@@ -1,6 +1,7 @@
 /* omnidirectional dip estimation  */
 
 #include <rsf.h>
+#include "ldip.h"
 #include "odip.h"
 
 int main(int argc, char*argv[])
@@ -45,15 +46,21 @@ int main(int argc, char*argv[])
 	dip = sf_floatalloc2(n1,n2);
 
 	/* initialize dip estimation */
-	odip_init(opwd, radius, nf, n1, n2, rect, liter, verb);
+	if (opwd)
+		odip_init(radius, nf, n1, n2, rect, liter, verb);
+	else
+		ldip_init(nf, n1, n2, rect, liter, verb);
+
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		odip(wav, dip, niter);
+		if (opwd) odip(wav, dip, niter);
+		else ldip(wav, dip, niter);
 		sf_floatwrite(dip[0], n1*n2, out);
 	}
 
-	odip_close();
+	if (opwd) 	odip_close();
+	else ldip_close();
 	return 0;
 }
 
