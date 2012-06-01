@@ -17,12 +17,11 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-#src.remove('einspline.c')
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'],
-            CCFLAGS='-pg ')
+            CCFLAGS='-pg ',
+            LINKFLAGS='-pg')
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

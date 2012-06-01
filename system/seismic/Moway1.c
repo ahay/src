@@ -81,7 +81,6 @@ int main(int argc, char* argv[])
 
     if (lagrange) {
 	slice0 = sf_floatalloc3(nx,np,nt);
-	sx = sp = st = 0.;
     } else {
 	slice0 = slice;
     } 
@@ -89,6 +88,7 @@ int main(int argc, char* argv[])
     sf_floatread(slice0[0][0],nt*np*nx,in);
     sf_floatwrite (slice0[0][0],nx*np,out);
 
+    sx = sp = st = 0.;
     for (iz=0; iz < nz-1; iz++) {
 	sf_warning("depth %d of %d;",iz+1,nz);
 
