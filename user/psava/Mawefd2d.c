@@ -380,7 +380,7 @@ int main(int argc, char* argv[])
     free(*up); free(up);
     free(*uo); free(uo);
     free(*ua); free(ua);
-    if (uc) {
+    if(snap) {
         free(*uc); free(uc);
     }
 
