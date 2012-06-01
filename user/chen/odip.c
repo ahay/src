@@ -64,11 +64,9 @@ void odip(float **in, float **dip, int nit)
 		}else{
 			lpwd(in, u1, dip, false);
 			lpwd(in, u2, dip, true);
-//			lpwd(in, u1, dip);
-//			lpwd_der(in, u2, dip);
 		}
 
-		norm = 0.0;
+/*		norm = 0.0;
 		for(i1=0; i1<n1*n2; i1++) 
 			norm += u2[0][i1]*u2[0][i1];
 		if(norm == 0.0) return;
@@ -81,8 +79,10 @@ void odip(float **in, float **dip, int nit)
 		}
 
 		sf_divn(u1[0], u2[0], u3[0]);
-		for(i1=0; i1<n1*n2; i1++)
+*/		for(i1=0; i1<n1*n2; i1++)
 		{
+			u3[0][i1]=u1[0][i1]*u2[0][i1]/
+				(u2[0][i1]*u2[0][i1]+0.0001);
 			dip[0][i1] -= eta*u3[0][i1];
 			while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
 			while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;

@@ -22,42 +22,39 @@ n2=input.int("n2")
 o2=input.float("o2")
 d2=input.float("d2")
 
-pclip=par.float("pclip",100)
+pclip=par.float("pclip",100) # clip percent
 
 # style
-plotfat=par.int("plotfat", 1)
-plotcol=par.string("plotcol", None)
-dash=par.string("dash", None)
-symbol=par.string("symbol", None)
-legends=par.string("legend", None)
-if plotcol != None:
-	plotcol=plotcol.split(',')
-else:
-	plotcol=arange(n2)
-if dash != None:
-	dash=dash.split(',')
-else:
-	dash=zeros(n2,'int')
-if legends != None:
-	legends=legends.split(',')
-else:
-	legends=arange(n2)
+plotfat=par.int("plotfat", 1) # plot line width
+plotcol=par.string("plotcol", "0,1,2,3,4,5,6,7") 
+# plot color
+dash=par.string("dash", "0") 
+# dash styles \n 0	solid line \n 1	dash line \n 2	dotted line \n 3	dash dot
+symbol=par.string("symbol", None) # mark symbols
+legends=par.string("legend", ",") # legends
+plotcol=plotcol.split(',')
+dash=dash.split(',')
+legends=legends.split(',')
 if symbol != None:
 	symbol=symbol.split(',')
 
-#plotcol=plotcol%len(colortable)
-#dash=dash%len(styletable)
-
-#sys.stderr.write(leg2.tostring())
 
 x1=arange(n1)*d1+o1
 x=zeros((n2,n1),'f')
 input.read(x)
 
 xx=(x.max()-x.min())*(100-pclip)/100
-min=x.min()+xx
-max=x.max()-xx
+min2=x.min()+xx
+max2=x.max()-xx
 
+min1=par.float("min1",x1[0])
+max1=par.float("max1",x1[n1-1])
+min2=par.float("min2",min2)
+max2=par.float("max2",max2)
+
+font = {'family' : 'serif'}
+
+rc('font', **font)
 
 for i2 in range (n2):
 	if i2 < len(legends):
@@ -80,9 +77,9 @@ for i2 in range (n2):
 
 
 # x label
-label1=input.string("label1")
+label1=par.string("label1")
 if label1 == None:
-	label1=par.string("label1")
+	label1=input.string("label1")
 if label1 != None:
 	label=label1
 	unit1=input.string("unit1")
@@ -92,9 +89,9 @@ if label1 != None:
 		label =label+': ('+ unit1+')'
 	xlabel(label)
 
-label2=input.string("label2")
+label2=par.string("label2")
 if label2 == None:
-	label2=par.string("label2")
+	label2=input.string("label2")
 if label2 != None:
 	label=label2
 	unit2=input.string("unit2")
@@ -111,9 +108,9 @@ wherelegend=par.int("wherelegend", 1)
 if wantlegend:
 	legend(loc=wherelegend)
 
-if pclip < 100 and pclip >0:
-	ylim(min,max)
+xlim(min1,max1)
+ylim(min2,max2)
 
 
-savefig(sys.stdout, format='pdf')
+savefig(sys.stdout, format='pdf', bbox_inches='tight', transparents=True)
 
