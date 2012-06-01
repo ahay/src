@@ -31,6 +31,7 @@ In the reproducible documents collection:
 In documentation:
 
 In APIs:
+* Fixed settype bug in Python API
 
 In the Python package:
 

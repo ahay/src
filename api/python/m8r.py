@@ -262,8 +262,8 @@ class _File(File):
         self.close()
         File.close(self)
     def settype(self,type):
-        for i in xrange(len(File.type)):
-            if type == File.type[i]:
+        for i in xrange(len(_File.type)):
+            if type == _File.type[i]:
                 self.type = type
                 c_rsf.sf_settype (self.file,i)
     def setformat(self,format):
