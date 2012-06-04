@@ -3,6 +3,7 @@ Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@total.com>
 William Burnett <will.burnett@gmail.com>
 Cody Brown <cbrown@eos.ubc.ca>
+Yihua Cai <caiyihua@gmail.com>
 Maria Cameron <kourkina@earthlink.net>
 Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
 Zhonghuan Chen <isaacthu@gmail.com>
@@ -35,7 +36,6 @@ Jeffrey Shragge <jshragge@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>
 Yanadet Sripanich <sripanichy@utexas.edu>
-I-Hua Tsai <caiyihua@gmail.com>
 Ioan Vlad <i.vlad@yahoo.com>
 Robin Weiss <robin.weiss@uwa.edu.au>
 Jia Yan <jyan@mines.edu>
