@@ -32,19 +32,12 @@
 */
 #include "elemental/core/environment.hpp"
 
-namespace elemental {
+namespace elem {
 namespace blas {
 
 //----------------------------------------------------------------------------//
 // Level 1 BLAS                                                               //
 //----------------------------------------------------------------------------//
-void Axpy
-( int n, int alpha, const int* x, int incx, int* y, int incy )
-{
-    for( int i=0; i<n; ++i )
-        y[i*incy] += alpha*x[i*incx];
-}
-
 void Axpy
 ( int n, float alpha, const float* x, int incx, float* y, int incy )
 { BLAS(saxpy)( &n, &alpha, x, &incx, y, &incy ); }
@@ -71,7 +64,7 @@ scomplex Dot( int n, const scomplex* x, int incx, const scomplex* y, int incy )
 { 
     scomplex alpha = 0;
     for( int i=0; i<n; ++i ) 
-        alpha += std::conj(x[i*incx])*y[i*incy];
+        alpha += Conj(x[i*incx])*y[i*incy];
     return alpha;
 }
 
@@ -79,7 +72,7 @@ dcomplex Dot( int n, const dcomplex* x, int incx, const dcomplex* y, int incy )
 {
     dcomplex alpha = 0;
     for( int i=0; i<n; ++i ) 
-        alpha += std::conj(x[i*incx])*y[i*incy];
+        alpha += Conj(x[i*incx])*y[i*incy];
     return alpha;
 }
 
@@ -93,7 +86,7 @@ scomplex Dotc( int n, const scomplex* x, int incx, const scomplex* y, int incy )
 { 
     scomplex alpha = 0;
     for( int i=0; i<n; ++i ) 
-        alpha += std::conj(x[i*incx])*y[i*incy];
+        alpha += Conj(x[i*incx])*y[i*incy];
     return alpha;
 }
 
@@ -101,7 +94,7 @@ dcomplex Dotc( int n, const dcomplex* x, int incx, const dcomplex* y, int incy )
 { 
     dcomplex alpha = 0;
     for( int i=0; i<n; ++i ) 
-        alpha += std::conj(x[i*incx])*y[i*incy];
+        alpha += Conj(x[i*incx])*y[i*incy];
     return alpha;
 }
 
@@ -614,78 +607,6 @@ void Herk
   dcomplex beta,        dcomplex* C, int ldc )
 { BLAS(zherk)( &uplo, &trans, &n, &k, &alpha, A, &lda, &beta, C, &ldc ); }
 
-void Hetrmm( char uplo, int n, float* A, int lda )
-{
-#ifndef RELEASE
-    PushCallStack("blas::Hetrmm");
-#endif
-    int info;
-    LAPACK(slauum)( &uplo, &n, A, &lda, &info );
-    if( info != 0 )
-    {
-        std::ostringstream os;
-        os << "slauum returned with info=" << info;
-        throw std::logic_error( os.str().c_str() );
-    }
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
-
-void Hetrmm( char uplo, int n, double* A, int lda )
-{
-#ifndef RELEASE
-    PushCallStack("blas::Hetrmm");
-#endif
-    int info;
-    LAPACK(dlauum)( &uplo, &n, A, &lda, &info );
-    if( info != 0 )
-    {
-        std::ostringstream os;
-        os << "dlauum returned with info=" << info;
-        throw std::logic_error( os.str().c_str() );
-    }
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
-
-void Hetrmm( char uplo, int n, scomplex* A, int lda )
-{
-#ifndef RELEASE
-    PushCallStack("blas::Hetrmm");
-#endif
-    int info;
-    LAPACK(clauum)( &uplo, &n, A, &lda, &info );
-    if( info != 0 )
-    {
-        std::ostringstream os;
-        os << "clauum returned with info=" << info;
-        throw std::logic_error( os.str().c_str() );
-    }
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
-
-void Hetrmm( char uplo, int n, dcomplex* A, int lda )
-{
-#ifndef RELEASE
-    PushCallStack("blas::Hetrmm");
-#endif
-    int info;
-    LAPACK(zlauum)( &uplo, &n, A, &lda, &info );
-    if( info != 0 )
-    {
-        std::ostringstream os;
-        os << "zlauum returned with info=" << info;
-        throw std::logic_error( os.str().c_str() );
-    }
-#ifndef RELEASE
-    PopCallStack();
-#endif
-}
-
 void Symm
 ( char side, char uplo, int m, int n,
   float alpha, const float* A, int lda, const float* B, int ldb,
@@ -851,4 +772,4 @@ void Trsm
 } 
 
 } // namespace blas
-} // namespace elemental
+} // namespace elem

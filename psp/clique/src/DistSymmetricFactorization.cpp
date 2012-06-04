@@ -1,8 +1,7 @@
 /*
    Clique: a scalable implementation of the multifrontal algorithm
 
-   Copyright (C) 2010-2011 Jack Poulson <jack.poulson@gmail.com>
-   Copyright (C) 2011 Jack Poulson, Lexing Ying, and 
+   Copyright (C) 2011-2012 Jack Poulson, Lexing Ying, and 
    The University of Texas at Austin
  
    This program is free software: you can redistribute it and/or modify
@@ -20,6 +19,8 @@
 */
 #include "clique.hpp"
 
+namespace cliq {
+
 // This is the part of the symbolic factorization that requires fine-grain 
 // parallelism: we assume that the upper floor(log2(commSize)) levels of the
 // tree are balanced.
@@ -30,7 +31,7 @@
 //
 // TODO: Generalize to support more than just a power-of-two number of 
 //       processes. This should be relatively straightforward.
-void clique::symbolic::DistSymmetricFactorization
+void symbolic::DistSymmetricFactorization
 ( const SymmOrig& orig, SymmFact& fact, bool storeFactRecvIndices )
 {
 #ifndef RELEASE
@@ -124,7 +125,7 @@ void clique::symbolic::DistSymmetricFactorization
 
         // Set some offset and size information for this supernode
         factSN.localSize1d = 
-            elemental::LocalLength<int>( origSN.size, teamRank, teamSize );
+            elem::LocalLength<int>( origSN.size, teamRank, teamSize );
         factSN.localOffset1d = localOffset1d;
 
         // Retrieve the child grid information
@@ -148,9 +149,8 @@ void clique::symbolic::DistSymmetricFactorization
         // Perform the exchange
         sendBuffer.resize( myChildLowerStructSize );
         recvBuffer.resize( theirChildLowerStructSize );
-        std::memcpy
-        ( &sendBuffer[0], &factChildSN.lowerStruct[0], 
-          myChildLowerStructSize*sizeof(int) );
+        elem::MemCopy
+        ( &sendBuffer[0], &factChildSN.lowerStruct[0], myChildLowerStructSize );
         mpi::SendRecv
         ( &sendBuffer[0], myChildLowerStructSize, partner, 0,
           &recvBuffer[0], theirChildLowerStructSize, partner, 0, 
@@ -303,8 +303,7 @@ void clique::symbolic::DistSymmetricFactorization
 
         // Fill numChildFactSendIndices so that we can reuse it for many facts.
         factSN.numChildFactSendIndices.resize( teamSize );
-        std::memset
-        ( &factSN.numChildFactSendIndices[0], 0, teamSize*sizeof(int) );
+        elem::MemZero( &factSN.numChildFactSendIndices[0], teamSize );
         const std::vector<int>& myChildRelIndices = 
             ( onLeft ? factSN.leftChildRelIndices 
                      : factSN.rightChildRelIndices );
@@ -313,16 +312,16 @@ void clique::symbolic::DistSymmetricFactorization
             const int updateColAlignment = myChildSize % childGridHeight;
             const int updateRowAlignment = myChildSize % childGridWidth;
             const int updateColShift = 
-                elemental::Shift<int>
+                elem::Shift<int>
                 ( childGridRow, updateColAlignment, childGridHeight );
             const int updateRowShift = 
-                elemental::Shift<int>
+                elem::Shift<int>
                 ( childGridCol, updateRowAlignment, childGridWidth );
             const int updateLocalHeight = 
-                elemental::LocalLength<int>
+                elem::LocalLength<int>
                 ( updateSize, updateColShift, childGridHeight );
             const int updateLocalWidth = 
-                elemental::LocalLength<int>
+                elem::LocalLength<int>
                 ( updateSize, updateRowShift, childGridWidth );
             for( int jChildLocal=0; 
                      jChildLocal<updateLocalWidth; ++jChildLocal )
@@ -353,15 +352,14 @@ void clique::symbolic::DistSymmetricFactorization
 
         // Fill numChildSolveSendIndices to use for many solves
         factSN.numChildSolveSendIndices.resize( teamSize );
-        std::memset
-        ( &factSN.numChildSolveSendIndices[0], 0, teamSize*sizeof(int) );
+        elem::MemZero( &factSN.numChildSolveSendIndices[0], teamSize );
         {
             const int updateAlignment = myChildSize % childTeamSize;
             const int updateShift = 
-                elemental::Shift<int>
+                elem::Shift<int>
                 ( childTeamRank, updateAlignment, childTeamSize );
             const int updateLocalHeight = 
-                elemental::LocalLength<int>
+                elem::LocalLength<int>
                 ( updateSize, updateShift, childTeamSize );
             for( int iChildLocal=0; 
                      iChildLocal<updateLocalHeight; ++iChildLocal )
@@ -456,7 +454,7 @@ void clique::symbolic::DistSymmetricFactorization
 #endif
 }
 
-void clique::symbolic::ComputeFactRecvIndices
+void symbolic::ComputeFactRecvIndices
 ( const DistSymmFactSupernode& sn, 
   const DistSymmFactSupernode& childSN )
 {
@@ -599,3 +597,4 @@ void clique::symbolic::ComputeFactRecvIndices
 #endif
 }
 
+} // namespace cliq

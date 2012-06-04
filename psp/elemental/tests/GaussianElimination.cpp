@@ -1,5 +1,5 @@
 #include "elemental.hpp"
-using namespace elemental;
+using namespace elem;
 
 int
 main( int argc, char* argv[] )
@@ -11,7 +11,7 @@ main( int argc, char* argv[] )
     int n = 100;
     int numRhs = 1;
     int blocksize = 64;
-    int gridHeight, gridWidth;
+    int gridHeight=1, gridWidth=1;
     bool specifiedGrid = false;
     for( int i=1; i<argc; ++i )
     {
@@ -61,18 +61,18 @@ main( int argc, char* argv[] )
         Grid grid( mpi::COMM_WORLD, gridHeight, gridWidth );
 
         // Set up random A and B, then make the copies X := B and ACopy := A
-        DistMatrix<double> A(n,n,grid), B(n,numRhs,grid), ACopy(grid), X(grid);
+        DistMatrix<double> A(grid), B(grid), ACopy(grid), X(grid);
         for( int test=0; test<3; ++test )
         {
-            A.SetToRandom();
-            B.SetToRandom();
+            Uniform( n, n,      A );
+            Uniform( n, numRhs, B );
             ACopy = A;
             X = B;
 
-            // Perform the LU factorization
+            // Perform the LU factorization and simultaneous solve
             if( commRank == 0 )
             {
-                std::cout << "Starting LU...";
+                std::cout << "Starting GaussianElimination...";
                 std::cout.flush();
             }
             mpi::Barrier( mpi::COMM_WORLD );
@@ -139,6 +139,9 @@ main( int argc, char* argv[] )
     {
         std::cout << "Process " << commRank << " caught exception: "
                   << e.what() << std::endl;
+#ifndef RELEASE
+        DumpCallStack();
+#endif
     }
 
     Finalize();

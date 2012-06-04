@@ -2,7 +2,7 @@
    Parallel Sweeping Preconditioner (PSP): a distributed-memory implementation
    of a sweeping preconditioner for 3d Helmholtz equations.
 
-   Copyright (C) 2011 Jack Poulson, Lexing Ying, and
+   Copyright (C) 2011-2012 Jack Poulson, Lexing Ying, and
    The University of Texas at Austin
 
    This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ void Usage()
 {
     std::cout << "Uniform <nx> <ny> <nz> <omega> <imagShift> "
                  "<numPlanesPerPanel> <fact blocksize> <solve blocksize> "
-                 "<accelerate?> <SQMR?> <viz?>\n"
+                 "<panelScheme> <SQMR?> <viz?>\n"
               << "  <nx>: Size of grid in x dimension\n"
               << "  <ny>: Size of grid in y dimension\n"
               << "  <nz>: Size of grid in z dimension\n"
@@ -34,7 +34,8 @@ void Usage()
               << "  <numPlanesPerPanel>: depth of sparse-direct solves\n"
               << "  <fact blocksize>: factorization algorithmic blocksize\n"
               << "  <solve blocksize>: solve algorithmic blocksize\n"
-              << "  <accelerate?>: accelerate solves iff !=0\n"
+              << "  <panel scheme>: NORMAL_1D=0, FAST_2D_LDL=1, "
+                 "COMPRESSED_2D_BLOCK_LDL=2\n"
               << "  <SQMR?>: use GMRES iff 0, otherwise SQMR\n"
               << "  <full viz?>:  Full visualization iff != 0\n"
               << std::endl;
@@ -43,16 +44,16 @@ void Usage()
 int
 main( int argc, char* argv[] )
 {
-    clique::Initialize( argc, argv );
-    clique::mpi::Comm comm = clique::mpi::COMM_WORLD;
-    const int commSize = clique::mpi::CommSize( comm );
-    const int commRank = clique::mpi::CommRank( comm );
+    cliq::Initialize( argc, argv );
+    cliq::mpi::Comm comm = cliq::mpi::COMM_WORLD;
+    const int commSize = cliq::mpi::CommSize( comm );
+    const int commRank = cliq::mpi::CommRank( comm );
 
     if( argc < 12 )
     {
         if( commRank == 0 )
             Usage();
-        clique::Finalize();
+        cliq::Finalize();
         return 0;
     }
     int argNum = 1;
@@ -64,7 +65,7 @@ main( int argc, char* argv[] )
     const int numPlanesPerPanel = atoi( argv[argNum++] );
     const int factBlocksize = atoi( argv[argNum++] );
     const int solveBlocksize = atoi( argv[argNum++] );
-    const bool accelerate = atoi( argv[argNum++] );
+    const PanelScheme panelScheme = (PanelScheme)atoi( argv[argNum++] );
     const bool useSQMR = atoi( argv[argNum++] );
     const bool fullVisualize = atoi( argv[argNum++] );
 
@@ -142,30 +143,30 @@ main( int argc, char* argv[] )
                 std::cout.flush();
             }
             velocity.WriteVolume("velocity");
-            elemental::mpi::Barrier( comm );
+            elem::mpi::Barrier( comm );
             if( commRank == 0 )
                 std::cout << "done" << std::endl;
         }
 
-        elemental::SetBlocksize( factBlocksize );
+        elem::SetBlocksize( factBlocksize );
         if( commRank == 0 )
             std::cout << "Beginning to initialize..." << std::endl;
-        clique::mpi::Barrier( comm );
-        const double initialStartTime = clique::mpi::Time(); 
-        helmholtz.Initialize( velocity, accelerate );
-        clique::mpi::Barrier( comm );
-        const double initialStopTime = clique::mpi::Time();
+        cliq::mpi::Barrier( comm );
+        const double initialStartTime = cliq::mpi::Time(); 
+        helmholtz.Initialize( velocity, panelScheme );
+        cliq::mpi::Barrier( comm );
+        const double initialStopTime = cliq::mpi::Time();
         const double initialTime = initialStopTime - initialStartTime;
         if( commRank == 0 )
             std::cout << "Finished initialization: " << initialTime 
                       << " seconds." << std::endl;
 
-        GridData<std::complex<double> > B
+        GridData<elem::Complex<double> > B
         ( 1, control.nx, control.ny, control.nz, XYZ, px, py, pz, comm );
-        std::complex<double>* localB = B.LocalBuffer();
+        elem::Complex<double>* localB = B.LocalBuffer();
         std::memset
         ( localB, 0, 
-          xLocalSize*yLocalSize*zLocalSize*sizeof(std::complex<double>) );
+          xLocalSize*yLocalSize*zLocalSize*sizeof(elem::Complex<double>) );
         const int xSource = control.nx/2;
         const int ySource = control.ny/2;
         const int zSource = control.nz/2;
@@ -190,17 +191,17 @@ main( int argc, char* argv[] )
                 std::cout << "done" << std::endl;
         }
 
-        elemental::SetBlocksize( solveBlocksize );
+        elem::SetBlocksize( solveBlocksize );
         if( commRank == 0 )
             std::cout << "Beginning solve..." << std::endl;
-        clique::mpi::Barrier( comm );
-        const double solveStartTime = clique::mpi::Time();
+        cliq::mpi::Barrier( comm );
+        const double solveStartTime = cliq::mpi::Time();
         if( useSQMR )
             helmholtz.SolveWithSQMR( B );
         else
             helmholtz.SolveWithGMRES( B );
-        clique::mpi::Barrier( comm );
-        const double solveStopTime = clique::mpi::Time();
+        cliq::mpi::Barrier( comm );
+        const double solveStopTime = cliq::mpi::Time();
         const double solveTime = solveStopTime - solveStartTime;
         if( commRank == 0 )
             std::cout << "Finished solve: " << solveTime << " seconds." 
@@ -228,11 +229,11 @@ main( int argc, char* argv[] )
         std::cerr << "Caught exception on process " << commRank << ":\n"
                   << e.what() << std::endl;
 #ifndef RELEASE
-        elemental::DumpCallStack();
-        clique::DumpCallStack();
+        elem::DumpCallStack();
+        cliq::DumpCallStack();
 #endif
     }
 
-    clique::Finalize();
+    cliq::Finalize();
     return 0;
 }

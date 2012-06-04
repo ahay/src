@@ -2,7 +2,7 @@
    Parallel Sweeping Preconditioner (PSP): a distributed-memory implementation
    of a sweeping preconditioner for 3d Helmholtz equations.
 
-   Copyright (C) 2011 Jack Poulson, Lexing Ying, and
+   Copyright (C) 2011-2012 Jack Poulson, Lexing Ying, and
    The University of Texas at Austin
 
    This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ void Usage()
 {
     std::cout << "EngquistYing-flat <N> <omega> <imagShift> <velocity> "
                  "<numPlanesPerPanel> <fact blocksize> <solve blocksize> "
-                 "<accelerate?> <SQMR?> <viz?>\n"
+                 "<panelScheme> <SQMR?> <viz?>\n"
               << "  <N>: Size of grid in each dimension\n"
               << "  <omega>: Frequency (in rad/sec) of problem\n"
               << "  <imagShift>: imaginary shift [2 pi is standard]\n"
@@ -33,7 +33,8 @@ void Usage()
               << "  <numPlanesPerPanel>: depth of sparse-direct solves\n"
               << "  <fact blocksize>: factorization algorithmic blocksize\n"
               << "  <solve blocksize>: solve algorithmic blocksize\n"
-              << "  <accelerate?>: accelerate solves iff !=0\n"
+              << "  <panelScheme>: NORMAL_1D=0, FAST_2D_LDL=1, "
+                 "COMPRESSED_2D_BLOCK_LDL=2\n"
               << "  <SQMR?>: GMRES iff 0, SQMR otherwise\n"
               << "  <full viz?>: Full visualization iff != 0\n"
               << "\n"
@@ -45,16 +46,16 @@ void Usage()
 int
 main( int argc, char* argv[] )
 {
-    clique::Initialize( argc, argv );
-    clique::mpi::Comm comm = clique::mpi::COMM_WORLD;
-    const int commSize = clique::mpi::CommSize( comm );
-    const int commRank = clique::mpi::CommRank( comm );
+    cliq::Initialize( argc, argv );
+    cliq::mpi::Comm comm = cliq::mpi::COMM_WORLD;
+    const int commSize = cliq::mpi::CommSize( comm );
+    const int commRank = cliq::mpi::CommRank( comm );
 
     if( argc < 11 )
     {
         if( commRank == 0 )
             Usage();
-        clique::Finalize();
+        cliq::Finalize();
         return 0;
     }
     int argNum=1;
@@ -65,7 +66,7 @@ main( int argc, char* argv[] )
     const int numPlanesPerPanel = atoi( argv[argNum++] );
     const int factBlocksize = atoi( argv[argNum++] );
     const int solveBlocksize = atoi( argv[argNum++] );
-    const bool accelerate = atoi( argv[argNum++] );
+    const PanelScheme panelScheme = (PanelScheme)atoi( argv[argNum++] );
     const bool useSQMR = atoi( argv[argNum++] );
     const bool fullVisualize = atoi( argv[argNum++] );
 
@@ -76,7 +77,7 @@ main( int argc, char* argv[] )
                       << "Please see \"Sweeping preconditioner for the "
                       << "Helmholtz equation: moving perfectly matched layers\""
                       << " for more details." << std::endl;
-        clique::Finalize();
+        cliq::Finalize();
         return 0;
     }
 
@@ -99,14 +100,9 @@ main( int argc, char* argv[] )
     control.Cx = 1.5;
     control.Cy = 1.5;
     control.Cz = 1.5;
-    control.bx = 4;
-    control.by = 4;
-    control.bz = 4;
-    /*
-    control.bx = 6;
-    control.by = 6;
-    control.bz = 6;
-    */
+    control.bx = 5;
+    control.by = 5;
+    control.bz = 5;
     control.imagShift = imagShift;
     control.cutoff = 96;
     control.numPlanesPerPanel = numPlanesPerPanel;
@@ -149,27 +145,29 @@ main( int argc, char* argv[] )
         if( velocityModel == 1 )
         {
             // Converging lens
+            const double center[] = { 0.5, 0.5, 0.5 };
+            double arg[3];
             for( int zLocal=0; zLocal<zLocalSize; ++zLocal )
             {
                 const int z = zShift + zLocal*pz;
                 const double Z = z / (N+1.0);
-                const double argZ = (Z-0.5/8)*(Z-0.5/8);
+                arg[2] = (Z-center[2]/8)*(Z-center[2]/8);
                 for( int yLocal=0; yLocal<yLocalSize; ++yLocal )
                 {
                     const int y = yShift + yLocal*py;
                     const double Y = y / (N+1.0);
-                    const double argY = (Y-0.5)*(Y-0.5);
+                    arg[1] = (Y-center[1])*(Y-center[1]);
                     for( int xLocal=0; xLocal<xLocalSize; ++xLocal )
                     {
                         const int x = xShift + xLocal*px;
                         const double X = x / (N+1.0);
-                        const double argX = (X-0.5)*(X-0.5);
+                        arg[0] = (X-center[0])*(X-center[0]);
                         
                         const int localIndex = 
                             xLocal + yLocal*xLocalSize + 
                             zLocal*xLocalSize*yLocalSize;
                         const double speed =
-                            1.0 - 0.4*std::exp(-32.*(argX+argY+argZ));
+                            1.0 - 0.4*std::exp(-32.*(arg[0]+arg[1]+arg[2]));
                         localVelocity[localIndex] = speed / 0.8;
                     }
                 }
@@ -178,24 +176,26 @@ main( int argc, char* argv[] )
         else // velocityModel == 2
         {
             // Wave guide
+            const double center[] = { 0.5, 0.5 };
+            double arg[2];
             for( int zLocal=0; zLocal<zLocalSize; ++zLocal )
             {
                 for( int yLocal=0; yLocal<yLocalSize; ++yLocal )
                 {
                     const int y = yShift + yLocal*py;
                     const double Y = y / (N+1.0);
-                    const double argY = (Y-0.5)*(Y-0.5);
+                    arg[1] = (Y-center[1])*(Y-center[1]);
                     for( int xLocal=0; xLocal<xLocalSize; ++xLocal )
                     {
                         const int x = xShift + xLocal*px;
                         const double X = x / (N+1.0);
-                        const double argX = (X-0.5)*(X-0.5);
+                        arg[0] = (X-center[0])*(X-center[0]);
                         
                         const int localIndex = 
                             xLocal + yLocal*xLocalSize + 
                             zLocal*xLocalSize*yLocalSize;
                         const double speed =
-                            1.0 - 0.4*std::exp(-32.*(argX+argY));
+                            1.0 - 0.4*std::exp(-32.*(arg[0]+arg[1]));
                         localVelocity[localIndex] = speed / 0.8;
                     }
                 }
@@ -213,58 +213,60 @@ main( int argc, char* argv[] )
                 std::cout.flush();
             }
             velocity.WriteVolume("velocity");
-            elemental::mpi::Barrier( comm );
+            elem::mpi::Barrier( comm );
             if( commRank == 0 )
                 std::cout << "done" << std::endl;
         }
 
-        elemental::SetBlocksize( factBlocksize );
+        elem::SetBlocksize( factBlocksize );
         if( commRank == 0 )
             std::cout << "Beginning to initialize..." << std::endl;
-        clique::mpi::Barrier( comm );
-        const double initialStartTime = clique::mpi::Time(); 
-        helmholtz.Initialize( velocity, accelerate );
-        clique::mpi::Barrier( comm );
-        const double initialStopTime = clique::mpi::Time();
+        cliq::mpi::Barrier( comm );
+        const double initialStartTime = cliq::mpi::Time(); 
+        helmholtz.Initialize( velocity, panelScheme );
+        cliq::mpi::Barrier( comm );
+        const double initialStopTime = cliq::mpi::Time();
         const double initialTime = initialStopTime - initialStartTime;
         if( commRank == 0 )
             std::cout << "Finished initialization: " << initialTime 
                       << " seconds." << std::endl;
 
-        GridData<std::complex<double> > 
+        GridData<elem::Complex<double> > 
             B( 2, N, N, N/8, XYZ, px, py, pz, comm );
-        std::complex<double>* localB = B.LocalBuffer();
-        const double dX = 0;
-        const double dY = sqrt(2.0)/2.0;
-        const double dZ = sqrt(2.0)/2.0;
-        const std::complex<double> imagOne( 0.0, 1.0 );
+        elem::Complex<double>* localB = B.LocalBuffer();
+        const double dir[] = { 0., sqrt(2.)/2., sqrt(2.)/2. };
+        const double center0[] = { 0.5, 0.5, 0.25/8 };
+        const double center1[] = { 0.5, 0.25, 0.25/8 };
+        double arg0[3];
+        double arg1[3];
+        const elem::Complex<double> imagOne( 0.0, 1.0 );
         for( int zLocal=0; zLocal<zLocalSize; ++zLocal )
         {
             const int z = zShift + zLocal*pz;
             const double Z = z / (N+1.0);
-            const double argZ = (Z-0.25/8)*(Z-0.25/8);
+            arg0[2] = (Z-center0[2])*(Z-center0[2]);
+            arg1[2] = (Z-center1[2])*(Z-center1[2]);
             for( int yLocal=0; yLocal<yLocalSize; ++yLocal )
             {
                 const int y = yShift + yLocal*py;
                 const double Y = y / (N+1.0);
-                const double argYOne = (Y-0.5)*(Y-0.5);
-                const double argYTwo = (Y-0.25)*(Y-0.25);
+                arg0[1] = (Y-center0[1])*(Y-center0[1]);
+                arg1[1] = (Y-center1[1])*(Y-center1[1]);
                 for( int xLocal=0; xLocal<xLocalSize; ++xLocal )
                 {
                     const int x = xShift + xLocal*px;
                     const double X = x / (N+1.0);
-                    const double argX = (X-0.5)*(X-0.5);
+                    arg0[0] = (X-center0[0])*(X-center0[0]);
+                    arg1[0] = (X-center1[0])*(X-center1[0]);
                     
                     const int localIndex = 
                         2*(xLocal + yLocal*xLocalSize + 
                            zLocal*xLocalSize*yLocalSize);
-                    const std::complex<double> fOne = 
-                        N*std::exp(-N*N*(argX+argYOne+argZ));
-                    const std::complex<double> fTwo = 
-                        N*std::exp(-2*omega*(argX+argYTwo+argZ))*
-                        std::exp(omega*imagOne*(X*dX+Y*dY+Z*dZ));
-                    localB[localIndex+0] = fOne;
-                    localB[localIndex+1] = fTwo;
+                    localB[localIndex+0] = 
+                        N*elem::Exp(-N*N*(arg0[0]+arg0[1]+arg0[2]));
+                    localB[localIndex+1] = 
+                        N*elem::Exp(-2*omega*(arg1[0]+arg1[1]+arg1[2]))*
+                        elem::Exp(omega*imagOne*(X*dir[0]+Y*dir[1]+Z*dir[2]));
                 }
             }
         }
@@ -284,17 +286,17 @@ main( int argc, char* argv[] )
                 std::cout << "done" << std::endl;
         }
 
-        elemental::SetBlocksize( solveBlocksize );
+        elem::SetBlocksize( solveBlocksize );
         if( commRank == 0 )
             std::cout << "Beginning solve..." << std::endl;
-        clique::mpi::Barrier( comm );
-        const double solveStartTime = clique::mpi::Time();
+        cliq::mpi::Barrier( comm );
+        const double solveStartTime = cliq::mpi::Time();
         if( useSQMR )
             helmholtz.SolveWithSQMR( B );
         else
             helmholtz.SolveWithGMRES( B );
-        clique::mpi::Barrier( comm );
-        const double solveStopTime = clique::mpi::Time();
+        cliq::mpi::Barrier( comm );
+        const double solveStopTime = cliq::mpi::Time();
         const double solveTime = solveStopTime - solveStartTime;
         if( commRank == 0 )
             std::cout << "Finished solve: " << solveTime << " seconds." 
@@ -322,11 +324,11 @@ main( int argc, char* argv[] )
         std::cerr << "Caught exception on process " << commRank << ":\n"
                   << e.what() << std::endl;
 #ifndef RELEASE
-        elemental::DumpCallStack();
-        clique::DumpCallStack();
+        elem::DumpCallStack();
+        cliq::DumpCallStack();
 #endif
     }
 
-    clique::Finalize();
+    cliq::Finalize();
     return 0;
 }

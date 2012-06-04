@@ -1,8 +1,8 @@
 /*
-   Clique: a scalable implementation of the multifrontal algorithm
+   Parallel Sweeping Preconditioner (PSP): a distributed-memory implementation
+   of a sweeping preconditioner for 3d Helmholtz equations.
 
-   Copyright (C) 2010-2011 Jack Poulson <jack.poulson@gmail.com>
-   Copyright (C) 2011 Jack Poulson, Lexing Ying, and 
+   Copyright (C) 2011-2012 Jack Poulson, Lexing Ying, and 
    The University of Texas at Austin
  
    This program is free software: you can redistribute it and/or modify
@@ -18,24 +18,12 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef CLIQUE_NUMERIC_FRONT_DIAGONAL_SOLVE_HPP
-#define CLIQUE_NUMERIC_FRONT_DIAGONAL_SOLVE_HPP 1
+#ifndef PSP_CONFIG_HPP
+#define PSP_CONFIG_HPP 1
 
-namespace clique {
-namespace numeric {
+#define PSP_VERSION_MAJOR @PSP_VERSION_MAJOR@
+#define PSP_VERSION_MINOR @PSP_VERSION_MINOR@
 
-template<typename F>
-void LocalFrontDiagonalSolve
-( const Matrix<F>& d, 
-        Matrix<F>& X );
+#cmakedefine USE_CUSTOM_ALLTOALLV_FOR_SPMV
 
-template<typename F>
-void DistFrontDiagonalSolve
-( const DistMatrix<F,VC,STAR>& d,
-        DistMatrix<F,VC,STAR>& X );
-
-} // namespace numeric
-} // namespace clique
-
-#endif /* CLIQUE_NUMERIC_FRONT_DIAGONAL_SOLVE_HPP */
-
+#endif /* PSP_CONFIG_HPP */

@@ -1,7 +1,7 @@
 /*
    Clique: a scalable implementation of the multifrontal algorithm
 
-   Copyright (C) 2011 Jack Poulson, Lexing Ying, and 
+   Copyright (C) 2011-2012 Jack Poulson, Lexing Ying, and 
    The University of Texas at Austin
  
    This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include "clique.hpp"
-using namespace elemental;
+using namespace elem;
 
 void Usage()
 {
@@ -33,7 +33,7 @@ void Usage()
 int
 main( int argc, char* argv[] )
 {
-    clique::Initialize( argc, argv );
+    cliq::Initialize( argc, argv );
     mpi::Comm comm = mpi::COMM_WORLD;
     const int commRank = mpi::CommRank( comm );
 
@@ -41,7 +41,7 @@ main( int argc, char* argv[] )
     {
         if( commRank == 0 )        
             Usage();
-        clique::Finalize();
+        cliq::Finalize();
         return 0;
     }
 
@@ -53,13 +53,13 @@ main( int argc, char* argv[] )
     if( numPieces == 0 && commRank == 0 )
     {
         std::cout << "Number of pieces must be positive." << std::endl;
-        clique::Finalize();
+        cliq::Finalize();
         return 0;
     }
     if( numFiles == 0 && commRank == 0 )
     {
         std::cout << "Number of files must be positive." << std::endl;
-        clique::Finalize();
+        cliq::Finalize();
         return 0;
     }
     if( commRank == 0 )
@@ -125,8 +125,8 @@ main( int argc, char* argv[] )
     catch( std::exception& e )
     {
 #ifndef RELEASE
-        elemental::DumpCallStack();
-        clique::DumpCallStack();
+        elem::DumpCallStack();
+        cliq::DumpCallStack();
 #endif
         std::ostringstream msg;
         msg << "Process " << commRank << " caught message:\n"
@@ -134,6 +134,6 @@ main( int argc, char* argv[] )
         std::cerr << msg.str() << std::endl;
     }
 
-    clique::Finalize();
+    cliq::Finalize();
     return 0;
 }

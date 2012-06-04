@@ -50,7 +50,7 @@ SafeMpi( int mpiError )
 
 } // anonymous namespace
 
-namespace elemental {
+namespace elem {
 namespace mpi {
 
 //----------------------------//
@@ -347,7 +347,7 @@ bool Test( Request& request )
 #ifndef RELEASE
     PushCallStack("mpi::Test");
 #endif
-    MPI_Status status;
+    Status status;
     int flag;
     SafeMpi( MPI_Test( &request, &flag, &status ) );
 #ifndef RELEASE
@@ -362,8 +362,32 @@ void Wait( Request& request )
 #ifndef RELEASE
     PushCallStack("mpi::Wait");
 #endif
-    MPI_Status status;
+    Status status;
     SafeMpi( MPI_Wait( &request, &status ) );
+#ifndef RELEASE
+    PopCallStack();
+#endif
+}
+
+// Ensure that the request finishes before continuing
+void Wait( Request& request, Status& status )
+{
+#ifndef RELEASE
+    PushCallStack("mpi::Wait");
+#endif
+    SafeMpi( MPI_Wait( &request, &status ) );
+#ifndef RELEASE
+    PopCallStack();
+#endif
+}
+
+// Ensure that several requests finish before continuing
+void WaitAll( int numRequests, Request* requests, Status* statuses )
+{
+#ifndef RELEASE
+    PushCallStack("mpi::WaitAll");
+#endif
+    SafeMpi( MPI_Waitall( numRequests, requests, statuses ) );
 #ifndef RELEASE
     PopCallStack();
 #endif
@@ -785,7 +809,7 @@ void Recv( byte* buf, int count, int from, int tag, Comm comm )
 #ifndef RELEASE
     PushCallStack("mpi::Recv");
 #endif
-    MPI_Status status;
+    Status status;
     SafeMpi( 
         MPI_Recv( buf, count, MPI_UNSIGNED_CHAR, from, tag, comm, &status ) 
     );
@@ -3054,7 +3078,6 @@ void ReduceScatter( byte* sbuf, byte* rbuf, int rc, Op op, Comm comm )
     std::memcpy( rbuf, &sbuf[commRank*rc], rc );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( sbuf, rc*commSize, op, 0, comm );
     Scatter( sbuf, rc, rbuf, rc, 0, comm );
 #endif
@@ -3217,7 +3240,6 @@ void ReduceScatter( byte* buf, int rc, Op op, Comm comm )
         std::memcpy( buf, &buf[commRank*rc], rc );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( buf, rc*commSize, op, 0, comm );
     Scatter( buf, rc, rc, 0, comm );
 #endif
@@ -3243,7 +3265,6 @@ void ReduceScatter( int* buf, int rc, Op op, Comm comm )
         std::memcpy( buf, &buf[commRank*rc], rc*sizeof(int) );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( buf, rc*commSize, op, 0, comm );
     Scatter( buf, rc, rc, 0, comm );
 #endif
@@ -3269,7 +3290,6 @@ void ReduceScatter( float* buf, int rc, Op op, Comm comm )
         std::memcpy( buf, &buf[commRank*rc], rc*sizeof(float) );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( buf, rc*commSize, op, 0, comm );
     Scatter( buf, rc, rc, 0, comm );
 #endif
@@ -3295,7 +3315,6 @@ void ReduceScatter( double* buf, int rc, Op op, Comm comm )
         std::memcpy( buf, &buf[commRank*rc], rc*sizeof(double) );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( buf, rc*commSize, op, 0, comm );
     Scatter( buf, rc, rc, 0, comm );
 #endif
@@ -3329,7 +3348,6 @@ void ReduceScatter( scomplex* buf, int rc, Op op, Comm comm )
         std::memcpy( buf, &buf[commRank*rc], rc*sizeof(scomplex) );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( buf, rc*commSize, op, 0, comm );
     Scatter( buf, rc, rc, 0, comm );
 #endif
@@ -3363,7 +3381,6 @@ void ReduceScatter( dcomplex* buf, int rc, Op op, Comm comm )
         std::memcpy( buf, &buf[commRank*rc], rc*sizeof(dcomplex) );
 #else
     const int commSize = CommSize( comm );
-    const int commRank = CommRank( comm );
     Reduce( buf, rc*commSize, op, 0, comm );
     Scatter( buf, rc, rc, 0, comm );
 #endif
@@ -3517,4 +3534,4 @@ void ReduceScatter
 }
 
 } // namespace mpi
-} // namespace elemental
+} // namespace elem

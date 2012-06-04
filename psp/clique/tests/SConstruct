@@ -10,6 +10,7 @@ SConscript('../src/SConstruct')
 
 progs = '''
 FileSpeed
+PanelBlockLDL
 PanelLDL
 '''
 

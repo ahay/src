@@ -1,7 +1,7 @@
 /*
    Clique: a scalable implementation of the multifrontal algorithm
 
-   Copyright (C) 2011 Jack Poulson, Lexing Ying, and 
+   Copyright (C) 2011-2012 Jack Poulson, Lexing Ying, and 
    The University of Texas at Austin
  
    This program is free software: you can redistribute it and/or modify
@@ -22,21 +22,26 @@
 namespace { 
 bool cliqueInitializedElemental; 
 bool initializedClique = false;
+#ifndef RELEASE
+std::stack<std::string> callStack;
+#endif
 }
 
-bool clique::Initialized()
+namespace cliq {
+
+bool Initialized()
 { return ::initializedClique; }
 
-void clique::Initialize( int& argc, char**& argv )
+void Initialize( int& argc, char**& argv )
 {
     // If Clique has already been initialized, this is a no-op
     if( ::initializedClique )
         return;
 
-    const bool mustInitElemental = !elemental::Initialized();
+    const bool mustInitElemental = !elem::Initialized();
     if( mustInitElemental )
     {
-        elemental::Initialize( argc, argv );
+        elem::Initialize( argc, argv );
         ::cliqueInitializedElemental = true;
     }
     else
@@ -46,28 +51,26 @@ void clique::Initialize( int& argc, char**& argv )
     ::initializedClique = true;
 }
 
-void clique::Finalize()
+void Finalize()
 {
     // If Clique is not currently initialized, then this is a no-op
     if( !::initializedClique )
         return;
     
     if( ::cliqueInitializedElemental )
-        elemental::Finalize();
+        elem::Finalize();
 
     ::initializedClique = false;
 }
 
 #ifndef RELEASE
-namespace { std::stack<std::string> callStack; }
-
-void clique::PushCallStack( std::string s )
+void PushCallStack( std::string s )
 { ::callStack.push( s ); }
 
-void clique::PopCallStack()
+void PopCallStack()
 { ::callStack.pop(); }
 
-void clique::DumpCallStack()
+void DumpCallStack()
 {
     std::ostringstream msg;
     while( !::callStack.empty() )
@@ -78,3 +81,5 @@ void clique::DumpCallStack()
     std::cerr << msg.str() << std::endl;
 }
 #endif // ifndef RELEASE
+
+} // namespace cliq

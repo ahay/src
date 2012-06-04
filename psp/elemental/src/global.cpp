@@ -34,17 +34,17 @@
 
 namespace {
 // Core routines
-bool initializedElemental = false;
-bool elementalInitializedMpi;
+int numElemInits = 0;
+bool elemInitializedMpi;
 std::stack<int> blocksizeStack;
-elemental::Grid* defaultGrid = 0;
+elem::Grid* defaultGrid = 0;
 
 // Debugging
 #ifndef RELEASE
 std::stack<std::string> callStack;
 #endif
 
-// Tuning paramters for basic routines
+// Tuning parameters for basic routines
 int localHemvFloatBlocksize = 64;
 int localHemvDoubleBlocksize = 64;
 int localHemvComplexFloatBlocksize = 64;
@@ -66,22 +66,25 @@ int localTrrkComplexFloatBlocksize = 64;
 int localTrrkComplexDoubleBlocksize = 64;
 
 // Tuning parameters for advanced routines
-using namespace elemental;
+using namespace elem;
 HermitianTridiagApproach tridiagApproach = HERMITIAN_TRIDIAG_DEFAULT;
 GridOrder gridOrder = ROW_MAJOR;
 }
 
-namespace elemental {
+namespace elem {
 
 bool Initialized()
-{ return ::initializedElemental; }
+{ return ::numElemInits > 0; }
 
 void Initialize( int& argc, char**& argv )
 {
-    // If Elemental is currently initialized, then this is a no-op
-    if( ::initializedElemental )
+    if( ::numElemInits > 0 )
+    {
+        ++::numElemInits;
         return;
+    }
 
+    ::numElemInits = 1;
     if( !mpi::Initialized() )
     {
         if( mpi::Finalized() )
@@ -101,11 +104,11 @@ void Initialize( int& argc, char**& argv )
 #else
         mpi::Initialize( argc, argv );
 #endif
-        ::elementalInitializedMpi = true;
+        ::elemInitializedMpi = true;
     }
     else
     {
-        ::elementalInitializedMpi = false;
+        ::elemInitializedMpi = false;
     }
 
     // Queue a default algorithmic blocksize
@@ -119,8 +122,8 @@ void Initialize( int& argc, char**& argv )
     // Build the pivot operations needed by the distributed LU
     internal::CreatePivotOp<float>();
     internal::CreatePivotOp<double>();
-    internal::CreatePivotOp<std::complex<float> >();
-    internal::CreatePivotOp<std::complex<double> >();
+    internal::CreatePivotOp<Complex<float> >();
+    internal::CreatePivotOp<Complex<double> >();
 
     // Seed the parallel random number generator, PLCG
     plcg::UInt64 seed;
@@ -131,8 +134,6 @@ void Initialize( int& argc, char**& argv )
     mpi::Broadcast
     ( (byte*)seed.d, 2*sizeof(unsigned), 0, mpi::COMM_WORLD );
     plcg::SeedParallelLcg( rank, size, seed );
-
-    ::initializedElemental = true;
 }
 
 void Finalize()
@@ -140,35 +141,37 @@ void Finalize()
 #ifndef RELEASE
     PushCallStack("Finalize");
 #endif
-    // If Elemental is not currently initialized, then this is a no-op
-    if( !::initializedElemental )
-        return;
+    if( ::numElemInits <= 0 )
+        throw std::logic_error("Finalized Elemental more than initialized");
+    --::numElemInits;
 
     if( mpi::Finalized() )
     {
         std::cerr << "Warning: MPI was finalized before Elemental." 
                   << std::endl;
     }
-    else if( ::elementalInitializedMpi )
+    if( ::numElemInits == 0 )
     {
-        // Destroy the pivot ops needed by the distributed LU
-        internal::DestroyPivotOp<float>();
-        internal::DestroyPivotOp<double>();
-        internal::DestroyPivotOp<std::complex<float> >();
-        internal::DestroyPivotOp<std::complex<double> >();
+        if( ::elemInitializedMpi )
+        {
+            // Destroy the pivot ops needed by the distributed LU
+            internal::DestroyPivotOp<float>();
+            internal::DestroyPivotOp<double>();
+            internal::DestroyPivotOp<Complex<float> >();
+            internal::DestroyPivotOp<Complex<double> >();
 
-        // Delete the default grid
+            // Delete the default grid
+            delete ::defaultGrid;
+            ::defaultGrid = 0;
+
+            mpi::Finalize();
+        }
+
         delete ::defaultGrid;
         ::defaultGrid = 0;
-
-        mpi::Finalize();
+        while( ! ::blocksizeStack.empty() )
+            ::blocksizeStack.pop();
     }
-
-    delete ::defaultGrid;
-    ::defaultGrid = 0;
-    while( ! ::blocksizeStack.empty() )
-        ::blocksizeStack.pop();
-    ::initializedElemental = false;
 #ifndef RELEASE
     PopCallStack();
 #endif
@@ -228,11 +231,11 @@ void SetLocalHemvBlocksize<double>( int blocksize )
 { ::localHemvDoubleBlocksize = blocksize; }
 
 template<>
-void SetLocalHemvBlocksize<std::complex<float> >( int blocksize )
+void SetLocalHemvBlocksize<Complex<float> >( int blocksize )
 { ::localHemvComplexFloatBlocksize = blocksize; }
 
 template<>
-void SetLocalHemvBlocksize<std::complex<double> >( int blocksize )
+void SetLocalHemvBlocksize<Complex<double> >( int blocksize )
 { ::localHemvComplexDoubleBlocksize = blocksize; }
 
 template<>
@@ -244,11 +247,11 @@ int LocalHemvBlocksize<double>()
 { return ::localHemvDoubleBlocksize; }
 
 template<>
-int LocalHemvBlocksize<std::complex<float> >()
+int LocalHemvBlocksize<Complex<float> >()
 { return ::localHemvComplexFloatBlocksize; }
 
 template<>
-int LocalHemvBlocksize<std::complex<double> >()
+int LocalHemvBlocksize<Complex<double> >()
 { return ::localHemvComplexDoubleBlocksize; }
 
 template<>
@@ -260,11 +263,11 @@ void SetLocalSymvBlocksize<double>( int blocksize )
 { ::localSymvDoubleBlocksize = blocksize; }
 
 template<>
-void SetLocalSymvBlocksize<std::complex<float> >( int blocksize )
+void SetLocalSymvBlocksize<Complex<float> >( int blocksize )
 { ::localSymvComplexFloatBlocksize = blocksize; }
 
 template<>
-void SetLocalSymvBlocksize<std::complex<double> >( int blocksize )
+void SetLocalSymvBlocksize<Complex<double> >( int blocksize )
 { ::localSymvComplexDoubleBlocksize = blocksize; }
 
 template<>
@@ -276,11 +279,11 @@ int LocalSymvBlocksize<double>()
 { return ::localSymvDoubleBlocksize; }
 
 template<>
-int LocalSymvBlocksize<std::complex<float> >()
+int LocalSymvBlocksize<Complex<float> >()
 { return ::localSymvComplexFloatBlocksize; }
 
 template<>
-int LocalSymvBlocksize<std::complex<double> >()
+int LocalSymvBlocksize<Complex<double> >()
 { return ::localSymvComplexDoubleBlocksize; }
 
 template<>
@@ -292,11 +295,11 @@ void SetLocalTrr2kBlocksize<double>( int blocksize )
 { ::localTrr2kDoubleBlocksize = blocksize; }
 
 template<>
-void SetLocalTrr2kBlocksize<std::complex<float> >( int blocksize )
+void SetLocalTrr2kBlocksize<Complex<float> >( int blocksize )
 { ::localTrr2kComplexFloatBlocksize = blocksize; }
 
 template<>
-void SetLocalTrr2kBlocksize<std::complex<double> >( int blocksize )
+void SetLocalTrr2kBlocksize<Complex<double> >( int blocksize )
 { ::localTrr2kComplexDoubleBlocksize = blocksize; }
 
 template<>
@@ -308,11 +311,11 @@ int LocalTrr2kBlocksize<double>()
 { return ::localTrr2kDoubleBlocksize; }
 
 template<>
-int LocalTrr2kBlocksize<std::complex<float> >()
+int LocalTrr2kBlocksize<Complex<float> >()
 { return ::localTrr2kComplexFloatBlocksize; }
 
 template<>
-int LocalTrr2kBlocksize<std::complex<double> >()
+int LocalTrr2kBlocksize<Complex<double> >()
 { return ::localTrr2kComplexDoubleBlocksize; }
 
 template<>
@@ -324,11 +327,11 @@ void SetLocalTrrkBlocksize<double>( int blocksize )
 { ::localTrrkDoubleBlocksize = blocksize; }
 
 template<>
-void SetLocalTrrkBlocksize<std::complex<float> >( int blocksize )
+void SetLocalTrrkBlocksize<Complex<float> >( int blocksize )
 { ::localTrrkComplexFloatBlocksize = blocksize; }
 
 template<>
-void SetLocalTrrkBlocksize<std::complex<double> >( int blocksize )
+void SetLocalTrrkBlocksize<Complex<double> >( int blocksize )
 { ::localTrrkComplexDoubleBlocksize = blocksize; }
 
 template<>
@@ -340,11 +343,11 @@ int LocalTrrkBlocksize<double>()
 { return ::localTrrkDoubleBlocksize; }
 
 template<>
-int LocalTrrkBlocksize<std::complex<float> >()
+int LocalTrrkBlocksize<Complex<float> >()
 { return ::localTrrkComplexFloatBlocksize; }
 
 template<>
-int LocalTrrkBlocksize<std::complex<double> >()
+int LocalTrrkBlocksize<Complex<double> >()
 { return ::localTrrkComplexDoubleBlocksize; }
 
 void SetHermitianTridiagApproach( HermitianTridiagApproach approach )
@@ -359,4 +362,4 @@ void SetHermitianTridiagGridOrder( GridOrder order )
 GridOrder GetHermitianTridiagGridOrder()
 { return ::gridOrder; }
 
-} // namespace elemental
+} // namespace elem
