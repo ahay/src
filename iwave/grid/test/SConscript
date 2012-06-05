@@ -21,10 +21,9 @@ env = Environment(ENV = os.environ,
 
 # find sources
 srcs=[]
-import glob
-srcs = srcs + glob.glob('./*.c')
-srcs = srcs + glob.glob('./*.cc')
-srcs = srcs + glob.glob('./*.cpp')
+srcs = srcs + Glob('*.c')
+srcs = srcs + Glob('*.cc')
+srcs = srcs + Glob('*.cpp')
 
 thispath = os.getcwd()
 
@@ -51,7 +50,7 @@ def cmdx(target, source, env):
 
 if len(srcs) > 0:
     for prog in srcs:
-        pname = prog.split('.')[1].strip('/')
+        pname = str(prog).split('.')[0].strip('/')
         pprog = pname + '.x'
         env.Program(pprog,prog)
         prout = pname + '.rpt'

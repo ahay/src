@@ -54,6 +54,7 @@ int asg_modelinit(PARARRAY *pars,
 
   int i;               /* counter */
 
+  fprintf(stream,"in minit\n");
   fd=(FD_MODEL *)malloc(sizeof(FD_MODEL));
   if (fd==NULL) return E_ALLOC;
   /* first the "base class" behaviour */
@@ -95,7 +96,11 @@ int asg_modelinit(PARARRAY *pars,
 
     grid g;
     if (!init_acoustic_geom_par(&g,*pars,stream)) m_ndim=g.dim;
-
+    else {
+      err=E_INTERNAL;
+      fprintf(stream,"ERROR: in asg_modelinit - failed to read spatial geometry\n");
+      abortexit(err,pars,&stream);;
+    }
 #ifdef IWAVE_USE_MPI
   }
   MPI_Bcast(&m_ndim,1,MPI_INT,0,cm);

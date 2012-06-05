@@ -6,7 +6,6 @@
 #include "omp.h"
 #endif
 
-
 //#define VERBOSE
 
 /* drivers should self-doc:
