@@ -1,4 +1,5 @@
 #include "sgn.h"
+#include "iwave.h"
 
 /* 
 Functions to convert between array names and indices.
@@ -99,7 +100,7 @@ int asg_modelinit(PARARRAY *pars,
     else {
       err=E_INTERNAL;
       fprintf(stream,"ERROR: in asg_modelinit - failed to read spatial geometry\n");
-      abortexit(err,pars,&stream);;
+      abortexit(err,pars,&stream);
     }
 #ifdef IWAVE_USE_MPI
   }
