@@ -26,8 +26,8 @@
 //#define IWAVE_EXTEND_MODEL
 
 /* uncomment to write to the rk-dep output stream at every major step 
-*/
    #define VERBOSE
+*/
 
 /* uncomment to write to the rk-dep output stream at every time step 
    #define VERBOSE_STEP
