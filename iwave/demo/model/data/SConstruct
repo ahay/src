@@ -1,0 +1,28 @@
+import os
+import shutil
+thispath = os.getcwd()
+env = Environment();
+
+####### tools
+def make_bin(target, source, env):
+    os.system('cd ..; scons main/standardmodel.x; cd ' + thispath + '; ln -s ../main/standardmodel.x .')
+
+env.Command(['./standardmodel.x'], ['SConstruct'], make_bin)
+
+def make_src(target, source, env):
+    os.system('suspike ntr=1 nt=401  offset=0 nspk=1 ix1=1 it1=201 dt=0.002 | sushw key=delrt  a=-400 |sufilter f=0.,2.5,15.0,20.0 amps=0.,1.,1.,0. | sugain scale=1.e6 > wavelet.su')
+
+env.Command(['wavelet.su'],['SConstruct'],make_src)
+
+def hdr_prep(target, source, env):
+    os.system('sunull nt=1501 ntr=301 dt=0.002 | sushw key=sx a=3300 c=0 j=301| sushw key=gx a=100 b=20 j=301 | sushw key=delrt a=0| sushw key=selev a=-40 | sushw key=gelev a=-20 > ' + str(target[0]))
+
+env.Command(['hdr.su'],['SConstruct'],hdr_prep)
+
+def mdl_prep(target, source, env):
+    for p in source:
+        rpath = str(p).split('/');
+	if len(rpath) > 1:
+           os.system('./standardmodel.x par=' + str(p))
+
+env.Command(['vp2d_20m.rsf', 'vp2d_20m.rsf@', 'dn2d_20m.rsf', 'dn2d_20m.rsf@', 'vp2d_10m.rsf', 'vp2d_10m.rsf@', 'dn2d_10m.rsf', 'dn2d_10m.rsf@', 'vp2d_5m.rsf', 'vp2d_5m.rsf@', 'dn2d_5m.rsf', 'dn2d_5m.rsf@', 'vp2d_2.5m.rsf', 'vp2d_2.5m.rsf@', 'dn2d_2.5m.rsf', 'dn2d_2.5m.rsf@'], ['Orig/vp2d_20m.par', 'Orig/dn2d_20m.par', 'Orig/vp2d_10m.par', 'Orig/dn2d_10m.par', 'Orig/vp2d_5m.par', 'Orig/dn2d_5m.par', 'Orig/vp2d_2.5m.par', 'Orig/dn2d_2.5m.par', './standardmodel.x', 'SConstruct'], mdl_prep);
