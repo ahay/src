@@ -24,7 +24,7 @@
 #include <algorithm>
 #include <map>
 
-#include "clique/config.h"
+//#include "clique/config.h"
 
 namespace cliq {
 

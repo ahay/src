@@ -23,7 +23,7 @@
 
 #include "clique.hpp"
 
-#include "psp/config.h"
+//#include "psp/config.h"
 #include "psp/finite_diff_control.hpp"
 #include "psp/grid_data.hpp"
 #include "psp/dist_helmholtz.hpp"

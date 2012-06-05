@@ -20,6 +20,10 @@
 #ifndef CLIQUE_HPP
 #define CLIQUE_HPP 1
 
+#define USE_CUSTOM_ALLTOALLV_FOR_FACT 1
+#define USE_CUSTOM_ALLTOALLV_FOR_MULT 1
+#define USE_CUSTOM_ALLTOALLV_FOR_SOLVE 1
+
 #include "clique/core/environment.hpp"
 #include "clique/symbolic/symmetric_factorization.hpp"
 #include "clique/numeric/symm_front_tree.hpp"

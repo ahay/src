@@ -50,11 +50,11 @@
 #include <string>
 #include <vector>
 
-#include "elemental/config.h"
+//#include "elemental/config.h"
 
-#ifdef HAVE_F90_INTERFACE
-# include "elemental/FCMangle.h"
-#endif
+//#ifdef HAVE_F90_INTERFACE
+//# include "elemental/FCMangle.h"
+//#endif
 
 // If defined, the _OPENMP macro contains the date of the specification
 #ifdef _OPENMP
