@@ -70,7 +70,7 @@ for r in range(4):
          suread < %s.su read=data endian=0
          ''' % data,stdin=0)
 
-    Result(data,'grey title="%g-m data" scalebar=y barreverse=y' % (2.5*j))
+    Result(data,'grey title="%g-m data" ' % (2.5*j))
 
     j *= 2
 
