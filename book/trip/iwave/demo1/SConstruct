@@ -26,8 +26,23 @@ Flow('wavelet',None,
      sfscale dscale=1.e6 
      ''')
 Flow('thead','wavelet','segyheader')
-Flow('wavelet.su','wavelet thead','suwrite tfile=${SOURCES[1]}')
+Flow('wavelet.su','wavelet thead','suwrite tfile=${SOURCES[1]} endian=0')
      
+Flow('data',None,'spike n1=1501 n2=301 d1=0.002 d2=1 o2=0')
+Flow('slice','data','window n1=1')
+
+hkeys = dict(sx=3300,gx='100+20*x1',delrt=0,selev=-40,gelev=-20)
+hks = hkeys.keys()
+
+i=0
+hstr = ''
+for hk in hks:
+    Flow(hk,'slice','math output=%s | dd type=int' % str(hkeys[hk]))
+    i += 1
+    hstr += '%s=${SOURCES[%d]} ' % (hk,i)
+
+Flow('tdata',['data']+hks,'segyheader ' + hstr) 
+Flow('hdr.su','data tdata','suwrite tfile=${SOURCES[1]} endian=0')
 
 for r in range(4):
     dn = 'dn%d' % r
