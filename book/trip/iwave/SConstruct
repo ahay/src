@@ -1,6 +1,8 @@
 from rsf.tex import *
 
-'''
+Paper('demo',color='vp0 dn0 trace wtrace',
+      use='hyperref',
+      include=r'''
 \newcommand{\du}{\delta u}
 \newcommand{\dm}{\delta m}
 \newcommand{\lu}{\lambda u}
@@ -21,8 +23,6 @@ from rsf.tex import *
 \newcommand{\peq}{\,+\hspace{-0.15cm}=}
 \newcommand{\pp}{\,+\hspace{-0.1cm}+}
 \newcommand{\mm}{\,-\hspace{-0.1cm}-}
-'''
-
-Paper('demo',color='vp0 dn0 trace wtrace')
+''')
 
 End()
