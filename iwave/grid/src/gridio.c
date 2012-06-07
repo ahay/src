@@ -45,19 +45,19 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
   for (i=0;i<RARR_MAX_NDIM;i++) {
     snprintf(key,kl,"n%d",i+1);
     tmp=1;
-    ps_ffint(par,key,&tmp);
+    ps_flint(par,key,&tmp);
     g->axes[i].n=tmp;
     snprintf(key,kl,"d%d",i+1);
-    if (ps_ffreal(par,key,&(g->axes[i].d))) g->axes[i].d=1.0;
+    if (ps_flreal(par,key,&(g->axes[i].d))) g->axes[i].d=1.0;
     snprintf(key,kl,"o%d",i+1);
-    if (ps_ffreal(par,key,&(g->axes[i].o))) g->axes[i].o=0.0;
+    if (ps_flreal(par,key,&(g->axes[i].o))) g->axes[i].o=0.0;
     /* determine dim by finding least axis index with n>1 */
     if (g->axes[i].n>1) g->dim=iwave_max(g->dim,i+1);
   }
   /*  fprintf(stderr,"order params - dim=%d\n",g->dim);*/
   if (g->dim > 0) { 
     tmp=1;
-    ps_ffint(par,"z_axis",&tmp);
+    ps_flint(par,"z_axis",&tmp);
     tmp--;
     /*    fprintf(stderr,"z axis tmp=%d\n",tmp);*/
     if (tmp<0 || tmp>g->dim-1) {
@@ -69,7 +69,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
   }
   if (g->dim > 1) { 
     tmp=2;
-    ps_ffint(par,"x_axis",&tmp);
+    ps_flint(par,"x_axis",&tmp);
     tmp--;
     /*    fprintf(stderr,"x axis tmp=%d\n",tmp);*/
     if (tmp<0 || tmp>g->dim-1) {
@@ -81,7 +81,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
   }
   if (g->dim > 2) {
     tmp=3;
-    ps_ffint(par,"y_axis",&tmp);
+    ps_flint(par,"y_axis",&tmp);
     tmp--;
     /*    fprintf(stderr,"y axis tmp=%d\n",tmp);*/
     if (tmp<0 || tmp>g->dim-1) {
@@ -475,8 +475,8 @@ int rsfread(ireal * a,
   }
   
   /* get filename */
-  if ( (err=ps_ffcstring(par,"in",&dname)) ) {
-    fprintf(stream,"Error: rsfread - read from ps_ffcstring\n");
+  if ( (err=ps_flcstring(par,"in",&dname)) ) {
+    fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
     fprintf(stream,"failed to extract in param\n");
     ps_destroy(&par);
     return err;
@@ -502,13 +502,13 @@ int rsfread(ireal * a,
   }
 #endif
  
-  if ( (err=ps_ffcstring(par,"data_format",&type)) ) {
-    fprintf(stream,"Error: rsfread - read from ps_ffcstring\n");
+  if ( (err=ps_flcstring(par,"data_format",&type)) ) {
+    fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
     fprintf(stream,"failed to extract type param\n");
     ps_destroy(&par);
     return err;
   }
-  ps_ffint(par,"scale",&scale);
+  ps_flint(par,"scale",&scale);
 
   /* compute current starting position */
   cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
@@ -725,8 +725,8 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
 	  fprintf(stream,"file %s exists but does not define RSF/SEP data structure\n",fname);
 	  return E_FILE;
       }
-    if (ps_ffcstring(par,"in",&dname)) {
-      fprintf(stream,"Error: rsfwrite from ps_ffcstring\n");
+    if (ps_flcstring(par,"in",&dname)) {
+      fprintf(stream,"Error: rsfwrite from ps_flcstring\n");
       fprintf(stream,"failed to read data filename\n");
       return E_FILE;
     }
@@ -734,12 +734,12 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
     fprintf(stream,"rsfwrite: header=%s data=%s parfile=\n",fname,dname);
     ps_printall(par,stream);
     */
-    if (ps_ffcstring(par,"data_format",&type)) {
-      fprintf(stream,"Error: rsfwrite from ps_ffcstring\n");
+    if (ps_flcstring(par,"data_format",&type)) {
+      fprintf(stream,"Error: rsfwrite from ps_flcstring\n");
       fprintf(stream,"failed to read data_format from header file %s\n",fname);
       return E_FILE;
     }
-    ps_ffint(par,"scale",&scale);
+    ps_flint(par,"scale",&scale);
 
   }
   else {
