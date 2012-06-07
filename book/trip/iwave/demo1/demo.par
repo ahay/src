@@ -11,17 +11,10 @@
    scheme_npml=24          scheme for PML
 
        srctype=point
-        source=wavelet.su
        sampord=0             sampling order
          phase=zerophase     wavelet phase
        refdist=1000.0        reference distance
         refamp=1.0           reference pressure 
-
-      hdrfile =hdr.su
-     datafile =data.su
-
-      velocity=vp3.rsf
-       density=dn3.rsf
 
        mpi_np1=1      n_doms along axis 1
        mpi_np2=1      n_doms along axis 2
