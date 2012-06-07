@@ -111,4 +111,11 @@ Output info:
      dump_term = 1           dump terminator data
      ''',stdin=0)
 
+    data = 'data%d' % r
+    Flow(data,par,
+         '''
+         asg par=$SOURCE &&
+         suread < data.su read=data
+         ''',stdin=0)
+
 End()
