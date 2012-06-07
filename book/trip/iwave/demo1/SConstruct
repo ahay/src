@@ -45,6 +45,7 @@ Flow('tdata',['data']+hks,'segyheader ' + hstr)
 Flow('hdr.su','data tdata','suwrite tfile=${SOURCES[1]} endian=0')
 
 j = 1
+traces = []
 for r in range(4):
     dn = 'dn%d' % r
     vp = 'vp%d' % r
@@ -72,5 +73,12 @@ for r in range(4):
     Result(data,'grey title="%g-m data" scalebar=y barreverse=y' % (2.5*j))
 
     j *= 2
+
+    trace = 'trace%d' % r
+    Flow(trace,data,'window n2=1 f2=100')
+    traces.append(trace)
+
+Result('trace',traces,
+       'cat axis=2 ${SOURCES[2:4]} | graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa')
 
 End()
