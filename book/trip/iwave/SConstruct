@@ -23,6 +23,6 @@ from rsf.tex import *
 \newcommand{\mm}{\,-\hspace{-0.1cm}-}
 '''
 
-Paper('demo')
+Paper('demo',color='vp0 dn0 trace wtrace')
 
 End()
