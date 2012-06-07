@@ -107,7 +107,11 @@ int main(int argc, char ** argv) {
   fprintf(stream,"readinput\n");
   fflush(stream);
 #endif
-  readinput(&pars,stream,argc,argv);
+  err=readinput(&pars,stream,argc,argv);
+  if (err) {
+    fprintf(stderr,"ERROR: main from readinput. ABORT\n");
+    abortexit(err,&pars,&stream);
+  }
 
 #ifdef VERBOSE
   fprintf(stream,"paramtable:\n");

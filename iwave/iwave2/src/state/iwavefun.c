@@ -121,7 +121,8 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
 
   /* workspace for processing command line */
   PARARRAY parr_arg;
-  SIZEDSTRING parfile;
+  //  SIZEDSTRING parfile;
+  char * parfile;
 
   /* destroy previous */
   ps_setnull(pars);
@@ -129,30 +130,34 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
   err=ps_createargs(&parr_arg,argc-1,argv+1);
   if (err) {
     fprintf(stream,
-	    "ERROR. Internal: error #%d processing command line. ABORT.\n", 
-	    err);
+	    "ERROR. failed to process command line. ABORT.\n");
     return err;
   }
+
   /* extract parameters from command line */
-  if (ps_getval(parr_arg,"par",0,&parfile)) {
+  //  if (ps_getval(parr_arg,"par",0,&parfile)) {
+  if (ps_ffcstring(parr_arg,"par",&parfile)) {
     *pars = parr_arg;
   }
   else {
 #ifdef VERBOSE
-    fprintf(stderr,"in readinput: create par from file %s\n",parfile.s);
+    fprintf(stderr,"in readinput: create par from file %s\n",parfile);
 #endif
-    err = ps_createfile(pars,parfile.s);
+
+    err = ps_createfile(pars,parfile);
     ps_destroy(&parr_arg);
+    free(parfile);
     if ( err ) {
       fprintf(stream, 
-	      "ERROR. Internal: error #%d processing command line. ABORT.\n", 
-	      err);
+	      "ERROR. failed to create par from file %s. ABORT.\n", 
+	      parfile);
       ps_destroy(pars);
     }
 #ifdef VERBOSE
     ps_printall(*pars,stderr);
 #endif
   }
+
   return err;
 }
 
