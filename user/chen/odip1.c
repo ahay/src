@@ -4,10 +4,10 @@
 #include "opwd.h"
 
 static int n1, n2, nf;
-static float **u1, **u2, **u3;
+static float **u1, **u2, **d1, **d2;
 
-void odip_init(float r,  int mf, int interp,
-	int m1, int m2, int *rect, int niter, bool verb)
+void odip1_init(float r,  int mf, int interp,
+	int m1, int m2, int niter, bool verb)
 /*< initialize >*/
 {
 	int n, nn[4];
@@ -21,32 +21,33 @@ void odip_init(float r,  int mf, int interp,
 
 	u1 = sf_floatalloc2(n1,n2);
 	u2 = sf_floatalloc2(n1,n2);
-	u3 = sf_floatalloc2(n1,n2);
+	d1 = sf_floatalloc2(n1,n2);
+	d2 = sf_floatalloc2(n1,n2);
 
 	opwd_init(interp, nf, n1, n2, r);
-	sf_divn_init (2, n, nn, rect, niter, verb);
 }
 
-void odip_close()
+void odip1_close()
 /*< release memory >*/
 {
 	free(u1[0]);
 	free(u1);
 	free(u2[0]);
 	free(u2);
-	free(u3[0]);
-	free(u3);
+	free(d1[0]);
+	free(d1);
+	free(d2[0]);
+	free(d2);
 	opwd_close();
-	sf_divn_close();
 }
 
 
 
-void odip(float **in, float **dip, int nit)
+void odip1(float **in, float **dip, int nit)
 /*< omnidirectional dip estimation >*/
 {
 	int it, i1;
-	double eta, norm;
+	double eta, u3;
 
 	for(i1=0; i1<n1*n2; i1++)
 	{
@@ -59,20 +60,11 @@ void odip(float **in, float **dip, int nit)
 		opwd(in, u1, dip, false);
 		opwd(in, u2, dip, true);
 
-        for(i1=0, norm=0.0; i1<n1*n2; i1++)
-            norm += (u2[0][i1]*u2[0][i1]);
-        norm=sqrtf(norm);
-        for(i1=0; i1<n1*n2; i1++)
-        {
-            u1[0][i1] /= norm;
-            u2[0][i1] /= norm;
-        }
-
-		sf_divn(u1[0], u2[0], u3[0]);
-
 		for(i1=0; i1<n1*n2; i1++)
 		{
-			dip[0][i1] -= eta*u3[0][i1];
+			u3=u1[0][i1]*u2[0][i1]/
+				(u2[0][i1]*u2[0][i1]+0.0001);
+			dip[0][i1] -= eta*u3;
 			while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
 			while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
 		}

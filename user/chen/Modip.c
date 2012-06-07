@@ -2,12 +2,15 @@
 
 #include <rsf.h>
 #include "ldip.h"
+#include "ldip1.h"
 #include "odip.h"
+#include "odip1.h"
+#include "odip2.h"
 
 int main(int argc, char*argv[])
 {
 	sf_file in, out;
-	int nf, n1, n2, n3, rect[2], niter, liter;
+	int nf, n1, n2, n3, rect[2], niter, liter, interp, solver;
 	int i3;
 	bool verb, opwd;
 	float **wav, **dip, radius;
@@ -34,12 +37,18 @@ int main(int argc, char*argv[])
 	/* number of iterations */
 	if (!sf_getint("liter",&liter)) liter=20;
 	/* number of linear iterations */
-
+	if (!sf_getint("interp",&interp)) interp=0;
+	/* interpolation method: 
+	0: maxflat
+	1: Lagrange 
+	2: B-Spline */
+	if (!sf_getint("solver", &solver)) solver=0;
+	/* solver for dip estimation */
 	if (!sf_getbool("opwd", &opwd)) verb = true;
 	/* y: opwd;  n: lpwd */
 	if (!sf_getfloat("radius", &radius)) radius = 1.0;
 	/* interpolating radius for opwd */
-	if (!sf_getbool("verb",&verb)) verb = false;
+	if (!sf_getbool("verb", &verb)) verb = false;
 	/* verbosity flag */
 
 	wav = sf_floatalloc2(n1,n2);
@@ -47,20 +56,77 @@ int main(int argc, char*argv[])
 
 	/* initialize dip estimation */
 	if (opwd)
-		odip_init(radius, nf, n1, n2, rect, liter, verb);
-	else
-		ldip_init(nf, n1, n2, rect, liter, verb);
+	switch(solver)
+	{
+	case 1:
+		odip1_init(radius, nf, interp, n1, n2, liter, verb);
+		break;
+	case 2:
+		odip2_init(radius, nf, interp, n1, n2, liter, verb);
+		break;
+	default:
+		odip_init(radius, nf, interp, n1, n2, rect, liter, verb);
+	}
+	else 
+	switch(solver)
+	{
+	case 1:
+		ldip1_init(nf, interp, n1, n2, liter, verb);
+		break;
+	default:
+		ldip_init(nf, interp, n1, n2, rect, liter, verb);
+	}
 
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		if (opwd) odip(wav, dip, niter);
-		else ldip(wav, dip, niter);
+		if (opwd)
+		switch(solver)
+		{
+		case 1:
+			odip1(wav, dip, niter);
+			break;
+		case 2:
+			odip2(wav, dip, niter);
+			break;
+		default:
+			odip(wav, dip, niter);
+		}
+		else 
+		switch(solver)
+		{
+		case 1:
+			ldip1(wav, dip, niter);
+			break;
+		default:
+			ldip(wav, dip, niter);
+		}
 		sf_floatwrite(dip[0], n1*n2, out);
 	}
 
-	if (opwd) 	odip_close();
-	else ldip_close();
+	if (opwd)
+	switch(solver)
+	{
+	case 1:
+		odip1_close();
+		break;
+	case 2:
+		odip2_close();
+		break;
+	default:
+		odip_close();
+	}
+	else 
+	switch(solver)
+	{
+	case 1:
+		ldip1_close();
+		break;
+	default:
+		ldip_close();
+	}
 	return 0;
 }
+
+
 
