@@ -42,9 +42,9 @@ This simple 2D model embeds an anticline or dome in an otherwise
 undisturbed package of layers. The velocity and density models are
 depicted in Figures \ref{fig1} and \ref{fig2}.
 
-\cite[]{SymesVdovina:09} use this model to illustrate the {\em
+\cite{SymesVdovina:09} use this model to illustrate the {\em
   interface error} phenomenon: the tendency, first reported by
-\cite[]{Brown:84}, of all finite difference schemes for wave
+\cite{Brown:84}, of all finite difference schemes for wave
 propagation to exhibit first order error, regardless of formal order,
 for models with material parameter discontinuities. The shot record
 (Figure \ref{fig3}, acquisition geometry described in caption) looks
@@ -56,10 +56,10 @@ position in 2D space, hence can be sampled at any rate at all. Figures
 at four different rates. The scheme used is the 2nd order in time,
 4th order in space staggered grid scheme, which is formally 2nd order
 convergent like the original 2nd order scheme suggested by
-\cite[]{Vir:84}, but has better dispersion suppression. Nonetheless,
+\cite{Vir:84}, but has better dispersion suppression. Nonetheless,
 the figures clearly show the first order error, in the form of a
-grid-dependent time shift, predicted by \cite[]{Brown:84}. See
-\cite{SymesVdovina:09} for more examples, analysis, and discussion.
+grid-dependent time shift, predicted by \cite{Brown:84}. See
+\cite[]{SymesVdovina:09} for more examples, analysis, and discussion.
 
 \section{Using {\tt demo1}}
 IWAVE and all of its parts build with SConstruct. For instructions on
@@ -91,13 +91,8 @@ acoustic modeling command. This command reads its parameters from a
 par file. Four par files are present in {\tt demo1}, each one defining
 a modeling job, corresponding to a given level of grid refinement. The
 meaning of each parameter in the par file is described in the IWAVE
-web documentation: \url{http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html}.
-
-\section{Acknowledgements}
-Development of IWAVE was supported by the SEG Advanced Modeling (SEAM) project, by the National Science Foundation under awards 0620821 and 0714193, and by the sponsors of The Rice Inversion Project. The IWAVE project owes a great deal to several open source seismic software packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully acknowledge.
- 
-\bibliographystyle{seg}
-\bibliography{masterref}
+web documentation:
+\url{http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html}.
 
 \inputdir{demo1}
 
@@ -111,12 +106,19 @@ sample interval = 2 ms. Source pulse = zero phase trapezoidal [0.0,
 \plot{trace}{height=15cm,width=15cm}{Trace 100 (receiver x = 2100 m) for $\Delta x = \Delta z = $
   20 m (red), 10 m (green), 5 m (blue), and 2.5 m (black). Note
   arrival time discrepancy after 1 s: this is the interface error
-  discussed in \cite{SymesVdovina:09}. Except for the 20 m result,
+  discussed in \cite[]{SymesVdovina:09}. Except for the 20 m result,
   grid dispersion error is minimal.} 
 
 \plot{wtrace}{height=15cm,width=15cm}{Trace 100 detail, 1.8-2.5 s, showing more clearly the
   first-order interface error: the time shift between computed events
   and the truth (the 2.5 m result, more or less) is proportional to
   $\Delta t$, or equivalently to $\Delta z$.}
+
+\section{Acknowledgements}
+Development of IWAVE was supported by the SEG Advanced Modeling (SEAM) project, by the National Science Foundation under awards 0620821 and 0714193, and by the sponsors of The Rice Inversion Project. The IWAVE project owes a great deal to several open source seismic software packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully acknowledge.
+ 
+\bibliographystyle{seg}
+\bibliography{masterref}
+
 
 
