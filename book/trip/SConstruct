@@ -1,0 +1,35 @@
+from rsf.book import *
+
+Papers(copyr='Rice University',
+       group='The Rice Inversion Project',
+       papers=Split('''
+       iwave/demo.tex
+       '''),
+       authors = {'iwave-demo':'William Symes'},
+       line='Selected papers',
+       fig=('iwave/demo1','wtrace','width=\\textwidth'))
+       
+End(use='hyperref',
+    include=r'''
+\newcommand{\du}{\delta u}
+\newcommand{\dm}{\delta m}
+\newcommand{\lu}{\lambda u}
+\newcommand{\lm}{\lambda m}
+\newcommand{\muu}{\mu u}
+\newcommand{\bF}{{\bf F}}
+\newcommand{\bS}{{\bf S}}
+\newcommand{\bH}{{\bf H}}
+\newcommand{\bM}{{\bf M}}
+\newcommand{\bR}{{\bf R}}
+\newcommand{\bu}{{\bf u}}
+\newcommand{\bx}{{\bf x}}
+\newcommand{\bv}{{\bf v}}
+\newcommand{\be}{{\bf e}}
+\newcommand{\bp}{{\bf p}}
+\newcommand{\cS}{{\cal S}}
+
+\newcommand{\peq}{\,+\hspace{-0.15cm}=}
+\newcommand{\pp}{\,+\hspace{-0.1cm}+}
+\newcommand{\mm}{\,-\hspace{-0.1cm}-}
+''')
+
