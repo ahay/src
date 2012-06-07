@@ -40,19 +40,19 @@ The bulk modulus and buoyancy (reciprocal density) are the natural parameters in
 
 This simple 2D model embeds an anticline or dome in an otherwise
 undisturbed package of layers. The velocity and density models are
-depicted in Figures \ref{fig1} and \ref{fig2}.
+depicted in Figures \ref{fig:vp0} and \ref{fig:dn0}.
 
 \cite{SymesVdovina:09} use this model to illustrate the {\em
   interface error} phenomenon: the tendency, first reported by
 \cite{Brown:84}, of all finite difference schemes for wave
 propagation to exhibit first order error, regardless of formal order,
 for models with material parameter discontinuities. The shot record
-(Figure \ref{fig3}, acquisition geometry described in caption) looks
+(Figure \ref{fig:data0}, acquisition geometry described in caption) looks
 perfectly normal. However the spatial sample rate of the model in
-Figures \ref{fig1} and \ref{fig2} has a considerable effect. The
+Figures \ref{fig:vp0} and \ref{fig:dn0} has a considerable effect. The
 material parameter fields are constructed as {\em functions} of
 position in 2D space, hence can be sampled at any rate at all. Figures
-\ref{fig4} and \ref{fig5} compare traces computed from models sampled
+\ref{fig:trace} and \ref{fig:wtrace} compare traces computed from models sampled
 at four different rates. The scheme used is the 2nd order in time,
 4th order in space staggered grid scheme, which is formally 2nd order
 convergent like the original 2nd order scheme suggested by
@@ -61,6 +61,27 @@ the figures clearly show the first order error, in the form of a
 grid-dependent time shift, predicted by \cite{Brown:84}. See
 \cite[]{SymesVdovina:09} for more examples, analysis, and discussion.
 
+\inputdir{demo1}
+
+\plot{vp0}{height=10cm,width=15cm}{Dome velocity model}
+\plot{dn0}{height=10cm,width=15cm}{Dome density model}
+\plot{data0}{height=15cm,width=15cm}{2D shot record, 301 traces: shot x = 3300 m, shot z = 40 m, receiver x =
+  100 - 6100 m, receiver z = 20 m, number of time samples = 1501, time
+sample interval = 2 ms. Source pulse = zero phase trapezoidal [0.0,
+2.4, 15.0, 20.0] Hz bandpass filter.}
+
+\plot{trace}{height=15cm,width=15cm}{Trace 100 (receiver x = 2100 m) for $\Delta x = \Delta z = $
+  20 m (red), 10 m (green), 5 m (blue), and 2.5 m (black). Note
+  arrival time discrepancy after 1 s: this is the interface error
+  discussed in \cite[]{SymesVdovina:09}. Except for the 20 m result,
+  grid dispersion error is minimal.} 
+
+\plot{wtrace}{height=15cm,width=15cm}{Trace 100 detail, 1.8-2.5 s, showing more clearly the
+  first-order interface error: the time shift between computed events
+  and the truth (the 2.5 m result, more or less) is proportional to
+  $\Delta t$, or equivalently to $\Delta z$.}
+
+\begin{comment}
 \section{Using {\tt demo1}}
 IWAVE and all of its parts build with SConstruct. For instructions on
 installing IWAVE (and all other TRIP software) see 
@@ -84,35 +105,16 @@ To build {\tt demo1},
 Note that the finest (2.5 m) grid consists of roughly 10 million
 gridpoints. Consequently the modeling runs collectively take a few
 minutes on a single thred.
+\end{comment}
 
 Inspection of the {\tt SConstruct} file in {\tt demo1} will show that
-the modeling tool used is {\tt \$IWAVE/asg2/main/asg.x}, the IWAVE
+the modeling tool used is {\tt asg}, the IWAVE
 acoustic modeling command. This command reads its parameters from a
 par file. Four par files are present in {\tt demo1}, each one defining
 a modeling job, corresponding to a given level of grid refinement. The
 meaning of each parameter in the par file is described in the IWAVE
 web documentation:
 \url{http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html}.
-
-\inputdir{demo1}
-
-\plot{vp0}{height=10cm,width=15cm}{Dome velocity model}
-\plot{dn0}{height=10cm,width=15cm}{Dome density model}
-\plot{data0}{height=15cm,width=15cm}{2D shot record, 301 traces: shot x = 3300 m, shot z = 40 m, receiver x =
-  100 - 6100 m, receiver z = 20 m, number of time samples = 1501, time
-sample interval = 2 ms. Source pulse = zero phase trapezoidal [0.0,
-2.4, 15.0, 20.0] Hz bandpass filter.}
-
-\plot{trace}{height=15cm,width=15cm}{Trace 100 (receiver x = 2100 m) for $\Delta x = \Delta z = $
-  20 m (red), 10 m (green), 5 m (blue), and 2.5 m (black). Note
-  arrival time discrepancy after 1 s: this is the interface error
-  discussed in \cite[]{SymesVdovina:09}. Except for the 20 m result,
-  grid dispersion error is minimal.} 
-
-\plot{wtrace}{height=15cm,width=15cm}{Trace 100 detail, 1.8-2.5 s, showing more clearly the
-  first-order interface error: the time shift between computed events
-  and the truth (the 2.5 m result, more or less) is proportional to
-  $\Delta t$, or equivalently to $\Delta z$.}
 
 \section{Acknowledgements}
 Development of IWAVE was supported by the SEG Advanced Modeling (SEAM) project, by the National Science Foundation under awards 0620821 and 0714193, and by the sponsors of The Rice Inversion Project. The IWAVE project owes a great deal to several open source seismic software packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully acknowledge.
