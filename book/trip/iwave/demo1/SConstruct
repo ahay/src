@@ -52,6 +52,7 @@ for r in range(4):
 
     par = 'iwave%d.par' % r
     data = 'data%d' % r
+    sudata = data + '.su'
     
     Flow(par,[dn,vp,'wavelet.su','hdr.su','demo.par'],
          '''
@@ -59,15 +60,15 @@ for r in range(4):
          echo
          source = ${SOURCES[2]}
          hdrfile  = ${SOURCES[3]}
-         datafile  = %s.su
+         datafile  = %s
          velocity = ${SOURCES[1]}
          density = ${SOURCES[0]} >> $TARGET
-         ''' % data,stdin=0,stdout=-1)
+         ''' % sudata,stdin=0,stdout=-1)
 
-    Flow(data,par,
+    Flow([data,sudata],par,
          '''
          asg par=$SOURCE &&
-         suread < %s.su read=data endian=0
+         suread < ${TARGETS[1]} read=data endian=0
          ''' % data,stdin=0)
 
     Result(data,'grey title="%g-m data" ' % (2.5*j))
