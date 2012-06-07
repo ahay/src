@@ -1,9 +1,9 @@
-#include "su.h"
-#include "segy.h"
-#include "header.h"
-#include "cubic.h"
-#include "parser.h"
-#include "parser_su.h"
+#include <su.h>
+#include <segy.h>
+#include <header.h>
+#include <cubic.h>
+#include <parser.h>
+#include <parser_su.h>
 
 #define DT_TOL 0.001
 

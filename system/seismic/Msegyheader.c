@@ -27,7 +27,7 @@
 int main(int argc, char* argv[])
 {
     int i, i2, n1, nbuf, *buf[SF_NKEYS], buf2[SF_NKEYS];
-    float d1;
+    float o1, d1;
     sf_file in=NULL, keys[SF_NKEYS], out=NULL;
     off_t n2, nleft;
     const char *key;
@@ -43,6 +43,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&d1) &&
 	!sf_getfloat("d1",&d1)) sf_error("Need d1=");
     /* trace sampling */
+    if (!sf_histfloat(in,"o1",&o1) &&
+	!sf_getfloat("o1",&o1)) o1=0;
+    /* trace origin */
 
     n2 = sf_leftsize(in,1);
     sf_putint(out,"n1",SF_NKEYS);
@@ -64,6 +67,12 @@ int main(int argc, char* argv[])
 	    buf[i] = sf_intalloc(nbuf);
 	    for (i2=0; i2 < nbuf; i2++) {
 		buf[i][i2] = (int) (d1*1000000.);
+	    }
+	} else if (0==strcmp(key,"delrt") && o1 != 0) {
+	    keys[i] = NULL;
+	    buf[i] = sf_intalloc(nbuf);
+	    for (i2=0; i2 < nbuf; i2++) {
+		buf[i][i2] = (int) (o1*1000.);
 	    }
 	} else if (NULL != (arg = sf_getstring(key))) {
 	    keys[i] = sf_input(key);

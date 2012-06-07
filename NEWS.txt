@@ -24,6 +24,7 @@ To programs:
 * sfspike now optionally accepts stdin
 * iwave package from Bill Symes and The Rice Inversion Project
 * user/zone: new contributor (Yanadet Sripanich)
+* sfsegyheader creates delrt from o1
 
 ===Bug fixes===
 

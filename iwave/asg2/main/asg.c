@@ -8,17 +8,17 @@
  *                            BEGIN INCLUDES 
  * ============================================================================*/
 
-#include "iwave.h"
-#include "sgn.h"
-#include "trace_term.h"
-#include "pointsrc.h"
-#include "sampler.h"
-#include "parser.h"
-#include "asg_selfdoc.h"
-#include "asg_movie.h"
+#include <iwave.h>
+#include <sgn.h>
+#include <trace_term.h>
+#include <pointsrc.h>
+#include <sampler.h>
+#include <parser.h>
+#include <asg_selfdoc.h>
+#include <asg_movie.h>
 
 #ifdef _OPENMP
-#include "omp.h"
+#include <omp.h>
 #endif
 
 #define NSTR 128
