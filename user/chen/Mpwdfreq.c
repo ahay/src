@@ -7,8 +7,8 @@
 int main(int argc, char*argv[])
 {
 	sf_file out;
-	int n1, nw, n3, i, interp;
-	sf_complex **bc;
+	int n1, nf, n3, i3, interp;
+	sf_complex **buf;
 	float d3, o3, radius;
 	bool iir, opwd;
 
@@ -20,7 +20,7 @@ int main(int argc, char*argv[])
     /* 0: maxflat; 1: lagrange */
 	if(!sf_getint("n1", &n1)) n1=50;
 	/* samples in frequency domain between (0:f_c] */
-	if(!sf_getint("nw", &nw)) nw=1;
+	if(!sf_getint("nf", &nf)) nf=1;
 	/* order of PWD */
 	if(!sf_getfloat("o3", &o3)) o3=20;
 	/* first dip angle */
@@ -39,7 +39,7 @@ int main(int argc, char*argv[])
 	sf_putfloat(out, "d3", d3);
 	sf_putfloat(out, "o3", o3);
 
-	bc = sf_complexalloc2(2*n1+1, 2*n1+1);
+	buf = sf_complexalloc2(2*n1+1, 2*n1+1);
 	sf_settype(out,SF_COMPLEX);
 
 	if(!sf_getbool("iir", &iir)) iir=false;
@@ -52,24 +52,24 @@ int main(int argc, char*argv[])
 
 	if(opwd==true)
 	{
-		opwd_init(interp, nw, 0, 0, radius);
-		for(i=0; i<n3; i++)
+		opwd_init(interp, nf, 0, 0, radius);
+		for(i3=0; i3<n3; i3++)
 		{
-			opwd_freq((d3*i+o3)/180*SF_PI, n1, bc, iir);
-			sf_complexwrite(bc[0], (2*n1+1)*(2*n1+1), out);
+			opwd_freq((d3*i3+o3)/180*SF_PI, n1, buf, iir);
+			sf_complexwrite(buf[0], (2*n1+1)*(2*n1+1), out);
 		}
 		opwd_close();
 	}else{
-		lpwd_init(interp, nw, 0, 0);
-		for(i=0; i<n3; i++)
+		lpwd_init(interp, nf, 0, 0);
+		for(i3=0; i3<n3; i3++)
 		{
-			lpwd_freq((d3*i+o3)/180*SF_PI, n1, bc, iir);
-			sf_complexwrite(bc[0], (2*n1+1)*(2*n1+1), out);
+			lpwd_freq((d3*i3+o3)/180*SF_PI, n1, buf, iir);
+			sf_complexwrite(buf[0], (2*n1+1)*(2*n1+1), out);
 		}
 		lpwd_close();
 	}
-	free(bc[0]);
-	free(bc);
+	free(buf[0]);
+	free(buf);
 
 	return 0;
 }

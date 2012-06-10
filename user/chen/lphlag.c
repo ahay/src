@@ -3,100 +3,77 @@
 #include <rsf.h>
 #include "poly.h"
 
-typedef struct tag_lphlag
+
+float **lphlag(int n)
+/*< Linear phase filter by noncausal Lagrange approximation
+  [	0.0   0.5p   0.5p^2    Z
+	1.0   0.0p  -1.0p^2	 
+	0.0  -0.5p   0.5p^2    Z^{-1} ]
+ >*/
 {
-	int n;
-	int n0;
-	float **r;
-}lphlag;
+	float **p;
+	int i1, i2, m;
 
-void * lphlag_init(int n, bool causal)
-/*< initiliaze >*/
-{
-	lphlag *p;
-	int m, m1, i1, i2;
-
-	p = (lphlag*) sf_alloc(1, sizeof(lphlag));
-	p->n = n;
-
-	if(causal)	m1 = 0;
-	else	m1 = -n;
-
-	m = n -m1;
-	p->r = sf_floatalloc2(m+1, m+1);
-	for(i1=m1; i1<=n; i1++)
+	m = 2*n;
+	p = sf_floatalloc2(m+1, m+1);
+	for(i1=-n; i1<=n; i1++)
 	{
-		p->r[n-i1][m] = 1.0;
-		for(i2=m1; i2<i1; i2++)
+		p[n-i1][m] = 1.0;
+		for(i2=-n; i2<i1; i2++)
 		{
-			p->r[n-i1][m] /= (i1-i2);
-			p->r[n-i1][i2-m1] = i2;
+			p[n-i1][m] /= (i1-i2);
+			p[n-i1][i2+n] = i2;
 		}
 		for(i2=i1+1; i2<=n; i2++)
 		{
-			p->r[n-i1][m] /= (i1-i2);
-			p->r[n-i1][i2-m1-1] = i2;
+			p[n-i1][m] /= (i1-i2);
+			p[n-i1][i2+n-1] = i2;
 		}
+		poly(m, p[n-i1]);
 	}
-	p->n0 = m1;
 	return p;
 }
 
-void lphlag_filt(void *h, float delay, float *out)
+
+void lphlag_filt(int n, float **c, float delay, float *out)
 /*< filter >*/
 {
-	lphlag *p;
-	int m, i;
+	int i;
 
-	p = (lphlag*) h;
-
-	m = p->n-p->n0;
-	for(i=0; i<=m; i++)
-		out[i] = creal(plyr_val(m, p->r[i], delay));	
+	for(i=0; i<=2*n; i++)
+		out[i] = crealf(poly_val(2*n, c[i], delay));	
 }
 
 
-void lphlag_dfilt(void *h, float delay, float *out)
+void lphlag_dfilt(int n, float **c, float delay, float *out)
 /*< derivative filter >*/
 {
-	lphlag *p;
-	int m, i;
+	int i;
 
-	p = (lphlag*) h;
-
-	m = p->n-p->n0;
-	for(i=0; i<=m; i++)
-		out[i] = creal(plyr_dval(m, p->r[i], delay));	
+	for(i=0; i<=2*n; i++)
+		out[i] = crealf(poly_dval(2*n, c[i], delay));	
 }
 
 
-void lphlag_freq(void *h, float delay, int nk, sf_complex *out)
+void lphlag_freq(int n, float **c, float delay, int n1, sf_complex *out)
 /*< frequency response >*/
 {
-	lphlag *p;
-	int m, i;
-	float *r;
+	int i1;
+	float *b1;
+	sf_complex c0, c1;
 
-	p = (lphlag*) h;
-	m = p->n-p->n0;
+	b1 = sf_floatalloc(2*n+1);
+	lphlag_filt(n, c, delay, b1);
 
-	r = sf_floatalloc(m+1);
-	lphlag_filt(h, delay, r);
+	for(i1=-n1; i1<=n1; i1++)
+	{
+		c0 = cexpf(sf_cmplx(0., SF_PI*i1*n/n1));
+		c1 = cexpf(sf_cmplx(0., -SF_PI*i1/n1));
+		out[i1+n1] = c0*poly_val(2*n, b1, c1);
+	}
 
-	for(i=-nk; i<=nk; i++)
-		out[i+nk] = cexpf(sf_cmplx(0., -2.0*SF_PI*i*p->n0/nk)) *
-			poly_val(m, r, cexpf(sf_cmplx(0.,-2.0*SF_PI*i/nk)));
-
-	free(r);
+	free(b1);
 }
 
-void lphlag_close(void *h)
-/*< release memory >*/
-{
-	lphlag *p;
-	p = (lphlag*) h;
-	free(p->r[0]);
-	free(p->r);
-	free(p);
-}
+
 

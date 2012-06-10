@@ -3,6 +3,35 @@
 
 #include <rsf.h>
 
+static double prod_n_m(double *r, int n, int m)
+{
+	if( n<m || n<=0) return 0.0;
+	if( m == 0 ) return 1.0;
+	if( m == 1 ) 
+		return (r[0]+prod_n_m(r+1, n-1, 1));
+	return (r[0]*prod_n_m(r+1, n-1, m-1) +
+			prod_n_m(r+1, n-1, m));
+}
+
+void poly(int n, float *r)
+/*< polynomial root to coefficients 
+	[1.0, 2.0, 1.0] => [2.0, 3.0, 1.0]
+>*/
+{
+	double *p;
+	int i1;
+
+	p = sf_alloc(n, sizeof(double));
+	for(i1=0; i1<n; i1++)	p[i1] = -r[i1];
+
+	for(i1=0; i1<=n; i1++)
+	{
+		r[i1]=r[n]*prod_n_m(p, n, n-i1);
+	}
+
+	free(p);
+}
+
 sf_complex poly_dval(int n, float *c, sf_complex x)
 /*< polynomial derivative value >*/
 {
