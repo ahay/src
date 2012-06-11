@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int dim, i, j, n[3], rect[3], it, nt, order, nt0, nx0;
     int iter, niter, cgiter, *f0, *m0=NULL;
     float d[3], o[3], dt0, dx0, ot0, ox0, eps, tol, *p=NULL, *p0=NULL, thres;
-    float *vd, *vdt, *vdx, *s, *t0, *x0, *ds, *rhs, *rhs0, error0, error;
+    float *vd, *vdt, *vdx, *s, *t0, *x0, *ds, *rhs, *rhs0, *rhs1=NULL, error0, error;
     char key[6];
     sf_file in, out, dix, t_0=NULL, x_0=NULL, f_0=NULL, grad=NULL, cost=NULL, mini=NULL, prec=NULL;
 
@@ -213,6 +213,8 @@ int main(int argc, char* argv[])
 	p0 = sf_floatalloc(nt);
 	sf_floatread(p0,nt,prec);
 	sf_fileclose(prec);
+
+	rhs1 = sf_floatalloc(nt);
     }
 
     /* fastmarch initialization */
@@ -240,13 +242,18 @@ int main(int argc, char* argv[])
 	    rhs[it] -= rhs0[it];
     }
 
-    error0 = cblas_snrm2(nt,rhs,1);
+    if (p0 == NULL) {
+	error0 = cblas_snrm2(nt,rhs,1);
+    } else {
+	for (it=0; it < nt; it++) rhs1[it] = p0[it]*rhs[it];
+	error0 = cblas_snrm2(nt,rhs1,1);
+    }
 
     /* write optional outputs */    
     if (NULL!=t_0)  sf_floatwrite(t0,nt,t_0);
     if (NULL!=x_0)  sf_floatwrite(x0,nt,x_0);
     if (NULL!=f_0)  sf_intwrite(f0,nt,f_0);
-    if (NULL!=cost) sf_floatwrite(rhs,nt,cost);    
+    if (NULL!=cost) sf_floatwrite(rhs,nt,cost);
 
     sf_warning("Start conversion:");
 
@@ -288,6 +295,13 @@ int main(int argc, char* argv[])
 		rhs[it] -= rhs0[it];
 	}
 	
+	if (p0 == NULL) {
+	    error = cblas_snrm2(nt,rhs,1);
+	} else {
+	    for (it=0; it < nt; it++) rhs1[it] = p0[it]*rhs[it];
+	    error = cblas_snrm2(nt,rhs1,1);
+	}
+
 	error = cblas_snrm2(nt,rhs,1);
 
 	/* write optional outputs */    

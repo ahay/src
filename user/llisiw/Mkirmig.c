@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
 {
     char *unit, *what, *type;
     bool cig;
-    int nt, nx, ny, ns, nh, nz, nzx, ix, ih, is, ist, iht;
+    int nt, nx, ny, ns, nh, nz, nzx, ix, iz, ih, is, ist, iht;
     float *trace, **out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
-    float ds, s0, x0, y0, dy, s, h,h0,dh,dx,ti,t0,t1,t2,dt,z0,dz,aal, tx;
+    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz, aal, tx, aper, thres;
     sf_file inp, mig, tbl, der;
 
     sf_init (argc,argv);
@@ -63,8 +63,15 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(tbl,"o3",&y0)) sf_error("No o3= in table");
     if (!sf_histfloat(tbl,"d3",&dy)) sf_error("No d3= in table");
 
+    if (!sf_getfloat("aperture",&aper)) aper=90.;
+    /* migration aperture (in degree) */
+
     if (!sf_getfloat("antialias",&aal)) aal=1.0;
     /* antialiasing */
+    
+    if (!sf_getfloat("threshold",&thres)) thres=0.;
+    /* source region thresholding */
+
     if (!sf_getbool("cig",&cig)) cig=false;
     /* y - output common offset gathers */
 
@@ -183,16 +190,27 @@ int main(int argc, char* argv[])
 	    sf_floatread (trace,nt,inp);
 	    doubint(nt,trace);
 
-	    /* Add aperture limitation later */
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) { /* image */
+		    /* aperture (cone angle) */
+		    if (h >= 0.) {
+			if (atanf((s-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+			if (atanf((x0+ix*dx-s-h)/(iz*dz))*180./SF_PI > aper) continue;
+		    } else {
+			if (atanf((s+h-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+			if (atanf((x0+ix*dx-s)/(iz*dz))*180./SF_PI > aper) continue;
+		    }
 
-	    for (ix=0; ix < nzx; ix++) { /* image */
-		t1 = stable[ix];
-		t2 = rtable[ix];
-		ti = t1+t2;
-		
-		tx = SF_MAX(fabsf(stablex[ix]*ds),fabsf(rtablex[ix]*dh));
-		pick(true,ti,tx*aal,out[cig ? ih : 0]+ix,trace);
-	    } 
+		    t1 = stable[ix*nz+iz];
+		    t2 = rtable[ix*nz+iz];
+		    ti = t1+t2;
+		    
+		    if (ti < thres) continue;
+
+		    tx = SF_MAX(fabsf(stablex[ix*nz+iz]*ds),fabsf(rtablex[ix*nz+iz]*dh));
+		    pick(true,ti,tx*aal,out[cig ? ih : 0]+ix*nz+iz,trace);
+		} 
+	    }
 	}
         if (!cig) 
             sf_floatwrite(out[0],(off_t)nzx,mig);

@@ -7,7 +7,7 @@ kirmig kirmig0 drayinte lineiko
 testanal gradient cconst cgconst
 fatomo fatomoomp mkrcv cpxeikonal
 drays dsreiko dsrtomo eikods tinterp
-tdconvert irays t2diter kirdat0
+tdconvert irays t2diter kirdat0 kirdat
 '''
 
 try:  # distributed version
