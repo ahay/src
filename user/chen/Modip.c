@@ -3,6 +3,7 @@
 #include <rsf.h>
 #include "ldip.h"
 #include "ldip1.h"
+#include "ldip2.h"
 #include "odip.h"
 #include "odip1.h"
 #include "odip2.h"
@@ -74,6 +75,9 @@ int main(int argc, char*argv[])
 	case 1:
 		ldip1_init(nf, interp, n1, n2, liter, verb);
 		break;
+	case 2:
+		ldip2_init(nf, interp, n1, n2, liter, verb);
+		break;
 	default:
 		ldip_init(nf, interp, n1, n2, rect, liter, verb);
 	}
@@ -99,6 +103,9 @@ int main(int argc, char*argv[])
 		case 1:
 			ldip1(wav, dip, niter);
 			break;
+		case 2:
+			ldip2(wav, dip, niter);
+			break;
 		default:
 			ldip(wav, dip, niter);
 		}
@@ -122,6 +129,9 @@ int main(int argc, char*argv[])
 	{
 	case 1:
 		ldip1_close();
+		break;
+	case 2:
+		ldip2_close();
 		break;
 	default:
 		ldip_close();
