@@ -83,7 +83,6 @@ int main (int argc, char* argv[])
         sf_floatread(uo,arr_size,in);
  
         for (i1=0; i1<arr_size; i1++){
-            
             sum=0.0;
             klo=i1-m ; if(klo<0) klo=0;
             khi=i1+m ; if(khi>=arr_size) khi=arr_size;
@@ -109,7 +108,6 @@ int main (int argc, char* argv[])
             }else {
                 der[i1]=uo[i1];
             }                                                             
-            
         }
         sf_floatwrite(der,arr_size,out);
     }

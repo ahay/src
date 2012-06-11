@@ -3,7 +3,8 @@ import os, sys
 try:
     import bldutil
     glob_build = True # scons command launched in RSFSRC
-    srcroot = '../..' # cwd is RSFSRC/build/user/psava
+    srcroot = os.environ.get('RSFSRC', '../..','./')
+    #srcroot = '../..'  # cwd is RSFSRC/build/user/psava
     Import('env bindir pkgdir')
 except:
     glob_build = False # scons command launched in the local directory
@@ -22,5 +23,6 @@ despike2-ed
 despike1-ed
 vel1d
 picks2rsf
+adjsrc_mva
 '''
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
