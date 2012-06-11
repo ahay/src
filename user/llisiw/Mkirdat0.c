@@ -19,12 +19,17 @@
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "kirdat.h"
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int it, nt, ix, nx, ng, left, right, ic, aper, shift, c, cc;
-    float datum, length, t0, dt, x0, dx, g0, dg, dist, tau, delta=0.;
+    float datum, length, t0, dt, x0, dx, g0, dg, dist, tau, delta;
     float **tr_in, **tr_out, **table;
     sf_file in, out, green;
 
@@ -32,6 +37,9 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
     
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
     if (!sf_getfloat("datum",&datum)) sf_error("Need datum=");
     /* datum depth */
 
@@ -71,36 +79,41 @@ int main(int argc, char* argv[])
     /* initialize */
     filt_init(dt,length);
 
+#ifdef _OPENMP
+#pragma omp parallel for private(c,left,right,ic,cc,tau,dist,shift,it,delta)
+#endif
     for (ix=0; ix < nx; ix++) {
-
+	if (verb) sf_warning("Processing grid %d of %d.",ix+1,nx);
+	
 	c = (x0+ix*dx-g0)/dg+0.5;
 	if (c < 0 || c > ng-1) sf_error("Traveltime table too small.");
-
+	
 	/* aperture */
 	left  = (ix-aper < 0)?    0:    ix-aper;
 	right = (ix+aper > nx-1)? nx-1: ix+aper;
-
+	
 	for (ic=left; ic <= right; ic++) {
 	    
 	    cc = (x0+ic*dx-g0)/dg+0.5;
 	    if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
-
+	    
 	    /* time delay */
 	    tau = 2.*table[cc][c];
-
+	    
 	    /* distance */
 	    dist = datum*datum+(ic-ix)*dx*(ic-ix)*dx;
-
+	    
 	    /* filter (tau dependent) */
 	    filt_set(tau);
-
+	    
 	    shift = 0;
+	    delta = 0.;
 	    for (it=0; it < nt; it++) {
 		if (((float)it)*dt < tau) 
 		    continue;
 		else if (shift == 0)
 		    delta = (((float)it*dt)-tau)/dt;
-
+		
 		tr_out[ix][it] += 1./SF_PI
 		    *dx*datum*tau/dist
 		    *pick(delta,tr_in[ic],shift);
@@ -108,7 +121,7 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-
+    
     /* write output */
     sf_floatwrite(tr_out[0],nt*nx,out);
 

@@ -19,45 +19,68 @@
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 static float dt;
-static int nsam;
-static float* filt;
+static int nsam, mts;
+static float** filt;
 
 void filt_init(float dt0 /* time sampling */,
 	       float length /* filter length */)
 /*< initialize filter >*/
 {
+    int mts;
+
     dt = dt0;
     nsam = (int)(length/dt)+2;
-    filt = sf_floatalloc(nsam);
+
+#ifdef _OPENMP
+    mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
+
+    filt = sf_floatalloc2(nsam,mts);
 }
 
 void filt_close()
 /*< close >*/
 {
+    int its;
+
+    for (its=0; its < mts; its++) free(filt[its]);
+
     free(filt);
 }
 
 void filt_set(float tau /* time delay */)
 /*< set up filter >*/
 {
-    int isam;
+    int its, isam;
+
+#ifdef _OPENMP
+    its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
 
     /* value */
-    filt[0] = 0.;
+    filt[its][0] = 0.;
 
     for (isam=1; isam < nsam; isam++) {
-	filt[isam] = sqrtf(powf((tau+isam*dt)/tau,2.)-1.);
+	filt[its][isam] = sqrtf(powf((tau+isam*dt)/tau,2.)-1.);
     }
 
     /* first derivative */
     for (isam=0; isam < nsam-1; isam++) {
-	filt[isam] = filt[isam+1]-filt[isam];
+	filt[its][isam] = filt[its][isam+1]-filt[its][isam];
     }
 
     /* second derivative */
     for (isam=nsam-2; isam > 0; isam--) {
-	filt[isam] = filt[isam]-filt[isam-1];
+	filt[its][isam] = filt[its][isam]-filt[its][isam-1];
     }
 }
 
@@ -67,11 +90,17 @@ float pick(float delta /* sample position */,
 /*< filter input trace for one output sample >*/
 {
     float value=0.;
-    int isam;    
+    int its, isam;    
+
+#ifdef _OPENMP
+    its = omp_get_thread_num();
+#else
+    its = 0;
+#endif
 
     for (isam=0; (isam < nsam-1) && (shift-isam >= 0); isam++) {
 	value += ((1.-delta)*trace[shift-isam]+delta*trace[shift-isam+1])
-	    *filt[isam]/dt;
+	    *filt[its][isam]/dt;
     }
 
     return value;
