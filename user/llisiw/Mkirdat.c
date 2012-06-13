@@ -29,11 +29,11 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int it, nt, ih, nh, is, ns, ng, left, right, ic, aper, shift, c, cc, hh;
-    int ir, nr, sleft, sright;
+    int ir, nr, sleft, sright, tap;
     float datum, length, t0, dt, h0, dh, s0, ds, g0, dg, dist, tau, delta;
-    float dr, s, h;
+    float dr, s, h, coef;
     float ***tr_in, ***tr_out, **table;
-    sf_file in, out, green;
+    sf_file in, out, green, interm;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -46,7 +46,10 @@ int main(int argc, char* argv[])
     /* datum depth */
 
     if (!sf_getint("aperture",&aper)) aper=50;
-    /* aperture (number of near traces) */
+    /* aperture (number of traces) */
+
+    if (!sf_getint("taper",&tap)) tap=10;
+    /* taper (number of traces) */
 
     if (!sf_getfloat("length",&length)) length=0.025;
     /* filter length (in seconds) */
@@ -72,7 +75,7 @@ int main(int argc, char* argv[])
     tr_out = sf_floatalloc3(nt,nh,ns);
 
     /* read Green's function (traveltime table) */
-    green = sf_input("table");
+    green = sf_input("green");
 
     if (!sf_histint(green,"n1",&ng)) sf_error("No ng=");
     if (!sf_histfloat(green,"o1",&g0)) sf_error("No g0=");
@@ -82,12 +85,19 @@ int main(int argc, char* argv[])
     sf_floatread(table[0],ng*ng,green);
     sf_fileclose(green);
 
+    /* output intermediate traces */
+    if (NULL != sf_getstring("interm")) {
+	interm = sf_output("interm");
+    } else {
+	interm = NULL;
+    }
+
     /* initialize */
     filt_init(dt,length);
 
     /* common-shot gather */
 #ifdef _OPENMP
-#pragma omp parallel for private(c,left,right,ic,cc,tau,dist,shift,it,delta)
+#pragma omp parallel for private(ih,c,left,right,ic,cc,coef,tau,dist,shift,it,delta)
 #endif
     for (is=0; is < ns; is++) {
 	if (verb) sf_warning("Processing common-shot gather %d of %d.",is+1,ns);
@@ -106,6 +116,11 @@ int main(int argc, char* argv[])
 		cc = (s0+is*ds+h0+ic*dh-g0)/dg+0.5;
 		if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
 
+		/* taper coefficient */
+		coef = 1.;
+		coef *= (ic-left  >= tap)? 1.: cosf((1.-(ic-left)/tap)*SF_PI/2.);
+		coef *= (right-ic >= tap)? 1.: cosf((1.-(right-ic)/tap)*SF_PI/2.);
+
 		/* time delay */
 		tau = table[cc][c];
 
@@ -123,7 +138,7 @@ int main(int argc, char* argv[])
 		    else if (shift == 0)
 			delta = (((float)it*dt)-tau)/dt;
 
-		    tr_out[is][ih][it] += 1./SF_PI
+		    tr_out[is][ih][it] += coef/SF_PI
 			*dh*datum*tau/dist
 			*pick(delta,tr_in[is][ic],shift);
 		    shift++;
@@ -132,6 +147,8 @@ int main(int argc, char* argv[])
 
 	}
     }
+
+    if (NULL != interm) sf_floatwrite(tr_out[0][0],nt*nh*ns,interm);
 
     /* zero input */
     for (is=0; is < ns; is++) {
@@ -143,21 +160,22 @@ int main(int argc, char* argv[])
     }
 
     /* acquisition */
-    s = (ns-1)*ds;
-    h = (nh-1)*dh;
+    s = fabsf((ns-1)*ds);
+    h = fabsf((nh-1)*dh);
 
     dr = (fabsf(ds)>=fabsf(dh))? fabsf(dh): fabsf(ds);
-    nr = (fabsf(s)+fabsf(h))/dr+1.5;
+    nr = (s+h)/dr+1.5;
 
     /* common-receiver gather */
 #ifdef _OPENMP
-#pragma omp parallel for private(sleft,sright,is,c,ih,left,right,ic,cc,hh,tau,dist,shift,it,delta)
+#pragma omp parallel for private(sleft,sright,is,c,ih,left,right,ic,cc,hh,coef,tau,dist,shift,it,delta)
 #endif
     for (ir=0; ir < nr; ir++) {
 	if (verb) sf_warning("Processing common-receiver gather %d of %d.",ir+1,nr);
 
-	sleft  = (ir*dr+((ds<=0.)?1.:0.)*s+((dh<=0.)?1.:-1.)*h)/ds+0.5;
-	sright = (ir*dr+((ds<=0.)?1.:0.)*s)/ds+0.5;
+	/* source receiver reciprocity */
+	sleft  = (ir*dr+((ds<=0.)?-1.:0.)*s+((ds<=0.)?0.:-1.)*h)/ds+0.5;
+	sright = (ir*dr+((ds<=0.)?-1.:0.)*s+((ds<=0.)?-1.:0.)*h)/ds+0.5;
 
 	if (sleft < 0) sleft = 0;
 	if (sright > ns-1) sright = ns-1;
@@ -167,7 +185,7 @@ int main(int argc, char* argv[])
 	    c = (s0+is*ds-g0)/dg+0.5;
 	    if (c < 0 || c > ng-1) sf_error("Traveltime table too small.");
 
-	    ih = (ir*dr-is*ds+((ds<=0.)?1.:0.)*s+((dh<=0.)?1.:0.)*h)/dh+0.5;
+	    ih = (ir*dr-is*ds+((ds<=0.)?-1.:0.)*s+((dh<=0.)?-1.:0.)*h)/dh+0.5;
 	    
 	    /* aperture */
 	    left  = (is-aper < sleft)?  sleft:  is-aper;
@@ -178,7 +196,12 @@ int main(int argc, char* argv[])
 		cc = (s0+ic*ds-g0)/dg+0.5;
 		if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
 
-		hh = (ir*dr-ic*ds+((ds<=0.)?1.:0.)*s+((dh<=0.)?1.:0.)*h)/dh+0.5;
+		hh = (ir*dr-ic*ds+((ds<=0.)?-1.:0.)*s+((dh<=0.)?-1.:0.)*h)/dh+0.5;
+
+		/* taper coefficient */
+		coef = 1.;
+		coef *= (ic-left  >= tap)? 1.: cosf((1.-(ic-left)/tap)*SF_PI/2.);
+		coef *= (right-ic >= tap)? 1.: cosf((1.-(right-ic)/tap)*SF_PI/2.);
 		
 		/* time delay */
 		tau = table[cc][c];
@@ -196,7 +219,7 @@ int main(int argc, char* argv[])
 		    else if (shift == 0)
 			delta = (((float)it*dt)-tau)/dt;
 		    
-		    tr_in[is][ih][it] += 1./SF_PI
+		    tr_in[is][ih][it] += coef/SF_PI
 			*ds*datum*tau/dist
 			*pick(delta,tr_out[ic][hh],shift);
 		    shift++;

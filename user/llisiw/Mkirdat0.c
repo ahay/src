@@ -28,8 +28,8 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int it, nt, ix, nx, ng, left, right, ic, aper, shift, c, cc;
-    float datum, length, t0, dt, x0, dx, g0, dg, dist, tau, delta;
+    int it, nt, ix, nx, ng, left, right, ic, aper, shift, c, cc, tap;
+    float datum, length, t0, dt, x0, dx, g0, dg, dist, tau, delta, coef;
     float **tr_in, **tr_out, **table;
     sf_file in, out, green;
 
@@ -44,7 +44,10 @@ int main(int argc, char* argv[])
     /* datum depth */
 
     if (!sf_getint("aperture",&aper)) aper=50;
-    /* aperture (number of near traces) */
+    /* aperture (number of traces) */
+
+    if (!sf_getint("taper",&tap)) tap=10;
+    /* taper (number of traces) */
 
     if (!sf_getfloat("length",&length)) length=0.025;
     /* filter length (in seconds) */
@@ -66,7 +69,7 @@ int main(int argc, char* argv[])
     tr_out = sf_floatalloc2(nt,nx);
 
     /* read Green's function (traveltime table) */
-    green = sf_input("table");
+    green = sf_input("green");
 
     if (!sf_histint(green,"n1",&ng)) sf_error("No ng=");
     if (!sf_histfloat(green,"o1",&g0)) sf_error("No g0=");
@@ -80,7 +83,7 @@ int main(int argc, char* argv[])
     filt_init(dt,length);
 
 #ifdef _OPENMP
-#pragma omp parallel for private(c,left,right,ic,cc,tau,dist,shift,it,delta)
+#pragma omp parallel for private(c,left,right,ic,cc,coef,tau,dist,shift,it,delta)
 #endif
     for (ix=0; ix < nx; ix++) {
 	if (verb) sf_warning("Processing grid %d of %d.",ix+1,nx);
@@ -97,6 +100,11 @@ int main(int argc, char* argv[])
 	    cc = (x0+ic*dx-g0)/dg+0.5;
 	    if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
 	    
+	    /* taper coefficient */
+	    coef = 1.;
+	    coef *= (ic-left  >= tap)? 1.: (ic-left)/tap;
+	    coef *= (right-ic >= tap)? 1.: (right-ic)/tap;
+
 	    /* time delay */
 	    tau = 2.*table[cc][c];
 	    
@@ -114,7 +122,7 @@ int main(int argc, char* argv[])
 		else if (shift == 0)
 		    delta = (((float)it*dt)-tau)/dt;
 		
-		tr_out[ix][it] += 1./SF_PI
+		tr_out[ix][it] += coef/SF_PI
 		    *dx*datum*tau/dist
 		    *pick(delta,tr_in[ic],shift);
 		shift++;
