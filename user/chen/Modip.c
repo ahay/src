@@ -64,7 +64,7 @@ int main(int argc, char*argv[])
 		odip1_init(radius, nf, interp, n1, n2, liter, verb);
 		break;
 	case 2:
-		odip2_init(radius, nf, interp, n1, n2, liter, verb);
+		odip2_init(nf, interp, n1, n2, liter, verb);
 		break;
 	default:
 		odip_init(radius, nf, interp, n1, n2, rect, liter, verb);

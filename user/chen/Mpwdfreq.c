@@ -30,11 +30,11 @@ int main(int argc, char*argv[])
 	/* number dip angle */
 
 	sf_putint(out, "n1", 2*n1+1);
-	sf_putfloat(out, "o1", -1.0);
-	sf_putfloat(out, "d1", 1.0/n1);
+	sf_putfloat(out, "o1", -0.5);
+	sf_putfloat(out, "d1", 0.5/n1);
 	sf_putint(out, "n2", 2*n1+1);
-	sf_putfloat(out, "o2", -1.0);
-	sf_putfloat(out, "d2", 1.0/n1);
+	sf_putfloat(out, "o2", -0.5);
+	sf_putfloat(out, "d2", 0.5/n1);
 	sf_putint(out, "n3", n3);
 	sf_putfloat(out, "d3", d3);
 	sf_putfloat(out, "o3", o3);

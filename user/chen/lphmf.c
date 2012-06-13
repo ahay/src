@@ -6,6 +6,9 @@
 
 float **lphmf(int n)
 /*< Linear phase filter by noncausal maxflat approximation 
+           B(Z)
+  H(Z) = --------
+          B(1/Z)
   [	1.0   1.5p   0.5p^2    Z
 	4.0   0.0p  -1.0p^2	 
 	1.0  -1.5p   0.5p^2    Z^{-1} ]

@@ -81,14 +81,19 @@ void lpwd(float **in, float **out, float **p, bool der)
 		}
 		break;
 	case 2:
+		if(der) 
+			for(i1=0; i1<=2*nf; i1++) b2[i1] = 0.0;
+		else
+			for(i1=0; i1<=2*nf; i1++) b2[i1] = c[i1][0];
 		for(i2=0; i2<n2-1; i2++)
 		for(i1=nf; i1<n1-nf; i1++)
 		{
 			if(der) lphbsp_dfilt(nf, c, p[i2][i1], b1);
 			else lphbsp_filt(nf, c, p[i2][i1], b1);
-			out[i2][i1] = in[i2][i1];
+			out[i2][i1] = 0.0;
 			for(j1=-nf; j1<=nf; j1++)
-				out[i2][i1] -= b1[j1+nf]*in[i2+1][i1-j1];
+				out[i2][i1] += b2[j1+nf]*in[i2][i1-j1] - 
+					b1[j1+nf]*in[i2+1][i1-j1];
 		}
 		break;
 	default:
@@ -108,7 +113,7 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 /*< frequency response of line-interpolating PWD >*/
 {
 	int i1, i2, j1;
-	sf_complex c1, c2, z2;
+	sf_complex c1, c2, c3;
 
 	switch(itp)
 	{
@@ -117,6 +122,8 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 		break;
 	case 2:
 		lphbsp_filt(nf, c, tan(dip), b1);
+		for(j1=0; j1<=2*nf; j1++)
+			b2[j1] = c[j1][0];
 		break;
 	default:
 		lphmf_filt(nf, c, tan(dip), b1);
@@ -126,10 +133,19 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 	switch(itp)
 	{
 	case 1:
-	case 2:
 		for(j1=-nf, c1=0.0; j1<=nf; j1++)
-			c1 += b1[j1+nf]*cexpf(sf_cmplx(0.,-2*SF_PI*j1*i1/nk));
-		c2 = 1.0 - cexpf(sf_cmplx(0.,2*SF_PI*i2/nk))*c1;
+			c1 += b1[j1+nf]*cexpf(sf_cmplx(0.,-SF_PI*j1*i1/nk));
+		c2 = 1.0 - cexpf(sf_cmplx(0.,SF_PI*i2/nk))*c1;
+		out[i2+nk][i1+nk] = c2;
+		break;
+	case 2:
+		for(j1=-nf, c1=0.0, c2=0.0; j1<=nf; j1++)
+		{
+			c3 = cexpf(sf_cmplx(0., -SF_PI*j1*i1/nk));
+			c1 += b1[j1+nf]*c1;
+			c2 += b2[j1+nf]*c2;
+		}
+		c2 = 1.0 - cexpf(sf_cmplx(0., SF_PI*i2/nk))*c1/c2;
 		out[i2+nk][i1+nk] = c2;
 		break;
 	default:
@@ -139,15 +155,15 @@ void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 		{
 			for(j1=-nf; j1<=nf; j1++)
 			{
-				c1 += b1[j1+nf]*cexpf(sf_cmplx(0.,2*SF_PI*j1*i1/nk));
-				c2 += b1[j1+nf]*cexpf(sf_cmplx(0.,-2*SF_PI*j1*i1/nk));
+				c1 += b1[j1+nf]*cexpf(sf_cmplx(0.,SF_PI*j1*i1/nk));
+				c2 += b1[j1+nf]*cexpf(sf_cmplx(0.,-SF_PI*j1*i1/nk));
 			}
-			out[i2+nk][i1+nk] = 1-c1/c2*cexpf(sf_cmplx(0.,-2*SF_PI*i2/nk));
+			out[i2+nk][i1+nk] = 1-c1/c2*cexpf(sf_cmplx(0.,-SF_PI*i2/nk));
 		}else{
 			for(j1=-nf; j1<=nf; j1++)
-				c1 += b1[j1+nf]*(cexpf(sf_cmplx(0.,2*SF_PI*j1*i1/nk))-
-					cexpf(sf_cmplx(0., -2*SF_PI*j1*i1/nk))*
-					cexpf(sf_cmplx(0., 2*SF_PI*i2/nk)));
+				c1 += b1[j1+nf]*(cexpf(sf_cmplx(0.,SF_PI*j1*i1/nk))-
+					cexpf(sf_cmplx(0., -SF_PI*j1*i1/nk))*
+					cexpf(sf_cmplx(0., SF_PI*i2/nk)));
 			out[i2+nk][i1+nk] = c1;
 		}
 		break;

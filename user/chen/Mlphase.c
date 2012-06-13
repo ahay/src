@@ -32,7 +32,7 @@ int main(int argc, char*argv[])
 
 	sf_putint(out, "n1", n1);
 	sf_putfloat(out, "o1", 0.0);
-	sf_putfloat(out, "d1", 1.0/(n1-1));
+	sf_putfloat(out, "d1", 0.5/(n1-1));
 	sf_putint(out, "n2", n2);
 	sf_putfloat(out, "o2", o2);
 	sf_putfloat(out, "d2", d2);

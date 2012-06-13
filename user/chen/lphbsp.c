@@ -67,17 +67,21 @@ void lphbsp_freq(int n, float **c, float delay, int n1, sf_complex *out)
 /*< frequency response >*/
 {
 	int i1;
-	float *b1;
+	float *b1, *b2;
 	sf_complex c0, c1;
 
 	b1 = sf_floatalloc(2*n+1);
+	b2 = sf_floatalloc(2*n+1);
 	lphbsp_filt(n, c, delay, b1);
+
+	for(i1=0; i1<=2*n; i1++) 
+		b2[i1] = c[i1][0];
 
 	for(i1=-n1; i1<=n1; i1++)
 	{
 		c0 = cexpf(sf_cmplx(0., SF_PI*i1*n/n1));
 		c1 = cexpf(sf_cmplx(0., -SF_PI*i1/n1));
-		out[i1+n1] = c0*poly_val(2*n, b1, c1);
+		out[i1+n1] = poly_val(2*n, b1, c1)/poly_val(2*n, b2, c1);
 	}
 
 	free(b1);
