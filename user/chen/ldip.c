@@ -56,8 +56,8 @@ void ldip(float **in, float **dip, int nit)
 	for (it=0; it<nit; it++)
 	{
 		eta=1.0/(1.0+it*it);
-		lpwd(in, u1, dip, false);
-		lpwd(in, u2, dip, true);
+		lpwd(in, u1, dip);
+		lpwdd(in, u2, dip);
 
 		for(i1=0, norm=0.0; i1<n1*n2; i1++)
 			norm += (u2[0][i1]*u2[0][i1]);

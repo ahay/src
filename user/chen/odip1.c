@@ -57,8 +57,8 @@ void odip1(float **in, float **dip, int nit)
 	for (it=0; it<nit; it++)
 	{
 		eta=1.0/(1.0+it*it);	
-		opwd(in, u1, dip, false);
-		opwd(in, u2, dip, true);
+		opwd(in, u1, dip);
+		opwdd(in, u2, dip);
 
 		for(i1=0; i1<n1*n2; i1++)
 		{

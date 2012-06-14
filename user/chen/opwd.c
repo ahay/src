@@ -1,12 +1,11 @@
 /* circle-interpolating pwd*/
 
 #include <rsf.h>
-#include "lphlag.h"
-#include "lphbsp.h"
-#include "lphmf.h"
+#include "lphase.h"
+#include "dsp.h"
 
 static int nf, n1, n2, itp;
-static float *b1, *b2, *b3;
+static float *b1, *b2, *d1, *d2;
 static float r, **c;
 
 void opwd_init(int interp, int mf, int m1, int m2, float rad)
@@ -20,109 +19,106 @@ void opwd_init(int interp, int mf, int m1, int m2, float rad)
 	r = rad;
 	b1 = sf_floatalloc(2*mf+1);
 	b2 = sf_floatalloc(2*mf+1);
-	b3 = sf_floatalloc(2*mf+1);
-	switch(interp)
-	{
-	case 1:
-		c = lphlag(mf);
-		break;
-	case 2:
-		c = lphbsp(mf);
-		break;
-	default:
-		c = lphmf(mf);
-	}
+	d1 = sf_floatalloc(2*mf+1);
+	d2 = sf_floatalloc(2*mf+1);
+
+	c = lphase(mf, interp);
 }
 
-
-void opwd(float **in, float **out, float **p, bool der)
+void opwd(float **in, float **out, float **p)
 /*< apply circle interpolating PWD >*/
 {
-	int i1, i2, j1, j2;
-	float *d1, *d2;
+	int i1, i2;
+	float c1, c2;
 
-	switch(itp)
+	for(i2=nf; i2<n2-nf; i2++)
+	for(i1=nf; i1<n1-nf; i1++)
 	{
-	case 1:
-		for(i2=nf; i2<n2-nf; i2++)
-		for(i1=nf; i1<n1-nf; i1++)
+		lphase_filt(nf, c, r*sin(p[i2][i1]), b1, 2*nf, false);
+		lphase_filt(nf, c, r*cos(p[i2][i1]), b2, 2*nf, false);
+		c1 = fir2(-nf, nf, b1+nf, -nf, nf, b2+nf, in[i2]+i1, 1, n1);
+		switch(itp)
 		{
-			if(der){
-				lphlag_dfilt(nf, c, r*sin(p[i2][i1]), b1);
-				lphlag_dfilt(nf, c, r*cos(p[i2][i1]), b2);
-			}else{
-				lphlag_filt(nf, c, r*sin(p[i2][i1]), b1);
-				lphlag_filt(nf, c, r*cos(p[i2][i1]), b2);
-			}
-			out[i2][i1] = 0.0;
-			for(j1=-nf; j1<=nf; j1++)
-			for(j2=-nf; j2<=nf; j2++)
-				out[i2][i1] += b1[j1+nf]*b2[j2+nf]*in[i2+j2][i1+j1];
-		}
-		break;
-	case 2:
-		for(i2=nf; i2<n2-nf; i2++)
-		for(i1=nf; i1<n1-nf; i1++)
-		{
-			if(der){
-				lphbsp_dfilt(nf, c, r*sin(p[i2][i1]), b1);
-				lphbsp_dfilt(nf, c, r*cos(p[i2][i1]), b2);
-			}else{
-				lphbsp_filt(nf, c, r*sin(p[i2][i1]), b1);
-				lphbsp_filt(nf, c, r*cos(p[i2][i1]), b2);
-			}
-			out[i2][i1] = 0.0;
-			for(j1=-nf; j1<=nf; j1++)
-			for(j2=-nf; j2<=nf; j2++)
-				out[i2][i1] += b1[j1+nf]*b2[j2+nf]*in[i2+j2][i1+j1];
-		}
-		break;
-	default:
-		if(!der)
-		{	
-			for(i2=nf; i2<n2-nf; i2++)
-			for(i1=nf; i1<n1-nf; i1++)
-			{
-				lphmf_filt(nf, c, r*sin(p[i2][i1]), b1);
-				lphmf_filt(nf, c, r*cos(p[i2][i1]), b2);
-				out[i2][i1] = 0.0;
-				for(j1=-nf; j1<=nf; j1++)
-				for(j2=-nf; j2<=nf; j2++)
-					out[i2][i1] += b1[j1+nf]*b2[j2+nf]*
-						(in[i2-j2][i1-j1] - in[i2+j2][i1+j1]);
-			}
+		case 1:
+			c2 = in[i2][i1];
 			break;
+		case 2:
+			c2 = fir2(-nf, nf, c[0]+nf, -nf, nf, c[0]+nf, in[i2]+i1, 1, n1);
+			break;
+		default:
+			c2 = fir2(-nf, nf, b1+nf, -nf, nf, b2+nf, in[i2]+i1, -1, -n1);
 		}
-
-		d1 = sf_floatalloc(2*nf+1);
-		d2 = sf_floatalloc(2*nf+1);
-		for(i2=nf; i2<n2-nf; i2++)
-		for(i1=nf; i1<n1-nf; i1++)
-		{
-			lphmf_filt(nf, c, r*sin(p[i2][i1]), b1);
-			lphmf_filt(nf, c, r*cos(p[i2][i1]), b2);
-			lphmf_dfilt(nf, c, r*sin(p[i2][i1]), d1);
-			lphmf_dfilt(nf, c, r*cos(p[i2][i1]), d2);
-			out[i2][i1] = 0.0;
-			for(j1=-nf; j1<=nf; j1++)
-			for(j2=-nf; j2<=nf; j2++)
-				out[i2][i1] += 
-					(d1[j1+nf]*b2[j2+nf]*cos(p[i2][i1])-
-					b1[j1+nf]*d2[j2+nf]*sin(p[i2][i1]))*r*
-					(in[i2-j2][i1-j1] - in[i2+j2][i1+j1]);
-		}
-
-		free(d1);
-		free(d2);
+		out[i2][i1] = c2 - c1;
 	}
 }
+
+
+void opwdd(float **in, float **out, float **p)
+/*< derivative filter of circle interpolating PWD >*/
+{
+	int i1, i2;
+	float p1, p2, c1, c2, z1, z2;
+
+	for(i2=nf; i2<n2-nf; i2++)
+	for(i1=nf; i1<n1-nf; i1++)
+	{
+		p1 = r*sin(p[i2][i1]);
+		p2 = r*cos(p[i2][i1]);
+		lphase_filt(nf, c, p1, b1, 2*nf, false);
+		lphase_filt(nf, c, p2, b2, 2*nf, false);
+		lphase_filt(nf, c, p1, d1, 2*nf, true);
+		lphase_filt(nf, c, p2, d2, 2*nf, true);
+		z1 = -p1*fir2(-nf, nf, b1+nf, -nf, nf, d2+nf, in[i2]+i1, 1, n1);
+		z2 =  p2*fir2(-nf, nf, d1+nf, -nf, nf, b2+nf, in[i2]+i1, 1, n1);
+		switch(itp)
+		{
+		case 1:
+			c1 = 0.0; c2 = 0.0;
+			break;
+		case 2:
+			c1 = 0.0; c2 = 0.0;
+			break;
+		default:
+			c1 = -p1*fir2(-nf, nf, b1+nf, -nf, nf, d2+nf, in[i2]+i1, -1, -n1);
+			c2 =  p2*fir2(-nf, nf, d1+nf, -nf, nf, b2+nf, in[i2]+i1, -1, -n1);
+		}
+		out[i2][i1] = c1 + c2 - z1 - z2;
+	}
+}
+
 
 void opwd_freq(float dip, int nk, sf_complex**out, bool iir)
 /*< frequency response of circle-interpolating PWD >*/
 {
-	int i1, i2, j1;
-	sf_complex c1, c2, c3, c4;
+	int i1, i2;
+	sf_complex c1, c2, z1, z2;
 
+	lphase_filt(nf, c, r*sin(dip), b1, 2*nf, false);
+	lphase_filt(nf, c, r*cos(dip), b2, 2*nf, false);
+
+	for(i2=-nk; i2<=nk; i2++)
+	{
+		c2 = fir_freq(-nf, nf, b2+nf, 0.5*i2/nk);
+		for(i1=-nk; i1<=nk; i1++)
+		{
+			c1 = fir_freq(-nf, nf, b1+nf, 0.5*i1/nk);
+			switch(itp)
+			{
+			case 1:
+				z1 = 1.0; z2 = 1.0;
+				break;
+			case 2:
+				z1 = fir_freq(-nf, nf, c[0]+nf, 0.5*i1/nk);
+				z2 = fir_freq(-nf, nf, c[0]+nf, 0.5*i2/nk);
+				break;
+			default:
+				z1 = conj(c1);	z2 = conj(c2);
+			}
+			if(iir)	out[i2+nk][i1+nk] = 1.0 - c1*c2/(z1*z2);
+			else	out[i2+nk][i1+nk] = z1*z2 - c1*c2;
+		}
+	}
+/*
 	switch(itp)
 	{
 	case 1:
@@ -178,6 +174,7 @@ void opwd_freq(float dip, int nk, sf_complex**out, bool iir)
 				out[i2+nk][i1+nk] = c3*c4- c1*c2;
 		}
 	}
+*/
 }
 
 
@@ -187,7 +184,8 @@ void opwd_close()
 {
 	free(b1);
 	free(b2);
-	free(b3);
+	free(d1);
+	free(d2);
 	free(c[0]);
 	free(c);
 }

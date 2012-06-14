@@ -1,13 +1,12 @@
 /* line-interpolating pwd*/
 
 #include <rsf.h>
-#include "lphmf.h"
-#include "lphlag.h"
-#include "lphbsp.h"
+#include "lphase.h"
+#include "dsp.h"
 
 static int nf, itp;
 static int n1, n2;
-static float **c, *b1, *b2;
+static float **c, *b1;
 
 void lpwd_init(int interp, int mf, int m1, int m2)
 /*< initialize >*/
@@ -18,155 +17,109 @@ void lpwd_init(int interp, int mf, int m1, int m2)
 	n1 = m1;
 	n2 = m2;
 
-	switch(interp)
-	{
-	case 1:
-		c = lphlag(mf);
-		break;
-	case 2:
-		c = lphbsp(mf);
-		break;
-	default:
-		c = lphmf(mf);
-	}
+	c = lphase(nf, interp);
+
 	b1 = sf_floatalloc(2*mf+1);
-	b2 = sf_floatalloc(2*mf+1);
 }
 
 void lpwc(float **in, float **out, float **p)
 /*< apply line interpolating PWC >*/
 {
+/*
 	int i1, i2, j1;
-	void (*filt)(int, float**, float, float*);
-
-	switch(itp)
-	{
-	case 1:
-		filt=lphlag_filt;
-		break;
-	case 2:
-		filt=lphbsp_filt;
-		break;
-	default:
-		filt=lphmf_filt;
-	}
 
 	for(i2=0; i2<n2; i2++)
 	for(i1=nf; i1<n1-nf; i1++)
 	{
-		filt(nf, c, p[i2][i1], b1);
+		lphase_filt(nf, c, p[i2][i1], b1, 2*nf, false);
 		out[i2][i1] = 0.0;
 		for(j1=-nf; j1<=nf; j1++)
 			out[i2][i1] += b1[j1+nf]*in[i2][i1-j1];
 	}
+*/
+}
+
+void lpwd(float **in, float **out, float **p)
+/*< apply line interpolating PWD >*/
+{
+	int i1, i2;
+	float c1, c2;
+
+	for(i2=0; i2<n2-1; i2++)
+	for(i1=nf; i1<n1-nf; i1++)
+	{
+		lphase_filt(nf, c, p[i2][i1], b1, 2*nf, false);
+		switch(itp)
+		{
+		case 1:
+			c1  = in[i2][i1];
+			break;
+		case 2:
+			c1  = fir(-nf, nf, c[0]+nf, in[i2]+i1, 1);
+			break;
+		default:
+			c1  = fir(-nf, nf, b1+nf, in[i2]+i1, -1);
+		}
+		c2 = fir(-nf, nf, b1+nf, in[i2+1]+i1, 1);
+		out[i2][i1]  = c1 - c2;
+	}
 }
 
 
-void lpwd(float **in, float **out, float **p, bool der)
-/*< apply line interpolating PWD >*/
+void lpwdd(float **in, float **out, float **p)
+/*< derivative filter of line interpolating PWD >*/
 {
-	int i1, i2, j1;
-	
-	switch(itp)
+	int i1, i2;
+	float c1, c2;
+
+	for(i2=0; i2<n2-1; i2++)
+	for(i1=nf; i1<n1-nf; i1++)
 	{
-	case 1:
-		for(i2=0; i2<n2-1; i2++)
-		for(i1=nf; i1<n1-nf; i1++)
+		lphase_filt(nf, c, p[i2][i1], b1, 2*nf, true);
+		switch(itp)
 		{
-			if(der) lphlag_dfilt(nf, c, p[i2][i1], b1);
-			else lphlag_filt(nf, c, p[i2][i1], b1);
-			out[i2][i1] = in[i2][i1];
-			for(j1=-nf; j1<=nf; j1++)
-				out[i2][i1] -= b1[j1+nf]*in[i2+1][i1-j1];
+		case 1:
+		case 2:
+			c1  = 0.0;
+			break;
+		default:
+			c1  = fir(-nf, nf, b1+nf, in[i2]+i1, -1);
 		}
-		break;
-	case 2:
-		if(der) 
-			for(i1=0; i1<=2*nf; i1++) b2[i1] = 0.0;
-		else
-			for(i1=0; i1<=2*nf; i1++) b2[i1] = c[i1][0];
-		for(i2=0; i2<n2-1; i2++)
-		for(i1=nf; i1<n1-nf; i1++)
-		{
-			if(der) lphbsp_dfilt(nf, c, p[i2][i1], b1);
-			else lphbsp_filt(nf, c, p[i2][i1], b1);
-			out[i2][i1] = 0.0;
-			for(j1=-nf; j1<=nf; j1++)
-				out[i2][i1] += b2[j1+nf]*in[i2][i1-j1] - 
-					b1[j1+nf]*in[i2+1][i1-j1];
-		}
-		break;
-	default:
-		for(i2=0; i2<n2-1; i2++)
-		for(i1=nf; i1<n1-nf; i1++)
-		{
-			if(der) lphmf_dfilt(nf, c, p[i2][i1], b1);
-			else lphmf_filt(nf, c, p[i2][i1], b1);
-			out[i2][i1] = 0.0;
-			for(j1=-nf; j1<=nf; j1++)
-				out[i2][i1] += b1[j1+nf]*(in[i2][i1+j1]-in[i2+1][i1-j1]);
-		}
+		c2 = fir(-nf, nf, b1+nf, in[i2+1]+i1, 1);
+		out[i2][i1]  = c1 - c2;
 	}
 }
 
 void lpwd_freq(float dip, int nk, sf_complex**out, bool iir)
 /*< frequency response of line-interpolating PWD >*/
 {
-	int i1, i2, j1;
-	sf_complex c1, c2, c3;
+	int i1, i2;
+	sf_complex c1, c2, z1;
 
-	switch(itp)
-	{
-	case 1:
-		lphlag_filt(nf, c, tan(dip), b1);
-		break;
-	case 2:
-		lphbsp_filt(nf, c, tan(dip), b1);
-		for(j1=0; j1<=2*nf; j1++)
-			b2[j1] = c[j1][0];
-		break;
-	default:
-		lphmf_filt(nf, c, tan(dip), b1);
-	}
+	lphase_filt(nf, c, tan(dip), b1, 2*nf, false);
+
 	for(i2=-nk; i2<=nk; i2++)
-	for(i1=-nk; i1<=nk; i1++)
-	switch(itp)
 	{
-	case 1:
-		for(j1=-nf, c1=0.0; j1<=nf; j1++)
-			c1 += b1[j1+nf]*cexpf(sf_cmplx(0.,-SF_PI*j1*i1/nk));
-		c2 = 1.0 - cexpf(sf_cmplx(0.,SF_PI*i2/nk))*c1;
-		out[i2+nk][i1+nk] = c2;
-		break;
-	case 2:
-		for(j1=-nf, c1=0.0, c2=0.0; j1<=nf; j1++)
+		c2 = cexpf(sf_cmplx(0., SF_PI*i2/nk));
+		for(i1=-nk; i1<=nk; i1++)
 		{
-			c3 = cexpf(sf_cmplx(0., -SF_PI*j1*i1/nk));
-			c1 += b1[j1+nf]*c1;
-			c2 += b2[j1+nf]*c2;
-		}
-		c2 = 1.0 - cexpf(sf_cmplx(0., SF_PI*i2/nk))*c1/c2;
-		out[i2+nk][i1+nk] = c2;
-		break;
-	default:
-		c1 = sf_cmplx(0, 0);
-		c2 = sf_cmplx(0, 0);
-		if(iir)
-		{
-			for(j1=-nf; j1<=nf; j1++)
+			c1 = fir_freq(-nf, nf, b1+nf, 0.5*i1/nk);
+			switch(itp)
 			{
-				c1 += b1[j1+nf]*cexpf(sf_cmplx(0.,SF_PI*j1*i1/nk));
-				c2 += b1[j1+nf]*cexpf(sf_cmplx(0.,-SF_PI*j1*i1/nk));
+			case 1:
+				out[i2+nk][i1+nk] = 1.0 - c2*c1;
+				break;
+			case 2:
+				z1 = fir_freq(-nf, nf, c[0]+nf, 0.5*i1/nk);
+				if(iir)	out[i2+nk][i1+nk] = 1.0 - c1*c2/z1;
+				else	out[i2+nk][i1+nk] = z1 - c1*c2;
+				break;
+			default:
+				z1 = conj(c1);
+				if(iir)	out[i2+nk][i1+nk] = 1.0 - c1*c2/z1;
+				else	out[i2+nk][i1+nk] = z1 - c1*c2;
 			}
-			out[i2+nk][i1+nk] = 1-c1/c2*cexpf(sf_cmplx(0.,-SF_PI*i2/nk));
-		}else{
-			for(j1=-nf; j1<=nf; j1++)
-				c1 += b1[j1+nf]*(cexpf(sf_cmplx(0.,SF_PI*j1*i1/nk))-
-					cexpf(sf_cmplx(0., -SF_PI*j1*i1/nk))*
-					cexpf(sf_cmplx(0., SF_PI*i2/nk)));
-			out[i2+nk][i1+nk] = c1;
 		}
-		break;
 	}
 }
 
@@ -175,7 +128,6 @@ void lpwd_close()
 /*< release memory >*/
 {
 	free(b1);
-	free(b2);
 	free(c[0]);
 	free(c);
 }
