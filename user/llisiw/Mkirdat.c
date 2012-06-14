@@ -28,12 +28,12 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int it, nt, ih, nh, is, ns, ng, left, right, ic, aper, shift, c, cc, hh;
-    int ir, nr, sleft, sright, tap;
-    float datum, length, t0, dt, h0, dh, s0, ds, g0, dg, dist, tau, delta;
-    float dr, s, h, coef;
-    float ***tr_in, ***tr_out, **table;
-    sf_file in, out, green, interm;
+    int it, nt, ih, nh, is, ns, nsg, nrg, left, right, ic, aper, shift, c, cc, hh;
+    int ir, nr, jump, sleft, sright, tap;
+    float datum, length, t0, dt, h0, dh, s0, ds, sg0, dsg, rg0, drg, dist, tau, delta;
+    float r, dr, s, h, coef;
+    float ***tr_in, ***tr_out, **stable, **rtable;
+    sf_file in, out, sgreen, rgreen, interm;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -74,16 +74,27 @@ int main(int argc, char* argv[])
     /* allocate memory for output */
     tr_out = sf_floatalloc3(nt,nh,ns);
 
-    /* read Green's function (traveltime table) */
-    green = sf_input("green");
+    /* read Green's function (source) */
+    sgreen = sf_input("sgreen");
 
-    if (!sf_histint(green,"n1",&ng)) sf_error("No ng=");
-    if (!sf_histfloat(green,"o1",&g0)) sf_error("No g0=");
-    if (!sf_histfloat(green,"d1",&dg)) sf_error("No dg=");
+    if (!sf_histint(sgreen,"n1",&nsg)) sf_error("No nsg=");
+    if (!sf_histfloat(sgreen,"o1",&sg0)) sf_error("No sg0=");
+    if (!sf_histfloat(sgreen,"d1",&dsg)) sf_error("No dsg=");
 
-    table = sf_floatalloc2(ng,ng);
-    sf_floatread(table[0],ng*ng,green);
-    sf_fileclose(green);
+    stable = sf_floatalloc2(nsg,nsg);
+    sf_floatread(stable[0],nsg*nsg,sgreen);
+    sf_fileclose(sgreen);
+
+    /* read Green's function (receiver) */
+    rgreen = sf_input("rgreen");
+
+    if (!sf_histint(rgreen,"n1",&nrg)) sf_error("No nrg=");
+    if (!sf_histfloat(rgreen,"o1",&rg0)) sf_error("No rg0=");
+    if (!sf_histfloat(rgreen,"d1",&drg)) sf_error("No drg=");
+
+    rtable = sf_floatalloc2(nrg,nrg);
+    sf_floatread(rtable[0],nrg*nrg,rgreen);
+    sf_fileclose(rgreen);
 
     /* output intermediate traces */
     if (NULL != sf_getstring("interm")) {
@@ -104,8 +115,8 @@ int main(int argc, char* argv[])
 
 	for (ih=0; ih < nh; ih++) {
 
-	    c = (s0+is*ds+h0+ih*dh-g0)/dg+0.5;
-	    if (c < 0 || c > ng-1) sf_error("Traveltime table too small.");
+	    c = (s0+is*ds+h0+ih*dh-rg0)/drg+0.5;
+	    if (c < 0 || c > nrg-1) sf_error("Receiver table too small.");
 
 	    /* aperture */
 	    left  = (ih-aper < 0)?    0:    ih-aper;
@@ -113,16 +124,16 @@ int main(int argc, char* argv[])
 	    
 	    for (ic=left; ic <= right; ic++) {
 		
-		cc = (s0+is*ds+h0+ic*dh-g0)/dg+0.5;
-		if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
+		cc = (s0+is*ds+h0+ic*dh-rg0)/drg+0.5;
+		if (cc < 0 || cc > nrg-1) sf_error("Receiver table too small.");
 
 		/* taper coefficient */
 		coef = 1.;
-		coef *= (ic-left  >= tap)? 1.: cosf((1.-(ic-left)/tap)*SF_PI/2.);
-		coef *= (right-ic >= tap)? 1.: cosf((1.-(right-ic)/tap)*SF_PI/2.);
+		coef *= (ic-left  >= tap)? 1.: (ic-left)/tap;
+		coef *= (right-ic >= tap)? 1.: (right-ic)/tap;
 
 		/* time delay */
-		tau = table[cc][c];
+		tau = rtable[cc][c];
 
 		/* distance */
 		dist = datum*datum+(ic-ih)*dh*(ic-ih)*dh;
@@ -163,16 +174,25 @@ int main(int argc, char* argv[])
     s = fabsf((ns-1)*ds);
     h = fabsf((nh-1)*dh);
 
-    dr = (fabsf(ds)>=fabsf(dh))? fabsf(dh): fabsf(ds);
+    if (fabsf(ds) >= fabsf(dh)) {
+	dr = fabsf(dh);
+	jump = 1;
+    } else {
+	dr = fabsf(ds);
+	jump = dh/ds+0.5;
+    }
+    
     nr = (s+h)/dr+1.5;
 
     /* common-receiver gather */
 #ifdef _OPENMP
-#pragma omp parallel for private(sleft,sright,is,c,ih,left,right,ic,cc,hh,coef,tau,dist,shift,it,delta)
+#pragma omp parallel for private(r,sleft,sright,is,c,ih,left,right,ic,cc,hh,coef,tau,dist,shift,it,delta)
 #endif
     for (ir=0; ir < nr; ir++) {
 	if (verb) sf_warning("Processing common-receiver gather %d of %d.",ir+1,nr);
 
+	r = ir*dr+((ds<=0.)?-1.:0.)*s+((dh<=0.)?-1.:0.)*h;
+	
 	/* source receiver reciprocity */
 	sleft  = (ir*dr+((ds<=0.)?-1.:0.)*s+((ds<=0.)?0.:-1.)*h)/ds+0.5;
 	sright = (ir*dr+((ds<=0.)?-1.:0.)*s+((ds<=0.)?-1.:0.)*h)/ds+0.5;
@@ -180,31 +200,38 @@ int main(int argc, char* argv[])
 	if (sleft < 0) sleft = 0;
 	if (sright > ns-1) sright = ns-1;
 	
-	for (is=sleft; is <= sright; is++) {
-	    
-	    c = (s0+is*ds-g0)/dg+0.5;
-	    if (c < 0 || c > ng-1) sf_error("Traveltime table too small.");
+	/* in case of fabsf(ds)>=fabsf(dh) */
+	left = (r-sleft*ds)/dh+0.5;
+	if (left < 0 || left > nh-1) sleft++;
 
-	    ih = (ir*dr-is*ds+((ds<=0.)?-1.:0.)*s+((dh<=0.)?-1.:0.)*h)/dh+0.5;
+	right = (r-sright*ds)/dh+0.5;
+	if (right < 0 || right > nh-1) sright--;
+
+	for (is=sleft; is <= sright; is=is+jump) {
+	    
+	    c = (s0+is*ds-sg0)/dsg+0.5;
+	    if (c < 0 || c > nsg-1) sf_error("Source table too small.");
+
+	    ih = (r-is*ds)/dh+0.5;
 	    
 	    /* aperture */
-	    left  = (is-aper < sleft)?  sleft:  is-aper;
-	    right = (is+aper > sright)? sright: is+aper;
+	    left  = (is-jump*aper < sleft)?  sleft:  is-jump*aper;
+	    right = (is+jump*aper > sright)? sright: is+jump*aper;
 	    
-	    for (ic=left; ic <= right; ic++) {
+	    for (ic=left; ic <= right; ic=ic+jump) {
 		
-		cc = (s0+ic*ds-g0)/dg+0.5;
-		if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
+		cc = (s0+ic*ds-sg0)/dsg+0.5;
+		if (cc < 0 || cc > nsg-1) sf_error("Source table too small.");
 
-		hh = (ir*dr-ic*ds+((ds<=0.)?-1.:0.)*s+((dh<=0.)?-1.:0.)*h)/dh+0.5;
+		hh = (r-ic*ds)/dh+0.5;
 
 		/* taper coefficient */
 		coef = 1.;
-		coef *= (ic-left  >= tap)? 1.: cosf((1.-(ic-left)/tap)*SF_PI/2.);
-		coef *= (right-ic >= tap)? 1.: cosf((1.-(right-ic)/tap)*SF_PI/2.);
+		coef *= (ic-left  >= tap)? 1.: (ic-left)/jump/tap;
+		coef *= (right-ic >= tap)? 1.: (right-ic)/jump/tap;
 		
 		/* time delay */
-		tau = table[cc][c];
+		tau = stable[cc][c];
 		
 		/* distance */
 		dist = datum*datum+(ic-is)*ds*(ic-is)*ds;

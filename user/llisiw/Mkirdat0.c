@@ -28,8 +28,8 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int it, nt, ix, nx, ng, left, right, ic, aper, shift, c, cc, tap;
-    float datum, length, t0, dt, x0, dx, g0, dg, dist, tau, delta, coef;
+    int it, nt, ix, nx, left, right, ic, aper, shift, tap;
+    float datum, length, t0, dt, x0, dx, dist, tau, delta, coef;
     float **tr_in, **tr_out, **table;
     sf_file in, out, green;
 
@@ -71,42 +71,32 @@ int main(int argc, char* argv[])
     /* read Green's function (traveltime table) */
     green = sf_input("green");
 
-    if (!sf_histint(green,"n1",&ng)) sf_error("No ng=");
-    if (!sf_histfloat(green,"o1",&g0)) sf_error("No g0=");
-    if (!sf_histfloat(green,"d1",&dg)) sf_error("No dg=");
-
-    table = sf_floatalloc2(ng,ng);
-    sf_floatread(table[0],ng*ng,green);
+    table = sf_floatalloc2(nx,nx);
+    sf_floatread(table[0],nx*nx,green);
     sf_fileclose(green);
 
     /* initialize */
     filt_init(dt,length);
 
 #ifdef _OPENMP
-#pragma omp parallel for private(c,left,right,ic,cc,coef,tau,dist,shift,it,delta)
+#pragma omp parallel for private(left,right,ic,coef,tau,dist,shift,it,delta)
 #endif
     for (ix=0; ix < nx; ix++) {
-	if (verb) sf_warning("Processing grid %d of %d.",ix+1,nx);
-	
-	c = (x0+ix*dx-g0)/dg+0.5;
-	if (c < 0 || c > ng-1) sf_error("Traveltime table too small.");
+	if (verb) sf_warning("Processing grid %d of %d.",ix+1,nx);	
 	
 	/* aperture */
 	left  = (ix-aper < 0)?    0:    ix-aper;
 	right = (ix+aper > nx-1)? nx-1: ix+aper;
 	
 	for (ic=left; ic <= right; ic++) {
-	    
-	    cc = (x0+ic*dx-g0)/dg+0.5;
-	    if (cc < 0 || cc > ng-1) sf_error("Traveltime table too small.");
-	    
+	    	    
 	    /* taper coefficient */
 	    coef = 1.;
 	    coef *= (ic-left  >= tap)? 1.: (ic-left)/tap;
 	    coef *= (right-ic >= tap)? 1.: (right-ic)/tap;
 
 	    /* time delay */
-	    tau = 2.*table[cc][c];
+	    tau = 2.*table[ic][ix];
 	    
 	    /* distance */
 	    dist = datum*datum+(ic-ix)*dx*(ic-ix)*dx;
