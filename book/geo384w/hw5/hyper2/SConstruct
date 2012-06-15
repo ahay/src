@@ -55,10 +55,10 @@ Flow('image0 wave0','model0 %s data0' % exe[0],
 # Display wave propagation movie
 Plot('wave0',
      '''
-     window min2=-1 max2=2 min1=0 max1=2 min3=4 |
+     window min2=-1 max2=2 min1=0 max1=2 n3=1 f3=35 |
      grey wanttitle=n gainpanel=all
      ''',view=1)
-
+Result('wave0','wave0 refl','Overlay')
 # Display image
 Plot('image0',
      '''

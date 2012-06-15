@@ -30,15 +30,15 @@ int main(int argc, char* argv[])
    
     int ncoefz,ncoefx,ncoefy,nz,nx,ny,izs,ixs,iys,nreport,nsnap,ntw,nze;
     int nye,nxe,nabsorbz,nabsorby,nabsorbx,itype,nttotal,j,iz1,iz2,ix1;
-    int ix2,iy1,iy2,norig,ngrid,nn,nm,nn1,nn2,i,k,jsnap,jreport;
+    int ix2,iy1,iy2,nn,nm,nn1,nn2,i,k,jsnap,jreport;
     int ss1,ss2,kt,ii,ij,ik,l,m,n,nt,jk,first=1,last=0;
     float ***pnow=NULL,***lp=NULL,***v=NULL,***v2=NULL,*w=NULL, ***psave=NULL;
     float ***plast=NULL,***pnext=NULL,***slices1=NULL,***slices2=NULL,***slices3=NULL;
-    float **zx=NULL,**zy=NULL,**xy=NULL,**slicexy,**slicezx,**slicezy;
-    float *dampz,*dampx,*dampy,*slice,*seis,**temp,decayx,decayy,decayz,fpeak,dx,dy;
+    float **slicexy,**slicezx,**slicezy;
+    float *dampz,*dampx,*dampy,decayx,decayy,decayz,fpeak,dx,dy;
     float walpha[3],wbeta[3],zs,xs,ys,dz,dt,dt2;
-    sf_file V1=NULL,Szx=NULL;
-    const int iz=1,ix=2,iy=3;
+    sf_file V1=NULL,Szx=NULL,Szy=NULL,Sxy=NULL;
+    
     
     sf_init(argc,argv);
    
@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
 	walpha[j]=0.56;
 	wbeta[j]=6;
     }
+
     if(ny<=1) {
 	ny=1;
 	dy=1;
@@ -99,15 +100,8 @@ int main(int argc, char* argv[])
     
     w=sf_floatalloc(ntw);
     
-    wavelet(w,ntw,dt,fpeak,itype);
-    dampz=sf_floatalloc(nabsorbz);
-    dampx=sf_floatalloc(nabsorbx);
-    dampy=sf_floatalloc(nabsorby);
-
-    getabsorb(dampz,nabsorbz,decayz);
-    getabsorb(dampx,nabsorbx,decayx);
-    getabsorb(dampy,nabsorby,decayy);
-
+    wavelet(w,dt,fpeak,itype,ntw);
+    
     nze=nz+2*nabsorbz;
     nxe=nx+2*nabsorbx;
     nye=ny+2*nabsorby;
@@ -128,20 +122,28 @@ int main(int argc, char* argv[])
 	nye=1;
 	nabsorby=1;
     }
-
-    norig=nz*nx*ny;
-    ngrid=nze*nxe*nye;
-    Szx=sf_output("out");
     
+    dampz=sf_floatalloc(nabsorbz);
+    dampx=sf_floatalloc(nabsorbx);
+    dampy=sf_floatalloc(nabsorby);
+
+    getabsorb(dampz,nabsorbz,decayz);
+    getabsorb(dampx,nabsorbx,decayx);
+    getabsorb(dampy,nabsorby,decayy);
+
+   
+       
     V1=sf_input("in");
     v=sf_floatalloc3(ny,nx,nz);
     sf_floatread(v[0][0],ny*nx*nz,V1);
     v2=sf_floatalloc3(nye,nxe,nze);
-   
     nn=nx*ny*nz;
     nm=nx*ny;
     nn1=nx*nz;
     nn2=ny*nz;
+    Szx=sf_output("out");
+   
+    
     
     for(i=0;i<nye;i++) {
 	for(j=0;j<nxe;j++) {
@@ -153,8 +155,126 @@ int main(int argc, char* argv[])
     }
 
        
+    extend(v,v2,nz,nx,ny,iz1,iz2,ix1,ix2,iy1,iy2,nze,nxe,nye);
+    free(**v);
+        
+    dt2=dt*dt;
+    for(i=0;i<nye;i++) {
+	for(j=0;j<nxe;j++) {
+	    for(k=0;k<nze;k++){
+	    
+		v2[k][j][i]=(v2[k][j][i]*v2[k][j][i])*dt2;
+	    }
+	}
+    }
     
-    sf_floatwrite(v2[0][0],nye*nxe*nze,Szx);
+    psave=sf_floatalloc3(nye,nxe,nze);
+    pnow=sf_floatalloc3(nye,nxe,nze);
+    plast=sf_floatalloc3(nye,nxe,nze);
+    pnext=sf_floatalloc3(nye,nxe,nze);
+
+    lp=sf_floatalloc3(nye,nxe,nze);
+    slicexy=sf_floatalloc2(ny,nx);
+    slicezx=sf_floatalloc2(nx,nz);
+    slicezy=sf_floatalloc2(ny,nz);
+
+    jsnap=0;
+    jreport=0;
+
+    ss1=(int)(nttotal/nsnap);
+    ss2=(int)(nttotal/nreport);
+    sf_putint(Szx,"n3",ss2);
+    slices1=sf_floatalloc3(ss2,ny,nx);
+    slices2=sf_floatalloc3(ss2,nx,nz);
+    slices3=sf_floatalloc3(ss2,ny,nz);
+
+    
+    for(ii=0;ii<nye;ii++) {
+	for(ij=0;ij<nxe;ij++) {
+	    for(ik=0;ik<nze;ik++) {
+		psave[ik][ij][ii]=0;
+		pnow[ik][ij][ii]=0;
+		plast[ik][ij][ii]=0;
+		pnext[ik][ij][ii]=0;
+		lp[ik][ij][ii]=0;
+	    }
+	}
+    }
+
+
+
+    for(kt=0;kt<nttotal;kt++) {
+	for(ii=0;ii<nye;ii++) {
+	    for(ij=0;ij<nxe;ij++) {
+		for(ik=0;ik<nze;ik++) {
+		    psave[ik][ij][ii]=pnow[ik][ij][ii];
+		    pnow[ik][ij][ii]=plast[ik][ij][ii];
+		    plast[ik][ij][ii]=psave[ik][ij][ii];
+		    pnext[ik][ij][ii]=plast[ik][ij][ii];
+		}
+	    }
+	}
+
+	if(kt<=ntw){
+	    sourcetogrid(pnow,nze,nxe,nye,dz,dx,dy,iz1,iz2,ix1,ix2,iy1,iy2,zs,xs,ys,w[kt]);
+	}
+	firlaplace(pnow,lp,walpha,wbeta,ncoefz,ncoefy,ncoefx,dz,dx,dy,nze,nxe,nye,first,last);
+	absorb(lp,nze,nxe,nye,dampz,nabsorbz,dampx,nabsorbx,dampy,nabsorby);
+
+	for(l=0;l<nye;l++) {
+	    for(m=0;m<nxe;m++) {
+		for(n=0;n<nze;n++) {
+		  lp[n][m][l]=v2[n][m][l]*lp[n][m][l];
+		  pnext[n][m][l]=(2*pnow[n][m][l])-plast[n][m][l]+lp[n][m][l];
+		}
+	    }
+	}
+	
+	if(kt%nreport==0) {
+	    xycollect(pnext,slicexy,nze,nxe,nye,nx,ny,ix1,iy1,izs);
+	    for(ii=0;ii<ny;ii++) {
+		for(ij=0;ij<nx;ij++)
+		slices1[ij][ii][jreport]=slicexy[ij][ii];
+	    jreport=jreport+1;
+	    }
+	}
+	
+	if(kt%nsnap==0) {
+	    zxcollect(pnext,slicezx,nze,nxe,nye,nz,nx,iz1,ix1,iys);
+	    for(i=0;i<nx;i++) {
+		for(j=0;j<nz;j++)
+		    slices2[j][i][jsnap]=slicezx[j][i];
+	    }
+
+	    zycollect(pnext,slicezy,nze,nxe,nye,nz,ny,iz1,iy1,ixs);
+	    for(ik=0;ik<ny;ik++) {
+		for(jk=0;jk<nz;jk++)
+		    slices3[jk][ik][jsnap]=slicezy[ik][jk];
+	    }
+	    jsnap=jsnap+1;
+	}
+    }
+    
+    
+    sf_floatwrite(slices2[0][0],ss2*nx*nz,Szx);
+   
+    
+   
+
+    nt=jreport;
+   
+
+    /* sei=sf_floatalloc2(nt,nx*ny);
+       temp=sf_floatalloc2(nx*ny,nt);
+
+       trans(seis,temp,nx*ny,nt);
+    sf_floatwrite(seis[0],nt*nm,Slices);*/
+
+    free(**pnow);
+    free(**psave);
+    free(**plast);
+    free(**pnext);
+    
     exit(0);
 
     

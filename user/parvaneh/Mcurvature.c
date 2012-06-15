@@ -32,7 +32,7 @@ int main (int argc, char *argv[])
     int ny,nx,nt;
     float idx,dx,idy,dy, scale;
     const char *what;
-    float a,b,c,d,e,***val,km,kg,**slice;
+    float a,b,c,d,e,nxx,nyy,nzz,qq1,qq2,qq3,***val,km,kg,**slice;
     
     sf_init(argc,argv);
     hor=sf_input("in");
@@ -76,6 +76,19 @@ int main (int argc, char *argv[])
 		d=idy*c1*(slice[ix+1][iy+1]+slice[ix][iy+1]+slice[ix-1][iy+1]-slice[ix+1][iy-1]-slice[ix][iy-1]-slice[ix-1][iy-1]);
 			
 		e=idx*c1*(slice[ix+1][iy-1]+slice[ix+1][iy]+slice[ix+1][iy+1]-slice[ix-1][iy-1]-slice[ix-1][iy]-slice[ix-1][iy+1]);
+		
+		nxx=d/sqrtf(1+d*d+e*e);
+			
+		nyy=e/sqrtf(1+d*d+e*e);
+		
+		nzz=1/sqrtf(1+d*d+e*e);
+		
+		qq1=(2*(d*c+2*e*b))/((1+d*d+e*e)*(sqrtf(1+d*d+e*e)));
+
+		qq2=(-2*(2*d*a+e*c))/((1+d*d+e*e)*(sqrtf(1+d*d+e*e)));
+		
+		qq3=(-2*d*d*c-4*e*d*b+4*e*d*a+2*e*e*c)/((1+d*d+e*e)*(sqrtf(1+d*d+e*e)));
+
 			
 		switch (what[0]) {
 		    case 'm': /*Mean curvature*/
@@ -109,6 +122,15 @@ int main (int argc, char *argv[])
 		    case 'c': /*Contour curvature*/
 			val[ix][iy][it]=2*(a*e*e+b*d*d-c*d*e)/((d*d+e*e)*sqrt(SF_EPS+d*d+e*e));
 			break;
+		    case 'r': /*rotation about the normal to the reflector dip*/
+			val[ix][iy][it]=nxx*qq1+nyy*qq2+nzz*qq3;
+			break;
+		    case 'v': /*Reflector convergence*/
+			val[ix][iy][it]=sqrtf((nyy*qq3-nzz*qq2)*(nyy*qq3-nzz*qq2)+(nzz*qq1-nxx*qq3)*(nzz*qq1-nxx*qq3)+(nxx*qq2-nyy*qq1)*(nxx*qq2-nyy*qq1));
+			break;
+		    case 'a': /*Azimuth of the convergence*/
+			val[ix][iy][it]=(atan(qq3/qq2)*180)/3,1415;
+
 		}
 	    }
 	}
