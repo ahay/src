@@ -467,6 +467,8 @@ int main(int argc, char* argv[]) {
 		if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 		/*------------------------------------------------------------*/
 		/* from displacement to strain AND strain to stress           */
+		/*		- Compute strains from displacements as in equation 1 */
+		/*		- Compute stress from strain as in equation 2		  */
 		/*------------------------------------------------------------*/
 			dim3 dimGrid9(ceil(fdm->nxpad/32.0f), ceil(fdm->nzpad/32.0f));
 			dim3 dimBlock9(32,32);
@@ -475,7 +477,9 @@ int main(int argc, char* argv[]) {
 
 
 		/*------------------------------------------------------------*/
-		/* free surface */
+		/* free surface boundary condition							  */
+		/*		- sets the z-component of stress tensor along the	  */
+		/*			free surface boundary to 0						  */
 		/*------------------------------------------------------------*/
 			if(fsrf) {
 				dim3 dimGrid3(ceil(fdm->nxpad/16.0f),ceil(fdm->nb/16.0f));
@@ -499,6 +503,8 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* from stress to acceleration                                */
+		/*		- Computes acceleration in model based on stress	  */
+		/*			tensor 											  */
 		/*------------------------------------------------------------*/
 			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/32.0f),ceil((fdm->nzpad-(2*NOP))/32.0f));
 			dim3 dimBlock4(32,32);
@@ -520,6 +526,7 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* step forward in time                                       */
+		/*		- Compute forward time step based on acceleration	  */
 		/*------------------------------------------------------------*/
 			dim3 dimGrid6(ceil(fdm->nxpad/16.0f),ceil(fdm->nzpad/12.0f));
 			dim3 dimBlock6(16,12);
@@ -533,11 +540,14 @@ int main(int argc, char* argv[]) {
 		d_uoz=d_upz; d_uox=d_upx;
 		d_upz=d_utz; d_upx=d_utx;
 	
-
 		/*------------------------------------------------------------*/
 		/* apply boundary conditions                                  */
 		/*------------------------------------------------------------*/
 			if(dabc) {
+				
+				/*---------------------------------------------------------------*/
+				/* apply One-way Absorbing BC as in (Clayton and Enquist, 1977)  */
+				/*---------------------------------------------------------------*/
 				/* One-way Absorbing BC */
 				dim3 dimGrid_TB(ceil(fdm->nxpad/192.0f), 2, 1);
 				dim3 dimBlock_TB(MIN(192, fdm->nxpad), 1, 1);
@@ -552,7 +562,9 @@ int main(int argc, char* argv[]) {
 				abcone2d_apply_LR_gpu<<<dimGrid_LR, dimBlock_LR, 0, stream[1]>>>(d_uox, d_umx, d_bxl_s, d_bxh_s, fdm->nxpad, fdm->nzpad);
 	
 
-				/* Sponge BC */
+				/*---------------------------------------------------------------*/
+				/* apply Sponge BC as in (Cerjan, et al., 1985)                  */
+				/*---------------------------------------------------------------*/
 				dim3 dimGrid_TB2(ceil(fdm->nxpad/256.0f), (fdm->nb * 1), 1);
 				dim3 dimBlock_TB2(256,1,1);
 
