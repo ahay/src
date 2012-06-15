@@ -706,7 +706,8 @@ int main(int argc, char* argv[]) {
 		
 		/*------------------------------------------------------------*/
 		/* from displacement to strain                                */
-		/*------------------------------------------------------------*/
+		/*		- Compute strains from displacements as in equation 1 */
+ 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
 			dim3 dimGrid2((fdm->nxpad-2*NOP)/24.0f, (fdm->nzpad-2*NOP)/24.0f);
@@ -717,6 +718,7 @@ int main(int argc, char* argv[]) {
 		
 		/*------------------------------------------------------------*/
 		/* from strain to stress                                      */
+		/*		- Compute stress from strain as in equation 2		  */
 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -729,6 +731,8 @@ int main(int argc, char* argv[]) {
 			
 		/*------------------------------------------------------------*/
 		/* free surface                                               */
+		/*		- sets the z-component of stress tensor along the	  */
+		/*			free surface boundary to 0						  */
 		/*------------------------------------------------------------*/
 		if(fsrf) {
 			for (int g = 0; g < ngpu; g++){
@@ -801,7 +805,7 @@ int main(int argc, char* argv[]) {
 		
 		
 		/*------------------------------------------------------------*/
-		/* from stress to acceleration                                */
+		/* from stress to acceleration  (first term in RHS of eq. 3)  */
 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -813,7 +817,7 @@ int main(int argc, char* argv[]) {
 	
 	
 		/*------------------------------------------------------------*/
-		/* inject acceleration source                                 */
+		/* inject acceleration source  (second term in RHS of eq. 3)  */
 		/*------------------------------------------------------------*/
 		if(!ssou) {
 			for (int g = 0; g < ngpu; g++){
@@ -831,6 +835,7 @@ int main(int argc, char* argv[]) {
 		
 		/*------------------------------------------------------------*/
 		/* step forward in time                                       */
+		/*		- Compute forward time step based on acceleration	  */
 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -854,7 +859,9 @@ int main(int argc, char* argv[]) {
 		/* apply boundary conditions                                  */
 		/*------------------------------------------------------------*/
 		if(dabc) {
-			/* One-way Absorbing BC */
+			/*---------------------------------------------------------------*/
+			/* apply One-way Absorbing BC as in (Clayton and Enquist, 1977)  */
+			/*---------------------------------------------------------------*/
 			for (int g = 0; g < ngpu; g++){
 				cudaSetDevice(g);
 				dim3 dimGrid_abc_XY(ceil(fdm->nxpad/32.0f),ceil(nyinterior/32.0f),2);
@@ -883,7 +890,9 @@ int main(int argc, char* argv[]) {
 			abcone3d_apply_XZ_high<<<dimGrid_abc_XZ,dimBlock_abc_XZ>>>(fdm->nxpad, nylocal[ngpu-1], fdm->nzpad, d_uoz[ngpu-1], d_umz[ngpu-1], d_byh_s[ngpu-1]);
 
 
-			/* sponge BC */
+			/*---------------------------------------------------------------*/
+			/* apply Sponge BC as in (Cerjan, et al., 1985)                  */
+			/*---------------------------------------------------------------*/
 			for (int g = 0; g < ngpu; g++){
 				cudaSetDevice(g);
 				dim3 dimGrid_spng_XY(ceil(fdm->nxpad/192.0f),nyinterior,1);

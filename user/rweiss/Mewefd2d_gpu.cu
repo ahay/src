@@ -502,9 +502,7 @@ int main(int argc, char* argv[]) {
 
 
 		/*------------------------------------------------------------*/
-		/* from stress to acceleration                                */
-		/*		- Computes acceleration in model based on stress	  */
-		/*			tensor 											  */
+		/* from stress to acceleration (first term in RHS of eq. 3)	  */
 		/*------------------------------------------------------------*/
 			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/32.0f),ceil((fdm->nzpad-(2*NOP))/32.0f));
 			dim3 dimBlock4(32,32);
@@ -513,7 +511,7 @@ int main(int argc, char* argv[]) {
 		
 
 		/*------------------------------------------------------------*/
-		/* inject acceleration source                                 */
+		/* inject acceleration source  (second term in RHS of eq. 3)  */
 		/*------------------------------------------------------------*/
 			if(!ssou) {
 			    dim3 dimGrid8(ns, 1, 1);
