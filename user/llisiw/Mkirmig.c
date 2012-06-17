@@ -18,6 +18,10 @@
 */
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "kirmig.h"
 #include "tinterp.h"
 
@@ -25,9 +29,9 @@ int main(int argc, char* argv[])
 {
     char *unit, *what, *type;
     bool cig;
-    int nt, nx, ny, ns, nh, nz, nzx, ix, iz, ih, is, ist, iht;
+    int nt, nx, ny, ns, nh, nz, nzx, i, ix, iz, ih, is, ist, iht;
     float *trace, **out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
-    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz, aal, tx, aper, thres;
+    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz, aal, tx, aper;
     sf_file inp, mig, tbl, der;
 
     sf_init (argc,argv);
@@ -69,9 +73,6 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("antialias",&aal)) aal=1.0;
     /* antialiasing */
     
-    if (!sf_getfloat("threshold",&thres)) thres=0.;
-    /* source region thresholding */
-
     if (!sf_getbool("cig",&cig)) cig=false;
     /* y - output common offset gathers */
 
@@ -164,14 +165,14 @@ int main(int argc, char* argv[])
 	    /* cubic Hermite spline interpolation */
 	    iht = (s+h-y0)/dy;
 	    if (iht <= 0) {
-		for (ix=0; ix < nzx; ix++) {
-		    rtable[ix]  = table[0][ix];
-		    rtablex[ix] = tablex[0][ix];
+		for (i=0; i < nzx; i++) {
+		    rtable[i]  = table[0][i];
+		    rtablex[i] = tablex[0][i];
 		}
 	    } else if (iht >= ny-1) {
-		for (ix=0; ix < nzx; ix++) {
-		    rtable[ix]  = table[ny-1][ix];
-		    rtablex[ix] = tablex[ny-1][ix];
+		for (i=0; i < nzx; i++) {
+		    rtable[i]  = table[ny-1][i];
+		    rtablex[i] = tablex[ny-1][i];
 		}
 	    } else {
 		switch (type[0]) {
@@ -190,33 +191,35 @@ int main(int argc, char* argv[])
 	    sf_floatread (trace,nt,inp);
 	    doubint(nt,trace);
 
-	    for (ix=0; ix < nx; ix++) {
-		for (iz=0; iz < nz; iz++) { /* image */
-		    /* aperture (cone angle) */
-		    if (h >= 0.) {
-			if (atanf((s-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
-			if (atanf((x0+ix*dx-s-h)/(iz*dz))*180./SF_PI > aper) continue;
-		    } else {
-			if (atanf((s+h-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
-			if (atanf((x0+ix*dx-s)/(iz*dz))*180./SF_PI > aper) continue;
-		    }
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix,t1,t2,ti,tx)
+#endif
+	    for (i=0; i < nzx; i++) { 
+		iz = i%nz;
+		ix = (i-iz)/nz;
 
-		    t1 = stable[ix*nz+iz];
-		    t2 = rtable[ix*nz+iz];
-		    ti = t1+t2;
-		    
-		    if (ti < thres) continue;
+		/* aperture (cone angle) */
+		if (h >= 0.) {
+		    if (atanf((s-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+		    if (atanf((x0+ix*dx-s-h)/(iz*dz))*180./SF_PI > aper) continue;
+		} else {
+		    if (atanf((s+h-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+		    if (atanf((x0+ix*dx-s)/(iz*dz))*180./SF_PI > aper) continue;
+		}
 
-		    tx = SF_MAX(fabsf(stablex[ix*nz+iz]*ds),fabsf(rtablex[ix*nz+iz]*dh));
-		    pick(true,ti,tx*aal,out[cig ? ih : 0]+ix*nz+iz,trace);
-		} 
+		t1 = stable[i];
+		t2 = rtable[i];
+		ti = t1+t2;
+
+		tx = SF_MAX(fabsf(stablex[i]*ds),fabsf(rtablex[i]*dh));
+		pick(true,ti,tx*aal,out[cig ? ih : 0]+i,trace);
 	    }
 	}
-        if (!cig) 
-            sf_floatwrite(out[0],(off_t)nzx,mig);
+	
+        if (!cig) sf_floatwrite(out[0],(off_t)nzx,mig);
     }
-    if (cig)
-        sf_floatwrite(out[0],(off_t)nzx*(off_t)nh,mig);
+    
+    if (cig) sf_floatwrite(out[0],(off_t)nzx*(off_t)nh,mig);
 
     exit(0);
 }

@@ -18,6 +18,10 @@
 */
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "kirmig.h"
 #include "tinterp.h"
 
@@ -153,14 +157,14 @@ int main(int argc, char* argv[])
 	/* cubic Hermite spline interpolation */
 	ist = (s-y0)/dy;
 	if (ist <= 0) {
-	    for (ix=0; ix < nzx; ix++) {
-		stable[ix]  = table[0][ix];
-		stablex[ix] = tablex[0][ix];
+	    for (i=0; i < nzx; i++) {
+		stable[i]  = table[0][i];
+		stablex[i] = tablex[0][i];
 	    }
 	} else if (ist >= ny-1) {
-	    for (ix=0; ix < nzx; ix++) {
-		stable[ix]  = table[ny-1][ix];
-		stablex[ix] = tablex[ny-1][ix];
+	    for (i=0; i < nzx; i++) {
+		stable[i]  = table[ny-1][i];
+		stablex[i] = tablex[ny-1][i];
 	    }
 	} else {
 	    switch (type[0]) {
@@ -186,19 +190,23 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	for (ix=0; ix < nx; ix++) { 
-	    for (iz=0; iz < nz; iz++) { /* image */
-		/* aperture (cone angle) */
-		if (fabsf(atanf((x0+ix*dx-s)/(iz*dz)))*180./SF_PI > aper)
-		    continue;
-		
-		ti = 2.*stable[ix*nz+iz];
-		tx = 2.*stablex[ix*nz+iz];
-		
-		pick(adj,ti,fabsf(tx*ds*aal),out+ix*nz+iz,trace);
-	    }
-	}
+#ifdef _OPENMP
+#pragma omp parallel for private(iz,ix,ti,tx)
+#endif
+	for (i=0; i < nzx; i++) { 
+	    iz = i%nz;
+	    ix = (i-iz)/nz;
 
+	    /* aperture (cone angle) */
+	    if (fabsf(atanf((x0+ix*dx-s)/(iz*dz)))*180./SF_PI > aper)
+		continue;
+
+	    ti = 2.*stable[i];
+	    tx = 2.*stablex[i];
+	    
+	    pick(adj,ti,fabsf(tx*ds*aal),out+i,trace);
+	}
+	
 	if (!adj) {
 	    doubint(nt,trace);
 	    sf_floatwrite (trace,nt,dat);

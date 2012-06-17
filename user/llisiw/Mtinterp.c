@@ -23,10 +23,10 @@
 
 int main (int argc,char* argv[]) 
 {
-    int n[3], ns, ns0, nt, interp, is0, ss, s0;
-    float o[3], os, d[3], ds, ds0, **t, **tds, *tempt;
+    int n[3], ns, ns0, nt, is0, s0;
+    float o[3], os, os0, d[3], ds, ds0, **t, **tds, *tempt, ss;
     char *what;
-    sf_file in, out, deriv;
+    sf_file in, out, deriv, pattern;
 
     sf_init (argc, argv);
     in  = sf_input("in");
@@ -74,14 +74,28 @@ int main (int argc,char* argv[])
 	sf_fileclose(deriv);
     }
     
-    if (!sf_getint("interp",&interp)) interp=1;
-    /* number of interpolation */
+    if (NULL != sf_getstring("pattern")) {
+	pattern = sf_input("pattern");
+    } else {
+	pattern = NULL;
+    }
     
-    ds0 = ds/(float)(1+interp);
-    ns0 = (ns-1)*interp+ns;
-
+    if (!sf_getint("ns",&ns0) && 
+	(NULL==pattern ||
+	 !sf_histint(pattern,"n4",&ns0))) sf_error("Need ns=");
+    /* Output source size */
+    if (!sf_getfloat("ds",&ds0) && 
+	(NULL==pattern ||
+	 !sf_histfloat(pattern,"d4",&ds0))) sf_error("Need ds=");
+    /* Output source sampling */
+    if (!sf_getfloat("os",&os0) &&
+	(NULL==pattern ||
+	 !sf_histfloat(pattern,"o4",&os0))) sf_error("Need os=");
+    /* Output source origin */
+    
     sf_putint(out,"n4",ns0);
     sf_putfloat(out,"d4",ds0);
+    sf_putfloat(out,"o4",os0);
 
     /* allocate temporaty memory */
     tempt = sf_floatalloc(nt);
@@ -91,23 +105,24 @@ int main (int argc,char* argv[])
 
     /* loop over sources */
     for (is0=0; is0 < ns0; is0++) {
-	ss = is0%(interp+1);
-	s0 = (is0-ss)/(interp+1);
+	s0 = (os0+is0*ds0-os)/ds;
+	ss = os0+is0*ds0-os-s0*ds;
 
-	/* continue if input sources */
-	if (ss == 0) {
-	    sf_floatwrite(t[s0],nt,out);
-	    continue;
+	if (s0 < 0) {
+	    s0 = 0; ss = 0.;
 	}
-	
+	if (s0 >= ns-1) {
+	    s0 = ns-2; ss = ds;
+	}
+
 	/* do interpolation */
 	switch (what[0]) {
 	    case 'l': /* linear */
-		tinterp_linear(tempt,((float)ss)*ds0,t[s0],t[s0+1]);
+		tinterp_linear(tempt,ss,t[s0],t[s0+1]);
 		break;
 
 	    default: /* cubic Hermite spline */
-		tinterp_hermite(tempt,((float)ss)*ds0,t[s0],t[s0+1],tds[s0],tds[s0+1]);
+		tinterp_hermite(tempt,ss,t[s0],t[s0+1],tds[s0],tds[s0+1]);
 		break;
 	}
 	
