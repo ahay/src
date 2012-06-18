@@ -85,7 +85,8 @@ class SUProject(rsf.proj.Project):
         self.Alias(target + '.lock',locked)
         self.lock.append(locked)
         
-        test = self.Test('.test_'+target,target2+pssuffix)
+        test = self.Test('.test_'+target,target2+pssuffix,
+                         figdir=self.figs,bindir=self.bindir)
         self.test.append(test)
         self.Alias(target + '.test',test)
     def End(self):

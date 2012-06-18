@@ -39,6 +39,8 @@ In APIs:
 
 In the Python package:
 
+* Fixed "scons test" in suproj
+
 In programs:
 
 * Fixed size limitation in sfclip2
