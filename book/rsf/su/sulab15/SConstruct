@@ -1,7 +1,6 @@
 from rsf.suproj import *
-from rsf.recipes.beg import server
 
-Fetch('seismic.segy','cwp',server)
+Fetch('seismic.segy','viking')
 
 # Convert to SU
 Flow('seismic','seismic.segy',

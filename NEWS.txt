@@ -8,6 +8,7 @@ To the reproducible documents collection:
   approximation (Fomel, Ying, and Song)
 * jsg/crs: Non-hyperbolic common reflection surface (Fomel and
   Kazinnik)
+* trip/iwave: IWAVE demonstration package (Symes)
 
 To SCons:
 
