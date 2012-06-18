@@ -9,6 +9,7 @@ To the reproducible documents collection:
 * jsg/crs: Non-hyperbolic common reflection surface (Fomel and
   Kazinnik)
 * trip/iwave: IWAVE demonstration package (Symes)
+* Viking Graben data moved to the public data server
 
 To SCons:
 
