@@ -1617,9 +1617,9 @@ def swig(context):
         'yellow_on_red')
     context.Message("checking for SWIG ... ")
     if 'swig' in Environment().get('TOOLS'):
-        swig = WhereIs('swig')
-        context.Result(swig)
-        contex.env['SWIG'] = swig
+        swigx = WhereIs('swig')
+        context.Result(swigx)
+        context.env['SWIG'] = swigx
     else:
         context.Result(context_failure)
         need_pkg('swig', fatal = False)
