@@ -22,7 +22,7 @@ velcon velinv vofzperm warp1 warpadd warpscan zero ztrace
 
 ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 
-pyprogs = 'fft rcat results zoom'
+pyprogs = 'cgi fft rcat results zoom'
 pymods = 'dottest conjgrad'
 
 try:  # distributed version
