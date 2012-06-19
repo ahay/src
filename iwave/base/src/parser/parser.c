@@ -166,7 +166,7 @@ int ps_addpairstring(PARARRAY *parr,
 
 /*----------------------------------------------------------------------------*/
 
-int ps_createfile(PARARRAY *parr, const char *filename)
+int old_ps_createfile(PARARRAY *parr, const char *filename)
 {
     FILE *stream;             /* file stream */
     long size;                /* file size */
@@ -561,136 +561,136 @@ int ps_gettype(PARARRAY parr, const char *name, int occ, int type, int n, void *
     return ps_gettypez(parr, ps_name2z(name), occ, type, n, p);
 }
 /*----------------------------------------------------------------------------*/
-int ps_ffchar(PARARRAY parr, const char *name, char *p)
+int old_ps_ffchar(PARARRAY parr, const char *name, char *p)
 {
     return ps_gettype(parr, name, 0, DT_CHAR, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffshort(PARARRAY parr, const char *name, short *p)
+int old_ps_ffshort(PARARRAY parr, const char *name, short *p)
 {
     return ps_gettype(parr, name, 0, DT_SHORT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffint(PARARRAY parr, const char *name, int *p)
+int old_ps_ffint(PARARRAY parr, const char *name, int *p)
 {
     return ps_gettype(parr, name, 0, DT_INT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_fflong(PARARRAY parr, const char *name, long *p)
+int old_ps_fflong(PARARRAY parr, const char *name, long *p)
 {
     return ps_gettype(parr, name, 0, DT_LONG, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffushort(PARARRAY parr, const char *name, unsigned short *p)
+int old_ps_ffushort(PARARRAY parr, const char *name, unsigned short *p)
 {
     return ps_gettype(parr, name, 0, DT_USHORT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffuint(PARARRAY parr, const char *name, unsigned int *p)
+int old_ps_ffuint(PARARRAY parr, const char *name, unsigned int *p)
 {
     return ps_gettype(parr, name, 0, DT_UINT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffulong(PARARRAY parr, const char *name, unsigned long *p)
+int old_ps_ffulong(PARARRAY parr, const char *name, unsigned long *p)
 {
     return ps_gettype(parr, name, 0, DT_ULONG, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
-int ps_fffloat(PARARRAY parr, const char *name, float *p)
+int old_ps_fffloat(PARARRAY parr, const char *name, float *p)
 {
     return ps_gettype(parr, name, 0, DT_FLOAT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffdouble(PARARRAY parr, const char *name, double *p)
+int old_ps_ffdouble(PARARRAY parr, const char *name, double *p)
 {
     return ps_gettype(parr, name, 0, DT_DOUBLE, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffreal(PARARRAY parr, const char *name, ireal *p)
+int old_ps_ffreal(PARARRAY parr, const char *name, ireal *p)
 {
     return ps_gettype(parr, name, 0, DT_REAL, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_ffcstring(PARARRAY parr, const char *name, char **p)
+int old_ps_ffcstring(PARARRAY parr, const char *name, char **p)
 {
     return ps_gettype(parr, name, 0, DT_CSTRING, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
-int ps_flchar(PARARRAY parr, const char *name, char *p)
+int old_ps_flchar(PARARRAY parr, const char *name, char *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_CHAR, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_flshort(PARARRAY parr, const char *name, short *p)
+int old_ps_flshort(PARARRAY parr, const char *name, short *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_SHORT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_flint(PARARRAY parr, const char *name, int *p)
+int old_ps_flint(PARARRAY parr, const char *name, int *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_INT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_fllong(PARARRAY parr, const char *name, long *p)
+int old_ps_fllong(PARARRAY parr, const char *name, long *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_LONG, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_flushort(PARARRAY parr, const char *name, unsigned short *p)
+int old_ps_flushort(PARARRAY parr, const char *name, unsigned short *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_USHORT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_fluint(PARARRAY parr, const char *name, unsigned int *p)
+int old_ps_fluint(PARARRAY parr, const char *name, unsigned int *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_UINT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_flulong(PARARRAY parr, const char *name, unsigned long *p)
+int old_ps_flulong(PARARRAY parr, const char *name, unsigned long *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_ULONG, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
-int ps_flfloat(PARARRAY parr, const char *name, float *p)
+int old_ps_flfloat(PARARRAY parr, const char *name, float *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_FLOAT, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_fldouble(PARARRAY parr, const char *name, double *p)
+int old_ps_fldouble(PARARRAY parr, const char *name, double *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_DOUBLE, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_flreal(PARARRAY parr, const char *name, ireal *p)
+int old_ps_flreal(PARARRAY parr, const char *name, ireal *p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_REAL, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_flcstring(PARARRAY parr, const char *name, char **p)
+int old_ps_flcstring(PARARRAY parr, const char *name, char **p)
 {
     return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_CSTRING, 0, (void*)p);
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_printall(PARARRAY parr, FILE *stream)
+int old_ps_printall(PARARRAY parr, FILE *stream)
 {
     int i, n;
 

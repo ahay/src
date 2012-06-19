@@ -84,8 +84,7 @@ void fwavelet(float s[]    /* input signal [n_signal] */,
 {
   	int i,len_filter,n_len;
 
-	float *ca1,*cd1,*tempo,*caodd1,*cdodd1,*ainverse;
-	float *tempo2,*d1,*a1,*a0,*d2,*a2,*a00;
+	float *ca1,*cd1,*tempo,*caodd1,*cdodd1;
 
 	float Lo_D[]={0.70711,0.70711};
 	float Hi_D[]={-0.70711,0.70711};
@@ -98,15 +97,6 @@ void fwavelet(float s[]    /* input signal [n_signal] */,
 	tempo=sf_floatalloc(n_signal+len_filter-1);
 	caodd1=sf_floatalloc(n_signal/2);
 	cdodd1=sf_floatalloc(n_signal/2);
-	ainverse=sf_floatalloc(n_signal);
-
-    tempo2=sf_floatalloc((n_signal+len_filter));
-	d1=sf_floatalloc(n_signal);
-	a1=sf_floatalloc(n_signal);
-	a0=sf_floatalloc(n_signal);
-	d2=sf_floatalloc(n_signal);
-	a2=sf_floatalloc(n_signal);
-	a00=sf_floatalloc(n_signal);	
 
 	conv(s,n_signal,Lo_D,len_filter,tempo);   /* the even low frequency */
 	dyaddown(tempo,n_len,ca1);
@@ -139,7 +129,7 @@ void iwavelet(float wcl[]  /* input low-frequncy part [n_signal] */,
 /*< inverse transform >*/
 {
     int i,len_filter,n_len;
-	float *ca1,*cd1,*tempo,*caodd1,*cdodd1,*ainverse;
+	float *ca1,*cd1,*tempo,*caodd1,*cdodd1;
 	float *tempo2,*d1,*a1,*a0,*d2,*a2,*a00;
 
     float Lo_R[]={0.70711,0.70711};
@@ -153,7 +143,6 @@ void iwavelet(float wcl[]  /* input low-frequncy part [n_signal] */,
 	tempo=sf_floatalloc((n_signal+len_filter-1));
 	caodd1=sf_floatalloc(n_signal/2);
 	cdodd1=sf_floatalloc(n_signal/2);
-	ainverse=sf_floatalloc(n_signal);
 
 	tempo2=sf_floatalloc((n_signal+len_filter));
 	d1=sf_floatalloc(n_signal);
