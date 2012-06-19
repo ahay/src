@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "iwave_fopen.h"
 
 typedef struct {
   char * str;
@@ -15,6 +16,10 @@ typedef struct PSLINK {
   struct PSLINK * next;
 } PSLINK;
 
+typedef struct {
+  PSLINK * list;
+} PARARRAY;
+
 /*----------------------------------------------------------------------------*/
 /** \defgroup create Creation and destruction */
 /*@{*/
@@ -24,7 +29,7 @@ Initialze pair
 WORD * word_new();
 void word_delete(WORD ** w);
 void word_reset(WORD * w);
-int word_assign(WORD * w, char * str, int len);
+int word_assign(WORD * w, const char * str, int len);
 int word_whitechar(char c);
 int word_copy(WORD * tgt, WORD src);
 int word_read(WORD * w, char ** src);
@@ -40,13 +45,28 @@ void kv_fprint(KEYVAL kv, FILE * f);
 
 PSLINK * pslink_new();
 void pslink_delete(PSLINK ** p);
+void pslink_setnull(PSLINK ** p);
 int pslink_front(PSLINK ** p);
 int pslink_back(PSLINK ** p);
 int pslink_read(PSLINK ** p, char ** str);
 int pslink_findfirst(PSLINK * par, WORD skey, WORD * sval);
 int pslink_findlast(PSLINK * par, WORD skey, WORD * sval);
 int pslink_setfirst(PSLINK ** par, WORD skey, WORD sval);
-//int pslink_setlast(PSLINK * par, WORD skey, WORD sval);
+int pslink_setlast(PSLINK ** par, WORD skey, WORD sval);
+
+PARARRAY * ps_new();
+void ps_delete(PARARRAY ** p);
+/** \defgroup print Output to stream
+ */
+/*@{*/
+/**
+Write contents of PARARRAY to stream
+@param[in] parr (PARARRAY) - input param array
+@param[out] stream (FILE *) - output stream
+@return (int) 0 if successful, else nonzero error code.
+*/
+
+int ps_printall(PARARRAY parr, FILE *stream);
 
 /*----------------------------------------------------------------------------*/
 /** 
@@ -54,7 +74,7 @@ Set parameter array (all fields) to zeros - null initialization
 @param[out] parr (PARARRAY *) - parameter array to initialize
 @return (int) 0 if successful, else nonzero error code.
 */
-//int ps_setnull(PARARRAY *parr);
+int ps_setnull(PARARRAY *parr);
 /*----------------------------------------------------------------------------*/
 /** 
 Creates parameter array (STORAGE ALLOCATION) from file
@@ -62,7 +82,7 @@ Creates parameter array (STORAGE ALLOCATION) from file
 @param[in] filename (char *) - name of parfile containing key=value info
 @return (int) 0 if successful, else nonzero error code.
 */
-//int ps_createfile(PARARRAY *parr, const char *filename);
+int ps_createfile(PARARRAY *parr, const char *filename);
 /** 
 Creates parameter array (STORAGE ALLOCATION) from command-line argument list
 @param[out] parr (PARARRAY *) - param array created on successful return
@@ -118,4 +138,34 @@ Full copy function: lhs = rhs (STORAGE (RE)ALLOCATED)
 */
 //int ps_copy(PARARRAY rhs, PARARRAY *lhs);
 
+/*@}*/
+
+/*----------------------------------------------------------------------------*/
+/** \defgroup ffaccess Parameter access - first occurence 
+
+Get first occurence of data in the first occurence of the key. 
+
+@param[in] parr (PARARRAY)  -  parameter array.
+@param[in] key (char *)    -  key (null-terminated string).
+@param[out] p (type *)       -  pointer to value of indicated type.
+@return (int) 0 if successful, else nonzero error code.
+
+Note: the string case allocates memory, which must be managed by the
+calling unit; in other cases the last arg points to memory already 
+allocated by the calling unit.
+*/
+
+/*@{*/
+int ps_ffwhatever(PARARRAY parr, const char * type, const char *key, void *p);
+int ps_ffcstring(PARARRAY parr, const char *key, char **p);
+int ps_ffchar(PARARRAY parr, const char *key, char *p);
+int ps_ffshort(PARARRAY parr, const char *key, short *p);
+int ps_ffint(PARARRAY parr, const char *key, int *p);
+int ps_fflong(PARARRAY parr, const char *key, long *p);
+int ps_ffushort(PARARRAY parr, const char *key, unsigned short *p);
+int ps_ffuint(PARARRAY parr, const char *key, unsigned int *p);
+int ps_ffulong(PARARRAY parr, const char *key, unsigned long *p);
+int ps_fffloat(PARARRAY parr, const char *key, float *p);
+int ps_ffdouble(PARARRAY parr, const char *key, double *p);
+int ps_ffreal(PARARRAY parr, const char *key, ireal *p);
 /*@}*/
