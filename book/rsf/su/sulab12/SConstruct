@@ -1,6 +1,6 @@
 from rsf.suproj import *
 
-Fetch('seismic.segy','viking')
+Fetch('seismic.segy','viking',server=os.environ.get('RSF_DATASERVER','http://www.ahay.org'))
 
 # Convert to SU
 Flow('seismic','seismic.segy',

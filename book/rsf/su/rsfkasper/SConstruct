@@ -8,7 +8,7 @@ pars = {
     'perc':90,
     'tpow':3.2,
     'flo':20,
-    'a':0.2
+    'rect':25
     }
 
 Plot('data','grey title="Original Data"')
@@ -19,12 +19,7 @@ Plot('gain','data',
      ''' % pars)
 Result('gain','data gain','SideBySideAniso')
 
-for case in ('data','filt'):
-    Flow('spec-'+case,case,'spectra')
-    Plot('spec-'+case,'grey title="FX spectrum" allpos=y')
-Result('spec','spec-data spec-filt','SideBySideAniso')
-
-Flow('filt','data','erf flo=%(flo)g a=%(a)g' % pars)
+Flow('filt','data','erf flo=%(flo)g rect=%(rect)g' % pars)
 Plot('filt',
      '''
      tpow tpow=%(tpow)g | 
@@ -32,5 +27,11 @@ Plot('filt',
      ''' % pars)
 
 Result('filt','gain filt','SideBySideAniso')
+
+for case in ('data','filt'):
+    Flow('spec-'+case,case,'spectra')
+    Plot('spec-'+case,'grey title="FX spectrum" allpos=y')
+Result('spec','spec-data spec-filt','SideBySideAniso')
+
 
 End()

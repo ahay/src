@@ -1,10 +1,10 @@
 from rsf.suproj import *
 
-# byte swap for little endian
+# byte swap for big endian
 if little_endian():
-    pre = 'suswapbytes | '
-else:
     pre = ''
+else:
+    pre = 'suswapbytes | '
 
 pars = {
     'perc':90,

@@ -63,7 +63,7 @@ Flow('ray1 outpar','model1',
      '''
      triray rayfile=$TARGET
      nangle=10 fangle=-45 langle=-15
-     xs=4.5 zs=0.0 nxz=%d
+     xs=4.5 zs=0.0 nxz=%d 
      refseq=2,0 refseq=3,0 refseq=4,0 refseq=5,1
      ''' % nxz,stdout=0)
 
