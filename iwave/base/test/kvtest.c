@@ -4,6 +4,7 @@ int main(int argc, char ** argv) {
 
   KEYVAL * kv = kv_new();
   char * teststr = (char *)malloc(1000*sizeof(char));
+  char * save = teststr;
 
   strcpy(teststr,
 	 "a test of the pair reader  \
@@ -11,7 +12,7 @@ int main(int argc, char ** argv) {
           b k=wwww0w \" this is a\n quote \" \
           this=fun this  =     \n \"no fun\" \
           ha ha ha mary had a little=lamb===");
-  
+
   do {
     kv_read(kv,&teststr);
     fprintf(stderr,"kvtest: ");
@@ -19,4 +20,7 @@ int main(int argc, char ** argv) {
   } while (!kv_check(*kv));
 
   kv_delete(&kv);
+
+  free(save);
+
 }

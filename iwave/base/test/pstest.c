@@ -7,30 +7,16 @@ int main(int argc, char ** argv) {
   WORD * key = word_new();
   WORD * val = word_new();
   char * teststr = (char *)malloc(1000*sizeof(char));
+  char * save = teststr;
 
   strcpy(teststr,
 	 "a test of the pair reader  \
           \n just to see if it works \na\n=  \
           b k=wwww0w \" this is a\n quote \" \
           this=fun this  =     \n \"no fun\" \
-          ha ha ha mary had a little=lamb===");
-  /*
-  do {
-    kv_read(par->pair,&teststr);
-    stop = kv_check(*(par->pair));
-    if (!stop) {
-      fprintf(stderr,"pstest: added ");
-      kv_fprint(*(par->pair),stderr);
-      par->next = pslink_new();
-      par->next->prev = par;
-      par       = par->next;
-    }
-    else {
-      par = par->prev;
-      pslink_delete(&(par->next));
-    }
-  } while (!stop);
-  */
+          \"quoted = equation\"    \
+          ha ha ha mary had a little=lamb===\
+          \n    a=c=b=d");
 
   if (pslink_read(&par,&teststr)) {
     fprintf(stderr,"Error: pstest - failed to read data\n");
@@ -64,14 +50,23 @@ int main(int argc, char ** argv) {
   fprintf(stderr,"\nkey = this val = ");
   fprintf(stderr,"%s\n",val->str);
 
-  fprintf(stderr,"\nreset value for existing key\n");
+  fprintf(stderr,"\nreset value for existing key - first\n");
   word_assign(val,"\"totally fun\"",strlen("\"totally fun\""));
   pslink_setfirst(&par,*key,*val);
 
-  fprintf(stderr,"\nset value for new key\n");
+  fprintf(stderr,"\nreset value for existing key - last\n");
+  word_assign(val,"\"bummer\"",strlen("\"bummer\""));
+  pslink_setlast(&par,*key,*val);
+
+  fprintf(stderr,"\nset value for new key - first\n");
   word_assign(key,"that",4);
   word_assign(val,"\"not much fun at all\"",22);
   pslink_setfirst(&par,*key,*val);
+
+  fprintf(stderr,"\nset value for new key - last\n");
+  word_assign(key,"\"the other\"",13);
+  word_assign(val,"\"quite a lot of fun actually\"",29);
+  pslink_setlast(&par,*key,*val);
 
   fprintf(stderr,"\nto the front\n");
   pslink_front(&par);
@@ -82,4 +77,28 @@ int main(int argc, char ** argv) {
   }
   kv_fprint(*(par->pair),stderr);
 
+  fprintf(stderr,"\nfind first instance of key \"a\"\n");
+  word_assign(key,"a",4);
+  pslink_findfirst(par,*key,val);
+  fprintf(stderr,"\nkey = %s val = %s\n",key->str,val->str);
+  fprintf(stderr,"\nfind last instance of key \"a\"\n");
+  word_assign(key,"a",4);
+  pslink_findlast(par,*key,val);
+  fprintf(stderr,"\nkey = %s val = %s\n",key->str,val->str);
+
+  fprintf(stderr,"\nre-read string, should add same pairs all over again at end\n");
+  teststr = save;
+  pslink_read(&par,&teststr);
+  pslink_front(&par);
+  fprintf(stderr,"\nprint again in normal order\n");
+  while (par->next) {
+    kv_fprint(*(par->pair),stderr);
+    par = par->next;
+  }
+  kv_fprint(*(par->pair),stderr);
+
+  free(save);
+  word_delete(&val);
+  word_delete(&key);
+  pslink_delete(&par);
 }

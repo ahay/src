@@ -13,7 +13,8 @@ int main(int argc, char ** argv) {
           \n just to see if it works \na\n=  \
           b k=wwww0w \" this is a\n quote \" \
           this=fun this  =     \n \"no fun\" \
-          ha ha ha mary had a little=lamb===");
+          ha ha ha mary had a little=lamb=== \
+           a=c=b=d");
 
   fprintf(stderr,"%s\n",teststr);
 
@@ -25,4 +26,6 @@ int main(int argc, char ** argv) {
   }
 
   word_delete(&w);
+
+  free(teststr);
 }
