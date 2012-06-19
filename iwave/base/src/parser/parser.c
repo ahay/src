@@ -28,7 +28,7 @@ SIZEDSTRING ps_name2z(const char *name)
 }
 /*----------------------------------------------------------------------------*/
 
-int ps_setnull(PARARRAY *parr)
+int old_ps_setnull(PARARRAY *parr)
 {
     memset((void*)parr, 0, sizeof(PARARRAY));    
     return 0;

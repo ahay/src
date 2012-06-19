@@ -174,12 +174,12 @@ void nc4_sigmastep(pqv pqvec, float ds, float *ssi, float **slow, int nx, int nz
 float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, float ox, float oz, float dpx, float dpz)
 /*< signed sigma step from phase space cells step >*/
 {
-    float ds, dsz, dsx, dspz, dspx, ssg[2];
+    float ds, dsz, dsx, dspx, ssg[2];
 
     dsz = SF_HUGE;
     dsx = SF_HUGE;
 
-    dspz = SF_HUGE;
+    /* dspz = SF_HUGE; */
     dspx = SF_HUGE;
 
     /* linear step size to exit from bottom or top */
@@ -194,7 +194,7 @@ float nc4_cellstep(pqv pqvec, float **slow, int nx, int nz, float dx, float dz, 
 
     slowg_lininterp(ssg,pqvec->q[1],pqvec->q[0],slow,nx,nz,dx,dz,ox,oz);
 
-    if (ssg[0] != 0.0) dspz = dpz/(ssg[0]);
+    /* if (ssg[0] != 0.0) dspz = dpz/(ssg[0]); */
     if (ssg[1] != 0.0) dspx = dpx/(ssg[1]);
 
     /* select minimum sigma step size */

@@ -41,7 +41,7 @@ void zoeppritz (int icoef /* (1, 2, 3)
 {
     int j;
     float fac1,fac2,fac3,fac4,thetasq,qa,t1,t2,t3,t4;
-    float a1,b1,a2,b2,a3,b3,a4,b4,x,y,z,z1,fe[4],fp[4];
+    float a1,b1,a2,b2,a3,b3,a4,b4,x,y,z,fe[4],fp[4];
     sf_complex p1,p2,p3,p4, d, r[4];
 
     thetasq = theta * theta;
@@ -99,7 +99,7 @@ void zoeppritz (int icoef /* (1, 2, 3)
     x = rho2 - qa*thetasq;
     y = rho1 + qa*thetasq;
     z  = rho2 - rho1 - qa*thetasq;
-    z1 = rho1 - rho2 + qa*thetasq;
+/*    z1 = rho1 - rho2 + qa*thetasq; */
 
     p1 = sf_cmplx(a1,b1);
     p2 = sf_cmplx(a2,b2);
