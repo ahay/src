@@ -26,22 +26,22 @@ struct Upd {
     int label;
 };
 
-static double tau1, tau2, angle, thres, miu;
+static double tau1, tau2, thres, miu;
 
 static float *o, *v, *d;
 static int *n, *in, s[3];
 static float **x, **xn, **x1;
 static int *offsets, *flag;
-static float *t, *theta, *alpha;
+static float *t, *alpha;
 
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(int index);
 int neighbors_default();
 int neighbours(float* time, int i);
-int update(float value, float* time, int i, int f, float th, float al);
-float qsolve(float* time, int i, int *f, float *th, float *al);
-bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th, float *al);
+int update(float value, float* time, int i, int f, float al);
+float qsolve(float* time, int i, int *f, float *al);
+bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al);
 double newton(double a,double b,double c,double d,double e, double guess);
 double ferrari(double a,double b,double c,double d,double e, double t0);
 
@@ -50,7 +50,6 @@ void dsreiko_init(int *n_in   /* length */,
 		  float *d_in /* increment */,
 		  float tau1_in,
 		  float tau2_in,
-		  float angle_in,
 		  float thres_in)
 /*< initialize >*/
 {
@@ -76,7 +75,6 @@ void dsreiko_init(int *n_in   /* length */,
 
     tau1 = tau1_in;
     tau2 = tau2_in;
-    angle = angle_in;
     thres = thres_in;
 
     miu = d[0]/d[1];
@@ -85,7 +83,6 @@ void dsreiko_init(int *n_in   /* length */,
 void dsreiko_fastmarch(float *time /* time */,
 		       float *v_in /* slowness squared */,
 		       int *f_in   /* upwind flag */,
-		       float *theta_in /* characteristic angle */,
 		       float *alpha_in /* barycentric coordinate */)
 /*< fast-marching solver >*/
 {
@@ -95,7 +92,6 @@ void dsreiko_fastmarch(float *time /* time */,
     t = time;
     v = v_in;
     flag = f_in;
-    theta = theta_in;
     alpha = alpha_in;
 
     xn = x;
@@ -303,7 +299,7 @@ int neighbours(float* time, int i)
 /* update neighbors of gridpoint i, return number of updated points */
 {
     int j, k, ix, np;
-    float ttemp, thtemp, altemp;
+    float ttemp, altemp;
     int ftemp;
 
     np = 0;
@@ -314,29 +310,28 @@ int neighbours(float* time, int i)
 	if (ix+1 <= n[j]-1) {
 	    k = i+s[j]; 
 	    if (in[k] != SF_IN) {
-		ttemp = qsolve(time,k,&ftemp,&thtemp,&altemp);
-		np += update(ttemp,time,k,ftemp,thtemp,altemp);
+		ttemp = qsolve(time,k,&ftemp,&altemp);
+		np += update(ttemp,time,k,ftemp,altemp);
 	    }
 	}
 	if (ix-1 >= 0 ) {
 	    k = i-s[j];
 	    if (in[k] != SF_IN) {
-		ttemp = qsolve(time,k,&ftemp,&thtemp,&altemp);
-		np += update(ttemp,time,k,ftemp,thtemp,altemp);
+		ttemp = qsolve(time,k,&ftemp,&altemp);
+		np += update(ttemp,time,k,ftemp,altemp);
 	    }
 	}
     }
     return np;
 }
 
-int update(float value, float* time, int i, int f, float th, float al)
+int update(float value, float* time, int i, int f, float al)
 /* update gridpoint i with new value and modify wave front */
 {
     /* only update when smaller than current value */
     if (value < time[i]) {
 	time[i] = value;
 	if (flag != NULL) flag[i] = f;
-	if (theta != NULL) theta[i] = th;
 	if (alpha != NULL) alpha[i] = al;
 	if (in[i] == SF_OUT) { 
 	    in[i] = SF_FRONT;      
@@ -350,7 +345,7 @@ int update(float value, float* time, int i, int f, float th, float al)
     return 0;
 }
 
-float qsolve(float* time, int i, int *f, float *th, float *al)
+float qsolve(float* time, int i, int *f, float *al)
 /* find new traveltime at gridpoint i */
 {
     int j, k, ix[3];
@@ -400,24 +395,24 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value < SF_HUGE) {
 
 	*f = 7;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 
 	if (xx[1].value <= xx[2].value) {
 	    *f = 6;
-	    if (updaten(&res,xj,vr,vs,f,th,al)) 
+	    if (updaten(&res,xj,vr,vs,f,al)) 
 		return res;
 	
 	    *f = 8;
-	    if (updaten(&res,xj,vr,vs,f,th,al)) 
+	    if (updaten(&res,xj,vr,vs,f,al)) 
 		return res;
 	} else {
 	    *f = 5;
-	    if (updaten(&res,xj,vr,vs,f,th,al)) 
+	    if (updaten(&res,xj,vr,vs,f,al)) 
 		return res;
 
 	    *f = 9;
-	    if (updaten(&res,xj,vr,vs,f,th,al)) 
+	    if (updaten(&res,xj,vr,vs,f,al)) 
 		return res;
 	}
 
@@ -430,7 +425,7 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value <  SF_HUGE) {
 
 	*f = 4;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -442,11 +437,11 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value <  SF_HUGE) {
 
 	*f = 5;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 	
 	*f = 9;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 	
 	return SF_HUGE;
@@ -458,11 +453,11 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value == SF_HUGE) {
 
 	*f = 6;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 	
 	*f = 8;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 	
 	return SF_HUGE;
@@ -474,7 +469,7 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value == SF_HUGE) {
 
 	*f = 1;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -486,7 +481,7 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value == SF_HUGE) {
 
 	*f = 2;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -498,7 +493,7 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
 	xx[2].value <  SF_HUGE) {
 
 	*f = 3;
-	if (updaten(&res,xj,vr,vs,f,th,al)) 
+	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 
 	return SF_HUGE;
@@ -507,7 +502,7 @@ float qsolve(float* time, int i, int *f, float *th, float *al)
     return SF_HUGE;
 }
 
-bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *th, float *al)
+bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al)
 /* calculate new traveltime */
 {
     double a, b, c, d, e, causal, tt, temp[4], discr;
@@ -522,7 +517,6 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	
 	*res = tt;
-	*th = 90.;
 	*al = 1.;
 	return true;
     }
@@ -531,7 +525,6 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
 	*res = tt;
-	*th = 0.;
 	*al = 0.;
 	return true;
     }
@@ -540,7 +533,6 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
 	*res = tt;
-	*th = 0.;
 	*al = 0.;
 	return true;
     }
@@ -553,12 +545,10 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 2;
-	    *th = 0.;
 	    *al = 0.;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
-	    *th = 0.;
 	    *al = 0.;
 	}
 
@@ -608,7 +598,6 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (tt <= causal) return false;
 
 	*res = tt;
-	*th = atan((tt-xj[0]->value)/(tt-xj[2]->value))/3.1416*180.;
 	
 	kappa2 = pow(tt-xj[2]->value,2.)*xj[2]->delta/vs;
 	if (kappa2 > 1.-thres) return false;
@@ -661,7 +650,6 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (tt <= causal) return false;
 
 	*res = tt;
-	*th = atan((tt-xj[0]->value)/(tt-xj[1]->value))/3.1416*180.;
 
 	kappa1 = pow(tt-xj[1]->value,2.)*xj[1]->delta/vr;
 	if (kappa1 > 1.-thres) return false;
@@ -678,13 +666,11 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 1;
-	    *th = 90.;
 	    *al = 1.;
 	    return true;
 	} else {
 	    *res = temp[1];
 	    *f = 2;
-	    *th = 0.;
 	    *al = 0.;
 	    return true;
 	}
@@ -697,13 +683,11 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 1;
-	    *th = 90.;
 	    *al = 1.;
 	    return true;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
-	    *th = 0.;
 	    *al = 0.;
 	    return true;
 	}
@@ -753,10 +737,8 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = ferrari(a,b,c,d,e,causal);
 	
 	if (tt <= causal) return false;
-	if (tt-xj[0]->value < (angle*sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))) return false;
 	
 	*res = tt;
-	*th = atan((tt-xj[0]->value)/sqrt(pow(tt-xj[1]->value,2.)+pow(tt-xj[2]->value,2.)))/3.1416*180.;
 
 	kappa1 = pow(tt-xj[1]->value,2.)*xj[1]->delta/vr;
 	if (kappa1 > 1.-thres) return false;

@@ -26,11 +26,11 @@ int main(int argc, char* argv[])
     bool velocity;
     int dim, i, n[SF_MAX_DIM], is, ns;
     int *f;
-    float *th, *al;
+    float *al;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
-    float tau1, tau2, angle, thres;
+    float tau1, tau2, thres;
     char key[6];
-    sf_file in, out, flag, theta, alpha;
+    sf_file in, out, flag, alpha;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -71,11 +71,6 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("tau2",&tau2)) tau2=1.;
     /* tau2 */
 
-    if (!sf_getfloat("angle",&angle)) angle=5.;
-    /* angle (degree) */
-
-    angle = tan(angle/180.*3.1416);
-
     if (!sf_getfloat("thres",&thres)) thres=0.1;
     /* threshold (percentage) */
 
@@ -89,17 +84,6 @@ int main(int argc, char* argv[])
     } else {
 	flag = NULL;
 	f = NULL;
-    }
-
-    if (NULL != sf_getstring("theta")) {
-	theta = sf_output("theta");
-	sf_putint(theta,"n3",n[1]);
-	sf_putfloat(theta,"d3",d[1]);
-	sf_putfloat(theta,"o3",o[1]);
-	th = sf_floatalloc(ns*n[1]);
-    } else {
-	theta = NULL;
-	th = NULL;
     }
 
     if (NULL != sf_getstring("alpha")) {
@@ -117,16 +101,15 @@ int main(int argc, char* argv[])
     t = sf_floatalloc(ns*n[1]);
 
     /* initialize */
-    dsreiko_init(n,o,d,tau1,tau2,angle,thres);
+    dsreiko_init(n,o,d,tau1,tau2,thres);
 
     /* compute */
-    dsreiko_fastmarch(t,s,f,th,al);
+    dsreiko_fastmarch(t,s,f,al);
 
     /* mirror */
     dsreiko_mirror(t);
 
     if (flag != NULL) sf_intwrite(f,ns*n[1],flag);
-    if (theta != NULL) sf_floatwrite(th,ns*n[1],theta);
     if (alpha != NULL) sf_floatwrite(al,ns*n[1],alpha);
 
     /* write output dimension */

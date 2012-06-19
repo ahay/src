@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     int iter, niter, cgiter, count;
     int *f, *m0, offset;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv=NULL, *t, *w, *t0, *w1, *p=NULL;
-    float eps, tol, tau1, tau2, angle, thres, *th, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
+    float eps, tol, tau1, tau2, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
     char key[6], *what;
     sf_file in, out, reco, grad, flag, mask, debug;
 
@@ -285,11 +285,6 @@ int main(int argc, char* argv[])
 	    if (!sf_getfloat("tau2",&tau2)) tau2=1.;
 	    /* tau2 */
 
-	    if (!sf_getfloat("angle",&angle)) angle=5.;
-	    /* angle (degree) */
-	    
-	    angle = tan(angle/180.*3.1416);
-	    
 	    if (!sf_getfloat("thres",&thres)) thres=0.1;
 	    /* threshold (percentage) */
 	    
@@ -331,17 +326,16 @@ int main(int argc, char* argv[])
 	    dt = sf_floatalloc(nt);
 	    w1 = sf_floatalloc(nw);
 	    f  = sf_intalloc(nt);
-	    th = sf_floatalloc(nt);
 	    al = sf_floatalloc(nt);
 
 	    /* initialize eikonal */
-	    dsreiko_init(n,o,d,tau1,tau2,angle,thres);
+	    dsreiko_init(n,o,d,tau1,tau2,thres);
 	    
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);
 	    
 	    /* initial misfit */
-	    dsreiko_fastmarch(t,w,f,th,al);
+	    dsreiko_fastmarch(t,w,f,al);
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
@@ -400,7 +394,7 @@ int main(int argc, char* argv[])
 			w1[iw] = (w[iw]+gama*dw[iw])*(w[iw]+gama*dw[iw])/w[iw];
 		    
 		    /* compute new misfit */
-		    dsreiko_fastmarch(t,w1,f,th,al);
+		    dsreiko_fastmarch(t,w1,f,al);
 		    dsreiko_mirror(t);
 		    
 		    for (it=0; it < nt; it++) {
