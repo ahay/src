@@ -14,8 +14,13 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys, tempfile, re, subprocess, urllib
-import c_m8r as c_rsf
-import numpy
+
+try:
+    import c_m8r as c_rsf
+    import numpy
+    _swig_ = True
+except:
+    _swig_ = False
 
 import rsf.doc
 import rsf.prog
@@ -23,45 +28,115 @@ import rsf.path
 
 ###
 
-class Par(object):
-    def __init__(self,argv=sys.argv):
-        c_rsf.sf_init(len(argv),argv)
-        self.prog = c_rsf.sf_getprog()
-        for type in ('int','float','bool'):
-            setattr(self,type,self.__get(type))
-            setattr(self,type+'s',self.__gets(type))
-    def close(self):
-        c_rsf.sf_parclose()
-    def __get(self,type):
-        func = getattr(c_rsf,'sf_get'+type)
-        def _get(key,default=None):
-            get,par = func(key)
-            if get:
+if _swig_:
+    class Par(object):
+        '''parameter table'''
+        def __init__(self,argv=sys.argv):
+            c_rsf.sf_init(len(argv),argv)
+            self.prog = c_rsf.sf_getprog()
+            for type in ('int','float','bool'):
+                setattr(self,type,self.__get(type))
+                setattr(self,type+'s',self.__gets(type))
+        def close(self):
+            c_rsf.sf_parclose()
+        def __get(self,type):
+            func = getattr(c_rsf,'sf_get'+type)
+            def _get(key,default=None):
+                get,par = func(key)
+                if get:
+                    return par
+                elif default != None:
+                    return default
+                else:
+                    return None
+            return _get
+        def __gets(self,type):
+            func = getattr(c_rsf,'get'+type+'s')
+            def _gets(key,num,default=None):
+                pars = func(key,num)
+                if pars:
+                    return pars
+                elif default:
+                    return default
+                else:
+                    return None
+            return _gets
+        def string(self,key,default=None):
+            par = c_rsf.sf_getstring(key)
+            if par:
                 return par
-            elif default != None:
-                return default
-            else:
-                return None
-        return _get
-    def __gets(self,type):
-        func = getattr(c_rsf,'get'+type+'s')
-        def _gets(key,num,default=None):
-            pars = func(key,num)
-            if pars:
-                return pars
             elif default:
                 return default
             else:
                 return None
-        return _gets
-    def string(self,key,default=None):
-        par = c_rsf.sf_getstring(key)
-        if par:
-            return par
-        elif default:
-            return default
-        else:
-            return None
+else:
+    # from apibak
+    class Par(object):
+        '''parameter table'''
+        def __init__(self,argv=sys.argv):
+            self.noArrays = True
+            self.prog = argv[0]
+            self.__args = self.__argvlist2dict(argv[1:])
+        def __argvlist2dict(self,argv):
+            """Eliminates duplicates in argv and makes it a dictionary"""
+            argv = self.__filter_equal_sign(argv)
+            args = {}
+            for a in argv:
+                key = a.split('=')[0]
+                args[key] = a.replace(key+'=','')
+            return args
+
+        def __filter_equal_sign(self,argv):
+            """Eliminates "par = val", "par= val" and "par =val" mistakes."""
+            argv2 = []
+            # Could not use the simpler 'for elem in argv'...argv.remove because
+            # lonely '=' signs are treated weirdly. Many things did not work as
+            # expected -- hence long and ugly code. Test everything.
+            for i in range( len(argv) ):
+                if argv[i] != '=':
+                    if argv[i].find('=') != 0:
+                        if argv[i].find('=') != -1:
+                            if argv[i].find('=') != len(argv[i])-1:
+                                argv2.append(argv[i])
+            return argv2
+
+        def __get(self, key, default):
+            """Obtains value of argument from dictionary"""
+            if self.__args.has_key(key):
+                return self.__args[key]
+            elif str(default):
+                return default
+            else:
+                return None
+
+        def string(self, key, default=None):
+            """Returns string argument given to program"""
+            return self.__get(key, default)
+
+        def int(self,key,default=None):
+            """Returns integer argument given to program"""
+            try:
+                return int( self.__get(key, default) )
+            except:
+                return None
+
+        def float(self,key,default=None):
+            """Returns float argument given to program"""
+            try:
+                return float( self.__get(key, default) )
+            except:
+                return None
+
+        def bool(self,key,default=None):
+            """Returns bool argument given to program"""
+            val = self.__get(key, default)
+            val = lower(str(val)) # No, combining with line above does not work
+            if val[0] == 'y' or val == 'true':
+                return True
+            elif val[0] =='n' or val == 'false':
+                return False
+            else:
+                return None
 
 # default parameters for interactive runs
 par = Par(['python','-'])
@@ -80,7 +155,7 @@ class File(object):
         if isinstance(tag,File):
             # copy file
             self.__init__(tag.tag)
-        elif isinstance(tag,numpy.ndarray):
+        elif _swig_ and isinstance(tag,numpy.ndarray):
             # numpy array
             out = Output(Temp())
             shape = tag.shape
@@ -90,7 +165,7 @@ class File(object):
             out.write(tag)
             out.close()
             self.__init__(out,temp=True)
-        elif isinstance(tag,list):
+        elif _swig_ and isinstance(tag,list):
             self.__init__(numpy.array(tag,'f'))
         else:
             self.tag = tag
@@ -159,19 +234,21 @@ class File(object):
     def dot(self,other):
         'Dot product'
         prod = self.__mul__(other).reshape()
-        stack = Input(Filter('stack')(norm=False,axis=1)[prod])
-        dp = numpy.zeros(1,'f')
-        stack.read(dp)
-        stack.close()
-        return dp[0]
+        stack = Filter('stack')(norm=False,axis=1)[prod]
+        return stack[0]
     def __array__(self,context=None):
         'numpy array'
-        # danger: dangling open file descriptor
-        if None == self.narray:
-            if not hasattr(self,'file'):
-                self.file = c_rsf.sf_input(self.tag)
-            self.narray = c_rsf.rsf_array(self.file)
-        return self.narray
+        if _swig_:
+            # danger: dangling open file descriptor
+            if None == self.narray:
+                if not hasattr(self,'file'):
+                    self.file = c_rsf.sf_input(self.tag)
+                self.narray = c_rsf.rsf_array(self.file)
+            return self.narray
+        else:
+            val = os.popen('%s < %s' % 
+                           (Filter('disfil')(number=False),self)).read()
+            return map(float,val.split())
     def __array_wrap__(self,array,context=None):
         return Input(array)
     def __getitem__(self,i):
@@ -181,14 +258,23 @@ class File(object):
         array = self.__array__()
         array.__setitem__(index,value)
     def size(self,dim=0):
-        if hasattr(self,'file'):
-            f = self.file
+        if _swig_:
+            if hasattr(self,'file'):
+                f = self.file
+            else:
+                f = c_rsf.sf_input(self.tag)
+            s = c_rsf.sf_leftsize(f,dim)
+            if not hasattr(self,'file'):
+                c_rsf.sf_fileclose(f)
         else:
-            f = c_rsf.sf_input(self.tag)
-        s = c_rsf.sf_leftsize(f,dim)
-        if not hasattr(self,'file'):
-            c_rsf.sf_fileclose(f)
-        return s
+            s = 1
+            for axis in range(dim+1,10):
+                n = self.int("n%d" % axis)
+                if n:
+                    s *= n
+                else:
+                    break
+        return s    
     def int(self,key,default=None):
         try:
             p = subprocess.Popen('%s %s parform=n < %s' % 
@@ -247,100 +333,163 @@ class File(object):
     def __del__(self):
         self.close()
 
-class _File(File):
-    type = ['uchar','char','int','float','complex']
-    form = ['ascii','xdr','native']
-    def __init__(self,tag):
-        if not self.file:
-            raise TypeError, 'Use Input or Output instead of File'
-        File.__init__(self,tag)
-        self.type = _File.type[c_rsf.sf_gettype(self.file)]
-        self.form = _File.form[c_rsf.sf_getform(self.file)]
-    def close(self):
-        c_rsf.sf_fileclose(self.file)
-    def __del__(self):
-        self.close()
-        File.close(self)
-    def settype(self,type):
-        for i in xrange(len(_File.type)):
-            if type == _File.type[i]:
-                self.type = type
-                c_rsf.sf_settype (self.file,i)
-    def setformat(self,format):
-        c_rsf.sf_setformat(self.file,format)
-    def __get(self,func,key,default):
-        get,par = func(self.file,key)
-        if get:
-            return par
-        elif default:
-            return default
-        else:
-            return None
-    def __gets(self,func,key,num,default):
-        pars = func(self.file,key,num)
-        if pars:
-            return pars
-        elif default:
-            return default
-        else:
-            return None
-    def string(self,key):
-        return c_rsf.sf_histstring(self.file,key)
-    def int(self,key,default=None):
-        return self.__get(c_rsf.sf_histint,key,default)
-    def float(self,key,default=None):
-        return self.__get(c_rsf.sf_histfloat,key,default)
-    def ints(self,key,num,default=None):
-        return self.__gets(c_rsf.histints,key,num,default)    
-    def bytes(self):
-        return c_rsf.sf_bytes(self.file)
-    def put(self,key,val):
-        if isinstance(val,int):
-            c_rsf.sf_putint(self.file,key,val)
-        elif isinstance(val,float):
-            c_rsf.sf_putfloat(self.file,key,val)
-        elif isinstance(val,str):
-            c_rsf.sf_putstring(self.file,key,val)
-        elif isinstance(val,list):
-            if isinstance(val[0],int):
-                c_rsf.sf_putints(self.file,key,val)
+if _swig_:
+    class _File(File):
+        type = ['uchar','char','int','float','complex']
+        form = ['ascii','xdr','native']
+        def __init__(self,tag):
+            if not self.file:
+                raise TypeError, 'Use Input or Output instead of File'
+            File.__init__(self,tag)
+            self.type = _File.type[c_rsf.sf_gettype(self.file)]
+            self.form = _File.form[c_rsf.sf_getform(self.file)]
+        def close(self):
+            c_rsf.sf_fileclose(self.file)
+        def __del__(self):
+            self.close()
+            File.close(self)
+            def settype(self,type):
+                for i in xrange(len(_File.type)):
+                    if type == _File.type[i]:
+                        self.type = type
+                        c_rsf.sf_settype (self.file,i)
+            def setformat(self,format):
+                c_rsf.sf_setformat(self.file,format)
+            def __get(self,func,key,default):
+                get,par = func(self.file,key)
+                if get:
+                    return par
+                elif default:
+                    return default
+                else:
+                    return None
+            def __gets(self,func,key,num,default):
+                pars = func(self.file,key,num)
+                if pars:
+                    return pars
+                elif default:
+                    return default
+                else:
+                    return None
+            def string(self,key):
+                return c_rsf.sf_histstring(self.file,key)
+            def int(self,key,default=None):
+                return self.__get(c_rsf.sf_histint,key,default)
+            def float(self,key,default=None):
+                return self.__get(c_rsf.sf_histfloat,key,default)
+            def ints(self,key,num,default=None):
+                return self.__gets(c_rsf.histints,key,num,default)    
+            def bytes(self):
+                return c_rsf.sf_bytes(self.file)
+            def put(self,key,val):
+                if isinstance(val,int):
+                    c_rsf.sf_putint(self.file,key,val)
+                elif isinstance(val,float):
+                    c_rsf.sf_putfloat(self.file,key,val)
+                elif isinstance(val,str):
+                    c_rsf.sf_putstring(self.file,key,val)
+                elif isinstance(val,list):
+                    if isinstance(val[0],int):
+                        c_rsf.sf_putints(self.file,key,val)
         
-class Input(_File):
-    def __init__(self,tag='in'):
-        if isinstance(tag,File):
-            # copy file
-            self.__init__(tag.tag)
-        else:
-            self.file = c_rsf.sf_input(tag)
-            _File.__init__(self,tag)
-    def read(self,data):
-        if self.type == 'float':
-            c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
-        elif self.type == 'complex':
-            c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
-        else:
-            raise TypeError, 'Unsupported file type %s' % self.type
+    class Input(_File):
+        def __init__(self,tag='in'):
+            if isinstance(tag,File):
+                # copy file
+                self.__init__(tag.tag)
+            else:
+                self.file = c_rsf.sf_input(tag)
+                _File.__init__(self,tag)
+        def read(self,data):
+            if self.type == 'float':
+                c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
+            elif self.type == 'complex':
+                c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
+            else:
+                raise TypeError, 'Unsupported file type %s' % self.type
 
-class Output(_File):
-    def __init__(self,tag='out',src=None):
-        if not tag:
-            self.tag = Temp()
-            self.temp = True
-        else:
-            self.tag = tag
-            self.temp = False
-        self.file = c_rsf.sf_output(self.tag)
-        if src: # clone source file
-            c_rsf.sf_settype(self.file,_File.type.index(src.type))
-            c_rsf.sf_fileflush(self.file,src.file)
-        _File.__init__(self,self.tag)
-    def write(self,data):
-        if self.type == 'float':
-            c_rsf.sf_floatwrite(numpy.reshape(data,(data.size,)),self.file)
-        elif self.type == 'complex':
-            c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),self.file)
-        else:
-            raise TypeError, 'Unsupported file type %s' % self.type
+    class Output(_File):
+        def __init__(self,tag='out',src=None):
+            if not tag:
+                self.tag = Temp()
+                self.temp = True
+            else:
+                self.tag = tag
+                self.temp = False
+            self.file = c_rsf.sf_output(self.tag)
+            if src: # clone source file
+                c_rsf.sf_settype(self.file,_File.type.index(src.type))
+                c_rsf.sf_fileflush(self.file,src.file)
+            _File.__init__(self,self.tag)
+        def write(self,data):
+            if self.type == 'float':
+                c_rsf.sf_floatwrite(numpy.reshape(data,(data.size,)),self.file)
+            elif self.type == 'complex':
+                c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),
+                                      self.file)
+            else:
+                raise TypeError, 'Unsupported file type %s' % self.type
+
+else:
+
+    class Input(object):
+        def __create_variable_dictionary(self, header):
+            'Parse RSF header into a dictionary of variables'
+            self.vd={} # variable dictionary
+            ilist = header.split()
+            pos = 0
+            squot = "'"
+            dquot = '"'
+            while pos < len(ilist):
+                if '=' in ilist[pos]:
+                    tokenlist = ilist[pos].split('=')
+                    lhs = tokenlist[0]
+                    rhs = tokenlist[1]
+                    quotmark = None
+                    if rhs[0] in (squot, dquot):
+                        if rhs[0] == squot:
+                            quotmark = squot
+                        else:
+                            quotmark = dquot
+                        if rhs[-1] == quotmark:
+                            rhs_out = rhs.strip(quotmark)
+                            pos += 1
+                        else:
+                            rhs_out = rhs.lstrip(quotmark)
+                            while pos < len(ilist):
+                                pos += 1
+                                rhs_out += ' '
+                                if ilist[pos][-1] == quotmark:
+                                    rhs_out += ilist[pos][:-1]
+                                    break
+                                else:
+                                    rhs_out += ilist[pos]
+                    else:
+                        rhs_out = rhs
+                        pos += 1
+                    self.vd[lhs] = rhs_out
+                else:
+                    pos += 1
+
+        def __init__(self,tag='in'):
+            # Temporary solution. Need to scan for \EOL\EOL\EOT, else this will
+            # choke on a .HH file!
+            if tag == 'in':
+                self.__create_variable_dictionary(sys.stdin.read())
+            else:
+                try:
+                    f = open(str(tag),'r')
+                    self.__create_variable_dictionary(f.read())
+                    f.close()
+                except:
+                    sys.stderr.write("Cannot read from \"%s\"\n" % tag)
+                    sys.exit(1)
+
+        def int(self, nm):
+            return int(self.vd[nm])
+
+        def float(self, nm):
+            return float(self.vd[nm])
 
 dataserver = os.environ.get('RSF_DATASERVER',
                             'http://www.reproducibility.org')
@@ -368,7 +517,8 @@ class Filter(object):
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle','grey3')
     diagnostic = ('attr','disfil')
-    def __init__(self,name,prefix='sf',srcs=[],run=False,checkpar=False,pipe=False):
+    def __init__(self,name,prefix='sf',srcs=[],
+                 run=False,checkpar=False,pipe=False):
         rsfroot = rsf.prog.RSFROOT
         self.plot = False
         self.stdout = True

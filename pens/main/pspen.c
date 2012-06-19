@@ -2110,7 +2110,7 @@ extern int      default_ps_font;
 void pstext (char *string, float pathx, float pathy, float upx, float upy)
 /*< text >*/
 {
-    double          fpathx, fpathy, fupx, fupy;
+    double          fpathx, fpathy; /* fupx, fupy; */
     double          path;
     int             txsize, orient;
     double          yfact, xfact;
@@ -2137,8 +2137,8 @@ void pstext (char *string, float pathx, float pathy, float upx, float upy)
  */
     fpathx = (double) pathx;
     fpathy = (double) pathy;
-    fupx = (double) upx;
-    fupy = (double) upy;
+/*    fupx = (double) upx;
+      fupy = (double) upy; */
 
     path = sqrt ((double) (fpathx * fpathx + fpathy * fpathy));
     /* up = sqrt ((double) (fupx * fupx + fupy * fupy)); */

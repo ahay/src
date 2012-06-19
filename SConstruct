@@ -134,8 +134,7 @@ api = env.get('API',[])
 if type(api) is str:
     api = [api]
 api.insert(0,'c')
-
-bldutil.py_install('api/python/apibak.py', env, pkgdir)
+api.insert(1,'python')
 
 Default('build/include')
 Default('build/lib')

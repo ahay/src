@@ -31,10 +31,7 @@ try: # Give precedence to local version
 except: # Use distributed version
     import rsf.user.m8rex as m8rex
 
-try:
-    import rsf.api as rsf
-except: # Madagascar's Python API not installed
-    import rsf.apibak as rsf
+import rsf.api as rsf
 
 try:
     import subprocess

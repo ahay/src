@@ -108,6 +108,7 @@ def check_all(context):
     petsc(context) # FDNSI
     cuda(context) # FDNSI
     epydoc(context) #FDNSI
+    swig(context)
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -119,8 +120,6 @@ def check_all(context):
         matlab(context)
     if 'octave' in api:
         octave(context)
-    if 'python' in api:
-        python(context)
     if 'java' in api:
         java(context)
 
@@ -1610,26 +1609,30 @@ pkg['swig'] = {'fedora':'swig',
 pkg['numpy'] = {'fedora':'numpy',
                 'ubuntu':'python-scipy, python-numpy-dev'}
 
-def python(context):
+def swig(context):
     if '-static-intel' in context.env.get('LINKFLAGS',''):
         stderr_write(
-        'The Python API needs shared libs that cannot be built with -static-intel',
+        'The Python/SWIG API needs shared libs '
+        'that cannot be built with -static-intel',
         'yellow_on_red')
     context.Message("checking for SWIG ... ")
     if 'swig' in Environment().get('TOOLS'):
         context.Result( WhereIs('swig') )
+        context.env['SWIG'] = True
     else:
         context.Result(context_failure)
-        need_pkg('swig')
+        need_pkg('swig', fatal = False)
+        context.env['SWIG'] = None
 
     context.Message("checking for numpy ... ")
     try:
         import numpy
         context.Result(context_success)
+        context.env['NUMPY'] = True
     except:
         context.Result(context_failure)
-        need_pkg('numpy')
-
+        need_pkg('numpy', fatal = False)
+        context.env['NUMPY'] = None
 
 pkg['java-devel'] = {'ubuntu':'openjdk-6-jdk'}
 pkg['minesjtk'] = {}
@@ -1806,5 +1809,7 @@ def options(file):
     opts.Add('CUDA_TOOLKIT_PATH','Location of CUDA toolkit')
     opts.Add('NVCC','NVIDIA C compiler')
     opts.Add('EPYDOC','RSF Python package HTML documentation')
+    opts.Add('NUMPY','Existence of numpy package')
+    opts.Add('SWIG','Location of SWIG')
     
     return opts

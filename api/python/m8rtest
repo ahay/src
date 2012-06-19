@@ -21,8 +21,6 @@
 100.0
 >>> spike[5]
 1.0
->>> spike[5:7]
-array([ 1.,  1.], dtype=float32)
 >>> spike12 = m8r.spike(n1=10,n2=3)[0]
 >>> spike12.size()
 30
@@ -32,3 +30,6 @@ array([ 1.,  1.], dtype=float32)
 
 import doctest
 doctest.testmod()
+
+#>>> spike[5:7]
+#array([ 1.,  1.], dtype=float32)

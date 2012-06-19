@@ -16,6 +16,7 @@ To SCons:
 To documentation:
 
 To APIs:
+* python API (m8r or rsf.api) is now always installed
 
 To the Python package:
 

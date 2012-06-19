@@ -39,13 +39,15 @@ int main(int argc, char* argv[])
 	image = sf_output("out");
 
 	stat = sf_histint(data,"n1",&nh);
-	stat = sf_histfloat(data,"d1",&dh);
+	stat = stat && sf_histfloat(data,"d1",&dh);
 
-	stat = sf_histint(data,"n2",&nx);
-	stat = sf_histfloat(data,"d2",&dx);
+	stat = stat && sf_histint(data,"n2",&nx);
+	stat = stat && sf_histfloat(data,"d2",&dx);
 
-	stat = sf_histint(data,"n3",&nt);
-	stat = sf_histfloat(data,"d3",&dt);
+	stat = stat && sf_histint(data,"n3",&nt);
+	stat = stat && sf_histfloat(data,"d3",&dt);
+
+	if (!stat) sf_error("Need n1,n2,etc. in input");
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
@@ -62,10 +64,12 @@ int main(int argc, char* argv[])
 	data = sf_output("out");
 
 	stat = sf_histint(image,"n1",&nz);
-	stat = sf_histfloat(image,"d1",&dz);
+	stat = stat && sf_histfloat(image,"d1",&dz);
 
-	stat = sf_histint(image,"n2",&nx);
-	stat = sf_histfloat(image,"d2",&dx);
+	stat = stat && sf_histint(image,"n2",&nx);
+	stat = stat && sf_histfloat(image,"d2",&dx);
+
+	if (!stat) sf_error("Need n1,n2,etc. in input");
 
 	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
 	/* time samples (if modeling) */

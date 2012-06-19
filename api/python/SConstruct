@@ -15,7 +15,16 @@ except: # local version
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'])
 
-if 'python' in env.get('API',[]):
+if root:
+    pydir = os.path.dirname(pkgdir)
+    for module in modules:
+        install = env.Install(pydir,module+'.py')
+
+        if module == 'm8r':
+            env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
+            env.Install(bindir,module+'test')
+
+if env.get('SWIG') and env.get('NUMPY'):
     try:
         EnsureSConsVersion(1,0)
     except:
@@ -62,12 +71,7 @@ if 'python' in env.get('API',[]):
 
         if root:
             pydir = os.path.dirname(pkgdir)
-
-            install = env.Install(pydir,pfiles)
-            
-            if module == 'm8r':
-                env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
-                env.Install(bindir,module+'test')
+            install = env.Install(pydir,pfiles[:2])
 
             if env['PLATFORM'] == 'darwin':
                 for lib in ('rsf','rsfplot'):

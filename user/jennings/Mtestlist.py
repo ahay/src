@@ -36,10 +36,7 @@ if not hasattr(os,'walk'):
     sys.stderr.write('testlist needs Python 2.3 or greater\n')
     sys.exit(unix_error)
 
-try:
-    import rsf.api as rsf
-except: # Madagascar's Python API not installed
-    import rsf.apibak as rsf
+import rsf.api as rsf
 
 sfprefix = 'sf'                 # prefix for rsf commands
 plprefix = 'vp'                 # prefix for vpl commands
