@@ -41,7 +41,7 @@ int main (int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&nt)) sf_error("Need n1= in in");
-    if (!sf_histint(in,"n2",&nd)) sf_error("Need n2= in in");
+    nd = sf_leftsize(in,1);
 
     header = sf_getstring("head");
     /* header file */
