@@ -22,11 +22,11 @@
 #include "dsreiko.h"
 
 struct Upd {
-    double stencil, value, delta;
-    int label;
+    double value, delta;
 };
 
-static double tau1, tau2, thres, miu;
+static double thres, tol, miu;
+static int nloop;
 
 static float *o, *v, *d;
 static int *n, *in, s[3];
@@ -42,15 +42,15 @@ int neighbours(float* time, int i);
 int update(float value, float* time, int i, int f, float al);
 float qsolve(float* time, int i, int *f, float *al);
 bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al);
-double newton(double a,double b,double c,double d,double e, double guess);
-double ferrari(double a,double b,double c,double d,double e, double t0);
+double bisect(struct Upd *xj[],bool r, double vr, bool s, double vs, double min, double max);
+double eval(struct Upd *xj[], bool r, double vr, bool s, double vs, double p);
 
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
 		  float *d_in /* increment */,
-		  float tau1_in,
-		  float tau2_in,
-		  float thres_in)
+		  float thres_in,
+		  float tol_in,
+		  int nloop_in)
 /*< initialize >*/
 {
     int maxband;
@@ -73,9 +73,9 @@ void dsreiko_init(int *n_in   /* length */,
 
     offsets = (int *) sf_alloc (n[0]*n[1]*n[2],sizeof (int));
 
-    tau1 = tau1_in;
-    tau2 = tau2_in;
     thres = thres_in;
+    tol = tol_in;
+    nloop = nloop_in;
 
     miu = d[0]/d[1];
 }
@@ -378,19 +378,14 @@ float qsolve(float* time, int i, int *f, float *al)
 	}
 	
 	xj[j] = xx+j;
-	xj[j]->label = j;
 	xj[j]->delta = 1./(d[j]*d[j]);
 
 	if (a < b) {
 	    xj[j]->value = a;
 	} else {
 	    xj[j]->value = b;
-	}
+	}	
     }
-
-    xj[0]->stencil = vr+vs;
-    xj[1]->stencil = vr-vs;
-    xj[2]->stencil = vs-vr;
 
     /* z-r-s */
     if (xx[0].value < SF_HUGE && 
@@ -508,13 +503,11 @@ float qsolve(float* time, int i, int *f, float *al)
 bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al)
 /* calculate new traveltime */
 {
-    double a, b, c, d, e, causal, tt, temp[4], discr;
+    double tt, temp[2];
     double kappa1, kappa2;
-    int j, cc, count;
+    double min, max;
+    int j;
     
-    /* a*t^4 + b*t^3 + c*t^2 + d*t + e = 0. */
-    a = b = c = d = e = 0.;
-
     /* one-sided */
     if (*f == 1) {
 	tt = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
@@ -548,61 +541,36 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 2;
-	    *al = 0.;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
-	    *al = 0.;
 	}
+
+	*al = 0.;	
 
 	return true;
     }
 
     if (*f == 5) {
 	if (xj[0]->value >= xj[2]->value)
-	    causal = xj[0]->value;
+	    min = xj[0]->value;
 	else
-	    causal = xj[2]->value;
+	    min = xj[2]->value;
 
-	count = 0;
+	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,sqrt(vs/xj[2]->delta)+xj[2]->value);
 
-	a = xj[0]->delta+xj[2]->delta;
-	b = xj[0]->value*xj[0]->delta+xj[2]->value*xj[2]->delta+sqrt(vr*xj[0]->delta);
-	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[2]->value,2.)*xj[2]->delta+2.*sqrt(vr*xj[0]->delta)*xj[0]->value+(vr-vs);
-	b /= a;
+	if (min > max) return false;
 
-	discr=b*b-c/a;
+	if (eval(xj,false,vr,true,vs,min) > 0.) return false;
+	if (eval(xj,false,vr,true,vs,max) < 0.) return false;
 
-	if (discr >= 0.) {
-	    temp[count++] = b+sqrt(discr);
-	    temp[count++] = b-sqrt(discr);
-	}
+	tt = bisect(xj,false,vr,true,vs,min,max);
 
-	a = xj[0]->delta+xj[2]->delta;
-	b = xj[0]->value*xj[0]->delta+xj[2]->value*xj[2]->delta-sqrt(vr*xj[0]->delta);
-	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[2]->value,2.)*xj[2]->delta-2.*sqrt(vr*xj[0]->delta)*xj[0]->value+(vr-vs);
-	b /= a;
-
-	discr=b*b-c/a;
-
-	if (discr >= 0.) {
-	    temp[count++] = b+sqrt(discr);
-	    temp[count++] = b-sqrt(discr);
-	}
-
-	if (count == 0) tt = -1.;
-	if (count == 1) tt = temp[0];
-
-	tt = temp[0];
-	for (cc=1; cc < count; cc++) {
-	    if (temp[cc] < tt && temp[cc] > causal+tau2) tt = temp[cc];
-	}
-
-	if (tt <= causal) return false;
+	if (tt < 0.) return false;
 
 	*res = tt;
 	
-	kappa2 = pow(tt-xj[2]->value,2.)*xj[2]->delta/vs;
+	kappa2 = (tt-xj[2]->value)*(tt-xj[2]->value)*xj[2]->delta/vs;
 	if (kappa2 > 1.-thres) return false;
 	*al = 1./(miu*sqrt(kappa2/(1.-kappa2))+1.);
 	if (*al < thres) return false;
@@ -612,49 +580,24 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 
     if (*f == 6) {
 	if (xj[0]->value >= xj[1]->value)
-	    causal = xj[0]->value;
+	    min = xj[0]->value;
 	else
-	    causal = xj[1]->value;
+	    min = xj[1]->value;
 
-	count = 0;
+	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,sqrt(vr/xj[1]->delta)+xj[1]->value);
 
-	a = xj[0]->delta+xj[1]->delta;
-	b = xj[0]->value*xj[0]->delta+xj[1]->value*xj[1]->delta+sqrt(vs*xj[0]->delta);
-	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[1]->value,2.)*xj[2]->delta+2.*sqrt(vs*xj[0]->delta)*xj[0]->value+(vs-vr);
-	b /= a;
+	if (min > max) return false;
 
-	discr=b*b-c/a;
+	if (eval(xj,true,vr,false,vs,min) > 0.) return false;
+	if (eval(xj,true,vr,false,vs,max) < 0.) return false;
 
-	if (discr >= 0.) {
-	    temp[count++] = b+sqrt(discr);
-	    temp[count++] = b-sqrt(discr);
-	}
+	tt = bisect(xj,true,vr,false,vs,min,max);
 
-	a = xj[0]->delta+xj[1]->delta;
-	b = xj[0]->value*xj[0]->delta+xj[1]->value*xj[1]->delta-sqrt(vs*xj[0]->delta);
-	c = pow(xj[0]->value,2.)*xj[0]->delta+pow(xj[1]->value,2.)*xj[2]->delta-2.*sqrt(vs*xj[0]->delta)*xj[0]->value+(vs-vr);
-	b /= a;
-
-	discr=b*b-c/a;
-
-	if (discr >= 0.) {
-	    temp[count++] = b+sqrt(discr);
-	    temp[count++] = b-sqrt(discr);
-	}
-
-	if (count == 0) tt = -1.;
-	if (count == 1) tt = temp[0];
-
-	tt = temp[0];
-	for (cc=1; cc < count; cc++) {
-	    if (temp[cc] < tt && temp[cc] > causal+tau2) tt = temp[cc];
-	}
-
-	if (tt <= causal) return false;
+	if (tt < 0.) return false;
 
 	*res = tt;
-
-	kappa1 = pow(tt-xj[1]->value,2.)*xj[1]->delta/vr;
+	
+	kappa1 = (tt-xj[1]->value)*(tt-xj[1]->value)*xj[1]->delta/vr;
 	if (kappa1 > 1.-thres) return false;
 	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+1.);
 	if (*al < thres) return false;
@@ -670,13 +613,13 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	    *res = temp[0];
 	    *f = 1;
 	    *al = 1.;
-	    return true;
 	} else {
 	    *res = temp[1];
 	    *f = 2;
 	    *al = 0.;
-	    return true;
 	}
+
+	return true;
     }
     
     if (*f == 9) {
@@ -687,65 +630,39 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	    *res = temp[0];
 	    *f = 1;
 	    *al = 1.;
-	    return true;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
 	    *al = 0.;
-	    return true;
 	}
+
+	return true;
     }
 
     /* three-sided */
     if (*f == 7) {
-	causal = 0.;
+	min = 0.;
 	for (j=0; j < 3; j++) {
-	    if (xj[j]->value > causal)
-		causal = xj[j]->value;
-	}
+	    if (xj[j]->value > min)
+		min = xj[j]->value;
+	}       
+
+	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,SF_MIN(sqrt(vr/xj[1]->delta)+xj[1]->value,sqrt(vs/xj[2]->delta)+xj[2]->value));
+
+	if (min > max) return false;
+
+	if (eval(xj,true,vr,true,vs,min) > 0.) return false;
+	if (eval(xj,true,vr,true,vs,max) < 0.) return false;
+
+	tt = bisect(xj,true,vr,true,vs,min,max);
 	
-	for (j=0; j < 3; j++) {
-	    a += pow(xj[j]->delta,2.);
-	    b += -4.*xj[j]->value*pow(xj[j]->delta,2.);
-	    c += 6.*pow(xj[j]->value,2.)*pow(xj[j]->delta,2.)-2.*xj[j]->stencil*xj[j]->delta;
-	    d += -4.*pow(xj[j]->value,3.)*pow(xj[j]->delta,2.)+4.*xj[j]->stencil*xj[j]->value*xj[j]->delta;
-	    e += pow(xj[j]->value,4.)*pow(xj[j]->delta,2.)-2.*xj[j]->stencil*pow(xj[j]->value,2.)*xj[j]->delta;
-	}    
-	e += pow(vs,2.)+pow(vr,2.)-2.*vs*vr;
-	
-	
-	a += -2.*xj[1]->delta*xj[2]->delta
-	    +2.*xj[0]->delta*xj[2]->delta
-	    +2.*xj[1]->delta*xj[0]->delta;
-	
-	b += 4.*xj[1]->delta*xj[2]->delta*(xj[1]->value+xj[2]->value)
-	    -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value+xj[2]->value)
-	    -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value+xj[0]->value);
-	
-	c += -2.*xj[1]->delta*xj[2]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[2]->value+pow(xj[2]->value,2.))
-	    +2.*xj[0]->delta*xj[2]->delta*(pow(xj[0]->value,2.)+4.*xj[0]->value*xj[2]->value+pow(xj[2]->value,2.))
-	    +2.*xj[1]->delta*xj[0]->delta*(pow(xj[1]->value,2.)+4.*xj[1]->value*xj[0]->value+pow(xj[0]->value,2.));
-	
-	d += 4.*xj[1]->delta*xj[2]->delta*(xj[1]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[1]->value,2.))
-	    -4.*xj[0]->delta*xj[2]->delta*(xj[0]->value*pow(xj[2]->value,2.)+xj[2]->value*pow(xj[0]->value,2.))
-	    -4.*xj[1]->delta*xj[0]->delta*(xj[1]->value*pow(xj[0]->value,2.)+xj[0]->value*pow(xj[1]->value,2.));
-	
-	e += -2.*xj[1]->delta*xj[2]->delta*pow(xj[1]->value,2.)*pow(xj[2]->value,2.)
-	    +2.*xj[0]->delta*xj[2]->delta*pow(xj[0]->value,2.)*pow(xj[2]->value,2.)
-	    +2.*xj[1]->delta*xj[0]->delta*pow(xj[1]->value,2.)*pow(xj[0]->value,2.);
-	
-	/*
-	tt = newton(a,b,c,d,e,vv[m-1]->value);
-	*/
-	tt = ferrari(a,b,c,d,e,causal);
-	
-	if (tt <= causal) return false;
-	
+	if (tt < 0.) return false;
+
 	*res = tt;
 
-	kappa1 = pow(tt-xj[1]->value,2.)*xj[1]->delta/vr;
+	kappa1 = (tt-xj[1]->value)*(tt-xj[1]->value)*xj[1]->delta/vr;
 	if (kappa1 > 1.-thres) return false;
-	kappa2 = pow(tt-xj[2]->value,2.)*xj[2]->delta/vs;
+	kappa2 = (tt-xj[2]->value)*(tt-xj[2]->value)*xj[2]->delta/vs;
 	if (kappa2 > 1.-thres) return false;
 	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+miu*sqrt(kappa2/(1.-kappa2))+1.);
 	if (*al < thres) return false;
@@ -756,106 +673,59 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
     return false;
 }
 
-double newton(double a,double b,double c,double d,double e /* coefficients */,
-	      double guess /* initial guess */)
-/* quartic solve (Newton's method) */
+double bisect(struct Upd *xj[],
+	      bool r, double vr,
+	      bool s, double vs,
+	      double min, double max)
+/* quartic solve (bisection method) */
 {
-    double val, der, root;
+    int iloop=0;
+    double left, right, middle, val;
 
-    root = guess;
+    left = min;
+    right = max;
 
-    /* evaluate functional */
-    val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
-    while (fabs(val) > tau1) {
+    middle = 0.5*(left+right);    
+    val = eval(xj,r,vr,s,vs,middle);
 
-	/* evaluate derivative */
-	der = 4.*a*pow(root,3.)+3.*b*pow(root,2.)+2.*c*root+d*root+d;
-
-	if (fabs(der) <= tau1) {
-	    sf_warning("FAILURE: Newton's method meets local minimum.");
-	    return -1.;
+    while (fabs(val) > tol && iloop < nloop) {
+	if (val <= 0.) {
+	    left = middle;
+	} else {
+	    right = middle;
 	}
 
-	root -= val/der;
-	val = a*pow(root,4.)+b*pow(root,3.)+c*pow(root,2.)+d*root+e;
+	middle = 0.5*(left+right);
+	val = eval(xj,r,vr,s,vs,middle);
+
+	iloop++;
     }
 
-    return root;
-}
-
-double ferrari(double a,double b,double c,double d,double e /* coefficients */,
-	       double t0 /* reference time */)
-/* quartic solve (Ferrari's method) */
-{
-    double alpha, beta, gama, P, Q, y, W;
-    double delta, root[4], temp;
-    double complex R, U;
-    int cc, count;
-
-    alpha = -3./8.*pow(b,2.)/pow(a,2.)+c/a;
-    beta  = 1./8.*pow(b,3.)/pow(a,3.)-1./2.*b*c/pow(a,2.)+d/a;
-    gama  = -3./256.*pow(b,4.)/pow(a,4.)+1./16.*c*pow(b,2.)/pow(a,3.)-1./4.*b*d/pow(a,2.)+e/a;
-
-    P = -1./12.*pow(alpha,2.)-gama;
-    Q = -1./108.*pow(alpha,3.)+1./3.*alpha*gama-1./8.*pow(beta,2.);
-
-    delta = 1./4.*pow(Q,2.)+1./27.*pow(P,3.);
-
-    /* R could be complex, any complex root will work */
-    if (delta >= 0.)
-	R = -1./2.*Q+sqrt(delta)+I*0.;
-    else
-	R = -1./2.*Q+I*sqrt(-delta);
-    
-    U = cpow(R,1./3.);
-
-    /* rotate U by exp(i*2*pi/3) until W is real*/
-    if (2.*creal(U) <= alpha/3.)
-	U *= -0.5+I*(sqrt(3.)/2.);
-    if (2.*creal(U) <= alpha/3.)
-	U *= -0.5+I*(sqrt(3.)/2.);
-
-    /* y must be real since a,b,c,d,e are all real */
-    if (cabs(U) <= 1.e-15)
-	if (Q >= 0.)
-	    y = -5./6.*alpha-pow(Q,1./3.);
-	else
-	    y = -5./6.*alpha+pow(-Q,1./3.);
-    else
-	y = -5./6.*alpha+2.*creal(U);
-
-    W = sqrt(alpha+2.*y);
-
-    /* return the smallest but causal real root */
-    count = 0;
-
-    delta = -3.*alpha-2.*y-2.*beta/W;    
-    if (delta >= 0.) {
-	root[count++] = -1./4.*b/a+1./2.*(W+sqrt(delta));
-	root[count++] = -1./4.*b/a+1./2.*(W-sqrt(delta));
-    }
-
-    delta = -3.*alpha-2.*y+2.*beta/W;    
-    if (delta >= 0.) {
-	root[count++] = -1./4.*b/a+1./2.*(-W+sqrt(delta));
-	root[count++] = -1./4.*b/a+1./2.*(-W-sqrt(delta));
-    }
-
-    if (count == 0) return -1.;
-
-    temp = root[0];
-    for (cc=1; cc < count; cc++) {
-	if (root[cc] < temp && root[cc] > t0+tau2) temp = root[cc];
-    }
-
-    if (temp > t0+tau1)
-	return temp;
+    if (fabs(val) <= tol)
+	return middle;
     else
 	return -1.;
-    
-    /*
-    toy:  1.e-3
-    test: 5.e-4
-    Marmousi: 1.e-3
-    */
+}
+
+double eval(struct Upd *xj[],
+	    bool r, double vr,
+	    bool s, double vs,
+	    double p)
+/* evaluate funtional */
+{
+    double val;
+
+    val = (p-xj[0]->value)*sqrt(xj[0]->delta);
+
+    if (r) 
+	val -= sqrt(vr-(p-xj[1]->value)*(p-xj[1]->value)*xj[1]->delta);
+    else
+	val -= sqrt(vr);
+
+    if (s) 
+	val -= sqrt(vs-(p-xj[2]->value)*(p-xj[2]->value)*xj[2]->delta);
+    else
+	val -= sqrt(vs);
+
+    return val;
 }

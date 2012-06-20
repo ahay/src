@@ -24,11 +24,10 @@
 int main(int argc, char* argv[])
 {
     bool velocity;
-    int dim, i, n[SF_MAX_DIM], is, ns;
-    int *f;
-    float *al;
+    int dim, i, n[SF_MAX_DIM], nm, nt;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
-    float tau1, tau2, thres;
+    int *f, nloop;
+    float thres, *al, tol;
     char key[6];
     sf_file in, out, flag, alpha;
 
@@ -39,13 +38,13 @@ int main(int argc, char* argv[])
     /* read input dimension */
     dim = sf_filedims(in,n);
 
-    ns = 1;
+    nm = 1;
     for (i=0; i < dim; i++) {
 	sprintf(key,"d%d",i+1);
 	if (!sf_histfloat(in,key,d+i)) sf_error("No %s= in input.",key);
 	sprintf(key,"o%d",i+1);
 	if (!sf_histfloat(in,key,o+i)) o[i]=0.;
-	ns *= n[i];
+	nm *= n[i];
     }
     if (dim < 3) {
 	/* extend the third dimension for output (copy second dimension) */
@@ -53,34 +52,42 @@ int main(int argc, char* argv[])
     }
 
     /* read input */
-    s = sf_floatalloc(ns);
-    sf_floatread(s,ns,in);
+    s = sf_floatalloc(nm);
+    sf_floatread(s,nm,in);
+
+    /* write output dimension */
+    sf_putint(out,"n3",n[2]);
+    sf_putfloat(out,"d3",d[2]);
+    sf_putfloat(out,"o3",o[2]);
 
     if (!sf_getbool("velocity",&velocity)) velocity=true;
     /* if y, the input is velocity; n, slowness squared */
 
     /* convert to slowness squared */
     if (velocity) {
-	for (is=0; is < ns; is++)
-	    s[is] = 1./s[is]*1./s[is];
+	for (i=0; i < nm; i++)
+	    s[i] = 1./s[i]*1./s[i];
     }
 
-    if (!sf_getfloat("tau1",&tau1)) tau1=1.e-3;
-    /* tau1 */
-
-    if (!sf_getfloat("tau2",&tau2)) tau2=1.;
-    /* tau2 */
-
-    if (!sf_getfloat("thres",&thres)) thres=0.1;
+    if (!sf_getfloat("thres",&thres)) thres=0.;
     /* threshold (percentage) */
+
+    if (!sf_getfloat("tol",&tol)) tol=1.e-3;
+    /* tolerance for bisection root-search */
+
+    if (!sf_getint("nloop",&nloop)) nloop=10;
+    /* number of bisection root-search */
+
+    nt = nm*n[2];
 
     if (NULL != sf_getstring("flag")) {
 	flag = sf_output("flag");
 	sf_settype(flag,SF_INT);
-	sf_putint(flag,"n3",n[1]);
-	sf_putfloat(flag,"d3",d[1]);
-	sf_putfloat(flag,"o3",o[1]);
-	f = sf_intalloc(ns*n[1]);
+	sf_putint(flag,"n3",n[2]);
+	sf_putfloat(flag,"d3",d[2]);
+	sf_putfloat(flag,"o3",o[2]);
+
+	f = sf_intalloc(nt);
     } else {
 	flag = NULL;
 	f = NULL;
@@ -88,20 +95,21 @@ int main(int argc, char* argv[])
 
     if (NULL != sf_getstring("alpha")) {
 	alpha = sf_output("alpha");
-	sf_putint(alpha,"n3",n[1]);
-	sf_putfloat(alpha,"d3",d[1]);
-	sf_putfloat(alpha,"o3",o[1]);
-	al = sf_floatalloc(ns*n[1]);
+	sf_putint(alpha,"n3",n[2]);
+	sf_putfloat(alpha,"d3",d[2]);
+	sf_putfloat(alpha,"o3",o[2]);
+
+	al = sf_floatalloc(nt);
     } else {
 	alpha = NULL;
 	al = NULL;
     }
 
     /* allocate memory for output */
-    t = sf_floatalloc(ns*n[1]);
+    t = sf_floatalloc(nt);
 
     /* initialize */
-    dsreiko_init(n,o,d,tau1,tau2,thres);
+    dsreiko_init(n,o,d,thres,tol,nloop);
 
     /* compute */
     dsreiko_fastmarch(t,s,f,al);
@@ -109,16 +117,11 @@ int main(int argc, char* argv[])
     /* mirror */
     dsreiko_mirror(t);
 
-    if (flag != NULL) sf_intwrite(f,ns*n[1],flag);
-    if (alpha != NULL) sf_floatwrite(al,ns*n[1],alpha);
-
-    /* write output dimension */
-    sf_putint(out,"n3",n[1]);
-    sf_putfloat(out,"d3",d[1]);
-    sf_putfloat(out,"o3",o[1]);
-
+    if (flag != NULL) sf_intwrite(f,nt,flag);
+    if (alpha != NULL) sf_floatwrite(al,nt,alpha);
+    
     /* write output */
-    sf_floatwrite(t,ns*n[1],out);
+    sf_floatwrite(t,nt,out);
 
     exit(0);
 }
