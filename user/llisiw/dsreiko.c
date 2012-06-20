@@ -265,6 +265,7 @@ int neighbors_default()
 		in[j*s[2]+k*s[1]+i] = SF_IN;
 		t[j*s[2]+k*s[1]+i] = 0.;
 		if (flag != NULL) flag[j*s[2]+k*s[1]+i] = 0;
+		if (alpha != NULL) alpha[j*s[2]+k*s[1]+i] = 0.;
 	    }
 	}
     }
@@ -283,9 +284,11 @@ int neighbors_default()
 	    if (temp[0] <= temp[1]) {
 		t[j*s[2]+(j+1)*s[1]+i] = temp[0];
 		if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 2;
+		if (alpha != NULL) alpha[j*s[2]+(j+1)*s[1]+i] = 0.;
 	    } else {
 		t[j*s[2]+(j+1)*s[1]+i] = temp[1];
 		if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 3;
+		if (alpha != NULL) alpha[j*s[2]+(j+1)*s[1]+i] = 0.;
 	    }
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);

@@ -6,9 +6,11 @@ progs = '''
 kirmig kirmig0 drayinte lineiko
 testanal gradient cconst cgconst
 fatomo fatomoomp mkrcv cpxeikonal
-drays dsreiko dsrtomo eikods tinterp
+drays dsreiko eikods tinterp
 tdconvert irays t2diter kirdat0 kirdat
 '''
+
+# dsrtomo
 
 try:  # distributed version
     Import('env root pkgdir bindir')
