@@ -468,7 +468,9 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from displacement to strain AND strain to stress           */
 		/*		- Compute strains from displacements as in equation 1 */
+		/*			- Step #1										  */
 		/*		- Compute stress from strain as in equation 2		  */
+		/*			- Step #2										  */
 		/*------------------------------------------------------------*/
 			dim3 dimGrid9(ceil(fdm->nxpad/32.0f), ceil(fdm->nzpad/32.0f));
 			dim3 dimBlock9(32,32);
@@ -480,6 +482,7 @@ int main(int argc, char* argv[]) {
 		/* free surface boundary condition							  */
 		/*		- sets the z-component of stress tensor along the	  */
 		/*			free surface boundary to 0						  */
+		/*			- Step #3
 		/*------------------------------------------------------------*/
 			if(fsrf) {
 				dim3 dimGrid3(ceil(fdm->nxpad/16.0f),ceil(fdm->nb/16.0f));
@@ -491,6 +494,7 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* inject stress source                                       */
+		/*		- Step #4
 		/*------------------------------------------------------------*/
 			if(ssou) {
 				dim3 dimGrid7(ns, 1, 1);
@@ -503,6 +507,7 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* from stress to acceleration (first term in RHS of eq. 3)	  */
+		/*		- Step #5											  */
 		/*------------------------------------------------------------*/
 			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/32.0f),ceil((fdm->nzpad-(2*NOP))/32.0f));
 			dim3 dimBlock4(32,32);
@@ -512,6 +517,7 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* inject acceleration source  (second term in RHS of eq. 3)  */
+		/*		- Step #6											  */
 		/*------------------------------------------------------------*/
 			if(!ssou) {
 			    dim3 dimGrid8(ns, 1, 1);
@@ -525,6 +531,7 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* step forward in time                                       */
 		/*		- Compute forward time step based on acceleration	  */
+		/*			- Step #7
 		/*------------------------------------------------------------*/
 			dim3 dimGrid6(ceil(fdm->nxpad/16.0f),ceil(fdm->nzpad/12.0f));
 			dim3 dimBlock6(16,12);
@@ -540,6 +547,7 @@ int main(int argc, char* argv[]) {
 	
 		/*------------------------------------------------------------*/
 		/* apply boundary conditions                                  */
+		/*		- Step #8
 		/*------------------------------------------------------------*/
 			if(dabc) {
 				
@@ -595,7 +603,8 @@ int main(int argc, char* argv[]) {
 			}	    
 
 		/*------------------------------------------------------------*/
-		/* cut wavefield and save */
+		/* cut wavefield and save 									  */
+		/*		- Step #9
 		/*------------------------------------------------------------*/
 		    if(snap && it%jsnap==0) {
 				cudaMemcpy(h_uox, d_uox, fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDeviceToHost);

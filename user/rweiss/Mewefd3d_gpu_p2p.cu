@@ -707,6 +707,7 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from displacement to strain                                */
 		/*		- Compute strains from displacements as in equation 1 */
+		/*			- Step #1										  */
  		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -719,6 +720,7 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from strain to stress                                      */
 		/*		- Compute stress from strain as in equation 2		  */
+		/*			- Step #2										  */
 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -733,6 +735,7 @@ int main(int argc, char* argv[]) {
 		/* free surface                                               */
 		/*		- sets the z-component of stress tensor along the	  */
 		/*			free surface boundary to 0						  */
+		/*			- Step #3										  */
 		/*------------------------------------------------------------*/
 		if(fsrf) {
 			for (int g = 0; g < ngpu; g++){
@@ -747,6 +750,7 @@ int main(int argc, char* argv[]) {
 		
 		/*------------------------------------------------------------*/
 		/* inject stress source                                       */
+		/*		- Step #4											  */
 		/*------------------------------------------------------------*/
 		if(ssou) {
 			for (int g = 0; g < ngpu; g++){
@@ -806,6 +810,7 @@ int main(int argc, char* argv[]) {
 		
 		/*------------------------------------------------------------*/
 		/* from stress to acceleration  (first term in RHS of eq. 3)  */
+		/*		- Step #5											  */
 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -818,6 +823,7 @@ int main(int argc, char* argv[]) {
 	
 		/*------------------------------------------------------------*/
 		/* inject acceleration source  (second term in RHS of eq. 3)  */
+		/*		- Step #6											  */
 		/*------------------------------------------------------------*/
 		if(!ssou) {
 			for (int g = 0; g < ngpu; g++){
@@ -836,6 +842,7 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* step forward in time                                       */
 		/*		- Compute forward time step based on acceleration	  */
+		/*			- Step #7										  */
 		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
@@ -857,6 +864,7 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* apply boundary conditions                                  */
+		/*		- Step #8											  */
 		/*------------------------------------------------------------*/
 		if(dabc) {
 			/*---------------------------------------------------------------*/
@@ -990,7 +998,8 @@ int main(int argc, char* argv[]) {
 			
 		
 		/*------------------------------------------------------------*/
-		/* cut wavefield and save */
+		/* cut wavefield and save 									  */
+		/*		- Step #9											  */
 		/*------------------------------------------------------------*/
 		if(snap && it%jsnap==0) {
 			
