@@ -19,9 +19,9 @@
 
 #include <rsf.h>
 
-#include "upgraddsr.h"
+#include "upgraddsr_backup.h"
 
-#ifndef _upgraddsr_h
+#ifndef _upgraddsr_backup_h
 
 typedef struct Upgrad *upgrad;
 /* abstract data type */

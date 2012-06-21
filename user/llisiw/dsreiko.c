@@ -382,8 +382,10 @@ float qsolve(float* time, int i, int *f, float *al)
 
 	if (a < b) {
 	    xj[j]->value = a;
+	    if (j==0) *al = -1.;
 	} else {
 	    xj[j]->value = b;
+	    if (j==0) *al = 1.;
 	}	
     }
 
@@ -513,7 +515,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = (sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value;
 	
 	*res = tt;
-	*al = 1.;
+	*al *= 1.;
 	return true;
     }
     
@@ -521,7 +523,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = sqrt(vr/xj[1]->delta)+xj[1]->value;
 
 	*res = tt;
-	*al = 0.;
+	*al *= 0.;
 	return true;
     }
 
@@ -529,7 +531,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	tt = sqrt(vs/xj[2]->delta)+xj[2]->value;
 
 	*res = tt;
-	*al = 0.;
+	*al *= 0.;
 	return true;
     }
 
@@ -546,7 +548,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	    *f = 3;
 	}
 
-	*al = 0.;	
+	*al *= 0.;	
 
 	return true;
     }
@@ -572,7 +574,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	
 	kappa2 = (tt-xj[2]->value)*(tt-xj[2]->value)*xj[2]->delta/vs;
 	if (kappa2 > 1.-thres) return false;
-	*al = 1./(miu*sqrt(kappa2/(1.-kappa2))+1.);
+	*al *= 1./(miu*sqrt(kappa2/(1.-kappa2))+1.);
 	if (*al < thres) return false;
 
 	return true;
@@ -599,7 +601,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	
 	kappa1 = (tt-xj[1]->value)*(tt-xj[1]->value)*xj[1]->delta/vr;
 	if (kappa1 > 1.-thres) return false;
-	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+1.);
+	*al *= 1./(miu*sqrt(kappa1/(1.-kappa1))+1.);
 	if (*al < thres) return false;
 
 	return true;
@@ -612,11 +614,11 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 1;
-	    *al = 1.;
+	    *al *= 1.;
 	} else {
 	    *res = temp[1];
 	    *f = 2;
-	    *al = 0.;
+	    *al *= 0.;
 	}
 
 	return true;
@@ -629,11 +631,11 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (temp[0] <= temp[1]) {
 	    *res = temp[0];
 	    *f = 1;
-	    *al = 1.;
+	    *al *= 1.;
 	} else {
 	    *res = temp[1];
 	    *f = 3;
-	    *al = 0.;
+	    *al *= 0.;
 	}
 
 	return true;
@@ -664,7 +666,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	if (kappa1 > 1.-thres) return false;
 	kappa2 = (tt-xj[2]->value)*(tt-xj[2]->value)*xj[2]->delta/vs;
 	if (kappa2 > 1.-thres) return false;
-	*al = 1./(miu*sqrt(kappa1/(1.-kappa1))+miu*sqrt(kappa2/(1.-kappa2))+1.);
+	*al *= 1./(miu*sqrt(kappa1/(1.-kappa1))+miu*sqrt(kappa2/(1.-kappa2))+1.);
 	if (*al < thres) return false;
 
 	return true;

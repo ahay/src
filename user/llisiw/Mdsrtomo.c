@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, it, nt;
     int iter, niter, cgiter, count;
     int *f, *m, offset, nloop;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv=NULL, *t, *w, *t0, *w1, *p=NULL;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL;
     float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
     char key[6], *what;
     sf_file in, out, reco, grad, flag, mask, debug;
@@ -87,10 +87,6 @@ int main(int argc, char* argv[])
 	    if (velocity) {
 		for (iw=0; iw < nw; iw++)
 		    w[iw] = 1./w[iw]*1./w[iw];
-
-		dv = sf_floatalloc(nw);
-	    } else {
-		dv = NULL;
 	    }
 
 	    /* read flag file */
@@ -105,7 +101,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* read receiver file */
-	    m  = sf_intalloc(nt);
+	    m = sf_intalloc(nt);
 	    
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
@@ -158,16 +154,7 @@ int main(int argc, char* argv[])
 	    }
 	    	    
 	    /* write output */
-	    if (adj) {
-		if (velocity) {
-		    for (iw=0; iw < nw; iw++)
-			dv[iw] = -dw[iw]/(2.*sqrtf(w[iw])*(w[iw]+dw[iw]/2.));
-
-		    sf_floatwrite(dv,nw,out);
-		} else {
-		    sf_floatwrite(dw,nw,out);
-		}
-		
+	    if (adj) {				
 		sf_floatwrite(dw,nw,out);
 	    } else {
 		sf_floatwrite(dt,nt,out);
@@ -216,18 +203,20 @@ int main(int argc, char* argv[])
 	    
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
 	    /* if y, the input is velocity; n, slowness squared */
-	    
-	    if (!sf_getbool("shape",&shape)) shape=false;
-	    /* shaping regularization (default no) */
-
+	    	    
 	    /* convert to slowness squared */
 	    if (velocity) {
 		for (iw=0; iw < nw; iw++)
 		    w[iw] = 1./w[iw]*1./w[iw];
 
 		dv = sf_floatalloc(nw);
+	    } else {
+		dv = NULL;
 	    }
 	    
+	    if (!sf_getbool("shape",&shape)) shape=false;
+	    /* shaping regularization (default no) */
+
 	    /* read record file */
 	    if (NULL == sf_getstring("reco"))
 		sf_error("Need record reco=");
@@ -271,10 +260,10 @@ int main(int argc, char* argv[])
 	    if (!sf_getint("niter",&niter)) niter=5;
 	    /* number of inversion iterations */
 	    
-	    if (!sf_getint("cgiter",&cgiter)) cgiter=25;
+	    if (!sf_getint("cgiter",&cgiter)) cgiter=10;
 	    /* number of conjugate-gradient iterations */
 	    
-	    if (!sf_getfloat("thres",&thres)) thres=0.1;
+	    if (!sf_getfloat("thres",&thres)) thres=0.;
 	    /* threshold (percentage) */
 	    
 	    if (!sf_getfloat("tol",&tol)) tol=1.e-3;
@@ -358,14 +347,12 @@ int main(int argc, char* argv[])
 		/* solve dw */
 		if (shape) {
 		    sf_conjgrad(NULL,dsrtomo_oper,sf_repeat_lop,p,dw,dt,cgiter);
-		} else {
-		    /*
-		    sf_solver(dsrtomo_oper,sf_cgstep,nw,nt,dw,dt,cgiter,"verb",verb,"end");
-		    */
+		} else {		    
 		    sf_solver_reg(dsrtomo_oper,sf_cgstep,sf_igrad2_lop,2*nw,nw,nt,dw,dt,cgiter,eps,"verb",verb,"end");
 		    sf_cgstep_close();
 		}
 
+		/* output gradien */
 		if (grad != NULL) {
 		    if (velocity) {
 			for (iw=0; iw < nw; iw++)
