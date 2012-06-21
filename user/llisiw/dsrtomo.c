@@ -58,6 +58,7 @@ void dsrtomo_close(void)
 /*< free allocated space >*/
 {
     upgrad_close(upg);
+    free(temp);
 }
 
 void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)

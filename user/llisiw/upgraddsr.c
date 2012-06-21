@@ -33,7 +33,6 @@ struct Upgrad {
     int *order, **pos;
     unsigned char **update;
     double **ww, **qq;
-    bool *source;
 };
 
 static int ndim, nt, ss[3];
@@ -54,44 +53,50 @@ static int fermat(const void *a, const void *b)
     return -1;
 }
 
-upgrad upgrad_init(int mdim        /* number of dimensions */,
-		   const int *mm   /* [dim] data size */,
-		   const float *d  /* [dim] data sampling */)
+upgrad upgrad_init(int ndim_in      /* number of dimensions */,
+		   const int *nn_in /* [dim] data size */,
+		   const float *d   /* [dim] data sampling */)
 /*< initialize >*/
 {
     upgrad upg;
     int i;
 
-    if (mdim > 3) sf_error("%s: dim=%d > 3",__FILE__,mdim);
+    /* for 2D model only */
+    if (ndim_in > 3) sf_error("%s: dim=%d > 3",__FILE__,ndim_in);
 
-    ndim = mdim;
-    nn = mm;
+    ndim = ndim_in;
+    nn = nn_in;
 
     nt = 1;
     for (i=0; i < ndim; i++) {
 	ss[i] = nt;
 	nt *= nn[i];
-	dd[i] = 1.0/(d[i]*d[i]);
+	dd[i] = 1./(d[i]*d[i]);
     }
 
     upg = (upgrad) sf_alloc(1,sizeof(*upg));
 
+    /* traveltime sort */
+    upg->order = sf_intalloc(nt);
+    
+    /* source-receiver location */
+    upg->pos = sf_intalloc2(2,nt);
+
+    /* upwind indicator */
     upg->update = sf_ucharalloc2(2,nt);
 
+    /* upwind stencil for traveltime */
     upg->ww = (double **) sf_alloc(nt, sizeof(double *));
     for (i=0; i < nt; i++) {
 	upg->ww[i] = (double *) sf_alloc(ndim+1, sizeof(double));
     }
 
+    /* upwind stencil for slowness-squared */
     upg->qq = (double **) sf_alloc(nt, sizeof(double *));
     for (i=0; i < nt; i++) {
 	upg->qq[i] = (double *) sf_alloc(2, sizeof(double));
     }
-
-    upg->order = sf_intalloc(nt);
-    upg->source = sf_boolalloc(nt);
-    upg->pos = sf_intalloc2(2,nt);
-
+    
     return upg;
 }
 
@@ -101,6 +106,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 		const int *f0   /* reference flag */)
 /*< supply reference >*/
 {
+    bool source;
     int i, m, it, jt, ii[3], a, b;
     unsigned char *up;
     double t, t2, dt[3], ws, wr;
@@ -123,9 +129,8 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	up[0] = up[1] = 0;
 	t = t0[jt];
 	upg->ww[it][ndim] = 0.;
-	upg->source[it] = true;
 
-	/* position */
+	/* source-receiver position */
 	upg->pos[jt][0] = ii[2]*ss[1]+ii[0];
 	upg->pos[jt][1] = ii[1]*ss[1]+ii[0];
 
@@ -133,6 +138,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	ws = w0[upg->pos[jt][0]];
 	wr = w0[upg->pos[jt][1]];
 
+	source = true;
 	for (i=0, m=1; i < ndim; i++, m <<= 1) {
 	    a = jt-ss[i];
 	    b = jt+ss[i];
@@ -146,41 +152,41 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 
 	    if (t2 < t) {
 		up[0] |= m;
-		upg->source[it] = false;
 		dt[i] = t-t2;
+		source = false;
 	    } else {
 		dt[i] = 0.;
 	    }
 	}
 
-	/* throw away h <= 0  */
-	if (upg->pos[jt][0] > upg->pos[jt][1]) upg->source[it] = true;
+	/* throw away h < 0  */
+	if (upg->pos[jt][0] > upg->pos[jt][1]) source = true;
 
-	if (upg->source[it]) continue;
+	if (source) continue;
 
 	/* one-sided */
 	if ((f0 == NULL && dt[1] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 1)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]-ws-wr);
+	    upg->ww[it][0] = sqrt(dd[0]);
 	    upg->ww[it][1] = 0.;
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0];
 	    
-	    upg->qq[jt][0] = dt[0]*dt[0]*dd[0]-ws+wr;
-	    upg->qq[jt][1] = dt[0]*dt[0]*dd[0]+ws-wr;
+	    upg->qq[jt][0] = 0.5/sqrt(ws);
+	    upg->qq[jt][1] = 0.5/sqrt(wr);
 	    
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[0] == 0. && dt[2] == 0.) || (f0 != NULL && f0[jt] == 2)) {
 	    upg->ww[it][0] = 0.;
-	    upg->ww[it][1] = 2.*dt[1]*dd[1];
+	    upg->ww[it][1] = sqrt(dd[1]);
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][1];
 	    
 	    upg->qq[jt][0] = 0.;
-	    upg->qq[jt][1] = 1.;
+	    upg->qq[jt][1] = 0.5/sqrt(wr);
 
 	    continue;
 	}
@@ -188,11 +194,11 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	if ((f0 == NULL && dt[0] == 0. && dt[1] == 0.) || (f0 != NULL && f0[jt] == 3)) {
 	    upg->ww[it][0] = 0.;
 	    upg->ww[it][1] = 0.;
-	    upg->ww[it][2] = 2.*dt[2]*dd[2];
+	    upg->ww[it][2] = sqrt(dd[2]);
 	    
 	    upg->ww[it][ndim] = upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = 1.;
+	    upg->qq[jt][0] = 0.5/sqrt(ws);
 	    upg->qq[jt][1] = 0.;
 
 	    continue;
@@ -206,58 +212,57 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	}
 
 	if ((f0 == NULL && dt[1] == 0.) || (f0 != NULL && f0[jt] == 5)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[2]*dt[2]*dd[2]-ws-wr);
+	    upg->ww[it][0] = sqrt(dd[0]);
 	    upg->ww[it][1] = 0.;
-	    upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]-ws+wr);
+	    upg->ww[it][2] = dt[2]*dd[2]/sqrt(ws-dt[2]*dt[2]*dd[2]);
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]-ws+wr;
-	    upg->qq[jt][1] = -dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr;
+	    upg->qq[jt][0] = 0.5/sqrt(ws-dt[2]*dt[2]*dd[2]);
+	    upg->qq[jt][1] = 0.5/sqrt(wr);
 
 	    continue;
 	}
 
 	if ((f0 == NULL && dt[2] == 0.) || (f0 != NULL && f0[jt] == 6)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[1]*dt[1]*dd[1]-ws-wr);
-	    upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]+ws-wr);
+	    upg->ww[it][0] = sqrt(dd[0]);
+	    upg->ww[it][1] = dt[1]*dd[1]/sqrt(wr-dt[1]*dt[1]*dd[1]);
 	    upg->ww[it][2] = 0.;
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1];
 	    
-	    upg->qq[jt][0] = -dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr;
-	    upg->qq[jt][1] = dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]+ws-wr;
+	    upg->qq[jt][0] = 0.5/sqrt(ws);
+	    upg->qq[jt][1] = 0.5/sqrt(wr-dt[1]*dt[1]*dd[1]);
 
 	    continue;
 	}
 
 	/* three-sided */
 	if ((f0 == NULL) || (f0 != NULL && f0[jt] == 7)) {
-	    upg->ww[it][0] = 2.*dt[0]*dd[0]*(dt[0]*dt[0]*dd[0]+dt[2]*dt[2]*dd[2]+dt[1]*dt[1]*dd[1]-ws-wr);
-	    upg->ww[it][1] = 2.*dt[1]*dd[1]*(dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr);
-	    upg->ww[it][2] = 2.*dt[2]*dd[2]*(dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr);
+	    upg->ww[it][0] = sqrt(dd[0]);
+	    upg->ww[it][1] = dt[1]*dd[1]/sqrt(wr-dt[1]*dt[1]*dd[1]);
+	    upg->ww[it][2] = dt[2]*dd[2]/sqrt(ws-dt[2]*dt[2]*dd[2]);
 	    
 	    upg->ww[it][ndim] = upg->ww[it][0]+upg->ww[it][1]+upg->ww[it][2];
 	    
-	    upg->qq[jt][0] = dt[2]*dt[2]*dd[2]-dt[1]*dt[1]*dd[1]+dt[0]*dt[0]*dd[0]-ws+wr;
-	    upg->qq[jt][1] = dt[1]*dt[1]*dd[1]-dt[2]*dt[2]*dd[2]+dt[0]*dt[0]*dd[0]+ws-wr;
+	    upg->qq[jt][0] = 0.5/sqrt(ws-dt[2]*dt[2]*dd[2]);
+	    upg->qq[jt][1] = 0.5/sqrt(wr-dt[1]*dt[1]*dd[1]);
 	}
     }
 }
 
 void upgrad_close(upgrad upg)
-/*< free allocated storage >*/
+/*< free allocated memory >*/
 {
+    free(upg->order);
+    free(*(upg->pos));
+    free(upg->pos);
     free(*(upg->ww));
     free(upg->ww);
     free(*(upg->qq));
     free(upg->qq);
     free(*(upg->update));
     free(upg->update);
-    free(upg->order);
-    free(upg->source);
-    free(*(upg->pos));
-    free(upg->pos);
     free(upg);
 }
 
@@ -278,7 +283,7 @@ void upgrad_solve(upgrad upg,
 	up = upg->update[it];
 	den = upg->ww[it][ndim];
 
-	if (upg->source[it]) { /* at the source, use boundary conditions */
+	if (den == 0.) { /* at the source, use boundary conditions */
 	    x[jt] = (NULL != x0)? x0[jt]: 0.;
 	    continue;
 	}
@@ -316,7 +321,7 @@ void upgrad_inverse(upgrad upg,
 	up = upg->update[it];
 	den = upg->ww[it][ndim];
 
-	if (upg->source[it]) { /* at the source, use boundary conditions */
+	if (den == 0.) { /* at the source, use boundary conditions */
 	    rhs[jt] = (NULL != x0)? x0[jt]: 0.;
 	} else {
 	    rhs[jt] = rhs[jt]/den;
