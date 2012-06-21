@@ -27,6 +27,7 @@ struct Upd {
 
 static double thres, tol, miu;
 static int nloop;
+static bool causal;
 
 static float *o, *v, *d;
 static int *n, *in, s[3];
@@ -44,13 +45,15 @@ float qsolve(float* time, int i, int *f, float *al);
 bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al);
 double bisect(struct Upd *xj[],bool r, double vr, bool s, double vs, double min, double max);
 double eval(struct Upd *xj[], bool r, double vr, bool s, double vs, double p);
+void search(float *ttemp, float* time, int i, int *f, float *al);
 
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
 		  float *d_in /* increment */,
 		  float thres_in,
 		  float tol_in,
-		  int nloop_in)
+		  int nloop_in,
+		  bool causal_in)
 /*< initialize >*/
 {
     int maxband;
@@ -76,6 +79,7 @@ void dsreiko_init(int *n_in   /* length */,
     thres = thres_in;
     tol = tol_in;
     nloop = nloop_in;
+    causal = causal_in;
 
     miu = d[0]/d[1];
 }
@@ -314,6 +318,7 @@ int neighbours(float* time, int i)
 	    k = i+s[j]; 
 	    if (in[k] != SF_IN) {
 		ttemp = qsolve(time,k,&ftemp,&altemp);
+		if (!causal) search(&ttemp,time,k,&ftemp,&altemp);
 		np += update(ttemp,time,k,ftemp,altemp);
 	    }
 	}
@@ -321,6 +326,7 @@ int neighbours(float* time, int i)
 	    k = i-s[j];
 	    if (in[k] != SF_IN) {
 		ttemp = qsolve(time,k,&ftemp,&altemp);
+		if (!causal) search(&ttemp,time,k,&ftemp,&altemp);
 		np += update(ttemp,time,k,ftemp,altemp);
 	    }
 	}
@@ -730,4 +736,35 @@ double eval(struct Upd *xj[],
 	val -= sqrt(vs);
 
     return val;
+}
+
+void search(float *ttemp, float* time, int i, int *f, float *al)
+/* search for non-causal update */
+{
+    int j, k, ix[3];
+    float min, stemp, rtemp;
+
+    for (j=0; j<3; j++) 
+	ix[j] = (i/s[j])%n[j];
+
+    min = SF_HUGE;
+    for (k=1; k < ix[1]-ix[2]; k++) {
+	if (in[(ix[2]+k)*s[2]+ix[1]*s[1]+ix[0]] == SF_IN)
+	    stemp = time[(ix[2]+k)*s[2]+ix[1]*s[1]+ix[0]];
+	else
+	    continue;
+
+	if (in[ix[2]*s[2]+(ix[2]+k)*s[1]+ix[0]] == SF_IN)
+	    rtemp = time[ix[2]*s[2]+(ix[2]+k)*s[1]+ix[0]];
+	else
+	    continue;
+
+	min = ((stemp+rtemp) < min)? stemp+rtemp: min;
+    }
+
+    if (min < *ttemp) {
+	*ttemp = min;
+	*f = -1;
+	*al = -1.;
+    }
 }

@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, verb, adj, shape;
+    bool velocity, causal, verb, adj, shape;
     int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, it, nt;
     int iter, niter, cgiter, count;
     int *f, *m, offset, nloop;
@@ -309,8 +309,11 @@ int main(int argc, char* argv[])
 	    f  = sf_intalloc(nt);
 	    al = sf_floatalloc(nt);
 
+	    if (!sf_getbool("causal",&causal)) causal=true;
+	    /* if y, neglect non-causal branches of DSR */
+
 	    /* initialize eikonal */
-	    dsreiko_init(n,o,d,thres,tol,nloop);
+	    dsreiko_init(n,o,d,thres,tol,nloop,causal);
 	    
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);

@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity;
+    bool velocity, causal;
     int dim, i, n[SF_MAX_DIM], nm, nt;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
     int *f, nloop;
@@ -108,8 +108,11 @@ int main(int argc, char* argv[])
     /* allocate memory for output */
     t = sf_floatalloc(nt);
 
+    if (!sf_getbool("causal",&causal)) causal=true;
+    /* if y, neglect non-causal branches of DSR */
+
     /* initialize */
-    dsreiko_init(n,o,d,thres,tol,nloop);
+    dsreiko_init(n,o,d,thres,tol,nloop,causal);
 
     /* compute */
     dsreiko_fastmarch(t,s,f,al);
