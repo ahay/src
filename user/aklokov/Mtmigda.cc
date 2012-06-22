@@ -19,11 +19,11 @@
 
 #include <rsf.hh>
 
-#include "support.hh"
-#include "tmigratorBase.hh"
-#include "tmigrator2D.hh"
-#include "tmigrator3D.hh"
-#include "sembler.hh"
+#include "support.h"
+#include "tmigratorBase.h"
+#include "tmigrator2D.h"
+#include "tmigrator3D.h"
+#include "sembler.h"
 
 //#ifdef _OPENMP
 //#include <omp.h>
@@ -126,6 +126,9 @@ void checkImageParams () {
 
     // crossline checking
 
+	if (!rp.is3D)
+		return; // 2D migration is runnig
+
     if (vp.yStart - ip.yStart > 1E-6) {
 	float diff = vp.yStart - ip.yStart;
 	ip.yNum -= (diff / ip.yStep + 1);
@@ -192,6 +195,7 @@ int main (int argc, char* argv[]) {
 	    sf_warning ("it seems that velocity is in km/s - will be multiplied on 1000");	
 	    rp.isVelMS = false;					
 	}			
+
     } else { sf_error ("Need input: velocity model"); }
 
 // check that the input is float 
@@ -278,6 +282,20 @@ int main (int argc, char* argv[]) {
     corUnit = (char*) "m"; unit = sf_histstring (velFile, "unit3"); if (!unit) sf_error ("unit3 in velocity model is not defined");
     if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
 
+// Migration parameters
+    if (!sf_getbool ("is3d",       &rp.is3D))       rp.is3D = false;
+    /* if y, apply 3D migration */
+    if (!sf_getbool ("isCMP",      &rp.isCMP))      rp.isCMP = false;
+    /* if y, data traces have coordinates of CMP position */
+    if (!sf_getbool ("isAA",       &rp.isAA))       rp.isAA = true;
+    /* if y, apply anti-aliasing */
+    if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
+    /* if y, apply dip/azimuth mode; if n, apply inline/crossline angle mode */
+    if (!sf_getint  ("hmign",   &rp.hMigNum)) rp.hMigNum = dp.hNum;	
+    /* number of migrated offsets */
+    if (!sf_getint  ("sembWindow",   &rp.sembWindow)) rp.sembWindow = 11;	
+    /* vertical window for semblance calculation (in samples) */
+
     // IMAGE PARAMS
     if (!sf_getint ("itn", &ip.zNum))        ip.zNum = dp.zNum;	
     /* number of imaged times */
@@ -316,22 +334,6 @@ int main (int argc, char* argv[]) {
     /* step in dip-angle */
     if (!sf_getfloat ("sdipd", &gp.sdipStep))  gp.sdipStep = 1.f;	
     /* step in secondary (azimuth or crossline) angle */
-
-
-// Migration parameters
-    if (!sf_getbool ("is3d",       &rp.is3D))       rp.is3D = false;
-    /* if y, apply 3D migration */
-    if (!sf_getbool ("isCMP",      &rp.isCMP))      rp.isCMP = false;
-    /* if y, data traces have coordinates of CMP position */
-    if (!sf_getbool ("isAA",       &rp.isAA))       rp.isAA = true;
-    /* if y, apply anti-aliasing */
-    if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
-    /* if y, apply dip/azimuth mode; if n, apply inline/crossline angle mode */
-    if (!sf_getint  ("hmign",   &rp.hMigNum)) rp.hMigNum = dp.hNum;	
-    /* number of migrated offsets */
-    if (!sf_getint  ("sembWindow",   &rp.sembWindow)) rp.sembWindow = 11;	
-    /* vertical window for semblance calculation (in samples) */
-
 
     // Initiate output 
 
