@@ -31,12 +31,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
 if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
-if lapack:
-    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++']+lapack)
+    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
 
 mains = Split(progs)
 for prog in mains:
@@ -50,7 +45,7 @@ ccmains = Split(ccprogs)
 
 for prog in ccmains:
     sources = ['M' + prog]+Split(subs)
-    if lapack:
+    if 'c++' in env.get('API',[]):
         prog = env.Program (prog, map (lambda x: x + '.cc', sources),CCFLAGS='')
     else:
         prog = env.RSF_Place ('sf' + prog, None, var='LAPACK', package='lapack')
