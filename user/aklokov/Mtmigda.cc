@@ -68,7 +68,7 @@ void readOffsetSection (int iOffset, float* offsetSection) {
     const int sectionSize = dp.zNum * tracesNum;
     memset (offsetSection, 0, sectionSize * sizeof (float));
 
-    const int startPos = iOffset * sectionSize * sizeof(float);
+    const size_t startPos = iOffset * sectionSize * sizeof(float);
 
     sf_seek (dataFile, startPos, SEEK_SET);
     sf_floatread (offsetSection, sectionSize, dataFile);
@@ -161,7 +161,7 @@ void prepareVelocityTrace (int taskX, int taskY, float* velTrace) {
     const int velX = (geoX - vp.xStart) / vp.xStep;
     const int velY = rp.is3D ? (geoY - vp.yStart) / vp.yStep : 0;
 
-    const int startPos = (velX + velY * vp.xNum) * vp.zNum * sizeof(float);
+    const size_t startPos = (velX + velY * vp.xNum) * vp.zNum * sizeof(float);
 
     sf_seek (velFile, startPos, SEEK_SET);
     sf_floatread (velTrace, vp.zNum, velFile);
@@ -457,7 +457,7 @@ int main (int argc, char* argv[]) {
 
 		if (rp.isCig) {
 		    // write trace into offset-domain CIG file
-		    int startPos = (ipx * rp.hMigNum + ih) * ip.zNum * sizeof(float);
+		    size_t startPos = (ipx * rp.hMigNum + ih) * ip.zNum * sizeof(float);
 		    sf_seek (cigFile, startPos, SEEK_SET);
 		    sf_floatwrite (coImage, ip.zNum, cigFile);
 		}
@@ -479,20 +479,23 @@ int main (int argc, char* argv[]) {
 		}
 	    }
 
-	    int startInd = (ipx + ipy * ip.xNum) * sizeof(float);
-	    sf_seek (imageFile, startInd * ip.zNum, SEEK_SET);
+	    size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
+		size_t shift = startInd * ip.zNum;
+	    sf_seek (imageFile, shift, SEEK_SET);
 	    sf_floatwrite (mainImage, ip.zNum, imageFile);
 
+		shift = startInd * dagSize;
 	    if (rp.isDag) {
-		sf_seek (dagFile, startInd * dagSize, SEEK_SET);
-		sf_floatwrite (mainGather, dagSize, dagFile);
+			sf_seek (dagFile, shift, SEEK_SET);
+			sf_floatwrite (mainGather, dagSize, dagFile);
 	    }			
 
 	    if (rp.isSemb) {
 		float* sembTrace = sf_floatalloc (ip.zNum);
 		Sembler::getSemblanceForTrace (gp.dipNum * gp.sdipNum, mainImage, mainImageSq, ip.zNum, rp.sembWindow, sembTrace);
-		int startInd = (ipx + ipy * ip.xNum) * sizeof(float);
-		sf_seek (sembFile, startInd * ip.zNum, SEEK_SET);
+		size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
+		size_t shift = startInd * ip.zNum;
+		sf_seek (sembFile, shift, SEEK_SET);
 		sf_floatwrite (sembTrace, ip.zNum, sembFile);
 		free (sembTrace);
 	    }
