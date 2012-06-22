@@ -19,11 +19,11 @@
 
 #include <rsf.hh>
 
-#include "support.h"
-#include "tmigratorBase.h"
-#include "tmigrator2D.h"
-#include "tmigrator3D.h"
-#include "sembler.h"
+#include "support.hh"
+#include "tmigratorBase.hh"
+#include "tmigrator2D.hh"
+#include "tmigrator3D.hh"
+#include "sembler.hh"
 
 //#ifdef _OPENMP
 //#include <omp.h>
