@@ -45,7 +45,7 @@ void CurveDefinerDipOffset3D::getEscapePoint (const float curY, const float curX
 	const float D = b*b - 4*a*c;
 	
 	const float tanBeta = a ? ( -b + sqrt (D) ) / (2 * a) : -c / b;
-	const float tanBeta2 = a ? ( -b - sqrt (D) ) / (2 * a) : -c / b;
+	// const float tanBeta2 = a ? ( -b - sqrt (D) ) / (2 * a) : -c / b;
 
 	const float beta = atan (tanBeta) * 180 / 3.1415;
 	const float dirAngle = beta + curDip;

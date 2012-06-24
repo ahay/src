@@ -26,17 +26,32 @@ import shutil
 def picture(directory,figure):
     png = figure+".png"
     fig = os.path.join("Fig",figure+".vpl")
-    
+
+   
+
     if os.chdir(directory):
         print "Content-type: text/html\n"
         print "<html><body>Wrong directory \"%s\".</body></html>" % directory
-    elif os.system("source env.sh && scons " + fig) or \
-            os.system("source env.sh && vpconvert pen=gd fat=3 serifs=n bgcolor=b %s %s" % (fig,png)):
-        print "Content-type: text/html\n"
-        print "<html><body>Madagascar failure.</body></html>"
-    else:    
-        print "Content-type: image/png\n"
-        shutil.copyfileobj(open(png,"rb"), sys.stdout)
+    else:
+        # silence stdout
+        sysout = sys.stdout.fileno()
+        stdout = os.dup(sysout)
+        devnull = open(os.devnull,'w',0)
+        os.dup2(devnull.fileno(),sysout)
+
+        fail = \
+            os.system("source env.sh && scons " + fig) or \
+            os.system("source env.sh && vpconvert pen=gd fat=3 serifs=n bgcolor=b %s %s" % (fig,png))
+
+        # unsilence stdout
+        os.dup2(stdout,sysout)
+
+        if fail:
+            print "Content-type: text/html\n"
+            print "<html><body>Madagascar failure.</body></html>"
+        else:    
+            print "Content-type: image/png\n"
+            shutil.copyfileobj(open(png,"rb"), sys.stdout)
 
 if __name__ == "__main__":
     form = cgi.FieldStorage()
