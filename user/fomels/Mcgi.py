@@ -21,30 +21,61 @@ import os, sys
 import cgi
 import cgitb; cgitb.enable()  # for troubleshooting
 
-import shutil
+import shutil, time
+
+class Lock(object):
+    'lock to avoid concurrent access'
+    def __init__(self):
+        self.locked = False
+        self.sysout = sys.stdout.fileno()
+        self.stdout = os.dup(self.sysout)
+        self.devnull = open(os.devnull,'w',0)
+ 
+    def lock(self):
+        assert not self.locked
+
+        while 1:
+            try:
+                os.mkdir('.lock')
+                self.locked = True
+                break
+            except:
+                time.sleep(1)
+
+        # silence stdout
+        os.dup2(self.devnull.fileno(),self.sysout)
+
+    def unlock(self):
+        assert self.locked
+        self.locked = False
+        os.rmdir('.lock')
+
+        # unsilence stdout
+        os.dup2(self.stdout,self.sysout)
+
+    # auto-unlock when lock object is deleted
+    def __del__(self):
+        if self.locked:
+            self.unlock()
+        self.devnull.close()
 
 def picture(directory,figure):
     png = figure+".png"
     fig = os.path.join("Fig",figure+".vpl")
 
-   
+    lock = Lock()
 
     if os.chdir(directory):
         print "Content-type: text/html\n"
         print "<html><body>Wrong directory \"%s\".</body></html>" % directory
     else:
-        # silence stdout
-        sysout = sys.stdout.fileno()
-        stdout = os.dup(sysout)
-        devnull = open(os.devnull,'w',0)
-        os.dup2(devnull.fileno(),sysout)
-
+        lock.lock()
+        
         fail = \
             os.system("source env.sh && scons " + fig) or \
             os.system("source env.sh && vpconvert pen=gd fat=3 serifs=n bgcolor=b %s %s" % (fig,png))
 
-        # unsilence stdout
-        os.dup2(stdout,sysout)
+        lock.unlock()
 
         if fail:
             print "Content-type: text/html\n"
