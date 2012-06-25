@@ -13,6 +13,8 @@
 #define MPI_N2 2
 #define MPI_N3 1
 #define DIM 2
+#define TESTFILE "test/mpigrid/test2d.rsf"
+#define NEWFILE "test/mpigrid/new2d.rsf"
 
 #define VERBOSE
 
@@ -58,14 +60,15 @@ int main(int argc, char **argv) {
   mpitime0=MPI_Wtime();
 #endif
 
-  fname = (char *)usermalloc_(sizeof(char)*(strlen("test2d.rsf")+1));
-  strcpy(fname,"test2d.rsf");
-  dname = (char *)usermalloc_(sizeof(char)*(strlen("test2d.rsf@")+1));
-  strcpy(dname,"test2d.rsf@");
+  fname = (char *)usermalloc_(sizeof(char)*(strlen(TESTFILE)+1));
+  strcpy(fname,TESTFILE);
+  dname = (char *)usermalloc_(sizeof(char)*(strlen(TESTFILE)+2));
+  strcpy(dname,TESTFILE);
+  strcat(dname,"@");
 
   if (wrank==0) {
     fp=iwave_fopen(&fname,"w",NULL,stderr);
-    fprintf(fp,"n1=%d\nn2=%d\nd1=1\nd2=1\no1=0\no2=10\ndata_format=native_float\nscale=3\nin=test2d.rsf@",N1,N2);
+    fprintf(fp,"n1=%d\nn2=%d\nd1=1\nd2=1\no1=0\no2=10\ndata_format=native_float\nscale=3\nin=test/mpigrid/test2d.rsf@",N1,N2);
     fflush(fp);
     iwave_fclose(fp);
     fpd=iwave_fopen(&dname,"w",NULL,stderr);
@@ -139,7 +142,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  if (rsfread(a,rags,ran,"test2d.rsf",0,stderr,0)) {
+  if (rsfread(a,rags,ran,fname,0,stderr,0)) {
 #ifdef VERBOSE
     fprintf(stderr,"Error: from rsfread\n");
 #endif
@@ -150,11 +153,10 @@ int main(int argc, char **argv) {
   }
 
   // write data to new file 
-  new_fname = (char *)usermalloc_(sizeof(char)*(strlen("test2d.rsf")+10));
-  new_dname = (char *)usermalloc_(sizeof(char)*(strlen("test2d.rsf")+11));
-  sprintf(new_fname, "proc%d", wrank);
-  strcat(new_fname,"test2d.rsf");
-  strcpy(new_dname,new_fname);
+  new_fname = (char *)usermalloc_(sizeof(char)*(strlen(NEWFILE)+1));
+  strcpy(fname,NEWFILE);
+  new_dname = (char *)usermalloc_(sizeof(char)*(strlen(NEWFILE)+2));
+  strcpy(new_dname,NEWFILE);
   strcat(new_dname,"@");
   
   if (!(hdrpar=ps_new())) {
