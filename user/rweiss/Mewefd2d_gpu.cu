@@ -468,7 +468,7 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from displacement to strain AND strain to stress           */
 		/*		- Compute strains from displacements as in equation 1 */
-		/*			- Step #1										  */
+		/*			- Step #1	(Steps denoted are as in Figure 2)	  */
 		/*		- Compute stress from strain as in equation 2		  */
 		/*			- Step #2										  */
 		/*------------------------------------------------------------*/
@@ -482,7 +482,7 @@ int main(int argc, char* argv[]) {
 		/* free surface boundary condition							  */
 		/*		- sets the z-component of stress tensor along the	  */
 		/*			free surface boundary to 0						  */
-		/*			- Step #3
+		/*			- Step #3   									  */
 		/*------------------------------------------------------------*/
 			if(fsrf) {
 				dim3 dimGrid3(ceil(fdm->nxpad/16.0f),ceil(fdm->nb/16.0f));
@@ -494,7 +494,7 @@ int main(int argc, char* argv[]) {
 
 		/*------------------------------------------------------------*/
 		/* inject stress source                                       */
-		/*		- Step #4
+		/*		- Step #4   										  */
 		/*------------------------------------------------------------*/
 			if(ssou) {
 				dim3 dimGrid7(ns, 1, 1);

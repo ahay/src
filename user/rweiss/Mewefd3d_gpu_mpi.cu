@@ -770,7 +770,7 @@ int main (int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from displacement to strain                                */
 		/*		- Compute strains from displacements as in equation 1 */
-		/*			- Step #1										  */
+		/*			- Step #1	(Steps denoted are as in Figure 2)	  */
  		/*------------------------------------------------------------*/
 			dim3 dimGrid2(ceil((fdm->nxpad-2*NOP)/24.0f), ceil((fdm->nzpad-2*NOP)/24.0f));
 			dim3 dimBlock2(24,24,1);

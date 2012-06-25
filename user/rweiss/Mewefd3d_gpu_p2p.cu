@@ -707,7 +707,7 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from displacement to strain                                */
 		/*		- Compute strains from displacements as in equation 1 */
-		/*			- Step #1										  */
+		/*			- Step #1	(Steps denoted are as in Figure 2)	  */
  		/*------------------------------------------------------------*/
 		for (int g = 0; g < ngpu; g++){
 			cudaSetDevice(g);
