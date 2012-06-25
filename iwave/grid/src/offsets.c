@@ -68,7 +68,7 @@ int get_array_offsets(off_t ** offs,
   else {
 
     /* initialize workspace */
-    *offs = (off_t *)malloc(*noffs*sizeof(off_t));
+    *offs = (off_t *)usermalloc_(*noffs*sizeof(off_t));
 
     /* compute power sequences. Note that ploc is dim-1 dim'l, and 
        consists of (1,ln1,ln1*ln2,...), whereas pglob is dim dim'l and

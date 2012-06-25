@@ -7,18 +7,20 @@ WWS 09.09: make compilation conditional on MPI
 int read_grid(grid * g, char * fname, FILE * fp) {
 
   int err=0;
-  PARARRAY par;
+  PARARRAY * par = ps_new();
 
   /* parser file for key=value pairs */
-  if (ps_createfile(&par,fname)) {
+  if (ps_createfile(par,fname)) {
     //    fprintf(fp,"read_grid: failed to parse file %s\n",fname);
     return E_FILE;
   }
 
-  if ( (err=par_grid(g,par,fp)) ) {
+  if ( (err=par_grid(g,*par,fp)) ) {
     //    fprintf(fp,"read_grid: failed to parse table from file %s\n",fname);
     return err;
   }
+
+  ps_delete(&par);
 
   return err;
 }
@@ -373,7 +375,7 @@ int rsfread(ireal * a,
   size_t recsize_b;/* length of 1D chunk to be read (bytes) */
 
   FILE * fp = NULL;
-  PARARRAY par;
+  PARARRAY * par;
   float * fbuf;    /* input buffer for read */
 
   /* XDR buffers etc. */
@@ -403,17 +405,20 @@ int rsfread(ireal * a,
    * END DECLARATIONS       *
    **************************/
 
-  ps_setnull(&par);
+  par = ps_new();
+
   /* read parameter table from file */
-  if (ps_createfile(&par,fname)) {
+  if (ps_createfile(par,fname)) {
     fprintf(stream,"read_grid: failed to parse file = %s\n",fname);
+    ps_delete(&par);
     return E_FILE;
   }
 
   /* create grid from parameter table */
-  if ( (err = par_grid(&g, par, stream)) ) {
+  if ( (err = par_grid(&g, *par, stream)) ) {
     fprintf(stream,"Error: read from read_grid\n");
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
     return err;
   }
   
@@ -470,15 +475,16 @@ int rsfread(ireal * a,
   if ( (err = get_array_offsets(&goffs, &noffs, g.dim, gs, n, g_gsa, gl_na)) ||
        (err = get_array_offsets(&loffs, &noffs, g.dim, rags, ran, l_gsa, gl_na)) ) {
     fprintf(stream,"Error: rsfread - read from get_array_offsets, err=%d\n",err);
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
     return err;
   }
   
   /* get filename */
-  if ( (err=ps_flcstring(par,"in",&dname)) ) {
+  if ( (err=ps_flcstring(*par,"in",&dname)) ) {
     fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
     fprintf(stream,"failed to extract in param\n");
-    ps_destroy(&par);
+    ps_delete(&par);
     return err;
   }
   
@@ -490,25 +496,27 @@ int rsfread(ireal * a,
   fp=iwave_const_fopen(dname,"r",NULL,stream);
   if (!fp) {
     fprintf(stream,"Error: rsfread - read from iwave_fopen, file = %s\n",dname);
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
     return E_FILE;
   }
 #else
   fp=fopen(dname,"r");
   if (!fp) {
     fprintf(stream,"Error: rsfread - read from fopen, file = %s\n",dname);
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
     return E_FILE;
   }
 #endif
  
-  if ( (err=ps_flcstring(par,"data_format",&type)) ) {
+  if ( (err=ps_flcstring(*par,"data_format",&type)) ) {
     fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
     fprintf(stream,"failed to extract type param\n");
-    ps_destroy(&par);
+    ps_delete(&par);
     return err;
   }
-  ps_flint(par,"scale",&scale);
+  ps_flint(*par,"scale",&scale);
 
   /* compute current starting position */
   cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
@@ -521,9 +529,9 @@ int rsfread(ireal * a,
   /* native read loop */
   
   if (!strcmp(type,"native_float")) {
-    
+
     /* allocate read buffer */
-    fbuf=(float *)malloc(recsize_b);
+    fbuf=(float *)usermalloc_(recsize_b);
     for (i=0;i<noffs;i++) {
       /* seek to read segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
@@ -542,8 +550,7 @@ int rsfread(ireal * a,
 	for (j=0;j<gl_na[0];j++) { *(a+loffs[i]+j)=*(fbuf+j); }
       }
     }
-
-    free(fbuf);
+    userfree_(fbuf);
   }
   
 #ifdef SUXDR
@@ -552,9 +559,9 @@ int rsfread(ireal * a,
     fprintf(stream,"rsfread: XDR option\n");
 
     /* allocate char buffer */
-    buf=malloc(recsize_b);
+    buf=usermalloc_(recsize_b);
     /* allocate one float */
-    fbuf=malloc(sizeof(float));
+    fbuf=usermalloc_(sizeof(float));
 
     /* (re)initialize xdr stream */
     xdrmem_create(&xdrs,buf,recsize_b,XDR_DECODE);
@@ -589,22 +596,24 @@ int rsfread(ireal * a,
       }
     }
     /* disengage xdr stream */
-    free(buf);
-    free(fbuf);
+    userfree_(buf);
+    userfree_(fbuf);
     xdr_destroy(&xdrs);
 
   }
   else {
     fprintf(stream,"Error: rsfread - data format must be either\n");
     fprintf(stream,"native_float or xdr_float\n");
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
 
     return E_OTHER;
   }
 #else
   else {
     fprintf(stream,"Error: rsfread - data format must be native_float\n");
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
 
     return E_OTHER;
   }
@@ -612,12 +621,13 @@ int rsfread(ireal * a,
 
   fflush(fp);
 #ifdef IWAVE_USE_FMGR
-  //  fprintf(stream,"RSFREAD -> IWAVE_FCLOSE, file=%s\n",dname);
+  //fprintf(stream,"RSFREAD -> IWAVE_FCLOSE, file=%s\n",dname);
   iwave_fclose(fp);
 #else
   fclose(fp);
 #endif
 
+  
   /* extension loop - extend by const along axes dim-1,..,0.
   */
   if (extend) {
@@ -631,7 +641,7 @@ int rsfread(ireal * a,
   } 
 
   /* scaling loop */
-  /*  fprintf(stream,"gridio: SCALE=%d\n",scale);*/
+  //  fprintf(stream,"gridio: SCALE=%d\n",scale);
   ntot=1;
   for (ii=0;ii<g.dim;ii++) ntot*=ran[ii];
   if (scale>0) for (ii=0;ii<scale;ii++) scfac *= 10.0;
@@ -643,14 +653,14 @@ int rsfread(ireal * a,
     a_max=iwave_max(a[i],a_max);
     a_min=iwave_min(a[i],a_min);
   }
-  /*  fprintf(stream,"gridio: fac=%e max=%e min=%e\n",scfac,a_max,a_min);*/
+  /*fprintf(stream,"gridio: fac=%e max=%e min=%e\n",scfac,a_max,a_min);*/
 
-  /* free workspace */
-  free(type);
-  if (goffs) free(goffs);
-  if (loffs) free(loffs);
-  
-  ps_destroy(&par);
+  if (goffs) userfree_(goffs);
+  if (loffs) userfree_(loffs);
+  userfree_(dname);
+  userfree_(type);
+
+  ps_delete(&par);
 
   return err;
 }
@@ -685,7 +695,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   IPNT na;         /* lengths of grid intersection axes */
   IPNT gl_na;      /* lengths of grid intersection axes, local or global */
   FILE * fp = NULL;
-  PARARRAY par;
+  PARARRAY * par;
 
   /*  char * schar;*/
   float * fbuf;    /* input buffer for read */
@@ -719,28 +729,31 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
 
   /* HEADER FILE SECTION */
 
-  if (!ps_createfile(&par,fname)) {
-      if ((ii=par_grid(&g,par,stream))) {
-	  fprintf(stream,"Error rsfwrite err=%d\n",ii);
-	  fprintf(stream,"file %s exists but does not define RSF/SEP data structure\n",fname);
-	  return E_FILE;
-      }
-    if (ps_flcstring(par,"in",&dname)) {
+  par = ps_new();
+
+  if (!ps_createfile(par,fname)) {
+    //    fprintf(stderr,"in rsfwrite: par file = \n");
+    //    ps_printall(*par,stderr);
+    //    fprintf(stderr,"next\n");
+    if ((ii=par_grid(&g,*par,stream))) {
+      fprintf(stream,"Error rsfwrite err=%d\n",ii);
+      fprintf(stream,"file %s exists but does not define RSF/SEP data structure\n",fname);
+      return E_FILE;
+    }
+
+    if (ps_flcstring(*par,"in",&dname)) {
       fprintf(stream,"Error: rsfwrite from ps_flcstring\n");
       fprintf(stream,"failed to read data filename\n");
       return E_FILE;
     }
-    /*
-    fprintf(stream,"rsfwrite: header=%s data=%s parfile=\n",fname,dname);
-    ps_printall(par,stream);
-    */
-    if (ps_flcstring(par,"data_format",&type)) {
+    if (ps_flcstring(*par,"data_format",&type)) {
       fprintf(stream,"Error: rsfwrite from ps_flcstring\n");
       fprintf(stream,"failed to read data_format from header file %s\n",fname);
       return E_FILE;
     }
-    ps_flint(par,"scale",&scale);
-
+    ps_flint(*par,"scale",&scale);
+    //    fprintf(stderr,"rsfwrite: header=%s data=%s data_format=%s scale=%d parfile=\n",fname,dname,type,scale);
+    //      ps_printall(*par,stderr);
   }
   else {
     fprintf(stream,"Error: rsfwrite - header file %s not opened\n",fname);
@@ -805,7 +818,8 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   if ( (err = get_array_offsets(&goffs, &noffs, g.dim, gs, n, g_gsa, gl_na)) ||
        (err = get_array_offsets(&loffs, &noffs, g.dim, rags, ran, l_gsa, gl_na)) ) {
     fprintf(stream,"Error: rsfread - read from get_array_offsets, err=%d\n",err);
-    ps_destroy(&par);
+    //    ps_destroy(&par);
+    ps_delete(&par);
     return err;
   }
   /*
@@ -822,6 +836,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
     for (ii=0;ii<g.dim;ii++) {
       if (adj_extend_array(a,rags,ran,l_gsa,gl_na,g.dim,ii)) {
 	fprintf(stream,"Error: rsfwrite - adjoint extension failed at axis %d\n",ii);
+	ps_delete(&par);
 	return E_OTHER;
       }
     }
@@ -855,7 +870,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   if (!strcmp(type,"native_float")) {
 
     /* allocate float buffer */
-    fbuf=(float *)malloc(recsize_b);
+    fbuf=(float *)usermalloc_(recsize_b);
 
     for (i=0;i<noffs;i++) {
       /* seek to write segment */
@@ -880,8 +895,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
 	err=E_FILE;
       }
     }
-
-    free(fbuf);
+    userfree_(fbuf);
   }
 
 #ifdef SUXDR
@@ -889,9 +903,9 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   else if (!strcmp(type,"xdr_float")) {
 
     /* allocate char buffer */
-    buf=malloc(recsize_b);
+    buf=usermalloc_(recsize_b);
     /* allocate one float */
-    fbuf=malloc(sizeof(float));
+    fbuf=usermalloc_(sizeof(float));
 
     /* (re)initialize xdr stream */
     xdrmem_create(&xdrs,buf,recsize_b,XDR_ENCODE);
@@ -934,8 +948,8 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
       }
     }
     /* disengage xdr stream */
-    free(buf);
-    free(fbuf);
+    userfree_(buf);
+    userfree_(fbuf);
     xdr_destroy(&xdrs);
 
   }
@@ -952,12 +966,13 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
 #endif
   
   /* free workspace */
-  if (goffs) free(goffs);
-  if (loffs) free(loffs);
-  free(dname);
+  if (goffs) userfree_(goffs);
+  if (loffs) userfree_(loffs);
+  userfree_(dname);
+  userfree_(type);
+  ps_delete(&par);
   fflush(fp);
 #ifdef IWAVE_USE_FMGR
-  //  fprintf(stream,"RSFWRITE->IWAVE_FCLOSE, file=%s\n",dname);
   iwave_fclose(fp);
 #else
   fclose(fp);

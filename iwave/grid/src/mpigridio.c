@@ -100,7 +100,7 @@ int mpirsfread(ireal * a,
   IPNT read_gn;       /* lengths of grid (memory) axes */ 
 
   FILE * fp = NULL;
-  PARARRAY par;
+  PARARRAY * par;
   float * fbuf;      /* input buffer for read */
 
   MPI_Comm wcomm;    /* global communicator */
@@ -186,23 +186,24 @@ int mpirsfread(ireal * a,
    */
   if (lrank==0) {
 
-    ps_setnull(&par);
     /* read parameter table from file */
-    if (ps_createfile(&par,fname)) {
+    par = new_ps();
+    if (ps_createfile(par,fname)) {
       fprintf(stream,"read_grid: failed to parse file = %s\n",fname);
       fflush(stream);
       err=E_FILE;
     }
     
     /* create grid from parameter table */
-    if ( err || (err = par_grid(&g, par, stream)) ) {
+    if ( err || (err = par_grid(&g, *par, stream)) ) {
       fprintf(stream,"Error [mpirsfread]: read from read_grid\n");
+      ps_delete(&par);
     }
 
     if (!err)  {
 
       scale=0;
-      ps_ffint(par,"scale",&scale);
+      ps_flint(*par,"scale",&scale);
   
       /* get global array params from grid
       */
@@ -261,7 +262,7 @@ int mpirsfread(ireal * a,
   /* read buffer - will always be adequate, as record 
      size will never increase 
   */
-  fbuf=(float *)malloc(recsize_b);
+  fbuf=(float *)usermalloc_(recsize_b);
   if (!fbuf) {
     fprintf(stream,"Fatal Error [mpirsfread]:\n");
     fprintf(stream,"  failed to allocate %ld bytes on process %d\n",recsize_b,lrank);
@@ -273,13 +274,13 @@ int mpirsfread(ireal * a,
   if (lrank==0) {
 
     /* get filename */
-    if ( (err=ps_ffcstring(par,"in",&dname)) ) {
-      fprintf(stream,"Error [mpirsfread]: read from ps_ffcstring\n");
+    if ( (err=ps_flcstring(*par,"in",&dname)) ) {
+      fprintf(stream,"Error [mpirsfread]: read from ps_flcstring\n");
       fprintf(stream,"failed to extract in param\n");
     }
 
-    if ( err || (err=ps_ffcstring(par,"data_format",&type)) ) {
-      fprintf(stream,"Error [mpirsfread]: read from ps_ffcstring\n");
+    if ( err || (err=ps_flcstring(*par,"data_format",&type)) ) {
+      fprintf(stream,"Error [mpirsfread]: read from ps_flcstring\n");
       fprintf(stream,"failed to extract type param\n");
     }
 
@@ -293,7 +294,7 @@ int mpirsfread(ireal * a,
     }
     
     /* now finished with PARARRAY, trash it */
-    ps_destroy(&par);
+    ps_delete(&par);
 
     /* open file */
     if (!err) {
@@ -309,7 +310,7 @@ int mpirsfread(ireal * a,
       }
       else {
 	/* done with filename */
-	free(dname);
+	userfree_(dname);
       }
     }
 
@@ -338,7 +339,7 @@ int mpirsfread(ireal * a,
 #ifdef SUXDR
       if (!strcmp(type,"xdr_float")) {
 	/* allocate char buffer - again, initial value of recsize_b is always enough */
-	buf=malloc(recsize_b);
+	buf=usermalloc_(recsize_b);
 	if (buf) {
 	  /* (re)initialize xdr stream */
 	  xdrmem_create(&xdrs,buf,recsize_b,XDR_DECODE);
@@ -519,8 +520,8 @@ int mpirsfread(ireal * a,
       for (i=0;i<noffs;i++) {
 	for (j=0;j<gl_na[0];j++) { *(a+loffs[i]+j)=*(fbuf+read_goffs[i]+j); }
       }
-      if (read_goffs) free(read_goffs);
-      if (loffs) free(loffs);     
+      if (read_goffs) userfree_(read_goffs);
+      if (loffs) userfree_(loffs);     
     }
 
     /* update start, size of read block */
@@ -548,7 +549,7 @@ int mpirsfread(ireal * a,
 
   /* cleanup - close file, delete read buffer */
 
-  free(fbuf);
+  userfree_(fbuf);
   if (lrank==0) {
 #ifdef IWAVE_USE_FMGR
     iwave_fclose(fp);
@@ -558,10 +559,10 @@ int mpirsfread(ireal * a,
 #ifdef SUXDR
     if (!strcmp(type,"xdr_float")) {
       /* disengage xdr stream */
-      free(buf);
+      userfree_(buf);
       xdr_destroy(&xdrs); 
     }
-    free(type);
+    userfree_(type);
 #endif
   }
 
@@ -687,7 +688,7 @@ int mpirsfwrite(ireal * a,
   IPNT read_gn;       /* lengths of grid (memory) axes */ 
 
   FILE * fp = NULL;
-  PARARRAY par;
+  PARARRAY * par;
   float * fbuf;      /* local output buffer */
   float * rbuf;      /* rank 0 reduction buffer */
 
@@ -759,9 +760,9 @@ int mpirsfwrite(ireal * a,
    */
   if (wrank==0) {
 
-    ps_setnull(&par);
     /* read parameter table from file */
-    if (ps_createfile(&par,fname)) {
+    par=ps_new();
+    if (ps_createfile(par,fname)) {
       fprintf(stream,"read_grid: failed to parse file = %s\n",fname);
       fflush(stream);
       err=E_FILE;
@@ -770,14 +771,14 @@ int mpirsfwrite(ireal * a,
     //    ps_printall(par,stream);
     
     /* create grid from parameter table */
-    if ( err || (err = par_grid(&g, par, stream)) ) {
+    if ( err || (err = par_grid(&g, *par, stream)) ) {
       fprintf(stream,"Error [mpirsfwrite]: read from read_grid\n");
     }
 
     if (!err)  {
 
       scale=0;
-      ps_ffint(par,"scale",&scale);
+      ps_flint(*par,"scale",&scale);
   
       /* get global array params from grid
       */
@@ -826,7 +827,7 @@ int mpirsfwrite(ireal * a,
   /* read buffer - will always be adequate, as record 
      size will never increase 
   */
-  fbuf=(float *)malloc(recsize_b);
+  fbuf=(float *)usermalloc_(recsize_b);
   if (!fbuf) {
     fprintf(stream,"Fatal Error [mpirsfwrite]:\n");
     fprintf(stream,"  failed to allocate %ld bytes on process %d\n",recsize_b,wrank);
@@ -839,7 +840,7 @@ int mpirsfwrite(ireal * a,
 
   /* reduction buffer on rank 0 */
   if (wrank==0) {
-    rbuf=(float *)malloc(recsize_b);
+    rbuf=(float *)usermalloc_(recsize_b);
   }
   else {
     rbuf=NULL;
@@ -855,18 +856,18 @@ int mpirsfwrite(ireal * a,
   if (wrank==0) {
 
     /* get filename */
-    if ( (err=ps_ffcstring(par,"in",&dname)) ) {
-      fprintf(stream,"Error [mpirsfwrite]: from ps_ffcstring\n");
+    if ( (err=ps_flcstring(*par,"in",&dname)) ) {
+      fprintf(stream,"Error [mpirsfwrite]: from ps_flcstring\n");
       fprintf(stream,"failed to extract in param\n");
     }
 
-    if ( err || (err=ps_ffcstring(par,"data_format",&type)) ) {
-      fprintf(stream,"Error [mpirsfwrite]: from ps_ffcstring\n");
+    if ( err || (err=ps_flcstring(*par,"data_format",&type)) ) {
+      fprintf(stream,"Error [mpirsfwrite]: from ps_flcstring\n");
       fprintf(stream,"failed to extract type param\n");
     }
 
     /* now finished with PARARRAY, trash it */
-    ps_destroy(&par);
+    ps_delete(&par);
 
     /* open file - since file must exist but needs to be written, use "r+" rather than "w" */
     if (!err) {
@@ -882,7 +883,7 @@ int mpirsfwrite(ireal * a,
       }
       else {
 	/* done with filename */
-	free(dname);
+	userfree_(dname);
       }
     }
 
@@ -914,7 +915,7 @@ int mpirsfwrite(ireal * a,
 #ifdef SUXDR
       if (!strcmp(type,"xdr_float")) {
 	/* allocate char buffer - again, initial value of recsize_b is always enough */
-	buf=malloc(recsize_b);
+	buf=usermalloc_(recsize_b);
 	if (buf) {
 	  /* (re)initialize xdr stream */
 	  xdrmem_create(&xdrs,buf,recsize_b,XDR_ENCODE);
@@ -1025,8 +1026,8 @@ int mpirsfwrite(ireal * a,
       for (i=0;i<noffs;i++) {
 	for (j=0;j<gl_na[0];j++) { *(fbuf+read_goffs[i]+j) = scfac * (*(a+loffs[i]+j)); }
       }
-      if (read_goffs) free(read_goffs);
-      if (loffs) free(loffs);     
+      if (read_goffs) userfree_(read_goffs);
+      if (loffs) userfree_(loffs);     
     }
     else{
       for (i=0;i<recsize;i++) fbuf[i]=0.0f;
@@ -1118,8 +1119,8 @@ int mpirsfwrite(ireal * a,
 
   /* cleanup - close file, delete read buffer */
 
-  free(fbuf);
-  free(rbuf);
+  userfree_(fbuf);
+  userfree_(rbuf);
   if (wrank==0) {
 #ifdef IWAVE_USE_FMGR
     iwave_fclose(fp);
@@ -1129,10 +1130,10 @@ int mpirsfwrite(ireal * a,
 #ifdef SUXDR
     if (!strcmp(type,"xdr_float")) {
       /* disengage xdr stream */
-      free(buf);
+      userfree_(buf);
       xdr_destroy(&xdrs); 
     }
-    free(type);
+    userfree_(type);
 #endif
   }
 
