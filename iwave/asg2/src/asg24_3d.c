@@ -338,7 +338,7 @@ int asg24_3d_v(RDOM * dom, void * pars) {
   dip1 = np1[0];
   dip2 = np2[0]*np2[1];
 
-  for (i2=gsc0[2]; i1<gec0[2]+1; i2++) {
+  for (i2=gsc0[2]; i2<gec0[2]+1; i2++) {
     ioffp0_2  = -offp0[1] + (i2-offp0[2]) *np0[1];
     ioffmv0_2 = -offmv0[1] + (i2-offmv0[2])*nmv0[1];
     ioffv0_2  = -offv0[1] + (i2-offv0[2]) *nv0[1];

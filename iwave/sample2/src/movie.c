@@ -248,7 +248,7 @@ int movie_run(MOVIE * mt,
   /* time test - not at integral time */
   if (m->tsind.iv) return 0;
 
-  /*  fprintf(stream,"MOVIE: write at it=%d\n",mt->it);*?
+  /*  fprintf(stream,"MOVIE: write at it=%d\n",mt->it);*/
 
   /* at next step */
 
