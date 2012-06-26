@@ -1,86 +1,265 @@
 from rsf.proj import *
 
-#Velocity model
-###############
-vel='marmvel.hh'
-Fetch(vel,"marm")
-d=0.004
+Fetch('marmvel.hh','marm')
 
-# Convert to RSF and update header
-Flow('vel',vel,
+Flow('vel','marmvel.hh',
      '''
      dd form=native | 
-     scale rscale=.001 | put
-     label1=Depth label2=Position unit1=km unit2=km
+     scale rscale=.001 | put d1=0.004 d2=0.004
+     label1=Depth label2=Distance unit1=km unit2=km
      label=Velocity unit=km/s
-     d1=%f d2=%f
-     ''' % (d,d))
-
-# Plot
-Result('vel',
-       '''
-       grey color=j allpos=y scalebar=y 
-       title="Marmousi" screenratio=.326
-       screenht=3 labelsz=4 titlesz=6
-       barreverse=y bias=1
-       ''')
-
-##################################################
-# Data
-##################################################
-
-shots = "marmrefl.hh"
-
-Fetch(shots,"marm")
-
-# Convert Files to RSF and update header
-Flow('data',shots,
-     '''
-     dd form=native | put
-     label1=Time label2=Offset unit2=km unit1=s
-     label3=Shot unit3=km d2=-.025 d3=.025 o2=2.575 o3=3
      ''')
 
-# Plot
-Result('near-offset','data',
-       'window min2=.200 n2=1 | grey title=Near\ Offset')
+Result('vel','grey scalebar=y color=j allpos=y title="Velocity Model" bias=1.5 barreverse=y')
 
-Result('shot20','data',
-       'window min3=3.500 n3=1 | grey title=Shot\ 20') 
+Flow('ref','vel',
+     '''
+     depth2time velocity=$SOURCE nt=3501 dt=0.001 |
+     ai2refl |
+     ricker1 frequency=20 |
+     time2depth velocity=$SOURCE
+     ''')
 
-###################
-# Traveltime tables
-###################
+Fetch('marmrefl.hh','marm')
 
-Flow('yshot','data','window n1=1 n2=1 | math output=x1')
-Flow('szero','yshot','math output=0')
+Flow('data','marmrefl.hh',
+     '''
+     dd form=native | 
+     put label1=Time unit1=s 
+     d2=0.025 o2=-2.575 label2=Offset unit2=km 
+     d3=0.025  o3=3     label3=Shot   unit3=km
+     ''')
+
+dz=0.004
+dx=0.004
+
+xmin=2.
+xmax=9.
+
+ns=576
+os=0.
+ds=0.016
+
+# shots
+Flow('yshot',None,'math n1=%d o1=%g d1=%g output=x1' % (ns,os,ds))
+Flow('szero','yshot','math output=0.')
 Flow('shots','szero yshot','cat axis=2 ${SOURCES[1]} ${SOURCES[0]} | transp')
 
-ds=0.025
+# mute refraction + spreading correction
+Flow('spread','data','mutter half=n v0=1.44 | tpow tpow=1')
 
-Flow('tables','vel shots',
-     'eikonal shotfile=${SOURCES[1]}',split=[2,240,[1]],reduce='cat axis=4')
-
-Flow('table','tables','window | put o3=3 d3=%g label3=Shot' % ds)
-Plot('table',
-     'window j3=10 | grey color=j title=Traveltime scalebar=y allpos=y clip=3.5 maxval=3.5 minval=0',view=1)
-
-Flow('tablex','table',
+# predictive decon
+Flow('filt lag','data',
      '''
-     transp plane=13 |
-     deriv |
-     transp plane=13 |
-     scale dscale=%g
-     ''' % (1/ds),split=[2,2301])
+     lopef a=76,1 w=726,96 gap=13,0 dim=2 lag=${TARGETS[1]}
+     ''')
 
-#########################
-# Prestack migration
-#########################
+Flow('decon','data filt',
+     '''
+     decon filt=${SOURCES[1]} | bandpass flo=15 fhi=45
+     ''')
 
-Flow('psdmig','data table tablex',
-     'kirmig table=${SOURCES[1]} tablex=${SOURCES[2]} verb=y',split=[3,240,[0]])
+# amplitude taper + static source shift
+Flow('taper1',None,'math n1=75 o1=0. d1=0.004 output=0.')
+Flow('taper2',None,'math n1=51 o1=0. d1=0.004 output="5.*x1"')
+Flow('taper3',None,'math n1=600 o1=0. d1=0.004 output=1.')
+Flow('taper','taper1 taper2 taper3',
+     '''
+     cat axis=1 ${SOURCES[1]} ${SOURCES[2]} |
+     spray axis=2 n=96 d=0.025 o=-2.575 |
+     spray axis=3 n=240 d=0.025 o=3.
+     ''')
 
-Flow('eikmarmcggmig','psdmig','stack axis=3')
-Result('eikmarmcggmig','grey title=standard')
+Flow('trace','decon taper',
+     '''
+     add mode=p ${SOURCES[1]} |
+     mutter half=n x0=-0.1 tp=0.2 v0=1.6 |
+     window n1=711 f1=14 | put o1=0.     
+     ''')
+
+##########
+# standard
+##########
+
+# traveltime
+Flow('time0 tdl0 tds0','vel shots',
+     '''
+     put d3=%g o3=0. label3= unit3= |
+     eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} b1=3 b2=3 |
+     put o4=%g d4=%g | window
+     ''' % (dx,os,ds))
+
+# migration
+Flow('dmig0','trace time0 tds0','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+Flow('mig0','dmig0',
+     '''
+     window f2=%d n2=%d |
+     stack axis=3 norm=n
+     ''' % (xmin/dx,(xmax-xmin)/dx+1))
+
+# plot
+Result('mig0','grey title="standard" screenratio=0.5')
+
+#############
+# recursive 1
+#############
+
+datum1=1.5
+chunk1=2.
+
+# chunk1
+########
+
+# traveltime
+Flow('time1_1','time0','window n1=%d' % (chunk1/dz+1))
+Flow('tds1_1','tds0','window n1=%d' % (chunk1/dz+1))
+
+# migration
+Flow('dmig1_1','trace time1_1 tds1_1','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# redatum
+#########
+
+Flow('sgreen1','time1_1 tds1_1',
+     '''
+     transp plane=34 memsize=4096 |
+     tinterp deriv=${SOURCES[1]} os=3 ds=0.025 ns=240 |
+     window n1=1 f1=%d |
+     spline o1=3 d1=0.025 n1=240
+     ''' % (datum1/dz))
+
+Flow('rgreen1','time1_1 tds1_1',
+     '''
+     transp plane=34 memsize=4000 |
+     tinterp deriv=${SOURCES[1]} os=0.425 ds=0.025 ns=335 |
+     window n1=1 f1=%d |
+     spline o1=0.425 d1=0.025 n1=335
+     ''' % (datum1/dz))
+
+Flow('redat1','trace sgreen1 rgreen1',
+     '''
+     reverse which=1 opt=i |
+     kirdat datum=%g sgreen=${SOURCES[1]} rgreen=${SOURCES[2]} aperture=200 |
+     reverse which=1 opt=i
+     ''' % datum1)
+
+# chunk2
+########
+
+Flow('chunk2','vel','window n1=%d f1=%d | put o1=0.' % (datum1/dz+1,(3.-datum1)/dz))
+
+# traveltime
+Flow('time1_2 tdl1_2 tds1_2','chunk2 shots',
+     '''
+     put d3=%g o3=0. label3= unit3= |
+     eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} |
+     put o4=%g d4=%g | window
+     ''' % (dx,os,ds))
+
+# migration
+Flow('dmig1_2','redat1 time1_2 tds1_2','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# plot
+######
+
+scale1=4.5
+
+Flow('cut1','dmig1_2','window n1=%d f1=%d | scale dscale=%g' % ((3.-chunk1)/dz+1,(chunk1-datum1)/dz,scale1))
+Flow('dmig1','dmig1_1 cut1','cat axis=1 ${SOURCES[1]}')
+
+Flow('mig1','dmig1',
+     '''
+     window f2=%d n2=%d |
+     stack axis=3 norm=n
+     ''' % (xmin/dx,(xmax-xmin)/dx+1))
+
+
+Result('mig1','grey title="down 1500 in one step" screenratio=0.5')
+
+#############
+# recursive 2
+#############
+
+datum2=0.5
+
+# redatum
+#########
+
+for n in range(3):
+    time='time2_'+str(n)
+    tdl='tdl2_'+str(n)
+    tds='tds2_'+str(n)
+
+    Flow([time,tdl,tds],'vel shots',
+         '''
+         window n1=%d f1=%d | put o1=0. d3=%g o3=0. label3= unit3= |
+         eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} |
+         put o4=%g d4=%g
+         ''' % (datum2/dz+1,n*datum2/dz,dx,os,ds))
+
+    sgreen='sgreen2_'+str(n)
+    rgreen='rgreen2_'+str(n)
+
+    Flow(sgreen,[time,tds],
+         '''
+         tinterp deriv=${SOURCES[1]} os=3 ds=0.025 ns=240 |
+         window n1=1 f1=%d |
+         spline o1=3 d1=0.025 n1=240
+         ''' % (datum2/dz))
+
+    Flow(rgreen,[time,tds],
+         '''
+         tinterp deriv=${SOURCES[1]} os=0.425 ds=0.025 ns=335 |
+         window n1=1 f1=%d |
+         spline o1=0.425 d1=0.025 n1=335
+         ''' % (datum2/dz))
+
+    if n==0:
+        inp='trace'        
+    else:
+        inp='redat2_'+str(n-1)
+
+    out='redat2_'+str(n)
+
+    Flow(out,[inp,sgreen,rgreen],
+         '''
+         reverse which=1 opt=i |
+         kirdat datum=%g sgreen=${SOURCES[1]} rgreen=${SOURCES[2]} aperture=200 |
+         reverse which=1 opt=i
+         ''' % datum2)
+
+# migration
+Flow('dmig2_2','redat2_2 time1_2 tds1_2','kirmig table=${SOURCES[1]} deriv=${SOURCES[2]} aperture=75.')
+
+# plot
+######
+
+scale2=3.
+
+Flow('cut2','dmig2_2','window n1=%d f1=%d | scale dscale=%g' % ((3.-chunk1)/dz+1,(chunk1-datum1)/dz,scale2))
+Flow('dmig2','dmig1_1 cut2','cat axis=1 ${SOURCES[1]}')
+
+Flow('mig2','dmig2',
+     '''
+     window f2=%d n2=%d |
+     stack axis=3 norm=n
+     ''' % (xmin/dx,(xmax-xmin)/dx+1))
+
+Result('mig2','grey title="down 1500 in three steps" screenratio=0.5')
+
+for case in Split('vel ref mig1 mig2'):
+    Plot(case+'w',case,
+         '''
+         window min1=2 min2=5 max2=8 max1=3 | 
+         grey wantaxis1=%d wantaxis2=%d title="%s"  mean=y
+         ''' % (case=='vel' or case=='dmig1',
+                case=='vel' or case=='ref',
+                {'vel':'velocity','ref':'reflectivity',
+                 'mig1':'down 1500 in one step',
+                 'mig2':'down 1500 in three steps'}[case]))
+
+Result('targref', 'velw refw mig1w mig2w','TwoRows')
 
 End()
+

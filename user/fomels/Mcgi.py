@@ -59,7 +59,7 @@ class Lock(object):
             self.unlock()
         self.devnull.close()
 
-def picture(directory,figure):
+def picture(directory,figure,par):
     png = figure+".png"
     fig = os.path.join("Fig",figure+".vpl")
 
@@ -72,7 +72,7 @@ def picture(directory,figure):
         lock.lock()
         
         fail = \
-            os.system("source env.sh && scons " + fig) or \
+            os.system("source env.sh && scons %s %s" % (par,fig)) or \
             os.system("source env.sh && vpconvert pen=gd fat=3 serifs=n bgcolor=b %s %s" % (fig,png))
 
         lock.unlock()
@@ -95,4 +95,9 @@ if __name__ == "__main__":
         print "<html><body>Need dir= and fig=</body></html>"
         sys.exit(1)
 
-    picture(d,f)
+    par = ''
+    for key in form.keys():
+        if key != "dir" and key != "fig":
+            par += ' %s=%s' % (key,form.getvalue(key))
+
+    picture(d,f,par)
