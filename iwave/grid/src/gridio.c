@@ -1,6 +1,7 @@
 /*
 WWS 09.09: make compilation conditional on MPI
 */
+#include <stdio.h>
 
 #include "gridio.h"
 
