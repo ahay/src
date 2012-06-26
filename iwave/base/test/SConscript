@@ -30,32 +30,37 @@ thispath = os.getcwd()
 g = open(thispath + '/' + 'summary.rpt','w')
 
 def cmdx(target, source, env):
-    os.system('/bin/rm -rf ' + str(target[1]) + '; mkdir ' + str(target[1]))
-    cmdl='./' + str(source[0]) + '>' + str(target[0])
+    os.system('/bin/rm -rf ' + str(target[0]) + '; mkdir ' + str(target[0]))
+    base = str(target[0]).split('/')[1]
+    tgt = str(target[0]) + '/' + base + '.rpt';
+    print 'tgt = ' + tgt
+    cmdl='./' + str(source[0]) + '>' + tgt
     print cmdl
     os.system(cmdl)
-    if os.path.exists(str(target[0]) + '_ref'):
-        f = open(str(target[0]),'r')
+    ref = thispath + '/' + base + '.rpt_ref'
+    if os.path.exists(ref):
+        f = open(tgt,'r')
         testres = f.read()
         f.close()
-        f = open(str(target[0]) + '_ref','r')
+        f = open(ref,'r')
         refres = f.read()
         f.close()
         if testres == refres:
-            os.system('echo ' + str(target[0]) + ': TRUE  = normal termination, output identical to reference >> ' + thispath + '/summary.rpt')
+            os.system('echo ' + base + ': TRUE  = normal termination, output identical to reference >> ' + thispath + '/summary.rpt')
         else:
-            os.system('echo ' + str(target[0]) + ': FALSE = normal termination, output differs from reference >> ' + thispath + '/summary.rpt')
+            os.system('echo ' + base + ': FALSE = normal termination, output differs from reference >> ' + thispath + '/summary.rpt')
     else:
-        shutil.copy(str(target[0]), str(target[0]) + '_ref')	        
+        shutil.copy(tgt, ref)	        
 
 if len(srcs) > 0:
     for prog in srcs:
         pname = str(prog).split('.')[0].strip('/')
         pprog = pname + '.x'
         env.Program(pprog,prog)
-        prout = pname + '.rpt'
+        prout = pname + '/' + pname + '.rpt'
 	praux = pname + '.aux'
-        t = env.Command([prout, pname],[pprog],cmdx) 
+	print 'pname = ' + pname + ' prout = ' + prout + ' praux = ' + praux
+        t = env.Command([pname],[pprog],cmdx) 
 	Clean(t, pname)
 
 g.close()

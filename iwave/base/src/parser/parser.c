@@ -1,741 +1,1161 @@
-/* 
-parser.c
-Igor Terentyev.
-*/
-/*============================================================================*/
-
-#include "utils.h"
 #include "parser.h"
-#include "convert.h"
-/* added 24.04.10 WWS */
-#include "iwave_fopen.h"
 
-/*----------------------------------------------------------------------------*/
-/*
-Symbol type.
-*/
-#define GRAPHICAL 0
-#define SEPARATOR 1
-#define DELIMITER 2
-/*----------------------------------------------------------------------------*/
+//#define VERBOSE
+#undef VERBOSE
 
-SIZEDSTRING ps_name2z(const char *name)
-{
-    SIZEDSTRING namez;
-    namez.n = strlen(name);
-    namez.s = (char*)name;
-    return namez;
+// max length of conversion string in set functions
+#define MAX_STR_LEN 128
+
+static char ps_sep_str[2] = { PS_SEP, '\0' };
+//static char ps_quo_str[2] = { PS_QUO, '\0' };
+
+WORD * word_new() {
+  WORD * w = (WORD *)usermalloc_(sizeof(WORD));
+  if (!w) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: word_new - failed to allocate WORD\n");
+#endif
+    return w;
+  }
+  w->str=NULL;
+  return w;
 }
-/*----------------------------------------------------------------------------*/
 
-int old_ps_setnull(PARARRAY *parr)
-{
-    memset((void*)parr, 0, sizeof(PARARRAY));    
-    return 0;
+void word_delete(WORD ** w) {
+  if ((*w)->str) userfree_((*w)->str);
+  userfree_(*w);
+  *w = NULL;
 }
-/*----------------------------------------------------------------------------*/
 
-int ps_destroy(PARARRAY *parr)
-{
-  if (parr->buffer) free(parr->buffer);
-  if (parr->ns)  free(parr->ns);
-  ps_setnull(parr);
-  
+void word_reset(WORD * w) {
+  if (w->str) userfree_(w->str);
+  w->str = NULL;
+}
+
+// post-construction initialization - use segment of a char array to
+// initialize a word, which must have previously been constructed by
+// word_new
+int word_assign(WORD * w, const char * str, int len) {
+  int i;
+  if (!w) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: word_assign - null word arg\n");
+#endif
+    return E_PARSE;
+  }
+  if (len<0) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: word_assign - len < 0\n");
+#endif
+    return E_PARSE;
+  }
+  if (w->str) userfree_(w->str);
+  w->str = (char *)usermalloc_(sizeof(char)*(len+1));
+  if (!(w->str)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: word_assign - failed to allocate w->str\n");
+#endif
+    return E_ALLOC;
+  }
+  for (i=0;i<len;i++) (w->str)[i]=str[i];
+  (w->str)[len]='\0';
   return 0;
 }
-/*----------------------------------------------------------------------------*/
 
-int ps_concat(PARARRAY *parr, PARARRAY parr2)
-{
-    char *buffer, *ptr;
-    SIZEDSTRING *ns, *vs;
-    int npar, buffersize, i;
-  
-    if ( parr2.npar <= 0 ) return 0; /* nothing to attach */
-    
-    /* new sizes */
-    buffersize = parr->buffersize + parr2.buffersize;
-    npar = parr->npar + parr2.npar;
-    
-    /* new buffer */
-    buffer = (char*)malloc(buffersize * sizeof(char));
-    if ( buffer == NULL ) return E_ALLOC;
-    
-    /* new ns */
-    ns = (SIZEDSTRING*)malloc(2 * npar * sizeof(SIZEDSTRING));
-    if ( ns == NULL )
-    {
-        free(buffer);
-        return E_ALLOC;
-    }
-    vs = ns + npar;
-    
-    /* copy data */
-    ptr = buffer;
-    for ( i = 0; i < parr->npar; ++i )
-    {
-        ns[i].s = ptr;
-        ns[i].n = parr->ns[i].n;
-        memcpy(ptr, parr->ns[i].s, (ns[i].n + 1) * sizeof(char));
-        ptr += ns[i].n + 1;
-    }
-    for ( i = 0; i < parr2.npar; ++i )
-    {
-        ns[parr->npar + i].s = ptr;
-        ns[parr->npar + i].n = parr2.ns[i].n;
-        memcpy(ptr, parr2.ns[i].s, (ns[parr->npar + i].n + 1) * sizeof(char));
-        ptr += ns[parr->npar + i].n + 1;
-    }
-    for ( i = 0; i < parr->npar; ++i )
-    {
-        vs[i].s = ptr;
-        vs[i].n = parr->vs[i].n;
-        memcpy(ptr, parr->vs[i].s, (vs[i].n + 1) * sizeof(char));
-        ptr += vs[i].n + 1;
-    }
-    for ( i = 0; i < parr2.npar; ++i )
-    {
-        vs[parr->npar + i].s = ptr;
-        vs[parr->npar + i].n = parr2.vs[i].n;
-        memcpy(ptr, parr2.vs[i].s, (vs[parr->npar + i].n + 1) * sizeof(char));
-        ptr += vs[parr->npar + i].n + 1;
-    }
-
-    /* delete old data */
-    ps_destroy(parr);
-
-    /* store new data */
-    parr->npar = npar;
-    parr->buffer = buffer;
-    parr->ns = ns;
-    parr->vs = vs;
-    parr->buffersize = buffersize;
-    
-    return 0;
+int word_whitechar(char c) {
+  if ((c == ' ')  ||
+      (c == '\n') ||
+      (c == '\t') ||
+      (c == '\f')) return 1;
+  return 0;
 }
-/*----------------------------------------------------------------------------*/
-int ps_addpairstring(PARARRAY *parr, 
-		     const char * key, int mk,
-		     const char * value, int mv) {
 
-  int nk;           /* key string len */
-  int nv;           /* val string len */
-  int err=0;        /* error flag */
-  
-  SIZEDSTRING sz;   /* workspace */
-  PARARRAY addpar;  /* workspace */
-
-  /* sanity-check inputs - this is probably sufficient */
-  nk=strlen(key);
-  nv=strlen(value);
-  if ((nk<1)||(nv<1)||(mk<nk+1)||(mv<nv+1)) {
-    fprintf(stderr,"ERROR: ps_addpairstring - bad input, mk=%d nk=%d mv=%d nv=%d\n",mk,nk,mv,nv);
-    return E_BADINPUT;
+int word_copy(WORD * tgt, WORD src) {
+  int err=0;
+  if (!src.str) {
+#ifdef VERBOSE 
+    fprintf(stderr,"Error: word_copy - source WORD not defined, str=NULL\n");
+#endif
+    return E_PARSE;
   }
-
-  /* build up sized string */
-  sz.n=nk+nv+4;
-  sz.s=(char*)malloc(sz.n*sizeof(char));
-  strcpy(sz.s,key);
-  strcat(sz.s," = ");
-  strcat(sz.s,value);
-
-  /* construct parray workspace */
-  ps_setnull(&addpar);
-  if ((err=ps_createstrz(&addpar,sz))) {
-    fprintf(stderr,"ERROR: ps_addpairstring from ps_createstrz, err=%d\n",err);
-    return err;
+  if (err=word_assign(tgt,src.str,strlen(src.str)+1)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: word_copy from word_assign\n");
+#endif
   }
-
-  /* tack the PARARRAY data member of the FO onto the newly-created
-     PARARRAY */
-  if ((err=ps_concat(&addpar,*parr))) {
-    fprintf(stderr,"ERROR: ps_addpairstring from ps_concat, err=%d\n",err);
-    return err;
-  }
-
-  /* copy the newly created PARARRAY over the data member */
-  if (ps_copy(addpar,parr)) return err;
-
-  /* clean up */
-  ps_destroy(&addpar);
-  free(sz.s);
-
   return err;
 }
 
-/*----------------------------------------------------------------------------*/
+int word_read(WORD * w, char ** src) {
+  // finds a word in string str
+  // allocates memory
+  // on call, word should point to an allocated WORD 
+  // on return, success indicated by w->str != NULL
 
-int old_ps_createfile(PARARRAY *parr, const char *filename)
-{
-    FILE *stream;             /* file stream */
-    long size;                /* file size */
-    SIZEDSTRING str;          /* string */
-    int err;                  /* error code */
-    
-    /* clear parameter structure */
-    ps_setnull(parr);
+  int len=0;
+  char * start;
+  char * finger = *src;
+  int qtoggle = 0;
 
-    /* open file */
-    stream = iwave_const_fopen(filename, "r", NULL, stderr);
-    if ( stream == NULL ) return E_FILEOPEN;
+#ifdef VERBOSE
+  fprintf(stderr,"word_read: reset word\n");
+#endif
+  word_reset(w);
 
-    /* get file size */
-    if ( fseek(stream, 0L, SEEK_END) )
-    {
-        iwave_fclose(stream);
-        return E_FILE;
-    }
-    size = ftell(stream);
-    if ( size == -1L )
-    {
-        iwave_fclose(stream);
-        return E_FILE;
-    }
-    else if ( size == 0L )
-    {
-        iwave_fclose(stream);
-        return 0;
-    }
-    rewind(stream);
+  // if initial search turns up null char then no word can be found,
+  // and word returns in its setnull initial state
+  if (*finger=='\0') return 0;
 
-    /* allocate memory */
-    str.s = (char*)malloc(size);
-    if ( str.s == NULL ) 
-    {
-        iwave_fclose(stream);
-        return E_ALLOC;
-    }
-    
-    /* copy the file into the buffer */
-    str.n = fread(str.s, 1L, size, stream);
-    iwave_fclose(stream);
+#ifdef VERBOSE
+  fprintf(stderr,"word_read: on input src = \"%s\"\n",*src);
+#endif
 
-    if ( str.n != size )
-    {
-        free(str.s);
-        return E_FILE;
-    }
-    
-    err = ps_createstrz(parr, str);
-// memory bust discovered by Muhong Zhou 03.12 - temporary
-// fix creates memory leak
-//    free(str.s);
-    
-    return err;
-}
-/*----------------------------------------------------------------------------*/
+  // find first non-whitespace char 
+  while (word_whitechar(*finger)) finger++;
 
-int ps_createargs(PARARRAY *parr, int argc, char **argv)
-{
-    long *sizes;             /* string sizes including null-terminator */
-    SIZEDSTRING str;         /* string */
-    int i, err;              /* error code */
-    char *buffer;
-    
-    /* clear parameter structure */
-    ps_setnull(parr);
-
-    /* calculate size */
-    if ( argc <= 0 ) return 0;
-        
-    sizes = (long*)malloc(argc * sizeof(long));
-    if ( sizes == NULL ) return E_ALLOC;
-        
-    str.n = 0L;
-    for ( i = 0; i < argc; ++i )
-    {
-        sizes[i] = strlen(argv[i]) + 1L;
-        str.n += sizes[i];
-    }
-    if ( str.n == 0L ) 
-    {
-        free(sizes);
-        return 0;
-    }
-        
-    /* allocate memory */
-    str.s = (char*)malloc(str.n * sizeof(char));
-    if ( str.s == NULL ) 
-    {
-        free(sizes);
-        return E_ALLOC;
-    }
-    
-    /* copy the strings into the buffer */
-    buffer = str.s;
-    for ( i = 0; i < argc; ++i ) 
-    {
-        strncpy(buffer, argv[i], sizes[i]);
-        buffer += sizes[i];
-        buffer[-1] = ' ';    /* substitute null with space symbol */
-    }
-
-    free(sizes);
-    err = ps_createstrz(parr, str);
-    free(str.s);
-    
-    return err;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_createstrz(PARARRAY *parr, SIZEDSTRING str)
-{
-    char *s = str.s;
-    long n = str.n;
-    long pr, ps, pe, pl;
-    int npar, nsep, fquo, fnew, fside, ftype;
-    SIZEDSTRING *ns, *vs;
-    char *buffer, c;
-    
-    /*    fprintf(stderr,"ps_createstrz: str.n = %d str.s = %s\n",str.n,str.s);*/
-    /* clear parameter structure, self-check */
-    ps_setnull(parr);
-    if ( PS_SEP == PS_QUO ) return E_INTERNAL; 
-    
-    /* count separators */
-    nsep = fquo = 0;
-    for ( pr = 0L; pr < n; ++pr )
-    {
-        c = s[pr];
-        if ( c == PS_QUO )
-        {
-            if ( (pr + 1L < n) && (s[pr + 1L] == PS_QUO) ) ++pr; /* double */
-            else fquo = 1 - fquo;                                /* single */
-            continue;
-        }
-        if ( (c == PS_SEP) && (!fquo) ) ++nsep;
-    }
-    if ( fquo ) return E_PARSE; /* QUO not closed */
-    if ( nsep == 0L ) return 0;
-
-    /* allocate memory */
-    buffer = (char*)malloc((n + 1L) * sizeof(char));
-    ns = (SIZEDSTRING*)malloc(2L * nsep * sizeof(SIZEDSTRING));
-    if ( (buffer == NULL) || (ns == NULL) )
-    {
-        free(buffer);
-        free(ns);
-        return E_ALLOC;
-    }
-    vs = ns + nsep;
-
-    /* start in left mode */    
-    pl = ps = pe = 0L;
-    fnew = 1;
-    npar = fquo = fside = 0;
-    
-    /* cycle through read buffer */
-    for ( pr = 0L; pr <= n; ++pr )
-    {
-        c = (pr < n) ? s[pr] : PS_SEP;
-        /* process QUO symbol */
-        if ( c == PS_QUO )
-        {
-            if ( (pr + 1L < n) && (s[pr + 1L] == PS_QUO) ) ++pr; /* double */
-            else { fquo = 1 - fquo; continue; }                  /* single */
-        }
-        /* determine symbol type */
-        if      ( fquo       ) ftype = GRAPHICAL;
-        else if ( c == PS_SEP) ftype = SEPARATOR;
-        else if ( isgraph((int) c) ) ftype = GRAPHICAL;
-        else                   ftype = DELIMITER;
-        /* check type */
-        if ( ftype == SEPARATOR ) --nsep;
-        else if ( (ftype == DELIMITER) && (pe == ps) ) continue;
-        /* process right mode */
-        if ( fside )
-        {
-            if ( ftype == GRAPHICAL )
-            {
-                buffer[pe++] = c;
-            }
-            else /* DELIMITER/SEPARATOR after non-empty value*/
-            {
-                vs[npar - 1].s = buffer + ps;
-                vs[npar - 1].n = pe - ps;
-                buffer[pe] = 0;
-                pl = ps = (++pe);
-                fnew = 1;
-                fside = 0;
-                if ( nsep <= 0 ) break;
-            }
-        }
-        /* process left mode */
-        else
-        {
-            if ( ftype == SEPARATOR )
-            {
-                if ( pe > ps )
-                {
-                    ns[npar].s = buffer + ps;
-                    ns[npar].n = pe - ps;
-                    buffer[pe] = 0;
-                    ps = (++pe);
-                    fnew = 1;
-                    fside = 1;
-                    ++npar;
-                }
-                else if ( nsep <= 0 ) break;
-            }
-            else if ( ftype == GRAPHICAL )
-            {
-                if ( fnew )
-                {
-                    pe = ps;
-                    fnew = 0;
-                }
-                buffer[pe++] = c;
-            }
-            else /* DELIMITER after non-empty name */
-            {
-                fnew = 1;
-            }
-        }
-    }
-    
-    /* free and return if no parameters */
-    if ( npar == 0 )
-    {
-        free(buffer);
-        free(ns);
-        return 0;
-    }
-    
-    /* reallocate */
-    memcpy(ns + npar, vs, npar * sizeof(SIZEDSTRING));
-    parr->buffer = (char*)realloc(buffer, pl * sizeof(char));
-    parr->ns = (SIZEDSTRING*)realloc(ns, 2L * npar * sizeof(SIZEDSTRING));
-    if ( (parr->buffer == NULL) || (parr->ns == NULL) )
-    {
-        free(buffer);
-        free(ns);
-        return E_ALLOC;
-    }
-    parr->vs = parr->ns + npar;
-    parr->npar = npar;
-    parr->buffersize = pl;
-    
-    return 0;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_countnamez(PARARRAY parr, SIZEDSTRING name)
-{
-    long num = name.n * sizeof(char);
-    int ip, count = 0;
-
-    for ( ip = 0; ip < parr.npar; ++ip )
-        if ( (parr.ns[ip].n == name.n) && (memcmp(name.s, parr.ns[ip].s, num) == 0) ) ++count;
-
-    return count;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_countname(PARARRAY parr, const char *name)
-{
-    return ps_countnamez(parr, ps_name2z(name));
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_getvalz(PARARRAY parr, SIZEDSTRING name, int occ, SIZEDSTRING *val)
-{
-    int ip = ps_nameindexz(parr, name, occ);
-    if ( ip < 0 ) return E_PARSENONAME;
-    *val = parr.vs[ip];
-    return 0;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_getval(PARARRAY parr, const char *name, int occ, SIZEDSTRING *val)
-{
-    return ps_getvalz(parr, ps_name2z(name), occ, val);
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_nameindexz(PARARRAY parr, SIZEDSTRING name, int occ)
-{
-    long num = name.n * sizeof(char);
-    int ip, count = -1;
-
-    for ( ip = 0; ip < parr.npar; ++ip )
-        if ( (parr.ns[ip].n == name.n) && (memcmp(name.s, parr.ns[ip].s, num) == 0) )
-            if ( (++count) == occ ) return ip;
-            
-    return -1;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_nameindex(PARARRAY parr, const char *name, int occ)
-{
-    return ps_nameindexz(parr, ps_name2z(name), occ);
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_val2type(SIZEDSTRING val, int type, void *p, SIZEDSTRING *valend)
-{
-    char *str;
-    long len;
-    
-    switch ( type )
-    {
-        case DT_CHAR:       return strz2char(val, (char*)p, valend);
-        case DT_SHORT:      return strz2short(val, (short*)p, valend);
-        case DT_INT:        return strz2int(val, (int*)p, valend);
-        case DT_LONG:       return strz2long(val, (long*)p, valend);
-        case DT_USHORT:     return strz2ushort(val, (unsigned short*)p, valend);
-        case DT_UINT:       return strz2uint(val, (unsigned int*)p, valend);
-        case DT_ULONG:      return strz2ulong(val, (unsigned long*)p, valend);
-        case DT_FLOAT:      return strz2float(val, (float*)p, valend);
-        case DT_DOUBLE:     return strz2double(val, (double*)p, valend);
-        case DT_CSTRING:
-            if ( valend != NULL ) *valend = val;
-            if ( val.n == 0L ) return E_PARSENOVALUE; /* empty SIZEDSTRING */
-            len = strlen(val.s) + 1L;  /* string lenght including terminator */
-            if ( p != NULL )           /* allocate and copy */
-            {
-                str = (char*)calloc(len, sizeof(char));
-                if ( str == NULL ) return E_ALLOC;
-                strncpy(str, val.s, len);
-                *((char**)p) = str;
-            }
-            if ( valend != NULL )      /* shift */
-            {
-                if ( len > val.n )
-                {
-                    val.s += val.n;
-                    val.n = 0L;
-                }
-                else
-                {
-                    val.s += len;
-                    val.n -= len;
-                }
-            }
-            return 0;
-    }
-    return E_BADINPUT;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_counttypez(PARARRAY parr, SIZEDSTRING name, int occ, int type)
-{
-    SIZEDSTRING val;
-    int err, count = 0;
-    
-    err = ps_getvalz(parr, name, occ, &val);
-    if ( err ) return -1;
-    
-    while ( 1 )
-    {
-        if ( ps_val2type(val, type, NULL, &val) > 0 ) break;
-        ++count;
-    }
-    return count;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_counttype(PARARRAY parr, const char *name, int occ, int type)
-{
-    return ps_counttypez(parr, ps_name2z(name), occ, type);
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_gettypez(PARARRAY parr, SIZEDSTRING name, int occ, int type, int n, void *p)
-{
-    SIZEDSTRING val;
-    int err, count;
-    
-    err = ps_getvalz(parr, name, occ, &val);
-    if ( err ) return err;
-    
-    for ( count = 0; count < n; ++count) 
-        if ( ps_val2type(val, type, NULL, &val) > 0 ) return E_PARSENOVALUE;
-            
-    return ps_val2type(val, type, p, NULL);
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_gettype(PARARRAY parr, const char *name, int occ, int type, int n, void *p)
-{
-    return ps_gettypez(parr, ps_name2z(name), occ, type, n, p);
-}
-/*----------------------------------------------------------------------------*/
-int old_ps_ffchar(PARARRAY parr, const char *name, char *p)
-{
-    return ps_gettype(parr, name, 0, DT_CHAR, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffshort(PARARRAY parr, const char *name, short *p)
-{
-    return ps_gettype(parr, name, 0, DT_SHORT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffint(PARARRAY parr, const char *name, int *p)
-{
-    return ps_gettype(parr, name, 0, DT_INT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_fflong(PARARRAY parr, const char *name, long *p)
-{
-    return ps_gettype(parr, name, 0, DT_LONG, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffushort(PARARRAY parr, const char *name, unsigned short *p)
-{
-    return ps_gettype(parr, name, 0, DT_USHORT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffuint(PARARRAY parr, const char *name, unsigned int *p)
-{
-    return ps_gettype(parr, name, 0, DT_UINT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffulong(PARARRAY parr, const char *name, unsigned long *p)
-{
-    return ps_gettype(parr, name, 0, DT_ULONG, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-int old_ps_fffloat(PARARRAY parr, const char *name, float *p)
-{
-    return ps_gettype(parr, name, 0, DT_FLOAT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffdouble(PARARRAY parr, const char *name, double *p)
-{
-    return ps_gettype(parr, name, 0, DT_DOUBLE, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffreal(PARARRAY parr, const char *name, ireal *p)
-{
-    return ps_gettype(parr, name, 0, DT_REAL, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_ffcstring(PARARRAY parr, const char *name, char **p)
-{
-    return ps_gettype(parr, name, 0, DT_CSTRING, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-int old_ps_flchar(PARARRAY parr, const char *name, char *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_CHAR, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_flshort(PARARRAY parr, const char *name, short *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_SHORT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_flint(PARARRAY parr, const char *name, int *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_INT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_fllong(PARARRAY parr, const char *name, long *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_LONG, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_flushort(PARARRAY parr, const char *name, unsigned short *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_USHORT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_fluint(PARARRAY parr, const char *name, unsigned int *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_UINT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_flulong(PARARRAY parr, const char *name, unsigned long *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_ULONG, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-int old_ps_flfloat(PARARRAY parr, const char *name, float *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_FLOAT, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_fldouble(PARARRAY parr, const char *name, double *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_DOUBLE, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_flreal(PARARRAY parr, const char *name, ireal *p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_REAL, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_flcstring(PARARRAY parr, const char *name, char **p)
-{
-    return ps_gettype(parr, name, ps_countname(parr, name) - 1, DT_CSTRING, 0, (void*)p);
-}
-/*----------------------------------------------------------------------------*/
-
-int old_ps_printall(PARARRAY parr, FILE *stream)
-{
-    int i, n;
-
-    n = parr.npar;
-    /*    fprintf(stream, "Number of parameters: %d\n",n); */
-    /*    for ( i = 0; i < n; ++i ) fprintf(stream, "%d [%s] [%s]\n", i, parr.ns[i].s, parr.vs[i].s); */
-    for ( i = 0; i < n; ++i ) fprintf(stream, "%s %c %s\n", parr.ns[i].s, PS_SEP, parr.vs[i].s);
-    
-    return 0;
-}
-/*----------------------------------------------------------------------------*/
-
-int ps_copy(PARARRAY rhs, PARARRAY *lhs)
-{
-  int i;
-  
-  ps_destroy(lhs);
-  if ( rhs.buffersize == 0 ) return 0;
-  
-  /* Allocate and copy buffer. */
-  lhs->buffer = (char*)malloc(rhs.buffersize * sizeof(char));
-  if ( lhs->buffer == NULL ) return E_ALLOC;
-  
-  memcpy(lhs->buffer, rhs.buffer, rhs.buffersize * sizeof(char));
-  
-  /* Allocate and copy pointers. */
-  lhs->ns = (SIZEDSTRING*)malloc(2L * rhs.npar * sizeof(SIZEDSTRING));
-  if ( lhs->ns == NULL )
-  {
-    free(lhs->buffer);
-    return E_ALLOC;
+  // have found a non-white, non-null char. Check to see if it is 
+  //(a) the separator, or (b) the quote char
+  start=finger;
+  // quote charager toggles quoted string, which may have embedded 
+  // whitespace
+  if (*finger == PS_QUO) qtoggle=!qtoggle;
+#ifdef VERBOSE 
+  fprintf(stderr,"word_read: quote toggled to %d\n",qtoggle);
+#endif VERBOSE
+  if (*finger == PS_SEP) {
+    word_assign(w,ps_sep_str,1);
+    finger++;
+#ifdef VERBOSE
+    fprintf(stderr,"word_read, returning \"%s\"\n",w->str);
+    fprintf(stderr,"word_read: on exit src = \"%s\"\n",*src);    
+#endif
   }
+  else {
+    if (!qtoggle) {
+      // keep scanning until you find either (a) whitespace or 
+      // (b) the separator char 
+      while (!(word_whitechar(*finger)   || 
+	       (*finger == PS_SEP) ||
+	       (*finger == PS_QUO) ||
+	       (*finger == '\0'))) {
+	finger++;
+	len++;
+      }
+      word_assign(w,start,len);
+#ifdef VERBOSE
+      fprintf(stderr,"word_read, returning \"%s\"\n",w->str);
+      fprintf(stderr,"word_read: on exit src = \"%s\"\n",*src);    
+#endif
+    }
+    else {
+#ifdef VERBOSE
+      fprintf(stderr,"word_read, quote branch, finger=%c\n",*finger);
+#endif
+      finger++;
+      len=1;
+      while ((*finger != PS_QUO) &&
+	     (*finger != '\0')) {
+	finger++;
+	len++;
+      }
+
+      // check that we have found the end-of-quote, if so copy the 
+      // string
+      if (*finger == PS_QUO) {
+	// then this char counts too
+	len++;
+	word_assign(w,start,len);
+	// unset quote toggle
+	qtoggle=0;
+	// and move beyond final quote
+	finger++;
+#ifdef VERBOSE
+	fprintf(stderr,"word_read, returning %s\n",w->str);
+	fprintf(stderr,"word_read: on exit src = \"%s\"\n",*src);    
+#endif
+      }
+      else {
+	// otherwise, quote is not terminated
+#ifdef VERBOSE
+	fprintf(stderr,"Error: word_read - quoted string not terminated with second quote\n");
+#endif
+	return E_PARSE;
+      }
+    }
+  }
+  *src = finger;
+  return 0;
+}
+
+KEYVAL * kv_new() {
+  KEYVAL * kv = (KEYVAL *)usermalloc_(sizeof(KEYVAL));
+  if (!kv) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: kv_new - failed to allocate new KEYVAL\n");
+#endif
+    return kv;
+  }
+  kv->key = word_new();
+  if (!kv->key) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: kv_new - failed to allocate new KEYVAL key\n");
+#endif
+    userfree_(kv);
+    return NULL;
+  }
+  kv->val = word_new();
+  if (!kv->val) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: kv_new - failed to allocate new KEYVAL val\n");
+#endif
+    word_delete(&(kv->key));
+    userfree_(kv);
+    return NULL;
+  }
+  return kv;
+}
   
-  for ( i = 0; i < 2 * rhs.npar; ++i )
-  {
-    lhs->ns[i].n = rhs.ns[i].n;
-    lhs->ns[i].s = lhs->buffer + (rhs.ns[i].s - rhs.buffer);
+void kv_delete(KEYVAL ** pair) {
+  word_delete(&((*pair)->key));
+  word_delete(&((*pair)->val));
+  userfree_(*pair);
+  *pair=NULL;
+}
+
+int kv_copy(KEYVAL * tgt, KEYVAL src) {
+  int err=0;
+  if (err=word_copy(tgt->key, *(src.key))) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: kv_copy from word_copy - key\n");
+#endif
+    return err;
+  }
+  if (err=word_copy(tgt->val, *(src.val))) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: kv_copy from word_copy - val\n");
+#endif
+    return err;
+  }
+  return err;
+}
+
+void kv_reset(KEYVAL * pair) {
+  word_reset(pair->key);
+  word_reset(pair->val);
+}
+
+int kv_check(KEYVAL src) {
+  if ((src.key)->str && (src.val)->str) return 0;
+  return 1;
+}
+
+int kv_read(KEYVAL * kv, char ** src) {
+  int err=0;
+
+#ifdef VERBOSE
+  fprintf(stderr,"entering kv_read\n");
+#endif
+  WORD * lw = word_new();
+  WORD * cw = word_new();
+  WORD * nw = word_new();
+
+#ifdef VERBOSE
+  fprintf(stderr,"reset kv pair - erase key, value strings\n");
+#endif
+  kv_reset(kv);
+
+#ifdef VERBOSE
+  fprintf(stderr,"initialize - must find at least three word to play!\n");
+#endif VERBOSE
+  if (word_read(lw,src) || !lw->str ||
+      word_read(cw,src) || !cw->str ||
+      word_read(nw,src) || !nw->str) {
+    word_delete(&lw);
+    word_delete(&cw);
+    word_delete(&nw);
+    return 0;
   }
 
-  /* Copy other fields. */
-  lhs->buffersize = rhs.buffersize;
-  lhs->npar = rhs.npar;
-  lhs->vs = lhs->ns + rhs.npar;
+  // loop, look for cw = separator - if found, return implicit kv
+  while (kv_check(*kv)) {
+#ifdef VERBOSE
+    fprintf(stderr,"in kv_read: lw = %s\n",lw->str);
+    fprintf(stderr,"in kv_read: cw = %s\n",cw->str);
+    fprintf(stderr,"in kv_read: nw = %s\n",nw->str);
+#endif
+    // have found a kv if (1) current word = separator, 
+    // (2) neither previous nor next words = separator
+    if (!strcmp(cw->str,ps_sep_str) && 
+	strcmp(lw->str,ps_sep_str) &&
+	strcmp(nw->str,ps_sep_str)) {
+      if (err=word_copy(kv->key,*lw)) {
+#ifdef VERBOSE
+	fprintf(stderr,"Error: kv_read from word_copy, key\n");
+#endif
+	return err;
+      }
+      if (err=word_copy(kv->val,*nw)) {
+#ifdef VERBOSE
+	fprintf(stderr,"Error: kv_read from word_copy, val\n");
+#endif
+	return err;
+      }
+      word_delete(&lw);
+      word_delete(&cw);
+      word_delete(&nw);
+      return 0;
+    }
+    // otherwise read another word
+    word_copy(lw,*cw);
+    word_copy(cw,*nw);
+    if (word_read(nw,src) || !nw->str) {
+      word_delete(&lw);
+      word_delete(&cw);
+      word_delete(&nw);
+      return 0;
+    }
+  }
+
+#ifdef VERBOSE
+  fprintf(stderr,"kv_read: deleting workspace, leave\n");
+#endif
+  word_delete(&lw);
+  word_delete(&cw);
+  word_delete(&nw);
 
   return 0;
 }
-/*----------------------------------------------------------------------------*/
+      
+void kv_print(KEYVAL kv) {
+  if (!kv_check(kv)) printf("%s %c %s\n",(kv.key)->str,PS_SEP,(kv.val)->str);
+}
 
+void kv_fprint(KEYVAL kv, FILE * f) {
+  if (!kv_check(kv)) fprintf(f,"%s %c %s\n",(kv.key)->str,PS_SEP,(kv.val)->str);
+}
+
+PSLINK * pslink_new() {
+  PSLINK * par = (PSLINK *)usermalloc_(sizeof(PSLINK));
+  if (!par) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_new - failed to allocate this\n");
+#endif
+    return NULL;
+  }
+  if (!(par->pair = kv_new())) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_new - failed to allocate KEYVAL data member\n");
+#endif
+    userfree_(par);
+    return NULL;
+  }
+  par->prev = NULL;
+  par->next = NULL;
+  return par;
+}
+
+void pslink_delete(PSLINK ** p) {
+  if (*p) {
+    pslink_front(p);
+    while ((*p)->next) {
+      *p=(*p)->next;
+      pslink_setnull(&((*p)->prev));
+    }
+    // last one
+    pslink_setnull(p);
+  }
+}
+
+void pslink_setnull(PSLINK ** p) {
+  if (*p) {
+    kv_delete(&((*p)->pair));
+    userfree_(*p);
+  }
+  *p=NULL;
+}
+
+int pslink_front(PSLINK ** par) {
+  if (!(*par)) {
+#ifdef VERBOSE 
+    fprintf(stderr,"Error: pslink_front - null pointer\n");
+#endif
+    return E_PARSE;
+  }
+  while ((*par)->prev) *par=(*par)->prev;
+}
+
+int pslink_back(PSLINK ** par) {
+  if (!(*par)) {
+#ifdef VERBOSE 
+    fprintf(stderr,"Error: pslink_back - null pointer\n");
+#endif
+    return E_PARSE;
+  }
+  while ((*par)->next) *par=(*par)->next;
+}
+
+int pslink_read(PSLINK ** par, char ** str) {
+  int stop = 0;
+  if (!(*par)) {
+#ifdef VERBOSE 
+    fprintf(stderr,"Error: pslink_read - null pointer\n");
+#endif
+    return E_PARSE;
+  }  
+  // reading always adds at the back, so make sure we are there 
+  // first 
+  if (pslink_back(par)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_read from pslink_back\n");
+#endif
+    return E_PARSE;
+  }     
+  do {
+    // either read this link if it is blank, or advance to next link
+    // and read there otherwise
+    if (kv_check(*((*par)->pair))) {
+      kv_read((*par)->pair,str);
+      // check that read was successful
+      stop = kv_check(*((*par)->pair));
+      // if so move to next link
+      if (!stop) {
+	(*par)->next = pslink_new();
+	(*par)->next->prev = *par;
+	*par       = (*par)->next;
+      }
+      else {
+	*par = (*par)->prev;
+	pslink_setnull(&((*par)->next));  
+      }
+    }
+    else {
+      // if current kv pair already initialized, do not overwrite, but 
+      // move to next link
+      (*par)->next = pslink_new();
+      (*par)->next->prev = *par;
+      *par       = (*par)->next;
+      kv_read((*par)->pair,str);
+      stop = kv_check(*((*par)->pair));
+      // if no read, we're at the end
+      if (stop) {
+	*par = (*par)->prev;
+	pslink_setnull(&((*par)->next));  
+      }
+    }	
+  } while (!stop);
+  return 0;
+}
+
+int pslink_findfirst(PSLINK * par, WORD skey, WORD * sval) {
+  int err=0;
+#ifdef VERBOSE
+    fprintf(stderr,"pslink_findfirst\n");
+#endif
+
+  if (err=pslink_front(&par)) {
+    return err;
+  }
+
+  word_reset(sval);
+
+#ifdef VERBOSE
+    fprintf(stderr,"search key = %s\n",skey.str);
+#endif
+  
+  do {
+#ifdef VERBOSE
+    fprintf(stderr,"compare key = %s\n",par->pair->key->str);
+    fprintf(stderr,"search  key = %s\n",skey.str);
+#endif
+    if (par->pair->key->str && !strcmp(par->pair->key->str,skey.str)) {
+#ifdef VERBOSE
+      fprintf(stderr,"found key match\n");
+#endif
+      word_copy(sval,*(par->pair->val));
+      return 0;
+    }
+  } while (par = par->next);
+
+  return 0;
+}
+
+int pslink_findlast(PSLINK * par, WORD skey, WORD * sval) {
+  int err=0;
+  if (err=pslink_back(&par)) {
+    return err;
+  }
+
+  word_reset(sval);
+
+#ifdef VERBOSE
+    fprintf(stderr,"search key = %s\n",skey.str);
+#endif
+  
+  do {
+#ifdef VERBOSE
+    fprintf(stderr,"key = %s\n",par->pair->key->str);
+#endif
+    if (par->pair->key->str && !strcmp(par->pair->key->str,skey.str)) {
+      word_copy(sval,*(par->pair->val));
+      return 0;
+    }
+  } while (par = par->prev);
+
+  return 0;
+}
+
+int pslink_setfirst(PSLINK ** par, WORD skey, WORD sval) {
+  int err=0;
+  
+  if (err=pslink_front(par)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setfirst - from pslink_front\n");
+#endif
+    return err;
+  }
+
+#ifdef VERBOSE
+  fprintf(stderr,"pslink_setfirst: search key = %s\n",skey.str);
+  fprintf(stderr,"pslink_setfirst: search val = %s\n",sval.str);
+#endif
+  
+  while ((*par)->next) {
+#ifdef VERBOSE
+    fprintf(stderr,"key = %s ",(*par)->pair->key->str);
+    if ((*par)->next) {
+      fprintf(stderr,"next != null\n");
+    }
+    else {
+      fprintf(stderr,"next == null\n");
+    }
+#endif
+    if (!strcmp((*par)->pair->key->str,skey.str)) {
+      word_copy((*par)->pair->val,sval);
+      return 0;
+    }
+    *par = (*par)->next;
+  } 
+  
+  // back up one, since final "next" is null!
+  *par = (*par)->prev;
+
+  // if we get this far, no value for this key is present. 
+  // add onto the list at the beginning
+  if (err=pslink_front(par)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setfirst - null pointer at front\n");
+#endif
+    return err;
+  }  
+  if (!((*par)->prev = pslink_new())) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setfirst - failed to allocate new pslink\n");
+#endif
+    return E_ALLOC;
+  }
+  (*par)->prev->next = (*par);
+  if (err=word_copy((*par)->prev->pair->key,skey)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setfirst - failed to copy key\n");
+#endif
+    return err;
+  }
+  if (err=word_copy((*par)->prev->pair->val,sval)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setfirst - failed to copy val\n");
+#endif
+    return err;
+  }
+#ifdef VERBOSE
+  fprintf(stderr,"pslink_setfirst: new pair = ");
+  kv_fprint(*((*par)->prev->pair),stderr);
+#endif
+  return 0;
+}
+
+int pslink_setlast(PSLINK ** par, WORD skey, WORD sval) {
+  int err=0;
+  
+  if (err=pslink_back(par)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setlast - from pslink_back\n");
+#endif
+    return err;
+  }
+
+#ifdef VERBOSE
+  fprintf(stderr,"pslink_setlast: search key = %s\n",skey.str);
+  fprintf(stderr,"pslink_setlast: search val = %s\n",sval.str);
+#endif
+  
+  while ((*par)->prev) {
+    if (!strcmp((*par)->pair->key->str,skey.str)) {
+      word_copy((*par)->pair->val,sval);
+      return 0;
+    }
+    *par = (*par)->prev;
+  } 
+  
+  // back up one, since first "prev" is null!
+  if ((*par)->next) *par = (*par)->next;
+
+  // if we get this far, no value for this key is present. 
+  // add onto the list at the end
+  if (err=pslink_back(par)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setlast - null pointer at back\n");
+#endif
+    return err;
+  }  
+  if (!((*par)->next = pslink_new())) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setlast - failed to allocate new pslink\n");
+#endif
+    return E_ALLOC;
+  }
+  (*par)->next->prev = (*par);
+  if (err=word_copy((*par)->next->pair->key,skey)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setlast - failed to copy key\n");
+#endif
+    return err;
+  }
+  if (err=word_copy((*par)->next->pair->val,sval)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: pslink_setlast - failed to copy val\n");
+#endif
+    return err;
+  }
+#ifdef VERBOSE
+  fprintf(stderr,"pslink_setlast: new pair = ");
+  kv_fprint(*((*par)->next->pair),stderr);
+#endif
+  return 0;
+}
+
+PARARRAY * ps_new() {
+  PARARRAY * p = (PARARRAY *)usermalloc_(sizeof(PARARRAY));
+  if (p) p->list = pslink_new();
+  return p;
+}
+
+void ps_delete(PARARRAY ** p) {
+  if (*p) {
+    pslink_delete(&((*p)->list));
+    userfree_(*p);
+    *p=NULL;
+  }
+}
+
+int ps_setnull(PARARRAY *par) {
+  pslink_delete(&(par->list));
+  par->list = pslink_new();
+  return 0;
+}
+
+int ps_createfile(PARARRAY *parr, const char *filename) {
+
+  FILE *stream;             /* file stream */
+  long size;                /* file size */
+  char * str;               /* string */
+  char * save;              /* start pointer */
+  int n=0;                  /* counter */
+  int err=0;                /* error code */
+  
+  /* open file */
+  stream = iwave_const_fopen(filename, "r", NULL, stderr);
+  if ( stream == NULL ) return E_FILEOPEN;
+  
+  /* get file size */
+  if ( fseek(stream, 0L, SEEK_END) ) {
+    iwave_fclose(stream);
+#ifdef VERBOSE
+    fprintf(stderr,"Error: ps_createfile - seek failed\n");
+#endif
+    return E_FILE;
+  }
+  size = ftell(stream);
+  if ( size == -1L ) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: ps_createfile - tell failed\n");
+#endif
+    iwave_fclose(stream);
+    return E_FILE;
+  }
+  else if ( size == 0L ) {
+#ifdef VERBOSE
+    fprintf(stderr,"NOTE: ps_createfile - zero length file\n");
+#endif
+    iwave_fclose(stream);
+    return 0;
+  }
+
+  rewind(stream);
+  
+  /* allocate memory, including space for trailing NUL */
+  size++;
+  str = (char*)malloc(size);
+  if ( !str ) { 
+    iwave_fclose(stream);
+    return E_ALLOC;
+  }
+  // reserve pointer to start of this segment
+  save=str;
+  
+  /* copy the file into the buffer */
+  n = fread(str, 1L, size, stream);
+  iwave_fclose(stream);
+  
+  /* bail on read failure */
+  if ( n != size-1 ) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: ps_createfile - read %d bytes expected %ld\n",n,size-1);
+#endif
+
+    free(str);
+    return E_FILE;
+  }
+  
+  /* else tack on the trailing null */
+  str[size-1] = '\0';
+  
+  /* read the string onto the end of the list */
+  if (err=pslink_read(&(parr->list),&str)) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: ps_createfile from pslink_read\n");
+#endif
+    free(save);
+    return err;
+  }
+  
+  free(save);
+  return 0;
+}
+
+int ps_printall(PARARRAY parr, FILE *stream) {
+  pslink_front(&(parr.list));
+  while ((parr.list)->next) {
+    kv_fprint(*((parr.list)->pair), stream);
+    parr.list = parr.list->next;
+  }
+  kv_fprint(*((parr.list)->pair), stream);
+  return 0;
+}
+/*@}*/
+
+// this construction is dangerous if let out, as the behaviour is 
+// unpredictable if the void* pointer does not actually point to the
+// indicated type - so should be used only locally, whence no mention
+// in header file.
+int ps_get(PARARRAY * par, int last, const char * type, const char * key, void *p) {
+  int err  = 0;
+
+  // set up key, value buffers
+  WORD * skey = word_new();
+  WORD * sval = word_new();
+  if (!skey || !sval) err = E_ALLOC;
+  if (!err) err=word_assign(skey,key,strlen(key)); 
+
+  // choose first or last
+  if (!err) {
+    if (last) err=pslink_findlast(par->list,*skey,sval);
+    else err=pslink_findfirst(par->list,*skey,sval);
+  }
+  if (err || !(sval->str)) err = iwave_max(err,1);
+
+  if (!err && type=="cstring") {
+    char **s = (char **)p;
+    if (!(*s = (char *)usermalloc_(sizeof(char)*(strlen(sval->str)+1)))) err=E_ALLOC;    
+    if (!err) strcpy(*s,sval->str);
+  }
+  else if (!err && type=="char") {
+    char * l = (char *)p;
+    if (1!=sscanf(sval->str,"%c",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="long") {
+    long * l = (long *)p;
+    if (1!=sscanf(sval->str,"%ld",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="ulong") {
+    unsigned long * l = (unsigned long *)p;
+    if (1!=sscanf(sval->str,"%lu",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="int") {
+    int * l = (int *)p;
+    if (1!=sscanf(sval->str,"%d",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="uint") {
+    unsigned int * l = (unsigned int *)p;
+    if (1!=sscanf(sval->str,"%u",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="short") {
+    short * l = (short *)p;
+    if (1!=sscanf(sval->str,"%hd",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="ushort") {
+    unsigned short * l = (unsigned short *)p;
+    if (1!=sscanf(sval->str,"%hu",l)) err=E_PARSECONVERT;
+  }    
+  else if (!err && type=="float") {
+    float * l = (float *)p;
+    if (1!=sscanf(sval->str,"%g",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="double") {
+    double * l = (double *)p;
+    if (1!=sscanf(sval->str,"%lg",l)) err=E_PARSECONVERT;
+  }
+  else if (!err && type=="ireal") {
+#if DT_REAL == DT_DOUBLE
+    double * l = (double *)p;
+    if (1!=sscanf(sval->str,"%lg",l)) err=E_PARSECONVERT;
+#else
+    float * l = (float *)p;
+    if (1!=sscanf(sval->str,"%g",l)) err=E_PARSECONVERT;
+#endif
+  }    
+  else {
+    err=E_PARSECONVERT;
+  }
+  word_delete(&skey);
+  word_delete(&sval);  
+  return err;
+}
+
+int ps_set(PARARRAY * par, int last, const char * type, const char * key, void * val) {
+  int err  = 0;
+  
+  char * l = (char *)malloc(MAX_STR_LEN*sizeof(char));
+
+  // set up key, value buffers
+  WORD * skey = word_new();
+  WORD * sval = word_new();
+  if (!skey || !sval) err = E_ALLOC;
+  if (!err) err=word_assign(skey,key,strlen(key)); 
+
+  if (!err && type=="cstring") {
+    if (!err) err=word_assign(sval,(char *)val,strlen((char *)val));
+  }
+  else {
+    if (!err && type=="char") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%c",*((char *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="long") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%ld",*((long *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="ulong") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%lu",*((unsigned long *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="int") {
+      //      fprintf(stderr,"in ps_set - int\n");
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%d",*((int *)val));
+      //      fprintf(stderr,"output = %s err=%d\n",l,err);
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="uint") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%u",*((unsigned int *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="short") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%hd",*((short *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="ushort") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%hu",*((unsigned short *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }    
+    else if (!err && type=="float") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%g",*((float *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="double") {
+      memset(l,'\0',MAX_STR_LEN);
+      err=sprintf(l,"%lg",*((double *)val));
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }
+    else if (!err && type=="ireal") {
+      memset(l,'\0',MAX_STR_LEN);
+#if DT_REAL == DT_DOUBLE
+      err=sprintf(l,"%lg",*((double *)val));
+#else
+      err=sprintf(l,"%g",*((float *)val));
+#endif
+      if (0==err || MAX_STR_LEN==err) {
+	err=E_PARSECONVERT;
+      }
+      else err=0;
+    }    
+    else {
+      err=E_PARSECONVERT;
+    }
+    //    fprintf(stderr,"assigning value = %s err=%d\n",l,err);
+
+    if (!err) err=word_assign(sval,l,strlen(l));
+
+  }
+  // choose first or last
+  //  fprintf(stderr,"ps_set: %s =  %s\n",skey->str,sval->str);
+  if (!err) {
+    if (last) err=pslink_setlast(&(par->list),*skey,*sval);
+    else err=pslink_setfirst(&(par->list),*skey,*sval);
+  }
+
+  free(l);
+  word_delete(&skey);
+  word_delete(&sval);
+
+}
+
+// this is the main public post-construction initialization
+int ps_createargs(PARARRAY *par, int argc, char **argv) {
+
+  int n;                   /* length of arg string */
+  int i, err;              /* counter, error code */
+  char *buffer;            /* arg buffer */
+  char *save;              /* reserve start of buffer */
+  char *tmp;               /* another reserve pointer */
+  KEYVAL * kv;             /* workspace for decoding kv pairs */
+  
+  /* bail if no args */
+  if ( argc <= 0 ) return 0;
+  
+  /* build string out of args */
+  n = 0;
+  for ( i = 0; i < argc; ++i ) n += strlen(argv[i]) + 2;
+  // trailing null
+  n++;
+
+  /* allocate arg buffer */
+  buffer = (char*)malloc(n * sizeof(char));
+  if ( buffer == NULL ) return E_ALLOC;
+  memset(buffer,'\0',n);
+  save=buffer;
+   
+  if (!(kv=kv_new())) {
+    free(buffer);
+    return E_ALLOC;
+  }
+  /* copy the args into the buffer
+     in course of copy, look for "par=" and 
+     if found initialize PARARRAY 
+   */
+  for ( i = 0; i < argc; ++i ) {
+    tmp=argv[i];
+    kv_reset(kv);
+    if (!kv_read(kv, &tmp) &&
+	!kv_check(*kv)           &&
+	!strcmp(kv->key->str,"par")) {
+      // have found par file
+      err=ps_createfile(par,kv->val->str);
+    }
+    else {
+#ifdef VERBOSE
+      fprintf(stderr,"adding %s\n",argv[i]);
+#endif
+      strcat(buffer,argv[i]);
+      strcat(buffer," ");
+    }
+  }
+#ifdef VERBOSE 
+  fprintf(stderr,"ps_createargs: arg buffer =\n");
+  fprintf(stderr,"%s\n",buffer);
+#endif
+
+  // now add on the arg pairs - these are appended, and do 
+  // not replace already initialized keys. So to give primacy to 
+  // the arg list over a par file, use find-last - other way around,
+  // use find-first.
+  if (!err) err=pslink_read(&(par->list),&buffer);
+
+#ifdef VERBOSE 
+  ps_printall(*par,stderr);
+#endif
+
+  kv_delete(&kv);
+ 
+  free(save);
+  return err;
+}
+
+// public functions
+
+// find first
+
+int ps_ffcstring(PARARRAY par, const char *key, char **p) {
+  return ps_get(&par,0,"cstring",key,p);
+}
+int ps_ffchar(PARARRAY par, const char *key, char *p) {
+  return ps_get(&par,0,"char",key,p);
+}
+int ps_ffshort(PARARRAY par, const char *key, short *p) {
+  return ps_get(&par,0,"short",key,p);
+}
+int ps_ffint(PARARRAY par, const char *key, int *p) {
+  return ps_get(&par,0,"int",key,p);
+}
+int ps_fflong(PARARRAY par, const char *key, long *p) {
+  return ps_get(&par,0,"long",key,p);
+}
+int ps_ffushort(PARARRAY par, const char *key, unsigned short *p) {
+  return ps_get(&par,0,"ushort",key,p);
+}
+int ps_ffuint(PARARRAY par, const char *key, unsigned int *p) {
+  return ps_get(&par,0,"uint",key,p);
+}
+int ps_ffulong(PARARRAY par, const char *key, unsigned long *p) {
+  return ps_get(&par,0,"ulong",key,p);
+}
+int ps_fffloat(PARARRAY par, const char *key, float *p) {
+  return ps_get(&par,0,"float",key,p);
+}
+int ps_ffdouble(PARARRAY par, const char *key, double *p) {
+  return ps_get(&par,0,"double",key,p);
+}
+int ps_ffreal(PARARRAY par, const char *key, ireal *p) {
+  return ps_get(&par,0,"ireal",key,p);
+}
+
+// find-last
+
+int ps_flcstring(PARARRAY par, const char *key, char **p) {
+  return ps_get(&par,1,"cstring",key,p);
+}
+int ps_flchar(PARARRAY par, const char *key, char *p) {
+  return ps_get(&par,1,"char",key,p);
+}
+int ps_flshort(PARARRAY par, const char *key, short *p) {
+  return ps_get(&par,1,"short",key,p);
+}
+int ps_flint(PARARRAY par, const char *key, int *p) {
+  return ps_get(&par,1,"int",key,p);
+}
+int ps_fllong(PARARRAY par, const char *key, long *p) {
+  return ps_get(&par,1,"long",key,p);
+}
+int ps_flushort(PARARRAY par, const char *key, unsigned short *p) {
+  return ps_get(&par,1,"ushort",key,p);
+}
+int ps_fluint(PARARRAY par, const char *key, unsigned int *p) {
+  return ps_get(&par,1,"uint",key,p);
+}
+int ps_flulong(PARARRAY par, const char *key, unsigned long *p) {
+  return ps_get(&par,1,"ulong",key,p);
+}
+int ps_flfloat(PARARRAY par, const char *key, float *p) {
+  return ps_get(&par,1,"float",key,p);
+}
+int ps_fldouble(PARARRAY par, const char *key, double *p) {
+  return ps_get(&par,1,"double",key,p);
+}
+int ps_flreal(PARARRAY par, const char *key, ireal *p) {
+  return ps_get(&par,1,"ireal",key,p);
+}
+
+// assign first
+
+int ps_sfcstring(PARARRAY par, const char *key, char *p) {
+  return ps_set(&par,0,"cstring",key,&p);
+}
+int ps_sfchar(PARARRAY par, const char *key, char p) {
+  return ps_set(&par,0,"char",key,&p);
+}
+int ps_sfshort(PARARRAY par, const char *key, short p) {
+  return ps_set(&par,0,"short",key,&p);
+}
+int ps_sfint(PARARRAY par, const char *key, int p) {
+  return ps_set(&par,0,"int",key,&p);
+}
+int ps_sflong(PARARRAY par, const char *key, long p) {
+  return ps_set(&par,0,"long",key,&p);
+}
+int ps_sfushort(PARARRAY par, const char *key, unsigned short p) {
+  return ps_set(&par,0,"ushort",key,&p);
+}
+int ps_sfuint(PARARRAY par, const char *key, unsigned int p) {
+  return ps_set(&par,0,"uint",key,&p);
+}
+int ps_sfulong(PARARRAY par, const char *key, unsigned long p) {
+  return ps_set(&par,0,"ulong",key,&p);
+}
+int ps_sffloat(PARARRAY par, const char *key, float p) {
+  return ps_set(&par,0,"float",key,&p);
+}
+int ps_sfdouble(PARARRAY par, const char *key, double p) {
+  return ps_set(&par,0,"double",key,&p);
+}
+int ps_sfreal(PARARRAY par, const char *key, ireal p) {
+  return ps_set(&par,0,"ireal",key,&p);
+}
+
+// assign last
+
+int ps_slcstring(PARARRAY par, const char *key, char *p) {
+  return ps_set(&par,1,"cstring",key,p);
+}
+int ps_slchar(PARARRAY par, const char *key, char p) {
+  return ps_set(&par,1,"char",key,&p);
+}
+int ps_slshort(PARARRAY par, const char *key, short p) {
+  return ps_set(&par,1,"short",key,&p);
+}
+int ps_slint(PARARRAY par, const char *key, int p) {
+  return ps_set(&par,1,"int",key,&p);
+}
+int ps_sllong(PARARRAY par, const char *key, long p) {
+  return ps_set(&par,1,"long",key,&p);
+}
+int ps_slushort(PARARRAY par, const char *key, unsigned short p) {
+  return ps_set(&par,1,"ushort",key,&p);
+}
+int ps_sluint(PARARRAY par, const char *key, unsigned int p) {
+  return ps_set(&par,1,"uint",key,&p);
+}
+int ps_slulong(PARARRAY par, const char *key, unsigned long p) {
+  return ps_set(&par,1,"ulong",key,&p);
+}
+int ps_slfloat(PARARRAY par, const char *key, float p) {
+  return ps_set(&par,1,"float",key,&p);
+}
+int ps_sldouble(PARARRAY par, const char *key, double p) {
+  return ps_set(&par,1,"double",key,&p);
+}
+int ps_slreal(PARARRAY par, const char *key, ireal p) {
+  return ps_set(&par,1,"ireal",key,&p);
+}

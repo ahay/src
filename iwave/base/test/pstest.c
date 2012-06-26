@@ -1,4 +1,4 @@
-#include <keyval.h>
+#include <parser.h>
 
 int main(int argc, char ** argv) {
 
@@ -23,79 +23,79 @@ int main(int argc, char ** argv) {
     exit(1);
   }
 
-  fprintf(stderr,"\nback to root\n");
+  fprintf(stdout,"\nback to root\n");
   //  while (par->prev) par=par->prev;
   if (pslink_front(&par)) {
     fprintf(stderr,"Error: pstest - failed to move to front\n");
     exit(1);
   }
 
-  fprintf(stderr,"\nprint in normal order\n");
+  fprintf(stdout,"\nprint in normal order\n");
   while (par->next) {
-    kv_fprint(*(par->pair),stderr);
+    kv_fprint(*(par->pair),stdout);
     par = par->next;
   }
-  kv_fprint(*(par->pair),stderr);
+  kv_fprint(*(par->pair),stdout);
   
-  fprintf(stderr,"\nprint in reverse order\n");
+  fprintf(stdout,"\nprint in reverse order\n");
   while (par->prev) {
-    kv_fprint(*(par->pair),stderr);
+    kv_fprint(*(par->pair),stdout);
     par = par->prev;
   }
-  kv_fprint(*(par->pair),stderr);
+  kv_fprint(*(par->pair),stdout);
 
-  fprintf(stderr,"\nfind first instance of key=\"this\", print value\n");
+  fprintf(stdout,"\nfind first instance of key=\"this\", print value\n");
   word_assign(key,"this",4);
   pslink_findfirst(par,*key,val);
-  fprintf(stderr,"\nkey = this val = ");
-  fprintf(stderr,"%s\n",val->str);
+  fprintf(stdout,"\nkey = this val = ");
+  fprintf(stdout,"%s\n",val->str);
 
-  fprintf(stderr,"\nreset value for existing key - first\n");
+  fprintf(stdout,"\nreset value for existing key - first\n");
   word_assign(val,"\"totally fun\"",strlen("\"totally fun\""));
   pslink_setfirst(&par,*key,*val);
 
-  fprintf(stderr,"\nreset value for existing key - last\n");
+  fprintf(stdout,"\nreset value for existing key - last\n");
   word_assign(val,"\"bummer\"",strlen("\"bummer\""));
   pslink_setlast(&par,*key,*val);
 
-  fprintf(stderr,"\nset value for new key - first\n");
+  fprintf(stdout,"\nset value for new key - first\n");
   word_assign(key,"that",4);
   word_assign(val,"\"not much fun at all\"",22);
   pslink_setfirst(&par,*key,*val);
 
-  fprintf(stderr,"\nset value for new key - last\n");
+  fprintf(stdout,"\nset value for new key - last\n");
   word_assign(key,"\"the other\"",13);
   word_assign(val,"\"quite a lot of fun actually\"",29);
   pslink_setlast(&par,*key,*val);
 
-  fprintf(stderr,"\nto the front\n");
+  fprintf(stdout,"\nto the front\n");
   pslink_front(&par);
-  fprintf(stderr,"\nprint again in normal order\n");
+  fprintf(stdout,"\nprint again in normal order\n");
   while (par->next) {
-    kv_fprint(*(par->pair),stderr);
+    kv_fprint(*(par->pair),stdout);
     par = par->next;
   }
-  kv_fprint(*(par->pair),stderr);
+  kv_fprint(*(par->pair),stdout);
 
-  fprintf(stderr,"\nfind first instance of key \"a\"\n");
+  fprintf(stdout,"\nfind first instance of key \"a\"\n");
   word_assign(key,"a",4);
   pslink_findfirst(par,*key,val);
-  fprintf(stderr,"\nkey = %s val = %s\n",key->str,val->str);
-  fprintf(stderr,"\nfind last instance of key \"a\"\n");
+  fprintf(stdout,"\nkey = %s val = %s\n",key->str,val->str);
+  fprintf(stdout,"\nfind last instance of key \"a\"\n");
   word_assign(key,"a",4);
   pslink_findlast(par,*key,val);
-  fprintf(stderr,"\nkey = %s val = %s\n",key->str,val->str);
+  fprintf(stdout,"\nkey = %s val = %s\n",key->str,val->str);
 
-  fprintf(stderr,"\nre-read string, should add same pairs all over again at end\n");
+  fprintf(stdout,"\nre-read string, should add same pairs all over again at end\n");
   teststr = save;
   pslink_read(&par,&teststr);
   pslink_front(&par);
-  fprintf(stderr,"\nprint again in normal order\n");
+  fprintf(stdout,"\nprint again in normal order\n");
   while (par->next) {
-    kv_fprint(*(par->pair),stderr);
+    kv_fprint(*(par->pair),stdout);
     par = par->next;
   }
-  kv_fprint(*(par->pair),stderr);
+  kv_fprint(*(par->pair),stdout);
 
   free(save);
   word_delete(&val);

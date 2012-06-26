@@ -225,6 +225,7 @@ Min, max macros.
 
 #define iwave_min(a, b) ((a) < (b) ? (a) : (b))
 #define iwave_max(a, b) ((a) > (b) ? (a) : (b))
+#define iwave_abs(a) ((a) < REAL_ZERO ? (-a) : (a))
 
 /*----------------------------------------------------------------------------*/
 /** \defgroup error Error codes

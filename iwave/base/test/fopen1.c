@@ -1,5 +1,9 @@
 #include "iwave_fopen.h"
 
+#define FILE1 "test/h1.su"
+#define FILE2 "test/f1.su"
+#define FILE3 "test/f2.su"
+
 int main(int argc, char ** argv) {
 
   FILE * fp1 = NULL;
@@ -11,42 +15,38 @@ int main(int argc, char ** argv) {
   FILE * fp7 = NULL;
   FILE * fp8 = NULL;
 
-  system("sunull nt=101 ntr=11 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100 > h1.su");
-  system("sunull nt=101 ntr=11 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100 > f1.su");
-  system("sunull nt=201 ntr=21 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100 > f2.su");
-
-  char * buf = (char *)malloc(128*sizeof(char));
-  strcpy(buf,"h1.su");
+  char * buf = (char *)usermalloc_(128*sizeof(char));
+  strcpy(buf,FILE1);
   fp1=iwave_fopen(&buf,"r",NULL,stdout);
-  strcpy(buf,"f1.su");
-  fp2=iwave_fopen(&buf,"r","h1.su",stdout);
-  strcpy(buf,"n1.su");
-  fp3=iwave_fopen(&buf,"w+","h1.su",stdout);
+  strcpy(buf,FILE2);
+  fp2=iwave_fopen(&buf,"r",FILE1,stdout);
+  strcpy(buf,"test/fopen1/n1.su");
+  fp3=iwave_fopen(&buf,"w+",FILE1,stdout);
   char * blank=NULL;
-  fp4=iwave_fopen(&blank,"w+","h1.su",stdout);
-  strcpy(buf,"f2.su");
+  fp4=iwave_fopen(&blank,"w+",FILE1,stdout);
+  strcpy(buf,FILE3);
   fp5=iwave_fopen(&buf,"r",NULL,stdout);
-  strcpy(buf,"h1.su");
-  fp6=iwave_fopen(&buf,"r+","h1.su",stdout);
+  strcpy(buf,FILE1);
+  fp6=iwave_fopen(&buf,"r+",FILE1,stdout);
 
   fprintf(stdout,"AFTER INITIAL OPENS\n");
 
   iwave_fprintall(stdout);
 
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp6=iwave_fopen(&blank,"w+","h1.su",stdout);
+  fp6=iwave_fopen(&blank,"w+",FILE1,stdout);
 
   iwave_fclose(fp4);
   fprintf(stdout,"AFTER CLOSE OF TEMP FILE\n");
   iwave_fprintall(stdout);
 
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp7=iwave_fopen(&blank,"w+","h1.su",stdout);
-  free(blank);
+  fp7=iwave_fopen(&blank,"w+",FILE1,stdout);
+  userfree_(blank);
   blank=NULL;
-  fp4=iwave_fopen(&blank,"w+","f2.su",stdout);
+  fp4=iwave_fopen(&blank,"w+",FILE3,stdout);
 
   fprintf(stdout,"OPEN OF TWO MORE\n");
   fprintf(stdout,"ONE ON SAME PROTOTYPE, ONE ON DIFFERENT\n");
@@ -56,14 +56,14 @@ int main(int argc, char ** argv) {
   fprintf(stdout,"ATTEMPT ERROR CONDITIONS:\n");
 
   iwave_fclose(fp7);
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp7=iwave_fopen(&blank,"r","f2.su",stdout);
+  fp7=iwave_fopen(&blank,"r",FILE3,stdout);
 
   fprintf(stdout,"attempt temp open with r access, got FILE * = %p\n",(void *)fp7);
 
   iwave_fclose(fp7);
-  free(blank);
+  userfree_(blank);
   blank=NULL;
   fp7=iwave_fopen(&blank,"w+",NULL,stdout);
   
@@ -75,19 +75,19 @@ int main(int argc, char ** argv) {
  
   fprintf(stdout,"REQUEST FILE PTR FOR TMP FILE TEMPLATED ON h1\n");
 
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp8=iwave_fopen(&blank,"w+","h1.su",stdout);
+  fp8=iwave_fopen(&blank,"w+",FILE1,stdout);
 
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp7=iwave_fopen(&blank,"w+","h1.su",stdout);
+  fp7=iwave_fopen(&blank,"w+",FILE1,stdout);
 
   iwave_fclose(fp4);
   
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp4=iwave_fopen(&blank,"w+","h1.su",stdout);
+  fp4=iwave_fopen(&blank,"w+",FILE1,stdout);
 
   fprintf(stdout,"AFTER MORE OPENS: fp4=%p fp7=%p fp8=%p\n",(void *)fp4,(void *)fp7,(void *)fp8);
 
@@ -106,20 +106,22 @@ int main(int argc, char ** argv) {
 
   iwave_fprintall(stdout);
 
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp7=iwave_fopen(&blank,"w+","h1.su",stdout);
+  fp7=iwave_fopen(&blank,"w+",FILE1,stdout);
 
-  free(blank);
+  userfree_(blank);
   blank=NULL;
-  fp6=iwave_fopen(&blank,"w+","f2.su",stdout);
+  fp6=iwave_fopen(&blank,"w+",FILE3,stdout);
 
   fprintf(stdout,"OPEN TEMP ON FP7 PROTO H1, FP6 PROTO F2\n");
 
   iwave_fprintall(stdout);
  
   fprintf(stdout,"TRASH IT ALL\n");
-  
+
+  userfree_(blank);
+  userfree_(buf);
   iwave_fdestroy();
   iwave_fprintall(stdout);
 

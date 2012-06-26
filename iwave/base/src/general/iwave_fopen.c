@@ -111,7 +111,7 @@ FILE * iwave_fopen(char ** name,
       /*      fprintf(stream,"new temp file construction\n");*/
       /* first, generate name - NOTE: THIS IS MEMORY THAT
 	 MUST BE MANAGED BY THE CALLING UNIT */
-      *name = (char *)malloc(NLEN*sizeof(char));
+      *name = (char *)usermalloc_(NLEN*sizeof(char));
       strcpy(*name,"./tmp.XXXXXX");
 
       fd=mkstemp(*name);
@@ -131,14 +131,14 @@ FILE * iwave_fopen(char ** name,
       }
 
       /* set filestat struct params */
-      *oldfpr = (struct filestat *)malloc(sizeof(struct filestat));
+      *oldfpr = (struct filestat *)usermalloc_(sizeof(struct filestat));
       fpr=*oldfpr;
       fpr->fp = retfp;
-      fpr->nm = (char *)malloc((strlen(*name)+1)*sizeof(char));
+      fpr->nm = (char *)usermalloc_((strlen(*name)+1)*sizeof(char));
       strcpy(fpr->nm,*name);
-      fpr->pr = (char *)malloc((strlen(proto)+1)*sizeof(char));
+      fpr->pr = (char *)usermalloc_((strlen(proto)+1)*sizeof(char));
       strcpy(fpr->pr,proto);
-      fpr->md = (char *)malloc(3*sizeof(char));
+      fpr->md = (char *)usermalloc_(3*sizeof(char));
       strcpy(fpr->md,"w+");
       fpr->istmp=1;
       fpr->inuse=1;
@@ -211,7 +211,7 @@ FILE * iwave_fopen(char ** name,
       }
 
       /* MEMORY WHICH MUST BE MANAGED BY CALLING UNIT */
-      *name=(char *)malloc((strlen(fpr->nm)+1)*sizeof(char));
+      *name=(char *)usermalloc_((strlen(fpr->nm)+1)*sizeof(char));
       strcpy(*name,fpr->nm);
     }
 
@@ -349,19 +349,19 @@ FILE * iwave_fopen(char ** name,
       if (fph) fseeko(fph,0L,SEEK_SET);
 
       /* set filestat struct params */
-      *oldfpr = (struct filestat *)malloc(sizeof(struct filestat));
+      *oldfpr = (struct filestat *)usermalloc_(sizeof(struct filestat));
       fpr=*oldfpr;
       fpr->fp = retfp;
-      fpr->nm = (char *)malloc((strlen(*name)+1)*sizeof(char));
+      fpr->nm = (char *)usermalloc_((strlen(*name)+1)*sizeof(char));
       strcpy(fpr->nm,*name);
       if (proto) {
-	fpr->pr = (char *)malloc((strlen(proto)+1)*sizeof(char));
+	fpr->pr = (char *)usermalloc_((strlen(proto)+1)*sizeof(char));
 	strcpy(fpr->pr,proto);
       }
       else {
 	fpr->pr = NULL;
       }
-      fpr->md = (char *)malloc((strlen(mode)+1)*sizeof(char));
+      fpr->md = (char *)usermalloc_((strlen(mode)+1)*sizeof(char));
       strcpy(fpr->md,mode);
       fpr->istmp=0;
       fpr->inuse=1;
@@ -441,10 +441,10 @@ FILE * iwave_const_fopen(const char * name,
     fprintf(stream,"called with null filename\n");
   }
   else {
-    tmpname=(char *)malloc((1+strlen(name))*sizeof(char));
+    tmpname=(char *)usermalloc_((1+strlen(name))*sizeof(char));
     strcpy(tmpname,name);
     fp=iwave_fopen(&tmpname,mode,proto,stream);
-    free(tmpname);
+    userfree_(tmpname);
   }
   /*
   if (!fp) {
@@ -507,13 +507,13 @@ void iwave_fdestroy() {
 #ifdef UNLINK_TMPS
     if (fpr->istmp && fpr->nm) unlink(fpr->nm);
 #endif
-    if (fpr->nm) { free(fpr->nm); fpr->nm=NULL; }
-    if (fpr->pr) { free(fpr->pr); fpr->pr=NULL; }
-    free(fpr->md); fpr->md=NULL;
+    if (fpr->nm) { userfree_(fpr->nm); fpr->nm=NULL; }
+    if (fpr->pr) { userfree_(fpr->pr); fpr->pr=NULL; }
+    userfree_(fpr->md); fpr->md=NULL;
     fpr->istmp=0;
     fpr->inuse=0;
     tmpnext=fpr->nextfpr;
-    free(fpr);
+    userfree_(fpr);
     fpr=(struct filestat *)NULL;
   }
   filestatlist=(struct filestat *)NULL;

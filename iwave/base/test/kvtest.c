@@ -1,4 +1,4 @@
-#include <keyval.h>
+#include <parser.h>
 
 int main(int argc, char ** argv) {
 
@@ -15,8 +15,8 @@ int main(int argc, char ** argv) {
 
   do {
     kv_read(kv,&teststr);
-    fprintf(stderr,"kvtest: ");
-    kv_fprint(*kv,stderr);
+    fprintf(stdout,"kvtest: ");
+    kv_fprint(*kv,stdout);
   } while (!kv_check(*kv));
 
   kv_delete(&kv);

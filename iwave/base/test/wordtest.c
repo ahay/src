@@ -1,4 +1,4 @@
-#include <keyval.h>
+#include <parser.h>
 
 int main(int argc, char ** argv) {
 
@@ -16,12 +16,12 @@ int main(int argc, char ** argv) {
           ha ha ha mary had a little=lamb=== \
            a=c=b=d");
 
-  fprintf(stderr,"%s\n",teststr);
+  fprintf(stdout,"%s\n",teststr);
 
-  fprintf(stderr,"\n --- here are the words:\n");
+  fprintf(stdout,"\n --- here are the words:\n");
   
   while (!word_read(w,&finger) && w->str) {
-    fprintf(stderr,"word %d = %s\n",wc,w->str);
+    fprintf(stdout,"word %d = %s\n",wc,w->str);
     wc++;
   }
 
