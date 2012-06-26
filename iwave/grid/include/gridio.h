@@ -14,6 +14,9 @@
   #include "iwave_fopen.h"
 #endif
 
+extern int fseeko(FILE *stream, off_t offset, int whence);
+extern off_t ftello (FILE *stream);
+
 /** read grid from SEP77/RSF header file 
 @param[out] g (grid *) - grid to be initialized
 @param[in]  fname (char *) - name of RSF header file
