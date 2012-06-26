@@ -22,7 +22,8 @@
 
 static bool gauss;
 static int nx, rect;
-static float *t, *t2;
+static float *t;
+static sf_triangle tr;
 
 void tristack_init (bool gauss1 /* pseudo-gaussian */,
 		    int ndat /* dense data length */,
@@ -30,22 +31,18 @@ void tristack_init (bool gauss1 /* pseudo-gaussian */,
 /*< initialize >*/
 {
     nx = ndat;
-    gauss = gauss1;
     rect = nbox;
+    gauss = gauss1;
 
     t = sf_floatalloc(nx);
-    if (gauss) t2 = sf_floatalloc(nx);
-
-    sf_triangle1_init (nbox,ndat);
+    tr = sf_triangle_init (nbox,ndat);
 }
 
 void  tristack_close(void)
 /*< free allocated storage >*/
 {
     free(t);
-    if (gauss) free(t2);
-
-    sf_triangle1_close();
+    sf_triangle_close(tr);
 }
 
 void tristack (bool adj, bool add, int nc, int nd, float *c, float *d) 
@@ -58,11 +55,14 @@ void tristack (bool adj, bool add, int nc, int nd, float *c, float *d)
     sf_adjnull(adj,add,nc,nd,c,d);
 
     if (adj) {
+	for (id=0; id < nd; id++) {
+	    t[id] = d[id];
+	}
 	if (gauss) {
-	    sf_triangle1_lop(false,false,nd,nd,d,t2);
-	    sf_triangle1_lop(true,false,nd,nd,t,t2);
+	    sf_smooth2 (tr, 0, 1, false, false, t);
+	    sf_smooth2 (tr, 0, 1, false, false, t);
 	} else {
-	    sf_triangle1_lop(true,false,nd,nd,t,d);
+	    sf_smooth2 (tr, 0, 1, false, false, t);
 	}
 	for (ic=id=0; id < nd; id++) {
 	    if (0==id%rect) {
@@ -80,12 +80,13 @@ void tristack (bool adj, bool add, int nc, int nd, float *c, float *d)
 	    }
 	}
 	if (gauss) {
-	    sf_triangle1_lop(false,false,nd,nd,t,t2);
-	    sf_triangle1_lop(true,true,nd,nd,d,t2);
+	    sf_smooth2 (tr, 0, 1, false, false, t);
+	    sf_smooth2 (tr, 0, 1, false, false, t);
 	} else {
-	    sf_triangle1_lop(false,true,nd,nd,t,d);
+	    sf_smooth2 (tr, 0, 1, false, false, t);
+	}
+	for (id=0; id < nd; id++) {
+	    d[id] += t[id];
 	}
     }
 }
-
-/* 	$Id$	 */
