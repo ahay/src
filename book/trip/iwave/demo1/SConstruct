@@ -69,7 +69,7 @@ for r in range(4):
          '''
          asg par=$SOURCE &&
          suread < ${TARGETS[1]} read=data endian=0
-         ''' % data,stdin=0)
+         ''',stdin=0)
 
     Result(data,'grey title="%g-m data" ' % (2.5*j))
 

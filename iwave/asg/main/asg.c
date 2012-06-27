@@ -16,6 +16,8 @@
 #include <asg_selfdoc.h>
 #include <asg_movie.h>
 
+#define VERBOSE 1
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
