@@ -66,7 +66,7 @@ int initoutstream(FILE ** stream, int rk, int sz) {
   char *filename; /* workspace for output filename */
   char tmp[20];   /* ditto */
   
-  filename = malloc(MAXPATHLEN * sizeof(char));    
+  filename = usermalloc_(MAXPATHLEN * sizeof(char));    
   if ( filename == NULL ) {
     if ( rk == 0 )
       fprintf(stderr,"IWAVE %dD.\nERROR. Internal: memory allocation for cout filename. ABORT.\n", IWAVE_NDIM);
@@ -74,6 +74,7 @@ int initoutstream(FILE ** stream, int rk, int sz) {
   }
   if (!getcwd(filename,MAXPATHLEN)) {
     fprintf(stderr,"IWAVE %dD.\nERROR. Internal: getcwd failed for cout filename. ABORT.\n", IWAVE_NDIM);
+    userfree_(filename);
     return E_FILE;
   }
   
@@ -99,11 +100,11 @@ int initoutstream(FILE ** stream, int rk, int sz) {
   if ( *stream == NULL ) {
     if ( rk == 0 )
       fprintf(stderr,"IWAVE %dD.\nERROR. Internal: cannot open %s. ABORT.\n", IWAVE_NDIM, filename);
-    free(filename);
+    userfree_(filename);
     return E_BADINPUT;
   }
 
-  free(filename);
+  userfree_(filename);
 
   /* FROM NOW CAN OUTPUT INTO THIS PROCESSOR'S STREAM */
   storeOutstream(*stream);
@@ -119,46 +120,20 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
 
   int err=0; /* error code */
 
-  /* workspace for processing command line */
-  PARARRAY *parr_arg;
-  //  SIZEDSTRING parfile;
-  char * parfile;
+  /* read parameters */
+  if (pars) ps_delete(&pars);
+  pars = ps_new();
 
-  /* delete previous */
-  ps_setnull(pars);
-
-  parr_arg = ps_new();
-
-  err=ps_createargs(parr_arg,argc-1,argv+1);
+  err=ps_createargs(pars,argc-1,argv+1);
   if (err) {
     fprintf(stream,
-	    "ERROR. failed to process command line. ABORT.\n");
+	    "ERROR. Internal: error #%d processing command line. ABORT.\n", 
+	    err);
     return err;
   }
-
-  /* extract parameters from command line */
-  //  if (ps_getval(parr_arg,"par",0,&parfile)) {
-  if (ps_ffcstring(*parr_arg,"par",&parfile)) {
-      pars = parr_arg;
-  }
-  else {
 #ifdef VERBOSE
-    fprintf(stderr,"in readinput: create par from file %s\n",parfile);
+  ps_printall(*pars,stderr);
 #endif
-
-    err = ps_createfile(pars,parfile);
-    ps_delete(&parr_arg);
-    free(parfile);
-    if ( err ) {
-      fprintf(stream, 
-	      "ERROR. failed to create par from file %s. ABORT.\n", 
-	      parfile);
-      ps_delete(&pars);
-    }
-#ifdef VERBOSE
-    ps_printall(*pars,stderr);
-#endif
-  }
 
   return err;
 }
@@ -176,18 +151,18 @@ void readparpars(PARARRAY * pars,
   int err=0;  
   *stats = 1;
 
-  err=ps_ffint(*pars, PNAMES_STATS, stats);
+  err=ps_flint(*pars, PNAMES_STATS, stats);
   if (err) {
     fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_STATS, *stats);
   }
   else fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_STATS, *stats);
   
   *nopts = 0;
-  if ( ps_ffint(*pars, PNAMES_NOPTS, nopts) ) fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NOPTS, *nopts);
+  if ( ps_flint(*pars, PNAMES_NOPTS, nopts) ) fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NOPTS, *nopts);
   else fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_NOPTS, *nopts);
   
   *printact = 0;
-  if ( ps_ffint(*pars, PNAMES_PRACT, printact) ) fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_PRACT, *printact);
+  if ( ps_flint(*pars, PNAMES_PRACT, printact) ) fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_PRACT, *printact);
   else fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_PRACT, *printact);
 }
 
@@ -252,14 +227,14 @@ int dump_pi(PARALLELINFO *pinfo, FILE *stream) {
 void dump_ac(PARARRAY * pars, IMODEL * model, FILE * stream) {
   int dump = 0;
 
-  ps_ffint(*pars, PNAMES_DUMPLDA, &dump);
+  ps_flint(*pars, PNAMES_DUMPLDA, &dump);
   if ( dump ) 
     {
       fprintf(stream, "Allocated ");
       rd_a_dump(&((*model).ld_a), stream);
     }
   dump = 0;
-  ps_ffint(*pars, PNAMES_DUMPLDC, &dump);
+  ps_flint(*pars, PNAMES_DUMPLDC, &dump);
   if ( dump )
     {
       fprintf(stream, "Computational ");
@@ -275,8 +250,8 @@ void dump_rs(PARARRAY * pars, IMODEL * model, FILE * stream, int sends) {
   RDOM *rd;
   FD_MODEL * fdm = (FD_MODEL *)(model->specs);
   
-  if ( sends ) ps_ffint(*pars, PNAMES_DUMPLDS, &dump);
-  else         ps_ffint(*pars, PNAMES_DUMPLDR, &dump);
+  if ( sends ) ps_flint(*pars, PNAMES_DUMPLDS, &dump);
+  else         ps_flint(*pars, PNAMES_DUMPLDR, &dump);
   
   if ( dump  && fdm ) {
     if ( sends ) {

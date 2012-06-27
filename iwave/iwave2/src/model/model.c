@@ -60,9 +60,9 @@ int im_construct(IMODEL * model) {
 int im_destroy(IMODEL *model)
 {
   rd_a_destroy(&(model->ld_a));
-  free(model->ld_s);
+  if (model->ld_s) userfree_(model->ld_s);
   fd_modeldest(model);
-  free(model->specs);
+  if (model->specs) userfree_(model->specs);
   return im_construct(model);
 }
 /*----------------------------------------------------------------------------*/
@@ -75,12 +75,12 @@ int im_setndim(IMODEL *model)
     err = gen_3n1(model->g.dim, &nnei);
     if ( err ) return err;
 
-    p = (RDOM*)malloc(nnei * 2 * sizeof(RDOM));
+    p = (RDOM*)usermalloc_(nnei * 2 * sizeof(RDOM));
     if ( p == NULL ) return E_ALLOC;
     
     for ( i = 0; i < nnei * 2; ++ i ) rd_a_setnull(p + i);
 
-    if ( model->ld_s != NULL ) free(model->ld_s);
+    if ( model->ld_s != NULL ) userfree_(model->ld_s);
     model->ld_s = p;
     model->ld_r = model->ld_s + nnei;
     model->nnei = nnei;

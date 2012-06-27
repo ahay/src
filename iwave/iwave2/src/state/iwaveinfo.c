@@ -134,13 +134,13 @@ int initparallel_local(PARARRAY par, FILE * stream) {
   
   /* detect task parallelization */
   pt=0;
-  ps_ffint(par,"partask",&pt);
+  ps_flint(par,"partask",&pt);
 
   /* read cartesian grid dimn */
   /*
   ndim = 0;
 
-  if (ps_ffint(par,"pardim",&ndim) || ndim<1 || ndim>RARR_MAX_NDIM) {
+  if (ps_flint(par,"pardim",&ndim) || ndim<1 || ndim>RARR_MAX_NDIM) {
     fprintf(stream,"ERROR: must define pardim in parameter table\n");
     fprintf(stream,"- should be in range [1,%d] and same as spatial dimension\n",
 	    RARR_MAX_NDIM);
@@ -154,7 +154,7 @@ int initparallel_local(PARARRAY par, FILE * stream) {
   /* parse out cartesian grid for local size */
   sz=1;
   for ( idim = 0; idim < RARR_MAX_NDIM; ++idim ) {
-    if ( ps_ffint(par, PNAMES_NP[idim], &(cdims[idim]))) 
+    if ( ps_flint(par, PNAMES_NP[idim], &(cdims[idim]))) 
       fprintf(stream, "NOTE. Cannot read %s. Default = 1.\n", PNAMES_NP[idim]);
     else {
       if ( cdims[idim] < 1 ) {
@@ -310,7 +310,7 @@ int readparallel(PARALLELINFO *pinfo, PARARRAY *pars, FILE *stream)
     IASN(cdims, IPNT_1); 
     for ( idim = 0; idim < IWAVE_NDIM; ++idim )
     {
-        if ( ps_ffint(*pars, PNAMES_NP[idim], cdims + idim) )
+        if ( ps_flint(*pars, PNAMES_NP[idim], cdims + idim) )
           fprintf(stream, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NP[idim], cdims[idim]);
     }
 
@@ -421,7 +421,7 @@ int initparallel_local(PARARRAY par, FILE * stream) {
   IPNT cdims; // local declaration added 02.07.11 WWS
   IASN(cdims, IPNT_1); /* default grid size */
   for ( idim = 0; idim < IWAVE_NDIM; ++idim ) {
-    if ( ps_ffint(par, PNAMES_NP[idim], cdims + idim) )
+    if ( ps_flint(par, PNAMES_NP[idim], cdims + idim) )
       fprintf(stream, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NP[idim], cdims[idim]);
     if (cdims[idim] != 1) {
       fprintf(stream, "ERROR: nontrivial domain decomposition not possible\n");
@@ -463,7 +463,7 @@ int initpinfo(PARALLELINFO *pinfo, FILE *stream) {
     
     for ( idim = 0; idim < RARR_MAX_NDIM; ++idim )
     {
-      if ( ps_ffint(*pars, PNAMES_NP[idim], cdims + idim) )
+      if ( ps_flint(*pars, PNAMES_NP[idim], cdims + idim) )
 	fprintf(stream, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NP[idim], cdims[idim]);
       if (cdims[idim] != 1) {
 	fprintf(stream, "ERROR: from createparallel -- serial mode\n");

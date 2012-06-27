@@ -23,7 +23,7 @@ int mask_create(STENCIL_MASK *mask, int ip, int ir, int n)
 
     if ( n > 0 )                        /* allocate memory */
     {
-        mask->s = (IPNT*)malloc(n * sizeof(IPNT));
+        mask->s = (IPNT*)usermalloc_(n * sizeof(IPNT));
         if ( mask->s == NULL ) return E_ALLOC;
     }
     
@@ -37,7 +37,7 @@ int mask_create(STENCIL_MASK *mask, int ip, int ir, int n)
 
 int mask_destroy(STENCIL_MASK *mask)
 {
-    free(mask->s);
+    userfree_(mask->s);
     mask_setnull(mask);
     
     return 0;
@@ -79,7 +79,7 @@ int sten_create(STENCIL *sten, int nmask)
 
     if ( nmask > 0 )                    /* allocate memory */
     {
-        sten->masks = (STENCIL_MASK*)malloc(nmask* sizeof(STENCIL_MASK));
+        sten->masks = (STENCIL_MASK*)usermalloc_(nmask* sizeof(STENCIL_MASK));
         if ( sten->masks == NULL ) return E_ALLOC;
         for ( m = 0; m < nmask; ++m ) mask_setnull(sten->masks + m);
     }
@@ -94,7 +94,7 @@ int sten_destroy(STENCIL *sten)
     int m;
     
     for ( m = 0; m < sten->nmask; ++m ) mask_destroy(sten->masks + m);
-    free(sten->masks);
+    userfree_(sten->masks);
     sten_setnull(sten);
     
     return 0;
