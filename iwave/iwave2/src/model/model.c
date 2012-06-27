@@ -62,7 +62,8 @@ int im_destroy(IMODEL *model)
   rd_a_destroy(&(model->ld_a));
   if (model->ld_s) userfree_(model->ld_s);
   fd_modeldest(model);
-  if (model->specs) userfree_(model->specs);
+  // since fd object allocates, should also free
+  //if (model->specs) userfree_(model->specs);
   return im_construct(model);
 }
 /*----------------------------------------------------------------------------*/

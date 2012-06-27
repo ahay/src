@@ -332,7 +332,7 @@ extern "C" {
    * Called in driver.
    */
 
-  int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv);
+  int readinput(PARARRAY ** pars, FILE * stream, int argc, char **argv);
   /** 
    * Reads miscellaneous flags from param array, such as stats, nopts and printact.
    * Called in \ref iwave_construct.

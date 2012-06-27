@@ -116,15 +116,14 @@ int initoutstream(FILE ** stream, int rk, int sz) {
 /*
   Initialize input parameter structures and populates them.
 */
-int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
+int readinput(PARARRAY ** pars, FILE * stream, int argc, char **argv) {
 
   int err=0; /* error code */
 
   /* read parameters */
-  if (pars) ps_delete(&pars);
-  pars = ps_new();
-
-  err=ps_createargs(pars,argc-1,argv+1);
+  //  if (pars) ps_delete(&pars);
+  *pars = ps_new();
+  err=ps_createargs(*pars,argc-1,argv+1);
   if (err) {
     fprintf(stream,
 	    "ERROR. Internal: error #%d processing command line. ABORT.\n", 
