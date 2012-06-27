@@ -3,7 +3,6 @@
 #include "header.h"
 #include "cubic.h"
 #include "parser.h"
-#include "parser_su.h"
 
 #define DT_TOL 0.001
 
@@ -59,7 +58,7 @@ int main(int argc, char ** argv) {
   float tol;       /* tolerance for comparison - default = 10^-6 */
 
   /* INTERNAL VARIABLES */
-  PARARRAY par;    /* param array */
+  PARARRAY * par;    /* param array */
   FILE * fp1;      /* input 1 file pointer */
   FILE * fp2;      /* input 2 file pointer */
   segy tr1;        /* input 1 trace workspace */
@@ -85,22 +84,23 @@ int main(int argc, char ** argv) {
   err=0;
 
   /* extract input parameters */
-  if ( ps_createargs(&par, argc - 1, argv + 1) ) {
+  par=ps_new();
+  if ( ps_createargs(par, argc - 1, argv + 1) ) {
     printf("Error parsing input data. ABORT.\n");
     exit(1);
   }
              
-  if (ps_ffcstring(par,"in1",&in1)) {
+  if (ps_flcstring(*par,"in1",&in1)) {
     printf("COMP reading in1. ABORT.\n");
     exit(1);
   }
 
-  if (ps_ffcstring(par,"in2",&in2)) {
+  if (ps_flcstring(*par,"in2",&in2)) {
     printf("COMP reading in2. ABORT.\n");
     exit(1);
   }
 
-  if (ps_ffreal(par,"tol",&tol)) tol=1.e-6;
+  if (ps_flreal(*par,"tol",&tol)) tol=1.e-6;
 
   /* open data files */
   if (!(fp1=fopen(in1,"r"))) {
@@ -189,6 +189,7 @@ int main(int argc, char ** argv) {
 
   fclose(fp1);
   fclose(fp2);
+  ps_delete(&par);
 
   if (!itr || !nt) exit(1);
   if (merror > tol*msamp) exit(1);

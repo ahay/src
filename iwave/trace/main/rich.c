@@ -3,7 +3,6 @@
 #include "header.h"
 #include "cubic.h"
 #include "parser.h"
-#include "parser_su.h"
 
 #define TOL 0.001
 
@@ -37,7 +36,7 @@ char * sdoc[] = {
 
 int main(int argc, char ** argv) {
   
-  PARARRAY par;    /* param array */
+  PARARRAY * par;    /* param array */
  
   char * in1;      /* input 1 file name */
   char * in2;      /* input 2 file name */
@@ -68,37 +67,38 @@ int main(int argc, char ** argv) {
   requestdoc(1);
 
   /* extract input parameters */
-  if ( ps_createargs(&par, argc - 1, argv + 1) ) {
+  par=ps_new();
+  if ( ps_createargs(par, argc - 1, argv + 1) ) {
     printf("Error parsing input data. ABORT.\n");
     return 1;
   }
              
-  if (ps_ffcstring(par,"in1",&in1)) {
+  if (ps_flcstring(*par,"in1",&in1)) {
     printf("Error reading in1. ABORT.\n");
     exit(1);
   }
 
-  if (ps_ffcstring(par,"in2",&in2)) {
+  if (ps_flcstring(*par,"in2",&in2)) {
     printf("Error reading in2. ABORT.\n");
     exit(1);
   }
 
-  if (ps_ffcstring(par,"out",&out)) {
+  if (ps_flcstring(*par,"out",&out)) {
     printf("Error reading out. ABORT.\n");
     exit(1);
   }
 
-  if (ps_fffloat(par,"par1",&h1)) {
+  if (ps_flfloat(*par,"par1",&h1)) {
     printf("Error reading par1. ABORT.\n");
     exit(1);
   }
 
-  if (ps_fffloat(par,"par2",&h2)) {
+  if (ps_flfloat(*par,"par2",&h2)) {
     printf("Error reading par1. ABORT.\n");
     exit(1);
   }
 
-  ps_ffint(par,"order",&order);
+  ps_flint(*par,"order",&order);
 
   /* compute Richardson factor */
   if (fabs(h1-h2) < iwave_min(TOL*h1,TOL*h2)) {
@@ -206,5 +206,6 @@ int main(int argc, char ** argv) {
   fclose(fp);
   fclose(fp1);
   fclose(fp2);
+  ps_delete(&par);
 }
   
