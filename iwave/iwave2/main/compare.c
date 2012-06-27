@@ -3,7 +3,7 @@
 #include <header.h>
 #include <cubic.h>
 #include <parser.h>
-#include <parser_su.h>
+/* #include <parser_su.h> */
 
 #define DT_TOL 0.001
 
@@ -65,12 +65,12 @@ int main(int argc, char ** argv) {
   segy tr1;        /* input 1 trace workspace */
   segy tr2;        /* input 2 trace workspace */
   Value val;       /* header word workspace */
-  float dt;        /* time step */
-  int nt;          /* number of samples per trace */
+  float dt=0.0f;        /* time step */
+  int nt=0;          /* number of samples per trace */
   float esamp;     /* sample error */
   float msamp;     /* max abs */
   float merror;    /* max error */
-  float gpow;      /* global power of input 2 data */
+  float gpow=0.0f;      /* global power of input 2 data */
   float tpow;      /* power of input 2 trace */
   float terror;    /* trace error */
   float gerror;    /* global abs error */

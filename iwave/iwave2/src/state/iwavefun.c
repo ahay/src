@@ -31,7 +31,7 @@ void quietexit(PARARRAY * pars,FILE ** stream) {
   fflush(*stream);
   fclose(*stream);
   *stream=NULL;
-  ps_destroy(pars);
+  ps_delete(&pars);
   //  exit(0);
 }
 
@@ -49,7 +49,7 @@ void abortexit(int err,PARARRAY * pars,FILE ** stream) {
   else {
     fprintf(stderr,"ABORT on error code %d\n",err);
   }
-  ps_destroy(pars);
+  ps_delete(&pars);
 #ifdef IWAVE_USE_MPI
   MPI_Abort(retrieveGlobalComm(),err);
 #else
@@ -120,14 +120,16 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
   int err=0; /* error code */
 
   /* workspace for processing command line */
-  PARARRAY parr_arg;
+  PARARRAY *parr_arg;
   //  SIZEDSTRING parfile;
   char * parfile;
 
-  /* destroy previous */
+  /* delete previous */
   ps_setnull(pars);
 
-  err=ps_createargs(&parr_arg,argc-1,argv+1);
+  parr_arg = ps_new();
+
+  err=ps_createargs(parr_arg,argc-1,argv+1);
   if (err) {
     fprintf(stream,
 	    "ERROR. failed to process command line. ABORT.\n");
@@ -136,8 +138,8 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
 
   /* extract parameters from command line */
   //  if (ps_getval(parr_arg,"par",0,&parfile)) {
-  if (ps_ffcstring(parr_arg,"par",&parfile)) {
-    *pars = parr_arg;
+  if (ps_ffcstring(*parr_arg,"par",&parfile)) {
+      pars = parr_arg;
   }
   else {
 #ifdef VERBOSE
@@ -145,13 +147,13 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
 #endif
 
     err = ps_createfile(pars,parfile);
-    ps_destroy(&parr_arg);
+    ps_delete(&parr_arg);
     free(parfile);
     if ( err ) {
       fprintf(stream, 
 	      "ERROR. failed to create par from file %s. ABORT.\n", 
 	      parfile);
-      ps_destroy(pars);
+      ps_delete(&pars);
     }
 #ifdef VERBOSE
     ps_printall(*pars,stderr);

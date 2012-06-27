@@ -30,7 +30,7 @@ def dottest(oper,mod,dat):
 
 if __name__ == "__main__":
     # Create random matrix
-    matrix = rsf.spike(n1=10,n2=5,d1=1,d2=1).random()
+    matrix = rsf.spike(n1=10,n2=5,d1=1,d2=1).noise(rep=1,type=0)[0]
     # Matrix multiplication operator
     oper = rsf.matmult(mat=matrix)
     # Model space and data space vectors

@@ -41,7 +41,7 @@ void quietexit(PARARRAY * pars,FILE ** stream) {
   fflush(*stream);
   fclose(*stream);
   *stream=NULL;
-  ps_destroy(pars);
+  ps_delete(pars);
   //  exit(0);
 }
 
@@ -59,7 +59,7 @@ void abortexit(int err,PARARRAY * pars,FILE ** stream) {
   else {
     fprintf(stderr,"ABORT on error code %d\n",err);
   }
-  ps_destroy(pars);
+  ps_delete(pars);
 #ifdef IWAVE_USE_MPI
   MPI_Abort(retrieveGlobalComm(),err);
 #else
@@ -152,12 +152,12 @@ int readinput(PARARRAY * pars, FILE * stream, int argc, char **argv) {
     fprintf(stderr,"in readinput: create par from file %s\n",parfile.s);
 #endif
     err = ps_createfile(pars,parfile.s);
-    ps_destroy(&parr_arg);
+    ps_delete(&parr_arg);
     if ( err ) {
       fprintf(stream, 
 	      "ERROR. Internal: error #%d processing command line. ABORT.\n", 
 	      err);
-      ps_destroy(pars);
+      ps_delete(pars);
     }
 #ifdef VERBOSE
     ps_printall(*pars,stderr);
