@@ -780,7 +780,7 @@ int construct_tracegeom(tracegeom * tg,
 
   /*  fprintf(stderr,"TRACEIO::CONSTRUCT_TRACEGEOM->allocate source arrays\n");*/
 
-  if (!(tg->ntr=(int*)malloc(MAX_RECS*sizeof(int)))) {
+  if (!(tg->ntr=(int*)usermalloc_(MAX_RECS*sizeof(int)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate ntr array\n");
     fflush(stream);
@@ -791,7 +791,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->recoff=(off_t*)malloc(MAX_RECS*sizeof(off_t)))) {
+  if (!(tg->recoff=(off_t*)usermalloc_(MAX_RECS*sizeof(off_t)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate recoff array\n");
     fflush(stream);
@@ -802,7 +802,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->src=(RPNT*)malloc(MAX_RECS*sizeof(RPNT)))) {
+  if (!(tg->src=(RPNT*)usermalloc_(MAX_RECS*sizeof(RPNT)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate ntr array\n");
     fflush(stream);
@@ -852,7 +852,7 @@ int construct_tracegeom(tracegeom * tg,
 
   /*  fprintf(stderr,"TRACEIO::CONSTRUCT_TRACEGEOM->allocate receiver arrays\n");*/
 
-  if (!(tg->ig=(IPNT*)malloc(MAX_TRACES*sizeof(IPNT)))) {
+  if (!(tg->ig=(IPNT*)usermalloc_(MAX_TRACES*sizeof(IPNT)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate ig array\n");
     fflush(stream);
@@ -863,7 +863,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->rg=(RPNT*)malloc(MAX_TRACES*sizeof(RPNT)))) {
+  if (!(tg->rg=(RPNT*)usermalloc_(MAX_TRACES*sizeof(RPNT)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate rg array\n");
     fflush(stream);
@@ -874,7 +874,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->tracl=(int*)malloc(MAX_TRACES*sizeof(int)))) {
+  if (!(tg->tracl=(int*)usermalloc_(MAX_TRACES*sizeof(int)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate tracl array\n");
     fflush(stream);
@@ -885,7 +885,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->tracr=(int*)malloc(MAX_TRACES*sizeof(int)))) {
+  if (!(tg->tracr=(int*)usermalloc_(MAX_TRACES*sizeof(int)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate tracr array\n");
     fflush(stream);
@@ -896,7 +896,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->tracf=(int*)malloc(MAX_TRACES*sizeof(int)))) {
+  if (!(tg->tracf=(int*)usermalloc_(MAX_TRACES*sizeof(int)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate tracf array\n");
     fflush(stream);
@@ -907,7 +907,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->fldr=(int*)malloc(MAX_TRACES*sizeof(int)))) {
+  if (!(tg->fldr=(int*)usermalloc_(MAX_TRACES*sizeof(int)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate fldr array\n");
     fflush(stream);
@@ -918,7 +918,7 @@ int construct_tracegeom(tracegeom * tg,
 #endif
   }
 
-  if (!(tg->troff=(off_t*)malloc(MAX_TRACES*sizeof(off_t)))) {
+  if (!(tg->troff=(off_t*)usermalloc_(MAX_TRACES*sizeof(off_t)))) {
     fprintf(stream,"Error: contruct_tracegeom\n");
     fprintf(stream,"failed to allocate troff array\n");
     fflush(stream);
@@ -1002,7 +1002,7 @@ int init_tracegeom(tracegeom * tg,
   }
  
   /* allocate init array */
-  if (!(init=(int *)malloc(MAX_TRACES*sizeof(int)))) {
+  if (!(init=(int *)usermalloc_(MAX_TRACES*sizeof(int)))) {
     fprintf(stream,"Error: init_tracegeom\n");
     fprintf(stream,"failed to allocate %d ints in init array\n",MAX_TRACES);
     fflush(stream);
@@ -1453,10 +1453,10 @@ int init_tracegeom(tracegeom * tg,
      should be freed.
   */
   if (tg->buf) {
-    free(tg->buf);
+    userfree_(tg->buf);
     tg->buf = NULL;
   }
-  if (tg->ntraces) tg->buf =(float *)malloc(tg->ntraces * tg->nt * sizeof(float));
+  if (tg->ntraces) tg->buf =(float *)usermalloc_(tg->ntraces * tg->nt * sizeof(float));
   if (tg->ntraces && !tg->buf) {
     fprintf(stream,"Error: tracegeom_init - failed to allocate trace\n");
     fprintf(stream,"buffer of length %ld\n", 
@@ -1479,7 +1479,7 @@ int init_tracegeom(tracegeom * tg,
     if (traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]))) return E_FILE;
     iinit=0;
     wlen=cubicadj_getworksize(tg->nt,tmpnt);
-    work=(float *)malloc(wlen*sizeof(float));
+    work=(float *)usermalloc_(wlen*sizeof(float));
     if (!work) {
       fprintf(stream,"Error: tracegeom_init - failed to allocate work\n");
       fprintf(stream,"buffer of length %ld\n",(long) (wlen*sizeof(float)));
@@ -1530,13 +1530,13 @@ int init_tracegeom(tracegeom * tg,
       }
       /*      fprintf(stream,"iinit=%d\n",iinit); fflush(stream);*/
     }
-    free(work);
+    userfree_(work);
     /*    fprintf(stream,"init_tracegeom: exit load loop\n"); fflush(stream);*/
   }	       
 
   /*  fprintf(stream,"init_tracegeom: return with err=%d\n",err); fflush(stream);*/
 
-  free(init);
+  userfree_(init);
 
   return err;
 }
@@ -1561,17 +1561,17 @@ void destroy_tracegeom(tracegeom * tg) {
   /* setnull_tracegeom(tg); */
 
   /* moved from setnull, which is a default constructor */
-  if (tg->buf) free(tg->buf); tg->buf=NULL;
-  if (tg->ntr) free(tg->ntr); tg->ntr=NULL;
-  if (tg->recoff) free(tg->recoff); tg->recoff=NULL;
-  if (tg->src) free(tg->src); tg->src=NULL;
-  if (tg->ig) free(tg->ig); tg->ig=NULL;
-  if (tg->rg) free(tg->rg); tg->rg=NULL;
-  if (tg->tracl) free(tg->tracl); tg->tracl=NULL;
-  if (tg->tracr) free(tg->tracr); tg->tracr=NULL;
-  if (tg->tracf) free(tg->tracf); tg->tracf=NULL;
-  if (tg->fldr) free(tg->fldr); tg->fldr=NULL;
-  if (tg->troff) free(tg->troff); tg->troff=NULL;
+  if (tg->buf) userfree_(tg->buf); tg->buf=NULL;
+  if (tg->ntr) userfree_(tg->ntr); tg->ntr=NULL;
+  if (tg->recoff) userfree_(tg->recoff); tg->recoff=NULL;
+  if (tg->src) userfree_(tg->src); tg->src=NULL;
+  if (tg->ig) userfree_(tg->ig); tg->ig=NULL;
+  if (tg->rg) userfree_(tg->rg); tg->rg=NULL;
+  if (tg->tracl) userfree_(tg->tracl); tg->tracl=NULL;
+  if (tg->tracr) userfree_(tg->tracr); tg->tracr=NULL;
+  if (tg->tracf) userfree_(tg->tracf); tg->tracf=NULL;
+  if (tg->fldr) userfree_(tg->fldr); tg->fldr=NULL;
+  if (tg->troff) userfree_(tg->troff); tg->troff=NULL;
 
 }
 
@@ -2350,7 +2350,7 @@ int writetraces(tracegeom const * tg,
   }
 
   /* allocate init array */
-  if (!(init=(int *)malloc(MAX_TRACES*sizeof(int)))) {
+  if (!(init=(int *)usermalloc_(MAX_TRACES*sizeof(int)))) {
     fprintf(stream,"Error: init_tracegeom\n");
     fprintf(stream,"failed to allocate %d ints in init array\n",MAX_TRACES);
     fflush(stream);
@@ -2369,7 +2369,7 @@ int writetraces(tracegeom const * tg,
 
   /* allocate workspace for interpolation, even if not needed */
   wl=cubic_getworksize(tg->nt);
-  work=(float *)malloc(sizeof(float)*wl);
+  work=(float *)usermalloc_(sizeof(float)*wl);
   if (!work) {
     fprintf(stream,"ERROR: tracegeom::writetraces\n");
     fprintf(stream,"failed to allocate workspace for interpolation\n");
@@ -2583,8 +2583,8 @@ int writetraces(tracegeom const * tg,
   }
 #endif 
 
-  free(work);
-  free(init);
+  userfree_(work);
+  userfree_(init);
 
   /* flush output unit */
   if (lrank==0) fflush(tg->fpout);
