@@ -8,14 +8,14 @@ crssemb diptaper
 
 mpi_progs = ''
 
-ccprogs = 'tmigda'
+ccprogs = 'tmigda dmigda'
 
 subs = '''
-support sembler
+hwt2d support sembler
 tmigratorBase tmigrator2D tmigrator3D 
+dmigratorBase dmigrator2D
 curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
 '''
-
 
 try:  # distributed version
     Import('env root pkgdir bindir')

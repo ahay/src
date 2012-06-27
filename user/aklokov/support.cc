@@ -23,3 +23,37 @@ Point2D& Point2D::operator= (const Point2D& point) {
 
     return *this;
 }
+
+// -- class EscapePoint ---
+
+EscapePoint::EscapePoint () : x (0.f),
+						      z (0.f),
+						      t (0.f), 
+						      p (0.f),
+						      full (false) {
+}
+
+EscapePoint::EscapePoint (float x1, float z1, float t1,  float p1, bool full1) : x (x1),
+																    z (z1),
+																    t (t1), 	
+																    p (p1),
+																    full (full1) {
+}
+
+EscapePoint::~EscapePoint () {
+
+}
+
+EscapePoint& EscapePoint::operator= (const EscapePoint& point) {
+    if (this == &point)
+        return *this;
+    x = point.x;
+    z = point.z;
+    t = point.t;
+	p = point.p;    
+	full = point.full;
+	h = point.h;
+	zodip = point.zodip;
+
+    return *this;
+}

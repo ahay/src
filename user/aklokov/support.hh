@@ -21,6 +21,24 @@ private:
     float y_;
 };
 
+class EscapePoint {
+public:
+    EscapePoint ();
+    EscapePoint (float x, float z, float t, float p, bool full);
+   ~EscapePoint ();
+
+    EscapePoint& operator= (const EscapePoint& point);
+	
+	float z;
+	float x;
+	float t;
+	float p;
+	float h;
+	float zodip;
+	bool full;
+};
+
+
 struct RunParamsTmigda {
 
 
@@ -76,6 +94,10 @@ struct GatherParams {
     int   dipNum;
     float dipStart;
     float dipStep; 
+
+    int   scatNum;
+    float scatStart;
+    float scatStep; 
 
     int   sdipNum;
     float sdipStart;
