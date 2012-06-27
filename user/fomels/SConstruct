@@ -16,8 +16,8 @@ planesignoi pmshape2 predict pwd pwcoh pwdix pwdsigk pwdsmooth2
 pwpaint pwpaint2 pwpaint3 pwspray pwspray2 pwspray3 regr rdiv reshape
 riesz rsin seislet seisigk semblance shape shapeagc shapesigk shearer
 shift1 similarity simenv smoothderw smoothreg taupfit thin timecont
-timefreq timeshift tomo trace2 trismooth2 tristack twodip2 twofreq2
-velcon velinv vofzperm warp1 warpadd warpscan zero ztrace
+timefreq timeshift tomo trace2 trismooth2 tristack tristack2 twodip2
+twofreq2 velcon velinv vofzperm warp1 warpadd warpscan zero ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'

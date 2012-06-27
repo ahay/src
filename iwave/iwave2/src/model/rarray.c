@@ -966,7 +966,7 @@ int ra_setoverlap(RARR *arr1, RARR *arr2)
 
 int ra_zero(RARR * a) {
 
-  int i;
+//  int i;
   IPNT li;         // counter
   IPNT n,n0;   // sizes
   
