@@ -31,10 +31,10 @@ plotcol=par.string("plotcol", "0,1,2,3,4,5,6,7")
 dash=par.string("dash", "0") 
 # dash styles \n 0	solid line \n 1	dash line \n 2	dotted line \n 3	dash dot
 symbol=par.string("symbol", None) # mark symbols
-legends=par.string("legend", ",") # legends
+legends=par.string("legend", ":") # legends
 plotcol=plotcol.split(',')
 dash=dash.split(',')
-legends=legends.split(',')
+legends=legends.split(':')
 if symbol != None:
 	symbol=symbol.split(',')
 

@@ -76,9 +76,12 @@ static void fdip_flt1(float *in,float *out)
 	int i1;
 
 	// 0 boundary
-	*out++ = in[1] - 2.0*in[0];
-	*out++ = 1.5*in[1];
-	*out++ = 8.0*in[0] + 2.0*in[1];
+//	*out++ = in[1] - 2.0*in[0];
+//	*out++ = 1.5*in[1];
+//	*out++ = 8.0*in[0] + 2.0*in[1];
+	*out++ = 0.0;
+	*out++ = 0.0;
+	*out++ = 0.0;
 	in++;
 	for(i1=1;i1<n1-1;i1++,in++)
 	{
@@ -87,9 +90,12 @@ static void fdip_flt1(float *in,float *out)
 		*out++ = 2.0* (in[-1] + 4.0*in[0] + in[1]);
 	}
 	// n1 boundary
-	*out++ = in[-1] - 2.0*in[0];
-	*out++ = -1.5*in[-1];
-	*out++ = 8.0*in[0] + 2.0*in[-1];
+	*out++ = 0.0;
+	*out++ = 0.0;
+	*out++ = 0.0;
+//	*out++ = in[-1] - 2.0*in[0];
+//	*out++ = -1.5*in[-1];
+//	*out++ = 8.0*in[0] + 2.0*in[-1];
 	in++;
 }
 
