@@ -95,6 +95,8 @@ Creates parameter array (STORAGE ALLOCATION) from file
 int ps_createfile(PARARRAY *parr, const char *filename);
 /** 
 Creates parameter array (STORAGE ALLOCATION) from command-line argument list
+NOTE: if "par" is amongst keys, create additional parameters (key=value pairs) 
+from file whose name is value for "par".
 @param[out] parr (PARARRAY *) - param array created on successful return
 @param[in] argc (int) - arg count
 @param[in] argv (char**) - arg array
