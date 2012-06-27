@@ -21,13 +21,13 @@ int traceterm_construct(TRACE_TERM * tr,
   dfile=NULL;
   /* 09.12.09: added keys as parameters; data key must always be non-void
      string, but hdr key may not be */
-  if (hdrkey) ps_ffcstring(*par,hdrkey,&hfile);
+  if (hdrkey) ps_flcstring(*par,hdrkey,&hfile);
   if (!datakey) {
     fprintf(stream,"ERROR: traceterm_construct\n");
     fprintf(stream,"data key is null string");
     return E_FILE;
   }
-  ps_ffcstring(*par,datakey,&dfile);
+  ps_flcstring(*par,datakey,&dfile);
 
   /* major change for this edition: if just a datafile name is given, then
      the header and data files are presumed to be the same, and the data file
@@ -38,7 +38,7 @@ int traceterm_construct(TRACE_TERM * tr,
     return E_FILE;
   }
   if (!hfile) {
-    hfile=(char *)malloc(sizeof(char)*(strlen(dfile)+1));
+    hfile=(char *)usermalloc_(sizeof(char)*(strlen(dfile)+1));
     strcpy(hfile,dfile);
   }
   /*
@@ -52,8 +52,8 @@ int traceterm_construct(TRACE_TERM * tr,
   
   /*  fprintf(stderr,"return from construct_tracegeom\n");*/
   
-  if (hfile) free(hfile);
-  if (dfile) free(dfile);
+  if (hfile) userfree_(hfile);
+  if (dfile) userfree_(dfile);
   if (err) {
     fprintf(stream,"ERROR: traceterm_construct\n");
     fprintf(stream,"return from construct_tracegeom with err=%d\n",err);
@@ -62,7 +62,7 @@ int traceterm_construct(TRACE_TERM * tr,
     
   /* read sampling order */
   tr->order=0;
-  ps_ffint(*par,"sampord",&(tr->order));
+  ps_flint(*par,"sampord",&(tr->order));
 
   /* record load flag */
   tr->load=load;
@@ -108,8 +108,8 @@ int traceterm_init(TRACE_TERM * tr,
   get_ord(axord,m->g);
 
   /* user overrides */
-  ps_ffint(*par,"nt",&usernt);
-  ps_ffreal(*par,"t0",&usert0);
+  ps_flint(*par,"nt",&usernt);
+  ps_flreal(*par,"t0",&usert0);
   
   /*fprintf(stream,"traceterm_init -> init_tracegeom, dt = %e\n",m->tsind.dt);*/
   

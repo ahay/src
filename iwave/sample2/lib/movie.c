@@ -25,13 +25,13 @@ int movie_init(MOVIE * mt,
       fprintf(stream,"ERROR: movie_init from snprintf\n");
       return E_ALLOC;
     }
-    if (!ps_ffcstring(*par,key,&(fname))) {
+    if (!ps_flcstring(*par,key,&(fname))) {
       mt->imovie[mt->nmovie]=mt->iselect(fname);
       if (mt->imovie[mt->nmovie] < 0) {
 	fprintf(stream,"NOTE: movie_init: key %s does not correspond to legit field, so no movie\n",fname);
       }
       else {
-	mt->smovie[mt->nmovie] = (char *)malloc(sizeof(char)*(KEYLEN+strlen(fname)));
+	mt->smovie[mt->nmovie] = (char *)usermalloc_(sizeof(char)*(KEYLEN+strlen(fname)));
 	strcpy(mt->smovie[mt->nmovie],"movie_");
 	strcat(mt->smovie[mt->nmovie],fname);
 	strcat(mt->smovie[mt->nmovie],".rsf");
@@ -57,10 +57,10 @@ int movie_init(MOVIE * mt,
   mt->slice3d = 0;
   dt=DEFSTEP*tg->dt;
 
-  ps_ffreal(*par, "moviestep", &dt);
+  ps_flreal(*par, "moviestep", &dt);
   if (m->g.dim>2) {
-    ps_ffint(*par, "movieaxis3D",&(mt->dim3d));
-    ps_ffreal(*par, "movieslice3D",&slice);
+    ps_flint(*par, "movieaxis3D",&(mt->dim3d));
+    ps_flreal(*par, "movieslice3D",&slice);
   }
 
   /* sanity check - note that if */
@@ -74,7 +74,7 @@ int movie_init(MOVIE * mt,
 
   /* if step<=0 then no movie - clean up */
   if (mt->framestep<1) {
-    for (i=0;i<mt->nmovie;i++) free(mt->smovie[i]);
+    for (i=0;i<mt->nmovie;i++) userfree_(mt->smovie[i]);
     mt->nmovie=0;
     return 0;
   }
@@ -94,7 +94,7 @@ int movie_init(MOVIE * mt,
   else
     mt->framestart = (int)(((tg->t0)/m->tsind.dt)+0.1);
   
-  mt->hname=malloc(10);
+  mt->hname=usermalloc_(10);
   strcpy(mt->hname,"./");
 
   /* compute next step */
@@ -146,7 +146,7 @@ int movie_init(MOVIE * mt,
   /* compute length of each frame, create null buffer */
   ntot=1;
   for (j=0;j<(mt->mg).dim-1;j++) ntot *= (mt->mg).axes[j].n;
-  buf = (float *)malloc(ntot*sizeof(float));
+  buf = (float *)usermalloc_(ntot*sizeof(float));
   memset(buf,0,ntot*sizeof(float));
 
   /* write out the header, data files (latter initialized to zero) */
@@ -178,7 +178,7 @@ int movie_init(MOVIE * mt,
 
     fprintf(fp,"data_format=native_float\n");
     fprintf(fp,"scale=0\n");
-    fname=(char *)malloc(strlen(mt->smovie[i])+10);
+    fname=(char *)usermalloc_(strlen(mt->smovie[i])+10);
     strcpy(fname,mt->smovie[i]);
     strcat(fname,"@");
     fprintf(fp,"in=%s\n",fname);
@@ -219,10 +219,10 @@ int movie_init(MOVIE * mt,
     fclose(fp);
 #endif
     
-    free(fname);
+    userfree_(fname);
   }
 
-  free(buf);
+  userfree_(buf);
  
   return 0;
 }
@@ -321,7 +321,7 @@ int movie_run(MOVIE * mt,
     }
     /* otherwise must copy data to buffer first */
     else if (mt->dim3d==1) {
-      if (!mt->buf) mt->buf=(ireal *)malloc(mt->maxslice*sizeof(ireal));
+      if (!mt->buf) mt->buf=(ireal *)usermalloc_(mt->maxslice*sizeof(ireal));
       for (i=0;i<n[2];i++) {
 	for (k=0;i<n[0];i++) {
 	  (mt->buf)[k+i*n[0]]=aptr[k+mt->slice3d*n[0]+i*n[0]*n[1]];
@@ -330,7 +330,7 @@ int movie_run(MOVIE * mt,
     }
     /* mt->dim3d=0 */
     else { 
-      if (!mt->buf) mt->buf=(ireal *)malloc(mt->maxslice*sizeof(ireal));      
+      if (!mt->buf) mt->buf=(ireal *)usermalloc_(mt->maxslice*sizeof(ireal));      
       for (i=0;i<n[2];i++) {
 	for (k=0;k<n[1];k++) {
 	  (mt->buf)[k+i*n[1]]=aptr[mt->slice3d+k*n[0]+i*n[0]*n[1]];
@@ -372,11 +372,11 @@ int movie_setnull(MOVIE * mt) {
 
 int movie_destroy(MOVIE * mt) {
   int i;
-  if (mt->hname) free(mt->hname);
+  if (mt->hname) userfree_(mt->hname);
   for (i=0;i<mt->nmovie;i++) {
-    if (mt->smovie[i]) free(mt->smovie[i]);
+    if (mt->smovie[i]) userfree_(mt->smovie[i]);
   }
-  if (mt->buf) free(mt->buf);
+  if (mt->buf) userfree_(mt->buf);
   movie_setnull(mt);
   return 0;
 }
