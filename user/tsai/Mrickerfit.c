@@ -1,3 +1,7 @@
+/* Model wavelet spectrum by fitting spectral components of ricker wavelet.
+n is the number of components. ma1 is amplitude, ma2 is peak frequency.
+ */
+
 /*
   Copyright (C) 2011 University of Texas at Austin
   
