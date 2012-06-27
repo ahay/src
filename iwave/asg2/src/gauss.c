@@ -63,7 +63,7 @@ ireal * igetgauss(int * iw, ireal dt, ireal fpeak) {
   int i;
   ireal * f = NULL;
   *iw = 1+(int)(1.2/(fpeak*dt)+0.1);
-  f = (ireal *)malloc((2*(*iw)+1)*sizeof(ireal));
+  f = (ireal *)usermalloc_((2*(*iw)+1)*sizeof(ireal));
   if (f) {
     for (i=-*iw;i<*iw+1;i++) {
       f[i+*iw]= compgauss(i*dt,fpeak);
@@ -78,7 +78,7 @@ float * getgauss(int * iw, float dt, float fpeak) {
   int i;
   float * f = NULL;
   *iw = 1+(int)(1.2/(fpeak*dt)+0.1);
-  f = (float *)malloc((2*(*iw)+1)*sizeof(float));
+  f = (float *)usermalloc_((2*(*iw)+1)*sizeof(float));
   if (f) {
     for (i=-*iw;i<*iw+1;i++) {
       f[i+*iw]= compgauss(i*dt,fpeak);
@@ -91,7 +91,7 @@ ireal * igetdgauss(int * iw, ireal dt, ireal fpeak) {
   int i;
   ireal * f = NULL;
   *iw = 1+(int)(1.2/(fpeak*dt)+0.1);
-  f = (ireal *)malloc((2*(*iw)+1)*sizeof(ireal));
+  f = (ireal *)usermalloc_((2*(*iw)+1)*sizeof(ireal));
   if (f) {
     for (i=-*iw;i<*iw+1;i++) {
       f[i+*iw]=compdgauss(i*dt,fpeak);
@@ -104,7 +104,7 @@ float * getdgauss(int * iw, float dt, float fpeak) {
   int i;
   float * f = NULL;
   *iw = 1+(int)(1.2/(fpeak*dt)+0.1);
-  f = (float *)malloc((2*(*iw)+1)*sizeof(float));
+  f = (float *)usermalloc_((2*(*iw)+1)*sizeof(float));
   if (f) {
     for (i=-*iw;i<*iw+1;i++) {
       f[i+*iw]=compdgauss(i*dt,fpeak);
@@ -118,7 +118,7 @@ float * getrick(int * iw, float dt, float fpeak) {
   int i;
   float * f = NULL;
   *iw = 1+(int)(1.2/(fpeak*dt)+0.1);
-  f = (float *)malloc((2*(*iw)+1)*sizeof(float));
+  f = (float *)usermalloc_((2*(*iw)+1)*sizeof(float));
   if (f) {
     for (i=-*iw;i<*iw+1;i++) {
       f[i+*iw]=comprick(i*dt,fpeak);

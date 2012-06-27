@@ -44,23 +44,23 @@ int init_acoustic_geom_par(grid * _g, PARARRAY par, FILE * fp) {
   size_t kl=3;
 
   /* check for permissible velo/bulkmod keywords */  
-  ps_ffcstring(par,"kappafile",&_kappakey);
-  ps_ffcstring(par,"bulkmod",&_bmodkey);
-  ps_ffcstring(par,"velocity",&_velokey);
+  ps_flcstring(par,"kappafile",&_kappakey);
+  ps_flcstring(par,"bulkmod",&_bmodkey);
+  ps_flcstring(par,"velocity",&_velokey);
 
   if (_kappakey) {
     err=read_grid(_g,_kappakey,fp);
-    if (_kappakey) free(_kappakey);
+    if (_kappakey) userfree_(_kappakey);
     if (err) return err;
   }
   else if (_bmodkey) {
     err=read_grid(_g,_bmodkey,fp);
-    if (_bmodkey) free(_bmodkey);
+    if (_bmodkey) userfree_(_bmodkey);
     if (err) return err;
   }
   else if (_velokey) {
     err=read_grid(_g,_velokey,fp);
-    if (_velokey) free(_velokey);
+    if (_velokey) userfree_(_velokey);
     if (err) return err;
   }
   else {
@@ -69,12 +69,12 @@ int init_acoustic_geom_par(grid * _g, PARARRAY par, FILE * fp) {
     for (i=0;i<RARR_MAX_NDIM;i++) {
       snprintf(key,kl,"n%d",i+1);
       tmp=1;
-      ps_ffint(par,key,&tmp);
+      ps_flint(par,key,&tmp);
       _g->axes[i].n=tmp;
       snprintf(key,kl,"d%d",i+1);
-      if (ps_ffreal(par,key,&(_g->axes[i].d))) _g->axes[i].d=1.0;
+      if (ps_flreal(par,key,&(_g->axes[i].d))) _g->axes[i].d=1.0;
       snprintf(key,kl,"o%d",i+1);
-      if (ps_ffreal(par,key,&(_g->axes[i].o))) _g->axes[i].o=0.0;
+      if (ps_flreal(par,key,&(_g->axes[i].o))) _g->axes[i].o=0.0;
       /* determine dim by finding least axis index with n>1 */
       if (_g->axes[i].n>1) _g->dim=iwave_max(_g->dim,i+1);
     }
@@ -83,7 +83,7 @@ int init_acoustic_geom_par(grid * _g, PARARRAY par, FILE * fp) {
     /*    if (_g->dim > 0) { */
     if (RARR_MAX_NDIM > 0) {
       tmp=1;
-      ps_ffint(par,"z_axis",&tmp);
+      ps_flint(par,"z_axis",&tmp);
       tmp--;
       if (tmp<0 || tmp>RARR_MAX_NDIM-1) {
 	fprintf(fp,"ERROR: init_acoustic_geom\n");
@@ -96,7 +96,7 @@ int init_acoustic_geom_par(grid * _g, PARARRAY par, FILE * fp) {
     /*    if (_g->dim > 1) { */
     if (RARR_MAX_NDIM > 1) {
       tmp=2;
-      ps_ffint(par,"x_axis",&tmp);
+      ps_flint(par,"x_axis",&tmp);
       tmp--;
       if (tmp<0 || tmp>RARR_MAX_NDIM-1) {
 	fprintf(fp,"ERROR: init_acoustic_geom\n");
@@ -110,7 +110,7 @@ int init_acoustic_geom_par(grid * _g, PARARRAY par, FILE * fp) {
     /*    if (_g->dim > 2) {*/
     if (RARR_MAX_NDIM > 2) {
       tmp=3;
-      ps_ffint(par,"y_axis",&tmp);
+      ps_flint(par,"y_axis",&tmp);
       tmp--;
       if (tmp<0 || tmp>RARR_MAX_NDIM-1) {
 	fprintf(fp,"ERROR: init_acoustic_geom\n");
@@ -146,7 +146,7 @@ int sg_readcfltime(RDOM dom,
   ndim = g.dim;
   
   /*
-  ps_ffcstring(par,"mode",&mode);      
+  ps_flcstring(par,"mode",&mode);      
   */
   a = g.axes[0].d;
   
@@ -275,7 +275,7 @@ int sg_readgustime(RDOM dom,
   /* DS 04.05.09 */
   /* disabled - WWS 02.10 */
   /*
-  ps_ffcstring(par,"mode",&mode);      
+  ps_flcstring(par,"mode",&mode);      
   if (mode)
 	tmp = iwave_max( tmp, cp[0] );
   else
@@ -343,16 +343,16 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
   par=*pars;
 
   /* branch on presence of parameter dt */
-  if ( !ps_ffreal(par,"dt", dt ) ){
+  if ( !ps_flreal(par,"dt", dt ) ){
     fprintf(stream,"NOTE: sg_readtimegrid - dt=%12.4e read from param table\n", *dt);	
     fprintf(stream,"NOTE: NOT CHECKED FOR STABILITY!\n");
     return 0;
   }
 
-  if (ps_ffreal(par,"cmax",&cmax)) 
+  if (ps_flreal(par,"cmax",&cmax)) 
     fprintf(stream,"NOTE: sg_readtimegrid - using default cmax = %e\n",cmax);
   
-  if (ps_ffreal(par,"cfl",&cfl)) {
+  if (ps_flreal(par,"cfl",&cfl)) {
     fprintf(stream,"NOTE: sg_readtimegrid - using default cfl = %e\n",cfl);
   }
   else {
@@ -363,7 +363,7 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
   }
     
 	
-  ps_ffint(par,"max_step",&max_step);		
+  ps_flint(par,"max_step",&max_step);		
   if (max_step) {
     fprintf(stream,"NOTE: sg_readtimegrid - dt computed from max stable step, CFL fraction = %e\n",cfl);
     cflgus=cfl;
@@ -373,7 +373,7 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
   }
 
   /* compute max stable step, optionally scaled by cfl from table */
-  if ((err=sg_readgustime(dom,stream,&dtgus,g,cflgus,par))) {  
+  if (err=sg_readgustime(dom,stream,&dtgus,g,cflgus,par)) {  
     fprintf(stream,"\ncalled from sg_readtimegrid\n");
     return err;
   }
@@ -383,7 +383,7 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
     return 0;
   }
 
-  if ((err=sg_readcfltime(dom,stream,dt,g,cfl,cmax,par))) {  
+  if (err=sg_readcfltime(dom,stream,dt,g,cfl,cmax,par)) {  
     fprintf(stream,"\ncalled from sg_readtimegrid\n");
     return err;
   }
@@ -496,16 +496,16 @@ int sg_readmedia(RDOM dom,
 
   /* SANITY CHECK MOVED TO SINGLE BOYANCY - I&T 03/05 */
   
-  if (ps_ffreal(par,"cmax",&cmax)) 
+  if (ps_flreal(par,"cmax",&cmax)) 
     fprintf(stream,"NOTE: sg_readmedia - using default max velocity = %e\n",cmax);
 
-  if (ps_ffreal(par,"cmin",&cmin)) 
+  if (ps_flreal(par,"cmin",&cmin)) 
     fprintf(stream,"NOTE: sg_readmedia - using default min velocity = %e\n",cmin);
 
-  if (ps_ffreal(par,"dmax",&dmax)) 
+  if (ps_flreal(par,"dmax",&dmax)) 
     fprintf(stream,"NOTE: sg_readmedia - using default max density = %e\n",dmax);
 
-  if (ps_ffreal(par,"dmin",&dmin)) 
+  if (ps_flreal(par,"dmin",&dmin)) 
     fprintf(stream,"NOTE: sg_readmedia - using default min density = %e\n",dmin);
 
   /* set limits for bulk mod, buoyancy */
@@ -515,8 +515,8 @@ int sg_readmedia(RDOM dom,
   bmin=REAL_ONE/dmax;
 
   /* reference values - first set defaults */
-  if ((err=set_default_material_params(&refkappa,
-				       &refbuoy))) {
+  if (err=set_default_material_params(&refkappa,
+				      &refbuoy)) {
     fprintf(stream,"ERROR: sg_readmedia from set_default\n");
     fprintf(stream,"SEAM units not set properly\n");
     return err;
@@ -528,10 +528,10 @@ int sg_readmedia(RDOM dom,
   /* detect which parameters are provided */
   refvel=REAL_ZERO;
   refden=REAL_ZERO;
-  is_kap=(!ps_ffreal(par,"refkappa",&refkappa) &&(refkappa > REAL_EPS));
-  is_bou=(!ps_ffreal(par,"refbuoy",&refbuoy) && (refbuoy > REAL_EPS));
-  is_vel=(!ps_ffreal(par,"refvel",&refvel) && (refvel > REAL_EPS));
-  is_den=(!ps_ffreal(par,"refden",&refden) && (refden > REAL_EPS));
+  is_kap=(!ps_flreal(par,"refkappa",&refkappa) &&(refkappa > REAL_EPS));
+  is_bou=(!ps_flreal(par,"refbuoy",&refbuoy) && (refbuoy > REAL_EPS));
+  is_vel=(!ps_flreal(par,"refvel",&refvel) && (refvel > REAL_EPS));
+  is_den=(!ps_flreal(par,"refden",&refden) && (refden > REAL_EPS));
   /* if buoyancy is not in param list, but either density or velocity 
      are, then compute - otherwise use default value */
   if (!is_bou) {
@@ -567,10 +567,10 @@ int sg_readmedia(RDOM dom,
   /* FILE I/O SECTION */
 
   /* read bulkmod or velocity into D_MP0 - flag velocity */
-  if (!ps_ffcstring(par,"kappa", &kappakey) ) {
-    if (!ps_ffcstring(par,"bulkmod", &bulkkey)) {
-      free(kappakey);
-      free(bulkkey);
+  if (!ps_flcstring(par,"kappa", &kappakey) ) {
+    if (!ps_flcstring(par,"bulkmod", &bulkkey)) {
+      userfree_(kappakey);
+      userfree_(bulkkey);
       fprintf(stream,
 	      "ERROR: sg_readmedia from ra_rsfread: both kappa and bulkmod"
 	      " are supplied (ambiguity)\n");
@@ -578,7 +578,7 @@ int sg_readmedia(RDOM dom,
     }
 		  
     err=rsfread(dom._s[D_MP0]._s0,rags,ran,kappakey,1,stream, panelindex);
-    free(kappakey);
+    userfree_(kappakey);
     if (err) {
       fprintf(stream,"ERROR: sg_readmedia from ra_rsfread - kappa\n");
       return err;
@@ -599,9 +599,9 @@ int sg_readmedia(RDOM dom,
       return E_OTHER;
     }
   }
-  else if (!ps_ffcstring(par,"bulkmod", &bulkkey)) {
+  else if (!ps_flcstring(par,"bulkmod", &bulkkey)) {
     err=rsfread(dom._s[D_MP0]._s0,rags,ran,bulkkey,1,stream,panelindex);
-    free(bulkkey);
+    userfree_(bulkkey);
     if (err) {
       fprintf(stream,"ERROR: sg_readmedia from ra_rsfread - bulkmod\n");
       return err;
@@ -622,13 +622,13 @@ int sg_readmedia(RDOM dom,
       return E_OTHER;
     }
   }
-  else if (!ps_ffcstring(par,"velocity",&velokey)) {
+  else if (!ps_flcstring(par,"velocity",&velokey)) {
     fprintf(stream,"sg_readmedia -> rsfread velo\n");
     fflush(stream);
     err=rsfread(dom._s[D_MP0]._s0,rags,ran,velokey,1,stream,panelindex);
     fprintf(stream,"sg_readmedia <- rsfread velo\n");
     fflush(stream);
-    free(velokey);
+    userfree_(velokey);
     veloflag = 1;
     if (err) {
       fprintf(stream,"ERROR: sg_readmedia from ra_rsfread - velocity\n");
@@ -669,7 +669,7 @@ int sg_readmedia(RDOM dom,
     strcat(dn,dg);
     strcat(rh,dg);
 
-    if (!ps_ffcstring(par,bn,&buoykey)) {
+    if (!ps_flcstring(par,bn,&buoykey)) {
       if (veloflag) {
 	fprintf(stream,"ERROR: sg_readmedia\n");
 	fprintf(stream,
@@ -681,7 +681,7 @@ int sg_readmedia(RDOM dom,
       rd_size(&dom,D_MV[i],ran);
       rd_gse(&dom,D_MV[i],rags,rage);
       err = rsfread(dom._s[D_MV[i]]._s0,rags,ran,buoykey,1,stream,panelindex);
-      free(buoykey);
+      userfree_(buoykey);
       if (err) {
 	fprintf(stream,
 		"ERROR: sg_readmedia from ra_rsfread - buoykey=%s\n",buoykey);
@@ -703,8 +703,8 @@ int sg_readmedia(RDOM dom,
       }
 
     }
-    else if ((!ps_ffcstring(par,dn,&rhokey)) || 
-	     (!ps_ffcstring(par,rh,&rhokey))) {  /* TODO: Memory leak in rhokey here !!!!!! */
+    else if ((!ps_flcstring(par,dn,&rhokey)) || 
+	     (!ps_flcstring(par,rh,&rhokey))) {  /* TODO: Memory leak in rhokey here !!!!!! */
       if (veloflag) {
 	fprintf(stream,"ERROR: sg_readmedia\n");
 	fprintf(stream,
@@ -715,7 +715,7 @@ int sg_readmedia(RDOM dom,
       rd_size(&dom,D_MV[i],ran);
       rd_gse(&dom,D_MV[i],rags,rage);
       err=rsfread(dom._s[D_MV[i]]._s0,rags,ran,rhokey,1,stream,panelindex);
-      free(rhokey);
+      userfree_(rhokey);
       if (err) {
 	fprintf(stream,
 		"ERROR: sg_readmedia from ra_rsfread - rhokey=%s\n",rhokey);
@@ -780,7 +780,7 @@ int sg_readmedia(RDOM dom,
     buoykey=NULL;
     rhokey=NULL;
 
-    if (!ps_ffcstring(par,"buoyancy",&buoykey)) {
+    if (!ps_flcstring(par,"buoyancy",&buoykey)) {
       err=rsfread(Btmp._s,rags,ran,buoykey,1,stream,panelindex);
       if (err) {
 	fprintf(stream,
@@ -828,8 +828,8 @@ int sg_readmedia(RDOM dom,
       }	  
     }
     
-    else if ((!ps_ffcstring(par,"density",&rhokey)) || 
-	     (!ps_ffcstring(par,"rho",&rhokey))) {
+    else if ((!ps_flcstring(par,"density",&rhokey)) || 
+	     (!ps_flcstring(par,"rho",&rhokey))) {
       fprintf(stream,"sg_readmedia -> rsfread dens\n");
       fflush(stream);
       err=rsfread(Btmp._s,rags,ran,rhokey,1,stream,panelindex);
@@ -952,12 +952,12 @@ static int sgn_setetas(PARARRAY *pars, FILE *stream, IMODEL *model) {
   ndim = model->g.dim;
 
   /* read cmax -------------------------------------------------------------*/
-  if ( ps_ffreal(*pars, "cmax", &cmax) ) 
+  if ( ps_flreal(*pars, "cmax", &cmax) ) 
     fprintf(stream,"NOTE: sgn_setetas - using default cmax = %e\n",cmax);
 
   /* read pml amplitude ----------------------------------------------------*/
   pmlampl = 1.5 * log(1000.0);
-  if ( ps_ffreal(*pars,"npml_ampl", &pmlampl) )
+  if ( ps_flreal(*pars,"npml_ampl", &pmlampl) )
     fprintf(stream, "NOTE. Cannot read npml_ampl. Default = %g.\n",  pmlampl);
   else
     fprintf(stream, "NOTE. Eta multiplier nplm_ampl = %g.\n", pmlampl);
@@ -1058,10 +1058,10 @@ int asg_readpmlgrid(IPNT nl, IPNT nr,
   char key[30];
   size_t kl=4;
 
-  if (ps_ffreal(par,"fpeak",&fpeak))
+  if (ps_flreal(par,"fpeak",&fpeak))
     fprintf(stream,"NOTE: sgn_readpmlgrid - using default fpeak = %e\n",fpeak);
 
-  if (ps_ffreal(par,"cmax",&cmax)) 
+  if (ps_flreal(par,"cmax",&cmax)) 
     fprintf(stream,"NOTE: sgn_readpmlgrid - using default cmax = %e\n",cmax);
 
   for (idim=0; idim<ndim; idim++ ) {
@@ -1071,12 +1071,12 @@ int asg_readpmlgrid(IPNT nl, IPNT nr,
 	  }
     snprintf(key,kl,"nl%d",idim+1);
     tmp=0.0;
-    ps_ffreal(par, key, &tmp);
+    ps_flreal(par, key, &tmp);
 
     nl[idim]=iwave_max(0,(int)((ceil)(tmp*cmax/(fpeak*dx[idim]))));
     snprintf(key,kl,"nr%d",idim+1);
     tmp=0.0;
-    ps_ffreal(par,key,&tmp);
+    ps_flreal(par,key,&tmp);
     nr[idim]=iwave_max(0,(int)((ceil)(tmp*cmax/(fpeak*dx[idim]))));
   }
   return 0;
@@ -1116,7 +1116,7 @@ int asg_readgrid(PARARRAY * pars,
   
   /* read physical grid parameters from bulk modulus or velocity
      grid, or from parameter file */
-  if ((err=init_acoustic_geom_par(&(model->g),*pars,stream))) {
+  if (err=init_acoustic_geom_par(&(model->g),*pars,stream)) {
     fprintf(stream,"Error: could not read grid parameters\n");
     return err;
   }

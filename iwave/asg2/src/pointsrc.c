@@ -291,7 +291,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 
   /* read sampling order */
   tr->order = 0;
-  ps_ffint(*par, "sampord", &(tr->order));
+  ps_flint(*par, "sampord", &(tr->order));
 
   /* either read from file, or it's a gaussian */
   tr->fpsrc = NULL;
@@ -355,7 +355,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
   sz = retrieveSize();
   cm = retrieveComm();
   if ( rk == 0 ) {
-    procbuf = (ireal*)malloc(sz * sizeof(ireal));
+    procbuf = (ireal*)usermalloc_(sz * sizeof(ireal));
     if ( procbuf == NULL ) return E_ALLOC;
   }
   MPI_Gather(&refkappa, 1, IWAVE_MPI_REAL, procbuf, 1, IWAVE_MPI_REAL, 0, cm);
@@ -396,7 +396,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
      source is located in homogeneous region.
   */
   
-  if (ps_ffreal(*par,"refvel",&refvel)) {  
+  if (ps_flreal(*par,"refvel",&refvel)) {  
 
     /* compute velocity from buoyancy and bulk modulus */
 
@@ -412,7 +412,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
   }
 
   /* Either read reference distance from parameters, or use default. */
-  ps_ffreal(*par,"refdist",&refdist);
+  ps_flreal(*par,"refdist",&refdist);
   if (refdist>0) {
     fprintf(stream,"NOTE: in pointsrc, using reference distance = %e\n", refdist);
   }
@@ -425,12 +425,12 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 
   /* Either read reference amplitude from parameters, or use default. */
   
-  ps_ffreal(*par,"refamp",&refamp);
+  ps_flreal(*par,"refamp",&refamp);
   fprintf(stream,"NOTE: in pointsrc, using reference amplitude = %e\n", refamp);
 
   /* read peak frequency from parameters, or use default (only used in
      Gaussian option II) */
-  if (ps_ffreal(*par,"fpeak", &fpeak)) {
+  if (ps_flreal(*par,"fpeak", &fpeak)) {
     fprintf(stream,"NOTE: pointsrc_init - using default ");
     fprintf(stream,"peak frequency (fpeak) = %e\n",fpeak);
   }
@@ -458,7 +458,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 
   /* Option I: read source from file */
 
-  if (!ps_ffcstring(*par,"source", &srcfile))  {
+  if (!ps_flcstring(*par,"source", &srcfile))  {
     if (!(tr->fpsrc = iwave_const_fopen(srcfile, "r",NULL,stream))) {
       fprintf(stream, "Error: pointsrc_init - failed to open source file\n");
       return E_FILE;
@@ -496,18 +496,18 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
     /* ext src array length set to number of samples from istart
        to max time */
     tr->n = (int)(tmax/((m->tsind).dt)) + 1 - tr->istart;
-    tr->w = (ireal *)malloc(sizeof(ireal)*(tr->n));
+    tr->w = (ireal *)usermalloc_(sizeof(ireal)*(tr->n));
     
     /* allocate buffer for integrated wavelet 
        at input sample rate */
     lnt  = (int)(tr->n * ((m->tsind).dt) / tmpdt) + 1;
-    resc = (ireal *)malloc(sizeof(ireal) * lnt);
+    resc = (ireal *)usermalloc_(sizeof(ireal) * lnt);
     for (i = 0; i < tmpnt; i++) resc[i] = trsrc.data[i];
     for (i = tmpnt; i < lnt; i++) resc[i] = trsrc.data[tmpnt-1];
 
     /* interpolation workspace */
     wl = cubic_getworksize(lnt);
-    wk=(ireal *)malloc(sizeof(ireal) * wl);
+    wk=(ireal *)usermalloc_(sizeof(ireal) * wl);
     if (!wk) return E_ALLOC;
     
     /* Option Ia: normalize to produce propagating wavelet at distance
@@ -534,7 +534,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
       
       tdt = (ireal)((m->tsind).dt);
       /* interpolate */
-      if ((err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w, &(tr->n), &iend,wk,&wl))) {
+      if (err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w, &(tr->n), &iend,wk,&wl)) {
 	fprintf(stream,"Error: pointsrc_init - from cubic\n");
 	return err;
       }
@@ -548,16 +548,16 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
       tdt = (ireal)((m->tsind).dt);
 
       /* interpolate */
-      if ((err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w,&(tr->n),&iend,wk,&wl))) {
+      if (err=cubic_(&tmpt0, &tmpdt, resc, &lnt, &t0, &(tdt), tr->w,&(tr->n),&iend,wk,&wl)) {
 	fprintf(stream,"Error: pointsrc_init - from cubic\n");
 	return err;
       }
     }
     
     /* clean up */
-    free(wk);
-    free(srcfile);
-    free(resc);
+    userfree_(wk);
+    userfree_(srcfile);
+    userfree_(resc);
   }
 
   /* Option II: create Gaussian derivative wavelet to produce Ricker
@@ -581,7 +581,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
     
     /* source phase - default is zero-phase */
     tr->istart = -iw;
-    if (!ps_ffcstring(*par,"waveletphase",&wp)) {
+    if (!ps_flcstring(*par,"waveletphase",&wp)) {
       if (!strcmp(wp,"zerophase")) tr->istart=-iw;
       else if (!strcmp(wp,"causal")) tr->istart=0;
       else if (!strcmp(wp,"anticausal")) tr->istart=-2*iw;
@@ -591,13 +591,13 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 	fprintf(stream,"zerophase, causal, anticausal\n");
 	return E_OTHER;
       }
-      free(wp);
+      userfree_(wp);
     }
   }
 
   /* optionally write out wavelet appearing on RHS */
   tr->idbg = 0;
-  ps_ffint(*par, "dump_wavelet", &(tr->idbg));
+  ps_flint(*par, "dump_wavelet", &(tr->idbg));
 
   if (tr->idbg) {
     memcpy(trdbg.data,tr->w,tr->n*sizeof(ireal));
@@ -625,7 +625,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 }
 
 int pointsrc_destroy(POINTSRC * tr) {
-  if (tr->w)       free(tr->w); 
+  if (tr->w)       userfree_(tr->w); 
   if ( tr->fpsrc ) iwave_fclose(tr->fpsrc);
   if ( tr->fpdbg ) iwave_fclose(tr->fpdbg);
   return 0;

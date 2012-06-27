@@ -8,17 +8,17 @@
  *                            BEGIN INCLUDES 
  * ============================================================================*/
 
-#include <iwave.h>
-#include <sgn.h>
-#include <trace_term.h>
-#include <pointsrc.h>
-#include <sampler.h>
-#include <parser.h>
-#include <asg_selfdoc.h>
-#include <asg_movie.h>
+#include "iwave.h"
+#include "sgn.h"
+#include "trace_term.h"
+#include "pointsrc.h"
+#include "sampler.h"
+#include "parser.h"
+#include "asg_selfdoc.h"
+#include "asg_movie.h"
 
 #ifdef _OPENMP
-#include <omp.h>
+#include "omp.h"
 #endif
 
 #define NSTR 128
@@ -26,8 +26,8 @@
 //#define IWAVE_EXTEND_MODEL
 
 /* uncomment to write to the rk-dep output stream at every major step 
-   #define VERBOSE
 */
+//#define VERBOSE
 
 /* uncomment to write to the rk-dep output stream at every time step 
    #define VERBOSE_STEP
@@ -41,7 +41,7 @@ int main(int argc, char ** argv) {
   int err=0;               /* error flag         */
   int runflag=1;           /* run time loop if 1 */
   FILE * stream;           /* output stream      */
-  PARARRAY pars;           /* parameter array    */
+  PARARRAY * pars;           /* parameter array    */
   IWAVE state;             /* model state        */
   SAMPLER trace;           /* trace sampler      */
   POINTSRC * ptsrc=NULL;   /* acoustic pt src    */
@@ -60,7 +60,7 @@ int main(int argc, char ** argv) {
   RPNT smult;              /* multiplier array   */
   RPNT scoord;             /* source cell loc    */
   int dump_term=0;         /* trace info dump    */
-  int istart=0;            /* start index        */
+  int istart;              /* start index        */
   int ts;                  /* thread support lvl */
   int rk;                  /* process rank       */
 
@@ -89,33 +89,28 @@ int main(int argc, char ** argv) {
 #ifdef VERBOSE
 #ifdef IWAVE_USE_MPI
   if (rk==0) {
-#endif
     fprintf(stderr,"Global MPI_Comm_size = %d\n",retrieveGlobalSize());
-    fprintf(stderr,"initoutstream\n");
-#ifdef IWAVE_USE_MPI
   }
 #endif
+  fprintf(stderr,"initoutstream\n");
 #endif
 
   err=initoutstream(&stream,retrieveGlobalRank(),retrieveGlobalSize());
   if (err) {
     fprintf(stderr,"ERROR: main from initoutstream. ABORT\n");
-    abortexit(err,&pars,&stream);
+    abortexit(err,pars,&stream);
   }
 
 #ifdef VERBOSE
   fprintf(stream,"readinput\n");
   fflush(stream);
 #endif
-  err=readinput(&pars,stream,argc,argv);
-  if (err) {
-    fprintf(stderr,"ERROR: main from readinput. ABORT\n");
-    abortexit(err,&pars,&stream);
-  }
+
+  readinput(&pars,stream,argc,argv);
 
 #ifdef VERBOSE
   fprintf(stream,"paramtable:\n");
-  ps_printall(pars,stream);
+  ps_printall(*pars,stream);
   fflush(stream);
 #endif
 
@@ -123,7 +118,7 @@ int main(int argc, char ** argv) {
   fprintf(stream,"initparallel_local \n");
   fflush(stream);
 #endif
-  initparallel_local(pars,stream);
+  initparallel_local(*pars,stream);
 
   /*******************************************************************
    ****************** INITIALIZE PARALLEL ENVIRONMENT ****************
@@ -145,11 +140,11 @@ int main(int argc, char ** argv) {
     strcpy(srckey,"source");
 
     /* extract trace sampler verbosity flag */
-    ps_ffint(pars,"dump_term",&dump_term);
+    ps_flint(*pars,"dump_term",&dump_term);
 
     /* extract source key - default = "point" */
-    if (ps_ffcstring(pars,"srctype",&srctype)) {
-      srctype=(char *)malloc(6*sizeof(char));
+    if (ps_flcstring(*pars,"srctype",&srctype)) {
+      srctype=(char *)usermalloc_(6*sizeof(char));
       strcpy(srctype,"point");
     }
 
@@ -159,11 +154,11 @@ int main(int argc, char ** argv) {
     fflush(stream);
 #endif
 
-    err=iwave_construct(&state,&pars,stream,&asg_modelinit);
+    err=iwave_construct(&state,pars,stream,&asg_modelinit);
     if (err) {
       fprintf(stream,"ERROR: main from iwave_construct. ABORT\n");
       iwave_destroy(&state);
-      abortexit(err,&pars,&stream);
+      abortexit(err,pars,&stream);
     }
 
 #ifdef VERBOSE
@@ -171,7 +166,7 @@ int main(int argc, char ** argv) {
     fflush(stream);
 #endif
 
-    iwave_printf(&state,&pars,stream);
+    iwave_printf(&state,pars,stream);
 
 #ifdef VERBOSE
     fprintf(stream,"data sampler\n");
@@ -184,16 +179,16 @@ int main(int argc, char ** argv) {
       fprintf(stream,"ERROR: main - model dim not sensible. ABORT\n");
       err=E_BADINPUT;
       iwave_destroy(&state);
-      abortexit(err,&pars,&stream);
+      abortexit(err,pars,&stream);
     }      
     for (i=0;i<RARR_MAX_NDIM;i++) tmult[i]=REAL_ONE/((ireal)(state.model.g.dim));
     RASN(scoord,RPNT_0);
   
     /* construct traceterm object */
-    err=sampler_construct(&trace,&pars,tindex,tmult,scoord,0,hdrkey,datakey,stream);
+    err=sampler_construct(&trace,pars,tindex,tmult,scoord,0,hdrkey,datakey,stream);
     if (err) {
       fprintf(stream,"ERROR: main from sampler_construct. ABORT\n");
-      abortexit(err,&pars,&stream);
+      abortexit(err,pars,&stream);
     }
     /* initial reassignment of source coordinates */
     RASN(scoord,trace.t.tg.src[trace.t.tg.xrec]);
@@ -206,7 +201,7 @@ int main(int argc, char ** argv) {
     err = asg_movie_construct(&mt, stream);
     if (err) {
       fprintf(stream,"ERROR: main from movie_construct. ABORT\n");
-      abortexit(err,&pars,&stream);
+      abortexit(err,pars,&stream);
     }
 
     /* postconditon: tracegeom trace.tg now equipped with 
@@ -249,21 +244,21 @@ int main(int argc, char ** argv) {
       /* iwave_static_init should succeed in record range [0,nrec) */
 #ifndef IWAVE_EXTEND_MODEL
       if (trace.t.tg.xrec == trace.t.tg.first) 
-	err = iwave_static_init(&state,&pars,stream,0);
+	err = iwave_static_init(&state,pars,stream,0);
 #else
-      err = iwave_static_init(&state,&pars,stream,trace.t.tg.xrec);
+      err = iwave_static_init(&state,pars,stream,trace.t.tg.xrec);
 #endif
       if(err){  
 	fprintf(stream,"ERROR: main from iwave_static_init, xrec = %d, err = %d. ABORT\n", trace.t.tg.xrec, err);
-	abortexit(err,&pars,&stream);
+	abortexit(err,pars,&stream);
       }
       
       /* sampler_init should succeed in record range [first,last) */
 
       //      fprint_grid(stderr,(state.model).g);
-      if (sampler_init(&trace,&(state.model),&pars,stream)) {
+      if (sampler_init(&trace,&(state.model),pars,stream)) {
 	fprintf(stream,"ERROR: main from sampler_init. ABORT\n");
-	abortexit(err,&pars,&stream);
+	abortexit(err,pars,&stream);
       }
 
       fprintf(stderr,"IWAVE::asg rkw=%d rk=%d isrc=%d\n",
@@ -280,24 +275,24 @@ int main(int argc, char ** argv) {
       fflush(stream);
 #endif	
       if (!strcmp(srctype,"point")) {
-	if (!(ptsrc=(POINTSRC *)malloc(sizeof(POINTSRC)))) {
+	if (!(ptsrc=(POINTSRC *)usermalloc_(sizeof(POINTSRC)))) {
 	  fprintf(stream,"ERROR: failed to allocate point source. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
-	err=pointsrc_init(ptsrc,&(state.model),&pars,&(trace.t.tg),stream);
+	err=pointsrc_init(ptsrc,&(state.model),pars,&(trace.t.tg),stream);
 	if (err) {
 	  fprintf(stream,"ERROR: main from pointsrc_init. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
 	if (dump_term) pointsrc_fprint(ptsrc,stream);
 	istart=ptsrc->istart;
       }
       else if (!strcmp(srctype,"array")) {
-	if (!(arrsrc=(SAMPLER *)malloc(sizeof(SAMPLER)))) {
+	if (!(arrsrc=(SAMPLER *)usermalloc_(sizeof(SAMPLER)))) {
 	  fprintf(stream,"ERROR: failed to allocate array source. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
-	ps_ffint(pars,"towed",&towed);
+	ps_flint(*pars,"towed",&towed);
 	if (!towed) {
 	  RASN(scoord,RPNT_0);
 	}
@@ -305,15 +300,15 @@ int main(int argc, char ** argv) {
 	IASN(sindex,D_P);
 	for (i=0;i<RARR_MAX_NDIM;i++) smult[i]=REAL_ONE;
 
-	err=sampler_construct(arrsrc,&pars,sindex,smult,scoord,1,NULL,srckey,stream);
+	err=sampler_construct(arrsrc,pars,sindex,smult,scoord,1,NULL,srckey,stream);
 	if (err) {
 	  fprintf(stream,"ERROR: main from sampler_construct. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
-	err=sampler_init(arrsrc,&(state.model),&pars,stream);
+	err=sampler_init(arrsrc,&(state.model),pars,stream);
 	if (err) {
 	  fprintf(stream,"ERROR: main from sampler_construct. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
 	istart=(arrsrc->t).istart;
 	if (dump_term) sampler_fprint(arrsrc,stream);
@@ -321,17 +316,17 @@ int main(int argc, char ** argv) {
       else {
 	if (srctype) fprintf(stream,"ERROR: unknown source option = %s\n",srctype);
 	else fprintf(stream,"ERROR: unknown source option\n");
-	abortexit(err,&pars,&stream);
+	abortexit(err,pars,&stream);
       }
       
 #ifdef VERBOSE
       fprintf(stream,"initialize movie\n");
       fflush(stream);
 #endif
-      err=movie_init(&mt, &(state.model), &pars, &(trace.t.tg), stream);
+      err=movie_init(&mt, &(state.model), pars, &(trace.t.tg), stream);
       if (err) {
 	fprintf(stream,"ERROR: main from movie_init. ABORT\n");
-	abortexit(err,&pars,&stream);
+	abortexit(err,pars,&stream);
       }
       if (dump_term) movie_fprint(&mt, stream);
 
@@ -348,7 +343,7 @@ int main(int argc, char ** argv) {
       fflush(stream);
 #endif
 
-      ps_ffint(pars,"run",&runflag);
+      ps_flint(*pars,"run",&runflag);
       
       /* time stepping */
       while ((state.model.tsind.it <= trace.t.istop) &&
@@ -361,7 +356,7 @@ int main(int argc, char ** argv) {
 	err=iwave_run(&state,stream);
 	if (err) {
 	  fprintf(stream,"ERROR: main from iwave_run. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
 
 #ifdef VERBOSE_STEP
@@ -373,14 +368,14 @@ int main(int argc, char ** argv) {
 	  err=pointsrc_run(ptsrc,&(state.model));
 	  if (err) {
 	    fprintf(stream,"ERROR: main from pointsrc_run. ABORT\n");
-	    abortexit(err,&pars,&stream);
+	    abortexit(err,pars,&stream);
 	  }
 	}
 	if (arrsrc) {
 	  err=sampler_run(arrsrc,&(state.model));
 	  if (err) {
 	    fprintf(stream,"ERROR: main from pointsrc_run. ABORT\n");
-	    abortexit(err,&pars,&stream);
+	    abortexit(err,pars,&stream);
 	  }
 	}
 
@@ -392,7 +387,7 @@ int main(int argc, char ** argv) {
 	err=sampler_run(&trace,&(state.model));
 	if (err) {
 	  fprintf(stream,"ERROR: main from sampler_run. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
 
 #ifdef VERBOSE_STEP
@@ -407,7 +402,7 @@ int main(int argc, char ** argv) {
 #endif
 	if (err) {
 	  fprintf(stream,"ERROR: main from movie_run. ABORT\n");
-	  abortexit(err,&pars,&stream);
+	  abortexit(err,pars,&stream);
 	}
 
 #ifdef VERBOSE_STEP
@@ -438,18 +433,18 @@ int main(int argc, char ** argv) {
 
       if (err) {
 	fprintf(stream,"ERROR: main from tracegeom::writetraces. ABORT\n");
-	abortexit(err,&pars,&stream);
+	abortexit(err,pars,&stream);
       }
 
 #ifdef VERBOSE
       fprintf(stream,"destroy source objects\n");
       fflush(stream);
 #endif
-      if (ptsrc) free(ptsrc);
-      if (arrsrc) free(arrsrc);
+      if (ptsrc) userfree_(ptsrc);
+      if (arrsrc) userfree_(arrsrc);
     }
 
-    if (srctype) free(srctype);
+    if (srctype) userfree_(srctype);
 
     /* destroy static objects and exit */
 
@@ -491,7 +486,7 @@ int main(int argc, char ** argv) {
   fflush(stream);
 #endif
 
-  quietexit(&pars,&stream);
+  quietexit(pars,&stream);
 
   exit(0);
 }
