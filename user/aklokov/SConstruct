@@ -42,14 +42,14 @@ for prog in mains:
         env.Install (bindir, prog)
 
 ccmains = Split(ccprogs)
+subs = Split(subs)
 
 for prog in ccmains:
-    sources = ['M' + prog]+Split(subs)
     if 'c++' in env.get('API',[]):
-        prog = env.Program (prog, map (lambda x: x + '.cc', sources),CCFLAGS='')
+        prog = env.Program (prog, ['M'+prog+'.cc'] + map (lambda x: x + '.o', subs),CCFLAGS='')
+        env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:
         prog = env.RSF_Place ('sf' + prog, None, var='LAPACK', package='lapack')
-    env.Depends(prog,map (lambda x: x + '.hh', Split(subs)))
     if root:
         env.Install(bindir,prog)
 ######################################################################
