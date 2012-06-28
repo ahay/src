@@ -435,7 +435,7 @@ int main (int argc, char* argv[]) {
     migrator->setImagingParams (&dp, data, rp.isAA, rp.isCMP, &vp, &ip, &gp);
     migrator->setDataLimits ();
 	migrator->wavefrontTracer_.setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
-			   									   vp.zNum, vp.xStep, vp.xStart);
+			   									   vp.xNum, vp.xStep, vp.xStart);
 	migrator->wavefrontTracer_.setParams (ttNum, ttStep, ttStart);
 
 	// read data

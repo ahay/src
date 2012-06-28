@@ -37,7 +37,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// size of dip-angle gather
 	const int dagSize = zNum * dipNum;
 	// travel-times rays number
-	const int ttNum = wavefrontTracer_.wp_.tNum;
+	const int ttNum = wavefrontTracer_.wp_.rNum;
 
 	// ACTION
 
@@ -95,7 +95,7 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 
 	const float dipStep = gp_->dipStep;
 
-	const int ttNum = wavefrontTracer_.wp_.tNum;
+	const int ttNum = wavefrontTracer_.wp_.rNum;
 
 	float baseDir = curDipAngle + 0.5 * curScatAngle;
 	const float shiftDir = 0.5 * dipStep;
@@ -171,7 +171,7 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 
 	//
 
-	int size = wavefrontTracer_.wp_.tNum;
+	int size = wavefrontTracer_.wp_.rNum;
 	float basedir = dir1 > dir2 ? dir1 : dir2;
 
 	//
