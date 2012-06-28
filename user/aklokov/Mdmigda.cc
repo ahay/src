@@ -42,7 +42,7 @@ sf_file velFile;
 sf_file imageFile;
 sf_file sembFile;
 sf_file dagFile;
-sf_file cigFile;
+sf_file acigFile;
 
 //  Causal integration of a trace[n]
 void applyCasualIntegration (float *trace, int n) {
@@ -208,7 +208,7 @@ int main (int argc, char* argv[]) {
 
     if ( NULL != sf_getstring("cig") ) {
 	/* output file containing CIGs in the surface-offset domain */ 
-	cigFile  = sf_output ("cig"); rp.isCig = true;
+	acigFile  = sf_output ("cig"); rp.isCig = true;
     } else { rp.isCig = false; }
 
     // data params
@@ -339,74 +339,73 @@ int main (int argc, char* argv[]) {
     sf_putfloat (imageFile, "d4", 1);   
     sf_putfloat (imageFile, "o1", ip.zStart); sf_putfloat (imageFile, "o2", ip.xStart); sf_putfloat (imageFile, "o3", ip.yStart);    
     sf_putfloat (imageFile, "o4", 0);   
-    sf_putstring(imageFile, "label1", "Time"); sf_putstring(imageFile, "label2", "Inline"); sf_putstring(imageFile, "label3", "Crossline");
-    sf_putstring(imageFile, "unit1", "ms"); sf_putstring(imageFile, "unit2", "m"); sf_putstring(imageFile, "unit3", "m");
+    sf_putstring(imageFile, "label1", "depth"); sf_putstring(imageFile, "label2", "inline"); sf_putstring(imageFile, "label3", "crossline");
+    sf_putstring(imageFile, "unit1", "m"); sf_putstring(imageFile, "unit2", "m"); sf_putstring(imageFile, "unit3", "m");
 
     if (rp.isCig) {
 		// angle gathers file
-    	sf_putint (cigFile, "n1", ip.zNum); sf_putint (cigFile, "n2", gp.scatNum); sf_putint (cigFile, "n3", ip.xNum); 
-		sf_putint (cigFile, "n4", ip.yNum); 
-    	sf_putfloat (cigFile, "d1", ip.zStep); sf_putfloat (cigFile, "d2", gp.scatStep); sf_putfloat (cigFile, "d3", ip.xStep);
-		sf_putfloat (cigFile, "d4", ip.yStep); 
-    	sf_putfloat (cigFile, "o1", ip.zStart); sf_putfloat (cigFile, "o2", gp.scatStart); sf_putfloat (cigFile, "o3", ip.xStart);
-		sf_putfloat (cigFile, "o4", ip.yStart);    
-		sf_putstring(cigFile, "label1", "Time"); sf_putstring(cigFile, "label2", "Scattering angle"); 
-		sf_putstring(cigFile, "label3", "Inline"); sf_putstring(cigFile, "label4", "Crossline");
-		sf_putstring(cigFile, "unit1", "ms"); sf_putstring(cigFile, "unit2", "deg"); 
-		sf_putstring(cigFile, "unit3", "m"); sf_putstring(cigFile, "unit4", "m");
+    	sf_putint (acigFile, "n1", ip.zNum); sf_putint (acigFile, "n2", gp.scatNum); sf_putint (acigFile, "n3", ip.xNum); 
+		sf_putint (acigFile, "n4", ip.yNum); 
+    	sf_putfloat (acigFile, "d1", ip.zStep); sf_putfloat (acigFile, "d2", gp.scatStep); sf_putfloat (acigFile, "d3", ip.xStep);
+		sf_putfloat (acigFile, "d4", ip.yStep); 
+    	sf_putfloat (acigFile, "o1", ip.zStart); sf_putfloat (acigFile, "o2", gp.scatStart); sf_putfloat (acigFile, "o3", ip.xStart);
+		sf_putfloat (acigFile, "o4", ip.yStart);    
+		sf_putstring(acigFile, "label1", "depth"); sf_putstring(acigFile, "label2", "scattering angle"); 
+		sf_putstring(acigFile, "label3", "inline"); sf_putstring(acigFile, "label4", "crossline");
+		sf_putstring(acigFile, "unit1", "m"); sf_putstring(acigFile, "unit2", "deg"); 
+		sf_putstring(acigFile, "unit3", "m"); sf_putstring(acigFile, "unit4", "m");
     }
 
     if (rp.isDag) {
-	// dip-angle gathers file
-	sf_putint (dagFile, "n1", ip.zNum); sf_putint (dagFile, "n2", gp.dipNum); sf_putint (dagFile, "n3", gp.sdipNum);
-	sf_putint (dagFile, "n4", ip.xNum); sf_putint (dagFile, "n5", ip.yNum);
+		// dip-angle gathers file
+		sf_putint (dagFile, "n1", ip.zNum); sf_putint (dagFile, "n2", gp.dipNum); sf_putint (dagFile, "n3", gp.sdipNum);
+		sf_putint (dagFile, "n4", ip.xNum); sf_putint (dagFile, "n5", ip.yNum);
     	sf_putfloat (dagFile, "d1", ip.zStep); sf_putfloat (dagFile, "d2", gp.dipStep); sf_putfloat (dagFile, "d3", gp.sdipStep);
-	sf_putfloat (dagFile, "d4", ip.xStep); sf_putfloat (dagFile, "d5", ip.yStep);    
+		sf_putfloat (dagFile, "d4", ip.xStep); sf_putfloat (dagFile, "d5", ip.yStep);    
     	sf_putfloat (dagFile, "o1", ip.zStart); sf_putfloat (dagFile, "o2", gp.dipStart); sf_putfloat (dagFile, "o3", gp.sdipStart);
-	sf_putfloat (dagFile, "o4", ip.xStart); sf_putfloat (dagFile, "o5", ip.yStart);    
-	sf_putstring(dagFile, "label1", "Time");
-	if (rp.isDipAz) {
-	    sf_putstring(dagFile, "label2", "Dip angle"); sf_putstring(dagFile, "label3", "Azimuth");
-	} else {
-	    sf_putstring(dagFile, "label2", "Inline slope"); sf_putstring(dagFile, "label3", "Crossline slope");
-	}
-	sf_putstring(dagFile, "label4", "Inline"); 	sf_putstring(dagFile, "label5", "Crossline");
-	sf_putstring(dagFile, "unit1", "ms"); sf_putstring(dagFile, "unit2", "deg"); sf_putstring(dagFile, "unit3", "deg");
-	sf_putstring(dagFile, "unit4", "m"); sf_putstring(dagFile, "unit5", "m");
+		sf_putfloat (dagFile, "o4", ip.xStart); sf_putfloat (dagFile, "o5", ip.yStart);    
+		sf_putstring(dagFile, "label1", "depth");
+		if (rp.isDipAz) {
+		    sf_putstring(dagFile, "label2", "dip angle"); sf_putstring(dagFile, "label3", "azimuth");
+		} else {
+		    sf_putstring(dagFile, "label2", "inline slope"); sf_putstring(dagFile, "label3", "crossline slope");
+		}
+		sf_putstring(dagFile, "label4", "inline"); 	sf_putstring(dagFile, "label5", "crossline");
+		sf_putstring(dagFile, "unit1", "m"); sf_putstring(dagFile, "unit2", "deg"); sf_putstring(dagFile, "unit3", "deg");
+		sf_putstring(dagFile, "unit4", "m"); sf_putstring(dagFile, "unit5", "m");
     }
 
     if (rp.isSemb) {
-	sf_putint (sembFile, "n1", ip.zNum); sf_putint (sembFile, "n2", ip.xNum); sf_putint (sembFile, "n3", ip.yNum); sf_putint (sembFile, "n4", 1);
+		sf_putint (sembFile, "n1", ip.zNum); sf_putint (sembFile, "n2", ip.xNum); sf_putint (sembFile, "n3", ip.yNum); sf_putint (sembFile, "n4", 1);
     	sf_putfloat (sembFile, "d1", ip.zStep); sf_putfloat (sembFile, "d2", ip.xStep); sf_putfloat (sembFile, "d3", ip.yStep); 
-	sf_putfloat (sembFile, "d4", 1);   
+		sf_putfloat (sembFile, "d4", 1);   
     	sf_putfloat (sembFile, "o1", ip.zStart); sf_putfloat (sembFile, "o2", ip.xStart); sf_putfloat (sembFile, "o3", ip.yStart);    
-	sf_putfloat (sembFile, "o4", 0);   
-	sf_putstring(sembFile, "label1", "Time"); sf_putstring (sembFile, "label2", "Inline"); sf_putstring (sembFile, "label3", "Crossline");
-	sf_putstring(sembFile, "unit1", "ms"); sf_putstring (sembFile, "unit2", "m"); sf_putstring (sembFile, "unit3", "m");
+		sf_putfloat (sembFile, "o4", 0);   
+		sf_putstring(sembFile, "label1", "depth"); sf_putstring (sembFile, "label2", "inline"); sf_putstring (sembFile, "label3", "crossline");
+		sf_putstring(sembFile, "unit1", "m"); sf_putstring (sembFile, "unit2", "m"); sf_putstring (sembFile, "unit3", "m");
     }
 
-    // dip-angle gather size
-    int dagSize = gp.zNum * gp.dipNum * gp.sdipNum;
-    const int dataSize = dp.zNum * dp.xNum * dp.yNum * dp.hNum;
-    const int velSize = vp.zNum * vp.xNum * vp.yNum;
+	// SIZES
 
-    // velocity trace
-    float** velModel = sf_floatalloc2 (vp.zNum, vp.xNum);
+    // dip-angle gather size
+    const int dataSize = dp.zNum * dp.xNum * dp.yNum * dp.hNum;
+	// dip-angle gather size
+    const int dagSize  = gp.zNum * gp.dipNum;  // * gp.sdipNum; - for 3D migration
+	// scattering-angle-gather size
+    const int acigSize = gp.zNum * gp.scatNum;
+
+	// MEMORY ALLOCATION
+
     // data
     float* data = sf_floatalloc (dataSize);
+    // velocity model
+    float** velModel = sf_floatalloc2 (vp.zNum, vp.xNum);
+    // dip-angle gather
+    float* dag  = sf_floatalloc (dagSize);
+	// dip-angle gather    
+	float* acig = sf_floatalloc (acigSize);
 
-    // current offset gather
-    float* coGather  = sf_floatalloc (dagSize);
-    // current offset image
-    float* aCig = sf_floatalloc (ip.zNum * gp.scatNum);
-    // current offset stack of amplitude squares
-    float* coImageSq = sf_floatalloc (ip.zNum);
-    // full dip-angle gather
-    float* mainGather  = sf_floatalloc (dagSize);
-    // full image
-    float* mainImage   = sf_floatalloc (ip.zNum);
-    // full stack of amplitude squares
-    float* mainImageSq = sf_floatalloc (ip.zNum);
+	// DEFINE MIGRATOR
 
     // set migrator
     DepthMigratorBase* migrator;
@@ -422,101 +421,63 @@ int main (int argc, char* argv[]) {
 	migrator->wavefrontTracer_.setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
 			   									   vp.zNum, vp.xStep, vp.xStart);
 
+	// read data
+	readData (data);
+	readVelocity (velModel);	
+
+    migrator->setVelModel (velModel);
+
+	// MAIN LOOP
 
     const int fullGatherNum = ip.yNum * ip.xNum;
-
-	readData (data);
-
-	readVelocity (velModel);	
-    migrator->setVelModel (velModel);
 
     for (int ipy = 0; ipy < ip.yNum; ++ipy) {
 		for (int ipx = 0; ipx < ip.xNum; ++ipx) {
 			sf_warning ("gather %d of %d;", ipx + 1, fullGatherNum);	
+			Point2D curGatherPos (ipx, ipy);
+		    const size_t startInd = ipx + ipy * ip.xNum;
 
-	    	memset (mainGather,   0, dagSize * sizeof (float));
-		    memset (mainImage,    0, ip.zNum * sizeof (float));
-		    memset (mainImageSq,  0, ip.zNum * sizeof (float));
+			memset (dag,  0, dagSize  * sizeof (float));
+			memset (acig, 0, acigSize * sizeof (float));
+//			memset (coImageSq,  0, ip.zNum * sizeof (float));
 
-//		    for (int ih = 0; ih < rp.hMigNum; ++ih) {
-		    for (int ih = 0; ih < 1; ++ih) {
+			migrator->processGather (curGatherPos, data, dag, acig);
 
-				float curOffset = dp.hStart + ih * dp.hStep;
-
-				memset (coGather,   0, dagSize * sizeof (float));
-				memset (aCig,    0, gp.scatNum * ip.zNum * sizeof (float));
-				memset (coImageSq,  0, ip.zNum * sizeof (float));
-	
-				Point2D curGatherPos (ipx, ipy);
-				migrator->processGather (curGatherPos, data, coGather, aCig);
-
-			// add migrated trace to image
-			float* ptrToCur ;// = coImage;	
-			float* ptrToMain;// = mainImage;
-//			const int size = gp.zNum;// * gp.sdipNum;
-//			for (int it = 0; it < size; ++it, ++ptrToCur, ++ptrToMain)
-//			    *ptrToMain += *ptrToCur;
-	
-			if (rp.isDag) {
-			    // add migrated trace to dip-angle gather
-			    ptrToCur  = coGather;	
-			    ptrToMain = mainGather;
-			    for (int it = 0; it < dagSize; ++it, ++ptrToCur, ++ptrToMain)
-				*ptrToMain += *ptrToCur;
-			}
+		    if (rp.isDag) {
+				size_t startPos = startInd * dagSize * sizeof(float);
+				sf_seek (dagFile, startPos, SEEK_SET);
+				sf_floatwrite (dag, dagSize, dagFile);
+		    }			
 
 			if (rp.isCig) {
-			    // write trace into offset-domain CIG file
-			    size_t startPos = ipx * gp.scatNum * ip.zNum * sizeof(float);
-			    sf_seek (cigFile, startPos, SEEK_SET);
-			    sf_floatwrite (aCig, ip.zNum * gp.scatNum, cigFile);
+			    // write trace into angle CIG file
+			    size_t startPos = startInd * acigSize * sizeof(float);
+			    sf_seek (acigFile, startPos, SEEK_SET);
+			    sf_floatwrite (acig, acigSize, acigFile);
 			}
 				
-			if (rp.isSemb) {				
-			    ptrToCur  = coImageSq;	
-			    ptrToMain = mainImageSq;
-			    const int size = gp.zNum;// * gp.sdipNum;
-			    for (int it = 0; it < size; ++it, ++ptrToCur, ++ptrToMain)
-				*ptrToMain += *ptrToCur;
-			}
+//		    if (rp.isSemb) {
+//				float* sembTrace = sf_floatalloc (ip.zNum);
+//				Sembler::getSemblanceForTrace (gp.dipNum * gp.sdipNum, mainImage, mainImageSq, ip.zNum, rp.sembWindow, sembTrace);
+//				size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
+//				size_t shift = startInd * ip.zNum;
+//				sf_seek (sembFile, shift, SEEK_SET);
+//				sf_floatwrite (sembTrace, ip.zNum, sembFile);
+//				free (sembTrace);
+//		    }
 		}
-
-	    size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
-		size_t shift = startInd * ip.zNum;
-//	    sf_seek (imageFile, shift, SEEK_SET);
-//	    sf_floatwrite (mainImage, ip.zNum, imageFile);
-
-		shift = startInd * dagSize;
-	    if (rp.isDag) {
-			sf_seek (dagFile, shift, SEEK_SET);
-			sf_floatwrite (mainGather, dagSize, dagFile);
-	    }			
-
-	    if (rp.isSemb) {
-		float* sembTrace = sf_floatalloc (ip.zNum);
-		Sembler::getSemblanceForTrace (gp.dipNum * gp.sdipNum, mainImage, mainImageSq, ip.zNum, rp.sembWindow, sembTrace);
-		size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
-		size_t shift = startInd * ip.zNum;
-		sf_seek (sembFile, shift, SEEK_SET);
-		sf_floatwrite (sembTrace, ip.zNum, sembFile);
-		free (sembTrace);
-	    }
 	}
-    }
 
-    free (coGather);
-    free (aCig);
-    free (coImageSq);
+    free (dag);
+    free (acig);
+//    free (coImageSq);
 
-    free (mainGather);
-    free (mainImage);
-
-    free (velModel);
+    free (*velModel);
     free (data);
 
     sf_fileclose (dagFile);
     sf_fileclose (imageFile);
-    sf_fileclose (cigFile);
+    sf_fileclose (acigFile);
 
     sf_fileclose (dataFile);
     sf_fileclose (velFile);

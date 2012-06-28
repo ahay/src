@@ -23,7 +23,7 @@ public:
 
 // private:
 
-	int    getSampleByBeam  	        (EscapePoint& point1, EscapePoint& point2, EscapePoint& point3, float& sample); 
+	int    getSampleByBeam  	        (float curScatAngle, float curDipAngle, float& sample); 
 	void   getSampleByRay               (EscapePoint& escPoint, float& sample);
   
  	float  getSampleFromData            (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f);

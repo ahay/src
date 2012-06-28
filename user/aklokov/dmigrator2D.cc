@@ -18,7 +18,7 @@ DepthMigrator2D::~DepthMigrator2D () {
 
 void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* dag, float* aCig) {
 
-    const int   zNum = ip_->zNum;
+    const int   zNum = gp_->zNum;
 	const float zStart = gp_->zStart;
 	const float zStep = gp_->zStep;
 	
@@ -30,6 +30,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	const float scatStart = gp_->scatStart;
 	const float scatStep = gp_->scatStep;
 
+	const int dagSize = zNum * dipNum;
 
 	raysNum_   = 2 * gp_->dipNum + 1;
     raysStep_  = gp_->dipStep / 2.f;	
@@ -43,8 +44,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 
 	wavefrontTracer_.setParams (ttNum, ttStep, ttStart);
 
-	const int dagSize = zNum * dipNum;
 	float* curDag = new float [dagSize];
+	memset ( curDag, 0, dagSize * sizeof (float) );
 
     for (int iz = 0; iz < zNum; ++iz) {	
 
@@ -57,87 +58,17 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 
 		for (int is = 0; is < scatNum; ++is) {
 			const float curScatAngle = scatStart + is * scatStep;
-
 			for (int id = 0; id < dipNum; ++id)	{
 				const float curDipAngle = dipStart + id * dipStep;
 				
 				float sample (0.f);
-
-				// calc receivers lane
-
-				float dir1 = curDipAngle + 0.5 * curScatAngle - 0.5 * scatStep;
-				EscapePoint* escPointRec1 = new EscapePoint ();
-				this->getEscPointByDirection (travelTimes_, ttNum, dir1, *escPointRec1);
-
-				float dir2 = curDipAngle + 0.5 * curScatAngle + 0.5 * scatStep;
-				EscapePoint* escPointRec2 = new EscapePoint ();
-				this->getEscPointByDirection (travelTimes_, ttNum, dir2, *escPointRec2);
-	
-				float recLaneLeft  = escPointRec1->x;
-				float recLaneRight = escPointRec2->x;
-				if (recLaneLeft > recLaneRight) {
-					float temp = recLaneRight;
-					recLaneRight = recLaneLeft;
-					recLaneLeft = temp;
-				}
-
-				// calc sources lane
-
-				float dir3 = curDipAngle - 0.5 * curScatAngle - 0.5 * scatStep;
-				EscapePoint* escPointRec3 = new EscapePoint ();
-				this->getEscPointByDirection (travelTimes_, ttNum, dir3, *escPointRec3);
-
-				float dir4 = curDipAngle - 0.5 * curScatAngle + 0.5 * scatStep;
-				EscapePoint* escPointRec4 = new EscapePoint ();
-				this->getEscPointByDirection (travelTimes_, ttNum, dir4, *escPointRec4);			
-
-				float srcLaneLeft  = escPointRec3->x;
-				float srcLaneRight = escPointRec4->x;
-				if (srcLaneLeft > srcLaneRight) {
-					float temp = srcLaneRight;
-					srcLaneRight = srcLaneLeft;
-					srcLaneLeft = temp;
-				}
-
-				// loop over receivers
-
-				int count (0);
-
-				float curRecPos = dp_->xStart + dp_->xStep * (dp_->xNum - 1);
-				while (curRecPos > recLaneRight) curRecPos -= dp_->xStep;
-
-				while (curRecPos > recLaneLeft) {
-				
-				// loop over offsets
-					for (int ih = 0; ih < dp_->hNum; ++ih) {
-						float curOffset = dp_->hStart + ih * dp_->hStep;
-						float curSrcPos = curRecPos - curOffset;
-						if (curSrcPos < srcLaneLeft || curSrcPos > srcLaneRight)
-							continue;
-						// get escape point
-						float timeToRec (0.f);
-						float recAbsP (0.f);
-						bool full;
-						this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, full);
-						if (!full) continue;
-						float timeToSrc (0.f);
-						float srcAbsP (0.f);
-						this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, full);
-						if (!full) continue;
-						float curTime = timeToRec + timeToSrc;
-						float tSample = this->getSampleFromData (curOffset, 0, curRecPos, 1000 * curTime, recAbsP);
-						sample += this->getSampleFromData (curOffset, 0, curRecPos, 1000 * curTime, recAbsP);
-						++count;
-					}
-					curRecPos -= dp_->xStep;
-						
-				}
-				if (count) sample /= count;
+				int isBad = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
+				if (isBad)
+					sample = 0.f;
 
 				const int ind = id * zNum + iz;
 				curDag [ind] += sample;
 				aCig [is*zNum + iz] += sample;
-
 			}
 
 			float* pTo = dag;
@@ -145,11 +76,95 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 			for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom)
 				*pTo += *pFrom;
 		}
+
+		delete [] travelTimes_;
 	}
 
-	delete curDag;
+	delete [] curDag;
 
 	return;
+}
+
+int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, float& sample) {
+
+	const int   hNum   = dp_->hNum;
+	const float hStart = dp_->hStart; 
+	const float hStep  = dp_->hStep; 
+	
+	const int   xNum   = dp_->xNum;
+	const float xStart = dp_->xStart; 
+	const float xStep  = dp_->xStep; 
+
+	const float dipStep = gp_->dipStep;
+
+	float baseDir = curDipAngle + 0.5 * curScatAngle;
+	const float shiftDir = 0.5 * dipStep;
+
+	// calc recs lane
+	float dir1 = baseDir - shiftDir;
+	EscapePoint* escPointRec1 = new EscapePoint ();
+	this->getEscPointByDirection (travelTimes_, ttNum, dir1, *escPointRec1);
+
+	float dir2 = baseDir + shiftDir;
+	EscapePoint* escPointRec2 = new EscapePoint ();
+	this->getEscPointByDirection (travelTimes_, ttNum, dir2, *escPointRec2);
+	
+	float recLaneLeft  = escPointRec1->x;
+	float recLaneRight = escPointRec2->x;
+	if (recLaneLeft > recLaneRight) { float temp = recLaneRight; recLaneRight = recLaneLeft; recLaneLeft = temp; }
+	delete escPointRec1;
+	delete escPointRec2;
+
+	// calc sources lane
+	baseDir = curDipAngle - 0.5 * curScatAngle;
+	float dir3 = baseDir - shiftDir;
+	EscapePoint* escPointRec3 = new EscapePoint ();
+	this->getEscPointByDirection (travelTimes_, ttNum, dir3, *escPointRec3);
+
+	float dir4 = baseDir + shiftDir;
+	EscapePoint* escPointRec4 = new EscapePoint ();
+	this->getEscPointByDirection (travelTimes_, ttNum, dir4, *escPointRec4);			
+
+	float srcLaneLeft  = escPointRec3->x;
+	float srcLaneRight = escPointRec4->x;
+	if (srcLaneLeft > srcLaneRight) { float temp = srcLaneRight; srcLaneRight = srcLaneLeft; srcLaneLeft = temp; }
+	delete escPointRec3;
+	delete escPointRec4;
+
+	// loop over receivers
+	int count (0);
+
+	float curRecPos = xStart + xStep * (xNum - 1);
+	while (curRecPos > recLaneRight) curRecPos -= xStep;
+
+	while (curRecPos > recLaneLeft) {
+		// loop over offsets
+		for (int ih = 0; ih < hNum; ++ih) {
+			const float curOffset = hStart + ih * hStep;
+			const float curSrcPos = curRecPos - curOffset;
+			if (curSrcPos < srcLaneLeft || curSrcPos > srcLaneRight)
+				continue;
+			// get escape point
+			float timeToRec (0.f);
+			float recAbsP (0.f);
+			bool onSurf;
+			this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
+			if (!onSurf) continue; // the ray does not reach the surface
+			float timeToSrc (0.f);
+			float srcAbsP (0.f);
+			this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
+			if (!onSurf) continue; // the ray does not reach the surface
+			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "s"
+			sample += this->getSampleFromData (curOffset, 0, curRecPos, curTime, recAbsP);
+			++count;
+		}
+		curRecPos -= xStep;
+	}
+			
+	if (!count) return -1; // no sample is returned
+	sample /= count;
+
+	return 0;
 }
 
 void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& full) {
@@ -267,7 +282,7 @@ void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, 
 //	!!! this interolation is NOT good solution, it is temporary
 
 	float bef = (pEscPoint->zodip - pRec) / ( pEscPoint->zodip - (pEscPoint - 1)->zodip );
-	float aft = 1 - bef;
+	float aft = 1.f - bef;
 
 	if (count == size)
 		resEscPoint = *(pEscPoint - 1);
@@ -350,79 +365,6 @@ void DepthMigrator2D::processGatherOLD (Point2D& curGatherCoords, float curOffse
 
    
     return;
-}
-
-int DepthMigrator2D::getSampleByBeam (EscapePoint& point1, EscapePoint& point2, EscapePoint& point3, float& sample) {
-
-
-	if (!point2.full)
-		return -1; 
-
-	const float xStepData = dp_->xStep;
-
-	int count (0);
-	EscapePoint leftPoint;
-	EscapePoint rightPoint;
-	
-	// part 1
-	
-	if (point1.x < point2.x) {
-		leftPoint = point1; 
-		rightPoint = point2;
-	} else {
-		leftPoint = point2;
-		rightPoint = point1;		
-	}	
-
-	float dt = rightPoint.t - leftPoint.t;
-	float dx = rightPoint.x - leftPoint.x;
-
-	float absP = fabs (point2.p);
-	
-	int curXSamp = leftPoint.x / xStepData;
-	if (curXSamp * xStepData < leftPoint.x) ++curXSamp;
-	
-	float curXpos = curXSamp * xStepData;
-	while (curXpos < rightPoint.x + 1e-6) {
-		if (curXpos < dataXMin_ || curXpos > dataXMax_) {curXpos += xStepData; continue; }
-		float curTime = leftPoint.t + dt * (curXpos - leftPoint.x) / dx;
-		//cout << curXpos << " " << curTime << " " << p << endl;
-
-		sample += this->getSampleFromData (point2.h, 0, curXpos, 1000 * curTime, absP);
-		curXpos += xStepData;
-		++count;
-	}	
-
-	// part 2
-	
-	if (point2.x < point3.x) {
-	
-		leftPoint = point2; 
-		rightPoint = point3;
-	} else {
-		leftPoint = point3;
-		rightPoint = point2;		
-	}	
-
-	dt = rightPoint.t - leftPoint.t;
-	dx = rightPoint.x - leftPoint.x;
-
-	curXSamp = leftPoint.x / xStepData;
-	if (curXSamp * xStepData < leftPoint.x) ++curXSamp;
-	
-	curXpos = curXSamp * xStepData;
-	while (curXpos < rightPoint.x + 1e-6) {
-		if (curXpos < dataXMin_ || curXpos > dataXMax_) {curXpos += xStepData; continue; }
-		float curTime = leftPoint.t + dt * (curXpos - leftPoint.x) / dx;
-		sample += this->getSampleFromData (point2.h, 0, curXpos, 1000 * curTime, absP);
-		curXpos += xStepData;
-		++count;
-	}	
-	if (!count) return -1;
-
-	sample /= count;
-
-	return 0;	
 }
 
 void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {

@@ -79,11 +79,8 @@ public:
 
 protected:
 
-
-	virtual	int    getSampleByBeam  	        (EscapePoint& point1, EscapePoint& point2, EscapePoint& point3, float& sample) = 0; 
-	virtual void   getSampleByRay               (EscapePoint& escPoint, float& sample) = 0;
-  
- 	virtual float  getSampleFromData            (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f) = 0;
+ 
+ //	virtual float  getSampleFromData            (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f) = 0;
 
 
 		void getAzDipFromXY (float curDipY, float curDipX, float& curDip, float&curAz);
