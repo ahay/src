@@ -12,8 +12,6 @@ public:
 
 	void  processGather (Point2D& curGatherCoords, const float* const data, float* gather, float* aCig);
 
-	void  calcWavefronts (EscapePoint* travelTimes, EscapePoint* escPoints, int raysNum, float curScatAngle);
-
 	void  processGatherOLD (Point2D& curGatherCoords, float curOffset,  const float* const velTrace, const bool isAzDip,
 								  float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
 
@@ -35,14 +33,11 @@ public:
 	float zoDipMin_;
 	float zoDipMax_;
 
-	int raysNum_;
-    float raysStep_;
-    float raysStart_;
+//	int raysNum_;
+//    float raysStep_;
+//    float raysStart_;
 
 	EscapePoint* travelTimes_;
-
-	int ttNum;
-
 };
 
 #endif

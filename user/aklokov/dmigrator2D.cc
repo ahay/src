@@ -18,59 +18,55 @@ DepthMigrator2D::~DepthMigrator2D () {
 
 void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* dag, float* aCig) {
 
-    const int   zNum = gp_->zNum;
+	// CONSTANTS
+
+	// inline position
+	const float xCIG = curGatherCoords.getX ();
+	// depth	
+    const int   zNum   = gp_->zNum;
 	const float zStart = gp_->zStart;
-	const float zStep = gp_->zStep;
-	
-	const int   dipNum = gp_->dipNum;
+	const float zStep  = gp_->zStep;
+	// dip-angle	
+	const int   dipNum   = gp_->dipNum;
 	const float dipStart = gp_->dipStart;
-	const float dipStep = gp_->dipStep;
-
-	const int scatNum = gp_->scatNum;
+	const float dipStep  = gp_->dipStep;
+	// scattering-angle
+	const int   scatNum   = gp_->scatNum;
 	const float scatStart = gp_->scatStart;
-	const float scatStep = gp_->scatStep;
-
+	const float scatStep  = gp_->scatStep;
+	// size of dip-angle gather
 	const int dagSize = zNum * dipNum;
+	// travel-times rays number
+	const int ttNum = wavefrontTracer_.wp_.tNum;
 
-	raysNum_   = 2 * gp_->dipNum + 1;
-    raysStep_  = gp_->dipStep / 2.f;	
-    raysStart_ = gp_->dipStart - raysStep_ + 180; // "+180" is because in the wavefront traces direction to the top correspond to 180 degree
+	// ACTION
 
-	// travel times tables
-
-	ttNum = 361;
-	float ttStep = 0.5;
-	float ttStart = 90;
-
-	wavefrontTracer_.setParams (ttNum, ttStep, ttStart);
-
+	// dip-angle gather for current scattering angle
 	float* curDag = new float [dagSize];
 	memset ( curDag, 0, dagSize * sizeof (float) );
 
+	// loop over depth samples
     for (int iz = 0; iz < zNum; ++iz) {	
-
-		sf_warning ("iz %d\n", iz);
-
-		float curZ = zStart + iz * zStep;		
-
+		const float curZ = zStart + iz * zStep;		
 		travelTimes_ = new EscapePoint [ttNum];		
-		this->calcTravelTimes (curZ, curGatherCoords.getX (), travelTimes_);
-
+		this->calcTravelTimes (curZ, xCIG, travelTimes_);
+		// loop over scattering-angle
 		for (int is = 0; is < scatNum; ++is) {
 			const float curScatAngle = scatStart + is * scatStep;
+			// loop over dip-angle
 			for (int id = 0; id < dipNum; ++id)	{
 				const float curDipAngle = dipStart + id * dipStep;
 				
 				float sample (0.f);
 				int isBad = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
 				if (isBad)
-					sample = 0.f;
+					sample = 0.f; // some function may be here
 
 				const int ind = id * zNum + iz;
 				curDag [ind] += sample;
 				aCig [is*zNum + iz] += sample;
 			}
-
+			// add current scattering-angle migration to the main result
 			float* pTo = dag;
 			float* pFrom = curDag;
 			for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom)
@@ -78,6 +74,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		}
 
 		delete [] travelTimes_;
+
+		sf_warning ("iz %d\n", iz);
 	}
 
 	delete [] curDag;
@@ -96,6 +94,8 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 	const float xStep  = dp_->xStep; 
 
 	const float dipStep = gp_->dipStep;
+
+	const int ttNum = wavefrontTracer_.wp_.tNum;
 
 	float baseDir = curDipAngle + 0.5 * curScatAngle;
 	const float shiftDir = 0.5 * dipStep;
@@ -171,7 +171,7 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 
 	//
 
-	int size = ttNum;
+	int size = wavefrontTracer_.wp_.tNum;
 	float basedir = dir1 > dir2 ? dir1 : dir2;
 
 	//
@@ -213,48 +213,6 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 	}	
 	
 return;
-}
-
-void DepthMigrator2D::calcWavefronts (EscapePoint* travelTimes, EscapePoint* escPoints, int raysNum, float curScatAngle) {
-
-    const int zNum = ip_->zNum;
-	const int dipNum = gp_->dipNum;
-	const int scatNum = gp_->scatNum;
-
-	EscapePoint* pEscPoint = escPoints;
-
-	ofstream fout ("front");
-
-	for (int ir = 0; ir < raysNum_; ++ir, ++pEscPoint) {
-		const float curDipAngle = raysStart_ + ir * raysStep_ - 180.f;							    				
-
-		float pSrc = curDipAngle - 0.5 * curScatAngle;
-		EscapePoint* escPointSrc = new EscapePoint ();
-		this->getEscPointByDirection (travelTimes, raysNum, pSrc, *escPointSrc);
-		float xSrc = escPointSrc->x;
-		float tSrc = escPointSrc->t;
-	
-		float pRec = curDipAngle + 0.5 * curScatAngle;
-		EscapePoint* escPointRec = new EscapePoint ();
-		this->getEscPointByDirection (travelTimes, raysNum, pRec, *escPointRec);
-		float xRec = escPointRec->x;
-		float tRec = escPointRec->t;	
-
-		(*pEscPoint).h = -xRec + xSrc;
-		(*pEscPoint).t = tRec + tSrc;
-		(*pEscPoint).p = escPointRec->p;
-		(*pEscPoint).z = escPointRec->z;		
-		(*pEscPoint).x = escPointRec->x;
-		(*pEscPoint).zodip = 0.5 * (escPointSrc->zodip + escPointRec->zodip);
-		(*pEscPoint).full = escPointRec->full;
-
-		fout << (*pEscPoint).t << " " << (*pEscPoint).x << endl;
-
-		delete escPointSrc;
-		delete escPointRec;
-	}	
-
-	return;
 }
 
 void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, float pRec, EscapePoint &resEscPoint) {

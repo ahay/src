@@ -311,10 +311,12 @@ int main (int argc, char* argv[]) {
 	if (!sf_getfloat ("iscatd", &gp.scatStep)) gp.scatStep = 10.f;	
     /* scattering-angle increment */
 
+	// CHECK IMAGE PARAMETERS
 
     checkImageParams ();
 
     // GATHER PARAMS
+
     gp.zNum = ip.zNum;
     if (!sf_getint ("dipn" , &gp.dipNum))      gp.dipNum = 1;	
     /* number of dip-angles */
@@ -330,6 +332,20 @@ int main (int argc, char* argv[]) {
     /* step in dip-angle */
     if (!sf_getfloat ("sdipd", &gp.sdipStep))  gp.sdipStep = 1.f;	
     /* step in secondary (azimuth or crossline) angle */
+
+	// TRAVEL TIMES TABLES
+	int ttNum (0);
+	float ttStep  (0.f);
+	float ttStart (0.f);
+
+    if ( !sf_getint  ("ttn", &ttNum) ) ttNum =  2 * gp.dipNum + 1;
+    /* travel-times rays number */
+    if ( !sf_getfloat ("ttd",  &ttStep) ) ttStep = gp.dipStep / 2.f;
+    /* travel-times rays increment */
+    if ( !sf_getfloat ("tto",  &ttStart) ) ttStart = gp.dipStart - ttStep + 180.f;
+    /* travel-times rays start */
+
+	// calculation ttStart we do "+180" because the direction to the top corresponds to 180 degree
 
     // Initiate output 
 
@@ -420,6 +436,7 @@ int main (int argc, char* argv[]) {
     migrator->setDataLimits ();
 	migrator->wavefrontTracer_.setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
 			   									   vp.zNum, vp.xStep, vp.xStart);
+	migrator->wavefrontTracer_.setParams (ttNum, ttStep, ttStart);
 
 	// read data
 	readData (data);
