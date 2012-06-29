@@ -24,7 +24,7 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../../api/c++/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
@@ -49,7 +49,7 @@ for prog in ccmains:
         prog = env.Program (prog, ['M'+prog+'.cc'] + map (lambda x: x + '.o', subs),CCFLAGS='')
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:
-        prog = env.RSF_Place ('sf' + prog, None, var='LAPACK', package='lapack')
+        prog = env.RSF_Place ('sf' + prog, None, var='API', package='c++')
     if root:
         env.Install(bindir,prog)
 ######################################################################

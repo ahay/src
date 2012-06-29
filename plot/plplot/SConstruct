@@ -8,8 +8,6 @@ try: # distribution version
 except: # local version
     env = bldutil.Debug()
     root = None
-    rsfroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
-    libdir = os.path.join(rsfroot,'lib')  
     SConscript('../lib/SConstruct')
 
 plplot = env.get('PLPLOT')

@@ -25,8 +25,7 @@ Takes: > plot.vpl
 
 int main(int argc, char* argv[])
 {
-    bool flat, scalebar, nomin=true, nomax=true, barreverse, hasc, hasdc, hasc0;
-    bool transp, yreverse;
+    bool flat, scalebar, nomin=true, nomax=true, barreverse, hasc, hasdc, hasc0, yreverse;
     char *cfilename;
     int n1,n2,n3, frame1,frame2,frame3, i1,i2,i3, iframe, nc, nc0, ic, maxstr;
     int n1pix, n2pix, m1pix, m2pix, n1front,n2front, movie, nframe=1, dframe; 
@@ -125,9 +124,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("dframe",&dframe)) dframe=1;
     /* frame increment in a movie */
 
-    if (!sf_getbool ("transp",&transp)) transp=true;
-    /* if y, transpose the axes */
-
     switch (movie) {
 	case 0:
 	    nframe = 1;
@@ -225,8 +221,8 @@ int main(int argc, char* argv[])
     vp_frame_init (in,"blt",false);
     if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
 
-    cfront = vp_contour_init(transp,n1,o1,d1,n2,o2,d2);
-    cside = vp_contour_init(transp,n1,o1,d1,n3,o3,d3);
+    cfront = vp_contour_init(true,n1,o1,d1,n2,o2,d2);
+    cside = vp_contour_init(true,n1,o1,d1,n3,o3,d3);
     ctop = vp_contour_init(false,n2,o2,d2,n3,o3,d3);
 
     vp_plot_init(nc);
@@ -239,11 +235,7 @@ int main(int argc, char* argv[])
 	    sf_floatread(front[0],n1*n2,in);
 	}
 
-	if (transp) {
-	    vp_cubecoord(3,min2,max2,min1,max1);
-	} else {
-	    vp_cubecoord(3,min1,max1,min2,max2);
-	}
+	vp_cubecoord(3,min2,max2,min1,max1);
 
 	for (ic=0; ic < nc; ic++) {
 	    vp_plot_set (ic);
@@ -257,11 +249,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if (transp) {
-	    vp_cubecoord(2,min3,max3,min1,max1);
-	} else {
-	    vp_cubecoord(2,min1,max1,min3,max3);
-	}
+	vp_cubecoord(2,min3,max3,min1,max1);
 
 	for (ic=0; ic < nc; ic++) {
 	    vp_plot_set (ic);

@@ -1,8 +1,8 @@
 /* Generate 3-D cube plot.
    
-Takes: > plot.vpl
+   Takes: > plot.vpl
 
-Requires an "unsigned char" input (the output of sfbyte).
+   Requires an "unsigned char" input (the output of sfbyte).
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 
     /* initialize color table */
     if (NULL == (color = sf_getstring("color"))) color="i";
-	/* color scheme (default is i) */
+    /* color scheme (default is i) */
     if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
     /* reserved colors */
     vp_rascoltab (nreserve, color);
@@ -225,13 +225,13 @@ int main(int argc, char* argv[])
 		i3 = n3*(i-n2front)/(float) (n2pix-n2front);
 		if (flat) {
 		    for (j=0; j < n1front; j++) {
-		    i1 = n1*(n1front-j-0.5)/(float) n1front;
+			i1 = n1*(n1front-j-0.5)/(float) n1front;
 			buf[i][j] = side[i3][i1];
 		    }
 		} else {
 		    j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
 		    for (j=j0; j < n1pix; j++) {
-		    i1 = n1*(n1front+j0-j-0.5)/(float) n1front;
+			i1 = n1*(n1front+j0-j-0.5)/(float) n1front;
 			if (i1 >= 0)
 			    buf[i][j] = side[i3][i1];
 		    }
@@ -265,7 +265,7 @@ int main(int argc, char* argv[])
 		for (i=i0; i < i0+n2front; i++) {
 		    i2 = n2*(i-i0)/(float) n2front;
 		    if (i2 < n2)
-			    buf[i][j] = top[i2][i3];
+			buf[i][j] = top[i2][i3];
 		}
 	    }
 	}

@@ -73,11 +73,11 @@ int main(int argc, char* argv[])
     bool sembl, half, slow, dsembl, asembl, weight, squared, trend, ratio;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask;
     float amp, amp2, dt, dh, t0, h0, v0, dv, ds, smax, num, den, dy, str, sh=0., sh2=0.;
-    float *trace, ***stack, ***stack2, ***stack2h, ***stackh, *hh;
+    float *trace, ***stack, ***stack2, ***stack2h, ***stackh, *hh, **bb;
     char *time, *space, *unit;
     const char *type;
     size_t len;
-    sf_file cmp, scan, offset, msk;
+    sf_file cmp, scan, offset, msk, grd;
     mapfunc nmofunc;
 
     sf_init (argc,argv);
@@ -221,6 +221,17 @@ int main(int argc, char* argv[])
 	sf_putstring(scan,"unit2",unit);
     }
 
+    if (NULL != sf_getstring("grad")) {
+	grd = sf_input("grad");
+
+	bb = sf_floatalloc2(nt,nv);
+	sf_floatread(bb[0],nt*nv,grd);
+
+	sf_fileclose(grd);
+    } else {
+	bb = NULL;
+    }
+
     stack =  sf_floatalloc3(nt,nv,ns);
     stack2 = ('p' != type[0])? sf_floatalloc3(nt,nv,ns): NULL;
     stackh = trend? sf_floatalloc3(nt,nv,ns): NULL;
@@ -281,6 +292,7 @@ int main(int argc, char* argv[])
 
 		    for (it=0; it < nt; it++) {
 			amp = weight? fabsf(v)*trace[it]: trace[it];
+			if (NULL != bb) amp /= (1.0+bb[iv][it]*h);
 			
 			switch(type[0]) {
 			    case 'd':

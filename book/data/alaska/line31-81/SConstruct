@@ -21,47 +21,29 @@ from rsf.suproj import *
 
 oodraw = WhereIs('oodraw')
 
-#if oodraw:
-#    Result('prevstack','31_81_IM.JPG',
-#           oodraw + ' $SOURCE',stdin=0)
+if oodraw:
+    Result('prevstack','31_81_IM.JPG',
+           oodraw + ' $SOURCE',stdin=0)
 
-#pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
-#          WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
 
-#if pdfread:
+if pdfread:
     # download and view the survey notes:
-<<<<<<< .mine
-#    Fetch('31_81_S.PDF',
-#          server='http://certmapper.cr.usgs.gov',
-#          top='nersl/NPRA/SEISMIC/1981/31_81',
-#          dir='DOCUMENTS')
-#    Result('surveylog','31_81_S.PDF',
-#            pdfread + ' $SOURCE')
-=======
     Fetch('31_81_S.PDF',
-          server='http://certmapper.cr.usgs.gov',
-          top='nersl/NPRA/SEISMIC/1981/31_81',
-          dir='DOCUMENTS')
+      server='http://certmapper.cr.usgs.gov',
+      top='nersl/NPRA/SEISMIC/1981/31_81',
+      dir='DOCUMENTS')
     Result('surveylog','31_81_S.PDF',
-            pdfread + ' $SOURCE',stdin=0)
->>>>>>> .r8459
+           pdfread + ' $SOURCE',stdin=0)
     
     # download and view the observer notes:
-<<<<<<< .mine
-#    Fetch('31_81_O.PDF',
-#          server='http://certmapper.cr.usgs.gov',
-#          top='nersl/NPRA/SEISMIC/1981/31_81',
-#          dir='DOCUMENTS')
-#    Result('observerlog','31_81_O.PDF',
-#            pdfread + ' $SOURCE')
-=======
     Fetch('31_81_O.PDF',
           server='http://certmapper.cr.usgs.gov',
           top='nersl/NPRA/SEISMIC/1981/31_81',
           dir='DOCUMENTS')
     Result('observerlog','31_81_O.PDF',
-            pdfread + ' $SOURCE',stdin=0)
->>>>>>> .r8459
+           pdfread + ' $SOURCE',stdin=0)
 
 segyread = '''
 segyread bfile=${TARGETS[1]} hfile=${TARGETS[2]}
