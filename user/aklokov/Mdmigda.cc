@@ -280,8 +280,6 @@ int main (int argc, char* argv[]) {
     /* if y, apply anti-aliasing */
     if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
     /* if y, apply dip/azimuth mode; if n, apply inline/crossline angle mode */
-    if (!sf_getint  ("hmign",   &rp.hMigNum)) rp.hMigNum = dp.hNum;	
-    /* number of migrated offsets */
     if (!sf_getint  ("sembWindow",   &rp.sembWindow)) rp.sembWindow = 11;	
     /* vertical window for semblance calculation (in samples) */
 
@@ -318,12 +316,12 @@ int main (int argc, char* argv[]) {
     // GATHER PARAMS
 
     gp.zNum = ip.zNum;
-    if (!sf_getint ("dipn" , &gp.dipNum))      gp.dipNum = 1;	
+    if (!sf_getint ("dipn" , &gp.dipNum))      gp.dipNum = 161;	
     /* number of dip-angles */
     if (!sf_getint ("sdipn", &gp.sdipNum))     gp.sdipNum = 1;	
     /* number of secondary (azimuth or crossline) angles */
     gp.zStart = ip.zStart;
-    if (!sf_getfloat ("dipo",  &gp.dipStart))   gp.dipStart = 0.f;	
+    if (!sf_getfloat ("dipo",  &gp.dipStart))   gp.dipStart = -80.f;	
     /* first dip-angle */
     if (!sf_getfloat ("sdipo", &gp.sdipStart))  gp.sdipStart = 90.f;
     /* first secondary (azimuth or crossline) angle */
