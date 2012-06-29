@@ -187,7 +187,7 @@ int mpirsfread(ireal * a,
   if (lrank==0) {
 
     /* read parameter table from file */
-    par = new_ps();
+    par = ps_new();
     if (ps_createfile(par,fname)) {
       fprintf(stream,"read_grid: failed to parse file = %s\n",fname);
       fflush(stream);
@@ -304,13 +304,11 @@ int mpirsfread(ireal * a,
 #else
       fp=fopen(dname,"r");
 #endif
+      /* done with filename */
+      userfree_(dname);
       if (!fp) {
 	fprintf(stream,"Error [mpirsfread]: read from fopen\n");
 	err=E_FILE;
-      }
-      else {
-	/* done with filename */
-	userfree_(dname);
       }
     }
 
@@ -562,9 +560,11 @@ int mpirsfread(ireal * a,
       userfree_(buf);
       xdr_destroy(&xdrs); 
     }
-    userfree_(type);
 #endif
+    /* done with type designator */
+    userfree_(type);
   }
+
 
   /* extension outside of file-defined grid */
 
