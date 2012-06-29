@@ -316,9 +316,10 @@ void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escP
 	const float xCIG = ip_->xStart + curX * ip_->xStep;
 	wavefrontTracer_.getEscapePoints (xCIG, curZ, escPoints);
 		
-	startDirMin_ = wavefrontTracer_.wp_.rStart - 180.f;
-	startDirMax_ = wavefrontTracer_.wp_.rStart +  (wavefrontTracer_.wp_.rNum - 1) * wavefrontTracer_.wp_.rStep - 180.f;
-
+	startDirMax_ = wavefrontTracer_.wp_.rStart - 180.f;
+	startDirMax_ *= -1; // "-1" is to consist with an agreement
+	startDirMin_ = wavefrontTracer_.wp_.rStart +  (wavefrontTracer_.wp_.rNum - 1) * wavefrontTracer_.wp_.rStep - 180.f;
+	startDirMin_ *= -1; // "-1" is to consist with an agreement
 
 	return;
 }
