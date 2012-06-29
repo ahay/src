@@ -10,7 +10,7 @@ public:
 	    DepthMigrator2D ();
 	   ~DepthMigrator2D ();
 
-	void  processGather (Point2D& curGatherCoords, const float* const data, float* gather, float* aCig);
+	void  processGather (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
 
 	void calcTravelTimes (float curZ, float curX, EscapePoint* escPoints);
 

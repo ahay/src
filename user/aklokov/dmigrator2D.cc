@@ -9,7 +9,7 @@ DepthMigrator2D::DepthMigrator2D () {
 DepthMigrator2D::~DepthMigrator2D () {
 }
 
-void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* dag, float* aCig) {
+void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig) {
 
 	// CONSTANTS
 
@@ -45,6 +45,12 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// internal scattering angle gather
 	double* curCig = new double [scatSize];
 	memset ( curCig, 0, scatSize * sizeof (double) );
+	// internal image
+	double* curImage = new double [zNum];
+	memset ( curImage, 0, zNum * sizeof (double) );
+	// sum of squared samples
+	double* imageSq = new double [zNum];
+	memset ( imageSq, 0, zNum * sizeof (double) );
 
 	// mask for dip-angle gather for current scattering angle
 	int* maskDag = new int [dagSize];
@@ -52,6 +58,9 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// mask for internal scattering angle gather
 	int* maskCig = new int [scatSize];
 	memset ( maskCig, 0, scatSize * sizeof (int) );
+	// mask for internal image
+	int* maskImage = new int [zNum];
+	memset ( maskImage, 0, zNum * sizeof (int) );
 
 	// loop over depth samples
     for (int iz = 0; iz < zNum; ++iz) {	
@@ -81,9 +90,11 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 				const int indCig = is * zNum + iz;
 				curCig [indCig] += sample;
 				maskCig [indCig] += 1;
+				curImage [iz] += sample;
+				imageSq [iz] += sample * sample;
+				maskImage [iz] += 1;
+	
 			}
-					
-		
 			// add current scattering-angle migration to the main result
 			float*  pTo   = dag;
 			double* pFrom = curDag;
@@ -95,6 +106,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 
 		sf_warning ("iz %d\n", iz);
 	}
+
 	// transfer data from internal angle gather (in double) to the external one (in float)
 	int* pMask = maskCig; float* pTo = aCig; double* pFrom = curCig;
 	for (int id = 0; id < scatSize; ++id, ++pTo, ++pFrom, ++pMask) {
@@ -102,16 +114,25 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		if (*pMask) *pTo /= *pMask;
 	}
 	// output dip-angle gather normalization
-	pMask = maskDag; pTo   = dag; pFrom = curDag;
-	for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom, ++pMask) {
+	pMask = maskDag; pTo = dag; 
+	for (int id = 0; id < dagSize; ++id, ++pTo, ++pMask) {
 		if (*pMask) *pTo /= *pMask;
+	}
+	// image normalization
+	pMask = maskImage; pFrom = curImage; pTo = image;
+	for (int iz = 0; iz < zNum; ++iz, ++pTo, ++pFrom, ++pMask) {
+		if (*pMask) *pTo = *pFrom / *pMask;		
 	}
 
 	delete [] curDag;
 	delete [] curCig;
+	delete [] curImage;
+
+	delete [] imageSq;
 
 	delete [] maskDag;
 	delete [] maskCig;
+	delete [] maskImage;
 
 	return;
 }
@@ -221,8 +242,6 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 		++count;
 	}
 	if (count == size) return;
-	--pTT;
-	--count;
 
 	float ttX = pTT->x;
 
@@ -264,7 +283,6 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 	} else {
 		float bef = ( rightPoint->x - curRecPos ) / (rightPoint->x - leftPoint->x);
 		float aft = 1 - bef;
-
 		timeToPoint = leftPoint->t * bef + rightPoint->t * aft;
 		pointAbsP   = leftPoint->p * bef + rightPoint->p * aft;
 		isSurf = true;	

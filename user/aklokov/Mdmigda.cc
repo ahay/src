@@ -22,8 +22,6 @@
 #include "support.hh"
 #include "dmigratorBase.hh"
 #include "dmigrator2D.hh"
-//#include "dmigrator3D.hh"
-#include "sembler.hh"
 
 //#ifdef _OPENMP
 //#include <omp.h>
@@ -40,7 +38,6 @@ sf_file dataFile;
 sf_file velFile;
 
 sf_file imageFile;
-sf_file sembFile;
 sf_file dagFile;
 sf_file acigFile;
 
@@ -194,12 +191,7 @@ int main (int argc, char* argv[]) {
 // OUTPUT FILES
 
     imageFile  = sf_output("out");
-    /* migrated gathers in the dip-angle domain */
-
-    if ( NULL != sf_getstring("semb") ) {
-	/* output file containing semblance measure of CIGs stacking */ 
-	sembFile  = sf_output ("semb"); rp.isSemb = true;
-    } else { rp.isSemb = false; }
+    /* image */
 
     if ( NULL != sf_getstring("dag") ) {
 	/* output file containing CIGs in the dip-angle domain */ 
@@ -280,8 +272,6 @@ int main (int argc, char* argv[]) {
     /* if y, apply anti-aliasing */
     if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
     /* if y, apply dip/azimuth mode; if n, apply inline/crossline angle mode */
-    if (!sf_getint  ("sembWindow",   &rp.sembWindow)) rp.sembWindow = 11;	
-    /* vertical window for semblance calculation (in samples) */
 
     // IMAGE PARAMS
     if (!sf_getint ("izn", &ip.zNum))        ip.zNum = dp.zNum;	
@@ -389,16 +379,6 @@ int main (int argc, char* argv[]) {
 		sf_putstring(dagFile, "unit4", "m"); sf_putstring(dagFile, "unit5", "m");
     }
 
-    if (rp.isSemb) {
-		sf_putint (sembFile, "n1", ip.zNum); sf_putint (sembFile, "n2", ip.xNum); sf_putint (sembFile, "n3", ip.yNum); sf_putint (sembFile, "n4", 1);
-    	sf_putfloat (sembFile, "d1", ip.zStep); sf_putfloat (sembFile, "d2", ip.xStep); sf_putfloat (sembFile, "d3", ip.yStep); 
-		sf_putfloat (sembFile, "d4", 1);   
-    	sf_putfloat (sembFile, "o1", ip.zStart); sf_putfloat (sembFile, "o2", ip.xStart); sf_putfloat (sembFile, "o3", ip.yStart);    
-		sf_putfloat (sembFile, "o4", 0);   
-		sf_putstring(sembFile, "label1", "depth"); sf_putstring (sembFile, "label2", "inline"); sf_putstring (sembFile, "label3", "crossline");
-		sf_putstring(sembFile, "unit1", "m"); sf_putstring (sembFile, "unit2", "m"); sf_putstring (sembFile, "unit3", "m");
-    }
-
 	// SIZES
 
     // dip-angle gather size
@@ -416,8 +396,10 @@ int main (int argc, char* argv[]) {
     float** velModel = sf_floatalloc2 (vp.zNum, vp.xNum);
     // dip-angle gather
     float* dag  = sf_floatalloc (dagSize);
-	// dip-angle gather    
+	// scattering-angle gather    
 	float* acig = sf_floatalloc (acigSize);
+	// image
+	float* image = sf_floatalloc (gp.zNum);
 
 	// DEFINE MIGRATOR
 
@@ -452,40 +434,34 @@ int main (int argc, char* argv[]) {
 			Point2D curGatherPos (ipx, ipy);
 		    const size_t startInd = ipx + ipy * ip.xNum;
 
-			memset (dag,  0, dagSize  * sizeof (float));
-			memset (acig, 0, acigSize * sizeof (float));
-//			memset (coImageSq,  0, ip.zNum * sizeof (float));
+			memset (dag,   0, dagSize  * sizeof (float));
+			memset (acig,  0, acigSize * sizeof (float));
+			memset (image, 0, gp.zNum  * sizeof (float));
 
-			migrator->processGather (curGatherPos, data, dag, acig);
+			migrator->processGather (curGatherPos, data, image, dag, acig);
+
+			size_t startPos = startInd * gp.zNum * sizeof(float);
+			sf_seek (imageFile, startPos, SEEK_SET);
+			sf_floatwrite (image, gp.zNum, imageFile);	
 
 		    if (rp.isDag) {
-				size_t startPos = startInd * dagSize * sizeof(float);
+				startPos = startInd * dagSize * sizeof(float);
 				sf_seek (dagFile, startPos, SEEK_SET);
 				sf_floatwrite (dag, dagSize, dagFile);
 		    }			
 
 			if (rp.isCig) {
 			    // write trace into angle CIG file
-			    size_t startPos = startInd * acigSize * sizeof(float);
+			    startPos = startInd * acigSize * sizeof(float);
 			    sf_seek (acigFile, startPos, SEEK_SET);
 			    sf_floatwrite (acig, acigSize, acigFile);
 			}
-				
-//		    if (rp.isSemb) {
-//				float* sembTrace = sf_floatalloc (ip.zNum);
-//				Sembler::getSemblanceForTrace (gp.dipNum * gp.sdipNum, mainImage, mainImageSq, ip.zNum, rp.sembWindow, sembTrace);
-//				size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
-//				size_t shift = startInd * ip.zNum;
-//				sf_seek (sembFile, shift, SEEK_SET);
-//				sf_floatwrite (sembTrace, ip.zNum, sembFile);
-//				free (sembTrace);
-//		    }
 		}
 	}
 
     free (dag);
     free (acig);
-//    free (coImageSq);
+    free (image);
 
     free (*velModel);
     free (data);

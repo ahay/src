@@ -13,7 +13,7 @@ DepthMigratorBase::~DepthMigratorBase () {
     delete curveDefiner_;
 }
 
-void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* const data, float* gather, float* aCig) {
+void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig) {
 }
 
 void DepthMigratorBase::getAzDipFromXY (float curDipY, float curDipX, float& curDip, float&curAz) {

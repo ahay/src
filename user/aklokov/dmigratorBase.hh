@@ -58,7 +58,7 @@ public:
                  DepthMigratorBase ();
         virtual ~DepthMigratorBase ();
 
-		virtual void processGather  (Point2D& curGatherCoords, const float* const data, float* gather, float* aCig);
+		virtual void processGather  (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
 
 
 		void setImagingParams (VolumeParams* dp, float* ptrToData, bool isAA, bool isCMP,
