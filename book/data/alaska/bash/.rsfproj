@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfcat', 'sfwindow', 'sfmask', 'sfadd', 'sfheaderwindow', 'sfput', 'sfshot2cmp', 'sfvscan', 'sfpick', 'sftransp', 'sfspline', 'sfnmo', 'sfstack', 'sfagc', 'sfgrey', 'sfmedian']
-data=['nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23535.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23536.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23537.SGY']
-size=  550127376
