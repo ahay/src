@@ -12,9 +12,6 @@ public:
 
 	void  processGather (Point2D& curGatherCoords, const float* const data, float* gather, float* aCig);
 
-	void  processGatherOLD (Point2D& curGatherCoords, float curOffset,  const float* const velTrace, const bool isAzDip,
-								  float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
-
 	void calcTravelTimes (float curZ, float curX, EscapePoint* escPoints);
 
 	void getEscPointByDirection (EscapePoint* escPoints, int size, float pRec, EscapePoint& resEscPoint);

@@ -2,13 +2,6 @@
 #include <string.h>
 #include "dmigrator2D.hh"
 #include "support.hh"
-#include "curveDefinerBase.hh"
-#include "curveDefinerDipOffset.hh"
-
-#include <fstream>
-
-#include <iostream>
-using namespace std;
 
 DepthMigrator2D::DepthMigrator2D () {
 }
@@ -38,6 +31,9 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	const int dagSize = zNum * dipNum;
 	// travel-times rays number
 	const int ttNum = wavefrontTracer_.wp_.rNum;
+	// velocity model limits
+	const float velModelDepthMin = vp_->zStart;
+	const float velModelDepthMax = vp_->zStart + (vp_->zNum - 1) * vp_->zStep;
 
 	// ACTION
 
@@ -48,6 +44,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// loop over depth samples
     for (int iz = 0; iz < zNum; ++iz) {	
 		const float curZ = zStart + iz * zStep;		
+		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
+			continue;
 		travelTimes_ = new EscapePoint [ttNum];		
 		this->calcTravelTimes (curZ, xCIG, travelTimes_);
 		// loop over scattering-angle
@@ -189,14 +187,32 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 	}
 	if (count == size) return;
 	--pTT;
+	--count;
 
 	float ttX = pTT->x;
-	while (ttX > curRecPos && count < size) { ++pTT; ttX = pTT->x; ++count; } 	
-	if (count == size) return;
 
 	// get two basic points around the target point
-	EscapePoint* rightPoint = pTT - 1;
-	EscapePoint* leftPoint  = pTT;				
+	EscapePoint* rightPoint (NULL);
+	EscapePoint* leftPoint	(NULL);	
+	if (ttX > curRecPos) {
+		while (ttX > curRecPos && count < size) {
+			++pTT; 
+			ttX = pTT->x; 
+			++count;
+	    }
+		if (count == size) return;
+		rightPoint = pTT - 1;
+		leftPoint  = pTT; 
+	} else {
+		while (ttX < curRecPos && count < size) {
+			++pTT; 
+			ttX = pTT->x; 
+			++count;
+	    } 
+		if (count == size) return;
+		rightPoint = pTT;
+		leftPoint  = pTT - 1; 
+	}	
 
 	if (!leftPoint->isSurf && !rightPoint->isSurf) {
 		isSurf = false; return;
@@ -270,66 +286,6 @@ void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escP
 
 
 	return;
-}
-
-void DepthMigrator2D::processGatherOLD (Point2D& curGatherCoords, float curOffset, const float* const velTrace, const bool isAzDip,
-									float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq) {
-   
-    const int   zNum     = ip_->zNum;
-    const float zStart   = ip_->zStart;
-    const float zStep    = ip_->zStep;
-
-    const int   curX     = (int) curGatherCoords.getX ();    
-	const float xCIG     = ip_->xStart + curX * ip_->xStep;
-
-    const int   dipNum   = gp_->dipNum;
-    const float dipStart = gp_->dipStart;
-    const float dipStep  = gp_->dipStep;
-
-	const float curAz    = gp_->sdipStart;
-
-
-
-
-//wavefrontTracer_.setParams (raysNum, raysStep, raysStart);
-
-//	const float dummy    = 0.f;
-
-//    float*     ptrGather = curoffsetGather;
-
-//	curveDefiner_->curOffset_ = curOffset;
-//	curOffset_ = (int) curOffset;
-
-	// calculate traveltimes
-
-//	escPoints = new EscapePoint [raysNum_ * zNum];
-//	EscapePoint* pEscPoints = escPoints;
-		
-//    for (int iz = 0; iz < zNum; ++iz, pEscPoints += raysNum) {
-//        const float curZ = ip_->zStart + iz * ip_->zStep;	
-//		this->getEscapePoints (xCIG, curZ, pEscPoints);
-//    }
-
-	
-//			if (!(*ptrMutingMask)) continue; // the sample is muted
-
-//  		    const float curTime = zStart + iz * zStep;
-//			const float migVel = this->getMigVel (velTrace, curTime);
-//			if (migVel < 1e-3) continue;
-	    	
-//			float sample (0.f);
-//    		int badRes = this->getSampleByBeam (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, sample);
-//    		if (badRes)
-//    			sample = this->getSampleByRay (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
-
-//			*ptrGather += sample;
-//			*ptrImage += sample;
-//			*ptrImageSq += sample * sample;
-//	    }
-//	}
-
-   
-    return;
 }
 
 void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {
