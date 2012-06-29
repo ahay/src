@@ -30,12 +30,8 @@ public:
 
 		float** velField_;
 
-	float zoDipMin_;
-	float zoDipMax_;
-
-//	int raysNum_;
-//    float raysStep_;
-//    float raysStart_;
+	float startDirMin_;
+	float startDirMax_;
 
 	EscapePoint* travelTimes_;
 };

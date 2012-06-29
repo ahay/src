@@ -55,7 +55,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 			const float curScatAngle = scatStart + is * scatStep;
 			// loop over dip-angle
 			for (int id = 0; id < dipNum; ++id)	{
-				const float curDipAngle = dipStart + id * dipStep;
+				const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
 				
 				float sample (0.f);
 				int isBad = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
@@ -154,7 +154,7 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 			float srcAbsP (0.f);
 			this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
 			if (!onSurf) continue; // the ray does not reach the surface
-			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "s"
+			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "ms"
 			sample += this->getSampleFromData (curOffset, 0, curRecPos, curTime, recAbsP);
 			++count;
 		}
@@ -167,7 +167,7 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 	return 0;
 }
 
-void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& full) {
+void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
 
 	//
 
@@ -178,77 +178,84 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 
 	EscapePoint* pTT = travelTimes_;
 	
-	float ttDir = pTT->zodip;
+	float ttDir = pTT->startDir;
 
 	int count (0);
 	
-	while (ttDir > basedir && count < size) {++pTT; ttDir = pTT->zodip; ++count;}
+	while (ttDir > basedir && count < size) {
+		++pTT; 
+		ttDir = pTT->startDir; 
+		++count;
+	}
 	if (count == size) return;
 	--pTT;
 
 	float ttX = pTT->x;
-	while (ttX > curRecPos && count < size) {++pTT; ttX = pTT->x; ++count;} 	
+	while (ttX > curRecPos && count < size) { ++pTT; ttX = pTT->x; ++count; } 	
 	if (count == size) return;
 
-	EscapePoint* rightPoint = pTT;
-	EscapePoint* leftPoint = pTT + 1;				
-	
-	if (!leftPoint->full && !rightPoint->full) {
-		full = false; return;
-	} else if (!leftPoint->full) {
+	// get two basic points around the target point
+	EscapePoint* rightPoint = pTT - 1;
+	EscapePoint* leftPoint  = pTT;				
+
+	if (!leftPoint->isSurf && !rightPoint->isSurf) {
+		isSurf = false; return;
+	} else if (!leftPoint->isSurf) {
 		timeToPoint = rightPoint->t;		
 		pointAbsP   = rightPoint->p;	
-		full = true;	
-	} else if (!rightPoint->full) {
+		isSurf = true;	
+		return;
+	} else if (!rightPoint->isSurf) {
 		timeToPoint = leftPoint->t;		
 		pointAbsP   = leftPoint->p;		
-		full = true;	
+		isSurf = true;	
+		return;
 	} else {
 		float bef = ( rightPoint->x - curRecPos ) / (rightPoint->x - leftPoint->x);
 		float aft = 1 - bef;
 
 		timeToPoint = leftPoint->t * bef + rightPoint->t * aft;
 		pointAbsP   = leftPoint->p * bef + rightPoint->p * aft;
-		full = true;	
+		isSurf = true;	
+		return;
 	}	
-	
-return;
 }
 
-void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, float pRec, EscapePoint &resEscPoint) {
+void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, float targetStartDir, EscapePoint &resEscPoint) {
 
 
-	if (pRec < zoDipMin_) {resEscPoint.full = false; return;}
-	if (pRec > zoDipMax_) {resEscPoint.full = false; return;}
+	if (targetStartDir < startDirMin_) {resEscPoint.isSurf = false; return;}
+	if (targetStartDir > startDirMax_) {resEscPoint.isSurf = false; return;}
 		
 
 	EscapePoint* pEscPoint = escPoints;
-	float zodip = pEscPoint->zodip;
-	if (zodip < pRec) {
+	float curStartDir = pEscPoint->startDir;
+	if (curStartDir < targetStartDir) {
 		resEscPoint = *pEscPoint;
 		return;
 	}
 
 	int count (0);
 
-	while (zodip > pRec && count <= size) {
+	while (curStartDir > targetStartDir && count <= size) {
 		++pEscPoint;
+		curStartDir = pEscPoint->startDir;
 		++count;
-		zodip = pEscPoint->zodip;
 	}
 
-//	!!! this interolation is NOT good solution, it is temporary
+	if (count == size) {
+		resEscPoint = *(pEscPoint - 1);
+		return;
+	}
 
-	float bef = (pEscPoint->zodip - pRec) / ( pEscPoint->zodip - (pEscPoint - 1)->zodip );
+//	!!! this interolation is NOT the best solution
+
+	float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
 	float aft = 1.f - bef;
 
-	if (count == size)
-		resEscPoint = *(pEscPoint - 1);
-	else {
-		resEscPoint.x = pEscPoint->x * aft + (pEscPoint - 1)->x * bef;
-		resEscPoint.p = pEscPoint->p * aft + (pEscPoint - 1)->p * bef;
-		resEscPoint.t = pEscPoint->t * aft + (pEscPoint - 1)->t * bef;
-	}
+	resEscPoint.x = pEscPoint->x * aft + (pEscPoint - 1)->x * bef;
+	resEscPoint.p = pEscPoint->p * aft + (pEscPoint - 1)->p * bef;
+	resEscPoint.t = pEscPoint->t * aft + (pEscPoint - 1)->t * bef;
 
 	return;
 }
@@ -258,8 +265,8 @@ void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escP
 	const float xCIG = ip_->xStart + curX * ip_->xStep;
 	wavefrontTracer_.getEscapePoints (xCIG, curZ, escPoints);
 		
-	zoDipMin_ = wavefrontTracer_.wp_.rStart - 180.f;
-	zoDipMax_ = wavefrontTracer_.wp_.rStart +  (wavefrontTracer_.wp_.rNum - 1) * wavefrontTracer_.wp_.rStep - 180.f;
+	startDirMin_ = wavefrontTracer_.wp_.rStart - 180.f;
+	startDirMax_ = wavefrontTracer_.wp_.rStart +  (wavefrontTracer_.wp_.rNum - 1) * wavefrontTracer_.wp_.rStep - 180.f;
 
 
 	return;
@@ -327,7 +334,7 @@ void DepthMigrator2D::processGatherOLD (Point2D& curGatherCoords, float curOffse
 
 void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {
 
-	if (!escPoint.full) {
+	if (!escPoint.isSurf) {
 		sample = 0.f;
 		return; 
 	}
@@ -353,8 +360,8 @@ void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {
 	float timeRight = escPoint.t + (posRightTrace - escPoint.x) * p * 0.001;	
 
 	float absP = fabs (p);
-	float sampleLeft  = this->getSampleFromData (escPoint.h, 0, posLeftTrace,  1000 * timeLeft, absP);
-	float sampleRight = this->getSampleFromData (escPoint.h, 0, posRightTrace, 1000 * timeRight, absP);
+	float sampleLeft  = this->getSampleFromData (escPoint.offset, 0, posLeftTrace,  1000 * timeLeft, absP);
+	float sampleRight = this->getSampleFromData (escPoint.offset, 0, posRightTrace, 1000 * timeRight, absP);
 
 	float bef = (escPoint.x - posLeftTrace) / xStepData_;
 	float aft = 1.f - bef;
@@ -366,22 +373,22 @@ void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {
 
 float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const float geoX1, const float ti, const float p) {
 	
-	int zNum_ = dp_->zNum;
-	int xNum_ = dp_->xNum;
+	int tNum = dp_->zNum;
+	int xNum = dp_->xNum;
 
-	float zStep_ = dp_->zStep;
-	float xStep_ = dp_->xStep;
+	float tStep = dp_->zStep;
+	float xStep = dp_->xStep;
 
-	float zStart_ = dp_->zStart;
-	float xStart_ = dp_->xStart;
+	float tStart = dp_->zStart;
+	float xStart = dp_->xStart;
 
 	float geoX = isCMP_ ? geoX1 - curOffset_ * 0.5 : geoX1;
 
-	const int itMiddle = (int) ((ti - zStart_) / zStep_);
-	if (itMiddle < 0 || itMiddle >= zNum_) return 0.f;
+	const int itMiddle = (int) ((ti - tStart) / tStep);
+	if (itMiddle < 0 || itMiddle >= tNum) return 0.f;
 
-	const int xSamp = (int) ((geoX - xStart_) / xStep_);
-	if (xSamp < 0 || xSamp >= xNum_) return 0.f;
+	const int xSamp = (int) ((geoX - xStart) / xStep);
+	if (xSamp < 0 || xSamp >= xNum) return 0.f;
 
 	// offset
 
@@ -389,11 +396,11 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 //	sf_warning ("offset %g %d", h, offsetInd);
 	if (offsetInd >= dp_->hNum || offsetInd < 0) return 0.f;
 
-	float* const trace = ptrToData_ + xSamp * zNum_ + xNum_ * zNum_ * offsetInd;
+	float* const trace = ptrToData_ + xSamp * tNum + xNum * tNum * offsetInd;
 
 	// middle (main) sample
     
-    const float befMiddle = (ti - zStart_) * 1.f / zStep_ - itMiddle;
+    const float befMiddle = (ti - tStart) * 1.f / tStep - itMiddle;
     const float aftMiddle = 1.f - befMiddle;
 
 	const float sampleMiddle = aftMiddle * trace[itMiddle] + befMiddle * trace[itMiddle + 1];
@@ -401,16 +408,16 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	if (!isAA_) 
 		return sampleMiddle;
 
-	const float filterLength = p * xStep_ + zStep_;
+	const float filterLength = p * xStep + tStep;
     
   	// left sample
  
  	const float timeLeft = ti - filterLength;
- 	const int     itLeft = (int) ((timeLeft - zStart_) / zStep_); 
+ 	const int     itLeft = (int) ((timeLeft - tStart) / tStep); 
 	
 	if (itLeft < 0) return 0.f;
 
-    const float befLeft = (timeLeft - zStart_) * 1.f / zStep_ - itLeft;
+    const float befLeft = (timeLeft - tStart) * 1.f / tStep - itLeft;
     const float aftLeft = 1.f - befLeft;
 
 	const float sampleLeft = aftLeft   * trace[itLeft]   + befLeft   * trace[itLeft   + 1];
@@ -418,18 +425,18 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	// right sample
  
  	const float timeRight = ti + filterLength;
- 	const int     itRight = (int) ((timeRight - zStart_) / zStep_); 
+ 	const int     itRight = (int) ((timeRight - tStart) / tStep); 
 
-	if (itRight >= zNum_ - 1) return 0.f;
+	if (itRight >= tNum - 1) return 0.f;
 
-    const float befRight = (timeRight - zStart_) * 1.f / zStep_ - itRight;
+    const float befRight = (timeRight - tStart) * 1.f / tStep - itRight;
     const float aftRight = 1.f - befRight;
 
 	const float sampleRight = aftRight  * trace[itRight]  + befRight  * trace[itRight  + 1];
 
 	// norm
  
-    float imp = zStep_ / (zStep_ + timeRight - timeLeft);
+    float imp = tStep / (tStep + timeRight - timeLeft);
     imp *= imp;
     
 	const float aaSample = (2.f * sampleMiddle - sampleLeft - sampleRight) * imp;

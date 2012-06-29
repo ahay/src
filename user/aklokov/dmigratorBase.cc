@@ -213,12 +213,12 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 			// checking if the ray has reached the daylight surface
 	
 		    for (int ig = 0; ig < wp_.rNum; ++ig) {
-				if (ep[ig].full) continue;
+				if (ep[ig].isSurf) continue;
 				else if (prevWF[ig].z >= 0) {
 					ep[ig].x = prevWF[ig].x;				
 					ep[ig].z = prevWF[ig].z;				
 					ep[ig].t = curTime;					
-				} else if (prevWF[ig].z < 0 && !ep[ig].full) {
+				} else if (prevWF[ig].z < 0 && !ep[ig].isSurf) {
 								
 					float bef = (1 - prevWF[ig].z / (prevWF[ig].z - ep[ig].z));
 					float dx = prevWF[ig].x - ep[ig].x;
@@ -227,10 +227,10 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 					ep[ig].t += bef * wp_.tStep;
 //					ep[ig].t *= 2; // because we need double time
 							
-					ep[ig].full = 1;
+					ep[ig].isSurf = true;
 				}
-				ep[ig].zodip = wp_.rStart + ig * wp_.rStep - 180.f;
-				ep[ig].zodip *= -1;
+				ep[ig].startDir = wp_.rStart + ig * wp_.rStep - 180.f;
+				ep[ig].startDir *= -1;
 			}
 		}	
 

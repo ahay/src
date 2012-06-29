@@ -24,7 +24,7 @@ private:
 class EscapePoint {
 public:
     EscapePoint ();
-    EscapePoint (float x, float z, float t, float p, bool full);
+    EscapePoint (float x, float z, float t, float p, float offset, float startDir, bool isSurf);
    ~EscapePoint ();
 
     EscapePoint& operator= (const EscapePoint& point);
@@ -33,9 +33,9 @@ public:
 	float x;
 	float t;
 	float p;
-	float h;
-	float zodip;
-	bool full;
+	float offset;    // offset
+	float startDir;  // scattering direction of the ray
+	bool  isSurf;    // if ray reached the daylight surface
 };
 
 

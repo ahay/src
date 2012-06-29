@@ -30,14 +30,19 @@ EscapePoint::EscapePoint () : x (0.f),
 						      z (0.f),
 						      t (0.f), 
 						      p (0.f),
-						      full (false) {
+						      offset   (0.f), 
+							  startDir (0.f),
+						      isSurf (false) {
 }
 
-EscapePoint::EscapePoint (float x1, float z1, float t1,  float p1, bool full1) : x (x1),
-																    z (z1),
-																    t (t1), 	
-																    p (p1),
-																    full (full1) {
+EscapePoint::EscapePoint (float x1, float z1, float t1, float p1, 
+						  float offset1, float startDir1, bool isSurf1) : x (x1),
+							 									          z (z1),
+																 	      t (t1), 	
+																	      p (p1),
+																	      offset   (offset1), 
+																	      startDir (startDir1),
+																	      isSurf   (isSurf1) {
 }
 
 EscapePoint::~EscapePoint () {
@@ -51,9 +56,9 @@ EscapePoint& EscapePoint::operator= (const EscapePoint& point) {
     z = point.z;
     t = point.t;
 	p = point.p;    
-	full = point.full;
-	h = point.h;
-	zodip = point.zodip;
+	offset   = point.offset;
+	startDir = point.startDir;
+	isSurf   = point.isSurf;
 
     return *this;
 }
