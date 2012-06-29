@@ -1573,6 +1573,9 @@ void destroy_tracegeom(tracegeom * tg) {
   if (tg->fldr) userfree_(tg->fldr); tg->fldr=NULL;
   if (tg->troff) userfree_(tg->troff); tg->troff=NULL;
 
+#ifdef IWAVE_USE_MPI
+  MPI_Type_free(&(tg->p));
+#endif
 }
 
 void setnull_tracegeom(tracegeom * tg) {
