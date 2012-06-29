@@ -121,7 +121,7 @@ FILE * iwave_fopen(char ** name,
 	return retfp;
       }
 
-      /*      fprintf(stream,"  temp file name = %s\n",*name);*/
+      fprintf(stream,"iwave_fopen: temp file name = %s\n",*name);
 
       /* open stream - always in w+ mode */
       if (!(retfp=fdopen(fd,"w+"))) {
@@ -213,6 +213,8 @@ FILE * iwave_fopen(char ** name,
       /* MEMORY WHICH MUST BE MANAGED BY CALLING UNIT */
       *name=(char *)usermalloc_((strlen(fpr->nm)+1)*sizeof(char));
       strcpy(*name,fpr->nm);
+
+      fprintf(stream,"iwave_fopen - re-use temp file %s\n",*name);
     }
 
     /* in either case, return file pointer */
