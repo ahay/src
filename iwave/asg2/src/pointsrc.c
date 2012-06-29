@@ -368,7 +368,7 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
   if(rk ==0 ) {
     refbou = 0.0;
     for ( i = 0; i < sz; ++i ) refbou=iwave_max(refbou,procbuf[i]);
-    free(procbuf);
+    userfree_(procbuf);
   }
   MPI_Bcast(&refbou, 1, IWAVE_MPI_REAL, 0, cm);
 #endif	

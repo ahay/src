@@ -142,6 +142,7 @@ int asg_modelinit(PARARRAY *pars,
         if (err=ps_flint(*pars,"k_phys",&(sgnm->k))) {
 	  fprintf(stream,"ERROR: asg_modelinit from ps_flint\n");
 	  fprintf(stream,"failed to read deprecated order param k_phys\n");
+	  userfree_(jnk);
 	  return err;
 	}
       }
@@ -150,8 +151,10 @@ int asg_modelinit(PARARRAY *pars,
 	fprintf(stream,"ERROR: asg_modelinit\n");	
 	fprintf(stream,"invalid value for deprecated param scheme_phys\n");
 	fprintf(stream,"legal values are 22, 24, 210 (3D only), and 2k\n");
+	  userfree_(jnk);
 	return err;
       }
+      userfree_(jnk);
     }
   }
   /* sanity-check order */
@@ -243,6 +246,18 @@ int asg_modeldest(IMODEL * model) {
   if (fdm) {
     if (fdm->fdpars) {
       sgnm=(SGN_TS_PARS *)(fdm->fdpars);
+      if (sgnm->ep0_p) userfree_(sgnm->ep0_p);
+      if (sgnm->ep0_pp) userfree_(sgnm->ep0_pp);
+      if (sgnm->ev0_p) userfree_(sgnm->ev0_p);
+      if (sgnm->ev0_pp) userfree_(sgnm->ev0_pp);
+      if (sgnm->ep1_p) userfree_(sgnm->ep1_p);
+      if (sgnm->ep1_pp) userfree_(sgnm->ep1_pp);
+      if (sgnm->ev1_p) userfree_(sgnm->ev1_p);
+      if (sgnm->ev1_pp) userfree_(sgnm->ev1_pp);
+      if (sgnm->ep2_p) userfree_(sgnm->ep2_p);
+      if (sgnm->ep2_pp) userfree_(sgnm->ep2_pp);
+      if (sgnm->ev2_p) userfree_(sgnm->ev2_p);
+      if (sgnm->ev2_pp) userfree_(sgnm->ev2_pp);
       userfree_(sgnm);
     }
     // since the FD_MODEL is allocated here, destroy here

@@ -782,6 +782,7 @@ int sg_readmedia(RDOM dom,
 
     if (!ps_flcstring(par,"buoyancy",&buoykey)) {
       err=rsfread(Btmp._s,rags,ran,buoykey,1,stream,panelindex);
+      userfree_(buoykey);
       if (err) {
 	fprintf(stream,
 		"ERROR: sg_readmedia from rsfread - buoykey (single) = %s\n",buoykey);
@@ -830,11 +831,12 @@ int sg_readmedia(RDOM dom,
     
     else if ((!ps_flcstring(par,"density",&rhokey)) || 
 	     (!ps_flcstring(par,"rho",&rhokey))) {
-      fprintf(stream,"sg_readmedia -> rsfread dens\n");
-      fflush(stream);
+      //      fprintf(stream,"sg_readmedia -> rsfread dens\n");
+      //      fflush(stream);
       err=rsfread(Btmp._s,rags,ran,rhokey,1,stream,panelindex);
-      fprintf(stream,"sg_readmedia <- rsfread dens\n");
-      fflush(stream);
+      userfree_(rhokey);
+      //      fprintf(stream,"sg_readmedia <- rsfread dens\n");
+      //      fflush(stream);
       if (err) {
 	fprintf(stream,"ERROR: sg_readmedia from ra_rsfread - rhokey (single) = %s\n",rhokey);
 	ra_destroy(&Btmp);
