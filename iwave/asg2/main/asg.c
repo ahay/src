@@ -8,17 +8,17 @@
  *                            BEGIN INCLUDES 
  * ============================================================================*/
 
-#include <iwave.h>
-#include <sgn.h>
-#include <trace_term.h>
-#include <pointsrc.h>
-#include <sampler.h>
-#include <parser.h>
-#include <asg_selfdoc.h>
-#include <asg_movie.h>
+#include "iwave.h"
+#include "sgn.h"
+#include "trace_term.h"
+#include "pointsrc.h"
+#include "sampler.h"
+#include "parser.h"
+#include "asg_selfdoc.h"
+#include "asg_movie.h"
 
 #ifdef _OPENMP
-#include <omp.h>
+#include "omp.h"
 #endif
 
 #define NSTR 128
@@ -60,7 +60,7 @@ int main(int argc, char ** argv) {
   RPNT smult;              /* multiplier array   */
   RPNT scoord;             /* source cell loc    */
   int dump_term=0;         /* trace info dump    */
-  int istart=0;            /* start index        */
+  int istart;              /* start index        */
   int ts;                  /* thread support lvl */
   int rk;                  /* process rank       */
 
@@ -106,7 +106,11 @@ int main(int argc, char ** argv) {
   fflush(stream);
 #endif
 
-  readinput(&pars,stream,argc,argv);
+  err=readinput(&pars,stream,argc,argv);
+  if (err) {
+    fprintf(stderr,"ERROR: main from readinput. ABORT\n");
+    abortexit(err,pars,&stream);
+  }
 
 #ifdef VERBOSE
   fprintf(stream,"paramtable:\n");
@@ -468,6 +472,8 @@ int main(int argc, char ** argv) {
 #endif
 
     iwave_destroy(&state);
+
+    iwave_fdestroy();
 
 #ifdef IWAVE_USE_MPI
 
