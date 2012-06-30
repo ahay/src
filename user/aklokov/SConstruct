@@ -44,9 +44,11 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
+objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
+
 for prog in ccmains:
     if 'c++' in env.get('API',[]):
-        prog = env.Program (prog, ['M'+prog+'.cc'] + map (lambda x: x + '.o', subs),CCFLAGS='')
+        prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
         env.Depends(prog,map (lambda x: x + '.hh', subs))
     else:
         prog = env.RSF_Place ('sf' + prog, None, var='API', package='c++')
