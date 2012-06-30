@@ -28,28 +28,55 @@
 int main(int argc, char* argv[])
 {
     char *unit, *what, *type;
-    bool cig;
-    int nt, nx, ny, ns, nh, nz, nzx, i, ix, iz, ih, is, ist, iht;
+    bool adj, cig;
+    off_t nzx;
+    int nt, nx, ny, ns, nh, nz, i, ix, iz, ih, is, ist, iht, ng;
     float *trace, **out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
-    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz, aal, tx, aper;
-    sf_file inp, mig, tbl, der;
+    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz;
+    float aal, tx, aper;
+    sf_file dat, mig, tbl, der;
 
     sf_init (argc,argv);
-    inp = sf_input("in");
+
+    if (!sf_getbool("adj",&adj)) adj=true;
+    /* y for migration, n for modeling */
+
+    if (adj) {
+	dat = sf_input("in");
+	mig = sf_output("out");
+    } else {
+	mig = sf_input("in");
+	dat = sf_output("out");
+    }
+
     tbl = sf_input("table"); /* traveltime table */
     der = sf_input("deriv"); /* source derivative table */
-    mig = sf_output("out");
 
-    if (!sf_histint(inp,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(inp,"n2",&nh)) sf_error("No n2= in input");
-    if (!sf_histint(inp,"n3",&ns)) sf_error("No n3= in input");
+    if (adj) {
+	if (!sf_histint(dat,"n1",&nt)) sf_error("No n1= in input");
+	if (!sf_histint(dat,"n2",&nh)) sf_error("No n2= in input");
+	if (!sf_histint(dat,"n3",&ns)) sf_error("No n3= in input");
+	
+	if (!sf_histfloat(dat,"o1",&t0)) sf_error("No o1= in input");
+	if (!sf_histfloat(dat,"d1",&dt)) sf_error("No d1= in input");
+	if (!sf_histfloat(dat,"o2",&h0)) sf_error("No o2= in input");
+	if (!sf_histfloat(dat,"d2",&dh)) sf_error("No d2= in input");
+	if (!sf_histfloat(dat,"o3",&s0)) sf_error("No o3= in input");
+	if (!sf_histfloat(dat,"d3",&ds)) sf_error("No d3= in input");
 
-    if (!sf_histfloat(inp,"o1",&t0)) sf_error("No o1= in input");
-    if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
-    if (!sf_histfloat(inp,"o2",&h0)) sf_error("No o2= in input");
-    if (!sf_histfloat(inp,"d2",&dh)) sf_error("No d2= in input");
-    if (!sf_histfloat(inp,"o3",&s0)) sf_error("No o3= in input");
-    if (!sf_histfloat(inp,"d3",&ds)) sf_error("No d3= in input");
+    } else {
+	
+	if (!sf_getint("nt",&nt)) sf_error("Need nt="); /* time samples */
+	if (!sf_getint("nh",&nh)) nh=1; /* offset samples */
+	if (!sf_getint("ns",&ns)) ns=1; /* shot samples */
+	
+	if (!sf_getfloat("t0",&t0)) t0=0.0; /* time origin */
+	if (!sf_getfloat("dt",&dt)) sf_error("Need dt="); /* time sampling */
+	if (!sf_getfloat("h0",&h0)) h0=0.0; /* offset origin */
+	if (!sf_getfloat("dh",&dh)) sf_error("Need dh="); /* offset sampling */
+	if (!sf_getfloat("s0",&s0)) s0=0.0; /* shot origin */
+	if (!sf_getfloat("ds",&ds)) sf_error("Need ds="); /* shot sampling */
+    }
 
     if (1==nh) dh=0.0;
     if (1==ns) ds=0.0;
@@ -76,38 +103,61 @@ int main(int argc, char* argv[])
     if (!sf_getbool("cig",&cig)) cig=false;
     /* y - output common offset gathers */
 
-    sf_putint(mig,"n1",nz);
-    sf_putint(mig,"n2",nx);
+    ng = cig? nh: 1;
 
-    sf_putfloat(mig,"o1",z0);
-    sf_putfloat(mig,"d1",dz);
-    sf_putfloat(mig,"o2",x0);
-    sf_putfloat(mig,"d2",dx);
-    sf_putstring(mig,"label1","Depth");
-    sf_putstring(mig,"label2","Lateral");
-    unit = sf_histstring(inp,"unit2");
-    if (NULL != unit) sf_putstring(mig,"unit1",unit);
-    if (cig) {
-        sf_putint(mig,"n3",nh);
-        sf_putfloat(mig,"o3",h0);
-        sf_putfloat(mig,"d3",dh);
-        sf_putstring(mig,"label3","Offset");
-        if (NULL != unit) sf_putstring(mig,"unit3",unit);
+    if (adj) {
+	sf_putint(mig,"n1",nz);
+	sf_putint(mig,"n2",nx);
+	
+	sf_putfloat(mig,"o1",z0);
+	sf_putfloat(mig,"d1",dz);
+	sf_putfloat(mig,"o2",x0);
+	sf_putfloat(mig,"d2",dx);
+	sf_putstring(mig,"label1","Depth");
+	sf_putstring(mig,"label2","Lateral");
+	unit = sf_histstring(dat,"unit2");
+	if (NULL != unit) sf_putstring(mig,"unit1",unit);
+	if (cig) {
+	    sf_putint(mig,"n3",nh);
+	    sf_putfloat(mig,"o3",h0);
+	    sf_putfloat(mig,"d3",dh);
+	    sf_putstring(mig,"label3","Offset");
+	    if (NULL != unit) sf_putstring(mig,"unit3",unit);
+	}
+    } else {
+	sf_putint(dat,"n1",nt);
+	sf_putint(dat,"n2",nh);
+	sf_putint(dat,"n3",ns);
+	
+	sf_putfloat(dat,"o1",t0);
+	sf_putfloat(dat,"d1",dt);
+
+	sf_putfloat(dat,"o2",h0);
+	sf_putfloat(dat,"d2",dh);
+
+	sf_putfloat(dat,"o3",s0);
+	sf_putfloat(dat,"d3",ds);
+
+	sf_putstring(dat,"label1","Time");
+	sf_putstring(dat,"unit1","s");	
+
+	sf_putstring(dat,"label2","Offset");
+	sf_putstring(dat,"label3","Shot");
     }
-
-    nzx = nz*nx;
+	
+    nzx = (off_t) nz* (off_t) nx;
 
     /* read traveltime table */
     table = sf_floatalloc2(nzx,ny);
-    sf_floatread(table[0],(off_t)nzx*(off_t)ny,tbl);
+    sf_floatread(table[0],nzx*ny,tbl);
     sf_fileclose(tbl);
 
     /* read derivative table */
     tablex = sf_floatalloc2(nzx,ny);
-    sf_floatread(tablex[0],(off_t)nzx*(off_t)ny,der);
+    sf_floatread(tablex[0],nzx*ny,der);
     sf_fileclose(der);    
 
-    out = sf_floatalloc2(nzx,cig ? nh : 1);
+    out = sf_floatalloc2(nzx,ng);
     trace = sf_floatalloc(nt);
 
     stable  = sf_floatalloc(nzx);
@@ -126,6 +176,12 @@ int main(int argc, char* argv[])
 
     /* initialize summation */
     kirmig_init(nt,dt,t0);
+    
+    if (adj) {
+	memset (out[0], 0, nzx*ng*sizeof(float));
+    } else {		
+	sf_floatread(out[0],nzx,mig);
+    }
 
     for (is=0; is < ns; is++) { /* shot */
 	s = s0 + is*ds;
@@ -156,9 +212,6 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-        if (!cig || 0 == is)
-	    memset (&out[0][0], 0, cig ? nzx*nh*sizeof(float) : nzx*sizeof(float));
-
 	for (ih=0; ih < nh; ih++) { /* offset */
 	    h = h0+ih*dh;
 
@@ -187,9 +240,15 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    /* read trace */
-	    sf_floatread (trace,nt,inp);
-	    doubint(nt,trace);
+	    if (adj) {
+		/* read trace */
+		sf_floatread (trace,nt,dat);
+		doubint(nt,trace);
+	    } else {
+		for (i=0; i < nt; i++) {
+		    trace[i]=0.;
+		}
+	    }
 
 #ifdef _OPENMP
 #pragma omp parallel for private(iz,ix,t1,t2,ti,tx)
@@ -212,14 +271,17 @@ int main(int argc, char* argv[])
 		ti = t1+t2;
 
 		tx = SF_MAX(fabsf(stablex[i]*ds),fabsf(rtablex[i]*dh));
-		pick(true,ti,tx*aal,out[cig ? ih : 0]+i,trace);
+		pick(adj,ti,tx*aal,out[cig ? ih : 0]+i,trace);
 	    }
-	}
-	
-        if (!cig) sf_floatwrite(out[0],(off_t)nzx,mig);
+
+	    if (!adj) {
+		doubint(nt,trace);
+		sf_floatwrite (trace,nt,dat);
+	    }
+	} /* ih */
     }
     
-    if (cig) sf_floatwrite(out[0],(off_t)nzx*(off_t)nh,mig);
+    if (adj) sf_floatwrite(out[0],nzx*ng,mig);
 
     exit(0);
 }

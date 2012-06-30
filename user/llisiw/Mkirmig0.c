@@ -60,14 +60,14 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(dat,"o2",&s0)) sf_error("No o2=");
 	if (!sf_histfloat(dat,"d2",&ds)) sf_error("No d2=");
     } else {
-	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
-	if (!sf_getint("ns",&ns)) sf_error("Need ns=");
+	if (!sf_getint("nt",&nt)) sf_error("Need nt="); /* time samples */
+	if (!sf_getint("ns",&ns)) sf_error("Need ns="); /* midpoint samples */
 	
-	if (!sf_getfloat("t0",&t0)) t0=0.0;
-	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
+	if (!sf_getfloat("t0",&t0)) t0=0.0;                /* time origin */
+	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");  /* time sampling */
 	
-	if (!sf_getfloat("s0",&s0)) s0=0.0;
-	if (!sf_getfloat("ds",&ds)) sf_error("Need ds=");
+	if (!sf_getfloat("s0",&s0)) s0=0.0;                /* midpoint origin */
+	if (!sf_getfloat("ds",&ds)) sf_error("Need ds=");  /* midpoint sampling */
     }
 
     if (!sf_histint(tbl,"n1",&nz)) sf_error("No n1= in table");
