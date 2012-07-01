@@ -6,6 +6,7 @@
 #include "ldip2.h"
 #include "odip.h"
 #include "odip1.h"
+#include "odip3.h"
 
 
 int main(int argc, char*argv[])
@@ -62,6 +63,9 @@ int main(int argc, char*argv[])
 	case 1:
 		odip1_init(radius, nf, interp, n1, n2, liter, verb);
 		break;
+	case 3:
+		odip3_init(radius, nf, interp, n1, n2, liter, verb);
+		break;
 	default:
 		odip_init(radius, nf, interp, n1, n2, rect, liter, verb);
 	}
@@ -87,6 +91,9 @@ int main(int argc, char*argv[])
 		case 1:
 			odip1(wav, dip, niter);
 			break;
+		case 3:
+			odip3(wav, dip, niter);
+			break;
 		default:
 			odip(wav, dip, niter);
 		}
@@ -110,6 +117,9 @@ int main(int argc, char*argv[])
 	{
 	case 1:
 		odip1_close();
+		break;
+	case 3:
+		odip3_close();
 		break;
 	default:
 		odip_close();

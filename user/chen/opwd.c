@@ -52,6 +52,42 @@ void opwd(float **in, float **out, float **p)
 	}
 }
 
+void opwdpd(float **in, float **out, float **p, int id)
+/*< partial derivative filter of circle interpolating PWD >*/
+{
+	int i1, i2;
+	float p1, p2, c1, z1;
+
+	for(i2=nf; i2<n2-nf; i2++)
+	for(i1=nf; i1<n1-nf; i1++)
+	{
+		p1 = r*sin(p[i2][i1]);
+		p2 = r*cos(p[i2][i1]);
+		if(id==0)
+		{
+			lphase_filt(nf, c, p1, b1, 2*nf, true);
+			lphase_filt(nf, c, p2, b2, 2*nf, false);
+		} else{
+			lphase_filt(nf, c, p1, b1, 2*nf, false);
+			lphase_filt(nf, c, p2, b2, 2*nf, true);
+		}
+		z1 = fir2(-nf, nf, b1+nf, -nf, nf, b2+nf, in[i2]+i1, 1, n1);
+		switch(itp)
+		{
+		case 1:
+			c1 = 0.0;
+			break;
+		case 2:
+			c1 = 0.0;
+			break;
+		default:
+			z1 = fir2(-nf, nf, b1+nf, -nf, nf, b2+nf, in[i2]+i1, -1, -n1);
+		}
+		out[i2][i1] = (c1 - z1);//*(id==0?p2:-p1);
+	}
+}
+
+
 
 void opwdd(float **in, float **out, float **p)
 /*< derivative filter of circle interpolating PWD >*/

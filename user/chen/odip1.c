@@ -47,7 +47,7 @@ void odip1(float **in, float **dip, int nit)
 /*< omnidirectional dip estimation >*/
 {
 	int it, i1;
-	double eta, u3;
+	double eta, u3, s1, c1;
 
 	for(i1=0; i1<n1*n2; i1++)
 	{
@@ -63,12 +63,22 @@ void odip1(float **in, float **dip, int nit)
 		for(i1=0; i1<n1*n2; i1++)
 		{
 			u3=u1[0][i1]*u2[0][i1]/
-				(u2[0][i1]*u2[0][i1]+0.0001);
+				(u2[0][i1]*u2[0][i1]+0.00000001);
 			dip[0][i1] -= eta*u3;
-			while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
-			while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
+            s1=sin(dip[0][i1]);
+            c1=cos(dip[0][i1]);
+            dip[0][i1] = atan2(s1*c1, c1*c1+0.00001);
+
+//			while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
+//			while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
 		}
 	}
+    for(i1=0; i1<n1*n2; i1++)
+    {
+        while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
+        while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
+    }
+
 }
 
 
