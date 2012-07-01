@@ -1,0 +1,43 @@
+n1=721 d1=2.500000e+00 o1=0.000000e+00
+n2=3121 d2=2.500000e+00 o2=0.000000e+00
+n3=1 d3=1.000000e+00 o3=3.300000e+03
+data_type=velocity
+data_format=native_float
+in=../../model/data/vp2d_2.5m.rsf@
+1.4-svn	sfdd	demo/model/data:	sergey@Sergeys-MacBook-Air.local	Thu Jun  7 02:38:15 2012
+
+	data_format="xdr_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+1.4-svn	sfdd	trip/iwave/demo1:	wsymes@william-symess-macbook-pro-15.local	Sun Jul  1 10:22:23 2012
+
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	in="stdin"
+
+1.4-svn	sfwindow	trip/iwave/demo1:	wsymes@william-symess-macbook-pro-15.local	Sun Jul  1 10:22:23 2012
+
+	d2=20.0000012314156
+	n2=391
+	o1=0
+	o2=0
+	data_format="native_float"
+	esize=4
+	in="stdout"
+	d1=20
+	n1=91
+	in="stdin"
+
+1.4-svn	sfput	trip/iwave/demo1:	wsymes@william-symess-macbook-pro-15.local	Sun Jul  1 10:22:23 2012
+
+	data_format="native_float"
+	unit=km/s
+	label=Velocity
+	in="/var/tmp/trip/iwave/demo1/vp3.rsf@"
+	unit1=m
+	label1=
+	unit2=m
+	label2=Distance

@@ -6,6 +6,10 @@ int main(int argc, char ** argv) {
   PARARRAY * par = ps_new();
   char * s = NULL;
   char * t = NULL;
+  char * dff = NULL;
+  char * inf = NULL;
+  char * dfl = NULL;
+  char * inl = NULL;
   long l = 0L;
   short h = 0;
   int i = 0;
@@ -18,8 +22,11 @@ int main(int argc, char ** argv) {
     exit(1);
   }
 
+  printf("DUMP of PARFILE:\n");
+  printf("------------------------------------------------------\n");
+    
   ps_printall(*par,stdout);
-
+  printf("------------------------------------------------------\n\n");
   if (err=ps_ffcstring(*par,"n1",&s)) {
     fprintf(stdout,"did not find n1 (cstring), err=%d\n",err);
   }
@@ -40,11 +47,39 @@ int main(int argc, char ** argv) {
     fprintf(stdout,"first value of n1 (long) = %ld\n",l);
   }
 
+  if (err=ps_ffcstring(*par,"data_format",&dff)) {
+    fprintf(stdout,"did not find data_format (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"first value of data_format (cstring) = %s\n",dff);
+  }
+
+  if (err=ps_flcstring(*par,"data_format",&dfl)) {
+    fprintf(stdout,"did not find data_format (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"last value of data_format (cstring) = %s\n",dfl);
+  }
+
   if (err=ps_fflong(*par,"data_format",&l)) {
     fprintf(stdout,"did not find data_format (long), err=%d\n",err);
   }
   else {
     fprintf(stdout,"first value of data_format (long) = %ld\n",l);
+  }
+
+  if (err=ps_ffcstring(*par,"in",&inf)) {
+    fprintf(stdout,"did not find in (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"first value of in (cstring) = %s\n",inf);
+  }
+
+  if (err=ps_flcstring(*par,"in",&inl)) {
+    fprintf(stdout,"did not find in (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"last value of in (cstring) = %s\n",inl);
   }
 
   if (err=ps_fflong(*par,"d1",&l)) {

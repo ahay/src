@@ -1,0 +1,5 @@
+sunull nt=101 ntr=11 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100 > h1.su
+sunull nt=101 ntr=11 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100 > f1.su
+sunull nt=201 ntr=21 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100 > f2.su
+
+

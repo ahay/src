@@ -1,0 +1,15 @@
+DispFlag=2
+AbsGradTol=0.0
+RelGradTol=0.01
+MaxItn=5
+LS_MaxSample=5
+LS_FirstStep=1.0e-7
+LS_MinStepTol=1.e-10
+LS_FractionOfMaxStep=0.9
+MinDecrease=0.01
+GoodDecrease=0.8
+StepDecrFactor=0.5
+StepIncrFactor=1.8
+BFGS_InvHessianScale=1.0
+BFGS_MaxUpdates=5
+
