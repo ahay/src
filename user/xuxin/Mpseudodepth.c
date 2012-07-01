@@ -46,7 +46,7 @@ int main(int argc,char *argv[])
 		!sf_histfloat(Ftau,"d1",&dz))
 		sf_error("Need n1=(n1>2) o1= d1= in tau");
 	nx = sf_leftsize(Ftau,1);
-	sf_putint(Fout,"n2",nx);
+	// sf_putint(Fout,"n2",nx);
 
 	if (inv) {
 		if (!sf_histint  (Fin,"n1",&nt) || nt < 3 ||

@@ -21,7 +21,7 @@
 
 #define MB 1048576
 
-size_t size;
+size_t esize;
 
 int is_little_endian(void)
 {
@@ -66,7 +66,7 @@ void count()
 {
 	static int b=0, mb=0;
 
-	if ((b += size) >= MB) {
+	if ((b += esize) >= MB) {
 		b = 0;
 		sf_warning("%d MB written;",++mb);
 	}
@@ -74,8 +74,7 @@ void count()
 
 int main(int argc, char *argv[])
 {
-    int i,n,n1;
-	off_t s,s1;
+	off_t fsize;
 	void *p;
 	bool verb;
 	sf_file Fin,Fout;
@@ -86,37 +85,22 @@ int main(int argc, char *argv[])
 	Fin = sf_input("in");
 	Fout= sf_output("out");
 
-    n1 = sf_filesize(Fin);
-
-    if (!sf_getlargeint("n",(off_t *)&n)) n = n1;
-    /* num of elements to convert */
 	if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity */
 
-    if (n < n1) {
-        sf_putlargeint(Fout,"n1",(off_t)n);
-
-        if (sf_leftsize(Fin,1) > 1) {
-		sf_warning("squeez");
-			if (sf_histint(Fin,"n2",&i)) sf_putint(Fout,"n2",1);
-			if (sf_histint(Fin,"n3",&i)) sf_putint(Fout,"n3",1);
-			if (sf_histint(Fin,"n4",&i)) sf_putint(Fout,"n4",1);
-		}
-    }
-
     switch (type = sf_gettype(Fin)) {
-    case SF_INT   : size = sizeof(int  ); break;
-    case SF_FLOAT : size = sizeof(float); break;
+    case SF_INT   : esize = sizeof(int  ); break;
+    case SF_FLOAT : esize = sizeof(float); break;
     default : sf_error("need type={int,float} in input");
     }
 
-    s = n * size;
-    s1= n1* size;
-    p = (void *)sf_alloc(1,size);
-
+	sf_seek(Fin,0,SEEK_END);
+	fsize = sf_tell(Fin);
 	sf_seek(Fin,0,SEEK_SET);
 
-    while(sf_tell(Fin) < s) {
+    p = (void *)sf_alloc(1,esize);
+
+    while(sf_tell(Fin) < fsize) { /* feof? */
         switch (sf_gettype(Fin)) {
         case SF_INT :
 			sf_intread(p,1,Fin);
@@ -133,7 +117,7 @@ int main(int argc, char *argv[])
 		}
         if (verb) count();
 	}
-	if (verb) sf_warning("\n%d of %d elements converted\n",sf_tell(Fin) / size,n1);
+	if (verb) sf_warning("\n%u of %u elements converted\n",sf_tell(Fin) / esize,fsize / esize);
 
 	sf_fileclose(Fin);
 	sf_fileclose(Fout);
