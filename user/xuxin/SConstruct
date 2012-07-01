@@ -1,0 +1,27 @@
+import os, sys
+
+try:
+    import bldutil
+    glob_build = True
+    srcroot = '../..'
+    Import('env bindir pkgdir')
+except:
+    glob_build = False
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug()
+    bindir = pkgdir = None
+
+progs = '''
+integral1 pseudodepth swapbyte
+'''
+
+env.Append(CPPPATH='/usr/include',
+		   LIBPATH='/usr/lib64',
+		   LIBS=['lapack'])
+    
+targets = bldutil.UserSconsTargets()
+targets.c = progs
+
+targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
