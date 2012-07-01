@@ -2,6 +2,8 @@
            cfl=0.4        proportion of max dt/dx
           cmin=1.0
           cmax=4.5
+          dmin=0.5
+          dmax=5.0
          fpeak=0.015      central frequency
 
            nl1=0.0         z - neg
