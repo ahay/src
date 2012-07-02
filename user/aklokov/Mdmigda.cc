@@ -410,18 +410,15 @@ int main (int argc, char* argv[]) {
 //		migrator->initCurveDefiner (true);
 //    } else {
 		migrator = new DepthMigrator2D ();
-		migrator->initCurveDefiner (false);
 //    }
     migrator->setImagingParams (&dp, data, rp.isAA, rp.isCMP, &vp, &ip, &gp);
     migrator->setDataLimits ();
-	migrator->wavefrontTracer_.setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
-			   									   vp.xNum, vp.xStep, vp.xStart);
-	migrator->wavefrontTracer_.setParams (ttNum, ttStep, ttStart);
-
+	migrator->setWavefrontTracerParams (ttNum, ttStep, ttStart);
+	migrator->setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
+ 							      vp.xNum, vp.xStep, vp.xStart);
 	// read data
-	readData (data);
+	readData     (data);
 	readVelocity (velModel);	
-
     migrator->setVelModel (velModel);
 
 	// MAIN LOOP

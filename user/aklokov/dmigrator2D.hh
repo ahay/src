@@ -7,30 +7,36 @@ class DepthMigrator2D : public DepthMigratorBase {
 
 public:
 
-	    DepthMigrator2D ();
-	   ~DepthMigrator2D ();
+	       DepthMigrator2D ();
+	      ~DepthMigrator2D ();
 
-	void  processGather (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
+	void   processGather             (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
+	void   calcTravelTimes           (float curZ, float curX, EscapePoint* escPoints);
 
-	void calcTravelTimes (float curZ, float curX, EscapePoint* escPoints);
+	void   getEscPointByDirection    (EscapePoint* escPoints, int size, float pRec, EscapePoint& resEscPoint);
+	void   getRayToPoint             (float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);	
 
-	void getEscPointByDirection (EscapePoint* escPoints, int size, float pRec, EscapePoint& resEscPoint);
-
-// private:
-
-	int    getSampleByBeam  	        (float curScatAngle, float curDipAngle, float& sample); 
-	void   getSampleByRay               (float dipAngle, float& sample);
+	int    getSampleByBeam  	     (float curScatAngle, float curDipAngle, float& sample); 
+	// get sample by only ray trace; implemented for zero-offset section only
+	void   getSampleByRay            (float dipAngle, float& sample);
   
- 	float  getSampleFromData            (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f);
+ 	float  getSampleFromData         (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f);
 
-	void   getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);
+	void   setWavefrontTracerParams  (int ttNum, float ttStep, float ttStart);
 
-		float** velField_;
-
-	float startDirMin_;
-	float startDirMax_;
-
+private:
+	
 	EscapePoint* travelTimes_;
-};
+
+	// velocity model
+	float**  velField_;
+	// travel-time-tables parameters
+	int      ttNum_;
+	float    ttStart_;
+	float    ttStep_;
+	// used by ray tracing; define an angle corridor
+	float    startDirMin_;
+	float    startDirMax_;
+}; 
 
 #endif
