@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
 
 		    for (it=0; it < nt; it++) {
 			amp = weight? fabsf(v)*trace[it]: trace[it];
-			if (NULL != bb) amp /= (1.0+bb[iv][it]*h);
+			if (NULL != bb) amp *= (1.0-bb[iv][it]*h);
 			
 			switch(type[0]) {
 			    case 'd':
