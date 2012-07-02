@@ -476,7 +476,7 @@ int pslink_findfirst(PSLINK * par, WORD skey, WORD * sval) {
       word_copy(sval,*(par->pair->val));
       return 0;
     }
-  } while (par = par->next);
+  } while ((par = par->next));
 
   return 0;
 }
@@ -501,7 +501,7 @@ int pslink_findlast(PSLINK * par, WORD skey, WORD * sval) {
       word_copy(sval,*(par->pair->val));
       return 0;
     }
-  } while (par = par->prev);
+  } while ((par = par->prev));
 
   return 0;
 }
@@ -773,7 +773,7 @@ int ps_get(PARARRAY * par, int last, const char * type, const char * key, void *
   }
   if (err || !(sval->str)) err = iwave_max(err,1);
   
-  if (!err && type=="cstring") {
+  if (!err && !strcmp(type,"cstring")) {
     char **s = (char **)p;
     // modification 01.07.12: strip quotes, if any
     if (((sval->str)[0]==PS_QUO) && ((sval->str)[strlen(sval->str)-1]==PS_QUO)) {
