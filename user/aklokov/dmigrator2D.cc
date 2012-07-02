@@ -461,7 +461,5 @@ void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, f
 	startDirMin_ = ttRayStart_ +  (ttRayNum_ - 1) * ttRayStep_ - 180.f;
 	startDirMin_ *= -1; // "-1" is to consist with an agreement
 
-	
-
 	return;
 }

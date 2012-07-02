@@ -49,7 +49,7 @@ public:
 
 		virtual void processGather  (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
 
-		virtual void setWavefrontTracerParams (int ttNum, float ttStep, float ttStart);
+		virtual void setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart);
 
 		void   setImagingParams   (VolumeParams* dp, float* ptrToData, bool isAA, bool isCMP,
 							       VolumeParams* vp, VolumeParams* ip, GatherParams* gp) { dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA; 
