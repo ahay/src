@@ -448,9 +448,10 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	return aaSample;
 }
 
-void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart) {
+void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart, 
+												int ttNum, float ttStep, float ttStart) {
 
-	wavefrontTracer_.setParams (ttRayNum, ttRayStep, ttRayStart);
+	wavefrontTracer_.setParams (ttRayNum, ttRayStep, ttRayStart, ttNum, ttStep, ttStart);
 
 	ttRayNum_ = ttRayNum;
 	ttRayStep_ = ttRayStep;

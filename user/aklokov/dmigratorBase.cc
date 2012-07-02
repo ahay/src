@@ -12,7 +12,8 @@ void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* co
 	return;
 }
 
-void DepthMigratorBase::setWavefrontTracerParams (int ttNum, float ttStep, float ttStart) {
+void DepthMigratorBase::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart,
+												  int ttNum, float ttStep, float ttStart) {
 	return;
 }
 
@@ -42,10 +43,6 @@ void DepthMigratorBase::setDataLimits () {
 ///////////////////////////
 
 WavefrontTracer::WavefrontTracer () {
-	// default parameters for travel-time-tables
-    wp_.tNum = 1001;
-    wp_.tStart = 0;
-    wp_.tStep = 0.002;
 }
 
 WavefrontTracer::~WavefrontTracer () {
@@ -90,8 +87,6 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
     curWF  = pt2dalloc1 (rNum);
     nextWF = pt2dalloc1 (rNum);
 
-	sf_warning ("tNUM %d\n", tNum);
-
     // initialize wavefronts
     for (int ir = 0; ir < rNum; ++ir) {
 		prevWF[ir].x = curWF[ir].x = nextWF[ir].x = 0.f;
@@ -103,21 +98,23 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
     hwt2d_init (pVelField_, az, ax, at, ag);
 
     // construct it = 0 wavefront
+	pt2d* pWF = prevWF;
     int it = 0;
-    for (int ir = 0; ir < rNum; ++ir) {
-		prevWF[ir].x = xSource;
-		prevWF[ir].z = zSource;
-		prevWF[ir].v = hwt2d_getv ( prevWF[ir] );
+    for (int ir = 0; ir < rNum; ++ir, ++pWF) {
+		pWF->x = xSource;
+		pWF->z = zSource;
+		pWF->v = hwt2d_getv ( *pWF );
     }
 
   	// construct it = 1 wavefront
-    it = 1;
-    for (int ir = 0; ir < rNum; ++ir) {
+	pWF = curWF;    
+	it = 1;
+    for (int ir = 0; ir < rNum; ++ir, ++pWF) {
 		const double d =  wp_.tStep  * hwt2d_getv ( prevWF[ir] );
 		const double g = (rStart + ir * rStep) * SF_PI / 180.f;
-		curWF[ir].x = xSource + d * sin(g);
-		curWF[ir].z = zSource + d * cos(g);
-		curWF[ir].v = hwt2d_getv ( curWF[ir] );
+		pWF->x = xSource + d * sin(g);
+		pWF->z = zSource + d * cos(g);
+		pWF->v = hwt2d_getv ( *pWF );
     }
 
     // loop over time 

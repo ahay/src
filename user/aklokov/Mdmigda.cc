@@ -322,10 +322,14 @@ int main (int argc, char* argv[]) {
     /* step in secondary (azimuth or crossline) angle */
 
 	// TRAVEL TIMES TABLES
-	int   ttRayNum   (0);
-	float ttRayStep  (0.f);
-	float ttRayStart (0.f);
+	int ttRayNum (0); float ttRayStep (0.f); float ttRayStart (0.f);
+	int ttNum (0); float ttStep (0.f); float ttStart (0.f);
 
+	const float maxTime = dp.zStart + (dp.zNum - 1) * dp.zStep;
+    if ( !sf_getfloat ("ttd",  &ttStep) ) ttStep = 0.002f; // not sure that this value is the optimal
+    /* travel-times increment */
+    if ( !sf_getint  ("ttn", &ttNum) ) ttNum = 0.001 * 0.5 * maxTime / ttStep + 1;
+    /* travel-times number */
     if ( !sf_getint  ("ttrayn", &ttRayNum) ) ttRayNum =  2 * gp.dipNum + 1;
     /* travel-times rays number */
     if ( !sf_getfloat ("ttrayd",  &ttRayStep) ) ttRayStep = gp.dipStep / 2.f;
@@ -334,7 +338,7 @@ int main (int argc, char* argv[]) {
     /* travel-times rays start */
 	// calculating ttStart we do "+180" because the direction to the top corresponds to 180 degree
 
-    // Initiate output 
+    // INITIATE OUTPUT
 
     // image file
     sf_putint (imageFile, "n1", ip.zNum); sf_putint (imageFile, "n2", ip.xNum); sf_putint (imageFile, "n3", ip.yNum); sf_putint (imageFile, "n4", 1);
@@ -412,7 +416,7 @@ int main (int argc, char* argv[]) {
 //    }
     migrator->setImagingParams (&dp, data, rp.isAA, rp.isCMP, &vp, &ip, &gp);
     migrator->setDataLimits ();
-	migrator->setWavefrontTracerParams (ttRayNum, ttRayStep, ttRayStart);
+	migrator->setWavefrontTracerParams (ttRayNum, ttRayStep, ttRayStart, ttNum, ttStep, ttStart);
 	migrator->setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
  							      vp.xNum, vp.xStep, vp.xStart );
 	// read data

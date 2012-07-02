@@ -21,8 +21,9 @@ public:
 		
 		void   getEscapePoints    (float xSource, float zSource, EscapePoint* ep);
 	
- 		void   setParams          (int raysNum, float raysStep, float raysStart) { wp_.rNum = raysNum; wp_.rStart = raysStart; 
-																				   wp_.rStep = raysStep; }
+ 		void   setParams          (int raysNum, float raysStep, float raysStart,
+								   int tNum, float tStep, float tStart) { wp_.rNum = raysNum; wp_.rStart = raysStart; wp_.rStep = raysStep;
+																		  wp_.tNum = tNum; wp_.tStart = tStart; wp_.tStep = tStep; }
 		void   setVelModelParams  (int zNum, float zStep, float zStart, 
 							  	   int xNum, float xStep, float xStart) {vp_.zNum = zNum; vp_.zStep = zStep; vp_.zStart = zStart;
 									 							         vp_.xNum = xNum; vp_.xStep = xStep; vp_.xStart = xStart;}
@@ -49,7 +50,7 @@ public:
 
 		virtual void processGather  (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
 
-		virtual void setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart);
+		virtual void setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart, int ttNum, float ttStep, float ttStart);
 
 		void   setImagingParams   (VolumeParams* dp, float* ptrToData, bool isAA, bool isCMP,
 							       VolumeParams* vp, VolumeParams* ip, GatherParams* gp) { dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA; 

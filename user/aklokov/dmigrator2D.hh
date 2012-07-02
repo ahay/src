@@ -22,7 +22,7 @@ public:
   
  	float  getSampleFromData         (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f);
 
-	void   setWavefrontTracerParams  (int ttNum, float ttStep, float ttStart);
+	void   setWavefrontTracerParams  (int ttRayNum, float ttRayStep, float ttRayStart, int ttNum, float ttStep, float ttStart);
 
 private:
 	
