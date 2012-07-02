@@ -14,12 +14,22 @@ except:
     bindir = pkgdir = None
 
 progs = '''
-integral1 pseudodepth swapbyte
+integral1 swapbyte
 '''
 
-env.Append(CPPPATH='/usr/include',
-		   LIBPATH='/usr/lib64',
-		   LIBS=['lapack'])
+lapack = env.get('LAPACK')
+
+if lapack:
+    env.Prepend(LIBS=lapack)
+    progs += ' pseudodepth'
+elif glob_build:
+    for prog in Split('pseudodepth'):
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')      
+        env.Install(bindir,prog)
+
+#env.Append(CPPPATH='/usr/include',
+#		   LIBPATH='/usr/lib64',
+#		   LIBS=['lapack'])
     
 targets = bldutil.UserSconsTargets()
 targets.c = progs
