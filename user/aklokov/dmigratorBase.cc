@@ -127,40 +127,42 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 			nextWF[ir] = pointPrevWF;
     	}
 		// checking if the ray has reached the daylight surface
-	    for (int ir = 0; ir < rNum; ++ir) {
+		EscapePoint* pPoint = ep;
+	    for (int ir = 0; ir < rNum; ++ir, ++pPoint) {
 			const float prevZ = prevWF[ir].z; 							
-			if (ep[ir].isSurf) continue; // the ray has already reached the surface
+			if (pPoint->isSurf) continue; // the ray has already reached the surface
 			if (prevZ < 0) { // the ray has left the model
-				float bef = (1 - prevZ / (prevZ - ep[ir].z));
-				float dx  = prevWF[ir].x - ep[ir].x;
-				ep[ir].x += bef * dx;
-				ep[ir].t += bef * tStep;
-				ep[ir].z = 0.f;
-				ep[ir].isSurf = true;
+				const float bef = (1 - prevZ / (prevZ - pPoint->z));
+				const float dx  = prevWF[ir].x - pPoint->x;
+				pPoint->x += bef * dx;
+				pPoint->t += bef * tStep;
+				pPoint->z = 0.f;
+				pPoint->isSurf = true;
 			} else { // the ray is inside the model	- update escape point	 
-				ep[ir].x = prevWF[ir].x;				
-				ep[ir].z = prevZ;				
-				ep[ir].t = curTime;					
+				pPoint->x = prevWF[ir].x;				
+				pPoint->z = prevZ;				
+				pPoint->t = curTime;					
 			}
 		}
 		// step in time
-		pt2d* pPrev = prevWF; pt2d* pCur  = curWF; pt2d* pNext = nextWF;
+		pt2d* pPrev = prevWF; pt2d* pCur = curWF; pt2d* pNext = nextWF;
 		for (int ir = 0; ir < rNum; ++ir, ++pPrev, ++pCur, ++pNext) {
 			*pPrev = *pCur;
 			*pCur = *pNext;
 		}
     } 
- 
+
+	EscapePoint* pPoint = ep + 1; 
 	const int rNumReduced = rNum - 1;   
-    for (int ir = 1; ir < rNumReduced; ++ir) {
+    for (int ir = 1; ir < rNumReduced; ++ir, ++pPoint) {
 		// start direction
-		ep[ir].startDir = rStart + ir * rStep - 180.f;
-		ep[ir].startDir *= -1;
+		pPoint->startDir = rStart + ir * rStep - 180.f;
+		pPoint->startDir *= -1;
 		// p
-		const float dx = ep[ir + 1].x - ep[ir - 1].x;
-		if (fabs (dx) < 1e-6) { ep[ir].p = 0.f; continue; } // vertical ray
-		const float dt = ep[ir + 1].t - ep[ir - 1].t;
-		ep[ir].p = fabs (1000 * dt / dx);
+		const float dx = (pPoint + 1)->x - (pPoint - 1)->x;
+		if (fabs (dx) < 1e-6) { pPoint->p = 0.f; continue; } // vertical ray
+		const float dt = (pPoint + 1)->t - (pPoint - 1)->t;
+		pPoint->p = fabs (1000 * dt / dx);
 	}
 	// handle edge points			
 	ep[0].p = ep[1].p;
