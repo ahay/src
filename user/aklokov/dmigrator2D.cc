@@ -78,8 +78,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 				
 				float sample (0.f);
 				int isBad = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
-				if (isBad)
-					sample = 0.f; // some function may be here
+				if (isBad && curScatAngle < 1e-6)
+					this->getSampleByRay (curDipAngle, sample);
 
 				if (!sample)
 					continue;
@@ -319,12 +319,16 @@ void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, 
 
 //	!!! this interolation is NOT the best solution
 
-	float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
-	float aft = 1.f - bef;
+	const float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
+	const float aft = 1.f - bef;
 
 	resEscPoint.x = pEscPoint->x * aft + (pEscPoint - 1)->x * bef;
 	resEscPoint.p = pEscPoint->p * aft + (pEscPoint - 1)->p * bef;
 	resEscPoint.t = pEscPoint->t * aft + (pEscPoint - 1)->t * bef;
+	resEscPoint.z = pEscPoint->z * aft + (pEscPoint - 1)->z * bef;
+	resEscPoint.startDir = pEscPoint->startDir * aft + (pEscPoint - 1)->startDir * bef;
+	resEscPoint.offset = pEscPoint->offset * aft + (pEscPoint - 1)->offset * bef;
+	resEscPoint.isSurf = resEscPoint.z > 0 ? false : true; // z > 0 - ray is below the daylight surface
 
 	return;
 }
@@ -342,9 +346,13 @@ void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escP
 	return;
 }
 
-void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {
+void DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 
-	if (!escPoint.isSurf) {
+	const int ttNum = wavefrontTracer_.wp_.rNum;
+	EscapePoint* escPoint = new EscapePoint ();
+	this->getEscPointByDirection (travelTimes_, ttNum, dipAngle, *escPoint);
+
+	if (!escPoint->isSurf) {
 		sample = 0.f;
 		return; 
 	}
@@ -357,26 +365,30 @@ void DepthMigrator2D::getSampleByRay (EscapePoint& escPoint, float& sample) {
 	float dataTMin_ = dp_->zStart;
 	float dataTMax_ = dataTMin_ + (dp_->zNum - 1) * dp_->zStep;
 
+	if (escPoint->x - dataXMin_ < -1e-4 || escPoint->x - dataXMax_ > 1e-4) return;
+	if (escPoint->t < dataTMin_ || escPoint->t > dataTMax_) return;
 
-	if (escPoint.x - dataXMin_ < -1e-4 || escPoint.x - dataXMax_ > 1e-4) return;
-	if (escPoint.t < dataTMin_ || escPoint.t > dataTMax_) return;
-
-	int curXSamp = (escPoint.x - xStartData_) / xStepData_;
+	int curXSamp = (escPoint->x - xStartData_) / xStepData_;
 	float posLeftTrace = curXSamp * xStepData_ + xStartData_;
 	float posRightTrace = (curXSamp + 1) * xStepData_ + xStartData_;
 	
-	float p = escPoint.p;
-	float timeLeft  = escPoint.t - (escPoint.x - posLeftTrace) * p * 0.001;
-	float timeRight = escPoint.t + (posRightTrace - escPoint.x) * p * 0.001;	
+	float p = escPoint->p;
+	const float smallp = p * 0.001;
+	float timeLeft  = 2.f * (escPoint->t - (escPoint->x - posLeftTrace)  * smallp); // double time
+	float timeRight = 2.f * (escPoint->t + (posRightTrace - escPoint->x) * smallp);	
 
 	float absP = fabs (p);
-	float sampleLeft  = this->getSampleFromData (escPoint.offset, 0, posLeftTrace,  1000 * timeLeft, absP);
-	float sampleRight = this->getSampleFromData (escPoint.offset, 0, posRightTrace, 1000 * timeRight, absP);
 
-	float bef = (escPoint.x - posLeftTrace) / xStepData_;
-	float aft = 1.f - bef;
+	const float zeroOffset = 0.f;
+	float sampleLeft  = this->getSampleFromData (zeroOffset, 0, posLeftTrace,  1000 * timeLeft,  absP);
+	float sampleRight = this->getSampleFromData (zeroOffset, 0, posRightTrace, 1000 * timeRight, absP);
+
+	const float bef = (escPoint->x - posLeftTrace) / xStepData_;
+	const float aft = 1.f - bef;
 	
 	sample = bef * sampleRight + aft * sampleLeft;
+
+	delete escPoint;
 	
 	return;
 }

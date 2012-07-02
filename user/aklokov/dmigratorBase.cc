@@ -225,6 +225,8 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 					
 					ep[ig].x += bef * dx;
 					ep[ig].t += bef * wp_.tStep;
+					ep[ig].z = 0.f;
+
 //					ep[ig].t *= 2; // because we need double time
 							
 					ep[ig].isSurf = true;
