@@ -198,11 +198,13 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 			float timeToRec (0.f);
 			float recAbsP (0.f);
 			bool onSurf;
-			this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
+			int badRes = this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
+			if (badRes) continue; // no ray was found
 			if (!onSurf) continue; // the ray does not reach the surface
 			float timeToSrc (0.f);
 			float srcAbsP (0.f);
-			this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
+			badRes = this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
+			if (badRes) continue; // no ray was found
 			if (!onSurf) continue; // the ray does not reach the surface
 			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "ms"
 			sample += this->getSampleFromData (curOffset, 0, curRecPos, curTime, recAbsP);
@@ -215,120 +217,6 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 	sample /= count;
 
 	return 0;
-}
-
-void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
-
-	const float basedir = dir1 > dir2 ? dir1 : dir2;
-
-	EscapePoint* pTT = travelTimes_;
-	float ttDir = pTT->startDir;
-
-	int count (0);
-	
-	while (ttDir > basedir && count < ttRayNum_) {
-		++pTT; 
-		ttDir = pTT->startDir; 
-		++count;
-	}
-	if (count == ttRayNum_) return;
-
-	float ttX = pTT->x;
-
-	// get two basic points around the target point
-	EscapePoint* rightPoint (NULL);
-	EscapePoint* leftPoint	(NULL);	
-	if (ttX > curRecPos) {
-		while (ttX > curRecPos && count < ttRayNum_) {
-			++pTT; 
-			ttX = pTT->x; 
-			++count;
-	    }
-		if (count == ttRayNum_) return;
-		rightPoint = pTT - 1;
-		leftPoint  = pTT; 
-	} else {
-		while (ttX < curRecPos && count < ttRayNum_) {
-			++pTT; 
-			ttX = pTT->x; 
-			++count;
-	    } 
-		if (count == ttRayNum_) return;
-		rightPoint = pTT;
-		leftPoint  = pTT - 1; 
-	}	
-
-	if (!leftPoint->isSurf && !rightPoint->isSurf) {
-		isSurf = false; return;
-	} else if (!leftPoint->isSurf) {
-		timeToPoint = rightPoint->t;		
-		pointAbsP   = rightPoint->p;	
-		isSurf = true;	
-		return;
-	} else if (!rightPoint->isSurf) {
-		timeToPoint = leftPoint->t;		
-		pointAbsP   = leftPoint->p;		
-		isSurf = true;	
-		return;
-	} else {
-		float bef = ( rightPoint->x - curRecPos ) / (rightPoint->x - leftPoint->x);
-		float aft = 1 - bef;
-		timeToPoint = leftPoint->t * bef + rightPoint->t * aft;
-		pointAbsP   = leftPoint->p * bef + rightPoint->p * aft;
-		isSurf = true;	
-		return;
-	}	
-}
-
-void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, float targetStartDir, EscapePoint &resEscPoint) {
-
-
-	if (targetStartDir < startDirMin_) {resEscPoint.isSurf = false; return;}
-	if (targetStartDir > startDirMax_) {resEscPoint.isSurf = false; return;}
-		
-
-	EscapePoint* pEscPoint = escPoints;
-	float curStartDir = pEscPoint->startDir;
-	if (curStartDir < targetStartDir) {
-		resEscPoint = *pEscPoint;
-		return;
-	}
-
-	int count (0);
-
-	while (curStartDir > targetStartDir && count <= size) {
-		++pEscPoint;
-		curStartDir = pEscPoint->startDir;
-		++count;
-	}
-
-	if (count == size) {
-		resEscPoint = *(pEscPoint - 1);
-		return;
-	}
-
-//	!!! this interolation is NOT the best solution
-
-	const float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
-	const float aft = 1.f - bef;
-
-	resEscPoint.x = pEscPoint->x * aft + (pEscPoint - 1)->x * bef;
-	resEscPoint.p = pEscPoint->p * aft + (pEscPoint - 1)->p * bef;
-	resEscPoint.t = pEscPoint->t * aft + (pEscPoint - 1)->t * bef;
-	resEscPoint.z = pEscPoint->z * aft + (pEscPoint - 1)->z * bef;
-	resEscPoint.startDir = pEscPoint->startDir * aft + (pEscPoint - 1)->startDir * bef;
-	resEscPoint.offset = pEscPoint->offset * aft + (pEscPoint - 1)->offset * bef;
-	resEscPoint.isSurf = resEscPoint.z > 0 ? false : true; // z > 0 - ray is below the daylight surface
-
-	return;
-}
-
-void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escPoints) {
-
-	const float xCIG = ip_->xStart + curX * ip_->xStep;
-	wavefrontTracer_.getEscapePoints (xCIG, curZ, escPoints);
-		
-	return;
 }
 
 // get sample by only ray trace; implemented for zero-offset section only
@@ -373,6 +261,112 @@ void DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 
 	delete escPoint;
 	
+	return;
+}
+
+// calculate ray touching the current receiver
+int DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
+
+	const float basedir = dir1 > dir2 ? dir1 : dir2; // basedir "starts" the target beam
+
+	EscapePoint* pTT = travelTimes_; // the first point in travelTimes has the most positive direction !
+	float ttDir = pTT->startDir;
+
+	int count (0);
+	// get ray inside the target beam
+	while (ttDir > basedir && count < ttRayNum_) {
+		++pTT; 
+		ttDir = pTT->startDir; 
+		++count;
+	}
+	if (count == ttRayNum_) return -1; // no ray was found
+
+	float ttX = pTT->x;
+
+	// get two basic points around the target point
+	EscapePoint* rightPoint (NULL);
+	EscapePoint* leftPoint	(NULL);	
+	if (ttX > curRecPos) {
+		while (ttX > curRecPos && count < ttRayNum_) {
+			++pTT; 
+			ttX = pTT->x; 
+			++count;
+	    }
+		if (count == ttRayNum_) return -1; // no ray was found
+		rightPoint = pTT - 1;
+		leftPoint  = pTT; 
+	} else {
+		while (ttX < curRecPos && count < ttRayNum_) {
+			++pTT; 
+			ttX = pTT->x; 
+			++count;
+	    } 
+		if (count == ttRayNum_) return -1; // no ray was found
+		rightPoint = pTT;
+		leftPoint  = pTT - 1; 
+	}	
+	// check if the basic points are valid
+	if (!leftPoint->isSurf && !rightPoint->isSurf) {
+		isSurf = false; return 0;
+	} else if (!leftPoint->isSurf) {
+		timeToPoint = rightPoint->t;		
+		pointAbsP   = rightPoint->p;	
+		isSurf = true;	
+		return 0;
+	} else if (!rightPoint->isSurf) {
+		timeToPoint = leftPoint->t;		
+		pointAbsP   = leftPoint->p;		
+		isSurf = true;	
+		return 0;
+	} else {
+		const float bef = ( rightPoint->x - curRecPos ) / (rightPoint->x - leftPoint->x);
+		const float aft = 1 - bef;
+		timeToPoint = leftPoint->t * bef + rightPoint->t * aft;
+		pointAbsP   = leftPoint->p * bef + rightPoint->p * aft;
+		isSurf = true;	
+		return 0;
+	}	
+}
+
+void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, float targetStartDir, EscapePoint &resEscPoint) {
+
+	if (targetStartDir < startDirMin_) {resEscPoint.isSurf = false; return;}
+	if (targetStartDir > startDirMax_) {resEscPoint.isSurf = false; return;}
+
+	EscapePoint* pEscPoint = escPoints;
+	float curStartDir = pEscPoint->startDir;
+	if (curStartDir < targetStartDir) {	resEscPoint = *pEscPoint; return; }
+
+	int count (0);
+
+	while (curStartDir > targetStartDir && count <= size) {
+		++pEscPoint;
+		curStartDir = pEscPoint->startDir;
+		++count;
+	}
+	if (count == size) {resEscPoint = *(pEscPoint - 1);	return;	}
+
+//	liniar interpolation - NOT the optimal solution
+
+	const float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
+	const float aft = 1.f - bef;
+
+	resEscPoint.x = pEscPoint->x * aft + (pEscPoint - 1)->x * bef;
+	resEscPoint.p = pEscPoint->p * aft + (pEscPoint - 1)->p * bef;
+	resEscPoint.t = pEscPoint->t * aft + (pEscPoint - 1)->t * bef;
+	resEscPoint.z = pEscPoint->z * aft + (pEscPoint - 1)->z * bef;
+	resEscPoint.startDir = pEscPoint->startDir * aft + (pEscPoint - 1)->startDir * bef;
+	resEscPoint.offset = pEscPoint->offset * aft + (pEscPoint - 1)->offset * bef;
+	resEscPoint.isSurf = resEscPoint.z > 0 ? false : true; // z > 0 - ray is below the daylight surface
+
+	return;
+}
+
+void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escPoints) {
+
+	const float xCIG = ip_->xStart + curX * ip_->xStep;
+	wavefrontTracer_.getEscapePoints (xCIG, curZ, escPoints);
+		
 	return;
 }
 
@@ -447,7 +441,7 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 		
 	return aaSample;
 }
-
+// transfer parameters to wavefrontTracer
 void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart, 
 												int ttNum, float ttStep, float ttStart) {
 

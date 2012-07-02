@@ -199,7 +199,7 @@ int main (int argc, char* argv[]) {
     } else { rp.isDag = false; }
 
     if ( NULL != sf_getstring("cig") ) {
-	/* output file containing CIGs in the surface-offset domain */ 
+	/* output file containing CIGs in the scattering-angle domain */ 
 	acigFile  = sf_output ("cig"); rp.isCig = true;
     } else { rp.isCig = false; }
 
@@ -264,14 +264,11 @@ int main (int argc, char* argv[]) {
     if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
 
 // Migration parameters
-    if (!sf_getbool ("is3d",       &rp.is3D))       rp.is3D = false;
-    /* if y, apply 3D migration */
     if (!sf_getbool ("isCMP",      &rp.isCMP))      rp.isCMP = false;
     /* if y, data traces have coordinates of CMP position */
     if (!sf_getbool ("isAA",       &rp.isAA))       rp.isAA = true;
     /* if y, apply anti-aliasing */
-    if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
-    /* if y, apply dip/azimuth mode; if n, apply inline/crossline angle mode */
+	rp.is3D = false; // the current version is for 2D case only
 
     // IMAGE PARAMS
     if (!sf_getint ("izn", &ip.zNum))        ip.zNum = dp.zNum;	
@@ -288,7 +285,7 @@ int main (int argc, char* argv[]) {
     /* first imaged inline (in meters) */
     if (!sf_getfloat ("iyo", &ip.yStart))    ip.yStart = dp.yStart;	
     /* first imaged crossline (in meters) */
-    if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0;	
+    if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0.f;	
     /* first scattering-angle (in degree) */
     if (!sf_getfloat ("izd", &ip.zStep))     ip.zStep = dp.zStep;
     /* step in depth (in meters) */
@@ -308,26 +305,21 @@ int main (int argc, char* argv[]) {
     gp.zNum = ip.zNum;
     if (!sf_getint ("dipn" , &gp.dipNum))      gp.dipNum = 161;	
     /* number of dip-angles */
-    if (!sf_getint ("sdipn", &gp.sdipNum))     gp.sdipNum = 1;	
-    /* number of secondary (azimuth or crossline) angles */
     gp.zStart = ip.zStart;
     if (!sf_getfloat ("dipo",  &gp.dipStart))   gp.dipStart = -80.f;	
     /* first dip-angle */
-    if (!sf_getfloat ("sdipo", &gp.sdipStart))  gp.sdipStart = 90.f;
-    /* first secondary (azimuth or crossline) angle */
     gp.zStep = ip.zStep;
     if (!sf_getfloat ("dipd",  &gp.dipStep))   gp.dipStep = 1.f;	
     /* step in dip-angle */
-    if (!sf_getfloat ("sdipd", &gp.sdipStep))  gp.sdipStep = 1.f;	
-    /* step in secondary (azimuth or crossline) angle */
 
 	// TRAVEL TIMES TABLES
 	int ttRayNum (0); float ttRayStep (0.f); float ttRayStart (0.f);
 	int ttNum (0); float ttStep (0.f); float ttStart (0.f);
 
 	const float maxTime = dp.zStart + (dp.zNum - 1) * dp.zStep;
-    if ( !sf_getfloat ("ttd",  &ttStep) ) ttStep = 0.002f; // not sure that this value is the optimal
+    if ( !sf_getfloat ("ttd",  &ttStep) ) ttStep = 0.002f;
     /* travel-times increment */
+	// not sure that "0.002f" is the optimal value
     if ( !sf_getint  ("ttn", &ttNum) ) ttNum = 0.001 * 0.5 * maxTime / ttStep + 1;
     /* travel-times number */
     if ( !sf_getint  ("ttrayn", &ttRayNum) ) ttRayNum =  2 * gp.dipNum + 1;
@@ -365,21 +357,16 @@ int main (int argc, char* argv[]) {
 
     if (rp.isDag) {
 		// dip-angle gathers file
-		sf_putint (dagFile, "n1", ip.zNum); sf_putint (dagFile, "n2", gp.dipNum); sf_putint (dagFile, "n3", gp.sdipNum);
-		sf_putint (dagFile, "n4", ip.xNum); sf_putint (dagFile, "n5", ip.yNum);
-    	sf_putfloat (dagFile, "d1", ip.zStep); sf_putfloat (dagFile, "d2", gp.dipStep); sf_putfloat (dagFile, "d3", gp.sdipStep);
-		sf_putfloat (dagFile, "d4", ip.xStep); sf_putfloat (dagFile, "d5", ip.yStep);    
-    	sf_putfloat (dagFile, "o1", ip.zStart); sf_putfloat (dagFile, "o2", gp.dipStart); sf_putfloat (dagFile, "o3", gp.sdipStart);
-		sf_putfloat (dagFile, "o4", ip.xStart); sf_putfloat (dagFile, "o5", ip.yStart);    
-		sf_putstring(dagFile, "label1", "depth");
-		if (rp.isDipAz) {
-		    sf_putstring(dagFile, "label2", "dip angle"); sf_putstring(dagFile, "label3", "azimuth");
-		} else {
-		    sf_putstring(dagFile, "label2", "inline slope"); sf_putstring(dagFile, "label3", "crossline slope");
-		}
-		sf_putstring(dagFile, "label4", "inline"); 	sf_putstring(dagFile, "label5", "crossline");
-		sf_putstring(dagFile, "unit1", "m"); sf_putstring(dagFile, "unit2", "deg"); sf_putstring(dagFile, "unit3", "deg");
-		sf_putstring(dagFile, "unit4", "m"); sf_putstring(dagFile, "unit5", "m");
+		sf_putint (dagFile, "n1", ip.zNum); sf_putint (dagFile, "n2", gp.dipNum);
+		sf_putint (dagFile, "n3", ip.xNum); sf_putint (dagFile, "n4", ip.yNum);
+    	sf_putfloat (dagFile, "d1", ip.zStep); sf_putfloat (dagFile, "d2", gp.dipStep);
+		sf_putfloat (dagFile, "d3", ip.xStep); sf_putfloat (dagFile, "d4", ip.yStep);    
+    	sf_putfloat (dagFile, "o1", ip.zStart); sf_putfloat (dagFile, "o2", gp.dipStart);
+		sf_putfloat (dagFile, "o3", ip.xStart); sf_putfloat (dagFile, "o4", ip.yStart);    
+		sf_putstring(dagFile, "label1", "depth"); sf_putstring(dagFile, "label2", "dip angle");
+		sf_putstring(dagFile, "label3", "inline");	sf_putstring(dagFile, "label4", "crossline");
+		sf_putstring(dagFile, "unit1", "m"); sf_putstring(dagFile, "unit2", "deg");
+		sf_putstring(dagFile, "unit3", "m"); sf_putstring(dagFile, "unit4", "m");
     }
 
 	// SIZES
@@ -419,7 +406,9 @@ int main (int argc, char* argv[]) {
 	migrator->setWavefrontTracerParams (ttRayNum, ttRayStep, ttRayStart, ttNum, ttStep, ttStart);
 	migrator->setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
  							      vp.xNum, vp.xStep, vp.xStart );
-	// read data
+
+	// READ DATA
+
 	readData     (data);
 	readVelocity (velModel);	
     migrator->setVelModel (velModel);
@@ -438,6 +427,7 @@ int main (int argc, char* argv[]) {
 			memset (acig,  0, acigSize * sizeof (float));
 			memset (image, 0, gp.zNum  * sizeof (float));
 
+			// the main migration function
 			migrator->processGather (curGatherPos, data, image, dag, acig);
 
 			// output the image trace
