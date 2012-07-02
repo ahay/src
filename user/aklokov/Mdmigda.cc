@@ -275,7 +275,7 @@ int main (int argc, char* argv[]) {
 
     // IMAGE PARAMS
     if (!sf_getint ("izn", &ip.zNum))        ip.zNum = dp.zNum;	
-    /* number of imaged times */
+    /* number of imaged depth samples */
     if (!sf_getint ("ixn", &ip.xNum))        ip.xNum = dp.xNum;	
     /* number of imaged inlines */
     if (!sf_getint ("iyn", &ip.yNum))        ip.yNum = rp.is3D ? vp.yNum : 1;	
@@ -283,21 +283,21 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("iscatn", &gp.scatNum))   gp.scatNum = 1;	
     /* number of scattering-angles */
     if (!sf_getfloat ("izo", &ip.zStart))    ip.zStart = dp.zStart;
-    /* first imaged time */
+    /* first imaged depth (in meters) */
     if (!sf_getfloat ("ixo", &ip.xStart))    ip.xStart = dp.xStart;
-    /* first imaged inline */
+    /* first imaged inline (in meters) */
     if (!sf_getfloat ("iyo", &ip.yStart))    ip.yStart = dp.yStart;	
-    /* first imaged crossline */
+    /* first imaged crossline (in meters) */
     if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0;	
-    /* first scattering-angle */
+    /* first scattering-angle (in degree) */
     if (!sf_getfloat ("izd", &ip.zStep))     ip.zStep = dp.zStep;
-    /* step in imaged times */
+    /* step in depth (in meters) */
     if (!sf_getfloat ("ixd", &ip.xStep))     ip.xStep = dp.xStep;	
-    /* step in imaged inlines */
+    /* step in inlines (in meters) */
     if (!sf_getfloat ("iyd", &ip.yStep))     ip.yStep = dp.yStep;
-    /* step in imaged crosslines */
+    /* step in crosslines (in meters) */
 	if (!sf_getfloat ("iscatd", &gp.scatStep)) gp.scatStep = 10.f;	
-    /* scattering-angle increment */
+    /* scattering-angle increment (in degree) */
 
 	// CHECK IMAGE PARAMETERS
 
@@ -322,7 +322,7 @@ int main (int argc, char* argv[]) {
     /* step in secondary (azimuth or crossline) angle */
 
 	// TRAVEL TIMES TABLES
-	int ttNum (0);
+	int   ttNum   (0);
 	float ttStep  (0.f);
 	float ttStart (0.f);
 
@@ -330,10 +330,9 @@ int main (int argc, char* argv[]) {
     /* travel-times rays number */
     if ( !sf_getfloat ("ttd",  &ttStep) ) ttStep = gp.dipStep / 2.f;
     /* travel-times rays increment */
-    if ( !sf_getfloat ("tto",  &ttStart) ) ttStart = gp.dipStart - ttStep + 180.f;
+    if ( !sf_getfloat ("tto",  &ttStart) ) ttStart = gp.dipStart - ttStep + 180.f; 	
     /* travel-times rays start */
-
-	// calculation ttStart we do "+180" because the direction to the top corresponds to 180 degree
+	// calculating ttStart we do "+180" because the direction to the top corresponds to 180 degree
 
     // Initiate output 
 
@@ -415,7 +414,7 @@ int main (int argc, char* argv[]) {
     migrator->setDataLimits ();
 	migrator->setWavefrontTracerParams (ttNum, ttStep, ttStart);
 	migrator->setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
- 							      vp.xNum, vp.xStep, vp.xStart);
+ 							      vp.xNum, vp.xStep, vp.xStart );
 	// read data
 	readData     (data);
 	readVelocity (velModel);	
@@ -437,16 +436,17 @@ int main (int argc, char* argv[]) {
 
 			migrator->processGather (curGatherPos, data, image, dag, acig);
 
+			// output the image trace
 			size_t startPos = startInd * gp.zNum * sizeof(float);
 			sf_seek (imageFile, startPos, SEEK_SET);
 			sf_floatwrite (image, gp.zNum, imageFile);	
-
+			// output the dip-angle gather
 		    if (rp.isDag) {
 				startPos = startInd * dagSize * sizeof(float);
 				sf_seek (dagFile, startPos, SEEK_SET);
 				sf_floatwrite (dag, dagSize, dagFile);
 		    }			
-
+			// output the scattering-angle gather
 			if (rp.isCig) {
 			    // write trace into angle CIG file
 			    startPos = startInd * acigSize * sizeof(float);
@@ -464,11 +464,11 @@ int main (int argc, char* argv[]) {
     free (data);
 
     sf_fileclose (dagFile);
-    sf_fileclose (imageFile);
     sf_fileclose (acigFile);
+    sf_fileclose (imageFile);
 
-    sf_fileclose (dataFile);
     sf_fileclose (velFile);
+	sf_fileclose (dataFile);
 
     return 0;
 }

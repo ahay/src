@@ -65,7 +65,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		const float curZ = zStart + iz * zStep;		
 		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
 			continue;
-		travelTimes_ = new EscapePoint [ttNum_];		
+		travelTimes_ = new EscapePoint [ttRayNum_];		
 		this->calcTravelTimes (curZ, xCIG, travelTimes_);
 		// loop over scattering-angle
 		for (int is = 0; is < scatNum; ++is) {
@@ -153,11 +153,11 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 	// calc recs lane
 	float dir1 = baseDir - shiftDir;
 	EscapePoint* escPointRec1 = new EscapePoint ();
-	this->getEscPointByDirection (travelTimes_, ttNum_, dir1, *escPointRec1);
+	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir1, *escPointRec1);
 
 	float dir2 = baseDir + shiftDir;
 	EscapePoint* escPointRec2 = new EscapePoint ();
-	this->getEscPointByDirection (travelTimes_, ttNum_, dir2, *escPointRec2);
+	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir2, *escPointRec2);
 	
 	float recLaneLeft  = escPointRec1->x;
 	float recLaneRight = escPointRec2->x;
@@ -169,11 +169,11 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 	baseDir = curDipAngle - 0.5 * curScatAngle;
 	float dir3 = baseDir - shiftDir;
 	EscapePoint* escPointRec3 = new EscapePoint ();
-	this->getEscPointByDirection (travelTimes_, ttNum_, dir3, *escPointRec3);
+	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir3, *escPointRec3);
 
 	float dir4 = baseDir + shiftDir;
 	EscapePoint* escPointRec4 = new EscapePoint ();
-	this->getEscPointByDirection (travelTimes_, ttNum_, dir4, *escPointRec4);			
+	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir4, *escPointRec4);			
 
 	float srcLaneLeft  = escPointRec3->x;
 	float srcLaneRight = escPointRec4->x;
@@ -226,12 +226,12 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 
 	int count (0);
 	
-	while (ttDir > basedir && count < ttNum_) {
+	while (ttDir > basedir && count < ttRayNum_) {
 		++pTT; 
 		ttDir = pTT->startDir; 
 		++count;
 	}
-	if (count == ttNum_) return;
+	if (count == ttRayNum_) return;
 
 	float ttX = pTT->x;
 
@@ -239,21 +239,21 @@ void DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 	EscapePoint* rightPoint (NULL);
 	EscapePoint* leftPoint	(NULL);	
 	if (ttX > curRecPos) {
-		while (ttX > curRecPos && count < ttNum_) {
+		while (ttX > curRecPos && count < ttRayNum_) {
 			++pTT; 
 			ttX = pTT->x; 
 			++count;
 	    }
-		if (count == ttNum_) return;
+		if (count == ttRayNum_) return;
 		rightPoint = pTT - 1;
 		leftPoint  = pTT; 
 	} else {
-		while (ttX < curRecPos && count < ttNum_) {
+		while (ttX < curRecPos && count < ttRayNum_) {
 			++pTT; 
 			ttX = pTT->x; 
 			++count;
 	    } 
-		if (count == ttNum_) return;
+		if (count == ttRayNum_) return;
 		rightPoint = pTT;
 		leftPoint  = pTT - 1; 
 	}	
@@ -335,7 +335,7 @@ void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escP
 void DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 
 	EscapePoint* escPoint = new EscapePoint ();
-	this->getEscPointByDirection (travelTimes_, ttNum_, dipAngle, *escPoint);
+	this->getEscPointByDirection (travelTimes_, ttRayNum_, dipAngle, *escPoint);
 
 	// check if the ray reaches the daylight surface
 	if (!escPoint->isSurf) { sample = 0.f; return; }
@@ -398,7 +398,6 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	// offset
 
 	const int offsetInd = h / dp_->hStep;
-//	sf_warning ("offset %g %d", h, offsetInd);
 	if (offsetInd >= dp_->hNum || offsetInd < 0) return 0.f;
 
 	float* const trace = ptrToData_ + xSamp * tNum + xNum * tNum * offsetInd;
@@ -449,18 +448,20 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	return aaSample;
 }
 
-void DepthMigrator2D::setWavefrontTracerParams (int ttNum, float ttStep, float ttStart) {
+void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart) {
 
-	wavefrontTracer_.setParams (ttNum, ttStep, ttStart);
+	wavefrontTracer_.setParams (ttRayNum, ttRayStep, ttRayStart);
 
-	ttNum_ = ttNum;
-	ttStep_ = ttStep;
-	ttStart_ = ttStart;
+	ttRayNum_ = ttRayNum;
+	ttRayStep_ = ttRayStep;
+	ttRayStart_ = ttRayStart;
 
-	startDirMax_ = ttStart_ - 180.f;
+	startDirMax_ = ttRayStart_ - 180.f;
 	startDirMax_ *= -1; // "-1" is to consist with an agreement
-	startDirMin_ = ttStart_ +  (ttNum_ - 1) * ttStep_ - 180.f;
+	startDirMin_ = ttRayStart_ +  (ttRayNum_ - 1) * ttRayStep_ - 180.f;
 	startDirMin_ *= -1; // "-1" is to consist with an agreement
+
+	
 
 	return;
 }

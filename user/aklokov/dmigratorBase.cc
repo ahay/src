@@ -1,6 +1,5 @@
-#include <math.h>
-#include <rsf.hh>
 #include "dmigratorBase.hh"
+#include <rsf.hh>
 #include "hwt2d.hh"
 
 DepthMigratorBase::DepthMigratorBase () {
@@ -10,6 +9,11 @@ DepthMigratorBase::~DepthMigratorBase () {
 }
 
 void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig) {
+	return;
+}
+
+void DepthMigratorBase::setWavefrontTracerParams (int ttNum, float ttStep, float ttStart) {
+	return;
 }
 
 void DepthMigratorBase::setDataLimits () {
@@ -33,15 +37,12 @@ void DepthMigratorBase::setDataLimits () {
 	return;
 }
 
-void DepthMigratorBase::setWavefrontTracerParams (int ttNum, float ttStep, float ttStart) {
-	return;
-}
-
-//////////////////////////
-// Class WavefrontTracer
-//////////////////////////
+///////////////////////////
+// Class WavefrontTracer //
+///////////////////////////
 
 WavefrontTracer::WavefrontTracer () {
+	// default parameters for travel-time-tables
     wp_.tNum = 1001;
     wp_.tStart = 0;
     wp_.tStep = 0.002;
@@ -52,7 +53,14 @@ WavefrontTracer::~WavefrontTracer () {
 
 void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint* ep) {
 
-    bool rays = true;
+	// CONSTANTS
+	const int   rNum   = wp_.rNum;
+	const float rStep  = wp_.rStep;
+	const float rStart = wp_.rStart;
+
+	const int   tNum   = wp_.tNum;
+	const float tStep  = wp_.tStep;
+	const float tStart = wp_.tStart;
 
     pt2d*    prevWF (NULL); // wavefront it-1 
     pt2d*    curWF  (NULL); // wavefront it   
@@ -60,9 +68,7 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 
     pt2d     pointPrevWF;            // point  on wft it - 1
     pt2d     pointNextWF;            // point  on wft it + 1 
-	pt2d     pointCurWF_left;        // points on wft it  
 	pt2d     pointCurWF_center; 
-    pt2d     pointCurWF_right;      
 
 	// Cartesian coordinates 
 	// z axis 
@@ -80,12 +86,14 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
     sf_setlabel (ag, "g");
 
     // allocate wavefronts
-    prevWF = pt2dalloc1 (wp_.rNum);
-    curWF  = pt2dalloc1 (wp_.rNum);
-    nextWF = pt2dalloc1 (wp_.rNum);
+    prevWF = pt2dalloc1 (rNum);
+    curWF  = pt2dalloc1 (rNum);
+    nextWF = pt2dalloc1 (rNum);
+
+	sf_warning ("tNUM %d\n", tNum);
 
     // initialize wavefronts
-    for (int ir = 0; ir < wp_.rNum; ++ir) {
+    for (int ir = 0; ir < rNum; ++ir) {
 		prevWF[ir].x = curWF[ir].x = nextWF[ir].x = 0.f;
 		prevWF[ir].z = curWF[ir].z = nextWF[ir].z = 0.f;
 		prevWF[ir].v = curWF[ir].v = nextWF[ir].v = 0.f;
@@ -96,105 +104,73 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 
     // construct it = 0 wavefront
     int it = 0;
-    for (int ir = 0; ir < wp_.rNum; ++ir) {
+    for (int ir = 0; ir < rNum; ++ir) {
 		prevWF[ir].x = xSource;
 		prevWF[ir].z = zSource;
-		prevWF[ir].v = hwt2d_getv (prevWF[ir]);
+		prevWF[ir].v = hwt2d_getv ( prevWF[ir] );
     }
 
   	// construct it = 1 wavefront
     it = 1;
-    for (int ig = 0; ig < wp_.rNum; ++ig) {
-		double d, g;
-		d =  wp_.tStep  * hwt2d_getv (prevWF[ig]);
-		g = (wp_.rStart + ig * wp_.rStep) * SF_PI / 180;
-
-		curWF[ig].x = xSource + d * sin(g);
-		curWF[ig].z = zSource + d * cos(g);
-		curWF[ig].v = hwt2d_getv (curWF [ig]);
+    for (int ir = 0; ir < rNum; ++ir) {
+		const double d =  wp_.tStep  * hwt2d_getv ( prevWF[ir] );
+		const double g = (rStart + ir * rStep) * SF_PI / 180.f;
+		curWF[ir].x = xSource + d * sin(g);
+		curWF[ir].z = zSource + d * cos(g);
+		curWF[ir].v = hwt2d_getv ( curWF[ir] );
     }
 
     // loop over time 
-    for (it = 2; it < wp_.tNum; ++it) {
-		float curTime = wp_.tStart + (it - 2) * wp_.tStep;
-
-		if (wp_.rNum > 3 && !rays) {
-	 		// boundaries 
-		    int ig = 0;     
-		    nextWF[ig] = hwt2d_raytr (prevWF[ig], curWF [ig]);
-		    ig = wp_.rNum - 1; 
-		    nextWF[ig] = hwt2d_raytr (prevWF[ig], curWF [ig]);
-
-	  		for (int ig = 1; ig < wp_.rNum - 1; ++ig) {
-		
-				pointCurWF_left = curWF [ig - 1];
-				pointCurWF_center = curWF [ig];
-				pointNextWF = prevWF[ig];
-				pointCurWF_right = curWF [ig + 1];
-		
-				if (hwt2d_cusp (pointNextWF, pointCurWF_left, 
-								pointCurWF_center, pointCurWF_right)) {
-				    pointPrevWF = hwt2d_raytr (pointNextWF,
-				    							pointCurWF_center   );
-				} else {
-				    pointPrevWF = hwt2d_wfttr (pointNextWF, 
-				    							pointCurWF_left, 
-				    							pointCurWF_center, 
-				    							pointCurWF_right);
-				}
-				nextWF[ig] = pointPrevWF;
-			  }
-		} else {
-		    for (int ig = 0; ig < wp_.rNum; ++ig) {
-				pointCurWF_center = curWF [ig];  
-				pointNextWF = prevWF[ig];
-				pointPrevWF = hwt2d_raytr (pointNextWF, pointCurWF_center);
-				nextWF[ig] = pointPrevWF;
-	    	}
-
-			// checking if the ray has reached the daylight surface
-	
-		    for (int ig = 0; ig < wp_.rNum; ++ig) {
-				if (ep[ig].isSurf) continue;
-				else if (prevWF[ig].z >= 0) {
-					ep[ig].x = prevWF[ig].x;				
-					ep[ig].z = prevWF[ig].z;				
-					ep[ig].t = curTime;					
-				} else if (prevWF[ig].z < 0 && !ep[ig].isSurf) {
-								
-					float bef = (1 - prevWF[ig].z / (prevWF[ig].z - ep[ig].z));
-					float dx = prevWF[ig].x - ep[ig].x;
-					
-					ep[ig].x += bef * dx;
-					ep[ig].t += bef * wp_.tStep;
-					ep[ig].z = 0.f;
-
-//					ep[ig].t *= 2; // because we need double time
-							
-					ep[ig].isSurf = true;
-				}
-				ep[ig].startDir = wp_.rStart + ig * wp_.rStep - 180.f;
-				ep[ig].startDir *= -1;
+    for (it = 2; it < tNum; ++it) {
+		const float curTime = tStart + (it - 2) * tStep;
+	    for (int ir = 0; ir < rNum; ++ir) {
+			pointCurWF_center = curWF [ir];  
+			pointNextWF = prevWF[ir];
+			pointPrevWF = hwt2d_raytr (pointNextWF, pointCurWF_center);
+			nextWF[ir] = pointPrevWF;
+    	}
+		// checking if the ray has reached the daylight surface
+	    for (int ir = 0; ir < rNum; ++ir) {
+			const float prevZ = prevWF[ir].z; 							
+			if (ep[ir].isSurf) continue; // the ray has already reached the surface
+			if (prevZ < 0) { // the ray has left the model
+				float bef = (1 - prevZ / (prevZ - ep[ir].z));
+				float dx  = prevWF[ir].x - ep[ir].x;
+				ep[ir].x += bef * dx;
+				ep[ir].t += bef * tStep;
+				ep[ir].z = 0.f;
+				ep[ir].isSurf = true;
+			} else { // the ray is inside the model	- update escape point	 
+				ep[ir].x = prevWF[ir].x;				
+				ep[ir].z = prevZ;				
+				ep[ir].t = curTime;					
 			}
-		}	
-
+		}
 		// step in time
-		for (int ir = 0; ir < wp_.rNum; ++ir) {
-		    prevWF[ir] = curWF [ir];
-		    curWF [ir] = nextWF[ir];
+		pt2d* pPrev = prevWF; pt2d* pCur  = curWF; pt2d* pNext = nextWF;
+		for (int ir = 0; ir < rNum; ++ir, ++pPrev, ++pCur, ++pNext) {
+			*pPrev = *pCur;
+			*pCur = *pNext;
 		}
     } 
-    
-    
-    for (int ig = 1; ig < wp_.rNum - 1; ++ig) {
-		const float dx = ep[ig + 1].x - ep[ig - 1].x;
-		if (fabs (dx) < 1e-6) {ep[ig].p = 0.f; continue;}
-		const float dt = ep[ig + 1].t - ep[ig - 1].t;
-		ep[ig].p = fabs (1000 * dt / dx);
+ 
+	const int rNumReduced = rNum - 1;   
+    for (int ir = 1; ir < rNumReduced; ++ir) {
+		// start direction
+		ep[ir].startDir = rStart + ir * rStep - 180.f;
+		ep[ir].startDir *= -1;
+		// p
+		const float dx = ep[ir + 1].x - ep[ir - 1].x;
+		if (fabs (dx) < 1e-6) { ep[ir].p = 0.f; continue; } // vertical ray
+		const float dt = ep[ir + 1].t - ep[ir - 1].t;
+		ep[ir].p = fabs (1000 * dt / dx);
 	}
-		
+	// handle edge points			
 	ep[0].p = ep[1].p;
-	ep[wp_.rNum - 1].p = ep[wp_.rNum - 2].p;
-       
+	ep[rNum - 1].p = ep[rNum - 2].p;
+ 
+	ep[0].startDir = rStart;
+	ep[rNum - 1].startDir = rStart + (rNum - 1) * rStep - 180.f;
+      
     return;
 }

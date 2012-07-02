@@ -7,7 +7,7 @@ struct WavefrontParams {
     int rNum; float rStart; float rStep; 
     int tNum; float tStart; float tStep; 
 };
-
+// velocity model parameters for wavefront-tracer
 struct VelocityParams {
     int  zNum; float zStart; float zStep; 
     int  xNum; float xStart; float xStep; 
@@ -62,7 +62,7 @@ public:
 
 protected:
 
-		WavefrontTracer wavefrontTracer_; 
+		WavefrontTracer  wavefrontTracer_; 
 
 		VolumeParams*    dp_;
 		GatherParams*    gp_;
