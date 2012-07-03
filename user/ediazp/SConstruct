@@ -3,7 +3,7 @@ import os, sys
 try:
     import bldutil
     glob_build = True # scons command launched in RSFSRC
-    srcroot = '../..' 
+    srcroot = '../..' # cwd is RSFSRC/build/user/psava
     Import('env bindir pkgdir')
 except:
     glob_build = False # scons command launched in the local directory
@@ -12,8 +12,6 @@ except:
     import bldutil
     env = bldutil.Debug() # Debugging flags for compilers
     bindir = pkgdir = None
-
-
 
 targets = bldutil.UserSconsTargets()
 
@@ -24,6 +22,6 @@ despike2-ed
 despike1-ed
 vel1d
 picks2rsf
-adjsrc_mva
+mask2pick 
 '''
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
