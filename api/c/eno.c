@@ -93,6 +93,26 @@ void sf_eno_set (sf_eno ent, float* c /* data [n] */)
     }
 }
 
+void sf_eno_set_wstride (sf_eno ent, float* c /* data [n] */, int stride)
+/*< Set the interpolation table. c can be changed or freed afterwords >*/
+{
+    int i, j;
+
+    if (stride < 1) stride = 1;
+
+    for (i=0; i < ent->n; i++) {
+	/* copy the initial data */
+	ent->diff[0][i] = c[i*stride];
+    }
+    
+    for (j=1; j < ent->order; j++) {
+	for (i=0; i < ent->n-j; i++) {
+	    /* compute difference tables */
+	    ent->diff[j][i] = ent->diff[j-1][i+1] - ent->diff[j-1][i];
+	}
+    }
+}
+
 void sf_eno_apply (sf_eno ent, 
 		int i     /* grid location */, 
 		float x   /* offset from grid */, 
