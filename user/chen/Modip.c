@@ -6,14 +6,14 @@
 #include "ldip2.h"
 #include "odip.h"
 #include "odip1.h"
-#include "odip3.h"
+#include "odip2.h"
 
 
 int main(int argc, char*argv[])
 {
 	sf_file in, out;
 	int nf, n1, n2, n3, rect[2], niter, liter, interp, solver;
-	int i3;
+	int i2, i3;
 	bool verb, opwd;
 	float **wav, **dip, radius;
 
@@ -63,8 +63,8 @@ int main(int argc, char*argv[])
 	case 1:
 		odip1_init(radius, nf, interp, n1, n2, liter, verb);
 		break;
-	case 3:
-		odip3_init(radius, nf, interp, n1, n2, liter, verb);
+	case 2:
+		odip2_init(radius, nf, interp, n1, n2, liter, verb);
 		break;
 	default:
 		odip_init(radius, nf, interp, n1, n2, rect, liter, verb);
@@ -82,6 +82,7 @@ int main(int argc, char*argv[])
 		ldip_init(nf, interp, n1, n2, rect, liter, verb);
 	}
 
+
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
@@ -91,8 +92,8 @@ int main(int argc, char*argv[])
 		case 1:
 			odip1(wav, dip, niter);
 			break;
-		case 3:
-			odip3(wav, dip, niter);
+		case 2:
+			odip2(wav, dip, niter);
 			break;
 		default:
 			odip(wav, dip, niter);
@@ -118,8 +119,8 @@ int main(int argc, char*argv[])
 	case 1:
 		odip1_close();
 		break;
-	case 3:
-		odip3_close();
+	case 2:
+		odip2_close();
 		break;
 	default:
 		odip_close();

@@ -77,7 +77,7 @@ void ldip2(float **in, float **dip, int nit)
 		for(i1=0; i1<n1; i1++)
 		{
  			d1 = divn(-u3[0][i1], u3[1][i1]);
-			for(i3=2; i3<2*nf+1; i3++)
+/*			for(i3=2; i3<2*nf+1; i3++)
 			{
 				d2 = u3[0][i1];
 				d3 = 0.0;
@@ -89,7 +89,7 @@ void ldip2(float **in, float **dip, int nit)
 					d1 += 0.5*divn(d2, d3);
 				}
 			}
-			dip[i2][i1] = atan(d1);
+*/			dip[i2][i1] = atan(d1);
 		}
 		memcpy(u1[0], u2[0], (2*nf+1)*n1*sizeof(float));
 	}

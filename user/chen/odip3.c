@@ -31,6 +31,7 @@ void odip3_close()
 	opwd_close();
 }
 
+#define divn(a, b)  (a*b/(b*b+0.0001))
 
 
 void odip3(float **in, float **dip, int nit)
@@ -51,9 +52,8 @@ void odip3(float **in, float **dip, int nit)
 		opwdpd(in, u2, dip, 0);
 		for(i1=0; i1<n1*n2; i1++)
 		{
-			u3 = u1[0][i1]*u2[0][i1]/
-				(u2[0][i1]*u2[0][i1]+0.00001);
-			s1=rad*sin(dip[0][i1]) - eta*u3;
+			u3 = divn(u1[0][i1], u2[0][i1]);
+			s1=rad*sin(dip[0][i1]) - u3;
 			c1=rad*cos(dip[0][i1]);
 			dip[0][i1] = atan2(s1*c1, c1*c1+0.00001);
 		}
@@ -62,10 +62,9 @@ void odip3(float **in, float **dip, int nit)
 		opwdpd(in, u2, dip, 1);
 		for(i1=0; i1<n1*n2; i1++)
 		{
-			u3 = u1[0][i1]*u2[0][i1]/
-				(u2[0][i1]*u2[0][i1]+0.00001);
+			u3 = divn(u1[0][i1], u2[0][i1]);
 			s1=rad*sin(dip[0][i1]);
-			c1=rad*cos(dip[0][i1]) - eta*u3;
+			c1=rad*cos(dip[0][i1]) - u3;
 			dip[0][i1] = atan2(s1*c1, c1*c1+0.00001);
 		}
 	}
