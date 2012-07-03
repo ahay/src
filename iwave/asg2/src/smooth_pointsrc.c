@@ -549,8 +549,8 @@ int spointsrc_run(SPOINTSRC * tr, IMODEL * m)
   int ndim, i;
   IPNT ix, gs, ge;
 	ireal bm, bou, p0, p1, p2, ps, t; 
-  FILE * stream;
-  stream = retrieveOutstream();
+/*  FILE * stream;
+    stream = retrieveOutstream(); */
 
 
   

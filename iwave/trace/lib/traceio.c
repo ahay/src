@@ -2300,8 +2300,9 @@ int writetraces(tracegeom const * tg,
 
   MPI_Comm wcomm;               /* global communicator */
   MPI_Comm lcomm;               /* local communicator */
-#endif
   int lsize;                    /* size of the local communicator */
+#endif
+
   int lrank;                    /* rank in the local communicator  */
 
   /* END DECLARE WORKSPACE **************************************************/
@@ -2310,9 +2311,9 @@ int writetraces(tracegeom const * tg,
 #ifdef IWAVE_USE_MPI
   wcomm=retrieveGlobalComm();
   lcomm=retrieveComm();
+  lsize=retrieveSize();
 #endif
   lrank=retrieveRank();
-  lsize=retrieveSize();
 
   ndim = tg->ndim;
   if (ndim < 1 || ndim > RARR_MAX_NDIM ) {

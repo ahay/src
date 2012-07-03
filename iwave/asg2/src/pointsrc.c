@@ -15,9 +15,8 @@ int pointsource(IPNT is,
   int ndim;
   ireal p;
   
-  FILE *stream;
-  
-  stream = retrieveOutstream();
+  /* FILE *stream;
+     stream = retrieveOutstream(); */
 
   ra_ndim(&arr, &ndim);
   ra_gse(&arr, gs, ge);

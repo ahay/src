@@ -83,7 +83,10 @@ for r in range(4):
     traces.append(trace)
 
 Result('trace',traces,
-       'cat axis=2 ${SOURCES[1:4]} | graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa')
+       '''
+       cat axis=2 ${SOURCES[1:4]} | 
+       graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa
+       ''')
 
 Result('wtrace',traces,
        '''
