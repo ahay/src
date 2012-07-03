@@ -10,6 +10,8 @@ int main(int argc, char ** argv) {
   char * inf = NULL;
   char * dfl = NULL;
   char * inl = NULL;
+  char * dffa = NULL;
+  char * dfla = NULL;
   long l = 0L;
   short h = 0;
   int i = 0;
@@ -22,7 +24,7 @@ int main(int argc, char ** argv) {
     exit(1);
   }
 
-  printf("DUMP of PARFILE:\n");
+  printf("DUMP of PARARRAY, before:\n");
   printf("------------------------------------------------------\n");
     
   ps_printall(*par,stdout);
@@ -130,7 +132,62 @@ int main(int argc, char ** argv) {
     fprintf(stdout,"last value of d2 (double) = %20.14lf\n",xx);
   }  
 
+  // change values of data_format
+  if (err=ps_sfcstring(*par,"data_format","xdr_float")) {
+    fprintf(stdout,"did not set data_format (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"set first value of data_format (cstring) = %s\n","xdr_float");
+  }
+
+  if (err=ps_slcstring(*par,"data_format","xdr_float")) {
+    fprintf(stdout,"did not set data_format (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"set last value of data_format (cstring) = %s\n","xdr_float");
+  }
+  
+  if (err=ps_ffcstring(*par,"data_format",&dffa)) {
+    fprintf(stdout,"did not find data_format (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"first value of data_format (cstring) = %s\n",dffa);
+  }
+
+  if (err=ps_flcstring(*par,"data_format",&dfla)) {
+    fprintf(stdout,"did not find data_format (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"last value of data_format (cstring) = %s\n",dfla);
+  }
+
+  // set a couple more things just for the heck of it
+  if (err=ps_slcstring(*par,"unit2","m")) {
+    fprintf(stdout,"did not set unit2 (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"set last value of unit2 (cstring) = %s\n","m");
+  }
+  if (err=ps_slcstring(*par,"label2","Depth")) {
+    fprintf(stdout,"did not set label2 (cstring), err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"set last value of label2 (cstring) = %s\n","Depth");
+  }
+
+  printf("DUMP of PARARRAY, after:\n");
+  printf("------------------------------------------------------\n");
+    
+  ps_printall(*par,stdout);
+  printf("------------------------------------------------------\n\n");
+
   if (s) userfree_(s);
   if (t) userfree_(t);
+  if (dff) userfree_(dff);
+  if (dfl) userfree_(dfl);
+  if (inf) userfree_(inf);
+  if (inl) userfree_(inl);
+  if (dffa) userfree_(dffa);
+  if (dfla) userfree_(dfla);
   ps_delete(&par);
 }

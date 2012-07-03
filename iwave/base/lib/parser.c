@@ -1139,7 +1139,7 @@ int ps_flreal(PARARRAY par, const char *key, ireal *p) {
 // assign first
 
 int ps_sfcstring(PARARRAY par, const char *key, char *p) {
-  return ps_set(&par,0,"cstring",key,&p);
+  return ps_set(&par,0,"cstring",key,p);
 }
 int ps_sfchar(PARARRAY par, const char *key, char p) {
   return ps_set(&par,0,"char",key,&p);
