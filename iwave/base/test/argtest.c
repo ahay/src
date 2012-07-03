@@ -25,4 +25,5 @@ int main(int argc, char ** argv) {
   free(xargv[3]);
   free(xargv);
   ps_delete(&par);
+  iwave_fdestroy();
 }

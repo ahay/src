@@ -190,4 +190,6 @@ int main(int argc, char ** argv) {
   if (dffa) userfree_(dffa);
   if (dfla) userfree_(dfla);
   ps_delete(&par);
+
+  iwave_fdestroy();
 }
