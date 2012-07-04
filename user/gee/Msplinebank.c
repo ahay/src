@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int nt, i, j, k, niter, np, ip, *nh, n2[2];
-    float s0, p, a0, dp, p2, pmax, p0, eps, p21;
+    float s0, p, dp, p2, pmax, p0, eps, p21;
     char *lagname, *nhname;
     sf_filter ss, aa;
     sf_file out, nhh, lag;
@@ -133,14 +133,14 @@ int main(int argc, char* argv[])
 	    aa->lag[i] = 3*nt+j;
 	}
 
-	a0 = wilson_factor (niter, s0, ss, aa, false, 1.e-6);
+	(void) wilson_factor (niter, s0, ss, aa, false, 1.e-6);
 	aa = compress (aa, eps);
 
 	for (i=0; i < aa->nh; i++) {
 	    aa->flt[i] = 0.;
 	}
 
-	a0 = wilson_factor (niter, s0, ss, aa, false, 1.e-6);
+	(void) wilson_factor (niter, s0, ss, aa, false, 1.e-6);
 
 	sf_floatwrite (aa->flt,aa->nh,out);
 	sf_intwrite (aa->lag,aa->nh,lag);

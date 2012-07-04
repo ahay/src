@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 {
     bool impresp;
     int nt,nx,nz,nw,init,i,padfactor,nfilt,nkol,it,ix,iz,iw;
-    float v,dx,dz,lambda,sixth,gamma,epsdamp,pi2,dw,dt,dkol,w,wov;
+    float v,dx,dz,lambda,sixth,gamma,epsdamp,pi2,dw,dt, w,wov;
     sf_complex wov2, a, b, c, d, cshift;
     float ***ppp;
     sf_complex *pp, *qq;
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
     dt =   pi2/(nt*dw);
 
     nkol=pad2(padfactor*nx);
-    dkol=pi2/nkol;
+    /* dkol=pi2/nkol; */
 
     for (it=0; it < nt; it++) {
 	for (ix=0; ix < nx; ix++) {

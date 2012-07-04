@@ -25,11 +25,10 @@
 
 int main(int argc, char* argv[]) 
 {
-    int ntxy, nt, nx, ny, pt, px, niter, npx, npy, np, m[3], n[3];
+    int ntxy, nt, nx, ny, pt, px, niter, npx, npy, m[3], n[3];
     float eps, *pp, *qq; 
     nfilter pfilt;
     sf_file in, out, dip;
-    bool stat;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -43,13 +42,13 @@ int main(int argc, char* argv[])
     n[0] = nt; n[1] = nx; n[2] = ny;
 
     if (!sf_getfloat("eps",&eps)) eps=0.001;
-    stat = sf_getint("nt",&pt);
-    stat = sf_getint("nx",&px);
+    if (!sf_getint("nt",&pt)) sf_error("Need nt=");
+    if (!sf_getint("nx",&px)) sf_error("Need nx=");
     m[0] = pt; m[1] = px; m[2] = px;
 
     if (!sf_getint("npx",&npx)) npx=100;
     if (!sf_getint("npy",&npy)) npy=100;
-    np = npx *npy;
+    /* np = npx *npy; */
 
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
