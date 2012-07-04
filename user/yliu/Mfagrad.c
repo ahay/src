@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool sign, grad;
-    int iw, nw, i1, n1, i2, n2, n1w, index=0, nd=0, wbeg=0, wend=0;
+    int iw, nw, i1, n1, i2, n2, n1w, nd=0, wbeg=0, wend=0;
     float lperc, hperc, emax;
     float d1, dw, w0, etotal, f1=0., f2=0., e1=0., e2=0., ecum, *fdg, *e;
 /*    float cum1, cum2, cum3, cum4, numer, denom; */
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 		    ((nw-index)*cum4-cum1*cum1);
 */
 
-		index = 0;
+		/*	index = 0; */
 		emax = e[i1];
 		for (iw=0; iw < nw-1; iw++) {
 		    if (emax < e[(iw+1)*n1+i1]) {

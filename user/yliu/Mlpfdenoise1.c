@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
     int n1, n2, nfw, i2, rect, niter;
     bool boundary, verb;
     
-    float *input, *output, temp;
+    float *input, *output;
     sf_file in, out;
     
     sf_init (argc, argv); 
@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
     for(i2=0; i2 < n2; i2++) {
 	sf_floatread(input,n1,in);
 	
-	temp = elpf (input,output,n1,nfw,niter,boundary);	
+	elpf (input,output,n1,nfw,niter,boundary);	
 
 	sf_floatwrite(output,n1,out);
     }

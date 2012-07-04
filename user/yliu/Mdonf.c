@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
     int n1, n2, n3, n12, nfw, i1, i2, i3, j, m, *coor, xc, yc, nw, nrep;
     bool boundary, verb, gauss;
     
-    float *input, *output, *temp, *dd, *data, ax, bx;
+    float *input, *output, *dd, *data, ax, bx;
     sf_file in, out, dip;
     
     sf_init (argc, argv); 
@@ -75,7 +75,6 @@ int main (int argc, char* argv[])
     dd = sf_floatalloc(n12);
     coor = sf_intalloc(nw*2);
     data = sf_floatalloc(nw);
-    temp = sf_floatalloc(nw);
 
     for(i3=0; i3 < n3; i3++) {
 	if (verb) sf_warning("3rd axis: %d of %d",i3+1,n3);

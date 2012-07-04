@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], m[SF_MAX_DIM], rect[SF_MAX_DIM], a[SF_MAX_DIM];
-    int ndim, mdim, nd, ns, n12, i, j, niter;
+    int mdim, nd, ns, n12, i, j, niter;
     int i1, i2, i3, j1, j2, j3, jump, i4, n4;
     float *d, *f, *g, mean, *ff, *outm;
     char key[6];
@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     for (j=0; j < mdim; j++) {
 	n[mdim] *= a[j];
     }
-    ndim = mdim+1;
+/*    ndim = mdim+1; */
 
     nd = 1;
     for (j=0; j < mdim; j++) {

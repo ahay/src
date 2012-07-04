@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int nw, n1, n2, n12, i1, i2, i3, n3, j, iter, nperc, interp, order;
     float *mm, *dd, *dd2=NULL, **pp, *d1, *m1, eps, perc, *hcurv;
-    float *data, *model, *ldata=NULL, *sddata, min, max, dm, dperc;
+    float *data, *model, *ldata=NULL, min, max, dm, dperc;
     sf_complex *norm12;
     char *type;
     bool verb, dwt;
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
 	    /* interpolate model */
 	    interp = (int)((max-min)/dm) +1;
 	    ldata = sf_floatalloc(interp);
-	    sddata = sf_floatalloc(interp);
+	    /* sddata = sf_floatalloc(interp); */
 	    order = 1;
 	    for (j=0; j < interp; j++) {
 		if ((max-dm*j) == model[order] && order < (nperc-1)) {

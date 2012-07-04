@@ -30,7 +30,7 @@ IEEE, 836-846*/
 int main (int argc, char *argv[])
 {
     int n1, n2, i2, ns, nrep;
-    float *trace, output, ax, bx;
+    float *trace, ax, bx;
     sf_file inp, out;
     bool gauss;
 
@@ -71,7 +71,7 @@ int main (int argc, char *argv[])
 	/* read input */
 	sf_floatread(trace,n1,inp);
 
-	output = bilateral(trace,ns,ax,bx,n1,nrep,gauss);
+	bilateral(trace,ns,ax,bx,n1,nrep,gauss);
 	/* write output */
 	sf_floatwrite(trace,n1,out);
     }

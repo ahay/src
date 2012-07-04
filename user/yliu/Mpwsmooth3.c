@@ -26,7 +26,8 @@ int main (int argc, char *argv[])
     bool verb, bilat, gauss;
     int n1,n2,n3, i1,i2,i3, ns2, ns3, ip2, ip3, ip, np2, np3, np; 
     int i4, n4, k2, k3, j2, j3, ud, lr, foldp, foldn, t1, t2;
-    float eps, ****u, ****w, ***p1, ***p2, ***norm, **cost, *trace, ***xk, ***yk, ax, bx, distance, max;
+    float eps, ****u, ****w, ***p1, ***p2, ***norm, **cost, *trace;
+    float ax, bx, distance, max;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -95,8 +96,6 @@ int main (int argc, char *argv[])
     p1 = sf_floatalloc3(n1,n2,n3);
     p2 = sf_floatalloc3(n1,n2,n3);
     norm = sf_floatalloc3(n1,n2,n3);
-    xk = sf_floatalloc3(n1,n2,n3);
-    yk = sf_floatalloc3(n1,n2,n3);
     trace = sf_floatalloc(n1);
 
     for (i4=0; i4 < n4; i4++) {

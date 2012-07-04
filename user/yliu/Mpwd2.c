@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    int ir, nr, n1,n2,n3, m1, m2, m3, n12, nw, nj1, nj2, i3;
+    int ir, nr, n1,n2,n3, m1, m2, m3, n12, nw, nj1, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
     bool verb;
@@ -59,7 +59,6 @@ int main (int argc, char *argv[])
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* aliasing */
 
-    nj2 = 1;
     n3 = 1;
 
     for (ir=0; ir < nr; ir++) {
