@@ -56,7 +56,7 @@ static float sf_get_diff_time (sf_timer timer) {
                    (0.001*(t_time.tv_usec - timer->start_time.tv_usec)));
 }
 
-sf_timer sf_timer_init ()
+sf_timer sf_timer_init (void)
 /*< Initialize timer object. >*/
 {
     sf_timer timer;
@@ -68,6 +68,12 @@ sf_timer sf_timer_init ()
     timer->running = false;
     timer->clock_sessions = 0;
     return timer;
+}
+
+void sf_timer_close (sf_timer timer)
+/*< Destroy timer object. >*/
+{
+    free (timer);
 }
 
 void sf_timer_start (sf_timer timer)
