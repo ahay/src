@@ -15,11 +15,11 @@ public:
 	// ray tracing functions
 	void   getEscPointByDirection    (EscapePoint* escPoints, int size, float pRec, EscapePoint& resEscPoint);
 	// calculate ray touching the current receiver
-	int    getRayToPoint             (float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);	
+	bool    getRayToPoint            (float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);	
 	// get sample by two-rays beam
-	int    getSampleByBeam  	     (float curScatAngle, float curDipAngle, float& sample); 
+	bool    getSampleByBeam  	     (float curScatAngle, float curDipAngle, float& sample); 
 	// get sample by only ray trace; implemented for zero-offset section only
-	void   getSampleByRay            (float dipAngle, float& sample);
+	bool    getSampleByRay            (float dipAngle, float& sample);
   
  	float  getSampleFromData         (const float h, const float geoY, const float geoX, const float t, const float trf = 0.f);
 	// transfer parameters to wavefrontTracer

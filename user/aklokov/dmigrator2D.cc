@@ -46,9 +46,6 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// internal image
 	double* curImage = new double [zNum];
 	memset ( curImage, 0, zNum * sizeof (double) );
-	// sum of squared samples
-	double* imageSq = new double [zNum];
-	memset ( imageSq, 0, zNum * sizeof (double) );
 
 	// mask for dip-angle gather for current scattering angle
 	int* maskDag = new int [dagSize];
@@ -75,11 +72,11 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 				const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
 				
 				float sample (0.f);
-				int isBad = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
-				if (isBad && curScatAngle < 1e-6) // implemented for zero-offset only
-					this->getSampleByRay (curDipAngle, sample);
+				bool isGood = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
+				if (!isGood && curScatAngle < 1e-6) // implemented for zero-offset only
+					isGood = this->getSampleByRay (curDipAngle, sample);
 
-				if (!sample)
+				if (!isGood)
 					continue;
 
 				const int indDag = id * zNum + iz;
@@ -89,9 +86,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 				curCig [indCig] += sample;
 				maskCig [indCig] += 1;
 				curImage [iz] += sample;
-				imageSq [iz] += sample * sample;
 				maskImage [iz] += 1;
-	
 			}
 			// add current scattering-angle migration to the main result
 			float*  pTo   = dag;
@@ -126,8 +121,6 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	delete [] curCig;
 	delete [] curImage;
 
-	delete [] imageSq;
-
 	delete [] maskDag;
 	delete [] maskCig;
 	delete [] maskImage;
@@ -135,7 +128,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	return;
 }
 
-int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, float& sample) {
+bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, float& sample) {
 
 	const int   hNum   = dp_->hNum;
 	const float hStart = dp_->hStart; 
@@ -145,10 +138,8 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 	const float xStart = dp_->xStart; 
 	const float xStep  = dp_->xStep; 
 
-	const float dipStep = gp_->dipStep;
-
 	float baseDir = curDipAngle + 0.5 * curScatAngle;
-	const float shiftDir = 0.5 * dipStep;
+	const float shiftDir = 0.25 * gp_->scatStep;
 
 	// calc recs lane
 	float dir1 = baseDir - shiftDir;
@@ -198,13 +189,13 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 			float timeToRec (0.f);
 			float recAbsP (0.f);
 			bool onSurf;
-			int badRes = this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
-			if (badRes) continue; // no ray was found
+			bool goodRes = this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
+			if (!goodRes) continue; // no ray was found
 			if (!onSurf) continue; // the ray does not reach the surface
 			float timeToSrc (0.f);
 			float srcAbsP (0.f);
-			badRes = this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
-			if (badRes) continue; // no ray was found
+			goodRes = this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
+			if (!goodRes) continue; // no ray was found
 			if (!onSurf) continue; // the ray does not reach the surface
 			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "ms"
 			sample += this->getSampleFromData (curOffset, 0, curRecPos, curTime, recAbsP);
@@ -213,24 +204,24 @@ int DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, flo
 		curRecPos -= xStep;
 	}
 			
-	if (!count) return -1; // no sample is returned
+	if (!count) return false; // no sample is returned
 	sample /= count;
 
-	return 0;
+	return true;
 }
 
 // get sample by only ray trace; implemented for zero-offset section only
-void DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
+bool DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 
 	EscapePoint* escPoint = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes_, ttRayNum_, dipAngle, *escPoint);
 
 	// check if the ray reaches the daylight surface
-	if (!escPoint->isSurf) { sample = 0.f; return; }
+	if (!escPoint->isSurf) { return false; }
 
 	// check if the sample is inside the data volume
-	if (escPoint->x - dataXMin_ < -1e-4 || escPoint->x - dataXMax_ > 1e-4) return;
-	if (escPoint->t < dataTMin_ || escPoint->t > dataTMax_) return;
+	if (escPoint->x - dataXMin_ < -1e-4 || escPoint->x - dataXMax_ > 1e-4) { return false; }
+	if (escPoint->t < dataTMin_ || escPoint->t > dataTMax_) { return false; }
 
 	// the sample coordinates
 	const float sampleX = escPoint->x;
@@ -261,11 +252,11 @@ void DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 
 	delete escPoint;
 	
-	return;
+	return true;
 }
 
 // calculate ray touching the current receiver
-int DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
+bool DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
 
 	const float basedir = dir1 > dir2 ? dir1 : dir2; // basedir "starts" the target beam
 
@@ -279,7 +270,7 @@ int DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, flo
 		ttDir = pTT->startDir; 
 		++count;
 	}
-	if (count == ttRayNum_) return -1; // no ray was found
+	if (count == ttRayNum_) return false; // no ray was found
 
 	float ttX = pTT->x;
 
@@ -292,7 +283,7 @@ int DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, flo
 			ttX = pTT->x; 
 			++count;
 	    }
-		if (count == ttRayNum_) return -1; // no ray was found
+		if (count == ttRayNum_) return false; // no ray was found
 		rightPoint = pTT - 1;
 		leftPoint  = pTT; 
 	} else {
@@ -301,30 +292,30 @@ int DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, flo
 			ttX = pTT->x; 
 			++count;
 	    } 
-		if (count == ttRayNum_) return -1; // no ray was found
+		if (count == ttRayNum_) return false; // no ray was found
 		rightPoint = pTT;
 		leftPoint  = pTT - 1; 
 	}	
 	// check if the basic points are valid
 	if (!leftPoint->isSurf && !rightPoint->isSurf) {
-		isSurf = false; return 0;
+		isSurf = false; return false;
 	} else if (!leftPoint->isSurf) {
 		timeToPoint = rightPoint->t;		
 		pointAbsP   = rightPoint->p;	
 		isSurf = true;	
-		return 0;
+		return false;
 	} else if (!rightPoint->isSurf) {
 		timeToPoint = leftPoint->t;		
 		pointAbsP   = leftPoint->p;		
 		isSurf = true;	
-		return 0;
+		return false;
 	} else {
 		const float bef = ( rightPoint->x - curRecPos ) / (rightPoint->x - leftPoint->x);
 		const float aft = 1 - bef;
 		timeToPoint = leftPoint->t * bef + rightPoint->t * aft;
 		pointAbsP   = leftPoint->p * bef + rightPoint->p * aft;
 		isSurf = true;	
-		return 0;
+		return true;
 	}	
 }
 
@@ -381,7 +372,8 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	float tStart = dp_->zStart;
 	float xStart = dp_->xStart;
 
-	float geoX = isCMP_ ? geoX1 - h * 0.5 : geoX1;
+//	float geoX = isCMP_ ? geoX1 - h * 0.5 : geoX1;
+	float geoX = geoX1 - h;
 
 	const int itMiddle = (int) ((ti - tStart) / tStep);
 	if (itMiddle < 0 || itMiddle >= tNum) return 0.f;
