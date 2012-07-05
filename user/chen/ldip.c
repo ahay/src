@@ -47,7 +47,7 @@ void ldip_close()
 void ldip(float **in, float **dip, int nit)
 /*< omnidirectional dip estimation >*/
 {
-	int it, i1;
+	int it, i1, j1;
 	double eta, norm;
 
 	for(i1=0; i1<n1*n2; i1++)
@@ -66,7 +66,7 @@ void ldip(float **in, float **dip, int nit)
 		}
 		for(i1=0, norm=0.0; i1<n1*n2; i1++)
 			norm += (u2[0][i1]*u2[0][i1]);
-		norm=sqrtf(norm);
+		norm=sqrtf(norm/(n1*n2));
 		for(i1=0; i1<n1*n2; i1++)
 		{
 			u1[0][i1] /= norm;
@@ -77,12 +77,8 @@ void ldip(float **in, float **dip, int nit)
 
 		for(i1=0; i1<n1*n2; i1++)
 			dip[0][i1] -= u3[0][i1];
+
 	}
-//    for(i1=0; i1<n1*n2; i1++)
- //   {
-   //     while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
-     //   while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
-//    }
 
 	for(i1=0; i1<n1*n2; i1++)
 		dip[0][i1] = atanf(dip[0][i1]);

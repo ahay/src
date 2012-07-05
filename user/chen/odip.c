@@ -61,7 +61,7 @@ void odip(float **in, float **dip, int nit)
 
         for(i1=0, norm=0.0; i1<n1*n2; i1++)
             norm += (u2[0][i1]*u2[0][i1]);
-        norm=sqrtf(norm);
+        norm=sqrtf(norm/(n1*n2));
         for(i1=0; i1<n1*n2; i1++)
         {
             u1[0][i1] /= norm;
