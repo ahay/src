@@ -3,7 +3,7 @@
 #include "support.hh"
 #include "curveDefinerBase.hh"
 #include "curveDefinerDipOffset.hh"
-
+#include <rsf.hh>
 
 TimeMigrator2D::TimeMigrator2D () {
 }
@@ -32,7 +32,8 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
     float*     ptrGather = curoffsetGather;
 
 	curveDefiner_->curOffset_ = curOffset;
-	curOffset_ = (int) curOffset;
+//	curOffset_ = (int) curOffset;
+	curOffset_ = curOffset;
 
     // compose gather
 	for (int id = 0; id < dipNum; ++id) {
@@ -149,7 +150,10 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
 	float zStart_ = dp_->zStart;
 	float xStart_ = dp_->xStart;
 
-	float geoX = isCMP_ ? geoX1 - curOffset_ * 0.5 : geoX1;
+	float geoX (0.f);
+	if      (0 == axis2label_) geoX = geoX1 - curOffset_;       // if axis2 is "shot"
+	else if (1 == axis2label_) geoX = geoX1 - curOffset_ * 0.5; // if axis2 is "cmp"
+	else if (2 == axis2label_) geoX = geoX1;                    // if axis2 is "receiver"
 
 	const int itMiddle = (int) ((ti - zStart_) / zStep_);
 	if (itMiddle < 0 || itMiddle >= zNum_) return 0.f;

@@ -285,8 +285,9 @@ int main (int argc, char* argv[]) {
 // Migration parameters
     if (!sf_getbool ("is3d",       &rp.is3D))       rp.is3D = false;
     /* if y, apply 3D migration */
-    if (!sf_getbool ("isCMP",      &rp.isCMP))      rp.isCMP = false;
-    /* if y, data traces have coordinates of CMP position */
+	int axis2label (0);
+    if ( !sf_getint ("axis2label", &axis2label) )   axis2label = 0;
+	/* 0 - shot; 1 - cmp; 2 - receiver */
     if (!sf_getbool ("isAA",       &rp.isAA))       rp.isAA = true;
     /* if y, apply anti-aliasing */
     if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
@@ -420,7 +421,7 @@ int main (int argc, char* argv[]) {
 	migrator = new TimeMigrator2D ();
 	migrator->initCurveDefiner (false);
     }
-    migrator->setImagingParams (&dp, offsetSection, rp.isAA, rp.isCMP, &vp, &ip, &gp);
+    migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
     migrator->setDataLimits ();
 
     const int fullGatherNum = ip.yNum * ip.xNum;

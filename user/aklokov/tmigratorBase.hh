@@ -15,9 +15,9 @@ public:
 		virtual void processGather  (Point2D& curGatherCoords, float curOffset, const float* const velTrace, const bool isAzDip,
   								     float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
 
-		void setImagingParams (VolumeParams* dp, float* ptrToData, bool isAA, bool isCMP,
-							   VolumeParams* vp, VolumeParams* ip, GatherParams* gp) {dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA; isCMP_ = isCMP;
-																				  vp_ = vp; ip_ = ip; gp_ = gp;}
+		void setImagingParams (VolumeParams* dp, float* ptrToData, bool isAA, int axis2label,
+							   VolumeParams* vp, VolumeParams* ip, GatherParams* gp) { dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA; 
+																					   axis2label_ = axis2label; vp_ = vp; ip_ = ip; gp_ = gp; }
 
 		float getMigVel (const float* const velTrace, const float curZ);
 		void  initCurveDefiner (bool is3D);
@@ -25,7 +25,7 @@ public:
 
 		CurveDefinerBase* curveDefiner_;
 
-		int             curOffset_;
+		float             curOffset_;
 
 protected:
 
@@ -45,13 +45,13 @@ protected:
 
 		VolumeParams*    dp_;
 		GatherParams*    gp_;
-		VolumeParams*      ip_;
-		VolumeParams*      vp_;
+		VolumeParams*    ip_;
+		VolumeParams*    vp_;
 
 		float*           ptrToData_;
 	
 		bool             isAA_;
-		bool             isCMP_;
+		int              axis2label_;
 
 		// data limits
         float            dataZMin_;
