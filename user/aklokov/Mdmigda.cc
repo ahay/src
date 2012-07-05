@@ -314,7 +314,6 @@ int main (int argc, char* argv[]) {
     /* step in dip-angle */
 
 	// TRAVEL TIMES TABLES
-	int ttRayNum (0); float ttRayStep (0.f); float ttRayStart (0.f);
 	int ttNum (0); float ttStep (0.f); float ttStart (0.f);
 
 	const float maxTime = dp.zStart + (dp.zNum - 1) * dp.zStep;
@@ -323,13 +322,19 @@ int main (int argc, char* argv[]) {
 	// not sure that "0.002f" is the optimal value
     if ( !sf_getint  ("ttn", &ttNum) ) ttNum = 0.001 * 0.5 * maxTime / ttStep + 1;
     /* travel-times number */
-    if ( !sf_getint  ("ttrayn", &ttRayNum) ) ttRayNum =  2 * gp.dipNum + 1;
-    /* travel-times rays number */
+
+	// travel-times rays
+	int ttRayNum (0); float ttRayStep (0.f); float ttRayStart (0.f);
+	const float maxScatAngle = gp.scatStart + (gp.scatNum - 1) * gp.scatStep;
+	const float maxDipAngle  = gp.dipStart + gp.dipStep * (gp.dipNum - 1);
+	const float maxttRay     = maxDipAngle + maxScatAngle / 2.f + ttRayStep;
+	const float minttRay     = gp.dipStart - maxScatAngle / 2.f - ttRayStep;
     if ( !sf_getfloat ("ttrayd",  &ttRayStep) ) ttRayStep = gp.dipStep / 2.f;
     /* travel-times rays increment */
-    if ( !sf_getfloat ("ttrayo",  &ttRayStart) ) ttRayStart = gp.dipStart - ttRayStep + 180.f; 	
+    if ( !sf_getfloat ("ttrayo",  &ttRayStart) ) ttRayStart = minttRay;
     /* travel-times rays start */
-	// calculating ttStart we do "+180" because the direction to the top corresponds to 180 degree
+    if ( !sf_getint  ("ttrayn", &ttRayNum) ) ttRayNum = (maxttRay - minttRay) / ttRayStep + 1;
+    /* travel-times rays number */
 
     // INITIATE OUTPUT
 

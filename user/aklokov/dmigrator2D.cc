@@ -198,7 +198,10 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 			if (!goodRes) continue; // no ray was found
 			if (!onSurf) continue; // the ray does not reach the surface
 			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "ms"
-			sample += this->getSampleFromData (curOffset, 0, curRecPos, curTime, recAbsP);
+			float curSample (0.f);
+			goodRes = this->getSampleFromData (curOffset, 0, curRecPos, curTime, recAbsP, curSample);
+			if (!goodRes) continue;
+			sample += curSample;
 			++count;
 		}
 		curRecPos -= xStep;
@@ -241,8 +244,12 @@ bool DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 
 	const float absP = fabs (p);
 	const float zeroOffset = 0.f;
-	const float sampleLeft  = this->getSampleFromData (zeroOffset, 0, posLeftTrace,  1000 * timeLeft,  absP); // transform time to "ms"
-	const float sampleRight = this->getSampleFromData (zeroOffset, 0, posRightTrace, 1000 * timeRight, absP);
+	float sampleLeft (0.f);
+	bool goodRes = this->getSampleFromData (zeroOffset, 0, posLeftTrace,  1000 * timeLeft, absP, sampleLeft); // transform time to "ms"
+	if (!goodRes) return false; // bad result
+	float sampleRight (0.f);
+	goodRes = this->getSampleFromData (zeroOffset, 0, posRightTrace, 1000 * timeRight, absP, sampleRight);
+	if (!goodRes) return false; // bad result
 	// interpolation parameters
 	const float bef = (sampleX - posLeftTrace) / xStepData;
 	const float aft = 1.f - bef;
@@ -361,7 +368,8 @@ void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escP
 	return;
 }
 
-float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const float geoX1, const float ti, const float p) {
+bool DepthMigrator2D::getSampleFromData (const float h, const float geoY, const float geoX1, const float ti, 
+										 const float p, float &sample) {
 	
 	int tNum = dp_->zNum;
 	int xNum = dp_->xNum;
@@ -378,15 +386,15 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	else if (2 == axis2label_) geoX = geoX1;           // if axis2 is "receiver"
 
 	const int itMiddle = (int) ((ti - tStart) / tStep);
-	if (itMiddle < 0 || itMiddle >= tNum) return 0.f;
+	if (itMiddle < 0 || itMiddle >= tNum) return false;
 
 	const int xSamp = (int) ((geoX - xStart) / xStep);
-	if (xSamp < 0 || xSamp >= xNum) return 0.f;
+	if (xSamp < 0 || xSamp >= xNum) return false;
 
 	// offset
 
 	const int offsetInd = h / dp_->hStep;
-	if (offsetInd >= dp_->hNum || offsetInd < 0) return 0.f;
+	if (offsetInd >= dp_->hNum || offsetInd < 0) return false;
 
 	float* const trace = ptrToData_ + xSamp * tNum + xNum * tNum * offsetInd;
 
@@ -397,8 +405,10 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 
 	const float sampleMiddle = aftMiddle * trace[itMiddle] + befMiddle * trace[itMiddle + 1];
     
-	if (!isAA_) 
-		return sampleMiddle;
+	if (!isAA_) {
+		sample = sampleMiddle;
+	    return true;
+	}
 
 	const float filterLength = p * xStep + tStep;
     
@@ -407,7 +417,7 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
  	const float timeLeft = ti - filterLength;
  	const int     itLeft = (int) ((timeLeft - tStart) / tStep); 
 	
-	if (itLeft < 0) return 0.f;
+	if (itLeft < 0) return false;
 
     const float befLeft = (timeLeft - tStart) * 1.f / tStep - itLeft;
     const float aftLeft = 1.f - befLeft;
@@ -419,7 +429,7 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
  	const float timeRight = ti + filterLength;
  	const int     itRight = (int) ((timeRight - tStart) / tStep); 
 
-	if (itRight >= tNum - 1) return 0.f;
+	if (itRight >= tNum - 1) return false;
 
     const float befRight = (timeRight - tStart) * 1.f / tStep - itRight;
     const float aftRight = 1.f - befRight;
@@ -431,23 +441,24 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
     float imp = tStep / (tStep + timeRight - timeLeft);
     imp *= imp;
     
-	const float aaSample = (2.f * sampleMiddle - sampleLeft - sampleRight) * imp;
+	sample = (2.f * sampleMiddle - sampleLeft - sampleRight) * imp;
 		
-	return aaSample;
+	return true;
 }
 // transfer parameters to wavefrontTracer
 void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart, 
 												int ttNum, float ttStep, float ttStart) {
 
-	wavefrontTracer_.setParams (ttRayNum, ttRayStep, ttRayStart, ttNum, ttStep, ttStart);
+	wavefrontTracer_.setParams (ttRayNum, ttRayStep, ttRayStart + 180.f, ttNum, ttStep, ttStart);
+	// "+180.f" is because in wavefrontTracer the vertical direction is 180 degree
 
 	ttRayNum_ = ttRayNum;
 	ttRayStep_ = ttRayStep;
 	ttRayStart_ = ttRayStart;
 
-	startDirMax_ = ttRayStart_ - 180.f;
+	startDirMax_ = ttRayStart_;
 	startDirMax_ *= -1; // "-1" is to consist with an agreement
-	startDirMin_ = ttRayStart_ +  (ttRayNum_ - 1) * ttRayStep_ - 180.f;
+	startDirMin_ = ttRayStart_ +  (ttRayNum_ - 1) * ttRayStep_;
 	startDirMin_ *= -1; // "-1" is to consist with an agreement
 
 	return;

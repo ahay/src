@@ -168,8 +168,10 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 	ep[0].p = ep[1].p;
 	ep[rNum - 1].p = ep[rNum - 2].p;
  
-	ep[0].startDir = rStart;
+	ep[0].startDir = rStart - 180.f;
+	ep[0].startDir *= -1;
 	ep[rNum - 1].startDir = rStart + (rNum - 1) * rStep - 180.f;
-      
+    ep[rNum - 1].startDir *= -1;
+
     return;
 }
