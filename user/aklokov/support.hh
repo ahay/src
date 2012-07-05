@@ -50,16 +50,15 @@ struct RunParamsTmigda {
     bool             isSemb;
 
     
-    bool              is3D;  // 0 - 2D mode (by default)
-    						// 1 - 3D mode
+    bool              is3D;   // 0 - 2D mode (by default)
+    						  // 1 - 3D mode
 
-	bool              isAA;  // 0 - no anti-aliasing filter
-							// 1 - anti-aliasing filter after Lumley-Claerbout-Bevc (by default)
+	bool              isAA;   // 0 - no anti-aliasing filter
+							  // 1 - anti-aliasing filter after Lumley-Claerbout-Bevc (by default)
 	
-	bool              isCMP; // 0 - if traces have coordinates of a receiver 
-							// 1 - if traces have coordinates of CMP
-
-	bool              isVelMS;
+	bool              isCMP;  // 0 - if traces have coordinates of a receiver 
+							  // 1 - if traces have coordinates of CMP
+	bool              isVelMS; 
 
 	int               hMigNum;
 	int               sembWindow;

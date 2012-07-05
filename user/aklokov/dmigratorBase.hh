@@ -52,9 +52,10 @@ public:
 
 		virtual void setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart, int ttNum, float ttStep, float ttStart);
 
-		void   setImagingParams   (VolumeParams* dp, float* ptrToData, bool isAA, bool isCMP,
+		void   setImagingParams   (VolumeParams* dp, float* ptrToData, bool isAA, int axis2label,
 							       VolumeParams* vp, VolumeParams* ip, GatherParams* gp) { dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA; 
-									  													   isCMP_ = isCMP; vp_ = vp; ip_ = ip; gp_ = gp; }
+									  													   axis2label_ = axis2label; vp_ = vp; ip_ = ip;
+																						   gp_ = gp; }
 		void   setVelModelParams  (int zNum, float zStep, float zStart, 
 								   int xNum, float xStep, float xStart) { wavefrontTracer_.setVelModelParams ( zNum, zStep, zStart, 
 																											   xNum, xStep, xStart); }
@@ -73,7 +74,7 @@ protected:
 		float*           ptrToData_;
 	
 		bool             isAA_;
-		bool             isCMP_;
+		int              axis2label_; // 0 - shot; 1 - cmp; 2 - receiver
 
 		// data limits
         float            dataTMin_;

@@ -372,8 +372,10 @@ float DepthMigrator2D::getSampleFromData (const float h, const float geoY, const
 	float tStart = dp_->zStart;
 	float xStart = dp_->xStart;
 
-//	float geoX = isCMP_ ? geoX1 - h * 0.5 : geoX1;
-	float geoX = geoX1 - h;
+	float geoX (0.f);
+	if      (0 == axis2label_) geoX = geoX1 - h;       // if axis2 is "shot"
+	else if (1 == axis2label_) geoX = geoX1 - h * 0.5; // if axis2 is "cmp"
+	else if (2 == axis2label_) geoX = geoX1;           // if axis2 is "receiver"
 
 	const int itMiddle = (int) ((ti - tStart) / tStep);
 	if (itMiddle < 0 || itMiddle >= tNum) return 0.f;

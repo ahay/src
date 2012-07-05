@@ -264,9 +264,10 @@ int main (int argc, char* argv[]) {
     if ( strcmp (corUnit, unit) ) { vp.yStep *= 1000; vp.yStart *= 1000; }
 
 // Migration parameters
-    if (!sf_getbool ("isCMP",      &rp.isCMP))      rp.isCMP = false;
-    /* if y, data traces have coordinates of CMP position */
-    if (!sf_getbool ("isAA",       &rp.isAA))       rp.isAA = true;
+	int axis2label (0);
+    if ( !sf_getint ("axis2label", &axis2label) ) axis2label = 0;
+	/* 0 - shot; 1 - cmp; 2 - receiver */
+    if ( !sf_getbool ("isAA", &rp.isAA) ) rp.isAA = true;
     /* if y, apply anti-aliasing */
 	rp.is3D = false; // the current version is for 2D case only
 
@@ -401,7 +402,7 @@ int main (int argc, char* argv[]) {
 //    } else {
 		migrator = new DepthMigrator2D ();
 //    }
-    migrator->setImagingParams (&dp, data, rp.isAA, rp.isCMP, &vp, &ip, &gp);
+    migrator->setImagingParams (&dp, data, rp.isAA, axis2label, &vp, &ip, &gp);
     migrator->setDataLimits ();
 	migrator->setWavefrontTracerParams (ttRayNum, ttRayStep, ttRayStart, ttNum, ttStep, ttStart);
 	migrator->setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
