@@ -348,49 +348,49 @@ if _swig_:
         def __del__(self):
             self.close()
             File.close(self)
-            def settype(self,type):
-                for i in xrange(len(_File.type)):
-                    if type == _File.type[i]:
-                        self.type = type
-                        c_rsf.sf_settype (self.file,i)
-            def setformat(self,format):
-                c_rsf.sf_setformat(self.file,format)
-            def __get(self,func,key,default):
-                get,par = func(self.file,key)
-                if get:
-                    return par
-                elif default:
-                    return default
-                else:
-                    return None
-            def __gets(self,func,key,num,default):
-                pars = func(self.file,key,num)
-                if pars:
-                    return pars
-                elif default:
-                    return default
-                else:
-                    return None
-            def string(self,key):
-                return c_rsf.sf_histstring(self.file,key)
-            def int(self,key,default=None):
-                return self.__get(c_rsf.sf_histint,key,default)
-            def float(self,key,default=None):
-                return self.__get(c_rsf.sf_histfloat,key,default)
-            def ints(self,key,num,default=None):
-                return self.__gets(c_rsf.histints,key,num,default)    
-            def bytes(self):
-                return c_rsf.sf_bytes(self.file)
-            def put(self,key,val):
-                if isinstance(val,int):
-                    c_rsf.sf_putint(self.file,key,val)
-                elif isinstance(val,float):
-                    c_rsf.sf_putfloat(self.file,key,val)
-                elif isinstance(val,str):
-                    c_rsf.sf_putstring(self.file,key,val)
-                elif isinstance(val,list):
-                    if isinstance(val[0],int):
-                        c_rsf.sf_putints(self.file,key,val)
+        def settype(self,type):
+            for i in xrange(len(_File.type)):
+                if type == _File.type[i]:
+                    self.type = type
+                    c_rsf.sf_settype (self.file,i)
+        def setformat(self,format):
+            c_rsf.sf_setformat(self.file,format)
+        def __get(self,func,key,default):
+            get,par = func(self.file,key)
+            if get:
+                return par
+            elif default:
+                return default
+            else:
+                return None
+        def __gets(self,func,key,num,default):
+            pars = func(self.file,key,num)
+            if pars:
+                return pars
+            elif default:
+                return default
+            else:
+                return None
+        def string(self,key):
+            return c_rsf.sf_histstring(self.file,key)
+        def int(self,key,default=None):
+            return self.__get(c_rsf.sf_histint,key,default)
+        def float(self,key,default=None):
+            return self.__get(c_rsf.sf_histfloat,key,default)
+        def ints(self,key,num,default=None):
+            return self.__gets(c_rsf.histints,key,num,default)    
+        def bytes(self):
+            return c_rsf.sf_bytes(self.file)
+        def put(self,key,val):
+            if isinstance(val,int):
+                c_rsf.sf_putint(self.file,key,val)
+            elif isinstance(val,float):
+                c_rsf.sf_putfloat(self.file,key,val)
+            elif isinstance(val,str):
+                c_rsf.sf_putstring(self.file,key,val)
+            elif isinstance(val,list):
+                if isinstance(val[0],int):
+                    c_rsf.sf_putints(self.file,key,val)
         
     class Input(_File):
         def __init__(self,tag='in'):
