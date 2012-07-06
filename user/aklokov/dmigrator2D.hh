@@ -24,8 +24,12 @@ public:
  	bool   getSampleFromData         (const float h, const float geoY, const float geoX, const float t, const float p, float& sample);
 	// transfer parameters to wavefrontTracer
 	void   setWavefrontTracerParams  (int ttRayNum, float ttRayStep, float ttRayStart, int ttNum, float ttStep, float ttStart);
+	// setup velocity model
+	void   setVelModel        (float** velField) { wavefrontTracer_.setVelModel (velField); velField_ = velField; } 	
 
 private:
+
+	float  getVel                    (float curZ, float xCIG);
 	
 	EscapePoint* travelTimes_;
 

@@ -59,7 +59,7 @@ public:
 		void   setVelModelParams  (int zNum, float zStep, float zStart, 
 								   int xNum, float xStep, float xStart) { wavefrontTracer_.setVelModelParams ( zNum, zStep, zStart, 
 																											   xNum, xStep, xStart); }
-		void   setVelModel        (float** velField) { wavefrontTracer_.setVelModel (velField); } 	
+		virtual void   setVelModel (float** velField);
 		void   setDataLimits      ();
 
 protected:

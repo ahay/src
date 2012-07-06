@@ -8,12 +8,17 @@ DepthMigratorBase::DepthMigratorBase () {
 DepthMigratorBase::~DepthMigratorBase () {
 }
 
-void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig) {
+void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* const data, 
+									   float* image, float* gather, float* aCig) {
 	return;
 }
 
 void DepthMigratorBase::setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart,
 												  int ttNum, float ttStep, float ttStart) {
+	return;
+}
+
+void DepthMigratorBase::setVelModel (float** velField) {
 	return;
 }
 

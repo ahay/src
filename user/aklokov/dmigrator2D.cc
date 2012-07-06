@@ -14,7 +14,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// CONSTANTS
 
 	// inline position
-	const float xCIG = curGatherCoords.getX ();
+	const float curX = curGatherCoords.getX ();
+	const float xCIG = ip_->xStart + curX * ip_->xStep;
 	// depth	
     const int   zNum   = gp_->zNum;
 	const float zStart = gp_->zStart;
@@ -57,17 +58,25 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	int* maskImage = new int [zNum];
 	memset ( maskImage, 0, zNum * sizeof (int) );
 
+	// precomputed amplitude factor; has to be divided on velocity
+	float* H0 = new float [scatNum];
+	for (int is = 0; is < scatNum; ++is) {
+		const float curScatAngle = scatStart + is * scatStep;		
+		H0[is] = 2 * cos (curScatAngle * SF_PI / 360.f); // 0.5 * SF_PI / 180.f;		
+	}
+
 	// loop over depth samples
     for (int iz = 0; iz < zNum; ++iz) {	
 		const float curZ = zStart + iz * zStep;		
 		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
 			continue;
+		const float velInPoint = this->getVel (curZ, xCIG);
 		travelTimes_ = new EscapePoint [ttRayNum_];		
 		this->calcTravelTimes (curZ, xCIG, travelTimes_);
 		// loop over scattering-angle
 		for (int is = 0; is < scatNum; ++is) {
 			const float curScatAngle = scatStart + is * scatStep;
-			const float H = 2 * cos (curScatAngle * 0.5 * SF_PI / 180.f);
+			const float H = H0[is] / velInPoint;
 			// loop over dip-angle
 			for (int id = 0; id < dipNum; ++id)	{
 				const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
@@ -80,7 +89,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 				if (!isGood)
 					continue;
 	
-				const float normSample = 1000000 * sample;// * H * H;
+				const float normSample = sample * H;
 
 				const int indDag = id * zNum + iz;
 				curDag [indDag]  += normSample;
@@ -115,6 +124,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	for (int iz = 0; iz < zNum; ++iz, ++pTo, ++pFrom, ++pMask) {
 		if (*pMask) *pTo = *pFrom / *pMask;		
 	}
+
+	delete [] H0;
 
 	delete [] curDag;
 	delete [] curCig;
@@ -363,9 +374,9 @@ void DepthMigrator2D::getEscPointByDirection (EscapePoint* escPoints, int size, 
 	return;
 }
 
-void DepthMigrator2D::calcTravelTimes (float curZ, float curX, EscapePoint* escPoints) {
+void DepthMigrator2D::calcTravelTimes (float curZ, float xCIG, EscapePoint* escPoints) {
 
-	const float xCIG = ip_->xStart + curX * ip_->xStep;
+//	const float xCIG = ip_->xStart + curX * ip_->xStep;
 	wavefrontTracer_.getEscapePoints (xCIG, curZ, escPoints);
 		
 	return;
@@ -465,4 +476,15 @@ void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, f
 	startDirMin_ *= -1; // "-1" is to consist with an agreement
 
 	return;
+}
+
+float DepthMigrator2D::getVel (float curZ, float xCIG) {
+
+	int zInd = (curZ - vp_->zStart) / vp_->zStep;	
+	if (zInd < 0 || zInd >= vp_->zNum) return 1.f;	
+
+	int xInd = (xCIG - vp_->xStart) / vp_->xStep;
+	if (xInd < 0 || xInd >= vp_->xNum) return 1.f;	
+		
+	return velField_[xInd][zInd];
 }
