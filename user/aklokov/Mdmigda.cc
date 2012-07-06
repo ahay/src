@@ -1,4 +1,5 @@
 /* 2D depth scattering-angle Kirchhoff migration  */
+/* Input: data - common-offset sections and velocity model */
 /*
   Copyright (C) 2012 University of Texas at Austin
   
@@ -327,8 +328,9 @@ int main (int argc, char* argv[]) {
 	int ttRayNum (0); float ttRayStep (0.f); float ttRayStart (0.f);
 	const float maxScatAngle = gp.scatStart + (gp.scatNum - 1) * gp.scatStep;
 	const float maxDipAngle  = gp.dipStart + gp.dipStep * (gp.dipNum - 1);
-	const float maxttRay     = maxDipAngle + maxScatAngle / 2.f + gp.scatStep / 4.f + ttRayStep;
-	const float minttRay     = gp.dipStart - maxScatAngle / 2.f - gp.scatStep / 4.f - ttRayStep;
+	const float addSector    = maxScatAngle / 2.f + gp.scatStep / 4.f + ttRayStep;
+	const float maxttRay     = maxDipAngle + addSector;
+	const float minttRay     = gp.dipStart - addSector;
     if ( !sf_getfloat ("ttrayd",  &ttRayStep) ) ttRayStep = gp.dipStep / 2.f;
     /* travel-times rays increment */
     if ( !sf_getfloat ("ttrayo",  &ttRayStart) ) ttRayStart = minttRay;

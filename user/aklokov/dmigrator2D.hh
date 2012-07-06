@@ -13,7 +13,7 @@ public:
 	void   processGather             (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
 	void   calcTravelTimes           (float curZ, float curX, EscapePoint* escPoints);
 	// ray tracing functions
-	void   getEscPointByDirection    (EscapePoint* escPoints, int size, float pRec, EscapePoint& resEscPoint);
+	void   getEscPointByDirection    (const float pRec, EscapePoint& resEscPoint);
 	// calculate ray touching the current receiver
 	bool   getRayToPoint            (float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);	
 	// get sample by two-rays beam
