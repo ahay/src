@@ -25,10 +25,6 @@
 #include "tmigrator3D.hh"
 #include "sembler.hh"
 
-//#ifdef _OPENMP
-//#include <omp.h>
-//#endif
-
 RunParamsTmigda  rp; // migration (running) params
 VolumeParams     dp; // data params
 VolumeParams     vp; // velocity params
@@ -177,7 +173,7 @@ void prepareVelocityTrace (int taskX, int taskY, float* velTrace) {
 }
 
 int main (int argc, char* argv[]) {
-   
+
 // Initialize RSF 
     sf_init (argc,argv);
 

@@ -32,34 +32,16 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
 
 	const float dummy    = 0.f;
 
-    float*     ptrGather = curoffsetGather;
-
 	curveDefiner_->curOffset_ = curOffset;
-//	curOffset_ = (int) curOffset;
 	curOffset_ = curOffset;
 
     // compose gather
 	for (int id = 0; id < dipNum; ++id) {
 		const float curDip = dipStart + id * dipStep;
-    
-//		int*   ptrMutingMask = mutingMask;					
-	    float* ptrImage      = curoffsetImage;
-		float* ptrImageSq    = curoffsetImageSq;
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic) \
-    shared (curoffsetGather, curoffsetImage, curoffsetImageSq)
+#ifdef _OPENMP 
+#pragma omp parallel for
 #endif
-
 	    for (int it = 0; it < tNum; ++it) {
-//	    for (int it = 0; it < tNum; ++it, ++ptrGather, ++ptrImage, ++ptrImageSq) { //, ++ptrMutingMask) {
-
-#ifdef _OPENMP
-			sf_warning ("omp");
-#endif
-	
-			sf_warning ("%d", it);
-//			if (!(*ptrMutingMask)) continue; // the sample is muted
 
   		    const float curTime = tStart + it * tStep;
 			const float migVel = this->getMigVel (velTrace, curTime);
@@ -68,14 +50,11 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
 			float sample (0.f);
     		int badRes = this->getSampleByBeam (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, sample);
     		if (badRes)
-    			sample = this->getSampleByRay (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
+    			sample = this->getSampleByRay  (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
 
-			curoffsetGather[it] += sample;
-			curoffsetImage [it] += sample;
+			curoffsetGather  [it] += sample;
+			curoffsetImage   [it] += sample;
 			curoffsetImageSq [it] += sample * sample;
-//			*ptrGather += sample;
-//			*ptrImage += sample;
-//			*ptrImageSq += sample * sample;
 	    }
 	}
     

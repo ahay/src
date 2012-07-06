@@ -63,9 +63,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		const float curScatAngle = scatStart + is * scatStep;		
 		H0[is] = 2 * cos (curScatAngle * SF_PI / 360.f); // 0.5 * SF_PI / 180.f;		
 	}
-
 	// loop over depth samples
-    for (int iz = 0; iz < zNum; ++iz) {	
+    for (int iz = 0; iz < zNum; ++iz) {	  
 		const float curZ = zStart + iz * zStep;		
 		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
 			continue;
@@ -74,6 +73,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		this->calcTravelTimes (curZ, xCIG, travelTimes_);
 		// loop over scattering-angle
 		for (int is = 0; is < scatNum; ++is) {
+
 			const float curScatAngle = scatStart + is * scatStep;
 			const float H = H0[is] / velInPoint;
 			// loop over dip-angle
@@ -88,22 +88,22 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 				if (!isGood)
 					continue;
 	
-				const float normSample = sample * H;
+				const float hSample = sample * H;
 
 				const int indDag = id * zNum + iz;
-				curDag [indDag]  += normSample;
+				curDag [indDag]  += hSample;
 				maskDag [indDag] += 1;
 				const int indCig = is * zNum + iz;
-				curCig [indCig] += normSample;
+				curCig [indCig] += hSample;
 				maskCig [indCig] += 1;
-				curImage [iz] += normSample;
+				curImage [iz] += hSample;
 				maskImage [iz] += 1;
 			}
 		}
 
 		delete [] travelTimes_;
 
-		sf_warning ("cig %g  sample %d of %d;", xCIG, iz + 1, zNum);	
+//		sf_warning ("cig %g  sample %d of %d;", xCIG, iz + 1, zNum);	
 	}
 
 	// transfer data from internal angle gather (in double) to the external one (in float) and normalization 
