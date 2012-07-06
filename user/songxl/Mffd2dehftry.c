@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     float dt, dx, dz, o1, o2;
     float **old,  **cur,  **tmp, *wav;
     float  **v, v0, ***aa, w, g1, g2, ct, cb, cl, cr; /* top, bottom, left, right */
-    float ax, az, factor;
+    float ax, az, factor, v0f;
     sf_file out, vel, source;
     bool opt;    /* optimal padding */
      
@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("ax",&ax)) ax= 5.0; /*suppress HF parameter*/
     if (!sf_getfloat("az",&az)) az= 5.0; /*suppress HF parameter*/
     if (!sf_getfloat("factor",&factor)) factor= 5.0/6.0; /*suppress HF parameter*/
+    if (!sf_getfloat("v0f",&v0f)) v0f= 0.8; /*suppress HF parameter*/
 
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
@@ -129,7 +130,7 @@ int main(int argc, char* argv[])
             if (v0<v[iz][ix]) v0 = v[iz][ix];
          }
     }
-    v0 = 0.8*v0;
+    v0 = v0f*v0;
  
     for (iz=0; iz < nzb; iz++){
          for (ix=0; ix < nxb; ix++) {

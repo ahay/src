@@ -30,7 +30,7 @@ ffd2dehftry
 mpi_progs = 'tti4rtm ffdrtm'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan'
+ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
