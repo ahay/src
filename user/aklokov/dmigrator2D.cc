@@ -67,6 +67,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		// loop over scattering-angle
 		for (int is = 0; is < scatNum; ++is) {
 			const float curScatAngle = scatStart + is * scatStep;
+			const float H = 2 * cos (curScatAngle * 0.5 * SF_PI / 180.f);
 			// loop over dip-angle
 			for (int id = 0; id < dipNum; ++id)	{
 				const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
@@ -78,21 +79,18 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 
 				if (!isGood)
 					continue;
+	
+				const float normSample = 1000000 * sample;// * H * H;
 
 				const int indDag = id * zNum + iz;
-				curDag [indDag]  += sample;
+				curDag [indDag]  += normSample;
 				maskDag [indDag] += 1;
 				const int indCig = is * zNum + iz;
-				curCig [indCig] += sample;
+				curCig [indCig] += normSample;
 				maskCig [indCig] += 1;
-				curImage [iz] += sample;
+				curImage [iz] += normSample;
 				maskImage [iz] += 1;
 			}
-			// add current scattering-angle migration to the main result
-			float*  pTo   = dag;
-			double* pFrom = curDag;
-			for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom)
-				*pTo += *pFrom;
 		}
 
 		delete [] travelTimes_;
@@ -103,12 +101,13 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// transfer data from internal angle gather (in double) to the external one (in float)
 	int* pMask = maskCig; float* pTo = aCig; double* pFrom = curCig;
 	for (int id = 0; id < scatSize; ++id, ++pTo, ++pFrom, ++pMask) {
-		*pTo += *pFrom;
+		*pTo = *pFrom;
 		if (*pMask) *pTo /= *pMask;
 	}
 	// output dip-angle gather normalization
-	pMask = maskDag; pTo = dag; 
-	for (int id = 0; id < dagSize; ++id, ++pTo, ++pMask) {
+	pMask = maskDag; pTo = dag; pFrom = curDag;
+	for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom, ++pMask) {
+		*pTo = *pFrom;
 		if (*pMask) *pTo /= *pMask;
 	}
 	// image normalization
@@ -145,10 +144,12 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 	float dir1 = baseDir - shiftDir;
 	EscapePoint* escPointRec1 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir1, *escPointRec1);
+	if (!escPointRec1->isSurf) return false;
 
 	float dir2 = baseDir + shiftDir;
 	EscapePoint* escPointRec2 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir2, *escPointRec2);
+	if (!escPointRec2->isSurf) return false;
 	
 	float recLaneLeft  = escPointRec1->x;
 	float recLaneRight = escPointRec2->x;
@@ -161,10 +162,12 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 	float dir3 = baseDir - shiftDir;
 	EscapePoint* escPointRec3 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir3, *escPointRec3);
+	if (!escPointRec3->isSurf) return false;
 
 	float dir4 = baseDir + shiftDir;
 	EscapePoint* escPointRec4 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes_, ttRayNum_, dir4, *escPointRec4);			
+	if (!escPointRec4->isSurf) return false;
 
 	float srcLaneLeft  = escPointRec3->x;
 	float srcLaneRight = escPointRec4->x;
