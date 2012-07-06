@@ -4,6 +4,9 @@
 #include "curveDefinerBase.hh"
 #include "curveDefinerDipOffset.hh"
 #include <rsf.hh>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 TimeMigrator2D::TimeMigrator2D () {
 }
@@ -42,9 +45,20 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
 //		int*   ptrMutingMask = mutingMask;					
 	    float* ptrImage      = curoffsetImage;
 		float* ptrImageSq    = curoffsetImageSq;
-		
-	    for (int it = 0; it < tNum; ++it, ++ptrGather, ++ptrImage, ++ptrImageSq) { //, ++ptrMutingMask) {
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    shared (curoffsetGather, curoffsetImage, curoffsetImageSq)
+#endif
+
+	    for (int it = 0; it < tNum; ++it) {
+//	    for (int it = 0; it < tNum; ++it, ++ptrGather, ++ptrImage, ++ptrImageSq) { //, ++ptrMutingMask) {
+
+#ifdef _OPENMP
+			sf_warning ("omp");
+#endif
 	
+			sf_warning ("%d", it);
 //			if (!(*ptrMutingMask)) continue; // the sample is muted
 
   		    const float curTime = tStart + it * tStep;
@@ -56,9 +70,12 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
     		if (badRes)
     			sample = this->getSampleByRay (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
 
-			*ptrGather += sample;
-			*ptrImage += sample;
-			*ptrImageSq += sample * sample;
+			curoffsetGather[it] += sample;
+			curoffsetImage [it] += sample;
+			curoffsetImageSq [it] += sample * sample;
+//			*ptrGather += sample;
+//			*ptrImage += sample;
+//			*ptrImageSq += sample * sample;
 	    }
 	}
     

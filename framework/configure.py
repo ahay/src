@@ -102,11 +102,6 @@ def check_all(context):
     jpeg(context) # FDNSI
     blas(context) # FDNSI
     lapack(context) # FDNSI
-    mpi (context) # FDNSI
-    pthreads (context) # FDNSI
-    omp (context) # FDNSI
-    petsc(context) # FDNSI
-    cuda(context) # FDNSI
     epydoc(context) #FDNSI
     swig(context)
     api = api_options(context)
@@ -122,6 +117,11 @@ def check_all(context):
         octave(context)
     if 'java' in api:
         java(context)
+    mpi (context) # FDNSI
+    pthreads (context) # FDNSI
+    omp (context) # FDNSI
+    petsc(context) # FDNSI
+    cuda(context) # FDNSI
 
 def identify_platform(context):
     global plat
@@ -1219,22 +1219,27 @@ def omp(context):
     LIBS  = context.env.get('LIBS',[])
     CC    = context.env.get('CC','gcc')
     flags = context.env.get('CFLAGS','')
+    ccflags =  context.env.get('CXXFLAGS','')
     lflags = context.env.get('LINKFLAGS','')
     pgcc =  (string.rfind(CC,'pgcc') >= 0)
     gcc = (string.rfind(CC,'gcc') >= 0)
     icc = (string.rfind(CC,'icc') >= 0)
     if pgcc:
         CFLAGS = flags + ' -mp'
+        CXXFLAGS = ccflags + '-mp'
         LINKFLAGS = lflags + ' -mp'
     elif gcc:
         LIBS.append('gomp')
         CFLAGS = flags + ' -fopenmp'
+        CXXFLAGS = ccflags  + ' -fopenmp'
         LINKFLAGS = lflags
     elif icc:
         CFLAGS = flags + ' -openmp -D_OPENMP'
+        CXXFLAGS = ccflags + ' -openmp -D_OPENMP'
         LINKFLAGS = lflags + ' -openmp' 
     else:
         CFLAGS = flags
+        CXXFLAGS = ccflags
         LINKFLAGS = lflags
 
     text = '''
@@ -1251,6 +1256,7 @@ def omp(context):
 
     context.env['LIBS'] = LIBS
     context.env['CFLAGS'] = CFLAGS
+    context.env['CXXFLAGS'] = CXXFLAGS
     context.env['LINKFLAGS'] = LINKFLAGS
     res = context.TryLink(text,'.c')
     if res:
@@ -1263,6 +1269,7 @@ def omp(context):
             LIBS.pop()
         context.env['LIBS'] = LIBS
         context.env['CFLAGS'] = flags
+        context.env['CXXFLAGS'] = ccflags
         context.env['LINKFLAGS'] = lflags
         context.env['OMP'] = False
 

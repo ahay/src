@@ -149,6 +149,7 @@ In the build system:
   on Mac
 * Fixed bug preventing spaces in ./configure arguments
 * Fixed cfortran.h dependency in api/f77
+* Added OpenMP suppport for C++ programs
 
 ===Changes in defaults===
 

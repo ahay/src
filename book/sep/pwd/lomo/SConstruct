@@ -28,6 +28,8 @@ for case in order.keys():
     txr = case + '-txr'
 
     Plot(case,'grey title=INPUT')
+    Result(case,'grey title=INPUT screenratio=1.2')
+
 
     Flow(dip,case,
          'dip order=%d p0=%g verb=y niter=10 rect1=%d rect2=%d' %
@@ -38,6 +40,8 @@ for case in order.keys():
          'pwd order=%d dip=${SOURCES[1]} | smooth rect1=%d' %
          (order[case],smoo[case]))
     Plot(pwd,'grey pclip=%g title=RESIDUAL' % pclip[case])
+
+    Result(pwd,'grey pclip=%g title=RESIDUAL  screenratio=1.2' % pclip[case])
 
     Flow(txr,dip,
          '''

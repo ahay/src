@@ -30,6 +30,8 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
+#			CCFLAGS = '-D_OPENMP',
+
 if 'c++' in env.get('API',[]):
     env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
 
