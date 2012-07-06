@@ -133,11 +133,16 @@ int main(int argc, char* argv[])
         sf_putfloat(rays,"o2",a0/deg2rad);
         sf_putfloat(rays,"d2",da/deg2rad);
     }
-    sf_putstring(rays,"label1","time");
-    sf_putstring(rays,"label2","angle");
-    sf_putstring(rays,"unit2","deg");
-    if (!escvar)
+    if (!escvar) {
         sf_settype (rays,SF_COMPLEX);
+        sf_putstring(rays,"label1","Time");
+        sf_putstring(rays,"unit1","s");
+    } else {
+        sf_putstring(rays,"label1","Escvar");
+        sf_putstring(rays,"unit1","");
+    }
+    sf_putstring(rays,"label2","Angle");
+    sf_putstring(rays,"unit2","Degrees");
     sf_fileflush (rays,NULL);
     sf_settype (rays,SF_FLOAT);
 
