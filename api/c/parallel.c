@@ -229,8 +229,8 @@ char** sf_split(sf_file inp          /* input file */,
 }
 
 void sf_out(sf_file out          /* output file */, 
-		  int axis             /* join axis */,
-		  const char *iname    /* name of the input file */)
+	    int axis             /* join axis */,
+	    const char *iname    /* name of the input file */)
 /*< prepare output >*/
 {
     char *oname, cmdline[SF_CMDLEN];
@@ -240,6 +240,7 @@ void sf_out(sf_file out          /* output file */,
     FILE *ofile=NULL;
 
     ofile = sf_tempfile(&oname,"w+b");
+    fclose(ofile);
     
     snprintf(cmdline,SF_CMDLEN,"%s %s --dryrun=y < %s > %s",
 	     command,splitcommand,iname,oname);

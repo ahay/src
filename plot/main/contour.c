@@ -105,7 +105,9 @@ int main (int argc, char* argv[])
     if (!sf_getbool("allpos",&pos)) pos=true;
     /* contour positive values only */
 
-    cnt = vp_contour_init(transp,n1,o1,d1,n2,o2,d2);
+    cnt = vp_contour_init(transp,
+			  n1,o1,d1,0.,
+			  n2,o2,d2,0.);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(z[0],n12,in);

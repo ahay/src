@@ -255,7 +255,9 @@ int main(int argc, char* argv[])
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat, false); 
     vp_frame_init (in,"blt",false);
     vp_plot_init(n3);
-    cnt = vp_contour_init(false,n1,o1,d1,n2,o2,d2); 
+    cnt = vp_contour_init(false,
+			  n1,o1,d1,0.,
+			  n2,o2,d2,0.); 
 
     for (iframe=0; iframe < nframe; iframe++) {
 	if (iframe > 0) vp_erase (); 

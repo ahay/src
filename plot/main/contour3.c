@@ -221,9 +221,15 @@ int main(int argc, char* argv[])
     vp_frame_init (in,"blt",false);
     if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
 
-    cfront = vp_contour_init(true,n1,o1,d1,n2,o2,d2);
-    cside = vp_contour_init(true,n1,o1,d1,n3,o3,d3);
-    ctop = vp_contour_init(false,n2,o2,d2,n3,o3,d3);
+    cfront = vp_contour_init(true,
+			     n1,o1,d1,0.,
+			     n2,o2,d2,0.);
+    cside = vp_contour_init(true,
+			    n1,o1,d1,0.,
+			    n3,o3,d3,0.);
+    ctop = vp_contour_init(false,
+			   n2,o2,d2,0.,
+			   n3,o3,d3,0.);
 
     vp_plot_init(nc);
 

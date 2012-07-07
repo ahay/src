@@ -32,7 +32,7 @@ typedef struct sf_Contour *vp_contour;
 
 struct sf_Contour {
     int n1, n2;
-    float o1, o2, d1, d2;
+    float o1, o2, d1, d2, s1, s2;
     bool transp, **west, **south;
 };
 /* concrete data type */
@@ -42,9 +42,9 @@ static bool cconnect (vp_contour cnt,
 		      bool pos, float** z, float  c, int *ix, int *iy);
 static void draw (vp_contour cnt, bool mask, float x, float y);
 
-vp_contour vp_contour_init(bool transp,                /* transpose flag */
-			   int n1, float o1, float d1, /* first axis */
-			   int n2, float o2, float d2) /* second axis */
+vp_contour vp_contour_init(bool transp,                          /* transpose flag */
+			   int n1, float o1, float d1, float s1, /* first axis */
+			   int n2, float o2, float d2, float s2) /* second axis */
 /*< initialize >*/
 {
     vp_contour cnt;
@@ -52,8 +52,8 @@ vp_contour vp_contour_init(bool transp,                /* transpose flag */
     cnt = (vp_contour) sf_alloc(1,sizeof(*cnt));
     
     cnt->transp = transp;
-    cnt->n1 = n1; cnt->o1 = o1; cnt->d1 = d1;
-    cnt->n2 = n2; cnt->o2 = o2; cnt->d2 = d2;
+    cnt->n1 = n1; cnt->o1 = o1; cnt->d1 = d1; cnt->s1 = s1;
+    cnt->n2 = n2; cnt->o2 = o2; cnt->d2 = d2; cnt->s2 = s2;
 
     cnt->west = sf_boolalloc2(n1,n2);
     cnt->south = sf_boolalloc2(n1,n2);
@@ -295,17 +295,22 @@ static float delta (float a, float b, float  c)
 
 static void draw (vp_contour cnt, bool mask, float x, float y) 
 {
+    float x2, y2;
+
+    x2 = cnt->o1+(x+y*cnt->s1)*cnt->d1;
+    y2 = cnt->o2+(y+x*cnt->s2)*cnt->d2;
+
     if (cnt->transp) {    
 	if (mask) {
-	    vp_udraw (cnt->o2+y*cnt->d2, cnt->o1+x*cnt->d1);
+	    vp_udraw (y2,x2);
 	} else {
-	    vp_umove (cnt->o2+y*cnt->d2, cnt->o1+x*cnt->d1);
+	    vp_umove (y2,x2);
 	}
     } else {
 	if (mask) {
-	    vp_udraw (cnt->o1+x*cnt->d1, cnt->o2+y*cnt->d2);
+	    vp_udraw (x2,y2);
 	} else {
-	    vp_umove (cnt->o1+x*cnt->d1, cnt->o2+y*cnt->d2);
+	    vp_umove (x2,y2);
 	}
     }
 }
