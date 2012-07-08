@@ -27,7 +27,7 @@ void odip_init(float r,  int mf, int interp,
 	m = sf_floatalloc4(2*nf+1, 2*nf+1, n1, n2); // m[i2][i1][j2][j1]
 
 	opwd_init(interp, nf, r);
-	sf_divn_init (2, n, nn, rect, niter, verb);
+	sf_divn_init (2, n, nn, rect, niter, false);
 }
 
 void odip_close()
@@ -56,53 +56,27 @@ void odip(float **in, float **dip, int nit)
 	int it, i1;
 	double eta, norm, s1, c1;
 
+	eta=0.75;
+
 	for(i1=0; i1<n1*n2; i1++)
 	{
-		dip[0][i1] = 0.0;
+		dip[0][i1] = SF_PI/4;
 	}
 	opwd_fbank(n1, n2, in, m);
 
 	for (it=0; it<nit; it++)
 	{
-		eta=1.0/(1.0+it*it);	
 		opwd(n1, n2, m, dip, u1);
 		opwdpd(n1, n2, m, dip, u2, 0);
+		opwdpd(n1, n2, m, dip, u3, 1);
 
         if(verb)
         {
             for(i1=0, norm=0.0; i1<n1*n2; i1++)
                 norm += (u1[0][i1]*u1[0][i1]);
-            sf_warning("aaa %d %g", it+1, sqrtf(norm/n1/n2));
+            sf_warning("res1 %d %g", it+1, sqrtf(norm/n1/n2));
         }
-
-
-        for(i1=0, norm=0.0; i1<n1*n2; i1++)
-            norm += (u2[0][i1]*u2[0][i1]);
-        norm=sqrtf(norm/(n1*n2));
-        sf_warning("bbb %d %g", it+1, sqrtf(norm/n1/n2));
-        for(i1=0; i1<n1*n2; i1++)
-        {
-            u1[0][i1] /= norm;
-            u2[0][i1] /= norm;
-        }
-		sf_divn(u1[0], u2[0], u3[0]);
-
-		for(i1=0; i1<n1*n2; i1++)
-		{
-			s1=rad*sin(dip[0][i1]) - u3[0][i1];
-			c1=rad*cos(dip[0][i1]);
-			dip[0][i1] = atan2(s1, c1);
-		}
-		opwd(n1, n2, m, dip, u1);
-		opwdpd(n1, n2, m, dip, u2, 1);
-
-        if(verb)
-        {
-            for(i1=0, norm=0.0; i1<n1*n2; i1++)
-                norm += (u1[0][i1]*u1[0][i1]);
-            sf_warning("aaa %d %g", it+1, sqrtf(norm/n1/n2));
-        }
-
+/*
 
         for(i1=0, norm=0.0; i1<n1*n2; i1++)
             norm += (u2[0][i1]*u2[0][i1]);
@@ -113,21 +87,31 @@ void odip(float **in, float **dip, int nit)
             u2[0][i1] /= norm;
         }
 		sf_divn(u1[0], u2[0], u3[0]);
+*/
 		for(i1=0; i1<n1*n2; i1++)
 		{
-		//	u3 = divn(u1[0][i1], u2[0][i1]);
 			s1=rad*sin(dip[0][i1]);
-			c1=rad*cos(dip[0][i1]) - u3[0][i1];
+			s1 -= eta * divn(u1[0][i1], u2[0][i1]);
+			c1=rad*cos(dip[0][i1]);
+			c1 -= eta * divn(u1[0][i1], u3[0][i1]);
 			dip[0][i1] = atan2(s1, c1);
 		}
 
 	}
-
-	for(i1=0; i1<n1*n2; i1++)
+/*	for(i1=0; i1<n1*n2; i1++)
 	{
 		while(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI/2;
 		while(dip[0][i1]<-SF_PI/2) dip[0][i1] += SF_PI/2;
 	}
+*/
+	for(i1=0; i1<n1*n2; i1++)
+		dip[0][i1] = atan(tan(dip[0][i1]));
+/*	for(i1=0; i1<n1*n2; i1++)
+	{
+		if(dip[0][i1]<0) dip[0][i1] *= -1;
+		if(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI;
+	}
+*/
 }
 
 

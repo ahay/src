@@ -23,7 +23,7 @@ int main(int argc, char*argv[])
 	if (!sf_histint(in, "n2", &n2)) sf_error("No n2= in input");
 	n3 = sf_leftsize(in, 2);
 
-	if (!sf_getint("nf",&nf)) nf=1;
+	if (!sf_getint("order",&nf)) nf=1;
 	/* PWD filter order */
 	if (!sf_getint("rect1",&rect[0])) rect[0]=1;
 	/* dip smoothness on 1st axis */
@@ -39,8 +39,6 @@ int main(int argc, char*argv[])
 	0: maxflat
 	1: Lagrange 
 	2: B-Spline */
-	if (!sf_getint("solver", &solver)) solver=0;
-	/* solver for dip estimation */
 	if (!sf_getbool("opwd", &opwd)) verb = true;
 	/* y: opwd;  n: lpwd */
 	if (!sf_getfloat("radius", &radius)) radius = 1.0;

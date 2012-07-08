@@ -77,7 +77,7 @@ void opwd(int n1, int n2, float ****fb, float **p, float **out)
 				c2 = ((j1+j2)%2==1?2.0:0.0);
 				c1 += c2 * fb[i2][i1][j2][j1] * b1[j1]; 
 			}
-			out[i2][i1] = c1*b2[j2];
+			out[i2][i1] += c1*b2[j2];
 		}
 	}
 }
@@ -121,7 +121,7 @@ void opwdpd(int n1, int n2, float ****fb,
 				c2 = ((j1+j2)%2==1?2.0:0.0);
 				c1 += c2 * fb[i2][i1][j2][j1] * b1[j1]; 
 			}
-			out[i2][i1] = c1*b2[j2];
+			out[i2][i1] += c1*b2[j2];
 		}
 	}
 }

@@ -51,6 +51,17 @@ for prog in mains:
 	if root:
 		env.Install(bindir,prog)
 
+for prog in Split(
+    '''
+	opwd 
+    '''):
+    sources = ['T' + prog,prog]
+    bldutil.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('T' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+
+
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
 ######################################################################
