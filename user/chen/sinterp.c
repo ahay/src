@@ -4,7 +4,7 @@ typedef float (*sinterp)(float *in, float x, int n);
 /* generic interpolation interface */
 /*^*/
 
-static float interp0(float *in, float x, int n)
+float interp0(float *in, float x, int n)
 /*< nearest interpolation >*/
 {
 	if(x<0) return in[0];
@@ -12,7 +12,7 @@ static float interp0(float *in, float x, int n)
 	else return in[(int)(x+0.5)];
 }
 
-static float interp1(float *in, float x, int n)
+float interp1(float *in, float x, int n)
 /*< linear interpolation >*/
 {
 	int k;

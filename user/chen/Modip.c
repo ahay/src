@@ -1,12 +1,7 @@
 /* omnidirectional dip estimation  */
 
 #include <rsf.h>
-#include "ldip.h"
-#include "ldip1.h"
-#include "ldip2.h"
 #include "odip.h"
-#include "odip1.h"
-#include "odip2.h"
 
 
 int main(int argc, char*argv[])
@@ -57,86 +52,17 @@ int main(int argc, char*argv[])
 	dip = sf_floatalloc2(n1,n2);
 
 	/* initialize dip estimation */
-	if (opwd)
-	switch(solver)
-	{
-	case 1:
-		odip1_init(radius, nf, interp, n1, n2, liter, verb);
-		break;
-	case 2:
-		odip2_init(radius, nf, interp, n1, n2, liter, verb);
-		break;
-	default:
-		odip_init(radius, nf, interp, n1, n2, rect, liter, verb);
-	}
-	else 
-	switch(solver)
-	{
-	case 1:
-		ldip1_init(nf, interp, n1, n2, liter, verb);
-		break;
-	case 2:
-		ldip2_init(nf, interp, n1, n2, liter, verb);
-		break;
-	default:
-		ldip_init(nf, interp, n1, n2, rect, liter, verb);
-	}
+	odip_init(radius, nf, interp, n1, n2, rect, liter, verb);
 
 
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		if (opwd)
-		switch(solver)
-		{
-		case 1:
-			odip1(wav, dip, niter);
-			break;
-		case 2:
-			odip2(wav, dip, niter);
-			break;
-		default:
-			odip(wav, dip, niter);
-		}
-		else 
-		switch(solver)
-		{
-		case 1:
-			ldip1(wav, dip, niter);
-			break;
-		case 2:
-			ldip2(wav, dip, niter);
-			break;
-		default:
-			ldip(wav, dip, niter);
-		}
+		odip(wav, dip, niter);
 		sf_floatwrite(dip[0], n1*n2, out);
 	}
 
-	if (opwd)
-	switch(solver)
-	{
-	case 1:
-		odip1_close();
-		break;
-	case 2:
-		odip2_close();
-		break;
-	default:
-		odip_close();
-	}
-	else 
-	switch(solver)
-	{
-	case 1:
-		ldip1_close();
-		break;
-	case 2:
-		ldip2_close();
-		break;
-	default:
-		ldip_close();
-	}
+	odip_close();
 	return 0;
 }
 

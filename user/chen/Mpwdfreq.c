@@ -52,7 +52,7 @@ int main(int argc, char*argv[])
 
 	if(opwd==true)
 	{
-		opwd_init(interp, nf, 0, 0, radius);
+		opwd_init(interp, nf, radius);
 		for(i3=0; i3<n3; i3++)
 		{
 			opwd_freq((d3*i3+o3)/180*SF_PI, n1, buf, iir);
