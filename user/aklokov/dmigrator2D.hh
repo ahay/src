@@ -11,15 +11,17 @@ public:
 	      ~DepthMigrator2D ();
 
 	void   processGather             (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
+	void   processDepthSample        (const float curX, const float curZ, const float* const data, double* image, double* dag, double* aCig);
+
 	void   calcTravelTimes           (float curZ, float curX, EscapePoint* escPoints);
 	// ray tracing functions
-	void   getEscPointByDirection    (const float pRec, EscapePoint& resEscPoint);
+	void   getEscPointByDirection    (EscapePoint* travelTimes, const float pRec, EscapePoint& resEscPoint);
 	// calculate ray touching the current receiver
-	bool   getRayToPoint            (float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);	
+	bool   getRayToPoint             (EscapePoint* travelTimes, float curRecPos, float dir1, float dir2, float& timeToRec, float& recAbsP, bool& full);	
 	// get sample by two-rays beam
-	bool   getSampleByBeam  	     (float curScatAngle, float curDipAngle, float& sample); 
+	bool   getSampleByBeam  	     (EscapePoint* travelTimes, float curScatAngle, float curDipAngle, float& sample); 
 	// get sample by only ray trace; implemented for zero-offset section only
-	bool   getSampleByRay            (float dipAngle, float& sample);
+	bool   getSampleByRay            (EscapePoint* travelTimes, float dipAngle, float& sample);
   
  	bool   getSampleFromData         (const float h, const float geoY, const float geoX, const float t, const float p, float& sample);
 	// transfer parameters to wavefrontTracer
@@ -30,8 +32,6 @@ public:
 private:
 
 	float  getVel                    (float curZ, float xCIG);
-	
-	EscapePoint* travelTimes_;
 
 	// velocity model
 	float**  velField_;

@@ -13,24 +13,18 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// CONSTANTS
 
 	// inline position
-	const float curX = curGatherCoords.getX ();
-	const float xCIG = ip_->xStart + curX * ip_->xStep;
+	const float xInd = curGatherCoords.getX ();
+	const float curX = ip_->xStart + xInd * ip_->xStep;
 	// depth	
     const int   zNum   = gp_->zNum;
 	const float zStart = gp_->zStart;
 	const float zStep  = gp_->zStep;
 	// dip-angle	
 	const int   dipNum   = gp_->dipNum;
-	const float dipStart = gp_->dipStart;
-	const float dipStep  = gp_->dipStep;
+	const int   dagSize  = dipNum * zNum;
 	// scattering-angle
-	const int   scatNum   = gp_->scatNum;
-	const float scatStart = gp_->scatStart;
-	const float scatStep  = gp_->scatStep;
-	// size of dip-angle gather
-	const int dagSize = zNum * dipNum;
-	// size of internal scattering-angle gather
-	const int scatSize = zNum * scatNum;
+	const int   scatNum  = gp_->scatNum;
+	const int   scatSize = scatNum * zNum;
 	// velocity model limits
 	const float velModelDepthMin = vp_->zStart;
 	const float velModelDepthMax = velModelDepthMin + (vp_->zNum - 1) * vp_->zStep;
@@ -47,95 +41,89 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	double* curImage = new double [zNum];
 	memset ( curImage, 0, zNum * sizeof (double) );
 
-	// mask for dip-angle gather for current scattering angle
-	int* maskDag = new int [dagSize];
-	memset ( maskDag, 0, dagSize * sizeof (int) );
-	// mask for internal scattering angle gather
-	int* maskCig = new int [scatSize];
-	memset ( maskCig, 0, scatSize * sizeof (int) );
-	// mask for internal image
-	int* maskImage = new int [zNum];
-	memset ( maskImage, 0, zNum * sizeof (int) );
-
-	// precomputed amplitude factor; has to be divided on velocity
-	float* H0 = new float [scatNum];
-	for (int is = 0; is < scatNum; ++is) {
-		const float curScatAngle = scatStart + is * scatStep;		
-		H0[is] = 2 * cos (curScatAngle * SF_PI / 360.f); // 0.5 * SF_PI / 180.f;		
-	}
 	// loop over depth samples
+#pragma omp parallel for
     for (int iz = 0; iz < zNum; ++iz) {	  
 		const float curZ = zStart + iz * zStep;		
 		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
 			continue;
-		const float velInPoint = this->getVel (curZ, xCIG);
-		travelTimes_ = new EscapePoint [ttRayNum_];		
-		this->calcTravelTimes (curZ, xCIG, travelTimes_);
-		// loop over scattering-angle
-		for (int is = 0; is < scatNum; ++is) {
-
-			const float curScatAngle = scatStart + is * scatStep;
-			const float H = H0[is] / velInPoint;
-			// loop over dip-angle
-			for (int id = 0; id < dipNum; ++id)	{
-				const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
-				
-				float sample (0.f);
-				bool isGood = this->getSampleByBeam (curScatAngle, curDipAngle, sample);	 
-				if (!isGood && curScatAngle < 1e-6) // implemented for zero-offset only
-					isGood = this->getSampleByRay (curDipAngle, sample);
-
-				if (!isGood)
-					continue;
-	
-				const float hSample = sample * H;
-
-				const int indDag = id * zNum + iz;
-				curDag [indDag]  += hSample;
-				maskDag [indDag] += 1;
-				const int indCig = is * zNum + iz;
-				curCig [indCig] += hSample;
-				maskCig [indCig] += 1;
-				curImage [iz] += hSample;
-				maskImage [iz] += 1;
-			}
-		}
-
-		delete [] travelTimes_;
-
-//		sf_warning ("cig %g  sample %d of %d;", xCIG, iz + 1, zNum);	
+		this->processDepthSample (curX, curZ, data, curImage + iz, curDag + iz, curCig + iz);
 	}
 
-	// transfer data from internal angle gather (in double) to the external one (in float) and normalization 
-	int* pMask = maskCig; float* pTo = aCig; double* pFrom = curCig;
-	for (int id = 0; id < scatSize; ++id, ++pTo, ++pFrom, ++pMask) {
-		if (*pMask) *pTo = *pFrom / *pMask;		
+	// transfer data from internal gathers (in double) to the external ones (in float)
+	float* pTo = aCig; double* pFrom = curCig;
+	for (int id = 0; id < scatSize; ++id, ++pTo, ++pFrom) {	
+		*pTo = *pFrom;
+	}		
+	pTo = dag; pFrom = curDag;
+	for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom) {
+		*pTo = *pFrom;		
 	}
-	// output dip-angle gather normalization and normalization
-	pMask = maskDag; pTo = dag; pFrom = curDag;
-	for (int id = 0; id < dagSize; ++id, ++pTo, ++pFrom, ++pMask) {
-		if (*pMask) *pTo = *pFrom / *pMask;		
+	pTo = image; pFrom = curImage;
+	for (int iz = 0; iz < zNum; ++iz, ++pTo, ++pFrom) {
+		*pTo = *pFrom;		
 	}
-	// image normalization
-	pMask = maskImage; pFrom = curImage; pTo = image;
-	for (int iz = 0; iz < zNum; ++iz, ++pTo, ++pFrom, ++pMask) {
-		if (*pMask) *pTo = *pFrom / *pMask;		
-	}
-
-	delete [] H0;
 
 	delete [] curDag;
 	delete [] curCig;
 	delete [] curImage;
 
-	delete [] maskDag;
-	delete [] maskCig;
-	delete [] maskImage;
+	return;
+}
+
+void DepthMigrator2D::processDepthSample (const float curX, const float curZ, const float* const data, 
+										  double* curImage, double* curDag, double* curCig) {
+
+	// CONSTANTS
+
+	const int   zNum   = gp_->zNum;
+	// dip-angle	
+	const int   dipNum   = gp_->dipNum;
+	const float dipStart = gp_->dipStart;
+	const float dipStep  = gp_->dipStep;
+	// scattering-angle
+	const int   scatNum   = gp_->scatNum;
+	const float scatStart = gp_->scatStart;
+	const float scatStep  = gp_->scatStep;
+
+	// ACTION
+
+	const float velInPoint = this->getVel (curZ, curX);
+	EscapePoint* travelTimes = new EscapePoint [ttRayNum_];		
+	this->calcTravelTimes (curZ, curX, travelTimes);
+
+	for (int is = 0; is < scatNum; ++is) {
+
+		const float curScatAngle = scatStart + is * scatStep;
+		const float H = 2 * cos (curScatAngle * SF_PI / 360.f) / velInPoint; // 0.5 * SF_PI / 180.f;		
+
+		// loop over dip-angle
+		for (int id = 0; id < dipNum; ++id)	{
+			const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
+	
+			float sample (0.f);
+			bool isGood = this->getSampleByBeam (travelTimes, curScatAngle, curDipAngle, sample);	 
+			if (!isGood && curScatAngle < 1e-6) // implemented for zero-offset only
+				isGood = this->getSampleByRay (travelTimes, curDipAngle, sample);
+			if (!isGood)
+				continue;
+	
+			const float hSample = sample * H;
+
+			const int dagInd = id * zNum;
+			curDag   [dagInd] += hSample;
+			const int scatInd = is * zNum;
+			curCig   [scatInd] += hSample;
+			*curImage += hSample;
+		}
+	}
+
+	delete [] travelTimes;
 
 	return;
 }
 
-bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, float& sample) {
+bool DepthMigrator2D::getSampleByBeam (EscapePoint* travelTimes, float curScatAngle, float curDipAngle, float& sample) {
 
 	const int   hNum   = dp_->hNum;
 	const float hStart = dp_->hStart; 
@@ -151,12 +139,12 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 	// calc recs lane
 	float dir1 = baseDir - shiftDir;
 	EscapePoint* escPointRec1 = new EscapePoint ();
-	this->getEscPointByDirection (dir1, *escPointRec1);
+	this->getEscPointByDirection (travelTimes, dir1, *escPointRec1);
 	if (!escPointRec1->isSurf) return false;
 
 	float dir2 = baseDir + shiftDir;
 	EscapePoint* escPointRec2 = new EscapePoint ();
-	this->getEscPointByDirection (dir2, *escPointRec2);
+	this->getEscPointByDirection (travelTimes, dir2, *escPointRec2);
 	if (!escPointRec2->isSurf) return false;
 	
 	float recLaneLeft  = escPointRec1->x;
@@ -169,12 +157,12 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 	baseDir = curDipAngle - 0.5 * curScatAngle;
 	float dir3 = baseDir - shiftDir;
 	EscapePoint* escPointRec3 = new EscapePoint ();
-	this->getEscPointByDirection (dir3, *escPointRec3);
+	this->getEscPointByDirection (travelTimes, dir3, *escPointRec3);
 	if (!escPointRec3->isSurf) return false;
 
 	float dir4 = baseDir + shiftDir;
 	EscapePoint* escPointRec4 = new EscapePoint ();
-	this->getEscPointByDirection (dir4, *escPointRec4);			
+	this->getEscPointByDirection (travelTimes, dir4, *escPointRec4);			
 	if (!escPointRec4->isSurf) return false;
 
 	float srcLaneLeft  = escPointRec3->x;
@@ -200,12 +188,12 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 			float timeToRec (0.f);
 			float recAbsP   (0.f);
 			bool onSurf;
-			bool goodRes = this->getRayToPoint (curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
+			bool goodRes = this->getRayToPoint (travelTimes, curRecPos, dir1, dir2, timeToRec, recAbsP, onSurf);
 			if (!goodRes) continue; // no ray was found
 			if (!onSurf)  continue; // the ray does not reach the surface
 			float timeToSrc (0.f);
 			float srcAbsP   (0.f);
-			goodRes = this->getRayToPoint (curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
+			goodRes = this->getRayToPoint (travelTimes, curSrcPos, dir3, dir4, timeToSrc, srcAbsP, onSurf);
 			if (!goodRes) continue; // no ray was found
 			if (!onSurf)  continue; // the ray does not reach the surface
 			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "ms"
@@ -225,10 +213,10 @@ bool DepthMigrator2D::getSampleByBeam (float curScatAngle, float curDipAngle, fl
 }
 
 // get sample by only ray trace; implemented for zero-offset section only
-bool DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
+bool DepthMigrator2D::getSampleByRay (EscapePoint* travelTimes, float dipAngle, float& sample) {
 
 	EscapePoint* escPoint = new EscapePoint ();
-	this->getEscPointByDirection (dipAngle, *escPoint);
+	this->getEscPointByDirection (travelTimes, dipAngle, *escPoint);
 
 	// check if the ray reaches the daylight surface
 	if (!escPoint->isSurf) { return false; }
@@ -274,11 +262,11 @@ bool DepthMigrator2D::getSampleByRay (float dipAngle, float& sample) {
 }
 
 // calculate ray touching the current receiver
-bool DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
+bool DepthMigrator2D::getRayToPoint (EscapePoint* travelTimes, float curRecPos, float dir1, float dir2, float& timeToPoint, float& pointAbsP, bool& isSurf) {
 
 	const float basedir = dir1 > dir2 ? dir1 : dir2; // basedir "starts" the target beam
 
-	EscapePoint* pTT = travelTimes_; // the first point in travelTimes has the most positive direction !
+	EscapePoint* pTT = travelTimes; // the first point in travelTimes has the most positive direction !
 	float ttDir = pTT->startDir;
 
 	int count (0);
@@ -320,12 +308,12 @@ bool DepthMigrator2D::getRayToPoint (float curRecPos, float dir1, float dir2, fl
 	return true;
 }
 
-void DepthMigrator2D::getEscPointByDirection (const float targetStartDir, EscapePoint &resEscPoint) {
+void DepthMigrator2D::getEscPointByDirection (EscapePoint* travelTimes, const float targetStartDir, EscapePoint &resEscPoint) {
 
 	if (targetStartDir < startDirMin_) { resEscPoint.isSurf = false; return; }
 	if (targetStartDir > startDirMax_) { resEscPoint.isSurf = false; return; }
 
-	EscapePoint* pEscPoint = travelTimes_;
+	EscapePoint* pEscPoint = travelTimes;
 	float curStartDir = pEscPoint->startDir;
 	if (curStartDir < targetStartDir)  { resEscPoint.isSurf = false; return; }
 
