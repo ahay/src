@@ -1,4 +1,17 @@
 /* 3D elastic time-domain FD modeling with multiple GPUs coordinated via MPI*/
+
+/*
+  Authors: Robin M. Weiss and Jeffrey Shragge
+
+  This code is a GPU-enabled version of the ewefd3d module from the Madagascar
+  software package (see: http://www.reproducibility.org).  It implements a 3D
+  Finite-Difference Time Domain solver for the elastice wave equation with 
+  2nd- and 8th- order temporal and spatial accuracy, respectively.  Computation
+  is distributed across an arbitrary number of GPU devices and coordinted by MPI.  
+  For more information, see (Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave 
+  Equations on Parallel GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063)
+*/
+
 /*
   Copyright (C) 2012 University of Western Australia
   

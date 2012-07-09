@@ -1,4 +1,16 @@
-/* 2D elastic time-domain FD modeling with GPU*/
+/*2D elastic time-domain FD modeling with GPU*/
+
+/*
+  Authors: Robin M. Weiss and Jeffrey Shragge
+
+  This code is a GPU-enabled version of the ewefd2d module from the Madagascar
+  software package (see: http://www.reproducibility.org).  It implements a 2D
+  Finite-Difference Time Domain solver for the elastice wave equation with 
+  2nd- and 8th- order temporal and spatial accuracy, respectively.  For more 
+  information, see (Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave 
+  Equations on Parallel GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063)
+*/
+
 /*
   Copyright (C) 2012 University of Western Australia
   

@@ -1,4 +1,15 @@
-/* GPU Kernel Functions used in sfewefd2d_gpu */
+/* GPU Kernel Functions used in sfewefd2d_gpu_dev */
+
+/*
+  Authors: Robin M. Weiss and Jeffrey Shragge
+
+  This file contains the GPU kernel functions called in the ewefd2d_gpu_dev module from
+  the Madagascar software package (http://www.reproducilitibly.org).  The calling
+  functions for these kernels can be found in the file Mewefd2d_gpu.cu.  For more 
+  information, see (Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave 
+  Equations on Parallel GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063)
+*/
+
 /*
   Copyright (C) 2012 University of Western Australia
   

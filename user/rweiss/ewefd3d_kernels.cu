@@ -1,4 +1,15 @@
 /* GPU Kernel Functions used in sfewefd3d_gpu_p2p and sfewefd3d_gpu_mpi */
+
+/*
+  Authors: Robin M. Weiss and Jeffrey Shragge
+
+  This file contains the GPU kernel functions called in the ewefd3d_gpu_mpi and
+  ewefd3d_gpu_p2p modules from the Madagascar software package (http://www.reproducilitibly.org).
+  These kernel functions are called from both Mewefd3d_gpu_mpi.cu and Mewefd3d_gpu_p2p.cu.
+  For more information, see (Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave 
+  Equations on Parallel GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063)
+*/
+
 /*
   Copyright (C) 2012 University of Western Australia
   
