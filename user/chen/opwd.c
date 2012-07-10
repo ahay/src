@@ -6,15 +6,14 @@
 
 static int nf, itp;
 static float *b1, *b2, *d1, *d2;
-static float r, **c;
+static float **c;
 
-void opwd_init(int interp, int mf, float rad)
+void opwd_init(int interp, int mf)
 /*< initialize >*/
 {
 	int n;
 	itp = interp;
 	nf = mf;
-	r = rad;
 	n = 2*mf+1;
 	b1 = sf_floatalloc(n);
 	b2 = sf_floatalloc(n);
@@ -28,7 +27,7 @@ void opwd_fbank(int n1, int n2, float**in, float ****out)
 /*< opwd filter bank >*/
 {
 	int i1, i2, j1, j2;
-	float **u1, **u2;
+	float **u1;
 
 	u1 = sf_floatalloc2(n1, n2);
 
@@ -45,7 +44,7 @@ void opwd_fbank(int n1, int n2, float**in, float ****out)
 	free(u1);
 }
 
-void opwd(int n1, int n2, float ****fb, float **p, float **out)
+void opwd(int n1, int n2, float ****fb, sf_complex **p, float **out)
 /*< apply circle interpolating PWD >*/
 {
 	int i1, i2, j1, j2;
@@ -56,8 +55,8 @@ void opwd(int n1, int n2, float ****fb, float **p, float **out)
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{
-		c1 = r*sin(p[i2][i1]);
-		c2 = r*cos(p[i2][i1]);
+		c1 = cimagf(p[i2][i1]);
+		c2 = crealf(p[i2][i1]);
 		for(j1=1; j1<2*nf+1; j1++)
 		{	
 			b1[j1] = b1[j1-1]*c1;
@@ -77,7 +76,7 @@ void opwd(int n1, int n2, float ****fb, float **p, float **out)
 
 
 void opwdpd(int n1, int n2, float ****fb, 
-	float **p, float **out, int id)
+	sf_complex **p, float **out, int id)
 /*< partial derivative filter of circle interpolating PWD >*/
 {
 	int i1, i2, j1, j2;
@@ -86,8 +85,8 @@ void opwdpd(int n1, int n2, float ****fb,
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{
-		c1 = r*sin(p[i2][i1]);
-		c2 = r*cos(p[i2][i1]);
+		c1 = cimagf(p[i2][i1]);
+		c2 = crealf(p[i2][i1]);
 		if(id == 0)
 		{
 			b1[0] = 0;
@@ -121,14 +120,14 @@ void opwdpd(int n1, int n2, float ****fb,
 
 
 
-void opwd_freq(float dip, int nk, sf_complex**out, bool iir)
+void opwd_freq(sf_complex dip, int nk, sf_complex**out, bool iir)
 /*< frequency response of circle-interpolating PWD >*/
 {
 	int i1, i2;
 	sf_complex c1, c2, z1, z2;
 
-	lphase_filt(nf, c, r*sin(dip), b1, 2*nf, false);
-	lphase_filt(nf, c, r*cos(dip), b2, 2*nf, false);
+	lphase_filt(nf, c, cimagf(dip), b1, 2*nf, false);
+	lphase_filt(nf, c, crealf(dip), b2, 2*nf, false);
 
 	for(i2=-nk; i2<=nk; i2++)
 	{

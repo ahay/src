@@ -46,7 +46,7 @@ int main(int argc, char*argv[])
 
 
 	/* initialize dip estimation */
-	opwd_init(interp, nf, 0.0);
+	opwd_init(interp, nf);
 
 
 	for(i3=0; i3<n3; i3++)

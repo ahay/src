@@ -8,7 +8,7 @@ int main(int argc, char*argv[])
 {
 	sf_file out;
 	int n1, nf, n3, i3, interp;
-	sf_complex **buf;
+	sf_complex **buf, c1;
 	float d3, o3, radius;
 	bool iir, opwd;
 
@@ -52,10 +52,11 @@ int main(int argc, char*argv[])
 
 	if(opwd==true)
 	{
-		opwd_init(interp, nf, radius);
+		opwd_init(interp, nf);
 		for(i3=0; i3<n3; i3++)
 		{
-			opwd_freq((d3*i3+o3)/180*SF_PI, n1, buf, iir);
+			c1 = sf_cmplx(0, (d3*i3+o3)/180*SF_PI);
+			opwd_freq(radius*cexpf(c1), n1, buf, iir);
 			sf_complexwrite(buf[0], (2*n1+1)*(2*n1+1), out);
 		}
 		opwd_close();

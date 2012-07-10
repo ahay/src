@@ -8,9 +8,9 @@
 int main(int argc, char*argv[])
 {
 	int i1, i2;
-	float **in, **p1, **d1, **d2, **u1, ****fb;
-	
-	opwd_init(0, 1, 1.0);
+	float **in, **d1, **d2, **u1, ****fb;
+	sf_complex **p1;
+	opwd_init(0, 1);
 
 // **c@9
 //  1.0   1.5   0.5 
@@ -38,7 +38,7 @@ int main(int argc, char*argv[])
 
 	in = sf_floatalloc2(n1, n2);
 	u1 = sf_floatalloc2(n1, n2);
-	p1 = sf_floatalloc2(n1, n2);
+	p1 = sf_complexalloc2(n1, n2);
 	d1 = sf_floatalloc2(n1, n2);
 	d2 = sf_floatalloc2(n1, n2);
 	fb = sf_floatalloc4(3, 3, n1, n2);
@@ -50,11 +50,11 @@ int main(int argc, char*argv[])
 	for(i1=0; i1<n1; i1++)
 	{
 		in[i2][i1] = 0.1*(i2+1)+i1;
-		p1[i2][i1] = 0.0;
+		p1[i2][i1] = sf_cmplx(1.0,0.0);
 	}
 
 	opwd_fbank(3,3, in, fb);
-//	**fb[1][1]@9
+//	fb[0-2][0-2][1][1]
 //  43.2    1.8   0.0
 //  18.0    0.0   0.0 
 //   0.0    0.0   0.0
@@ -80,7 +80,7 @@ int main(int argc, char*argv[])
 	}
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
-		p1[i2][i1] = 0.0;
+		p1[i2][i1] = sf_cmplx(1.0,0.0);
 
 	opwd_fbank(3,3, in, fb);
 //	**fb[1][1]@9
