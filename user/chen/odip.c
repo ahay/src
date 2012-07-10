@@ -50,13 +50,12 @@ void odip_close()
 #define divn(a, b)  (a*b/(b*b+10E-15))
 
 
-void odip(float **in, float **dip, int nit)
+void odip(float **in, float **dip, int nit, float eta)
 /*< omnidirectional dip estimation >*/
 {
 	int it, i1;
-	double eta, norm, s1, c1;
+	double  norm, s1, c1;
 
-	eta=0.75;
 
 	for(i1=0; i1<n1*n2; i1++)
 	{
@@ -106,12 +105,6 @@ void odip(float **in, float **dip, int nit)
 */
 	for(i1=0; i1<n1*n2; i1++)
 		dip[0][i1] = atan(tan(dip[0][i1]));
-/*	for(i1=0; i1<n1*n2; i1++)
-	{
-		if(dip[0][i1]<0) dip[0][i1] *= -1;
-		if(dip[0][i1]>SF_PI/2) dip[0][i1] -= SF_PI;
-	}
-*/
 }
 
 

@@ -10,7 +10,7 @@ int main(int argc, char*argv[])
 	int nf, n1, n2, n3, rect[2], niter, liter, interp, solver;
 	int i2, i3;
 	bool verb, opwd;
-	float **wav, **dip, radius;
+	float **wav, **dip, radius, eta;
 
 	sf_init(argc, argv);
 
@@ -43,6 +43,8 @@ int main(int argc, char*argv[])
 	/* y: opwd;  n: lpwd */
 	if (!sf_getfloat("radius", &radius)) radius = 1.0;
 	/* interpolating radius for opwd */
+	if (!sf_getfloat("eta", &eta)) eta = 0.75;
+	/* steps for iteration */
 	if (!sf_getbool("verb", &verb)) verb = false;
 	/* verbosity flag */
 
@@ -56,7 +58,7 @@ int main(int argc, char*argv[])
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		odip(wav, dip, niter);
+		odip(wav, dip, niter, eta);
 		sf_floatwrite(dip[0], n1*n2, out);
 	}
 
