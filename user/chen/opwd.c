@@ -31,25 +31,18 @@ void opwd_fbank(int n1, int n2, float**in, float ****out)
 	float **u1, **u2;
 
 	u1 = sf_floatalloc2(n1, n2);
-	u2 = sf_floatalloc2(n1, n2);
 
 	for(j2=0; j2<=2*nf; j2++)
 	for(j1=0; j1<=2*nf; j1++)
 	{
 		for(i1=0; i1<n1; i1++)
-			firs(-nf, nf, c[j2]+nf, in[0]+i1, n1, n2, u2[0]+i1, n1);
+			firs(-nf, nf, c[j2]+nf, in[0]+i1, n1, n2, u1[0]+i1, n1);
 		for(i2=0; i2<n2; i2++)
-		{
-			firs(-nf, nf, c[j1]+nf, u2[i2], 1, n1, u1[i2], 1);
-			for(i1=0; i1<n1; i1++)
-				out[i2][i1][j2][j1] = u1[i2][i1];
-		}
+			firs(-nf, nf, c[j1]+nf, u1[i2], 1, n1, out[j2][j1][i2], 1);
 	}
 
 	free(u1[0]);
 	free(u1);
-	free(u2[0]);
-	free(u2);
 }
 
 void opwd(int n1, int n2, float ****fb, float **p, float **out)
@@ -75,7 +68,7 @@ void opwd(int n1, int n2, float ****fb, float **p, float **out)
 			for(j1=0, c1=0.0; j1<2*nf+1; j1++)
 			{
 				c2 = ((j1+j2)%2==1?2.0:0.0);
-				c1 += c2 * fb[i2][i1][j2][j1] * b1[j1]; 
+				c1 += c2 * fb[j2][j1][i2][i1] * b1[j1]; 
 			}
 			out[i2][i1] += c1*b2[j2];
 		}
@@ -119,7 +112,7 @@ void opwdpd(int n1, int n2, float ****fb,
 			for(j1=0, c1=0.0; j1<2*nf+1; j1++)
 			{
 				c2 = ((j1+j2)%2==1?2.0:0.0);
-				c1 += c2 * fb[i2][i1][j2][j1] * b1[j1]; 
+				c1 += c2 * fb[j2][j1][i2][i1] * b1[j1]; 
 			}
 			out[i2][i1] += c1*b2[j2];
 		}
