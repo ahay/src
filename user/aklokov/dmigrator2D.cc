@@ -88,6 +88,13 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 
 	// ACTION
 
+	// masks for illumination normalization
+	int* maskDag = new int [dipNum];
+	memset ( maskDag, 0, dipNum * sizeof (int) );
+	int* maskCig = new int [scatNum];
+	memset ( maskCig, 0, scatNum * sizeof (int) );
+	int maskImage (0);
+
 	const float velInPoint = this->getVel (curZ, curX);
 	EscapePoint* travelTimes = new EscapePoint [ttRayNum_];		
 	this->calcTravelTimes (curZ, curX, travelTimes);
@@ -112,11 +119,25 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 
 			const int dagInd = id * zNum;
 			curDag   [dagInd] += hSample;
+			maskDag [id] += 1;
 			const int scatInd = is * zNum;
 			curCig   [scatInd] += hSample;
+			maskCig [is] += 1;
 			*curImage += hSample;
+			maskImage += 1;
 		}
 	}
+	// illumination normalization
+	double* pRes = curDag; int* pMask = maskDag;
+	for (int id = 0; id < dipNum; ++id, pRes += zNum, ++pMask)
+		if (*pMask) *pRes /= *pMask;
+	pRes = curCig; pMask = maskCig;
+	for (int is = 0; is < scatNum; ++is, pRes += zNum, ++pMask)
+		if (*pMask) *pRes /= *pMask;
+	if (maskImage) *curImage /= maskImage;
+
+	delete [] maskDag;
+	delete [] maskCig; 
 
 	delete [] travelTimes;
 
