@@ -341,26 +341,35 @@ void DepthMigrator2D::getEscPointByDirection (EscapePoint* travelTimes, const fl
 	EscapePoint* pEscPoint = travelTimes;
 	float curStartDir = pEscPoint->startDir;
 	if (curStartDir < targetStartDir)  { resEscPoint.isSurf = false; return; }
+	else if (curStartDir == targetStartDir) { // "==" for float ?!
+		resEscPoint.x = pEscPoint->x;
+		resEscPoint.p = pEscPoint->p;
+		resEscPoint.t = pEscPoint->t;
+		resEscPoint.z = pEscPoint->z;
+		resEscPoint.startDir = pEscPoint->startDir;
+		resEscPoint.offset = pEscPoint->offset;
+		resEscPoint.isSurf = pEscPoint->isSurf;
+	} else {
+		int count (0);
 
-	int count (0);
+		while (curStartDir > targetStartDir && count < ttRayNum_) {
+			++pEscPoint; curStartDir = pEscPoint->startDir;	++count;
+		}
+		if (count == ttRayNum_) { resEscPoint.isSurf = false; return; }
 
-	while (curStartDir > targetStartDir && count < ttRayNum_) {
-		++pEscPoint; curStartDir = pEscPoint->startDir;	++count;
+		//	liniar interpolation - NOT the optimal solution
+		const float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
+		const float aft = 1.f - bef;
+
+		const EscapePoint* prevPoint = pEscPoint - 1;
+		resEscPoint.x = pEscPoint->x * aft + prevPoint->x * bef;
+		resEscPoint.p = pEscPoint->p * aft + prevPoint->p * bef;
+		resEscPoint.t = pEscPoint->t * aft + prevPoint->t * bef;
+		resEscPoint.z = pEscPoint->z * aft + prevPoint->z * bef;
+		resEscPoint.startDir = pEscPoint->startDir * aft + prevPoint->startDir * bef;
+		resEscPoint.offset = pEscPoint->offset * aft + prevPoint->offset * bef;
+		resEscPoint.isSurf = resEscPoint.z > 0 ? false : true; // z > 0 - ray is below the daylight surface
 	}
-	if (count == ttRayNum_) { resEscPoint.isSurf = false; return; }
-
-//	liniar interpolation - NOT the optimal solution
-
-	const float bef = ( pEscPoint->startDir - targetStartDir ) / ( pEscPoint->startDir - (pEscPoint - 1)->startDir );
-	const float aft = 1.f - bef;
-
-	resEscPoint.x = pEscPoint->x * aft + (pEscPoint - 1)->x * bef;
-	resEscPoint.p = pEscPoint->p * aft + (pEscPoint - 1)->p * bef;
-	resEscPoint.t = pEscPoint->t * aft + (pEscPoint - 1)->t * bef;
-	resEscPoint.z = pEscPoint->z * aft + (pEscPoint - 1)->z * bef;
-	resEscPoint.startDir = pEscPoint->startDir * aft + (pEscPoint - 1)->startDir * bef;
-	resEscPoint.offset = pEscPoint->offset * aft + (pEscPoint - 1)->offset * bef;
-	resEscPoint.isSurf = resEscPoint.z > 0 ? false : true; // z > 0 - ray is below the daylight surface
 
 	return;
 }
