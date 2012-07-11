@@ -49,6 +49,14 @@ sf_axis sf_maxa(int n   /* length */,
     return AA;
 }
 
+void sf_maxa_free (sf_axis tofree) 
+/*< free allocated storage >*/
+{
+	free (tofree);
+	tofree = NULL;
+	return;
+}
+
 sf_axis sf_iaxa(sf_file FF, int i) 
 /*< read axis i >*/
 {
