@@ -27,7 +27,8 @@ public:
 	// transfer parameters to wavefrontTracer
 	void   setWavefrontTracerParams  (int ttRayNum, float ttRayStep, float ttRayStart, int ttNum, float ttStep, float ttStart);
 	// setup velocity model
-	void   setVelModel        (float** velField) { wavefrontTracer_.setVelModel (velField); velField_ = velField; } 	
+	void   setVelModel               (float** velField) { wavefrontTracer_.setVelModel (velField); velField_ = velField; } 	
+	void   setWavefrontTracerAxes    ();
 
 private:
 

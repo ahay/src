@@ -8,7 +8,7 @@
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
   
-  This program is distributed in the hope that it will be useful,
+  This program is distributed in the hope that it will be useful,a
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
@@ -414,13 +414,12 @@ int main (int argc, char* argv[]) {
 	migrator->setWavefrontTracerParams (ttRayNum, ttRayStep, ttRayStart, ttNum, ttStep, ttStart);
 	migrator->setVelModelParams ( vp.zNum, vp.zStep, vp.zStart,
  							      vp.xNum, vp.xStep, vp.xStart );
-
 	// READ DATA
 
 	readData     (data);
 	readVelocity (velModel);	
     migrator->setVelModel (velModel);
-
+	migrator->setWavefrontTracerAxes ();
 	// MAIN LOOP
 
     const int fullGatherNum = ip.yNum * ip.xNum;
@@ -458,19 +457,21 @@ int main (int argc, char* argv[]) {
 		}
 	}
 
-    free (dag);
-    free (acig);
-    free (image);
-
-    free (*velModel);
-    free (data);
-
     sf_fileclose (dagFile);
     sf_fileclose (acigFile);
     sf_fileclose (imageFile);
 
     sf_fileclose (velFile);
 	sf_fileclose (dataFile);
+
+	delete migrator;
+
+    free (dag);
+    free (acig);
+    free (image);
+
+    free (*velModel);
+    free (data);
 
     return 0;
 }

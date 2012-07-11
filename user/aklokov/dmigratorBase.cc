@@ -22,6 +22,10 @@ void DepthMigratorBase::setVelModel (float** velField) {
 	return;
 }
 
+void DepthMigratorBase::setWavefrontTracerAxes () {
+	return;
+}
+
 void DepthMigratorBase::setDataLimits () {
 
 	const int tNum = dp_->zNum;
@@ -53,6 +57,30 @@ WavefrontTracer::WavefrontTracer () {
 WavefrontTracer::~WavefrontTracer () {
 }
 
+void WavefrontTracer::setAxes () {
+	// Cartesian coordinates 
+	// z axis 
+    sf_axis az = sf_maxa (vp_.zNum, vp_.zStart, vp_.zStep);
+    sf_setlabel (az, "z");
+	// x axis 
+    sf_axis ax = sf_maxa (vp_.xNum, vp_.xStart, vp_.xStep);
+    sf_setlabel (ax, "x");
+	// ray coordinates 
+	// time axis 
+    sf_axis at = sf_maxa (wp_.tNum, wp_.tStart, wp_.tStep);
+    sf_setlabel (at, "t");
+	// shooting angle axis 
+    sf_axis ag = sf_maxa (wp_.rNum, wp_.rStart, wp_.rStep);
+    sf_setlabel (ag, "g");
+
+    hwt2d_init (pVelField_, az, ax, at, ag);
+
+	sf_maxa_free (az);
+	sf_maxa_free (ax);
+	sf_maxa_free (at);	
+	sf_maxa_free (ag);
+}
+
 void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint* ep) {
 
 	// CONSTANTS
@@ -72,21 +100,6 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
     pt2d     pointNextWF;            // point  on wft it + 1 
 	pt2d     pointCurWF_center; 
 
-	// Cartesian coordinates 
-	// z axis 
-    sf_axis az = sf_maxa (vp_.zNum, vp_.zStart, vp_.zStep);
-    sf_setlabel (az, "z");
-	// x axis 
-    sf_axis ax = sf_maxa (vp_.xNum, vp_.xStart, vp_.xStep);
-    sf_setlabel (ax, "x");
-	// ray coordinates 
-	// time axis 
-    sf_axis at = sf_maxa (wp_.tNum, wp_.tStart, wp_.tStep);
-    sf_setlabel (at, "t");
-	// shooting angle axis 
-    sf_axis ag = sf_maxa (wp_.rNum, wp_.rStart, wp_.rStep);
-    sf_setlabel (ag, "g");
-
     // allocate wavefronts
     prevWF = pt2dalloc1 (rNum);
     curWF  = pt2dalloc1 (rNum);
@@ -98,9 +111,6 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 		prevWF[ir].z = curWF[ir].z = nextWF[ir].z = 0.f;
 		prevWF[ir].v = curWF[ir].v = nextWF[ir].v = 0.f;
     }
-
-    // init HWT 
-    hwt2d_init (pVelField_, az, ax, at, ag);
 
     // construct it = 0 wavefront
 	pt2d* pWF = prevWF;
@@ -177,6 +187,10 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 	ep[0].startDir *= -1;
 	ep[rNum - 1].startDir = rStart + (rNum - 1) * rStep - 180.f;
     ep[rNum - 1].startDir *= -1;
+
+	pt2dfree1 (prevWF);
+	pt2dfree1 (curWF);
+	pt2dfree1 (nextWF);
 
     return;
 }

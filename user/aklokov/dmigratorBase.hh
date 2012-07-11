@@ -28,7 +28,8 @@ public:
 							  	   int xNum, float xStep, float xStart) {vp_.zNum = zNum; vp_.zStep = zStep; vp_.zStart = zStart;
 									 							         vp_.xNum = xNum; vp_.xStep = xStep; vp_.xStart = xStart;}
 		void   setVelModel        (float** pVelField) { pVelField_ = pVelField; }
-	
+		void   setAxes            ();	
+
 		int    getRaysNum         () { return wp_.rNum;   }
 		float  getRaysStart       () { return wp_.rStart; }
 		float  getRaysStep        () { return wp_.rStep;  }
@@ -60,6 +61,8 @@ public:
 								   int xNum, float xStep, float xStart) { wavefrontTracer_.setVelModelParams ( zNum, zStep, zStart, 
 																											   xNum, xStep, xStart); }
 		virtual void   setVelModel (float** velField);
+		virtual void   setWavefrontTracerAxes ();
+
 		void   setDataLimits      ();
 
 protected:
