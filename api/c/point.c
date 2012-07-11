@@ -243,8 +243,15 @@ pt2d* pt2dalloc1( size_t n1)
     return ptr;
 }
 
-pt2d** pt2dalloc2( size_t n1,
-		   size_t n2)
+void pt2dfree1 (pt2d* tofree) 
+/*< free allocated storage >*/
+{
+	free (tofree);
+	tofree = NULL;
+	return;
+}
+
+pt2d** pt2dalloc2( size_t n1, size_t n2)
 /*< alloc point2d 2-D vector >*/
 {
     size_t i2;
