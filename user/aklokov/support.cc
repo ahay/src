@@ -1,7 +1,6 @@
 #include <string.h>
 #include "support.hh"
 
-
 // -- class Point2D ---
 Point2D::Point2D () : x_ (0),
 		      y_ (0) {
@@ -46,7 +45,6 @@ EscapePoint::EscapePoint (float x1, float z1, float t1, float p1,
 }
 
 EscapePoint::~EscapePoint () {
-
 }
 
 EscapePoint& EscapePoint::operator= (const EscapePoint& point) {

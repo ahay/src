@@ -28,9 +28,9 @@ public:
    ~EscapePoint ();
 
     EscapePoint& operator= (const EscapePoint& point);
-	
+
+	float x;	
 	float z;
-	float x;
 	float t;
 	float p;
 	float offset;    // offset

@@ -165,12 +165,12 @@ bool DepthMigrator2D::getSampleByBeam (EscapePoint* travelTimes, float curScatAn
 	float dir1 = baseDir - shiftDir;
 	EscapePoint* escPointRec1 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes, dir1, *escPointRec1);
-	if (!escPointRec1->isSurf) return false;
+	if (!escPointRec1->isSurf) { delete escPointRec1; return false; }
 
 	float dir2 = baseDir + shiftDir;
 	EscapePoint* escPointRec2 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes, dir2, *escPointRec2);
-	if (!escPointRec2->isSurf) return false;
+	if (!escPointRec2->isSurf) { delete escPointRec1; delete escPointRec2; return false; }
 	
 	float recLaneLeft  = escPointRec1->x;
 	float recLaneRight = escPointRec2->x;
@@ -183,12 +183,12 @@ bool DepthMigrator2D::getSampleByBeam (EscapePoint* travelTimes, float curScatAn
 	float dir3 = baseDir - shiftDir;
 	EscapePoint* escPointRec3 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes, dir3, *escPointRec3);
-	if (!escPointRec3->isSurf) return false;
+	if (!escPointRec3->isSurf) { delete escPointRec3; return false; }
 
 	float dir4 = baseDir + shiftDir;
 	EscapePoint* escPointRec4 = new EscapePoint ();
 	this->getEscPointByDirection (travelTimes, dir4, *escPointRec4);			
-	if (!escPointRec4->isSurf) return false;
+	if (!escPointRec4->isSurf)  { delete escPointRec3; delete escPointRec4; return false; }
 
 	float srcLaneLeft  = escPointRec3->x;
 	float srcLaneRight = escPointRec4->x;
@@ -244,11 +244,11 @@ bool DepthMigrator2D::getSampleByRay (EscapePoint* travelTimes, float dipAngle, 
 	this->getEscPointByDirection (travelTimes, dipAngle, *escPoint);
 
 	// check if the ray reaches the daylight surface
-	if (!escPoint->isSurf) { return false; }
+	if (!escPoint->isSurf) { delete escPoint; return false; }
 
 	// check if the sample is inside the data volume
-	if (escPoint->x - dataXMin_ < -1e-4 || escPoint->x - dataXMax_ > 1e-4) { return false; }
-	if (escPoint->t < dataTMin_ || escPoint->t > dataTMax_) { return false; }
+	if (escPoint->x - dataXMin_ < -1e-4 || escPoint->x - dataXMax_ > 1e-4) { delete escPoint; return false; }
+	if (escPoint->t < dataTMin_ || escPoint->t > dataTMax_) { delete escPoint; return false; }
 
 	// the sample coordinates
 	const float sampleX = escPoint->x;
@@ -262,6 +262,7 @@ bool DepthMigrator2D::getSampleByRay (EscapePoint* travelTimes, float dipAngle, 
 	const float posRightTrace = (curXSamp + 1) * xStepData + xStartData;
 	
 	const float p = escPoint->p;
+	delete escPoint;	
 	const float smallp = p * 0.001;
 	const float timeLeft  = 2.f * (sampleT - (sampleX - posLeftTrace)  * smallp); // double time
 	const float timeRight = 2.f * (sampleT + (posRightTrace - sampleX) * smallp);	
@@ -280,8 +281,6 @@ bool DepthMigrator2D::getSampleByRay (EscapePoint* travelTimes, float dipAngle, 
 	
 	// get the sample by interpolation
 	sample = bef * sampleRight + aft * sampleLeft;
-
-	delete escPoint;
 	
 	return true;
 }
