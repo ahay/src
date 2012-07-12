@@ -23,6 +23,9 @@ public:
     // file data type
     int type (void);
     // reading data
+    const iRSF& operator>> (float &value) const;
+    const iRSF& operator>> (int &value) const;
+    const iRSF& operator>> (sf_complex &value) const;
     const iRSF& operator>> (std::valarray <float> &vect) const;
     const iRSF& operator>> (std::valarray <int> &vect) const;
     const iRSF& operator>> (std::valarray <sf_complex> &vect) const;
@@ -64,9 +67,14 @@ public:
     // destructor 
     ~oRSF();
     // writing data
+    const oRSF& operator<< (float &value) const;
+    const oRSF& operator<< (int &value) const;
+    const oRSF& operator<< (sf_complex &value) const;
     const oRSF& operator<< (std::valarray <float> &vect) const;
     const oRSF& operator<< (std::valarray <int> &vect) const;
     const oRSF& operator<< (std::valarray <sf_complex> &vect) const;
+    off_t tell(void);
+    void seek(off_t offset, int whence);
     // set file data type
     void type (sf_datatype type);
     // writing parameters

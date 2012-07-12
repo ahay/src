@@ -71,6 +71,14 @@ iRSF::type (void)
 // Reading data
 // ------------
 const iRSF&
+iRSF::operator>> (float &value) const
+{
+    if (NULL == file_) sf_error("Cannot write data to parameter file");
+    sf_floatread(&value,1,file_);
+    return *this;
+}
+
+const iRSF&
 iRSF::operator>> (std::valarray<float> &array) const
 {
     if (NULL == file_) sf_error("Cannot write data to parameter file");
@@ -79,10 +87,26 @@ iRSF::operator>> (std::valarray<float> &array) const
 }
 
 const iRSF&
+iRSF::operator>> (int &value) const
+{
+    if (NULL == file_) sf_error("Cannot write data to parameter file");
+    sf_intread(&value,1,file_);
+    return *this;
+}
+
+const iRSF&
 iRSF::operator>> (std::valarray<int> &array) const
 {
     if (NULL == file_) sf_error("Cannot write data to parameter file");
     sf_intread(&(array[0]),array.size(),file_);
+    return *this;
+}
+
+const iRSF&
+iRSF::operator>> (sf_complex &value) const
+{
+    if (NULL == file_) sf_error("Cannot write data to parameter file");
+    sf_complexread(&value,1,file_);
     return *this;
 }
 
@@ -109,9 +133,23 @@ iRSF::seek( off_t offset, int whence) // seek to a position in a file
 // Writing data
 // ------------
 const oRSF&
+oRSF::operator<< (float &value) const
+{
+    sf_floatwrite(&value,1,file_);
+    return *this;
+}
+
+const oRSF&
 oRSF::operator<< (std::valarray<float> &array) const
 {
     sf_floatwrite(&(array[0]),array.size(),file_);
+    return *this;
+}
+
+const oRSF&
+oRSF::operator<< (int &value) const
+{
+    sf_intwrite(&value,1,file_);
     return *this;
 }
 
@@ -123,10 +161,29 @@ oRSF::operator<< (std::valarray<int> &array) const
 }
 
 const oRSF&
+oRSF::operator<< (sf_complex &value) const
+{
+    sf_complexwrite(&value,1,file_);
+    return *this;
+}
+
+const oRSF&
 oRSF::operator<< (std::valarray<sf_complex> &array) const
 {
     sf_complexwrite(&(array[0]),array.size(),file_);
     return *this;
+}
+
+off_t 
+oRSF::tell(void) // position in a file
+{
+    return sf_tell(file_);
+}
+
+void
+oRSF::seek( off_t offset, int whence) // seek to a position in a file
+{
+    sf_seek(file_,offset, whence);
 }
 
 // Reading parameters
