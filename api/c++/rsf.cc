@@ -94,6 +94,18 @@ iRSF::operator>> (std::valarray<sf_complex> &array) const
     return *this;
 }
 
+off_t 
+iRSF::tell(void) // position in a file
+{
+    return sf_tell(file_);
+}
+
+void
+iRSF::seek( off_t offset, int whence) // seek to a position in a file
+{
+    sf_seek(file_,offset, whence);
+}
+
 // Writing data
 // ------------
 const oRSF&

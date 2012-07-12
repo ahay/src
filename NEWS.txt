@@ -17,6 +17,7 @@ To documentation:
 
 To APIs:
 * python API (m8r or rsf.api) is now always installed
+* tell and seek added to C++ API
 
 To the Python package:
 

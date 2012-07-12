@@ -7,7 +7,7 @@ int main (void)
     int i, argc=5;
     float f, d[4];
     bool yes, no[2];
-    char *argv[] = {"prog","a=5","b=as","a=100","par=Testgetpar.cc"};
+    const char *argv[] = {"prog","a=5","b=as","a=100","par=Testgetpar.cc"};
 //    char *str;
     iRSF par(0);
 
@@ -15,7 +15,7 @@ int main (void)
 //      float=5.625 cc=fgsg
 //      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
 
-    sf_init(argc,argv);
+    sf_init(argc,(char**) argv);
     par.get("a",i);
     assert (i==100);
     par.get("c",i,0);
