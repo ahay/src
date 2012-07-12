@@ -25,9 +25,9 @@
 int main(int argc, char* argv[])
 {
     bool velocity, causal, verb, adj, shape;
-    int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, it, nt;
+    int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
     int iter, niter, cgiter, count;
-    int *f, *m, offset, nloop;
+    int *f, *m, nloop;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL;
     float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
     char key[6], *what;
@@ -101,29 +101,16 @@ int main(int argc, char* argv[])
 	    }
 
 	    /* read receiver file */
-	    m = sf_intalloc(nt);
+	    m = sf_intalloc(nt/n[0]);
 	    
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
 
-		if (!sf_getint("offset",&offset)) offset=n[1];
-		/* offset */
-
-		for (k=0; k < n[2]; k++) {
-		    for (j=0; j < n[1]; j++) {
-			if (abs(j-k) <= offset)
-			    m[j*n[0]+k*n[0]*n[1]] = 1;
-			else
-			    m[j*n[0]+k*n[0]*n[1]] = 0;
-			
-			for (i=1; i < n[0]; i++){
-			    m[i+j*n[0]+k*n[0]*n[1]] = 0;
-			}
-		    }
-		}
+		for (k=0; k < n[1]*n[2]; k++)
+		    m[k] = 1;
 	    } else {
 		mask = sf_input("mask");
-		sf_intread(m,nt,mask);
+		sf_intread(m,nt/n[0],mask);
 		sf_fileclose(mask);
 	    }
 	    
@@ -226,33 +213,19 @@ int main(int argc, char* argv[])
 	    sf_floatread(t0,nt,reco);
 	    sf_fileclose(reco);
 	    
-	    /* read receiver file */
-	    m = sf_intalloc(nt);
-
+	    /* read receiver file */	    
+	    m = sf_intalloc(nt/n[0]);
+	    
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
-		
-		if (!sf_getint("offset",&offset)) offset=n[1];
-		/* offset */
 
-		for (k=0; k < n[2]; k++) {
-		    for (j=0; j < n[1]; j++) {
-			if (abs(j-k) <= offset)
-			    m[j*n[0]+k*n[0]*n[1]] = 1;
-			else
-			    m[j*n[0]+k*n[0]*n[1]] = 0;
-			
-			for (i=1; i < n[0]; i++){
-			    m[i+j*n[0]+k*n[0]*n[1]] = 0;
-			}
-		    }
-		}
+		for (k=0; k < n[1]*n[2]; k++)
+		    m[k] = 1;
 	    } else {
 		mask = sf_input("mask");
-		
-		sf_intread(m,nt,mask);
+		sf_intread(m,nt/n[0],mask);
 		sf_fileclose(mask);
-	    }	    
+	    }
 
 	    if (!sf_getbool("verb",&verb)) verb=false;
 	    /* verbosity flag */
@@ -323,13 +296,16 @@ int main(int argc, char* argv[])
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
-	    for (it=0; it < nt; it++) {
-		if (m == NULL || m[it] == 1)
-		    dt[it] = t0[it]-t[it];
+	    for (i=0; i < n[1]*n[2]; i++) {
+		if (m == NULL || m[i] == 1)
+		    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
 		else
-		    dt[it] = 0.;
+		    dt[i*n[0]] = 0.;
+
+		for (j=1; j < n[0]; j++)
+		    dt[i*n[0]+j] = 0.;
 	    }
-	    
+
 	    rhsnorm0 = cblas_snrm2(nt,dt,1);
 	    rhsnorm = rhsnorm0;
 	    rhsnorm1 = rhsnorm;
@@ -355,7 +331,7 @@ int main(int argc, char* argv[])
 		    sf_cgstep_close();
 		}
 
-		/* output gradien */
+		/* output gradient */
 		if (grad != NULL) {
 		    if (velocity) {
 			for (iw=0; iw < nw; iw++)
@@ -379,13 +355,16 @@ int main(int argc, char* argv[])
 		    dsreiko_fastmarch(t,w1,f,al);
 		    dsreiko_mirror(t);
 		    
-		    for (it=0; it < nt; it++) {
-			if (m == NULL || m[it] == 1)
-			    dt[it] = t0[it]-t[it];
+		    for (i=0; i < n[1]*n[2]; i++) {
+			if (m == NULL || m[i] == 1)
+			    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
 			else
-			    dt[it] = 0.;
+			    dt[i*n[0]] = 0.;
+
+			for (j=1; j < n[0]; j++)
+			    dt[i*n[0]+j] = 0.;
 		    }
-		    
+
 		    rhsnorm = cblas_snrm2(nt,dt,1);
 		    rate = rhsnorm/rhsnorm1;
 		    

@@ -22,7 +22,7 @@
 #include "upgraddsr.h"
 #include "dsrtomo.h"
 
-static int nt, *m;
+static int nt, *nn, *m;
 static upgrad upg;
 static float *temp;
 
@@ -32,6 +32,8 @@ void dsrtomo_init(int dim  /* model dimension */,
 /*< initialize >*/
 {
     int i;
+
+    nn = n;
 
     nt = 1;
     for (i=0; i < dim; i++) {
@@ -64,20 +66,21 @@ void dsrtomo_close(void)
 void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
-    int i;
+    int i,j;
 
     sf_adjnull(adj,add,nx,nr,x,r);
 
     if (adj) {
 	/* given dt solve dw */
 	
-	if (m != NULL) {
-	    for (i=0; i < nt; i++) {
-		if (m[i] != 1)
-		    r[i] = 0.;
-	    }
+	for (i=0; i < nn[1]*nn[2]; i++) {
+	    if (m != NULL && m[i] != 1)
+		r[i*nn[0]] = 0.;
+	    
+	    for (j=1; j < nn[0]; j++)
+		r[i*nn[0]+j] = 0.;
 	}
-	
+
 	upgrad_paste(r);
 	upgrad_inverse(upg,temp,r,NULL);
 	upgrad_spread(upg,x,temp);
@@ -87,12 +90,13 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	upgrad_collect(upg,x,temp);
 	upgrad_solve(upg,temp,r,NULL);
 	upgrad_copy(r);
-	
-	if (m != NULL) {
-	    for (i=0; i < nt; i++) {
-		if (m[i] != 1)
-		    r[i] = 0.;
-	    }
+		
+	for (i=0; i < nn[1]*nn[2]; i++) {
+	    if (m != NULL && m[i] != 1)
+		r[i*nn[0]] = 0.;
+	    
+	    for (j=1; j < nn[0]; j++)
+		r[i*nn[0]+j] = 0.;
 	}
     }
 }
