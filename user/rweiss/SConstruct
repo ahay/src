@@ -12,7 +12,7 @@ except: # local version
 	SConscript('../../api/c/SConstruct')
 
 
-
+# YOU MAY HAVE TO EDIT THIS SECTION!!!
 # MPI_LIB and MPI_INC must be defined for your specific system
 MPI_LIB = '/usr/lib/openmpi/lib'		# MPI lib directory (contains libmpi.so)
 MPI_INC = '/usr/lib/openmpi/include'		# MPI include directory	(contains mpi.h)

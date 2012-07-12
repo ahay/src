@@ -3,6 +3,10 @@
 /*
   Authors: Robin M. Weiss and Jeffrey Shragge
 
+  Use of this code is freely avaiable. In publications, please reference the paper: 
+  Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave Equations on Parallel 
+  GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063
+
   This code is a GPU-enabled version of the ewefd3d module from the Madagascar
   software package (see: http://www.reproducibility.org).  It implements a 3D
   Finite-Difference Time Domain solver for the elastice wave equation with 
