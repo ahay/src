@@ -1,6 +1,6 @@
-/* 4-D data binning. */
+/* 4-D data binning from traces at irregular coordinates */
 /*
-  Copyright (C) 2010 University of Texas at Austin
+  Copyright (C) 2012 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
