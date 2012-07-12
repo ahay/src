@@ -129,7 +129,19 @@ int main (int argc, char *argv[])
 			val[ix][iy][it]=sqrtf((nyy*qq3-nzz*qq2)*(nyy*qq3-nzz*qq2)+(nzz*qq1-nxx*qq3)*(nzz*qq1-nxx*qq3)+(nxx*qq2-nyy*qq1)*(nxx*qq2-nyy*qq1));
 			break;
 		    case 'a': /*Azimuth of the convergence*/
-			val[ix][iy][it]=(atan(qq3/qq2)*180)/3,1415;
+			if (qq2>0 && qq3>0) {
+			    val[ix][iy][it]=(atan(abs(qq3/qq2))*180)/3.1415;
+			}
+			else if (qq2<0 && qq3>0) {
+			    val[ix][iy][it]=180-((atan(abs(qq3/qq2))*180)/3.1415); 
+			}
+			else if (qq2<0 && qq3<0) {
+			     val[ix][iy][it]=((atan(abs(qq3/qq2))*180)/3.1415)+180;
+			}
+			else if (qq2>0 && qq3<0) {
+			    val[ix][iy][it]=360-((atan(abs(qq3/qq2))*180)/3.1415);
+			}
+			break;
 
 		}
 	    }
