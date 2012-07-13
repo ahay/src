@@ -6,9 +6,9 @@
 \subtitle{``exploding reflector'' modeling/migration}
 \author[]{Paul Sava}
 \institute{
-Center for Wave Phenomena \\
-Colorado School of Mines \\
-psava@mines.edu
+  Center for Wave Phenomena \\
+  Colorado School of Mines \\
+  psava@mines.edu
 }
 \date{}
 \logo{}
@@ -44,75 +44,111 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{import packages}
+  \normalsize
+  \blueshade{
     \lstinputlisting[firstline=1,lastline=3]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{setup main parameters}
-\lstinputlisting[firstline=6,lastline=14]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=6,lastline=14]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{set-up plotting parameters}
-\lstinputlisting[firstline=18,lastline=18]{sigsbee/SConstruct}
+\begin{frame} \frametitle{setup plotting parameters}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=18,lastline=18]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{make the source coordinates}
-\lstinputlisting[firstline=22,lastline=31]{sigsbee/SConstruct}
+\begin{frame} \frametitle{make the source array}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=22,lastline=31]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the horizontal receiver array}
-\lstinputlisting[firstline=35,lastline=39]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=35,lastline=39]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the vertical receiver array}
-\lstinputlisting[firstline=42,lastline=46]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=42,lastline=46]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the receiver arrays}
-\lstinputlisting[firstline=48,lastline=60]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=48,lastline=60]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 \begin{frame} \plot{dens}{width=\textwidth}{} \end{frame}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{group the receivers}
-\lstinputlisting[firstline=63,lastline=69]{sigsbee/SConstruct}
+\begin{frame} \frametitle{group the receivers in one array}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=63,lastline=69]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{read the velocity}
-\lstinputlisting[firstline=73,lastline=75]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=73,lastline=75]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{format the velocity}
-\lstinputlisting[firstline=77,lastline=88]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=77,lastline=88]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{smooth the velocity}
-\lstinputlisting[firstline=92,lastline=94]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=92,lastline=94]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the velocities}
-\lstinputlisting[firstline=98,lastline=102]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=98,lastline=102]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
@@ -121,13 +157,19 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the density}
-\lstinputlisting[firstline=106,lastline=106]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=106,lastline=106]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the wavelet}
-\lstinputlisting[firstline=111,lastline=119]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=111,lastline=119]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
@@ -135,13 +177,19 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{run FD modeling}
-\lstinputlisting[firstline=123,lastline=131]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=123,lastline=131]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the wavefield}
-\lstinputlisting[firstline=135,lastline=140]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=135,lastline=140]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
@@ -173,13 +221,19 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{remove the wavelet delay}
-\lstinputlisting[firstline=144,lastline=150]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=144,lastline=150]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{set-up the horizontal array data}
-\lstinputlisting[firstline=153,lastline=167]{sigsbee/SConstruct}
+\begin{frame} \frametitle{setup the horizontal array data}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=153,lastline=167]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
@@ -187,8 +241,11 @@ psava@mines.edu
 \begin{frame} \plot{wigH}{width=\textwidth}{} \end{frame}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{set-up the vertical array data}
-\lstinputlisting[firstline=169,lastline=182]{sigsbee/SConstruct}
+\begin{frame} \frametitle{setup the vertical array data}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=169,lastline=182]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
@@ -197,7 +254,29 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{run FD migration}
-\lstinputlisting[firstline=186,lastline=200]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=186,lastline=200]{sigsbee/SConstruct}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{run FD migration}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=186,lastline=186]{sigsbee/SConstruct}
+    \lstinputlisting[firstline=187,lastline=194]{sigsbee/SConstruct}
+  }
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot the image}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=186,lastline=186]{sigsbee/SConstruct}
+    \lstinputlisting[firstline=195,lastline=200]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 
@@ -207,7 +286,10 @@ psava@mines.edu
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{close}
-\lstinputlisting[firstline=203,lastline=203]{sigsbee/SConstruct}
+  \normalsize
+  \blueshade{
+    \lstinputlisting[firstline=203,lastline=203]{sigsbee/SConstruct}
+  }
 \end{frame}
 \cwpnote{}
 

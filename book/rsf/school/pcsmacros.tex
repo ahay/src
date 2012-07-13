@@ -326,6 +326,7 @@ a_x \; a_y \; a_z
 % perturbations
 
 \def\ds{\Delta s}
+\def\dl{\Delta l}
 \def\di{\Delta \RR}
 \def\du{\Delta \UU}
 
@@ -382,11 +383,16 @@ a_x \; a_y \; a_z
 \put(#1,#2){\color{black} \textbf{#3}}
 }
 
-
 \def\anarrow#1#2#3#4{
 \thicklines
 \put(#1,#2){\color{#4} \vector(-1,-1){5}}
 \put(#1,#2){\color{#4} \textbf{#3}}
+}
+
+\def\myvec#1#2#3#4{
+\thicklines
+\put(#1,#2){\color{green} \rotatebox{#4}{\vector(4,0){20}}}
+\put(#1,#2){\color{green} \textbf{#3}}
 }
 
 % ------------------------------------------------------------
@@ -726,13 +732,11 @@ a_x \; a_y \; a_z
 }
 
 
-
-
 % ------------------------------------------------------------
 \def\postit#1{
   \begin{center}
     \colorbox{yellow}
-    {\begin{minipage}{0.66\columnwidth} {#1} \end{minipage}} 
+    {\begin{minipage}{0.80\columnwidth} {#1} \end{minipage}} 
   \end{center}
 }
 
@@ -814,6 +818,8 @@ a_x \; a_y \; a_z
   \end{picture}
 }
 
+% ------------------------------------------------------------
+% two color boxes
 \def\sidebyside#1#2{
   \begin{center}
     \colorbox{LightBlue}{
@@ -825,12 +831,12 @@ a_x \; a_y \; a_z
   \end{center}
 }
 
-
+% upward pointing arrow
 \def\uparrow#1#2#3{
-\thicklines
-\put(#1,#2){\color{green} \vector(0,+1){5}}
-\put(#1,#2){\color{green} \textbf{#3}}
+  \thicklines
+  \put(#1,#2){\color{green} \vector(0,+1){5}}
+  \put(#1,#2){\color{green} \textbf{#3}}
 }
 
-
+% acknowledge figure source
 \def\ackfig#1#2#3{\blabel{#1}{#2}{\normalsize \sc #3}}
