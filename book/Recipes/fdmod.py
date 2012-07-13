@@ -117,7 +117,7 @@ def param(par):
         par['theight3d']=11*par['tratio3d']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=2 titlesz=12 titlefat=3 '
     
     if(not par.has_key('nqz')): par['nqz']=par['nz']
     if(not par.has_key('oqz')): par['oqz']=par['oz']
@@ -142,7 +142,7 @@ def param(par):
 def cgrey(custom,par):
     return '''
     grey 
-    parallel2=n labelrot=n wantaxis=y title=""
+    title=""
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
