@@ -1,13 +1,13 @@
 from rsf.tex import *
 
-Paper('slides',
+Paper('slidesFDM',
       lclass='cwpslides',
       use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
       color='ALL')
-Paper('slidesDEMO',
-      lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
-      color='ALL')
+#Paper('slidesDEMO',
+#      lclass='cwpslides',
+#      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
+#      color='ALL')
 
 Paper('slidesMadFast',
       lclass='cwpslides',
