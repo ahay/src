@@ -1,0 +1,103 @@
+\input{pcsmacros}
+
+\pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
+
+\title[]{reproducible documents with \latex~and \mg}
+\author[]{Paul Sava}
+\institute{
+  Center for Wave Phenomena \\
+  Colorado School of Mines \\
+  psava@mines.edu
+}
+\date{}
+\logo{}
+\large
+
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{definitions}
+
+\begin{columns}[t]
+   \column{.5\textwidth} \big{\latex}
+   \cit{a document markup language and document preparation system 
+     for the \TeX~typesetting program
+   }
+
+   \column{.5\textwidth} \big{\mg}
+
+   \cit{an open-source software package for multidimensional 
+     data analysis and reproducible computational experiments
+   }
+
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{document preparation}
+
+\begin{columns}[t]
+   \column{.5\textwidth} \big{\latex}
+   \cen{documents: \\ articles \\ slides \\ \dots}
+
+   \column{.5\textwidth} \big{\mg}
+   \cen{experiments: \\ figures}
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{document organization}
+
+\begin{columns}[t]
+   \column{.20\textwidth} \cen{book}
+   \column{.35\textwidth} \cen{chapter}
+   \column{.30\textwidth} \cen{example}
+   \column{.15\textwidth} \cen{figures}
+\end{columns}
+
+\pause
+
+\begin{columns}[t]
+   \column{.20\textwidth} \ctt{rsf/}
+   \column{.35\textwidth} \ctt{school/}
+   \column{.30\textwidth} \ctt{sigsbee/}
+   \column{.15\textwidth} \ctt{Fig}
+\end{columns}
+
+\pause
+
+\begin{columns}[t]
+   \column{.20\textwidth} 
+   \column{.35\textwidth}    
+   \ctt{SConstruct \\ slidesWSI.tex \\ slidesDOC.tex \\ paperWSI.tex \\ dots}
+   \column{.30\textwidth} 
+   \ctt{SConstruct}
+   \column{.15\textwidth}
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\url{http://www.ahay.org}}
+
+  \vfill
+
+  \big{\texttt{\$RSFSRC/book/rsf/school}}
+
+  \vfill
+
+  \begin{center}
+    \pgfuseimage{logo}
+  \end{center}
+
+\end{frame}
+\cwpnote{}

@@ -4,10 +4,14 @@ Paper('slidesWSI',
       lclass='cwpslides',
       use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
       color='ALL')
-#Paper('slidesDEMO',
-#      lclass='cwpslides',
-#      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
-#      color='ALL')
+Paper('slidesDOC',
+      lclass='cwpslides',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+      color='ALL')
+for paper in glob.glob('paper*.tex'):
+    name = os.path.splitext(paper)[0]
+    Paper(name,
+          use='multicol,natbib,color,amssymb,amsbsy,lineno,ulem,framed,hyperref,listings')
 
 Paper('slidesMadFast',
       lclass='cwpslides',
@@ -42,6 +46,5 @@ Paper('shragge',
 \definecolor{lightlightgray}{gray}{0.9}
 ''')
 
-End(use='hyperref,listings',
+End(use='multicol,natbib,color,amssymb,amsbsy,lineno,ulem,framed,hyperref,listings',
     color='horizon smoothed mona smoothed2')
-
