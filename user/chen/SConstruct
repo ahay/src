@@ -3,8 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psss psefd mdfd4 resample addevent lphase pwdfreq odip 
-mflt opwdfb
+fdip comp psss psefd mdfd4 resample addevent lphase pwdfreq mflt 
+opwdfb odip 
+fbank lphfilt firfreq
 '''
 
 pyprogs='circle prefilt pygraph subplot rsort'

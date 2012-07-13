@@ -62,15 +62,11 @@ void opwd(int n1, int n2, float ****fb, sf_complex **p, float **out)
 			b1[j1] = b1[j1-1]*c1;
 			b2[j1] = b2[j1-1]*c2;
 		}
-		for(j2=0, out[i2][i1] = 0.0; j2<2*nf+1; j2++)
-		{
-			for(j1=0, c1=0.0; j1<2*nf+1; j1++)
-			{
-				c2 = ((j1+j2)%2==1?2.0:0.0);
-				c1 += c2 * fb[j2][j1][i2][i1] * b1[j1]; 
-			}
-			out[i2][i1] += c1*b2[j2];
-		}
+		out[i2][i1] = 0.0;
+		for(j2=0; j2<2*nf+1; j2++)
+		for(j1=0; j1<2*nf+1; j1++)
+		if((j1+j2)%2==1)
+		out[i2][i1] += 2.0*fb[j2][j1][i2][i1]*b1[j1]*b2[j2]; 
 	}
 }
 
@@ -106,15 +102,11 @@ void opwdpd(int n1, int n2, float ****fb,
 				b1[j1] = b1[j1-1]*c1;
 
 		}
-		for(j2=0, out[i2][i1] = 0.0; j2<2*nf+1; j2++)
-		{
-			for(j1=0, c1=0.0; j1<2*nf+1; j1++)
-			{
-				c2 = ((j1+j2)%2==1?2.0:0.0);
-				c1 += c2 * fb[j2][j1][i2][i1] * b1[j1]; 
-			}
-			out[i2][i1] += c1*b2[j2];
-		}
+		out[i2][i1] = 0.0;
+		for(j2=0; j2<2*nf+1; j2++)
+		for(j1=0; j1<2*nf+1; j1++)
+		if((j1+j2)%2==1)
+		out[i2][i1] += 2.0*fb[j2][j1][i2][i1]*b1[j1]*b2[j2]; 
 	}
 }
 

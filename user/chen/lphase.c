@@ -130,6 +130,14 @@ float **lphmf(int n)
 		p[i2][i1] = p[i1][i2];
 		p[i1][i2] = a;
 	}
+
+	for(i1=1, a=1.0; i1<=m; i1++)
+		a = a*i1/(m+i1);
+
+	for(i2=0; i2<=m; i2++)
+	for(i1=0; i1<=m; i1++)
+		p[i1][i2] *= a;
+
 	return p;
 }
 

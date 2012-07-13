@@ -19,7 +19,8 @@ d1=par.float("d1",1)
 n2=par.int("n2",500)
 o2=par.float("o2",-250)
 d2=par.float("d2",1)
-f=par.float("f",5)
+f=par.float("f",0.05)
+# frequency (circles per sampling interval)
 
 output.put("n1",n1)
 output.put("o1",o1)
@@ -34,7 +35,7 @@ for i1 in range(n1):
 	x1=i1*d1+o1
 	for i2 in range(n2):
 		x2=i2*d2+o2
-		p=2*math.pi*f/180*sqrt(x1*x1+x2*x2)
+		p=2*math.pi*f*sqrt(x1*x1+x2*x2)
 		dat[i1,i2]=cos(p)
 
 output.write(dat)
