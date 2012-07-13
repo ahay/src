@@ -1,7 +1,131 @@
-\author{Paul Sava}
-\title{Seismic Imaging Tutorial: ``exploding reflector'' modeling/migration}
+\input{pcsmacros}
+
+\author{Paul Sava \\ Center for Wave Phenomena \\ Colorado School of Mines}
+\title{Seismic Imaging Tutorial: \\
+  ``exploding reflector'' modeling/migration}
 \email{psava@mines.edu}
+\righthead{WSI tutorial}
+\lefthead{Sava}
+\ms{Published online}
 \maketitle
 
+% ------------------------------------------------------------
 \begin{abstract}
+This document demonstrates how reproducible numeric experiments
+constructed using the \mg~software package can be integrated into a
+document generated using the \latex typesetting program. I use a
+simple modeling/migration exercise based on the exploding reflector
+model to illustrate reproducible document generation.
 \end{abstract}
+
+% ------------------------------------------------------------
+\section{Introduction}
+
+Acoustic modeling and migration can be implemented using numeric
+solutions to the acoustic wave-equation \cite[]{Claerbout.iei.1985}:
+%
+\begin{equation} \label{eqn:AWE}
+  \frac{1}{v^2} \ddot{\UU} = 
+  \rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} -f \;.
+\end{equation}
+%
+In \rEq{AWE},
+$\UU\ofxt$ represents the acoustic wavefield,
+$v\ofx$ and $\rho\ofx$ represent the velocity and density of the
+medium, respectively, and $f\ofxt$ represents a source function.
+\begin{itemize}
+\item In modeling, we use the distributed source $f\ofxt$ to generate
+  the wavefield $\UU\ofxt$ at all positions and all times by wave
+  propagation forward in time. The data represent a subset of the
+  wavefield observed at receivers distributed in the medium: $\DD\lp
+  \rr,t \rp=\UU\lp \xx=\rr,t \rp$.
+\item In migration, we use the observed data $\DD\lp \rr,t \rp$ to
+  generate the wavefield $\UU\ofxt$ at all positions and all times by
+  wave propagation backward in time. The image represents a subset of
+  the wavefield at time zero: $\RR\ofx=\UU\lp \xx=,t=0 \rp$.
+\end{itemize}
+In both cases, we solve \rEq{AWE} with different initial conditions,
+but with the same model, $v\ofx$ and $\rho\ofx$ and with the same
+boundary conditions.
+
+% ------------------------------------------------------------
+\section{Example}
+
+\inputdir{sigsbee}
+
+I illustrate the method using the Sigsbee 2A synthetic model.  This
+model is based on the Sigsbee structure in the Gulf of Mexico and the
+velocity model is illustrated in \rFg{velo}. The model is
+characterized by a massive salt body close to the water bottom and
+surrounded by sediments. The salt velocity is $4.5$~km/s and the
+surrounding sediment velocity ranges from approximately $1.5$ to
+$3.25$~km/s.
+
+\sideplot{vstr}{width=\textwidth}{Stratigraphic Sigsbee 2A velocity model}.
+
+In this experiment, I consider sources distributed uniformly in the
+subsalt region of the model. The data are acquired in a borehole
+array, located at $x=8.5$~km and a horizontal array located at
+$z=1.5$~km. In order to avoid multiple scattering in the subsurface, I
+simulate waves in a smooth version of the Sigsbee model, illustrated in
+\rFg{vsmo}, and constant density.
+
+\sideplot{vsmo}{width=\textwidth}{Smooth Sigsbee 2A velocity model}.
+
+Using the \mg program \texttt{sfawefd2d}, we can simulate wavefields
+from the distributed sources. \rFgs{wfld-01}-\rfn{wfld-15} show
+wavefield snapshots in order of increasing times. We can observe waves
+propagating from all subsalt sources, interacting with the variable
+velocity medium and arriving at the vertical and horizontal arrays.
+
+\multiplot{2}{wfld-01,wfld-03,wfld-05,wfld-07,wfld-09,wfld-11,wfld-13,wfld-15}
+{width=0.45\textwidth}{Wavefield snapshots at increasing times.}
+
+\rFgs{datH} and \rfn{wigH} show the data observed at the horizontal
+array in variable density and wiggle plotting formats,
+respectively. Similarly, \rFgs{datV} and \rfn{wigV} show the data
+observed in the vertical array using the same plotting formats. The
+data are just subsets of the same wavefields at the respective
+receiver positions and capture the complications observed in the
+wavefield, i.e. triplications due to lateral velocity variation.
+
+\multiplot{1}{datH,wigH}{width=0.75\textwidth}{Acoustic data observed
+  in the horizontal array.}
+
+\multiplot{1}{datV,wigV}{width=0.75\textwidth}{Acoustic data observed
+  in the vertical array.}
+
+In zero-offset migration, we use the observed data to backprogate the
+wavefields using the data as boundary conditions. The image is the
+wavefield at time zero. Since we can acquire data at different
+locations in space, the reconstructed wavefields depend on the
+acquisition geometry, thus limiting the illumination in the
+subsurface. Therefore, the migrated images depend on the acquisition
+array, as illustrated in \rFgs{imgH} and \rfn{imgV} for the horizontal
+and vertical arrays, respectively. 
+We can also obtain images by migrating the data observed in both the
+horizontal and vertical arrays, as illustrated in \rFg{imgA}, thus
+increasing the acquisition aperture and the subsurface illumination.
+
+\multiplot{1}{imgH,imgV}{width=\textwidth}{Migrated images for data
+  acquired in (a) the horizontal array and (b) the vertical array.}
+
+\plot{imgA}{width=\textwidth}{Migrated image for data acquired in 
+the horizontal and the vertical arrays.}
+
+% ------------------------------------------------------------
+\section{Conclusions}
+The combination of \latex and \mg allows geoscientists to generate
+reproducible documents where the numeric examples can be verified by
+any user with the same computer setup. This allows for transparent
+peer-review, for recursive development and for transfer of technology
+between collaborative research groups.
+
+% ------------------------------------------------------------
+\section{Acknowledgments}
+The reproducible numeric examples in this paper use the \mg~
+open-source software package freely available from
+http://www.reproducibility.org.
+
+\bibliographystyle{seg}
+\bibliography{BOOKS,SEG}

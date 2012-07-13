@@ -8,10 +8,15 @@ Paper('slidesDOC',
       lclass='cwpslides',
       use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
       color='ALL')
-for paper in glob.glob('paper*.tex'):
-    name = os.path.splitext(paper)[0]
+for article in glob.glob('article*.tex'):
+    name = os.path.splitext(article)[0]
     Paper(name,
-          use='multicol,natbib,color,amssymb,amsbsy,lineno,ulem,framed,hyperref,listings')
+          lclass='geophysics',
+          options='manuscript',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,setspace,ulem,algorithmic,algorithm',
+          include=r'''
+          \linenumbers*[1]
+          ''')
 
 Paper('slidesMadFast',
       lclass='cwpslides',
