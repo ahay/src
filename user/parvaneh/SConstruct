@@ -3,10 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-backdireazi backdire curvature kir33 kirm3 shuffle
+backdireazi backdire curvature 
 '''
 
-# kirm3 rtmpar
+# kirr33 kirm3 rtmpar shuffle
 
 try:  # distributed version
     Import('env root pkgdir bindir')

@@ -539,7 +539,9 @@ class Filter(object):
         self.checkpar = checkpar
         self.pipe = pipe
         if self.prog:
-            self.__doc__ =  self.prog.docstring(25,rsf.prog.RSFROOT)
+            self.__doc__ =  self.prog.text(None)
+    def getdoc():
+        return self.__doc__
     def __str__(self):
         return self.command
     def __or__(self,other):
@@ -649,6 +651,7 @@ class Vplot(object):
         'Constructor'
         self.name = name
         self.temp = temp
+        self.png = None
     def __del__(self):
         'Destructor'
         if self.temp:
@@ -672,6 +675,14 @@ class Vplot(object):
         'Convert to PNG in the current directory (for use with SAGE)'
         self.png = os.path.basename(self.name)+'.png'
         self.export(self.png,'png',pen=pen,args='bgcolor=w')
+    def _repr_png_(self): 	 
+        'return PNG representation' 	 
+        if not self.png: 	 
+            self.image() 	 
+        png = open(self.png,'rb') 	 
+        guts = png.read() 	 
+        png.close() 	 
+        return guts
     def movie(self):
         'Convert to animated GIF in the current directory (for use with SAGE)'
         self.gif = os.path.basename(self.name)+'.gif'

@@ -13,7 +13,7 @@ for article in glob.glob('article*.tex'):
     Paper(name,
           lclass='geophysics',
           options='manuscript',
-          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,setspace,ulem,algorithmic,algorithm',
+          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,setspace,ulem,algorithmic,algorithm,hyperref',
           include=r'''
           \linenumbers*[1]
           ''')
@@ -51,5 +51,5 @@ Paper('shragge',
 \definecolor{lightlightgray}{gray}{0.9}
 ''')
 
-End(use='multicol,natbib,color,amssymb,amsbsy,lineno,ulem,framed,hyperref,listings',
-    color='horizon smoothed mona smoothed2')
+End()
+

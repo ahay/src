@@ -545,7 +545,8 @@ class rsfprog(object):
     def text(self,dir,name=None):
         if not name:
             name = self.name
-        file = open (os.path.join(dir,name + '.txt'),'w')
+        if dir:
+            file = open (os.path.join(dir,name + '.txt'),'w')
         contents = 'Program %s | %s\n' % (name,self.desc)
         if self.snps:
             contents = contents + '[SYNOPSIS]\n%s\n' % self.snps
@@ -560,8 +561,10 @@ class rsfprog(object):
         filedir = os.path.split(self.file)[0]
         if filedir:
             contents = contents + '[DIRECTORY]\n%s\n' % filedir
-        file.write(contents)
-        file.close()
+        if dir:
+            file.write(contents)
+            file.close()
+        return contents
     def spec(self,dir,name=None):
         if not name:
             name = self.name

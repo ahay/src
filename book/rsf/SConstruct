@@ -3,17 +3,19 @@ from rsf.book import *
 Papers(copyr='Madagascar Community',
        group='Madagascar Documentation',
        papers=Split('''
-       school/paper.tex
+       school/articleWSI.tex
+       school2009/paper.tex
        rsf/prog.tex
        rsf/format.tex
        rsf/tour.tex
        rsf/api.tex
        rsf/demo.tex
        scons/paper.tex
-       manual/manual.tex
        '''),
+#       manual/manual.tex
        authors={'scons':'Sergey Fomel and Gilles Hennenfent',
-                'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis'},
+                'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis',
+                'school-articleWSI':'Paul Sava'},
        line='\\url{http://ahay.org/}',
        fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
        
