@@ -74,7 +74,7 @@
 \begin{columns}[t]
    \column{.20\textwidth} 
    \column{.35\textwidth}    
-   \ctt{SConstruct \\ slidesWSI.tex \\ slidesDOC.tex \\ paperWSI.tex \\ dots}
+   \ctt{SConstruct \\ slidesWSI.tex \\ slidesDOC.tex \\ articleWSI.tex \\ dots}
    \column{.30\textwidth} 
    \ctt{SConstruct}
    \column{.15\textwidth}
@@ -83,6 +83,95 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame}
+\big{Geophysics article}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{general info}
+  \framesubtitle{import commonly used \latex macros}
+  \normalsize
+  \blueshade{
+   \texttt{$\backslash$input\{ \}}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{general info}
+  \framesubtitle{paper and author information}
+  \normalsize
+  \blueshade{
+    \texttt{$\backslash$author\{\dots\}} \\
+    \texttt{$\backslash$title\{\dots\}} \\
+    \texttt{$\backslash$email\{\dots\}} \\
+    \texttt{$\backslash$righthead\{\dots\}} \\
+    \texttt{$\backslash$lefthead\{ \\dots\}} \\
+    \texttt{$\backslash$ms\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$maketitle}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{chapters}
+  \framesubtitle{paper sections}
+  \normalsize
+  \blueshade{
+    \texttt{$\backslash$begin\{abstract\} \\
+      \dots \\
+      $\backslash$end\{abstract\}
+    }
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$section\{\dots\}
+    }
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{figures}
+  \framesubtitle{}
+  \normalsize
+  \blueshade{
+    \texttt{$\backslash$inputdir\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$plot\{\dots\}\{\dots\}\{\dots\} \\
+    $\backslash$sideplot\{\dots\}\{\dots\}\{\dots\} \\
+    $\backslash$multiplot\{\dots\}\{\dots\}\{\dots\}\{\dots\}
+    }
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{figure and equation numbers}
+  \framesubtitle{definitions in \texttt{pcsmacros.tex}}
+  \normalsize
+  \blueshade{
+    \texttt{$\backslash$rFg\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$rEq\{\dots\}}
+  }
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{citations}
+  \framesubtitle{definitions in \texttt{.bib} files}
+  \normalsize
+  \blueshade{
+    \texttt{$\backslash$cite[]\{\dots\} \\
+      $\backslash$cite\{\dots\}}
+    \\ \vspace{0.5in}
+    \texttt{$\backslash$bibliographystyle\{\dots\} \\
+      $\backslash$bibliography\{\dots\}}
+  }
+\end{frame}
+\cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}
