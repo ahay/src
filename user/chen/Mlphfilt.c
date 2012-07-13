@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(out, "n1", 2*nf+1);
 	sf_putfloat(out, "o1", -nf);
-	sf_putfloat(out, "d1", nf);
+	sf_putfloat(out, "d1", 1);
 	sf_putint(out, "n2", 2*nf+1);
 	sf_putfloat(out, "o2", 0);
 	sf_putfloat(out, "d2", 1);

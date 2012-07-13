@@ -7,9 +7,9 @@
 int main(int argc, char* argv[])
 {
 	sf_file in, out;
-	int n1, n2, mw, o1, d1;
+	int n1, n2, mw;
 	int iw, i2;
-	float **c, ow, dw;
+	float **c, ow, dw, o1, d1;
 	sf_complex **d;
 
 	sf_init(argc, argv);
@@ -18,8 +18,8 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-	if (!sf_histint(in,"o1", &o1)) sf_error("o1");
-	if (!sf_histint(in,"d1", &d1)) sf_error("d1");
+	if (!sf_histfloat(in,"o1", &o1)) sf_error("o1");
+	if (!sf_histfloat(in,"d1", &d1)) sf_error("d1");
 
 	if(!sf_getint("nw", &mw)) mw=101;
 	/* samples in frequency domain */
@@ -40,7 +40,8 @@ int main(int argc, char* argv[])
 
 	for(i2=0; i2<n2; i2++)
 	for(iw=0; iw<mw; iw++)
-	d[i2][iw] = fir_freq(o1, o1+d1*(n1-1), c[i2]-o1, (ow+dw*iw));
+	d[i2][iw] = fir_freq((int)(o1-0.5), (int)(o1+(n1-1)+0.5), 
+		c[i2]-(int)(o1-0.5), (ow+dw*iw));
 
 	sf_complexwrite(d[0], mw*n2, out);
 
