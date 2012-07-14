@@ -52,7 +52,7 @@ int main(int argc, char*argv[])
 
 	if(opwd==true)
 	{
-		opwd_init(interp, nf);
+		opwd_init(interp, nf, 1.0);
 		for(i3=0; i3<n3; i3++)
 		{
 			c1 = sf_cmplx(0, (d3*i3+o3)/180*SF_PI);

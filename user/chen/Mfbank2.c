@@ -1,7 +1,7 @@
-/* filter bank of omnidirectional pwd  */
+/* 2d filter bank  */
 
 #include <rsf.h>
-#include "opwd.h"
+#include "fbank.h"
 
 
 int main(int argc, char*argv[])
@@ -45,18 +45,17 @@ int main(int argc, char*argv[])
 	sf_putfloat(out, "d4", 1);
 
 
-	/* initialize dip estimation */
-	opwd_init(interp, nf);
+	fbank_init(nf, interp);
 
 
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		opwd_fbank(n1, n2, wav, fb);
+		fbank2(n1, n2, wav, fb);
 		sf_floatwrite(fb[0][0][0], n1*n2*nf2*nf2, out);
 	}
 
-	opwd_close();
+	fbank_close();
 	return 0;
 }
 
