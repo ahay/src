@@ -65,4 +65,3 @@ void fbank2(int n1, int n2, float**in, float ****out)
 }
 
 
-

@@ -1,19 +1,18 @@
-/* omnidirectional dip estimation by PWD */
+/* dip estimation by linear phase filter bank */
 
 #include <rsf.h>
-#include "opwd.h"
 
-static int n1, n2, nf;
+
+static int n1, n2;
 static float **u1, **u2, **u3, **u4, **u5, r;
 static sf_complex **p, p0;
 static bool verb, use_divn;
 
-void odip_init(int interp, int mf, float rad,
-	int m1, int m2, int *rect, int niter, float dip0, bool vb)
+void fbdip_init(float rad, int m1, int m2, 
+	int *rect, int niter, float dip0, bool vb)
 /*< initialize >*/
 {
 	int n, nn[2];
-	nf = mf;
 	n1 = m1;
 	n2 = m2;
 	verb = vb;
@@ -28,7 +27,6 @@ void odip_init(int interp, int mf, float rad,
 	r=rad;
 	p0 = rad*cexpf(sf_cmplx(0, dip0));
 	
-	opwd_init(interp, nf, r);
 	if(rect[0]>0 && rect[1]>0)
 	{
 		n = n1*n2;
@@ -39,7 +37,7 @@ void odip_init(int interp, int mf, float rad,
 	}else 	use_divn=false;
 }
 
-void odip_close()
+void fbdip_close()
 /*< release memory >*/
 {
 	free(u1[0]);
@@ -54,17 +52,16 @@ void odip_close()
 	free(u5);
 	free(p[0]);
 	free(p);
-	opwd_close();
 	if(use_divn)	sf_divn_close();
 }
 
 #define divn(a, b)  (a*b/(b*b+10E-15))
 
 
-void odip(float **in, float **dip, int nit, float eta)
+void fbdip(int n3, int n4, float ****in, float **dip, int nit, float eta)
 /*< omnidirectional dip estimation >*/
 {
-	int it, i1;
+	int it, i1, j1, j2;
 	double  norm, s1, c1;
 
 	for(i1=0; i1<n1*n2; i1++)
@@ -72,9 +69,22 @@ void odip(float **in, float **dip, int nit, float eta)
 
 	for (it=0; it<nit; it++)
 	{
-		opwd(n1, n2, in, p, u1);
-		opwdpd(n1, n2, in, p, u2, 0);
-		opwdpd(n1, n2, in, p, u3, 1);
+		for(i1=0; i1<n1*n2; i1++)
+		{
+			s1 = cimagf(p[0][i1]);
+			c1 = crealf(p[0][i1]);
+			u1[0][i1] = 0.0;
+			u2[0][i1] = 0.0;
+			u3[0][i1] = 0.0;
+			for(j2=0; j2<n4; j2++)
+			for(j1=0; j1<n3; j1++)
+			{
+				if((j1+j2)%2==0) continue;
+				u1[0][i1] += in[j2][j1][0][i1]*pow(s1, j1)*pow(c1,j2);
+				u2[0][i1] += in[j2][j1][0][i1]*j1*pow(s1, j1-1)*pow(c1,j2);
+				u3[0][i1] += in[j2][j1][0][i1]*pow(s1, j1)*j2*pow(c1,j2-1);
+			}
+		}
 
 		if(verb)
 		{
