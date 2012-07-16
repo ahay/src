@@ -17,7 +17,7 @@ Papers(copyr='Madagascar Community',
                 'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis',
                 'school-articleWSI':'Paul Sava'},
        line='\\url{http://ahay.org/}',
-       fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
+       fig=('rsf/rsftour','overplot','width=0.75\\textwidth'))
        
 End(use='hyperref,color,amsmath,amssymb,fancybox,jfc,desclist,makeidx',
     include='\\newcommand{\\RSF}{../../..}\n\\makeindex\\setcounter{tocdepth}{1}')
