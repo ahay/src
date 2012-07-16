@@ -13,10 +13,7 @@ for article in glob.glob('article*.tex'):
     Paper(name,
           lclass='geophysics',
           options='manuscript',
-          use='times,natbib,amsmath,graphicx,color,amssymb,amsbsy,lineno,setspace,ulem,algorithmic,algorithm,hyperref',
-          include=r'''
-          \linenumbers*[1]
-          ''')
+          use='amsmath,amssymb,amsbsy,setspace,hyperref,color')
 
 Paper('slidesMadFast',
       lclass='cwpslides',

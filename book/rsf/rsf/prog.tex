@@ -49,25 +49,25 @@ message is printed out if the the axis sampling parameters (such as
 \subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/add.c?view=markup}{system/main/add.c}}
 
 The first input file is either in the list or in the standard input.
-\moddex{add}{add}{101}{108}{system/main}
+\moddex{add}{add}{103}{111}{system/main}
 
 Collect input files in the \texttt{in} array from all command-line
 parameters that don't contain an ``\texttt{=}'' sign. The total number
 of input files is \texttt{nin}.
-\moddex{add}{add}{110}{116}{system/main}
+\moddex{add}{add}{112}{118}{system/main}
 
 A helper function \texttt{check\_compat} checks the compatibility of
 input files.
-\moddex{add}{add}{422}{461}{system/main}
+\moddex{add}{add}{424}{467}{system/main}
 
 Finally, we enter the main loop, where the input data are getting read
 buffer by buffer and combined in the total product depending on the
 data type.  
-\moddex{add}{add}{182}{203}{system/main}
+\moddex{add}{add}{183}{203}{system/main}
 
 The data combination program for floating point numbers is
 \texttt{add\_float}.  
-\moddex{add}{add}{263}{304}{system/main}
+\moddex{add}{add}{264}{305}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfattr}
@@ -95,15 +95,15 @@ Computations start by finding the input data (\texttt{in}) size
 \moddex{attr}{attr}{81}{84}{system/main}
 
 In the main loop, we read the input data buffer by buffer.
-\moddex{attr}{attr}{98}{120}{system/main}
+\moddex{attr}{attr}{100}{122}{system/main}
 
 The data attributes are accumulated in corresponding double-precision
 variables. 
-\moddex{attr}{attr}{144}{145}{system/main}
+\moddex{attr}{attr}{146}{147}{system/main}
 
 Finally, the attributes are reduced and printed out.
-\moddex{attr}{attr}{178}{185}{system/main}
-\moddex{attr}{attr}{192}{201}{system/main}
+\moddex{attr}{attr}{180}{187}{system/main}
+\moddex{attr}{attr}{194}{203}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}
@@ -156,29 +156,29 @@ sfcat: n2 mismatch: need 3
 \subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cat.c?view=markup}{system/main/cat.c}}
 
 The first input file is either in the list or in the standard input.
-\moddex{cat}{cat}{49}{56}{system/main}
+\moddex{cat}{cat}{64}{69}{system/main}
 
 Everything on the command line that does not contain a ``='' sign is
 treated as a file name, and the corresponding file object is added to the list.
-\moddex{cat}{cat}{58}{64}{system/main}
+\moddex{cat}{cat}{71}{77}{system/main}
 
 As explained above, if the \texttt{space=} parameter is not set, it is
 inferred from the program name: \texttt{sfmerge} corresponds to
 \texttt{space=y} and \texttt{sfcat} corresponds to \texttt{space=n}.
-\moddex{cat}{cat}{76}{89}{system/main}
+\moddex{cat}{cat}{99}{112}{system/main}
 
 Find the axis for the merging (from the command line \texttt{axis=}
 argument) and figure out two sizes: \texttt{n1} for everything after
 the axis and \texttt{n2} for everything before the axis.
-\moddex{cat}{cat}{103}{108}{system/main}
+\moddex{cat}{cat}{132}{137}{system/main}
 
 In the output, the selected axis will get extended.
-\moddex{cat}{cat}{120}{134}{system/main}
+\moddex{cat}{cat}{149}{163}{system/main}
 
 The rest is simple: loop through the datasets reading and writing the
 data in buffer-size chunks and adding extra empty chunks if
 \texttt{space=y}.
-\moddex{cat}{cat}{155}{170}{system/main}
+\moddex{cat}{cat}{184}{200}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcmplx}
@@ -336,10 +336,10 @@ two.rsf:
 First, we look for the two first command-line arguments that don't
 have the ``='' character in them and consider them as the names of the
 input and the output files.  
-\moddex{cp}{cp}{38}{51}{system/main}
+\moddex{cp}{cp}{47}{58}{system/main}
 
 Next, we use library functions \verb#sf_cp# and \verb#sf_mv# to do the actual work.
-\moddex{cp}{cp}{55}{57}{system/main}
+\moddex{cp}{cp}{66}{68}{system/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcut}

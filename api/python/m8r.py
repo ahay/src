@@ -541,7 +541,11 @@ class Filter(object):
         if self.prog:
             self.__doc__ =  self.prog.text(None)
     def getdoc():
+        '''for IPython'''
         return self.__doc__
+    def _sage_argspec_():
+        '''for Sage'''
+        return None
     def __str__(self):
         return self.command
     def __or__(self,other):
@@ -587,10 +591,11 @@ class Filter(object):
             command = '%s > %s' % (self.command,out)
         else:
             command = self.command
+
+        (first,pipe,second) = command.partition('|')
             
         if mysrcs:    
-            command = '< %s %s %s' % \
-                (mysrcs[0],command,' '.join(map(str,mysrcs[1:])))  
+            command = ' '.join(['< ',str(mysrcs[0]),first]+map(str,mysrcs[1:])+[pipe,second])  
                 
         fail = os.system(command)
         if fail:
