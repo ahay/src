@@ -57,6 +57,7 @@ void fbdip_close()
 
 #define divn(a, b)  (a*b/(b*b+10E-15))
 
+#define POW(a, b) (b<0?0.0:(b==0?2.0:pow(a,b)))
 
 void fbdip(int n3, int n4, float ****in, float **dip, int nit, float eta)
 /*< omnidirectional dip estimation >*/
@@ -80,9 +81,9 @@ void fbdip(int n3, int n4, float ****in, float **dip, int nit, float eta)
 			for(j1=0; j1<n3; j1++)
 			{
 				if((j1+j2)%2==0) continue;
-				u1[0][i1] += in[j2][j1][0][i1]*pow(s1, j1)*pow(c1,j2);
-				u2[0][i1] += in[j2][j1][0][i1]*j1*pow(s1, j1-1)*pow(c1,j2);
-				u3[0][i1] += in[j2][j1][0][i1]*pow(s1, j1)*j2*pow(c1,j2-1);
+				u1[0][i1] += in[j2][j1][0][i1]*POW(s1, j1)*POW(c1,j2);
+				u2[0][i1] += in[j2][j1][0][i1]*j1*POW(s1, j1-1)*POW(c1,j2);
+				u3[0][i1] += in[j2][j1][0][i1]*POW(s1, j1)*j2*POW(c1,j2-1);
 			}
 		}
 

@@ -24,8 +24,8 @@ except: # local version
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
-	    LIBPATH=['../../lib'],
-	    LIBS=[env.get('DYNLIB','')+'rsf'])
+		LIBPATH=['../../lib'],
+		LIBS=[env.get('DYNLIB','')+'rsf'])
 
 lapack = env.get('LAPACK')
 blas = env.get('BLAS')
@@ -53,14 +53,14 @@ for prog in mains:
 		env.Install(bindir,prog)
 
 for prog in Split(
-    '''
-	opwd 
-    '''):
-    sources = ['T' + prog,prog]
-    bldutil.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
-    env.Object('T' + prog + '.c')
-    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+	'''
+	opwd fbdip
+	'''):
+	sources = ['T' + prog,prog]
+	bldutil.depends(env,sources,prog)
+	sources = map(lambda x: x + '.o',sources)
+	env.Object('T' + prog + '.c')
+	env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
 
 
 ######################################################################
@@ -68,12 +68,12 @@ for prog in Split(
 ######################################################################
 
 if root: # no compilation, just rename
-    pymains = Split(pyprogs)
-    exe = env.get('PROGSUFFIX','')
-    for prog in pymains:
-        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
-    for mod in Split(pymods):
-        env.Install(pkgdir,mod+'.py')
+	pymains = Split(pyprogs)
+	exe = env.get('PROGSUFFIX','')
+	for prog in pymains:
+		env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+	for mod in Split(pymods):
+		env.Install(pkgdir,mod+'.py')
 
 
 ######################################################################
