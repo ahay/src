@@ -513,7 +513,7 @@ def Fetch(directory,filename,server=dataserver,top='data'):
             print 'Could not retrieve file "%s" from "%s"' % (filename,rdir)
         
 class Filter(object):
-    'Madgagascar filter'
+    'Madagascar filter'
     plots = ('grey','contour','graph','contour3',
              'dots','graph3','thplot','wiggle','grey3')
     diagnostic = ('attr','disfil')
@@ -656,7 +656,7 @@ class Vplot(object):
         'Constructor'
         self.name = name
         self.temp = temp
-        self.png = None
+        self.img = None
     def __del__(self):
         'Destructor'
         if self.temp:
@@ -676,18 +676,28 @@ class Vplot(object):
     def hard(self,printer='printer'):
         'Send to printer'
         os.system('PRINTER=%s pspen %s' % (printer,self.name))
-    def image(self,pen='ps'):
-        'Convert to PNG in the current directory (for use with SAGE)'
-        self.png = os.path.basename(self.name)+'.png'
-        self.export(self.png,'png',pen=pen,args='bgcolor=w')
+    def image(self):
+        'Convert to PNG in the current directory (for use with IPython and SAGE)'
+        self.img = os.path.basename(self.name)+'.png'
+        self.export(self.img,'png',args='bgcolor=w')
     def _repr_png_(self): 	 
         'return PNG representation' 	 
-        if not self.png: 	 
+        if not self.img: 	 
             self.image() 	 
-        png = open(self.png,'rb') 	 
-        guts = png.read() 	 
-        png.close() 	 
+        img = open(self.img,'rb') 	 
+        guts = img.read() 	 
+        img.close() 	 
         return guts
+
+    try:
+        from IPython.display import Image
+        
+        @property
+        def png(self):
+            return Image(self._repr_png_(), embed=True)
+    except:
+        pass
+        
     def movie(self):
         'Convert to animated GIF in the current directory (for use with SAGE)'
         self.gif = os.path.basename(self.name)+'.gif'
@@ -701,10 +711,6 @@ class Vplot(object):
             else:
                 format = 'vpl'
         convert(self.name,name,format,pen,args,verb=False)
-#        if format in ('eps','gif','avi','png'):
-#            os.system('vplot2%s %s %s' % (format,self.name,name))
-#        else:
-#            os.system('cp %s %s' % (self.name,name))
 
 class _Wrap(object):
      def __init__(self, wrapped):

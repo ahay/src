@@ -47,7 +47,7 @@ def exists(pen):
     '''check if a given pen exists'''
     bindir = os.path.join(rsf.prog.RSFROOT,'bin')
     exe = os.path.join(bindir,pen+'pen')
-    if os.path.isfile(exe):
+    if os.path.isfile(exe) and os.path.getsize(exe) > 500:
         return exe
     else:
         return None
@@ -81,11 +81,10 @@ def convert(vpl,out,format,pen,args,verb=True):
     convert = None
 
     if not exe:
-        print 'Unsupported program "%spen".' % pen
 
         # Offer alternatives
         if format == 'png':
-            mypens = ('png','gd','ps')
+            mypens = ('gd','png','ps')
         elif format == 'gif':
             mypens = ('gd','ppm')
         elif format == 'jpeg' or format == 'jpg':
@@ -105,6 +104,7 @@ def convert(vpl,out,format,pen,args,verb=True):
                 if exe:
                     break
         if not exe:
+            print 'Unsupported program "%spen".' % pen
             sys.exit(4)
 
         if convert:
