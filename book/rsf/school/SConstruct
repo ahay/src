@@ -1,19 +1,18 @@
 from rsf.tex import *
 
-Paper('slidesWSI',
+Paper('slides',
       lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
       color='ALL')
-Paper('slidesDOC',
+Paper('slidesDEMO',
       lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy',
       color='ALL')
-for article in glob.glob('article*.tex'):
-    name = os.path.splitext(article)[0]
-    Paper(name,
-          lclass='geophysics',
-          options='manuscript',
-          use='amsmath,amssymb,amsbsy,setspace,hyperref,color')
+
+
+Paper('slides_hpc',
+      lclass='cwpslides',
+      use='pythonlisting,alltt,dashrule,multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,xcolor')
 
 Paper('slidesMadFast',
       lclass='cwpslides',
@@ -48,5 +47,6 @@ Paper('shragge',
 \definecolor{lightlightgray}{gray}{0.9}
 ''')
 
-End()
+End(use='hyperref,listings',
+    color='horizon smoothed mona smoothed2')
 
