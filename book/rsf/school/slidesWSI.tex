@@ -25,8 +25,8 @@
 \begin{frame} \frametitle{acoustic wave propagation}
 
 \[
-\frac{1}{v^2} \ddot{\UU} = 
-\rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} -f
+\frac{1}{v^2} \ddot{\UU} - 
+\rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} = f
 \]
 
 \sep
@@ -36,6 +36,12 @@
    \item \textbf{migration}: propagate waves backward 
 \end{itemize}
 
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{example directory}
+\big{\texttt{cd \$RSF/book/rsf/school/sigsbee}}
 \end{frame}
 \cwpnote{}
 
@@ -102,6 +108,8 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} \big{\texttt{scons dens.view}} \end{frame}
 \begin{frame} \plot{dens}{width=\textwidth}{} \end{frame}
 
 % ------------------------------------------------------------
@@ -149,6 +157,11 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} 
+\big{\texttt{scons vstr.view}} 
+\big{\texttt{scons vsmo.view}} 
+\end{frame}
 \begin{frame} \plot{vstr}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{vsmo}{width=\textwidth}{} \end{frame}
 
@@ -170,6 +183,8 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} \big{\texttt{scons wav.view}} \end{frame}
 \begin{frame} \plot{wav}{width=0.9\textwidth}{} \end{frame}
 
 % ------------------------------------------------------------
@@ -190,6 +205,8 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} \big{\texttt{scons wfld-??.view}} \end{frame}
 \begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-01}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-02}{width=\textwidth}{} \end{frame}
@@ -234,6 +251,11 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} 
+\big{\texttt{scons datH.view}} 
+\big{\texttt{scons wigH.view}}
+\end{frame}
 \begin{frame} \plot{datH}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wigH}{width=\textwidth}{} \end{frame}
 
@@ -246,6 +268,11 @@
 \end{frame}
 \cwpnote{}
 
+% ------------------------------------------------------------
+\begin{frame} 
+\big{\texttt{scons datV.view}} 
+\big{\texttt{scons wigV.view}}
+\end{frame}
 \begin{frame} \plot{datV}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wigV}{width=\textwidth}{} \end{frame}
 
@@ -269,6 +296,12 @@
 \end{frame}
 \cwpnote{}
 
+\begin{frame} 
+\big{\texttt{scons imgH.view}} 
+\big{\texttt{scons imgV.view}}
+\big{\texttt{scons imgA.view}}
+\end{frame}
+
 \begin{frame} \plot{imgH}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{imgV}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{imgA}{width=\textwidth}{} \end{frame}
@@ -289,7 +322,7 @@
   
   \vfill
 
-  \big{\texttt{\$RSFSRC/book/rsf/school}}
+  \big{\texttt{\$RSF/book/rsf/school}}
 
   \vfill
   

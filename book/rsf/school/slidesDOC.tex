@@ -84,17 +84,38 @@
 \cwpnote{}
 
 % ------------------------------------------------------------
+\begin{frame} \frametitle{figure directories}
+
+\begin{columns}[t]
+   \column{.5\textwidth} 
+   \cen{\texttt{$\dots$/Fig}}
+   \cen{\texttt{scons blah.view}}
+   \cit{ ``testing'' figures}
+
+   \column{.5\textwidth} 
+   \cen{\texttt{\$RSFFIGS}}
+   \cen{\texttt{scons blah.lock}}
+   \cit{``permanent'' figures}
+\end{columns}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
 \begin{frame}
 \big{Geophysics article}
+\sep
+\big{\texttt{cd \$RSF/book/rsf/school}}
+\big{\texttt{scons paperWSI.read}}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{general info}
-  \framesubtitle{import commonly used \latex macros}
+  \framesubtitle{import commonly used \latex~macros}
   \normalsize
   \blueshade{
-   \texttt{$\backslash$input\{ \}}
+   \texttt{$\backslash$input\{\dots\}}
   }
 \end{frame}
 \cwpnote{}
@@ -153,15 +174,23 @@
   \normalsize
   \blueshade{
     \texttt{$\backslash$rFg\{\dots\}}
-    \\ \vspace{0.5in}
+  }
+  \texttt{$\backslash$def$\backslash$rFg\#1\{Figure$\sim\backslash$ref\{fig:\#1\}\}}
+
+\vfill
+
+  \normalsize
+  \blueshade{
     \texttt{$\backslash$rEq\{\dots\}}
   }
+    \texttt{$\backslash$def$\backslash$rEq\#1\{Equation$\sim\backslash$ref\{eqn:\#1\}\}}
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{citations}
-  \framesubtitle{definitions in \texttt{.bib} files}
+  \framesubtitle{entries in \texttt{.bib} files}
   \normalsize
   \blueshade{
     \texttt{$\backslash$cite[]\{\dots\} \\
@@ -180,7 +209,7 @@
 
   \vfill
 
-  \big{\texttt{\$RSFSRC/book/rsf/school}}
+  \big{\texttt{\$RSF/book/rsf/school}}
 
   \vfill
 
