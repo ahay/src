@@ -1,0 +1,171 @@
+\author{Maurice the Aye-Aye}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Madagascar tutorial}
+
+\lefthead{Maurice}
+\righthead{Tutorial}
+\footer{Madagascar Documentation}
+
+\maketitle
+
+\begin{abstract}
+  In this tutorial, you will learn about multiple attenuation using parabolic Radon transform. You will first go through an example that explains the process step by step. You will be asked to change some parameters and add missing few lines. In the next part of the tutorial, you will be asked to apply the same workflow to another CMP gather. The CMP gathers used in the tutorial are from Canterbury data set. By the end of this tutorial, you should have learned to:
+  \begin{enumerate}
+    \item apply NMO and inverse NMO for a CMP gather,
+    \item apply forward and inverse parabloic Radon transform,
+    \item design a mute function that preserves multiples in the Radon domain,
+    \item subtract multiples from the data,
+    \item create a semblance scan for a CMP gather.
+  \end{enumerate}
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing this tutorial requires
+\begin{itemize}
+\item \textsc{Madagascar} software environment available from \\
+\url{http://www.ahay.org}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+\url{http://www.ahay.org/wiki/SEGTeX}
+\end{itemize}
+To do the assignment on your personal computer, you need to install
+the required environments. An Internet connection is required for
+access to the data repository.
+
+The tutorial itself is available from the \textsc{Madagascar} repository
+by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/rsf/school
+\end{verbatim}
+\section{Introduction}
+
+In this tutorial, you will be asked to run commands from the Unix
+shell (identified by \texttt{bash\$}) and to edit files in a text
+editor. Different editors are available in a typical Unix environment
+(\texttt{vi}, \texttt{emacs}, \texttt{nedit}, etc.)
+
+Your first assignment:
+\begin{enumerate}
+\item Open a Unix shell.
+\item Change directory to the tutorial directory
+\begin{verbatim}
+bash$ cd school
+\end{verbatim}
+\item Open the \texttt{tutorial.tex} file in your favorite editor, for example by
+running
+\begin{verbatim}
+bash$ nedit tutorial.tex & 
+\end{verbatim}
+\item Look at the first line in the file and change the author name from Maurice the Aye-Aye to your name (first things first). 
+\end{enumerate}
+
+\section{Demo}
+\inputdir{demo}
+
+\multiplot{2}{cmp,nmo}{width=.35\textwidth}{CMP gather from Canterbury data set before applying NMO (a). After applying NMO (b)}
+
+The left plot in Figure~\ref{fig:cmp,nmo} shows a CMP gather from Canterbury data set Line 12. The multiple energy
+appears at time around 2.25 s. The right plot shows the same gather after applying NMO correction with veloctiy equals to 1500 m/s. The multiple events starting at around 2.25 s and below are flatened while primary events , e.g at 2 s,  are over corrected. The difference in move-out between the primaries and multiples , hence, can be used in Radon domain to attenuate multiple energy.
+
+\begin{enumerate}
+\item Change directory to the demo directory
+\begin{verbatim}
+bash$ cd demo
+\end{verbatim}
+\item Run
+\begin{verbatim}
+bash$ scons cmp.view
+\end{verbatim}
+in the Unix shell. A number of commands will appear in the shell followed by Figure~ appearing on your screen. 
+\item To understand the commands, examine the script that generated them by opening the \texttt{SConstruct} file in a text editor. Notice that, instead of Shell commands, the script contains rules. 
+\begin{itemize}
+\item The first rule, \texttt{Fetch}, allows the script to download the input data file \texttt{cmp1.rsf} from the data server. 
+\item Other rules have the form \texttt{Flow(target,source,command)} for generating data files or \texttt{Plot} and  \texttt{Result} for 
+generating picture files. 
+\item \texttt{Fetch}, \texttt{Flow}, \texttt{Plot}, and \texttt{Result} are defined in \textsc{Madagascar}'s \texttt{rsf.proj} package, which extends the functionality of \href{http://www.scons.org}{SCons}
+.
+\end{itemize}
+\item To better understand how rules translate into commands, run 
+\begin{verbatim}
+bash$ scons -c cmp.rsf
+\end{verbatim}
+The \texttt{-c} flag tells scons to remove the \texttt{cmp.rsf} file and all its dependencies.
+\item Next, run
+\begin{verbatim}
+bash$ scons -n cmp.rsf
+\end{verbatim}
+The \texttt{-n} flag tells scons not to run the command but simply to display it on the screen. Identify the lines in the \texttt{SConstruct} file that generate the output you see on the screen.
+\item Run
+\begin{verbatim}
+bash$ scons cmp.rsf
+\end{verbatim}
+Examine the file \texttt{cmp.rsf} both by opening it in a text editor and by running
+\begin{verbatim}
+bash$ sfin cmp.rsf
+\end{verbatim}
+
+\item Run
+\begin{verbatim}
+bash$ scons taup_qc.view
+\end{verbatim}
+Three figures will be displayed
+\begin{verbatim}
+bash$ sfin cmp.rsf
+\end{verbatim}
+
+\multiplot{3}{nmo,taup,nmo2}{width=.25\textwidth}{CMP gather after NMO (a). The CMP gather in (a) after Forward paraolic Radon transfrom (b).  The gather in (b) after inverse parabolic Radon transform (c). The forward and inverse parabolic Radon transform is applied in sequence to examine the parameters of the process and that events are not lost during the process}
+
+The left plot in Figure~\ref{fig:nmo,taup,nmo2} shows the same CMP gather after NMO in Figure~\ref{fig:cmp,nmo} after taking the data into the parabolic Radon domain. The figure in the middle is the generated by the forward parabolic Radon transform while the figure in the right is generated by the inverse parabloic Radon transform. The purpose was to make sure that forward and inverse transforms do not cause data loss.
+
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{demo/SConstruct}
+
+\section{Exercise}
+\inputdir{ex}
+
+This part is about applying the same workflow explained above to a different CMP gather that requires different
+parameters.
+
+\section{Writing a report}
+
+\begin{enumerate}
+\item Change directory to the parent directory
+\begin{verbatim}
+bash$ cd ..
+\end{verbatim}
+This should be the directory that contains \texttt{tutorial.tex}.
+\item Run
+\begin{verbatim}
+bash$ sftour scons lock
+\end{verbatim}
+The \texttt{sftour} command visits all subdirectories and runs \texttt{scons lock}, which copies result files to a different location so that they do not get modified until further notice.
+\item You can also run
+\begin{verbatim}
+bash$ sftour scons -c
+\end{verbatim}
+to clean intermediate results.
+\item Edit the file \texttt{paper.tex} to include your additional results. If you have not used \LaTeX\ before, no worries. It is a descriptive language. Study the file, and it should become evident by example how to include figures.
+\item Run
+\begin{verbatim}
+bash$ scons tutorial.pdf
+\end{verbatim}
+and open \texttt{tutorial.pdf} with a PDF viewing program such as \textbf{Acrobat Reader}. 
+
+\item If you have \LaTeX2HTML installed, you can also generate an HTML version of your paper by running
+\begin{verbatim}
+bash$ scons html
+\end{verbatim}
+and opening \verb#tutorial_html/index.html# in a web browser.
+\end{enumerate}
+
+%\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+%\lstinputlisting[frame=single]{SConstruct}
+
+
+\bibliographystyle{seg}
+\bibliography{school}
+
+
+
