@@ -1,0 +1,17 @@
+from rsf.proj import *
+
+# download cmp2.rsf from the server
+Fetch('cmp2.rsf','cant12')
+
+# convert cmp2.rsf to native format
+Flow('cmp','cmp2','dd form=native')
+
+# create cmp.vpl file
+Plot('cmp','grey title=CMP')
+
+# create cmp.vpl file under Fig directory
+# this file gets displayed when "scons dt.view" command is executed
+Result('cmp','grey title=CMP')
+
+
+End()
