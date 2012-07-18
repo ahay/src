@@ -1,0 +1,180 @@
+from rsf.proj import *
+
+# download cmp1.rsf from the server
+Fetch('cmp1.rsf','cant12')
+
+# convert to native format
+Flow('cmp','cmp1','dd form=native')
+
+# create cmp.vpl file
+Plot('cmp','grey title=CMP ')
+
+wvel=1500
+
+# NMO with water velocity
+Flow('nmo','cmp','nmostretch half=n v0=%g'%wvel)
+
+# create nmo.vpl
+Plot('nmo','grey title=NMO')
+
+# create cmp_nmo.vpl file under Fig directory
+# cmp.vpl and nmo.vpl created earlier using Plot
+# command will be ploted side by side
+Result('cmp_nmo','cmp nmo','SideBySideAniso')
+
+####################
+# radon parameters
+####################
+ox=29.25 
+nx=60
+dx=25
+x0=1000  # CHANGE ME
+p0=-.05
+dp=.0005
+np=201
+
+# forward Radon operator
+radono='''
+       radon  np=%d p0=%f dp=%f x0=%d parab=y
+       ''' %(np,p0,dp,x0)
+
+# inverse Radon operator
+radonoinv='''
+       radon  adj=n nx=%d ox=%g dx=%d x0=%d parab=y
+       ''' %(nx,ox,dx,x0)
+
+# Test radon parameters, apply forward and
+# inverse Radon Transform, and QC results
+#########################################
+Flow('taup','nmo',radono)
+
+# plot
+Plot('taup','grey title=forward RT')
+
+# Inverse
+Flow('nmo2','taup',radonoinv)
+
+# plot
+Plot('nmo2','grey title=inverse RT')
+
+# Display three figures to QC Radon parameters
+# Check that forward and inverse Radon transforms
+# do not change the data i.e events are preserved. 
+
+Result('taup_qc','nmo taup nmo2','SideBySideAniso')
+
+######################################
+# design a mute function that protects
+# multiples only in the Radon domain
+######################################
+
+t0=1.2  # CHANGE ME ; try 1.5
+# vertical position of the triangle vertix
+
+v0=.03  # CHANGE ME ; try .015
+# slope of the triangle
+
+Flow('taupmult','taup','mutter t0=%g v0=%g'%(t0,v0))
+Plot('taupmult','grey title="multiples in Radon domain"')
+
+# Display taup.vpl and taupmult.vpl 
+# This display allows a flip between
+# the two figures
+Result('taup_mult','taup taupmult',
+       '''
+       cat axis=3 ${SOURCES[1]}
+       |grey
+       ''')
+
+# Transform mulitples from Radon domain to time-offset domain
+Flow('multiple','taupmult',radonoinv)
+
+# create multiple.vpl
+Plot('multiple','grey title="multiples"')
+
+# plot CMP and multiples side by side
+Result('cmp_mult','nmo2 multiple','SideBySideAniso')
+
+# Subtract multiples from the CMP
+Flow('signal','multiple nmo2',
+     '''
+     add scale=-1,1 ${SOURCES[1]}
+     ''')
+
+# inverse NMO
+Flow('signal2','signal',
+     '''
+     nmostretch inv=y half=n v0=%g 
+     | mutter v0=1900 x0=200
+     '''%wvel)
+
+# ADD THE CODE
+# to plot signal2
+
+
+# ADD THE CODE
+# to plot cmp and signal2, make the figures 
+# flip back and forth so you can examine the
+# the results of multiple attenuation
+
+
+
+####################
+# Semblance Scan 
+####################
+dv=10
+nv=251
+v0=1400
+vscan='vscan v0=%d dv=%d nv=%d semblance=y half=n '%(v0,dv,nv) 
+pick='pick rect1=150 rect2=50 gate=20'
+ 
+# semblance scan
+Flow('vscan_cmp','cmp',vscan)
+
+# semblance scan
+Flow('vscan_signal2','signal2',vscan)
+
+Plot('vscan_cmp',
+       '''
+       grey color=j allpos=y
+       title="Velocity Scan - CMP" 
+       ''')
+
+Plot('vscan_signal2',
+       '''
+       grey color=j allpos=y
+       title="Velocity Scan - after demultiple" 
+       ''')
+
+# ADD THE CODE
+# to plot the two figures vscan_cmp and vscan_signal2
+# SideBySide
+
+
+
+###################################################
+# This part is to create figures for tutorial.pdf
+###################################################
+# define grey commands for figures to be included
+# in tutorial.pdf
+grey='''
+     grey wanttitle=n labelfat=2 titlefat=2 
+     xll=2 yll=1.5 yur=9 xur=6
+     '''
+
+greyc='''
+     grey wanttitle=n labelfat=2 titlefat=2 
+     xll=2 yll=1.5 yur=9 xur=6
+     color=j allpos=y
+     '''
+# create plots
+Result('cmp',grey)
+Result('nmo',grey)
+Result('taup',grey)
+Result('nmo2',grey)
+Result('taupmult',grey)
+Result('signal2',grey)
+Result('vscan_cmp',greyc)
+Result('vscan_signal2',greyc)
+
+End()
