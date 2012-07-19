@@ -1,5 +1,4 @@
 from rsf.tex import *
-from rsf.tex import *
 
 Paper('tutorial',
       use='hyperref,color,listings,amsmath',
@@ -16,7 +15,7 @@ Paper('slidesDOC',
 
 Paper('slides_hpc',
       lclass='cwpslides',
-      use='pythonlisting,alltt,dashrule,multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,xcolor')
+      use='pythonlisting,alltt,multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,xcolor')
 
 for article in glob.glob('article*.tex'):
     name = os.path.splitext(article)[0]
