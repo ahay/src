@@ -2,7 +2,6 @@ from rsf.tex import *
 
 Paper('tutorial',
       use='hyperref,color,listings,amsmath',
-      lclass='geophysics',
       color='ALL')
 Paper('slidesWSI',
       lclass='cwpslides',
