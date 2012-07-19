@@ -12,8 +12,8 @@ Papers(copyr='Madagascar Community',
        rsf/api.tex
        rsf/demo.tex
        scons/paper.tex
-       manual/manual.tex
        '''),
+#       manual/manual.tex
        authors={'scons':'Sergey Fomel and Gilles Hennenfent',
                 'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis',
                 'school-articleWSI':'Paul Sava'},
