@@ -122,27 +122,27 @@ The left plot in Figure~\ref{fig:nmo,taup,nmo2} shows the same CMP gather after 
 scons taup_qc.view
 \end{verbatim}
 
-\item Edit the \texttt{SConstruct} file to modify the starting time $t0$ for \texttt{sfmutter}. To get more details about sfmutter parameters, run \texttt{sfmutter} in a Unix shell Check your result by running
+\item Edit the \texttt{SConstruct} file to modify the starting time $t0$ for \texttt{sfmutter}. To get more details about sfmutter parameters, run \texttt{sfmutter} in a Unix shell. Check your result by running
 \begin{verbatim}
 scons taup_mult.view
 \end{verbatim}
 
-\item Edit the \texttt{SConstruct} file to modify the starting time $v0$ for \texttt{sfmutter}. To get more details about sfmutter parameters, run \texttt{sfmutter} in a Unix shell Check your result by running
+\item Edit the \texttt{SConstruct} file to modify the starting time $v0$ for \texttt{sfmutter}. To get more details about sfmutter parameters, run \texttt{sfmutter} in a Unix shell. Check your result by running
 \begin{verbatim}
 scons taup_mult.view
 \end{verbatim}
 
-\item Edit the \texttt{SConstruct} file and find the line that says "ADD CODE to create \texttt{signal2.vpl}". To get more details about sfgrey parameters, run \texttt{sfgrey} in a Unix shell. Add your code and create the vpl file by running
+\item Edit the \texttt{SConstruct} file and find the line that says ADD CODE to create \texttt{signal2.vpl}. To get more details about sfgrey parameters, run \texttt{sfgrey} in a Unix shell. Add your code and create the vpl file by running
 \begin{verbatim}
 scons signal2.vpl
 \end{verbatim}
 
-\item Edit the \texttt{SConstruct} file and find the line that says "ADD CODE to display \texttt{cmp.vpl} and \texttt{signal2.vpl}. To get more details about sfgrey parameters, run \texttt{sfgrey} in a Unix shell. Add your code that creates cmp_signal2.vpl by running
+\item Edit the \texttt{SConstruct} file and find the line that says ADD CODE to display \texttt{cmp.vpl} and \texttt{signal2.vpl}. To get more details about sfgrey parameters, run \texttt{sfgrey} in a Unix shell. Add your code and view the file by running
 \begin{verbatim}
 scons cmp_signal2.view
 \end{verbatim}
 
-\item Edit the \texttt{SConstruct} file and find the line that says "ADD CODE to display \texttt{vscan_cmp.vpl} and \texttt{vscan_signal2.vpl}. Add your code that creates v_cmp_signal2.vpl by running
+\item Edit the \texttt{SConstruct} file and find the line that says ADD CODE to display \texttt{vscan\_cmp.vpl} and \texttt{vscan\_signal2.vpl}.  Add your code and view the file by running
 \begin{verbatim}
 scons v_cmp_signal2.view
 \end{verbatim}
@@ -161,7 +161,7 @@ In this part, your task is to apply the same workflow explained above to a diffe
 
 \item Display the CMP gather after NMO with and without mute applied by running 
 \begin{verbatim}
-scons nmo0_nmo.view
+scons nmo1_nmo.view
 \end{verbatim}
 
 \item Your task is to add the necessary code to attenuate multiples for this CMP.
@@ -170,7 +170,7 @@ The same work flow used in the SConstruct under demo directory should work here 
 \item $x0$
 \item $t0$
 \item $v0$
-where it says \texttt{CHANGE ME} in the comments
+\newline where it says \texttt{CHANGE ME} in the comments
 \end{itemize}
 
 \end{enumerate}
