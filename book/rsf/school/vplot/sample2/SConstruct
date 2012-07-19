@@ -1,0 +1,8 @@
+from rsf.proj import *
+
+Flow('sin2',None,'''math n1=95 n2=95 d1=0.1 d2=0.1
+                    output="sin(x1)*sin(x2)"''')
+Result('sin2','''grey color=h label1=x label2=y scalebar=y
+                      title="sin(x)*sin(y)"''')
+
+End()
