@@ -114,17 +114,18 @@ Flow('signal2','signal',
      | mutter v0=1900 x0=200
      '''%wvel)
 
-#----------------------------
-# ADD CODE to plot signal2
-#----------------------------
+#-------------------------------
+# ADD CODE to create signal2.vpl
+#-------------------------------
  
 
-#------------------------------------
-# ADD CODE to plot cmp and signal2, 
-# make the figures flip back and forth
-# so you can examine the the results
-# of multiple attenuation
-#------------------------------------
+#---------------------------------------------
+# ADD CODE to display cmp.vpl and signal2.vpl, 
+# make the figures flip back and forth so you
+# can examine the the results of multiple
+# attenuation. Let us call the output file
+# cmp_signal2
+#---------------------------------------------
 
 
 ####################
@@ -154,11 +155,12 @@ Plot('vscan_signal2',
        title="Velocity Scan - after demultiple" 
        ''')
 
-#---------------------------------
-# ADD CODE to plot the two figures
-# vscan_cmp and vscan_signal2
-# SideBySide
-#---------------------------------
+#------------------------------------
+# ADD CODE to display the two figures
+# vscan_cmp.vpl and vscan_signal2.vpl
+# side by side. Let us call the output
+# file v_cmp_signal2
+#------------------------------------
 
 
 
