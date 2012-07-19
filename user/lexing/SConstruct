@@ -3,11 +3,11 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-radon2 radon32 radon23 radon3 slradon3 sthres lrmatrix
+lrmatrix
 '''
 
 subs = '''
-vecmatop bfio bfio_eval bfio_eval3
+vecmatop
 '''
 
 try:  # distributed version
@@ -47,7 +47,6 @@ for prog in mains:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
-        env.Install(incdir,'bfio.bin')
 
 ######################################################################
 # SELF-DOCUMENTATION
