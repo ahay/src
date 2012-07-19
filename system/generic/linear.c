@@ -38,10 +38,10 @@ void linear_close (void)
 }
 
 void linear_coeffs(float* x1, float *a1)
-/*< feel coefficients table >*/
+/*< fill coefficients table >*/
 {
     int k;
-    float xk, fk, xp, fp;
+    float xk, fk, xp=0., fp=0.;
     
     x = x1;
     a = a1;
