@@ -171,7 +171,7 @@ Plot('vscan_signal2',
 # in tutorial.pdf
 grey='''
      grey wanttitle=n labelfat=2 titlefat=2 
-     xll=2 yll=1.5 yur=9 xur=6
+     xll=2 yll=1.5 yur=9 xur=6 pclip=99
      '''
 
 greyc='''
