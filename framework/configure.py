@@ -121,6 +121,7 @@ def check_all(context):
     pthreads (context) # FDNSI
     omp (context) # FDNSI
     petsc(context) # FDNSI
+    psp(context) #FDNSI
     cuda(context) # FDNSI
 
 def identify_platform(context):
@@ -1190,6 +1191,77 @@ def petsc(context):
     else:
         context.Result(context_failure)
         need_pkg('petsc', fatal=False)
+
+def psp(context):
+    pspdir = context.env.get('PSPDIR',os.environ.get('PSP_DIR'))
+
+    if not pspdir:
+        return
+    testdir = os.path.join(os.getcwd(),'user/psp')
+    
+    # Run make in order to catch PSP compilation options
+    if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
+        popen = subprocess.Popen('make PSP_DIR=%s options' % pspdir, 
+                                 shell=True,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 cwd=testdir)
+        if popen.wait() != 0:
+            return
+        makeout = popen.stdout.read()
+    else: # otherwise use os.popen2(), deprecated in Py 2.6
+        makeout = os.popen2('make PSP_DIR=%s -C %s options' % 
+                            (pspdir,testdir))[1].read()
+        
+    context.Message("checking for PSP ... ")
+
+    # Compiler name
+    compiler = re.compile(r'^\S*')
+    pspcxx = compiler.findall(makeout)
+    pspcxx = WhereIs(pspcxx[0])
+    # All include paths (-I/...)
+    includes = re.compile(r'\s\-I(\S*)')
+    psppath = includes.findall(makeout)
+    # All lib paths (-L/...)
+    libpaths = re.compile(r'\s\-L(\S*)')
+    psplibpath = libpaths.findall(makeout)
+    # All libs (-l...)
+    libs = re.compile(r'\s\-l(\S*)')
+    psplibs = libs.findall(makeout)
+
+    oldcxx = context.env.get('CXX')
+    oldpath = context.env.get('CPPPATH',[])
+    oldlibpath = context.env.get('LIBPATH',[])
+    oldlibs = context.env.get('LIBS',[])
+
+    context.env['CXX'] = pspcxx
+    context.env['CPPPATH'] = oldpath + [psppath,] 
+    context.env['LIBPATH'] = oldlibpath + [psplibpath,]
+    context.env['LIBS'] = oldlibs + [psplibs,]
+
+    text = '''
+    #include "psp.hpp"
+    int main(int argc,char* argv[]) {
+    psp::Initialize( argc, argv );
+    psp::Finalize();
+    }\n'''
+    res = context.TryLink(text,'.cc')
+
+    context.env['CPPPATH'] = oldpath
+    context.env['LIBPATH'] = oldlibpath
+    context.env['LIBS'] = oldlibs
+    context.env['CXX'] = oldcxx
+
+    if res:
+        context.Result(res)
+        context.env['PSPDIR'] = pspdir
+        context.env['PSPPATH'] = psppath
+        context.env['PSPLIBPATH'] = psplibpath
+        context.env['PSPLIBS'] = psplibs
+        context.env['PSPCXX'] = pspcxx
+    else:
+        context.Result(context_failure)
+        need_pkg('psp', fatal=False)
 
 def ncpus():
     'Detects number of CPUs'
