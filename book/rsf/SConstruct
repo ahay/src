@@ -3,6 +3,7 @@ from rsf.book import *
 Papers(copyr='Madagascar Community',
        group='Madagascar Documentation',
        papers=Split('''
+       school2012/tutorial.tex
        school/articleWSI.tex
        school2009/paper.tex
        rsf/prog.tex
@@ -11,8 +12,8 @@ Papers(copyr='Madagascar Community',
        rsf/api.tex
        rsf/demo.tex
        scons/paper.tex
+       manual/manual.tex
        '''),
-#       manual/manual.tex
        authors={'scons':'Sergey Fomel and Gilles Hennenfent',
                 'manual-manual': 'Mohammad Akbar Zuberi, Tariq Alkhalifah, and Christos Saragoitis',
                 'school-articleWSI':'Paul Sava'},

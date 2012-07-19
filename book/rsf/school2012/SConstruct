@@ -1,0 +1,6 @@
+from rsf.tex import *
+
+Paper('tutorial',use='hyperref,listings',color='vscan-cmp vscan-signal2')
+
+End()
+

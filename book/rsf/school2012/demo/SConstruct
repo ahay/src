@@ -138,18 +138,18 @@ vscan='vscan v0=%d dv=%d nv=%d semblance=y half=n '%(v0,dv,nv)
 pick='pick rect1=150 rect2=50 gate=20'
  
 # semblance scan
-Flow('vscan_cmp','cmp',vscan)
+Flow('vscan-cmp','cmp',vscan)
 
 # semblance scan
-Flow('vscan_signal2','signal2',vscan)
+Flow('vscan-signal2','signal2',vscan)
 
-Plot('vscan_cmp',
+Plot('vscan-cmp',
        '''
        grey color=j allpos=y
        title="Velocity Scan - CMP" 
        ''')
 
-Plot('vscan_signal2',
+Plot('vscan-signal2',
        '''
        grey color=j allpos=y
        title="Velocity Scan - after demultiple" 
@@ -157,9 +157,9 @@ Plot('vscan_signal2',
 
 #------------------------------------
 # ADD CODE to display the two figures
-# vscan_cmp.vpl and vscan_signal2.vpl
+# vscan-cmp.vpl and vscan-signal2.vpl
 # side by side. Let us call the output
-# file v_cmp_signal2
+# file vcmp-signal2
 #------------------------------------
 
 
@@ -186,7 +186,7 @@ Result('taup',grey)
 Result('nmo2',grey)
 Result('taupmult',grey)
 Result('signal2',grey)
-Result('vscan_cmp',greyc)
-Result('vscan_signal2',greyc)
+Result('vscan-cmp',greyc)
+Result('vscan-signal2',greyc)
 
 End()

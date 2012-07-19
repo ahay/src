@@ -4,13 +4,15 @@ from rsf.proj import *
 Flow('syncline.asc',None,
      '''
      echo
+     0    1100
+     0    1100
      500  1100
      1000 1300
      2000 1000
      2700 1100
      3200 1000
      4000 1050
-     n1=2 n2=6 in=$TARGET
+     n1=2 n2=8 in=$TARGET
      data_format=ascii_float
      ''')
 Flow('syncline','syncline.asc',
