@@ -9,6 +9,7 @@ Flow('cmp','cmp1','dd form=native')
 # create cmp.vpl file
 Plot('cmp','grey title=CMP ')
 
+# water velocity 1500 m/s
 wvel=1500
 
 # NMO with water velocity
@@ -28,7 +29,9 @@ Result('cmp_nmo','cmp nmo','SideBySideAniso')
 ox=29.25 
 nx=60
 dx=25
+#---------------------
 x0=1000  # CHANGE ME
+#---------------------
 p0=-.05
 dp=.0005
 np=201
@@ -67,11 +70,14 @@ Result('taup_qc','nmo taup nmo2','SideBySideAniso')
 # design a mute function that protects
 # multiples only in the Radon domain
 ######################################
-
+#----------------------------
 t0=1.2  # CHANGE ME ; try 1.5
+#----------------------------
 # vertical position of the triangle vertix
 
+#-----------------------------
 v0=.03  # CHANGE ME ; try .015
+#-----------------------------
 # slope of the triangle
 
 Flow('taupmult','taup','mutter t0=%g v0=%g'%(t0,v0))
@@ -108,15 +114,17 @@ Flow('signal2','signal',
      | mutter v0=1900 x0=200
      '''%wvel)
 
-# ADD THE CODE
-# to plot signal2
+#----------------------------
+# ADD CODE to plot signal2
+#----------------------------
+ 
 
-
-# ADD THE CODE
-# to plot cmp and signal2, make the figures 
-# flip back and forth so you can examine the
-# the results of multiple attenuation
-
+#------------------------------------
+# ADD CODE to plot cmp and signal2, 
+# make the figures flip back and forth
+# so you can examine the the results
+# of multiple attenuation
+#------------------------------------
 
 
 ####################
@@ -146,9 +154,11 @@ Plot('vscan_signal2',
        title="Velocity Scan - after demultiple" 
        ''')
 
-# ADD THE CODE
-# to plot the two figures vscan_cmp and vscan_signal2
+#---------------------------------
+# ADD CODE to plot the two figures
+# vscan_cmp and vscan_signal2
 # SideBySide
+#---------------------------------
 
 
 
