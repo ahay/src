@@ -68,7 +68,7 @@ Result('taup_qc','nmo taup nmo2','SideBySideAniso')
 
 ######################################
 # design a mute function that protects
-# multiples only in the Radon domain
+# multiples in the Radon domain
 ######################################
 #----------------------------
 t0=1.2  # CHANGE ME ; try 1.5
