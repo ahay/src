@@ -1,12 +1,10 @@
 from rsf.tex import *
 
-Paper('tutorial',use='hyperref,listings',color='vscan-cmp vscan-signal2')
-
 Paper('sample',color='sin sin2',hires='sin2')
 
-Paper('rsfplot',lclass='beamer',options='onlymath',use='listings',
+Paper('rsfplot',lclass='beamer',options='onlymath',
+      use='listings,lstlist',
       include=r'''
-      \input{lstlist.sty}
       \mode<presentation>
       {
       \beamertemplatenavigationsymbolsempty
@@ -15,8 +13,8 @@ Paper('rsfplot',lclass='beamer',options='onlymath',use='listings',
       ''',
       color=
       '''
-      line sqline msincs mpsincs dplines mbsincs sqsurf csqsurf csurf sqplsurf
-      fganom ganom3 sganom
+      line sqline msincs mpsincs mbmincs dplines mbsincs sqsurf csqsurf csurf sqplsurf
+      fganom ganom3 sganom ganom-7 ganom2
       ''',
 #     \usetheme{progressbar}
 #     \progressbaroptions{titlepage=normal,frametitle=normal,headline=none}
@@ -24,6 +22,8 @@ Paper('rsfplot',lclass='beamer',options='onlymath',use='listings',
       '''
       sqsurf csqsurf csurf sqplsurf sgath fganom ganom3 sganom
       ''')
+
+Paper('tutorial',use='hyperref,listings',color='vscan-cmp vscan-signal2')
 
 End()
 

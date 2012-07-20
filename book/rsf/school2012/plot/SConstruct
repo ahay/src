@@ -6,12 +6,12 @@ Result('sinc','graph title=Sinc Function')
 
 # Graph, x squared example
 Flow('xsq',None,'math n1=10 output="x1*x1"')
-Flow('sqline','xsq line','cmplx ${SOURCES[1]}')
+Flow('sqline','xsq','cmplx $SOURCE')
 Result('sqline','''
        graph symbol="+" title="Line, x\\^2" symbolsz=12''')
-
 Flow('msinc',None,
-     'math n1=101 d1=0.2 o1=-10 n2=3 output="sin((x2+1)*x1)/((x2+1)*x1)"')
+     '''math n1=101 d1=0.2 o1=-10 n2=3
+        output="sin((x2+1)*x1)/((x2+1)*x1)"''')
 Result('msincs','msinc','graph title="Multiple Sincs, n3 > 1"')
 Result('mpsincs','msinc','''
        graph title="With symbol=" symbol=+*o symbolsz=8''')
@@ -72,9 +72,7 @@ Plot('ganom1','ganom1','''contour3 color=j scalebar=y
      title=Isolines nc=30 frame1=20 frame2=20 frame3=20''')
 Result('sganom','ganom ganom1','SideBySideAniso')
 
-# PLplot example
-#Result('sqplsin','sinsq','''
-#       plsurf mesh=n color=e title="PLplot surface"''')
+Result('ganom2','ganom ganom1','SideBySideIso')
 
 Result('ganom-7','ganom1 ganom','Overlay')
 
