@@ -89,7 +89,7 @@ Plot('rA',['rH','rV'],'Overlay')
 # make the density
 Flow('dens','vsmo',
      'math output=1')
-Plot(  'dens',fdmod.cgrey('allpos=y',par))
+Plot(  'dens',fdmod.cgrey('mean=y',par))
 Result('dens',['dens','ss','rH','rV'],'Overlay')
 
 # ------------------------------------------------------------
@@ -102,7 +102,7 @@ Flow('vsmo','modl',
 # ------------------------------------------------------------
 for v in ('vstr','vsmo'):
     # plot velocities
-    Plot(  v,fdmod.cgrey('allpos=y bias=1.43',par))
+    Plot(  v,fdmod.cgrey('mean=y',par))
 
     # overlay sources and receivers
     Result(v,[v,'ss','rH','rV'],'Overlay')
