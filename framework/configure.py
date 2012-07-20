@@ -176,7 +176,7 @@ def identify_platform(context):
         del uname, dist
     except: # "platform" not installed. Python < 2.3
         # For each OS with Python < 2.3, should use specific
-        # commands through os.system to find distro/version
+        # commands hthrough os.system to find distro/version
         # Not known if what follows works everywhere:
         plat_nm = os.uname()[4]
         if plat_nm == 'x86_64':
@@ -1208,26 +1208,37 @@ def psp(context):
                                  cwd=testdir)
         if popen.wait() != 0:
             return
-        makeout = popen.stdout.read()
+        makeoptionsout = popen.stdout.read()
+        popen = subprocess.Popen('make PSP_DIR=%s libs' % pspdir,
+                                 shell=True,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 cwd=testdir)
+        if popen.wait() != 0:
+            return
+        makelibsout = popen.stdout.read()
     else: # otherwise use os.popen2(), deprecated in Py 2.6
-        makeout = os.popen2('make PSP_DIR=%s -C %s options' % 
+        makeoptionsout = os.popen2('make PSP_DIR=%s -C %s options' % 
+                            (pspdir,testdir))[1].read()
+        makelibsout = os.popen2('make PSP_DIR=%s -C %s libs' %
                             (pspdir,testdir))[1].read()
         
     context.Message("checking for PSP ... ")
 
     # Compiler name
     compiler = re.compile(r'^\S*')
-    pspcxx = compiler.findall(makeout)
+    pspcxx = compiler.findall(makeoptionsout)
     pspcxx = WhereIs(pspcxx[0])
     # All include paths (-I/...)
     includes = re.compile(r'\s\-I(\S*)')
-    psppath = includes.findall(makeout)
+    psppath = includes.findall(makeoptionsout)
     # All lib paths (-L/...)
     libpaths = re.compile(r'\s\-L(\S*)')
-    psplibpath = libpaths.findall(makeout)
-    # All libs (-l...)
-    libs = re.compile(r'\s\-l(\S*)')
-    psplibs = libs.findall(makeout)
+    psplibpath = libpaths.findall(makeoptionsout)
+
+    # Full paths
+    libs = re.compile(r'(\S+)')
+    psplibs = libs.findall(makelibsout)
 
     oldcxx = context.env.get('CXX')
     oldpath = context.env.get('CPPPATH',[])
@@ -1237,13 +1248,23 @@ def psp(context):
     context.env['CXX'] = pspcxx
     context.env['CPPPATH'] = oldpath + [psppath,] 
     context.env['LIBPATH'] = oldlibpath + [psplibpath,]
-    context.env['LIBS'] = oldlibs + [psplibs,]
+
+    normallib = re.compile(r'-l(\S*)')
+    pathlib = re.compile(r'(\S+)')
+    testlibs = oldlibs
+    for lib in psplibs:
+        if normallib.match(lib):
+            testlibs = testlibs + normallib.findall(lib)
+        else:
+            testlibs = testlibs + [File(lib)]
+    context.env['LIBS'] = testlibs 
 
     text = '''
     #include "psp.hpp"
     int main(int argc,char* argv[]) {
     psp::Initialize( argc, argv );
     psp::Finalize();
+    return 0;
     }\n'''
     res = context.TryLink(text,'.cc')
 
