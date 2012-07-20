@@ -14,7 +14,7 @@ Paper('slidesDOC',
       color='ALL')
 Paper('slidesTST',
       lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed')
+      use='multicol,color,overpic,listings,lstlist,amsmath,amssymb,amsbsy,framed')
 
 Paper('slides_hpc',
       lclass='cwpslides',
