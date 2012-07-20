@@ -50,7 +50,7 @@ f.boxarray('ss',
            0.5, # horizontal sampling
            par)
 Plot(  'ss',f.ssplot('plotcol=5',par))
-Result('ss','modl ss','Overlay')
+Result('ss',['modl','ss'],'Overlay')
 
 # ------------------------------------------------------------
 # horizontal array @ z=1.5km
@@ -82,7 +82,7 @@ for j in ('H','V'):
     
 # ------------------------------------------------------------
 # merge receiver files
-Flow('rA','rH rV',
+Flow('rA',['rH','rV'],
      'cat axis=2 space=n ${SOURCES[1]}')
 Plot('rA',['rH','rV'],'Overlay')
 # ------------------------------------------------------------
