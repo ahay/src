@@ -17,196 +17,205 @@
 % ------------------------------------------------------------
 \mode<beamer> { \cwpcover }
 
+\inputdir{XFig}
+% ------------------------------------------------------------
+\begin{frame} \frametitle{exploding reflector model}
+
+  \cit{reflectors are treated as collections of simultaneous sources}
+  
+  \plot{expref}{width=\textwidth}{}
+  \talkcite{Jon Claerbout, Basic Earth Imaging}
+  
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{acoustic wave propagation}
+
+  \[
+  \frac{1}{v^2} \dtwo{\UU}{t} - 
+  \rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} = f
+  \]
+
+  \begin{itemize}
+  \item $\UU\ofxt$: acoustic wavefield
+  \item $v\ofx$: velocity
+  \item $\rho\ofx$: density
+  \end{itemize}
+  
+  \sep
+  \begin{columns}[t]
+    \column{.5\textwidth} \cen{modeling}
+    \cit{forward propagation}
+
+    \column{.5\textwidth} \cen{migration}
+    \cit{backward propagation}
+  \end{columns}
+  
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\begin{frame} \frametitle{example}
+  \big{\texttt{cd \$RSF/book/rsf/school/sigsbee}}
+  \vfill
+  \big{\texttt{\$EDITOR SConstruct}}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\lstset{language=Python,backgroundcolor=\color{yellow}}
+\def\mycode#1#2{
+  \small
+  \lstinputlisting[frame=single,language=Python,firstline=#1,lastline=#2]
+  {sigsbee/SConstruct}
+}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{import packages}
+  \framesubtitle{modules available in \texttt{\$RSF/book/Recipes} }
+  \mycode{1}{2}
+  \sep
+  \texttt{fdmod.py}: \textit{FD modeling and plotting functions}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup parameter dictionary}
+  \mycode{6}{14}
+\end{frame}
+\cwpnote{}
+
 % ------------------------------------------------------------
 \inputdir{sigsbee}
 % ------------------------------------------------------------
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{acoustic wave propagation}
-
-\[
-\frac{1}{v^2} \ddot{\UU} - 
-\rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} = f
-\]
-
-\sep
-
-\begin{itemize}
-   \item \textbf{modeling}: propagate waves forward
-   \item \textbf{migration}: propagate waves backward 
-\end{itemize}
-
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{example directory}
-\big{\texttt{cd \$RSF/book/rsf/school/sigsbee}}
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{import packages}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=1,lastline=3]{sigsbee/SConstruct}
-  }
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{setup main parameters}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=6,lastline=14]{sigsbee/SConstruct}
-  }
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
 \begin{frame} \frametitle{setup plotting parameters}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=18,lastline=18]{sigsbee/SConstruct}
-  }
+  \mycode{18}{18}
 \end{frame}
 \cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{fetch the model}
+  \mycode{23}{25}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{setup the model}
+  \mycode{28}{40}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons modl.view}} 
+  \plot{modl}{width=\textwidth}{} 
+\end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the source array}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=22,lastline=31]{sigsbee/SConstruct}
-  }
+  \mycode{44}{53}
 \end{frame}
 \cwpnote{}
 
+\begin{frame} \frametitle{\texttt{scons ss.view}}
+  \plot{ss}{width=\textwidth}{} 
+\end{frame}
+
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the horizontal receiver array}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=35,lastline=39]{sigsbee/SConstruct}
-  }
+  \mycode{57}{61}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the vertical receiver array}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=42,lastline=46]{sigsbee/SConstruct}
-  }
+  \mycode{64}{68}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the receiver arrays}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=48,lastline=60]{sigsbee/SConstruct}
-  }
+  \mycode{70}{81}
 \end{frame}
 \cwpnote{}
 
-% ------------------------------------------------------------
-\begin{frame} \big{\texttt{scons dens.view}} \end{frame}
-\begin{frame} \plot{dens}{width=\textwidth}{} \end{frame}
+\begin{frame} \frametitle{\texttt{scons rH.view}}
+  \plot{rH}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons rV.view}}
+  \plot{rV}{width=\textwidth}{} 
+\end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{group the receivers in one array}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=63,lastline=69]{sigsbee/SConstruct}
-  }
+  \mycode{85}{87}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{read the velocity}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=73,lastline=75]{sigsbee/SConstruct}
-  }
+\begin{frame} \frametitle{make the density}
+  \mycode{90}{93}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{\texttt{scons dens.view}}
+  \plot{dens}{width=\textwidth}{} 
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{make the stratigraphic velocity}
+  \mycode{97}{98}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{format the velocity}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=77,lastline=88]{sigsbee/SConstruct}
-  }
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{smooth the velocity}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=92,lastline=94]{sigsbee/SConstruct}
-  }
+\begin{frame} \frametitle{make the smooth velocity}
+  \mycode{100}{101}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the velocities}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=98,lastline=102]{sigsbee/SConstruct}
-  }
+  \mycode{103}{108}
 \end{frame}
 \cwpnote{}
 
-% ------------------------------------------------------------
-\begin{frame} 
-\big{\texttt{scons vstr.view}} 
-\big{\texttt{scons vsmo.view}} 
+\begin{frame} \frametitle{\texttt{scons vstr.view}}
+  \plot{vstr}{width=\textwidth}{} 
 \end{frame}
-\begin{frame} \plot{vstr}{width=\textwidth}{} \end{frame}
-\begin{frame} \plot{vsmo}{width=\textwidth}{} \end{frame}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{make the density}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=106,lastline=106]{sigsbee/SConstruct}
-  }
+\begin{frame} \frametitle{\texttt{scons vsmo.view}}
+  \plot{vsmo}{width=\textwidth}{} 
 \end{frame}
-\cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{make the wavelet}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=111,lastline=119]{sigsbee/SConstruct}
-  }
+  \mycode{112}{119}
 \end{frame}
 \cwpnote{}
 
-% ------------------------------------------------------------
-\begin{frame} \big{\texttt{scons wav.view}} \end{frame}
-\begin{frame} \plot{wav}{width=0.9\textwidth}{} \end{frame}
+\begin{frame} \frametitle{\texttt{scons wav.view}}
+  \plot{wav}{width=\textwidth}{} 
+\end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{run FD modeling}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=123,lastline=131]{sigsbee/SConstruct}
-  }
+  \mycode{123}{131}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the wavefield}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=135,lastline=140]{sigsbee/SConstruct}
-  }
+  \mycode{134}{146}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \big{\texttt{scons wfld-??.view}} \end{frame}
+\begin{frame} \big{\texttt{scons wfld.view}} \end{frame}
 \begin{frame} \plot{wfld-00}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-01}{width=\textwidth}{} \end{frame}
 \begin{frame} \plot{wfld-02}{width=\textwidth}{} \end{frame}
@@ -235,83 +244,64 @@
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{remove the wavelet delay}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=144,lastline=150]{sigsbee/SConstruct}
-  }
+  \mycode{150}{155}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{setup the horizontal array data}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=153,lastline=167]{sigsbee/SConstruct}
-  }
+  \mycode{159}{169}
 \end{frame}
 \cwpnote{}
 
-% ------------------------------------------------------------
-\begin{frame} 
-\big{\texttt{scons datH.view}} 
-\big{\texttt{scons wigH.view}}
+\begin{frame} \frametitle{\texttt{scons datH.view}}
+  \plot{datH}{width=\textwidth}{} 
 \end{frame}
-\begin{frame} \plot{datH}{width=\textwidth}{} \end{frame}
-\begin{frame} \plot{wigH}{width=\textwidth}{} \end{frame}
+\begin{frame} \frametitle{\texttt{scons wigH.view}}
+  \plot{wigH}{width=\textwidth}{} 
+\end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{setup the vertical array data}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=169,lastline=182]{sigsbee/SConstruct}
-  }
+  \mycode{173}{183}
 \end{frame}
 \cwpnote{}
 
-% ------------------------------------------------------------
-\begin{frame} 
-\big{\texttt{scons datV.view}} 
-\big{\texttt{scons wigV.view}}
+\begin{frame} \frametitle{\texttt{scons datV.view}}
+  \plot{datV}{width=\textwidth}{} 
 \end{frame}
-\begin{frame} \plot{datV}{width=\textwidth}{} \end{frame}
-\begin{frame} \plot{wigV}{width=\textwidth}{} \end{frame}
+\begin{frame} \frametitle{\texttt{scons wigV.view}}
+  \plot{wigV}{width=\textwidth}{} 
+\end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{run FD migration}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=186,lastline=186]{sigsbee/SConstruct}
-    \lstinputlisting[firstline=187,lastline=194]{sigsbee/SConstruct}
-  }
+  \mycode{186}{186}
+  \mycode{189}{195}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{plot the image}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=186,lastline=186]{sigsbee/SConstruct}
-    \lstinputlisting[firstline=195,lastline=200]{sigsbee/SConstruct}
-  }
+  \mycode{186}{186}
+  \mycode{198}{199}
+  \mycode{202}{202}
 \end{frame}
 \cwpnote{}
 
-\begin{frame} 
-\big{\texttt{scons imgH.view}} 
-\big{\texttt{scons imgV.view}}
-\big{\texttt{scons imgA.view}}
+\begin{frame} \frametitle{\texttt{scons imgH.view}}
+  \plot{imgH}{width=\textwidth}{} 
 \end{frame}
-
-\begin{frame} \plot{imgH}{width=\textwidth}{} \end{frame}
-\begin{frame} \plot{imgV}{width=\textwidth}{} \end{frame}
-\begin{frame} \plot{imgA}{width=\textwidth}{} \end{frame}
+\begin{frame} \frametitle{\texttt{scons imgV.view}}
+  \plot{imgV}{width=\textwidth}{} 
+\end{frame}
+\begin{frame} \frametitle{\texttt{scons imgA.view}}
+  \plot{imgA}{width=\textwidth}{} 
+\end{frame}
 
 % ------------------------------------------------------------
 \begin{frame} \frametitle{close}
-  \normalsize
-  \blueshade{
-    \lstinputlisting[firstline=203,lastline=203]{sigsbee/SConstruct}
-  }
+  \mycode{205}{205}
 \end{frame}
 \cwpnote{}
 
@@ -337,9 +327,9 @@
 % ------------------------------------------------------------
 \begin{frame} \frametitle{assignment}
 
-  \cen{modify the acquisition parameters \\
+  \cit{Modify the acquisition parameters \\
     to explore the seismic illumination \\
-    at different locations in the subsurface}
+    at different locations in the subsurface.}
   
 \end{frame}
 \cwpnote{}

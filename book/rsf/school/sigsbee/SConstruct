@@ -16,6 +16,28 @@ par = dict(
 # ------------------------------------------------------------
 # set plotting parameters
 f.param(par)
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# get the model
+strvelfile = 'sigsbee2a_stratigraphy.sgy'
+Fetch(strvelfile,'sigsbee')
+Flow('vraw',strvelfile,'segyread read=data')
+
+# setup the model
+Flow('modl','vraw',
+     '''
+     scale rscale=%g |
+     put o1=%g d1=%g o2=%g d2=%g |
+     window n1=%d min1=%g n2=%d min2=%g
+     ''' % (0.001*f2m,
+            0     ,0.025*f2m,
+            10*f2m,0.025*f2m,
+            par['nz'],par['oz'],
+            par['nx'],par['ox']
+            ))
+Plot  ('modl',f.cgrey('mean=y',par))
+Result('modl',f.cgrey('mean=y',par))
 
 # ------------------------------------------------------------
 # source coordinates (exploding reflectors)
@@ -27,8 +49,8 @@ f.boxarray('ss',
            10,  # horizontal origin
            0.5, # horizontal sampling
            par)
-
-Plot('ss',f.ssplot('plotcol=5',par))
+Plot(  'ss',f.ssplot('plotcol=5',par))
+Result('ss','modl ss','Overlay')
 
 # ------------------------------------------------------------
 # horizontal array @ z=1.5km
@@ -43,69 +65,47 @@ f.vertical('tV',8.5,par)
 par['jrV']=20   # jump (grid points)
 par['orV']=2.5  # origin
 par['nrV']=25   # number
-par['crV']=2    # color
+par['crV']=1    # color
 
 for j in ('H','V'):
 
     # window array
-    Flow('r'+j,
-         't'+j,
+    Flow('r'+j,'t'+j,
          'window j2=%d min2=%g n2=%d'%
          (par['jr'+j],  # jump
           par['or'+j],  # origin
           par['nr'+j])) # number
     
     # plot array
-    Plot('r'+j,
-         f.rrplot('plotcol=%d'%par['cr'+j],par)) 
-
+    Plot(  'r'+j,f.rrplot('plotcol=%d'%par['cr'+j],par))
+    Result('r'+j,['modl','r'+j],'Overlay')
+    
 # ------------------------------------------------------------
 # merge receiver files
-Flow('rA',
-     'rH rV',
+Flow('rA','rH rV',
      'cat axis=2 space=n ${SOURCES[1]}')
-
-# overlay receiver arrays
-Plot('rA','rH rV','Overlay')
+Plot('rA',['rH','rV'],'Overlay')
+# ------------------------------------------------------------
+# make the density
+Flow('dens','vsmo',
+     'math output=1')
+Plot('dens',f.cgrey('allpos=y bias=1.43',par))
+Result('dens',['dens','ss','rH','rV'],'Overlay')
 
 # ------------------------------------------------------------
-# get stratigraphic velocity
-strvelfile = 'sigsbee2a_stratigraphy.sgy'
-Fetch(strvelfile,'sigsbee')
-Flow('vstr-raw',strvelfile,'segyread read=data')
-
-Flow('vstr',
-     'vstr-raw',
-     '''
-     scale rscale=%g |
-     put o1=%g d1=%g o2=%g d2=%g |
-     window n1=%d min1=%g n2=%d min2=%g
-     ''' % (0.001*f2m,
-            0     ,0.025*f2m,
-            10*f2m,0.025*f2m,
-            par['nz'],par['oz'],
-            par['nx'],par['ox']
-            ))
-
-# ------------------------------------------------------------
+# make stratigraphic velocity
+Flow('vstr','modl',
+     'window')
 # make smooth velocity
-Flow('vsmo',
-     'vstr',
+Flow('vsmo','modl',
      'smooth rect1=25 rect2=25 repeat=3')
-
 # ------------------------------------------------------------
-# plot velocities
 for v in ('vstr','vsmo'):
+    # plot velocities
     Plot(  v,f.cgrey('allpos=y bias=1.43',par))
 
     # overlay sources and receivers
     Result(v,[v,'ss','rH','rV'],'Overlay')
-
-# ------------------------------------------------------------
-# make constant density
-Flow('dens','vsmo','math output=1')
-Plot('dens',f.cgrey('allpos=y bias=1.43',par))
-Result('dens',['dens','ss','rH','rV'],'Overlay')
 
 # ------------------------------------------------------------
 # construct wavelet
@@ -131,18 +131,23 @@ f.awefd1('tmpA',  # data file (all receivers)
          par)
 
 # ------------------------------------------------------------
-# plot wavefield frames
-for i in range( int((par['nt']-1)/par['jsnap']) ):
+par['nfrm']=int((par['nt']-1)/par['jsnap'])
+for i in range(par['nfrm']):
     tag = '-%02d'%i
+    # plot wavefield frames
     f.wframe('wfld'+tag,
              'wfld',i,'pclip=99',par)
-    Result(  'wfld'+tag,
-            ['wfld'+tag,'ss','rH','rV'],'Overlay')
+    Plot(    'wovl'+tag,['wfld'+tag,'ss','rH','rV'],
+             'Overlay')
+    Result(  'wfld'+tag,['wfld'+tag,'ss','rH','rV'],
+             'Overlay')
+Result('wfld',
+       map(lambda x:'wovl-%02d'%x,range(par['nfrm'])),
+       'Movie')
     
 # ------------------------------------------------------------
-# undo wavelet delay
-Flow('datA',
-     'tmpA',
+# remove the wavelet delay
+Flow('datA','tmpA',
      '''
      window squeeze=n f2=%(kt)d |
      pad end2=%(kt)d |
@@ -151,15 +156,13 @@ Flow('datA',
 
 # ------------------------------------------------------------
 # window data from the horizontal array
-Flow('datH',
-     'datA',
+Flow('datH','datA',
      '''
      window squeeze=n n1=%d |
      put o1=%g d1=%g
      '''%(par['nrH'],
           par['orH'],
           par['jrH']*par['dx']))
-
 Result('datH',       'window j2=4 | transp|'
        + f.dgrey(''%par,par))
 Result('wigH','datH','window j2=4 | transp|'
@@ -167,23 +170,22 @@ Result('wigH','datH','window j2=4 | transp|'
 
 # ------------------------------------------------------------
 # window data from the vertical array
-Flow('datV',
-     'datA',
+Flow('datV','datA',
      '''
      window squeeze=n f1=%d |
      put o1=%g d1=%g
      '''%(par['nrH'],
           par['orV'],
           par['jrV']*par['dz']))
-    
 Result('datV',       'window j2=4 |'
        + f.egrey(''%par,par))
 Result('wigV','datV','window j2=4 |'
        + f.ewigl('pclip=98'%par,par))
     
 # ------------------------------------------------------------
-# run FD migration
 for j in ('H','V','A'):
+
+    # run FD migration
     f.zom('img'+j,  # image
           'dat'+j,  # data
           'vsmo',   # velocity

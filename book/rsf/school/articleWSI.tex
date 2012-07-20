@@ -21,11 +21,26 @@ model to illustrate reproducible document generation.
 % ------------------------------------------------------------
 \section{Introduction}
 
+The exploding reflector model, \rfg{expref}, allows us to perform
+zero-off modeling and migration for models of arbitrary complexity
+\cite[]{Claerbout.iei.1985} . Under this model, the image is described
+as a collection of points which ``explode'', i.e. become sources, at
+the same time. Data are obtained at the receivers by forward
+simulation of acoustic waves from the exploding reflectors, and images
+are obtained by backward simulation of acoustic waves from the
+observed data.
+
+% ------------------------------------------------------------
+\inputdir{XFig}
+\plot{expref}{width=\textwidth}{The exploding reflector model (after
+  \cite{Claerbout.iei.1985}).}
+% ------------------------------------------------------------
+
 Acoustic modeling and migration can be implemented using numeric
-solutions to the acoustic wave-equation \cite[]{Claerbout.iei.1985}:
+solutions to the acoustic wave-equation:
 %
 \begin{equation} \label{eqn:AWE}
-  \frac{1}{v^2} \ddot{\UU} - 
+  \frac{1}{v^2} \dtwo{\UU}{t} - 
   \rho \DIV{\lp \frac{1}{\rho} \GRAD{\UU} \rp} = f \;.
 \end{equation}
 %
