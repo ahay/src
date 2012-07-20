@@ -23,10 +23,10 @@ Plot('nmo','grey title=NMO')
 # create nmo0.vpl
 Plot('nmo1','grey title=NMO without mute')
 
-# create nmo0_nmo.vpl file under Fig directory
+# create nmo0-nmo.vpl file under Fig directory
 # nmo0.vpl and nmo.vpl created earlier using Plot
 # command will be ploted side by side
-Result('nmo1_nmo','nmo1 nmo','SideBySideAniso')
+Result('nmo1-nmo','nmo1 nmo','SideBySideAniso')
 
 #---------------------
 # ADD CODE

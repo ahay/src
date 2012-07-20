@@ -18,10 +18,10 @@ Flow('nmo','cmp','nmostretch half=n v0=%g'%wvel)
 # create nmo.vpl
 Plot('nmo','grey title=NMO')
 
-# create cmp_nmo.vpl file under Fig directory
+# create cmp-nmo.vpl file under Fig directory
 # cmp.vpl and nmo.vpl created earlier using Plot
 # command will be ploted side by side
-Result('cmp_nmo','cmp nmo','SideBySideAniso')
+Result('cmp-nmo','cmp nmo','SideBySideAniso')
 
 ####################
 # radon parameters
@@ -64,7 +64,7 @@ Plot('nmo2','grey title=inverse RT')
 # Check that forward and inverse Radon transforms
 # do not change the data i.e events are preserved. 
 
-Result('taup_qc','nmo taup nmo2','SideBySideAniso')
+Result('taup-qc','nmo taup nmo2','SideBySideAniso')
 
 ######################################
 # design a mute function that protects
@@ -86,7 +86,7 @@ Plot('taupmult','grey title="multiples in Radon domain"')
 # Display taup.vpl and taupmult.vpl 
 # This display allows a flip between
 # the two figures
-Result('taup_mult','taup taupmult',
+Result('taup-mult','taup taupmult',
        '''
        cat axis=3 ${SOURCES[1]}
        |grey
@@ -99,7 +99,7 @@ Flow('multiple','taupmult',radonoinv)
 Plot('multiple','grey title="multiples"')
 
 # plot CMP and multiples side by side
-Result('cmp_mult','nmo2 multiple','SideBySideAniso')
+Result('cmp-mult','nmo2 multiple','SideBySideAniso')
 
 # Subtract multiples from the CMP
 Flow('signal','multiple nmo2',
@@ -124,7 +124,7 @@ Flow('signal2','signal',
 # make the figures flip back and forth so you
 # can examine the the results of multiple
 # attenuation. Let us call the output file
-# cmp_signal2
+# cmp-signal2
 #---------------------------------------------
 
 
