@@ -11,11 +11,11 @@ mpi_progs = ''
 ccprogs = 'tmigda dmigda'
 
 subs = '''
-hwt2d support sembler
-tmigratorBase tmigrator2D tmigrator3D 
-dmigratorBase dmigrator2D
+support sembler
 curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
 '''
+# hwt2d dmigratorBase dmigrator2D
+# tmigratorBase tmigrator2D tmigrator3D 
 
 try:  # distributed version
     Import('env root pkgdir bindir')
