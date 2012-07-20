@@ -1,0 +1,22 @@
+from rsf.proj import *
+
+
+N1=1000
+d1=0.002
+o1=-1
+
+# ex1
+Flow('signal',None,'math n1=%d d1=%g o1=%g output="x1" ' % (N1,d1,o1))
+Result('signal','graph title="original signal" ')
+Flow('st_signal','signal','test mu=0.5')
+Result('st_signal','graph title="soft thresholded signal" ')
+
+# ex2
+Flow('signal1',None,'math n1=%d d1=%g o1=%g output="0" | noise' % (N1,d1,o1))
+Result('signal1','graph title="original signal" ')
+Flow('st_signal1','signal1','test mu=1.5')
+Result('st_signal1','graph title="soft thresholded signal" ')
+
+
+
+End()
