@@ -546,6 +546,9 @@ class Filter(object):
     def _sage_argspec_():
         '''for Sage'''
         return None
+    def __wrapped__():
+        '''for IPython'''
+        return None
     def __str__(self):
         return self.command
     def __or__(self,other):
@@ -595,7 +598,8 @@ class Filter(object):
         (first,pipe,second) = command.partition('|')
             
         if mysrcs:    
-            command = ' '.join(['< ',str(mysrcs[0]),first]+map(str,mysrcs[1:])+[pipe,second])  
+            command = ' '.join(['< ',str(mysrcs[0]),first]+
+                               map(str,mysrcs[1:])+[pipe,second])  
                 
         fail = os.system(command)
         if fail:
