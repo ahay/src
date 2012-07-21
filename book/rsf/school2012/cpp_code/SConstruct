@@ -6,9 +6,6 @@ progs = '''
 test
 '''
 
-subs = '''
-'''
-
 try:  # distributed version
     Import('env root bindir pkgdir')
     env = env.Clone()
@@ -20,19 +17,10 @@ except: # local version
 inc = Glob('[a-z]*.h*')
 
 if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
-if lapack:
     env.Prepend(CPPPATH=['../../include'],
                 LIBPATH=['../../lib'],
                 LIBS=[env.get('DYNLIB','')+'rsf++',
-                      env.get('DYNLIB','')+'rsf']+lapack)
-
-    ccfiles = map(lambda x: x+'.cc',Split(subs))
-
-    env.Install('../../include',inc)
+                      env.get('DYNLIB','')+'rsf'])
 
 mains = Split(progs)
 for prog in mains:
