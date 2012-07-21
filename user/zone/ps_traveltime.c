@@ -11,6 +11,7 @@
 #include <math.h>
 #include "ps_traveltime.h"
 #include "newton.h"
+#include <rsf.h>
 /*^*/
 
 static func1 zz, zzp, zzs; 
@@ -39,6 +40,7 @@ float traveltime(float x)
 	float t;
 	
 	t = hypotf(x-xs,zz(x))/v0 + hypotf(x-xr,zz(x))/v0;
+	sf_warning("x=%g,xs=%g,xr=%g and t=%g",x,xs,xr,t);
 	
 	return t;
 }

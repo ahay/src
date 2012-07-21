@@ -24,7 +24,7 @@ static sf_eno eno, deno; /* interpolation structure */
 static float r0, dr;
 
 static float z(float x) 
-/* first derivative */
+/* function */
 {
 	int i;
 	float f, f1;
@@ -65,7 +65,7 @@ static float zder2(float x)
 int main(int argc, char* argv[])
 {
 	int nr, nt, it, ir, order, niter, nt2, it2;
-	float x, t0, dt, velocity, tol, xinitial; /*,max_extent, scale,max_x,xmax,hmax;*/
+	float x, t0, dt, velocity, tol, xinitial,dt2,t02; /*,max_extent, scale,max_x,xmax,hmax;*/
 	float *rr, *rd, **tt, **xx; 
 	double xs,xr;
 	sf_file refl, ttime, xrefl;
@@ -78,22 +78,25 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(refl,"o1",&r0)) r0=0.;
 	if (!sf_histfloat(refl,"d1",&dr)) dr=1.;
 	
-	/* Set output */
+	/* Set output 2D traveltime and 1D reflection point*/
 	ttime = sf_output("out"); /* Output traveltime */
 	
-	/* number of sources */
-	if (!sf_getint("ns",&nt)) nt=nr; 
-	if (!sf_getint("ns2",&nt2)) nt2=nr; /*FIX the number of sources*/
+	if (!sf_getint("ns",&nt)) nt=nr; /* number of sources for midpoint*/
+	if (!sf_getint("ns2",&nt2)) nt2=nr; /* number of sources for offset*/
+
+	if (!sf_getfloat("ds",&dt)) dt=dr; 	/* source sampling for midpoint*/
+	if (!sf_getfloat("ds2",&dt2)) dt2=dr; 	/* source sampling for offset*/
 	
-	/* source sampling */
-	if (!sf_getfloat("ds",&dt)) dt=dr;  /*FIX the scale*/
+	if (!sf_getfloat("s0",&t0)) t0=r0;/* origin for midpoint*/
+	if (!sf_getfloat("s02",&t02)) t02=r0;/* origin for offset*/
 	
-	/* source origin */
-	if (!sf_getfloat("s0",&t0)) t0=r0;
-	
-	sf_putint(ttime,"n1",nt);
+	sf_putint(ttime,"n1",nt); /* Midpoint axis*/
 	sf_putfloat(ttime,"d1",dt);
 	sf_putfloat(ttime,"o1",t0);
+	
+	sf_putint(ttime,"n2",nt2); /*S&R increment axis*/
+	sf_putfloat(ttime,"d2",dt2);
+	sf_putfloat(ttime,"o2",t02);
 	
 	xrefl = sf_output("xrefl"); /* Output reflection point */
 	sf_putint(xrefl,"n1",nt);
@@ -111,14 +114,14 @@ int main(int argc, char* argv[])
 	sf_floatread(rr,nr,refl);
 	
 	/* Initialize interpolation */
-	if (!sf_getint("order",&order)) order=3;
-	/* interpolation order */
+	if (!sf_getint("order",&order)) order=3;/*interpolation order*/
 	
-	if (!sf_getfloat("velocity",&velocity)) velocity=2.0;
-	/* assign velocity km/s*/
 	
-	if (!sf_getfloat("tol",&tol)) tol=1/(1000000*velocity);
-	/* assign a default value for tolerance*/
+	if (!sf_getfloat("velocity",&velocity)) velocity=2.0;/*assign velocity km/s*/
+	
+	
+	if (!sf_getfloat("tol",&tol)) tol=1/(1000000*velocity);/* assign a default value for tolerance*/
+	
 	
 	/*if (!sf_getfloat("max_extent",&max_extent)) hmax=500;
 	assign max extent from the center of the xs and xr in meter*/
@@ -149,20 +152,19 @@ int main(int argc, char* argv[])
 		
 		
 		for (it=0; it < nt; it++) { /*How many times we compute xs&xr at each location => row*/
-			xs = t0+it2*dt-it*dt; /* source location */
-			xr = t0+it2*dt+it*dt; /* receiver location */
+			xs = t0+it2*dt-it*dt2; /* source location */
+			xr = t0+it2*dt+it*dt2; /* receiver location */
 			
-			/*if (xs==0 || xr==0) break; break operation when either xs or xr reach the end at the origin (won't go negative)*/
 			
 			traveltime_init(z,zder,zder2,xs,xr,velocity);
 			if (it==0) {
-				xinitial = 0.00001; /*The first calculation starting from 0.00001 km from the origin*/
+				xinitial = t0+it2*dt; /*The first calculation starting from the origin*/
+				x = newton(dtdx,d2tdx2,xinitial,niter,tol);
+				xinitial = x; /*Use the answer of the previous iteration to be the starting point of the next iteration*/
 			}
-			x = newton(dtdx,d2tdx2,xinitial,niter,tol);
-			xinitial = x;
 			
-			tt[it2][it] = traveltime(x);
-			xx[it2][it] = x;
+			tt[it][it2] = traveltime(x);
+			xx[it][it2] = x;
 		}
 		
 	}	

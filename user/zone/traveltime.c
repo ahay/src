@@ -38,7 +38,7 @@ float traveltime(float x)
 	float t;
 	
 	t = hypotf(x-x0,zz(x))/v0;
-	sf_warning("%g",t);
+	sf_warning("Location of s&r=%g, Depth(f(x))=%g and t=%g",x0,zz(x),t);
 
 	return t;
 }

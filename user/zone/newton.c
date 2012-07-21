@@ -40,14 +40,16 @@ float newton(func1 function /*f(x)*/,
     float f;  /*function value*/
     float fp; /*function derivative value*/
 	
-    float x_back; /*value of the previous step*/
-    float xtem; /*Temporary value of x*/
-    float h; /*increment value*/
-    float htem; /*Temporary value of h*/
-    int iter; /*iteration counter*/
-    int check; /*checking counter*/
-    int n;
-    const int nmax = 100;
+
+	float x_back; /*value of the previous step*/
+	float xtem; /*Temporary value of x*/
+	float h; /*increment value*/
+	float htem; /*Temporary value of h*/
+	int iter; /*iteration counter*/
+	int check; /*checking counter*/
+	int n;
+	const int nmax = 20;
+
 	
 	
     x=x_back=x0;
@@ -57,18 +59,20 @@ float newton(func1 function /*f(x)*/,
 	f = function(x);
 	fp = derivative(x);
 		
-	if (fabsf(f) < tol) { /*Break operation if the tolerance level is reached*/
-	    sf_warning("Tolerance level is reached.");
-	    break;
-	}
+		if (fabsf(f/fp) < tol) { /*Break operation if the tolerance level is reached*/
+			sf_warning("Tolerance level is reached.");
+			break;
+		}
+
 		
-	for (n=0; n<nmax && fabsf((f/fp)/h)>1; n++) { /* If the increment f/fp diverges, decrease the increment size by half*/
-	    h = 0.5*h;
-	    x = x_back - h;
-	    f = function(x);
-	    fp = derivative(x);
-	    sf_warning("Increment diverges-->decrease x to %g, f(x)=%g, fp(x)=%g",x,f,fp);
-			
+
+		for (n=0; n<nmax && fabsf((f/fp)/h)>1; n++) { /* If the increment f/fp diverges, decrease the increment size by half*/
+			h = 0.5*h;
+			x = x_back - h;
+			f = function(x);
+			fp = derivative(x);
+			sf_warning("Increment diverges-->decrease x to %g, f(x)=%g, fp(x)=%g, f/fp=%g, h(previous)=%g",x,f,fp,f/fp,h);
+
 	}
 
 	if (fabsf(f) < tol) { /*Break operation if the tolerance level is reached (Check again)*/
