@@ -53,6 +53,7 @@ In programs:
 * Fixed installing the plplot driver with .driver_info extension
 
 In the build system:
+* Fixed failed dependency on gendoc.h when installing pens
 
 ===Changes in defaults===
 
