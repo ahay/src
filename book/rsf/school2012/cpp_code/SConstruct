@@ -25,11 +25,11 @@ if 'c++' in env.get('API',[]):
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
-    if lapack:
+    if 'c++' in env.get('API',[]):
         prog = env.Program(prog,map(lambda x: x + '.cc',sources))
         env.Depends(prog,inc)
     else:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+        prog = env.RSF_Place('sf'+prog,None,var='C++')
     if root:
         env.Install(bindir,prog)
 
