@@ -227,6 +227,7 @@ def dgrey(custom,par):
     pclip=100 gainpanel=a
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
+    screenratio=0.5 screenht=7
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -239,6 +240,7 @@ def dwigl(custom,par):
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
+    screenratio=0.5 screenht=7
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -325,7 +327,7 @@ def waveplot(custom,par):
     plotfat=5 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
-    parallel2=n
+    parallel2=n screenratio=0.5 screenht=7
     %s
     ''' % (par['lt'],par['ut'],
            par['labelattr']+' '+custom)
