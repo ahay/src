@@ -38,7 +38,7 @@ sfpen = env.get('SFPEN')
 
 env.RSF_Include('vppen',prefix='pen_')
 obj = env.StaticObject('vppen.c')
-env.Depends(obj,'vppen.h')
+env.Depends(obj,['vppen.h','../include/gendoc.h'])
 main = env.Program('vppen',[obj,]+objects)
 
 if root:
@@ -55,7 +55,7 @@ lib = env.get('XLIBPATH')
 if inc and lib:
     env.RSF_Include('xtpen',prefix='pen_')
     obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
-    env.Depends(obj,'xtpen.h')
+    env.Depends(obj,['xtpen.h','../include/gendoc.h'])
     main = env.Program('xtpen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
@@ -76,7 +76,7 @@ if root:
 if inc and lib:
     env.RSF_Include('x11pen',prefix='pen_')
     obj = env.StaticObject('x11pen.c',CPPPATH=env.get('CPPPATH',[])+inc)
-    env.Depends(obj,'x11pen.h')
+    env.Depends(obj,['x11pen.h','../include/gendoc.h'])
     main = env.Program('x11pen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
@@ -92,7 +92,7 @@ if root:
 
 env.RSF_Include('pspen',prefix='pen_')
 obj = env.StaticObject('pspen.c')
-env.Depends(obj,'pspen.h')
+env.Depends(obj,['pspen.h','../include/gendoc.h'])
 main = env.Program('pspen',[obj,]+objects)
 
 if root:
@@ -121,7 +121,7 @@ for pen in ('ppm','tiff','jpeg'):
         else:
             obj = env.StaticObject(name+'.o','raspen.c',
                                    CPPDEFINES=defines)
-        env.Depends(obj,'raspen.h')
+        env.Depends(obj,['raspen.h','../include/gendoc.h'])
         main = env.Program(name,[obj,]+objects,
                            LIBS=[lib]+env.get('LIBS',[]))
         docalias['sf'+name]='sfraspen'
@@ -193,7 +193,7 @@ for pen in ('png','pdf','svg'):
         else:
             obj = env.StaticObject(name+'.o','crpen.c',
                                    CPPDEFINES=defines)
-        env.Depends(obj,'crpen.h')
+        env.Depends(obj,['crpen.h','../include/gendoc.h'])
         main = env.Program(name,[obj,]+objects,
                            LIBS=[lib]+env.get('LIBS',[]))
         docalias['sf'+name]='sfcrpen'
@@ -219,7 +219,7 @@ if ogl or oglflags:
     env.RSF_Include('oglpen',prefix='ogl_')
     obj = env.StaticObject('oglpen.c',
                            CPPPATH=[oglpath]+env.get('CPPPATH',[]))
-    env.Depends(obj,'oglpen.h') 
+    env.Depends(obj,['oglpen.h','../include/gendoc.h']) 
     main = env.Program('oglpen',[obj,]+objects,
                        LIBS=[ogl]+env.get('LIBS',[]),
                        LINKFLAGS=[oglflags]+Split(env.get('LINKFLAGS',[])))

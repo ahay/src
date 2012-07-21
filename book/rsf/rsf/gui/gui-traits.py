@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
-from enthought.traits.api import HasTraits, Enum, Range, on_trait_change
-from enthought.traits.ui.api import View, Item
+from traits.api import HasTraits, Enum, Range, on_trait_change
+from traitsui.api import View, Item
 
 class Wavelet(HasTraits):
     wtype = Enum(['Bi-orthogonal','Linear','Haar'])
@@ -23,6 +23,4 @@ class Wavelet(HasTraits):
 if __name__ == "__main__":
     w = Wavelet()
     w.configure_traits()
-
-
     
