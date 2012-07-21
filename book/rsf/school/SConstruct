@@ -1,9 +1,5 @@
 from rsf.tex import *
 
-Paper('tutorial',
-      use='hyperref,color,listings,amsmath',
-      color='ALL')
-
 Paper('slidesWSI',
       lclass='cwpslides',
       use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
