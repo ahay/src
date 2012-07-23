@@ -1,4 +1,10 @@
-/* Make a seismic foldplot/stacking chart. */
+/* Make a seismic foldplot/stacking chart. 
+
+   Axis1, 2 and 3 define the bins for the output fold map.  These 
+   are usually (offset,xline,offset), but you might want to compute some 
+   other histogram.  This can be done by selecting other segy headers 
+   using label1, 2 and 3.
+*/
 /*
   Copyright (C) 2012 University of Texas at Austin
   
@@ -41,44 +47,46 @@ int main(int argc, char* argv[])
     out = sf_output ("out");
     sf_putint(out,"input",2);
 
-    /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
     if(!sf_getint("verbose",&verbose))verbose=1;
-
-    /* Axis1, 2 and 3 define the bins for the output fold map.  These 
-       are usually (offset,xline,offset), but you might want to compute some 
-       other histogram.  This can be done by selecting other segy headers 
-       using label1, 2 and 3.
-    */
+    /* 0 terse, 1 informative, 2 chatty, 3 debug */
 
     /* get o1, n1, d1, label1 for axis1. Do the same for axis2 and 3. */
 
-    /*( o1=-32.5 required parameter.  Minimum label1 - usually min offset ) */
     if(!sf_getfloat("o1",&o1))sf_error("o1 is a required parameter");
-    /*( o2=32 required parameter.  Minimum label2 - usually min xline ) */
+    /* Minimum label1 - usually min offset */
+
     if(!sf_getfloat("o2",&o2))sf_error("o2 is a required parameter");
-    /*( o3=32 required parameter.  Minimum label3 - usually min iline ) */
+    /* Minimum label2 - usually min xline  */
+
     if(!sf_getfloat("o3",&o3))sf_error("o3 is a required parameter");
+    /* Minimum label3 - usually min iline */
 
-    /*( n1=96 required parameter.  Number label1 - usually number offset ) */
     if(!sf_getint("n1",&n1))sf_error("n1 is a required parameter");
-    /*( n1=623 required parameter.  Number label2 - usually number xline ) */
+    /* Number label1 - usually number offset */
+
     if(!sf_getint("n2",&n2))sf_error("n2 is a required parameter");
-    /*( n1=623 required parameter.  Number label3 - usually number iline ) */
+    /* Number label2 - usually number xline */
+
     if(!sf_getint("n3",&n3))sf_error("n3 is a required parameter");
+    /* Number label3 - usually number iline */
 
-    /*( d1=110 required parameter.  delta label1 - usually delta offset ) */
     if(!sf_getfloat("d1",&d1))sf_error("d1 is a required parameter");
-    /*( d2=1 required parameter.  delta label2 - usually delta xline ) */
-    if(!sf_getfloat("d2",&d2))sf_error("d2 is a required parameter");
-    /*( d3=1 required parameter.  delta label3 - usually delta iline ) */
-    if(!sf_getfloat("d3",&d3))sf_error("d3 is a required parameter");
+    /* Delta label1 - usually delta offset  */
 
-    /*( label1=offset  header for axis1 - usually offset ) */
+    if(!sf_getfloat("d2",&d2))sf_error("d2 is a required parameter");
+    /* Delta label2 - usually delta xline  */
+
+    if(!sf_getfloat("d3",&d3))sf_error("d3 is a required parameter");
+    /* Delta label3 - usually delta iline  */
+
     if(NULL == (label1 = sf_getstring("label1")))label1="offset";
-    /*( label2=xline  header for axis2 - usually xline or cdp ) */
+    /* header for axis1 - usually offset */
+
     if(NULL == (label2 = sf_getstring("label2")))label2="cdp";
-    /*( label3=iline  header for axis3 - usually iline ) */
+    /*  header for axis2 - usually xline or cdp  */
+
     if(NULL == (label3 = sf_getstring("label3")))label3="iline";
+    /* header for axis3 - usually iline  */
 
     if (SF_FLOAT != sf_gettype (in)) sf_error("Need float input");
 
@@ -128,27 +136,27 @@ int main(int argc, char* argv[])
 
     if(verbose >=1)fprintf(stderr,"loop processing input trace headers\n");
     for (i_input=0 ; i_input<n_input; i_input++) {
-      int iiline,ixline,ioffset;
-      sf_floatread(hdrin,n1_input,in);
-      ioffset=roundf((hdrin[idx_offset]-o1)/d1);
-      ixline =roundf((hdrin[idx_xline ]-o2)/d2);
-      iiline =roundf((hdrin[idx_iline ]-o3)/d3);
-      if(verbose>2){
-	fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
-	       hdrin[idx_offset],
-	       hdrin[idx_xline ],
-	       hdrin[idx_iline ]);
-	fprintf(stderr,"ioffset=%d,ixline=%d,iiline=%d\n",
-		        ioffset   ,ixline   ,iiline);
-      }
-      if(ioffset>=0 && ioffset< n1 &&
-	 ixline >=0 && ixline < n2 &&
-	 iiline >=0 && iiline < n3 ){
-	if(verbose>2)
-	  fprintf(stderr,"increment fold at %d,%d,%d\n",
-		         iiline,ixline,ioffset); 
-	foldplot[iiline][ixline][ioffset]++;
-      }
+	int iiline,ixline,ioffset;
+	sf_floatread(hdrin,n1_input,in);
+	ioffset=roundf((hdrin[idx_offset]-o1)/d1);
+	ixline =roundf((hdrin[idx_xline ]-o2)/d2);
+	iiline =roundf((hdrin[idx_iline ]-o3)/d3);
+	if(verbose>2){
+	    fprintf(stderr,"offset=%f,xline=%f,iline=%f\n",
+		    hdrin[idx_offset],
+		    hdrin[idx_xline ],
+		    hdrin[idx_iline ]);
+	    fprintf(stderr,"ioffset=%d,ixline=%d,iiline=%d\n",
+		    ioffset   ,ixline   ,iiline);
+	}
+	if(ioffset>=0 && ioffset< n1 &&
+	   ixline >=0 && ixline < n2 &&
+	   iiline >=0 && iiline < n3 ){
+	    if(verbose>2)
+		fprintf(stderr,"increment fold at %d,%d,%d\n",
+			iiline,ixline,ioffset); 
+	    foldplot[iiline][ixline][ioffset]++;
+	}
     }
     if(verbose >=1)fprintf(stderr,"write foldplot to output\n");
     /* write the output in one big write */

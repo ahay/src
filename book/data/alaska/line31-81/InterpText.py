@@ -67,16 +67,23 @@ class InterpText:
                        (self.yin[i+1]-self.yin[i])/(self.xin[i+1]-self.xin[i])
         return self.yin[len(self.yin)-1]
 
+import sys
+
+fspnElev = sys.argv[1]
+
 # create InterpText object to interpolate spnElev.txt
 spnElev = InterpText()
-spnElev.read('spnElev.txt')
+spnElev.read(fspnElev)
+
+frecnoSpn = sys.argv[2]
 
 # create InterpText object to interpolate recnoSpn.txt
 recnoSpn = InterpText()
-recnoSpn.read('recnoSpn.txt')
+recnoSpn.read(frecnoSpn)
 
+hdrfile = sys.argv[3]
 
-for line in open('hdrfile.txt'):  # read each line in the hdrfile.txt file
+for line in open(hdrfile):  # read each line in the hdrfile.txt file
     tokens=line.split()
     # get the 3 values on the input record.  (no error checking!!)
     tracl =long(tokens[0])
