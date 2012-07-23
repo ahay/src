@@ -125,31 +125,31 @@ void ist (int len            /* data size              */,
     d =  (kiss_fft_cpx*) sf_complexalloc(nw);
 
     for (i=0; i < nw; i++) {
-	pp[i].r = 0.;
-	pp[i].i = 0.;
+		pp[i].r = 0.;
+		pp[i].i = 0.;
     }
 
     for (i1=lo; i1 <= hi; i1++) {
-	for (i=0; i < len; i++) {
-	    pp[i1-lo].r += crealf(data[(i1-lo)*len+i]);
-	    pp[i1-lo].i += cimagf(data[(i1-lo)*len+i]);
-	}
+		for (i=0; i < len; i++) {
+			pp[i1-lo].r += crealf(data[(i1-lo)*len+i]);
+			pp[i1-lo].i += cimagf(data[(i1-lo)*len+i]);
+		}
     }
  
     l2 = (nw+1)/2;
     for (i=1; i < l2; i++) {
-	pp[i].r /= 2.;
-	pp[i].i /= 2.;
+		pp[i].r /= 2.;
+		pp[i].i /= 2.;
     }
     l2 = nw/2+1;
     for (i=l2; i < nw; i++) {
-	pp[i].r = pp[nw-i].r;
-	pp[i].i = -pp[nw-i].i;
+		pp[i].r = pp[nw-i].r;
+		pp[i].i = -pp[nw-i].i;
     }
     kiss_fft_stride(itfft,pp,d,1);
 	    
     for (i=0; i < len; i++) {
-	result[i] = d[i].r/len;
+		result[i] = d[i].r/len;
     }
     free(pp);
     free(d);

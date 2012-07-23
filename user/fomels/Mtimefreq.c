@@ -35,18 +35,18 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(time,1);
 
     if (!sf_getint("nw",&nw)) { /* number of frequencies */
-	nt = 2*kiss_fft_next_fast_size((n1+1)/2);
-	nw = nt/2+1;
-	dw = 1./(nt*d1);
-	w0 = 0.;
+		nt = 2*kiss_fft_next_fast_size((n1+1)/2);
+		nw = nt/2+1;
+		dw = 1./(nt*d1);
+		w0 = 0.;
     } else {
-	if (!sf_getfloat("dw",&dw)) {
-	    /* frequency step */
-	    nt = 2*kiss_fft_next_fast_size((n1+1)/2);
-	    dw = 1./(nt*d1);
-	}
-	if (!sf_getfloat("w0",&w0)) w0=0.;
-	/* first frequency */
+		if (	!sf_getfloat("dw",&dw)) {
+			/* f	requency step */
+			nt =	2*kiss_fft_next_fast_size((n1+1)/2);
+			dw =	1./(nt*d1);
+		}
+		if (!sf_getfloat("w0",&w0)) w0=0.;
+		/* first frequency */
     }
 
     sf_shiftdim(time, timefreq, 2);
@@ -55,9 +55,8 @@ int main(int argc, char* argv[])
     sf_putfloat(timefreq,"d2",dw);
     sf_putfloat(timefreq,"o2",w0);
 
-    if (NULL != (label = sf_histstring(time,"label1")) &&
-	!sf_fft_label(2,label,timefreq)) 
-	sf_putstring(timefreq,"label2","Wavenumber");
+    if (NULL != (label = sf_histstring(time,"label1")) && !sf_fft_label(2,label,timefreq)) 
+		sf_putstring(timefreq,"label2","Wavenumber");
     sf_fft_unit(2,sf_histstring(time,"unit1"),timefreq);
 
     dw *= 2.*SF_PI;
@@ -80,52 +79,52 @@ int main(int argc, char* argv[])
     sf_divn_init(1,n1,&n1,&rect,niter,false);
 
     if (NULL != sf_getstring("mask")) {
-	mask = sf_input("mask");
-	mm = sf_floatalloc(n1);
+		mask = sf_input("mask");
+		mm = sf_floatalloc(n1);
     } else {
-	mask = NULL;
-	mm = NULL;
+		mask = NULL;
+		mm = NULL;
     }
 
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(trace,n1,time);
-	if (NULL != mm) {
-	    sf_floatread(mm,n1,mask);
-	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] *= mm[i1];
-	    }
-	}
-
-	for (iw=0; iw < nw; iw++) {
-	    w = w0 + iw*dw;
-
-	    if (0.==w) { /* zero frequency */
-		for (i1=0; i1 < n1; i1++) {
-		    ss[i1] = 0.;
-		    bc[i1] = 0.5;
-		    if (NULL != mm) bc[i1] *= mm[i1];
+		sf_floatread(trace,n1,time);
+		if (NULL != mm) {
+			sf_floatread(mm,n1,mask);
+			for (i1=0; i1 < n1; i1++) {
+				trace[i1] *= mm[i1];
+			}
 		}
-		sf_divn(trace,bc,cc);
-	    } else {
-		for (i1=0; i1 < n1; i1++) {
-		    t = i1*d1;
-		    bs[i1] = sinf(w*t);
-		    bc[i1] = cosf(w*t);
-		    if (NULL != mm) {
-			bs[i1] *= mm[i1];
-			bc[i1] *= mm[i1];
-		    }
+
+		for (iw=0; iw < nw; iw++) {
+			w = w0 + iw*dw;
+
+			if (0.==w) { /* zero frequency */
+				for (i1=0; i1 < n1; i1++) {
+					ss[i1] = 0.;
+					bc[i1] = 0.5;
+					if (NULL != mm) bc[i1] *= mm[i1];
+				}
+				sf_divn(trace,bc,cc);
+			} else {
+				for (i1=0; i1 < n1; i1++) {
+					t = i1*d1;
+					bs[i1] = sinf(w*t);
+					bc[i1] = cosf(w*t);
+					if (NULL != mm) {
+						bs[i1] *= mm[i1];
+						bc[i1] *= mm[i1];
+					}
+				}
+				sf_divn(trace,bs,ss);
+				sf_divn(trace,bc,cc);
+			}
+
+			for (i1=0; i1 < n1; i1++) {
+				ss[i1] = phase? atan2f(ss[i1],cc[i1]): hypotf(ss[i1],cc[i1]);
+			}
+
+			sf_floatwrite(ss,n1,timefreq);
 		}
-		sf_divn(trace,bs,ss);
-		sf_divn(trace,bc,cc);
-	    }
-
-	    for (i1=0; i1 < n1; i1++) {
-		ss[i1] = phase? atan2f(ss[i1],cc[i1]): hypotf(ss[i1],cc[i1]);
-	    }
-
-	    sf_floatwrite(ss,n1,timefreq);
-	}
     }
     
 

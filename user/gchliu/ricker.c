@@ -41,23 +41,23 @@ void ricker_init(int nfft   /* time samples */,
     shape = (kiss_fft_cpx*) sf_complexalloc(nw);
 
     for (iw=0; iw < nw; iw++) {
-	w = iw*dw;
-	w *= w;
+		w = iw*dw;
+		w *= w;
 
-	switch (order) {
-	    case 2: /* half-order derivative */
-		cw.r = 2*SF_PI/nfft;
-		cw.i = iw*2*SF_PI/nfft;
-		cw = sf_csqrtf(cw);
-		shape[iw].r = cw.r*w*expf(1-w)/nfft;
-		shape[iw].i = cw.i*w*expf(1-w)/nfft;
-		break;
-	    case 0:
-	    default:
-		shape[iw].r = w*expf(1-w)/nfft;
-		shape[iw].i = 0.;
-		break;
-	}
+		switch (order) {
+			case 2: /* half-order derivative */
+				cw.r = 2*SF_PI/nfft;
+				cw.i = iw*2*SF_PI/nfft;
+				cw = sf_csqrtf(cw);
+				shape[iw].r = cw.r*w*expf(1-w)/nfft;
+				shape[iw].i = cw.i*w*expf(1-w)/nfft;
+				break;
+			case 0:
+			default:
+				shape[iw].r = w*expf(1-w)/nfft;
+				shape[iw].i = 0.;
+				break;
+		}
     }
 
     sf_freqfilt_init(nfft,nw);

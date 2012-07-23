@@ -36,7 +36,7 @@ void fatomo_init(int dim    /* model dimension */,
 
     nt = 1;
     for (i=0; i < dim; i++) {
-	nt = nt*n[i];
+		nt = nt*n[i];
     }
 
     ns = nshot;
@@ -47,7 +47,7 @@ void fatomo_init(int dim    /* model dimension */,
     upglist = (upgrad *)malloc(ns*sizeof(upgrad));
     
     for (is=0; is < ns; is++) {
-	upglist[is] = upgrad_init(dim,n,d);
+		upglist[is] = upgrad_init(dim,n,d);
     }
 }
 
@@ -59,7 +59,7 @@ void fatomo_set(float **t  /* stencil time */,
 
     /* set stencil */
     for (is=0; is < ns; is++) {
-	upgrad_set(upglist[is],t[is]);
+		upgrad_set(upglist[is],t[is]);
     }
     
     /* set mask */
@@ -72,7 +72,7 @@ void fatomo_close(void)
     int is;
 
     for (is=0; is < ns; is++) {
-	upgrad_close(upglist[is]);
+		upgrad_close(upglist[is]);
     }
 }
 
@@ -84,35 +84,35 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
     sf_adjnull(adj,add,nx,nr,x,r);
 
     if (adj) {
-	/* given dt solve ds */
+		/* given dt solve ds */
 
-	count = 0;	
-	for (is=0; is < ns; is++) {
-	    for (it=0; it < nt; it++) {
-		if (mask[is][it] == 1) {
-		    tempt[it] = r[count];
-		    count++;
-		} else {
-		    tempt[it] = 0.;
-		}
-	    }
+		count = 0;	
+		for (is=0; is < ns; is++) {
+			for (it=0; it < nt; it++) {
+				if (mask[is][it] == 1) {
+					tempt[it] = r[count];
+					count++;
+				} else {
+					tempt[it] = 0.;
+				}
+			}
 	    
-	    upgrad_inverse(upglist[is],tempx,tempt,NULL);
-	    for (it=0; it < nt; it++) x[it]+=tempx[it];
-	}
-    } else {
-	/* given ds solve dt */
-
-	count = 0;
-	for (is=0; is < ns; is++) {
-	    upgrad_solve(upglist[is],x,tempt,NULL);
-
-	    for (it=0; it < nt; it++) {
-		if (mask[is][it] == 1) {
-		    r[count] = tempt[it];
-		    count++;
+			upgrad_inverse(upglist[is],tempx,tempt,NULL);
+			for (it=0; it < nt; it++) x[it]+=tempx[it];
 		}
-	    }
-	}
+    } else {
+		/* given ds solve dt */
+
+		count = 0;
+		for (is=0; is < ns; is++) {
+			upgrad_solve(upglist[is],x,tempt,NULL);
+
+			for (it=0; it < nt; it++) {
+				if (mask[is][it] == 1) {
+					r[count] = tempt[it];
+					count++;
+				}
+			}
+		}
     }
 }

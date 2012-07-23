@@ -61,35 +61,35 @@ void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
     sf_adjnull(adj,add,ns,nt,s,t);
  
     for (i=0; i < nq; i++) { /* loop over initial depths */
-	kz = i*dq;
-	if (kz > nz-1) kz=nz-1;
+		kz = i*dq;
+		if (kz > nz-1) kz=nz-1;
 
-	for (iy=0; iy < nx; iy++) { /* loop over sources */
-	    for (ip=0; ip < np; ip++) { /* loop over initial directions */
-		p = p0 + ip*dp; /* initial slope */
-		x = iy*dx; /* initial position (origin iz zero) */
+		for (iy=0; iy < nx; iy++) { /* loop over sources */
+			for (ip=0; ip < np; ip++) { /* loop over initial directions */
+				p = p0 + ip*dp; /* initial slope */
+				x = iy*dx; /* initial position (origin iz zero) */
 	    
-		is = iy*nz + kz; /* where in the grid is [kz,iy] */
-		it = (i*nx + iy)*np + ip;
+				is = iy*nz + kz; /* where in the grid is [kz,iy] */
+				it = (i*nx + iy)*np + ip;
 	    
-		deltax = dz*p; /* shift in x */
-		distance = hypotf(dz,deltax); /* Pythagor */
+				deltax = dz*p; /* shift in x */
+				distance = hypotf(dz,deltax); /* Pythagor */
 		
-		for (iz=kz; iz > 0; iz--) { /* loop up in depth */
-		    if (adj) {
-			s[is] += t[it]*distance;
-		    } else {
-			t[it] += s[is]*distance; /* time is slowness * distance */
-		    }
+				for (iz=kz; iz > 0; iz--) { /* loop up in depth */
+					if (adj) {
+						s[is] += t[it]*distance;
+					} else {
+						t[it] += s[is]*distance; /* time is slowness * distance */
+					}
 		
-		    x += deltax;
-		    ix = 0.5 + x/dx; /* nearest point on the grid */
+					x += deltax;
+					ix = 0.5 + x/dx; /* nearest point on the grid */
 		    
-		    if (ix < 0 || ix >= nx) break; /* outside the grid */
+					if (ix < 0 || ix >= nx) break; /* outside the grid */
 		
-		    is = ix*nz + iz; 
-		} /* iz */      
-	    } /* ip */ 
-	} /* is */
+					is = ix*nz + iz; 
+				} /* iz */      
+			} /* ip */ 
+		} /* is */
     } /* i */
 }

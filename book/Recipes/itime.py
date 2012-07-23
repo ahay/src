@@ -40,14 +40,14 @@ def itime2(out,data, ltft=' ',div=' '):
 
 def itimef(out,data, ft=' ', div=' '):
    '''Instantaneous traveltimes as a function of t and f (FT)
-      ft:  sffft1 parameters.
+      ft:  fft1 parameters.
       div: parameters for smooth division.'''
    
    Flow(data+'_ft',  data,'fft1 %s' %ft )
    Flow(data+'_dft', data,
         'math output="input*x1" | fft1 %s | math output="input*I"' %ft)
    Flow(out, [data+'_dft', data+'_ft'],
-        'cdivn den=${SOURCES[1]} %s | imag | put label2="tau(f)"' %div)
+        'cdivn den=${SOURCES[1]} %s | imag | put label2="tau"' %div)
 
 
 """

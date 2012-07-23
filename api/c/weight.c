@@ -42,11 +42,11 @@ void sf_weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     sf_adjnull (adj, add, nx, ny, xx, yy);
   
     for (i=0; i < nx; i++) {
-	if (adj) {
-	    xx[i] += yy[i] * w[i];
-	} else {
-	    yy[i] += xx[i] * w[i];
-	}
+		if (adj) {
+			xx[i] += yy[i] * w[i];
+		} else {
+			yy[i] += xx[i] * w[i];
+		}
     }
 }
 

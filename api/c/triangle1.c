@@ -33,7 +33,7 @@ static sf_triangle tr;
 static float *tmp;
 
 void sf_triangle1_init (int nbox /* triangle size */, 
-			int ndat /* data size */)
+						int ndat /* data size */)
 /*< initialize >*/
 {
     nd = ndat;

@@ -67,9 +67,9 @@ int main(int argc, char* argv[])
     sf_unshiftdim(scn,pik,2);
 
     if (NULL != (label = sf_histstring(scn,"label2"))) 
-	sf_putstring(pik,"label",label);
+		sf_putstring(pik,"label",label);
     if (NULL != (label = sf_histstring(scn,"unit2"))) 
-	sf_putstring(pik,"unit",label);
+		sf_putstring(pik,"unit",label);
 
     for (i=1; i < dim-1; i++) {
 	n[i] = n[i+1];

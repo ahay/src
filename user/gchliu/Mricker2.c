@@ -42,12 +42,12 @@ int main(int argc, char* argv[])
     /* Frequency and phase*/
     if (NULL == sf_getstring("tphase") || NULL == sf_getstring("tfreq")) {
         if (!sf_getfloat("frequency",&freq)) {
-	    /* peak frequency for Ricker wavelet (in Hz) */
-	    if (!sf_getfloat("freq",&freq)) freq=0.2;
-	    /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
-        } else {
-	    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-	    freq *= 2.*d1;
+			/* peak frequency for Ricker wavelet (in Hz) */
+			if (!sf_getfloat("freq",&freq)) freq=0.2;
+				/* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+		} else {
+			if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+			freq *= 2.*d1;
         }
 
         trace = sf_floatalloc(n1);
@@ -55,9 +55,9 @@ int main(int argc, char* argv[])
         ricker_init(fft_size, 0.5*freq, 0);
 
         for (i2=0; i2 < n2; i2++) {
-	    sf_floatread(trace,n1,in);
-	    sf_freqfilt(n1,trace);
-	    sf_floatwrite(trace,n1,out);
+			sf_floatread(trace,n1,in);
+			sf_freqfilt(n1,trace);
+			sf_floatwrite(trace,n1,out);
         }
     } else { /*frequency and phase are time-varying*/
         
@@ -86,34 +86,34 @@ int main(int argc, char* argv[])
         sf_hilbert_init(n1, hilbn, hilbc);
         hilb = sf_floatalloc(n1);
         for (i2=0;i2 < n2; i2++) {
-	    sf_floatread(trace,n1,in);
-	    for (it=0; it < n1; it++) {
-		outtrace[it] = 0.;
-	    }
-	    for (i1=0; i1 < n1; i1++) {
-                  
-		max = 0.; 
-		for (it=0;it < n1; it++) {
-                       
-		    mt=d1*(i1-it);
-		    ric[it] = (1-2*(SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt))*exp(-SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt);
-                       
-		}
-		sf_hilbert(ric,hilb);
-		for (it=0; it < n1; it++) {
-		    hilb[it] = ric[it]*cosf(phase[i1]*SF_PI/180.) + hilb[it]*sinf(phase[i1]*SF_PI/180.);
-		    if (hilb[it] > max) max=hilb[it];
-		}
-		for (it=0;it < n1; it++) {
-		    if (!norm) {
-			max = 1;
-			ee  = 0.;
-		    }
-		    hilb[it] = hilb[it]*trace[i1]/(max+ee);
-		    outtrace[it] += hilb[it];
-		}
-	    }
-	    sf_floatwrite(outtrace,n1,out);
+			sf_floatread(trace,n1,in);
+			for (it=0; it < n1; it++) {
+				outtrace[it] = 0.;
+			}
+			for (i1=0; i1 < n1; i1++) {
+	
+				max = 0.; 
+				for (it=0;it < n1; it++) {
+
+					mt=d1*(i1-it);
+					ric[it] = (1-2*(SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt))*exp(-SF_PI*freqc[i1]*mt*SF_PI*freqc[i1]*mt);
+	
+				}
+				sf_hilbert(ric,hilb);
+				for (it=0; it < n1; it++) {
+					hilb[it] = ric[it]*cosf(phase[i1]*SF_PI/180.) + hilb[it]*sinf(phase[i1]*SF_PI/180.);
+					if (hilb[it] > max) max=hilb[it];
+				}
+				for (it=0;it < n1; it++) {
+					if (!norm) {
+						max = 1;
+						ee  = 0.;
+					}
+					hilb[it] = hilb[it]*trace[i1]/(max+ee);
+					outtrace[it] += hilb[it];
+				}
+			}
+			sf_floatwrite(outtrace,n1,out);
         }
     }
  

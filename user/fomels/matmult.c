@@ -37,10 +37,10 @@ void matmult_lop (bool adj, bool add,
     int ix, iy;
     sf_adjnull (adj, add, nx, ny, x, y);
     for (ix = 0; ix < nx; ix++) {
-	for (iy = 0; iy < ny; iy++) {
-	    if (adj) x[ix] += B[iy][ix] * y[iy];
-	    else     y[iy] += B[iy][ix] * x[ix];
-	}
+		for (iy = 0; iy < ny; iy++) {
+			if (adj) x[ix] += B[iy][ix] * y[iy];
+			else     y[iy] += B[iy][ix] * x[ix];
+		}
     }
 }
 

@@ -75,79 +75,79 @@ int main (int argc, char *argv[])
     dy *= 2.*SF_PI; y0 *= 2.*SF_PI;
 
     if (NULL == sf_getstring("velocity")) {
-	vel = NULL;
-	velz = NULL;
-	eta = NULL;
+		vel = NULL;
+		velz = NULL;
+		eta = NULL;
     } else {
-	vel = sf_input("velocity");
-	if (!sf_histint(vel,"n1",&nz)) 
-	    sf_error ("No n1= in velocity");
-	if (!sf_histfloat(vel,"d1",&dz)) 
-	    sf_error ("No d1= in velocity");
+		vel = sf_input("velocity");
+		if (!sf_histint(vel,"n1",&nz)) 
+			sf_error ("No n1= in velocity");
+		if (!sf_histfloat(vel,"d1",&dz)) 
+			sf_error ("No d1= in velocity");
 	
-	if (NULL == sf_getstring("velz")) {
-	    velz = NULL;
-	    eta = NULL;
-	} else {
-	    velz = sf_input("velz");
-	    if (NULL == sf_getstring("eta")) sf_error("Need eta=");
-	    eta = sf_input("eta");
-	}
+		if (NULL == sf_getstring("velz")) {
+			velz = NULL;
+			eta = NULL;
+		} else {
+			velz = sf_input("velz");
+			if (NULL == sf_getstring("eta")) sf_error("Need eta=");
+			eta = sf_input("eta");
+		}
     }
 
     if (inv) { /* modeling */
-	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
-	if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
+		if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
+		if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
 
-	if (!sf_getint("nt",&nt)) {
-	    /* Length of time axis (for modeling) */
-	    if (depth) {
-		sf_error ("nt= must be supplied");
-	    } else {
-		nt=nz;
-	    }
-	} else {
-	    sf_putint(out,"n1",nt);
-	}
+		if (!sf_getint("nt",&nt)) {
+			/* Length of time axis (for modeling) */
+			if (depth) {
+				sf_error ("nt= must be supplied");
+			} else {
+				nt=nz;
+			}
+		} else {
+			sf_putint(out,"n1",nt);
+		}
 
-	if (!sf_getfloat("dt",&dt)) {
-	    /* Sampling of time axis (for modeling) */
-	    if (depth) {
-		sf_error ("dt= must be supplied");
-	    } else {
-		dt=dz;
-	    }
-	} else {
-	    sf_putfloat(out,"d1",dt);
-	}
+		if (!sf_getfloat("dt",&dt)) {
+			/* Sampling of time axis (for modeling) */
+			if (depth) {
+				sf_error ("dt= must be supplied");
+			} else {
+				dt=dz;
+			}
+		} else {
+			sf_putfloat(out,"d1",dt);
+		}
 
-	sf_putfloat(out,"o1",0.);
+		sf_putfloat(out,"o1",0.);
     } else { /* migration */
-	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
-	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
+		if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
+		if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
 
-	if (NULL == vel) {
-	    if (!sf_getint("nz",&nz)) {
-		/* Length of depth axis (for migration, if no velocity file) */
-		if (depth) {
-		    sf_error("Need nz=");
-		} else {
-		    nz = nt;
+		if (NULL == vel) {
+			if (!sf_getint("nz",&nz)) {
+				/* Length of depth axis (for migration, if no velocity file) */
+				if (depth) {
+					sf_error("Need nz=");
+				} else {
+					nz = nt;
+				}
+			}
+			if (!sf_getfloat("dz",&dz)) {
+				/* Sampling of depth axis (for migration, if no velocity file) */
+				if (depth) {
+					sf_error("Need dz=");
+				} else {
+					dz = dt;
+				}
+			}
 		}
-	    }
-	    if (!sf_getfloat("dz",&dz)) {
-		/* Sampling of depth axis (for migration, if no velocity file) */
-		if (depth) {
-		    sf_error("Need dz=");
-		} else {
-		    dz = dt;
-		}
-	    }
-	}
 
-	sf_putint(out,"n1",nz);
-	sf_putfloat(out,"d1",dz);
-	sf_putfloat(out,"o1",0.);
+		sf_putint(out,"n1",nz);
+		sf_putfloat(out,"d1",dz);
+		sf_putfloat(out,"o1",0.);
     }
     
     vt = sf_floatalloc(nz);
@@ -166,41 +166,41 @@ int main (int argc, char *argv[])
 	/* Constant vertical velocity (if no velocity file) */
 
 	if (!sf_getfloat("n",&n0)) n0=0.0;
-	/* Constant eta (if no velocity file) */	
+		/* Constant eta (if no velocity file) */	
 
-	for (iz=0; iz < nz; iz++) {
-	    vt[iz] = v0;
-	    vz[iz] = vz0;
-	    n[iz] = n0;
-	}
-    } else {
-	sf_floatread(vt,nz,vel);
-	sf_fileclose(vel);
+		for (iz=0; iz < nz; iz++) {
+			vt[iz] = v0;
+			vz[iz] = vz0;
+			n[iz] = n0;
+		}
+	} else {
+		sf_floatread(vt,nz,vel);
+		sf_fileclose(vel);
 
-	if ('a' == rule[0]) {
-	    if (NULL == velz || NULL == eta) sf_error("Need velz= and eta=");
-	    sf_floatread(vz,nz,velz);
-	    sf_floatread(n,nz,eta);
+		if ('a' == rule[0]) {
+			if (NULL == velz || NULL == eta) sf_error("Need velz= and eta=");
+			sf_floatread(vz,nz,velz);
+			sf_floatread(n,nz,eta);
 
-	    sf_fileclose(velz);
-	    sf_fileclose(eta);
-	}  else {
-	    for (iz=0; iz < nz; iz++) {
-		vz[iz] = vt[iz];
-		n[iz] = 0.0;
-	    }
-	}	
+			sf_fileclose(velz);
+			sf_fileclose(eta);
+		}  else {
+			for (iz=0; iz < nz; iz++) {
+				vz[iz] = vt[iz];
+				n[iz] = 0.0;
+			}
+		}	
     }
 
     /* vt -> 1/4 vt^2 */ 
     for (iz=0; iz < nz; iz++) {
-	vt[iz] *= 0.25*vt[iz];
-	vz[iz] *= 0.25*vz[iz];
+		vt[iz] *= 0.25*vt[iz];
+		vz[iz] *= 0.25*vz[iz];
 
-	if (depth) {
-	    vt[iz] = 1./vt[iz];
-	    vz[iz] = 1./vz[iz];
-	}
+		if (depth) {
+			vt[iz] = 1./vt[iz];
+			vz[iz] = 1./vz[iz];
+		}
     }
 
     /* determine frequency sampling */    
@@ -212,34 +212,34 @@ int main (int argc, char *argv[])
     gazdag_init (eps, nt2, dt, nz, dz, vt, vz, n, depth, rule[0]);
 
     for (iy=0; iy < ny; iy++) {
-	y = y0+iy*dy;
-	y *= y;
+		y = y0+iy*dy;
+		y *= y;
 
-	for (ix=0; ix < nx; ix++) {
-	    x = x0+ix*dx;
-	    x = x*x+y;
+		for (ix=0; ix < nx; ix++) {
+			x = x0+ix*dx;
+			x = x*x+y;
 	
-	    if (verb) sf_warning("wavenumber %d of %d;",iy*nx+ix+1,nx*ny);
+			if (verb) sf_warning("wavenumber %d of %d;",iy*nx+ix+1,nx*ny);
 	
-	    if (inv) {
-		sf_floatread(q,nz,in);
-	    } else {
-		sf_floatread(p,nt,in);
-		if (nt != nt2) {
-		    for (it=nt; it < nt2; it++) {
-			p[it]=0.;
-		    }
+			if (inv) {
+				sf_floatread(q,nz,in);
+			} else {
+				sf_floatread(p,nt,in);
+				if (nt != nt2) {
+					for (it=nt; it < nt2; it++) {
+						p[it]=0.;
+					}
+				}
+			}
+
+			gazdag(inv,x,p,q);
+
+			if (inv) {
+				sf_floatwrite(p,nt,out);
+			} else {
+				sf_floatwrite(q,nz,out);
+			}
 		}
-	    }
-
-	    gazdag(inv,x,p,q);
-
-	    if (inv) {
-		sf_floatwrite(p,nt,out);
-	    } else {
-		sf_floatwrite(q,nz,out);
-	    }
-	}
     } 
     if (verb) sf_warning(".");
 
