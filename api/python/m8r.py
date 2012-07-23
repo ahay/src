@@ -491,6 +491,11 @@ else:
         def float(self, nm):
             return float(self.vd[nm])
 
+    class Output(object):
+        def __init__(self,tag='out',src=None):
+            print 'To use Output, you need to install SWIG http://www.swig.org/'
+            sys.exit(1)
+
 dataserver = os.environ.get('RSF_DATASERVER',
                             'http://www.reproducibility.org')
 
