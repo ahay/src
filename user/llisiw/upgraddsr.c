@@ -389,15 +389,3 @@ void upgrad_paste(float *time)
 	}
     }
 }
-
-void upgrad_debug(upgrad upg, float *den)
-/*< debug >*/
-{
-    int it, jt;
-
-    for (it = nt-1; it >= 0; it--) {
-	jt = upg->order[it];
-
-	den[jt] = upg->ww[it][ndim];
-    }
-}

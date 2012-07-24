@@ -123,6 +123,8 @@ int main(int argc, char* argv[])
 	    sf_putfloat(mig,"d3",dh);
 	    sf_putstring(mig,"label3","Offset");
 	    if (NULL != unit) sf_putstring(mig,"unit3",unit);
+	} else {
+	    sf_putint(mig,"n3",1);
 	}
     } else {
 	sf_putint(dat,"n1",nt);
@@ -184,19 +186,19 @@ int main(int argc, char* argv[])
     }
 
     for (is=0; is < ns; is++) { /* shot */
-	s = s0 + is*ds;
+	s = s0+is*ds;
 
 	/* cubic Hermite spline interpolation */
 	ist = (s-y0)/dy;
 	if (ist <= 0) {
-	    for (ix=0; ix < nzx; ix++) {
-		stable[ix]  = table[0][ix];
-		stablex[ix] = tablex[0][ix];
+	    for (i=0; i < nzx; i++) {
+		stable[i]  = table[0][i];
+		stablex[i] = tablex[0][i];
 	    }
 	} else if (ist >= ny-1) {
-	    for (ix=0; ix < nzx; ix++) {
-		stable[ix]  = table[ny-1][ix];
-		stablex[ix] = tablex[ny-1][ix];
+	    for (i=0; i < nzx; i++) {
+		stable[i]  = table[ny-1][i];
+		stablex[i] = tablex[ny-1][i];
 	    }
 	} else {
 	    switch (type[0]) {
@@ -229,14 +231,15 @@ int main(int argc, char* argv[])
 		}
 	    } else {
 		switch (type[0]) {
-		case 'l': /* linear */
-		    tinterp_linear(rtable, s+h-iht*dy-y0,table[iht], table[iht+1]);
-		    tinterp_linear(rtablex,s+h-iht*dy-y0,tablex[iht],tablex[iht+1]);
-		    break;
-
-		case 'h': /* hermit */
-		    tinterp_hermite(rtable, s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
-		    dinterp_hermite(rtablex,s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+		    case 'l': /* linear */
+			tinterp_linear(rtable, s+h-iht*dy-y0,table[iht], table[iht+1]);
+			tinterp_linear(rtablex,s+h-iht*dy-y0,tablex[iht],tablex[iht+1]);
+			break;
+			
+		    case 'h': /* hermit */
+			tinterp_hermite(rtable, s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+			dinterp_hermite(rtablex,s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+			break;
 		}
 	    }
 

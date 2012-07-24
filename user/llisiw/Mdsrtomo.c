@@ -29,9 +29,9 @@ int main(int argc, char* argv[])
     int iter, niter, cgiter, count;
     int *f, *m, nloop;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL;
-    float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama, *den=NULL;
+    float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
     char key[6], *what;
-    sf_file in, out, reco, grad, flag, mask, debug;
+    sf_file in, out, reco, grad, flag, mask;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -145,22 +145,6 @@ int main(int argc, char* argv[])
 		sf_floatwrite(dw,nw,out);
 	    } else {
 		sf_floatwrite(dt,nt,out);
-	    }
-
-	    /* output debug file */
-	    if (NULL == sf_getstring("debug")) {
-		debug = NULL;
-		den = NULL;
-	    } else {
-		debug = sf_output("debug");
-		den = sf_floatalloc(nt);
-
-		sf_putint(debug,"n3",n[2]);
-		sf_putfloat(debug,"d3",d[2]);
-		sf_putfloat(debug,"o3",o[2]);
-
-		dsrtomo_debug(den);
-		sf_floatwrite(den,nt,debug);
 	    }
 
 	    break;
@@ -311,7 +295,7 @@ int main(int argc, char* argv[])
 	    rhsnorm1 = rhsnorm;
 	    rate = rhsnorm1/rhsnorm0;
 	    
-	    sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rate);
+	    sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rhsnorm0);
 	    
 	    /* iterations over inversion */
 	    for (iter=0; iter < niter; iter++) {
@@ -326,13 +310,16 @@ int main(int argc, char* argv[])
 		/* solve dw */
 		if (shape) {
 		    sf_conjgrad(NULL,dsrtomo_oper,sf_repeat_lop,p,dw,dt,cgiter);
-		} else {		    
+		} else {
 		    sf_solver_reg(dsrtomo_oper,sf_cgstep,sf_igrad2_lop,2*nw,nw,nt,dw,dt,cgiter,eps,"verb",verb,"end");
 		    sf_cgstep_close();
 		}
 
 		/* output gradient */
 		if (grad != NULL) {
+		    sf_floatwrite(dw,nw,grad);
+
+		    /*
 		    if (velocity) {
 			for (iw=0; iw < nw; iw++)
 			    dv[iw] = -dw[iw]/(2.*sqrtf(w[iw])*(w[iw]+dw[iw]/2.));
@@ -341,6 +328,7 @@ int main(int argc, char* argv[])
 		    } else {
 			sf_floatwrite(dw,nw,grad);
 		    }
+		    */
 		}
 
 		/* line search */
