@@ -53,10 +53,10 @@ segyclean
 
 rawsegy=['L23535','L23536','L23537']
 for file in rawsegy  :
-#    Fetch(file+'.SGY',
-#	  server='http://certmapper.cr.usgs.gov',
-#      	  top='nersl/NPRA/SEISMIC/1981/31_81',
-#      	  dir='DMUX')
+    Fetch(file+'.SGY',
+	  server='http://certmapper.cr.usgs.gov',
+      	  top='nersl/NPRA/SEISMIC/1981/31_81',
+      	  dir='DMUX')
     Flow([file, file+'.bin',  file+'.asc'],
          file+'.SGY',segyread,stdin=0)
 

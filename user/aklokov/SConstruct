@@ -17,12 +17,12 @@ curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
 '''
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
 except: # local version
     env = bldutil.Debug()
-    root = None
+    root = None    
     SConscript('../../api/c++/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
