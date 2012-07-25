@@ -63,15 +63,26 @@ su.Flow('allshots','line binary_hdrfile1.dat',
 Flow('rsfallshots trsfallshots','allshots.su',
       'segyread su=y tfile=${TARGETS[1]}')
 
-Flow('folds','trsfallshots',
+Flow('ftrsfallshots','trsfallshots','dd type=float')
+
+Flow('folds','ftrsfallshots',
     '''
-    dd type=float |
     fold
-    o1=-5200 n1=96 d1=110 label1=offset
-    o2=101 n2=636 d2=1 label2=cdp
-    o3=0 n3=1 d3=10000 label3=iline
+    o1=-5200 n1=96  d1=110   label1=offset
+    o2=101   n2=636 d2=1     label2=cdp
+    o3=0     n3=1   d3=10000 label3=iline
     ''')
 
 Result('folds','grey title=foldplot')
+
+Flow('fold','ftrsfallshots',
+    '''
+    window n1=1 |
+    bin fold=$TARGET head=$SOURCE
+    x0=-5200 nx=96  dx=110 xkey=11 
+    y0=101   ny=636 dy=1   ykey=5
+    ''',stdout=0)
+
+Result('fold','grey title=foldplot label1=offset label2=cdp')
 
 End()

@@ -4,6 +4,8 @@
    are usually (offset,xline,offset), but you might want to compute some 
    other histogram.  This can be done by selecting other segy headers 
    using label1, 2 and 3.
+
+   See also fold= option in sfbin.
 */
 /*
   Copyright (C) 2012 University of Texas at Austin
