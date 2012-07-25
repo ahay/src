@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
 	    rhsnorm1 = rhsnorm;
 	    rate = rhsnorm1/rhsnorm0;
 	    
-	    sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rhsnorm0);
+	    sf_warning("L2 misfit after iteration 0 of %d: %g",niter,rate);
 	    
 	    /* iterations over inversion */
 	    for (iter=0; iter < niter; iter++) {

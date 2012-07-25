@@ -80,8 +80,7 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    for (j=1; j < nn[0]; j++)
 		r[i*nn[0]+j] = 0.;
 	}
-
-	upgrad_paste(r);
+	
 	upgrad_inverse(upg,temp,r,NULL);
 	upgrad_spread(upg,x,temp);
     } else {
@@ -89,8 +88,7 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	
 	upgrad_collect(upg,x,temp);
 	upgrad_solve(upg,temp,r,NULL);
-	upgrad_copy(r);
-		
+
 	for (i=0; i < nn[1]*nn[2]; i++) {
 	    if (m != NULL && m[i] != 1)
 		r[i*nn[0]] = 0.;

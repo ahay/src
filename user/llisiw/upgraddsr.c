@@ -159,7 +159,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	    }
 	}
 
-	/* throw away h < 0  */
+	/* throw away h < 0 */
 	if (upg->pos[jt][0] > upg->pos[jt][1]) source = true;
 
 	if (source) continue;
@@ -297,6 +297,15 @@ void upgrad_solve(upgrad upg,
 
 	x[jt] = num/den;
     }
+
+    /* copy */
+    for (j=1; j < nn[2]; j++) {
+	for (i=0; i < j; i++) {
+	    for (it=0; it < nn[0]; it++) {
+		x[j*ss[2]+i*ss[1]+it] = x[i*ss[2]+j*ss[1]+it];
+	    }
+	}
+    }
 }
 
 void upgrad_inverse(upgrad upg,
@@ -305,7 +314,7 @@ void upgrad_inverse(upgrad upg,
 		    const float *x0 /* initial solution */)
 /*< adjoint inv(alpha) >*/
 {
-    int it, jt, i, m, j;
+    int it, jt, i, m, j, ii[3];
     unsigned char *up;
     double den, w;
 
@@ -316,7 +325,10 @@ void upgrad_inverse(upgrad upg,
     for (it = nt-1; it >= 0; it--) {
 	jt = upg->order[it];
 
-	rhs[jt] += x[jt];
+	sf_line2cart(ndim,nn,jt,ii);
+
+	/* paste */
+	rhs[jt] += x[jt]+x[ii[1]*ss[2]+ii[2]*ss[1]+ii[0]];
 
 	up = upg->update[it];
 	den = upg->ww[it][ndim];
@@ -345,7 +357,8 @@ void upgrad_collect(upgrad upg,
     int it;
 
     for (it = 0; it < nt; it++) {
-	x[it] = upg->qq[it][0]*rhs[upg->pos[it][0]]+upg->qq[it][1]*rhs[upg->pos[it][1]];
+	x[it] = upg->qq[it][0]*rhs[upg->pos[it][0]]
+	    +upg->qq[it][1]*rhs[upg->pos[it][1]];
     }
 }
 
@@ -359,33 +372,5 @@ void upgrad_spread(upgrad upg,
     for (it = 0; it < nt; it++) {
 	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];
 	rhs[upg->pos[it][1]] += upg->qq[it][1]*x[it];
-    }
-}
-
-void upgrad_copy(float *time)
-/*< gama >*/
-{
-    int i, j, k;
-
-    for (k=1; k < nn[1]; k++) {
-	for (j=0; j < k; j++) {
-	    for (i=0; i < nn[0]; i++) {
-		time[k*ss[2]+j*ss[1]+i] = time[j*ss[2]+k*ss[1]+i];
-	    }
-	}
-    }
-}
-
-void upgrad_paste(float *time)
-/*< adjoint gama >*/
-{
-    int i, j, k;
-
-    for (j=1; j < nn[1]; j++) {
-	for (k=0; k < j; k++) {
-	    for (i=0; i < nn[0]; i++) {
-		time[k*ss[2]+j*ss[1]+i] += time[j*ss[2]+k*ss[1]+i];
-	    }
-	}
     }
 }
