@@ -121,6 +121,7 @@ def check_all(context):
     pthreads (context) # FDNSI
     omp (context) # FDNSI
     cuda(context) # FDNSI
+    fftw(context) # FDNSI
     petsc(context) # FDNSI
     psp(context) #FDNSI
 
@@ -1113,6 +1114,39 @@ def cuda(context):
         context.Result(context_failure)
         context.env['NVCC'] = None
 
+pkg['fftw'] = {'fedora':'fftw-devel'}
+
+def fftw(context):
+    context.Message("checking for FFTW ... ")
+
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+
+    text = '''
+    #include <fftw3.h>
+    int main(int argc,char* argv[]) {
+    fftwf_complex *in;
+    fftwf_plan p;
+    in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 10);
+    p = fftwf_plan_dft_1d(10, in, in, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftwf_destroy_plan(p);
+    fftwf_free(in); 
+    return 0;
+    }\n'''
+    fftw = context.env.get('FFTW','fftw3f')
+    LIBS.append(fftw)
+    res = context.TryLink(text,'.c')
+
+    if res:
+        context.Result(res)
+        context.env['FFTW'] = fftw
+    else:
+        context.Result(context_failure)
+        context.env['FFTW'] = None
+        need_pkg('fftw', fatal=False)
+    LIBS.pop()
+
 pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}
 
@@ -1854,6 +1888,7 @@ def options(file):
     opts.Add('PSPLIBS','PSP - libraries')
     opts.Add('PSPEXTRA','PSP - extra libraries')
     opts.Add('PSPCXX','PSP - compiler')
+    opts.Add('FFTW','The FFTW library')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')

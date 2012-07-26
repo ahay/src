@@ -33,8 +33,8 @@ for case in ('fft2','smoo','divn'):
          ''')
 
 def plot(one,two):
-    n1 = (18-len(one))/2
-    n2 = (18-len(two))/2
+    n1 = (18-len(one))//2
+    n2 = (18-len(two))//2
     return '''
     merge axis=2 nspace=5 ${SOURCES[1]} |
     grey title="%s%s%s | %s%s%s"

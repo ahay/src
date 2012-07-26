@@ -22,6 +22,10 @@ Input and output are complex data. The input is padded by factor pad.
 
 #include <rsf.h>
 
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+#endif
+
 int main (int argc, char **argv)
 {
     int n1, nx, n3, dim, n[SF_MAX_DIM];     /* dimensions */
@@ -45,7 +49,12 @@ int main (int argc, char **argv)
 
     char varname[12];        /* variable name */
     char *label;             /* transformed axis label */
+
+#ifdef SF_HAS_FFTW
+    fftwf_plan cfg;
+#else 
     kiss_fft_cfg cfg;
+#endif
 
     sf_file in=NULL, out=NULL;
 
@@ -148,10 +157,20 @@ int main (int argc, char **argv)
     sprintf(varname,"unit%d",axis);
     sf_fft_unit(axis,sf_histstring(in,varname),out);
 
-    cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
-
     cp     = (kiss_fft_cpx**) sf_complexalloc2(n1,nk);
     ctrace = (kiss_fft_cpx*)  sf_complexalloc(nk);
+
+#ifdef SF_HAS_FFTW
+    ix = nk;
+    cfg = fftwf_plan_many_dft(1, &ix, n1,
+			      (fftwf_complex*) cp[0], NULL, n1, 1,
+			      (fftwf_complex*) cp[0], NULL, n1, 1,
+			      sign? FFTW_BACKWARD: FFTW_FORWARD, 
+			      FFTW_ESTIMATE);
+    if (NULL == cfg) sf_error("FFTW failure.");
+#else
+    cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
+#endif
 
     /* FFT scaling */
     wt = sym? 1./sqrtf((float) nk): 1./nk;
@@ -160,6 +179,15 @@ int main (int argc, char **argv)
 	if (inv) {
 	    sf_floatread((float*) cp[0],n1*nk*2,in);
 
+#ifdef SF_HAS_FFTW
+	    fftwf_execute(cfg);
+	    
+	    for (ix=0; ix<nx; ix++) {
+		for (i1=0; i1 < n1; i1++) {
+		    cp[ix][i1] = sf_crmul(cp[ix][i1],ix%2? -wt: wt);
+		}
+	    }
+#else	    
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform k to x */
 		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
@@ -168,6 +196,7 @@ int main (int argc, char **argv)
 		    cp[ix][i1] = sf_crmul(ctrace[ix],ix%2? -wt: wt);
 		}
 	    }
+#endif
 
 	    sf_floatwrite((float*) cp[0],n1*nx*2,out);
 	} else {
@@ -196,6 +225,9 @@ int main (int argc, char **argv)
 		}
 	    }
 
+#ifdef SF_HAS_FFTW
+	    fftwf_execute(cfg);
+#else
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform x to k */
 		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
@@ -205,6 +237,7 @@ int main (int argc, char **argv)
 		    cp[ix][i1] = ctrace[ix];
 		}
 	    }
+#endif
 
 	    sf_floatwrite((float*) cp[0],n1*nk*2,out);
 	}

@@ -18,6 +18,7 @@ To documentation:
 To APIs:
 * python API (m8r or rsf.api) is now always installed
 * tell and seek added to C++ API
+* added support for FFTW and PSP
 
 To the Python package:
 
