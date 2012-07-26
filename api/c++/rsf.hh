@@ -29,6 +29,8 @@ public:
     const iRSF& operator>> (std::valarray <float> &vect) const;
     const iRSF& operator>> (std::valarray <int> &vect) const;
     const iRSF& operator>> (std::valarray <sf_complex> &vect) const;
+    // direct access
+    void unpipe(off_t size);
     off_t tell(void);
     void seek(off_t offset, int whence);
     // reading parameters

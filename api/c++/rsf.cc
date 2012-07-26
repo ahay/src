@@ -118,6 +118,12 @@ iRSF::operator>> (std::valarray<sf_complex> &array) const
     return *this;
 }
 
+void
+iRSF::unpipe(off_t size) // prepare for direct access
+{
+    sf_unpipe(file_,size);
+}
+
 off_t 
 iRSF::tell(void) // position in a file
 {

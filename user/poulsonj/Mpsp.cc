@@ -50,7 +50,11 @@ main( int argc, char* argv[] )
     try 
     {
         sf_init( argc, argv );
-        iRSF in("inFile.rsf"), par(0);
+        iRSF in, par(0);
+
+	// prepare for direct access
+	off_t size = in.size()*sizeof(float);
+	in.unpipe(size);
 
         int Nx, Ny, Nz;
         in.get( "n1", Nx );
