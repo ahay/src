@@ -1,11 +1,38 @@
 /* Make a seismic foldplot/stacking chart. 
 
-   Axis1, 2 and 3 define the bins for the output fold map.  These 
-   are usually (offset,xline,offset), but you might want to compute some 
-   other histogram.  This can be done by selecting other segy headers 
-   using label1, 2 and 3.
+This is a general 3D histogram program implemented to create foldplot or
+stacking charts on a 3d project from trace headers.  Axis1, 2 and 3 define 
+the bins for the output fold map.  These are usually (offset,xline,iline), 
+but you might want to compute some other histogram. This can be done by 
+selecting other segy headers using label1, 2 and 3.
 
-   See also fold= option in sfbin.
+See also fold= option in sfbin for creating 2D histograms.
+
+EXAMPLES:
+
+   To make a stacking chart movie showing fold(xline,offset) for each inline
+   from a 3d segyfile:
+
+   sfsegyread tfile=tteapot.rsf hfile=teapot.asc bfile=teapot.bin \\
+           tape=npr3_field.sgy > teapot.rsf
+
+   # read the tfile, which contains the segy trace headers
+   < tteapot.rsf sfdd type=float             \\
+   | sffold verbose=1                        \\
+            o1=0 n1=96  d1=200 label1=offset \\
+            o2=1 n2=188 d2=1   label2=xline  \\
+            o3=1 n3=345 d3=1   label3=iline  \\
+   >foldplot.rsf
+   <foldplot.rsf sfgrey title=foldplot pclip=100 \\
+   | sfpen 
+
+  # transpose this data to plot foldmaps for each offset window:
+
+  < foldplot.rsf sftransp plane=13          \\
+  | sftransp plane=12                       \\
+  | sfgrey title=foldplot_off gainpanel=all \\
+  | sfpen
+  
 */
 /*
   Copyright (C) 2012 University of Texas at Austin
