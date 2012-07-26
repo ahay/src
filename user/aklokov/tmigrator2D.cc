@@ -52,7 +52,9 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
     		if (badRes)
     			sample = this->getSampleByRay  (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
 
-			curoffsetGather  [it] += sample;
+			const int gInd = it + id * tNum;
+			curoffsetGather  [gInd] += sample;
+
 			curoffsetImage   [it] += sample;
 			curoffsetImageSq [it] += sample * sample;
 	    }
