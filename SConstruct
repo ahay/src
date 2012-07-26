@@ -309,7 +309,7 @@ if 'install' in COMMAND_LINE_TARGETS:
 
 if env.get('EPYDOC',[]):
     epydir = os.path.join(docdir,'epydoc')
-    envcmd = 'env PYTHONPATH=' + os.path.dirname(pkgdir.rstrip(os.path.sep))
+    envcmd = 'PYTHONPATH=%s %s' % (setenv. get_local_site_pkgs(root),WhereIs('epydoc'))   
     epyargs = '--exclude rsf.use --exclude rsf.vplot --exclude rsf.sf* '
     epyargs += '--html -qqq --no-private --graph classtree rsf'
-    env.Command(epydir, pkgdir, envcmd + ' epydoc -o $TARGET ' + epyargs)
+    env.Command(epydir, pkgdir, envcmd + ' -o $TARGET ' + epyargs)
