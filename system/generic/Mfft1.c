@@ -19,6 +19,10 @@
 
 #include <rsf.h>
 
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+#endif
+
 int main (int argc, char *argv[])
 {
     bool inv, sym, opt;
@@ -27,7 +31,12 @@ int main (int argc, char *argv[])
     kiss_fft_cpx *pp, ce;
     char *label;
     sf_file in=NULL, out=NULL;
+
+#ifdef SF_HAS_FFTW
+    fftwf_plan cfg;
+#else
     kiss_fftr_cfg cfg;
+#endif
 
     sf_init(argc, argv);
     in  = sf_input("in");
@@ -100,7 +109,19 @@ int main (int argc, char *argv[])
     p = sf_floatalloc(nt);
     pp = (kiss_fft_cpx*) sf_complexalloc(nw);
 
+#ifdef SF_HAS_FFTW
+    if (inv) {
+	cfg = fftwf_plan_dft_c2r_1d(nt, (fftwf_complex *) pp, p,
+				    FFTW_ESTIMATE);
+    } else {
+	cfg = fftwf_plan_dft_r2c_1d(nt, p, (fftwf_complex *) pp,
+				    FFTW_ESTIMATE);
+    }
+    if (NULL == cfg) sf_error("FFTW failure.");
+#else
     cfg = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
+#endif
+
     wt = sym? 1./sqrtf((float) nt): 1.0/nt;
 
     for (i2=0; i2 < n2; i2++) {
@@ -117,7 +138,11 @@ int main (int argc, char *argv[])
 		p[i1]=0.0;
 	    }
 
+#ifdef SF_HAS_FFTW
+	    fftwf_execute(cfg);
+#else
 	    kiss_fftr (cfg,p,pp);
+#endif
 
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
@@ -141,7 +166,11 @@ int main (int argc, char *argv[])
 		}
 	    }
 
+#ifdef SF_HAS_FFTW
+	    fftwf_execute(cfg);
+#else
 	    kiss_fftri(cfg,pp,p);
+#endif
 
 	    for (i1=0; i1 < n1; i1++) {
 		p[i1] *= wt;
