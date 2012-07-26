@@ -1,3 +1,5 @@
+// Parallel Sweeping Preconditioner (PSP) for solving 3D Helmholtz equations.
+
 /*
    Parallel Sweeping Preconditioner (PSP): a distributed-memory implementation
    of a sweeping preconditioner for 3d Helmholtz equations.
@@ -22,10 +24,10 @@
 #include "psp.hpp"
 using namespace psp;
 
-void Usage()
-{
-    std::cout << "Madagascar <omega>" << std::endl;
-}
+//void Usage()
+//{
+//    std::cout << "Madagascar <omega>" << std::endl;
+//}
 
 int
 main( int argc, char* argv[] )
@@ -35,13 +37,15 @@ main( int argc, char* argv[] )
     const int commSize = mpi::CommSize( comm );
     const int commRank = mpi::CommRank( comm );
 
-    if( argc < 2 )
-    {
-        if( commRank == 0 )
-            Usage();
-        psp::Finalize();
-        return 0;
-    }
+//    if( argc < 2 )
+//    {
+//        if( commRank == 0 )
+//            Usage();
+//        psp::Finalize();
+//        return 0;
+//    }
+
+    atexit(psp::Finalize);
 
     try 
     {
