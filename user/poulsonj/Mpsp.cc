@@ -75,7 +75,7 @@ main( int argc, char* argv[] )
         }
 
         float omega;
-        par.get( "omega", omega );
+        par.get( "omega", omega ); // frequency
 
         if( commRank == 0 )
             std::cout << "omega=" << omega << std::endl;

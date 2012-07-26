@@ -15,9 +15,30 @@ except: # local version
     SConscript('../../api/c++/SConstruct')
 
 if 'c++' in env.get('API',[]):
-    psp = env.get('PSPHOME')
+    psp = env.get('PSPDIR')
 else:
     psp = None
+
+if psp:
+    pspcxx = env.get('PSPCXX')
+    if pspcxx == None:
+       pspcxx = env.get('MPICXX')
+       if pspcxx == None:
+          pspcxx = env.get('CXX')
+    psppath = env.get('PSPPATH',[])
+    psplibpath = env.get('PSPLIBPATH',[])
+    psplibs = env.get('PSPLIBS',[])+map(File,env.get('PSPEXTRA',[]))
+ 
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../lib'],
+                LIBS=[env.get('DYNLIB','')+'rsf++',
+                      env.get('DYNLIB','')+'rsf'])
+       
+    env.Replace(CXX=pspcxx)
+    env.Prepend(CPPPATH=psppath,
+                LIBPATH=psplibpath,
+                LIBS=psplibs)
+
 
 mains = Split(progs)
 for prog in mains:

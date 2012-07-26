@@ -120,9 +120,9 @@ def check_all(context):
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
+    cuda(context) # FDNSI
     petsc(context) # FDNSI
     psp(context) #FDNSI
-    cuda(context) # FDNSI
 
 def identify_platform(context):
     global plat
@@ -1193,11 +1193,8 @@ def petsc(context):
         need_pkg('petsc', fatal=False)
 
 def psp(context):
-    pspdir = context.env.get('PSPDIR',os.environ.get('PSP_DIR'))
-
-    if not pspdir:
-        return
-    testdir = os.path.join(os.getcwd(),'user/psp')
+    pspdir = context.env.get('PSPDIR',os.environ.get('PSP_DIR','/usr/local'))
+    testdir = os.path.join(os.getcwd(),'user/poulsonj')
     
     # Run make in order to catch PSP compilation options
     if have_subprocess: # use subprocess.Popen() if possible, for Py 2.4 and up
@@ -1238,7 +1235,7 @@ def psp(context):
 
     # Full paths
     libs = re.compile(r'(\S+)')
-    psplibs = libs.findall(makelibsout)
+    testlibs = libs.findall(makelibsout)
 
     oldcxx = context.env.get('CXX')
     oldpath = context.env.get('CPPPATH',[])
@@ -1251,16 +1248,18 @@ def psp(context):
 
     normallib = re.compile(r'-l(\S*)')
     pathlib = re.compile(r'(\S+)')
-    testlibs = oldlibs
-    for lib in psplibs:
+    psplibs = []
+    pspextra = []
+    for lib in testlibs:
         if normallib.match(lib):
-            testlibs = testlibs + normallib.findall(lib)
+            psplibs += normallib.findall(lib)
         else:
-            testlibs = testlibs + [File(lib)]
-    context.env['LIBS'] = testlibs 
+            pspextra.append(lib)
+    context.env['LIBS'] = oldlibs+psplibs + map(File,pspextra)
 
     text = '''
     #include "psp.hpp"
+    using namespace psp;
     int main(int argc,char* argv[]) {
     psp::Initialize( argc, argv );
     psp::Finalize();
@@ -1279,6 +1278,7 @@ def psp(context):
         context.env['PSPPATH'] = psppath
         context.env['PSPLIBPATH'] = psplibpath
         context.env['PSPLIBS'] = psplibs
+        context.env['PSPEXTRA'] = pspextra
         context.env['PSPCXX'] = pspcxx
     else:
         context.Result(context_failure)
@@ -1848,6 +1848,12 @@ def options(file):
     opts.Add('PETSCLIBPATH','PETSc - path to libraries')
     opts.Add('PETSCLIBS','PETSc - libraries')
     opts.Add('PETSCCC','PETSc - compiler')
+    opts.Add('PSPDIR','Parallel Sweeping Preconditioner - installation directory')
+    opts.Add('PSPPATH','PSP - path to headers')
+    opts.Add('PSPLIBPATH','PSP - path to libraries')
+    opts.Add('PSPLIBS','PSP - libraries')
+    opts.Add('PSPEXTRA','PSP - extra libraries')
+    opts.Add('PSPCXX','PSP - compiler')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
     opts.Add('BLAS','The BLAS library')
