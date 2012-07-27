@@ -27,15 +27,15 @@
 int main(int argc, char* argv[])
 {   
     bool inv, cmplx;
-    int nz,nx,nz2,nx2,nk,ix,n2,pad1,nw;
+    int nz,nx,nz2,nx2,nzx,nk,ix,n2,pad1,nw;
     float *f;
     sf_complex *c; 
     sf_file space, freq;
+
 #ifdef SF_HAS_FFTW
-    int i1, i2;
+    sf_complex *cf;
     fftwf_plan fft;
 #endif
-
 	
     sf_init(argc,argv);
     
@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
 	
     nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
     nw = nk/nx2;
+    nzx = nz2*nx2;
 	
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);
@@ -78,16 +79,32 @@ int main(int argc, char* argv[])
 	sf_putint(freq,"n2",1);
     }
 	
-    f = sf_floatalloc(nz2*nx2);
+    f = sf_floatalloc(nzx);
     c = sf_complexalloc(nk);
 
 #ifdef SF_HAS_FFTW
-    if (inv) {
-	fft = fftwf_plan_dft_c2r_2d(nx2,nz2,(fftwf_complex *) c,f,
-				    FFTW_MEASURE);
+    if (cmplx) {
+	cf = sf_complexalloc(nzx);
+	if (inv) {
+	    fft = fftwf_plan_dft_2d(nx2,nz2,
+				    (fftwf_complex *) c, 
+				    (fftwf_complex *) cf,
+				    FFTW_BACKWARD, FFTW_MEASURE);
+	} else {
+	    fft = fftwf_plan_dft_2d(nx2,nz2,
+				    (fftwf_complex *) cf, 
+				    (fftwf_complex *) c,
+				    FFTW_FORWARD, FFTW_MEASURE);
+	} 
     } else {
-	fft = fftwf_plan_dft_r2c_2d(nx2,nz2, f, (fftwf_complex *) c,
-				    FFTW_MEASURE);
+	cf = NULL;
+	if (inv) {
+	    fft = fftwf_plan_dft_c2r_2d(nx2,nz2,(fftwf_complex *) c,f,
+					FFTW_MEASURE);
+	} else {
+	    fft = fftwf_plan_dft_r2c_2d(nx2,nz2, f, (fftwf_complex *) c,
+					FFTW_MEASURE);
+	}
     }
     if (NULL == fft) sf_error("FFTW failure.");
 #endif
@@ -97,35 +114,40 @@ int main(int argc, char* argv[])
 
 #ifdef SF_HAS_FFTW
 	fftwf_execute(fft);
+
+	if (cmplx) {
+	    for (ix=0; ix < nzx; ix++) {
+		f[ix] = crealf(cf[ix]);
+	    }
+	}
 #else
 	ifft2(f,c);
 #endif
 		
+	fft2_unshift(f);
+
 	for (ix=0; ix < nx; ix++) {
 	    sf_floatwrite(f+ix*nz2,nz,space);
 	}
     } else {
-	for (ix=0; ix < nz2*nx2; ix++) {
+	for (ix=0; ix < nzx; ix++) {
 	    f[ix]=0.;
 	}
 		
 	for (ix=0; ix < nx; ix++) {
 	    sf_floatread(f+ix*nz2,nz,space);
 	}
+
+	fft2_shift(f);
 	
 #ifdef SF_HAS_FFTW
-	fftwf_execute(fft);
-
-	/* FFT centering */
-	for (i2=1; i2<nx2; i2+=2) {
-	    for (i1=0; i1<nw; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		c[i2*nw+i1] = -c[i2*nw+i1];
-#else
-		c[i2*nw+i1] = sf_cneg(c[i2*nw+i1]);
-#endif
+	if (cmplx) {
+	    for (ix=0; ix < nzx; ix++) {
+		cf[ix] = sf_cmplx(f[ix],0.0f);
 	    }
 	}
+
+	fftwf_execute(fft);
 #else	
 	fft2(f,c);
 #endif

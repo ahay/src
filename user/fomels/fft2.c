@@ -82,6 +82,46 @@ int fft2_init(bool cmplx1        /* if complex transform */,
     return (nk*n2);
 }
 
+void fft2_shift(float *inp /* [n1*n2] */) 
+/*< FFT centering >*/
+{
+    int i1, i2;
+
+   if (cmplx) {
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=1; i1 < n1; i1+=2) {
+		inp[i2*n1+i1] = -inp[i2*n1+i1];
+	    }
+	}
+    }
+
+    for (i2=1; i2 < n2; i2+=2) {
+	for (i1=0; i1<n1; i1++) {
+	    inp[i2*n1+i1] = -inp[i2*n1+i1];
+	}
+    } 
+}
+
+void fft2_unshift(float *inp /* [n1*n2] */) 
+/*< FFT centering - inverse transform >*/
+{
+    int i1, i2;
+
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1<n1; i1++) {
+	    inp[i2*n1+i1] *= (i2%2)? -wt: wt;
+	}
+    } 
+
+    if (cmplx) {
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=1; i1 < n1; i1+=2) {
+		inp[i2*n1+i1] = -inp[i2*n1+i1];
+	    }
+	}
+    }
+}
+
 #ifndef SF_HAS_FFTW
 
 void fft2(float *inp      /* [n1*n2] */, 
@@ -94,18 +134,10 @@ void fft2(float *inp      /* [n1*n2] */,
 	if (cmplx) {
 	    for (i1=0; i1 < n1; i1++) {
 		trace1[i1] = sf_cmplx(inp[i2*n1+i1],0.);
-		if (i1%2) ctrace1[i1] = sf_cneg(ctrace1[i1]);
 	    }
 	    kiss_fft_stride(cfg1,ctrace1,tmp[i2],1);
 	} else {
 	    kiss_fftr (cfg,inp+i2*n1,tmp[i2]);
-	}
-    }
-	
-    /* FFT centering */
-    for (i2=1; i2<n2; i2+=2) {
-	for (i1=0; i1<nk; i1++) {
-	    tmp[i2][i1] = sf_cneg(tmp[i2][i1]);
 	}
     }
 	
@@ -130,14 +162,13 @@ void ifft2(float *out     /* [n1*n2] */,
 	kiss_fft_stride(icfg2,(kiss_fft_cpx *) (inp+i1),ctrace2,nk);
 		
 	for (i2=0; i2<n2; i2++) {
-	    tmp[i2][i1] = sf_crmul(ctrace2[i2],i2%2? -wt: wt);
+	    tmp[i2][i1] = ctrace2[i2];
 	}
     }
     for (i2=0; i2 < n2; i2++) {
 	if (cmplx) {
 	    kiss_fft_stride(icfg1,tmp[i2],ctrace1,1);
 	    for (i1=0; i1 < n1; i1++) {
-		if (i1%2) ctrace1[i1] = sf_cneg(ctrace1[i1]);
 		out[i2*n1+i1] = crealf(trace1[i1]);
 	    }
 	} else {

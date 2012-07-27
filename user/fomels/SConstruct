@@ -41,7 +41,6 @@ env.Prepend(CPPPATH=['../../include'],
 
 fftw = env.get('FFTW')
 fftw = None
-
 if fftw:
     env.Prepend(LIBS=[fftw],
                 CPPDEFINES=['SF_HAS_FFTW'])
