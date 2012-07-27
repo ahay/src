@@ -21,16 +21,25 @@
 #include <math.h>
 #include <rsf.h>
 
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+#endif
+
 int main (int argc, char* argv[]) 
 {
     int nw, n1, n2, nk, n3, ni, nfft, i, i1, i2, i3;
-    float d1, o1, d2, o2, dw, dk, k0, **spec=NULL, scale, *trace=NULL;
-    kiss_fft_cpx **fft=NULL, *ctrace=NULL, *ctrace2=NULL;
+    float d1, o1, d2, o2, dw, dk, k0, **spec, scale, *trace, **traces;
+    kiss_fft_cpx **fft, *ctrace, *ctrace2;
     char key[3];
     bool sum;
+    sf_file in, out;
+
+#ifdef SF_HAS_FFTW
+    fftwf_plan txfft;
+#else
     kiss_fftr_cfg tfft;
     kiss_fft_cfg  xfft;
-    sf_file in=NULL, out=NULL;
+#endif
 
     sf_init (argc, argv); 
     in = sf_input("in");
@@ -61,14 +70,21 @@ int main (int argc, char* argv[])
     dk = 1./(nk*d2);
     k0 = -0.5/d2;
 
-    trace = sf_floatalloc (nfft);
+    traces = sf_floatalloc2 (nfft,nk);
     ctrace = (kiss_fft_cpx*) sf_complexalloc (nw);
     ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
     fft = (kiss_fft_cpx**) sf_complexalloc2(nw,nk);
     spec = sf_floatalloc2(nw,nk);
 
+#ifdef SF_HAS_FFTW
+    txfft = fftwf_plan_dft_r2c_2d(nk,nfft,
+				  traces[0], (fftwf_complex *) fft[0],
+				  FFTW_ESTIMATE);
+    if (NULL == txfft) sf_error("FFTW failure.");
+#else
     tfft = kiss_fftr_alloc(nfft,0,NULL,NULL);
     xfft = kiss_fft_alloc(nk,0,NULL,NULL);
+#endif
 
     sf_putint(out,"n1",nw);
     sf_putfloat(out,"d1",dw);
@@ -93,23 +109,50 @@ int main (int argc, char* argv[])
 
     scale = sqrtf(1./(nfft*nk)); /* FFT scaling */
 
-    for (i1=n1; i1 < nfft; i1++) {
-	trace[i1]=0.;
+    for (i2=n2; i2 < nk; i2++) {
+	for (i1=0; i1 < nfft; i1++) {
+	    traces[i2][i1] = 0.;
+	}
     }
 
     /*  loop over all planes */
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
+	    trace = traces[i2];
+	    
 	    sf_floatread(trace,n1,in);
+
+	    if (i2%2) { /* FFT centering */
+		for (i1=0; i1 < n1; i1++) {
+		    trace[i1] = -trace[i1];
+		}
+	    }
 	    for (i1=n1; i1 < nfft; i1++) {
 		trace[i1]=0.;
 	    }
+
+#ifndef SF_HAS_FFTW
 	    /* Fourier transform in n1 */
 	    kiss_fftr (tfft,trace,ctrace);
 	    for (i1=0; i1 < nw; i1++) {
-		fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
+		fft[i2][i1] = ctrace[i1];
+	    }
+#endif
+	}
+#ifdef SF_HAS_FFTW
+
+	fftwf_execute(txfft);
+
+	for (i2=0; i2 < nk; i2++) {
+	    for (i1=0; i1 < nw; i1++) {
+		if (sum) {
+		    spec[i2][i1] += sf_cabsf(fft[i2][i1]);
+		} else { 
+		    spec[i2][i1] = sf_cabsf(fft[i2][i1])*scale;
+		}
 	    }
 	}
+#else
 	for (i2=n2; i2 < nk; i2++) {
 	    for (i1=0; i1 < nw; i1++) {
 		fft[i2][i1].r = 0.;
@@ -120,16 +163,15 @@ int main (int argc, char* argv[])
 	for (i1=0; i1 < nw; i1++) {
 	    /* Fourier transform in n2 */
 	    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
-	    if (sum) {
-		for (i2=0; i2 < nk; i2++) {
+	    for (i2=0; i2 < nk; i2++) {
+		if (sum) {
 		    spec[i2][i1] += sf_cabsf(ctrace2[i2]);
-		}
-	    } else {
-		for (i2=0; i2 < nk; i2++) {
+		} else { 
 		    spec[i2][i1] = sf_cabsf(ctrace2[i2])*scale;
 		}
 	    }
 	}
+#endif
 	
 	if (!sum) sf_floatwrite(spec[0],nw*nk,out);
     } /* i3 */
