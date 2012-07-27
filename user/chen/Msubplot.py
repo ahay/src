@@ -169,7 +169,7 @@ for ip in range(np):
 	min2=par.float("p%dmin2"%ip, xx.min()+ll)
 	max2=par.float("p%dmax2"%ip, xx.max()-ll)
 
-	ax=subplot(np2,np1,ip)
+	ax=subplot(np2,np1,ip+1)
 	ax.xaxis.set_major_formatter(
 		TicFormatter(fmt1[ip]))
 	ax.yaxis.set_major_formatter(
