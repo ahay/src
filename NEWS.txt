@@ -33,7 +33,7 @@ To programs:
 * user/poulsonj: new contributor (Jack Poulson)
 * vpconvert  checks the existence of different pens and prefers gdpen
   to pngpen
-* sffft1 and sffft3: optional support for FFTW
+* sffft1, sffft3, sfspectra: optional support for FFTW
 
 ===Bug fixes===
 

@@ -17,10 +17,11 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <stdio.h>
-#include <math.h>
-
 #include <rsf.h>
+
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+#endif
 
 int main (int argc, char* argv[]) 
 {
@@ -30,7 +31,12 @@ int main (int argc, char* argv[])
     char key[3], *label=NULL;
     bool sum;
     sf_file in=NULL, out=NULL;
+
+#ifdef SF_HAS_FFTW
+    fftwf_plan cfg;
+#else
     kiss_fftr_cfg cfg;
+#endif
 
     sf_init (argc, argv); 
     in = sf_input("in");
@@ -82,14 +88,25 @@ int main (int argc, char* argv[])
     }
 
     scale = sqrtf(1./nfft); /* FFT scaling */ 
+
+#ifdef SF_HAS_FFTW
+    cfg = fftwf_plan_dft_r2c_1d(nfft, trace, 
+				(fftwf_complex *) fft,
+				FFTW_ESTIMATE);
+#else
     cfg = kiss_fftr_alloc(nfft,0,NULL,NULL);
+#endif
 
     /*  loop over all traces */
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
 	/* Fourier transform */
+#ifdef SF_HAS_FFTW
+	fftwf_execute(cfg);
+#else
 	kiss_fftr (cfg,trace,fft);
+#endif
 
 	if (sum) {
 	    for (i1=0; i1 < nw; i1++) {
