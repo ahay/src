@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
     if (!sf_stdin()) { /* no input file in stdin */
 	nin=0;
     } else {
-	filename[0] = "stdin";
+	filename[0] = "in";
 	nin=1;
     }
 
