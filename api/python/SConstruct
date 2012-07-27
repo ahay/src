@@ -18,10 +18,12 @@ env.Prepend(CPPPATH=['../../include'],
 if root:
     pydir = os.path.dirname(pkgdir)
     for module in modules:
-        install = env.Install(pydir,module+'.py')
+        env.RSF_Pycompile(module+'.pyc',module+'.py')
+        install = env.Install(pydir,[module+'.py',module+'.pyc'])
 
         if module == 'm8r':
             env.InstallAs(os.path.join(pkgdir,'api.py'),module+'.py')
+            env.InstallAs(os.path.join(pkgdir,'api.pyc'),module+'.pyc')
             env.Install(bindir,module+'test')
 
 if env.get('SWIG') and env.get('NUMPY'):

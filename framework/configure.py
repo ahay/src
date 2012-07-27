@@ -102,7 +102,6 @@ def check_all(context):
     jpeg(context) # FDNSI
     blas(context) # FDNSI
     lapack(context) # FDNSI
-    epydoc(context) #FDNSI
     swig(context)
     api = api_options(context)
     if 'c++' in api:
@@ -1698,19 +1697,6 @@ def matlab(context):
     else:
         suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
-
-pkg['epydoc'] = {'fedora':'epydoc',
-                 'ubuntu':'python-epydoc'}
-
-def epydoc(context):
-    context.Message("checking for Epydoc ...")
-    epydoc_exec = WhereIs('epydoc')
-    if epydoc_exec:
-        context.Result(epydoc_exec)
-        context.env['EPYDOC'] = epydoc_exec
-    else:
-        context.Result(context_failure)
-        need_pkg('epydoc',False)
 
 pkg['octave'] = {'fedora':'octave',
                  'ubuntu':'octave'}

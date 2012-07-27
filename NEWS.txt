@@ -19,6 +19,8 @@ To APIs:
 * python API (m8r or rsf.api) is now always installed
 * tell and seek added to C++ API
 * added support for FFTW and PSP
+* shape() and reshape() methods in File class (python API) reversed
+  for consistency with numpy
 
 To the Python package:
 

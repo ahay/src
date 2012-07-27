@@ -310,7 +310,7 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 	/* dimensions and type */
 	nd = sf_filedims (file, n);
 	dims = sf_alloc(nd,sizeof(*dims));
-	for (id=0; id < nd; id++) dims[id]=n[id];
+	for (id=0; id < nd; id++) dims[id]=n[nd-id-1];
 
 	switch (sf_gettype(file)) {
 	    case SF_FLOAT:

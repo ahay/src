@@ -294,6 +294,7 @@ class File(object):
             val = None
         return val
     def shape(self):
+        # axes are reversed for consistency with numpy
         s = []
         dim = 1
         for i in range(1,10):
@@ -301,25 +302,30 @@ class File(object):
             if ni > 1:
                 dim = i
             s.append(ni)
-        return tuple(s[:dim])
+        s = s[:dim]
+        s.reverse()
+        return tuple(s)
     def reshape(self,shape=None):
         if not shape:
             shape = self.size()
         try:
-            shape = tuple(shape)
+            shape = list(shape)
         except:
-            shape = (shape,)
-        old = self.shape()
+            shape = [shape]
+        old = list(self.shape())
+        old.reverse()
+        shape.reverse()
         lold = len(old)
         lshape = len(shape)
         puts = {}
         for i in range(max(lold,lshape)):
             ni = 'n%d' % (i+1)
-            if i < lold and i < lshape:
-                if old[i] != shape[i]:
-                    puts[ni] = shape[i]
-            elif i < lold:
-                puts[ni] = 1
+            if i < lold:
+                if i < lshape:
+                    if old[i] != shape[i]:
+                        puts[ni] = shape[i]
+                else:
+                    puts[ni] = 1
             else:
                 puts[ni] = shape[i]
         put = Filter('put')
