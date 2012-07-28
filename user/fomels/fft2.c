@@ -109,7 +109,7 @@ void fft2_unshift(float *inp /* [n1*n2] */)
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
-	    inp[i2*n1+i1] *= (i2%2)? -wt: wt;
+	    inp[i2*n1+i1] *= ((i2%2)? -wt: wt);
 	}
     } 
 
