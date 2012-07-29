@@ -60,13 +60,13 @@ int main(int argc,char**argv)
 	fdip_init(n[0], n[1], n[2], rect, liter, verb);
 	
 	for(ir=0;ir<nr;ir++){
-		sf_warning(" %d/%d;", ir, nr);
+		if(verb)	sf_warning(" %d/%d;", ir, nr);
 		sf_floatread(u,n123,in);
 		fdip( u, p, n4);
 		if( n4 == 2 )	sf_floatwrite(p, n123*2, out);
 		else	sf_floatwrite(p, n123, out);
 	}
-
+	if(verb) sf_warning(" finished.\n");
 	fdip_close();
 	exit(0);
 }

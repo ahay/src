@@ -7,7 +7,7 @@ try:
 	from string import *
 	import rsf.api as rsf
 except Exception, e:
-	print 'ERROR: numpy needed'
+	print 'ERROR: pylab needed'
 	sys.exit(1)
 
 colortable=('black','blue','red','magenta','green','cyan','yellow','white')
