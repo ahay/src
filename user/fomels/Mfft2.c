@@ -60,16 +60,17 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 	
     nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
+
+    f = sf_floatalloc(nz2*nx2);
+    c = sf_complexalloc(nk);
 	
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);
+	ifft2_allocate(c);
     } else {
 	sf_putint(freq,"n1",nk);
 	sf_putint(freq,"n2",1);
     }
-	
-    f = sf_floatalloc(nz2*nx2);
-    c = sf_complexalloc(nk);
 	
     if (inv) {
 	sf_complexread(c,nk,freq);

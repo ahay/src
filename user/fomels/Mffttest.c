@@ -64,16 +64,17 @@ int main(int argc, char* argv[])
 
     nk = fft3_init(cmplx,pad1,nz,ny,nx,&nz2,&ny2,&nx2);
 
+    f = sf_floatalloc(nz2*ny2*nx2);
+    c = sf_complexalloc(nk);
+
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);
+	ifft3_allocate(c);
     } else {
 	sf_putint(freq,"n1",nk);
 	sf_putint(freq,"n2",1);
 	sf_putint(freq,"n3",1);
     }
-
-    f = sf_floatalloc(nz2*ny2*nx2);
-    c = sf_complexalloc(nk);
 
     if (inv) {
 	sf_complexread(c,nk,freq);

@@ -54,17 +54,18 @@ int main(int argc, char* argv[])
     }
 	
     nk = fft1_init(nz,&nz2);
+
+    f = sf_floatalloc(nz2);
+    c = sf_complexalloc(nk);
 	
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) 
 	    sf_error("Need n1=%d in input",nk);
+	ifft1_allocate(c);
     } else {
 	sf_putint(freq,"n1",nk);
     }
-	
-    f = sf_floatalloc(nz2);
-    c = sf_complexalloc(nk);
-	
+		
     if (inv) {
 	sf_complexread(c,nk,freq);
 		

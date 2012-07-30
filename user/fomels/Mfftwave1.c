@@ -102,6 +102,8 @@ int main(int argc, char* argv[])
 
 	cwavem = sf_complexalloc(nk);
 	wave = sf_floatalloc2(nx,m1);
+
+	ifft1_allocate(cwavem);
     } else {
 	if (SF_COMPLEX != sf_gettype(prop)) sf_error("Need complex prop");
 
@@ -125,7 +127,7 @@ int main(int argc, char* argv[])
 	curr[ix] = 0.;
     }
 
-    /* propagation in time */
+     /* propagation in time */
     for (it=0; it < nt; it++) {
 	fft1(curr,cwave);
 

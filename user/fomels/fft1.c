@@ -55,8 +55,7 @@ void fft1(float *inp      /* [n] */,
 
     if (NULL==cfg) {
 #ifdef SF_HAS_FFTW
-	cfg = fftwf_plan_dft_r2c_1d(n,
-				    ff, (fftwf_complex *) out,
+	cfg = fftwf_plan_dft_r2c_1d(n, ff, (fftwf_complex *) out,
 				    FFTW_MEASURE);
 #else
 	cfg  = kiss_fftr_alloc(n,0,NULL,NULL);
@@ -75,6 +74,15 @@ void fft1(float *inp      /* [n] */,
 #endif
 }
 
+void ifft1_allocate(sf_complex *inp /* [nk] */)
+/*< allocate inverse transform >*/
+{
+#ifdef SF_HAS_FFTW
+    icfg = fftwf_plan_dft_c2r_1d(n, (fftwf_complex *) inp, ff,
+				 FFTW_MEASURE);
+    if (NULL == icfg) sf_error("FFT allocation failure.");
+#endif
+}
 
 void ifft1(float *out      /* [n] */, 
 	   sf_complex *inp /* [nk] */)
@@ -84,8 +92,7 @@ void ifft1(float *out      /* [n] */,
 
     if (NULL==icfg) {
 #ifdef SF_HAS_FFTW
-	icfg = fftwf_plan_dft_c2r_1d(n, (fftwf_complex *) inp, ff,
-				     FFTW_MEASURE);
+	sf_error("Call ifft1_allocate first.");
 #else
 	icfg  = kiss_fftr_alloc(n,1,NULL,NULL);
 #endif

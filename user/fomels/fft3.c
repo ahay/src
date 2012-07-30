@@ -196,6 +196,21 @@ void fft3(float *inp      /* [n1*n2*n3] */,
 
 }
 
+void ifft3_allocate(sf_complex *inp /* [nk*n2*n3] */)
+/*< allocate inverse transform >*/
+{
+#ifdef SF_HAS_FFTW
+    icfg = cmplx? 
+	fftwf_plan_dft_3d(n3,n2,n1,
+			  (fftwf_complex *) inp, 
+			  (fftwf_complex *) cc[0][0],
+			  FFTW_BACKWARD, FFTW_MEASURE):
+	fftwf_plan_dft_c2r_3d(n3,n2,n1,
+			      (fftwf_complex *) inp, ff[0][0],
+			      FFTW_MEASURE);
+    if (NULL == icfg) sf_error("FFTW failure.");
+ #endif
+}
 
 void ifft3(float *out      /* [n1*n2*n3] */, 
 	   sf_complex *inp /* [nk*n2*n3] */)
@@ -204,18 +219,6 @@ void ifft3(float *out      /* [n1*n2*n3] */,
     int i1, i2, i3;
 
 #ifdef SF_HAS_FFTW
-    if (NULL==icfg) {
-	icfg = cmplx? 
-	    fftwf_plan_dft_3d(n3,n2,n1,
-			      (fftwf_complex *) inp, 
-			      (fftwf_complex *) cc[0][0],
-			      FFTW_BACKWARD, FFTW_MEASURE):
-	    fftwf_plan_dft_c2r_3d(n3,n2,n1,
-				  (fftwf_complex *) inp, ff[0][0],
-				  FFTW_MEASURE);
-	if (NULL == icfg) sf_error("FFTW failure.");
-    }
-
     fftwf_execute(icfg);
 #else
 

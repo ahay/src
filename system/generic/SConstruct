@@ -31,7 +31,6 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
 fftw = env.get('FFTW')
-
 if fftw:
     env.Prepend(LIBS=[fftw],
                 CPPDEFINES=['SF_HAS_FFTW'])
