@@ -4,7 +4,7 @@ from rsf.proj import *
 data='../SEGY/shots.rsf'
 
 # Passband filter the data
-Flow('shots',data,
+Flow('shot0',data,
      '''
      bandpass flo=20 fhi=180 
      | pow pow1=2
@@ -13,10 +13,10 @@ Flow('shots',data,
 ##################
 # common offset
 ##################
-Flow('near_offset','shots','window n2=1')
+Flow('near_offset','shot0','window n2=1')
 Plot('near_offset','grey title="Near Offset section"')
 
-Flow('far_offset','shots','window n2=1 f2=119')
+Flow('far_offset','shot0','window n2=1 f2=119')
 
 ###############################
 # Pick Sea Floor for near offset
@@ -56,5 +56,13 @@ Flow('mute','pick',
      | nmostretch inv=y half=n v0=1500
      ''',split=[1,ns],reduce="cat axis=3")
 
+mute='mute'
+# apply mute above sea floor
+############################
+Flow('shot', [data, mute],
+     '''
+     bandpass flo=20 fhi=180
+     | mul ${SOURCES[1]}
+     ''')
 End()
 
