@@ -336,6 +336,7 @@ def c99(context):
 
 # The two lists below only used in the x11 check
 xinc = [
+    '/opt/X11/include',
     '/usr/X11/include',
     '/usr/X11R6/include',
     '/usr/X11R5/include',
@@ -366,6 +367,7 @@ xinc = [
     ]
 
 xlib = [
+    '/opt/X11/lib',
     '/usr/X11/lib64',
     '/usr/X11/lib',
     '/usr/X11R6/lib64',
