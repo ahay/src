@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, causal, verb, adj, shape;
+    bool velocity, causal, verb, adj, shape, weight;
     int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
     int iter, niter, cgiter, count;
     int *f, *m, nloop;
@@ -188,6 +188,9 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("shape",&shape)) shape=false;
 	    /* shaping regularization (default no) */
 
+	    if (!sf_getbool("weight",&weight)) weight=false;
+	    /* data weighting (default no) */
+
 	    /* read record file */
 	    if (NULL == sf_getstring("reco"))
 		sf_error("Need record reco=");
@@ -281,10 +284,11 @@ int main(int argc, char* argv[])
 	    
 	    /* calculate L2 data-misfit */
 	    for (i=0; i < n[1]*n[2]; i++) {
-		if (m == NULL || m[i] == 1)
+		if (m == NULL || m[i] == 1) {
 		    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
-		else
+		} else {
 		    dt[i*n[0]] = 0.;
+		}
 
 		for (j=1; j < n[0]; j++)
 		    dt[i*n[0]+j] = 0.;
@@ -317,18 +321,14 @@ int main(int argc, char* argv[])
 
 		/* output gradient */
 		if (grad != NULL) {
-		    sf_floatwrite(dw,nw,grad);
-
-		    /*
 		    if (velocity) {
-			for (iw=0; iw < nw; iw++)
+			for (iw=0; iw < nw; iw++) {
 			    dv[iw] = -dw[iw]/(2.*sqrtf(w[iw])*(w[iw]+dw[iw]/2.));
-			
+			}
 			sf_floatwrite(dv,nw,grad);
 		    } else {
 			sf_floatwrite(dw,nw,grad);
 		    }
-		    */
 		}
 
 		/* line search */
@@ -344,10 +344,11 @@ int main(int argc, char* argv[])
 		    dsreiko_mirror(t);
 		    
 		    for (i=0; i < n[1]*n[2]; i++) {
-			if (m == NULL || m[i] == 1)
+			if (m == NULL || m[i] == 1) {
 			    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
-			else
+			} else {
 			    dt[i*n[0]] = 0.;
+			}
 
 			for (j=1; j < n[0]; j++)
 			    dt[i*n[0]+j] = 0.;

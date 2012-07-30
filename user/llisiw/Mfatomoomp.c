@@ -317,10 +317,7 @@ int main(int argc, char* argv[])
 	    fatomo_lop(true,false,nt,nrhs,ds,rhs);
 
 	    if (velocity) {
-		for (it=0; it < nt; it++) {
-		    /*
-		    dv[it] = -ds[it]/(s[it]+sqrtf(s[it])*ds[it]);
-		    */
+		for (it=0; it < nt; it++) {		    
 		    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
 		}
 		sf_floatwrite(dv,nt,sout);
@@ -364,10 +361,7 @@ int main(int argc, char* argv[])
 		/* output computed gradient (before line-search) */
 		if (grad != NULL) {
 		    if (velocity) {
-			for (it=0; it < nt; it++) {
-			    /*
-			    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
-			    */
+			for (it=0; it < nt; it++) {			    
 			    dv[it] = -ds[it]/(sqrtf(s[it])*(s[it]+ds[it]));
 			}
 			sf_floatwrite(dv,nt,grad);
