@@ -237,7 +237,11 @@ void oglbuildmenu (void)
     glutAddMenuEntry (stretchy ? "Rigid" : "Stretchy", MENU_STRETCHY);
     glutAddMenuEntry ("Full Screen", MENU_FULLSCREEN);
     glutAddMenuEntry ("Quit", MENU_QUIT);
+#ifdef __APPLE__
+    glutAttachMenu (GLUT_LEFT_BUTTON); /* for single-button Macs */
+#else
     glutAttachMenu (GLUT_RIGHT_BUTTON);
+#endif
 }
 
 void oglreset (void)
@@ -828,8 +832,12 @@ void oglkeyboard (unsigned char key, int x, int y)
             break;
         case 'N': /* Next */
         case 'n':
-            if (!animate && frames_num > 1) {
-                if (curr_frame == (frames_num - 1))
+	    if (frames_num > 1) {
+		if (animate) {
+		    animate = false;
+		    oglbuildmenu ();
+		}
+		if (curr_frame == (frames_num - 1))
                     curr_frame = 0;
                 else
                     curr_frame++;
@@ -838,7 +846,11 @@ void oglkeyboard (unsigned char key, int x, int y)
             break;
         case 'm': /* Prev */
         case 'M':
-            if (!animate && frames_num > 1) {
+            if (frames_num > 1) {
+		if (animate) {
+		    animate = false;
+		    oglbuildmenu ();
+		}
                 if (curr_frame == 0)
                     curr_frame = frames_num - 1;
                 else
@@ -873,7 +885,8 @@ void oglkeyboard (unsigned char key, int x, int y)
         case 'T': /* Stretchy */
         case 't':
             stretchy = (bool) !stretchy;
-            oglreshape (glutGet (GLUT_WINDOW_WIDTH), glutGet (GLUT_WINDOW_HEIGHT));
+            oglreshape (glutGet (GLUT_WINDOW_WIDTH), 
+			glutGet (GLUT_WINDOW_HEIGHT));
             oglbuildmenu ();
             break;
         case 'Q': /* Quit */
