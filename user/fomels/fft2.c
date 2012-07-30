@@ -23,7 +23,7 @@
 #endif
 
 static bool cmplx;
-static int n1, n2, n12, nk;
+static int n1, n2, nk;
 static float wt;
 
 static float **ff=NULL;
@@ -68,7 +68,6 @@ int fft2_init(bool cmplx1        /* if complex transform */,
     }
 		
     n2 = kiss_fft_next_fast_size(ny);
-    n12 = n1*n2;
 
     if (cmplx) {
 	cc = sf_complexalloc2(n1,n2);
@@ -93,7 +92,7 @@ int fft2_init(bool cmplx1        /* if complex transform */,
     *nx2 = n1;
     *ny2 = n2;
 	
-    wt =  1.0/n12;
+    wt =  1.0/(n1*n2);
 	
     return (nk*n2);
 }
@@ -168,9 +167,7 @@ void ifft2(float *out      /* [n1*n2] */,
 				  FFTW_MEASURE);
 	if (NULL == icfg) sf_error("FFTW failure.");
     }
-#endif  
 
-#ifdef SF_HAS_FFTW
     fftwf_execute(icfg);
 #else
     for (i1=0; i1 < nk; i1++) {
