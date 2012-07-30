@@ -1113,7 +1113,8 @@ def cuda(context):
         context.Result(context_failure)
         context.env['NVCC'] = None
 
-pkg['fftw'] = {'fedora':'fftw-devel'}
+pkg['fftw'] = {'fedora':'fftw-devel',
+               'darwin':'fftw-3-single'}
 
 def fftw(context):
     context.Message("checking for FFTW ... ")

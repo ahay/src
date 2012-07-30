@@ -212,13 +212,22 @@ Flow('helm','wave0','window n2=300 | transp | fft1')
 Flow('dreal','helm','real | deriv')
 Flow('dimag','helm','imag | deriv')
 
-Flow('iphase','dreal dimag helm','cmplx ${SOURCES[1]} | math f=${SOURCES[2]} output=input/f | imag | window max1=50')
+Flow('iphase','dreal dimag helm',
+     '''
+     cmplx ${SOURCES[1]} | math f=${SOURCES[2]} output=input/f | imag |
+     window max1=50
+     ''')
 
-Result('iphase','grey title="Instantaneous Phase" ')
+#Result('iphase','grey title="Instantaneous Phase" ')
 
 # Lowrank propagation
-Flow('awave2','spike left2 right2','fftwave1 prop=${SOURCES[1]} right=${SOURCES[2]} nt=500 dt=%g' % dt)
-Result('awave2','window max2=3 | grey title="Lowrank Wave" transp=n clip=0.5 label1=Distance unit1=m')
+Flow('awave2','spike left2 right2',
+     'fftwave1 prop=${SOURCES[1]} right=${SOURCES[2]} nt=500 dt=%g' % dt)
+Result('awave2',
+       '''
+       window max2=3 |
+       grey title="Lowrank Wave" transp=n clip=0.5 label1=Distance unit1=m
+       ''')
 
 Flow('awaveo','spike mido lefto righto','fftwave1 sub=n prop=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} nt=500 dt=%g' % dt)
 Result('awaveo','window max2=3 | grey title="Lowrank Wave" transp=n clip=0.5 label1=Distance unit1=m')

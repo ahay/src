@@ -169,14 +169,14 @@ int main(int argc, char* argv[])
     ifft = (fftwf_plan *) sf_alloc(m2,sizeof(fftwf_plan));    
     if (cmplx) {
 	cc = sf_complexalloc(nzx2);
-	fft = fftwf_plan_dft_2d(nx2,nz2,
+	fft = fftwf_plan_dft_2d(nz2,nx2,
 				(fftwf_complex *) cc, 
 				(fftwf_complex *) cwave,
 				FFTW_FORWARD, FFTW_MEASURE);
 	if (NULL == fft) sf_error("FFTW failure.");
 	cw = sf_complexalloc2(nzx2,m2);
 	for (im = 0; im < m2; im++) {
-	    ifft[im] = fftwf_plan_dft_2d(nx2,nz2,
+	    ifft[im] = fftwf_plan_dft_2d(nz2,nx2,
 					 (fftwf_complex *) cwavem, 
 					 (fftwf_complex *) cw[im],
 					 FFTW_BACKWARD, FFTW_MEASURE);

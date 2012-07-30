@@ -42,6 +42,7 @@ int main(int argc, char* argv[])
     sf_file left, right;
 
 #ifdef SF_HAS_FFTW
+    sf_complex *cc, **cw;
     fftwf_plan fft, *ifft;
 #endif
 
@@ -106,17 +107,34 @@ int main(int argc, char* argv[])
     }
 
 #ifdef SF_HAS_FFTW
-    fft = fftwf_plan_dft_r2c_2d(nx2,nz2,
-				curr, (fftwf_complex *) cwave,
-				FFTW_MEASURE);
-    if (NULL == fft) sf_error("FFTW failure.");
-    ifft = (fftwf_plan *) sf_alloc(m2,sizeof(fftwf_plan));
-    for (im = 0; im < m2; im++) {
-	ifft[im] = fftwf_plan_dft_c2r_2d(nx2,nz2,
-					(fftwf_complex *) cwavem,
-					wave[im],
-					FFTW_MEASURE);
-	if (NULL == ifft[im]) sf_error("FFTW failure.");
+    if (cmplx) {
+	cc = sf_complexalloc(nzx2);
+	fft = fftwf_plan_dft_2d(nx2,nz2,
+				(fftwf_complex *) cc, 
+				(fftwf_complex *) cwave,
+				FFTW_FORWARD, FFTW_MEASURE);
+	if (NULL == fft) sf_error("FFTW failure.");
+	cw = sf_complexalloc2(nzx2,m2);
+	for (im = 0; im < m2; im++) {
+	    ifft[im] = fftwf_plan_dft_2d(nx2,nz2,
+					 (fftwf_complex *) cwavem, 
+					 (fftwf_complex *) cw[im],
+					 FFTW_BACKWARD, FFTW_MEASURE);
+	    if (NULL == ifft[im]) sf_error("FFTW failure.");
+	} 
+    } else {
+	fft = fftwf_plan_dft_r2c_2d(nx2,nz2,
+				    curr, (fftwf_complex *) cwave,
+				    FFTW_MEASURE);
+	if (NULL == fft) sf_error("FFTW failure.");
+	ifft = (fftwf_plan *) sf_alloc(m2,sizeof(fftwf_plan));
+	for (im = 0; im < m2; im++) {
+	    ifft[im] = fftwf_plan_dft_c2r_2d(nx2,nz2,
+					     (fftwf_complex *) cwavem,
+					     wave[im],
+					     FFTW_MEASURE);
+	    if (NULL == ifft[im]) sf_error("FFTW failure.");
+	}
     }
 #endif
 
@@ -125,7 +143,14 @@ int main(int argc, char* argv[])
 	if(verb) sf_warning("it=%d;",it);
 
 	/* matrix multiplication */
+	fft2_shift(curr);
+
 #ifdef SF_HAS_FFTW
+	if (cmplx) {
+	    for (ix=0; ix < nzx2; ix++) {
+		cc[ix] = sf_cmplx(curr[ix],0.0f);
+	    }
+	}
 	fftwf_execute(fft);
 #else
 	fft2(curr,cwave);
@@ -141,9 +166,15 @@ int main(int argc, char* argv[])
 	    }
 #ifdef SF_HAS_FFTW
 	    fftwf_execute(ifft[im]);
+	    if (cmplx) {
+		for (ix=0; ix < nzx2; ix++) {
+		    wave[im][ix] = crealf(cw[im][ix]);
+		}
+	    }	    
 #else
-	    ifft2(wave[im],cwavem);
+	    ifft2(wave[im],cwavem);	    
 #endif
+	    fft2_unshift(wave[im]);
 	}
 
 	for (ix = 0; ix < nx; ix++) {

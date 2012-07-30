@@ -36,6 +36,7 @@ To programs:
 * vpconvert  checks the existence of different pens and prefers gdpen
   to pngpen
 * sffft1, sffft3, sfspectra, sfspectra2: optional support for FFTW
+* oglpen stops movie on pressing 'n' or 'm', menu on left button on Macs
 
 ===Bug fixes===
 
