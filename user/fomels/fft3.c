@@ -135,10 +135,10 @@ void fft3(float *inp      /* [n1*n2*n3] */,
 	    fftwf_plan_dft_3d(n3,n2,n1,
 			      (fftwf_complex *) cc[0][0], 
 			      (fftwf_complex *) out,
-			      FFTW_FORWARD, FFTW_MEASURE):
+			      FFTW_FORWARD, FFTW_ESTIMATE):
 	    fftwf_plan_dft_r2c_3d(n3,n2,n1,
 				  ff[0][0], (fftwf_complex *) out,
-				  FFTW_MEASURE);
+				  FFTW_ESTIMATE);
 	if (NULL == cfg) sf_error("FFTW failure.");
     }
 #endif  
@@ -204,10 +204,10 @@ void ifft3_allocate(sf_complex *inp /* [nk*n2*n3] */)
 	fftwf_plan_dft_3d(n3,n2,n1,
 			  (fftwf_complex *) inp, 
 			  (fftwf_complex *) cc[0][0],
-			  FFTW_BACKWARD, FFTW_MEASURE):
+			  FFTW_BACKWARD, FFTW_ESTIMATE):
 	fftwf_plan_dft_c2r_3d(n3,n2,n1,
 			      (fftwf_complex *) inp, ff[0][0],
-			      FFTW_MEASURE);
+			      FFTW_ESTIMATE);
     if (NULL == icfg) sf_error("FFTW failure.");
  #endif
 }

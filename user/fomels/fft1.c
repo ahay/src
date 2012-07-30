@@ -56,7 +56,7 @@ void fft1(float *inp      /* [n] */,
     if (NULL==cfg) {
 #ifdef SF_HAS_FFTW
 	cfg = fftwf_plan_dft_r2c_1d(n, ff, (fftwf_complex *) out,
-				    FFTW_MEASURE);
+				    FFTW_ESTIMATE);
 #else
 	cfg  = kiss_fftr_alloc(n,0,NULL,NULL);
 #endif
@@ -79,7 +79,7 @@ void ifft1_allocate(sf_complex *inp /* [nk] */)
 {
 #ifdef SF_HAS_FFTW
     icfg = fftwf_plan_dft_c2r_1d(n, (fftwf_complex *) inp, ff,
-				 FFTW_MEASURE);
+				 FFTW_ESTIMATE);
     if (NULL == icfg) sf_error("FFT allocation failure.");
 #endif
 }
