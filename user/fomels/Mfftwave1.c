@@ -125,8 +125,6 @@ int main(int argc, char* argv[])
 	curr[ix] = 0.;
     }
 
-    ifft1_allocate(m1);
-
     /* propagation in time */
     for (it=0; it < nt; it++) {
 	fft1(curr,cwave);
@@ -140,7 +138,7 @@ int main(int argc, char* argv[])
 		    cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]/nx2);
 #endif
 		}
-		ifft1(im,wave[im],cwavem);
+		ifft1(wave[im],cwavem);
 	    }
 	}
 

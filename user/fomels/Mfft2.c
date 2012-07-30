@@ -18,24 +18,15 @@
 */
 #include <rsf.h>
 
-#ifdef SF_HAS_FFTW
-#include <fftw3.h>
-#endif
-
 #include "fft2.h"
 
 int main(int argc, char* argv[])
 {   
     bool inv, cmplx;
-    int nz,nx,nz2,nx2,nzx,nk,ix,n2,pad1,nw;
+    int nz,nx,nz2,nx2,nk,ix,n2,pad1;
     float *f;
     sf_complex *c; 
     sf_file space, freq;
-
-#ifdef SF_HAS_FFTW
-    sf_complex *cf;
-    fftwf_plan fft;
-#endif
 	
     sf_init(argc,argv);
     
@@ -69,8 +60,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 	
     nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
-    nw = nk/nx2;
-    nzx = nz2*nx2;
 	
     if (inv) {
 	if (!sf_histint(freq,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in input",nk);
@@ -79,78 +68,27 @@ int main(int argc, char* argv[])
 	sf_putint(freq,"n2",1);
     }
 	
-    f = sf_floatalloc(nzx);
+    f = sf_floatalloc(nz2*nx2);
     c = sf_complexalloc(nk);
-
-#ifdef SF_HAS_FFTW
-    if (cmplx) {
-	cf = sf_complexalloc(nzx);
-	if (inv) {
-	    fft = fftwf_plan_dft_2d(nx2,nz2,
-				    (fftwf_complex *) c, 
-				    (fftwf_complex *) cf,
-				    FFTW_BACKWARD, FFTW_MEASURE);
-	} else {
-	    fft = fftwf_plan_dft_2d(nx2,nz2,
-				    (fftwf_complex *) cf, 
-				    (fftwf_complex *) c,
-				    FFTW_FORWARD, FFTW_MEASURE);
-	} 
-    } else {
-	cf = NULL;
-	if (inv) {
-	    fft = fftwf_plan_dft_c2r_2d(nx2,nz2,(fftwf_complex *) c,f,
-					FFTW_MEASURE);
-	} else {
-	    fft = fftwf_plan_dft_r2c_2d(nx2,nz2, f, (fftwf_complex *) c,
-					FFTW_MEASURE);
-	}
-    }
-    if (NULL == fft) sf_error("FFTW failure.");
-#endif
 	
     if (inv) {
 	sf_complexread(c,nk,freq);
-
-#ifdef SF_HAS_FFTW
-	fftwf_execute(fft);
-
-	if (cmplx) {
-	    for (ix=0; ix < nzx; ix++) {
-		f[ix] = crealf(cf[ix]);
-	    }
-	}
-#else
-	ifft2(f,c);
-#endif
 		
-	fft2_unshift(f);
-
+	ifft2(f,c);
+		
 	for (ix=0; ix < nx; ix++) {
 	    sf_floatwrite(f+ix*nz2,nz,space);
 	}
     } else {
-	for (ix=0; ix < nzx; ix++) {
+	for (ix=0; ix < nz2*nx2; ix++) {
 	    f[ix]=0.;
 	}
 		
 	for (ix=0; ix < nx; ix++) {
 	    sf_floatread(f+ix*nz2,nz,space);
 	}
-
-	fft2_shift(f);
-	
-#ifdef SF_HAS_FFTW
-	if (cmplx) {
-	    for (ix=0; ix < nzx; ix++) {
-		cf[ix] = sf_cmplx(f[ix],0.0f);
-	    }
-	}
-
-	fftwf_execute(fft);
-#else	
+		
 	fft2(f,c);
-#endif
 		
 	sf_complexwrite(c,nk,freq);
     }

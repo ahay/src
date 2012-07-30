@@ -66,11 +66,9 @@ int main(int argc, char* argv[])
     c = sf_complexalloc(nk);
 	
     if (inv) {
-	ifft1_allocate(1);
-
 	sf_complexread(c,nk,freq);
 		
-	ifft1(0,f,c);
+	ifft1(f,c);
 		
 	sf_floatwrite(f,nz,space);
     } else {
