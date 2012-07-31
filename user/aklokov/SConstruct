@@ -3,17 +3,18 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-crssemb diptaper
+crssemb diptaper dvscan2d dvscan2d
 '''
 
 mpi_progs = ''
 
-ccprogs = 'tmigda dmigda'
+ccprogs = 'tmigda dmigda rpu'
 
 subs = '''
 support sembler dmigrator2D dmigratorBase hwt2d
 tmigrator2D tmigratorBase tmigrator3D
 curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
+signalUnwrapper
 '''
 
 try:  # distributed version
