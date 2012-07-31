@@ -137,8 +137,8 @@ int main(int argc, char* argv[])
 	nrecv = (n[1]-2*offset[0])*(n[2]-2*offset[1]);
     else
 	/* moving acquisition: offset defines distance from source */
-	nrecv = ((2*offset[0]+1)*(2*offset[1]+1)>n[1]*n[2])?n[1]*n[2]-1
-	    :(2*offset[0]+1)*(2*offset[1]+1)-1;
+	nrecv = ((2*offset[0]+1)*(2*offset[1]+1)>n[1]*n[2])?n[1]*n[2]
+	    :(2*offset[0]+1)*(2*offset[1]+1);
 
     /* allocate memory for output */
     recv = sf_intalloc2(nrecv,nc);
@@ -250,9 +250,6 @@ int main(int argc, char* argv[])
 		    
 		    if (left[0] <= j && j <= right[0] 
 			&& left[1] <= k && k <= right[1]) {
-			
-			if (j == temp[0] && k == temp[1])
-			    continue;
 			
 			for (i=0; i < n[0]; i++) {
 			    if (s[k*n[1]*n[0]+j*n[0]+i] < air) {

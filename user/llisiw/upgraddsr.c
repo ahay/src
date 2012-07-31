@@ -38,7 +38,7 @@ struct Upgrad {
 static int ndim, nt, ss[3];
 static const int *nn;
 static double dd[3];
-static const float *t0, *w0;
+static const float *t0, *w0, *wght;
 
 static int fermat(const void *a, const void *b)
 /* comparison for traveltime sorting from small to large */
@@ -103,7 +103,8 @@ upgrad upgrad_init(int ndim_in      /* number of dimensions */,
 void upgrad_set(upgrad upg      /* upwind stencil */,
 		const float *r0 /* reference time */,
 		const float *s0 /* reference slowness-squared */,
-		const int *f0   /* reference flag */)
+		const int *f0   /* reference flag */,
+		const float *weight /* data weighting */)
 /*< supply reference >*/
 {
     bool source;
@@ -113,6 +114,7 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 
     t0 = r0;
     w0 = s0;
+    wght = weight;
 
     /* sort from small to large traveltime */
     for (it = 0; it < nt; it++) {
@@ -306,6 +308,12 @@ void upgrad_solve(upgrad upg,
 	    }
 	}
     }
+
+    /* weighting */
+    if (wght != NULL) {
+	for (i=0; i < nn[1]*nn[2]; i++)
+	    x[i*nn[0]] *= wght[i];
+    }
 }
 
 void upgrad_inverse(upgrad upg,
@@ -327,8 +335,10 @@ void upgrad_inverse(upgrad upg,
 
 	sf_line2cart(ndim,nn,jt,ii);
 
-	/* paste */
-	rhs[jt] += x[jt]+x[ii[1]*ss[2]+ii[2]*ss[1]+ii[0]];
+	/* weighting and paste */
+	rhs[jt] += (wght!=NULL)? wght[ii[2]*nn[1]+ii[1]]*x[jt]
+	    +wght[ii[1]*nn[1]+ii[2]]*x[ii[1]*ss[2]+ii[2]*ss[1]+ii[0]] 
+	    :x[jt]+x[ii[1]*ss[2]+ii[2]*ss[1]+ii[0]];
 
 	up = upg->update[it];
 	den = upg->ww[it][ndim];

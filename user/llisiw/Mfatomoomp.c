@@ -27,19 +27,15 @@
 #include "fatomoomp.h"
 #include "trianglen.h"
 
-#include "l1.h"
-#include "l1step.c"
-
 int main(int argc, char* argv[])
 {
-    bool velocity, l1norm, shape, verb;
+    bool velocity, shape, verb, weight;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order, seg;
-    int iter, niter, stiter, istep, nstep, *k, nfreq, nmem, nrhs, **rhslist, nrecv;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl, **ray;
-    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step;
+    int iter, niter, stiter, istep, nstep, *k, nrhs, **rhslist, nrecv;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl, **ray, *wght=NULL;
+    float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, pow;
     char key[6], *what;
     sf_file sinp, sout, shot, reco, recv, topo, grad, norm, rayd, time;
-    sf_weight weight=NULL;
     
     sf_init(argc,argv);
     sinp = sf_input("in");
@@ -87,9 +83,6 @@ int main(int argc, char* argv[])
 	temps[it] = s[it];
     }
 
-    if (!sf_getbool("l1norm",&l1norm)) l1norm=false;
-    /* norm for minimization (default L2 norm) */
-    
     if (!sf_getbool("shape",&shape)) shape=false;
     /* regularization (default Tikhnov) */
 
@@ -175,6 +168,16 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.;
     /* regularization parameter (for both Ticknov and Shaping) */
     
+    if (!sf_getbool("weight",&weight)) weight=false;
+    /* data weighting */
+
+    if (weight) {
+	wght = sf_floatalloc(nrhs);
+
+	if (!sf_getfloat("pow",&pow)) pow=2.;
+	/* power raised for data weighting */
+    }
+
     /* output gradient at each iteration */
     if (NULL != sf_getstring("grad")) {
 	grad = sf_output("grad");
@@ -230,23 +233,6 @@ int main(int argc, char* argv[])
     /* initialize 2D gradient operator */
     sf_igrad2_init(n[0],n[1]);
     
-    /* initialize L1-norm operator */
-    if (l1norm) {
-	/*
-	  if (!sf_getfloat("perc",&perc)) perc=90.;
-	  
-	  l1_init(nt,stiter,perc,false);
-	*/
-	if (!sf_getint("nfreq",&nfreq)) nfreq=1;
-	/* l1-norm weighting nfreq */
-	
-	if (!sf_getint("nmem",&nmem)) nmem=1;
-	/* l1-norm weighting nmem */
-	
-	weight = sf_l1;
-	sf_irls_init(nt);
-    }
-    
     /* initialize shaping operator */
     if (shape) {
 	if (!sf_getfloat("tol",&tol)) tol=1.e-6;
@@ -273,11 +259,18 @@ int main(int argc, char* argv[])
     }
     
     /* initialize fatomo */
-    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,t0);
+    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,t0,wght);
 
     /* initial misfit */
     fatomo_fastmarch(s,t,source,rhs);
 
+    /* data weighting */
+    if (weight) {
+	for (i=0; i < nrhs; i++) {
+	    wght[i] = 1.;
+	}
+    }
+    
     /* output forward-modeled record */
     if (time != NULL) {
 	for (is=0; is < nshot; is++) {
@@ -304,10 +297,7 @@ int main(int argc, char* argv[])
     rhsnorm1 = rhsnorm;
     rate = rhsnorm1/rhsnorm0;
     
-    if (l1norm)
-	sf_warning("L1 misfit after iteration 0 of %d:\t %g",niter,rate);
-    else
-	sf_warning("L2 misfit after iteration 0 of %d:\t %g",niter,rate);
+    sf_warning("L2 misfit after iteration 0 of %d:\t %g",niter,rate);
     
     if (norm != NULL) sf_floatwrite(&rate,1,norm);
     
@@ -343,19 +333,11 @@ int main(int argc, char* argv[])
 		}
 
 		/* solve ds */
-		if (l1norm) {
-		    /* sf_solver_reg(fatomo_lop,l1step,sf_igrad2_lop,2*nt, nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end"); */
-		    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"wght",weight,"nfreq",nfreq,"nmem",nmem,"verb",verb,"end");
-		    
-		    /* l1step_close(); */
-		    sf_cgstep_close();
+		if (shape) {
+		    sf_conjgrad(NULL,fatomo_lop,sf_repeat_lop,p,ds,rhs,stiter);
 		} else {
-		    if (shape) {
-			sf_conjgrad(NULL,fatomo_lop,sf_repeat_lop,p,ds,rhs,stiter);
-		    } else {
-			sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
-			sf_cgstep_close();
-		    }
+		    sf_solver_reg(fatomo_lop,sf_cgstep,sf_igrad2_lop,2*nt,nt,nrhs,ds,rhs,stiter,eps,"verb",verb,"end");
+		    sf_cgstep_close();
 		}
 		
 		/* output computed gradient (before line-search) */
@@ -381,6 +363,13 @@ int main(int argc, char* argv[])
 		    
 		    /* forward fast-marching for stencil time */		    
 		    fatomo_fastmarch(temps,t,source,rhs);
+
+		    if (weight) {
+			for (i=0; i < nrhs; i++) {
+			    wght[i] = 1./expf(fabsf(powf(iter+1.,pow)*rhs[i]));
+			    rhs[i] *= wght[i];
+			}
+		    }
 
 		    rhsnorm = cblas_snrm2(nrhs,rhs,1);
 		    rate = rhsnorm/rhsnorm1;
@@ -423,10 +412,7 @@ int main(int argc, char* argv[])
 		    break;
 		}
 
-		if (l1norm)
-		    sf_warning("L1 misfit after iteration %d of %d:\t %g (istep = %d).",iter+1,niter,rate,istep);
-		else
-		    sf_warning("L2 misfit after iteration %d of %d:\t %g (istep = %d).",iter+1,niter,rate,istep);
+		sf_warning("L2 misfit after iteration %d of %d:\t %g (istep = %d).",iter+1,niter,rate,istep);
 
 		if (norm != NULL) sf_floatwrite(&rate,1,norm);
 	    }

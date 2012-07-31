@@ -48,10 +48,11 @@ void dsrtomo_init(int dim  /* model dimension */,
 void dsrtomo_set(float *t /* stencil time */,
 		 float *w /* stencil slowness-squared */,
 		 int *f   /* stencil flag */,
-		 int *m0  /* receiver mask */)
+		 int *m0  /* receiver mask */,
+		 float *wght /* data weighting */)
 /*< set operator >*/
 {
-    upgrad_set(upg,t,w,f);
+    upgrad_set(upg,t,w,f,wght);
 
     m = m0;
 }
@@ -75,7 +76,7 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	
 	for (i=0; i < nn[1]*nn[2]; i++) {
 	    if (m != NULL && m[i] != 1)
-		r[i*nn[0]] = 0.;
+		r[i*nn[0]] = 0.;	    
 	    
 	    for (j=1; j < nn[0]; j++)
 		r[i*nn[0]+j] = 0.;
@@ -91,7 +92,7 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 
 	for (i=0; i < nn[1]*nn[2]; i++) {
 	    if (m != NULL && m[i] != 1)
-		r[i*nn[0]] = 0.;
+		r[i*nn[0]] = 0.;	    
 	    
 	    for (j=1; j < nn[0]; j++)
 		r[i*nn[0]+j] = 0.;

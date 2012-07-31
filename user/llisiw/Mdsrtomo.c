@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
     int iter, niter, cgiter, count;
     int *f, *m, nloop;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL, *wght=NULL, pow;
     float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
     char key[6], *what;
     sf_file in, out, reco, grad, flag, mask;
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	    dsrtomo_init(dimt,n,d);
 
 	    /* set operator */
-	    dsrtomo_set(t,w,f,m);	    
+	    dsrtomo_set(t,w,f,m,wght);	    
 
 	    /* linear operator */
 	    if (adj) {
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 	    }
 	    	    
 	    /* write output */
-	    if (adj) {				
+	    if (adj) {
 		sf_floatwrite(dw,nw,out);
 	    } else {
 		sf_floatwrite(dt,nt,out);
@@ -187,10 +187,7 @@ int main(int argc, char* argv[])
 	    
 	    if (!sf_getbool("shape",&shape)) shape=false;
 	    /* shaping regularization (default no) */
-
-	    if (!sf_getbool("weight",&weight)) weight=false;
-	    /* data weighting (default no) */
-
+	    
 	    /* read record file */
 	    if (NULL == sf_getstring("reco"))
 		sf_error("Need record reco=");
@@ -212,6 +209,16 @@ int main(int argc, char* argv[])
 		mask = sf_input("mask");
 		sf_intread(m,nt/n[0],mask);
 		sf_fileclose(mask);
+	    }
+
+	    if (!sf_getbool("weight",&weight)) weight=false;
+	    /* data weighting (default no) */
+
+	    if (weight) {
+		wght = sf_floatalloc(nt/n[0]);
+		
+		if (!sf_getfloat("pow",&pow)) pow=2.;
+		/* power raised for data weighting */
 	    }
 
 	    if (!sf_getbool("verb",&verb)) verb=false;
@@ -290,6 +297,10 @@ int main(int argc, char* argv[])
 		    dt[i*n[0]] = 0.;
 		}
 
+		if (weight) {
+		    wght[i] = 1.;
+		}
+
 		for (j=1; j < n[0]; j++)
 		    dt[i*n[0]+j] = 0.;
 	    }
@@ -309,16 +320,16 @@ int main(int argc, char* argv[])
 		    dw[iw] = 0.;
 		
 		/* set operator */
-		dsrtomo_set(t,w,f,m);
+		dsrtomo_set(t,w,f,m,wght);
 		
-		/* solve dw */
+		/* solve dw */		
 		if (shape) {
 		    sf_conjgrad(NULL,dsrtomo_oper,sf_repeat_lop,p,dw,dt,cgiter);
 		} else {
 		    sf_solver_reg(dsrtomo_oper,sf_cgstep,sf_igrad2_lop,2*nw,nw,nt,dw,dt,cgiter,eps,"verb",verb,"end");
 		    sf_cgstep_close();
 		}
-
+		
 		/* output gradient */
 		if (grad != NULL) {
 		    if (velocity) {
@@ -348,6 +359,11 @@ int main(int argc, char* argv[])
 			    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
 			} else {
 			    dt[i*n[0]] = 0.;
+			}
+
+			if (weight) {
+			    wght[i] = 1./expf(fabsf(powf(iter+1.,pow)*dt[i*n[0]]));
+			    dt[i*n[0]] *= wght[i];
 			}
 
 			for (j=1; j < n[0]; j++)

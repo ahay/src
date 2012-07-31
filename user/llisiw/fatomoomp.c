@@ -27,7 +27,7 @@
 #include "fatomoomp.h"
 
 static int nt, **mask, ns, **list, *upgnum;
-static float **tempt, **tempx, **psum, **data;
+static float **tempt, **tempx, **psum, **data, *wght;
 static upgrad *upglist;
 
 void fatomo_init(int dim      /* model dimension */,
@@ -38,7 +38,8 @@ void fatomo_init(int dim      /* model dimension */,
 		 int nshot    /* number of shots */,
 		 int **rhslist /* rhs list */,
 		 int **recv   /* receiver list */,
-		 float **reco /* record list */)
+		 float **reco /* record list */,
+		 float *weight /* data weighting */)
 /*< initialize >*/
 {
     int i, is, mts;
@@ -53,6 +54,7 @@ void fatomo_init(int dim      /* model dimension */,
     list = rhslist;
     mask = recv;
     data = reco;
+    wght = weight;
 
     /* initialize upwind stencil and fast marching */
     upgrad_init(dim,n,d);
@@ -151,7 +153,7 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		
 		i = list[is][0];
 		for (it=0; it < list[is][1]; it++) {
-		    tempt[its][mask[is][it]] = r[i];
+		    tempt[its][mask[is][it]] = (wght!=NULL)? wght[i]*r[i]: r[i];
 		    i++;
 		}
 		
@@ -189,6 +191,7 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 		i = list[is][0];
 		for (it=0; it < list[is][1]; it++) {
 		    r[i] = tempt[its][mask[is][it]];
+		    if (wght != NULL) r[i] *= wght[i];
 		    i++;
 		}
 	    }
