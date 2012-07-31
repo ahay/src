@@ -145,7 +145,7 @@ but have to be submitted to a queue.
     bypass it.
   \end{block}
   \begin{block}{Directly through MPI}
-    {\bf Flow}('target','source','workflow',[n,'mpi',m],reduce='cat') \\
+    {\bf Flow}('target','source','workflow',[n,'mpi'],np=m,reduce='cat') \\
     \# Try to invoke MPI executable environment directly with {\bf mpirun} -np
     {\bf m}.
   \end{block}
@@ -255,17 +255,19 @@ compiled as sequential
   \end{figure}
 \end{frame}
 
+\newcommand{\RSFSRC}{../../..}
+
 \begin{frame}
-  \ccode{20}{37}{mpihello.c}{mpi/mpihello.c}
+  \ccode{20}{37}{mpihello.c}{\RSFSRC/user/bash/Mmpihello.c}
 \end{frame}
 \begin{frame}
-  \ccode{38}{56}{mpihello.c}{mpi/mpihello.c}
+  \ccode{38}{56}{mpihello.c}{\RSFSRC/user/bash/Mmpihello.c}
 \end{frame}
 \begin{frame}
-  \ccode{58}{77}{mpihello.c}{mpi/mpihello.c}
+  \ccode{58}{77}{mpihello.c}{\RSFSRC/user/bash/Mmpihello.c}
 \end{frame}
 \begin{frame}
-  \ccode{78}{96}{mpihello.c}{mpi/mpihello.c}
+  \ccode{78}{96}{mpihello.c}{\RSFSRC/user/bash/Mmpihello.c}
 \end{frame}
 
 \begin{frame}
