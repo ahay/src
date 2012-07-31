@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#$ -V                                 # Inherit the submission environment
+#$ -cwd                               # Start job in submission dir
+#$ -N pred_mul                        # Job name
+#$ -j y                               # stderr and stdout into stdout
+#$ -o $JOB_NAME.o$JOB_ID              # Name of the output file
+#$ -pe 8way 48                        # Request nodes
+#$ -q normal                          # Queue name
+#$ -A TCCS                            # Account
+#$ -l h_rt=4:00:00                    # runtime (hh:mm:ss)
+#$ -M salah.alhadab@gmail.com         # Where to send "End of job" note to
+#$ -m e                               # "End of job" email only
+
+source $RSFSRC/env.sh
+
+export mycores=6
+
+# cores * nodes
+#    6  *  3
+export RSF_THREADS=18
+
+export RSF_CLUSTER=`awk -v p=$mycores 'NF>=2 {print $1" "p}' $PE_HOSTFILE`
+
+echo $RSF_THREADS
+echo $RSF_CLUSTER
+
+#echo $NSLOTS
+#echo $PE_HOSTFILE
+
+pscons
+
