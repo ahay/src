@@ -37,7 +37,7 @@ for prog in mains:
         if mpicc:
             prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
         else:
-            prog = env.RSF_Place('sf'+mprog,None,var='MPICC',package='mpi')
+            prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
     else:
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
