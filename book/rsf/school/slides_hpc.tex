@@ -262,7 +262,7 @@ Flow('Targets','Sources','flow',
 \pause
 \begin{python} 
 Flow('Targets','Sources','flow',
-     split=[n,'mpi',m],reduce='cat') 
+     split=[n,'mpi'],np=m,reduce='cat') 
 \end{python}
 
 other reduce commands: sfrcat, sfadd, sfinterleave ...
@@ -345,11 +345,11 @@ Flow('clip_omp_scons','random',' clip clip=500',
 \begin{frame}[fragile]
 \begin{python}
 # 3: In this case I use explicit parallelization 
-#    with MPI [n,'mpi',m] in this case m is the
+#    with MPI [n,'mpi'] in this case m is the
 #    number of CPU's to use, n is the axis to split
 
 Flow('clip_mpi_scons','random',' clip clip=500',
-    split=[3,'mpi',8],reduce='cat')
+    split=[3,'mpi'],np=8,reduce='cat')
 \end{python}
    \begin{alltt}
    time pscons clip_mpi_scons.rsf
@@ -381,7 +381,7 @@ Flow('clip_omp_incore','random clip_omp.exe',
 #    computer doesn't make too much sense but with
 #    a cluster it does.
 Flow('clip_hybrid','random clip_omp.exe',
-    './${SOURCES[1]} clip=500',split=[3,'mpi',4],reduce='cat')
+    './${SOURCES[1]} clip=500',split=[3,'mpi'],np=4,reduce='cat')
 \end{python}
 
    \begin{alltt}

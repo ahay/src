@@ -54,9 +54,9 @@ main( int argc, char* argv[] )
         const double wz = origDz*(origNz-1);
         
         int Nx, Ny, Nz;
-        par.get( "n1", Nx, 50 );
-        par.get( "n2", Ny, 50 );
-        par.get( "n3", Nz, 50 );
+        par.get( "n1", Nx, origNx);
+        par.get( "n2", Ny, origNy);
+        par.get( "n3", Nz, origNz);
         const float dx = wx/(Nx-1);
         const float dy = wy/(Ny-1);
         const float dz = wz/(Nz-1);

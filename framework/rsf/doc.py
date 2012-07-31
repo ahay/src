@@ -794,7 +794,7 @@ version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
 
 comment['c++'] = re.compile(r'\/\/(?P<comment>[^\n]+)\n')
 inpout['c++'] = re.compile(r'(?P<io>iRSF|oRSF)\s*(?P<name>\w+)'
-                           '\s*(?:\(\s*(?P<tag>\w+)\s*\))?')
+                           '\s*(?:\(\s*\"?(?P<tag>\w+)\"?\s*\))?')
 param['c++'] = re.compile(r'par.get\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
                           '(?:\,\s*(?P<var>[^\)\,]+))'
                           '(?:\,\s*(?P<default>[^\)]+))?\)'

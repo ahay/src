@@ -13,6 +13,7 @@ To the reproducible documents collection:
 
 To SCons:
 * Support for XQuartz on Macs - looking in /opt/X11 directories 
+* np= parameter in Flow() for mpi programs
 
 To documentation:
 
@@ -49,6 +50,7 @@ In documentation:
 
 In APIs:
 * Fixed settype bug in Python API
+* Fixed inpout selfdoc extraction for C++ programs
 
 In the Python package:
 

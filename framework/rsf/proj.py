@@ -368,7 +368,7 @@ class Project(Environment):
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
-             split=[],reduce='cat',local=0):
+             split=[],np=1,reduce='cat',local=0):
 
         if not flow:
             return None     
@@ -386,7 +386,7 @@ class Project(Environment):
         else:
             sfiles = []
 
-        mpirun = self.mpirun
+        mpirun = '%s -np %s' % (self.mpirun,np)
 
         if split:
             if len(split) < 2:
@@ -402,9 +402,7 @@ class Project(Environment):
             if split[1] == 'omp': 
                 flow = 'omp ' + flow
             elif split[1] == 'mpi':
-                if mpirun:
-                    flow = 'mpi ' + flow
-                    mpirun += ' -np %d' % split[2]
+                flow = 'mpi ' + flow
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
