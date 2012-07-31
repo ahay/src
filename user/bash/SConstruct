@@ -6,6 +6,10 @@ progs = '''
 datshift eikfswp ktmig maskval wile
 '''
 
+mpiprogs = '''
+hello
+'''
+
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
@@ -32,6 +36,20 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+mpicc = env.get('MPICC')
+
+mpis = Split(mpiprogs)
+for prog in mpis:
+    mprog = 'mpi' + prog
+    sources = ['M' + mprog]
+    bldutil.depends(env,sources,'M'+mprog)
+    if mpicc:
+        prog = env.Program(mprog,map(lambda x: x + '.c',sources),CC=mpicc)
+    else:
+        prog = env.RSF_Place('sf'+mprog,None,var='MPICC',package='mpi')
     if root:
         env.Install(bindir,prog)
 
