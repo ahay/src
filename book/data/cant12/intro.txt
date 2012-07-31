@@ -2,9 +2,9 @@ Date: August, 2012
 
 Cant12 directory contains the workflows used to process marine seismic Line 12
 from the data set of the Canterbury Basin, New Zealand using Madagascar. Some
-processing jobs required access to Ranger at Texas Advanced Computing Center 
-at UT. Therefore, some directories will have along with the SConstruct file
-a job file.
+processing jobs required access to Ranger (32 GB of RAM and 16 cores per node)
+at Texas Advanced Computing Center at UT. Therefore, some directories will 
+have a job file beside the SConstruct file .
 
 The list of sub directories with a brief description of the purpose of each
 
