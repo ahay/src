@@ -1,7 +1,7 @@
 from rsf.proj import *
 
 ref='../stk/dmostk.rsf'
-dif='../velcon/difstk.rsf'
+dif='../velcon/dif.rsf'
 migvel='../velcon/migvel.rsf'
 
 # Angle-gather migration
