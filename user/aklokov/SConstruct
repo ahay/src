@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-crssemb diptaper dvscan2d dvscan2d
+crssemb diptaper dvscan2d
 '''
 
 mpi_progs = ''
