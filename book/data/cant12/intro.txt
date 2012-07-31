@@ -1,0 +1,34 @@
+Date: August, 2012
+
+Cant12 directory contains the workflows used to process marine seismic Line 12
+from the data set of the Canterbury Basin, New Zealand using Madagascar. Some
+processing jobs required access to Ranger at Texas Advanced Computing Center 
+at UT. Therefore, some directories will have along with the SConstruct file
+a job file.
+
+The list of sub directories with a brief description of the purpose of each
+
+- SEGY     : To read SEGY files and create shot.rsf file.
+- shot     : To pick sea floor time and create shot.rsf and shot0.rsf.
+- cmp      : To sort SHOT gathers into CMP gathers.
+- decon    : To apply predictive deconvolution; the result was not used in 
+             other processing workflows.
+- interp   : To interpolate shots using PWD method; the results was not used
+             in other processing workflows.
+- srme     : To predict surface related mutliple energy using the algorithm
+             described in (Dragost 1998).
+- lpf      : To adaptively subtract the predicted mutliples using regularized 
+             nonstationary regressions introduced by Fomel (2007).
+- vel      : To automatically pick stacking velocities from demultipled data
+- stk0      : To create nmostk.rsf and dmostk.rsf from cmp/cmp.rsf; CMPs before
+             demultiple
+- stk      : To create nmostk.rsf and dmostk.rsf after demultiple
+- stkdemul : To apply poststack demultiple using SRME and regularized 
+             nonstationary regressions
+- velcon   : To estimate migration velocities using both velocity continuation 
+             (fomel 2003) method and path integral method (Burnet and Fomel 
+             2011) on diffraction data 
+- diffmig  : To generate migrated diffractions section using Kirchhoff 
+             migration in dip-angle gather domain
+- mig      : To generate conventional migrated section using Kirchhoff 
+             migration in dip-angle gather domain
