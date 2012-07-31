@@ -39,7 +39,7 @@ int main(int argc, char*argv[])
 	0: maxflat
 	1: Lagrange 
 	2: B-Spline */
-	if (!sf_getfloat("eta", &eta)) eta = 0.5;
+	if (!sf_getfloat("eta", &eta)) eta = 1.0;
 	/* steps for iteration */
 
 	if(sf_getstring("dip0")!=NULL)
