@@ -13,20 +13,20 @@ The list of sub directories with a brief description of the purpose of each
 - cmp      : To sort SHOT gathers into CMP gathers.
 - decon    : To apply predictive deconvolution; the result was not used in 
              other processing workflows.
-- interp   : To interpolate shots using PWD method; the results was not used
+- interp   : To interpolate shots using PWD method; the result was not used
              in other processing workflows.
 - srme     : To predict surface related mutliple energy using the algorithm
-             described in (Dragost 1998).
+             described in (Dragoset 1998).
 - lpf      : To adaptively subtract the predicted mutliples using regularized 
-             nonstationary regressions introduced by Fomel (2007).
+             nonstationary regressions introduced by Fomel (2009)
 - vel      : To automatically pick stacking velocities from demultipled data
-- stk0      : To create nmostk.rsf and dmostk.rsf from cmp/cmp.rsf; CMPs before
+- stk0     : To create nmostk.rsf and dmostk.rsf from cmp/cmp.rsf; CMPs before
              demultiple
 - stk      : To create nmostk.rsf and dmostk.rsf after demultiple
 - stkdemul : To apply poststack demultiple using SRME and regularized 
-             nonstationary regressions
+             nonstationary regressions.
 - velcon   : To estimate migration velocities using both velocity continuation 
-             (fomel 2003) and path integral (Burnet and Fomel 2011) methods on
+             (Fomel 2003) and path integral (Burnett and Fomel 2011) methods on
               diffraction data 
 - mig      : To generate conventional migrated section and migrated 
              diffractions section using Kirchhoff migration in dip-angle 
