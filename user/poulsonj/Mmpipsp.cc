@@ -24,11 +24,6 @@
 #include "psp.hpp"
 using namespace psp;
 
-//void Usage()
-//{
-//    std::cout << "Madagascar <omega>" << std::endl;
-//}
-
 int
 main( int argc, char* argv[] )
 {
@@ -37,54 +32,57 @@ main( int argc, char* argv[] )
     const int commSize = mpi::CommSize( comm );
     const int commRank = mpi::CommRank( comm );
 
-//    if( argc < 2 )
-//    {
-//        if( commRank == 0 )
-//            Usage();
-//        psp::Finalize();
-//        return 0;
-//    }
-
     atexit(psp::Finalize);
 
     try 
     {
         sf_init( argc, argv );
         iRSF in("velocity"); // velocity RSF file
-	iRSF par(0); // command-line parameters
+        iRSF par(0); // command-line parameters
 
-	// prepare for direct access
-	off_t size = in.size()*sizeof(float);
-	in.unpipe(size);
+        int origNx, origNy, origNz;
+        in.get( "n1", origNx );
+        in.get( "n2", origNy );
+        in.get( "n3", origNz );
 
+        float origDx, origDy, origDz;
+        in.get( "d1", origDx );
+        in.get( "d2", origDy );
+        in.get( "d3", origDz );
+        const double wx = origDx*(origNx-1);
+        const double wy = origDy*(origNy-1);
+        const double wz = origDz*(origNz-1);
+        
         int Nx, Ny, Nz;
-        in.get( "n1", Nx );
-        in.get( "n2", Ny );
-        in.get( "n3", Nz );
-
-        float dx, dy, dz;
-        in.get( "d1", dx );
-        in.get( "d2", dy );
-        in.get( "d3", dz );
-        const double wx = dx*(Nx-1);
-        const double wy = dy*(Ny-1);
-        const double wz = dz*(Nz-1);
+        par.get( "n1", Nx, 50 );
+        par.get( "n2", Ny, 50 );
+        par.get( "n3", Nz, 50 );
+        const float dx = wx/(Nx-1);
+        const float dy = wy/(Ny-1);
+        const float dz = wz/(Nz-1);
 
         if( commRank == 0 )
         {
-            std::cout << "Nx=" << Nx << "\n"
+            std::cout << "origNx=" << origNx << "\n"
+                      << "origNy=" << origNy << "\n"
+                      << "origNz=" << origNz << "\n"
+                      << "origDx=" << origDx << "\n"
+                      << "origDy=" << origDy << "\n"
+                      << "origDz=" << origDz << "\n"
+                      << "wx=" << wx << "\n"
+                      << "wy=" << wy << "\n"
+                      << "wz=" << wz << "\n"
+                      << "Nx=" << Nx << "\n"
                       << "Ny=" << Ny << "\n"
-                      << "Nz=" << Nz << "\n"
+                      << "Nz=" << Nz << "\n" 
                       << "dx=" << dx << "\n"
                       << "dy=" << dy << "\n"
                       << "dz=" << dz << "\n"
-                      << "wx=" << wx << "\n"
-                      << "wy=" << wy << "\n"
-                      << "wz=" << wz << std::endl;
+                      << std::endl;
         }
 
         float omega;
-        par.get( "omega", omega ); // frequency
+        par.get( "omega", omega ); // frequency in rad/sec
 
         if( commRank == 0 )
             std::cout << "omega=" << omega << std::endl;
@@ -95,15 +93,16 @@ main( int argc, char* argv[] )
         const int factBlocksize = 96;
         const int solveBlocksize = 64;
 
-    // This uses 5 grid points of PML by default
-    Discretization<double> disc
-    ( omega, Nx, Ny, Nz, wx, wy, wz, PML, PML, PML, PML, DIRICHLET );
-
+        // This uses 5 grid points of PML by default
+        Discretization<double> disc
+        ( omega, Nx, Ny, Nz, wx, wy, wz, 
+          PML, PML, PML, PML, DIRICHLET );
 
         DistHelmholtz<double> helmholtz
         ( disc, comm, damping, numPlanesPerPanel );
 
-        DistUniformGrid<double> velocity( 1, Nx, Ny, Nz, XYZ, comm );
+        DistUniformGrid<double> velocity
+        ( 1, origNx, origNy, origNz, XYZ, comm );
         double* localVelocity = velocity.LocalBuffer();
         const int xLocalSize = velocity.XLocalSize();
         const int yLocalSize = velocity.YLocalSize();
@@ -123,17 +122,27 @@ main( int argc, char* argv[] )
                 for( int xLocal=0; xLocal<xLocalSize; ++xLocal )
                 {
                     const int x = xShift + xLocal*px;
-                    const int filePos = (x + y*Nx + z*Nx*Ny)*sizeof(float);
+                    const int filePos = 
+                        (x + y*origNx + z*origNx*origNy)*sizeof(float);
                     in.seek( filePos, SEEK_SET );
                     const int localIndex = 
                         xLocal + yLocal*xLocalSize + 
                         zLocal*xLocalSize*yLocalSize;
                     float speed;
                     in >> speed;
+                    if( localIndex >= xLocalSize*yLocalSize*zLocalSize )
+                        throw std::logic_error("local index out of bounds");
                     localVelocity[localIndex] = speed;
                 }
             }
         }
+
+        if( commRank == 0 )
+            std::cout << "Interpolating to " 
+                      << Nx << " x " << Ny << " x " << Nz << std::endl;
+        velocity.InterpolateTo( Nx, Ny, Nz );
+        if( commRank == 0 )
+            std::cout << "done" << std::endl;
 
         if( vtkVisualize )
         {
@@ -152,9 +161,9 @@ main( int argc, char* argv[] )
         }
 
         elem::SetBlocksize( factBlocksize );
+        mpi::Barrier( comm );
         if( commRank == 0 )
             std::cout << "Beginning to initialize..." << std::endl;
-        mpi::Barrier( comm );
         const double initialStartTime = mpi::Time();
         helmholtz.Initialize( velocity );
         mpi::Barrier( comm );
@@ -164,7 +173,8 @@ main( int argc, char* argv[] )
             std::cout << "Finished initialization: " << initialTime
                       << " seconds." << std::endl;
 
-        DistUniformGrid<Complex<double> > B( 1, Nx, Ny, Nz, XYZ, comm );
+        DistUniformGrid<Complex<double> > B
+        ( 1, Nx, Ny, Nz, XYZ, comm );
         Complex<double>* localB = B.LocalBuffer();
         const double center[] = { 0.5, 0.5, 0.25 };
         double arg[3];
@@ -237,10 +247,11 @@ main( int argc, char* argv[] )
         }
 
         helmholtz.Finalize();
-        if( commRank == 0 ) {
+        if( commRank == 0 ) 
+        {
             std::cout << "Beginning to write output data...please be patient"
-		      << std::endl;
-	}
+            << std::endl;
+        }
 
         const int xMaxLocalSize = elem::MaxLocalLength( Nx, px );
         const int yMaxLocalSize = elem::MaxLocalLength( Ny, py );
@@ -256,15 +267,14 @@ main( int argc, char* argv[] )
         }
         else
         {
-
-	    oRSF out("solution"); // output RSF file
-	    out.type( SF_COMPLEX );
-	    out.put( "n1", Nx );
-	    out.put( "n2", Ny );
-	    out.put( "n3", Nz );
-	    out.put( "d1", dx );
-	    out.put( "d2", dy );
-	    out.put( "d3", dz );
+            oRSF out("solution"); // output RSF file
+            out.type( SF_COMPLEX );
+            out.put( "n1", Nx );
+            out.put( "n2", Ny );
+            out.put( "n3", Nz );
+            out.put( "d1", dx );
+            out.put( "d2", dy );
+            out.put( "d3", dz );
 
             receiveData.resize( maxLocalSize*commSize );
             mpi::Gather
