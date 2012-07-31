@@ -30,4 +30,4 @@ The list of sub directories with a brief description of the purpose of each
               diffraction data 
 - mig      : To generate conventional migrated section and migrated 
              diffractions section using Kirchhoff migration in dip-angle 
-             gather domain
+             gather domain. 
