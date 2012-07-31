@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-psp
+mpipsp
 '''
 
 try:  # distributed version

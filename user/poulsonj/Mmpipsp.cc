@@ -50,7 +50,8 @@ main( int argc, char* argv[] )
     try 
     {
         sf_init( argc, argv );
-        iRSF in, par(0);
+        iRSF in("velocity"); // velocity RSF file
+	iRSF par(0); // command-line parameters
 
 	// prepare for direct access
 	off_t size = in.size()*sizeof(float);
@@ -236,23 +237,17 @@ main( int argc, char* argv[] )
         }
 
         helmholtz.Finalize();
-
-        if( commRank == 0 )
+        if( commRank == 0 ) {
             std::cout << "Beginning to write output data...please be patient"
-                      << std::endl;
-        oRSF out("outFile.rsf");
-        out.type( SF_COMPLEX );
-        out.put( "n1", Nx );
-        out.put( "n2", Ny );
-        out.put( "n3", Nz );
-        out.put( "d1", dx );
-        out.put( "d2", dy );
-        out.put( "d3", dz );
+		      << std::endl;
+	}
+
         const int xMaxLocalSize = elem::MaxLocalLength( Nx, px );
         const int yMaxLocalSize = elem::MaxLocalLength( Ny, py );
         const int zMaxLocalSize = elem::MaxLocalLength( Nz, pz );
         const int maxLocalSize = xMaxLocalSize*yMaxLocalSize*zMaxLocalSize;
         std::vector<Complex<double> > receiveData;
+
         if( commRank != 0 )
         {
             mpi::Gather
@@ -261,6 +256,16 @@ main( int argc, char* argv[] )
         }
         else
         {
+
+	    oRSF out("solution"); // output RSF file
+	    out.type( SF_COMPLEX );
+	    out.put( "n1", Nx );
+	    out.put( "n2", Ny );
+	    out.put( "n3", Nz );
+	    out.put( "d1", dx );
+	    out.put( "d2", dy );
+	    out.put( "d3", dz );
+
             receiveData.resize( maxLocalSize*commSize );
             mpi::Gather
             ( B.LocalBuffer(), maxLocalSize,
