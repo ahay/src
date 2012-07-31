@@ -2,45 +2,71 @@
 #include <rsf.h>
 //#include <math.h>
 
-static int n;
-static double *ref, pr;
-
-void comp_init(int m, float *r)
-/*< initialize >*/
+float comp_ncc(float *a, float *b, int n)
+/*< normalized cross-correlation >*/
 {
+	double e, pa, pb;
 	int i;
 
-	n = m;
-
-	ref = (double*) sf_alloc(n,sizeof(double));
-	for(i=0, pr=0.0; i<n; i++)
-	{
-		pr += r[i]*r[i];
-		ref[i] = r[i];
-	}
-}
-
-float comp_xcor(float *d)
-/*< unit x-correlation >*/
-{
-	double e, po;
-	int i;
-
-	po = 0.0;
+	pa = 0.0; 
+	pb = 0.0;
 	e  = 0.0;
 	for(i=0; i<n; i++)
 	{
-		po += d[i]*d[i];
-		e  += d[i]*ref[i];
+		pa += a[i]*a[i];
+		pb += b[i]*b[i];
+		e  += a[i]*b[i];
 	}
-	e = 1.0 - e/sqrt(po*pr);
+	e = e/sqrt(pa*pb);
 
 	return (float)( e );
 }
 
 
-void comp_close()
-/*< free the space >*/
+
+float comp_cor(float *a, float *b, int n)
+/*< cross-correlation >*/
 {
-	free(ref);
+	double e, pa, pb;
+	int i;
+
+	pa = 0.0; 
+	pb = 0.0;
+	e  = 0.0;
+	for(i=0; i<n; i++)
+	{
+		pa += a[i]*a[i];
+		pb += b[i]*b[i];
+		e  += 2*a[i]*b[i];
+	}
+	e = e/(pa+pb);
+
+	return (float)( e );
 }
+
+float comp_mae(float *a, float *b, int n)
+/*< mean absolute error >*/
+{
+	double e;
+	int i;
+	e=0.0;
+	for(i=0; i<n; i++)
+		e += fabs(a[i]-b[i]);
+	return (float)(e/n);
+}
+
+float comp_mse(float *a, float *b, int n)
+/*< mean square error >*/
+{
+	double e,t;
+	int i;
+	e=0.0;
+	for(i=0; i<n; i++)
+	{
+		t = a[i]-b[i];
+		e += t*t;
+	}
+	return (float)(e/n);
+}
+
+

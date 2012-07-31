@@ -33,7 +33,9 @@ int main(int argc,char*argv[])
 	for(id=dimr, n2=1; id<dim; id++)	n2 *= n[id];
 
 	if (!sf_getint("mode",&mode)) mode=0;
-	/* compare method: 0 - unit xcorrelation; 1 - relative error */
+	/* compare method: 
+	0 - normalized xcorrelation; 
+	1 - mean square error */
 
 	u  = sf_floatalloc(n1);
 	ur = sf_floatalloc(n1);
@@ -41,16 +43,22 @@ int main(int argc,char*argv[])
 
 	sf_floatread(ur,n1,ref);
 
-	comp_init(n1,ur);
-
 	for(i2=0; i2<n2; i2++)
 	{
 		sf_floatread(u,n1,in);
 		switch(mode)
 		{
 		case 1:
+			p[i2]=comp_mae(u, ur, n1);
+			break;
+		case 2:
+			p[i2]=comp_mse(u, ur, n1);
+			break;
+		case 3:
+			p[i2]=comp_cor(u, ur, n1);
+			break;
 		default:
-			p[i2]=comp_xcor(u);
+			p[i2]=comp_ncc(u, ur, n1);
 		}
 	}
 	

@@ -7,7 +7,7 @@ static int n1, n2, nf;
 static float **u1, **u2, **u3;
 static bool verb;
 
-void ldip_init(int mf, int interp,
+void ldip_init(int interp, int mf,
 	int m1, int m2, int *rect, int niter, bool vb)
 /*< initialize >*/
 {
@@ -26,7 +26,7 @@ void ldip_init(int mf, int interp,
 	u3 = sf_floatalloc2(n1,n2);
 
 	lpwd_init(interp, nf, n1, n2);
-	sf_divn_init (2, n, nn, rect, niter, false);
+	sf_divn_init (2, n, nn, rect, niter, vb);
 }
 
 void ldip_close()
@@ -44,14 +44,11 @@ void ldip_close()
 
 #define divn(a, b)  (a*b/(b*b+0.0001))
 
-void ldip(float **in, float **dip, int nit)
+void ldip(float **in, float **dip, int nit, float eta)
 /*< omnidirectional dip estimation >*/
 {
-	int it, i1, j1;
-	double eta, norm;
-
-	for(i1=0; i1<n1*n2; i1++)
-		dip[0][i1]=0.0;
+	int it, i1;
+	double norm;
 
 	for (it=0; it<nit; it++)
 	{
@@ -76,12 +73,9 @@ void ldip(float **in, float **dip, int nit)
 		sf_divn(u1[0], u2[0], u3[0]);
 
 		for(i1=0; i1<n1*n2; i1++)
-			dip[0][i1] -= u3[0][i1];
+			dip[0][i1] -= eta*u3[0][i1];
 
 	}
-
-	for(i1=0; i1<n1*n2; i1++)
-		dip[0][i1] = atanf(dip[0][i1]);
 }
 
 

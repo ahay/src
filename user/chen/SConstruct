@@ -5,6 +5,7 @@ import bldutil
 progs = '''
 fdip comp psss psefd mdfd4 resample addevent lphase pwdfreq mflt 
 odip fbank2 fbank1 lphfilt firfreq fbdip
+ldip
 '''
 
 pyprogs='''
