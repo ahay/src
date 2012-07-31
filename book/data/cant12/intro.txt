@@ -26,8 +26,8 @@ The list of sub directories with a brief description of the purpose of each
 - stkdemul : To apply poststack demultiple using SRME and regularized 
              nonstationary regressions
 - velcon   : To estimate migration velocities using both velocity continuation 
-             (fomel 2003) method and path integral method (Burnet and Fomel 
-             2011) on diffraction data 
+             (fomel 2003) and path integral (Burnet and Fomel 2011) methods on
+              diffraction data 
 - diffmig  : To generate migrated diffractions section using Kirchhoff 
              migration in dip-angle gather domain
 - mig      : To generate conventional migrated section using Kirchhoff 
