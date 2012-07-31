@@ -11,19 +11,20 @@ mpi_progs = ''
 ccprogs = 'tmigda dmigda rpu'
 
 subs = '''
-support sembler dmigrator2D dmigratorBase hwt2d
-tmigrator2D tmigratorBase tmigrator3D
+hwt2d support sembler
+tmigratorBase tmigrator2D tmigrator3D 
+dmigratorBase dmigrator2D
 curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
 signalUnwrapper
 '''
 
 try:  # distributed version
-    Import('env root pkgdir bindir libdir incdir')
+    Import('env root pkgdir bindir')
     env = env.Clone()
     dir = string.replace(os.getcwd(),'/build','')
 except: # local version
     env = bldutil.Debug()
-    root = None    
+    root = None
     SConscript('../../api/c++/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
@@ -44,8 +45,7 @@ for prog in mains:
 ccmains = Split(ccprogs)
 subs = Split(subs)
 
-if 'c++' in env.get('API',[]):
-    objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
+objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
 
 for prog in ccmains:
     if 'c++' in env.get('API',[]):
