@@ -4,6 +4,8 @@ import bldutil
 
 src = 'do  init_  main_ proc_'
 
+pens = 'vp xt x11 ps ras gd cr ogl'
+
 try: # distribution version
     Import('env root pkgdir bindir')
     env = env.Clone()
@@ -43,8 +45,6 @@ main = env.Program('vppen',[obj,]+objects)
 
 if root:
     env.Install(bindir,main[0])
-        
-pens = ['vppen']
 
 # xtpen
 #######
@@ -52,14 +52,14 @@ pens = ['vppen']
 inc = env.get('XINC')
 lib = env.get('XLIBPATH')
 
+env.RSF_Include('xtpen',prefix='pen_')
+
 if inc and lib:
-    env.RSF_Include('xtpen',prefix='pen_')
     obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
     env.Depends(obj,['xtpen.h','../include/gendoc.h'])
     main = env.Program('xtpen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
-    pens.append('xtpen')
 else:
     main = env.RSF_Place('xtpen',None,
                      var='XINC and XLIBPATH',package='libXaw-devel')
@@ -72,15 +72,14 @@ if root:
 
 # x11pen
 #######
+env.RSF_Include('x11pen',prefix='pen_')
 
 if inc and lib:
-    env.RSF_Include('x11pen',prefix='pen_')
     obj = env.StaticObject('x11pen.c',CPPPATH=env.get('CPPPATH',[])+inc)
     env.Depends(obj,['x11pen.h','../include/gendoc.h'])
     main = env.Program('x11pen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
-    pens.append('x11pen')
 else:
     main = env.RSF_Place('x11pen',None,var='XINC and XLIBPATH')
     
@@ -98,13 +97,10 @@ main = env.Program('pspen',[obj,]+objects)
 if root:
     env.Install(bindir,main[0])
 
-pens.append('pspen')
-
 # raspen
 #######
 
 env.RSF_Include('raspen',prefix='pen_')
-pens.append('raspen')
 
 for pen in ('ppm','tiff','jpeg'):
     cap = pen.upper()
@@ -124,12 +120,13 @@ for pen in ('ppm','tiff','jpeg'):
         env.Depends(obj,['raspen.h','../include/gendoc.h'])
         main = env.Program(name,[obj,]+objects,
                            LIBS=[lib]+env.get('LIBS',[]))
-        docalias['sf'+name]='sfraspen'
     else:
         main = env.RSF_Place(name,None,var=cap,
                          package={'ppm':'libnetpbm-devel',
                                   'tiff':'libtiff-devel',
                                   'jpeg':'libjpeg-devel'}[pen])
+    
+    docalias['sf'+name]='sfraspen'
 
     if root:
         env.Install(bindir,main[0])
@@ -143,8 +140,9 @@ gifanim = env.get('GIFANIM')
 # Ability to save MPEG movies
 ffmpeg = env.get('FFMPEG')
 
+env.RSF_Include('gdpen',prefix='gd_')
+
 if gd:
-    env.RSF_Include('gdpen',prefix='gd_')
     path =  env.get('CPPPATH',[])
     defines = env.get('CPPDEFINES',[])
     libs = [gd]+env.get('LIBS',[])
@@ -165,7 +163,6 @@ if gd:
                            CPPDEFINES=defines)
     env.Depends(obj,['gdpen.h','../include/gendoc.h'])
     main = env.Program('gdpen',[obj,]+objects,LIBS=libs)
-    pens.append('gdpen')
 else:
     main = env.RSF_Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')
     
@@ -176,7 +173,6 @@ if root:
 #######
 
 env.RSF_Include('crpen',prefix='pen_')
-pens.append('crpen')
 path = env.get('CAIROPATH')
 
 for pen in ('png','pdf','svg'):
@@ -196,9 +192,10 @@ for pen in ('png','pdf','svg'):
         env.Depends(obj,['crpen.h','../include/gendoc.h'])
         main = env.Program(name,[obj,]+objects,
                            LIBS=[lib]+env.get('LIBS',[]))
-        docalias['sf'+name]='sfcrpen'
     else:
         main = env.RSF_Place(name,None,var='CAIRO-'+cap,pakage='cairo')
+
+    docalias['sf'+name]='sfcrpen'
     
     if root:
         env.Install(bindir,main[0])
@@ -210,20 +207,20 @@ ogl = env.get('OPENGL')
 oglflags = env.get('OPENGLFLAGS')
 oglpath = env.get('OPENGLPATH')
 
+env.RSF_Include('oglpen',prefix='ogl_')
+
 if ogl or oglflags:
     if type(ogl) is not types.ListType:
         ogl = Split(ogl)
     if oglflags:
         if type(oglflags) is not types.ListType:
             oglflags = Split(oglflags)
-    env.RSF_Include('oglpen',prefix='ogl_')
     obj = env.StaticObject('oglpen.c',
                            CPPPATH=[oglpath]+env.get('CPPPATH',[]))
     env.Depends(obj,['oglpen.h','../include/gendoc.h']) 
     main = env.Program('oglpen',[obj,]+objects,
                        LIBS=[ogl]+env.get('LIBS',[]),
                        LINKFLAGS=[oglflags]+Split(env.get('LINKFLAGS',[])))
-    pens.append('oglpen')
 else:
     main = env.RSF_Place('oglpen',None,var='OPENGL',package='freeglut-devel')
 
@@ -238,6 +235,8 @@ if root:
 ######################################################################
 if root:    
     main = 'sfpens.py'
+
+    pens = map(lambda x: x+ 'pen',Split(pens))
 
     for pen in pens:
         env.Command('M'+pen+'.c',[pen+'.c','init_vplot.c'],

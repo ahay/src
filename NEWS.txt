@@ -14,6 +14,7 @@ To the reproducible documents collection:
 To SCons:
 * Support for XQuartz on Macs - looking in /opt/X11 directories 
 * np= parameter in Flow() for mpi programs
+* sfdocs generated for all "pens" in pens/main
 
 To documentation:
 
