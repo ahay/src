@@ -2,13 +2,13 @@
 
 #$ -V                                 # Inherit the submission environment
 #$ -cwd                               # Start job in submission dir
-#$ -N demul                           # Job name
+#$ -N lpf                             # Job name
 #$ -j y                               # stderr and stdout into stdout
 #$ -o $JOB_NAME.o$JOB_ID              # Name of the output file
 #$ -pe 2way 960                       # Request nodes
 #$ -q normal                          # Queue name
 #$ -A TCCS                            # Account
-#$ -l h_rt=5:00:00                   # runtime (hh:mm:ss)
+#$ -l h_rt=5:00:00                    # runtime (hh:mm:ss)
 #$ -M salah.alhadab@gmail.com         # Where to send "End of job" note to
 #$ -m e                               # "End of job" email only
 
