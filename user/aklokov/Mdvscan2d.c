@@ -57,10 +57,45 @@ float gammaStart_;
 
 int   coher_;
 float dlim_;
+bool  isSemb_;
 
 // FUNCTIONS
 
-void processGather () {
+void processGatherStack () {
+	
+	float* ptrSemb = pSembPanel_;
+
+	for (int ig = 0; ig < gammaNum_; ++ig) {
+		const float curGamma = gammaStart_ + ig * gammaStep_;
+		for (int it = 0; it < tNum_; ++it, ++ptrSemb) {			
+			const float curT = tStart_ + it * tStep_;
+			float curStack = 0.f;
+			for (int id = 0; id < dipNum_; ++id) {
+				const float curDip = dipStart_ + id * dipStep_;
+				if (fabs (curDip) > dlim_) continue;
+				const float curDipRad = curDip * SF_PI / 180.f;
+	
+				const float t = curT * cos (curDipRad) / sqrt (1 - pow (curGamma * sin (curDipRad), 2) );
+				const int tIndBase = (t - tStart_) / tStep_;
+
+				for (int ic = 0; ic < coher_; ++ic) {
+					const int tInd = tIndBase + ic - coher_ / 2;
+					if (tInd < 0 || tInd >= tNum_)
+						continue;
+					const int ind = id * tNum_ + tInd;
+					const float val = *(pData_ + ind);
+
+					curStack += val;
+				}
+			}
+			*ptrSemb = fabs (curStack);
+		}
+	}
+
+	return;
+}
+
+void processGatherSemb () {
 	
 	float* ptrSemb = pSembPanel_;
 
@@ -158,6 +193,9 @@ int main (int argc, char* argv[]) {
 	/* defines dip-angle-window for the analysis */
 	if (!dlim_) {sf_warning ("coher value is changed to 1"); coher_ = fabs (dipStart_);}
 
+	if (!sf_getbool ( "isSemb", &isSemb_) ) isSemb_ = true;
+	/* y - output is semblance; n - stack power */
+
 // OUTPUT FILE
 
     sf_putint (sembFile_, "n1", tNum_); 
@@ -189,7 +227,10 @@ int main (int argc, char* argv[]) {
 		sf_seek (dataFile_, startPos, SEEK_SET);
 		sf_floatread (pData_, dagSize, dataFile_);
 
-		processGather ();
+		if (isSemb_)
+			processGatherSemb ();
+		else
+			processGatherStack ();
 
 		sf_floatwrite (pSembPanel_, sembSize, sembFile_);
 	}
