@@ -1,14 +1,14 @@
 /* 2D picking
 
 Input:
-	dataFile_.rsf - migrated dip-angle gathers
+	dataFile_.rsf - parameter spectrum (semblance) panel
 
 Output:
-	sembFile_.rsf - semblance spectrum
+	outFile_.rsf - picked optimal values
 */
 
 /*
-  Copyright (C) 2011 University of Texas at Austin
+  Copyright (C) 2012 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,51 +30,63 @@ Output:
 // VARIABLES
 
 // files
-sf_file dataFile_;          // dip-angle gathers file - stack in the scattering-angle direction
-sf_file sembFile_;          // output file - semblance
-sf_file paramFile_;           // output file - semblance
-sf_file outFile_;           // output file - semblance
+sf_file dataFile_;          // input file - parameter spectrum file
+sf_file sembFile_;          // auxiliary file - semblance
+sf_file paramFile_;         // auxiliary file - max param values
+sf_file outFile_;           // output file - picked values
 
 // data
-float* pData_;               //  --"--  --"--  square gathers data 
-float* panel_;          //  --"--  --"--  result - crs-based semblance
-float* maxTrace_;       
+float*  panel_;             // parameter spectrum
+float*  maxTrace_;       	// picked max param values
 
-// dip-angle gathers dimensions:
-int   tNum_;                 
-float tStart_;
-float tStep_;
+// param panel dimensions:
+int     tNum_;                 
+float   tStart_;
+float   tStep_;
 
-int   paramNum_;
-float paramStart_;
-float paramStep_;
+int     paramNum_;
+float   paramStart_;
+float   paramStep_;
 
-int   xNum_;
-float xStart_;
-float xStep_;
+int     xNum_;
+float   xStart_;
+float   xStep_;
 
-// scan parameters
-int   gammaNum_;
-float gammaStep_;
-float gammaStart_;
-
-int   coher_;
-float eps_;
+// regularization params
+int     xApp_;
+float   eps_;
 
 // FUNCTIONS
+
+void TridiagonalSolve (const float *Ma, const float *Mb, float *Mc, float *Md, float *x, unsigned int n) {
+
+    Mc[0] /= Mb[0];	
+    Md[0] /= Mb[0];		
+    for (int i = 1; i < n; ++i) {
+        double id = (Mb[i] - Mc[i - 1] * Ma[i]);
+		Mc[i] /= id;		
+		Md[i] = (Md[i] - Md[i - 1] * Ma[i]) / id;
+    }
+ 
+    // back substitute
+    x[n - 1] = Md[n - 1];
+    for (int i = n - 2; i >= 0; --i)
+        x[i] = Md[i] - Mc[i] * x[i + 1];
+
+	return;	
+}
 
 int main (int argc, char* argv[]) {
    
 // Initialize RSF 
     sf_init (argc, argv);
+
 // Input files
     dataFile_   = sf_input("in");
-
 // check that the input is float 
     if ( SF_FLOAT != sf_gettype (dataFile_) )   sf_error ("Need float input: dip-angle gathers");
     /* dip-angle gathers - stacks in the scattering-angle direction */
-
-// Output file
+// Output auxiliary files
 	char* paramTag = "maxForPicking.rsf";
     paramFile_ = sf_output (paramTag);
 	char* sembTag = "sembForPicking.rsf";
@@ -94,23 +106,29 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (dataFile_, "d3", &xStep_) )    sf_error ("Need d3= in input");
     if ( !sf_histfloat (dataFile_, "o3", &xStart_) )   sf_error ("Need o3= in input");
 
-    if ( !sf_getfloat ("eps", &eps_) ) eps_ = 1;
-    /* epsilon  */
+    if ( !sf_getfloat ("eps", &eps_) ) eps_ = 0;
+    /* smoothness measure */
+    if ( !sf_getint   ("xApp", &xApp_) ) xApp_ = 1;
+    /* x-aperture */
 
 // OUTPUT FILE
-
     sf_putint    (sembFile_, "n1", tNum_);     	 sf_putint    (sembFile_, "n2", xNum_); 
     sf_putfloat  (sembFile_, "d1", tStep_); 	 sf_putfloat  (sembFile_, "d2", xStep_); 
     sf_putfloat  (sembFile_, "o1", tStart_);	 sf_putfloat  (sembFile_, "o2", xStart_); 
     sf_putstring (sembFile_, "label1", "time");  sf_putstring (sembFile_, "label2", "inline");
     sf_putstring (sembFile_, "unit1", "s");      sf_putstring (sembFile_, "unit2", "m"); 
 
-    sf_putint    (paramFile_, "n1", tNum_);     	 sf_putint    (paramFile_, "n2", xNum_); 
+    sf_putint    (paramFile_, "n1", tNum_);      sf_putint    (paramFile_, "n2", xNum_); 
     sf_putfloat  (paramFile_, "d1", tStep_);   	 sf_putfloat  (paramFile_, "d2", xStep_); 
-    sf_putfloat  (paramFile_, "o1", tStart_);	     sf_putfloat  (paramFile_, "o2", xStart_); 
-    sf_putstring (paramFile_, "label1", "time");   sf_putstring (paramFile_, "label2", "inline");
-    sf_putstring (paramFile_, "unit1", "s");       sf_putstring (paramFile_, "unit2", "m"); 
+    sf_putfloat  (paramFile_, "o1", tStart_);	 sf_putfloat  (paramFile_, "o2", xStart_); 
+    sf_putstring (paramFile_, "label1", "time"); sf_putstring (paramFile_, "label2", "inline");
+    sf_putstring (paramFile_, "unit1", "s");     sf_putstring (paramFile_, "unit2", "m"); 
 
+    sf_putint    (outFile_, "n1", tNum_);     	 sf_putint    (outFile_, "n2", xNum_); 
+    sf_putfloat  (outFile_, "d1", tStep_);   	 sf_putfloat  (outFile_, "d2", xStep_); 
+    sf_putfloat  (outFile_, "o1", tStart_);	     sf_putfloat  (outFile_, "o2", xStart_); 
+    sf_putstring (outFile_, "label1", "time");   sf_putstring (outFile_, "label2", "inline");
+    sf_putstring (outFile_, "unit1", "s");       sf_putstring (outFile_, "unit2", "m"); 
 
 	const int panelSize = tNum_ * paramNum_;	
 	panel_ = sf_floatalloc (panelSize);
@@ -119,10 +137,10 @@ int main (int argc, char* argv[]) {
 	float* maxTrace = sf_floatalloc (tNum_);
 	float* paramTrace = sf_floatalloc (tNum_);
 
-	// compute max
+	// I. PICK MAX VALUES
 
 	for (int ix = 0; ix < xNum_; ++ix) {
-		sf_warning ("CIG %d of %d;", ix + 1, xNum_);
+		sf_warning ("max picking: CIG %d of %d;", ix + 1, xNum_);
 
 		const size_t startPos = (size_t) ix * panelSize * sizeof (float);
 		sf_seek (dataFile_, startPos, SEEK_SET);
@@ -146,7 +164,6 @@ int main (int argc, char* argv[]) {
 
 	sf_warning (".");
 
-	free (pData_);
 	free (panel_);
 	free (maxTrace);		
 	free (paramTrace);		
@@ -155,28 +172,110 @@ int main (int argc, char* argv[]) {
 	sf_fileclose (paramFile_);
 	sf_fileclose (sembFile_);
 
-	// regularization
+	// II. REGULARIZATION
 
+	// constants
+	const int   halfXApp = xApp_ / 2;
+	const float epsSq = eps_ * eps_;
+
+	// input files
 	sembFile_  = sf_input (sembTag);
 	paramFile_ = sf_input (paramTag);
 
 	for (int ix = 0; ix < xNum_; ++ix) {
-		sf_warning ("CIG %d of %d;", ix + 1, xNum_);
+		sf_warning ("regularization: CIG %d of %d;", ix + 1, xNum_);
 
-/*        xNum = xApp;       
-        startInd = it - halfXApp;
+        int xNum = xApp_;       
+        size_t startInd = ix - halfXApp;
 
 		// boundary checking
-        int temp = it - halfXApp;
-		if (temp < 0) {
-	    	xNum += temp;
-	    	startInd -= temp;
+        int temp = ix - halfXApp;
+		if (temp < 0) { xNum += temp; startInd -= temp; }
+		temp = xNum_ - (ix + halfXApp) - 1;
+		if (temp < 0) xNum += temp;
+
+		// memory allocation
+		const int curPanelSize = tNum_ * xNum; 
+
+	    float* data = sf_floatalloc (curPanelSize);
+	    float* semb = sf_floatalloc (curPanelSize);
+		float*  res = sf_floatalloc (tNum_);
+		float*   Ma = sf_floatalloc (tNum_);
+		float*   Mb = sf_floatalloc (tNum_);    
+		float*   Mc = sf_floatalloc (tNum_);    
+		float* rightPart = sf_floatalloc (tNum_);
+
+		// read data
+		int offset = tNum_ * startInd * sizeof (float);
+		sf_seek (paramFile_, offset, SEEK_SET);
+		sf_seek (sembFile_ , offset, SEEK_SET);
+
+		sf_floatread (data, curPanelSize, paramFile_);	
+		sf_floatread (semb, curPanelSize, sembFile_);	
+
+		// fix if semblance value equals zero
+		float* pSemb = semb;
+		for (int ip = 0; ip < curPanelSize; ++ip, ++pSemb) {
+			if (*pSemb < 1e-6) *pSemb = 1e-6;
+		}
+	
+		// fill out the equation matrices
+		// - left part
+		float* pMa = Ma;
+		float* pMb = Mb;
+		float* pMc = Mc;
+		// --- basic - D^T D
+		for (int it = 0; it < tNum_; ++it, ++pMa, ++pMb, ++pMc) {
+			*pMa = -epsSq;
+			*pMb = 2 * epsSq;
+			*pMc = -epsSq;
+		}
+		// --- add weigths in the main diagonal
+		pMb = Mb;		
+		float* pR = rightPart;
+		for (int it = 0; it < tNum_; ++it, ++pMb, ++pR) {
+			float* pSemb = semb + it;			
+			float sembStack = 0.f;		    
+			for (int ix = 0; ix < xNum; ++ix, pSemb += tNum_)
+				sembStack += *pSemb;
+			*pMb += sembStack * sembStack;	
+			*pR = sembStack;	
+		}
+		// - complete right part
+		pR = rightPart;		
+		for (int it = 0; it < tNum_; ++it, ++pR) {
+			float* pSemb = semb + it;			
+			float* pData = data + it;						
+			float horStack = 0.f;		    
+		    for (int ix = 0; ix < xNum; ++ix, pSemb += tNum_, pData += tNum_)
+				horStack += *pData * (*pSemb);
+			*pR *= horStack;
 		}	
-        temp = tracesNum - (it + halfXApp) - 1;
-		if (temp < 0)
-		    xNum += temp;
-*/
+		// - correct end values
+		Ma[0] = 0.f;
+		const int lSamp = tNum_ - 1;
+		Mb[lSamp] -= epsSq;
+		Mc[lSamp] = 0.f;
+
+		// solve the equation  
+		TridiagonalSolve (Ma, Mb, Mc, rightPart, res, tNum_);
+
+		// write down the result
+		sf_floatwrite (res, tNum_, outFile_);
+	
+		// free memory
+		free (Ma);
+		free (Mb);
+		free (Mc);
+
+		free (rightPart);
+
+		free (data);
+		free (semb);
+		free (res);
 	}
+
+	sf_warning (".");
 
 	sf_fileclose (paramFile_);
 	sf_fileclose (sembFile_);
