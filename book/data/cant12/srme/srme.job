@@ -8,7 +8,7 @@
 #$ -pe 16way 16                        # Request nodes
 #$ -q serial                          # Queue name
 #$ -A TCCS                            # Account
-#$ -l h_rt=6:00:00                    # runtime (hh:mm:ss)
+#$ -l h_rt=3:00:00                    # runtime (hh:mm:ss)
 #$ -M salah.alhadab@gmail.com         # Where to send "End of job" note to
 #$ -m e                               # "End of job" email only
 
@@ -25,8 +25,13 @@ export RSF_CLUSTER=`awk -v p=$mycores 'NF>=2 {print $1" "p}' $PE_HOSTFILE`
 echo $RSF_THREADS
 echo $RSF_CLUSTER
 
-printenv
+# number of nodes
+echo $NHOSTS
+
+# number of cores
 echo $NSLOTS
+
+# list of nodes
 #echo $PE_HOSTFILE
 
 pscons multiple.rsf

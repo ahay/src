@@ -3,7 +3,7 @@ from rsf.proj import *
 shots='../shot/shot.rsf'
 multiples='../srme/multiple.rsf'
 
-lpf='lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=50 rect2=50 niter=80'
+lpf='lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=50 rect2=50 niter=100'
 
 #lpf='lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=50 niter=100'
 
