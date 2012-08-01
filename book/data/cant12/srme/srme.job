@@ -25,7 +25,8 @@ export RSF_CLUSTER=`awk -v p=$mycores 'NF>=2 {print $1" "p}' $PE_HOSTFILE`
 echo $RSF_THREADS
 echo $RSF_CLUSTER
 
-#echo $NSLOTS
+printenv
+echo $NSLOTS
 #echo $PE_HOSTFILE
 
 pscons multiple.rsf

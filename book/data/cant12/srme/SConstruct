@@ -10,7 +10,7 @@ s0=6144 # first shot
 #########################
 Flow('cmp',data,'put o2=14.625 d2=6.25 | shot2cmp half=y positive=n')
 
-# Interpolate near offsets
+# Replicate near offset trace to zero offset
 #########################
 Flow('cmp0','cmp','sfwindow n2=1 squeeze=n')
 Flow('cmp1','cmp0 cmp',
@@ -51,6 +51,6 @@ Flow('multiple','multip_transp',
 
 #
 # multiple file has the predicted multiples in shot domain
-
+# tpow scaling was not applied
 End()
 
