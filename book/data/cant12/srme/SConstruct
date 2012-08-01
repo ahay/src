@@ -26,7 +26,7 @@ Flow('shot_intp0','cmp1','cmp2shot positive=n' )
 Flow('shot_intp','shot_intp0','window n3=%d min3=%g| put d2=12.5' % (ns,s0))
 
 # fft and transpose (offset, shot, frequency)
-pad n1=6048
+# pad n1=6048
 
 Flow('fft1','shot_intp','pad n1=6048| fft1 | transp memsize=5000',split=[3,ns])
 
