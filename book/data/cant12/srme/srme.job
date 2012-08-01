@@ -2,7 +2,7 @@
 
 #$ -V                                 # Inherit the submission environment
 #$ -cwd                               # Start job in submission dir
-#$ -N pred_mul                        # Job name
+#$ -N srme                            # Job name
 #$ -j y                               # stderr and stdout into stdout
 #$ -o $JOB_NAME.o$JOB_ID              # Name of the output file
 #$ -pe 16way 16                        # Request nodes
