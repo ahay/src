@@ -67,7 +67,7 @@ map, known as a scalogram \cite[]{Rioul1991}, rather than
 a time-frequency spectrum. Because a scale represents a frequency
 band, \cite{Hlawatsch1992} choose their scale
 to be inversely proportional to the center frequency of the wavelet,
-which allowed them to transform their scalogram into a timefrequency
+which allowed them to transform their scalogram into a time-frequency
 map. \cite{Sinha2005} provide a novel method of obtaining
 such a time-frequency map by taking a Fourier transform of
 the inverse CWT.
@@ -261,12 +261,12 @@ resolution at low frequencies for spikes. When we use the shaping
 operator as a regularization term, there is an edge effect from
 smoothing, which appears near 0 s and 4 s (Figure ~\ref{fig:proj-0}). Figure ~\ref{fig:proj-0-30}
 displays the time-frequency map using a different parameter
-(30-point smoothing radius) to demonstrate adjustable timefrequency
+(30-point smoothing radius) to demonstrate adjustable time-frequency
 representation of the proposed method.
 
 \multiplot{4}{s-0,st-0,proj-0,proj-0-30}{width=0.5\columnwidth}{(a) Synthetic signal with three constant frequency 
 components and two spikes. (b) Time-frequency map of the S-transform. 
-(c) Timefrequency map of the proposed method with smoothing radius of 15 points. 
+(c) Time-frequency map of the proposed method with smoothing radius of 15 points. 
 (d) Time-frequency map of the proposed method with smoothing radius of 30 points.
 }
   
@@ -277,7 +277,7 @@ results of the S-transform and the proposed method with 10-point
 smoothing radius, respectively. The two frequency components are
 detected with higher time and frequency resolution by our method.
 The S-transform has high spectral resolution near low frequencies,
-but loses resolution at high frequencies. Resolution of the timefrequency
+but loses resolution at high frequencies. Resolution of the time-frequency
 map deteriorates in both methods when the curvature
 of the time-frequency curve becomes large (as indicated by
 the arrow).
@@ -298,7 +298,7 @@ of basis functions. The wavelet-based methods need to decide the
 wavelets, which can be regarded as patterns of seismic data. The
 closer the selected wavelets are to the true pattern of the input data,
 the better the result of the time-frequency analysis. In this paper, we
-use more general Fourier basis functions to compute the timefrequency
+use more general Fourier basis functions to compute the time-frequency
 map.
 
 \section{ESTIMATION OF TIME-VARYING AVERAGE FREQUENCY}
