@@ -1,5 +1,5 @@
 from rsf.proj import *
-
+from rsf.xflow import *
 
 p=0.3
 
@@ -18,18 +18,21 @@ Flow('modl',None,
 Flow('data', 'modl', 
 	'noise var=%f seed=2012 '%(0.5*pow(10, -snr/10)))
 
-Flow('xtime timetest','data ../../Mxtime.py', 
-	'''
-	${SOURCES[1]} opt=" order=1 liter=50 niter=5 verb=n 
-	<${SOURCES[0]}  >${TARGETS[1]}"
-	cmd="
-	sfdip rect1=2 rect2=2 : 
-	sfdip rect1=4 rect2=4 :
-	sffdip rect1=2 rect2=2 : 
-	sffdip rect1=4 rect2=4 
-	"
-	''', stdin=None)
+#Flow('xtime timetest','data ../../Mxtime.py', 
+#	'''
+#	${SOURCES[1]} opt=" order=1 liter=50 niter=5 verb=n 
+#	<${SOURCES[0]}  >${TARGETS[1]}"
+#	cmd="
+#	sfdip rect1=2 rect2=2 : 
+#	sfdip rect1=4 rect2=4 :
+#	sffdip rect1=2 rect2=2 : 
+#	sffdip rect1=4 rect2=4 
+#	"
+#	''', stdin=None)
 
-Plot('xtime','graph ')
+#Plot('xtime','graph ')
+
+Tflow('fdip', 'data',
+	'dip rect1=2 rect2=2')
 
 #../../Mxtime.py opt=" order=1 liter=50 niter=5 verb=n < data.rsf > timetest.rsf" cmd=" sfdip rect1=2 rect2=2 : sfdip rect1=4 rect2=4 : sffdip rect1=2 rect2=2 : sffdip rect1=4 rect2=4 " > xtime.rsf 

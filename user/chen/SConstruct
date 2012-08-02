@@ -13,7 +13,7 @@ circle prefilt pygraph subplot rsort asc2rsf
 xtime
 '''
 pymods='''
-pcmf xplot
+pcmf xplot xflow
 '''
 
 docs = []

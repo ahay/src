@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 'runtime'
 
-import sys
-import os
+import sys, os, commands
+
 try:
 	import numpy as np
 	import rsf.api as rsf
@@ -12,9 +12,9 @@ except Exception, e:
 
 plat=sys.platform
 if plat=='darwin': # MAC OS using GNU gtime
-	time=' gtime -f "%U" 2>&1 '
+	timer=commands.getoutput('which gtime')
 else: # RHEL 
-	time=' time -f "%U" 2>&1 '
+	timer=commands.getoutput('which gtime')
 
 par=rsf.Par()
 po=rsf.Output()
@@ -27,7 +27,7 @@ lstcmd=strcmd.split(':')
 
 opt=par.string('opt')
 
-# sys.stderr.write(strcmd+' \n'+opt+'\n')
+sys.stderr.write(strcmd+' \n'+opt+'\n')
 
 num=len(lstcmd)
 po.put("n1",num)
@@ -37,9 +37,9 @@ po.put("d1",1)
 b1=np.zeros(num,'f')
 
 for ii in range(num):
-	cmd=time+lstcmd[ii]+opt
+	cmd=timer+' -f "%U" 2>&1 '+lstcmd[ii]+opt
 	aa=os.popen(cmd).readlines()[-1]
-	#sys.stderr.write(aa)
+	sys.stderr.write(aa)
 	b1[ii]=float(aa)
 
 po.write(b1)

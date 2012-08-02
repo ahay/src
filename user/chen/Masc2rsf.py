@@ -11,14 +11,20 @@ except Exception, e:
 po = rsf.Output()
 par= rsf.Par()
 data = np.genfromtxt(sys.stdin)
-(n2, n1)=data.shape
+
+nk=len(data.shape)
+
+if nk==2:
+	(n2, n1)=data.shape
+	po.put('o2',0)
+	po.put('d2',1)
+	po.put('n2',n2)
+elif nk==1:
+	n1=data.shape[0]
 
 po.put('o1',0)
-po.put('o2',0)
 po.put('d1',1)
-po.put('d2',1)
 po.put('n1',n1)
-po.put('n2',n2)
 
 po.write(data.astype('f'))
 
