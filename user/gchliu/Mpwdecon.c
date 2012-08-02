@@ -21,13 +21,13 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
     
-#include "copyk.c"
-#include "predk.c"
+#include "convk.c"
 
 int main(int argc, char* argv[])
 {   
-    int i, n1, n2, n12, n3, nk, nf, reg, n12k, niter, nliter, iter, i3, ori_wavelet;
+    int i, n1, n2, n12, n3, nk, nf, reg, n12k, niter, nliter, iter, i3, ori_wavelet, order;
     float eps, d1, of, maxweight, *d, *s, *wf, ***pp, *w=NULL, *p=NULL, *ww=NULL;
     bool verb, sparse, cut_p;
     sf_file in, out, dips, wav, weight=NULL;
@@ -68,6 +68,8 @@ int main(int argc, char* argv[])
     if (!sf_getbool("cut_p",&cut_p)) cut_p = true;
     /* cut off value of precondition */
     
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
  
     sf_putint (out,"n3",nk);
     sf_putint (out,"n4",n3);
@@ -107,7 +109,7 @@ int main(int argc, char* argv[])
 	    }
         }
         if (reg == 1){
-            predk_init(nk,n1,n2,0.0001,pp);
+            predk_init(nk,n1,n2,0.0001,order,pp);
         }
     
         sf_floatread(wf,nf,wav);
@@ -182,7 +184,7 @@ int main(int argc, char* argv[])
     } else { /* 2-norm deconvolution */
 
         sf_floatread (d,n12,in);
-        predk_init(nk,n1,n2,0.0001,pp);
+        predk_init(nk,n1,n2,0.0001,order,pp);
         sf_floatread(wf,nf,wav);
         convk_init(nf,wf,ori_wavelet,nk,n2,n1);
         sf_warning("sparse=false");

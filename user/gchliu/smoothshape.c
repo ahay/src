@@ -18,14 +18,15 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
 
 #include "smoothshape.h"
-#include "pwdsl.h"
-#include "repeat.h"
 #include "down.h"
+
 static float *tmp;
 
 void smoothshape_init(int n1, int n2        /* data size */, 
+		      int order             /* accuracy order */,
 		      int rect1, int rect2  /* smoothing radius */,
 		      float lam             /* operator scaling */,
 		      float **dip           /* dip field */,
@@ -36,8 +37,8 @@ void smoothshape_init(int n1, int n2        /* data size */,
 
     n = n1*n2;
     sf_down_init(down);
-    repeat_init(n1,n2,sf_down_lop);
-    pwdsl_init(n1,n2,rect1,rect2, 0.01);
+    sf_repeat_init(n1,n2,sf_down_lop);
+    pwdsl_init(n1,n2,order, rect1,rect2, 0.01);
     pwdsl_set(dip);
 
     tmp = sf_floatalloc(n);
@@ -60,9 +61,9 @@ void smoothshape(int niter     /* number of iterations */,
 { 
     if (NULL != weight) {
 	sf_weight_init(weight);
-	sf_conjgrad(sf_weight_lop,repeat_lop,pwdsl_lop,tmp,der,data,niter);
+	sf_conjgrad(sf_weight_lop,sf_repeat_lop,pwdsl_lop,tmp,der,data,niter);
     } else {
-	sf_conjgrad(NULL,repeat_lop,pwdsl_lop,tmp,der,data,niter);
+	sf_conjgrad(NULL,sf_repeat_lop,pwdsl_lop,tmp,der,data,niter);
     }
 }
 

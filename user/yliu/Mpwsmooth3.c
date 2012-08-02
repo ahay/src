@@ -18,14 +18,13 @@
 */
 
 #include <rsf.h>
-#include "predict.h"
-#include "dijkstra.h"
+#include <rsfpwd.h>
 
 int main (int argc, char *argv[])
 {
     bool verb, bilat, gauss;
     int n1,n2,n3, i1,i2,i3, ns2, ns3, ip2, ip3, ip, np2, np3, np; 
-    int i4, n4, k2, k3, j2, j3, ud, lr, foldp, foldn, t1, t2;
+    int i4, n4, k2, k3, j2, j3, ud, lr, foldp, foldn, t1, t2, order;
     float eps, ****u, ****w, ***p1, ***p2, ***norm, **cost, *trace;
     float ax, bx, distance, max;
     sf_file inp, out, dip;
@@ -70,6 +69,9 @@ int main (int argc, char *argv[])
 	/* exponential weight for the domain distance */
     }
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     cost = sf_floatalloc2(np2,np3);
     for (i3=0; i3 < np3; i3++) {
 	for (i2=0; i2 < np2; i2++) {
@@ -78,7 +80,7 @@ int main (int argc, char *argv[])
     }
 
     dijkstra_init(np2,np3,cost,cost);
-    predict_init (n1, n2, eps*eps, 1);
+    predict_init (n1, n2, eps*eps, order, 1, false);
 
     u = sf_floatalloc4(n1,np,n2,n3);
     w = sf_floatalloc4(n1,np,n2,n3);

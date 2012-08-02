@@ -9,10 +9,10 @@ fourmis2 freqreg freshape geoconvert groll initial instattr kuwahara
 lorenz locorr lpad2 lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2
 lumsmoother lumsharpener matchoper mean mf mig2 miss4 miss43 mlm mtm
 mlwm multiple nmradon nmult nonloc oclet pwcsemb pwd2 pwsfault
-pwsfault3 pwsmooth pwsmooth3 radonoper rtft saltpepper sclet seisavf
-seisbreg2 seishrink seislet97 seismis2 seispocs seisreg2 sharpsimi snr
-sphase st stft svddenoise swell testapef testcasoper testmatch
-threshold2 tvmf variogram variogram2 vconvert wavemis2 wmf zcwt
+pwsfault3 pwsmooth3 radonoper rtft saltpepper sclet seisavf seisbreg2
+seishrink seismis2 seispocs seisreg2 sharpsimi snr sphase st stft
+svddenoise swell testapef testcasoper testmatch threshold2 tvmf
+variogram variogram2 vconvert wavemis2 wmf zcwt
 '''
 
 try:  # distributed version
@@ -21,13 +21,14 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../fomels/SConstruct')
 
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsfpwd',
+                  env.get('DYNLIB','')+'rsf'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

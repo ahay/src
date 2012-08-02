@@ -1,1 +1,0 @@
-../fomels/allp3.c

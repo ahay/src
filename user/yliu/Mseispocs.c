@@ -18,11 +18,11 @@
 */
 
 #include <rsf.h>
-#include "seisletoper.h"
+#include <rsfpwd.h>
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
+    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter, order; 
     float *mm, *dd, *dd2=NULL, **pp, *m=NULL, eps, perc, *sknown;
     char *type;
     bool verb, *dknown;
@@ -54,6 +54,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization parameter */
+
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
 
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
@@ -87,11 +90,11 @@ int main(int argc, char* argv[])
 	    dknown[i] = (bool) (dd[i] != 0.);
 	}
     }
-     if (NULL != convex) {
+    if (NULL != convex) {
 	sf_floatread(sknown,n12,convex);
     }  
 
-    seislet_init(n1,n2,true,true,eps,type[0]);
+    seislet_init(n1,n2,true,true,eps,order,type[0]);
     dd2 = sf_floatalloc(n12);
 
     seislet_set(pp);

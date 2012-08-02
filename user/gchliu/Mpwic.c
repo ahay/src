@@ -21,13 +21,14 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
     
 #include "iccopyk.c"
-#include "predk.c"
+
 
 int main(int argc, char* argv[])
 {   
-    int i, n1, n2, n12, n3, nk, reg, n12k, niter, nliter, iter, i3;
+    int i, n1, n2, n12, n3, nk, reg, n12k, niter, nliter, iter, i3, order;
     float eps, maxweight, *d, *s, *dwave, ***pp, *w=NULL, *p=NULL, *ww=NULL;
     bool verb, sparse, cut_p;
     sf_file in, out, dips, down, weight=NULL;
@@ -51,9 +52,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(down,"n1",&i) || i != n1) sf_error("Wrong n1= in down");
     if (!sf_histint(down,"n2",&i) || i != n2) sf_error("Wrong n2= in down");
     if (sf_histint(down,"n3",&i) && i != n3) sf_error("Wrong n4= in down");
-
-    
-    
     
     if (!sf_getbool("sparse",&sparse)) sparse = true;
     /* if sparse = ture   sparse deconvolution cauchy-norm
@@ -87,6 +85,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = true;
     /* verbosity flag */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     s = sf_floatalloc(n12k);
     d = sf_floatalloc(n12k);
     pp = sf_floatalloc3(n1,n2,nk);
@@ -107,7 +108,7 @@ int main(int argc, char* argv[])
 	    }
         }
         if (reg == 1){
-            predk_init(nk,n1,n2,0.0001,pp);
+            predk_init(nk,n1,n2,0.0001,order,pp);
         }
     
         sf_floatread(dwave,n12k,down);
@@ -182,7 +183,7 @@ int main(int argc, char* argv[])
     } else { /* 2-norm least square imaging condition */
         sf_warning("*********sparse==0**********");
         sf_floatread (d,n12,in);
-        predk_init(nk,n1,n2,0.0001,pp);
+        predk_init(nk,n1,n2,0.0001,order,pp);
         sf_floatread(dwave,n12k,down);
         divk_init(dwave,nk,n2,n1);
         sf_warning("sparse=false");

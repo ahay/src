@@ -18,12 +18,12 @@
 */
 
 #include <rsf.h>
-#include "predict.h"
+#include <rsfpwd.h>
 
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, fold, niter, nit;
+    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, fold, niter, nit, order;
     float eps, perc, ***u, **p, *trace, **xk, **yk;
     sf_file inp, out, dip;
     char *type;
@@ -68,7 +68,10 @@ int main (int argc, char *argv[])
 	    sf_error("Unknown operator \"%s\"",type);
     }
 
-    predict_init (n1, n2, eps*eps, 1);
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
+    predict_init (n1, n2, eps*eps, order, 1, false);
 
     u = sf_floatalloc3(n1,ns2,n2);
     for (i2=0; i2 < n2; i2++) {

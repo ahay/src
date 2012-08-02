@@ -18,11 +18,11 @@
 */
 
 #include <rsf.h>
-#include "seisletoper.h"
+#include <rsfpwd.h>
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter; 
+    int i, niter, nw, n1, n2, n12, i1, i3, n3, iter, order; 
     float *mm, *dd, *dd2, *dd3, **pp, *m;
     float eps, perc;
     char *type, *oper;
@@ -62,6 +62,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("perc",&perc)) perc=99.;
     /* percentage for soft thresholding */ 
+
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
     
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
@@ -78,7 +81,7 @@ int main(int argc, char* argv[])
     }
 
     sf_sharpen_init(n12,perc);
-    seislet_init(n1,n2,true,true,eps,type[0]);
+    seislet_init(n1,n2,true,true,eps,order,type[0]);
     seislet_set(pp);
     
     for (i3=0; i3 < n3; i3++) {

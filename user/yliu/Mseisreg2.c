@@ -18,12 +18,13 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
+
 #include "int1.h"
-#include "seisletoper.h"
 
 int main(int argc, char* argv[])
 {
-    int niter, nw, n1, i3, n3, nt, nd, nm, interp;
+    int niter, nw, n1, i3, n3, nt, nd, nm, interp, order;
     float *mm, *dd, **pp, *offset, x0, dx, eps;
     char *header;
     char *type;
@@ -85,12 +86,15 @@ int main(int argc, char* argv[])
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     pp = sf_floatalloc2(nt,nm);
     mm = sf_floatalloc(nt*nm);
     dd = sf_floatalloc(nt*nd);
 
     int1_init (offset, x0,dx,nm, nt, sf_spline_int, interp, nd);
-    seislet_init(nt,nm,true,true,eps,type[0]);
+    seislet_init(nt,nm,true,true,eps,order,type[0]);
     seislet_set(pp);
 
     if (!sf_getbool("verb",&verb)) verb = false;

@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "seisletoper.h"
+#include <rsfpwd.h>
 #include "wavelet.h"
 
 int main(int argc, char* argv[])
@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     dm = 1.e+20;
     dperc = 100.0/(nperc-1);
 
-    seislet_init(n1,n2,true,true,eps,type[0]);
+    seislet_init(n1,n2,true,true,eps,order,type[0]);
     wavelet_init(n1,true,true,type[0]);
 
     seislet_set(pp);

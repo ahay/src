@@ -18,13 +18,12 @@
 */
 
 #include <rsf.h>
-#include "predict.h"
-#include "dijkstra.h"
+#include <rsfpwd.h>
 
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, np; 
+    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, np, order; 
     int i4, n4, k2, k3, j2, j3, ud, lr, fold, niter, nit;
     float eps, perc, ****u, ***p1, ***p2, **cost, *trace, ***xk, ***yk;
     sf_file inp, out, dip;
@@ -74,6 +73,9 @@ int main (int argc, char *argv[])
 	    sf_error("Unknown operator \"%s\"",type);
     }
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     cost = sf_floatalloc2(np2,np3);
     for (i3=0; i3 < np3; i3++) {
 	for (i2=0; i2 < np2; i2++) {
@@ -82,7 +84,7 @@ int main (int argc, char *argv[])
     }
 
     dijkstra_init(np2,np3,cost,cost);
-    predict_init (n1, n2, eps*eps, 1);
+    predict_init (n1, n2, eps*eps, order, 1, false);
 
     u = sf_floatalloc4(n1,np,n2,n3);
     for (i3=0; i3 < n3; i3++) {

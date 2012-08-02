@@ -18,12 +18,12 @@
 */
 
 #include <rsf.h>
-#include "seisletoper.h"
+#include <rsfpwd.h>
 
 int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n12, i1, i2, i3, n3;
-    int iter, cnum, cutting, num; 
+    int iter, cnum, cutting, num, order; 
     float *mm, *dd, *dd2=NULL, *dd3=NULL, **pp, *m=NULL;
     float eps, perc, ordert, iperc, orderc, inum;
     char *type, *oper;
@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization parameter */
 
+    if (!sf_getint("order",&order)) order=1;
+    /* accuracy order */
+
     pp = sf_floatalloc2(n1,n2);
     mm = sf_floatalloc(n12);
     dd = sf_floatalloc(n12);
@@ -83,7 +86,7 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("orderc",&orderc)) orderc=1.;
 	/* Curve order for cutting operator, default is linear */
 	
-	seislet_init(n1,n2,true,true,eps,type[0]);
+	seislet_init(n1,n2,true,true,eps,order,type[0]);
 	if (cnum > n2 || (cnum-1) <0) sf_error("need cnum in [1,n2].");
     } else {
 	if (!sf_getfloat("perc",&perc)) perc=99.;
@@ -95,11 +98,11 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n12; i1++) {
 		mm[i1] = 0.;
 	    }
-	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    break;
 
 	case 'c':
-	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    sf_mask_init(known);
 	    break;
 
@@ -108,7 +111,7 @@ int main(int argc, char* argv[])
 	    /* Curve order for thresholding operator, default is linear */
 	    
 	    sf_sharpen_init(n12,perc);
-	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 
@@ -117,13 +120,13 @@ int main(int argc, char* argv[])
 	    /* Curve order for thresholding operator, default is linear */
 
 	    sf_sharpen_init(n12,perc);
-	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    break;
 
 	case 'b':
 	    sf_sharpen_init(n12,perc);
-	    seislet_init(n1,n2,true,true,eps,type[0]);
+	    seislet_init(n1,n2,true,true,eps,order,type[0]);
 	    dd2 = sf_floatalloc(n12);
 	    dd3 = sf_floatalloc(n12);
 	    break;
