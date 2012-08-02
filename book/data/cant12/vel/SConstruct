@@ -34,7 +34,8 @@ def myfunction(l,its):
                      '''%(len(its)/2),stdin=0)
     Flow(velt,[vfile,tfile],'invbin1 head=${SOURCES[1]} nx=3000 dx=.001 x0=0 ')
     vs.append(velt)
-    Flow('g%s'%l,[vfile,tfile],'rm $SOURCES[1:2]',stdout=-1)
+    Flow('g%s'%l,[vfile+".asc",tfile+".asc"],'\\rm ${SOURCES[0:2]}',stdout=-1,stdin=0)
+    Flow('gg%s'%l,[tfile,vfile],'rm ${SOURCES[0:2]}',stdout=-1,stdin=0)
     return
 
 txt_f = open(infile, 'r')
@@ -73,8 +74,8 @@ Result('rms',
 mute='rms.rsf'
 
 # sort to CMP
-#Flow('cmp_all',data,'shot2cmp half=n positive=n')
-data='ccmp_all'
+Flow('cmp_all',data,'shot2cmp half=n positive=n')
+data='cmp_all'
 
 ncmp1=9701 # number of cmps
 ncmp=9464  # number of cmps of full fold
