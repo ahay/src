@@ -2,9 +2,33 @@ from rsf.proj import *
 
 # using CMPs after demultiple
 data='../lpf/demultiple.rsf'
-mute='handvel.rsf'
-
 # data has tpow squared already applied
+
+# Let us first get the hand picked velocity
+############################################
+Flow('handvels.asc','handvels.txt handvel.sh','./${SOURCES[1]} ${SOURCES[0]} ',stdin=0)
+
+Flow('pattern0',None,
+     'spike n1=3000 d1=0.001 o1=0 n2=9701 d2=6.25 o2=5391.88')
+
+Flow('pickv','handvels.asc',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=938 |
+     dd form=native
+     ''')
+Flow('rms','pickv pattern0',
+     'vconvert pattern=${SOURCES[1]} shift=20| smooth rect1=50 rect2=50 ')
+Result('rms',
+       '''
+       grey title="NMO Velocity" 
+       label1="Time" label2="Lateral" unit1=s unit2=km
+       color=j scalebar=y allpos=y barlabel="Velocity (m/s)"
+       barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
+       ''' )
+
+# Use the velocity to create a mute for automatic velocity picking
+mute='rms.rsf'
+
 # sort to CMP
 Flow('cmp_all',data,'shot2cmp half=n positive=n')
 data='cmp_all'
