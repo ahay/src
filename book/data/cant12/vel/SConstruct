@@ -2,44 +2,87 @@ from rsf.proj import *
 
 # using CMPs after demultiple
 data='../lpf/demultiple.rsf'
+infile='handvels.txt'
 # data has tpow squared already applied
 
 # Let us first get the hand picked velocity
 ############################################
-Flow('handvels.asc','handvels.txt handvel.sh','./${SOURCES[1]} ${SOURCES[0]} ',stdin=0)
+
+# This function interpolates the time samples
+# for each trace
+vs=[]
+def myfunction(l,its):
+    #print its
+    tfile='t%s'%l
+    vfile='v%s'%l
+    velt='velt%s'%l
+    tfl= open(tfile+".asc", 'w')
+    vfl= open(vfile+".asc", 'w')
+    for i in range(0,len(its),2):
+        # time samples are converted to seconds
+        tfl.write(str(float(its[i])/1000.0)+" ")
+        vfl.write(its[i+1]+" ")
+    tfl.close()
+    vfl.close()
+    Flow(tfile,tfile+".asc",'''
+                     echo in=$SOURCE n1=%d data_format=ascii_float 
+                     | sfdd form=native 
+                     '''%(len(its)/2),stdin=0)
+    Flow(vfile,vfile+".asc",'''
+                     echo in=$SOURCE n1=%d data_format=ascii_float 
+                     | sfdd form=native 
+                     '''%(len(its)/2),stdin=0)
+    Flow(velt,[vfile,tfile],'invbin1 head=${SOURCES[1]} nx=3000 dx=.001 x0=0 ')
+    vs.append(velt)
+    Flow('g%s'%l,[vfile,tfile],'rm $SOURCES[1:2]',stdout=-1)
+    return
+
+txt_f = open(infile, 'r')
+
+items=[]
+for line in txt_f.read().splitlines():
+   if line.startswith("HANDVEL"):
+       loc=line.split()[1]
+       if items:
+          myfunction(loc,items)
+          items=[]
+   else:
+          items = items + line.split()
+myfunction(loc,items)
+txt_f.close()
+
+Flow('velt',vs,'cat axis=2 ${SOURCES[1:%d]} | put d2=625 o2=5866.90 '%len(vs))
 
 Flow('pattern0',None,
-     'spike n1=3000 d1=0.001 o1=0 n2=9701 d2=6.25 o2=5391.88')
+     'spike n1=9701 d1=6.25 o1=5391.88')
 
-Flow('pickv','handvels.asc',
-     '''
-     echo in=$SOURCE data_format=ascii_float n1=3 n2=938 |
-     dd form=native
-     ''')
-Flow('rms','pickv pattern0',
-     'vconvert pattern=${SOURCES[1]} shift=20| smooth rect1=50 rect2=50 ')
+Flow('rms','velt pattern0','transp memsize=500| remap1 pattern=${SOURCES[1]} |transp memsize=500  ')
+Result('velt',
+    '''
+    grey color=j allpos=y yreverse=y 
+    label1=Time unit1=s label2=Velocity unit2=m/s
+    ''')
 Result('rms',
-       '''
-       grey title="NMO Velocity" 
-       label1="Time" label2="Lateral" unit1=s unit2=km
-       color=j scalebar=y allpos=y barlabel="Velocity (m/s)"
-       barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
-       ''' )
+    '''
+    grey color=j allpos=y yreverse=y 
+    label1=Time unit1=s label2=Velocity unit2=m/s
+    ''')
+
 
 # Use the velocity to create a mute for automatic velocity picking
 mute='rms.rsf'
 
 # sort to CMP
-Flow('cmp_all',data,'shot2cmp half=n positive=n')
-data='cmp_all'
+#Flow('cmp_all',data,'shot2cmp half=n positive=n')
+data='ccmp_all'
 
 ncmp1=9701 # number of cmps
 ncmp=9464  # number of cmps of full fold
 fcmp=118   # cmp first location (actually it skips 118)
 jump=100   # every 100th
 
-n3=(ncmp1-fcmp)/(jump+1)  # 94 number of locations
-# n3=95                   # 95 number of locations
+n3=int((ncmp1-fcmp)/(jump+1))  # 94 locations
+# n3=95                  
 
 Flow('cmp',data,'window n3=%d f3=%d j3=%d'%(n3,fcmp,jump))
 
