@@ -38,14 +38,16 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+libs = [env.get('DYNLIB','')+'rsf']+env.get('LIBS',[])
+dlibs = ['drsf']+env.get('LIBS',[])
+
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBPATH=['../../lib'])
 
 fftw = env.get('FFTW')
 if fftw:
-    env.Prepend(LIBS=[fftw],
-                CPPDEFINES=['SF_HAS_FFTW'])
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    libs.insert(0,fftw)
 
 dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 
@@ -80,8 +82,7 @@ if root:
     env.Install(incdir,inc)
 
 if dynlib:
-    dlib = env.SharedLibrary('rsfpwd',dobjects,SHLIBPREFIX='libd',LIBS=[])
-    
+    dlib = env.SharedLibrary('rsfpwd',dobjects,SHLIBPREFIX='libd',LIBS=dlibs)
     if root:
         env.Install(libdir,dlib)
 
@@ -89,7 +90,7 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
     if root:
         env.Install(bindir,prog)
 
@@ -99,14 +100,13 @@ else:
     lapack = None
 
 if lapack:
-    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
-                      'vecmatop']+lapack)
+    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']+lapack+libs
 
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
     if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources),LIBS=libsxx)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
@@ -119,10 +119,10 @@ if jpeg:
 
 for conv in ('byte2jpg','jpg2byte'):
     if jpeg:
-        libs=env.get('LIBS')+[jpeg]
-        prog = env.Program('sf'+conv,['_%s.c' % conv,jpeg_o],LIBS=libs)
+        prog = env.Program('sf'+conv,['_%s.c' % conv,jpeg_o],LIBS=libs+[jpeg])
     else:
-        prog = env.RSF_Place('sf'+conv,None,var='JPEG',package='libjpeg-devel')
+        prog = env.RSF_Place('sf'+conv,None,var='JPEG',
+                             package='libjpeg-devel')
     if root:
         env.Install(bindir,prog)
 
@@ -130,8 +130,7 @@ tiff = env.get('TIFF')
 
 for conv in ('byte2tif','tif2byte'):
     if tiff:
-        libs=env.get('LIBS')+[tiff]
-        prog = env.Program('sf'+conv,'_%s.c' % conv,LIBS=libs)
+        prog = env.Program('sf'+conv,'_%s.c' % conv,LIBS=libs+[tiff])
     else:
         prog = env.RSF_Place('sf'+conv,None,var='TIFF',package='libtiff-devel')
     if root:
@@ -146,7 +145,7 @@ for prog in Split(
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
     env.Object('Test' + prog + '.c')
-    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
 
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
