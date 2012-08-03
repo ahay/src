@@ -41,20 +41,27 @@ def myfunction(l,its):
 txt_f = open(infile, 'r')
 
 items=[]
+loc=""
 for line in txt_f.read().splitlines():
    if line.startswith("HANDVEL"):
-       loc=line.split()[1]
+       if not loc:
+          loc=line.split()[1]
+       else:
+          loc1=loc
+          loc=line.split()[1]
        if items:
-          myfunction(loc,items)
+          myfunction(loc1,items)
           items=[]
    else:
           items = items + line.split()
 myfunction(loc,items)
 txt_f.close()
 
+print vs
+
 Flow('velt',vs,'cat axis=2 ${SOURCES[1:%d]} | put d2=625 o2=5866.90 '%len(vs))
-vs.append('velt')
-Flow('gvelt',vs,'rm ${SOURCES[1:%d]}'%(len(vs)-1),stdout=-1)
+vs.insert(0,'velt')
+Flow('gvelt',vs,'rm ${SOURCES[1:%d]}'%(len(vs)),stdout=-1, stdin=0)
 
 Flow('pattern0',None,
      'spike n1=9701 d1=6.25 o1=5391.88')
@@ -76,7 +83,7 @@ Result('rms',
 mute='rms.rsf'
 
 # sort to CMP
-Flow('cmp_all',data,'shot2cmp half=n positive=n')
+#Flow('cmp_all',data,'shot2cmp half=n positive=n')
 data='cmp_all'
 
 ncmp1=9701 # number of cmps

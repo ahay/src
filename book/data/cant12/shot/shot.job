@@ -2,13 +2,13 @@
 
 #$ -V                                 # Inherit the submission environment
 #$ -cwd                               # Start job in submission dir
-#$ -N stack                           # Job name
+#$ -N shot                            # Job name
 #$ -j y                               # stderr and stdout into stdout
 #$ -o $JOB_NAME.o$JOB_ID              # Name of the output file
-#$ -pe 4way 48                        # Request nodes
-#$ -q development                     # Queue name
+#$ -pe 4way 16                        # Request nodes
+#$ -q serial                          # Queue name
 #$ -A TCCS                            # Account
-#$ -l h_rt=01:30:00                   # runtime (hh:mm:ss)
+#$ -l h_rt=01:00:00                   # runtime (hh:mm:ss)
 #$ -M salah.alhadab@gmail.com         # Where to send "End of job" note to
 #$ -m e                               # "End of job" email only
 
@@ -37,4 +37,3 @@ echo $RSF_CLUSTER
 #echo $PE_HOSTFILE
 
 pscons
-
