@@ -22,7 +22,7 @@ import rsf.vplot2gif
 def convert(infile,outfile):
     gif = 'tmp%s.gif' %  time.time()    
     rsf.vplot2gif.convert(infile,gif)
-    run = 'ffmpeg -f gif -i %s %s' % (gif,outfile)
+    run = 'ffmpeg -i %s %s' % (gif,outfile)
     os.system(run)
     os.unlink(gif)
 
