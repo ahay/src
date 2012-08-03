@@ -22,7 +22,7 @@ Flow('shifts',shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
 Flow('flt pre',['shifts',data],
      'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=40 rect2=25 niter=80')
 
-Flow('sig',[data,'pre'],'add scale=1,-1 ${SOURCES[1]}')
+Flow('dmostk',[data,'pre'],'add scale=1,-1 ${SOURCES[1]}')
 
 Result('mult','grey title="post stack multiple prediction"')
 

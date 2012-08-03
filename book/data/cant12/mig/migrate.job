@@ -14,11 +14,19 @@
 
 source $RSFSRC/env.sh
 
+# CHANGE the number of jobs per node
 export mycores=2
 
-# cores * nodes
-#    2  *  1
-export RSF_THREADS=2
+if [ $mycores -lt 16 ]
+then
+  export MY_NSLOTS=`expr $mycores \\* $NHOSTS`
+  export RSF_THREADS=$MY_NSLOTS
+else
+  export RSF_THREADS=$NSLOTS
+fi
+
+# number of nodes
+# $NHOSTS
 
 export RSF_CLUSTER=`awk -v p=$mycores 'NF>=2 {print $1" "p}' $PE_HOSTFILE`
 

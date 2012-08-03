@@ -1,7 +1,8 @@
 from rsf.proj import *
 
-data='../stk/dmostk.rsf'
-mask='../vel/vel.rsf' # mute around hand picked velocities
+data='../stkdemul/dmostk.rsf'
+mute='../vel/vel.rsf' # stacking velocity
+#mask='../vel/vel.rsf' # mute around hand picked velocities
 
 fvel=1390
 
@@ -65,6 +66,15 @@ Flow('velcon_dif','velcon_tdif',
 ##########################
 # Pick best focused image
 ##########################
+dvel=100
+Flow('mask',mute,
+     '''
+     spray axis=2 n=%d o=%d d=%d label="velocity" unit="m/s"
+     | math output="input-x2"
+     | mask max=%g min=%g
+     | dd type=float
+     | smooth rect2=5
+     '''%(nv,v0,dv,dvel/2,-dvel),split=[2,ncmp1],reduce="cat axis=3")
 
 Flow('maskt',mask,
      '''

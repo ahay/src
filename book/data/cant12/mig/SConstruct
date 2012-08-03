@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-ref='../stk/dmostk.rsf'
+ref='../stkdemul/dmostk.rsf'
 dif='../velcon/dif.rsf'
 migvel='../velcon/migvel.rsf'
 
