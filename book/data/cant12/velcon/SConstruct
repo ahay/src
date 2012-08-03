@@ -67,6 +67,9 @@ Flow('velcon_dif','velcon_tdif',
 # Pick best focused image
 ##########################
 dvel=100
+dv=10
+nv=201
+v0=1400
 Flow('mask',mute,
      '''
      spray axis=2 n=%d o=%d d=%d label="velocity" unit="m/s"
@@ -74,13 +77,9 @@ Flow('mask',mute,
      | mask max=%g min=%g
      | dd type=float
      | smooth rect2=5
-     '''%(nv,v0,dv,dvel/2,-dvel),split=[2,ncmp1],reduce="cat axis=3")
+     '''%(nv,v0,dv,dvel/2,-dvel))
 
-Flow('maskt',mask,
-     '''
-     transp plane=23 memsize=16000
-     ''',split=[3,9701],reduce='cat axis=2')
-
+Flow('maskt','mask','transp plane=23 memsize=16000')
 
 mask='maskt'
 difstk='velcon_dif'
@@ -103,7 +102,7 @@ Flow('mpathv',[difstk,mask],
      ''')
 
 # migration velocity
-Flow('migvel','mpathv2 mpath2','divn den=${SOURCES[1]} rect1=40 rect2=80')
+Flow('migvel','mpathv mpath','divn den=${SOURCES[1]} rect1=40 rect2=80')
 
 Result('migvel',
       '''
