@@ -12,7 +12,7 @@ for n in range(403,413):
         out = 'cant12-%d' % n
 
         #Flow([out,'t'+out,out+'.asc',out+'.bin'],inp,
-        # 'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+        #     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
 	
 	# mask out traces with trid > 2   ,  key# 7 (f1=7) on header file
 	mask = 'mask%d' % n
@@ -31,7 +31,8 @@ for n in range(403,413):
 	     '''
              headerwindow mask=${SOURCES[1]} | 
              intbin head=${SOURCES[2]} xk=tracf yk=fldr |
-             put d2=12.5 o2=29.25 d3=12.5 unit2="m" label3="Shot offset" unit3="m" 
+             put d2=12.5 o2=29.25 unit2="m" label2="Offset" 
+                 d3=12.5          unit3="m" label3="Shot"
              ''')
  
 	# shot location (sx and sy)
@@ -40,7 +41,8 @@ for n in range(403,413):
 	     '''
              window n1=2 f1=21 |
              intbin head=${SOURCES[0]} xk=tracf yk=fldr |
-             put d2=12.5 o2=29.25
+             put d2=12.5 o2=29.25 unit2="m" label2="Offset" 
+                 d3=12.5          unit3="m" label3="Shot"
              ''')
 
         parts.append(part)
@@ -59,7 +61,15 @@ Flow('tshots',tparts,'cat axis=2 ${SOURCES[1:%d]}' % len(tparts))
 # concatenate shot coordinates
 Flow('shotcoords',coords,'cat axis=3 ${SOURCES[1:%d]}' % len(coords))
 
+Result('shotcoords','shotcoords',
+       '''
+       dd type=complex
+       | window  n2=1 f2=0 
+       | graph symbol='*'
+       ''')
 # Remove the last shot (it has 45 traces instead of 120 traces )
 #Flow('shots','lshots','window n3=5010')
 #Flow('tshots','ltshots','window n2=601200')
 #Flow('shotcoords','lshotcoords','window n3=5010')
+
+End()
