@@ -691,8 +691,25 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          ''' % par)
 def awefd1(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     awefd(odat,owfl,idat,velo,dens,sou,rec,custom+' expl=y ',par)
-    
 
+# constant-density acoustic FD modeling
+def cdafd(odat,owfl,idat,velo,sou,rec,custom,par):    
+    Flow([odat,owfl],[idat,velo,sou,rec],
+         '''
+         awefd2d cden=y
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         dabc=%(dabc)s nb=%(nb)d
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]}
+         rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         '''%par+custom)
+def cdafd1(odat,owfl,idat,velo,sou,rec,custom,par):
+    cdafd(odat,owfl,idat,velo,sou,rec,custom+' expl=y ',par)
+
+# ------------------------------------------------------------
+# Born modeling
 def lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
     par['fdcustom'] = custom
     
@@ -829,40 +846,39 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
 
 # ------------------------------------------------------------    
 # exploding-reflector reverse-time migration
-def oldzom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
-
-    rwfl = imag+'_ur' # receiver wavefield
-    rout = imag+'_dr' # receiver data (not the input rdat)
-
-    # receiver wavefield (z,x,t)
-    tdat = imag+'_tds'
-    twfl = imag+'_tur'
-
-    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
-
-    Flow(imag,twfl,'window n3=1 f3=1')
+#def oldzom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
+#
+#    rwfl = imag+'_ur' # receiver wavefield
+#    rout = imag+'_dr' # receiver data (not the input rdat)
+#
+#    # receiver wavefield (z,x,t)
+#    tdat = imag+'_tds'
+#    twfl = imag+'_tur'
+#
+#    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
+#    awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
+#
+#    Flow(imag,twfl,'window n3=1 f3=1')
 
 # ------------------------------------------------------------
 # exploding-reflector reverse-time migration
 def zom(imag,data,velo,dens,racq,custom,par):
-
     tdat = imag+'_tds'
     jwfl = imag+'_tur'
     jdat = imag+'_jnk'
 
     Flow(tdat,data,'reverse which=2 opt=i verb=y')
-    awefd(jdat,
-	  jwfl,
-    	  tdat,
-	  velo,
-	  dens,
-	  racq,
-	  racq,
-	  custom+' jsnap=%d' % (par['nt']-1),par)
+    awefd(jdat,jwfl,tdat,velo,dens,racq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
+    Flow( imag,jwfl,'window n3=1 f3=1')
 
-    Flow(imag,jwfl,'window n3=1 f3=1')
+def cdzom(imag,data,velo,racq,custom,par):
+    tdat = imag+'_tds'
+    jwfl = imag+'_tur'
+    jdat = imag+'_jnk'
 
+    Flow(tdat,data,'reverse which=2 opt=i verb=y')
+    cdafd(jdat,jwfl,tdat,velo,racq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
+    Flow( imag,jwfl,'window n3=1 f3=1')
 
 # ------------------------------------------------------------
 # wavefield-over-model plot

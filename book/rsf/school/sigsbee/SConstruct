@@ -87,7 +87,7 @@ Flow('rA',['rH','rV'],
 Plot('rA',['rH','rV'],'Overlay')
 # ------------------------------------------------------------
 # make the density
-Flow('dens','vsmo',
+Flow('dens','modl',
      'math output=1')
 Plot(  'dens',fdmod.cgrey('mean=y',par))
 Result('dens',['dens','ss','rH','rV'],'Overlay')
