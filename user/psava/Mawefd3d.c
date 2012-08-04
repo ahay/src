@@ -46,7 +46,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,fsrf,snap,expl,dabc; 
+    bool verb,fsrf,snap,expl,dabc,cden; 
     int  jsnap,ntsnap,jdata;
 #ifdef _OPENMP
     int ompnth=1;
@@ -119,6 +119,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
     if(! sf_getbool("expl",&expl)) expl=false; /* "exploding reflector" */
     if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing BC */
+    if(! sf_getbool("cden",&cden)) cden=false; /* constant density */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -129,7 +130,7 @@ int main(int argc, char* argv[])
     Frec = sf_input ("rec"); /* receivers */
     Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
-    Fden = sf_input ("den"); /* density   */
+    if(!cden) Fden = sf_input("den"); /* density */
 
     /*------------------------------------------------------------*/
     /* axes */
@@ -247,27 +248,33 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/ 
     tt = sf_floatalloc3(nz,nx,ny); 
 
-    ro  =sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-    roz =sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-    rox =sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-    roy =sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-    vp  =sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
-    vt  =sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
+    vp = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
+    vt = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
 
-    /* input density */
-    sf_floatread(tt[0][0],nz*nx*ny,Fden);     expand3d(tt,ro ,fdm);
+    if (!cden) {
 
-    /* normalized density derivatives */
-    for        (iy=NOP; iy<fdm->nypad-NOP; iy++) {
-	for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-		roz[iy][ix][iz] = DZ(ro,ix,iy,iz,idz) / ro[iy][ix][iz];
-		rox[iy][ix][iz] = DX(ro,ix,iy,iz,idx) / ro[iy][ix][iz];
-		roy[iy][ix][iz] = DY(ro,ix,iy,iz,idy) / ro[iy][ix][iz];
-	    }
-	}   
+        /* input density */
+        ro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+        sf_floatread(tt[0][0],nz*nx*ny,Fden); expand3d(tt,ro ,fdm);
+
+        /* normalized density derivatives */
+        roz = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+        rox = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+        roy = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+    
+        /* Possible cache trashing, may be optimized by writing separate loops
+           for roz, rox, roy. Should be profiled. */
+        for    (iy=NOP; iy<fdm->nypad-NOP; iy++) {
+    	  for  (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+    	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+    		roz[iy][ix][iz] = DZ(ro,ix,iy,iz,idz) / ro[iy][ix][iz];
+    		rox[iy][ix][iz] = DX(ro,ix,iy,iz,idx) / ro[iy][ix][iz];
+    		roy[iy][ix][iz] = DY(ro,ix,iy,iz,idy) / ro[iy][ix][iz];
+    	    }
+    	  }   
+        }
+        free(**ro); free(*ro); free(ro);  
     }
-    free(**ro);  free(*ro); free(ro);  
 
     /* input velocity */
     sf_floatread(tt[0][0],nz*nx*ny,Fvel );    expand3d(tt,vp,fdm);
@@ -347,11 +354,13 @@ int main(int argc, char* argv[])
 			caz*(uo[iy  ][ix  ][iz-1] + uo[iy  ][ix  ][iz+1]) +
 			cbz*(uo[iy  ][ix  ][iz-2] + uo[iy  ][ix  ][iz+2]);
 		    
-		    /* density term */
-		    ua[iy][ix][iz] -= (
-			DZ(uo,ix,iy,iz,idz) * roz[iy][ix][iz] +
-			DX(uo,ix,iy,iz,idx) * rox[iy][ix][iz] +
-			DY(uo,ix,iy,iz,idy) * roy[iy][ix][iz] );
+            if(!cden) {
+                /* density term */
+                ua[iy][ix][iz] -= (
+                    DZ(uo,ix,iy,iz,idz) * roz[iy][ix][iz] +
+                    DX(uo,ix,iy,iz,idx) * rox[iy][ix][iz] +
+                    DY(uo,ix,iy,iz,idy) * roy[iy][ix][iz] );
+            }
 		}
 	    }   
 	}
@@ -416,9 +425,11 @@ int main(int argc, char* argv[])
         free(**uc); free(*uc); free(uc);
     }
 
-    free(**rox); free(*rox); free(rox);
-    free(**roy); free(*roy); free(roy);
-    free(**roz); free(*roz); free(roz);
+    if(!cden) {
+        free(**rox); free(*rox); free(rox);
+        free(**roy); free(*roy); free(roy);
+        free(**roz); free(*roz); free(roz);
+    }
 
     free(**vp); free(*vp); free(vp);
     free(**vt); free(*vt); free(vt);

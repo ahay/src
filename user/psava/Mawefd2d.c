@@ -44,7 +44,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,fsrf,snap,expl,dabc; 
+    bool verb,fsrf,snap,expl,dabc,cden; 
     int  jsnap,ntsnap,jdata;
 #ifdef _OPENMP
     int ompnth=1;
@@ -116,6 +116,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
     if(! sf_getbool("expl",&expl)) expl=false; /* "exploding reflector" */
     if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing BC */
+    if(! sf_getbool("cden",&cden)) cden=false; /* constant density */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -126,7 +127,7 @@ int main(int argc, char* argv[])
     Frec = sf_input ("rec"); /* receivers */
     Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
-    Fden = sf_input ("den"); /* density   */
+    if(!cden) Fden = sf_input ("den"); /* density   */
 
     /*------------------------------------------------------------*/
     /* axes */
@@ -233,22 +234,26 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/ 
     tt = sf_floatalloc2(nz,nx); 
 
-    ro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
-    roz =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
-    rox =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
     vp  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
     vt  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 
-    /* input density */
-    sf_floatread(tt[0],nz*nx,Fden);     expand(tt,ro ,fdm);
-    /* normalized density derivatives */
-    for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-	for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-	    roz[ix][iz] = DZ(ro,ix,iz,idz) / ro[ix][iz];
-	    rox[ix][iz] = DX(ro,ix,iz,idx) / ro[ix][iz];
-	}
-    }   
-    free(*ro); free(ro);
+    if (!cden) {
+
+        /* input density */
+        ro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+        sf_floatread(tt[0],nz*nx,Fden); expand(tt,ro ,fdm);
+
+        /* normalized density derivatives */
+        roz =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+        rox =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+        for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+	        for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+	            roz[ix][iz] = DZ(ro,ix,iz,idz) / ro[ix][iz];
+	            rox[ix][iz] = DX(ro,ix,iz,idx) / ro[ix][iz];
+	        }
+        }   
+        free(*ro); free(ro);
+    }
 
     /* input velocity */
     sf_floatread(tt[0],nz*nx,Fvel );    expand(tt,vp,fdm);
@@ -319,10 +324,12 @@ int main(int argc, char* argv[])
 		    caz*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
 		    cbz*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);
 		
-		/* density term */
-		ua[ix][iz] -= (
-		    DZ(uo,ix,iz,idz) * roz[ix][iz] +
-		    DX(uo,ix,iz,idx) * rox[ix][iz] );
+            if(!cden) {
+		        /* density term */
+		        ua[ix][iz] -= (
+		            DZ(uo,ix,iz,idz) * roz[ix][iz] +
+		            DX(uo,ix,iz,idx) * rox[ix][iz] );
+            }
 	    }
 	}   
 
@@ -384,8 +391,11 @@ int main(int argc, char* argv[])
         free(*uc); free(uc);
     }
 
-    free(*rox); free(rox);
-    free(*roz); free(roz);
+    if(!cden) {
+        free(*rox); free(rox);
+        free(*roz); free(roz);
+    }
+
     free(*vp);  free(vp);
     free(*vt);  free(vt);
 
