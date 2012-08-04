@@ -2,8 +2,10 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = '''
+progs='''
 '''
+
+pyprogs = 'handvel2rsf'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
@@ -35,6 +37,24 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+if root: # no compilation, just rename
+    pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
+    for prog in pymains:
+        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+
+#env = Environment()
+#dict = env.Dictionary()
+#keys = dict.keys()
+#keys.sort()
+#print "###start of constructon variables##\n"
+#for key in keys:
+#    print "construction variable = '%s', value = '%s'" % (key, dict[key])
+#print "###end of construction variables##\n"
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
