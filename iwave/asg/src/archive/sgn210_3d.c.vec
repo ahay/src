@@ -1,0 +1,326 @@
+/* 
+sgn210_3d.c
+Igor Terentyev.
+********************************************************************************
+Implementation of 2-10 scheme in 3D.
+*/
+/*============================================================================*/
+
+#include "utils.h"
+#include "sgn.h"
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif /*_OPENMP*/
+/*----------------------------------------------------------------------------*/
+/*
+Constants
+*/
+#define C1 ( -19845.0e0/16384.0e0  )
+#define C2 (    735.0e0/8192.0e0   )
+#define C3 (   -567.0e0/40960.0e0  )
+#define C4 (    405.0e0/229376.0e0 )
+#define C5 (    -35.0e0/294912.0e0 )
+/*----------------------------------------------------------------------------*/
+
+static ireal ic1=C1;
+static ireal ic2=C2;
+static ireal ic3=C3;
+static ireal ic4=C4;
+static ireal ic5=C5;
+
+int sgn_ts3d_210p012(RDOM *, void *);
+int sgn_ts3d_210v0(RDOM *, void *);
+int sgn_ts3d_210vj(RDOM *, void *, int);
+
+int sgn_ts3d_210(RDOM *dom, int iarr, void *pars)
+{
+    if ( iarr == D_P0 )           /* covers D_P0, D_P1 in one function */
+    {
+      return sgn_ts3d_210p012(dom, pars);
+    }
+    if ( iarr == D_V0 )
+    {
+      return sgn_ts3d_210v0(dom, pars);
+    }
+    if ( iarr == D_V1 )
+    {
+      return sgn_ts3d_210vj(dom, pars, 1);
+    }
+    if ( iarr == D_V2 )
+    {
+      return sgn_ts3d_210vj(dom, pars, 2);
+    }
+    
+    return E_NOTIMESTEP;
+}
+/*----------------------------------------------------------------------------*/
+
+int sgn_ts3d_210p012(RDOM *dom, void *pars) {
+  /* dimensional workspace */
+  int 
+    nx,      ny,      nz, 
+    gxs,     gys,     gzs, 
+    px_a,    py_a,    pz_a,    mpx_a,    vx_a,    vy_a,    vz_a,
+    px_aa,   py_aa,   pz_aa,   mpx_aa,   vx_aa,   vy_aa,   vz_aa,
+    iy,      iz, 
+    stridey, stridez;
+  register ireal 
+    * restrict _px,  * restrict _py,  * restrict _pz, 
+    * restrict _mpx, * restrict _epx, 
+    * restrict _vx9,
+    * restrict _vy9,
+    * restrict _vz9, 
+    * restrict _epy, * restrict _epz;
+  register ireal 
+    lax, lay, laz, dt2, etaxdt, etaydt, etazdt, delta;
+  register ireal
+    numx, numy, numz, denx, deny, denz;
+  register int i;
+
+  RARR *s;
+  INFODIM *dims;
+  
+  s = dom->_s;
+    
+  dims = s[D_P0]._dims;
+  
+  nx = dims[0].n;
+  ny = dims[1].n;
+  nz = dims[2].n;
+  if ( nx * ny * nz == 0 ) return 0;
+  
+  gxs = dims[0].gs;
+  gys = dims[1].gs;
+  gzs = dims[2].gs;
+  
+  px_a  = s[D_P0 ]._dims[0].n0;
+  py_a  = s[D_P1 ]._dims[0].n0;
+  pz_a  = s[D_P2 ]._dims[0].n0;
+  mpx_a = s[D_MP0]._dims[0].n0;
+  vx_a  = s[D_V0 ]._dims[0].n0;
+  vy_a  = s[D_V1 ]._dims[0].n0;
+  vz_a  = s[D_V2 ]._dims[0].n0;
+
+  px_aa  = (s[D_P0 ]._dims[1].n0 - ny ) * s[D_P0 ]._dims[0].n0;
+  py_aa  = (s[D_P1 ]._dims[1].n0 - ny ) * s[D_P1 ]._dims[0].n0;
+  pz_aa  = (s[D_P2 ]._dims[1].n0 - ny ) * s[D_P2 ]._dims[0].n0;
+  mpx_aa = (s[D_MP0]._dims[1].n0 - ny ) * s[D_MP0]._dims[0].n0;
+  vx_aa  = (s[D_V0 ]._dims[1].n0 - ny ) * s[D_V0 ]._dims[0].n0;
+  vy_aa  = (s[D_V1 ]._dims[1].n0 - ny ) * s[D_V1 ]._dims[0].n0;
+  vz_aa  = (s[D_V2 ]._dims[1].n0 - ny ) * s[D_V2 ]._dims[0].n0;
+  
+  lax = ((SGN_TS_PARS*)pars)->lam[0];
+  lay = ((SGN_TS_PARS*)pars)->lam[1];
+  laz = ((SGN_TS_PARS*)pars)->lam[2];
+  dt2 = (ireal)(((SGN_TS_PARS*)pars)->dt / 2.0);
+  
+  dims = s[D_P0 ]._dims;
+  _px  = s[D_P0 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  dims = s[D_P1 ]._dims;
+  _py  = s[D_P1 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  dims = s[D_P2 ]._dims;
+  _pz  = s[D_P2 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  dims = s[D_MP0]._dims;
+  _mpx = s[D_MP0]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  dims = s[D_V0 ]._dims;
+  _vx9 = s[D_V0 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0 + 4;
+
+  dims = s[D_V1 ]._dims;
+  _vy9 = s[D_V1 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0 + 4;
+  stridey=dims[0].n0;
+
+  dims = s[D_V2 ]._dims;
+  _vz9 = s[D_V2 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0 + 4;
+  stridez=dims[1].n0*dims[0].n0;
+
+  _epx = s[D_EP0]._s + (gxs - s[D_EP0]._dims[0].gs);              /* 1D */
+  _epy = s[D_EP1]._s + (gys - s[D_EP1]._dims[0].gs);              /* 1D */
+  _epz = s[D_EP2]._s + (gzs - s[D_EP2]._dims[0].gs);              /* 1D */
+  
+  for ( iz = 0; iz < nz; ++iz ) {
+    etazdt = _epz[iz] * dt2;
+    numz = (1.0 - etazdt);
+    denz = 1.0/ (1.0 + etazdt);
+    
+    for ( iy = 0; iy < ny; ++iy ) {
+      etaydt = _epy[iy] * dt2;
+      numy = (1.0 - etaydt);
+      deny = 1.0/ (1.0 + etaydt);    
+
+      for ( i=0; i<nx; ++i) {                    
+	delta = 
+	  (
+	   ( (_vx9[i          ]-_vx9[i-9        ])*lax+
+	     (_vy9[i          ]-_vy9[i-9*stridey])*lay+
+	     (_vz9[i          ]-_vz9[i-9*stridez])*laz )*ic5 +
+	   ( (_vx9[i-1        ]-_vx9[i-8        ])*lax+
+	     (_vy9[i-1*stridey]-_vy9[i-8*stridey])*lay+
+	     (_vz9[i-1*stridez]-_vz9[i-8*stridez])*laz )*ic4 + 
+	   ( (_vx9[i-2        ]-_vx9[i-7        ])*lax+
+	     (_vy9[i-2*stridey]-_vy9[i-7*stridey])*lay+
+	     (_vz9[i-2*stridez]-_vz9[i-7*stridez])*laz )*ic3 +
+	   ( (_vx9[i-3        ]-_vx9[i-6        ])*lax+
+	     (_vy9[i-3*stridey]-_vy9[i-6*stridey])*lay+
+	     (_vz9[i-3*stridez]-_vz9[i-6*stridez])*laz )*ic2 + 
+	   ( (_vx9[i-4        ]-_vx9[i-5        ])*lax+
+	     (_vy9[i-4*stridey]-_vy9[i-5*stridey])*lay+
+	     (_vz9[i-4*stridez]-_vz9[i-5*stridez])*laz )*ic1 )*
+	  (_mpx[i]);
+	_py[i] = (_py[i]*numy + delta)*deny;
+	_pz[i] = (_pz[i]*numz + delta)*denz;
+	etaxdt = _epx[i] * dt2;
+	numx = (REAL_ONE - etaxdt);
+	denx = REAL_ONE/ (REAL_ONE + etaxdt);
+	_px[i] = (_px[i]*numx + delta)*denx;
+      }   
+      _px += px_a; _py += py_a; _pz += pz_a; _mpx += mpx_a; _vx9 += vx_a;
+      _vy9 += vy_a; _vz9 += vz_a; 
+    }
+    _px += px_aa; _py += py_aa; _pz += pz_aa; _mpx += mpx_aa; _vx9 += vx_aa;
+    _vy9 += vy_aa; _vz9 += vz_aa; 
+  }
+  return 0;
+}
+/*----------------------------------------------------------------------------*/
+
+int sgn_ts3d_210v0(RDOM *dom, void *pars) {
+  int nx, ny, nz, gxs, gys, gzs, vx_a, mvx_a, px_a, vx_aa, mvx_aa, px_aa,
+    iy, iz;
+  register ireal * restrict _vx, * restrict _mvx,
+    * restrict _evx, * restrict _px9;
+  register ireal lax, dt2, etaxdt;
+  register int i;
+  RARR *s;
+  INFODIM *dims;
+  
+  s = dom->_s;
+  
+  dims = s[D_V0]._dims;
+  
+  nx = dims[0].n;
+  ny = dims[1].n;
+  nz = dims[2].n;
+  if ( nx * ny * nz == 0 ) return 0;
+  
+  gxs = dims[0].gs;
+  gys = dims[1].gs;
+  gzs = dims[2].gs;
+  
+  vx_a  = s[D_V0 ]._dims[0].n0;
+  mvx_a = s[D_MV0]._dims[0].n0;
+  px_a  = s[D_P0 ]._dims[0].n0;
+  
+  lax = ((SGN_TS_PARS*)pars)->lam[0];
+  dt2 = ((SGN_TS_PARS*)pars)->dt / 2.0;
+  
+  vx_aa  = (s[D_V0 ]._dims[1].n0 - ny ) * s[D_V0 ]._dims[0].n0;
+  mvx_aa = (s[D_MV0]._dims[1].n0 - ny ) * s[D_MV0]._dims[0].n0;
+  px_aa  = (s[D_P0 ]._dims[1].n0 - ny ) * s[D_P0 ]._dims[0].n0;
+
+  dims = s[D_V0 ]._dims;
+  _vx  = s[D_V0 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  dims = s[D_MV0]._dims;
+  _mvx = s[D_MV0]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;        
+  dims = s[D_P0 ]._dims;
+  _px9 = s[D_P0 ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0 + 5;
+  _evx = s[D_EV0]._s + (gxs - s[D_EV0]._dims[0].gs);              /* 1D */
+  
+  for ( iz = 0; iz < nz; ++iz ) {
+    for ( iy = 0; iy < ny; ++iy ) {
+      for ( i=0; i<nx; ++i ) {
+	etaxdt = _evx[i] * dt2;
+	_vx[i] = (_vx[i] * (REAL_ONE - etaxdt) + 
+		  (( _px9[i  ] - _px9[i-9]) * ic5 + 
+		   ( _px9[i-1] - _px9[i-8]) * ic4 + 
+		   ( _px9[i-2] - _px9[i-7]) * ic3 + 
+		   ( _px9[i-3] - _px9[i-6]) * ic2 + 
+		   ( _px9[i-4] - _px9[i-5]) * ic1 ) * 
+		  lax * _mvx[i]) / (REAL_ONE + etaxdt);
+      }
+      _vx += vx_a; _mvx += mvx_a; _px9 += px_a; _evx -= nx;
+    }
+            
+    _vx += vx_aa; _mvx += mvx_aa; _px9 += px_aa;
+  }
+  return 0;
+}
+/*----------------------------------------------------------------------------*/
+
+int sgn_ts3d_210vj(RDOM *dom, void *pars, int ind) {
+  int nx, ny, nz, gxs, gys, gzs, v_a, mv_a, p_a, ev_a, v_aa, mv_aa, p_aa,
+    ev_aa, iy, iz, D_v, D_mv, D_ev, D_p, p_shift;
+  register ireal 
+    * restrict _v, 
+    * restrict _mv, 
+    * restrict _p4, 
+    * restrict _ev;
+  register ireal la, etadt;
+  register int i;
+  ireal dt2;
+  RARR *s;
+  INFODIM *dims;
+  
+  D_v  = D_V[ind];
+  D_mv = D_MV[ind];
+  D_ev = D_EV[ind];
+  D_p  = D_P[ind];
+  
+  s = dom->_s;
+  
+  dims = s[D_v]._dims;
+  
+  nx = dims[0].n;
+  ny = dims[1].n;
+  nz = dims[2].n;
+  if ( nx * ny * nz == 0 ) return 0;
+  
+  gxs = dims[0].gs;
+  gys = dims[1].gs;
+  gzs = dims[2].gs;
+  
+  v_a  = s[D_v ]._dims[0].n0;
+  mv_a = s[D_mv]._dims[0].n0;
+  p_a  = s[D_p ]._dims[0].n0;
+  ev_a = ((ind == 1) ? 1 : 0);
+  
+  la = ((SGN_TS_PARS*)pars)->lam[ind];
+  dt2 = ((SGN_TS_PARS*)pars)->dt / 2.0;
+  
+  p_shift = s[D_p]._dims[0].n0 * ((ind == 1) ?  1 : s[D_p]._dims[1].n0);
+  
+  v_aa  = (s[D_v ]._dims[1].n0 - ny ) * s[D_v ]._dims[0].n0;
+  mv_aa = (s[D_mv]._dims[1].n0 - ny ) * s[D_mv]._dims[0].n0;
+  p_aa  = (s[D_p ]._dims[1].n0 - ny ) * s[D_p ]._dims[0].n0;
+  ev_aa = ((ind == 1) ? -ny : 1);
+  
+  dims = s[D_v ]._dims;
+  _v   = s[D_v ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  dims = s[D_mv]._dims;
+  _mv  = s[D_mv]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;        
+  dims = s[D_p ]._dims;
+  _p4  = s[D_p ]._s + (gxs - dims[0].gs) + (gys - dims[1].gs + (gzs - dims[2].gs) * dims[1].n0) * dims[0].n0;
+  _ev  = s[D_ev]._s + ((ind == 1) ? gys : gzs) - s[D_ev]._dims[0].gs ;
+  
+  for ( iz = 0; iz < nz; ++iz ) {
+    for ( iy = 0; iy < ny; ++iy ) {
+      etadt = (*_ev) * dt2;
+	    
+      for ( i=0;i<nx;++i )
+	
+	_v[i] = (_v[i] * (REAL_ONE - etadt) + 
+		 ((_p4[i+5*p_shift] - _p4[i-4*p_shift]) * ic5 + 
+		  (_p4[i+4*p_shift] - _p4[i-3*p_shift]) * ic4 + 
+		  (_p4[i+3*p_shift] - _p4[i-2*p_shift]) * ic3 +
+		  (_p4[i+2*p_shift] - _p4[i-1*p_shift]) * ic2 + 
+		  (_p4[i+  p_shift] - _p4[i          ]) * ic1) * 
+		 la * (_mv[i]) ) / (REAL_ONE + etadt);
+       
+      _v += v_a; _mv += mv_a; _p4 += p_a; _ev += ev_a;
+    }
+    _v += v_aa; _mv += mv_aa; _p4 += p_aa; _ev += ev_aa;
+  }
+
+  return 0;
+}
+/*----------------------------------------------------------------------------*/
