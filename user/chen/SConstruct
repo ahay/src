@@ -10,10 +10,10 @@ ldip
 
 pyprogs='''
 circle prefilt pygraph subplot rsort asc2rsf
-xtime
+sos fpca
 '''
 pymods='''
-pcmf xplot xflow
+pcmf xproj
 '''
 
 docs = []

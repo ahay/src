@@ -19,17 +19,16 @@ nd=len(nn)
 id=par.int("id",2)
 if id>nd:
 	sys.stderr.write('id=%d greater than nd=%d'%(id, nd))
-id=id-1
-n2=nn[id]
+n2=nn[-id]
 seed=par.int("seed", n2)
 inv=par.bool("inv", False)
 
 n1=1
 n3=1
-for i1 in range(id):
-	n1=n1*nn[i1]
-for i1 in range(nd-id-1):
-	n3=n3*nn[id+i1+1]
+for i1 in range(id-1):
+	n1=n1*nn[-1-i1]
+for i1 in range(nd-id):
+	n3=n3*nn[id]
 
 
 u1=zeros((n2,n1),'f')
