@@ -3,7 +3,7 @@ INPUT DATA FOR iwave
 ------------------------------------------------------------------------
 FD:
 
-   scheme_phys = 24         scheme
+         order = 4         
            cfl = 0.4        proportion of max dt/dx
           cmin = 1.0
           cmax = 4.5
