@@ -38,7 +38,8 @@ enum {
     SF_BNYBYTES=400,	/* Bytes in the binary coded block	*/
     SF_HDRBYTES=240,	/* Bytes in the tape trace header	*/
     SF_NKEYS=91,	/* Number of mandated header fields	*/
-    SF_BHKEYS=27	/* Number of mandated binary fields	*/
+    SF_BHKEYS=27,	/* Number of mandated binary fields	*/
+    SF_MAXKEYS=256      /* Maximum number of keys               */
 };
 /*^*/
 

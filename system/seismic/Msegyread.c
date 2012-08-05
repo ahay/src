@@ -343,6 +343,8 @@ int main(int argc, char *argv[])
     if (NULL == (read = sf_getstring("read"))) read = "b";
     /* what to read: h - header, d - data, b - both (default) */
 
+    
+
     if (su) { /* figure out ns and ntr */
 	trace = sf_charalloc (SF_HDRBYTES);
 	if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
@@ -479,7 +481,10 @@ int main(int argc, char *argv[])
 
 	nkeys = SF_NKEYS;
 
-	/* get extra keys */
+	/* get extra keys 
+	for (; nkeys < SF_MAXKEYS; nkeys++) {
+	}
+	*/
 
 	sf_putint(hdr,"n1",nkeys);
 	sf_putint(hdr,"n2",n2);
