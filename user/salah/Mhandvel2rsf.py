@@ -24,7 +24,7 @@ basename=os.path.basename(sys.argv[0])
 usage= '''
 Name
         %s
-Description 
+DESCRIPTION 
         Converts 2D velocity files from handvel.txt to handvel.rsf
 SYNOPSIS
         %s < handvels.txt o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 > handvel.rsf
