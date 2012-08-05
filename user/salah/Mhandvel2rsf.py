@@ -97,9 +97,9 @@ def myfunction(l,its):
     vcmd= vcmd + '''n1=%d data_format=ascii_float in=%s\
                  '''%((len(its)/2),vpath)
     #print vcmd
-    nx=3000
-    dx=.001
-    x0=0
+    nx=n1
+    dx=d1
+    x0=o1
     tvcmd=''' %s head=%s nx=%d dx=%f x0=%f \
           '''%(sfinvbin1,tpathb,nx,dx,x0)
     #print tvpath
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     if not (n1 or o1 or d1 or o2 or d2):
        sys.stderr.write(usage)
        sys.exit(2)
-    if sys.stdout.isatty():
+    if sys.stdout.isatty() or sys.stdin.isatty():
        sys.stderr.write(usage)
        sys.exit(2)
     items=[]
