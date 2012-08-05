@@ -52,24 +52,16 @@
 ###### val[5] = queue (batch only)
 
 jobs = {
-'demo20m' : ['../../../asg2/main/asg.x','','','','',''],
-'demo10m' : ['../../../asg2/main/asg.x','demo20m','','','',''],
-'demo5m'  : ['../../../asg2/main/asg.x','demo10m','','','',''],
-'demo2.5m'  : ['../../../asg2/main/asg.x','demo5m','','','',''],
+'demo20m' : ['../../../asg/main/asg.x','','','','',''],
+'demo10m' : ['../../../asg/main/asg.x','demo20m','','','',''],
+'demo5m'  : ['../../../asg/main/asg.x','demo10m','','','',''],
+'demo2.5m'  : ['../../../asg/main/asg.x','demo5m','','','',''],
 'fig'     : ['../fig.par','demo2.5m', '', '', '', '']
 }
 
 ########################################################################
 ################# OPTIONS COMMON FOR ALL BATCH JOBS ####################
 ########################################################################
-
-###### INDICES INTO JOB PARAM LIST
-n_cmd         = 0
-n_dep         = 1
-n_bat         = 2
-n_clk         = 3
-n_res         = 4
-n_que         = 5
 
 ###### EMAIL ADDRESS FOR BATCH SYSTEM NOTIFICATION
 MAIL = 'symes@caam.rice.edu'
@@ -86,6 +78,14 @@ import os
 import shutil
 thispath = os.getcwd()
 env = Environment();
+
+###### INDICES INTO JOB PARAM LIST
+n_cmd         = 0
+n_dep         = 1
+n_bat         = 2
+n_clk         = 3
+n_res         = 4
+n_que         = 5
 
 def scriptwriter(batch,job,path,queue,mail,acct,wall,res,exe):
     if batch == 'pbs':
