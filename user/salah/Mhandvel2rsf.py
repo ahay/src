@@ -20,7 +20,7 @@ import sys, os, string , tempfile, subprocess
 import rsf.path, rsf.prog
 import rsf.api as salah
 
-
+basename=os.path.basename(sys.argv[0])
 usage= '''
 Name
         %s
@@ -47,8 +47,10 @@ COMMENTS:
         -This program uses sfinvbin1 default parameters. The program
          could possibly be enhanced to work with additional sfinvbin1
          parameters.
+SOURCE
+        %s
                   
-''' %(sys.argv[0],sys.argv[0])
+''' %(basename,basename,sys.argv[0])
 
 # may be not neccessary because i am using Flow()
 # or maybe even better not to use Flow()
