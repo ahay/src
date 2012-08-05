@@ -127,7 +127,12 @@ def myfunction(l,its):
        os.close(k)
      
     # remove files  
-    for k in [tpath,vpath,tpathb,vpathb]:
+    for k in [tpathb,vpathb]:
+       try:
+           subprocess.call(sfrm + ' ' + k,shell=True)
+       except:
+           pass
+    for k in [tpath,vpath]:
        os.remove(k)
     
     return
@@ -164,7 +169,7 @@ if __name__ == "__main__":
     # removing temp files of individual traces
     for tmp in vs:
         try:
-           os.system(sfrm + ' ' + tmp)
+           subprocess.call(sfrm + ' ' + tmp,shell=True)
         except:
            pass
     sys.exit(0)
