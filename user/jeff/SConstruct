@@ -1,4 +1,7 @@
-import os, sys
+import os, sys, re, string
+sys.path.append('../../framework')
+
+
 
 try:
     import bldutil
@@ -15,18 +18,39 @@ except:
     
 targets = bldutil.UserSconsTargets()
 
+F90 = env.get('F90')
+api = env.get('API',[])
+
+if 'f90' in api and F90:
+	F90base= os.path.basename(F90)
+ 	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
+		env.Append(F90FLAGS=' -fopenmp -fbackslash ')
+        elif F90base == 'ifort':
+    		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
+
 # C mains
 targets.c = '''
+adjgradient2d
+adjwfld2d_iso
+adjsou
+wfld2d_iso
+wem2d_iso
+lap2d_iso
 modelcreate
 ewefd2d_omp
 ewefd3d_omp
+nmo_hti
 '''
 
 # F90 mains
 targets.f90 = '''
+laptform
+mccc
 rwe2d
 telemig2d
 rec2ps
+backus
+fixdensity
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)

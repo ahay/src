@@ -1,6 +1,5 @@
 module fft
   use rsf
-
   implicit none
 
 contains
@@ -21,7 +20,7 @@ contains
     complex :: cw, cdel, ct
 
     nx = size (cx) 
-    if (nx /= pad2(nx)) call sf_error("ftu: nx not a power of 2")
+    if (nx /= pad2(nx)) call sf_error('ftu: nx not a power of 2')
     cx = cx / sqrt( 1.*nx)
 
     j = 1; k = 1
