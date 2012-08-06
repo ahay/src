@@ -87,7 +87,7 @@ if label1 != None:
 		unit1=par.string("unit1",None)
 	if unit1 != None:
 		label =label+': ('+ unit1+')'
-	xlabel(label)
+	ylabel(label)
 
 label2=par.string("label2")
 if label2 == None:
@@ -99,7 +99,7 @@ if label2 != None:
 		unit2=par.string("unit2",None)
 	if unit2 != None:
 		label =label+': ('+ unit2+')'
-	ylabel(label)
+	xlabel(label)
 
 
 # legends:

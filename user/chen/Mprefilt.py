@@ -4,7 +4,7 @@
 try:
 	from numpy import *
 	import rsf.api as rsf
-	import rsf.pcmf as mf
+	import rsf.user.pcmf as mf
 except Exception, e:
 	import sys
 	print 'ERROR: numpy needed'

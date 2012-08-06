@@ -13,7 +13,7 @@ circle prefilt pygraph subplot rsort asc2rsf
 sos fpca
 '''
 pymods='''
-pcmf xproj
+pcmf
 '''
 
 docs = []
@@ -77,8 +77,7 @@ if root: # no compilation, just rename
 	exe = env.get('PROGSUFFIX','')
 	for prog in pymains:
 		env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
-	for mod in Split(pymods):
-		env.Install(pkgdir,mod+'.py')
+	bldutil.install_py_modules(env,Split(pymods),pkgdir)
 
 
 ######################################################################
