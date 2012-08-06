@@ -35,7 +35,6 @@ wem2d_iso
 modelcreate
 ewefd2d_omp
 ewefd3d_omp
-nmo_hti
 '''
 
 # F90 mains
@@ -45,7 +44,6 @@ rwe2d
 telemig2d
 rec2ps
 backus
-fixdensity
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
