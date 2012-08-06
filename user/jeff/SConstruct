@@ -32,7 +32,6 @@ if 'f90' in api and F90:
 targets.c = '''
 adjgradient2d
 wem2d_iso
-lap2d_iso
 modelcreate
 ewefd2d_omp
 ewefd3d_omp
@@ -41,7 +40,6 @@ nmo_hti
 
 # F90 mains
 targets.f90 = '''
-laptform
 mccc
 rwe2d
 telemig2d
