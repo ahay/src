@@ -93,8 +93,8 @@ int main (int argc, char* argv[])
 	    for (it=0; it < nt; it++) {
 		t = t0 + it*dt;
 		tm = t - ph[it]*h*dt/dh;
-		tx = h*px[it]*dt/dh;
-		tp = tm*ph[it] + px[it]*tx;
+		tx = h*px[it]*dt/dx;
+		tp = tm*ph[it] + px[it]*tx*dh/dx;
 		tq = tm*tm-tx*tx;
 
 		if (mzo) {

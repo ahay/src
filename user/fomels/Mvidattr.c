@@ -25,8 +25,8 @@ int main (int argc, char* argv[])
     bool half;
     char *what;
     int it,ix,ih, nt,nx, nh, CDPtype;
-    float dt, t0, h, h0, t, tm, tp, tx, tq, dh, dx, x0, x;
-    float *px, *ph, *at;
+    float dt, t0, h, h0, t, tm, tp, tx, tq, dh, dx, x0, x, ph, px;
+    float *dpx, *dph, *at;
     sf_file xdip, hdip, out;
 
     sf_init (argc,argv);
@@ -62,8 +62,8 @@ int main (int argc, char* argv[])
     if (1 != CDPtype) sf_histint(xdip,"CDPtype",&CDPtype);
     sf_warning("CDPtype=%d",CDPtype);
 
-    px = sf_floatalloc(nt);
-    ph = sf_floatalloc(nt);
+    dpx = sf_floatalloc(nt);
+    dph = sf_floatalloc(nt);
     at = sf_floatalloc(nt);  
 
     for (ih = 0; ih < nh; ih++) {
@@ -71,24 +71,38 @@ int main (int argc, char* argv[])
 	    x = x0 + ix*dx;
 	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
 
-	    sf_floatread (px, nt, xdip);
-	    sf_floatread (ph, nt, hdip);
+	    sf_floatread (dpx, nt, xdip);
+	    sf_floatread (dph, nt, hdip);
 	    
 	    for (it=0; it < nt; it++) {
 		t = t0 + it*dt;
-		tm = t - ph[it]*h*dt/dh;
-		tx = h*px[it]*dt/dh;
-		tp = tm*ph[it] + px[it]*tx;
-		tq = tm*tm-tx*tx;
+		ph = dph[it];
+		px = dpx[it];
+
+		tm = t - ph*h*dt/dh; 
+		tx = h*px*dt/dx;     
+		tp = (tm*ph/dh + px*tx/dx)*dt; /* t^2/x */ 
+		tq = tm*tm-tx*tx; /* t^2 */
 
 		switch(what[0]) {
-		    case 't':
+		    case 't': /* time */
 			at[it] = 
-			    sqrtf(fabsf(t*ph[it]*tq*tq)/
+			    sqrtf(fabsf(t*ph*tq*tq*dt/dh)/
 				  (fabsf(tm*tm*tp)+SF_EPS));
 			break;
-		    case 'x':
-			at[it] = x - t*h*px[it]/(tp+SF_EPS);
+		    case 'x': /* distance */
+			at[it] = x - t*tx/(tp+SF_EPS);
+			break;
+		    case 'v': /* velocity */
+			at[it] = 2*sqrtf(fabsf(h*tm)/
+					 (fabsf(t*tp)+SF_EPS));
+			break;
+		    case 'r': /* reflection angle */
+			break;
+			at[it] = 180.*acosf(fabsf(tm)/(t+SF_EPS))/SF_PI;
+		    case 'd': /* dip angle */
+			at[it] = 180.*acosf(fabsf(ph*tm*dt)/
+					    (fabsf(dh*tp)+SF_EPS))/SF_PI;
 			break;
 		    default:
 			sf_error("Unknow attribute \"%s\"",what);
