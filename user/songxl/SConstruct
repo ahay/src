@@ -24,13 +24,16 @@ ffd0 ffd01
 lffd2an25
 phasescan
 ffd2dehftry
+fdp2
+orp
+lffd2anc
 '''
 
 
-mpi_progs = 'tti4rtm ffdrtm'
+mpi_progs = 'tti4rtm ffdrtm ffdrtms ttirtmsa'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2'
+ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2 lffdand lffdanc'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
