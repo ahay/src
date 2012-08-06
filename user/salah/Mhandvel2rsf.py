@@ -36,6 +36,8 @@ PARAMETERS
         float   d2= sampling in the second axis
              
 COMMENTS:
+        -The program converts time samples from ms to s
+
         -The rsf output file will have traces equal to the number
          of CMP locations in handvel.txt. You need to interploate
          between traces for a denser grid e.g. using sfremap1
@@ -52,8 +54,6 @@ SOURCE
                   
 ''' %(basename,basename,sys.argv[0])
 
-# may be not neccessary because i am using Flow()
-# or maybe even better not to use Flow()
 bindir   = os.path.join(rsf.prog.RSFROOT,'bin')
 sfcat    = os.path.join(bindir,'sfcat')
 sfrm     = os.path.join(bindir,'sfrm')
@@ -62,12 +62,6 @@ sfdd       = os.path.join(bindir,'sfdd')
 sfput      = os.path.join(bindir,'sfput')
 datapath = rsf.path.datapath().rstrip('/')
 
-#########
-# What i need to do next:
-# - check and get values of o1, n1 ...
-# - use temp directory for temp files
-#
-#############
 vs=[]
 def myfunction(l,its):
     global sfcat, sfrm, sfinvbin1, sfdd, sfput, datapath
@@ -81,11 +75,13 @@ def myfunction(l,its):
     vb,vpathb = tempfile.mkstemp(suffix=".rsf",dir=datapath)
     tvd,tvpath = tempfile.mkstemp(suffix=".rsf",dir=datapath)
 
-    # let me put vel for time 0
-    t=0
-    v=its[1]
-    its.insert(0,v)
-    its.insert(0,t)
+    # let me put vel for time o1
+    if its[0] != o1 :
+        t=o1
+        v=its[1]
+        # insert v then t
+        its.insert(0,v)
+        its.insert(0,t)
 
     # create cmds for time and velocity files
     for i in range(0,len(its),2):
@@ -117,7 +113,6 @@ def myfunction(l,its):
     os.lseek(tb,0,0)
     os.lseek(vb,0,0)  
     subprocess.call(tvcmd,stdin=vb,stdout=tvd,shell=True)
-    
 
     # maintain a list of interpolated traces
     vs.append(tvpath)
@@ -137,7 +132,6 @@ def myfunction(l,its):
     
     return
 if __name__ == "__main__":
-    
     par=salah.Par()
     n1=par.int("n1")
     o1=par.float("o1")
