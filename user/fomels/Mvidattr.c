@@ -1,4 +1,7 @@
-/* Slope-based velocity-independent data attributes. */
+/* Slope-based velocity-independent data attributes. 
+
+   The axis order is time-midpoint-offset.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -39,13 +42,13 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(xdip,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(xdip,"o1",&t0)) sf_error("No o1= in input");
 
-    if (!sf_histint(xdip,"n3",&nh)) sf_error("No n3= in input");
-    if (!sf_histfloat(xdip,"d3",&dh)) sf_error("No d3= in input");
-    if (!sf_histfloat(xdip,"o3",&h0)) sf_error("No o3= in input");
-
     if (!sf_histint(xdip,"n2",&nx)) sf_error("No n2= in input");
     if (!sf_histfloat(xdip,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(xdip,"o2",&x0)) sf_error("No o2= in input");
+
+    if (!sf_histint(xdip,"n3",&nh)) sf_error("No n3= in input");
+    if (!sf_histfloat(xdip,"d3",&dh)) sf_error("No d3= in input");
+    if (!sf_histfloat(xdip,"o3",&h0)) sf_error("No o3= in input");
 
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
