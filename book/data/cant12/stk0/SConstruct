@@ -4,19 +4,35 @@ from rsf.proj import *
 data='../cmp/cmp.rsf'
 vel='../vel/vels.rsf'
 
-##############
-## perform nmo
-###############
-
+######################
+## perform nmo, serial
+######################
 Flow('nmo',[data,vel],
      '''
      nmo half=n velocity=${SOURCES[1]}
      | mutter half=n v0=1450 x0=200 abs=n
      ''')
 
-############
-# NMO stack
-############
+#######################################
+# Let us test parallel NMO and stacking
+#######################################
+# Parallel nmo
+Flow('nmo_parallel',[data,vel],
+     '''
+     nmo half=n velocity=${SOURCES[1]}
+     | mutter half=n v0=1450 x0=200 abs=n
+     ''',split=[3,9701])
+
+# stack in parallel with serial nmo
+Flow('nmostk_parallel','nmo','stack',split=[3,9701],reduce="cat axis=2")
+
+# stack in parallel with parallel nmo
+Flow('nmostk_parallel0','nmo_parallel','stack',split=[3,9701],reduce="cat axis=2")
+
+
+##################
+# NMO stack, serial
+###################
 
 Flow('nmostk','nmo','stack')
 
