@@ -458,13 +458,14 @@ def point3(cc,xcoord,zcoord,magn,par):
          ${SOURCES[1]} ${SOURCES[2]} | transp
          ''')
 
+# ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
     Flow(cc+'_x',None,
-         'math n1=%d d1=%g o1=%g output="%g+%g*cos(x1/180*3.14)"'
-         % (sampling,360./sampling,0.,xcenter,radius) )
+         'math n1=%d d1=%g o1=%g output="%g+%g*cos(3.1415926*x1/180.)"'
+         %(sampling,360./sampling,0.,xcenter,radius) )
     Flow(cc+'_z',None,
-         'math n1=%d d1=%g o1=%g output="%g-%g*sin(x1/180*3.14)"'
-         % (sampling,360./sampling,0.,zcenter,radius) )
+         'math n1=%d d1=%g o1=%g output="%g-%g*sin(3.1415926*x1/180)"'
+         %(sampling,360./sampling,0.,zcenter,radius) )
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -472,18 +473,19 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
 	 put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
 
+# ------------------------------------------------------------
 def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
     Flow(cc+'_r',None,
          '''
          math n1=%d d1=%g o1=%g
-         output="((%g)*(%g))/sqrt( ((%g)*cos(x1/180*3.14))^2 + ((%g)*sin(x1/180*3.14))^2 )"
+         output="((%g)*(%g))/sqrt( ((%g)*cos(x1/180*3.1415926))^2 + ((%g)*sin(x1/180*3.1415926))^2 )"
          '''% (sampling,360./sampling,0.,
                 semiA,semiB,semiB,semiA) )
     Flow(cc+'_x',cc+'_r',
-         'math output="%g+input*cos(x1/180*3.14)"'
+         'math output="%g+input*cos(x1/180*3.1415926)"'
          % (xcenter) )
     Flow(cc+'_z',cc+'_r',
-         'math output="%g+input*sin(x1/180*3.14)"'
+         'math output="%g+input*sin(x1/180*3.1415926)"'
          % (zcenter) )
 
     Flow(cc,[cc+'_x',cc+'_z'],

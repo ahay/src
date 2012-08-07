@@ -141,6 +141,32 @@ def bWRawe(data,wfld,velo,dens,coor,custom,par):
                   data+'_rev',velo,dens,coor,coor,iwindow+custom,par)
     Flow(wfld,wfld+'_rev','reverse which=4 opt=i verb=y')
 
+# WR: forward in time
+def fWRcda(data,wfld,velo,coor,custom,par):
+    iwindow = ' ' + \
+        '''
+        nqz=%(nqz)d oqz=%(oqz)g
+        nqx=%(nqx)d oqx=%(oqx)g
+        jsnap=%(jdata)d jdata=%(jdata)d
+        ''' % par + ' '
+
+    fdmod.cdafd(wfld+'_out',wfld,
+                  data,velo,coor,coor,iwindow+custom,par)
+
+# WR: backward in time
+def bWRcda(data,wfld,velo,coor,custom,par):
+    iwindow = ' ' + \
+        '''
+        nqz=%(nqz)d oqz=%(oqz)g
+        nqx=%(nqx)d oqx=%(oqx)g
+        jsnap=%(jdata)d jdata=%(jdata)d
+        ''' % par + ' '
+
+    Flow(data+'_rev',data,'reverse which=2 opt=i verb=y')
+    fdmod.cdafd(wfld+'_out',wfld+'_rev',
+                  data+'_rev',velo,coor,coor,iwindow+custom,par)
+    Flow(wfld,wfld+'_rev','reverse which=4 opt=i verb=y')
+
 # ------------------------------------------------------------
 # IC
 # ------------------------------------------------------------
