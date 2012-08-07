@@ -9,7 +9,7 @@ ldip
 '''
 
 pyprogs='''
-circle prefilt pygraph subplot rsort asc2rsf
+circle prefilt pygraph subplot shuffle asc2rsf
 sos fpca
 '''
 pymods='''
