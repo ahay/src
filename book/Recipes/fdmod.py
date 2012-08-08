@@ -569,7 +569,7 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
     Flow(box,[box+'_x',box+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
 # ------------------------------------------------------------
-def makeline(line,zmin,zmax,xmin,xmax,par):
+def oldmakeline(line,zmin,zmax,xmin,xmax,par):
     Temp(line+'_z',None,
          '''
          spike nsp=2 mag=%g,%g
@@ -583,6 +583,30 @@ def makeline(line,zmin,zmax,xmin,xmax,par):
          transp
          '''%(xmin,xmax))
     Flow(line,[line+'_x',line+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
+
+def makeline(line,zmin,zmax,xmin,xmax,par):
+    M8R='$RSFROOT/bin/sf'
+
+    linez=line+'z'
+    linex=line+'x'
+
+    Flow(line,None,
+         '''
+         %sspike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 |
+         transp >%s datapath=/tmp/;
+         '''%(M8R,zmin,zmax,linez) +
+         '''
+         %sspike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 |
+         transp >%s datapath=/tmp/;
+         '''%(M8R,xmin,xmax,linex) +
+         '''
+         %scat axis=1 space=n %s %s >${TARGETS[0]};
+         '''%(M8R,linex,linez) +
+         '''     
+         %srm %s %s
+         '''%(M8R,linex,linez),
+              stdin=0,
+              stdout=0)
 
 # ------------------------------------------------------------
 def hline(cc,sx,ex,coord,par):
