@@ -2,7 +2,7 @@ try:
     from rsf.cluster import *
 except:
     from rsf.proj import *
-import pplot
+import pplot,math
 
 # default parameters
 def param(par):
@@ -461,11 +461,11 @@ def point3(cc,xcoord,zcoord,magn,par):
 # ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
     Flow(cc+'_x',None,
-         'math n1=%d d1=%g o1=%g output="%g+%g*cos(3.1415926*x1/180.)"'
-         %(sampling,360./sampling,0.,xcenter,radius) )
+         'math n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)"'
+         %(sampling,360./sampling,0.,xcenter,radius,math.pi) )
     Flow(cc+'_z',None,
-         'math n1=%d d1=%g o1=%g output="%g-%g*sin(3.1415926*x1/180)"'
-         %(sampling,360./sampling,0.,zcenter,radius) )
+         'math n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)"'
+         %(sampling,360./sampling,0.,zcenter,radius,math.pi) )
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -478,15 +478,15 @@ def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
     Flow(cc+'_r',None,
          '''
          math n1=%d d1=%g o1=%g
-         output="((%g)*(%g))/sqrt( ((%g)*cos(x1/180*3.1415926))^2 + ((%g)*sin(x1/180*3.1415926))^2 )"
+         output="((%g)*(%g))/sqrt( ((%g)*cos(%g*x1/180))^2 + ((%g)*sin(%g*x1/180))^2 )"
          '''% (sampling,360./sampling,0.,
-                semiA,semiB,semiB,semiA) )
+                semiA,semiB,semiB,math.pi,semiA,math.pi) )
     Flow(cc+'_x',cc+'_r',
-         'math output="%g+input*cos(x1/180*3.1415926)"'
-         % (xcenter) )
+         'math output="%g+input*cos(%g*x1/180)"'
+         % (xcenter,math.pi) )
     Flow(cc+'_z',cc+'_r',
-         'math output="%g+input*sin(x1/180*3.1415926)"'
-         % (zcenter) )
+         'math output="%g+input*sin(%g*x1/180)"'
+         % (zcenter,math.pi) )
 
     Flow(cc,[cc+'_x',cc+'_z'],
          '''

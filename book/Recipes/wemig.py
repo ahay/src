@@ -2,7 +2,8 @@ try:
     from rsf.cluster import *
 except:
     from rsf.proj import *
-import spmig, sgmig, zomig,fdmod
+import spmig,sgmig,zomig,fdmod
+import random
 
 def param(par):
     p  = ' '
@@ -166,6 +167,55 @@ def bWRcda(data,wfld,velo,coor,custom,par):
     fdmod.cdafd(wfld+'_out',wfld+'_rev',
                   data+'_rev',velo,coor,coor,iwindow+custom,par)
     Flow(wfld,wfld+'_rev','reverse which=4 opt=i verb=y')
+
+# ------------------------------------------------------------
+# constant-density shot-record migration
+def cdrtm(imag,velo,
+          sdat,scoo,
+          rdat,rcoo,
+          custom,par):
+
+    M8R='$RSFROOT/bin/sf'
+
+    awewin = 'nqz=%(nqz)d oqz=%(oqz)g nqx=%(nqx)d oqx=%(oqx)g'%par
+    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
+
+    swfl=imag+'swfl'
+    rdrv=imag+'rdrv'
+    rwrv=imag+'rwrv'
+    rwfl=imag+'rwfl'
+
+    Flow(imag,[sdat,scoo,rdat,rcoo,velo],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=y %s
+         vel=${SOURCES[4]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=/tmp/
+         >/dev/null;
+         '''%(M8R,awewin+' '+awepar,swfl) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=/tmp/;
+         '''%(M8R,rdrv) +
+         '''
+         %sawefd2d < %s cden=y %s
+         vel=${SOURCES[4]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         wfl=%s datapath=/tmp/
+         >/dev/null;
+         '''%(M8R,rdrv,awewin+' '+awepar,rwrv) +
+         '''
+         %sreverse < %s which=4 opt=i verb=y >%s datapath=/tmp/;
+         '''%(M8R,rwrv,rwfl) +
+         '''
+         %sxcor2d <%s uu=%s axis=3 verb=y %s >${TARGETS[0]};
+         '''%(M8R,swfl,rwfl,custom) +
+         '''
+         %srm %s %s %s %s
+         '''%(M8R,swfl,rdrv,rwrv,rwfl),
+              stdin=0,
+              stdout=0)
 
 # ------------------------------------------------------------
 # IC
