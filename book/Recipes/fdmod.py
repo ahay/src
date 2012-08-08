@@ -4,6 +4,11 @@ except:
     from rsf.proj import *
 import pplot,math
 
+# ------------------------------------------------------------
+def Temp(o,i,r):
+    Flow(o,i,r+ ' datapath=/tmp/ ')
+# ------------------------------------------------------------
+
 # default parameters
 def param(par):
     if(not par.has_key('ot')):       par['ot']=0.
@@ -360,9 +365,9 @@ def wavelet(wav,frequency,par):
 
 # ------------------------------------------------------------
 def horizontal(cc,coord,par):
-    Flow(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-    Flow(cc+'_z',cc+'_','math output="%g" ' % coord)
-    Flow(cc+'_x',cc+'_','math output="x1" ')
+    Temp(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+    Temp(cc+'_z',cc+'_','math output="%g" ' % coord)
+    Temp(cc+'_x',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -370,20 +375,25 @@ def horizontal(cc,coord,par):
 	     put label1="" unit1="" label2="" unit2=""
          ''')
 
+# ------------------------------------------------------------
 def horizontal3d(cc,coord,par):
-    Flow(cc+'_',None,
+    Temp(cc+'_',None,
          'math n1=%(nx)d d1=%(dx)g o1=%(ox)g n2=%(ny)d d2=%(dy)g o2=%(oy)g output=0' % par)
-    Flow(cc+'_z',cc+'_','math output="%g" | put n1=%d n2=%d n3=1' % (coord,par['nx'],par['ny']) )
+    Temp(cc+'_z',cc+'_','math output="%g" | put n1=%d n2=%d n3=1' % (coord,par['nx'],par['ny']) )
 
     if(par['nx']==1):
-        Flow(cc+'_x',cc+'_','math output="%g" | put n1=%d n2=%d n3=1' % (par['ox'],par['nx'],par['ny']) )
+        Temp(cc+'_x',cc+'_',
+             'math output="%g" | put n1=%d n2=%d n3=1' % (par['ox'],par['nx'],par['ny']) )
     else:
-        Flow(cc+'_x',cc+'_','math output="x1" | put n1=%d n2=%d n3=1' % (      par['nx'],par['ny']) )
+        Temp(cc+'_x',cc+'_',
+             'math output="x1" | put n1=%d n2=%d n3=1' % (      par['nx'],par['ny']) )
 
     if(par['ny']==1):
-        Flow(cc+'_y',cc+'_','math output="%g" | put n1=%d n2=%d n3=1' % (par['oy'],par['nx'],par['ny']) )
+        Temp(cc+'_y',cc+'_',
+             'math output="%g" | put n1=%d n2=%d n3=1' % (par['oy'],par['nx'],par['ny']) )
     else:
-        Flow(cc+'_y',cc+'_','math output="x2" | put n1=%d n2=%d n3=1' % (          par['nx'],par['ny']) )
+        Temp(cc+'_y',cc+'_',
+             'math output="x2" | put n1=%d n2=%d n3=1' % (          par['nx'],par['ny']) )
 
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
@@ -393,27 +403,26 @@ def horizontal3d(cc,coord,par):
          ''')
 
 def vertical(cc,coord,par):
-    Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
-    Flow(cc+'_x',cc+'_','math output="%g" '% coord)
-    Flow(cc+'_z',cc+'_','math output="x1" ')
+    Temp(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
+    Temp(cc+'_x',cc+'_','math output="%g" '% coord)
+    Temp(cc+'_z',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
-         cat axis=2 space=n
-         ${SOURCES[1]} | 
+         cat axis=2 space=n ${SOURCES[1]} | 
          transp |
-	     put label1="" unit1="" label2="" unit2=""
+         put label1="" unit1="" label2="" unit2=""
          ''')
 
 def vertical3d(cc,coordx,coordy,par):
-    Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
-    Flow(cc+'_x',cc+'_','math output="%g" '% coordx)
-    Flow(cc+'_y',cc+'_','math output="%g" '% coordy)
-    Flow(cc+'_z',cc+'_','math output="x1" ')
+    Temp(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
+    Temp(cc+'_x',cc+'_','math output="%g" '% coordx)
+    Temp(cc+'_y',cc+'_','math output="%g" '% coordy)
+    Temp(cc+'_z',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
          cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]} | 
          transp |
-	     put label1="" unit1="" label2="" unit2=""
+         put label1="" unit1="" label2="" unit2=""
          ''')
 
 
@@ -448,10 +457,10 @@ def point3d(cc,xcoord,ycoord,zcoord,par):
          'spike nsp=3 mag=%g,%g,%g n1=3 k1=1,2,3'%(xcoord,ycoord,zcoord))
     
 def point3(cc,xcoord,zcoord,magn,par):
-    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
-    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
-    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-    Flow(cc+'_r',cc+'_','math output="%g"' % magn)
+    Temp(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
+    Temp(cc+'_z',cc+'_','math output="%g"' % zcoord)
+    Temp(cc+'_x',cc+'_','math output="%g"' % xcoord)
+    Temp(cc+'_r',cc+'_','math output="%g"' % magn)
     Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
          '''
          cat axis=2 space=n
@@ -460,10 +469,10 @@ def point3(cc,xcoord,zcoord,magn,par):
 
 # ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
-    Flow(cc+'_x',None,
+    Temp(cc+'_x',None,
          'math n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)"'
          %(sampling,360./sampling,0.,xcenter,radius,math.pi) )
-    Flow(cc+'_z',None,
+    Temp(cc+'_z',None,
          'math n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)"'
          %(sampling,360./sampling,0.,zcenter,radius,math.pi) )
     Flow(cc,[cc+'_x',cc+'_z'],
@@ -475,16 +484,16 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
 
 # ------------------------------------------------------------
 def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
-    Flow(cc+'_r',None,
+    Temp(cc+'_r',None,
          '''
          math n1=%d d1=%g o1=%g
          output="((%g)*(%g))/sqrt( ((%g)*cos(%g*x1/180))^2 + ((%g)*sin(%g*x1/180))^2 )"
          '''% (sampling,360./sampling,0.,
                 semiA,semiB,semiB,math.pi,semiA,math.pi) )
-    Flow(cc+'_x',cc+'_r',
+    Temp(cc+'_x',cc+'_r',
          'math output="%g+input*cos(%g*x1/180)"'
          % (xcenter,math.pi) )
-    Flow(cc+'_z',cc+'_r',
+    Temp(cc+'_z',cc+'_r',
          'math output="%g+input*sin(%g*x1/180)"'
          % (zcenter,math.pi) )
 
@@ -496,9 +505,9 @@ def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
          ''', stdin=0)
     
 def dipping(cc,intercept,slope,par):
-    Flow(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-    Flow(cc+'_z',cc+'_','math output="%g+x1*%g" '%(intercept,slope))
-    Flow(cc+'_x',cc+'_','math output="x1" ')
+    Temp(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+    Temp(cc+'_z',cc+'_','math output="%g+x1*%g" '%(intercept,slope))
+    Temp(cc+'_x',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -507,15 +516,15 @@ def dipping(cc,intercept,slope,par):
          ''', stdin=0)
 
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
-    Flow(cc+'_',None,
+    Temp(cc+'_',None,
          '''
          math output=1
          n1=%d d1=%g o1=%g
          n2=%d d2=%g o2=%g
          ''' % (nz,dz,oz,
 		nx,dx,ox) )
-    Flow(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
-    Flow(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
+    Temp(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
+    Temp(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -524,7 +533,7 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
          ''',stdin=0)
 
 def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
-    Flow(cc+'_',None,
+    Temp(cc+'_',None,
          '''
          math output=1
          n1=%d d1=%g o1=%g
@@ -533,9 +542,9 @@ def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
          ''' % (nz,dz,oz,
 	 	nx,dx,ox,
 		ny,dy,oy) )
-    Flow(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
-    Flow(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
-    Flow(cc+'_y',cc+'_','math output="x3" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
+    Temp(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
+    Temp(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
+    Temp(cc+'_y',cc+'_','math output="x3" | put n1=%d n2=1 n3=1' % (nz*nx*ny))
     Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -544,52 +553,46 @@ def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
          ''',stdin=0)
 
 def makebox(box,zmin,zmax,xmin,xmax,par):
-
-    Flow(box+'_z',None,
+    Temp(box+'_z',None,
          '''
          spike nsp=5 mag=%g,%g,%g,%g,%g
          n1=5 o1=0 d1=1 k1=1,2,3,4,5 |
          transp
          '''%(zmin,zmax,zmax,zmin,zmin))
 
-    Flow(box+'_x',None,
+    Temp(box+'_x',None,
          '''
          spike nsp=5 mag=%g,%g,%g,%g,%g
          n1=5 o1=0 d1=1 k1=1,2,3,4,5 |
          transp
          '''%(xmin,xmin,xmax,xmax,xmin))
-
     Flow(box,[box+'_x',box+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
+# ------------------------------------------------------------
 def makeline(line,zmin,zmax,xmin,xmax,par):
-    Flow(line+'_z',None,
+    Temp(line+'_z',None,
          '''
          spike nsp=2 mag=%g,%g
          n1=2 o1=0 d1=1 k1=1,2 |
          transp
          '''%(zmin,zmax))
-
-    Flow(line+'_x',None,
+    Temp(line+'_x',None,
          '''
          spike nsp=2 mag=%g,%g
          n1=2 o1=0 d1=1 k1=1,2 |
          transp
          '''%(xmin,xmax))
-
     Flow(line,[line+'_x',line+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
-
-
 # ------------------------------------------------------------
-
 def hline(cc,sx,ex,coord,par):
     
     nx=(ex-sx)/par['dx']+1
     dx=par['dx']
 
-    Flow(cc+'_',None,'math n1=%d d1=%g o1=%g output=0' % (nx,dx,sx))
-    Flow(cc+'_z',cc+'_','math output="%g" ' % coord)
-    Flow(cc+'_x',cc+'_','math output="x1" ')
+    Temp(cc+'_',None,'math n1=%d d1=%g o1=%g output=0' % (nx,dx,sx))
+    Temp(cc+'_z',cc+'_','math output="%g" ' % coord)
+    Temp(cc+'_x',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -602,9 +605,9 @@ def vline(cc,sz,ez,coord,par):
     nz=(ez-sz)/par['dz']+1
     dz=par['dz']
     
-    Flow(cc+'_',None,'math n1=%d d1=%g o1=%g output=0' % (nz,dz,sz))
-    Flow(cc+'_x',cc+'_','math output="%g" ' % coord)
-    Flow(cc+'_z',cc+'_','math output="x1" ')
+    Temp(cc+'_',None,'math n1=%d d1=%g o1=%g output=0' % (nz,dz,sz))
+    Temp(cc+'_x',cc+'_','math output="%g" ' % coord)
+    Temp(cc+'_z',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -792,8 +795,6 @@ def anifd2d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          %(anifdcustom)s
          ''' % par)
 
-
-
 # ------------------------------------------------------------
 # elastic modeling
 def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
@@ -976,9 +977,9 @@ def iom(iom,imag,velo,vmean,par):
 def wframe(frame,movie,index,custom,par):
 
     Flow([movie+'_plt',movie+'_bar'],movie,
-         'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
+         'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s'%custom)
     Plot  (frame,[movie+'_plt',movie+'_bar'],
-           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index
+           'window n3=1 f3=%d bar=${SOURCES[1]} |'%index
            + wgrey(custom,par))
     
 # ------------------------------------------------------------
