@@ -6,7 +6,7 @@ import pplot,math
 
 # ------------------------------------------------------------
 def Temp(o,i,r):
-    Flow(o,i,r+ ' datapath=/tmp/ ')
+    Flow(o,i,r+ ' datapath=/scratch/ ')
 # ------------------------------------------------------------
 
 # default parameters
@@ -593,11 +593,11 @@ def makeline(line,zmin,zmax,xmin,xmax,par):
     Flow(line,None,
          '''
          %sspike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 |
-         transp >%s datapath=/tmp/;
+         transp >%s datapath=/scratch/;
          '''%(M8R,zmin,zmax,linez) +
          '''
          %sspike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 |
-         transp >%s datapath=/tmp/;
+         transp >%s datapath=/scratch/;
          '''%(M8R,xmin,xmax,linex) +
          '''
          %scat axis=1 space=n %s %s >${TARGETS[0]};

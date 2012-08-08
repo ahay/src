@@ -191,22 +191,22 @@ def cdrtm(imag,velo,
          vel=${SOURCES[4]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
-         wfl=%s datapath=/tmp/
+         wfl=%s datapath=/scratch/
          >/dev/null;
          '''%(M8R,awewin+' '+awepar,swfl) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=/tmp/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=/scratch/;
          '''%(M8R,rdrv) +
          '''
          %sawefd2d < %s cden=y %s
          vel=${SOURCES[4]}
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
-         wfl=%s datapath=/tmp/
+         wfl=%s datapath=/scratch/
          >/dev/null;
          '''%(M8R,rdrv,awewin+' '+awepar,rwrv) +
          '''
-         %sreverse < %s which=4 opt=i verb=y >%s datapath=/tmp/;
+         %sreverse < %s which=4 opt=i verb=y >%s datapath=/scratch/;
          '''%(M8R,rwrv,rwfl) +
          '''
          %sxcor2d <%s uu=%s axis=3 verb=y %s >${TARGETS[0]};
