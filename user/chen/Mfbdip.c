@@ -10,7 +10,7 @@ int main(int argc, char*argv[])
 	int n1, n2, n3, m1, m2, rect[2], niter, liter;
 	int i3;
 	bool verb;
-	float ****wav, **dip, radius, eta, dip0;
+	float ****wav, **dip, radius, eta, idip;
 
 	sf_init(argc, argv);
 
@@ -39,7 +39,7 @@ int main(int argc, char*argv[])
 	/* interpolating radius for opwd */
 	if (!sf_getfloat("eta", &eta)) eta = 0.75;
 	/* steps for iteration */
-	if (!sf_getfloat("dip0", &dip0)) dip0 = 0.0;
+	if (!sf_getfloat("idip", &idip)) idip = 0.0;
 	/* initial dip */
 	if (!sf_getbool("verb", &verb)) verb = false;
 	/* verbosity flag */
@@ -48,7 +48,7 @@ int main(int argc, char*argv[])
 	dip = sf_floatalloc2(n1,n2);
 
 	/* initialize dip estimation */
-	fbdip_init(radius, n1, n2, rect, liter, dip0, verb);
+	fbdip_init(radius, n1, n2, rect, liter, idip, verb);
 
 
 	for(i3=0; i3<n3; i3++)

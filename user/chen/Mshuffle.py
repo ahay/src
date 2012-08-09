@@ -16,19 +16,19 @@ po=rsf.Output()
 nn=pi.shape()
 nd=len(nn)
 
-id=par.int("id",2)
-if id>nd:
-	sys.stderr.write('id=%d greater than nd=%d'%(id, nd))
-n2=nn[-id]
+axis=par.int("axis",2)
+if axis>nd:
+	sys.stderr.write('axis=%d greater than nd=%d'%(axis, nd))
+n2=nn[-axis]
 seed=par.int("seed", n2)
 inv=par.bool("inv", False)
 
 n1=1
 n3=1
-for i1 in range(id-1):
+for i1 in range(axis-1):
 	n1=n1*nn[-1-i1]
-for i1 in range(nd-id):
-	n3=n3*nn[id]
+for i1 in range(nd-axis):
+	n3=n3*nn[axis]
 
 
 u1=zeros((n2,n1),'f')

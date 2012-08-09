@@ -10,7 +10,7 @@ int main(int argc, char*argv[])
 	int nf, n1, n2, n3, rect[2], niter, liter, interp;
 	int i3;
 	bool verb;
-	float **wav, **dip, eta, **dip0;
+	float **wav, **dip, eta, **idip;
 
 	sf_init(argc, argv);
 
@@ -42,15 +42,15 @@ int main(int argc, char*argv[])
 	if (!sf_getfloat("eta", &eta)) eta = 1.0;
 	/* steps for iteration */
 
-	if(sf_getstring("dip0")!=NULL)
+	if(sf_getstring("idip")!=NULL)
 	{
-		dip0 = sf_floatalloc2(n1, n2);
-		p0 = sf_input("dip0");
+		idip = sf_floatalloc2(n1, n2);
+		p0 = sf_input("idip");
 		sf_histint(p0, "n1", &i3);
 		if(i3!=n1) sf_error("p0.n1=%d and in.n1=%d",i3,n1);
 		sf_histint(p0, "n2", &i3);
 		if(i3!=n2) sf_error("p0.n2=%d and in.n2=%d",i3,n2);
-		sf_floatread(dip0[0], n1*n2, p0);
+		sf_floatread(idip[0], n1*n2, p0);
 	}else	p0=NULL;
 	
 	/* starting dip */
@@ -69,7 +69,7 @@ int main(int argc, char*argv[])
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		if(p0!=NULL) memcpy(dip[0], dip0[0], n1*n2*sizeof(float));
+		if(p0!=NULL) memcpy(dip[0], idip[0], n1*n2*sizeof(float));
 		else memset(dip[0], 0, n1*n2*sizeof(float));
 		ldip(wav, dip, niter, eta);
 		sf_floatwrite(dip[0], n1*n2, out);
@@ -77,8 +77,8 @@ int main(int argc, char*argv[])
 
 	if(p0!=NULL)
 	{
-		free(dip0[0]);
-		free(dip0);
+		free(idip[0]);
+		free(idip);
 	}
 	ldip_close();
 	free(dip[0]);
