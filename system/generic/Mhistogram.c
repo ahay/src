@@ -1,6 +1,7 @@
-/* Compute a histogram of integer- or float-valued input data
+/* Compute a histogram of integer- or float-valued input data.
+
 The output grid is not centered on the bins; it marks their "left edge".
-I.e., the first sample holds the number of values between o1 and o1+d1*/
+I.e., the first sample holds the number of values between o1 and o1+d1. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -27,11 +28,11 @@ int main(int argc, char* argv[])
     int i1; /* Counter over output */
     int n1; /* Output axis length */
     int nbuf; /* Number of elements read at one time */
-    int   *hist=NULL; /* Output histogram */
+    int   *hist; /* Output histogram */
     int   *ibuf=NULL; /* Input buffer for reading integers */
     float *fbuf=NULL; /* Input buffer for reading floats */
     float o1, d1;     /* Output axis origin and sampling */
-    sf_file in=NULL, out=NULL; /* Input, output files */
+    sf_file in, out; /* Input, output files */
     sf_datatype inp_type; /* Input data type */
 
     sf_init(argc,argv);
@@ -83,34 +84,36 @@ int main(int argc, char* argv[])
 
     /* Duplicating boilerplate code to avoid conditionals inside loops */
 
-    if (inp_type == SF_FLOAT) {
-
-        for (; n > 0; n -= nbuf) {
-
-            if (nbuf > n) nbuf = n;
-
-            sf_floatread(fbuf, nbuf, in);
-
-            for (i=0; i < nbuf; i++) {
-                i1 = (int) floorf((fbuf[i]-o1)/d1);
-                if (i1 >= 0 && i1 < n1) hist[i1]++;
-            }
-        }
-    }
-
-    else if (inp_type == SF_INT) {
-
-        for (; n > 0; n -= nbuf) {
-
-            if (nbuf > n) nbuf = n;                                        
-                                                                           
-            sf_intread(ibuf, nbuf, in);                                    
-                                                                           
-            for (i=0; i < nbuf; i++) {                                     
-                i1 = (int) floorf((ibuf[i]-o1)/d1);                        
-                if (i1 >= 0 && i1 < n1) hist[i1]++;                        
-            }                                                              
-        }
+    switch (inp_type) {
+	case SF_FLOAT:
+	    for (; n > 0; n -= nbuf) {
+		
+		if (nbuf > n) nbuf = n;
+		
+		sf_floatread(fbuf, nbuf, in);
+		
+		for (i=0; i < nbuf; i++) {
+		    i1 = (int) floorf((fbuf[i]-o1)/d1);
+		    if (i1 >= 0 && i1 < n1) hist[i1]++;
+		}
+	    }
+	    break;
+	case SF_INT:
+	    for (; n > 0; n -= nbuf) {
+		
+		if (nbuf > n) nbuf = n;                                        
+		
+		sf_intread(ibuf, nbuf, in);                                    
+		
+		for (i=0; i < nbuf; i++) {                                     
+		    i1 = (int) floorf((ibuf[i]-o1)/d1);                        
+		    if (i1 >= 0 && i1 < n1) hist[i1]++;                        
+		}                                                              
+	    }
+	    break;
+	default:
+	    sf_error("Need float or int input");
+	    break;
     }
 
     sf_intwrite(hist,n1,out);
