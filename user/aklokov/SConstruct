@@ -34,6 +34,13 @@ env.Prepend(CPPPATH=['../../include'],
 if 'c++' in env.get('API',[]):
     env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
 
+src = Glob('[a-z]*.c')
+
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
