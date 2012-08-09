@@ -898,7 +898,7 @@ def zom(imag,data,velo,dens,racq,custom,par):
     awefd(jdat,jwfl,tdat,velo,dens,racq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
     Flow( imag,jwfl,'window n3=1 f3=1')
 
-def cdzom(imag,data,velo,racq,custom,par):
+def oldcdzom(imag,data,velo,racq,custom,par):
     tdat = imag+'_tds'
     jwfl = imag+'_tur'
     jdat = imag+'_jnk'
@@ -906,6 +906,37 @@ def cdzom(imag,data,velo,racq,custom,par):
     Flow(tdat,data,'reverse which=2 opt=i verb=y')
     cdafd(jdat,jwfl,tdat,velo,racq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
     Flow( imag,jwfl,'window n3=1 f3=1')
+
+def cdzom(imag,data,velo,rcoo,custom,par):
+    
+    M8R='$RSFROOT/bin/sf'
+
+    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
+
+    rdat = imag+'rdat'
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo],
+         '''
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=/scratch/;
+         '''%(M8R,rdat) +
+         '''
+         %sawefd2d < %s cden=y %s
+         vel=${SOURCES[2]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=/scratch/
+         >/dev/null;
+         '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl) +
+         '''
+         %swindow < %s n3=1 f3=1
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s %s
+         '''%(M8R,rdat,rwfl),
+              stdin=0,
+              stdout=0)
+
 
 # ------------------------------------------------------------
 # wavefield-over-model plot
