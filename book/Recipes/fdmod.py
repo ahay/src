@@ -929,7 +929,7 @@ def cdzom(imag,data,velo,rcoo,custom,par):
          >/dev/null;
          '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl) +
          '''
-         %swindow < %s n3=1 f3=1
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
          '''%(M8R,rwfl) +
          '''
          %srm %s %s
