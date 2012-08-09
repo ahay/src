@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-crssemb diptaper dvscan2d pick2d gammapick2d
+crssemb diptaper dvscan2d pick2d gammapick2d pickvert
 '''
 
 mpi_progs = ''
