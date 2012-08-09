@@ -31,8 +31,10 @@ void fbpwd(int m1, int m2, float ****in, float **dip)
 		for(j2=0; j2<m2; j2++)
 		for(j1=0; j1<m1; j1++)
 		{
-			if((j1+j2)%2==0) continue;
-			dip[0][i1] += 2.0*in[j2][j1][0][i1]*POW(s1, j1)*POW(c1,j2);
+//			if((j1+j2)%2==0) continue;
+			dip[0][i1] += in[j2][j1][0][i1]*
+			(POW(s1, j1)*POW(c1,j2)-
+			 POW(-s1, j1)*POW(-c1,j2));
 		}
 	}
 

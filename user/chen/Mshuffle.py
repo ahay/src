@@ -28,8 +28,9 @@ n3=1
 for i1 in range(axis-1):
 	n1=n1*nn[-1-i1]
 for i1 in range(nd-axis):
-	n3=n3*nn[axis]
+	n3=n3*nn[i1]
 
+sys.stderr.write('n1=%d n2=%d n3=%d\n'%(n1, n2, n3))
 
 u1=zeros((n2,n1),'f')
 u2=zeros((n2,n1),'f')
