@@ -299,7 +299,17 @@ int main(int argc, char* argv[])
     free(**tt);  free(*tt); free(tt);    
     /*------------------------------------------------------------*/
 
+    if(dabc) {
+	/* one-way abc setup */
+	abc = abcone3d_make(NOP,dt,vp,fsrf,fdm);
+	/* sponge abc setup */
+	spo = sponge_make(fdm->nb);
+    }
+
+    free(**vp); free(*vp); free(vp);
+
     /*------------------------------------------------------------*/
+
     /* allocate wavefield arrays */
     um=sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
     uo=sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
@@ -315,14 +325,6 @@ int main(int argc, char* argv[])
 		ua[iy][ix][iz]=0;
 	    }
 	}
-    }
-
-    /*------------------------------------------------------------*/
-    if(dabc) {
-	/* one-way abc setup */
-	abc = abcone3d_make(NOP,dt,vp,fsrf,fdm);
-	/* sponge abc setup */
-	spo = sponge_make(fdm->nb);
     }
 
     /*------------------------------------------------------------*/
@@ -431,7 +433,6 @@ int main(int argc, char* argv[])
         free(**roz); free(*roz); free(roz);
     }
 
-    free(**vp); free(*vp); free(vp);
     free(**vt); free(*vt); free(vt);
 
     free(ss);
