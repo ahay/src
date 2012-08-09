@@ -15,6 +15,10 @@ pymods='''
 pcmf
 '''
 
+tprogs='''
+opwd fbdip
+'''
+
 docs = []
 
 try:  # distributed version
@@ -31,17 +35,10 @@ env.Prepend(CPPPATH=['../../include'],
 		LIBPATH=['../../lib'],
 		LIBS=[env.get('DYNLIB','')+'rsf'])
 
-lapack = env.get('LAPACK')
-blas = env.get('BLAS')
-if (lapack and blas):
-	frt_h = env.RSF_Include('_frt.c',prefix='')
-	frt_o = env.StaticObject('_frt.c')
-	env.Depends(frt_o,frt_h)
-	env.Prepend(LIBS=lapack)
-	prog = env.Program('sffrt',['Mfrt.c',frt_o])
-	if root:
-		env.Install(bindir,prog)
-		docs += map(lambda prog: env.Doc(prog,'M' + prog),['frt'])
+if env.get('BLAS'):
+	progs += ' frt'
+	if env.get('LAPACK'):
+		env.Prepend(LIBS='lapack')
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
@@ -56,10 +53,7 @@ for prog in mains:
 	if root:
 		env.Install(bindir,prog)
 
-for prog in Split(
-	'''
-	opwd fbdip
-	'''):
+for prog in Split(tprogs):
 	sources = ['T' + prog,prog]
 	bldutil.depends(env,sources,prog)
 	sources = map(lambda x: x + '.o',sources)
