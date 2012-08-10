@@ -5,7 +5,7 @@
 #$ -N velcon                          # Job name
 #$ -j y                               # stderr and stdout into stdout
 #$ -o $JOB_NAME.o$JOB_ID              # Name of the output file
-#$ -pe 2way 32                        # Request nodes
+#$ -pe 2way 48                        # Request nodes
 #$ -q normal                          # Queue name
 #$ -A TCCS                            # Account
 #$ -l h_rt=6:00:00                    # runtime (hh:mm:ss)
@@ -15,7 +15,7 @@
 source $RSFSRC/env.sh
 
 # CHANGE the number of jobs per node
-export mycores=2
+export mycores=1
 
 if [ $mycores -lt 16 ]
 then
