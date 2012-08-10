@@ -1,6 +1,6 @@
 'extra flows'
 
-import string, re, sys
+import string, re, sys, os
 from rsf.proj import *
 
 if sys.platform == 'darwin':
@@ -40,7 +40,11 @@ def Tflow(target, source, command,
 
 
 def Mplot(target, cmd, mtx):
-	Result(target,
+	try:
+		os.stat('Fig/')
+	except:
+		os.mkdir('Fig/')
+	Flow('Fig/'+target, target,
 		cmd+''' 
 		| %s serifs=y fat=3 color=y label="" tex=y scale=0.8
 		| ps2pdf - -
