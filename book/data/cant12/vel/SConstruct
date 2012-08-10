@@ -1,82 +1,12 @@
 from rsf.proj import *
 
 # using CMPs after demultiple
-data='../lpf/demultiple.rsf'
+data='../lpf/cmp.rsf'
 infile='handvels.txt'
 # data has tpow squared already applied
 
-# Let us first get the hand picked velocity
-############################################
-
-# This function interpolates the time samples
-# for each trace
-vs=[]
-def myfunction(l,its):
-    #print its
-    tfile='t%s'%l
-    vfile='v%s'%l
-    velt='velt%s'%l
-    tfl= open(tfile+".asc", 'w')
-    vfl= open(vfile+".asc", 'w')
-    if its[0] != 0.0:
-        t=0
-        v=its[1]
-        its.insert(0,v)
-        its.insert(0,t)
-
-    for i in range(0,len(its),2):
-        # time samples are converted to seconds
-        tfl.write(str(float(its[i])/1000.0)+" ")
-        vfl.write(its[i+1]+" ")
-    tfl.close()
-    vfl.close()
-    # time file
-    Flow(tfile,tfile+".asc",'''
-                     echo in=$SOURCE n1=%d data_format=ascii_float 
-                     | sfdd form=native 
-                     '''%(len(its)/2),stdin=0)
-    # velocity file
-    Flow(vfile,vfile+".asc",'''
-                     echo in=$SOURCE n1=%d data_format=ascii_float 
-                     | sfdd form=native 
-                     '''%(len(its)/2),stdin=0)
-    # interpolated velocity for the trace
-    Flow(velt,[vfile,tfile],
-             'invbin1 head=${SOURCES[1]} nx=3000 dx=.001 x0=0 ')
-    # append to the list of traces
-    vs.append(velt)
-
-    # clean up temp files after making sure that velt%s 
-    # for the current trace was created
-    Flow('g%s'%l,[velt,vfile+".asc",tfile+".asc"],
-         '\\rm ${SOURCES[1:3]}',stdout=-1,stdin=0)
-    Flow('gg%s'%l,[velt,tfile,vfile],
-         'rm ${SOURCES[1:3]}',stdout=-1,stdin=0)
-    return
-
-txt_f = open(infile, 'r')
-
-items=[]
-loc=""
-for line in txt_f.read().splitlines():
-   if line.startswith("HANDVEL"):
-       if not loc:
-          loc=line.split()[1]
-       else:
-          loc1=loc
-          loc=line.split()[1]
-       if items:
-          myfunction(loc1,items)
-          items=[]
-   else:
-          items = items + line.split()
-myfunction(loc,items)
-txt_f.close()
-
-#print vs
-# concatinate traces in the second axis
-Flow('velt',vs,'cat axis=2 ${SOURCES[1:%d]} | put d2=625 o2=5866.90 '%len(vs))
-
+# handvel2rsf needs to be sfhandvel2rsf
+Flow('velt',infile,'sfhandvel2rsf o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 ')
 # plot velocity
 Result('velt',
     '''
@@ -84,30 +14,27 @@ Result('velt',
     label1=Time unit1=s label2=Velocity unit2=m/s
     ''')
 
-# clean up temp files after making sure that velt.rsf was created
-vs.insert(0,'velt')
-Flow('gvelt',vs,'rm ${SOURCES[1:%d]}'%(len(vs)),stdout=-1, stdin=0)
-
 # seismic line CMP axis parameters
 Flow('pattern0',None,
      'spike n1=9701 d1=6.25 o1=5391.88')
 
 # interploate velocity
-Flow('rms','velt pattern0','transp memsize=500| remap1 pattern=${SOURCES[1]} |transp memsize=500  ')
+Flow('rms','velt pattern0',
+      'transp memsize=500| remap1 pattern=${SOURCES[1]} |transp memsize=500  ')
 
 # plot interpolate veloctiy
 Result('rms',
     '''
-    grey color=j allpos=y yreverse=y 
-    label1=Time unit1=s label2=Velocity unit2=m/s
+    grey color=j allpos=y yreverse=y scalebar=y barreverse=y allpos=y mean=y
+    label1=Time unit1=s label2=Velocity unit2=m/s title="rms velocity"
     ''')
 
 # Use the velocity to create a mute for automatic velocity picking
 mute='rms.rsf'
 
-# sort to CMP
+# sort to CMP if input is shot gathers
 #Flow('cmp_all',data,'shot2cmp half=n positive=n')
-data='cmp_all'
+#data='cmp_all'
 
 ncmp1=9701 # number of cmps
 ncmp=9464  # number of cmps of full fold
