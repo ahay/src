@@ -14,7 +14,10 @@ Flow('data','zero',
 Flow('pca', 'data ../../sfpca',
 	'../../sfpca nc=1 ')
 
-for x in ('data', 'pca'):
+Flow('med', 'data',
+	'shuffle | mflt rect1=0 rect2=4 ')
+
+for x in ('data', 'pca', 'med'):
 	Result(x,'grey title="%s"'%(x.upper()))
 
 End()
