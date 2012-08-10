@@ -19,7 +19,7 @@
 
 
 #include <rsf.h>
-#include <time.h>
+//#include <time.h>
 
 void bubble(int *in, int *idx, int n)
 {
@@ -42,7 +42,7 @@ void bubble(int *in, int *idx, int n)
 
 int main (int argc, char *argv[]) {
     
-    int n;
+    int n, seed;
     sf_file  bshuffle,ashuffle;
     sf_axis ax,at,ap,av;
     int nx,nt,np,nv,iteration,*a1, *a2;
@@ -53,6 +53,7 @@ int main (int argc, char *argv[]) {
     ashuffle=sf_output("out");
 
     if (!sf_getint("iteration",&iteration)) iteration=1;
+    if (!sf_getint("seed",&seed)) seed=2012;
     at=sf_iaxa( bshuffle,1); nt=sf_n(at);
     ax=sf_iaxa( bshuffle,3); nx=sf_n(ax);
     ap=sf_iaxa( bshuffle,2); np=sf_n(ap);
@@ -63,7 +64,7 @@ int main (int argc, char *argv[]) {
     a2=sf_intalloc(np);
 	sf_warning("ntpx=%d",nt*np*nx);
 
-    srand(time(0));
+    srand(seed);
 
 
     for (int m=0; m<np; m++) {

@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-backdireazi backdire curvature 
+backdireazi backdire curvature shuffle2
 '''
 
 # kirr33 kirm3 rtmpar shuffle
@@ -14,8 +14,9 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../chen/SConstruct')
 
+#    SConscript('../../api/c/SConstruct')
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],

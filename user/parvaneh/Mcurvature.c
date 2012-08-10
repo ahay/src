@@ -19,6 +19,8 @@
 */
 #include <rsf.h>
 
+#include "curvature.h"
+
 /* Roberts, A., 2001, Curvature attributes and their application to
    3-D interpreted horizons: First Break, 19, no. 2, 85–99. */
 
@@ -30,32 +32,44 @@ int main (int argc, char *argv[])
     sf_axis ay,ax,at;
     int iy,ix,it;
     int ny,nx,nt;
-    float idx,dx,idy,dy, scale;
+    float idx,dx,idy,dy,idt,dt, scale, vscale;
     const char *what;
-    float a,b,c,d,e,nxx,nyy,nzz,qq1,qq2,qq3,***val,km,kg,**slice;
+    bool rotation;
+    float a,b,c,d,e,ev,dv,nxy,nyx,nxz,nzx,nzy,nyz,qq1,qq2,qq3,***val,km,kg,**slice;
+    float ***nxx,***nyy,***nzz,r1,r2,r3;
     
     sf_init(argc,argv);
     hor=sf_input("in");
     cur=sf_output("out");
 
-    at=sf_iaxa(hor,1); nt=sf_n(at);
+    at=sf_iaxa(hor,1); nt=sf_n(at); dt=sf_d(at);
     ay=sf_iaxa(hor,2); ny=sf_n(ay); dy=sf_d(ay);  
     ax=sf_iaxa(hor,3); nx=sf_n(ax); dx=sf_d(ax);
    
-    idx=1.0/dx;
-    idy=1.0/dy;
-
     if (NULL == (what = sf_getstring("what"))) what="val";
     /* what to compute */
+
+    if (!sf_getbool("rotation", &rotation)) rotation = false;
+    /* if y: rotation, if n: convergence */
 
     if (!sf_getfloat("scale",&scale)) scale=1.0;
     /* scaling (from time to depth) */
 
+     if (!sf_getfloat("vscale",&vscale)) vscale=1.0;
+    /* scaling (from time to depth) */
+
+    idx=1.0/dx;
+    idy=1.0/dy;
+    idt=1.0/(dt*vscale);
+
     val =sf_floatalloc3(nt,ny,nx);
     slice = sf_floatalloc2(ny,nx);
-
+    nxx =sf_floatalloc3(nt,ny,nx);
+    nyy =sf_floatalloc3(nt,ny,nx);
+    nzz =sf_floatalloc3(nt,ny,nx);
+    
     sf_floatread(val[0][0],nt*ny*nx,hor);
-  
+
     for (it=0; it<nt; it++){
 	for (ix=0; ix<nx; ix++) {
 	    for (iy=0; iy<ny; iy++) {
@@ -63,33 +77,32 @@ int main (int argc, char *argv[])
 		val[ix][iy][it] = 0.0;
 	    }
 	}
-
-
+	
+	
 	for (ix=1; ix<nx-1; ix++) {
 	    for (iy=1; iy<ny-1; iy++) {
 		a=idy*idy*(c0*(slice[ix+1][iy-1]+slice[ix+1][iy+1]+slice[ix][iy-1]+slice[ix][iy+1]+slice[ix-1][iy-1]+slice[ix-1][iy+1])-c1*(slice[ix+1][iy]+slice[ix][iy]+slice[ix-1][iy]));
-	    
+		
 		b=idx*idx*(c0*(slice[ix+1][iy-1]+slice[ix+1][iy]+slice[ix+1][iy+1]+slice[ix-1][iy-1]+slice[ix-1][iy]+slice[ix-1][iy+1])-c1*(slice[ix][iy-1]+slice[ix][iy]+slice[ix][iy+1]));
 		
 		c=idx*idy*c2*(slice[ix+1][iy+1]+slice[ix-1][iy-1]-slice[ix+1][iy-1]-slice[ix-1][iy+1]);
-		   
+		
 		d=idy*c1*(slice[ix+1][iy+1]+slice[ix][iy+1]+slice[ix-1][iy+1]-slice[ix+1][iy-1]-slice[ix][iy-1]-slice[ix-1][iy-1]);
-			
+		
 		e=idx*c1*(slice[ix+1][iy-1]+slice[ix+1][iy]+slice[ix+1][iy+1]-slice[ix-1][iy-1]-slice[ix-1][iy]-slice[ix-1][iy+1]);
 		
-		nxx=d/sqrtf(1+d*d+e*e);
-			
-		nyy=e/sqrtf(1+d*d+e*e);
+		ev=e*vscale;
 		
-		nzz=1/sqrtf(1+d*d+e*e);
+		dv=d*vscale;
 		
-		qq1=(2*(d*c+2*e*b))/((1+d*d+e*e)*(sqrtf(1+d*d+e*e)));
-
-		qq2=(-2*(2*d*a+e*c))/((1+d*d+e*e)*(sqrtf(1+d*d+e*e)));
 		
-		qq3=(-2*d*d*c-4*e*d*b+4*e*d*a+2*e*e*c)/((1+d*d+e*e)*(sqrtf(1+d*d+e*e)));
-
-			
+		nxx[ix][iy][it]=dv/sqrtf(1+ev*ev+dv*dv);
+		
+		nyy[ix][iy][it]=ev/sqrtf(1+ev*ev+dv*dv);
+		
+		nzz[ix][iy][it]=1/sqrtf(1+ev*ev+dv*dv);
+		
+		
 		switch (what[0]) {
 		    case 'm': /*Mean curvature*/
 			val[ix][iy][it]=(a*(1+e*e)+b*(1+d*d)-(c*d*e))/((1+d*d+e*e)*sqrtf(1+d*d+e*e));
@@ -122,32 +135,61 @@ int main (int argc, char *argv[])
 		    case 'c': /*Contour curvature*/
 			val[ix][iy][it]=2*(a*e*e+b*d*d-c*d*e)/((d*d+e*e)*sqrt(SF_EPS+d*d+e*e));
 			break;
-		    case 'r': /*rotation about the normal to the reflector dip*/
-			val[ix][iy][it]=nxx*qq1+nyy*qq2+nzz*qq3;
-			break;
-		    case 'v': /*Reflector convergence*/
-			val[ix][iy][it]=sqrtf((nyy*qq3-nzz*qq2)*(nyy*qq3-nzz*qq2)+(nzz*qq1-nxx*qq3)*(nzz*qq1-nxx*qq3)+(nxx*qq2-nyy*qq1)*(nxx*qq2-nyy*qq1));
-			break;
-		    case 'a': /*Azimuth of the convergence*/
-			if (qq2>0 && qq3>0) {
-			    val[ix][iy][it]=(atan(abs(qq3/qq2))*180)/3.1415;
-			}
-			else if (qq2<0 && qq3>0) {
-			    val[ix][iy][it]=180-((atan(abs(qq3/qq2))*180)/3.1415); 
-			}
-			else if (qq2<0 && qq3<0) {
-			     val[ix][iy][it]=((atan(abs(qq3/qq2))*180)/3.1415)+180;
-			}
-			else if (qq2>0 && qq3<0) {
-			    val[ix][iy][it]=360-((atan(abs(qq3/qq2))*180)/3.1415);
-			}
-			break;
-
+			
 		}
 	    }
 	}
     }
+    
+    if(rotation)
+    {
+	for (it=1; it<nt-1; it++){
+	    for (ix=1; ix<nx-1; ix++) {
+		for (iy=1; iy<ny-1; iy++) {
+		    
+		    nyz = fd1_1(nyy, it, iy, ix, 'z')*idt;	
+		    nyx = fd1_1(nyy, it, iy, ix, 'x')*idx;	
+		    nxz = fd1_1(nxx, it, iy, ix, 'z')*idt;	
+		    nxy = fd1_1(nxx, it, iy, ix, 'y')*idy;	
+		    nzx = fd1_1(nzz, it, iy, ix, 'x')*idx;	
+		    nzy = fd1_1(nzz, it, iy, ix, 'y')*idy;	
+		    
+		    qq1=nyy[ix][iy][it]*(nxy-nyx)-nzz[ix][iy][it]*(nzx-nxz);
+		    
+		    qq2=nzz[ix][iy][it]*(nyz-nzy)-nxx[ix][iy][it]*(nxy-nyx);
+		    
+		    qq3=nxx[ix][iy][it]*(nzx-nxz)-nyy[ix][iy][it]*(nyz-nzy);
+		    
+		    r1=nxx[ix][iy][it]*(nyz-nzy);
+		    
+		    r2=nyy[ix][iy][it]*(nzx-nxz);
+		    
+		    r3=nzz[ix][iy][it]*(nxy-nyx);
+		    
 
+		    switch (what[0]) {
+			case 'o' :/*Reflector rotation*/
+			    
+			    val[ix][iy][it]=r1+r2+r3;
+			    break;
+			case 'e' :/*Magnitude of convergence*/
+			    
+			    val[ix][iy][it]=sqrtf(qq1*qq1+qq2*qq2+qq3*qq3);
+			    break;
+			case 'a':/*Azimuth of the convergence projected on xy plane*/
+			    
+			    val[ix][iy][it]=(atan2(qq2,qq1)*180)/3.1415;
+			    
+			    break;
+		    }
+		}
+	    }
+	}
+	
+    }
+    
+    
+    
     sf_floatwrite(val[0][0],nt*ny*nx,cur);
     exit (0);
 }
