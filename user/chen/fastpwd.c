@@ -1,4 +1,5 @@
 /* Analytical dip. */
+
 /*
   Copyright (C) 2011 University of Texas at Austin
   
@@ -8,7 +9,7 @@
   (at your option) any later version.
   
   This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  but WITHOUT ANY WA:RRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
   

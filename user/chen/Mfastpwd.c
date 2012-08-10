@@ -1,4 +1,5 @@
 /* 2-D dip estimation using analytical equation. */
+
 /*
   Copyright (C) 2011 University of Texas at Austin
   
