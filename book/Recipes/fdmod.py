@@ -370,9 +370,9 @@ def horizontal(cc,coord,par):
     Temp(cc+'_x',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
-         cat axis=2 space=n
-         ${SOURCES[1]} | transp |
-	     put label1="" unit1="" label2="" unit2=""
+         cat axis=2 space=n ${SOURCES[1]} |
+         transp |
+         put label1="" unit1="" label2="" unit2=""
          ''')
 
 # ------------------------------------------------------------
@@ -425,7 +425,6 @@ def vertical3d(cc,coordx,coordy,par):
          put label1="" unit1="" label2="" unit2=""
          ''')
 
-
 def point(cc,xcoord,zcoord,par):
 #    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
 #    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
@@ -469,18 +468,42 @@ def point3(cc,xcoord,zcoord,magn,par):
 
 # ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
-    Temp(cc+'_x',None,
-         'math n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)"'
-         %(sampling,360./sampling,0.,xcenter,radius,math.pi) )
-    Temp(cc+'_z',None,
-         'math n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)"'
-         %(sampling,360./sampling,0.,zcenter,radius,math.pi) )
-    Flow(cc,[cc+'_x',cc+'_z'],
+    M8R='$RSFROOT/bin/sf'
+    ccx=cc+'x'
+    ccz=cc+'z'
+
+    Flow(cc,None,
          '''
-         cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''', stdin=0)
+         %smath n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)" >%s datapath=/scratch/;
+         '''%(M8R,sampling,360./sampling,0.,xcenter,radius,math.pi,ccx) +
+         '''
+         %smath n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)" >%s datapath=/scratch/;
+         '''%(M8R,sampling,360./sampling,0.,zcenter,radius,math.pi,ccz) +
+         '''
+         %scat axis=2 space=n %s %s |
+         transp |
+	 put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''
+         %srm %s %s
+         '''%(M8R,ccx,ccz),
+         stdin=0,
+         stdout=0
+        )
+
+    
+        #    Temp(cc+'_x',None,
+        #         'math n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)"'
+        #         %(sampling,360./sampling,0.,xcenter,radius,math.pi) )
+        #    Temp(cc+'_z',None,
+        #         'math n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)"'
+        #         %(sampling,360./sampling,0.,zcenter,radius,math.pi) )
+        #    Flow(cc,[cc+'_x',cc+'_z'],
+        #         '''
+        #         cat axis=2 space=n
+        #         ${SOURCES[0]} ${SOURCES[1]} | transp |
+        #	 put label1="" unit1="" label2="" unit2=""
+        #         ''', stdin=0)
 
 # ------------------------------------------------------------
 def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
@@ -559,7 +582,6 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
          n1=5 o1=0 d1=1 k1=1,2,3,4,5 |
          transp
          '''%(zmin,zmax,zmax,zmin,zmin))
-
     Temp(box+'_x',None,
          '''
          spike nsp=5 mag=%g,%g,%g,%g,%g
@@ -569,20 +591,20 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
     Flow(box,[box+'_x',box+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
 # ------------------------------------------------------------
-def oldmakeline(line,zmin,zmax,xmin,xmax,par):
-    Temp(line+'_z',None,
-         '''
-         spike nsp=2 mag=%g,%g
-         n1=2 o1=0 d1=1 k1=1,2 |
-         transp
-         '''%(zmin,zmax))
-    Temp(line+'_x',None,
-         '''
-         spike nsp=2 mag=%g,%g
-         n1=2 o1=0 d1=1 k1=1,2 |
-         transp
-         '''%(xmin,xmax))
-    Flow(line,[line+'_x',line+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
+#def oldmakeline(line,zmin,zmax,xmin,xmax,par):
+#    Temp(line+'_z',None,
+#         '''
+#         spike nsp=2 mag=%g,%g
+#         n1=2 o1=0 d1=1 k1=1,2 |
+#         transp
+#         '''%(zmin,zmax))
+#    Temp(line+'_x',None,
+#         '''
+#         spike nsp=2 mag=%g,%g
+#         n1=2 o1=0 d1=1 k1=1,2 |
+#         transp
+#         '''%(xmin,xmax))
+#    Flow(line,[line+'_x',line+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
 def makeline(line,zmin,zmax,xmin,xmax,par):
     M8R='$RSFROOT/bin/sf'
@@ -945,16 +967,16 @@ def wom(wom,wfld,velo,vmean,par):
     if(not par.has_key('wweight')): par['wweight']=10
     if(not par.has_key('wclip')):   par['wclip']=1.0
 
-    chop = wfld+'_chop'
-    Flow(chop,wfld,
-         '''
-         window
-         min1=%(zmin)g n1=%(nz)d
-         min2=%(xmin)g n2=%(nx)d |
-         scale axis=123
-         ''' % par)
+    #chop = wfld+'_chop'
+    #Flow(chop,wfld,
+    #     '''
+    #     window
+    #     min1=%(zmin)g n1=%(nz)d
+    #     min2=%(xmin)g n2=%(nx)d |
+    #     scale axis=123
+    #     ''' % par)
 
-    Flow(wom,[velo,chop],
+    Flow(wom,[velo,wfld],
          '''
          add add=-%g |
          scale axis=123 |
@@ -1035,7 +1057,7 @@ def wframe(frame,movie,index,custom,par):
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s'%custom)
     Plot  (frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'%index
-           + wgrey(custom,par))
+           + cgrey(custom,par))
     
 # ------------------------------------------------------------
 # elastic wavefield movie frames
