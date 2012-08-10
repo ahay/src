@@ -3,13 +3,19 @@
 import string, re, sys, os
 from rsf.proj import *
 
-if sys.platform == 'darwin':
-	timer=WhereIs('gtime')
-else:
-	timer=WhereIs('time')
 
 def Tflow(target, source, command,
 	prefix='sf',):
+	
+	if sys.platform == 'darwin':
+		time_nm='gtime'
+	else:
+		time_nm='time'
+
+	timer=WhereIs(time_nm)
+	if timer==None:
+		sys.stderr.write('Tflow need %s.'%time_nm)
+		
 	if type(target) is types.ListType:
 		tfiles = target
 	else:
@@ -40,6 +46,10 @@ def Tflow(target, source, command,
 
 
 def Mplot(target, cmd, mtx):
+	ps2pdf=WhereIs('ps2pdf')
+	pdfjam=WhereIs('pdfjam')
+	if ps2pdf == None or pdfjam==None:
+		sys.stderr.write('Mplot need ps2pdf pdfjam.')
 	try:
 		os.stat('Fig/')
 	except:
@@ -47,11 +57,12 @@ def Mplot(target, cmd, mtx):
 	Flow('Fig/'+target, target,
 		cmd+''' 
 		| %s serifs=y fat=3 color=y label="" tex=y scale=0.8
-		| ps2pdf - -
-		| pdfjam -q -o /dev/stdout --papersize "{5in,5in}"
+		| %s - -
+		| %s -q -o /dev/stdout --papersize "{5in,5in}"
 		  --trim '6.2cm 2.2cm 7.2cm 7.5cm'
-		| pdfjam -q -o /dev/stdout --papersize "{5in,5in}"
+		| %s -q -o /dev/stdout --papersize "{5in,5in}"
 		  --nup %s  
-		'''%(WhereIs('pspen'),mtx), suffix='.pdf')
+		'''%(WhereIs('pspen'),ps2pdf,pdfjam,pdfjam,mtx), 
+		suffix='.pdf')
 
 
