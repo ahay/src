@@ -1,5 +1,19 @@
 #!/usr/bin/env python
-'Converts 2D velocity files from handvel.txt to handvel.rsf'
+'''Converts 2D velocity files from handvel.txt to handvel.rsf
+-The program converts time samples from ms to s
+
+-The rsf output file will have traces equal to the number
+of CMP locations in handvel.txt. You need to interploate
+between traces for a denser grid e.g. using sfremap1
+
+-CMP locations in handvel.txt are not used in the program.
+o2 tells the program where to put the first trace and d2
+tells the program of the locations of the remaining traces.
+
+-This program uses sfinvbin1 default parameters. The program
+could possibly be enhanced to work with additional sfinvbin1
+parameters.
+'''
 
 ##   Copyright (C) 2007 University of Texas at Austin
 ##  
@@ -133,16 +147,18 @@ def myfunction(l,its):
     return
 if __name__ == "__main__":
     par=salah.Par()
-    n1=par.int("n1")
-    o1=par.float("o1")
-    d1=par.float("d1")
-    o2=par.float("o2")
-    d2=par.float("d2")
+    n1=par.int("n1")   # size of the first axis
+    o1=par.float("o1") # origin of the first axis
+    d1=par.float("d1") # sampleing in the first axis
+    o2=par.float("o2") # origin of the second axis
+    d2=par.float("d2") # sampling in the second axis
     if not (n1 or o1 or d1 or o2 or d2):
-       sys.stderr.write(usage)
+       #sys.stderr.write(usage)
+       rsf.prog.selfdoc()
        sys.exit(2)
     if sys.stdout.isatty() or sys.stdin.isatty():
-       sys.stderr.write(usage)
+       #sys.stderr.write(usage)
+       rsf.prog.selfdoc() 
        sys.exit(2)
     items=[]
     for line in sys.stdin:
