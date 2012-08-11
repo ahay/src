@@ -6,7 +6,7 @@ import pplot,math
 
 # ------------------------------------------------------------
 def Temp(o,i,r):
-    Flow(o,i,r+ ' datapath=/scratch/ ')
+    Flow(o,i,r+ ' datapath=%s '%os.environ.get('TMPDATAPATH'))
 # ------------------------------------------------------------
 
 # default parameters
@@ -469,16 +469,18 @@ def point3(cc,xcoord,zcoord,magn,par):
 # ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
     M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+    
     ccx=cc+'x'
     ccz=cc+'z'
 
     Flow(cc,None,
          '''
-         %smath n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)" >%s datapath=/scratch/;
-         '''%(M8R,sampling,360./sampling,0.,xcenter,radius,math.pi,ccx) +
+         %smath n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)" >%s datapath=%s/;
+         '''%(M8R,sampling,360./sampling,0.,xcenter,radius,math.pi,ccx,DPT) +
          '''
-         %smath n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)" >%s datapath=/scratch/;
-         '''%(M8R,sampling,360./sampling,0.,zcenter,radius,math.pi,ccz) +
+         %smath n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)" >%s datapath=%s/;
+         '''%(M8R,sampling,360./sampling,0.,zcenter,radius,math.pi,ccz,DPT) +
          '''
          %scat axis=2 space=n %s %s |
          transp |
@@ -608,6 +610,7 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
 
 def makeline(line,zmin,zmax,xmin,xmax,par):
     M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
 
     linez=line+'z'
     linex=line+'x'
@@ -615,12 +618,12 @@ def makeline(line,zmin,zmax,xmin,xmax,par):
     Flow(line,None,
          '''
          %sspike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 |
-         transp >%s datapath=/scratch/;
-         '''%(M8R,zmin,zmax,linez) +
+         transp >%s datapath=%s/;
+         '''%(M8R,zmin,zmax,linez,DPT) +
          '''
          %sspike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 |
-         transp >%s datapath=/scratch/;
-         '''%(M8R,xmin,xmax,linex) +
+         transp >%s datapath=%s/;
+         '''%(M8R,xmin,xmax,linex,DPT) +
          '''
          %scat axis=1 space=n %s %s >${TARGETS[0]};
          '''%(M8R,linex,linez) +
@@ -930,8 +933,8 @@ def oldcdzom(imag,data,velo,racq,custom,par):
     Flow( imag,jwfl,'window n3=1 f3=1')
 
 def cdzom(imag,data,velo,rcoo,custom,par):
-    
     M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
@@ -940,16 +943,16 @@ def cdzom(imag,data,velo,rcoo,custom,par):
 
     Flow(imag,[data,rcoo,velo],
          '''
-         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=/scratch/;
-         '''%(M8R,rdat) +
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdat,DPT) +
          '''
          %sawefd2d < %s cden=y %s
          vel=${SOURCES[2]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
-         wfl=%s datapath=/scratch/
+         wfl=%s datapath=%s/
          >/dev/null;
-         '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl) +
+         '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
          '''
          %swindow < %s n3=1 f3=1 >${TARGETS[0]};
          '''%(M8R,rwfl) +
