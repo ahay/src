@@ -16,6 +16,7 @@ To SCons:
 * np= parameter in Flow() for mpi programs
 * sfdocs generated for all "pens" in pens/main
 * pre-compilation of modules in book/Recipes
+* upgraded to scons-2.2.0
 
 To documentation:
 
