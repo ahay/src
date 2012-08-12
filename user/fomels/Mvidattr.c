@@ -101,8 +101,8 @@ int main (int argc, char* argv[])
 					 (fabsf(t*tp)+SF_EPS));
 			break;
 		    case 'r': /* reflection angle */
-			break;
 			at[it] = 180.*acosf(fabsf(tm)/(t+SF_EPS))/SF_PI;
+			break;
 		    case 'd': /* dip angle */
 			at[it] = 180.*acosf(fabsf(ph*tm*dt)/
 					    (fabsf(dh*tp)+SF_EPS))/SF_PI;

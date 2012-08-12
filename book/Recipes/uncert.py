@@ -24,7 +24,7 @@ def uncert(data,        # data name
     velcon.velcon(data,nv,v0,dv,nx,nh,padt,padt2,padx,v1,n1,dt,dx,units,vslope,vx0,x0,rect1,rect2)
     
     vlf=data+'-vlf'
-    vlf2=data+'-vlf2'
+    vlf2=data+'-vlf1'
     npk = data+'-npk'
 
     # To estimate uncertainty: measure dt/dv, measure dv, multiply
