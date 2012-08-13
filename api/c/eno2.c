@@ -84,6 +84,16 @@ void sf_eno2_set1 (sf_eno2 pnt, float* c /* data [n2*n1] */)
     }
 }
 
+void sf_eno2_set1_wstride (sf_eno2 pnt, float* c /* data [n2*n1] */, int stride)
+/*< Set the interpolation table. c can be changed or freed afterwords. >*/
+{
+    int i2;
+
+    for (i2 = 0; i2 < pnt->n2; i2++) {
+        sf_eno_set_wstride (pnt->ent[i2], c+i2*(pnt->n1)*stride, stride);
+    }
+}
+
 void sf_eno2_close (sf_eno2 pnt)
 /*< Free internal storage >*/
 {
