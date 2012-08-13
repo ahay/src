@@ -18,10 +18,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-
-typedef float (*sinterp)(float *in, float x, int n);
-/* generic interpolation interface */
-/*^*/
+#include <rsf.h>
 
 float sinterp_nearest(float *in, float x, int n)
 /*< nearest interpolation >*/
@@ -44,5 +41,19 @@ float sinterp_linear(float *in, float x, int n)
 	return ((1.0-d)*in[k] + d*in[k+1]);
 }
 
+
+
+typedef float (*sinterp)(float *in, float x, int n);
+/* generic interpolation interface */
+/*^*/
+
+
+sinterp sinterp_c2f(char *c)
+/*< interpolator selecter >*/
+{
+	if(strcmp(c, "nearest") == 0) return sinterp_nearest;
+	else if(strcmp(c, "linear") == 0) return sinterp_linear;
+	else return NULL;
+}
 
 

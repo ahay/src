@@ -23,65 +23,60 @@
 #include "sinterp.h"
 #include "sfilt.h"
 
-struct tag_dipfilt
+struct tag_dipflt
 {
 	int nf;
 	int n1;
 	int n2;
 	float *v1;
 	sfilt filt;
-	sinterp interp1;
-	sinterp interp2;
+	sinterp intp;
 };
 
 
-void *dipfilt_init(int mf, int m1, int m2, 
-	 sfilt flt, sinterp int1, sinterp int2)
+void *dipflt_init(int mf, int m1, int m2, 
+	 char *flt, char *interp)
 /*< initialize >*/
 {
-	struct tag_dipfilt *p;
+	struct tag_dipflt *p;
 	
-	p = (struct tag_dipfilt*) sf_alloc(sizeof(struct tag_dipfilt), 1);
+	p = (struct tag_dipflt*) sf_alloc(sizeof(struct tag_dipflt), 1);
 
 	p->nf = mf;
 	p->n1 = m1;
 	p->n2 = m2;
 
 	p->v1 = sf_floatalloc(2*mf+1);
-	p->filt = flt;
-	p->interp1 = int1;
-	p->interp2 = int2;
+	p->intp = sinterp_c2f(interp);
+	p->filt = sfilt_c2f(flt);
 	return p;
 }
 
-
-void dipfilt(void* h, float **dip, float **in, float **out)
-/*< initialize >*/
+void dipflt_close(void *h)
+/*< release memory >*/
 {
-	int i1, i2, i3;
-	struct tag_dipfilt *p;
-	float *pv, d1;
+	struct tag_dipflt *p;
+	p = (struct tag_dipflt*) h;
+	free(p->v1);
+	free(p);
+}
+
+void dipflt(void* h, float **dip, float **in, float **out)
+/*< dip filter >*/
+{
+	int i1, i2, j1;
+	struct tag_dipflt *p;
+	float *pv;
 	
 	pv = p->v1+p->nf;
-	p = (struct tag_dipfilt*) h;
+	p = (struct tag_dipflt*) h;
 
 	for(i2=p->nf; i2<p->n2-p->nf; i2++)
 	{
-		for(i1=p->nf; i1<p->n1-p->nf; i1++)
+		for(i1=0; i1<p->n1; i1++)
 		{
-			pv[0] = in[i2][i1];
-			d1 = dip[i2][i1];
-			for(i3=1; i3<=p->nf; i3++)
-			{
-				pv[i3] = p->interp1(in[i2+i3], i1+d1, p->n1);
-				d1 = p->interp2(dip[i2+i3], i1+d1, p->n1);
-			}
-			d1 = -dip[i2][i1];
-			for(i3=1; i3<=p->nf; i3++)
-			{
-				pv[-i3] = p->interp1(in[i2-i3], i1+d1, p->n1);
-				d1 = -p->interp2(dip[i2+i3], i1+d1, p->n1);
-			}
+			for(j1=-p->nf; j1<=p->nf; j1++)
+				pv[j1] = p->intp(in[i2+j1], dip[i2][i1]*j1+i1, p->n1);
 			out[i2][i1] = p->filt(2*p->nf+1, p->v1);
 		}
 	}

@@ -20,11 +20,6 @@
 
 #include <rsf.h>
 
-typedef float (*sfilt)(int,float*);
-/* generic filter interface */
-/*^*/
-
-
 float sfilt_mean(int n, float *x)
 /*< mean filter >*/
 {
@@ -42,7 +37,7 @@ float sfilt_median(int n, float *p)
 	int i1, j1, chg;
 	float temp;
 
-	for(j1=n-1; j1>=n/2; j1--)
+	for(j1=n-1; j1>=n/2+1; j1--)
 	{
 		chg=0;
 		for(i1=0; i1<j1; i1++)
@@ -58,5 +53,17 @@ float sfilt_median(int n, float *p)
 	return (p[n/2]);
 }
 
+
+typedef float (*sfilt)(int,float*);
+/* generic filter interface */
+/*^*/
+
+sfilt sfilt_c2f(char *c)
+/*< filter selecter >*/
+{
+	if(strcmp(c, "mean") == 0) return sfilt_mean;
+	else if(strcmp(c, "median") == 0) return sfilt_median;
+	else return NULL;
+}
 
 
