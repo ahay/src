@@ -39,7 +39,7 @@ int main(int argc, char*argv[])
     /* 0: maxflat; 1: lagrange */
 	if(!sf_getint("n1", &n1)) n1=50;
 	/* samples in frequency domain between (0:f_c] */
-	if(!sf_getint("nf", &nf)) nf=1;
+	if(!sf_getint("order", &nf)) nf=1;
 	/* order of PWD */
 	if(!sf_getfloat("o3", &o3)) o3=20;
 	/* first dip angle */

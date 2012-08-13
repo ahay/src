@@ -38,7 +38,7 @@ int main(int argc, char*argv[])
 	/* 0: maxflat; 1: lagrange; 2: b-spline */
 	if(!sf_getint("n1", &n1)) n1=50;
 	/* samples in frequency domain between (0:f_c] */
-	if(!sf_getint("nf", &nf)) nf=1;
+	if(!sf_getint("order", &nf)) nf=1;
 	/* order of filters */
 	if(!sf_getfloat("o2", &o2)) o2=0.1;
 	/* first phase shift */

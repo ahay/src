@@ -82,7 +82,7 @@ void dipfilt(void* h, float **dip, float **in, float **out)
 				pv[-i3] = p->interp1(in[i2-i3], i1+d1, p->n1);
 				d1 = -p->interp2(dip[i2+i3], i1+d1, p->n1);
 			}
-			out[i2][i1] = p->filt(p->v1, 2*p->nf+1);
+			out[i2][i1] = p->filt(2*p->nf+1, p->v1);
 		}
 	}
 }

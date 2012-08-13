@@ -23,7 +23,7 @@ typedef float (*sinterp)(float *in, float x, int n);
 /* generic interpolation interface */
 /*^*/
 
-float interp0(float *in, float x, int n)
+float sinterp_nearest(float *in, float x, int n)
 /*< nearest interpolation >*/
 {
 	if(x<0) return in[0];
@@ -31,7 +31,7 @@ float interp0(float *in, float x, int n)
 	else return in[(int)(x+0.5)];
 }
 
-float interp1(float *in, float x, int n)
+float sinterp_linear(float *in, float x, int n)
 /*< linear interpolation >*/
 {
 	int k;
