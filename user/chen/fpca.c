@@ -19,7 +19,6 @@
 */
 
 #include <rsf.h>
-#include "sigana.h"
 #include "_blas.h"
 
 void fpca1(float **a, int n1, int n2, float *p, float *t, int niter)
