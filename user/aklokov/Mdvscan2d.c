@@ -73,36 +73,50 @@ int   coher_;
 float dlim_;
 bool  isSemb_;
 
-bool  isVelMS;
+bool  isVelKMS;
+
 // FUNCTIONS
 
-void processGatherStack () {
-	
+void processGatherStack (float* velTrace, int cigNum, float distShift) {
+
 	float* ptrSemb = pSembPanel_;
 
 	for (int ig = 0; ig < gammaNum_; ++ig) {
 		const float curGamma = gammaStart_ + ig * gammaStep_;
 		for (int it = 0; it < tNum_; ++it, ++ptrSemb) {			
 			const float curT = tStart_ + it * tStep_;
+
+			const int velInd = (curT - v_tStart_) / v_tStep_;
+			float velMig = *(velTrace + velInd);
+
 			float curStack = 0.f;
-			for (int id = 0; id < dipNum_; ++id) {
-				const float curDip = dipStart_ + id * dipStep_;
-				if (fabs (curDip) > dlim_) continue;
-				const float curDipRad = curDip * SF_PI / 180.f;
+			for (int idist = 0; idist < cigNum; ++idist) {
+				const float curDist = distStart_ + idist * xStep_ + distShift;
+				for (int id = 0; id < dipNum_; ++id) {
+					const float curDip = dipStart_ + id * dipStep_;
+					if (fabs (curDip) > dlim_) continue;
+					const float curDipRad = curDip * SF_PI / 180.f;
+
+					const float gammaSin = curGamma * sin (curDipRad);
+					const float aux = 1 - pow (gammaSin, 2);
+					const float zd = velMig * curT / (2 * curGamma) + 1e-6;
+					const float xi = curDist / zd;
+
+					const float t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
+
+					const int tIndBase = (t - tStart_) / tStep_;
 	
-				const float t = curT * cos (curDipRad) / sqrt (1 - pow (curGamma * sin (curDipRad), 2) );
-				const int tIndBase = (t - tStart_) / tStep_;
+					for (int ic = 0; ic < coher_; ++ic) {
+						const int tInd = tIndBase + ic - coher_ / 2;
+						if (tInd < 0 || tInd >= tNum_)
+							continue;
+						const int ind = idist * tNum_ * dipNum_ + id * tNum_ + tInd;
+						const float val = *(pData_ + ind);
 
-				for (int ic = 0; ic < coher_; ++ic) {
-					const int tInd = tIndBase + ic - coher_ / 2;
-					if (tInd < 0 || tInd >= tNum_)
-						continue;
-					const int ind = id * tNum_ + tInd;
-					const float val = *(pData_ + ind);
-
-					curStack += val;
+						curStack += val;
+					}
 				}
-			}
+			}	
 			*ptrSemb = fabs (curStack);
 		}
 	}
@@ -139,7 +153,7 @@ void processGatherSemb (float* velTrace, int cigNum, float distShift) {
 
 					const float gammaSin = curGamma * sin (curDipRad);
 					const float aux = 1 - pow (gammaSin, 2);
-					const float zd = 0.001 * velMig * curT / (2 * curGamma) + 1e-6;
+					const float zd = velMig * curT / (2 * curGamma) + 1e-6;
 					const float xi = curDist / zd;
 
 					const float t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
@@ -188,14 +202,14 @@ int main (int argc, char* argv[]) {
     /* dip-angle gathers - stacks in the scattering-angle direction */
 
     if ( NULL != sf_getstring("vel") ) {
-	/* velocity model file (velocity in m/s) */ 
+	/* velocity model file (velocity in km/s) */ 
 		velFile_  = sf_input ("vel");
 		float firstvel;
 		sf_floatread (&firstvel, 1, velFile_);
-		isVelMS = true;		
-		if (firstvel < 15.f) {
-		    sf_warning ("it seems that velocity is in km/s - will be multiplied on 1000");	
-		    isVelMS = false;					
+		isVelKMS = true;		
+		if (firstvel > 15.f) {
+		    sf_warning ("it seems that velocity is in m/s - will be divided by 1000");	
+		    isVelKMS = false;					
 		}			
     } else { sf_error ("Need input: velocity model"); }
 
@@ -301,10 +315,10 @@ int main (int argc, char* argv[]) {
 	sf_seek (velFile_, 0, SEEK_SET);
 	sf_floatread (pVel_, velSize, velFile_);
 	
-	if (!isVelMS) {
+	if (!isVelKMS) {
 		float* ptrVel = pVel_;
 		for (int iv = 0; iv < velSize; ++iv, ++ptrVel)
-			*ptrVel *= 1000;
+			*ptrVel /= 1000;
 	}
 
 	for (int ix = 0; ix < xNum_; ++ix) {
@@ -338,7 +352,7 @@ int main (int argc, char* argv[]) {
 		if (isSemb_)
 			processGatherSemb (velTrace, xNum, distShift);
 		else
-			processGatherStack ();
+			processGatherStack (velTrace, xNum, distShift);
 
 		sf_floatwrite (pSembPanel_, sembSize, sembFile_);
 	}
