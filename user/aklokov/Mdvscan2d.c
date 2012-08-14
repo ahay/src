@@ -140,9 +140,10 @@ void processGatherSemb (float* velTrace, int cigNum, float distShift) {
 					const float gammaSin = curGamma * sin (curDipRad);
 					const float aux = 1 - pow (gammaSin, 2);
 					const float zd = 0.001 * velMig * curT / (2 * curGamma) + 1e-6;
-					const float p1 = -1 * curDist * gammaSin / zd;		
-				
-					const float t = curT * cos (curDipRad) * (p1 + sqrt (pow (curDist / zd, 2) + aux)) / aux;
+					const float xi = curDist / zd;
+
+					const float t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
+
 					const int tIndBase = (t - tStart_) / tStep_;
 	
 					for (int ic = 0; ic < coher_; ++ic) {
