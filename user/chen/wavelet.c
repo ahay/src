@@ -71,7 +71,7 @@ void sf_wvlt_harmonic(int nt,
 
 
 void sf_wvlt_sinc(int nt,
-	sf_complex *buf,		// in time index; out = sinc wavelet
+	float *buf,		// in time index; out = sinc wavelet
 	float *par)		/* 0- fw; */
 /*< truncated sinc wavelet >*/
 {
@@ -82,7 +82,7 @@ void sf_wvlt_sinc(int nt,
 	for(it=0;it<nt;it++)
 	{
 		if(buf[it] == 0.0) buf[it] = 1.0;
-		else	buf[it] = sin(x*creal(buf[it]))/(SF_PI*buf[it]);
+		else	buf[it] = sin(x*buf[it])/(SF_PI*buf[it]);
 	}
 }
 
