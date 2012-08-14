@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(hdata, "o3", oy);
 	sf_putfloat(hdata, "d3", dy);
 
-	if(wave!=NULL)
+	if(hwave!=NULL)
 	{
 		sf_putint(hwave, "n1", nz);
 		sf_putint(hwave, "n2", nx);
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 			for(ix=0; ix<nx; ix++)
 				data[iy][ix][it] = wave[iy][ix][zr];
 		}
-		if(wave!=NULL && it>=0 && it%jt == 0)// wave
+		if(hwave!=NULL && it%jt == 0)// wave
 		{
 			sf_floatwrite(wave[0][0], nz*nx*ny, hwave);
 		}
