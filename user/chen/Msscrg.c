@@ -1,4 +1,4 @@
-/* blend reciever gathers (T-S-R) to generate simultaneous data */
+/* Extract common reciever gathers from simultaneous data */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -20,15 +20,15 @@
 
 
 #include <rsf.h>
-#include "_blas.h"
 
 int main(int argc, char*argv[])
 {
 	sf_file in, delay, out ;
 	int n1, nt, nr, ns;
-	int ir, is, inx;
+	int ir, is;
 	int *pdelay, nn[SF_MAX_DIM], ndim;
-	float **pi, *po, alpha;
+	float *pi, **po;
+	char buf[4];
 
 	sf_init(argc, argv);
 
@@ -37,46 +37,38 @@ int main(int argc, char*argv[])
 	out = sf_output("out");
 
 	ndim = sf_filedims(in, nn);
-	if(ndim<3) sf_error("input dimensions < 3");
+	sf_shiftdim(in, out, 2);
 
 	if(!sf_histint(delay, "n1", &ns)) sf_error("n1 needed in delay");
-	n1 = nn[0];
-	if(nn[1] != ns) sf_error("delay and input has different shots");
 
 	nr = 1;
-	for(ir=2; ir<ndim; ir++) nr *= nn[ir];
+	for(ir=1; ir<ndim; ir++) nr *= nn[ir];
 
 	pdelay = sf_intalloc(ns);
 	sf_intread(pdelay, ns, delay);
-	for(is=0, nt=0; is<ns; is++)
-	if(pdelay[is]>nt) nt = pdelay[is];
-	nt += n1;
+	for(is=0, n1=0; is<ns; is++)
+	if(pdelay[is]>n1) n1 = pdelay[is];
+	n1 = nn[0] - n1;
+	if(!sf_getint("nt", &nt)) nt = n1;
+	n1 = nn[0];
 
-	pi = sf_floatalloc2(n1, ns);
-	po = sf_floatalloc(nt);
+	pi = sf_floatalloc(n1);
+	po = sf_floatalloc2(nt, nr);
+
 	sf_putint(out, "n1", nt);
-	sf_unshiftdim(in,out,2);
+	sf_putint(out, "n2", ns);
 
-	alpha = 1.0; inx =1;
 	for(ir=0; ir<nr; ir++)
 	{
-		sf_floatread(pi[0], ns*n1, in);
-		memset(po, 0, sizeof(float)*nt);
+		sf_floatread(pi, n1, in);
 		for(is=0; is<ns; is++)
-		{
-#ifndef NO_BLAS
-		saxpy_(&n1, &alpha, pi[is], &inx, po+pdelay[is], &inx);
-#else
-		for(inx=0; inx<n1; inx++)
-			po[pdelay[is]+inx] += pi[is][inx];
-#endif
-		}
-		sf_floatwrite(po, nt, out);
+		memcpy(po[is], pi+pdelay[is], nt*sizeof(float));
+		sf_floatwrite(po[0], nt*ns, out);
 	}
 
-	free(pi[0]);
-	free(pi);
+	free(po[0]);
 	free(po);
+	free(pi);
 	free(pdelay);
 
 	return 0;

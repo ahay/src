@@ -7,6 +7,7 @@ comp resample addevent mflt signal
 psss psefd mdfd4 wavmod
 lphase pwdfreq lphfilt firfreq
 fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
+ssblend sscrg
 '''
 
 pyprogs='''
@@ -38,9 +39,8 @@ env.Prepend(CPPPATH=['../../include'],
 		LIBS=[env.get('DYNLIB','')+'rsf'])
 
 if env.get('BLAS'):
-	progs += ' pca ssblend'
 	if env.get('LAPACK'):
-		progs += ' frt'
+		progs += ' frt pca'
 		env.Prepend(LIBS='lapack')
 
 for source in src:
