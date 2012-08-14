@@ -2,21 +2,23 @@ from rsf.proj import *
 
 # velocity
 Fetch('marmvel.hh','marm')
-Flow('vel','marmvel.hh','dd form=native')
+Flow('vel','marmvel.hh',
+	'''
+	dd form=native
+	''')
 Result('vel',
 	''' 
 	grey wanttitle=n color=j allpos=y 
-	screenratio=0.3125 screenht=4 labelsz=4
 	scalebar=y barreverse=y
 	''')
 
 # source
-Flow('wvlt', None, 'wavelet o=-0.05 d=0.0004 n=4000')
+Flow('wvlt', None, 'wavelet o=-0.05 d=0.0004 n=3751 para=10 ')
 Result('wvlt', 'graph title="Ricker wavelet"')
 
 Flow('shot wave', 'wvlt vel ../../sfwavmod',
 	'''
-	../../sfwavmod zr=1 xs=1000 zs=1
+	../../sfwavmod zr=2 xs=1201 zs=1 ot=0
 	vel=${SOURCES[1]} wave=${TARGETS[1]}
 	''')
 Result('shot', 'grey title="Shot"')

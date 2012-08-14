@@ -1,4 +1,4 @@
-/* Generate a wavelet */
+/* Generate a 1D signal */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -35,9 +35,15 @@ int main(int argc, char*argv[])
 	out = sf_output("out");
 
 	if ((waveform=sf_getstring("waveform"))==NULL) waveform="ricker";
-	/* waveform: ricker,sinc,harmonic */
-	if (!sf_getfloats("par", par, 4)) {par[0] = 25.0; par[1] = 0.0;}
-	/* paraameters of waveform */
+	/* waveform: ricker,sinc,harmonic,randn,rand */
+	if (!sf_getfloats("para", par, 4)) {par[0] = 25.0; par[1] = 0.0;}
+/* parameters of waveform\n
+  ricker    w0
+  sinc      w0
+  harmonic  w0    phase
+  randn     seed
+  rand      seed
+*/
 	if (!sf_getint("n", &n1)) n1 = 100;
 	/* length */
 	if (!sf_getfloat("o", &o1)) o1 = 0.0;
@@ -50,23 +56,28 @@ int main(int argc, char*argv[])
 	sf_putfloat(out, "d1", d1);
 
 	u1 = sf_floatalloc(n1);
-	for(i1=0; i1<n1; i1++)
-		u1[i1] = o1+d1*i1;
 
-	switch(waveform[0])
+	if(strcmp(waveform, "ricker")==0)
 	{
-	case 'r':
+		for(i1=0; i1<n1; i1++)	u1[i1] = o1+d1*i1;
 		sf_wvlt_rck(n1, u1, par);
-		break;
-	case 's':
-		sf_wvlt_sinc(n1, u1, par);
-		break;
-	case 'h':
+	}else if(strcmp(waveform, "harmonic")==0)
+	{
+		for(i1=0; i1<n1; i1++)	u1[i1] = o1+d1*i1;
 		sf_wvlt_harmonic(n1, u1, par);
-		break;
-	default:
-		sf_error("waveform %s not implemented", waveform);
-	}
+	}else if(strcmp(waveform, "sinc")==0)
+	{
+		for(i1=0; i1<n1; i1++)	u1[i1] = o1+d1*i1;
+		sf_wvlt_sinc(n1, u1, par);
+	}else if(strcmp(waveform, "randn")==0)
+	{
+		init_genrand(par[0]);
+		sf_randn(n1, u1);
+	}else if(strcmp(waveform, "rand")==0)
+	{
+		init_genrand(par[0]);
+		sf_random(n1, u1);
+	}else sf_error("waveform %s not implemented", waveform);
 
 	sf_floatwrite(u1, n1, out);
 

@@ -3,9 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fdip comp psss psefd mdfd4 resample addevent lphase pwdfreq mflt 
-odip fbank2 fbank1 lphfilt firfreq fbdip ldip fbpwd dipflt
-wavmod wavelet
+comp resample addevent mflt signal
+psss psefd mdfd4 wavmod
+lphase pwdfreq lphfilt firfreq
+fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
 '''
 
 pyprogs='''
@@ -37,8 +38,9 @@ env.Prepend(CPPPATH=['../../include'],
 		LIBS=[env.get('DYNLIB','')+'rsf'])
 
 if env.get('BLAS'):
-	progs += ' frt pca'
+	progs += ' pca ssblend'
 	if env.get('LAPACK'):
+		progs += ' frt'
 		env.Prepend(LIBS='lapack')
 
 for source in src:
