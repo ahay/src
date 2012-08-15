@@ -68,8 +68,8 @@ void dipflt(void* h, float **dip, float **in, float **out)
 	struct tag_dipflt *p;
 	float *pv;
 	
-	pv = p->v1+p->nf;
 	p = (struct tag_dipflt*) h;
+	pv = p->v1+p->nf;
 
 	for(i2=p->nf; i2<p->n2-p->nf; i2++)
 	{

@@ -29,6 +29,7 @@ int main(int argc, char*argv[])
 	int *pdelay, nn[SF_MAX_DIM], ndim;
 	float *pi, **po;
 	char buf[4];
+	sf_axis ax;
 
 	sf_init(argc, argv);
 
@@ -40,6 +41,8 @@ int main(int argc, char*argv[])
 	sf_shiftdim(in, out, 2);
 
 	if(!sf_histint(delay, "n1", &ns)) sf_error("n1 needed in delay");
+	ax = sf_iaxa(delay, 1);
+	sf_oaxa(out, ax, 2);
 
 	nr = 1;
 	for(ir=1; ir<ndim; ir++) nr *= nn[ir];
@@ -56,7 +59,6 @@ int main(int argc, char*argv[])
 	po = sf_floatalloc2(nt, nr);
 
 	sf_putint(out, "n1", nt);
-	sf_putint(out, "n2", ns);
 
 	for(ir=0; ir<nr; ir++)
 	{

@@ -23,11 +23,9 @@
 float sfilt_mean(int n, float *x)
 /*< mean filter >*/
 {
-	float d=0.0;
-	do{
-		n--;
-		d += x[n-1];
-	}while(n>0);
+	int i;
+	double d=0.0;
+	for (i=0; i<n; i++) d += x[i];
 	return (d/n);
 }
 
