@@ -30,7 +30,7 @@ data = {}
 # m8r wiki page, with fallback info in a config file
 
 docprogs = '''
-add attr awefd cat cmplx conjgrad cp csv2rsf cut dd disfil dottest get 
+add attr awefd2d cat cmplx conjgrad cp csv2rsf cut dd disfil dottest get 
 headerattr headercut headermath headersort headerwindow in interleave mask math
 pad pick prep4plot put real remap1 reverse rm rotate rtoc scale segyread
 segywrite spike spray srmig3 stack stretch transp window sizes figlist booklist
