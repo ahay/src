@@ -1,4 +1,4 @@
-/* 1-2-3D finite difference modeling	*/
+/* 1-2-3D finite difference modeling */
 
 /*
   Copyright (C) 2011 University of Texas at Austin
@@ -23,11 +23,11 @@
 
 int main(int argc, char* argv[])
 {
-	int it, jt, jtm, is, ig, st;			// index
-	int nt, n1, ns, ng, m[SF_MAX_DIM], nm;				 	// dimensions
+	int jt, jtm, is, st;			// index
+	int nt, n1, n2, ns, ng, m[SF_MAX_DIM], nm;				 	// dimensions
 	float ot, o1, d1;				// original
 	sf_file in, dat, wfl, vel, sgrid, ggrid; /* I/O files */
-	float *wvlt, *wave, **data;
+	float **wvlt;
 	sf_axis ax;
 	HVel hv;
 	HCoord hs, hg;
@@ -35,19 +35,30 @@ int main(int argc, char* argv[])
 
 	sf_init(argc,argv);
 
-	in = sf_input ("in");   //- source wavelet
-	vel  = sf_input ("vel");  //- velocity field
-	sgrid  = sf_input ("sgrid");  //- source grid
-	ggrid  = sf_input ("ggrid");  //- geophone grid
-	dat = sf_output("out");  //- seismic data
+	in = sf_input ("in");   
+/* source wavelet \n
+\t nt X 1: regular shot gather
+\t nt X ns: simultaneous source shotting
+*/
+	vel  = sf_input ("vel");  /* velocity field */
+	sgrid  = sf_input ("sgrid");  /* source grid */
+	ggrid  = sf_input ("ggrid");  /* geophone grid */
+	dat = sf_output("out");  /* seismic data */
  
 	if(sf_getstring("wfl")!=NULL) 
 		wfl = sf_output("wfl"); /* wavefield movie file */
 	else wfl=NULL;
 
-	ax = sf_iaxa(in, 1);
-	n1 = sf_n(ax);	o1 = sf_o(ax);	d1 = sf_d(ax);
+	if (!sf_getint("jt",&jt)) jt=1; 
+	/* time interval in observation system */
+	if (!sf_getint("jtm",&jtm)) jtm=100; 
+	/* time interval of wave movie */
+	if (!sf_getfloat("ot", &ot)) ot = 0.0; 
+	/* time delay */
+	if (!sf_getbool("verb", &verb)) verb = false; 
+	/* verbosity */
 
+	// velocity and observation system
 	hv = obs_vel(vel);
 	m[0] = sf_n(hv->z);	nm = 1;
 	if(hv->nd >= 2)	{m[1] = sf_n(hv->x); nm=2;}
@@ -57,18 +68,13 @@ int main(int argc, char* argv[])
 	ns = sf_n(hs->a2);
 	ng = sf_n(hg->a2);
 
-	if (!sf_getint("jt",&jt)) jt=1; 
-	/* time interval in observation system */
-	if (!sf_getint("jtm",&jtm)) jtm=100; 
-	/* time interval of wave movie */
-	if (!sf_getfloat("ot", &ot)) ot = o1; 
-	/* time delay */
-	if (!sf_getbool("verb", &verb)) verb = false; 
-	/* verbosity */
+	// waveform
+	ax = sf_iaxa(in, 1);
+	n1 = sf_n(ax);	o1 = sf_o(ax);	d1 = sf_d(ax);
+	if(!sf_histint(in, "n2", &n2) || n2 != ns) n2=1;
+	wvlt = sf_floatalloc2(n1, n2);
+	sf_floatread(wvlt[0], n1*n2, in);
 
-	/* allocate temporary arrays */
-	wvlt = sf_floatalloc(n1);
-	sf_floatread(wvlt, n1, in);
 
 	if(ot<o1) ot=o1;
 	st = (ot-o1)/d1;
@@ -92,39 +98,14 @@ int main(int argc, char* argv[])
 		sf_oaxa(wfl, hs->a2, hv->nd+2);
 	}
 
-	data = sf_floatalloc2(nt, ng);
+	wavmod_init(hv, d1, n1, st, jt, jtm, hg->p, ng, verb);
 
-	wavmod_init(d1, hv);
+	for (is=0; is < ns/n2; is++)
+	wavmod_shot(dat, wfl, n2, hs->p, wvlt);
 
-
-	for (is=0; is < ns; is++)
-	{
-		wavmod_shot_init();
-		for (it=0; it < n1; it++) 
-		{
-			wave = wavmod( wvlt[it], hs->p[is]);
-
-			if(it >= st && (it-st)%jt==0)
-			{
-#ifdef _OPENMP
-#pragma omp parallel for         \
-    schedule(dynamic,8)          \
-    private(ig)                  
-#endif
-				for(ig=0; ig<ng; ig++)
-				data[ig][(it-st)/jt] = wave[hg->p[ig]];
-			}
-			if(wfl!=NULL && it>st && (it-st)%jtm == 0)// wave
-				sf_floatwrite(wave, hv->nxyz, wfl);
-			if(verb) sf_warning("%d %d of %d;", is, it, n1);
-		}
-		/* output seismic data */
-		sf_floatwrite(data[0], nt*ng, dat);
-	}
 	wavmod_close();
 
-	free(data[0]);
-	free(data);
+	free(wvlt[0]);
 	free(wvlt);
 	return (0);
 }
