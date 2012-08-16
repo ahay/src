@@ -19,6 +19,9 @@
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 static	double c0, c11, c12, c21, c22, c31, c32;
 
@@ -54,6 +57,9 @@ void fd3_init(float d1, float d2, float d3)
 		c32=  -t/12.0;
 	}
 	c0  = -2.0 * (c11 + c12 + c21 + c22 +c31 + c32);
+#ifdef _OPENMP
+    omp_init();
+#endif
 }
 
 void fd3_laplacian(int n1, int n2, int n3, float *uin, float *uout)
@@ -63,6 +69,13 @@ void fd3_laplacian(int n1, int n2, int n3, float *uin, float *uout)
 	double u;
 
 	n12 = n1*n2;
+
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+	schedule(dynamic,n1)         \
+	private(i1,i2,i3,i,u)
+//	shared(n1,n2,n3,n12,i,u,uin,uout,c0,c11,c12,c21,c22,c31,c32)
+#endif
 	for (i3=0; i3 < n3; i3++) 
 	for (i2=0; i2 < n2; i2++) 
 	for (i1=0; i1 < n1; i1++) 

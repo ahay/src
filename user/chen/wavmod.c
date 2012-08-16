@@ -21,63 +21,89 @@
 #include <rsf.h>
 #include "fd3.h"
 
+#include "obsys.h"
+/*^*/
 
-static int nx, ny, nz, nxyz;
-static int is;
-static float *vel, *owv, *ud;
+static HVel vel;
+static int nxyz;
+static float *wav, *owv, *nwv, *ud;
 
-void wavmod_init(int n1, int n2, int n3, float dt, sf_file hvel,
-	int zs, int xs, int ys)
+void wavmod_init(float dt, HVel pvel)
 /*< initialize >*/
 {
-	int i1;
-	float dt2;
+	int i1, n1, n2, n3;
+	double dt2;
+	float d1, d2, d3;
 
-	nz = n1;
-	nx = n2;
-	ny = n3;
+	vel = pvel;
+
+	n1 = sf_n(vel->z); n2=1; n3=1;
+	d1 = sf_d(vel->z); d2=0.0; d3=0.0;
+	if(vel->nd >= 2) 
+	{
+		n2 = sf_n(vel->x);
+		d2 = sf_d(vel->x);
+	}
+	if(vel->nd >= 3) 
+	{
+		n3 = sf_n(vel->y);
+		d3 = sf_d(vel->y);
+	}
+
 	nxyz = n1*n2*n3;
-	is = (ys*nx+xs)*nz+zs;
 
-	vel = sf_floatalloc(nxyz);
 	owv = sf_floatalloc(nxyz);
+	wav = sf_floatalloc(nxyz);
+	nwv = sf_floatalloc(nxyz);
 	ud  = sf_floatalloc(nxyz);
 
-	sf_floatread(vel, nxyz, hvel);
-
+	fd3_init(d1, d2, d3);
 	dt2 = dt*dt;
 	for(i1=0; i1<nxyz; i1++)
-	{
-		vel[i1] = vel[i1]*vel[i1]*dt2;
-		owv[i1] = 0.0;
-		ud[i1] = 0.0;
-	}
+		vel->p[i1] = dt2*vel->p[i1]*vel->p[i1];
 }
 
+void wavmod_shot_init()
+/*< shot initialize >*/
+{
+	memset(owv, 0, nxyz*sizeof(float));
+	memset(wav, 0, nxyz*sizeof(float));
+	memset(nwv, 0, nxyz*sizeof(float));
+	memset(ud, 0, nxyz*sizeof(float));
+}
 
-
-void wavmod(float *wav, float source)
+float* wavmod(float source, int is)
 /*< time continuation >*/
 {
-	int i1;
-	float t1;
+	int i1, n1, n2, n3;
+	float *p;
+	n1 = sf_n(vel->z); n2=1; n3=1;
+	if(vel->nd >= 2) n2 = sf_n(vel->x);
+	if(vel->nd >= 3) n3 = sf_n(vel->y);
 
-	fd3_laplacian(nz, nx, ny, wav, ud);
+	fd3_laplacian(n1, n2, n3,  wav, ud);
 	ud[is] += source;
 
+#ifdef _OPENMP
+#pragma omp parallel for         \
+	schedule(dynamic,n1)          \
+	private(i1)                  
+#endif
 	for(i1=0; i1<nxyz; i1++)
-	{
-		ud[i1] *= vel[i1];
-		t1 = 2.0*wav[i1] - owv[i1] + ud[i1];
-		owv[i1] = wav[i1];
-		wav[i1] = t1;
-	}
+		nwv[i1] = 2.0*wav[i1] - owv[i1] + ud[i1]*vel->p[i1];
+	p = owv;	
+	owv = wav;
+	wav = nwv;
+	nwv = p;
+	return wav;
 }
 
 void wavmod_close()
 /*< release memory >*/
 {
 	free(owv);
+	free(wav);
+	free(nwv);
 	free(vel);
 	free(ud);
 }

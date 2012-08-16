@@ -40,8 +40,8 @@ env.Prepend(CPPPATH=['../../include'],
 
 if env.get('BLAS'):
 	if env.get('LAPACK'):
-		progs += ' frt pca'
 		env.Prepend(LIBS='lapack')
+		progs += ' frt pca'
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')

@@ -2,24 +2,44 @@ from rsf.proj import *
 
 # velocity
 Fetch('marmvel.hh','marm')
-Flow('vel','marmvel.hh',
+Flow('vel','marmvel.hh', 
 	'''
-	dd form=native
+	dd form=native 
+	| put label1="Depth" unit1="m" label2="Distance" unit2="m" 
 	''')
-Result('vel',
-	''' 
-	grey wanttitle=n color=j allpos=y 
-	scalebar=y barreverse=y
-	''')
+Result('vel', 'grey wanttitle=n color=j allpos=y scalebar=y')
 
 # source
-Flow('wvlt', None, 'wavelet o=-0.05 d=0.0004 n=3751 para=10 ')
+Flow('wvlt', None, 
+	'''
+	signal o=-0.1 d=0.0004 n=4000 para=10 
+	| put label1="Time" unit1="s"
+	''')
 Result('wvlt', 'graph title="Ricker wavelet"')
 
-Flow('shot wave', 'wvlt vel ../../sfwavmod',
+# observation
+Flow('r_',None, 
 	'''
-	../../sfwavmod zr=2 xs=1201 zs=1 ot=0
-	vel=${SOURCES[1]} wave=${TARGETS[1]}
+	math o1=0 d1=1 n1=500 output="0"
+	| put label1="Recievers" unit1=""
+	''')
+Flow('zr','r_', 'math output="2"')
+Flow('xr','r_', 'math output="x1*2+500"')
+Flow('rr', 'zr xr', 'cat ${SOURCES[1]} axis=2 | transp | dd type=int' )
+
+Flow('s_',None, 
+	'''
+	math o1=0 d1=1 n1=1 output="0"
+	| put label1="Shots" unit1=""
+	''')
+Flow('zs','s_', 'math output="1"')
+Flow('xs','s_', 'math output="x1*20+800"')
+Flow('ss', 'zs xs', 'cat ${SOURCES[1]} axis=2 | transp | dd type=int' )
+
+Flow('shot wave', 'wvlt vel rr ss  ../../sfwavmod',
+	'''
+	../../sfwavmod ot=0 wfl=${TARGETS[1]} verb=y
+	vel=${SOURCES[1]} ggrid=${SOURCES[2]} sgrid=${SOURCES[3]}
 	''')
 Result('shot', 'grey title="Shot"')
 Result('wave', 'grey title="Wave" gainpanel=e ')

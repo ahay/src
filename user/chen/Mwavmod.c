@@ -20,133 +20,112 @@
 
 #include <rsf.h>
 #include "wavmod.h"
-#include "fd3.h"
 
 int main(int argc, char* argv[])
 {
-	int ix, iy, it;			// index
-	int nz, nx, ny, nt, n1;		 	// dimensions
-	float dz, dx, dy, dt;		// increments
-	float oz, ox, oy, ot, o1;		// original
-
-	sf_file hwvlt, hwave, hdata, hvel; /* I/O files */
-	float *wvlt, ***wave, ***data;
-
-	int xs, ys, zs;			// shot positions
-	int zr;		// recevier positions
-	int jt;
+	int it, jt, jtm, is, ig, st;			// index
+	int nt, n1, ns, ng, m[SF_MAX_DIM], nm;				 	// dimensions
+	float ot, o1, d1;				// original
+	sf_file in, dat, wfl, vel, sgrid, ggrid; /* I/O files */
+	float *wvlt, *wave, **data;
+	sf_axis ax;
+	HVel hv;
+	HCoord hs, hg;
+	bool verb;
 
 	sf_init(argc,argv);
 
-	hwvlt = sf_input ("in");   //- source wavelet
-	hvel  = sf_input ("vel");  //- velocity field
-	hdata = sf_output("out");  //- seismic data
+	in = sf_input ("in");   //- source wavelet
+	vel  = sf_input ("vel");  //- velocity field
+	sgrid  = sf_input ("sgrid");  //- source grid
+	ggrid  = sf_input ("ggrid");  //- geophone grid
+	dat = sf_output("out");  //- seismic data
  
-	if(sf_getstring("wave")!=NULL) 
-		hwave = sf_output("wave"); /* wavefield movie file */
-	else hwave=NULL;
+	if(sf_getstring("wfl")!=NULL) 
+		wfl = sf_output("wfl"); /* wavefield movie file */
+	else wfl=NULL;
 
-	if (!sf_histint(hwvlt,"n1", &n1)) sf_error("n1 needed in wvlt");
-	if (!sf_histfloat(hwvlt,"d1", &dt)) sf_error("d1 needed in wvlt");
-	if (!sf_histfloat(hwvlt,"o1", &o1)) o1 = 0;
+	ax = sf_iaxa(in, 1);
+	n1 = sf_n(ax);	o1 = sf_o(ax);	d1 = sf_d(ax);
 
-	if (!sf_histint(hvel,"n1", &nz)) sf_error("n1 needed in vel");
-	if (!sf_histint(hvel,"n2", &nx)) nx = 1;
-	if (!sf_histint(hvel,"n3", &ny)) ny = 1;
-	if (!sf_histfloat(hvel,"d1", &dz)) sf_error("d1 needed in vel");
-	if (!sf_histfloat(hvel,"d2", &dx)) dx = 0.0;
-	if (!sf_histfloat(hvel,"d3", &dy)) dy = 0.0;
-	if (!sf_histfloat(hvel,"o1", &oz)) oz = 0.0;
-	if (!sf_histfloat(hvel,"o2", &ox)) ox = 0.0;
-	if (!sf_histfloat(hvel,"o3", &oy)) oy = 0.0;
+	hv = obs_vel(vel);
+	m[0] = sf_n(hv->z);	nm = 1;
+	if(hv->nd >= 2)	{m[1] = sf_n(hv->x); nm=2;}
+	if(hv->nd >= 3)	{m[2] = sf_n(hv->y); nm=3;}
+	hs = obs_coord(sgrid, m, nm);
+	hg = obs_coord(ggrid, m, nm);
+	ns = sf_n(hs->a2);
+	ng = sf_n(hg->a2);
 
-	if (!sf_getint("jt",&jt)) jt=100; 
-	/* wave movie time interval */
+	if (!sf_getint("jt",&jt)) jt=1; 
+	/* time interval in observation system */
+	if (!sf_getint("jtm",&jtm)) jtm=100; 
+	/* time interval of wave movie */
 	if (!sf_getfloat("ot", &ot)) ot = o1; 
 	/* time delay */
-
-	if (!sf_getint("xs",&xs)) xs=0; 
-	if (!sf_getint("ys",&ys)) ys=0; 
-	if (!sf_getint("zs",&zs)) zs=0; 
-	/* x-y-z position index of the source */
-	if(xs < 0 || xs >= nx) 
-		sf_error("xs (= %d) should between (0,%d)",xs,nx-1);
-	if(ys < 0 || ys >= ny) 
-		sf_error("ys (= %d) should between (0,%d)",ys,ny-1);
-	if(zs < 0 || zs >= nz) 
-		sf_error("zs (= %d) should between (0,%d)",zs,nz-1);
-
-	if (!sf_getint("zr",&zr)) zr=1; 
-	/* z dimension of receiver */
-	if(zr < 0 || zr >= nz) 
-		sf_error("z position should between (0,%d)",nz-1);
-	
-	nt = (dt*n1+o1-ot)/dt +1;
-
-	sf_putint(hdata, "n1", nt);
-	sf_putfloat(hdata, "o1", ot);
-	sf_putfloat(hdata, "d1", dt);
-	sf_putint(hdata, "n2", nx);
-	sf_putfloat(hdata, "o2", ox);
-	sf_putfloat(hdata, "d2", dx);
-	sf_putint(hdata, "n3", ny);
-	sf_putfloat(hdata, "o3", oy);
-	sf_putfloat(hdata, "d3", dy);
-
-	if(hwave!=NULL)
-	{
-		sf_putint(hwave, "n1", nz);
-		sf_putint(hwave, "n2", nx);
-		sf_putint(hwave, "n3", ny);
-		sf_putint(hwave, "n4", nt/jt);
-		sf_putfloat(hwave, "d1", dz);
-		sf_putfloat(hwave, "d2", dx);
-		sf_putfloat(hwave, "d3", dy);
-		sf_putfloat(hwave, "d4", dt*jt);
-		sf_putfloat(hwave, "o1", oz);
-		sf_putfloat(hwave, "o2", ox);
-		sf_putfloat(hwave, "o3", oy);
-		sf_putfloat(hwave, "o4", o1);
-	}
-
-	fd3_init(dz, dx, dy);
-	wavmod_init(nz, nx, ny, dt, hvel, zs, xs, ys);
+	if (!sf_getbool("verb", &verb)) verb = false; 
+	/* verbosity */
 
 	/* allocate temporary arrays */
 	wvlt = sf_floatalloc(n1);
-	sf_floatread(wvlt, n1, hwvlt);
+	sf_floatread(wvlt, n1, in);
 
-	data = sf_floatalloc3(nt, nx, ny);
-	wave  = sf_floatalloc3(nz, nx, ny);
+	if(ot<o1) ot=o1;
+	st = (ot-o1)/d1;
+	nt = (n1-st)/jt+1;
+	sf_setn(ax, nt);
+	sf_setd(ax, d1*jt);
+	sf_seto(ax, ot);
+	sf_oaxa(dat, ax, 1);
+	sf_oaxa(dat, hg->a2, 2);
+	sf_oaxa(dat, hs->a2, 3);
 
-	memset(wave[0][0], 0, nx*ny*nz);
-
-	for (it=0; it < nt; it++) 
+	if(wfl!=NULL)
 	{
-		wavmod(wave[0][0], wvlt[it]);
-
-		if(dt*it+o1 >= ot)
-		{
-			for(iy=0; iy<ny; iy++)
-			for(ix=0; ix<nx; ix++)
-				data[iy][ix][it] = wave[iy][ix][zr];
-		}
-		if(hwave!=NULL && it%jt == 0)// wave
-		{
-			sf_floatwrite(wave[0][0], nz*nx*ny, hwave);
-		}
+		sf_oaxa(wfl, hv->z, 1);
+		if(hv->nd >= 2) sf_oaxa(wfl, hv->x, 2);
+		if(hv->nd >= 3) sf_oaxa(wfl, hv->y, 3);
+		sf_setn(ax, n1/jtm);
+		sf_setd(ax, d1*jtm);
+		sf_seto(ax, ot+d1*jtm);
+		sf_oaxa(wfl, ax, hv->nd+1);
+		sf_oaxa(wfl, hs->a2, hv->nd+2);
 	}
-	/* output seismic data */
-	sf_floatwrite(data[0][0], nt*ny*nx, hdata);
 
+	data = sf_floatalloc2(nt, ng);
+
+	wavmod_init(d1, hv);
+
+
+	for (is=0; is < ns; is++)
+	{
+		wavmod_shot_init();
+		for (it=0; it < n1; it++) 
+		{
+			wave = wavmod( wvlt[it], hs->p[is]);
+
+			if(it >= st && (it-st)%jt==0)
+			{
+#ifdef _OPENMP
+#pragma omp parallel for         \
+    schedule(dynamic,8)          \
+    private(ig)                  
+#endif
+				for(ig=0; ig<ng; ig++)
+				data[ig][(it-st)/jt] = wave[hg->p[ig]];
+			}
+			if(wfl!=NULL && it>st && (it-st)%jtm == 0)// wave
+				sf_floatwrite(wave, hv->nxyz, wfl);
+			if(verb) sf_warning("%d %d of %d;", is, it, n1);
+		}
+		/* output seismic data */
+		sf_floatwrite(data[0], nt*ng, dat);
+	}
 	wavmod_close();
 
-	free(wave[0][0]);
-	free(wave[0]);
-	free(wave);
-	free(data[0][0]);
 	free(data[0]);
 	free(data);
 	free(wvlt);
 	return (0);
 }
+

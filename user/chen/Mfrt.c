@@ -20,6 +20,9 @@
 
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "frt.h"
 
@@ -145,7 +148,11 @@ int main(int argc, char* argv[])
 	}
     }
 
-
+#ifdef _OPENMP
+#pragma omp parallel for  ordered       \
+    schedule(dynamic,5)          \
+    private(iw)                  
+#endif
     for(iw=0; iw<nw; iw++)
     {
 	sf_complexread(ibuf[0], n1*nn, in);

@@ -36,8 +36,8 @@ int main(int argc, char*argv[])
 	sf_init(argc, argv);
 
 	in  = sf_input("in");
-	dip = sf_input("dip");
 	out = sf_output("out");
+	dip = sf_input("dip");
 
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type input");
 	if (!sf_histint(in, "n1", &n1)) sf_error("No n1= in input");
@@ -48,7 +48,7 @@ int main(int argc, char*argv[])
 
 	if(m1 != n1) sf_error("dip.n1=%d and in.n1=%d",m1,n1);
 	if(m2 != n2) sf_error("dip.n2=%d and in.n2=%d",m2,n2);
-	n3 = sf_leftsize(in, 3);
+	n3 = sf_leftsize(in, 2);
 	
 	if ((interp = sf_getstring("interp")) == NULL) interp = "nearest";
 	/* interpolation method: [nearest],linear */
@@ -63,11 +63,11 @@ int main(int argc, char*argv[])
 
 	/* initialize dip estimation */
 	h = dipflt_init(nf, n1, n2, filt, interp);
+	sf_floatread(u3[0], n1*n2, dip);
 
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(u1[0], n1*n2, in);
-		sf_floatread(u3[0], n1*n2, dip);
 		dipflt(h, u3, u1, u2);
 		sf_floatwrite(u2[0], n1*n2, out);
 	}

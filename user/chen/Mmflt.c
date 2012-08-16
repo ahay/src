@@ -20,6 +20,10 @@
 
 
 #include<rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "mflt.h"
 
 int main(int argc, char*argv[])
@@ -65,6 +69,11 @@ int main(int argc, char*argv[])
 	if(rect[1]>0) h2 = mflt_init(n2, rect[1]);
 	if(rect[2]>0) h3 = mflt_init(n3, rect[2]);
 
+#ifdef _OPENMP
+#pragma omp parallel for         \
+    schedule(dynamic,8)          \
+    private(i4)                  
+#endif
 	for(i4=0; i4<n4; i4++)
 	{
 		sf_floatread(u1, n123, in);
