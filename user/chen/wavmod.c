@@ -116,7 +116,7 @@ void wavmod_shot(sf_file dat, sf_file wfl, int ns, int *ps, float **ws)
 			for(ig=0; ig<ng; ig++)
 			data[ig][(it-st)/jt] = wav[pg[ig]];
 		}
-		if(wfl!=NULL && it>st && (it-st)%jtm == 0)// wave
+		if(wfl!=NULL && it>=st && (it-st)%jtm == 0)// wave
 		sf_floatwrite(wav, nxyz, wfl);
 		if(verb) sf_warning("%d of %d;", it, nt);
 	}

@@ -26,7 +26,7 @@ int main(int argc, char*argv[])
 {
 	sf_file in, delay, out ;
 	int n1, nt, nr, ns;
-	int ir, is, inx;
+	int ir, is, inx, jt;
 	int *pdelay, nn[SF_MAX_DIM], ndim;
 	float **pi, *po, alpha;
 
@@ -46,10 +46,16 @@ int main(int argc, char*argv[])
 	nr = 1;
 	for(ir=2; ir<ndim; ir++) nr *= nn[ir];
 
+	if(!sf_getint("jt", &jt)) jt=1;
+	/* subsampling nps */
+
 	pdelay = sf_intalloc(ns);
 	sf_intread(pdelay, ns, delay);
 	for(is=0, nt=0; is<ns; is++)
-	if(pdelay[is]>nt) nt = pdelay[is];
+	{
+		pdelay[is] /= jt;
+		if(pdelay[is]>nt) nt = pdelay[is];
+	}
 	nt += n1;
 
 	pi = sf_floatalloc2(n1, ns);

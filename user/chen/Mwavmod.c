@@ -84,24 +84,27 @@ int main(int argc, char* argv[])
 	sf_seto(ax, ot);
 	sf_oaxa(dat, ax, 1);
 	sf_oaxa(dat, hg->a2, 2);
-	sf_oaxa(dat, hs->a2, 3);
+	if(n2==1) sf_oaxa(dat, hs->a2, 3);
 
 	if(wfl!=NULL)
 	{
 		sf_oaxa(wfl, hv->z, 1);
 		if(hv->nd >= 2) sf_oaxa(wfl, hv->x, 2);
 		if(hv->nd >= 3) sf_oaxa(wfl, hv->y, 3);
-		sf_setn(ax, n1/jtm);
+		sf_setn(ax, (n1-st)/jtm+1);
 		sf_setd(ax, d1*jtm);
 		sf_seto(ax, ot+d1*jtm);
 		sf_oaxa(wfl, ax, hv->nd+1);
-		sf_oaxa(wfl, hs->a2, hv->nd+2);
+		if(n2==1) sf_oaxa(wfl, hs->a2, hv->nd+2);
 	}
 
 	wavmod_init(hv, d1, n1, st, jt, jtm, hg->p, ng, verb);
 
 	for (is=0; is < ns/n2; is++)
-	wavmod_shot(dat, wfl, n2, hs->p, wvlt);
+	{
+		wavmod_shot(dat, wfl, n2, hs->p, wvlt);
+		if(verb) sf_warning("shot %d of %d", is, ns/n2);
+	}
 
 	wavmod_close();
 

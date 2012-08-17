@@ -30,6 +30,7 @@ int main(int argc, char*argv[])
 	float *pi, **po;
 	char buf[4];
 	sf_axis ax;
+	int jt;
 
 	sf_init(argc, argv);
 
@@ -49,8 +50,14 @@ int main(int argc, char*argv[])
 
 	pdelay = sf_intalloc(ns);
 	sf_intread(pdelay, ns, delay);
+
+	if(!sf_getint("jt", &jt)) jt = 1;
+	/* subsampling [nps] in observation */
 	for(is=0, n1=0; is<ns; is++)
-	if(pdelay[is]>n1) n1 = pdelay[is];
+	{
+		pdelay[is] /= jt;
+		if(pdelay[is]>n1) n1 = pdelay[is];
+	}
 	n1 = nn[0] - n1;
 	if(!sf_getint("nt", &nt)) nt = n1;
 	n1 = nn[0];
