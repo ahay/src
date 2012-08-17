@@ -7,7 +7,7 @@ comp resample addevent mflt signal
 psss psefd mdfd4 wavmod
 lphase pwdfreq lphfilt firfreq
 fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
-ssblend sscrg
+ss ssblend sscrg
 '''
 
 pyprogs='''

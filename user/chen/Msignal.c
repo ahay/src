@@ -1,4 +1,4 @@
-/* Generate a 1D signal */
+/* Generate signal series */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -38,11 +38,11 @@ int main(int argc, char*argv[])
 	/* waveform: ricker,sinc,harmonic,randn,rand */
 	if (!sf_getfloats("para", par, 4)) {par[0] = 25.0; par[1] = 0.0;}
 /* parameters of waveform\n
-  ricker    w0
-  sinc      w0
-  harmonic  w0    phase
-  randn     seed
-  rand      seed
+  ricker(freq)
+  sinc(freq)
+  harmonic(freq,phase)
+  randn(seed)
+  rand(seed)
 */
 	if (!sf_getint("n", &n1)) n1 = 100;
 	/* length */
