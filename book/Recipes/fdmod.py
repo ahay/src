@@ -1158,8 +1158,8 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     
     iwindow = ' ' + \
               '''
-              nq1=%(nqz)d oq1=%(oqz)g
-              nq2=%(nqx)d oq2=%(oqx)g
+              nqz=%(nqz)d oqz=%(oqz)g
+              nqx=%(nqx)d oqx=%(oqx)g
               jsnap=%(jdata)d jdata=%(jdata)d
               ''' % par + ' '
     
