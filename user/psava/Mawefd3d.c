@@ -1,4 +1,7 @@
-/* 3D acoustic time-domain FD modeling */
+/* 3D acoustic time-domain FD modeling
+4th order in space, 2nd order in time. Absorbing boundary conditions.
+Invisible parameter due to self-doc parsing bug: 
+nb=[2] Boundary padding in grid points */
 /*
   Copyright (C) 2008 Colorado School of Mines
   
@@ -114,12 +117,12 @@ int main(int argc, char* argv[])
 #endif
     /*------------------------------------------------------------*/
 
-    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
-    if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
-    if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
-    if(! sf_getbool("expl",&expl)) expl=false; /* "exploding reflector" */
-    if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing BC */
-    if(! sf_getbool("cden",&cden)) cden=false; /* constant density */
+    if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
+    if(! sf_getbool("snap",&snap)) snap=false; /* Wavefield snapshots flag */
+    if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
+    if(! sf_getbool("expl",&expl)) expl=false; /* Multiple sources, one wvlt */
+    if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
+    if(! sf_getbool("cden",&cden)) cden=false; /* Constant density */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -128,9 +131,9 @@ int main(int argc, char* argv[])
     Fvel = sf_input ("vel"); /* velocity  */
     Fsou = sf_input ("sou"); /* sources   */
     Frec = sf_input ("rec"); /* receivers */
-    Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
-    if(!cden) Fden = sf_input("den"); /* density */
+    if( snap) Fwfl = sf_output("wfl"); /* wavefield */
+    if(!cden) Fden = sf_input ("den"); /* density   */
 
     /*------------------------------------------------------------*/
     /* axes */
@@ -138,7 +141,6 @@ int main(int argc, char* argv[])
     az = sf_iaxa(Fvel,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
     ax = sf_iaxa(Fvel,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
     ay = sf_iaxa(Fvel,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /* space */
-
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
 
@@ -146,7 +148,6 @@ int main(int argc, char* argv[])
     nz = sf_n(az); dz = sf_d(az);
     nx = sf_n(ax); dx = sf_d(ax);
     ny = sf_n(ay); dy = sf_d(ay);
-
     ns = sf_n(as);
     nr = sf_n(ar);
     /*------------------------------------------------------------*/
@@ -154,8 +155,10 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* other execution parameters */
     if(! sf_getint("jdata",&jdata)) jdata=1;
-    if(snap) {  /* save wavefield every *jsnap* time steps */
+    /* # of t steps at which to save receiver data */
+    if(snap) {
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;        
+        /* # of t steps at which to save wavefield */ 
     }
     /*------------------------------------------------------------*/
 
@@ -169,13 +172,13 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az);
-	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax);
-	if(!sf_getint  ("nqy",&nqy)) nqy=sf_n(ay);
+	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az); /* Saved wfld window nz */
+	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax); /* Saved wfld window nx */
+	if(!sf_getint  ("nqy",&nqy)) nqy=sf_n(ay); /* Saved wfld window ny */
 
-	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az);
-	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax);
-	if(!sf_getfloat("oqy",&oqy)) oqy=sf_o(ay);
+	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az); /* Saved wfld window oz */
+	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax); /* Saved wfld window ox */
+	if(!sf_getfloat("oqy",&oqy)) oqy=sf_o(ay); /* Saved wfld window oy */
 
 	dqz=sf_d(az);
 	dqx=sf_d(ax);
@@ -363,9 +366,9 @@ int main(int argc, char* argv[])
                     DX(uo,ix,iy,iz,idx) * rox[iy][ix][iz] +
                     DY(uo,ix,iy,iz,idy) * roy[iy][ix][iz] );
             }
-		}
-	    }   
-	}
+            }
+            }   
+        }
 
 	/* inject acceleration source */
 	if(expl) {
@@ -435,12 +438,10 @@ int main(int argc, char* argv[])
 
     free(**vt); free(*vt); free(vt);
 
+    free(ww);
     free(ss);
     free(rr);
     free(dd);
-    free(ww);
 
     exit (0);
 }
-
-

@@ -1,6 +1,7 @@
-/* 2D acoustic time-domain FD modeling.
-4th order in space, 2nd order in time. Absorbing boundary conditions
-*/
+/* 2D acoustic time-domain FD modeling
+4th order in space, 2nd order in time. Absorbing boundary conditions.
+Invisible parameter due to self-doc parsing bug: 
+nb=[2] Boundary padding in grid points */
 /*
   Copyright (C) 2007 Colorado School of Mines
   
@@ -111,12 +112,12 @@ int main(int argc, char* argv[])
 #endif
     /*------------------------------------------------------------*/
 
-    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
-    if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
-    if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
-    if(! sf_getbool("expl",&expl)) expl=false; /* "exploding reflector" */
-    if(! sf_getbool("dabc",&dabc)) dabc=false; /* absorbing BC */
-    if(! sf_getbool("cden",&cden)) cden=false; /* constant density */
+    if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
+    if(! sf_getbool("snap",&snap)) snap=false; /* Wavefield snapshots flag */
+    if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
+    if(! sf_getbool("expl",&expl)) expl=false; /* Multiple sources, one wvlt */
+    if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
+    if(! sf_getbool("cden",&cden)) cden=false; /* Constant density */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -125,8 +126,8 @@ int main(int argc, char* argv[])
     Fvel = sf_input ("vel"); /* velocity  */
     Fsou = sf_input ("sou"); /* sources   */
     Frec = sf_input ("rec"); /* receivers */
-    Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
+    if( snap) Fwfl = sf_output("wfl"); /* wavefield */
     if(!cden) Fden = sf_input ("den"); /* density   */
 
     /*------------------------------------------------------------*/
@@ -149,8 +150,10 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* other execution parameters */
     if(! sf_getint("jdata",&jdata)) jdata=1;
-    if(snap) {  /* save wavefield every *jsnap* time steps */
+    /* # of t steps at which to save receiver data */
+    if(snap) {
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;        
+        /* # of t steps at which to save wavefield */ 
     }
     /*------------------------------------------------------------*/
 
@@ -164,11 +167,10 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az);
-	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax);
-
-	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az);
-	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax);
+	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az); /* Saved wfld window nz */
+	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax); /* Saved wfld window nx */
+	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az); /* Saved wfld window oz */
+	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax); /* Saved wfld window ox */
 
 	dqz=sf_d(az);
 	dqx=sf_d(ax);
@@ -327,13 +329,12 @@ int main(int argc, char* argv[])
 		    caz*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
 		    cbz*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);
 		
-            if(!cden) {
-		        /* density term */
-		        ua[ix][iz] -= (
-		            DZ(uo,ix,iz,idz) * roz[ix][iz] +
-		            DX(uo,ix,iz,idx) * rox[ix][iz] );
+            if(!cden) { /* density term */
+                ua[ix][iz] -= (
+		    DZ(uo,ix,iz,idz) * roz[ix][iz] +
+		    DX(uo,ix,iz,idx) * rox[ix][iz] );
             }
-	    }
+            }
 	}   
 
 	/* inject acceleration source */
@@ -406,7 +407,5 @@ int main(int argc, char* argv[])
     free(rr);
     free(dd);
 
-
     exit (0);
 }
-
