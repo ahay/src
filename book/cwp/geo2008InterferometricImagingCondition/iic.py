@@ -448,8 +448,8 @@ def pimage(cic,iic,
 
     iwindow = ' ' + \
               '''
-              nq1=%(nqz)d oq1=%(oqz)g
-              nq2=%(nqx)d oq2=%(oqx)g
+              nqz=%(nqz)d oqz=%(oqz)g
+              nqx=%(nqx)d oqx=%(oqx)g
               jsnap=%(jdata)d jdata=%(jdata)d
               ''' % par + ' '
     
@@ -496,8 +496,8 @@ def aimage(cic,iic,
 
     iwindow = ' ' + \
               '''
-              nq1=%(nqz)d oq1=%(oqz)g
-              nq2=%(nqx)d oq2=%(oqx)g
+              nqz=%(nqz)d oqz=%(oqz)g
+              nqx=%(nqx)d oqx=%(oqx)g
               jsnap=%(jdata)d jdata=%(jdata)d
               ''' % par + ' '
 
@@ -673,8 +673,8 @@ def wdfic(cii,
     # ------------------------------------------------------------ 
     iwindow = ' ' + \
               '''
-              nq1=%(nqz)d oq1=%(oqz)g
-              nq2=%(nqx)d oq2=%(oqx)g
+              nqz=%(nqz)d oqz=%(oqz)g
+              nqx=%(nqx)d oqx=%(oqx)g
               jsnap=%(jdata)d jdata=%(jdata)d
               ''' % par + ' '
     # ------------------------------------------------------------

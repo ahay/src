@@ -82,13 +82,13 @@ def iparam(par):
     
     pari['nt']=par['nt']+pari['tpad']
 
-    pari['nq1']=par['nzq']
-    pari['oq1']=par['ozq']
-    pari['dq1']=par['dzq']
+    pari['nqz']=par['nzq']
+    pari['oqz']=par['ozq']
+    pari['dqz']=par['dzq']
 
-    pari['nq2']=par['nxq']
-    pari['oq2']=par['oxq']
-    pari['dq2']=par['dxq']
+    pari['nqx']=par['nxq']
+    pari['oqx']=par['oxq']
+    pari['dqx']=par['dxq']
 
     return pari
 
