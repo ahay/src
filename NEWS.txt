@@ -19,6 +19,7 @@ To SCons:
 * upgraded to scons-2.2.0
 
 To documentation:
+* Self-doc is complete now for sfawefd2d and 3d
 
 To APIs:
 * python API (m8r or rsf.api) is now always installed
@@ -44,6 +45,7 @@ To programs:
 * oglpen stops movie on pressing 'n' or 'm', menu on left button on
   Macs
 * creating rsfpwd library in user/fomels to avoid code duplication
+* sfawefd2d and 3d: constant-density flag. Improved speed, memory usage
 
 ===Bug fixes===
 
@@ -68,7 +70,9 @@ In programs:
 In the build system:
 * Fixed failed dependency on gendoc.h when installing pens
 
-===Changes in defaults===
+===Changes in defaults and interfaces===
+
+* In sflwefd: *q1 and *q2 parameters become *qx and *qz, respectively
 
 ==Release 1.3 (2012-04-22)==
 
