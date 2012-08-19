@@ -74,9 +74,9 @@ int main(int argc, char* argv[])
 #endif
 
     sf_axis   ac1=NULL,ac2=NULL;
-    int       nq1,nq2;
-    float     oq1,oq2;
-    float     dq1,dq2;
+    int       nqz,nqx;
+    float     oqz,oqx;
+    float     dqz,dqx;
     float     **uc=NULL;
 
     /*------------------------------------------------------------*/
@@ -143,15 +143,15 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	if(!sf_getint  ("nq1",&nq1)) nq1=sf_n(a1);
-	if(!sf_getint  ("nq2",&nq2)) nq2=sf_n(a2);
-	if(!sf_getfloat("oq1",&oq1)) oq1=sf_o(a1);
-	if(!sf_getfloat("oq2",&oq2)) oq2=sf_o(a2);
-	dq1=sf_d(a1);
-	dq2=sf_d(a2);
+	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(a1);
+	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(a2);
+	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(a1);
+	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(a2);
+	dqz=sf_d(a1);
+	dqx=sf_d(a2);
 
-	ac1 = sf_maxa(nq1,oq1,dq1);
-	ac2 = sf_maxa(nq2,oq2,dq2);
+	ac1 = sf_maxa(nqz,oqz,dqz);
+	ac2 = sf_maxa(nqx,oqx,dqx);
 
 	/* check if the imaging window fits in the wavefield domain */
 
