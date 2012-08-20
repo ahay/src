@@ -20,6 +20,9 @@
 
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "svd.h"
 #include "pca.h"
@@ -60,6 +63,11 @@ int main(int argc, char* argv[])
 
 	n3 = sf_leftsize(in, 2);
 
+#ifdef _OPENMP
+#pragma omp parallel for  ordered       \
+    schedule(dynamic,n3/10+1)          \
+    private(i3)                  
+#endif
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(u1[0], n1*n2, in);
