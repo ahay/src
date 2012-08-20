@@ -100,11 +100,14 @@ int main(int argc, char* argv[])
 
 	wavmod_init(hv, d1, n1, st, jt, jtm, hg->p, ng, verb);
 
-	for (is=0; is < ns/n2; is++)
+	if(n2==1)
+	for (is=0; is < ns; is++)
 	{
-		wavmod_shot(dat, wfl, n2, hs->p, wvlt);
+		wavmod_shot(dat, wfl, 1, hs->p+is, wvlt);
 		if(verb) sf_warning("shot %d of %d", is, ns/n2);
 	}
+	else 
+		wavmod_shot(dat, wfl, ns, hs->p, wvlt);
 
 	wavmod_close();
 
