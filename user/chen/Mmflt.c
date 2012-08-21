@@ -72,7 +72,7 @@ int main(int argc, char*argv[])
 #ifdef _OPENMP
 #pragma omp parallel for         \
     schedule(dynamic,8)          \
-    private(i4)                  
+    private(i1,i2, i3,i4)                  
 #endif
 	for(i4=0; i4<n4; i4++)
 	{

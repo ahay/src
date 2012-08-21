@@ -20,9 +20,9 @@
 
 
 #include <rsf.h>
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+//#ifdef _OPENMP
+//#include <omp.h>
+//#endif
 
 #include "svd.h"
 #include "pca.h"
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	int n1, n2, n3, nc, nc0, n0;
 	int i3;
 	float eta, **u1, **u2, **u, *s, **v;
-
+	bool verb;
 
     sf_init(argc, argv);
 
@@ -48,6 +48,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
 
+    if (!sf_getbool("verb",&verb) ) verb=true;
+    /* verbosity */
     if (!sf_getint("nc",&nc0) ) nc0=n1;
     /* number of components [ 0 < nc < n1 ] */
 	if (!sf_getfloat("eta",&eta)) eta=0.9;
@@ -62,12 +64,12 @@ int main(int argc, char* argv[])
     s = sf_floatalloc(n0);
 
 	n3 = sf_leftsize(in, 2);
-
+/*
 #ifdef _OPENMP
 #pragma omp parallel for  ordered       \
-    schedule(dynamic,n3/10+1)          \
-    private(i3)                  
-#endif
+	schedule(dynamic,n3/10+1)          \
+	private(i3)                  
+#endif */
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(u1[0], n1*n2, in);
@@ -77,6 +79,7 @@ int main(int argc, char* argv[])
 		pca_klt(n1, n2, nc, s, v, u1);
 		pca_iklt(n1, n2, nc, u, u1, n1, u2);
 		sf_floatwrite(u2[0], n1*n2, out);
+		if(verb) sf_warning("%d of %d", i3, n3);
 	}
 
     free(u1[0]);
