@@ -49,7 +49,7 @@ int   vNum_;
 float vStep_;
 float vStart_;
 
-int   vw_;
+int   wh_;
 
 int main (int argc, char* argv[]) {
 
@@ -126,9 +126,9 @@ int main (int argc, char* argv[]) {
     /* increment of velocities */
 	if (!vStep_) {sf_warning ("vd value is changed to 50"); vStep_ = 50.f;}
 
-    if ( !sf_getint ("vw",   &vw_) )   vw_ = 11;
+    if ( !sf_getint ("wh",   &wh_) )   wh_ = 11;
 	/* height of a vertical window for semblance calculation */
-	if (!vw_) {sf_warning ("vertical window size is changed to 1"); vw_ = 1;}
+	if (!wh_) {sf_warning ("vertical window size is changed to 1"); wh_ = 1;}
 
     sf_putint    (outFile, "n1", tNum_);
 	sf_putint    (outFile, "n2", pNum_);
@@ -224,7 +224,7 @@ int main (int argc, char* argv[]) {
 			}
 		}
 		// semblance calculation
-		const int vwhalf = vw_ / 2;
+		const int vwhalf = wh_ / 2;
 		for (int ip = 0; ip < pNum_; ++ip) {
 			const int ts = ip * tNum_;
 #ifdef _OPENMP 
@@ -238,7 +238,7 @@ int main (int argc, char* argv[]) {
 				int ccount = 0;
 				int totalCount = 0;
 
-				for (int ic = 0, iw = it - vwhalf; ic < vw_; ++ic, ++iw) {
+				for (int ic = 0, iw = it - vwhalf; ic < wh_; ++ic, ++iw) {
 					if (iw < 0 || iw > tNumRed) continue;
 					const int ind = ts + iw;
 					sampleSq   += pow (zo [ind], 2);
