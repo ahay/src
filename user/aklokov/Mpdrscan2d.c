@@ -1,4 +1,4 @@
-/* Veocity Scan by Parametric Development of Reflections */
+/* Velocity Scan by 2D Parametric Development of Reflections */
 /*
   Copyright (C) 2012 University of Texas at Austin
   
@@ -234,9 +234,10 @@ int main (int argc, char* argv[]) {
 
 				float sampleSq = 0.f;	
 				float sqSample = 0.f;
-				int iw = 0;
+			
 				int ccount = 0;
 				int totalCount = 0;
+
 				for (int ic = 0, iw = it - vwhalf; ic < vw_; ++ic, ++iw) {
 					if (iw < 0 || iw > tNumRed) continue;
 					const int ind = ts + iw;
