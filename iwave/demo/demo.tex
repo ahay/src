@@ -67,9 +67,9 @@ This simple 2D model embeds an anticline or dome in an otherwise
 undisturbed package of layers. The velocity and density models are
 depicted in Figures \ref{fig1} and \ref{fig2}.
 
-\cite[]{SymesVdovina:09} use this model to illustrate the {\em
+\cite{SymesVdovina:09} use this model to illustrate the {\em
   interface error} phenomenon: the tendency, first reported by
-\cite[]{Brown:84}, of all finite difference schemes for wave
+\cite{Brown:84}, of all finite difference schemes for wave
 propagation to exhibit first order error, regardless of formal order,
 for models with material parameter discontinuities. The shot record
 (Figure \ref{fig3}, acquisition geometry described in caption) looks
@@ -81,9 +81,9 @@ position in 2D space, hence can be sampled at any rate at all. Figures
 at four different rates. The scheme used is the 2nd order in time,
 4th order in space staggered grid scheme, which is formally 2nd order
 convergent like the original 2nd order scheme suggested by
-\cite[]{Vir:84}, but has better dispersion suppression. Nonetheless,
+\cite{Vir:84}, but has better dispersion suppression. Nonetheless,
 the figures clearly show the first order error, in the form of a
-grid-dependent time shift, predicted by \cite[]{Brown:84}. See
+grid-dependent time shift, predicted by \cite{Brown:84}. See
 \cite{SymesVdovina:09} for more examples, analysis, and discussion.
 
 \section{Building IWAVE outside of Madagascar}
@@ -127,7 +127,7 @@ will produce a directory {\tt \$IWAVE/demo/demo1/demo20m}, within which you will
 find all of the result files for this example, always including the output data file {\tt data.su}.
 
 Inspection of the {\tt SConstruct} file in {\tt demo1} will show that
-the modeling tool used is {\tt \$IWAVE/asg2/main/asg.x}, the IWAVE
+the modeling tool used is {\tt \$IWAVE/asg/main/asg.x}, the IWAVE
 acoustic modeling command. This command reads its parameters from a
 par file. Four par files are present in {\tt demo1}, each one defining
 a modeling job, corresponding to a given level of grid refinement. The
