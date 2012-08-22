@@ -23,7 +23,7 @@
 
 
 \begin{document}
-\title{IWAVE Demonstration Package - Draft 28.05.12}
+\title{IWAVE Demonstration Package - Draft 22.08.12}
 \author{William. W. Symes \thanks{The Rice Inversion Project,
 Department of Computational and Applied Mathematics, Rice University,
 Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
@@ -61,7 +61,7 @@ at source location $\bx_s$.
 
 The bulk modulus and buoyancy (reciprocal density) are the natural parameters in a time-stepping discretization of this equation. I will display velocity and density instead. IWAVE's acoustic application converts velocity and density to bulk modulus and buoyancy as part of the problem setup phase.
 
-\section{The dome model - {\tt demo1}}
+\section{The dome model}
 
 This simple 2D model embeds an anticline or dome in an otherwise
 undisturbed package of layers. The velocity and density models are
@@ -86,31 +86,45 @@ the figures clearly show the first order error, in the form of a
 grid-dependent time shift, predicted by \cite[]{Brown:84}. See
 \cite{SymesVdovina:09} for more examples, analysis, and discussion.
 
-\section{Using {\tt demo1}}
-IWAVE and all of its parts build with SConstruct. For instructions on
-installing IWAVE (and all other TRIP software) see 
+\section{Building IWAVE outside of Madagascar}
+IWAVE and all of its parts build with SConstruct, either as part of the Madagascar environment, or independently. This section describes the build of the IWAVE demos in a standalone installation. 
+
+For instructions on TRIP software (including IWAVE) independently of Madagascar, see 
 \begin{verbatim}
 www.trip.caam.rice.edu/software/admin/doc/html/install.html
 \end{verbatim}
 
-To build {\tt demo1},
+To build the IWAVE demo examples and this pdf document,
 \begin{itemize}
-\item install IWAVE somewhere - I will use  {\tt \$IWAVE} to denote
-  the path to this directory  
-\item build the input data:
-\begin{itemize} 
-  \item {\tt cd \$IWAVE/demo/model/data}
-\item {\tt scons}
-\end{itemize}
-\item build demo1:
+\item install IWAVE somewhere, following the instructions in the web document referenced above - I will use  {\tt \$IWAVE} to denote
+  the path to the top-level IWAVE directory;  
+\item build {\tt demo1}, {\tt demo2},...:
 \begin{itemize}
 \item {\tt cd \$IWAVE/demo/demo1}
 \item {\tt scons}
 \end{itemize}
+\item install the figures (this is optional, only needed if you have done something to change them - reference figure files are included with the download)
+\begin{itemize}
+\item {\tt cd \$IWAVE/demo/demo1/fig}
+\item {\tt cp fig*.ps ../../Fig}
 \end{itemize}
-Note that the finest (2.5 m) grid consists of roughly 10 million
+\item build this document:
+\begin{itemize}
+\item {\tt cd \$IWAVE/demo}
+\item {\tt scons}
+\end{itemize}
+\end{itemize}
+Note that the finest (2.5 m) grid used in any of the {\tt demo1} examples consists of roughly 10 million
 gridpoints. Consequently the modeling runs collectively take a few
-minutes on a single thred.
+minutes on a single thread, for this example. The coarsest grid (20 m) on the other hand runs in a couple of seconds. 
+
+It is possible to run individual examples within each demo directory: for example,
+\begin{verbatim}
+cd $IWAVE/demo/demo1
+scons demo20m
+\end{verbatim}
+will produce a directory {\tt \$IWAVE/demo/demo1/demo20m}, within which you will 
+find all of the result files for this example, always including the output data file {\tt data.su}.
 
 Inspection of the {\tt SConstruct} file in {\tt demo1} will show that
 the modeling tool used is {\tt \$IWAVE/asg2/main/asg.x}, the IWAVE
@@ -119,10 +133,10 @@ par file. Four par files are present in {\tt demo1}, each one defining
 a modeling job, corresponding to a given level of grid refinement. The
 meaning of each parameter in the par file is described in the IWAVE
 web documentation:
-
 \begin{verbatim}
 www.trip.caam.rice.edu/software/iwave/doc/html/index.html
 \end{verbatim}
+All other demos are organized similarly.
 
 \section{Acknowledgements}
 Development of IWAVE was supported by the SEG Advanced Modeling (SEAM) project, by the National Science Foundation under awards 0620821 and 0714193, and by the sponsors of The Rice Inversion Project. The IWAVE project owes a great deal to several open source seismic software packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully acknowledge. 
