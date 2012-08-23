@@ -211,6 +211,7 @@ int main (int argc, char* argv[]) {
 				const float curPos = pStart_ + ip * pStep_;
 				const float l0 = curPos - shotPos;			
 				const int vxInd = vtNum_ * (curPos - vxStart_) / vxStep_;
+				const float forA = 4 * l0 * (curOffset - l0);
 
 				for (int it = 0; it < tNum_; ++it) {	
 					const float t0 = tStart_ + it * tStep_;
@@ -219,12 +220,11 @@ int main (int argc, char* argv[]) {
 					const int vtInd = (t0 - vtStart_) / vtStep_;
 					const int vInd  = vxInd + vtInd;
 					const float vel = velModel [vInd];
-
-					const float a = 0.25 * t0 * t0 / (l0 * (curOffset - l0) );
-
+					// get time
+					const float a = t0 * t0 / forA;
 					const float t = curOffset * sqrt (a + 1 / pow (vel, 2) );
 
-					// calc function limits
+					// calc curve limits
 					const float forLim = offsetSq / (vel * t);
 					const float limitLeft  = halfOffset - forLim;
 					const float limitRight = halfOffset + forLim;					
@@ -272,9 +272,9 @@ int main (int argc, char* argv[]) {
 
 	int offset = 0;
 	sf_seek (outFile, offset, SEEK_SET);
-	sf_floatwrite (semb, zoSize, outFile);
+	sf_floatwrite (zo, zoSize, outFile);
 	sf_seek (auxFile, offset, SEEK_SET);
-	sf_floatwrite (zo, zoSize, auxFile);
+	sf_floatwrite (semb, zoSize, auxFile);
 	
     free (data);
     free (zo);
