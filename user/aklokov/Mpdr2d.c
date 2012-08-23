@@ -194,8 +194,6 @@ int main (int argc, char* argv[]) {
     memset ( semb,  0, zoSize * sizeof (float) );   
 	memset ( count, 0, zoSize * sizeof (int)   );   
 
-	const float vel = 2000;
-
 	// loop over shots
 	for (int is = 0; is < shotNum_; ++is) {				
 	    sf_warning ("shot %d of %d;", is + 1, shotNum_);	
@@ -212,10 +210,16 @@ int main (int argc, char* argv[]) {
 			for (int ip = 0; ip < pNum_; ++ip) {
 				const float curPos = pStart_ + ip * pStep_;
 				const float l0 = curPos - shotPos;			
+				const int vxInd = vtNum_ * (curPos - vxStart_) / vxStep_;
 
 				for (int it = 0; it < tNum_; ++it) {	
 					const float t0 = tStart_ + it * tStep_;
-					
+
+					// get velocity
+					const int vtInd = (t0 - vtStart_) / vtStep_;
+					const int vInd  = vxInd + vtInd;
+					const float vel = velModel [vInd];
+
 					const float a = 0.25 * t0 * t0 / (l0 * (curOffset - l0) );
 
 					const float t = curOffset * sqrt (a + 1 / pow (vel, 2) );
