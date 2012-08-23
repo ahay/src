@@ -27,10 +27,11 @@ int main(int argc, char*argv[])
 {
 	sf_file in,  out;
 	int i1, i2, i3, n1, n2, n3;
-	float lamda, **u1, **u2, **u3, par[4];
+	float lamda, **u1, **u2, **u3, sigma;
 	bool twod;
-	similor op;
+	kernel op;
 	void *h1, *h2;
+	char *str;
 
 	sf_init(argc, argv);
 
@@ -39,24 +40,26 @@ int main(int argc, char*argv[])
 
 	if(!sf_getbool("twod", &twod)) twod=false;
 	/* y, 2D smoothing */
-	if ((op=similor_c2f(sf_getstring("similor")))==NULL) op=similor_gaussian;
+	if ((str=sf_getstring("kernel"))==NULL) str="gaussian";
 	/* similarity: gaussian */
-	if (!sf_getfloats("para", par, 4)) {par[0] = 25.0; par[1] = 0.0;}
-	/* similor parameter */
+	if (!sf_getfloat("sigma", &sigma)) sigma=1.0;
+	/* normalizing parameter */
 	if(!sf_getfloat("lamda", &lamda)) lamda=0.8;
 	/* lamda */
+
+	op = kernel_c2f(str);
 
 	if(!sf_histint(in, "n1", &n1)) sf_error("n1 needed in input");
 	if(!sf_histint(in, "n2", &n2)) {n2=1; twod=false;}
 	n3 = sf_leftsize(in, 2);
 
 	u1 = sf_floatalloc2(n1, n2);
-	h1 = beeps_init(n1, op, par);
+	h1 = beeps_init(n1, op, sigma, lamda);
 	if(twod)
 	{
 		u2 = sf_floatalloc2(n1, n2);
 		u3 = sf_floatalloc2(n1, n2);
-		h2 = beeps_init(n2, op, par);
+		h2 = beeps_init(n2, op, sigma, lamda);
 	}
 
 	for(i3=0; i3<n3; i3++)
@@ -65,15 +68,15 @@ int main(int argc, char*argv[])
 		if(twod)
 		{
 			memcpy(u2[0], u1[0], n1*n2*sizeof(float));
-			for(i2=0; i2<n2; i2++)	beeps(h1, u2[i2], 1, lamda);
-			for(i1=0; i1<n2; i1++)	beeps(h2, u2[0]+i1, n1, lamda);
+			for(i2=0; i2<n2; i2++)	beeps(h1, u2[i2], 1);
+			for(i1=0; i1<n2; i1++)	beeps(h2, u2[0]+i1, n1);
 			memcpy(u3[0], u1[0], n1*n2*sizeof(float));
-			for(i1=0; i1<n2; i1++)	beeps(h2, u3[0]+i1, n1, lamda);
-			for(i2=0; i2<n2; i2++)	beeps(h1, u3[i2], 1, lamda);
+			for(i1=0; i1<n2; i1++)	beeps(h2, u3[0]+i1, n1);
+			for(i2=0; i2<n2; i2++)	beeps(h1, u3[i2], 1);
 			for(i1=0; i1<n1*n2; i1++)
 				u1[0][i1] = 0.5*(u2[0][i1]+u3[0][i1]);
 		} else
-		for(i2=0; i2<n2; i2++)	beeps(h1, u1[i2], 1, lamda);
+		for(i2=0; i2<n2; i2++)	beeps(h1, u1[i2], 1);
 		sf_floatwrite(u1[0], n1*n2, out);
 	}
 

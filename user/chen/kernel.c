@@ -1,4 +1,4 @@
-/* Similarity operator */
+/* nokernelear kernel functions */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -22,22 +22,37 @@
 #include <rsf.h>
 
 
-float similor_gaussian(float a, float b, float *p)
-/*< Gaussian similarity >*/
+float kernel_gaussian(float t)
+/*< normalized Gaussian function >*/
 {
-	float t;
-	t = (a-b)/p[0];
 	return expf(-t*t/2.0);
 }
 
-typedef float (*similor)(float a, float b, float *p);
-/* similarity operator interface */
+float kernel_sigmoid(float t)
+/*< sigmoid/logistic function >*/
+{
+	return 1.0 / ( 1 + expf(-t) );
+}
+
+float kernel_dsigmoid(float t)
+/*< sigmoid/logistic differential >*/
+{
+	float a, b;
+	a = expf(-t);
+	b = 1+a;
+	return 2*a / (b*b);
+}
+
+typedef float (*kernel)(float a);
+/* nonlinear kernel interface */
 /*^*/
 
-similor similor_c2f(char *c)
+kernel kernel_c2f(char *c)
 /*< operator selector >*/
 {
-	if(strcmp(c,"gaussian")==0)	return similor_gaussian;
+	if(strcmp(c,"gaussian")==0)	return kernel_gaussian;
+	else if(strcmp(c,"sigmoid")==0)	return kernel_sigmoid;
+	else if(strcmp(c,"dsigmoid")==0)	return kernel_dsigmoid;
 	else return NULL;
 }
 

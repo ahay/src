@@ -21,17 +21,17 @@
 
 #include <rsf.h>
 
-#include "similor.h"
+#include "kernel.h"
 /*^*/
 
 typedef struct{
 	int n;
 	float *p, *q;
-	similor op;
-	float *par;
+	kernel op;
+	float sigma, lamda;
 }BEEPS;
 
-void* beeps_init(int n, similor op, float *par)
+void* beeps_init(int n, kernel op, float sigma, float lamda)
 /*< initialize >*/
 {
 	BEEPS *h;
@@ -40,7 +40,8 @@ void* beeps_init(int n, similor op, float *par)
 	h->q = sf_floatalloc(n);
 	h->n = n;
 	h->op = op;
-	h->par = par;
+	h->sigma = sigma;
+	h->lamda = lamda;
 	return h;
 }
 
@@ -55,7 +56,7 @@ void beeps_close(void *p)
 	free(h);
 }
 
-void beeps(void *p, float *x, int inc, float lamda)
+void beeps(void *p, float *x, int inc)
 /*< beeps >*/
 {
 	int i, k;
@@ -69,19 +70,21 @@ void beeps(void *p, float *x, int inc, float lamda)
 	for(k=1; k<h->n; k++)
 	{
 		xk = x[k*inc];
-		r = h->op(xk, h->p[k-1], h->par)*lamda;
+		r = ( xk - h->p[k-1] ) / h->sigma;
+		r = h->op(r) * h->lamda;
 		h->p[k] =(1-r)*xk + r*h->p[k-1];
 
 		i = h->n - 1 -k;
 		xk = x[i*inc];
-		r = h->op(xk, h->q[i+1], h->par)*lamda;
+		r = (xk - h->q[i+1]) / h->sigma;
+		r = h->op(r) * h->lamda;
 		h->q[i] =(1-r)*xk + r*h->q[i+1];
 	}
 
 	for(k=0; k<h->n; k++)
 	{
 		i = k*inc;
-		x[i] = (h->p[k] + h->q[k] - (1-lamda)*x[i])/(1+lamda);
+		x[i] = (h->p[k] + h->q[k] - (1-h->lamda)*x[i]) / (1+h->lamda);
 	}
 }
 
