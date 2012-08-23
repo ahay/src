@@ -178,6 +178,18 @@ int main (int argc, char* argv[]) {
 	const int   halfXApp = xApp_ / 2;
 	const float epsSq = eps_ * eps_;
 
+	// weight function 
+
+	float* weight = sf_floatalloc (xApp_);
+	float wstack = 0.f;
+	for (int ix = 0; ix < xApp_; ++ix) {
+		weight[ix] = xApp_ > 1 ? pow (sin (M_PI * ix / (xApp_ - 1) ), 2) : 1.f;
+		wstack += weight[ix]; 
+	}
+	for (int ix = 0; ix < xApp_; ++ix) {
+		weight[ix] /= wstack;
+	}
+
 	// input files
 	sembFile_  = sf_input (sembTag);
 	paramFile_ = sf_input (paramTag);
@@ -186,11 +198,12 @@ int main (int argc, char* argv[]) {
 		sf_warning ("regularization: CIG %d of %d;", ix + 1, xNum_);
 
         int xNum = xApp_;       
-        size_t startInd = ix - halfXApp;
+        int startInd = ix - halfXApp;
+		int wshift = 0;
 
 		// boundary checking
         int temp = ix - halfXApp;
-		if (temp < 0) { xNum += temp; startInd -= temp; }
+		if (temp < 0) { xNum += temp; startInd -= temp; wshift = -temp; }
 		temp = xNum_ - (ix + halfXApp) - 1;
 		if (temp < 0) xNum += temp;
 
@@ -237,7 +250,7 @@ int main (int argc, char* argv[]) {
 			float* pSemb = semb + it;			
 			float sembStack = 0.f;		    
 			for (int ix = 0; ix < xNum; ++ix, pSemb += tNum_)
-				sembStack += *pSemb;
+				sembStack += *pSemb * weight [ix + wshift];
 			*pMb += sembStack * sembStack;	
 			*pR = sembStack;	
 		}
@@ -248,7 +261,7 @@ int main (int argc, char* argv[]) {
 			float* pData = data + it;						
 			float horStack = 0.f;		    
 		    for (int ix = 0; ix < xNum; ++ix, pSemb += tNum_, pData += tNum_)
-				horStack += *pData * (*pSemb);
+				horStack += *pData * (*pSemb) * weight [ix + wshift];
 			*pR *= horStack;
 		}	
 		// - correct end values
@@ -276,6 +289,8 @@ int main (int argc, char* argv[]) {
 	}
 
 	sf_warning (".");
+
+	free (weight);
 
 	sf_fileclose (paramFile_);
 	sf_fileclose (sembFile_);
