@@ -169,9 +169,7 @@ int main (int argc, char* argv[]) {
 	for (int iv = 0; iv < vNum_; ++iv) {
 
 		float vel = vStart_ + iv * vStep_;
-
-		sf_warning ("scanning: velocity %d of %d - %g;", iv + 1, vNum_, vel);		
-	    
+    
 		memset ( zo,    0, zoSize * sizeof (float) );   
 	    memset ( zoSq,  0, zoSize * sizeof (float) );   
 	    memset ( semb,  0, zoSize * sizeof (float) );   
@@ -179,6 +177,7 @@ int main (int argc, char* argv[]) {
 
 		// loop over shots
 		for (int is = 0; is < shotNum_; ++is) {				
+		    sf_warning ("scanning: velocity %d of %d - %g; shot %d of %d;", iv + 1, vNum_, vel, is + 1, shotNum_);
 			const float shotPos = shotStart_ + shotStep_ * is;
 			// loop over receivers
 			for (int ir = 0; ir < recNum_; ++ir) {						
@@ -243,11 +242,9 @@ int main (int argc, char* argv[]) {
 					const int ind = ts + iw;
 					sampleSq   += pow (zo [ind], 2);
 					sqSample   += zoSq [ind];
-					totalCount += count [ind];
-					ccount += 1;
+					if (totalCount < count [ind]) totalCount = count [ind];
 				}
-				totalCount /= ccount;
-				const float curSemb = sqSample ? sampleSq / ( totalCount * sqSample ) : 0.f;
+				const float curSemb = sqSample && totalCount ? sampleSq / ( totalCount * sqSample ) : 0.f;
 				semb [ts + it] = curSemb;
 			}
 		}	
