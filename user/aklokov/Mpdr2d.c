@@ -238,7 +238,7 @@ int main (int argc, char* argv[]) {
 					const int indZO   = ip * tNum_ + tInd;
 					zo    [indZO] += sample;
 					zoSq  [indZO] += sample*sample;
-					count [indZO] += 1;
+					count [indZO] += 1;									
 				}
 			}
 		}
