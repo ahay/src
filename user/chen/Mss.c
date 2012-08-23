@@ -1,4 +1,4 @@
-/* blend reciever gathers (T-S-R) to generate simultaneous data */
+/* generate simultaneous sources grid from delay file */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -38,11 +38,11 @@ int main(int argc, char*argv[])
 	sf_shiftdim(in, out, 1);
 
 
-	if(!sf_getint("n1", &n1)) n1=1000;
-	if(!sf_getfloat("o1", &o1)) o1=0.0;
-	if(!sf_getfloat("d1", &d1)) d1=0.004;
-	if((l1=sf_getstring("l1")) == NULL) l1="Time";
-	if((u1=sf_getstring("u1")) == NULL) u1="s";
+	if(!sf_getint("n1", &n1)) n1=1000; /* samples */
+	if(!sf_getfloat("o1", &o1)) o1=0.0; /* sampling interval */
+	if(!sf_getfloat("d1", &d1)) d1=0.004; /* original  */
+	if((l1=sf_getstring("l1")) == NULL) l1="Time"; /* label "Time" */
+	if((u1=sf_getstring("u1")) == NULL) u1="s"; /* unit "s" */
 
 	ax = sf_maxa(n1, o1, d1);
 	sf_setlabel(ax, l1);
