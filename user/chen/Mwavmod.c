@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 		if(hv->nd >= 3) sf_oaxa(wfl, hv->y, 3);
 		sf_setn(ax, (n1-st)/jtm+1);
 		sf_setd(ax, d1*jtm);
-		sf_seto(ax, ot+d1*jtm);
+		sf_seto(ax, ot);
 		sf_oaxa(wfl, ax, hv->nd+1);
 		if(n2==1) sf_oaxa(wfl, hs->a2, hv->nd+2);
 	}
