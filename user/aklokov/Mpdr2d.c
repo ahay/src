@@ -209,33 +209,30 @@ int main (int argc, char* argv[]) {
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif					
-			for (int it = 0; it < tNum_; ++it) {	
-				const float curTime = tStart_ + it * tStep_;
-				if (curTime < 1e-6) continue;
-				// take sample
-				const int dataInd = forDataInd + it;
-				const float sample = data[dataInd];
-				// calc function limits
-				const float forLim = offsetSq / (vel * curTime);
-				const float limitLeft  = halfOffset - forLim;
-				const float limitRight = halfOffset + forLim;
+			for (int ip = 0; ip < pNum_; ++ip) {
+				const float curPos = pStart_ + ip * pStep_;
+				const float l0 = curPos - shotPos;			
 
-				// loop over zero-offset positions
-				for (int ip = 0; ip < pNum_; ++ip) {
-					const float curPos = pStart_ + ip * pStep_;
-					const float l0 = curPos - shotPos;			
+				for (int it = 0; it < tNum_; ++it) {	
+					const float t0 = tStart_ + it * tStep_;
+					
+					const float a = 0.25 * t0 * t0 / (l0 * (curOffset - l0) );
+
+					const float t = curOffset * sqrt (a + 1 / pow (vel, 2) );
+
+					// calc function limits
+					const float forLim = offsetSq / (vel * t);
+					const float limitLeft  = halfOffset - forLim;
+					const float limitRight = halfOffset + forLim;					
 					if (l0 < limitLeft || l0 > limitRight) continue;
 
-					const float a = pow (curTime, 2) - pow (curOffset / vel, 2);
-					const float b = pow (l0 - halfOffset, 2);
-					const float c = pow (halfOffset, 2);
-
-					const float t0 = c ? sqrt ( a * (1 - b / c) ) : curTime;
-					const int tInd = (t0 - tStart_) / tStep_;
-		
+					const int tInd = (t - tStart_) / tStep_;
 					if (tInd < 0 || tInd > tNumRed) continue; 
-	
-					const int indZO   = ip * tNum_ + tInd;
+
+					const int dataInd = forDataInd + tInd;
+					const float sample = data [dataInd];
+
+					const int indZO   = ip * tNum_ + it;
 					zo    [indZO] += sample;
 					zoSq  [indZO] += sample*sample;
 					count [indZO] += 1;									
