@@ -121,7 +121,7 @@ FILE * iwave_fopen(char ** name,
 	return retfp;
       }
 
-      fprintf(stream,"iwave_fopen: temp file name = %s\n",*name);
+      //      fprintf(stream,"iwave_fopen: temp file name = %s\n",*name);
 
       /* open stream - always in w+ mode */
       if (!(retfp=fdopen(fd,"w+"))) {

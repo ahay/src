@@ -33,9 +33,9 @@ def cmdx(target, source, env):
     os.system('/bin/rm -rf ' + str(target[0]) + '; mkdir ' + str(target[0]))
     base = str(target[0]).split('/')[1]
     tgt = str(target[0]) + '/' + base + '.rpt';
-    print 'tgt = ' + tgt
+#    print 'tgt = ' + tgt
     cmdl='./' + str(source[0]) + '>' + tgt
-    print cmdl
+#    print cmdl
     os.system(cmdl)
     ref = thispath + '/' + base + '.rpt_ref'
     if os.path.exists(ref):
@@ -59,7 +59,7 @@ if len(srcs) > 0:
         env.Program(pprog,prog)
         prout = pname + '/' + pname + '.rpt'
 	praux = pname + '.aux'
-	print 'pname = ' + pname + ' prout = ' + prout + ' praux = ' + praux
+#	print 'pname = ' + pname + ' prout = ' + prout + ' praux = ' + praux
         t = env.Command([pname],[pprog],cmdx) 
 	Clean(t, pname)
 
