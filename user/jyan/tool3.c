@@ -61,8 +61,8 @@ wfs2d wfsep_init(sf_axis  ax,
     wfs->UPz  = sf_floatalloc2(sf_n(az),sf_n(ax));
     wfs->UPx  = sf_floatalloc2(sf_n(az),sf_n(ax));
 
-    wfs->ftz=sf_fft3a1_init(sf_n(az),sf_n(ax),1);
-    wfs->ftx=sf_fft3a2_init(sf_n(az),sf_n(ax),1);
+    wfs->ftz = sf_fft3a1_init(sf_n(az),sf_n(ax),1);
+    wfs->ftx = sf_fft3a2_init(sf_n(az),sf_n(ax),1);
 
     return wfs;
 }

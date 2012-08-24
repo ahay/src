@@ -23,6 +23,7 @@ density
 convolve2
 ewefd2dtti
 ewefd3dtti
+ederiv
 ederiv2d
 ederiv3d
 ederiv3dfilters
