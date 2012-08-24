@@ -123,6 +123,7 @@ def check_all(context):
     fftw(context) # FDNSI
     petsc(context) # FDNSI
     psp(context) #FDNSI
+    sparse(context) #FDNSI
 
 def identify_platform(context):
     global plat
@@ -1320,6 +1321,37 @@ def psp(context):
         context.Result(context_failure)
         need_pkg('psp', fatal=False)
 
+def sparse(context):
+    context.Message("checking for SuiteSparse ... ")
+
+    oldlibs = context.env.get('LIBS',[])
+    sparselibs = ['umfpack','amd','suitesparseconfig','cholmod','colamd','blas']
+    context.env['LIBS'] = oldlibs+sparselibs
+
+    text = '''
+    #include <umfpack.h>
+    int main(void) {
+    int    n = 3;
+    int    Ap [ ] = {0,2,4,6};
+    int    Ai [ ] = {0,1,0,2,1,2};
+    double Ax [ ] = {2.,3.,3.,-1.,4.,-3.};
+    double *null = (double *) NULL;
+    void *Symbolic;
+    (void) umfpack_di_symbolic (n, n, Ap, Ai, Ax, &Symbolic, null, null);
+    umfpack_di_free_symbolic (&Symbolic) ;
+    return 0;
+    }\n'''
+    res = context.TryLink(text,'.c')
+
+    context.env['LIBS'] = oldlibs
+
+    if res:
+        context.Result(res)
+        context.env['SPARSELIBS'] = sparselibs
+    else:
+        context.Result(context_failure)
+        need_pkg('SuiteSparse', fatal=False)
+
 def ncpus():
     'Detects number of CPUs'
     if plat['OS'] in ('linux','posix'):
@@ -1877,6 +1909,7 @@ def options(file):
     opts.Add('PSPLIBS','PSP - libraries')
     opts.Add('PSPEXTRA','PSP - extra libraries')
     opts.Add('PSPCXX','PSP - compiler')
+    opts.Add('SPARSELIBS','The SuiteSparse library')
     opts.Add('FFTW','The FFTW library')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
