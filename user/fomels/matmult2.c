@@ -44,3 +44,18 @@ void matmult2_lop (bool adj, bool add,
     }
 }
 
+void matmult2 (int nx, const float* x, float* y, void* mat) 
+/*< square linear operator, no adjoint >*/
+{
+    float** A;
+    int ix, iy;
+
+    A = (float**) mat;
+
+    for (iy = 0; iy < nx; iy++) {
+	y[iy] = 0.;
+	for (ix = 0; ix < nx; ix++) {
+	    y[iy] += A[iy][ix] * x[ix];
+	}
+    }
+}

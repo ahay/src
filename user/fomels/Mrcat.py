@@ -18,6 +18,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os,sys,string,tempfile
+from subprocess import Popen, call
 import rsf.path, rsf.prog
 
 bindir = os.path.join(rsf.prog.RSFROOT,'bin')
@@ -29,11 +30,8 @@ def rcat(files,options,out):
     'Call sfcat recursively on a list of files'
     global sfcat, sfrm, datapath
     if len(files) <= 3:
-        stdout = os.dup(1)
-        os.dup2(out,1)
-        os.spawnv(os.P_WAIT,sfcat,['sfcat',]+options+files)
-        os.dup2(stdout,1)
-        os.close(out)
+        p = Popen([sfcat]+options+files,stdout=out,close_fds=True)
+        p.wait()
     else:
         middle = len(files)/2
         first = files[:middle]
@@ -43,12 +41,7 @@ def rcat(files,options,out):
         rcat(first,options,fd)
         rcat(secon,options,sd)
         rcat([ffile,sfile],options,out)
-        for tmp in ((fd,ffile),(sd,sfile)):
-            try:
-                os.system(sfrm + ' ' + tmp[1])
-                os.close(tmp[0])
-            except:
-                pass
+        call([sfrm,ffile,sfile])
 
 if __name__ == "__main__":
     options = []

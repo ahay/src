@@ -145,7 +145,8 @@ def identify_platform(context):
                 plat['OS'] = 'linux'
                 plat['distro'] = 'fedora'
                 plat['version'] = dist()[1]
-            elif dist()[0].lower() == 'redhat':
+            elif dist()[0].lower() == 'redhat' or \
+                    dist()[0].lower()[:7] == 'red hat':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'rhel' # Red Hat Enterprise Linux
                 plat['version'] = dist()[1]
@@ -590,6 +591,7 @@ def tiff(context):
     LIBS.pop()
 
 pkg['libgd'] = {'suse':'gd-devel',
+                'rhel':'gd-devel',
                 'ubuntu':'libgd2-xpm-dev'}
 
 def gd(context):

@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
 
-    if (!sf_getbool("mig",&mig) && !sf_getbool("adj",&mig)) mig=false;
+    if (!sf_getbool("mig",&mig)) mig=false;
     /* if n, modeling; if y, migration */
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */

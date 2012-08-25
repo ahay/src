@@ -3,6 +3,7 @@
 #include <rsf.h>
 
 #include "matmult2.h"
+#include "gmres.h"
 
 int main (void) {
     float** a;
@@ -51,6 +52,21 @@ int main (void) {
 	}
 	printf ("\n");
     }
+
+    printf ("gmres\n------\n");
+    gmres_init(4,4);
+
+    for (iter =0; iter < 5; iter++) {
+	for (i=0; i < 4; i ++) {
+	    x[i] = 0.0f;
+	}
+	gmres( y, x, matmult2, a, iter, 0.01*SF_EPS, false); 
+	printf ("x = ");
+	for (i=0; i < 4; i ++) {
+	    printf (" %12.8f",x[i]);
+	}
+	printf ("\n");
+    }    
 
     exit(0);
 }

@@ -17,6 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, sys
+from subprocess import Popen
 import rsf.prog
 
 fft = os.path.join(rsf.prog.RSFROOT,'bin','sffft3')
@@ -28,7 +29,7 @@ def run(args):
             adj = arg[4:]
     if args and not os.isatty(sys.stdin.fileno()):
         args.extend(['sym=y','inv='+adj])
-    os.spawnv(os.P_WAIT,fft,['sffft3',]+args)
+    Popen([fft]+args)
 
 if __name__ == "__main__":
     run(sys.argv[1:])
