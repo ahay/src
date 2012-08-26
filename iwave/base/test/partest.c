@@ -2,6 +2,7 @@
 
 int main(int argc, char ** argv) {
 
+  FILE * fp = NULL;
   int err=0;
   PARARRAY * par = ps_new();
   char * s = NULL;
@@ -18,7 +19,66 @@ int main(int argc, char ** argv) {
   float x = 0.0f;
   double xx = 0.0;
 
-  if (err=ps_createfile(par,"test/test.par")) {
+  // create test par file
+  char * tname = (char *)malloc(128*sizeof(char));
+  memset(tname,'\0',128);
+  strcpy(tname,"test/partest/test.par");
+
+  if (!(fp = iwave_fopen(&tname,"w",NULL,stderr))) {
+    fprintf(stderr,"PANIC!\n");
+    exit(1);
+  }
+  fprintf(fp,"n1=721 d1=2.500000e+00 o1=0.000000e+00\n");
+  fprintf(fp,"n2=3121 d2=2.500000e+00 o2=0.000000e+00\n");
+  fprintf(fp,"n3=1 d3=1.000000e+00 o3=3.300000e+03\n");
+  fprintf(fp,"data_type=velocity\n");
+  fprintf(fp,"data_format=native_float\n");
+  fprintf(fp,"in=../../model/data/vp2d_2.5m.rsf@\n");
+  fprintf(fp,"1.4-svn	sfdd	demo/model/data:	sergey@Sergeys-MacBook-Air.local	Thu Jun  7 02:38:15 2012\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"	data_format=\"xdr_float\"\n");
+  fprintf(fp,"	esize=4\n");
+  fprintf(fp,"	in=\"stdout\"\n");
+  fprintf(fp,"	in=\"stdin\"\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"1.4-svn	sfdd	trip/iwave/demo1:	wsymes@william-symess-macbook-pro-15.local	Sun Jul  1 10:22:23 2012\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"	data_format=\"native_float\"\n");
+  fprintf(fp,"	esize=4\n");
+  fprintf(fp,"	in=\"stdout\"\n");
+  fprintf(fp,"	in=\"stdin\"\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"1.4-svn	sfwindow	trip/iwave/demo1:	wsymes@william-symess-macbook-pro-15.local	Sun Jul  1 10:22:23 2012\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"	d2=20.0000012314156\n");
+  fprintf(fp,"	n2=391\n");
+  fprintf(fp,"	o1=0\n");
+  fprintf(fp,"	o2=0\n");
+  fprintf(fp,"	data_format=\"native_float\"\n");
+  fprintf(fp,"	esize=4\n");
+  fprintf(fp,"	in=\"stdout\"\n");
+  fprintf(fp,"	d1=20\n");
+  fprintf(fp,"	n1=91\n");
+  fprintf(fp,"	in=\"stdin\"\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"1.4-svn	sfput	trip/iwave/demo1:	wsymes@william-symess-macbook-pro-15.local	Sun Jul  1 10:22:23 2012\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"	data_format=\"native_float\"\n");
+  fprintf(fp,"	unit=km/s\n");
+  fprintf(fp,"	label=Velocity\n");
+  fprintf(fp,"	in=\"/var/tmp/trip/iwave/demo1/vp3.rsf@\"\n");
+  fprintf(fp,"	unit1=m\n");
+  fprintf(fp,"	label1=\n");
+  fprintf(fp,"	unit2=m\n");
+  fprintf(fp,"	label2=Distance\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"\n");
+  fprintf(fp,"\n");
+  
+  fflush(fp);
+  iwave_fclose(fp);
+
+  if (err=ps_createfile(par,"test/partest/test.par")) {
     fprintf(stderr,"Error from ps_createfile: err=%d\n",err);
     ps_delete(&par);
     exit(1);

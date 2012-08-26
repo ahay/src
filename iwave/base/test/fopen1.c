@@ -1,10 +1,15 @@
 #include "iwave_fopen.h"
 
-#define FILE1 "test/h1.su"
-#define FILE2 "test/f1.su"
-#define FILE3 "test/f2.su"
+#define FILE1 "test/fopen1/file1"
+#define FILE2 "test/fopen1/file1"
+#define FILE3 "test/fopen1/file3"
 
 int main(int argc, char ** argv) {
+
+  // generate 3 data files
+  system("echo \"sunull nt=101 ntr=11 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100\" > test/fopen1/file1");
+  system("echo \"sunull nt=101 ntr=11 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100\" > test/fopen1/file2");
+  system("echo \"sunull nt=201 ntr=21 dt=0.002|sushw key=sx a=1000|sushw key=gx a=2000 b=-100\" > test/fopen1/file3");
 
   FILE * fp1 = NULL;
   FILE * fp2 = NULL;

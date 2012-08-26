@@ -108,11 +108,25 @@ FILE * iwave_fopen(char ** name,
 
     if (fpr==((struct filestat *)NULL)) {
 
+      /* first identify DATAPATH, if it exists*/
+      char * dpath = getenv("DATAPATH");
+      int namelen = NLEN;
+      if (dpath) namelen += strlen(dpath)+1;
+
       /*      fprintf(stream,"new temp file construction\n");*/
       /* first, generate name - NOTE: THIS IS MEMORY THAT
-	 MUST BE MANAGED BY THE CALLING UNIT */
-      *name = (char *)usermalloc_(NLEN*sizeof(char));
-      strcpy(*name,"./tmp.XXXXXX");
+	 MUST BE MANAGED BY THE CALLING UNIT 
+	 Note that DATAPATH is used as a path, if it is defined, else the
+	 current working directory
+      */
+      *name = (char *)usermalloc_(namelen*sizeof(char));
+      memset(*name,'\0',namelen);
+      if (dpath) {
+	strcat(*name,dpath);
+	if (strlen(dpath) && (dpath[strlen(dpath)-1] != '/')) strcat(*name,"/");
+      }
+      else strcat(*name,"./");
+      strcat(*name,"tmp.XXXXXX");
 
       fd=mkstemp(*name);
       if (fd<0) {
@@ -214,7 +228,7 @@ FILE * iwave_fopen(char ** name,
       *name=(char *)usermalloc_((strlen(fpr->nm)+1)*sizeof(char));
       strcpy(*name,fpr->nm);
 
-      fprintf(stream,"iwave_fopen - re-use temp file %s\n",*name);
+      //      fprintf(stream,"iwave_fopen - re-use temp file %s\n",*name);
     }
 
     /* in either case, return file pointer */
