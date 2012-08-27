@@ -241,9 +241,11 @@ int main(int argc, char* argv[]) {
 	for (int g = 0; g < ngpu; g++){
 		cudaSetDevice(g);
 		cudaMalloc(&d_bell[g], (2*nbell+1)*(2*nbell+1)*(2*nbell+1)*sizeof(float));
+		sf_check_gpu_error("cudaMalloc d_bell");
 		cudaMemcpy(d_bell[g], h_bell, (2*nbell+1)*(2*nbell+1)*(2*nbell+1)*sizeof(float), cudaMemcpyDefault);
+		sf_check_gpu_error("copy d_bell to device");
 	}
-	sf_check_gpu_error("copy d_bell to device");
+	
 	/*------------------------------------------------------------*/
 	
 	/*------------------------------------------------------------*/
@@ -326,9 +328,11 @@ int main(int argc, char* argv[]) {
 	for (int g = 0; g < ngpu; g++){
 		cudaSetDevice(g);
 		cudaMalloc(&d_ww[g], ns*nc*nt*sizeof(float));
+		sf_check_gpu_error("cudaMalloc source wavelet to device");
 		cudaMemcpy(d_ww[g], h_ww, ns*nc*nt*sizeof(float), cudaMemcpyDefault);
+		sf_check_gpu_error("copy source wavelet to device");
 	}
-	sf_check_gpu_error("copy source wavelet to device");
+	
     /*------------------------------------------------------------*/
 
 	
@@ -341,8 +345,8 @@ int main(int argc, char* argv[]) {
 	for (int g = 0; g < ngpu; g++){
 		cudaSetDevice(g);
 		cudaMalloc(&d_dd[g], nr*nc*sizeof(float));
+		sf_check_gpu_error("allocate data arrays");
 	}
-	sf_check_gpu_error("allocate data arrays");
     /*------------------------------------------------------------*/
 	
 	
@@ -375,6 +379,7 @@ int main(int argc, char* argv[]) {
 		cudaMalloc(&d_Sw101[g], ns * sizeof(float));
 		cudaMalloc(&d_Sw110[g], ns * sizeof(float));
 		cudaMalloc(&d_Sw111[g], ns * sizeof(float));
+		sf_check_gpu_error("cudaMalloc source interpolation coeficients to device");
 		cudaMemcpy(d_Sw000[g], cs->w000, ns * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_Sw001[g], cs->w001, ns * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_Sw010[g], cs->w010, ns * sizeof(float), cudaMemcpyDefault);
@@ -382,9 +387,10 @@ int main(int argc, char* argv[]) {
 		cudaMemcpy(d_Sw100[g], cs->w100, ns * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_Sw101[g], cs->w101, ns * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_Sw110[g], cs->w110, ns * sizeof(float), cudaMemcpyDefault);
-		cudaMemcpy(d_Sw111[g], cs->w111, ns * sizeof(float), cudaMemcpyDefault);		
+		cudaMemcpy(d_Sw111[g], cs->w111, ns * sizeof(float), cudaMemcpyDefault);
+		sf_check_gpu_error("copy source interpolation coeficients to device");
+		
 	}
-	sf_check_gpu_error("copy source interpolation coeficients to device");
 	
 	// z, x, and y coordinates of each source
 	int **d_Sjz = (int**)malloc(ngpu*sizeof(int*));
@@ -395,11 +401,12 @@ int main(int argc, char* argv[]) {
 		cudaMalloc(&d_Sjz[g], ns * sizeof(int));
 		cudaMalloc(&d_Sjx[g], ns * sizeof(int));
 		cudaMalloc(&d_Sjy[g], ns * sizeof(int));
+		sf_check_gpu_error("cudaMalloc source coords to device");
 		cudaMemcpy(d_Sjz[g], cs->jz, ns * sizeof(int), cudaMemcpyDefault);
 		cudaMemcpy(d_Sjx[g], cs->jx, ns * sizeof(int), cudaMemcpyDefault);
 		cudaMemcpy(d_Sjy[g], cs->jy, ns * sizeof(int), cudaMemcpyDefault);	
+		sf_check_gpu_error("copy source coords to device");
 	}
-	sf_check_gpu_error("copy source coords to device");
 	
 	
 	/* calculate 3d linear interpolation coefficients for receiver locations and copy to each GPU*/
@@ -423,6 +430,7 @@ int main(int argc, char* argv[]) {
 			cudaMalloc(&d_Rw101[g], nr * sizeof(float));
 			cudaMalloc(&d_Rw110[g], nr * sizeof(float));
 			cudaMalloc(&d_Rw111[g], nr * sizeof(float));
+			sf_check_gpu_error("cudaMalloc receiver interpolation coefficients to device");
 			cudaMemcpy(d_Rw000[g], cr->w000, nr * sizeof(float), cudaMemcpyDefault);
 			cudaMemcpy(d_Rw001[g], cr->w001, nr * sizeof(float), cudaMemcpyDefault);
 			cudaMemcpy(d_Rw010[g], cr->w010, nr * sizeof(float), cudaMemcpyDefault);
@@ -431,9 +439,10 @@ int main(int argc, char* argv[]) {
 			cudaMemcpy(d_Rw101[g], cr->w101, nr * sizeof(float), cudaMemcpyDefault);
 			cudaMemcpy(d_Rw110[g], cr->w110, nr * sizeof(float), cudaMemcpyDefault);
 			cudaMemcpy(d_Rw111[g], cr->w111, nr * sizeof(float), cudaMemcpyDefault);
+			sf_check_gpu_error("copy receiver interpolation coefficients to device");
+			
 		}
 	}
-	sf_check_gpu_error("copy receiver interpolation coefficients to device");
 
 	// z, x, and y coordinates of each receiver
 	int **d_Rjz = (int**)malloc(ngpu*sizeof(int*));
@@ -444,11 +453,13 @@ int main(int argc, char* argv[]) {
 		cudaMalloc(&d_Rjz[g], nr * sizeof(int));
 		cudaMalloc(&d_Rjx[g], nr * sizeof(int));
 		cudaMalloc(&d_Rjy[g], nr * sizeof(int));
+		sf_check_gpu_error("cudaMalloc receiver coords to device");
 		cudaMemcpy(d_Rjz[g], cr->jz, nr * sizeof(int), cudaMemcpyDefault);
 		cudaMemcpy(d_Rjx[g], cr->jx, nr * sizeof(int), cudaMemcpyDefault);
 		cudaMemcpy(d_Rjy[g], cr->jy, nr * sizeof(int), cudaMemcpyDefault);	
+		sf_check_gpu_error("copy receiver coords to device");
 	}
-	sf_check_gpu_error("copy receiver coords to device");
+	
 	/*------------------------------------------------------------*/
 	
 	
@@ -513,6 +524,7 @@ int main(int argc, char* argv[]) {
 		cudaMalloc(&d_c12[g], nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float));
 		cudaMalloc(&d_c13[g], nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float));
 		cudaMalloc(&d_c23[g], nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float));
+		sf_check_gpu_error("cudaMalloc density and stiffness to device");
 		
 		cudaMemcpy(d_ro[g] , h_ro  + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_c11[g], h_c11 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
@@ -523,9 +535,10 @@ int main(int argc, char* argv[]) {
 		cudaMemcpy(d_c66[g], h_c66 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_c12[g], h_c12 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_c13[g], h_c13 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
-		cudaMemcpy(d_c23[g], h_c23 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);	
+		cudaMemcpy(d_c23[g], h_c23 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
+		sf_check_gpu_error("copy density and stiffness to device");
+			
 	}
-	sf_check_gpu_error("copy density and stiffness to device");
 	
 	
 	/*------------------------------------------------------------*/
