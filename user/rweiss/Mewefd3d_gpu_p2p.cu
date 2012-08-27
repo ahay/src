@@ -243,6 +243,7 @@ int main(int argc, char* argv[]) {
 		cudaMalloc(&d_bell[g], (2*nbell+1)*(2*nbell+1)*(2*nbell+1)*sizeof(float));
 		cudaMemcpy(d_bell[g], h_bell, (2*nbell+1)*(2*nbell+1)*(2*nbell+1)*sizeof(float), cudaMemcpyDefault);
 	}
+	sf_check_gpu_error("copy d_bell to device");
 	/*------------------------------------------------------------*/
 	
 	/*------------------------------------------------------------*/
@@ -327,6 +328,7 @@ int main(int argc, char* argv[]) {
 		cudaMalloc(&d_ww[g], ns*nc*nt*sizeof(float));
 		cudaMemcpy(d_ww[g], h_ww, ns*nc*nt*sizeof(float), cudaMemcpyDefault);
 	}
+	sf_check_gpu_error("copy source wavelet to device");
     /*------------------------------------------------------------*/
 
 	
@@ -340,6 +342,7 @@ int main(int argc, char* argv[]) {
 		cudaSetDevice(g);
 		cudaMalloc(&d_dd[g], nr*nc*sizeof(float));
 	}
+	sf_check_gpu_error("allocate data arrays");
     /*------------------------------------------------------------*/
 	
 	
@@ -381,6 +384,7 @@ int main(int argc, char* argv[]) {
 		cudaMemcpy(d_Sw110[g], cs->w110, ns * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_Sw111[g], cs->w111, ns * sizeof(float), cudaMemcpyDefault);		
 	}
+	sf_check_gpu_error("copy source interpolation coeficients to device");
 	
 	// z, x, and y coordinates of each source
 	int **d_Sjz = (int**)malloc(ngpu*sizeof(int*));
@@ -395,6 +399,7 @@ int main(int argc, char* argv[]) {
 		cudaMemcpy(d_Sjx[g], cs->jx, ns * sizeof(int), cudaMemcpyDefault);
 		cudaMemcpy(d_Sjy[g], cs->jy, ns * sizeof(int), cudaMemcpyDefault);	
 	}
+	sf_check_gpu_error("copy source coords to device");
 	
 	
 	/* calculate 3d linear interpolation coefficients for receiver locations and copy to each GPU*/
@@ -428,6 +433,7 @@ int main(int argc, char* argv[]) {
 			cudaMemcpy(d_Rw111[g], cr->w111, nr * sizeof(float), cudaMemcpyDefault);
 		}
 	}
+	sf_check_gpu_error("copy receiver interpolation coefficients to device");
 
 	// z, x, and y coordinates of each receiver
 	int **d_Rjz = (int**)malloc(ngpu*sizeof(int*));
@@ -442,6 +448,7 @@ int main(int argc, char* argv[]) {
 		cudaMemcpy(d_Rjx[g], cr->jx, nr * sizeof(int), cudaMemcpyDefault);
 		cudaMemcpy(d_Rjy[g], cr->jy, nr * sizeof(int), cudaMemcpyDefault);	
 	}
+	sf_check_gpu_error("copy receiver coords to device");
 	/*------------------------------------------------------------*/
 	
 	
@@ -518,6 +525,7 @@ int main(int argc, char* argv[]) {
 		cudaMemcpy(d_c13[g], h_c13 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
 		cudaMemcpy(d_c23[g], h_c23 + g * nyinterior * fdm->nzpad * fdm->nxpad, nyinterior * fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);	
 	}
+	sf_check_gpu_error("copy density and stiffness to device");
 	
 	
 	/*------------------------------------------------------------*/
@@ -604,6 +612,8 @@ int main(int argc, char* argv[]) {
 		cudaSetDevice(ngpu-1);
 		cudaMalloc(&d_byh_s[ngpu-1], fdm->nzpad * fdm->nxpad * sizeof(float));
 		cudaMemcpy(d_byh_s[ngpu-1], h_byh_s, fdm->nzpad * fdm->nxpad * sizeof(float), cudaMemcpyDefault);
+		
+		sf_check_gpu_error("set up ABC coefficients");
 		
 		/* sponge set up */
 		// sponge coefficients are calculated inside the sponge kernel on GPU based on spo
