@@ -1,5 +1,5 @@
 from rsf.proj import *
-from rsf.xflow import *
+from rsf.recipes.xproj import *
 
 p=0.3
 
@@ -36,3 +36,5 @@ Tflow('fdip', 'data',
 	'dip rect1=2 rect2=2')
 
 #../../Mxtime.py opt=" order=1 liter=50 niter=5 verb=n < data.rsf > timetest.rsf" cmd=" sfdip rect1=2 rect2=2 : sfdip rect1=4 rect2=4 : sffdip rect1=2 rect2=2 : sffdip rect1=4 rect2=4 " > xtime.rsf 
+
+End()
