@@ -3,12 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-kirmig kirmig0 drayinte lineiko
-testanal gradient cconst cgconst
-fatomo fatomoomp mkrcv cpxeikonal
-drays dsreiko dsrtomo eikods tinterp
-tdconvert irays t2diter kirdat0 kirdat
-kirmigsr kirdatsr ftoper dsreiko0
+helmlu
 '''
 
 try:  # distributed version
@@ -21,9 +16,14 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+sparselibs = env.get('SPARSELIBS')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
+
+if sparselibs:
+    env.Prepend(LIBS=sparselibs)
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -34,7 +34,12 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+
+    if sparselibs:
+        prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',package='suitesparse')
+        
     if root:
         env.Install(bindir,prog)
 

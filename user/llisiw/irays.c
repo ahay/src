@@ -447,7 +447,7 @@ bool updaten(int i, int m, float* tres, float* xres, int* fres, struct Upd *vv[]
     
 	ttemp = b + sqrt(discr);
 
-	if (ttemp <= vv[m-1]->tvalue) return false;
+	if (ttemp <= vv[m-1]->tvalue+1.e-7) return false;
 
 	a = b = 0.;
 
