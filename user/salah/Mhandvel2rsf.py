@@ -30,12 +30,14 @@ parameters.
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, string , tempfile
+import sys, os, string , tempfile, subprocess
+import rsf.path, rsf.prog
 try: 
     import subprocess
 except:
     sys.stderr.write("subprocess module is needed")
     sys.exit(2) 
+import rsf.api as salah
 
 basename=os.path.basename(sys.argv[0])
 usage= '''
@@ -152,7 +154,7 @@ if __name__ == "__main__":
     par=salah.Par()
     n1=par.int("n1")   # size of the first axis
     o1=par.float("o1") # origin of the first axis
-    d1=par.float("d1") # sampleing in the first axis
+    d1=par.float("d1") # sampling in the first axis
     o2=par.float("o2") # origin of the second axis
     d2=par.float("d2") # sampling in the second axis
     if not (n1 or o1 or d1 or o2 or d2):
