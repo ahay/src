@@ -20,68 +20,73 @@
 
 #include <rsf.h>
 
-struct tag_mflt
+struct tag_rmedian
 {
 	float *bi;
-	int n1, nw;
+	int n1, nw1, nw2;
 	int *pi;
 };
 
 
-void* mflt_init(int m1, int mw)
+void* rmedian_init(int m1, int mw1, int mw2)
 /*< median filter initialize >*/
 {
-	struct tag_mflt *p;
-	p=sf_alloc(1, sizeof(struct tag_mflt));
+	struct tag_rmedian *p;
+	p=sf_alloc(1, sizeof(struct tag_rmedian));
 
 	p->n1 = m1;
-	p->nw = mw;
-	p->bi = sf_floatalloc(m1+2*mw);
-	p->pi = sf_intalloc(2*mw+1);
+	p->nw1 = mw1;
+	p->nw2 = mw2;
+	p->bi = sf_floatalloc(m1+mw1+mw2);
+	p->pi = sf_intalloc(mw1+mw2+1);
 	return p;
 }
 
-void mflt_close(void*h)
+void rmedian_close(void*h)
 /*< recursive median filter >*/
 {
-	struct tag_mflt *p;
+	struct tag_rmedian *p;
 
-	p=(struct tag_mflt*)h;
+	p=(struct tag_rmedian*)h;
 	free(p->pi);
 	free(p->bi);
 	free(p);
 }
 
 
-void mflt(void *h, float*d, int d1)
+void rmedian(void *h, float*d, int d1)
 /*< recursive median filter >*/
 {
-	struct tag_mflt *p;
-	int i1, i2, j1, temp, chg, *pi, n1, nw;
+	struct tag_rmedian *p;
+	int i1, i2, j1, temp, chg, *pi, n1, nw1, nw2;
 	float *pb;
 	
-	p=(struct tag_mflt*)h;
-	nw=p->nw;
+	p=(struct tag_rmedian*)h;
+	nw1=p->nw1;
+	nw2=p->nw2;
 	n1=p->n1;
-	pi=p->pi+nw;
-	pb=p->bi+nw;
+	pi=p->pi+nw1;
+	pb=p->bi+nw1;
 
 	for(i1=0; i1<n1; i1++)
 		pb[i1] = d[i1*d1];
-	for(i1=1; i1<=nw; i1++)
+	for(i1=1; i1<=nw1; i1++)
 	{
-		pb[0-i1] = pb[0];
-		pb[n1-1+i1] = pb[n1-1];
+		pb[-i1] = pb[0];
 		pi[-i1] = -i1;
+	}
+	for(i1=1; i1<=nw2; i1++)
+	{
+		pb[n1-1+i1] = pb[n1-1];
 		pi[i1] = i1;
 	}
 	pi[0] = 0;
 
 	// initialiaze
-	for(j1=nw; j1>=-nw; j1--)
+	for(j1=nw2; j1>=-nw1; j1--)
 	{
 		chg=0;
-		for(i1=-nw; i1<j1; i1++)
+		for(i1=-nw1; i1<j1; i1++)
 			if(pb[pi[i1]] > pb[pi[i1+1]])
 			{
 				temp = pi[i1];
@@ -97,16 +102,16 @@ void mflt(void *h, float*d, int d1)
 	for(i2=1; i2<n1; i2++)
 	{
 		pb++;
-		for(i1=-nw; i1<=nw; i1++)
+		for(i1=-nw1; i1<=nw2; i1++)
 		{
 			pi[i1] -= 1;
-			if(pi[i1] < -nw)
+			if(pi[i1] < -nw1)
 			{
 				j1 = i1;
-				pi[i1] = nw;
+				pi[i1] = nw2;
 			}
 		}	
-		for(i1=j1; i1<nw; i1++)
+		for(i1=j1; i1<nw2; i1++)
 		{
 			if(pb[pi[i1]] > pb[pi[i1+1]])
 			{
@@ -115,7 +120,7 @@ void mflt(void *h, float*d, int d1)
 				pi[i1+1] = temp;
 			}else break;
 		}
-		for(i1=j1; i1>-nw; i1--)
+		for(i1=j1; i1>-nw1; i1--)
 		{
 			if(pb[pi[i1]] < pb[pi[i1-1]])
 			{
@@ -127,4 +132,5 @@ void mflt(void *h, float*d, int d1)
 		d[i2*d1]=pb[pi[0]];
 	}
 }
+
 

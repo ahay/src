@@ -40,7 +40,7 @@ void *dipflt_init(int mf, int m1, int m2,
 {
 	struct tag_dipflt *p;
 	
-	p = (struct tag_dipflt*) sf_alloc(sizeof(struct tag_dipflt), 1);
+	p = (struct tag_dipflt*) sf_alloc(1, sizeof(struct tag_dipflt));
 
 	p->nf = mf;
 	p->n1 = m1;

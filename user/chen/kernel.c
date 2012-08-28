@@ -34,13 +34,19 @@ float kernel_sigmoid(float t)
 	return 1.0 / ( 1 + expf(-t) );
 }
 
+float kernel_func4(float t)
+/*< 1/(1+t^4) function >*/
+{
+	return 1.0 / ( 1 + powf(t, 4.0) );
+}
+
 float kernel_dsigmoid(float t)
 /*< sigmoid/logistic differential >*/
 {
 	float a, b;
 	a = expf(-t);
 	b = 1+a;
-	return 2*a / (b*b);
+	return a / (b*b);
 }
 
 typedef float (*kernel)(float a);
@@ -53,6 +59,7 @@ kernel kernel_c2f(char *c)
 	if(strcmp(c,"gaussian")==0)	return kernel_gaussian;
 	else if(strcmp(c,"sigmoid")==0)	return kernel_sigmoid;
 	else if(strcmp(c,"dsigmoid")==0)	return kernel_dsigmoid;
+	else if(strcmp(c,"func4")==0)	return kernel_func4;
 	else return NULL;
 }
 
