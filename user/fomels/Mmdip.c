@@ -25,9 +25,9 @@ int main (int argc, char *argv[])
 {
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[3], nr, ir; 
-    float p0, q0, *u, *p, pmin, pmax, qmin, qmax;
+    float p0, *u, *p, pmin, pmax;
     bool verb, **mm;
-    sf_file in, out, mask, idip0, xdip0;
+    sf_file in, out, mask, idip0;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -37,9 +37,9 @@ int main (int argc, char *argv[])
 
     dim = sf_filedims(in,n);
     if (dim < 2) n[1]=1;
-    for (j=1; j < nr; j *= 2) ;
-    if (j!= n[1]) sf_error("n2=%d, need pow(2,n)",nr);
-    sf_putint(out,"n2",2*nr);
+    for (j=1; j < n[1]; j *= 2) ;
+    if (j!= n[1]) sf_error("n2=%d, need pow(2,n)",n[1]);
+    sf_putint(out,"n2",2*n[1]);
 
     n123 = n[0]*n[1];
 
@@ -50,10 +50,7 @@ int main (int argc, char *argv[])
     
     n[2]= 1;
     rect[2]=1;
-    q0=0.;
     nj2=1;
-    qmin = -FLT_MAX;
-    qmax = +FLT_MAX;
     
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -101,8 +98,6 @@ int main (int argc, char *argv[])
     } else {
 	idip0 = NULL;
     }
-
-    xdip0 = NULL;
 
     for (ir=0; ir < nr; ir++) {
 	if (verb) sf_warning("slice %d of %d", ir+1, nr);

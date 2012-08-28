@@ -24,7 +24,7 @@
 int main (int argc, char* argv[]) 
 {
     int *rct[SF_MAX_DIM], *sft[SF_MAX_DIM];
-    int box[SF_MAX_DIM], n[SF_MAX_DIM], s[SF_MAX_DIM];
+    int box[SF_MAX_DIM], n[SF_MAX_DIM];
     int dim, dim1, i, n1, n2, i1, i2, b, nrep;
     float *data, *smoo;
     char key[8];
@@ -66,7 +66,6 @@ int main (int argc, char* argv[])
     n1 = n2 = 1;
     for (i=0; i < dim; i++) {
 	if (i <= dim1) {
-	    s[i] = n1;
 	    n1 *= n[i];
 	} else {
 	    n2 *= n[i];

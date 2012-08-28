@@ -34,8 +34,8 @@ static fftwf_plan cfg=NULL, icfg=NULL;
 #else
 static kiss_fftr_cfg cfg, icfg;
 static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
-static kiss_fft_cpx **tmp, *ctrace1, *ctrace2;
-static sf_complex *trace1, *trace2;
+static kiss_fft_cpx **tmp, *ctrace2;
+static sf_complex *trace2;
 #endif
 
 int fft2_init(bool cmplx1        /* if complex transform */,

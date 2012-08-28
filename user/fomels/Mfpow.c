@@ -24,11 +24,9 @@ int main(int argc, char* argv[])
 {
     bool verb, time;
     int n1, n2, i1, i2, imin, imax, iter, niter, ib, nb, i;
-    float fmin, fmax, o1, d1, *spec, bi, *b, *w, semb, db, deltab, b0, bmin, bmax, oldsemb;
-    float omega, rho, eps, tol, smax;
+    float fmin, fmax, o1, d1, *spec, bi, *b, *w, semb, db, deltab; 
+    float omega, rho, tol, smax, b0, bmin, bmax, oldsemb;
     sf_file inp, out, beta;
-
-    eps = 0.01;
 
     sf_init(argc,argv);
     inp = sf_input("in");
