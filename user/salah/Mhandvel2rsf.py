@@ -30,9 +30,12 @@ parameters.
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, string , tempfile, subprocess
-import rsf.path, rsf.prog
-import rsf.api as salah
+import sys, os, string , tempfile
+try: 
+    import subprocess
+except:
+    sys.stderr.write("subprocess module is needed")
+    sys.exit(2) 
 
 basename=os.path.basename(sys.argv[0])
 usage= '''
@@ -44,7 +47,7 @@ SYNOPSIS
         %s < handvels.txt o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 > handvel.rsf
 PARAMETERS
         float   o1= origin of the first axis
-        float   d1= sampleing in the first axis
+        float   d1= sampling in the first axis
         int     n1= size of the first axis
         float   o2= origin of the second axis
         float   d2= sampling in the second axis
