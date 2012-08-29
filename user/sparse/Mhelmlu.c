@@ -36,6 +36,7 @@ double maxvel(int nm, float *vel)
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int n1, n2, npw, npml, pad1, pad2, i, j;
     int n_row, n_col, nz, count, index, *Ti, *Tj;
     float d1, d2, **v, **f, freq, eps;
@@ -53,6 +54,9 @@ int main(int argc, char* argv[])
     in  = sf_input("in");
     out = sf_output("out");
    
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+    
     /* read input dimension */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input.");
@@ -240,6 +244,11 @@ int main(int argc, char* argv[])
 	}
     }
 
+    /* prepare LU */
+    umfpack_zi_defaults (Control);
+    
+    if (verb) Control [UMFPACK_PRL] = 2;
+
     /* convert triplet to compressed-column form */
     Ap = sf_intalloc(n_col+1);
     Ai = sf_intalloc(nz);
@@ -251,15 +260,18 @@ int main(int argc, char* argv[])
     status = umfpack_zi_triplet_to_col (n_row, n_col, nz, 
 					Ti, Tj, Tx, Tz, 
 					Ap, Ai, Ax, Az, Map);
+    if (verb) umfpack_zi_report_status (Control, status);
 
     /* LU factorization */
     status = umfpack_zi_symbolic (n_row, n_col, 
 				  Ap, Ai, Ax, Az, 
 				  &Symbolic, Control, Info);
+    if (verb) umfpack_zi_report_status (Control, status);
 
     status = umfpack_zi_numeric (Ap, Ai, Ax, Az, 
 				 Symbolic, &Numeric, 
 				 Control, Info);
+    if (verb) umfpack_zi_report_status (Control, status);
 
     /* read source */
     if (NULL == sf_getstring("source"))
@@ -294,6 +306,7 @@ int main(int argc, char* argv[])
 			       Ap, Ai, Ax, Az, 
 			       Xx, Xz, Bx, Bz, 
 			       Numeric, Control, Info);
+    if (verb) umfpack_zi_report_status (Control, status);
 
     /* write output */
     sf_settype(out,SF_COMPLEX);
