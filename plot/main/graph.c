@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     y = sf_floatalloc2(n1,n2);
     t = sf_floatalloc(n);
 
-    if (depth) {
+    if (NULL != depth) {
 	z = sf_ucharalloc2(n1,n2);
 	/* initialize color table */
 	if (NULL == (color = sf_getstring("color"))) color="j";
