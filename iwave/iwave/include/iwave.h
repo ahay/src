@@ -359,7 +359,7 @@ extern "C" {
   /**
    * Dumps parallel info.
    */
-  int dump_pi(PARALLELINFO *pinfo, FILE *stream);  
+  int dump_pi(PARARRAY * pars, PARALLELINFO *pinfo, FILE *stream);  
 
   /**
    * Dumps information of all arrays including the allocated, and computational virtual ones.

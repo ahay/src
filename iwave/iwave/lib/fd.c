@@ -129,7 +129,7 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
 	//	fprintf(stream,"dgs[%d]=%d, dge[%d]=%d",idim,dgs[iv][idim],idim,dge[iv][idim]);
 	//	fprintf(stream,"dgs[%d]=%d, dge[%d]=%d",idim,dgs[i][idim],idim,dge[i][idim]);
       }
-      fprintf(stream,"\n");
+      //      fprintf(stream,"\n");
     }   
   }
 #endif
@@ -469,8 +469,10 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
     model->gl.axes[idim].n = ge[idim]-gs[idim]+1;
     model->gl.axes[idim].id = model->g.axes[idim].id;
   }
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: local grid used to determine trace sampling:\n");
   fprint_grid(stream,model->gl);
+#endif
   /*--------------------------------------------------------------------------*/
 
   /* deallocate stencil */

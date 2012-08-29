@@ -317,10 +317,12 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 
   if (iflag) refkappa = rd_gget(&(m->ld_a), D_MP0, tis);
 
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: proc=%d sample kappa at ",retrieveRank());
   for (i=0;i<ndim;++i) 
     fprintf(stream,"index[%d]=%d ",i,tis[i]);
   fprintf(stream,"sample flag=%d\n",iflag);
+#endif
 
   /* extract near-source buoyancy from grid - necessary for
      several (but not all) cases, and not enough of an expense to 
@@ -344,10 +346,12 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
     if ( (tis[i] < gs[i]) || (tis[i] > ge[i]) ) iflag=0;
 
   if (iflag) refbou = rd_gget(&(m->ld_a), D_MV0, tis);
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: proc=%d sample buoyancy at ",retrieveRank());
   for (i=0;i<ndim;++i) 
     fprintf(stream,"index[%d]=%d ",i,tis[i]);
   fprintf(stream,"sample flag=%d\n",iflag);
+#endif
 
 #ifdef IWAVE_USE_MPI
   rk = retrieveRank();
@@ -373,7 +377,9 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 #endif	
 
   if (refbou > REAL_ZERO) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: in pointsrc, using  buoyancy at source location = %e\n", refbou);
+#endif
   }
   else {
     fprintf(stream,"ERROR: in pointsrc, ref buoyancy nonpositive, = %e\n",refbou);
@@ -381,7 +387,9 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
   }
 
   if (refkappa > REAL_ZERO) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: in pointsrc, using  bulk mod at source location = %e\n", refkappa);
+#endif
   }
   else {
     fprintf(stream,"ERROR: in pointsrc, ref bulk mod nonpositive, = %e\n",refkappa);
@@ -401,37 +409,48 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 
     refvel = sqrt(refkappa * refbou);
     
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: in pointsrc, using velocity computed from \n");
     fprintf(stream,"      bulk mod and buoyancy near source location; \n");
     fprintf(stream,"      computed value = %e\n", refvel);
-
+#endif
   }
   else {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: in pointsrc, using velocity from param table = %e\n", refvel);
+#endif
   }
 
   /* Either read reference distance from parameters, or use default. */
   ps_flreal(*par,"refdist",&refdist);
   if (refdist>0) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: in pointsrc, using reference distance = %e\n", refdist);
+#endif
   }
   else {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: in pointsrc, read nonpos. reference distance = %e\n", refdist);
     fprintf(stream,"      this implies that wavelet will be read from file and used \n");
     fprintf(stream,"      directly on RHS as multiplier of spatial delta, rather than\n");
     fprintf(stream,"      to produce target propagating pulse.\n");
+#endif
   }
 
   /* Either read reference amplitude from parameters, or use default. */
   
   ps_flreal(*par,"refamp",&refamp);
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: in pointsrc, using reference amplitude = %e\n", refamp);
+#endif
 
   /* read peak frequency from parameters, or use default (only used in
      Gaussian option II) */
   if (ps_flreal(*par,"fpeak", &fpeak)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: pointsrc_init - using default ");
     fprintf(stream,"peak frequency (fpeak) = %e\n",fpeak);
+#endif
   }
     
   /* Overall scale factor for source insertion to produce target pulse, per 
@@ -514,7 +533,9 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
     
     if (refdist > 0) {
 
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"NOTE: in pointsrc_init, compute wavelet for target pulse (Option Ia)\n");
+#endif
 
       /* integrate once - trapezoidal rule in-place 
 	 w[j] <- sum_{i=1}^{i=j} 0.5*dt*(w[i-1]+w[i])
@@ -543,7 +564,9 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
 
     else {
 
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"NOTE: in pointsrc_init, using file wavelet directly on RHS (Option Ib)\n");
+#endif
       tdt = (ireal)((m->tsind).dt);
 
       /* interpolate */
@@ -571,8 +594,10 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
       fprintf(stream,"negative reference distance = %e no legal in this case\n",refdist);
       return E_OTHER;
     }
-     
+
+#ifdef IWAVE_VERBOSE     
     fprintf(stream,"NOTE: in pointsrc_init, computing Gaussian derivative RHS for target Ricker pulse at f=%e, r=%e\n",fpeak,refdist);
+#endif
  
     /* RHS wavelet is derivative of gaussian */
     tr->w = igetdgauss(&iw, (m->tsind).dt, fpeak);
@@ -612,7 +637,9 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
       return E_FILE;
     }
     else {
-      fprintf(stream,"write wavelet trace\n");
+#ifdef IWAVE_VERBOSE
+      fprintf(stream,"NOTE: write wavelet trace\n");
+#endif
     }
     fputtr(tr->fpdbg,&trdbg);
     fflush(tr->fpdbg);

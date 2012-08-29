@@ -25,10 +25,6 @@
 
 //#define IWAVE_EXTEND_MODEL
 
-/* uncomment to write to the rk-dep output stream at every major step 
-*/
-#define VERBOSE
-
 /* uncomment to write to the rk-dep output stream at every time step 
    #define VERBOSE_STEP
 */
@@ -86,7 +82,7 @@ int main(int argc, char ** argv) {
   rk=retrieveGlobalRank();
   if (rk==0) requestdoc(1);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
 #ifdef IWAVE_USE_MPI
   if (rk==0) {
     fprintf(stderr,"Global MPI_Comm_size = %d\n",retrieveGlobalSize());
@@ -101,7 +97,7 @@ int main(int argc, char ** argv) {
     abortexit(err,pars,&stream);
   }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"readinput\n");
   fflush(stream);
 #endif
@@ -112,13 +108,13 @@ int main(int argc, char ** argv) {
     abortexit(err,pars,&stream);
   }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"paramtable:\n");
   ps_printall(*pars,stream);
   fflush(stream);
 #endif
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"initparallel_local \n");
   fflush(stream);
 #endif
@@ -153,7 +149,7 @@ int main(int argc, char ** argv) {
     }
 
     /* construct iwave object */
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"iwave_construct\n");
     fflush(stream);
 #endif
@@ -165,14 +161,14 @@ int main(int argc, char ** argv) {
       abortexit(err,pars,&stream);
     }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"iwave_printf\n");
     fflush(stream);
 #endif
 
     iwave_printf(&state,pars,stream);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"data sampler\n");
     fflush(stream);
 #endif
@@ -197,7 +193,7 @@ int main(int argc, char ** argv) {
     /* initial reassignment of source coordinates */
     RASN(scoord,trace.t.tg.src[trace.t.tg.xrec]);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"movie sampler\n");
     fflush(stream);
 #endif
@@ -216,7 +212,7 @@ int main(int argc, char ** argv) {
 
     /* NOTE: pointsrc object has trivial default construction */
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"loop\n");
     fflush(stream);
 #endif
@@ -274,7 +270,7 @@ int main(int argc, char ** argv) {
       /* pointsrc_init: initializes source wavelet with proper
        * calibration, determines start time of simulation 
        */
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"initialize source\n");
       fflush(stream);
 #endif	
@@ -323,7 +319,7 @@ int main(int argc, char ** argv) {
 	abortexit(err,pars,&stream);
       }
       
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"initialize movie\n");
       fflush(stream);
 #endif
@@ -334,7 +330,7 @@ int main(int argc, char ** argv) {
       }
       if (dump_term) movie_fprint(&mt, stream);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"initialize state\n");
       fflush(stream);
 #endif
@@ -342,7 +338,7 @@ int main(int argc, char ** argv) {
       /* initialize dynamic fields */
       iwave_dynamic_init(&state,istart);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"time loop\n"); 
       fflush(stream);
 #endif
@@ -428,7 +424,7 @@ int main(int argc, char ** argv) {
       get_d(d, state.model.g);
       get_o(o, state.model.g);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"writetraces\n");
       fflush(stream);
 #endif
@@ -440,7 +436,7 @@ int main(int argc, char ** argv) {
 	abortexit(err,pars,&stream);
       }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"destroy source objects\n");
       fflush(stream);
 #endif
@@ -458,21 +454,21 @@ int main(int argc, char ** argv) {
 
     /* destroy static objects and exit */
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"movie_destroy\n");
     fflush(stream);
 #endif
 
     movie_destroy(&mt);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"sampler_destroy\n");
     fflush(stream);
 #endif
 
     sampler_destroy(&trace);
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"iwave_destroy\n");
     fflush(stream);
 #endif
@@ -485,7 +481,7 @@ int main(int argc, char ** argv) {
 
   } /* end nontriv comm branch */
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"MPI_Finalize\n");
   fflush(stream);
 #endif
@@ -493,7 +489,7 @@ int main(int argc, char ** argv) {
   MPI_Finalize();
 #endif
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"quietexit\n");
   fflush(stream);
 #endif

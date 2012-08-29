@@ -1,1 +1,0 @@
-psimage< dn2d_20m.rsf@ n1=91 d1=0.02 d2=0.02 f2=0 label1="z (km)" label2="x (km)" width=6 height=3 legend=1 lstyle=horibottom units="density (kg/m^3)" lbeg=1000 lend=2500 wrgb=0.0,0.0,1.0 grgb=1.0,0.0,0.0 brgb=1.0,1.0,1.0 > Fig/dn2d_20m.ps

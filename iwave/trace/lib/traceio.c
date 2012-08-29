@@ -1,7 +1,5 @@
 #include "traceio.h"
 
-#define VERBOSE
-
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
 /** helper function to determine whether an index tuple is within rarray */
@@ -1440,9 +1438,10 @@ int init_tracegeom(tracegeom * tg,
   }
    
   /* allocate data buffer, optionally store data */
-  
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: allocating %d traces of %d samples in tracegeom buffer\n",tg->ntraces,tg->nt);
   fflush(stream);
+#endif
 
   /*  if (tg->ntraces) { */
   /* fix of 26.07.10: since this is SPMD code, have to call
@@ -2403,13 +2402,14 @@ int writetraces(tracegeom const * tg,
     }
 
     //##########
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"\nwritetraces -> ");
     iwave_fprintall(stream);
 
-#ifdef VERBOSE 
-    fprintf(stream,"writetraces: first pass trace loop rk 0\n");
+    fprintf(stream,"\nwritetraces: first pass trace loop rk 0\n");
 #endif
     for (nb=0;nb<tg->ntraces;nb++) {
-#ifdef VERBOSE 
+#ifdef IWAVE_VERBOSE 
       fprintf(stream,"writetraces: assemble trace %d\n",nb);
 #endif  
       err=assembletrace(tg,&otr,nb,
@@ -2425,7 +2425,7 @@ int writetraces(tracegeom const * tg,
 #endif	
       }
 	  
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"writetraces: rk 0 write trace %d tracr=%d offset=%ld\n",nb,otr.tr.tracr,otr.m);
 #endif
       err=fseeko(tg->fpout,otr.m,SEEK_SET);
@@ -2451,7 +2451,7 @@ int writetraces(tracegeom const * tg,
 
   /* second pass - from here on rank 0 acts as server */
 
-#ifdef VERBOSE 
+#ifdef IWAVE_VERBOSE 
   fprintf(stream,"writetraces: collect traces info \n");
 #endif
 
@@ -2463,7 +2463,7 @@ int writetraces(tracegeom const * tg,
   else
     tleft=tg->ntraces;
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"writetraces: total number of traces = %d\n",tleft);
 #endif
  
@@ -2474,7 +2474,7 @@ int writetraces(tracegeom const * tg,
 
     while (tleft > 0) {
      
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"writetraces: number of traces yet to be recd = %d\n",tleft);
 #endif
       if(lsize>1)
@@ -2489,7 +2489,7 @@ int writetraces(tracegeom const * tg,
 	return err;
 #endif	
       }
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"RECV from rank %d offset=%ld tracr=%d ns=%d\n",stat.MPI_SOURCE,otr.m,otr.tr.tracr,otr.tr.ns); 
 #endif
       /* two different options, depending on whether any part of this
@@ -2498,7 +2498,7 @@ int writetraces(tracegeom const * tg,
 	 out.
       */
       if (init[otr.tr.tracr]) {
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
 	fprintf(stream,"writetraces: init flag set, read to update\n");
 #endif
 	err=fseeko(tg->fpout,otr.m,SEEK_SET);
@@ -2537,7 +2537,7 @@ int writetraces(tracegeom const * tg,
       fflush(tg->fpout);
       init[otr.tr.tracr]=1;
       tleft--;
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"trace %d written, %d left\n",otr.tr.tracr,tleft);
 #endif
     
@@ -2547,7 +2547,7 @@ int writetraces(tracegeom const * tg,
 
   else {
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"writetraces: total number of traces to send = %d\n",tg->ntraces);
 #endif
   
@@ -2565,7 +2565,7 @@ int writetraces(tracegeom const * tg,
 	return err;
 #endif	
       }
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"SEND trace %d of %d from rank=%d offset=%ld ns=%d\n",nb,tg->ntraces,retrieveRank(),otr.m,otr.tr.ns);
       fflush(stream);
 #endif
@@ -2593,7 +2593,7 @@ int writetraces(tracegeom const * tg,
   /* flush output unit */
   if (lrank==0) fflush(tg->fpout);
   
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"at end of writetraces rk=%d err=%d\n",retrieveRank(),err);
   fflush(stream);
 #endif

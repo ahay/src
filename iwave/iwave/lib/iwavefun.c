@@ -2,8 +2,6 @@
 /* included to enable access to MAXPATHLEN */
 #include <sys/param.h>
 
-/* #define VERBOSE */
-
 /*----------------------------------------------------------------------------*/
 /*
   Input file parameter names.
@@ -27,7 +25,9 @@ static const char PNAMES_PRACT[] = "printact";     /* output actions */
    assume stream exists
 */
 void quietexit(PARARRAY * pars,FILE ** stream) {
+#ifdef IWAVE_VERBOSE
   fprintf(*stream,"Normal exit\n");
+#endif
   fflush(*stream);
   fclose(*stream);
   *stream=NULL;
@@ -130,7 +130,7 @@ int readinput(PARARRAY ** pars, FILE * stream, int argc, char **argv) {
 	    err);
     return err;
   }
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   ps_printall(*pars,stderr);
 #endif
 
@@ -152,17 +152,39 @@ void readparpars(PARARRAY * pars,
 
   err=ps_flint(*pars, PNAMES_STATS, stats);
   if (err) {
+#ifdef IWAVE_VERBOSE
     fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_STATS, *stats);
+#endif
   }
-  else fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_STATS, *stats);
+  else {
+#ifdef IWAVE_VERBOSE
+    fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_STATS, *stats);
+#endif
+  }
   
   *nopts = 0;
-  if ( ps_flint(*pars, PNAMES_NOPTS, nopts) ) fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NOPTS, *nopts);
-  else fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_NOPTS, *nopts);
+  if ( ps_flint(*pars, PNAMES_NOPTS, nopts) ) {
+#ifdef IWAVE_VERBOSE
+    fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NOPTS, *nopts);
+#endif
+  }
+  else {
+#ifdef IWAVE_VERBOSE
+    fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_NOPTS, *nopts);
+#endif
+  }
   
   *printact = 0;
-  if ( ps_flint(*pars, PNAMES_PRACT, printact) ) fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_PRACT, *printact);
-  else fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_PRACT, *printact);
+  if ( ps_flint(*pars, PNAMES_PRACT, printact) ) {
+#ifdef IWAVE_VERBOSE
+    fprintf(out, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_PRACT, *printact);
+#endif
+  }
+  else {
+#ifdef IWAVE_VERBOSE
+    fprintf(out, "NOTE. Found %s = %d.\n", PNAMES_PRACT, *printact);
+#endif
+  }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -179,7 +201,10 @@ void storeparallel(PARALLELINFO *pinfo) {
 #endif
 }
 
-int dump_pi(PARALLELINFO *pinfo, FILE *stream) {
+int dump_pi(PARARRAY * par, PARALLELINFO *pinfo, FILE *stream) {
+  int flag = 0;
+  ps_flint(*par,"dump_pi",&flag);
+  if (!flag) return 0;
 #ifdef IWAVE_USE_MPI
   int idim, in;/* dimension, neighbor number */
   IPNT offs;   /* neighbor offsets [-1/0/1]  */

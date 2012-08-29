@@ -301,9 +301,10 @@ int sg_readgustime(RDOM dom,
   }
   
   *dt = a*cfl/(vgus*sqrt((float)(ndim)));
+#ifdef IWAVE_VERBOSE
   fprintf(stream, "NOTE - sg_readgustime: Computed dt=%12.4e from cfl, bulk modulus, density fields\n", *dt);
   fprintf(stream, "NOTE. min space step=%e, cfl=%e, Gustafsson factor=%e\n",a,cfl,vgus);
-
+#endif
   return err;
 }
 
@@ -344,16 +345,23 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
 
   /* branch on presence of parameter dt */
   if ( !ps_flreal(par,"dt", dt ) ){
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readtimegrid - dt=%12.4e read from param table\n", *dt);	
     fprintf(stream,"NOTE: NOT CHECKED FOR STABILITY!\n");
+#endif
     return 0;
   }
 
-  if (ps_flreal(par,"cmax",&cmax)) 
+  if (ps_flreal(par,"cmax",&cmax)) { 
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readtimegrid - using default cmax = %e\n",cmax);
-  
+#endif
+  }
+
   if (ps_flreal(par,"cfl",&cfl)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readtimegrid - using default cfl = %e\n",cfl);
+#endif
   }
   else {
     if (cfl>CFL_DEF || cfl<REAL_EPS) {
@@ -361,15 +369,18 @@ int asg_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
       return E_BADINPUT;
     }
   }
-    
-	
+    	
   ps_flint(par,"max_step",&max_step);		
   if (max_step) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readtimegrid - dt computed from max stable step, CFL fraction = %e\n",cfl);
+#endif
     cflgus=cfl;
   }
   else {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readtimegrid - base dt on asserted CMAX = %e, CFL fraction = %e\n",cmax,cfl);
+#endif
   }
 
   /* compute max stable step, optionally scaled by cfl from table */
@@ -496,17 +507,29 @@ int sg_readmedia(RDOM dom,
 
   /* SANITY CHECK MOVED TO SINGLE BOYANCY - I&T 03/05 */
   
-  if (ps_flreal(par,"cmax",&cmax)) 
+  if (ps_flreal(par,"cmax",&cmax))  {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readmedia - using default max velocity = %e\n",cmax);
+#endif
+  }
 
-  if (ps_flreal(par,"cmin",&cmin)) 
+  if (ps_flreal(par,"cmin",&cmin)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readmedia - using default min velocity = %e\n",cmin);
+#endif
+  }
 
-  if (ps_flreal(par,"dmax",&dmax)) 
+  if (ps_flreal(par,"dmax",&dmax)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readmedia - using default max density = %e\n",dmax);
+#endif
+  }
 
-  if (ps_flreal(par,"dmin",&dmin)) 
+  if (ps_flreal(par,"dmin",&dmin)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sg_readmedia - using default min density = %e\n",dmin);
+#endif
+  }
 
   /* set limits for bulk mod, buoyancy */
   kmax=cmax*cmax*dmax;
@@ -545,6 +568,8 @@ int sg_readmedia(RDOM dom,
     if (is_vel && is_den) refkappa=refden*refvel*refvel;
     if (is_vel && is_bou) refkappa=refvel*refvel/refbuoy;
   }
+
+#ifdef IWAVE_VERBOSE
   fprintf(stream,
 	  "NOTE: in sg_readmedia, reference values: \n");
   fprintf(stream,
@@ -555,6 +580,8 @@ int sg_readmedia(RDOM dom,
 	  "  vel = %e\n",refvel);
   fprintf(stream,
 	  "  den = %e\n",refden);
+#endif
+
   /* at this point reference values of bulk mod and buoyancy should 
      be available. check reference velocity for conformance */
   refvel=sqrt(refkappa*refbuoy);
@@ -623,10 +650,10 @@ int sg_readmedia(RDOM dom,
     }
   }
   else if (!ps_flcstring(par,"velocity",&velokey)) {
-    fprintf(stream,"sg_readmedia -> rsfread velo\n");
+    //    fprintf(stream,"sg_readmedia -> rsfread velo\n");
     fflush(stream);
     err=rsfread(dom._s[D_MP0]._s0,rags,ran,velokey,1,stream,panelindex);
-    fprintf(stream,"sg_readmedia <- rsfread velo\n");
+    //    fprintf(stream,"sg_readmedia <- rsfread velo\n");
     fflush(stream);
     userfree_(velokey);
     veloflag = 1;
@@ -954,16 +981,26 @@ static int sgn_setetas(PARARRAY *pars, FILE *stream, IMODEL *model) {
   ndim = model->g.dim;
 
   /* read cmax -------------------------------------------------------------*/
-  if ( ps_flreal(*pars, "cmax", &cmax) ) 
+  
+  if ( ps_flreal(*pars, "cmax", &cmax) ) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sgn_setetas - using default cmax = %e\n",cmax);
+#endif
+  }
 
   /* read pml amplitude ----------------------------------------------------*/
   pmlampl = 1.5 * log(1000.0);
-  if ( ps_flreal(*pars,"npml_ampl", &pmlampl) )
+  if ( ps_flreal(*pars,"npml_ampl", &pmlampl) ) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream, "NOTE. Cannot read npml_ampl. Default = %g.\n",  pmlampl);
-  else
+#endif
+  }
+  else {
+#ifdef IWAVE_VERBOSE
     fprintf(stream, "NOTE. Eta multiplier nplm_ampl = %g.\n", pmlampl);
-    
+#endif
+  }
+
   for ( idim = 0; idim < ndim; ++idim )
     {
       /* space step and area bounds */
@@ -1060,11 +1097,17 @@ int asg_readpmlgrid(IPNT nl, IPNT nr,
   char key[30];
   size_t kl=4;
 
-  if (ps_flreal(par,"fpeak",&fpeak))
+  if (ps_flreal(par,"fpeak",&fpeak)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sgn_readpmlgrid - using default fpeak = %e\n",fpeak);
+#endif
+  }
 
-  if (ps_flreal(par,"cmax",&cmax)) 
+  if (ps_flreal(par,"cmax",&cmax)) {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: sgn_readpmlgrid - using default cmax = %e\n",cmax);
+#endif
+  }
 
   for (idim=0; idim<ndim; idim++ ) {
 	  if (dx[idim]<REAL_EPS) {

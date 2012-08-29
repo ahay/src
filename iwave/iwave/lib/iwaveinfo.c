@@ -154,8 +154,11 @@ int initparallel_local(PARARRAY par, FILE * stream) {
   /* parse out cartesian grid for local size */
   sz=1;
   for ( idim = 0; idim < RARR_MAX_NDIM; ++idim ) {
-    if ( ps_flint(par, PNAMES_NP[idim], &(cdims[idim]))) 
+    if ( ps_flint(par, PNAMES_NP[idim], &(cdims[idim]))) {
+#ifdef IWAVE_VERBOSE
       fprintf(stream, "NOTE. Cannot read %s. Default = 1.\n", PNAMES_NP[idim]);
+#endif
+    }
     else {
       if ( cdims[idim] < 1 ) {
 	fprintf(stream, "ERROR. Bad input: number of processors %s = %d.\n", PNAMES_NP[idim], cdims[idim]);
@@ -228,7 +231,9 @@ int initparallel_local(PARARRAY par, FILE * stream) {
       return E_INTERNAL;
     }
     if ( cm == MPI_COMM_NULL ) {
+#ifdef IWAVE_VERBOSE
       fprintf(stream, "NOTE. Processor %d not in the Cartesian grid.\n", rkw);
+#endif
       return E_NOTINGRID;
     }
   }
@@ -242,14 +247,18 @@ int initparallel_local(PARARRAY par, FILE * stream) {
     MPI_Comm_size(cmg,&szw);
     MPI_Comm_rank(cm,&rk);
     MPI_Comm_size(cm,&sz);
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: initparallel_local\n");
     fprintf(stream,"NOTE: global rank = %d global size = %d number of groups = %d group = %d group size = %d local rank = %d\n",rkw,szw,ng,g,sz,rk);
     fflush(stream);
+#endif
   }
   else {
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"NOTE: initparallel_local\n");
     fprintf(stream,"NOTE: world rank = %d not in any group\n",rkw);
     fflush(stream);
+#endif
   }  
 
   /* store local params, group info */
@@ -421,8 +430,11 @@ int initparallel_local(PARARRAY par, FILE * stream) {
   IPNT cdims; // local declaration added 02.07.11 WWS
   IASN(cdims, IPNT_1); /* default grid size */
   for ( idim = 0; idim < IWAVE_NDIM; ++idim ) {
-    if ( ps_flint(par, PNAMES_NP[idim], cdims + idim) )
+    if ( ps_flint(par, PNAMES_NP[idim], cdims + idim) ) {
+#ifdef IWAVE_VERBOSE
       fprintf(stream, "NOTE. Cannot read %s. Default = %d.\n", PNAMES_NP[idim], cdims[idim]);
+#endif
+    }
     if (cdims[idim] != 1) {
       fprintf(stream, "ERROR: nontrivial domain decomposition not possible\n");
       fprintf(stream, "       in serial mode of IWAVE; recompile with MPI\n");

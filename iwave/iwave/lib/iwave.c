@@ -27,7 +27,7 @@ int iwave_construct(IWAVE * state,
 		    int (*minit)(PARARRAY *, 
 				 FILE *,
 				 IMODEL *)) {
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: in iwave constructor\n");
   ps_printall(*pars,stream);
   fflush(stream);
@@ -46,7 +46,7 @@ int iwave_construct(IWAVE * state,
   /* initialize parallel info structure - part that depends only on 
      MPI_Cart_comm, not on physical grid
    */
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"initpinfo\n");
   fflush(stream);
 #endif
@@ -61,7 +61,7 @@ int iwave_construct(IWAVE * state,
   /* default construction of model component of state 
    */
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"im_construct\n");
   fflush(stream);
 #endif
@@ -79,7 +79,7 @@ int iwave_construct(IWAVE * state,
    * implementation, a class or struct containing this and the other
    * functions could be passed as a template parameter.
    */
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"minit\n");
   fflush(stream);
 #endif
@@ -105,7 +105,7 @@ int iwave_construct(IWAVE * state,
     return err;
   }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"readparpars\n");
   fflush(stream);
 #endif
@@ -119,15 +119,18 @@ int iwave_construct(IWAVE * state,
 
   /* initialize data exchange info depening on physical grid dimn */
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"initexch \n");
   fflush(stream);
 #endif
 
   err=initexch(&(state->pinfo),(state->model).g.dim,stream);
   if (err) {
-    if (err==E_NOTINGRID) 
+    if (err==E_NOTINGRID) {
+#ifdef IWAVE_VERBOSE
       fprintf(stream,"NOTE: Internal: create parallel returned Not-In-Grid\n");    
+#endif
+    }
     else
       fprintf(stream,"ERROR: Internal create parallel error\n");
 
@@ -135,7 +138,7 @@ int iwave_construct(IWAVE * state,
   }
 
   /* post-construction initialization of (state->model) via "virtual" interface */
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"mcrea\n");
   fflush(stream);
 #endif
@@ -150,7 +153,7 @@ int iwave_construct(IWAVE * state,
     return err;
   }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"setrecvexchange\n");
   fflush(stream);
 #endif
@@ -164,7 +167,7 @@ int iwave_construct(IWAVE * state,
     return err;
   }
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"prepexch\n");
   fflush(stream);
 #endif
@@ -179,7 +182,7 @@ int iwave_construct(IWAVE * state,
 	   //	   &(state->wt0));
 #endif
 
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"exit iwave_construct err=%d\n",err);
   fflush(stream);
 #endif
@@ -189,10 +192,7 @@ int iwave_construct(IWAVE * state,
 
 /** C-style write function */
 void iwave_printf(IWAVE * state, PARARRAY * pars, FILE * stream) {
-  if (dump_pi(&(state->pinfo),stream)) {
-    fprintf(stream,
-	    "NOTE: failed to print PARALLELINFO\n");
-  }
+  dump_pi(pars,&(state->pinfo),stream);
   dump_ac(pars,&(state->model),stream);
   dump_rs(pars,&(state->model),stream,0);
   dump_rs(pars,&(state->model),stream,1);

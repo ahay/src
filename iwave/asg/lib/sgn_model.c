@@ -126,6 +126,9 @@ int asg_modelinit(PARARRAY *pars,
   /* decode order - with version 2.0, deprecated syntax "scheme_phys" etc. is dropped */
   sgnm->k=1;
   ps_flint(*pars,"order",&(sgnm->k));
+#ifdef IWAVE_VERBOSE
+  fprintf(stream,"NOTE: initializing ASG with half-order = %d\n",sgnm->k);
+#endif
 
   // initialize scaled Courant arrays
   RASN(sgnm->c11,RPNT_0);
@@ -488,7 +491,7 @@ int asg_readschemeinfo(PARARRAY * par,
       return E_BADINPUT;
     }
     sgnp->lam[idim] = (model->tsind).dt / dxs[idim];
-#ifdef VERBOSE
+#ifdef IWAVE_VERBOSE
     fprintf(stderr, "lam[%d] = %g\n", idim, sgnp->lam[idim]);
 #endif
 
@@ -519,8 +522,10 @@ int asg_readschemeinfo(PARARRAY * par,
   // reserve a copy of dt for use in source scaling
   sgnp->dt = (model->tsind).dt;
 
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: asg_readschemeinfo: initialize aux PML arrays\n");
   fflush(stream);
+#endif
 
   if (sgnp->nep0 || sgnp->ep0_p || sgnp->ep0_pp ||
       sgnp->nev0 || sgnp->ev0_p || sgnp->ev0_pp ||
@@ -620,12 +625,14 @@ int asg_readschemeinfo(PARARRAY * par,
   }
 #endif
 
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"NOTE: asg_schemeinfo\n");
   fprintf(stream," -- initialized aux PML arrays with dimensions\n");
   fprintf(stream," -- nep0=%d nev0=%d\n",sgnp->nep0,sgnp->nev0);
   fprintf(stream," -- nep1=%d nev1=%d\n",sgnp->nep1,sgnp->nev1);
   fprintf(stream," -- nep2=%d nev2=%d\n",sgnp->nep2,sgnp->nev2);
   fflush(stream);
+#endif
 
   return 0;
 

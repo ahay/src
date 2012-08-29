@@ -1,6 +1,0 @@
-n1=361 d1=5.000000e+00 o1=0.000000e+00
-n2=1561 d2=5.000000e+00 o2=0.000000e+00
-n3=1 d3=1.000000e+00 o3=3.300000e+03
-data_type=density
-data_format=native_float
-in=../../model/data/dn2d_5m.rsf@
