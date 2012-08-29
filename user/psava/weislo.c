@@ -57,6 +57,10 @@ weislo3d weislo_init(weicub3d cub,
     sf_seek(slo->F,0,SEEK_SET);
     sf_floatread(slo->s[0][0],sf_n(cub->alx)*sf_n(cub->aly)*sf_n(cub->az),slo->F);
 
+    for(iz=0; iz<sf_n(cub->az); iz++)
+      for(jj=0; jj<slo->nrmax; jj++)
+        slo->sm[iz][jj] = 0.0;
+
     for (iz=0; iz<sf_n(cub->az); iz++) {
 	slo->nr[iz] = weislo(slo->nrmax,
 			     slo->dsmax,
