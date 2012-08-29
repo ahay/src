@@ -205,7 +205,8 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    if (scalebar) {
-		sf_seek(bar,(off_t) frame3*(VP_BSIZE+2*sizeof(float)),SEEK_SET);
+		sf_seek(bar,(off_t) frame3*(VP_BSIZE+2*sizeof(float)),
+			SEEK_SET);
 
 		sf_floatread(minmax,2,bar);
 		sf_ucharread(barbuf[0],VP_BSIZE,bar);
@@ -229,7 +230,8 @@ int main(int argc, char* argv[])
 			buf[i][j] = side[i3][i1];
 		    }
 		} else {
-		    j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
+		    j0 = (i-n2front)*(n1pix-n1front)/
+			(float) (n2pix-n2front);
 		    for (j=j0; j < n1pix; j++) {
 			i1 = n1*(n1front+j0-j-0.5)/(float) n1front;
 			if (i1 >= 0)

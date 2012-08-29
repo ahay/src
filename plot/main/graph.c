@@ -37,17 +37,26 @@ static void getminmax(const float* f, float* min, float* max);
 int main(int argc, char* argv[])
 {
     bool transp, start;
-    int n1, n2, n3, i1, i2, i3, len;
+    int n1, n2, n3, i1, i2, i3, len, nreserve;
     float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt;
     float **x, **y, **tmp, *symbolsz=NULL, symsize, xc, yc;    
-    float*** data=NULL;
-    char* symbol, sym[2]=" ";
+    float ***data=NULL;
+    char *symbol, sym[2]=" ", *color=NULL;
+    unsigned char **z=NULL;
     sf_datatype type;
-    sf_file in;
+    sf_file in, depth;
 
     sf_init(argc,argv);
     in = sf_input("in");
     vp_init();
+
+    if (NULL != sf_getstring("depth")) {
+	depth = sf_input("depth"); /* values for colored symbols */
+	if (SF_UCHAR != sf_gettype(depth)) 
+	    sf_error("Need uchar in depth");
+    } else {
+	depth = NULL;
+    }
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
@@ -61,6 +70,16 @@ int main(int argc, char* argv[])
     x = sf_floatalloc2(n1,n2);
     y = sf_floatalloc2(n1,n2);
     t = sf_floatalloc(n);
+
+    if (depth) {
+	z = sf_ucharalloc2(n1,n2);
+	/* initialize color table */
+	if (NULL == (color = sf_getstring("color"))) color="j";
+	/* color scheme (default is j) */
+	if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
+	/* reserved colors */
+	vp_rascoltab(nreserve,color);
+    } 
 
     if (!sf_getfloat("pclip",&pclip)) pclip=100.; /* clip percentile */
 
@@ -126,6 +145,8 @@ int main(int argc, char* argv[])
 	    max1=o1+(n1-1)*d1;
 	}
 	getminmax(y[0],&min2,&max2);
+
+	if (NULL != depth) sf_ucharread(z[0],n,depth);
 	
 	vp_stdplot_init (min1, max1, min2, max2,
 			 transp,false,false,true);
@@ -161,6 +182,9 @@ int main(int argc, char* argv[])
 			vp_umove(xi,yi);
 			vp_where (&xc, &yc);
 			vp_tjust (TH_SYMBOL, TV_SYMBOL);
+
+			if (NULL != depth) vp_color(z[i2][i1]+256);
+
 			vp_gtext (xc,yc,symsize,0.,0.,symsize,sym);
 		    } else if (start) {
 			vp_umove(xi,yi);

@@ -45,7 +45,9 @@ To programs:
 * oglpen stops movie on pressing 'n' or 'm', menu on left button on
   Macs
 * creating rsfpwd library in user/fomels to avoid code duplication
-* sfawefd2d and 3d: constant-density flag. Improved speed, memory usage
+* sfawefd2d and 3d: constant-density flag. Improved speed, memory
+* sfgraph: depth= option for colored symbols
+
 
 ===Bug fixes===
 
