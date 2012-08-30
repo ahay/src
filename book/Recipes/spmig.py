@@ -1,7 +1,5 @@
-try:
-    from rsf.cluster import *
-except:
-    from rsf.proj import *
+try:    from rsf.cluster import *
+except: from rsf.proj    import *
 import zomig,cluster,os
 
 # ------------------------------------------------------------

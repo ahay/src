@@ -33,7 +33,7 @@ public class Header{
             try{
                     deltas[index-1] = delta;
             } catch (Exception e){
-                    System.err.printf("Failed putting %f at index %d into deltas\n",delta,index);
+                    //System.err.printf("Failed putting %f at index %d into deltas\n",delta,index);
                //     System.exit(1);
             }
     }
@@ -46,7 +46,7 @@ public class Header{
             try{
                     origins[index-1] = origin;
             } catch (Exception e){
-                    System.err.printf("Failed putting %f at index %d into origins\n",origin,index);
+                    //System.err.printf("Failed putting %f at index %d into origins\n",origin,index);
             }
     }
     
@@ -59,7 +59,7 @@ public class Header{
                     this.n[index-1] = n;
                     //ndims += 1;
             } catch (Exception e){
-                    System.err.printf("Failed putting %d at index %d into n\n",n,index);
+                    //System.err.printf("Failed putting %d at index %d into n\n",n,index);
             }
     }
     
@@ -71,7 +71,7 @@ public class Header{
             try{
                     labels[index-1] = label;
             } catch (Exception e){
-                    System.err.printf("Failed to put %s at index %d in labels\n",label,index);
+                    //System.err.printf("Failed to put %s at index %d in labels\n",label,index);
             }
     }
     
@@ -83,7 +83,7 @@ public class Header{
             try{
                     units[index-1] = unit;
             } catch (Exception e){
-                    System.err.printf("Failed to put %s at index %d in unit\n",unit,index);
+                    //System.err.printf("Failed to put %s at index %d in unit\n",unit,index);
             }
     }
     

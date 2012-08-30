@@ -42,7 +42,6 @@ weislo3d weislo_init(weicub3d cub,
     weislo3d slo;
 
     if (!sf_getint(  "nrmax",&nrmax )) nrmax =     1; /* maximum references */
-
     /*------------------------------------------------------------*/
     slo = (weislo3d) sf_alloc(1,sizeof(*slo));
 

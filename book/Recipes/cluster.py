@@ -1,4 +1,5 @@
-from rsf.proj import *
+try:    from rsf.cluster import *
+except: from rsf.proj    import *
 
 # generate launch file
 def launch(edir,job,nodes,time,queue,project):

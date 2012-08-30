@@ -1,4 +1,5 @@
-from rsf.proj import *
+try:    from rsf.cluster import *
+except: from rsf.proj    import *
 import pplot,fdmod
 
 def param(par):

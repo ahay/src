@@ -11,7 +11,7 @@ public class RSF{
             targs[0] = "java";
             for(int i = 0; i < args.length; ++i){
                 targs[i+1] = args[i];
-                System.err.printf("targs: %d %s\n",i+1,args[i]);
+                //System.err.printf("targs: %d %s\n",i+1,args[i]);
             }
         }
         m8r.sf_init(targs.length,targs);
