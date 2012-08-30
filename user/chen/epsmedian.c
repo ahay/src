@@ -20,59 +20,63 @@
 
 
 #include <rsf.h>
-#include "rmedian.h"
+#include "sfilt.h"
 
 typedef struct{
 	int n;
-	int nfw;
-	float *v, *e;
-	void *h;
+	int nfw1, nfw2;
+	float *u, *v, *e;
 }EPSMEDIAN;
 
-void* epsmedian_init(int n1, int nfw)
+void* epsmedian_init(int n1, int nfw1, int nfw2)
 /*< initialize >*/
 {
 	EPSMEDIAN *p;
 
 	p = sf_alloc(1, sizeof(EPSMEDIAN));
 	p->n = n1;
-	p->nfw = nfw;
+	p->nfw1 = nfw1;
+	p->nfw2 = nfw2;
+	p->u = sf_floatalloc(nfw1+nfw2+1);
 	p->v = sf_floatalloc(n1);
 	p->e = sf_floatalloc(n1);
-	p->h = rmedian_init(n1, 0, nfw);
 	return p;
 }
 
+#define MAX(a,b) ((a)<(b) ? (b) : (a))
+#define MIN(a,b) ((a)>(b) ? (b) : (a))
 void epsmedian(void *h, float *x, int d)
 /*< eps by median filter >*/
 {
-	int i1, j1, j2;
+	int i1, j1, j2, min, max, l;
 	EPSMEDIAN *p;
 	p = (EPSMEDIAN*) h;
 	float t;
-	for(i1=0; i1 < p->n; i1++)
-	{
-		p->v[i1] = x[i1*d];
-		p->e[i1] = 0.0;
-	}
 
-	rmedian(p->h, p->v, 1);
-
-	for(i1=0; i1 < p->n; i1++)
-	{
-		for(j1=0; j1 < p->nfw; j1++)
+    for(i1=0; i1 < p->n; i1++)
+    {
+        min = MAX(i1-p->nfw1, 0);
+        max = MIN(i1+p->nfw2, p->n-1);
+        l = max - min + 1;
+    	for(j1=min; j1 <= max; j1++)
+    	p->u[j1-min] = x[j1*d];
+        p->v[i1] = sfilt_median(l, p->u);
+    	for(j1=min, p->e[i1]=0.0 ; j1 <= max; j1++)
 		{
-			t = x[(i1+j1)*d] - p->v[i1];
+			t = p->v[i1] - p->u[j1];
 			p->e[i1] += t*t;
 		}
-	}
+		p->e[i1] /= l;
+    }
 
-	for(i1=p->nfw; i1 < p->n - p->nfw; i1++)
-	{
-		j2 = -p->nfw;
-		for(j1=-p->nfw; j1<=p->nfw; j1++)
-			if(p->e[i1+j1] < p->e[i1+j2]) j2 = j1;
-		x[i1*d] = p->v[i1+j2];
-	}
+    // selection
+    for(i1=0; i1 < p->n; i1++)
+    {
+        min = MAX(i1-p->nfw1, 0);
+        max = MIN(i1+p->nfw2, p->n-1);
+        j2 = min;
+        for(j1=min+1; j1 <= max; j1++) 
+        if(p->e[j1] < p->e[j2]) j2 = j1;
+        x[i1*d] = p->v[j2];
+    }
 }
-

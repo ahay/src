@@ -1,4 +1,4 @@
-/* nokernelear kernel functions */
+/* nonlinear kernel functions */
 
 /*
   Copyright (C) 2012 University of Texas at Austin

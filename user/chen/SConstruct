@@ -8,7 +8,7 @@ psss psefd mdfd4 wavmod
 lphase pwdfreq lphfilt firfreq
 fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
 ss ssblend sscrg
-beeps 
+beeps
 '''
 
 pyprogs='''
@@ -39,6 +39,11 @@ env.Prepend(CPPPATH=['../../include'],
 		LIBPATH=['../../lib'],
 		LIBS=[env.get('DYNLIB','')+'rsf'])
 
+if env.get('BLAS'):
+	if env.get('LAPACK'):
+		env.Prepend(LIBS='lapack')
+		progs += ' frt pca epfws'
+
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
 	obj = env.StaticObject(source)
@@ -47,17 +52,8 @@ for source in src:
 mains = Split(progs)
 for prog in mains:
 	sources = ['M' + prog]
-	bldutil.depends(env,sources,'M'+prog)	
-	if prog in Split('frt pca epfws'):
-		lapack = env.get('LAPACK')
-		if env.get('BLAS') and lapack:
-			prog = env.Program(prog,map(lambda x: x + '.c',sources),
-					   LIBS=env.get('LIBS')+lapack)
-		else:
-			prog = env.RSF_Place('sf'+prog,
-					     None,var='LAPACK',package='lapack')
-	else:
-		prog = env.Program(prog,map(lambda x: x + '.c',sources))
+	bldutil.depends(env,sources,'M'+prog)
+	prog = env.Program(prog,map(lambda x: x + '.c',sources))
 	if root:
 		env.Install(bindir,prog)
 
@@ -66,11 +62,8 @@ for prog in Split(tprogs):
 	bldutil.depends(env,sources,prog)
 	sources = map(lambda x: x + '.o',sources)
 	env.Object('T' + prog + '.c')
-	if prog in Split('frt pca epfws'):
-		lapack = env.get('LAPACK')
-		if env.get('BLAS') and lapack:
-			env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',
-				    LIBS=env.get('LIBS')+lapack)
+	env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+
 
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
