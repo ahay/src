@@ -120,7 +120,7 @@ def param(par):
         par['theight3d']=11*par['tratio3d']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=2 titlesz=12 titlefat=3 '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 '
     
     if(not par.has_key('nqz')): par['nqz']=par['nz']
     if(not par.has_key('oqz')): par['oqz']=par['oz']
@@ -964,30 +964,49 @@ def cdzom(imag,data,velo,rcoo,custom,par):
 # ------------------------------------------------------------
 # wavefield-over-model plot
 def wom(wom,wfld,velo,vmean,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
 
-    if(not par.has_key('wweight')): par['wweight']=10
+    if(not par.has_key('wweight')): par['wweight']=1
     if(not par.has_key('wclip')):   par['wclip']=1.0
 
-    #chop = wfld+'_chop'
-    #Flow(chop,wfld,
-    #     '''
-    #     window
-    #     min1=%(zmin)g n1=%(nz)d
-    #     min2=%(xmin)g n2=%(nx)d |
-    #     scale axis=123
-    #     ''' % par)
+    wtmp = wfld + 'tmp'
+    vtmp = velo + 'tmp'
 
     Flow(wom,[velo,wfld],
-         '''
-         add add=-%g |
-         scale axis=123 |
-         spray axis=3 n=%d o=%g d=%g |
-         math w=${SOURCES[1]} output="input+%g*w"
-         ''' % (vmean,
-                (par['nt']-1)/par['jsnap']+1,
-                par['ot'],
-                par['dt']*par['jsnap'],
-                par['wweight']))
+        '''
+        %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
+        '''%(M8R,wtmp,DPT) +
+        '''
+        %sadd < ${SOURCES[0]} add=-%g |
+        scale axis=123 |
+        spray axis=3 n=%d o=%g d=%g
+        >%s datapath=%s/;
+        '''%(M8R,vmean,
+             (par['nt']-1)/par['jsnap']+1,
+             par['ot'],
+             par['dt']*par['jsnap'],
+             vtmp,DPT) +
+        '''
+        %sadd scale=1,%g %s %s >${TARGETS[0]};
+        '''%(M8R,par['wweight'],vtmp,wtmp) +
+        '''
+        %srm %s %s
+        '''%(M8R,wtmp,vtmp),
+        stdin=0,
+        stdout=0)
+
+        #    Flow(wom,[velo,wfld],
+        #         '''
+        #         add add=-%g |
+        #         scale axis=123 |
+        #         spray axis=3 n=%d o=%g d=%g |
+        #         math w=${SOURCES[1]} output="input+%g*w"
+        #         ''' % (vmean,
+        #                (par['nt']-1)/par['jsnap']+1,
+        #                par['ot'],
+        #                par['dt']*par['jsnap'],
+        #                par['wweight']))
 
 # ------------------------------------------------------------
 # (elastic) wavefield-over-model
@@ -1057,7 +1076,7 @@ def wframe(frame,movie,index,custom,par):
     Flow([movie+'_plt',movie+'_bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s'%custom)
     Plot  (frame,[movie+'_plt',movie+'_bar'],
-           'window n3=1 f3=%d bar=${SOURCES[1]} |'%index
+           'window n3=1 f3=%dbar=${SOURCES[1]} |'%index
            + cgrey(custom,par))
     
 # ------------------------------------------------------------
@@ -1075,10 +1094,11 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
 #             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
 #             + cgrey('',par))
 
-    if(axis==1):
-        pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
-    else:
-        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
+#    if(axis==1):
+#        pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
+#    else:
+#        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
+    pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
 
 # ------------------------------------------------------------
 # elastic wavefield movie
@@ -1089,7 +1109,7 @@ def emovie(movie,wfld,nframes,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.2
         eframe(movie+tag,wfld,iframe,custom,axis,par,xscale,yscale,shift)
         
     allframes = map(lambda x: movie+'-%02d'  % x,range(nframes))
-    Plot(movie,allframes,'Movie',view=1)
+    Result(movie,allframes,'Movie')
 
 # ------------------------------------------------------------
 # elastic data
@@ -1133,7 +1153,7 @@ def ewavelet(wavelet,custom,par):
         Plot(wavelet+'-'+str(i+1),wavelet,
              'window n2=1 f2=%d | transp | window |'%i +
              waveplot('%d %s'% (i,custom) ,par))
-    pplot.p1x2(wavelet,wavelet+'-1',wavelet+'-2',0.5,0.5,-11)
+    pplot.p1x2(wavelet,wavelet+'-1',wavelet+'-2',0.5,0.5,-11.5)
 def ewavelet3d(wavelet,custom,par):
     
     for i in range(3):

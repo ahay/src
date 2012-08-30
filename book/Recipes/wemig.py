@@ -174,6 +174,7 @@ def cdrtm(imag,velo,
           custom,par):
 
     M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
 
     awewin = 'nqz=%(nqz)d oqz=%(oqz)g nqx=%(nqx)d oqx=%(oqx)g'%par
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
@@ -189,23 +190,23 @@ def cdrtm(imag,velo,
          vel=${SOURCES[4]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
-         wfl=%s datapath=/scratch/
+         wfl=%s datapath=%s/
          >/dev/null;
-         '''%(M8R,awewin+' '+awepar,swfl) +
+         '''%(M8R,awewin+' '+awepar,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=/scratch/;
-         '''%(M8R,rdrv) +
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
          '''
          %sawefd2d < %s cden=y %s
          vel=${SOURCES[4]}
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
-         wfl=%s datapath=/scratch/
+         wfl=%s datapath=%s/
          >/dev/null;
-         '''%(M8R,rdrv,awewin+' '+awepar,rwrv) +
+         '''%(M8R,rdrv,awewin+' '+awepar,rwrv,DPT) +
          '''
-         %sreverse < %s which=4 opt=i verb=y >%s datapath=/scratch/;
-         '''%(M8R,rwrv,rwfl) +
+         %sreverse < %s which=4 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rwrv,rwfl,DPT) +
          '''
          %sxcor2d <%s uu=%s axis=3 verb=y %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
