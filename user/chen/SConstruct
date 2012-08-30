@@ -20,7 +20,7 @@ pcmf
 '''
 
 tprogs='''
-opwd fbdip pca
+opwd fbdip
 '''
 
 docs = []
@@ -43,6 +43,7 @@ if env.get('BLAS'):
 	if env.get('LAPACK'):
 		env.Prepend(LIBS='lapack')
 		progs += ' frt pca epfws'
+		tprogs += ' pca'
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
