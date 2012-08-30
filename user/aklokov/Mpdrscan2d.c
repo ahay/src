@@ -140,7 +140,7 @@ int main (int argc, char* argv[]) {
 	sf_putfloat  (outFile, "o2", pStart_);
 	sf_putfloat  (outFile, "o3", vStart_);
     sf_putstring (outFile, "label1", "time"); sf_putstring(outFile, "label2", "inline"); sf_putstring(outFile, "label3", "velocity");
-    sf_putstring (outFile, "unit1", "ms"); sf_putstring(outFile, "unit2", "m"); sf_putstring(outFile, "unit3", "m/s");
+    sf_putstring(outFile, "unit3", "m/s");
 
     sf_putint    (auxFile, "n1", tNum_);
 	sf_putint    (auxFile, "n2", pNum_);
@@ -152,11 +152,11 @@ int main (int argc, char* argv[]) {
 	sf_putfloat  (auxFile, "o2", pStart_);
 	sf_putfloat  (auxFile, "o3", vStart_);
     sf_putstring (auxFile, "label1", "time"); sf_putstring (auxFile, "label2", "inline"); sf_putstring (auxFile, "label3", "velocity");
-    sf_putstring (auxFile, "unit1", "ms"); sf_putstring(auxFile, "unit2", "m"); sf_putstring (auxFile, "unit3", "m/s");
+    sf_putstring (auxFile, "unit3", "m/s");
 
 	const int zoSize = pNum_ * tNum_;
 	const int dataSize = shotNum_ * recNum_ * tNum_;
-	const int tNumRed = tNum_ - 1;
+	const int tNumRed = tNum_ - 2;
 	
     float* zo    = sf_floatalloc (zoSize);
     float* zoSq  = sf_floatalloc (zoSize);
@@ -183,41 +183,46 @@ int main (int argc, char* argv[]) {
 			for (int ir = 0; ir < recNum_; ++ir) {						
 				const float curOffset = recStart_ + recStep_ * ir;
 				const float halfOffset = curOffset / 2.f;
+				const float fabsOffset = fabs (curOffset);
 				const float offsetSq = curOffset * halfOffset;
 				const int forDataInd = (is * recNum_ + ir) * tNum_;
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif					
-				for (int it = 0; it < tNum_; ++it) {	
-					const float curTime = tStart_ + it * tStep_;
-					if (curTime < 1e-6) continue;
-					// take sample
-					const int dataInd = forDataInd + it;
-					const float sample = data[dataInd];
-					// calc function limits
-					const float forLim = offsetSq / (vel * curTime);
-					const float limitLeft  = halfOffset - forLim;
-					const float limitRight = halfOffset + forLim;
+				for (int ip = 0; ip < pNum_; ++ip) {
+					const float curPos = pStart_ + ip * pStep_;
+					const float l0 = curPos - shotPos;			
+					if (fabsOffset <= fabs (l0) || curOffset * l0 <= 0) continue;
+					const float forA = 4 * l0 * (curOffset - l0);
+					for (int it = 0; it < tNum_; ++it) {	
+						const float t0 = tStart_ + it * tStep_;
 
-					// loop over zero-offset positions
-					for (int ip = 0; ip < pNum_; ++ip) {
-						const float curPos = pStart_ + ip * pStep_;
-						const float l0 = curPos - shotPos;			
+						// get time
+						const float a = t0 * t0 / forA;
+						const float t = curOffset * sqrt (a + 1 / pow (vel, 2) );
+
+						// calc curve limits
+						const float forLim = offsetSq / (vel * t);
+						const float limitLeft  = halfOffset - forLim;
+						const float limitRight = halfOffset + forLim;					
+					
 						if (l0 < limitLeft || l0 > limitRight) continue;
 
-						const float a = pow (curTime, 2) - pow (curOffset / vel, 2);
-						const float b = pow (l0 - halfOffset, 2);
-						const float c = pow (halfOffset, 2);
-
-						const float t0 = c ? sqrt ( a * (1 - b / c) ) : curTime;
-						const int tInd = (t0 - tStart_) / tStep_;
-		
+						const int tInd = (t - tStart_) / tStep_;
 						if (tInd < 0 || tInd > tNumRed) continue; 
-	
-						const int indZO   = ip * tNum_ + tInd;
+
+//
+						const float bef = (t - tInd * tStep_) / tStep_;
+						const float aft = 1.f - bef;
+//
+
+						const int dataInd = forDataInd + tInd;
+						const float sample = data [dataInd] * aft + data [dataInd + 1] * bef;
+
+						const int indZO   = ip * tNum_ + it;
 						zo    [indZO] += sample;
 						zoSq  [indZO] += sample*sample;
-						count [indZO] += 1;
+						count [indZO] += 1;									
 					}
 				}
 			}
