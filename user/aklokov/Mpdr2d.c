@@ -175,7 +175,7 @@ int main (int argc, char* argv[]) {
 
 	const int zoSize = pNum_ * tNum_;
 	const int dataSize = shotNum_ * recNum_ * tNum_;
-	const int tNumRed = tNum_ - 1;
+	const int tNumRed = tNum_ - 2;
 	const int velSize = vtNum_ * vxNum_;	
 
     float* zo    = sf_floatalloc (zoSize);
@@ -202,6 +202,7 @@ int main (int argc, char* argv[]) {
 		for (int ir = 0; ir < recNum_; ++ir) {						
 			const float curOffset = recStart_ + recStep_ * ir;
 			const float halfOffset = curOffset / 2.f;
+			const float fabsOffset = fabs (curOffset);
 			const float offsetSq = curOffset * halfOffset;
 			const int forDataInd = (is * recNum_ + ir) * tNum_;
 #ifdef _OPENMP 
@@ -210,6 +211,7 @@ int main (int argc, char* argv[]) {
 			for (int ip = 0; ip < pNum_; ++ip) {
 				const float curPos = pStart_ + ip * pStep_;
 				const float l0 = curPos - shotPos;			
+				if (fabsOffset <= fabs (l0) || curOffset * l0 <= 0) continue;
 				const int vxInd = vtNum_ * (curPos - vxStart_) / vxStep_;
 				const float forA = 4 * l0 * (curOffset - l0);
 
@@ -233,8 +235,11 @@ int main (int argc, char* argv[]) {
 					const int tInd = (t - tStart_) / tStep_;
 					if (tInd < 0 || tInd > tNumRed) continue; 
 
+					const float bef = (t - tInd * tStep_) / tStep_;
+					const float aft = 1.f - bef;
+
 					const int dataInd = forDataInd + tInd;
-					const float sample = data [dataInd];
+					const float sample = data [dataInd] * aft + data [dataInd + 1] * bef;
 
 					const int indZO   = ip * tNum_ + it;
 					zo    [indZO] += sample;

@@ -211,10 +211,8 @@ int main (int argc, char* argv[]) {
 						const int tInd = (t - tStart_) / tStep_;
 						if (tInd < 0 || tInd > tNumRed) continue; 
 
-//
 						const float bef = (t - tInd * tStep_) / tStep_;
 						const float aft = 1.f - bef;
-//
 
 						const int dataInd = forDataInd + tInd;
 						const float sample = data [dataInd] * aft + data [dataInd + 1] * bef;
