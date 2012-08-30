@@ -412,57 +412,50 @@ def vertical(cc,coord,par):
          ''')
 
 def vertical3d(cc,coordx,coordy,par):
-    Temp(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
-    Temp(cc+'_x',cc+'_','math output="%g" '% coordx)
-    Temp(cc+'_y',cc+'_','math output="%g" '% coordy)
-    Temp(cc+'_z',cc+'_','math output="x1" ')
-    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
-         '''
-         cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]} | 
-         transp |
-         put label1="" unit1="" label2="" unit2=""
-         ''')
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
 
+    cco=cc+'o'
+    ccx=cc+'x'
+    ccy=cc+'y'
+    ccz=cc+'z'
+
+    Flow(cc,None,
+         '''
+         %smath n1=%d d1=%g o1=%g output=0 >%s datapath=%s/;
+         '''%(M8R,par['nz'],par['dz'],par['oz'],cco,DPT) +
+         '''
+         %smath <%s output="%g" >%s datapath=%s/;
+         '''%(M8R,cco,coordx,ccx,DPT) +
+         '''
+         %smath <%s output="%g" >%s datapath=%s/;
+         '''%(M8R,cco,coordy,ccy,DPT) +
+         '''
+         %smath <%s output="x1" >%s datapath=%s/;
+         '''%(M8R,cco,ccz,DPT) +
+         '''
+         %scat axis=2 space=n %s %s %s |
+         transp |
+	 put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
+         '''%(M8R,ccx,ccy,ccz) +
+         '''
+         %srm %s %s %s %s
+         '''%(M8R,cco,ccx,ccy,ccz),
+         stdin=0,
+         stdout=0
+        )
+    
 def point(cc,xcoord,zcoord,par):
-#    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
-#    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
-#    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-#    Flow(cc,[cc+'_x',cc+'_z'],
-#         '''
-#         cat axis=2 space=n
-#         ${SOURCES[0]} ${SOURCES[1]} | transp |
-#	 put label1="" unit1="" label2="" unit2=""
-#         ''', stdin=0)
-#
     Flow(cc,None,
          'spike nsp=2 mag=%g,%g n1=2 k1=1,2'%(xcoord,zcoord))
     
 def point3d(cc,xcoord,ycoord,zcoord,par):
-#    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
-#    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-#    Flow(cc+'_y',cc+'_','math output="%g"' % ycoord)
-#    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
-
-#    Flow(cc,[cc+'_x',cc+'_y',cc+'_z'],
-#         '''
-#         cat axis=2 space=n
-#         ${SOURCES[0:3]} | transp |
-#	 put label1="" unit1="" label2="" unit2=""
-#         ''', stdin=0)
-
     Flow(cc,None,
          'spike nsp=3 mag=%g,%g,%g n1=3 k1=1,2,3'%(xcoord,ycoord,zcoord))
     
 def point3(cc,xcoord,zcoord,magn,par):
-    Temp(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
-    Temp(cc+'_z',cc+'_','math output="%g"' % zcoord)
-    Temp(cc+'_x',cc+'_','math output="%g"' % xcoord)
-    Temp(cc+'_r',cc+'_','math output="%g"' % magn)
-    Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
-         '''
-         cat axis=2 space=n
-         ${SOURCES[1]} ${SOURCES[2]} | transp
-         ''')
+    Flow(cc,None,
+         'spike nsp=3 mag=%g,%g,%g n1=3 k1=1,2,3'%(xcoord,zcoord,magn))
 
 # ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
