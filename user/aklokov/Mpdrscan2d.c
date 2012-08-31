@@ -199,7 +199,7 @@ int main (int argc, char* argv[]) {
 
 						// get time
 						const float a = t0 * t0 / forA;
-						const float t = curOffset * sqrt (a + 1 / pow (vel, 2) );
+						const float t = fabsOffset * sqrt (a + 1 / pow (vel, 2) );
 
 						// calc curve limits
 						const float forLim = offsetSq / (vel * t);
