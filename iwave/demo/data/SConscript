@@ -6,23 +6,9 @@
 import os
 import shutil
 thispath = os.getcwd()
-DATAPATH = os.getenv('DATAPATH','.')
-if DATAPATH[len(DATAPATH)-1] == '/':
-    TMPDATAPATH = DATAPATH + 'iwave'
-else:
-    TMPDATAPATH = DATAPATH + '/iwave'
+env = Environment()
 
-Import('MADAGASCAR', 'jobs', 'scripts')
-
-# madagascar version
-if MADAGASCAR:
-    from rsf.proj import *
-    env = Environment();
-    ROOT = os.path.abspath(os.path.expandvars('$RSFROOT/bin')) + '/'    
-# autonomous version
-else:
-    env = Environment();
-    ROOT = '../../../'
+Import('MADAGASCAR TMPDATAPATH ROOT jobs scripts')
 
 ###### INDICES INTO JOB PARAM LIST
 n_cmd         = 0
@@ -70,19 +56,16 @@ def scriptwriter(batch,job,path,queue,mail,acct,wall,res,exe):
 def make(target, source, env):
     tgt = str(target[0])
     print 'making ' + tgt
-
+# create working dir
     try:
         shutil.rmtree('./' + tgt)
     except OSError:
-        pass
+        pass	 
     os.mkdir('./' + tgt)
-
-# first see if it's a script
     if tgt in scripts.keys():
-        Export('MADAGASCAR', 'TMPDATAPATH')
+        Export('MADAGASCAR TMPDATAPATH ROOT')
         SConscript('./' + tgt + '.sc')
-    else:
-# must be in jobs list
+    if tgt in jobs.keys():
 # expand tmpdatapath in param file        
         fin  = open('./' + tgt + '.par','r')
         fout = open('./parfile','w')
@@ -104,20 +87,18 @@ def make(target, source, env):
 # this loop induces the required dependencies, and indicates what needs to be cleaned up
 for i in jobs.keys():
     if len(jobs[i][n_dep]) == 0:
-        t = env.Command([i], [i + '.par', 'SConstruct'], make)
+        t = env.Command([i], [], make)
     else: 
-        print 'job = ' + i + ' deps = ' 
-        print jobs[i][n_dep] + [i + '.par', 'SConstruct']
-        t = env.Command([i], jobs[i][n_dep] + [i + '.par', 'SConstruct'], make)
+#        print 'job = ' + i + ' deps = ' 
+#        print jobs[i][n_dep] + [i + '.par', 'SConstruct']
+        t = env.Command([i], jobs[i][n_dep], make)
     Clean(t,i)
 
 for i in scripts.keys():
     if len(scripts[i]) == 0:
-        t = env.Command([i], [i + '.sc', 'SConstruct'], make)
+        t = env.Command([i], [], make)
     else:
-        print 'script = ' + i + ' deps = ' 
-        print scripts[i] + [i + '.sc', 'SConstruct']
-        t = env.Command([i], scripts[i] + [i + '.sc', 'SConstruct'], make)
+        t = env.Command([i], scripts[i], make)
     if (i == 'tmpdata'):
         Clean(t,[i, '/var/tmp/iwave'])
     else:

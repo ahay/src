@@ -57,26 +57,39 @@
 ################### ENVIRONMENT-DEPENDENT USER INPUT ###################
 
 ########################################################################
+################### FLAG: MADAGASCAR OR STANDALONE #####################
+########################################################################
+
+MADAGASCAR = False
+
+########################################################################
 ######################### JOB DEFINITION TABLE #########################
 ########################################################################
 
+if MADAGASCAR:
+    standardmodel = 'sfstandardmodel'
+    asg           = 'sfasg'
+else:
+    standardmodel = 'demo/main/standardmodel.x'
+    asg           = 'asg/main/asg.x'
+
 jobs = {
-'dn2d_20m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'vp2d_20m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'dn2d_10m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'vp2d_10m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'dn2d_5m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'vp2d_5m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'dn2d_2.5m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'vp2d_2.5m': ['demo/main/standardmodel.x',['tmpdata'],'', '', '',''],
-'demo20m' : ['asg/main/asg.x',['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
-'demo10m' : ['asg/main/asg.x',['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
-'demo5m'  : ['asg/main/asg.x',['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
-'demo2.5m'  : ['asg/main/asg.x',['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
-'demo20m8k' : ['asg/main/asg.x',['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
-'demo10m8k' : ['asg/main/asg.x',['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
-'demo5m8k'  : ['asg/main/asg.x',['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
-'demo2.5m8k'  : ['asg/main/asg.x',['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
+'dn2d_20m': [standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_20m': [standardmodel,['tmpdata'],'', '', '',''],
+'dn2d_10m': [standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_10m': [standardmodel,['tmpdata'],'', '', '',''],
+'dn2d_5m': [standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_5m': [standardmodel,['tmpdata'],'', '', '',''],
+'dn2d_2.5m': [standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_2.5m': [standardmodel,['tmpdata'],'', '', '',''],
+'demo20m' : [asg,['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
+'demo10m' : [asg,['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
+'demo5m'  : [asg,['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
+'demo2.5m'  : [asg,['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
+'demo20m8k' : [asg,['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
+'demo10m8k' : [asg,['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
+'demo5m8k'  : [asg,['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
+'demo2.5m8k'  : [asg,['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
 }
 
 scripts = {
@@ -84,7 +97,6 @@ scripts = {
 'tmpdata' : [],
 'Fig'     : ['demo2.5m', 'demo5m', 'demo10m', 'demo20m', 'demo2.5m8k', 'demo5m8k', 'demo10m8k', 'demo20m8k']
 }
-
 
 ########################################################################
 ################# OPTIONS COMMON FOR ALL BATCH JOBS ####################
@@ -97,14 +109,23 @@ MAIL = 'symes@caam.rice.edu'
 ACCT = 'FDTD3D-Cont'
 
 ########################################################################
-################### FLAG: MADAGASCAR OR STANDALONE #####################
-########################################################################
-
-MADAGASCAR = False
-
-########################################################################
 ###### interface to sconscript files - do not edit below this line #####
 ########################################################################
 
-Export('MADAGASCAR', 'jobs', 'scripts')
+import os
+DATAPATH = os.getenv('DATAPATH','.')
+if DATAPATH[len(DATAPATH)-1] == '/':
+    TMPDATAPATH = DATAPATH + 'iwave'
+else:
+    TMPDATAPATH = DATAPATH + '/iwave'
+
+# madagascar version
+if MADAGASCAR:
+    ROOT = os.path.abspath(os.path.expandvars('$RSFROOT/bin')) + '/'    
+# autonomous version
+else:
+    ROOT = '../../../'
+
+Export('MADAGASCAR TMPDATAPATH ROOT jobs scripts')
 SConscript('./SConscript')
+
