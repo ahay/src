@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from traits.api import HasTraits, Instance, Button, Enum, Int, Float, Range
 from traitsui.api import View, Item, Group
 from chaco.api import HPlotContainer, Plot, ArrayPlotData, DataRange1D
@@ -48,9 +49,11 @@ class SeisData(HasTraits):
             #print "inc=",inc,"last=",last
         subsetvals=self.vals[:last[0]:inc[0],:last[1]:inc[1],:last[2]:inc[2]]
         #print "subsetvals.shape=",subsetvals.shape
-        self.minval = min(subsetvals)
-        #print "compute max"
-        self.maxval = max(subsetvals)
+        mymin=min(subsetvals)
+        mymax=max(subsetvals)
+        print "min/max",mymin,mymax
+        self.maxval = max([abs(mymin),mymax])
+        self.minval = -self.maxval
         print "min=",self.minval,"max=",self.maxval
 
         print "leaving m8rInput"
@@ -80,7 +83,7 @@ class ContainerExample(HasTraits):
               orientation="horizontal"),
         Item('plot',editor=ComponentEditor(), show_label=False),
         # put the info box that lists the mouse location tuple kls karl
-        width=1000, height=600, resizable=True, title="Chaco Plot",
+        width=1000, height=600, resizable=True, title="Madagascar Comparison",
         # How do I activate these? buttons=["do_nothing","do_nothing_1"]
         )
 
