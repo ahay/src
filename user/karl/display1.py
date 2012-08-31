@@ -190,8 +190,8 @@ class ContainerExample(HasTraits):
         print "next button pushed"
         slice_y = self.slice_y + self.displayParameters.slice_inc 
         print "shape=",self.seis_data_0.vals.shape
-        if(slice_y > self.seis_data_0.vals.shape[0]):
-            slice_y = 1
+        if(slice_y >= self.seis_data_0.vals.shape[0]):
+            slice_y = 0
         print "after increment slice_y=",slice_y
         self.slice_y=slice_y
         self._update_images()
