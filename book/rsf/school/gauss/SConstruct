@@ -1,0 +1,76 @@
+from rsf.proj import *
+
+sig=1.5
+# ------------------------------------------------------------
+# Gaussian function
+Flow('gg',None,
+     '''
+     math output="exp(-(x1*x1+x2*x2)/(2*%g*%g))"
+     n1=200 d1=0.1 o1=-10.
+     n2=200 d2=0.1 o2=-10. |
+     put label1=z unit1=km label2=x unit2=km
+     ''' % (sig,sig) )
+
+Result('gg','grey pclip=100 screenratio=1 title="2D Gaussian" labelsz=5 labelfat=3 titlefat=3')
+Result('gg0','gg',
+       '''
+       window n2=1 f2=100 |
+       graph title="1D Gaussian" titlefat=3
+       plotfat=5 labelsz=5 labelfat=3
+       ''')
+
+# ------------------------------------------------------------
+# Velocity
+Flow('vel','gg',
+     '''
+     scale rscale=-1. |
+     add add=3
+     ''')
+Plot  ('vel','grey title="" pclip=100 screenratio=1 bias=3 labelsz=5 labelfat=3')
+Result('vel','grey title="" pclip=100 screenratio=1 bias=3 labelsz=5 labelfat=3')
+
+# ------------------------------------------------------------
+# FME
+Flow('fme','vel','eikonal zshot=-10 yshot=0')    
+Plot('fme',
+     '''
+     contour nc=200 plotcol=0
+     plotfat=3 labelsz=5 labelfat=3
+     labelrot=n wantaxis=n wanttitle=n title=""
+     scalebar=n
+     screenratio=1
+     ''')
+Result('fme',['vel','fme'],'Overlay')
+
+# ------------------------------------------------------------
+# HWT
+Flow('hwt','vel',
+     '''
+     hwt2d xsou=0 zsou=-10
+     nt=1000 ot=0   dt=0.01
+     ng=1801 og=-90 dg=0.1
+     ''')
+
+Plot('ray','hwt',
+     '''
+     transp |
+     window f1=50 j1=25 j2=20 |
+     graph plotcol=0
+     plotfat=3 labelsz=5 labelfat=3
+     wantaxis=n title="" yreverse=y screenratio=1
+     min1=-10 max1=+10 min2=-10 max2=+10
+     ''')
+Plot('wft','hwt',
+     '''
+     window f2=50 j2=25 j1=20 |
+     graph plotcol=0
+     plotfat=3 labelsz=5 labelfat=3
+     wantaxis=n title="" yreverse=y screenratio=1
+     min1=-10 max1=+10 min2=-10 max2=+10
+     ''')
+Result('hwt',['vel','ray','wft'],'Overlay')
+
+# ------------------------------------------------------------
+
+
+End()
