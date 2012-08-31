@@ -1,6 +1,6 @@
 from rsf.tex import *
 
-Paper('demo',color='vp2d_5m dn2d_5m trace wtrace trace8k wtrace8k',
+Paper('paper',color='vp2d_5m dn2d_5m trace wtrace trace8k wtrace8k',
       use='hyperref',
       include=r'''
 \newcommand{\du}{\delta u}
