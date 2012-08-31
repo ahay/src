@@ -1,3 +1,0 @@
-uses=['sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfspike', 'sftrapez', 'sfscale', 'sfsegyheader', 'sfsuwrite', 'sfmath', 'sfasg', 'sfsuread', 'sfcat', 'sfgraph']
-data=['data/iwave/dn2d_2.5m.hh', 'data/iwave/vp2d_2.5m.hh']
-size=   33104424

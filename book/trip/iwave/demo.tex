@@ -1,4 +1,4 @@
-\title{IWAVE Demonstration Package - Draft 28.05.12}
+\title{IWAVE Demonstration Package - Draft 31.08.12}
 \author{William. W. Symes \thanks{The Rice Inversion Project,
 Department of Computational and Applied Mathematics, Rice University,
 Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
@@ -6,25 +6,56 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
 \maketitle
 
 \begin{abstract}
-IWAVE is a framework for time-domain regular grid finite difference and finite element methods. The demonstration package includes examples of typical IWAVE use cases, with complete input data. This paper displays reference output. [Note - under construction!]
+  IWAVE is a framework for time-domain regular grid finite difference
+  and finite element methods. The demonstration package includes
+  examples of typical IWAVE use cases, with complete input data. The
+  examples are taken from a recent paper on error propagation for
+  heterogeneous medium simulation using finite differences, and allow
+  the user to replicate illustrations of the interface error effect
+  which renders all FD methods effectively first-order accurate.  This
+  paper gives a brief tour of the demonstration package.
 \end{abstract}
 
 \section{Introduction}
-The primary purpose of this short paper is to illustrate the use of IWAVE to calculate synthetic seismograms. IWAVE is built around a core framework, that is, a collection of separate software packages which together provide a set of essential services upon which applications may be built, and which completely define the interfaces to which additional software must be written to formulate a complete application. Along with the core framework, the current release contains a complete time-domain acoustic modeling application, as well as a basic isotropic elastodynamics application.
-The demonstrations discussed here are based on the acoustic modeling application.
+The primary purpose of this short paper is to illustrate the use of
+IWAVE to calculate synthetic seismograms. IWAVE is built around a core
+framework, that is, a collection of separate software packages which
+together provide a set of essential services upon which applications
+may be built, and which completely define the interfaces to which
+additional software must be written to formulate a complete
+application. Along with the core framework, the current release
+contains a complete time-domain acoustic modeling application, as well
+as a basic isotropic elastodynamics application.  The demonstrations
+discussed here are based on the acoustic modeling application.
 
-All IWAVE applications are parameter-driven: that is, they accept as input a file defining a {\em map} or associative array, consisting of a list of {\tt key = value} pairs. The demo directories described in this paper contain one or more such parameter (``par'') files, always signified by the suffix ``{\tt .par}''. Each file defines a modeling task. By perusing these par files and examining the simulation output, the user can quickly gain an appreciation of scope of IWAVE's capabilities. 
+All IWAVE applications are parameter-driven: that is, they accept as
+input a file defining a {\em map} or associative array, consisting of
+a list of {\tt key = value} pairs. The demo directories described in
+this paper contain one or more such parameter (``par'') files, always
+signified by the suffix ``{\tt .par}''. Each file defines a modeling
+task. By perusing these par files and examining the simulation output,
+the user can quickly gain an appreciation of scope of IWAVE's
+capabilities.
 
-A secondary purpose is to supply the user with the means to independently verify some of the claims in the paper by \cite{SymesVdovina:09}, in which the examples were generated using an earlier version of the same software.
+A secondary purpose is to supply the user with the means to
+independently verify some of the claims in the paper by
+\cite{SymesVdovina:09}, in which the examples were generated using an
+earlier version of the same software.
 
 \section{Acoustodynamics}
-The IWAVE acoustic package is based on the pressure-velocity form of acoustodynamics, consisting of two coupled first-order partial differential equations:
+The IWAVE acoustic package is based on the pressure-velocity form of
+acoustodynamics, consisting of two coupled first-order partial
+differential equations:
 \begin{eqnarray}
 \label{awe}
 \rho \frac{\partial \bv}{\partial t} &=& - \nabla p \\
 \frac{1}{\kappa}\frac{\partial p}{\partial t} &=& -\nabla \cdot \bv + g
 \end{eqnarray}
-In these equations, $p(\bx,t)$ is the pressure (excess, relative to an ambient equilibrium pressure), $\bv(\bx,t)$ is the particle velocity, $\rho(\bx)$ and $\kappa(\bx)$ are the density and particle velocity respectively. Bold-faced symbols denote vectors; the above formulation applies in 1, 2, or 3D. 
+In these equations, $p(\bx,t)$ is the pressure (excess, relative to an
+ambient equilibrium pressure), $\bv(\bx,t)$ is the particle velocity,
+$\rho(\bx)$ and $\kappa(\bx)$ are the density and particle velocity
+respectively. Bold-faced symbols denote vectors; the above formulation
+applies in 1, 2, or 3D.
 
 The inhomogeneous term $g$ represents externally supplied energy (a
 ``source''), via a defect in the acoustic constitutive relation. A
@@ -34,78 +65,141 @@ g(\bx,t) = w(t) \delta(\bx-\bx_s)
 \]
 at source location $\bx_s$.
 
-The bulk modulus and buoyancy (reciprocal density) are the natural parameters in a time-stepping discretization of this equation. I will display velocity and density instead. IWAVE's acoustic application converts velocity and density to bulk modulus and buoyancy as part of the problem setup phase.
+The bulk modulus and buoyancy (reciprocal density) are the natural
+parameters in a time-stepping discretization of this equation. I will
+display velocity and density instead. IWAVE's acoustic application
+converts velocity and density to bulk modulus and buoyancy as part of
+the problem setup phase.
 
-\section{The dome model - {\tt demo1}}
+\section{Examples based on a 2D dome model}
 
 This simple 2D model embeds an anticline or dome in an otherwise
 undisturbed package of layers. The velocity and density models are
-depicted in Figures \ref{fig:vp0} and \ref{fig:dn0}.
+depicted in Figures \ref{fig:vp2d_5m} and \ref{fig:dn2d_5m}. These
+figures display sampled versions of the models with $\Delta x = \Delta
+z = $ 5 m; the model fields are actually given analytically, and can
+be sampled at any spatial rate.
 
 \cite{SymesVdovina:09} use this model to illustrate the {\em
   interface error} phenomenon: the tendency, first reported by
 \cite{Brown:84}, of all finite difference schemes for wave
 propagation to exhibit first order error, regardless of formal order,
-for models with material parameter discontinuities. The shot record
-(Figure \ref{fig:data0}, acquisition geometry described in caption) looks
-perfectly normal. However the spatial sample rate of the model in
-Figures \ref{fig:vp0} and \ref{fig:dn0} has a considerable effect. The
-material parameter fields are constructed as {\em functions} of
-position in 2D space, hence can be sampled at any rate at all. Figures
+for models with material parameter discontinuities. 
+Figure \ref{fig:data5m} exhibits a shot gather, computed with a (2,4) (= 2nd order in time,
+4th order in space) staggered grid scheme, $\Delta
+x = \Delta z = $ 5 m and an appropriate near-optimal time step, acquisition geometry as described in
+caption. The same gather computed at different spatial sample rates
+seem identical, at first glance, however in fact the sample rate has a considerable effect. Figures
 \ref{fig:trace} and \ref{fig:wtrace} compare traces computed from models sampled
-at four different rates. The scheme used is the 2nd order in time,
-4th order in space staggered grid scheme, which is formally 2nd order
+at four different spatial rates (20 m to 2.5 m), with proportional
+time steps. The scheme used is formally 2nd order
 convergent like the original 2nd order scheme suggested by
-\cite{Vir:84}, but has better dispersion suppression. Nonetheless,
+\cite{Vir:84}, but has better dispersion suppression due to the use of
+4th order spatial derivative approximation. Nonetheless,
 the figures clearly show the first order error, in the form of a
-grid-dependent time shift, predicted by \cite{Brown:84}. See
+grid-dependent time shift, predicted by \cite{Brown:84}. 
+
+Generally, even higher order approximation of spatial derivatives
+yields less dispersive propagation error, which dominates the finite
+difference error for smoothly varying material models. For
+discontinuous models, the dispersive component of error is still
+improved by use of a higher order spatial derivative approximation,
+but the first order interface error eventually dominates as the grids
+are refined. Figure \ref{fig:data5m8k} shows the same shot gather as
+displayed earlier, with the same spatial and temporal sampling and
+acquisition geometry, but computed via the (2,8) (8th order in space)
+scheme. The two gather figures are difficult to disinguish. The trace
+details (Figures \ref{fig:trace8k}, \ref{fig:wtrace8k}) show clearly
+that while the coarse grid simulation is more accurate than the (2,4)
+result, but the convergence rate stalls out to 1st order as the grid
+as refined, and for fine grids the (2,4) and (2,8) schemes produce
+very similar results: dispersion error has been suppressed, and what
+remains is due to the presence of model discontinuities.
+
+See
 \cite[]{SymesVdovina:09} for more examples, analysis, and discussion.
 
-\inputdir{demo1}
+%\inputdir{demo1}
+\inputdir{data}
 
-\plot{vp0}{width=15cm}{Dome velocity model}
-\plot{dn0}{width=15cm}{Dome density model}
-\plot{data0}{width=15cm}{2D shot record, 301 traces: shot x = 3300 m, shot z = 40 m, receiver x =
-  100 - 6100 m, receiver z = 20 m, number of time samples = 1501, time
+\plot{vp2d_5m}{width=15cm}{Dome velocity model}
+\plot{dn2d_5m}{width=15cm}{Dome density model}
+\plot{data5m}{width=15cm}{2D shot record, (2,4) staggered grid scheme, $\Delta x = \Delta z =$ 5 m,
+  appropriate $\Delta t$, 301 traces: shot x = 3300 m, shot z = 40 m, receiver x =
+ 100 - 6100 m, receiver z = 20 m, number of time samples = 1501, time
 sample interval = 2 ms. Source pulse = zero phase trapezoidal [0.0,
 2.4, 15.0, 20.0] Hz bandpass filter.}
 
 \plot{trace}{width=15cm}{Trace 100 (receiver x = 2100 m) for $\Delta x = \Delta z = $
-  20 m (red), 10 m (green), 5 m (blue), and 2.5 m (black). Note
-  arrival time discrepancy after 1 s: this is the interface error
-  discussed in \cite[]{SymesVdovina:09}. Except for the 20 m result,
-  grid dispersion error is minimal.} 
+ 20 m (red), 10 m (green), 5 m (blue), and 2.5 m (black). Note
+ arrival time discrepancy after 1 s: this is the interface error
+ discussed in \cite[]{SymesVdovina:09}. Except for the 20 m result,
+ grid dispersion error is minimal.} 
 
 \plot{wtrace}{width=15cm}{Trace 100 detail, 1.8-2.5 s, showing more clearly the
-  first-order interface error: the time shift between computed events
-  and the truth (the 2.5 m result, more or less) is proportional to
-  $\Delta t$, or equivalently to $\Delta z$.}
+ first-order interface error: the time shift between computed events
+ and the truth (the 2.5 m result, more or less) is proportional to
+ $\Delta t$, or equivalently to $\Delta z$.}
 
-\begin{comment}
-\section{Using {\tt demo1}}
+\plot{data5m8k}{width=15cm}{2D shot record, (2,8) scheme, other
+  parameters as in Figure \ref{fig:data5m}.}
+
+\plot{trace8k}{width=15cm}{Trace 100 computed with the (2,8) scheme,
+  other parameters as described in the captions of Figures
+  \ref{fig:data5m} and \ref{fig:trace}.} 
+
+\plot{wtrace8k}{width=15cm}{Trace 100 detail, 1.8-2.5 s, (2,8) scheme..
+Comparing to Figure \ref{fig:wtrace}, notice that the dispersion error for
+the 20 m grid is considerably smaller, but the results for finer grids
+are nearly identical to those produced by the (2,4) grids - almost all
+of the remaining error is due to the presence of discontinuities in
+the model.}
+
+\section{Using IWAVE demos}
 IWAVE and all of its parts build with SConstruct. For instructions on
 installing IWAVE (and all other TRIP software) see 
 \url{http://www.trip.caam.rice.edu/software/admin/doc/html/install.html}.
 
-To build {\tt demo1},
+To build the intermediate data and figures for  the examples described
+here,,
 \begin{itemize}
-\item install IWAVE somewhere - I will use  {\tt \$IWAVE} to denote
-  the path to this directory  
-\item build the input data:
-\begin{itemize} 
-  \item {\tt cd \$IWAVE/demo/model/data}
+\item install IWAVE, either within Madagascar or standalone. I will use  {\tt \$TOP} to denote
+  the path to the top-level IWAVE directory for the standalone
+  version, or to the top-level Madagascar directory.
+\item build data and figures: in the standalone version of IWAVE,
+\begin{itemize}
+  \item {\tt cd \$TOP/demo/data}
+\item {\tt scons}
+\end{itemize},
+or, in the Madagascar version,
+\begin{itemize}
+\item {\tt cd \$TOP/book/trip/iwave/data}
+\item {\tt scons}
+\item {\tt scons lock -f madfig.sc}
+\end{itemize}
+(the last step is necessary only to archive the newly created copies
+of the figures - the current Madagascar distribution will arrive with
+already-archived figure files)
+\item to (re)build this paper, build the figures first. Then in the standalone version,
+\begin{itemize}
+\item {\tt cd \$TOP/papers}
+\item {\tt scons}
+\end{itemize} 
+or, in the Madagascar version,
+\begin{itemize}
+\item {\tt cd \$TOP/book/iwave}
 \item {\tt scons}
 \end{itemize}
-\item build demo1:
-\begin{itemize}
-\item {\tt cd \$IWAVE/demo/demo1}
-\item {\tt scons}
-\end{itemize}
+
 \end{itemize}
 Note that the finest (2.5 m) grid consists of roughly 10 million
-gridpoints. Consequently the modeling runs collectively take a few
-minutes on a single thred.
-\end{comment}
+gridpoints. Consequently the modeling runs collectively take a
+considerable time, from a minutes to a substantial fraction of an hour
+depending on platform,
+on a single thred. This example is computationally large enough that
+parallelism via domain decomposition is worthwhile. IWAVE is designed
+from the ground up to support parallel computation; a companion report
+will demonstrate parallel use of IWAVE.
 
 Inspection of the {\tt SConstruct} file in {\tt demo1} will show that
 the modeling tool used is {\tt asg}, the IWAVE
