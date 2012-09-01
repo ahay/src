@@ -1,5 +1,4 @@
 \input{pcsmacros}
-
 \pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
 
 \title[]{basic \mg usage}
@@ -17,27 +16,16 @@
 \mode<beamer> { \cwpcover }
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{objective}
-  \big{\mg programs}
-  \big{file format}
-  \big{processing flows}
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
 \begin{frame} \frametitle{\mg mission}
 
-  to provide
-  \vfill
   \begin{itemize}
-  \item a powerful \textbf{research environment} \\
-    \uncover<2->{\alert{(open-source software package)}}
+  \item \textbf{a research environment} \\
+    \uncover<2->{\alert{--open-source software package--}}
     \vfill
-  \item a convenient \textbf{technology transfer tool} \\
-    \uncover<3->{\alert{(reproducible numeric experiments system)}}
+  \item \textbf{a technology transfer tool} \\
+    \uncover<3->{\alert{--reproducible numeric experiments system--}}
     \vfill
   \end{itemize}
-  for researchers working with digital data processing
   
 \end{frame}
 \cwpnote{}
@@ -45,18 +33,17 @@
 % ------------------------------------------------------------
 \begin{frame} \frametitle{why open source software?}
 
-  \textbf{freedom}
-  \begin{itemize}
-  \item to use 
-  \item to study and modify 
-  \item to redistribute 
-  \item to improve
-  \end{itemize}
-  
-  \vfill
-  \textbf{reproducibility}
-  \vfill
-  
+  \begin{columns}[t]
+    \column{.5\textwidth} \cen{freedom}
+    \cit{to use}
+    \cit{to study}
+    \cit{to modify}
+    \cit{to redistribute}
+    \cit{to improve}
+    
+    \column{.5\textwidth} \cen{reproducibility} 
+  \end{columns}
+
 \end{frame}
 \cwpnote{}
 
@@ -64,13 +51,13 @@
 \begin{frame} \frametitle{why numeric reproducibility?}
 
   \vfill
-  \textbf{collaborative research} 
+  \cen{collaborative research} 
   \vfill
-  \textbf{technology transfer}
+  \cen{technology transfer}
   \vfill
-  \textbf{education}
+  \cen{education}
   \vfill
-  \textbf{peer review}
+  \cen{peer review}
   \vfill
   
 \end{frame}
@@ -105,7 +92,7 @@
 
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{\mg development}
+\begin{frame} \frametitle{\mg developers}
 
   \begin{itemize}
   \item University of Texas (Austin)
@@ -232,9 +219,9 @@
 \begin{frame} \frametitle{programs}
 
   \begin{itemize}
-  \item ``sf'' prefix
   \item independent processing modules
   \item combined using pipes
+  \item ``sf'' prefix
   \item documented by examples (``books'')
   \item implement SMP parallelism
   \item program count: $1023$ on 8/30/2012
@@ -245,7 +232,9 @@
 
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{program list}
+  
   \mex{ {\bf sfdoc} -k .}
+
   \tiny
   \begin{semiverbatim}
     sfofpwd: Objective function of dip estimation with PWD filters.
@@ -279,7 +268,9 @@
 
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{example}
-\mex{ {\bf sfspike} }
+
+  \mex{ {\bf sfspike} }
+
 \tiny
 \begin{semiverbatim}
 NAME
@@ -306,10 +297,6 @@ USED IN
         bei/dpmv/matt
         bei/dpmv/yalei
         bei/dwnc/vofz
-        bei/dwnc/phasemod
-        bei/fdm/kjartjac
-        bei/ft1/autocor
-        bei/ft1/ft2d
 	...
 \end{semiverbatim}
 \end{frame}
@@ -320,16 +307,19 @@ USED IN
   \framesubtitle{single input, single output}
 
   \mex{ 
-    $<$ input.rsf \\
-    {\bf sfprog} \\
-    \emph{arguments} \\ 
-    $>$ output.rsf }
+    $<$ i.rsf
+    {\bf sfprog} 
+    arguments
+    $>$ o.rsf 
+  }
+  
+  \vfill
   
   \begin{itemize}
   \item sfprog = \mg program
-  \item \emph{arguments} = program arguments
-  \item Input from \texttt{stdin} ($<$)
-  \item Output to \texttt{stdout} ($>$)
+  \item arguments = program arguments
+  \item input from \texttt{stdin} ($<$)
+  \item output to \texttt{stdout} ($>$)
   \end{itemize}
   
 \end{frame}
@@ -338,14 +328,16 @@ USED IN
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ {\bf sfspike} \\
-    \emph{n1=100 o1=0 d1=0.01 n2=50 o2=1000 d2=10} \\
-    $>$ file1.rsf }
+  \mex{ 
+    {\bf sfspike}
+    n1=100 o1=0 d1=0.01 n2=50 o2=1000 d2=10
+    $>$ f1.rsf 
+  }
   
   \vfill
   \begin{itemize}
   \item standard in: none
-  \item standart out: \mex{file1.rsf}
+  \item standart out: \mex{f1.rsf}
   \end{itemize}
   
 \end{frame}
@@ -386,8 +378,9 @@ USED IN
 \begin{frame}[fragile] \frametitle{example}
 
   \mex{ {\bf sfin} }
-  \tiny
-  \begin{semiverbatim}
+
+\tiny
+\begin{semiverbatim}
 NAME
         sfin
 DESCRIPTION
@@ -418,12 +411,12 @@ SOURCE
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ {\bf sfin} file1.rsf}
-  \vfill
-  \tiny
+  \mex{ {\bf sfin} f1.rsf}
+
+\tiny
 \begin{semiverbatim}
-file1.rsf:
-    in="/scratch/file1.rsf@"
+f1.rsf:
+    in="/scratch/f1.rsf@"
     esize=4 type=float form=native
     n1=100         d1=0.01        o1=0          label1="Time" unit1="s"
     n2=50          d2=10          o2=1000       label2="Distance" unit2="km"
@@ -433,17 +426,17 @@ file1.rsf:
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{axes}
+\begin{frame}
 
-  dataset
+  \textbf{dataset} described by:
   \begin{itemize}
-  \item header: $file1.rsf$
-  \item binary: $in="/scratch/file1.rsf@"$
+  \item header: \texttt{f1.rsf}
+  \item binary: \texttt{in="/scratch/f1.rsf@"}
   \end{itemize}
   
   \vfill
   
-  axis described by:
+  \textbf{axis} described by:
   \begin{itemize}
   \item $n$: number of samples
   \item $o$: sampling origin
@@ -458,9 +451,9 @@ file1.rsf:
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ $<$ file1.rsf {\bf sfattr} }
-  \vfill
-  \tiny
+  \mex{ $<$ f1.rsf {\bf sfattr} }
+
+\tiny
 \begin{semiverbatim}
 *******************************************
 rms = 1
@@ -484,41 +477,46 @@ total number of samples = 5000
   \begin{itemize}
   \item SEPlib: identical format
     \\
-    \mex{ {\bf In} file1.rsf}
+    \mex{ {\bf In} f1.rsf}
   \item SU: use converters
     \\
-    \mex{ {\bf sfsegyread}  tape=file1.su su=y tfile=tfile.rsf endian=0 $>$ file1.rsf }
+    \mex{ {\bf sfsegyread}  tape=f1.su su=y tfile=tfile.rsf endian=0
+      \\ $>$ f1.rsf }
     \vspace{0.25in}
     \\
-    \mex{ {\bf sfsegywrite} tape=file1.su su=y tfile=tfile.rsf endian=0 $<$ file1.rsf }
+    \mex{ {\bf sfsegywrite} tape=f1.su su=y tfile=tfile.rsf endian=0
+      \\ $<$ f1.rsf }
   \end{itemize}
+
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ $<$ file1.rsf {\bf sfwindow} n2=25 min2=1200 $>$ file2.rsf}
+  \mex{ $<$ f1.rsf {\bf sfwindow} n2=25 min2=1200 $>$ f2.rsf}
+
   \vfill
-  \mex{ {\bf sfin} file1.rsf}
-  \tiny
+
+  \mex{ {\bf sfin} f1.rsf}
+\tiny
 \begin{semiverbatim}
-file1.rsf:
-    in="/scratch/file1.rsf@"
+f1.rsf:
+    in="/scratch/f1.rsf@"
     esize=4 type=float form=native
     n1=100         d1=0.01        o1=0          label1="Time" unit1="s"
     n2=50          d2=10          o2=1000       label2="Distance" unit2="km"
         5000 elements 20000 bytes
 \end{semiverbatim}
-\normalsize
+\large
 
   \vfill
 
-  \mex{ {\bf sfin} file2.rsf}
-  \tiny
+  \mex{ {\bf sfin} f2.rsf}
+\tiny
 \begin{semiverbatim}
-file2.rsf:
-    in="/scratch/file2.rsf@"
+f2.rsf:
+    in="/scratch/f2.rsf@"
     esize=4 type=float form=native
     n1=100         d1=0.01        o1=0          label1="Time" unit1="s"
     n2=25          d2=10          o2=1200       label2="Distance" unit2="km"
@@ -533,20 +531,18 @@ file2.rsf:
   \framesubtitle{multiple inputs, multiple outputs}
   
   \mex{ 
-    $<$ input.rsf \\
-    {\bf sfprog} \\
-    \emph{arguments} \\
-    label1=file1.rsf \\
-    label2=file2.rsf \\
-    ... \\
-    $>$ output.rsf }
+    $<$ i.rsf 
+    {\bf sfprog} 
+    arguments
+    l1=f1.rsf 
+    l2=f2.rsf 
+    $>$ o.rsf }
 
   \begin{itemize}
-  \item sfprog = \mg program
-  \item Input from \texttt{stdin} ($<$)
-  \item Output to \texttt{stdout} ($>$)
-  \item file1.rsf can be open for input and/or output
-  \item file2.rsf can be open for input and/or output
+  \item input from \texttt{stdin} ($<$)
+  \item output to \texttt{stdout} ($>$)
+  \item \texttt{f1.rsf} can be open for input and/or output
+  \item \texttt{f2.rsf} can be open for input and/or output
   \end{itemize}
   
 \end{frame}
@@ -555,50 +551,26 @@ file2.rsf:
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{example}
 
-  \mex{ {\bf sfafmod} }
-  \tiny
+  \mex{ {\bf sfbandpass} }
+
+\tiny
 \begin{semiverbatim}
 NAME
-        sfafmod
+        sfbandpass
 DESCRIPTION
-        Time-domain acoustic FD modeling.
+        Bandpass filtering. 
 SYNOPSIS
-        sfafmod < Fw.rsf vel=Fv.rsf den=Fe.rsf > Fd.rsf sou=Fs.rsf rec=Fr.rsf wfl=Fu.rsf
-	verb=false abc=false snap=false free=false dens=false jsnap=nt nbz=nop nbx=nop tz=0.025 tx=0.025
-
+        sfbandpass < in.rsf > out.rsf flo= fhi= phase=n verb=n nplo=6 nphi=6
 PARAMETERS
-        bool    abc=n [y/n]
-        bool    dens=n [y/n]
-        bool    free=n [y/n]
-        int     jsnap=nt
-        int     nbx=nop
-        int     nbz=nop
-        bool    snap=n [y/n]
-        float   tx=0.025
-        float   tz=0.025
-        bool    verb=n [y/n]
-USED IN
-        gti/fdmod/dens
-        gti/fdmod/scat
-	...
+        float   fhi=    High frequency in band, default is Nyquist 
+        float   flo=    Low frequency in band, default is 0 
+        int     nphi=6  number of poles for high cutoff 
+        int     nplo=6  number of poles for low cutoff 
+        bool    phase=n [y/n]   y: minimum phase, n: zero phase 
+        bool    verb=n [y/n]    verbosity flag
+SOURCE
+        system/generic/Mbandpass.c
 \end{semiverbatim}
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame}  \frametitle{demo}
-
-  \mex{ 
-    $<$ wavelet.rsf \\
-    {\bf sfawefd2d}  \\
-    vel=velocity.rsf \\
-    den=density.rsf \\
-    sou=sources.rsf \\
-    rec=receivers.rsf \\
-    wfl=wavefield.rsf \\
-    $>$ data.rsf
-  }
-
 \end{frame}
 \cwpnote{}
 
@@ -607,9 +579,8 @@ USED IN
 
   \begin{itemize}
   \item \mg programs can be piped
-  \item Stdout from one program becomes stdin for the next
-  \item No intrinsic limit for the number of pipes
-  \item Different from SEPlib's pipes
+  \item \texttt{stdout} from one program becomes \texttt{stdin} for the next
+  \item no intrinsic limit for the number of pipes
   \end{itemize}
   
 \end{frame}
@@ -618,29 +589,31 @@ USED IN
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
   
-  \mex{ $<$ file1.rsf {\bf sfwindow} n2=25 min2=1200 $|$ {\bf sftransp} $>$ file3.rsf}
+  \mex{ $<$ f1.rsf 
+    {\bf sfwindow} n2=25 min2=1200 $|$
+    {\bf sftransp} 
+    $>$ f3.rsf
+  }
   
   \vfill
-  
-  \mex{ {\bf sfin} file1.rsf}
-  \tiny
+  \mex{ {\bf sfin} f1.rsf}
+\tiny
 \begin{semiverbatim}
-file1.rsf:
-    in="/scratch/file1.rsf@"
+f1.rsf:
+    in="/scratch/f1.rsf@"
     esize=4 type=float form=native
     n1=100         d1=0.01        o1=0          label1="Time" unit1="s"
     n2=50          d2=10          o2=1000       label2="Distance" unit2="km"
         5000 elements 20000 bytes
 \end{semiverbatim}
-\normalsize
+\large
 
   \vfill
-
-  \mex{ {\bf sfin} file3.rsf}
-  \tiny
+  \mex{ {\bf sfin} f3.rsf}
+\tiny
 \begin{semiverbatim}
-file3.rsf:
-    in="/scratch/file3.rsf@"
+f3.rsf:
+    in="/scratch/f3.rsf@"
     esize=4 type=float form=native
     n1=25          d1=10          o1=1200       label1="Distance" unit1="km"
     n2=100         d2=0.01        o2=0          label2="Time" unit2="s"
@@ -650,13 +623,8 @@ file3.rsf:
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{useful utilities}
-
-  \begin{itemize}
-  \item simple operations
-  \item plotting
-  \end{itemize}
-  
+\begin{frame}
+  \big{useful utilities}
 \end{frame}
 \cwpnote{}
 
@@ -707,23 +675,23 @@ USED IN
 \begin{frame}[fragile] \frametitle{demo}
 
   \mex{ 
-    {\bf sfmath} \\
-    n1=1000 output='sin(0.5*x1)' \\
-    $>$ sin1.rsf 
+    {\bf sfmath}
+    n1=1000 output='sin(0.5*x1)'
+    $>$ s1.rsf 
   }
   
   \vfill
   
-  \mex{ {\bf sfin} sin1.rsf}
-  \tiny
+  \mex{ {\bf sfin} s1.rsf}
+\tiny
 \begin{semiverbatim}
-sin1.rsf:
-    in="/scratch/sin1.rsf@"
+s1.rsf:
+    in="/scratch/s1.rsf@"
     esize=4 type=float form=native
     n1=1000        d1=1           o1=0
         1000 elements 4000 bytes
 \end{semiverbatim}
-\normalsize
+\large
 
 \end{frame}
 \cwpnote{}
@@ -732,24 +700,24 @@ sin1.rsf:
 \begin{frame}[fragile] \frametitle{demo}
 
   \mex{ 
-    {\bf sfmath} \\
-    n1=300 n2=200 output='sin(0.25*x1+1*x2)' \\
-    $>$ sin2.rsf 
+    {\bf sfmath}
+    n1=300 n2=200 output='sin(0.25*x1+1*x2)'
+    $>$ s2.rsf 
   }
   
   \vfill
   
-  \mex{ {\bf sfin} sin2.rsf}
-  \tiny
+  \mex{ {\bf sfin} s2.rsf}
+\tiny
 \begin{semiverbatim}
-sin2.rsf:
-    in="/scratch/sin2.rsf@"
+s2.rsf:
+    in="/scratch/s2.rsf@"
     esize=4 type=float form=native
     n1=300         d1=1           o1=0
     n2=200         d2=1           o2=0
         60000 elements 240000 bytes
 \end{semiverbatim}
-\normalsize
+\large
 
 \end{frame}
 \cwpnote{}
@@ -771,20 +739,21 @@ sin2.rsf:
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ {\bf sfin} sin1.rsf}
-  \tiny
+  \mex{ {\bf sfin} s1.rsf}
+
+\tiny
 \begin{semiverbatim}
-sin1.rsf:
-    in="/scratch/sin1.rsf@"
+s1.rsf:
+    in="/scratch/s1.rsf@"
     esize=4 type=float form=native
     n1=1000        d1=1           o1=0
         1000 elements 4000 bytes
 \end{semiverbatim}
-\normalsize
+\large
 
   \vfill
   
-  \mex{ $<$ sin1.rsf sfgraph title=''1D plot'' $|$ xtpen}
+  \mex{ $<$ s1.rsf {\bf sfgraph} title='' $|$ {\bf xtpen}}
 
 \end{frame}
 \cwpnote{}
@@ -792,21 +761,28 @@ sin1.rsf:
 % ------------------------------------------------------------
 \begin{frame}[fragile] \frametitle{demo}
 
-  \mex{ {\bf sfin} sin2.rsf}
-  \tiny
+  \mex{ {\bf sfin} s2.rsf}
+
+\tiny
 \begin{semiverbatim}
-sin2.rsf:
-    in="/scratch/sin2.rsf@"
+s2.rsf:
+    in="/scratch/s2.rsf@"
     esize=4 type=float form=native
     n1=300         d1=1           o1=0
     n2=200         d2=1           o2=0
         60000 elements 240000 bytes
 \end{semiverbatim}
-\normalsize
+\large
 
   \vfill
 
-  \mex{ $<$ sin2.rsf sfgrey title=''2D plot'' $|$ xtpen}
+  \mex{ $<$ s2.rsf {\bf sfgrey} title='' $|$ {\bf xtpen}}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+  \big{exercise}
 \end{frame}
 \cwpnote{}
 
@@ -815,20 +791,20 @@ sin2.rsf:
 % ------------------------------------------------------------
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] \frametitle{exercise (1)}
-  \framesubtitle{create 2D Gaussian function}
+\begin{frame}[fragile] 
+  \frametitle{create 2D Gaussian function}
   
   \mex{
-    sfmath output="exp(-(x1*x1+x2*x2)/(2*1.5*1.5))" \\
+    {\bf sfmath} output="exp(-(x1*x1+x2*x2)/(2*1.5*1.5))" \\
     n1=200 d1=0.1 o1=-10. n2=200 d2=0.1 o2=-10. $|$ \\
-    sfput label1=z unit1=km label2=x unit2=km $>$ gg.rsf
+    {\bf sfput} label1=z unit1=km label2=x unit2=km $>$ gg.rsf
   }
   
   \vfill
   
   \mex{
-    $<$ gg.rsf sfgrey pclip=100 screenratio=1 title="2D Gaussian" $|$ \\
-    xtpen
+    $<$ gg.rsf {\bf sfgrey} pclip=100 screenratio=1 title='' $|$
+    {\bf xtpen}
   }
   
 \end{frame}
@@ -841,13 +817,18 @@ sin2.rsf:
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] \frametitle{exercise (2)}
-  \framesubtitle{extract 1D subset from the 2D Gaussian function}
+\begin{frame}[fragile]
+  \frametitle{extract 1D subset}
   
   \mex{
-    $<$ gg.rsf sfwindow n2=1 f2=100 $|$ \\
-    sfgraph title="1D Gaussian" $|$ \\
-    xtpen
+    $<$ gg.rsf {\bf sfwindow} n2=1 f2=100 $>$ gg0.rsf
+ }
+  
+  \vfill
+
+  \mex{
+    $<$ gg0.rsf {\bf sfgraph} title='' $|$
+    {\bf xtpen}
   }
   
 \end{frame}
@@ -855,24 +836,24 @@ sin2.rsf:
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{gg0}{width=0.75\textwidth}{}
+  \plot{gg0}{width=0.90\textwidth}{}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] \frametitle{exercise (3)}
-  \framesubtitle{create a velocity model}
+\begin{frame}[fragile] 
+  \frametitle{create a velocity model}
   
   \mex{
-    $<$ gg.rsf sfscale rscale=-1. $|$ \\
-    sfadd add=3 $>$ vel.rsf
+    $<$ gg.rsf {\bf sfscale} rscale=-1. $|$ 
+    {\bf sfadd} add=3 $>$ vel.rsf
   }
   
   \vfill
   
   \mex{
-    $<$ vel.rsf sfgrey title="" pclip=100 screenratio=1 bias=3 $|$ \\
-    xtpen
+    $<$ vel.rsf {\bf sfgrey} title='' pclip=100 screenratio=1 $|$ 
+    {\bf xtpen}
   }
   
 \end{frame}
@@ -885,18 +866,18 @@ sin2.rsf:
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] \frametitle{exercise (4)}
-  \framesubtitle{compute traveltimes with an eikonal solver}
+\begin{frame}[fragile] 
+  \frametitle{compute traveltimes}
   
   \mex{
-    $<$ vel.rsf sfeikonal zshot=-10 yshot=0 $>$ fme.rsf
+    $<$ vel.rsf {\bf sfeikonal} zshot=-10 yshot=0 $>$ fme.rsf
   }
   
   \vfill
   
   \mex{
-    $<$ fme.rsf sfcontour title="" nc=200 screenratio=1 $|$ \\
-    xtpen
+    $<$ fme.rsf {\bf sfcontour} title='' nc=200 screenratio=1 $|$
+    {\bf xtpen}
   }
   
 \end{frame}
@@ -909,20 +890,21 @@ sin2.rsf:
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}[fragile] \frametitle{exercise (5)}
-  \framesubtitle{compute rays and wavefronts}
+\begin{frame}[fragile]
+  \frametitle{compute rays and wavefronts}
   
   \mex{
-    $<$ vel.rsf sfhwt2d xsou=0 zsou=-10 nt=1000 ot=0 dt=0.01 ng=1801 og=-90 dg=0.1 $>$ hwt.rsf
+    $<$ vel.rsf {\bf sfhwt2d} xsou=0 zsou=-10 \\
+    nt=1000 ot=0 dt=0.01 ng=1801 og=-90 dg=0.1 $>$ hwt.rsf
   }
   
   \vfill
   
   \mex{
-    $<$ hwt.rsf sfwindow j1=20 j2=20 $|$ \\
-    sfgraph title="" yreverse=y screenratio=1 \\
-    min1=-10 max1=+10 min2=-10 max2=+10  $|$ \\
-    xtpen
+    $<$ hwt.rsf {\bf sfwindow} j1=20 j2=20 $|$ \\
+    {\bf sfgraph} title='' yreverse=y screenratio=1 \\
+    min1=-10 max1=+10 min2=-10 max2=+10  $|$
+    {\bf xtpen}
   }
   
 \end{frame}
@@ -931,6 +913,66 @@ sin2.rsf:
 % ------------------------------------------------------------
 \begin{frame}
   \plot{hwt}{width=0.75\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+  \big{reproducible example using \texttt{scons}}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\texttt{cd gauss}}
+  \vfill
+  \big{\texttt{vi SConstruct}}
+  
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{Flow}
+
+  \big{\texttt{Flow(output,input,command)}}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{Plot}
+
+  \big{\texttt{Plot(vplfile,rsffile,command)}}
+
+\cen{output in local directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{Result}
+
+  \big{\texttt{Result(vplfile,rsffile,command)}}
+
+\cen{output in \texttt{Fig} directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\texttt{scons}}
+  \vfill
+  \big{\texttt{scons blah.view}}
+  \vfill
+  \big{\texttt{scons view}}
+  \vfill
+  \big{\texttt{scons blah.lock}}
+  \vfill
+  \big{\texttt{scons lock}}
+  \vfill
+  \big{\texttt{scons -c}}
+
 \end{frame}
 \cwpnote{}
 
