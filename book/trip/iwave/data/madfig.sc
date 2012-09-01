@@ -18,12 +18,12 @@ Result('data5m','./demo5m.rsf','grey title="Dome Data, 2-4 scheme, dx = dz = 5 m
 Result('trace',traces,
    '''
    cat axis=2 ${SOURCES[1:4]} | 
-   graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa
+   graph plotcol=4,2,6,7 wanttitle=n label2=Pressure unit2=MPa
    ''')
 Result('wtrace',traces,
    '''
    cat axis=2 ${SOURCES[1:4]} | window min1=1.8 max1=2.5 |
-   graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa
+   graph plotcol=4,2,6,7 wanttitle=n label2=Pressure unit2=MPa
    ''')
 
 # 2-8 results
@@ -40,12 +40,12 @@ Result('data5m8k','./demo5m8k.rsf','grey title="Dome Data, 2-8 scheme, dx = dz =
 Result('trace8k',traces8k,
    '''
    cat axis=2 ${SOURCES[1:4]} | 
-   graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa
+   graph plotcol=4,2,6,7 wanttitle=n label2=Pressure unit2=MPa
    ''')
 Result('wtrace8k',traces8k,
    '''
    cat axis=2 ${SOURCES[1:4]} | window min1=1.8 max1=2.5 |
-   graph plotcol=7,6,2,4 wanttitle=n label2=Pressure unit2=MPa
+   graph plotcol=4,2,6,7 wanttitle=n label2=Pressure unit2=MPa
    ''')
 
 # enable rsf.proj functionality
