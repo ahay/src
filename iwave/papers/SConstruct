@@ -2,13 +2,14 @@ import os
 thispath = os.getcwd()
 env = Environment();
 
+papername = 'paper1'
 texsources = ['demo.tex', 'suplot.tex'] 
 bibname = 'masterref'
 
 def ltx(target, source, env):
     lname = str(source[0])
     name = (lname.split('.'))[0]
-    f = open('paper.ltx','w')
+    f = open(papername+'.ltx','w')
     f.write('\documentclass [12pt]{georeport}\n\n')
     g = open(name + '.fmt','r')
     for line in g.read():
@@ -23,14 +24,14 @@ def ltx(target, source, env):
 def paper(target, source, env): 
     lname = str(source[0])
     name = (lname.split('.'))[0]
-    os.system('latex paper.ltx; bibtex paper; latex paper.ltx; latex paper.ltx')
+    os.system('latex ' + name + '.ltx; bibtex ' + name + '; latex ' + name + '.ltx; latex ' + name + '.ltx')
 
 def final(target, source, env):
     os.system('dvipdf ' + str(source[0]))
 
-env.Command(['paper.ltx'], texsources, ltx)
+env.Command([papername + '.ltx'], texsources, ltx)
 
-env.Command(['paper.dvi', 'paper.aux', 'paper.bbl', 'paper.log', 'paper.blg'], ['paper.ltx', 'SConstruct'], paper)
+env.Command([papername + '.dvi', papername + '.aux', papername + '.bbl', papername + '.log', papername + '.blg'], [papername + '.ltx', 'SConstruct'], paper)
 
-env.Command(['paper.pdf'], ['paper.dvi', 'SConstruct'], final)
+env.Command([papername + '.pdf'], [papername + '.dvi', 'SConstruct'], final)
 
