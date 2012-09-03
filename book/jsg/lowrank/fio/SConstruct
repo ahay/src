@@ -32,7 +32,7 @@ for it in range(500):
     prev = curr
     curr = next
 
-Flow('wave',steps,'rcat axis=2 ${SOURCES[1:%d]}' % len(steps))
+Flow('wave',steps,'cat axis=2 ${SOURCES[1:%d]}' % len(steps))
 Result('wave','grey title=Wave transp=n')
 
 prev = 'zero'
@@ -56,7 +56,7 @@ for it in range(500):
     prev = curr
     curr = next
 
-Flow('wave1',steps,'rcat axis=2 ${SOURCES[1:%d]}' % len(steps))
+Flow('wave1',steps,'cat axis=2 ${SOURCES[1:%d]}' % len(steps))
 Result('wave1','grey title=Wave transp=n')
 
 
@@ -85,7 +85,7 @@ for it in range(500):
     prev = curr
     curr = next
 
-Flow('cwave',steps,'rcat axis=2 ${SOURCES[1:%d]}' % len(steps))
+Flow('cwave',steps,'cat axis=2 ${SOURCES[1:%d]}' % len(steps))
 Result('cwave','grey title="Wave (Cosine FT)" transp=n')
 
 # Fourier transform back and forth

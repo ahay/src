@@ -36,7 +36,7 @@ for i in range(ns):
     Flow([flt, lag],dt,pef)
     Flow(dc,[dt,flt,lag], helicon + '|bandpass flo=20 fhi=180')
     dts.append(dc)
-Flow('decon',dts,'rcat axis=3 ${SOURCES[1:%d]}'%len(dts)) 
+Flow('decon',dts,'cat axis=3 ${SOURCES[1:%d]}'%len(dts)) 
 
 # apply mute above sea floor
 ############################

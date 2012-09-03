@@ -47,8 +47,8 @@ for i in range (n2):
     preds.append(pre)
     #Flow('j1unk%03d'%i,[demul, offset],'rm ${SOURCES[1]}',stdout=-1,stdin=0)
 
-Flow('demultiple',offsets,'rcat ${SOURCES[1:%d]} axis=2' % len(offsets) )
-Flow('pred',preds,'rcat ${SOURCES[1:%d]} axis=3 ' % len(preds) )
+Flow('demultiple',offsets,'cat ${SOURCES[1:%d]} axis=2' % len(offsets) )
+Flow('pred',preds,'cat ${SOURCES[1:%d]} axis=3 ' % len(preds) )
 
 Flow('cmp','demultiple','shot2cmp half=n positive=n')
 

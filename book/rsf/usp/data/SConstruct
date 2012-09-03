@@ -66,7 +66,7 @@ for shot in range(lines['S']):
     line = 'line%d' % shot
     Flow(line,'R','window f2=%d n2=282' % (2*shot))
     shots.append(line)
-Flow('rece',shots,'rcat axis=3 ${SOURCES[1:%d]}' % len(shots))
+Flow('rece',shots,'cat axis=3 ${SOURCES[1:%d]}' % len(shots))
 Flow('sour','S','spray axis=2 n=282 o=0 d=1')
 
 # Compute static corrections
@@ -75,7 +75,7 @@ for shot in range(lines['S']):
     line = 'static-line%d' % shot
     Flow(line,'R-static','window f1=%d n1=282' % (2*shot))
     shots.append(line)
-Flow('rstat',shots,'rcat axis=2 ${SOURCES[1:%d]}' % len(shots))
+Flow('rstat',shots,'cat axis=2 ${SOURCES[1:%d]}' % len(shots))
 Flow('static','S-static rstat',
      '''
      spray axis=1 n=282 o=0 d=1 |

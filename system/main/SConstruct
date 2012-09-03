@@ -12,7 +12,7 @@ window
 try: # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    alias = {'cat':'merge',
+    alias = {'cat':'merge rcat',
              'real':'imag',
              'add':'mul div',
              'stack': 'prod min max',

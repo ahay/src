@@ -43,16 +43,17 @@ static int sort_order(const void *a, const void *b)
     return (ia < ib)? -1: (ia > ib)? 1: 0;
 }
 
-static void check_compat (int esize, int nin, sf_file *in, int axis, 
+static void check_compat (int esize, int nin, int nopen, sf_file *ins, 
+			  const char **filename, int axis, 
 			  int dim, const off_t *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
 {
-    int i, j, k, axis, *naxis, nin, open_max;
+    int i, j, k, axis, *naxis, nin, open_max, nopen;
     int dim, dim1, esize, nspace;
     float f;
-    off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM]; 
-    sf_file *in, out;
+    off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM], *tell=NULL; 
+    sf_file *ins, in, out;
     char *prog, key[3], buf[BUFSIZ];
     const char **filename;
     bool space;
@@ -87,12 +88,23 @@ int main (int argc, char* argv[])
     free(sort);
 
     open_max = sysconf(_SC_OPEN_MAX);
-    if (open_max > 0 && 2*nin+5 > open_max)
-	sf_error("Too many files for sfcat, try sfrcat instead.");
+    /* system limit for the number of simultaneously open files */
 
-    in = (sf_file*) sf_alloc ((size_t) nin,sizeof(sf_file));
-    for (i=0; i< nin; i++) {
-	in[i] = sf_input(filename[i]);
+    nopen = (open_max > 0)? open_max/2-10:10;
+
+    if (nin > nopen) {
+	tell = (off_t*) sf_alloc((size_t) nin-nopen,sizeof(off_t));
+	for (i=0; i< nin-nopen; i++) {
+	    tell[i] = 0;
+	}
+    } else {
+	nopen = nin;
+    }
+
+    ins = (sf_file*) sf_alloc((size_t) nopen,sizeof(sf_file));
+
+    for (i=0; i < nopen; i++) {
+	ins[i] = sf_input(filename[i]);
     }
     out = sf_output ("out");
 
@@ -102,7 +114,8 @@ int main (int argc, char* argv[])
 	prog = sf_getprog();
 	if (NULL != strstr (prog, "merge")) {
 	    space = true;
-	} else if (NULL != strstr (prog, "cat")) {
+	} else if (NULL != strstr (prog, "cat") || 
+		   NULL != strstr (prog, "rcat")) {
 	    space = false;
 	} else {
 	    sf_warning("%s is neither merge nor cat,"
@@ -111,7 +124,7 @@ int main (int argc, char* argv[])
 	}
     }
 
-    dim = sf_largefiledims(in[0],n);
+    dim = sf_largefiledims(ins[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
     /* Axis being merged */
     if (0 == axis) {
@@ -138,13 +151,13 @@ int main (int argc, char* argv[])
 
     naxis = sf_intalloc(nin);
 
-    if (!sf_histint(in[0],"esize",&esize)) {
+    if (!sf_histint(ins[0],"esize",&esize)) {
 	esize=4;
     } else if (0>=esize) {
 	sf_error("cannot handle esize=%d",esize);
     }
-    esize = sf_esize(in[0]);
-    check_compat(esize,nin,in,axis,dim1,n,naxis);
+    esize = sf_esize(ins[0]);
+    check_compat(esize,nin,nopen,ins,filename,axis,dim1,n,naxis);
 
     /* figure out the length of extended axis */
     ni = 0;
@@ -174,21 +187,37 @@ int main (int argc, char* argv[])
 	sf_putfloat(out,key,f);
     }
 
-    sf_setformat(out,sf_histstring(in[0],"data_format"));
-    sf_fileflush(out,in[0]);
+    sf_setformat(out,sf_histstring(ins[0],"data_format"));
+    sf_fileflush(out,ins[0]);
     sf_setform(out,SF_NATIVE);
-    for (j=0; j < nin; j++) {
-    	sf_setform(in[j],SF_NATIVE);
+
+    for (i=0; i < nopen; i++) {
+	sf_setform(ins[0],SF_NATIVE);
     }
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
 	    k = order[j];
+	    
+	    if (k < nopen) {
+		in = ins[k];
+	    } else {
+		in = sf_input(filename[k]);
+		sf_setform(in,SF_NATIVE);
+		sf_seek(in,tell[k-nopen],SEEK_SET);
+	    }    
+
 	    for (ni = n1*naxis[k]*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
-		sf_charread (buf,nbuf,in[k]);
+		sf_charread (buf,nbuf,in);
 		sf_charwrite (buf,nbuf,out);
 	    }
+	    
+	    if (k >= nopen) {
+		tell[k-nopen] = sf_tell(in);
+		sf_fileclose(in);
+	    }
+
 	    if (!space || j == nin-1) continue;
 	    /* Add spaces */
 	    memset(buf,0,BUFSIZ);
@@ -199,26 +228,29 @@ int main (int argc, char* argv[])
 	}
     }
     
-
     exit(0);
 }
 
-static void check_compat (int esize, int nin, sf_file *in, int axis, int dim, 
+static void check_compat (int esize, int nin, int nopen, sf_file *ins, 
+			  const char **filename, int axis, int dim, 
 			  const off_t *n, /*@out@*/ int *naxis) 
 /*< check if the file dimensions are compatible >*/
 {
     int i, ni, id;
     float o, d, di, oi;
     char key[3];
+    sf_file in;
     const float tol=1.e-3;
     
     naxis[0] = n[axis-1];
     for (i=1; i < nin; i++) {
-	if (!sf_histint(in[i],"esize",&ni) || ni != esize)
+	in = (i >= nopen)? sf_input(filename[i]): ins[i];
+
+	if (!sf_histint(in,"esize",&ni) || ni != esize)
 	    sf_error ("esize mismatch: need %d",esize);
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
-	    if (!sf_histint(in[i],key,&ni) || (id != axis && ni != n[id-1]))
+	    if (!sf_histint(in,key,&ni) || (id != axis && ni != n[id-1]))
 #if defined(__cplusplus) || defined(c_plusplus)
 		sf_error("%s mismatch: need %ld",key,(long int) n[id-1]);
 #else
@@ -226,24 +258,26 @@ static void check_compat (int esize, int nin, sf_file *in, int axis, int dim,
 #endif
 	    if (id == axis) naxis[i] = ni;
 	    (void) snprintf(key,3,"d%d",id);
-	    if (sf_histfloat(in[0],key,&d)) {
-		if (!sf_histfloat(in[i],key,&di) || 
+	    if (sf_histfloat(ins[0],key,&d)) {
+		if (!sf_histfloat(in,key,&di) || 
 		    (id != axis && fabsf(di-d) > tol*fabsf(d)))
 		    sf_warning("%s mismatch: need %g",key,d);
 	    } else {
 		d = 1.;
 	    }
 	    (void) snprintf(key,3,"o%d",id);
-	    if (sf_histfloat(in[0],key,&o) && 
-		(!sf_histfloat(in[i],key,&oi) || 
+	    if (sf_histfloat(ins[0],key,&o) && 
+		(!sf_histfloat(in,key,&oi) || 
 		 (id != axis && fabsf(oi-o) > tol*fabsf(d))))
 		sf_warning("%s mismatch: need %g",key,o);
 	}
 	if (axis > dim) {
 	    (void) snprintf(key,3,"n%d",axis);
-	    if (!sf_histint(in[i],key,naxis+i)) naxis[i]=1;
+	    if (!sf_histint(in,key,naxis+i)) naxis[i]=1;
 	}
-    }
+	
+	if (i >= nopen) sf_fileclose(in);
+    } /* i */
 }
 
 /* 	$Id$	 */

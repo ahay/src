@@ -23,7 +23,7 @@ vofzperm warp1 warpadd warpscan zero ztrace
 
 ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 
-pyprogs = 'cgi fft rcat results zoom'
+pyprogs = 'cgi fft results zoom'
 pymods = 'dottest conjgrad'
 
 libsrc = 'apfilt dijkstra predict predk pwd pwdsl repeat2 seislet'

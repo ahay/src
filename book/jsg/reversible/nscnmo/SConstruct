@@ -233,15 +233,15 @@ for i in range(nx):
     tracelist3.append(outtrace3)
     
 
-Flow('nmod',tracelist,'rcat ${SOURCES[1:%d]} axis=2 '%(nx))
+Flow('nmod',tracelist,'cat ${SOURCES[1:%d]} axis=2 '%(nx))
 Plot('nmod','real | grey title=NMO label2=Offset unit2=kft font=2 titlefat=10 labelfat=10 titlesz=18 labelsz=14')
 Result('nmod','data nmod','SideBySideAniso')
 
-Flow('inmod',tracelist2,'rcat ${SOURCES[1:%d]} axis=2 '%(nx))
+Flow('inmod',tracelist2,'cat ${SOURCES[1:%d]} axis=2 '%(nx))
 Plot('inmod','real | grey title=INMO label2=Offset unit2=kft font=2 titlefat=10 labelfat=10 titlesz=18 labelsz=14')
 Result('inmod','data inmod','SideBySideAniso')
 
-Flow('inmod-noalpha',tracelist3,'rcat ${SOURCES[1:%d]} axis=2 '%(nx))
+Flow('inmod-noalpha',tracelist3,'cat ${SOURCES[1:%d]} axis=2 '%(nx))
 Plot('inmod-noalpha','real | grey title=INMO label2=Offset unit2=kft')
 Result('inmod-noalpha','data inmod-noalpha','SideBySideAniso')
 
