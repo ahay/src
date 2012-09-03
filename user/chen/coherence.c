@@ -1,4 +1,4 @@
-/* coherence operators  */
+/* first coherence */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -19,127 +19,113 @@
 */
 
 #include <rsf.h>
-#include "sinterp.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
-static sinterp intp=NULL;
+static int nw, n1, n2, lag1, lag2;
+static float ***u0, ***u1, *v;
 
-void coherence_init(sinterp interp)
+void coh1_normalize(float *d, float **dn)
+{
+	int i1, iw;
+	double t1, t2;
+
+	for(iw=0, t2=0.0; iw<=2*nw; iw++)
+		t2 += d[iw]*d[iw];
+	t1 = sqrt(t2);
+
+	for(iw=0; iw<=2*nw; iw++)
+	dn[nw][iw] = d[iw-nw]/t1;
+	
+	for(i1=nw+1; i1<n1-nw; i1++)
+	{
+		t1 = d[i1+nw];
+		t2 += t1*t1; 
+		t1 = d[i1-nw-1];
+		t2 -= t1*t1; 
+		t1 = sqrt(t2);
+		for(iw=-nw; iw<=nw; iw++)
+		dn[i1][iw+nw] = d[iw+i1]/t1;
+	}
+	for(i1=0; i1<nw; i1++)
+	for(iw=0; iw<=2*nw; iw++)
+	{
+		dn[i1][iw] = 0.0;
+		dn[n1-i1-1][iw] = 0.0;
+	}
+
+}
+
+float coh1_max(int n, int nl, float *x, float **y, float *pv)
+{
+	int il, i1, max;
+
+	max = -nl;
+	for(il=-nl; il<=nl; il++)
+	{
+		pv[il+nl] = 0.0;
+		for(i1=0; i1<=2*n; i1++)
+			pv[il+nl] += x[i1]*y[il-nl][i1];
+		if(pv[il+nl] > pv[max+nl]) max = il;
+	}
+	return pv[max+nl];
+}
+
+void coh1_init(int win, int m1, int m2, float **d, int l1, int l2)
 /*< initialize >*/
 {
-	intp = interp;
-}
-
-typedef float (*coherence)(float **u, int n1, int n2, float *c, int win);
-/* generic coherence interface */
-/*^*/
-
-float coh_stack(float ** u, int n1, int n2, float *c, int win)
-/*< amplitude stack >*/
-{
-	double t1;
 	int i2;
-
-	t1 = 0.0;
+	nw = win;
+	n1 = m1;
+	n2 = m2;
+	lag1 = l1;
+	lag2 = l2;
+	u0 = sf_floatalloc3(2*nw+1, n1, n2);
+	u1 = sf_floatalloc3(2*nw+1, n1, n2);
+	i2 = l1>l2? l1:l2;
+	v = sf_floatalloc(2*i2+1);
 	for(i2=0; i2<n2; i2++)
-		t1 += intp(u[i2], c[i2], n1);
-	return t1;
+		coh1_normalize(d[i2], u0[i2]);
 }
 
-float coh_stack_l1(float ** u, int n1, int n2, float *c, int win)
-/*< stack normalized by L1 norm >*/
+void coh1_close()
+/*< release memory >*/
 {
-	double t1, t2, t3;
-	int i2;
-
-	t2 = 0.0; t3 = 0.0;
-	for(i2=0; i2<n2; i2++)
-	{
-		t1 = intp(u[i2], c[i2], n1);
-		t2 += t1;
-		t3 += fabs(t1);
-	}
-	return (t2/t3);
+	free(u0[0][0]);
+	free(u1[0][0]);
+	free(u0[0]);
+	free(u1[0]);
+	free(u0);
+	free(u1);
+	free(v);
 }
 
-float coh_stack_l2(float ** u, int n1, int n2, float *c, int win)
-/*< stack normalized by L2 norm >*/
+void coh1(float **d)
+/*< recursive first coherence >*/
 {
-	double t1, t2, t3;
-	int i2;
-
-	t2 = 0.0; t3 = 0.0;
-	for(i2=0; i2<n2; i2++)
-	{
-		t1 = intp(u[i2], c[i2], n1);
-		t2 += t1;
-		t3 += t1*t1;
-	}
-	return (t2*t2/t3);
-}
-
-float coh_mxcor(float ** u, int n1, int n2, float *c, int win)
-/*< multi cross correlation  >*/
-{
-	double t1, t2, t3, t4;
 	int i1, i2;
+	float ***p;
 
-	t4 = 0.0;
-	for(i1=-win; i1<=win; i1++)
+	coh1_normalize(d[0], u1[0]);
+
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+    schedule(dynamic,10)         \
+    private(i1,i2)
+#endif
+	for(i2=1; i2<n2; i2++)
 	{
-		t2 = 0.0; t3 = 0.0;
-		for(i2=0; i2<n2; i2++)
-		{
-			t1 = intp(u[i2], c[i2]+i1, n1);
-			t2 += t1;
-			t3 += t1*t1;
-		}
-		t4 += (t2*t2-t3);
+		coh1_normalize(d[i2], u1[i2]);
+		for(i1=0; i1<n1; i1++)
+		d[i2-1][i1] = sqrt(
+				coh1_max(nw, lag1, u1[i2-1][i1], u1[i2]+i1, v) *
+				coh1_max(nw, lag2, u1[i2-1][i1], u0[i2-1]+i1, v) );
 	}
-	return t4/2.0;
+	p = u0;
+	u0 = u1;
+	u1 = p;
 }
 
-float coh_ncc(float ** u, int n1, int n2, float *c, int win)
-/*< normalized cross correlation  >*/
-{
-	double t1, t2, t3, t4;
-	int i1, i2;
-
-	t3 = 0.0; t4 = 0.0;
-	for(i1=-win; i1<=win; i1++)
-	{
-		t2 = 0.0;
-		for(i2=0; i2<n2; i2++)
-		{
-			t1 = intp(u[i2], c[i2]+i1, n1);
-			t2 += t1;
-			t3 += t1*t1;
-		}
-		t4 += t2*t2;
-	}
-	if(t3 == 0.0) return -1.0/(n2-1);
-	else return (t4/t3-1)/(n2-1);
-}
-
-
-float coh_semb(float ** u, int n1, int n2, float *c, int win)
-/*< semblance  >*/
-{
-	double t1, t2, t3, t4;
-	int i1, i2;
-
-	t3 = 0.0; t4 = 0.0;
-	for(i1=-win; i1<=win; i1++)
-	{
-		t2 = 0.0;
-		for(i2=0; i2<n2; i2++)
-		{
-			t1 = intp(u[i2], c[i2]+i1, n1);
-			t2 += t1;
-			t3 += t1*t1;
-		}
-		t4 += t2*t2;
-	}
-	return t4/(t3*n2+1E-20);
-}
 
 

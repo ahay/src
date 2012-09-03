@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nfw",&nfw)) nfw=5;
     /* half window size = 2*nfw+1 */
     if ((filter=sf_getstring("filter"))!=NULL) filter="mean";
-    /* filter: mean,median,polynomial,fir */
+    /* filter: mean,median,poly,fir */
     if (!sf_getint("order",&order)) order=nfw-1;
     /* filter order (<= nfw, only for polynomial and fir filters) */
 
