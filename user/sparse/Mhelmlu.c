@@ -37,7 +37,7 @@ double maxvel(int nm, float *vel)
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1, n2, npw, npml, pad1, pad2, i, j, index;
+    int n1, n2, npw, npml, pad1, pad2, i, j, index, is, ns;
     SuiteSparse_long n, nz, *Ti, *Tj, count;
     float d1, d2, **v, **f, freq, eps;
     double omega, eta1, eta2, mvel, c1, c2;
@@ -280,52 +280,55 @@ int main(int argc, char* argv[])
     
     if (verb) sf_warning("Solving...");
 
-    /* read source */
+    /* solve linear system */
     if (NULL == sf_getstring("source"))
 	sf_error("Need source=");
     source = sf_input("source");
 
-    f = sf_floatalloc2(n1,n2);
-    sf_floatread(f[0],n1*n2,source);
-    sf_fileclose(source);
+    if (!sf_histint(source,"n3",&ns)) ns=1;
 
+    sf_settype(out,SF_COMPLEX);
+    sf_putint(out,"n3",ns);    
+
+    f = sf_floatalloc2(n1,n2);
     Bx = (double*) sf_alloc(n,sizeof(double));
     Bz = (double*) sf_alloc(n,sizeof(double));
-
-    for (j=1; j < pad2-1; j++) {
-	for (i=1; i < pad1-1; i++) {
-	    if (i < npml || i >= pad1-npml || 
-		j < npml || j >= pad2-npml) {
-		Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
-	    } else {
-		Bx[(j-1)*(pad1-2)+(i-1)] = f[j-npml][i-npml];
-	    }
-
-	    Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
-	}
-    }    
-
-    /* solve linear system */
     Xx = (double*) sf_alloc(n,sizeof(double));
     Xz = (double*) sf_alloc(n,sizeof(double));
-
-    status = umfpack_zl_solve (UMFPACK_A, 
-			       Ap, Ai, Ax, Az, 
-			       Xx, Xz, Bx, Bz, 
-			       Numeric, Control, Info);
-
-    /* write output */
-    sf_settype(out,SF_COMPLEX);
-
     utemp = sf_complexalloc(n1);
 
-    for (j=npml; j < pad2-npml; j++) {
-	for (i=npml; i < pad1-npml; i++) {
-	    utemp[i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
-				     (float) Xz[(j-1)*(pad1-2)+(i-1)]);
-	}
+    for (is=0; is < ns; is++) {
+	if (verb) sf_warning("source %d of %d.",is+1,ns);
 
-	sf_complexwrite(utemp,n1,out);
+	sf_floatread(f[0],n1*n2,source);
+
+	for (j=1; j < pad2-1; j++) {
+	    for (i=1; i < pad1-1; i++) {
+		if (i < npml || i >= pad1-npml || 
+		    j < npml || j >= pad2-npml) {
+		    Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
+		} else {
+		    Bx[(j-1)*(pad1-2)+(i-1)] = f[j-npml][i-npml];
+		}
+		
+		Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
+	    }
+	}    
+			
+	status = umfpack_zl_solve (UMFPACK_A, 
+				   Ap, Ai, Ax, Az, 
+				   Xx, Xz, Bx, Bz, 
+				   Numeric, Control, Info);
+
+	/* write output */
+	for (j=npml; j < pad2-npml; j++) {
+	    for (i=npml; i < pad1-npml; i++) {
+		utemp[i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
+					 (float) Xz[(j-1)*(pad1-2)+(i-1)]);
+	    }
+	    
+	    sf_complexwrite(utemp,n1,out);
+	}
     }
 
     exit(0);
