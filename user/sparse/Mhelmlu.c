@@ -37,17 +37,18 @@ double maxvel(int nm, float *vel)
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1, n2, npw, npml, pad1, pad2, i, j;
-    int n_row, n_col, nz, count, index, *Ti, *Tj;
+    int n1, n2, npw, npml, pad1, pad2, i, j, index;
+    SuiteSparse_long n, nz, *Ti, *Tj, count;
     float d1, d2, **v, **f, freq, eps;
     double omega, eta1, eta2, mvel, c1, c2;
     double *g1, *g2, **pad, *Tx, *Tz;
     double complex *s1, *s2, neib, cent;
-    int status, *Ap, *Ai, *Map;
+    SuiteSparse_long status, *Ap, *Ai, *Map;
     double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
     void *Symbolic, *Numeric;
     double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
     sf_complex *utemp;
+    char *save;
     sf_file in, out, source;
  
     sf_init(argc,argv);
@@ -78,6 +79,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* epsilon for PML */
+
+    if (verb) sf_warning("Preparing...");
 
     /* prepare PML */
     npml = npw*2;
@@ -165,11 +168,11 @@ int main(int argc, char* argv[])
     }
     
     /* assemble matrix in triplet form */
-    n_row = n_col = (pad1-2)*(pad2-2);
+    n = (pad1-2)*(pad2-2);
     nz = 5*(pad1-2)*(pad2-2)-2*(pad1-4)-2*(pad2-4)-8;
     
-    Ti = sf_intalloc(nz);
-    Tj = sf_intalloc(nz);
+    Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+    Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
     Tx = (double*) sf_alloc(nz,sizeof(double));
     Tz = (double*) sf_alloc(nz,sizeof(double));
 
@@ -244,34 +247,38 @@ int main(int argc, char* argv[])
 	}
     }
 
-    /* prepare LU */
-    umfpack_zi_defaults (Control);
-    
-    if (verb) Control [UMFPACK_PRL] = 2;
+    if (verb) sf_warning("LU factorizing...");
 
-    /* convert triplet to compressed-column form */
-    Ap = sf_intalloc(n_col+1);
-    Ai = sf_intalloc(nz);
-    Map = sf_intalloc(nz);
+    /* prepare LU */
+    umfpack_zl_defaults (Control);
+    
+    /* convert triplet to compressed-column form */    
+    Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
+    Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+    Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
 
     Ax = (double*) sf_alloc(nz,sizeof(double));
     Az = (double*) sf_alloc(nz,sizeof(double));
 
-    status = umfpack_zi_triplet_to_col (n_row, n_col, nz, 
+    status = umfpack_zl_triplet_to_col (n, n, nz, 
 					Ti, Tj, Tx, Tz, 
 					Ap, Ai, Ax, Az, Map);
-    if (verb) umfpack_zi_report_status (Control, status);
 
     /* LU factorization */
-    status = umfpack_zi_symbolic (n_row, n_col, 
+    status = umfpack_zl_symbolic (n, n, 
 				  Ap, Ai, Ax, Az, 
 				  &Symbolic, Control, Info);
-    if (verb) umfpack_zi_report_status (Control, status);
 
-    status = umfpack_zi_numeric (Ap, Ai, Ax, Az, 
+    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
 				 Symbolic, &Numeric, 
 				 Control, Info);
-    if (verb) umfpack_zi_report_status (Control, status);
+
+    /* save Numeric */
+    save = sf_getstring("lu");    
+    if (save != NULL) 
+	status = umfpack_zl_save_numeric (Numeric, save);
+    
+    if (verb) sf_warning("Solving...");
 
     /* read source */
     if (NULL == sf_getstring("source"))
@@ -282,8 +289,8 @@ int main(int argc, char* argv[])
     sf_floatread(f[0],n1*n2,source);
     sf_fileclose(source);
 
-    Bx = (double*) sf_alloc(n_col,sizeof(double));
-    Bz = (double*) sf_alloc(n_col,sizeof(double));
+    Bx = (double*) sf_alloc(n,sizeof(double));
+    Bz = (double*) sf_alloc(n,sizeof(double));
 
     for (j=1; j < pad2-1; j++) {
 	for (i=1; i < pad1-1; i++) {
@@ -299,14 +306,13 @@ int main(int argc, char* argv[])
     }    
 
     /* solve linear system */
-    Xx = (double*) sf_alloc(n_col,sizeof(double));
-    Xz = (double*) sf_alloc(n_col,sizeof(double));
+    Xx = (double*) sf_alloc(n,sizeof(double));
+    Xz = (double*) sf_alloc(n,sizeof(double));
 
-    status = umfpack_zi_solve (UMFPACK_A, 
+    status = umfpack_zl_solve (UMFPACK_A, 
 			       Ap, Ai, Ax, Az, 
 			       Xx, Xz, Bx, Bz, 
 			       Numeric, Control, Info);
-    if (verb) umfpack_zi_report_status (Control, status);
 
     /* write output */
     sf_settype(out,SF_COMPLEX);
