@@ -72,10 +72,9 @@ float coh1_max(int n, int nl, float *x, float **y, float *pv)
 	return pv[max+nl];
 }
 
-void coh1_init(int win, int m1, int m2, float **d, int l1, int l2)
+void coh1_init(int win, int m1, int m2, int l1, int l2)
 /*< initialize >*/
 {
-	int i2;
 	nw = win;
 	n1 = m1;
 	n2 = m2;
@@ -83,11 +82,17 @@ void coh1_init(int win, int m1, int m2, float **d, int l1, int l2)
 	lag2 = l2;
 	u0 = sf_floatalloc3(2*nw+1, n1, n2);
 	u1 = sf_floatalloc3(2*nw+1, n1, n2);
-	i2 = l1>l2? l1:l2;
-	v = sf_floatalloc(2*i2+1);
+	v = sf_floatalloc(2*(l1>l2? l1:l2)+1);
+}
+
+void coh1_init2(float **d)
+/*< initialize for each 2D profile  >*/
+{
+	int i2;
 	for(i2=0; i2<n2; i2++)
 		coh1_normalize(d[i2], u0[i2]);
 }
+
 
 void coh1_close()
 /*< release memory >*/
