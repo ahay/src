@@ -1,6 +1,6 @@
 /* Pad a dataset with zeros.
 
-n#out is equivalent to n#, both of them overwrite end#.
+   n#out is equivalent to n#, both of them overwrite end#.
 */
 
 /*
@@ -62,15 +62,15 @@ int main (int argc, char* argv[])
 	    /*( end#=0 the number of zeros to add after the end of #-th axis )*/
 	    sprintf(key,"n%dout",i);
 	    if (sf_getint(key,&nj) || sf_getint(key2,&nj)) {
-			/*( n# the output length of #-th axis (padding at the end) )*/
-			if (0==nj) 
-				for (nj++; nj < n[j]; nj *= 2) ;
+		/*( n# the output length of #-th axis - padding at the end )*/
+		if (0==nj) 
+		    for (nj++; nj < n[j]; nj *= 2) ;
 			
-			end[j]=nj-n[j]-beg[j];
-			if (end[j]<0)
-				sf_error("negative end=%d",end[j]);
+		end[j]=nj-n[j]-beg[j];
+		if (end[j]<0)
+		    sf_error("negative end=%d",end[j]);
 	    } else {
-			end[j]=0;
+		end[j]=0;
 	    }
 	}
 	n2[j]=n[j]+beg[j]+end[j];
