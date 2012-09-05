@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    bool sub;
+    bool sub, step;
     int nx, nx2, nk, nt, m1, m2, ix, ik, it, im, n2;
     float dt, f, old;
     float *curr, *prev, **lft, **rht, **mid, **wave;
@@ -42,6 +42,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("sub",&sub)) sub=true;
     /* if -1 is included in the matrix */
+
+    if (!sf_getbool("step",&step)) step=true;
+    /* if two-step propagation */
 
     sf_putint(out,"n2",nt);
     sf_putfloat(out,"d2",dt);
@@ -149,8 +152,10 @@ int main(int argc, char* argv[])
 	    
 	    f = sub? 2*old: 0.0f;
 
-	    f -= prev[ix];
-	    prev[ix] = old;
+	    if (step) {
+		f -= prev[ix];
+		prev[ix] = old;
+	    }
 
 	    if (NULL == mat) {
 		if (NULL == mid) {
