@@ -3,7 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-crssemb diptaper dvscan2d pick2d gammapick2d pickvert pdrscan2d pdr2d
+crssemb diptaper dvscan2d
+pick2d gammapick2d pickvert
+pdrscan2d pdr2d
+taperedge
 '''
 
 mpi_progs = ''
@@ -20,7 +23,6 @@ curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-    dir = string.replace(os.getcwd(),'/build','')
 except: # local version
     env = bldutil.Debug()
     root = None
