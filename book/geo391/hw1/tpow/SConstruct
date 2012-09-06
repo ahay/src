@@ -13,7 +13,7 @@ Flow('data','wz.25.H',
 # Display
 Plot('data','grey title="(a) Original Data"')
 Plot('tpow','data',
-     'tpow tpow=2 | grey title="(b) Time Power Correction" ')
+     'pow pow1=2 | grey title="(b) Time Power Correction" ')
 
 Result('tpow','data tpow','SideBySideAniso')
 

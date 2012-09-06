@@ -51,11 +51,11 @@ int main(int argc, char* argv[])
 	for (ia=0; ia < na; ia++) {
 	    a = a0+ia*da;
 
-	    /* loop over samples */
+	    /* loop over time samples */
 	    for (it=0; it < nt; it++) {
 		t = t0+it*dt;
 
-		/* apply gain t^a */
+		/* apply gain t^alpha */
 		s = trace[it]*powf(t,a);
 		
                 /* !!! MODIFY THE NEXT LINE !!! */
