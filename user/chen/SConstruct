@@ -15,6 +15,7 @@ frt pca epfws
 pyprogs='''
 circle prefilt pygraph subplot shuffle asc2rsf
 sos fpca
+fb1freq fb2freq
 '''
 pymods='''
 pcmf

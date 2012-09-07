@@ -33,7 +33,7 @@ void coh1_normalize(float *d, float **dn)
 
 	for(iw=0, t2=0.0; iw<=2*nw; iw++)
 		t2 += d[iw]*d[iw];
-	t1 = sqrt(t2);
+	t1 = sqrt(t2)+FLT_EPSILON;
 
 	for(iw=0; iw<=2*nw; iw++)
 	dn[nw][iw] = d[iw-nw]/t1;
@@ -44,7 +44,7 @@ void coh1_normalize(float *d, float **dn)
 		t2 += t1*t1; 
 		t1 = d[i1-nw-1];
 		t2 -= t1*t1; 
-		t1 = sqrt(t2);
+		t1 = sqrt(t2)+FLT_EPSILON;
 		for(iw=-nw; iw<=nw; iw++)
 		dn[i1][iw+nw] = d[iw+i1]/t1;
 	}
@@ -57,19 +57,20 @@ void coh1_normalize(float *d, float **dn)
 
 }
 
-float coh1_max(int n, int nl, float *x, float **y, float *pv)
+float coh1_max(int n, int minl, int maxl, float *x, float **y, float *pv)
 {
-	int il, i1, max;
+	int il, i1, max, nl;
 
-	max = -nl;
-	for(il=-nl; il<=nl; il++)
+	max = 0;
+	nl = maxl-minl;
+	for(il=0; il<=nl; il++)
 	{
-		pv[il+nl] = 0.0;
+		pv[il] = 0.0;
 		for(i1=0; i1<=2*n; i1++)
-			pv[il+nl] += x[i1]*y[il-nl][i1];
-		if(pv[il+nl] > pv[max+nl]) max = il;
+			pv[il] += x[i1]*y[il+minl][i1];
+		if(pv[il] > pv[max]) max = il;
 	}
-	return pv[max+nl];
+	return pv[max];
 }
 
 void coh1_init(int win, int m1, int m2, int l1, int l2)
@@ -106,11 +107,14 @@ void coh1_close()
 	free(v);
 }
 
+
+#define MIN(a,b)  (a)<(b)?(a):(b)
+#define MAX(a,b)  (a)>(b)?(a):(b)
 void coh1(float **d)
 /*< recursive first coherence >*/
 {
-	int i1, i2;
-	float ***p;
+	int i1, i2, k1, k2;
+	float ***p, t1, t2;
 
 	coh1_normalize(d[0], u1[0]);
 
@@ -123,9 +127,15 @@ void coh1(float **d)
 	{
 		coh1_normalize(d[i2], u1[i2]);
 		for(i1=0; i1<n1; i1++)
-		d[i2-1][i1] = sqrt(
-				coh1_max(nw, lag1, u1[i2-1][i1], u1[i2]+i1, v) *
-				coh1_max(nw, lag2, u1[i2-1][i1], u0[i2-1]+i1, v) );
+		{
+			k1 = MAX(-i1, -lag1);
+			k2 = MIN(n2-i1-1, lag1);
+			t1 = coh1_max(nw, k1, k2, u1[i2-1][i1], u1[i2]+i1, v);
+			k1 = MAX(-i1, -lag2);
+			k2 = MIN(n2-i1-1, lag2);
+			t2 = coh1_max(nw, k1, k2, u1[i2-1][i1], u0[i2-1]+i1, v);
+			d[i2-1][i1] = sqrt(t1*t2);
+		}
 	}
 	p = u0;
 	u0 = u1;
