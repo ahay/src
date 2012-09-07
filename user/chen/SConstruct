@@ -9,7 +9,7 @@ lphase pwdfreq lphfilt firfreq
 fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
 ss ssblend sscrg
 beeps bilateral coherence
-frt pca epfws
+frt pca epfws fault
 '''
 
 pyprogs='''

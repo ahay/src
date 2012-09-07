@@ -87,6 +87,8 @@ int main(int argc,char**argv)
 	}
 	if(verb) sf_warning(" finished.\n");
 	fdip_close();
+	free(u);
+	free(p);
 	exit(0);
 }
 
