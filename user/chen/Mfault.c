@@ -62,7 +62,7 @@ int main(int argc, char*argv[])
 			v[i1] = lamda * q[i1];
 			v[i1] = (1-v[i1])*u1[i1] + v[i1]*v[i1+1];
 		}
-		for(i1=1; i1<n1-1; i1++) v[i1] = 1.0/(p[i1] * q[i1]);
+		for(i1=1; i1<n1-1; i1++) v[i1] = (p[i1] * q[i1]);
 		v[0] = v[1]; v[n1-1] = v[n1-2];
 		sf_floatwrite(v, n1, out);
 	}
