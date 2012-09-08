@@ -1,4 +1,7 @@
-/* Input parameters into a header. */
+/* Input parameters into a header. 
+
+Takes: [parameter=value list]
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 
