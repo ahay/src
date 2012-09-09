@@ -77,8 +77,6 @@ def add(output,   # output
     # sort groups
     groups=grp(nf,of,df,ng)
 
-    print nodes
-
     # loop over groups
     Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
