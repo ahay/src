@@ -50,6 +50,7 @@ def cat(output,   # output
 
     # sort groups
     groups=grp(nf,of,df,ng)
+    nodes=min(nodes,len(groups))
 
     # loop over groups
     Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
@@ -76,6 +77,7 @@ def add(output,   # output
 
     # sort groups
     groups=grp(nf,of,df,ng)
+    nodes=min(nodes,len(groups))
 
     # loop over groups
     Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
