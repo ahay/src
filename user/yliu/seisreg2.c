@@ -17,9 +17,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+#include <rsfpwd.h>
 
 #include "seisreg2.h"
-#include "seisletoper.h"
  
 static int nm, nt, nd, ntm;
 static float *mod, *dat, *temp;
@@ -43,7 +43,7 @@ void seisreg_init (float* coord               /* cooordinates [nd] */,
     ntm = n1*n2;
 
     sf_int1_init(coord,o1,d1,n1,interp,nf,nd);
-    seislet_init(n2,n1,inv,unit,eps,type);
+    seislet_init(n2,n1,inv,unit,eps,1,type);
     seislet_set(dd);
 
     mod = sf_floatalloc(nm);
