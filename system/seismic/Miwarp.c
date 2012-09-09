@@ -1,4 +1,4 @@
-/* Inverse 1-D warping */
+/* Inverse 1-D warping. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -40,10 +40,12 @@ int main(int argc, char* argv[])
     if (inv) {
 	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
 	
-	if (!sf_getint("n1",&n1)) n1=nt;
+	if (!sf_getint("n1",&n1)) n1=nt; /* output samples - for inv=y */
 	if (!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
+	/*( d1=1 output sampling - for inv=y )*/
 	if (!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
-	
+	/*( o1=0 output origin - for inv=y )*/ 
+
 	sf_putint(out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
 	sf_putfloat(out,"o1",o1);
