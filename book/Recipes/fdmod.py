@@ -969,7 +969,8 @@ def wom(wom,wfld,velo,vmean,par):
     Flow(wom,[velo,wfld],
         '''
         %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
-        '''%(M8R,wtmp,DPT) +
+        '''%(M8R,wtmp,DPT) 
+	+
         '''
         %sadd < ${SOURCES[0]} add=-%g |
         scale axis=123 |
@@ -979,10 +980,12 @@ def wom(wom,wfld,velo,vmean,par):
              (par['nt']-1)/par['jsnap']+1,
              par['ot'],
              par['dt']*par['jsnap'],
-             vtmp,DPT) +
+             vtmp,DPT) 
+	+
         '''
-        %sadd scale=1,%g %s %s >${TARGETS[0]};
-        '''%(M8R,par['wweight'],vtmp,wtmp) +
+        %sadd scale=1,%g <%s %s >${TARGETS[0]};
+        '''%(M8R,par['wweight'],vtmp,wtmp) 
+	+
         '''
         %srm %s %s
         '''%(M8R,wtmp,vtmp),
