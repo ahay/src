@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 '''Converts 2D velocity files from handvel.txt to handvel.rsf
--The program converts time samples from ms to s
+
+- sfhandvel2rsf < handvels.txt o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 > handvel.rsf
+
+- The program converts time samples from ms to s
 
 -The rsf output file will have traces equal to the number
 of CMP locations in handvel.txt. You need to interploate
