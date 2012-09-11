@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
     int i, j, k, axis, *naxis, nin, open_max, nopen;
     int dim, dim1, esize, nspace;
     float f;
-    off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM], *tell=NULL; 
+    off_t ni, nbuf, n1, n2, i2, n[SF_MAX_DIM], *tell; 
     sf_file *ins, in, out;
     char *prog, key[3], buf[BUFSIZ];
     const char **filename;
@@ -70,8 +70,7 @@ int main (int argc, char* argv[])
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */
-	if (NULL != strchr(argv[i],'=')) 
-	    continue; /* not a file */
+	if (NULL != strchr(argv[i],'=')) continue; /* not a file */
 	filename[nin] = argv[i];
 	nin++;
     }
@@ -98,6 +97,7 @@ int main (int argc, char* argv[])
 	    tell[i] = 0;
 	}
     } else {
+	tell = NULL;
 	nopen = nin;
     }
 
@@ -234,7 +234,7 @@ int main (int argc, char* argv[])
 static void check_compat (int esize, int nin, int nopen, sf_file *ins, 
 			  const char **filename, int axis, int dim, 
 			  const off_t *n, /*@out@*/ int *naxis) 
-/*< check if the file dimensions are compatible >*/
+/* check if the file dimensions are compatible */
 {
     int i, ni, id;
     float o, d, di, oi;

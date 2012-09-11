@@ -45,7 +45,9 @@ less efficient.
 
 static void check_compat(sf_datatype type, 
 			 size_t     nin, 
-			 sf_file*   in, 
+			 size_t     nopen,
+			 sf_file*   ins,
+			 const char** filename,
 			 int        dim, 
 			 const off_t *n);
 static void add_float (bool   collect, 
@@ -85,39 +87,60 @@ static void add_complex (bool        collect,
 int main (int argc, char* argv[])
 {
     int i, dim;
-    off_t n[SF_MAX_DIM], nsiz;
-    size_t j, nin, nbuf;
-    sf_file *in, out;
+    off_t n[SF_MAX_DIM], nsiz, *tell;
+    size_t j, nin, nbuf, nopen, open_max;
+    sf_file *ins, in, out;
     float *scale, *add;
     bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
     char cmode, *buf, *bufi, *prog;
-    const char *mode;
+    const char *mode, **filename;
     sf_datatype type;
 
     /* init RSF */
     sf_init (argc, argv);
-
-    in = (sf_file*) sf_alloc ((size_t) argc,sizeof(sf_file));
-    out = sf_output ("out");
+    
+    filename = (const char**) sf_alloc ((size_t) argc,sizeof(char*));
     
     /* find number of input files */
     if (isatty(fileno(stdin))) { 
         /* no input file in stdin */
 	nin=0;
     } else {
-	in[0] = sf_input("in");
+	filename[0] = "in";
 	nin=1;
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */
-	if (NULL != strchr(argv[i],'=')) continue; 
-	in[nin] = sf_input(argv[i]);
+	if (NULL != strchr(argv[i],'=')) continue; /* not a file */
+	filename[nin] = argv[i];
 	nin++;
     }
     if (0==nin) sf_error ("no input");
     /* nin = no of input files*/
 
-    nbuf = sf_bufsiz(in[0]);
+    open_max = sysconf(_SC_OPEN_MAX);
+    /* system limit for the number of simultaneously open files */
+
+    nopen = (open_max > 0)? open_max/2-10:10;
+
+    if (nin > nopen) {
+	tell = (off_t*) sf_alloc((size_t) nin-nopen,sizeof(off_t));
+	for (i=0; i< nin-nopen; i++) {
+	    tell[i] = 0;
+	}
+    } else {
+	tell = NULL;
+	nopen = nin;
+    }
+
+    ins = (sf_file*) sf_alloc((size_t) nopen,sizeof(sf_file));
+
+    for (i=0; i < nopen; i++) {
+	ins[i] = sf_input(filename[i]);
+    }
+    out = sf_output ("out");
+    
+    nbuf = sf_bufsiz(ins[0]);
     buf  = sf_charalloc(nbuf);
     bufi = sf_charalloc(nbuf);
     
@@ -169,27 +192,32 @@ int main (int argc, char* argv[])
     cmode = (NULL==mode)? 'a':mode[0];
 
     /* verify file compatibility */
-    dim = sf_largefiledims(in[0],n); /* input files dimensions */
+    dim = sf_largefiledims(ins[0],n); /* input files dimensions */
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }                           /* number of elements in input files */
-    type = sf_gettype(in[0]);
-    check_compat(type,nin,in,dim,n);
+    type = sf_gettype(ins[0]);
+    check_compat(type,nin,nopen,ins,filename,dim,n);
     /* end verify file compatibility */
 
-    sf_setformat(out,sf_histstring(in[0],"data_format"));
-    sf_fileflush(out,in[0]);
-    
-    for (nbuf /= sf_esize(in[0]); nsiz > 0; nsiz -= nbuf) {
+    for (nbuf /= sf_esize(ins[0]); nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 
 	for (j=0; j < nin; j++) {
+
+	    if (j < nopen) {
+		in = ins[j];
+	    } else {
+		in = sf_input(filename[j]);
+		sf_seek(in,tell[j-nopen],SEEK_SET);
+	    }    
+
 	    collect = (bool) (j != 0);
 	    switch(type) {
 		case SF_FLOAT:
 		    sf_floatread((float*) bufi,
 				 nbuf,
-				 in[j]);	    
+				 in);	    
 		    add_float(collect, 
 			      nbuf,
 			      (float*) buf,
@@ -205,7 +233,7 @@ int main (int argc, char* argv[])
 		case SF_COMPLEX:		    
 		    sf_complexread((sf_complex*) bufi,
 				   nbuf,
-				   in[j]);
+				   in);
 		    add_complex(collect, 
 				nbuf,
 				(sf_complex*) buf,
@@ -221,7 +249,7 @@ int main (int argc, char* argv[])
 		case SF_INT:
 		    sf_intread((int*) bufi,
 			       nbuf,
-			       in[j]);
+			       in);
 		    add_int(collect, 
 			    nbuf,
 			    (int*) buf,
@@ -238,7 +266,12 @@ int main (int argc, char* argv[])
 		    sf_error("wrong type");
 		    break;
 	    }
-	}
+
+	    if (j >= nopen) {
+		tell[j-nopen] = sf_tell(in);
+		sf_fileclose(in);
+	    }
+	} /* j */
 
 	switch(type) {
 	    case SF_FLOAT:
@@ -421,11 +454,13 @@ static void add_complex (bool        collect,
 
 /*------------------------------------------------------------*/
 static void 
-check_compat (sf_datatype type /* data type */, 
-	      size_t      nin  /* number of files */, 
-	      sf_file*    in   /* input files [nin] */, 
-	      int         dim  /* file dimensionality */, 
-	      const off_t*  n  /* dimensions [dim] */)
+check_compat (sf_datatype type      /* data type */, 
+	      size_t      nin       /* total number of files */,
+	      size_t      nopen     /* number of open files */,
+	      sf_file*    ins       /* input files [nopen] */,
+	      const char **filename /* input file names [nin] */,
+	      int         dim       /* file dimensionality */, 
+	      const off_t*  n       /* dimensions [dim] */)
 /* Check that the input files are compatible. 
    Issue error for type mismatch or size mismatch.
    Issue warning for grid parameters mismatch. */
@@ -434,14 +469,17 @@ check_compat (sf_datatype type /* data type */,
     size_t i;
     float d, di, o, oi;
     char key[3];
+    sf_file in;
     const float tol=1.e-5; /* tolerance for comparison */
     
     for (i=1; i < nin; i++) {
-	if (sf_gettype(in[i]) != type) 
+	in = (i >= nopen)? sf_input(filename[i]): ins[i];
+
+	if (sf_gettype(in) != type) 
 	    sf_error ("type mismatch: need %d",type);
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
-	    if (!sf_histint(in[i],key,&ni) || ni != n[id-1])
+	    if (!sf_histint(in,key,&ni) || ni != n[id-1])
 #if defined(__cplusplus) || defined(c_plusplus)
 		sf_error("%s mismatch: need %ld",key,
 			 (long int) n[id-1]);
@@ -450,18 +488,20 @@ check_compat (sf_datatype type /* data type */,
 			 (long long int) n[id-1]);
 #endif
 	    (void) snprintf(key,3,"d%d",id);
-	    if (sf_histfloat(in[0],key,&d)) {
-		if (!sf_histfloat(in[i],key,&di) || 
+	    if (sf_histfloat(ins[0],key,&d)) {
+		if (!sf_histfloat(in,key,&di) || 
 		    (fabsf(di-d) > tol*fabsf(d)))
 		    sf_warning("%s mismatch: need %g",key,d);
 	    } else {
 		d = 1.;
 	    }
 	    (void) snprintf(key,3,"o%d",id);
-	    if (sf_histfloat(in[0],key,&o) && 
-		(!sf_histfloat(in[i],key,&oi) || 
+	    if (sf_histfloat(ins[0],key,&o) && 
+		(!sf_histfloat(in,key,&oi) || 
 		 (fabsf(oi-o) > tol*fabsf(d))))
 		sf_warning("%s mismatch: need %g",key,o);
 	}
-    }
+
+	if (i >= nopen) sf_fileclose(in);
+    } /* i */
 }
