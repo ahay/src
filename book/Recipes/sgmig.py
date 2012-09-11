@@ -164,7 +164,14 @@ def execute(EDIR,JOB,ngroup,nfreqs,imag,slow,wfld,par):
 
     f.close()
 
-bsub = WhereIs('bsub')
+# Esteban Diaz:
+# I had a problem using this module because
+# the "WhereIs()"function doesn't exist
+# and neither command bsub
+
+# bsub = WhereIs('bsub')
+
+bsub = False
 
 def run(img,wfl,slo,par,clspar):
     if bsub:

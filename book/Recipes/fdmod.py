@@ -964,7 +964,7 @@ def wom(wom,wfld,velo,vmean,par):
     if(not par.has_key('wclip')):   par['wclip']=1.0
 
     wtmp = wfld + 'tmp'
-    vtmp = velo + 'tmp'
+    vtmp = wfld + 'vel'
 
     Flow(wom,[velo,wfld],
         '''
