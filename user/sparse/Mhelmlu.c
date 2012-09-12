@@ -25,15 +25,15 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1, n2, npw, npml, pad1, pad2, i, j, is, ns;
+    int n1, n2, npw, npml, pad1, pad2, is, ns;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float d1, d2, **v, **f, freq, eps;
+    float d1, d2, **v, freq, eps;
     double omega, *Tx, *Tz;
     SuiteSparse_long status, *Ap, *Ai, *Map;
     double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
     void *Symbolic, *Numeric;
     double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
-    sf_complex *utemp;
+    sf_complex **f;
     char *save;
     sf_file in, out, source;
  
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 
     omega = (double) 2.*SF_PI*freq;
 
-    if (!sf_getint("npw",&npw)) npw=5;
+    if (!sf_getint("npw",&npw)) npw=6;
     /* number of points per wave-length */
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
@@ -133,43 +133,26 @@ int main(int argc, char* argv[])
     sf_settype(out,SF_COMPLEX);
     sf_putint(out,"n3",ns);    
 
-    f = sf_floatalloc2(n1,n2);
+    f = sf_complexalloc2(n1,n2);
     Bx = (double*) sf_alloc(n,sizeof(double));
     Bz = (double*) sf_alloc(n,sizeof(double));
     Xx = (double*) sf_alloc(n,sizeof(double));
     Xz = (double*) sf_alloc(n,sizeof(double));
-    utemp = sf_complexalloc(n1);
 
     for (is=0; is < ns; is++) {
-	sf_floatread(f[0],n1*n2,source);
+	sf_complexread(f[0],n1*n2,source);
 
-	for (j=1; j < pad2-1; j++) {
-	    for (i=1; i < pad1-1; i++) {
-		if (i < npml || i >= pad1-npml || 
-		    j < npml || j >= pad2-npml) {
-		    Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
-		} else {
-		    Bx[(j-1)*(pad1-2)+(i-1)] = f[j-npml][i-npml];
-		}
-		
-		Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
-	    }
-	}    
+	fdpad(npml,pad1,pad2, f,Bx,Bz);
 			
 	status = umfpack_zl_solve (UMFPACK_A, 
 				   Ap, Ai, Ax, Az, 
 				   Xx, Xz, Bx, Bz, 
 				   Numeric, Control, Info);
 
-	/* write output */
-	for (j=npml; j < pad2-npml; j++) {
-	    for (i=npml; i < pad1-npml; i++) {
-		utemp[i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
-					 (float) Xz[(j-1)*(pad1-2)+(i-1)]);
-	    }
-	    
-	    sf_complexwrite(utemp,n1,out);
-	}
+
+	fdcut(npml,pad1,pad2, f,Xx,Xz);
+
+	sf_complexwrite(f[0],n1*n2,out);
     }
 
     (void) umfpack_zl_free_numeric (&Numeric);

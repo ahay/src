@@ -196,6 +196,44 @@ void fdprep(const double omega,
     }
 }
 
+void fdpad(const int npml,
+	   const int pad1, const int pad2,
+	   sf_complex **dat,
+	   double *Bx, double *Bz)
+/*< pad >*/
+{
+    int i, j;
+
+    for (j=1; j < pad2-1; j++) {
+	for (i=1; i < pad1-1; i++) {
+	    if (i < npml || i >= pad1-npml || 
+		j < npml || j >= pad2-npml) {
+		Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
+		Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
+	    } else {
+		Bx[(j-1)*(pad1-2)+(i-1)] = creal(dat[j-npml][i-npml]);
+		Bz[(j-1)*(pad1-2)+(i-1)] = cimag(dat[j-npml][i-npml]);
+	    }
+	}
+    }
+}
+
+void fdcut(const int npml,
+	   const int pad1, const int pad2,
+	   sf_complex **dat,
+	   double *Xx, double *Xz)
+/*< cut >*/
+{
+    int i, j;
+
+    for (j=npml; j < pad2-npml; j++) {
+	for (i=npml; i < pad1-npml; i++) {
+	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
+					   (float) Xz[(j-1)*(pad1-2)+(i-1)]);
+	}	    
+    }
+}
+
 double maxvel(int nm, float *vel)
 /* find maximum velocity */
 {
