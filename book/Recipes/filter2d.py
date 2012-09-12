@@ -42,7 +42,8 @@ def spectra2d(spectra2d,fin):
     Flow(spectra2d,fin,
       '''
       math output="sqrt(input*conj(input))" | 
-      real
+      real |
+      window min1=0 min2=0
       ''')
 
 def plot2d (custom):
@@ -122,11 +123,11 @@ def f2dv1v2(filt,inp,slp1=0.1,slp2=0.4,smooth="rect1=1 rect2=1 repeat=1",sym=0,r
           '''
           add mode=a scale=1,-1 ${SOURCES[1]}|
           real |
-          math output="abs(1-input)" | 
+          math output="abs(input)" | 
           smooth %s |
           scale axis=123 |
           rtoc | 
-          math output="input- sqrt(-1)*input"
+          math output="1-(input- sqrt(-1)*input)"
           '''%smooth)
         
 
