@@ -20,29 +20,15 @@
 #include <rsf.h>
 #include <umfpack.h>
 
-double maxvel(int nm, float *vel)
-/* find maximum velocity */
-{
-    int i;
-    float val;
-    
-    val = vel[0];
-    for (i=1; i < nm; i++) {
-	if (vel[i] > val) val = vel[i];
-    }
-
-    return ((double) val);
-}
+#include "fdprep.h"
 
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1, n2, npw, npml, pad1, pad2, i, j, index, is, ns;
-    SuiteSparse_long n, nz, *Ti, *Tj, count;
+    int n1, n2, npw, npml, pad1, pad2, i, j, is, ns;
+    SuiteSparse_long n, nz, *Ti, *Tj;
     float d1, d2, **v, **f, freq, eps;
-    double omega, eta1, eta2, mvel, c1, c2;
-    double *g1, *g2, **pad, *Tx, *Tz;
-    double complex *s1, *s2, neib, cent;
+    double omega, *Tx, *Tz;
     SuiteSparse_long status, *Ap, *Ai, *Map;
     double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
     void *Symbolic, *Numeric;
@@ -82,177 +68,25 @@ int main(int argc, char* argv[])
 
     if (verb) sf_warning("Preparing...");
 
-    /* prepare PML */
     npml = npw*2;
     pad1 = n1+2*npml;
     pad2 = n2+2*npml;
 
-    eta1 = (double) npml*d1;
-    eta2 = (double) npml*d2;
-
-    mvel = maxvel(n1*n2,v[0]);
-    c1 = -3.*log((double) eps)*mvel/(eta1*omega);
-    c2 = -3.*log((double) eps)*mvel/(eta2*omega);
-
-    g1 = (double*) sf_alloc(pad1,sizeof(double));
-    for (i=0; i < pad1; i++) {
-	if (i < npml) {
-	    g1[i] = pow(c1*((npml-i)*d1/eta1),2.);
-	} else if (i >= pad1-npml) {
-	    g1[i] = pow(c1*((i-(pad1-npml-1))*d1/eta1),2.);
-	} else {
-	    g1[i] = 0.;
-	}
-    }
-
-    s1 = (double complex*) sf_alloc(pad1,sizeof(double complex));
-    for (i=0; i < pad1; i++) {
-	s1[i] = 1./(1.+I*g1[i]);
-    }
-
-    g2 = (double*) sf_alloc(pad2,sizeof(double));
-    for (j=0; j < pad2; j++) {
-	if (j < npml) {
-	    g2[j] = pow(c2*((npml-j)*d2/eta2),2.);
-	} else if (j >= pad2-npml) {
-	    g2[j] = pow(c2*((j-(pad2-npml-1))*d2/eta2),2.);
-	} else {
-	    g2[j] = 0.;
-	}
-    }
-
-    s2 = (double complex*) sf_alloc(pad2,sizeof(double complex));
-    for (j=0; j < pad2; j++) {
-	s2[j] = 1./(1.+I*g2[j]);
-    }
-    
-    /* extend model */
-    pad = (double**) sf_alloc(pad2,sizeof(double*));
-    pad[0] = (double*) sf_alloc(pad1*pad2,sizeof(double));
-    for (j=1; j < pad2; j++) {
-	pad[j] = pad[0]+j*pad1;
-    }
-
-    for (j=0; j < npml; j++) {
-	for (i=0; i < npml; i++) {
-	    pad[j][i] = v[0][0];
-	}
-	for (i=npml; i < pad1-npml; i++) {
-	    pad[j][i] = v[0][i-npml];
-	}
-	for (i=pad1-npml; i < pad1; i++) {
-	    pad[j][i] = v[0][n1-1];
-	}
-    }
-    for (j=npml; j < pad2-npml; j++) {
-	for (i=0; i < npml; i++) {
-	    pad[j][i] = v[j-npml][0];
-	}
-	for (i=npml; i < pad1-npml; i++) {
-	    pad[j][i] = v[j-npml][i-npml];
-	}
-	for (i=pad1-npml; i < pad1; i++) {
-	    pad[j][i] = v[j-npml][n1-1];
-	}
-    }
-    for (j=pad2-npml; j < pad2; j++) {
-	for (i=0; i < npml; i++) {
-	    pad[j][i] = v[n2-1][0];
-	}
-	for (i=npml; i < pad1-npml; i++) {
-	    pad[j][i] = v[n2-1][i-npml];
-	}
-	for (i=pad1-npml; i < pad1; i++) {
-	    pad[j][i] = v[n2-1][n1-1];
-	}
-    }
-    
-    /* assemble matrix in triplet form */
     n = (pad1-2)*(pad2-2);
     nz = 5*(pad1-2)*(pad2-2)-2*(pad1-4)-2*(pad2-4)-8;
-    
+
+    /* assemble matrix in triplet form */
     Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
     Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
     Tx = (double*) sf_alloc(nz,sizeof(double));
     Tz = (double*) sf_alloc(nz,sizeof(double));
 
-    count = 0;
-    for (j=1; j < pad2-1; j++) {
-	for (i=1; i < pad1-1; i++) {
-	    index = (j-1)*(pad1-2)+(i-1);
-	    
-	    cent = 0.+I*0.;
+    fdprep(omega, eps, 
+	   n1, n2, d1, d2, v,
+	   npml, pad1, pad2, n, nz, 
+	   Ti, Tj, Tx, Tz);
 
-	    /* left */
-	    neib = (s1[i]/s2[j]+s1[i-1]/s2[j])/(2.*d1*d1);
-	    cent += -neib;
-
-	    if (i != 1) {
-		Ti[count] = index;
-		Tj[count] = index-1;
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
-	    /* right */
-	    neib = (s1[i]/s2[j]+s1[i+1]/s2[j])/(2.*d1*d1);
-	    cent += -neib;
-
-	    if (i != pad1-2) {
-		Ti[count] = index;
-		Tj[count] = index+1;
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
-	    /* down */
-	    neib = (s2[j]/s1[i]+s2[j-1]/s1[i])/(2.*d2*d2);
-	    cent += -neib;
-
-	    if (j != 1) {
-		Ti[count] = index;
-		Tj[count] = index-(pad1-2);
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
-	    /* up */
-	    neib = (s2[j]/s1[i]+s2[j+1]/s1[i])/(2.*d2*d2);
-	    cent += -neib;
-
-	    if (j != pad2-2) {
-		Ti[count] = index;
-		Tj[count] = index+(pad1-2);
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
-	    /* center */
-	    cent += pow(omega/pad[j][i],2.)/(s1[i]*s2[j]);
-	    
-	    Ti[count] = index;
-	    Tj[count] = index;
-	    Tx[count] = creal(cent);
-	    Tz[count] = cimag(cent);
-	    
-	    count++;
-	}
-    }
-
-    if (verb) sf_warning("LU factorizing...");
-
-    /* prepare LU */
-    umfpack_zl_defaults (Control);
-    
-    /* convert triplet to compressed-column form */    
+    /* convert triplet to compressed-column form */
     Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
     Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
     Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
@@ -264,6 +98,13 @@ int main(int argc, char* argv[])
 					Ti, Tj, Tx, Tz, 
 					Ap, Ai, Ax, Az, Map);
 
+    free(Ti); free(Tj); free(Tx); free(Tz);
+
+    if (verb) sf_warning("LU factorizing...");
+
+    /* prepare LU */
+    umfpack_zl_defaults (Control);
+        
     /* LU factorization */
     status = umfpack_zl_symbolic (n, n, 
 				  Ap, Ai, Ax, Az, 
@@ -273,6 +114,8 @@ int main(int argc, char* argv[])
 				 Symbolic, &Numeric, 
 				 Control, Info);
 
+    (void) umfpack_zl_free_symbolic (&Symbolic);
+    
     /* save Numeric */
     save = sf_getstring("lu");    
     if (save != NULL) 
@@ -298,8 +141,6 @@ int main(int argc, char* argv[])
     utemp = sf_complexalloc(n1);
 
     for (is=0; is < ns; is++) {
-	if (verb) sf_warning("source %d of %d.",is+1,ns);
-
 	sf_floatread(f[0],n1*n2,source);
 
 	for (j=1; j < pad2-1; j++) {
@@ -330,6 +171,8 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(utemp,n1,out);
 	}
     }
+
+    (void) umfpack_zl_free_numeric (&Numeric);
 
     exit(0);
 }
