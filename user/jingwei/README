@@ -15,9 +15,9 @@ vec2t1.hh    vec3t1.hh
 numvec1.hh    nummat1.hh    numtns1.hh
 offvec1.hh    offmat1.hh    offtns1.hh
 serialize1.hh
-vecmatop1.hh    vecmatop1.cc
+vecmatop1.hh    
 
-bfio.hh    bfio.bin    
+bfio.hh     
 
 
 
@@ -43,7 +43,7 @@ Mradon3.cc    3to3 Radon transform (using 3to3 butterfly)
               BFIO::eval3
 
 Mradon32.cc   special 3to2 Radon transform (using 2to2 butterfly)
-              complex f(w,x1,x2) --> real u(tau,p)
+              complex f(w,x1,x2) --> complex u(tau,p)
               BFIO::setup32
               BFIO::kernel2 
               BFIO::check2
@@ -73,6 +73,14 @@ Msum.cc       adjoint test
               check <f1,f2>?=<g1,g2>
               complex f1(t,x), f2(t,x), g1(t,x), g2(t,x)
 
+Msum23.cc     adjoint test
+              check <f1,f2>?=<g1,g2>
+              complex f1(t,x), f2(t,x), g1(t,x,y), g2(t,x,y)
+
+Msum3.cc      adjoint test
+              check <f1,f2>?=<g1,g2>
+              complex f1(t,x,y), f2(t,x,y), g1(t,x,y), g2(t,x,y)
+
 Msthres.cc    soft thresholding function
 
 
@@ -80,6 +88,10 @@ Msthres.cc    soft thresholding function
 ********************************************************
 Auxiliary Files
 ********************************************************
+
+vecmatop1.cc
+
+bfio.bin   
 
 bfio.cc         BFIO::setup2 
                 BFIO::setup32
@@ -91,8 +103,8 @@ bfio.cc         BFIO::setup2
                                  fi=3 x*k
                                  fi=4 -x*k
                 BFIO::kernel3    fi=0 linear Radon
-                                 fi=1 reflection Radon
-                                 fi=2 diffraction Radon
+                                 fi=1 reflection Radon    fi=3 adjoint of reflection Radon
+                                 fi=2 diffraction Radon   fi=4 adjoint of diffraction Radon
                 BFIO::apkernel2  fi=1 apex shifted hyper Radon
 
                 BFIO::check2 

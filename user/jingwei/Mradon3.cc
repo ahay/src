@@ -3,7 +3,8 @@
 //   Output u(tau,p,q) complex
 //   Call bfio.setup3 bfio.kernel3 bfio.check3 bfio.eval3
 //   In bfio.kernel3: fi=0 linear Radon
-//                    fi=1 reflection Radon; fi=2 diffraction Radon
+//                    fi=1 reflection Radon;            fi=2 diffraction Radon
+//                    fi=3 adjoint of reflection Radon; fi=4 adjoint of diffraction Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

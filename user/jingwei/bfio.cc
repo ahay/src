@@ -4,8 +4,9 @@
 //   bfio.check2, bfio.check3, bfio.apcheck2
 //   In bfio.kernel2 fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
 //                   fi=3 x*k;         fi=4 -x*k;   
-//   In bfio.kernel3 fi=0 linear Radon; fi=3 adjoint of linear Radon;
-//                   fi=1 reflection Radon; fi=2 defraction Radon;
+//   In bfio.kernel3 fi=0 linear Radon; 
+//                   fi=1 reflection Radon;            fi=2 difraction Radon;
+//                   fi=3 adjoint of reflection Radon; fi=4 adjoin of diffraction Radon;
 //   In bfio.apkernel2 fi=1 apex shifted hyper Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
