@@ -1,0 +1,114 @@
+*********************************************
+*****************READ ME*********************
+*********************************************
+
+
+
+
+*********************************************************
+Header Files
+*********************************************************
+
+commoninc1.hh
+comobject1.hh    
+vec2t1.hh    vec3t1.hh
+numvec1.hh    nummat1.hh    numtns1.hh
+offvec1.hh    offmat1.hh    offtns1.hh
+serialize1.hh
+vecmatop1.hh    vecmatop1.cc
+
+bfio.hh    bfio.bin    
+
+
+
+*********************************************************
+Main Programs
+*********************************************************
+
+Mradon2.cc    2to2 Radon transform (using 2to2 butterfly)
+              complex f(w,x) --> complex u(tau,p)
+              BFIO::setup2
+              BFIO::kernel2 
+              BFIO::check2
+              BFIO::prep_aux
+              BFIO::eval2
+
+Mradon3.cc    3to3 Radon transform (using 3to3 butterfly)
+              complex f(w,x,y) --> complex u(tau,p,q)
+              BFIO::setup3
+              BFIO::kernel3
+              BFIO::check3
+              BFIO::prep_aux
+              BFIO::eval_addaux
+              BFIO::eval3
+
+Mradon32.cc   special 3to2 Radon transform (using 2to2 butterfly)
+              complex f(w,x1,x2) --> real u(tau,p)
+              BFIO::setup32
+              BFIO::kernel2 
+              BFIO::check2
+              BFIO::prep_aux
+              BFIO::eval2
+
+Mradon23.cc   special 2to3 Radon transform (using 2to2 butterfly)
+              complex f(w,x) --> complex u(tau,p1,p2)
+              BFIO::setup23
+              BFIO::kernel2 
+              BFIO::check2
+              BFIO::prep_aux
+              BFIO::eval2
+
+Mapradon2.cc  apex shifted Radon transform (using 2to2 butterfly)
+              complex f(w,x) --> complex u(tau,p,x)
+              BFIO::setup2 
+              BFIO::apkernel2 
+              BFIO::apcheck2
+              BFIO::prep_aux
+              BFIO::apeval2
+
+Mslradon3.cc  3to3 slow linear Radon transform 
+              complex f(w,x,y) --> complex u(w,p,q)
+
+Msum.cc       adjoint test 
+              check <f1,f2>?=<g1,g2>
+              complex f1(t,x), f2(t,x), g1(t,x), g2(t,x)
+
+Msthres.cc    soft thresholding function
+
+
+
+********************************************************
+Auxiliary Files
+********************************************************
+
+bfio.cc         BFIO::setup2 
+                BFIO::setup32
+                BFIO::setup23
+                BFIO::setup3
+
+                BFIO::kernel2    fi=1 hyper Radon
+                                 fi=2 adjoint of hyper Radon
+                                 fi=3 x*k
+                                 fi=4 -x*k
+                BFIO::kernel3    fi=0 linear Radon
+                                 fi=1 reflection Radon
+                                 fi=2 diffraction Radon
+                BFIO::apkernel2  fi=1 apex shifted hyper Radon
+
+                BFIO::check2 
+                BFIO::check3
+                BFIO::apcheck2
+
+bfio_eval2.cc   BFIO::prep_aux
+                BFIO::eval2
+
+bfio_eval3.cc   BFIO::prep_aux
+                BFIO::eval_addaux
+                BFIO::eval3
+
+bfio_apeval2.cc BFIO::prep_aux
+                BFIO::apeval2
+
+
+
+
