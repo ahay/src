@@ -20,35 +20,36 @@
 
 
 #include <rsf.h>
-
-#include "lphase.h"
+#include "palp.h"
 
 int main(int argc, char* argv[])
 {
 	sf_file out;
-	int nf, interp;
+	int n1, m, n;
 	float **c;
+	char *interp;
 
 	sf_init(argc, argv);
 	out = sf_output ("out");
 
-	if(!sf_getint("order", &nf)) nf=1;
-	/* order of linear phase filter */
-	if (!sf_getint("interp",&interp)) interp=0;
-	/* interpolation method: 
-	0: maxflat
-	1: Lagrange 
-	2: B-Spline */
+	if(!sf_getint("m", &m)) m=1;
+	/* b[-m, ... ,n] */
+	if(!sf_getint("n", &n)) n=1;
+	/* b[-m, ... ,n] */
+	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
+	/* interpolation method: maxflat lagrange bspline */
 
-	sf_putint(out, "n1", 2*nf+1);
-	sf_putfloat(out, "o1", -nf);
-	sf_putfloat(out, "d1", 1);
-	sf_putint(out, "n2", 2*nf+1);
-	sf_putfloat(out, "o2", 0);
-	sf_putfloat(out, "d2", 1);
+	n1 = m+n+1;
+	sf_putint(out, "n1", n1);
+	sf_putint(out, "o1", -m);
+	sf_putint(out, "d1", 1);
+	sf_putint(out, "n2", n1);
+	sf_putint(out, "o2", 0);
+	sf_putint(out, "d2", 1);
 
-	c = lphase(nf, interp);
-	sf_floatwrite(c[0], (2*nf+1)*(2*nf+1), out);
+	c = lphase(m, n, interp);
+	if(c==NULL) sf_error("interp=%s incorrect", interp);
+	sf_floatwrite(c[0], n1*n1, out);
 
 	free(c[0]);
 	free(c);
