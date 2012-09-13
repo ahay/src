@@ -565,19 +565,25 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
     for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
     for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
     //
-    float tana0x, tana0y, tanax, tanay, a, b, c;
     FltNumMat phs(m,n);
     float COEF = 2*M_PI;
+    vector<float> tana0x(m), tana0y(m);
+    vector<float> tanax(n), tanay(n);
+    for(int i=0; i<m; i++) {
+      tana0x[i] = tan(ps[i]*M_PI/180);
+      tana0y[i] = tan(qs[i]*M_PI/180);
+    }
+    for(int i=0; i<n; i++) {
+      tanax[i] = tan(xs[i]*M_PI/180);
+      tanay[i] = tan(ys[i]*M_PI/180);
+    }
+    float a, b, c;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-        tana0x = tan(ps[i]*M_PI/180);
-        tana0y = tan(qs[i]*M_PI/180);
-        tanax = tan(xs[j]*M_PI/180);
-        tanay = tan(ys[j]*M_PI/180);
-        a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
-        b = sqrt(1 + tanax*tanax + tanay*tanay);
-        c = tana0x*tanax + tana0y*tanay;
-	phs(i,j) = COEF * (ws[j]) * (taus[i]) / (a*b-c);
+        a = sqrt(1 + tana0x[i]*tana0x[i] + tana0y[i]*tana0y[i]);
+        b = sqrt(1 + tanax[j]*tanax[j] + tanay[j]*tanay[j]);
+        c = tana0x[i]*tanax[j] + tana0y[i]*tanay[j];
+	phs(i,j) = COEF * ws[j] * taus[i] / (a*b-c);
       }
     FltNumMat ss(m,n), cc(m,n);
     for(int j=0; j<n; j++)
@@ -606,16 +612,19 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
     for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
     for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
     //
-    float tanax, tanay, K1, K;
     FltNumMat phs(m,n);
     float COEF = 2*M_PI;
+    vector<float> tanax(n), tanay(n);
+    for(int i=0; i<n; i++) {
+      tanax[i] = tan(xs[i]*M_PI/180);
+      tanay[i] = tan(ys[i]*M_PI/180);
+    }
+    float K1, K;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-        tanax = tan(xs[j]*M_PI/180);
-        tanay = tan(ys[j]*M_PI/180);
-        K1 = ps[i]*tanax + qs[i]*tanay;
+        K1 = ps[i]*tanax[j] + qs[i]*tanay[j];
         K = sqrt(K1*K1 + ps[i]*ps[i]+ qs[i]*qs[i] + 1);
-	phs(i,j) = COEF * (ws[j]) * (taus[i]) * (K1+K);
+	phs(i,j) = COEF * ws[j] * taus[i] * (K1+K);
       }
     FltNumMat ss(m,n), cc(m,n);
     for(int j=0; j<n; j++)
@@ -644,19 +653,25 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
     for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
     for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
     //
-    float tana0x, tana0y, tanax, tanay, a, b, c;
     FltNumMat phs(m,n);
     float COEF = 2*M_PI;
+    vector<float> tana0x(m), tana0y(m);
+    vector<float> tanax(n), tanay(n);
+    for(int i=0; i<m; i++) {
+      tana0x[i] = tan(ps[i]*M_PI/180);
+      tana0y[i] = tan(qs[i]*M_PI/180);
+    }
+    for(int i=0; i<n; i++) {
+      tanax[i] = tan(xs[i]*M_PI/180);
+      tanay[i] = tan(ys[i]*M_PI/180);
+    }
+    float a, b, c;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-        tana0x = tan(ps[i]*M_PI/180);
-        tana0y = tan(qs[i]*M_PI/180);
-        tanax = tan(xs[j]*M_PI/180);
-        tanay = tan(ys[j]*M_PI/180);
-        a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
-        b = sqrt(1 + tanax*tanax + tanay*tanay);
-        c = tana0x*tanax + tana0y*tanay;
-	phs(i,j) = -COEF * (ws[j]) * (taus[i]) / (a*b-c);
+        a = sqrt(1 + tana0x[i]*tana0x[i] + tana0y[i]*tana0y[i]);
+        b = sqrt(1 + tanax[j]*tanax[j] + tanay[j]*tanay[j]);
+        c = tana0x[i]*tanax[j] + tana0y[i]*tanay[j];
+	phs(i,j) = -COEF * ws[j] * taus[i] / (a*b-c);
       }
     FltNumMat ss(m,n), cc(m,n);
     for(int j=0; j<n; j++)
@@ -684,16 +699,19 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
     for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
     for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
     //
-    float tanax, tanay, K1, K;
     FltNumMat phs(m,n);
     float COEF = 2*M_PI;
+    vector<float> tanax(m), tanay(m);
+    for(int i=0; i<m; i++) {
+      tanax[i] = tan(ps[i]*M_PI/180);
+      tanay[i] = tan(qs[i]*M_PI/180);
+    }
+    float K1, K;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-        tanax = tan(ps[i]*M_PI/180);
-        tanay = tan(qs[i]*M_PI/180);
-        K1 = xs[j]*tanax + ys[j]*tanay;
+        K1 = xs[j]*tanax[i] + ys[j]*tanay[i];
         K = sqrt(K1*K1 + xs[j]*xs[j]+ ys[j]*ys[j] + 1);
-	phs(i,j) = -COEF * (ws[j]) * (taus[i]) * (K1+K);
+	phs(i,j) = -COEF * ws[j] * taus[i] * (K1+K);
       }
     FltNumMat ss(m,n), cc(m,n);
     for(int j=0; j<n; j++)
