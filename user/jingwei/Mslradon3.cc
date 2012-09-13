@@ -1,4 +1,4 @@
-//   Slow 3-D linear Radon transform
+//   Slow 3-D to 3-D linear Radon transform
 //   Input f(w,x,y) complex
 //   Output u(w,p,q) complex
 //
@@ -101,10 +101,12 @@ int main(int argc, char** argv)
   output.put("o3",q0);
   output.put("d3",dq);
 
-  clock_t ck0, ck1;  
-  float time_eval;
+  clock_t ck0, ck1; 
+  time_t tt0, tt1; 
+  float clockt_eval, timet_eval;
 
   ck0 = clock();
+  tt0 = time(0);
   for(int i=0; i<nw; i++)
     for(int j=0; j<np; j++)
       for(int k=0; k<nq; k++)
@@ -117,9 +119,12 @@ int main(int argc, char** argv)
             res = cpx(cc,ss);
             u(i,j,k) += res*f(i,m,n);
 	  }
-  ck1 = clock();    
-  time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
-  cerr<<"slow lradon3 "<<time_eval<<endl;
+  ck1 = clock();
+  tt1 = time(0);
+  clockt_eval = float(ck1-ck0)/CLOCKS_PER_SEC;   
+  timet_eval = difftime(tt1,tt0);
+  cerr<<"slow lradon3 clockt_eval"<<clockt_eval<<endl;
+  cerr<<"slow lradon3 timet_eval"<<timet_eval<<endl;
 
 
   std::valarray<sf_complex> udata(nw*np*nq);

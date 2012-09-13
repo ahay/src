@@ -1,4 +1,4 @@
-//   3-D Butterfly algorithm
+//   3-D to 3-D butterfly algorithm
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

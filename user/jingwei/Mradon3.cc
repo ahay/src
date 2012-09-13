@@ -1,8 +1,9 @@
-//   3-D Radon transform
+//   3-D to 3-D Radon transform
 //   Input f(w,x,y) complex
-//   Output u(tau,p,q) real
-//   Call bfio.setup3 bfio.kernel3 bfio.eval3 bfio.check3
-//   In bfio.kernel3: fi=0 linear 
+//   Output u(tau,p,q) complex
+//   Call bfio.setup3 bfio.kernel3 bfio.check3 bfio.eval3
+//   In bfio.kernel3: fi=0 linear Radon
+//                    fi=1 reflection Radon; fi=2 diffraction Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -114,7 +115,7 @@ int main(int argc, char** argv)
   output.put("o3",q0);
   output.put("d3",dq);
 
-  output.type(SF_FLOAT);
+  //output.type(SF_FLOAT);
   // this has be there if the input and output types are different
 
   // BFIO setup
@@ -153,13 +154,15 @@ int main(int argc, char** argv)
   cerr<<"Ea "<<relerr<<endl;
   //
   
-  std::valarray<float> udata(ntau*np*nq);
+  std::valarray<sf_complex> udata(ntau*np*nq);
+  //std::valarray<float> udata(ntau*np*nq);
   //udata.resize(ntau*np*nq);
     
   for (int i=0; i<ntau; i++)
     for (int j=0; j<np; j++)
       for (int k=0; k<nq; k++)
-	udata[ntau*np*k+ntau*j+i]=real(u(i,j,k));
+	udata[ntau*np*k+ntau*j+i]=sf_cmplx(real(u(i,j,k)),imag(u(i,j,k)));
+        //udata[ntau*np*k+ntau*j+i]=real(u(i,j,k));
 
   output << udata;
 

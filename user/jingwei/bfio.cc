@@ -1,10 +1,12 @@
-//   Butterfly algorithm
-//   bfio.setup, bfio.setup32, bfio.setup23, bfio.setup3
-//   bfio.kernel, bfio.kernel3
-//   bfio.check, bfio.check3
-//   In bfio.kernel fi=1 hyperbolic Radon; fi=2 adjoint of hyperbolic Radon;
-//                  fi=3 x*k; fi=4 -x*k;   
-//   In bfio.kernel3 fi=0 linear Radon
+//   butterfly algorithm
+//   bfio.setup2, bfio.setup32, bfio.setup23, bfio.setup3
+//   bfio.kernel2, bfio.kernel3, bfio.apkernel2
+//   bfio.check2, bfio.check3, bfio.apcheck2
+//   In bfio.kernel2 fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
+//                   fi=3 x*k;         fi=4 -x*k;   
+//   In bfio.kernel3 fi=0 linear Radon; fi=3 adjoint of linear Radon;
+//                   fi=1 reflection Radon; fi=2 defraction Radon;
+//   In bfio.apkernel2 fi=1 apex shifted hyper Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -48,7 +50,7 @@ int deserialize(Entry& e, istream& is, const vector<int>& mask)
 }
 
 //---------------------------------------
-int BFIO::setup(iRSF& par, iRSF& inp)
+int BFIO::setup2(iRSF& par, iRSF& inp)
 {
   vector<int> all(1,1);
   
@@ -176,6 +178,8 @@ int BFIO::setup32(iRSF& par, iRSF& inp)
   cerr<<"ntau "<<ntau<<" np "<<np<<endl;
   cerr<<"taumin "<<taumin<<" taumax "<<taumax<<endl;
   cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
+
+  cerr<<"fi "<<_fi<<endl;
   return 0;
 }
 
@@ -248,6 +252,8 @@ int BFIO::setup23(iRSF& par, iRSF& inp)
   cerr<<"p1min "<<p1min<<" p1max "<<p1max<<endl;
   cerr<<"p2min "<<p2min<<" p2max "<<p2max<<endl;
   cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
+
+  cerr<<"fi "<<_fi<<endl;
   return 0;
 }
 
@@ -328,11 +334,13 @@ int BFIO::setup3(iRSF& par, iRSF& inp)
   cerr<<"taumin "<<taumin<<" taumax "<<taumax<<endl;
   cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
   cerr<<"qmin "<<qmin<<" qmax "<<qmax<<endl;
+
+  cerr<<"fi "<<_fi<<endl;
   return 0;
 }
 
 //---------------------------------------
-int BFIO::kernel(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res)
+int BFIO::kernel2(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res)
 {
   if(_fi==1) {
     // hyperbolic Radon 
@@ -463,6 +471,46 @@ int BFIO::kernel(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res
   return 0;
 }
 
+//---------------------------------------
+int BFIO::apkernel2(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res, const float xx)
+{
+  if(_fi==1) {
+    // apex shifted hyperbolic Radon 
+    //--------------------------
+    int m = trg.size();
+    int n = src.size();
+    vector<float> taus(m), ps(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    vector<float> ws(n), xs(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+	float pz = ps[i]*(xs[j]-xx);
+	phs(i,j) = COEF * (sqrt(taus[i]*taus[i] + pz*pz)) * (ws[j]);
+      }
+    FltNumMat ss(m,n), cc(m,n);
+    //int TTL = m*n;
+    //vdsincos_(&TTL, phs.data(), ss.data(), cc.data());
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++) {
+	ss(i,j) = sin(phs(i,j));
+	cc(i,j) = cos(phs(i,j));
+	//sincos(phs(i,j), &(ss(i,j)), &(cc(i,j)));
+      }
+    res.resize(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++)
+	res(i,j) = cpx( cc(i,j), ss(i,j) );
+  } else {
+    //--------------------------
+    iA(0);
+  }
+  return 0;
+}
 
 //---------------------------------------
 int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& res)
@@ -499,6 +547,163 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
     for(int j=0; j<n; j++)
       for(int i=0; i<m; i++)
 	res(i,j) = cpx( cc(i,j), ss(i,j) );
+  } else if(_fi==1) {
+    // reflection Radon
+    // ws --> w; xs --> ax; ys --> ay
+    // taus --> tau0; ps --> a0x; qs --> a0y
+    int m = trg.size();
+    int n = src.size();
+    //
+    vector<float> taus(m), ps(m), qs(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    for(int i=0; i<m; i++)      qs[i] = trg[i](2)*(qmax-qmin) + qmin;
+    //
+    vector<float> ws(n), xs(n), ys(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
+    //
+    float tana0x, tana0y, tanax, tanay, a, b, c;
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+        tana0x = tan(ps[i]*M_PI/180);
+        tana0y = tan(qs[i]*M_PI/180);
+        tanax = tan(xs[j]*M_PI/180);
+        tanay = tan(ys[j]*M_PI/180);
+        a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
+        b = sqrt(1 + tanax*tanax + tanay*tanay);
+        c = tana0x*tanax + tana0y*tanay;
+	phs(i,j) = COEF * (ws[j]) * (taus[i]) / (a*b-c);
+      }
+    FltNumMat ss(m,n), cc(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++) {
+	ss(i,j) = sin(phs(i,j));
+	cc(i,j) = cos(phs(i,j));
+      }
+    res.resize(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++)
+	res(i,j) = cpx( cc(i,j), ss(i,j) );
+  } else if(_fi==2) {
+    // diffraction Radon
+    // ws --> w; xs --> ax; ys --> ay
+    // taus --> tau0; ps --> kix; qs --> kiy
+    int m = trg.size();
+    int n = src.size();
+    //
+    vector<float> taus(m), ps(m), qs(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    for(int i=0; i<m; i++)      qs[i] = trg[i](2)*(qmax-qmin) + qmin;
+    //
+    vector<float> ws(n), xs(n), ys(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
+    //
+    float tanax, tanay, K1, K;
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+        tanax = tan(xs[j]*M_PI/180);
+        tanay = tan(ys[j]*M_PI/180);
+        K1 = ps[i]*tanax + qs[i]*tanay;
+        K = sqrt(K1*K1 + ps[i]*ps[i]+ qs[i]*qs[i] + 1);
+	phs(i,j) = COEF * (ws[j]) * (taus[i]) * (K1+K);
+      }
+    FltNumMat ss(m,n), cc(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++) {
+	ss(i,j) = sin(phs(i,j));
+	cc(i,j) = cos(phs(i,j));
+      }
+    res.resize(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++)
+	res(i,j) = cpx( cc(i,j), ss(i,j) );
+  } else if(_fi==3) {
+    // adjoint of reflection Radon 
+    // only add - to phi
+    //--------------------------
+    int m = trg.size();
+    int n = src.size();
+    //
+    vector<float> taus(m), ps(m), qs(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    for(int i=0; i<m; i++)      qs[i] = trg[i](2)*(qmax-qmin) + qmin;
+    //
+    vector<float> ws(n), xs(n), ys(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
+    //
+    float tana0x, tana0y, tanax, tanay, a, b, c;
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+        tana0x = tan(ps[i]*M_PI/180);
+        tana0y = tan(qs[i]*M_PI/180);
+        tanax = tan(xs[j]*M_PI/180);
+        tanay = tan(ys[j]*M_PI/180);
+        a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
+        b = sqrt(1 + tanax*tanax + tanay*tanay);
+        c = tana0x*tanax + tana0y*tanay;
+	phs(i,j) = -COEF * (ws[j]) * (taus[i]) / (a*b-c);
+      }
+    FltNumMat ss(m,n), cc(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++) {
+	ss(i,j) = sin(phs(i,j));
+	cc(i,j) = cos(phs(i,j));
+      }
+    res.resize(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++)
+	res(i,j) = cpx( cc(i,j), ss(i,j) );
+  } else if(_fi==4) {
+    // adjoint of diffraction Radon 
+    //--------------------------
+    int m = trg.size();
+    int n = src.size();
+    //
+    vector<float> taus(m), ps(m), qs(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    for(int i=0; i<m; i++)      qs[i] = trg[i](2)*(qmax-qmin) + qmin;
+    //
+    vector<float> ws(n), xs(n), ys(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
+    //
+    float tanax, tanay, K1, K;
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+        tanax = tan(ps[i]*M_PI/180);
+        tanay = tan(qs[i]*M_PI/180);
+        K1 = xs[j]*tanax + ys[j]*tanay;
+        K = sqrt(K1*K1 + xs[j]*xs[j]+ ys[j]*ys[j] + 1);
+	phs(i,j) = -COEF * (ws[j]) * (taus[i]) * (K1+K);
+      }
+    FltNumMat ss(m,n), cc(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++) {
+	ss(i,j) = sin(phs(i,j));
+	cc(i,j) = cos(phs(i,j));
+      }
+    res.resize(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++)
+	res(i,j) = cpx( cc(i,j), ss(i,j) );
   } else {
     //--------------------------
     iA(0);
@@ -507,7 +712,7 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
 }
 
 //---------------------------------------
-int BFIO::check(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr)
+int BFIO::check2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr)
 {
   int N1 = f.m();
   int N2 = f.n();
@@ -527,7 +732,52 @@ int BFIO::check(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& 
     app[g] = u(x1,x2);
     //
     vector<Point2> trg;  trg.push_back( Point2((tau(x1)-taumin)/(taumax-taumin), (p(x2)-pmin)/(pmax-pmin)) );
-    CpxNumMat res(1,N1*N2);  iC( kernel(N, trg, src, res) );
+    CpxNumMat res(1,N1*N2);  iC( kernel2(N, trg, src, res) );
+    CpxNumMat resaux(N1,N2,false,res.data());
+    cpx ttl(0,0);
+    for(int j=0; j<N2; j++)
+      for(int i=0; i<N1; i++)
+	ttl = ttl + resaux(i,j) * f(i,j);
+    dir[g] = ttl;
+  }
+  vector<cpx> err(NC);
+  for(int g=0; g<NC; g++)
+    err[g] = app[g] - dir[g];
+  float dn = 0;
+  float en = 0;
+  for(int g=0; g<NC; g++) {
+    dn += abs(dir[g])*abs(dir[g]);
+    en += abs(err[g])*abs(err[g]);
+  }
+  dn = sqrt(dn);
+  en = sqrt(en);
+  relerr = en/dn;
+  //
+  return 0;
+}
+
+//---------------------------------------
+int BFIO::apcheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, const float xx, int NC, float& relerr)
+{
+  int N1 = f.m();
+  int N2 = f.n();
+  int M1 = u.m();
+  int M2 = u.n();
+  vector<Point2> src;
+  for(int j=0; j<N2; j++)
+    for(int i=0; i<N1; i++)
+      src.push_back( Point2((w(i)-wmin)/(wmax-wmin), (x(j)-xmin)/(xmax-xmin)) );
+  vector<cpx> app(NC);
+  vector<cpx> dir(NC);
+  //
+  for(int g=0; g<NC; g++) {
+    int x1 = int( floor(drand48()*M1) );
+    int x2 = int( floor(drand48()*M2) );
+    //
+    app[g] = u(x1,x2);
+    //
+    vector<Point2> trg;  trg.push_back( Point2((tau(x1)-taumin)/(taumax-taumin), (p(x2)-pmin)/(pmax-pmin)) );
+    CpxNumMat res(1,N1*N2);  iC( apkernel2(N, trg, src, res, xx) );
     CpxNumMat resaux(N1,N2,false,res.data());
     cpx ttl(0,0);
     for(int j=0; j<N2; j++)

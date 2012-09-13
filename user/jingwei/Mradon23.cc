@@ -1,8 +1,8 @@
-//   2-D to 3-D Radon transform NEED TO CHECK
-//   Input f(w,x) complex  --- f(w,p)
-//   Output u(tau,p1,p2) real --- u(t,x1,x2)
-//   Call bfio.setup23 bfio.kernel bfio.eval bfio.check
-//   In bfio.kernel: fi=2 adjoint of hyperbolic Radon
+//   special 2-D to 3-D Radon transform 
+//   Input f(w,x) complex  --- f(tau,p)
+//   Output u(tau,p1,p2) complex --- u(w,x1,x2)
+//   Call bfio.setup23 bfio.kernel2 bfio.check2 bfio.eval2
+//   In bfio.kernel2: fi=2 adjoint of hyper Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
   output.put("o3",p20);
   output.put("d3",dp2);
 
-  output.type(SF_FLOAT);
+  //output.type(SF_FLOAT);
   // this has be there if the input and output types are different
 
 
@@ -126,12 +126,12 @@ int main(int argc, char** argv)
 
   if(N<=256) {
     ck0 = clock();
-    iC( bfio.eval(N,f,w,x,u,tau,p) );
+    iC( bfio.eval2(N,f,w,x,u,tau,p) );
     ck1 = clock();    
     time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
   } else {
     tt0 = time(0);
-    iC( bfio.eval(N,f,w,x,u,tau,p) );
+    iC( bfio.eval2(N,f,w,x,u,tau,p) );
     tt1 = time(0);    
     time_eval = difftime(tt1,tt0);
   }
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
   float relerr = 0;
   int NC = 64;
   ck0 = clock();
-  iC( bfio.check(N,f,w,x,u,tau,p,NC,relerr) );
+  iC( bfio.check2(N,f,w,x,u,tau,p,NC,relerr) );
   ck1 = clock();
   float time_chck = float(ck1-ck0)/CLOCKS_PER_SEC*float(ntau)*float(np1*np2)/float(NC);
   //
@@ -149,13 +149,15 @@ int main(int argc, char** argv)
   cerr<<"Ea "<<relerr<<endl;
   //
   
-  std::valarray<float> udata(ntau*np1*np2);
+  std::valarray<sf_complex> udata(ntau*np1*np2);
+  //std::valarray<float> udata(ntau*np1*np2);
   //udata.resize(ntau*np1*np2);
     
   for (int i=0; i<ntau; i++)
     for (int j=0; j<np1; j++)
       for (int k=0; k<np2; k++)
-        udata[ntau*np1*k+ntau*j+i]=real(u(i,np1*k+j));
+        udata[ntau*np1*k+ntau*j+i]=sf_cmplx(real(u(i,np1*k+j)),imag(u(i,np1*k+j)));
+        //udata[ntau*np1*k+ntau*j+i]=real(u(i,np1*k+j));
 
   output << udata;
 

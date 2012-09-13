@@ -1,7 +1,9 @@
-//   2-D Radon transform
+//   2-D to 2-D Radon transform
 //   Input f(w,x) complex
 //   Output u(tau,p) complex
-//   Call bfio.setup bfio.kernel bfio.eval bfio.check
+//   Call bfio.setup2 bfio.kernel2 bfio.check2 bfio.eval2
+//   In bfio.kernel2: fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
+//                    fi=3 x*k;         fi=4 -x*k
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -99,7 +101,7 @@ int main(int argc, char** argv)
 
   // BFIO setup
   BFIO bfio("bfio_");
-  iC( bfio.setup(par,input) );
+  iC( bfio.setup2(par,input) );
 
   int N;
   par.get("N",N); // number of partitions
@@ -109,12 +111,12 @@ int main(int argc, char** argv)
 
   if(N<=256) {
     ck0 = clock();
-    iC( bfio.eval(N,f,w,x,u,tau,p) );
+    iC( bfio.eval2(N,f,w,x,u,tau,p) );
     ck1 = clock();    
     time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
   } else {
     tt0 = time(0);
-    iC( bfio.eval(N,f,w,x,u,tau,p) );
+    iC( bfio.eval2(N,f,w,x,u,tau,p) );
     tt1 = time(0);    
     time_eval = difftime(tt1,tt0);
   }
@@ -122,7 +124,7 @@ int main(int argc, char** argv)
   float relerr = 0;
   int NC = 64;
   ck0 = clock();
-  iC( bfio.check(N,f,w,x,u,tau,p,NC,relerr) );
+  iC( bfio.check2(N,f,w,x,u,tau,p,NC,relerr) );
   ck1 = clock();
   float time_chck = float(ck1-ck0)/CLOCKS_PER_SEC*float(ntau)*float(np)/float(NC);
   //

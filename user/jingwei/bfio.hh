@@ -59,18 +59,21 @@ public:
   int& EL() { return _EL; }
   map<int, Entry>& e2dmap() { return _e2dmap; }
   //
-  int setup(iRSF& par, iRSF& inp);
+  int setup2(iRSF& par, iRSF& inp);
   int setup32(iRSF& par, iRSF& inp);
   int setup23(iRSF& par, iRSF& inp);
   int setup3(iRSF& par, iRSF& inp);
   //
-  int kernel(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res);
+  int kernel2(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res);
+  int apkernel2(int N, vector<Point2>& trg, vector<Point2>& src, CpxNumMat& res, const float xx);
   int kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& res);
   //
-  int eval(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
+  int eval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
+  int apeval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, const float xx);
   int eval3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec& x, const FltNumVec& y, CpxNumTns& u, const FltNumVec& tau, const FltNumVec& p, const FltNumVec& q);
   //
-  int check(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr);
+  int check2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr);
+  int apcheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, const float xx, int NC, float& relerr);
   int check3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec& x, const FltNumVec& y, const CpxNumTns& u, const FltNumVec& tau, const FltNumVec& p, const FltNumVec& q, int NC, float& relerr);
   //
   int prep_aux(FltNumVec& grid, vector<float>& ts, CpxNumMat& tmp);

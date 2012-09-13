@@ -1,8 +1,8 @@
-//   3-D to 2-D Radon transform
+//   special 3-D to 2-D Radon transform
 //   Input f(w,x1,x2) complex
-//   Output u(tau,p) real
-//   Call bfio.setup32 bfio.kernel bfio.eval bfio.check
-//   In bfio.kernel: fi=1 hyperbolic Radon
+//   Output u(tau,p) complex
+//   Call bfio.setup32 bfio.kernel2 bfio.check2 bfio.eval2
+//   In bfio.kernel2: fi=1 hyper Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
   output.put("o2",p0);
   output.put("d2",dp);
 
-  output.type(SF_FLOAT);
+  //output.type(SF_FLOAT);
   // this has be there if the input and output types are different
 
   // BFIO setup
@@ -121,12 +121,12 @@ int main(int argc, char** argv)
 
   if(N<=256) {
     ck0 = clock();
-    iC( bfio.eval(N,f,w,x,u,tau,p) );
+    iC( bfio.eval2(N,f,w,x,u,tau,p) );
     ck1 = clock();    
     time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
   } else {
     tt0 = time(0);
-    iC( bfio.eval(N,f,w,x,u,tau,p) );
+    iC( bfio.eval2(N,f,w,x,u,tau,p) );
     tt1 = time(0);    
     time_eval = difftime(tt1,tt0);
   }
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
   float relerr = 0;
   int NC = 64;
   ck0 = clock();
-  iC( bfio.check(N,f,w,x,u,tau,p,NC,relerr) );
+  iC( bfio.check2(N,f,w,x,u,tau,p,NC,relerr) );
   ck1 = clock();
   float time_chck = float(ck1-ck0)/CLOCKS_PER_SEC*float(ntau)*float(np)/float(NC);
   //
@@ -144,12 +144,14 @@ int main(int argc, char** argv)
   cerr<<"Ea "<<relerr<<endl;
   //
   
-  std::valarray<float> udata(ntau*np);
+  std::valarray<sf_complex> udata(ntau*np);
+  //std::valarray<float> udata(ntau*np);
   //udata.resize(ntau*np);
     
   for (int i=0; i<ntau; i++)
     for (int j=0; j<np; j++)
-      udata[ntau*j+i]=real(u(i,j));
+      udata[ntau*j+i]=sf_cmplx(real(u(i,j)),imag(u(i,j)));
+      //udata[ntau*j+i]=real(u(i,j));
 
   output << udata;
 
