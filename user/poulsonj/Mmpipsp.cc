@@ -102,7 +102,7 @@ main( int argc, char* argv[] )
         ( disc, comm, damping, numPlanesPerPanel );
 
         DistUniformGrid<double> velocity
-        ( 1, origNx, origNy, origNz, XYZ, comm );
+	    ( origNx, origNy, origNz, comm );
         double* localVelocity = velocity.LocalBuffer();
         const int xLocalSize = velocity.XLocalSize();
         const int yLocalSize = velocity.YLocalSize();
@@ -174,7 +174,7 @@ main( int argc, char* argv[] )
                       << " seconds." << std::endl;
 
         DistUniformGrid<Complex<double> > B
-        ( 1, Nx, Ny, Nz, XYZ, comm );
+        ( Nx, Ny, Nz, comm );
         Complex<double>* localB = B.LocalBuffer();
         const double center[] = { 0.5, 0.5, 0.25 };
         double arg[3];
@@ -223,7 +223,7 @@ main( int argc, char* argv[] )
             std::cout << "Beginning solve..." << std::endl;
         mpi::Barrier( comm );
         const double solveStartTime = mpi::Time();
-        helmholtz.SolveWithGMRES( B );
+        helmholtz.Solve( B );
         mpi::Barrier( comm );
         const double solveStopTime = mpi::Time();
         const double solveTime = solveStopTime - solveStartTime;
