@@ -84,8 +84,16 @@ main( int argc, char* argv[] )
         float omega;
         par.get( "omega", omega ); // frequency in rad/sec
 
+        float sigma;
+        par.get( "sigma", sigma, 1.5 ); // magnitude of PML stretching
+
+        int pmlSize;
+        par.get( "pmlSize", pmlSize, 5 ); // number of grid points of PML
+
         if( commRank == 0 )
-            std::cout << "omega=" << omega << std::endl;
+            std::cout << "omega=" << omega << "\n"
+                      << "sigma=" << sigma << "\n"
+                      << "pmlSize=" << pmlSize << std::endl;
 
         const double damping = 7.;
         const int numPlanesPerPanel = 4;
@@ -96,7 +104,7 @@ main( int argc, char* argv[] )
         // This uses 5 grid points of PML by default
         Discretization<double> disc
         ( omega, Nx, Ny, Nz, wx, wy, wz, 
-          PML, PML, PML, PML, DIRICHLET );
+          PML, PML, PML, PML, DIRICHLET, pmlSize, sigma );
 
         DistHelmholtz<double> helmholtz
         ( disc, comm, damping, numPlanesPerPanel );

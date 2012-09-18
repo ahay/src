@@ -24,9 +24,10 @@
 #endif
 
 static int nw, n1, n2, lag1, lag2;
-static float ***u0, ***u1, *v;
+static float ***u0, ***u1, **v;
 
-void coh1_normalize(float *d, float **dn)
+static void coh1_normalize(float *d, float **dn)
+// normalize a trace
 {
 	int i1, iw;
 	double t1, t2;
@@ -57,7 +58,8 @@ void coh1_normalize(float *d, float **dn)
 
 }
 
-float coh1_max(int n, int minl, int maxl, float *x, float **y, float *pv)
+static float coh1_max(int n, int minl, int maxl, float *x, float **y, float *pv)
+// dip scan
 {
 	int il, i1, max, nl;
 
@@ -83,15 +85,8 @@ void coh1_init(int win, int m1, int m2, int l1, int l2)
 	lag2 = l2;
 	u0 = sf_floatalloc3(2*nw+1, n1, n2);
 	u1 = sf_floatalloc3(2*nw+1, n1, n2);
-	v = sf_floatalloc(2*(l1>l2? l1:l2)+1);
-}
-
-void coh1_init2(float **d)
-/*< initialize for each 2D profile  >*/
-{
-	int i2;
-	for(i2=0; i2<n2; i2++)
-		coh1_normalize(d[i2], u0[i2]);
+	v = sf_floatalloc2(2*(l1>l2? l1:l2)+1, n2);
+	// use two d memory for OPENMP
 }
 
 
@@ -102,6 +97,7 @@ void coh1_close()
 	free(u1[0][0]);
 	free(u0[0]);
 	free(u1[0]);
+	free(v[0]);
 	free(u0);
 	free(u1);
 	free(v);
@@ -110,30 +106,78 @@ void coh1_close()
 
 #define MIN(a,b)  (a)<(b)?(a):(b)
 #define MAX(a,b)  (a)>(b)?(a):(b)
-void coh1(float **d)
-/*< recursive first coherence >*/
+void coh1_2d(float **d)
+/*< two-d coherence >*/
 {
-	int i1, i2, k1, k2;
-	float ***p, t1, t2;
-
-	coh1_normalize(d[0], u1[0]);
+	int i1, i2;
+	float t1;
 
 #ifdef _OPENMP
-#pragma omp parallel for                    \
-    schedule(dynamic,10)         \
-    private(i1,i2)
+#pragma omp parallel for     \
+	schedule(dynamic,8)   \
+	private(i2)       
+#endif
+	for(i2=0; i2<n2; i2++)
+		coh1_normalize(d[i2], u1[i2]);
+
+#ifdef _OPENMP
+#pragma omp parallel for     \
+	schedule(dynamic,1)   \
+	private(i1,i2,t1)       
 #endif
 	for(i2=1; i2<n2; i2++)
 	{
-		coh1_normalize(d[i2], u1[i2]);
 		for(i1=0; i1<n1; i1++)
 		{
-			k1 = MAX(-i1, -lag1);
-			k2 = MIN(n2-i1-1, lag1);
-			t1 = coh1_max(nw, k1, k2, u1[i2-1][i1], u1[i2]+i1, v);
-			k1 = MAX(-i1, -lag2);
-			k2 = MIN(n2-i1-1, lag2);
-			t2 = coh1_max(nw, k1, k2, u1[i2-1][i1], u0[i2-1]+i1, v);
+			t1 = coh1_max(nw, MAX(-i1, -lag1), MIN(n1-i1-1, lag1),
+				u1[i2-1][i1], u1[i2]+i1, v[i2]);
+			d[i2-1][i1] = sqrt(t1);
+		}
+	}
+}
+
+
+void coh1_3d_init2d(float **d)
+/*< initialize for each 2D profile  >*/
+{
+	int i2;
+#ifdef _OPENMP
+#pragma omp parallel for     \
+	schedule(dynamic,8)   \
+	private(i2)       
+#endif
+	for(i2=0; i2<n2; i2++)
+		coh1_normalize(d[i2], u0[i2]);
+}
+
+
+void coh1_3d(float **d)
+/*< recursive first coherence >*/
+{
+	int i1, i2;
+	float ***p, t1, t2;
+
+#ifdef _OPENMP
+#pragma omp parallel for     \
+	schedule(dynamic,8)   \
+	private(i2)       
+#endif
+	for(i2=0; i2<n2; i2++)
+		coh1_normalize(d[i2], u1[i2]);
+
+#ifdef _OPENMP
+#pragma omp parallel for     \
+	schedule(dynamic,1)   \
+	private(i1,i2, t1,t2)       
+#endif
+	for(i2=1; i2<n2; i2++)
+	{
+		for(i1=0; i1<n1; i1++)
+		{
+			t1 = coh1_max(nw, MAX(-i1, -lag1), MIN(n1-i1-1, lag1),
+				u1[i2-1][i1], u1[i2]+i1, v[i2]);
+			t2 = coh1_max(nw, MAX(-i1, -lag2), MIN(n1-i1-1, lag2),
+				u1[i2-1][i1], u0[i2-1]+i1, v[i2]);
 			d[i2-1][i1] = sqrt(t1*t2);
 		}
 	}
