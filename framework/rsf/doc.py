@@ -1119,7 +1119,9 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 else:
                     main.document(usedoc_max,root)
             else:
-                print "No program %s in Madagascar." % prog
+                print '''Run %s with parameters. 
+To obtain a selfdoc, install %s with Madagascar: http://www.ahay.org/wiki/Adding_new_programs_to_Madagascar
+                     ''' % (prog,prog)
 
     except (getopt.error, BadUsage):
         print '''sfdoc - the RSF documentation tool
