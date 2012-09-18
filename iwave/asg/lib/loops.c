@@ -165,13 +165,21 @@ void ploop2_3d(int n0,
   register ireal sdiv;
 
   for (i0=0;i0<n0;i0++) {
-    sdiv = _mp[i0]*
+    sdiv = 
+      _mp[i0]*
       (c1lam0*(_v0[i0]-_v0[i0-1])+c2lam0*(_v0[i0+1]-_v0[i0-2]) +
        c1lam1*(_v1p0[i0]-_v1m1[i0])+c2lam1*(_v1p1[i0]-_v1m2[i0]) +
        c1lam2*(_v2p0[i0]-_v2m1[i0])+c2lam2*(_v2p1[i0]-_v2m2[i0]));
+    // fprintf(stderr,"i0=%d\n",i0);
+    // fprintf(stderr,"_v0[i0]=%e _v0[i0-1]=%e _v0[i0+1]=%e _v0[i0-2]=%e\n",_v0[i0],_v0[i0-1],_v0[i0+1],_v0[i0-2]);
+    // fprintf(stderr,"_v1p0[i0]=%e _v1m1[i0]=%e _v1p1[i0]=%e _v1m2[i0]=%e\n",_v1p0[i0],_v1m1[i0],_v1p1[i0],_v1m2[i0]);
+    // fprintf(stderr,"_v2p0[i0]=%e _v2m1[i0]=%e _v2p1[i0]=%e _v2m2[i0]=%e\n",_v2p0[i0],_v2m1[i0],_v2p1[i0],_v2m2[i0]);
+    // fprintf(stderr,"i0=%d sdiv=%e\n",i0,sdiv);
     _p0[i0] = (_p0[i0]*ep0p[i0] + sdiv)*ep0pp[i0];
     _p1[i0] = (_p1[i0]*tmp_ep1p + sdiv)*tmp_ep1pp;
+    // fprintf(stderr," *** i0=%d input p2=%e sdiv=%e tmp_ep2p=%e tmp_ep2pp=%e ",i0,_p2[i0],sdiv,tmp_ep2p,tmp_ep2pp);
     _p2[i0] = (_p2[i0]*tmp_ep2p + sdiv)*tmp_ep2pp;
+    // fprintf(stderr,"output p2=%e\n",_p2[i0]);
   }
 }
 
@@ -219,14 +227,17 @@ void ploop4_3d(int n0,
   int i0;
   register ireal sdiv;
 
+
   for (i0=0;i0<n0;i0++) {
-    sdiv = _mp[i0]*
+    sdiv = 
+      _mp[i0]*
       (c1lam0*(_v0[i0  ]-_v0[i0-1])+c2lam0*(_v0[i0+1]-_v0[i0-2]) +
        c3lam0*(_v0[i0+2]-_v0[i0-3])+c4lam0*(_v0[i0+3]-_v0[i0-4]) +
        c1lam1*(_v1p0[i0]-_v1m1[i0])+c2lam1*(_v1p1[i0]-_v1m2[i0]) +
        c3lam1*(_v1p2[i0]-_v1m3[i0])+c4lam1*(_v1p3[i0]-_v1m4[i0]) +
        c1lam2*(_v2p0[i0]-_v2m1[i0])+c2lam2*(_v2p1[i0]-_v2m2[i0]) +
        c3lam2*(_v2p2[i0]-_v2m3[i0])+c4lam2*(_v2p3[i0]-_v2m4[i0]));
+
     _p0[i0] = (_p0[i0]*ep0p[i0] + sdiv)*ep0pp[i0];
     _p1[i0] = (_p1[i0]*tmp_ep1p + sdiv)*tmp_ep1pp;
     _p2[i0] = (_p2[i0]*tmp_ep2p + sdiv)*tmp_ep2pp;

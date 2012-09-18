@@ -202,9 +202,10 @@ void iwave_destroy(IWAVE * state) {
   /* free memory allocated for workspace */
   im_destroy(&(state->model));
   /* free parallel descriptors */
-  //  destroyparallel(&(state->pinfo),0); rename 10.04.11
   destroypinfo(&(state->pinfo),0); 
 }
+
+// replaced ra_zero with ra_a_zero - WWS 05.09.12
 
 void iwave_dynamic_init(IWAVE * state,
 			int istart) {
@@ -212,7 +213,7 @@ void iwave_dynamic_init(IWAVE * state,
   FD_MODEL * fdm = (FD_MODEL *)((state->model).specs);
   for (i=0;i<(state->model).ld_a.narr; i++) 
     if (isdyn(fdm,i)) 
-      ra_zero(&((state->model).ld_a._s[i]));
+      ra_a_zero(&((state->model).ld_a._s[i]));
   /* transfer start time to state */
   (state->model).tsind.it=istart;
   (state->model).tsind.iv=0;
@@ -287,10 +288,10 @@ int iwave_run(IWAVE * state, FILE * stream) {
   if ( state->printact > 5 ) {
     fprintf(stream,"\n------ iwave_run: before update\n");
     for (ia=0;ia<RDOM_MAX_NARR;ia++) {
-      if (fdm->update(ia,iv)) {
+      //      if (fdm->update(ia,iv)) {
 	fprintf(stream,"------ iarr = %d\n",ia);
 	rd_print(&((state->model).ld_a), ia, stream);
-      }
+	//      }
     }
     fflush(stream); 
   }
@@ -310,10 +311,10 @@ int iwave_run(IWAVE * state, FILE * stream) {
   if ( state->printact > 5 ) {
     fprintf(stream,"\n------ iwave_run: after update\n");
     for (ia=0;ia<RDOM_MAX_NARR;ia++) {
-      if (fdm->update(ia,iv)) {
+      //      if (fdm->update(ia,iv)) {
 	fprintf(stream,"------ iarr = %d\n",ia);
 	rd_print(&((state->model).ld_a), ia, stream);
-      }
+	//      }
     }
     fflush(stream); 
   }  

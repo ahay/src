@@ -131,7 +131,7 @@ int readinput(PARARRAY ** pars, FILE * stream, int argc, char **argv) {
     return err;
   }
 #ifdef IWAVE_VERBOSE
-  ps_printall(*pars,stderr);
+  ps_printall(*(*pars),stderr);
 #endif
 
   return err;

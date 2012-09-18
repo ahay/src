@@ -199,7 +199,7 @@ int traceserver_init(FILE ** fpin, char * fin,
     /* iwave_fopen version */
     if (!(*fpin=iwave_const_fopen(fin,"r",NULL,stream))) {
       fprintf(stream,"Error: traceserver_init\n");
-      fprintf(stream,"failed to open input file\n");
+      fprintf(stream,"failed to open input file %s\n",fin);
       err=E_FILE;
       fflush(stream);
 #ifdef IWAVE_USE_MPI

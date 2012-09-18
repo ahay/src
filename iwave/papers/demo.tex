@@ -17,30 +17,53 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
 \end{abstract}
 
 \section{Introduction}
-The primary purpose of this short paper is to illustrate the use of
-IWAVE to calculate synthetic seismograms. IWAVE is built around a core
-framework, that is, a collection of separate software packages which
-together provide a set of essential services upon which applications
-may be built, and which completely define the interfaces to which
+Domain-specific simulation such as seismic modeling begs for
+software re-use via modular design. All applications of this type have
+the same structure: static fields are initialized, dynamic fields
+updated, output extracted. A modular approach to code architecture is
+implicit in this structure.
+
+Further specialization of simulator type offers even more opportunity
+for modular design. The general topic of this paper, time-domain
+simulation on regular rectangular grids, presents specific openings
+for code re-use via abstraction: time steps may have internal
+structure which is repeated in a defined pattern, parallelism via
+domain decomposition may be computed rather than hard-wired into the
+code, sampling rules for output buffering are simple to formulate and
+universal, and external data formats may be hidden behind uniform
+interfaces.
+
+The software package described in these pages, IWAVE, takes advantage
+of the aforementioned intrinsic modularity. IWAVE is open source
+software for finite difference or finite element time-domain
+simulation on regular rectangular grids, written exclusively in the
+C99 dialect of ISO C. IWAVE is built around a core framework: that is,
+a collection of separate software packages which together provide a
+set of essential services upon which applications may be built. These
+service components completely define the interfaces to which
 additional software must be written to formulate a complete
 application. Along with the core framework, the current release
-contains a complete time-domain acoustic modeling application, as well
-as a basic isotropic elastodynamics application.  The demonstrations
-discussed here are based on the acoustic modeling application.
+contains a complete time-domain acoustic modeling finite difference
+application, as well as a basic isotropic elastodynamics application.
 
-All IWAVE applications are parameter-driven: that is, they accept as
-input a file defining a {\em map} or associative array, consisting of
-a list of {\tt key = value} pairs. The demo directories described in
-this paper contain one or more such parameter (``par'') files, always
-signified by the suffix ``{\tt .par}''. Each file defines a modeling
-task. By perusing these par files and examining the simulation output,
-the user can quickly gain an appreciation of scope of IWAVE's
-capabilities.
+The primary purpose of this short paper is to illustrate the use of
+IWAVE to calculate synthetic seismograms. To that end, the paper
+describes a simple application - 2D synthetic seismogram generation
+over a simple structural model of the sedimentary column - and
+provides a set of demonstration examples (``demos'') which the reader
+may reproduce, along with complete annotation of the files needed for
+job specification and sample graphics derived from the results (as
+well as commands to produce these graphics).
 
 A secondary purpose is to supply the user with the means to
 independently verify some of the claims in the paper by
-\cite{SymesVdovina:09}, in which the examples were generated using an
-earlier version of the same software.
+\cite{SymesVdovina:09}, namely the existance of an error component in
+synthetic data derived from strongly heterogeneous models, in addition
+to the well-known grid dispersion error. The examples were generated using an
+earlier version of IWAVE, and are reproduced here using the current
+version.
+
+
 
 \section{Acoustodynamics}
 The IWAVE acoustic package is based on the pressure-velocity form of
@@ -119,12 +142,16 @@ remains is due to the presence of model discontinuities.
 See
 \cite[]{SymesVdovina:09} for more examples, analysis, and discussion.
 
-\section{Using IWAVE demos}
-IWAVE and all of its parts build with SConstruct. For instructions on
-installing IWAVE (and all other TRIP software) see 
+\section{Creating the examples}
+IWAVE and all of its parts build with SConstruct, either as an
+independent package or as part of Madagascar ({\tt
+  http://www.reproducibility.org/wiki/Main\_Page}). For instructions on
+installing IWAVE (and all other TRIP software) as standalone packages, see 
 \begin{verbatim}
 http://www.trip.caam.rice.edu/software/admin/doc/html/install.html.
 \end{verbatim}
+For instructions on installing iWAVE as part of Madagascar, see the
+Madagascar web site.
 
 To build the intermediate data and figures for  the examples described
 here,,
@@ -168,16 +195,10 @@ from the ground up to support parallel computation; a companion report
 will demonstrate parallel use of IWAVE.
 
 Inspection of the {\tt SConstruct} file in {\tt data} will show that
-the modeling tool used is {\tt asg}, the IWAVE
-acoustic modeling command. This command reads its parameters from a
-par file. Four par files are present in {\tt data}, each one defining
-a modeling job, corresponding to a given level of grid refinement. The
-meaning of each parameter in the par file is described in the IWAVE
-web documentation:
-\begin{verbatim}
-http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html.
-\end{verbatim}
-
+the modeling tool used is {\tt \$TOP/asg/main/asg.x}, the IWAVE
+acoustic modeling command (in Madagascar, this command is referenced
+simply as {\tt asg}). Input data is supplied by a parameter file,
+described in more detail in the appendix.
 The model-building tool {\tt standardmodel} builds the velocity and
 density model files, and works the same way - many of the parameter
 files in the {\tt data} directory are input for this tool.
@@ -200,5 +221,31 @@ creation.
 \bibliographystyle{seg}
 \bibliography{masterref}
 
+\append{Annotated Parameter Files}
 
+All IWAVE applications are parameter-driven: that is, they accept as
+input a {\em map} or associative array, defined by 
+a list of {\tt key = value} pairs. These parameter specifications can
+be included on the command line. However, because the number of such
+parameter specifications is rather large, it's convenient to store
+them in a parameter file (``par file''). The use of a par file has the
+added advantage that the file may include annotations and white space to
+improve readability. 
+
+The examples displayed in this paper are created in the directory {\tt
+  \$TOP/demo/data}. The par file {\tt parfile} is a by-product of data
+creation - the SConstruct script text-processes it from prototype
+files including macros, which are resolved when the scripts are
+run. Four such prototype par files are present in {\tt data}, each one defining
+a modeling task corresponding to a given level of grid refinement. 
+The actual input to the modeling command is {\tt parfile}. 
+
+
+This command reads its parameters from a
+par file. The
+meaning of each parameter in the par file is described in the IWAVE
+web documentation:
+\begin{verbatim}
+http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html.
+\end{verbatim}
 

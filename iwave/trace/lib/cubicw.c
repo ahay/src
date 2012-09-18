@@ -1,4 +1,5 @@
 #include "cubic.h"
+#include "utils.h" // added 06.09.12 WWS
 
 int cubic_getworksize(int nt) { return 4*nt-3; }
 
@@ -86,6 +87,24 @@ You must link the resulting object file with the libraries:
   --work;
 
   /* Function Body */
+
+  /*    if 
+	(1) number of samples are same for input and output
+	(2) initial abscissae are same to within 0.01% of input step
+	(3) total abscissae interval lengths (nt*dt) are same to within
+	0.01% of input step
+
+	then regard interpolation as copy, to working precision, and
+	implement as a copy.
+
+	- WWS 06.09.12
+  */
+  if ((ni == no) &&
+      (iwave_abs(((float)(*ni))*(*hi)-((float)(*no))*(*ho)) < 0.01 * iwave_abs(*hi)) &&
+      (iwave_abs(*x1i-*x1o) < 0.01 * iwave_abs(*hi))) {
+    for (i__=0;i__<*ni;i__++) vo[i__]=vi[i__];
+    return 0;
+  }
 
   /* 	check that an appropriate end condition has been supplied */
 

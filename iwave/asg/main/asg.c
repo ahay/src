@@ -175,8 +175,8 @@ int main(int argc, char ** argv) {
 
     /* assign default sampler params - still pressure only for this version */
     IASN(tindex,D_P);
-    if (!((state.model.g.dim > 0) && (state.model.g.dim < RARR_MAX_NDIM))) {
-      fprintf(stream,"ERROR: main - model dim not sensible. ABORT\n");
+    if (!((state.model.g.dim > 0) && (state.model.g.dim < RARR_MAX_NDIM+1))) {
+      fprintf(stream,"ERROR: main - model dim = %zd not in range [1, %d]. ABORT\n",state.model.g.dim,RARR_MAX_NDIM);
       err=E_BADINPUT;
       iwave_destroy(&state);
       abortexit(err,pars,&stream);

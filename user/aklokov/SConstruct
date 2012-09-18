@@ -3,6 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
+ditime2d
 crssemb diptaper dvscan2d
 pick2d gammapick2d pickvert
 pdrscan2d pdr2d

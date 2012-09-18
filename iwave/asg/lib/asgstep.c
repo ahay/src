@@ -235,6 +235,8 @@ int asg_step_p(RDOM * dom, void *pars) {
   IPNT offep0, offep1, offep2, offp0, offp1, offp2, offmp, offv0, offv1, offv2;
   // inner loop offsets
   int ioffp0, ioffp1, ioffp2, ioffmp, ioffv0, ioffv1, ioffv2;
+  // middle loop offsets 3D
+  int ioffp0_3d, ioffp1_3d, ioffp2_3d, ioffmp_3d, ioffv0_3d, ioffv1_3d, ioffv2_3d;
   // strides = allocated rarray sizes, loop lengths
   IPNT nep0, nep1, nep2, np0, np1, np2, nmp, nv0, nv1, nv2;
   // half time step
@@ -291,7 +293,7 @@ int asg_step_p(RDOM * dom, void *pars) {
   // half timestep
   dt2 = sgnpars->dt / 2.0;
 
-  // size of computational domain for P0 - same as for P1
+  // size of computational domain for P0 - same as for P1, P2
   rd_gse(dom, D_P0, gsc, gec);    
   
   // start indices of allocated domains (index offsets)
@@ -426,28 +428,31 @@ int asg_step_p(RDOM * dom, void *pars) {
     }
   }
   else if (sgnpars->ndim==3) {
+    // fprintf(stderr,"gsc[0]=%d gec[0]=%d\n",gsc[0],gec[0]);
+    // fprintf(stderr,"gsc[1]=%d gec[1]=%d\n",gsc[1],gec[1]);
+    // fprintf(stderr,"gsc[2]=%d gec[2]=%d\n",gsc[2],gec[2]);
     for (i2=gsc[2];i2<gec[2]+1;i2++) {
 
-      ioffp0 = -offp0[0] + (i2-offp0[2])*np0[0]*np0[1];
-      ioffp1 = -offp1[0] + (i2-offp1[2])*np1[0]*np1[1];
-      ioffp2 = -offp2[0] + (i2-offp2[2])*np2[0]*np2[1];
-      ioffmp = -offmp[0] + (i2-offmp[2])*nmp[0]*nmp[1];
-      ioffv0 = -offv0[0] + (i2-offv0[2])*nv0[0]*nv0[1];
-      ioffv1 = -offv1[0] + (i2-offv1[2])*nv1[0]*nv1[1];
-      ioffv2 = -offv2[0] + (i2-offv2[2])*nv2[0]*nv2[1];
+      ioffp0_3d = -offp0[0] + (i2-offp0[2])*np0[0]*np0[1];
+      ioffp1_3d = -offp1[0] + (i2-offp1[2])*np1[0]*np1[1];
+      ioffp2_3d = -offp2[0] + (i2-offp2[2])*np2[0]*np2[1];
+      ioffmp_3d = -offmp[0] + (i2-offmp[2])*nmp[0]*nmp[1];
+      ioffv0_3d = -offv0[0] + (i2-offv0[2])*nv0[0]*nv0[1];
+      ioffv1_3d = -offv1[0] + (i2-offv1[2])*nv1[0]*nv1[1];
+      ioffv2_3d = -offv2[0] + (i2-offv2[2])*nv2[0]*nv2[1];
 
       tmp_ep2p  = (sgnpars->ep2_p)[i2-offep2[0]];
       tmp_ep2pp = (sgnpars->ep2_pp)[i2-offep2[0]];
 
       for (i1=gsc[1];i1<gec[1]+1;i1++) {
       
-	ioffp0 += (i1-offp0[1])*np0[0];
-	ioffp1 += (i1-offp1[1])*np1[0];
-	ioffp2 += (i1-offp2[1])*np2[0];
-	ioffmp += (i1-offmp[1])*nmp[0];
-	ioffv0 += (i1-offv0[1])*nv0[0];
-	ioffv1 += (i1-offv1[1])*nv1[0];
-	ioffv2 += (i1-offv2[1])*nv2[0];
+	ioffp0 = ioffp0_3d + (i1-offp0[1])*np0[0];
+	ioffp1 = ioffp1_3d + (i1-offp1[1])*np1[0];
+	ioffp2 = ioffp2_3d + (i1-offp2[1])*np2[0];
+	ioffmp = ioffmp_3d + (i1-offmp[1])*nmp[0];
+	ioffv0 = ioffv0_3d + (i1-offv0[1])*nv0[0];
+	ioffv1 = ioffv1_3d + (i1-offv1[1])*nv1[0];
+	ioffv2 = ioffv2_3d + (i1-offv2[1])*nv2[0];
 	
 	tmp_ep1p  = (sgnpars->ep1_p)[i1-offep1[0]];
 	tmp_ep1pp = (sgnpars->ep1_pp)[i1-offep1[0]];
@@ -462,27 +467,30 @@ int asg_step_p(RDOM * dom, void *pars) {
 	  _v1p0 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1]);
 	  _v1m1 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1-nv1[0]]);
 	  _v2p0 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2]);
-	  _v2m1 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-nv2[0]]);
+	  _v2m1 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-nv2[0]*nv2[1]]);
 	}
 	if (sgnpars->k>1) {
 	  _v1p1 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1+nv1[0]]);
 	  _v1m2 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1-2*nv1[0]]);
-	  _v2p1 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2+nv2[0]]);
-	  _v2m2 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-2*nv2[0]]);
+	  _v2p1 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2+nv2[0]*nv2[1]]);
+	  _v2m2 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-2*nv2[0]*nv2[1]]);
 	}
 	if (sgnpars->k>2) {
 	  _v1p2 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1+2*nv1[0]]);
 	  _v1m3 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1-3*nv1[0]]);
-	  _v2p2 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2+2*nv2[0]]);
-	  _v2m3 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-3*nv2[0]]);
+	  _v2p2 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2+2*nv2[0]*nv2[1]]);
+	  _v2m3 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-3*nv2[0]*nv2[1]]);
 	}
 	if (sgnpars->k>3) {
 	  _v1p3 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1+3*nv1[0]]);
 	  _v1m4 = &(((dom->_s)[D_V1 ]._s0)[gsc[0]+ioffv1-4*nv1[0]]);
-	  _v2p3 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2+3*nv2[0]]);
-	  _v2m4 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-4*nv2[0]]);
+	  _v2p3 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2+3*nv2[0]*nv2[1]]);
+	  _v2m4 = &(((dom->_s)[D_V2 ]._s0)[gsc[0]+ioffv2-4*nv2[0]*nv2[1]]);
 	}
     
+	// fprintf(stderr,"in asgstep: i1=%d i2=%d v0 offset=%d\n",i1,i2,gsc[0]+ioffv0);
+	//	fprintf(stderr,"last entry in _p0 = %e\n",_p0[n0-1]);
+
 	if (sgnpars->k==1) {
 	  ploop1_3d(n0,
 		    (sgnpars->c11)[0],
@@ -679,7 +687,7 @@ int asg_step_p(RDOM * dom, void *pars) {
 	}
       }
       if (sgnpars->lbc[2]) {
-	for (i1=1; i1<np2[1]; i1++) {
+	for (i1=0; i1<np2[1]; i1++) {
 	  for (i0=0; i0<np2[0]; i0++) {
 	    _p2[i0+i1*np2[0]+0*np2[0]*np2[1]]=-_p2[i0+i1*np2[0]+2*np2[0]*np2[1]];
 	      // p2(i0,i1,1)=0
@@ -688,7 +696,7 @@ int asg_step_p(RDOM * dom, void *pars) {
 	}
       }
       if (sgnpars->rbc[2]) {
-	for (i1=0; i1<np2[0]; i1++) {
+	for (i1=0; i1<np2[1]; i1++) {
 	  for (i0=0; i0<np2[0]; i0++) {
 	    _p2[i0+i1*np2[0]+(np2[2]-3)*np2[1]*np2[0]]=-_p2[i0+i1*np2[0]+(np2[2]-1)*np2[1]*np2[0]];
 	    // p2(i0,i1,np2[2]-2)=0

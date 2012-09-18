@@ -1,6 +1,7 @@
 import os
 thispath = os.getcwd()
 env = Environment();
+Decider('make')
 
 papername = 'paper1'
 texsources = ['demo.tex', 'suplot.tex'] 
@@ -29,9 +30,14 @@ def paper(target, source, env):
 def final(target, source, env):
     os.system('dvipdf ' + str(source[0]))
 
-env.Command([papername + '.ltx'], texsources, ltx)
+t_ltx = env.Command([papername + '.ltx'], texsources, ltx)
 
-env.Command([papername + '.dvi', papername + '.aux', papername + '.bbl', papername + '.log', papername + '.blg'], [papername + '.ltx', 'SConstruct'], paper)
+t_paper = env.Command([papername + '.dvi'], [papername + '.ltx'], paper)
+Clean(t_paper,[papername + '.aux', papername + '.bbl', papername + '.log', papername + '.blg'])
 
-env.Command([papername + '.pdf'], [papername + '.dvi', 'SConstruct'], final)
+t_final = env.Command([papername + '.pdf'], [papername + '.dvi'], final)
+
+#Depends(t_paper, [t_ltx])
+
+#Depends(t_final, [t_paper])
 
