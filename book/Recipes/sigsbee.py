@@ -74,8 +74,8 @@ def migpar(par):
 # ------------------------------------------------------------
 def getdata(data,par):
 
-    datafile = 'data/sigsbee/sigsbee2a_nfs.sgy'
-    #Fetch(data,'sigsbee')
+    datafile = 'sigsbee2a_nfs.sgy'
+    Fetch(datafile,'sigsbee')
     
     Flow([data,data+'-t','./'+data+'-h','./'+data+'-b'],
          datafile,
@@ -90,8 +90,8 @@ def getdata(data,par):
 # ------------------------------------------------------------
 def getmigvel(velo,par):
 
-    migvelfile = 'data/sigsbee/sigsbee2a_migvel.sgy'
-    #Fetch(velo,'sigsbee')
+    migvelfile = 'sigsbee2a_migvel.sgy'
+    Fetch(migvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
          migvelfile,

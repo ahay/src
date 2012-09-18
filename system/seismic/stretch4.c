@@ -242,4 +242,3 @@ void stretch4_close (map4 str)
 }
 
 /* 	$Id$	 */
-

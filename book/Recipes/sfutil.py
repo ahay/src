@@ -12,7 +12,7 @@ import commands,os
     It should be extended to take advantage of other unix
     utilities (ls, tail, grep, etc)
 
-    Esteban Díaz,
+    Esteban Diaz,
     Center for Wave Phenomena
 '''
 
@@ -24,7 +24,7 @@ def sfaxa(fin,dim=1):
     '''
     var=commands.getoutput('sfin %s.rsf'%fin+'|grep n%d | sed -e \"s/=/ /g\"'%dim)
     tmp=var.split()
-    axa=[tmp[1],tmp[3],tmp[5]] 
+    axa=[float(tmp[1]),float(tmp[3]),float(tmp[5])] 
     return axa
 
 def sfdisfil(fin):

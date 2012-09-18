@@ -90,7 +90,7 @@ void veltran_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
 		if (t > 0. && z > 0.) {
 		    t = sqrtf(t);
 		    str[it] = t;
-		    tx[it] = anti*sx/t;
+		    tx[it] = fabsf(anti*sx)/t;
 		    switch (adj? psun1: psun2) {
 			case 2:
 			    w = x*x;
