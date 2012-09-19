@@ -1445,6 +1445,12 @@ void sf_seek (sf_file file, off_t offset, int whence)
 		sf_error ("%s: seek problem:",__FILE__);
 }
 
+FILE* sf_filestream (sf_file file)
+/*< Returns file descriptor to a stream >*/
+{
+    return file ? file->stream : NULL;
+}
+
 void sf_unpipe (sf_file file, off_t size) 
 /*< Redirect a pipe input to a direct access file >*/
 {
