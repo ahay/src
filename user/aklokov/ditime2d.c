@@ -73,28 +73,30 @@ void ditime2d_close (void)
 
     aastretch_close();
     sf_halfint_close();
+
+	return;
 }
 
-void ditime2d_lop (bool adj, bool add, int nm, int nd, 
-		  		   float *modl, float *data) 
+void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize, 
+		  		   float* modl, float* data) 
 /*< operator >*/
 {
     switch (invMod_) {
 		case 0:
-		    if (nm != tn_ * xin_ || nd != tn_ * dipn_) 
-			sf_error ("%s: wrong dimensions nm=%d nd=%d",__FILE__, nm, nd);
+		    if (modelSize != tn_ * xin_ || dataSize != tn_ * dipn_) 
+			sf_error ("%s: wrong dimensions nm=%d dataSize=%d",__FILE__, modelSize, dataSize);
 		    break;
 		case 1:
-		    if (nm != tn_ * dip0n_ || nd != tn_ * dipn_) 
-			sf_error ("%s: wrong dimensions nm=%d nd=%d",__FILE__, nm, nd);
+		    if (modelSize != tn_ * dip0n_ || dataSize != tn_ * dipn_) 
+			sf_error ("%s: wrong dimensions nm=%d dataSize=%d",__FILE__, modelSize, dataSize);
 		    break;
 		case 2:
-		    if (nm != tn_ * (xin_ + dip0n_) || nd != tn_ * dipn_) 
-			sf_error ("%s: wrong dimensions nm=%d nd=%d %d %d %d ",__FILE__, nm, nd, tn_, xin_, dip0n_);
+		    if (modelSize != tn_ * (xin_ + dip0n_) || dataSize != tn_ * dipn_) 
+			sf_error ("%s: wrong dimensions nm=%d dataSize=%d",__FILE__, modelSize, dataSize);
 		    break;
     }
 
-    sf_adjnull (adj, add, nm, nd, modl, data);
+    sf_adjnull (adj, add, modelSize, dataSize, modl, data);
 
     for (int id = 0; id < dipn_; ++id) { 
 		const float curDip = dipo_ + id * dipd_;
@@ -110,13 +112,19 @@ void ditime2d_lop (bool adj, bool add, int nm, int nd,
 				for (int it = 0; it < tn_; ++it) { 
 				    const float curTime = to_ + it * td_;
 				    const float t = curTime * (curXi * sin_a + sqrt ( curXi * curXi + cos_a * cos_a ) ) / cos_a;			    
+				    if (t > 0. && t < tLim_) {
+					    str [it] = t;
 
-				    str [it] = t;
-//				    tx [it] = anti * fabsf (p - p1) * dx;
-					tx[it] = 0.f;
-				    amp [it] = 1.;
-				}
-		
+						tx[it] = 0.f;  // not sure if it is reasonable to calculate tx - may be too expensive
+//					    tx [it] = anti * fabsf (p - p1) * dx;
+
+					    amp [it] = 1.;
+					} else {
+						str[it] = curTime - 2.f * td_;
+						tx[it]  = 0.f;
+						amp[it] = 0.f;
+					}
+				}	
 				aastretch_define (str, tx, amp);
 		
 			    sf_chain (sf_halfint_lop, aastretch_lop,
@@ -136,28 +144,29 @@ void ditime2d_lop (bool adj, bool add, int nm, int nd,
 				const float sin_a0 = sin (a0);	
 		
 				for (int it = 0; it < tn_; ++it) {		
-				    const float t0 = to_ + it * td_;
-				    const float t = t0 * cos_a * cos_a0 / (1 - sin_a * sin_a0);
-		    
+				    const float curTime = to_ + it * td_;
+				    const float t = curTime * cos_a * cos_a0 / (1 - sin_a * sin_a0);
 				    if (t > 0. && t < tLim_) {
-
 						str[it] = t;
-						tx[it] = 0.f;
-	//					tx[it] = fabsf(anti*sx)/t;
-						float w = 1.f; /* can be changed later */
+
+						tx[it] = 0.f;  // not sure if it is reasonable to calculate tx - may be too expensive
+//						tx[it] = fabsf(anti*sx)/t;
+
 						amp[it] = 1.f;
 				    } else {
-						str[it] = t0 - 2. * td_;
-						tx[it] = 0.;
-						amp[it] = 0.;
+						str[it] = curTime - 2.f * td_;
+						tx[it]  = 0.f;
+						amp[it] = 0.f;
 				    }		
 				}
 		
 				aastretch_define (str, tx, amp);
 
-			    sf_chain (sf_halfint_lop,aastretch_lop,
-					      adj,true, tn_, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_, tmp);
+			    sf_chain (sf_halfint_lop, aastretch_lop,
+					      adj, true, tn_, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_, tmp);
 		    }
 		}
 	}
+
+	return;
 }
