@@ -301,13 +301,13 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("iyn", &ip.yNum))        ip.yNum = rp.is3D ? vp.yNum : 1;	
     /* number of imaged crosslines */
     if (!sf_getfloat ("ito", &ip.zStart))    ip.zStart = dp.zStart;
-    /* first imaged time */
+    /* first imaged time (in ms) */
     if (!sf_getfloat ("ixo", &ip.xStart))    ip.xStart = dp.xStart;
     /* first imaged inline */
     if (!sf_getfloat ("iyo", &ip.yStart))    ip.yStart = dp.yStart;	
     /* first imaged crossline */
     if (!sf_getfloat ("itd", &ip.zStep))     ip.zStep = dp.zStep;
-    /* step in imaged times */
+    /* step in imaged times  (in ms) */
     if (!sf_getfloat ("ixd", &ip.xStep))     ip.xStep = dp.xStep;	
     /* step in imaged inlines */
     if (!sf_getfloat ("iyd", &ip.yStep))     ip.yStep = dp.yStep;
