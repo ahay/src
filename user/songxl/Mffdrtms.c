@@ -263,7 +263,6 @@ int main(int argc, char* argv[])
         iname = sf_charalloc(20);
         oname = sf_charalloc(25);
         itoa(isx,mm);
-/*
         sname[0] = '/';
         sname[1] = 't';
         sname[2] = 'm';
@@ -275,7 +274,7 @@ int main(int argc, char* argv[])
         sname[8] = 'p';
         sname[9] = '_';
         sname[10] = '\0';
-*/
+/*
        sname[0] = '/';
         sname[1] = 'd';
         sname[2] = 'a';
@@ -287,6 +286,7 @@ int main(int argc, char* argv[])
         sname[8] = 'p';
         sname[9] = '_';
         sname[10] = '\0';
+*/
 
         sname = strcat(sname,mm);
         out = fopen(sname,"w");

@@ -34,7 +34,7 @@ float dehf(float k /*current frequency*/,
 
 int main(int argc, char* argv[]) 
 {
-    int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, isx, isz;
+    int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, isx, isz, tl, sht;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2, kx0, kz0, v0;
     float **new_p, **cur_p, **new_uz, **cur_uz,  **new_ux, **cur_ux,  **ukr, **v, **d, *wav;
     float k, kmax, tmp, *tmparray, dt2, dz2, dx2, dth, dxh, dzh, v02;
@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(den)) sf_error("Need float input");
 
+    if (!sf_histint(source,"n1",&tl)) sf_error("No n1= in input");
     if (!sf_histint(vel,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dz)) sf_error("No d1= in input");
     if (!sf_histint(vel,"n2",&nx)) sf_error("No n2= in input");
@@ -82,6 +83,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nbb",&nbb)) nbb=0;
     if (!sf_getint("nbl",&nbl)) nbl=0;
     if (!sf_getint("nbr",&nbr)) nbr=0;
+    if (!sf_getint("sht",&sht)) sht=0;
 
     if (!sf_getfloat("ct",&ct)) ct = 0.01; /*decaying parameter*/
     if (!sf_getfloat("cb",&cb)) cb = 0.01; /*decaying parameter*/
@@ -142,7 +144,7 @@ int main(int argc, char* argv[])
 
     wav    =  sf_floatalloc(nt);
     tmparray    =  sf_floatalloc(nx-nbl-nbr);
-    sf_floatread(wav,nt,source);
+    sf_floatread(wav,tl,source);
 
     cur_p    =  sf_floatalloc2(nz,nx);
     new_p   =  sf_floatalloc2(nz,nx);
@@ -240,7 +242,7 @@ int main(int argc, char* argv[])
     /* propagation in time */
     for (it=0; it < nt; it++) {
         sf_warning("it=%d",it);
-        if(it<2500) { cur_p[isx+nbl][isz+nbt] += wav[it]; }
+        if(it<tl) { cur_p[isx+nbl][isz+nbt] += wav[it]; }
         if((!(it%jm)) && snap) { 
            for (ix=0; ix<nx-nbl-nbr; ix++) sf_floatwrite(cur_p[nbl+ix]+nbt,nz-nbt-nbb,snaps);
                
