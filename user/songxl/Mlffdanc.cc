@@ -74,6 +74,33 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
             res(a,b) = cos(2.0*pi*r*dt)/cos(2.0*pi*r0*dt);
            
 	}
+/*
+	for (int b=0; b<nc; b++) {
+            double x0 = kx[cs[b]];
+            double z0 = kz[cs[b]];
+            // rotation of coordinates
+            double x = x0*c+z0*s;
+            double z = z0*c-x0*s;
+            double x00 = x0*c0+z0*s0;
+            double z00 = z0*c0-x0*s0;
+
+            res(a,b) = (x*x+z*z);
+
+            z = wz*z*z;
+            x = wx*x*x;
+            double r = x+z;
+            r = r+sqrt(r*r-qq*x*z);
+            r = sqrt(0.5*r);
+            z00 = wz0*z00*z00;
+            x00 = wx0*x00*x00;
+            double r0 = x00+z00;
+            r0 = r0+sqrt(r0*r0-q00*x00*z00);
+            r0 = sqrt(0.5*r0);
+            if(r0<0.0000001) res(a,b)=0;
+            else res(a,b) *= (cos(2.0*pi*r*dt)-1.0)/(cos(2.0*pi*r0*dt)-1.0);
+           
+	}
+*/
     }
     return 0;
 }
@@ -97,7 +124,7 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
     float pr;
-    par.get("pr",pr,0.25); // time step
+    par.get("pr",pr,0.15); // time step
 
     int SIZE, DE;
     par.get("size",SIZE,9); // stencil length 
@@ -232,14 +259,16 @@ int main(int argc, char** argv)
     int gdc=0;
     for (int ix=0; ix<SIZE; ix++){
         for (int iz=0; iz<SIZE; iz++){
-            if((stmp[iz] > 0 || (stmp[iz] == 0 && stmp[ix] >=0)) && ((stmp[iz]*stmp[iz]+stmp[ix]*stmp[ix])< (float) (band*band)+0.00001)) gdc++;
+            //if((stmp[iz] > 0 || (stmp[iz] == 0 && stmp[ix] >=0)) && ((stmp[iz]*stmp[iz]+stmp[ix]*stmp[ix])< (float) (band*band)+0.00001)) gdc++;
+            if(( (stmp[iz] > 0 && stmp[ix] == 0) || (stmp[iz] == 0 && stmp[ix] >=0))) gdc++;
         }
     }
     nk = 0;
     DblNumMat s1(gdc,1), s2(gdc,1); 
     for (int ix=0; ix<SIZE; ix++){
         for (int iz=0; iz<SIZE; iz++){
-            if((stmp[iz] > 0 || (stmp[iz] == 0 && stmp[ix] >=0)) && ((stmp[iz]*stmp[iz]+stmp[ix]*stmp[ix])<(float) (band*band)+0.00001)){
+            //if((stmp[iz] > 0 || (stmp[iz] == 0 && stmp[ix] >=0)) && ((stmp[iz]*stmp[iz]+stmp[ix]*stmp[ix])<(float) (band*band)+0.00001)){
+            if((  (stmp[iz] > 0 && stmp[ix] == 0) || (stmp[iz] == 0 && stmp[ix] >=0))){
               s1._data[nk]=stmp[iz];
               s2._data[nk]=stmp[ix];
               nk++;
@@ -250,11 +279,18 @@ int main(int argc, char** argv)
 
     DblNumMat kxtmp(1,nxz); for(int k=0; k<nxz; k++) kxtmp._data[k]=kx[k];
     DblNumMat kztmp(1,nxz); for(int k=0; k<nxz; k++) kztmp._data[k]=kz[k];
-    int LEN = s1._m;
-    DblNumMat Bc(LEN,nxz), B(LEN,nxz);
-    iC(ddgemm(dz,s1,kztmp,0.0,B));
+    int LENt = s1._m;
+    int LEN = LENt+1;
+    DblNumMat Bc(LENt,nxz), Bb(LENt,nxz),B(LEN,nxz);
+    iC(ddgemm(dz,s1,kztmp,0.0,Bb));
     iC(ddgemm(dx,s2,kxtmp,0.0,Bc));
-    for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*pi*(B._data[k]+Bc._data[k]));
+    for (int x=0; x<LENt; x++){
+        for (int k=0; k<nxz; k++){
+            B(x,k) = cos(2.0*pi*(Bc(x,k)+Bb(x,k)));
+        }
+    }
+    for (int k=0; k<nxz; k++) B(LENt,k) = cos(2.0*pi*(kz[k]*dz+kx[k]*dx))+cos(2.0*pi*(kz[k]*dz-kx[k]*dx));
+    //for(int k=0; k<B._m*B._n; k++) B._data[k]=cos(2.0*pi*(B._data[k]+Bc._data[k]));
     float ACCU=1e-4;
     DblNumMat WGT(nxz,1);
     for(int k=0; k<nxz; k++) WGT._data[k]=1.0;
@@ -274,6 +310,7 @@ int main(int argc, char** argv)
             M2c(x,k) = M2(x,k)*WGT._data[k];
         }
     } 
+    Bc.resize(LEN,nxz);  
     for (int x=0; x<B._m; x++){
         for (int k=0; k<nxz; k++){
             Bc(x,k) = B(x,k)*WGT._data[k];
@@ -302,20 +339,20 @@ int main(int argc, char** argv)
     outm << fMlr;
     //s1f.type(SF_INT);
     //s2f.type(SF_INT);
-    s1f.put("n1",LEN);
+    s1f.put("n1",LENt);
     s1f.put("n2",1);
-    s2f.put("n1",LEN);
+    s2f.put("n1",LENt);
     s2f.put("n2",1);
     //std::valarray<int> fs(LEN);
-    std::valarray<float> fs(LEN);
+    std::valarray<float> fs(LENt);
     ldat = s1.data();
-    for (int k=0; k < LEN; k++) {
+    for (int k=0; k < LENt; k++) {
         //fs[k] = (int) ldat[k];
         fs[k] = ldat[k];
     } 
     s1f << fs;
     ldat = s2.data();
-    for (int k=0; k < LEN; k++) {
+    for (int k=0; k < LENt; k++) {
         fs[k] =  ldat[k];
     } 
     s2f << fs;
