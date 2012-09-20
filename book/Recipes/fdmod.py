@@ -961,7 +961,6 @@ def wom(wom,wfld,velo,vmean,par):
     DPT=os.environ.get('TMPDATAPATH')
 
     if(not par.has_key('wweight')): par['wweight']=1
-    if(not par.has_key('wclip')):   par['wclip']=1.0
 
     wtmp = wfld + 'tmp'
     vtmp = wfld + 'vel'
@@ -1072,7 +1071,7 @@ def wframe(frame,movie,index,custom,par):
     Flow([movie+'_plt',movie+'_bar'],movie,
          'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s'%custom)
     Plot  (frame,[movie+'_plt',movie+'_bar'],
-           'window n3=1 f3=%dbar=${SOURCES[1]} |'%index
+           'window n3=1 f3=%d |'%index
            + cgrey(custom,par))
     
 # ------------------------------------------------------------

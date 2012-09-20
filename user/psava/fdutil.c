@@ -1214,8 +1214,8 @@ void sponge3d_apply(float  ***uu,
 	iby = fdm->nypad-ib-1;
 	for    (ix=0; ix<fdm->nxpad; ix++) {
 	    for(iz=0; iz<fdm->nzpad; iz++) {
-		uu[ib ][ix][iz] *= w; /* x min */
-		uu[iby][ix][iz] *= w; /* x max */
+		uu[ib ][ix][iz] *= w; /* y min */
+		uu[iby][ix][iz] *= w; /* y max */
 	    }
 	}
 
