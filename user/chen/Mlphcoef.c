@@ -1,4 +1,4 @@
-/* 2d filter bank  */
+/* Linear PHase filter COEFficients */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -20,29 +20,17 @@
 
 
 #include <rsf.h>
-#include "fbank.h"
+#include "lphpoly.h"
 
-
-int main(int argc, char*argv[])
+int main(int argc, char* argv[])
 {
-	sf_file in, out;
-	int nf, n1, n2, n3, m, n;
-	int i3;
-	float **wav, ****fb;
+	sf_file out;
+	int nf, m, n;
+	float **c;
 	char *interp;
 
 	sf_init(argc, argv);
-
-	in  = sf_input("in");
-	out = sf_output("out");
-
-	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
-
-	if (!sf_histint(in, "n1", &n1)) sf_error("No n1= in input");
-	if (!sf_histint(in, "n2", &n2)) sf_error("No n2= in input");
-	n3 = sf_leftsize(in, 2);
-
-	sf_shiftdim2(in,out,2);
+	out = sf_output ("out");
 
 	if(!sf_getint("m", &m)) m=1;
 	/* b[-m, ... ,n] */
@@ -52,31 +40,19 @@ int main(int argc, char*argv[])
 	/* interpolation method: maxflat lagrange bspline */
 
 	nf = m+n+1;
+	sf_putint(out, "nf", nf);
+	sf_putint(out, "o1", -m);
+	sf_putint(out, "d1", 1);
+	sf_putint(out, "n2", nf);
+	sf_putint(out, "o2", 0);
+	sf_putint(out, "d2", 1);
 
-	wav = sf_floatalloc2(n1,n2);
-	fb  = sf_floatalloc4(n1, n2, nf, nf);
+	c = lphpoly(m, n, interp);
+	if(c==NULL) sf_error("interp=%s incorrect", interp);
+	sf_floatwrite(c[0], nf*nf, out);
 
-	sf_putint(out, "n3", nf);
-	sf_putint(out, "n4", nf);
-	sf_putfloat(out, "o3", 0);
-	sf_putfloat(out, "d3", 1);
-	sf_putfloat(out, "o4", 0);
-	sf_putfloat(out, "d4", 1);
-
-
-	fbank_init(m, n, interp);
-
-
-	for(i3=0; i3<n3; i3++)
-	{
-		sf_floatread(wav[0], n1*n2, in);
-		fbank2(n1, n2, wav, fb);
-		sf_floatwrite(fb[0][0][0], n1*n2*nf*nf, out);
-	}
-
-	fbank_close();
+	free(c[0]);
+	free(c);
 	return 0;
 }
-
-
 

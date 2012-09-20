@@ -20,26 +20,28 @@
 
 
 #include <rsf.h>
-#include "lphase.h"
+#include "lphpoly.h"
 #include "dsp.h"
 
-static int nf;
+static int m, n;
 static float **c;
 
 
-void fbank_init(int mf, int interp)
+void fbank_init(int mf, int nf, char* interp)
 /*< initialize >*/
 {
-	nf = mf;
-	c = lphase(mf, interp);
+	m = mf;
+	n = nf;
+	c = lphpoly(m, n, interp);
 }
 
-void fbank_init2(int mf, float **a)
+void fbank_init2(int mf, int nf, float **a)
 /*< initialize >*/
 {
-	nf = mf;
-	c = sf_floatalloc2(2*nf+1, 2*nf+1);
-	memcpy(c[0], a[0], (2*nf+1)*(2*nf+1)*sizeof(float));
+	m = mf;
+	n = nf;
+	c = sf_floatalloc2(m+n+1, m+n+1);
+	memcpy(c[0], a[0], (m+n+1)*(m+n+1)*sizeof(float));
 }
 
 void fbank_close()
@@ -55,9 +57,9 @@ void fbank1(int n1, float *in, float **out)
 {
 	int j1;
 
-	for(j1=0; j1<=2*nf; j1++)
+	for(j1=0; j1<=(m+n); j1++)
 	{
-		firs(-nf, nf, c[j1]+nf, in, 1, n1, out[j1], 1);
+		firs(-m, n, c[j1]+m, in, 1, n1, out[j1], 1);
 	}
 }
 
@@ -70,13 +72,13 @@ void fbank2(int n1, int n2, float**in, float ****out)
 
 	u1 = sf_floatalloc2(n1, n2);
 
-	for(j2=0; j2<=2*nf; j2++)
-	for(j1=0; j1<=2*nf; j1++)
+	for(j2=0; j2<=(m+n); j2++)
+	for(j1=0; j1<=(m+n); j1++)
 	{
 		for(i1=0; i1<n1; i1++)
-			firs(-nf, nf, c[j2]+nf, in[0]+i1, n1, n2, u1[0]+i1, n1);
+			firs(-m, n, c[j2]+m, in[0]+i1, n1, n2, u1[0]+i1, n1);
 		for(i2=0; i2<n2; i2++)
-			firs(-nf, nf, c[j1]+nf, u1[i2], 1, n1, out[j2][j1][i2], 1);
+			firs(-m, n, c[j1]+m, u1[i2], 1, n1, out[j2][j1][i2], 1);
 	}
 
 	free(u1[0]);

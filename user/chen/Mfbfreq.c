@@ -1,4 +1,4 @@
-/* frequency response of linear phase approximators */
+/* frequency response of linear phase filter bank */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -23,19 +23,22 @@
 #include "lphpoly.h"
 #include "dsp.h"
 
+
+
+
 int main(int argc, char*argv[])
 {
 	sf_file out;
-	int n1, n2, nf, m, n, i1, i2;
-	sf_complex z1, **bf;
-	float o1, d1, o2, d2, **c, *b1, f, delay;
-	bool iir;
-	char* interp;
+	int n1, nd, m, n, nf, i1, j1, id, nfd, n1d, kf, k1;
+	sf_complex z1, **bf, *buf;
+	float o1, d1, **c, f;
+	char* interp, tmp[8];
 
 	sf_init(argc, argv);
 
 	out = sf_output("out");
 	sf_settype(out,SF_COMPLEX);
+
 
 	if(!sf_getint("m", &m)) m=1;
 	/* b[-m, ... ,n] */
@@ -46,54 +49,69 @@ int main(int argc, char*argv[])
 
 	nf = m+n+1;
 
-	if(!sf_getbool("iir", &iir)) iir=true;
-	/* y:iir,  n:fir */
 	if(!sf_getint("n1", &n1)) n1=50;
-	/* samples in frequency domain between (0:f_c] */
-	if(!sf_getfloat("o2", &o2)) o2=0.1;
-	/* first phase shift */
-	if(!sf_getfloat("d2", &d2)) d2=0.3;
-	/* phase shift increment */
-	if(!sf_getint("n2", &n2)) n2=1;
-	/* number of phase shift */
+	/* samples in frequency domain is 2*n1+1 */
+	if(!sf_getint("nd", &nd)) nd=1;
+	/* nd dimensional filter bank, nd should not be large, or you will need to buy a new disk array */
 
-	o1 = 0.0;
-	d1 = 0.5/(n1-1);
-	sf_putint(out, "n1", n1);
-	sf_putfloat(out, "o1", o1);
-	sf_putfloat(out, "d1", d1);
-	sf_putint(out, "n2", n2);
-	sf_putfloat(out, "o2", o2);
-	sf_putfloat(out, "d2", d2);
+	o1 = -0.5;
+	d1 = 0.5/n1;
+	for(j1=1; j1<=nd; j1++)
+	{
+		sprintf(tmp, "n%d", j1);
+		sf_putint(out, tmp, 2*n1+1);
+		sprintf(tmp, "o%d", j1);
+		sf_putfloat(out, tmp, o1);
+		sprintf(tmp, "d%d", j1);
+		sf_putfloat(out, tmp, d1);
+		sprintf(tmp, "n%d", j1+nd);
+		sf_putint(out, tmp, nf);
+		sprintf(tmp, "o%d", j1+nd);
+		sf_putfloat(out, tmp, 0);
+		sprintf(tmp, "d%d", j1+nd);
+		sf_putfloat(out, tmp, 1);
+	}
 
-	bf = sf_complexalloc2(n1, n2);
-	b1 = sf_floatalloc(nf);
+	n1 = 2*n1+1;
+	bf = sf_complexalloc2(n1, nf);
 
 	c = lphpoly(m, n, interp);
 	if(c==NULL) sf_error("interp=%s not correct", interp);
-	for(i2=0; i2<n2; i2++)
+	for(j1=0; j1<nf; j1++)
 	{
-		delay = o2+d2*i2;
-		if(iir) delay /= 2.0;
-		lphpoly_coef(nf-1, c, delay, b1, nf-1, false);
 		for(i1=0; i1<n1; i1++)
 		{
 			f = (o1+d1*i1);
-			z1 = fir_freq(-m, n, b1+m, f);
-			if(iir) z1 = z1*z1/(z1*conj(z1)+0.000001);
-			bf[i2][i1] = z1;
+			z1 = fir_freq(-m, n, c[j1]+m, f);
+			bf[j1][i1] = z1;
 		}
 	}
 
-	sf_complexwrite(bf[0], n1*n2, out);
+	nfd=1; n1d=1;
+	for(i1=0; i1<nd; i1++) { nfd=nf*nfd; n1d=n1*n1d; }
+
+	buf = sf_complexalloc(n1d);
+	for(j1=0; j1<nfd; j1++)
+	{
+		for(i1=0; i1<n1d; i1++)
+		{
+			z1 = 1; kf=j1; k1=i1;
+			for(id=0; id<nd; id++)
+			{
+				z1 *= bf[kf%nf][k1%n1];
+				kf /= nf;
+				k1 /= n1;
+			}
+			buf[i1] = z1;
+		}
+		sf_complexwrite(buf, n1d, out);
+	}
+
 	free(bf[0]);
 	free(bf);
+	free(buf);
 	free(c[0]);
 	free(c);
-	free(b1);
 	return 0;
 }
-
-
-
 

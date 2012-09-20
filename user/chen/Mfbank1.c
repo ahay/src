@@ -1,4 +1,4 @@
-/* 2d filter bank  */
+/* 1d filter bank  */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -26,9 +26,10 @@
 int main(int argc, char*argv[])
 {
 	sf_file in, out;
-	int nf, n1, n2, interp, nf2;
+	int nf, n1, n2, m, n;
 	int i2;
 	float *wav, **fb;
+	char *interp;
 
 	sf_init(argc, argv);
 
@@ -42,32 +43,31 @@ int main(int argc, char*argv[])
 
 	sf_shiftdim(in,out,1);
 
-	if (!sf_getint("order",&nf)) nf=1;
-	/* PWD filter order */
-	
-	if (!sf_getint("interp",&interp)) interp=0;
-	/* interpolation method: 
-	0: maxflat
-	1: Lagrange 
-	2: B-Spline */
+	if(!sf_getint("m", &m)) m=1;
+	/* b[-m, ... ,n] */
+	if(!sf_getint("n", &n)) n=1;
+	/* b[-m, ... ,n] */
+	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
+	/* interpolation method: maxflat lagrange bspline */
 
-	nf2 = 2*nf+1;
+	nf = m+n+1;
+
 	wav = sf_floatalloc(n1);
-	fb  = sf_floatalloc2(n1, nf2);
+	fb  = sf_floatalloc2(n1, nf);
 
-	sf_putint(out, "n2", nf2);
+	sf_putint(out, "n2", nf);
 	sf_putfloat(out, "o2", 0);
 	sf_putfloat(out, "d2", 1);
 
 
-	fbank_init(nf, interp);
+	fbank_init(m, n, interp);
 
 
 	for(i2=0; i2<n2; i2++)
 	{
 		sf_floatread(wav, n1, in);
 		fbank1(n1, wav, fb);
-		sf_floatwrite(fb[0], n1*nf2, out);
+		sf_floatwrite(fb[0], n1*nf, out);
 	}
 
 	fbank_close();
