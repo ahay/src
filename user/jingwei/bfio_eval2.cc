@@ -99,8 +99,20 @@ int BFIO::eval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& 
   int EL = _EL;
   int TL = int(round(log(float(N))/log(2)));
   int SL = TL-EL;
-  int ML = int(floor((SL+EL)/2.0));
+  int ML;
+  if ( (SL+EL)%2 == 0 ) {
+    ML = (SL+EL)/2;
+  } else {
+    if (_fi==1 || _fi==3) {
+      // if forward hyper Radon or x*k
+      ML = floor((SL+EL)/2.0);
+    } else if (_fi==2 || _fi==4) {
+      // if adjoint hyper Radon or -x*k
+      ML = floor((SL+EL)/2.0)+1;
+    }
+  }
   cerr<<"EL "<<EL<<" SL "<<SL<<endl;
+  cerr<<"ML "<<ML<<endl;
   // grouping things for input
   NumMat<Point2> ks(N1,N2);
   for(int i=0; i<N1; i++)
