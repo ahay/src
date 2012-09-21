@@ -28,6 +28,8 @@ static int dip0n_; static float dip0o_, dip0d_;
 
 static float *tmp, *amp, *str, *tx;
 
+static float *tableRefl_, *tableDiff_;
+
 static float anti_;
 static int   invMod_;
 static int   tLim_;
@@ -60,6 +62,47 @@ void ditime2d_init (float dipo,  float dipd,  int dipn,  // dip angle axis
     tx  = sf_floatalloc (tn_);
     tmp = sf_floatalloc (tn_);
 
+	// shift tables
+
+	const int reflSize = tn_ * dip0n_ * dipn_;
+	const int diffSize = tn_ * xin_ * dipn_;
+
+	tableRefl_ = sf_floatalloc (reflSize);
+	tableDiff_ = sf_floatalloc (diffSize);
+
+	const float CONVPARAM = SF_PI / 180.f;
+
+	float* pTableR = tableRefl_;
+	float* pTableD = tableDiff_;
+
+    for (int id = 0; id < dipn_; ++id) { 
+		const float curDip = dipo_ + id * dipd_;
+		const float a      = curDip * CONVPARAM;
+		const float cos_a  = cos (a);
+		const float sin_a  = sin (a);
+	    for (int ixi = 0; ixi < xin_; ++ixi) { 
+			const float curXi = xio_ + ixi * xid_;
+			const float aux_diff = (curXi * sin_a + sqrt ( curXi * curXi + cos_a * cos_a ) ) / cos_a;
+			for (int it = 0; it < tn_; ++it, ++pTableD) { 
+			    const float curTime = to_ + it * td_;
+			    *pTableD = curTime * aux_diff;			    
+			}
+		}
+	    for (int id0 = 0; id0 < dip0n_; ++id0) { 
+			const int   curDip0 = dip0o_ + id0 * dip0d_;
+			const float a0 = curDip0 * CONVPARAM;
+			const float cos_a0 = cos (a0);	
+			const float sin_a0 = sin (a0);	
+		
+			const float aux_refl = cos_a * cos_a0 / (1 - sin_a * sin_a0);
+
+			for (int it = 0; it < tn_; ++it, ++pTableR) {		
+			    const float curTime = to_ + it * td_;
+			    *pTableR = curTime * aux_refl;		
+			}
+		}
+	}
+
 	return;
 }
 
@@ -73,6 +116,9 @@ void ditime2d_close (void)
 
     aastretch_close();
     sf_halfint_close();
+
+	free (tableRefl_);
+	free (tableDiff_);
 
 	return;
 }
@@ -99,22 +145,16 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
     sf_adjnull (adj, add, modelSize, dataSize, modl, data);
 
 	const float CONVPARAM = SF_PI / 180.f;
-    for (int id = 0; id < dipn_; ++id) { 
-		const float curDip = dipo_ + id * dipd_;
-		const float a      = curDip * CONVPARAM;
-		const float cos_a  = cos (a);
-		const float sin_a  = sin (a);
+	float* pTableR = tableRefl_;
+	float* pTableD = tableDiff_;
 
+    for (int id = 0; id < dipn_; ++id) { 
 		// diffracion part
 		if (1 != invMod_) {	
 		    for (int ixi = 0; ixi < xin_; ++ixi) { 
-				const float curXi = xio_ + ixi * xid_;
-	
-				const float aux_diff = (curXi * sin_a + sqrt ( curXi * curXi + cos_a * cos_a ) ) / cos_a;
-
-				for (int it = 0; it < tn_; ++it) { 
-				    const float curTime = to_ + it * td_;
-				    const float t = curTime * aux_diff;			    
+				for (int it = 0; it < tn_; ++it, ++pTableD) { 
+					const float curTime = to_ + it * td_;
+				    const float t = *pTableD;		    
 				    if (t > 0. && t < tLim_) {
 					    str [it] = t;
 						tx[it] = 0.f;  // not sure if it is reasonable to calculate tx - may be too expensive
@@ -137,18 +177,10 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 		// reflection part
 		if (0 != invMod_) {
 		    const int offset = (1 == invMod_) ? 0 : xin_;
-
 		    for (int id0 = 0; id0 < dip0n_; ++id0) { 
-				const int   curDip0 = dip0o_ + id0 * dip0d_;
-				const float a0 = curDip0 * CONVPARAM;
-				const float cos_a0 = cos (a0);	
-				const float sin_a0 = sin (a0);	
-		
-				const float aux_refl = cos_a * cos_a0 / (1 - sin_a * sin_a0);
-
-				for (int it = 0; it < tn_; ++it) {		
-				    const float curTime = to_ + it * td_;
-				    const float t = curTime * aux_refl;
+				for (int it = 0; it < tn_; ++it, ++pTableR) {		
+					const float curTime = to_ + it * td_;
+				    const float t = *pTableR;
 				    if (t > 0. && t < tLim_) {
 						str[it] = t;
 						tx[it] = 0.f;  // not sure if it is reasonable to calculate tx - may be too expensive
