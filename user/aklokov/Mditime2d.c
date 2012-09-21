@@ -46,7 +46,7 @@ int main (int argc, char* argv[]) {
 	
 	fileDweight = NULL;
     if ( NULL != sf_getstring ("dweight") ) {
-	/* input file containing data weightsq */ 
+	/* input file containing data weights */ 
 		fileDweight = sf_input ("dweight");
     }
 
