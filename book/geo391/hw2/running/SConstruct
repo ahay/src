@@ -31,6 +31,15 @@ Result('res',plot('Noise') + ' allpos=n')
 
 #############################################################
 
+import sys
+
+if sys.platform=='darwin':
+     gtime = WhereIs('gtime')
+     if not gtime:
+          print "For computing CPU time, please install gtime."
+else:
+     gtime = WhereIs('gtime') or WhereIs('time')
+
 # slow or fast
 for case in ('fast','slow'):
 
@@ -39,6 +48,8 @@ for case in ('fast','slow'):
 
     time = 'time-' + case
     wind = 'wind-' + case
+
+ 
     
     # loop over window size
     for w in range(3,16,2):
@@ -49,10 +60,13 @@ for case in ('fast','slow'):
         ws.append(iwind)
 
         # measure CPU time
+ 
+        
+        
         Flow(iwind,None,'spike n1=1 mag=%d' % (w*w)) 
-        Flow(itime,'bay %s' % run[0],
+        Flow(itime,'dem %s' % run[0],
              '''
-             ( (/usr/bin/time -f "%%S %%U"
+             ( (%s -f "%%S %%U"
              ./${SOURCES[1]} < ${SOURCES[0]} 
               w1=%d w2=%d what=%s > /dev/null ) 2>&1 )
               > time.out &&
@@ -62,7 +76,7 @@ for case in ('fast','slow'):
              dd form=native < time0.asc | stack axis=1 norm=n
              > $TARGET &&
              /bin/rm time0.asc time.out
-             ''' % (w,w,case),stdin=0,stdout=-1)
+             ''' % (gtime,w,w,case),stdin=0,stdout=-1)
         
     Flow(time,ts,'cat axis=1 ${SOURCES[1:%d]}' % len(ts))
     Flow(wind,ws,'cat axis=1 ${SOURCES[1:%d]}' % len(ws))
