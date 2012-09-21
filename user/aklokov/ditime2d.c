@@ -81,26 +81,27 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 		  		   float* modl, float* data) 
 /*< operator >*/
 {
-    switch (invMod_) {
+	switch (invMod_) {
 		case 0:
 		    if (modelSize != tn_ * xin_ || dataSize != tn_ * dipn_) 
-			sf_error ("%s: wrong dimensions nm=%d dataSize=%d",__FILE__, modelSize, dataSize);
+			sf_error ("%s: wrong dimensions modelSize=%d dataSize=%d",__FILE__, modelSize, dataSize);
 		    break;
 		case 1:
 		    if (modelSize != tn_ * dip0n_ || dataSize != tn_ * dipn_) 
-			sf_error ("%s: wrong dimensions nm=%d dataSize=%d",__FILE__, modelSize, dataSize);
+			sf_error ("%s: wrong dimensions modelSize=%d dataSize=%d",__FILE__, modelSize, dataSize);
 		    break;
 		case 2:
 		    if (modelSize != tn_ * (xin_ + dip0n_) || dataSize != tn_ * dipn_) 
-			sf_error ("%s: wrong dimensions nm=%d dataSize=%d",__FILE__, modelSize, dataSize);
+			sf_error ("%s: wrong dimensions modelSize=%d dataSize=%d",__FILE__, modelSize, dataSize);
 		    break;
     }
 
     sf_adjnull (adj, add, modelSize, dataSize, modl, data);
 
+	const float CONVPARAM = SF_PI / 180.f;
     for (int id = 0; id < dipn_; ++id) { 
 		const float curDip = dipo_ + id * dipd_;
-		const float a      = curDip * SF_PI / 180.f;
+		const float a      = curDip * CONVPARAM;
 		const float cos_a  = cos (a);
 		const float sin_a  = sin (a);
 
@@ -109,15 +110,15 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 		    for (int ixi = 0; ixi < xin_; ++ixi) { 
 				const float curXi = xio_ + ixi * xid_;
 	
+				const float aux_diff = (curXi * sin_a + sqrt ( curXi * curXi + cos_a * cos_a ) ) / cos_a;
+
 				for (int it = 0; it < tn_; ++it) { 
 				    const float curTime = to_ + it * td_;
-				    const float t = curTime * (curXi * sin_a + sqrt ( curXi * curXi + cos_a * cos_a ) ) / cos_a;			    
+				    const float t = curTime * aux_diff;			    
 				    if (t > 0. && t < tLim_) {
 					    str [it] = t;
-
 						tx[it] = 0.f;  // not sure if it is reasonable to calculate tx - may be too expensive
 //					    tx [it] = anti * fabsf (p - p1) * dx;
-
 					    amp [it] = 1.;
 					} else {
 						str[it] = curTime - 2.f * td_;
@@ -139,19 +140,19 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 
 		    for (int id0 = 0; id0 < dip0n_; ++id0) { 
 				const int   curDip0 = dip0o_ + id0 * dip0d_;
-				const float a0 = curDip0 * SF_PI / 180.f;
+				const float a0 = curDip0 * CONVPARAM;
 				const float cos_a0 = cos (a0);	
 				const float sin_a0 = sin (a0);	
 		
+				const float aux_refl = cos_a * cos_a0 / (1 - sin_a * sin_a0);
+
 				for (int it = 0; it < tn_; ++it) {		
 				    const float curTime = to_ + it * td_;
-				    const float t = curTime * cos_a * cos_a0 / (1 - sin_a * sin_a0);
+				    const float t = curTime * aux_refl;
 				    if (t > 0. && t < tLim_) {
 						str[it] = t;
-
 						tx[it] = 0.f;  // not sure if it is reasonable to calculate tx - may be too expensive
 //						tx[it] = fabsf(anti*sx)/t;
-
 						amp[it] = 1.f;
 				    } else {
 						str[it] = curTime - 2.f * td_;
