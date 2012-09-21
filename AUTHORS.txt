@@ -7,6 +7,7 @@ Yihua Cai <caiyihua@gmail.com>
 Maria Cameron <kourkina@earthlink.net>
 Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
 Zhonghuan Chen <isaacthu@gmail.com>
+Jiubing Cheng <cjb1206@tongji.edu.cn>
 Joseph Dellinger <geojoe@freeusp.org>
 Esteban Diaz <ediazpan@mines.edu>
 Sergey Fomel <sergey.fomel@gmail.com>

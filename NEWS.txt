@@ -48,7 +48,7 @@ To programs:
 * sfawefd2d and 3d: constant-density flag. Improved speed, memory
 * sfgraph: depth= option for colored symbols
 * sfcat and sfadd no longer have a limit on the number of files
-
+* user/chengjb: new contributor (Jiubing Cheng)
 
 ===Bug fixes===
 

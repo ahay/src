@@ -1,0 +1,104 @@
+import os, sys, re, string
+#sys.path.append('../../framework')
+sys.path.append('/home/cjb/RSFSRC/framework')
+import bldutil
+
+progs = '''
+vti2dpseudop vti2dpseudop1 vti2delatsic
+tti2dpseudop tti2dpseudop1 tti2delatsic
+'''
+
+mpiprogs='''
+'''
+
+pyprogs='''
+'''
+
+pymods='''
+'''
+
+docs = []
+
+try:  # distributed version
+	Import('env root pkgdir bindir')
+	env = env.Clone()
+except: # local version
+	env = bldutil.Debug()
+	root = None
+	SConscript('/home/cjb/RSFSRC/api/c/SConstruct')
+
+env.Prepend(CPPPATH=['/home/cjb/RSFSRC/include'],
+		LIBPATH=['/home/cjb/RSFSRC/lib'],
+		LIBS=[env.get('DYNLIB','')+'rsf'])
+
+lapack = env.get('LAPACK')
+blas = env.get('BLAS')
+if (lapack and blas):
+	env.Prepend(LIBS=lapack)
+
+fftw = env.get('FFTW')
+if (fftw):
+	env.Prepend(LIBS=fftw)
+	env.Prepend(LIBS=['fftw3'])
+
+src = Glob('[a-z]*.c')
+for source in src:
+	inc = env.RSF_Include(source,prefix='')
+	obj = env.StaticObject(source)
+	env.Depends(obj,inc)
+
+mains = Split(progs)
+for prog in mains:
+	sources = ['M' + prog]
+	bldutil.depends(env,sources,'M'+prog)
+	prog = env.Program(prog,map(lambda x: x + '.c',sources))
+	if root:
+		env.Install(bindir,prog)
+
+mpicc = env.get('MPICC')
+
+mpi_mains = Split(mpiprogs)
+for prog in mpi_mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    if mpicc:
+        prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
+
+for prog in Split(
+	'''
+	'''):
+	sources = ['T' + prog,prog]
+	bldutil.depends(env,sources,prog)
+	sources = map(lambda x: x + '.o',sources)
+	env.Object('T' + prog + '.c')
+	env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+
+######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+if root: # no compilation, just rename
+	pymains = Split(pyprogs)
+	exe = env.get('PROGSUFFIX','')
+	for prog in pymains:
+		env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+	for mod in Split(pymods):
+		env.Install(pkgdir,mod+'.py')
+
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+	user = os.path.basename(os.getcwd())
+	main = 'sf%s.py' % user
+	
+	docs += map(lambda prog: env.Doc(prog,'M' + prog),mains)  + \
+		map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+	env.Depends(docs,'#/framework/rsf/doc.py')	
+	doc = env.RSF_Docmerge(main,docs)
+	env.Install(pkgdir,doc)
