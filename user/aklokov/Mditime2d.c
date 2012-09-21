@@ -23,13 +23,13 @@
 
 int main (int argc, char* argv[]) {
 
-    sf_file in, out, fileRefl, fileDiff;
+    sf_file in, out, fileDweight, fileRefl, fileDiff;
 	int dipn;  float dipo, dipd;
 	int dip0n; float dip0o, dip0d;
 	int tn; float to, td;
 	int xin;   float xio, xid;
 	int xn;
-	float *data, *model;
+	float *data, *model, *dweight;
 	int im, ix;
 	int invMod;
 
@@ -43,6 +43,12 @@ int main (int argc, char* argv[]) {
 
     in  = sf_input  ("in");
     out = sf_output ("out");
+	
+	fileDweight = NULL;
+    if ( NULL != sf_getstring ("dweight") ) {
+	/* input file containing data weightsq */ 
+		fileDweight = sf_input ("dweight");
+    }
 
     if (!sf_histint   (in, "n1", &tn) ) sf_error("No n1= in input");
     if (!sf_histfloat (in, "o1", &to) ) sf_error("No o1= in input");
@@ -133,8 +139,10 @@ int main (int argc, char* argv[]) {
 		case 2: modelSize = diffSize + reflSize; break;
     }
 
-    data   = sf_floatalloc (dataSize);
-    model  = sf_floatalloc (modelSize);
+    data    = sf_floatalloc (dataSize);
+    dweight = sf_floatalloc (dataSize);
+    
+	model  = sf_floatalloc (modelSize);
 
     w = (0 == niter) ? NULL : sf_floatalloc (modelSize);
     p = (0 == niter) ? NULL : sf_floatalloc (modelSize);
@@ -151,6 +159,11 @@ int main (int argc, char* argv[]) {
 		// read data	
 		if( adj) {
 		    sf_floatread (data, dataSize, in);
+			if (fileDweight) 
+			    sf_floatread (dweight, dataSize, fileDweight);
+			else
+				for (int id = 0; id < dataSize; ++id)
+					dweight[id] = 1.f;
 		} else {
 		    sf_floatread (model, diffSize, fileDiff);
 		    sf_floatread (model + diffSize, reflSize, fileRefl);
@@ -168,7 +181,7 @@ int main (int argc, char* argv[]) {
 		    for (iter = 0; iter < niter; ++iter) {
 				sf_solver_prec (ditime2d_lop, sf_cgstep, sf_copy_lop,
 								modelSize, modelSize, dataSize, model, data, liter, eps,
-								"verb", verb, "mwt", w, "xp", p, "end");
+								"verb", verb, "mwt", w, "xp", p, "wt", dweight, "end");
 				sf_cgstep_close ();
 
 				for (im = 0; im < modelSize; ++im) {
@@ -184,6 +197,18 @@ int main (int argc, char* argv[]) {
 		    sf_floatwrite (data, dataSize, out);
 		} 
     }
+
+	free (data);
+	free (model);
+
+    sf_fileclose (in);
+    sf_fileclose (out);
+    sf_fileclose (fileRefl);
+
+	if (fileDweight) {
+		free (dweight);
+		sf_fileclose (fileDweight);
+	}
 
     return 0;
 }
