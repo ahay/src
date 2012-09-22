@@ -21,7 +21,7 @@ def interp_from_t (t, v, tint):
     return interp1d (t, v, kind='linear')(tint).astype (float32)
 
 # Interpolation of velocities in a constant-t slice
-def interp_for_const_t (p, v, gx, gy):
+def interp_for_const_t (pnt, v, gx, gy):
     return Rbf(pnt[:,0], pnt[:,1], v, function='thin_plate')(gx, gy).T.astype (float32)
 
 # Visualize one slice after interpolation

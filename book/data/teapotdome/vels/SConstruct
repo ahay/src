@@ -28,8 +28,15 @@ maxclip=20000
 Result('vel_xline%d' % xline,'vvol','''
        window min2=%d max2=%d | clip2 lower=%d upper=%d |
        grey color=j scalebar=y allpos=y pclip=100 bias=%d
-            title="Velocity ar xline %d" label1=Time unit1=ms label2=Inline unit2=
+            title="Velocity at xline %d" label1=Time unit1=ms label2=Inline unit2=
        ''' % (xline, xline, minclip, maxclip, minclip, xline))
 
+time=300
+
+Result('vel_time%d' % time,'vvol','''
+       window min1=%d max1=%d | clip2 lower=%d upper=%d |
+       grey color=j scalebar=y allpos=y pclip=100 bias=%d
+            title="Velocity at time %d" label1=xline unit1= label2=xline unit2=
+       ''' % (time, time, minclip, maxclip, minclip, time))
 End()
 
