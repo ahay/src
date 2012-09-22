@@ -1,11 +1,24 @@
-/*************************************************************************
- *    Smoothing 2D array 
- *    Copyright: Tongji University (Jiubing Cheng)
- *    2012.3.2
-*************************************************************************/
-#include "_cjb.h"
-#include "alloc.h"
+/*    Smoothing 2D array */
+/*
+  Copyright (C) 2012 Tongji University (Jiubing Cheng)
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 #include <rsf.h>
+#include "_cjb.h"
+
 
 /* Prototype for function used internally */
 /*****************************************************************************
@@ -76,7 +89,7 @@ void smooth2d(float **v, int n1, int n2, float r1, float r2, float rw)
 {
 	int nmax;	/* max of n1 and n2 */
 	int ix, iz;	/* counters */
-	int *win;	/* 1d array defining the corners of smoothing window */
+	int win[4];	/* 1d array defining the corners of smoothing window */
 	float **v0;	/* array of output velocities */
 	float **w;	/* intermediate array */
 	float *d, *e;	/* input arrays for subroutine tripd */
@@ -92,11 +105,12 @@ void smooth2d(float **v, int n1, int n2, float r1, float r2, float rw)
 	v0 = sf_floatalloc2(n1,n2);
 	w = sf_floatalloc2(n1,n2);
 
-	win = calloc(sizeof(int),4);
+	d = sf_floatalloc(nmax);
+	e = sf_floatalloc(nmax);
+	f = sf_floatalloc(nmax);
 
-	d = calloc(sizeof(float),nmax);
-	e = calloc(sizeof(float),nmax);
-	f = calloc(sizeof(float),nmax);
+	for(ix=0; ix<nmax; ++ix)
+	    d[ix] = e[ix] = f[ix] = 0.0f;
 
 	/* save the original velocity */
         for(ix=0; ix<n2; ++ix)
@@ -174,10 +188,11 @@ void smooth2d(float **v, int n1, int n2, float r1, float r2, float rw)
 			v[ix][iz+1] = f[iz];
 	}
 
-	free(win);
 	free(d);
 	free(e);
 	free(f);
-	free2float(v0);
-	free2float(w);
+	free(v0);
+	free(*v0);
+	free(w);
+	free(*w);
 }

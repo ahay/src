@@ -30,7 +30,7 @@ void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
        int subx, subz;
        sf_complex *xin, *xout;
 #ifdef SF_HAS_FFTW
-       fftw_plan xpi;
+       fftwf_plan xpi;
 #endif
 
        nkxz=nkx*nkz;
@@ -39,7 +39,7 @@ void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
        xout=sf_complexalloc(nkxz);
 
 #ifdef SF_HAS_FFTW
-       xpi=fftw_plan_dft_2d(nkx,nkz,
+       xpi=fftwf_plan_dft_2d(nkx,nkz,
 			    (fftwf_complex *) xin, (fftwf_complex *) xout,
 			    FFTW_BACKWARD,FFTW_ESTIMATE);
 #endif
@@ -64,7 +64,7 @@ void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
 	}
 
 #ifdef SF_HAS_FFTW
-	fftw_execute(xpi);
+	fftwf_execute(xpi);
 #endif
 
         for(i=-hnkx;i<=hnkx;i++)
@@ -87,7 +87,7 @@ void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
 	}
 
 #ifdef SF_HAS_FFTW
-        fftw_destroy_plan(xpi);
+        fftwf_destroy_plan(xpi);
 #endif
 
         free(xin);
@@ -101,7 +101,7 @@ void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
        int subx, subz;
        sf_complex *xin, *xout;
 #ifdef SF_HAS_FFTW
-       fftw_plan xpi;
+       fftwf_plan xpi;
 #endif
 
        nkxz=nkx*nkz;
@@ -135,7 +135,7 @@ void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
 	}
 
 #ifdef SF_HAS_FFTW
-	fftw_execute(xpi);
+	fftwf_execute(xpi);
 #endif
 
         for(i=-hnkx;i<=hnkx;i++)
@@ -158,7 +158,7 @@ void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
 	}
 
 #ifdef SF_HAS_FFTW
-        fftw_destroy_plan(xpi);
+        fftwf_destroy_plan(xpi);
 #endif
 
         free(xin);
