@@ -1,26 +1,48 @@
-/*************************************************************************
- * * inverse Fourier transform of projection deviation operator
- * *
- * *    Copyright: Tongji University (Jiubing Cheng)
- * *    2012.3.2
- * *************************************************************************/
-//#include <rsf.h>
+/* inverse Fourier transform of projection deviation operator */
+/*
+  Copyright (C) 2012 Tongji University (Jiubing Cheng)
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+#include <rsf.h>
 #include "_cjb.h"
 
+#ifdef SF_HAS_FFTW
 #include <fftw3.h>
+#endif
 
 void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
 /*< kxkz2xz: inverse Fourier transform of operator from (kx,kz) to (x, z) domain>*/
 {
        int ii, jj, i, j, nkxz;
        int subx, subz;
+       sf_complex *xin, *xout;
+#ifdef SF_HAS_FFTW
+       fftw_plan xpi;
+#endif
 
        nkxz=nkx*nkz;
 
-       fftw_complex* xin=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nkxz);
-       fftw_complex* xout=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*nkxz);
+       xin=sf_complexalloc(nkxz);
+       xout=sf_complexalloc(nkxz);
 
-       fftw_plan xpi=fftw_plan_dft_2d(nkx,nkz,xin,xout,FFTW_BACKWARD,FFTW_ESTIMATE);
+#ifdef SF_HAS_FFTW
+       xpi=fftw_plan_dft_2d(nkx,nkz,
+			    (fftwf_complex *) xin, (fftwf_complex *) xout,
+			    FFTW_BACKWARD,FFTW_ESTIMATE);
+#endif
 
 	for(i=-hnkx;i<=hnkx;i++)
 	for(j=-hnkz;j<=hnkz;j++)
@@ -38,10 +60,12 @@ void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
                 else
                     subz=jj-hnkz-1;
 
-		xin[ii*nkz+jj]=xi[subx][subz];
+		xin[ii*nkz+jj]=sf_cmplx(xi[subx][subz],0.);
 	}
 
+#ifdef SF_HAS_FFTW
 	fftw_execute(xpi);
+#endif
 
         for(i=-hnkx;i<=hnkx;i++)
         for(j=-hnkz;j<=hnkz;j++)
@@ -59,13 +83,15 @@ void kxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
                 else
                     subz=jj-hnkz-1;
 
-		xo[subx][subz]=xout[ii*nkz+jj]/nkxz;
+		xo[subx][subz]=crealf(xout[ii*nkz+jj])/nkxz;
 	}
 
+#ifdef SF_HAS_FFTW
         fftw_destroy_plan(xpi);
+#endif
 
-        fftw_free(xin);
-        fftw_free(xout);
+        free(xin);
+        free(xout);
 }
 
 void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
@@ -73,16 +99,24 @@ void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
 {
        int ii, jj, i, j, nkxz;
        int subx, subz;
+       sf_complex *xin, *xout;
+#ifdef SF_HAS_FFTW
+       fftw_plan xpi;
+#endif
 
        nkxz=nkx*nkz;
 
-       fftw_complex* xin=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(nkxz));
-       fftw_complex* xout=(fftw_complex*)fftw_malloc(sizeof(fftw_complex)*(nkxz));
+       xin=sf_complexalloc(nkxz);
+       xout=sf_complexalloc(nkxz);
 
-       fftw_plan xpi=fftw_plan_dft_2d(nkx,nkz,xin,xout,FFTW_BACKWARD,FFTW_ESTIMATE);
+#ifdef SF_HAS_FFTW
+       xpi=fftwf_plan_dft_2d(nkx,nkz,
+			     (fftwf_complex *) xin, (fftwf_complex *) xout,
+			     FFTW_BACKWARD,FFTW_ESTIMATE);
+#endif
 
-	for(i=-hnkx;i<=hnkx;i++)
-	for(j=-hnkz;j<=hnkz;j++)
+       for(i=-hnkx;i<=hnkx;i++)
+       for(j=-hnkz;j<=hnkz;j++)
 	{
                 ii=i+hnkx;
                 jj=j+hnkz;
@@ -97,11 +131,12 @@ void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
                 else
                     subz=jj-hnkz-1;
 
-		xin[ii*nkz+jj]=xi[subx][subz]*I;
-                //sf_warning("xi=%f xin=(%f, %f)",xi[subx][subz],creal(xin[ii*nkz+jj]),cimag(xin[ii*nkz+jj]));
+		xin[ii*nkz+jj]=sf_cmplx(0.,xi[subx][subz]);
 	}
 
+#ifdef SF_HAS_FFTW
 	fftw_execute(xpi);
+#endif
 
         for(i=-hnkx;i<=hnkx;i++)
         for(j=-hnkz;j<=hnkz;j++)
@@ -119,10 +154,13 @@ void ikxkz2xz(float**xi, float **xo, int hnkx, int hnkz, int nkx, int nkz)
                 else
                     subz=jj-hnkz-1;
 
-		xo[subx][subz]=xout[ii*nkz+jj]/(nkxz);
+		xo[subx][subz]=crealf(xout[ii*nkz+jj])/(nkxz);
 	}
 
+#ifdef SF_HAS_FFTW
         fftw_destroy_plan(xpi);
-        fftw_free(xin);
-        fftw_free(xout);
+#endif
+
+        free(xin);
+        free(xout);
 }
