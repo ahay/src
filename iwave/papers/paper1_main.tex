@@ -1,4 +1,4 @@
-\title{IWAVE Demonstration Package - Draft 31.08.12}
+\title{Using IWAVE}
 \author{William. W. Symes \thanks{The Rice Inversion Project,
 Department of Computational and Applied Mathematics, Rice University,
 Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
@@ -13,7 +13,7 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
   heterogeneous medium simulation using finite differences, and allow
   the user to replicate illustrations of the interface error effect
   which renders all FD methods effectively first-order accurate.  This
-  paper gives a brief tour of the demonstration package.
+  paper gives a brief tour of the common use cases illustrated in the demonstration package.
 \end{abstract}
 
 \section{Introduction}
@@ -28,10 +28,10 @@ for modular design. The general topic of this paper, time-domain
 simulation on regular rectangular grids, presents specific openings
 for code re-use via abstraction: time steps may have internal
 structure which is repeated in a defined pattern, parallelism via
-domain decomposition may be computed rather than hard-wired into the
-code, sampling rules for output buffering are simple to formulate and
-universal, and external data formats may be hidden behind uniform
-interfaces.
+domain decomposition may be computed from stencil shape information
+rather than hard-wired into the code, sampling rules for output
+buffering are simple to formulate and universal, and external data
+formats may be hidden behind uniform interfaces.
 
 The software package described in these pages, IWAVE, takes advantage
 of the aforementioned intrinsic modularity. IWAVE is open source
@@ -59,11 +59,32 @@ A secondary purpose is to supply the user with the means to
 independently verify some of the claims in the paper by
 \cite{SymesVdovina:09}, namely the existance of an error component in
 synthetic data derived from strongly heterogeneous models, in addition
-to the well-known grid dispersion error. The examples were generated using an
-earlier version of IWAVE, and are reproduced here using the current
-version.
+to the well-known grid dispersion error. The examples presented here
+are essentially the same as those presented in that paper. By
+installing IWAVE and running the demonstrations described here, the
+reader may reproduce the computational content of \cite[]{SymesVdovina:09}.
 
+IWAVE is both a standalone application, and a component of the
+Madagascar software suite:
+\begin{verbatim}
+http://www.reproducibility.org/wiki/Main_Page
+\end{verbatim}
+The application and the examples discussed
+here (and indeed this paper itself) may be built either independently, or within Madagascar, as
+explained in detail below.
 
+The internal details of IWAVE are not discussed here, except insofar
+as is necessary to explain the use of the main
+commands. \cite{GeoPros:11} briefly describe the structure of the
+IWAVE framework, with emphasis on its object-oriented design and the
+resulting mechanisms for coupling modeling with optimization packages
+to produce inversion applications. The IWAVE project web page 
+\begin{verbatim}
+http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html.
+\end{verbatim}
+provides extensive reference material, and further information about
+the design.
+ 
 
 \section{Acoustodynamics}
 The IWAVE acoustic package is based on the pressure-velocity form of
@@ -88,11 +109,20 @@ g(\bx,t) = w(t) \delta(\bx-\bx_s)
 \]
 at source location $\bx_s$.
 
+\cite{Vir:84} introduced finite difference methods based on this
+formulation of acoustodynamics to the active source seismic
+community. \cite{Vir:86} extended the technique to elastodynamics, and
+\cite{Lev:88} demonstrated the use of higher (than second) order
+difference formulas and the consequent improvement in dispersion
+error.  IWAVE's acoustic application uses the principles introduced by
+these authors to offer a suite of finite difference schemes, all
+second order in time and of various orders of accuracy in space.
+
 The bulk modulus and buoyancy (reciprocal density) are the natural
-parameters in a time-stepping discretization of this equation. I will
-display velocity and density instead. IWAVE's acoustic application
+parameters whose grid samplings appear in the difference formulae. I will
+display velocity and density instead in the examples below. IWAVE's acoustic application
 converts velocity and density to bulk modulus and buoyancy as part of
-the problem setup phase.
+the problem setup phase; the user may supply any equivalent combination of parameters.
 
 \section{Examples based on a 2D dome model}
 
@@ -143,14 +173,14 @@ See
 \cite[]{SymesVdovina:09} for more examples, analysis, and discussion.
 
 \section{Creating the examples}
-IWAVE and all of its parts build with SConstruct, either as an
+IWAVE builds with SConstruct, either as an
 independent package or as part of Madagascar ({\tt
   http://www.reproducibility.org/wiki/Main\_Page}). For instructions on
 installing IWAVE (and all other TRIP software) as standalone packages, see 
 \begin{verbatim}
 http://www.trip.caam.rice.edu/software/admin/doc/html/install.html.
 \end{verbatim}
-For instructions on installing iWAVE as part of Madagascar, see the
+For instructions on installing IWAVE as part of Madagascar, see the
 Madagascar web site.
 
 To build the intermediate data and figures for  the examples described
@@ -215,37 +245,9 @@ project owes a great deal to several open source seismic software
 packages (Seismic Un*x, SEPlib, Madagascar), debts which we gratefully
 acknowledge. The author wishes to record his special gratitude to
 Sergey Fomel, the architect of Madagascar, for his inspiring ideas and
-his generous and crucial help in the integration of IWAVE into his
-creation.
+his generous and crucial help in the integration of IWAVE into Madagascar.
 
 \bibliographystyle{seg}
 \bibliography{masterref}
 
-\append{Annotated Parameter Files}
-
-All IWAVE applications are parameter-driven: that is, they accept as
-input a {\em map} or associative array, defined by 
-a list of {\tt key = value} pairs. These parameter specifications can
-be included on the command line. However, because the number of such
-parameter specifications is rather large, it's convenient to store
-them in a parameter file (``par file''). The use of a par file has the
-added advantage that the file may include annotations and white space to
-improve readability. 
-
-The examples displayed in this paper are created in the directory {\tt
-  \$TOP/demo/data}. The par file {\tt parfile} is a by-product of data
-creation - the SConstruct script text-processes it from prototype
-files including macros, which are resolved when the scripts are
-run. Four such prototype par files are present in {\tt data}, each one defining
-a modeling task corresponding to a given level of grid refinement. 
-The actual input to the modeling command is {\tt parfile}. 
-
-
-This command reads its parameters from a
-par file. The
-meaning of each parameter in the par file is described in the IWAVE
-web documentation:
-\begin{verbatim}
-http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html.
-\end{verbatim}
 

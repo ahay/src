@@ -4,7 +4,7 @@ env = Environment();
 Decider('make')
 
 papername = 'paper1'
-texsources = ['demo.tex', 'suplot.tex'] 
+texsources = ['paper1_main.tex', 'paper1_suplot.tex', 'paper1_append.tex'] 
 bibname = 'masterref'
 
 def ltx(target, source, env):
@@ -37,7 +37,4 @@ Clean(t_paper,[papername + '.aux', papername + '.bbl', papername + '.log', paper
 
 t_final = env.Command([papername + '.pdf'], [papername + '.dvi'], final)
 
-#Depends(t_paper, [t_ltx])
-
-#Depends(t_final, [t_paper])
 

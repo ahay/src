@@ -1,0 +1,122 @@
+\append{Annotated Parameter Files}
+
+All IWAVE applications are parameter-driven: that is, they accept as
+input a {\em map} or associative array, defined by 
+a list of {\tt key = value} pairs. These parameter specifications can
+be included on the command line. However, because the number of such
+parameter specifications is rather large, it's convenient to store
+them in a parameter file (``par file''). The use of a par file has the
+added advantage that the file may include annotations and white space to
+improve readability. 
+
+The examples displayed in this paper are created in the directory {\tt
+  \$TOP/demo/data}. The par file {\tt parfile} is a by-product of data
+creation - the SConstruct script text-processes it from prototype
+files including macros, which are resolved when the scripts are
+run. Four such prototype par files are present in {\tt data}, each one defining
+a modeling task corresponding to a given level of grid refinement. 
+The actual input to the modeling command is {\tt parfile}. 
+
+The meaning of each parameter in the par file is described in the IWAVE
+web documentation:
+\begin{verbatim}
+http://www.trip.caam.rice.edu/software/iwave/doc/html/index.html.
+\end{verbatim}
+This appendix gives a brief description of the parameter assignments
+appearing in the {\tt parfile} generated for the 20 m grid example. To
+run this example, and coincidentally generate its parameter file,
+\begin{itemize}
+\item {\tt cd \$TOP/demo/data}
+\item {\tt scons demo20m}
+\end{itemize}
+
+The file {\tt parfile} groups job parameters into blocks. The first
+block looks like this:
+\begin{verbatim}
+INPUT DATA FOR iwave
+
+------------------------------------------------------------------------
+FD:
+
+         order = 2          spatial half-order
+           cfl = 0.4        proportion of max dt/dx
+          cmin = 1.0
+          cmax = 4.5
+          dmin = 0.5
+          dmax = 5.0
+         fpeak = 0.010      central frequency
+
+\end{verbatim}
+Note that comments, block labels, and typographical separators are all
+accommodated. The IWAVE parameter parser identifies parameter
+specifications by strings of the form 
+\begin{verbatim}
+          key = value
+\end{verbatim}
+consisting of a string with no embedded whitespace, followed by an
+{\tt =} sign surrounded by any amount of whitespace on either side,
+followed by another string with no embedded whitespace. Strings with embedded
+whitespace are also allowed, provided that they are double-quoted -
+thus {\tt ``this is a value''} is a legitimate value string. Other
+capabilities of the parser are described in its html
+documentation. All values are first read as strings, then
+converted to other types as required.
+
+The parameters appearing in {\tt parfile} are as follows:
+
+\begin{itemize}
+\item {\tt order = 2}: half-order of the spatial difference scheme -
+  {\tt asg} implements schemes of order 2 in time, and 2k in space,
+  for certain values of k, the spatial half-order. A this paper is
+  written, permissible values of k are 1, 2, and 4.
+\item {\tt cfl = 0.4}: max time step is computed using one osf several
+  criteria - see html docs for details. This number is the fraction of
+  the max step used. Must lie between 0.0 and 1.0.
+\item{\tt cmin, cmax, dmin, dmax}: sanity checks on density and
+  velocity values. The max permitted velocity {\tt cmax} also figures
+  in two of the max time step criteria. Violation of these bounds
+  causes an exception to be raised, an informative error message to be
+  written to the output file {\tt cout[n].txt}, where {\tt n} is the
+  process number ( = 0 for serial execution), and the program to
+  exit. All trappable fatal errors are handled in this way.
+\item {\tt fpeak = 0.010}: nominal central frequency, in kHz. Used in
+  two ways: (1) to set the width of absorbing boundary layers by
+  defining a wavelength at max velocity {\tt cmax}, and (2) as the
+  center frequency of a Ricker wavelet in case the point source Ricker
+  option is chosen for source generation. Plays no other role.
+\item {\tt nl1, nr1, nl2, nr2}: specify 2D PML layer thicknesses: {\tt
+    nl1} describes the layer thickness, in wavelengths determined as
+  above, of the {\em left} boundary (with lesser coordinate) in the
+  axis 1 direction, etc. Set = 0.0 for no layer, in which case the
+  free (pressure-release) boundary condition is applied.
+\item {\tt srctype = point}: this application implements two source
+  representations, a point source with amplitude options and a very flexible array
+  source option.
+\item{\tt ``source  = ....''}: a quoted parameter spec is just a
+  string, from the IWAVE parser's point of view, so does not define
+  anything: this parameter is commented out.
+\item{\tt sampord = 0}: order of spatial interpolation. Legal values
+  are 0 and 1. 0 signifies rounding down the source coordinates to the
+  nearest gridpoint with smaller coordinates. 1 signifies piecewise
+  multilinear (adjoint) interpolation, so that the source is
+  represented by a convex linear combination of point sources at
+  the corners of the grid cube in which it lies.
+\item {\tt refdist = 1000.0, refamp = 1.0}: point source calibration
+  rule developed for the SEAM project - the wavelet amplitude is
+  adjusted to produce the prescribed amplitude (in GPa) at the
+  prescribed distance (in m).
+\item {\tt hdrfile = ...}: IWAVE specifies acquisition parameters
+  such as source and receiver locations, time sample rates and delays,
+  and so on, by supplying trace headers in a file: the traces produced
+  in simulation have the same headers. At present, the only
+  implemented option for specifying headers is via a path to an SU
+  file, that is, a SEGY-formatted file with reel header stripped
+  off. Other options are planned for future releases.
+\item {\tt datafile = ...}: output data file; contains traces with
+  same headers as in {\tt hdrfile}, computed trace samples. Note that
+  sample rate of output traces is whatever is specified in {\tt
+    hdrfile}, and generally is not the same as the time step used in
+  the simulation, the trace samples being resampled on output. Note
+  also that pathnames may be either fully qualified (as in the {\tt hdrfile}
+  entry) or relative.
+
