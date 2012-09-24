@@ -61,6 +61,7 @@ mathematica = WhereIs('mathematica')
 if mathematica:
     mathematica = WhereIs('math')
 matlab      = WhereIs('matlab')
+gnuplot     = WhereIs('gnuplot') or WhereIs('gnuplot44')
 try:
     import numpy, pylab
     haspylab=1
@@ -782,6 +783,12 @@ if epstopdf:
                          '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
                          (matlabpath,matlab,epstopdf),
                          suffix='.pdf',src_suffix='.ml')
+    if gnuplot:
+        Gnuplot = Builder(action = '%s $SOURCE > junk_gp.eps && '
+                          '%s junk_gp.eps -o=$TARGET && rm junk_gp.eps' %
+                          (gnuplot,epstopdf),
+                          suffix='.pdf',src_suffix='.gp')
+
     if haspylab:
         Pylab = Builder(action = Action(pylab),
                         suffix='.pdf',src_suffix='.py')
@@ -848,6 +855,8 @@ class TeXPaper(Environment):
         if epstopdf:
             if mathematica:
                 self.Append(BUILDERS={'Math':Math})
+            if gnuplot:
+                self.Append(BUILDERS={'Gnuplot':Gnuplot})
             if matlab:
                 self.Append(BUILDERS={'Matlab':Matlab})
             if haspylab:
@@ -931,6 +940,18 @@ class TeXPaper(Environment):
             mathdir = os.path.join(self.docdir,'Math')
             self.Install2(mathdir,mths)
             self.Alias('figinstall',mathdir)
+        # gnuplot figures:
+        gpls = glob.glob('%s/Gnuplot/*.gp' % topdir)
+        if gpls:
+            for gpl in gpls:
+                pdf = re.sub(r'([^/]+)\.gp$',
+                             os.path.join(resdir,'\g<1>.pdf'),gpl)
+                if gnuplot and epstopdf:
+                    self.Gnuplot(pdf,gpl)
+                crfigs.append(pdf)
+            gpldir = os.path.join(self.docdir,'Gnuplot')
+            self.Install2(gpldir,gpls)
+            self.Alias('figinstall',gpldir)
         # matlab figures
         mtls = glob.glob('%s/Matlab/*.ml' % topdir)
         if mtls:

@@ -29,6 +29,7 @@ To APIs:
   for consistency with numpy
 
 To the Python package:
+* added support for gnuplot figures in rsf.tex
 
 To programs:
 
