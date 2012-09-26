@@ -185,7 +185,7 @@ to list if key not already present.
 */
 
 /*@{*/
-int ps_sfcstring(PARARRAY parr, const char *key, char *val);
+int ps_sfcstring(PARARRAY parr, const char *key, const char *val);
 int ps_sfchar(PARARRAY parr, const char *key, char p);
 int ps_sfshort(PARARRAY parr, const char *key, short p);
 int ps_sfint(PARARRAY parr, const char *key, int p);
@@ -211,7 +211,7 @@ to list if key not already present.
 */
 
 /*@{*/
-int ps_slcstring(PARARRAY parr, const char *key, char *val);
+int ps_slcstring(PARARRAY parr, const char *key, const char *val);
 int ps_slchar(PARARRAY parr, const char *key, char p);
 int ps_slshort(PARARRAY parr, const char *key, short p);
 int ps_slint(PARARRAY parr, const char *key, int p);

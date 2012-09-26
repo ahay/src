@@ -1,0 +1,92 @@
+AFTER INITIAL OPENS
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+-- total FILE * = 6, open as tmp = 1, in use = 6
+AFTER CLOSE OF TEMP FILE
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4e1d0 name=/scratch/tmp/tmp.tLf1ra mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+-- total FILE * = 7, open as tmp = 2, in use = 6
+OPEN OF TWO MORE
+ONE ON SAME PROTOTYPE, ONE ON DIFFERENT
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4e1d0 name=/scratch/tmp/tmp.tLf1ra mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4e4d0 name=/scratch/tmp/tmp.J62PVH mode=w+ proto=test/fopen1/file3 istmp = 1 inuse = 1
+-- total FILE * = 8, open as tmp = 3, in use = 8
+ATTEMPT ERROR CONDITIONS:
+Error: iwave_fopen
+the only legal permission for a temp file is w+
+attempt temp open with r access, got FILE * = (nil)
+Error: iwave_fopen
+cannot request temp file without file prototype
+attempt to open tmp file without proto, got FILE * = (nil)
+AFTER ERROR CONDITIONS:
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4e1d0 name=/scratch/tmp/tmp.tLf1ra mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4e4d0 name=/scratch/tmp/tmp.J62PVH mode=w+ proto=test/fopen1/file3 istmp = 1 inuse = 1
+-- total FILE * = 8, open as tmp = 3, in use = 7
+REQUEST FILE PTR FOR TMP FILE TEMPLATED ON h1
+AFTER MORE OPENS: fp4=0x1d4ea70 fp7=0x1d4e7b0 fp8=0x1d4d950
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 1
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4e1d0 name=/scratch/tmp/tmp.tLf1ra mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4e4d0 name=/scratch/tmp/tmp.J62PVH mode=w+ proto=test/fopen1/file3 istmp = 1 inuse = 0
+FILE*=0x1d4e7b0 name=/scratch/tmp/tmp.BfvGpf mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4ea70 name=/scratch/tmp/tmp.Ep1xTM mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+-- total FILE * = 10, open as tmp = 5, in use = 9
+EVERYTHING IWAVE_FCLOSED
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 0
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 0
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 0
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 0
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4e1d0 name=/scratch/tmp/tmp.tLf1ra mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4e4d0 name=/scratch/tmp/tmp.J62PVH mode=w+ proto=test/fopen1/file3 istmp = 1 inuse = 0
+FILE*=0x1d4e7b0 name=/scratch/tmp/tmp.BfvGpf mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4ea70 name=/scratch/tmp/tmp.Ep1xTM mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+-- total FILE * = 10, open as tmp = 5, in use = 1
+OPEN TEMP ON FP7 PROTO H1, FP6 PROTO F2
+IWAVE file manager database
+FILE*=0x1d4d0a0 name=test/fopen1/file1 mode=r proto=NULL istmp = 0 inuse = 0
+FILE*=0x1d4d360 name=test/fopen1/file1 mode=r proto=test/fopen1/file1 istmp = 0 inuse = 0
+FILE*=0x1d4d640 name=test/fopen1/n1.su mode=w+ proto=test/fopen1/file1 istmp = 0 inuse = 0
+FILE*=0x1d4d950 name=/scratch/tmp/tmp.XqceYC mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 1
+FILE*=0x1d4dc30 name=test/fopen1/file3 mode=r proto=NULL istmp = 0 inuse = 0
+FILE*=0x1d4def0 name=test/fopen1/file1 mode=r+ proto=test/fopen1/file1 istmp = 0 inuse = 1
+FILE*=0x1d4e1d0 name=/scratch/tmp/tmp.tLf1ra mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4e4d0 name=/scratch/tmp/tmp.J62PVH mode=w+ proto=test/fopen1/file3 istmp = 1 inuse = 1
+FILE*=0x1d4e7b0 name=/scratch/tmp/tmp.BfvGpf mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+FILE*=0x1d4ea70 name=/scratch/tmp/tmp.Ep1xTM mode=w+ proto=test/fopen1/file1 istmp = 1 inuse = 0
+-- total FILE * = 10, open as tmp = 5, in use = 3
+TRASH IT ALL
+IWAVE file manager database
+-- total FILE * = 0, open as tmp = 0, in use = 0

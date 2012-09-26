@@ -842,7 +842,7 @@ int ps_get(PARARRAY * par, int last, const char * type, const char * key, void *
   return err;
 }
 
-int ps_set(PARARRAY * par, int last, const char * type, const char * key, void * val) {
+int ps_set(PARARRAY * par, int last, const char * type, const char * key, const void * val) {
   int err  = 0;     // flag
   char * sq;        // finger, quoted string
   char * l = (char *)usermalloc_(MAX_STR_LEN*sizeof(char));
@@ -1138,7 +1138,7 @@ int ps_flreal(PARARRAY par, const char *key, ireal *p) {
 
 // assign first
 
-int ps_sfcstring(PARARRAY par, const char *key, char *p) {
+int ps_sfcstring(PARARRAY par, const char *key, const char *p) {
   return ps_set(&par,0,"cstring",key,p);
 }
 int ps_sfchar(PARARRAY par, const char *key, char p) {
@@ -1174,7 +1174,7 @@ int ps_sfreal(PARARRAY par, const char *key, ireal p) {
 
 // assign last
 
-int ps_slcstring(PARARRAY par, const char *key, char *p) {
+int ps_slcstring(PARARRAY par, const char *key, const char *p) {
   return ps_set(&par,1,"cstring",key,p);
 }
 int ps_slchar(PARARRAY par, const char *key, char p) {
