@@ -1043,26 +1043,55 @@ def wem(wom,wfld,velo,vmean,par):
 # ------------------------------------------------------------
 # image-over-model plot
 def iom(iom,imag,velo,vmean,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
 
-    if(not par.has_key('iweight')): par['iweight']=10
-    if(not par.has_key('iclip')):   par['iclip']=1.0
+    if(not par.has_key('iweight')): par['iweight']=1
 
-    chop = imag+'_chop'
-    Flow(chop,imag,
-         '''
-         window
-         min1=%(zmin)g max1=%(zmax)g
-         min2=%(xmin)g max2=%(xmax)g |
-         scale axis=123 |
-         clip clip=%(iclip)g
-         ''' % par)
+    itmp = imag + 'tmp'
+    vtmp = imag + 'vel'
 
-    Flow(iom,[velo,chop],
-         '''
-         add add=-%g |
-         scale axis=123 |
-         math w=${SOURCES[1]} output="input+%g*w"
-         ''' % (vmean,par['iweight']))
+    Flow(iom,[velo,imag],
+        '''
+        %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
+        '''%(M8R,itmp,DPT) 
+	+
+        '''
+        %sadd < ${SOURCES[0]} add=-%g |
+        scale axis=123
+        >%s datapath=%s/;
+        '''%(M8R,vmean,
+             vtmp,DPT) 
+	+
+        '''
+        %sadd scale=1,%g <%s %s >${TARGETS[0]};
+        '''%(M8R,par['iweight'],vtmp,itmp) 
+	+
+        '''
+        %srm %s %s
+        '''%(M8R,itmp,vtmp),
+        stdin=0,
+        stdout=0)
+    
+        #    if(not par.has_key('iweight')): par['iweight']=10
+        #    if(not par.has_key('iclip')):   par['iclip']=1.0
+        #
+        #    chop = imag+'_chop'
+    #    Flow(chop,imag,
+    #         '''
+    #         window
+    #         min1=%(zmin)g max1=%(zmax)g
+    #         min2=%(xmin)g max2=%(xmax)g |
+    #         scale axis=123 |
+    #         clip clip=%(iclip)g
+    #         ''' % par)
+
+    #    Flow(iom,[velo,chop],
+    #         '''
+    #         add add=-%g |
+    #         scale axis=123 |
+    #         math w=${SOURCES[1]} output="input+%g*w"
+    #         ''' % (vmean,par['iweight']))
 
 # ------------------------------------------------------------
 # wavefield snapshot plots
