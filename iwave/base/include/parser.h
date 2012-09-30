@@ -107,11 +107,11 @@ int ps_createargs(PARARRAY *parr, int argc, char **argv);
 /*----------------------------------------------------------------------------*/
 /**
 Full copy function: lhs = rhs (STORAGE (RE)ALLOCATED)
-//@param lhs (PARARRAY *) - target parameter array
+//@param lhs (PARARRAY **) - target parameter array
 //@param rhs (PARARRAY)   - source parameter array (const)
 //@return (int) 0 if successful, else nonzero error code.
 */
-//int ps_copy(PARARRAY rhs, PARARRAY *lhs);
+int ps_copy(PARARRAY ** tgt, PARARRAY src);
 
 /*@}*/
 

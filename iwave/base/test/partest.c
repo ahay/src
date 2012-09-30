@@ -4,6 +4,7 @@ int main(int argc, char ** argv) {
 
   FILE * fp = NULL;
   int err=0;
+  PARARRAY * par1 = NULL; // will be copy
   PARARRAY * par = ps_new();
   char * s = NULL;
   char * t = NULL;
@@ -240,6 +241,17 @@ int main(int argc, char ** argv) {
     
   ps_printall(*par,stdout);
   printf("------------------------------------------------------\n\n");
+
+  if (err = ps_copy(&par1,*par)) {
+    fprintf(stdout,"copy failed, err=%d\n",err);
+  }
+  else {
+    fprintf(stdout,"copied final version of table - dump of copy:\n");
+    printf("------------------------------------------------------\n");
+    ps_printall(*par1,stdout);
+    printf("------------------------------------------------------\n");
+    ps_delete(&par1);
+  }
 
   if (s) userfree_(s);
   if (t) userfree_(t);

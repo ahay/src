@@ -83,13 +83,13 @@ jobs = {
 'dn3d_40m': ['',standardmodel, ['tmpdata'],'', '', '',''],
 'vp3d_40m': ['',standardmodel, ['tmpdata'],'', '', '',''],
 'dome3d40m' : ['',asg, ['sudata', 'dn3d_40m', 'vp3d_40m'],'','','',''],
-'dome3d40mp' : ['mpirun -np 2',asg, ['sudata', 'dn3d_40m', 'vp3d_40m'],'','','',''],
+'dome3d40mp' : ['mpiexec -n 2',asg, ['sudata', 'dn3d_40m', 'vp3d_40m'],'','','',''],
 }
 
 scripts = {
 'sudata'  : ['tmpdata', 'sudata.sc'],
 'tmpdata' : [],
-'Fig'     : ['demo3d40m']
+'Fig'     : ['dome3d40m']
 }
 
 ########################################################################

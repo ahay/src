@@ -1078,6 +1078,7 @@ int ps_ffshort(PARARRAY par, const char *key, short *p) {
 int ps_ffint(PARARRAY par, const char *key, int *p) {
   return ps_get(&par,0,"int",key,p);
 }
+
 int ps_fflong(PARARRAY par, const char *key, long *p) {
   return ps_get(&par,0,"long",key,p);
 }
@@ -1206,4 +1207,37 @@ int ps_sldouble(PARARRAY par, const char *key, double p) {
 }
 int ps_slreal(PARARRAY par, const char *key, ireal p) {
   return ps_set(&par,1,"ireal",key,&p);
+}
+
+int ps_copy(PARARRAY ** tgt, PARARRAY src) {
+
+  PSLINK * slst;      // source list object
+  PSLINK * tlst;      // target list object
+
+  if (*tgt) ps_delete(tgt);
+  
+  slst = src.list;
+  tlst = NULL;
+
+  // start at the beginning...
+  if (pslink_front(&slst)) {
+    return E_OTHER;
+  }
+  
+  while (slst) {
+    // first pair: tgt has been deleted, assign new PARARRAY
+    if (!(*tgt)) *tgt=ps_new();
+    else {
+      // target PARARRAY has been initialized, create next link
+      // move up
+      (*tgt)->list->next = pslink_new();
+      (*tgt)->list->next->prev = (*tgt)->list;
+      (*tgt)->list = (*tgt)->list->next;
+    }
+    tlst = (*tgt)->list;
+    word_copy(tlst->pair->key,*(slst->pair->key));
+    word_copy(tlst->pair->val,*(slst->pair->val));
+    slst = slst->next;
+  }
+
 }
