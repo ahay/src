@@ -568,6 +568,58 @@ def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
          put label1="" unit1="" label2="" unit2="" label3="" unit3=""
          ''',stdin=0)
 
+
+
+
+#
+# distribute random locations within a defined box 
+#
+#       _________________  <-- zmin
+#      | . .  .  .   .   | 
+#      |    .   .   .  . |
+#      | .         .   . |
+#      |     .   .   .   |
+#       _________________  <-- zmax
+#      ^                 ^
+#      |                 |
+#     xmin              xmax
+#    
+# ns: number of random points
+#
+# seed: seed that start the pseudo-random number sequence. 
+#       It is hardcoded on purpose, so the results can be 
+#       reproduced   
+#
+
+def rand_boxarray(rsrc,xmin,xmax,zmin,zmax,ns,seed=33121):
+
+    m8r='$RSFROOT/bin/sf'
+    xrand='xrand'+rsrc 
+    zrand='zrand'+rsrc 
+
+    custom1=' seed=%d'%seed
+    custom2=' seed=%d'%(seed*4+1)
+
+    Flow(rsrc,None,
+        '''
+        spike n1=%d | noise type=n rep=y range=1 mean=0 %s |
+	    add add=1 | scale axis=123 | add scale=%f |
+        add add=%g > %s ;
+        '''%(ns,custom1,(xmax-xmin),xmin,xrand)+
+        '''
+        %sspike n1=%d | noise type=n rep=y range=1 mean=0 %s |
+	    add add=1 | scale axis=123 | add scale=%f |
+        add add=%g > %s ;
+        '''%(m8r,ns,custom2,(zmax-zmin),zmin,zrand)+
+        '''
+        %scat axis=2 %s %s |transp >${TARGETS[0]} ; 
+        '''%(m8r,xrand,zrand)+
+        '''
+        %srm %s %s
+        '''%(m8r,xrand,zrand),stdout=0)
+
+
+
 def makebox(box,zmin,zmax,xmin,xmax,par):
     Temp(box+'_z',None,
          '''
@@ -734,6 +786,78 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          wfl=${TARGETS[1]}
          %(fdcustom)s
          ''' % par)
+
+
+
+# ------------------------------------------------------------
+# acoustic modeling that only generates data 
+# ------------------------------------------------------------
+def awefd_data(odat,idat,velo,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow([odat],[idat,velo,dens,sou,rec],
+         '''
+         awefd2d
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         dabc=%(dabc)s nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}'''%par+'''
+         wfl=tmp_%s  '''%odat+ '''
+         %s >${TARGETS[0]}; 
+         $RSFROOT/bin/sfrm tmp_%s
+         ''' %(par['fdcustom'],odat),stdout=0)
+
+# ------------------------------------------------------------
+# acoustic modeling that only generates source wavefield 
+# ------------------------------------------------------------
+def awefd_swfl(owfl,idat,velo,dens,sou,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow([owfl],[idat,velo,dens,sou],
+         '''
+         awefd2d
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         dabc=%(dabc)s nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         wfl=${TARGETS[0]} '''%par+'''
+         %s >tmp%s ; $RSFROOT/bin/sfrm tmp%s
+         ''' %(par['fdcustom'],owfl,owfl),stdout=0)
+# ------------------------------------------------------------
+# acoustic modeling that only generates receiver wavefield:
+# the input data is not reversed, all the 
+# secondary steps are taken in the rule, and all the 
+# intermediate files are deleted
+# ------------------------------------------------------------
+def awefd_rwfl(owfl,idat,velo,dens,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow([owfl],[idat,velo,dens,rec],
+         '''
+         $RSFROOT/bin/sfreverse opt=i which=2 |
+         awefd2d
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         dabc=%(dabc)s nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}'''%par+'''
+         wfl=junk_%s
+         %s >tmp%s  ; $RSFROOT/bin/sfrm tmp%s ;
+         $RSFROOT/bin/sfreverse opt=i which=4 <junk_%s >${TARGETS[0]};
+         $RSFROOT/bin/sfrm junk_%s
+         ''' %(owfl,par['fdcustom'],owfl,owfl,owfl,owfl),stdout=0)
+
+
+
+
 def awefd1(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     awefd(odat,owfl,idat,velo,dens,sou,rec,custom+' expl=y ',par)
 
