@@ -33,10 +33,9 @@ int main (int argc, char* argv[]) {
 	int im, ix;
 	int invMod;
 
-
     int   niter, liter, iter;
-    bool adj,verb;
-    float anti, eps;
+    bool  adj, verb, isAA;
+    float eps;
     float *w, *p;
 
     sf_init (argc, argv);
@@ -58,7 +57,8 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getbool ("verb", &verb)) verb=false; /* verbosity flag */
     if (!sf_getbool ( "adj", &adj )) adj=false;  /* adjoint flag */
-    if (!sf_getfloat("anti", &anti)) anti=1.;    /* antialiasing */
+    if (!sf_getbool ("isAA", &isAA)) isAA = false;
+    /* if y, apply anti-aliasing */
 
     if (!sf_getint ("liter",&liter)) liter=100; /* number of linear iterations (for inversion) */
     if (!sf_getint ("niter",&niter)) niter=0; /* number of nonlinear iterations (for inversion) */
@@ -101,6 +101,7 @@ int main (int argc, char* argv[]) {
 		sf_putfloat (fileRefl,  "o2", dip0o);
 		sf_putstring (fileRefl, "label2", "dip angle");
 		sf_putstring (fileRefl, "unit2", "deg");
+
     } else {
 
 		fileDiff = in;
@@ -151,7 +152,7 @@ int main (int argc, char* argv[]) {
 		 xio, xid, xin, 
 		 dip0o, dip0d, dip0n, 
 		 to, td, tn, 
-		 anti, invMod);
+		 isAA, invMod);
 
     for (ix = 0; ix < xn; ++ix) { 
 		if (verb) sf_warning ("i=%d of %d", ix + 1, xn);

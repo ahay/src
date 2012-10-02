@@ -18,6 +18,7 @@
 */
 #include <rsf.h>
 #include "aastretch.h"
+#include "stretch.h"
 
 // data parameters
 static int tn_;    static float to_, td_;
@@ -30,15 +31,15 @@ static float *tmp, *amp, *str, *tx;
 
 static float *tableRefl_, *tableDiff_;
 
-static float anti_;
-static int   invMod_;
-static int   tLim_;
+static bool isAA_;
+static int invMod_;
+static int tLim_;
 
 void ditime2d_init (float dipo,  float dipd,  int dipn,  // dip angle axis 
 				    float xio,   float xid,   int xin,   // xi axis
 			  	    float dip0o, float dip0d, int dip0n, // refl dip axis
 		  		    float to,    float td,    int tn,    // time axis 
-		  			float anti,                          // antialiasing
+		  			bool isAA,                           // antialiasing
 					int invMod) 						 
 /*< initialize >*/
 {
@@ -52,10 +53,13 @@ void ditime2d_init (float dipo,  float dipd,  int dipn,  // dip angle axis
 	tLim_ = to_ + td_ * (tn_ - 1);
 
 	invMod_ = invMod;
-	anti_   = anti;
+	isAA_   = isAA;
 
-    aastretch_init  (false, tn_, to_, td_, tn_);
-    sf_halfint_init (true, 2 * tn_, 1.f - 1.f / tn_);
+	if (isAA_) {
+		aastretch_init  (false, tn_, to_, td_, tn_);
+		sf_halfint_init (true, 2 * tn_, 1.f - 1.f / tn_);
+	} else    
+		stretch_init  (tn_, to_, td_, tn_);
 
     amp = sf_floatalloc (tn_);
     str = sf_floatalloc (tn_);
@@ -114,8 +118,11 @@ void ditime2d_close (void)
     free(tx);
     free(tmp);
 
-    aastretch_close();
-    sf_halfint_close();
+	if (isAA_) {
+	    aastretch_close();
+		sf_halfint_close();
+	} else
+	    stretch_close();
 
 	free (tableRefl_);
 	free (tableDiff_);
@@ -144,14 +151,15 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 
     sf_adjnull (adj, add, modelSize, dataSize, modl, data);
 
-	const float CONVPARAM = SF_PI / 180.f;
 	float* pTableR = tableRefl_;
 	float* pTableD = tableDiff_;
 
     for (int id = 0; id < dipn_; ++id) { 
 		// diffracion part
+
 		if (1 != invMod_) {	
 		    for (int ixi = 0; ixi < xin_; ++ixi) { 
+
 				for (int it = 0; it < tn_; ++it, ++pTableD) { 
 					const float curTime = to_ + it * td_;
 				    const float t = *pTableD;		    
@@ -166,16 +174,21 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 						amp[it] = 0.f;
 					}
 				}	
-				aastretch_define (str, tx, amp);
-		
-			    sf_chain (sf_halfint_lop, aastretch_lop,
-					      adj, true, tn_, tn_, tn_, modl + ixi * tn_, data + id * tn_, tmp);
-	
+
+				if (isAA_) {
+					aastretch_define (str, tx, amp);
+				    sf_chain (sf_halfint_lop, aastretch_lop,
+						      adj, true, tn_, tn_, tn_, modl + ixi * tn_, data + id * tn_, tmp);
+				} else {
+					stretch_define (str);
+					stretch_lop (adj, true, tn_, tn_, modl + ixi * tn_, data + id * tn_);
+				}
 		    }
 		}
 
 		// reflection part
 		if (0 != invMod_) {
+
 		    const int offset = (1 == invMod_) ? 0 : xin_;
 		    for (int id0 = 0; id0 < dip0n_; ++id0) { 
 				for (int it = 0; it < tn_; ++it, ++pTableR) {		
@@ -193,10 +206,14 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 				    }		
 				}
 		
-				aastretch_define (str, tx, amp);
-
-			    sf_chain (sf_halfint_lop, aastretch_lop,
-					      adj, true, tn_, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_, tmp);
+				if (isAA_) {
+					aastretch_define (str, tx, amp);
+				    sf_chain (sf_halfint_lop, aastretch_lop,
+						      adj, true, tn_, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_, tmp);
+				} else {
+					stretch_define (str);
+					stretch_lop (adj, true, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_);
+				}
 		    }
 		}
 	}
