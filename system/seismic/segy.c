@@ -842,7 +842,7 @@ void head2segy(char* buf, const int* trace, int nk)
 void binary_head(char* buf)
 /*< Create a binary header for SEGY >*/
 {
-    int i, val, size;
+    int i, val;
 
     for (i=0; i < 3; i++) {
 	if (!sf_getint(bheadkey[i].name,&val)) val=1;
@@ -851,7 +851,7 @@ void binary_head(char* buf)
     }
 
     for (i=3; i < SF_BHKEYS; i++) {
-	size = bheadkey[i].size;
+	/* size = bheadkey[i].size; */
 	if (sf_getint(bheadkey[i].name,&val)) 
 	    insert2(val,buf);
 	buf += 2;

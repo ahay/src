@@ -158,7 +158,7 @@ void dsr (char rule /* rule for angle gathers */,
 /*< apply >*/
 {
     int iz,iw, ia;
-    float s, r, a, ss;
+    float s, r, a;
     sf_complex w, k, kk;
 
     /* convert from midpoint/offset wavenumbers to
@@ -222,7 +222,7 @@ void dsr (char rule /* rule for angle gathers */,
 		
 		if (rule=='a') {
 		    a = costheta(vt[iz],vt[iz],eta[iz],cimagf(w),0.5*(kx-kh),0.5*(kx+kh));
-		    ss = 0.5/(sqrt(vt[iz])*cimagf(w))*hypotf(cimagf(kk),kx);
+		    /* ss = 0.5/(sqrt(vt[iz])*cimagf(w))*hypotf(cimagf(kk),kx); */
 		    /*warn("a=%f ss=%f eps=%f w=%f kx=%f s=%f r=%f eta=%f",a,ss,eps,cimagf(w),kx,sqrt(s),sqrt(r),eta[iz]);*/
 
 		    if (a <= 1.) {

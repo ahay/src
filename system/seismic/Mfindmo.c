@@ -1,4 +1,4 @@
-/* DMO and stack by finite-difference offset continuation. */
+/* DMO without stacking by finite-difference offset continuation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     ctris slv;
-    int nw,nh,nx,iw,ix,ih,n1,n2,ns;
+    int nw,nh,nx,iw,ix,ih,n1,n2,ns,ig;
     float w0,dw, h0,dh,dx,w,w2,h,h2;
     sf_complex diag,diag2, c1,c2,offd,offd2;
     sf_complex *in=NULL, *out=NULL, **dat=NULL;
@@ -52,21 +52,6 @@ int main(int argc, char* argv[])
     dat = sf_complexalloc2(nx,nh);
 
     slv = ctridiagonal_init (nx);
-
-    if ((dh > 0. && h0 >= 0.) || (dh < 0. && h0 <= 0.)) {
-	n1 = nh-1; 
-	ns = -1;
-	n2 = -0.5 - h0/dh;
-    } else {
-	n1 = 0;
-	ns = 1;
-	n2 = nh - h0/dh - 0.5;
-    }
-
-    sf_putint(stk,"n3",1);
-    sf_putint(stk,"n2",nw);
-    sf_putfloat(stk,"o2",w0);
-    sf_putfloat(stk,"d2",dw);
     
     for (iw=0; iw < nw; iw++) {
 	sf_warning("frequency %d of %d;",iw+1,nw);
@@ -76,11 +61,10 @@ int main(int argc, char* argv[])
 
 	sf_complexread(dat[0],nx*nh,cmp);
 
-	for (ix=0; ix < nx; ix++) {
-	    out[ix] = sf_cmplx(0.,0.);
-	}
-
 	if (fabsf(w) < dw) {
+	    for (ix=0; ix < nx; ix++) {
+		out[ix] = sf_cmplx(0.,0.);
+	    }	    
 	    sf_complexwrite(out,nx,stk);
 	    continue;
 	}
@@ -95,68 +79,77 @@ int main(int argc, char* argv[])
 		     sf_cmplx(w2*3.,-w2*w));
 #endif
 
-	for (ih=n1; ih != n2; ih += ns) {
+	for (ig=0; ig < nh; ig++) {
+	    if ((dh > 0. && h0 >= 0.) || (dh < 0. && h0 <= 0.)) {
+		n1 = ig-1; 
+		ns = -1;
+		n2 = -0.5 - h0/dh;
+	    } else {
+		n1 = 0;
+		ns = 1;
+		n2 = ig - h0/dh - 0.5;
+	    }
+	    
 	    for (ix=0; ix < nx; ix++) {
-		if (ih >=0 && ih < nh) {
-#ifdef SF_HAS_COMPLEX_H
-		    in[ix] = dat[ih][ix] + out[ix];
-#else
-		    in[ix] = sf_cadd(dat[ih][ix],out[ix]);
-#endif
-		} else {
+		out[ix] = dat[ig][ix];
+	    }
+
+	    for (ih=n1; ih != n2; ih += ns) {
+		for (ix=0; ix < nx; ix++) {
 		    in[ix] = out[ix];
-		}
-	    }
+		}		
 
-	    h = h0 + ih*dh; 
-	    h2 = h+dh*ns; 
-	    h *= h; 
-	    h2 *= h2;
+		h = h0 + ih*dh; 
+		h2 = h+dh*ns; 
+		h *= h; 
+		h2 *= h2;
 
 #ifdef SF_HAS_COMPLEX_H	
-	    offd  = 1. - c1*h2 + c2*h;
-	    offd2 = 1. - c1*h  + c2*h2;
-	    diag  = 12. - 2.*offd;
-	    diag2 = 12. - 2.*offd2;
+		offd  = 1. - c1*h2 + c2*h;
+		offd2 = 1. - c1*h  + c2*h2;
+		diag  = 12. - 2.*offd;
+		diag2 = 12. - 2.*offd2;
 #else
-	    offd  = sf_cadd(sf_cmplx(1.,0.),
-			    sf_cadd(sf_crmul(c1,-h2),
-				    sf_crmul(c2,h)));
-	    offd2 = sf_cadd(sf_cmplx(1.,0.),
-			    sf_cadd(sf_crmul(c1,-h),
-				    sf_crmul(c2,h2)));
-	    diag  = sf_cadd(sf_cmplx(12.,0.),sf_crmul(offd,-2.));
-	    diag2 = sf_cadd(sf_cmplx(12.,0.),sf_crmul(offd2,-2.));
+		offd  = sf_cadd(sf_cmplx(1.,0.),
+				sf_cadd(sf_crmul(c1,-h2),
+					sf_crmul(c2,h)));
+		offd2 = sf_cadd(sf_cmplx(1.,0.),
+				sf_cadd(sf_crmul(c1,-h),
+					sf_crmul(c2,h2)));
+		diag  = sf_cadd(sf_cmplx(12.,0.),sf_crmul(offd,-2.));
+		diag2 = sf_cadd(sf_cmplx(12.,0.),sf_crmul(offd2,-2.));
 #endif
 
-	    ctridiagonal_const_define (slv,diag2,offd2);
+		ctridiagonal_const_define (slv,diag2,offd2);
 
 #ifdef SF_HAS_COMPLEX_H
-	    out[0] = diag*in[0] + offd*in[1];
+		out[0] = diag*in[0] + offd*in[1];
 #else
-	    out[0] = sf_cadd(sf_cmul(diag,in[0]),
-			     sf_cmul(offd,in[1]));
+		out[0] = sf_cadd(sf_cmul(diag,in[0]),
+				 sf_cmul(offd,in[1]));
 #endif
-	    for (ix=1; ix < nx-1; ix++) {
+		for (ix=1; ix < nx-1; ix++) {
 #ifdef SF_HAS_COMPLEX_H	
-		out[ix] = diag*in[ix] + offd*(in[ix+1]+in[ix-1]);
+		    out[ix] = diag*in[ix] + offd*(in[ix+1]+in[ix-1]);
 #else
-		out[ix] = sf_cadd(sf_cmul(diag,in[ix]),
-				 sf_cmul(offd,sf_cadd(in[ix+1],in[ix-1])));
+		    out[ix] = sf_cadd(sf_cmul(diag,in[ix]),
+				      sf_cmul(offd,sf_cadd(in[ix+1],in[ix-1])));
 #endif
+		}
+#ifdef SF_HAS_COMPLEX_H	
+		out[nx-1] = diag*in[nx-1] + offd*in[nx-2];
+#else
+		out[nx-1] = sf_cadd(sf_cmul(diag,in[nx-1]),
+				    sf_cmul(offd,in[nx-2]));
+#endif
+		
+		ctridiagonal_solve (slv,out);
 	    }
-#ifdef SF_HAS_COMPLEX_H	
-	    out[nx-1] = diag*in[nx-1] + offd*in[nx-2];
-#else
-	    out[nx-1] = sf_cadd(sf_cmul(diag,in[nx-1]),
-				sf_cmul(offd,in[nx-2]));
-#endif
+	    sf_complexwrite (out,nx,stk);
+	} /* ig */
 
-	    ctridiagonal_solve (slv,out);
-	}
-	sf_complexwrite (out,nx,stk);
-    }
+    } /* iw */
     sf_warning(".");
-
+	
     exit(0);
 }

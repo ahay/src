@@ -21,12 +21,9 @@
 #include <math.h>
 #include <float.h>
 #include <rsf.h>
-#include "stretch4.h"
-
 
 int main (int argc, char* argv[])
 {
-    map4 nmo;
     int it,ix,i2,iv, nt,nx, n2, nv, ntv, nw, imin2, imax2;
     float dt, t0, t,o2, d2, v0, dv, min2, max2;
     float *M=NULL, *ord=NULL, *v=NULL, *v2=NULL;
@@ -53,12 +50,6 @@ int main (int argc, char* argv[])
     if (!sf_histint(cmp,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histfloat(cmp,"d2",&d2)) sf_error("No d2= in input");
     if (!sf_histfloat(cmp,"o2",&o2)) sf_error("No o2= in input");
-    
-    
-    
-    nmo = stretch4_init (nt, t0, dt, nt, 0.01);
-    
-    
     
     /* parameter sampling */
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");       /* number of velocities */

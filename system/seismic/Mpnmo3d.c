@@ -26,11 +26,11 @@ int main (int argc, char* argv[])
 {
     map4 nmo;
     bool half;
-    int it,ix,ihx,ihy,ih, nt,nx, nhx,nhy, nw, CDPtype;
+    int it,ix,ihx,ihy,ih, nt,nx, nhx,nhy, nw;
     float dt, t0, hx,hy, h0x, h0y, t, f, dhx, dhy, eps;
     float *trace=NULL, *px=NULL, *py=NULL, *offx=NULL, *offy=NULL,  *str=NULL, *out=NULL, *vtr=NULL;
 
-    sf_file cmp=NULL, nmod=NULL, dipx=NULL, dipy=NULL, offset=NULL, vel=NULL;
+    sf_file cmp, nmod, dipx, dipy, vel;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -49,40 +49,31 @@ int main (int argc, char* argv[])
     if (!sf_histint(cmp,"n3",&nhy)) sf_error("No n2= in input");
 
     nx = sf_leftsize(cmp,3);
-
-    CDPtype=1;
-    if (NULL != sf_getstring("offset")) {
-	offset = sf_input("offset");
-	offx = NULL;
-	offy = NULL;
-    } else {
-	offset = NULL;
 	
-	if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
-	if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
-	if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
-	if (!sf_histfloat(cmp,"o3",&h0y)) sf_error("No o3= in input");
-	
-	
-	if (!sf_getbool("half",&half)) half=true;
-	/* if y, the second axis is half-offset instead of full offset */
-	
-	if (half) {
-	    dhx *= 2.;
-	    h0x *= 2.;
-	    dhy *= 2.;
-	    h0y *= 2.;
-	}
-	
-	offx = sf_floatalloc(nhx*nhy);
-	offy = sf_floatalloc(nhy*nhx);
-	ih=0;
-	for (ihx = 0; ihx < nhx; ihx++) {
-	    for (ihy = 0; ihy < nhy; ihy++) {
-		offx[ih] = h0x + ihx*dhx; 
-		offy[ih] = h0y + ihy*dhy;
-		ih++;
-	    }
+    if (!sf_histfloat(cmp,"d2",&dhx)) sf_error("No d2= in input");
+    if (!sf_histfloat(cmp,"o2",&h0x)) sf_error("No o2= in input");
+    if (!sf_histfloat(cmp,"d3",&dhy)) sf_error("No d3= in input");
+    if (!sf_histfloat(cmp,"o3",&h0y)) sf_error("No o3= in input");
+    
+    
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+    
+    if (half) {
+	dhx *= 2.;
+	h0x *= 2.;
+	dhy *= 2.;
+	h0y *= 2.;
+    }
+    
+    offx = sf_floatalloc(nhx*nhy);
+    offy = sf_floatalloc(nhy*nhx);
+    ih=0;
+    for (ihx = 0; ihx < nhx; ihx++) {
+	for (ihy = 0; ihy < nhy; ihy++) {
+	    offx[ih] = h0x + ihx*dhx; 
+	    offy[ih] = h0y + ihy*dhy;
+	    ih++;
 	}
     }
 

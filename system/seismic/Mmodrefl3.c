@@ -31,11 +31,11 @@ int main(int argc, char* argv[])
 {
     bool moveout;
     int nt, n1, i1, i2, n2, ns, n1s, ip, np, three;
-    float *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, *spline=NULL, **pp=NULL, **ps=NULL;
+    float *a=NULL, *b=NULL, *r=NULL, *tpp=NULL, *tps=NULL, *app=NULL, *aps=NULL, **pp=NULL, **ps=NULL;
     float dt, tp,ts, a1,a2, b1,b2, r1,r2, eps, rc[4], ang[4];
     float d1, p0, dp, p, as, bs, ad1, bd1; 
     map4 map;
-    sf_file in=NULL, out=NULL;
+    sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -94,7 +94,6 @@ int main(int argc, char* argv[])
     app = sf_floatalloc(n1s);
     aps = sf_floatalloc(n1s);
 
-    spline = sf_floatalloc(nt);
     pp = sf_floatalloc2(nt,np);
     ps = sf_floatalloc2(nt,np);
 
