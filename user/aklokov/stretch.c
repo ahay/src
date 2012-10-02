@@ -40,8 +40,6 @@ void stretch_init (
     x = sf_intalloc(nd);
     m = sf_boolalloc(nd);
     w = sf_floatalloc(nd);
-
-	sf_warning ("stretch_init");
 }
 
 void stretch_define (const float *coord /* data coordinates [nd] */)
