@@ -559,7 +559,9 @@ def ppm(context):
         context.env['PPM'] = None
     context.env['CPPPATH'] = oldpath
 
-pkg['libtiff'] = {'suse':'libtiff-devel', 'fedora':'libtiff-devel'}
+pkg['libtiff'] = {'suse':'libtiff-devel', 
+                  'fedora':'libtiff-devel',
+                  'rhel':'libtiff-devel'}
 
 def tiff(context):
     context.Message("checking for tiff ... ")

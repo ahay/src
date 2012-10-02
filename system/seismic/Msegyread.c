@@ -281,9 +281,9 @@ int main(int argc, char *argv[])
     bool verbose, su, xdr, suxdr;
     const char *read, *headname;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *filename, *trace, *prog;
+    char *filename, *trace, *prog, key[6], byte[7], *name;
     sf_file out, hdr, msk=NULL;
-    int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask, nkeys;
+    int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask, nkeys, ik, byt;
     off_t pos, nsegy;
     FILE *head, *file;
     float *ftrace, dt;
@@ -342,8 +342,6 @@ int main(int argc, char *argv[])
 
     if (NULL == (read = sf_getstring("read"))) read = "b";
     /* what to read: h - header, d - data, b - both (default) */
-
-    
 
     if (su) { /* figure out ns and ntr */
 	trace = sf_charalloc (SF_HDRBYTES);
@@ -481,10 +479,15 @@ int main(int argc, char *argv[])
 
 	nkeys = SF_NKEYS;
 
-	/* get extra keys 
-	for (; nkeys < SF_MAXKEYS; nkeys++) {
+	/* get extra keys */
+	for (ik=0; nkeys < SF_MAXKEYS; ik++, nkeys++) {
+	    snprintf(key,6,"key%d",ik+1);
+	    snprintf(byte,7,"byte%d",ik+1);
+
+	    if (NULL == (name = sf_getstring(key))) break;
+
+	    if(!sf_getint(byte,&byt)) break; /* or use default */
 	}
-	*/
 
 	sf_putint(hdr,"n1",nkeys);
 	sf_putint(hdr,"n2",n2);
