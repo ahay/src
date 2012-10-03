@@ -47,7 +47,23 @@ int main(int argc, char* argv[])
     sf_putint(out,"T",1);
     sf_putint(out,"input",2);
 
-    for (i=0; i < SF_NKEYS; i++) {
+    if (SF_FLOAT != sf_gettype (in)) sf_error("Need float input");
+
+    if (!sf_histint(in,"n1",&n1)) n1=1;
+    if (!sf_histint(in,"n2",&n2)) n2=1;
+    n3 = sf_leftsize(in,2); /* left dimensions after the first two */
+    if (n1 > 1) {
+	if (n2 > 1) { /* input: many keys */
+	    sf_putint(out,"n1",1);
+	} else { /* input: one key, arranged in n1 */
+	    n2 = n1;
+	    n1 = 1;
+	}
+    }
+
+    segy_init(n1,in);
+
+    for (i=0; i < n1; i++) {
 	sf_putint(out,segykeyword(i),i+3);
     }
 
@@ -68,19 +84,7 @@ int main(int argc, char* argv[])
 	free(key);
     }
 
-    if (SF_FLOAT != sf_gettype (in)) sf_error("Need float input");
 
-    if (!sf_histint(in,"n1",&n1)) n1=1;
-    if (!sf_histint(in,"n2",&n2)) n2=1;
-    n3 = sf_leftsize(in,2); /* left dimensions after the first two */
-    if (n1 > 1) {
-	if (n2 > 1) { /* input: many keys */
-	    sf_putint(out,"n1",1);
-	} else { /* input: one key, arranged in n1 */
-	    n2 = n1;
-	    n1 = 1;
-	}
-    }
 
     if (!sf_histfloat(in,n1>1? "d2":"d1",&d2)) d2=1.;
     if (!sf_histfloat(in,n1>1? "o2":"o1",&o2)) o2=0.;
