@@ -51,6 +51,8 @@ To programs:
 * sfgraph: depth= option for colored symbols
 * sfcat and sfadd no longer have a limit on the number of files
 * user/chengjb: new contributor (Jiubing Cheng)
+* retired su2rsf and segy2rsf to avoid code duplication with suread
+  and segyread
 
 ===Bug fixes===
 

@@ -347,7 +347,7 @@ int main(int argc, char *argv[])
 	    NULL == sf_getstring(name)) break;
 	/*( key# extra key for trace headers )*/
     }
-    segy_init(nkeys);
+    segy_init(nkeys,NULL);
 
     if (su) { /* figure out ns and ntr */
 	trace = sf_charalloc (SF_HDRBYTES);
@@ -489,6 +489,8 @@ int main(int argc, char *argv[])
 	sf_putint(hdr,"n1",nkeys);
 	sf_putint(hdr,"n2",n2);
 	sf_setformat(hdr,"native_int");
+
+	segy2hist(hdr,nkeys);
 
 	if (NULL == (headname = sf_getstring("tfile"))) headname = "tfile";
 	/* output trace header file */

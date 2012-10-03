@@ -130,6 +130,7 @@ int main(int argc, char* argv[])
 
     /* allocate space for the one location from the input file */ 
     hdrin = sf_floatalloc(n1_input);
+    segy_init(n1_input,in);
 
     /* The output file will have new shape.  The axis have new lengths and
        names.  Write this information to the output history file.

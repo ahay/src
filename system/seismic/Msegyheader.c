@@ -54,6 +54,8 @@ int main(int argc, char* argv[])
     nbuf = BUFSIZ/sizeof(int);
     memset(zero,0,BUFSIZ);
 
+    segy_init(SF_NKEYS,NULL);
+
     for (i=0; i < SF_NKEYS; i++) {
 	key = segykeyword(i);
 	if (0==strcmp(key,"ns")) {

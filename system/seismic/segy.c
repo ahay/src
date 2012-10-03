@@ -445,7 +445,7 @@ static const segy standard_segy_key[] = {
 
 static segy segy_key[SF_MAXKEYS];
 
-void segy_init(int nkeys)
+void segy_init(int nkeys, sf_file hdr)
 /*< initialize trace headers >*/
 {
     int ik, nk, len, namelen;
@@ -458,8 +458,10 @@ void segy_init(int nkeys)
 	    nk = ik-SF_NKEYS+1;
 	    
 	    snprintf(key,7,"key%d",nk);
-	    if (NULL == (name = sf_getstring(key))) 
-		sf_error("Need %s=",key);
+	    if ( NULL == (name = sf_getstring(key)) &&
+		(NULL == hdr ||
+		 NULL == (name = sf_histstring(hdr,key))) )
+		name = "?";
 	
 	    snprintf(key,11,"key%d_len",ik-SF_NKEYS+1);
 	    if (!sf_getint(key,&len)) len=4;
@@ -803,6 +805,26 @@ format: 1: IBM, 2: int4, 3: int2, 5: IEEE
       case 5: finsert4((float) trace[i],buf); break; /* IEEE float */
       default: sf_error("Unknown format %d",format); break;
       }
+    }
+}
+
+void segy2hist(sf_file head, int nkeys)
+/*< write out trace header information to the RSF header >*/
+{
+    int ik, nk, byte;
+    char key[11];
+
+    for (ik=SF_NKEYS; ik < nkeys; ik++) {
+	nk = ik-SF_NKEYS+1;
+	
+	snprintf(key,7,"key%d",nk);
+	sf_putstring(head,key,segy_key[ik].name);
+
+	snprintf(key,11,"key%d_len",ik-SF_NKEYS+1);
+	sf_putint(head,key,segy_key[ik].size);
+
+	if (sf_getint(segy_key[ik].name,&byte)) 
+	    sf_putint(head,segy_key[ik].name,byte);
     }
 }
 

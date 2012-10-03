@@ -69,10 +69,11 @@ int main(int argc, char* argv[])
 	}
     }
 
+    segy_init(n1,head);
+
     for (i1=0; i1 < n1; i1++) {
 	if (min[i1] != 0 || max[i1] != 0) {
-	    snprintf(out,21,"key[%d]=\"%s\"",i1,
-		     i1 < SF_NKEYS? segykeyword(i1): "?");
+	    snprintf(out,21,"key[%d]=\"%s\"",i1,segykeyword(i1));
 	    printf("%s%s",out,pad+strlen(out));
 	    snprintf(out,21,"min[%d]=%d",imin,min[i1]);
 	    printf("%s%s",out,pad+strlen(out));

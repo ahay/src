@@ -57,6 +57,8 @@ int main (int argc, char* argv[])
     if (!sf_histint(head,"n2",&n2) || n2 != nd) 
 	sf_error("Wrong n2= in head");
 
+    segy_init(nk,head);
+
     if (NULL != (xk = sf_getstring("xk"))) {
 	/* x key name */
 	xkey = segykey(xk);
