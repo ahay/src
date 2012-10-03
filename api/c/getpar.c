@@ -71,7 +71,7 @@ void sf_init(int argc,char *argv[])
     tprog = (NULL == tprog)? argv[0]:tprog+1;
     prog_len = strlen(tprog) + 1;
     prog = sf_charalloc(prog_len);
-    strcpy(prog,tprog);
+    strncpy(prog,tprog,prog_len);
     
     /* no pars and input from terminal */
     if (1==argc && !sf_stdin()) {

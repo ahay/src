@@ -281,9 +281,9 @@ int main(int argc, char *argv[])
     bool verbose, su, xdr, suxdr;
     const char *read, *headname;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *filename, *trace, *prog, key[6], byte[7], *name;
+    char *filename, *trace, *prog, key[7], *name;
     sf_file out, hdr, msk=NULL;
-    int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask, nkeys, ik, byt;
+    int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik;
     off_t pos, nsegy;
     FILE *head, *file;
     float *ftrace, dt;
@@ -340,8 +340,14 @@ int main(int argc, char *argv[])
 	pos = 0;
     }
 
-    if (NULL == (read = sf_getstring("read"))) read = "b";
-    /* what to read: h - header, d - data, b - both (default) */
+    /* figure out the number of trace keys */
+    for (ik=0; nkeys < SF_MAXKEYS; ik++, nkeys++) {
+	snprintf(key,7,"key%d",ik+1);
+	if (NULL == (name = sf_getstring(key)) || 
+	    NULL == sf_getstring(name)) break;
+	/*( key# extra key for trace headers )*/
+    }
+    segy_init(nkeys);
 
     if (su) { /* figure out ns and ntr */
 	trace = sf_charalloc (SF_HDRBYTES);
@@ -438,7 +444,7 @@ int main(int argc, char *argv[])
 	if (0==ntr) ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
     } 
     if (verbose) sf_warning("Expect %d traces",ntr);
-    
+
     if (NULL != sf_getstring("mask")) {
 	/* optional header mask for reading only selected traces */
 	msk = sf_input("mask");
@@ -455,6 +461,9 @@ int main(int argc, char *argv[])
 	mask = NULL;
 	n2 = ntr;
     }
+ 
+    if (NULL == (read = sf_getstring("read"))) read = "b";
+    /* what to read: h - header, d - data, b - both (default) */
 
     if (read[0] != 'h') { /* not only header */
 	out = sf_output("out");
@@ -473,21 +482,9 @@ int main(int argc, char *argv[])
 	out = NULL;
 	ftrace = NULL;
     }
-
+    
     if (read[0] != 'd') { /* not only data */
 	hdr = sf_output("tfile");
-
-	nkeys = SF_NKEYS;
-
-	/* get extra keys */
-	for (ik=0; nkeys < SF_MAXKEYS; ik++, nkeys++) {
-	    snprintf(key,6,"key%d",ik+1);
-	    snprintf(byte,7,"byte%d",ik+1);
-
-	    if (NULL == (name = sf_getstring(key))) break;
-
-	    if(!sf_getint(byte,&byt)) break; /* or use default */
-	}
 
 	sf_putint(hdr,"n1",nkeys);
 	sf_putint(hdr,"n2",n2);
@@ -498,7 +495,6 @@ int main(int argc, char *argv[])
 	if (NULL != out) sf_putstring(out,"head",headname);
     } else {
 	hdr = NULL;
-	nkeys = 0;
     }
 
     if (NULL != out) sf_fileflush(out,NULL);

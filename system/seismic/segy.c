@@ -219,7 +219,7 @@ static const segy bheadkey[] = {
 		     8	293.5 to 337.5 degrees */
 };
 
-static const segy segy_key[] = {
+static const segy standard_segy_key[] = {
     {"tracl",  4},  /* trace sequence number within line 0 */
 
     {"tracr",  4},  /* trace sequence number within reel 4 */
@@ -443,6 +443,35 @@ static const segy segy_key[] = {
     {"unass2", 4}    /* unassigned 236 */
 };
 
+static segy segy_key[SF_MAXKEYS];
+
+void segy_init(int nkeys)
+/*< initialize trace headers >*/
+{
+    int ik, nk, len, namelen;
+    char key[11], *name;
+ 
+    for (ik=0; ik < nkeys; ik++) {
+	if (ik < SF_NKEYS) {
+	    segy_key[ik] = standard_segy_key[ik];
+	} else {
+	    nk = ik-SF_NKEYS+1;
+	    
+	    snprintf(key,7,"key%d",nk);
+	    if (NULL == (name = sf_getstring(key))) 
+		sf_error("Need %s=",key);
+	
+	    snprintf(key,11,"key%d_len",ik-SF_NKEYS+1);
+	    if (!sf_getint(key,&len)) len=4;
+
+	    namelen = strlen(name) + 1;
+	    segy_key[ik].name = sf_charalloc(namelen);
+	    strncpy((char*) segy_key[ik].name,name,namelen);
+	    
+	    segy_key[ik].size=len;
+	}
+    }
+}
 
 /* Big-endian to Little-endian conversion and back */
 static int convert2(const char* buf);
