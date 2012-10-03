@@ -1240,4 +1240,6 @@ int ps_copy(PARARRAY ** tgt, PARARRAY src) {
     slst = slst->next;
   }
 
+  return 0;
+
 }
