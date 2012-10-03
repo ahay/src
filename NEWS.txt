@@ -30,6 +30,7 @@ To APIs:
 
 To the Python package:
 * added support for gnuplot figures in rsf.tex
+* added support for sage figures in rsf.tex
 
 To programs:
 

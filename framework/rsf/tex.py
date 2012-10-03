@@ -62,6 +62,8 @@ if mathematica:
     mathematica = WhereIs('math')
 matlab      = WhereIs('matlab')
 gnuplot     = WhereIs('gnuplot') or WhereIs('gnuplot44')
+sage        = WhereIs('sage')
+
 try:
     import numpy, pylab
     haspylab=1
@@ -242,6 +244,12 @@ def latify(target=None,source=None,env=None):
     ltx.write('\\end{document}\n')
     ltx.close()
     return 0
+
+def sage_emit(target=None, source=None, env=None):
+    sage = str(source[0])    
+    stem = suffix.sub('',sage)
+    target.append(stem+'.py')
+    return target, source
 
 def latex_emit(target=None, source=None, env=None):
     tex = str(source[0])    
@@ -765,6 +773,11 @@ if latex2html:
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir -image_type %s %s' %
                    (inputs,l2hdir,latex2html,itype,init),src_suffix='.ltx')
+
+if sage:
+    Sage = Builder(action = sage + ' $SOURCE && mv junk_sage.pdf $TARGET',
+                   suffix='.pdf',src_suffix='.sage',emitter=sage_emit)
+
 if epstopdf:
     if mathematica:
         Math = Builder(action = '%s -batchoutput '
@@ -788,7 +801,7 @@ if epstopdf:
                           '%s junk_gp.eps -o=$TARGET && rm junk_gp.eps' %
                           (gnuplot,epstopdf),
                           suffix='.pdf',src_suffix='.gp')
-
+        
     if haspylab:
         Pylab = Builder(action = Action(pylab),
                         suffix='.pdf',src_suffix='.py')
@@ -861,6 +874,8 @@ class TeXPaper(Environment):
                 self.Append(BUILDERS={'Matlab':Matlab})
             if haspylab:
                 self.Append(BUILDERS={'Pylab':Pylab})
+            if sage:
+                self.Append(BUILDERS={'Sage':Sage})
             
         self.scons = []
         self.figs = []
@@ -952,6 +967,18 @@ class TeXPaper(Environment):
             gpldir = os.path.join(self.docdir,'Gnuplot')
             self.Install2(gpldir,gpls)
             self.Alias('figinstall',gpldir)
+        # sage figures
+        sapls = glob.glob('%s/Sage/*.sage' % topdir)
+        if sapls:
+            for sapl in sapls:
+                pdf = re.sub(r'([^/]+)\.sage$',
+                             os.path.join(resdir,'\g<1>.pdf'),sapl)
+                if sage and epstopdf:
+                    self.Sage(pdf,sapl)
+                crfigs.append(pdf)
+            sapldir = os.path.join(self.docdir,'Sage')
+            self.Install2(sapldir,sapls)
+            self.Alias('figinstall',sapldir) 
         # matlab figures
         mtls = glob.glob('%s/Matlab/*.ml' % topdir)
         if mtls:
