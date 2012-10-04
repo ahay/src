@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfadd', 'sfput', 'sfcostaper', 'sfgrey', 'sfcut', 'sfmath', 'sfrtoc', 'sffft3', 'sfreal', 'sfmask', 'sfsmooth', 'sfmul']
+data=['data/hall/horizon.asc']
+size=    3265152
