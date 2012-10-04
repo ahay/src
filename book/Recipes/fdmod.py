@@ -146,7 +146,7 @@ def cgrey(custom,par):
     return '''
     grey 
     title=""
-    pclip=100
+    pclip=100 gainpanel=a
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s

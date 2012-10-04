@@ -1,4 +1,5 @@
-from rsf.proj import *
+try:    from rsf.cluster import * 
+except: from rsf.proj    import *
 import math
 
 def execute(rr,seed,par):
