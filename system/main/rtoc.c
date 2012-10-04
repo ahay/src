@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     int size;
     off_t i, nleft, nbuf, e_size;
     sf_file real, cmplx;
+    bool pair = false;
     char rbuf[BUFSIZ], *cbuf, *rformat, *cformat;
 
     sf_init(argc,argv);
@@ -37,11 +38,23 @@ int main(int argc, char* argv[])
     cmplx = sf_output ("out");
 
     if (SF_FLOAT != sf_gettype(real)) sf_error("wrong input type");
-    
+
+    if (!sf_getbool("pair",&pair)) pair = false;
+    /* y - use odd elements for real part and even ones for imaginary part */
+    if (pair) {
+        if (!sf_histint(real,"n1",&size)) sf_error("No n1= in input");
+        if ((size % 2)) sf_error("n1= in input should be even");
+        size /= 2;
+        if (size != 1)
+            sf_putint(cmplx,"n1",size);
+        else
+            sf_unshiftdim(real,cmplx,1);
+    }
+
     rformat = sf_histstring(real,"data_format");
     cformat = sf_charalloc(strlen(rformat)+1
-			   -strlen("float")
-			   +strlen("complex"));
+                           -strlen("float")
+                           +strlen("complex"));
     strncpy(cformat,rformat,strlen(rformat));
     strcpy(strstr(cformat,"float"),"complex");
     sf_setformat(cmplx,cformat);
@@ -55,20 +68,23 @@ int main(int argc, char* argv[])
 
     cbuf = sf_charalloc(2*BUFSIZ);
     for (i=0; i < BUFSIZ; i += e_size) {
-	memset(cbuf+2*i+e_size,0,e_size);
+        memset(cbuf+2*i+e_size,0,e_size);
     }
 
     for (nleft=size*e_size; nleft > 0; nleft -= nbuf) {
-	nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
-	sf_charread(rbuf,nbuf,real);
-	for (i=0; i < nbuf; i += e_size) {
-	    memcpy(cbuf+2*i,rbuf+i,e_size);
-	}
-	sf_charwrite(cbuf,2*nbuf,cmplx);
+        nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
+        sf_charread(rbuf,nbuf,real);
+        if (pair) {
+            sf_charwrite(rbuf,nbuf,cmplx);
+        } else {
+            for (i=0; i < nbuf; i += e_size) {
+                memcpy(cbuf+2*i,rbuf+i,e_size);
+            }
+            sf_charwrite(cbuf,2*nbuf,cmplx);
+        }
     }
-    
 
     exit (0);
 }
 
-/* 	$Id$	 */
+/*         $Id$         */
