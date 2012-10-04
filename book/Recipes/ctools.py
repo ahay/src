@@ -92,3 +92,32 @@ def add(output,   # output
     Flow(output,
          [output+"%04d"%ig for ig in range(len(groups))],
          'add ${SOURCES[1:%d]}'%(len(groups)))
+
+
+# ------------------------------------------------------------
+# make movie of "nf" plots in groups of "ng" files
+def mov(output,   # output
+        prefix,   # input template
+        nf,of,df, # input files n,o,d
+        ng,       # number of files in a group
+        time=5,   # cluster execution time
+        nodes=1): # number of cluster nodes
+
+    # sort groups
+    groups=grp(nf,of,df,ng)
+    nodes=min(nodes,len(groups))
+
+    # loop over groups
+    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    for ig in range(len(groups)):
+        Plot(output+"%04d"%ig,
+             [prefix%jg for jg in groups[ig]],
+             'Movie')
+        Iterate()
+    Join()
+
+    # join groups
+    Result(output,
+         [output+"%04d"%ig for ig in range(len(groups))],
+         'Movie')
+    
