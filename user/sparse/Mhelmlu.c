@@ -24,17 +24,18 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb;
-    int n1, n2, npw, npml, pad1, pad2, is, ns;
+    bool verb, save, load, hermite;
+    int n1, n2, npw, npml, pad1, pad2, is, ns, iw, nw;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float d1, d2, **v, freq, eps;
+    float d1, d2, **v, eps, ds, os, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long status, *Ap, *Ai, *Map;
     double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
     void *Symbolic, *Numeric;
     double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
     sf_complex **f;
-    char *save;
+    char *datapath, *insert, *append;
+    size_t srclen, inslen;
     sf_file in, out, source;
  
     sf_init(argc,argv);
@@ -44,6 +45,31 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
     
+    if (!sf_getbool("save",&save)) save=false;
+    /* save LU */
+
+    if (!sf_getbool("load",&load)) load=false;
+    /* load LU */
+
+    if (save || load) {
+	datapath = sf_histstring(in,"in");
+	srclen = strlen(datapath);
+	insert = sf_charalloc(6);
+    } else {
+	datapath = NULL;
+	insert = NULL;
+	append = NULL;
+    }
+
+    if (!sf_getbool("hermite",&hermite)) hermite=false;
+    /* Hermite operator */
+    
+    if (!sf_getint("npw",&npw)) npw=6;
+    /* number of points per wave-length */
+
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* epsilon for PML */
+
     /* read input dimension */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input.");
@@ -55,19 +81,35 @@ int main(int argc, char* argv[])
     v = sf_floatalloc2(n1,n2);
     sf_floatread(v[0],n1*n2,in);
     
-    if (!sf_getfloat("freq",&freq)) freq=2.5;
-    /* frequency (Hz) */
+    /* read source */
+    if (NULL == sf_getstring("source"))
+	sf_error("Need source=");
+    source = sf_input("source");
 
-    omega = (double) 2.*SF_PI*freq;
+    if (!sf_histint(source,"n3",&ns)) sf_error("No ns=.");
+    if (!sf_histfloat(source,"d3",&ds)) ds=d2;
+    if (!sf_histfloat(source,"o3",&os)) os=0.;
+    if (!sf_histint(source,"n4",&nw)) sf_error("No nw=.");
+    if (!sf_histfloat(source,"d4",&dw)) sf_error("No dw=.");
+    if (!sf_histfloat(source,"o4",&ow)) sf_error("No ow=.");
 
-    if (!sf_getint("npw",&npw)) npw=6;
-    /* number of points per wave-length */
+    f = sf_complexalloc2(n1,n2);
 
-    if (!sf_getfloat("eps",&eps)) eps=0.01;
-    /* epsilon for PML */
+    /* write output header */
+    sf_settype(out,SF_COMPLEX);
 
-    if (verb) sf_warning("Preparing...");
+    sf_putint(out,"n3",ns);
+    sf_putfloat(out,"d3",ds);
+    sf_putfloat(out,"o3",os);
+    sf_putstring(out,"label3","Shot");
+    sf_putstring(out,"unit3","");
+    sf_putint(out,"n4",nw);
+    sf_putfloat(out,"d4",dw);
+    sf_putfloat(out,"o4",ow);
+    sf_putstring(out,"label4","Frequency");
+    sf_putstring(out,"unit4","Hz");
 
+    /* allocate temporary memory */
     npml = npw*2;
     pad1 = n1+2*npml;
     pad2 = n2+2*npml;
@@ -75,87 +117,99 @@ int main(int argc, char* argv[])
     n = (pad1-2)*(pad2-2);
     nz = 5*(pad1-2)*(pad2-2)-2*(pad1-4)-2*(pad2-4)-8;
 
-    /* assemble matrix in triplet form */
-    Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-    Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-    Tx = (double*) sf_alloc(nz,sizeof(double));
-    Tz = (double*) sf_alloc(nz,sizeof(double));
-
-    fdprep(omega, eps, 
-	   n1, n2, d1, d2, v,
-	   npml, pad1, pad2, n, nz, 
-	   Ti, Tj, Tx, Tz);
-
-    /* convert triplet to compressed-column form */
-    Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
-    Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-    Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-
-    Ax = (double*) sf_alloc(nz,sizeof(double));
-    Az = (double*) sf_alloc(nz,sizeof(double));
-
-    status = umfpack_zl_triplet_to_col (n, n, nz, 
-					Ti, Tj, Tx, Tz, 
-					Ap, Ai, Ax, Az, Map);
-
-    free(Ti); free(Tj); free(Tx); free(Tz);
-
-    if (verb) sf_warning("LU factorizing...");
-
-    /* prepare LU */
-    umfpack_zl_defaults (Control);
-        
-    /* LU factorization */
-    status = umfpack_zl_symbolic (n, n, 
-				  Ap, Ai, Ax, Az, 
-				  &Symbolic, Control, Info);
-
-    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
-				 Symbolic, &Numeric, 
-				 Control, Info);
-
-    (void) umfpack_zl_free_symbolic (&Symbolic);
+    if (!load) {
+	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	Tx = (double*) sf_alloc(nz,sizeof(double));
+	Tz = (double*) sf_alloc(nz,sizeof(double));
+	
+	Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
+	Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	
+	Ax = (double*) sf_alloc(nz,sizeof(double));
+	Az = (double*) sf_alloc(nz,sizeof(double));
+    } else {
+	Ti = NULL; Tj = NULL; Tx = NULL; Tz = NULL; 
+	Ap = NULL; Ai = NULL; Map = NULL; Ax = NULL; Az = NULL;
+    }
     
-    /* save Numeric */
-    save = sf_getstring("lu");    
-    if (save != NULL) 
-	status = umfpack_zl_save_numeric (Numeric, save);
-    
-    if (verb) sf_warning("Solving...");
-
-    /* solve linear system */
-    if (NULL == sf_getstring("source"))
-	sf_error("Need source=");
-    source = sf_input("source");
-
-    if (!sf_histint(source,"n3",&ns)) ns=1;
-
-    sf_settype(out,SF_COMPLEX);
-    sf_putint(out,"n3",ns);    
-
-    f = sf_complexalloc2(n1,n2);
     Bx = (double*) sf_alloc(n,sizeof(double));
     Bz = (double*) sf_alloc(n,sizeof(double));
     Xx = (double*) sf_alloc(n,sizeof(double));
     Xz = (double*) sf_alloc(n,sizeof(double));
 
-    for (is=0; is < ns; is++) {
-	sf_complexread(f[0],n1*n2,source);
+    /* turn off iterative refinement */
+    umfpack_zl_defaults (Control);
+    Control [UMFPACK_IRSTEP] = 0;
 
-	fdpad(npml,pad1,pad2, f,Bx,Bz);
+    /* loop over frequency */
+    for (iw=0; iw < nw; iw++) {
+	omega = (double) 2.*SF_PI*(ow+iw*dw);
+
+	if (verb) sf_warning("Frequency %d of %d.",iw+1,nw);
+
+	/* LU file (append _lu* after velocity file) */
+	if (save || load) {
+	    sprintf(insert,"_lu%d",iw);
+	    inslen = strlen(insert);
+	    
+	    append = malloc(srclen+inslen+1);
+
+	    memcpy(append,datapath,srclen-5);
+	    memcpy(append+srclen-5,insert,inslen);
+	    memcpy(append+srclen-5+inslen,datapath+srclen-5,5+1);
+	}
+
+	if (!load) {
+	    /* assemble matrix */
+	    fdprep(omega, eps, 
+		   n1, n2, d1, d2, v,
+		   npml, pad1, pad2, n, nz, 
+		   Ti, Tj, Tx, Tz);
+	    
+	    status = umfpack_zl_triplet_to_col (n, n, nz, 
+						Ti, Tj, Tx, Tz, 
+						Ap, Ai, Ax, Az, Map);
+	    
+	    /* LU */
+	    status = umfpack_zl_symbolic (n, n, 
+					  Ap, Ai, Ax, Az, 
+					  &Symbolic, Control, Info);
+	    
+	    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
+					 Symbolic, &Numeric, 
+					 Control, Info);
+	    
+	    /* save Numeric */
+	    if (save) status = umfpack_zl_save_numeric (Numeric, append);
+	} else {
+	    /* load Numeric */
+	    status = umfpack_zl_load_numeric (&Numeric, append);
+	}
+
+	if (save || load) free(append);
+
+	/* loop over shots */
+	for (is=0; is < ns; is++) {
+	    sf_complexread(f[0],n1*n2,source);
+
+	    fdpad(npml,pad1,pad2, f,Bx,Bz);
 			
-	status = umfpack_zl_solve (UMFPACK_A, 
-				   Ap, Ai, Ax, Az, 
-				   Xx, Xz, Bx, Bz, 
-				   Numeric, Control, Info);
+	    status = umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
+				       NULL, NULL, NULL, NULL, 
+				       Xx, Xz, Bx, Bz, 
+				       Numeric, Control, Info);
+	    
+	    
+	    fdcut(npml,pad1,pad2, f,Xx,Xz);
+	    
+	    sf_complexwrite(f[0],n1*n2,out);
+	}
 
-
-	fdcut(npml,pad1,pad2, f,Xx,Xz);
-
-	sf_complexwrite(f[0],n1*n2,out);
+	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
+	(void) umfpack_zl_free_numeric (&Numeric);
     }
-
-    (void) umfpack_zl_free_numeric (&Numeric);
 
     exit(0);
 }

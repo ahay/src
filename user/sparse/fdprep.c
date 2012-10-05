@@ -132,7 +132,7 @@ void fdprep(const double omega,
 	    cent = 0.+I*0.;
 
 	    /* left */
-	    neib = (s1[i]/s2[j]+s1[i-1]/s2[j])/(2.*d1*d1);
+	    neib = conj((s1[i]/s2[j]+s1[i-1]/s2[j])/(2.*d1*d1));
 	    cent += -neib;
 
 	    if (i != 1) {
@@ -145,7 +145,7 @@ void fdprep(const double omega,
 	    }
 
 	    /* right */
-	    neib = (s1[i]/s2[j]+s1[i+1]/s2[j])/(2.*d1*d1);
+	    neib = conj((s1[i]/s2[j]+s1[i+1]/s2[j])/(2.*d1*d1));
 	    cent += -neib;
 
 	    if (i != pad1-2) {
@@ -158,7 +158,7 @@ void fdprep(const double omega,
 	    }
 
 	    /* down */
-	    neib = (s2[j]/s1[i]+s2[j-1]/s1[i])/(2.*d2*d2);
+	    neib = conj((s2[j]/s1[i]+s2[j-1]/s1[i])/(2.*d2*d2));
 	    cent += -neib;
 
 	    if (j != 1) {
@@ -171,7 +171,7 @@ void fdprep(const double omega,
 	    }
 
 	    /* up */
-	    neib = (s2[j]/s1[i]+s2[j+1]/s1[i])/(2.*d2*d2);
+	    neib = conj((s2[j]/s1[i]+s2[j+1]/s1[i])/(2.*d2*d2));
 	    cent += -neib;
 
 	    if (j != pad2-2) {
@@ -184,7 +184,7 @@ void fdprep(const double omega,
 	    }
 
 	    /* center */
-	    cent += pow(omega/pad[j][i],2.)/(s1[i]*s2[j]);
+	    cent += conj(pow(omega/pad[j][i],2.)/(s1[i]*s2[j]));
 	    
 	    Ti[count] = index;
 	    Tj[count] = index;
