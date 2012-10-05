@@ -22,14 +22,6 @@ par['xl']=par['nx']-50
 par['xsou']=par['ox']+par['nx']/2*par['dx']
 par['zsou']=par['oz']
 
-iwindow = ' ' + \
-              '''
-              nq1=%(nqz)d oq1=%(oqz)g
-              nq2=%(nqx)d oq2=%(oqx)g
-              jsnap=%(jdata)d jdata=%(jdata)d
-              ''' % par + ' '
-
-
 # ------------------------------------------------------------
 # wavelet
 fdm.wavelet('wav_',35,par)
@@ -85,11 +77,11 @@ Result('taper','transp |'+fdm.dgrey('pclip=99',par))
 
 # ------------------------------------------------------------
 # finite-differences modeling
-fdm.awefd2d('dd','ww','wav','vo','ra','ss','rr','free=n'+iwindow,par)
-fdm.awefd2d('do','wo','wav','vo','rb','ss','rr','free=n'+iwindow,par)
+fdm.awefd2d('dd','ww','wav','vo','ra','ss','rr','free=n',par)
+fdm.awefd2d('do','wo','wav','vo','rb','ss','rr','free=n',par)
 
-Result('ww','window j3=50 |' + fdm.wgrey('pclip=99',par))
-Result('wo','window j3=50 |' + fdm.wgrey('pclip=99',par))
+Result('ww',fdm.cgrey('pclip=99',par))
+Result('wo',fdm.cgrey('pclip=99',par))
 
 # receiver data
 Flow(  'dr0','dd taper','window | add mode=p ${SOURCES[1]}')
