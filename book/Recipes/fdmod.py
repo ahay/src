@@ -1029,24 +1029,37 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
 
 # ------------------------------------------------------------
 # exploding-reflector reverse-time migration
-def zom(imag,data,velo,dens,racq,custom,par):
-    tdat = imag+'_tds'
-    jwfl = imag+'_tur'
-    jdat = imag+'_jnk'
+def zom(imag,data,velo,dens,rcoo,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+    
+    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    Flow(tdat,data,'reverse which=2 opt=i verb=y')
-    awefd(jdat,jwfl,tdat,velo,dens,racq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
-    Flow( imag,jwfl,'window n3=1 f3=1')
+    rdat = imag+'rdat'
+    rwfl = imag+'wwfl'
 
-def oldcdzom(imag,data,velo,racq,custom,par):
-    tdat = imag+'_tds'
-    jwfl = imag+'_tur'
-    jdat = imag+'_jnk'
-
-    Flow(tdat,data,'reverse which=2 opt=i verb=y')
-    cdafd(jdat,jwfl,tdat,velo,racq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
-    Flow( imag,jwfl,'window n3=1 f3=1')
-
+    Flow(imag,[data,rcoo,velo,dens],
+         '''
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdat,DPT) +
+         '''
+         %sawefd2d < %s cden=n %s
+         vel=${SOURCES[2]}
+         den=${SOURCES[3]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s %s
+         '''%(M8R,rdat,rwfl),
+              stdin=0,
+              stdout=0)
+    
 def cdzom(imag,data,velo,rcoo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
@@ -1076,7 +1089,6 @@ def cdzom(imag,data,velo,rcoo,custom,par):
          '''%(M8R,rdat,rwfl),
               stdin=0,
               stdout=0)
-
 
 # ------------------------------------------------------------
 # wavefield-over-model plot
@@ -1114,18 +1126,6 @@ def wom(wom,wfld,velo,vmean,par):
         '''%(M8R,wtmp,vtmp),
         stdin=0,
         stdout=0)
-
-        #    Flow(wom,[velo,wfld],
-        #         '''
-        #         add add=-%g |
-        #         scale axis=123 |
-        #         spray axis=3 n=%d o=%g d=%g |
-        #         math w=${SOURCES[1]} output="input+%g*w"
-        #         ''' % (vmean,
-        #                (par['nt']-1)/par['jsnap']+1,
-        #                par['ot'],
-        #                par['dt']*par['jsnap'],
-        #                par['wweight']))
 
 # ------------------------------------------------------------
 # (elastic) wavefield-over-model
