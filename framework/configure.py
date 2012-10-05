@@ -1329,7 +1329,8 @@ def sparse(context):
     context.Message("checking for SuiteSparse ... ")
 
     oldlibs = context.env.get('LIBS',[])
-    sparselibs = ['umfpack','amd','suitesparseconfig','cholmod','colamd','blas']
+    sparselibs = ['umfpack','suitesparseconfig','cholmod',
+                  'amd','camd','colamd','ccolamd','metis','goto2']
     context.env['LIBS'] = oldlibs+sparselibs
 
     text = '''
