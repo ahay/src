@@ -53,17 +53,17 @@ def cat(output,   # output
     nodes=min(nodes,len(groups))
 
     # loop over groups
-    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    #    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
-        Flow(output+"%04d"%ig,
+        Flow(output+"-g%04d"%ig,
              [prefix%jg for jg in groups[ig]],
              'cat axis=%d space=n ${SOURCES[1:%d]}'%(axis,len(groups[ig])))
-        Iterate()
-    Join()
+    #        Iterate()
+    #    Join()
 
     # join groups
     Flow(output,
-         [output+"%04d"%ig for ig in range(len(groups))],
+         [output+"-g%04d"%ig for ig in range(len(groups))],
          'cat axis=%d space=n ${SOURCES[1:%d]}'%(axis,len(groups)))
 
 # ------------------------------------------------------------
@@ -80,17 +80,17 @@ def add(output,   # output
     nodes=min(nodes,len(groups))
 
     # loop over groups
-    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    #    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
-        Flow(output+"%04d"%ig,
+        Flow(output+"-g%04d"%ig,
              [prefix%jg for jg in groups[ig]],
              'add ${SOURCES[1:%d]}'%(len(groups[ig])))
-        Iterate()
-    Join()
+    #        Iterate()
+    #    Join()
         
     # join groups
     Flow(output,
-         [output+"%04d"%ig for ig in range(len(groups))],
+         [output+"-g%04d"%ig for ig in range(len(groups))],
          'add ${SOURCES[1:%d]}'%(len(groups)))
 
 
@@ -108,16 +108,16 @@ def mov(output,   # output
     nodes=min(nodes,len(groups))
 
     # loop over groups
-    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    #    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
-        Plot(output+"%04d"%ig,
+        Plot(output+"-g%04d"%ig,
              [prefix%jg for jg in groups[ig]],
              'Movie')
-        Iterate()
-    Join()
+    #        Iterate()
+    #    Join()
 
     # join groups
     Result(output,
-         [output+"%04d"%ig for ig in range(len(groups))],
+         [output+"-g%04d"%ig for ig in range(len(groups))],
          'Movie')
     
