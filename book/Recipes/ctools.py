@@ -53,13 +53,14 @@ def cat(output,   # output
     nodes=min(nodes,len(groups))
 
     # loop over groups
-    #    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    if(nodes>1): Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
         Flow(output+"-g%04d"%ig,
              [prefix%jg for jg in groups[ig]],
              'cat axis=%d space=n ${SOURCES[1:%d]}'%(axis,len(groups[ig])))
-    #        Iterate()
-    #    Join()
+        
+        if(nodes>1): Iterate()
+    if(nodes>1): Join()
 
     # join groups
     Flow(output,
@@ -80,13 +81,13 @@ def add(output,   # output
     nodes=min(nodes,len(groups))
 
     # loop over groups
-    #    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    if(nodes>1): Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
         Flow(output+"-g%04d"%ig,
              [prefix%jg for jg in groups[ig]],
              'add ${SOURCES[1:%d]}'%(len(groups[ig])))
-    #        Iterate()
-    #    Join()
+        if(nodes>1): Iterate()
+    if(nodes>1): Join()
         
     # join groups
     Flow(output,
@@ -108,13 +109,13 @@ def mov(output,   # output
     nodes=min(nodes,len(groups))
 
     # loop over groups
-    #    Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    if(nodes>1): Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
     for ig in range(len(groups)):
         Plot(output+"-g%04d"%ig,
              [prefix%jg for jg in groups[ig]],
              'Movie')
-    #        Iterate()
-    #    Join()
+        if(nodes>1): Iterate()
+    if(nodes>1): Join()
 
     # join groups
     Result(output,
