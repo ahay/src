@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
     void *Symbolic, *Numeric;
     double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
-    sf_complex **srce, **recv;
+    sf_complex ***srce, ***recv;
     char *datapath, *insert, *append;
     size_t srclen, inslen;
     sf_file in, out, source, data, us, ur;
@@ -95,14 +95,14 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(source,"d4",&dw)) sf_error("No dw=.");
     if (!sf_histfloat(source,"o4",&ow)) sf_error("No ow=.");
 
-    srce = sf_complexalloc2(n1,n2);
+    srce = sf_complexalloc3(n1,n2,ns);
 
     /* read receiver */
     if (NULL == sf_getstring("data"))
 	sf_error("Need data=");
     data = sf_input("data");
 
-    recv = sf_complexalloc2(n1,n2);
+    recv = sf_complexalloc3(n1,n2,ns);
 
     /* write output header */
     sf_putint(out,"n3",2*nh+1);
@@ -230,48 +230,49 @@ int main(int argc, char* argv[])
 	for (is=0; is < ns; is++) {
 
 	    /* source wavefield */
-	    sf_complexread(srce[0],n1*n2,source);
+	    sf_complexread(srce[is][0],n1*n2,source);
 
-	    fdpad(npml,pad1,pad2, srce,Bx,Bz);
+	    fdpad(npml,pad1,pad2, srce[is],Bx,Bz);
 
 	    status = umfpack_zl_solve (UMFPACK_A, 
 				       NULL, NULL, NULL, NULL, 
 				       Xx, Xz, Bx, Bz, 
 				       Numeric, Control, Info);
 
-	    fdcut(npml,pad1,pad2, srce,Xx,Xz);
-
-	    if (us != NULL) sf_complexwrite(srce[0],n1*n2,us);
+	    fdcut(npml,pad1,pad2, srce[is],Xx,Xz);
 
 	    /* receiver wavefield */
-	    sf_complexread(recv[0],n1*n2,data);
+	    sf_complexread(recv[is][0],n1*n2,data);
 
-	    fdpad(npml,pad1,pad2, recv,Bx,Bz);
+	    fdpad(npml,pad1,pad2, recv[is],Bx,Bz);
 
 	    status = umfpack_zl_solve (UMFPACK_At, 
 				       NULL, NULL, NULL, NULL, 
 				       Xx, Xz, Bx, Bz, 
 				       Numeric, Control, Info);
 
-	    fdcut(npml,pad1,pad2, recv,Xx,Xz);
+	    fdcut(npml,pad1,pad2, recv[is],Xx,Xz);
+	}
 
-	    if (ur != NULL) sf_complexwrite(recv[0],n1*n2,ur);
+	if (us != NULL) sf_complexwrite(srce[0][0],n1*n2*ns,us);
+	if (ur != NULL) sf_complexwrite(recv[0][0],n1*n2*ns,ur);
 
-	    /* imaging condition */
+	/* imaging condition */
 #ifdef _OPENMP    
-#pragma omp parallel for private(j,i)
+#pragma omp parallel for private(is,j,i)
 #endif
-	    for (ih=-nh; ih < nh+1; ih++) {
+	for (ih=-nh; ih < nh+1; ih++) {
+	    for (is=0; is < ns; is++) {
 		for (j=0; j < n2; j++) {
 		    for (i=0; i < n1; i++) {
 			if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
-			    image[ih+nh][j][i] += creal(conjf(srce[j-ih][i])*recv[j+ih][i]);
+			    image[ih+nh][j][i] += creal(conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
 			}
 		    }
 		}
 	    }
 	}
-
+	
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
 	(void) umfpack_zl_free_numeric (&Numeric);
     }

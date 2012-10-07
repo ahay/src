@@ -36,109 +36,142 @@ static void *Symbolic, *Numeric;
 static double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
 static double *Tx, *Tz;
 static double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
-static sf_complex **us, **ur, **as, **ar;
+static sf_complex ***us, ***ur, ***as, ***ar;
 static bool load;
 static char *datapath, *insert, *append;
 static size_t srclen, inslen;
 
-void adjsrce(sf_complex **recv /* receiver wavefield */,
+void adjsrce(sf_complex ***recv /* receiver wavefield */,
 	     float *rhs /* right-hand side */,
-	     sf_complex **adjs /* adjoint-source */,
+	     sf_complex ***adjs /* adjoint-source */,
 	     bool adj)
 /* assemble ajoint-source */
 {
-    int i, j, ih;
+    int is, i, j, ih;
 
     if (adj) {
-	for (ih=-nh; ih < nh+1; ih++) {
-	    for (j=0; j < n2; j++) {
-		for (i=0; i < n1; i++) {
-		    if (j+2*ih >= 0 && j+2*ih < n2) {
-			adjs[j][i] += recv[j+2*ih][i]
-			    *(wght==NULL? 1.: wght[ih+nh][j+ih][i])
-			    *rhs[(ih+nh)*ss[2]+(j+ih)*ss[1]+i];
+#ifdef _OPENMP    
+#pragma omp parallel for private(ih,j,i)
+#endif
+	for (is=0; is < ns; is++) {
+	    for (ih=-nh; ih < nh+1; ih++) {
+		for (j=0; j < n2; j++) {
+		    for (i=0; i < n1; i++) {
+			if (j+2*ih >= 0 && j+2*ih < n2) {
+			    adjs[is][j][i] += recv[is][j+2*ih][i]
+				*(wght==NULL? 1.: wght[ih+nh][j+ih][i])
+				*rhs[(ih+nh)*ss[2]+(j+ih)*ss[1]+i];
+			}
 		    }
 		}
 	    }
 	}
     } else {
-	for (j=0; j < n2; j++) {
-	    for (i=0; i < n1; i++) {
-		adjs[j][i] = recv[j][i]*rhs[j*ss[1]+i];
+#ifdef _OPENMP    
+#pragma omp parallel for private(j,i)
+#endif	
+	for (is=0; is < ns; is++) {
+	    for (j=0; j < n2; j++) {
+		for (i=0; i < n1; i++) {
+		    adjs[is][j][i] = recv[is][j][i]*rhs[j*ss[1]+i];
+		}
 	    }
 	}
     }
 }
 
-void adjrecv(sf_complex **srce /* source wavefield */,
+void adjrecv(sf_complex ***srce /* source wavefield */,
 	     float *rhs /* right-hand side */,
-	     sf_complex **adjr /* adjoint-receiver */,
+	     sf_complex ***adjr /* adjoint-receiver */,
 	     bool adj)
 /* assemble ajoint-receiver */
 {
-    int i, j, ih;
+    int is, i, j, ih;
 
     if (adj) {
-	for (ih=-nh; ih < nh+1; ih++) {
-	    for (j=0; j < n2; j++) {
-		for (i=0; i < n1; i++) {
-		    if (j-2*ih >= 0 && j-2*ih < n2) {
-			adjr[j][i] += srce[j-2*ih][i]
-			    *(wght==NULL? 1.: wght[ih+nh][j-ih][i])
-			    *rhs[(ih+nh)*ss[2]+(j-ih)*ss[1]+i];
+#ifdef _OPENMP    
+#pragma omp parallel for private(ih,j,i)
+#endif
+	for (is=0; is < ns; is++) {
+	    for (ih=-nh; ih < nh+1; ih++) {
+		for (j=0; j < n2; j++) {
+		    for (i=0; i < n1; i++) {
+			if (j-2*ih >= 0 && j-2*ih < n2) {
+			    adjr[is][j][i] += srce[is][j-2*ih][i]
+				*(wght==NULL? 1.: wght[ih+nh][j-ih][i])
+				*rhs[(ih+nh)*ss[2]+(j-ih)*ss[1]+i];
+			}
 		    }
 		}
-	    }
-	}
-    } else {
-	for (j=0; j < n2; j++) {
-	    for (i=0; i < n1; i++) {
-		adjr[j][i] = srce[j][i]*rhs[j*ss[1]+i];
-	    }
-	}
-    }
-}
-
-void adjclean(sf_complex **adj)
-/* clean-up */
-{
-    int i, j;
-
-    for (j=0; j < n2; j++) {
-	for (i=0; i < n1; i++) {
-	    adj[j][i] = 0.;
-	}
-    }
-}
-
-void iwiadd(double omega,	     
-	    sf_complex **srce /* source */,
-	    sf_complex **recv /* receiver */,
-	    sf_complex **adjs /* adjoint-source */,
-	    sf_complex **adjr /* adjoint-receiver */,
-	    float *dm, float *di, bool adj)
-/* assemble */
-{
-    int i, j, ih;
-
-    if (adj) {
-	for (j=0; j < n2; j++) {
-	    for (i=0; i < n1; i++) {    
-		dm[j*ss[1]+i] -= omega*omega*
-		    creal(conjf(srce[j][i])*adjs[j][i]+recv[j][i]*conjf(adjr[j][i]));
 	    }
 	}
     } else {
 #ifdef _OPENMP    
 #pragma omp parallel for private(j,i)
 #endif
-	for (ih=-nh; ih < nh+1; ih++) {
+	for (is=0; is < ns; is++) {
 	    for (j=0; j < n2; j++) {
 		for (i=0; i < n1; i++) {
-		    if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
-			di[(ih+nh)*ss[2]+j*ss[1]+i] -= omega*omega
-			    *(wght==NULL? 1.: wght[ih+nh][j][i])
-			    *creal(recv[j+ih][i]*conj(adjr[j-ih][i])+conjf(srce[j-ih][i])*adjs[j+ih][i]);
+		    adjr[is][j][i] = srce[is][j][i]*rhs[j*ss[1]+i];
+		}
+	    }
+	}
+    }
+}
+
+void adjclean(sf_complex ***adjs,
+	      sf_complex ***adjr)
+/* clean-up */
+{
+    int is, i, j;
+
+#ifdef _OPENMP    
+#pragma omp parallel for private(j,i)
+#endif
+    for (is=0; is < ns; is++) {
+	for (j=0; j < n2; j++) {
+	    for (i=0; i < n1; i++) {
+		adjs[is][j][i] = 0.;
+		adjr[is][j][i] = 0.;
+	    }
+	}
+    }
+}
+
+void iwiadd(double omega,	     
+	    sf_complex ***srce /* source */,
+	    sf_complex ***recv /* receiver */,
+	    sf_complex ***adjs /* adjoint-source */,
+	    sf_complex ***adjr /* adjoint-receiver */,
+	    float *dm, float *di, bool adj)
+/* assemble */
+{
+    int is, i, j, ih;
+
+    if (adj) {
+	for (is=0; is < ns; is++) {
+	    for (j=0; j < n2; j++) {
+		for (i=0; i < n1; i++) {    
+		    dm[j*ss[1]+i] -= omega*omega*creal(
+			conjf(srce[is][j][i])*adjs[is][j][i]+
+			recv[is][j][i]*conjf(adjr[is][j][i]));
+		}
+	    }
+	}
+    } else {
+#ifdef _OPENMP    
+#pragma omp parallel for private(is,j,i)
+#endif
+	for (ih=-nh; ih < nh+1; ih++) {
+	    for (is=0; is < ns; is++) {
+		for (j=0; j < n2; j++) {
+		    for (i=0; i < n1; i++) {
+			if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
+			    di[(ih+nh)*ss[2]+j*ss[1]+i] -= omega*omega
+				*(wght==NULL? 1.: wght[ih+nh][j][i])*creal(
+				    recv[is][j+ih][i]*conj(adjr[is][j-ih][i])+
+				    conjf(srce[is][j-ih][i])*adjs[is][j+ih][i]);
+			}
 		    }
 		}
 	    }
@@ -191,10 +224,10 @@ void iwi_init(int npw, float eps0,
     nz = 5*(pad1-2)*(pad2-2)-2*(pad1-4)-2*(pad2-4)-8;
 
     /* allocate temporary space */
-    us = sf_complexalloc2(n1,n2);
-    ur = sf_complexalloc2(n1,n2);
-    as = sf_complexalloc2(n1,n2);
-    ar = sf_complexalloc2(n1,n2);
+    us = sf_complexalloc3(n1,n2,ns);
+    ur = sf_complexalloc3(n1,n2,ns);
+    as = sf_complexalloc3(n1,n2,ns);
+    ar = sf_complexalloc3(n1,n2,ns);
 
     if (!load) {
 	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
@@ -281,48 +314,39 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 
 	if (load) free(append);
 
-	/* loop over shots */
+	/* background wavefields */
+	sf_complexread(us[0][0],n1*n2*ns,sfile);	    
+	sf_complexread(ur[0][0],n1*n2*ns,rfile);
+
+	/* adjoint wavefields */
+	adjsrce(ur, r,as, adj);
+	adjrecv(us, r,ar, adj);
+
 	for (is=0; is < ns; is++) {
-
-	    /* source wavefield */
-	    sf_complexread(us[0],n1*n2,sfile);	    
-
-	    /* receiver wavefield */
-	    sf_complexread(ur[0],n1*n2,rfile);
-
-	    /* source-branch */
-	    adjsrce(ur, r,as, adj);
-
-	    fdpad(npml,pad1,pad2, as,Bx,Bz);
+	    fdpad(npml,pad1,pad2, as[is],Bx,Bz);
 
 	    status = umfpack_zl_solve (UMFPACK_At, 
 				       NULL, NULL, NULL, NULL, 
 				       Xx, Xz, Bx, Bz, 
 				       Numeric, Control, Info);
 
-	    fdcut(npml,pad1,pad2, as,Xx,Xz);
+	    fdcut(npml,pad1,pad2, as[is],Xx,Xz);
 
-	    /* receiver-branch */
-	    adjrecv(us, r,ar, adj);
-
-	    fdpad(npml,pad1,pad2, ar,Bx,Bz);
+	    fdpad(npml,pad1,pad2, ar[is],Bx,Bz);
 
 	    status = umfpack_zl_solve (UMFPACK_A, 
 				       NULL, NULL, NULL, NULL, 
 				       Xx, Xz, Bx, Bz, 
 				       Numeric, Control, Info);
 
-	    fdcut(npml,pad1,pad2, ar,Xx,Xz);
-
-	    /* assemble */
-	    iwiadd(omega, us,ur,as,ar, x,r,adj);
-
-	    /* clean up */
-	    if (adj) {
-		adjclean(as);
-		adjclean(ar);
-	    }
+	    fdcut(npml,pad1,pad2, ar[is],Xx,Xz);
 	}
+
+	/* assemble */
+	iwiadd(omega, us,ur,as,ar, x,r,adj);
+	
+	/* clean up */
+	if (adj) adjclean(as,ar);
 
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
 	(void) umfpack_zl_free_numeric (&Numeric);
