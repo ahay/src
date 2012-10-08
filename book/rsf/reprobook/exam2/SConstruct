@@ -39,10 +39,9 @@ Flow('noise','synt','saltpepper inten=2 ')
 # Generating the temporary figure file about noisy data
 #########################################################
 
-Plot('noise',
-     'grey title="Noisy model"')
-Result('noise',
-       'grey title="Noisy model" screenratio=1.2 ')
+Plot('noise','grey title="Noisy model"')
+Result('noise','grey title="Noisy model" screenratio=1.2')
+
 #########################################################
 # Excuting simple band-pass filtering and displaying
 #########################################################
