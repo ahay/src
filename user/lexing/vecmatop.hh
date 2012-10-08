@@ -43,13 +43,15 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 //--------------------------------------------------
 int pinv(const FltNumMat& M, float eps, FltNumMat& R);
 int ddpinv(const DblNumMat& M, double eps, DblNumMat& R);
-
+int pinv(const CpxNumMat& M, double eps, CpxNumMat& R);
 
 //--------------------------------------------------
 int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, FltNumMat&), float eps, int npk,
 	    vector<int>& cidx, vector<int>& ridx, FltNumMat& mid);
 int ddlowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, DblNumMat&), double eps, int npk,
             vector<int>& cidx, vector<int>& ridx, DblNumMat& mid);
+int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&), float eps, int npk,
+	    vector<int>& cidx, vector<int>& ridx, CpxNumMat& mid);
 
 int ztran(const CpxNumMat& A, CpxNumMat& B);
 

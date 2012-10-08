@@ -99,9 +99,9 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		if (ih >=0 && ih < nh) {
 #ifdef SF_HAS_COMPLEX_H
-		    in[ix] = dat[ih][ix] + out[ix];
+			in[ix] = dat[ih][ix] + out[ix];
 #else
-		    in[ix] = sf_cadd(dat[ih][ix],out[ix]);
+			in[ix] = sf_cadd(dat[ih][ix],out[ix]);
 #endif
 		} else {
 		    in[ix] = out[ix];
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 		out[ix] = diag*in[ix] + offd*(in[ix+1]+in[ix-1]);
 #else
 		out[ix] = sf_cadd(sf_cmul(diag,in[ix]),
-				 sf_cmul(offd,sf_cadd(in[ix+1],in[ix-1])));
+				  sf_cmul(offd,sf_cadd(in[ix+1],in[ix-1])));
 #endif
 	    }
 #ifdef SF_HAS_COMPLEX_H	
