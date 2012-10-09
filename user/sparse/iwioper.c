@@ -42,9 +42,8 @@ static char *datapath, *insert, *append;
 static size_t srclen, inslen;
 
 void adjsrce(sf_complex ***recv /* receiver wavefield */,
-	     float *rhs /* right-hand side */,
 	     sf_complex ***adjs /* adjoint-source */,
-	     bool adj)
+	     float *dm, float *di, bool adj)
 /* assemble ajoint-source */
 {
     int is, i, j, ih;
@@ -60,7 +59,7 @@ void adjsrce(sf_complex ***recv /* receiver wavefield */,
 			if (j+2*ih >= 0 && j+2*ih < n2) {
 			    adjs[is][j][i] += recv[is][j+2*ih][i]
 				*(wght==NULL? 1.: wght[ih+nh][j+ih][i])
-				*rhs[(ih+nh)*ss[2]+(j+ih)*ss[1]+i];
+				*di[(ih+nh)*ss[2]+(j+ih)*ss[1]+i];
 			}
 		    }
 		}
@@ -73,7 +72,7 @@ void adjsrce(sf_complex ***recv /* receiver wavefield */,
 	for (is=0; is < ns; is++) {
 	    for (j=0; j < n2; j++) {
 		for (i=0; i < n1; i++) {
-		    adjs[is][j][i] = recv[is][j][i]*rhs[j*ss[1]+i];
+		    adjs[is][j][i] = recv[is][j][i]*dm[j*ss[1]+i];
 		}
 	    }
 	}
@@ -81,9 +80,8 @@ void adjsrce(sf_complex ***recv /* receiver wavefield */,
 }
 
 void adjrecv(sf_complex ***srce /* source wavefield */,
-	     float *rhs /* right-hand side */,
 	     sf_complex ***adjr /* adjoint-receiver */,
-	     bool adj)
+	     float *dm, float *di, bool adj)
 /* assemble ajoint-receiver */
 {
     int is, i, j, ih;
@@ -99,7 +97,7 @@ void adjrecv(sf_complex ***srce /* source wavefield */,
 			if (j-2*ih >= 0 && j-2*ih < n2) {
 			    adjr[is][j][i] += srce[is][j-2*ih][i]
 				*(wght==NULL? 1.: wght[ih+nh][j-ih][i])
-				*rhs[(ih+nh)*ss[2]+(j-ih)*ss[1]+i];
+				*di[(ih+nh)*ss[2]+(j-ih)*ss[1]+i];
 			}
 		    }
 		}
@@ -112,7 +110,7 @@ void adjrecv(sf_complex ***srce /* source wavefield */,
 	for (is=0; is < ns; is++) {
 	    for (j=0; j < n2; j++) {
 		for (i=0; i < n1; i++) {
-		    adjr[is][j][i] = srce[is][j][i]*rhs[j*ss[1]+i];
+		    adjr[is][j][i] = srce[is][j][i]*dm[j*ss[1]+i];
 		}
 	    }
 	}
@@ -131,8 +129,8 @@ void adjclean(sf_complex ***adjs,
     for (is=0; is < ns; is++) {
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {
-		adjs[is][j][i] = 0.;
-		adjr[is][j][i] = 0.;
+		adjs[is][j][i] = sf_cmplx(0.,0.);
+		adjr[is][j][i] = sf_cmplx(0.,0.);
 	    }
 	}
     }
@@ -319,8 +317,8 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	sf_complexread(ur[0][0],n1*n2*ns,rfile);
 
 	/* adjoint wavefields */
-	adjsrce(ur, r,as, adj);
-	adjrecv(us, r,ar, adj);
+	adjsrce(ur,as, x,r,adj);
+	adjrecv(us,ar, x,r,adj);
 
 	for (is=0; is < ns; is++) {
 	    fdpad(npml,pad1,pad2, as[is],Bx,Bz);
