@@ -279,31 +279,23 @@ int main (int argc, char* argv[]) {
     /* number of imaged inlines */
     if (!sf_getint ("iyn", &ip.yNum))        ip.yNum = rp.is3D ? vp.yNum : 1;	
     /* number of imaged crosslines */
-    if (!sf_getint ("iscatn", &gp.scatNum))   gp.scatNum = 1;	
-    /* number of scattering-angles */
     if (!sf_getfloat ("izo", &ip.zStart))    ip.zStart = dp.zStart;
     /* first imaged depth (in meters) */
     if (!sf_getfloat ("ixo", &ip.xStart))    ip.xStart = dp.xStart;
     /* first imaged inline (in meters) */
     if (!sf_getfloat ("iyo", &ip.yStart))    ip.yStart = dp.yStart;	
     /* first imaged crossline (in meters) */
-    if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0.f;	
-    /* first scattering-angle (in degree) */
     if (!sf_getfloat ("izd", &ip.zStep))     ip.zStep = dp.zStep;
     /* step in depth (in meters) */
     if (!sf_getfloat ("ixd", &ip.xStep))     ip.xStep = dp.xStep;	
     /* step in inlines (in meters) */
     if (!sf_getfloat ("iyd", &ip.yStep))     ip.yStep = dp.yStep;
     /* step in crosslines (in meters) */
-	if (!sf_getfloat ("iscatd", &gp.scatStep)) gp.scatStep = 10.f;	
-    /* scattering-angle increment (in degree) */
 
 	// CHECK IMAGE PARAMETERS
-
     checkImageParams ();
 
     // GATHER PARAMS
-
     gp.zNum = ip.zNum;
     if (!sf_getint ("dipn" , &gp.dipNum))      gp.dipNum = 161;	
     /* number of dip-angles */
@@ -313,6 +305,13 @@ int main (int argc, char* argv[]) {
     gp.zStep = ip.zStep;
     if (!sf_getfloat ("dipd",  &gp.dipStep))   gp.dipStep = 1.f;	
     /* step in dip-angle */
+
+    if (!sf_getint ("iscatn", &gp.scatNum))   gp.scatNum = 1;	
+    /* number of scattering-angles */
+    if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0.f;	
+    /* first scattering-angle (in degree) */
+	if (!sf_getfloat ("iscatd", &gp.scatStep)) gp.scatStep = gp.dipStep;	
+    /* scattering-angle increment (in degree) */
 
 	// TRAVEL TIMES TABLES
 	int ttNum (0); float ttStep (0.f); float ttStart (0.f);
