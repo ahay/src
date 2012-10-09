@@ -2,7 +2,6 @@ try:    from rsf.cluster import *
 except: from rsf.proj    import *
 
 import fdmod
-import cippicker,rsflof,rsflsf,rsftensor
 
 def param(par):
     p  = ' '
@@ -153,39 +152,4 @@ def genwfl(wfl,sou,coo,slo,down,causal,par):
          down=%s causal=%s 
 	 %s
          ''' %(down,causal,param(par)))
-
-# ------------------------------------------------------------
-def pickCIPs(picks,img,mask,nwinpicks,rad1,rad2):
-    jmem='4g'
-
-    Flow(img+'-pmap',[img,mask],
-         '''
-         envelope | math k=${SOURCES[1]} output="input*k"
-         ''')
-
-    # get picks
-    cippicker.pickCoord2D(img+'-fpicks',img+'-pmap',rad1,rad2,jmem)
-
-    # the following steps are done to restructure the cip picks for plots
-    Flow(img+'-fpicks-z',img+'-fpicks','window n2=1')
-    Flow(img+'-fpicks-x',img+'-fpicks','window f2=1 n2=1')
-    Flow(img+'-fpicks-y',img+'-fpicks','window n2=1 | math output="0"')
-
-    Flow(picks,[img+'-fpicks-x',img+'-fpicks-y',img+'-fpicks-z'],
-                 'cat axis=2 space=n ${SOURCES[1:3]} | window n1=%d | transp'%(nwinpicks))
-
-# ------------------------------------------------------------
-def pickSPKs(picks,img,mask,nwinpicks,rad1,rad2):
-    jmem='4g'
-
-    # get picks
-    cippicker.pickCoord2D(img+'-fpicks',mask,rad1,rad2,jmem)
-
-    # the following steps are done to restructure the cip picks for plots
-    Flow(img+'-fpicks-z',img+'-fpicks','window n2=1')
-    Flow(img+'-fpicks-x',img+'-fpicks','window f2=1 n2=1')
-    Flow(img+'-fpicks-y',img+'-fpicks','window n2=1 | math output="0"')
-
-    Flow(picks,[img+'-fpicks-x',img+'-fpicks-y',img+'-fpicks-z'],
-                 'cat axis=2 space=n ${SOURCES[1:3]} | window n1=%d | transp'%(nwinpicks))
 
