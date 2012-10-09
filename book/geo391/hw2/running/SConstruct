@@ -18,11 +18,11 @@ Result('dem',plot('Digital Elevation Map'))
 # Running median program
 run = Program('running.c')
 
-# !!! CHANGE THE NEXT LINE !!!
 w = 30
 
+# !!! CHANGE BELOW !!!
 Flow('ave','dem %s' % run[0],
-     './${SOURCES[1]} w1=%d w2=%d' % (w,w))
+     './${SOURCES[1]} w1=%d w2=%d what=fast' % (w,w))
 Result('ave',plot('Signal'))
 
 # Difference
