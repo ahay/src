@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
 {
     int nx,ny, nt, nsx,nsy, nhx,nhy, nc, nxyc, isx,isy, ihx,ihy, ix,iy, ic;
     int ns,nh, two, is, ih;
+    bool absoff;
     float ***rfl, ***rgd, ***crv, ***dipx, ***dipy, *trace;
     float slow, dx, x0, dy, y0, dt, t0, aper, x, y, dx1, dy1, dx2, dy2;
     float dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
@@ -61,6 +62,9 @@ int main(int argc, char* argv[])
     /* time sampling */
     if (!sf_getfloat("t0",&t0)) t0=0.;
     /* time origin */
+
+    if (!sf_getbool("absoff",&absoff)) absoff=false;
+    /* y - h0x, h0y - are not in shot coordinate system */
 
     trace = sf_floatalloc(nt+1);
 
@@ -292,9 +296,14 @@ int main(int argc, char* argv[])
 	    if (NULL == head) { /* regular */		
 		ihy = ih/nhx;
 		ihx = ih - ihy*nhx;
-		
-		geom[ih][0] = geom[nh][0] + h0x + ihx*dhx;
-		geom[ih][1] = geom[nh][1] + h0y + ihy*dhy;
+
+		if (absoff) {
+                    geom[ih][0] = h0x + ihx*dhx;
+                    geom[ih][1] = h0y + ihy*dhy;
+		} else {
+		    geom[ih][0] = geom[nh][0] + h0x + ihx*dhx;
+  		    geom[ih][1] = geom[nh][1] + h0y + ihy*dhy;
+		}
 	    }	
 
 	    /* loop over surface */
