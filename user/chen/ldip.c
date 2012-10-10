@@ -22,16 +22,17 @@
 #include <rsf.h>
 #include "lpwd.h"
 
-static int n1, n2, nf;
+static int n1, n2, nf1, nf2;
 static float **u1, **u2, **u3;
 static bool verb, use_divn;
 
-void ldip_init(int interp, int mf,
+void ldip_init(char *interp, int mf1, int mf2,
 	int m1, int m2, int *rect, int niter, bool vb)
 /*< initialize >*/
 {
 	int n, nn[4];
-	nf = mf;
+	nf1 = mf1;
+	nf2 = mf2;
 	n1 = m1;
 	n2 = m2;
 	verb=vb;
@@ -40,7 +41,7 @@ void ldip_init(int interp, int mf,
 	u2 = sf_floatalloc2(n1,n2);
 	u3 = sf_floatalloc2(n1,n2);
 
-	lpwd_init(interp, nf, n1, n2);
+	lpwd_init(nf1, nf2, n1, n2, interp);
 	if(rect[0]>0 && rect[1]>0)
 	{
 		n = n1*n2;

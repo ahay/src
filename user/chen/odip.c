@@ -22,17 +22,18 @@
 #include <rsf.h>
 #include "opwd.h"
 
-static int n1, n2, nf;
+static int n1, n2, nf1, nf2;
 static float **u1, **u2, **u3, **u4, **u5, r;
 static sf_complex **p, p0;
 static bool verb, use_divn;
 
-void odip_init(int interp, int mf, float rad,
+void odip_init(char* interp, int mf1, int mf2, float rad,
 	int m1, int m2, int *rect, int niter, float dip0, bool vb)
 /*< initialize >*/
 {
 	int n, nn[2];
-	nf = mf;
+	nf1 = mf1;
+	nf2 = mf2;
 	n1 = m1;
 	n2 = m2;
 	verb = vb;
@@ -47,7 +48,7 @@ void odip_init(int interp, int mf, float rad,
 	r=rad;
 	p0 = rad*cexpf(sf_cmplx(0, dip0));
 	
-	opwd_init(interp, nf, r);
+	opwd_init(nf1, nf2, interp, r);
 	if(rect[0]>0 && rect[1]>0)
 	{
 		n = n1*n2;

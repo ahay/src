@@ -29,7 +29,7 @@ int main(int argc, char*argv[])
 	int i1, i2;
 	float **in, **d1, **d2, **u1, ****fb;
 	sf_complex **p1;
-	opwd_init(0, 1, 1.0);
+	opwd_init(1, 1, "maxflat", 1.0);
 
 // **c@9
 //  0.1666   0.25    0.8333 

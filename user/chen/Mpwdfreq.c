@@ -26,17 +26,16 @@
 int main(int argc, char*argv[])
 {
 	sf_file out;
-	int n1, nf, n3, i3, interp;
+	int n1, nf, n3, i3;
 	sf_complex **buf, c1;
 	float d3, o3, radius;
 	bool iir, opwd;
+	char *interp;
 
 	sf_init(argc, argv);
 
 	out = sf_output("out");
 
-    if(!sf_getint("interp", &interp)) interp=0;
-    /* 0: maxflat; 1: lagrange */
 	if(!sf_getint("n1", &n1)) n1=50;
 	/* samples in frequency domain between (0:f_c] */
 	if(!sf_getint("order", &nf)) nf=1;
@@ -47,6 +46,8 @@ int main(int argc, char*argv[])
 	/* dip angle increment */
 	if(!sf_getint("n3", &n3)) n3=1;
 	/* number dip angle */
+	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
+	/* interpolation method: maxflat lagrange bspline */
 
 	sf_putint(out, "n1", 2*n1+1);
 	sf_putfloat(out, "o1", -0.5);
@@ -71,7 +72,7 @@ int main(int argc, char*argv[])
 
 	if(opwd==true)
 	{
-		opwd_init(interp, nf, 1.0);
+		opwd_init(nf, nf, interp, 1.0);
 		for(i3=0; i3<n3; i3++)
 		{
 			c1 = sf_cmplx(0, (d3*i3+o3)/180*SF_PI);
@@ -80,7 +81,7 @@ int main(int argc, char*argv[])
 		}
 		opwd_close();
 	}else{
-		lpwd_init(interp, nf, 0, 0);
+		lpwd_init(nf, nf, 0, 0, interp);
 		for(i3=0; i3<n3; i3++)
 		{
 			lpwd_freq((d3*i3+o3)/180*SF_PI, n1, buf, iir);

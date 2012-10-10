@@ -26,10 +26,11 @@
 int main(int argc, char*argv[])
 {
 	sf_file in, out, p0;
-	int nf, n1, n2, n3, rect[2], niter, liter, interp;
+	int m, n, n1, n2, n3, rect[2], niter, liter;
 	int i3;
 	bool verb;
 	float **wav, **dip, eta, **idip;
+	char *interp;
 
 	sf_init(argc, argv);
 
@@ -42,22 +43,22 @@ int main(int argc, char*argv[])
 	if (!sf_histint(in, "n2", &n2)) sf_error("No n2= in input");
 	n3 = sf_leftsize(in, 2);
 
+	if(!sf_getint("m", &m)) m=1;
+	/* b[-m, ... ,n] */
+	if(!sf_getint("n", &n)) n=1;
+	/* b[-m, ... ,n] */
+	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
+	/* interpolation method: maxflat lagrange bspline */
+
 	if (!sf_getint("rect1",&rect[0])) rect[0]=0;
 	/* dip smoothness on 1st axis */
 	if (!sf_getint("rect2",&rect[1])) rect[1]=0;
 	/* dip smoothness on 2nd axis */
 	
-	if (!sf_getint("order",&nf)) nf=1;
-	/* pwd order */
 	if (!sf_getint("niter",&niter)) niter=5;
 	/* number of iterations */
 	if (!sf_getint("liter",&liter)) liter=20;
 	/* number of linear iterations */
-	if (!sf_getint("interp",&interp)) interp=0;
-	/* interpolation method: 
-	0: maxflat
-	1: Lagrange 
-	2: B-Spline */
 	if (!sf_getfloat("eta", &eta)) eta = 1.0;
 	/* steps for iteration */
 
@@ -80,9 +81,8 @@ int main(int argc, char*argv[])
 	dip = sf_floatalloc2(n1, n2);
 
 	
-
 	/* initialize dip estimation */
-	ldip_init(interp, nf, n1, n2, rect, liter, verb);
+	ldip_init(interp, m, n, n1, n2, rect, liter, verb);
 
 
 	for(i3=0; i3<n3; i3++)
