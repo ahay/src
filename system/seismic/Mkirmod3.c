@@ -330,13 +330,16 @@ int main(int argc, char* argv[])
 		    time[ic][iy][ix] = ts->t + tg->t;
 		    
 		    tg->an /= sqrtf(1.-(tg->tn)*(tg->tn));
-		    ts->an /= sqrtf(1.-(ts->tn)*(ts->tn)); 
-		    theta = hypotf((tg->an)*(tg->tx)-(ts->an)*(ts->tx),
-				   (tg->an)*(tg->ty)-(ts->an)*(ts->ty));
+		    ts->an /= sqrtf(1.-(ts->tn)*(ts->tn));
+                    if (rgd[ic][iy][ix] != 0.) { 
+			theta = hypotf((tg->an)*(tg->tx)-(ts->an)*(ts->tx),
+					(tg->an)*(tg->ty)-(ts->an)*(ts->ty));
 
-		    /* AVA */
-		    theta = sinf(0.5*theta);
-		    ava = rfl[ic][iy][ix]+rgd[ic][iy][ix]*theta*theta;
+			/* AVA */
+			theta = sinf(0.5*theta);
+			ava = rfl[ic][iy][ix]+rgd[ic][iy][ix]*theta*theta;
+		    } else
+			ava = rfl[ic][iy][ix];
 
 		    /* obliguity */
 		    obl = 0.5*(ts->tn + tg->tn);
@@ -344,7 +347,7 @@ int main(int argc, char* argv[])
 		    /* Geometrical spreading */
 		    amp = ts->a * tg->a + FLT_EPSILON;
 		    
-		    ampl[ic][iy][ix] = ava*obl*dx/amp; 
+		    ampl[ic][iy][ix] = ava*obl*dx/amp;
 		    delt[ic][iy][ix] = SF_MAX(fabsf(ts->tx+tg->tx)*dx,
 					      fabsf(ts->ty+tg->ty)*dy); 
 		}
