@@ -310,7 +310,7 @@ int main (int argc, char* argv[]) {
     /* number of scattering-angles */
     if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0.f;	
     /* first scattering-angle (in degree) */
-	if (!sf_getfloat ("iscatd", &gp.scatStep)) gp.scatStep = gp.dipStep;	
+	if (!sf_getfloat ("iscatd", &gp.scatStep)) gp.scatStep = 2 * gp.dipStep;	
     /* scattering-angle increment (in degree) */
 
 	// TRAVEL TIMES TABLES
