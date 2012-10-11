@@ -525,6 +525,11 @@ int asg_readschemeinfo(PARARRAY * par,
   fflush(stream);
 #endif
 
+  /* mod 11.10.12: for extended modeling, must permit re-use of
+     internal buffers, including these. The design now relies on these
+     pointers having been correctly allocated once, on subsequent reads, 
+     and being initialized to NULL at the outset.
+
   if (sgnp->nep0 || sgnp->ep0_p || sgnp->ep0_pp ||
       sgnp->nev0 || sgnp->ev0_p || sgnp->ev0_pp ||
       sgnp->nep1 || sgnp->ep1_p || sgnp->ep1_pp ||
@@ -537,7 +542,7 @@ int asg_readschemeinfo(PARARRAY * par,
     fflush(stream);
     return E_BADINPUT;
   }
-
+  */
   dt2 = sgnp->dt / ((ireal)2.0);
 
 #if RARR_MAX_NDIM > 0
@@ -545,8 +550,10 @@ int asg_readschemeinfo(PARARRAY * par,
   rd_gse(dom, D_EP[0], gsa, gea);  
   sgnp->nep0 = gea[0]-gsa[0]+1;
   if (sgnp->nep0) {
-    sgnp->ep0_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep0));
-    sgnp->ep0_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep0));
+    if (!(sgnp->ep0_p))
+      sgnp->ep0_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep0));
+    if (!(sgnp->ep0_pp))
+      sgnp->ep0_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep0));
     tmp = dom->_s[D_EP[0]]._s0;
     for (i=0;i<sgnp->nep0;i++) { 
       sgnp->ep0_p[i]=REAL_ONE - tmp[i]*dt2;
@@ -558,8 +565,10 @@ int asg_readschemeinfo(PARARRAY * par,
   rd_gse(dom, D_EV[0], gsa, gea);  
   sgnp->nev0 = gea[0]-gsa[0]+1;
   if (sgnp->nev0) {
-    sgnp->ev0_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev0));
-    sgnp->ev0_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev0));
+    if (!(sgnp->ev0_p))
+      sgnp->ev0_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev0));
+    if (!(sgnp->ev0_pp))
+      sgnp->ev0_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev0));
     tmp = dom->_s[D_EV[0]]._s0;
     for (i=0;i<sgnp->nev0;i++) { 
       sgnp->ev0_p[i]=REAL_ONE/(REAL_ONE + tmp[i]*dt2);
@@ -573,8 +582,10 @@ int asg_readschemeinfo(PARARRAY * par,
   rd_gse(dom, D_EP[1], gsa, gea);  
   sgnp->nep1 = gea[0]-gsa[0]+1;
   if (sgnp->nep1) {
-    sgnp->ep1_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep1));
-    sgnp->ep1_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep1));
+    if (!(sgnp->ep1_p))
+      sgnp->ep1_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep1));
+    if (!(sgnp->ep1_pp))
+      sgnp->ep1_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep1));
     tmp = dom->_s[D_EP[1]]._s0;
     for (i=0;i<sgnp->nep1;i++) { 
       sgnp->ep1_p[i]=REAL_ONE - tmp[i]*dt2;
@@ -585,8 +596,10 @@ int asg_readschemeinfo(PARARRAY * par,
   rd_gse(dom, D_EV[1], gsa, gea);  
   sgnp->nev1 = gea[0]-gsa[0]+1;
   if (sgnp->nev1) {
-    sgnp->ev1_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev1));
-    sgnp->ev1_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev1));
+    if (!(sgnp->ev1_p))
+      sgnp->ev1_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev1));
+    if (!(sgnp->ev1_pp))
+      sgnp->ev1_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev1));
     tmp = dom->_s[D_EV[1]]._s0;
     for (i=0;i<sgnp->nev1;i++) { 
       sgnp->ev1_p[i]=REAL_ONE/(REAL_ONE + tmp[i]*dt2);
@@ -600,8 +613,10 @@ int asg_readschemeinfo(PARARRAY * par,
   rd_gse(dom, D_EP[2], gsa, gea);  
   sgnp->nep2 = gea[0]-gsa[0]+1;
   if (sgnp->nep2) {
-    sgnp->ep2_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep2));
-    sgnp->ep2_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep2));
+    if (!(sgnp->ep2_p))
+      sgnp->ep2_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep2));
+    if (!(sgnp->ep2_pp))
+      sgnp->ep2_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nep2));
     tmp = dom->_s[D_EP[2]]._s0;
     for (i=0;i<sgnp->nep2;i++) { 
       sgnp->ep2_p[i]=REAL_ONE - tmp[i]*dt2;
@@ -613,8 +628,10 @@ int asg_readschemeinfo(PARARRAY * par,
   rd_gse(dom, D_EV[2], gsa, gea);  
   sgnp->nev2 = gea[0]-gsa[0]+1;
   if (sgnp->nev2) {
-    sgnp->ev2_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev2));
-    sgnp->ev2_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev2));
+    if (!(sgnp->ev2_p))
+      sgnp->ev2_p = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev2));
+    if (!(sgnp->ev2_pp))
+      sgnp->ev2_pp = (ireal *)usermalloc_(sizeof(ireal)*(sgnp->nev2));
     tmp = dom->_s[D_EV[2]]._s0;
     for (i=0;i<sgnp->nev2;i++) { 
       sgnp->ev2_p[i]=REAL_ONE/(REAL_ONE + tmp[i]*dt2);

@@ -2,6 +2,7 @@
 
 #define NLEN 16
 #define BLEN 1000
+#define CONST_FP
 
 static char buf[BLEN];
 
@@ -28,7 +29,10 @@ FILE * iwave_fopen(char ** name,
   int nr;                      /* #words read/written in copy of proto */
   int chunk;                   /* size of buffer read in copy of proto */
   off_t plen;                  /* size of prototype file */   
-  
+#ifdef CONST_FP
+  off_t sav;                   /* saved offset prior to reopen */
+#endif
+
   /* sanity check: if proto file given, then previously opened for read */
   if (proto) {
     /*    fprintf(stderr,"begin proto - search for %s\n",proto);*/
@@ -216,14 +220,28 @@ FILE * iwave_fopen(char ** name,
 	 ALWAYS OPEN WITH "r+" - this works because file has been written if we get 
 	 to this point, in its complete length, from the prototype.
       */
-
+#ifdef CONST_FP
+      if ((sav = ftello(fpr->fp) < 0)) {
+	fprintf(stream,"ERROR: iwave_fopen\n");
+	fprintf(stream,"-- failed to record current offset before reopen\n");
+	fflush(stream);
+	return NULL;;
+      }
+#endif
       retfp = freopen(fpr->nm,"r+",fpr->fp);
       if (!retfp) {
 	fprintf(stream,"ERROR: iwave_fopen\n");
 	fprintf(stream,"-- failed to reopen stream on file %s mode r+ with same file pointer\n",fpr->nm);
 	return retfp;
       }
-
+#ifdef CONST_FP
+      if (fseeko(retfp,sav,SEEK_SET))  {
+	fprintf(stream,"ERROR: iwave_fopen\n");
+	fprintf(stream,"-- failed to seek to saved offset\n");
+	fflush(stream);
+	return NULL;;
+      }
+#endif
       /* MEMORY WHICH MUST BE MANAGED BY CALLING UNIT */
       *name=(char *)usermalloc_((strlen(fpr->nm)+1)*sizeof(char));
       strcpy(*name,fpr->nm);
@@ -426,6 +444,14 @@ FILE * iwave_fopen(char ** name,
 	 previously opened with w or w+ mode, then data was copied in
 	 to fully populate it.
       */
+#ifdef CONST_FP
+      if ((sav = ftello(fpr->fp) < 0)) {
+	fprintf(stream,"ERROR: iwave_fopen\n");
+	fprintf(stream,"-- failed to record current offset before reopen\n");
+	fflush(stream);
+	return NULL;;
+      }
+#endif
       fpr->inuse=1;      
       retfp = freopen(fpr->nm,"r+",fpr->fp);
       if (!retfp) {
@@ -433,6 +459,14 @@ FILE * iwave_fopen(char ** name,
 	fprintf(stream,"-- failed to reopen stream on file %s mode r+ with same file pointer\n",fpr->nm);
 	return retfp;
       }     
+#ifdef CONST_FP
+      if (fseeko(retfp,sav,SEEK_SET))  {
+	fprintf(stream,"ERROR: iwave_fopen\n");
+	fprintf(stream,"-- failed to seek to saved offset\n");
+	fflush(stream);
+	return NULL;;
+      }
+#endif
     }
   }
 
