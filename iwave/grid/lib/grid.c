@@ -37,6 +37,7 @@ int compare_axis(axis a1, axis a2) {
 int init_default_grid(grid * g) {
   int i;
   g->dim=0;
+  g->gdim=0;
   for (i=0;i<RARR_MAX_NDIM;i++) {
     init_default_axis(&(g->axes[i]));
     g->axes[i].id=i;
@@ -44,10 +45,11 @@ int init_default_grid(grid * g) {
   return 0;
 }
 
-int init_grid(grid * g, size_t dim) {
+int init_grid(grid * g, int dim, int gdim) {
   int i;
-  if (dim<1 || dim>RARR_MAX_NDIM) return E_BADINPUT;
+  if (dim<1 || dim>gdim || gdim>RARR_MAX_NDIM) return E_BADINPUT;
   g->dim=dim;
+  g->gdim=gdim;
   for (i=0;i<RARR_MAX_NDIM;i++) { 
     init_default_axis(&(g->axes[i]));
     g->axes[i].id=i;
@@ -57,7 +59,9 @@ int init_grid(grid * g, size_t dim) {
 
 int fprint_grid(FILE * fp, grid a) {
   int i;
-  fprintf(fp,"Grid data structure, consisting of %ld axes:\n",(long) a.dim);
+  fprintf(fp,"Grid data structure:\n");
+  fprintf(fp,"%d axes\n",a.gdim);
+  fprintf(fp,"%d physical axes\n",a.dim);
   for (i=0;i<a.dim;i++) fprint_axis(fp,a.axes[i]);
   return 0;
 }
@@ -67,8 +71,8 @@ int print_grid(grid a) { return fprint_grid(stdout,a); }
 int compare_grid(grid g1, grid g2) {
   int err=0;
   int i;
-  if (g1.dim != g2.dim) return 1;
-  for (i=0;i<g1.dim;i++) err = err || compare_axis(g1.axes[i],g2.axes[i]);
+  if (g1.gdim != g2.gdim) return 1;
+  for (i=0;i<g1.gdim;i++) err = err || compare_axis(g1.axes[i],g2.axes[i]);
   return err;
 }
 
@@ -78,6 +82,24 @@ int get_datasize_grid(grid g) {
   int sz=1;
   get_n(_n,g);
   for (i=0;i<g.dim;i++) sz*=_n[i];
+  return sz;
+}
+
+int get_global_datasize_grid(grid g) {
+  _IPNT _n;
+  int i;
+  int sz=1;
+  get_n(_n,g);
+  for (i=0;i<g.gdim;i++) sz*=_n[i];
+  return sz;
+}
+
+int get_panelnum_grid(grid g) {
+  _IPNT _n;
+  int i;
+  int sz=1;
+  get_n(_n,g);
+  for (i=g.dim;i<g.gdim;i++) sz*=_n[i];
   return sz;
 }
 
@@ -104,7 +126,7 @@ int get_o(_RPNT o, grid g) {
 }
 int get_gs(_IPNT gs, grid g) {
   int i;
-  for (i=0;i<g.dim;i++) {
+  for (i=0;i<RARR_MAX_NDIM;i++) {
     if (g.axes[i].o<0) gs[i]=(int)((g.axes[i].o-g.axes[i].d*TOL)/(g.axes[i].d));
     else gs[i]=(int)((g.axes[i].o+g.axes[i].d*TOL)/(g.axes[i].d));
   }

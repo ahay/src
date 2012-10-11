@@ -53,9 +53,22 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
     if (ps_flreal(par,key,&(g->axes[i].d))) g->axes[i].d=1.0;
     snprintf(key,kl,"o%d",i+1);
     if (ps_flreal(par,key,&(g->axes[i].o))) g->axes[i].o=0.0;
-    /* determine dim by finding least axis index with n>1 */
-    if (g->axes[i].n>1) g->dim=iwave_max(g->dim,i+1);
+    /* determine global dim by finding least axis index with n>1 */
+    if (g->axes[i].n>1) g->gdim=iwave_max(g->gdim,i+1);
   }
+
+  /* mod of 10.10.12: keyword dim = physical dimension = record
+     dimension - default = global dim */
+  g->dim = g->gdim;
+  ps_flint(par,"dim",&(g->dim));
+  if (g->dim < 0 || g->dim > RARR_MAX_NDIM) {
+    fprintf(fp,"ERROR: par_grid\n");
+    fprintf(fp,"keyword = dim value = %d out of bounds [0, %d]\n",g->dim,RARR_MAX_NDIM);
+    return E_OTHER;
+  }
+  /* allow some top dims to be = 1 */	    
+  if (g->dim > g->gdim) g->gdim = g->dim;
+
   /*  fprintf(stderr,"order params - dim=%d\n",g->dim);*/
   if (g->dim > 0) { 
     tmp=1;
@@ -64,7 +77,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
     /*    fprintf(stderr,"z axis tmp=%d\n",tmp);*/
     if (tmp<0 || tmp>g->dim-1) {
       fprintf(fp,"ERROR: par_grid\n");
-      fprintf(fp,"  z_axis index = %d out of range for dim = %zu\n",tmp,g->dim);
+      fprintf(fp,"  z_axis index = %d out of range for dim = %d\n",tmp,g->dim);
       return E_OTHER;
     }
     g->axes[tmp].id=0;
@@ -76,7 +89,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
     /*    fprintf(stderr,"x axis tmp=%d\n",tmp);*/
     if (tmp<0 || tmp>g->dim-1) {
       fprintf(fp,"ERROR: par_grid\n");
-      fprintf(fp,"  x_axis index = %d out of range for dim = %zu\n",tmp,g->dim);
+      fprintf(fp,"  x_axis index = %d out of range for dim = %d\n",tmp,g->dim);
       return E_OTHER;
     }
     g->axes[tmp].id=1;
@@ -88,7 +101,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
     /*    fprintf(stderr,"y axis tmp=%d\n",tmp);*/
     if (tmp<0 || tmp>g->dim-1) {
       fprintf(fp,"ERROR: par_grid\n");
-      fprintf(fp,"  y_axis index = %d out of range for dim = %zu\n",tmp,g->dim);
+      fprintf(fp,"  y_axis index = %d out of range for dim = %d\n",tmp,g->dim);
       return E_OTHER;
     }
     g->axes[tmp].id=2;
@@ -249,6 +262,8 @@ int adj_extend_loop(ireal * a,
   return 0;
 }
       
+/* array extension happens only over physical dimensions, assumed to
+   be at most 3 */
 int extend_array(ireal * a, 
 		 IPNT rags, 
 		 IPNT ran, 
@@ -262,8 +277,8 @@ int extend_array(ireal * a,
   int err=0;        /* return value */
 
   /* sanity */
-  if (RARR_MAX_NDIM > 3) err=E_OUTOFBOUNDS;
-  if (dim > RARR_MAX_NDIM || dim < 1) err=E_OUTOFBOUNDS;
+  //  if (RARR_MAX_NDIM > 3) err=E_OUTOFBOUNDS;
+  if (dim > 3 || dim < 1) err=E_OUTOFBOUNDS;
   if (ax < 0 || ax > dim-1) err=E_OUTOFBOUNDS;
   
   if (err) return err;
@@ -304,8 +319,8 @@ int adj_extend_array(ireal * a,
   int err=0;        /* return value */
 
   /* sanity */
-  if (RARR_MAX_NDIM > 3) err=E_OUTOFBOUNDS;
-  if (dim > RARR_MAX_NDIM || dim < 1) err=E_OUTOFBOUNDS;
+  //  if (RARR_MAX_NDIM > 3) err=E_OUTOFBOUNDS;
+  if (dim > 3 || dim < 1) err=E_OUTOFBOUNDS;
   if (ax < 0 || ax > dim-1) err=E_OUTOFBOUNDS;
   
   if (err) return err;
@@ -367,8 +382,6 @@ int rsfread(ireal * a,
   IPNT g_gsa;      /* start indices, global */
   IPNT l_gsa;      /* start indices, local  */
   IPNT gea;        /* end   indices of grid intersection */
-  IPNT g_gea;      /* end   indices, global */
-  IPNT l_gea;      /* end   indices, local */
   IPNT n;          /* lengths of grid (file) axes */
   IPNT na;         /* lengths of grid intersection axes */
   IPNT gl_na;      /* lengths of grid intersection axes, local or global */
@@ -447,25 +460,19 @@ int rsfread(ireal * a,
     /* rarray to left of garray */
     if ( (rags[ii] + ran[ii] - 1 < gs[ii]) && extend ) { 
       g_gsa[ii] = gs[ii];
-      g_gea[ii] = gs[ii];
       l_gsa[ii] = rags[ii] + ran[ii] - 1;
-      l_gea[ii] = rags[ii] + ran[ii] - 1;
       gl_na[ii] = 1;
     }
     /* rarray to right of garray */
     else if ( (rags[ii] > gs[ii] + n[ii] -1) && extend ) {
       g_gsa[ii] = gs[ii] + n[ii] - 1;
-      g_gea[ii] = gs[ii] + n[ii] - 1;
       l_gsa[ii] = rags[ii];
-      l_gea[ii] = rags[ii];
       gl_na[ii] = 1;
     }
     /* intersection nonempty */
     else {
       g_gsa[ii] = gsa[ii];
-      g_gea[ii] = gea[ii];
       l_gsa[ii] = gsa[ii];
-      l_gea[ii] = gea[ii];
       gl_na[ii] = na[ii];
     }
   }
@@ -519,6 +526,15 @@ int rsfread(ireal * a,
   ps_flint(*par,"scale",&scale);
 
   /* compute current starting position */
+  /* first sanity check */
+  if (panelindex < 0) {
+    fprintf(stream,"Error: rsfread\n");
+    fprintf(stream,"panelindex = %d < 0\n",panelindex);
+    return E_OTHER;
+  }
+      
+  /* seek to panel at input panelindex modulo number of panels */
+  panelindex = panelindex % get_panelnum_grid(g);
   cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
 
   /*** from here on, memory is allocated, so save return until
@@ -667,8 +683,8 @@ int rsfread(ireal * a,
 
 int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, 
 	     int extend,       /* WWS 06.03.11 */
-	     FILE * stream
-	     , int panelindex  /* D.S. 01.01.11: extended-model related */
+	     FILE * stream,
+	     int panelindex  /* D.S. 01.01.11: extended-model related */
 	     ) {
 
   /**************************
@@ -687,8 +703,6 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   IPNT g_gsa;      /* start indices, global */
   IPNT l_gsa;      /* start indices, local  */
   IPNT gea;        /* end   indices of grid intersection */
-  IPNT g_gea;      /* end   indices, global */
-  IPNT l_gea;      /* end   indices, local */
   IPNT gs;         /* start indices of grid (file) */
   IPNT gsa;        /* start indices of grid intersection */
   IPNT n;          /* lengths of grid (file) axes */
@@ -790,25 +804,19 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
     /* rarray to left of garray */
     if ( (rags[ii] + ran[ii] - 1 < gs[ii]) && extend ) { 
       g_gsa[ii] = gs[ii];
-      g_gea[ii] = gs[ii];
       l_gsa[ii] = rags[ii] + ran[ii] - 1;
-      l_gea[ii] = rags[ii] + ran[ii] - 1;
       gl_na[ii] = 1;
     }
     /* rarray to right of garray */
     else if ( (rags[ii] > gs[ii] + n[ii] -1) && extend ) {
       g_gsa[ii] = gs[ii] + n[ii] - 1;
-      g_gea[ii] = gs[ii] + n[ii] - 1;
       l_gsa[ii] = rags[ii];
-      l_gea[ii] = rags[ii];
       gl_na[ii] = 1;
     }
     /* intersection nonempty */
     else {
       g_gsa[ii] = gsa[ii];
-      g_gea[ii] = gea[ii];
       l_gsa[ii] = gsa[ii];
-      l_gea[ii] = gea[ii];
       gl_na[ii] = na[ii];
     }
   }
@@ -862,6 +870,15 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   fflush(stream);
 
   /* compute current starting position */
+  /* first sanity check */
+  if (panelindex < 0) {
+    fprintf(stream,"Error: rsfread\n");
+    fprintf(stream,"panelindex = %d < 0\n",panelindex);
+    return E_OTHER;
+  }
+      
+  /* seek to panel at input panelindex modulo number of panels */
+  panelindex = panelindex % get_panelnum_grid(g);
   cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
   /* <-- D.S. 01.01.11: extended-model related */
 

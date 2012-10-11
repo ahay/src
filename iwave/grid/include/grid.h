@@ -60,9 +60,14 @@ int fprint_axis(FILE * fp, axis a);
 */
 int compare_axis(axis a1, axis a2);
  
-/** Regular grid struct */
+/** Regular grid struct 
+@param dim - dimension of physical grid 
+@param gdim - global dimension including nonphysical axes
+@param axis - vector of axes defining grid
+*/
 typedef struct {
-  size_t dim;
+  int dim;
+  int gdim;
   axis axes[RARR_MAX_NDIM];
 } grid;
   
@@ -77,7 +82,7 @@ int init_default_grid(grid * g);
 @param[out] g (grid *) - grid to be initialized
 @param[in] dim (int) - dimension of grid, at most \ref RARR_MAX_NDIM
 */
-int init_grid(grid * g, size_t dim);
+int init_grid(grid * g, int dim, int gdim);
 
 /** print grid to stdout 
 @param[in] a (grid) - grid to be printed
@@ -97,12 +102,26 @@ int fprint_grid(FILE * fp, grid a);
 */
 int compare_grid(grid g1, grid g2);
   
-/** get number of gridpoints (product of n's)
+/** get number of physical gridpoints (product of n's)
+@param[in] g (grid) - input grid
+@return product of physical axis lengths
+ */
+int get_datasize_grid(grid g);
+
+/** get total number of gridpoints (product of n's)
 @param[in] g (grid) - input grid
 @return product of axis lengths
  */
-int get_datasize_grid(grid g);
+int get_global_datasize_grid(grid g);
   
+/** get total number of records = physical grids within global grid
+    (product of n's)
+
+@param[in] g (grid) - input grid
+@return product of nonphysical axis lengths
+ */
+int get_panelnum_grid(grid g);
+
 /** get axis length array 
 @param[in] g (grid) - input grid
 @param[out] n (IPNT) - axis lengths

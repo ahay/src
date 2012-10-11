@@ -462,7 +462,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
       break;
     }
   }
-  init_grid(&(model->gl),ndim);
+  init_grid(&(model->gl),ndim,ndim);
   for ( idim = 0; idim < ndim; ++idim ) {
     model->gl.axes[idim].d = model->g.axes[idim].d;
     model->gl.axes[idim].o = model->g.axes[idim].o + model->gl.axes[idim].d * gs[idim];

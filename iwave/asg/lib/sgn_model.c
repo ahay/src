@@ -424,12 +424,10 @@ int asg_build_sten_dep(FILE *stream, int ndim, int sten_dep_mat[RDOM_MAX_NARR][R
 
 int sgn_modelinfo(FILE *stream, IMODEL *model)
 {
-  FD_MODEL *sgnm;
   int ndim, i, iv, ia;
   IPNT n;
   RDOM *dc; /* computational */
 
-  sgnm = (FD_MODEL*)(model->specs);
   ndim = model->g.dim;
 
   fprintf(stream, "SGN model %dD.\n", ndim);

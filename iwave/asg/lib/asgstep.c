@@ -239,8 +239,6 @@ int asg_step_p(RDOM * dom, void *pars) {
   int ioffp0_3d, ioffp1_3d, ioffp2_3d, ioffmp_3d, ioffv0_3d, ioffv1_3d, ioffv2_3d;
   // strides = allocated rarray sizes, loop lengths
   IPNT nep0, nep1, nep2, np0, np1, np2, nmp, nv0, nv1, nv2;
-  // half time step
-  ireal dt2;
 
   // workspace
   IPNT ipntbuf;
@@ -289,9 +287,6 @@ int asg_step_p(RDOM * dom, void *pars) {
     }
     return E_BADINPUT;
   }
-
-  // half timestep
-  dt2 = sgnpars->dt / 2.0;
 
   // size of computational domain for P0 - same as for P1, P2
   rd_gse(dom, D_P0, gsc, gec);    

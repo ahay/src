@@ -158,27 +158,25 @@ int traceserver_init(FILE ** fpin, char * fin,
   segy tr;
 
   short ns;
-  int ins;
   int err=0;
-
-  off_t offtmp;     /* buffer for offset of next trace */
 
   int rkw;          /* global rank */
   int rkl;          /* local rank */
-  int szw;          /* global size */
-  int szl;          /* local size */
 
 #ifdef IWAVE_USE_MPI
+  int ins;
+  int szw;          /* global size */
+  int szl;          /* local size */
   MPI_Comm cmw;     /* global communicator */
   MPI_Comm cml;     /* local communicator */
 #endif
 
   rkw=retrieveGlobalRank();
   rkl=retrieveRank();
-  szw=retrieveGlobalSize();
-  szl=retrieveSize();
 
 #ifdef IWAVE_USE_MPI
+  szw=retrieveGlobalSize();
+  szl=retrieveSize();
   cml=retrieveComm();
   cmw=retrieveGlobalComm();
 #endif
@@ -324,14 +322,10 @@ int traceserver_init(FILE ** fpin, char * fin,
     /* read first trace */
     ir=0;
     *nrec=0;
-    offtmp=0;
     recoff[ir]=0;
     ntr[ir]=0;
     
     if (fgettr(*fpin,&tr)) {
-      /* tentative begin of next rec */
-      offtmp=ftello(*fpin);
-      
       /* at least one record, at least one trace in it - presumed
 	 not to exceed bounds for either! */
       (*nrec)++;
@@ -339,8 +333,10 @@ int traceserver_init(FILE ** fpin, char * fin,
       
       /* record ns for first trace, both as short and as int.*/
       ns=tr.ns;
+#ifdef IWAVE_USE_MPI
       ins=tr.ns;
-      
+#endif
+
       /* read scale information */
       gethdval(&tr,"scalco",&val);
       scalco = vtof(hdtype("scalco"),val);
@@ -434,8 +430,6 @@ int traceserver_init(FILE ** fpin, char * fin,
 	if (ds<tol) {
 	  /* found another trace in current record */
 	  ntr[ir]++;
-	  /* the following line added by D.S. 10.10.10 */
-	  offtmp=ftello(*fpin);
 	}
 	else {
 	  /* found first trace of next record */
@@ -455,16 +449,12 @@ int traceserver_init(FILE ** fpin, char * fin,
 #endif
 	  }
 
-	  //	  recoff[ir]=offtmp;
 	  recoff[ir]=recoff[ir-1]+ntr[ir-1]*(HDRBYTES+ns*sizeof(float));
 	  ntr[ir]=1;
 	  (*nrec)++;
 	  src[ir][0]=sz;
 	  src[ir][1]=sx;
 	  src[ir][2]=sy;
-	  /* tentative begin of next rec */
-	  /* comment out by D.S. 10.10.10 (REF L436) */
-	  /* offtmp=ftello(*fpin); */
 	}
 	/* set tracr, write trace to output */
 	tr.tracr=ntr[ir];
@@ -552,21 +542,20 @@ int traceserver_rec(int * irec,
 		    FILE * stream) {
   int err=0;
 
-  int lsize;         /* size of the local communicator */
   int lrank;         /* rank in the local communicator  */
 
 #ifdef IWAVE_USE_MPI
   MPI_Comm wcomm;    /* global communicator */
   MPI_Comm lcomm;    /* local communicator */
+  int lsize;         /* size of the local communicator */
 
   /* local variables for mpi info */
   wcomm=retrieveGlobalComm();
   lcomm=retrieveComm();
+  lsize=retrieveSize();
 #endif
 
   lrank=retrieveRank();
-  lsize=retrieveSize();
-
 
   /* only on rank 0  */
 
@@ -618,12 +607,9 @@ int traceserver_seek(FILE * fp,
 		     off_t * n) {
   int res=0;
 
-  int lrank;         /* rank in the local communicator  */
-
-  /* local variables for mpi info */
-  lrank=retrieveRank();
-
 #ifdef IWAVE_USE_MPI 
+  int lrank;         /* rank in the local communicator  */
+  lrank=retrieveRank();
   if (lrank==0)  {
 #endif
     res=fseeko(fp,*n,SEEK_SET);
@@ -641,19 +627,19 @@ int traceserver_get(FILE * fp,
 
   int err=0;
 
-  int lsize;         /* size of the local communicator */
   int lrank;         /* rank in the local communicator  */
 
 #ifdef IWAVE_USE_MPI
   MPI_Comm wcomm;    /* global communicator */
   MPI_Comm lcomm;    /* local communicator */
+  int lsize;         /* size of the local communicator */
 
   /* local variables for mpi info */
   wcomm=retrieveGlobalComm();
   lcomm=retrieveComm();
+  lsize=retrieveSize();
 #endif
   lrank=retrieveRank();
-  lsize=retrieveSize();
 
   if (lrank==0) {
 
@@ -686,18 +672,18 @@ int traceserver_put(FILE * fp,
 
   int err=0;
 
-  int lsize;         /* size of the local communicator */
   int lrank;         /* rank in the local communicator  */
 #ifdef IWAVE_USE_MPI
   MPI_Comm wcomm;    /* global communicator */
   MPI_Comm lcomm;    /* local communicator */
+  int lsize;         /* size of the local communicator */
 
   /* local variables for mpi info */
   wcomm=retrieveGlobalComm();
   lcomm=retrieveComm();
+  lsize=retrieveSize();
 #endif
   lrank=retrieveRank();
-  lsize=retrieveSize();
 
 #ifdef IWAVE_USE_MPI
 
@@ -979,13 +965,14 @@ int init_tracegeom(tracegeom * tg,
   int iend=1;                   /* endpoint code for splines (linear) */
   int err=0;                    /* error flag */
 
+#ifdef IWAVE_USE_MPI
   int rk=0;                     /* rank in local MPI comm */
-
   MPI_Comm wcomm;               /* global communicator */
   /******************* END LOCAL DECLARATIONS **********************/
 
-  rk=retrieveRank();
   wcomm=retrieveGlobalComm();
+  rk=retrieveRank();
+#endif
 
   /* sanity check */
   if (tg->nrec==0) {

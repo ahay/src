@@ -156,10 +156,11 @@ int spointsrc_init(SPOINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FI
   segy trdbg;               /* workspace for building output segy */
 	double q;
 
-  int rk, sz;
+  int rk;
 	
   /* MPI workspace */
 #ifdef IWAVE_USE_MPI
+  int sz = retrieveSize();
   MPI_Comm cm;
   ireal *procbuf;
 	
@@ -169,7 +170,6 @@ int spointsrc_init(SPOINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FI
 
   stream = retrieveOutstream();
   rk = retrieveRank();
-  sz = retrieveSize();
 
   /* assign default reference values */
   refvel   = CREF_DEF;

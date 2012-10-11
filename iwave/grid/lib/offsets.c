@@ -22,7 +22,6 @@ int get_array_offsets(off_t ** offs,
   /* storage for expansion coefficients */
   int idx[RARR_MAX_NDIM];
 
-  off_t a;
   off_t b;
 
   /********************
@@ -104,7 +103,6 @@ int get_array_offsets(off_t ** offs,
       idx[0]=k; /* should = 0 , since ploc[0]=1 ex def */
       (*offs)[j]=0;
       for (i=0;i<dim;i++) {
-	a=pglob[i];
 	b=(idx[i]+ls[i]-gs[i]);
 	(*offs)[j]+=pglob[i]*b;
 	/*	(*offs)[j]+=(idx[i]+ls[i]-gs[i])*pglob[i];*/
