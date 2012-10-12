@@ -422,9 +422,12 @@ int main (int argc, char* argv[]) {
 
     const int fullGatherNum = ip.yNum * ip.xNum;
 
+	int cigind = 1;
+
     for (int ipy = 0; ipy < ip.yNum; ++ipy) {
-	for (int ipx = 0; ipx < ip.xNum; ++ipx) {
-	    sf_warning ("gather %d of %d;", ipx + 1, fullGatherNum);	
+		for (int ipx = 0; ipx < ip.xNum; ++ipx, ++cigind) {
+
+	    sf_warning ("gather %d of %d;", cigind, fullGatherNum);	
 
 	    memset (mainGather,   0, dagSize * sizeof (float));
 	    memset (mainImage,    0, ip.zNum * sizeof (float));
