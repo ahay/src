@@ -67,8 +67,8 @@ Flow(   'reblended_688_985',
 	./${SOURCES[1]} delays=${SOURCES[2]}
 	''')
 
-print "Result blended_688_985"
-Result('reblended_688_985','blended_688_985',
+print "Result reblended_688_985"
+Result('reblended_688_985','reblended_688_985',
 	'grey title=reblended_688_985')
 	
 
