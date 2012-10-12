@@ -14,7 +14,7 @@ Output:
 */
 
 /*
-  Copyright (C) 2011 University of Texas at Austin
+  Copyright (C) 2012 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -149,17 +149,15 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
 
 	for (int iy = 0; iy < *curYapp; ++iy) {
 		
-		const int yShift = iy * xNum_ * dipyNum_ * dipxNum_;
 		const size_t startPos = (size_t) ((iy + startY) * xNum_ + startX) * dagSize_ * sizeof (float);
 
 		sf_seek (inDags_,   startPos, SEEK_SET);
 		sf_seek (inDagsSq_, startPos, SEEK_SET);
 
-		sf_floatread (ptrToDags_,   pointsNumToRead, inDags_);
-		sf_floatread (ptrToDagsSq_, pointsNumToRead, inDagsSq_);
+		const size_t shift = iy * pointsNumToRead;
 
-//		sf_floatread (ptrToData_,   pointsNumToRead, inDags_);
-//		sf_floatread (ptrToDataSq_, pointsNumToRead, inDagsSq_);
+		sf_floatread (ptrToDags_   + shift, pointsNumToRead, inDags_);
+		sf_floatread (ptrToDagsSq_ + shift, pointsNumToRead, inDagsSq_);
 	}
 /*
 
@@ -357,7 +355,7 @@ int main (int argc, char* argv[]) {
 
     if ( !sf_getint ("yapp",    &yapp_) )    yapp_ = 1;
     /* number of CIGs in the crossline-direction processed simultaneously */
-	if (!yapp_) {sf_warning ("xapp value is changed to 1"); yapp_ = 1;}
+	if (!yapp_) {sf_warning ("yapp value is changed to 1"); yapp_ = 1;}
 
     if ( !sf_getint ("dipappx",    &xdipapp_) ) xdipapp_ = 1;
     /* number of traces in the x-dip direction processed simultaneously */
