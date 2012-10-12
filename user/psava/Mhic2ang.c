@@ -316,8 +316,10 @@ int main(int argc, char* argv[])
     shared( nph,aph,ath,aps,ahy,ahx,aht,cip,ang,vep,ves,eps,dlt)
 #endif
 	for(iph=0;iph<nph;iph++) {
-	    phi=(sf_o(aph)+iph*sf_d(aph))/180.*SF_PI;
-	    
+	    phi=(180+sf_o(aph)+iph*sf_d(aph))/180.*SF_PI;
+	    /* use '180' to reverse illumination direction: */
+	    /* at a CIP, look toward the source */
+
 	    /* reflection azimuth vector */
 	    jk = rot3d(nn,aa,phi);
 	    qq = nor3d(&jk);
