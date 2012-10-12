@@ -150,52 +150,55 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
 	for (int iy = 0; iy < *curYapp; ++iy) {
 		
 		const size_t startPos = (size_t) ((iy + startY) * xNum_ + startX) * dagSize_ * sizeof (float);
-
+			
 		sf_seek (inDags_,   startPos, SEEK_SET);
 		sf_seek (inDagsSq_, startPos, SEEK_SET);
 
 		const size_t shift = iy * pointsNumToRead;
 
-		sf_floatread (ptrToDags_   + shift, pointsNumToRead, inDags_);
-		sf_floatread (ptrToDagsSq_ + shift, pointsNumToRead, inDagsSq_);
+		sf_floatread (ptrToData_   + shift, pointsNumToRead, inDags_);
+		sf_floatread (ptrToDataSq_ + shift, pointsNumToRead, inDagsSq_);
 	}
-/*
 
 	// substacking in the y-dip and x-dip directions
 	for (int iy = 0; iy < *curYapp; ++iy) {
-		const int yShift = iy * xNum_ * dipyNum_ * dipxNum_;
-	for (int ix = 0; ix < *curXapp; ++ix) {
-		const int xShift = ix * dipyNum_ * dipxNum_;
-		for (int idy = 0; idy < dipyNum_; ++idy) {
-			for (int idx = 0; idx < dipxNum_; ++idx) {
-				const int tracesShift = yShift + xShift + idy * dipxNum_ + idx;
-				float* ptrToTrace   = ptrToDags_ + tracesShift * zNum_;
-				float* ptrToTraceSq = ptrToDagsSq_ + tracesShift * zNum_;
+		const int yShift = iy * (*curXapp) * dipyNum_ * dipxNum_ * zNum_;
+		for (int ix = 0; ix < *curXapp; ++ix) {
+			const int xShift = ix * dipyNum_ * dipxNum_ * zNum_;
+			const size_t shiftToGather = yShift + xShift;
 
-				for (int idya = 0; idya < ydipapp_; ++idya) {		
-					int indy = idy - ydipapp_ / 2 + idya;
-					if (indy < 0 || indy >= dipyNum_) continue;		
-					for (int idxa = 0; idxa < xdipapp_; ++idxa) {		
-						int indx = idx - xdipapp_ / 2 + idxa;
-						if (indx < 0 || indx >= dipxNum_) continue;		
+			for (int idy = 0; idy < dipyNum_; ++idy) {
+				for (int idx = 0; idx < dipxNum_; ++idx) {
+					const size_t tracesShift = shiftToGather + (idy * dipxNum_ + idx) * zNum_;
+		
+					float* ptrToTrace   = ptrToDags_   + tracesShift;
+					float* ptrToTraceSq = ptrToDagsSq_ + tracesShift;
+
+					for (int idya = 0; idya < ydipapp_; ++idya) {		
+						int indy = idy - ydipapp_ / 2 + idya;
+						if (indy < 0 || indy >= dipyNum_) continue;		
+						for (int idxa = 0; idxa < xdipapp_; ++idxa) {		
+							int indx = idx - xdipapp_ / 2 + idxa;
+							if (indx < 0 || indx >= dipxNum_) continue;		
 			
-						const int dataShift = yShift + xShift + idya * dipxNum_ + idxa;
-						float* ptrFrom   = ptrToData_   + dataShift * zNum_;
-						float* ptrSqFrom = ptrToDataSq_ + dataShift * zNum_;
+							const size_t dataShift = shiftToGather + (indy * dipxNum_ + indx) * zNum_;
+							float* ptrFrom   = ptrToData_   + dataShift;
+							float* ptrSqFrom = ptrToDataSq_ + dataShift;
 
-						float* ptrTo     = ptrToTrace;
-						float* ptrSqTo   = ptrToTraceSq;
+							float* ptrTo     = ptrToTrace;
+							float* ptrSqTo   = ptrToTraceSq;
 
-						for (int iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
-							*ptrTo += *ptrFrom;
-							*ptrSqTo += *ptrSqFrom;
+							for (int iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
+								*ptrTo += *ptrFrom;
+								*ptrSqTo += *ptrSqFrom;
+							}
 						}
 					}
 				}
 			}
 		}
-	}}
-*/
+	}
+
 	return;
 }
 
@@ -269,7 +272,7 @@ void buildFilter (int curyapp, int bottomShift, int curxapp, int leftShift, floa
 			memset (stackGrid,   0, stackGridSize * sizeof (float));
 			memset (stackSqGrid, 0, stackGridSize * sizeof (float));
 
-			const int shiftInDag = (idy * dipxNum_ + idx) * zNum_;
+			const size_t shiftInDag = (idy * dipxNum_ + idx) * zNum_;
 		
 		    int tracesNum = 0;
 			for (int iy = 0; iy < curyapp; ++iy) {					
@@ -281,7 +284,7 @@ void buildFilter (int curyapp, int bottomShift, int curxapp, int leftShift, floa
 		   		    const float xDepthShift = xShift * tanxDipInRad;
 					const int xDepthShiftSamp = xDepthShift / zStep_;
 
-					const int dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize;
+					const size_t dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize;
 
 					float* ptrDataStack   = ptrToDags_   + dataShift;
 					float* ptrDataStackSq = ptrToDagsSq_ + dataShift;
@@ -357,17 +360,17 @@ int main (int argc, char* argv[]) {
     /* number of CIGs in the crossline-direction processed simultaneously */
 	if (!yapp_) {sf_warning ("yapp value is changed to 1"); yapp_ = 1;}
 
-    if ( !sf_getint ("dipappx",    &xdipapp_) ) xdipapp_ = 1;
+    if ( !sf_getint ("dipappx",    &xdipapp_) ) xdipapp_ = 11;
     /* number of traces in the x-dip direction processed simultaneously */
-	if (!xdipapp_) {sf_warning ("dipapp value is changed to 1"); xdipapp_ = 1;}
+	if (!xdipapp_) {sf_warning ("dipapp value is changed to 11"); xdipapp_ = 11;}
 
-    if ( !sf_getint ("dipappy",    &ydipapp_) ) ydipapp_ = 1;
+    if ( !sf_getint ("dipappy",    &ydipapp_) ) ydipapp_ = 11;
     /* number of traces in the y-dip direction processed simultaneously */
-	if (!xdipapp_) {sf_warning ("dipappy value is changed to 1"); ydipapp_ = 1;}
+	if (!xdipapp_) {sf_warning ("dipappy value is changed to 11"); ydipapp_ = 11;}
 
-    if ( !sf_getint ("coher",   &coher_) )   coher_ = 11;
+    if ( !sf_getint ("coher",   &coher_) ) coher_ = 11;
 	/* height of a vertical window for semblance calculation */
-	if (!coher_) {sf_warning ("coher value is changed to 1"); coher_ = 1;}
+	if (!coher_) {sf_warning ("coher value is changed to 11"); coher_ = 11;}
 
     if ( !sf_getint ("scatnum", &scatnum_) ) scatnum_ = 1;
 	/* shows how many traces were stacked in the scattering angle direction; 
@@ -380,7 +383,7 @@ int main (int argc, char* argv[]) {
 	halfYapp_  = yapp_ / 2;     // this is the integer division too	
 
 	const int cigNum = xNum_ * yNum_;
-	int cigInd = 0;
+	int cigInd = 1;
 
 	for (int iy = 0; iy < yNum_; ++iy) {
 		for (int ix = 0; ix < xNum_; ++ix, ++cigInd) {
