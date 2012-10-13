@@ -1,8 +1,8 @@
 from rsf.tex import *
 
-End(color='vp2d_5m dn2d_5m trace wtrace trace8k wtrace8k',
-    use='hyperref',
-    include='''
+End(color='vp1 dn1 trace wtrace trace8k wtrace8k',
+      use='hyperref',
+      include='''
               \\newcommand{\\du}{\\delta u}
               \\newcommand{\\dm}{\\delta m}
               \\newcommand{\\lu}{\\lambda u}
@@ -24,4 +24,5 @@ End(color='vp2d_5m dn2d_5m trace wtrace trace8k wtrace8k',
               \\newcommand{\\pp}{\\,+\\hspace{-0.1cm}+}
               \\newcommand{\\mm}{\\,-\\hspace{-0.1cm}-}
               ''')
+
 
