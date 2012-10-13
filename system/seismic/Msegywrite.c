@@ -165,17 +165,19 @@ int main(int argc, char *argv[])
     if (verbose) sf_warning("Expect %d traces",ntr);
 
     hdr = sf_input("tfile");
-    if (!sf_histint(hdr,"n1",&nk) || (SF_NKEYS != nk))
-	sf_error ("Need n1=%d keys in tfile",SF_NKEYS);
-    if (SF_NKEYS*ntr != sf_filesize(hdr))
+    if (!sf_histint(hdr,"n1",&nk) || (SF_NKEYS > nk))
+	sf_error ("Need at least n1=%d keys in tfile",SF_NKEYS);
+    if (nk*ntr != sf_filesize(hdr))
 	sf_error ("Wrong number of traces in tfile");
+    
+    segy_init(nk,hdr);
 
     trace = sf_charalloc (nsegy);
     ftrace = sf_floatalloc (ns);
-    itrace = sf_intalloc (SF_NKEYS); 
+    itrace = sf_intalloc (nk); 
 
     for (itr=0; itr < ntr; itr++) {
-	sf_intread(itrace,SF_NKEYS,hdr);	
+	sf_intread(itrace,nk,hdr);	
 	head2segy(trace, itrace, SF_NKEYS);
 	
 	if (suxdr) {

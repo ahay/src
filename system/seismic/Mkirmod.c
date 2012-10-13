@@ -246,21 +246,21 @@ int main(int argc, char* argv[])
     vel2 = (velocity) sf_alloc(1,sizeof(*vel2));
 
     if (!sf_getfloat("vel",&(vel->v0))) sf_error("Need vel=");
-    /*( vel velocity) */
+    /*( vel velocity )*/
     
     if (!sf_getfloat("gradx",&(vel->gx))) (vel->gx)=0.;
-    /*( gradz horizontal velocity gradient )*/
+    /*( gradx horizontal velocity gradient )*/
 
     if (!sf_getfloat("gradz",&(vel->gz))) (vel->gz)=0.;
     /*( gradz vertical velocity gradient )*/
 
     if (!sf_getfloat("velz",&(vel->vz))) (vel->vz)=vel->v0;
-    /* vertical velocity (for anisotropy) */
+    /*( velz vertical velocity for VTI anisotropy )*/
     if (!sf_getfloat("eta",&(vel->n))) (vel->n)=0.;
-    /* eta (for anisotropy) */
+    /*( eta parameter for VTI anisotropy )*/
 
     type = sf_getstring("type");
-    /* type of velocity ('c': constant, 's': linear sloth, 'v': linear velocity, 'a': VTI anisotropy) */
+    /*( type of velocity, 'c': constant, 's': linear sloth, 'v': linear velocity, 'a': VTI anisotropy )*/
     if (NULL==type) {
 	type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
     } else if ((vel->gx)==0. && (vel->gz)==0. && (vel->n)==0.) {
@@ -281,18 +281,20 @@ int main(int argc, char* argv[])
     /* 2-D or 2.5-D */
 	
     if (!sf_getfloat("refx",&(vel->x0))) (vel->x0)=x0;
+    /*( refx reference x-coordinate for velocity )*/
     if (!sf_getfloat("refz",&(vel->z0))) (vel->z0)=0.;
-    /* reference coordinates for velocity */
+    /*( refz reference z-coordinate for velocity )*/
 
     if (!sf_getfloat("vel2",&(vel2->v0))) (vel2->v0)=(vel->v0);
-    /* converted velocity */
+    /*( vel2 converted velocity )*/
     
     if (!sf_getfloat("gradx2",&(vel2->gx))) (vel2->gx)=(vel->gx);
+     /*( gradx2 converted velocity, horizontal gradient )*/
     if (!sf_getfloat("gradz2",&(vel2->gz))) (vel2->gz)=(vel->gz);
-    /* converted velocity gradient */
+    /*( gradz2 converted velocity, vertical gradient )*/
 
     type2 = sf_getstring("type2");
-    /* type of the receiver side branch */
+    /*( type2 type of velocity for the receiver side branch )*/
     if (NULL==type2) {	
 	type2=type;
     } else if ((vel2->gx)==0. && (vel2->gz)==0. && (vel2->n)==0.) {
