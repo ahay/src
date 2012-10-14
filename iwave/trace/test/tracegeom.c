@@ -1,6 +1,6 @@
 #include <traceio.h>
 
-#define HDRFILE "test/hdr.su"
+#define HDRFILE "testsrc/tracegeom/hdr.su"
 
 char ** xargv;
 
@@ -32,6 +32,12 @@ int main(int argc, char ** argv) {
   n[2]=1;
 
   /* construct trace geometry object */
+  char * cmd = (char *)usermalloc_(512*sizeof(char));
+  memset(cmd,'\0',512);
+  strcpy(cmd,"sunull nt=1501 ntr=301 dt=0.002 | sushw key=sx a=3300 c=0 j=301| sushw key=gx a=100 b=20 j=301 | sushw key=delrt a=0| sushw key=selev a=-40 | sushw key=gelev a=-20 > ");
+  strcat(cmd,HDRFILE);
+  system(cmd);
+  userfree_(cmd);
   if (err=construct_tracegeom(&tg,HDRFILE,HDRFILE,SRC_TOL,stderr)) {
     fprintf(stderr,"Error from construct_tracegeom, err=%d\n",err);
     exit(1);
