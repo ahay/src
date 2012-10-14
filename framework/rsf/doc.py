@@ -620,7 +620,7 @@ DocCmd: %s
             wiki = ''
         contents = heading(name,'#ffffff','#7799ee',
                            '<a href="./index.html">index</a><br>'+
-                           '<a href="%s/%s?view=markup">%s</a>%s' %
+                           '<a href="%s/%s">%s</a>%s' %
                            (rep,self.file,self.file,wiki))
         if self.desc:
             contents += self.desc
