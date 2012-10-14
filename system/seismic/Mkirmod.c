@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
     /*( eta parameter for VTI anisotropy )*/
 
     type = sf_getstring("type");
-    /*( type of velocity, 'c': constant, 's': linear sloth, 'v': linear velocity, 'a': VTI anisotropy )*/
+    /* type of velocity, 'c': constant, 's': linear sloth, 'v': linear velocity, 'a': VTI anisotropy */
     if (NULL==type) {
 	type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
     } else if ((vel->gx)==0. && (vel->gz)==0. && (vel->n)==0.) {
@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
     /*( gradz2 converted velocity, vertical gradient )*/
 
     type2 = sf_getstring("type2");
-    /*( type2 type of velocity for the receiver side branch )*/
+    /* type of velocity for the converted (receiver side) branch */
     if (NULL==type2) {	
 	type2=type;
     } else if ((vel2->gx)==0. && (vel2->gz)==0. && (vel2->n)==0.) {

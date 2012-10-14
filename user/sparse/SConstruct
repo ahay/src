@@ -24,9 +24,10 @@ env.Prepend(CPPPATH=['../../include'],
 
 if sparselibs:
     env.Prepend(LIBS=sparselibs)
-
-    for source in src:
-        inc = env.RSF_Include(source,prefix='')
+    
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    if sparselibs:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
 

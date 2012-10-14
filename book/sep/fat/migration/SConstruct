@@ -18,7 +18,7 @@ for file in raw:
 # convert files to RSF and update headers
     Flow(fileOut,file,'''dd form=native | 
         scale rscale=.001 | put
-        label1=Depth label2=Position unit1=km unit2=km
+        label1=Depth label2=Distance unit1=km unit2=km
         d1=%f d2=%f''' % (d,d))
 
 # plotting section
@@ -29,6 +29,14 @@ for file in raw:
         barreverse=y''' % t)
 
 Result('vel','marmvel marmsmooth','OverUnderAniso')
+
+Flow('ref','marmvel',
+     '''
+     depth2time velocity=$SOURCE nt=3501 dt=0.001 |
+     ai2refl |
+     ricker1 frequency=20 |
+     time2depth velocity=$SOURCE
+     ''')
 
 # Marmousi
 ##########
@@ -124,14 +132,14 @@ Result('mig0','dmig0',
        '''
        window f2=%d n2=%d |
        grey title=Standard screenht=7 screenwd=13
-       labelsz=5 titlesz=7 label2=Position pclip=96.5
+       labelsz=5 titlesz=7 label2=Distance pclip=96.5
        ''' % (xmin/dx,(xmax-xmin)/dx+1))
 
 Plot('zoom0','dmig0',
      '''
      window n1=251 f1=500 n2=751 f2=1250 |
      grey title=Standard screenratio=0.7
-     labelsz=5 titlesz=7 label2=Position pclip=90
+     labelsz=5 titlesz=7 label2=Distance pclip=90
      ''')
 
 
@@ -239,14 +247,14 @@ Result('mig1','dmig1',
        '''
        window f2=%d n2=%d |
        grey title="Recursive 1 step" screenht=7 screenwd=13
-       labelsz=5 titlesz=7 label2=Position pclip=96.5
+       labelsz=5 titlesz=7 label2=Distance pclip=96.5
        ''' % (xmin/dx,(xmax-xmin)/dx+1))
 
 Plot('zoom1','dmig1',
      '''
      window n1=251 f1=500 n2=751 f2=1250 |
      grey title="Redatum 1 step" screenratio=0.7 
-     labelsz=5 titlesz=7 label2=Position pclip=90
+     labelsz=5 titlesz=7 label2=Distance pclip=90
      ''')
 
 #############
@@ -375,17 +383,24 @@ Result('mig2','dmig2',
        '''
        window f2=%d n2=%d |
        grey title="Recursive 3 steps" screenht=7 screenwd=13
-       labelsz=5 titlesz=7 label2=Position pclip=96.5
+       labelsz=5 titlesz=7 label2=Distance pclip=96.5
        ''' % (xmin/dx,(xmax-xmin)/dx+1))
 
 Plot('zoom2','dmig2',
      '''
      window n1=251 f1=500 n2=751 f2=1250 |
      grey title="Redatum 3 steps" screenratio=0.7
-     labelsz=5 titlesz=7 label2=Position pclip=90     
+     labelsz=5 titlesz=7 label2=Distance pclip=90     
+     ''')
+
+Plot('rzoom','ref',
+     '''
+     window n1=251 f1=500 n2=751 f2=1250 |
+     grey title=Reflectivity screenratio=0.7
+     labelsz=5 titlesz=7 label2=Distance pclip=90     
      ''')
 
 # zoom
-Result('targref','zoom zoom0 zoom1 zoom2','TwoRows')
+Result('targref','zoom rzoom zoom1 zoom2','TwoRows')
 
 End()
