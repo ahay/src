@@ -1,6 +1,6 @@
 #include <traceio.h>
 
-#define HDRFILE "testsrc/tracegeom/hdr.su"
+#define HDRFILE "test/tracegeom/hdr.su"
 
 char ** xargv;
 
