@@ -45,7 +45,49 @@ Reproducibility is important.
 
 \section{History of the Madagascar project}
 
+The history of reproducible research in applied geophysics goes back
+to the work of Jon Claerbout at Stanford University
+\cite[]{cise}. While working on the manuscript of a book
+\footnote{published later as \cite[]{pvi}}, Claerbout had what he
+described as a ``eureka'' moment \cite[]{Claerbout.sep.67.139}:
+\begin{quote}
+My third textbook on earth soundings analysis consists of about 300
+pages, 120 figures, and listings of 40 terse subroutines. The
+subroutines were used in preparing the figures. Each of the figure
+captions contains a one-word name for the figure. Behind the visible
+book are plot files for each figure as well as main programs and
+command scripts (makefiles) that I used to make each figure. I
+suddenly realized that I had all the materials needed by any reader or
+student to recreate my work. This would give a tremendous boost to
+anyone wishing to go beyond me.
+\end{quote}
+A that moment, he had a vision of computational reproducibility
+achieved ... Cake to make ... CiSE article ... CD-Rom to Web...
+
+The work of Claerbout inspired other research groups, most notably the
+lab of David Donoho... Claerbout's principle...
+
+However, the computational environment for reproducible experiments
+created by Claerbout and his students at the Stanford Exploration
+Project (SEP) did not spread to the rest of the geophysical
+community. Part of the reason was the complexity of the tools used to
+implement it: an accumulation of make rules, Perl scripts, Unix shell
+scripts, etc. The Madagascar project started in 2003 as an attempt to
+reimplement the functionality of the SEP environment and to make it
+accessible to other users in an open-source form.
+
+Madagascar was released under a GPL license and publicly announced in
+June 2006 at the workshop ``Open Source E&P Software – Putting the
+Pieces Together'' organized by the European Association of
+Geoscientists and Engineers (EAGE). ... version 1.0 ... number of
+developers ... number of papers ... 
+
+.... Madagascar schools ...
+
 \section{Madagascar approach to reproducibility}
+
+Describe how scons - scons lock - scons test works. Generating papers
+for the website...
 
 \section{Example}
 
@@ -398,6 +440,12 @@ model.
 
 \section{Lessons learned}
 
+Over 20 years of experience with reproducible research in geophysical
+applications taught us several important lessons. Whether you use
+Madagascar in your research or you prefer other tools to implement
+computational reproducibility, we hope that you can learn from our
+lessons to improve the experience.
+
 \subsection{``The principal beneficiary is the author.''}
 
 \subsection{Each computation is a test.}
@@ -408,3 +456,17 @@ model.
 
 \section{Conclusions}
 
+... again about the importance of reproducibility ... history
+... lessons ...
+
+While the goal and purpose for reproducible research in computational
+science are clearly defined, the tools used to implement
+reproducibility in practice are constantly evolving. The Madagascar
+project provides some of the tools that can be used today but awaits
+new, more powerful or more convenient tools, that might be available
+tomorrow.
+
+In particular ... wish list ...
+
+\bibliographystyle{seg}
+\bibliography{mad}
