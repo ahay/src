@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, mint;
     const char *type, *type2;
-    bool twod, verb, adj, lin, cmp;
+    bool twod, verb, adj, lin, cmp, absoff;
     surface inc, ref;
     velocity vel, vel2;
     ktable ts, tg, **tss, **tgs;
@@ -70,6 +70,9 @@ int main(int argc, char* argv[])
     if (!sf_histint  (curv,"n2",&nc)) nc=1; /* number of reflectors */
     nxc = nx*nc;
     
+    if (!sf_getbool("absoff",&absoff)) absoff=false;
+    /* y - h0 is not in shot coordinate system */
+
     /*** Initialize trace ***/
     
     if (adj) {
@@ -322,14 +325,14 @@ int main(int argc, char* argv[])
     
     if (cmp && !adj) sf_putint(modl,"CDPtype",1);
 
-    inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp);
+    inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp, absoff);
     if (strcmp(type,type2) ||
 	(vel2->v0) != (vel->v0) || 
 	(vel2->gz) != (vel->gz) ||
 	(vel2->gx) != (vel->gx) ||
 	(vel2->z0) != (vel->z0) ||
 	(vel2->x0) != (vel->x0)) {
-	ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp);
+	ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc, cmp, absoff);
     } else {
 	ref = inc;
     }

@@ -65,7 +65,8 @@ surface kirmod2_init(int ns,  float s0,  float ds  /* source/midpoint axis */,
 		     int nh,  float h0,  float dh  /* offset axis */,
 		     int nx1, float x01, float dx1 /* reflector axis */,
 		     int nc1                       /* number of reflectors */,
-                     bool cmp                      /* if CMP instead of shot gather */)
+                     bool cmp                      /* if CMP instead of shot gather */,
+                     bool absoff                   /* use absolute offset */)
 /*< Initialize surface locations >*/ 
 {
     int is, ih, iy;
@@ -104,7 +105,7 @@ surface kirmod2_init(int ns,  float s0,  float ds  /* source/midpoint axis */,
 	    }
 	} else {
 	    for (ih=0; ih < nh; ih++, yi++) {
-		yi->x = s + h0 + ih*dh;
+		yi->x = absoff ? h0 + ih*dh : s + h0 + ih*dh;
 		yi->is = is;
 		yi->ih = ih;
 	    }
