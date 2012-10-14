@@ -358,4 +358,11 @@ In programs:
 No release notes for 1.0 or before
 
 ==About this document==
-This document is found both as a wiki page at http://m8r.info/wiki/Release_Notes , and under source version control (SVN) at https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/NEWS.txt . The SVN version is the definitive one. Before a release, the content of the latest section of the wiki page and that of the corresponding part of NEWS.txt should be reconciled.
+
+This document is found both as a wiki page at
+http://www.ahay.org/wiki/Release_Notes , and under source version
+control (SVN) at
+http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/NEWS.txt . The SVN
+version is the definitive one. Before a release, the content of the
+latest section of the wiki page and that of the corresponding part of
+NEWS.txt should be reconciled.
