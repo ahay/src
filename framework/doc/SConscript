@@ -34,7 +34,7 @@ if not repository:
     else:
         repository = 'branches/madagascar-%s' % version
     
-    repository =  'http://rsf.svn.sourceforge.net/viewvc/rsf/'+repository
+    repository = 'http://sourceforge.net/p/rsf/code/HEAD/tree/'+repository 
 
 docs = map(lambda x: os.path.join('..','rsf',x),
            Split('sfdoc doc.py prog.py use.py'))
