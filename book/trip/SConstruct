@@ -3,11 +3,11 @@ from rsf.book import *
 Papers(copyr='Rice University',
        group='The Rice Inversion Project',
        papers=Split('''
-       iwave/demo.tex
+       iwave
        '''),
-       authors = {'iwave-demo':'William Symes'},
+       authors = {'iwave':'William Symes'},
        line='Selected papers',
-       fig=('iwave/demo1','wtrace','width=\\textwidth'))
+       fig=('iwave/data','wtrace','width=\\textwidth'))
        
 End(use='hyperref',
     include=r'''
