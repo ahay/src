@@ -317,7 +317,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-
+	
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
 	for (its=0; its < uts; its++) {
 	    (void) umfpack_zl_free_numeric (&Numeric[its]);
@@ -333,7 +333,7 @@ int main(int argc, char* argv[])
     }
 
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(mts) private(j,i,its)
+#pragma omp parallel for num_threads(uts) private(j,i,its)
     for (ih=-nh; ih < nh+1; ih++) {
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {

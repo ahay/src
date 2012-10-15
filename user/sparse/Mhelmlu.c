@@ -20,6 +20,10 @@
 #include <rsf.h>
 #include <umfpack.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "fdprep.h"
 
 int main(int argc, char* argv[])
@@ -29,15 +33,17 @@ int main(int argc, char* argv[])
     SuiteSparse_long n, nz, *Ti, *Tj;
     float d1, d2, **v, eps, ds, os, dw, ow;
     double omega, *Tx, *Tz;
-    SuiteSparse_long status, *Ap, *Ai, *Map;
-    double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
-    void *Symbolic, *Numeric;
-    double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
-    sf_complex **f;
+    SuiteSparse_long *Ap, *Ai, *Map;
+    double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
+    void *Symbolic, **Numeric;
+    double Control[UMFPACK_CONTROL];
+    sf_complex ***f;
     char *datapath, *insert, *append;
     size_t srclen, inslen;
     sf_file in, out, source;
- 
+    int uts, its, mts;
+    sf_timer timer;
+
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
@@ -45,6 +51,11 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
     
+    if (verb)
+	timer = sf_timer_init();
+    else
+	timer = NULL;
+
     if (!sf_getbool("save",&save)) save=false;
     /* save LU */
 
@@ -60,6 +71,18 @@ int main(int argc, char* argv[])
 	insert = NULL;
 	append = NULL;
     }
+
+    if (!sf_getint("uts",&uts)) uts=0;
+    /* number of OMP threads */
+
+#ifdef _OPENMP
+    mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
+
+    uts = (uts < 1)? mts: uts;
+    if (verb) sf_warning("Using %d out of %d threads.",uts,mts);
 
     if (!sf_getbool("hermite",&hermite)) hermite=false;
     /* Hermite operator */
@@ -93,7 +116,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(source,"d4",&dw)) sf_error("No dw=.");
     if (!sf_histfloat(source,"o4",&ow)) sf_error("No ow=.");
 
-    f = sf_complexalloc2(n1,n2);
+    f = sf_complexalloc3(n1,n2,ns);
 
     /* write output header */
     sf_settype(out,SF_COMPLEX);
@@ -134,10 +157,19 @@ int main(int argc, char* argv[])
 	Ap = NULL; Ai = NULL; Map = NULL; Ax = NULL; Az = NULL;
     }
     
-    Bx = (double*) sf_alloc(n,sizeof(double));
-    Bz = (double*) sf_alloc(n,sizeof(double));
-    Xx = (double*) sf_alloc(n,sizeof(double));
-    Xz = (double*) sf_alloc(n,sizeof(double));
+    Bx = (double**) sf_alloc(uts,sizeof(double*));
+    Bz = (double**) sf_alloc(uts,sizeof(double*));
+    Xx = (double**) sf_alloc(uts,sizeof(double*));
+    Xz = (double**) sf_alloc(uts,sizeof(double*));
+
+    for (its=0; its < uts; its++) {
+	Bx[its] = (double*) sf_alloc(n,sizeof(double));
+	Bz[its] = (double*) sf_alloc(n,sizeof(double));
+	Xx[its] = (double*) sf_alloc(n,sizeof(double));
+	Xz[its] = (double*) sf_alloc(n,sizeof(double));
+    }
+
+    Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
     /* turn off iterative refinement */
     umfpack_zl_defaults (Control);
@@ -147,7 +179,10 @@ int main(int argc, char* argv[])
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
 
-	if (verb) sf_warning("Frequency %d of %d.",iw+1,nw);
+	if (verb) {
+	    sf_warning("Frequency %d of %d.",iw+1,nw);
+	    sf_timer_start(timer);
+	}
 
 	/* LU file (append _lu* after velocity file) */
 	if (save || load) {
@@ -168,47 +203,76 @@ int main(int argc, char* argv[])
 		   npml, pad1, pad2, n, nz, 
 		   Ti, Tj, Tx, Tz);
 	    
-	    status = umfpack_zl_triplet_to_col (n, n, nz, 
-						Ti, Tj, Tx, Tz, 
-						Ap, Ai, Ax, Az, Map);
+	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
+					      Ti, Tj, Tx, Tz, 
+					      Ap, Ai, Ax, Az, Map);
 	    
 	    /* LU */
-	    status = umfpack_zl_symbolic (n, n, 
-					  Ap, Ai, Ax, Az, 
-					  &Symbolic, Control, Info);
+	    (void) umfpack_zl_symbolic (n, n, 
+					Ap, Ai, Ax, Az, 
+					&Symbolic, Control, NULL);
 	    
-	    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
-					 Symbolic, &Numeric, 
-					 Control, Info);
+	    (void) umfpack_zl_numeric (Ap, Ai, Ax, Az, 
+				       Symbolic, &Numeric[0], 
+				       Control, NULL);
 	    
 	    /* save Numeric */
-	    if (save) status = umfpack_zl_save_numeric (Numeric, append);
+#ifdef _OPENMP
+	    (void) umfpack_zl_save_numeric (Numeric[0], append);
+	    
+	    for (its=1; its < uts; its++) {
+		(void) umfpack_zl_load_numeric (&Numeric[its], append);
+	    }
+	    
+	    (void) remove (append);
+#else
+	    if (save) (void) umfpack_zl_save_numeric (Numeric[0], append);
+#endif
 	} else {
 	    /* load Numeric */
-	    status = umfpack_zl_load_numeric (&Numeric, append);
+	    for (its=0; its < uts; its++) {
+		(void) umfpack_zl_load_numeric (&Numeric[its], append);
+	    }
 	}
 
 	if (save || load) free(append);
 
-	/* loop over shots */
-	for (is=0; is < ns; is++) {
-	    sf_complexread(f[0],n1*n2,source);
+	/* read source */
+	sf_complexread(f[0][0],n1*n2*ns,source);
 
-	    fdpad(npml,pad1,pad2, f,Bx,Bz);
+	/* loop over shots */
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(uts) private(its)
+#endif
+	for (is=0; is < ns; is++) {
+#ifdef _OPENMP
+	    its = omp_get_thread_num();
+#else
+	    its = 0;
+#endif
+
+	    fdpad(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
 			
-	    status = umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
-				       NULL, NULL, NULL, NULL, 
-				       Xx, Xz, Bx, Bz, 
-				       Numeric, Control, Info);
+	    (void) umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
+				     NULL, NULL, NULL, NULL, 
+				     Xx[its], Xz[its], Bx[its], Bz[its], 
+				     Numeric[its], Control, NULL);	    
 	    
-	    
-	    fdcut(npml,pad1,pad2, f,Xx,Xz);
-	    
-	    sf_complexwrite(f[0],n1*n2,out);
+	    fdcut(npml,pad1,pad2, f[is],Xx[its],Xz[its]);
 	}
 
+	/* write wavefields */
+	sf_complexwrite(f[0][0],n1*n2*ns,out);
+
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
-	(void) umfpack_zl_free_numeric (&Numeric);
+	for (its=0; its < uts; its++) {
+	    (void) umfpack_zl_free_numeric (&Numeric[its]);
+	}
+
+	if (verb) {
+	    sf_timer_stop (timer);
+	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+	}
     }
 
     exit(0);
