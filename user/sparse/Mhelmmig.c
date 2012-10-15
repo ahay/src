@@ -32,16 +32,18 @@ int main(int argc, char* argv[])
     int npw, npml, pad1, pad2, n1, n2; 
     int ih, nh, is, ns, iw, nw, i, j;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float eps, d1, d2, **vel, ***image, dw, ow;
+    float eps, d1, d2, **vel, ****image, dw, ow;
     double omega, *Tx, *Tz;
-    SuiteSparse_long status, *Ap, *Ai, *Map;
-    double *Ax, *Az, *Xx, *Xz, *Bx, *Bz;
-    void *Symbolic, *Numeric;
-    double Control[UMFPACK_CONTROL], Info[UMFPACK_INFO];
+    SuiteSparse_long *Ap, *Ai, *Map;
+    double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
+    void *Symbolic, **Numeric;
+    double Control[UMFPACK_CONTROL];
     sf_complex ***srce, ***recv;
     char *datapath, *insert, *append;
     size_t srclen, inslen;
     sf_file in, out, source, data, us, ur;
+    int uts, its, mts;
+    sf_timer timer;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -49,6 +51,11 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
+
+    if (verb)
+	timer = sf_timer_init();
+    else
+	timer = NULL;
 
     if (!sf_getbool("save",&save)) save=false;
     /* save LU */
@@ -65,6 +72,18 @@ int main(int argc, char* argv[])
 	insert = NULL;
 	append = NULL;
     }
+
+    if (!sf_getint("uts",&uts)) uts=0;
+    /* number of OMP threads */
+
+#ifdef _OPENMP
+    mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
+
+    uts = (uts < 1)? mts: uts;
+    if (verb) sf_warning("Using %d out of %d threads.",uts,mts);
 
     if (!sf_getint("nh",&nh)) nh=0;
     /* horizontal space-lag */
@@ -167,13 +186,24 @@ int main(int argc, char* argv[])
 	Ti = NULL; Tj = NULL; Tx = NULL; Tz = NULL; 
 	Ap = NULL; Ai = NULL; Map = NULL; Ax = NULL; Az = NULL;
     }
+    
+    Bx = (double**) sf_alloc(uts,sizeof(double*));
+    Bz = (double**) sf_alloc(uts,sizeof(double*));
+    Xx = (double**) sf_alloc(uts,sizeof(double*));
+    Xz = (double**) sf_alloc(uts,sizeof(double*));
 
-    Bx = (double*) sf_alloc(n,sizeof(double));
-    Bz = (double*) sf_alloc(n,sizeof(double));
-    Xx = (double*) sf_alloc(n,sizeof(double));
-    Xz = (double*) sf_alloc(n,sizeof(double));
+    image = (float****) sf_alloc(uts,sizeof(float***));
 
-    image = sf_floatalloc3(n1,n2,2*nh+1);
+    for (its=0; its < uts; its++) {
+	Bx[its] = (double*) sf_alloc(n,sizeof(double));
+	Bz[its] = (double*) sf_alloc(n,sizeof(double));
+	Xx[its] = (double*) sf_alloc(n,sizeof(double));
+	Xz[its] = (double*) sf_alloc(n,sizeof(double));
+
+	image[its] = sf_floatalloc3(n1,n2,2*nh+1);
+    }
+    
+    Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
     /* turn off iterative refinement */
     umfpack_zl_defaults (Control);
@@ -183,7 +213,10 @@ int main(int argc, char* argv[])
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
 
-	if (verb) sf_warning("Frequency %d of %d.",iw+1,nw);
+	if (verb) {
+	    sf_warning("Frequency %d of %d.",iw+1,nw);
+	    sf_timer_start(timer);
+	}
 
 	/* LU file (append _lu* after velocity file) */
 	if (save || load) {
@@ -203,81 +236,116 @@ int main(int argc, char* argv[])
 		   n1, n2, d1, d2, vel,
 		   npml, pad1, pad2, n, nz, 
 		   Ti, Tj, Tx, Tz);
-	    
-	    status = umfpack_zl_triplet_to_col (n, n, nz, 
-						Ti, Tj, Tx, Tz, 
-						Ap, Ai, Ax, Az, Map);
-	    
-	    /* LU */
-	    status = umfpack_zl_symbolic (n, n, 
-					  Ap, Ai, Ax, Az, 
-					  &Symbolic, Control, Info);
-	    
-	    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
-					 Symbolic, &Numeric, 
-					 Control, Info);
 
+	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
+					      Ti, Tj, Tx, Tz, 
+					      Ap, Ai, Ax, Az, Map);	    
+
+	    /* LU */
+	    (void) umfpack_zl_symbolic (n, n, 
+					Ap, Ai, Ax, Az, 
+					&Symbolic, Control, NULL);
+	    
+	    (void) umfpack_zl_numeric (Ap, Ai, Ax, Az, 
+				       Symbolic, &Numeric[0], 
+				       Control, NULL);
+	    
 	    /* save Numeric */
-	    if (save) status = umfpack_zl_save_numeric (Numeric, append);
+#ifdef _OPENMP
+	    (void) umfpack_zl_save_numeric (Numeric[0], append);
+	    
+	    for (its=1; its < uts; its++) {
+		(void) umfpack_zl_load_numeric (&Numeric[its], append);
+	    }
+	    
+	    (void) remove (append);
+#else
+	    if (save) (void) umfpack_zl_save_numeric (Numeric[0], append);
+#endif
 	} else {
 	    /* load Numeric */
-	    status = umfpack_zl_load_numeric (&Numeric, append);
+	    for (its=0; its < uts; its++) {
+		(void) umfpack_zl_load_numeric (&Numeric[its], append);
+	    }
 	}
 	
 	if (save || load) free(append);
 
+	/* read source and data */
+	sf_complexread(srce[0][0],n1*n2*ns,source);
+	sf_complexread(recv[0][0],n1*n2*ns,data);
+
 	/* loop over shots */
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(uts) private(its,ih,j,i)
+#endif
 	for (is=0; is < ns; is++) {
+#ifdef _OPENMP
+	    its = omp_get_thread_num();
+#else
+	    its = 0;
+#endif
 
 	    /* source wavefield */
-	    sf_complexread(srce[is][0],n1*n2,source);
+	    fdpad(npml,pad1,pad2, srce[is],Bx[its],Bz[its]);
 
-	    fdpad(npml,pad1,pad2, srce[is],Bx,Bz);
+	    (void) umfpack_zl_solve (UMFPACK_A, 
+				     NULL, NULL, NULL, NULL, 
+				     Xx[its], Xz[its], Bx[its], Bz[its], 
+				     Numeric[its], Control, NULL);
 
-	    status = umfpack_zl_solve (UMFPACK_A, 
-				       NULL, NULL, NULL, NULL, 
-				       Xx, Xz, Bx, Bz, 
-				       Numeric, Control, Info);
-
-	    fdcut(npml,pad1,pad2, srce[is],Xx,Xz);
+	    fdcut(npml,pad1,pad2, srce[is],Xx[its],Xz[its]);
 
 	    /* receiver wavefield */
-	    sf_complexread(recv[is][0],n1*n2,data);
+	    fdpad(npml,pad1,pad2, recv[is],Bx[its],Bz[its]);
 
-	    fdpad(npml,pad1,pad2, recv[is],Bx,Bz);
+	    (void) umfpack_zl_solve (UMFPACK_At, 
+				     NULL, NULL, NULL, NULL, 
+				     Xx[its], Xz[its], Bx[its], Bz[its], 
+				     Numeric[its], Control, NULL);
 
-	    status = umfpack_zl_solve (UMFPACK_At, 
-				       NULL, NULL, NULL, NULL, 
-				       Xx, Xz, Bx, Bz, 
-				       Numeric, Control, Info);
+	    fdcut(npml,pad1,pad2, recv[is],Xx[its],Xz[its]);
 
-	    fdcut(npml,pad1,pad2, recv[is],Xx,Xz);
-	}
-
-	if (us != NULL) sf_complexwrite(srce[0][0],n1*n2*ns,us);
-	if (ur != NULL) sf_complexwrite(recv[0][0],n1*n2*ns,ur);
-
-	/* imaging condition */
-#ifdef _OPENMP    
-#pragma omp parallel for private(is,j,i)
-#endif
-	for (ih=-nh; ih < nh+1; ih++) {
-	    for (is=0; is < ns; is++) {
+	    /* imaging condition */
+	    for (ih=-nh; ih < nh+1; ih++) {
 		for (j=0; j < n2; j++) {
 		    for (i=0; i < n1; i++) {
 			if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
-			    image[ih+nh][j][i] += creal(conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
+			    image[its][ih+nh][j][i] += creal(conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
 			}
 		    }
 		}
 	    }
 	}
-	
+
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
-	(void) umfpack_zl_free_numeric (&Numeric);
+	for (its=0; its < uts; its++) {
+	    (void) umfpack_zl_free_numeric (&Numeric[its]);
+	}
+
+	if (verb) {
+	    sf_timer_stop (timer);
+	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+	}
+
+	if (us != NULL) sf_complexwrite(srce[0][0],n1*n2*ns,us);
+	if (ur != NULL) sf_complexwrite(recv[0][0],n1*n2*ns,ur);
     }
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(mts) private(j,i,its)
+    for (ih=-nh; ih < nh+1; ih++) {
+	for (j=0; j < n2; j++) {
+	    for (i=0; i < n1; i++) {
+		for (its=1; its < uts; its++) {
+		    image[0][ih+nh][j][i] += image[its][ih+nh][j][i];
+		}
+	    }
+	}
+    }
+#endif
     
-    sf_floatwrite(image[0][0],n1*n2*(2*nh+1),out);
+    sf_floatwrite(image[0][0][0],n1*n2*(2*nh+1),out);
     
     exit(0);
 }
