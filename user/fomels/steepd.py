@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-'Conjugate-gradient method'
+'Steepest-descent method'
 
 ##   Copyright (C) 2008 University of Texas at Austin
 ##  
@@ -19,27 +19,20 @@
 
 import rsf.api as rsf
 
-def conjgrad(oper,dat,x0,niter):
-    'Conjugate-gradient algorithm for minimizing |oper x - dat|^2'
+def steepd(oper,dat,x0,niter):
+    'Steepest-gradient algorithm for minimizing |oper x - dat|^2'
     x = x0
     R = oper(adj=0)[x]-dat      
     for iter in range(niter):
         g = oper(adj=1)[R]
         G = oper(adj=0)[g]
-        gn = g.dot(g)
-        print "iter %d: %g" % (iter+1,gn)
-        if 0==iter:
-            s = g
-            S = G
-        else:
-            alpha = gn/gnp
-            s = g+s*alpha
-            S = G+S*alpha
-        gnp = gn
-        beta = S.dot(S)
-        alpha = -gn/beta
-        x = x+s*alpha
-        R = R+S*alpha
+        RG = R.dot(G)
+        print "iter %d: %g" % (iter+1,RG)
+
+        alpha = - RG/G.dot(G)
+
+        x = x+g*alpha
+        R = R+G*alpha
     return x
 
 if __name__ == "__main__":
@@ -54,14 +47,8 @@ if __name__ == "__main__":
     # matrix multiplication operator
     matmult = rsf.matmult(mat=matrix)
 
-    # Using sfconjgrad
-    x = rsf.conjgrad(mod=x0,niter=6)[y,matmult]
-    y1 = matmult[x]
-    print x[:]
-    print y1[:]
-
     # Using function above
-    x = conjgrad(matmult,y,x0,6)
+    x = steepd(matmult,y,x0,100)
     y2 = matmult[x]
     print x[:]
     print y2[:]
