@@ -75,9 +75,6 @@ int main(int argc, char** argv)
     int npk;
     par.get("npk",npk,20); // maximum rank
 
-    int outputs;
-    par.get("outputs",outputs,3); // number of outputs (2 or 3)
-
     iRSF in;
     oRSF out;
 
@@ -114,19 +111,13 @@ int main(int argc, char** argv)
     CpxNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
 
-    CpxNumMat tmp1(m,n2);
-    iC( zgemm(1.0, lmat, mid, 0.0, tmp1) );
+    CpxNumMat lmat2(m,n2);
+    iC( zgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    if (outputs > 2) {
-	output("mid",mid);
-	output("left",lmat);
-    } else {
-	output("left",tmp1);
-    }
-
+    output("left",lmat2);
     output("right",rmat);
 
-    iC( zgemm(1.0, tmp1, rmat, 0.0, mat) );
+    iC( zgemm(1.0, lmat2, rmat, 0.0, mat) );
     
     for (int k=0; k < m*n; k++) 
 	fdata[k] = sf_cmplx(real(data[k]),imag(data[k]));
