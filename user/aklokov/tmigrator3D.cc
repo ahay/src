@@ -4,7 +4,9 @@
 #include <algorithm>
 #include "curveDefinerBase.hh"
 #include "curveDefinerDipOffset.hh"
-
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 using namespace std;
 
 TimeMigrator3D::TimeMigrator3D () {
@@ -51,8 +53,10 @@ void TimeMigrator3D::processGather (Point2D& curGatherCoords, float curOffset, c
 			float* ptrImageSq = curoffsetImageSq;
 
 			const float dummy = 0.f;
-
-		    for (int it = 0; it < tNum; ++it, ++ptrGather, ++ptrImage, ++ptrImageSq) {
+#ifdef _OPENMP 
+#pragma omp parallel for
+#endif
+		    for (int it = 0; it < tNum; ++it) {
 				const float curTime = tStart + it * tStep;
 				const float migVel = this->getMigVel (velTrace, curTime);
 				if (migVel < 1e-3) continue;
@@ -62,9 +66,11 @@ void TimeMigrator3D::processGather (Point2D& curGatherCoords, float curOffset, c
 	    		if (badRes)
 	    			sample = this->getSampleByRay (yCIG, xCIG, curTime, curSDip, curDip, migVel, isAzDip, dummy, dummy);
 	
-				*ptrGather += sample;
-				*ptrImage += sample;
-				*ptrImageSq += sample * sample;
+				const int gInd = it + (idy * dipNum + idx) * tNum;
+				ptrGather[gInd] += sample;
+
+				ptrImage[it] += sample;
+				ptrImageSq[it] += sample * sample;
 		    }
 		}
 	}	
