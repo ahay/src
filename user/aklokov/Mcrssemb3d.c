@@ -173,7 +173,9 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
 		for (int ix = 0; ix < *curXapp; ++ix) {
 			const int xShift = ix * dipyNum_ * dipxNum_ * zNum_;
 			const size_t shiftToGather = yShift + xShift;
-
+#ifdef _OPENMP 
+#pragma omp parallel for
+#endif
 			for (int idy = 0; idy < dipyNum_; ++idy) {
 				for (int idx = 0; idx < dipxNum_; ++idx) {
 					const size_t tracesShift = shiftToGather + (idy * dipxNum_ + idx) * zNum_;
@@ -214,8 +216,8 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
     double sumOutput, sumInput;
     int im, it;
 
-    const int targetZNum     = zNum_; 
-	const int zNumFull    = 2 * halfCoher_ + zNum_;
+    const int targetZNum = zNum_; 
+	const int zNumFull   = 2 * halfCoher_ + zNum_;
 
 	float stackVal   = 0.f;
 	float stackSqVal = 0.f;
@@ -309,8 +311,10 @@ void buildFilter (int curyapp, int bottomShift, int curxapp, int leftShift, floa
 
 	float* ptrToSembTrace = ptrToSembPanel;
 	const float CONVRATIO = M_PI / 180.f;
-
+		
+#ifdef _OPENMP 
 #pragma omp parallel for
+#endif
 	for (int idy = 0; idy < dipyNum_; ++idy) {
 		const float curyDip = dipyStart_ + idy * dipyStep_;
 		const float curyDipInRad = curyDip * CONVRATIO;
