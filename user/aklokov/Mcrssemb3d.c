@@ -86,6 +86,10 @@ int yapp_;                  // number of CIGs in the crossline-direction process
 int halfYapp_;              // half of the "yapp"
 int ydipapp_;               // number of traces in the y-dip direction processed simultaneously
 
+int	dipNum;
+int	dagSize;
+int fullSampNumber;
+
 // FUNCTIONS
 
 // Check if the point with its surounding is inside data volume;
@@ -221,9 +225,6 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
     memset (traceSumOutput, 0, zNumFull * sizeof (float));   
     memset (traceSumInput,  0, zNumFull * sizeof (float));   
 
-#ifdef _OPENMP 
-#pragma omp parallel for
-#endif
 	for (it = 0; it < targetZNum; ++it) {
 		const int trInd = it + halfCoher_;
         for (im = 0; im < gathersNum; ++im){
@@ -236,9 +237,7 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
 		}
 		traceSumOutput[trInd] *= traceSumOutput[trInd];
 	}
-#ifdef _OPENMP 
-#pragma omp parallel for
-#endif
+
     for (int it = 0; it < targetZNum; ++it) {
         sumOutput = 0.f;
         sumInput  = 0.f;
@@ -256,66 +255,75 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
     return;
 }
 
+void getTaperTrace (int curyapp, int bottomShift, int curxapp, int leftShift,
+					float tanyDipInRad, float tanxDipInRad, size_t shiftInDag, float* ptrTaper) {
+
+	const int stackGridSize = curyapp * curxapp * fullSampNumber;
+
+	float* stackGrid   = sf_floatalloc (stackGridSize);
+	float* stackSqGrid = sf_floatalloc (stackGridSize);
+	memset (stackGrid,   0, stackGridSize * sizeof (float));
+	memset (stackSqGrid, 0, stackGridSize * sizeof (float));
+
+
+    int tracesNum = 0;
+	for (int iy = 0; iy < curyapp; ++iy) {					
+		const float yShift = (iy - bottomShift) * yStep_;
+	    const float yDepthShift = yShift * tanyDipInRad;
+		const int yDepthShiftSamp = yDepthShift / zStep_;
+		for (int ix = 0; ix < curxapp; ++ix) {		
+			const float xShift = (ix - leftShift) * xStep_;
+   		    const float xDepthShift = xShift * tanxDipInRad;
+			const int xDepthShiftSamp = xDepthShift / zStep_;
+
+			const size_t dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize;
+
+			float* ptrDataStack   = ptrToDags_   + dataShift;
+			float* ptrDataStackSq = ptrToDagsSq_ + dataShift;
+
+			const int stackShift = tracesNum * zNum_;
+		
+			float* ptrStackGrid   = stackGrid + stackShift;
+			float* ptrStackSqGrid = stackSqGrid + stackShift;
+
+			int zInd = -yDepthShiftSamp - xDepthShiftSamp;
+		
+			for (int iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
+				if (zInd < 0 || zInd >= zNum_) continue;
+				*(ptrStackGrid) = *(ptrDataStack + zInd);
+				*(ptrStackSqGrid) = *(ptrDataStackSq + zInd);
+			}		
+			++tracesNum;
+		}
+	}
+
+	getSemblanceForTrace (tracesNum, stackGrid, stackSqGrid, ptrTaper);  
+
+	free (stackGrid);
+	free (stackSqGrid);
+
+	return;
+}
+
 void buildFilter (int curyapp, int bottomShift, int curxapp, int leftShift, float* ptrToSembPanel) {
 
-	const int fullSampNumber = 2 * halfCoher_ + zNum_;
-	const int dipNum = dipyNum_ * dipxNum_;
-	const int dagSize = dipNum * zNum_;
-	const int stackGridSize = curyapp * curxapp * fullSampNumber;
-	const float CONVRATIO = M_PI / 180.f;
-	
 	float* ptrToSembTrace = ptrToSembPanel;
+	const float CONVRATIO = M_PI / 180.f;
 
+#pragma omp parallel for
 	for (int idy = 0; idy < dipyNum_; ++idy) {
 		const float curyDip = dipyStart_ + idy * dipyStep_;
 		const float curyDipInRad = curyDip * CONVRATIO;
 		const float tanyDipInRad = tan (curyDipInRad);
-		for (int idx = 0; idx < dipxNum_; ++idx, ptrToSembTrace += zNum_) {
+		for (int idx = 0; idx < dipxNum_; ++idx) {
 			const float curxDip = dipxStart_ + idx * dipxStep_;
 			const float curxDipInRad = curxDip * CONVRATIO;
 			const float tanxDipInRad = tan (curxDipInRad);
-	
-			float* stackGrid   = sf_floatalloc (stackGridSize);
-			float* stackSqGrid = sf_floatalloc (stackGridSize);
-			memset (stackGrid,   0, stackGridSize * sizeof (float));
-			memset (stackSqGrid, 0, stackGridSize * sizeof (float));
 
-			const size_t shiftInDag = (idy * dipxNum_ + idx) * zNum_;
-		
-		    int tracesNum = 0;
-			for (int iy = 0; iy < curyapp; ++iy) {					
-				const float yShift = (iy - bottomShift) * yStep_;
-	   		    const float yDepthShift = yShift * tanyDipInRad;
-				const int yDepthShiftSamp = yDepthShift / zStep_;
-				for (int ix = 0; ix < curxapp; ++ix) {		
-					const float xShift = (ix - leftShift) * xStep_;
-		   		    const float xDepthShift = xShift * tanxDipInRad;
-					const int xDepthShiftSamp = xDepthShift / zStep_;
-
-					const size_t dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize;
-
-					float* ptrDataStack   = ptrToDags_   + dataShift;
-					float* ptrDataStackSq = ptrToDagsSq_ + dataShift;
-
-					const int stackShift = tracesNum * zNum_;
-		
-					float* ptrStackGrid   = stackGrid + stackShift;
-					float* ptrStackSqGrid = stackSqGrid + stackShift;
-
-					int zInd = -yDepthShiftSamp - xDepthShiftSamp;
-				
-					for (int iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
-						if (zInd < 0 || zInd >= zNum_) continue;
-						*ptrStackGrid = *(ptrDataStack + zInd);
-						*ptrStackSqGrid = *(ptrDataStackSq + zInd);
-					}		
-					++tracesNum;
-				}
-			}
-			getSemblanceForTrace (tracesNum, stackGrid, stackSqGrid, ptrToSembTrace);  
-
-			free (stackGrid);
-			free (stackSqGrid);
+			ptrToSembTrace = ptrToSembPanel + (idy * dipxNum_ + idx) * zNum_;	
+			size_t shiftInDag = (idy * dipxNum_ + idx) * zNum_;
+			getTaperTrace (curyapp, bottomShift, curxapp, leftShift, 
+						   tanyDipInRad, tanxDipInRad, shiftInDag, ptrToSembTrace);
 		}
 	}
 
@@ -389,6 +397,10 @@ int main (int argc, char* argv[]) {
 	halfCoher_ = coher_ / 2;    // yes - this is the integer division	
 	halfXapp_  = xapp_ / 2;     // this is the integer division too	
 	halfYapp_  = yapp_ / 2;     // this is the integer division too	
+
+	fullSampNumber = 2 * halfCoher_ + zNum_;
+	dipNum = dipyNum_ * dipxNum_;
+	dagSize = dipNum * zNum_;
 
 	const int cigNum = xNum_ * yNum_;
 	int cigInd = 1;
