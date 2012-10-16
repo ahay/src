@@ -19,21 +19,29 @@
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "iwioper.h"
 
 int main(int argc, char* argv[])
 {
-    bool adj, load;
+    bool verb, adj, load;
     int npw, n1, n2; 
     int nh, ns, nw;
     float eps, d1, d2, **vel, dw, ow;
     float *di, *dm, ***wght;
     char *datapath;
     sf_file in, out, model, us, ur, weight;
+    int uts, mts;
 
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");    
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
@@ -43,7 +51,19 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("load",&load)) load=false;
     /* load LU */
-        
+
+    if (!sf_getint("uts",&uts)) uts=0;
+    /* number of OMP threads */
+
+#ifdef _OPENMP
+    mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
+
+    uts = (uts < 1)? mts: uts;
+    if (verb) sf_warning("Using %d out of %d threads.",uts,mts);
+
     if (!sf_getint("npw",&npw)) npw=6;
     /* number of points per wave-length */
 
@@ -113,7 +133,7 @@ int main(int argc, char* argv[])
     
     /* initialize */
     iwi_init(npw,eps, n1,n2,d1,d2, nh,ns,ow,dw,nw,
-	     us,ur, load,datapath);
+	     us,ur, load,datapath, verb,uts);
 
     /* set velocity and weight */
     iwi_set(vel,wght);
