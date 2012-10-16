@@ -86,9 +86,7 @@ int yapp_;                  // number of CIGs in the crossline-direction process
 int halfYapp_;              // half of the "yapp"
 int ydipapp_;               // number of traces in the y-dip direction processed simultaneously
 
-int	dipNum;
-int	dagSize;
-int fullSampNumber;
+int fullSampNumber_;        // number of samples included semblance windows
 
 // FUNCTIONS
 
@@ -260,13 +258,12 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
 void getTaperTrace (int curyapp, int bottomShift, int curxapp, int leftShift,
 					float tanyDipInRad, float tanxDipInRad, size_t shiftInDag, float* ptrTaper) {
 
-	const int stackGridSize = curyapp * curxapp * fullSampNumber;
+	const int stackGridSize = curyapp * curxapp * fullSampNumber_;
 
 	float* stackGrid   = sf_floatalloc (stackGridSize);
 	float* stackSqGrid = sf_floatalloc (stackGridSize);
 	memset (stackGrid,   0, stackGridSize * sizeof (float));
 	memset (stackSqGrid, 0, stackGridSize * sizeof (float));
-
 
     int tracesNum = 0;
 	for (int iy = 0; iy < curyapp; ++iy) {					
@@ -278,7 +275,7 @@ void getTaperTrace (int curyapp, int bottomShift, int curxapp, int leftShift,
    		    const float xDepthShift = xShift * tanxDipInRad;
 			const int xDepthShiftSamp = xDepthShift / zStep_;
 
-			const size_t dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize;
+			const size_t dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize_;
 
 			float* ptrDataStack   = ptrToDags_   + dataShift;
 			float* ptrDataStackSq = ptrToDagsSq_ + dataShift;
@@ -397,14 +394,11 @@ int main (int argc, char* argv[]) {
 	   if the stack was normalized use the default value 
 	*/ 
 
-	dagSize_ = zNum_ * dipxNum_ * dipyNum_;
+	fullSampNumber_ = 2 * halfCoher_ + zNum_;
+	dagSize_   = zNum_ * dipxNum_ * dipyNum_;
 	halfCoher_ = coher_ / 2;    // yes - this is the integer division	
 	halfXapp_  = xapp_ / 2;     // this is the integer division too	
 	halfYapp_  = yapp_ / 2;     // this is the integer division too	
-
-	fullSampNumber = 2 * halfCoher_ + zNum_;
-	dipNum = dipyNum_ * dipxNum_;
-	dagSize = dipNum * zNum_;
 
 	const int cigNum = xNum_ * yNum_;
 	int cigInd = 1;
