@@ -32,6 +32,9 @@ Output:
 */
 
 #include <rsf.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 // VARIABLES
 
@@ -218,6 +221,9 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
     memset (traceSumOutput, 0, zNumFull * sizeof (float));   
     memset (traceSumInput,  0, zNumFull * sizeof (float));   
 
+#ifdef _OPENMP 
+#pragma omp parallel for
+#endif
 	for (it = 0; it < targetZNum; ++it) {
 		const int trInd = it + halfCoher_;
         for (im = 0; im < gathersNum; ++im){
@@ -230,7 +236,9 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
 		}
 		traceSumOutput[trInd] *= traceSumOutput[trInd];
 	}
- 
+#ifdef _OPENMP 
+#pragma omp parallel for
+#endif
     for (int it = 0; it < targetZNum; ++it) {
         sumOutput = 0.f;
         sumInput  = 0.f;
