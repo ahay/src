@@ -152,13 +152,15 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
 	return;
 }
 
-void getSemblanceForTrace (int gathersNum, int tracesNum, float* stack, float* stackSq, float* semb) {
+void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* semb) {
    
     double sumOutput, sumInput;
     int im, it;
 
     const int targetZNum     = zNum_; 
 	const int zNumFull    = 2 * halfCoher_ + zNum_;
+
+	const int k = tracesNum * scatnum_ * xdipapp_;
 
 	float stackVal   = 0.f;
 	float stackSqVal = 0.f;
@@ -170,7 +172,7 @@ void getSemblanceForTrace (int gathersNum, int tracesNum, float* stack, float* s
 
 	for (it = 0; it < targetZNum; ++it) {
 		const int trInd = it + halfCoher_;
-        for (im = 0; im < gathersNum; ++im){
+        for (im = 0; im < tracesNum; ++im){
 			const int ind = im * zNum_ + it;
 			stackVal   = stack[ind];
 			stackSqVal = stackSq[ind];
@@ -189,7 +191,7 @@ void getSemblanceForTrace (int gathersNum, int tracesNum, float* stack, float* s
 		    sumOutput += traceSumOutput[j];
 		    sumInput  += traceSumInput[j];
 		}
-		semb[it] = sumInput ? sumOutput / (tracesNum * sumInput) : 0.f;
+		semb[it] = sumInput ? sumOutput / (k * sumInput) : 0.f;
     }
 
     free (traceSumOutput);
@@ -243,7 +245,7 @@ void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) {
 			++tracesNum;
 		}
 
-		getSemblanceForTrace (curxapp, curxapp * scatnum_, stackGrid, stackSqGrid, ptrToSembTrace);  
+		getSemblanceForTrace (curxapp, stackGrid, stackSqGrid, ptrToSembTrace);  
 
 		free (stackGrid);
 		free (stackSqGrid);
