@@ -86,7 +86,11 @@ int yapp_;                  // number of CIGs in the crossline-direction process
 int halfYapp_;              // half of the "yapp"
 int ydipapp_;               // number of traces in the y-dip direction processed simultaneously
 
+int substackNum_;           // equals xdipapp_ * ydipapp_; should be taken into account by semblance calculation
+
 int fullSampNumber_;        // number of samples included semblance windows
+
+
 
 // FUNCTIONS
 
@@ -206,6 +210,8 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
 		}
 	}
 
+	substackNum_ = ydipapp_ * xdipapp_;
+
 	return;
 }
 
@@ -216,6 +222,8 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
 
     const int targetZNum = zNum_; 
 	const int zNumFull   = 2 * halfCoher_ + zNum_;
+		
+	const int k = gathersNum * scatnum_ * substackNum_;
 
 	float stackVal   = 0.f;
 	float stackSqVal = 0.f;
@@ -246,7 +254,7 @@ void getSemblanceForTrace (int gathersNum, float* stack, float* stackSq, float* 
 		    sumOutput += traceSumOutput[j];
 		    sumInput  += traceSumInput[j];
 		}
-		semb[it] = sumInput ? sumOutput / (gathersNum * scatnum_* sumInput) : 0.f;
+		semb[it] = sumInput ? sumOutput / (k * sumInput) : 0.f;
     }
 
     free (traceSumOutput);
