@@ -288,9 +288,9 @@ int main (int argc, char* argv[]) {
     /* number of CIGs in the inline-direction processed simultaneously */
 	if (!xapp_) {sf_warning ("xapp value is changed to 1"); xapp_ = 1;}
 
-    if ( !sf_getint ("dipapp",    &xdipapp_) ) xdipapp_ = 1;
+    if ( !sf_getint ("dipapp",    &xdipapp_) ) xdipapp_ = 11;
     /* number of traces in the x-dip direction processed simultaneously */
-	if (!xdipapp_) {sf_warning ("dipapp value is changed to 1"); xdipapp_ = 1;}
+	if (!xdipapp_) {sf_warning ("dipapp value is changed to 11"); xdipapp_ = 11;}
 
     if ( !sf_getint ("coher",   &coher_) )   coher_ = 11;
 	/* height of a vertical window for semblance calculation */
