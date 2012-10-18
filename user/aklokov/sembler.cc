@@ -7,7 +7,7 @@ Sembler::Sembler () {
 Sembler::~Sembler () {
 }
 
-void Sembler::getSemblanceForTrace (int tracesNum, float* data, float* dataSq, int zNum, int sembWindow, float* semb) {
+void Sembler::getSemblanceForTrace (int tracesNum, float* data, float* dataSq, int zNum, int sembWindow, float* semb, int k) {
    
 	const int halfWindow = sembWindow / 2;
 
@@ -33,7 +33,7 @@ void Sembler::getSemblanceForTrace (int tracesNum, float* data, float* dataSq, i
 		    sumOutput += traceSumOutput[j];
 		    sumInput  += traceSumInput[j];
 		}
-		semb[iz] = sumInput ? sumOutput / (tracesNum * sumInput) : 0.f;
+		semb[iz] = sumInput ? sumOutput / (tracesNum * k * sumInput) : 0.f;
     }
 
     delete traceSumOutput;

@@ -492,7 +492,7 @@ int main (int argc, char* argv[]) {
 
 	    if (rp.isSemb) {
 		float* sembTrace = sf_floatalloc (ip.zNum);
-		Sembler::getSemblanceForTrace (gp.dipNum * gp.sdipNum, mainImage, mainImageSq, ip.zNum, rp.sembWindow, sembTrace);
+		Sembler::getSemblanceForTrace (gp.dipNum * gp.sdipNum, mainImage, mainImageSq, ip.zNum, rp.sembWindow, sembTrace, rp.hMigNum);
 		size_t startInd = (ipx + ipy * ip.xNum) * sizeof(float);
 		size_t shift = startInd * ip.zNum;
 		sf_seek (sembFile, shift, SEEK_SET);
