@@ -139,6 +139,7 @@ int main (int argc, char* argv[])
 	ins[i] = sf_input(filename[i]);
     }
     out = sf_output ("out");
+    sf_fileflush(out,ins[0]);
     
     nbuf = sf_bufsiz(ins[0]);
     buf  = sf_charalloc(nbuf);
