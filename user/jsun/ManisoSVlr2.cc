@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static std::valarray<float>  vx, vz, q, t;
+static std::valarray<float>  vx, vz, vs, q, t;
 static std::valarray<double> kx, kz;
 static double dt;
 
@@ -34,15 +34,17 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,0.0);
+//    double itta,f,p1,p2,p3,r;
     for(int a=0; a<nr; a++) {
 	int i=rs[a];
 	double wx = vx[i]*vx[i];
 	double wz = vz[i]*vz[i];
+	double ws = vs[i]*vs[i];
 	double qq = q[i];
 	double tt = t[i];
 	double c = cos(tt);
 	double s = sin(tt);
-	
+
 	for(int b=0; b<nc; b++) {
 	    double x0 = kx[cs[b]];
 	    double z0 = kz[cs[b]];
@@ -50,11 +52,20 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    double x = x0*c+z0*s;
 	    double z = z0*c-x0*s;
 
-	    z = wz*z*z;
-	    x = wx*x*x;
-	    double r = x+z;
-	    r = r+sqrt(r*r-qq*x*z);
-	    r = sqrt(0.5*r);
+//	    z = wz*z*z;
+//	    x = wx*x*x;
+
+            double itta=qq/(8-2*qq);
+	    double f  = sqrt(wx*(wz-ws)/(2*itta)-wz*ws+ws*ws)-ws;
+	    double p1 = (wx+ws)*x*x+(wz+ws)*z*z;
+	    double p2 = (wx-ws)*x*x-(wz-ws)*z*z;
+	    double p3 = 4*(f+ws)*(f+ws)*x*x*z*z;
+	    double r  = sqrt(0.5*p1-0.5*sqrt(p2*p2+p3));
+
+
+//	    double r = x+z;
+//	    r = r+sqrt(r*r-qq*x*z);
+//	    r = sqrt(0.5*r);
 	    res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
@@ -79,7 +90,7 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    iRSF velz, velx("velx"), eta("eta"), theta("theta");
+    iRSF velz, velx("velx"), eta("eta"), theta("theta"), vels("vels");
 
     int nz,nx;
     velz.get("n1",nz);
@@ -88,11 +99,13 @@ int main(int argc, char** argv)
 
     vx.resize(m);
     vz.resize(m);
+    vs.resize(m);
     q.resize(m);
     t.resize(m);
 
     velx >> vx;
     velz >> vz;
+    vels >> vs;
     eta >> q;
     theta >> t;
 
@@ -101,7 +114,7 @@ int main(int argc, char** argv)
 	q[im] = 8*q[im]/(1.0+2*q[im]);
     }
 
-    /* fram degrees to radians */
+    /* from degrees to radians */
     for (int im=0; im < m; im++) {
 	t[im] *= SF_PI/180.;
     }
