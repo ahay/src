@@ -1,6 +1,5 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-
 import math
 ## 
  # mapping from polar to Cartesian coordinates
@@ -42,12 +41,16 @@ def p2c(pol,car,cco):
 # ------------------------------------------------------------
 def ovl(ovl,jc,jr,custom,cco):
 
+    print "OVL"
+
     min=cco['o']
     max=cco['o']+(cco['n']-1)*cco['d']
 
     # circles
     for ic in range(jc,int((cco['n']-1)/2*cco['d']+jc),jc):
         ctag='%02d'%ic
+
+        print ctag
 
         Flow(ovl+'_cx'+ctag,None,
              'math n1=%d d1=%g o1=%g output="%g*cos(3.1415*x1/180)"'
@@ -71,9 +74,9 @@ def ovl(ovl,jc,jr,custom,cco):
              ''' %(min,max,min,max,
                    custom))
 
-        Plot(ovl+ctag+'l',None,
+        Plot(ovl+ctag+'l',ovl+ctag,
              'box x0=%g y0=%g label="%s\^o\_" xt=%g yt=%g lab_fat=1 lab_color=3 boxit=n'%
-             ((5.6+2.75*ic/90.),(5.1-2.75*ic/90.),"%s"%ic,0,0))
+             ((5.6+2.75*ic/90.),(5.1-2.75*ic/90.),"%s"%ic,0,0),stdin=0)
 
     # radii
     for ir in range(0,360,jr):
