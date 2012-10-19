@@ -532,21 +532,47 @@ def dipping(cc,intercept,slope,par):
          ''', stdin=0)
 
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
-    Temp(cc+'_',None,
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+
+    Flow(cc,None,
          '''
-         math output=1
-         n1=%d d1=%g o1=%g
-         n2=%d d2=%g o2=%g
-         ''' % (nz,dz,oz,
-		nx,dx,ox) )
-    Temp(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
-    Temp(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
-    Flow(cc,[cc+'_x',cc+'_z'],
+         %smath output=1 n1=%d o1=%g d1=%g n2=%d o2=%g d2=%g >%s datapath=%s/;
+         '''%(M8R,nz,oz,dz,nx,ox,dx,cco,DPT) +
          '''
-         cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
-         ''',stdin=0)
+         %smath <%s output="x1" | put n1=%d n2=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx,ccz,DPT) +
+         '''
+         %smath <%s output="x2" | put n1=%d n2=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx,ccx,DPT) +
+         '''
+         %scat axis=2 space=n %s %s | transp >${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''     
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
+
+        #    Temp(cc+'_',None,
+        #         '''
+        #         math output=1
+        #         n1=%d d1=%g o1=%g
+        #         n2=%d d2=%g o2=%g
+        #         ''' % (nz,dz,oz,
+        #		nx,dx,ox) )
+        #    Temp(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
+        #    Temp(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
+        #    Flow(cc,[cc+'_x',cc+'_z'],
+        #         '''
+        #         cat axis=2 space=n
+        #         ${SOURCES[0]} ${SOURCES[1]} | transp |
+        #	 put label1="" unit1="" label2="" unit2=""
+        #         ''',stdin=0)
 
 def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
     Temp(cc+'_',None,
@@ -567,9 +593,6 @@ def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
          ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
          put label1="" unit1="" label2="" unit2="" label3="" unit3=""
          ''',stdin=0)
-
-
-
 
 #
 # distribute random locations within a defined box 
