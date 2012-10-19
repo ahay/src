@@ -106,20 +106,20 @@ def ovl(ovl,jc,jr,custom,cco):
              ''' %(min,max,min,max,
                    custom))
 
-    Plot(ovl+'-ann000',ovl,
+    Plot(ovl+'-ann000',ovl+'000',
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
          (9.65,5,"0\^o\_",0,0),stdin=0)
-    Plot(ovl+'-ann090',ovl,
+    Plot(ovl+'-ann090',ovl+'000',
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
          (5.55,9.25,"90\^o\_",0,0),stdin=0)
-    Plot(ovl+'-ann180',ovl,
+    Plot(ovl+'-ann180',ovl+'000',
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
          (1.2,5,"180\^o\_",0,0),stdin=0)
-    Plot(ovl+'-ann270',ovl,
+    Plot(ovl+'-ann270',ovl+'000',
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
          (5.5,1,"270\^o\_",0,0),stdin=0)
 
-    Plot(ovl+'-center',ovl,
+    Plot(ovl+'-center',ovl+'000',
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
          (5.6,5.10,"0",0,0),stdin=0)
     
