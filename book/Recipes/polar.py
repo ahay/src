@@ -106,22 +106,22 @@ def ovl(ovl,jc,jr,custom,cco):
              ''' %(min,max,min,max,
                    custom))
 
-    Plot(ovl+'-ann000',None,
+    Plot(ovl+'-ann000',ovl,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (9.65,5,"0\^o\_",0,0))
-    Plot(ovl+'-ann090',None,
+         (9.65,5,"0\^o\_",0,0),stdin=0)
+    Plot(ovl+'-ann090',ovl,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (5.55,9.25,"90\^o\_",0,0))
-    Plot(ovl+'-ann180',None,
+         (5.55,9.25,"90\^o\_",0,0),stdin=0)
+    Plot(ovl+'-ann180',ovl,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (1.2,5,"180\^o\_",0,0))
-    Plot(ovl+'-ann270',None,
+         (1.2,5,"180\^o\_",0,0),stdin=0)
+    Plot(ovl+'-ann270',ovl,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (5.5,1,"270\^o\_",0,0))
+         (5.5,1,"270\^o\_",0,0),stdin=0)
 
-    Plot(ovl+'-center',None,
+    Plot(ovl+'-center',ovl,
          'box x0=%g y0=%g label="%s" xt=%g yt=%g lab_fat=1 boxit=n'%
-         (5.6,5.10,"0",0,0))
+         (5.6,5.10,"0",0,0),stdin=0)
     
     Plot(ovl,
          map(lambda x: ovl+'%02d' % x,range(jc,int((cco['n']-1)/2*cco['d']+jc),jc))+
