@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-dispelem
+dispelem diff
 '''
 
 try: # distributed version
