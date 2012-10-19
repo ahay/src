@@ -41,16 +41,12 @@ def p2c(pol,car,cco):
 # ------------------------------------------------------------
 def ovl(ovl,jc,jr,custom,cco):
 
-    print "OVL"
-
     min=cco['o']
     max=cco['o']+(cco['n']-1)*cco['d']
 
     # circles
     for ic in range(jc,int((cco['n']-1)/2*cco['d']+jc),jc):
         ctag='%02d'%ic
-
-        print ctag
 
         Flow(ovl+'_cx'+ctag,None,
              'math n1=%d d1=%g o1=%g output="%g*cos(3.1415*x1/180)"'
