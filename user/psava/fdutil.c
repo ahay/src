@@ -596,12 +596,12 @@ void lint2d_inject(float**uu,
     int   ia;
     float wa;
 
-#ifdef _OPENMP
-#pragma omp parallel for \
-    schedule(dynamic,1) \
-    private(ia,wa) \
-    shared(ca,ww,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for		\*/
+/*    schedule(dynamic,1)			\*/
+/*    private(ia,wa)				\*/
+/*    shared(ca,ww,uu)*/
+/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 	wa = ww[ia];
 	
@@ -621,9 +621,9 @@ void lint3d_inject(float***uu,
     int   ia;
     float wa;
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ia,wa) shared(ca,ww,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for schedule(dynamic,1) private(ia,wa) shared(ca,ww,uu)*/
+/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 	wa = ww[ia];
 	
@@ -646,9 +646,9 @@ void lint2d_inject1(float**uu,
 {
     int   ia;
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)*/
+/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 
 	uu[ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w00[ia];
@@ -666,9 +666,9 @@ void lint3d_inject1(float***uu,
 {
     int   ia;
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)*/
+/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 
 	uu[ ca->jy[ia]   ][ ca->jx[ia]   ][ ca->jz[ia]   ] += ww * ca->w000[ia];
@@ -690,9 +690,9 @@ void lint2d_extract(float**uu,
 {
     int ia;
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)*/
+/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 	dd[ia] =
 	    uu[ ca->jx[ia]  ][ ca->jz[ia]  ] * ca->w00[ia] +
@@ -709,9 +709,9 @@ void lint3d_extract(float***uu,
 {
     int ia;
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)
-#endif
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,dd,uu)*/
+/*#endif*/
     for (ia=0;ia<ca->n;ia++) {
 	dd[ia] =
 	    uu[ ca->jy[ia]  ][ ca->jx[ia]  ][ ca->jz[ia]  ] * ca->w000[ia] +
