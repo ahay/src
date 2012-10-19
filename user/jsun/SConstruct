@@ -1,0 +1,60 @@
+import os, sys, re, string
+sys.path.append('../../framework')
+import bldutil
+
+progs = ''
+
+ccprogs = 'anisoSVlr2'
+
+pyprogs = ''
+pymods = ''
+
+libsrc = 'apfilt dijkstra predict predk pwd pwdsl repeat2 seislet'
+
+try:  # distributed version
+    Import('env root pkgdir bindir libdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../lexing/SConstruct')
+
+src = Glob('[a-z]*.c')
+
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'])
+
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    libs.insert(0,fftw)
+
+for source in src:
+    inc = env.RSF_Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
+
+mains = Split(progs)
+for prog in mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
+           map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
+           map(lambda prog: env.Doc(prog,'_' + prog),['byte2tif','tif2byte']) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+    env.Depends(docs,'#/framework/rsf/doc.py')	
+
+    doc = env.RSF_Docmerge(main,docs)
+    env.Install(pkgdir,doc)
