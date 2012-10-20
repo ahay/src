@@ -6,6 +6,7 @@ Cody Brown <cbrown@eos.ubc.ca>
 Yihua Cai <caiyihua@gmail.com>
 Maria Cameron <kourkina@earthlink.net>
 Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
+Yangkang Chen <chenyk1990@gmail.com>
 Zhonghuan Chen <isaacthu@gmail.com>
 Jiubing Cheng <cjb1206@tongji.edu.cn>
 Joseph Dellinger <geojoe@freeusp.org>
