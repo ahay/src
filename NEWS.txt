@@ -53,6 +53,7 @@ To programs:
 * user/chengjb: new contributor (Jiubing Cheng)
 * retired su2rsf and segy2rsf to avoid code duplication with suread
   and segyread
+* user/jsun: new contributor (Junzhe Sun)
 
 ===Bug fixes===
 
