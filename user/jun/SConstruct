@@ -33,13 +33,17 @@ if 'f90' in api and F90:
     elif F90base == 'ifort':
         env.Append(F90FLAGS=' -module ${SOURCE.dir}')
 
-    for prog in mains:
-        sources = ['M' + prog]
-        bldutil.depends90(env,sources,'M'+prog)
+for prog in mains:
+    sources = ['M' + prog]
 
+    if 'f90' in api and F90:
+        bldutil.depends90(env,sources,'M'+prog)
         prog = env.Program(prog,map(lambda x: x + '.f90',sources))
-        if root:
-            env.Install(bindir,prog)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='F90')
+        
+    if root:
+        env.Install(bindir,prog)
 
 ######################################################################
 # SELF-DOCUMENTATION
