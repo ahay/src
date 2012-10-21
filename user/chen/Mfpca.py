@@ -42,7 +42,7 @@ nd=len(nn)
 n1 = nn[-1]
 n2 = nn[-2]
 n3 = 1
-for id in range(-nd:-3):
+for id in range(-nd,-3):
 	n3 = n3 * nn[id]	
 
 
