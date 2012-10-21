@@ -1,4 +1,4 @@
-// Lowrank decomposition for 2-D anisotropic wave propagation using exact SV phase velocity. 
+// Lowrank decomposition for 2-D anisotropic wave propagation using exact P phase velocity. 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    double p1 = (wx+ws)*x*x+(wz+ws)*z*z;
 	    double p2 = (wx-ws)*x*x-(wz-ws)*z*z;
 	    double p3 = 4*(f+ws)*(f+ws)*x*x*z*z;
-	    double r  = sqrt(0.5*p1-0.5*sqrt(p2*p2+p3));
+	    double r  = sqrt(0.5*p1+0.5*sqrt(p2*p2+p3));
 
 
 //	    double r = x+z;

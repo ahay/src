@@ -4,12 +4,11 @@ import bldutil
 
 progs = ''
 
-ccprogs = 'anisoSVlr2'
+ccprogs = 'anisoSVlr2 anisoEPlr2'
 
 pyprogs = ''
 pymods = ''
 
-libsrc = 'apfilt dijkstra predict predk pwd pwdsl repeat2 seislet'
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
@@ -60,6 +59,7 @@ for prog in ccmains:
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
+
 if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
@@ -67,6 +67,5 @@ if root:
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
            map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) 
     env.Depends(docs,'#/framework/rsf/doc.py')	
-
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
