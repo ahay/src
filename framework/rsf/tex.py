@@ -89,6 +89,7 @@ ismplot = re.compile(r'^[^%]*\\multiplot\*?\s*(?:\[[\!htbp]+\])?' \
 issmplot = re.compile(r'^[^%]*\\sidemultiplot\*?\s*(?:\[[\!htbp]+\])?' \
                      '\{[^\}]+\}\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
+isanim = re.compile(r'^[^%]*\\animategraphics\s*(\[[^\]]*\])?\{([0-9]+)\}\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 linput = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
 chdir = re.compile(r'[^%]*\\inputdir\s*\{([^\}]+)')
@@ -182,12 +183,21 @@ def latexscan(node,env,path):
                      if re.search('angle=90',line):
                          plotoption[plot+pssuffix] = '-flip r90'
 
-
             check = isfig.search(line)
             if check:
                  plot = check.group(2)
                  if plot[-len(ressuffix):] != ressuffix:
                      plot = plot + ressuffix
+                 plots.append(plot)
+
+            check = isanim.search(line)
+            if check:
+                 plot = check.group(3)
+                 if plot[-len(ressuffix):] != ressuffix:
+                     plotoption[plot+pssuffix] = ' cropshift=y'
+                     plot = plot + ressuffix
+                 else:
+                     plotoption[plot[-len(ressuffix):]+pssuffix] = ' cropshift=y'
                  plots.append(plot)
   
         inp.close()
@@ -405,10 +415,11 @@ hiresfigs = []
 
 def pstexpen(target=None,source=None,env=None):
     "Convert vplot to EPS"
-    global colorfigs, geomanuscript
+    global colorfigs, geomanuscript, plotoption
 
     vpl = str(source[0])
     eps = str(target[0])
+    ploption = plotoption.get(eps,'')
 
     if vpl[-len(pssuffix):]==pssuffix:
         try:
@@ -431,6 +442,8 @@ def pstexpen(target=None,source=None,env=None):
                 options += ' serifs=n'
             elif slides:
                 options += ' fat=2 txscale=1.25'
+            if ploption:
+                options += ploption
             vpconvert.convert(vpl,eps,'eps',None,options)
         except:
             sys.stderr.write('vpconvert failed\n')

@@ -122,8 +122,12 @@ def convert(vpl,out,format,pen,args,verb=True):
         args += ' type=%s' % format
 
     if format == 'eps':
+        crshift = False
+        if args.find('cropshift=y') != -1:
+           crshift = True;
         rsf.vplot2eps.convert(vpl,out,
-                              options='color=n fat=1 fatmult=1.5 ' + args)
+                              options='color=n fat=1 fatmult=1.5 ' + args,
+                              cropshift=crshift)
     elif format == 'png' and pen == 'ps':
         rsf.vplot2png.convert(vpl,out,
                               options='color=y fat=1 fatmult=1.5 ' + args)

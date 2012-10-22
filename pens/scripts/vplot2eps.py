@@ -27,7 +27,8 @@ def convert(vplot,eps,
             psborder=0.1,
             ppi=72,                     # points per inch resolution
             xbmin=None, xbmax=None,     # options to override default bounding box
-            ybmin=None, ybmax=None
+            ybmin=None, ybmax=None,
+            cropshift=False
             ):
     "Convert vplot to EPS"
     
@@ -74,9 +75,24 @@ def convert(vplot,eps,
     name = tempfile.mktemp()
     command = pspen + ' size=a tex=y %s < %s > %s' % (opts,vplot,name)
     os.system(command)
-    
+
     ps = open(name,'r')        
-    out.write(ps.read())
+
+    if (cropshift):
+        # For multipage EPS files, the afterward conversion to PDF will cause
+        # pages appear to be shifted (except for the very first one).
+        # It is probably due to a bug in GS, which happens when the latter is
+        # called with -dEPSCrop option from within epstopdf. We apply a 
+        # PS translate here in the beginning of every page to counteract that
+        # bug.
+        for line in ps.readlines ():
+            if line.find('showpage') != -1:
+                out.write(line)
+                out.write('%g %g translate\n' % (-bbm[0],-bbm[1]))
+            else:
+                out.write(line)
+    else:
+        out.write(ps.read())
     ps.close()
     os.unlink(name)
     
@@ -92,10 +108,11 @@ if __name__ == "__main__":
     if argc < 2:
         print '''
 Usage:
-%s [xbmin= xbmax= ybmin= ybmax=] [options] file.vpl [file.eps]
+%s [xbmin= xbmax= ybmin= ybmax=] [cropshift=n] [options] file.vpl [file.eps]
 
 Converts vplot to encapsulated postscript.
 [xbmin= xbmax= ybmin= ybmax=] overrides the default bounding box.
+[cropshift=y] applies PS translate for every page (except for the first one)
 [options] are passed to pspen.
         ''' % prog
         sys.exit(2)
@@ -109,20 +126,24 @@ Converts vplot to encapsulated postscript.
 
     options = []
     xbmin=None; xbmax=None; ybmin=None; ybmax=None
+    crshift=False
     for item in sys.argv:
         if   item.split('=')[0] == 'xbmin': xbmin = item.split('=')[1] 
         elif item.split('=')[0] == 'xbmax': xbmax = item.split('=')[1] 
         elif item.split('=')[0] == 'ybmin': ybmin = item.split('=')[1] 
         elif item.split('=')[0] == 'ybmax': ybmax = item.split('=')[1]
+        elif (item.split('=')[0] == 'cropshift' and
+              item.split('=')[1] == 'y'):   crshift=True
         else:                               options.append(item)
-            
     try:
         if options:
             convert(vpl,eps,options=string.join(options,' '),
-                    xbmin=xbmin, xbmax=xbmax, ybmin=ybmin, ybmax=ybmax)
+                    xbmin=xbmin, xbmax=xbmax, ybmin=ybmin, ybmax=ybmax,
+                    cropshift=crshift)
         else:
             convert(vpl,eps,
-                    xbmin=xbmin, xbmax=xbmax, ybmin=ybmin, ybmax=ybmax)
+                    xbmin=xbmin, xbmax=xbmax, ybmin=ybmin, ybmax=ybmax,
+                    cropshift=crshift)
     except:
         print 'Failed to convert %s to %s' % (vpl,eps)
         sys.exit(1)
