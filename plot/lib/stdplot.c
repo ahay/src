@@ -962,8 +962,12 @@ static void make_title (sf_file in, char wheret)
     vs = titlesz * 0.6;
 
     if (title->where == 'l' || title->where == 'r') {	
-	if (NULL != label2 && title->where == label2->where)
-	    vs += 3.25*labelsz; /* !!! fix that - use text justification */
+	if (NULL != label2 && title->where == label2->where) {
+	    if (label1->text != blank)
+		vs += 3.25*labelsz; /* !!! fix that - use text justification */
+	    else
+                vs += 2.0*labelsz;
+        }
 
 	title->ypath = labelrot? -titlesz: titlesz;
 	title->yup = 0.;
@@ -1206,7 +1210,10 @@ void vp_framenum(float num)
 
     sprintf (string, "%g", num);
     vp_tjust (TH_CENTER, TV_TOP);
-    vp_gtext (x, y-4.*labelsz, labelsz, 0., 0., labelsz, string);
+    if (title && (title->where == 'b' || label1->where == 'b'))
+        vp_gtext (x, y-4.*labelsz, labelsz, 0., 0., labelsz, string);
+    else
+        vp_gtext (x+3.*labelsz, y-2.*labelsz, labelsz, 0., 0., labelsz, string);
     vp_egroup();
 }
 
