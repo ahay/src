@@ -234,7 +234,7 @@ int main (int argc, char *argv[]) {
 	    }
 	}
 
-        plMinMax2dGrid (z, n2, n1, &zmax, &zmin);
+        plMinMax2dGrid ((const PLFLT **) z, n2, n1, &zmax, &zmin);
         if (minval < zmin) zmin = minval;
         if (maxval > zmax) zmax = maxval;
 
@@ -267,9 +267,9 @@ int main (int argc, char *argv[]) {
 
         plcol0 (meshc);
         if (opt & MESH)
-            plot3dc (x, y, z, n2, n1, opt, clevel, nc);
+            plot3dc (x, y, (const PLFLT **) z, n2, n1, opt, clevel, nc);
         else
-            plsurf3d (x, y, z, n2, n1, opt, clevel, nc);
+            plsurf3d (x, y, (const PLFLT **) z, n2, n1, opt, clevel, nc);
 
         if (wanttitle) {
             plcol0 (VP_WHITE);
