@@ -811,7 +811,6 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          ''' % par)
 
 
-
 # ------------------------------------------------------------
 # acoustic modeling that only generates data 
 # ------------------------------------------------------------
@@ -828,9 +827,9 @@ def awefd_data(odat,idat,velo,dens,sou,rec,custom,par):
          den=${SOURCES[2]}
          sou=${SOURCES[3]}
          rec=${SOURCES[4]}'''%par+'''
-         wfl=tmp_%s  '''%odat+ '''
+         wfl=%stmp  '''%odat+ '''
          %s >${TARGETS[0]}; 
-         $RSFROOT/bin/sfrm tmp_%s
+         $RSFROOT/bin/sfrm %stmp
          ''' %(par['fdcustom'],odat),stdout=0)
 
 # ------------------------------------------------------------
@@ -850,7 +849,7 @@ def awefd_swfl(owfl,idat,velo,dens,sou,custom,par):
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
          wfl=${TARGETS[0]} '''%par+'''
-         %s >tmp%s ; $RSFROOT/bin/sfrm tmp%s
+         %s >%stmp ; $RSFROOT/bin/sfrm %stmp
          ''' %(par['fdcustom'],owfl,owfl),stdout=0)
 # ------------------------------------------------------------
 # acoustic modeling that only generates receiver wavefield:
@@ -872,10 +871,10 @@ def awefd_rwfl(owfl,idat,velo,dens,rec,custom,par):
          den=${SOURCES[2]}
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}'''%par+'''
-         wfl=junk_%s
-         %s >tmp%s  ; $RSFROOT/bin/sfrm tmp%s ;
-         $RSFROOT/bin/sfreverse opt=i which=4 <junk_%s >${TARGETS[0]};
-         $RSFROOT/bin/sfrm junk_%s
+         wfl=%s_junk
+         %s >%stmp  ; $RSFROOT/bin/sfrm %stmp ;
+         $RSFROOT/bin/sfreverse opt=i which=4 <%s_junk >${TARGETS[0]};
+         $RSFROOT/bin/sfrm %s_junk
          ''' %(owfl,par['fdcustom'],owfl,owfl,owfl,owfl),stdout=0)
 
 
