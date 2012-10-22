@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
     float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
     sf_complex *cnum, *cden, *crat;
     char key[6];
-    bool hertz, band, cmplx;
+    bool hertz, band, cmplx, verb;
     sf_file in, out;
 	
     sf_init (argc,argv);
@@ -47,6 +47,9 @@ int main (int argc, char* argv[])
 		n12 *= n[i];
     }
     n2 = n12/n1;
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity */
 	
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
 	
@@ -90,65 +93,69 @@ int main (int argc, char* argv[])
 	
     mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
-		sf_floatread(trace,n1,in);
-		sf_hilbert(trace,hilb);
-		
-		if (band) {
-			for (i1=0; i1 < n1; i1++) {
-				/* find envelope */
-				trace[i1] = hypotf(trace[i1],hilb[i1]);
-			}
-			sf_deriv(trace,hilb);
-		} else {
-			sf_deriv(trace,dtrace);
-			sf_deriv(hilb,dhilb);
-		}
-		
-		if (cmplx) {
-			for (i1=0; i1 < nh; i1++, i++) {
-				cnum[i] = sf_cmplx(0.,0.);
-				cden[i] = sf_cmplx(0.,0.);
-			}	
-			
-			for (i1=nh; i1 < n1-nh; i1++, i++) {
-				cnum[i] = sf_cmplx(dtrace[i1],dhilb[i1]);
-				cden[i] = sf_cmplx( trace[i1], hilb[i1]);
-				
-				a = cabsf(cden[i]);
-				mean += a*a;
-			}
-			
-			for (i1=n1-nh; i1 < n1; i1++, i++) {
-				cnum[i] = sf_cmplx(0.,0.);
-				cden[i] = sf_cmplx(0.,0.);
-			}
-		} else {
-			for (i1=0; i1 < nh; i1++, i++) {
-				num[i] = 0.;
-				den[i] = 0.;
-			}	
-			
-			for (i1=nh; i1 < n1-nh; i1++, i++) {
-				a = trace[i1];
-				b = hilb[i1];
-				if (band) {
-					num[i] = b;
-					den[i] = a;
-				} else {
-					num[i] = a*dhilb[i1]-b*dtrace[i1];
-					den[i] = a*a+b*b;
-				}
-				mean += den[i]*den[i];
-			}
-			
-			for (i1=n1-nh; i1 < n1; i1++, i++) {
-				num[i] = 0.;
-				den[i] = 0.;
-			}
-		} /* cmplx */
-		
-    } /* i2 */
+	if (verb) sf_warning("slice %d of %d;",i2+1,n2);
+
+	sf_floatread(trace,n1,in);
+	sf_hilbert(trace,hilb);
 	
+	if (band) {
+	    for (i1=0; i1 < n1; i1++) {
+		/* find envelope */
+		trace[i1] = hypotf(trace[i1],hilb[i1]);
+	    }
+	    sf_deriv(trace,hilb);
+	} else {
+	    sf_deriv(trace,dtrace);
+	    sf_deriv(hilb,dhilb);
+	}
+	
+	if (cmplx) {
+	    for (i1=0; i1 < nh; i1++, i++) {
+		cnum[i] = sf_cmplx(0.,0.);
+		cden[i] = sf_cmplx(0.,0.);
+	    }	
+	    
+	    for (i1=nh; i1 < n1-nh; i1++, i++) {
+		cnum[i] = sf_cmplx(dtrace[i1],dhilb[i1]);
+		cden[i] = sf_cmplx( trace[i1], hilb[i1]);
+		
+		a = cabsf(cden[i]);
+		mean += a*a;
+	    }
+	    
+	    for (i1=n1-nh; i1 < n1; i1++, i++) {
+		cnum[i] = sf_cmplx(0.,0.);
+		cden[i] = sf_cmplx(0.,0.);
+	    }
+	} else {
+	    for (i1=0; i1 < nh; i1++, i++) {
+		num[i] = 0.;
+		den[i] = 0.;
+	    }	
+	    
+	    for (i1=nh; i1 < n1-nh; i1++, i++) {
+		a = trace[i1];
+		b = hilb[i1];
+		if (band) {
+		    num[i] = b;
+		    den[i] = a;
+		} else {
+		    num[i] = a*dhilb[i1]-b*dtrace[i1];
+		    den[i] = a*a+b*b;
+		}
+		mean += den[i]*den[i];
+	    }
+	    
+	    for (i1=n1-nh; i1 < n1; i1++, i++) {
+		num[i] = 0.;
+		den[i] = 0.;
+	    }
+	} /* cmplx */
+	
+    } /* i2 */
+    
+    if (verb) sf_warning(".");
+    
     mean = sqrtf(n12/mean);
     
     for (i=0; i < n12; i++) {
