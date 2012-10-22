@@ -41,7 +41,7 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 		double ep = eps2[i];
 		double de = del2[i];
 		double f   = f2[i];
-		double c33 = C33[i];
+		double vp0 = sqrt(C33[i])*1000; // convert from km/s to m/s
 	//	double tt = t[i];
 	//	double c = cos(tt);
 	//	double s = sin(tt);
@@ -58,8 +58,8 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    double p1 = 1+ep*x0*x0-f/2;
 	    double p2 = 1+2*ep*x0*x0/f;
 	    double p3 = 2*(ep-de)*4*x0*x0*z0*z0/f;
-	    double r  = c33*sqrt(p1+sqrt(p2*p2-p3)*f/2);
-	    // double r  = c33*sqrt(p1-sqrt(p2*p2-p3)*f/2); //SV wave exact phase velocity
+	    double r  = vp0*sqrt(p1+sqrt(p2*p2-p3)*f/2);
+	    // double r  = vp0*sqrt(p1-sqrt(p2*p2-p3)*f/2); //SV wave exact phase velocity
 
 	    res(a,b) = 2*(cos(r*dt)-1); 
 	}
