@@ -1,4 +1,4 @@
-// Lowrank decomposition for 2-D anisotropic wave propagation using exact SV phase velocity. 
+// Lowrank decomposition for 2-D anisotropic wave propagation using exact P phase velocity. 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static std::valarray<float>  vx, vz, vs, q, t;
+static std::valarray<float>  C11, C33, C55, C13, t;
 static std::valarray<double> kx, kz;
 static double dt;
 
@@ -34,13 +34,12 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,0.0);
-//    double itta,f,p1,p2,p3,r;
     for(int a=0; a<nr; a++) {
 	int i=rs[a];
-	double wx = vx[i]*vx[i];
-	double wz = vz[i]*vz[i];
-	double ws = vs[i]*vs[i];
-	double qq = q[i];
+	double c11 = C11[i];
+	double c33 = C33[i];
+	double c55 = C55[i];
+	double c13 = C13[i];
 	double tt = t[i];
 	double c = cos(tt);
 	double s = sin(tt);
@@ -51,21 +50,10 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    // rotation of coordinates
 	    double x = x0*c+z0*s;
 	    double z = z0*c-x0*s;
-
-//	    z = wz*z*z;
-//	    x = wx*x*x;
-
-            double itta=qq/(8-2*qq);
-	    double f  = sqrt(wx*(wz-ws)/(2*itta+1)-wz*ws+ws*ws)-ws;
-	    double p1 = (wx+ws)*x*x+(wz+ws)*z*z;
-	    double p2 = (wx-ws)*x*x-(wz-ws)*z*z;
-	    double p3 = 4*(f+ws)*(f+ws)*x*x*z*z;
-	    double r  = sqrt(0.5*p1-0.5*sqrt(p2*p2+p3));
-
-
-//	    double r = x+z;
-//	    r = r+sqrt(r*r-qq*x*z);
-//	    r = sqrt(0.5*r);
+	    double p1 = (c11+c55)*x*x+(c33+c55)*z*z;
+	    double p2 = (c11-c55)*x*x-(c33-c55)*z*z;
+	    double p3 = 4*(c13+c55)*(c13+c55)*x*x*z*z;
+	    double r  = sqrt(0.5*p1+0.5*sqrt(p2*p2+p3));
 	    res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
@@ -90,29 +78,25 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    iRSF velz, velx("velx"), eta("eta"), theta("theta"), vels("vels");
+    iRSF c11, c33("c33"), c55("c55"), c13("c13"), theta("theta");
 
     int nz,nx;
-    velz.get("n1",nz);
-    velz.get("n2",nx);
+    c11.get("n1",nz);
+    c11.get("n2",nx);
     int m = nx*nz;
 
-    vx.resize(m);
-    vz.resize(m);
-    vs.resize(m);
-    q.resize(m);
+    C11.resize(m);
+    C33.resize(m);
+    C55.resize(m);
+    C13.resize(m);
     t.resize(m);
 
-    velx >> vx;
-    velz >> vz;
-    vels >> vs;
-    eta >> q;
+    c11 >> C11;
+    c33 >> C33;
+    c55 >> C55;
+    c13 >> C13;
     theta >> t;
 
-    /* from eta to q */
-    for (int im=0; im < m; im++) {
-	q[im] = 8*q[im]/(1.0+2*q[im]);
-    }
 
     /* from degrees to radians */
     for (int im=0; im < m; im++) {
