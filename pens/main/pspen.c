@@ -396,6 +396,10 @@ extern FILE *pltout;
 
 static int      ps_oldx = 0, ps_oldy = 0;
 
+static bool     corners = true; /* Leaver or remove corners (sfgrey3) */
+static int      iscorners = 0; /* "corner" group is acrive */
+static int      corners_group = -1; /* "corner" group number */
+
 static void rgb_to_cmyk (int red, int green, int blue,
 			 int *cyan, int *magenta, int *yellow, int *black);
 
@@ -415,6 +419,9 @@ void psarea (int npts, struct vertex  *verlist)
 
     char            stringd[80];
     char            stringr[80];
+
+    if (!corners && iscorners)
+        return; /* Ignore area filling, if "corner" group is active */
 
     endpath ();
 
@@ -864,6 +871,20 @@ void psattributes (int command, int value, int v1, int v2, int v3)
 
 	case NEW_DASH:
 	    ps_set_dash (value);
+	    break;
+
+	case BEGIN_GROUP:
+	    if (!corners && 0 == strcmp (group_name, "corner")) {
+	        corners_group = value;
+	        iscorners = 1;
+	    }
+	    break;
+
+	case END_GROUP:
+	    if (!corners && iscorners && corners_group == value) {
+	        iscorners = 0;
+	        corners_group = -1;
+	    }
 	    break;
 
 	default:
@@ -1714,6 +1735,9 @@ void opendev (int argc, char* argv[])
     if (!sf_getint("copies",&ncopies_document)) ncopies_document = 1;
     /* number of copies */
 
+    if (!sf_getbool("corners",&corners)) corners=true;
+    /* n - remove "corner" group. */
+
 /*
  * Initialize the PostScript file
  */
@@ -1978,10 +2002,33 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	     xshift, yshift, rxscale, ryscale, rangle);
 
     fflush(pltout);
-    if ( mono || ras_allgrey ) {
-	fprintf (pltout, "/raster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop} image} def\n", xpix, ypix, xpix, -ypix, ypix);
 
-	fprintf (pltout, "raster\n");
+    if (!corners) {
+        if (mono || ras_allgrey)
+            fprintf (pltout, "/DeviceGray setcolorspace\n");
+        else if (rgb_colorspace)
+            fprintf (pltout, "/DeviceRGB setcolorspace\n");
+        else
+            fprintf (pltout, "/DeviceCMYK setcolorspace\n");
+        fprintf (pltout, "<<\n");
+        fprintf (pltout, "  /ImageType 4\n");
+        fprintf (pltout, "  /Width %d\n", xpix);
+        fprintf (pltout, "  /Height %d\n", ypix);
+        fprintf (pltout, "  /ImageMatrix [ %d 0 0 %d 0 %d ]\n", xpix, -ypix, ypix);
+        fprintf (pltout, "  /MultipleDataSources false\n");
+        fprintf (pltout, "  /DataSource currentfile /ASCIIHexDecode filter\n");
+        fprintf (pltout, "  /BitsPerComponent 8\n");
+    }
+
+    if ( mono || ras_allgrey ) {
+        if (corners) {
+            fprintf (pltout, "/raster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop} image} def\n", xpix, ypix, xpix, -ypix, ypix);
+	    fprintf (pltout, "raster\n");
+	} else {
+            fprintf (pltout, "  /Decode [ 0 1 ]\n");
+            fprintf (pltout, "  /MaskColor [ %d ]\n", dither_it ? 0 : 255 - ps_grey_ras[8]);
+            fprintf (pltout, ">> image\n");
+	}
 
 	if (dither_it)
 	{
@@ -2006,9 +2053,14 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	    }
 	}
     } else if (rgb_colorspace) {
-        fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 3 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
-
-        fprintf (pltout, "colraster\n");
+        if (corners) {
+            fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 3 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
+            fprintf (pltout, "colraster\n");
+	} else {
+            fprintf (pltout, "  /Decode [ 0 1 0 1 0 1 ]\n");
+            fprintf (pltout, "  /MaskColor [ %d %d %d ]\n", red[8], green[8], blue[8]);
+            fprintf (pltout, ">> image\n");
+	}
 
 	for (j = 0; j < xpix*ypix; j+=80)
 	{
@@ -2024,9 +2076,16 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
  * The "colorimage" command uses RGB if 3 bytes per pixel are specified,
  * but CMYK if 4 bytes per pixel are specified.
  */
-        fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 4 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
-
-        fprintf (pltout, "colraster\n");
+        if (corners) {
+            fprintf (pltout, "/colraster {%d %d 8 [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop } false 4 colorimage} def\n", xpix, ypix, xpix, -ypix, ypix);
+            fprintf (pltout, "colraster\n");
+	} else {
+            fprintf (pltout, "  /Decode [ 0 1 0 1 0 1 0 1 ]\n");
+            rgb_to_cmyk(red[8],green[8],blue[8],
+                        &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+            fprintf (pltout, "  /MaskColor [ %d %d %d %d ]\n", cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
+            fprintf (pltout, ">> image\n");
+	}
 
 	for (j = 0; j < xpix*ypix; j+=80)
 	{
