@@ -193,12 +193,16 @@ def latexscan(node,env,path):
             check = isanim.search(line)
             if check:
                  plot = check.group(3)
-                 if plot[-len(ressuffix):] != ressuffix:
-                     plotoption[plot+pssuffix] = ' cropshift=y'
-                     plot = plot + ressuffix
-                 else:
-                     plotoption[plot[-len(ressuffix):]+pssuffix] = ' cropshift=y'
-                 plots.append(plot)
+                 # Only make VPL->PDF target if the file name does
+                 # not end with '_', otherwise, assume that \animategraphics
+                 # is going to assemble the animation from individual files
+                 if plot[len(plot)-1] != '_':
+                     if plot[-len(ressuffix):] != ressuffix:
+                         plotoption[plot+pssuffix] = ' cropshift=y'
+                         plot = plot + ressuffix
+                     else:
+                         plotoption[plot[-len(ressuffix):]+pssuffix] = ' cropshift=y'
+                     plots.append(plot)
   
         inp.close()
     bibs = []
