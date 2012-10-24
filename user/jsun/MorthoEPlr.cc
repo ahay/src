@@ -33,6 +33,7 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,0.0f);
+    //    float con2 = pow(2.0,1/3.0);
     for(int a=0; a<nr; a++) {
         int i=rs[a];
 	double c11 = C11[i];
@@ -70,14 +71,22 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 	   if (abs(dd)<0.0000001) {
 	       r=0;
 	   } else {
+//	       cv=-qq/(2*sqrt(-dd*dd*dd/27.0));
 	       cv=-qq/(2*sqrt(abs(-dd*dd*dd/27.0)));
 	       vv=acos(cv);
-	       r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*3.14159/3.0)-aa/3.0;
+	       r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0)-aa/3.0;
 	       r=sqrt(abs(r));
 	   }
-
+//	   double p1=sqrt(abs(aa*aa/3-b));
+//	   double p2=2*pow(aa/3,3)-aa*bb/3+cc;
+//	   double vv=-sqrt(27)*0.5*p2*pow(p1,-3);
+//	   vv=acos(vv);
+//	   double r=2*sqrt(-dd/3.0)*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
+//	   double r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
+//	   double r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*3.14159/3.0)-aa/3.0;
+//	   sf_warning("r=%g",r);
 	   res(a,b) = 2*(cos(r*dt)-1); 
-
+//	   sf_warning("res=%g",res(a,b));
 	}
     }
     return 0;
