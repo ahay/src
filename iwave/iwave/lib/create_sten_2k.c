@@ -8,7 +8,7 @@ int create_sten2_2k(FD_MODEL * fdm,
 		    STENCIL * sten ) {
   
   int err = 0;
-  int idim, i, j, ir, ip, next, iv, nmask = 0;
+  int idim, i, j, next, iv, nmask = 0;
   int len, disp;
   STENCIL_MASK mask;
   IPNT ind;
@@ -61,7 +61,7 @@ int create_sten2_2k(FD_MODEL * fdm,
 	    //            if (gtype[ir][iv] != gtype[ip][iv]) {
             if (gtype[i][iv] != gtype[j][iv]) {
               fprintf(stream, "Error: bad input in fd_create_sten2_2k: ");
-              fprintf(stream, "array %d is dependent of array %d, ", ir, ip);
+/*              fprintf(stream, "array %d is dependent of array %d, ", ir, ip); */
               fprintf(stream, "but they are defined on different types of grids\n");
               sten_destroy(sten);
               return E_BADINPUT;

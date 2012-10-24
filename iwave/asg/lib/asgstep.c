@@ -251,26 +251,26 @@ int asg_step_p(RDOM * dom, void *pars) {
 
   // field pointers - allocated arrays
   register ireal * restrict _p0;
-  register ireal * restrict _p1;
-  register ireal * restrict _p2;
+  register ireal * restrict _p1=NULL;
+  register ireal * restrict _p2=NULL;
   register ireal * restrict _mp;
   register ireal * restrict _v0;
-  register ireal * restrict _v1p0;
-  register ireal * restrict _v1p1;
-  register ireal * restrict _v1p2;
-  register ireal * restrict _v1p3;
-  register ireal * restrict _v1m1;
-  register ireal * restrict _v1m2;
-  register ireal * restrict _v1m3;
-  register ireal * restrict _v1m4;
-  register ireal * restrict _v2p0;
-  register ireal * restrict _v2p1;
-  register ireal * restrict _v2p2;
-  register ireal * restrict _v2p3;
-  register ireal * restrict _v2m1;
-  register ireal * restrict _v2m2;
-  register ireal * restrict _v2m3;
-  register ireal * restrict _v2m4;
+  register ireal * restrict _v1p0=NULL;
+  register ireal * restrict _v1p1=NULL;
+  register ireal * restrict _v1p2=NULL;
+  register ireal * restrict _v1p3=NULL;
+  register ireal * restrict _v1m1=NULL;
+  register ireal * restrict _v1m2=NULL;
+  register ireal * restrict _v1m3=NULL;
+  register ireal * restrict _v1m4=NULL;
+  register ireal * restrict _v2p0=NULL;
+  register ireal * restrict _v2p1=NULL;
+  register ireal * restrict _v2p2=NULL;
+  register ireal * restrict _v2p3=NULL;
+  register ireal * restrict _v2m1=NULL;
+  register ireal * restrict _v2m2=NULL;
+  register ireal * restrict _v2m3=NULL;
+  register ireal * restrict _v2m4=NULL;
 
   register ireal * restrict ep0p;
   register ireal * restrict ep0pp;
