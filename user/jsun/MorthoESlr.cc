@@ -65,10 +65,28 @@ int sample(vector<int>& rs, vector<int>& cs, FltNumMat& res)
 	   double cc=H11*H23*H23+H22*H13*H13+H33*H12*H12-H11*H22*H33-2*H12*H23*H13;
 	   double dd=bb-aa*aa/3.0;
 	   double qq=2.0*aa*aa*aa/27.0-aa*bb/3.0+cc;
-	   double cv=-qq/(2*sqrt(-dd*dd*dd/27.0));
-	   double vv=acos(cv);
-	   double r=2*sqrt(-dd/3.0)*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
+	   double Q=pow(dd/3,3)+pow(qq/2,2);
+	   if (Q>0) sf_warning ("!!Q is positive!! Q=%g \n", Q);
+	   double r,cv,vv;
+	   if (abs(dd)<0.0000001) {
+	       r=0;
+	   } else {
+//	       cv=-qq/(2*sqrt(-dd*dd*dd/27.0));
+	       cv=-qq/(2*sqrt(abs(-dd*dd*dd/27.0)));
+	       vv=acos(cv);
+	       r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0)-aa/3.0;
+	       r=sqrt(abs(r));
+	   }
+//	   double p1=sqrt(abs(aa*aa/3-b));
+//	   double p2=2*pow(aa/3,3)-aa*bb/3+cc;
+//	   double vv=-sqrt(27)*0.5*p2*pow(p1,-3);
+//	   vv=acos(vv);
+//	   double r=2*sqrt(-dd/3.0)*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
+//	   double r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*SF_PI/3.0)-aa/3.0;
+//	   double r=2*sqrt(abs(-dd/3.0))*cos(vv/3.0+2.0*3.14159/3.0)-aa/3.0;
+//	   sf_warning("r=%g",r);
 	   res(a,b) = 2*(cos(r*dt)-1); 
+//	   sf_warning("res=%g",res(a,b));
 	}
     }
     return 0;

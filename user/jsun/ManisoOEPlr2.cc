@@ -38,14 +38,14 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 //    double itta,f,p1,p2,p3,r;
     for(int a=0; a<nr; a++) {
 	int i=rs[a];
-		double ep = eps2[i];
-		double de = del2[i];
-		double f   = f2[i];
-		double vp0 = sqrt(C33[i])*1000; // convert from km/s to m/s
+	double ep = eps2[i];
+	double de = del2[i];
+	double f   = f2[i];
+	double vp0 = sqrt(C33[i])*1000; // convert from km/s to m/s
 	//	double tt = t[i];
 	//	double c = cos(tt);
 	//	double s = sin(tt);
-
+	
 	for(int b=0; b<nc; b++) {
 	    double x0 = kx[cs[b]];
 	    double z0 = kz[cs[b]];
