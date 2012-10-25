@@ -1,0 +1,6 @@
+from rsf.proj import *
+
+Flow('spike',None,
+     'spike d1=1. d2=1. n1=100 n2=100 k1=24 k2=13 nsp=1 label1=X unit1=m label2=Y unit2=m')
+
+End()
