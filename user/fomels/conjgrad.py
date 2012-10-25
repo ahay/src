@@ -32,12 +32,11 @@ def conjgrad(oper,dat,x0,niter):
             s = g
             S = G
         else:
-            alpha = gn/gnp
-            s = g+s*alpha
-            S = G+S*alpha
+            beta = gn/gnp
+            s = g+s*beta
+            S = G+S*beta
         gnp = gn
-        beta = S.dot(S)
-        alpha = -gn/beta
+        alpha = -gn/S.dot(S)
         x = x+s*alpha
         R = R+S*alpha
     return x
