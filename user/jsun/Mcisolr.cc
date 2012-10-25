@@ -35,7 +35,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    res(a,b) = 2*(exp(cpx(0,1)*vs[rs[a]]*ks[cs[b]]*dt)-1); 
+	  res(a,b) = exp(_Complex_I*vs[rs[a]]*ks[cs[b]]*dt); 
 	}
     }
     return 0;
