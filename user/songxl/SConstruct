@@ -5,38 +5,29 @@ import bldutil
 
 progs = '''
 wave1 wave4 wave124 sbd waveab wave2dss wavefft wavefftb
-wavefft1 pspi pspig pspi2 pspi2c pspif pspifb1 ffd1 ffdb1
+wavefft1 pspig ffd1 
                                  fdb1 fd2bs
-                                 pspif2 pspifs2 pspifcos2 pspifscos2 pspifcos2b pspifcos2bs
-                                 ffdcos2 ffdcos2b ffd2b ffdcos2bs
-                                 ffdan2b ffdan4b ffdantti4b
+                                 pspifcos2bs
+                                 ffdcos2b 
                                  ffdantti4b_smsr ffd2_ps
-                                 ffdantti4b_rvr  ffd2b_rvr
 laplace laplace2
 ffd2dehf sp 
 ofd1 fd1 ofd1_5 fd1_5 ofd2_5 ofd2_7 ofd2_13 ofd2_10 fd2_10 
-ffdtti4
-ofd2_25 lfd2_25 lfd2_25b
-lffd1_10 lffd2_4 lffd2_4_c lffd2_an_25
+ofd2_25 lfd2_25b
+lffd1_10 lffd2_an_25
 nxtfftn orthowave
 ffd2_den_omp
-permffdxzc
-ffd0 ffd01
+ffd0 
 lffd2an25
 phasescan
-ffd2dehftry
 orp
-lffd2anc
-lffdb
 '''
-# fdp2 orp lffd2anc
 
 mpi_progs = 'tti4rtm ffdrtm ffdrtms ttirtmsa'
 
 
-ccprogs = 'ortholr ortlr orthollr permlr4 ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2 lffdanc'
+ccprogs = 'ortholr ortlr orthollr ortllr lfdc1 lfdc2_7 lfdc2_25 lfdanc2_25 lffdan lfdp1 lfdp2'
 
-# lffdand lffdanc
 
 try:  # distributed version
     Import('env root pkgdir bindir')
