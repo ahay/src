@@ -42,6 +42,8 @@ if 'c++' in env.get('API',[]):
 else:
     lapack = None
 
+#if lapack:
+#    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']+lapack+libs
 if lapack:
     env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
                       'vecmatop']+lapack)
