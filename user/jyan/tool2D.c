@@ -182,7 +182,7 @@ void wfsep(float **zdel,
     float  kz,  kx;
 
 
-    float tmp;
+    /*   float tmp; */
 
     extern float **tpvalue;
     extern char *tapertype; 
@@ -257,7 +257,7 @@ void wfsep(float **zdel,
 	 */
 	for    (jx=0;jx<nx;jx++){kx = KMAP(jx,nx);
 	    for(jz=0;jz<nz;jz++){ kz = KMAP(jz,nz);
-		tmp=sqrt(kx*kx+kz*kz);
+		/* tmp=sqrt(kx*kx+kz*kz); */
 		wfs->temp[0][jx][jz]=sf_cmplx( 0, zdel[jx][jz]);
 	    }
 	}   
@@ -280,7 +280,7 @@ void wfsep(float **zdel,
 	 */
 	for    (jx=0;jx<nx;jx++){ kx = KMAP(jx,nx);
 	    for(jz=0;jz<nz;jz++){ kz = KMAP(jz,nz);
-		tmp=sqrt(kx*kx+kz*kz);
+		/* tmp=sqrt(kx*kx+kz*kz); */
 		wfs->temp[0][jx][jz]=sf_cmplx( 0, xdel[jx][jz]);
 	    }
 	}

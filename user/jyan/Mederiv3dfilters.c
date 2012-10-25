@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     sf_axis sx,sy,sz;      /* cube axes */
     
     float ***c11,***c12,***c13,***c22,***c23,***c33,***c44,***c55,***c66; /* input file */
-    float ***tmp;
+    /* float ***tmp; */
 /*    float  mc11, mc12, mc13, mc22, mc23, mc33, mc44, mc55, mc66;*/
     float ***pxdel,***pydel,***pzdel;                /* output derivative */
     float ***vxdel,***vydel,***vzdel;                /* output derivative */
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     c44=sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
     c55=sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
     c66=sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
-    tmp=sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay));
+    /*   tmp=sf_floatalloc3(sf_n(az),sf_n(ax),sf_n(ay)); */
     
     nnn = sf_n(ax)*sf_n(ay)*sf_n(az);
     /*  sf_floatread(c11[0][0],nnn,Fccc);  */

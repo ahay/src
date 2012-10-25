@@ -28,23 +28,26 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(void)
 {
-    int narcs=3, iarc,iang;
-    float xval[NARCS2][NANGLES], zval[NARCS2][NANGLES];
     bool wantframe=false;
     float xll=1.705,yll=1.37,xur=11.945,yur=8.87, plotfat=1.;
-    float xstart,zstart,xend,zend;
+    float xstart,zstart,xend,zend,xscale,zscale, y=0.5;
     float xmin,zmin,xmax,zmax,slop,surface=0.;
-    float xcenter,zcenter,xscale,zscale, y=0.5;
-    float d=1.4,xs,zs,xr,zr,xc,zc,xsp,zsp,xp,zp;
-    float xs1,zs1,xr1,zr1,d1, xs2,zs2,xr2,zr2,d2,dth,radius,drad,arcmin,phi;
-    float degrad,theta=30.,tanth,sinth,costh,arcln=30.;
+    float d=1.4,xs,zs,xr,zr,xc,xr1,zr1;
+    float xs1,zs1,d1;
+    float degrad,theta=30.,tanth,sinth,costh;
 
 #ifdef REFLKINE
-    float x,z;
+    float x,z, zc=0.;
+#endif
+
+#ifdef TUCHEL
+    float xp,zp;
 #endif
 
 #ifdef REFLEXPT
-    arcln=45.;
+    int narcs=3, iarc,iang;
+    float drad,arcmin,phi,dth,radius,arcln,zr2,xr2,d2,zs2,xs2,xsp,zsp;
+    float xval[NARCS2][NANGLES], zval[NARCS2][NANGLES];
 #endif
 
 /*		 			Origin is at midpoint */
@@ -54,18 +57,18 @@ int main(void)
     sinth = sinf(theta);
     costh = cosf(theta);
 
+#ifdef REFLEXPT
+    arcln=45.;
     dth = arcln*degrad/(NANGLES-1);
     arcmin = -arcln / 2. * degrad;
     drad = d / (narcs + 1);
+#endif
 
     xs = y;					/* Shotpoint */
     zs = surface;
     xr = xs - d*sinth; 			        /* Reflection point */
     zr = zs + d*costh; 
     xc = xr;					/* Migrated location */
-    zc = surface;
-    xsp = y  - 2*d*sinth;			/* Image shotpoint */
-    zsp = surface + 2*d*costh;
 
     xs1= y + d/2.;				/* Second shotpoint */
     zs1= surface;
@@ -73,23 +76,34 @@ int main(void)
     xr1= xs1 - d1*sinth; 			
     zr1= zs1 + d1*costh; 
 
+#ifdef REFLEXPT
+    xsp = y  - 2*d*sinth;			/* Image shotpoint */
+    zsp = surface + 2*d*costh;
+
     xs2= y - d/2.;				/* Third shotpoint */
     zs2= surface;
+
     d2 = d + (xs2-xs)*sinth;			/* Third Reflection point */
+
     xr2= xs2 - d2*sinth; 			
     zr2= zs2 + d2*costh; 
+#endif
 
+#ifdef TUCHEL
     /* For Tuchel's Law */
     xp = xs + (xs1-xs)*costh*costh;
     zp = zs + (xs1-xs)*costh*sinth;
+#endif
 
     slop = 0.05*d;
     xmin = -2.;
     zmin = 0.;
     xmax =  2.;
     zmax = 3.;
+/*
     xcenter=0.5*(xmin+xmax);
     zcenter=0.5*(zmin+zmax);
+*/
 
 /*						dipping-reflector parameters */
     xstart = xc - d;
@@ -102,6 +116,7 @@ int main(void)
 /*						Pre-compute arcs of circles */
 
 /*						Downgoing wavefronts */
+#ifdef REFLEXPT
     radius = 0.;
     for (iarc = 0; iarc < narcs; iarc++) {
 	radius += drad;
@@ -121,7 +136,7 @@ int main(void)
 	    zval[iarc][iang] = zsp - radius * cos(theta+phi);
 	}
     }
-
+#endif
 
     vp_init();
 

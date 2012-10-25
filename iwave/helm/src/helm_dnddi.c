@@ -32,7 +32,7 @@
 
     /* Local variables */
     static integer ptr_to_x__, i__, j, ptr_to_xt__, nd, jx, jy, ptr_to_coef__,
-	     ntx1, nsx2, nfft, ptr_to_wsave__;
+	/* ntx1, */ nsx2, nfft, ptr_to_wsave__;
     extern /* Subroutine */ int sint2d_(integer *, integer *, real *, real *, 
 	    real *), getcoef_(integer *, real *, real *, integer *, real *, 
 	    real *, real *, integer *);
@@ -117,8 +117,8 @@
 	*ier = 44;
 	return 0;
     }
-/*     useful aux. numbers */
-    ntx1 = *ntx - 1;
+/*     useful aux. numbers 
+    ntx1 = *ntx - 1; */
 /* Computing MAX */
     i__1 = (integer) (*d__ / *dt) + 1;
     nd = max(i__1,0);

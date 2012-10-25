@@ -25,7 +25,7 @@
 
 int main (int argc,char* argv[]) 
 {
-  int b1, b2, b3, n1, n2, n3, i, nshot, ndim, is,n123, **p,j;
+    int b1, b2, b3, n1, n2, n3, i, nshot, ndim, is,n123, /* **p, */ j;
     float br1, br2, br3, o1, o2, o3, d1, d2, d3;
     float **s, **t, **v, **vv,**vs,**q,**a,**sg,**bet;
     char *sfile, *file;
@@ -130,7 +130,7 @@ int main (int argc,char* argv[])
     a  = sf_floatalloc2(n1,n2);
     bet = sf_floatalloc2(n1,n2);
     sg = sf_floatalloc2(n1,n2); 
-    p  = sf_intalloc2(n1,n2);
+    /* p  = sf_intalloc2(n1,n2); */
 
     sf_floatread(v[0],n123,bv);
 	

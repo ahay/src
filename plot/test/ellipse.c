@@ -31,8 +31,8 @@ int main (void)
     bool wantframe=false,option=true,animate=false;
     float xll=1.705,yll=1.37,xur=11.945,yur=8.87;
     float h=1.0,y=0.0,time=1.6,v=2.0,theta=30., xstart, zstart;
-    float a, b, xs, xg, surface,slop,xmin,zmin,xmax,zmax, xrp, zrp;
-    float xcenter, zcenter, xscale, zscale, dth, thtmp, xz, xsp;
+    float a, b, xs, xg, surface,slop,xmin,zmin,xmax,zmax;
+    float xscale, zscale, dth, thtmp, xsp;
     float tanth, sinth, costh, d, xr, zr, x,z, x1,z1, xend,zend;
 
     vp_init();
@@ -49,8 +49,6 @@ int main (void)
     zmin = -1.;
     xmax =  2.;
     zmax = 2.;
-    xcenter=0.5*(xmin+xmax);
-    zcenter=0.5*(zmin+zmax);
 
     /* set vplot scales */
     vp_orig(xll,yur);
@@ -189,10 +187,7 @@ int main (void)
 	xr  = y - d*sinth - h*h*costh*costh*sinth/d;
 	zr  = surface + d*costh - h*h*costh*sinth*sinth/d;
 
-	xz  = y - h*h/d*sinth;
 	xsp = y - h   - 2*(d-h*sinth)*sinth;
-        xrp = y - d*sinth;
-        zrp = surface + d*costh;
 	xstart = xsp;
 	zstart = surface + d/costh + tanth * (xstart-y);
 	xend = 0.5*(xg + y);

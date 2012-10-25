@@ -314,7 +314,7 @@ void xclose (int status)
 /*< close >*/
 {
     XEvent event;
-    int             fd, pid;
+    int             /* fd ,*/ pid;
     char           *option;
     bool persist;
 
@@ -333,7 +333,7 @@ void xclose (int status)
 	    if (!sf_getbool("stay",&persist)) persist=false;
 	    /* open terminal to count keys */
 
-	    fd = open ("/dev/tty", 0);
+	    /* fd = open ("/dev/tty", 0); */
 	    if (!persist)
 	    {
 		dev.message (MESG_TEXT, "Click mouse in window to end.\n");

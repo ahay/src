@@ -313,7 +313,7 @@ void wfsep3(float ***pxdel, float ***pydel, float *** pzdel,
     float  kx, ky, kz;
    
     float tmp=0.0;
-    float maxn;
+/*    float maxn; */
 
     double A[3][3],w[3],Q[3][3];
 
@@ -321,7 +321,7 @@ void wfsep3(float ***pxdel, float ***pydel, float *** pzdel,
     ny = sf_n(ay);
     nz = sf_n(az);
     sf_warning("%d,%d,%d",nx,ny,nz);
-    maxn=MAX(nx,ny,nz);
+    /*  maxn=MAX(nx,ny,nz); */
     /*initialize here*/
     
     for(jy=0;jy<ny;jy++){

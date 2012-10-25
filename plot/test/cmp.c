@@ -27,12 +27,11 @@ static float rand01(void);
 
 int main (void)
 {
-    float dx, xmin=-4., xmax=7., tmax=9.0, x,t,z, x0,t0, v=1., alfa, ca, sa;
+    float dx, xmin=-4., xmax=7., tmax=9.0, x,t,z, x0, v=1., alfa, ca;
     int ix, iz, nz=100, nx=100, degrees=85;
 
     vp_init();
 
-    t0 = 0;	
     x0= xmin;
     dx= (xmax-xmin)/(nx-1);
     v = 1.;
@@ -52,7 +51,6 @@ int main (void)
     for (iz=0; iz < nz; iz++) {
 	alfa = degrees *  2 * 3.14 / 360 * rand01(); 
 	ca = cosf( alfa);
-	sa = sinf( alfa);
 	z =  tmax * (.1 + .9*rand01());
 	z =  tmax * rand01();
 	vp_penup();

@@ -40,7 +40,7 @@ int main (int argc, char* argv[])
     float *output;
     double tt1,ampl;
     int ipx,ipy,ipz;
-    int nx,ny,nz,nv,nt,nw;
+    int nx,ny,nz,/* nv, */ nt,nw;
     float ox,oy,oz,dx,dy,dz,dv;
     float v0,vgrad;
     float t1,t2,dt,ot,dw,ow;
@@ -59,7 +59,7 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("dy",&dy)) dy=0.02;
     if (!sf_getfloat("dz",&dz)) dz=0.02; /* grid spacing */
     dv=dx*dy*dz;
-    nv=nx*ny*nz;
+/*    nv=nx*ny*nz; */
 
     if (!sf_getfloat("v0",   &v0   )) v0=1.5;   /* surface velocity */
     if (!sf_getfloat("vgrad",&vgrad)) vgrad=.8; /* velocity gradient */

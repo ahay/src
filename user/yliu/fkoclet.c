@@ -33,7 +33,7 @@ static sf_complex fkocpredict(bool forw, sf_complex tt, int i, int j)
     if (dwt) {
 	return(tt);
     } else {
-	float h1, h2, eps1, amp1, eps2, amp2, amp, phase;
+	float h1, h2, eps1, /* amp1, amp2, */ eps2, amp, phase;
 	sf_complex oper;
 	
 	if (forw) {
@@ -47,11 +47,11 @@ static sf_complex fkocpredict(bool forw, sf_complex tt, int i, int j)
 	
 	    eps1 = 2.*k*h1/w;
 	    eps1 = sqrtf (1+eps1*eps1);
-	    amp1 = sqrtf(0.5*(1/eps1+1.))*expf(0.5*(1-eps1));
+/*	    amp1 = sqrtf(0.5*(1/eps1+1.))*expf(0.5*(1-eps1)); */
 	    
 	    eps2 = 2.*k*h2/w;
 	    eps2 = sqrtf (1+eps2*eps2);
-	    amp2 = sqrtf(0.5*(1/eps2+1.))*expf(0.5*(1-eps2));
+/*	    amp2 = sqrtf(0.5*(1/eps2+1.))*expf(0.5*(1-eps2)); */
 
 	    phase = 1-eps2+logf(0.5*(1+eps2)) - (1-eps1+logf(0.5*(1+eps1))) ;
 	    phase *= -SF_PI*w;

@@ -258,11 +258,11 @@ static char solve1pt(int ind,int inda,float ha,char ch)
 
 static char solve2pt(int ind,int inda,int indb,float ha,float hb,char ch) 
 {
-  int kmin,i,k,i1,k1;
+    int kmin /* ,i,k  ,i1,k1 */;
   float x1,x2;
   float xa,ta,xb,tb,x,t,tmin;
   float d,dp,dp2,df;
-  char ch1='y',ch2='n';
+  char /* ch1='y', */ ch2='n';
   int ntry=0;
 
   xa=*(x0+inda);
@@ -277,8 +277,8 @@ static char solve2pt(int ind,int inda,int indb,float ha,float hb,char ch)
   if( kmin<nt1 ) {
     while( ch2=='n' && ntry<NTRYMAX ) {
       x=lateral(t,xa,xb,ta,tb,ha,hb);
-      i=SF_MAX(0,SF_MIN(nx1-1,floor(x/hx)));
-      k=SF_MAX(0,SF_MIN(nt1-1,floor(t/ht)));
+      /*i=SF_MAX(0,SF_MIN(nx1-1,floor(x/hx)));
+	k=SF_MAX(0,SF_MIN(nt1-1,floor(t/ht))); */
       d=fn(t,ta,tb,xa,xb,ha,hb);
       dp=2.0*d;
       dp2=dp;
@@ -290,14 +290,14 @@ static char solve2pt(int ind,int inda,int indb,float ha,float hb,char ch)
         d=fn(t,ta,tb,xa,xb,ha,hb);
       } 
       x=lateral(t,xa,xb,ta,tb,ha,hb);
-      i1=SF_MAX(0,SF_MIN(nx1-1,floor(x/hx)));
-      k1=SF_MAX(0,SF_MIN(nt1-1,floor(t/ht)));
+/*      i1=SF_MAX(0,SF_MIN(nx1-1,floor(x/hx)));
+	k1=SF_MAX(0,SF_MIN(nt1-1,floor(t/ht))); */
       if( x>=x1 && x<=x2 && t>=tmin ) ch2='y';
       ntry++;
     }
     if( fabs(d)<=TOL  && t>=tmin  ) {
       if( x>=x1 && x<=x2 ) {
-	ch1='n';
+/*	ch1='n'; */
 	if( *(pup+ind)<=1 || (*(pup+ind)==2 && t<(*(t0+ind))) ) {
 	  ch='s';
 	  *(t0+ind)=t;

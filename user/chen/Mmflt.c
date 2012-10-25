@@ -32,7 +32,7 @@ int main(int argc, char*argv[])
 	int n1, n2, n3, n4, i1, i2, i3, i4, n123;
 	int rect[3];
 	float *u1;
-	void *h1, *h2, *h3;
+	void *h1=NULL, *h2=NULL, *h3=NULL;
 
 	sf_init(argc, argv);
 

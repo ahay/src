@@ -92,7 +92,7 @@ Author:		Brian Macy, Phillips Petroleum Co., 11/14/98
 	XWindowAttributes wa;
 	Colormap cmap;
 	float xbase,ybase,xscale,yscale;
-	float xamin,xamax,yamin,yamax;
+	/* float xamin,xamax,yamin,yamax; */
 	float *xcurve,*ycurve;
 	XPoint *lpoints;   /* points for drawing line */
 	XRectangle rectclip;
@@ -115,23 +115,23 @@ Author:		Brian Macy, Phillips Petroleum Co., 11/14/98
 		XSetForeground(dpy,gcc,1L);
 
 	if (style==NORMAL) {
-		xamin = (x1beg<x1end)?x1beg:x1end;
-		xamax = (x1beg>x1end)?x1beg:x1end;
+	    /* xamin = (x1beg<x1end)?x1beg:x1end;
+	       xamax = (x1beg>x1end)?x1beg:x1end; */
 		xscale = width/(x1end+p1end-x1beg-p1beg);
 		xbase = x-xscale*(x1beg+p1beg);
-		yamin = (x2beg<x2end)?x2beg:x2end;
-		yamax = (x2beg>x2end)?x2beg:x2end;
+/*		yamin = (x2beg<x2end)?x2beg:x2end;
+		yamax = (x2beg>x2end)?x2beg:x2end; */
 		yscale = -height/(x2end+p2end-x2beg-p2beg);
 		ybase = y+height-yscale*(x2beg+p2beg);
 		xcurve=x1curve;
 		ycurve=x2curve;
 	} else {
-		xamin = (x2beg<x2end)?x2beg:x2end;
-		xamax = (x2beg>x2end)?x2beg:x2end;
+/*		xamin = (x2beg<x2end)?x2beg:x2end;
+		xamax = (x2beg>x2end)?x2beg:x2end; */
 		xscale = width/(x2end+p2end-x2beg-p2beg);
 		xbase = x-xscale*(x2beg+p2beg);
-		yamin = (x1beg<x1end)?x1beg:x1end;
-		yamax = (x1beg>x1end)?x1beg:x1end;
+/*		yamin = (x1beg<x1end)?x1beg:x1end;
+		yamax = (x1beg>x1end)?x1beg:x1end; */
 		yscale = height/(x1end+p1end-x1beg-p1beg);
 		ybase = y-yscale*(x1beg+p1beg);
 		ycurve=x1curve;

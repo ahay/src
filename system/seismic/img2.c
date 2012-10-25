@@ -549,7 +549,7 @@ void img2g(int iw)
     int irx,iry,irz;
 
     float hh,aa,bb; /* aa,bb in radians */
-    float hx,hy,hz;
+    float hx,hy /* ,hz */;
     sf_complex cs,cr;
     float hscale;
 
@@ -572,7 +572,7 @@ void img2g(int iw)
 	    for(iha=0; iha<aha.n; iha++) {    /* longitude */
 		aa = aha.o + iha*aha.d;
 		
-		hz = hh * sin(aa);
+		/* hz = hh * sin(aa); */
 		hx = hh * cos(aa) * cos(bb);
 		hy = hh * sin(aa) * sin(bb);
 

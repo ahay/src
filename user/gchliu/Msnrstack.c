@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 {
     int nt, nh, ncmp, it, icmp, ih, iw, w, zero, shift;
     float *indata, *outdata, *stack, *win1, *win2, *outweight;
-    float dt,var, maxwin1, maxwin2, ee, esp, dh, dcmp,cmp0, t0, h0, sumab, sumwin1, sumwin2, weight, sumweight, sft;
+    float dt,var, maxwin1, maxwin2, ee, esp, dh, dcmp,cmp0, t0, h0, /* sumab, sumwin1, sumwin2, */ sumweight, sft;
 
     sf_file in, out; 
     
@@ -110,11 +110,11 @@ int main(int argc, char* argv[])
               zero = 0;
 	       sumweight=0;
               for (ih=0; ih < nh; ih++){
-                    sumwin1 = 0;
+		  /* sumwin1 = 0;
                     sumwin2 = 0;
-                    sumab = 0;
+                    sumab = 0; */
                    shift = SF_MAX(0,SF_MIN(nt-w, it-w/2-1));
-		   weight=0;
+		   /* weight=0; */
 		   var=0;
 		   maxwin1=0;
 		   maxwin2=0;

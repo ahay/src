@@ -30,11 +30,11 @@ void eigvec2( float **a,
 /*<test>*/
 {
 /*< return eigenvector for given eigenvalue of 2x2 matrix >*/
-    float a11,a12,a21,a22;
+    float /* a11,a12, */ a21,a22;
     float uu;
     
-    a11 = a[0][0];
-    a12 = a[0][1];
+    /*a11 = a[0][0];
+      a12 = a[0][1]; */
     a21 = a[1][0];
     a22 = a[1][1];
 

@@ -35,18 +35,20 @@ float* psitti(vc3d *nn,
 /*< deviation angle in TTI media >*/
 {
     float *ttipar;
-    vc3d bb;
+/*    vc3d bb; */
     int ips;
     float psi,v_s=0.,v_r=0.; /* output variables */
     float ps_,vs_,vr_; /*  local variables */
     float     ts_,tr_;
-    float     t_s,t_r;
+/*    float     t_s,t_r; */
     float     as_,ar_;
-    float     a_s,a_r;
+/*    float     a_s,a_r; */
     vc3d  ns_,nr_;
     float snell,snell_;
 
+/*
     float deg2rad,rad2deg;
+*/
 
 /*    sf_warning("tht=%g",tht/SF_PI*180.);*/
 /*    sf_warning("eps=%g",eps);*/
@@ -54,11 +56,13 @@ float* psitti(vc3d *nn,
 /*    sf_warning("vep=%g",vep);*/
 /*    sf_warning("ves=%g",ves);*/
 
+/*
     deg2rad = SF_PI/180;
     rad2deg = 180/SF_PI;
+*/
 
     ttipar=sf_floatalloc(3);
-    bb=vcp3d(qq,nn);
+/*    bb=vcp3d(qq,nn); */
     
     snell=1e6;
     psi=0;
@@ -91,12 +95,13 @@ float* psitti(vc3d *nn,
 	    snell=snell_;
 	    psi=ps_;
 	    
+/*
 	    t_s=ts_;
 	    t_r=tr_;
 
 	    a_s=as_;
 	    a_r=ar_;
-
+*/
 	    v_s=vs_;
 	    v_r=vr_;
 	}

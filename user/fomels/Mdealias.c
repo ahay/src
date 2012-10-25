@@ -33,7 +33,7 @@ int main (int argc, char *argv[])
     bool both;
     int n1, n2, n3, n12, m2, m3, m12, i1, i2, i3, order;
     float d2, d3, eps;
-    float ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***qt, ***uu, ***p2, ***q2;
+    float ***u1, ***uu1, ***u2, ***uu2, ***p, ***q, ***qt, ***uu, ***p2; /* , ***q2; */
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -76,10 +76,10 @@ int main (int argc, char *argv[])
     
     if (both) {
 	p2 = sf_floatalloc3(n1,n2,n3);
-	q2 = sf_floatalloc3(n1,n2,n3);
+	/* q2 = sf_floatalloc3(n1,n2,n3); */
     } else {
 	p2 = NULL;
-	q2 = NULL;
+	/* q2 = NULL; */
     }
     
     uu1 = sf_floatalloc3(n1,m2,n3);

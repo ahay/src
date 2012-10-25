@@ -85,7 +85,7 @@ static void init(char meth)
 static void chebyshev_init(void)
 {
     int i,j,ind,k,klo,khi;
-    float yp1,ypn, *u, *b, *b2,a1,a2,un,qn,x,aux;
+    float yp1,ypn, *u, *b, *b2,a1,a2,un,/*qn,*/x,aux;
 
     u = sf_floatalloc(nx);
     b = sf_floatalloc(nx);
@@ -109,7 +109,7 @@ static void chebyshev_init(void)
 	    u[i]=(b[i+1]-b[i])/hx-(b[i]-b[i-1])/hx;
 	    u[i]=(3.0*u[i]/hx-0.5*u[i-1])/aux;
 	}
-	qn=0.5;
+/*	qn=0.5; */
 	un=(3.0/hx)*(ypn-(b[nx1]-b[nx2])/hx);
 	b2[nx1]=(un-0.5*u[nx2])/(0.5*b2[nx2]+1.0);
 	for( k=nx-2; k>=0; k-- ) b2[k]=b2[k]*b2[k+1]+u[k];
@@ -142,7 +142,7 @@ static void qp_lf(void)
 {
   int i,k=0,ind;
   const float lam=ht/(hx*hx);
-  float ff,qq,f0,f1,f2,f3,q0,q1,q2,q3;
+  float ff,qq,/* f0,f1, */ f2,f3,q0,q1,q2,q3;
 
   sf_warning("lam=%.4e",lam);
 
@@ -158,8 +158,8 @@ static void qp_lf(void)
 	  q2=(i>1) ? *(q+ind-2) : 1.0;
 	  q3=(i<nx2) ? *(q+ind+2) : 1.0;
 	  qq=*(q+ind);
-	  f0=*(f+ind-1);
-	  f1=*(f+ind+1);
+/*	  f0=*(f+ind-1);
+	  f1=*(f+ind+1); */
 	  f2=(i>1) ? *(f+ind-2) : *(f+k*nx);
 	  f3=(i<nx1) ? *(f+ind+2) : *(f+nx1+k*nx);
 	  ff=*(f+ind);

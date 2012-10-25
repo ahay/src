@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
     float oa,da,a;
     float ob,db,b;
     float ol,dl,l,lt,lx,lz;
-    float ot,dt;
-    float ox,dx;
+/*    float ot,dt;
+      float ox,dx; */
 
     int   ***kt=NULL,*pkt;
     int   ***kx=NULL,*pkx;
@@ -113,8 +113,8 @@ int main(int argc, char* argv[])
     ax = sf_iaxa(Fs,2); sf_setlabel(ax,"x"); sf_setunit(ax,""); 
     az = sf_iaxa(Fs,3); sf_setlabel(az,"z"); sf_setunit(az,"");
 
-    nt = sf_n(at); ot=sf_o(at); dt=sf_d(at);
-    nx = sf_n(ax); ox=sf_o(ax); dx=sf_d(ax);
+    nt = sf_n(at); /* ot=sf_o(at); dt=sf_d(at); */
+    nx = sf_n(ax); /* ox=sf_o(ax); dx=sf_d(ax); */
     nz = sf_n(az); 
 
     if(verb) {

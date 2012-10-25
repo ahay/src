@@ -630,12 +630,12 @@ int ra_read(RARR *arr, FILE* stream)
             break;
         
         case 1:
-            fread(arr->_s, sizeof(ireal), n[0], stream);
+            (void) fread(arr->_s, sizeof(ireal), n[0], stream);
             break;
         #if RARR_MAX_NDIM > 1
         case 2:
             for ( li[1] = 0; li[1] < n[1]; ++li[1] )
-                fread(arr->_s + li[1] * arr->_dims[0].n0, sizeof(ireal), n[0], stream);
+                (void) fread(arr->_s + li[1] * arr->_dims[0].n0, sizeof(ireal), n[0], stream);
             break;
         #endif
         #if RARR_MAX_NDIM > 2
@@ -643,8 +643,8 @@ int ra_read(RARR *arr, FILE* stream)
             for ( li[2] = 0; li[2] < n[2]; ++li[2] )
             {
                 for ( li[1] = 0; li[1] < n[1]; ++li[1] )
-                    fread(arr->_s + (li[1] + li[2] * arr->_dims[1].n0) * arr->_dims[0].n0, 
-                           sizeof(ireal), n[0], stream);
+                    (void) fread(arr->_s + (li[1] + li[2] * arr->_dims[1].n0) * arr->_dims[0].n0, 
+				 sizeof(ireal), n[0], stream);
             }
             break;
         #endif
