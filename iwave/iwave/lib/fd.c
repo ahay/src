@@ -50,7 +50,7 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
   int i, idim;
   int ndim = (model->g).dim;
   
-  for (i = 0;i < RDOM_MAX_NARR;i ++) {
+  for (i = 0;i < RDOM_MAX_NARR;i++) {
     IASN(dgs[i], IPNT_1);
     IASN(dge[i], IPNT_0);
   }
@@ -61,7 +61,7 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
   IASN(ls, IPNT_1);
   IASN(le, IPNT_0);
 #if INCLUDE_BOUNDARY_PNTS
-  /*< include left and right boundary pnts */
+  /*< include left and right boundary pnts */   
   /*< ls, le: local start, end for primal grid */
   for (idim = 0;idim < ndim;idim ++) {
     gs_pa[idim] = -model->nls[idim];
@@ -72,8 +72,8 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
     le[idim] = gn_pa[idim] * (long)(crank[idim] + 1);
     le[idim] = gs_pa[idim] + le[idim] / (long)cdims[idim]-1;
     if (le[idim] < ls[idim]) {
-      fprintf(stream, "Error: in fd_setcompdom: le[%d] < ls[%d]\n",
-              idim, idim);
+      fprintf(stream, "Error: in fd_setcompdom: le[%d] = %d < ls[%d] = %d\n",
+              idim, le[idim], idim, ls[idim]);
       return E_INTERNAL;
     }
   } 
@@ -103,8 +103,8 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
     le[idim] = gn_pa[idim] * (long)(crank[idim] + 1);
     le[idim] = gs_pa[idim] + le[idim] / (long)cdims[idim]-1;
     if (le[idim] < ls[idim]) {
-      fprintf(stream, "Error: in fd_setcompdom: le[%d] < ls[%d]\n",
-              idim, idim);
+      fprintf(stream, "Error: in fd_setcompdom: le[%d] = %d < ls[%d] = %d\n",
+              idim, le[idim], idim, ls[idim]);
       return E_INTERNAL;
     }
   } 

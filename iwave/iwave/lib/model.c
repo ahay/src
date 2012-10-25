@@ -10,7 +10,7 @@ Igor Terentyev.
 /*----------------------------------------------------------------------------*/
 
 void next_step(TIMESTEPINDEX * ts) {
-  if (ts->iv == ts->niv) {
+  if (ts->iv == ts->niv-1) {
     ts->iv=0;
     ts->it++;
   }
@@ -49,7 +49,7 @@ int im_construct(IMODEL * model) {
 
   model->tsind.it=0;
   model->tsind.iv=0;
-  model->tsind.niv=1;
+  model->tsind.niv=0;
   model->tsind.dt=REAL_ZERO;
 
   return 0;

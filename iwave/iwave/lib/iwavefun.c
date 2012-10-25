@@ -119,15 +119,24 @@ int initoutstream(FILE ** stream, int rk, int sz) {
 int readinput(PARARRAY ** pars, FILE * stream, int argc, char **argv) {
 
   int err=0; /* error code */
+  int i;     /* counter */
 
   /* read parameters */
-  //  if (pars) ps_delete(&pars);
+  if (*pars) {
+    fprintf(stderr,"ERROR: iwave::readinput\n");
+    fprintf(stderr,"  called on non-null PARARRAY argument\n");
+    return E_OTHER;
+  }
   *pars = ps_new();
-  err=ps_createargs(*pars,argc-1,argv+1);
+  err=ps_createargs(*pars,argc-1,&(argv[1]));
   if (err) {
     fprintf(stream,
-	    "ERROR. Internal: error #%d processing command line. ABORT.\n", 
+	    "ERROR: iwave::readinput from ps_creatargs, err = %d\n",
 	    err);
+    fprintf(stream,"  called with args:\n");
+    fprintf(stream,"  argc = %d\n",argc-1);
+    for (i=0;i<argc-1;i++) 
+      fprintf(stream,"  argv[%d] = %s\n",i,argv[i+1]);
     return err;
   }
 #ifdef IWAVE_VERBOSE

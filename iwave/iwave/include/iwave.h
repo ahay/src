@@ -280,11 +280,17 @@ extern "C" {
    * @param [out] state - (IWAVE *) IWAVE struct pointer
    * @param [in] par - (PARARRAY *) param array
    * @param [in] stream - (FILE *) verbose output stream
-   * @param[in]   panelindex (int) - panel index of extended model (always be 0 for non-extended model) 
+   * @param[in]  panelindex (int) - panel index of extended model  
+   * @param[in] isfirst (int) - flag - set for first panel of block 
+   *            assigned to this process, else unset
    *
    * @return 0 on successful completion, else error code
    */ 
-  int iwave_static_init(IWAVE * state, PARARRAY * par, FILE * stream, int panelindex);
+  int iwave_static_init(IWAVE * state, 
+			PARARRAY * par, 
+			FILE * stream, 
+			int panelindex, 
+			int isfirst);
 
   /**
    * Takes current substep, as indicated by internal data of IWAVE argument

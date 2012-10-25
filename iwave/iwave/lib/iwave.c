@@ -217,16 +217,29 @@ void iwave_dynamic_init(IWAVE * state,
   /* transfer start time to state */
   (state->model).tsind.it=istart;
   (state->model).tsind.iv=0;
+  (state->model).tsind.niv=fdm->numsubsteps();
 
 }
 
-int iwave_static_init(IWAVE * state, PARARRAY * par, FILE * stream, int panelindex) {
+int iwave_static_init(IWAVE * state, 
+		      PARARRAY * par, 
+		      FILE * stream, 
+		      int panelindex,
+		      int firstindex) {
   int err=0;
-  err=fd_mread(stream, 
-	       &(state->model),
-	       par,
-	       panelindex);
-  //  fprintf(stderr,"returning from iwave_static_init: ndim=%ld\n",(state->model).g.dim);
+
+  /* read model data at panelindex if panelindex is first in the block
+     assigned to this process OR if model consists of multiple
+     panels; else no-op. Assumes block of simulations will always
+     begin at firstindex */
+  if ((state->model.g.dim < state->model.g.gdim) ||
+      (panelindex == firstindex)) 
+ 
+    err=fd_mread(stream, 
+		 &(state->model),
+		 par,
+		 panelindex);
+    //  fprintf(stderr,"returning from iwave_static_init: ndim=%ld\n",(state->model).g.dim);
   if (!err && (state->printact > 5)) {
     fprintf(stream,"----------------- after iwave_static_init->fd_mread --------------------\n");
     rd_a_print(&((state->model).ld_a),stream);
@@ -258,12 +271,11 @@ int iwave_run(IWAVE * state, FILE * stream) {
   it = (state->model).tsind.it;
   iv = (state->model).tsind.iv;
 
-  if ( state->printact > 0  && (state->model).tsind.iv == 0) 
-  {
-    fprintf(stream,"it=%d\n", (state->model).tsind.it);
+  if ( state->printact == 1 ) {
+    if ((state->model).tsind.iv == 0) 
+      fprintf(stream,"it=%d\n", (state->model).tsind.it);
   }
-  else if ( state->printact > 1) 
-  {
+  if ( state->printact > 1) {
     fprintf(stream,"*************************************\n");
     fprintf(stream,"* iwave_run: it=%d iv=%d\n", (state->model).tsind.it, (state->model).tsind.iv);
     fprintf(stream,"*************************************\n");
@@ -281,10 +293,6 @@ int iwave_run(IWAVE * state, FILE * stream) {
      current substep, which must be synchronized.
   */    
   
-  if ( state->printact > 1 ) {
-    fprintf(stream,"\n------ iwave_run: COMPUTE it = %d iv = %d -------------\n",it,iv);
-    fflush(stream); 
-  }
   if ( state->printact > 5 ) {
     fprintf(stream,"\n------ iwave_run: before update\n");
     for (ia=0;ia<RDOM_MAX_NARR;ia++) {

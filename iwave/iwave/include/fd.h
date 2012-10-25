@@ -32,6 +32,8 @@
 #define DEP_DFDX   2
 /** y-derivative dependency */
 #define DEP_DFDY   3
+/** dependency on all derivs (Laplacian) */
+#define DEP_LAPF   5
   
 #define DUAL_GRID   1
 #define PRIMAL_GRID 0
