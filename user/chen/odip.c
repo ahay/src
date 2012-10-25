@@ -46,7 +46,7 @@ void odip_init(char* interp, int mf1, int mf2, float rad,
 	p = sf_complexalloc2(n1, n2);
 
 	r=rad;
-	p0 = rad*cexpf(sf_cmplx(0, dip0));
+	p0 = dip0;
 	
 	opwd_init(nf1, nf2, interp, r);
 	if(rect[0]>0 && rect[1]>0)
@@ -80,15 +80,33 @@ void odip_close()
 
 #define divn(a, b)  (a*b/(b*b+10E-15))
 
+static void odip_verb(int it, int n, float *u)
+{
+	int i1;
+	double norm;
+
+	if(verb)
+	{
+		for(i1=0, norm=0.0; i1<n; i1++)
+			norm += (u[i1]*u[i1]);
+		sf_warning("res1 %d %g", it, sqrtf(norm/n));
+	}
+}
 
 void odip(float **in, float **dip, int nit, float eta)
 /*< omnidirectional dip estimation >*/
 {
 	int it, i1;
-	double  norm, s1, c1;
+	double  c1;
+	sf_complex dip0;
+
+	dip0 = r*cexpf(sf_cmplx(0, p0));
 
 	for(i1=0; i1<n1*n2; i1++)
-		p[0][i1] = p0;
+	{
+		dip[0][i1] = p0;
+		p[0][i1] = dip0;
+	}
 
 	for (it=0; it<nit; it++)
 	{
@@ -96,12 +114,56 @@ void odip(float **in, float **dip, int nit, float eta)
 		opwdpd(n1, n2, in, p, u2, 0);
 		opwdpd(n1, n2, in, p, u3, 1);
 
-		if(verb)
+		odip_verb(it+1, n1*n2, u1[0]);
+		for(i1=0, c1=0.0; i1<n1*n2; i1++)
 		{
-			for(i1=0, norm=0.0; i1<n1*n2; i1++)
-				norm += (u1[0][i1]*u1[0][i1]);
-			sf_warning("res1 %d %g", it+1, sqrtf(norm/n1/n2));
+			u4[0][i1] = u2[0][i1]*creal(p[0][i1]) 
+				- u3[0][i1]*cimag(p[0][i1]);
+			c1 += (u4[0][i1]*u4[0][i1]);
 		}
+		c1=sqrtf(c1/(n1*n2));
+		for(i1=0; i1<n1*n2; i1++)
+		{
+			u1[0][i1] /= c1;
+			u4[0][i1] /= c1;
+		}
+
+		if(use_divn)
+		{
+			sf_divn(u1[0], u4[0], u5[0]);
+		}else{
+			for(i1=0; i1<n1*n2; i1++)
+			{
+				u5[0][i1] = divn(u1[0][i1], u4[0][i1]);
+			}
+		}
+		for(i1=0; i1<n1*n2; i1++)
+		{
+			dip[0][i1] -= eta * u5[0][i1];
+			p[0][i1] = r*cexpf(sf_cmplx(0, dip[0][i1]));
+		}
+
+	}
+}
+
+void oslope(float **in, float **dip, int nit, float eta)
+/*< omnidirectional slope estimation >*/
+{
+	int it, i1;
+	double  s1, c1;
+	sf_complex dip0;
+
+	dip0 = r*cexpf(sf_cmplx(0, p0));
+	for(i1=0; i1<n1*n2; i1++)
+		p[0][i1] = dip0;
+
+	for (it=0; it<nit; it++)
+	{
+		opwd(n1, n2, in, p, u1);
+		opwdpd(n1, n2, in, p, u2, 0);
+		opwdpd(n1, n2, in, p, u3, 1);
+
+		odip_verb(it+1, n1*n2, u1[0]);
 
 		if(use_divn)
 		{

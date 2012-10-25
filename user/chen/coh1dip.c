@@ -1,4 +1,4 @@
-/* first coherence */
+/* first coherence with estimated dip */
 
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -23,10 +23,10 @@
 #include <omp.h>
 #endif
 
-static int nw, n1, n2, lag1, lag2;
+static int nw, n1, n2;
 static float ***u0, ***u1, **v;
 
-static void coh1_normalize(float *d, float **dn)
+static void coh1dip_normalize(float *d, float **dn)
 // normalize a trace
 {
 	int i1, iw;
@@ -58,55 +58,47 @@ static void coh1_normalize(float *d, float **dn)
 
 }
 
-static int dipscan(int n, int minl, int maxl, float *x, float **y, float *pv)
-// dip scan
-{
-	int il, i1, max, nl;
 
-	max = 0;
-	nl = maxl-minl;
-	for(il=0; il<=nl; il++)
-	{
-		pv[il] = 0.0;
-		for(i1=0; i1<=2*n; i1++)
-			pv[il] += x[i1]*y[il+minl][i1];
-		if(pv[il] > pv[max]) max = il;
-	}
-	return max;
+static float coh1dip(int n, float *x, float *y)
+{
+	int i1;
+	float p;
+
+	p = 0.0;
+	for(i1=0; i1<=2*n; i1++)
+		p += x[i1]*y[i1];
+
+	return p;
 }
 
-void coh1_init(int win, int m1, int m2, int l1, int l2)
+
+void coh1dip_init(int win, int m1, int m2)
 /*< initialize >*/
 {
 	nw = win;
 	n1 = m1;
 	n2 = m2;
-	lag1 = l1;
-	lag2 = l2;
 	u0 = sf_floatalloc3(2*nw+1, n1, n2);
 	u1 = sf_floatalloc3(2*nw+1, n1, n2);
-	v = sf_floatalloc2(2*(l1>l2? l1:l2)+1, n2);
 	// use two d memory for OPENMP
 }
 
 
-void coh1_close()
+void coh1dip_close()
 /*< release memory >*/
 {
 	free(u0[0][0]);
 	free(u1[0][0]);
 	free(u0[0]);
 	free(u1[0]);
-	free(v[0]);
 	free(u0);
 	free(u1);
-	free(v);
 }
 
 
 #define MIN(a,b)  (a)<(b)?(a):(b)
 #define MAX(a,b)  (a)>(b)?(a):(b)
-void coh1_2d(float **d)
+void coh1dip_2d(float **d, float **p)
 /*< two-d coherence >*/
 {
 	int i1, i2, k;
@@ -117,7 +109,7 @@ void coh1_2d(float **d)
 	private(i2)       
 #endif
 	for(i2=0; i2<n2; i2++)
-		coh1_normalize(d[i2], u1[i2]);
+		coh1dip_normalize(d[i2], u1[i2]);
 
 #ifdef _OPENMP
 #pragma omp parallel for     \
@@ -128,15 +120,16 @@ void coh1_2d(float **d)
 	{
 		for(i1=0; i1<n1; i1++)
 		{
-			k = dipscan(nw, MAX(-i1, -lag1), MIN(n1-i1-1, lag1),
-				u1[i2-1][i1], u1[i2]+i1, v[i2]);
-			d[i2-1][i1] = sqrt(v[i2][k]);
+			k = i1 + p[i2-1][i1]+0.5;
+			k = MAX(k, 0);
+			k = MIN(k, n1-1);
+			d[i2-1][i1] = sqrt(coh1dip(nw, u1[i2-1][i1], u1[i2][k]));
 		}
 	}
 }
 
 
-void coh1_3d_init2d(float **d)
+void coh1dip_3d_init2d(float **d)
 /*< initialize for each 2D profile  >*/
 {
 	int i2;
@@ -146,11 +139,11 @@ void coh1_3d_init2d(float **d)
 	private(i2)       
 #endif
 	for(i2=0; i2<n2; i2++)
-		coh1_normalize(d[i2], u0[i2]);
+		coh1dip_normalize(d[i2], u0[i2]);
 }
 
 
-void coh1_3d(float **d)
+void coh1dip_3d(float **d, float **p1, float **p2)
 /*< recursive first coherence >*/
 {
 	int i1, i2, k1, k2;
@@ -162,23 +155,26 @@ void coh1_3d(float **d)
 	private(i2)       
 #endif
 	for(i2=0; i2<n2; i2++)
-		coh1_normalize(d[i2], u1[i2]);
+		coh1dip_normalize(d[i2], u1[i2]);
 
 #ifdef _OPENMP
 #pragma omp parallel for     \
 	schedule(dynamic,1)   \
-	private(i1,i2, t1, k1, k2)       
+	private(i1,i2, t1,k1, k2)       
 #endif
 	for(i2=1; i2<n2; i2++)
 	{
 		for(i1=0; i1<n1; i1++)
 		{
-			k1 = dipscan(nw, MAX(-i1, -lag1), MIN(n1-i1-1, lag1),
-				u1[i2-1][i1], u1[i2]+i1, v[i2]);
-			t1 = v[i2][k1];
-			k2 = dipscan(nw, MAX(-i1, -lag2), MIN(n1-i1-1, lag2),
-				u1[i2-1][i1], u0[i2-1]+i1, v[i2]);
-			d[i2-1][i1] = sqrt(t1*v[i2][k2]);
+			k1 = i1 + p1[i2-1][i1]+0.5;
+			k1 = MAX(k1, 0);
+			k1 = MIN(k1, n1-1);
+			k2 = i1 + p2[i2-1][i1]+0.5;
+			k2 = MAX(k2, 0);
+			k2 = MIN(k2, n1-1);
+			t1 = coh1dip(nw, u1[i2-1][i1], u1[i2][k1]);
+			t1 *= coh1dip(nw, u0[i2-1][i1], u1[i2-1][k1]);
+			d[i2-1][i1] = sqrt(t1);
 		}
 	}
 	p = u0;

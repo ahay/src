@@ -28,7 +28,7 @@ int main(int argc, char*argv[])
 	sf_file in, out;
 	int m, n, nf, n1, n2, n3, rect[2], niter, liter;
 	int i3;
-	bool verb;
+	bool verb, slope;
 	float **wav, **dip, radius, eta, dip0;
 	char *interp;
 
@@ -69,6 +69,8 @@ int main(int argc, char*argv[])
 	/* starting dip */
 	if (!sf_getbool("verb", &verb)) verb = false;
 	/* verbosity flag */
+	if (!sf_getbool("slope", &slope)) slope = false;
+	/* slope (y) or dip (n) estimation */
 
 	wav = sf_floatalloc2(n1, n2);
 	dip = sf_floatalloc2(n1, n2);
@@ -80,7 +82,8 @@ int main(int argc, char*argv[])
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(wav[0], n1*n2, in);
-		odip(wav, dip, niter, eta);
+		if(slope) oslope(wav, dip, niter, eta);
+		else odip(wav, dip, niter, eta);
 		sf_floatwrite(dip[0], n1*n2, out);
 	}
 
