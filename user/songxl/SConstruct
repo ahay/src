@@ -4,7 +4,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-wave1 wave4 wave124 sbd waveab wave2dss wavefft wavefftb
+wave1 wave4 wave124 sbd waveab wave2dss 
 wavefft1 pspig ffd1 
                                  fdb1 fd2bs
                                  pspifcos2bs
