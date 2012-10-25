@@ -24,8 +24,8 @@
 #define NSTR 128
 
 /* uncomment to write to the rk-dep output stream at every time step 
-   #define VERBOSE_STEP
 */
+   #define VERBOSE_STEP
 /*============================================================================
  *                             END INCLUDES 
  * ============================================================================*/
@@ -35,7 +35,7 @@ int main(int argc, char ** argv) {
   int err=0;               /* error flag         */
   int runflag=1;           /* run time loop if 1 */
   FILE * stream;           /* output stream      */
-  PARARRAY * pars;           /* parameter array    */
+  PARARRAY * pars=NULL;    /* parameter array    */
   IWAVE state;             /* model state        */
   SAMPLER trace;           /* trace sampler      */
   POINTSRC * ptsrc=NULL;   /* acoustic pt src    */
@@ -53,7 +53,6 @@ int main(int argc, char ** argv) {
   IPNT sindex;             /* sample array index */
   RPNT smult;              /* multiplier array   */
   RPNT scoord;             /* source cell loc    */
-  int extmod;              /* mult mdl panel flag*/
   int dump_term=0;         /* trace info dump    */
   int istart=0;            /* start index        */
   int ts;                  /* thread support lvl */
@@ -183,10 +182,6 @@ int main(int argc, char ** argv) {
     for (i=0;i<RARR_MAX_NDIM;i++) tmult[i]=REAL_ONE/((ireal)(state.model.g.dim));
     RASN(scoord,RPNT_0);
   
-    /* detect multiple model panels, flag */
-    extmod = 0;
-    if (state.model.g.dim < state.model.g.gdim) extmod = 1;
-
     /* construct traceterm object */
     err=sampler_construct(&trace,pars,tindex,tmult,scoord,0,hdrkey,datakey,stream);
     if (err) {
@@ -245,12 +240,13 @@ int main(int argc, char ** argv) {
     while ( (trace.t.tg.xrec < trace.t.tg.last+1)) {
 
       /* iwave_static_init should succeed in record range [0,nrec) */
-      if (extmod) {
-	err = iwave_static_init(&state,pars,stream,trace.t.tg.xrec);
-      }
-      else {
-	if (trace.t.tg.xrec == trace.t.tg.first) 
-	  err = iwave_static_init(&state,pars,stream,0);
+      err = iwave_static_init(&state,pars,stream,
+				trace.t.tg.xrec,trace.t.tg.first);
+      if (err) {  
+	fprintf(stream,"ERROR: main from iwave_static_init ",
+		"xrec = %d, err = %d. ABORT\n", 
+		trace.t.tg.xrec, err);
+	abortexit(err,pars,&stream);
       }
 
       if (err) {  
@@ -402,11 +398,8 @@ int main(int argc, char ** argv) {
 	fflush(stream);
 #endif
 
-#ifndef IWAVE_EXTEND_MODEL
+	// note: only zero panel recorded, even for extended model;
 	err=movie_run(&mt,&(state.model),stream,0);
-#else
-	err=movie_run(&mt,&(state.model),stream, trace.t.tg.irec);
-#endif
 	if (err) {
 	  fprintf(stream,"ERROR: main from movie_run. ABORT\n");
 	  abortexit(err,pars,&stream);
