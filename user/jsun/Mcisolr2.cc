@@ -15,7 +15,6 @@
 //   along with this program; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <time.h>
-#include <complex.h>
 #include <rsf.hh>
 
 #include "vecmatop.hh"
@@ -23,8 +22,8 @@
 
 using namespace std;
 
-static std::valarray<sf_complex>  vs;
-static std::valarray<sf_complex> ks;
+static std::valarray<float> vs;
+static std::valarray<float> ks;
 static float dt;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
@@ -35,7 +34,9 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	  res(a,b) = exp(_Complex_I*vs[rs[a]]*ks[cs[b]]*dt); 
+	    float phase = vs[rs[a]]*ks[cs[b]]*dt; 
+	    res(a,b) = cpx(cos(phase),sin(phase)); 
+//	    sf_warning("real=%g, imag=%g", real(res(a,b)),imag(res(a,b)));
 	}
     }
     return 0;
@@ -65,7 +66,7 @@ int main(int argc, char** argv)
     vel.get("n1",nz);
     vel.get("n2",nx);
     int m = nx*nz;
-    std::valarray<sf_complex> vels(m);
+    std::valarray<float> vels(m);
     vel >> vels;
     vs.resize(m);
     vs = vels;
@@ -87,12 +88,12 @@ int main(int argc, char** argv)
     float kx, kz;
 
     int n = nkx*nkz;
-    std::valarray<cpx> k(n);
+    std::valarray<float> k(n);
     for (int ix=0; ix < nkx; ix++) {
 	kx = kx0+ix*dkx;
 	for (int iz=0; iz < nkz; iz++) {
 	    kz = kz0+iz*dkz;
-	    k[iz+ix*nkz] = cpx(crealf(2*SF_PI*hypot(kx,kz)), cimagf(2*SF_PI*hypot(kx,kz)));
+	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
 	}
     }
     ks.resize(n);
@@ -116,12 +117,15 @@ int main(int argc, char** argv)
     iC ( sample(midx,lidx,lmat) );
 
     CpxNumMat lmat2(m,n2);
-    iC( dgemm(1.0, lmat, mid, 0.0, lmat2) );
+    iC( zgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    sf_complex *ldat = lmat2.data();
+    cpx *ldat = lmat2.data();
     std::valarray<sf_complex> ldata(m*n2);
-    for (int k=0; k < m*n2; k++) 
-	ldata[k] = ldat[k];
+    for (int k=0; k < m*n2; k++) {
+	ldata[k] = sf_cmplx(real(ldat[k]),imag(ldat[k]));
+//	sf_warning("real of ldat=%g, imag of ldat=%g", real(ldat[k]),imag(ldat[k]));
+    }
+
     oRSF left("left");
     left.put("n1",m);
     left.put("n2",n2);
@@ -130,10 +134,12 @@ int main(int argc, char** argv)
     CpxNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
 
-    sf_complex *rdat = rmat.data();
+    cpx *rdat = rmat.data();
     std::valarray<sf_complex> rdata(n2*n);    
-    for (int k=0; k < n2*n; k++) 
-	rdata[k] = rdat[k];
+    for (int k=0; k < n2*n; k++) {
+	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
+//    	sf_warning("real of rdat=%g, imag of rdat=%g", real(rdat[k]),imag(rdat[k]));
+    }
     oRSF right;
     right.put("n1",n2);
     right.put("n2",n);

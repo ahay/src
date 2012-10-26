@@ -4,7 +4,7 @@ import bldutil
 
 progs = 'cfftwave2'
 
-ccprogs = 'anisoSVlr2 anisoEPlr2 aclfEPlr2 aclfSVlr2 anisoOEPlr2 orthoESlr orthoEPlr'
+ccprogs = 'anisoSVlr2 anisoEPlr2 aclfEPlr2 aclfSVlr2 anisoOEPlr2 orthoESlr orthoEPlr cisolr2'
 
 pyprogs = 'fft'
 pymods = ''

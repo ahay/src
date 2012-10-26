@@ -1,4 +1,4 @@
-/* 1-D complex lowrank FFT wave extrapolation */
+/* 2-D complex lowrank FFT wave extrapolation */
 /*
   Copyright (C) 2008 University of Texas at Austin
   
@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
   int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
   float dt, f, fscale;
   float *curr, **wave;
-  //  float *ww;
-  //  float *rr;
+//  float *ww;
+//  float *rr;
   sf_complex **lft, **rht, *cwave, *cwavem;
   sf_file Fr;
   sf_file inp, out, left, right;
