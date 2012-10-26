@@ -164,7 +164,7 @@ int movie_init(MOVIE * mt,
       fprintf(stream,"failed to create movie header file %s\n",mt->smovie[i]);
       return E_FILE;
     }
-    fprintf(stderr,"creating movie rsf\n");
+
     for (j=0;j<(mt->mg).dim-1;j++) {
       fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
 	      j+1,(mt->mg).axes[j].n,
