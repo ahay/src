@@ -230,7 +230,7 @@ class Project(Environment):
 
         self.Append(ENV={'RSFROOT':root,
                          'DATAPATH':self.path,
-                         'OMP_NUM_THREADS':os.environ.get('OMP_NUM_THREADS',rsf.path.cpus()),
+                         'OMP_NUM_THREADS': os.environ.get('OMP_NUM_THREADS',rsf.path.cpus()),
                          'TMPDATAPATH': tmpdatapath,
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',
@@ -299,7 +299,7 @@ class Project(Environment):
 
         
         self.jobs = GetOption('num_jobs')
-        cluster = self.get('CLUSTER','localhost 1')
+        cluster = self.get('CLUSTER',os.environ.get('RSF_CLUSTER','localhost 1'))
         hosts = string.split(cluster)
         self.nodes = []
         for i in range(1,len(hosts),2):
