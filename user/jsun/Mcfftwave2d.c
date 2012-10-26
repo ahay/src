@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
     float  *ww,*rr;      /* I/O arrays*/
     sf_complex *cwave, *cwavem;
-    float **wave, *curr, *prev;
+    float **wave, *curr;
 
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
@@ -86,7 +86,6 @@ int main(int argc, char* argv[])
     rr=sf_floatalloc(nzx); sf_floatread(rr,nzx,Fr);
 
     curr = sf_floatalloc(nzx2);
-    prev = sf_floatalloc(nzx);
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
@@ -94,15 +93,12 @@ int main(int argc, char* argv[])
 
     ifft2_allocate(cwavem);
 
-    for (iz=0; iz < nzx; iz++) {
-	prev[iz]=0.;
-    }
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=0.;
     }
 
-    fscale= 1.0/nx2;
+    fscale= 1.0/nzx2;
 
     /* MAIN LOOP */
     for (it=0; it<nt; it++) {
@@ -126,13 +122,13 @@ int main(int argc, char* argv[])
 	    for (iz=0; iz < nz; iz++) {
 		i = iz+ix*nz;  /* original grid */
 		j = iz+ix*nz2; /* padded grid */
-		
-		old = c = curr[j];
-		c += c + ww[it] * rr[i] - prev[i];
-		prev[i] = old;
+ 
+		c = 0.0f;
+		c += ww[it] * rr[i];
 
 		for (im = 0; im < m2; im++) {
 		    c += lt[im][i]*wave[im][j];
+		    //c += creal(lt[im][i])*wave[im][j];
 		}
 
 		curr[j] = c;
