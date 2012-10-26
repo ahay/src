@@ -99,6 +99,9 @@ int iwave_construct(IWAVE * state,
   /* extract FD_MODEL member - stored as void * in IMODEL */
   fdm = (FD_MODEL *)((state->model).specs);
 
+  /* transfer number of substeps to TSINDEX member of IMODEL */
+  (state->model).tsind.niv=fdm->numsubsteps();
+
   /* initialize primal grid and grid padding params */
   if ( (err=fdm->readgrid(pars, stream, &(state->model))) ) {
     fprintf(stream,"ERROR: iwave_construct from readgrid\n");
@@ -217,7 +220,6 @@ void iwave_dynamic_init(IWAVE * state,
   /* transfer start time to state */
   (state->model).tsind.it=istart;
   (state->model).tsind.iv=0;
-  (state->model).tsind.niv=fdm->numsubsteps();
 
 }
 

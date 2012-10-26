@@ -164,17 +164,17 @@ int movie_init(MOVIE * mt,
       fprintf(stream,"failed to create movie header file %s\n",mt->smovie[i]);
       return E_FILE;
     }
-
+    fprintf(stderr,"creating movie rsf\n");
     for (j=0;j<(mt->mg).dim-1;j++) {
       fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
 	      j+1,(mt->mg).axes[j].n,
 	      j+1,(mt->mg).axes[j].d,
 	      j+1,(mt->mg).axes[j].o);
     }
-    fprintf(fp,"en=%zu ed=%g eo=%g\n",
-	    (mt->mg).axes[(mt->mg).dim-1].n,
-	    (mt->mg).axes[(mt->mg).dim-1].d,
-	    (mt->mg).axes[(mt->mg).dim-1].o);
+    fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
+	    (mt->mg).dim,(mt->mg).axes[(mt->mg).dim-1].n,
+	    (mt->mg).dim,(mt->mg).axes[(mt->mg).dim-1].d,
+	    (mt->mg).dim,(mt->mg).axes[(mt->mg).dim-1].o);
 
     fprintf(fp,"data_format=native_float\n");
     fprintf(fp,"scale=0\n");
