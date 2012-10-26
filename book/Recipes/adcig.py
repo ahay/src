@@ -141,7 +141,6 @@ def tparam(v,nht,oht,dht,nz,oz,dz,par):
     dz = (nz-1)*dz
     dt =((nht-1)*dht)*v
 
-    print dz,dt
     par['tratio']=(dz)/(dt);
     
 # ------------------------------------------------------------
