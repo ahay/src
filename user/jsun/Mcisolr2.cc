@@ -127,6 +127,7 @@ int main(int argc, char** argv)
     }
 
     oRSF left("left");
+    left.type(SF_COMPLEX);
     left.put("n1",m);
     left.put("n2",n2);
     left << ldata;
@@ -141,6 +142,7 @@ int main(int argc, char** argv)
 //    	sf_warning("real of rdat=%g, imag of rdat=%g", real(rdat[k]),imag(rdat[k]));
     }
     oRSF right;
+    right.type(SF_COMPLEX);
     right.put("n1",n2);
     right.put("n2",n);
     right << rdata;
