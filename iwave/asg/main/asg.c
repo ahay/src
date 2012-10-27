@@ -73,7 +73,7 @@ int main(int argc, char ** argv) {
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &ts);
 #endif
 
-  //initparallel(ts);
+  /* initparallel(ts); */
   initparallel_global(ts);
 
   /* self-doc if no args */
@@ -256,7 +256,7 @@ int main(int argc, char ** argv) {
       
       /* sampler_init should succeed in record range [first,last) */
 
-      //      fprint_grid(stderr,(state.model).g);
+      /*      fprint_grid(stderr,(state.model).g); */
       if (sampler_init(&trace,&(state.model),pars,stream)) {
 	fprintf(stream,"ERROR: main from sampler_init. ABORT\n");
 	abortexit(err,pars,&stream);
@@ -396,7 +396,7 @@ int main(int argc, char ** argv) {
 	fflush(stream);
 #endif
 
-	// note: only zero panel recorded, even for extended model;
+	/* note: only zero panel recorded, even for extended model; */
 	err=movie_run(&mt,&(state.model),stream,0);
 	if (err) {
 	  fprintf(stream,"ERROR: main from movie_run. ABORT\n");

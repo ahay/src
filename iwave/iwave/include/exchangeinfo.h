@@ -26,7 +26,7 @@ extern "C" {
  *
  * Set by \ref ra_setexchangeinfo. buf points to _s in an \ref RARR.
  */
-typedef struct
+typedef struct s_EXCHANGEINFO
 {
   /** pointer to a buffer for data exchange.*/
   void *buf;

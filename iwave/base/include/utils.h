@@ -195,7 +195,7 @@ ireal* RASN(RPNT l, const RPNT r);
    long n  :  string length (not including null terminator).
    char *s :  string pointer (has additional null terminator).
 */
-typedef struct
+typedef struct s_SIZEDSTRING
 {
     long n;
     char *s;

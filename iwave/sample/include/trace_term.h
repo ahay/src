@@ -60,9 +60,9 @@ typedef struct {
 
 int traceterm_construct(TRACE_TERM * t, 
 			PARARRAY * par, 
-			// removed 03.12
+			/* removed 03.12
 			//			int sindex, 
-			//			ireal mindex,
+			//			ireal mindex, */
 			int load,
 			const char * hdrkey,
 			const char * datakey,

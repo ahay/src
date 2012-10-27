@@ -1,4 +1,4 @@
-char * sdoc[] = {
+const char * sdoc[] = {
 " IWAVE Variable Density Acoustic Wave Equation Solver, Version 1.1",
 "  ",
 "  ",
