@@ -21,8 +21,8 @@
 #include<rsf.h>
 
 void sf_wvlt_frck(int nf,
-	sf_complex *buf,		// in frequency; out = ricker wavelet
-	float *par)		/* 0 ref freq, 1 phase */
+		  sf_complex *buf,	/* in frequency; out = ricker wavelet */
+		  float *par)		/* 0 ref freq, 1 phase */
 /*< frequency domain ricker wavelet >*/
 {
 	int ifr;
@@ -36,8 +36,8 @@ void sf_wvlt_frck(int nf,
 }
 
 void sf_wvlt_rck(int nt,
-	float *buf,		// in time index; out = ricker wavelet
-	float *par)		/* 0 ref freq, 1 phase */
+		 float *buf,		/* in time index; out = ricker wavelet */
+		 float *par)		/* 0 ref freq, 1 phase */
 /*< time domain ricker wavelet >*/
 {
 	int it;
@@ -54,8 +54,8 @@ void sf_wvlt_rck(int nt,
 
 
 void sf_wvlt_harmonic(int nt,
-	float *buf,		// in time index; out = ricker wavelet
-	float *par)		/* 0 ref freq, 1 phase */
+		      float *buf,		/* in time index; out = ricker wavelet */
+		      float *par)		/* 0 ref freq, 1 phase */
 /*< harmonics: sin signal >*/
 {
 	int it;
@@ -71,8 +71,8 @@ void sf_wvlt_harmonic(int nt,
 
 
 void sf_wvlt_sinc(int nt,
-	float *buf,		// in time index; out = sinc wavelet
-	float *par)		/* 0- fw; */
+		  float *buf,		/* in time index; out = sinc wavelet */
+		  float *par)		/* 0- fw; */
 /*< truncated sinc wavelet >*/
 {
 	int it;

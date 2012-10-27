@@ -102,7 +102,7 @@ void sf_addevent(void* p, float x, sf_complex *ftr)
     int ifreq;
     float txw,freq,fa,deltat;
     addevent *pp;
-    float complex fc1;
+    sf_complex fc1;
 
     pp = (addevent*) p;
     for(ifreq=0; ifreq<pp->nf; ifreq++)
@@ -121,7 +121,7 @@ void sf_addevent(void* p, float x, sf_complex *ftr)
 #ifdef SF_HAS_COMPLEX_H
 	ftr[ifreq] += fc1*pp->wvlt[ifreq];
 #else
-	ftr[ifreq] = sf_cadd(ftr[ifreq],sf_crmul(pp->wvlt[ifreq],fc1));
+	ftr[ifreq] = sf_cadd(ftr[ifreq],sf_cmul(fc1,pp->wvlt[ifreq]));
 #endif
     }
 }
