@@ -25,7 +25,7 @@
 
 /* uncomment to write to the rk-dep output stream at every time step 
 */
-   #define VERBOSE_STEP
+#define VERBOSE_STEP
 /*============================================================================
  *                             END INCLUDES 
  * ============================================================================*/
