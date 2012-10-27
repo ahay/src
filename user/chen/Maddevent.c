@@ -22,7 +22,6 @@
 #include <rsf.h>
 #include "addevent.h"
 
-/////////////////////////////////////////////////////
 
 int main(int argc,char**argv)
 {
