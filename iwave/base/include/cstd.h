@@ -9,6 +9,9 @@
 #include <errno.h>
 #include <limits.h>
 #include <unistd.h>
+
+#if defined(__sun) || defined(__sun__)
+#include <sys/inttypes.h>
+#else
 #include <stdint.h>
-
-
+#endif

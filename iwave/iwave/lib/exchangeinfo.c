@@ -8,6 +8,10 @@ Igor Terentyev.
 #include "exchangeinfo.h"
 /*----------------------------------------------------------------------------*/
 
+#ifndef IWAVE_USE_MPI
+static int MPI_Type_free(MPI_Datatype *t) { *t = MPI_DATATYPE_NULL; return 0; }
+#endif
+
 int ei_setnull(EXCHANGEINFO *einfo)
 {
 	einfo->buf = NULL;
