@@ -1050,11 +1050,13 @@ class TeXPaper(Environment):
         self.Command('dummy.tex',self.figs,Action(dummy))
     def Paper(self,paper,lclass='geophysics',scons=1,
               use=None,include=None,options=None,
-              resdir='Fig',color='',hires=''):
+              resdir='Fig',color='',hires='',source=''):
+     	if source == '':
+			source = paper
         global colorfigs, hiresfigs
         colorfigs.extend(string.split(color))
         hiresfigs.extend(string.split(hires))
-        ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
+        ltx = self.Latify(target=paper+'.ltx',source=source+'.tex',
                           use=use,lclass=lclass,options=options,
                           include=include,resdir=resdir)
         pdf = self.Pdf(target=paper,source=paper+'.ltx',
@@ -1090,16 +1092,15 @@ class TeXPaper(Environment):
             self.Depends(paper+'.install','figinstall')
         return pdf
     def End(self,paper='paper',**kw):
-        if os.path.isfile(paper+'.tex'):
-            apply(self.Paper,(paper,),kw)
-            self.Alias('pdf',paper+'.pdf')
-            self.Alias('wiki',paper+'.wiki')
-            self.Alias('read',paper+'.read')
-            self.Alias('print',paper+'.print')
-            self.Alias('html',paper+'.html')
-            self.Alias('install',paper+'.install')
-            self.Alias('figs',paper+'.figs')
-            self.Default('pdf')
+        apply(self.Paper,(paper,),kw)
+        self.Alias('pdf',paper+'.pdf')
+        self.Alias('wiki',paper+'.wiki')
+        self.Alias('read',paper+'.read')
+        self.Alias('print',paper+'.print')
+        self.Alias('html',paper+'.html')
+        self.Alias('install',paper+'.install')
+        self.Alias('figs',paper+'.figs')
+        self.Default('pdf')
 
 default = TeXPaper()
 def Dir(**kw):
