@@ -1,15 +1,15 @@
 /** \file
-Author: Igor Terentyev.
-********************************************************************************
-Utilities:
+    Author: Igor Terentyev.
+    ********************************************************************************
+    Utilities:
 
-Constants.
-Data type [ireal].
-Data type flags.
-Point arrays.
-Aligned malloc.
-Separator, delimiter for parser.
-All error codes.
+    Constants.
+    Data type [ireal].
+    Data type flags.
+    Point arrays.
+    Aligned malloc.
+    Separator, delimiter for parser.
+    All error codes.
 */
 /*============================================================================*/
 
@@ -23,19 +23,19 @@ All error codes.
 /*----------------------------------------------------------------------------*/
 /* inline keyword. */
 #ifndef __cplusplus
-    #if __STDC_VERSION__ >= 199901L
-    #else
-        #define inline
-    #endif
+#if __STDC_VERSION__ >= 199901L
+#else
+#define inline
+#endif
 #endif
 /* restrict keyword. */
 #if __STDC_VERSION__ >= 199901L
 #else
-    #define restrict
+#define restrict
 #endif
 /*----------------------------------------------------------------------------*/
 /* 
-Data types.
+   Data types.
 */
 #define DT_CSTRING     1
 #define DT_CHAR        2
@@ -49,7 +49,7 @@ Data types.
 #define DT_ULONG      11
 /*----------------------------------------------------------------------------*/
 /**
-Real type and consts.- legal values are DT_DOUBLE and DT_FLOAT.
+   Real type and consts.- legal values are DT_DOUBLE and DT_FLOAT.
 */
 /*#define DT_REAL DT_DOUBLE*/  
 #define DT_REAL DT_FLOAT
@@ -57,37 +57,37 @@ Real type and consts.- legal values are DT_DOUBLE and DT_FLOAT.
 /* DO NOT CHANGE. */
 #if   DT_REAL == DT_DOUBLE
 /** real type */
-    typedef double ireal;
-    #define REAL_NAN 0.0         /* TODO: better than 0 */
-    #define REAL_ZERO 0.0
-    #define REAL_ONE 1.0
-    #define REAL_EPS DBL_EPSILON
-    #define REAL_MIN DBL_MIN
-    #define REAL_MAX DBL_MAX
-	#define IWAVE_MPI_REAL MPI_DOUBLE
+#define ireal double
+#define REAL_NAN 0.0         /* TODO: better than 0 */
+#define REAL_ZERO 0.0
+#define REAL_ONE 1.0
+#define REAL_EPS DBL_EPSILON
+#define REAL_MIN DBL_MIN
+#define REAL_MAX DBL_MAX
+#define IWAVE_MPI_REAL MPI_DOUBLE
 #elif DT_REAL == DT_FLOAT
-    typedef float ireal;
+#define ireal float
 /**< ** real type >*/
-    #define REAL_NAN 0.0f        /* TODO: better than 0 */
-    #define REAL_ZERO 0.0f
-    #define REAL_ONE 1.0f
-    #define REAL_EPS FLT_EPSILON
-    #define REAL_MIN FLT_MIN
-    #define REAL_MAX FLT_MAX
-	#define IWAVE_MPI_REAL MPI_FLOAT
+#define REAL_NAN 0.0f        /* TODO: better than 0 */
+#define REAL_ZERO 0.0f
+#define REAL_ONE 1.0f
+#define REAL_EPS FLT_EPSILON
+#define REAL_MIN FLT_MIN
+#define REAL_MAX FLT_MAX
+#define IWAVE_MPI_REAL MPI_FLOAT
 #else
-	#error REAL TYPE UNDEFINED.
+#error REAL TYPE UNDEFINED.
 #endif
 
 /*----------------------------------------------------------------------------*/
 /**
-Maximum number of arrays in any domain.
+   Maximum number of arrays in any domain.
 */
 #define RDOM_MAX_NARR 30
 /*----------------------------------------------------------------------------*/
 /**
-Maximum number of dimensions in any array. If set > 3, note
-that RARR_MAX_3NDIM (below) will require redefinition.
+   Maximum number of dimensions in any array. If set > 3, note
+   that RARR_MAX_3NDIM (below) will require redefinition.
 */
 #define RARR_MAX_NDIM 3
 
@@ -124,50 +124,50 @@ that RARR_MAX_3NDIM (below) will require redefinition.
 
 /*----------------------------------------------------------------------------*/
 /*
-Indices of coordinate axes. Permutation of {0,1,2}.
-TO CHANGE BY USER.
+  Indices of coordinate axes. Permutation of {0,1,2}.
+  TO CHANGE BY USER.
 */
 #define IX 0
 #define IY 1
 #define IZ 2
 /*----------------------------------------------------------------------------*/
 /*
-Flag (0/1) to dump pointers when dumping an array.
-TO CHANGE BY USER.
+  Flag (0/1) to dump pointers when dumping an array.
+  TO CHANGE BY USER.
 */
 #define RARR_DUMP_POINTERS 0
 /*----------------------------------------------------------------------------*/
 /**
-\section IPNT
-Integer arrays of space dimension - index into grid
+   \section IPNT
+   Integer arrays of space dimension - index into grid
 */
 typedef int IPNT[RARR_MAX_NDIM];
 /**
-\section RPNT
-Real arrays of space dimension - grid coordinates, vector field values.
+   \section RPNT
+   Real arrays of space dimension - grid coordinates, vector field values.
 */
 typedef ireal RPNT[RARR_MAX_NDIM];
 
 #if   RARR_MAX_NDIM == 1
-    static const IPNT IPNT_0 = {0};
-    static const IPNT IPNT_1 = {1};
-    static const RPNT RPNT_0 = {REAL_ZERO};
-	static const RPNT RPNT_1 = {REAL_ONE};
-    #define RARR_MAX_3NDIM     3
+static const IPNT IPNT_0 = {0};
+static const IPNT IPNT_1 = {1};
+static const RPNT RPNT_0 = {REAL_ZERO};
+static const RPNT RPNT_1 = {REAL_ONE};
+#define RARR_MAX_3NDIM     3
 #elif RARR_MAX_NDIM == 2
-    static const IPNT IPNT_0 = {0, 0};
-    static const IPNT IPNT_1 = {1, 1};
-    static const RPNT RPNT_0 = {REAL_ZERO, REAL_ZERO};
-	static const RPNT RPNT_1 = {REAL_ONE, REAL_ONE};
-    #define RARR_MAX_3NDIM     9
+static const IPNT IPNT_0 = {0, 0};
+static const IPNT IPNT_1 = {1, 1};
+static const RPNT RPNT_0 = {REAL_ZERO, REAL_ZERO};
+static const RPNT RPNT_1 = {REAL_ONE, REAL_ONE};
+#define RARR_MAX_3NDIM     9
 #elif RARR_MAX_NDIM == 3
-    static const IPNT IPNT_0 = {0, 0, 0};
-    static const IPNT IPNT_1 = {1, 1, 1};
-    static const RPNT RPNT_0 = {REAL_ZERO, REAL_ZERO, REAL_ZERO};
-	static const RPNT RPNT_1 = {REAL_ONE, REAL_ONE, REAL_ONE};
-    #define RARR_MAX_3NDIM     27
+static const IPNT IPNT_0 = {0, 0, 0};
+static const IPNT IPNT_1 = {1, 1, 1};
+static const RPNT RPNT_0 = {REAL_ZERO, REAL_ZERO, REAL_ZERO};
+static const RPNT RPNT_1 = {REAL_ONE, REAL_ONE, REAL_ONE};
+#define RARR_MAX_3NDIM     27
 #else
-	#error IPNT/RPNT CONSTANTS UNDEFINED.
+#error IPNT/RPNT CONSTANTS UNDEFINED.
 #endif
 
 
@@ -182,18 +182,18 @@ ireal* RASN(RPNT l, const RPNT r);
 #define _RPNT RPNT
 /*----------------------------------------------------------------------------*/
 /*
-Flag to perform bounds checks.
-TO CHANGE BY USER.
+  Flag to perform bounds checks.
+  TO CHANGE BY USER.
 */
 #define CHECK_BOUNDS
 //#undef CHECK_BOUNDS
 /*----------------------------------------------------------------------------*/
 /**
-String with size. Has size n (0,...,n-1) and extra terminating null character 
-at n-th position. May have null characters in the middle.
+   String with size. Has size n (0,...,n-1) and extra terminating null character 
+   at n-th position. May have null characters in the middle.
 
-long n  :  string length (not including null terminator).
-char *s :  string pointer (has additional null terminator).
+   long n  :  string length (not including null terminator).
+   char *s :  string pointer (has additional null terminator).
 */
 typedef struct
 {
@@ -202,25 +202,25 @@ typedef struct
 } SIZEDSTRING;
 /*----------------------------------------------------------------------------*/
 /*
-Separator and quote symbols for parser.
-TO CHANGE BY USER.
+  Separator and quote symbols for parser.
+  TO CHANGE BY USER.
 */
 #define PS_SEP '='     /* separator symbol */
 #define PS_QUO '"'     /* quote symbol */
 /*----------------------------------------------------------------------------*/
 void* usermalloc_(size_t size);
 /**<
-Modified malloc/free functions.
-Currently implemented as 16 byte aligned pointers.
-TO CHANGE BY USER in utils.c.
+   Modified malloc/free functions.
+   Currently implemented as 16 byte aligned pointers.
+   TO CHANGE BY USER in utils.c.
 
-size_t size       :  size in bytes.
-void * return/ptr :  pointer to the allocated memory.
->*/
+   size_t size       :  size in bytes.
+   void * return/ptr :  pointer to the allocated memory.
+   >*/
 void userfree_(void *ptr);
 /*----------------------------------------------------------------------------*/
 /*
-Min, max macros.
+  Min, max macros.
 */
 
 #define iwave_min(a, b) ((a) < (b) ? (a) : (b))
@@ -229,7 +229,7 @@ Min, max macros.
 
 /*----------------------------------------------------------------------------*/
 /** \defgroup error Error codes
- Error codes used throughout IWAVE.
+    Error codes used throughout IWAVE.
 */
 /*@{*/
 #define E_SUCCESS          0     /**< no error */
@@ -260,18 +260,18 @@ Min, max macros.
 
 /*----------------------------------------------------------------------------*/
 /*
-Numbering functions.
-Convert {-1,0,1}^ndim to a linear index and back. 
-Note: {0,0,0} always gets last linear index (3^ndim - 1).
+  Numbering functions.
+  Convert {-1,0,1}^ndim to a linear index and back. 
+  Note: {0,0,0} always gets last linear index (3^ndim - 1).
 
-gen_3n1   :  number of linear indices - 1 (IMPORTANT:  returns n = 3^ndim - 1).
-gen_n2pnt :  linear index to cartesian.
-gen_pnt2n :  cartesian index to linear.
+  gen_3n1   :  number of linear indices - 1 (IMPORTANT:  returns n = 3^ndim - 1).
+  gen_n2pnt :  linear index to cartesian.
+  gen_pnt2n :  cartesian index to linear.
   
-int ndim   :  number of dimensions.
-IPNT p     :  cartesian index, each p[i] is from {-1,0,1} set.
-int i      :  linear index from 0 to 3^ndim - 1 (including).
-int return :  error code.
+  int ndim   :  number of dimensions.
+  IPNT p     :  cartesian index, each p[i] is from {-1,0,1} set.
+  int i      :  linear index from 0 to 3^ndim - 1 (including).
+  int return :  error code.
 */
 int gen_3n1(int ndim, int *n);
 int gen_i2pnt(int ndim, int i, IPNT p);
@@ -322,7 +322,7 @@ MPI_Comm retrieveRemComm();
 
 /*----------------------------------------------------------------------------*/
 /* 
-Determine machine endiannes runtime
+   Determine machine endiannes runtime
 */
 #define SEAMX_BIG_ENDIAN    0
 #define SEAMX_LITTLE_ENDIAN 1
@@ -330,8 +330,8 @@ Determine machine endiannes runtime
 int getMachineEndianness();
 
 /*
-Swap bytes for each number in the array.
-Array has [arrsize] elements, each [atomsize] bytes long.
+  Swap bytes for each number in the array.
+  Array has [arrsize] elements, each [atomsize] bytes long.
 */
 void swapBytes(unsigned char *arr, int arrsize, int atomsize);
 /*----------------------------------------------------------------------------*/

@@ -22,39 +22,39 @@ static const ireal COEFF7[] = { -1288287.0e0/1048576.0e0, 429429.0e0/4194304.0e0
  *----------------------------------------------------------------------------
  */
 typedef struct {
-  ireal dt;      // time step - copied from IMODEL.tsinfo
-  RPNT lam;      // courant params
-  int k;         // scheme order
-  int ndim;      // dimension, copied from IMODEL.grid
-  IPNT lbc;      // flag left boundary conditions
-  IPNT rbc;      // flag right boundary conditions
-  ireal * ep0_p;     // precomputed pml arrays
-  ireal * ep0_pp;    // p = (1-eta*dt^2)
-  ireal * ev0_p;     // pp = p/(1+eta*dt^2)
-  ireal * ev0_pp;
-  ireal * ep1_p;
-  ireal * ep1_pp;   
-  ireal * ev1_p;
-  ireal * ev1_pp;
-  ireal * ep2_p;
-  ireal * ep2_pp;   
-  ireal * ev2_p;
-  ireal * ev2_pp;
-  // slightly redundant dim info for aux arrays
-  int nep0;
-  int nev0;
-  int nep1;
-  int nev1;
-  int nep2;
-  int nev2;
-  // coefficient arrays for FD schemes - set in readschemeinfo as they
-  // are data-dependent
-  // encoding (as RPNT): c[diff index][half-order]
-  // thus for 3D, c23[0] is the coefficient of u[.][.][.+2]-u[.][.][.-1]  
-  // or u[.][.][.+1]-u[.][.][.-2] in a sixth-order difference formula  
-  RPNT c11;
-  RPNT c12, c22;
-  RPNT c14, c24, c34, c44;
+    ireal dt;      /* time step - copied from IMODEL.tsinfo */
+    RPNT lam;      /* courant params */
+    int k;         /* scheme order */
+    int ndim;      /* dimension, copied from IMODEL.grid */
+    IPNT lbc;      /* flag left boundary conditions */
+    IPNT rbc;      /* flag right boundary conditions */
+    ireal * ep0_p;     /* precomputed pml arrays */
+    ireal * ep0_pp;    /* p = (1-eta*dt^2) */
+    ireal * ev0_p;     /* pp = p/(1+eta*dt^2) */
+    ireal * ev0_pp;
+    ireal * ep1_p;
+    ireal * ep1_pp;   
+    ireal * ev1_p;
+    ireal * ev1_pp;
+    ireal * ep2_p;
+    ireal * ep2_pp;   
+    ireal * ev2_p;
+    ireal * ev2_pp;
+    /* slightly redundant dim info for aux arrays */
+    int nep0;
+    int nev0;
+    int nep1;
+    int nev1;
+    int nep2;
+    int nev2;
+    /* coefficient arrays for FD schemes - set in readschemeinfo as they
+    // are data-dependent
+    // encoding (as RPNT): c[diff index][half-order]
+    // thus for 3D, c23[0] is the coefficient of u[.][.][.+2]-u[.][.][.-1]  
+    // or u[.][.][.+1]-u[.][.][.-2] in a sixth-order difference formula */
+    RPNT c11;
+    RPNT c12, c22;
+    RPNT c14, c24, c34, c44;
 
 } SGN_TS_PARS;  
 
