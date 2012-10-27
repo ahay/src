@@ -25,6 +25,7 @@
 #include "neighbors.h"
 #include "pqueue.h"
 #include "_defs.h"
+#include "c99.h"
 
 struct Upd {
     double stencil, value;

@@ -27,6 +27,7 @@
 #include "fzero.h"
 #include "_defs.h"
 #include "error.h"
+#include "c99.h"
 
 float sf_zero (float (*func)(float) /* function f(x) */, 
 	       float a, float b     /* interval */, 
