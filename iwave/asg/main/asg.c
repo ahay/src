@@ -243,15 +243,13 @@ int main(int argc, char ** argv) {
       err = iwave_static_init(&state,pars,stream,
 				trace.t.tg.xrec,trace.t.tg.first);
       if (err) {  
-	fprintf(stream,"ERROR: main from iwave_static_init ",
-		"xrec = %d, err = %d. ABORT\n", 
+	fprintf(stream,"ERROR: main from iwave_static_init \n xrec = %d, err = %d. ABORT\n", 
 		trace.t.tg.xrec, err);
 	abortexit(err,pars,&stream);
       }
 
       if (err) {  
-	fprintf(stream,"ERROR: main from iwave_static_init "
-		"xrec = %d, err = %d. ABORT\n", 
+	fprintf(stream,"ERROR: main from iwave_static_init \n xrec = %d, err = %d. ABORT\n", 
 		trace.t.tg.xrec, err);
 	abortexit(err,pars,&stream);
       }

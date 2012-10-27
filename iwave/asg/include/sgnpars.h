@@ -21,7 +21,7 @@ static const ireal COEFF7[] = { -1288287.0e0/1048576.0e0, 429429.0e0/4194304.0e0
  * Parameters for time step function.
  *----------------------------------------------------------------------------
  */
-typedef struct {
+typedef struct s_SGN_TS_PARS {
     ireal dt;      /* time step - copied from IMODEL.tsinfo */
     RPNT lam;      /* courant params */
     int k;         /* scheme order */

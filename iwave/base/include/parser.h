@@ -4,22 +4,22 @@
 #include "utils.h"
 #include "iwave_fopen.h"
 
-typedef struct {
+typedef struct s_WORD {
   char * str;
 } WORD;
 
-typedef struct {
+typedef struct s_KEYVAL {
   WORD * key;
   WORD * val;
 } KEYVAL;
 
-typedef struct PSLINK {
+typedef struct s_PSLINK {
   KEYVAL * pair;
-  struct PSLINK * prev;
-  struct PSLINK * next;
+  struct s_PSLINK * prev;
+  struct s_PSLINK * next;
 } PSLINK;
 
-typedef struct {
+typedef struct s_PARARRAY {
   PSLINK * list;
 } PARARRAY;
 

@@ -24,7 +24,7 @@ Flag for iwave to use MPI.
 	#define MPI_Datatype int
 	#define MPI_DATATYPE_NULL 0
 	
-	inline int MPI_Type_free(MPI_Datatype *t) { *t = MPI_DATATYPE_NULL; return 0; }
+	static inline int MPI_Type_free(MPI_Datatype *t) { *t = MPI_DATATYPE_NULL; return 0; }
 #endif
 /*----------------------------------------------------------------------------*/
 

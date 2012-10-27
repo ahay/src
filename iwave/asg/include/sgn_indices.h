@@ -47,14 +47,14 @@ D_EP :  eta pressure. Allocated as 1D arrays: Nx1x1.
 All pressure arrays must have same global coordinates - P0 is used to get
 global coordinates and sizes of all pressure arrays.
 */
-#define D_EP0 (2 + 2 * RARR_MAX_NDIM)  // 8
-#define D_EV0 (D_EP0 + 1)              // 9
-#define D_P1  (D_EV0 + 1)              // 10
-#define D_EP1 (D_P1  + 1)              // 11
-#define D_EV1 (D_EP1 + 1)              // 12
-#define D_P2  (D_EV1 + 1)              // 13
-#define D_EP2 (D_P2  + 1)              // 14
-#define D_EV2 (D_EP2 + 1)              // 15
+#define D_EP0 (2 + 2 * RARR_MAX_NDIM)  /* 8  */
+#define D_EV0 (D_EP0 + 1)              /* 9  */
+#define D_P1  (D_EV0 + 1)              /* 10 */
+#define D_EP1 (D_P1  + 1)              /* 11 */
+#define D_EV1 (D_EP1 + 1)              /* 12 */
+#define D_P2  (D_EV1 + 1)              /* 13 */
+#define D_EP2 (D_P2  + 1)              /* 14 */
+#define D_EV2 (D_EP2 + 1)              /* 15 */
 
 /*----------------------------------------------------------------------------*/
 #if   RARR_MAX_NDIM == 1

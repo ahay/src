@@ -29,7 +29,7 @@
 
 
 /* TYPEDEFS */
-typedef struct {	/* segy - trace identification header */
+typedef struct s_segy {	/* segy - trace identification header */
 
 	int tracl;	/* Trace sequence number within line
 			   --numbers continue to increase if the
@@ -408,7 +408,7 @@ typedef struct {	/* segy - trace identification header */
 } segy;
 
 
-typedef struct {	/* bhed - binary header */
+typedef struct s_bhed {	/* bhed - binary header */
 
 	int jobid;	/* job identification number */
 

@@ -186,7 +186,7 @@ ireal* RASN(RPNT l, const RPNT r);
   TO CHANGE BY USER.
 */
 #define CHECK_BOUNDS
-//#undef CHECK_BOUNDS
+/* #undef CHECK_BOUNDS */
 /*----------------------------------------------------------------------------*/
 /**
    String with size. Has size n (0,...,n-1) and extra terminating null character 

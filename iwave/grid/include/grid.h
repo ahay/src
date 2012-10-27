@@ -18,7 +18,7 @@
     its physical meaning)..
 */
 
-typedef struct {
+typedef struct s_axis {
   /** number of gridpoints on axis */
   size_t n; 
   /** step between gridpoints */

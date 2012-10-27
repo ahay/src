@@ -24,7 +24,7 @@
 /* end-of-file flag - should be disinct from other error returns */
 #define W_EOF -10
 
-typedef struct {
+typedef struct s_offsegy {
   off_t m;
   segy tr;
 } offsegy;
@@ -47,7 +47,7 @@ traceserver object, which hides details of parallelism and data
 distribution.
 */
 
-typedef struct {
+typedef struct s_tracegeom {
 
   /** number of shot records in data */
   int nrec;
@@ -60,21 +60,21 @@ typedef struct {
   /** index of last record (in group) */
   int last;
   /** number of traces per shot record */
-  //  int ntr[MAX_RECS];
+  /*  int ntr[MAX_RECS]; */
   int * ntr;
   /** file offset of first trace in record */
-  //  off_t recoff[MAX_RECS];
+  /*  off_t recoff[MAX_RECS]; */
   off_t * recoff;
   /** source coordinates - index convention is z=0, x=1, y=2 */
-  //  RPNT src[MAX_RECS];
+  /*  RPNT src[MAX_RECS]; */
   RPNT * src;
   /** number of traces in this record with receivers in grid cells */
   int ntraces;     
   /** receiver index array in grid */
-  //  IPNT ig[MAX_TRACES];
+  /*  IPNT ig[MAX_TRACES]; */
   IPNT * ig;
   /** receiver relative coordinates within grid cell (betw 0 and 1) */
-  //  RPNT rg[MAX_TRACES];
+  /*  RPNT rg[MAX_TRACES]; */
   RPNT * rg;
   /** source index array in grid */
   IPNT is;
@@ -99,16 +99,16 @@ typedef struct {
   /** min time for output (may differ from t0) */
   float t0out;
   /** tracl - trace number within line (SEGY) */
-  //  int tracl[MAX_TRACES];
+  /*  int tracl[MAX_TRACES]; */
   int * tracl;
   /** tracr - trace number within record (SEGY) */
-  //  int tracr[MAX_TRACES];
+  /*  int tracr[MAX_TRACES]; */
   int * tracr;
   /** fldr - field record numer (SEGY) */
-  //  int fldr[MAX_TRACES];
+  /*  int fldr[MAX_TRACES]; */
   int * fldr;
   /** trace number within field record (SEGY) */
-  //  int tracf[MAX_TRACES];
+  /*  int tracf[MAX_TRACES]; */
   int * tracf;
   /** scale factor for elevations (SEGY) */
   int scalel;
@@ -127,7 +127,7 @@ typedef struct {
   /** output file pointer */
   FILE * fpout;
   /** offset of trace in file */
-  //  off_t troff[MAX_TRACES];
+  /*  off_t troff[MAX_TRACES]; */
   off_t * troff;
 #ifdef IWAVE_USE_MPI
   /** datatype for trace augmented with file offset */
@@ -370,11 +370,11 @@ void sampletraces(tracegeom * tg,
 		  IPNT strides,
 		  IPNT origs,
 		  ireal * field,
-		  //		  IPNT allocstrides_mult,
+		  /*		  IPNT allocstrides_mult,
 		  //		  IPNT allocorigs_mult,
 		  //		  IPNT strides_mult,
 		  //		  IPNT origs_mult,
-		  //		  int * mult);
+		  //		  int * mult); */
 		  ireal mult);
 
 /** Trace output. Sets up internal segy for writing, by transferring

@@ -260,7 +260,7 @@ void powell_minimization(float p[], float **xi, int n,
 /***** lincoeff -- linearized reflection coefficients */
 /* type definitions */
 
-typedef struct 
+typedef struct ErrorFlagStructure
     {
       float iso[5];
       float upper[2];

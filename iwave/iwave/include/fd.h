@@ -21,7 +21,7 @@
 #include "model.h"
 #include "gridio.h"
 
-//#define VERBOSE
+/* #define VERBOSE */
 /** computational domain includes the boundary points or not */
 #define INCLUDE_BOUNDARY_PNTS 0
 /** value dependency */
@@ -124,7 +124,7 @@ fd_model_init itself, to defined functions.
  *    - when INCLUDE_BOUNDARY_PNTS = 0, dynamic variables are not recomputed, but updated using 
  *    boundary conditions
  */
-typedef struct FD_MODEL {
+typedef struct s_FD_MODEL {
 
   /********* DATA MEMBERS *************/
   /**internal parameters of time step functions - model-dep */
@@ -333,7 +333,7 @@ typedef struct FD_MODEL {
 
       called in fd_modelcrea
   */
-  int (*create_sten)(struct FD_MODEL * fdm,
+  int (*create_sten)(struct s_FD_MODEL * fdm,
 		     FILE * stream,
 		     int ndim, 
 		     IPNT gtype[RDOM_MAX_NARR], 
