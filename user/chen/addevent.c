@@ -26,17 +26,17 @@
 
 typedef struct tag_addevent
 {
-    float	df;		/* time sample rate */
-    int 	of;		/* time samples */
-    int		nf;		/* frequency numbers (half) */
-    float complex 	*wvlt;	/* frequency domain wavelet */
-    int 	type;	        /* event type */
-    float 	t0;		/* event traveltime at zero offset (x=0) */
-    float 	a0;		/* event amplitude at reference frequency at zero offset (x=0,f=f0) */
-    float 	*vw; 	        /* velocity over frequencies */
-    float 	qa;		/* event amplitude attenuation */
-    float	f0;		/* center frequency */
-    int 	a0ref;    	/* reference point for a0 */
+    float	df;	/* time sample rate */
+    int 	of;	/* time samples */
+    int		nf;	/* frequency numbers (half) */
+    sf_complex 	*wvlt;	/* frequency domain wavelet */
+    int 	type;	/* event type */
+    float 	t0;	/* event traveltime at zero offset (x=0) */
+    float 	a0;	/* event amplitude at reference frequency at zero offset (x=0,f=f0) */
+    float 	*vw; 	/* velocity over frequencies */
+    float 	qa;	/* event amplitude attenuation */
+    float	f0;	/* center frequency */
+    int 	a0ref;  /* reference point for a0 */
 }addevent;
 
 
@@ -79,15 +79,15 @@ void* sf_addevent_init(int nfft, float of, float df, 	/* time domain sampling pa
 	case 0:
 	    for(ifreq=0;ifreq<pp->nf;ifreq++)
 	    {
-		pp->wvlt[ifreq]=ifreq*df+of;
+		pp->wvlt[ifreq]=sf_cmplx(ifreq*df+of,0.f);
 	    }
 	    sf_wvlt_frck(pp->nf, pp->wvlt, wvp);
 	    break;
 	case 1:
 	    for(ifreq=0;ifreq<pp->nf;ifreq++)
 	    {
-		if(fabs(ifreq*df+of) < wvp[0]) pp->wvlt[ifreq] = 1.0;
-		else pp->wvlt[ifreq] = 0.0;
+		if(fabs(ifreq*df+of) < wvp[0]) pp->wvlt[ifreq] = sf_cmplx(1.0f,0.0f);
+		else pp->wvlt[ifreq] = sf_cmplx(0.0f,0.0f);
 	    }
 	    break;
 	default:
@@ -96,7 +96,7 @@ void* sf_addevent_init(int nfft, float of, float df, 	/* time domain sampling pa
     return ( pp);
 }
 
-void sf_addevent(void* p, float x, float complex *ftr)
+void sf_addevent(void* p, float x, sf_complex *ftr)
 /*< modeling for one trace >*/
 {
     int ifreq;
@@ -118,7 +118,11 @@ void sf_addevent(void* p, float x, float complex *ftr)
 	    fa = pp->a0;
 	}
 	fc1 = sf_cmplx(fa*cos(2.0*SF_PI*freq*txw),-fa*sin(2.0*SF_PI*freq*txw));
+#ifdef SF_HAS_COMPLEX_H
 	ftr[ifreq] += fc1*pp->wvlt[ifreq];
+#else
+	ftr[ifreq] = sf_cadd(ftr[ifreq],sf_crmul(pp->wvlt[ifreq],fc1));
+#endif
     }
 }
 
