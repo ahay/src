@@ -244,10 +244,17 @@ int asg_step_p(RDOM * dom, void *pars) {
     IPNT ipntbuf;
 
     /* tmp scalar storage for outer loop PML coeffs */
+#ifdef __GNUC__
     ireal tmp_ep1p __attribute__ ((__aligned__(16)));
     ireal tmp_ep1pp __attribute__ ((__aligned__(16)));
     ireal tmp_ep2p __attribute__ ((__aligned__(16)));
     ireal tmp_ep2pp __attribute__ ((__aligned__(16)));
+#else
+    ireal tmp_ep1p;
+    ireal tmp_ep1pp;
+    ireal tmp_ep2p;
+    ireal tmp_ep2pp;
+#endif
 
     /* field pointers - allocated arrays */
     register ireal * restrict _p0;
@@ -798,10 +805,17 @@ int asg_step_v(RDOM * dom, void * pars) {
     IPNT ipntbuf;
 
     /* tmp scalar storage for outer loop PML coeffs */
+#ifdef __GNUC__
     ireal tmp_ev1p __attribute__ ((__aligned__(16)));
     ireal tmp_ev1pp __attribute__ ((__aligned__(16)));
     ireal tmp_ev2p __attribute__ ((__aligned__(16)));
     ireal tmp_ev2pp __attribute__ ((__aligned__(16)));
+#else
+    ireal tmp_ev1p;
+    ireal tmp_ev1pp;
+    ireal tmp_ev2p;
+    ireal tmp_ev2pp;
+#endif
 
     /* field pointers - allocated arrays */
     register ireal * restrict _p0;
