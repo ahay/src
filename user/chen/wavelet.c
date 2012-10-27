@@ -31,7 +31,7 @@ void sf_wvlt_frck(int nf,
 	{
 		freq=crealf(buf[ifr])/par[0];
 		freq=freq*freq;
-		buf[ifr]=4.0*sqrt(SF_PI)*freq*exp(-freq);
+		buf[ifr]=sf_cmplx(4.0*sqrt(SF_PI)*freq*exp(-freq),0.0f);
 	}
 }
 
