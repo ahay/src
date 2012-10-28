@@ -9,13 +9,13 @@ int movie_init(MOVIE * mt,
   int i,j,k,ntot;
   int kl=KEYLEN;
   char key[KEYLEN];
-  ireal slice;        // actual slice coord, 3d case
-  RPNT d;             // workspace for grid build-up
-  RPNT o;             // workspace for grid build-up
-  IPNT n;             // workspace for grid build-up
-  char * fname;       // workspace for data file name
-  FILE * fp;          // for output initializiation
-  float * buf;        // null buffer for data file init
+  ireal slice;        /* actual slice coord, 3d case */
+  RPNT d;             /* workspace for grid build-up */
+  RPNT o;             /* workspace for grid build-up */
+  IPNT n;             /* workspace for grid build-up */
+  char * fname;       /* workspace for data file name */
+  FILE * fp;          /* for output initializiation */
+  float * buf;        /* null buffer for data file init */
 
   mt->maxslice=0;
   mt->nmovie=0;
@@ -310,7 +310,7 @@ int movie_run(MOVIE * mt,
       rsfwrite(aptr, gs, n, mt->smovie[i], 0, stream, mt->frameindex); 
     }
     else if (mt->dim3d==2) {
-      //      fprintf(stream,"write (0,1) plane on %s\n",mt->smovie[i]);
+	/*      fprintf(stream,"write (0,1) plane on %s\n",mt->smovie[i]); */
       aoff=mt->slice3d*n[0]*n[1];
       /*      fprintf(stderr,"write (0,1) plane on %s aoff=%d\n",mt->smovie[i],aoff);*/
       /* D.S. 01.01.11: extended-model related --> */
