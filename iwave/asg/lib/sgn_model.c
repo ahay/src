@@ -58,9 +58,9 @@ int asg_modelinit(PARARRAY *pars,
   fd=(FD_MODEL *)usermalloc_(sizeof(FD_MODEL));
   if (fd==NULL) return E_ALLOC;
   /* first the "base class" behaviour */
-  //  fprintf(stream,"top of asg_modelinit: im->specs=%x\n",im->specs);
+  /*  fprintf(stream,"top of asg_modelinit: im->specs=%x\n",im->specs); */
   im->specs=(void *)fd;
-  //  fprintf(stream,"top of asg_modelinit: im->specs=%x after assignment\n",im->specs);
+  /*  fprintf(stream,"top of asg_modelinit: im->specs=%x after assignment\n",im->specs); */
 
   /* allocate sgn model ----------------------------------------------------*/   
   sgnm = (SGN_TS_PARS*)usermalloc_(sizeof(SGN_TS_PARS));
@@ -71,12 +71,12 @@ int asg_modelinit(PARARRAY *pars,
     return err;
   }
 	    
-  // assign heritage pars
+  /* assign heritage pars 
   // 11.04.12: remove these
-  //  sgnm->psingle = 0; /* TODO: single pressures in Step 3 */
-  //  IASN(sgnm->eflags,IPNT_1); /* this is related - with code from old sg added, could try using this device */
+  //  sgnm->psingle = 0;  TODO: single pressures in Step 3 
+  //  IASN(sgnm->eflags,IPNT_1);  this is related - with code from old sg added, could try using this device */
 
-  // decode dimensions, parallel rank - read grid dimn on rank 0, broadcast
+  /* decode dimensions, parallel rank - read grid dimn on rank 0, broadcast */
 
   IASN(cdims, IPNT_1); /* default grid size */ 
   IASN(crank, IPNT_0); /* default cartisian ranks */ 
@@ -130,7 +130,7 @@ int asg_modelinit(PARARRAY *pars,
   fprintf(stream,"NOTE: initializing ASG with half-order = %d\n",sgnm->k);
 #endif
 
-  // initialize scaled Courant arrays
+  /* initialize scaled Courant arrays */
   RASN(sgnm->c11,RPNT_0);
   RASN(sgnm->c12,RPNT_0);
   RASN(sgnm->c22,RPNT_0);
@@ -139,7 +139,7 @@ int asg_modelinit(PARARRAY *pars,
   RASN(sgnm->c34,RPNT_0);
   RASN(sgnm->c44,RPNT_0);
 
-  // initialize aux pml arrays
+  /* initialize aux pml arrays */
   sgnm->nep0=0;
   sgnm->nev0=0;
   sgnm->nep1=0;
@@ -159,7 +159,7 @@ int asg_modelinit(PARARRAY *pars,
   sgnm->ep2_pp=NULL;
   sgnm->ev2_pp=NULL;
 
-  // assign param object pointer
+  /* assign param object pointer */
   fd->fdpars = (void*)sgnm;
 
   fd->isarr  = asg_isarr;
@@ -178,10 +178,10 @@ int asg_modelinit(PARARRAY *pars,
   fd->fd_model_init = asg_modelinit;
   fd->fd_model_dest = asg_modeldest;
 
-  // choose time step
+  /* choose time step */
   fd->tsf=asg_step;
 
-  //  fprintf(stream,"\n********** asg indices *************\n");
+  /*  fprintf(stream,"\n********** asg indices *************\n"); */
   /*
     fprintf(stream,"D_P0=%d\n",D_P0);
     fprintf(stream,"D_MP0=%d\n",D_MP0);
@@ -227,7 +227,7 @@ int asg_modeldest(IMODEL * model) {
       if (sgnm->ev2_pp) userfree_(sgnm->ev2_pp);
       userfree_(sgnm);
     }
-    // since the FD_MODEL is allocated here, destroy here
+    /* since the FD_MODEL is allocated here, destroy here */
     userfree_(fdm);
   }
   return 0;
@@ -245,9 +245,9 @@ void sgn_ts_parcopy(void * tgt, const void * src) {
     (ptgt->lam)[i]=(psrc->lam)[i];
   ptgt->ndim=psrc->ndim;
   ptgt->k = psrc->k;
-  //ptgt->psingle=psrc->psingle;
+  /* ptgt->psingle=psrc->psingle; */
 
-  //  IASN(ptgt->eflags,psrc->eflags);
+  /*  IASN(ptgt->eflags,psrc->eflags); */
   IASN(ptgt->lbc,psrc->lbc);
   IASN(ptgt->rbc,psrc->rbc);   
 
@@ -303,7 +303,7 @@ void sgn_ts_parcopy(void * tgt, const void * src) {
 }
 
 int asg_isarr(int i) {
-  //  fprintf(stderr,"asg_isarr: ndim=%d i=%d\n",m_ndim,i);
+    /*  fprintf(stderr,"asg_isarr: ndim=%d i=%d\n",m_ndim,i); */
   if (m_ndim<4) {
     if (m_ndim>0) {
       if (i==D_P0) return 1;
@@ -332,7 +332,7 @@ int asg_isarr(int i) {
 }
 
 int asg_update(int ia, int iv) {
-  // update pressure arrays on iv = 0
+    /* update pressure arrays on iv = 0 */
   if (iv==0) {
     if (m_ndim>2 && ia==D_P2) return 1;
     if (m_ndim>1 && ia==D_P1) return 1;
@@ -356,7 +356,7 @@ int asg_alter_dom(int iv, IPNT gs, IPNT ge) {
     if (iv==D_EP[idim] || iv==D_EV[idim]) {
       gs[0]=gs[idim];
       ge[0]=ge[idim];
-      //      fprintf(stderr,"iv=%d idim=%d\n",iv,idim);
+      /*      fprintf(stderr,"iv=%d idim=%d\n",iv,idim); */
       for ( i = 1; i < m_ndim; ++i ) 
 	gs[i] = ge[i] = 0;
     }
@@ -459,7 +459,7 @@ int asg_create_sten(FD_MODEL * fdm,
 		    STENCIL * sten) {
 
   SGN_TS_PARS * sgnp = (SGN_TS_PARS *)(fdm->fdpars);
-  //  return create_sten2_2k(stream, sgnp->k, ndim, m_size, gtype, sten_dep_mat, asg_isdyn, //asg_getindices, 
+  /*  return create_sten2_2k(stream, sgnp->k, ndim, m_size, gtype, sten_dep_mat, asg_isdyn, //asg_getindices, */
   return create_sten2_2k(fdm,stream, sgnp->k, ndim, gtype, sten_dep_mat, sten);
 }
 
@@ -467,18 +467,18 @@ int asg_readschemeinfo(PARARRAY * par,
 		       FILE * stream, 
 		       IMODEL * model) {
   
-  RPNT dxs;       // grid steps
-  int idim, i;    // counters
-  IPNT gsa, gea;  // workspace for aux PML calc
-  ireal * tmp;    // "
-  ireal dt2;      // "
+    RPNT dxs;       /* grid steps */
+    int idim, i;    /* counters */
+    IPNT gsa, gea;  /* workspace for aux PML calc */
+    ireal * tmp;    /* " */
+    ireal dt2;      /* " */
 
   RDOM * dom = &(model->ld_a);
   FD_MODEL * fdm = (FD_MODEL *)(model->specs);
   SGN_TS_PARS * sgnp = (SGN_TS_PARS *)(fdm->fdpars);
 
   get_d(dxs, model->g);
-  // set model dimn par
+  /* set model dimn par */
   sgnp->ndim = (model->g).dim;
 
   for (idim = 0;idim < sgnp->ndim;idim ++) {
@@ -493,8 +493,8 @@ int asg_readschemeinfo(PARARRAY * par,
     fprintf(stderr, "lam[%d] = %g\n", idim, sgnp->lam[idim]);
 #endif
 
-    // assign scaled Courant numbers for orders 2, 4, and 8 - these are the only
-    // choices implemented
+    /* assign scaled Courant numbers for orders 2, 4, and 8 - these are the only */
+    /* choices implemented */
     if (sgnp->k==1) {
       sgnp->c11[idim] = sgnp->lam[idim]*COEFF1[0];
     }
@@ -517,7 +517,7 @@ int asg_readschemeinfo(PARARRAY * par,
     }
   }
 
-  // reserve a copy of dt for use in source scaling
+  /* reserve a copy of dt for use in source scaling */
   sgnp->dt = (model->tsind).dt;
 
 #ifdef IWAVE_VERBOSE
@@ -546,7 +546,7 @@ int asg_readschemeinfo(PARARRAY * par,
   dt2 = sgnp->dt / ((ireal)2.0);
 
 #if RARR_MAX_NDIM > 0
-  // p0
+  /* p0 */
   rd_gse(dom, D_EP[0], gsa, gea);  
   sgnp->nep0 = gea[0]-gsa[0]+1;
   if (sgnp->nep0) {
@@ -561,7 +561,7 @@ int asg_readschemeinfo(PARARRAY * par,
     }
   }
 
-  // v0
+  /* v0 */
   rd_gse(dom, D_EV[0], gsa, gea);  
   sgnp->nev0 = gea[0]-gsa[0]+1;
   if (sgnp->nev0) {
@@ -578,7 +578,7 @@ int asg_readschemeinfo(PARARRAY * par,
 #endif
 
 #if RARR_MAX_NDIM > 1
-  // p1
+  /* p1 */
   rd_gse(dom, D_EP[1], gsa, gea);  
   sgnp->nep1 = gea[0]-gsa[0]+1;
   if (sgnp->nep1) {
@@ -592,7 +592,7 @@ int asg_readschemeinfo(PARARRAY * par,
       sgnp->ep1_pp[i]=REAL_ONE/(REAL_ONE + tmp[i]*dt2);
     }
   }
-  // v1
+  /* v1 */
   rd_gse(dom, D_EV[1], gsa, gea);  
   sgnp->nev1 = gea[0]-gsa[0]+1;
   if (sgnp->nev1) {
@@ -609,7 +609,7 @@ int asg_readschemeinfo(PARARRAY * par,
 #endif
 
 #if RARR_MAX_NDIM > 2
-  // p2
+  /* p2 */
   rd_gse(dom, D_EP[2], gsa, gea);  
   sgnp->nep2 = gea[0]-gsa[0]+1;
   if (sgnp->nep2) {
@@ -624,7 +624,7 @@ int asg_readschemeinfo(PARARRAY * par,
     }
   }
 
-  // v2
+  /* v2 */
   rd_gse(dom, D_EV[2], gsa, gea);  
   sgnp->nev2 = gea[0]-gsa[0]+1;
   if (sgnp->nev2) {
