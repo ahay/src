@@ -26,7 +26,7 @@ static const char *PNAMES_NP[3]    = {"mpi_np1", "mpi_np2", "mpi_np3"};    /* MP
 
 #ifdef IWAVE_USE_MPI /* this code for MPI version only */
 
-//int destroyparallel(PARALLELINFO *pinfo, int fabort) { // name change 10.04.11
+/* int destroyparallel(PARALLELINFO *pinfo, int fabort) { // name change 10.04.11 */
 int destroypinfo(PARALLELINFO *pinfo, int fabort) {
     int iv, i;
     for ( iv = 0; iv < RDOM_MAX_NARR; ++iv )
@@ -93,27 +93,27 @@ int initparallel_global(int ts) {
 /*----------------------------------------------------------------------------*/
 int initparallel_local(PARARRAY par, FILE * stream) {
 
-  int rkw;      // global rank
-  int szw;      // global size
-  int rk;       // local rank
-  int sz;       // local size
-  int ng;       // group number
-  int g;        // group id (color)
-  int tg;       // trimmed group id (= 1 or MPI_UNDEFINED)
-  int d;        // (domain) index within group
-  int pt;       // task parallel flag
-  div_t res;    // workspace
-  int idim;     // workspace
+    int rkw;      /* global rank */
+  int szw;      /* global size */
+  int rk;       /* local rank */
+  int sz;       /* local size */
+  int ng;       /* group number */
+  int g;        /* group id (color) */
+  int tg;       /* trimmed group id (= 1 or MPI_UNDEFINED) */
+  int d;        /* (domain) index within group */
+  int pt;       /* task parallel flag */
+  div_t res;    /* workspace */
+  int idim;     /* workspace */
 
-  int cartdim;  // dim of cart comm
-  IPNT cdims;   // lengths of axes in cart comm
-  IPNT pers;    // periodicity flags for cartesian comm
+  int cartdim;  /* dim of cart comm */
+  IPNT cdims;   /* lengths of axes in cart comm */
+  IPNT pers;    /* periodicity flags for cartesian comm */
 
-  MPI_Comm cmw; // initial global comm (WORLD)
-  MPI_Comm cmg; // trimmed global comm (does not included undef processes)
-  MPI_Comm cm;  // local (intragroup Cartesian) comm
-  MPI_Comm cmr; // remote (intergroup) comm
-  MPI_Comm cmtmp; // workspace
+  MPI_Comm cmw; /* initial global comm (WORLD) */
+  MPI_Comm cmg; /* trimmed global comm (does not included undef processes) */
+  MPI_Comm cm;  /* local (intragroup Cartesian) comm */
+  MPI_Comm cmr; /* remote (intergroup) comm */
+  MPI_Comm cmtmp; /* workspace */
 
 
   /* global params */
@@ -147,7 +147,7 @@ int initparallel_local(PARARRAY par, FILE * stream) {
     return E_BADINPUT;
   }
   */
-  /// expt!!!
+  /* expt!!! */
   cartdim=1;
   IASN(cdims, IPNT_1); /* default grid size */
     
@@ -165,11 +165,11 @@ int initparallel_local(PARARRAY par, FILE * stream) {
 	return E_BADINPUT;
       }
       sz *= cdims[idim];
-      //      fprintf(stderr,"cdims[%d]=%d\n",idim,cdims[idim]);
+      /*      fprintf(stderr,"cdims[%d]=%d\n",idim,cdims[idim]); */
       if (cdims[idim] > 1) cartdim=idim+1;
     }
   }
-  //  fprintf(stderr,"cartdim=%d\n",cartdim);
+  /*  fprintf(stderr,"cartdim=%d\n",cartdim); */
   if (sz<0 ||sz>szw) {
     fprintf(stream,"Error: initparallel_local\n");
     fprintf(stream,"sz=%d computed from parameter array (total\n",sz);
@@ -190,9 +190,9 @@ int initparallel_local(PARARRAY par, FILE * stream) {
 
   if (pt) {
     res=div(szw,sz);
-    // allow user control of number of groups - since
+    /* allow user control of number of groups - since
     // number of simulations not know at this stage of
-    // construction, must assign responsibility to user
+    // construction, must assign responsibility to user */
     ng=res.quot;
     ng=iwave_min(ng,pt);
     res=div(rkw,sz);
@@ -263,7 +263,7 @@ int initparallel_local(PARARRAY par, FILE * stream) {
 
   /* store local params, group info */
   storeComm(cm);
-  storeRank(rk); // should be same as d - index in local comm
+  storeRank(rk); /* should be same as d - index in local comm */
   storeSize(sz);
   storeGroupID(g);
   storeNumGroups(ng);
@@ -298,7 +298,7 @@ int initpinfo(PARALLELINFO *pinfo, FILE *stream) {
     return E_INTERNAL;
   }
 
-  // cannot set exch info until problem dimension is known
+  /* cannot set exch info until problem dimension is known */
   for ( iv = 0; iv < RDOM_MAX_NARR; ++iv ) {
     for ( i = 0; i < IWAVE_NNEI; ++i ) {
       ei_setnull(&(pinfo->seinfo[iv][i]));
@@ -340,7 +340,7 @@ int initexch(PARALLELINFO *pinfo, int ndim, FILE *stream) {
   fprintf(stderr," retrieve infomation related to cartesian comm\n");
 #endif
 
-  // first task: check that cart comm dim is <= physical grid dim  
+  /* first task: check that cart comm dim is <= physical grid dim  */
   if (MPI_SUCCESS != MPI_Cartdim_get(pinfo->ccomm,&cartdim)) {
     fprintf(stream,"Error: createparallel\n");
     fprintf(stream,"- failed to extract cartesian dims from cartesian comm\n");
@@ -357,7 +357,7 @@ int initexch(PARALLELINFO *pinfo, int ndim, FILE *stream) {
 #ifdef VERBOSE
   fprintf(stderr,"call gen_3n1\n");
 #endif
-  // set physical dimn, get number of neighbors
+  /* set physical dimn, get number of neighbors */
   pinfo->ndim=ndim;
   if ( gen_3n1(ndim, &(pinfo->nnei)) ) {
     fprintf(stream, "ERROR. Internal: cannot compute number of neighbors for ndim = %d.\n", pinfo->ndim);
@@ -406,7 +406,7 @@ int initexch(PARALLELINFO *pinfo, int ndim, FILE *stream) {
 #else
 /*-------------------- BEGIN SERIAL ------------------------------------------*/
 
-//int destroyparallel(PARALLELINFO *pinfo, int fabort) renamed 10.04.11
+/* int destroyparallel(PARALLELINFO *pinfo, int fabort) renamed 10.04.11 */
 int destroypinfo(PARALLELINFO *pinfo, int fabort)
 {
     return 0;
@@ -427,7 +427,7 @@ int initparallel_global(int ts) {
 
 int initparallel_local(PARARRAY par, FILE * stream) {
   int idim;
-  IPNT cdims; // local declaration added 02.07.11 WWS
+  IPNT cdims; /* local declaration added 02.07.11 WWS */
   IASN(cdims, IPNT_1); /* default grid size */
   for ( idim = 0; idim < IWAVE_NDIM; ++idim ) {
     if ( ps_flint(par, PNAMES_NP[idim], cdims + idim) ) {
@@ -491,7 +491,7 @@ int initpinfo(PARALLELINFO *pinfo, FILE *stream) {
     }
     */    
     /* set ranks -------------------------------------------------------------*/
-    //    for ( i = 0; i < pinfo->nnei; ++i ) rranks[i] = sranks[i] = MPI_PROC_NULL;
+    /*    for ( i = 0; i < pinfo->nnei; ++i ) rranks[i] = sranks[i] = MPI_PROC_NULL; */
     for ( i = 0; i < pinfo->nnei; ++i ) pinfo->rranks[i] = pinfo->sranks[i] = 0;
     pinfo->lrank = 0;
     IASN(pinfo->crank, IPNT_0);
@@ -513,7 +513,7 @@ int readparallel(PARALLELINFO *pinfo, PARARRAY *pars, FILE *stream)
 int createparallel(PARALLELINFO *pinfo, FILE *stream)
 */
 int initexch(PARALLELINFO *pinfo, int ndim, FILE *stream) {
-  //int initexch(PARALLELINFO *pinfo, FILE *stream)
+    /* int initexch(PARALLELINFO *pinfo, FILE *stream) */
     return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -542,8 +542,8 @@ int setrecvexchange(IMODEL * model, PARALLELINFO * pinfo, FILE * stream) {
   ld_c = &(model->ld_c);
 
 
-  // 12.03.12 WWS
-  //  narr = model->tsinfo.narr;
+  /* 12.03.12 WWS */
+  /*  narr = model->tsinfo.narr; */
   
   /* Set all receives to empty ---------------------------------------------*/
   for ( ia = 0; ia < RDOM_MAX_NARR; ++ia ) {
@@ -596,9 +596,9 @@ int setrecvexchange(IMODEL * model, PARALLELINFO * pinfo, FILE * stream) {
     /* fill recvinfo */
     index = 0;
     recvinfo[index++] = narr(fdm);
-    // loop over dynamic arrays
+    /* loop over dynamic arrays */
     for ( ia = 0; ia < RDOM_MAX_NARR; ++ia ) {
-      //      ia = model->tsinfo.arrs[iv]; /* recomputed array index */
+	/*      ia = model->tsinfo.arrs[iv];  recomputed array index */
      if (isdyn(fdm,ia)) {
 	recvinfo[index++] = ia;
 	
