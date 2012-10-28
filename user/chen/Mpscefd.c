@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
 	int nw,nx,nz,nt,nz0,nt2;
 
 	kiss_fftr_cfg cfg,icfg;
-	float *v1; 		// fft buffer
-	kiss_fft_cpx *v2,**u1; // fft buffer
+	float *v1; 		/* fft buffer */
+	kiss_fft_cpx *v2,**u1; /* fft buffer */
 
 	float ox;
 	float **u2,**u3,**vel;  
@@ -89,9 +89,9 @@ int main(int argc, char* argv[])
     v1 = sf_floatalloc(nt2);
     v2 = (kiss_fft_cpx *) sf_complexalloc(nw);
 
-    u1 = (kiss_fft_cpx *) sf_complexalloc2(nx,nw);	// U_z(x,w)
-    u2 = sf_floatalloc2(njt,nx);	// u_z(x,t)
-    u3 = sf_floatalloc2(nz,nx);		// u(x,z,0)
+    u1 = (kiss_fft_cpx *) sf_complexalloc2(nx,nw);	/* U_z(x,w) */
+    u2 = sf_floatalloc2(njt,nx);	/* u_z(x,t) */
+    u3 = sf_floatalloc2(nz,nx);		/* u(x,z,0) */
 
 	for(it=nt;it<nt2;it++) v1[it]=0.0;
 
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	{
     	sf_floatread(v1,nt,data);
 		for(it=0;it<njt;it++)   u2[ix][it]=v1[it*jt];
-        u3[ix][0]=v1[0];  // imag iz =0
+		u3[ix][0]=v1[0];  /* imag iz =0 */
 
 		kiss_fftr(cfg,v1,v2);
 		kiss_fftri(icfg,v2,v1);
@@ -109,15 +109,15 @@ int main(int argc, char* argv[])
 			u1[iw][ix].i=v2[iw].i; 
 		}
 	}
-	sf_floatwrite(u2[0],njt*nx,wave); // wave slice iz=0
+	sf_floatwrite(u2[0],njt*nx,wave); /* wave slice iz=0 */
 
-//	sf_pscefd_init(nx,nw,dx,dz,
-//		1.0/(nt2*dt),vel);
+/*	sf_pscefd_init(nx,nw,dx,dz,
+//		1.0/(nt2*dt),vel); */
 
 
 	for(iz=1;iz<nz;iz++)
 	{
-//		sf_pscefd_step3(iz,u1);
+/*		sf_pscefd_step3(iz,u1); */
 
 		for(ix=0;ix<nx;ix++)
 		{
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(u3[0],nz*nx,imag);
  
-//	sf_pscefd_exit();
+/*	sf_pscefd_exit(); */
 
 	return 0;
 }

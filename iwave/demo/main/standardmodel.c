@@ -490,6 +490,9 @@ int main(int argc, char **argv) {
   char valname[10];
   char x1rsname[10];
 
+  char * cwdpath;
+  char * pathptr;
+
   /* end DS */   
   
   /******************
@@ -644,13 +647,13 @@ int main(int argc, char **argv) {
     //      strcpy(dname,getenv("DATAPATH"));
     // DATAPATH made preferentially a parameter WWS 08.28.12 
     // else env variable else */ 
-    char * cwdpath = NULL;
+    cwdpath = NULL;
     /* if you can't get it from the parfile */
     if (ps_flcstring(*par,"datapath",&cwdpath)) {
 	/* try to get it from the environment */
       cwdpath = (char *)malloc(128*sizeof(char));
       memset(cwdpath,'\0',128);
-      char * pathptr = getenv("DATAPATH");      
+      pathptr = getenv("DATAPATH");      
       if (pathptr) strcpy(cwdpath,pathptr);
       /* otherwise set to cwd */
       else strcpy(cwdpath,".");

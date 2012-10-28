@@ -74,7 +74,7 @@ void fd3_laplacian(int n1, int n2, int n3, float *uin, float *uout)
 #pragma omp parallel for                    \
 	schedule(dynamic,n1)         \
 	private(i1,i2,i3,i,u)
-//	shared(n1,n2,n3,n12,i,u,uin,uout,c0,c11,c12,c21,c22,c31,c32)
+/*	shared(n1,n2,n3,n12,i,u,uin,uout,c0,c11,c12,c21,c22,c31,c32) */
 #endif
 	for (i3=0; i3 < n3; i3++) 
 	for (i2=0; i2 < n2; i2++) 
