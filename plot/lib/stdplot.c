@@ -29,13 +29,13 @@
 #include "vplot.h"
 #include "plot.h"
 
-static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
+static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3, tickscale;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
 static float d1, d2, d3, frame1, frame2, frame3, l1min, l1max, l2min, l2max, l3min, l3max;
 static int framecol, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
 static int framelabelcol=VP_YELLOW;
-static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
+static bool labelrot, transp, barmove, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, movie=false, flat, xreverse, yreverse;
 static char blank[]=" ";
 static const float aspect=0.8, ticksep=1.75;
@@ -106,6 +106,10 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 	!sf_getbool ("scalebar",&scalebar)) scalebar = false;
     /* plot a scalebar */
 
+    if (!sf_getbool ("barmove", &barmove)) barmove = false;
+    /* adjust scalebar position, if bartype=h */
+
+    /* plot a scalebar */
     if (pad) { /* 4% stretch */
 	mid = 0.5*(umin1+umax1);
 	off = 1.04*0.5*(umax1-umin1);
@@ -117,7 +121,10 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 	umin2 = mid-off;
 	umax2 = mid+off;
     }
- 
+
+    if (!sf_getfloat ("tickscale",&tickscale)) tickscale=0.5;
+    /* ticks scaling */
+
     /* get max and min */
     if (!sf_getfloat ("min1",&min1)) min1=umin1;
     /* minimum on the first axis */
@@ -223,10 +230,10 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 		barmax = 0.98*screenht;
 		barmin = barmax-barwd;
 	    } else {
+		barmin = barmove ? yll : 0.12*screenht;
+		barmax = barmin+barwd;
 		yur += 0.4*barwd;
 		yll += (0.04*screenht + barwd);
-		barmin = 0.12*screenht;
-		barmax = barmin+barwd;
 	    }
 	}
     }
@@ -1299,10 +1306,10 @@ void vp_frame(void)
 	/* plot label */
 	if (label1->where == 't') { 
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
-	    vs = 0.5*labelsz;
+	    vs = tickscale*labelsz;
 	} else {
 	    vp_tjust (TH_CENTER, TV_TOP);
-	    vs = -0.5*labelsz;
+	    vs = -tickscale*labelsz;
 	}
 
 	sy = label1->y;
@@ -1380,7 +1387,7 @@ void vp_frame(void)
 	    vp_tjust (TH_CENTER, TV_TOP);
 	}
 
-	vs = label2->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	vs = label2->where == 'l'? -tickscale*labelsz: tickscale*labelsz;
 
 	sx = label2->x;
 	if (! axis2->parallel) 
@@ -1453,7 +1460,7 @@ void vp_frame(void)
 	/* plot label */
 
 	vp_tjust (TH_CENTER, TV_TOP);
-	vs = -0.5*labelsz;
+	vs = -tickscale*labelsz;
 
 	sx = label3->x;
 	sy = label3->y;
@@ -1560,7 +1567,7 @@ void vp_frame(void)
 	    vp_tjust (TH_CENTER, TV_TOP);
 	}
 
-	vs = label4->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	vs = label4->where == 'l'? -tickscale*labelsz: tickscale*labelsz;
 
 	sx = label4->x;
 	if (! axis4->parallel) 
@@ -1641,7 +1648,7 @@ void vp_frame(void)
     
     if (cube) {
 	/* draw colored lines */
-	vs = 0.5*labelsz;
+	vs = tickscale*labelsz;
 
 	yc = mid2-(mid2-min2)*(frame1+0.5)*d1/(l2min-l2max);
 
@@ -1810,16 +1817,16 @@ void vp_barframe(void)
 	    } else {
 		vp_tjust (TH_CENTER, TV_TOP);
 	    }
-	    vs = barlabel->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	    vs = barlabel->where == 'l'? -tickscale*labelsz: tickscale*labelsz;
 	    if (! baraxis->parallel) 
 		barlabel->x += 2*(baraxis->maxstrlen-1)*vs;
 	} else {
 	    if (barlabel->where == 't') {
 		vp_tjust (TH_CENTER, TV_BOTTOM);
-		vs = 0.5*labelsz;
+		vs = tickscale*labelsz;
 	    } else {
 		vp_tjust (TH_CENTER, TV_TOP);
-		vs = -0.5*labelsz;
+		vs = -tickscale*labelsz;
 	    }
 	    if (! baraxis->parallel) 
 		barlabel->y += 2*(baraxis->maxstrlen-1)*vs;
