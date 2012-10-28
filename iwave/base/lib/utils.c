@@ -10,7 +10,7 @@ Igor Terentyev.
 
 #include <stdlib.h>
 
-static __inline void * _mm_malloc(size_t size, size_t alignment)
+static void * _mm_malloc(size_t size, size_t alignment)
 {
 	void * ptr;
 
@@ -20,7 +20,7 @@ static __inline void * _mm_malloc(size_t size, size_t alignment)
 		return NULL;
 }
 
-static __inline void _mm_free(void * ptr)
+static void _mm_free(void * ptr)
 {
 		free(ptr);
 }

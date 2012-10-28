@@ -56,12 +56,12 @@ int esg_ts(RDOM * unext, RDOM * ucurr, RDOM * coef, int iarr, int _fwd, void *pa
       return err;
     }    
     if (ndim==2) {
-      //if (esgnp->k==5) return esgn_gts2d_210(unext,ucurr,coef,iarr,pars,_fwd);
-      //else {
+	/* if (esgnp->k==5) return esgn_gts2d_210(unext,ucurr,coef,iarr,pars,_fwd); */
+	/* else { */
         fprintf(stderr,"ERROR: time step module\n");
         fprintf(stderr,"order = %d not implemented for 2D\n",2*esgnp->k);
         return E_BADINPUT;
-        //}
+        /* } */
     }
     if (ndim==3) {
       if (esgnp->k==5) return esgn_gts3d_210(unext,ucurr,coef,iarr,pars,_fwd);

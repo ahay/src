@@ -682,7 +682,7 @@ static int esg_readmedia(PARARRAY * par, FILE * stream, IMODEL * model, int pane
 #endif
           {
             for (ii[0] = rags[0];ii[0] <= rage[0];ii[0] ++) {
-              //q = ra_gget(&B0tmp, ii);
+		/* q = ra_gget(&B0tmp, ii); */
               q = REAL_ONE / ra_gget(&B0tmp, ii);
               for (n = 1;n < n_average;n ++) {
                 l = n;
@@ -693,10 +693,10 @@ static int esg_readmedia(PARARRAY * par, FILE * stream, IMODEL * model, int pane
                     l = l/2 ;
                   }
                 }
-                //q += ra_gget(&B0tmp, kk);
+                /* q += ra_gget(&B0tmp, kk); */
                 q += REAL_ONE / ra_gget(&B0tmp, kk);
               }
-              //rd_gset(&dom, D_MV[i], ii, q*b);
+              /* rd_gset(&dom, D_MV[i], ii, q*b); */
               rd_gset(&dom, D_MV[i], ii, REAL_ONE/(q*b));
             }
           }
@@ -994,7 +994,7 @@ int esg_readgrid(PARARRAY * pars,
 		 FILE *stream, 
 		 IMODEL * model) {
 
-  // workspace
+    /* workspace */
   int err=0;
   RPNT d;
 	
