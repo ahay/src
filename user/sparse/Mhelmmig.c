@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
 	insert = sf_charalloc(6);
     } else {
 	datapath = NULL;
+	srclen = 0;
 	insert = NULL;
 	append = NULL;
     }
@@ -128,8 +129,8 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d3",d2);
     sf_putfloat(out,"o3",(float) -nh*d2);
 
+    /* output source wavefield */
     if (NULL != sf_getstring("us")) {
-	/* output source wavefield */
 	us = sf_output("us");
 	
 	sf_settype(us,SF_COMPLEX);
@@ -145,8 +146,8 @@ int main(int argc, char* argv[])
 	us = NULL;
     }
 
+    /* output receiver wavefield */
     if (NULL != sf_getstring("ur")) {
-	/* output receiver wavefield */
 	ur = sf_output("ur");
 	
 	sf_settype(ur,SF_COMPLEX);

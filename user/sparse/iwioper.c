@@ -27,7 +27,8 @@
 #include "fdprep.h"
 #include "iwioper.h"
 
-static float eps, **vel, d1, d2, ow, dw, ***wght;
+static float eps, **vel, d1, d2, ow, dw;
+static float ***wght, **prec;
 static float **tempx, **tempr;
 static int n1, n2, npml, pad1, pad2, nh, ns, nw;
 static sf_file sfile, rfile;
@@ -38,11 +39,10 @@ static double Control[UMFPACK_CONTROL];
 static double *Tx, *Tz;
 static double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
 static sf_complex ***us, ***ur, ***as, ***ar;
-static bool load, verb;
+static bool load;
 static int uts, ss[3];
 static char *datapath, *insert, *append;
 static size_t srclen, inslen;
-static sf_timer timer;
 
 void adjsrce(sf_complex **recv /* receiver wavefield */,
 	     sf_complex **adjs /* adjoint-source */,
@@ -66,7 +66,9 @@ void adjsrce(sf_complex **recv /* receiver wavefield */,
     } else {
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {
-		adjs[j][i] = recv[j][i]*dm[j*ss[1]+i];
+		adjs[j][i] = recv[j][i]
+		    *(prec==NULL? 1.: prec[j][i])
+		    *dm[j*ss[1]+i];
 	    }
 	}
     }
@@ -94,7 +96,9 @@ void adjrecv(sf_complex **srce /* source wavefield */,
     } else {
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {
-		adjr[j][i] = srce[j][i]*dm[j*ss[1]+i];
+		adjr[j][i] = srce[j][i]
+		    *(prec==NULL? 1.: prec[j][i])
+		    *dm[j*ss[1]+i];
 	    }
 	}
     }
@@ -127,9 +131,10 @@ void iwiadd(double omega,
     if (adj) {
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {    
-		dm[j*ss[1]+i] -= omega*omega*creal(
-		    conjf(srce[j][i])*adjs[j][i]+
-		    recv[j][i]*conjf(adjr[j][i]));
+		dm[j*ss[1]+i] -= omega*omega
+		    *(prec==NULL? 1.: prec[j][i])*creal(
+			conjf(srce[j][i])*adjs[j][i]+
+			recv[j][i]*conjf(adjr[j][i]));
 	    }
 	}
     } else {
@@ -155,7 +160,7 @@ void iwi_init(int npw, float eps0,
 	      float ow0, float dw0, int nw0,
 	      sf_file us0, sf_file ur0,
 	      bool load0, char *datapath0,
-	      bool verb0, int uts0)
+	      int uts0)
 /*< initialize >*/
 {
     int its;
@@ -176,13 +181,7 @@ void iwi_init(int npw, float eps0,
     load = load0;
     datapath = datapath0;
     
-    verb = verb0;
     uts = uts0;
-
-    if (verb)
-	timer = sf_timer_init();
-    else
-	timer = NULL;
 
     ss[0] = 1; ss[1] = n1; ss[2] = n1*n2;
 
@@ -191,6 +190,7 @@ void iwi_init(int npw, float eps0,
 	srclen = strlen(datapath);
 	insert = sf_charalloc(6);
     } else {
+	srclen = 0;
 	insert = NULL;
 	append = NULL;
     }
@@ -248,12 +248,35 @@ void iwi_init(int npw, float eps0,
     Control [UMFPACK_IRSTEP] = 0;
 }
 
+void iwi_free()
+/*< free memories >*/
+{
+    int its;
+
+    free(us); free(ur); free(as); free(ar);
+
+    if (!load) {
+	free(Ti); free(Tj); free(Tx); free(Tz); 
+	free(Ap); free(Ai); free(Map); free(Ax); free(Az);
+    }
+
+    for (its=0; its < uts; its++) {
+	free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
+    }
+
+    free(Bx); free(Bz); free(Xx); free(Xz);
+
+    free(tempx); free(tempr);
+}
+
 void iwi_set(float **vel0,
-	     float ***wght0)
-/*< set velocity and weight >*/
+	     float ***wght0,
+	     float **prec0)
+/*< set velocity, weight and preconditioner >*/
 {
     vel = vel0;
     wght = wght0;
+    prec = prec0;
 }
 
 void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
@@ -267,11 +290,6 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
     /* loop over frequency */
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
-
-	if (verb) {
-	    sf_warning("Frequency %d of %d.",iw+1,nw);
-	    sf_timer_start(timer);
-	}
 
 	/* LU file (append _lu* after velocity file) */
 	if (load) {
@@ -373,13 +391,12 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	for (its=0; its < uts; its++) {
 	    (void) umfpack_zl_free_numeric (&Numeric[its]);
 	}
-
-	if (verb) {
-	    sf_timer_stop (timer);
-	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
-	}
     }
-    
+
+    /* rewind file stream */
+    rewind(sf_filestream(sfile));
+    rewind(sf_filestream(rfile));
+
 #ifdef _OPENMP
     if (adj) {
 #pragma omp parallel for num_threads(uts) private(its)

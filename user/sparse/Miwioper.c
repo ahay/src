@@ -27,21 +27,19 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, adj, load;
+    bool adj, load;
     int npw, n1, n2; 
     int nh, ns, nw;
     float eps, d1, d2, **vel, dw, ow;
-    float *di, *dm, ***wght;
+    float *di, *dm, ***wght, **prec;
     char *datapath;
-    sf_file in, out, model, us, ur, weight;
+    sf_file in, out, model, us, ur;
+    sf_file weight, precon;
     int uts, mts;
 
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");    
-
-    if (!sf_getbool("verb",&verb)) verb=false;
-    /* verbosity flag */
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
@@ -62,7 +60,6 @@ int main(int argc, char* argv[])
 #endif
 
     uts = (uts < 1)? mts: uts;
-    if (verb) sf_warning("Using %d out of %d threads.",uts,mts);
 
     if (!sf_getint("npw",&npw)) npw=6;
     /* number of points per wave-length */
@@ -99,8 +96,8 @@ int main(int argc, char* argv[])
     else
 	sf_floatread(dm,n1*n2,in);
 
+    /* read source wavefield */
     if (NULL == sf_getstring("us"))
-	/* read source wavefield */
 	sf_error("Need source wavefield us=");
     us = sf_input("us");
 
@@ -109,13 +106,13 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(us,"d4",&dw)) sf_error("No dw=.");
     if (!sf_histfloat(us,"o4",&ow)) sf_error("No ow=.");    
     
+    /* read receiver wavefield */	
     if (NULL == sf_getstring("ur"))
-	/* read receiver wavefield */	
 	sf_error("Need receiver wavefield ur=");
     ur = sf_input("ur");
 
+    /* read image weight */
     if (NULL == sf_getstring("weight")) {
-	/* read image weight */
 	weight = NULL;
 	wght = NULL;
     } else {
@@ -123,6 +120,17 @@ int main(int argc, char* argv[])
 	wght = sf_floatalloc3(n1,n2,2*nh+1);
 	sf_floatread(wght[0][0],n1*n2*(2*nh+1),weight);
 	sf_fileclose(weight);
+    }
+
+    /* read model preconditioner */
+    if (NULL == sf_getstring("precon")) {
+	precon = NULL;
+	prec = NULL;
+    } else {
+	precon = sf_input("precon");
+	prec = sf_floatalloc2(n1,n2);
+	sf_floatread(prec[0],n1*n2,precon);
+	sf_fileclose(precon);
     }
 
     /* write output header */
@@ -133,10 +141,10 @@ int main(int argc, char* argv[])
     
     /* initialize */
     iwi_init(npw,eps, n1,n2,d1,d2, nh,ns,ow,dw,nw,
-	     us,ur, load,datapath, verb,uts);
+	     us,ur, load,datapath, uts);
 
     /* set velocity and weight */
-    iwi_set(vel,wght);
+    iwi_set(vel,wght,prec);
 
     /* linear operator */
     iwi_oper(adj,false,n1*n2,n1*n2*(2*nh+1),dm,di);

@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
-   
+
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
     
@@ -68,6 +68,7 @@ int main(int argc, char* argv[])
 	insert = sf_charalloc(6);
     } else {
 	datapath = NULL;
+	srclen = 0;
 	insert = NULL;
 	append = NULL;
     }
@@ -224,7 +225,7 @@ int main(int argc, char* argv[])
 		(void) umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	    
-	    (void) remove (append);
+	    if (!save) (void) remove (append);
 #else
 	    if (save) (void) umfpack_zl_save_numeric (Numeric[0], append);
 #endif
