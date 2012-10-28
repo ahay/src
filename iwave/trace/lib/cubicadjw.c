@@ -1,5 +1,5 @@
 #include "cubic.h"
-#include "utils.h" // added 06.09.12 WWS
+#include "utils.h" /* added 06.09.12 WWS */
 
 int cubicadj_getworksize(int ntout, int ntin) { return ntin + 7*ntout; }
 
