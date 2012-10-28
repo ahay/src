@@ -19,6 +19,7 @@ if root:
     pydir = os.path.dirname(pkgdir)
     for module in modules:
         try:
+            EnsurePythonVersion(2,4)
             env.RSF_Pycompile(module+'.pyc',module+'.py')
             install = env.Install(pydir,[module+'.py',module+'.pyc'])
 
