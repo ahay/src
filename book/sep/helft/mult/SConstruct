@@ -6,11 +6,11 @@ Flow('data','data-BP2.HH','dd form=native')
 # convolution using 1-D helix FFT
 Flow('mult','data',
      '''
-     pad n1=2000 n2=2000 | put n2=1 n1=4000000 | 
+     pad n1=2000 | put n2=1 n1=1496000 |
      rtoc | fft3 axis=1 pad=1  | 
      math output="input*input" |
      fft3 axis=1 inv=y | real  | 
-     put n1=2000 n2=2000 | window n1=1216 n2=748
+     put n1=2000 n2=748 | window n1=1216
      ''')
 
 End()
