@@ -2,9 +2,9 @@
 
 int traceterm_construct(TRACE_TERM * tr, 
 			PARARRAY * par,
-			// removed mod of 03.12 - not sensible constructor inputs
+			/* removed mod of 03.12 - not sensible constructor inputs
 			//			int sindex, 
-			//			ireal mindex,
+			//			ireal mindex, */
 			int load,
 			const char * hdrkey,
 			const char * datakey,
@@ -73,8 +73,8 @@ int traceterm_construct(TRACE_TERM * tr,
   /* modification of 03.12 - these never made sense here, since they
      are set in the run method and controlled one level up, by
      sampler. So set to default values. */
-  //  tr->index=sindex;
-  //  tr->mult=mindex;
+  /*  tr->index=sindex; */
+  /*  tr->mult=mindex; */
   tr->index=0;
   tr->mult=REAL_ONE;
 
@@ -143,12 +143,12 @@ int traceterm_destroy(TRACE_TERM * tr) {
 }
 
 int traceterm_run(TRACE_TERM * tr, IMODEL * m) {
-  // workspace for array geometry
+    /* workspace for array geometry */
   IPNT n, gs, ge, n0, gs0, ge0;
-  // no longer needed - mod of 03.12
-  //  IPNT nm, gsm, gem, n0m, gs0m, ge0m;
-  // ireal * mptr; /* pointer to multiplier array, or NULL, for no multiplier */
-  //  int i,j;
+  /* no longer needed - mod of 03.12 */
+  /*  IPNT nm, gsm, gem, n0m, gs0m, ge0m; */
+  /* ireal * mptr;  pointer to multiplier array, or NULL, for no multiplier */
+  /*  int i,j; */
 
   /* sanity-check sample array index */
   if (tr->index < 0 || tr->index > (m->ld_a).narr-1) {
@@ -214,9 +214,9 @@ int traceterm_run(TRACE_TERM * tr, IMODEL * m) {
 		 n0, gs0,
 		 n, gs,
 		 (m->ld_a)._s[tr->index]._s,
-		 //		 n0m, gs0m,
+		 /*		 n0m, gs0m,
 		 //		 nm, gsm,
-		 //		 mptr);
+		 //		 mptr); */
 		 tr->mult);
 
   return 0;
