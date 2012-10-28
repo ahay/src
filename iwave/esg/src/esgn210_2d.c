@@ -105,8 +105,8 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
   register ireal * restrict _epx, * restrict _epy;
   register ireal lax, lay, dt2, vx3, vx2, vx1, vx0, dfdx, dfdy, etaxdt, etaydt;
 
-  //  register ireal *tmp;  /*pointer for swapping p with mp during imaging accumulation*/ 
-  // register ireal *_rmpx;  /*pointer for stroe scaling multipliers*/ 
+  /*  register ireal *tmp;  pointer for swapping p with mp during imaging accumulation*/ 
+  /* register ireal *_rmpx; pointer for stroe scaling multipliers*/ 
   RARR *s, *rs, *cs;
   RARR *s_pml;
   RDOM *ld_pml;
@@ -234,7 +234,7 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _epy    = s[D_EP[1]]._s + (gys - s[D_EP[1]]._dims[0].gs + tid);        /* 1D */
     
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
    
     for ( iy = gys_pml_I+tid; iy < gye_pml_I+1; iy += tsz )
     {
@@ -264,13 +264,13 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
 
           *_px = *_px_x_I + *_px_y_I;
           *_py = *_py_x_I + *_py_y_I;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _px++; _py++; _mp00++; _mp01++;
         _px_x_I++; _px_y_I++; _py_x_I++; _py_y_I++;
@@ -326,12 +326,12 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _py_y_IV = s_pml[D_P1]._s + (gxs_pml_IV - s_pml[D_P1]._dims[0].gs) + (gye_pml_I + 1 - s_pml[D_P1]._dims[1].gs + tid) * s_pml[D_P1]._dims[0].n0;
     
     /** adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gye_pml_I+1+tid; iy < gys_pml_II; iy += tsz )
     {
       vx2 = _vx3[-1]; vx1 = _vx3[-2]; vx0 = _vx3[-3];
-      //etaydt = (*_epy) * dt2;
+      /* etaydt = (*_epy) * dt2; */
       
       /* swap pointers when _fwd = 0 (imaging accumulation), not derived yet */
       /*
@@ -357,13 +357,13 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
 
           *_px = *_px_x_III + *_px_y_III;
           *_py = *_py_x_III + *_py_y_III;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _px++; _py++; _mp00++; _mp01++;
         _px_x_III++; _px_y_III++; _py_x_III++; _py_y_III++;
@@ -387,7 +387,7 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _px++; _py++; _mp00++; _mp01++;	
 
@@ -410,13 +410,13 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
 
           *_px = *_px_x_IV + *_px_y_IV;
           *_py = *_py_x_IV + *_py_y_IV;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _px++; _py++; _mp00++; _mp01++;	
         _px_x_IV++; _px_y_IV++; _py_x_IV++; _py_y_IV++;
@@ -466,7 +466,7 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _py_y_II = s_pml[D_P1]._s + (gxs - s_pml[D_P1]._dims[0].gs) + (gys_pml_II - s_pml[D_P1]._dims[1].gs + tid) * s_pml[D_P1]._dims[0].n0;
  
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gys_pml_II+tid; iy < gye_pml_II+1; iy += tsz )
     {
@@ -496,13 +496,13 @@ int esgn_gts2d_210ns(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
 
           *_px = *_px_x_II + *_px_y_II;
           *_py = *_py_x_II + *_py_y_II;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _px++; _py++; _mp00++; _mp01++;
         _px_x_II++; _px_y_II++; _py_x_II++; _py_y_II++;
@@ -546,8 +546,8 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
   register ireal * restrict _epx, * restrict _epy;
   register ireal lax, lay, dt2, vy3, vy2, vy1, vy0, dfdx, dfdy, etaxdt, etaydt;
 
-  //register ireal *tmp;  /*pointer for swapping p with mp during imaging accumulation*/ 
-  //register ireal *_rmpx;  /*pointer for stroe scaling multipliers*/ 
+  /* register ireal *tmp;  pointer for swapping p with mp during imaging accumulation*/ 
+  /* register ireal *_rmpx;  pointer for stroe scaling multipliers*/ 
   RARR *s, *rs, *cs;
   RARR *s_pml;
   RDOM *ld_pml;
@@ -661,7 +661,7 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _epy     = rs[D_EV[1]]._s + (gys - s[D_EV[1]]._dims[0].gs + tid);        /* 1D */
     
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
    
     for ( iy = gys_pml_I+tid; iy < gye_pml_I+1; iy += tsz )
     {
@@ -688,13 +688,13 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_sxy_y_I) = ((*_sxy_y_I) * (1.0f - etaydt) + dfdy*(*_ms0))/(1.0f + etaydt);
         
           *_sxy = *_sxy_x_I + *_sxy_y_I;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _sxy++; _ms0++;
         _sxy_x_I++; _sxy_y_I++;
@@ -744,12 +744,12 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _sxy_y_IV = s_pml[D_S0]._s + (gxs_pml_IV - s_pml[D_S0]._dims[0].gs) + (gye_pml_I + 1 - s_pml[D_S0]._dims[1].gs + tid) * s_pml[D_S0]._dims[0].n0;
       
     /** adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gye_pml_I+1+tid; iy < gys_pml_II; iy += tsz )
     {
       vy2 = _vy3[-1]; vy1 = _vy3[-2]; vy0 = _vy3[-3];
-      //etaydt = (*_epy) * dt2;
+      /* etaydt = (*_epy) * dt2; */
       
       /* swap pointers when _fwd = 0 (imaging accumulation), not derived yet */
       /*
@@ -772,13 +772,13 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_sxy_y_III) = (*_sxy_y_III) + dfdy*(*_ms0);
           
           *_sxy = *_sxy_x_III + *_sxy_y_III;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _sxy++; _ms0++;
         _sxy_x_III++; _sxy_y_III++;
@@ -801,7 +801,7 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _sxy++; _ms0++;
 
@@ -821,13 +821,13 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_sxy_y_IV) = (*_sxy_y_IV) + dfdy*(*_ms0);
           
           *_sxy = *_sxy_x_IV + *_sxy_y_IV;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _sxy++; _ms0++;
         _sxy_x_IV++; _sxy_y_IV++; 
@@ -873,7 +873,7 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _sxy_y_II = s_pml[D_S0]._s + (gxs - s_pml[D_S0]._dims[0].gs) + (gys_pml_II - s_pml[D_S0]._dims[1].gs + tid) * s_pml[D_S0]._dims[0].n0;
     
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gys_pml_II+tid; iy < gye_pml_II+1; iy += tsz )
     {
@@ -900,13 +900,13 @@ int esgn_gts2d_210ss0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_sxy_y_II) = ((*_sxy_y_II) * (1.0f - etaydt) + dfdy*(*_ms0))/(1.0f + etaydt);
           
           *_sxy = *_sxy_x_II + *_sxy_y_II;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _sxy++; _ms0++;
         _sxy_x_II++; _sxy_y_II++;
@@ -949,8 +949,8 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
   register ireal * restrict _epx, * restrict _epy;
   register ireal lax, lay, dt2, px3, px2, px1, px0, dfdx, dfdy, etaxdt, etaydt;
 
-  //register ireal *tmp;  /*pointer for swapping p with mp during imaging accumulation*/ 
-  //register ireal *_rmpx;  /*pointer for stroe scaling multipliers*/ 
+  /* register ireal *tmp;  pointer for swapping p with mp during imaging accumulation*/ 
+  /* register ireal *_rmpx;  pointer for stroe scaling multipliers*/ 
   RARR *s, *rs, *cs;
   RARR *s_pml;
   RDOM *ld_pml;
@@ -1065,7 +1065,7 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _epy    = rs[D_EP[1]]._s + (gys - s[D_EP[1]]._dims[0].gs + tid);        /* 1D */
     
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
    
     for ( iy = gys_pml_I+tid; iy < gye_pml_I+1; iy += tsz )
     {
@@ -1092,13 +1092,13 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vx_y_I) = ((*_vx_y_I) * (1.0f - etaydt) + dfdy*(*_mvx))/(1.0f + etaydt);
           
           *_vx = *_vx_x_I + *_vx_y_I;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vx++; _mvx++;
         _vx_x_I++; _vx_y_I++;
@@ -1149,12 +1149,12 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _vx_y_IV = s_pml[D_V0]._s + (gxs_pml_IV - s_pml[D_V0]._dims[0].gs) + (gye_pml_I + 1 - s_pml[D_V0]._dims[1].gs + tid) * s_pml[D_V0]._dims[0].n0;
         
     /** adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gye_pml_I+1+tid; iy < gys_pml_II; iy += tsz )
     {
       px2 = _px3[-1]; px1 = _px3[-2]; px0 = _px3[-3];
-      //etaydt = (*_epy) * dt2;
+      /* etaydt = (*_epy) * dt2; */
       
       /* swap pointers when _fwd = 0 (imaging accumulation), not derived yet */
       /*
@@ -1177,13 +1177,13 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vx_y_III) = (*_vx_y_III) + dfdy*(*_mvx);
           
           *_vx = *_vx_x_III + *_vx_y_III;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vx++; _mvx++;
         _vx_x_III++; _vx_y_III++;
@@ -1206,7 +1206,7 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vx++; _mvx++;	
 
@@ -1226,13 +1226,13 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vx_y_IV) = (*_vx_y_IV) + dfdy*(*_mvx);
           
           *_vx = *_vx_x_IV + *_vx_y_IV;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vx++; _mvx++;
         _vx_x_IV++; _vx_y_IV++;
@@ -1279,7 +1279,7 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _vx_y_II = s_pml[D_V0]._s + (gxs - s_pml[D_V0]._dims[0].gs) + (gys_pml_II - s_pml[D_V0]._dims[1].gs + tid) * s_pml[D_V0]._dims[0].n0;
      
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gys_pml_II+tid; iy < gye_pml_II+1; iy += tsz )
     {
@@ -1306,13 +1306,13 @@ int esgn_gts2d_210v0(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vx_y_II) = ((*_vx_y_II) * (1.0f - etaydt) + dfdy*(*_mvx))/(1.0f + etaydt);
           
           *_vx = *_vx_x_II + *_vx_y_II;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vx++; _mvx++;
         _vx_x_II++; _vx_y_II++;
@@ -1355,8 +1355,8 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
   register ireal * restrict _epx, * restrict _epy;
   register ireal lax, lay, dt2, sxy3, sxy2, sxy1, sxy0, dfdx, dfdy, etaxdt, etaydt;
 
-  //register ireal *tmp;  /*pointer for swapping p with mp during imaging accumulation*/ 
-  //register ireal *_rmpx;  /*pointer for stroe scaling multipliers*/ 
+  /* register ireal *tmp;  pointer for swapping p with mp during imaging accumulation*/ 
+  /* register ireal *_rmpx;  pointer for stroe scaling multipliers*/ 
   RARR *s, *rs, *cs;
   RARR *s_pml;
   RDOM *ld_pml;
@@ -1471,7 +1471,7 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _epy    = rs[D_EV[1]]._s + (gys - s[D_EV[1]]._dims[0].gs + tid);        /* 1D */
     
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
    
     for ( iy = gys_pml_I+tid; iy < gye_pml_I+1; iy += tsz )
     {
@@ -1498,13 +1498,13 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vy_y_I) = ((*_vy_y_I) * (1.0f -etaydt) + dfdy*(*_mvy))/(1.0f + etaydt);
           
           *_vy = *_vy_x_I + *_vy_y_I;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vy++; _mvy++;
         _vy_x_I++; _vy_y_I++;
@@ -1554,12 +1554,12 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _vy_y_IV = s_pml[D_V1]._s + (gxs_pml_IV - s_pml[D_V1]._dims[0].gs) + (gye_pml_I + 1 - s_pml[D_V1]._dims[1].gs + tid) * s_pml[D_V1]._dims[0].n0;
     
     /** adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gye_pml_I+1+tid; iy < gys_pml_II; iy += tsz )
     {
       sxy2 = _sxy3[-1]; sxy1 = _sxy3[-2]; sxy0 = _sxy3[-3];
-      //etaydt = (*_epy) * dt2;
+      /* etaydt = (*_epy) * dt2; */
       
       /* swap pointers when _fwd = 0 (imaging accumulation), not derived yet */
       /*
@@ -1582,13 +1582,13 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vy_y_III) = (*_vy_y_III) + dfdy*(*_mvy);
 
           *_vy = *_vy_x_III + *_vy_y_III;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vy++; _mvy++;
         _vy_x_III++; _vy_y_III++;
@@ -1611,7 +1611,7 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vy++; _mvy++;
 
@@ -1631,13 +1631,13 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vy_y_IV) = (*_vy_y_IV) + dfdy*(*_mvy);
 
           *_vy = *_vy_x_IV + *_vy_y_IV;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vy++; _mvy++;
         _vy_x_IV++; _vy_y_IV++;
@@ -1683,7 +1683,7 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
     _vy_y_II = s_pml[D_V1]._s + (gxs - s_pml[D_V1]._dims[0].gs) + (gys_pml_II - s_pml[D_V1]._dims[1].gs + tid) * s_pml[D_V1]._dims[0].n0;
  
     /* adjoint formula not derived */
-    //_rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0;
+    /* _rmpx = rs[D_MP00]._s + (gxs - s[D_MP00]._dims[0].gs) + (gys - s[D_MP00]._dims[1].gs + tid) * s[D_MP00]._dims[0].n0; */
     
     for ( iy = gys_pml_II+tid; iy < gye_pml_II+1; iy += tsz )
     {
@@ -1710,13 +1710,13 @@ int esgn_gts2d_210v1(RDOM *dom, RDOM *rdom, RDOM *cdom, void *pars, int _fwd)
           (*_vy_y_II) = ((*_vy_y_II) * (1.0f - etaydt) + dfdy*(*_mvy))/(1.0f + etaydt);
 
           *_vy = *_vy_x_II + *_vy_y_II;
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta) / (1.0 + etaxdt); */
         }
         else {
           /*
           (*_px) = (*_px) + delta/(*_rmpx++);
           */
-          // (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt);
+          /* (*_px) = ((*_px) * (1.0 - etaxdt) + delta/(*_rmpx++)) / (1.0 + etaxdt); */
         }
         _vy++; _mvy++;
         _vy_x_II++; _vy_y_II++;

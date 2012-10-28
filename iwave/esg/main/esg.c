@@ -20,7 +20,7 @@
 
 #define NSTR 128
 
-//#define IWAVE_EXTEND_MODEL
+/* #define IWAVE_EXTEND_MODEL */
 
 /* uncomment to write to the rk-dep output stream at every major step 
    #define VERBOSE
@@ -57,7 +57,7 @@ int main(int argc, char ** argv) {
   int ts;                  /* thread support lvl */
   int rk;                  /* process rank       */
 
-  // int i;
+  /* int i; */
 
   /*******************************************************************
    ****************** INITIALIZE PARALLEL ENVIRONMENT ****************
@@ -72,7 +72,7 @@ int main(int argc, char ** argv) {
   MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &ts);
 #endif
 
-  //initparallel(ts);
+  /* initparallel(ts); */
   initparallel_global(ts);
 
   /* self-doc if no args */
@@ -245,7 +245,7 @@ int main(int argc, char ** argv) {
       
       /* sampler_init should succeed in record range [first,last) */
 
-      //      fprint_grid(stderr,(state.model).g);
+      /*      fprint_grid(stderr,(state.model).g); */
       if (sampler_init(&trace,&(state.model),&pars,stream)) {
 	fprintf(stream,"ERROR: main from sampler_init. ABORT\n");
 	abortexit(err,&pars,&stream);
@@ -286,7 +286,7 @@ int main(int argc, char ** argv) {
 	if (!towed) {
 	  RASN(scoord,RPNT_0);
 	}
-	/////// NOTE THIS PROBABLY ISN'T ANY INTERESTING SOURCE
+	/* NOTE THIS PROBABLY ISN'T ANY INTERESTING SOURCE */
         IASN(sindex,D_P);
 	err=sampler_construct(arrsrc,&pars,sindex,mult,scoord,1,NULL,srckey,stream);
 	if (err) {
