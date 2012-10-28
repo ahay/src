@@ -643,7 +643,7 @@ int main(int argc, char **argv) {
     //      dname=malloc(strlen(getenv("DATAPATH"))+strlen(fname)+2);
     //      strcpy(dname,getenv("DATAPATH"));
     // DATAPATH made preferentially a parameter WWS 08.28.12 
-    // else env variable else */ .
+    // else env variable else */ 
     char * cwdpath = NULL;
     /* if you can't get it from the parfile */
     if (ps_flcstring(*par,"datapath",&cwdpath)) {

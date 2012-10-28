@@ -14,7 +14,7 @@
    is completely independent of libf2c, and need not link to it.
 */
 #include "f2c.h"
-// include C math library headers to avoid having to use libf2c version of pow
+/* include C math library headers to avoid having to use libf2c version of pow */
 #include "math.h"
 
 /* Subroutine */ int helm_(integer *nsx, integer *ntx, real *dt, real *dx, 
@@ -27,8 +27,8 @@
     doublereal d__1, d__2;
 
     /* Builtin functions */
-    //    double pow_dd(doublereal *, doublereal *);
-    // replace with pow from C math library - OK as doublereal=double
+    /*    double pow_dd(doublereal *, doublereal *); */
+    /* replace with pow from C math library - OK as doublereal=double */
 
     /* Local variables */
     static integer ptr_to_x__, i__, j, ptr_to_xt__, nd, jx, jy, ptr_to_coef__,
@@ -173,7 +173,7 @@
     for (j = 1; j <= i__1; ++j) {
       d__1 = (doublereal) work[ptr_to_coef__ - 1 + j];
       d__2 = (doublereal) (*p);
-      //	work[ptr_to_x__ - 1 + j] *= pow_dd(&d__1, &d__2);
+      /*	work[ptr_to_x__ - 1 + j] *= pow_dd(&d__1, &d__2); */
       work[ptr_to_x__ - 1 + j] *= pow(d__1, d__2);
     }
     sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[
