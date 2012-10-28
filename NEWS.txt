@@ -12,6 +12,8 @@ To the reproducible documents collection:
 * Viking Graben data moved to the public data server
 * sep/fat: Imaging complex structures with first-arrival traveltimes
   (Bevc)
+* sep/helft: Multi-dimensional Fourier transforms in the helical
+  coordinate system (Rickett and Guitton)
 
 To SCons:
 * Support for XQuartz on Macs - looking in /opt/X11 directories 
