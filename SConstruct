@@ -1,3 +1,4 @@
+EnsurePythonVersion(2,4)
 EnsureSConsVersion(1,0)
 
 import atexit, os, sys
