@@ -1048,12 +1048,12 @@ class TeXPaper(Environment):
                     self.Alias('figinstall',resdir2)
         self.figs.extend(nrfigs)
         self.Command('dummy.tex',self.figs,Action(dummy))
-    def Paper(self,paper,lclass='geophysics',scons=1,
+    def Paper(self,paper,source='',lclass='geophysics',scons=1,
               use=None,include=None,options=None,
-              resdir='Fig',color='',hires='',source=''):
-     	if source == '':
-			source = paper
+              resdir='Fig',color='',hires=''):
         global colorfigs, hiresfigs
+        if source == '':
+            source = paper
         colorfigs.extend(string.split(color))
         hiresfigs.extend(string.split(hires))
         ltx = self.Latify(target=paper+'.ltx',source=source+'.tex',
@@ -1091,29 +1091,34 @@ class TeXPaper(Environment):
             self.Alias(paper+'.install',dochtml)
             self.Depends(paper+'.install','figinstall')
         return pdf
-    def End(self,paper='paper',**kw):
-        apply(self.Paper,(paper,),kw)
-        self.Alias('pdf',paper+'.pdf')
-        self.Alias('wiki',paper+'.wiki')
-        self.Alias('read',paper+'.read')
-        self.Alias('print',paper+'.print')
-        self.Alias('html',paper+'.html')
-        self.Alias('install',paper+'.install')
-        self.Alias('figs',paper+'.figs')
-        self.Default('pdf')
+    def End(self,paper='paper',source='',**kw):
+        if source == '':
+            source = paper
+        if os.path.isfile(source+'.tex'):
+            apply(self.Paper,(paper,source),kw)
+            self.Alias('pdf',paper+'.pdf')
+            self.Alias('wiki',paper+'.wiki')
+            self.Alias('read',paper+'.read')
+            self.Alias('print',paper+'.print')
+            self.Alias('html',paper+'.html')
+            self.Alias('install',paper+'.install')
+            self.Alias('figs',paper+'.figs')
+            self.Default('pdf')
 
 default = TeXPaper()
 def Dir(**kw):
      return apply(default.Dir,[],kw)
-def Paper(paper,**kw):
-    return apply(default.Paper,(paper,),kw)
+def Paper(paper,source='',**kw):
+    return apply(default.Paper,(paper,source),kw)
 def Command2(target,source,command):
     return default.Command(target,source,command)
-def End(paper='paper',**kw):
-    return apply(default.End,(paper,),kw)
+def End(paper='paper',source='',**kw):
+    return apply(default.End,(paper,source),kw)
 def Depends2(target,source):
     return default.Depends(target,source)
 
 if __name__ == "__main__":
      import pydoc
      pydoc.help(TeXPaper)
+
+
