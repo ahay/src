@@ -104,11 +104,11 @@ void gmres (const float *f                                         /* data */,
 
   /* use ATLAS' CBLAS routines */
 
-  // v = f - v
-  cblas_sscal (n, -1.0, v, 1); // v = - v
-  cblas_saxpy (n, 1.0, f, 1, v, 1); // v = f - v
+  /* v = f - v */
+  cblas_sscal (n, -1.0, v, 1); /* v = - v */
+  cblas_saxpy (n, 1.0, f, 1, v, 1); /* v = f - v */
 
-  //g[0] = cblas_dnrm2 (n, v, 1);
+  /* g[0] = cblas_dnrm2 (n, v, 1); */
   g[0] = sqrt (cblas_sdot (n, v, 1, v, 1));
   cblas_sscal (n, 1.0 / g[0], v, 1);
 
@@ -145,7 +145,7 @@ void gmres (const float *f                                         /* data */,
 
 	  /* use ATLAS' CBLAS routines */
 
-	  //hh = cblas_dnrm2 (n, v + (j + 1) * n, 1);
+	  /* hh = cblas_dnrm2 (n, v + (j + 1) * n, 1); */
 	  hh = sqrt (cblas_sdot (n, v + (j + 1) * n, 1, v + (j + 1) * n, 1));
 	  cblas_sscal (n, 1.0 / hh, v + (j + 1) * n, 1);
 
@@ -196,11 +196,11 @@ void gmres (const float *f                                         /* data */,
 
       /* use ATLAS' CBLAS routines */
 
-      // v = f - v
+      /* v = f - v */
       cblas_sscal (n, -1.0, v, 1); // v = - v
       cblas_saxpy (n, 1.0, f, 1, v, 1); // v = f - v
 
-      //g [0] = cblas_dnrm2 (n, v, 1);
+      /* g [0] = cblas_dnrm2 (n, v, 1); */
       g[0] = sqrt (cblas_sdot (n, v, 1, v, 1));
       cblas_sscal (n, 1.0 / g[0], v, 1);
 
