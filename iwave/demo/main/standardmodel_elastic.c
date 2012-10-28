@@ -562,7 +562,7 @@ int main(int argc, char **argv) {
   xargc=argc; xargv=argv;
   requestdoc(0);
   
-  //   if (ps_getparint("model",&model)) {
+  /*   if (ps_getparint("model",&model)) { */
   if (!(ps_ffint(*par,"model",&model))) {
     if (model<1 || model > NMODEL) {
       fprintf(stderr,"Error: standardmodel.x\n");
@@ -575,7 +575,7 @@ int main(int argc, char **argv) {
     fprintf(stderr,"no model index given, so using model=1\n");
     model=1;
   }
-  //   if(ps_getparint("choose",&choose)) {
+  /*   if(ps_getparint("choose",&choose)) { */
   if (!(ps_ffint(*par,"choose",&choose))) {
     if (choose<1 || choose > 5) {
       fprintf(stderr,"Error: standardmodel.x\n");

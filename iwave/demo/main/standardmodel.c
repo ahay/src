@@ -511,7 +511,7 @@ int main(int argc, char **argv) {
   xargc=argc; xargv=argv;
   requestdoc(0);
   
-  //   if (ps_getparint("model",&model)) {
+  /*   if (ps_getparint("model",&model)) { */
   if (!(ps_ffint(*par,"model",&model))) {
     if (model<1 || model > NMODEL) {
       fprintf(stderr,"Error: standardmodel.x\n");
@@ -524,7 +524,7 @@ int main(int argc, char **argv) {
     fprintf(stderr,"no model index given, so using model=1\n");
     model=1;
   }
-  //   if(ps_getparint("choose",&choose)) {
+  /*   if(ps_getparint("choose",&choose)) { */
   if (!(ps_ffint(*par,"choose",&choose))) {
     if (choose<1 || choose > 4) {
       fprintf(stderr,"Error: standardmodel.x\n");
@@ -634,25 +634,25 @@ int main(int argc, char **argv) {
   /* end DS*/
 
   /* WWS */
-  //   if (ps_getparstring("hfile",&fname) {
+  /*   if (ps_getparstring("hfile",&fname) { */
   if (!(ps_ffcstring(*par,"hfile",&fname))) {
 
     /* DATAPATH deprecated - WWS 08.01.12*/
     /* DATAPATH revived - WWS 28.05.12 */
-    //    if (getenv("DATAPATH")) {
+    /*    if (getenv("DATAPATH")) {
     //      dname=malloc(strlen(getenv("DATAPATH"))+strlen(fname)+2);
     //      strcpy(dname,getenv("DATAPATH"));
     // DATAPATH made preferentially a parameter WWS 08.28.12 
-    // else env variable else .
+    // else env variable else */ .
     char * cwdpath = NULL;
-    // if you can't get it from the parfile
+    /* if you can't get it from the parfile */
     if (ps_flcstring(*par,"datapath",&cwdpath)) {
-      // try to get it from the environment
+	/* try to get it from the environment */
       cwdpath = (char *)malloc(128*sizeof(char));
       memset(cwdpath,'\0',128);
       char * pathptr = getenv("DATAPATH");      
       if (pathptr) strcpy(cwdpath,pathptr);
-      // otherwise set to cwd
+      /* otherwise set to cwd */
       else strcpy(cwdpath,".");
     }
     dname=malloc(strlen(cwdpath)+strlen(fname)+2);

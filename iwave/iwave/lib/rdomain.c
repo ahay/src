@@ -25,7 +25,7 @@ Creates/declares domain using fun to create/declare arrays.
 static int rd_a_create_(RDOM *dom, int narr, int ndim, IPNT v1[], IPNT v2[], RA_CREATE_FUN fun)
 {
     int a, err;
-    //    fprintf(stderr,"rd_a_create_: narr=%d\n",narr);
+    /*    fprintf(stderr,"rd_a_create_: narr=%d\n",narr); */
 
     rd_a_setnull(dom);
     
@@ -103,7 +103,7 @@ int rd_a_create_e(RDOM *dom, int narr, int ndim, IPNT dge[], IPNT dn[])
 
 int rd_a_create(RDOM *dom, int narr, int ndim, IPNT dgs[], IPNT dge[])
 {
-  //  fprintf(stderr,"rd_a_create\n");
+    /*  fprintf(stderr,"rd_a_create\n"); */
     return rd_a_create_(dom, narr, ndim, dgs, dge, ra_create);
 }
 /*----------------------------------------------------------------------------*/
