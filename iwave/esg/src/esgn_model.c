@@ -44,7 +44,7 @@ const char* esg_ind2str(int ind) {
 }
 /*----------------------------------------------------------------------------*/
 
-//int esg_getndim() { return m_ndim; }
+/* int esg_getndim() { return m_ndim; } */
 
 /*----------------------------------------------------------------------------*/
 int esg_modelinit(PARARRAY *pars, 
@@ -59,9 +59,9 @@ int esg_modelinit(PARARRAY *pars,
   fd=(FD_MODEL *)malloc(sizeof(FD_MODEL));
   if (fd==NULL) return E_ALLOC;
   /* first the "base class" behaviour */
-  //  fprintf(stream,"top of asg_modelinit: im->specs=%x\n",im->specs);
+  /*  fprintf(stream,"top of asg_modelinit: im->specs=%x\n",im->specs); */
   im->specs=(void *)fd;
-  //  fprintf(stream,"top of asg_modelinit: im->specs=%x after assignment\n",im->specs);
+  /*  fprintf(stream,"top of asg_modelinit: im->specs=%x after assignment\n",im->specs); */
 
   /* allocate sgn model ----------------------------------------------------*/   
   esgnp = (ESGN_TS_PARS*)malloc(sizeof(ESGN_TS_PARS));
@@ -72,7 +72,7 @@ int esg_modelinit(PARARRAY *pars,
     return err;
   }
 	    
-  // decode dimension - only on rk 0
+  /* decode dimension - only on rk 0 */
 #ifdef IWAVE_USE_MPI
   int rk=retrieveRank();
   MPI_Comm cm=retrieveComm();
@@ -146,11 +146,11 @@ int esg_modelinit(PARARRAY *pars,
   /*   return E_BADINPUT; */
   /* } */
   
-  //fd->getndim  = esg_getndim;
-  //fd->getnarr = esg_getnarr;
+  /*fd->getndim  = esg_getndim; */
+  /* fd->getnarr = esg_getnarr; */
   fd->isarr  = esg_isarr;
-  //fd->getnames = esg_getnames;
-  //fd->getindices = esg_getindices;
+  /* fd->getnames = esg_getnames; */
+  /* fd->getindices = esg_getindices; */
   fd->isdyn  = esg_isdyn;
   fd->readgrid = esg_readgrid;
   fd->readtimegrid = esg_readtimegrid; 
@@ -229,7 +229,7 @@ int esg_modeldest(IMODEL * model) {
       free(esgnp);
     }
   }
-  // fdm is freed in im_destroy
+  /* fdm is freed in im_destroy */
   return 0;
 }
 
@@ -252,7 +252,7 @@ void esgn_ts_parcopy(void * tgt, const void * src) {
 }
 
 int esg_isarr(int i) {
-  //  fprintf(stderr,"asg_isarr: ndim=%d i=%d\n",m_ndim,i);
+    /*  fprintf(stderr,"asg_isarr: ndim=%d i=%d\n",m_ndim,i); */
   if (m_ndim<4) {
     if (m_ndim>0) {
       if (i==D_P0) return 1;
@@ -324,7 +324,7 @@ int esg_alter_dom(int iv, IPNT gs, IPNT ge) {
     if (iv==D_EP[idim] || iv==D_EV[idim]) {
       gs[0]=gs[idim];
       ge[0]=ge[idim];
-      //      fprintf(stderr,"iv=%d idim=%d\n",iv,idim);
+      /*      fprintf(stderr,"iv=%d idim=%d\n",iv,idim); */
       for ( i = 1; i < m_ndim; ++i ) 
 	gs[i] = ge[i] = 0;
     }
@@ -729,13 +729,13 @@ int esg_modelpostts(int iarr, IMODEL * model) {
 
 int esgn_modelinfo(FILE *stream, IMODEL *model)
 {
-  //FD_MODEL *fdm;
+    /* FD_MODEL *fdm; */
   int ndim, i, iv, ia;
   IPNT n;
   int nss;
   RDOM *dc; /* computational */
 
-  //fdm = (FD_MODEL*)(model->specs);
+  /* fdm = (FD_MODEL*)(model->specs); */
   ndim = model->g.dim;
   nss = ndim*(ndim-1)/2;
 
@@ -778,7 +778,7 @@ int esg_create_sten(FILE * stream,
 		    void * fdpars) {
 
   ESGN_TS_PARS * esgnp = (ESGN_TS_PARS *)(fdpars);
-  return create_sten2_2k(stream, esgnp->k, ndim, gtype, sten_dep_mat, esg_isdyn, //esg_getindices, 
+  return create_sten2_2k(stream, esgnp->k, ndim, gtype, sten_dep_mat, esg_isdyn, /* esg_getindices, */
                          sten);
 }
 
@@ -856,12 +856,12 @@ int esg_readschemeinfo(PARARRAY * par,
 		       FILE * stream, 
                        IMODEL * model) {
   
-  RPNT dxs;  // grid steps
-  int idim;  // counter
+    RPNT dxs;  /* grid stepsn */
+    int idim;  /* counter */
   int ndim;
   RDOM *ld_pml;
   IPNT dgsa[RDOM_MAX_NARR], dgea[RDOM_MAX_NARR], gsc, gec, ns;
-  //IPNT gtype[RDOM_MAX_NARR];
+  /* IPNT gtype[RDOM_MAX_NARR]; */
   int iv, i;
   FD_MODEL * fdm = (FD_MODEL *)(model->specs); 
   ESGN_TS_PARS * esgnp = (ESGN_TS_PARS *)(fdm->fdpars);
@@ -870,7 +870,7 @@ int esg_readschemeinfo(PARARRAY * par,
 
   get_d(dxs, model->g);
   get_n(ns, model->g);
-  // set model dimn par
+  /* set model dimn par */
   esgnp->ndim = ndim = (model->g).dim;
   for (idim = 0;idim < esgnp->ndim;idim ++) {
     if (dxs[idim] <= 0.0) {
@@ -893,7 +893,7 @@ int esg_readschemeinfo(PARARRAY * par,
   }
   
   /*< initialize ld_pml here */
-  //esg_set_grid_type(stderr, ndim, gtype);
+  /* esg_set_grid_type(stderr, ndim, gtype); */
   esgnp->ld_pml = (RDOM *)malloc(2*ndim*ndim*sizeof(RDOM));
   
   ld_pml = esgnp->ld_pml;

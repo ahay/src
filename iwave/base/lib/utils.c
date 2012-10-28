@@ -5,7 +5,33 @@ Igor Terentyev.
 /*============================================================================*/
 
 #include "utils.h"
-#include "mm_malloc.h"
+
+#if defined(__sun) || defined(__sun__)
+
+#include <stdlib.h>
+
+static __inline void * _mm_malloc(size_t size, size_t alignment)
+{
+	void * ptr;
+
+	if (posix_memalign(&ptr, alignment, size) == 0)
+		return ptr;
+	else
+		return NULL;
+}
+
+static __inline void _mm_free(void * ptr)
+{
+		free(ptr);
+}
+
+#else 
+
+#include <mm_malloc.h>
+
+#endif
+
+
 /*----------------------------------------------------------------------------*/
 
 static int m_rk = 0;
