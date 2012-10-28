@@ -39,7 +39,7 @@ int im_construct(IMODEL * model) {
   init_default_grid(&(model->g));
 
   model->nnei = 0;
-  //  sten_setnull(&(model->sten));
+  /*  sten_setnull(&(model->sten)); */
 
   rd_a_setnull(&(model->ld_a));
   rd_a_setnull(&(model->ld_c));
@@ -62,8 +62,8 @@ int im_destroy(IMODEL *model)
   rd_a_destroy(&(model->ld_a));
   if (model->ld_s) userfree_(model->ld_s);
   fd_modeldest(model);
-  // since fd object allocates, should also free
-  //if (model->specs) userfree_(model->specs);
+  /* since fd object allocates, should also free */
+  /* if (model->specs) userfree_(model->specs); */
   return im_construct(model);
 }
 /*----------------------------------------------------------------------------*/

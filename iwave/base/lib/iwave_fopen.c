@@ -139,7 +139,7 @@ FILE * iwave_fopen(char ** name,
 	return retfp;
       }
 
-      //      fprintf(stream,"iwave_fopen: temp file name = %s\n",*name);
+      /*      fprintf(stream,"iwave_fopen: temp file name = %s\n",*name); */
 
       /* open stream - always in w+ mode */
       if (!(retfp=fdopen(fd,"w+"))) {
@@ -246,7 +246,7 @@ FILE * iwave_fopen(char ** name,
       *name=(char *)usermalloc_((strlen(fpr->nm)+1)*sizeof(char));
       strcpy(*name,fpr->nm);
 
-      //      fprintf(stream,"iwave_fopen - re-use temp file %s\n",*name);
+      /*      fprintf(stream,"iwave_fopen - re-use temp file %s\n",*name); */
     }
 
     /* in either case, return file pointer */
@@ -299,8 +299,8 @@ FILE * iwave_fopen(char ** name,
       if (!(retfp=fopen(*name,mode))) {
 	/* NOT NECESSARILY AN ERROR - so don't print! 
 	*/
-	//	fprintf(stream,"NOTE: iwave_fopen\n");
-	//	fprintf(stream,"-- failed to open stream on file %s mode %s\n",*name,mode);
+	/*	fprintf(stream,"NOTE: iwave_fopen\n"); */
+	/*	fprintf(stream,"-- failed to open stream on file %s mode %s\n",*name,mode); */
 	return retfp;
       }
       
