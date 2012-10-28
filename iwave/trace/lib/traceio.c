@@ -277,7 +277,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 #endif
       }
     }
-#endif // end file mgr branch
+#endif /* end file mgr branch */
 
     if (fseeko(*fpout,0L,SEEK_SET)) {
       fprintf(stream,"Error: traceserver_init\n");
@@ -688,7 +688,7 @@ int traceserver_put(FILE * fp,
 #ifdef IWAVE_USE_MPI
 
   MPI_Status mpistat;
-  //  int i;
+  /*  int i; */
   if (lsize>1) {
     if (MPI_SUCCESS != MPI_Send(otr,1,*p,0,lrank,lcomm)) {
       fprintf(stderr,"PANIC: traceserver_put\n");
@@ -1020,11 +1020,11 @@ int init_tracegeom(tracegeom * tg,
   */
 
   /*  if (rk==0) fprintf(stderr,"in init: call tr_seek\n");*/
-  //  fprintf(stream,"rk=%d call traceserver_seek\n",retrieveRank()); 
+  /*  fprintf(stream,"rk=%d call traceserver_seek\n",retrieveRank()); */
   /* seek to correct location */
   err=traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]));
-  // err=traceserver_seek(tg->fpout,&(tg->recoff[tg->irec]));
-  //  fprintf(stream,"rk=%d return traceserver_seek\n",retrieveRank());
+  /* err=traceserver_seek(tg->fpout,&(tg->recoff[tg->irec])); */
+  /*  fprintf(stream,"rk=%d return traceserver_seek\n",retrieveRank()); */
   fflush(stream);
   if (err) {
     fprintf(stream,"Error: init_tracegeom from traceserver_seek\n");
@@ -1152,7 +1152,7 @@ int init_tracegeom(tracegeom * tg,
     ol[axord[2]]=oy-marg*dy;
   }
 
-  //  fprintf(stderr,"nz=%d nx=%d dz=%g dx=%g oz=%g ox=%g dim=%d\n",nz,nx,dz,dx,oz,ox,ndim);
+  /*  fprintf(stderr,"nz=%d nx=%d dz=%g dx=%g oz=%g ox=%g dim=%d\n",nz,nx,dz,dx,oz,ox,ndim); */
   /*
   fprintf(stream,"nl = %d %d\n",nl[0],nl[1]);
   fprintf(stream,"ol = %e %e\n",ol[0],ol[1]);
@@ -1185,7 +1185,7 @@ int init_tracegeom(tracegeom * tg,
     /*    fprintf(stream,"rk=%d itr=%d\n",retrieveRank(),itr);*/
 
     /*    if (rk==0) fprintf(stderr,"in init: call tr_get\n");*/
-    //    err=traceserver_get(tg->fpout,
+    /*   err=traceserver_get(tg->fpout, */
     err=traceserver_get(tg->fpin,
 #ifdef IWAVE_USE_MPI
 			&(tg->p),
@@ -1403,9 +1403,9 @@ int init_tracegeom(tracegeom * tg,
       tg->fldr[tg->ntraces]=vtoi(hdtype("fldr"),val);
       gethdval(&(otr.tr),"tracf",&val);
       tg->tracf[tg->ntraces]=vtoi(hdtype("tracf"),val);
-      // WWS 30.11.10
+      /* WWS 30.11.10 */
       tg->troff[tg->ntraces]=otr.m;
-      //      tg->troff[tg->ntraces]=tg->recoff[tg->irec]+itr*(HDRBYTES + tg->ntout * sizeof(float));
+      /*      tg->troff[tg->ntraces]=tg->recoff[tg->irec]+itr*(HDRBYTES + tg->ntout * sizeof(float)); */
       
       /*	fprintf(stream,"rk=%d ntraces=%d offset=%ld\n",retrieveRank(),tg->ntraces,tg->troff[tg->ntraces]);*/
       tg->ntraces++;
@@ -1696,11 +1696,11 @@ void sampletraces(tracegeom * tg,
 		  IPNT n,
 		  IPNT gs,
 		  ireal * d,
-		  //		  IPNT n0m,
+		  /*		  IPNT n0m,
 		  //		  IPNT gs0m,
 		  //		  IPNT nm,
 		  //		  IPNT gsm,		  
-		  //		  ireal * m) {
+		  //		  ireal * m) { */
 		  ireal mult) {
   /*****************************************
    * gs input added 25.02.08: must treat 
@@ -1742,25 +1742,25 @@ void sampletraces(tracegeom * tg,
 
   int itr;    /* trace counter */
   int ioff=0;   /* offset into sampled array */
-  //  int moff;   /* offset into multiplier array */
+  /*  int moff;   offset into multiplier array */
   int ndim;   /* problem dimension */
   IPNT ind;   /* integer part of sample coords */
   
   /* convenience storage for multiplier */
-  //  ireal mult;
+  /*  ireal mult; */
   ireal fac;
 
   if (it<0 || it>tg->nt-1) return;
   
   ndim=tg->ndim;
   IASN(ind,IPNT_0);
-  //  /* default value for multiplier, just to make code simple */
+  /*  default value for multiplier, just to make code simple 
   // this is now an input - 03.12
-  //  mult=REAL_ONE;
+  //  mult=REAL_ONE; */
   /* generic scale factor - accounts for weights on L2 norms for
      viewing load option as adjoint of save
   */
-  // big change 03.12: scale by mult; also by ratio of cell vols for adjoint
+  /* big change 03.12: scale by mult; also by ratio of cell vols for adjoint */
   if (load) fac=mult*tg->dt/tg->dvol;
   else fac=mult;
 
@@ -1782,12 +1782,12 @@ void sampletraces(tracegeom * tg,
 
     if (load) {
 
-      // printf("sampletraces: trace=%d ioff=%d moff=%d ind[0]=%d ind[1]=%d\n gsm[0]=%d nm[0]=%d gsm[1]=%d nm[1]=%d gs0m[0]=%d n0m[0]=%d gs0m[1]=%d n0m[1]=%d\n",itr,ioff,moff,ind[0],ind[1],gsm[0],nm[0],gsm[1],nm[1],gs0m[0],n0m[0],gs0m[1],n0m[1]);
+	/* printf("sampletraces: trace=%d ioff=%d moff=%d ind[0]=%d ind[1]=%d\n gsm[0]=%d nm[0]=%d gsm[1]=%d nm[1]=%d gs0m[0]=%d n0m[0]=%d gs0m[1]=%d n0m[1]=%d\n",itr,ioff,moff,ind[0],ind[1],gsm[0],nm[0],gsm[1],nm[1],gs0m[0],n0m[0],gs0m[1],n0m[1]); */
        
       if (order==0) {
 	if (ingrid(ndim,n,gs,ind)) {
-	  //	  mult=fac;
-	  //	  if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff];
+	    /*	  mult=fac; */
+	    /*	  if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff]; */
 	  d[ioff]+=fac*(tg->buf)[it+itr*tg->nt];
 	}
       }
@@ -1796,9 +1796,9 @@ void sampletraces(tracegeom * tg,
 	if (ndim==1) {
 	  /* 0,0,0 */
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    moff=ind[0]-gs0m[0];
+	      /*	    moff=ind[0]-gs0m[0];
 	    //	    mult=fac;
-	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff];
+	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff]; */
 	    d[ioff]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (tg->buf)[it+itr*tg->nt];
@@ -1806,9 +1806,9 @@ void sampletraces(tracegeom * tg,
 	  /* 1,0,0 */
 	  ind[0]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    moff=ind[0]-gs0m[0];
+	      /*	    moff=ind[0]-gs0m[0];
 	    //	    mult=fac;
-	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff+1];
+	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff+1]; */
 	    d[ioff+1]+=fac*
 	      (tg->rg)[itr][0]*
 	      (tg->buf)[it+itr*tg->nt];
@@ -1818,53 +1818,53 @@ void sampletraces(tracegeom * tg,
 	else if (ndim == 2) {
 	  /* 0,0,0 */
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0];
+	      /*	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0];
 	    //	    mult=fac;
-	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff];	    
+	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff]; */	    
 	    d[ioff]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (1.0-(tg->rg)[itr][1])*
 	      (tg->buf)[it+itr*tg->nt];
-	    //	    printf("sampletraces: itr=%d ig=[0,0] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]);
+	    /*	    printf("sampletraces: itr=%d ig=[0,0] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]); */
 	  }
 	  /* 1,0,0 */
 	  ind[0]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0];
+	      /*	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0];
 	    //	    mult=fac;
-	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff];
+	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff]; */
 	    d[ioff+1]+=fac*
 	      (tg->rg)[itr][0]*
 	      (1.0-(tg->rg)[itr][1])*
 	      (tg->buf)[it+itr*tg->nt];
-	    //	    printf("sampletraces: itr=%d ig=[1,0] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]);
+	    /*	    printf("sampletraces: itr=%d ig=[1,0] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]); */
 	  }
 	  ind[0]--;
 	  /* 0,1,0 */
 	  ind[1]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    // 	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0];
-	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff]; 
+	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff]; */
 	    d[ioff+n0[0]]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (tg->rg)[itr][1]*
 	      (tg->buf)[it+itr*tg->nt];
-	    //	    printf("sampletraces: itr=%d ig=[0,1] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]);
+	    /*	    printf("sampletraces: itr=%d ig=[0,1] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]); */
 	  }
 	  ind[1]--;
 	  /* 1,1,0 */
 	  ind[0]++;
 	  ind[1]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    // 	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0];
-	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff+1+n0[0]]; 
+	    //	    if (m && ingrid(ndim,nm,gsm,ind)) mult*=m[moff+1+n0[0]]; */
 	    d[ioff+1+n0[0]]+=fac*
 	      (tg->rg)[itr][0]*
 	      (tg->rg)[itr][1]*
 	      (tg->buf)[it+itr*tg->nt];
-	    //	    printf("sampletraces: itr=%d ig=[1,1] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]);
+	    /*	    printf("sampletraces: itr=%d ig=[1,1] ind=[%d,%d] moff=%d m=%20.14e\n",itr,ind[0],ind[1],moff,m[moff]); */
 	  }
 	  ind[0]--;
 	  ind[1]--;
@@ -1872,10 +1872,10 @@ void sampletraces(tracegeom * tg,
 	else if (ndim == 3) {
 	  /* 0,0,0 */
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff]; 
+	    //	      mult*=m[moff]; */
 	    d[ioff]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (1.0-(tg->rg)[itr][1])*
@@ -1885,10 +1885,10 @@ void sampletraces(tracegeom * tg,
 	  /* 1,0,0 */
 	  ind[0]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff+1]; 
+	    //	      mult*=m[moff+1]; */
 	    d[ioff+1]+=fac*
 	      (tg->rg)[itr][0]*
 	      (1.0-(tg->rg)[itr][1])*
@@ -1899,10 +1899,10 @@ void sampletraces(tracegeom * tg,
 	  /* 0,1,0 */
 	  ind[1]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff+n0[0]];
+	    //	      mult*=m[moff+n0[0]]; */
 	    d[ioff+n0[0]]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (tg->rg)[itr][1]*
@@ -1913,10 +1913,10 @@ void sampletraces(tracegeom * tg,
 	  /* 0,0,1 */
 	  ind[2]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff+n0[0]*n0[1]];
+	    //	      mult*=m[moff+n0[0]*n0[1]]; */
 	    d[ioff+n0[0]*n0[1]]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (1.0-(tg->rg)[itr][1])*
@@ -1928,10 +1928,10 @@ void sampletraces(tracegeom * tg,
 	  ind[0]++;
 	  ind[1]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff+1+n0[0]];
+	    //	      mult*=m[moff+1+n0[0]]; */
 	    d[ioff+1+n0[0]]+=fac*
 	      (tg->rg)[itr][0]*
 	      (tg->rg)[itr][1]*
@@ -1944,10 +1944,10 @@ void sampletraces(tracegeom * tg,
 	  ind[0]++;
 	  ind[2]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff+1+n0[0]*n0[1]]; 
+	    //	      mult*=m[moff+1+n0[0]*n0[1]]; */
 	    d[ioff+1+n0[0]*n0[1]]+=fac*
 	      (tg->rg)[itr][0]*
 	      (1.0-(tg->rg)[itr][1])*
@@ -1960,10 +1960,10 @@ void sampletraces(tracegeom * tg,
 	  ind[1]++;
 	  ind[2]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind)) 
-	    //	      mult*=m[moff+n[0]+n0[0]*n0[1]];
+	    //	      mult*=m[moff+n[0]+n0[0]*n0[1]]; */
 	    d[ioff+n0[0]+n0[0]*n0[1]]+=fac*
 	      (1.0-(tg->rg)[itr][0])*
 	      (tg->rg)[itr][1]*
@@ -1977,10 +1977,10 @@ void sampletraces(tracegeom * tg,
 	  ind[1]++;
 	  ind[2]++;
 	  if (ingrid(ndim,n,gs,ind)) {
-	    //	    mult=fac;
+	      /*	    mult=fac;
 	    //	    moff=ind[0]-gs0m[0] + (ind[1]-gs0m[1])*n0m[0] + (ind[2]-gs0m[2])*n0m[0]*n0m[1];
 	    //	    if (m && ingrid(ndim,nm,gsm,ind))
-	    //	      mult*=m[moff+1+n0[0]+n0[0]*n0[1]];	    
+	    //	      mult*=m[moff+1+n0[0]+n0[0]*n0[1]]; */	    
 	    d[ioff+1+n0[0]+n0[0]*n0[1]]+=fac*
 	      (tg->rg)[itr][0]*
 	      (tg->rg)[itr][1]*
@@ -2388,7 +2388,7 @@ int writetraces(tracegeom const * tg,
 #endif
     }
 
-    //##########
+    /* ########## */
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"\nwritetraces -> ");
     iwave_fprintall(stream);
@@ -2427,7 +2427,7 @@ int writetraces(tracegeom const * tg,
       }      
       fputtr(tg->fpout,&(otr.tr));
       fflush(tg->fpout);
-      //      for (j=0;j<otr.tr.ns;j++) fprintf(stream,"it=%d data=%g\n",j,otr.tr.data[j]);
+      /*      for (j=0;j<otr.tr.ns;j++) fprintf(stream,"it=%d data=%g\n",j,otr.tr.data[j]); */
       init[otr.tr.tracr]=1;
     }
     /*
