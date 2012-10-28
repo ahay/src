@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   int mpi_n2=MPI_N2; 
   int mpi_n3=MPI_N3;
 #else
-  // serial defaults
+  /* serial defaults */
   int mpi_n1=1;
   int mpi_n2=1; 
   int mpi_n3=1;
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  // write data to new file 
+  /* write data to new file */
   new_fname = (char *)usermalloc_(sizeof(char)*(strlen(NEWFILE)+1));
   strcpy(fname,NEWFILE);
   new_dname = (char *)usermalloc_(sizeof(char)*(strlen(NEWFILE)+2));
@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
   fflush(fp);
   iwave_fclose(fp);
 
-  // open data file so that write works
+  /* open data file so that write works */
   if (!(fpd = iwave_fopen(&new_dname,"w",dname,stderr))) {
 #ifdef VERBOSE
     fprintf(stderr,"Error: from iwave_fopen\n");
@@ -228,7 +228,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  // now read it back in again
+  /* now read it back in again */
   b = (ireal *) usermalloc_(N1*N2*N3*sizeof(ireal));
   if (rsfread(b,rags,ran,new_fname,0,stderr,0)) {
 #ifdef VERBOSE
@@ -244,7 +244,7 @@ int main(int argc, char **argv) {
     exit(1);
   }
 
-  // check results
+  /* check results */
   ferr=REAL_ZERO;
   ndata=ran[0]*ran[1]*ran[2];
   for (ii=0;ii<ndata;ii++) 

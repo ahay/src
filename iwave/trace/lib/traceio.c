@@ -1,5 +1,7 @@
 #include "traceio.h"
 
+#define MAX(a,b) ((a) < (b) ? (b) : (a))
+
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
 /** helper function to determine whether an index tuple is within rarray */
@@ -423,9 +425,9 @@ int traceserver_init(FILE ** fpin, char * fin,
 	sz=-sz;
 	
 	/* compare to previous */
-	ds = fmaxf(fabsf(sz-src[ir][0]),
-		   fmaxf(fabsf(sx-src[ir][1]),
-			 fabsf(sy-src[ir][2])));
+	ds = MAX(fabs(sz-src[ir][0]),
+		  MAX(fabs(sx-src[ir][1]),
+		      fabs(sy-src[ir][2])));
 	
 	if (ds<tol) {
 	  /* found another trace in current record */

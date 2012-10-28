@@ -767,8 +767,8 @@ int mpirsfwrite(ireal * a,
       fflush(stream);
       err=E_FILE;
     }
-    //    fprintf(stream,"NOTE: par file %s opened in mpirsfwrite = \n",fname);
-    //    ps_printall(par,stream);
+    /*    fprintf(stream,"NOTE: par file %s opened in mpirsfwrite = \n",fname); */
+    /*    ps_printall(par,stream); */
     
     /* create grid from parameter table */
     if ( err || (err = par_grid(&g, *par, stream)) ) {
@@ -849,8 +849,8 @@ int mpirsfwrite(ireal * a,
   /* compute scale factor - reciprocal */
   ntot=1;
   for (ii=0;ii<dim;ii++) ntot*=ran[ii];
-  if (scale>0) for (ii=0;ii< scale;ii++) scfac *= 0.10; // 10.0;
-  if (scale<0) for (ii=0;ii<-scale;ii++) scfac *= 10.0; // 0.10;
+  if (scale>0) for (ii=0;ii< scale;ii++) scfac *= 0.10; /* 10.0; */
+  if (scale<0) for (ii=0;ii<-scale;ii++) scfac *= 10.0; /* 0.10; */
 
   /* prepare binary output on rk 0 */
   if (wrank==0) {
@@ -956,7 +956,7 @@ int mpirsfwrite(ireal * a,
       gsa[ii] = iwave_max(read_gs[ii], rags[ii]);
       gea[ii] = iwave_min(read_gs[ii] + read_gn[ii] - 1, rags[ii] + ran[ii] - 1);
       na[ii]  = iwave_max(gea[ii] - gsa[ii] + 1, 0);
-      //      if (extend) {
+      /*      if (extend) { */
 	/* rarray to left of garray */
 	if (rags[ii] + ran[ii] - 1 < read_gs[ii]) {
 	  g_gsa[ii] = read_gs[ii];
@@ -983,7 +983,7 @@ int mpirsfwrite(ireal * a,
 	    gl_na[ii] = 0;
 	  }
 	}      
-	//      }
+	/*      } */
       /* intersection nonempty */
       if ((rags[ii] + ran[ii] - 1 >= read_gs[ii]) &&
 	  (rags[ii] <= read_gs[ii]+read_gn[ii]-1)) {

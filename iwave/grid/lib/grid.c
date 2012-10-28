@@ -25,11 +25,13 @@ int print_axis(axis a) {
   return fprint_axis(stdout,a);
 }
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
 int compare_axis(axis a1, axis a2) {
   int err=0;
   err = err || (a1.n != a2.n);
-  err = err || (fabs((double)(a1.d-a2.d)) > TOL*fmin((double)(a1.d),(double)(a2.d)));
-  err = err || (fabs((double)(a1.o-a2.o)) > TOL*fmin((double)(a1.d),(double)(a2.d)));
+  err = err || (fabs((double)(a1.d-a2.d)) > TOL*MIN((double)(a1.d),(double)(a2.d)));
+  err = err || (fabs((double)(a1.o-a2.o)) > TOL*MIN((double)(a1.d),(double)(a2.d)));
   err = err || (a1.id != a2.id);
   return err;
 }

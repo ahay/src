@@ -14,10 +14,9 @@ static void * _mm_malloc(size_t size, size_t alignment)
 {
 	void * ptr;
 
-	if (posix_memalign(&ptr, alignment, size) == 0)
-		return ptr;
-	else
-		return NULL;
+	ptr = memalign(alignment, size);
+
+	return ptr;
 }
 
 static void _mm_free(void * ptr)
