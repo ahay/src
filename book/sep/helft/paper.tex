@@ -2,14 +2,18 @@
 \lefthead{Rickett \& Guitton}
 \righthead{Helical Fourier transforms}
 \footer{SEP--105}
-\keywords{helix, linear filtering, FFT}
+%\keywords{helix, linear filtering, FFT}
+\published{SEP Report, 105, 167-176 (2000)}
 \title{Multi-dimensional Fourier transforms in the helical coordinate 
 system}  
 
 \email{james@sep.stanford.edu, antoine@sep.stanford.edu}
 \author{James Rickett and Antoine Guitton}
 
-\ABS{For every two-dimensional system with helical boundary
+\maketitle
+
+\begin{abstract}
+For every two-dimensional system with helical boundary
 conditions, there is an isomorphic one-dimensional system.
 Therefore, the one-dimensional FFT of a 2-D function wrapped on a
 helix is equivalent to a 2-D FFT.
@@ -19,15 +23,16 @@ explicitly link the wavenumber vector, ${\bf k}$, in a
 multi-dimensional system with the wavenumber of a helical 1-D FFT,
 $k_h$.   
 We illustrated the concepts with an example of multi-dimensional
-multiple prediction.}  
+multiple prediction.
+\end{abstract}  
 
 \section{Introduction}
 \inputdir{XFig}
 
-If helical boundary conditions \cite{geofizhelix} are imposed on a
+If helical boundary conditions \cite[]{geofizhelix} are imposed on a
 multi-dimensional system, an isomorphism exists between that system
 and an equivalent one-dimensional system.  
-Previous authors, for example \longcite{gee}, take advantage of
+Previous authors, for example \cite{gee}, take advantage of
 this isomorphism to perform rapid multi-dimensional inverse filtering
 by recursion. 
 
@@ -252,7 +257,7 @@ also leads to potential computational savings.
 Two-dimensional FFT's are easier to code to run both in parallel and
 out-of-core than 1-D FFT's, leading to significantly faster code and a
 lower memory requirement without the additional complexity of
-Singleton's algorithm \cite{numrec}.
+Singleton's algorithm \cite[]{numrec}.
 
 \section{Examples}
 \inputdir{spike}
@@ -282,8 +287,8 @@ difference between (b) and (c) clipped to same level.}
 \subsection{Application to the multiple prediction}
 \inputdir{mult}
 Multiple prediction is the first step in the class of adaptive
-multiple suppression methods \cite{GEO.57.9.11661177}.  
-In a laterally homogeneous earth, \longcite{kelamis:00} show that 
+multiple suppression methods \cite[]{GEO57-09-11661177}.
+In a laterally homogeneous earth, \cite{kelamis:00} show that 
 surface-related multiples can be predicted by taking the
 multi-dimensional auto-convolution of a common midpoint (CMP) gather.
 This auto-convolution reduces to a multiplication in the {\em f-k}
@@ -298,7 +303,7 @@ result, and returning to the original domain.
 
 \par
 We tested this algorithm on a single CMP from the synthetic BP
-multiple dataset \cite{BPmultiples}.
+multiple dataset \cite[]{BPmultiples}.
 Figure~\ref{fig:BP2} displays the multiple prediction result using the
 helical coordinate system and only a single one-dimensional FFT. 
 Theoretically, only first-order multiples should have correct
@@ -321,9 +326,5 @@ helical boundary conditions but with axes transposed.
 We have illustrated the concepts with an example of multi-dimensional
 multiple prediction.
 
-\bibliographystyle{sep}
-\bibliography{tvdecon,SEP,GEOPHYSICS,ref}
-
-
-
-
+\bibliographystyle{seg}
+\bibliography{tvdecon,ref}
