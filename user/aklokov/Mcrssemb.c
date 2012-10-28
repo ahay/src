@@ -33,23 +33,23 @@ Output:
 
 #include <rsf.h>
 
-// VARIABLES
+/* VARIABLES */
 
-// files
-sf_file inDags_;            // dip-angle gathers file - stack in the scattering-angle direction
-sf_file inDagsSq_;          // stack of amplitude squares in the scattering-angle direction
-sf_file sembFile_;          // output file - crs-base semblance
+/* files */
+sf_file inDags_;            /* dip-angle gathers file - stack in the scattering-angle direction */
+sf_file inDagsSq_;          /* stack of amplitude squares in the scattering-angle direction */
+sf_file sembFile_;          /* output file - crs-base semblance */
 
-// data
-float* ptrToDags_;          // pointer to the dip-angle gathers data
-float* ptrToDagsSq_;        //  --"--  --"--  square gathers data 
-float* ptrToSembPanel_;     //  --"--  --"--  result - crs-based semblance
+/* data */
+float* ptrToDags_;          /* pointer to the dip-angle gathers data */
+float* ptrToDagsSq_;        /*  --"--  --"--  square gathers data */
+float* ptrToSembPanel_;     /*  --"--  --"--  result - crs-based semblance */
 
-float* ptrToData_;          // pointer to the dip-angle gathers data
-float* ptrToDataSq_;        //  --"--  --"--  square gathers data 
+float* ptrToData_;          /* pointer to the dip-angle gathers data */
+float* ptrToDataSq_;        /*  --"--  --"--  square gathers data */
 
 
-// dip-angle gathers dimensions:
+/* dip-angle gathers dimensions: */
 int zNum_;                 
 float zStart_;
 float zStep_;
@@ -62,30 +62,30 @@ int xNum_;
 float xStart_;
 float xStep_;
 
-int dagSize_;               // size (in samples) of one dip-angle gather
-int scatnum_;               // shows how many traces were stacked in the scattering angle direction
-int coher_;                 // height (in samples) of a vertical window for semblance calculation
-int halfCoher_;             // half of the "coher"
-int xapp_;                  // number of CIGs in the inline-direction processed simultaneously
-int halfXapp_;              // half of the "xapp"
-int xdipapp_;               // number of traces in the x-dip direction processed simultaneously
+int dagSize_;               /* size (in samples) of one dip-angle gather */
+int scatnum_;               /* shows how many traces were stacked in the scattering angle direction */
+int coher_;                 /* height (in samples) of a vertical window for semblance calculation */
+int halfCoher_;             /* half of the "coher" */
+int xapp_;                  /* number of CIGs in the inline-direction processed simultaneously */
+int halfXapp_;              /* half of the "xapp" */
+int xdipapp_;               /* number of traces in the x-dip direction processed simultaneously */
 
-// FUNCTIONS
+/* FUNCTIONS */
 
-// Check if the point with its surounding is inside data volume;
-// if not - correct analysis aperture
+/* Check if the point with its surounding is inside data volume; */
+/* if not - correct analysis aperture */
 void checkBoundary (int* xPos, int* curXapp) {
 
-    // checking in X-dimension
+    /* checking in X-dimension */
 
-    // left edge
+    /* left edge */
     if (*xPos < 0) {
         int diff = -1 * *xPos;
 		*curXapp -= diff;
 		*xPos = 0;
 	}
 
-    // right edge
+    /* right edge */
     if (*xPos + *curXapp - 1 >= xNum_) {
         int diff = *xPos + *curXapp - xNum_; 
         *curXapp -= diff;
@@ -98,7 +98,7 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
 
     int startX = xPos - halfXapp;
     
-    // check if the apperture is adequate... if not - correct it and the start point
+    /* check if the apperture is adequate... if not - correct it and the start point */
     checkBoundary (&startX, curXapp);
 	*leftShift = xPos - startX;
 	const int pointsNumToRead = dagSize_ * (*curXapp);
@@ -121,7 +121,7 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
 	sf_floatread (ptrToData_,   pointsNumToRead, inDags_);
 	sf_floatread (ptrToDataSq_, pointsNumToRead, inDagsSq_);
 
-	// substacking in the x-dip direction
+	/* substacking in the x-dip direction */
 		
 	for (int ix = 0; ix < *curXapp; ++ix) {
 		for (int id = 0; id < dipNum_; ++id) {
@@ -256,30 +256,30 @@ void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) {
 
 int main (int argc, char* argv[]) {
    
-// Initialize RSF 
+/* Initialize RSF */
     sf_init (argc,argv);
-// Input files
+/* Input files */
     inDags_   = sf_input("in");
     inDagsSq_ = sf_input("dataSq");
 
-// check that the input is float 
+/* check that the input is float */
     if ( SF_FLOAT != sf_gettype (inDags_) )   sf_error ("Need float input: dip-angle gathers");
     /* dip-angle gathers - stacks in the scattering-angle direction */
     if ( SF_FLOAT != sf_gettype (inDagsSq_) ) sf_error ("Need float input: dip-angle gathers in squares");
     /* stacks of amplitude squares in the scattering-angle direction */
 
-// Output file
+/* Output file */
     sembFile_ = sf_output("out");
 
-// Depth/time axis 
+/* Depth/time axis */
     if ( !sf_histint   (inDags_, "n1", &zNum_) )   sf_error ("Need n1= in input");
     if ( !sf_histfloat (inDags_, "d1", &zStep_) )  sf_error ("Need d1= in input");
     if ( !sf_histfloat (inDags_, "o1", &zStart_) ) sf_error ("Need o1= in input");
-// Dip angle axis 
+/* Dip angle axis */
     if ( !sf_histint   (inDags_, "n2", &dipNum_) )   sf_error ("Need n2= in input");
     if ( !sf_histfloat (inDags_, "d2", &dipStep_) )  sf_error ("Need d2= in input");
     if ( !sf_histfloat (inDags_, "o2", &dipStart_) ) sf_error ("Need o2= in input");
-// x axis 
+/* x axis */
     if ( !sf_histint   (inDags_, "n3", &xNum_) )     sf_error ("Need n3= in input");
     if ( !sf_histfloat (inDags_, "d3", &xStep_) )    sf_error ("Need d3= in input");
     if ( !sf_histfloat (inDags_, "o3", &xStart_) )   sf_error ("Need o3= in input");
@@ -302,16 +302,16 @@ int main (int argc, char* argv[]) {
 	*/ 
 
 	dagSize_ = zNum_ * dipNum_;
-	halfCoher_ = coher_ / 2;    // yes - this is the integer division	
-	halfXapp_  = xapp_ / 2;     // this is the integer division too	
+	halfCoher_ = coher_ / 2;    /* yes - this is the integer division */	
+	halfXapp_  = xapp_ / 2;     /* this is the integer division too	*/
 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		
 		sf_warning ("CIG %d of %d;", ix + 1, xNum_);
 		
-		// xapp for the currect core CIG; it can be changed by the checkBoundary ()
+		/* xapp for the currect core CIG; it can be changed by the checkBoundary () */
 		int curxapp = xapp_; 
-        // distance between the core gather and the left side of the aperture
+		/* distance between the core gather and the left side of the aperture */
 		int leftShift = 0;	
 
 		ptrToSembPanel_ = sf_floatalloc (dagSize_);

@@ -77,7 +77,7 @@ void mflt(void *h, float*d, int d1)
 	}
 	pi[0] = 0;
 
-	// initialiaze
+	/* initialiaze */
 	for(j1=nw; j1>=-nw; j1--)
 	{
 		chg=0;
@@ -93,7 +93,7 @@ void mflt(void *h, float*d, int d1)
 	}
 	d[0]=pb[pi[0]];
 
-	// update
+	/* update */
 	for(i2=1; i2<n1; i2++)
 	{
 		pb++;

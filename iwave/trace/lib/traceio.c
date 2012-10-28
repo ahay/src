@@ -1,7 +1,5 @@
 #include "traceio.h"
 
-#define MAX(a,b) ((a) < (b) ? (b) : (a))
-
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
 /** helper function to determine whether an index tuple is within rarray */
