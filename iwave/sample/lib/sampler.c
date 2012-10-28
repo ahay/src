@@ -20,7 +20,7 @@ int sampler_construct(SAMPLER * s,
      arrays - these are updated as needed in the run method */
   /* note - sindex, mindex removed from arg list mod of 03.12 */
   int err=traceterm_construct(&(s->t),par,
-			      //sindex[0],mindex[0],
+			      /* sindex[0],mindex[0], */
 			      load,hdrkey,datakey,stream);
   /*  fprintf(stderr,"EXIT SAMPLER_CONSTRUCT err=%d\n",err);*/
   return err;
@@ -48,8 +48,8 @@ int sampler_run(SAMPLER * s, IMODEL * m) {
   int err=0;       /* error flag    */
   int rep=1;       /* repeat flag   */
 
-  // major change 03.12: do same thing on loads and saves
-  //  if (s->load) {
+  /* major change 03.12: do same thing on loads and saves */
+  /*  if (s->load) { */
   /* load - loop over sindex, also pass corr. multiplier
      both done by modifying trace_term data members - should 
      this be relegated to a trace_term member function?
@@ -67,12 +67,12 @@ int sampler_run(SAMPLER * s, IMODEL * m) {
       }
     }
   }
-  //}
+  /*}
   //else {
-  //  /* save - save only from first field */
+  //   save - save only from first field 
   //  (s->t).index=(s->sindex)[0];
   //  err = traceterm_run(&(s->t),m);
-  //}
+  //} */
     
   return err;
 }
