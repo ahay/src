@@ -5,7 +5,7 @@ int main(int argc, char ** argv) {
   FILE * fp = NULL;
   PARARRAY * par = ps_new();
 
-  // create fake args
+  /* create fake args */
   int xargc = 4;
   char ** xargv = (char **)malloc(xargc*sizeof(char *));
   xargv[0]=NULL;
@@ -16,7 +16,7 @@ int main(int argc, char ** argv) {
   xargv[3]=(char *)malloc(strlen("par=test/argtest/umin.par")+1);
   strcpy(xargv[3],"par=test/argtest/umin.par");
 
-  // create par file
+  /* create par file */
   char * tname = (char *)malloc(128*sizeof(char));
   memset(tname,'\0',128);
   strcpy(tname,"test/argtest/umin.par");

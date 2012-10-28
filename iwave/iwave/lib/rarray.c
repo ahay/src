@@ -7,7 +7,7 @@ Igor Terentyev.
 #include "utils.h"
 #include "rarray.h"
 
-//#undef VERBOSE
+/* #undef VERBOSE */
 #define VERBOSE
 
 /*----------------------------------------------------------------------------*/
@@ -966,8 +966,8 @@ int ra_setoverlap(RARR *arr1, RARR *arr2)
 
 int ra_zero(RARR * a) {
 
-  IPNT li;         // counter
-  IPNT n,n0;   // sizes
+    IPNT li;         /* counter */
+    IPNT n,n0;   /* sizes */
   
   if (a->_s != NULL) {
     
@@ -1041,9 +1041,9 @@ int ra_deepcopy(RARR const * src, RARR * tgt)
 
 int ra_a_inner(RARR const * arr1, RARR const * arr2, ireal * ip) {
 
-  int i;         // counter
-  int n;         // total data length
-  IPNT n1, n2;   // sizes
+    int i;         /* counter */
+    int n;         /* total data length */
+    IPNT n1, n2;   /* sizes */
   
   if ( (arr2->_s0 != NULL) && (arr2->_s0 != NULL) &&
        (arr1->ndim == arr2->ndim) ) {
@@ -1066,9 +1066,9 @@ int ra_a_inner(RARR const * arr1, RARR const * arr2, ireal * ip) {
 int ra_axpy(RARR * arry, RARR const * arrx, ireal a) {
 
   int i;
-  IPNT li;         // counter
-  IPNT nx, ny;   // sizes
-  IPNT nx0, ny0; // allocated sizes
+  IPNT li;         /* counter */
+  IPNT nx, ny;   /* sizes */
+  IPNT nx0, ny0; /* allocated sizes */
   
   if ( (arrx->_s != NULL) && (arry->_s != NULL) &&
        (arrx->ndim == arry->ndim) ) {

@@ -4,7 +4,7 @@ int main(int argc, char ** argv) {
 
   FILE * fp = NULL;
   int err=0;
-  PARARRAY * par1 = NULL; // will be copy
+  PARARRAY * par1 = NULL; /* will be copy */
   PARARRAY * par = ps_new();
   char * s = NULL;
   char * t = NULL;
@@ -20,7 +20,7 @@ int main(int argc, char ** argv) {
   float x = 0.0f;
   double xx = 0.0;
 
-  // create test par file
+  /* create test par file */
   char * tname = (char *)malloc(128*sizeof(char));
   memset(tname,'\0',128);
   strcpy(tname,"test/partest/test.par");
@@ -193,7 +193,7 @@ int main(int argc, char ** argv) {
     fprintf(stdout,"last value of d2 (double) = %20.14lf\n",xx);
   }  
 
-  // change values of data_format
+  /* change values of data_format */
   if (err=ps_sfcstring(*par,"data_format","xdr_float")) {
     fprintf(stdout,"did not set data_format (cstring), err=%d\n",err);
   }
@@ -222,7 +222,7 @@ int main(int argc, char ** argv) {
     fprintf(stdout,"last value of data_format (cstring) = %s\n",dfla);
   }
 
-  // set a couple more things just for the heck of it
+  /* set a couple more things just for the heck of it */
   if (err=ps_slcstring(*par,"unit2","m")) {
     fprintf(stdout,"did not set unit2 (cstring), err=%d\n",err);
   }

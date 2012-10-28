@@ -24,7 +24,7 @@ int main(int argc, char ** argv) {
   }
 
   fprintf(stdout,"\nback to root\n");
-  //  while (par->prev) par=par->prev;
+  /*  while (par->prev) par=par->prev; */
   if (pslink_front(&par)) {
     fprintf(stderr,"Error: pstest - failed to move to front\n");
     exit(1);
