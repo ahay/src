@@ -1,5 +1,5 @@
 #include "cubic.h"
-#include "utils.h" // added 06.09.12 WWS
+#include "utils.h" /* added 06.09.12 WWS */
 
 int cubic_getworksize(int nt) { return 4*nt-3; }
 
