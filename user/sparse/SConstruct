@@ -3,7 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-helmlu helmmig iwioper iwiiter
+helmlu helmmig iwioper iwiiter 
+iwioper0
 '''
 
 try:  # distributed version
