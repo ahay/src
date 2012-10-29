@@ -58,7 +58,7 @@ int main(int argc, char ** argv) {
     float * rp1;  /* receiver pressure field, current time step */
     float * rp0;  /* receiver pressure field, last time step */
     float * tr;            /* traces */
-    float * tmp;           /* swap */
+    /* float * tmp;           swap */
     float * imag;          /* image */ 
     
     int ix, iz, it;        /* counters */
@@ -74,7 +74,7 @@ int main(int argc, char ** argv) {
     float vmax, vmin;      /* max and min velocity */ 
     float two;             /* two */
     
-    int k_scale = 0, num_cfl = 0;
+    int k_scale = 0; /* num_cfl = 0; */
     /* geomB * arrB = (geomB*)0;*/
 
     /* PETSc */

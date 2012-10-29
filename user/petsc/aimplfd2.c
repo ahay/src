@@ -49,7 +49,7 @@ struct PETScAimplFD2 {
 #define CHKERR CHKERRABORT(aimplfd->comm,ierr)
 
 /* Show contents of a matrix */
-static void sf_petsc_mat_view (MPI_Comm comm, Mat A) {
+void sf_petsc_mat_view (MPI_Comm comm, Mat A) {
     PetscViewer viewer;
     PetscErrorCode ierr;
 

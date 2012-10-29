@@ -27,7 +27,7 @@ int main (int argc, char* argv[]) {
     bool fourth;
     sf_petsc_aimplfd2 aimplfd;
     /* I/O */
-    sf_file usol, vel, src;
+    sf_file usol=NULL, vel, src;
     /* PETSc */
     PetscErrorCode ierr;
 	

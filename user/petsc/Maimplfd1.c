@@ -26,7 +26,7 @@ int main (int argc, char* argv[]) {
     float *u, *v, *f;
     sf_petsc_aimplfd1 aimplfd;
     /* I/O */
-    sf_file usol, vel, src;
+    sf_file usol=NULL, vel, src;
     /* PETSc */
     PetscErrorCode ierr;
 
