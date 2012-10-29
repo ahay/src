@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
     sf_file Fs,Fr,Fi;    /* I/O files */
     sf_axis a1,a2,a3,aa; /* cube axes */
     int     i1,i2,i3;
+    int     n1,n2,n3;
 
     int nbuf,ibuf;
 
@@ -87,58 +88,62 @@ int main(int argc, char* argv[])
     sf_setlabel(aa,""); 
     sf_setunit (aa,""); 
 
-    nbuf = SF_MIN(nbuf,sf_n(a3));
+    n1 = sf_n(a1);
+    n2 = sf_n(a2);
+    n3 = sf_n(a3);
+
+    nbuf = SF_MIN(nbuf,n3);
 
     switch(axis) {
 	case 3:
 	    sf_oaxa(Fi,a1,1);
 	    sf_oaxa(Fi,a2,2);
 	    sf_oaxa(Fi,aa,3);
-	    ii=sf_floatalloc2(sf_n(a1),sf_n(a2)); 
-	    scale = 1./sf_n(a3);
+	    ii=sf_floatalloc2(n1,n2); 
+	    scale = 1./n3;
 	    break;
 	case 2:
 	    sf_oaxa(Fi,a1,1);
 	    sf_oaxa(Fi,a3,2);
 	    sf_oaxa(Fi,aa,3);
-	    ii=sf_floatalloc2(sf_n(a1),nbuf); 
-	    scale = 1./sf_n(a2);
+	    ii=sf_floatalloc2(n1,nbuf); 
+	    scale = 1./n2;
 	    break;
 	case 1:
 	default:
 	    sf_oaxa(Fi,a2,1);
 	    sf_oaxa(Fi,a3,2);
 	    sf_oaxa(Fi,aa,3);
-	    ii=sf_floatalloc2(sf_n(a2),nbuf); 
-	    scale = 1./sf_n(a1);
+	    ii=sf_floatalloc2(n2,nbuf); 
+	    scale = 1./n1;
 	    break;
     }
 
-    for    (i2=0; i2<sf_n(a2); i2++) {
-	for(i1=0; i1<sf_n(a1); i1++) {
+    for    (i2=0; i2<n2; i2++) {
+	for(i1=0; i1<n1; i1++) {
 	    ii[i2][i1]=0.;
 	}
     }
 
     if(rflg) {
-	r_us = sf_floatalloc3  (sf_n(a1),sf_n(a2),nbuf);
-	r_ur = sf_floatalloc3  (sf_n(a1),sf_n(a2),nbuf);
+	r_us = sf_floatalloc3  (n1,n2,nbuf);
+	r_ur = sf_floatalloc3  (n1,n2,nbuf);
     } else {
-	c_us = sf_complexalloc3(sf_n(a1),sf_n(a2),nbuf);
-	c_ur = sf_complexalloc3(sf_n(a1),sf_n(a2),nbuf);
+	c_us = sf_complexalloc3(n1,n2,nbuf);
+	c_ur = sf_complexalloc3(n1,n2,nbuf);
     }
 
-    i3=sf_n(a3);
+    i3=n3;
     for (; i3 > 0; i3 -= nbuf) {
 	if (nbuf > i3) nbuf=i3;
 	if(verb) sf_warning("nsiz=%ld nbuf=%ld",i3,nbuf);
 
 	if(rflg) {
-	    sf_floatread  (r_us[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fs);
-	    sf_floatread  (r_ur[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fr);
+	    sf_floatread  (r_us[0][0],n1*n2*nbuf,Fs);
+	    sf_floatread  (r_ur[0][0],n1*n2*nbuf,Fr);
 	} else {
-	    sf_complexread(c_us[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fs);
-	    sf_complexread(c_ur[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fr);
+	    sf_complexread(c_us[0][0],n1*n2*nbuf,Fs);
+	    sf_complexread(c_ur[0][0],n1*n2*nbuf,Fr);
 	}
 
 	switch(axis) {
@@ -152,10 +157,10 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
     private(i1,i2)				\
-    shared( a1,a2,ii,r_us,r_ur)
+    shared( n1,n2,ii,r_us,r_ur)
 #endif
-			for    (i2=0; i2<sf_n(a2); i2++) {
-			    for(i1=0; i1<sf_n(a1); i1++) {
+			for    (i2=0; i2<n2; i2++) {
+			    for(i1=0; i1<n1; i1++) {
 				ii[i2][i1] += rCOR(r_us[ibuf][i2][i1],r_ur[ibuf][i2][i1]);
 			    }
 			}
@@ -167,10 +172,10 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
     private(i1,i2)				\
-    shared( a1,a2,ii,c_us,c_ur)
+    shared( n1,n2,ii,c_us,c_ur)
 #endif
-			for    (i2=0; i2<sf_n(a2); i2++) {
-			    for(i1=0; i1<sf_n(a1); i1++) {
+			for    (i2=0; i2<n2; i2++) {
+			    for(i1=0; i1<n1; i1++) {
 				ii[i2][i1] += cCOR(c_us[ibuf][i2][i1],c_ur[ibuf][i2][i1]);
 			    }
 			}
@@ -187,20 +192,20 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,r_us,r_ur,scale)
+    shared( nbuf,n1,n2,ii,r_us,r_ur,scale)
 #endif
 		    for(ibuf=0; ibuf<nbuf; ibuf++) {
-			for(i1=0; i1<sf_n(a1); i1++) {
+			for(i1=0; i1<n1; i1++) {
 			    ii[ibuf][i1]=0;
 			}
 			
-			for    (i2=0; i2<sf_n(a2); i2++) {
-			    for(i1=0; i1<sf_n(a1); i1++) {
+			for    (i2=0; i2<n2; i2++) {
+			    for(i1=0; i1<n1; i1++) {
 				ii[ibuf][i1] += rCOR(r_us[ibuf][i2][i1],r_ur[ibuf][i2][i1]);
 			    }
 			}
 			
-			for(i1=0; i1<sf_n(a1); i1++) {
+			for(i1=0; i1<n1; i1++) {
 			    ii[ibuf][i1] *= scale;
 			}
 		    } /* ibuf */
@@ -210,27 +215,27 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,c_us,c_ur,scale)
+    shared( nbuf,n1,n2,ii,c_us,c_ur,scale)
 #endif
 		    for(ibuf=0; ibuf<nbuf; ibuf++) {
-			for(i1=0; i1<sf_n(a1); i1++) {
+			for(i1=0; i1<n1; i1++) {
 			    ii[ibuf][i1]=0;
 			}
 			
-			for    (i2=0; i2<sf_n(a2); i2++) {
-			    for(i1=0; i1<sf_n(a1); i1++) {
+			for    (i2=0; i2<n2; i2++) {
+			    for(i1=0; i1<n1; i1++) {
 				ii[ibuf][i1] += cCOR(c_us[ibuf][i2][i1],c_ur[ibuf][i2][i1]);
 			    }
 			}
 			
-			for(i1=0; i1<sf_n(a1); i1++) {
+			for(i1=0; i1<n1; i1++) {
 			    ii[ibuf][i1] *= scale;
 			}
 		    } /* ibuf */
 		    
 		}
 		
-		sf_floatwrite(ii[0],sf_n(a1)*nbuf,Fi);
+		sf_floatwrite(ii[0],n1*nbuf,Fi);
 		break;
 		/*------------------------------------------------------------*/		
 	    case 1:
@@ -241,20 +246,20 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,r_us,r_ur,scale)
+    shared( nbuf,n1,n2,ii,r_us,r_ur,scale)
 #endif
 		    for(ibuf=0; ibuf<nbuf; ibuf++) {
-			for(i2=0; i2<sf_n(a2); i2++) {
+			for(i2=0; i2<n2; i2++) {
 			    ii[ibuf][i2]=0;
 			}
 			
-			for    (i2=0; i2<sf_n(a2); i2++) {
-			    for(i1=0; i1<sf_n(a1); i1++) {
+			for    (i2=0; i2<n2; i2++) {
+			    for(i1=0; i1<n1; i1++) {
 				ii[ibuf][i2] += rCOR(r_us[ibuf][i2][i1],r_ur[ibuf][i2][i1]);
 			    }
 			}
 			
-			for(i2=0; i2<sf_n(a2); i2++) {
+			for(i2=0; i2<n2; i2++) {
 			    ii[ibuf][i2] *= scale;
 			}
 		    } /* ibuf */
@@ -264,27 +269,27 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,c_us,c_ur,scale)
+    shared( nbuf,n1,n2,ii,c_us,c_ur,scale)
 #endif
 		    for(ibuf=0; ibuf<nbuf; ibuf++) {
-			for(i2=0; i2<sf_n(a2); i2++) {
+			for(i2=0; i2<n2; i2++) {
 			    ii[ibuf][i2]=0;
 			}
 			
-			for    (i2=0; i2<sf_n(a2); i2++) {
-			    for(i1=0; i1<sf_n(a1); i1++) {
+			for    (i2=0; i2<n2; i2++) {
+			    for(i1=0; i1<n1; i1++) {
 				ii[ibuf][i2] += cCOR(c_us[ibuf][i2][i1],c_ur[ibuf][i2][i1]);
 			    }
 			}
 			
-			for(i2=0; i2<sf_n(a2); i2++) {
+			for(i2=0; i2<n2; i2++) {
 			    ii[ibuf][i2] *= scale;
 			}
 		    } /* ibuf */
 
 		}
 		
-		sf_floatwrite(ii[0],sf_n(a2)*nbuf,Fi);   
+		sf_floatwrite(ii[0],n2*nbuf,Fi);   
 		break;
 		
 	} /* n3 */
@@ -293,12 +298,12 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr,"\n");    
     
     if(axis==3) {
-	for    (i2=0; i2<sf_n(a2); i2++) {
-	    for(i1=0; i1<sf_n(a1); i1++) {
+	for    (i2=0; i2<n2; i2++) {
+	    for(i1=0; i1<n1; i1++) {
 		ii[i2][i1] *=scale;
 	    }
 	}
-	sf_floatwrite(ii[0],sf_n(a2)*sf_n(a1),Fi);
+	sf_floatwrite(ii[0],n2*n1,Fi);
     }
     
     /*------------------------------------------------------------*/
