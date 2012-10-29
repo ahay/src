@@ -6,7 +6,11 @@ Igor Terentyev.
 
 #include "utils.h"
 
-#if defined(__sun) || defined(__sun__)
+#if defined(__i386__) || defined(__x86_64__)
+
+#include <mm_malloc.h>
+
+#elif defined(__sun) || defined(__sun__)
 
 #include <stdlib.h>
 
@@ -26,7 +30,10 @@ static void _mm_free(void * ptr)
 
 #else 
 
-#include <mm_malloc.h>
+#include <stdlib.h>
+
+#define _mm_malloc(a,b)	malloc(a)
+#define _mm_free(a)	free(a)
 
 #endif
 
