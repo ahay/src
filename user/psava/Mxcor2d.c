@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
     private(i1,i2)				\
-    shared( a1,a2,ii,r_us,r_ur,scale)
+    shared( a1,a2,ii,r_us,r_ur)
 #endif
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic)	\
     private(i1,i2)				\
-    shared( a1,a2,ii,c_us,c_ur,scale)
+    shared( a1,a2,ii,c_us,c_ur)
 #endif
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
