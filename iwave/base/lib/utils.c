@@ -6,37 +6,7 @@ Igor Terentyev.
 
 #include "utils.h"
 
-#if defined(__i386__) || defined(__x86_64__)
-
-#include <mm_malloc.h>
-
-#elif defined(__sun) || defined(__sun__)
-
-#include <stdlib.h>
-
-static void * _mm_malloc(size_t size, size_t alignment)
-{
-	void * ptr;
-
-	ptr = memalign(alignment, size);
-
-	return ptr;
-}
-
-static void _mm_free(void * ptr)
-{
-		free(ptr);
-}
-
-#else 
-
-#include <stdlib.h>
-
-#define _mm_malloc(a,b)	malloc(a)
-#define _mm_free(a)	free(a)
-
-#endif
-
+#include "mm_malloc.h"
 
 /*----------------------------------------------------------------------------*/
 
