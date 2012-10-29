@@ -36,9 +36,9 @@ void lci(int nx,
     */
     oops=oy;
     duh=yx[i];
-    duh=fmax(duh,oops);
+    duh=MAX(duh,oops);
     oops=maxy;
-    y=fmin(oops,duh);
+    y=MIN(oops,duh);
 
     j = iwave_min(ny-2,iwave_max((int)((y-oy)/dy),0));
     k = iwave_min(iwave_max(0,j-1),ny-4);

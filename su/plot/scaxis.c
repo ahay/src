@@ -60,6 +60,8 @@
 */
 #include <math.h>
 
+#include <rsf.h>
+
 void scaxis (float x1     /* first x value */, 
 	     float x2     /* second x value */, 
 	     int *nxnum   /* number of numbered values */, 
