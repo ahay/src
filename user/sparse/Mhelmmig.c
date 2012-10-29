@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
 		(void) umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	    
-	    (void) remove (append);
+	    if (!save) (void) remove (append);
 #else
 	    if (save) (void) umfpack_zl_save_numeric (Numeric[0], append);
 #endif
