@@ -86,6 +86,33 @@ def cat(output,   # output
          [output+"-g%04d"%ig for ig in range(len(groups))],
          'cat axis=%d space=n ${SOURCES[1:%d]}'%(axis,len(groups)))
 
+def catlist(output,   # output
+            prefix,   # input template
+            list,
+            ng,       # number of files in a group
+            axis,     # cat axis
+            time=5,   # cluster execution time
+            nodes=1): # number of cluster nodes
+
+    # sort groups
+    groups=grplist(list,ng)
+    nodes=min(nodes,len(groups))
+    
+    # loop over groups
+    if(nodes>1): Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    for ig in range(len(groups)):
+        Flow(output+"-g%04d"%ig,
+             [prefix%jg for jg in groups[ig]],
+             'cat axis=%d space=n ${SOURCES[1:%d]}'%(axis,len(groups[ig])))
+        
+        if(nodes>1): Iterate()
+    if(nodes>1): Join()
+
+    # join groups
+    Flow(output,
+         [output+"-g%04d"%ig for ig in range(len(groups))],
+         'cat axis=%d space=n ${SOURCES[1:%d]}'%(axis,len(groups)))
+
 # ------------------------------------------------------------
 # add "nf" files in groups of "ng" files
 def add(output,   # output
@@ -94,6 +121,10 @@ def add(output,   # output
         ng,       # number of files in a group
         time=5,   # cluster execution time
         nodes=1): # number of cluster nodes
+
+    nf=len(list)
+    of=0
+    df=1
 
     # sort groups
     groups=grp(nf,of,df,ng)
@@ -165,4 +196,53 @@ def mov(output,   # output
     Result(output,
          [output+"-g%04d"%ig for ig in range(len(groups))],
          'Movie')
+
+# ------------------------------------------------------------
+def ovl(output,   # output
+        prefix,   # input template
+        nf,of,df, # input files n,o,d
+        ng,       # number of files in a group
+        time=5,   # cluster execution time
+        nodes=1): # number of cluster nodes
+
+    # sort groups
+    groups=grp(nf,of,df,ng)
+    nodes=min(nodes,len(groups))
+
+    # loop over groups
+    if(nodes>1): Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    for ig in range(len(groups)):
+        Plot(output+"-g%04d"%ig,
+             [prefix%jg for jg in groups[ig]],
+             'Overlay')
+        if(nodes>1): Iterate()
+    if(nodes>1): Join()
+
+    # join groups
+    Plot  (output,[output+"-g%04d"%ig for ig in range(len(groups))],'Overlay')
+    Result(output,[output+"-g%04d"%ig for ig in range(len(groups))],'Overlay')
+
+def ovllist(output,   # output
+            prefix,   # input template
+            list,
+            ng,       # number of files in a group
+            time=5,   # cluster execution time
+            nodes=1): # number of cluster nodes
+
+    # sort groups
+    groups=grplist(list,ng)
+    nodes=min(nodes,len(groups))
+
+    # loop over groups
+    if(nodes>1): Fork(time=time,ipn=len(groups)/nodes,nodes=nodes)
+    for ig in range(len(groups)):
+        Plot(output+"-g%04d"%ig,
+             [prefix%jg for jg in groups[ig]],
+             'Overlay')
+        if(nodes>1): Iterate()
+    if(nodes>1): Join()
+
+    # join groups
+    Plot  (output,[output+"-g%04d"%ig for ig in range(len(groups))],'Overlay')
+    Result(output,[output+"-g%04d"%ig for ig in range(len(groups))],'Overlay')
     
