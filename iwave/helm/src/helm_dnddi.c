@@ -13,9 +13,11 @@
 /* modified WWS 10.12.11 to use pow instead of libf2c version - thus this package
    is completely independent of libf2c, and need not link to it.
 */
-#include "f2c.h"
+
 /* include C math library headers to avoid having to use libf2c version of pow */
-#include "math.h"
+#include <math.h>
+
+#include "f2c.h"
 
 /* Subroutine */ int helm_(integer *nsx, integer *ntx, real *dt, real *dx, 
 	real *st, real *sx, real *p, real *d__, real *x, real *y, real *work, 
