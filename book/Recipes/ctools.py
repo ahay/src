@@ -122,10 +122,6 @@ def add(output,   # output
         time=5,   # cluster execution time
         nodes=1): # number of cluster nodes
 
-    nf=len(list)
-    of=0
-    df=1
-
     # sort groups
     groups=grp(nf,of,df,ng)
     nodes=min(nodes,len(groups))
