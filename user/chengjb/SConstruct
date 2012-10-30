@@ -34,6 +34,7 @@ lapack = env.get('LAPACK')
 blas = env.get('BLAS') and lapack
 if blas:
 	env.Prepend(LIBS=lapack)
+	env.Depends('_lapack.h','_blas.h')
 
 fftw = env.get('FFTW')
 if fftw:

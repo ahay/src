@@ -50,6 +50,7 @@ blas   = env.get('BLAS') and lapack
 
 if blas:
 	env.Prepend(LIBS=lapack)
+	env.Depends('_lapack.h','_blas.h')
 
 mains = Split(progs)
 for prog in mains:

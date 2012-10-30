@@ -1,9 +1,11 @@
+#include <time.h>
+
 #include <rsf.h>
 
 /* prepared head files by myself */
 #include "_lapack.h"
 #include "_fd.h"
-#include "_cjb.h"
+/* #include "_cjb.h" */
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"
@@ -141,7 +143,7 @@ int main(int argc, char* argv[])
 
         for(i=0;i<nx;i++)
         for(j=0;j<nz;j++)
-           theta[i][j] *= PI/180.0;
+           theta[i][j] *= SF_PI/180.0;
 
         t2=clock();
 
@@ -183,10 +185,10 @@ int main(int argc, char* argv[])
            sf_warning("hnkx=%d hnkz=%d nkx=%d nkz=%d", hnkx, hnkz, nkx, nkz);
            sf_warning("hnkx1=%d hnkz1=%d nkx1=%d nkz1=%d", hnkx1, hnkz1, nkx1, nkz1);
 
-           dkx=2*PI/dx/nkx;
-           dkz=2*PI/dz/nkz;
-	   kxmax=PI/dx;
-	   kzmax=PI/dz;
+           dkx=2*SF_PI/dx/nkx;
+           dkz=2*SF_PI/dz/nkz;
+	   kxmax=SF_PI/dx;
+	   kzmax=SF_PI/dz;
 
            kx=calloc(sizeof(float), nkx);
            kz=calloc(sizeof(float), nkz);

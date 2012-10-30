@@ -1,9 +1,11 @@
+#include <time.h>
+
 #include <rsf.h>
 
 /* prepared head files by myself */
 #include "_lapack.h"
 #include "_fd.h"
-#include "_cjb.h"
+/* #include "_cjb.h" */
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"
@@ -174,10 +176,10 @@ int main(int argc, char* argv[])
            sf_warning("hnkx=%d hnkz=%d nkx=%d nkz=%d", hnkx, hnkz, nkx, nkz);
            sf_warning("hnkx1=%d hnkz1=%d nkx1=%d nkz1=%d", hnkx1, hnkz1, nkx1, nkz1);
 
-           dkx=2*PI/dxf/nkx;
-           dkz=2*PI/dzf/nkz;
-	   kxmax=PI/dxf;
-	   kzmax=PI/dzf;
+           dkx=2*SF_PI/dxf/nkx;
+           dkz=2*SF_PI/dzf/nkz;
+	   kxmax=SF_PI/dxf;
+	   kzmax=SF_PI/dzf;
 
            kx=calloc(sizeof(float), nkx);
            kz=calloc(sizeof(float), nkz);

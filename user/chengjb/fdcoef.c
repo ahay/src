@@ -7,7 +7,7 @@
  * *************************************************************************/
 #include <rsf.h>
 #include "_fd.h"
-#include "_cjb.h"
+/* #include "_cjb.h" */
 #include "alloc.h"
 
 int fac(int n)
