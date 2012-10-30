@@ -31,15 +31,15 @@ int main(int argc, char* argv[])
     int npw, n1, n2, cgiter; 
     int nh, ns, nw;
     float eps, d1, d2, **vel, dw, ow;
-    float *di, *dm, ***wght, reg, **prec;
+    float *di, *dm, ***wght, reg, **prec, **xmov, **rmov;
     char *datapath;
     sf_file in, out, model, us, ur;
-    sf_file weight, precon;
+    sf_file weight, precon, miter, riter;
     int uts, mts;
 
     sf_init(argc,argv);
     in  = sf_input("in");
-    out = sf_output("out");    
+    out = sf_output("out");
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -78,15 +78,15 @@ int main(int argc, char* argv[])
 	sf_error("Need model=");
     model = sf_input("model");
 
+    vel = sf_floatalloc2(n1,n2);
+    sf_floatread(vel[0],n1*n2,model);
+
     if (!sf_histint(model,"n1",&n1)) sf_error("No n1= in model.");
     if (!sf_histint(model,"n2",&n2)) sf_error("No n2= in model.");
 
     if (!sf_histfloat(model,"d1",&d1)) sf_error("No d1= in model.");
     if (!sf_histfloat(model,"d2",&d2)) sf_error("No d2= in model.");
 
-    vel = sf_floatalloc2(n1,n2);
-    sf_floatread(vel[0],n1*n2,model);
-    
     if (load)
 	datapath = sf_histstring(model,"in");	
     else
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(us,"d4",&dw)) sf_error("No dw=.");
     if (!sf_histfloat(us,"o4",&ow)) sf_error("No ow=.");    
     
-    /* read receiver wavefield */	
+    /* read receiver wavefield */
     if (NULL == sf_getstring("ur"))
 	sf_error("Need receiver wavefield ur=");
     ur = sf_input("ur");
@@ -138,7 +138,23 @@ int main(int argc, char* argv[])
 
     /* write output header */
     sf_putint(out,"n3",1);
-    
+
+    /* output model and residual iteration */
+    if (NULL == sf_getstring("miter") && 
+	NULL == sf_getstring("riter")) {
+	miter = NULL;
+	riter = NULL;
+	xmov = NULL;
+	rmov = NULL;
+    } else {
+	miter = sf_output("miter");
+	sf_putint(miter,"n3",cgiter);
+	riter = sf_output("riter");
+	sf_putint(riter,"n4",cgiter);
+	xmov = sf_floatalloc2(n1*n2,cgiter);
+	rmov = sf_floatalloc2(n1*n2*(2*nh+1),cgiter);
+    }    
+
     /* initialize operator */
     iwi_init(npw,eps, n1,n2,d1,d2, nh,ns,ow,dw,nw,
 	     us,ur, load,datapath, uts);
@@ -146,21 +162,33 @@ int main(int argc, char* argv[])
     /* initialize regularization */
     sf_igrad2_init(n1,n2);
 
-    /* set velocity, weight and preconditioner */
+    /* set weight and preconditioner */
     iwi_set(vel,wght,prec);
 
     /* solve update */
-    sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
-		  2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
-		  cgiter,reg,"verb",verb,"end");
+    if (NULL == miter && NULL == riter) {
+	sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
+		      2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
+		      cgiter,reg,"verb",verb,"end");
+    } else {
+	sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
+		      2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
+		      cgiter,reg,"xmov",xmov,"rmov",rmov,"verb",verb,"end");
+    }
+    
     sf_cgstep_close();
 
     /* write output */
     sf_floatwrite(dm,n1*n2,out);
 
+    if (NULL != miter || NULL != riter) {
+	sf_floatwrite(xmov[0],n1*n2*cgiter,miter);
+	sf_floatwrite(rmov[0],n1*n2*(2*nh+1)*cgiter,riter);
+    }
+
     /* free */
     iwi_free();
     free(dm); free(di);
-
+    
     exit(0);
 }
