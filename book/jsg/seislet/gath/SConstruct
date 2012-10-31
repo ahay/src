@@ -1,5 +1,7 @@
 from rsf.proj import *
-import random, string, math
+from rsf.recipes.beg import server as private
+
+import random, math
 
 random.seed(2005)
 
@@ -9,11 +11,6 @@ def rnd(x):
     global nr
     r = str(random.randint(1,nr))
     return r
-
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
-
 
 Fetch('elf0.H','elf',private)
 
@@ -159,9 +156,9 @@ Result('gath4',
        ''')
 
 nr = n1
-k1 = string.join(map(rnd,range(nsp)),',')
+k1 = ','.join(map(rnd,range(nsp)))
 nr = n2
-k2 = string.join(map(rnd,range(nsp)),',')
+k2 = ','.join(map(rnd,range(nsp)))
 
 imps = data+'imps'
 Flow(imps,dip,

@@ -9,12 +9,8 @@
 
 
 from rsf.proj import *
+from rsf.recipes.beg import server as private
 from math import pi
-
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
-
 
 # ----------------------------------------------------------------------
 # RESERVOIR MODEL VS DATA 2-D CROSSLINE SECTION

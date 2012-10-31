@@ -1,12 +1,10 @@
 from rsf.proj import *
+from rsf.recipes.beg import server as private
+
 import math
 import random
 
 random.seed(2005)
-
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
 
 def wiggle(title):
     return '''

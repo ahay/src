@@ -1,4 +1,5 @@
 from rsf.proj import *
+from rsf.recipes.beg import server as private
 
 def cubeplot(title,clip='',extra=''):
     return '''
@@ -22,10 +23,6 @@ def dipplot(title,clip='',extra=''):
 ##################
 # Field data test
 ##################
-
-private = {'login':os.environ.get('BEG_LOGIN'),
-           'password':os.environ.get('BEG_PASSWORD'),
-           'server':os.environ.get('BEG_SERVER')}
 
 segy = 'sgr.sgy'
 
