@@ -3,8 +3,8 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-vti2dpseudop vti2dpseudop1 vti2delatsic
-tti2dpseudop tti2dpseudop1 tti2delatsic
+vti2dpseudop vti2dpseudop1 vti2delastic
+tti2dpseudop tti2dpseudop1 tti2delastic
 '''
 
 mpiprogs='''
