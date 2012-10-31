@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int n1, n2, nh, ns, nw;
     int ih, is, iw, **pos, i, j, ipos;
     double omega;
-    float dw, ow, ***wght, ***ahess;
+    float dw, ow, ***wght, ****ahess;
     sf_complex ****swave, ****rwave, *f;
     sf_complex **green, temps, tempr;
     sf_file in, out, list, us, ur, wvlt;
@@ -111,11 +111,11 @@ int main(int argc, char* argv[])
 
     /* allocate memory */
     green = sf_complexalloc2(ns,uts);
-    ahess = sf_floatalloc3(n1,n2,uts);
+    ahess = sf_floatalloc4(n1,n2,2*nh+1,uts);
 
     /* loop over frequency */
 #ifdef _OPENMP
-#pragma omp parallel num_threads(uts) private(its,omega,j,i,ipos,ih,is,temps,tempr)
+#pragma omp parallel num_threads(uts) private(its,omega,j,i,ipos,is,ih,temps,tempr)
 #endif
     {
 #ifdef _OPENMP
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 				    tempr *= wght[ih+nh][pos[ipos][1]-ih][pos[ipos][0]];
 				}
 				
-				ahess[its][j][i] += pow(-omega*omega*creal(temps+tempr),2.);
+				ahess[its][ih+nh][j][i] += -omega*omega*creal(temps+tempr);
 			    }
 			}
 		    }
@@ -176,17 +176,19 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp for
 #endif
-	for (j=0; j < n2; j++) {
-	    for (i=0; i < n1; i++) {
-		for (its=1; its < uts; its++) {
-		    ahess[0][j][i] += ahess[its][j][i];
+	for (ih=-nh; ih < nh+1; ih++) {
+	    for (j=0; j < n2; j++) {
+		for (i=0; i < n1; i++) {
+		    for (its=1; its < uts; its++) {
+			ahess[0][ih+nh][j][i] += ahess[its][ih+nh][j][i];
+		    }
 		}
 	    }
 	}
     }
     
     /* write output */
-    sf_floatwrite(ahess[0][0],n1*n2,out);
+    sf_floatwrite(ahess[0][0][0],n1*n2*(2*nh+1),out);
 
     exit(0);
 }
