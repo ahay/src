@@ -58,9 +58,9 @@ covariance operator corresponds to the Green's function $G(\mathbf{x})$ that sol
 In 2-D, the Green's function has the form 
 \begin{equation}
 \label{eq:g2d}
-G(\mathbf{x}) = \displaystyle k - \frac{\ln |\mathbf{x}-\mathbf{x}_0|}{2\pi}
+G(\mathbf{x}) = \displaystyle A - \frac{\ln |\mathbf{x}-\mathbf{x}_0|}{2\pi}
 \end{equation}
-with some constant $k$.
+with some constant $A$.
 
 To derive equation~(\ref{eq:g2d}), we can introduce polar coordinates
 around $\mathbf{x}_0$ with the radius $r= |\mathbf{x}-\mathbf{x}_0|$
@@ -73,15 +73,15 @@ $\phi(r)$ in polar coordinates takes the form
 Away from the point $\mathbf{x}_0$, solving
 \begin{equation}
 \label{eq:away}
-\frac{1}{r}\,\frac{d}{dG}\,\left(r\,\frac{d \phi}{dr}\right) = 0
+\frac{1}{r}\,\frac{d}{dr}\,\left(r\,\frac{d G}{dr}\right) = 0
 \end{equation}
-leads to $G(r) = k_1\,\ln r + k_2$. To find the constant $k_1$, we can
+leads to $G(r) = A + B\,\ln r$. To find the constant $B$, we can
 integrate $\nabla^2 G$ over a circle with some small radius $\epsilon$
 around the origin and apply the Green's theorem
 \begin{equation}
 \label{eq:integrate}
 -1 = \iint \nabla^2 G dx\,dy = \oint \nabla G \cdot \vec{ds} = 
-\int\limits_{0}^{2\pi} \left.\frac{\partial G}{\partial r}\right|_{r=\epsilon}\,\epsilon\,d\theta = 2\pi\,k_1\;.
+\int\limits_{0}^{2\pi} \left.\frac{\partial G}{\partial r}\right|_{r=\epsilon}\,\epsilon\,d\theta = 2\pi\,B\;.
 \end{equation}
 
 Derive the model covariance function $G(\mathbf{x})$ which corresponds
