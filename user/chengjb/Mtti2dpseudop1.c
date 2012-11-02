@@ -1,19 +1,38 @@
-#include <time.h>
+/* 2-D two-components wavefield modeling using pseudo-pure mode P-wave equation in TTI media.
+
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng, Wei Kang and Tengfei Wang
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 
 #include <rsf.h>
 
 /* prepared head files by myself */
 #include "_lapack.h"
 #include "_fd.h"
-/* #include "_cjb.h" */
+#include "_cjb.h"
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"
 #include "puthead.h"
-#include "alloc.h"
+#include "zero.h"
 #include "fdcoef.h"
-#include "kxkz2xz.h"
-#include "kxkztaper.h"
+#include "kykxkz2yxz.h"
+#include "kykxkztaper.h"
 #include "clipsmthspec.h"
 
 /* wave-mode separation operators */
@@ -27,16 +46,14 @@
 int main(int argc, char* argv[])
 {
 	int	ix, iz, jx, jz, ixf, izf,ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
-	float   t, vp2, vs2, ep2, de2, the;
 	float   kxmax,kzmax;
 
-        float   f0, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
+        float   f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
         int     A, mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
         int     itaper; /* tapering or not for spectrum of oprtator*/
-        int     ismth;   /* smoothing or not for spectrum of oprtator*/
 
        int     nstep;            /* every nstep in spatial grids to calculate filters sparsely*/
 
@@ -59,6 +76,8 @@ int main(int argc, char* argv[])
 
         int     isep=1;
         int     ihomo=1;
+
+	double  vp2, vs2, ep2, de2, the;
 
         sf_init(argc,argv);
 
@@ -141,7 +160,7 @@ int main(int argc, char* argv[])
 
         for(i=0;i<nx;i++)
         for(j=0;j<nz;j++)
-           theta[i][j] *= SF_PI/180.0;
+           theta[i][j] *= PI/180.0;
 
         t2=clock();
 
@@ -149,9 +168,9 @@ int main(int argc, char* argv[])
         Fo1 = sf_output("out"); /* pseudo-pure P-wave x-component */
         Fo2 = sf_output("PseudoPurePz"); /* pseudo-pure P-wave z-component */
         Fo3 = sf_output("PseudoPureP"); /* scalar P-wave field using divergence operator */
-        puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
-        puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
-        puthead3(Fo3, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
+        puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
+        puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
+        puthead3(Fo3, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
 
         /*****************************************************************************
          *  Calculating polarization deviation operator for wave-mode separation
@@ -171,25 +190,25 @@ int main(int argc, char* argv[])
            nkz=2*hnkz+1;   /* operator length in kz-direction */
 
            /* truncated spatial operators length for filtering*/
-           hnkx1=200.0/dx;
-           hnkz1=200.0/dz;
+           hnkx1=300.0/dx;
+           hnkz1=300.0/dz;
            nkx1=2*hnkx1+1;
            nkz1=2*hnkz1+1;
 
            sf_warning("hnkx=%d hnkz=%d nkx=%d nkz=%d", hnkx, hnkz, nkx, nkz);
            sf_warning("hnkx1=%d hnkz1=%d nkx1=%d nkz1=%d", hnkx1, hnkz1, nkx1, nkz1);
 
-           dkx=2*SF_PI/dx/nkx;
-           dkz=2*SF_PI/dz/nkz;
-	   kxmax=SF_PI/dx;
-	   kzmax=SF_PI/dz;
+           dkx=2*PI/dx/nkx;
+           dkz=2*PI/dz/nkz;
+	   kxmax=PI/dx;
+	   kzmax=PI/dz;
 
-           kx=calloc(sizeof(float), nkx);
-           kz=calloc(sizeof(float), nkz);
-           kkx=calloc(sizeof(float), nkx);
-           kkz=calloc(sizeof(float), nkz);
-           kx2=calloc(sizeof(float), nkx);
-           kz2=calloc(sizeof(float), nkz);
+           kx=sf_floatalloc(nkx);
+           kz=sf_floatalloc(nkx);
+           kkx=sf_floatalloc(nkx);
+           kkz=sf_floatalloc(nkx);
+           kx2=sf_floatalloc(nkx);
+           kz2=sf_floatalloc(nkx);
 
            taper=sf_floatalloc2(nkz, nkx);
 
@@ -272,10 +291,9 @@ int main(int argc, char* argv[])
 
    	        /*************calculate projection deviation without tapering **********/
                 itaper=1;
-                ismth=0;
                 /* devvtip: projection deviation operators for P-wave in TTI media */
-                divpoldevttip(adx,adz,apx,apz,apvx,apvz,kx,kz,kkx,kkz,taper,hnkx,hnkz,
-                              vp2,vs2,ep2,de2,the,itaper,ismth);
+                divpoldevttip(adx,adz,apx,apz,apvx,apvz,kx,kz,kkx,kkz,taper,hnkx,hnkz,dkx,dkz,
+                              vp2,vs2,ep2,de2,the,itaper);
 
                 /* inverse Fourier transform */
                 kxkz2xz(apvx, apvxx, hnkx, hnkz, nkx, nkz);
@@ -333,20 +351,20 @@ int main(int argc, char* argv[])
           free(kkx);
           free(kkz);
 
-          free2float(taper);
+          free(*taper);
 
-          free2float(adx);
-          free2float(adz);
-          free2float(adxx);
-          free2float(adzz);
-          free2float(apx);
-          free2float(apz);
-          free2float(apxx);
-          free2float(apzz);
-          free2float(apvx);
-          free2float(apvz);
-          free2float(apvxx);
-          free2float(apvzz);
+          free(*adx);
+          free(*adz);
+          free(*adxx);
+          free(*adzz);
+          free(*apx);
+          free(*apz);
+          free(*apxx);
+          free(*apzz);
+          free(*apvx);
+          free(*apvz);
+          free(*apvxx);
+          free(*apvzz);
       }// isep
       /****************End of Calculating Projection Deviation Operator****************/
       t3=clock();
@@ -354,10 +372,10 @@ int main(int argc, char* argv[])
       sf_warning("Computation time (operators): %f (second)",timespent);
 
       /****************begin to calculate wavefield****************/
-      coeff_2dx=calloc(sizeof(float),mm);
-      coeff_2dz=calloc(sizeof(float),mm);
-      coeff_1dx=calloc(sizeof(float),mm);
-      coeff_1dz=calloc(sizeof(float),mm);
+       coeff_2dx=sf_floatalloc(mm);
+       coeff_2dz=sf_floatalloc(mm);
+       coeff_1dx=sf_floatalloc(mm);
+       coeff_1dz=sf_floatalloc(mm);
 
       coeff2d(coeff_2dx,dx);
       coeff2d(coeff_2dz,dz);
@@ -385,7 +403,7 @@ int main(int argc, char* argv[])
         /* setup I/O files */
         Fo16 = sf_output("PseudoPureSepP"); /* scalar P-wave field using polarization projection oprtator*/
 
-        puthead3(Fo16, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
+        puthead3(Fo16, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
       }
 
       sf_warning("==================================================");
@@ -401,7 +419,7 @@ int main(int argc, char* argv[])
 
                 /* fwpttipseudop: forward-propagating in TTI media with pseudo-pure P-wave equation */
 		fwpttipseudop(dt2, p1, p2, p3, q1, q2, q3, coeff_2dx, coeff_2dz,
-                              dx, dz, dt, nx, nz, nxpad, nzpad, vp0, vs0, epsi, del, theta);
+                              dx, dz, nx, nz, nxpad, nzpad, vp0, vs0, epsi, del, theta);
 
                /******* output wavefields: component and divergence *******/
 	       if(it==ns-1)
@@ -463,32 +481,32 @@ int main(int argc, char* argv[])
 
         if(isep==1)
         {
-          free2float(p3c);
-          free2float(q3c);
-          free2float(sum);
+          free(*p3c);
+          free(*q3c);
+          free(*sum);
 
           if(ihomo==1)
           {
-              free2float(exx);
-              free2float(ezz);
+              free(*exx);
+              free(*ezz);
           }else{
-              free4float(ex);
-              free4float(ez);
+              free(***ex);
+              free(***ez);
           }
         }
 
-        free2float(p1);
-        free2float(p2);
-        free2float(p3);
-        free2float(q1);
-        free2float(q2);
-        free2float(q3);
+        free(*p1);
+        free(*p2);
+        free(*p3);
+        free(*q1);
+        free(*q2);
+        free(*q3);
 
-        free2float(vp0);
-        free2float(vs0);
-        free2float(epsi);
-        free2float(del);
-        free2float(theta);
+        free(*vp0);
+        free(*vs0);
+        free(*epsi);
+        free(*del);
+        free(*theta);
 
 	exit(0);
 }

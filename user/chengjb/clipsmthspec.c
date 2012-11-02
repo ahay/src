@@ -3,7 +3,6 @@
  * *************************************************************************/
 #include <rsf.h>
 
-#include "alloc.h"
 #include "_cjb.h"
 
 void clipsmthspec(float **a,int nx,int nz, float var)
@@ -38,5 +37,5 @@ void clipsmthspec(float **a,int nx,int nz, float var)
            for( j=0; j<nz ; j++)
                a[i][j]=tmp[i][j];
 
-        free2float(tmp);
+        free(*tmp);
 }

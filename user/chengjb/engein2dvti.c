@@ -6,22 +6,40 @@
  *
  * Note:  Method 2 & 3 are similar, they solve same equation using different codes
  *
- *    Copyright: Tongji University (Jiubing Cheng)
- *    2012.3.2
  *************************************************************************/
+/*
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng, Wei Kang and Tengfei Wang
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 
 #include "_cjb.h"
 #include "_lapack.h"
 #include "eigen2x2.h"
 
-void engein2dvti1(float ve[2][2], float va[2], float sinx, float cosx, float vp2, float vs2,
-                 float ep2, float de2, float f)
+void engein2dvti1(double ve[2][2], double va[2], double sinx, double cosx, double vp2, double vs2,
+                 double ep2, double de2, double f)
 /*< engein2dvti1: Calculate eigeinvalues and eigeinvectors for 2D VTI media
                   using analytic solution based on Dellinger's expression >*/
 {
-        float sin2, cos2, cos2a, sin4;
-        float d33, d11, psi2, psi, d33d11, d33d11_2, sin2cos2, sin2cos2_4, tmpa,tmpb,u1,u2,u1u2;
+        double sin2, cos2, cos2a, sin4;
+        double d33, d11, psi2, psi, d33d11, d33d11_2, sin2cos2, sin2cos2_4, tmpa,tmpb,u1,u2,u1u2;
 
         sin2=sinx*sinx;
         cos2=1.0-sin2;
@@ -82,13 +100,13 @@ void engein2dvti1(float ve[2][2], float va[2], float sinx, float cosx, float vp2
         ve[1][1]=u2;
 }
 
-void engein2dvti2(float ve[2][2], float va[2], float kx, float kz, float vp2, float vs2,
-                 float ep2, float de2)
+void engein2dvti2(double ve[2][2], double va[2], double kx, double kz, double vp2, double vs2,
+                 double ep2, double de2)
 /*< engein2dvti2: Calculate eigeinvalues and eigeinvectors for 2D VTI media
                   using 2*2 matrix analytic solution>*/
 {
-        float u1, u2, c11, c33, c44, c13, a11, a12, a22;
-        float a[2][2];
+        double u1, u2, c11, c33, c44, c13, a11, a12, a22;
+        double a[2][2];
 
         c33=vp2;
         c44=vs2;
@@ -112,7 +130,7 @@ void engein2dvti2(float ve[2][2], float va[2], float kx, float kz, float vp2, fl
          a[1][0] = a12;
          a[1][1] = a22;
 
-        solveSymmetric22(a, ve, va);
+        dsolveSymmetric22(a, ve, va);
 
         u1=ve[0][0];
         u2=ve[0][1];
@@ -135,58 +153,4 @@ void engein2dvti2(float ve[2][2], float va[2], float kx, float kz, float vp2, fl
         }
         ve[1][0]=u1;
         ve[1][1]=u2;
-}
-
-void engein2dvti3(float ve[2][2], float va[2], float sinx, float cosx, float vp2, float vs2,
-                 float ep2, float de2)
-/*< engein2dvti3: Calculate eigeinvalues and eigeinvectors for 2D VTI media
-                  using general N*N matrix Lapack solution >*/
-{
-        float sin2, cos2;
-
-	char	jobz='V';  /* for SVD */
-	char	uplo='U';  /* for SVD */
-	int     M=2;  /* for SVD */
-	int     LDA=M;  /* for SVD */
-	int     LWORK=4*M;  /* for SVD */
-
-	int     INFO;  /* for SVD */
-
-        float   *Chr, *w, *work;  /* Lapack SVD array */
-	Chr=calloc(sizeof(float),M*M);
-        w=calloc(sizeof(float),M);
-	work=calloc(sizeof(float),LWORK);
-        
-        sin2=sinx*sinx;
-        cos2=1-sin2;
-
-        Chr[0]=ep2*vp2*sin2+vs2*cos2;
-        Chr[1]=sqrt((vp2-vs2)*(de2*vp2-vs2))*sinx*cosx;
-        Chr[2]=Chr[1];
-        Chr[3]=vs2*sin2+vp2*cos2;
-
-        ssyev_(&jobz, &uplo, &M, Chr, &LDA, w, work, &LWORK, &INFO);
-
-        /* large eigeinvalue */
-        va[0]=w[1];
-        ve[0][0]=Chr[2];
-        ve[0][1]=Chr[3];
-        if(Chr[2]*sinx + Chr[3]*cosx <=0.0)
-        {
-             ve[0][0]= -Chr[2];
-             ve[0][1]= -Chr[3];
-        }
-        /* small eigeinvalue */
-        va[1]=w[0];
-        ve[1][0]=Chr[0];
-        ve[1][1]=Chr[1];
-        if(Chr[0]*cosx - Chr[1]*sinx <=0.0)
-        {
-             ve[1][0]= -Chr[0];
-             ve[1][1]= -Chr[1];
-        }
-
-        free(Chr);
-        free(w);
-        free(work);
 }

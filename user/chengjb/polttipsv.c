@@ -4,10 +4,29 @@
  * 2) calculate P-wave's polarization operators 
  * 3) calculate SV-wave's polarization operators 
  *
- *    Copyright: Tongji University (Jiubing Cheng)
- *    2012.3.6
- *    Modified on Madagascar at 2012.8.1
  *************************************************************************/
+/*
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng
+   2012.3.6
+   Modified on Madagascar at 2012.8.1
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 
 #include "_cjb.h"
@@ -16,19 +35,14 @@
 
 void polttipsv(float **apx,float **apz, float **apxs,float **apzs,
              float *kx,float *kz, float *kkx,float *kkz,
-             float **taper, int hnkx, int hnkz,
-             float vp2, float vs2, float ep2, float de2, float the, int itaper)
+             float **taper, int hnkx, int hnkz, float dkx, float dkz,
+             double vp2, double vs2, double ep2, double de2, double the, int itaper)
 /*< polvtipsv: P- and SV-wave polarization operators in VTI media >*/
 {
-        int   i, j, ik, jk, ismth=0;
-        float k2, rk, sinx, cosx, coss, sins;
-        float kxx, kzz, kx2, kz2;
-
-        //float e1=0, e2=0, e12;
-        float r1, r2, rw;
-        float ve[2][2], va[2];
- 
-        //float f = 1.0-vs2/vp2;
+        int   i, j, ik, jk;
+        double k2, rk, sinx, cosx, coss, sins;
+        double kxx, kzz, kx2, kz2;
+        double ve[2][2], va[2];
 
         coss=cos(the);
         sins=sin(the);
@@ -59,45 +73,58 @@ void polttipsv(float **apx,float **apz, float **apxs,float **apzs,
                 sinx=kxx/rk;
                 cosx=kzz/rk;
 
-                //engein2dvti1(ve, va, sinx, cosx, vp2, vs2, ep2, de2, f);
-                engein2dvti2(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
-                //engein2dvti3(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
+                if(kxx==0.0)  { /*move this sample from zero for cintinuous spectrum */
+                  sinx = 0.0001*dkx/rk;
+                  cosx = SGN(kzz)*sqrt(1.0-sinx*sinx);
+                }
 
-                apx[ik][jk]=ve[0][0];
-                apz[ik][jk]=ve[0][1];
+                if(kz[jk]==0.0) { /*move this sample from zero for cintinuous spectrum */
+                  cosx = 0.0001*dkz/rk;
+                  sinx = SGN(kxx)*sqrt(1.0-cosx*cosx);
+                }
+
+                engein2dvti2(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
+
+                apx[ik][jk]=(float)ve[0][0];
+                apz[ik][jk]=(float)ve[0][1];
                 if(ve[0][0]*sinx + ve[0][1]*cosx <=0.0)
                 {
-                     apx[ik][jk]= -ve[0][0];
-                     apz[ik][jk]= -ve[0][1];
+                     apx[ik][jk]= (float)(-ve[0][0]);
+                     apz[ik][jk]= (float)(-ve[0][1]);
                 }
                 apx[ik][jk] *= taper[ik][jk];
                 apz[ik][jk] *= taper[jk][ik];
 
-                apxs[ik][jk]=ve[1][0];
-                apzs[ik][jk]=ve[1][1];
+                apxs[ik][jk]=(float)ve[1][0];
+                apzs[ik][jk]=(float)ve[1][1];
                 if(ve[1][0]*cosx - ve[1][1]*sinx <=0.0)
                 {
-                     apxs[ik][jk]= -ve[1][0];
-                     apzs[ik][jk]= -ve[1][1];
+                     apxs[ik][jk]= (float)(-ve[1][0]);
+                     apzs[ik][jk]= (float)(-ve[1][1]);
                 }
-                apxs[ik][jk] *= taper[jk][ik];
-                apzs[ik][jk] *= taper[ik][jk];
+                if(itaper==1){
+                  apxs[ik][jk] *= taper[jk][ik];
+                  apzs[ik][jk] *= taper[ik][jk];
+                }
           } /* j loop */
       } /*i loop */
 
-     if(ismth==1)
+     int nkx, nkz;
+     nkx=2*hnkx+1;
+     nkz=2*hnkz+1;
+     /* interpolating */
+     for( i=0; i<nkx; i++ )
      {
-
-        int nkx, nkz;
-        nkx=2*hnkx+1;
-        nkz=2*hnkz+1;
-
-        r1=6.0;
-        r2=6.0;
-        rw=2.0;
-        smooth2d(apx, nkz, nkx, r1, r2, rw);
-        smooth2d(apz, nkz, nkx, r1, r2, rw);
-        smooth2d(apxs, nkz, nkx, r1, r2, rw);
-        smooth2d(apzs, nkz, nkx, r1, r2, rw);
+          apx[i][hnkz]=(apx[i][hnkz+1] + apx[i][hnkz-1])/2.0;
+          apz[i][hnkz]=(apz[i][hnkz+1] + apz[i][hnkz-1])/2.0;
+          apxs[i][hnkz]=(apxs[i][hnkz+1] + apxs[i][hnkz-1])/2.0;
+          apzs[i][hnkz]=(apzs[i][hnkz+1] + apzs[i][hnkz-1])/2.0;
+     }
+     for( j=0; j<nkz ; j++)
+     {
+          apx[hnkx][j]=(apx[hnkx+1][j] + apx[hnkx-1][j])/2.0;
+          apz[hnkx][j]=(apz[hnkx+1][j] + apz[hnkx-1][j])/2.0;
+          apxs[hnkx][j]=(apxs[hnkx+1][j] + apxs[hnkx-1][j])/2.0;
+          apzs[hnkx][j]=(apzs[hnkx+1][j] + apzs[hnkx-1][j])/2.0;
      }
 }

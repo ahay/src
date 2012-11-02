@@ -191,8 +191,6 @@ void smooth2d(float **v, int n1, int n2, float r1, float r2, float rw)
 	free(d);
 	free(e);
 	free(f);
-	free(v0);
 	free(*v0);
-	free(w);
 	free(*w);
 }

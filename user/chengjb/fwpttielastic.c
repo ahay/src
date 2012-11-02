@@ -1,20 +1,40 @@
 /*************************************************************************
  * * Forward propagating using original elastic equation of displacement 
- * in VTI media
- * *
- * *    Copyright: Tongji University (Jiubing Cheng)
- * *    2012.3.2
+ *   in VTI media
+ * 
+ *     Copyright: Tongji University (Jiubing Cheng and Tengfei Wang)
+ *     2012.3.2
  * *************************************************************************/
+/*
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng and Tengfei Wang
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 
 #include "_cjb.h"
 #include "_fd.h"
 
-#include "alloc.h"
+#include "zero.h"
 
 void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float** q2,float** q3,
                float* coeff_2dx,float* coeff_2dz, float* coeff_1dx,float* coeff_1dz,
-               float dx, float dz, float dt, int nx, int nz, int nxpad, int nzpad, 
+               float dx, float dz, int nx, int nz, int nxpad, int nzpad, 
                float **vp0,float **vs0, float **epsilon,float **delta, float **theta)
 /*< fwpttielastic: forward-propagating using original elastic equation of displacement in TTI media>*/
 {
@@ -100,6 +120,6 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
           }
 	}
 
-	free2float(px_tmp);	
-	free2float(qx_tmp);	
+	free(*px_tmp);	
+	free(*qx_tmp);	
 }

@@ -1,17 +1,35 @@
 /*************************************************************************
-* Forward propagating using pseudo-pure P-wave equation in VTI media
+* Forward propagating using pseudo-pure P-wave equation in TTI media
 * (see, Kang and Cheng, 2011; Cheng et al., 2012).
 *
-*    Copyright: Tongji University (Jiubing Cheng)
-*    2012.3.2
 *************************************************************************/
+/*
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng and Wei Kang
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 #include "_cjb.h"
 #include "_fd.h"
-#include "alloc.h"
+#include "zero.h"
 
 void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float** q2,float** q3,
-               float* coeff_x,float* coeff_z, float dx,float dz,float dt,
+               float* coeff_x,float* coeff_z, float dx,float dz,
                int nx,int nz,int nxpad, int nzpad, float** vp0,float **vs0,
                float** epsilon,float** delta, float **theta)
 /*< fwpttipseudop: forward-propagating in TTI media with pseudo-pure P-wave equation>*/
@@ -21,8 +39,8 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
         float px,pz,qx,qz,vp2,vs2,vpx2,vpn2,ep,de,the,coef;
         float sinthe,costhe,cos2,sin2,sin2a,hxp,hxq,hzp,hzq,pxz,qxz;
 
-        p_temp=alloc2float(nzpad,nxpad);
-        q_temp=alloc2float(nzpad,nxpad);
+        p_temp=sf_floatalloc2(nzpad,nxpad);
+        q_temp=sf_floatalloc2(nzpad,nxpad);
 
         zero2float(p_temp,nzpad,nxpad);
         zero2float(q_temp,nzpad,nxpad);
@@ -91,6 +109,6 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                 }
 
            }/* i llop */
-        free2float(p_temp);
-        free2float(q_temp);
+        free(*p_temp);
+        free(*q_temp);
 }

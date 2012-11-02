@@ -5,27 +5,44 @@
  * 3) calculate projection deviation due to difference between 
  *    wave-vector and P-wave's polarization vector
  *
- *    Copyright: Tongji University (Jiubing Cheng)
- *    2012.3.2
  *************************************************************************/
+/*
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 
 #include "_cjb.h"
-#include "smth2d.h"
 #include "engein2dvti.h"
 
 void devttip(float **apvx,float **apvz,
              float *kx,float *kz, float *kkx,float *kkz, float **taper,          
-             int hnkx, int hnkz,
-             float vp2, float vs2, float ep2, float de2, float the, int itaper, int ismth)
+             int hnkx, int hnkz, float dkx, float dkz,
+             double vp2, double vs2, double ep2, double de2, double the, int itaper)
 /*< devttip: projection deviation operators for P-wave in TTI media >*/
 {
         int   i, j, ii, jj, ik, jk, num;
-        float kx2, kz2, k2, rk, sinx, cosx;
-        float coss, sins;
-        float sum, kxx, kzz;
+        double kx2, kz2, k2, rk, sinx, cosx;
+        double coss, sins;
+        double sum, kxx, kzz;
 
-        float ve[2][2],va[2];
+        double ve[2][2],va[2];
 
         coss=cos(the);
         sins=sin(the);
@@ -55,12 +72,22 @@ void devttip(float **apvx,float **apvz,
                 sinx=kxx/rk;
                 cosx=kzz/rk;
 
-                //engein2dvti1(ve, va, sinx, cosx, vp2, vs2, ep2, de2, f);
-                
-                engein2dvti2(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
-                
-                //engein2dvti3(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
+                if(kxx==0.0)  { /*move this sample from zero for cintinuous spectrum */
+                  sinx = 0.0001*dkx/rk;
+                  cosx = SGN(kzz)*sqrt(1.0-sinx*sinx);
+                }
 
+                if(kzz==0.0) { /*move this sample from zero for cintinuous spectrum */
+                  cosx = 0.0001*dkz/rk;
+                  sinx = SGN(kxx)*sqrt(1.0-cosx*cosx);
+                }
+
+                engein2dvti2(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
+
+		apvx[ik][jk]=ve[0][0]/sinx;
+		apvz[ik][jk]=ve[0][1]/cosx;
+
+                /* 
                 if(i!=0)
 		  apvx[ik][jk]=ve[0][0]/sinx;
                 else
@@ -70,9 +97,11 @@ void devttip(float **apvx,float **apvz,
 		  apvz[ik][jk]=ve[0][1]/cosx;
                 else
 		  apvz[ik][jk]=1.0;
-
-		apvx[ik][jk] *=taper[ik][jk];
-		apvz[ik][jk] *=taper[jk][ik];
+                */
+                if(itaper==1){
+		  apvx[ik][jk] *=taper[ik][jk];
+		  apvz[ik][jk] *=taper[jk][ik];
+                }
 
           } /* j loop */
       } /*i loop */
@@ -82,6 +111,7 @@ void devttip(float **apvx,float **apvz,
      nkz=2*hnkz+1;
 
      /* interpolating */
+
      for( i=0; i<nkx; i++ )
      {
           apvz[i][hnkz]=(apvz[i][hnkz+1] + apvz[i][hnkz-1])/2.0;
@@ -136,40 +166,5 @@ void devttip(float **apvx,float **apvz,
                apvz[i][j]=sum/num;
             } // end if
           }//j loop
-     }
-
-     /***************************************************************************
-     void smooth2d(float **v, int n1, int n2, float r1, float r2, float rw)
-     **************************************************************************
-     int n1;          number of points in x1 (fast) dimension
-     int n2;          number of points in x1 (fast) dimension 
-     float **v0;       array of input velocities 
-     float r1;        smoothing parameter for x1 direction
-     float r2;        smoothing parameter for x2 direction
-     float rw;        smoothing parameter for window
-     " Notes:                                                                ",
-     " Larger r1 and r2 result in a smoother data. Recommended ranges of r1  ", 
-     " and r2 are from 1 to 20.                                              ",
-     "                                                                       ",
-     " Smoothing can be implemented in a selected window. The range of 1st   ",
-     " dimension for window is from win[0] to win[1]; the range of 2nd       ",
-     " dimension is from win[2] to win[3].                                   ",
-     "                                                                       ",
-     " Smoothing the window function (i.e. blurring the edges of the window) ",
-     " may be done by setting a nonzero value for rw, otherwise the edges    ",
-     " of the window will be sharp.                                          ",
-     "                                                                       ",
-     ***************************************************************************/
-
-     float r1, r2, rw;
-
-     r1=4.0;
-     r2=4.0;
-     rw=2.0;
-
-     if(ismth==1)
-     {
-       smooth2d(apvx, nkz, nkx, r1, r2, rw);
-       smooth2d(apvz, nkz, nkx, r1, r2, rw);
      }
 }

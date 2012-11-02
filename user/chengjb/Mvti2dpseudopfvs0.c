@@ -1,4 +1,5 @@
 /* 2-D two-components wavefield modeling using pseudo-pure mode P-wave equation in VTI media.
+   with finite nonzero vs0
 
    Copyright (C) 2012 Tongji University, Shanghai, China 
    Authors: Jiubing Cheng and Wei Kang
@@ -46,7 +47,9 @@
 int main(int argc, char* argv[])
 {
 	int	ix, iz, jx, jz, ixf, izf, ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
-        float   t, f0, t0, dx, dz, dxf, dzf, dt, dt2, div;
+	float   kxmax,kzmax;
+
+        float   f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
         int     A, mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
@@ -56,31 +59,29 @@ int main(int argc, char* argv[])
         int     nstep;            /* every nstep in spatial grids to calculate filters sparsely*/
 
         float   *coeff_1dx, *coeff_1dz, *coeff_2dx, *coeff_2dz; /* finite-difference coefficient */
+        float   *kx, *kz, *kkx, *kkz, *kx2, *kz2, **taper;
 
-        float   **apvx, **apvz, **apvxx, **apvzz;    /* projection deviation operator of P-wave for a location */
+        float **apvx, **apvz, **apvxx, **apvzz;    /* projection deviation operator of P-wave for a location */
 
-        float   ****ex, ****ez;                      /* operator for whole model for P-wave*/
-        float   **exx, **ezz;                        /* operator for constant model for P-wave*/
+        float ****ex, ****ez;                      /* operator for whole model for P-wave*/
+        float **exx, **ezz;                        /* operator for constant model for P-wave*/
 
-        float   **vp0, **vs0, **epsi, **del;         /* velocity model */
-        float   **p1, **p2, **p3, **q1, **q2, **q3, **p3c, **q3c, **sum;  /* wavefield array */
+        float **vp0, **vs0, **epsi, **del;         /* velocity model */
+        float **p1, **p2, **p3, **q1, **q2, **q3, **p3c, **q3c, **sum;  /* wavefield array */
 
         clock_t t1, t2, t3, t4, t5;
         float   timespent; 
         float   fx, fz;
         char    *tapertype;
 
-        float  *kx, *kz, *kkx, *kkz, *kx2, *kz2, **taper;
-	float  dkx,dkz,kxmax,kzmax;
-
-	double vp2, vs2, ep2, de2;
-
         int     isep=1;
         int     ihomo=1;
 
+	double  vp2, vs2, ep2, de2;
+
         sf_init(argc,argv);
 
-        sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8;
+        sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8, Fo9;
        
         t1=clock();
  
@@ -108,10 +109,9 @@ int main(int argc, char* argv[])
         sf_warning("read velocity model parameters");
 
         /* setup I/O files */
-        sf_file Fvp0, Fvs0, Feps, Fdel;
+        sf_file Fvp0, Feps, Fdel;
 
         Fvp0 = sf_input ("in");  /* vp0 using standard input */
-        Fvs0 = sf_input ("vs0");  /* vs0 */
         Feps = sf_input ("epsi");  /* epsi */
         Fdel = sf_input ("del");  /* delta */
 
@@ -151,7 +151,6 @@ int main(int argc, char* argv[])
 
         /* read velocity model */
         sf_floatread(vp0[0],nxz,Fvp0);
-        sf_floatread(vs0[0],nxz,Fvs0);
         sf_floatread(epsi[0],nxz,Feps);
         sf_floatread(del[0],nxz,Fdel);
 
@@ -161,10 +160,25 @@ int main(int argc, char* argv[])
         Fo1 = sf_output("out"); /* pseudo-pure P-wave x-component */
         Fo2 = sf_output("PseudoPurePz"); /* pseudo-pure P-wave z-component */
         Fo3 = sf_output("PseudoPureP"); /* scalar P-wave field using divergence operator */
+        Fo4 = sf_output("Fvs0"); /* scalar P-wave field using divergence operator */
 
         puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, dt*(ns-1));
         puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, dt*(ns-1));
         puthead3(Fo3, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, dt*(ns-1));
+
+        puthead2(Fo4, nz, nx, dz/1000.0, fz/1000.0,  dx/1000.0, fx/1000.0);
+        for(i=0;i<nx;i++)
+        for(j=0;j<nz;j++)
+        {
+           float eta = epsi[i][j]-del[i][j];
+           if(eta<=0.0001)
+              vs0[i][j]=0.1*vp0[i][j];
+           else
+              vs0[i][j]=vp0[i][j]*sqrt(eta);
+           //sf_warning("vp0=%f ep=%f de=%f vs0= %f",vp0[i][j],epsi[i][j],del[i][j],vs0[i][j]);
+        }
+        
+        sf_floatwrite(vs0[0],nxz,Fo4);
 
         /*****************************************************************************
         *  Calculating polarization deviation operator for wave-mode separation
@@ -178,8 +192,8 @@ int main(int argc, char* argv[])
            nzf=nz/nstep+1;
 
            /* operators length for calculation */
-           hnkx=800.0/dx;
-           hnkz=800.0/dz;
+           hnkx=1000.0/dx;
+           hnkz=1000.0/dz;
            nkx=2*hnkx+1;   /* operator length in kx-direction */
            nkz=2*hnkz+1;   /* operator length in kz-direction */
 
@@ -233,16 +247,16 @@ int main(int argc, char* argv[])
 	   apvzz=sf_floatalloc2(nkz, nkx);
 
            /* setup I/O files */
-           Fo4 = sf_output("apvx"); /* P-wave projection deviation x-comp */
-           Fo5 = sf_output("apvz"); /* P-wave projection deviation z-comp */
-           Fo6 = sf_output("apvxx"); /* P-wave projection deviation x-comp in (x,z) domain */
-           Fo7 = sf_output("apvzz"); /* P-wave projection deviation z-comp in (x,z) domain */
+           Fo5 = sf_output("apvx"); /* P-wave projection deviation x-comp */
+           Fo6 = sf_output("apvz"); /* P-wave projection deviation z-comp */
+           Fo7 = sf_output("apvxx"); /* P-wave projection deviation x-comp in (x,z) domain */
+           Fo8 = sf_output("apvzz"); /* P-wave projection deviation z-comp in (x,z) domain */
 
-           puthead1(Fo4, nkz, nkx, (float)dkz, (float)(-kzmax), (float)dkx, (float)(-kxmax));
-           puthead1(Fo5, nkz, nkx, (float)dkz, (float)(-kzmax), (float)dkx, (float)(-kxmax));
+           puthead1(Fo5, nkz, nkx, dkz, -kzmax, dkx, -kxmax);
+           puthead1(Fo6, nkz, nkx, dkz, -kzmax, dkx, -kxmax);
 
-           puthead2(Fo6, nkz, nkx, dz/1000.0, 0.0, dx/1000.0, 0.0);
            puthead2(Fo7, nkz, nkx, dz/1000.0, 0.0, dx/1000.0, 0.0);
+           puthead2(Fo8, nkz, nkx, dz/1000.0, 0.0, dx/1000.0, 0.0);
 
 	   /*************calculate projection deviation grid-point by grid-point **********/
            for(ix=0,ixf=0;ix<nx;ix+=nstep,ixf++)
@@ -285,11 +299,11 @@ int main(int argc, char* argv[])
                 if((ixf==nxf/2&&izf==nzf/2&&ihomo==0)||ihomo==1)
                 {
                    //sf_warning("write-disk projection-deviation operators in kx-kz domain");
-	           sf_floatwrite(apvx[0], nkxz, Fo4);
-	           sf_floatwrite(apvz[0], nkxz, Fo5);
+	           sf_floatwrite(apvx[0], nkxz, Fo5);
+	           sf_floatwrite(apvz[0], nkxz, Fo6);
 
-	           sf_floatwrite(apvxx[0], nkxz, Fo6);
-	           sf_floatwrite(apvzz[0], nkxz, Fo7);
+	           sf_floatwrite(apvxx[0], nkxz, Fo7);
+	           sf_floatwrite(apvzz[0], nkxz, Fo8);
                 }
                 if(ihomo==1) goto loop;
 
@@ -346,9 +360,9 @@ int main(int argc, char* argv[])
 
         if(isep==1)
         {
-             Fo8 = sf_output("PseudoPureSepP"); /* scalar P-wave field using polarization projection oprtator*/
+             Fo9 = sf_output("PseudoPureSepP"); /* scalar P-wave field using polarization projection oprtator*/
 
-             puthead3(Fo8, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, dt*(ns-1));
+             puthead3(Fo9, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, dt*(ns-1));
         }
 
         sf_warning("==================================================");
@@ -404,7 +418,7 @@ int main(int argc, char* argv[])
 			for(j=0;j<nz;j++)
 				sum[i][j]=p3c[i][j]+q3c[i][j];
 
-			sf_floatwrite(sum[0],nx*nz, Fo8);
+			sf_floatwrite(sum[0],nx*nz, Fo9);
           
                       } // isep==1
                 }/* (it+1)%ntstep==0 */
@@ -455,5 +469,6 @@ int main(int argc, char* argv[])
         free(*epsi);
         free(*del);
 
+        sf_warning("ok");
 	exit(0);
 }

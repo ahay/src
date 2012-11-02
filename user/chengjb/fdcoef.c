@@ -1,14 +1,30 @@
 /*************************************************************************
  * calculate finite-difference coefficents for wave propagation
  *
- * Copyright: Tongji University (Jiubing Cheng)
- * 2012.3.2
- *
  * *************************************************************************/
+/*
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng, Wei Kang and Tengfei Wang
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 #include "_fd.h"
-/* #include "_cjb.h" */
-#include "alloc.h"
+#include "_cjb.h"
 
 int fac(int n)
 /*< fac for FD coefficent calculation >*/
@@ -79,11 +95,11 @@ void coeff1d(float* x,float delta)
                         sum+=A[i][j]*x[j];
                 x[i]=(A[i][mm]-sum)/A[i][i];
         }
-      free2float(A);
+      free(*A);
 }
 
 void coeff2d(float* x,float delta)    
-/*< m-th order coefficients for 2nd-order spatial derivatives >*/
+/*< m-th order coefficients for 2nd-order spatial derivatives, e.g. displacement-time equation >*/
 {
         int mm=m+1;       
         int i,j,k=0,s=0;
@@ -137,10 +153,10 @@ void coeff2d(float* x,float delta)
                 x[2*mm-2-i]=x[i];
         }
 
-      free2float(A);
+      free(*A);
 }
 
-void coeff1dmix(float* x,float delta)
+void coeff1dmix(float* x, float delta)
 /*< m-th order coefficients for 1st-order mixed spatial derivatives >*/
 {
         int i;

@@ -7,7 +7,6 @@
  * Copyright: Tongji University (Jiubing Cheng)
  *  2000.1.2
  * *************************************************************************/
-#include <rsf.h>
 #include "_cjb.h"
 
 float Ricker(float t, float f0, float t0, float A) 

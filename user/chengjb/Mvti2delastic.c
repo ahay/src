@@ -1,19 +1,38 @@
-#include <time.h>
+/* 2-D two-components wavefield modeling using original elastic displacement wave equation in VTI media.
+
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+   Authors: Jiubing Cheng and Tengfei Wang
+     
+   This program is free software; you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation; either version 2 of the License, or
+   (at your option) any later version.
+             
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+                   
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 
 #include <rsf.h>
 
 /* prepared head files by myself */
 #include "_lapack.h"
 #include "_fd.h"
-/* #include "_cjb.h" */
+#include "_cjb.h"
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"
 #include "puthead.h"
-#include "alloc.h"
+#include "zero.h"
 #include "fdcoef.h"
-#include "kxkztaper.h"
-#include "kxkz2xz.h"
+#include "kykxkztaper.h"
+#include "kykxkz2yxz.h"
 #include "clipsmthspec.h"
 
 /* wave-mode separation operators */
@@ -27,10 +46,9 @@
 int main(int argc, char* argv[])
 {
 	int	ix, iz, jx, jz, ixf, izf,ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
-	float   t, vp2, vs2, ep2, de2;
 	float   kxmax,kzmax;
 
-        float   f0, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2;
+        float   f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2;
         int     A, mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
@@ -62,6 +80,8 @@ int main(int argc, char* argv[])
         int     ihomo=1;
 
         char    *tapertype;
+
+	double  vp2, vs2, ep2, de2;
 
         sf_init(argc,argv);
 
@@ -143,8 +163,8 @@ int main(int argc, char* argv[])
         Fo1 = sf_output("out"); /* Elastic-wave x-component */
         Fo2 = sf_output("Elasticz"); /* Elastic-wave z-component */
         /* setup I/O files */
-        puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
-        puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
+        puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
+        puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
 
         /*****************************************************************************
          *  Calculating polarization operator for wave-mode separation
@@ -172,20 +192,23 @@ int main(int argc, char* argv[])
            nkx1=2*hnkx1+1;
            nkz1=2*hnkz1+1;
 
+           sf_warning("nx=%d nz=%d nxf=%d nzf=%d", nx,nz,nxf,nzf);
+           sf_warning("dx=%f dz=%f dxf=%f dzf=%f", dx,dz,dxf,dzf);
+
            sf_warning("hnkx=%d hnkz=%d nkx=%d nkz=%d", hnkx, hnkz, nkx, nkz);
            sf_warning("hnkx1=%d hnkz1=%d nkx1=%d nkz1=%d", hnkx1, hnkz1, nkx1, nkz1);
 
-           dkx=2*SF_PI/dx/nkx;
-           dkz=2*SF_PI/dz/nkz;
-	   kxmax=SF_PI/dx;
-	   kzmax=SF_PI/dz;
+           dkx=2*PI/dx/nkx;
+           dkz=2*PI/dz/nkz;
+	   kxmax=PI/dx;
+	   kzmax=PI/dz;
 
-           kx=calloc(sizeof(float), nkx);
-           kz=calloc(sizeof(float), nkz);
-           kkx=calloc(sizeof(float), nkx);
-           kkz=calloc(sizeof(float), nkz);
-           kx2=calloc(sizeof(float), nkx);
-           kz2=calloc(sizeof(float), nkz);
+           kx=sf_floatalloc(nkx);
+           kz=sf_floatalloc(nkx);
+           kkx=sf_floatalloc(nkx);
+           kkz=sf_floatalloc(nkx);
+           kx2=sf_floatalloc(nkx);
+           kz2=sf_floatalloc(nkx);
 
            taper=sf_floatalloc2(nkz, nkx);
 
@@ -254,7 +277,7 @@ int main(int argc, char* argv[])
 	        ep2=1.0+2*epsi[ix][iz];
 	        de2=1.0+2*del[ix][iz];
 
-if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=%f",nxf, ixf,izf,vp2,vs2);
+                if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=%f",nxf, ixf,izf,vp2,vs2);
 
    	        /*************calculate projection operrate with tapering **********/
                 zero2float(apx, nkz, nkx);
@@ -264,7 +287,7 @@ if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=
                
                 /* polvtipsv: P- and SV-wave polarization operators in VTI media  */
                 itaper=1;
-                polvtipsv(apx,apz,apxs,apzs,kx,kz,kkx,kkz,kx2,kz2,taper,hnkx,hnkz,
+                polvtipsv(apx,apz,apxs,apzs,kx,kz,kkx,kkz,kx2,kz2,taper,hnkx,hnkz,dkx,dkz,
                           vp2,vs2,ep2,de2,itaper);
 
                 ikxkz2xz(apx, apxx, hnkx, hnkz, nkx, nkz);
@@ -320,16 +343,16 @@ if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=
            free(kkx);
            free(kkz);
 
-           free2float(taper);
+           free(*taper);
 
-           free2float(apx);
-           free2float(apz);
-           free2float(apxs);
-           free2float(apzs);
-           free2float(apxx);
-           free2float(apzz);
-           free2float(apxxs);
-           free2float(apzzs);
+           free(*apx);
+           free(*apz);
+           free(*apxs);
+           free(*apzs);
+           free(*apxx);
+           free(*apzz);
+           free(*apxxs);
+           free(*apzzs);
         }// isep loop
 	/****************End of Calculating Projection Deviation Operator****************/
         t3=clock();
@@ -341,10 +364,11 @@ if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=
         sf_warning("==================================================");
         sf_warning("==      Porpagation Using Elastic Wave Eq.      ==");
         sf_warning("==================================================");
-	coeff_2dx=calloc(sizeof(float),mm);
-	coeff_2dz=calloc(sizeof(float),mm);
-	coeff_1dx=calloc(sizeof(float),mm);
-	coeff_1dz=calloc(sizeof(float),mm);
+
+        coeff_2dx=sf_floatalloc(mm);
+        coeff_2dz=sf_floatalloc(mm);
+        coeff_1dx=sf_floatalloc(mm);
+        coeff_1dz=sf_floatalloc(mm);
 
         coeff2d(coeff_2dx,dx);
         coeff2d(coeff_2dz,dz);
@@ -373,8 +397,8 @@ if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=
             Fo11 = sf_output("ElasticSepP"); /*  scalar wavefield using P-wave's polarization projection oprtator*/
             Fo12 = sf_output("ElasticSepSV"); /*  scalar wavefield using SV-wave's polarization projection oprtator*/
 
-            puthead3(Fo11, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
-            puthead3(Fo12, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0);
+            puthead3(Fo11, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
+            puthead3(Fo12, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
 
 	   p3c=sf_floatalloc2(nz,nx);
 	   q3c=sf_floatalloc2(nz,nx);
@@ -402,7 +426,7 @@ if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=
 
                 /* fwpvtielastic: forward-propagating using original elastic equation of displacement in VTI media*/
 		fwpvtielastic(dt2, p1, p2, p3, q1, q2, q3, coeff_2dx, coeff_2dz, coeff_1dx, coeff_1dz,
-                              dx, dz, dt, nx, nz, nxpad, nzpad, vp0, vs0, epsi, del);
+                              dx, dz, nx, nz, nxpad, nzpad, vp0, vs0, epsi, del);
 
                /******* output wavefields: component and divergence *******/
 	       if(it==ns-1)
@@ -478,35 +502,39 @@ if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=
 
         if(isep==1)
         {
-          free2float(p3c);
-          free2float(q3c);
-          free2float(sum);
+          free(*p3c);
+          free(*q3c);
+          free(*sum);
 
           if(ihomo==1)
           {
-              free2float(exx);
-              free2float(ezz);
-              free2float(exxs);
-              free2float(ezzs);
+              free(*exx);
+              free(*ezz);
+              free(*exxs);
+              free(*ezzs);
           }else{
-              free4float(ex);
-              free4float(ez);
-              free4float(exs);
-              free4float(ezs);
+              free(***ex);
+              free(***ez);
+              free(***exs);
+              free(***ezs);
           }
         }
+        free(coeff_2dx);
+        free(coeff_2dz);
+        free(coeff_1dx);
+        free(coeff_1dz);
 
-        free2float(p1);
-        free2float(p2);
-        free2float(p3);
-        free2float(q1);
-        free2float(q2);
-        free2float(q3);
+        free(*p1);
+        free(*p2);
+        free(*p3);
+        free(*q1);
+        free(*q2);
+        free(*q3);
 
-        free2float(vp0);
-        free2float(vs0);
-        free2float(epsi);
-        free2float(del);
+        free(*vp0);
+        free(*vs0);
+        free(*epsi);
+        free(*del);
 
 	exit(0);
 }
