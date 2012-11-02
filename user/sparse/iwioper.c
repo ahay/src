@@ -132,7 +132,7 @@ void iwiadd(double omega,
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {    
 		dm[j*ss[1]+i] -= omega*omega
-		    *(prec==NULL? 1.: prec[j][i])*creal(
+		    *(prec==NULL? 1.: prec[j][i])*crealf(
 			conjf(srce[j][i])*adjs[j][i]+
 			recv[j][i]*conjf(adjr[j][i]));
 	    }
@@ -143,7 +143,7 @@ void iwiadd(double omega,
 		for (i=0; i < n1; i++) {
 		    if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
 			di[(ih+nh)*ss[2]+j*ss[1]+i] -= omega*omega
-			    *(wght==NULL? 1.: wght[ih+nh][j][i])*creal(
+			    *(wght==NULL? 1.: wght[ih+nh][j][i])*crealf(
 				recv[j+ih][i]*conj(adjr[j-ih][i])+
 				conjf(srce[j-ih][i])*adjs[j+ih][i]);
 		    }

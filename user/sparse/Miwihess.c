@@ -25,34 +25,19 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb;
-    int n1, n2, nh, ns, nw;
-    int ih, is, iw, **pp, i, ip;
-    int zz, xx;
+    int n1, n2, ns, nw;
+    int is, iw, **pp, i, ip;
     double omega;
-    float dw, ow, ***wght;
-    float *ahess, ***ahesss, ***ahessr;
+    float dw, ow;
+    float *ahess, **ahesss, **ahessr;
     sf_complex *f, ***swave, ***rwave;
-    sf_complex ***stemp, ***rtemp;
+    sf_complex **stemp, **rtemp;
     sf_file in, out, list, us, ur, wvlt;
-    sf_file weight;
-    int uts, mts, its;
-    sf_timer timer;
+    int uts, mts;
 
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");
-
-    if (!sf_getbool("verb",&verb)) verb=false;
-    /* verbosity flag */
-
-    if (verb)
-	timer = sf_timer_init();
-    else
-	timer = NULL;
-
-    if (!sf_getint("nh",&nh)) nh=0;
-    /* horizontal space-lag */
 
     if (!sf_getint("uts",&uts)) uts=0;
     /* number of OMP threads */
@@ -82,19 +67,8 @@ int main(int argc, char* argv[])
     /* read receiver wavefield */	
     if (NULL == sf_getstring("ur"))
 	sf_error("Need receiver wavefield ur=");
-    ur = sf_input("ur");
+    ur = sf_input("ur");    
     
-    /* read image weight */
-    if (NULL == sf_getstring("weight")) {
-	weight = NULL;
-	wght = NULL;
-    } else {
-	weight = sf_input("weight");
-	wght = sf_floatalloc3(n1,n2,2*nh+1);
-	sf_floatread(wght[0][0],n1*n2*(2*nh+1),weight);
-	sf_fileclose(weight);
-    }
-
     /* read wavelet */
     if (NULL == sf_getstring("wvlt"))
 	sf_error("Need wvlt=");
@@ -116,88 +90,68 @@ int main(int argc, char* argv[])
     /* allocate memory */
     swave = sf_complexalloc3(n1,n2,ns);
     rwave = sf_complexalloc3(n1,n2,ns);
-    stemp = sf_complexalloc3(2*nh+1,ns,ns);
-    rtemp = sf_complexalloc3(2*nh+1,ns,ns);
+    stemp = sf_complexalloc2(ns,ns);
+    rtemp = sf_complexalloc2(ns,ns);
 
-    ahess = sf_floatalloc(n1*n2);
-    ahesss = sf_floatalloc3(2*nh+1,ns,n1*n2); /* NOTE: we cannot afford this! */
-    ahessr = sf_floatalloc3(2*nh+1,ns,n1*n2); /* NOTE: we cannot afford this! */
+    ahesss = sf_floatalloc2(n1*n2,ns);
+    ahessr = sf_floatalloc2(n1*n2,ns);
 
     /* loop over frequency */
     for (iw=0; iw < nw; iw++) {
-	omega = (double) 2.*SF_PI*(ow+iw*dw);
-
-	if (verb) {
-	    sf_warning("Frequency %d of %d.",iw+1,nw);
-	    sf_timer_start(timer);
-	}
+	omega = (double) 2.*SF_PI*(ow+iw*dw);	
 
 	/* read wavefields */
 	sf_complexread(swave[0][0],n1*n2*ns,us);
 	sf_complexread(rwave[0][0],n1*n2*ns,ur);
 
 #ifdef _OPENMP
-#pragma omp parallel num_threads(uts) private(its,is,ip,ih,zz,xx,i)
+#pragma omp parallel num_threads(uts) private(is,ip,i)
 #endif
 	{
-#ifdef _OPENMP
-	    its = omp_get_thread_num();
-#else
-	    its = 0;
-#endif
-
-	    /* temparary wavefields */
-	    /* NOTE: negletible cost */
 #ifdef _OPENMP
 #pragma omp for
 #endif
 	    for (is=0; is < ns; is++) {
 		for (ip=0; ip < ns; ip++) {
-		    for (ih=-nh; ih < nh+1; ih++) {
-			zz = pp[ip][0];
-
-			/* source */
-			xx = pp[ip][1]+ih;
-			if (xx+ih >= 0 && xx+ih < n2)
-			    stemp[is][ip][ih+nh] = -omega*omega/conjf(f[iw])
-				*(wght==NULL? 1.: wght[ih+nh][xx][zz])*rwave[is][xx+ih][zz];
-			
-			/* receiver */
-			xx = pp[ip][1]-ih;
-			if (xx-ih >= 0 && xx-ih < n2)
-			    rtemp[is][ip][ih+nh] = -omega*omega/conjf(f[iw])
-				*(wght==NULL? 1.: wght[ih+nh][xx][zz])*conjf(swave[is][xx-ih][zz]);
-		    }
+		    /* temps */
+		    stemp[is][ip] = -omega*omega/conjf(f[iw])
+			*rwave[is][pp[ip][1]][pp[ip][0]];
+		    
+		    /* tempr */
+		    rtemp[is][ip] = -omega*omega/conjf(f[iw])
+			*conjf(swave[is][pp[ip][1]][pp[ip][0]]);
 		}
 	    }
 
 	    /* loop over model */
-	    /* NOTE: unacceptable cost */
 #ifdef _OPENMP
 #pragma omp for
 #endif
 	    for (i=0; i < n1*n2; i++) {
-		for (ih=-nh; ih < nh+1; ih++) {
-		    for (is=0; is < ns; is++) {
-			for (ip=0; ip < ns; ip++) {
-			    ahesss[i][ip][ih+nh] += 
-				crealf(conjf(swave[ip][0][i]*swave[is][0][i])*stemp[is][ip][ih+nh]);
-			    ahessr[i][ip][ih+nh] += 
-				crealf(conjf(swave[ip][0][i])*rwave[is][0][i]*rtemp[is][ip][ih+nh]);
-			}
+		for (is=0; is < ns; is++) {
+		    for (ip=0; ip < ns; ip++) {
+			ahesss[ip][i] += 
+			    crealf(conjf(swave[ip][0][i]*swave[is][0][i])*stemp[is][ip]);
+			ahessr[ip][i] += 
+			    crealf(conjf(swave[ip][0][i])*rwave[is][0][i]*rtemp[is][ip]);
 		    }
 		}
 	    }
-	}
+	}	
+    }
 
-	if (verb) {
-	    sf_timer_stop (timer);
-	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+    /* assemble */
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(uts) private(i,ip)
+#endif
+    for (i=0; i < n1*n2; i++) {
+	for (ip=0; ip < ns; ip++) {
+	    ahess[i] += powf(ahesss[ip][i]+ahessr[ip][i],2.);
 	}
     }
 
-    /* assemble approximate Hessian */
-    /* NOTE: to be finished */
+    /* output hessian */
+    sf_floatwrite(ahess,n1*n2,out);
 
     exit(0);
 }

@@ -312,7 +312,7 @@ int main(int argc, char* argv[])
 		for (j=0; j < n2; j++) {
 		    for (i=0; i < n1; i++) {
 			if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
-			    image[its][ih+nh][j][i] += creal(conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
+			    image[its][ih+nh][j][i] += crealf(conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
 			}
 		    }
 		}
