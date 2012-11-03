@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0., minmax[2];
     float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
-    bool transp, yreverse, xreverse, allpos, polarity, verb;
+    bool transp, yreverse, xreverse, allpos, polarity, symcp, verb;
     bool eclip=false, egpow=false, barreverse, mean=false;
     bool scalebar, nomin=true, nomax=true, framenum, sfbyte, sfbar, charin;
     char *gainpanel, *color, *barfile;
@@ -168,6 +168,8 @@ int main(int argc, char* argv[])
 	/* value mapped to the center of the color table */
 	if (!sf_getbool("polarity",&polarity)) polarity=false;
 	/* if y, reverse polarity (white is high by default) */
+	if (!sf_getbool("symcp",&symcp)) symcp=false;
+	/* if y, assume symmetric color palette of 255 colors */
 	if (!sf_getbool("verb",&verb)) verb=false;
 	/* verbosity flag */
     } /* if !charin */
@@ -290,16 +292,29 @@ int main(int argc, char* argv[])
 		/* initialize the conversion table */
 		if(!allpos) { /* negative and positive values */
 		    for (it=1; it<=TSIZE/2; it++) {
-			tbl[TSIZE-it] = (gpow != 1.)?
-			    252*(pow(((TSIZE-2.0*it)/TSIZE),gpow)+1.)/2.+3.:
-			    252*(    ((TSIZE-2.0*it)/TSIZE)      +1.)/2.+3.;
-			tbl[it] = 255 - tbl[TSIZE-it] + 2.0;
+		        if (symcp) {
+			    tbl[TSIZE-it] = (gpow != 1.)?
+			        254*(pow(((TSIZE-2.0*it)/TSIZE),gpow)+1.)/2.+1.:
+			        254*(    ((TSIZE-2.0*it)/TSIZE)      +1.)/2.+1.;
+			    tbl[it] = 255 - tbl[TSIZE-it] + 1.0;
+			} else {
+			    tbl[TSIZE-it] = (gpow != 1.)?
+			        252*(pow(((TSIZE-2.0*it)/TSIZE),gpow)+1.)/2.+3.:
+			        252*(    ((TSIZE-2.0*it)/TSIZE)      +1.)/2.+3.;
+			    tbl[it] = 255 - tbl[TSIZE-it] + 2.0;
+			}
 		    }
 		    bias = TSIZE/2.;
 		    gain = TSIZE/(2.*clip);
 		} else { /* all positive */
-		    for (it=1; it < TSIZE ; it++) {
-			tbl[it] = 256*((it-1.0)/TSIZE);
+		    if (symcp) {
+			for (it=1; it < TSIZE ; it++) {
+			    tbl[it] = 255*((it-1.0)/TSIZE) + 1.0;
+			}
+		    } else {
+			for (it=1; it < TSIZE ; it++) {
+			    tbl[it] = 256*((it-1.0)/TSIZE);
+			}
 		    }
 		    bias = 0.;
 		    gain = TSIZE/clip;		
