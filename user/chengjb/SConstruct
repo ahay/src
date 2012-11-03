@@ -66,7 +66,7 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
     if blas and fftw:
-        prog = env.Program(prog,map(lambda x: x + '.o',sources))
+        prog = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
         prog = env.RSF_Place('sf'+prog,
                              None,var='LAPACK',package='lapack')
