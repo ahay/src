@@ -33,6 +33,10 @@ except: # local version
     root = None
     SConscript('../lexing/SConstruct')
 
+env.Prepend(CPPPATH=['../../include'],
+	    LIBPATH=['../../lib'],
+	    LIBS=[env.get('DYNLIB','')+'rsf'])
+
 lapack = env.get('LAPACK')
 blas   = env.get('BLAS') and lapack
 
