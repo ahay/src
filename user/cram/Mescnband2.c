@@ -26,7 +26,7 @@ int main (int argc, char* argv[]) {
     float dz, oz, dx, ox, mdist;
     sf_file spdom, vspline = NULL, out;
 
-    bool verb, cmix;
+    bool verb, cmix, atraced, mtraced;
     sf_esc_slowness2 esc_slow;
     sf_esc_tracer2 esc_tracer;
     sf_esc_nbout2 esc_out;
@@ -75,6 +75,12 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("morder", &morder)) morder = ESC2_MORDER;
     /* Maximum order in F-D stencil */
 
+    if (!sf_getbool ("atraced", &atraced)) atraced = false;
+    /* true - output map of all traced points */
+
+    if (!sf_getbool ("mtraced", &mtraced)) mtraced = false;
+    /* true - output map of points traced because of mdist criterion */
+
     if (!sf_getbool ("cmix", &cmix)) cmix = true;
     /* true - check for color mixing */
 
@@ -85,7 +91,7 @@ int main (int argc, char* argv[]) {
     esc_out = sf_esc_nbout2_init (nz, nx, na, 
                                   oz, ox, sf_esc_nbgrid2_get_oa (na),
                                   dz, dx, sf_esc_nbgrid2_get_da (na),
-                                  spdom, out);
+                                  atraced || mtraced, spdom, out);
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
     /* Spline coefficients for velocity model */
@@ -98,7 +104,7 @@ int main (int argc, char* argv[]) {
     esc_tracer = sf_esc_tracer2_init (esc_slow, NULL, 0.0, NULL);
 
     /* Narrow band grid */
-    esc_grid = sf_esc_nbgrid2_init (nz, nx, na, oz, ox, dz, dx,
+    esc_grid = sf_esc_nbgrid2_init (nz, nx, na, oz, ox, dz, dx, atraced, mtraced,
                                     esc_slow, esc_tracer, esc_out);
     sf_esc_nbgrid2_set_verb (esc_grid, verb);
     sf_esc_nbgrid2_set_cmix (esc_grid, cmix);

@@ -22,12 +22,12 @@
 #include "esc_nbgrid2.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, na;
+    int nz, nx, na, nc;
     int iz, ix;
     off_t off, off2;
     float dz, oz, dx, ox;
     float *buf1, *buf2;
-    bool verb;
+    bool verb, otraced;
     sf_file in, out;
 
     sf_init (argc, argv);
@@ -37,8 +37,11 @@ int main (int argc, char* argv[]) {
     out = sf_output ("out");
     /* Escape values */
 
+    if (!sf_histbool (in, "otraced", &otraced)) otraced = false;
+    nc = otraced ? ESC2_NUM + 1 : ESC2_NUM;
+
     if (!sf_histint (in, "n1", &na)) sf_error ("No n1= in input");
-    if (na != ESC2_NUM) sf_error ("Need n1=%d in input", ESC2_NUM);
+    if (na != nc) sf_error ("Need n1=%d in input", nc);
     if (!sf_histint (in, "n5", &na)) sf_error ("No n5= in input");
     if (na != 2) sf_error ("Need n5=2 in input");
 
@@ -55,7 +58,7 @@ int main (int argc, char* argv[]) {
     /* verbosity flag */
 
     /* Set up output */
-    sf_putint (out, "n1", ESC2_NUM);
+    sf_putint (out, "n1", nc);
     sf_putfloat (out, "o1", 0.0);
     sf_putfloat (out, "d1", 1.0);
     sf_putstring (out, "label1", "Escape variable");
@@ -71,8 +74,8 @@ int main (int argc, char* argv[]) {
     sf_putstring (out, "label1", "");
     sf_putstring (out, "unit1", "");
 
-    buf1 = sf_floatalloc (na*ESC2_NUM);
-    buf2 = sf_floatalloc (na*ESC2_NUM);
+    buf1 = sf_floatalloc (na*nc);
+    buf2 = sf_floatalloc (na*nc);
 
     /* Starting offset in data */
     off = sf_tell (in);
@@ -86,19 +89,19 @@ int main (int argc, char* argv[]) {
             /* Read downgoing range - [-PI/2; PI/2) */
             sf_seek (in, off + ((off_t)na*(off_t)ix +
                                 (off_t)na*(off_t)nx*(off_t)iz)*
-                               (off_t)(ESC2_NUM*sizeof (float)), SEEK_SET);
-            sf_floatread (buf1, (size_t)ESC2_NUM*(size_t)na, in);
+                                (off_t)(nc*sizeof (float)), SEEK_SET);
+            sf_floatread (buf1, (size_t)nc*(size_t)na, in);
             /* Read upgoing range - [PI/2; -PI/2) */
             sf_seek (in, off + (off2 + (off_t)na*(off_t)ix +
                                        (off_t)na*(off_t)nx*(off_t)(nz - iz - 1))*
-                               (off_t)(ESC2_NUM*sizeof (float)), SEEK_SET);
-            sf_floatread (buf2, (size_t)ESC2_NUM*(size_t)na, in);
+                                (off_t)(nc*sizeof (float)), SEEK_SET);
+            sf_floatread (buf2, (size_t)nc*(size_t)na, in);
             /* Combine output */
-            sf_floatwrite (&buf2[ESC2_NUM*na/2], (size_t)ESC2_NUM*(size_t)na/2,
+            sf_floatwrite (&buf2[nc*na/2], (size_t)nc*(size_t)na/2,
                            out); /* [-PI; -PI/2) */
-            sf_floatwrite (buf1, (size_t)ESC2_NUM*(size_t)na,
+            sf_floatwrite (buf1, (size_t)nc*(size_t)na,
                            out); /* [-PI/2; PI/2) */
-            sf_floatwrite (&buf2[0], (size_t)ESC2_NUM*(size_t)na/2,
+            sf_floatwrite (&buf2[0], (size_t)nc*(size_t)na/2,
                            out); /* [PI/2; PI) */
         }
     }

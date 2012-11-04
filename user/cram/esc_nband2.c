@@ -76,7 +76,7 @@ sf_esc_nband2 sf_esc_nband2_init (int nz, int nx, int na)
     esc_nband->nc = na/2*nx*(ESC2_MORDER + 1);
 
     esc_nband->nb = sf_ucharalloc3 (na/2*sf_esc_point2_sizeof (), nx, ESC2_MORDER + 1);
-    memset (esc_nband->nb[0][0], 0, esc_nband->nc*sf_esc_point2_sizeof ());
+    memset (esc_nband->nb[0][0], 0, (size_t)esc_nband->nc*(size_t)sf_esc_point2_sizeof ());
     /* Contents of nb[...] will be moved later as the narrow band progress,
        nb2 preserves the original pointer for a proper free () in the end */
     esc_nband->nb2 = esc_nband->nb[0];
@@ -209,7 +209,8 @@ bool sf_esc_nband2_next_generation (sf_esc_nband2 esc_nband)
     }
     esc_nband->nb[0] = tmp;
     /* Reset points in the child layer */
-    memset (&esc_nband->nb[0][0][0], 0, esc_nband->nc/(ESC2_MORDER + 1)*sf_esc_point2_sizeof ());
+    memset (&esc_nband->nb[0][0][0], 0, (size_t)esc_nband->nc/(size_t)(ESC2_MORDER + 1)*
+                                        (size_t)sf_esc_point2_sizeof ());
 
     return true;
 }

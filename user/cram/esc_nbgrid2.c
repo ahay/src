@@ -45,7 +45,7 @@ struct EscNBGrid2 {
     float                dz, dx, da;
     float                d[ESC2_DIMS], mdist;
     size_t               nct, ndt, nlt, nbt, pgt, bct;
-    bool                 verb, cmix;
+    bool                 verb, cmix, atraced, mtraced;
     sf_timer             ttime, rtime;
     sf_esc_nband2        nband;
     sf_esc_nbchild2_iter nbciter;
@@ -69,6 +69,7 @@ float sf_esc_nbgrid2_get_da (int na)
 
 sf_esc_nbgrid2 sf_esc_nbgrid2_init (int nz, int nx, int na,
                                     float oz, float ox, float dz, float dx,
+                                    bool atraced, bool mtraced,
                                     sf_esc_slowness2 esc_slow, sf_esc_tracer2 esc_tracer,
                                     sf_esc_nbout2 esc_out)
 /*< Initialize object >*/
@@ -105,6 +106,9 @@ sf_esc_nbgrid2 sf_esc_nbgrid2_init (int nz, int nx, int na,
     esc_nbgrid->bct = 0; /* Number of ray traced for the boundary conditions */
 
     esc_nbgrid->verb = false;
+
+    esc_nbgrid->atraced = atraced;
+    esc_nbgrid->mtraced = mtraced;
 
     esc_nbgrid->ttime = sf_timer_init (); /* Total time */
     esc_nbgrid->rtime = sf_timer_init (); /* Ray tracing time */
@@ -271,7 +275,7 @@ static bool sf_esc_nbgrid2_same_group_phase (sf_esc_nbgrid2 esc_nbgrid, bool *ha
 static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, int ix, int ia,
                                            sf_esc_point2 child, sf_esc_point2 parents[ESC2_DIMS][ESC2_MORDER]) {
     int j, k, l, m, nb = esc_nbgrid->na/4;
-    bool trace = false;
+    bool trace = false, trmdist = false;
     bool hasp[ESC2_DIMS] = { false, false, false };
     EscDirection2 pdir, dirs[ESC2_DIMS];
     EscColor2 col1, col2;
@@ -350,10 +354,11 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
                                     esc_nbgrid->nct++;
                                     break;
                                 }
-                                /* Exceding maximum allowed distance between parents */
+                                /* Exceeding maximum allowed distance between parents */
                                 if (ESC2_TOP == col1 && fabs (x1 - x2) > esc_nbgrid->mdist) {
                                     trace = true;
                                     esc_nbgrid->ndt++;
+                                    trmdist = true;
                                     break;
                                 }
                             }
@@ -372,6 +377,8 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
                                 esc_nbgrid->ox + ix*esc_nbgrid->dx,
                                 esc_nbgrid->oa + ia*esc_nbgrid->da,
                                 0.0, 0.0, child);
+        if ((esc_nbgrid->mtraced && trmdist) || esc_nbgrid->atraced)
+            sf_esc_point2_set_traced (child, true);
         if (esc_nbgrid->verb)
             sf_timer_stop (esc_nbgrid->rtime);
     } else { /* F-D */

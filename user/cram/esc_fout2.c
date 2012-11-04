@@ -58,7 +58,8 @@ sf_esc_fout2 sf_esc_fout2_init (int nz, int nx, int na,
     esc_fout->da = da;
    
     esc_fout->t = sf_ucharalloc3 (nz*sf_esc_point2_sizeof (), nx, na);
-    memset (esc_fout->t[0][0], 0, nz*nx*na*sf_esc_point2_sizeof ());
+    memset (esc_fout->t[0][0], 0, (size_t)nz*(size_t)nx*(size_t)na*
+                                  (size_t)sf_esc_point2_sizeof ());
 
     esc_fout->out = out;
 

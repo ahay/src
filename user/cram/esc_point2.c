@@ -58,6 +58,7 @@ struct EscPoint2 {
     uint32_t nc:3; /* Number of connections */
     uint32_t f:6; /* Connections in all directions */
     uint32_t col:4; /* Color (origin) */
+    uint32_t trc:4; /* Is traced */
 };
 /* concrete data type */
 
@@ -79,6 +80,7 @@ void sf_esc_point2_reset (sf_esc_point2 esc_point)
     esc_point->nc = 0;
     esc_point->f = 0;
     esc_point->col = 0;
+    esc_point->trc = 0;
 }
 
 sf_esc_point2 sf_esc_point2_init (void)
@@ -96,7 +98,6 @@ void sf_esc_point2_close (sf_esc_point2 esc_point)
 {
     free (esc_point);
 }
-
 
 float sf_esc_point2_get_esc_var (sf_esc_point2 esc_point, EscType2 i)
 /*< Get escape length >*/
@@ -180,5 +181,17 @@ bool sf_esc_point2_has_parent_link (sf_esc_point2 esc_point, EscAxisDim2 dim,
     *dir = (esc_point->f & (1 << (2*dim + 1))) ? ESC2_FORW
                                                : ESC2_BACK;
     return true;
+}
+
+bool sf_esc_point2_set_traced (sf_esc_point2 esc_point, bool traced)
+/*< Set ray traced flag >*/
+{
+    esc_point->trc = traced;
+}
+
+bool sf_esc_point2_is_traced (sf_esc_point2 esc_point)
+/*< Return true, if point is ray traced >*/
+{
+    return (1 == esc_point->trc);
 }
 
