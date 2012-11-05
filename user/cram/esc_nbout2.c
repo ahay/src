@@ -122,7 +122,7 @@ void sf_esc_nbout2_write_plane (sf_esc_nbout2 esc_nbout, sf_esc_point2 plane, un
             nc++;
         }
         sf_floatwrite (esc_nbout->buf[0], esc_nbout->otraced ? 
-                                          (size_t)(esc_nbout->na*ESC2_NUM + 1) :
+                                          (size_t)(esc_nbout->na*(ESC2_NUM + 1)) :
                                           (size_t)(esc_nbout->na*ESC2_NUM),
                        esc_nbout->out);
     }

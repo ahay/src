@@ -43,8 +43,9 @@ struct EscNBGrid2 {
     int                  nz, nx, na, jz, jx, morder;
     float                oz, ox, oa;
     float                dz, dx, da;
+    float                xmax, zmax;
     float                d[ESC2_DIMS], mdist;
-    size_t               nct, ndt, nlt, nbt, pgt, bct;
+    size_t               nct, ndt, fdt, nlt, nbt, pgt, bct;
     bool                 verb, cmix, atraced, mtraced;
     sf_timer             ttime, rtime;
     sf_esc_nband2        nband;
@@ -94,12 +95,16 @@ sf_esc_nbgrid2 sf_esc_nbgrid2_init (int nz, int nx, int na,
     esc_nbgrid->ox = ox;
     esc_nbgrid->oa = sf_esc_nbgrid2_get_oa (na);
 
+    esc_nbgrid->zmax = oz + (nz - 1)*dz;
+    esc_nbgrid->xmax = ox + (nx - 1)*dx;
+
     esc_nbgrid->mdist = SF_HUGE;
     esc_nbgrid->morder = ESC2_MORDER;
     esc_nbgrid->cmix = true;
 
     esc_nbgrid->nct = 0; /* Number of ray traced because of color mixing */
     esc_nbgrid->ndt = 0; /* Number of ray traced because of maximum allowed exit distance spread */
+    esc_nbgrid->fdt = 0; /* Number of ray traced because of F-D overshooting */
     esc_nbgrid->nlt = 0; /* Number of ray traced because of deadlocks */
     esc_nbgrid->pgt = 0; /* Number of ray traced because of phase/group velocity deviation */
     esc_nbgrid->nbt = 0; /* Number of ray traced for the narrow band edges */
@@ -279,7 +284,7 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
     bool hasp[ESC2_DIMS] = { false, false, false };
     EscDirection2 pdir, dirs[ESC2_DIMS];
     EscColor2 col1, col2;
-    float x1, x2;
+    float x1, x2, x, z;
 
     /* Boundary condition? */
     if (sf_esc_nbgrid2_is_bc (esc_nbgrid, iz, ix, ia)) {
@@ -369,6 +374,19 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
         }
     }
 
+    if (!trace) { /* F-D */
+        sf_esc_nbgrid2_compute_point (esc_nbgrid, iz, ix, ia, child,
+                                      parents);
+        /* Check for F-D overshooting */
+        z =  sf_esc_point2_get_esc_var (child, ESC2_Z);
+        x =  sf_esc_point2_get_esc_var (child, ESC2_X);
+        if (z < esc_nbgrid->oz || z > esc_nbgrid->zmax ||
+            x < esc_nbgrid->ox || x > esc_nbgrid->xmax) {
+            esc_nbgrid->fdt++;
+            trace = true;
+        }
+    }
+
     if (trace) { /* Do explicit ray tracing */
         if (esc_nbgrid->verb)
             sf_timer_start (esc_nbgrid->rtime);
@@ -381,9 +399,6 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
             sf_esc_point2_set_traced (child, true);
         if (esc_nbgrid->verb)
             sf_timer_stop (esc_nbgrid->rtime);
-    } else { /* F-D */
-        sf_esc_nbgrid2_compute_point (esc_nbgrid, iz, ix, ia, child,
-                                      parents);
     }
 
     sf_esc_point2_become_parent (child);
@@ -527,6 +542,8 @@ void sf_esc_nbgrid2_compute (sf_esc_nbgrid2 esc_nbgrid)
                     esc_nbgrid->nct, esc_nbgrid->nct/(float)nr*100.0);
         sf_warning ("Total: %lu points exceeded maximum exit spread (%g %%)",
                     esc_nbgrid->ndt, esc_nbgrid->ndt/(float)nr*100.0);
+        sf_warning ("Total: %lu points had F-D overshooting (%g %%)",
+                    esc_nbgrid->fdt, esc_nbgrid->fdt/(float)nr*100.0);
         sf_warning ("Total: %lu points had deadlocks (%g %%)",
                     esc_nbgrid->nlt, esc_nbgrid->nlt/(float)nr*100.0);
         sf_warning ("Total: %lu points used for boundary conditions (%g %%)",

@@ -42,6 +42,7 @@ struct EscFGrid2 {
     int                  nz, nx, na, morder, niter;
     float                oz, ox, oa;
     float                dz, dx, da;
+    float                zmax, xmax;
     float                d[ESC2_DIMS], mdist, thresh;
     unsigned long        nct, ndt, bct;
     bool                 verb, cmix, tracebc;
@@ -72,6 +73,9 @@ sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
     esc_fgrid->d[ESC2_AXIS_X] = dx;
     esc_fgrid->da = sf_esc_nbgrid2_get_da (na);
     esc_fgrid->d[ESC2_AXIS_A] = esc_fgrid->da;
+
+    esc_fgrid->zmax = oz + (nz - 1)*dz;
+    esc_fgrid->xmax = ox + (nx - 1)*dx;
 
     esc_fgrid->oz = oz;
     esc_fgrid->ox = ox;
@@ -187,7 +191,7 @@ static void sf_esc_fgrid2_compute_point (sf_esc_fgrid2 esc_fgrid, int iz, int ix
                                          float fz, float fx, float fa, float s, sf_esc_point2 point,
                                          sf_esc_point2 neighbors[ESC2_DIMS][ESC2_MORDER]) {
     int j, k, l;
-    float rhs, e[ESC2_DIMS], n[ESC2_DIMS], f[ESC2_DIMS][ESC2_MORDER];
+    float val, rhs, e[ESC2_DIMS], n[ESC2_DIMS], f[ESC2_DIMS][ESC2_MORDER];
     EscColor2 col = 0;
 
     /* Coefficients of the escape equations */
@@ -221,8 +225,20 @@ static void sf_esc_fgrid2_compute_point (sf_esc_fgrid2 esc_fgrid, int iz, int ix
         else
             rhs = 0.0;
 
-        sf_esc_point2_set_esc_var (point, k,
-                                   sf_esc_fgrid2_gs_update (esc_fgrid, n, e, f, rhs));
+        val = sf_esc_fgrid2_gs_update (esc_fgrid, n, e, f, rhs);
+        /* Check limits */
+        if (ESC2_Z == k) {
+            if (val < esc_fgrid->oz)
+                val = esc_fgrid->oz;
+            if (val > esc_fgrid->zmax)
+                val = esc_fgrid->zmax;
+        } else if (ESC2_X == k) {
+            if (val < esc_fgrid->ox)
+                val = esc_fgrid->ox;
+            if (val > esc_fgrid->xmax)
+                val = esc_fgrid->xmax;
+        }
+        sf_esc_point2_set_esc_var (point, k, val);
     }
 
     for (j = 0; j < ESC2_DIMS; j++) {
