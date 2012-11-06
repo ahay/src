@@ -35,16 +35,18 @@ int ra_create(RARR *arr, int ndim, IPNT gs, IPNT ge)
 {
     int err;
     
+
     err = ra_declare(arr, ndim, gs, ge);
     if ( err ) return err;
     
     err = ra_allocate(arr);
+
     if ( err )
     {    
+      fprintf(stderr,"error return err=%d\n",err);
         ra_setnull(arr);
         return err;
     }
-
     return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -129,7 +131,10 @@ int ra_allocate(RARR *arr)
 {
     int d;
     long size;                          /* size to allocate */
-    
+#if RARR_MAX_NDIM > 1
+    long psize;                         /* size of slice    */
+#endif
+
     if ( arr->_s0 != NULL ) return E_ALREADYALLOC;
     
     size = 1L;                          /* allocation size */
@@ -143,20 +148,85 @@ int ra_allocate(RARR *arr)
     
     arr->_s = arr->_s0;
 
+    // added 03.11.12 WWS: multidim array access
+
+#if RARR_MAX_NDIM > 1
+    psize = 1L;
+    for (d=1; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
+    arr->_s02 = (ireal **)usermalloc_(psize * sizeof(ireal*));
+    arr->_s2_alloc = (ireal **)usermalloc_(psize * sizeof(ireal*));
+    arr->_s2 = arr->_s2_alloc;
+    arr->_s02[0] = arr->_s0;
+    arr->_s2[0] = arr->_s0;
+    for (d=1;d<psize; ++d) {
+      arr->_s02[d]=arr->_s02[d-1]+arr->_dims[0].n0;
+      arr->_s2[d]=arr->_s2[d-1]+arr->_dims[0].n0;
+    }
+#endif
+#if RARR_MAX_NDIM > 2
+    psize = 1L;
+    for (d=2; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
+    arr->_s03 = (ireal ***)usermalloc_(psize * sizeof(ireal**));
+    arr->_s3_alloc = (ireal ***)usermalloc_(psize * sizeof(ireal**));
+    arr->_s3 = arr->_s3_alloc;
+    arr->_s03[0] = arr->_s02;
+    arr->_s3[0] = arr->_s02;
+    for (d=1;d<psize; ++d) {
+      arr->_s03[d]=arr->_s03[d-1]+arr->_dims[1].n0;
+      arr->_s3[d]=arr->_s3[d-1]+arr->_dims[1].n0;
+    }
+#endif
+#if RARR_MAX_NDIM > 3
+    psize = 1L;
+    for (d=3; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
+    arr->_s04 = (ireal ****)usermalloc_(psize * sizeof(ireal***));
+    arr->_s4 = (ireal ****)usermalloc_(psize * sizeof(ireal***));
+    arr->_s04[0] = arr->_s03;
+    arr->_s4[0] = arr->_s03;
+    for (d=1;d<arr->_dims[4].n0; ++d) {
+      arr->_s04[d]=arr->_s04[d-1]+arr->_dims[2].n0;
+      arr->_s4[d]=arr->_s4[d-1]+arr->_dims[2].n0;
+    }
+#endif
+#if RARR_MAX_NDIM > 4
+    psize = 1L;
+    for (d=4; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
+    arr->_s05 = (ireal *****)usermalloc_(psize * sizeof(ireal****));
+    arr->_s5 = (ireal *****)usermalloc_(psize * sizeof(ireal****));
+    arr->_s05[0] = arr->_s04;
+    arr->_s5[0] = arr->_s04;
+    for (d=1;d<arr->_dims[5].n0; ++d) {
+      arr->_s05[d]=arr->_s05[d-1]+arr->_dims[3].n0;
+      arr->_s5[d]=arr->_s5[d-1]+arr->_dims[3].n0;
+    }
+#endif
+
     return 0;
 }
 /*----------------------------------------------------------------------------*/
 
 int ra_destroy(RARR *arr)
 {
-  /*
-  fprintf(stderr,"ra_destroy: arr->_s0 = %d\n",arr->_s0);
-  */
   userfree_(arr->_s0);
+#if RARR_MAX_NDIM > 1
+  userfree_(arr->_s02);
+  userfree_(arr->_s2_alloc);
+#endif
+#if RARR_MAX_NDIM > 2
+  userfree_(arr->_s03);
+  userfree_(arr->_s3_alloc);
+#endif
+#if RARR_MAX_NDIM > 3
+  userfree_(arr->_s04);
+  userfree_(arr->_s4_alloc);
+#endif
+#if RARR_MAX_NDIM > 4
+  userfree_(arr->_s05);
+  userfree_(arr->_s5_alloc);
+#endif
+
   ra_setnull(arr);
-  /*
-  fprintf(stderr,"ra_destroy exit: arr->_s0 = %d\n",arr->_s0);
-  */
+
   return 0;
 }
 /*----------------------------------------------------------------------------*/
@@ -206,32 +276,75 @@ int ra_offset_e(RARR *arr, const IPNT oe, const IPNT n)
 }
 /*----------------------------------------------------------------------------*/
 
-int ra_greset(RARR *arr, const IPNT gs, const IPNT ge)
-{
-    int d;
-    INFODIM *dim;                      /* pointer to current dimension */
-    long pshift = 0L;                  /* pointer shift */
-    RARR arrold = *arr;                /* remember old to restore if error */
+int ra_greset(RARR *arr, const IPNT gs, const IPNT ge) {
+
+  int d;
+  IPNT idx;                          /* index workspace */
+  INFODIM *dim;                      /* pointer to current dimension */
+  long pshift=0L;                    /* pointer shift */
+  long soff[RARR_MAX_NDIM+1];        /* pointer offset - start */
+  long eoff[RARR_MAX_NDIM+1];        /* pointer offset - end */
+  RARR arrold = *arr;                /* remember old to restore if error */
     
-    /* cycle backwards to compute pshift correctly */
-    for ( d = arr->ndim - 1; d >= 0; --d ) 
-    {
-        dim = arr->_dims + d;
-        dim->gs = gs[d];
-        dim->ge = ge[d];
-        dim->n = dim->ge - dim->gs + 1;
-        if ( (dim->n < 0) || (dim->gs < dim->gs0) || (dim->ge > dim->ge0) )
-        {
-	  fprintf(stderr,"n=%d gs=%d gs0=%d ge=%d ge0=%d\n",dim->n,dim->gs,dim->gs0,dim->ge,dim->ge0);
-            *arr = arrold;
-            return E_OUTOFBOUNDS;
-        }
-        pshift = pshift * (long)(dim->n0) + (long)(dim->gs - dim->gs0);
+  /* cycle backwards to compute pshift correctly */
+  for ( d = arr->ndim - 1; d >= 0; --d ) {
+    dim = arr->_dims + d;
+    dim->gs = gs[d];
+    dim->ge = ge[d];
+    dim->n = dim->ge - dim->gs + 1;
+    if ( (dim->n < 0) || (dim->gs < dim->gs0) || (dim->ge > dim->ge0) ) {
+      fprintf(stderr,"Error: ra_greset - out of bounds\n");
+      fprintf(stderr,"n=%d gs=%d gs0=%d ge=%d ge0=%d\n",dim->n,dim->gs,dim->gs0,dim->ge,dim->ge0);
+      *arr = arrold;
+      return E_OUTOFBOUNDS;
     }
+    soff[d] = (long)(dim->gs - dim->gs0);
+    eoff[d] = (long)(dim->ge0 - dim->ge);
+    pshift = pshift * (long)(dim->n0) + soff[d];
+  }
+  
+  if ( arr->_s != NULL ) arr->_s = arr->_s0 + pshift;
+  
+#if RARR_MAX_NDIM > 1
+
+  if (arr->ndim == 2) {
+    arr->_s2 = arr->_s2_alloc + soff[1];
+    for (idx[1]=-soff[1];
+	 idx[1]<arr->_dims[1].n + eoff[1];
+	 idx[1]++) 
+      arr->_s2[idx[1]] = 
+	arr->_s02[soff[1]+idx[1]] + soff[0];
+  }
     
-    if ( arr->_s != NULL ) arr->_s = arr->_s0 + pshift;
+#endif
     
-    return 0;
+#if RARR_MAX_NDIM > 2 
+	
+  if (arr->ndim == 3) {
+    arr->_s2 = arr->_s2_alloc + soff[1]+soff[2]*arr->_dims[1].n0;
+    arr->_s3 = arr->_s3_alloc + soff[2];
+
+    for (idx[2]=-soff[2]; 
+	 idx[2] < arr->_dims[2].n + eoff[2];
+	 idx[2]++) {
+      for (idx[1]=-soff[1];
+	   idx[1]<arr->_dims[1].n + eoff[1];
+	   idx[1]++) {
+	arr->_s2[idx[1]+idx[2]*arr->_dims[1].n0] = 
+	  arr->_s02[soff[1]+idx[1] +
+		    (soff[2]+idx[2])*arr->_dims[1].n0] + soff[0];
+      }
+      arr->_s3[idx[2]]=&(arr->_s2[idx[2]*arr->_dims[1].n0]); 
+    }
+  }
+#endif
+
+#if RARR_MAX_NDIM > 3
+  fprintf(stderr,"ERROR: max dim > 3 not implemented yet\n");
+  return E_OTHER;
+#else
+  return 0;
+#endif
 }
 /*----------------------------------------------------------------------------*/
 
