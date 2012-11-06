@@ -1966,6 +1966,7 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
     int             xshift, yshift;
     int             rxscale, ryscale;
     int             rangle;
+    unsigned char   ci = 255;
 
     endpath ();
 
@@ -2018,6 +2019,14 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
         fprintf (pltout, "  /MultipleDataSources false\n");
         fprintf (pltout, "  /DataSource currentfile /ASCIIHexDecode filter\n");
         fprintf (pltout, "  /BitsPerComponent 8\n");
+	for (j = 0; j < xpix*ypix; j+=80)
+	{
+	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
+	    {
+	        if (raster_block[0][i] < ci)
+	            ci = raster_block[0][i];
+	    }
+	}
     }
 
     if ( mono || ras_allgrey ) {
@@ -2026,7 +2035,7 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	    fprintf (pltout, "raster\n");
 	} else {
             fprintf (pltout, "  /Decode [ 0 1 ]\n");
-            fprintf (pltout, "  /MaskColor [ %d ]\n", dither_it ? 0 : 255 - ps_grey_ras[8]);
+            fprintf (pltout, "  /MaskColor [ 0 0 ]\n");
             fprintf (pltout, ">> image\n");
 	}
 
@@ -2036,7 +2045,10 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	    {
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
-		    fprintf (pltout, "%2.2x", 255 - (int) raster_block[0][i]);
+	            if (!corners && ci == (int) raster_block[0][i])
+	                fprintf (pltout, "%2.2x", 0);
+	            else
+		        fprintf (pltout, "%2.2x", 255 - (int) raster_block[0][i]);
 	   	}
     	   	fprintf (pltout, "\n");
 	    }
@@ -2047,7 +2059,10 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	    {
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
-		    fprintf (pltout,"%2.2x", 255 - ps_grey_ras[(int) raster_block[0][i]]);
+	            if (!corners && ci == (int) raster_block[0][i])
+	                fprintf (pltout, "%2.2x", 0);
+	            else
+		        fprintf (pltout,"%2.2x", 255 - ps_grey_ras[(int) raster_block[0][i]]);
 	   	}
     	   	fprintf (pltout, "\n");
 	    }
@@ -2058,7 +2073,7 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
             fprintf (pltout, "colraster\n");
 	} else {
             fprintf (pltout, "  /Decode [ 0 1 0 1 0 1 ]\n");
-            fprintf (pltout, "  /MaskColor [ %d %d %d ]\n", red[8], green[8], blue[8]);
+            fprintf (pltout, "  /MaskColor [ 0 0 0 0 0 0 ]\n");
             fprintf (pltout, ">> image\n");
 	}
 
@@ -2066,7 +2081,10 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	{
 	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
-		fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
+	        if (!corners && ci == (int) raster_block[0][i])
+	            fprintf (pltout, "%2.2x%2.2x%2.2x", 0, 0, 0);
+	        else
+		    fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
 	    }
 	    fprintf (pltout, "\n");
 	}
@@ -2081,9 +2099,11 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
             fprintf (pltout, "colraster\n");
 	} else {
             fprintf (pltout, "  /Decode [ 0 1 0 1 0 1 0 1 ]\n");
-            rgb_to_cmyk(red[8],green[8],blue[8],
+            rgb_to_cmyk(0, 0, 0,
                         &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
-            fprintf (pltout, "  /MaskColor [ %d %d %d %d ]\n", cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
+            fprintf (pltout, "  /MaskColor [ %d %d %d %d %d %d %d %d ]\n",
+                     cmyk_cyan, cmyk_cyan, cmyk_magenta, cmyk_magenta,
+                     cmyk_yellow, cmyk_yellow, cmyk_black, cmyk_black);
             fprintf (pltout, ">> image\n");
 	}
 
@@ -2091,11 +2111,17 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	{
 	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
-		rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
-			    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
-
-		fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
-			 cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
+	        if (!corners && ci == (int) raster_block[0][i]) {
+		    rgb_to_cmyk(0, 0, 0,
+			        &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		    fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
+			     cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
+                } else {
+		    rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
+			        &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		    fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
+			     cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
+                }
 	    }
 	    fprintf (pltout, "\n");
 	}
