@@ -1,0 +1,2 @@
+rarray_test: TRUE = normal termination, output identical to reference
+rarray_test_2d: TRUE = normal termination, output identical to reference

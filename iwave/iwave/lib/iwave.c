@@ -1,12 +1,11 @@
 #include "utils.h"
 #include "iwave.h"
 #include "parser.h"
-/* #include "model_action.h" */
 #ifdef _OPENMP
 #include "omp.h"
 #endif
 
-/* #define VERBOSE */
+/* #define IWAVE_VERBOSE */
 
 /* drivers should self-doc:
 

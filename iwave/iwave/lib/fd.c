@@ -348,6 +348,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	}      
 	/*    fprintf(stderr,"bottom iv=%d\n",iv); */
     }
+
     /*--------------------------------------------------------------------------*/
     /*-allocate main domain, create computational domain------------------------*/
     err = rd_a_create(&(model->ld_a), RDOM_MAX_NARR, ndim, dgsa, dgea);
@@ -356,6 +357,10 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	fflush(stream);
 	return E_INTERNAL;
     }
+
+    fprintf(stream,"in modelcrea\n");
+    fflush(stream);
+
     model->ld_c = model->ld_a;
     for (i = 0;i < RDOM_MAX_NARR;i ++) {
 	if ( !(isdyn(fdm,i)) ) continue;
