@@ -69,8 +69,8 @@ sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow,
 
     esc_tracer->nz = sf_esc_slowness3_nz (esc_slow);
     esc_tracer->nx = sf_esc_slowness3_nx (esc_slow);
+    esc_tracer->ny = sf_esc_slowness3_ny (esc_slow);
     esc_tracer->oz = sf_esc_slowness3_oz (esc_slow);
-    esc_tracer->ox = sf_esc_slowness3_ox (esc_slow);
     esc_tracer->dz = sf_esc_slowness3_dz (esc_slow);
     esc_tracer->ox = sf_esc_slowness3_ox (esc_slow);
     esc_tracer->dx = sf_esc_slowness3_dx (esc_slow);
@@ -188,7 +188,7 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     the nearest wall defined by (dz, dx, dy), return pseudotime along the trajectory >*/
 {
     float A, B, C, D, s1, s2, sigma, az, ax, ay,
-          pz, px, py, pz0, px0, py0, l;
+          pz, px, py, pz0, px0, py0, l, aold;
 
     /* Assume locally constant slowness and slowness gradients */
     /* Parabola - dz = -v_z*sigma + 0.5*a_z*sigma^2 */
@@ -199,9 +199,10 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     az = s*sz;
     ax = s*sx;
     ay = s*sy;
+    aold = *a;
     pz0 = -s*cos (*b);
-    px0 = s*sin (*b)*cos (*a);
-    py0 = s*sin (*b)*sin (*a);
+    px0 = s*sin (*b)*cos (aold);
+    py0 = s*sin (*b)*sin (aold);
 
     if (*b <= SF_PI/4.0 || *b >= 3.0*SF_PI/4.0) {
         /* Intersection with z */
@@ -238,10 +239,12 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     py = py0 + ay*sigma;
     /* Find new phase angle */
     l = sqrt (px*px + py*py);
-    if (py >= 0.0)
-        *a = acos (pz/l);
-    else
-        *a = 2.0*SF_PI - acos (pz/l);
+    if (l > 1e-6) {
+        if (py >= 0.0)
+            *a = acos (px/l);
+        else
+            *a = 2.0*SF_PI - acos (px/l);
+    }
     l = sqrt (pz*pz + px*px + py*py);
     *b = acos (-pz/l);
     *t += (pz0*pz0 + px0*px0 + py0*py0)*sigma + (pz0*az + px0*ax + py0*ay)*sigma*sigma +

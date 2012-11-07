@@ -201,7 +201,7 @@ int main (int argc, char* argv[]) {
         tdata.pnts = sf_floatalloc2 (TRAJ3_COMPS - 1, tdata.nt);
     }
 
-    e = sf_floatalloc3 (ESC3_NUM, na, nb);
+    e = sf_floatalloc3 (ESC3_NUM, nb, na);
 
     /* Make room for escape variables in output */
     if (spdom)
@@ -332,9 +332,9 @@ int main (int argc, char* argv[]) {
                                 for (i = 0; i < TRAJ3_COMPS - 1; i++)
                                     tdata.pnts[it][i] = tdata.pnts[tdata.it][i];
                             }
+                            sf_floatwrite (tdata.pnts[0], (size_t)tdata.nt*
+                                                          (size_t)(TRAJ3_COMPS - 1), tdata.traj);
                         }
-                        sf_floatwrite (tdata.pnts[0], (size_t)tdata.nt*
-                                                      (size_t)(TRAJ3_COMPS - 1), tdata.traj);
                     } /* Loop over b */
                 } /* Loop over a */
                 sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
