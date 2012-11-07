@@ -11,7 +11,7 @@ lumsharpener matchoper mean mf mig2 miss4 miss43 mlm mtm mlwm multiple
 nmradon nmult nonloc oclet pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3
 radonoper rtft saltpepper sclet seisavf seisbreg2 seishrink seismis2
 seispocs seisreg2 seisxwell sharpsimi snr sphase st stft svddenoise
-swell testapef testcasoper testmatch threshold2 tvmf variogram
+swell testapef testcasoper testmatch threshold2 tvmf v2d variogram
 variogram2 vconvert wavemis2 wmf zcwt
 '''
 
