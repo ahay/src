@@ -83,6 +83,7 @@ int main (int argc, char* argv[])
     }
    
     for(nn3 = 0; nn3 < n3; nn3++){
+	sf_warning("slice %d of %d;",nn3+1,n3);
 	sf_floatread(x,n12,in);
 	for(number = 0; number < n2; number++) {
 	    for(ii = 1; ii<= maxscale; ii++) {
@@ -117,7 +118,7 @@ int main (int argc, char* argv[])
 	} 
 	sf_floatwrite(result,n12,out);
     }
-
+    sf_warning(".");
     exit (0);
 }
 
