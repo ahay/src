@@ -1966,7 +1966,7 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
     int             xshift, yshift;
     int             rxscale, ryscale;
     int             rangle;
-    unsigned char   ci = 255;
+    unsigned char   ci = 8;
 
     endpath ();
 
@@ -2019,14 +2019,14 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
         fprintf (pltout, "  /MultipleDataSources false\n");
         fprintf (pltout, "  /DataSource currentfile /ASCIIHexDecode filter\n");
         fprintf (pltout, "  /BitsPerComponent 8\n");
-	for (j = 0; j < xpix*ypix; j+=80)
+/*	for (j = 0; j < xpix*ypix; j+=80)
 	{
 	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
 	        if (raster_block[0][i] < ci)
 	            ci = raster_block[0][i];
 	    }
-	}
+	}*/
     }
 
     if ( mono || ras_allgrey ) {
