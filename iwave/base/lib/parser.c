@@ -4,7 +4,7 @@
 #undef VERBOSE
 
 /* max length of conversion string in set functions */
-#define MAX_STR_LEN 128
+#define MAX_STR_LEN 1024
 
 static char ps_sep_str[2] = { PS_SEP, '\0' };
 /* static char ps_quo_str[2] = { PS_QUO, '\0' }; */
@@ -326,13 +326,11 @@ int kv_read(KEYVAL * kv, char ** src) {
     return 0;
 }
       
-void kv_print(KEYVAL kv) {
-    if (!kv_check(kv)) printf("%s %c %s\n",(kv.key)->str,PS_SEP,(kv.val)->str);
+void kv_fprint(KEYVAL kv, FILE * f) {
+  if (!kv_check(kv)) fprintf(f,"%s%c%s\n",(kv.key)->str,PS_SEP,(kv.val)->str);
 }
 
-void kv_fprint(KEYVAL kv, FILE * f) {
-    if (!kv_check(kv)) fprintf(f,"%s %c %s\n",(kv.key)->str,PS_SEP,(kv.val)->str);
-}
+void kv_print(KEYVAL kv) { kv_fprint(kv,stdout); }
 
 PSLINK * pslink_new() {
     PSLINK * par = (PSLINK *)usermalloc_(sizeof(PSLINK));
