@@ -34,8 +34,8 @@ void opwd_init(int mf1, int mf2, char *interp, float rad)
 	nf1 = mf1;
 	nf2 = mf2;
 	r = rad;
-	b1 = sf_floatalloc(mf1+mf2);
-	b2 = sf_floatalloc(mf1+mf2);
+	b1 = sf_floatalloc(mf1+mf2+1);
+	b2 = sf_floatalloc(mf1+mf2+1);
 
 	c = lphpoly(mf1, mf2, interp);
 }
