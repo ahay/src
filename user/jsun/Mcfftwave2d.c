@@ -25,9 +25,8 @@ int main(int argc, char* argv[])
     bool verb, cmplx;        
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx,nxx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
-    float c, old, fscale;
+    float c;
 
-    float  *ww,*rr;      /* I/O arrays*/
     sf_complex *cwave, *cwavem;
     float **wave, *curr;
 
@@ -54,7 +53,7 @@ int main(int argc, char* argv[])
     sf_oaxa(Fo,ax,2); 
     sf_oaxa(Fo,at,3);
     
-    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=true; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
     nk = fft2_init(cmplx,pad1,nz,nx,&nz2,&nx2);
@@ -81,12 +80,7 @@ int main(int argc, char* argv[])
     sf_fileclose(left);
     sf_fileclose(right);
 
-    /* read wavelet & reflectivity */
-//    ww=sf_floatalloc(nt);  sf_floatread(ww,nt ,Fw);
-//    rr=sf_floatalloc(nzx); sf_floatread(rr,nzx,Fr);
-
     curr = sf_floatalloc(nzx2);
-
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
     wave = sf_floatalloc2(nzx2,m2);
