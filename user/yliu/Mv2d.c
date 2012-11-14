@@ -48,6 +48,9 @@ int main (int argc, char* argv[])
     if (!sf_getbool("mute",&mute)) mute=false;
     /* if y, use mutter */
 
+    if (!sf_getbool("half",&half)) half=false;
+    /* if y, half-offset instead of full offset */
+    
     vel = sf_floatalloc(n1);
     dip = sf_floatalloc(n1*xn);
 
@@ -57,8 +60,6 @@ int main (int argc, char* argv[])
     sf_putfloat(out,"o2",xo);
 
     if (mute) {
-	if (!sf_getbool("half",&half)) half=false;
-	/* if y, half-offset instead of full offset (available when mute=y) */
 	
 	if (!sf_getfloat("tp",&tp)) tp=0.150; 
         /* end time (available when mute=y) */
@@ -99,8 +100,13 @@ int main (int argc, char* argv[])
 	
 	for (j=0; j < xn; j++) {
 	    for (i=0; i < n1; i++)  {
-		dip[j*n1+i] = (xo+j*xd)*xd/
-		    ((o1+i*d1)*vel[i]*vel[i]*d1+FLT_EPSILON);
+		if (half) {
+		    dip[j*n1+i] = (xo+j*xd*2)*xd*2/
+			((o1+i*d1)*vel[i]*vel[i]*d1+FLT_EPSILON);
+		} else {
+		    dip[j*n1+i] = (xo+j*xd)*xd/
+			((o1+i*d1)*vel[i]*vel[i]*d1+FLT_EPSILON);
+		}
 	    }
 	}
 
