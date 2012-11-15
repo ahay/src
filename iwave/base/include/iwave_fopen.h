@@ -42,6 +42,7 @@ not truncate the existing file.
 
 /** if set, unlink temporary files in iwave_fdestroy */
 #define UNLINK_TMPS
+//#undef UNLINK_TMPS
 
 /** Organized to behave exactly as fopen does with respect to
     mode:

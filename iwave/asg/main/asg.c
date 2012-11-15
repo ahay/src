@@ -1,4 +1,4 @@
-/* 
+/* Acoustic staggered grid modeling
    asg.c
    William W. Symes
    driver for iwave with acoustic staggered grid model

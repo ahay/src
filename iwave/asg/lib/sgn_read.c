@@ -6,26 +6,12 @@
 
 int set_default_material_params(ireal * refkappa,
 				ireal * refbuoy) {
-    if ( strcmp(SEAM_UNITS, "SI") == 0 ) {
-	*refkappa=KAPPA_SI;
-	*refbuoy =1.0/RHO_SI;
-    }
-    else if ( strcmp(SEAM_UNITS, "MMSKG") == 0 ) {
-	*refkappa=KAPPA_MMSKG;
-	*refbuoy =1.0/RHO_MMSKG;
-    }
-    else if ( strcmp(SEAM_UNITS, "KMSKG") == 0 ) {
-	*refkappa=KAPPA_KMSKG;
-	*refbuoy =1.0/RHO_KMSKG;    
-    }
-    else if ( strcmp(SEAM_UNITS, "MMSGCM3") == 0 ) {
-	*refkappa=KAPPA_MMSGCM3;
-	*refbuoy =1.0/RHO_MMSGCM3;
-    }
-    else {
-	return 1;
-    }
+  if ( strcmp(SEAM_UNITS, "MMSGCM3") == 0 ) {
+    *refkappa=KAPPA_MMSGCM3;
+    *refbuoy =1.0/RHO_MMSGCM3;
     return 0;
+  }
+  return 1;
 }
 
 /* this version: reads grid geometry from bulk modulus or velocity RSF
