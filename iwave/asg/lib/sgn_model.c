@@ -58,9 +58,8 @@ int asg_modelinit(PARARRAY *pars,
 #ifdef IWAVE_USE_MPI
     int rk;
     MPI_Comm cm;
-#else
-    grid g;
 #endif
+    grid g;
 
     fd=(FD_MODEL *)usermalloc_(sizeof(FD_MODEL));
     if (fd==NULL) return E_ALLOC;
