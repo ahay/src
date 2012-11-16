@@ -36,8 +36,8 @@ svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo391/hw5
 \item The following equality for the posterior model covariance was given in lecture notes without a proof:
 \begin{equation}
 \label{eq:cpost}
-\left(\mathbf{F}^T\,\mathbf{C}_n^{-1}\,\mathbf{F} + \mathbf{C}_{m}^{-1}\right)^{-1}=
-\mathbf{C}_m-\mathbf{C}_m\,\left(\mathbf{F}\,\mathbf{C}_{m}\,\mathbf{F}^T + \mathbf{C}_n\right)^{-1}\,\mathbf{C}_m\;.
+\widehat{\mathbf{C}_m} = \left(\mathbf{F}^T\,\mathbf{C}_n^{-1}\,\mathbf{F} + \mathbf{C}_{m}^{-1}\right)^{-1}=
+\mathbf{C}_m-\mathbf{C}_m\,\mathbf{F}^T\,\left(\mathbf{F}\,\mathbf{C}_{m}\,\mathbf{F}^T + \mathbf{C}_n\right)^{-1}\,\mathbf{F}\,\mathbf{C}_m\;.
 \end{equation}
 Prove it.
 \item Suppose that we use the gradient operator for data interpolation:
