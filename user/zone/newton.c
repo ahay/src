@@ -75,7 +75,7 @@ float newton(func1 function /*f(x)*/,
 
 	}
 
-	if (fabsf(f) < tol) { /*Break operation if the tolerance level is reached (Check again)*/
+	if (fabsf(f/fp) < tol) { /*Break operation if the tolerance level is reached (Check again)*/
 	    sf_warning("Tolerance level is reached.");
 	    break;
 	}

@@ -155,8 +155,8 @@ int main(int argc, char* argv[])
 			xs = t0+it2*dt-it*dt2; /* source location */
 			xr = t0+it2*dt+it*dt2; /* receiver location */
 			
-			
 			traveltime_init(z,zder,zder2,xs,xr,velocity);
+			
 			if (it==0) {
 				xinitial = t0+it2*dt; /*The first calculation starting from the origin*/
 				x = newton(dtdx,d2tdx2,xinitial,niter,tol);
