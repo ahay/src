@@ -131,13 +131,8 @@ int mpirsfread(ireal * a,
   int scale=0;       /* flag - read from parameters */
   float scfac=1.0;   /* factor workspace */
   size_t ntot;       /* total length of constructed local array */
-  /*
-  float a_max;
-  float a_min;
-  */
 
   /* vars used to read extended model*/  
-  int panel_size = 1; 
   off_t cur_pos = 0;
 
   /**************************
@@ -316,17 +311,17 @@ int mpirsfread(ireal * a,
       /* initial file offset */
       file_goffs = 0;
            
-      /* D.S. 01.01.11: extended-model related --> */
-      /* get size of every model panel */
-      for (ii=0; ii< g.dim; ii++){
-	panel_size *= (n[ii]);   
+      /* first sanity check */
+      if (panelindex < 0) {
+	fprintf(stream,"Error: rsfread\n");
+	fprintf(stream,"panelindex = %d < 0\n",panelindex);
+	return E_OTHER;
       }
-
-      /* compute current starting position
-	 Note: for extended model, don't move cursor to the begining
-	       when cur_pos is not less than file size (should 
-	       throw an error in this case)*/
-      cur_pos = panelindex * panel_size * sizeof(float);
+      
+      /* seek to panel at input panelindex modulo number of panels */
+      panelindex = panelindex % get_panelnum_grid(g);
+      /* compute current starting position */
+      cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
       
 #ifdef VERBOSE
       fprintf(stream, "--- mpirsfread: current file cursor : %lld , moving to cus_pos: %lld \n", ftello(fp), cur_pos);
@@ -892,29 +887,25 @@ int mpirsfwrite(ireal * a,
       /* initial file offset */
       file_goffs = 0;
            
-      /* WWS 20.01.11 -- turn off ext model feature by setting panelindex=-1 */
-
-      if (panelindex >-1) {
-
-	/* D.S. 01.01.11: extended-model related --> */
-	/* get size of every model panel */
-	for (ii=0; ii< g.dim; ii++){
-	  panel_size *= (n[ii]);   
-	}
-	/* compute current starting position
-	   Note: for extended model, don't move cursor to the begining
-	   when cur_pos is not less than file size (should 
-	   throw an error in this case)*/
-	cur_pos = panelindex * panel_size * sizeof(float);
-	
-	fprintf(stream, "--- mpirsfwrite: rank=%d current file cursor : %lld, moving to cus_pos: %lld\n",wrank, ftello(fp), cur_pos);
-	fseeko(fp,cur_pos,SEEK_SET); 
-	/*<-- D.S. 01.01.11: extended-model related */
-	
+      /* first sanity check */
+      if (panelindex < 0) {
+	fprintf(stream,"Error: rsfread\n");
+	fprintf(stream,"panelindex = %d < 0\n",panelindex);
+	return E_OTHER;
       }
+      
+      /* seek to panel at input panelindex modulo number of panels */
+      panelindex = panelindex % get_panelnum_grid(g);
+      /* compute current starting position */
+      cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
+	
+      fprintf(stream, "--- mpirsfwrite: rank=%d current file cursor : %lld, moving to cus_pos: %lld\n",wrank, ftello(fp), cur_pos);
+      fseeko(fp,cur_pos,SEEK_SET); 
+
 #ifdef SUXDR
       if (!strcmp(type,"xdr_float")) {
-	/* allocate char buffer - again, initial value of recsize_b is always enough */
+	/* allocate char buffer - again, initial value of recsize_b is
+	   always enough */
 	buf=usermalloc_(recsize_b);
 	if (buf) {
 	  /* (re)initialize xdr stream */
