@@ -60,7 +60,7 @@ void sf_escrt3_traj (float z, float x, float y, float b,
             a0 = cbud->pnts[cbud->it][TRAJ3_A];
 
             /* Make sure that angles do not jump
-               across 2.0*p->0 boundary in azimuth */
+               across 2.0*pi->0 boundary in azimuth */
             if (a0 > 3.0*SF_PI/2.0 && a < SF_PI/2.0)
                 a0 -= 2.0*SF_PI;
             else if (a0 < SF_PI/2.0 && a > 3.0*SF_PI/2.0)
@@ -86,20 +86,20 @@ void sf_escrt3_traj (float z, float x, float y, float b,
                 a1 = a0 + j*da;
                 b1 = b0 + j*db;
                 /* Keep b in [0; pi] and a in [0; 2*pi] range */
-                if (a1 < -SF_PI)
+                if (a1 < 0.0)
                     a1 += 2.0*SF_PI;
-                else if (a1 > SF_PI)
+                else if (a > 2.0*SF_PI)
                     a1 -= 2.0*SF_PI;
                 if (b1 < 0.0) {
                     a1 += SF_PI;
                     b1 = fabs (b);
                 } else if (b1 > SF_PI) {
                     a1 -= SF_PI;
-                    b1 = fabs (b) - SF_PI;
-                }  
-                if (a1 < -SF_PI)
+                    b1 = 2.0*SF_PI - b;
+                }
+                if (a1 < 0.0)
                     a1 += 2.0*SF_PI;
-                else if (a1 > SF_PI)
+                else if (a > 2.0*SF_PI)
                     a1 -= 2.0*SF_PI;
                 cbud->pnts[i][TRAJ3_B] = b1;
                 cbud->pnts[i][TRAJ3_A] = a1;

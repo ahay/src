@@ -275,43 +275,8 @@ static void sf_esc_slowness3_compute_components (sf_esc_slowness3 esc_slow, floa
 
 #define SPEPS 1e-3
 
-void sf_esc_slowness3_get_components (sf_esc_slowness3 esc_slow,
-                                      float z, float x, float y, float b, float a,
-                                      float *s, float *sb, float *sa,
-                                      float *sz, float *sx, float *sy)
-/*< Set slowness and its derivatives for position z, x, and phase angle a >*/
-{
-    float vel[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 },
-          grad[15] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
-
-    if (z <= esc_slow->zmin)
-        z = esc_slow->zmin + SPEPS*esc_slow->dz;
-    if (z >= esc_slow->zmax)
-        z = esc_slow->zmax - SPEPS*esc_slow->dz;
-    if (x <= esc_slow->xmin)
-        x = esc_slow->xmin + SPEPS*esc_slow->dx;
-    if (x >= esc_slow->xmax)
-        x = esc_slow->xmax - SPEPS*esc_slow->dx;
-    if (y <= esc_slow->ymin)
-        y = esc_slow->ymin + SPEPS*esc_slow->dy;
-    if (y >= esc_slow->ymax)
-        y = esc_slow->ymax - SPEPS*esc_slow->dy;
-
-    eval_multi_UBspline_3d_s_vg (&esc_slow->velspline, y, x, z, vel, grad);
-
-    sf_esc_slowness3_compute_components (esc_slow, b, a,
-                                         vel[0], vel[1], vel[2], vel[3], vel[4], /* vz, vx, et, bti, ati */
-                                         grad[2], grad[1], grad[0], /* vz/dz, vz/dx, vz/dy */
-                                         grad[5], grad[4], grad[3], /* vx/dz, vx/dz, vx/dy */
-                                         grad[8], grad[7], grad[6], /* et/dz, et/dz, et/dy */
-                                         grad[11], grad[10], grad[9], /* bti/dz, bti/dz, bti/dy */
-                                         grad[14], grad[13], grad[12], /* ati/dz, ati/dz, ati/dy */
-                                         s, sb, sa, sz, sx, sy);
-}
-
 void sf_esc_slowness3_get_svg (sf_esc_slowness3 esc_slow,
-                               float z, float x, float y, float b, float a,
+                               float z, float x, float y,
                                float *vel, float *grad)
 /*< Set slowness and its derivatives for position z, x, and phase angle a >*/
 {
@@ -329,6 +294,38 @@ void sf_esc_slowness3_get_svg (sf_esc_slowness3 esc_slow,
         y = esc_slow->ymax - SPEPS*esc_slow->dy;
 
     eval_multi_UBspline_3d_s_vg (&esc_slow->velspline, y, x, z, vel, grad);
+
+    /* Zero out angle components for VTI */
+    if (esc_slow->velspline.num_splines > 1 &&
+        esc_slow->velspline.num_splines < 4) {
+        vel[4] = 0.0;
+        vel[5] = 0.0;
+        grad[9] = 0.0; grad[10] = 0.0; grad[11] = 0.0;
+        grad[12] = 0.0; grad[13] = 0.0; grad[14] = 0.0;
+    }
+
+}
+
+void sf_esc_slowness3_get_components (sf_esc_slowness3 esc_slow,
+                                      float z, float x, float y, float b, float a,
+                                      float *s, float *sb, float *sa,
+                                      float *sz, float *sx, float *sy)
+/*< Set slowness and its derivatives for position z, x, and phase angle a >*/
+{
+    float vel[5] = { 0.0, 0.0, 0.0, 0.0, 0.0 },
+          grad[15] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+
+    sf_esc_slowness3_get_svg (esc_slow, z, x, y, vel, grad);
+
+    sf_esc_slowness3_compute_components (esc_slow, b, a,
+                                         vel[0], vel[1], vel[2], vel[3], vel[4], /* vz, vx, et, bti, ati */
+                                         grad[2], grad[1], grad[0], /* vz/dz, vz/dx, vz/dy */
+                                         grad[5], grad[4], grad[3], /* vx/dz, vx/dz, vx/dy */
+                                         grad[8], grad[7], grad[6], /* et/dz, et/dz, et/dy */
+                                         grad[11], grad[10], grad[9], /* bti/dz, bti/dz, bti/dy */
+                                         grad[14], grad[13], grad[12], /* ati/dz, ati/dz, ati/dy */
+                                         s, sb, sa, sz, sx, sy);
 }
 
 void sf_esc_slowness3_get_coefs (sf_esc_slowness3 esc_slow,

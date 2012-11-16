@@ -200,9 +200,9 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     ax = s*sx;
     ay = s*sy;
     aold = *a;
-    pz0 = -s*cos (*b);
-    px0 = s*sin (*b)*cos (aold);
-    py0 = s*sin (*b)*sin (aold);
+    pz0 = -s*cosf (*b);
+    px0 = s*sinf (*b)*cosf (aold);
+    py0 = s*sinf (*b)*sinf (aold);
 
     if (*b <= SF_PI/4.0 || *b >= 3.0*SF_PI/4.0) {
         /* Intersection with z */
@@ -241,12 +241,12 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     l = sqrt (px*px + py*py);
     if (l > 1e-6) {
         if (py >= 0.0)
-            *a = acos (px/l);
+            *a = acosf (px/l);
         else
-            *a = 2.0*SF_PI - acos (px/l);
+            *a = 2.0*SF_PI - acosf (px/l);
     }
     l = sqrt (pz*pz + px*px + py*py);
-    *b = acos (-pz/l);
+    *b = acosf (-pz/l);
     *t += (pz0*pz0 + px0*px0 + py0*py0)*sigma + (pz0*az + px0*ax + py0*ay)*sigma*sigma +
           (az*az + ax*ax + ay*ay)*sigma*sigma*sigma/3.0;
     return sigma;
@@ -319,26 +319,26 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
             sigma = sf_esc_tracer3_sintersect (esc_tracer, &z, &x, &y, &b, &a,
                                                dz, dx, dy, db, da, fz, fx, fy, fb, fa);
         /* Keep b in [0; pi] and a in [0; 2*pi] range */
-        if (a < -SF_PI)
+         if (a < 0.0)
             a += 2.0*SF_PI;
-        else if (a > SF_PI)
+        else if (a > 2.0*SF_PI)
             a -= 2.0*SF_PI;
         if (b < 0.0) {
             a += SF_PI;
-            b = fabs (b);
+            b = fabsf (b);
         } else if (b > SF_PI) {
             a -= SF_PI;
-            b = fabs (b) - SF_PI;
+            b = 2.0*SF_PI - b;
         }  
-        if (a < -SF_PI)
+        if (a < 0.0)
             a += 2.0*SF_PI;
-        else if (a > SF_PI)
+        else if (a > 2.0*SF_PI)
             a -= 2.0*SF_PI;
         /* Update slowness and it components at the new location */
         sf_esc_slowness3_get_components (esc_tracer->esc_slow, z, x, y, b, a,
                                          &s, &sb, &sa, &sz, &sx, &sy);
         /* Length of this segment of the characteristic */
-        dd = fabs (sigma*sqrt (fz*fz + fx*fx));
+        dd = fabsf (sigma*sqrt (fz*fz + fx*fx));
         if (!esc_tracer->parab)
             t += dd*(s + sp)*0.5;
 #ifdef ESC_EQ_WITH_L
