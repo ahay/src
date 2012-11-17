@@ -1,12 +1,116 @@
-/* Acoustic staggered grid modeling
-   asg.c
-   William W. Symes
-   driver for iwave with acoustic staggered grid model
-   after iwave.c by Igor Terentyev
+/* Driver for coustic staggered grid modeling in 1D, 2D, or
+3D. Outputs pressure traces at specified sample rates, arbitrary
+receiver positions, and/or movie frames of pressure and/or
+velocity. Point source at arbitrary location, or array sources with
+arbitrarily many traces. Uses staggered grid finite difference scheme
+of order 2 in time and 2k in space, k=1, 2, or 4, derived from
+pressure-velocity form of acoustodynamics. Either pressure-free
+(reflecting) or absorbing (PML) boundary conditions on boundary faces
+of simulation hypercube. Optionally parallelized at both loop (domain
+decomposition) and task (shot) levels.
+
+Authors: Igor Terentyev, William W. Symes, Tetyana Vdovina, Xin Wang
+
+Typical parameter list. May be copied, edited, and used for input: place
+in file "parfile", invoke modeling command by 
+
+sfasg par=parfile [Madagascar install] 
+
+or 
+
+asg.x par=parfile [standalone install]
+
+Given values are defaults, non-optional values in corner brackets.
+
+-------------------------------- cut here ------------------------------
+
+INPUT DATA FOR iwave
+
+------------------------------------------------------------------------
+FD:
+
+         order = 2          spatial half-order
+           cfl = 0.75       proportion of max dt/dx
+          cmin = 1.0        min permitted velocity (m/ms) - sanity check
+          cmax = 4.5        max permitted velocity (m/ms) - used in dt comp
+          dmin = 0.5        min permitted density (g/cm^3) - sanity check
+          dmax = 3.0        max permitted density (g/cm^3) - sanity check
+         fpeak = 0.010      nominal central frequency (KHz)
+
+------------------------------------------------------------------------
+PML info: layer thickness in WL at fpeak, cmax. Set = 0.0 for reflecting
+boundary
+
+           nl1 = 0.0         axis 1 - low end
+           nr1 = 0.0         axis 1 - high end
+           nl2 = 0.0         axis 2 - low end
+           nr2 = 0.0         axis 2 - high end
+           nl3 = 0.0         axis 3 - low end
+           nr3 = 0.0         axis 3 - high end
+
+------------------------------------------------------------------------
+Source info:
+
+       srctype = point       source type - point or array
+        source = <path>      path to input source data file (traces), 
+	                     SU format - required for array source, 
+			     optional for point source
+       sampord = 1           spatial interp order - 0 (nr nbr) or 
+                             1 (multilin)
+
+point source options:
+
+                             if "source" keyword not used, Ricker source 
+                             generated with central freq = fpeak
+         phase = zerophase   wavelet phase (Ricker option) - possible values
+                             are zerophase, minimumphase, maximumphase
+       refdist = 1000.0      reference distance (m) - if > 0, scale source
+                             to achieve target amplitude at this distance in
+                             homogeneous 3D medium.
+        refamp = 1.0         target amplitude at reference (GPa) 
+
+------------------------------------------------------------------------
+Trace info:
+
+      hdrfile  = <path>      input prototype trace file, SU format
+     datafile  = <path>      output data file, SU format - headers
+                             from hdrfile, trace data from modeling
+
+------------------------------------------------------------------------
+Model info:
+
+      velocity = <path>      path to input velocity file, RSF format
+       density = <path>      path to input density file, RSF format
+
+------------------------------------------------------------------------
+MPI info:
+
+       mpi_np1 = 1           number of subdomains along axis 1
+       mpi_np2 = 1           number of subdomains along axis 2
+       mpi_np3 = 1           number of subdomains along axis 3
+       partask = 1           number of shots to execute in parallel
+
+------------------------------------------------------------------------
+Output info:
+
+      printact = 0           output at every time step
+                             0 - none
+                             1 - time step index
+                             2 - diagnostic messages from main routines
+                             > 2 - much more, useful only for serious 
+                                debugging
+       dump_pi = 0           dump parallel/dom. decomp info
+      dump_lda = 0           dump grid data for allocated arrays
+      dump_ldc = 0           dump grid data for computational arrays
+      dump_ldr = 0           dump grid data for receive buffers
+      dump_lds = 0           dump grid data for send buffers
+     dump_term = 0           dump trace header data
+
+-------------------------------- cut here ------------------------------
 */
 /*============================================================================
  *                            BEGIN INCLUDES 
- * ============================================================================*/
+ *============================================================================*/
 
 #include <iwave.h>
 #include <sgn.h>
@@ -15,20 +119,24 @@
 #include <sampler.h>
 #include <parser.h>
 #include <asg_selfdoc.h>
+#include <par.h>
 #include <asg_movie.h>
-
+      
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-
+      
 #define NSTR 128
-
+      
 /* uncomment to write to the rk-dep output stream at every time step 
-*/
+ */
 #define VERBOSE_STEP
 /*============================================================================
  *                             END INCLUDES 
- * ============================================================================*/
+ *============================================================================*/
+      
+/*  definitions of global variables */
+int xargc; char **xargv;
 
 int main(int argc, char ** argv) {
 
@@ -78,7 +186,7 @@ int main(int argc, char ** argv) {
 
   /* self-doc if no args */
   rk=retrieveGlobalRank();
-  if (rk==0) requestdoc(1);
+  if (rk==0) requestdoc(1); 
 
 #ifdef IWAVE_VERBOSE
 #ifdef IWAVE_USE_MPI
@@ -131,7 +239,7 @@ int main(int argc, char ** argv) {
   else {
 #endif
 
-    xargc=argc;
+    //    xargc=argc;
     /* assign key strings */
     strcpy(hdrkey,"hdrfile");
     strcpy(datakey,"datafile");
