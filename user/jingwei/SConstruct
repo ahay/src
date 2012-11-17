@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-radon2 radon3 radon32 radon23 apradon2 slradon3 sum sum23 sum3 sthres
+radon2 radon3 radon32 radon23 apradon2 slradon3 sum sum23 sum3 sthres diradon2 diradon3 
 '''
 
 subs = '''

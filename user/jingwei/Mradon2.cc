@@ -3,7 +3,7 @@
 //   Output u(tau,p) complex
 //   Call bfio.setup2 bfio.kernel2 bfio.check2 bfio.eval2
 //   In bfio.kernel2: fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
-//                    fi=3 x*k;         fi=4 -x*k
+//                    fi=3 x*k;         fi=4 -x*k;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

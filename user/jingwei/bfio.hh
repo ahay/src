@@ -78,6 +78,9 @@ public:
   //
   int prep_aux(FltNumVec& grid, vector<float>& ts, CpxNumMat& tmp);
   int eval_addaux(const CpxNumTns& ext, CpxNumTns& all, CpxNumMat& m1, CpxNumMat& m2, CpxNumMat& m3);
+  //
+  int dikernel2(const int fi, const float tau, const float p, const float x, float& t);
+  int dikernel3(const int fi, const float tau, const float p, const float q, const float x, const float y, float& t);
 };
 
 #endif

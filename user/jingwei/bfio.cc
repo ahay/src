@@ -1,13 +1,18 @@
 //   butterfly algorithm
+//
 //   bfio.setup2, bfio.setup32, bfio.setup23, bfio.setup3
-//   bfio.kernel2, bfio.kernel3, bfio.apkernel2
+//   bfio.kernel2, bfio.kernel3, bfio.apkernel2, bfio.dikernel2, bfio.dikernel3
 //   bfio.check2, bfio.check3, bfio.apcheck2
+//
 //   In bfio.kernel2 fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
 //                   fi=3 x*k;         fi=4 -x*k;   
 //   In bfio.kernel3 fi=0 linear Radon; 
-//                   fi=1 reflection Radon;            fi=2 difraction Radon;
+//                   fi=1 reflection Radon;            fi=2 diffraction Radon;
 //                   fi=3 adjoint of reflection Radon; fi=4 adjoin of diffraction Radon;
 //   In bfio.apkernel2 fi=1 apex shifted hyper Radon
+//
+//   In bfio.dikernel2 fi=1 hyper Radon;
+//   In bfio.dikernel3 fi=1 reflection Radon;          fi=2 diffraction Radon;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -869,5 +874,50 @@ int BFIO::check3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec&
   en = sqrt(en);
   relerr = en/dn;
   //
+  return 0;
+}
+
+
+//---------------------------------------
+int BFIO::dikernel2(const int fi, const float tau, const float p, const float x, float& t)
+{
+  if(fi==1) {
+    // hyperbolic Radon
+    t = sqrt(tau*tau + p*p*x*x);
+  } else {
+    //--------------------------
+    iA(0);
+  }
+  return 0;
+}
+
+//---------------------------------------
+int BFIO::dikernel3(const int fi, const float tau, const float p, const float q, const float x, const float y, float& t)
+{
+  if(fi==1) {
+    // reflection Radon
+    // tau --> tau0; p --> a0x; q --> a0y
+    // t --> tau; x --> ax; y --> ay
+    float tana0x = tan(p*M_PI/180); 
+    float tana0y = tan(q*M_PI/180);
+    float tanax = tan(x*M_PI/180);
+    float tanay = tan(y*M_PI/180);
+    float a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
+    float b = sqrt(1 + tanax*tanax + tanay*tanay);
+    float c = tana0x*tanax + tana0y*tanay;
+    t = tau / (a*b-c);
+  } else if(fi==2) {
+    // diffraction Radon
+    // tau --> tau0; p --> kix; q --> kiy
+    // t --> tau; x --> ax; y --> ay
+    float tanax = tan(x*M_PI/180);
+    float tanay = tan(y*M_PI/180);
+    float K1 = p*tanax + q*tanay;
+    float K = sqrt(K1*K1 + p*p + q*q + 1);
+    t = tau * (K1+K);
+  } else {
+    //--------------------------
+    iA(0);
+  }
   return 0;
 }
