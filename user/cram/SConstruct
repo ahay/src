@@ -20,9 +20,17 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+sse = env.get('SSE')
+
+if sse:
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../lib'],
+                LIBS=[env.get('DYNLIB','')+'rsf'],
+                CCFLAGS=[sse],CPPDEFINES=['HAVE_SSE'])
+else:
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../lib'],
+                LIBS=[env.get('DYNLIB','')+'rsf'])
 
 for source in src:
     if source.rstr() == 'einspline.c':

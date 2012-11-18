@@ -17,6 +17,49 @@
  * bspline_data.c
  */
 
+#ifdef HAVE_SSE
+#include <xmmintrin.h>
+#include <emmintrin.h>
+#include <pmmintrin.h>
+
+__m128 *restrict A_s = (__m128 *)0;
+
+void init_sse_data()
+{
+  if (A_s == 0) {
+    posix_memalign ((void**)&A_s, 16, (sizeof(__m128)*12));
+    A_s[0]  = _mm_setr_ps ( 1.0/6.0, -3.0/6.0,  3.0/6.0, -1.0/6.0 );
+    A_s[0]  = _mm_setr_ps ( 1.0/6.0, -3.0/6.0,  3.0/6.0, -1.0/6.0 );          
+    A_s[1]  = _mm_setr_ps ( 4.0/6.0,  0.0/6.0, -6.0/6.0,  3.0/6.0 );          
+    A_s[2]  = _mm_setr_ps ( 1.0/6.0,  3.0/6.0,  3.0/6.0, -3.0/6.0 );          
+    A_s[3]  = _mm_setr_ps ( 0.0/6.0,  0.0/6.0,  0.0/6.0,  1.0/6.0 );          
+    A_s[4]  = _mm_setr_ps ( -0.5,  1.0, -0.5, 0.0  );                  
+    A_s[5]  = _mm_setr_ps (  0.0, -2.0,  1.5, 0.0  );                  
+    A_s[6]  = _mm_setr_ps (  0.5,  1.0, -1.5, 0.0  );                  
+    A_s[7]  = _mm_setr_ps (  0.0,  0.0,  0.5, 0.0  );                  
+    A_s[8]  = _mm_setr_ps (  1.0, -1.0,  0.0, 0.0  );                  
+    A_s[9]  = _mm_setr_ps ( -2.0,  3.0,  0.0, 0.0  );                  
+    A_s[10] = _mm_setr_ps (  1.0, -3.0,  0.0, 0.0  );                  
+    A_s[11] = _mm_setr_ps (  0.0,  1.0,  0.0, 0.0  );                  
+  }
+}
+
+#define _MM_MATVEC4_PS(M0, M1, M2, M3, v, r)                        \
+do {                                                                \
+  __m128 r0 = _mm_hadd_ps (_mm_mul_ps (M0, v), _mm_mul_ps (M1, v)); \
+  __m128 r1 = _mm_hadd_ps (_mm_mul_ps (M2, v), _mm_mul_ps (M3, v)); \
+  r = _mm_hadd_ps (r0, r1);                                         \
+ } while (0);
+#define _MM_DOT4_PS(A, B, _p)                                       \
+do {                                                                \
+  __m128 t  = _mm_mul_ps (A, B);                                    \
+  __m128 t1 = _mm_hadd_ps (t,t);                                    \
+  __m128 r  = _mm_hadd_ps (t1, t1);                                 \
+  _mm_store_ss (&(_p), r);                                          \
+} while(0);
+
+#endif
+
 /********************
  * Single precision *
  ********************/
@@ -311,10 +354,16 @@ UBspline_1d_s* create_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, float *data) {
 
   x_grid.delta_inv = 1.0/x_grid.delta;
   spline->x_grid   = x_grid;
+#ifndef HAVE_SSE
   spline->coefs = malloc ((size_t)sizeof(float)*(size_t)N);
+#else
+  posix_memalign ((void**)&spline->coefs, 16, (sizeof(float)*N));
+#endif
   spline->nc = (size_t)sizeof(float)*(size_t)N;
   find_coefs_1d_s (spline->x_grid, xBC, data, 1, spline->coefs, 1);
-
+#ifdef HAVE_SSE
+  init_sse_data ();
+#endif
   return spline;
 }
 
@@ -354,7 +403,11 @@ UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
   y_grid.delta_inv = 1.0/y_grid.delta;
   spline->y_grid   = y_grid;
   spline->x_stride = Ny;
+#ifndef HAVE_SSE
   spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny);
+#else
+  posix_memalign ((void**)&spline->coefs, 16, sizeof(float)*Nx*Ny);
+#endif
   spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny;
 
   /* First, solve in the X-direction */
@@ -372,6 +425,9 @@ UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
     find_coefs_1d_s (spline->y_grid, spline->yBC, spline->coefs+doffset, 1, 
                      spline->coefs+coffset, 1);
   }
+#ifdef HAVE_SSE
+  init_sse_data ();
+#endif
   return spline;
 }
 
@@ -450,8 +506,11 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
 
   spline->x_stride = Ny*Nz;
   spline->y_stride = Nz;
-
+#ifndef HAVE_SSE
   spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz);
+#else
+  posix_memalign ((void**)&spline->coefs, 16, (sizeof(float)*Nx*Ny*Nz));
+#endif
   spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz;
 
   /* First, solve in the X-direction */
@@ -480,6 +539,9 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
       find_coefs_1d_s (spline->z_grid, zBC, spline->coefs+doffset, 1, 
                        spline->coefs+coffset, 1);
     }
+#ifdef HAVE_SSE
+  init_sse_data ();
+#endif
   return spline;
 }
 
@@ -590,50 +652,12 @@ void eval_UBspline_1d_s_vg (UBspline_1d_s * restrict spline, double x,
      coefs[i+3]*(dAf[13]*tp[1] + dAf[14]*tp[2] + dAf[15]*tp[3]));
 }
 
-/* Value, first derivative, and second derivative */
-void eval_UBspline_1d_s_vgl (UBspline_1d_s * restrict spline, double x, 
-                             float* restrict val, float* restrict grad,
-                             float* restrict lapl)
-{
-  x -= spline->x_grid.start;
-  float u = x*spline->x_grid.delta_inv;
-  float ipart, t;
-  t = modff (u, &ipart);
-  int i = (int) ipart;
-  
-  float tp[4];
-  tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
-  float* restrict coefs = spline->coefs;
-
-  *val = 
-    (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
-     coefs[i+1]*(Af[ 4]*tp[0] + Af[ 5]*tp[1] + Af[ 6]*tp[2] + Af[ 7]*tp[3])+
-     coefs[i+2]*(Af[ 8]*tp[0] + Af[ 9]*tp[1] + Af[10]*tp[2] + Af[11]*tp[3])+
-     coefs[i+3]*(Af[12]*tp[0] + Af[13]*tp[1] + Af[14]*tp[2] + Af[15]*tp[3]));
-  *grad = spline->x_grid.delta_inv * 
-    (coefs[i+0]*(dAf[ 1]*tp[1] + dAf[ 2]*tp[2] + dAf[ 3]*tp[3])+
-     coefs[i+1]*(dAf[ 5]*tp[1] + dAf[ 6]*tp[2] + dAf[ 7]*tp[3])+
-     coefs[i+2]*(dAf[ 9]*tp[1] + dAf[10]*tp[2] + dAf[11]*tp[3])+
-     coefs[i+3]*(dAf[13]*tp[1] + dAf[14]*tp[2] + dAf[15]*tp[3]));
-  *lapl = spline->x_grid.delta_inv * spline->x_grid.delta_inv * 
-    (coefs[i+0]*(d2Af[ 2]*tp[2] + d2Af[ 3]*tp[3])+
-     coefs[i+1]*(d2Af[ 6]*tp[2] + d2Af[ 7]*tp[3])+
-     coefs[i+2]*(d2Af[10]*tp[2] + d2Af[11]*tp[3])+
-     coefs[i+3]*(d2Af[14]*tp[2] + d2Af[15]*tp[3]));
-}
-
-void eval_UBspline_1d_s_vgh (UBspline_1d_s * restrict spline, double x, 
-                             float* restrict val, float* restrict grad,
-                             float* restrict hess)
-{
-  eval_UBspline_1d_s_vgl (spline, x, val, grad, hess);
-}
-
 /************************************************************/
 /* 2D single-precision, real evaulation functions           */
 /************************************************************/
 
 /* Value only */
+#ifndef HAVE_SSE
 void eval_UBspline_2d_s (UBspline_2d_s * restrict spline, 
                          double x, double y, float* restrict val)
 {
@@ -672,8 +696,79 @@ void eval_UBspline_2d_s (UBspline_2d_s * restrict spline,
 #undef C
 
 }
+#else
+void eval_UBspline_2d_s (UBspline_2d_s * restrict spline, 
+                         double x, double y, float* restrict val)
+{
+  _mm_prefetch ((const char*)  &A_s[0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[3],_MM_HINT_T0);
+  /* SSE mesh point determination */
+  __m128 xy        = _mm_set_ps (x, y, 0.0, 0.0);
+  __m128 x0y0      = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 0.0, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 0.0, 0.0);
+  xy = _mm_sub_ps (xy, x0y0);
+  /* ux = (x - x0)/delta_x and same for y */
+  __m128 uxuy    = _mm_mul_ps (xy, delta_inv);
+  /* intpart = trunc (ux, uy) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuy);
+  __m128i ixiy;
+  _mm_storeu_si128 (&ixiy, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiy)[3];
+  int iy = ((int *)&ixiy)[2];
+
+  int xs = spline->x_stride;
+  /* This macro is used to give the pointer to coefficient data.
+     i and j should be in the range [0,3].  Coefficients are read four
+     at a time, so no j value is needed. */
+#define P(i) (spline->coefs+(ix+(i))*xs+iy)
+  /* Prefetch the data from main memory into cache so it's available
+     when we need to use it. */
+  _mm_prefetch ((const char*)P(0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3), _MM_HINT_T0);
+
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txty   = _mm_sub_ps (uxuy, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txty, txty);
+  __m128 t3     = _mm_mul_ps (t2, txty);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txty;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
+
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a, b, bP, tmp0, tmp1, tmp2, tmp3;
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpx,   a);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpy,   b);
+  /* Compute cP, dcP, and d2cP products 1/4 at a time to maximize
+     register reuse and avoid rerereading from memory or cache.
+     1st quarter */
+  tmp0 = _mm_loadu_ps (P(0));
+  tmp1 = _mm_loadu_ps (P(1));
+  tmp2 = _mm_loadu_ps (P(2));
+  tmp3 = _mm_loadu_ps (P(3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   b,   bP);
+  /* Compute value */
+  _MM_DOT4_PS (a, bP, *val);
+#undef P
+}
+#endif
 
 /* Value and gradient */
+#ifndef HAVE_SSE
 void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline, 
                             double x, double y, 
                             float* restrict val, float* restrict grad)
@@ -732,177 +827,97 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline,
 #undef C
 
 }
-
-/* Value, gradient, and laplacian */
-void eval_UBspline_2d_s_vgl (UBspline_2d_s * restrict spline, 
-                             double x, double y, float* restrict val, 
-                             float* restrict grad, float* restrict lapl)
+#else
+void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline, 
+                            double x, double y, 
+                            float* restrict val, float* restrict grad)
 {
-  int xs;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
-  
-  float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* restrict coefs = spline->coefs;
+  _mm_prefetch ((const char*)  &A_s[0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[3],_MM_HINT_T0);
+  _mm_prefetch ((const char*)  &A_s[4],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[5],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[6],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[7],_MM_HINT_T0);
+  /* SSE mesh point determination */
+  __m128 xy        = _mm_set_ps (x, y, 0.0, 0.0);
+  __m128 x0y0      = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 0.0, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 0.0, 0.0);
+  xy = _mm_sub_ps (xy, x0y0);
+  /* ux = (x - x0)/delta_x and same for y */
+  __m128 uxuy    = _mm_mul_ps (xy, delta_inv);
+  /* intpart = trunc (ux, uy) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuy);
+  __m128i ixiy;
+  _mm_storeu_si128 (&ixiy, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiy)[3];
+  int iy = ((int *)&ixiy)[2];
 
-  a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]   = (  Af[ 8]*tpx[0] +   Af[ 9]*tpx[1] +  Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]   = (  Af[12]*tpx[0] +   Af[13]*tpx[1] +  Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0]  = ( dAf[ 1]*tpx[1] +  dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1]  = ( dAf[ 5]*tpx[1] +  dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2]  = ( dAf[ 9]*tpx[1] +  dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3]  = ( dAf[13]*tpx[1] +  dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
+  int xs = spline->x_stride;
+  /* This macro is used to give the pointer to coefficient data.
+     i and j should be in the range [0,3].  Coefficients are read four
+     at a time, so no j value is needed. */
+#define P(i) (spline->coefs+(ix+(i))*xs+iy)
+  /* Prefetch the data from main memory into cache so it's available
+     when we need to use it. */
+  _mm_prefetch ((const char*)P(0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3), _MM_HINT_T0);
 
-  b[0]  = ( Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1]  = ( Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2]  = ( Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3]  = ( Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
-  
-  xs = spline->x_stride;
-#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
-  *val =    
-    (a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
-     a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
-     a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
-     a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
-  grad[0] = spline->x_grid.delta_inv *
-    (da[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
-     da[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
-     da[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
-     da[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
-  grad[1] = spline->y_grid.delta_inv *
-    (a[0]*(C(0,0)*db[0]+C(0,1)*db[1]+C(0,2)*db[2]+C(0,3)*db[3])+
-     a[1]*(C(1,0)*db[0]+C(1,1)*db[1]+C(1,2)*db[2]+C(1,3)*db[3])+
-     a[2]*(C(2,0)*db[0]+C(2,1)*db[1]+C(2,2)*db[2]+C(2,3)*db[3])+
-     a[3]*(C(3,0)*db[0]+C(3,1)*db[1]+C(3,2)*db[2]+C(3,3)*db[3]));
-  *lapl   = 
-    spline->y_grid.delta_inv * spline->y_grid.delta_inv *
-    (a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
-     a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
-     a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
-     a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3])) + 
-    spline->x_grid.delta_inv * spline->x_grid.delta_inv *
-     (d2a[0]*(C(0,0)*b[0]+C(0,1)*b[1]+C(0,2)*b[2]+C(0,3)*b[3])+
-      d2a[1]*(C(1,0)*b[0]+C(1,1)*b[1]+C(1,2)*b[2]+C(1,3)*b[3])+
-      d2a[2]*(C(2,0)*b[0]+C(2,1)*b[1]+C(2,2)*b[2]+C(2,3)*b[3])+
-      d2a[3]*(C(3,0)*b[0]+C(3,1)*b[1]+C(3,2)*b[2]+C(3,3)*b[3]));
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txty   = _mm_sub_ps (uxuy, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txty, txty);
+  __m128 t3     = _mm_mul_ps (t2, txty);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txty;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
 
-#undef C
-
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a, b, da, db, bP, dbP, tmp0, tmp1, tmp2, tmp3;
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpx,   a);
+  _MM_MATVEC4_PS (A_s[4], A_s[5], A_s[6], A_s[7], tpx,  da);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpy,   b);
+  _MM_MATVEC4_PS (A_s[4], A_s[5], A_s[6], A_s[7], tpy,  db);
+  /* Compute cP, dcP, and d2cP products 1/4 at a time to maximize
+     register reuse and avoid rerereading from memory or cache.
+     1st quarter */
+  tmp0 = _mm_loadu_ps (P(0));
+  tmp1 = _mm_loadu_ps (P(1));
+  tmp2 = _mm_loadu_ps (P(2));
+  tmp3 = _mm_loadu_ps (P(3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   b,   bP);
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,  db,  dbP);
+  /* Compute value */
+  _MM_DOT4_PS (a, bP, *val);
+  /* Compute gradient */
+  _MM_DOT4_PS (da, bP, grad[0]);
+  _MM_DOT4_PS (a, dbP, grad[1]);
+  /* Multiply gradients and hessians by appropriate grid inverses */
+  float dxInv = spline->x_grid.delta_inv;
+  float dyInv = spline->y_grid.delta_inv;
+  grad[0] *= dxInv;
+  grad[1] *= dyInv;
+#undef P
 }
-
-/* Value, gradient, and Hessian */
-void eval_UBspline_2d_s_vgh (UBspline_2d_s * restrict spline, 
-                             double x, double y, float* restrict val, 
-                             float* restrict grad, float* restrict hess)
-{
-  int xs;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);
-  ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
-  
-  float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* restrict coefs = spline->coefs;
-
-  a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]   = (  Af[ 8]*tpx[0] +   Af[ 9]*tpx[1] +  Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]   = (  Af[12]*tpx[0] +   Af[13]*tpx[1] +  Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0]  = ( dAf[ 1]*tpx[1] +  dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1]  = ( dAf[ 5]*tpx[1] +  dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2]  = ( dAf[ 9]*tpx[1] +  dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3]  = ( dAf[13]*tpx[1] +  dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  b[0]   = (  Af[ 0]*tpy[0] +   Af[ 1]*tpy[1] +  Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1]   = (  Af[ 4]*tpy[0] +   Af[ 5]*tpy[1] +  Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2]   = (  Af[ 8]*tpy[0] +   Af[ 9]*tpy[1] +  Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3]   = (  Af[12]*tpy[0] +   Af[13]*tpy[1] +  Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0]  = ( dAf[ 1]*tpy[1] +  dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1]  = ( dAf[ 5]*tpy[1] +  dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2]  = ( dAf[ 9]*tpy[1] +  dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3]  = ( dAf[13]*tpy[1] +  dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
-  
-  xs = spline->x_stride;
-#define C(i,j) coefs[(ix+(i))*xs+iy+(j)]
-  *val =    
-    (  a[0]*(C(0,0)*  b[0]+C(0,1)*  b[1]+C(0,2)*  b[2]+C(0,3)*  b[3])+
-       a[1]*(C(1,0)*  b[0]+C(1,1)*  b[1]+C(1,2)*  b[2]+C(1,3)*  b[3])+
-       a[2]*(C(2,0)*  b[0]+C(2,1)*  b[1]+C(2,2)*  b[2]+C(2,3)*  b[3])+
-       a[3]*(C(3,0)*  b[0]+C(3,1)*  b[1]+C(3,2)*  b[2]+C(3,3)*  b[3]));
-  grad[0] = spline->x_grid.delta_inv *
-    ( da[0]*(C(0,0)*  b[0]+C(0,1)*  b[1]+C(0,2)*  b[2]+C(0,3)*  b[3])+
-      da[1]*(C(1,0)*  b[0]+C(1,1)*  b[1]+C(1,2)*  b[2]+C(1,3)*  b[3])+
-      da[2]*(C(2,0)*  b[0]+C(2,1)*  b[1]+C(2,2)*  b[2]+C(2,3)*  b[3])+
-      da[3]*(C(3,0)*  b[0]+C(3,1)*  b[1]+C(3,2)*  b[2]+C(3,3)*  b[3]));
-  grad[1] = spline->y_grid.delta_inv *
-    (  a[0]*(C(0,0)* db[0]+C(0,1)* db[1]+C(0,2)* db[2]+C(0,3)* db[3])+
-       a[1]*(C(1,0)* db[0]+C(1,1)* db[1]+C(1,2)* db[2]+C(1,3)* db[3])+
-       a[2]*(C(2,0)* db[0]+C(2,1)* db[1]+C(2,2)* db[2]+C(2,3)* db[3])+
-       a[3]*(C(3,0)* db[0]+C(3,1)* db[1]+C(3,2)* db[2]+C(3,3)* db[3]));
-  hess[0] = spline->x_grid.delta_inv * spline->x_grid.delta_inv *
-    (d2a[0]*(C(0,0)*  b[0]+C(0,1)*  b[1]+C(0,2)*  b[2]+C(0,3)*  b[3])+
-     d2a[1]*(C(1,0)*  b[0]+C(1,1)*  b[1]+C(1,2)*  b[2]+C(1,3)*  b[3])+
-     d2a[2]*(C(2,0)*  b[0]+C(2,1)*  b[1]+C(2,2)*  b[2]+C(2,3)*  b[3])+
-     d2a[3]*(C(3,0)*  b[0]+C(3,1)*  b[1]+C(3,2)*  b[2]+C(3,3)*  b[3]));
-  hess[1] = spline->x_grid.delta_inv * spline->y_grid.delta_inv *
-    ( da[0]*(C(0,0)* db[0]+C(0,1)* db[1]+C(0,2)* db[2]+C(0,3)* db[3])+
-      da[1]*(C(1,0)* db[0]+C(1,1)* db[1]+C(1,2)* db[2]+C(1,3)* db[3])+
-      da[2]*(C(2,0)* db[0]+C(2,1)* db[1]+C(2,2)* db[2]+C(2,3)* db[3])+
-      da[3]*(C(3,0)* db[0]+C(3,1)* db[1]+C(3,2)* db[2]+C(3,3)* db[3]));
-  hess[3] = spline->y_grid.delta_inv * spline->y_grid.delta_inv *
-    (  a[0]*(C(0,0)*d2b[0]+C(0,1)*d2b[1]+C(0,2)*d2b[2]+C(0,3)*d2b[3])+
-       a[1]*(C(1,0)*d2b[0]+C(1,1)*d2b[1]+C(1,2)*d2b[2]+C(1,3)*d2b[3])+
-       a[2]*(C(2,0)*d2b[0]+C(2,1)*d2b[1]+C(2,2)*d2b[2]+C(2,3)*d2b[3])+
-       a[3]*(C(3,0)*d2b[0]+C(3,1)*d2b[1]+C(3,2)*d2b[2]+C(3,3)*d2b[3]));
-  hess[2] = hess[1];
-
-#undef C
-
-}
+#endif
 
 /************************************************************/
 /* 3D single-precision, real evaulation functions           */
 /************************************************************/
 
 /* Value only */
+#ifndef HAVE_SSE
 void eval_UBspline_3d_s (UBspline_3d_s * restrict spline, 
                          double x, double y, double z,
                          float* restrict val)
@@ -962,8 +977,118 @@ void eval_UBspline_3d_s (UBspline_3d_s * restrict spline,
 #undef P
 
 }
+#else
+void eval_UBspline_3d_s (UBspline_3d_s * restrict spline, 
+                         double x, double y, double z,
+                         float* restrict val)
+{
+  _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
+
+  /* SSE mesh point determination */
+  __m128 xyz       = _mm_set_ps (x, y, z, 0.0);
+  __m128 x0y0z0    = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 
+                                 spline->z_grid.start, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 
+                                 spline->z_grid.delta_inv, 0.0);
+  xyz = _mm_sub_ps (xyz, x0y0z0);
+  /* ux = (x - x0)/delta_x and same for y and z */
+  __m128 uxuyuz    = _mm_mul_ps (xyz, delta_inv);
+  /* intpart = trunc (ux, uy, uz) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuyuz);
+  __m128i ixiyiz;
+  _mm_storeu_si128 (&ixiyiz, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiyiz)[3];
+  int iy = ((int *)&ixiyiz)[2];
+  int iz = ((int *)&ixiyiz)[1];
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+
+  /* This macro is used to give the pointer to coefficient data.
+     i and j should be in the range [0,3].  Coefficients are read four
+     at a time, so no k value is needed. */
+#define P(i,j) (spline->coefs+(ix+(i))*xs+(iy+(j))*ys+(iz))
+  /* Prefetch the data from main memory into cache so it's available
+     when we need to use it. */
+  _mm_prefetch ((const char*)P(0,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(0,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(0,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(0,3), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,3), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,3), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,3), _MM_HINT_T0);
+
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txtytz = _mm_sub_ps (uxuyuz, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txtytz, txtytz);
+  __m128 t3     = _mm_mul_ps (t2, txtytz);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txtytz;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
+
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a, b, c, cP[4],bcP,
+    tmp0, tmp1, tmp2, tmp3;
+
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpx,   a);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpy,   b);
+  /* z-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpz,   c);
+
+  /* Compute cP, dcP, and d2cP products 1/4 at a time to maximize
+     register reuse and avoid rerereading from memory or cache.
+     1st quarter */
+  tmp0 = _mm_loadu_ps (P(0,0));  tmp1 = _mm_loadu_ps (P(0,1));
+  tmp2 = _mm_loadu_ps (P(0,2));  tmp3 = _mm_loadu_ps (P(0,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[0]);
+  /* 2nd quarter */
+  tmp0 = _mm_loadu_ps (P(1,0));  tmp1 = _mm_loadu_ps (P(1,1));
+  tmp2 = _mm_loadu_ps (P(1,2));  tmp3 = _mm_loadu_ps (P(1,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[1]);
+  /* 3rd quarter */
+  tmp0 = _mm_loadu_ps (P(2,0));  tmp1 = _mm_loadu_ps (P(2,1));
+  tmp2 = _mm_loadu_ps (P(2,2));  tmp3 = _mm_loadu_ps (P(2,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[2]);
+  /* 4th quarter */
+  tmp0 = _mm_loadu_ps (P(3,0));  tmp1 = _mm_loadu_ps (P(3,1));
+  tmp2 = _mm_loadu_ps (P(3,2));  tmp3 = _mm_loadu_ps (P(3,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[3]);
+  
+  /* Now compute bcP, dbcP, bdcP, d2bcP, bd2cP, and dbdc products */
+  _MM_MATVEC4_PS (  cP[0],   cP[1],   cP[2],   cP[3],   b,   bcP);
+
+  /* Compute value */
+  _MM_DOT4_PS (a, bcP, *val);
+
+#undef P
+}
+#endif
 
 /* Value and gradient */
+#ifndef HAVE_SSE
 void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline, 
                             double x, double y, double z,
                             float* restrict val, float* restrict grad)
@@ -1069,368 +1194,145 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline,
 #undef P
 
 }
-
-/* Value, gradient, and laplacian */
-void eval_UBspline_3d_s_vgl (UBspline_3d_s * restrict spline, 
-                             double x, double y, double z,
-                             float* restrict val, float* restrict grad, float* restrict lapl)
+#else
+/* Value and gradient */
+void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline, 
+                            double x, double y, double z,
+                            float* restrict val, float* restrict grad)
 {
-  int xs, ys;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modff (uy, &iparty);  int iy = (int) iparty; 
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz; 
+  _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
+  _mm_prefetch ((const char*)  &A_s[ 4],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 5],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 6],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 7],_MM_HINT_T0);
+
+  /* SSE mesh point determination */
+  __m128 xyz       = _mm_set_ps (x, y, z, 0.0);
+  __m128 x0y0z0    = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 
+                                 spline->z_grid.start, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 
+                                 spline->z_grid.delta_inv, 0.0);
+  xyz = _mm_sub_ps (xyz, x0y0z0);
+  /* ux = (x - x0)/delta_x and same for y and z */
+  __m128 uxuyuz    = _mm_mul_ps (xyz, delta_inv);
+  /* intpart = trunc (ux, uy, uz) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuyuz);
+  __m128i ixiyiz;
+  _mm_storeu_si128 (&ixiyiz, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiyiz)[3];
+  int iy = ((int *)&ixiyiz)[2];
+  int iz = ((int *)&ixiyiz)[1];
+
+  int xs = spline->x_stride;
+  int ys = spline->y_stride;
+
+  /* This macro is used to give the pointer to coefficient data.
+     i and j should be in the range [0,3].  Coefficients are read four
+     at a time, so no k value is needed. */
+#define P(i,j) (spline->coefs+(ix+(i))*xs+(iy+(j))*ys+(iz))
+  /* Prefetch the data from main memory into cache so it's available
+     when we need to use it. */
+  _mm_prefetch ((const char*)P(0,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(0,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(0,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(0,3), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(1,3), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(2,3), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,0), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,1), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,2), _MM_HINT_T0);
+  _mm_prefetch ((const char*)P(3,3), _MM_HINT_T0);
+
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txtytz = _mm_sub_ps (uxuyuz, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txtytz, txtytz);
+  __m128 t3     = _mm_mul_ps (t2, txtytz);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txtytz;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
+
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a, b, c, da, db, dc,
+    cP[4], dcP[4], bcP, dbcP, bdcP,
+    tmp0, tmp1, tmp2, tmp3;
   
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
-    d2a[4], d2b[4], d2c[4], cP[16], dcP[16], bcP[4], dbcP[4], d2bcP[4], bdcP[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* restrict coefs = spline->coefs;
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpx,   a);
+  _MM_MATVEC4_PS (A_s[4], A_s[5], A_s[6], A_s[7], tpx,  da);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpy,   b);
+  _MM_MATVEC4_PS (A_s[4], A_s[5], A_s[6], A_s[7], tpy,  db);
+  /* z-dependent vectors */
+  _MM_MATVEC4_PS (A_s[0], A_s[1], A_s[2], A_s[3], tpz,   c);
+  _MM_MATVEC4_PS (A_s[4], A_s[5], A_s[6], A_s[7], tpz,  dc);
 
-  a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]   = (  Af[ 8]*tpx[0] +   Af[ 9]*tpx[1] +  Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]   = (  Af[12]*tpx[0] +   Af[13]*tpx[1] +  Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0]  = ( dAf[ 1]*tpx[1] +  dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1]  = ( dAf[ 5]*tpx[1] +  dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2]  = ( dAf[ 9]*tpx[1] +  dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3]  = ( dAf[13]*tpx[1] +  dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  b[0]  = ( Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1]  = ( Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2]  = ( Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3]  = ( Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
-
-  c[0]  = ( Af[ 0]*tpz[0] + Af[ 1]*tpz[1] + Af[ 2]*tpz[2] + Af[ 3]*tpz[3]);
-  c[1]  = ( Af[ 4]*tpz[0] + Af[ 5]*tpz[1] + Af[ 6]*tpz[2] + Af[ 7]*tpz[3]);
-  c[2]  = ( Af[ 8]*tpz[0] + Af[ 9]*tpz[1] + Af[10]*tpz[2] + Af[11]*tpz[3]);
-  c[3]  = ( Af[12]*tpz[0] + Af[13]*tpz[1] + Af[14]*tpz[2] + Af[15]*tpz[3]);
-  dc[0] = (dAf[ 1]*tpz[1] + dAf[ 2]*tpz[2] + dAf[ 3]*tpz[3]);
-  dc[1] = (dAf[ 5]*tpz[1] + dAf[ 6]*tpz[2] + dAf[ 7]*tpz[3]);
-  dc[2] = (dAf[ 9]*tpz[1] + dAf[10]*tpz[2] + dAf[11]*tpz[3]);
-  dc[3] = (dAf[13]*tpz[1] + dAf[14]*tpz[2] + dAf[15]*tpz[3]);
-  d2c[0] = (d2Af[ 2]*tpz[2] + d2Af[ 3]*tpz[3]);
-  d2c[1] = (d2Af[ 6]*tpz[2] + d2Af[ 7]*tpz[3]);
-  d2c[2] = (d2Af[10]*tpz[2] + d2Af[11]*tpz[3]);
-  d2c[3] = (d2Af[14]*tpz[2] + d2Af[15]*tpz[3]);
+  /* Compute cP, dcP, and d2cP products 1/4 at a time to maximize
+     register reuse and avoid rerereading from memory or cache.
+     1st quarter */
+  tmp0 = _mm_loadu_ps (P(0,0));  tmp1 = _mm_loadu_ps (P(0,1));
+  tmp2 = _mm_loadu_ps (P(0,2));  tmp3 = _mm_loadu_ps (P(0,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[0]);
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,  dc,  dcP[0]);
+  /* 2nd quarter */
+  tmp0 = _mm_loadu_ps (P(1,0));  tmp1 = _mm_loadu_ps (P(1,1));
+  tmp2 = _mm_loadu_ps (P(1,2));  tmp3 = _mm_loadu_ps (P(1,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[1]);
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,  dc,  dcP[1]);
+  /* 3rd quarter */
+  tmp0 = _mm_loadu_ps (P(2,0));  tmp1 = _mm_loadu_ps (P(2,1));
+  tmp2 = _mm_loadu_ps (P(2,2));  tmp3 = _mm_loadu_ps (P(2,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[2]);
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,  dc,  dcP[2]);
+  /* 4th quarter */
+  tmp0 = _mm_loadu_ps (P(3,0));  tmp1 = _mm_loadu_ps (P(3,1));
+  tmp2 = _mm_loadu_ps (P(3,2));  tmp3 = _mm_loadu_ps (P(3,3));
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,   c,   cP[3]);
+  _MM_MATVEC4_PS (tmp0, tmp1, tmp2, tmp3,  dc,  dcP[3]);
   
-  xs = spline->x_stride;
-  ys = spline->y_stride;
-#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
-  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
-  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
-  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
-  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
-  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
-  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
-  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
-  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
-  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
-  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
-  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
-  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
-  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
-  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
-  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
-  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
+  /* Now compute bcP, dbcP, bdcP, d2bcP, bd2cP, and dbdc products */
+  _MM_MATVEC4_PS (  cP[0],   cP[1],   cP[2],   cP[3],   b,   bcP);
+  _MM_MATVEC4_PS (  cP[0],   cP[1],   cP[2],   cP[3],  db,  dbcP);
+  _MM_MATVEC4_PS ( dcP[0],  dcP[1],  dcP[2],  dcP[3],   b,  bdcP);
 
-  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
-  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
-  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
-  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
-  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
-  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
-  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
-  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
-  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
-  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
-  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
-  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
-  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
-  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
-  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
-  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
-
-  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
-  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
-  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
-  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
-
-  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
-  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
-  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
-  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
-
-  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
-  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
-  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
-  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
-
-  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
-  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
-  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
-  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
-
-
-  *val    = 
-    ( a[0]*bcP[0] +  a[1]*bcP[1] +  a[2]*bcP[2] +  a[3]*bcP[3]);
-
-  grad[0] = spline->x_grid.delta_inv *
-    (da[0]*bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
-  grad[1] = spline->y_grid.delta_inv * 
-    (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
-  grad[2] = spline->z_grid.delta_inv * 
-    (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
-
-  *lapl = 
-    spline->x_grid.delta_inv * spline->x_grid.delta_inv * 
-    (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3])
-    
-    + spline->y_grid.delta_inv * spline->y_grid.delta_inv * 
-    (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]) +
-    
-    + spline->z_grid.delta_inv * spline->z_grid.delta_inv * 
-    (a[0]*(b[0]*(P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3])+    
-           b[1]*(P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3])+
-           b[2]*(P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3])+
-           b[3]*(P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]))+
-     a[1]*(b[0]*(P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3])+
-           b[1]*(P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3])+
-           b[2]*(P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3])+
-           b[3]*(P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]))+
-     a[2]*(b[0]*(P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3])+
-           b[1]*(P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3])+
-           b[2]*(P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3])+
-           b[3]*(P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]))+
-     a[3]*(b[0]*(P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3])+
-           b[1]*(P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3])+
-           b[2]*(P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3])+
-           b[3]*(P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3])));
+  /* Compute value */
+  _MM_DOT4_PS (a, bcP, *val);
+  /* Compute gradient */
+  _MM_DOT4_PS (da, bcP, grad[0]);
+  _MM_DOT4_PS (a, dbcP, grad[1]);
+  _MM_DOT4_PS (a, bdcP, grad[2]);
+  
+  /* Multiply gradients and hessians by appropriate grid inverses */
+  float dxInv = spline->x_grid.delta_inv;
+  float dyInv = spline->y_grid.delta_inv;
+  float dzInv = spline->z_grid.delta_inv;
+  grad[0] *= dxInv;
+  grad[1] *= dyInv;
+  grad[2] *= dzInv;
 #undef P
-
 }
-
-/* Value, gradient, and Hessian */
-void eval_UBspline_3d_s_vgh (UBspline_3d_s * restrict spline, 
-                             double x, double y, double z,
-                             float* restrict val, float* restrict grad, float* restrict hess)
-{
-  int xs, ys, offmax;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;  
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  ux = fmin (ux, (double)(spline->x_grid.num)-1.0e-5);
-  uy = fmin (uy, (double)(spline->y_grid.num)-1.0e-5);
-  uz = fmin (uz, (double)(spline->z_grid.num)-1.0e-5);
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
-
-/*   if ((ix >= spline->x_grid.num))    x = spline->x_grid.num;
-     if ((ix < 0))                      x = 0;                 
-     if ((iy >= spline->y_grid.num))    y = spline->y_grid.num;
-     if ((iy < 0))                      y = 0;                 
-     if ((iz >= spline->z_grid.num))    z = spline->z_grid.num;
-     if ((iz < 0))                      z = 0;                 */
-
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
-    d2a[4], d2b[4], d2c[4], cP[16], dcP[16], d2cP[16], bcP[4], dbcP[4],
-    d2bcP[4], dbdcP[4], bd2cP[4], bdcP[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* restrict coefs = spline->coefs;
-
-  a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]   = (  Af[ 8]*tpx[0] +   Af[ 9]*tpx[1] +  Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]   = (  Af[12]*tpx[0] +   Af[13]*tpx[1] +  Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0]  = ( dAf[ 1]*tpx[1] +  dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1]  = ( dAf[ 5]*tpx[1] +  dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2]  = ( dAf[ 9]*tpx[1] +  dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3]  = ( dAf[13]*tpx[1] +  dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  b[0]  = ( Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1]  = ( Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2]  = ( Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3]  = ( Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
-
-  c[0]  = ( Af[ 0]*tpz[0] + Af[ 1]*tpz[1] + Af[ 2]*tpz[2] + Af[ 3]*tpz[3]);
-  c[1]  = ( Af[ 4]*tpz[0] + Af[ 5]*tpz[1] + Af[ 6]*tpz[2] + Af[ 7]*tpz[3]);
-  c[2]  = ( Af[ 8]*tpz[0] + Af[ 9]*tpz[1] + Af[10]*tpz[2] + Af[11]*tpz[3]);
-  c[3]  = ( Af[12]*tpz[0] + Af[13]*tpz[1] + Af[14]*tpz[2] + Af[15]*tpz[3]);
-  dc[0] = (dAf[ 1]*tpz[1] + dAf[ 2]*tpz[2] + dAf[ 3]*tpz[3]);
-  dc[1] = (dAf[ 5]*tpz[1] + dAf[ 6]*tpz[2] + dAf[ 7]*tpz[3]);
-  dc[2] = (dAf[ 9]*tpz[1] + dAf[10]*tpz[2] + dAf[11]*tpz[3]);
-  dc[3] = (dAf[13]*tpz[1] + dAf[14]*tpz[2] + dAf[15]*tpz[3]);
-  d2c[0] = (d2Af[ 2]*tpz[2] + d2Af[ 3]*tpz[3]);
-  d2c[1] = (d2Af[ 6]*tpz[2] + d2Af[ 7]*tpz[3]);
-  d2c[2] = (d2Af[10]*tpz[2] + d2Af[11]*tpz[3]);
-  d2c[3] = (d2Af[14]*tpz[2] + d2Af[15]*tpz[3]);
-  
-  xs = spline->x_stride;
-  ys = spline->y_stride;
-  offmax = (ix+3)*xs + (iy+3)*ys + iz+3;
-/*   if (offmax > spline->coef_size) {
-        fprintf (stderr, "Outside bounds in spline evalutation.\n"
-                 "offmax = %d  csize = %d\n", offmax, spline->csize);
-        fprintf (stderr, "ix=%d   iy=%d   iz=%d\n", ix,iy,iz);
-     }*/
-#define P(i,j,k) coefs[(ix+(i))*xs+(iy+(j))*ys+(iz+(k))]
-  cP[ 0] = (P(0,0,0)*c[0]+P(0,0,1)*c[1]+P(0,0,2)*c[2]+P(0,0,3)*c[3]);
-  cP[ 1] = (P(0,1,0)*c[0]+P(0,1,1)*c[1]+P(0,1,2)*c[2]+P(0,1,3)*c[3]);
-  cP[ 2] = (P(0,2,0)*c[0]+P(0,2,1)*c[1]+P(0,2,2)*c[2]+P(0,2,3)*c[3]);
-  cP[ 3] = (P(0,3,0)*c[0]+P(0,3,1)*c[1]+P(0,3,2)*c[2]+P(0,3,3)*c[3]);
-  cP[ 4] = (P(1,0,0)*c[0]+P(1,0,1)*c[1]+P(1,0,2)*c[2]+P(1,0,3)*c[3]);
-  cP[ 5] = (P(1,1,0)*c[0]+P(1,1,1)*c[1]+P(1,1,2)*c[2]+P(1,1,3)*c[3]);
-  cP[ 6] = (P(1,2,0)*c[0]+P(1,2,1)*c[1]+P(1,2,2)*c[2]+P(1,2,3)*c[3]);
-  cP[ 7] = (P(1,3,0)*c[0]+P(1,3,1)*c[1]+P(1,3,2)*c[2]+P(1,3,3)*c[3]);
-  cP[ 8] = (P(2,0,0)*c[0]+P(2,0,1)*c[1]+P(2,0,2)*c[2]+P(2,0,3)*c[3]);
-  cP[ 9] = (P(2,1,0)*c[0]+P(2,1,1)*c[1]+P(2,1,2)*c[2]+P(2,1,3)*c[3]);
-  cP[10] = (P(2,2,0)*c[0]+P(2,2,1)*c[1]+P(2,2,2)*c[2]+P(2,2,3)*c[3]);
-  cP[11] = (P(2,3,0)*c[0]+P(2,3,1)*c[1]+P(2,3,2)*c[2]+P(2,3,3)*c[3]);
-  cP[12] = (P(3,0,0)*c[0]+P(3,0,1)*c[1]+P(3,0,2)*c[2]+P(3,0,3)*c[3]);
-  cP[13] = (P(3,1,0)*c[0]+P(3,1,1)*c[1]+P(3,1,2)*c[2]+P(3,1,3)*c[3]);
-  cP[14] = (P(3,2,0)*c[0]+P(3,2,1)*c[1]+P(3,2,2)*c[2]+P(3,2,3)*c[3]);
-  cP[15] = (P(3,3,0)*c[0]+P(3,3,1)*c[1]+P(3,3,2)*c[2]+P(3,3,3)*c[3]);
-
-  dcP[ 0] = (P(0,0,0)*dc[0]+P(0,0,1)*dc[1]+P(0,0,2)*dc[2]+P(0,0,3)*dc[3]);
-  dcP[ 1] = (P(0,1,0)*dc[0]+P(0,1,1)*dc[1]+P(0,1,2)*dc[2]+P(0,1,3)*dc[3]);
-  dcP[ 2] = (P(0,2,0)*dc[0]+P(0,2,1)*dc[1]+P(0,2,2)*dc[2]+P(0,2,3)*dc[3]);
-  dcP[ 3] = (P(0,3,0)*dc[0]+P(0,3,1)*dc[1]+P(0,3,2)*dc[2]+P(0,3,3)*dc[3]);
-  dcP[ 4] = (P(1,0,0)*dc[0]+P(1,0,1)*dc[1]+P(1,0,2)*dc[2]+P(1,0,3)*dc[3]);
-  dcP[ 5] = (P(1,1,0)*dc[0]+P(1,1,1)*dc[1]+P(1,1,2)*dc[2]+P(1,1,3)*dc[3]);
-  dcP[ 6] = (P(1,2,0)*dc[0]+P(1,2,1)*dc[1]+P(1,2,2)*dc[2]+P(1,2,3)*dc[3]);
-  dcP[ 7] = (P(1,3,0)*dc[0]+P(1,3,1)*dc[1]+P(1,3,2)*dc[2]+P(1,3,3)*dc[3]);
-  dcP[ 8] = (P(2,0,0)*dc[0]+P(2,0,1)*dc[1]+P(2,0,2)*dc[2]+P(2,0,3)*dc[3]);
-  dcP[ 9] = (P(2,1,0)*dc[0]+P(2,1,1)*dc[1]+P(2,1,2)*dc[2]+P(2,1,3)*dc[3]);
-  dcP[10] = (P(2,2,0)*dc[0]+P(2,2,1)*dc[1]+P(2,2,2)*dc[2]+P(2,2,3)*dc[3]);
-  dcP[11] = (P(2,3,0)*dc[0]+P(2,3,1)*dc[1]+P(2,3,2)*dc[2]+P(2,3,3)*dc[3]);
-  dcP[12] = (P(3,0,0)*dc[0]+P(3,0,1)*dc[1]+P(3,0,2)*dc[2]+P(3,0,3)*dc[3]);
-  dcP[13] = (P(3,1,0)*dc[0]+P(3,1,1)*dc[1]+P(3,1,2)*dc[2]+P(3,1,3)*dc[3]);
-  dcP[14] = (P(3,2,0)*dc[0]+P(3,2,1)*dc[1]+P(3,2,2)*dc[2]+P(3,2,3)*dc[3]);
-  dcP[15] = (P(3,3,0)*dc[0]+P(3,3,1)*dc[1]+P(3,3,2)*dc[2]+P(3,3,3)*dc[3]);
-
-  d2cP[ 0] = (P(0,0,0)*d2c[0]+P(0,0,1)*d2c[1]+P(0,0,2)*d2c[2]+P(0,0,3)*d2c[3]);
-  d2cP[ 1] = (P(0,1,0)*d2c[0]+P(0,1,1)*d2c[1]+P(0,1,2)*d2c[2]+P(0,1,3)*d2c[3]);
-  d2cP[ 2] = (P(0,2,0)*d2c[0]+P(0,2,1)*d2c[1]+P(0,2,2)*d2c[2]+P(0,2,3)*d2c[3]);
-  d2cP[ 3] = (P(0,3,0)*d2c[0]+P(0,3,1)*d2c[1]+P(0,3,2)*d2c[2]+P(0,3,3)*d2c[3]);
-  d2cP[ 4] = (P(1,0,0)*d2c[0]+P(1,0,1)*d2c[1]+P(1,0,2)*d2c[2]+P(1,0,3)*d2c[3]);
-  d2cP[ 5] = (P(1,1,0)*d2c[0]+P(1,1,1)*d2c[1]+P(1,1,2)*d2c[2]+P(1,1,3)*d2c[3]);
-  d2cP[ 6] = (P(1,2,0)*d2c[0]+P(1,2,1)*d2c[1]+P(1,2,2)*d2c[2]+P(1,2,3)*d2c[3]);
-  d2cP[ 7] = (P(1,3,0)*d2c[0]+P(1,3,1)*d2c[1]+P(1,3,2)*d2c[2]+P(1,3,3)*d2c[3]);
-  d2cP[ 8] = (P(2,0,0)*d2c[0]+P(2,0,1)*d2c[1]+P(2,0,2)*d2c[2]+P(2,0,3)*d2c[3]);
-  d2cP[ 9] = (P(2,1,0)*d2c[0]+P(2,1,1)*d2c[1]+P(2,1,2)*d2c[2]+P(2,1,3)*d2c[3]);
-  d2cP[10] = (P(2,2,0)*d2c[0]+P(2,2,1)*d2c[1]+P(2,2,2)*d2c[2]+P(2,2,3)*d2c[3]);
-  d2cP[11] = (P(2,3,0)*d2c[0]+P(2,3,1)*d2c[1]+P(2,3,2)*d2c[2]+P(2,3,3)*d2c[3]);
-  d2cP[12] = (P(3,0,0)*d2c[0]+P(3,0,1)*d2c[1]+P(3,0,2)*d2c[2]+P(3,0,3)*d2c[3]);
-  d2cP[13] = (P(3,1,0)*d2c[0]+P(3,1,1)*d2c[1]+P(3,1,2)*d2c[2]+P(3,1,3)*d2c[3]);
-  d2cP[14] = (P(3,2,0)*d2c[0]+P(3,2,1)*d2c[1]+P(3,2,2)*d2c[2]+P(3,2,3)*d2c[3]);
-  d2cP[15] = (P(3,3,0)*d2c[0]+P(3,3,1)*d2c[1]+P(3,3,2)*d2c[2]+P(3,3,3)*d2c[3]);
-
-  bcP[0] = ( b[0]*cP[ 0] + b[1]*cP[ 1] + b[2]*cP[ 2] + b[3]*cP[ 3]);
-  bcP[1] = ( b[0]*cP[ 4] + b[1]*cP[ 5] + b[2]*cP[ 6] + b[3]*cP[ 7]);
-  bcP[2] = ( b[0]*cP[ 8] + b[1]*cP[ 9] + b[2]*cP[10] + b[3]*cP[11]);
-  bcP[3] = ( b[0]*cP[12] + b[1]*cP[13] + b[2]*cP[14] + b[3]*cP[15]);
-
-  dbcP[0] = ( db[0]*cP[ 0] + db[1]*cP[ 1] + db[2]*cP[ 2] + db[3]*cP[ 3]);
-  dbcP[1] = ( db[0]*cP[ 4] + db[1]*cP[ 5] + db[2]*cP[ 6] + db[3]*cP[ 7]);
-  dbcP[2] = ( db[0]*cP[ 8] + db[1]*cP[ 9] + db[2]*cP[10] + db[3]*cP[11]);
-  dbcP[3] = ( db[0]*cP[12] + db[1]*cP[13] + db[2]*cP[14] + db[3]*cP[15]);
-
-  bdcP[0] = ( b[0]*dcP[ 0] + b[1]*dcP[ 1] + b[2]*dcP[ 2] + b[3]*dcP[ 3]);
-  bdcP[1] = ( b[0]*dcP[ 4] + b[1]*dcP[ 5] + b[2]*dcP[ 6] + b[3]*dcP[ 7]);
-  bdcP[2] = ( b[0]*dcP[ 8] + b[1]*dcP[ 9] + b[2]*dcP[10] + b[3]*dcP[11]);
-  bdcP[3] = ( b[0]*dcP[12] + b[1]*dcP[13] + b[2]*dcP[14] + b[3]*dcP[15]);
-
-  bd2cP[0] = ( b[0]*d2cP[ 0] + b[1]*d2cP[ 1] + b[2]*d2cP[ 2] + b[3]*d2cP[ 3]);
-  bd2cP[1] = ( b[0]*d2cP[ 4] + b[1]*d2cP[ 5] + b[2]*d2cP[ 6] + b[3]*d2cP[ 7]);
-  bd2cP[2] = ( b[0]*d2cP[ 8] + b[1]*d2cP[ 9] + b[2]*d2cP[10] + b[3]*d2cP[11]);
-  bd2cP[3] = ( b[0]*d2cP[12] + b[1]*d2cP[13] + b[2]*d2cP[14] + b[3]*d2cP[15]);
-
-  d2bcP[0] = ( d2b[0]*cP[ 0] + d2b[1]*cP[ 1] + d2b[2]*cP[ 2] + d2b[3]*cP[ 3]);
-  d2bcP[1] = ( d2b[0]*cP[ 4] + d2b[1]*cP[ 5] + d2b[2]*cP[ 6] + d2b[3]*cP[ 7]);
-  d2bcP[2] = ( d2b[0]*cP[ 8] + d2b[1]*cP[ 9] + d2b[2]*cP[10] + d2b[3]*cP[11]);
-  d2bcP[3] = ( d2b[0]*cP[12] + d2b[1]*cP[13] + d2b[2]*cP[14] + d2b[3]*cP[15]);
-
-  dbdcP[0] = ( db[0]*dcP[ 0] + db[1]*dcP[ 1] + db[2]*dcP[ 2] + db[3]*dcP[ 3]);
-  dbdcP[1] = ( db[0]*dcP[ 4] + db[1]*dcP[ 5] + db[2]*dcP[ 6] + db[3]*dcP[ 7]);
-  dbdcP[2] = ( db[0]*dcP[ 8] + db[1]*dcP[ 9] + db[2]*dcP[10] + db[3]*dcP[11]);
-  dbdcP[3] = ( db[0]*dcP[12] + db[1]*dcP[13] + db[2]*dcP[14] + db[3]*dcP[15]);
-
-  *val = a[0]*bcP[0] + a[1]*bcP[1] + a[2]*bcP[2] + a[3]*bcP[3];
-  grad[0] = spline->x_grid.delta_inv *
-    (da[0] *bcP[0] + da[1]*bcP[1] + da[2]*bcP[2] + da[3]*bcP[3]);
-  grad[1] = spline->y_grid.delta_inv *
-    (a[0]*dbcP[0] + a[1]*dbcP[1] + a[2]*dbcP[2] + a[3]*dbcP[3]);
-  grad[2] = spline->z_grid.delta_inv *
-    (a[0]*bdcP[0] + a[1]*bdcP[1] + a[2]*bdcP[2] + a[3]*bdcP[3]);
-  /* d2x */
-  hess[0] = spline->x_grid.delta_inv * spline->x_grid.delta_inv *
-    (d2a[0]*bcP[0] + d2a[1]*bcP[1] + d2a[2]*bcP[2] + d2a[3]*bcP[3]);
-  /* dx dy */
-  hess[1] = spline->x_grid.delta_inv * spline->y_grid.delta_inv *
-    (da[0]*dbcP[0] + da[1]*dbcP[1] + da[2]*dbcP[2] + da[3]*dbcP[3]);
-  hess[3] = hess[1];
-  /* dx dz */
-  hess[2] = spline->x_grid.delta_inv * spline->z_grid.delta_inv *
-    (da[0]*bdcP[0] + da[1]*bdcP[1] + da[2]*bdcP[2] + da[3]*bdcP[3]);
-  hess[6] = hess[2];
-  /* d2y */
-  hess[4] = spline->y_grid.delta_inv * spline->y_grid.delta_inv *
-    (a[0]*d2bcP[0] + a[1]*d2bcP[1] + a[2]*d2bcP[2] + a[3]*d2bcP[3]);
-  /* dy dz */
-  hess[5] = spline->y_grid.delta_inv * spline->z_grid.delta_inv *
-    (a[0]*dbdcP[0] + a[1]*dbdcP[1] + a[2]*dbdcP[2] + a[3]*dbdcP[3]);
-  hess[7] = hess[5];
-  /* d2z */
-  hess[8] = spline->z_grid.delta_inv * spline->z_grid.delta_inv *
-    (a[0]*bd2cP[0] + a[1]*bd2cP[1] + a[2]*bd2cP[2] + a[3]*bd2cP[3]);
-#undef P
-
-}
+#endif
 
 /*************************************
  *************************************
  **    Uniform, multiple splines    **
  *************************************
  *************************************/
-
 
 /***********************************************************
 
@@ -1468,10 +1370,19 @@ create_multi_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, int num_splines)
   }
 
   N = num_splines;
+#ifdef HAVE_SSE
+  if (N % 4) 
+    N += 4 - (N % 4);
+#endif 
   spline->x_stride = N;
   x_grid.delta_inv = 1.0/x_grid.delta;
   spline->x_grid   = x_grid;
+#ifndef HAVE_SSE
   spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)N);
+#else
+  posix_memalign ((void**)&spline->coefs, 64, (sizeof(float)*Nx*N));
+  init_sse_data();    
+#endif
   spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)N;
 
   return spline;
@@ -1520,9 +1431,19 @@ create_multi_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
   spline->y_grid   = y_grid;
 
   N = num_splines;
+#ifdef HAVE_SSE
+  if (N % 4) 
+    N += 4 - (N % 4);
+#endif
   spline->x_stride = Ny*N;
   spline->y_stride = N;
+#ifndef HAVE_SSE
   spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)N);
+#else
+  posix_memalign ((void**)&spline->coefs, 64, 
+                  sizeof(float)*Nx*Ny*N);
+  init_sse_data();
+#endif
   spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)N;
 
   return spline;
@@ -1604,10 +1525,20 @@ create_multi_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->z_grid   = z_grid;
 
   N = num_splines;
+#ifdef HAVE_SSE
+  if (N % 4) 
+    N += 4 - (N % 4);
+#endif
   spline->x_stride      = Ny*Nz*N;
   spline->y_stride      = Nz*N;
   spline->z_stride      = N;
+#ifndef HAVE_SSE
   spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz*(size_t)N);
+#else
+  posix_memalign ((void**)&spline->coefs, 64, 
+                  ((size_t)sizeof(float)*Nx*Ny*Nz*N));
+  init_sse_data();
+#endif
   spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz*(size_t)N;
 
   return spline;
@@ -1752,71 +1683,10 @@ void eval_multi_UBspline_1d_s_vg (multi_UBspline_1d_s *spline,
     grads[n] *= dxInv;
 }
 
-void eval_multi_UBspline_1d_s_vgl (multi_UBspline_1d_s *spline,
-                                   double x,
-                                   float* restrict vals,
-                                   float* restrict grads,
-                                   float* restrict lapl)          
-{
-  int n, i;
-  x -= spline->x_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float ipartx, tx;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  
-  float tpx[4], a[4], da[4], d2a[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  float* restrict coefs = spline->coefs;
-
-  a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]  = (Af[ 8]*tpx[0] + Af[ 9]*tpx[1] + Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]  = (Af[12]*tpx[0] + Af[13]*tpx[1] + Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0] = (dAf[ 0]*tpx[0] + dAf[ 1]*tpx[1] + dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1] = (dAf[ 4]*tpx[0] + dAf[ 5]*tpx[1] + dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2] = (dAf[ 8]*tpx[0] + dAf[ 9]*tpx[1] + dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3] = (dAf[12]*tpx[0] + dAf[13]*tpx[1] + dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 0]*tpx[0] + d2Af[ 1]*tpx[1] + d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 4]*tpx[0] + d2Af[ 5]*tpx[1] + d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[ 8]*tpx[0] + d2Af[ 9]*tpx[1] + d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[12]*tpx[0] + d2Af[13]*tpx[1] + d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  intptr_t xs = spline->x_stride;
-
-  for (n=0; n<spline->num_splines; n++) {
-    vals[n]  = 0.0;
-    grads[n] = 0.0;
-    lapl[n]  = 0.0;
-  }
-
-  for (i=0; i<4; i++) {      
-    coefs = spline->coefs + ((ix+i)*xs);
-    for (n=0; n<spline->num_splines; n++) {
-      vals[n]  +=   a[i] * coefs[n];
-      grads[n] +=  da[i] * coefs[n];
-      lapl[n]  += d2a[i] * coefs[n];
-    }
-  }
-
-  float dxInv = spline->x_grid.delta_inv;
-  for (n=0; n<spline->num_splines; n++) {
-    grads[n] *= dxInv;
-    lapl [n] *= dxInv*dxInv;
-  }
-}
-
-void eval_multi_UBspline_1d_s_vgh (multi_UBspline_1d_s *spline,
-                                   double x,
-                                   float* restrict vals,
-                                   float* restrict grads,
-                                   float* restrict hess)
-{
-  eval_multi_UBspline_1d_s_vgl (spline, x, vals, grads, hess);
-}
-
 /************************************************************/
 /* 2D single precision, real evaulation functions           */
 /************************************************************/
+#ifndef HAVE_SSE
 void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
                                double x, double y,
                                float* restrict vals)
@@ -1859,7 +1729,95 @@ void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
         vals[n] += prefactor*coefs[n];
     }
 }
+#else
+void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
+                               double x, double y,
+                               float* restrict vals)
+{
+  _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
+  /* SSE mesh point determination */
+  __m128 xy        = _mm_set_ps (x, y, 0.0, 0.0);
+  __m128 x0y0      = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 0.0, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 0.0, 0.0);
+  xy = _mm_sub_ps (xy, x0y0);
+  /* ux = (x - x0)/delta_x and same for y */
+  __m128 uxuy    = _mm_mul_ps (xy, delta_inv);
+  /* intpart = trunc (ux, uy) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuy);
+  __m128i ixiy;
+  _mm_storeu_si128 (&ixiy, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiy)[3];
+  int iy = ((int *)&ixiy)[2];
 
+  intptr_t xs = spline->x_stride;
+  intptr_t ys = spline->y_stride;
+
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txty   = _mm_sub_ps (uxuy, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txty, txty);
+  __m128 t3     = _mm_mul_ps (t2, txty);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txty;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
+
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a4, b4, da4, db4;
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpx,   a4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpx,  da4);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpy,   b4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpy,  db4);
+
+  __m128 a[4], b[4];
+  __m128 tmp;
+
+  /* Unpack a values */
+  tmp=_mm_unpacklo_ps(  a4,   a4);   a[0]=_mm_unpacklo_ps(tmp, tmp);   a[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  a4,   a4);   a[2]=_mm_unpacklo_ps(tmp, tmp);   a[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  /* Unpack b values */
+  tmp=_mm_unpacklo_ps(  b4,   b4);   b[0]=_mm_unpacklo_ps(tmp, tmp);   b[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  b4,   b4);   b[2]=_mm_unpacklo_ps(tmp, tmp);   b[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  int N = spline->num_splines;
+  int Nm = (N+3)/4;
+
+  __m128 mvals[Nm];
+
+  /* Zero out values; */
+  for (int n=0; n<Nm; n++)     mvals[n] = _mm_setzero_ps();
+
+  /* Main compute loop */
+  __m128 ab;
+  for (int i=0; i<4; i++)
+    for (int j=0; j<4; j++) {
+      ab      = _mm_mul_ps (  a[i],   b[j]);
+      
+      __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys);
+      for (int n=0; n<Nm; n++) 
+        mvals[n]     = _mm_add_ps (mvals[n],     _mm_mul_ps(  ab   , coefs[n]));
+    }
+  
+  /* Now, store results back */
+  for (int n=0; n<N; n++) 
+    vals[n] = ((float*)mvals)[n];
+}
+#endif
+
+#ifndef HAVE_SSE
 void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
                                   double x, double y,
                                   float* restrict vals,
@@ -1927,186 +1885,118 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
     grads[2*n+1] *= dyInv;
   }
 }
-
-void eval_multi_UBspline_2d_s_vgl (multi_UBspline_2d_s *spline,
+#else
+void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
                                    double x, double y,
-                                   float* restrict vals,
-                                   float* restrict grads,
-                                   float* restrict lapl)          
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
-  int n, i, j;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  
-  float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* restrict coefs = spline->coefs;
-
-  a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]  = (Af[ 8]*tpx[0] + Af[ 9]*tpx[1] + Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]  = (Af[12]*tpx[0] + Af[13]*tpx[1] + Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0] = (dAf[ 0]*tpx[0] + dAf[ 1]*tpx[1] + dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1] = (dAf[ 4]*tpx[0] + dAf[ 5]*tpx[1] + dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2] = (dAf[ 8]*tpx[0] + dAf[ 9]*tpx[1] + dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3] = (dAf[12]*tpx[0] + dAf[13]*tpx[1] + dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 0]*tpx[0] + d2Af[ 1]*tpx[1] + d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 4]*tpx[0] + d2Af[ 5]*tpx[1] + d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[ 8]*tpx[0] + d2Af[ 9]*tpx[1] + d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[12]*tpx[0] + d2Af[13]*tpx[1] + d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  b[0] = (Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1] = (Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2] = (Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3] = (Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 0]*tpy[0] + dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 4]*tpy[0] + dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 8]*tpy[0] + dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[12]*tpy[0] + dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 0]*tpy[0] + d2Af[ 1]*tpy[1] + d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 4]*tpy[0] + d2Af[ 5]*tpy[1] + d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[ 8]*tpy[0] + d2Af[ 9]*tpy[1] + d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[12]*tpy[0] + d2Af[13]*tpy[1] + d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
+  _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
+  _mm_prefetch ((const char*)  &A_s[ 4],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 5],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 6],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 7],_MM_HINT_T0);
+  /* SSE mesh point determination */
+  __m128 xy        = _mm_set_ps (x, y, 0.0, 0.0);
+  __m128 x0y0      = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 0.0, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 0.0, 0.0);
+  xy = _mm_sub_ps (xy, x0y0);
+  /* ux = (x - x0)/delta_x and same for y */
+  __m128 uxuy    = _mm_mul_ps (xy, delta_inv);
+  /* intpart = trunc (ux, uy) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuy);
+  __m128i ixiy;
+  _mm_storeu_si128 (&ixiy, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiy)[3];
+  int iy = ((int *)&ixiy)[2];
 
   intptr_t xs = spline->x_stride;
   intptr_t ys = spline->y_stride;
 
-  float lapl2[2*spline->num_splines];
-  for (n=0; n<spline->num_splines; n++) {
-    vals[n] = 0.0;
-    grads[2*n+0] = grads[2*n+1] = 0.0;
-    lapl2[2*n+0] = lapl2[2*n+1] = 0.0;
-  }
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txty   = _mm_sub_ps (uxuy, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txty, txty);
+  __m128 t3     = _mm_mul_ps (t2, txty);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txty;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
 
-  for (i=0; i<4; i++)
-    for (j=0; j<4; j++) {
-      float ab = a[i]*b[j];
-      float dab[2], d2ab[2];
-      dab[0] = da[i]* b[j];
-      dab[1] =  a[i]*db[j];
-      d2ab[0] = d2a[i]*  b[j];
-      d2ab[1] =   a[i]*d2b[j];
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a4, b4, da4, db4;
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpx,   a4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpx,  da4);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpy,   b4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpy,  db4);
+
+  __m128 a[4], b[4], da[4], db[4];
+  __m128 tmp;
+
+  /* Unpack a values */
+  tmp=_mm_unpacklo_ps(  a4,   a4);   a[0]=_mm_unpacklo_ps(tmp, tmp);   a[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  a4,   a4);   a[2]=_mm_unpacklo_ps(tmp, tmp);   a[3]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpacklo_ps( da4,  da4);  da[0]=_mm_unpacklo_ps(tmp, tmp);  da[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps( da4,  da4);  da[2]=_mm_unpacklo_ps(tmp, tmp);  da[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  /* Unpack b values */
+  tmp=_mm_unpacklo_ps(  b4,   b4);   b[0]=_mm_unpacklo_ps(tmp, tmp);   b[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  b4,   b4);   b[2]=_mm_unpacklo_ps(tmp, tmp);   b[3]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpacklo_ps( db4,  db4);  db[0]=_mm_unpacklo_ps(tmp, tmp);  db[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps( db4,  db4);  db[2]=_mm_unpacklo_ps(tmp, tmp);  db[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  int N = spline->num_splines;
+  int Nm = (N+3)/4;
+
+  __m128 mvals[Nm], mgrad[2*Nm];
+
+  /* Zero out values; */
+  for (int n=0; n<Nm; n++)     mvals[n] = _mm_setzero_ps();
+  for (int n=0; n<2*Nm; n++)   mgrad[n] = _mm_setzero_ps();
+
+  /* Main compute loop */
+  __m128 ab, dab[2];
+  for (int i=0; i<4; i++)
+    for (int j=0; j<4; j++) {
+      ab      = _mm_mul_ps (  a[i],   b[j]);
+      dab[0]  = _mm_mul_ps ( da[i],   b[j]);
+      dab[1]  = _mm_mul_ps (  a[i],  db[j]);
       
-      coefs = spline->coefs + ((ix+i)*xs + (iy+j)*ys);
-      for (n=0; n<spline->num_splines; n++) {
-        vals[n]      +=   ab   *coefs[n];
-        grads[2*n+0] +=  dab[0]*coefs[n];
-        grads[2*n+1] +=  dab[1]*coefs[n];
-        lapl2[2*n+0] += d2ab[0]*coefs[n];
-        lapl2[2*n+1] += d2ab[1]*coefs[n];
+      __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys);
+      for (int n=0; n<Nm; n++) {
+        mvals[n]     = _mm_add_ps (mvals[n],     _mm_mul_ps(  ab   , coefs[n]));
+        mgrad[2*n+0] = _mm_add_ps (mgrad[2*n+0], _mm_mul_ps( dab[0], coefs[n]));
+        mgrad[2*n+1] = _mm_add_ps (mgrad[2*n+1], _mm_mul_ps( dab[1], coefs[n]));
       }
     }
-
-  float dxInv = spline->x_grid.delta_inv;
-  float dyInv = spline->y_grid.delta_inv;
-  for (n=0; n<spline->num_splines; n++) {
-    grads[2*n+0] *= dxInv;
-    grads[2*n+1] *= dyInv;
-    lapl2[2*n+0] *= dxInv*dxInv;
-    lapl2[2*n+1] *= dyInv*dyInv;
-    lapl[n] = lapl2[2*n+0] + lapl2[2*n+1];
-  }
-}
-
-void eval_multi_UBspline_2d_s_vgh (multi_UBspline_2d_s *spline,
-                                   double x, double y,
-                                   float* restrict vals,
-                                   float* restrict grads,
-                                   float* restrict hess)          
-{
-  int n, i, j;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
   
-  float tpx[4], tpy[4], a[4], b[4], da[4], db[4], d2a[4], d2b[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float* restrict coefs = spline->coefs;
-
-  a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]  = (Af[ 8]*tpx[0] + Af[ 9]*tpx[1] + Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]  = (Af[12]*tpx[0] + Af[13]*tpx[1] + Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0] = (dAf[ 0]*tpx[0] + dAf[ 1]*tpx[1] + dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1] = (dAf[ 4]*tpx[0] + dAf[ 5]*tpx[1] + dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2] = (dAf[ 8]*tpx[0] + dAf[ 9]*tpx[1] + dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3] = (dAf[12]*tpx[0] + dAf[13]*tpx[1] + dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 0]*tpx[0] + d2Af[ 1]*tpx[1] + d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 4]*tpx[0] + d2Af[ 5]*tpx[1] + d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[ 8]*tpx[0] + d2Af[ 9]*tpx[1] + d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[12]*tpx[0] + d2Af[13]*tpx[1] + d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  b[0] = (Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1] = (Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2] = (Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3] = (Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 0]*tpy[0] + dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 4]*tpy[0] + dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 8]*tpy[0] + dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[12]*tpy[0] + dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 0]*tpy[0] + d2Af[ 1]*tpy[1] + d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 4]*tpy[0] + d2Af[ 5]*tpy[1] + d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[ 8]*tpy[0] + d2Af[ 9]*tpy[1] + d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[12]*tpy[0] + d2Af[13]*tpy[1] + d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
-
-  intptr_t xs = spline->x_stride;
-  intptr_t ys = spline->y_stride;
-
-  for (n=0; n<spline->num_splines; n++) {
-    vals[n] = 0.0;
-    grads[2*n+0] = grads[2*n+1] = 0.0;
-    for (i=0; i<4; i++)
-      hess[4*n+i] = 0.0;
-  }
-
-  for (i=0; i<4; i++)
-    for (j=0; j<4; j++){
-      float ab = a[i]*b[j];
-      float dab[2], d2ab[3];
-      dab[0] = da[i]* b[j];
-      dab[1] =  a[i]*db[j];
-      d2ab[0] = d2a[i] *   b[j];
-      d2ab[1] =  da[i] *  db[j];
-      d2ab[2] =   a[i] * d2b[j];
-
-      coefs = spline->coefs + ((ix+i)*xs + (iy+j)*ys);
-      for (n=0; n<spline->num_splines; n++) {
-        vals[n]      +=   ab   *coefs[n];
-        grads[2*n+0] +=  dab[0]*coefs[n];
-        grads[2*n+1] +=  dab[1]*coefs[n];
-        hess [4*n+0] += d2ab[0]*coefs[n];
-        hess [4*n+1] += d2ab[1]*coefs[n];
-        hess [4*n+3] += d2ab[2]*coefs[n];
-      }
-    }
-
+  /* Now, store results back */
   float dxInv = spline->x_grid.delta_inv;
   float dyInv = spline->y_grid.delta_inv;
-  for (n=0; n<spline->num_splines; n++) {
-    grads[2*n+0] *= dxInv;
-    grads[2*n+1] *= dyInv;
-    hess[4*n+0] *= dxInv*dxInv;
-    hess[4*n+1] *= dxInv*dyInv;
-    hess[4*n+3] *= dyInv*dyInv;
-    /* Copy hessian elements into lower half of 3x3 matrix */
-    hess[4*n+2] = hess[4*n+1];
+  for (int n=0; n<N; n++) {
+    int nd4 = n>>2;
+    int nm4 = n & 3;
+    vals[n] = ((float*)mvals)[n];
+    grads[2*n+0] = ((float*)mgrad)[nd4*8 + 4*0 + nm4] * dxInv;
+    grads[2*n+1] = ((float*)mgrad)[nd4*8 + 4*1 + nm4] * dyInv;
   }
 }
+#endif
 
 /************************************************************/
 /* 3D single precision, real evaulation functions           */
 /************************************************************/
+#ifndef HAVE_SSE
 void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
                                double x, double y, double z,
                                float* restrict vals)
@@ -2160,7 +2050,105 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
           vals[n] += abc*coefs[n];
       }
 }
+#else
+void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
+                               double x, double y, double z,
+                               float* restrict vals)
+{
+  _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
 
+  /* SSE mesh point determination */
+  __m128 xyz       = _mm_set_ps (x, y, z, 0.0);
+  __m128 x0y0z0    = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 
+                                 spline->z_grid.start, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 
+                                 spline->z_grid.delta_inv, 0.0);
+  xyz = _mm_sub_ps (xyz, x0y0z0);
+  /* ux = (x - x0)/delta_x and same for y and z */
+  __m128 uxuyuz    = _mm_mul_ps (xyz, delta_inv);
+  /* intpart = trunc (ux, uy, uz) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuyuz);
+  __m128i ixiyiz;
+  _mm_storeu_si128 (&ixiyiz, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiyiz)[3];
+  int iy = ((int *)&ixiyiz)[2];
+  int iz = ((int *)&ixiyiz)[1];
+
+  intptr_t xs = spline->x_stride;
+  intptr_t ys = spline->y_stride;
+  intptr_t zs = spline->z_stride;
+
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txtytz = _mm_sub_ps (uxuyuz, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txtytz, txtytz);
+  __m128 t3     = _mm_mul_ps (t2, txtytz);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txtytz;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
+
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a4, b4, c4;
+  
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpx,   a4);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpy,   b4);
+  /* z-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpz,   c4);
+
+  __m128 a[4], b[4], c[4];
+  __m128 tmp;
+
+  /* Unpack a values */
+  tmp=_mm_unpacklo_ps(  a4,   a4);   a[0]=_mm_unpacklo_ps(tmp, tmp);   a[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  a4,   a4);   a[2]=_mm_unpacklo_ps(tmp, tmp);   a[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  /* Unpack b values */
+  tmp=_mm_unpacklo_ps(  b4,   b4);   b[0]=_mm_unpacklo_ps(tmp, tmp);   b[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  b4,   b4);   b[2]=_mm_unpacklo_ps(tmp, tmp);   b[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  /* Unpack c values */
+  tmp=_mm_unpacklo_ps(  c4,   c4);   c[0]=_mm_unpacklo_ps(tmp, tmp);   c[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  c4,   c4);   c[2]=_mm_unpacklo_ps(tmp, tmp);   c[3]=_mm_unpackhi_ps(tmp, tmp);
+
+  int N = spline->num_splines;
+  int Nm = (N+3)/4;
+
+  __m128 mvals[Nm];
+
+  /* Zero out values; */
+  for (int n=0; n<Nm; n++)     mvals[n] = _mm_setzero_ps();
+
+  /* Main compute loop */
+  __m128 abc;
+  for (int i=0; i<4; i++)
+    for (int j=0; j<4; j++)
+      for (int k=0; k<4; k++) {
+        abc      = _mm_mul_ps (  a[i], _mm_mul_ps(  b[j],  c[k]));
+        __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
+        for (int n=0; n<Nm; n++) 
+          mvals[n]     = _mm_add_ps (mvals[n], _mm_mul_ps(  abc   , coefs[n]));
+      }
+  
+  /* Now, store results back */
+  for (int n=0; n<N; n++) 
+    vals[n] = ((float*)mvals)[n];
+  
+}
+#endif
+
+#ifndef HAVE_SSE
 void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
                                   double x, double y, double z,
                                   float* restrict vals,
@@ -2248,245 +2236,133 @@ void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
     grads[3*n+2] *= dzInv;
   }
 }
-
-void eval_multi_UBspline_3d_s_vgl (multi_UBspline_3d_s *spline,
-                                   double x, double y, double z,
-                                   float* restrict vals,
-                                   float* restrict grads,
-                                   float* restrict lapl)          
+#else
+void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
+                                  double x, double y, double z,
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
-  int n, i, j, k;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
-  
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], 
-    da[4], db[4], dc[4], d2a[4], d2b[4], d2c[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* restrict coefs = spline->coefs;
+  _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
+  _mm_prefetch ((const char*)  &A_s[ 4],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 5],_MM_HINT_T0);  
+  _mm_prefetch ((const char*)  &A_s[ 6],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 7],_MM_HINT_T0);
 
-  a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]  = (Af[ 8]*tpx[0] + Af[ 9]*tpx[1] + Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]  = (Af[12]*tpx[0] + Af[13]*tpx[1] + Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0] = (dAf[ 0]*tpx[0] + dAf[ 1]*tpx[1] + dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1] = (dAf[ 4]*tpx[0] + dAf[ 5]*tpx[1] + dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2] = (dAf[ 8]*tpx[0] + dAf[ 9]*tpx[1] + dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3] = (dAf[12]*tpx[0] + dAf[13]*tpx[1] + dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 0]*tpx[0] + d2Af[ 1]*tpx[1] + d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 4]*tpx[0] + d2Af[ 5]*tpx[1] + d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[ 8]*tpx[0] + d2Af[ 9]*tpx[1] + d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[12]*tpx[0] + d2Af[13]*tpx[1] + d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
-
-  b[0] = (Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1] = (Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2] = (Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3] = (Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 0]*tpy[0] + dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 4]*tpy[0] + dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 8]*tpy[0] + dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[12]*tpy[0] + dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 0]*tpy[0] + d2Af[ 1]*tpy[1] + d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 4]*tpy[0] + d2Af[ 5]*tpy[1] + d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[ 8]*tpy[0] + d2Af[ 9]*tpy[1] + d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[12]*tpy[0] + d2Af[13]*tpy[1] + d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
-
-  c[0] = (Af[ 0]*tpz[0] + Af[ 1]*tpz[1] + Af[ 2]*tpz[2] + Af[ 3]*tpz[3]);
-  c[1] = (Af[ 4]*tpz[0] + Af[ 5]*tpz[1] + Af[ 6]*tpz[2] + Af[ 7]*tpz[3]);
-  c[2] = (Af[ 8]*tpz[0] + Af[ 9]*tpz[1] + Af[10]*tpz[2] + Af[11]*tpz[3]);
-  c[3] = (Af[12]*tpz[0] + Af[13]*tpz[1] + Af[14]*tpz[2] + Af[15]*tpz[3]);
-  dc[0] = (dAf[ 0]*tpz[0] + dAf[ 1]*tpz[1] + dAf[ 2]*tpz[2] + dAf[ 3]*tpz[3]);
-  dc[1] = (dAf[ 4]*tpz[0] + dAf[ 5]*tpz[1] + dAf[ 6]*tpz[2] + dAf[ 7]*tpz[3]);
-  dc[2] = (dAf[ 8]*tpz[0] + dAf[ 9]*tpz[1] + dAf[10]*tpz[2] + dAf[11]*tpz[3]);
-  dc[3] = (dAf[12]*tpz[0] + dAf[13]*tpz[1] + dAf[14]*tpz[2] + dAf[15]*tpz[3]);
-  d2c[0] = (d2Af[ 0]*tpz[0] + d2Af[ 1]*tpz[1] + d2Af[ 2]*tpz[2] + d2Af[ 3]*tpz[3]);
-  d2c[1] = (d2Af[ 4]*tpz[0] + d2Af[ 5]*tpz[1] + d2Af[ 6]*tpz[2] + d2Af[ 7]*tpz[3]);
-  d2c[2] = (d2Af[ 8]*tpz[0] + d2Af[ 9]*tpz[1] + d2Af[10]*tpz[2] + d2Af[11]*tpz[3]);
-  d2c[3] = (d2Af[12]*tpz[0] + d2Af[13]*tpz[1] + d2Af[14]*tpz[2] + d2Af[15]*tpz[3]);
+  /* SSE mesh point determination */
+  __m128 xyz       = _mm_set_ps (x, y, z, 0.0);
+  __m128 x0y0z0    = _mm_set_ps (spline->x_grid.start,  spline->y_grid.start, 
+                                 spline->z_grid.start, 0.0);
+  __m128 delta_inv = _mm_set_ps (spline->x_grid.delta_inv,spline->y_grid.delta_inv, 
+                                 spline->z_grid.delta_inv, 0.0);
+  xyz = _mm_sub_ps (xyz, x0y0z0);
+  /* ux = (x - x0)/delta_x and same for y and z */
+  __m128 uxuyuz    = _mm_mul_ps (xyz, delta_inv);
+  /* intpart = trunc (ux, uy, uz) */
+  __m128i intpart  = _mm_cvttps_epi32(uxuyuz);
+  __m128i ixiyiz;
+  _mm_storeu_si128 (&ixiyiz, intpart);
+  /* Store to memory for use in C expressions
+     xmm registers are stored to memory in reverse order */
+  int ix = ((int *)&ixiyiz)[3];
+  int iy = ((int *)&ixiyiz)[2];
+  int iz = ((int *)&ixiyiz)[1];
 
   intptr_t xs = spline->x_stride;
   intptr_t ys = spline->y_stride;
   intptr_t zs = spline->z_stride;
 
-  float lapl3[3*spline->num_splines];
-  for (n=0; n<spline->num_splines; n++) {
-    vals[n] = 0.0;
-    grads[3*n+0] = grads[3*n+1] = grads[3*n+2] = 0.0;
-    lapl3[3*n+0] = lapl3[3*n+1] = lapl3[3*n+2] = 0.0;
-  }
+  /* Now compute the vectors:
+     tpx = [t_x^3 t_x^2 t_x 1]
+     tpy = [t_y^3 t_y^2 t_y 1]
+     tpz = [t_z^3 t_z^2 t_z 1] */
+  __m128 ipart  = _mm_cvtepi32_ps (intpart);
+  __m128 txtytz = _mm_sub_ps (uxuyuz, ipart);
+  __m128 one    = _mm_set_ps (1.0, 1.0, 1.0, 1.0);
+  __m128 t2     = _mm_mul_ps (txtytz, txtytz);
+  __m128 t3     = _mm_mul_ps (t2, txtytz);
+  __m128 tpx    = t3;
+  __m128 tpy    = t2;
+  __m128 tpz    = txtytz;
+  __m128 zero   = one;
+  _MM_TRANSPOSE4_PS(zero, tpz, tpy, tpx);
 
-  for (i=0; i<4; i++)
-    for (j=0; j<4; j++) 
-      for (k=0; k<4; k++) {
-        float abc = a[i]*b[j]*c[k];
-        float dabc[3], d2abc[3];
-        dabc[0] = da[i]* b[j]* c[k];
-        dabc[1] =  a[i]*db[j]* c[k];
-        dabc[2] =  a[i]* b[j]*dc[k];
-        d2abc[0] = d2a[i]*  b[j]*  c[k];
-        d2abc[1] =   a[i]*d2b[j]*  c[k];
-        d2abc[2] =   a[i]*  b[j]*d2c[k];
-
-        coefs = spline->coefs + ((ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
-        for (n=0; n<spline->num_splines; n++) {
-          vals[n]      +=   abc   *coefs[n];
-          grads[3*n+0] +=  dabc[0]*coefs[n];
-          grads[3*n+1] +=  dabc[1]*coefs[n];
-          grads[3*n+2] +=  dabc[2]*coefs[n];
-          lapl3[3*n+0] += d2abc[0]*coefs[n];
-          lapl3[3*n+1] += d2abc[1]*coefs[n];
-          lapl3[3*n+2] += d2abc[2]*coefs[n];
-        }
-      }
-
-  float dxInv = spline->x_grid.delta_inv;
-  float dyInv = spline->y_grid.delta_inv;
-  float dzInv = spline->z_grid.delta_inv; 
-  for (n=0; n<spline->num_splines; n++) {
-    grads[3*n+0] *= dxInv;
-    grads[3*n+1] *= dyInv;
-    grads[3*n+2] *= dzInv;
-    lapl3[3*n+0] *= dxInv*dxInv;
-    lapl3[3*n+1] *= dyInv*dyInv;
-    lapl3[3*n+2] *= dzInv*dzInv;
-    lapl[n] = lapl3[3*n+0] + lapl3[3*n+1] + lapl3[3*n+2];
-  }
-}
-
-void eval_multi_UBspline_3d_s_vgh (multi_UBspline_3d_s *spline,
-                                   double x, double y, double z,
-                                   float* restrict vals,
-                                   float* restrict grads,
-                                   float* restrict hess)          
-{
-  int n, i, j, k;
-  x -= spline->x_grid.start;
-  y -= spline->y_grid.start;
-  z -= spline->z_grid.start;
-  float ux = x*spline->x_grid.delta_inv;
-  float uy = y*spline->y_grid.delta_inv;
-  float uz = z*spline->z_grid.delta_inv;
-  float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
+  /* a  =  A * tpx,   b =  A * tpy,   c =  A * tpz
+     da = dA * tpx,  db = dA * tpy,  dc = dA * tpz, etc.
+     A is 4x4 matrix given by the rows A_s[0], A_s[1], A_s[ 2], A_s[ 3] */
+  __m128 a4, b4, c4, da4, db4, dc4;
   
-  float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], 
-    da[4], db[4], dc[4], d2a[4], d2b[4], d2c[4];
-  tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float* restrict coefs = spline->coefs;
+  /* x-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpx,   a4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpx,  da4);
+  /* y-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpy,   b4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpy,  db4);
+  /* z-dependent vectors */
+  _MM_MATVEC4_PS (A_s[ 0], A_s[ 1], A_s[ 2], A_s[ 3], tpz,   c4);
+  _MM_MATVEC4_PS (A_s[ 4], A_s[ 5], A_s[ 6], A_s[ 7], tpz,  dc4);
 
-  a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
-  a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
-  a[2]  = (Af[ 8]*tpx[0] + Af[ 9]*tpx[1] + Af[10]*tpx[2] + Af[11]*tpx[3]);
-  a[3]  = (Af[12]*tpx[0] + Af[13]*tpx[1] + Af[14]*tpx[2] + Af[15]*tpx[3]);
-  da[0] = (dAf[ 0]*tpx[0] + dAf[ 1]*tpx[1] + dAf[ 2]*tpx[2] + dAf[ 3]*tpx[3]);
-  da[1] = (dAf[ 4]*tpx[0] + dAf[ 5]*tpx[1] + dAf[ 6]*tpx[2] + dAf[ 7]*tpx[3]);
-  da[2] = (dAf[ 8]*tpx[0] + dAf[ 9]*tpx[1] + dAf[10]*tpx[2] + dAf[11]*tpx[3]);
-  da[3] = (dAf[12]*tpx[0] + dAf[13]*tpx[1] + dAf[14]*tpx[2] + dAf[15]*tpx[3]);
-  d2a[0] = (d2Af[ 0]*tpx[0] + d2Af[ 1]*tpx[1] + d2Af[ 2]*tpx[2] + d2Af[ 3]*tpx[3]);
-  d2a[1] = (d2Af[ 4]*tpx[0] + d2Af[ 5]*tpx[1] + d2Af[ 6]*tpx[2] + d2Af[ 7]*tpx[3]);
-  d2a[2] = (d2Af[ 8]*tpx[0] + d2Af[ 9]*tpx[1] + d2Af[10]*tpx[2] + d2Af[11]*tpx[3]);
-  d2a[3] = (d2Af[12]*tpx[0] + d2Af[13]*tpx[1] + d2Af[14]*tpx[2] + d2Af[15]*tpx[3]);
+  __m128 a[4], b[4], c[4], da[4], db[4], dc[4];
+  __m128 tmp;
 
-  b[0] = (Af[ 0]*tpy[0] + Af[ 1]*tpy[1] + Af[ 2]*tpy[2] + Af[ 3]*tpy[3]);
-  b[1] = (Af[ 4]*tpy[0] + Af[ 5]*tpy[1] + Af[ 6]*tpy[2] + Af[ 7]*tpy[3]);
-  b[2] = (Af[ 8]*tpy[0] + Af[ 9]*tpy[1] + Af[10]*tpy[2] + Af[11]*tpy[3]);
-  b[3] = (Af[12]*tpy[0] + Af[13]*tpy[1] + Af[14]*tpy[2] + Af[15]*tpy[3]);
-  db[0] = (dAf[ 0]*tpy[0] + dAf[ 1]*tpy[1] + dAf[ 2]*tpy[2] + dAf[ 3]*tpy[3]);
-  db[1] = (dAf[ 4]*tpy[0] + dAf[ 5]*tpy[1] + dAf[ 6]*tpy[2] + dAf[ 7]*tpy[3]);
-  db[2] = (dAf[ 8]*tpy[0] + dAf[ 9]*tpy[1] + dAf[10]*tpy[2] + dAf[11]*tpy[3]);
-  db[3] = (dAf[12]*tpy[0] + dAf[13]*tpy[1] + dAf[14]*tpy[2] + dAf[15]*tpy[3]);
-  d2b[0] = (d2Af[ 0]*tpy[0] + d2Af[ 1]*tpy[1] + d2Af[ 2]*tpy[2] + d2Af[ 3]*tpy[3]);
-  d2b[1] = (d2Af[ 4]*tpy[0] + d2Af[ 5]*tpy[1] + d2Af[ 6]*tpy[2] + d2Af[ 7]*tpy[3]);
-  d2b[2] = (d2Af[ 8]*tpy[0] + d2Af[ 9]*tpy[1] + d2Af[10]*tpy[2] + d2Af[11]*tpy[3]);
-  d2b[3] = (d2Af[12]*tpy[0] + d2Af[13]*tpy[1] + d2Af[14]*tpy[2] + d2Af[15]*tpy[3]);
+  /* Unpack a values */
+  tmp=_mm_unpacklo_ps(  a4,   a4);   a[0]=_mm_unpacklo_ps(tmp, tmp);   a[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  a4,   a4);   a[2]=_mm_unpacklo_ps(tmp, tmp);   a[3]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpacklo_ps( da4,  da4);  da[0]=_mm_unpacklo_ps(tmp, tmp);  da[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps( da4,  da4);  da[2]=_mm_unpacklo_ps(tmp, tmp);  da[3]=_mm_unpackhi_ps(tmp, tmp);
 
-  c[0] = (Af[ 0]*tpz[0] + Af[ 1]*tpz[1] + Af[ 2]*tpz[2] + Af[ 3]*tpz[3]);
-  c[1] = (Af[ 4]*tpz[0] + Af[ 5]*tpz[1] + Af[ 6]*tpz[2] + Af[ 7]*tpz[3]);
-  c[2] = (Af[ 8]*tpz[0] + Af[ 9]*tpz[1] + Af[10]*tpz[2] + Af[11]*tpz[3]);
-  c[3] = (Af[12]*tpz[0] + Af[13]*tpz[1] + Af[14]*tpz[2] + Af[15]*tpz[3]);
-  dc[0] = (dAf[ 0]*tpz[0] + dAf[ 1]*tpz[1] + dAf[ 2]*tpz[2] + dAf[ 3]*tpz[3]);
-  dc[1] = (dAf[ 4]*tpz[0] + dAf[ 5]*tpz[1] + dAf[ 6]*tpz[2] + dAf[ 7]*tpz[3]);
-  dc[2] = (dAf[ 8]*tpz[0] + dAf[ 9]*tpz[1] + dAf[10]*tpz[2] + dAf[11]*tpz[3]);
-  dc[3] = (dAf[12]*tpz[0] + dAf[13]*tpz[1] + dAf[14]*tpz[2] + dAf[15]*tpz[3]);
-  d2c[0] = (d2Af[ 0]*tpz[0] + d2Af[ 1]*tpz[1] + d2Af[ 2]*tpz[2] + d2Af[ 3]*tpz[3]);
-  d2c[1] = (d2Af[ 4]*tpz[0] + d2Af[ 5]*tpz[1] + d2Af[ 6]*tpz[2] + d2Af[ 7]*tpz[3]);
-  d2c[2] = (d2Af[ 8]*tpz[0] + d2Af[ 9]*tpz[1] + d2Af[10]*tpz[2] + d2Af[11]*tpz[3]);
-  d2c[3] = (d2Af[12]*tpz[0] + d2Af[13]*tpz[1] + d2Af[14]*tpz[2] + d2Af[15]*tpz[3]);
+  /* Unpack b values */
+  tmp=_mm_unpacklo_ps(  b4,   b4);   b[0]=_mm_unpacklo_ps(tmp, tmp);   b[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  b4,   b4);   b[2]=_mm_unpacklo_ps(tmp, tmp);   b[3]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpacklo_ps( db4,  db4);  db[0]=_mm_unpacklo_ps(tmp, tmp);  db[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps( db4,  db4);  db[2]=_mm_unpacklo_ps(tmp, tmp);  db[3]=_mm_unpackhi_ps(tmp, tmp);
 
-  intptr_t xs = spline->x_stride;
-  intptr_t ys = spline->y_stride;
-  intptr_t zs = spline->z_stride;
+  /* Unpack c values */
+  tmp=_mm_unpacklo_ps(  c4,   c4);   c[0]=_mm_unpacklo_ps(tmp, tmp);   c[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps(  c4,   c4);   c[2]=_mm_unpacklo_ps(tmp, tmp);   c[3]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpacklo_ps( dc4,  dc4);  dc[0]=_mm_unpacklo_ps(tmp, tmp);  dc[1]=_mm_unpackhi_ps(tmp, tmp);
+  tmp=_mm_unpackhi_ps( dc4,  dc4);  dc[2]=_mm_unpacklo_ps(tmp, tmp);  dc[3]=_mm_unpackhi_ps(tmp, tmp);
 
-  for (n=0; n<spline->num_splines; n++) {
-    vals[n] = 0.0;
-    grads[3*n+0] = grads[3*n+1] = grads[3*n+2] = 0.0;
-    for (i=0; i<9; i++)
-      hess[9*n+i] = 0.0;
-  }
+  int N = spline->num_splines;
+  int Nm = (N+3)/4;
 
-  for (i=0; i<4; i++)
-    for (j=0; j<4; j++) 
-      for (k=0; k<4; k++) {
-        float abc = a[i]*b[j]*c[k];
-        float dabc[3], d2abc[6];
-        dabc[0] = da[i]* b[j]* c[k];
-        dabc[1] =  a[i]*db[j]* c[k];
-        dabc[2] =  a[i]* b[j]*dc[k];
-        d2abc[0] = d2a[i]*  b[j]*  c[k];
-        d2abc[1] =  da[i]* db[j]*  c[k];
-        d2abc[2] =  da[i]*  b[j]* dc[k];
-        d2abc[3] =   a[i]*d2b[j]*  c[k];
-        d2abc[4] =   a[i]* db[j]* dc[k];
-        d2abc[5] =   a[i]*  b[j]*d2c[k];
+  __m128 mvals[Nm], mgrad[3*Nm];
 
-        coefs = spline->coefs + ((ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
-        for (n=0; n<spline->num_splines; n++) {
-          vals[n]      +=   abc   *coefs[n];
-          grads[3*n+0] +=  dabc[0]*coefs[n];
-          grads[3*n+1] +=  dabc[1]*coefs[n];
-          grads[3*n+2] +=  dabc[2]*coefs[n];
-          hess [9*n+0] += d2abc[0]*coefs[n];
-          hess [9*n+1] += d2abc[1]*coefs[n];
-          hess [9*n+2] += d2abc[2]*coefs[n];
-          hess [9*n+4] += d2abc[3]*coefs[n];
-          hess [9*n+5] += d2abc[4]*coefs[n];
-          hess [9*n+8] += d2abc[5]*coefs[n];
+  /* Zero out values; */
+  for (int n=0; n<Nm; n++)     mvals[n] = _mm_setzero_ps();
+  for (int n=0; n<3*Nm; n++)   mgrad[n] = _mm_setzero_ps();
+
+  /* Main compute loop */
+  __m128 abc, dabc[3];
+  for (int i=0; i<4; i++)
+    for (int j=0; j<4; j++)
+      for (int k=0; k<4; k++) {
+        abc      = _mm_mul_ps (  a[i], _mm_mul_ps(  b[j],  c[k]));
+        dabc[0]  = _mm_mul_ps ( da[i], _mm_mul_ps(  b[j],  c[k]));
+        dabc[1]  = _mm_mul_ps (  a[i], _mm_mul_ps( db[j],  c[k]));
+        dabc[2]  = _mm_mul_ps (  a[i], _mm_mul_ps(  b[j],  dc[k]));
+
+        __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
+        for (int n=0; n<Nm; n++) {
+          mvals[n]     = _mm_add_ps (mvals[n], _mm_mul_ps(  abc   , coefs[n]));
+          mgrad[3*n+0] = _mm_add_ps (mgrad[3*n+0], _mm_mul_ps( dabc[0], coefs[n]));
+          mgrad[3*n+1] = _mm_add_ps (mgrad[3*n+1], _mm_mul_ps( dabc[1], coefs[n]));
+          mgrad[3*n+2] = _mm_add_ps (mgrad[3*n+2], _mm_mul_ps( dabc[2], coefs[n]));
         }
       }
-
+  
+  /* Now, store results back */
   float dxInv = spline->x_grid.delta_inv;
   float dyInv = spline->y_grid.delta_inv;
-  float dzInv = spline->z_grid.delta_inv; 
-  for (n=0; n<spline->num_splines; n++) {
-    grads[3*n+0] *= dxInv;
-    grads[3*n+1] *= dyInv;
-    grads[3*n+2] *= dzInv;
-    hess [9*n+0] *= dxInv*dxInv;
-    hess [9*n+4] *= dyInv*dyInv;
-    hess [9*n+8] *= dzInv*dzInv;
-    hess [9*n+1] *= dxInv*dyInv;
-    hess [9*n+2] *= dxInv*dzInv;
-    hess [9*n+5] *= dyInv*dzInv;
-    /* Copy hessian elements into lower half of 3x3 matrix */
-    hess [9*n+3] = hess[9*n+1];
-    hess [9*n+6] = hess[9*n+2];
-    hess [9*n+7] = hess[9*n+5];
+  float dzInv = spline->z_grid.delta_inv;
+  for (int n=0; n<N; n++) {
+    int nd4 = n>>2;
+    int nm4 = n & 3;
+    vals[n] = ((float*)mvals)[n];
+    grads[3*n+0] = ((float*)mgrad)[nd4*12 + 4*0 + nm4] * dxInv;
+    grads[3*n+1] = ((float*)mgrad)[nd4*12 + 4*1 + nm4] * dyInv;
+    grads[3*n+2] = ((float*)mgrad)[nd4*12 + 4*2 + nm4] * dzInv;
   }
 }
-
+#endif
 
 void destroy_Bspline (void *spline) {
   Bspline *sp = (Bspline *)spline;

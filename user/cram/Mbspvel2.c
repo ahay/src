@@ -24,8 +24,11 @@
 int main (int argc, char* argv[]) {
     int nz, nx, ic, nc;
     float dz, oz, dx, ox;
-    size_t i;
+    size_t i, sz;
     float *buf = NULL, *buf2 = NULL;
+#ifdef HAVE_SSE
+    unsigned char pad[64];
+#endif
     sf_file velz, velx = NULL, theta = NULL, eta = NULL, out;
     bool verb;
     Ugrid z_grid, x_grid;
@@ -143,12 +146,17 @@ int main (int argc, char* argv[]) {
         free (buf2);
     free (buf);
 
+    sz = (size_t)sizeof(multi_UBspline_2d_s) +
+         (size_t)velspline->nc;
+#ifdef HAVE_SSE
+    if (sizeof(multi_UBspline_2d_s) % 64)
+        sz += 64 - (sizeof(multi_UBspline_2d_s) % 64);
+#endif
     /* Make output a 1-D file of coefficients */
     sf_unshiftdim (velz, out, 1);
     /* Set up output */
     sf_settype (out, SF_UCHAR);
-    sf_putlargeint (out, "n1", (size_t)sizeof(multi_UBspline_2d_s) +
-                               (size_t)velspline->nc);
+    sf_putlargeint (out, "n1", sz);
     sf_putfloat (out, "o1", 0.0);
     sf_putfloat (out, "d1", 1.0);
     sf_putstring (out, "label1", "Spline coefficients");
@@ -173,6 +181,10 @@ int main (int argc, char* argv[]) {
     }
 
     sf_ucharwrite ((unsigned char*)velspline, (size_t)sizeof(multi_UBspline_2d_s), out);
+#ifdef HAVE_SSE
+    if (sizeof(multi_UBspline_2d_s) % 64)
+        sf_ucharwrite (pad, (size_t)(64 - (sizeof(multi_UBspline_2d_s) % 64)), out);
+#endif
     sf_ucharwrite ((unsigned char*)velspline->coefs, (size_t)velspline->nc, out);
     destroy_Bspline (velspline);
 

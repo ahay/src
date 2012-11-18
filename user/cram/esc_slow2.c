@@ -97,9 +97,17 @@ sf_esc_slowness2 sf_esc_slowness2_init (sf_file vspline, bool verb)
     }
 
     stream = sf_filestream (vspline);
+    esc_slow->offs = ftello (stream);
+#ifdef HAVE_SSE
+    if (sizeof(multi_UBspline_2d_s) % 64)
+        esc_slow->offs += 64 - (sizeof(multi_UBspline_2d_s) % 64);
+#endif
 
-    if (stream != stdin) {
-        esc_slow->offs = ftello (stream);
+    if (stream != stdin
+#ifdef HAVE_SSE
+        && 0 == (esc_slow->offs % 64)
+#endif
+        ) {
         esc_slow->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_slow->offs +
                                                        (size_t)esc_slow->velspline.nc,
                                                  PROT_READ, MAP_SHARED,
@@ -108,9 +116,16 @@ sf_esc_slowness2 sf_esc_slowness2_init (sf_file vspline, bool verb)
             sf_error ("Velocity spline coefficients mmap failed: %s", strerror (errno));
         esc_slow->velspline.coefs = (float*)(esc_slow->mmaped + esc_slow->offs);
     } else {
-        sf_warning ("Velocity coefficients file appears to be stdin");
+        if (stream == stdin)
+            sf_warning ("Velocity coefficients file appears to be stdin");
+        else
+            sf_warning ("Velocity coefficients file does not have the right padding");
         sf_warning ("mmap is not possible for velocity coefficients");
+#ifndef HAVE_SSE
         esc_slow->velspline.coefs = (float*)sf_ucharalloc (esc_slow->velspline.nc);
+#else
+        posix_memalign ((void**)&esc_slow->velspline.coefs, 64, esc_slow->velspline.nc);
+#endif
         sf_ucharread ((unsigned char*)esc_slow->velspline.coefs,
                       esc_slow->velspline.nc, vspline);
         esc_slow->mmaped = NULL;
