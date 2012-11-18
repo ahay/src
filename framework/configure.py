@@ -119,6 +119,7 @@ def check_all(context):
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
+    sse (context) # FDNSI
     cuda(context) # FDNSI
     fftw(context) # FDNSI
     petsc(context) # FDNSI
@@ -1476,6 +1477,32 @@ def pthreads(context):
         context.env.Replace(LINKFLAGS=flags)
         context.env['PTHREADS'] = False
 
+def sse(context):
+    context.Message("checking for Streaming SIMD Extensions ... ")
+
+    flags = context.env.get('CFLAGS','')
+    CFLAGS = flags + ' -msse3'
+    text = '''
+    #include <xmmintrin.h>
+    #include <emmintrin.h>
+    #include <pmmintrin.h>
+    __m128 *restrict A_s = (__m128 *)0;
+    int main(void) {
+    double x = 0.0, y = 0.0, z = 0.0;
+    __m128 xyz = _mm_set_ps (x, y, z, 0.0);
+    return 0;
+    }
+    '''
+    context.env['CFLAGS'] = CFLAGS
+    res = context.TryLink(text,'.c')
+    context.env['CFLAGS'] = flags
+    if res:
+        context.Result(res)
+        context.env['SSE'] = '-msse3'
+    else:
+        context.Result(context_failure)
+        context.env['SSE'] = None
+
 def api_options(context):
     context.Message("checking API options ... ")
     api = context.env.get('API')
@@ -1918,6 +1945,7 @@ def options(file):
     opts.Add('FFTW','The FFTW library')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')
+    opts.Add('SSE','Streaming SIMD Extensions compilation flags')
     opts.Add('BLAS','The BLAS library')
     opts.Add('LAPACK','The LAPACK library')
     opts.Add('PPM','The netpbm library')
