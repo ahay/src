@@ -1408,7 +1408,7 @@ int init_tracegeom(tracegeom * tg,
       
 #ifdef IWAVE_VERBOSE
       fprintf(stream,"tracegeom_init\n");
-      fprintf(stream,"rk=%d itr=%d offset=%ld\n",retrieveRank(),itr,tg->troff[tg->ntraces]);
+      fprintf(stream,"rk=%d itr=%d tracl=%d offset=%ld\n",retrieveRank(),itr,tg->tracl[tg->ntraces],tg->troff[tg->ntraces]);
 #endif
       tg->ntraces++;
       if (tg->ntraces > MAX_TRACES) {
