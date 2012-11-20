@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     double omega;
     float dw, ow;
     float *ahess, **ahesss, **ahessr;
-    sf_complex *f, ***swave, ***rwave;
+    sf_complex **f, ***swave, ***rwave;
     sf_complex **stemp, **rtemp;
     sf_file in, out, list, us, ur, wvlt;
     int uts, mts;
@@ -74,8 +74,8 @@ int main(int argc, char* argv[])
 	sf_error("Need wvlt=");
     wvlt = sf_input("wvlt");
     
-    f = sf_complexalloc(nw);
-    sf_complexread(f,nw,wvlt);
+    f = sf_complexalloc2(nw,ns);
+    sf_complexread(f[0],nw*ns,wvlt);
     sf_fileclose(wvlt);
 
     /* read list */
@@ -96,6 +96,8 @@ int main(int argc, char* argv[])
     ahesss = sf_floatalloc2(n1*n2,ns);
     ahessr = sf_floatalloc2(n1*n2,ns);
 
+    ahess = sf_floatalloc(n1*n2);
+
     /* loop over frequency */
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);	
@@ -114,11 +116,11 @@ int main(int argc, char* argv[])
 	    for (is=0; is < ns; is++) {
 		for (ip=0; ip < ns; ip++) {
 		    /* temps */
-		    stemp[is][ip] = -omega*omega/conjf(f[iw])
+		    stemp[is][ip] = -omega*omega/conjf(f[ip][iw])
 			*rwave[is][pp[ip][1]][pp[ip][0]];
 		    
 		    /* tempr */
-		    rtemp[is][ip] = -omega*omega/conjf(f[iw])
+		    rtemp[is][ip] = -omega*omega/conjf(f[ip][iw])
 			*conjf(swave[is][pp[ip][1]][pp[ip][0]]);
 		}
 	    }
@@ -130,10 +132,10 @@ int main(int argc, char* argv[])
 	    for (i=0; i < n1*n2; i++) {
 		for (is=0; is < ns; is++) {
 		    for (ip=0; ip < ns; ip++) {
-			ahesss[ip][i] += 
-			    crealf(conjf(swave[ip][0][i]*swave[is][0][i])*stemp[is][ip]);
-			ahessr[ip][i] += 
-			    crealf(conjf(swave[ip][0][i])*rwave[is][0][i]*rtemp[is][ip]);
+			ahesss[ip][i] += crealf(
+			    conjf(swave[ip][0][i]*swave[is][0][i])*stemp[is][ip]);
+			ahessr[ip][i] += crealf(
+			    conjf(swave[ip][0][i])*rwave[is][0][i]*rtemp[is][ip]);
 		    }
 		}
 	    }
