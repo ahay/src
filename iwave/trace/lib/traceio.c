@@ -597,9 +597,9 @@ int traceserver_rec(int * irec,
       MPI_Abort(wcomm,E_OTHER);
     }
   }
-  /*  fprintf(stream,"tr_rec: rkw=%d rk=%d ig=%d\n",rkw,rk,ig);*/
+  fprintf(stream,"tr_rec: rkw=%d rk=%d ig=%d\n",rkw,rk,ig);
 #endif
-  /*  fprintf(stream,"tr_rec: last=%d irec=%d\n",last,*irec);*/
+  fprintf(stream,"tr_rec: last=%d irec=%d\n",last,*irec);
   return err;
 }
 
@@ -728,14 +728,14 @@ int traceserver_put(FILE * fp,
 
   if (lrank==0) {
     
-      if ((err=fseeko(fp,otr->m,SEEK_SET))) {
-	  fprintf(stderr,"Error: traceserver_put from fseeko\n");
+    if ((err=fseeko(fp,otr->m,SEEK_SET))) {
+      fprintf(stderr,"Error: traceserver_put from fseeko\n");
 #ifdef IWAVE_USE_MPI
-	  MPI_Abort(wcomm,err);
+      MPI_Abort(wcomm,err);
 #else
-	  return err;
+      return err;
 #endif
-      }
+    }
     fputtr(fp,&(otr->tr));
     
   }
@@ -1000,10 +1000,9 @@ int init_tracegeom(tracegeom * tg,
     
   /* obtain correct record number - if no more records, set return flag */
   err=traceserver_rec(&(tg->irec),&(tg->xrec),tg->last,stream);
-  /*
+
   fprintf(stream,"tg_init: irec=%d err=%d\n",tg->irec,err);
   fflush(stream);
-  */
 
   /* note that this is NOT an error! */
   if (err) {
@@ -1407,7 +1406,10 @@ int init_tracegeom(tracegeom * tg,
       tg->troff[tg->ntraces]=otr.m;
       /*      tg->troff[tg->ntraces]=tg->recoff[tg->irec]+itr*(HDRBYTES + tg->ntout * sizeof(float)); */
       
-      /*	fprintf(stream,"rk=%d ntraces=%d offset=%ld\n",retrieveRank(),tg->ntraces,tg->troff[tg->ntraces]);*/
+#ifdef IWAVE_VERBOSE
+      fprintf(stream,"tracegeom_init\n");
+      fprintf(stream,"rk=%d itr=%d offset=%ld\n",retrieveRank(),itr,tg->troff[tg->ntraces]);
+#endif
       tg->ntraces++;
       if (tg->ntraces > MAX_TRACES) {
 	fprintf(stream,"Error: tracegeom_init - ntraces exceeds MAX_TRACES = %d\n",MAX_TRACES);

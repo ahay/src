@@ -15,8 +15,8 @@ WWS 09.11.09: correct assignment of gs throughout
 #ifdef IWAVE_USE_MPI
 
 /*
-*/
 #define VERBOSE
+*/
 
 /* an MPI error handler from 
  * 
