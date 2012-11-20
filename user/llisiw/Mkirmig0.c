@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int nt, nx, ny, ns, nz, nzx, ix, iz, i, is, ist;
     float *trace, *out, **table, **tablex, *stable, *stablex;
     float ds, s0, x0, y0, dy, s, dx, ti, t0, dt, z0, dz, aal, tx, aper;
-    char *unit, *what, *type;
+    char *unit, *type;
     sf_file dat, mig, tbl, der;
 
     sf_init (argc,argv);
@@ -135,11 +135,8 @@ int main(int argc, char* argv[])
     if (NULL == (type = sf_getstring("type"))) type="hermit";
     /* type of interpolation (default Hermit) */
 
-    if (NULL == (what = sf_getstring("what"))) what="expanded";
-    /* Hermite basis functions (default expanded) */
-
     /* initialize interpolation */
-    tinterp_init(nzx,dy,what);
+    tinterp_init(nzx,dy);
 
     if (adj) {
 	for (i=0; i < nzx; i++) {
@@ -171,6 +168,11 @@ int main(int argc, char* argv[])
 		case 'l': /* linear */
 		    tinterp_linear(stable, s-ist*dy-y0,table[ist], table[ist+1]);
 		    tinterp_linear(stablex,s-ist*dy-y0,tablex[ist],tablex[ist+1]);
+		    break;
+
+		case 'p': /* partial */
+		    tinterp_partial(stable, s-ist*dy-y0,nz,nx,dx,table[ist], table[ist+1]);
+		    tinterp_partial(stablex,s-ist*dy-y0,nz,nx,dx,tablex[ist],tablex[ist+1]);
 		    break;
 
 		case 'h': /* hermit */

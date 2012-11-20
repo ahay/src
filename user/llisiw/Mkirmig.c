@@ -27,12 +27,12 @@
 
 int main(int argc, char* argv[])
 {
-    char *unit, *what, *type;
-    bool adj, cig;
+    char *unit, *type;
+    bool adj, cig, cmp;
     off_t nzx;
     int nt, nx, ny, ns, nh, nz, i, ix, iz, ih, is, ist, iht, ng;
     float *trace, **out, **table, *stable, *rtable, **tablex, *stablex, *rtablex;
-    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz;
+    float ds, s0, x0, y0, dy, s, h, h0, dh, dx, ti, t0, t1, t2, dt, z0, dz, tau;
     float aal, tx, aper;
     sf_file dat, mig, tbl, der;
 
@@ -40,6 +40,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("adj",&adj)) adj=true;
     /* y for migration, n for modeling */
+
+    if (!sf_getbool("cmp",&cmp)) cmp=true;
+    /* y for CMP gather, n for shot gather */    
 
     if (adj) {
 	dat = sf_input("in");
@@ -63,17 +66,15 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(dat,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(dat,"o3",&s0)) sf_error("No o3= in input");
 	if (!sf_histfloat(dat,"d3",&ds)) sf_error("No d3= in input");
-
-    } else {
-	
+    } else {	
 	if (!sf_getint("nt",&nt)) sf_error("Need nt="); /* time samples */
-	if (!sf_getint("nh",&nh)) nh=1; /* offset samples */
+	if (!sf_getint("nh",&nh)) nh=1; /* offset/receiver samples */
 	if (!sf_getint("ns",&ns)) ns=1; /* shot samples */
 	
 	if (!sf_getfloat("t0",&t0)) t0=0.0; /* time origin */
 	if (!sf_getfloat("dt",&dt)) sf_error("Need dt="); /* time sampling */
-	if (!sf_getfloat("h0",&h0)) h0=0.0; /* offset origin */
-	if (!sf_getfloat("dh",&dh)) sf_error("Need dh="); /* offset sampling */
+	if (!sf_getfloat("h0",&h0)) h0=0.0; /* offset/receiver origin */
+	if (!sf_getfloat("dh",&dh)) sf_error("Need dh="); /* offset/receiver sampling */
 	if (!sf_getfloat("s0",&s0)) s0=0.0; /* shot origin */
 	if (!sf_getfloat("ds",&ds)) sf_error("Need ds="); /* shot sampling */
     }
@@ -94,6 +95,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(tbl,"o3",&y0)) sf_error("No o3= in table");
     if (!sf_histfloat(tbl,"d3",&dy)) sf_error("No d3= in table");
 
+    if (!sf_getfloat("tau",&tau)) tau=0.;
+    /* static time-shift (in second) */
+
     if (!sf_getfloat("aperture",&aper)) aper=90.;
     /* migration aperture (in degree) */
 
@@ -101,7 +105,7 @@ int main(int argc, char* argv[])
     /* antialiasing */
     
     if (!sf_getbool("cig",&cig)) cig=false;
-    /* y - output common offset gathers */
+    /* y - output common offset/receiver gathers */
 
     ng = cig? nh: 1;
 
@@ -121,7 +125,12 @@ int main(int argc, char* argv[])
 	    sf_putint(mig,"n3",nh);
 	    sf_putfloat(mig,"o3",h0);
 	    sf_putfloat(mig,"d3",dh);
-	    sf_putstring(mig,"label3","Offset");
+
+	    if (cmp)
+		sf_putstring(mig,"label3","Offset");
+	    else
+		sf_putstring(mig,"label3","Receiver");
+
 	    if (NULL != unit) sf_putstring(mig,"unit3",unit);
 	} else {
 	    sf_putint(mig,"n3",1);
@@ -143,7 +152,10 @@ int main(int argc, char* argv[])
 	sf_putstring(dat,"label1","Time");
 	sf_putstring(dat,"unit1","s");	
 
-	sf_putstring(dat,"label2","Offset");
+	if (cmp)
+	    sf_putstring(dat,"label2","Offset");
+	else
+	    sf_putstring(dat,"label2","Receiver");
 	sf_putstring(dat,"label3","Shot");
     }
 	
@@ -170,11 +182,8 @@ int main(int argc, char* argv[])
     if (NULL == (type = sf_getstring("type"))) type="hermit";
     /* type of interpolation (default Hermit) */    
 
-    if (NULL == (what = sf_getstring("what"))) what="expanded";
-    /* Hermite basis functions (default expanded) */
-
     /* initialize interpolation */
-    tinterp_init(nzx,dy,what);
+    tinterp_init(nzx,dy);
 
     /* initialize summation */
     kirmig_init(nt,dt,t0);
@@ -207,6 +216,11 @@ int main(int argc, char* argv[])
 		    tinterp_linear(stablex,s-ist*dy-y0,tablex[ist],tablex[ist+1]);
 		    break;
 
+		case 'p': /* partial */
+		    tinterp_partial(stable, s-ist*dy-y0,nz,nx,dx,table[ist], table[ist+1]);
+		    tinterp_partial(stablex,s-ist*dy-y0,nz,nx,dx,tablex[ist],tablex[ist+1]);
+		    break;
+
 		case 'h': /* hermit */
 		    tinterp_hermite(stable, s-ist*dy-y0,table[ist],table[ist+1],tablex[ist],tablex[ist+1]);
 		    dinterp_hermite(stablex,s-ist*dy-y0,table[ist],table[ist+1],tablex[ist],tablex[ist+1]);
@@ -214,11 +228,11 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	for (ih=0; ih < nh; ih++) { /* offset */
+	for (ih=0; ih < nh; ih++) { /* offset/receiver */
 	    h = h0+ih*dh;
 
 	    /* cubic Hermite spline interpolation */
-	    iht = (s+h-y0)/dy;
+	    iht = cmp? (s+h-y0)/dy: (h-y0)/dy;
 	    if (iht <= 0) {
 		for (i=0; i < nzx; i++) {
 		    rtable[i]  = table[0][i];
@@ -232,13 +246,18 @@ int main(int argc, char* argv[])
 	    } else {
 		switch (type[0]) {
 		    case 'l': /* linear */
-			tinterp_linear(rtable, s+h-iht*dy-y0,table[iht], table[iht+1]);
-			tinterp_linear(rtablex,s+h-iht*dy-y0,tablex[iht],tablex[iht+1]);
+			tinterp_linear(rtable, cmp? s+h-iht*dy-y0: h-iht*dy-y0,table[iht], table[iht+1]);
+			tinterp_linear(rtablex,cmp? s+h-iht*dy-y0: h-iht*dy-y0,tablex[iht],tablex[iht+1]);
 			break;
 			
+		    case 'p': /* partial */
+			tinterp_partial(rtable, cmp? s+h-iht*dy-y0: h-iht*dy-y0,nz,nx,dx,table[iht], table[iht+1]);
+			tinterp_partial(rtablex,cmp? s+h-iht*dy-y0: h-iht*dy-y0,nz,nx,dx,tablex[iht],tablex[iht+1]);
+			break;
+
 		    case 'h': /* hermit */
-			tinterp_hermite(rtable, s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
-			dinterp_hermite(rtablex,s+h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+			tinterp_hermite(rtable, cmp? s+h-iht*dy-y0: h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
+			dinterp_hermite(rtablex,cmp? s+h-iht*dy-y0: h-iht*dy-y0,table[iht],table[iht+1],tablex[iht],tablex[iht+1]);
 			break;
 		}
 	    }
@@ -261,17 +280,27 @@ int main(int argc, char* argv[])
 		ix = (i-iz)/nz;
 
 		/* aperture (cone angle) */
-		if (h >= 0.) {
-		    if (atanf((s-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
-		    if (atanf((x0+ix*dx-s-h)/(iz*dz))*180./SF_PI > aper) continue;
+		if (cmp) {
+		    if (h >= 0.) {
+			if (atanf((s-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+			if (atanf((x0+ix*dx-s-h)/(iz*dz))*180./SF_PI > aper) continue;
+		    } else {
+			if (atanf((s+h-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+			if (atanf((x0+ix*dx-s)/(iz*dz))*180./SF_PI > aper) continue;
+		    }
 		} else {
-		    if (atanf((s+h-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
-		    if (atanf((x0+ix*dx-s)/(iz*dz))*180./SF_PI > aper) continue;
+		    if (h-s >= 0.) {
+			if (atanf((s-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+			if (atanf((x0+ix*dx-h)/(iz*dz))*180./SF_PI > aper) continue;
+		    } else {
+			if (atanf((h-x0-ix*dx)/(iz*dz))*180./SF_PI > aper) continue;
+			if (atanf((x0+ix*dx-s)/(iz*dz))*180./SF_PI > aper) continue;
+		    }
 		}
 
 		t1 = stable[i];
 		t2 = rtable[i];
-		ti = t1+t2;
+		ti = t1+t2+tau;
 
 		tx = SF_MAX(fabsf(stablex[i]*ds),fabsf(rtablex[i]*dh));
 		pick(adj,ti,tx*aal,out[cig ? ih : 0]+i,trace);

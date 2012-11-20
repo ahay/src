@@ -25,7 +25,7 @@ int main (int argc,char* argv[])
 {
     int n[3], ns, ns0, nt, is0, s0;
     float o[3], os, os0, d[3], ds, ds0, **t, **tds, *tempt, ss;
-    char *what;
+    char *type;
     sf_file in, out, deriv, pattern;
 
     sf_init (argc, argv);
@@ -56,10 +56,10 @@ int main (int argc,char* argv[])
     t = sf_floatalloc2(nt,ns);
     sf_floatread(t[0],nt*ns,in);
 
-    if (NULL == (what = sf_getstring("what"))) what="expanded";
-    /* Hermite basis functions (default expanded) */
+    if (NULL == (type = sf_getstring("type"))) type="hermit";
+    /* type of interpolation (default Hermit) */
 
-    if (what[0] == 'l') {
+    if (type[0] != 'h') {
 	/* linear interpolation */
 	deriv = NULL;
 	tds = NULL;
@@ -101,7 +101,7 @@ int main (int argc,char* argv[])
     tempt = sf_floatalloc(nt);
 
     /* initialization */
-    tinterp_init(nt,ds,what);
+    tinterp_init(nt,ds);
 
     /* loop over sources */
     for (is0=0; is0 < ns0; is0++) {
@@ -116,12 +116,16 @@ int main (int argc,char* argv[])
 	}
 
 	/* do interpolation */
-	switch (what[0]) {
+	switch (type[0]) {
 	    case 'l': /* linear */
 		tinterp_linear(tempt,ss,t[s0],t[s0+1]);
 		break;
 
-	    default: /* cubic Hermite spline */
+	    case 'p': /* partial */
+		tinterp_partial(tempt,ss,n[0],n[1],d[1],t[s0],t[s0+1]);
+		break;
+
+	    case 'h': /* hermite */
 		tinterp_hermite(tempt,ss,t[s0],t[s0+1],tds[s0],tds[s0+1]);
 		break;
 	}

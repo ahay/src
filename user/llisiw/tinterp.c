@@ -24,20 +24,17 @@
 
 static int nn;
 static float dx;
-static char* type;
 
 float hermite_exp(float t, float dx, float p0, float m0, float p1, float m1);
 float hermite_fac(float t, float dx, float p0, float m0, float p1, float m1);
 float hermite_ber(float t, float dx, float p0, float m0, float p1, float m1);
 
 void tinterp_init(int nt     /* model dimension */,
-		  float ds   /* original source sampling */,
-		  char* what /* type of basis function */)
+		  float ds   /* original source sampling */)
 /*< initialization >*/
 {
     nn = nt;
     dx = ds;
-    type = what;
 }
 
 void tinterp_linear(float* p /* interpolated result */,
@@ -55,6 +52,30 @@ void tinterp_linear(float* p /* interpolated result */,
     }
 }
 
+void tinterp_partial(float* p /* interpolated result */,
+		     float x  /* position */,
+		     int n1, int n2 /* grid size */,
+		     float dd /* grid horizontal sampling */,
+		     float* p0, float* p1 /* values at both ends */)
+/*< interpolation with fixed relative coordinate >*/
+{
+    int i, k1, k2;
+    float t;
+
+    t = x/dx;
+    
+    k1 = x/dd+0.5;
+    k2 = (dx-x)/dd+0.5;
+
+    for (i=0; i < nn; i++) {
+	if (i-k1*n1>=0 && i+k2*n1<nn) {
+	    p[i] = (1.-t)*p0[i-k1*n1]+t*p1[i+k2*n1];
+	} else {
+	    p[i] = (1.-t)*p0[i]+t*p1[i];
+	}
+    }
+}
+
 void tinterp_hermite(float* p /* interpolated result */,
 		     float x  /* position */,
 		     float* p0, float* p1 /* values at both ends */,
@@ -66,28 +87,8 @@ void tinterp_hermite(float* p /* interpolated result */,
 
     t = x/dx;
 
-    switch (type[0]) {
-	case 'e': /* expanded */
-	    for (i=0; i < nn; i++) {
-		p[i] = hermite_exp(t,dx,p0[i],m0[i],p1[i],m1[i]);
-	    }
-	    break;
-
-	case 'f': /* factorized */
-	    for (i=0; i < nn; i++) {
-		p[i] = hermite_fac(t,dx,p0[i],m0[i],p1[i],m1[i]);
-	    }
-	    break;
-
-	case 'b': /* Bernstein */
-	    for (i=0; i < nn; i++) {
-		p[i] = hermite_ber(t,dx,p0[i],m0[i],p1[i],m1[i]);
-	    }
-	    break;
-
-	default:
-	    sf_error("Basis function not supported");
-	    break;
+    for (i=0; i < nn; i++) {
+	p[i] = hermite_exp(t,dx,p0[i],m0[i],p1[i],m1[i]);
     }
 }
 
@@ -129,32 +130,6 @@ float hermite_exp(float t, float dx, float p0, float m0, float p1, float m1)
     h10 = t*t*t-2.*t*t+t;
     h01 = -2.*t*t*t+3.*t*t;
     h11 = t*t*t-t*t;
-
-    return h00*p0+h10*dx*m0+h01*p1+h11*dx*m1;
-}
-
-float hermite_fac(float t, float dx, float p0, float m0, float p1, float m1)
-/* cubic Hermite with factorized basis */
-{
-    double h00, h10, h01, h11;
-
-    h00 = (1.+2.*t)*(1.-t)*(1.-t);
-    h10 = t*(1.-t)*(1.-t);
-    h01 = t*t*(3.-2.*t);
-    h11 = t*t*(t-1.);
-
-    return h00*p0+h10*dx*m0+h01*p1+h11*dx*m1;
-}
-
-float hermite_ber(float t, float dx, float p0, float m0, float p1, float m1)
-/* cubic Hermite with Bernstein basis */
-{
-    double h00, h10, h01, h11;
-
-    h00 = (1.-t)*(1.-t)*(1.-t)+3.*t*(1.-t)*(1.-t);
-    h10 = t*(1.-t)*(1.-t);
-    h01 = 3.*t*t*(1.-t)+t*t*t;
-    h11 = -t*t*(1.-t);
 
     return h00*p0+h10*dx*m0+h01*p1+h11*dx*m1;
 }

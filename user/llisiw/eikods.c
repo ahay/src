@@ -153,7 +153,7 @@ void eikods_dt1(int l      /* direction */,
 		float* d   /* sampling*/)
 /* first-order derivative */
 {
-    int j, ii[3], a, b, i1=-1;
+    int j, ii[3], a, b, i1=-1, i2=-1;
     double rhs=0., den=0., dw=0., dt=0.;
 
     sf_line2cart(3,nn,i0,ii);
@@ -175,9 +175,19 @@ void eikods_dt1(int l      /* direction */,
 
 	    if (l == j) {
 		if (i1 == b) {
-		    dt = (t0[i1]-t0[i0])/d[j];
+		    i2 = i1+ss[j];
+
+		    if (ii[j] < nn[j]-2 && 1==fermat(&i1,&i2))
+			dt = (-t0[i2]+4.*t0[i1]-3.*t0[i0])/(2.*d[j]);
+		    else
+			dt = (t0[i1]-t0[i0])/d[j];
 		} else {
-		    dt = (t0[i0]-t0[i1])/d[j];
+		    i2 = i1-ss[j];
+
+		    if (ii[j] > 1 && 1==fermat(&i1,&i2))
+			dt = (3.*t0[i0]-4.*t0[i1]+t0[i2])/(2.*d[j]);
+		    else
+			dt = (t0[i0]-t0[i1])/d[j];
 		}
 	    }
 	}	
@@ -239,7 +249,6 @@ void eikods_dt2(int l                  /* direction */,
 		if (i2 != -1 && t0[i2] < t0[i1])
 		    dtdt = (t0[i0]-2.*t0[i1]+t0[i2])/(d[j]*d[j]);
 		else
-		    /* Hmm... Be careful with this. */
 		    dtdt = (t0[i0]-t0[i1])/(d[j]*d[j]);
 	    }
 	}
