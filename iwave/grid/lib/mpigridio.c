@@ -82,6 +82,7 @@ int mpirsfread(ireal * a,
   int err=0;         /* error flag */
   grid g;            /* grid workspace, init from file */
   int dim;           /* grid dimension */
+  int gdim;          /* grid global dimension */
   IPNT gs;           /* start indices of grid (file) */
   IPNT gsa;          /* start indices of grid intersection */
   IPNT g_gsa;        /* start indices, global */
@@ -205,6 +206,7 @@ int mpirsfread(ireal * a,
       
       get_n(n, g);
       dim = g.dim;
+      gdim = g.gdim;
       
     }
 
@@ -220,6 +222,7 @@ int mpirsfread(ireal * a,
     
   if (lsize>1) {
     err = (MPI_Bcast(&dim,1,MPI_INT,0,lcomm)) ||
+      (MPI_Bcast(&gdim,1,MPI_INT,0,lcomm)) ||
       (MPI_Bcast(n,RARR_MAX_NDIM,MPI_INT,0,lcomm)) ||
       (MPI_Bcast(&scale,1,MPI_INT,0,lcomm));
     /*  mpi_err(err,wcomm,stream);*/
@@ -234,6 +237,7 @@ int mpirsfread(ireal * a,
   */
   IASN(gs,IPNT_0);
   IASN(read_gn,n);
+  for (ii=dim;ii<gdim;ii++) read_gn[ii]=1;
   read_gn[dim-1]=iwave_min(N_SLOWEST_AXIS_SLICE, n[dim-1]);
   
   /* start indices begin at 0 */
@@ -665,6 +669,7 @@ int mpirsfwrite(ireal * a,
   int err=0;         /* error flag */
   grid g;            /* grid workspace, init from file */
   int dim;           /* grid dimension */
+  int gdim;          /* grid global dimension */
   IPNT gs;           /* start indices of grid (file) */
   IPNT gsa;          /* start indices of grid intersection */
   IPNT g_gsa;        /* start indices, global */
@@ -780,6 +785,7 @@ int mpirsfwrite(ireal * a,
       
       get_n(n, g);
       dim = g.dim;
+      gdim = g.gdim;
       
     }
 
@@ -796,6 +802,7 @@ int mpirsfwrite(ireal * a,
      information to compute various global dependent quantities.
   */
   err = (MPI_Bcast(&dim,1,MPI_INT,0,wcomm)) ||
+    (MPI_Bcast(&gdim,1,MPI_INT,0,wcomm)) ||
     (MPI_Bcast(n,RARR_MAX_NDIM,MPI_INT,0,wcomm)) ||
     (MPI_Bcast(&scale,1,MPI_INT,0,wcomm));
 
@@ -810,6 +817,7 @@ int mpirsfwrite(ireal * a,
   */
   IASN(gs,IPNT_0);
   IASN(read_gn,n);
+  for (ii=dim;ii<gdim;ii++) read_gn[ii]=1;
   read_gn[dim-1]=iwave_min(N_SLOWEST_AXIS_SLICE, n[dim-1]);
   
   /* start indices begin at 0 */
