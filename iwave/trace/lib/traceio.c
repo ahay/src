@@ -597,9 +597,9 @@ int traceserver_rec(int * irec,
       MPI_Abort(wcomm,E_OTHER);
     }
   }
-  fprintf(stream,"tr_rec: rkw=%d rk=%d ig=%d\n",rkw,rk,ig);
+  /*  fprintf(stream,"tr_rec: rkw=%d rk=%d ig=%d\n",rkw,rk,ig);*/
 #endif
-  fprintf(stream,"tr_rec: last=%d irec=%d\n",last,*irec);
+  /*  fprintf(stream,"tr_rec: last=%d irec=%d\n",last,*irec);*/
   return err;
 }
 
