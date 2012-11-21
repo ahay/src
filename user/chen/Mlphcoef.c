@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 	/* interpolation method: maxflat lagrange bspline */
 
 	nf = m+n+1;
-	sf_putint(out, "nf", nf);
+	sf_putint(out, "n1", nf);
 	sf_putint(out, "o1", -m);
 	sf_putint(out, "d1", 1);
 	sf_putint(out, "n2", nf);
