@@ -1023,8 +1023,10 @@ int init_tracegeom(tracegeom * tg,
   /* seek to correct location */
   err=traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]));
   /* err=traceserver_seek(tg->fpout,&(tg->recoff[tg->irec])); */
-  /*  fprintf(stream,"rk=%d return traceserver_seek\n",retrieveRank()); */
+#ifdef IWAVE_VERBOSE
+  fprintf(stream,"rk=%d rec=%d init_tracegeom <- traceserver_seek recoff=%ld\n",retrieveRank(),tg->irec,tg->recoff[tg->irec]); */
   fflush(stream);
+#endif
   if (err) {
     fprintf(stream,"Error: init_tracegeom from traceserver_seek\n");
 #ifdef IWAVE_USE_MPI
@@ -1181,7 +1183,9 @@ int init_tracegeom(tracegeom * tg,
 
   while ( (itr < (tg->ntr)[tg->irec]) && (!err) ) {
 
-    /*    fprintf(stream,"rk=%d itr=%d\n",retrieveRank(),itr);*/
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"rk=%d itr=%d\n",retrieveRank(),itr);
+#endif
 
     /*    if (rk==0) fprintf(stderr,"in init: call tr_get\n");*/
     /*   err=traceserver_get(tg->fpout, */
