@@ -129,8 +129,8 @@ Output info:
 #define NSTR 128
       
 /* uncomment to write to the rk-dep output stream at every time step 
- */
 #define VERBOSE_STEP
+ */
 /*============================================================================
  *                             END INCLUDES 
  *============================================================================*/

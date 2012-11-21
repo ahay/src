@@ -659,6 +659,12 @@ int traceserver_get(FILE * fp,
       return W_EOF;
 #endif
     }
+    /* it is very strange that this fix is necessary - 
+       for some reason fp was being rewound by the call
+       to fgettr. A new trace was being read, but the file
+       pointer being reset. This call exerts positive 
+       control over file position. WWS 20.11.12
+    */
     fseeko(fp,otr->m+nb,SEEK_SET);
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"<- traceserver_get: nb=%d offset=%ld\n",nb,ftello(fp));
