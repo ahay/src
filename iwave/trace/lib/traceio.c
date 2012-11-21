@@ -1186,7 +1186,7 @@ int init_tracegeom(tracegeom * tg,
 
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"rk=%d itr=%d\n",retrieveRank(),itr);
-    fprintf(stream,"1 offset=%ld\n",ftello(tg->fpin));
+    fprintf(stream,"0 offset=%ld\n",ftello(tg->fpin));
     fflush(stream);
 #endif
 
@@ -1206,6 +1206,10 @@ int init_tracegeom(tracegeom * tg,
       return err;
     }
 
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"1 offset=%ld\n",ftello(tg->fpin));
+    fflush(stream);
+#endif
     /*    if (rk==0) fprintf(stderr,"in init: process trace\n");*/
   
     /* extract info common TO RECORD from first trace IN RECORD */
