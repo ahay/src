@@ -20,7 +20,8 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-sse = env.get('SSE')
+sse = None
+#sse = env.get('SSE')
 
 if sse:
     env.Prepend(CPPPATH=['../../include'],
@@ -58,7 +59,7 @@ if root:
     main = 'sf%s.py' % user
 
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/framework/rsf/doc.py')	
+    env.Depends(docs,'#/framework/rsf/doc.py')
 
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

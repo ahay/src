@@ -24,7 +24,7 @@
 
 __m128 *restrict A_s = (__m128 *)0;
 
-void init_sse_data()
+static void init_sse_data (void)
 {
   if (A_s == 0) {
     posix_memalign ((void**)&A_s, 16, (sizeof(__m128)*12));
@@ -59,6 +59,12 @@ do {                                                                \
 } while(0);
 
 #endif
+
+void init_einspline (void) {
+#ifdef HAVE_SSE
+    init_sse_data ();
+#endif
+}
 
 /********************
  * Single precision *

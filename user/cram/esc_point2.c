@@ -183,7 +183,7 @@ bool sf_esc_point2_has_parent_link (sf_esc_point2 esc_point, EscAxisDim2 dim,
     return true;
 }
 
-bool sf_esc_point2_set_traced (sf_esc_point2 esc_point, bool traced)
+void sf_esc_point2_set_traced (sf_esc_point2 esc_point, bool traced)
 /*< Set ray traced flag >*/
 {
     esc_point->trc = traced;

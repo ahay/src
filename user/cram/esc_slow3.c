@@ -138,6 +138,7 @@ sf_esc_slowness3 sf_esc_slowness3_init (sf_file vspline, bool verb)
                       esc_slow->velspline.nc, vspline);
         esc_slow->mmaped = NULL;
     }
+    init_einspline ();
 
     if (verb)
         sf_warning ("Size of splined velocity model: %g Mb", 1e-6*(float)esc_slow->velspline.nc);

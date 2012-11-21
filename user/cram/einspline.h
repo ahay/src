@@ -352,5 +352,7 @@ void set_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
 void set_multi_UBspline_3d_s (multi_UBspline_3d_s *spline, 
                               int spline_num, float *data);
 
+void init_einspline (void);
+
 #endif /* EINSPLINE_H */
 
