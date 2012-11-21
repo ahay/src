@@ -629,6 +629,7 @@ int traceserver_get(FILE * fp,
   int err=0;
 
   int lrank;         /* rank in the local communicator  */
+  int nb=0; 
 
 #ifdef IWAVE_USE_MPI
   MPI_Comm wcomm;    /* global communicator */
@@ -649,8 +650,7 @@ int traceserver_get(FILE * fp,
     fprintf(stream,"-> traceserver_get: offset=%ld\n",otr->m);
     fflush(stream);
 #endif
-    fseeko(fp,otr->m,SEEK_SET);
-    if (!fgettr(fp,&(otr->tr))) {
+    if (!(nb=fgettr(fp,&(otr->tr)))) {
       fprintf(stderr,"PANIC: traceserver_get\n");
       fprintf(stderr,"failed to read trace on input unit\n");
 #ifdef IWAVE_USE_MPI      
@@ -660,7 +660,7 @@ int traceserver_get(FILE * fp,
 #endif
     }
 #ifdef IWAVE_VERBOSE
-    fprintf(stream,"<- traceserver_get: offset=%ld\n",ftello(fp));
+    fprintf(stream,"<- traceserver_get: nb=%d offset=%ld\n",nb,ftello(fp));
     fflush(stream);
 #endif
   }
