@@ -659,6 +659,7 @@ int traceserver_get(FILE * fp,
       return W_EOF;
 #endif
     }
+    fseeko(fp,otr->m+nb,SEEK_SET);
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"<- traceserver_get: nb=%d offset=%ld\n",nb,ftello(fp));
     fflush(stream);
