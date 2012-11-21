@@ -649,6 +649,7 @@ int traceserver_get(FILE * fp,
     fprintf(stream,"-> traceserver_get: offset=%ld\n",otr->m);
     fflush(stream);
 #endif
+    fseeko(fp,otr->m);
     if (!fgettr(fp,&(otr->tr))) {
       fprintf(stderr,"PANIC: traceserver_get\n");
       fprintf(stderr,"failed to read trace on input unit\n");
