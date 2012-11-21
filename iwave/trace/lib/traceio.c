@@ -1186,10 +1186,13 @@ int init_tracegeom(tracegeom * tg,
 
 #ifdef IWAVE_VERBOSE
     fprintf(stream,"rk=%d itr=%d\n",retrieveRank(),itr);
+    fprintf(stream,"1 offset=%ld\n",ftello(tg->fpin));
+    fflush(stream);
 #endif
 
     /*    if (rk==0) fprintf(stderr,"in init: call tr_get\n");*/
     /*   err=traceserver_get(tg->fpout, */
+    
     err=traceserver_get(tg->fpin,
 #ifdef IWAVE_USE_MPI
 			&(tg->p),
@@ -1320,6 +1323,10 @@ int init_tracegeom(tracegeom * tg,
       }
     }
 
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"2 offset=%ld\n",ftello(tg->fpin));
+#endif
+
     tmpz=0.0;
     tmpx=0.0;
     tmpy=0.0;
@@ -1428,6 +1435,11 @@ int init_tracegeom(tracegeom * tg,
     }      
     /* one more trace read... */
     itr++; /* in record */
+
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"3 offset=%ld\n",ftello(tg->fpin));
+    fflush(stream);
+#endif
     
   }
    
