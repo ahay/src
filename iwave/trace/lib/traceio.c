@@ -1000,10 +1000,10 @@ int init_tracegeom(tracegeom * tg,
     
   /* obtain correct record number - if no more records, set return flag */
   err=traceserver_rec(&(tg->irec),&(tg->xrec),tg->last,stream);
-
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"tg_init: irec=%d err=%d\n",tg->irec,err);
   fflush(stream);
-
+#endif
   /* note that this is NOT an error! */
   if (err) {
     fprintf(stream,"NOTE: init_tracegeom from traceserver_rec\n");
@@ -1018,23 +1018,6 @@ int init_tracegeom(tracegeom * tg,
      header and offset info is the same between the two.
   */
 
-  /*  if (rk==0) fprintf(stderr,"in init: call tr_seek\n");*/
-  /*  fprintf(stream,"rk=%d call traceserver_seek\n",retrieveRank()); */
-  /* seek to correct location */
-  err=traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]));
-  /* err=traceserver_seek(tg->fpout,&(tg->recoff[tg->irec])); */
-#ifdef IWAVE_VERBOSE
-  fprintf(stream,"rk=%d rec=%d init_tracegeom <- traceserver_seek recoff=%ld\n",retrieveRank(),tg->irec,tg->recoff[tg->irec]); 
-  fflush(stream);
-#endif
-  if (err) {
-    fprintf(stream,"Error: init_tracegeom from traceserver_seek\n");
-#ifdef IWAVE_USE_MPI
-    MPI_Abort(wcomm,err);
-#else
-    return err;
-#endif
-  }
   /* common initializations for record */
 
   /*  if (rk==0) fprintf(stderr,"in init: initializations\n");*/
@@ -1179,6 +1162,24 @@ int init_tracegeom(tracegeom * tg,
 
   tg->ntraces=0;  /* number of traces located in grid */
 
+
+  /*  if (rk==0) fprintf(stderr,"in init: call tr_seek\n");*/
+  /*  fprintf(stream,"rk=%d call traceserver_seek\n",retrieveRank()); */
+  /* seek to correct location */
+  err=traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]));
+  /* err=traceserver_seek(tg->fpout,&(tg->recoff[tg->irec])); */
+#ifdef IWAVE_VERBOSE
+  fprintf(stream,"rk=%d rec=%d init_tracegeom <- traceserver_seek recoff=%ld\n",retrieveRank(),tg->irec,tg->recoff[tg->irec]); 
+  fflush(stream);
+#endif
+  if (err) {
+    fprintf(stream,"Error: init_tracegeom from traceserver_seek\n");
+#ifdef IWAVE_USE_MPI
+    MPI_Abort(wcomm,err);
+#else
+    return err;
+#endif
+  }
   /*  if (rk==0) fprintf(stderr,"in init: read loop\n");*/
 
   while ( (itr < (tg->ntr)[tg->irec]) && (!err) ) {
