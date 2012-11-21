@@ -623,7 +623,8 @@ int traceserver_get(FILE * fp,
 #ifdef IWAVE_USE_MPI
 		    MPI_Datatype *p,
 #endif
-		    offsegy * otr) {
+		    offsegy * otr,
+		    FILE * stream) {
 
   int err=0;
 
@@ -644,6 +645,10 @@ int traceserver_get(FILE * fp,
   if (lrank==0) {
 
     otr->m=ftello(fp);
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"-> traceserver_get: offset=%ld\n",otr->m);
+    fflush(stream);
+#endif
     if (!fgettr(fp,&(otr->tr))) {
       fprintf(stderr,"PANIC: traceserver_get\n");
       fprintf(stderr,"failed to read trace on input unit\n");
@@ -653,6 +658,10 @@ int traceserver_get(FILE * fp,
       return W_EOF;
 #endif
     }
+#ifdef IWAVE_VERBOSE
+    fprintf(stream,"<- traceserver_get: offset=%ld\n",ftello(fp));
+    fflush(stream);
+#endif
   }
 
   /* broadcast trace */
@@ -1197,7 +1206,7 @@ int init_tracegeom(tracegeom * tg,
 #ifdef IWAVE_USE_MPI
 			&(tg->p),
 #endif
-			&otr); 
+			&otr, stream); 
     /* any error returned from traceserver functions in MPI case
        is impossible - has resulted in abort */
     if (err) {
@@ -1507,7 +1516,7 @@ int init_tracegeom(tracegeom * tg,
 #ifdef IWAVE_USE_MPI
 			  &(tg->p),
 #endif
-			  &otr); 
+			  &otr, stream); 
       if (err) {
 	fprintf(stream,"init_tracegeom - error from traceserver_get\n");
 	fflush(stream);
