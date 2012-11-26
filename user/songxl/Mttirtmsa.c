@@ -1,4 +1,4 @@
-/* 2-D Fourier finite-difference wave extrapolation: MPI + OMP*/
+/* 2-D TTI FFD RTM: MPI + OMP*/
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -68,11 +68,6 @@ void source_smooth(float **source /*source matrix*/,
 /*< smooth source input >*/
 
 
-float dehf(float k /*current frequency*/,
-	   float kn /*highest frequency*/,
-	   float a /*suppress factor*/,
-	   float factor /*propotion*/);
-/*< high frequency depressing>*/
 int main(int argc, char* argv[]) 
 {
     int nxorg, nt, nkx, nkz, ix, it, ikx, ikz, nzorg, iz, nbt, nbb, nbl, nbr, nxb, nzb, isx, isz, irz, ir;
@@ -83,7 +78,7 @@ int main(int argc, char* argv[])
     float w1, w10, w2, w20, w3, w30, h1, h10, h2, h20, h3, h30;
     float cosg, cosg0, cosg2, cosg02, sing, sing0, sing2, sing02;
     float vk, vk2, tmpvk, tmpk, k2, err, dt2, kx1, kz1;
-    float alpha, ratio, vzmax, vxmax; /* source smoothing */
+    float ratio, vzmax, vxmax; /* source smoothing */
     kiss_fft_cpx **uk, **ctracex, **ctracez;
     sf_file input, velx, velz, source, yita, seta, geo, output;
     FILE *out;
@@ -93,7 +88,6 @@ int main(int argc, char* argv[])
     int i, rank, nodes;
     int nr, jr, r0, nl, fsize, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
-    float ax, az, factor;
     kiss_fft_cfg *cfgx, *cfgxi, *cfgz, *cfgzi;
     int lefts, rights, newl, tskip, sht;
     float **vxorg, **vzorg, **yiorg, **seorg;
@@ -103,12 +97,6 @@ int main(int argc, char* argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nodes);
     if(rank==0) sf_warning("nodes=%d",nodes);
-/*
-  if (nodes < 2) {
-  fprintf(stderr,"Need at least two nodes!\n");
-  MPI_Finalize();
-  }
-*/
 
     sf_init(argc,argv);
     geo = sf_input("geo");   /* geometry: source location isx, receiver starting & number: r0 & nl*/
@@ -116,7 +104,7 @@ int main(int argc, char* argv[])
     velz = sf_input("velz");   /* velocity */
     yita = sf_input("yita");   /* anistropic parameter*/
     source = sf_input("source");   /* source wavlet*/
-    seta = sf_input("seta");   /* TTI angle*/
+    seta = sf_input("seta");   /* TTI dip*/
 
     if (rank == 0){
 	if (SF_FLOAT != sf_gettype(velx)) sf_error("Need float input");
@@ -131,57 +119,43 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(velx,"d2",&dz)) sf_error("No d2= in input");
     if (!sf_histfloat(velx,"o1",&o1)) o1=0.0;
     if (!sf_histfloat(velx,"o2",&o2)) o2=0.0;
-    if (!sf_getbool("opt",&opt)) opt=true;
-    if (!sf_getbool("de",&de)) de=true;
-    /* if y, determine optimal size for efficiency */
-    if (!sf_getfloat("dt",&dt)) sf_error("Need dt input");
-    if (!sf_getint("nt",&nt)) sf_error("Need nt input");
-    if (!sf_getint("isz",&isz)) sf_error("Need isz input");
-    if (!sf_getint("irz",&irz)) irz=isz;
-    /* if (!sf_getint("r0",&r0)) r0=0; */
-    if (!sf_getint("jr",&jr)) jr=1;
-    if (!sf_getint("jm",&jm)) jm=20;
-    if (!sf_getint("tskip",&tskip)) tskip=1000;
-    if (!sf_getint("sht",&sht)) sht=0;
+    if (!sf_getbool("opt",&opt)) opt=true; /*optimal padding*/
+    if (!sf_getbool("de",&de)) de=true; /*in angle*/
+    if (!sf_getfloat("dt",&dt)) sf_error("Need dt input"); /*time step size*/
+    if (!sf_getint("nt",&nt)) sf_error("Need nt input"); /*total time length*/
+    if (!sf_getint("isz",&isz)) sf_error("Need isz input"); /*source depth*/
+    if (!sf_getint("irz",&irz)) irz=isz; /*receiver depth*/
+    if (!sf_getint("jr",&jr)) jr=1; /*receiver sampling*/
+    if (!sf_getint("jm",&jm)) jm=20; /*snap sampling*/
+    if (!sf_getint("tskip",&tskip)) tskip=1000; /*time skipped*/
+    if (!sf_getint("sht",&sht)) sht=0; /*time shift*/
     if (!sf_getint("nr",&nr)) sf_error("Need nr input");/*streamer total length*/
-    if (!sf_getfloat("err",&err)) err = 0.00001;
-    if (!sf_getfloat("alpha",&alpha)) alpha=-0.7;
+    if (!sf_getfloat("err",&err)) err = 0.00001; /*error control*/
 
-    if (!sf_getint("nbt",&nbt)) nbt=102;
-    if (!sf_getint("nbb",&nbb)) nbb=102;
-    if (!sf_getint("nbl",&nbl)) nbl=128;
-    if (!sf_getint("nbr",&nbr)) nbr=127;
+    if (!sf_getint("nbt",&nbt)) nbt=102; /*boundary nodes*/
+    if (!sf_getint("nbb",&nbb)) nbb=102; /*boundary nodes*/
+    if (!sf_getint("nbl",&nbl)) nbl=128; /*boundary nodes*/
+    if (!sf_getint("nbr",&nbr)) nbr=127; /*boundary nodes*/
 
     if (!sf_getfloat("ct",&ct)) ct = 0.02; /*decaying parameter*/
     if (!sf_getfloat("cb",&cb)) cb = 0.02; /*decaying parameter*/
     if (!sf_getfloat("cl",&cl)) cl = 0.02; /*decaying parameter*/
     if (!sf_getfloat("cr",&cr)) cr = 0.02; /*decaying parameter*/
-    if (!sf_getfloat("ratio",&ratio)) ratio = 2.0; /*decaying parameter*/
-
-    if (!sf_getfloat("ax",&ax)) ax= 2.0; /*suppress HF parameter*/
-    if (!sf_getfloat("az",&az)) az= 2.0; /*suppress HF parameter*/
-    if (!sf_getfloat("factor",&factor)) factor= 2.0/3.0; /*suppress HF parameter*/
+    if (!sf_getfloat("ratio",&ratio)) ratio = 2.0; /*v0/vmax*/ 
     
     if(SF_INT != sf_gettype(geo)) sf_error("Need int!");
     if(!sf_histint(geo,"esize",&esize)) esize = sizeof("int");
-    /* if(!sf_histint(geo,"n1",&shot_num)) sf_error("No n1=!"); */
     if(!sf_histint(geo,"n1",&n1)) sf_error("No n1=!");
     if(!(n1==4)) sf_error("n1 in geo should be 4");
     if(!sf_histint(geo,"n2",&shot_num)) sf_error("No n2=!");
     if(rank==0) sf_warning("%d shots!",shot_num);
     n2 = sf_leftsize(geo,1);
 
-    if (!sf_getint("left",&lefts)) lefts=nr*3/2*jr;
-    if (!sf_getint("right",&rights)) rights=nr/2*jr;
-/*
-    nxb = nx + nbl + nbr;
-    nzb = nz + nbt + nbb;
-    tl = nx*nz;
-*/
+    if (!sf_getint("left",&lefts)) lefts=nr*3/2*jr; /*left*/
+    if (!sf_getint("right",&rights)) rights=nr/2*jr; /*right*/
     newl = 1 + lefts + rights;
     nxb = newl + nbl + nbr;
     nzb = nzorg + nbt + nbb;
-    //tl = nx*nz;
     tl = newl*nzorg;
     nkx = opt? kiss_fft_next_fast_size(nxb): nxb;
     nkz = opt? kiss_fft_next_fast_size(nzb): nzb;
@@ -265,8 +239,6 @@ int main(int argc, char* argv[])
     sf_warning("Rank= %d",rank);
     for (i=rank; i < shot_num; i+=nodes) {
         sf_warning("Shot No. %d",i);
-        /* out = fopen("/local/lfs1/data/snap","w"); */
-	/* out = fopen("/tmp/snap","w"); */
         sf_intread(&isx,1,geo);
         sf_intread(&r0,1,geo);
         sf_intread(&nl,1,geo);
@@ -277,7 +249,6 @@ int main(int argc, char* argv[])
         iname = sf_charalloc(20);
         oname = sf_charalloc(25);
         itoa(isx,mm);
-/*
         sname[0] = '/';
         sname[1] = 't';
         sname[2] = 'm';
@@ -286,18 +257,6 @@ int main(int argc, char* argv[])
         sname[5] = 's';
         sname[6] = 'n';
         sname[7] = 'a';
-        sname[8] = 'p';
-        sname[9] = '_';
-        sname[10] = '\0';
-*/
-        sname[0] = '/';
-        sname[1] = 'd';
-        sname[2] = 'a';
-        sname[3] = 't';
-        sname[4] = 'a';
-        sname[5] = '1';
-        sname[6] = '/';
-        sname[7] = 's';
         sname[8] = 'p';
         sname[9] = '_';
         sname[10] = '\0';
@@ -311,7 +270,6 @@ int main(int argc, char* argv[])
         iname[3] = 'A';
         iname[4] = '/';
         iname[5] = 's';
-        /* iname[5] = 'd'; */
         iname[6] = 'h';
         iname[7] = 'o';
         iname[8] = 't';
@@ -321,14 +279,7 @@ int main(int argc, char* argv[])
         oname[0] = 'I';
         oname[1] = 'M';
         oname[2] = 'A';
-//        oname[3] = 'T';
         oname[3] = 'G';
-/*
-  oname[0] = 'I';
-  oname[1] = 'M';
-  oname[2] = 'G';
-  oname[3] = 'S';
-*/
         oname[4] = '/';
         oname[5] = 'I';
         oname[6] = 'm';
@@ -461,17 +412,14 @@ int main(int argc, char* argv[])
             }
         }
         for (ikz=0; ikz < nkz; ikz++) {
-            /* kz1 = (kz0+ikz*dkz)*2.0*pi; */
             kz1 = (kz0+ikz*dkz);
             for (ikx=0; ikx < nkx; ikx++) {
-                /* kx1 = (kx0+ikx*dkx)*2.0*pi; */
                 kx1 = (kx0+ikx*dkx);
                 kx = kx1*cosg0+kz1*sing0;
                 kz = kz1*cosg0-kx1*sing0;
                 tmpvk = (vx02*kx*kx+vz02*kz*kz);
                 k2 = kx1*kx1+kz1*kz1;
                 vk2 = 0.5*tmpvk+0.5*sqrtf(tmpvk*tmpvk-8.0*yi0/(1.0+2.0*yi0)*vx02*vz02*kx*kx*kz*kz);
-                /* vk2 = tmpvk; */
                 vk = sqrtf(vk2);
                 tmpk = vk*dt;
                 tmp = vz0*dt;
@@ -499,9 +447,7 @@ int main(int argc, char* argv[])
         /* propagation in time */
         for (it=0; it < nt; it++) {
             if(it<1500 )  { 
-		//cur[isz+nbt][isx+nbl] += wav[it];
 		cur[isz+nbt][lefts+nbl] += wav[it];
-		//source_smooth(cur,isz+nbt,isx+nbl,wav[it]);
 		source_smooth(cur,isz+nbt,lefts+nbl,wav[it]);
 	    }
 
@@ -611,7 +557,6 @@ int main(int argc, char* argv[])
 		for (ix=0; ix < nxb; ix++) {
 		    dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
 		    new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-		    /*     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; */
 		}
 	    }
  
@@ -629,13 +574,10 @@ int main(int argc, char* argv[])
 		}
 	    }
             if(!((it-sht)%jm) && (it>sht)) {
-		/* sf_floatwrite(cur[nbt],nxb*nz,out); */
 		for(iz=0;iz < nzorg;iz++) fwrite(cur[nbt+iz]+nbl,sizeof(float),newl,out);
             }
         }
         fclose(out);
-        /* out = fopen("/local/lfs1/data/snap","r"); */
-        /* out = fopen("/tmp/snap","r"); */
         out = fopen(sname,"r");
         for (iz=0; iz < nzb; iz++) {
             for (ix=0; ix < nxb; ix++) {
@@ -646,13 +588,8 @@ int main(int argc, char* argv[])
         }
         sf_floatread(rvr[0],nr*(nt-sht),input);
         sf_fileclose(input);
-        /* for (it=nt-1; it >-1; it--) { */
-       // for (it=nt-1; it >194; it--) {
         for (it=nt-1-sht; it > tskip; it--) {
-            /* sf_floatread(rvr,nr,input); */
-	    /*     for (ix=r0; ix < nx; ix+=jr) cur[irz+nbt][ix+nbl] += rvr[ix][it]; */
             for (ir=0; ir < nl; ir++) {
-                //ix = r0 + ir*jr;
                 ix = r0 -isx + lefts + ir*jr;
                 cur[irz+nbt][ix+nbl] += rvr[rb+ir][it];
             }
@@ -767,7 +704,6 @@ int main(int argc, char* argv[])
 		for (ix=0; ix < nxb; ix++) {
 		    dercur[iz][ix]= derold[iz][ix] + new[iz][ix]/dt;
 		    new[iz][ix] = cur[iz][ix] + dercur[iz][ix]*dt; 
-		    /*     new[iz][ix] += 2.0*cur[iz][ix] -old[iz][ix]; */
 		}
 	    }
  
@@ -793,8 +729,6 @@ int main(int argc, char* argv[])
         free(sname);
     }
 
-    /* remove("/local/lfs1/data/snap"); */
-    /* remove("/tmp/snap"); */
     bd_close();
     srcsm_close();
     free(**aa);
@@ -1002,7 +936,6 @@ void bd_decay(float **a /*2-D matrix*/)
     }
     for (iz=0; iz < nbt; iz++) {  
         for (ix=0; ix < nbl; ix++) {
-            /* a[iz][ix] *= (float)iz/(float)(ix+iz)*wl[ix]+(float)ix/(float)(ix+iz)*wt[iz]; */
             a[iz][ix] *= iz>ix? wl[ix]:wt[iz];
         }
     }
@@ -1043,37 +976,5 @@ void abc_cal(int abc /* decaying type*/,
 		w[ib]=powf((1.0+0.9*cosf(((float)(nb-1.0)-(float)ib)/(float)(nb-1.0)*pi))/2.0,abc);
 	    }
     }   
-}
-float dehf(float k /*current frequency*/,
-	   float kn /*highest frequency*/,
-	   float a /*suppress factor*/,
-	   float factor /*propotion*/)
-/*< high frequency depressing>*/
-{
-    float kmax, kmax2;
-    float depress;
-    /* float pi=SF_PI; */
-    kmax =  (kn*factor);
-    kmax2 = (kmax+kn)/2.0;
-    if (fabs(k) < kmax) {
-	depress = 1.0;
-    }
-    else {
-	depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
-/*          depress =cosf(((fabs(k)-kmax))/((kn-kmax))*pi/2.0); */
-	/*       depress = depress * depress; */
-    }
-    /*   depress = exp(-a*((fabs(k)-kmax)*(fabs(k)-kmax))/((kn-kmax)*(kn-kmax))); */
-/*
-  else if (fabs(k) < kmax2){
-  depress =cosf(((fabs(k)-kmax))/((kmax2-kmax))*pi/2.0);
-  depress = depress * depress;
-  }    
-  // depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)))); 
-  else
-  depress = 0.0;
-//       depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
-*/
-    return(depress);
 }
 
