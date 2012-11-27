@@ -130,7 +130,7 @@ else:
         def bool(self,key,default=None):
             """Returns bool argument given to program"""
             val = self.__get(key, default)
-            val = lower(str(val)) # No, combining with line above does not work
+            val = str(val).lower()
             if val[0] == 'y' or val == 'true':
                 return True
             elif val[0] =='n' or val == 'false':
