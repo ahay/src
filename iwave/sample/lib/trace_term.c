@@ -111,7 +111,10 @@ int traceterm_init(TRACE_TERM * tr,
 		     usernt,usert0,tr->load,
 		     stream);
 
+#ifdef IWAVE_VERBOSE
   fprintf(stream,"traceterm_init: (tr->tg).t0 = %e, (m->tsind).dt = %e\n",(tr->tg).t0,(m->tsind).dt);
+  fflush(stream);
+#endif
   /* start and stop from delrt, ns - OK even if (err)*/
   tr->istart=(int)((((tr->tg).t0)/((m->tsind).dt))+0.1);
   tr->istop=tr->istart + (tr->tg).nt - 1;

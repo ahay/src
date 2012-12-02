@@ -358,8 +358,10 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	return E_INTERNAL;
     }
 
+#ifdef IWAVE_VERBOSE
     fprintf(stream,"in modelcrea\n");
     fflush(stream);
+#endif
 
     model->ld_c = model->ld_a;
     for (i = 0;i < RDOM_MAX_NARR;i ++) {
