@@ -3,7 +3,7 @@
 int main(int argc, char ** argv) {
   
   int ndim=2;
-  IPNT gs0, ge0, gs, ge, i, n0, n;
+  IPNT gs0, ge0, gs, ge, s, e, i, n0, n;
   RARR arr;
   int err=0;
 
@@ -18,7 +18,7 @@ int main(int argc, char ** argv) {
   ge[1]=6;
   gs[2]=1;
   ge[2]=0;
-
+  
   ra_setnull(&arr);
   fprintf(stderr,"main->ra_create\n");
   err=ra_create(&arr,ndim,gs0,ge0);
@@ -39,6 +39,8 @@ int main(int argc, char ** argv) {
   ra_greset(&arr,gs,ge);
   fprintf(stderr,"main<-ra_greset\n");  
 
+  ra_se(&arr,s,e);
+
   fprintf(stderr,"************\n");
   ra_dump(&arr,stderr);
   fprintf(stderr,"************\n");
@@ -48,18 +50,18 @@ int main(int argc, char ** argv) {
   ra_size(&arr,n);
   fprintf(stderr,"main<-ra_size\n");  
   fprintf(stderr,"************\n");
-  for (i[1]=0;i[1]<n[1];i[1]++) {
-    for (i[0]=0;i[0]<n[0];i[0]++) {
+  for (i[1]=s[1];i[1]<=e[1];i[1]++) {
+    for (i[0]=s[0];i[0]<=e[0];i[0]++) {
       fprintf(stderr,"%+11.3e ",arr._s2[i[1]][i[0]]);
     }
     fprintf(stderr,"\n");
   }
 
   fprintf(stderr,"************\n");
-  fprintf(stderr,"s2[0][-1]=%+11.3e\n",arr._s2[0][-1]);
-  fprintf(stderr,"s2[-1][0]=%+11.3e\n",arr._s2[-1][0]);
-  fprintf(stderr,"s2[-1][-1]=%+11.3e\n",arr._s2[-1][-1]);
-  fprintf(stderr,"s02[2][2]=%+11.3e\n",arr._s02[2][2]);
+  fprintf(stderr,"s2[%d][%d]=%+11.3e\n",s[1],s[0]-1,arr._s2[s[1]][s[0]-1]);
+  fprintf(stderr,"s2[%d][%d]=%+11.3e\n",s[1]-1,s[0],arr._s2[s[1]-1][s[0]]);
+  fprintf(stderr,"s2[%d][%d]=%+11.3e\n",s[1]-1,s[0]-1,arr._s2[s[1]-1][s[0]-1]);
+  fprintf(stderr,"s2[%d][%d]=%+11.3e\n",s[1],s[0],arr._s2[s[1]][s[0]]);
   ra_destroy(&arr);
 
 }

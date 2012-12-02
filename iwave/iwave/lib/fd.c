@@ -366,10 +366,10 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	if ( !(isdyn(fdm,i)) ) continue;
 	err = rd_greset(&(model->ld_c), i, dgs[i], dge[i]);
 	if ( err ) {
-	    fprintf(stream, 
-		    fdm->ind2str(i), err);
-	    fflush(stream);
-	    return E_INTERNAL;
+	  fprintf(stream,"in modelcrea: reset failed for array %s err=%d\n", 
+		  fdm->ind2str(i), err);
+	  fflush(stream);
+	  return E_INTERNAL;
 	}
     }
     /*--------------------------------------------------------------------------*/

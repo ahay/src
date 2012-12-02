@@ -156,6 +156,11 @@ int ra_allocate(RARR *arr) {
     psize = 1L;
     for (d=1; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
+      arr->_s2 = (ireal **)usermalloc_(psize * sizeof(ireal*));
+      arr->_s2[0] = arr->_s0;
+      for (d=1;d<psize; ++d) 
+	arr->_s2[d]=arr->_s2[d-1]+arr->_dims[0].n0;
+      /*
       arr->_s02 = (ireal **)usermalloc_(psize * sizeof(ireal*));
       arr->_s2_alloc = (ireal **)usermalloc_(psize * sizeof(ireal*));
       if ((!arr->_s02) || (!arr->_s2_alloc)) return E_ALLOC;
@@ -166,6 +171,7 @@ int ra_allocate(RARR *arr) {
 	arr->_s02[d]=arr->_s02[d-1]+arr->_dims[0].n0;
 	arr->_s2[d]=arr->_s2[d-1]+arr->_dims[0].n0;
       }
+      */
     }
 
 #endif
@@ -175,6 +181,11 @@ int ra_allocate(RARR *arr) {
     psize = 1L;
     for (d=2; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
+      arr->_s3 = (ireal ***)usermalloc_(psize * sizeof(ireal**));
+      arr->_s3[0] = arr->_s2;
+      for (d=1;d<psize; ++d) 
+	arr->_s3[d]=arr->_s3[d-1]+arr->_dims[1].n0;
+      /*
       arr->_s03 = (ireal ***)usermalloc_(psize * sizeof(ireal**));
       arr->_s3_alloc = (ireal ***)usermalloc_(psize * sizeof(ireal**));
       if ((!arr->_s03) || (!arr->_s3_alloc)) return E_ALLOC;
@@ -185,6 +196,7 @@ int ra_allocate(RARR *arr) {
 	arr->_s03[d]=arr->_s03[d-1]+arr->_dims[1].n0;
 	arr->_s3[d]=arr->_s3[d-1]+arr->_dims[1].n0;
       }
+      */
     }
 
 #endif
@@ -194,6 +206,11 @@ int ra_allocate(RARR *arr) {
     psize = 1L;
     for (d=3; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
+      arr->_s4 = (ireal ****)usermalloc_(psize * sizeof(ireal***));
+      arr->_s4[0] = arr->_s3;
+      for (d=1;d<arr->_dims[4].n0; ++d) 
+	arr->_s4[d]=arr->_s4[d-1]+arr->_dims[2].n0;
+      /*
       arr->_s04 = (ireal ****)usermalloc_(psize * sizeof(ireal***));
       arr->_s4_alloc = (ireal ****)usermalloc_(psize * sizeof(ireal***));
       if ((!arr->_s04) || (!arr->_s4_alloc)) return E_ALLOC;      
@@ -204,6 +221,7 @@ int ra_allocate(RARR *arr) {
 	arr->_s04[d]=arr->_s04[d-1]+arr->_dims[2].n0;
 	arr->_s4[d]=arr->_s4[d-1]+arr->_dims[2].n0;
       }
+      */
     }
 
 #endif
@@ -213,6 +231,11 @@ int ra_allocate(RARR *arr) {
     psize = 1L;
     for (d=4; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
+      arr->_s5 = (ireal *****)usermalloc_(psize * sizeof(ireal****));
+      arr->_s5[0] = arr->_s4;
+      for (d=1;d<arr->_dims[5].n0; ++d) 
+	arr->_s5[d]=arr->_s5[d-1]+arr->_dims[3].n0;
+      /*
       arr->_s05 = (ireal *****)usermalloc_(psize * sizeof(ireal****));
       arr->_s5_alloc = (ireal *****)usermalloc_(psize * sizeof(ireal****));
       if ((!arr->_s05) || (!arr->_s5_alloc)) return E_ALLOC;      
@@ -223,6 +246,7 @@ int ra_allocate(RARR *arr) {
 	arr->_s05[d]=arr->_s05[d-1]+arr->_dims[3].n0;
 	arr->_s5[d]=arr->_s5[d-1]+arr->_dims[3].n0;
       }
+      */
     }
 
 #endif
@@ -236,20 +260,32 @@ int ra_allocate(RARR *arr) {
 int ra_destroy(RARR *arr) {
   if (arr->_s0) userfree_(arr->_s0);
 #if RARR_MAX_NDIM > 1
+  if (arr->_s2) userfree_(arr->_s2);
+  /*
   if (arr->_s02) userfree_(arr->_s02);
   if (arr->_s2_alloc) userfree_(arr->_s2_alloc);
+  */
 #endif
 #if RARR_MAX_NDIM > 2
+  if (arr->_s3) userfree_(arr->_s3);
+  /*
   if (arr->_s03) userfree_(arr->_s03);
   if (arr->_s3_alloc) userfree_(arr->_s3_alloc);
+  */
 #endif
 #if RARR_MAX_NDIM > 3
+  if (arr->s4) userfree_(arr->_s4);
+  /*
   if (arr->s04) userfree_(arr->_s04);
   if (arr->s4_alloc) userfree_(arr->_s4_alloc);
+  */
 #endif
 #if RARR_MAX_NDIM > 4
+  if (arr->s5) userfree_(arr->_s5);
+  /*
   if (arr->s05) userfree_(arr->_s05);
   if (arr->s5_alloc) userfree_(arr->_s5_alloc);
+  */
 #endif
 
   ra_setnull(arr);
@@ -306,11 +342,11 @@ int ra_offset_e(RARR *arr, const IPNT oe, const IPNT n)
 int ra_greset(RARR *arr, const IPNT gs, const IPNT ge) {
 
   int d;
-  IPNT idx;                          /* index workspace */
+  /*  IPNT idx;                         index workspace */
   INFODIM *dim;                      /* pointer to current dimension */
   long pshift=0L;                    /* pointer shift */
   long soff[RARR_MAX_NDIM+1];        /* pointer offset - start */
-  long eoff[RARR_MAX_NDIM+1];        /* pointer offset - end */
+  /* long eoff[RARR_MAX_NDIM+1];        pointer offset - end */
   RARR arrold = *arr;                /* remember old to restore if error */
     
   /* cycle backwards to compute pshift correctly */
@@ -326,12 +362,17 @@ int ra_greset(RARR *arr, const IPNT gs, const IPNT ge) {
       return E_OUTOFBOUNDS;
     }
     soff[d] = (long)(dim->gs - dim->gs0);
+    /*
     eoff[d] = (long)(dim->ge0 - dim->ge);
+    */
     pshift = pshift * (long)(dim->n0) + soff[d];
   }
   
   if ( arr->_s != NULL ) arr->_s = arr->_s0 + pshift;
-  
+
+  /* non-functional attempt to create multi-d access to 
+     resized array 
+
 #if RARR_MAX_NDIM > 1
 
   if (arr->ndim == 2 && arr->_s02) {
@@ -372,6 +413,9 @@ int ra_greset(RARR *arr, const IPNT gs, const IPNT ge) {
 #else
   return 0;
 #endif
+
+  */
+  return 0;
 }
 /*----------------------------------------------------------------------------*/
 
@@ -925,6 +969,22 @@ int ra_gse(const RARR *arr, IPNT gs, IPNT ge)
 }
 /*----------------------------------------------------------------------------*/
 
+int ra_se(const RARR *arr, IPNT s, IPNT e)
+{
+    int d;
+    const INFODIM *dim;                      /* pointer to current dimension */
+    
+    for ( d = 0; d < arr->ndim; ++d )
+    {
+        dim = arr->_dims + d;
+        if ( s != NULL ) s[d] = dim->gs-dim->gs0;
+        if ( e != NULL ) e[d] = dim->ge-dim->gs0;
+    }
+    
+    return 0;
+}
+/*----------------------------------------------------------------------------*/
+
 int ra_a_gse(const RARR *arr, IPNT gs, IPNT ge)
 {
     int d;
@@ -941,6 +1001,24 @@ int ra_a_gse(const RARR *arr, IPNT gs, IPNT ge)
 }
 /*----------------------------------------------------------------------------*/
 
+int ra_ds(const RARR * tgt, const RARR * src, IPNT ds) {
+
+  int d;
+  const INFODIM *tdim;                      /* pointer to target dimension */
+  const INFODIM *sdim;                      /* pointer to source dimension */
+
+  if (tgt->ndim != src->ndim) return E_BADINPUT;
+
+  for (d=0; d<tgt->ndim; d++) {
+    tdim = tgt->_dims + d;
+    sdim = src->_dims + d;
+    ds[d] = sdim->gs0 - tdim->gs0;      
+  }
+
+  return 0;
+}
+
+/*----------------------------------------------------------------------------*/
 int ra_gcheckbound(const RARR *arr, int idim, int gi)
 {
     const INFODIM *dim;                      /* pointer to current dimension */
