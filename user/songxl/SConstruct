@@ -21,8 +21,8 @@ ffd0
 lffd2an25
 phasescan
 orp
-differenciate
 '''
+# differenciate
 
 mpi_progs = 'tti4rtm ffdrtm ffdrtms ttirtmsa'
 

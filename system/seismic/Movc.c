@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     sf_floatread(slice0[0][0],ntpx,in);
 
     for (iv=1; iv <= nv; iv++) {
-	sf_warning("step %d of %d;",iv+1,nv);
+	sf_warning("step %d of %d;",iv,nv);
 
 	v = v0+iv*dv;
 
