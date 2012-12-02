@@ -30,9 +30,8 @@ main (int argc, char *argv[])
 
     sf_init(argc,argv);
 
-    if( !sf_getint("i", &i))
-        sf_error( "Need i=" );
-        /* What size to start counting from. i=0 gets n1x */
+    if( !sf_getint("i", &i)) i=0;
+    /* What size to start counting from. i=0 gets total number of elements */
 
     if( i < 0  ) sf_error( "i must be >= 0" );
 
