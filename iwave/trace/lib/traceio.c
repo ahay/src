@@ -1805,7 +1805,7 @@ void sampletraces(tracegeom * tg,
   else fac=mult;
 
   for (itr=0;itr<tg->ntraces;itr++) {
-    
+
     /* set up index tuple, grid offset */
     if (ndim > 0) {
       ind[0]=(tg->ig)[itr][0];
@@ -1822,7 +1822,9 @@ void sampletraces(tracegeom * tg,
 
     if (load) {
 
-	/* printf("sampletraces: trace=%d ioff=%d moff=%d ind[0]=%d ind[1]=%d\n gsm[0]=%d nm[0]=%d gsm[1]=%d nm[1]=%d gs0m[0]=%d n0m[0]=%d gs0m[1]=%d n0m[1]=%d\n",itr,ioff,moff,ind[0],ind[1],gsm[0],nm[0],gsm[1],nm[1],gs0m[0],n0m[0],gs0m[1],n0m[1]); */
+#ifdef IWAVE_VERBOSE
+      fprintf(stderr,"sampletraces load: itr=%d it=%d buf=%15.7e ioff=%d ind[0]=%d ind[1]=%d\n",itr,it,(tg->buf)[it+itr*tg->nt],ioff,ind[0],ind[1]);
+#endif	
        
       if (order==0) {
 	if (ingrid(ndim,n,gs,ind)) {
@@ -2047,9 +2049,6 @@ void sampletraces(tracegeom * tg,
       if (order==0) {
 	if (ingrid(ndim,n,gs,ind)) 
 	  (tg->buf)[it+itr*tg->nt]+=fac*d[ioff];
-/*
-	fprintf(stderr,"sample=%e buffer index=%d\n",(tg->buf)[it+itr*tg->nt],it+itr*tg->nt);
-*/
       }
 
       else if (order==1) {

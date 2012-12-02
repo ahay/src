@@ -2,9 +2,6 @@
 
 int traceterm_construct(TRACE_TERM * tr, 
 			PARARRAY * par,
-			/* removed mod of 03.12 - not sensible constructor inputs
-			//			int sindex, 
-			//			ireal mindex, */
 			int load,
 			const char * hdrkey,
 			const char * datakey,
@@ -41,11 +38,6 @@ int traceterm_construct(TRACE_TERM * tr,
     hfile=(char *)usermalloc_(sizeof(char)*(strlen(dfile)+1));
     strcpy(hfile,dfile);
   }
-  /*
-  fprintf(stderr,"hfile=%s\n",hfile);
-  fprintf(stderr,"dfile=%s\n",dfile);
-  */
-  /* ad hoc tmp - sample pressure */
 
   /* construct trace geometry object */
   err=construct_tracegeom(&(tr->tg),hfile,dfile,SRC_TOL,stream);
@@ -111,8 +103,6 @@ int traceterm_init(TRACE_TERM * tr,
   ps_flint(*par,"nt",&usernt);
   ps_flreal(*par,"t0",&usert0);
   
-  /*fprintf(stream,"traceterm_init -> init_tracegeom, dt = %e\n",m->tsind.dt);*/
-  
   /* initialize tracegeom */
   err=init_tracegeom(&(tr->tg),
 		     og,n,d,o,axord,
@@ -120,13 +110,8 @@ int traceterm_init(TRACE_TERM * tr,
 		     m->tsind.dt,(m->g).dim,
 		     usernt,usert0,tr->load,
 		     stream);
-  /*
-  fprintf(stream,"traceterm_init: return from init_tracegeom\n");
-  fprintf(stream,"######################\n");
-  fprint_tracegeom(&(tr->tg),stream);
-  fprintf(stream,"######################\n");
-  fflush(stream);
-  */
+
+  fprintf(stream,"traceterm_init: (tr->tg).t0 = %e, (m->tsind).dt = %e\n",(tr->tg).t0,(m->tsind).dt);
   /* start and stop from delrt, ns - OK even if (err)*/
   tr->istart=(int)((((tr->tg).t0)/((m->tsind).dt))+0.1);
   tr->istop=tr->istart + (tr->tg).nt - 1;
@@ -143,30 +128,13 @@ int traceterm_destroy(TRACE_TERM * tr) {
 }
 
 int traceterm_run(TRACE_TERM * tr, IMODEL * m) {
-    /* workspace for array geometry */
+  /* workspace for array geometry */
   IPNT n, gs, ge, n0, gs0, ge0;
-  /* no longer needed - mod of 03.12 */
-  /*  IPNT nm, gsm, gem, n0m, gs0m, ge0m; */
-  /* ireal * mptr;  pointer to multiplier array, or NULL, for no multiplier */
-  /*  int i,j; */
 
   /* sanity-check sample array index */
   if (tr->index < 0 || tr->index > (m->ld_a).narr-1) {
-    /* no stream access in current version 
-    fprintf(stream,"ERROR: traceterm_run\n");
-    fprintf(stream,"sample array index %d out of range [0, %d]\n",
-	    tr->index,(m->ld_a).narr-1);
-    */
     return E_BADINPUT;
   }
-
-  /* assign multplier pointer to rarray data if in range, else
-     NULL (no multiplier) */
-  /* mode of 03.12: this pointer is eliminated 
-  if (tr->mult < 0 || tr->mult > (m->ld_a).narr-1) 
-    mptr=NULL;
-  else mptr=(m->ld_a)._s[tr->mult]._s;
-  */
 
   /* NO-OP only on step boundary */
   if ((m->tsind).iv != 0) return 0;
@@ -176,32 +144,6 @@ int traceterm_run(TRACE_TERM * tr, IMODEL * m) {
   ra_size(&((m->ld_a)._s[tr->index]), n0);
   ra_gse(&((m->ld_c)._s[tr->index]),gs,ge);
   ra_size(&((m->ld_c)._s[tr->index]), n);
-
-  /* extract grid params for multiplier, if it exists */
-  /*
-  if (mptr) {
-    ra_gse(&((m->ld_a)._s[tr->mult]),gs0m,ge0m);
-    ra_size(&((m->ld_a)._s[tr->mult]), n0m);
-    ra_gse(&((m->ld_c)._s[tr->mult]),gsm,gem);
-    ra_size(&((m->ld_c)._s[tr->mult]), nm);
-  }
-  else {
-    IASN(gs0m,gs0);
-    IASN(n0m,n0);
-    IASN(gsm,gs);
-    IASN(nm,n);
-  }
-  */
-
-  /*
-  if (tr->istart==(m->tsind).it) {
-    printf("************traceterm_run:\n");
-    for (i=0;i<n0m[1];i++) {
-      printf("col = %d\n",i);
-      for (j=0;j<10;j++) printf("it=%d m=%20.14e\n",j,*(mptr+j+i*n0m[0]));
-    }
-  }
-  */
 
   /* if start is reached, start recording, incrementing counter */
   if ((m->tsind).it >  tr->istart-1 &&
@@ -214,9 +156,6 @@ int traceterm_run(TRACE_TERM * tr, IMODEL * m) {
 		 n0, gs0,
 		 n, gs,
 		 (m->ld_a)._s[tr->index]._s,
-		 /*		 n0m, gs0m,
-		 //		 nm, gsm,
-		 //		 mptr); */
 		 tr->mult);
 
   return 0;
