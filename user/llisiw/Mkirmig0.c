@@ -166,13 +166,13 @@ int main(int argc, char* argv[])
 	} else {
 	    switch (type[0]) {
 		case 'l': /* linear */
-		    tinterp_linear(stable, s-ist*dy-y0,table[ist], table[ist+1]);
-		    tinterp_linear(stablex,s-ist*dy-y0,tablex[ist],tablex[ist+1]);
+		    tinterp_linear(stable, s-ist*dy-y0,table[ist],table[ist+1]);
+		    dinterp_linear(stablex,s-ist*dy-y0,table[ist],table[ist+1]);
 		    break;
 
 		case 'p': /* partial */
-		    tinterp_partial(stable, s-ist*dy-y0,nz,nx,dx,table[ist], table[ist+1]);
-		    tinterp_partial(stablex,s-ist*dy-y0,nz,nx,dx,tablex[ist],tablex[ist+1]);
+		    tinterp_partial(stable, s-ist*dy-y0,nz,nx,dx,table[ist],table[ist+1]);
+		    dinterp_partial(stablex,s-ist*dy-y0,nz,nx,dx,table[ist],table[ist+1]);
 		    break;
 
 		case 'h': /* hermit */

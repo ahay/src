@@ -226,13 +226,13 @@ int main(int argc, char* argv[])
 	} else {
 	    switch (type[0]) {
 		case 'l': /* linear */
-		    tinterp_linear(true,stable, s-ist*sdy-sy0,stbl[ist], stbl[ist+1]);
-		    tinterp_linear(true,stablex,s-ist*sdy-sy0,stblx[ist],stblx[ist+1]);
+		    tinterp_linear(true,stable, s-ist*sdy-sy0,stbl[ist],stbl[ist+1]);
+		    dinterp_linear(true,stablex,s-ist*sdy-sy0,stbl[ist],stbl[ist+1]);
 		    break;
 
 		case 'p': /* partial */
-		    tinterp_partial(true,stable, s-ist*sdy-sy0,nz,nx,dx,stbl[ist], stbl[ist+1]);
-		    tinterp_partial(true,stablex,s-ist*sdy-sy0,nz,nx,dx,stblx[ist],stblx[ist+1]);
+		    tinterp_partial(true,stable, s-ist*sdy-sy0,nz,nx,dx,stbl[ist],stbl[ist+1]);
+		    dinterp_partial(true,stablex,s-ist*sdy-sy0,nz,nx,dx,stbl[ist],stbl[ist+1]);
 		    break;
 
 		case 'h': /* hermit */
@@ -260,13 +260,13 @@ int main(int argc, char* argv[])
 	    } else {
 		switch (type[0]) {
 		    case 'l': /* linear */
-			tinterp_linear(false,rtable, cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,rtbl[iht], rtbl[iht+1]);
-			tinterp_linear(false,rtablex,cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,rtblx[iht],rtblx[iht+1]);
+			tinterp_linear(false,rtable, cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,rtbl[iht],rtbl[iht+1]);
+			dinterp_linear(false,rtablex,cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,rtbl[iht],rtbl[iht+1]);
 			break;
 			
 		    case 'p': /* partial */
-			tinterp_partial(false,rtable, cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,nz,nx,dx,rtbl[iht], rtbl[iht+1]);
-			tinterp_partial(false,rtablex,cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,nz,nx,dx,rtblx[iht],rtblx[iht+1]);
+			tinterp_partial(false,rtable, cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,nz,nx,dx,rtbl[iht],rtbl[iht+1]);
+			dinterp_partial(false,rtablex,cmp? s+h-iht*rdy-ry0: h-iht*rdy-ry0,nz,nx,dx,rtbl[iht],rtbl[iht+1]);
 			break;
 
 		    case 'h': /* hermit */

@@ -25,10 +25,6 @@
 static int nn;
 static float sdx, rdx;
 
-float hermite_exp(float t, float dx, float p0, float m0, float p1, float m1);
-float hermite_fac(float t, float dx, float p0, float m0, float p1, float m1);
-float hermite_ber(float t, float dx, float p0, float m0, float p1, float m1);
-
 void tinterp_init(int nt     /* model dimension */,
 		  float sds   /* original source sampling */,
 		  float rds   /* original source sampling */)
@@ -53,6 +49,22 @@ void tinterp_linear(bool source /* source or receiver */,
 
     for (i=0; i < nn; i++) {
 	p[i] = (1.-t)*p0[i]+t*p1[i];
+    }
+}
+
+void dinterp_linear(bool source /* source or receiver */,
+		    float* p /* interpolated result */,
+		    float x  /* position */,
+		    float* p0, float* p1 /* values at both ends */)
+/*< linear interpolation (derivative) >*/
+{
+    int i;
+    float dx;
+
+    dx = source?sdx:rdx;
+
+    for (i=0; i < nn; i++) {
+	p[i] = (-p0[i]+p1[i])/dx;
     }
 }
 
@@ -82,6 +94,46 @@ void tinterp_partial(bool source /* source or receiver */,
     }
 }
 
+void dinterp_partial(bool source /* source or receiver */,
+		     float* p /* interpolated result */,
+		     float x  /* position */,
+		     int n1, int n2 /* grid size */,
+		     float dd /* grid horizontal sampling */,
+		     float* p0, float* p1 /* values at both ends */)
+/*< interpolation with fixed relative coordinate (derivative) >*/
+{
+    int i, k1, k2;
+    float t, dx;
+
+    dx = source?sdx:rdx;
+    t = x/dx;
+    
+    k1 = x/dd+0.5;
+    k2 = (dx-x)/dd+0.5;
+
+    for (i=0; i < nn; i++) {
+	if (i-k1*n1>=0 && i+k2*n1<nn) {
+	    p[i] = (-p0[i-k1*n1]+p1[i+k2*n1])/dx;
+
+	    if (i-(k1+1)*n1>=0 && i-(k1-1)*n1<nn)
+		p[i] -= (1.-t)*(-p0[i-(k1+1)*n1]+p0[i-(k1-1)*n1])/(2.*dd);
+	    else if (i-(k1+1)*n1<0)
+		p[i] -= (1.-t)*(-p0[i-k1*n1]+p0[i-(k1-1)*n1])/dd;
+	    else
+		p[i] -= (1.-t)*(-p0[i-(k1+1)*n1]+p0[i-k1*n1])/dd;
+		
+	    if (i-(k2+1)*n1>=0 && i-(k2-1)*n1<nn)
+		p[i] -= t*(-p1[i-(k2+1)*n1]+p1[i-(k2-1)*n1])/(2.*dd);
+	    else if (i-(k2+1)*n1<0)
+		p[i] -= t*(-p1[i-k2*n1]+p1[i-(k2-1)*n1])/dd;
+	    else
+		p[i] -= t*(-p1[i-(k2+1)*n1]+p1[i-k2*n1])/dd;
+	} else {
+	    p[i] = (-p0[i]+p1[i])/dx;
+	}
+    }
+}
+
 void tinterp_hermite(bool source /* source or receiver */,
 		     float* p /* interpolated result */,
 		     float x  /* position */,
@@ -91,12 +143,18 @@ void tinterp_hermite(bool source /* source or receiver */,
 {
     int i;
     float t, dx;
+    double h00, h10, h01, h11;
 
     dx = source?sdx:rdx;
     t = x/dx;
 
+    h00 = 2.*t*t*t-3.*t*t+1.;
+    h10 = t*t*t-2.*t*t+t;
+    h01 = -2.*t*t*t+3.*t*t;
+    h11 = t*t*t-t*t;
+
     for (i=0; i < nn; i++) {
-	p[i] = hermite_exp(t,dx,p0[i],m0[i],p1[i],m1[i]);
+	p[i] = h00*p0[i]+h10*dx*m0[i]+h01*p1[i]+h11*dx*m1[i];
     }
 }
 
@@ -114,14 +172,13 @@ void dinterp_hermite(bool source /* source or receiver */,
     dx = source?sdx:rdx;
     t = x/dx;
 
-    /* all basis functions provide the same coefficients */
     h00 = -6.*t*(1.-t);
     h10 = (1.-t)*(1.-3.*t);
     h01 = 6.*t*(1.-t);
     h11 = 3.*t*t-2.*t;
 
     for (i=0; i < nn; i++) {
-	p[i] = h00*p0[i]+h10*dx*m0[i]+h01*p1[i]+h11*dx*m1[i];
+	p[i] = (h00*p0[i]+h10*dx*m0[i]+h01*p1[i]+h11*dx*m1[i])/dx;
     }
 }
 
@@ -129,17 +186,4 @@ void tinterp_close()
 /*< close >*/
 {
     return;
-}
-
-float hermite_exp(float t, float dx, float p0, float m0, float p1, float m1)
-/* cubic Hermite with expanded basis */
-{
-    double h00, h10, h01, h11;
-
-    h00 = 2.*t*t*t-3.*t*t+1.;
-    h10 = t*t*t-2.*t*t+t;
-    h01 = -2.*t*t*t+3.*t*t;
-    h11 = t*t*t-t*t;
-
-    return h00*p0+h10*dx*m0+h01*p1+h11*dx*m1;
 }
