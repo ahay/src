@@ -55,7 +55,8 @@ int movie_init(MOVIE * mt,
   /* defaults for 3D slice - last axis, middle slice */
   mt->dim3d=2;
   mt->slice3d = 0;
-  dt=DEFSTEP*tg->dt;
+  /* default step = 0.0 - no movie! */
+  dt=0.0;
 
   ps_flreal(*par, "moviestep", &dt);
   if (m->g.dim>2) {

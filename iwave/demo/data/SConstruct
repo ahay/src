@@ -47,12 +47,13 @@
 
 ###### Structure of the job dictionary:
 ###### key    = name of job = name of output directory
-###### val[0] = path to command (may be empty only if a special branch of make takes care of this target)
-###### val[1] = dependency list (may be empty)
-###### val[2] = batch key ('' for interactive, else 'pbs' or 'sge' or ...)
-###### val[3] = wallclock limit (batch only)
-###### val[4] = resource alloc (batch only)
-###### val[5] = queue (batch only)
+###### val[0] = command prefix, eg. 'mpirun -np ...'
+###### val[1] = path to command (may be empty only if a special branch of make takes care of this target)
+###### val[2] = dependency list (may be empty)
+###### val[3] = batch key ('' for interactive, else 'pbs' or 'sge' or ...)
+###### val[4] = wallclock limit (batch only)
+###### val[5] = resource alloc (batch only)
+###### val[6] = queue (batch only)
 
 ################### ENVIRONMENT-DEPENDENT USER INPUT ###################
 
@@ -60,40 +61,44 @@
 ################### FLAG: MADAGASCAR OR STANDALONE #####################
 ########################################################################
 
-MADAGASCAR = True
+MADAGASCAR = False
 
 ########################################################################
 ######################### JOB DEFINITION TABLE #########################
 ########################################################################
-
+import os
+ROOT = '../../../'
 if MADAGASCAR:
     standardmodel = 'sfstandardmodel'
     asg           = 'sfasg'
 else:
-    standardmodel = 'demo/main/standardmodel.x'
-    asg           = 'asg/main/asg.x'
+    standardmodel = os.path.join(ROOT,'demo/main/standardmodel.x')
+    asg           = os.path.join(ROOT,'asg/main/asg.x')
+    acd           = os.path.join(ROOT,'acd/main/acd.x')
 
 jobs = {
-'dn2d_20m': [standardmodel,['tmpdata'],'', '', '',''],
-'vp2d_20m': [standardmodel,['tmpdata'],'', '', '',''],
-'dn2d_10m': [standardmodel,['tmpdata'],'', '', '',''],
-'vp2d_10m': [standardmodel,['tmpdata'],'', '', '',''],
-'dn2d_5m': [standardmodel,['tmpdata'],'', '', '',''],
-'vp2d_5m': [standardmodel,['tmpdata'],'', '', '',''],
-'dn2d_2.5m': [standardmodel,['tmpdata'],'', '', '',''],
-'vp2d_2.5m': [standardmodel,['tmpdata'],'', '', '',''],
-'demo20m' : [asg,['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
-'demo10m' : [asg,['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
-'demo5m'  : [asg,['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
-'demo2.5m'  : [asg,['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
-'demo20m8k' : [asg,['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
-'demo10m8k' : [asg,['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
-'demo5m8k'  : [asg,['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
-'demo2.5m8k'  : [asg,['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
+'dn2d_20m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_20m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'dn2d_10m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_10m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'dn2d_5m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_5m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'dn2d_2.5m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'vp2d_2.5m': ['',standardmodel,['tmpdata'],'', '', '',''],
+'demo20m' : ['',asg,['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
+'demo10m' : ['',asg,['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
+'demo5m'  : ['',asg,['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
+'demo2.5m'  : ['',asg,['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
+'demo20m8k' : ['',asg,['sudata', 'dn2d_20m', 'vp2d_20m'],'','','',''],
+'demo10m8k' : ['',asg,['sudata', 'dn2d_10m', 'vp2d_10m'],'','','',''],
+'demo5m8k'  : ['',asg,['sudata', 'dn2d_5m', 'vp2d_5m'],'','','',''],
+'demo2.5m8k'  : ['',asg,['sudata', 'dn2d_2.5m', 'vp2d_2.5m'],'','','',''],
+'acdemo20m' : ['',acd,['sudata_acd', 'vp2d_20m'], '', '', '', ''],
 }
 
 scripts = {
 'sudata'  : ['tmpdata'],
+'sudata_acd' : ['tmpdata'],
 'tmpdata' : [],
 'Fig'     : ['demo2.5m', 'demo5m', 'demo10m', 'demo20m', 'demo2.5m8k', 'demo5m8k', 'demo10m8k', 'demo20m8k']
 }
@@ -112,12 +117,12 @@ ACCT = 'FDTD3D-Cont'
 ###### interface to sconscript files - do not edit below this line #####
 ########################################################################
 
-import os
 DATAPATH = os.getenv('DATAPATH','.')
 if DATAPATH[len(DATAPATH)-1] == '/':
     TMPDATAPATH = DATAPATH + 'iwave'
 else:
     TMPDATAPATH = DATAPATH + '/iwave'
+print TMPDATAPATH
 
 # madagascar version
 if MADAGASCAR:
