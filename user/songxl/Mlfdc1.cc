@@ -224,13 +224,11 @@ int main(int argc, char** argv)
     DblNumMat tmpB(N,1);
     iC(ddgemm(1.0,G,Bc,0.0,tmpB));
     for(int k=0; k<N; k++) tmpB._data[k]=2.0/tmpB._data[k];
-    sf_warning("eeeee");
     for (int x=0; x<N; x++){
         for (int k=0; k<SIZE; k++){
             G(x,k) = G(x,k)*tmpB._data[x];
         }
     }
-    sf_warning("bbbb");
 
       
     iC(ddgemm(1.0,G,B,0.0,Mlr));
@@ -238,12 +236,10 @@ int main(int argc, char** argv)
     for (int k=0; k < N*N; k++) {
         fMlr[k] = ldat[k];
     } 
-    sf_warning("cccc");
     Mappfile << fMlr;
 
     ldat = G.data();
     fMlr.resize(N*SIZE);
-    sf_warning("dddd");
     for (int k=0; k < SIZE*N; k++) {
         fMlr[k] = ldat[k];
     } 
