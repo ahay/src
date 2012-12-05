@@ -37,10 +37,10 @@ struct Allpass {
 
 static allpass ap1, ap2;
 
-allpass allpass_init(int nw                 /* filter size (1,2,3) */, 
+allpass allpass_init(int nw                 /* filter size */, 
 		     int nj                 /* filter step */, 
 		     int nx, int ny, int nz /* data size */, 
-		     float *pp              /* data [nz*ny*nx] */)
+		     float *pp              /* dip [nz*ny*nx] */)
 /*< Initialize >*/
 {
     allpass ap;

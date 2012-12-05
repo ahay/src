@@ -139,8 +139,8 @@ for conv in ('byte2tif','tif2byte'):
 
 for prog in Split(
     '''
-    agrid burg cburg gauss2 gaussel grid1 matmult matmult2 ntriangle1
-    predict predict2 pwdsl trisl
+    agrid allp3 burg cburg gauss2 gaussel grid1 matmult matmult2
+    ntriangle1 predict predict2 pwdsl trisl
     '''):
     sources = ['Test' + prog,prog]
     if prog=='matmult2':
