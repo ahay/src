@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 
     if(ot<o1) ot=o1;
     st = (ot-o1)/d1;
-    nt = (n1-st)/jt+1;
+    nt = (n1-st+1)/jt;
     sf_setn(ax, nt);
     sf_setd(ax, d1*jt);
     sf_seto(ax, ot);
@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 	sf_oaxa(wfl, hv->z, 1);
 	if(hv->nd >= 2) sf_oaxa(wfl, hv->x, 2);
 	if(hv->nd >= 3) sf_oaxa(wfl, hv->y, 3);
-	sf_setn(ax, (n1-st)/jtm+1);
+	sf_setn(ax, (n1-st+1)/jtm);
 	sf_setd(ax, d1*jtm);
 	sf_seto(ax, ot);
 	sf_oaxa(wfl, ax, hv->nd+1);
