@@ -17,6 +17,13 @@ int movie_init(MOVIE * mt,
   FILE * fp;          /* for output initializiation */
   float * buf;        /* null buffer for data file init */
 
+  /* remind user that there are no 1D movies */
+  if ((m->g).dim<2) {
+    fprintf(stream,"NOTE: no movie created for 1D\n");
+    return 0;
+  }
+
+  /* read movie choices */
   mt->maxslice=0;
   mt->nmovie=0;
   for (i=0;i<RDOM_MAX_NARR;i++) {
@@ -75,7 +82,9 @@ int movie_init(MOVIE * mt,
 
   /* if step<=0 then no movie - clean up */
   if (mt->framestep<1) {
-    for (i=0;i<mt->nmovie;i++) userfree_(mt->smovie[i]);
+    for (i=0;i<mt->nmovie;i++) {
+      userfree_(mt->smovie[i]);
+    }
     mt->nmovie=0;
     return 0;
   }
@@ -103,46 +112,32 @@ int movie_init(MOVIE * mt,
   mt->frameindex=0;
 
   /* create movie grid */
-  if (m->g.dim > 2) (mt->mg).dim=m->g.dim;
-  else (mt->mg).dim=m->g.dim+1;
+  /* correction 03.12.12: actually movie frames are extended axis! */
+  /* also movie dim is ALWAYS = 2 and movie gdim ALWAYS = 3 ! */
+  /*
+    if (m->g.dim > 2) (mt->mg).dim=m->g.dim;
+    else (mt->mg).dim=m->g.dim+1;
+  */
+  (mt->mg).dim=2;
+  (mt->mg).gdim=3;
   for (i=0;i<mt->dim3d; i++) {
     (mt->mg).axes[i].n  = (m->g).axes[i].n;
     (mt->mg).axes[i].d  = (m->g).axes[i].d;
     (mt->mg).axes[i].o  = (m->g).axes[i].o;    
     (mt->mg).axes[i].id = (m->g).axes[i].id;
   }
-  if ((mt->mg).dim>2) {
-    for (i=mt->dim3d;i<(mt->mg).dim-1; i++) {
-      (mt->mg).axes[i].n  = (m->g).axes[i+1].n;
-      (mt->mg).axes[i].d  = (m->g).axes[i+1].d;
-      (mt->mg).axes[i].o  = (m->g).axes[i+1].o;    
-      (mt->mg).axes[i].id = (m->g).axes[i+1].id;
-    }
+  for (i=mt->dim3d;i<(mt->mg).dim-1; i++) {
+    (mt->mg).axes[i].n  = (m->g).axes[i+1].n;
+    (mt->mg).axes[i].d  = (m->g).axes[i+1].d;
+    (mt->mg).axes[i].o  = (m->g).axes[i+1].o;    
+    (mt->mg).axes[i].id = (m->g).axes[i+1].id;
   }
-  else {
-    for (i=mt->dim3d;i<(mt->mg).dim-1; i++) {
-      (mt->mg).axes[i].n  = (m->g).axes[i+1].n;
-      (mt->mg).axes[i].d  = (m->g).axes[i+1].d;
-      (mt->mg).axes[i].o  = (m->g).axes[i+1].o;    
-      (mt->mg).axes[i].id = (m->g).axes[i+1].id;
-    }
-  }
-  i=(mt->mg).dim-1;
+  i=(mt->mg).gdim-1;
   (mt->mg).axes[i].n  = 1+(mt->framestop-mt->framestart)/mt->framestep;
-  /*
   (mt->mg).axes[i].d  = dt;
   (mt->mg).axes[i].o  = tg->t0;
-  */
-  (mt->mg).axes[i].d  = REAL_ONE;
-  (mt->mg).axes[i].o  = REAL_ZERO;
-  if ((mt->mg).dim>2) (mt->mg).axes[i].id = (m->g.axes[mt->dim3d].id);  
-  else (mt->mg).axes[i].id = i+1;
-
-  /* remind ser that there are no 1D movies */
-  if ((mt->mg).dim<2) {
-    fprintf(stream,"NOTE: no movie created for 1D\n");
-    return 0;
-  }
+  //  if ((mt->mg).dim>2) (mt->mg).axes[i].id = (m->g.axes[mt->dim3d].id);  
+  (mt->mg).axes[i].id = i+1;
 
   /* compute length of each frame, create null buffer */
   ntot=1;
@@ -166,19 +161,20 @@ int movie_init(MOVIE * mt,
       return E_FILE;
     }
 
-    for (j=0;j<(mt->mg).dim-1;j++) {
+    for (j=0;j<(mt->mg).dim;j++) {
       fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
 	      j+1,(mt->mg).axes[j].n,
 	      j+1,(mt->mg).axes[j].d,
 	      j+1,(mt->mg).axes[j].o);
     }
     fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
-	    (mt->mg).dim,(mt->mg).axes[(mt->mg).dim-1].n,
-	    (mt->mg).dim,(mt->mg).axes[(mt->mg).dim-1].d,
-	    (mt->mg).dim,(mt->mg).axes[(mt->mg).dim-1].o);
+	    (mt->mg).gdim,(mt->mg).axes[(mt->mg).gdim-1].n,
+	    (mt->mg).gdim,(mt->mg).axes[(mt->mg).gdim-1].d,
+	    (mt->mg).gdim,(mt->mg).axes[(mt->mg).gdim-1].o);
 
     fprintf(fp,"data_format=native_float\n");
     fprintf(fp,"scale=0\n");
+    fprintf(fp,"dim=2\n");
     fname=(char *)usermalloc_(strlen(mt->smovie[i])+10);
     strcpy(fname,mt->smovie[i]);
     strcat(fname,"@");
@@ -205,7 +201,7 @@ int movie_init(MOVIE * mt,
     }
     
     /* fill data file with zeros */
-    for (j=0;j<(mt->mg).axes[(mt->mg).dim-1].n;j++) {
+    for (j=0;j<(mt->mg).axes[(mt->mg).gdim-1].n;j++) {
       if (ntot != fwrite(buf,sizeof(float),ntot,fp)) {
 	fprintf(stream,"Error: movie_init\n");
 	fprintf(stream,"failed to write %d bytes to data file %s\n",ntot,fname);
@@ -219,12 +215,11 @@ int movie_init(MOVIE * mt,
 #else
     fclose(fp);
 #endif
-    
     userfree_(fname);
   }
 
   userfree_(buf);
- 
+
   return 0;
 }
 
@@ -241,6 +236,7 @@ int movie_run(MOVIE * mt,
   off_t aoff;              /* offset into target data */
   IPNT gs_a, ge_a, gs_c, ge_c;
   int ndim;
+  int err=0;
   
   /* time test - not there yet */
   if (m->tsind.it < mt->it) return 0;
@@ -249,13 +245,10 @@ int movie_run(MOVIE * mt,
   /* time test - not at integral time */
   if (m->tsind.iv) return 0;
 
-  /*  fprintf(stream,"MOVIE: write at it=%d\n",mt->it);*/
-
   /* at next step */
 
   for (i=0;i<mt->nmovie;i++) {
 
-    /*    fprintf(stderr,"MOVIE: nmovie=%d fname=%s field=%d\n",i,mt->smovie[i],mt->imovie[i]);*/
     /* gussy up gs and ge starting with domain */
     rd_size(&(m->ld_a),mt->imovie[i],n);
     rd_size(&(m->ld_a),mt->imovie[i],np);
@@ -263,11 +256,6 @@ int movie_run(MOVIE * mt,
     gs[mt->dim3d]=(mt->it-mt->framestart)/(mt->framestep);
     np[mt->dim3d]=1;
 
-    /*
-    for (j=0;j<RARR_MAX_NDIM;j++) {
-      fprintf(stream,"gs[%d]=%d n[%d]=%d\n",j,gs[j],j,np[j]);
-    }
-    */
     /* if mt->dim3d==2 then life is easy */
     aptr=m->ld_a._s[mt->imovie[i]]._s0;
 
@@ -276,6 +264,7 @@ int movie_run(MOVIE * mt,
     rd_gse(&(m->ld_a),mt->imovie[i],gs_a,ge_a);
     aptr0 = aptr;
     ndim = (m->g).dim;
+
     /* 1D */
     if (ndim == 1) {
       for (ii = gs_a[0];ii <= ge_a[0];ii ++) {
@@ -307,18 +296,21 @@ int movie_run(MOVIE * mt,
         }
       }
     }
+
     if (ndim==2) {
-      rsfwrite(aptr, gs, n, mt->smovie[i], 0, stream, mt->frameindex); 
+      if (err=rsfwrite(aptr, gs, n, mt->smovie[i], 0, stream, mt->frameindex)) {
+	fprintf(stream,"ERROR: movie_run from rsfwrite, err=%d\n",err);
+	fflush(stream);
+	return err;
+      }
     }
     else if (mt->dim3d==2) {
-	/*      fprintf(stream,"write (0,1) plane on %s\n",mt->smovie[i]); */
       aoff=mt->slice3d*n[0]*n[1];
-      /*      fprintf(stderr,"write (0,1) plane on %s aoff=%d\n",mt->smovie[i],aoff);*/
-      /* D.S. 01.01.11: extended-model related --> */
-      rsfwrite(&(aptr[aoff]), gs, np, mt->smovie[i], 0, stream, mt->frameindex); 
-      /* <-- extended-model related*/
-
-      /*      fprintf(stderr,"return from rsfwrite\n");*/
+      if (err=rsfwrite(&(aptr[aoff]), gs, np, mt->smovie[i], 0, stream, mt->frameindex)) {
+	fprintf(stream,"ERROR: movie_run from rsfwrite, err=%d\n",err);
+	fflush(stream);
+	return err;
+      }
     }
     /* otherwise must copy data to buffer first */
     else if (mt->dim3d==1) {
@@ -404,6 +396,3 @@ void movie_fprint(MOVIE * mt, FILE * fp) {
 
 } 
 
-/*
-int movie_construct(MOVIE *mt,  FILE * stream);
-*/

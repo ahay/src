@@ -3,8 +3,9 @@
 
 #include "utils.h"
 
-/*#define DEBUG_OFFSETS*/
-
+/*
+#define DEBUG_OFFSETS
+*/
 /** @file
     @brief Functions for extraction of offset lists of subarrays.
 

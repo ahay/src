@@ -136,7 +136,7 @@ Output info:
  *============================================================================*/
       
 /*  definitions of global variables */
-int xargc; char **xargv;
+						     //int xargc; char **xargv;
 
 int main(int argc, char ** argv) {
 

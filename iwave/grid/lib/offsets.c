@@ -29,7 +29,7 @@ int get_array_offsets(off_t ** offs,
    ********************/
 
 #ifdef DEBUG_OFFSETS
-  for (i=0;i<RARR_MAX_NDIM;i++)
+  for (i=0;i<dim;i++)
     fprintf(stderr,"i=%d gs[i]=%d gn[i]=%d ls[i]=%d ln[i]=%d\n",i,gs[i],gn[i],ls[i],ln[i]);
 #endif
 
