@@ -18,7 +18,7 @@ targets = bldutil.UserSconsTargets()
 # C mains
 targets.c = '''
 quantile leftsize filedims fileflush create gettype lmo multicheck hist2
-sparsify csr
+sparsify csqrtf
 '''
 
 # F90 mains

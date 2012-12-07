@@ -1,4 +1,6 @@
-/* Complex square root */
+/* Complex square root. Good example of I/O loop for applying a function.
+Realized after I wrote this program that the sqrt function in sfmath does the
+same job, but keeping it around as a simple example of buffer I/O. */
 /*
   Copyright (C) 2012 Ioan Vlad
 
