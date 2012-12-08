@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 	for (ix = 0; ix < nx; ix++) {
 	    f = 0.0f;
 	    for (im = 0; im < m; im++) {
-		f += lft[im][ix]*wave[im][ix];
+		f += crealf(lft[im][ix])*wave[im][ix];
 	    }
 	    curr[ix] = f;
 	} 

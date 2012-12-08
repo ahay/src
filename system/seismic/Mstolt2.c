@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 
     spl = (nf > 2)? sf_spline_init (nf, nw): NULL;
     for (iy = 0; iy < ny; iy++) {
-	sf_warning("%d of %d",iy+1,ny);
+	sf_warning("%d of %d;",iy+1,ny);
 	y = iy*dy;
 	y *= y;
 	for (ix = 0; ix < nx; ix++) {
@@ -103,6 +103,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace2,nt,out);
 	}
     }
+    sf_warning(".");
 
     exit (0);
 }

@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     map = fint1_init (nf, nw, mute);
 
     for (iy = 0; iy < ny; iy++) {
-	sf_warning("%d of %d",iy+1,ny);
+	sf_warning("%d of %d;",iy+1,ny);
 	y = y0+iy*dy;
 	y *= y;
 	for (ix = 0; ix < nx; ix++) {
@@ -117,6 +117,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace,nt,out);
 	}
     }
+    sf_warning(".");
 
     exit (0);
 }
