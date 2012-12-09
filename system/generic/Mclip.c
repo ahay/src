@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 #ifdef sun
 	    nan = (bool) !finite(trace[i]);
 #else
-	    nan = (bool) (!isnormal(trace[i]) && (fpclassify(trace[i]) != FP_ZERO));
+	    nan = (bool) !isfinite(trace[i]);
 #endif
 	    if (nan) trace[i] = SF_SIG(trace[i])*clip; 
 	    else if (trace[i] >  clip) trace[i]= clip;
