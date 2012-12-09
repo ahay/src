@@ -26,6 +26,8 @@ In the Python package:
 
 In programs:
 
+* fixed bug with handling zero values in sfclip
+
 In the build system:
 
 ===Changes in defaults and interfaces===
