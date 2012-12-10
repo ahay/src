@@ -203,6 +203,13 @@ int main (int argc, char* argv[]) {
 
     e = sf_floatalloc3 (ESC3_NUM, nb, na);
 
+    if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
+    /* Spline coefficients for velocity model */
+    vspline = sf_input ("vspl");
+
+    /* Slowness components module [(an)isotropic] */
+    esc_slow = sf_esc_slowness3_init (vspline, verb);
+
     /* Make room for escape variables in output */
     if (spdom)
         sf_shiftdimn (spdom, out, 1, 3);
@@ -244,6 +251,19 @@ int main (int argc, char* argv[]) {
         sf_putstring (out, "label6", "Y");
         sf_putstring (out, "unit6", "");
     }
+    /* Save min/max possible escape values */
+    sf_putfloat (out, "Zmin", sf_esc_slowness3_oz (esc_slow));
+    sf_putfloat (out, "Zmax", sf_esc_slowness3_oz (esc_slow) +
+                              (sf_esc_slowness3_nz (esc_slow) - 1)*
+                              sf_esc_slowness3_dz (esc_slow));
+    sf_putfloat (out, "Xmin", sf_esc_slowness3_ox (esc_slow));
+    sf_putfloat (out, "Xmax", sf_esc_slowness3_ox (esc_slow) +
+                              (sf_esc_slowness3_nx (esc_slow) - 1)*
+                              sf_esc_slowness3_dx (esc_slow));
+    sf_putfloat (out, "Ymin", sf_esc_slowness3_oy (esc_slow));
+    sf_putfloat (out, "Ymax", sf_esc_slowness3_oy (esc_slow) +
+                              (sf_esc_slowness3_ny (esc_slow) - 1)*
+                              sf_esc_slowness3_dy (esc_slow));
 
     if (tdata.traj) {
         if (spdom)
@@ -291,13 +311,6 @@ int main (int argc, char* argv[]) {
             sf_putstring (out, "unit7", "");
         }
     }
-
-    if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
-    /* Spline coefficients for velocity model */
-    vspline = sf_input ("vspl");
-
-    /* Slowness components module [(an)isotropic] */
-    esc_slow = sf_esc_slowness3_init (vspline, verb);
 
     if (tdata.traj)
         esc_tracer = sf_esc_tracer3_init (esc_slow,

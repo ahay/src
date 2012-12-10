@@ -27,7 +27,8 @@ int main (int argc, char* argv[]) {
     int iz, ix, nz, nx, na, nt, ts, th;
     float dt, da, t0, a0;
     float dz, z0, dx, x0, zd, z, x, zf, vconst = 1.5, smax, hmax;
-    float oazmin, oazmax, dazmin, dazmax, oaz, daz, ds, dh;
+    float oazmin = 180.0, oazmax = 180.0, dazmin = 180.0, dazmax = 180.0;
+    float oaz, daz, ds, dh;
     float **esc;
     sf_file esct, data = NULL, vz = NULL;
     sf_file oimag = NULL, dimag = NULL, fimag = NULL,
@@ -67,25 +68,26 @@ int main (int argc, char* argv[]) {
     if (!sf_getbool ("sqsmb", &sqsmb)) sqsmb = false;
     /* y - output energy traces instead of semblance */
 
-    if (!sf_getfloat ("oazmin", &oazmin)) oazmin = 180.0;
-    /* Maximum allowed opening angle at z min */
-    if (!sf_getfloat ("oazmax", &oazmax)) oazmax = 180.0;
-    /* Maximum allowed opening angle at z max */
-    if (!sf_getfloat ("dazmin", &dazmin)) dazmin = 180.0;
-    /* Maximum allowed opening dip angle (abs.value) at z min */
-    if (!sf_getfloat ("dazmax", &dazmax)) dazmax = 180.0;
-    /* Maximum allowed opening dip angle (abs.value) at z max */
+    if (mute) {
+        if (!sf_getfloat ("oazmin", &oazmin)) oazmin = 180.0;
+        /* Maximum allowed opening angle at z min */
+        if (!sf_getfloat ("oazmax", &oazmax)) oazmax = 180.0;
+        /* Maximum allowed opening angle at z max */
+        if (!sf_getfloat ("dazmin", &dazmin)) dazmin = 180.0;
+        /* Maximum allowed opening dip angle (abs.value) at z min */
+        if (!sf_getfloat ("dazmax", &dazmax)) dazmax = 180.0;
+        /* Maximum allowed opening dip angle (abs.value) at z max */
+        if (oazmin < 0.0) oazmin = 0.0;
+        if (oazmax < 0.0) oazmax = 0.0;
+        if (dazmin < 0.0) dazmin = 0.0;
+        if (dazmax < 0.0) dazmax = 0.0;
+    }
 
     if (!sf_getint ("ts", &ts)) ts = 3;
     /* Tapering length at the edges of the source direction */
     if (!sf_getint ("th", &th)) th = 5;
     /* Tapering length at the edges of the receiver direction */
     
-    if (oazmin < 0.0) oazmin = 0.0;
-    if (oazmax < 0.0) oazmax = 0.0;
-    if (dazmin < 0.0) dazmin = 0.0;
-    if (dazmax < 0.0) dazmax = 0.0;
-
     esc = sf_floatalloc2 (ESC2_NUM, na);
 
     if (sf_getstring ("data")) {

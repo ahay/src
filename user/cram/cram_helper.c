@@ -116,7 +116,6 @@ static void sf_cram_trace_conv (int lx, int ifx, float *x,
 #define LHHALF 30       /* half-length of Hilbert transform filter*/
 #define LH 2*LHHALF+1   /* filter length must be odd */
 void sf_cram_trace_hilbert (int n, float *x, float *y)
-
 /*< Hilbert tracnform of a trace x[n] -> y[n] >*/
 {
     static int madeh=0;
@@ -138,5 +137,253 @@ void sf_cram_trace_hilbert (int n, float *x, float *y)
 
     /* convolve Hilbert transform with input array */
     sf_cram_trace_conv (LH, -LHHALF, h, n, 0, x, n, 0, y);
+}
+
+/*
+ *  2-D Delaunay triangulation based of Paul Bourke's code
+ *  
+ */
+
+#define TRI_EPS 1e-6
+ 
+/*
+   Returns true, if a point (xp,yp) is inside the circumcircle made up
+   of the points (x1,y1), (x2,y2), (x3,y3).
+   The circumcircle centre is returned in (xc,yc) and the radius r
+   NOTE: A point on the edge is inside the circumcircle
+*/
+
+static bool sf_cram_circum_circle (double xp, double yp, double x1, double y1,
+                                   double x2, double y2, double x3, double y3,
+                                   double *xc, double *yc, double *rsqr) {
+    double m1, m2, mx1, mx2, my1, my2;
+    double dx, dy, drsqr;
+    double fabsy1y2 = fabs (y1-y2);
+    double fabsy2y3 = fabs (y2-y3);
+
+    /* Check for coincident points */
+    if (fabsy1y2 < TRI_EPS && fabsy2y3 < TRI_EPS)
+        return true;
+
+    if (fabsy1y2 < TRI_EPS) {
+        m2 = -(x3-x2)/(y3-y2);
+        mx2 = (x2 + x3)/2.0;
+        my2 = (y2 + y3)/2.0;
+        *xc = (x2 + x1)/2.0;
+        *yc = m2*(*xc - mx2) + my2;
+    } else if (fabsy2y3 < TRI_EPS) {
+        m1 = -(x2-x1)/(y2-y1);
+        mx1 = (x1 + x2)/2.0;
+        my1 = (y1 + y2)/2.0;
+        *xc = (x3 + x2)/2.0;
+        *yc = m1*(*xc - mx1) + my1;
+    } else {
+       m1 = -(x2-x1)/(y2-y1);
+       m2 = -(x3-x2)/(y3-y2);
+       mx1 = (x1 + x2)/2.0;
+       mx2 = (x2 + x3)/2.0;
+       my1 = (y1 + y2)/2.0;
+       my2 = (y2 + y3)/2.0;
+       *xc = (m1*mx1 - m2*mx2 + my2 - my1)/(m1 - m2);
+       if (fabsy1y2 > fabsy2y3) {
+           *yc = m1*(*xc - mx1) + my1;
+       } else {
+           *yc = m2*(*xc - mx2) + my2;
+       }
+    }
+
+    dx = x2 - *xc;
+    dy = y2 - *yc;
+    *rsqr = dx*dx + dy*dy;
+
+    dx = xp - *xc;
+    dy = yp - *yc;
+    drsqr = dx*dx + dy*dy;
+
+    return (drsqr - *rsqr) <= TRI_EPS ? true : false;
+}
+
+/*
+    Takes array xy[np+3] as input (x_i = xy[i*2], y_i = xy[i*2+1],
+    returns a list of ntr vertices[3*np] for all detected triangles.
+    The vertex array xy must be sorted in the order of increasing x values.
+*/
+
+int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
+/*< 2-D Delaunay triangulation of an raay of points >*/
+{
+    bool *complete = NULL;
+    size_t *edges = NULL;
+    size_t nedge = 0;
+    size_t trimax, emax = 200;
+
+    bool inside;
+    size_t i, j, k;
+    double xp, yp, x1, y1, x2, y2, x3, y3, xc, yc, r;
+    double xmin, xmax, ymin, ymax, xmid, ymid;
+    double dx, dy, dmax;
+
+    /* Allocate memory for the completeness list, flag for each triangle */
+    trimax = 4*np;
+    if ((complete = (bool*)malloc (trimax*(size_t)sizeof(bool))) == NULL) {
+        return 1;
+    }
+
+    /* Allocate memory for the edge list */
+    if ((edges = (size_t*)malloc (emax*(size_t)(2*sizeof(size_t)))) == NULL) {
+        free (complete);
+        return 2;
+    }
+
+    /*
+       Find the maximum and minimum vertex bounds.
+       This is to allow calculation of the bounding triangle
+    */
+    xmin = xy[0];
+    ymin = xy[1];
+    xmax = xmin;
+    ymax = ymin;
+    for (i = 1; i < np; i++) {
+        if (xy[i*(size_t)2] < xmin) xmin = xy[i*(size_t)2];
+        if (xy[i*(size_t)2] > xmax) xmax = xy[i*(size_t)2];
+        if (xy[i*(size_t)2 + (size_t)1] < ymin) ymin = xy[i*(size_t)2 + (size_t)1];
+        if (xy[i*(size_t)2 + (size_t)1] > ymax) ymax = xy[i*(size_t)2 + (size_t)1];
+    }
+    dx = xmax - xmin;
+    dy = ymax - ymin;
+    dmax = (dx > dy) ? dx : dy;
+    xmid = (xmax + xmin)/2.0;
+    ymid = (ymax + ymin)/2.0;
+    /*
+       Set up the supertriangle
+       This is a triangle which encompasses all the sample points.
+       The supertriangle coordinates are added to the end of the
+       vertex list. The supertriangle is the first triangle in
+       the triangle list.
+    */
+    xy[np*(size_t)2] = xmid - 20*dmax;
+    xy[np*(size_t)2 + (size_t)1] = ymid - dmax;
+    xy[(np + 1)*(size_t)2] = xmid;
+    xy[(np + 1)*(size_t)2 + (size_t)1] = ymid + 20*dmax;
+    xy[(np + 2)*(size_t)2] = xmid + 20*dmax;
+    xy[(np + 2)*(size_t)2 + (size_t)1] = ymid - dmax;
+    vertices[0] = np;
+    vertices[1] = np + 1;
+    vertices[2] = np + 2;
+    complete[0] = false;
+    *ntr = 1;
+    /*
+       Include each point one at a time into the existing mesh
+    */
+    for (i = 0; i < np; i++) {
+        xp = xy[i*(size_t)2];
+        yp = xy[i*(size_t)2 + (size_t)1];
+        nedge = 0;
+        /*
+           Set up the edge buffer.
+           If the point (xp,yp) lies inside the circumcircle then the
+           three edges of that triangle are added to the edge buffer
+           and that triangle is removed.
+        */
+        for (j = 0; j < (*ntr); j++) {
+            if (complete[j])
+                continue;
+            x1 = xy[vertices[j*(size_t)3]*(size_t)2];
+            y1 = xy[vertices[j*(size_t)3]*(size_t)2 + (size_t)1];
+            x2 = xy[vertices[j*(size_t)3 + (size_t)1]*(size_t)2];
+            y2 = xy[vertices[j*(size_t)3 + (size_t)1]*(size_t)2 + (size_t)1];
+            x3 = xy[vertices[j*(size_t)3 + (size_t)2]*(size_t)2];
+            y3 = xy[vertices[j*(size_t)3 + (size_t)2]*(size_t)2 + (size_t)1];
+            inside = sf_cram_circum_circle (xp, yp, x1, y1, x2, y2, x3, y3, &xc, &yc, &r);
+            if (xc < xp && ((xp - xc)*(xp - xc)) > r)
+                complete[j] = true;
+            if (inside) {
+                /* Check that we haven't exceeded the edge list size */
+                if (nedge + 3 >= emax) {
+                    emax += 100;
+                    if ((edges = (size_t*)realloc (edges, emax*(size_t)(2*sizeof(size_t)))) == NULL) {
+                        free (complete);
+                        return 3;
+                    }
+                }
+                /* Triangle sides */
+                edges[nedge*(size_t)2] = vertices[j*(size_t)3];
+                edges[nedge*(size_t)2 + (size_t)1] = vertices[j*(size_t)3 + (size_t)1];
+                edges[(nedge + 1)*(size_t)2] = vertices[j*(size_t)3 + (size_t)1];
+                edges[(nedge + 1)*(size_t)2 + (size_t)1] = vertices[j*(size_t)3 + (size_t)2];
+                edges[(nedge + 2)*(size_t)2] = vertices[j*(size_t)3 + (size_t)2];
+                edges[(nedge + 2)*(size_t)2 + (size_t)1] = vertices[j*(size_t)3];
+                nedge += 3;
+                vertices[j*(size_t)3] = vertices[((*ntr) - 1)*(size_t)3];
+                vertices[j*(size_t)3 + (size_t)1] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)1];
+                vertices[j*(size_t)3 + (size_t)2] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)2];
+                complete[j] = complete[(*ntr) - 1];
+                (*ntr)--;
+                j--;
+            }
+        }
+        /*
+           Tag multiple edges
+           Note: if all triangles are specified anticlockwise then all
+                 interior edges are opposite pointing in direction.
+        */
+        for (j = 0; j < (nedge - 1); j++) {
+            for (k = j + 1; k < nedge; k++) {
+                if ((edges[j*(size_t)2] == edges[k*(size_t)2 + (size_t)1]) &&
+                    (edges[j*(size_t)2 + (size_t)1] == edges[k*(size_t)2])) {
+                    edges[j*(size_t)2] = -1;
+                    edges[j*(size_t)2 + (size_t)1] = -1;
+                    edges[k*(size_t)2] = -1;
+                    edges[k*(size_t)2 + (size_t)1] = -1;
+                }
+                /* Shouldn't need the following, see note above */
+                if ((edges[j*(size_t)2] == edges[k*(size_t)2]) &&
+                    (edges[j*(size_t)2 + (size_t)1] == edges[k*(size_t)2 + (size_t)1])) {
+                    edges[j*(size_t)2] = -1;
+                    edges[j*(size_t)2 + (size_t)1] = -1;
+                    edges[k*(size_t)2] = -1;
+                    edges[k*(size_t)2 + (size_t)1] = -1;
+                }
+            }
+        }
+        /*
+           Form new triangles for the current point
+           Skipping over any tagged edges.
+           All edges are arranged in clockwise order.
+        */
+        for (j = 0; j < nedge; j++) {
+             if (edges[j*(size_t)2] < 0 || edges[j*(size_t)2 + (size_t)1] < 0)
+                 continue;
+             if ((*ntr) >= trimax) {
+                 free (complete);
+                 free (edges);
+                 return 4;;
+             }
+             vertices[(*ntr)*(size_t)2] = edges[j*(size_t)2];
+             vertices[(*ntr)*(size_t)3 + (size_t)1] = edges[j*(size_t)2 + (size_t)1];
+             vertices[(*ntr)*(size_t)3 + (size_t)2] = i;
+             complete[*ntr] = false;
+             (*ntr)++;
+        }
+    }
+    /*
+       Remove triangles with supertriangle vertices
+       These are triangles which have a vertex number greater than np
+    */
+    for (i = 0; i < (*ntr); i++) {
+        if (vertices[i*(size_t)3] >= np ||
+            vertices[i*(size_t)3 + (size_t)1] >= np ||
+            vertices[i*(size_t)3 + (size_t)2] >= np) {
+            vertices[i*(size_t)3] = vertices[((*ntr) - 1)*(size_t)3];
+            vertices[i*(size_t)3 + (size_t)1] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)1];
+            vertices[i*(size_t)3 + (size_t)2] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)2];
+            (*ntr)--;
+            i--;
+        }
+    }
+
+    free (edges);
+    free (complete);
+    return 0;
 }
 
