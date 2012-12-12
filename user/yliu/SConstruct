@@ -8,11 +8,11 @@ dominantf donf dowmf duwt dwt97 epsf fagrad fkoclet fkoclet3 fourbreg2
 fourmis2 freqreg freshape geoconvert groll initial instattr kuwahara
 locorr lpad2 lpfdenoise1 lpfdenoise2 lrmf ltft lum lum2 lumsmoother
 lumsharpener matchoper mean mf mig2 miss4 miss43 mlm mtm mlwm multiple
-nmradon nmult nonloc oclet pwcsemb pwd2 pwsfault pwsfault3 pwsmooth3
-radonoper rtft saltpepper sclet seisavf seisbreg2 seishrink seismis2
-seispocs seisreg2 seisxwell sharpsimi snr sphase st stft svddenoise
-swell testapef testcasoper testmatch threshold2 tvmf v2d variogram
-variogram2 vconvert wavemis2 wmf zcwt
+nmradon nmult nonloc oclet oshift1 pwcsemb pwd2 pwsfault pwsfault3
+pwsmooth3 radonoper rtft saltpepper sclet seisavf seisbreg2 seishrink
+seismis2 seispocs seisreg2 seisxwell sharpsimi snr sphase st stft
+svddenoise swell testapef testcasoper testmatch threshold2 tvmf v2d
+variogram variogram2 vconvert wavemis2 wmf zcwt
 '''
 
 try:  # distributed version
