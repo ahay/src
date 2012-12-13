@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     /* loop over n4 */
     for (i4=0; i4 < n4; i4++) {
 	for (iw=0; iw < nw; iw++) { /* loop over frequency */
-	    if (verb) sf_warning("frequency %d of %d",iw+1,nw);
+	    if (verb) sf_warning("frequency %d of %d;",iw+1,nw);
 	    w = w0 + iw*dw;
 	    for (ik=0; ik < nk; ik++) { /* loop over wavenumber */
 		k = k0 + ik*dk;
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 	    }
 	}
     }
-
+    sf_warning(".");
     exit(0);
 }
 /* 	$Id$	 */
