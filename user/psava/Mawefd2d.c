@@ -1,7 +1,7 @@
 /* 2D acoustic time-domain FD modeling
+
 4th order in space, 2nd order in time. Absorbing boundary conditions.
-Invisible parameter due to self-doc parsing bug: 
-nb=[2] Boundary padding in grid points */
+*/
 /*
   Copyright (C) 2007 Colorado School of Mines
   
@@ -197,6 +197,7 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* expand domain for FD operators and ABC */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
+    /*( nb=2 boundary padding in grid points )*/
 
     fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
 

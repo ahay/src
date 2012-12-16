@@ -20,6 +20,8 @@ In the reproducible documents collection:
 
 In documentation:
 
+* Fixed nb= parameter in sfawefd2d and sfawefd3d
+
 In APIs:
 
 In the Python package:
