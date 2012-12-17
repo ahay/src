@@ -81,7 +81,8 @@ asg           = ROOT + 'asg/main/asg.x'
 ### jobs driven by parameter tables:
 jobs = {
 #'marm4m' : ['',asg, ['sudata', 'dn3d_40m', 'vp3d_40m'],'','','',''],
-#'marm24m' : ['mpiexec -n 2',asg, ['sudata', 'dn3d_40m', 'vp3d_40m'],'','','',''],
+'line100m' : ['',asg, ['marmousi'],'','','',''],
+'line100m8k' : ['',asg, ['marmousi'],'','','',''],
 }
 
 ### scripts:
