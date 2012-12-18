@@ -1,0 +1,79 @@
+/* general recursive operator */
+
+/*
+  Copyright (C) 2012 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WA:RRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <rsf.h>
+
+typedef void (*op_func)(float *out, float **in, int n1, int n2);
+/*^*/
+
+struct tag_recursion
+{
+	float **b, *buf;
+	int n1, n2;
+	op_func op;
+//	void (*upd)(float **pb, int n2);
+};
+
+void* recursion_init(int n1, int n2, op_func pop)
+/*< initialize >*/
+{
+	int i;
+	struct tag_recursion *p;
+	p=sf_alloc(1, sizeof(struct tag_recursion));
+
+	p->n1 = n1; // array size
+	p->n2 = n2; // operator size
+	p->op = pop;
+
+	p->b = sf_floatalloc2(n1, p->n2);
+	p->buf = p->b[0];
+	for(i=0; i<n1*p->n2; i++) p->buf[i] = 0.0;
+	return p;
+}
+
+void recursion_close(void*h)
+/*< release recursive operator >*/
+{
+	struct tag_recursion *p;
+
+	p=(struct tag_recursion*)h;
+	free(p->b);
+	free(p->buf);
+	free(p);
+}
+
+void recursion(void *h, float*d)
+/*< recursive operator >*/
+{
+	struct tag_recursion *p;
+	int i1, i2;
+	float *pp;
+	p=(struct tag_recursion*)h;
+	
+	// update
+	pp = p->b[p->n2-1];
+	for(i2=1; i2<p->n2; i2++) p->b[i2] = p->b[i2-1];
+	p->b[0] = pp;
+	for(i1=0; i1<p->n1; i1++) p->b[0][i1] = d[i1];
+
+//	p->upd(p->b, p->n2);
+	p->op(d, p->b, p->n1, p->n2);
+}
+
