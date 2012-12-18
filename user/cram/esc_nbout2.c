@@ -108,7 +108,7 @@ void sf_esc_nbout2_write_plane (sf_esc_nbout2 esc_nbout, sf_esc_point2 plane, un
 /*< Write points in plane to disk >*/
 {
     int i, j, sz;
-    unsigned long nc;
+    unsigned long nc = 0;
     unsigned char *points = (unsigned char*)plane;
 
     sz = sf_esc_point2_sizeof ();

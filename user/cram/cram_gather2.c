@@ -211,7 +211,7 @@ void sf_cram_gather2_oangle_output (sf_cram_gather2 cram_gather, sf_file oafile,
                 if (ia1 > (cram_gather->na/2))
                     ia1 = cram_gather->na/2;
                 for (; ia0 != ia1; ia0++) {
-                    ave += cram_gather->rstack[iz0][ia0]*cram_gather->rstack[iz0][ia0];
+                    ave += cram_gather->rstack[iz0][ia0]/*cram_gather->rstack[iz0][ia0]*/;
                     rms += cram_gather->renergy[iz0][ia0];
                 }
             }
@@ -270,12 +270,12 @@ void sf_cram_gather2_dangle_output (sf_cram_gather2 cram_gather, sf_file dafile,
                 if (ia1 > (2*cram_gather->na))
                     ia1 = 2*cram_gather->na;
                 for (; ia0 != ia1; ia0++) {
-                    ave += cram_gather->dstack[iz0][ia0]*cram_gather->dstack[iz0][ia0];
+                    ave += cram_gather->dstack[iz0][ia0]/*cram_gather->dstack[iz0][ia0]*/;
                     rms += cram_gather->denergy[iz0][ia0];
                 }
             }
             h = cram_gather->dillum[iz][ia];
-            cram_gather->smb[ia] = (rms != 0.0 && h) ? ave/rms : 0.0;
+            cram_gather->smb[ia] = (rms != 0.0 && h) ? ave*ave/rms : 0.0;
         }
         /* Semblance map */
         sf_floatwrite (&cram_gather->smb[cram_gather->oda],
