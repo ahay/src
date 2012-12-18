@@ -75,14 +75,24 @@ void rgradient(float *u1, float *u2)
 {
 	int i1, i2, off;
 
+#ifdef _OPENMP
+#pragma omp parallel for       \
+    schedule(dynamic,5)         \
+    private(i2, off)
+#endif
 	for(i2=0; i2<n2; i2++)
 	{
 		off = i2*n1;
-		firs(order, order, c[1], u1+off, 1, n1, u2+off*3, 3);
+		firs(-order, order, c[1]+order, u1+off, 1, n1, u2+off*3, 3);
 	}
+#ifdef _OPENMP
+#pragma omp parallel for       \
+    schedule(dynamic,5)         \
+    private(i1, off)
+#endif
 	for(i1=0; i1<n1; i1++)
 	{
-		firs(order, order, c[1], u1+i1, n1, n2, u2+i1*3+1, 3*n1);
+		firs(-order, order, c[1]+order, u1+i1, n1, n2, u2+i1*3+1, 3*n1);
 	}
 	rfir(h1, u1);
 	for(i1=0; i1<n1*n2; i1++) u2[i1*3+2] = u1[i1];
@@ -92,17 +102,17 @@ void rgradient(float *u1, float *u2)
 		for(i2=0; i2<n2; i2++) // d1
 		{
 			off = i2*n1;
-			firs(order, order, c[0], u2+off*3+1, 3, n1, buf, 1);
+			firs(-order, order, c[0]+order, u2+off*3+1, 3, n1, buf, 1);
 			for(i1=0; i1<n1; i1++) u2[(off+i1)*3+1] = buf[i1];
-			firs(order, order, c[0], u2+off*3+2, 3, n1, buf, 1);
+			firs(-order, order, c[0]+order, u2+off*3+2, 3, n1, buf, 1);
 			for(i1=0; i1<n1; i1++) u2[(off+i1)*3+2] = buf[i1];
 		}
 		for(i1=0; i1<n1; i1++) // d2
 		{
 			off = i1;
-			firs(order, order, c[0], u2+off*3, 3*n1, n2, buf, 1);
+			firs(-order, order, c[0]+order, u2+off*3, 3*n1, n2, buf, 1);
 			for(i2=0; i2<n2; i2++) u2[(off+i2*n1)*3] = buf[i2];
-			firs(order, order, c[0], u2+off*3+2, 3*n1, n2, buf, 1);
+			firs(-order, order, c[0]+order, u2+off*3+2, 3*n1, n2, buf, 1);
 			for(i2=0; i2<n2; i2++) u2[(off+i2*n1)*3+2] = buf[i2];
 		}
 

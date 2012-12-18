@@ -62,7 +62,7 @@ void wavmod_init(HVel pvel,
 	wav = sf_floatalloc(nxyz);
 	nwv = sf_floatalloc(nxyz);
 	ud  = sf_floatalloc(nxyz);
-	ntj = (nt-st)/jt+1;
+	ntj = (nt-st+1)/jt;
 	data  = sf_floatalloc2(ntj, ng);
 
 	fd3_init(d1, d2, d3);

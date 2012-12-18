@@ -84,8 +84,10 @@ int main(int argc,char*argv[])
 		{
 			sf_floatread(u1, n[0], in);
 			rfir(h, u1);
-			sf_floatwrite(u1, n[0], out);
+			if(i2+of>=0) sf_floatwrite(u1, n[0], out);
 		}
+		for(i2=of; i2<0; i2++)
+			sf_floatwrite(u1, n[0], out);
 		rfir_close(h);
 	}
 	free(u1);

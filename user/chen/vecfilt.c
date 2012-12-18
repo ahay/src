@@ -37,7 +37,7 @@ void vecfilt_mean(float *out, float **in, int m1, int m2)
 		out[i1] = 0.0;
 		if(wgt) 
 			for(i2=0; i2<m2; i2++) out[i1] += in[i2][i1]*wgt[i2];
-		else for(i2=0; i2<m2; i2++) out[i1] += in[i2][i1]*wgt[i2];
+		else for(i2=0; i2<m2; i2++) out[i1] += in[i2][i1];
 		out[i1] /= m2;
 	}
 }
@@ -80,8 +80,13 @@ void vecfilt(float *u1, float *u2, float *w)
 	float alpha=1.0;
 
 	n00 = n0*n0;
+#ifdef _OPENMP
+#pragma omp parallel for       \
+    schedule(dynamic,5)         \
+    private(i1)
+#endif
 	for(i1=0; i1<n1*n2; i1++)
-		ssyr_("U", &n0, &alpha, u1+i1*n0, &inc, buf[i1], &inc); 
+		ssyr_("U", &n0, &alpha, u1+i1*n0, &inc, buf[i1], &n0); 
 
 	wgt = w;
 
@@ -130,8 +135,10 @@ void vecfilt(float *u1, float *u2, float *w)
 	for(i1=0; i1<n1*n2; i1++)
 	{
 		ssyev_("V", "U", &n0, buf[i1], &n0, u2+i1*n0, buf2, &lwork, &info);
+		for(i0=0, i2=0; i0<n0; i0++)
+		if(buf2[i0]>buf2[i2]) i2=i0;
 		for(i0=0; i0<n0; i0++)
-		u2[i1*n0+i0] = buf[i1][i0];
+		u2[i1*n0+i0] = buf[i1][i2*n0+i0];
 	}
 }
 

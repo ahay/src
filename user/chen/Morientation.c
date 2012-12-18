@@ -34,7 +34,6 @@ int main(int argc, char*argv[])
 	sf_init(argc, argv);
 
 	in  = sf_input("in");
-	wgt  = sf_input("weight");
 	out = sf_output("out");
 
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
@@ -53,6 +52,8 @@ int main(int argc, char*argv[])
 	/* approximating order of finite difference */
 	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
 	/* interpolation method: maxflat lagrange bspline */
+	if(sf_getstring("weight")!=NULL) wgt  = sf_input("weight");
+	else wgt = NULL;
 
 	rgradient_init(interp, order, n1, n2);
 	vecfilt_init(3, n1, n2, rect);
@@ -71,10 +72,13 @@ int main(int argc, char*argv[])
 		rgradient(u1, v1);
 		vecfilt(v1, v2, w);
 		for(i1=0; i1<n1*n2; i1++)
-		u1[i1] = atanf(fabs(v2[i1*3]) / 
+		u1[i1] = atan2(fabs(v2[i1*3]), 
 			sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]+v2[i1*3+2]));
-		sf_floatwrite(u1, n1*n2, out);
+		if(i3 >= rect[2])	sf_floatwrite(u1, n1*n2, out);
+		sf_warning("%d of %d;", i3, n3);
 	}
+	for(i3=0; i3<rect[2]; i3++)
+		sf_floatwrite(u1, n1*n2, out);
 
 	rgradient_close();
 	vecfilt_close();
@@ -83,7 +87,7 @@ int main(int argc, char*argv[])
 	free(v1);
 	free(v2);
 
-	if(w) free(w);
+	if(wgt) free(w);
 
 	return 0;
 }
