@@ -406,7 +406,7 @@ bool DepthMigrator2D::getSampleFromData (const float h, const float geoY, const 
 
 	// offset
 
-	const int offsetInd = h / dp_->hStep;
+	const int offsetInd = (h - dp_->hStart) / dp_->hStep;
 	if (offsetInd >= dp_->hNum || offsetInd < 0) return false;
 
 	float* const trace = ptrToData_ + xSamp * tNum + xNum * tNum * offsetInd;
