@@ -90,6 +90,8 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 	const float scatStart = gp_->scatStart;
 	const float scatStep  = gp_->scatStep;
 
+	const bool zeroStartOffset = dp_->hStart < 1e-6 ? true : false; // start offset in data 
+
 	// ACTION
 
 	// masks for illumination normalization
@@ -114,7 +116,7 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 	
 			float sample (0.f);
 			bool isGood = this->getSampleByBeam (travelTimes, curScatAngle, curDipAngle, sample);	 
-			if (!isGood && curScatAngle < 1e-6) // implemented for zero-offset only
+			if (zeroStartOffset && !isGood && curScatAngle < 1e-6) // implemented for zero-offset only
 				isGood = this->getSampleByRay (travelTimes, curDipAngle, sample);
 			if (!isGood)
 				continue;
