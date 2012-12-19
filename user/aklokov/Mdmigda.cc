@@ -112,16 +112,16 @@ void checkImageParams () {
 	float diff = vp.zStart - ip.zStart;
 	ip.zNum -= (diff / ip.zStep + 1);
 	ip.zStart += (diff / ip.zStep + 1) * ip.zStep;
-	sf_warning ("first migrated time was changed to %g", ip.zStart);			
+	sf_warning ("first migrated depth was changed to %g", ip.zStart);			
     }
-    if (ip.zNum <= 0) sf_error ("wrong image time sample number");	
+    if (ip.zNum <= 0) sf_error ("wrong image depth sample number");	
     float zImageMax = ip.zStart + ip.zStep * (ip.zNum - 1);
     if (zImageMax - zVelMax > 1E-6) {
 	float diff = zImageMax - zVelMax; 
 	ip.zNum -= (diff / ip.zStep + 1);
-	sf_warning ("time sample number was changed to %d", ip.zNum);	
+	sf_warning ("depth sample number was changed to %d", ip.zNum);	
     }
-    if (ip.zNum <= 0) sf_error ("wrong image time sample number");	
+    if (ip.zNum <= 0) sf_error ("wrong image depth sample number");	
 
     // inline checking
 
