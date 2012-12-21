@@ -68,23 +68,38 @@ int main(int argc, char*argv[])
 
 	runtime_init(n1*n2*sizeof(float));
 
-	for(i3=0; i3<n3; i3++)
-	{	
-		sf_floatread(u1, n1*n2, in);
-		if(wgt) sf_floatread(w, n1*n2, wgt);
-		rgradient(u1, v1);
+//	time sequences for recursive operators:
+//			0	od	 od+rc		  n3  n3+od	 n3+od+rc
+//	i3		|----|-----|-----------|----|-----|
+//	read	|----------------------|
+//	u1=0						   |----|
+//	grad	|----|----------------------|
+//	v1=0								|-----|
+//	weight		 |----------------------|
+//	vecf		 |-----|----------------------|
+//	write			   |----------------------|
+
+	for(i3=0; i3<n3+order+rect[2]; i3++)
+	{
+		if(i3<n3) sf_floatread(u1, n1*n2, in);
+		if(i3>=n3 && i3<n3+order) memset(u1, 0, n1*n2*sizeof(float));
+		if(i3<n3+order)	rgradient(u1, v1);
+		else memset(v1, 0, 3*n1*n2*sizeof(float));
+		if(i3<order) continue;
+
+		if(wgt && i3<n3+order) sf_floatread(w, n1*n2, wgt);
 		vecfilt(v1, v2, w);
+		if(i3<order+rect[2]) continue;
+
 		for(i1=0; i1<n1*n2; i1++)
 		{
 			a = sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]*v2[i1*3+2]);
 			u1[i1] = atan2(fabs(v2[i1*3]), a);
 		}
-		if(i3 >= rect[2])	sf_floatwrite(u1, n1*n2, out);
+		sf_floatwrite(u1, n1*n2, out);
 		a = runtime(1);
 		sf_warning("%d of %d, %f MB/sec;", i3, n3, a);
 	}
-	for(i3=0; i3<rect[2]; i3++)
-		sf_floatwrite(u1, n1*n2, out);
 
 	rgradient_close();
 	vecfilt_close();

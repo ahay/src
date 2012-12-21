@@ -24,12 +24,37 @@
 #endif
 #include "lphpoly.h"
 #include "dsp.h"
-#include "rfir.h"
+#include "recursion.h"
 
-static	float **c, **b1, **b2;
+static	float **c, **b1, **b2, ***g;
 static int order, n1, n2;
 static char mode;
-static void *h0, *h1;
+static void *h;
+
+void grad3(float *out, float **in, int m1, int m2)
+{
+	int i1, i2, j1, off;
+	// in[nf][3][n2][n1] ==> out[3][n2][n1]
+#ifdef _OPENMP
+#pragma omp parallel for       \
+    schedule(dynamic,5)         \
+    private(i1, i2, off)
+#endif
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	{
+		off = i2*n1+i1;
+		out[off] = 0.0;
+		out[n1*n2+off] = 0.0;
+		out[n1*n2*2+off] = 0.0;
+		for(j1=0; j1<m2; j1++)
+		{
+			out[off] += c[0][m2-j1]*in[j1][off];
+			out[n1*n2+off] += c[0][m2-j1]*in[j1][n2*n1+off];
+			out[n1*n2*2+off] += c[1][m2-j1]*in[j1][n2*n1*2+off];
+		}
+	}
+}
 
 void rgradient_init(char* type, int horder, int m1, int m2)
 /*< initialize >*/
@@ -49,11 +74,12 @@ void rgradient_init(char* type, int horder, int m1, int m2)
 	n1 = m1;
 	n2 = m2;
 
-	h0 = rfir_init(nf, c[0], n1*n2);
-	h1 = rfir_init(nf, c[1], n1*n2);
+	h = recursion_init(n1*n2*3, nf, grad3);
 
 	b1 = sf_floatalloc2(n1, n2);
-	b2 = sf_floatalloc2(n2, n1);
+	b2 = sf_floatalloc2(n1, n2);
+
+	g = sf_floatalloc3(n1, n2, 3);
 
 #ifdef _OPENMP
     omp_init();
@@ -69,13 +95,14 @@ void rgradient_close()
 	free(*b2);
 	free(b1);
 	free(b2);
-	rfir_close(h0);
-	rfir_close(h1);
+	free(**g);
+	free(*g);
+	free(g);
+	recursion_close(h);
 }
 
-
 void rgradient(float *u1, float *u2)
-/*< direct computation of rgradient >*/
+/*< recursive computation of rgradient >*/
 {
 	int i1, i2, off;
 
@@ -87,8 +114,10 @@ void rgradient(float *u1, float *u2)
 	for(i2=0; i2<n2; i2++)
 	{
 		off = i2*n1;
-		firs(-order, order, c[1]+order, u1+off, 1, n1, u2+off*3, 3);
+		firs(-order, order, c[1]+order, u1+off, 1, n1, b1[i2], 1);
+		firs(-order, order, c[0]+order, u1+off, 1, n1, b2[i2], 1);
 	}
+
 #ifdef _OPENMP
 #pragma omp parallel for       \
     schedule(dynamic,5)         \
@@ -96,48 +125,19 @@ void rgradient(float *u1, float *u2)
 #endif
 	for(i1=0; i1<n1; i1++)
 	{
-		firs(-order, order, c[1]+order, u1+i1, n1, n2, u2+i1*3+1, 3*n1);
+		firs(-order, order, c[0]+order, b1[0]+i1, n1, n2, g[0][0]+i1, n1);
+		firs(-order, order, c[1]+order, b2[0]+i1, n1, n2, g[1][0]+i1, n1);
+		firs(-order, order, c[0]+order, b2[0]+i1, n1, n2, g[2][0]+i1, n1);
 	}
-	rfir(h1, u1);
-	for(i1=0; i1<n1*n2; i1++) u2[i1*3+2] = u1[i1];
 
-	if(0)
-	if(mode !='l')
+	recursion(h, g[0][0]);
+	for(i2=0; i2<n2; i2++) 
+	for(i1=0; i1<n1; i1++) 
 	{
-#ifdef _OPENMP
-#pragma omp parallel for       \
-    schedule(dynamic,5)         \
-    private(i1,i2, off)
-#endif
-		for(i2=0; i2<n2; i2++) // d1
-		{
-			off = i2*n1;
-			firs(-order, order, c[0]+order, u2+off*3+1, 3, n1, b1[i2], 1);
-			for(i1=0; i1<n1; i1++) u2[(off+i1)*3+1] = b1[i2][i1];
-			firs(-order, order, c[0]+order, u2+off*3+2, 3, n1, b1[i2], 1);
-			for(i1=0; i1<n1; i1++) u2[(off+i1)*3+2] = b1[i2][i1];
-		}
-#ifdef _OPENMP
-#pragma omp parallel for       \
-    schedule(dynamic,5)         \
-    private(i1,i2, off)
-#endif
-		for(i1=0; i1<n1; i1++) // d2
-		{
-			off = i1;
-			firs(-order, order, c[0]+order, u2+off*3, 3*n1, n2, b2[i1], 1);
-			for(i2=0; i2<n2; i2++) u2[(off+i2*n1)*3] = b2[i1][i2];
-			firs(-order, order, c[0]+order, u2+off*3+2, 3*n1, n2, b2[i1], 1);
-			for(i2=0; i2<n2; i2++) u2[(off+i2*n1)*3+2] = b2[i1][i2];
-		}
-
-		for(i1=0; i1<n1*n2; i1++) b1[0][i1] = u2[i1*3];
-		rfir(h0, b1[0]);
-		for(i1=0; i1<n1*n2; i1++) u2[i1*3] = b1[0][i1];
-		for(i1=0; i1<n1*n2; i1++) b1[0][i1] = u2[i1*3+1];
-		rfir(h0, b1[0]);
-		for(i1=0; i1<n1*n2; i1++) u2[i1*3+1] = b1[0][i1];
-
+		u2[i2*i1*3] = g[0][i2][i1];
+		u2[i2*i1*3+1] = g[1][i2][i1];
+		u2[i2*i1*3+2] = g[2][i2][i1];
 	}
 }
+
 
