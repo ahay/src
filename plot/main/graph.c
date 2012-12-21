@@ -36,15 +36,15 @@ static void getminmax(const float* f, float* min, float* max);
 
 int main(int argc, char* argv[])
 {
-    bool transp, start;
+    bool transp, start, scalebar, nomin=true, nomax=true, barreverse;
     int n1, n2, n3, i1, i2, i3, len, nreserve;
     float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt;
     float **x, **y, **tmp, *symbolsz=NULL, symsize, xc, yc;    
-    float ***data=NULL;
-    char *symbol, sym[2]=" ", *color=NULL;
-    unsigned char **z=NULL;
+    float ***data=NULL, barmin, barmax, minmax[2];
+    char *symbol, sym[2]=" ", *color=NULL, *barfile;
+    unsigned char **z=NULL, *barbuf[1];
     sf_datatype type;
-    sf_file in, depth;
+    sf_file in, depth, bar=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -71,6 +71,9 @@ int main(int argc, char* argv[])
     y = sf_floatalloc2(n1,n2);
     t = sf_floatalloc(n);
 
+    if (!sf_getbool("scalebar",&scalebar)) scalebar=false;
+    /* if y, draw scalebar */
+    
     if (NULL != depth) {
 	z = sf_ucharalloc2(n1,n2);
 	/* initialize color table */
@@ -79,6 +82,31 @@ int main(int argc, char* argv[])
 	if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
 	/* reserved colors */
 	vp_rascoltab(nreserve,color);
+
+	if (scalebar) {
+	    barfile = sf_getstring("bar");
+	    /* file for scalebar data */
+	    if (NULL == barfile) {
+		barfile=sf_histstring(depth,"bar");
+		if (NULL == barfile) sf_error("Need bar=");
+	    }
+
+	    nomin = (bool) (!sf_getfloat("minval",&barmin));
+	    /* minimum value for scalebar (default is the data minimum) */
+	    nomax = (bool) (!sf_getfloat("maxval",&barmax));
+	    /* maximum value for scalebar (default is the data maximum) */
+	
+	    bar = sf_input(barfile);
+	    if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
+
+	    if (nomin) nomin = (bool) (!sf_histfloat(bar,"minval",&barmin));
+	    if (nomax) nomax = (bool) (!sf_histfloat(bar,"maxval",&barmax));
+
+	    barbuf[0] = (unsigned char*) sf_alloc(VP_BSIZE,sizeof(unsigned char));
+
+	    if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
+	    /* if y, go from small to large on the bar scale */
+	}
     } 
 
     if (!sf_getfloat("pclip",&pclip)) pclip=100.; /* clip percentile */
@@ -196,6 +224,21 @@ int main(int argc, char* argv[])
 		    start=true;
 		}
 	    }
+	}
+
+	if (depth && scalebar) {
+	    sf_floatread(minmax,2,bar);
+	    sf_ucharread(barbuf[0],VP_BSIZE,bar);
+
+	    if (nomin) barmin=minmax[0];
+	    if (nomax) barmax=minmax[1];
+
+	    if (barreverse) {
+		vp_barframe_init (depth,barmax,barmin);
+	    } else {
+		vp_barframe_init (depth,barmin,barmax);
+	    }
+	    vp_barraster(VP_BSIZE, barbuf);
 	}
 	
 	if (transp) {

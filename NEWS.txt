@@ -14,6 +14,8 @@ To the Python package:
 
 To programs:
 
+* Added scalebar= option for sfgraph with depth=
+
 ===Bug fixes===
 
 In the reproducible documents collection:

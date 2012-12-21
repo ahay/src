@@ -234,7 +234,8 @@ int main(int argc, char* argv[])
     if (!sfbyte && !sfbar) {
 	vp_stdplot_init (x1, x2, y1, y2, transp, false, yreverse, false);
 	vp_frame_init(in,"tlb",false);
-	if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
+/*	if (scalebar && !nomin && !nomax) 
+	vp_barframe_init (in,barmin,barmax); */
     }
 
     if (transp) {
