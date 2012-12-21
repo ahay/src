@@ -1,4 +1,4 @@
-#include <rsf.h>
+/* runtime */
 
 /*
   Copyright (C) 2012 Zhonghuan Chen, UT Austin, Tsinghua University
@@ -18,22 +18,32 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <rsf.h>
+#include <time.h>
 
+static	long nblk, szblk;
+static time_t start, end;
 
-float sf_traveltime(int type, float t0, float x, float v)
-/*< travel time:  type =	0 line, 1 parabola, x hyperbola >*/
+void runtime_init(int size)
+/*< initialize >*/
 {
-	float deltat;
-	deltat= x/v;
-	switch(type)
-	{
-	case 0:
-		return (t0+deltat);
-		break;
-	case 1:
-		return (t0+deltat*deltat);
-		break;
-	default:
-		return sqrtf(t0*t0+deltat*deltat);
-	}
+	szblk = size;
+	nblk = 0;
+	start = time(NULL);
 }
+
+
+float runtime(long db)
+/*< data flow >*/
+{
+	float f;
+	double d;
+	nblk += db; 
+	end = time(NULL);
+	d = difftime(end, start);
+	d = nblk / d;
+	d *= szblk;
+	f = d/1024/1024;
+	return f;
+}
+

@@ -1,7 +1,7 @@
 /* orientation estimation by structural gradient tensor */
 
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2012 Zhonghuan Chen, UT Austin, Tsinghua University
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -22,13 +22,14 @@
 #include <rsf.h>
 #include "rgradient.h"
 #include "vecfilt.h"
+#include "runtime.h"
 
 int main(int argc, char*argv[])
 {
 	sf_file in, wgt, out;
 	int n1, n2, n3, rect[3], order;
 	int i1, i3;
-	float *u1, *w, *v1, *v2;
+	float *u1, *w, *v1, *v2, a;
 	char *interp;
 
 	sf_init(argc, argv);
@@ -65,6 +66,8 @@ int main(int argc, char*argv[])
 	if(wgt) w  = sf_floatalloc(n1*n2);
 	else w = NULL;
 
+	runtime_init(n1*n2*sizeof(float));
+
 	for(i3=0; i3<n3; i3++)
 	{	
 		sf_floatread(u1, n1*n2, in);
@@ -72,10 +75,13 @@ int main(int argc, char*argv[])
 		rgradient(u1, v1);
 		vecfilt(v1, v2, w);
 		for(i1=0; i1<n1*n2; i1++)
-		u1[i1] = atan2(fabs(v2[i1*3]), 
-			sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]+v2[i1*3+2]));
+		{
+			a = sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]*v2[i1*3+2]);
+			u1[i1] = atan2(fabs(v2[i1*3]), a);
+		}
 		if(i3 >= rect[2])	sf_floatwrite(u1, n1*n2, out);
-		sf_warning("%d of %d;", i3, n3);
+		a = runtime(1);
+		sf_warning("%d of %d, %f MB/sec;", i3, n3, a);
 	}
 	for(i3=0; i3<rect[2]; i3++)
 		sf_floatwrite(u1, n1*n2, out);
