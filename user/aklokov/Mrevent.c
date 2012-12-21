@@ -53,23 +53,31 @@ int main (int argc, char* argv[]) {
 	float tStart, hStart, sStart, tStep, hStep, sStep;
 
     if ( !sf_getint ("tn", &tNum) ) tNum = 1001;
+	/* number of time samples */
     if ( !sf_getint ("hn", &hNum) ) hNum = 51;
+	/* number of offsets */
     if ( !sf_getint ("sn", &sNum) ) sNum = 1;
-
+	/* number of sources */
     if ( !sf_getfloat ("to", &tStart) ) tStart = 0.f;
+	/* start time (in s) */
     if ( !sf_getfloat ("ho", &hStart) ) hStart = 0.f;
+	/* start offset (in s) */
     if ( !sf_getfloat ("so", &sStart) ) sStart = 0.f;
-
+	/* start source position (in s) */
     if ( !sf_getfloat ("td", &tStep) ) tStep = 0.004f;
+	/* step in time (in s) */
     if ( !sf_getfloat ("hd", &hStep) ) hStep = 0.05f;
+	/* step in offset (in km) */
     if ( !sf_getfloat ("sd", &sStep) ) sStep= 0.025f;
+	/* step in source position (in km) */
 
 	float eps;
-    if ( !sf_getfloat ("eps", &eps) ) eps = 0.01f;
+    if ( !sf_getfloat ("eps", &eps) ) eps = 0.01;
+	/* receiver position accuracy (in km) */
 
 	float vel;
     if ( !sf_getfloat ("vel", &vel) ) vel = 2.f;
-
+	/* constant velocity value (in km/s) */
 
 	const int dataSize = hNum * tNum;
 
@@ -104,7 +112,8 @@ int main (int argc, char* argv[]) {
 			for (int ir = 0; ir < n1; ++ir) {
 				const float z  = depth [ir];
 				const float z1 = deriv [ir];
-				const float x = o1 + ir * d1 - sPos;
+				const float rx = o1 + ir * d1;
+				const float x = rx - sPos;
 
 				const float a1 = z - x * z1;
 				const float a2 = z * (1 - z1*z1) - 2*x*z1;
@@ -113,7 +122,12 @@ int main (int argc, char* argv[]) {
 		
 				if (fabs (l - offset) > eps ) continue;
 		
-				const float t = 2 * sqrt (x*x + z*z) * a1 / (vel * a2);
+				// time correction
+				const float dx  = sPos + l - rx;
+				const float way = sqrt (dx*dx + z*z);
+				const float dt  = dx * (l - offset) / (vel * way);
+				const float t = 2 * sqrt (x*x + z*z) * a1 / (vel * a2) - dt;
+				const float fullWay = vel * t;
 
 				// put impulse
 				const int tInd = (t - tStart) / tStep;
@@ -123,8 +137,8 @@ int main (int argc, char* argv[]) {
 				const float bef = (t - tInd * tStep) / tStep;
 				const float aft = 1.f - bef;
 
-				data [ih*tNum + tInd]     += aft;
-				data [ih*tNum + tInd + 1] += bef;
+				data [ih*tNum + tInd]     += aft / fullWay;
+				data [ih*tNum + tInd + 1] += bef / fullWay;
 			}
 		}
 		sf_floatwrite (data, dataSize, dataFile);
