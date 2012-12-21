@@ -72,7 +72,7 @@ int main (int argc, char* argv[]) {
 	/* step in source position (in km) */
 
 	float eps;
-    if ( !sf_getfloat ("eps", &eps) ) eps = 0.01;
+    if ( !sf_getfloat ("eps", &eps) ) eps = 0.5 * hStep;
 	/* receiver position accuracy (in km) */
 
 	float vel;
