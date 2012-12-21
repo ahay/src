@@ -10,6 +10,7 @@ pick2d gammapick2d pickvert
 pdrscan2d pdr2d
 dagap
 taperedge
+revent
 '''
 
 mpi_progs = ''
