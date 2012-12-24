@@ -22,8 +22,8 @@
 
 int main (int argc, char* argv[])
 {
-    int n1, n2, xn, i, j, k;
-    float o1, d1, xd, xo, *vel, *dip;
+    int n1, n2, xn, i, j, k, m;
+    float o1, d1, xd, xo, *vel, *dip, t, t1, x2;
     float t0=0., tp=0., slope0=0., slopep=0., x=0., x1=0., v0=0., *data=NULL;
     bool abs, half, inner, hyper, mute;
     sf_file in, out;
@@ -50,6 +50,12 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("half",&half)) half=false;
     /* if y, half-offset instead of full offset */
+
+    if (half) {
+	xd *= 2.;
+	xo *= 2.;
+    }
+
     
     vel = sf_floatalloc(n1);
     dip = sf_floatalloc(n1*xn);
@@ -100,21 +106,24 @@ int main (int argc, char* argv[])
 	
 	for (j=0; j < xn; j++) {
 	    for (i=0; i < n1; i++)  {
-		if (half) {
-		    dip[j*n1+i] = (xo+j*xd*2)*xd*2/
-			((o1+i*d1)*vel[i]*vel[i]*d1+FLT_EPSILON);
-		} else {
-		    dip[j*n1+i] = (xo+j*xd)*xd/
-			((o1+i*d1)*vel[i]*vel[i]*d1+FLT_EPSILON);
+		t = o1+i*d1;
+		x2 = xo+j*xd;
+		
+		m = 0;
+		t1 = o1 + m*d1;
+		while((t*t)>(t1*t1+x2*x2/(vel[m]*vel[m]+FLT_EPSILON))) {
+		    m++;
+		    t1 = o1 + m*d1;
 		}
+		dip[j*n1+i] = x2*xd/
+		    ((o1+i*d1)*vel[m]*vel[m]*d1+FLT_EPSILON);
 	    }
 	}
-
+	
 	if (mute) {
 	    for (j=0; j < xn; j++) { 
 		x = xo + j*xd;	    
 		x -= x1;
-		if (half) x *= 2.;
 		if (hyper) x *= x;
 		
 		for (i=0; i < n1; i++) {
