@@ -44,8 +44,8 @@ int main(int argc, char* argv[])
     out = sf_output("out");	
 
     if (!sf_getint("nfw",&nfw)) nfw=5;
-    /* half window size = 2*nfw+1 */
-    if ((filter=sf_getstring("filter"))!=NULL) filter="mean";
+    /* window size */
+    if ((filter=sf_getstring("filter"))==NULL) filter="mean";
     /* filter: mean,median,poly,fir */
     if (!sf_getint("order",&order)) order=nfw-1;
     /* filter order (<= nfw, only for polynomial and fir filters) */
@@ -55,9 +55,9 @@ int main(int argc, char* argv[])
 
 	u1 = sf_floatalloc(n1);
 
-	if(strcmp(filter, "mean")==0) h = epsmean_init(n1, nfw, nfw);
-	else if(strcmp(filter, "median")==0) h = epsmedian_init(n1, nfw, nfw);
-	else if(strcmp(filter, "poly")==0) h = epspoly_init(n1, nfw, nfw, order);
+	if(strcmp(filter, "mean")==0) h = epsmean_init(n1, nfw);
+	else if(strcmp(filter, "median")==0) h = epsmedian_init(n1, nfw);
+	else if(strcmp(filter, "poly")==0) h = epspoly_init(n1, nfw, order);
 	else sf_error("filter %s not support", filter);
 
 #ifdef _OPENMP

@@ -24,20 +24,19 @@
 
 typedef struct{
 	int n;
-	int nfw1, nfw2;
+	int nfw;
 	float *u, *v, *e;
 }EPSMEDIAN;
 
-void* epsmedian_init(int n1, int nfw1, int nfw2)
+void* epsmedian_init(int n1, int nfw)
 /*< initialize >*/
 {
 	EPSMEDIAN *p;
 
 	p = sf_alloc(1, sizeof(EPSMEDIAN));
 	p->n = n1;
-	p->nfw1 = nfw1;
-	p->nfw2 = nfw2;
-	p->u = sf_floatalloc(nfw1+nfw2+1);
+	p->nfw = nfw;
+	p->u = sf_floatalloc(nfw+1);
 	p->v = sf_floatalloc(n1);
 	p->e = sf_floatalloc(n1);
 	return p;
@@ -55,15 +54,15 @@ void epsmedian(void *h, float *x, int d)
 
     for(i1=0; i1 < p->n; i1++)
     {
-        min = MAX(i1-p->nfw1, 0);
-        max = MIN(i1+p->nfw2, p->n-1);
+        min = i1;
+        max = MIN(i1+p->nfw, p->n-1);
         l = max - min + 1;
     	for(j1=min; j1 <= max; j1++)
     	p->u[j1-min] = x[j1*d];
         p->v[i1] = sfilt_median(l, p->u);
     	for(j1=min, p->e[i1]=0.0 ; j1 <= max; j1++)
 		{
-			t = p->v[i1] - p->u[j1];
+			t = p->v[i1] - p->u[j1-min];
 			p->e[i1] += t*t;
 		}
 		p->e[i1] /= l;
@@ -72,11 +71,13 @@ void epsmedian(void *h, float *x, int d)
     // selection
     for(i1=0; i1 < p->n; i1++)
     {
-        min = MAX(i1-p->nfw1, 0);
-        max = MIN(i1+p->nfw2, p->n-1);
+        min = MAX(i1-p->nfw, 0);
+        max = MIN(i1, p->n-p->nfw-1);
         j2 = min;
         for(j1=min+1; j1 <= max; j1++) 
         if(p->e[j1] < p->e[j2]) j2 = j1;
         x[i1*d] = p->v[j2];
     }
 }
+
+

@@ -24,26 +24,25 @@
 
 typedef struct{
 	int n;
-	int nfw1, nfw2;
+	int nfw;
 	int order;
 	float *c, **u, *e;
 }EPSPOLY;
 
-void* epspoly_init(int n1, int nfw1, int nfw2, int order)
+void* epspoly_init(int n1, int nfw, int order)
 /*< initialize >*/
 {
 	EPSPOLY *p;
 
-	if(order > nfw1 || order > nfw2) 
+	if(order > nfw) 
 	sf_error("order=%d > window size in epspoly", order);
 	p = sf_alloc(1, sizeof(EPSPOLY));
 	p->n = n1;
-	p->nfw1 = nfw1;
-	p->nfw2 = nfw2;
+	p->nfw = nfw;
 	p->order = order;
 	p->c = sf_floatalloc(order);
 	p->e = sf_floatalloc(n1);
-	p->u = sf_floatalloc2(nfw1+nfw2+1, n1);
+	p->u = sf_floatalloc2(nfw+1, n1);
 
 	return p;
 }
@@ -59,38 +58,38 @@ void epspoly(void *h, float *x, int d)
 	void *h1;
 
 	p = (EPSPOLY*) h;
-	for(i1=0; i1 < p->n; i1++)
-	{
-		min = MAX(i1-p->nfw1, 0);
-		max = MIN(i1+p->nfw2, p->n-1);
-		l = max - min + 1;
-		pv = p->u[i1]+p->nfw1+min-i1;
-		for(j1=min; j1<=max; j1++)
-			pv[j1-min] = x[j1*d];
-		h1 = polyfit_init(l, p->order, -i1, 0);
-		polyfit_coef(h1, pv, p->c);
-		polyfit(h1, p->c, pv);
-		polyfit_close(h1);
-		p->e[i1] = 0.0;
-		for(j1=min; j1<=max; j1++)
-		{
-			t = pv[j1-min] - x[j1*d];
-			p->e[i1] += t*t;
-		}
-		p->e[i1] /= l;
-	}
+	h1 = polyfit_init(p->nfw+1, p->order, 0, 0);
 
 	for(i1=0; i1 < p->n; i1++)
 	{
-		min = MAX(i1-p->nfw1, 0);
-		max = MIN(i1+p->nfw2, p->n-1);
+		pv = p->u[i1];
+		for(j1=0; j1<=p->nfw; j1++)
+		if(i1+j1 < p->n)	pv[j1] = x[(j1+i1)*d];
+		else pv[j1] = 0.0;
+		polyfit_coef(h1, pv, p->c);
+		polyfit(h1, p->c, pv);
+		p->e[i1] = 0.0;
+		for(j1=0; j1<=p->nfw; j1++)
+		{
+			t = pv[0] - x[(i1+j1)*d];
+			p->e[i1] += t*t;
+		}
+		p->e[i1] /= p->nfw;
+	}
+
+	polyfit_close(h1);
+
+	for(i1=0; i1 < p->n; i1++)
+	{
+		min = MAX(i1-p->nfw, 0);
+		max = MIN(i1, p->n-p->nfw-1);
 		l = max - min + 1;
 		j2 = min;
         for(j1=min+1; j1 <= max; j1++)
         if(p->e[j1] < p->e[j2]) j2 = j1;
 
-		pv = p->u[j2]+p->nfw1;
-		x[i1*d] = pv[j2-i1];
+		pv = p->u[j2];
+		x[i1*d] = pv[i1-j2];
 	}
 }
 

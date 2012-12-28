@@ -96,13 +96,20 @@ int main(int argc, char*argv[])
 		for(i1=0; i1<n1*n2; i1++)
 		{
 			a = sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]*v2[i1*3+2]);
-			u1[0][i1] = atan2(fabs(v2[i1*3]), a);
+			u1[0][i1] = atan2(a, fabs(v2[i1*3]));
 		}
 		sf_floatwrite(u1[0], n1*n2, out);
 		if(az)
 		{
 			for(i1=0; i1<n1*n2; i1++)
+			{
+				if(v2[i1*3+1]<0)
+				{
+					v2[i1*3+1]=-v2[i1*3+1];
+					v2[i1*3+2]=-v2[i1*3+2];
+				}
 				u1[0][i1] = atan2(v2[i1*3+2], v2[i1*3+1]);
+			}
 			sf_floatwrite(u1[0], n1*n2, az);
 		}
 		a = runtime(1);

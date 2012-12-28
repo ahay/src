@@ -89,11 +89,11 @@ void rgradient(float **u1, float **u2)
 	{
 		b1[i2][i1] = 0.0;
 		b2[i2][i1] = 0.0;
+		if(i1-order<0 || i1+order>=n1) continue;	
 		for(j1=-order; j1<=order; j1++)
 		{
-			if(j1+i1<0 || j1+i1>=n1) continue;	
-			b1[i2][i1] += c[1][j1+order]*u1[i2][i1];
-			b2[i2][i1] += c[0][j1+order]*u1[i2][i1];
+			b1[i2][i1] += c[1][j1+order]*u1[i2][i1+j1];
+			b2[i2][i1] += c[0][j1+order]*u1[i2][i1+j1];
 		}
 	}
 
@@ -109,9 +109,9 @@ void rgradient(float **u1, float **u2)
 		u2[i2][i1*3] = 0.0;
 		u2[i2][i1*3+1] = 0.0;
 		u2[i2][i1*3+2] = 0.0;
+		if(i2-order<0 || i2+order>=n2) continue;	
 		for(j2=-order; j2<=order; j2++)
 		{
-			if(j2+i2<0 || j2+i2>=n2) continue;	
 			u2[i2][i1*3] += c[0][j2+order]*b1[i2+j2][i1];
 			u2[i2][i1*3+1] += c[1][j2+order]*b2[i2+j2][i1];
 			u2[i2][i1*3+2] += c[0][j2+order]*b2[i2+j2][i1];

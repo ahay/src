@@ -24,19 +24,18 @@
 
 typedef struct{
 	int n;
-	int nfw1, nfw2;
+	int nfw;
 	float *v, *e, *u;
 }EPSMEAN;
 
-void* epsmean_init(int n1, int nfw1, int nfw2)
+void* epsmean_init(int n1, int nfw)
 /*< initialize >*/
 {
 	EPSMEAN *p;
 
 	p = sf_alloc(1, sizeof(EPSMEAN));
 	p->n = n1;
-	p->nfw1 = nfw1;
-	p->nfw2 = nfw2;
+	p->nfw = nfw;
 	p->u = sf_floatalloc(n1);
 	p->v = sf_floatalloc(n1);
 	p->e = sf_floatalloc(n1);
@@ -76,8 +75,8 @@ void epsmean(void *h, float *x, int d)
 
 	for(i1=0; i1 < p->n; i1++)
 	{
-		min = MAX(i1-p->nfw1, 0);
-		max = MIN(i1+p->nfw2, p->n-1);
+		min = i1;
+		max = MIN(i1+p->nfw, p->n-1);
 		l = max - min + 1;
 		p->e[i1] = mean_var(l, p->u+min, p->v+i1);
 	}
@@ -85,8 +84,8 @@ void epsmean(void *h, float *x, int d)
 	// selection
 	for(i1=0; i1 < p->n; i1++)
 	{
-		min = MAX(i1-p->nfw1, 0);
-		max = MIN(i1+p->nfw2, p->n-1);
+		min = MAX(i1-p->nfw, 0);
+		max = MIN(i1, p->n-p->nfw-1);
 		j2 = min;
 		for(j1=min+1; j1 <= max; j1++) 
 		if(p->e[j1] < p->e[j2]) j2 = j1;
