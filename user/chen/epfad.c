@@ -26,7 +26,7 @@ static int n1, n2, rc1, rc2, rc3;
 static void *h;
 static float *c1, *c2, *c3;
 
-void epfad_app(float *out, float **in, int n12, int nf)
+void epfad_app(float *out, float **in, int n12, int nf, int *par)
 {
 	int i1, i2, j1, j2;
 	float vf, vb, ef, eb, *p, **p2;
@@ -105,7 +105,7 @@ void epfad_init(int m1, int m2, int *rect)
 	n1 = m1;
 	n2 = m2;
 
-	h = recursion_init(n1*n2, 2*rc3+1, epfad_app);
+	h = recursion_init(n1*n2, 2*rc3+1, epfad_app, NULL);
 	c1 = sf_floatalloc(rc1+1);
 	c2 = sf_floatalloc(rc2+1);
 	c3 = sf_floatalloc(rc3+1);

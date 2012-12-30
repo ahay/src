@@ -22,6 +22,7 @@
 #include <rsf.h>
 #include "rgradient.h"
 #include "vecfilt.h"
+#include "tls2.h"
 #include "runtime.h"
 
 int main(int argc, char*argv[])
@@ -30,7 +31,8 @@ int main(int argc, char*argv[])
 	int n1, n2, n3, rect[3], order;
 	int i1, i3;
 	float **u1, *w, **v1, *v2, a;
-	char *interp;
+	char *interp, *filt;
+	void *h1, *h2;
 
 	sf_init(argc, argv);
 
@@ -53,13 +55,27 @@ int main(int argc, char*argv[])
 	/* approximating order of finite difference */
 	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
 	/* interpolation method: maxflat lagrange bspline */
+	if ((filt=sf_getstring("filt"))==NULL) filt="tls";
+	/* filter type : ls, tls, tensor */
 	if(sf_getstring("weight")!=NULL) wgt  = sf_input("weight");
 	else wgt = NULL;
 	if(sf_getstring("azimuth")!=NULL) az  = sf_output("azimuth");
 	else az = NULL;
 
 	rgradient_init(interp, order, n1, n2);
-	vecfilt_init(3, n1, n2, rect);
+	if(strcmp(filt,"tensor")==0)
+		vecfilt_init(3, n1, n2, rect);
+	else if(strcmp(filt,"ls")==0)
+	{
+		h1 = tls2_init(n1, n2, rect, false);
+		if(az)
+		h2 = tls2_init(n1, n2, rect, false);
+	}else if(strcmp(filt,"tls")==0)
+	{
+		h1 = tls2_init(n1, n2, rect, true);
+		if(az)
+		h2 = tls2_init(n1, n2, rect, true);
+	}else sf_error("filt=%s not support", filt);
 
 	u1 = sf_floatalloc2(n1, n2);
 	v1 = sf_floatalloc2(n1*3, n2);
@@ -85,40 +101,85 @@ int main(int argc, char*argv[])
 	{
 		if(i3<n3) sf_floatread(u1[0], n1*n2, in);
 		if(i3>=n3 && i3<n3+order) memset(u1[0], 0, n1*n2*sizeof(float));
-		if(i3<n3+order)	rgradient(u1, v1);
-		else memset(v1[0], 0, 3*n1*n2*sizeof(float));
+		if(i3<n3+order){
+			rgradient(u1, v1);
+			for(i1=0; i1<n1*n2; i1++)
+			{
+				if(v1[0][i1*3]<0)
+				{
+					v1[0][i1*3]=-v1[0][i1*3];
+					v1[0][i1*3+1]=-v1[0][i1*3+1];
+					v1[0][i1*3+2]=-v1[0][i1*3+2];
+				}
+				if(v1[0][i1*3+1]<0)
+				{
+					v1[0][i1*3+1]=-v1[0][i1*3+1];
+					v1[0][i1*3+2]=-v1[0][i1*3+2];
+				}
+			}
+		}else memset(v1[0], 0, 3*n1*n2*sizeof(float));
 		if(i3<order) continue;
 
 		if(wgt && i3<n3+order) sf_floatread(w, n1*n2, wgt);
-		vecfilt(v1[0], v2, w);
-		if(i3<order+rect[2]) continue;
+		if(strcmp(filt,"tensor")==0)
+		{
+			vecfilt(v1[0], v2, w);
+			if(i3<order+rect[2]) continue;
 
-		for(i1=0; i1<n1*n2; i1++)
-		{
-			a = sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]*v2[i1*3+2]);
-			u1[0][i1] = atan2(a, fabs(v2[i1*3]));
-		}
-		sf_floatwrite(u1[0], n1*n2, out);
-		if(az)
-		{
 			for(i1=0; i1<n1*n2; i1++)
 			{
-				if(v2[i1*3+1]<0)
-				{
-					v2[i1*3+1]=-v2[i1*3+1];
-					v2[i1*3+2]=-v2[i1*3+2];
-				}
-				u1[0][i1] = atan2(v2[i1*3+2], v2[i1*3+1]);
+				a = sqrt(v2[i1*3+1]*v2[i1*3+1]+v2[i1*3+2]*v2[i1*3+2]);
+				u1[0][i1] = atan2(a, fabs(v2[i1*3]));
 			}
-			sf_floatwrite(u1[0], n1*n2, az);
+			sf_floatwrite(u1[0], n1*n2, out);
+			if(az)
+			{
+				for(i1=0; i1<n1*n2; i1++)
+				{
+					if(v2[i1*3+1]<0)
+					{
+						v2[i1*3+1]=-v2[i1*3+1];
+						v2[i1*3+2]=-v2[i1*3+2];
+					}
+					u1[0][i1] = atan2(v2[i1*3+2], v2[i1*3+1]);
+				}
+				sf_floatwrite(u1[0], n1*n2, az);
+			}
+		}else{
+			for(i1=0; i1<n1*n2; i1++)
+			{
+				v2[i1*2+1] = sqrt(v1[0][i1*3+1]*v1[0][i1*3+1]
+						+ v1[0][i1*3+2]*v1[0][i1*3+2]);
+				v2[i1*2] = v1[0][i1*3];
+			}
+			tls2(h1, v2);
+			if(i3 >= order+rect[2])
+			sf_floatwrite(v2, n1*n2, out);
+			if(az){
+				for(i1=0; i1<n1*n2; i1++)
+				{
+					v2[i1*2] = v1[0][i1*3+1];
+					v2[i1*2+1] = v1[0][i1*3+2];
+				}
+				tls2(h2, v2);
+				if(i3 >= order+rect[2])
+				sf_floatwrite(v2, n1*n2, az);
+			}
 		}
-		a = runtime(1);
-		sf_warning("%d of %d, %f MB/sec;", i3-order-rect[2], n3, a);
+		if(i3>order+rect[2])
+		{
+			a = runtime(1);
+			sf_warning("%d of %d, %f MB/sec;", i3-order-rect[2], n3, a);
+		}
 	}
 
 	rgradient_close();
-	vecfilt_close();
-
+	if(strcmp(filt,"tensor")==0)
+		vecfilt_close();
+	else{
+		tls2_close(h1);
+		if(az) tls2_close(h2);
+	}
 	free(u1[0]);
 	free(u1);
 	free(v1[0]);

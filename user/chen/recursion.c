@@ -20,7 +20,7 @@
 
 #include <rsf.h>
 
-typedef void (*op_func)(float *out, float **in, int n1, int n2);
+typedef void (*op_func)(float *out, float **in, int n1, int n2, int*par);
 /*^*/
 
 struct tag_recursion
@@ -28,10 +28,10 @@ struct tag_recursion
 	float **b, *buf;
 	int n1, n2;
 	op_func op;
-//	void (*upd)(float **pb, int n2);
+	int *par;
 };
 
-void* recursion_init(int n1, int n2, op_func pop)
+void* recursion_init(int n1, int n2, op_func pop, int *para)
 /*< initialize >*/
 {
 	int i;
@@ -44,6 +44,7 @@ void* recursion_init(int n1, int n2, op_func pop)
 
 	p->b = sf_floatalloc2(n1, p->n2);
 	p->buf = p->b[0];
+	p->par = para;
 	for(i=0; i<n1*p->n2; i++) p->buf[i] = 0.0;
 	return p;
 }
@@ -74,6 +75,6 @@ void recursion(void *h, float*d)
 	for(i1=0; i1<p->n1; i1++) p->b[0][i1] = d[i1];
 
 //	p->upd(p->b, p->n2);
-	p->op(d, p->b, p->n1, p->n2);
+	p->op(d, p->b, p->n1, p->n2, p->par);
 }
 

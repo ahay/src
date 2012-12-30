@@ -27,7 +27,7 @@ static int n0, n1, n2, rect[3];
 static void *h3;
 
 
-void vecfilt_mean(float *out, float **in, int m1, int m2)
+void vecfilt_mean(float *out, float **in, int m1, int m2, int *par)
 {
 	int i1, i2;
 	for(i1=0; i1<m1; i1++)
@@ -51,7 +51,7 @@ void vecfilt_init(int m0, int m1, int m2, int *rc)
 	rect[2] = rc[2];
 
 	if(rect[2]>0)
-	h3 = recursion_init(m0*m0*m1*m2, 2*rect[2]+1, vecfilt_mean);
+	h3 = recursion_init(m0*m0*m1*m2, 2*rect[2]+1, vecfilt_mean, NULL);
 
 	buf = sf_floatalloc2(m0*m0, m1*m2);
 	b1 = sf_floatalloc2(m1, m2);
