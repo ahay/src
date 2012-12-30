@@ -22,21 +22,23 @@
 #include "recursion.h"
 #include "_lapack.h"
 
-static	float **buf, *buf2, **b1, **b2, *wgt;
-static int n0, n1, n2, rect[3];
+static	float **buf, **b1, *b2, *d1, *d2;
+static int n0, n1, n2, rect[3], n00;
 static void *h3;
 
 
 void vecfilt_mean(float *out, float **in, int m1, int m2, int *par)
 {
-	int i1, i2;
-	for(i1=0; i1<m1; i1++)
+	int i1, i2, j2, off;
+
+	for(i2=0; i2<n1*n2; i2++)
+	for(i1=0; i1<n00; i1++)
 	{
-		out[i1] = 0.0;
-		if(wgt) 
-			for(i2=0; i2<m2; i2++) out[i1] += in[i2][i1]*wgt[i2];
-		else for(i2=0; i2<m2; i2++) out[i1] += in[i2][i1];
-		out[i1] /= m2;
+		off = i2*(n00+1)+i1;
+		out[off] = 0.0;
+		for(j2=0; j2<m2; j2++) 
+			out[off] += in[j2][off]*in[j2][i2*(n00+1)+n00];
+		out[off] /= m2;
 	}
 }
 
@@ -50,13 +52,16 @@ void vecfilt_init(int m0, int m1, int m2, int *rc)
 	rect[1] = rc[1];
 	rect[2] = rc[2];
 
-	if(rect[2]>0)
-	h3 = recursion_init(m0*m0*m1*m2, 2*rect[2]+1, vecfilt_mean, NULL);
+	n00 =m0*(m0+1)/2;
 
-	buf = sf_floatalloc2(m0*m0, m1*m2);
-	b1 = sf_floatalloc2(m1, m2);
-	b2 = sf_floatalloc2(m2, m1);
-	buf2 = sf_floatalloc((m1>m2?m1:m2)+(rect[0]+rect[1])*2);
+	if(rect[2]>0)
+	h3 = recursion_init((n00+1)*m1*m2, 2*rect[2]+1, vecfilt_mean, NULL);
+
+	buf = sf_floatalloc2(n00+1, m1*m2);
+	b1 = sf_floatalloc2(m0, m0);
+	b2 = sf_floatalloc(m0*m0);
+	d1 = sf_floatalloc(n1);
+	d2 = sf_floatalloc(n2);
 }
 
 void vecfilt_close()
@@ -64,11 +69,11 @@ void vecfilt_close()
 {
 	free(buf[0]);
 	free(buf);
-	free(buf2);
 	free(*b1);
-	free(*b2);
 	free(b1);
 	free(b2);
+	free(d1);
+	free(d2);
 
 	if(rect[2]>0)	recursion_close(h3);
 }
@@ -77,8 +82,8 @@ void vecfilt_close()
 void vecfilt(float *u1, float *u2, float *w)
 /*< u1[n2][n1][3] u2[n2][n1][3] >*/
 {
-	int i0, i1, i2, n00, inc=1, j1, lwork, info, off;
-	float alpha=1.0, *p, *q;
+	int i0, i1, i2, inc=1, j1, lwork, info;
+	float alpha=1.0, *q;
 
 	if (rect[0]==0 && rect[1]==0 && rect[2] == 0)
 	{
@@ -86,33 +91,34 @@ void vecfilt(float *u1, float *u2, float *w)
 		return;
 	}
 
-	n00 = n0*n0;
-	for(i1=0; i1<n1*n2; i1++)
-		ssyr_("U", &n0, &alpha, u1+i1*n0, &inc, buf[i1], &n0); 
-
-	wgt = w;
-
-	if(rect[2]>0) recursion(h3, buf[0]);
+	for(i2=0; i2<n1*n2; i2++)
+	{
+		for(i1=0; i1<n0*n0; i1++) b1[0][i1] = 0.0;
+		ssyr_("U", &n0, &alpha, u1+i2*n0, &inc, b1[0], &n0); 
+		for(i1=0, j1=0; i1<n0; i1++)
+		for(i0=0; i0<=i1; i0++)
+			buf[i2][j1++] = b1[i1][i0];
+		if(w) buf[i2][n00] = w[i2];
+		else buf[i2][n00] = 1.0;
+	}
 
 	if(rect[0]>0)
 	{
 		for(i2=0; i2<n2; i2++)
 		for(i0=0; i0<n00; i0++)
 		{
-			if(i0/n0 < i0%n0) continue;
 			for(i1=0; i1<n1; i1++)
 			{
-				b1[i2][i1] = 0.0;
-				for(j1=i1-rect[0]; j1<=i1+rect[0]; j1++)
+				d1[i1] = 0.0;
+				for(j1=-rect[0]; j1<=rect[0]; j1++)
 				{
-					if(j1<0) continue;
-					if(j1>=n1) break;
-					if(w) b1[i2][i1] += buf[i2*n1+j1][i0]*w[i2*n1+j1];
-					else b1[i2][i1] += buf[i2*n1+j1][i0];
+					if(i1+j1<0) continue;
+					if(i1+j1>=n1) break;
+					d1[i1] += buf[i2*n1+i1+j1][i0] * buf[i2*n1+i1+j1][n00];
 				}
 			}
 			for(i1=0; i1<n1; i1++)
-				buf[i2*n1+i1][i0] =  b1[i2][i1]/n1;
+				buf[i2*n1+i1][i0] =  d1[i1]/n1;
 		}
 	}
 	if(rect[1]>0)
@@ -120,36 +126,37 @@ void vecfilt(float *u1, float *u2, float *w)
 		for(i1=0; i1<n1; i1++)
 		for(i0=0; i0<n00; i0++)
 		{
-			if(i0/n0 < i0%n0) continue;
 			for(i2=0; i2<n2; i2++)
 			{
-				b2[i1][i2] = 0.0;
-				for(j1=i2-rect[1]; j1<=i2+rect[1]; j1++)
+				d2[i2] = 0.0;
+				for(j1=-rect[1]; j1<=rect[1]; j1++)
 				{
-					if(j1<0) continue;
-					if(j1>=n2) break;
-					if(w) b2[i1][i2] += buf[j1*n1+i1][i0]*w[j1*n1+i1];
-					else b2[i1][i2] += buf[j1*n1+i1][i0];
+					if(i2+j1<0) continue;
+					if(i2+j1>=n2) break;
+					d2[i2] += buf[(i2+j1)*n1+i1][i0] * buf[(i2+j1)*n1+i1][n00];
 				}
 			}
 			for(i2=0; i2<n2; i2++)
-				buf[i2*n1+i1][i0] =  b2[i1][i2]/n2;
+				buf[i2*n1+i1][i0] =  d2[i2]/n2;
 		}
 	}
+
+	if(rect[2]>0) recursion(h3, buf[0]);
 	
 	// pca
-	lwork = n1;
+	lwork = n0*n0;
 
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
+	for(i2=0; i2<n1*n2; i2++)
 	{
-		p = buf[i2*n1+i1];
-		q = u2+(i2*n1+i1)*n0;
-		ssyev_("V", "U", &n0, p, &n0, q, b1[i2], &lwork, &info);
+		for(i1=0, j1=0; i1<n0; i1++)
+		for(i0=0; i0<=i1; i0++)
+		b1[i1][i0] = buf[i2][j1++];
+		q = u2+i2*n0;
+		ssyev_("V", "U", &n0, b1[0], &n0, q, b2, &lwork, &info);
 		for(i0=0, j1=0; i0<n0; i0++)
 		if(q[i0] > q[j1]) j1=i0;
 		for(i0=0; i0<n0; i0++)
-			q[i0] = p[j1*n0+i0];
+		q[i0] = b1[j1][i0];
 	}
 }
 

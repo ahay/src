@@ -55,9 +55,11 @@ static void tls(float *out, float **in, int m1, int m2, int *par)
 			t2 += a*b;
 			t3 += b*b;
 		}
-		a = t1 -t3;
-		b = sqrt(a*a + 4*t2*t2);
-		out[i2*n1+i1] = atan2(t2, (a-b)/2.0);
+		t1 = t1 - t3;
+		t2 *= -2;
+		t3 = sqrt(t1*t1 + t2*t2);
+		a = t3 - t1;
+		out[i2*n1+i1] = atan2(t2, a);
 	}
 }
 
@@ -87,7 +89,7 @@ static void ls(float *out, float **in, int m1, int m2, int *par)
 			t1 += a*a;
 			t2 += a*b;
 		}
-		out[i2*n1+i1] = atan2(t2, t1);
+		out[i2*n1+i1] = atan2(-t2, t1);
 	}
 }
 

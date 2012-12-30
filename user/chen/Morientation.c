@@ -32,7 +32,7 @@ int main(int argc, char*argv[])
 	int i1, i3;
 	float **u1, *w, **v1, *v2, a;
 	char *interp, *filt;
-	void *h1, *h2;
+	void *h1=NULL, *h2=NULL;
 
 	sf_init(argc, argv);
 
@@ -103,20 +103,6 @@ int main(int argc, char*argv[])
 		if(i3>=n3 && i3<n3+order) memset(u1[0], 0, n1*n2*sizeof(float));
 		if(i3<n3+order){
 			rgradient(u1, v1);
-			for(i1=0; i1<n1*n2; i1++)
-			{
-				if(v1[0][i1*3]<0)
-				{
-					v1[0][i1*3]=-v1[0][i1*3];
-					v1[0][i1*3+1]=-v1[0][i1*3+1];
-					v1[0][i1*3+2]=-v1[0][i1*3+2];
-				}
-				if(v1[0][i1*3+1]<0)
-				{
-					v1[0][i1*3+1]=-v1[0][i1*3+1];
-					v1[0][i1*3+2]=-v1[0][i1*3+2];
-				}
-			}
 		}else memset(v1[0], 0, 3*n1*n2*sizeof(float));
 		if(i3<order) continue;
 
@@ -148,9 +134,9 @@ int main(int argc, char*argv[])
 		}else{
 			for(i1=0; i1<n1*n2; i1++)
 			{
-				v2[i1*2+1] = sqrt(v1[0][i1*3+1]*v1[0][i1*3+1]
+				v2[i1*2] = fabs(v1[0][i1*3]);
+				v2[i1*2+1] = -sqrt(v1[0][i1*3+1]*v1[0][i1*3+1]
 						+ v1[0][i1*3+2]*v1[0][i1*3+2]);
-				v2[i1*2] = v1[0][i1*3];
 			}
 			tls2(h1, v2);
 			if(i3 >= order+rect[2])
@@ -158,8 +144,14 @@ int main(int argc, char*argv[])
 			if(az){
 				for(i1=0; i1<n1*n2; i1++)
 				{
-					v2[i1*2] = v1[0][i1*3+1];
-					v2[i1*2+1] = v1[0][i1*3+2];
+					if(v1[0][i1*3+1] >= 0)
+					{
+						v2[i1*2] = v1[0][i1*3+1];
+						v2[i1*2+1] = -v1[0][i1*3+2];
+					}else{
+						v2[i1*2] = -v1[0][i1*3+1];
+						v2[i1*2+1] = v1[0][i1*3+2];
+					}
 				}
 				tls2(h2, v2);
 				if(i3 >= order+rect[2])
