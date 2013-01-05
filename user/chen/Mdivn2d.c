@@ -46,20 +46,20 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    if (!sf_getbool("verb",&verb)) verb=true;
+    if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity */
 
     u1 = sf_floatalloc(n12);
     u2 = sf_floatalloc(n12);
     u3 = sf_floatalloc(n12);
 
-    sf_divn_init(2, n12, n, rect, niter, verb);
 	runtime_init(n12*sizeof(float));
     for (i3=0; i3 < n3; i3++) 
 	{
 		sf_floatread(u1, n12, inp);
 		sf_floatread(u2, n12, den);
 
+    	sf_divn_init(2, n12, n, rect, niter, verb);
 		/* smooth division */
 		norm = 0.;
 		for (i1=0; i1 < n12; i1++) 
@@ -75,11 +75,11 @@ int main(int argc, char* argv[])
 
 		sf_floatwrite(u3, n12, out);
 
+		sf_divn_close();
 		norm = runtime(1);
 		sf_warning("%d of %d, %f MB/sec;", i3, n3, norm);
 	}
 
-	sf_divn_close();
 	free(u1);
 	free(u2);
 	free(u3);

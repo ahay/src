@@ -55,6 +55,7 @@ int main(int argc,char*argv[])
 	if (!sf_histint(fir, "n1", &nf)) sf_error("No n1= in fir file");
 	if (!sf_histint(fir, "o1", &of)) sf_error("No o1= in fir file");
 
+//	sf_warning("of=%d, nf=%d\n", of, nf);
 	if (!sf_getint("axis",&axis)) axis=1;
 	/* apply fir filter on which dimension */
 	dim = dim3(in, axis, n);
@@ -76,7 +77,7 @@ int main(int argc,char*argv[])
 	if(axis == 1)
 	{
 		sf_floatread(u1, n[1], in);
-		firs(of, nf+of-1, c, u1, 1, n[1], u2, 1);
+		firs(of, nf+of-1, c-of, u1, 1, n[1], u2, 1);
 		sf_floatwrite(u2, n[1], out);
 	}else{
 		h = rfir_init(nf, c, n[0]);
