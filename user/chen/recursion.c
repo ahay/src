@@ -70,7 +70,7 @@ void recursion(void *h, float*d)
 	
 	// update
 	pp = p->b[p->n2-1];
-	for(i2=1; i2<p->n2; i2++) p->b[i2] = p->b[i2-1];
+	for(i2=p->n2-1; i2>0; i2--) p->b[i2] = p->b[i2-1];
 	p->b[0] = pp;
 	for(i1=0; i1<p->n1; i1++) p->b[0][i1] = d[i1];
 

@@ -68,6 +68,10 @@ void rfir(void *h, float*d)
 
 	n1 = p->n1;	
 	n2 = p->nf;	
+
+	pp = p->b[n2-1];
+	for(i2=n2-1; i2>0; i2--) p->b[i2] = p->b[i2-1];
+	p->b[0] = pp;
 	for(i1=0; i1<n1; i1++) p->b[0][i1] = d[i1];
 
 	for(i1=0; i1<n1; i1++)
@@ -76,9 +80,5 @@ void rfir(void *h, float*d)
 		for(i2=0; i2<n2; i2++)
 			d[i1] += p->c[i2]*p->b[i2][i1];
 	}
-
-	pp = p->b[n2-1];
-	for(i2=1; i2<n2; i2++) p->b[i2] = p->b[i2-1];
-	p->b[0] = pp;
 }
 
