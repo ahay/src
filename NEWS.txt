@@ -30,9 +30,11 @@ In the Python package:
 
 In programs:
 
-* fixed bug with handling zero values in sfclip
+* Fixed bug with handling zero values in sfclip
 
 In the build system:
+
+* Replaced WhereIs('python') with sys.executable
 
 ===Changes in defaults and interfaces===
 
