@@ -31,6 +31,7 @@ static void tls(float *out, float **in, int m1, int m2, int *par)
 {
 	int i1, i2, j1, j2, j3, n1, n2, rc1, rc2, rc3;
 	float a, b, t1, t2, t3;
+	int k1, k2;
 	n1 = par[0];
 	n2 = par[1];
 	rc1 = par[2];
@@ -47,10 +48,12 @@ static void tls(float *out, float **in, int m1, int m2, int *par)
 		for(j2=-rc2; j2<=rc2; j2++)
 		for(j1=-rc1; j1<=rc1; j1++)
 		{
-			if(j1+i1<=0 || j1+i1>= n1) continue;
-			if(j2+i2<=0 || j2+i2>= n2) continue;
-			a = in[j3][(i2*n1+i1)*2];
-			b = in[j3][(i2*n1+i1)*2+1];
+			k1 = i1 + j1;
+			k2 = i2 + j2;
+			if(k1<0 || k1>= n1) continue;
+			if(k2<0 || k2>= n2) continue;
+			a = in[j3][(k2*n1+k1)*2];
+			b = in[j3][(k2*n1+k1)*2+1];
 			t1 += a*a;
 			t2 += a*b;
 			t3 += b*b;
@@ -59,7 +62,7 @@ static void tls(float *out, float **in, int m1, int m2, int *par)
 		t2 *= -2;
 		t3 = sqrt(t1*t1 + t2*t2);
 		a = t3 - t1;
-		out[i2*n1+i1] = atan2(t2, a);
+		out[i2*n1+i1] = t2/a;
 	}
 }
 
@@ -67,6 +70,7 @@ static void ls(float *out, float **in, int m1, int m2, int *par)
 {
 	int i1, i2, j1, j2, j3, n1, n2, rc1, rc2, rc3;
 	float a, b, t1, t2;
+	int k1, k2;
 	n1 = par[0];
 	n2 = par[1];
 	rc1 = par[2];
@@ -82,14 +86,16 @@ static void ls(float *out, float **in, int m1, int m2, int *par)
 		for(j2=-rc2; j2<=rc2; j2++)
 		for(j1=-rc1; j1<=rc1; j1++)
 		{
-			if(j1+i1<=0 || j1+i1>= n1) continue;
-			if(j2+i2<=0 || j2+i2>= n2) continue;
-			a = in[j3][(i2*n1+i1)*2];
-			b = in[j3][(i2*n1+i1)*2+1];
+			k1 = i1 + j1;
+			k2 = i2 + j2;
+			if(k1<0 || k1>= n1) continue;
+			if(k2<0 || k2>= n2) continue;
+			a = in[j3][(k2*n1+k1)*2];
+			b = in[j3][(k2*n1+k1)*2+1];
 			t1 += a*a;
 			t2 += a*b;
 		}
-		out[i2*n1+i1] = atan2(-t2, t1);
+		out[i2*n1+i1] = -t2/t1;
 	}
 }
 

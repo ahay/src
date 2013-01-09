@@ -41,12 +41,12 @@ int main(int argc, char* argv[])
     if (!sf_histint(inp,"n3", &n3)) n3=1;
     n12 = n1*n2;
 
-    if (!sf_getint("rect1",&rect[0])) rect[0]=1;
-    if (!sf_getint("rect2",&rect[1])) rect[1]=1;
-    if (!sf_getint("rect3",&rect[2])) rect[2]=1;
+    if (!sf_getint("rect1",&rect[0])) rect[0]=0;
+    if (!sf_getint("rect2",&rect[1])) rect[1]=0;
+    if (!sf_getint("rect3",&rect[2])) rect[2]=0;
     /* smoothing radius */
 
-    if (!sf_getbool("tls",&tls)) tls=true;
+    if (!sf_getbool("tls",&tls)) tls=false;
     /* total least squares */
 
     u1 = sf_floatalloc(n12);
@@ -56,14 +56,20 @@ int main(int argc, char* argv[])
 	runtime_init(n12*sizeof(float));
 	h = tls2_init(n1, n2, rect, false);
     for (i3=0; i3 < n3+rect[2]; i3++)
-	{ 
-		sf_floatread(u1, n12, inp);
-		sf_floatread(u2, n12, den);
-			/* smooth division */
-		for (i1=0; i1 < n12; i1++) 
-		{
-			u3[i1*2] = u1[i1];
-			u3[i1*2+1] = u1[i1];
+	{
+		if(i3<n3)
+		{ 
+			sf_floatread(u1, n12, inp);
+			sf_floatread(u2, n12, den);
+				/* smooth division */
+			for (i1=0; i1 < n12; i1++) 
+			{
+				u3[i1*2] = u1[i1];
+				u3[i1*2+1] = -u2[i1];
+			}
+		}else{
+			for (i1=0; i1 < 2*n12; i1++) 
+				u3[i1] = 0.0;
 		}
 		tls2(h, u3);
 
