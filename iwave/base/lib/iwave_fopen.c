@@ -306,8 +306,8 @@ FILE * iwave_fopen(char ** name,
       if (!(retfp=fopen(*name,mode))) {
 	/* NOT NECESSARILY AN ERROR - so don't print! 
 	*/
-	/*	fprintf(stream,"NOTE: iwave_fopen\n"); */
-	/*	fprintf(stream,"-- failed to open stream on file %s mode %s\n",*name,mode); */
+	fprintf(stream,"NOTE: iwave_fopen\n"); 
+	fprintf(stream,"-- failed to open stream on file %s mode %s\n",*name,mode); 
 	return retfp;
       }
       
@@ -503,13 +503,13 @@ FILE * iwave_const_fopen(const char * name,
     fp=iwave_fopen(&tmpname,mode,proto,stream);
     userfree_(tmpname);
   }
-  /*
+
   if (!fp) {
     fprintf(stream,"NOTE: returning from iwave_const_fopen with null ptr\n");
     fprintf(stream,"NOTE: state of file system:\n");
     iwave_fprintall(stream);
   }
-  */
+
   return fp;
 }
 
