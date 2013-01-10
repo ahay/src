@@ -418,7 +418,7 @@ int initparallel(int ts) {
 
 /*----------------------------------------------------------------------------*/
 
-int initparallel_global(int ts) {
+void initparallel_global(int ts) {
   return 0;
 }
 

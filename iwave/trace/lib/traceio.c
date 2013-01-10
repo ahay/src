@@ -148,16 +148,18 @@ int traceserver_init(FILE ** fpin, char * fin,
 #endif
 		     float tol,
 		     FILE * stream) {
-  int ir;
-  Value val;
-  ireal scalco;
-  ireal scalel;
 
-  float sz,sx,sy;
-  float ds;
-  segy tr;
+  int ir;            /* trace index in record */
+  int ntraces;       /* counter for total traces */
+  Value val;         /* workspace for header conversion */
+  ireal scalco;      /* SEGY scale factor */
+  ireal scalel;      /* SEGY scale factor */
 
-  short ns;
+  float sz,sx,sy;    /* source coords */
+  float ds;          /* difference between sources - detect new rec */
+  segy tr;           /* trace workspace */
+
+  short ns;          /* samples in trace, read from header */
   int err=0;
 
   int rkw;          /* global rank */
@@ -321,6 +323,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 
     /* read first trace */
     ir=0;
+    ntraces=0;
     *nrec=0;
     recoff[ir]=0;
     ntr[ir]=0;
@@ -330,6 +333,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 	 not to exceed bounds for either! */
       (*nrec)++;
       ntr[ir]++;
+      ntraces++;
       
       /* record ns for first trace, both as short and as int.*/
       ns=tr.ns;
@@ -367,10 +371,12 @@ int traceserver_init(FILE ** fpin, char * fin,
       /* trace reading loop */
       while (fgettr(*fpin,&tr)) {
 	
-	if (ntr[ir]>MAX_TRACES-1) {
+	/* increment counter, check */
+	ntraces++; 
+	if (ntraces>MAX_TRACES-1) {
 	  fprintf(stream,"Error: traceserver_init\n");
-	  fprintf(stream,"read too many traces in record %d\n",ir);
-	  fprintf(stream,"exceeded MAX_TRACES set in trace/include/traceio.h\n");
+	  fprintf(stream,"number of traces specified in header file %s\n",fin);
+	  fprintf(stream,"exceeds MAX_TRACES set in trace/include/traceio.h\n");
 	  fprintf(stream,"current value of MAX_TRACES = %d\n",MAX_TRACES);
 	  err=E_FILE;
 	  fflush(stream);
@@ -387,6 +393,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 	  fprintf(stream,"Error: traceserver_init\n");
 	  fprintf(stream,"ns on trace %d rec %d = %d\n",ntr[ir],ir,tr.ns);
 	  fprintf(stream,"does not match ns on first trace = %d\n",ns);
+	  fprintf(stream,"in header file %s\n",fin);
 	  err=E_FILE;
 	  fflush(stream);
 #ifdef IWAVE_USE_MPI
@@ -436,7 +443,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 	  ir++;
 	  if (ir>MAX_RECS-1) {
 	    fprintf(stream,"Error: traceserver_init\n");
-	    fprintf(stream,"read too many records\n");
+	    fprintf(stream,"read too many records from header file %s\n",fin);
 	    fprintf(stream,"exceeded MAX_RECS set in trace/include/traceio.h\n");
 	    fprintf(stream,"current value of MAX_RECS = %d\n",MAX_RECS);
 	    err = E_FILE;
