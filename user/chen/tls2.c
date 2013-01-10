@@ -24,82 +24,29 @@
 
 struct tag_tls2{
 	void *h;
-	int par[8];
+	int n1;
+	int n2;
+	int rc1;
+	int rc2;
+	int rc3;
+	float **u1;
+	float **u2;
+	int n0;
+	bool ang;
 };
 
-static void tls(float *out, float **in, int m1, int m2, int *par)
+static void ls_mean3(float *out, float **in, int m1, int m2, int *par)
 {
-	int i1, i2, j1, j2, j3, n1, n2, rc1, rc2, rc3;
-	float a, b, t1, t2, t3;
-	int k1, k2;
-	n1 = par[0];
-	n2 = par[1];
-	rc1 = par[2];
-	rc2 = par[3];
-	rc3 = par[4];
+	int i1, i2;
 
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
+	for(i1=0; i1<m1; i1++)
+	for(out[i1]=0.0, i2=0; i2<m2; i2++)
 	{
-		t1 = 0.0;
-		t2 = 0.0;
-		t3 = 0.0;
-		for(j3=0; j3<m2; j3++)
-		for(j2=-rc2; j2<=rc2; j2++)
-		for(j1=-rc1; j1<=rc1; j1++)
-		{
-			k1 = i1 + j1;
-			k2 = i2 + j2;
-			if(k1<0 || k1>= n1) continue;
-			if(k2<0 || k2>= n2) continue;
-			a = in[j3][(k2*n1+k1)*2];
-			b = in[j3][(k2*n1+k1)*2+1];
-			t1 += a*a;
-			t2 += a*b;
-			t3 += b*b;
-		}
-		t1 = t1 - t3;
-		t2 *= -2;
-		t3 = sqrt(t1*t1 + t2*t2);
-		a = t3 - t1;
-		out[i2*n1+i1] = t2/a;
+		out[i1] += in[i2][i1];
 	}
 }
 
-static void ls(float *out, float **in, int m1, int m2, int *par)
-{
-	int i1, i2, j1, j2, j3, n1, n2, rc1, rc2, rc3;
-	float a, b, t1, t2;
-	int k1, k2;
-	n1 = par[0];
-	n2 = par[1];
-	rc1 = par[2];
-	rc2 = par[3];
-	rc3 = par[4];
-
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
-	{
-		t1 = 0.0;
-		t2 = 0.0;
-		for(j3=0; j3<m2; j3++)
-		for(j2=-rc2; j2<=rc2; j2++)
-		for(j1=-rc1; j1<=rc1; j1++)
-		{
-			k1 = i1 + j1;
-			k2 = i2 + j2;
-			if(k1<0 || k1>= n1) continue;
-			if(k2<0 || k2>= n2) continue;
-			a = in[j3][(k2*n1+k1)*2];
-			b = in[j3][(k2*n1+k1)*2+1];
-			t1 += a*a;
-			t2 += a*b;
-		}
-		out[i2*n1+i1] = -t2/t1;
-	}
-}
-
-void* tls2_init(int m1, int m2, int *rect, bool istls)
+void* tls2_init(int m1, int m2, int *rect, bool istls, bool ang)
 /*< initialize >*/
 {
 	struct tag_tls2 *p;
@@ -107,15 +54,20 @@ void* tls2_init(int m1, int m2, int *rect, bool istls)
 
 	p = sf_alloc(1,sizeof(struct tag_tls2));
 
-	p->par[0] = m1;
-	p->par[1] = m2;
-	p->par[2] = rect[0];
-	p->par[3] = rect[1];
-	p->par[4] = rect[2];
+	p->n1 = m1;
+	p->n2 = m2;
+	p->rc1 = rect[0];
+	p->rc2 = rect[1];
+	p->rc3 = rect[2];
+	p->ang = ang;
+	if(istls) p->n0 = 3;
+	else p->n0 = 2;
 
 	n = 2*rect[2]+1;
-	if(istls) p->h =recursion_init(m1*m2*2, n, tls, p->par);
-	else p->h =recursion_init(m1*m2*2, n, ls, p->par);
+	p->h = recursion_init(m1*m2*p->n0, n, ls_mean3, NULL);
+	p->u1 = sf_floatalloc2(m1*p->n0, m2);
+	p->u2 = sf_floatalloc2(m1*p->n0, m2);
+
 	return p;
 }
 
@@ -124,13 +76,68 @@ void tls2_close(void *h)
 {
 	struct tag_tls2 *p = (struct tag_tls2*) h;
 	recursion_close(p->h);
+	free(p->u1[0]);
+	free(p->u1);
+	free(p->u2[0]);
+	free(p->u2);
 	free(h);
 }
 
-void tls2(void *h, float *u1)
+void tls2(void *h, float *u1, float *u2)
 /*< 2*n1*n2 ==> n1*n2 >*/
 {
+	int n0, n1, n2, i0, i1, i2, k1, k2;
+	float a, b;
 	struct tag_tls2 *p = (struct tag_tls2*) h;
-	recursion(p->h, u1);
+
+	n0 = p->n0;
+	n1 = p->n1;
+	n2 = p->n2;
+
+	for (i2=0; i2<n2; i2++)
+	for (i1=0; i1<n1; i1++)
+	{
+		for (i0=0; i0<n0; i0++)
+			p->u1[i2][i1*n0+i0] = 0.0;
+		for (k1=i1-p->rc1; k1<=i1+p->rc1; k1++)
+		{
+			if(k1<0 || k1>=n1) continue;
+			a = u2[i2*n1+k1];
+			b = u1[i2*n1+k1];
+			p->u1[i2][i1*n0] += a*a;
+			p->u1[i2][i1*n0+1] += a*b;
+			if(n0 == 3)
+				p->u1[i2][i1*n0+2] += b*b;
+		}
+	}
+
+	for (i1=0; i1<n1*n0; i1++)
+	for (i2=0; i2<n2; i2++)
+	{
+		p->u2[i2][i1] = 0.0;
+		for (k2=i2-p->rc2; k2<=i2+p->rc2; k2++)
+		{
+			if(k2<0 || k2>=n2) continue;
+			p->u2[i2][i1] += p->u1[k2][i1];
+		}
+	}
+
+	if(p->rc3 > 0)
+		recursion(p->h, p->u2[0]);
+
+	for (i2=0; i2<n2; i2++)
+	for (i1=0; i1<n1; i1++)
+	{
+		b = p->u2[i2][i1*n0+1];
+		if(n0 == 3)
+		{
+			a = (p->u2[i2][i1*n0] - p->u2[i2][i1*n0+2])/2.0;
+			a = sqrt(a*a+b*b) + a;
+		}else{
+			a = p->u2[i2][i1*n0];
+		}
+		if(p->ang) u1[i2*n1+i1] = atan2(b, a);
+		else u1[i2*n1+i1] = b/a;
+	}
 }
 

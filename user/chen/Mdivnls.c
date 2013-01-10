@@ -23,9 +23,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool tls;
+    bool tls, angle;
     int i1, i3, n1, n2, n3, n12, rect[3];
-    float norm, *u1, *u2, *u3;
+    float norm, *u1, *u2;
     sf_file inp, out, den;
 	void *h=NULL;
 
@@ -48,34 +48,29 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("tls",&tls)) tls=false;
     /* total least squares */
+    if (!sf_getbool("angle",&angle)) angle=false;
+    /* angle or slope */
 
     u1 = sf_floatalloc(n12);
     u2 = sf_floatalloc(n12);
-    u3 = sf_floatalloc(n12*2);
 
 	runtime_init(n12*sizeof(float));
-	h = tls2_init(n1, n2, rect, false);
+	h = tls2_init(n1, n2, rect, tls, angle);
     for (i3=0; i3 < n3+rect[2]; i3++)
 	{
 		if(i3<n3)
 		{ 
 			sf_floatread(u1, n12, inp);
 			sf_floatread(u2, n12, den);
-				/* smooth division */
-			for (i1=0; i1 < n12; i1++) 
-			{
-				u3[i1*2] = u1[i1];
-				u3[i1*2+1] = -u2[i1];
-			}
 		}else{
-			for (i1=0; i1 < 2*n12; i1++) 
-				u3[i1] = 0.0;
+			for (i1=0; i1 < n12; i1++) 
+			{ u1[i1] = 0.0; u2[i1] = 0.0; }
 		}
-		tls2(h, u3);
+		tls2(h, u1, u2);
 
 		if(i3>=rect[2])
 		{
-			sf_floatwrite(u3, n12, out);
+			sf_floatwrite(u1, n12, out);
 			norm = runtime(1);
 			sf_warning("%d of %d, %f MB/sec;", i3-rect[2], n3, norm);
 		}
@@ -84,7 +79,6 @@ int main(int argc, char* argv[])
 
 	free(u1);
 	free(u2);
-	free(u3);
     exit(0);
 }
 

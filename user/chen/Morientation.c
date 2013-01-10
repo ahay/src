@@ -28,7 +28,7 @@
 int main(int argc, char*argv[])
 {
 	sf_file in, wgt, out, az;
-	int n1, n2, n3, rect[3], order;
+	int n1, n2, n3, rect[3], order, n12;
 	int i1, i3;
 	float **u1, *w, **v1, *v2, a;
 	char *interp, *filt;
@@ -62,24 +62,26 @@ int main(int argc, char*argv[])
 	if(sf_getstring("azimuth")!=NULL) az  = sf_output("azimuth");
 	else az = NULL;
 
+	n12 =n1*n2;
+
 	rgradient_init(interp, order, n1, n2);
 	if(strcmp(filt,"tensor")==0)
 		vecfilt_init(3, n1, n2, rect);
 	else if(strcmp(filt,"ls")==0)
 	{
-		h1 = tls2_init(n1, n2, rect, false);
+		h1 = tls2_init(n1, n2, rect, false, false);
 		if(az)
-		h2 = tls2_init(n1, n2, rect, false);
+		h2 = tls2_init(n1, n2, rect, false, false);
 	}else if(strcmp(filt,"tls")==0)
 	{
-		h1 = tls2_init(n1, n2, rect, true);
+		h1 = tls2_init(n1, n2, rect, true, false);
 		if(az)
-		h2 = tls2_init(n1, n2, rect, true);
+		h2 = tls2_init(n1, n2, rect, true, false);
 	}else sf_error("filt=%s not support", filt);
 
 	u1 = sf_floatalloc2(n1, n2);
 	v1 = sf_floatalloc2(n1*3, n2);
-	v2 = sf_floatalloc(n1*n2*3);
+	v2 = sf_floatalloc(n12*3);
 
 	if(wgt) w  = sf_floatalloc(n1*n2);
 	else w = NULL;
@@ -134,11 +136,11 @@ int main(int argc, char*argv[])
 		}else{
 			for(i1=0; i1<n1*n2; i1++)
 			{
-				v2[i1*2] = fabs(v1[0][i1*3]);
-				v2[i1*2+1] = -sqrt(v1[0][i1*3+1]*v1[0][i1*3+1]
+				v2[i1] = sqrt(v1[0][i1*3+1]*v1[0][i1*3+1]
 						+ v1[0][i1*3+2]*v1[0][i1*3+2]);
+				v2[i1+n12] = fabs(v1[0][i1*3]);
 			}
-			tls2(h1, v2);
+			tls2(h1, v2, v2+n12);
 			if(i3 >= order+rect[2])
 			sf_floatwrite(v2, n1*n2, out);
 			if(az){
@@ -146,14 +148,14 @@ int main(int argc, char*argv[])
 				{
 					if(v1[0][i1*3+1] >= 0)
 					{
-						v2[i1*2] = v1[0][i1*3+1];
-						v2[i1*2+1] = -v1[0][i1*3+2];
+						v2[i1] = v1[0][i1*3+2];
+						v2[i1+n12] = v1[0][i1*3+1];
 					}else{
-						v2[i1*2] = -v1[0][i1*3+1];
-						v2[i1*2+1] = v1[0][i1*3+2];
+						v2[i1] = -v1[0][i1*3+2];
+						v2[i1+n12] = -v1[0][i1*3+1];
 					}
 				}
-				tls2(h2, v2);
+				tls2(h2, v2, v2+n12);
 				if(i3 >= order+rect[2])
 				sf_floatwrite(v2, n1*n2, az);
 			}
