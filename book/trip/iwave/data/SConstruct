@@ -1,5 +1,8 @@
 from rsf.proj import *
 
+# dummy target
+Flow('cout0.txt',None,'touch $TARGET')
+
 choose = {
 'dn': '1',
 'vp': '2'
