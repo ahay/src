@@ -4,7 +4,7 @@ import pplot,math
 
 # ------------------------------------------------------------
 def Temp(o,i,r):
-    Flow(o,i,r+ ' datapath=%s '%os.environ.get('TMPDATAPATH'))
+    Flow(o,i,r+ ' datapath=%s '%os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH')))
 # ------------------------------------------------------------
 
 # default parameters
@@ -413,7 +413,7 @@ def vertical(cc,coord,par):
 
 def vertical3d(cc,coordx,coordy,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
     cco=cc+'o'
     ccx=cc+'x'
@@ -460,7 +460,7 @@ def point3(cc,xcoord,zcoord,magn,par):
 # ------------------------------------------------------------
 def circle(cc,xcenter,zcenter,radius,sampling,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
     ccx=cc+'x'
     ccz=cc+'z'
@@ -533,7 +533,7 @@ def dipping(cc,intercept,slope,par):
 
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
     cco=cc+'o'
     ccz=cc+'z'
@@ -676,7 +676,7 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
 
 def makeline(line,zmin,zmax,xmin,xmax,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
     linez=line+'z'
     linex=line+'x'
@@ -1053,7 +1053,7 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
 # exploding-reflector reverse-time migration
 def zom(imag,data,velo,dens,rcoo,custom,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
@@ -1084,7 +1084,7 @@ def zom(imag,data,velo,dens,rcoo,custom,par):
     
 def cdzom(imag,data,velo,rcoo,custom,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
@@ -1116,7 +1116,7 @@ def cdzom(imag,data,velo,rcoo,custom,par):
 # wavefield-over-model plot
 def wom(wom,wfld,velo,vmean,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
     if(not par.has_key('wweight')): par['wweight']=1
 
@@ -1190,7 +1190,7 @@ def wem(wom,wfld,velo,vmean,par):
 # image-over-model plot
 def iom(iom,imag,velo,vmean,par):
     M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
     if(not par.has_key('iweight')): par['iweight']=1
 

@@ -64,12 +64,11 @@ Plot('rr','window j2=10 |' + fdmod.rrplot('symbol=o plotfat=15',par))
 Plot('qq','window j2=61 |' + fdmod.qqplot('',par))
 
 # ------------------------------------------------------------
-for file in ('vp','vs','ro'):
-    Fetch('vp_marmousi-ii.segy',"marm2")
-    Fetch('vs_marmousi-ii.segy',"marm2")
-    Fetch('density_marmousi-ii.segy',"marm2")
+Fetch('vp_marmousi-ii.segy',"marm2")
+Fetch('vs_marmousi-ii.segy',"marm2")
+Fetch('density_marmousi-ii.segy',"marm2")
 
-    print file
+for file in ('vp','vs','ro'):
     if(file=='ro'):
         ifile='density_marmousi-ii.segy'
        

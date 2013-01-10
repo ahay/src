@@ -3,7 +3,7 @@ except: from rsf.proj    import *
 
 # ------------------------------------------------------------
 def Temp(o,i,r):
-    Flow(o,i,r+ ' datapath=%s '%os.environ.get('TMPDATAPATH'))
+    Flow(o,i,r+ ' datapath=%s '%os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH')))
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
