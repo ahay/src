@@ -1,6 +1,6 @@
 import os
 
-imports = ' cpplist liblist libname libdirlist'
+imports = ' cpplist liblist thisname libdirlist'
 
 try:  # madagascar version
     Import('env root pkgdir bindir' + imports)
@@ -45,7 +45,7 @@ if len(srcs) > 0:
 
 # Madagascar self-docs
 if root:
-    main = 'sf%s.py' % libname
+    main = 'sf%s.py' % thisname
     
     docs = map(lambda prog: env.Doc(prog,prog),progs)
     env.Depends(docs,'#/framework/rsf/doc.py')

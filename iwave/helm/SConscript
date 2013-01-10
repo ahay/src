@@ -1,54 +1,50 @@
 # determine path to here, package name
 import os
+thispath = (os.popen('pwd').read()).strip('\n')
+thisname = os.path.basename(thispath)
 
-buildpath = (os.popen('pwd').read()).strip('\n')
-buildname = os.path.basename(buildpath)
-
-try:  # madagascar version
-    Import('env root pkgdir libdir bindir')
-    thispath = buildpath.replace('build/','')
-    thisname = buildname.replace('build/','')
-    testflag = 'no'
-except: # autonomous version
-    # import compiler variables, testflag
-    Import('vars', 'testflag')
-    thispath = buildpath
-    thisname = buildname
-    root = None
-
+# import compiler variables, testflag
+Import('vars', 'testflag')
 #print 'thispath = '+thispath
 #print 'thisname = '+thisname
 
-def getlist(filename):
-    alist=[]
-    pathfile=os.path.join(thispath,filename)
-    if os.path.exists(pathfile):
-        f = open(pathfile,'r')
-        alist = (f.read().strip('\n')).split(':')
-        f.close()
-    return alist
-
 # extract package dependencies from hclasspath file
-deplist=getlist('hclasspath')
+deplist=[]
+if os.path.exists(thispath+'/hclasspath'):
+    f = open('./hclasspath','r')
+    deplist = (f.read().strip('\n')).split(':')
+    f.close()
 
 #print ['deplist = ']+deplist
 
 # extract nonstandard external header dependencies from hincpath file
-extincs=getlist('hincpath')
+extincs=[]
+if os.path.exists(thispath+'/hincpath'):
+    f = open('./hincpath','r')
+    extincs=(f.read().strip('\n')).split(':')
+    f.close()
 
 # extract nonstandard external library dependencies from hlibpath file
-extlibs=getlist('hlibpath')
+extlibs=[]
+if os.path.exists(thispath+'/hlibpath'):
+    f = open('./hlibpath','r')
+    extlibs=(f.read().strip('\n')).split(':')
+    f.close()
 
 #print ['extlibs = ']+extlibs
 
+srclist=[]
+
 # extract nonstandard source search path from hsrcpath file, if it exists,
 # else set up standard search in src and/or lib if either/both exist
-
-srclist=getlist('hsrcpath')
-if not srclist:
-    if os.path.exists(os.path.join(thispath,'src')):
+if os.path.exists(thispath+'/hsrcpath'):
+    f = open('./hsrcpath','r')
+    srclist = (f.read().strip('\n')).split(':')
+    f.close()
+else:
+    if os.path.exists('./src'):
         srclist.append('src')
-    if os.path.exists(os.path.join(thispath,'lib')):
+    if os.path.exists('./lib'):
         srclist.append('lib')
 
 #print ['srclist = ']+srclist
@@ -63,34 +59,23 @@ if os.path.exists(thispath+'/include'):
 
 # start library list with this package
 if os.path.exists(thispath+'/lib'):
-    libdirlist.append(buildpath+'/lib')
+    libdirlist.append(thispath+'/lib')
     liblist.append('lib'+thisname+'.a')
 
 # add other standard packages - headers in "include", library in "lib" with title
 # = lib[basename of package].a 
 for n in deplist:
-# if root undefined, then not in madagascar environment
-    # Madagascar branch
-    if root:
-        testpath=os.path.abspath(os.path.expandvars(os.path.join(thispath,n)))
-    else:
-        testpath=os.path.abspath(os.path.expandvars(n))
+    testpath=os.path.abspath(os.path.expandvars(n))
     testincl=testpath+'/include'
     if os.path.exists(testincl):
         cpplist.append(testincl)
-    testbuildpath=os.path.abspath(os.path.expandvars(os.path.join(buildpath,n)))
     testlibdir=testpath+'/lib'
     testlib='lib'+os.path.basename(testpath)+'.a'
     #    print 'testing for '+testlibdir
     # only test for lib dir - lib may not yet be built! 
     if os.path.exists(testlibdir):
         liblist.append(testlib)
-        # Madagascar branch
-	if root:
-            libdirlist.append(testbuildpath + '/lib')
-        # Standalone branch
-        else:
-            libdirlist.append(testpath + '/lib')
+        libdirlist.append(testlibdir)
 
 # add other possibly nonstandard sources of headers
 # it is ALWAYS PRESUMED that header files live in final leaves
@@ -113,25 +98,18 @@ for n in extlibs:
 # finish with -lm - always!
 liblist.append('-lm')
 
-# determine base name of library - same as package name
-libname = thisname
-
 # test for lib - build library
 if os.path.exists(thispath+'/lib'):
+    # determine base name of library - same as package name
+    libname = thisname
     # export environment and basename
-    if root:
-        Export('env root pkgdir libdir libname cpplist srclist')
-    else:
-        Export('vars libname cpplist srclist')
+    Export('vars', 'libname', 'cpplist', 'srclist', 'thispath')
     # build in lib
     SConscript('lib/SConscript')
 
 #test for main - build executables 
-if os.path.exists(thispath+'/main'):
-    if root:
-        Export('env root pkgdir bindir cpplist liblist libname libdirlist')
-    else:
-        Export('vars cpplist liblist libname libdirlist')
+if os.path.exists('main'):
+    Export('vars', 'cpplist', 'liblist', 'thisname', 'libdirlist')
     SConscript('main/SConscript')
 
 #test for test flag, test source directories - build executables, run tests 
@@ -142,5 +120,9 @@ if testflag == 'yes':
    if os.path.exists('test'):
        Export('vars', 'cpplist','liblist','libdirlist')
        SConscript('test/SConscript')
+
+
+
+
 
 

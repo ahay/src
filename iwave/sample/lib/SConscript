@@ -16,6 +16,7 @@ except:  # autonomous version
                        CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
                        CXX={'CXX' : '${CXX}'},
                        CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+		       AR={'AR' : '${AR}'},
                        CPPPATH = cpplist)
 
 # create list of source files found in prescribed source directories

@@ -79,7 +79,7 @@ extern "C" {
      *
      * @param [in] ts - (int) thread support level
      */
-    int initparallel_global(int);
+    void initparallel_global(int);
 
     /*----------------------------------------------------------------------------*/
     /**

@@ -75,7 +75,7 @@ int initparallel(int ts)
 } 
 
 /*----------------------------------------------------------------------------*/
-int initparallel_global(int ts) {
+void initparallel_global(int ts) {
   /* global params */
   int rk;
   int sz;
@@ -87,13 +87,12 @@ int initparallel_global(int ts) {
   storeGlobalRank(rk);
   storeGlobalSize(sz);
   storeThreadSupp(ts);
-  return 0;
 }
 
 /*----------------------------------------------------------------------------*/
 int initparallel_local(PARARRAY par, FILE * stream) {
 
-    int rkw;      /* global rank */
+  int rkw;      /* global rank */
   int szw;      /* global size */
   int rk;       /* local rank */
   int sz;       /* local size */

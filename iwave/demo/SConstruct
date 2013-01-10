@@ -83,6 +83,7 @@ vars.Add('CCFLAGS','flags passed to C/C++ compiler','-g -pedantic -Wunused -Wimp
 vars.Add('CXX','path or alias for C++ compiler','g++')
 vars.Add('CXXFLAGS','flags passed to C++ compiler only (not C)','')
 vars.Add('LINKFLAGS','flags passed only to linker','')
+vars.Add('AR','static library (object archive) creation','ar')
 
 # initialize build environment
 env = Environment(variables = vars,
@@ -91,7 +92,8 @@ env = Environment(variables = vars,
                   CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
                   CXX={'CXX' : '${CXX}'},
 	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
-		  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'})
+		  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
+		  AR={'AR' : '${AR}'})
 Help(vars.GenerateHelpText(env))
 
 # main options:
