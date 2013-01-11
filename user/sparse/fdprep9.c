@@ -20,21 +20,21 @@
 #include <rsf.h>
 #include <umfpack.h>
 
-#include "fdprep.h"
+#include "fdprep9.h"
 
-double maxvel(int nm, float *vel);
+double maxvel9(int nm, float *vel);
 
-void fdprep(const double omega,
-	    const float eps,
-	    const int n1, const int n2,
-	    const float d1, const float d2,
-	    float **v,
-	    const int npml,
-	    const int pad1, const int pad2,
-	    SuiteSparse_long n, SuiteSparse_long nz,
-	    SuiteSparse_long *Ti, SuiteSparse_long *Tj,
-	    double* Tx, double *Tz)
-/*< 2nd order centered finite-difference >*/
+void fdprep9(const double omega,
+	     const float eps,
+	     const int n1, const int n2,
+	     const float d1, const float d2,
+	     float **v,
+	     const int npml,
+	     const int pad1, const int pad2,
+	     SuiteSparse_long n, SuiteSparse_long nz,
+	     SuiteSparse_long *Ti, SuiteSparse_long *Tj,
+	     double* Tx, double *Tz)
+/*< 4th order centered finite-difference >*/
 {
     int i, j, index;
     double eta1, eta2, mvel, c1, c2;
@@ -46,7 +46,7 @@ void fdprep(const double omega,
     eta1 = (double) npml*d1;
     eta2 = (double) npml*d2;
     
-    mvel = maxvel(n1*n2,v[0]);
+    mvel = maxvel9(n1*n2,v[0]);
     c1 = -3.*log((double) eps)*mvel/(eta1*omega);
     c2 = -3.*log((double) eps)*mvel/(eta2*omega);
 
@@ -125,17 +125,30 @@ void fdprep(const double omega,
 
     /* assemble matrix in triplet form */
     count = 0;
-    for (j=1; j < pad2-1; j++) {
-	for (i=1; i < pad1-1; i++) {
-	    index = (j-1)*(pad1-2)+(i-1);
+    for (j=2; j < pad2-2; j++) {
+	for (i=2; i < pad1-2; i++) {
+	    index = (j-2)*(pad1-4)+(i-2);
 	    
 	    cent = 0.+I*0.;
 
-	    /* left */
-	    neib = conj((s1[i]/s2[j]+s1[i-1]/s2[j])/(2.*d1*d1));
+	    /* left left */
+	    neib = (-1./12)*conj((s1[i-1]/s2[j]+s1[i-2]/s2[j])/(2.*d1*d1));
 	    cent += -neib;
 
-	    if (i != 1) {
+	    if (i > 3) {
+		Ti[count] = index;
+		Tj[count] = index-2;
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+
+	    /* left */
+	    neib = (4./3)*conj((s1[i]/s2[j]+s1[i-1]/s2[j])/(2.*d1*d1));
+	    cent += -neib;
+
+	    if (i > 2) {
 		Ti[count] = index;
 		Tj[count] = index-1;
 		Tx[count] = creal(neib);
@@ -145,10 +158,10 @@ void fdprep(const double omega,
 	    }
 
 	    /* right */
-	    neib = conj((s1[i]/s2[j]+s1[i+1]/s2[j])/(2.*d1*d1));
+	    neib = (4./3)*conj((s1[i]/s2[j]+s1[i+1]/s2[j])/(2.*d1*d1));
 	    cent += -neib;
 
-	    if (i != pad1-2) {
+	    if (i < pad1-3) {
 		Ti[count] = index;
 		Tj[count] = index+1;
 		Tx[count] = creal(neib);
@@ -157,13 +170,39 @@ void fdprep(const double omega,
 		count++;
 	    }
 
-	    /* down */
-	    neib = conj((s2[j]/s1[i]+s2[j-1]/s1[i])/(2.*d2*d2));
+	    /* right right */
+	    neib = (-1./12)*conj((s1[i+1]/s2[j]+s1[i+2]/s2[j])/(2.*d1*d1));
 	    cent += -neib;
 
-	    if (j != 1) {
+	    if (i < pad1-4) {
 		Ti[count] = index;
-		Tj[count] = index-(pad1-2);
+		Tj[count] = index+2;
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+
+	    /* down down */
+	    neib = (-1./12)*conj((s2[j-1]/s1[i]+s2[j-2]/s1[i])/(2.*d2*d2));
+	    cent += -neib;
+
+	    if (j > 3) {
+		Ti[count] = index;
+		Tj[count] = index-2*(pad1-4);
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+
+	    /* down */
+	    neib = (4./3)*conj((s2[j]/s1[i]+s2[j-1]/s1[i])/(2.*d2*d2));
+	    cent += -neib;
+
+	    if (j > 2) {
+		Ti[count] = index;
+		Tj[count] = index-(pad1-4);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -171,12 +210,25 @@ void fdprep(const double omega,
 	    }
 
 	    /* up */
-	    neib = conj((s2[j]/s1[i]+s2[j+1]/s1[i])/(2.*d2*d2));
+	    neib = (4./3)*conj((s2[j]/s1[i]+s2[j+1]/s1[i])/(2.*d2*d2));
 	    cent += -neib;
 
-	    if (j != pad2-2) {
+	    if (j < pad2-3) {
 		Ti[count] = index;
-		Tj[count] = index+(pad1-2);
+		Tj[count] = index+(pad1-4);
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+
+	    /* up up */
+	    neib = (-1./12)*conj((s2[j+1]/s1[i]+s2[j+2]/s1[i])/(2.*d2*d2));
+	    cent += -neib;
+
+	    if (j < pad2-4) {
+		Ti[count] = index;
+		Tj[count] = index+2*(pad1-4);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -196,45 +248,45 @@ void fdprep(const double omega,
     }
 }
 
-void fdpad(const int npml,
-	   const int pad1, const int pad2,
-	   sf_complex **dat,
-	   double *Bx, double *Bz)
+void fdpad9(const int npml,
+	    const int pad1, const int pad2,
+	    sf_complex **dat,
+	    double *Bx, double *Bz)
 /*< pad >*/
 {
     int i, j;
 
-    for (j=1; j < pad2-1; j++) {
-	for (i=1; i < pad1-1; i++) {
+    for (j=2; j < pad2-2; j++) {
+	for (i=2; i < pad1-2; i++) {
 	    if (i < npml || i >= pad1-npml || 
 		j < npml || j >= pad2-npml) {
-		Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
-		Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
+		Bx[(j-2)*(pad1-4)+(i-2)] = 0.;
+		Bz[(j-2)*(pad1-4)+(i-2)] = 0.;
 	    } else {
-		Bx[(j-1)*(pad1-2)+(i-1)] = creal(dat[j-npml][i-npml]);
-		Bz[(j-1)*(pad1-2)+(i-1)] = cimag(dat[j-npml][i-npml]);
+		Bx[(j-2)*(pad1-4)+(i-2)] = creal(dat[j-npml][i-npml]);
+		Bz[(j-2)*(pad1-4)+(i-2)] = cimag(dat[j-npml][i-npml]);
 	    }
 	}
     }
 }
 
-void fdcut(const int npml,
-	   const int pad1, const int pad2,
-	   sf_complex **dat,
-	   double *Xx, double *Xz)
+void fdcut9(const int npml,
+	    const int pad1, const int pad2,
+	    sf_complex **dat,
+	    double *Xx, double *Xz)
 /*< cut >*/
 {
     int i, j;
 
     for (j=npml; j < pad2-npml; j++) {
 	for (i=npml; i < pad1-npml; i++) {
-	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
-					   (float) Xz[(j-1)*(pad1-2)+(i-1)]);
+	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-2)*(pad1-4)+(i-2)], 
+					   (float) Xz[(j-2)*(pad1-4)+(i-2)]);
 	}	    
     }
 }
 
-double maxvel(int nm, float *vel)
+double maxvel9(int nm, float *vel)
 /* find maximum velocity */
 {
     int i;
