@@ -25,13 +25,14 @@
 #endif
 
 #include "fdprep.h"
+#include "fdprep9.h"
 #include "iwioper0.h"
 
 static float eps, d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
 static int n1, n2, npml, pad1, pad2, nh, ns, nw;
-static SuiteSparse_long n;
+static SuiteSparse_long n=0;
 static void **Numeric;
 static double Control[UMFPACK_CONTROL];
 static double **Xx, **Xz, **Bx, **Bz;
@@ -39,6 +40,7 @@ static sf_complex ****us, ****ur, ***as, ***ar;
 static int uts, ss[3];
 static char *datapath, **insert, **append;
 static size_t srclen, inslen;
+static char *order;
 
 void adjsrce(sf_complex **recv /* receiver wavefield */,
 	     sf_complex **adjs /* adjoint-source */,
@@ -156,7 +158,8 @@ void iwi_init(int npw, float eps0,
 	      float ow0, float dw0, int nw0,
 	      sf_file us0, sf_file ur0,
 	      char *datapath0,
-	      int uts0)
+	      int uts0,
+	      char *order0)
 /*< initialize >*/
 {
     int its;
@@ -175,6 +178,8 @@ void iwi_init(int npw, float eps0,
     
     uts = uts0;
 
+    order = order0;
+
     ss[0] = 1; ss[1] = n1; ss[2] = n1*n2;
 
     /* LU file */
@@ -187,7 +192,15 @@ void iwi_init(int npw, float eps0,
     pad1 = n1+2*npml;
     pad2 = n2+2*npml;
 
-    n = (pad1-2)*(pad2-2);
+    switch (order[0]) {
+	case '5':
+	    n = (pad1-2)*(pad2-2);
+	    break;
+
+	case '9':
+	    n = (pad1-4)*(pad2-4);
+	    break;
+    }
 
     /* allocate temporary space */
     us = sf_complexalloc4(n1,n2,ns,nw);
@@ -295,27 +308,59 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 		/* adjoint source */
 		adjsrce(ur[iw][is],as[its], x,r,adj);
 		
-		fdpad(npml,pad1,pad2, as[its],Bx[its],Bz[its]);
-		
+		switch (order[0]) {
+		    case '5':
+			fdpad(npml,pad1,pad2, as[its],Bx[its],Bz[its]);
+			break;
+
+		    case '9':
+			fdpad9(npml,pad1,pad2, as[its],Bx[its],Bz[its]);
+			break;
+		}
+
 		(void) umfpack_zl_solve (UMFPACK_At, 
 					 NULL, NULL, NULL, NULL, 
 					 Xx[its], Xz[its], Bx[its], Bz[its], 
 					 Numeric[its], Control, NULL);
 		
-		fdcut(npml,pad1,pad2, as[its],Xx[its],Xz[its]);
-		
+		switch (order[0]) {
+		    case '5':
+			fdcut(npml,pad1,pad2, as[its],Xx[its],Xz[its]);
+			break;
+
+		    case '9':
+			fdcut9(npml,pad1,pad2, as[its],Xx[its],Xz[its]);
+			break;
+		}
+
 		/* adjoint receiver */
 		adjrecv(us[iw][is],ar[its], x,r,adj);
 		
-		fdpad(npml,pad1,pad2, ar[its],Bx[its],Bz[its]);
-		
+		switch (order[0]) {
+		    case '5':
+			fdpad(npml,pad1,pad2, ar[its],Bx[its],Bz[its]);
+			break;
+
+		    case '9':
+			fdpad9(npml,pad1,pad2, ar[its],Bx[its],Bz[its]);
+			break;
+		}
+
 		(void) umfpack_zl_solve (UMFPACK_A, 
 					 NULL, NULL, NULL, NULL, 
 					 Xx[its], Xz[its], Bx[its], Bz[its], 
 					 Numeric[its], Control, NULL);
 		
-		fdcut(npml,pad1,pad2, ar[its],Xx[its],Xz[its]);
-		
+		switch (order[0]) {
+		    case '5':
+			fdcut(npml,pad1,pad2, ar[its],Xx[its],Xz[its]);
+			break;
+
+		    case '9':
+			fdcut9(npml,pad1,pad2, ar[its],Xx[its],Xz[its]);
+			break;
+		}
+
 		/* assemble */
 		iwiadd(omega, us[iw][is],ur[iw][is],as[its],ar[its], tempx[its],tempr[its],adj);
 		

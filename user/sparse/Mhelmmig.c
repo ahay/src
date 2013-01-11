@@ -25,13 +25,14 @@
 #endif
 
 #include "fdprep.h"
+#include "fdprep9.h"
 
 int main(int argc, char* argv[])
 {
     bool verb, save, load;
     int npw, npml, pad1, pad2, n1, n2; 
     int ih, nh, is, ns, iw, nw, i, j;
-    SuiteSparse_long n, nz, *Ti, *Tj;
+    SuiteSparse_long n=0, nz=0, *Ti, *Tj;
     float eps, d1, d2, **vel, ****image, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long *Ap, *Ai, *Map;
@@ -44,6 +45,7 @@ int main(int argc, char* argv[])
     sf_file in, out, source, data, us, ur;
     int uts, its, mts;
     sf_timer timer;
+    char *order;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -89,8 +91,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("nh",&nh)) nh=0;
     /* horizontal space-lag */
 
-    if (!sf_getint("npw",&npw)) npw=6;
+    if (!sf_getint("npw",&npw)) npw=8;
     /* number of points per wave-length */
+
+    if (NULL == (order = sf_getstring("order"))) order="5";
+    /* order of finite-difference */
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* epsilon for PML */
@@ -168,8 +173,20 @@ int main(int argc, char* argv[])
     pad1 = n1+2*npml;
     pad2 = n2+2*npml;
 
-    n = (pad1-2)*(pad2-2);
-    nz = 5*(pad1-2)*(pad2-2)-2*(pad1-4)-2*(pad2-4)-8;
+    switch (order[0]) {
+	case '5':
+	    n = (pad1-2)*(pad2-2);
+	    nz = 5*(pad1-2)*(pad2-2)
+		-2*(pad1-4)-2*(pad2-4)-8;
+	    break;
+
+	case '9':
+	    n = (pad1-4)*(pad2-4);
+	    nz = 9*(pad1-4)*(pad2-4)
+		-4*(pad1-6)-4*(pad2-6)-16
+		-2*(pad1-8)-2*(pad2-8)-8;
+	    break;
+    }
 
     if (!load) {
 	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
@@ -233,11 +250,22 @@ int main(int argc, char* argv[])
 
 	if (!load) {
 	    /* assemble matrix */
-	    fdprep(omega, eps, 
-		   n1, n2, d1, d2, vel,
-		   npml, pad1, pad2, n, nz, 
-		   Ti, Tj, Tx, Tz);
-
+	    switch (order[0]) {
+		case '5':
+		    fdprep(omega, eps, 
+			   n1, n2, d1, d2, vel,
+			   npml, pad1, pad2, n, nz, 
+			   Ti, Tj, Tx, Tz);
+		    break;
+		    
+		case '9':
+		    fdprep9(omega, eps, 
+			    n1, n2, d1, d2, vel,
+			    npml, pad1, pad2, n, nz, 
+			    Ti, Tj, Tx, Tz);
+		    break;
+	    }
+	    
 	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
 					      Ti, Tj, Tx, Tz, 
 					      Ap, Ai, Ax, Az, Map);	    
@@ -259,7 +287,10 @@ int main(int argc, char* argv[])
 		(void) umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	    
-	    if (!save) (void) remove (append);
+	    if (!save) {
+		(void) remove (append);
+		(void) remove ("numeric.umf");
+	    }
 #else
 	    if (save) (void) umfpack_zl_save_numeric (Numeric[0], append);
 #endif
@@ -287,25 +318,57 @@ int main(int argc, char* argv[])
 	    its = 0;
 #endif
 
-	    /* source wavefield */
-	    fdpad(npml,pad1,pad2, srce[is],Bx[its],Bz[its]);
+	    /* source wavefield */	    
+	    switch (order[0]) {
+		case '5':
+		    fdpad(npml,pad1,pad2, srce[is],Bx[its],Bz[its]);
+		    break;
+
+		case '9':
+		    fdpad9(npml,pad1,pad2, srce[is],Bx[its],Bz[its]);
+		    break;
+	    }
 
 	    (void) umfpack_zl_solve (UMFPACK_A, 
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);
 
-	    fdcut(npml,pad1,pad2, srce[is],Xx[its],Xz[its]);
+	    switch (order[0]) {
+		case '5':
+		    fdcut(npml,pad1,pad2, srce[is],Xx[its],Xz[its]);
+		    break;
+
+		case '9':
+		    fdcut9(npml,pad1,pad2, srce[is],Xx[its],Xz[its]);
+		    break;
+	    }
 
 	    /* receiver wavefield */
-	    fdpad(npml,pad1,pad2, recv[is],Bx[its],Bz[its]);
-
+	    switch (order[0]) {
+		case '5':
+		    fdpad(npml,pad1,pad2, recv[is],Bx[its],Bz[its]);
+		    break;
+		    
+		case '9':
+		    fdpad9(npml,pad1,pad2, recv[is],Bx[its],Bz[its]);
+		    break;
+	    }
+	    
 	    (void) umfpack_zl_solve (UMFPACK_At, 
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);
-
-	    fdcut(npml,pad1,pad2, recv[is],Xx[its],Xz[its]);
+	    
+	    switch (order[0]) {
+		case '5':
+		    fdcut(npml,pad1,pad2, recv[is],Xx[its],Xz[its]);
+		    break;
+		    
+		case '9':
+		    fdcut9(npml,pad1,pad2, recv[is],Xx[its],Xz[its]);
+		    break;
+	    }
 
 	    /* imaging condition */
 	    for (ih=-nh; ih < nh+1; ih++) {

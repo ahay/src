@@ -25,6 +25,7 @@
 #endif
 
 #include "fdprep.h"
+#include "fdprep9.h"
 #include "iwioper.h"
 
 static float eps, **vel, d1, d2, ow, dw;
@@ -32,7 +33,7 @@ static float ***wght, **prec;
 static float **tempx, **tempr;
 static int n1, n2, npml, pad1, pad2, nh, ns, nw;
 static sf_file sfile, rfile;
-static SuiteSparse_long n, nz, *Ti, *Tj;
+static SuiteSparse_long n=0, nz=0, *Ti, *Tj;
 static SuiteSparse_long *Ap, *Ai, *Map;
 static void *Symbolic, **Numeric;
 static double Control[UMFPACK_CONTROL];
@@ -43,6 +44,7 @@ static bool load;
 static int uts, ss[3];
 static char *datapath, *insert, *append;
 static size_t srclen, inslen;
+static char *order;
 
 void adjsrce(sf_complex **recv /* receiver wavefield */,
 	     sf_complex **adjs /* adjoint-source */,
@@ -160,7 +162,8 @@ void iwi_init(int npw, float eps0,
 	      float ow0, float dw0, int nw0,
 	      sf_file us0, sf_file ur0,
 	      bool load0, char *datapath0,
-	      int uts0)
+	      int uts0,
+	      char *order0)
 /*< initialize >*/
 {
     int its;
@@ -183,6 +186,8 @@ void iwi_init(int npw, float eps0,
     
     uts = uts0;
 
+    order = order0;
+
     ss[0] = 1; ss[1] = n1; ss[2] = n1*n2;
 
     /* LU file */
@@ -200,9 +205,21 @@ void iwi_init(int npw, float eps0,
     pad1 = n1+2*npml;
     pad2 = n2+2*npml;
 
-    n = (pad1-2)*(pad2-2);
-    nz = 5*(pad1-2)*(pad2-2)-2*(pad1-4)-2*(pad2-4)-8;
-
+    switch (order[0]) {
+	case '5':
+	    n = (pad1-2)*(pad2-2);
+	    nz = 5*(pad1-2)*(pad2-2)
+		-2*(pad1-4)-2*(pad2-4)-8;
+	    break;
+	    
+	case '9':
+	    n = (pad1-4)*(pad2-4);
+	    nz = 9*(pad1-4)*(pad2-4)
+		-4*(pad1-6)-4*(pad2-6)-16
+		-2*(pad1-8)-2*(pad2-8)-8;
+	    break;
+    }
+    
     /* allocate temporary space */
     us = sf_complexalloc3(n1,n2,ns);
     ur = sf_complexalloc3(n1,n2,ns);
@@ -305,10 +322,21 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 
 	if (!load) {
 	    /* assemble matrix */
-	    fdprep(omega, eps, 
-		   n1, n2, d1, d2, vel,
-		   npml, pad1, pad2, n, nz, 
-		   Ti, Tj, Tx, Tz);
+	    switch (order[0]) {
+		case '5':
+		    fdprep(omega, eps, 
+			   n1, n2, d1, d2, vel,
+			   npml, pad1, pad2, n, nz, 
+			   Ti, Tj, Tx, Tz);
+		    break;
+
+		case '9':
+		    fdprep9(omega, eps, 
+			    n1, n2, d1, d2, vel,
+			    npml, pad1, pad2, n, nz, 
+			    Ti, Tj, Tx, Tz);
+		    break;
+	    }
 	    
 	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
 					      Ti, Tj, Tx, Tz, 
@@ -359,26 +387,58 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    /* adjoint source */
 	    adjsrce(ur[is],as[is], x,r,adj);
 
-	    fdpad(npml,pad1,pad2, as[is],Bx[its],Bz[its]);
+	    switch (order[0]) {
+		case '5':
+		    fdpad(npml,pad1,pad2, as[is],Bx[its],Bz[its]);
+		    break;
+
+		case '9':
+		    fdpad9(npml,pad1,pad2, as[is],Bx[its],Bz[its]);
+		    break;
+	    }
 
 	    (void) umfpack_zl_solve (UMFPACK_At, 
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);
+	    
+	    switch (order[0]) {
+		case '5':
+		    fdcut(npml,pad1,pad2, as[is],Xx[its],Xz[its]);
+		    break;
 
-	    fdcut(npml,pad1,pad2, as[is],Xx[its],Xz[its]);
+		case '9':
+		    fdcut9(npml,pad1,pad2, as[is],Xx[its],Xz[its]);
+		    break;
+	    }
 
 	    /* adjoint receiver */
 	    adjrecv(us[is],ar[is], x,r,adj);
 
-	    fdpad(npml,pad1,pad2, ar[is],Bx[its],Bz[its]);
+	    switch (order[0]) {
+		case '5':
+		    fdpad(npml,pad1,pad2, ar[is],Bx[its],Bz[its]);
+		    break;
+
+		case '9':
+		    fdpad9(npml,pad1,pad2, ar[is],Bx[its],Bz[its]);
+		    break;
+	    }
 
 	    (void) umfpack_zl_solve (UMFPACK_A, 
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);
 
-	    fdcut(npml,pad1,pad2, ar[is],Xx[its],Xz[its]);
+	    switch (order[0]) {
+		case '5':
+		    fdcut(npml,pad1,pad2, ar[is],Xx[its],Xz[its]);
+		    break;
+
+		case '9':
+		    fdcut9(npml,pad1,pad2, ar[is],Xx[its],Xz[its]);
+		    break;
+	    }
 
 	    /* assemble */
 	    iwiadd(omega, us[is],ur[is],as[is],ar[is], tempx[its],tempr[its],adj);

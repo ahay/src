@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
     sf_file in, out, model, us, ur;
     sf_file weight, precon;
     int uts, mts;
+    char *order;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -58,8 +59,11 @@ int main(int argc, char* argv[])
 
     uts = (uts < 1)? mts: uts;
 
-    if (!sf_getint("npw",&npw)) npw=6;
+    if (!sf_getint("npw",&npw)) npw=8;
     /* number of points per wave-length */
+
+    if (NULL == (order = sf_getstring("order"))) order="5";
+    /* order of finite-difference */
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* epsilon for PML */
@@ -132,7 +136,7 @@ int main(int argc, char* argv[])
     
     /* initialize */
     iwi_init(npw,eps, n1,n2,d1,d2, nh,ns,ow,dw,nw,
-	     us,ur, datapath, uts);
+	     us,ur, datapath, uts, order);
 
     /* set weight and preconditioner */
     iwi_set(wght,prec);
