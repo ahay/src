@@ -1,6 +1,7 @@
 /* 2D 9-point finite difference scheme */
-/* C-H. Jo, C. Shin, J.H. Suh, 1996, An optimal 9-point, finite difference, 
-   frequency-space, 2-D scalar wave extrapolator, Geophysics, 61, 529-537.*/
+/* C-H. Jo, C. Shin, J.H. Suh, 1996, An optimal 9-point, finite 
+   difference, frequency-space, 2-D scalar wave extrapolator, Geophysics, 
+   61, 529-537. */
 /*
   Copyright (C) 2012 University of Texas at Austin
   
@@ -130,8 +131,9 @@ void fdprep9o(const double omega,
 	    cent = 0.+I*0.;
 
 	    /* left */
-	    neib = (s2[j]/s1[i]+s2[j]/s1[i-1])/(2.*d1*d1);
+	    neib = 0.5461*(s2[j]/s1[i]+s2[j]/s1[i-1])/(2.*d1*d1);
 	    cent += -neib;
+	    neib += 0.09381*pow(omega/pad[j][i-1],2.)*(s1[i-1]*s2[j]);
 
 	    if (i != 1) {
 		Ti[count] = index;
@@ -143,8 +145,9 @@ void fdprep9o(const double omega,
 	    }
 
 	    /* right */
-	    neib = (s2[j]/s1[i]+s2[j]/s1[i+1])/(2.*d1*d1);
+	    neib = 0.5461*(s2[j]/s1[i]+s2[j]/s1[i+1])/(2.*d1*d1);
 	    cent += -neib;
+	    neib += 0.09381*pow(omega/pad[j][i+1],2.)*(s1[i+1]*s2[j]);
 
 	    if (i != pad1-2) {
 		Ti[count] = index;
@@ -156,8 +159,9 @@ void fdprep9o(const double omega,
 	    }
 
 	    /* down */
-	    neib = (s1[i]/s2[j]+s1[i]/s2[j-1])/(2.*d2*d2);
+	    neib = 0.5461*(s1[i]/s2[j]+s1[i]/s2[j-1])/(2.*d2*d2);
 	    cent += -neib;
+	    neib += 0.09381*pow(omega/pad[j-1][i],2.)*(s1[i]*s2[j-1]);
 
 	    if (j != 1) {
 		Ti[count] = index;
@@ -169,8 +173,9 @@ void fdprep9o(const double omega,
 	    }
 
 	    /* up */
-	    neib = (s1[i]/s2[j]+s1[i]/s2[j+1])/(2.*d2*d2);
+	    neib = 0.5461*(s1[i]/s2[j]+s1[i]/s2[j+1])/(2.*d2*d2);
 	    cent += -neib;
+	    neib += 0.09381*pow(omega/pad[j+1][i],2.)*(s1[i]*s2[j+1]);
 
 	    if (j != pad2-2) {
 		Ti[count] = index;
@@ -181,8 +186,64 @@ void fdprep9o(const double omega,
 		count++;
 	    }
 
+	    /* left down */
+	    neib = 0.4539*(s2[j]/s1[i]+s2[j-1]/s1[i-1])/(2.*(d1*d1+d2*d2));
+	    cent += -neib;
+	    neib += -0.00001*pow(omega/pad[j-1][i-1],2.)*(s1[i-1]*s2[j-1]);
+
+	    if (i != 1 && j != 1) {
+		Ti[count] = index;
+		Tj[count] = index-1-(pad1-2);
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+
+	    /* right up */
+	    neib = 0.4539*(s2[j]/s1[i]+s2[j+1]/s1[i+1])/(2.*(d1*d1+d2*d2));
+	    cent += -neib;
+	    neib += -0.00001*pow(omega/pad[j+1][i+1],2.)*(s1[i+1]*s2[j+1]);
+
+	    if (i != pad1-2 && j != pad2-2) {
+		Ti[count] = index;
+		Tj[count] = index+1+(pad1-2);
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+	    
+	    /* left up */
+	    neib = 0.4539*(s1[i]/s2[j]+s1[i-1]/s2[j+1])/(2.*(d1*d1+d2*d2));
+	    cent += -neib;
+	    neib += -0.00001*pow(omega/pad[j+1][i-1],2.)*(s1[i-1]*s2[j+1]);
+
+	    if (i != 1 && j != pad2-2) {
+		Ti[count] = index;
+		Tj[count] = index-1+(pad1-2);
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+
+	    /* right down */
+	    neib = 0.4539*(s1[i]/s2[j]+s1[i+1]/s2[j-1])/(2.*(d1*d1+d2*d2));
+	    cent += -neib;
+	    neib += -0.00001*pow(omega/pad[j-1][i+1],2.)*(s1[i+1]*s2[j-1]);
+
+	    if (i != pad1-2 && j != 1) {
+		Ti[count] = index;
+		Tj[count] = index+1-(pad1-2);
+		Tx[count] = creal(neib);
+		Tz[count] = cimag(neib);
+
+		count++;
+	    }
+	    
 	    /* center */
-	    cent += pow(omega/pad[j][i],2.)*(s1[i]*s2[j]);
+	    cent += 0.6248*pow(omega/pad[j][i],2.)*(s1[i]*s2[j]);
 	    
 	    Ti[count] = index;
 	    Tj[count] = index;

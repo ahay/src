@@ -22,6 +22,7 @@
 
 #include "fdprep5.h"
 #include "fdprep9.h"
+#include "fdprep9o.h"
 
 #include "fdprep.h"
 
@@ -46,6 +47,10 @@ SuiteSparse_long fdprep_n(const int pad1, const int pad2)
 	case '9':
 	    n = (pad1-4)*(pad2-4);
 	    break;
+
+	case 'j':
+	    n = (pad1-2)*(pad2-2);
+	    break;
     }
 
     return n;
@@ -67,6 +72,11 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 		-4*(pad1-6)-4*(pad2-6)-16
 		-2*(pad1-8)-2*(pad2-8)-8;
 	    break;
+
+	case 'j':
+	    nz = 9*(pad1-2)*(pad2-2)
+		-6*(pad1-4)-6*(pad2-4)-20;
+	    break;
     }
 
     return nz;
@@ -86,11 +96,15 @@ void fdprep(const double omega,
 {
     switch (order[0]) {
 	case '5':
-	    fdprep5(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    fdprep5 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
 	    break;
 
 	case '9':
-	    fdprep9(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    fdprep9 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    break;
+
+	case 'j':
+	    fdprep9o(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
 	    break;
     }
 }
@@ -103,11 +117,15 @@ void fdpad(const int npml,
 {
     switch (order[0]) {
 	case '5':
-	    fdpad5(npml,pad1,pad2, dat,Bx,Bz);
+	    fdpad5 (npml,pad1,pad2, dat,Bx,Bz);
 	    break;
 
 	case '9':
-	    fdpad9(npml,pad1,pad2, dat,Bx,Bz);
+	    fdpad9 (npml,pad1,pad2, dat,Bx,Bz);
+	    break;
+
+	case 'j':
+	    fdpad9o(npml,pad1,pad2, dat,Bx,Bz);
 	    break;
     }
 }
@@ -120,11 +138,15 @@ void fdcut(const int npml,
 {
     switch (order[0]) {
 	case '5':
-	    fdcut5(npml,pad1,pad2, dat,Xx,Xz);
+	    fdcut5 (npml,pad1,pad2, dat,Xx,Xz);
 	    break;
 
 	case '9':
-	    fdcut9(npml,pad1,pad2, dat,Xx,Xz);
+	    fdcut9 (npml,pad1,pad2, dat,Xx,Xz);
+	    break;
+
+	case 'j':
+	    fdcut9o(npml,pad1,pad2, dat,Xx,Xz);
 	    break;
     }
 }
