@@ -28,9 +28,9 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    int npw, n1, n2; 
+    int n1, n2; 
     int nh, ns, nw;
-    float eps, d1, d2, dw, ow;
+    float vpml, alpha, f0, d1, d2, dw, ow;
     float *di, *dm, ***wght, **prec;
     char *datapath;
     sf_file in, out, model, us, ur;
@@ -59,14 +59,17 @@ int main(int argc, char* argv[])
 
     uts = (uts < 1)? mts: uts;
 
-    if (!sf_getint("npw",&npw)) npw=8;
-    /* number of points per wave-length */
+    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
+    /* velocity for PML */
 
     if (NULL == (order = sf_getstring("order"))) order="5";
     /* order of finite-difference */
 
-    if (!sf_getfloat("eps",&eps)) eps=0.01;
-    /* epsilon for PML */
+    if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
+    /* alpha for PML */
+
+    if (!sf_getfloat("f0",&f0)) f0=25.;
+    /* dominant frequency for PML */
 
     /* read model */
     if (NULL == sf_getstring("model"))
@@ -135,7 +138,7 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n3",2*nh+1);    
     
     /* initialize */
-    iwi_init(npw,eps, n1,n2,d1,d2, nh,ns,ow,dw,nw,
+    iwi_init(vpml,alpha,f0, n1,n2,d1,d2, nh,ns,ow,dw,nw,
 	     us,ur, datapath, uts, order);
 
     /* set weight and preconditioner */

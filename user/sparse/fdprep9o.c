@@ -1,5 +1,6 @@
 /* 2D 9-point finite difference scheme */
-/* centered fourth order stencil */
+/* C-H. Jo, C. Shin, J.H. Suh, 1996, An optimal 9-point, finite difference, 
+   frequency-space, 2-D scalar wave extrapolator, Geophysics, 61, 529-537.*/
 /*
   Copyright (C) 2012 University of Texas at Austin
   
@@ -21,18 +22,18 @@
 #include <rsf.h>
 #include <umfpack.h>
 
-#include "fdprep9.h"
+#include "fdprep9o.h"
 
-void fdprep9(const double omega,
-	     const float a0, const float f0,
-	     const int n1, const int n2,
-	     const float d1, const float d2,
-	     float **v,
-	     const int npml,
-	     const int pad1, const int pad2,
-	     SuiteSparse_long n, SuiteSparse_long nz,
-	     SuiteSparse_long *Ti, SuiteSparse_long *Tj,
-	     double* Tx, double *Tz)
+void fdprep9o(const double omega,
+	      const float a0, const float f0,
+	      const int n1, const int n2,
+	      const float d1, const float d2,
+	      float **v,
+	      const int npml,
+	      const int pad1, const int pad2,
+	      SuiteSparse_long n, SuiteSparse_long nz,
+	      SuiteSparse_long *Ti, SuiteSparse_long *Tj,
+	      double* Tx, double *Tz)
 /*< discretization >*/
 {
     int i, j, index;
@@ -122,30 +123,17 @@ void fdprep9(const double omega,
 
     /* assemble matrix in triplet form */
     count = 0;
-    for (j=2; j < pad2-2; j++) {
-	for (i=2; i < pad1-2; i++) {
-	    index = (j-2)*(pad1-4)+(i-2);
+    for (j=1; j < pad2-1; j++) {
+	for (i=1; i < pad1-1; i++) {
+	    index = (j-1)*(pad1-2)+(i-1);
 	    
 	    cent = 0.+I*0.;
 
-	    /* left left */
-	    neib = (-1./12)*(s2[j]/s1[i-1])/(d1*d1);
-	    cent += -neib;
-
-	    if (i > 3) {
-		Ti[count] = index;
-		Tj[count] = index-2;
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
 	    /* left */
-	    neib = (4./3)*(s2[j]/s1[i]+s2[j]/s1[i-1])/(2.*d1*d1);
+	    neib = (s2[j]/s1[i]+s2[j]/s1[i-1])/(2.*d1*d1);
 	    cent += -neib;
 
-	    if (i > 2) {
+	    if (i != 1) {
 		Ti[count] = index;
 		Tj[count] = index-1;
 		Tx[count] = creal(neib);
@@ -155,10 +143,10 @@ void fdprep9(const double omega,
 	    }
 
 	    /* right */
-	    neib = (4./3)*(s2[j]/s1[i]+s2[j]/s1[i+1])/(2.*d1*d1);
+	    neib = (s2[j]/s1[i]+s2[j]/s1[i+1])/(2.*d1*d1);
 	    cent += -neib;
 
-	    if (i < pad1-3) {
+	    if (i != pad1-2) {
 		Ti[count] = index;
 		Tj[count] = index+1;
 		Tx[count] = creal(neib);
@@ -167,39 +155,13 @@ void fdprep9(const double omega,
 		count++;
 	    }
 
-	    /* right right */
-	    neib = (-1./12)*(s2[j]/s1[i+1])/(d1*d1);
-	    cent += -neib;
-
-	    if (i < pad1-4) {
-		Ti[count] = index;
-		Tj[count] = index+2;
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
-	    /* down down */
-	    neib = (-1./12)*(s1[i]/s2[j-1])/(d2*d2);
-	    cent += -neib;
-
-	    if (j > 3) {
-		Ti[count] = index;
-		Tj[count] = index-2*(pad1-4);
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
 	    /* down */
-	    neib = (4./3)*(s1[i]/s2[j]+s1[i]/s2[j-1])/(2.*d2*d2);
+	    neib = (s1[i]/s2[j]+s1[i]/s2[j-1])/(2.*d2*d2);
 	    cent += -neib;
 
-	    if (j > 2) {
+	    if (j != 1) {
 		Ti[count] = index;
-		Tj[count] = index-(pad1-4);
+		Tj[count] = index-(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -207,25 +169,12 @@ void fdprep9(const double omega,
 	    }
 
 	    /* up */
-	    neib = (4./3)*(s1[i]/s2[j]+s1[i]/s2[j+1])/(2.*d2*d2);
+	    neib = (s1[i]/s2[j]+s1[i]/s2[j+1])/(2.*d2*d2);
 	    cent += -neib;
 
-	    if (j < pad2-3) {
+	    if (j != pad2-2) {
 		Ti[count] = index;
-		Tj[count] = index+(pad1-4);
-		Tx[count] = creal(neib);
-		Tz[count] = cimag(neib);
-
-		count++;
-	    }
-
-	    /* up up */
-	    neib = (-1./12)*(s1[i]/s2[j+1])/(d2*d2);
-	    cent += -neib;
-
-	    if (j < pad2-4) {
-		Ti[count] = index;
-		Tj[count] = index+2*(pad1-4);
+		Tj[count] = index+(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -245,40 +194,40 @@ void fdprep9(const double omega,
     }
 }
 
-void fdpad9(const int npml,
-	    const int pad1, const int pad2,
-	    sf_complex **dat,
-	    double *Bx, double *Bz)
+void fdpad9o(const int npml,
+	     const int pad1, const int pad2,
+	     sf_complex **dat,
+	     double *Bx, double *Bz)
 /*< pad >*/
 {
     int i, j;
 
-    for (j=2; j < pad2-2; j++) {
-	for (i=2; i < pad1-2; i++) {
+    for (j=1; j < pad2-1; j++) {
+	for (i=1; i < pad1-1; i++) {
 	    if (i < npml || i >= pad1-npml || 
 		j < npml || j >= pad2-npml) {
-		Bx[(j-2)*(pad1-4)+(i-2)] = 0.;
-		Bz[(j-2)*(pad1-4)+(i-2)] = 0.;
+		Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
+		Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
 	    } else {
-		Bx[(j-2)*(pad1-4)+(i-2)] = creal(dat[j-npml][i-npml]);
-		Bz[(j-2)*(pad1-4)+(i-2)] = cimag(dat[j-npml][i-npml]);
+		Bx[(j-1)*(pad1-2)+(i-1)] = creal(dat[j-npml][i-npml]);
+		Bz[(j-1)*(pad1-2)+(i-1)] = cimag(dat[j-npml][i-npml]);
 	    }
 	}
     }
 }
 
-void fdcut9(const int npml,
-	    const int pad1, const int pad2,
-	    sf_complex **dat,
-	    double *Xx, double *Xz)
+void fdcut9o(const int npml,
+	     const int pad1, const int pad2,
+	     sf_complex **dat,
+	     double *Xx, double *Xz)
 /*< cut >*/
 {
     int i, j;
 
     for (j=npml; j < pad2-npml; j++) {
 	for (i=npml; i < pad1-npml; i++) {
-	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-2)*(pad1-4)+(i-2)], 
-					   (float) Xz[(j-2)*(pad1-4)+(i-2)]);
+	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
+					   (float) Xz[(j-1)*(pad1-2)+(i-1)]);
 	}	    
     }
 }

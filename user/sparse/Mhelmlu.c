@@ -25,14 +25,13 @@
 #endif
 
 #include "fdprep.h"
-#include "fdprep9.h"
 
 int main(int argc, char* argv[])
 {
     bool verb, save, load, hermite;
-    int n1, n2, npw, npml, pad1, pad2, is, ns, iw, nw;
-    SuiteSparse_long n=0, nz=0, *Ti, *Tj;
-    float d1, d2, **v, eps, ds, os, dw, ow;
+    int n1, n2, npml, pad1, pad2, is, ns, iw, nw;
+    SuiteSparse_long n, nz, *Ti, *Tj;
+    float d1, d2, **v, vpml, alpha, f0, ds, os, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long *Ap, *Ai, *Map;
     double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
@@ -90,14 +89,19 @@ int main(int argc, char* argv[])
     if (!sf_getbool("hermite",&hermite)) hermite=false;
     /* Hermite operator */
     
-    if (!sf_getint("npw",&npw)) npw=8;
-    /* number of points per wave-length */
+    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
+    /* velocity for PML */
 
     if (NULL == (order = sf_getstring("order"))) order="5";
     /* order of finite-difference */
 
-    if (!sf_getfloat("eps",&eps)) eps=0.01;
-    /* epsilon for PML */
+    fdprep_order(order);
+
+    if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
+    /* alpha for PML */
+
+    if (!sf_getfloat("f0",&f0)) f0=25.;
+    /* dominant frequency for PML */
 
     /* read input dimension */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -139,24 +143,12 @@ int main(int argc, char* argv[])
     sf_putstring(out,"unit4","Hz");
 
     /* allocate temporary memory */
-    npml = npw*2;
+    npml = (vpml/f0/fminf(d1,d2)+1)*2+0.5;
     pad1 = n1+2*npml;
     pad2 = n2+2*npml;
 
-    switch (order[0]) {
-	case '5':
-	    n = (pad1-2)*(pad2-2);
-	    nz = 5*(pad1-2)*(pad2-2)
-		-2*(pad1-4)-2*(pad2-4)-8;
-	    break;
-
-	case '9':
-	    n = (pad1-4)*(pad2-4);
-	    nz = 9*(pad1-4)*(pad2-4)
-		-4*(pad1-6)-4*(pad2-6)-16
-		-2*(pad1-8)-2*(pad2-8)-8;
-	    break;
-    }
+    n  = fdprep_n (pad1,pad2);
+    nz = fdprep_nz(pad1,pad2);
 
     if (!load) {
 	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
@@ -215,22 +207,11 @@ int main(int argc, char* argv[])
 	}
 
 	if (!load) {
-	    /* assemble matrix */
-	    switch (order[0]) {
-		case '5':
-		    fdprep(omega, eps, 
-			   n1, n2, d1, d2, v,
-			   npml, pad1, pad2, n, nz, 
-			   Ti, Tj, Tx, Tz);
-		    break;
-
-		case '9':
-		    fdprep9(omega, eps, 
-			    n1, n2, d1, d2, v,
-			    npml, pad1, pad2, n, nz, 
-			    Ti, Tj, Tx, Tz);
-		    break;
-	    }
+	    /* assemble matrix */	    
+	    fdprep(omega, alpha, f0,
+		   n1, n2, d1, d2, v,
+		   npml, pad1, pad2, n, nz, 
+		   Ti, Tj, Tx, Tz);
 	    
 	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
 					      Ti, Tj, Tx, Tz, 
@@ -282,31 +263,15 @@ int main(int argc, char* argv[])
 #else
 	    its = 0;
 #endif
-
-	    switch (order[0]) {
-		case '5':
-		    fdpad(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
-		    break;
-
-		case '9':
-		    fdpad9(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
-		    break;
-	    }
+	    
+	    fdpad(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
 
 	    (void) umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);	    
-	    
-	    switch (order[0]) {
-		case '5':
-		    fdcut(npml,pad1,pad2, f[is],Xx[its],Xz[its]);
-		    break;
-
-		case '9':
-		    fdcut9(npml,pad1,pad2, f[is],Xx[its],Xz[its]);
-		    break;
-	    }
+	    	    
+	    fdcut(npml,pad1,pad2, f[is],Xx[its],Xz[its]);
 	}
 
 	/* write wavefields */
