@@ -921,3 +921,34 @@ int BFIO::dikernel3(const int fi, const float tau, const float p, const float q,
   }
   return 0;
 }
+
+//----------------------------------
+//---------------------------------------
+int BFIO::diieval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p)
+{
+  int N1 = f.m();
+  int N2 = f.n();
+  int M1 = u.m();
+  int M2 = u.n();
+  vector<Point2> src;
+  for(int j=0; j<N2; j++)
+    for(int i=0; i<N1; i++)
+      src.push_back( Point2((w(i)-wmin)/(wmax-wmin), (x(j)-xmin)/(xmax-xmin)) );
+  //
+  for(int j1=0; j1<M2; j1++)
+    for(int i1=0; i1<M1; i1++) {
+      vector<Point2> trg;  trg.push_back( Point2((tau(i1)-taumin)/(taumax-taumin), (p(j1)-pmin)/(pmax-pmin)) );
+      CpxNumMat res(1,N1*N2);  iC( kernel2(N, trg, src, res) );
+      CpxNumMat resaux(N1,N2,false,res.data());
+      cpx ttl(0,0);
+      for(int j=0; j<N2; j++)
+        for(int i=0; i<N1; i++)
+          ttl = ttl + resaux(i,j) * f(i,j);
+      u(i1,j1) = ttl;
+    }
+  //
+  return 0;
+}
+
+
+

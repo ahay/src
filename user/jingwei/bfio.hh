@@ -71,6 +71,7 @@ public:
   int eval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
   int apeval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, const float xx);
   int eval3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec& x, const FltNumVec& y, CpxNumTns& u, const FltNumVec& tau, const FltNumVec& p, const FltNumVec& q);
+  int eval3_prep(int N, FltNumVec& w, FltNumVec& x, FltNumVec& y, FltNumVec& tau, FltNumVec& p, FltNumVec& q);
   //
   int check2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr);
   int apcheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, const float xx, int NC, float& relerr);
@@ -81,6 +82,7 @@ public:
   //
   int dikernel2(const int fi, const float tau, const float p, const float x, float& t);
   int dikernel3(const int fi, const float tau, const float p, const float q, const float x, const float y, float& t);
+  int diieval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
 };
 
 #endif
