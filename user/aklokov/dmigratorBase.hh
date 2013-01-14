@@ -49,7 +49,7 @@ public:
                  DepthMigratorBase ();
         virtual ~DepthMigratorBase ();
 
-		virtual void processGather  (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
+		virtual void processGather  (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig, float* mCig);
 
 		virtual void setWavefrontTracerParams (int ttRayNum, float ttRayStep, float ttRayStart, int ttNum, float ttStep, float ttStart);
 

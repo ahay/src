@@ -48,6 +48,7 @@ struct RunParamsTmigda {
     bool             isDag;
     bool             isCig;
     bool             isSemb;
+	bool             isMCig;  // super (dip-angle and scattering-angle) CIG
 
     
     bool              is3D;   // 0 - 2D mode (by default)

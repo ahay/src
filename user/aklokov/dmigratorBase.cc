@@ -9,7 +9,7 @@ DepthMigratorBase::~DepthMigratorBase () {
 }
 
 void DepthMigratorBase::processGather (Point2D& curGatherCoords, const float* const data, 
-									   float* image, float* gather, float* aCig) {
+									   float* image, float* gather, float* aCig, float* mCig) {
 	return;
 }
 

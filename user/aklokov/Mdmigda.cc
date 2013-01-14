@@ -41,6 +41,7 @@ sf_file velFile;
 sf_file imageFile;
 sf_file dagFile;
 sf_file acigFile;
+sf_file mcigFile;
 
 //  Causal integration of a trace[n]
 void applyCasualIntegration (float *trace, int n) {
@@ -203,6 +204,11 @@ int main (int argc, char* argv[]) {
 	/* output file containing CIGs in the scattering-angle domain */ 
 	acigFile  = sf_output ("cig"); rp.isCig = true;
     } else { rp.isCig = false; }
+
+    if ( NULL != sf_getstring("mcig") ) {
+	/* output file containing multi-CIGs (in the dip-angle and the scattering-angle domain both */ 
+		mcigFile  = sf_output ("mcig"); rp.isMCig = true;
+    } else { rp.isMCig = false; }
 
     // data params
 
@@ -376,6 +382,20 @@ int main (int argc, char* argv[]) {
 		sf_putstring(dagFile, "unit3", "m"); sf_putstring(dagFile, "unit4", "m");
     }
 
+    if (rp.isMCig) {
+		// super-gathers file
+    	sf_putint (mcigFile, "n1", ip.zNum); sf_putint (mcigFile, "n2", gp.dipNum); sf_putint (mcigFile, "n3", gp.scatNum);
+  		sf_putint (mcigFile, "n4", ip.xNum); sf_putint (mcigFile, "n5", ip.yNum); 
+    	sf_putfloat (mcigFile, "d1", ip.zStep); sf_putfloat (mcigFile, "d2", gp.dipStep); sf_putfloat (mcigFile, "d3", gp.scatStep);
+		sf_putfloat (mcigFile, "d4", ip.xStep);	sf_putfloat (mcigFile, "d5", ip.yStep); 
+    	sf_putfloat (mcigFile, "o1", ip.zStart); sf_putfloat (mcigFile, "o2", gp.dipStart); sf_putfloat (mcigFile, "o3", gp.scatStart);
+		sf_putfloat (mcigFile, "o4", ip.xStart); sf_putfloat (mcigFile, "o5", ip.yStart);    
+		sf_putstring(mcigFile, "label1", "depth"); sf_putstring(mcigFile, "label2", "dipangle");  sf_putstring(mcigFile, "label3", "scattering angle"); 
+		sf_putstring(mcigFile, "label4", "inline"); sf_putstring(mcigFile, "label5", "crossline");
+		sf_putstring(mcigFile, "unit1", "m"); sf_putstring(mcigFile, "unit2", "deg"); sf_putstring(mcigFile, "unit3", "deg"); 
+		sf_putstring(mcigFile, "unit4", "m"); sf_putstring(mcigFile, "unit5", "m");
+    }
+
 	// SIZES
 
     // dip-angle gather size
@@ -384,6 +404,8 @@ int main (int argc, char* argv[]) {
     const int dagSize  = gp.zNum * gp.dipNum;  // * gp.sdipNum; - for 3D migration
 	// scattering-angle-gather size
     const int acigSize = gp.zNum * gp.scatNum;
+	// multi-gather size
+    const int mcigSize = gp.zNum * gp.scatNum * gp.dipNum;
 
 	// MEMORY ALLOCATION
 
@@ -395,6 +417,8 @@ int main (int argc, char* argv[]) {
     float* dag  = sf_floatalloc (dagSize);
 	// scattering-angle gather    
 	float* acig = sf_floatalloc (acigSize);
+	// multi-gather    
+	float* mcig = sf_floatalloc (mcigSize);
 	// image
 	float* image = sf_floatalloc (gp.zNum);
 
@@ -434,7 +458,7 @@ int main (int argc, char* argv[]) {
 			memset (image, 0, gp.zNum  * sizeof (float));
 
 			// the main migration function
-			migrator->processGather (curGatherPos, data, image, dag, acig);
+			migrator->processGather (curGatherPos, data, image, dag, acig, mcig);
 
 			// output the image trace
 			size_t startPos = startInd * gp.zNum * sizeof(float);
@@ -453,11 +477,18 @@ int main (int argc, char* argv[]) {
 			    sf_seek (acigFile, startPos, SEEK_SET);
 			    sf_floatwrite (acig, acigSize, acigFile);
 			}
+			// output the multi-gather
+			if (rp.isMCig) {
+			    startPos = startInd * mcigSize * sizeof(float);
+			    sf_seek (mcigFile, startPos, SEEK_SET);
+			    sf_floatwrite (mcig, mcigSize, mcigFile);
+			}
 		}
 	}
 
     sf_fileclose (dagFile);
     sf_fileclose (acigFile);
+    sf_fileclose (mcigFile);
     sf_fileclose (imageFile);
 
     sf_fileclose (velFile);
@@ -467,6 +498,7 @@ int main (int argc, char* argv[]) {
 
     free (dag);
     free (acig);
+    free (mcig);
     free (image);
 
     free (*velModel);

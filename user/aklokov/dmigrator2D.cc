@@ -12,7 +12,7 @@ void DepthMigrator2D::setWavefrontTracerAxes () {
 	wavefrontTracer_.setAxes ();
 }
 
-void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig) {
+void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig, float* mCig) {
 
 	// CONSTANTS
 
@@ -45,13 +45,15 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	double* curImage = new double [zNum];
 	memset ( curImage, 0, zNum * sizeof (double) );
 
+	memset ( mCig, 0, scatSize * dipNum * sizeof (double) );
+
 	// loop over depth samples
 #pragma omp parallel for
     for (int iz = 0; iz < zNum; ++iz) {	  
 		const float curZ = zStart + iz * zStep;		
 		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
 			continue;
-		this->processDepthSample (curX, curZ, data, curImage + iz, curDag + iz, curCig + iz);
+		this->processDepthSample (curX, curZ, data, curImage + iz, curDag + iz, curCig + iz, mCig + iz);
 	}
 
 	// transfer data from internal gathers (in double) to the external ones (in float)
@@ -76,7 +78,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 }
 
 void DepthMigrator2D::processDepthSample (const float curX, const float curZ, const float* const data, 
-										  double* curImage, double* curDag, double* curCig) {
+										  double* curImage, double* curDag, double* curCig, float* mCig) {
 
 	// CONSTANTS
 
@@ -131,6 +133,8 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 			maskCig [is] += 1;
 			*curImage += hSample;
 			maskImage += 1;
+			mCig [is * dipNum + id] += hSample;
+
 		}
 	}
 	// illumination normalization

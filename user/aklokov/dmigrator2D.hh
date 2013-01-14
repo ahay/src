@@ -10,8 +10,8 @@ public:
 	       DepthMigrator2D ();
 	      ~DepthMigrator2D ();
 
-	void   processGather             (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig);
-	void   processDepthSample        (const float curX, const float curZ, const float* const data, double* image, double* dag, double* aCig);
+	void   processGather             (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig, float* mCig);
+	void   processDepthSample        (const float curX, const float curZ, const float* const data, double* image, double* dag, double* aCig, float* curMCig);
 
 	void   calcTravelTimes           (float curZ, float curX, EscapePoint* escPoints);
 	// ray tracing functions
