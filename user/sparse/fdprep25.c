@@ -1,8 +1,9 @@
 /* 2D 25-point finite difference scheme */
 /* Z. Chen, T. Wu, H. Yang, 2011, An optimal 25-point finite difference 
-   scheme for the Helmholtz equation with PML, 236, 1240-1258. */
+   scheme for the Helmholtz equation with PML, J. Comput. Appl. Math., 
+   236, 1240-1258. */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

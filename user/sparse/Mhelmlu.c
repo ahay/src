@@ -90,18 +90,18 @@ int main(int argc, char* argv[])
     /* Hermite operator */
     
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* velocity for PML */
+    /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
-    /* order of finite-difference */
+    /* discretization scheme (default optimal 9-point) */
 
     fdprep_order(order);
 
     if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
-    /* alpha for PML */
+    /* PML damping */
 
     if (!sf_getfloat("f0",&f0)) f0=25.;
-    /* dominant frequency for PML */
+    /* PML dominant frequency */
 
     /* read input dimension */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");

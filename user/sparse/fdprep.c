@@ -1,6 +1,6 @@
 /* Interface for Helmholtz discretization */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -56,6 +56,9 @@ SuiteSparse_long fdprep_n(const int pad1, const int pad2)
 	case 'c':
 	    n = (pad1-4)*(pad2-4);
 	    break;
+
+	default:
+	    sf_error("Fail to load discretization scheme.");
     }
 
     return n;
@@ -88,6 +91,9 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 		-20*(pad1-8)-20*(pad2-8)-52-64
 		-10*(pad1-8)-10*(pad2-8)-36;
 	    break;
+
+	default:
+	    sf_error("Fail to load discretization scheme.");
     }
 
     return nz;
@@ -121,6 +127,9 @@ void fdprep(const double omega,
 	case 'c':
 	    fdprep25(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
 	    break;
+
+	default:
+	    sf_error("Fail to load discretization scheme.");
     }
 }
 
@@ -146,6 +155,9 @@ void fdpad(const int npml,
 	case 'c':
 	    fdpad25(npml,pad1,pad2, dat,Bx,Bz);
 	    break;
+
+	default:
+	    sf_error("Fail to load discretization scheme.");
     }
 }
 
@@ -171,5 +183,8 @@ void fdcut(const int npml,
 	case 'c':
 	    fdcut25(npml,pad1,pad2, dat,Xx,Xz);
 	    break;
+
+	default:
+	    sf_error("Fail to load discretization scheme.");
     }
 }

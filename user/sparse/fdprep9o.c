@@ -3,7 +3,7 @@
    difference, frequency-space, 2-D scalar wave extrapolator, Geophysics, 
    61, 529-537. */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
