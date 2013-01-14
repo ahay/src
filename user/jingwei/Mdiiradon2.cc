@@ -1,4 +1,4 @@
-//   2-D to 2-D Radon transform 
+//   2-D to 2-D Radon transform direct check every point
 //   Input f(w,x) complex
 //   Output u(tau,p) complex
 //   Call bfio.setup2 bfio.kernel2 bfio.check2 bfio.eval2
@@ -111,12 +111,12 @@ int main(int argc, char** argv)
 
   if(N<=256) {
     ck0 = clock();
-    iC( bfio.diieval2(N,f,w,x,u,tau,p) );
+    iC( bfio.dicheck2(N,f,w,x,u,tau,p) );
     ck1 = clock();    
     time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
   } else {
     tt0 = time(0);
-    iC( bfio.diieval2(N,f,w,x,u,tau,p) );
+    iC( bfio.dicheck2(N,f,w,x,u,tau,p) );
     tt1 = time(0);    
     time_eval = difftime(tt1,tt0);
   }

@@ -924,7 +924,7 @@ int BFIO::dikernel3(const int fi, const float tau, const float p, const float q,
 
 //----------------------------------
 //---------------------------------------
-int BFIO::diieval2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p)
+int BFIO::dicheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p)
 {
   int N1 = f.m();
   int N2 = f.n();
