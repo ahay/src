@@ -44,8 +44,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 	// internal image
 	double* curImage = new double [zNum];
 	memset ( curImage, 0, zNum * sizeof (double) );
-
-	memset ( mCig, 0, scatSize * dipNum * sizeof (double) );
+	// multi-gather
+	memset ( mCig, 0, scatSize * dipNum * sizeof (float) );
 
 	// loop over depth samples
 #pragma omp parallel for
@@ -133,8 +133,8 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 			maskCig [is] += 1;
 			*curImage += hSample;
 			maskImage += 1;
-			mCig [is * dipNum + id] += hSample;
-
+			const int mInd = (is * dipNum + id) * zNum;
+			mCig [mInd] += hSample;
 		}
 	}
 	// illumination normalization
