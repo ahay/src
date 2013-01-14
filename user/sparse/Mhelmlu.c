@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
     /* velocity for PML */
 
-    if (NULL == (order = sf_getstring("order"))) order="5";
+    if (NULL == (order = sf_getstring("order"))) order="j";
     /* order of finite-difference */
 
     fdprep_order(order);

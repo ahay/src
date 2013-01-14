@@ -252,7 +252,7 @@ void fdprep9o(const double omega,
 	    
 	    count++;
 	}
-    }
+    }    
 }
 
 void fdpad9o(const int npml,
