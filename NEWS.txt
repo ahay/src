@@ -15,6 +15,7 @@ To the Python package:
 To programs:
 
 * Added scalebar= option for sfgraph with depth=
+* Added an ability to specify options for sfpen with SFPENOPTS
 
 ===Bug fixes===
 

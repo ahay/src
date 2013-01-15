@@ -232,6 +232,7 @@ class Project(Environment):
                          'DATAPATH':self.path,
                          'OMP_NUM_THREADS': os.environ.get('OMP_NUM_THREADS',rsf.path.cpus()),
                          'TMPDATAPATH': tmpdatapath,
+                         'SFPENOPTS': os.environ.get('SFPENOPTS',''),
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',
                                         os.path.join(os.environ.get('HOME'),

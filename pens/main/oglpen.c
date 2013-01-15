@@ -110,6 +110,8 @@ void opendev (int argc, char* argv[])
     int dwidth, dheight, mwidth, mheight;
     int win_width, win_height;
 
+    sf_parenv("SFPENOPTS");
+
     dev.txfont = DEFAULT_HARDCOPY_FONT;
     dev.txprec = DEFAULT_HARDCOPY_PREC;
     dev.brake = BREAK_IGNORE;

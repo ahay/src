@@ -135,6 +135,15 @@ void sf_init(int argc,char *argv[])
     atexit(sf_close);
 }
 
+void sf_parenv(const char *string) 
+/*< add parameters from an environmental variable >*/
+{
+    char *env;
+
+    env = getenv(string);
+    if (NULL != env) sf_simtab_string(pars,env);
+}
+
 void sf_parclose (void)
 /*< close parameter table and free space >*/
 {

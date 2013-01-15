@@ -509,12 +509,53 @@ void sf_simtab_put (sf_simtab table, const char *keyval)
     free(key);
 }
 
+void sf_simtab_string (sf_simtab table, char* string)
+/*< extract parameters from a string >*/
+{
+    char *cw, *cl, word[LINELEN];
+    int c;
+    enum {START, INAWORD, STRING} state;
+
+    cw = word;
+    state = START;
+    for (cl = string; '\0' != (c=*cl); cl++) {
+	switch (state) {
+	    case START:
+		if (!isspace(c)) {
+		    *cw++ = c;
+		    state = ('"' == (char) c)? STRING:INAWORD;
+		}
+		break;
+	    case INAWORD:
+		if (isspace(c)) {
+		    *cw = '\0';
+		    sf_simtab_put (table,word);
+		    cw = word;
+		    state = START;
+		} else {
+		    *cw++ = c;
+		    if ('"' == c) state = STRING;
+		}
+		break;
+	    case STRING:
+		*cw++ = c;
+		if ('"' == c) state = INAWORD;
+		break;
+	}
+    }
+     
+    if (STRING == state) {
+	sf_error("%s: unterminated string",__FILE__);
+    } else if (INAWORD == state) {
+	*cw = '\0';
+	sf_simtab_put (table,word);
+    }
+}
+
 void sf_simtab_input (sf_simtab table, FILE* fp, FILE* out) 
 /*< extract parameters from a file >*/
 {
-    char line[LINELEN], word[LINELEN], *cl, *cw;
-    int c;
-    enum {START, INAWORD, STRING} state;
+    char line[LINELEN];
 
     while (NULL != fgets(line,4,fp)) {
 	/* code for the header end */
@@ -523,40 +564,7 @@ void sf_simtab_input (sf_simtab table, FILE* fp, FILE* out)
 	    NULL == fgets(line+3,LINELEN-3,fp)) return;
 
 	if (NULL != out) fputs(line,out);
-
-	cw = word;
-	state = START;
-        for (cl = line; '\0' != (c=*cl); cl++) {
-	    switch (state) {
-                case START:
-		    if (!isspace(c)) {
-			*cw++ = c;
-			state = ('"' == (char) c)? STRING:INAWORD;
-		    }
-		    break;
-                case INAWORD:
-		    if (isspace(c)) {
-			*cw = '\0';
-			sf_simtab_put (table,word);
-			cw = word;
-			state = START;
-		    } else {
-			*cw++ = c;
-			if ('"' == c) state = STRING;
-		    }
-		    break;
-                case STRING:
-		    *cw++ = c;
-		    if ('"' == c) state = INAWORD;
-		    break;
-	    }
-        }
-        if (STRING == state) {
-	    sf_error("%s: unterminated string",__FILE__);
-        } else if (INAWORD == state) {
-            *cw = '\0';
-	    sf_simtab_put (table,word);
-        }
+	sf_simtab_string(table,line);
     }
 }
 

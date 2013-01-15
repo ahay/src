@@ -2260,6 +2260,8 @@ void opendev (int argc, char* argv[])
     char ** myxargv;
     const char *color;
     
+    sf_parenv("SFPENOPTS");
+
     dev.message = xtmessage;
     dev.erase = xterase;
     dev.close = xtclose;

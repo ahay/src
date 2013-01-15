@@ -6,7 +6,6 @@
 # Date  : August, 07
 
 from rsf.proj import *
-import string as s
 
 # define SLIM FTP server information
 FTPserver = {
@@ -21,7 +20,7 @@ pcurve.pdf
 '''
 
 # fetch figures from FTP server
-for fig in s.split(flist):
+for fig in Split(flist):
     Fetch(fig,loc,FTPserver)
     
 End()
