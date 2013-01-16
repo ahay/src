@@ -368,29 +368,21 @@ int main(int argc, char* argv[])
 			b2=0;
 			xxtem[a+1] = xx[a+1]-dk[a+1];
 			
-			if (xxtem[a+1]<bmin) {
-				switch (b1) {
-					case 20: /*maximum times to multiply is 20*/
-						break;
-					default:
-						dk[a+1]=0.5*dk[a+1];
-						sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
-						xxtem[a+1] = xx[a+1]-dk[a+1];
-						b1++;
-						break;
-				}
+			while (xxtem[a+1]<bmin && b1<21) {  /*maximum times to multiply is 20*/
+				
+					dk[a+1]=0.5*dk[a+1];
+					sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+					xxtem[a+1] = xx[a+1]-dk[a+1];
+					b1++;
 			}
-			else if (xxtem[a+1]>bmax) {
-				switch (b2) {
-					case 20: /*maximum times to multiply is 20*/
-						break;
-					default:
-						dk[a+1]=0.5*dk[a+1];
-						sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
-						xxtem[a+1] = xx[a+1]-dk[a+1];
-						b2++;
-						break;
-				}
+			
+			while (xxtem[a+1]>bmax && b2<21) {
+	
+					dk[a+1]=0.5*dk[a+1];
+					sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+					xxtem[a+1] = xx[a+1]-dk[a+1];
+					b2++;
+				
 			}
 			
 		}
