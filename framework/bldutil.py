@@ -149,7 +149,7 @@ def __placeholder(target=None,source=None,env=None):
     out.write('import sys\n\n')
     out.write('sys.stderr.write(\'\'\'\n%s is not installed.\n')
     if var:
-        out.write('Check $RSFROOT/etc/madagascar/config.py for ' + var)
+        out.write('Check $RSFROOT/share/madagascar/etc/config.py for ' + var)
         out.write('\nand reinstall if necessary.')
     message = env.get('message')
     if message:

@@ -5,8 +5,10 @@ skiplist =  [
                 'book/rsf/programming/svd',                     # SciPy not installed
                 'book/rsf/rsf/sfenvelope',                      # SU not installed
                 'book/rsf/bash/plot',                           # plplot not installed
-
+		'book/chen/test/fpca',                          # sfpca not installed
+		'book/chen/test/xtime',                         # no results
 								# Examples with movies
+                'book/geo391/hw2/sorting',						
 		'book/rsf/rsf/fractal',
 		'book/rsf/rsf/sfawefd',
 		'book/rsf/su/rsflab5',
