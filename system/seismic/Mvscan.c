@@ -23,7 +23,6 @@ Inverse of sfvelmod
 #include <math.h>
 #include <rsf.h>
 #include "fint1.h"
-#include <time.h>
 
 static float v, h, v1, s;
 
@@ -70,9 +69,6 @@ static float noncurved1(float t, int it)
 
 int main(int argc, char* argv[])
 {
-    float time_eval;
-    clock_t ck0, ck1;
-
     fint1 nmo;
     bool sembl, half, slow, dsembl, asembl, weight, squared, trend, ratio;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, is, ns, CDPtype, mute, *mask;
@@ -83,8 +79,6 @@ int main(int argc, char* argv[])
     size_t len;
     sf_file cmp, scan, offset, msk, grd;
     mapfunc nmofunc;
-
-    ck0 = clock();
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -394,10 +388,6 @@ int main(int argc, char* argv[])
 	}
     } /* x */
     sf_warning(".");
-
-    ck1 = clock();    
-    time_eval = ((float)(ck1-ck0))/CLOCKS_PER_SEC;
-    printf("Ta %f\n",time_eval);
-   
+    
     exit(0);
 }
