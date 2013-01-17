@@ -81,7 +81,7 @@ public:
   //
   int dikernel2(const int fi, const float tau, const float p, const float x, float& t);
   int dikernel3(const int fi, const float tau, const float p, const float q, const float x, const float y, float& t);
-  int dicheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
+  int diicheck2(const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p);
 };
 
 #endif

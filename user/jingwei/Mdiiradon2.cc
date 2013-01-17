@@ -1,7 +1,7 @@
-//   2-D to 2-D Radon transform direct check every point
+//   direct 2-D to 2-D Radon transform / double integral
 //   Input f(w,x) complex
 //   Output u(tau,p) complex
-//   Call bfio.setup2 bfio.kernel2 bfio.check2 bfio.eval2
+//   Call bfio.setup2 bfio.kernel2 bfio.diicheck2
 //   In bfio.kernel2: fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
 //                    fi=3 x*k;         fi=4 -x*k;
 //
@@ -103,27 +103,18 @@ int main(int argc, char** argv)
   BFIO bfio("bfio_");
   iC( bfio.setup2(par,input) );
 
-  int N;
-  par.get("N",N); // number of partitions
-  cerr<<"N "<<N<<endl;
+  float time_eval1, time_eval2;
 
-  float time_eval;
+  ck0 = clock(); 
+  tt0 = time(0);
+  iC( bfio.diicheck2(f,w,x,u,tau,p) );
+  ck1 = clock();    
+  tt1 = time(0);  
+  time_eval1 = float(ck1-ck0)/CLOCKS_PER_SEC;
+  time_eval2 = difftime(tt1,tt0);
+  cerr<<"Teval1 "<<time_eval1<<endl;
+  cerr<<"Teval2 "<<time_eval2<<endl;
 
-  if(N<=256) {
-    ck0 = clock();
-    iC( bfio.dicheck2(N,f,w,x,u,tau,p) );
-    ck1 = clock();    
-    time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
-  } else {
-    tt0 = time(0);
-    iC( bfio.dicheck2(N,f,w,x,u,tau,p) );
-    tt1 = time(0);    
-    time_eval = difftime(tt1,tt0);
-  }
-  //
-  cerr<<"Ta "<<time_eval<<endl;
-  //
-  
   std::valarray<sf_complex> udata(ntau*np);
   //std::valarray<float> udata(ntau*np);
   //udata.resize(ntau*np);

@@ -924,7 +924,7 @@ int BFIO::dikernel3(const int fi, const float tau, const float p, const float q,
 
 //----------------------------------
 //---------------------------------------
-int BFIO::dicheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p)
+int BFIO::diicheck2(const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p)
 {
   int N1 = f.m();
   int N2 = f.n();
@@ -938,7 +938,7 @@ int BFIO::dicheck2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVe
   for(int j1=0; j1<M2; j1++)
     for(int i1=0; i1<M1; i1++) {
       vector<Point2> trg;  trg.push_back( Point2((tau(i1)-taumin)/(taumax-taumin), (p(j1)-pmin)/(pmax-pmin)) );
-      CpxNumMat res(1,N1*N2);  iC( kernel2(N, trg, src, res) );
+      CpxNumMat res(1,N1*N2);  iC( kernel2(1, trg, src, res) );
       CpxNumMat resaux(N1,N2,false,res.data());
       cpx ttl(0,0);
       for(int j=0; j<N2; j++)

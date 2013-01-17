@@ -1,4 +1,4 @@
-//   direct 2-D to 2-D Radon transform
+//   direct 2-D to 2-D Radon transform / single integral
 //   Input f(t,x) real
 //   Output u(tau,p) real
 //   Call bfio.dikernel2
