@@ -30,9 +30,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "general_traveltime.h"
 #include "vectorsub.h"
+#include "general_traveltime.h"
 #include "ml_traveltime_vconstant.h"
+#include "ml_traveltime_vgradient.h"
+#include "setvelocity.h"
 
 /*Reflector function--------------------------------------------------------------------------------*/
 
@@ -82,15 +84,13 @@ static float zder2(int k,float x)
 /*Main program-------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter;
+	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus;
 	float x, dt, t0, bmin, bmax, tt;
 	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *dk_old, *xxtem, *zk,*ck_inv; 
 	double tol;
 	sf_file refl, xrefl;
 	
 	sf_init(argc,argv); /* initialize - always call first */
-	
-	
 	
 	/*Set input------------------------------------------------------------------------------*/
 	refl = sf_input("in"); /* reflector */
@@ -113,8 +113,6 @@ int main(int argc, char* argv[])
 	rd = sf_floatalloc2(nr1,nr2+2);
 	ans = sf_floatalloc2(nr2+2,2);
 	
-	
-	
 	xx = sf_floatalloc(nr2+2);
 	xxnew = sf_floatalloc(nr2+2);
 	xinitial = sf_floatalloc(nr2);
@@ -126,11 +124,11 @@ int main(int argc, char* argv[])
 	xref_inp = sf_floatalloc(N-1); /* Input reference point x-coordinate*/
 	zref_inp = sf_floatalloc(N-1); /* Input reference point z-coordinate*/
 	
-	v = sf_floatalloc(nr2+1);  /* Velocity array used in calculation generated according to where the ray travels*/
-	gx = sf_floatalloc(nr2+1); /* Velocity gradient in x-direction used in calculation generated according to where the ray travels*/
-	gz = sf_floatalloc(nr2+1); /* Velocity gradient in z-direction used in calculation generated according to where the ray travels*/
-	xref = sf_floatalloc(nr2+1); /* Reference point x-coordinate used in calculation generated according to where the ray travels*/
-	zref = sf_floatalloc(nr2+1); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
+	v = sf_floatalloc(nr2+2);  /* Velocity array used in calculation generated according to where the ray travels*/
+	gx = sf_floatalloc(nr2+2); /* Velocity gradient in x-direction used in calculation generated according to where the ray travels*/
+	gz = sf_floatalloc(nr2+2); /* Velocity gradient in z-direction used in calculation generated according to where the ray travels*/
+	xref = sf_floatalloc(nr2+2); /* Reference point x-coordinate used in calculation generated according to where the ray travels*/
+	zref = sf_floatalloc(nr2+2); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
 	
 	F = sf_floatalloc(nr2+2);
 	dk = sf_floatalloc(nr2+2);
@@ -142,7 +140,6 @@ int main(int argc, char* argv[])
 	
 	
 	/*Set input------------------------------------------------------------------------------*/
-	
 	
 	if (!sf_getfloat("xs",&xx[0])) sf_error("Please enter the source position");
 	/* Source*/
@@ -179,6 +176,9 @@ int main(int argc, char* argv[])
 	
 	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
 	/* The number of iterations*/
+	
+	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
+	/* Velocity status*/
 	
 	if (!sf_getdouble("tol",&tol)) tol=0.000001/v_inp[0];
 	/* Assign a default value for tolerance*/
@@ -222,41 +222,43 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	/*generate input according to the reflection sequence-----------------------------*/
+	/*Generate input according to the reflection sequence-----------------------------*/
 	for (d2=0; d2<nr2+2; d2++) {
 		
 				
-		if (d2<nr2+1) { /*Set velocity, gradient, and reference points arrays*/
+		/*Set velocity, gradient, and reference points arrays*/
 			
-			if (d2 == 0) {
+			if (d2 <=1) {
 				v[d2] = v_inp[0];
 				gx[d2] = gx_inp[0];
 				gz[d2] = gz_inp[0];
 				xref[d2] = xref_inp[0];
 				zref[d2] = zref_inp[0];
  			}
-			d3 = updown[d2-1]; /*need d3, d4, and d5 because array argument needs to be an interger*/
-			d4 = updown[d2];
-			
-			if (d4-d3>0) {
+			else {
+				d3 = updown[d2-2]; /*need d3, d4, and d5 because array argument needs to be an interger*/
+				d4 = updown[d2-1];
 				
-				v[d2] = v_inp[d3];
-				gx[d2] = gx_inp[d3];
-				gz[d2] = gz_inp[d3];
-				xref[d2] = xref_inp[d3];
-				zref[d2] = zref_inp[d3];
-			}	
+				if (d4-d3>0) {
+					
+					gx[d2] = gx_inp[d3];
+					gz[d2] = gz_inp[d3];
+					xref[d2] = xref_inp[d3];
+					zref[d2] = zref_inp[d3];
+					
+				}	
 				
-			if(d4-d3<0){
-			
-				v[d2] = v_inp[d4];
-				gx[d2] = gx_inp[d4];
-				gz[d2] = gz_inp[d4];
-				xref[d2] = xref_inp[d4];
-				zref[d2] = zref_inp[d4];
-				
+				if(d4-d3<0){
+					
+					v[d2] = v_inp[d4];
+					gx[d2] = gx_inp[d4];
+					gz[d2] = gz_inp[d4];
+					xref[d2] = xref_inp[d4];
+					zref[d2] = zref_inp[d4];
+					
+				}
 			}
-		}
+
 		
 		for (d1=0; d1<nr1; d1++) {
 			
@@ -297,6 +299,27 @@ int main(int argc, char* argv[])
 		sf_eno_set (deno[ir2],rr[ir2]);
 	}
 	
+	/*Set vconstant or vgradient----------------------------------------------------------*/
+
+	func3 f;
+	
+	f.T_k = 0; /*Initialize structure f*/
+	f.T_k_k = 0;
+	f.T_k_k1 = 0;
+	f.T_k_k_k = 0;
+	f.T_k_k1_k1 = 0;
+	f.T_k_k_k1 = 0;
+	f.T_k_zk = 0;
+	f.T_k_zk1 = 0;
+	f.T_k_zk_zk = 0;
+	f.T_k_zk1_zk1 = 0;
+	f.T_k_zk_zk1 = 0;
+	f.T_k_k_zk = 0;
+	f.T_k_k1_zk1 = 0;
+	f.T_k_k_zk1 = 0;
+	f.T_k_k1_zk = 0;
+		
+	setfunc(vstatus,&f);
 	
 	/*Step 1: Calculate F(y) to see if it is sufficiently close to zero-------------------*/
 	
@@ -307,14 +330,11 @@ int main(int argc, char* argv[])
 		xx[i3+1] = xinitial[i3];
 	}
 	
-	
-	/*Set initial structure variables' values---------------------------------------------------*/
-	
 	for (i=0; i<nr2; i++) {
 		
 		initialize(i+1,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_k and y_k1*/
 		
-		F[i+1] = T_hat_1k_k(T_k_k1,T_k_zk1) + T_hat_k_k(T_k_k,T_k_zk);
+		F[i+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 		
 		/*F[i+1] = traveltime_1k_k(i+1,v[i],xx[i],xx[i+1],xx[i+2],z,zder,zder2) + traveltime_k_k(i+1,v[i+1],xx[i],xx[i+1],xx[i+2],z,zder,zder2);*/
 		
@@ -353,7 +373,7 @@ int main(int argc, char* argv[])
 			
 			initialize(i2+1,xx,v,xref,zref,gx,gz,z,zder,zder2);
 			
-			F[i2+1] = T_hat_1k_k(T_k_k1,T_k_zk1) + T_hat_k_k(T_k_k,T_k_zk);
+			F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 			
 			/*F[i2+1] = traveltime_1k_k(i2+1,v[i2],xx[i2],xx[i2+1],xx[i2+2],z,zder,zder2) + traveltime_k_k(i2+1,v[i2+1],xx[i2],xx[i2+1],xx[i2+2],z,zder,zder2);*/
 			
@@ -387,16 +407,16 @@ int main(int argc, char* argv[])
 			
 			if (l==0) {
 				
-				ck_inv[1]= 1/(T_hat_1k_k_k(T_k_k1_k1,T_k_k1_zk1,T_k_zk1,T_k_zk1_zk1) + T_hat_k_k_k(T_k_k_k,T_k_k_zk,T_k_zk,T_k_zk_zk));
-				zk[1] = T_hat_1k_k(T_k_k1,T_k_zk1) +T_hat_k_k(T_k_k,T_k_zk);
+				ck_inv[1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
+				zk[1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) +T_hat_k_k(f.T_k_k,f.T_k_zk);
 				
 				/*ck_inv[1] = 1/(traveltime_1k_k_k(l+1,v[l],xx[0],xx[1],xx[2],z,zder,zder2) + traveltime_k_k_k(l+1,v[l+1],xx[0],xx[1],xx[2],z,zder,zder2)); */
 				/*zk[1] = traveltime_1k_k(l+1,v[l],xx[0],xx[1],xx[2],z,zder,zder2) + traveltime_k_k(l+1,v[l+1],xx[0],xx[1],xx[2],z,zder,zder2); */
 			}
 			else {
 				
-				ck_inv[l+1]= 1/(T_hat_1k_k_k(T_k_k1_k1,T_k_k1_zk1,T_k_zk1,T_k_zk1_zk1) + T_hat_k_k_k(T_k_k_k,T_k_k_zk,T_k_zk,T_k_zk_zk) - T_hat_1k_1k_k(T_k_k_k1,T_k_k1_zk,T_k_k_zk1,T_k_zk_zk1)*ck_inv[l]*T_hat_1k_1k_k(T_k_k_k1,T_k_k1_zk,T_k_k_zk1,T_k_zk_zk1));
-				zk[l+1] = T_hat_1k_k(T_k_k1,T_k_zk1) + T_hat_k_k(T_k_k,T_k_zk) - T_hat_1k_1k_k(T_k_k_k1,T_k_k1_zk,T_k_k_zk1,T_k_zk_zk1)*ck_inv[l]*zk[l];
+				ck_inv[l+1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
+				zk[l+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*zk[l];
 				
 				/*ck_inv[l+1] = 1/(traveltime_1k_k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2) + traveltime_k_k_k(l+1,v[l+1],xx[l],xx[l+1],xx[l+2],z,zder,zder2)-traveltime_1k_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2)*ck_inv[l]*traveltime_1k_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2));*/
 				/*zk[l+1] = traveltime_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2) + traveltime_k_k(l+1,v[l+1],xx[l],xx[l+1],xx[l+2],z,zder,zder2)-traveltime_1k_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2)*ck_inv[l]*zk[l];*/	
@@ -419,7 +439,7 @@ int main(int argc, char* argv[])
 				dk[m+1] = ck_inv[m+1]*zk[m+1];
 			}
 			else {
-				dk[m+1] = ck_inv[m+1]*(zk[m+1]-T_hat_k_k_k1(T_k_k_k1,T_k_k1_zk,T_k_k_zk1,T_k_zk_zk1)*dk[m+2]);
+				dk[m+1] = ck_inv[m+1]*(zk[m+1]-T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*dk[m+2]);
 				/*dk[m+1] = ck_inv[m+1]*(zk[m+1]-traveltime_k_k_k1(m+1,v[m+1],xx[m],xx[m+1],xx[m+2],z,zder,zder2)*dk[m+2]);*/
 			}
 			
@@ -525,7 +545,7 @@ mark: /*mark point for goto*/
 		
 		half_initialize(c,xx,v,xref,zref,gx,gz,z,zder,zder2);
 		
-		tt = tt + T_hat_k(T_k);
+		tt = tt + T_hat_k(f.T_k);
 		/*tt = tt + traveltime_k(c, v[c],xx[c],xx[c+1],z,zder,zder2);*/
 		
 		if (c==nr2) {

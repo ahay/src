@@ -15,10 +15,6 @@
 
 #ifndef _general_traveltime_h
 
-typedef float (*func1)(int, float);
-/* function pointer for int and float -> float */
-/*^*/
-
 typedef struct twod {
 	float x; /*x-coordinate*/
 	float z; /*z-coordinate*/
@@ -26,19 +22,43 @@ typedef struct twod {
 	float d2; /*Second derivative*/
 	float v; /*velocity at the reflector*/
 	float gx;/*x-direction velocity gradient*/
-	float gz;/*z-diection velocity gradient*/
+	float gz;/*z-direction velocity gradient*/
 } twod;
 /* structure pointer */
+/*^*/
+
+typedef float (*func1)(int, float);
+/* function pointer for int and float -> float */
 /*^*/
 
 typedef float (*func2)(twod,twod);
 /* function pointer for twod,twod -> float */
 /*^*/
 
+typedef struct func3 {
+	func2 T_k;
+	func2 T_k_k;
+	func2 T_k_k1;
+	func2 T_k_k_k;
+	func2 T_k_k1_k1;
+	func2 T_k_k_k1;
+	func2 T_k_zk;
+	func2 T_k_zk1;
+	func2 T_k_zk_zk;
+	func2 T_k_zk1_zk1;
+	func2 T_k_zk_zk1;
+	func2 T_k_k_zk;
+	func2 T_k_k1_zk1;
+	func2 T_k_k_zk1;
+	func2 T_k_k1_zk;
+} func3;
+/* structure pointer */
+/*^*/
 
 #endif
 
 static twod y_1k,y_k,y_k1;
+/*static func3 f;*/
 
 /*T(x_k,x_k+1,z_k,z_k+1) = T_hat(x_k,x_k+1)*/
 
@@ -112,7 +132,6 @@ void half_initialize(int i /*Indicator of layer*/,
 	y_k1.v = v[i+1]+y_k1.gx*(y_k1.x-xref[i+1])+y_k1.gz*(y_k1.z-zref[i+1]);
 	
 }
-
 
 
 float T_hat_k(func2 T_k)
@@ -219,4 +238,29 @@ float T_hat_1k_1k_k(func2 T_k_k_k1,func2 T_k_k1_zk,func2 T_k_k_zk1, func2 T_k_zk
 	
 	return t_1k_1k_k;
 }
+
+
+/*	int i
+ 
+ func2 functions[] =
+ {
+ f.T_k,f.T_k_k,f.T_k_k1,f.T_k_k_k,f.T_k_k1_k1,f.T_k_k_k1,
+ f.T_k_zk,f.T_k_zk1,f.T_k_zk_zk,f.T_k_zk1_zk1,f.T_k_zk_zk1,
+ f.T_k_k_zk,f.T_k_k1_zk1,f.T_k_k_zk1,f.T_k_k1_zk
+ };
+ 
+ func2 functions0[] =
+ {
+ T0_k,T0_k_k,T0_k_k1,T0_k_k_k,T0_k_k1_k1,T0_k_k_k1,
+ T0_k_zk,T0_k_zk1,T0_k_zk_zk,T0_k_zk1_zk1,T0_k_zk_zk1,
+ T0_k_k_zk,T0_k_k1_zk1,T0_k_k_zk1,T0_k_k1_zk
+ };
+ 
+ func2 functions1[] =
+ {
+ T1_k,T1_k_k,T1_k_k1,T1_k_k_k,T1_k_k1_k1,T1_k_k_k1,
+ T1_k_zk,T1_k_zk1,T1_k_zk_zk,T1_k_zk1_zk1,T1_k_zk_zk1,
+ T1_k_k_zk,T1_k_k1_zk1,T1_k_k_zk1,T1_k_k1_zk
+ };*/
+
 

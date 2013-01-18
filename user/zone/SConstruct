@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-isaac0 isaac1 isaac2 isaac3 isaac4
+isaac0 isaac1 isaac2 isaac3
 '''
 
 # kirr33 kirm3 rtmpar shuffle

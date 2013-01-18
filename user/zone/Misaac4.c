@@ -30,7 +30,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include "general_traveltime.h"
-#include "ml_traveltime_vgradient.h"
 #include "vectorsub.h"
 
 
