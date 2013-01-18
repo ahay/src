@@ -36,6 +36,15 @@ context_success = 1
 context_failure = 0
 unix_failure = 1
 
+def path_get(context,name,new=None):
+    'get a path list'
+    path = context.env.get(name,[])
+    if type(path) is not types.ListType:
+        path = path.split(',')
+    if new:
+        path.append(new)
+    return path
+
 def escape_seq(keyword):
     'A few ANSI escape sequences for highlighting warnings and errors'
     # Bold for warnings, and yellow on red background for fatal errors
@@ -248,15 +257,15 @@ def cc(context):
         context.env['LINKFLAGS'] = context.env.get('LINKFLAGS','') + \
             ' -framework Accelerate ' 
         if os.path.isdir('/opt'):   # paths for MacPorts
-            context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
-                ['/opt/local/include',]
-            context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
-                ['/opt/local/lib',]
+            context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                              '/opt/local/include')
+            context.env['LIBPATH'] = path_get(context,'LIBPATH',
+                                              '/opt/local/lib')
         if os.path.isdir('/sw'):    # paths for Fink
-            context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
-                ['/sw/include',]
-            context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
-                ['/sw/lib',]
+            context.env['CPPPATH'] = path_get(context,'CPPPATH',
+                                              '/sw/include')
+            context.env['LIBPATH'] = path_get(context,'LIBPATH',
+                                              '/sw/lib')
     # Solaris
     elif plat['OS'] == 'sunos':
         context.env['CFLAGS'] = string.replace(context.env.get('CFLAGS',''),
@@ -281,14 +290,13 @@ pkg['libs'] = {'fedora':'glibc-headers',
 # Failing this check stops the installation.
 def libs(context):
     context.Message("checking for libraries ... ")
-    LIBS = context.env.get('LIBS','m')
+    LIBS = path_get(context,'LIBS','m')
     DYNLIB = context.env.get('DYNLIB')
     if not DYNLIB or DYNLIB[0].lower() == 'n':
         context.env['DYNLIB'] = ''
     else:
         context.env['DYNLIB'] = 'd'
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+        
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
     elif plat['OS'] == 'cygwin':
@@ -333,7 +341,7 @@ def c99(context):
         context.Result(res)
     else:
         context.env['CPPDEFINES'] = \
-            context.env.get('CPPDEFINES',[])+['NO_COMPLEX']
+            path_get(context,'CPPDEFINES','NO_COMPLEX')
         context.Result(context_failure)
         need_pkg('c99', fatal=False)
 
@@ -417,11 +425,9 @@ def x11(context):
     }\n'''
 
     context.Message("checking for X11 headers ... ")
-    INC = context.env.get('XINC','')
-    if type(INC) is not types.ListType:
-        INC = string.split(INC)
-
-    oldpath = context.env.get('CPPPATH',[])
+    
+    INC = path_get(context,'XINC')
+    oldpath = path_get(context,'CPPPATH')
 
     res = None
     for path in filter(lambda x:
@@ -442,18 +448,12 @@ def x11(context):
         return
 
     context.Message("checking for X11 libraries ... ")
-    LIB = context.env.get('XLIBPATH','')
-    if type(LIB) is not types.ListType:
-        LIB = string.split(LIB)
-
-    oldlibpath = context.env.get('LIBPATH',[])
-    oldlibs = context.env.get('LIBS',[])
-
-    XLIBS = context.env.get('XLIBS')
-    if XLIBS:
-        if type(XLIBS) is not types.ListType:
-            XLIBS = string.split(XLIBS,',')
-    else:
+    
+    LIB = path_get(context,'XLIBPATH')
+    oldlibpath = path_get(context,'LIBPATH')    
+    oldlibs = path_get(context,'LIBS')
+    XLIBS = path_get(context,'XLIBS')
+    if not XLIBS:
         if  plat['OS'] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
 #        elif (plat['OS'] == 'linux' or plat['OS'] == 'posix') and \
@@ -521,7 +521,8 @@ pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
 def ppm(context):
     context.Message("checking for ppm ... ")
 
-    oldpath = context.env.get('CPPPATH',[])
+    oldpath = path_get(context,'CPPPATH')
+    
     if plat['OS'] == 'darwin':
 	ppmpath = context.env.get('PPMPATH','/opt/local/include/netpbm')
     else:
@@ -531,9 +532,8 @@ def ppm(context):
     else:
         ppmpath = None
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
+ 
     text = '''
     #include <ppm.h>
     int main(int argc,char* argv[]) {
@@ -567,9 +567,8 @@ pkg['libtiff'] = {'suse':'libtiff-devel',
 def tiff(context):
     context.Message("checking for tiff ... ")
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
+ 
     text = '''
     #include <tiffio.h>
     int main(int argc,char* argv[]) {
@@ -600,9 +599,8 @@ pkg['libgd'] = {'suse':'gd-devel',
 def gd(context):
     context.Message("checking for GD (PNG) ... ")
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
+
     text = '''
     #include <gd.h>
     int main(int argc,char* argv[]) {
@@ -653,9 +651,9 @@ pkg['plplot'] = {'fedora':'plplot-devel',
 def plplot(context):
     context.Message("checking for plplot ... ")
 
-    oldpath = context.env.get('CPPPATH',[])
+    oldpath = path_get(context,'CPPPATH')    
     plplotpath = context.env.get('PLPLOTPATH')
-    oldlibpath = context.env.get('LIBPATH',[])
+    oldlibpath = path_get(context,'LIBPATH')
     plplotlibpath = context.env.get('PLPLOTLIBPATH')
     if plplotpath and os.path.isfile(os.path.join(plplotpath,'plplot.h')):
         context.env['CPPPATH'] = oldpath + [plplotpath]
@@ -669,9 +667,8 @@ def plplot(context):
     if plplotlibpath:
         context.env['LIBPATH'] = oldlibpath + [plplotlibpath]
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
+ 
     text = '''
     #include <plplot.h>
     #include <plplotP.h>
@@ -707,7 +704,7 @@ pkg['ffmpeg'] = {'fedora':'ffmpeg-devel',
 def ffmpeg(context):
     context.Message("checking for ffmpeg ... ")
 
-    oldpath = context.env.get('CPPPATH',[])
+    oldpath = path_get(context,'CPPPATH')
     ffmpegpath = context.env.get('FFMPEGPATH')
     if ffmpegpath and os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
         context.env['CPPPATH'] = oldpath + [ffmpegpath]
@@ -729,9 +726,8 @@ def ffmpeg(context):
                 context.env['CPPPATH'] = oldpath + [ffmpegpath]
                 break
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
+ 
     text = '''
     #include <avcodec.h>
     int main (int argc, char *argv[]) {
@@ -761,7 +757,7 @@ pkg['cairo'] = {'suse':'cairo-devel',
 def cairo(context):
     context.Message("checking for cairo (PNG) ... ")
 
-    oldpath = context.env.get('CPPPATH',[])
+    oldpath = path_get(context,'CPPPATH')
 
     cairopath = context.env.get('CAIROPATH')
     if cairopath and os.path.isfile(os.path.join(cairopath,'cairo.h')):
@@ -773,9 +769,8 @@ def cairo(context):
                 context.env['CPPPATH'] = oldpath + [cairopath]
                 break
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
+
     text = '''
     #include <cairo.h>
     int main(int argc,char* argv[]) {
@@ -826,9 +821,7 @@ pkg['jpeg'] = {'fedora':'libjpeg-devel',
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
     context.Message("checking for jpeg ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
     jpeg = context.env.get('JPEG','jpeg')
     LIBS.append(jpeg)
     text = '''
@@ -863,11 +856,9 @@ pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut + freeglut-devel',
 def opengl(context):
     global plat
     context.Message("checking for OpenGL ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
     LINKFLAGS = context.env.get('LINKFLAGS','')
-    CPPPATH = context.env.get('CPPPATH',[])
+    CPPPATH = path_get(context,'CPPPATH')
     oglflags = None
     oglpath = None
 
@@ -880,10 +871,10 @@ def opengl(context):
         oglpath = '/usr/include/opengl'
         context.env['CPPPATH'] = CPPPATH + [oglpath]
     else:
-        ogl = context.env.get('OPENGL','GL GLU glut')
+        ogl = path_get(context,'OPENGL')
+        if not ogl:
+            ogl = ['GL','GLU','glut']
 
-    if type(ogl) is not types.ListType:
-        ogl = string.split(ogl)
     context.env['LIBS'] = LIBS + ogl
 
     text = '''
@@ -921,9 +912,7 @@ pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
 
 def blas(context):
     context.Message("checking for BLAS ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
     blas = context.env.get('BLAS','blas')
     LIBS.append(blas)
     text = '''
@@ -962,7 +951,7 @@ def blas(context):
         else:
             context.Result(context_failure)
             context.env['CPPDEFINES'] = \
-                context.env.get('CPPDEFINES',[]) + ['NO_BLAS']
+                path_get(context,'CPPDEFINES','NO_BLAS')
             LIBS.pop()
             LIBS.pop()
             context.env['BLAS'] = None
@@ -970,9 +959,7 @@ def blas(context):
 
 def lapack(context):
     context.Message("checking for LAPACK ... ")
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
+    LIBS = path_get(context,'LIBS')
     blas = context.env.get('BLAS','blas')
     lapack = context.env.get('LAPACK','lapack')
     mylibs = [lapack,blas]
@@ -1127,10 +1114,8 @@ pkg['fftw'] = {'fedora':'fftw-devel',
 def fftw(context):
     context.Message("checking for FFTW ... ")
 
-    LIBS = context.env.get('LIBS','m')
-    if type(LIBS) is not types.ListType:
-        LIBS = string.split(LIBS)
-
+    LIBS = path_get(context,'LIBS')
+    
     text = '''
     #include <fftw3.h>
     int main(int argc,char* argv[]) {
@@ -1196,9 +1181,9 @@ def petsc(context):
     petsclibs = libs.findall(makeout)
 
     oldcc = context.env.get('CC')
-    oldpath = context.env.get('CPPPATH',[])
-    oldlibpath = context.env.get('LIBPATH',[])
-    oldlibs = context.env.get('LIBS',[])
+    oldpath = path_get(context,'CPPPATH')
+    oldlibpath = path_get(context,'LIBPATH')
+    oldlibs = path_get(context,'LIBS')
 
     context.env['CC'] = petsccc
     context.env['CPPPATH'] = oldpath + [petscpath,] 
@@ -1280,9 +1265,9 @@ def psp(context):
     testlibs = libs.findall(makelibsout)
 
     oldcxx = context.env.get('CXX')
-    oldpath = context.env.get('CPPPATH',[])
-    oldlibpath = context.env.get('LIBPATH',[])
-    oldlibs = context.env.get('LIBS',[])
+    oldpath = path_get(context,'CPPPATH')
+    oldlibpath = path_get(context,'LIBPATH')
+    oldlibs = path_get(context,'LIBS')
 
     context.env['CXX'] = pspcxx
     context.env['CPPPATH'] = oldpath + [psppath,] 
@@ -1329,7 +1314,7 @@ def psp(context):
 def sparse(context):
     context.Message("checking for SuiteSparse ... ")
 
-    oldlibs = context.env.get('LIBS',[])
+    oldlibs = path_get(context,'LIBS')
     sparselibs = ['umfpack','suitesparseconfig','cholmod',
                   'amd','camd','colamd','ccolamd','metis','goto2']
     context.env['LIBS'] = oldlibs+sparselibs
@@ -1383,7 +1368,7 @@ def omp(context):
         context.env['OMP'] = False
         return # only 1 cpu. OMP not needed
     context.Message("checking for OpenMP ... ")
-    LIBS  = context.env.get('LIBS',[])
+    LIBS  = path_get(context,'LIBS')
     CC    = context.env.get('CC','gcc')
     flags = context.env.get('CFLAGS','')
     ccflags =  context.env.get('CXXFLAGS','')
@@ -1444,7 +1429,7 @@ def pthreads(context):
     context.Message("checking for Posix threads ... ")
 
     flags = context.env.get('LINKFLAGS','')
-    LIBS  = context.env.get('LIBS',[])
+    LIBS  = path_get(context,'LIBS')
     CC    = context.env.get('CC','gcc')
     pgcc =  (string.rfind(CC,'pgcc') >= 0)
     gcc = (string.rfind(CC,'gcc') >= 0)
@@ -1505,11 +1490,7 @@ def sse(context):
 
 def api_options(context):
     context.Message("checking API options ... ")
-    api = context.env.get('API')
-    if api:
-        api = string.split(string.lower(api),',')
-    else:
-        api = []
+    api = map(string.lower,path_get(context,'API'))
 
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
                          'f90', 'python', 'matlab', 'octave', 'java']

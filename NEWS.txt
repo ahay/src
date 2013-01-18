@@ -12,6 +12,8 @@ To APIs:
 
 To the Python package:
 
+* Added an ability to have list arguments in configure
+
 To programs:
 
 * Added scalebar= option for sfgraph with depth=
