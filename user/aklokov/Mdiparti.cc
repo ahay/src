@@ -19,7 +19,8 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include <rsf.hh>
+#include "sembler.hh"
 
 // dip-angle gathers dimensions
 int zNum_;   float zStart_;   float zStep_;
@@ -36,8 +37,9 @@ float v_xStart_;
 float v_xStep_;
 
 float apert_;
+int sembWindow_;
 
-void processPartImage (const float migDip, float* partImage, float* dPartImage, float* velModel) {
+void processPartImage (const float migDip, float* partImage, float* dPartImage, float* sembMap, float* velModel) {
 
 	const float curDipRad = migDip * SF_PI / 180.f;
 
@@ -45,6 +47,7 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		const float curX = xStart_ + ix * xStep_;
 		// loop over z
+		float* trace2 = sf_floatalloc (zNum_);
 		for (int iz = 0; iz < zNum_; ++iz) {
 			const float curT = zStart_ + iz * zStep_;
 			// get velocity
@@ -53,8 +56,8 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 
 			const float zd = 0.5 * velMig * curT + 1e-6;		
 
-			float diffStack = 0.f;
-			
+			float diffStack  = 0.f;
+			float diffStack2 = 0.f;
 			// loop over x - the second one 
 			for (int ip = 0; ip < xNum_; ++ip) {
 				const float curPos = xStart_ + ip * xStep_;	
@@ -70,14 +73,27 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 				if (tInd < 0 || tInd >= zNum_)
 						continue;
 
-				int ind = ip * zNum_ + tInd;
-		
-				diffStack += partImage [ind];							
+				const int ind = ip * zNum_ + tInd;
+				const float sample = partImage [ind];		
+
+				diffStack  += sample;
+				diffStack2 += sample * sample;
 			}
 
-			int sInd = ix * zNum_ + iz;
+			const int sInd = ix * zNum_ + iz;
 			dPartImage [sInd] += diffStack;
+
+			trace2 [iz] += diffStack2;
 		}
+
+		float* sembTrace = sf_floatalloc (zNum_);
+		Sembler::getSemblanceForTrace (xNum_, dPartImage + ix*zNum_, trace2, zNum_, sembWindow_, sembTrace);		
+		float* pMap = sembMap + ix*zNum_;
+		float* pTrace = sembTrace;
+		for (int iz = 0; iz < zNum_; ++iz, ++pMap, ++pTrace)
+			*pMap = *pTrace;
+		free (sembTrace);
+		free (trace2);
 	}
 
 	return;
@@ -107,11 +123,21 @@ int main (int argc, char* argv[]) {
 		}			
     } else { sf_error ("Need input: velocity model"); }
 
-// Output file
+// Output files
     sf_file resFile = sf_output ("out");
+
+    sf_file sembFile;
+    if ( NULL != sf_getstring("semb") ) {
+	/* output file containing semblance */ 
+		sembFile  = sf_output ("semb"); 
+    } else sf_error ("Need float output: semblance");
+
 
     if ( !sf_getfloat ("apert", &apert_) ) apert_ = 1000;
     /* diffraction summation aperture */
+    if ( !sf_getint ("sembWindow", &sembWindow_) ) sembWindow_ = 11;
+    /* vertical window for semblance calculation (in samples) */
+
 
 // Depth/time axis 
     if ( !sf_histint   (piFile, "n1", &zNum_) )   sf_error ("Need n1= in input");
@@ -148,6 +174,7 @@ int main (int argc, char* argv[]) {
 	const int piSize = xNum_ * zNum_;
 	float* partImage  = sf_floatalloc (piSize);
 	float* dPartImage = sf_floatalloc (piSize);
+	float* sembMap  = sf_floatalloc (piSize);
 
 	const int velSize = v_tNum_ * v_xNum_;
 	float* vel = sf_floatalloc (velSize);
@@ -167,6 +194,7 @@ int main (int argc, char* argv[]) {
 
 		memset ( partImage,  0, piSize * sizeof (float) );
 		memset ( dPartImage, 0, piSize * sizeof (float) );
+		memset ( sembMap,    0, piSize * sizeof (float) );
 
 		// read partial image
 		const int startPos = id * piSize * sizeof (float);
@@ -174,10 +202,11 @@ int main (int argc, char* argv[]) {
 		sf_floatread (partImage, piSize, piFile);
 
 		// process partial image
-		processPartImage (curDip, partImage, dPartImage, vel);
+		processPartImage (curDip, partImage, dPartImage, sembMap, vel);
 
 		// write down the result
 		sf_floatwrite (dPartImage, piSize, resFile);
+		sf_floatwrite (sembMap, piSize, sembFile);
 	}	
 
 	sf_warning (".");
@@ -187,6 +216,7 @@ int main (int argc, char* argv[]) {
 
 	free (partImage);
 	free (dPartImage);
+	free (sembMap);
 
 	return 0;
 }

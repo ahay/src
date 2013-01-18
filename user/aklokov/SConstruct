@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-ditime2d diparti
+ditime2d
 crssemb crssemb3d 
 diptaper dvscan2d
 pick2d gammapick2d pickvert
@@ -15,7 +15,7 @@ revent
 
 mpi_progs = ''
 
-ccprogs = 'tmigda dmigda'
+ccprogs = 'tmigda dmigda diparti'
 
 subs = '''
 hwt2d support sembler
