@@ -27,12 +27,12 @@
 #include "fdprep.h"
 #include "iwioper.h"
 
-static float alpha, f0, **vel, d1, d2, ow, dw;
+static float vpml, alpha, f0, **vel, d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
-static int n1, n2, npml, pad1, pad2, nh, ns, nw;
+static int n1, n2, nh, ns, nw;
 static sf_file sfile, rfile;
-static SuiteSparse_long n, nz, *Ti, *Tj;
+static SuiteSparse_long *Ti, *Tj;
 static SuiteSparse_long *Ap, *Ai, *Map;
 static void *Symbolic, **Numeric;
 static double Control[UMFPACK_CONTROL];
@@ -154,7 +154,7 @@ void iwiadd(double omega,
     }
 }
 
-void iwi_init(float vpml, float alpha0, float f00,
+void iwi_init(float vpml0, float alpha0, float f00,
 	      int nn1, int nn2, 
 	      float dd1, float dd2,
 	      int nh0, int ns0, 
@@ -165,8 +165,7 @@ void iwi_init(float vpml, float alpha0, float f00,
 	      char *order0)
 /*< initialize >*/
 {
-    int its;
-
+    vpml = vpml0;
     alpha = alpha0;
     f0 = f00;
 
@@ -199,15 +198,7 @@ void iwi_init(float vpml, float alpha0, float f00,
 	srclen = 0;
 	insert = NULL;
 	append = NULL;
-    }
-
-    /* prepare PML and LU */
-    npml = (vpml/f0/fminf(d1,d2)+1)*2+0.5;
-    pad1 = n1+2*npml;
-    pad2 = n2+2*npml;
-
-    n  = fdprep_n (pad1,pad2);
-    nz = fdprep_nz(pad1,pad2);    
+    }    
     
     /* allocate temporary space */
     us = sf_complexalloc3(n1,n2,ns);
@@ -215,19 +206,7 @@ void iwi_init(float vpml, float alpha0, float f00,
     as = sf_complexalloc3(n1,n2,ns);
     ar = sf_complexalloc3(n1,n2,ns);
 
-    if (!load) {
-	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Tx = (double*) sf_alloc(nz,sizeof(double));
-	Tz = (double*) sf_alloc(nz,sizeof(double));
-	
-	Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
-	Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	
-	Ax = (double*) sf_alloc(nz,sizeof(double));
-	Az = (double*) sf_alloc(nz,sizeof(double));
-    } else {
+    if (load) {
 	Ti = NULL; Tj = NULL; Tx = NULL; Tz = NULL; 
 	Ap = NULL; Ai = NULL; Map = NULL; Ax = NULL; Az = NULL;
     }
@@ -237,19 +216,12 @@ void iwi_init(float vpml, float alpha0, float f00,
     Xx = (double**) sf_alloc(uts,sizeof(double*));
     Xz = (double**) sf_alloc(uts,sizeof(double*));
 
-    for (its=0; its < uts; its++) {
-	Bx[its] = (double*) sf_alloc(n,sizeof(double));
-	Bz[its] = (double*) sf_alloc(n,sizeof(double));
-	Xx[its] = (double*) sf_alloc(n,sizeof(double));
-	Xz[its] = (double*) sf_alloc(n,sizeof(double));
-    }
-
     Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
     tempx = sf_floatalloc2(n1*n2,uts);
     tempr = sf_floatalloc2(n1*n2*(2*nh+1),uts);
 
-    /* turn off iterative refinement */
+    /* LU control */
     umfpack_zl_defaults (Control);
     Control [UMFPACK_IRSTEP] = 0;
 }
@@ -289,6 +261,8 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
     int iw, is, its, i;
+    int npml, pad1, pad2;
+    SuiteSparse_long n, nz;
     double omega;
 
     sf_adjnull(adj,add,nx,nr,x,r);
@@ -296,6 +270,34 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
     /* loop over frequency */
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
+
+	/* PML padding */
+	npml = vpml/((ow+iw*dw)*fminf(d1,d2))+0.5;
+	pad1 = n1+2*npml;
+	pad2 = n2+2*npml;
+
+	n  = fdprep_n (pad1,pad2);
+	nz = fdprep_nz(pad1,pad2);
+
+	if (!load) {
+	    Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Tx = (double*) sf_alloc(nz,sizeof(double));
+	    Tz = (double*) sf_alloc(nz,sizeof(double));
+	    
+	    Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
+	    Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    
+	    Ax = (double*) sf_alloc(nz,sizeof(double));
+	    Az = (double*) sf_alloc(nz,sizeof(double));
+	}
+	for (its=0; its < uts; its++) {
+	    Bx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Bz[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xz[its] = (double*) sf_alloc(n,sizeof(double));
+	}
 
 	/* LU file (append _lu* after velocity file) */
 	if (load) {
@@ -313,7 +315,7 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    /* assemble matrix */
 	    fdprep(omega, alpha, f0,
 		   n1, n2, d1, d2, vel,
-		   npml, pad1, pad2, n, nz, 
+		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);	    
 	    
 	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
@@ -397,6 +399,15 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
 	for (its=0; its < uts; its++) {
 	    (void) umfpack_zl_free_numeric (&Numeric[its]);
+	}
+
+	if (!load) {
+	    free(Ti); free(Tj); free(Tx); free(Tz);
+	    free(Ap); free(Ai); free(Map);
+	    free(Ax); free(Az);
+	}
+	for (its=0; its < uts; its++) {
+	    free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
 	}
     }
 

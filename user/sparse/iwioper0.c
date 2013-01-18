@@ -27,11 +27,10 @@
 #include "fdprep.h"
 #include "iwioper0.h"
 
-static float alpha, f0, d1, d2, ow, dw;
+static float vpml, alpha, f0, d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
-static int n1, n2, npml, pad1, pad2, nh, ns, nw;
-static SuiteSparse_long n;
+static int n1, n2, nh, ns, nw;
 static void **Numeric;
 static double Control[UMFPACK_CONTROL];
 static double **Xx, **Xz, **Bx, **Bz;
@@ -150,7 +149,7 @@ void iwiadd(double omega,
     }
 }
 
-void iwi_init(float vpml, float alpha0, float f00,
+void iwi_init(float vpml0, float alpha0, float f00,
 	      int nn1, int nn2, 
 	      float dd1, float dd2,
 	      int nh0, int ns0, 
@@ -161,8 +160,7 @@ void iwi_init(float vpml, float alpha0, float f00,
 	      char *order0)
 /*< initialize >*/
 {
-    int its;
-
+    vpml = vpml0;
     alpha = alpha0;
     f0 = f00;
 
@@ -188,13 +186,6 @@ void iwi_init(float vpml, float alpha0, float f00,
     insert = sf_charalloc2(6,uts);
     append = (char**) sf_alloc(uts,sizeof(char*));
 
-    /* prepare PML and LU */
-    npml = (vpml/f0/fminf(d1,d2)+1)*2+0.5;
-    pad1 = n1+2*npml;
-    pad2 = n2+2*npml;
-
-    n  = fdprep_n (pad1,pad2);
-
     /* allocate temporary space */
     us = sf_complexalloc4(n1,n2,ns,nw);
     ur = sf_complexalloc4(n1,n2,ns,nw);
@@ -205,20 +196,13 @@ void iwi_init(float vpml, float alpha0, float f00,
     Bz = (double**) sf_alloc(uts,sizeof(double*));
     Xx = (double**) sf_alloc(uts,sizeof(double*));
     Xz = (double**) sf_alloc(uts,sizeof(double*));
-
-    for (its=0; its < uts; its++) {
-	Bx[its] = (double*) sf_alloc(n,sizeof(double));
-	Bz[its] = (double*) sf_alloc(n,sizeof(double));
-	Xx[its] = (double*) sf_alloc(n,sizeof(double));
-	Xz[its] = (double*) sf_alloc(n,sizeof(double));
-    }
-
+    
     Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
     tempx = sf_floatalloc2(n1*n2,uts);
     tempr = sf_floatalloc2(n1*n2*(2*nh+1),uts);
 
-    /* turn off iterative refinement */
+    /* LU control */
     umfpack_zl_defaults (Control);
     Control [UMFPACK_IRSTEP] = 0;
 
@@ -260,13 +244,15 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
     int iw, is, its, i;
+    int npml, pad1, pad2;
+    SuiteSparse_long n;
     double omega;
 
     sf_adjnull(adj,add,nx,nr,x,r);
 
     /* loop over frequency */
 #ifdef _OPENMP
-#pragma omp parallel num_threads(uts) private(its,omega,inslen,is)
+#pragma omp parallel num_threads(uts) private(its,omega,inslen,is,npml,pad1,pad2,n)
 #endif
     {
 #ifdef _OPENMP
@@ -281,6 +267,18 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	for (iw=0; iw < nw; iw++) {
 	    omega = (double) 2.*SF_PI*(ow+iw*dw);
 	    
+	    /* PML padding */
+	    npml = vpml/((ow+iw*dw)*fminf(d1,d2))+0.5;
+	    pad1 = n1+2*npml;
+	    pad2 = n2+2*npml;
+	    
+	    n = fdprep_n (pad1,pad2);
+
+	    Bx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Bz[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xz[its] = (double*) sf_alloc(n,sizeof(double));
+
 	    /* load Numeric */
 	    sprintf(insert[its],"_lu%d",iw);
 	    inslen = strlen(insert[its]);
@@ -330,6 +328,7 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    }
 
 	    (void) umfpack_zl_free_numeric (&Numeric[its]);
+	    free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
 	}
 
 	if (adj) {

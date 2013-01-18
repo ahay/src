@@ -91,18 +91,18 @@ int main(int argc, char* argv[])
     /* horizontal space-lag */
 
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* velocity for PML */
+    /* PML width */
 
-    if (NULL == (order = sf_getstring("order"))) order="5";
-    /* order of finite-difference */
+    if (NULL == (order = sf_getstring("order"))) order="j";
+    /* discretization scheme (default optimal 9-point) */
 
     fdprep_order(order);
 
     if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
-    /* alpha for PML */
+    /* PML damping */
 
     if (!sf_getfloat("f0",&f0)) f0=25.;
-    /* dominant frequency for PML */
+    /* PML dominant frequency */
 
     /* read model */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -172,27 +172,8 @@ int main(int argc, char* argv[])
 	ur = NULL;
     }
 
-    /* allocate temporary memory */
-    npml = (vpml/f0/fminf(d1,d2)+1)*2+0.5;
-    pad1 = n1+2*npml;
-    pad2 = n2+2*npml;
-
-    n  = fdprep_n (pad1,pad2);
-    nz = fdprep_nz(pad1,pad2);
-
-    if (!load) {
-	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Tx = (double*) sf_alloc(nz,sizeof(double));
-	Tz = (double*) sf_alloc(nz,sizeof(double));
-	
-	Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
-	Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	
-	Ax = (double*) sf_alloc(nz,sizeof(double));
-	Az = (double*) sf_alloc(nz,sizeof(double));
-    } else {
+    /* allocate temporary memory */    
+    if (load) {
 	Ti = NULL; Tj = NULL; Tx = NULL; Tz = NULL; 
 	Ap = NULL; Ai = NULL; Map = NULL; Ax = NULL; Az = NULL;
     }
@@ -203,25 +184,47 @@ int main(int argc, char* argv[])
     Xz = (double**) sf_alloc(uts,sizeof(double*));
 
     image = (float****) sf_alloc(uts,sizeof(float***));
-
     for (its=0; its < uts; its++) {
-	Bx[its] = (double*) sf_alloc(n,sizeof(double));
-	Bz[its] = (double*) sf_alloc(n,sizeof(double));
-	Xx[its] = (double*) sf_alloc(n,sizeof(double));
-	Xz[its] = (double*) sf_alloc(n,sizeof(double));
-
 	image[its] = sf_floatalloc3(n1,n2,2*nh+1);
     }
     
     Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
-    /* turn off iterative refinement */
+    /* LU control */
     umfpack_zl_defaults (Control);
     Control [UMFPACK_IRSTEP] = 0;
 
     /* loop over frequency */
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
+
+	/* PML padding */
+	npml = vpml/((ow+iw*dw)*fminf(d1,d2))+0.5;
+	pad1 = n1+2*npml;
+	pad2 = n2+2*npml;
+
+	n  = fdprep_n (pad1,pad2);
+	nz = fdprep_nz(pad1,pad2);
+
+	if (!load) {
+	    Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Tx = (double*) sf_alloc(nz,sizeof(double));
+	    Tz = (double*) sf_alloc(nz,sizeof(double));
+	    
+	    Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
+	    Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    
+	    Ax = (double*) sf_alloc(nz,sizeof(double));
+	    Az = (double*) sf_alloc(nz,sizeof(double));
+	}
+	for (its=0; its < uts; its++) {
+	    Bx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Bz[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xz[its] = (double*) sf_alloc(n,sizeof(double));
+	}
 
 	if (verb) {
 	    sf_warning("Frequency %d of %d.",iw+1,nw);
@@ -244,7 +247,7 @@ int main(int argc, char* argv[])
 	    /* assemble matrix */
 	    fdprep(omega, alpha, f0,
 		   n1, n2, d1, d2, vel,
-		   npml, pad1, pad2, n, nz, 
+		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);	    
 	    
 	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
@@ -330,19 +333,28 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
+
+	if (verb) {
+	    sf_timer_stop (timer);
+	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+	}
 	
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
 	for (its=0; its < uts; its++) {
 	    (void) umfpack_zl_free_numeric (&Numeric[its]);
 	}
 
-	if (verb) {
-	    sf_timer_stop (timer);
-	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+	if (!load) {
+	    free(Ti); free(Tj); free(Tx); free(Tz);
+	    free(Ap); free(Ai); free(Map);
+	    free(Ax); free(Az);
+	}
+	for (its=0; its < uts; its++) {
+	    free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
 	}
 
 	if (us != NULL) sf_complexwrite(srce[0][0],n1*n2*ns,us);
-	if (ur != NULL) sf_complexwrite(recv[0][0],n1*n2*ns,ur);
+	if (ur != NULL) sf_complexwrite(recv[0][0],n1*n2*ns,ur);	
     }
 
 #ifdef _OPENMP

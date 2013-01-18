@@ -68,28 +68,83 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 /*< number of triplets >*/
 {
     SuiteSparse_long nz=0;
+    int i, j;
 
     switch (order[0]) {
 	case '5':
-	    nz = 5*(pad1-2)*(pad2-2)
-		-2*(pad1-4)-2*(pad2-4)-8;
+	    for (j=1; j < pad2-1; j++) {
+		for (i=1; i < pad1-1; i++) {
+		    if (i != 1) nz++;
+		    if (i != pad1-2) nz++;
+		    if (j != 1) nz++;
+		    if (j != pad2-2) nz++;
+		    nz++;
+		}
+	    }
 	    break;
 
 	case '9':
-	    nz = 9*(pad1-4)*(pad2-4)
-		-4*(pad1-6)-4*(pad2-6)-16
-		-2*(pad1-8)-2*(pad2-8)-8;
+	    for (j=2; j < pad2-2; j++) {
+		for (i=2; i < pad1-2; i++) {
+		    if (i > 3) nz++;
+		    if (i > 2) nz++;
+		    if (i < pad1-3) nz++;
+		    if (i < pad1-4) nz++;
+		    if (j > 3) nz++;
+		    if (j > 2) nz++;
+		    if (j < pad2-3) nz++;
+		    if (j < pad2-4) nz++;
+		    nz++;
+		}
+	    }
 	    break;
 
 	case 'j':
-	    nz = 9*(pad1-2)*(pad2-2)
-		-6*(pad1-4)-6*(pad2-4)-20;
+	    for (j=1; j < pad2-1; j++) {
+		for (i=1; i < pad1-1; i++) {
+		    if (i != 1) nz++;
+		    if (i != pad1-2) nz++;
+		    if (j != 1) nz++;
+		    if (j != pad2-2) nz++;
+		    if (i != 1 && j != 1) nz++;
+		    if (i != pad1-2 && j != pad2-2) nz++;
+		    if (i != 1 && j != pad2-2) nz++;
+		    if (i != pad1-2 && j != 1) nz++;
+		    nz++;
+		}
+	    }
 	    break;
 
 	case 'c':
-	    nz = 25*(pad1-4)*(pad2-4)
-		-20*(pad1-8)-20*(pad2-8)-52-64
-		-10*(pad1-8)-10*(pad2-8)-36;
+	    for (j=2; j < pad2-2; j++) {
+		for (i=2; i < pad1-2; i++) {
+		    if (i > 2 && j > 2) nz++;
+		    if (i > 2) nz++;
+		    if (i > 2 && j < pad2-3) nz++;
+		    if (j < pad2-3) nz++;
+		    if (i < pad1-3 && j < pad2-3) nz++;
+		    if (i < pad1-3) nz++;
+		    if (i < pad1-3 && j > 2) nz++;
+		    if (j > 2) nz++;
+		    if (i > 3 && j > 3) nz++;
+		    if (i > 3 && j > 2) nz++;
+		    if (i > 3) nz++;
+		    if (i > 3 && j < pad2-3) nz++;
+		    if (i > 3 && j < pad2-4) nz++;
+		    if (i > 2 && j < pad2-4) nz++;
+		    if (j < pad2-4) nz++;
+		    if (i < pad1-3 && j < pad2-4) nz++;
+		    if (i < pad1-4 && j < pad2-4) nz++;
+		    if (i < pad1-4 && j < pad2-3) nz++;
+		    if (i < pad1-4) nz++;
+		    if (i < pad1-4 && j > 2) nz++;
+		    if (i < pad1-4 && j > 3) nz++;
+		    if (i < pad1-3 && j > 3) nz++;
+		    if (j > 3) nz++;
+		    if (i > 2 && j > 3) nz++;
+		    nz++;
+		}
+	    }
 	    break;
 
 	default:
@@ -106,26 +161,25 @@ void fdprep(const double omega,
 	    float **v,
 	    const int npml,
 	    const int pad1, const int pad2,
-	    SuiteSparse_long n, SuiteSparse_long nz,
 	    SuiteSparse_long *Ti, SuiteSparse_long *Tj,
 	    double* Tx, double *Tz)
 /*< discretization >*/
 {
     switch (order[0]) {
 	case '5':
-	    fdprep5 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    fdprep5 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	case '9':
-	    fdprep9 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    fdprep9 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	case 'j':
-	    fdprep9o(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    fdprep9o(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	case 'c':
-	    fdprep25(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, n,nz,Ti,Tj,Tx,Tz);
+	    fdprep25(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	default:

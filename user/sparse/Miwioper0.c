@@ -60,16 +60,16 @@ int main(int argc, char* argv[])
     uts = (uts < 1)? mts: uts;
 
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* velocity for PML */
+    /* PML width */
 
-    if (NULL == (order = sf_getstring("order"))) order="5";
-    /* order of finite-difference */
+    if (NULL == (order = sf_getstring("order"))) order="j";
+    /* discretization scheme (default optimal 9-point) */
 
     if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
-    /* alpha for PML */
+    /* PML damping */
 
     if (!sf_getfloat("f0",&f0)) f0=25.;
-    /* dominant frequency for PML */
+    /* PML dominant frequency */
 
     /* read model */
     if (NULL == sf_getstring("model"))

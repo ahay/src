@@ -30,7 +30,6 @@ void fdprep9(const double omega,
 	     float **v,
 	     const int npml,
 	     const int pad1, const int pad2,
-	     SuiteSparse_long n, SuiteSparse_long nz,
 	     SuiteSparse_long *Ti, SuiteSparse_long *Tj,
 	     double* Tx, double *Tz)
 /*< discretization >*/

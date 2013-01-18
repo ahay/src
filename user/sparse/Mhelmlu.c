@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
     int uts, its, mts;
     sf_timer timer;
     char *order;
+    SuiteSparse_long status;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -143,45 +144,19 @@ int main(int argc, char* argv[])
     sf_putstring(out,"unit4","Hz");
 
     /* allocate temporary memory */
-    npml = (vpml/f0/fminf(d1,d2)+1)*2+0.5;
-    pad1 = n1+2*npml;
-    pad2 = n2+2*npml;
-
-    n  = fdprep_n (pad1,pad2);
-    nz = fdprep_nz(pad1,pad2);
-
-    if (!load) {
-	Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Tx = (double*) sf_alloc(nz,sizeof(double));
-	Tz = (double*) sf_alloc(nz,sizeof(double));
-	
-	Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
-	Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
-	
-	Ax = (double*) sf_alloc(nz,sizeof(double));
-	Az = (double*) sf_alloc(nz,sizeof(double));
-    } else {
+    if (load) {
 	Ti = NULL; Tj = NULL; Tx = NULL; Tz = NULL; 
 	Ap = NULL; Ai = NULL; Map = NULL; Ax = NULL; Az = NULL;
     }
-    
+
     Bx = (double**) sf_alloc(uts,sizeof(double*));
     Bz = (double**) sf_alloc(uts,sizeof(double*));
     Xx = (double**) sf_alloc(uts,sizeof(double*));
     Xz = (double**) sf_alloc(uts,sizeof(double*));
 
-    for (its=0; its < uts; its++) {
-	Bx[its] = (double*) sf_alloc(n,sizeof(double));
-	Bz[its] = (double*) sf_alloc(n,sizeof(double));
-	Xx[its] = (double*) sf_alloc(n,sizeof(double));
-	Xz[its] = (double*) sf_alloc(n,sizeof(double));
-    }
-
     Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
-    /* turn off iterative refinement */
+    /* LU control */
     umfpack_zl_defaults (Control);
     Control [UMFPACK_IRSTEP] = 0;
 
@@ -189,8 +164,37 @@ int main(int argc, char* argv[])
     for (iw=0; iw < nw; iw++) {
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
 
+	/* PML padding */
+	npml = vpml/((ow+iw*dw)*fminf(d1,d2))+0.5;
+
+	pad1 = n1+2*npml;
+	pad2 = n2+2*npml;
+
+	n  = fdprep_n (pad1,pad2);
+	nz = fdprep_nz(pad1,pad2);
+
+	if (!load) {
+	    Ti = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Tj = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Tx = (double*) sf_alloc(nz,sizeof(double));
+	    Tz = (double*) sf_alloc(nz,sizeof(double));
+	    
+	    Ap = (SuiteSparse_long*) sf_alloc(n+1,sizeof(SuiteSparse_long));
+	    Ai = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    Map = (SuiteSparse_long*) sf_alloc(nz,sizeof(SuiteSparse_long));
+	    
+	    Ax = (double*) sf_alloc(nz,sizeof(double));
+	    Az = (double*) sf_alloc(nz,sizeof(double));
+	}
+	for (its=0; its < uts; its++) {
+	    Bx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Bz[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xx[its] = (double*) sf_alloc(n,sizeof(double));
+	    Xz[its] = (double*) sf_alloc(n,sizeof(double));
+	}
+
 	if (verb) {
-	    sf_warning("Frequency %d of %d.",iw+1,nw);
+	    sf_warning("Frequency %d of %d. Pad %d for PML.",iw+1,nw,npml);
 	    sf_timer_start(timer);
 	}
 
@@ -210,28 +214,28 @@ int main(int argc, char* argv[])
 	    /* assemble matrix */	    
 	    fdprep(omega, alpha, f0,
 		   n1, n2, d1, d2, v,
-		   npml, pad1, pad2, n, nz, 
+		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);
 	    
-	    (void) umfpack_zl_triplet_to_col (n, n, nz, 
+	    status = umfpack_zl_triplet_to_col (n, n, nz, 
 					      Ti, Tj, Tx, Tz, 
 					      Ap, Ai, Ax, Az, Map);
 	    
 	    /* LU */
-	    (void) umfpack_zl_symbolic (n, n, 
+	    status = umfpack_zl_symbolic (n, n, 
 					Ap, Ai, Ax, Az, 
 					&Symbolic, Control, NULL);
-	    
-	    (void) umfpack_zl_numeric (Ap, Ai, Ax, Az, 
+
+	    status = umfpack_zl_numeric (Ap, Ai, Ax, Az, 
 				       Symbolic, &Numeric[0], 
 				       Control, NULL);
-	    
+
 	    /* save Numeric */
 #ifdef _OPENMP
-	    (void) umfpack_zl_save_numeric (Numeric[0], append);
+	    status = umfpack_zl_save_numeric (Numeric[0], append);
 	    
 	    for (its=1; its < uts; its++) {
-		(void) umfpack_zl_load_numeric (&Numeric[its], append);
+		status = umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	    
 	    if (!save) {
@@ -239,12 +243,12 @@ int main(int argc, char* argv[])
 		(void) remove ("numeric.umf");
 	    }
 #else
-	    if (save) (void) umfpack_zl_save_numeric (Numeric[0], append);
+	    if (save) status = umfpack_zl_save_numeric (Numeric[0], append);
 #endif
 	} else {
 	    /* load Numeric */
 	    for (its=0; its < uts; its++) {
-		(void) umfpack_zl_load_numeric (&Numeric[its], append);
+		status = umfpack_zl_load_numeric (&Numeric[its], append);
 	    }
 	}
 
@@ -266,7 +270,7 @@ int main(int argc, char* argv[])
 	    
 	    fdpad(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
 
-	    (void) umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
+	    status = umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);	    
@@ -277,14 +281,23 @@ int main(int argc, char* argv[])
 	/* write wavefields */
 	sf_complexwrite(f[0][0],n1*n2*ns,out);
 
+	if (verb) {
+	    sf_timer_stop (timer);
+	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+	}
+
 	if (!load) (void) umfpack_zl_free_symbolic (&Symbolic);
 	for (its=0; its < uts; its++) {
 	    (void) umfpack_zl_free_numeric (&Numeric[its]);
 	}
 
-	if (verb) {
-	    sf_timer_stop (timer);
-	    sf_warning("Finished in %g seconds.",sf_timer_get_diff_time(timer)/1.e3);
+	if (!load) {
+	    free(Ti); free(Tj); free(Tx); free(Tz);
+	    free(Ap); free(Ai); free(Map);
+	    free(Ax); free(Az);
+	}
+	for (its=0; its < uts; its++) {
+	    free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
 	}
     }
 
