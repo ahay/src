@@ -64,8 +64,10 @@ int main(int argc, char* argv[])
 	if (fabsf(w) < dw) {
 	    for (ix=0; ix < nx; ix++) {
 		out[ix] = sf_cmplx(0.,0.);
-	    }	    
-	    sf_complexwrite(out,nx,stk);
+	    }	 
+	    for (ig=0; ig < nh; ig++) {
+		sf_complexwrite(out,nx,stk);
+	    }
 	    continue;
 	}
 

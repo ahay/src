@@ -22,7 +22,7 @@ Flow('nmo','bei vel','mutter v0=1.4 | nmo velocity=${SOURCES[1]}')
 Flow('dmo','nmo',
      '''
      window f1=15 | logstretch nout=2048 | fft1 | transp plane=13 memsize=500 |
-     finstack stack=n |
+     findmo |
      transp memsize=500 plane=13 | fft1 inv=y | window n1=2048 | logstretch inv=y | pad beg1=15 
      ''')
 
@@ -50,7 +50,7 @@ Result('weight',
        ''')
 
 
-Flow('tweight','weight','threshold pclip=98')
+Flow('tweight','weight','threshold pclip=99.9')
 
 Flow('simistack1','tweight dmo1',                                                             
      '''
