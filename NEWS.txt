@@ -8,6 +8,8 @@ To SCons:
 
 To documentation:
 
+* Selfdocs include links for programs of the month
+
 To APIs:
 
 To the Python package:

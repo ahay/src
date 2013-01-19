@@ -1,4 +1,8 @@
-/* Compute data envelope or phase rotation. */
+/* Compute data envelope or phase rotation. 
+
+November 2011 program of the month:
+http://ahay.org/rsflog/index.php?/archives/274-Program-of-the-month-sfenvelope.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   

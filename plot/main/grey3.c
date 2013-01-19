@@ -3,6 +3,9 @@
    Takes: > plot.vpl
 
    Requires an "unsigned char" input (the output of sfbyte).
+
+April 2012 program of the month:
+http://ahay.org/rsflog/index.php?/archives/287-Program-of-the-month-sfgrey3.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

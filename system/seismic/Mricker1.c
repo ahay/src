@@ -1,4 +1,8 @@
-/* Convolution with a Ricker wavelet. */
+/* Convolution with a Ricker wavelet. 
+
+January 2013 program of the month:
+http://ahay.org/rsflog/index.php?/archives/318-Program-of-the-month-sfricker1.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 

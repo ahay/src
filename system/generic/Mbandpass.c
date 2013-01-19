@@ -1,4 +1,8 @@
-/* Bandpass filtering. */
+/* Bandpass filtering. 
+
+November 2012 program of the month:
+http://ahay.org/rsflog/index.php?/archives/313-Program-of-the-month-sfbandpass.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 

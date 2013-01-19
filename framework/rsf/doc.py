@@ -154,6 +154,10 @@ def underline(text):
     """Format a string in underline by overstriking."""
     return ''.join(map(lambda ch: ch + "\b_", text))
 
+def underline_match(text):
+    """Underline a matching expression"""
+    return underline(text.group(0))
+
 def replace(text, *pairs):
     """Do a series of global replacements on a string."""
     while pairs:
@@ -408,7 +412,8 @@ class rsfprog(object):
         if self.snps:
             doc = doc + section('synopsis',self.snps)
         if self.cmts:
-            doc = doc + section('comments',self.cmts)
+            cmts = re.sub(r'http://[\S]+',underline_match,self.cmts)
+            doc = doc + section('comments',cmts)
         pars =  self.pars.keys()
         if pars:
             pars.sort()
@@ -627,7 +632,8 @@ DocCmd: %s
         if self.snps:
             contents += bigsection('Synopsis','#fffff', '#aa55cc',self.snps)
         if self.cmts:
-            contents += self.cmts.replace('\n','<br>\n')
+            cmts = re.sub(r'(http://[\S]+)',r'<a href="\1">\1</a>',self.cmts)
+            contents += cmts.replace('\n','<br>\n')
         pars =  self.pars.keys()
         if pars:
             pars.sort()

@@ -6,6 +6,9 @@ The output is
 input if |input| < clip 
 
 See also sfclip2.
+
+September 2011 program of the month:
+http://ahay.org/rsflog/index.php?/archives/269-Program-of-the-month-sfclip.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

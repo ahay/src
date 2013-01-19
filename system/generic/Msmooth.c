@@ -1,4 +1,8 @@
-/* Multi-dimensional triangle smoothing. */
+/* Multi-dimensional triangle smoothing. 
+
+January 2012 program of the month:
+http://ahay.org/rsflog/index.php?/archives/280-Program-of-the-month-sfsmooth.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 

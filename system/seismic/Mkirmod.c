@@ -1,4 +1,8 @@
-/* Kirchhoff 2-D/2.5-D modeling with analytical Green's functions. */
+/* Kirchhoff 2-D/2.5-D modeling with analytical Green's functions. 
+
+October 2012 program of the month:
+http://ahay.org/rsflog/index.php?/archives/308-Program-of-the-month-sfkirmod.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   

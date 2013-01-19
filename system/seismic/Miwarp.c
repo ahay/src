@@ -1,4 +1,8 @@
-/* Inverse 1-D warping. */
+/* Inverse 1-D warping. 
+
+September 2012 program of the month:
+http://ahay.org/rsflog/index.php?/archives/304-Program-of-the-month-sfiwarp.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 
