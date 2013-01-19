@@ -48,6 +48,7 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 		const float curX = xStart_ + ix * xStep_;
 		// loop over z
 		float* trace2 = sf_floatalloc (zNum_);
+		memset (trace2, 0, zNum_ * sizeof (float) );
 		for (int iz = 0; iz < zNum_; ++iz) {
 			const float curT = zStart_ + iz * zStep_;
 			// get velocity
