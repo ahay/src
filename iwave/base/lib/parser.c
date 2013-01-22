@@ -653,45 +653,32 @@ int ps_setnull(PARARRAY *par) {
     return 0;
 }
 
-int ps_createfile(PARARRAY *parr, const char *filename) {
+int ps_createfp(PARARRAY *parr, FILE * stream) {
 
-    FILE *stream;             /* file stream */
     long size;                /* file size */
     char * str;               /* string */
     char * save;              /* start pointer */
     int n=0;                  /* counter */
     int err=0;                /* error code */
   
-    /* open file */
-    stream = iwave_const_fopen(filename, "r", NULL, stderr);
-    if ( stream == NULL ) {
-#ifdef VERBOSE
-	fprintf(stderr,"Error: ps_createfile - failed to open file=%s\n",filename);
-#endif
-	return E_FILEOPEN;
-    }
-
     /* get file size */
     if ( fseek(stream, 0L, SEEK_END) ) {
-	iwave_fclose(stream);
 #ifdef VERBOSE
-	fprintf(stderr,"Error: ps_createfile - seek failed\n");
+	fprintf(stderr,"Error: ps_createfp - seek failed\n");
 #endif
 	return E_FILE;
     }
     size = ftell(stream);
     if ( size == -1L ) {
 #ifdef VERBOSE
-	fprintf(stderr,"Error: ps_createfile - tell failed\n");
+	fprintf(stderr,"Error: ps_createfp - tell failed\n");
 #endif
-	iwave_fclose(stream);
 	return E_FILE;
     }
     else if ( size == 0L ) {
 #ifdef VERBOSE
-	fprintf(stderr,"NOTE: ps_createfile - zero length file\n");
+	fprintf(stderr,"NOTE: ps_createfp - zero length file\n");
 #endif
-	iwave_fclose(stream);
 	return 0;
     }
 
@@ -701,7 +688,6 @@ int ps_createfile(PARARRAY *parr, const char *filename) {
     size++;
     str = (char*)usermalloc_(size);
     if ( !str ) { 
-	iwave_fclose(stream);
 	return E_ALLOC;
     }
     /* reserve pointer to start of this segment */
@@ -709,12 +695,11 @@ int ps_createfile(PARARRAY *parr, const char *filename) {
   
     /* copy the file into the buffer */
     n = fread(str, 1L, size, stream);
-    iwave_fclose(stream);
   
     /* bail on read failure */
     if ( n != size-1 ) {
 #ifdef VERBOSE
-	fprintf(stderr,"Error: ps_createfile - read %d bytes expected %ld\n",n,size-1);
+	fprintf(stderr,"Error: ps_createfp - read %d bytes expected %ld\n",n,size-1);
 #endif
 
 	userfree_(str);
@@ -727,7 +712,7 @@ int ps_createfile(PARARRAY *parr, const char *filename) {
     /* read the string onto the end of the list */
     if ((err=pslink_read(&(parr->list),&str))) {
 #ifdef VERBOSE
-	fprintf(stderr,"Error: ps_createfile from pslink_read\n");
+	fprintf(stderr,"Error: ps_createfp from pslink_read\n");
 #endif
 	userfree_(save);
 	return err;
@@ -735,6 +720,58 @@ int ps_createfile(PARARRAY *parr, const char *filename) {
   
     userfree_(save);
     return 0;
+}
+
+int ps_createfile_fproto(PARARRAY *parr, 
+			 FILE ** fp, 
+			 const char * proto,
+			 const char * fname) {
+
+  int err=0;                /* error code */
+  
+  /* sanity test - only on *fp = NULL! */
+  if (*fp) {
+#ifdef VERBOSE
+    fprintf(stderr,"Error: ps_createfile_fproto - input stream non-null\n");
+#endif
+    return E_FILEOPEN;
+  }
+  /* open file */
+  *fp = iwave_const_fopen(fname, "r", proto, stderr);
+  if ( *fp == NULL ) {
+#ifdef VERBOSE
+    if (proto) 
+      fprintf(stderr,"Error: ps_createfile_fproto - failed to open file=%s proto=%s\n",filename,proto);
+    else
+      fprintf(stderr,"Error: ps_createfile_fproto - failed to open file=%s proto=NULL\n",filename);
+#endif
+    return E_FILEOPEN;
+  }
+  
+  err = ps_createfp(parr,*fp);
+#ifdef VERBOSE
+  if (err) 
+    fprintf(stderr,"Error: ps_createfile_fproto from ps_createfp, filename=%s, err=%d\n",filename,err);
+#endif
+  
+  return err;
+}
+
+int ps_createfile(PARARRAY *parr, const char *fname) {
+
+  FILE * stream = NULL;
+  char * proto = NULL;
+  int err=0;                /* error code */
+
+  err = ps_createfile_fproto(parr,&stream,proto,fname);
+#ifdef VERBOSE
+  if (err || !stream) 
+    fprintf(stderr,"Error: ps_createfile from ps_createfile_fproto, filename=%s, err=%d\n",filename,err);
+#endif
+
+  iwave_fclose(stream);
+
+  return err;
 }
 
 int ps_printall(PARARRAY parr, FILE *stream) {

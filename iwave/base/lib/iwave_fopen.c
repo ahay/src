@@ -273,24 +273,28 @@ FILE * iwave_fopen(char ** name,
        - modes match, and
        - either no prototypes, or prototypes match. and
        - inuse flag unset
+       MOD OF 15.01.13: disregard inuse - return copy of pointer regardless
     */
     oldfpr=&filestatlist;
     for (fpr=filestatlist; fpr != (struct filestat *)NULL; 
 	 fpr = fpr->nextfpr) {
       /* break if filenames match */
       if (!(strcmp(*name,fpr->nm)) &&
-	  !(strcmp(mode,fpr->md)) &&
 	  (
-	   (
-	    (proto) && (fpr->pr) &&
-	    !(strcmp(proto,fpr->pr))
-	    ) 
-	   ||
-	   (
-	    (!proto) && (!(fpr->pr))
-	    )
+	  !(strcmp(mode,fpr->md)) ||
+	  !(strcmp(fpr->md,"r+")) ||
+	  !(strcmp(fpr->md,"w+")) ||
+	  (!(strcmp(fpr->md,"r")) && !(strcmp(mode,"r+"))) ||
+	  (!(strcmp(fpr->md,"w")) && !(strcmp(mode,"w+")))
 	   ) &&
+	  (
+	   ((proto) && (fpr->pr) &&
+	   !(strcmp(proto,fpr->pr))) ||
+	   ((!proto) && (!(fpr->pr)))
+	   )
+	  /* &&
 	  (!fpr->inuse)
+	  */
 	  )
 	break;
       oldfpr=&fpr->nextfpr;
@@ -305,9 +309,9 @@ FILE * iwave_fopen(char ** name,
       /* open stream */
       if (!(retfp=fopen(*name,mode))) {
 	/* NOT NECESSARILY AN ERROR - so don't print! 
-	*/
 	fprintf(stream,"NOTE: iwave_fopen\n"); 
 	fprintf(stream,"-- failed to open stream on file %s mode %s\n",*name,mode); 
+	*/
 	return retfp;
       }
       
@@ -411,7 +415,7 @@ FILE * iwave_fopen(char ** name,
 
     else {
 
-      /* CASE IIB: found already-opened archival file */
+      /* CASE IIB: found already-opened archival *** or temp *** file */
       /* return to start-of-file, to imitate setup with freshly opened
 	 file. */
       /* no, don't - very useful for the behaviour of iwave_fopen to be
@@ -459,7 +463,7 @@ FILE * iwave_fopen(char ** name,
 	return NULL;;
       }
 #endif
-      fpr->inuse=1;      
+      fpr->inuse++;      
       retfp = freopen(fpr->nm,"r+",fpr->fp);
       if (!retfp) {
 	fprintf(stream,"ERROR: iwave_fopen\n");
@@ -522,7 +526,7 @@ void iwave_fclose(FILE * fp) {
     if (fp==fpr->fp) break;
   }
   if (fpr!=((struct filestat *)NULL)) {
-    fpr->inuse=0;
+    fpr->inuse=iwave_max(0,(fpr->inuse)--);;
     /*
     fprintf(stderr,"closing fp=%x name=%s mode=%s istmp=%d inuse=%d\n",
       fp,fpr->nm,fpr->md,fpr->istmp,fpr->inuse);

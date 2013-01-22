@@ -3,10 +3,10 @@
 int get_array_offsets(off_t ** offs,
 		      size_t * noffs,
 		      int dim,
-		      _IPNT gs,
-		      _IPNT gn,
-		      _IPNT ls,
-		      _IPNT ln) {
+		      const _IPNT gs,
+		      const _IPNT gn,
+		      const _IPNT ls,
+		      const _IPNT ln) {
 
   /********************
    *   declarations   *

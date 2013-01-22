@@ -106,7 +106,7 @@ int par_grid(grid * g, PARARRAY par, FILE * fp) {
 }
 
 int extend_loop(ireal * a,
-		IPNT ran,
+		const IPNT ran,
 		int dim,
 		int ax,
 		int kxmin,
@@ -166,7 +166,7 @@ int extend_loop(ireal * a,
 }
 
 int adj_extend_loop(ireal * a,
-		    IPNT ran,
+		    const IPNT ran,
 		    int dim,
 		    int ax,
 		    int kxmin,
@@ -234,10 +234,10 @@ int adj_extend_loop(ireal * a,
 /* array extension happens only over physical dimensions, assumed to
    be at most 3 */
 int extend_array(ireal * a, 
-		 IPNT rags, 
-		 IPNT ran, 
-		 IPNT gs, 
-		 IPNT n, 
+		 const IPNT rags, 
+		 const IPNT ran, 
+		 const IPNT gs, 
+		 const IPNT n, 
 		 int dim, 
 		 int ax) {
 
@@ -276,10 +276,10 @@ int extend_array(ireal * a,
 }
 
 int adj_extend_array(ireal * a, 
-		     IPNT rags, 
-		     IPNT ran, 
-		     IPNT gs, 
-		     IPNT n, 
+		     const IPNT rags, 
+		     const IPNT ran, 
+		     const IPNT gs, 
+		     const IPNT n, 
 		     int dim, 
 		     int ax) {
 
@@ -321,14 +321,22 @@ int adj_extend_array(ireal * a,
 
 #ifndef IWAVE_USE_MPI
 
-int rsfread(ireal * a, 
-	    IPNT rags, 
-	    IPNT ran, 
-	    char * fname, 
-	    int extend, 
-	    FILE * stream,
-	    int panelindex   /* D.S. 01.01.11: extended-model related */
-	    ) {
+/* private - not prototyped in .h */
+int rsfread_base(ireal * a, 
+		 const IPNT rags, 
+		 const IPNT ran,
+		 const char * dname,
+		 const char * type,
+		 const char * protodata,
+		 int dim,
+		 int panelnum,
+		 int datasize,
+		 IPNT n,
+		 int scale,
+		 int extend, 
+		 FILE * stream,
+		 int panelindex   /* D.S. 01.01.11: extended-model related */
+		 ) {
 
   /**************************
    * BEGIN DECLARATIONS     *
@@ -337,27 +345,20 @@ int rsfread(ireal * a,
   /* rags = start indices of target array */
   /* ran  = lengths of target array axes  */
 
-  /* strings */
-  char * type;
-  char * dname;
-
   /* workspace */  
   int ii;          /* axis counter */
   off_t i,j;       /* offset counters */
   int err=0;       /* error flag */
-  grid g;          /* grid workspace, init from file */
-  IPNT gs;         /* start indices of grid (file) */
+  IPNT gs;         /* start indices of grid (file) - always 0! */
   IPNT gsa;        /* start indices of grid intersection */
   IPNT g_gsa;      /* start indices, global */
   IPNT l_gsa;      /* start indices, local  */
   IPNT gea;        /* end   indices of grid intersection */
-  IPNT n;          /* lengths of grid (file) axes */
   IPNT na;         /* lengths of grid intersection axes */
   IPNT gl_na;      /* lengths of grid intersection axes, local or global */
   size_t recsize_b;/* length of 1D chunk to be read (bytes) */
 
   FILE * fp = NULL;
-  PARARRAY * par;
   float * fbuf;    /* input buffer for read */
 
   /* XDR buffers etc. */
@@ -374,7 +375,6 @@ int rsfread(ireal * a,
   size_t noffs;    /* number of offsets */
 
   /* scale flag - like scalco, scalel in SEGY; factor */
-  int scale=0;     /* flag - read from parameters */
   float scfac=1.0; /* factor workspace */
   size_t ntot;     /* total length of constructed local array */
   float a_max;
@@ -387,33 +387,30 @@ int rsfread(ireal * a,
    * END DECLARATIONS       *
    **************************/
 
-  par = ps_new();
-
-  /* read parameter table from file */
-  if (ps_createfile(par,fname)) {
-    fprintf(stream,"read_grid: failed to parse file = %s\n",fname);
-    ps_delete(&par);
+  /* open data file */
+#ifdef IWAVE_USE_FMGR
+  fp=iwave_const_fopen(dname,"r",protodata,stream);
+  if (!fp) {
+    fprintf(stream,"Error: rsfread - read from iwave_fopen, file = %s\n",dname);
     return E_FILE;
   }
-
-  /* create grid from parameter table */
-  if ( (err = par_grid(&g, *par, stream)) ) {
-    fprintf(stream,"Error: read from read_grid\n");
-    ps_delete(&par);
-    return err;
+#else
+  fp=fopen(dname,"r");
+  if (!fp) {
+    fprintf(stream,"Error: rsfread - read from fopen, file = %s\n",dname);
+    return E_FILE;
   }
-  
-  /* get global array params from grid 
-     NOTE: the global index origin is always IPNT_0, 
+#endif
+
+  /* NOTE: the global index origin is always IPNT_0, 
      regardless of what the physical grid coordinates are
   */
   IASN(gs,IPNT_0);
   /*  get_gs(gs, g);*/
-  get_n(n, g);
 
   /* figger out array intersection. special case: if there is no
      intersection, read nearest part of data */
-  for (ii=0; ii < g.dim; ii++) {
+  for (ii=0; ii < dim; ii++) {
     gsa[ii] = iwave_max(gs[ii], rags[ii]);
     gea[ii] = iwave_min(gs[ii] + n[ii] - 1, rags[ii] + ran[ii] - 1);
     na[ii]  = iwave_max(gea[ii] - gsa[ii] + 1, 0);
@@ -440,47 +437,11 @@ int rsfread(ireal * a,
 
   /* use array data to work out offsets of 1D segments in both
      grid array (global) and rarray (local) */
-  if ( (err = get_array_offsets(&goffs, &noffs, g.dim, gs, n, g_gsa, gl_na)) ||
-       (err = get_array_offsets(&loffs, &noffs, g.dim, rags, ran, l_gsa, gl_na)) ) {
+  if ( (err = get_array_offsets(&goffs, &noffs, dim, gs, n, g_gsa, gl_na)) ||
+       (err = get_array_offsets(&loffs, &noffs, dim, rags, ran, l_gsa, gl_na)) ) {
     fprintf(stream,"Error: rsfread - read from get_array_offsets, err=%d\n",err);
-    ps_delete(&par);
     return err;
-  }
-  
-  /* get filename */
-  if ( (err=ps_flcstring(*par,"in",&dname)) ) {
-    fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
-    fprintf(stream,"failed to extract in param\n");
-    ps_delete(&par);
-    return err;
-  }
-  
-  /* open file */
-  /* file mgr version - no prototype file is possible */
-  fp=NULL;
-#ifdef IWAVE_USE_FMGR
-  fp=iwave_const_fopen(dname,"r",NULL,stream);
-  if (!fp) {
-    fprintf(stream,"Error: rsfread - read from iwave_fopen, file = %s\n",dname);
-    ps_delete(&par);
-    return E_FILE;
-  }
-#else
-  fp=fopen(dname,"r");
-  if (!fp) {
-    fprintf(stream,"Error: rsfread - read from fopen, file = %s\n",dname);
-    ps_delete(&par);
-    return E_FILE;
-  }
-#endif
- 
-  if ( (err=ps_flcstring(*par,"data_format",&type)) ) {
-    fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
-    fprintf(stream,"failed to extract type param\n");
-    ps_delete(&par);
-    return err;
-  }
-  ps_flint(*par,"scale",&scale);
+  }  
 
   /* compute current starting position */
   /* first sanity check */
@@ -491,8 +452,8 @@ int rsfread(ireal * a,
   }
       
   /* seek to panel at input panelindex modulo number of panels */
-  panelindex = panelindex % get_panelnum_grid(g);
-  cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
+  panelindex = panelindex % panelnum;
+  cur_pos = panelindex * datasize * sizeof(float);
 
   /*** from here on, memory is allocated, so save return until
        deallocation */
@@ -577,33 +538,31 @@ int rsfread(ireal * a,
   else {
     fprintf(stream,"Error: rsfread - data format must be either\n");
     fprintf(stream,"native_float or xdr_float\n");
-    ps_delete(&par);
 
     return E_OTHER;
   }
 #else
   else {
     fprintf(stream,"Error: rsfread - data format must be native_float\n");
-    ps_delete(&par);
 
     return E_OTHER;
   }
 #endif
 
   fflush(fp);
+
 #ifdef IWAVE_USE_FMGR
   iwave_fclose(fp);
 #else
   fclose(fp);
 #endif
 
-  
   /* extension loop - extend by const along axes dim-1,..,0.
    */
   if (extend) {
 
-    for (ii=g.dim-1;ii>-1;ii--) {
-      if (extend_array(a,rags,ran,l_gsa,gl_na,g.dim,ii)) {
+    for (ii=dim-1;ii>-1;ii--) {
+      if (extend_array(a,rags,ran,l_gsa,gl_na,dim,ii)) {
 	fprintf(stream,"Error: rsfread - extension failed at axis %d\n",ii);
 	return E_OTHER;
       }
@@ -612,7 +571,7 @@ int rsfread(ireal * a,
 
   /* scaling loop */
   ntot=1;
-  for (ii=0;ii<g.dim;ii++) ntot*=ran[ii];
+  for (ii=0;ii<dim;ii++) ntot*=ran[ii];
   if (scale>0) for (ii=0;ii<scale;ii++) scfac *= 10.0;
   if (scale<0) for (ii=0;ii<-scale;ii++) scfac *= 0.10;
   a_max=scfac*a[0];
@@ -626,30 +585,145 @@ int rsfread(ireal * a,
   }
   if (goffs) userfree_(goffs);
   if (loffs) userfree_(loffs);
-  userfree_(dname);
-  userfree_(type);
-
-  ps_delete(&par);
 
   return err;
 }
 
-int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname, 
-	     int extend,       /* WWS 06.03.11 */
-	     FILE * stream,
-	     int panelindex  /* D.S. 01.01.11: extended-model related */
-	     ) {
+int rsfread_proto(ireal * a, 
+		  const IPNT rags, 
+		  const IPNT ran, 
+		  const char * fname,
+		  const char * dname,
+		  const char * type,
+		  int scale,
+		  const char * protohdr,
+		  const char * protodata,
+		  const grid * protogrid,
+		  int extend, 
+		  FILE * stream,
+		  int panelindex   /* D.S. 01.01.11: extended-model related */
+		  ) {
+
+  /* data to be fished out of metadata file */
+  FILE * fph = NULL;
+  PARARRAY * par = NULL;
+  grid g;
+  char * ltype = NULL;
+  char * ldname = NULL;
+  int lscale=0;     /* local scaling index */
+  IPNT n;          /* lengths of grid (file) axes */
+  int err=0;
+
+  if (!(protohdr) && !(protodata) && !(protogrid)) {
+    par = ps_new();
+    
+    /* read parameter table from file */
+    if (ps_createfile_fproto(par,&fph,protohdr,fname)) {
+      fprintf(stream,"read_grid from ps_creatfile_fproto: failed to parse file = %s\n",fname);
+      ps_delete(&par);
+      return E_FILE;
+    }
+
+    /* having created par, can close stream */
+#ifdef IWAVE_USE_FMGR
+    iwave_fclose(fph);
+#else
+    fclose(fph);
+#endif
+
+    /* create grid from parameter table */
+    if ( (err = par_grid(&g, *par, stream)) ) {
+      fprintf(stream,"Error: read from read_grid\n");
+      ps_delete(&par);
+      return err;
+    }
+  
+    /* get data filename */
+    if ( (err=ps_flcstring(*par,"in",&ldname)) ) {
+      fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
+      fprintf(stream,"failed to extract in param\n");
+      ps_delete(&par);
+      return err;
+    }    
+
+    if ( (err=ps_flcstring(*par,"data_format",&ltype)) ) {
+      fprintf(stream,"Error: rsfread - read from ps_flcstring\n");
+      fprintf(stream,"failed to extract type param\n");
+      ps_delete(&par);
+      return err;
+    }
+    ps_flint(*par,"scale",&lscale);
+    ps_delete(&par);
+  }
+
+  else if ((protohdr) && (protodata) && (protogrid)) { 
+    ldname = (char *)usermalloc_((strlen(dname)+10)*sizeof(char));
+    strcpy(ldname,dname);
+    ltype = (char *)usermalloc_((strlen(type)+10)*sizeof(char));
+    strcpy(ltype,type);
+    lscale=scale;
+    copy_grid(&g,protogrid);
+  }
+  else {
+    fprintf(stream,"Error: rsfread_proto - inconsistent values of\n");
+    fprintf(stream,"protohdr, protodata, protog args\n");
+    return E_BADINPUT;
+  }
+    
+  /* get global array lengths from grid 
+     */
+  get_n(n, g);
+
+  err=rsfread_base(a,rags,ran,
+		   ldname,ltype,protodata,
+		   g.dim,get_panelnum_grid(g),get_datasize_grid(g),n,
+		   lscale,extend,stream,panelindex);
+  if (err) 
+    fprintf(stream,"Error: rsfread_proto from rsfread_base err=%d\n",err);
+  
+  userfree_(ldname);
+  userfree_(ltype);
+
+  return err;
+
+}
+
+int rsfread(ireal * a, 
+	    const IPNT rags, 
+	    const IPNT ran, 
+	    const char * fname,
+	    int extend, 
+	    FILE * stream,
+	    int panelindex   /* D.S. 01.01.11: extended-model related */
+	    ) {
+  return rsfread_proto(a,rags,ran,fname,NULL,NULL,0,NULL,NULL,NULL,extend,stream,panelindex);
+}
+
+int rsfwrite_proto(ireal * a, 
+		   const IPNT rags, 
+		   const IPNT ran, 
+		   const char * fname,
+		   const char * dname,
+		   const char * type,
+		   int scale,
+		   const char * protohdr,
+		   const char * protodata,
+		   const grid * protogrid,
+		   int extend, 
+		   FILE * stream,
+		   int panelindex   /* D.S. 01.01.11: extended-model related */
+		   ) {
 
   /**************************
    * BEGIN DECLARATIONS     *
    **************************/
 
   /* strings */
-  char * dname;
+  char * ltype;
+  char * ldname;
 
   /* workspace */  
   grid g;
-  char * type; 
   int ii;
   off_t i,j;       /* counters */
   int err=0;       /* error flag */
@@ -662,7 +736,8 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   IPNT na;         /* lengths of grid intersection axes */
   IPNT gl_na;      /* lengths of grid intersection axes, local or global */
   FILE * fp = NULL;
-  PARARRAY * par;
+  FILE * fph = NULL;
+  PARARRAY * par = NULL;
 
   /*  char * schar;*/
   float * fbuf;    /* input buffer for read */
@@ -677,7 +752,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
 
   /* scale flag - like scalco, scalel in SEGY; factor */
   int ntot;
-  int scale=0;     /* flag - read from parameters */
+  int lscale=0;     /* flag - read from parameters */
   float scfac=1.0; /* factor workspace */
 
   /* grid offsets - allocated dynamically */
@@ -692,32 +767,61 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
    * END DECLARATIONS       *
    **************************/
 
-  /* HEADER FILE SECTION */
+  if (!(protohdr) && !(protodata) && !(protogrid)) {
 
-  par = ps_new();
-
-  if (!ps_createfile(par,fname)) {
-    if ((ii=par_grid(&g,*par,stream))) {
-      fprintf(stream,"Error rsfwrite err=%d\n",ii);
-      fprintf(stream,"file %s exists but does not define RSF/SEP data structure\n",fname);
+    par = ps_new();
+    
+    /* read parameter table from file */
+    if (ps_createfile_fproto(par,&fph,protohdr,fname)) {
+      fprintf(stream,"read_grid from ps_creatfile_fproto: failed to parse file = %s\n",fname);
+      ps_delete(&par);
       return E_FILE;
     }
 
-    if (ps_flcstring(*par,"in",&dname)) {
-      fprintf(stream,"Error: rsfwrite from ps_flcstring\n");
-      fprintf(stream,"failed to read data filename\n");
-      return E_FILE;
+    /* having created par, can close stream */
+#ifdef IWAVE_USE_FMGR
+    iwave_fclose(fph);
+#else
+    fclose(fph);
+#endif
+
+    /* create grid from parameter table */
+    if ( (err = par_grid(&g, *par, stream)) ) {
+      fprintf(stream,"Error: read from read_grid\n");
+      ps_delete(&par);
+      return err;
     }
-    if (ps_flcstring(*par,"data_format",&type)) {
-      fprintf(stream,"Error: rsfwrite from ps_flcstring\n");
-      fprintf(stream,"failed to read data_format from header file %s\n",fname);
-      return E_FILE;
+  
+    /* get data filename */
+    if ( (err=ps_flcstring(*par,"in",&ldname)) ) {
+      fprintf(stream,"Error: rsfwrite - read from ps_flcstring\n");
+      fprintf(stream,"failed to extract in param\n");
+      ps_delete(&par);
+      return err;
+    }    
+
+    if ( (err=ps_flcstring(*par,"data_format",&ltype)) ) {
+      fprintf(stream,"Error: rsfwrite - read from ps_flcstring\n");
+      fprintf(stream,"failed to extract type param\n");
+      ps_delete(&par);
+      return err;
     }
-    ps_flint(*par,"scale",&scale);
+    ps_flint(*par,"scale",&lscale);
+    ps_delete(&par);
+  }
+
+  else if ((protohdr) && (protodata) && (protogrid)) { 
+    ldname = (char *)usermalloc_((strlen(dname)+10)*sizeof(char));
+    strcpy(ldname,dname);
+    ltype = (char *)usermalloc_((strlen(type)+10)*sizeof(char));
+    strcpy(ltype,type);
+    lscale=scale;
+    copy_grid(&g,protogrid);
   }
   else {
-    fprintf(stream,"Error: rsfwrite - header file %s not opened\n",fname);
-    return E_FILE;
+    fprintf(stream,"Error: rsfwrite_proto - inconsistent values of\n");
+    fprintf(stream,"protohdr, protodata, protog args\n");
+    return E_BADINPUT;
   }
 
   /* DATA FILE SECTION */
@@ -726,13 +830,12 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   ntot=1;
   for (ii=0;ii<g.dim;ii++) ntot*=ran[ii];
   /* invert scale */
-  scale=-scale;
-  if (scale>0) for (ii=0;ii<scale;ii++) scfac *= 10.0;
-  if (scale<0) for (ii=0;ii<-scale;ii++) scfac *= 0.10;
-  if (scale) for (i=0;i<ntot;i++) {
-      a[i]*=scfac;
-    }
-
+  lscale=-lscale;
+  if (lscale>0) for (ii=0;ii<lscale;ii++) scfac *= 10.0;
+  if (lscale<0) for (ii=0;ii<-lscale;ii++) scfac *= 0.10;
+  if (lscale) 
+    for (i=0;i<ntot;i++) a[i]*=scfac;
+  
   /* get global array data from grid 
      WWS 09.11.09 - gs is ALWAYS IPNT_0 */
   IASN(gs,IPNT_0);
@@ -779,7 +882,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   }
 
   /* adjoint extension loop - adj_extend by const along axes 0,...,dim-1.
-     added 06.03.12 to make rsfwrite l2-adjoint to rsfread WWS
+     added 06.03.12 to make rsfwrite l2-adjoint to rsfwrite WWS
   */
   if (extend) {
     for (ii=0;ii<g.dim;ii++) {
@@ -799,12 +902,12 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   */
   fp=NULL;
 #ifdef IWAVE_USE_FMGR
-  fp=iwave_const_fopen(dname,"r+",NULL,stream);
+  fp=iwave_const_fopen(ldname,"r+",NULL,stream);
 #else
-  p=fopen(dname,"r+")
+  p=fopen(ldname,"r+")
 #endif
     if (!fp) {
-      fprintf(stream,"Error: rsfwrite from fopen: cannot open file=%s\n",dname);
+      fprintf(stream,"Error: rsfwrite from fopen: cannot open file=%s\n",ldname);
       return E_FILE;
     }
 
@@ -813,7 +916,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   /* compute current starting position */
   /* first sanity check */
   if (panelindex < 0) {
-    fprintf(stream,"Error: rsfread\n");
+    fprintf(stream,"Error: rsfwrite\n");
     fprintf(stream,"panelindex = %d < 0\n",panelindex);
     return E_OTHER;
   }
@@ -822,7 +925,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   panelindex = panelindex % get_panelnum_grid(g);
   cur_pos = panelindex * get_datasize_grid(g) * sizeof(float);
 
-  if (!strcmp(type,"native_float")) {
+  if (!strcmp(ltype,"native_float")) {
 
     /* allocate float buffer */
     fbuf=(float *)usermalloc_(recsize_b);
@@ -855,7 +958,7 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
 
 #ifdef SUXDR
   /* xdr write loop */
-  else if (!strcmp(type,"xdr_float")) {
+  else if (!strcmp(ltype,"xdr_float")) {
 
     /* allocate char buffer */
     buf=usermalloc_(recsize_b);
@@ -925,8 +1028,8 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   if (goffs) userfree_(goffs);
   if (loffs) userfree_(loffs);
   
-  userfree_(dname);
-  userfree_(type);
+  userfree_(ldname);
+  userfree_(ltype);
   ps_delete(&par);
   fflush(fp);
 #ifdef IWAVE_USE_FMGR
@@ -938,6 +1041,19 @@ int rsfwrite(ireal * a, IPNT rags, IPNT ran, char * fname,
   return err;
 }
 
+int rsfwrite(ireal * a, 
+	     const IPNT rags, 
+	     const IPNT ran, 
+	     const char * fname, 
+	     int extend,       /* WWS 06.03.11 */
+	     FILE * stream,
+	     int panelindex  /* D.S. 01.01.11: extended-model related */
+	     ) {
+
+  return rsfwrite_proto(a,rags,ran,fname,NULL,NULL,0,NULL,NULL,NULL,extend,stream,panelindex);
+}
+
 #endif
+
 
   

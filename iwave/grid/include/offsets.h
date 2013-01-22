@@ -65,9 +65,9 @@
 int get_array_offsets(off_t ** offs,
 		      size_t * noffs,
 		      int dim,
-		      IPNT gs,
-		      IPNT gn,
-		      IPNT ls,
-		      IPNT ln);
+		      const IPNT gs,
+		      const IPNT gn,
+		      const IPNT ls,
+		      const IPNT ln);
 
 #endif

@@ -53,7 +53,13 @@ int par_grid(grid * g, PARARRAY par, FILE * fp);
 @param[in]  ax (int)   - axis along which to extend by const
 @return 0 on success, else nonzero error code (see \ref utils.h)
  */
-int extend_array(ireal * a, IPNT rags, IPNT ran, IPNT gs, IPNT n, int dim, int ax);
+int extend_array(ireal * a, 
+		 const IPNT rags, 
+		 const IPNT ran, 
+		 const IPNT gs, 
+		 const IPNT n, 
+		 int dim, 
+		 int ax);
 
 /** adjoint-extend by constant along axis ax an array of dimension dim
     defined by (rags,ran) - replaces boundary elements of array by sum
@@ -75,16 +81,48 @@ int extend_array(ireal * a, IPNT rags, IPNT ran, IPNT gs, IPNT n, int dim, int a
 @param[in]  ax (int)   - axis along which to extend by const
 @return 0 on success, else nonzero error code (see \ref utils.h)
  */
-int adj_extend_array(ireal * a, IPNT rags, IPNT ran, IPNT gs, IPNT n, int dim, int ax);
+int adj_extend_array(ireal * a, 
+		     const IPNT rags, 
+		     const IPNT ran, 
+		     const IPNT gs, 
+		     const IPNT n, 
+		     int dim, 
+		     int ax);
 
-/** read array from SEP77/RSF file structure. 
+/** read array from SEP77/RSF file structure from previously opened files.
  *
+ *  This version of rsfread has two legal use cases: 
+ *  <ol>
+ *  <li>prototype files, grid not provided (corresponding pointer args = NULL); in this
+ *  case metadata file (fname) is source of all info about RSF data structure - data file,
+ *  grid, scale exponent, data type are extracted from fname, so consistency is guaranteed
+ *  if fname is the path to a legitimate metadata file (which does not need to have been
+ *  opened in the current process). <p>This option is safe for read-only apps like IWAVE.</li>
+ *  <li>prototype files and grid are provided - args point to existing objects. Then 
+ *  consistency is responsibility of calling function. Assuming that metadata files are
+ *  already opened using iwave_fopen with appropriate (r, r+, or w+) permissions on appropriate
+ *  prototypes, existing file pointers will be used. Prototype grid, scale, and type arguments
+ *  provide metadata, and must also be consistent - which they are if calling function has
+ *  generated them from a legit metadata file.<p> This option provides a means to guarantee
+ *  data integrity of temporary data in read/write apps such as IWAVE++: 
+ *  GridDC opens temporary (and archival) files and keeps them open for
+ *  the life of the GridDC object. The reference count feature of the IWAVE file manager 
+ *  prevents the corresponding FILE*s from being re-used for writes of other DC data, despite
+ *  calls to iwave_fclose within rsfread.
+ *  <p>
  *  Preconditions:
  *  <ol>
- *  <li>file describes SEP77/RSF data structure, including (n,d,o) grid
+ *  <li>pathname fname describes existing SEP77/RSF metadata file, including (n,d,o) grid
  *  parameters, "in" key with data file name as value, and
  *  "data_format" key with either "native_float" or "xdr_float" as
  *  parameters.</li>
+ *  <li>pathname dname describes existing SEP77/RSF data file, compatible with fname</li>
+ *  <li>pointers to prototype metadata file, data file, and grid either (a) all exist 
+ *  and are compatible with the specified RSF files, or (b) are all NULL. In first
+ *  case, compatibility is NOT checked and is responsibility of calling function.</li>
+ *  <li> fname may be opened for read access, and either (a) if already
+ *  open, was opened by iwave_fopen with prototype specified by proto (or
+ *  any prototype if proto=NULL), or (b) has not been previously opened.
  *  <li>file pointed to by "in=" contains float data, either native or
  *  xdr. No other data types are currently admitted.</li>
  * </ol>
@@ -94,19 +132,58 @@ int adj_extend_array(ireal * a, IPNT rags, IPNT ran, IPNT gs, IPNT n, int dim, i
  *  intersection read from file into sub-rarray
  *  corresponding to intersection</li>
  *  </ol>
- *  @param[out]  a (ireal *)     - array to be read
- *  @param[in]     gs (IPNT)     - global indices of axis starts
- *  @param[in]    n  (IPNT)      - global axis lengths
- *  @param[in]   fname  (char *) - file from which to read data
- *  @param[in]     extend (int)  - extension flag - extend along all axes in decreasing axis order if set
- *  @param[in]   fp (FILE *)     - verbose output parameter
- *  @param[in]   panelindex (int) - panel index of extended model (always be 0 for non-extended model) 
+ *  @param[out]  a             - array to be read
+ *  @param[in]   ags           - global indices of axis starts
+ *  @param[in]   an            - global axis lengths
+ *  @param[in]   fname         - pathname of RSF metadata source file
+ *  @param[in]   dname         - pathname of RSF data source file
+ *  @param[in]   type          - data type string, for insertion in RSF metadata
+ *  @param[in]   scale         - data scale exponent, for insertion in RSF metadata
+ *  @param[in]   protohdr      - pathname of RSF metadata prototype, or NULL
+ *  @param[in]   protodata     - pathname of RSF data prototype, or NULL
+ *  @param[in]   protog        - grid, presumed to be defined by protohdr
+ *  @param[in]   extens        - extension flag - extend along all axes in 
+ *                               decreasing axis order if set
+ *  @param[in]   fp            - verbose output parameter
+ *  @param[in]   panelindex    - panel index of extended model (always 
+ *                               0 for non-extended model) 
+ *  @return 0 on success, else nonzero error code (see \ref utils.h)
+ */
+int rsfread_proto(ireal * a, 
+		  const IPNT rags, 
+		  const IPNT ran,
+		  const char * fname, 
+		  const char * dname,
+		  const char * type,
+		  int scale,
+		  const char * protohdr,
+		  const char * protodata,
+		  const grid * protog,
+		  int extend, 
+		  FILE * fp,
+		  int panelindex       /* D.S. 01.01.11: extended-model related*/
+		  );
+
+/** read array from SEP77/RSF file data structure
+ *
+ *  this version specifies NULL prototypes for RSF files and grid, and delegates
+ *  rsfread_proto. Safe for read-only apps such as IWAVE.
+ *
+ *  @param[out]  a             - array to be read
+ *  @param[in]   gs            - global indices of axis starts
+ *  @param[in]   n             - global axis lengths
+ *  @param[in]   fname         - name of header file
+ *  @param[in]   extens        - extension flag - extend along all axes in 
+ *                               decreasing axis order if set
+ *  @param[in]   fp            - verbose output parameter
+ *  @param[in]   panelindex    - panel index of extended model (always 
+ *                               0 for non-extended model) 
  *  @return 0 on success, else nonzero error code (see \ref utils.h)
  */
 int rsfread(ireal * a, 
-	    IPNT gs, 
-	    IPNT n,
-	    char * fname, 
+	    const IPNT gs, 
+	    const IPNT n,
+	    const char * fname, 
 	    int extend, 
 	    FILE * fp,
 	    int panelindex       /* D.S. 01.01.11: extended-model related*/
@@ -141,13 +218,28 @@ int rsfread(ireal * a,
  *  @param[in]   panelindex (int) - panel index of extended model (always be 0 for non-extended model) 
  *  @return 0 on success, else nonzero error code (see \ref utils.h)
  */
+int rsfwrite_proto(ireal * a, 
+		   const IPNT rags, 
+		   const IPNT ran,
+		   const char * fname, 
+		   const char * dname,
+		   const char * type,
+		   int scale,
+		   const char * protohdr,
+		   const char * protodata,
+		   const grid * protog,
+		   int extend, 
+		   FILE * fp,
+		   int panelindex       /* D.S. 01.01.11: extended-model related*/
+		  );
+
 int rsfwrite(ireal * a, 
-	     IPNT gs, 
-	     IPNT n, 
-	     char * fname, 
+	     const IPNT gs, 
+	     const IPNT n, 
+	     const char * fname, 
 	     int extend,
 	     FILE * fp,
 	     int panelindex        /* D.S. 01.01.11: extended-model related*/
 	     );
 
-#endif /* __SEAM_GRIDIO */
+#endif /* __IWAVE_GRIDIO */

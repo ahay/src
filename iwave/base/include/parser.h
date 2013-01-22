@@ -84,6 +84,31 @@ Write contents of PARARRAY to stream
 
 int ps_printall(PARARRAY parr, FILE *stream);
 
+/*----------------------------------------------------------------------------*/
+/** 
+Creates parameter array (STORAGE ALLOCATION) from by reading from 
+file pointer
+@param[out] parr (PARARRAY *) - param array created on successful return
+@param[in] fp (FILE *) - file pointer
+@return (int) 0 if successful, else nonzero error code.
+*/
+int ps_createfp(PARARRAY *parr, FILE * fp);
+
+/*----------------------------------------------------------------------------*/
+/** 
+Creates parameter array (STORAGE ALLOCATION) from file. Returns control of
+file pointer, which may be allocated via iwave_fopen (or simply returned, if
+file is already open). Includes optional specification of file prototype.
+@param[out] parr - param array created on successful return
+@param[in/out] stream - pointer to FILE pointer, which may be alloc
+@param[in] proto - optional prototype filename for use by iwave_fopen, or NULL
+@param[in] filename - name of parfile containing key=value info
+@return (int) 0 if successful, else nonzero error code.
+*/
+int ps_createfile_fproto(PARARRAY *parr, 
+			 FILE ** stream,  
+			 const char * proto,
+			 const char *filename);
 
 /*----------------------------------------------------------------------------*/
 /** 
