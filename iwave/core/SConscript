@@ -11,7 +11,7 @@ try:  # madagascar version
     testflag = 'no'
 except: # autonomous version
     # import compiler variables, testflag
-    Import('vars', 'testflag')
+    Import('vars', 'testflag', 'docflag')
     thispath = buildpath
     thisname = buildname
     root = None
@@ -143,4 +143,8 @@ if testflag == 'yes':
        Export('vars', 'cpplist','liblist','libdirlist')
        SConscript('test/SConscript')
 
+#test for doc flag, attempt to build docs if it exists
+if docflag == 'yes':
+   if os.path.exists('doc'):
+       os.system('cd doc; doxygen')
 

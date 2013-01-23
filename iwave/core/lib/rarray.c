@@ -1329,4 +1329,26 @@ int ra_axpy(RARR * arry, RARR const * arrx, ireal a) {
   return E_BADINDEX;
 }
       
+int ra_compare_meta(const RARR * a, const RARR * b) {
+
+  int ndima;
+  int ndimb;
+  IPNT gea;
+  IPNT gsa;
+  IPNT geb;
+  IPNT gsb;
   
+  ra_ndim(a,&ndima);
+  ra_ndim(b,&ndimb);
+
+  if (ndima == ndimb) {
+    ra_a_gse(a,gsa,gea);
+    ra_a_gse(b,gsb,geb);
+    if ((gsa==gsb) && (gea==geb)) {
+      ra_gse(a,gsa,gea);
+      ra_gse(b,gsb,geb);
+      if ((gsa==gsb) && (gea==geb)) return 0;
+    }
+  }
+  return 1;
+}

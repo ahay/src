@@ -686,5 +686,12 @@ int ra_a_inner(RARR const * arr1, RARR const * arr2, ireal * ip);
  * @return 0 on successful completion, else error code as in base/include/utils.h.
  */  
 int ra_axpy(RARR * arry, RARR const * arrx, ireal a);
+/*-----------------------------------------------------------------------------*/
+/** 
+ * comparison function - required to make RARR behave like a proper metadata 
+ * object
+ * @return 0 if arguments have same ndim, gs and ge, 1 otherwise
+ */
+int ra_compare_meta(const RARR * a, const RARR * b); 
 
 #endif /*__RARRAY_H_*/

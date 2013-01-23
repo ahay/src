@@ -42,6 +42,15 @@ AddOption('--test',
 	  help="""use scons --test to execute unit and functional tests in subdir test or testsrc """)
 testflag = GetOption('test')
 
+AddOption('--doc',
+          dest='doc',
+	  type='string',
+	  default='no',
+	  const='yes',
+	  nargs='?',
+	  help="""use scons --doc to create html documentation. requires doxygen command in path""")
+docflag = GetOption('doc')
+
 AddOption('--ccopts',
 	  dest='ccopts',
 	  type='string',
@@ -83,6 +92,7 @@ vars.Add('CCFLAGS','flags passed to C/C++ compiler','-g -pedantic -Wunused -Wimp
 vars.Add('CXX','path or alias for C++ compiler','g++')
 vars.Add('CXXFLAGS','flags passed to C++ compiler only (not C)','')
 vars.Add('LINKFLAGS','flags passed only to linker','')
+vars.Add('AR','static library (object archive) creation','ar')
 
 # initialize build environment
 env = Environment(variables = vars,
@@ -91,7 +101,8 @@ env = Environment(variables = vars,
                   CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
                   CXX={'CXX' : '${CXX}'},
 	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
-		  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'})
+		  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
+		  AR={'AR' : '${AR}'})
 Help(vars.GenerateHelpText(env))
 
 # main options:
@@ -155,6 +166,6 @@ else:
 	            shutil.copyfile(configfile, subpath+'/config.py')
 
         else:
-            Export('vars', 'testflag')
+            Export('vars', 'testflag', 'docflag')
             SConscript(subpath+'/SConscript')
 

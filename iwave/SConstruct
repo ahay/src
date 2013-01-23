@@ -42,6 +42,15 @@ AddOption('--test',
 	  help="""use scons --test to execute unit and functional tests in subdir test or testsrc """)
 testflag = GetOption('test')
 
+AddOption('--doc',
+          dest='doc',
+	  type='string',
+	  default='no',
+	  const='yes',
+	  nargs='?',
+	  help="""use scons --doc to create html documentation. requires doxygen command in path""")
+docflag = GetOption('doc')
+
 AddOption('--ccopts',
 	  dest='ccopts',
 	  type='string',
@@ -157,6 +166,6 @@ else:
 	            shutil.copyfile(configfile, subpath+'/config.py')
 
         else:
-            Export('vars', 'testflag')
+            Export('vars', 'testflag', 'docflag')
             SConscript(subpath+'/SConscript')
 
