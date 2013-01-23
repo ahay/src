@@ -39,7 +39,7 @@ float traveltime(float x)
 {
 	float t;
 	
-	t = hypotf(x-xs,zz(x))/v0 + hypotf(x-xr,zz(x))/v0;
+	t = hypot(x-xs,zz(x))/v0 + hypot(x-xr,zz(x))/v0;
 	sf_warning("x=%g,xs=%g,xr=%g and t=%g",x,xs,xr,t);
 	
 	return t;
@@ -51,7 +51,7 @@ float dtdx(float x)
 {
 	float diff;
 	
-	diff = ((x-xs)+zz(x)*zzp(x))*pow(hypotf(x-xs, zz(x)),-1)/v0 + ((x-xr)+zz(x)*zzp(x))*pow(hypotf(x-xr, zz(x)),-1)/v0;
+	diff = ((x-xs)+zz(x)*zzp(x))/(v0*hypot(x-xs, zz(x))) + ((x-xr)+zz(x)*zzp(x))/(v0*hypot(x-xr, zz(x)));
 	
 	return diff;
 }
@@ -62,7 +62,7 @@ float d2tdx2(float x)
 {
 	float diff2;
 	
-	diff2 = (zz(x)*pow(hypotf(x-xs, zz(x)),2)*zzs(x)+pow((xs-x)*zzp(x)+zz(x),2))/(v0*pow(hypotf(x-xs, zz(x)),3))+(zz(x)*pow(hypotf(x-xr, zz(x)),2)*zzs(x)+pow((xr-x)*zzp(x)+zz(x),2))/(v0*pow(hypotf(x-xr, zz(x)),3));
+	diff2 = (zzs(x)*zz(x)+pow(zzp(x),2)+1)/(v0*hypot(x-xs,zz(x))) - pow(x-xs+zz(x)*zzp(x),2)/(v0*pow(hypot(x-xs,zz(x)),3)) + (zzs(x)*zz(x)+pow(zzp(x),2)+1)/(v0*hypot(x-xr,zz(x))) - pow(x-xr+zz(x)*zzp(x),2)/(v0*pow(hypot(x-xr,zz(x)),3));
 	
 	return diff2;
 }

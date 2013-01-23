@@ -73,13 +73,13 @@ float newton(func1 function /*f(x)*/,
 			fp = derivative(x);
 			sf_warning("Increment diverges-->decrease x to %g, f(x)=%g, fp(x)=%g, f/fp=%g, h(previous)=%g",x,f,fp,f/fp,h);
 
-	}
+		}
 
-	if (fabsf(f/fp) < tol) { /*Break operation if the tolerance level is reached (Check again)*/
-	    sf_warning("Tolerance level is reached.");
-	    break;
-	}
-		
+		if (fabsf(f/fp) < tol) { /*Break operation if the tolerance level is reached (Check again)*/
+			sf_warning("Tolerance level is reached.");
+			break;
+		}
+			
 	h=f/fp;
 		
 	if (isnan(fp) != 0 || isinf(fp) != 0 || isnan(f) != 0 || isinf(f) != 0) { /*If the derivative and/or function values are '0' or 'infinity', we will reduce the size of increment*/
@@ -88,12 +88,14 @@ float newton(func1 function /*f(x)*/,
 	    fp = derivative(xtem); /*Generate fp of the previous step again*/
 	    h = f/fp; /*Generate the increment value of the previous step*/
 	    htem = sqrt(-1); /*Set the initial value of htem to get into the for loop*/
+		
 	    for (check = 0; isnan(htem) != 0 || isinf(htem)!= 0;check++) { 
-		if (check == 10) break;
-		h *= 0.5; /*Reduce the size of increment by half each loop*/
-		xtem -= h; /*Calculate x with the new increment*/
-		htem = function(xtem)/derivative(xtem);
+			if (check == 10) break;
+			h *= 0.5; /*Reduce the size of increment by half each loop*/
+			xtem -= h; /*Calculate x with the new increment*/
+			htem = function(xtem)/derivative(xtem);
 	    }
+		
 	    x = x_back; /*Take the value of x back to the previous step*/
 	    sf_warning("The derivative and/or function values is undefined."); 
 	    sf_warning("The number of times the increment size is halved = %d and the new increment = %g",check,h);

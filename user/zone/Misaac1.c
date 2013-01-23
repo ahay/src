@@ -17,11 +17,15 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <rsf.h>
+#include <math.h>
 #include "ps_traveltime.h"
 #include "newton.h"
 
+#define pi 3.14159265358979323846
+
 static sf_eno eno, deno; /* interpolation structure */	
-static float r0, dr;
+static float r0, dr,*rr;
+static int nr;
 
 static float z(float x) 
 /* function */
@@ -62,11 +66,57 @@ static float zder2(float x)
 	return f1/dr;	
 }
 
+static float zder22(float x) 
+/* second derivative from finite difference */
+{
+	int i;
+	float f;
+	
+	x = (x-r0)/dr; 
+	i = floorf(x);
+
+	if (i<=1) {
+		
+		f = (2*rr[i]-5*rr[i+1]+4*rr[i+2]-rr[i+3])/(dr*dr);/*2nd order Right-sided finite difference for left end*/
+		
+	} else if (i>=nr-2){
+		
+		f = (2*rr[i]-5*rr[i-1]+4*rr[i-2]-rr[i-3])/(dr*dr);/*2nd order Left-sided finite difference for right end*/
+		
+	} else {
+		f = ((-1)*rr[i+2]+16*rr[i+1]-30*rr[i]+16*rr[i-1]-rr[i-2])/(12*dr*dr); /*4th order Central finite difference for middle points*/
+	}
+
+	return f;
+}
+
+static float d1(float x,float h,float alpha)
+/*Second derivative for hyperbolic reflector*/
+{
+	float f;
+	
+	f = x*pow(tan(alpha),2)/hypot(h,x*tan(alpha));
+	
+	return f;
+}
+
+static float d2(float x,float h,float alpha)
+/*Second derivative for hyperbolic reflector*/
+{
+	float f;
+	
+	f = pow(h,2)*pow(tan(alpha),2)/pow(hypot(h,x*tan(alpha)),3);
+	
+	return f;
+}
+
 int main(int argc, char* argv[])
 {
-	int nr, nt, it, ir, order, niter, nt2, it2;
+	int nt, it, ir, order, niter, nt2, it2;
 	float x, t0, dt, velocity, tol, xinitial,dt2,t02; /*,max_extent, scale,max_x,xmax,hmax;*/
-	float *rr, *rd, **tt, **xx; 
+	float zd1,zd1_real, zd2, zd2_real; /*temp second derivative value*/
+	
+	float *rd, **tt, **xx; 
 	double xs,xr;
 	sf_file refl, ttime, xrefl;
 	
@@ -90,13 +140,14 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("s0",&t0)) t0=r0;/* origin for midpoint*/
 	if (!sf_getfloat("s02",&t02)) t02=r0;/* origin for offset*/
 	
-	sf_putint(ttime,"n1",nt); /* Midpoint axis*/
-	sf_putfloat(ttime,"d1",dt);
-	sf_putfloat(ttime,"o1",t0);
 	
-	sf_putint(ttime,"n2",nt2); /*S&R increment axis*/
-	sf_putfloat(ttime,"d2",dt2);
-	sf_putfloat(ttime,"o2",t02);
+	sf_putint(ttime,"n1",nt2); /*S&R increment axis (Faster axis)*/
+	sf_putfloat(ttime,"d1",dt2);
+	sf_putfloat(ttime,"o1",t02);
+	
+	sf_putint(ttime,"n2",nt); /* Midpoint axis*/
+	sf_putfloat(ttime,"d2",dt);
+	sf_putfloat(ttime,"o2",t0);
 	
 	xrefl = sf_output("xrefl"); /* Output reflection point */
 	sf_putint(xrefl,"n1",nt);
@@ -107,8 +158,8 @@ int main(int argc, char* argv[])
 	rr = sf_floatalloc(nr);
 	rd = sf_floatalloc(nr);
 	
-	tt = sf_floatalloc2(nt,nt2);
-	xx = sf_floatalloc2(nt,nt2);
+	tt = sf_floatalloc2(nt2,nt);/*Row is always for midpoint and column is always for offset*/
+	xx = sf_floatalloc2(nt2,nt);
 	
 	/* read input */
 	sf_floatread(rr,nr,refl);
@@ -148,19 +199,30 @@ int main(int argc, char* argv[])
 	
 	
 	/* Loop through the output */
-	for (it2=0; it2<nt2; it2++){ /*How many times we move the location => column*/
+	for (it=0; it < nt; it++){ /*How many times we move the location (Midpoint) =>Each Row*/
 		
 		
-		for (it=0; it < nt; it++) { /*How many times we compute xs&xr at each location => row*/
-			xs = t0+it2*dt-it*dt2; /* source location */
-			xr = t0+it2*dt+it*dt2; /* receiver location */
+		if (it >= 200) {
+			sf_warning("Line = %d\n",it);
+		}
+		
+		for (it2=0; it2 < nt2; it2++) { /*How many times we compute xs&xr at each location =>Each Column*/
+			xs = t0+it*dt-it2*dt2; /* source location */
+			xr = t0+it*dt+it2*dt2; /* receiver location */
 			
-			traveltime_init(z,zder,zder2,xs,xr,velocity);
+			traveltime_init(z,zder,zder22,xs,xr,velocity);
 			
-			if (it==0) {
-				xinitial = t0+it2*dt; /*The first calculation starting from the origin*/
+			if (it2==0) {
+				xinitial = t0+it*dt; /*The first calculation starting from the origin*/
 				x = newton(dtdx,d2tdx2,xinitial,niter,tol);
 				xinitial = x; /*Use the answer of the previous iteration to be the starting point of the next iteration*/
+				
+				zd1 = zder(xinitial);
+				zd1_real = d1(xinitial,1, 45*pi/180.0);
+				zd2 = zder22(xinitial);
+				zd2_real = d2(xinitial,1, 45*pi/180.0);
+				
+				sf_warning("x=%g,zder1=%g,zd1_real=%g \n\tzder2=%g,zd2_real=%g",xinitial,zd1,zd1_real,zd2,zd2_real);
 			}
 			
 			tt[it][it2] = traveltime(x);
@@ -169,9 +231,10 @@ int main(int argc, char* argv[])
 		
 	}	
 	
+	
 	/* write output */
-	sf_floatwrite(tt[0],nt*nt2,ttime); 
-	sf_floatwrite(xx[0],nt*nt2,xrefl);
+	sf_floatwrite(*tt,nt*nt2,ttime); 
+	sf_floatwrite(*xx,nt*nt2,xrefl);
 	
 	exit(0);
 }

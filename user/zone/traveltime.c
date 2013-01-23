@@ -62,7 +62,7 @@ float d2tdx2(float x)
 {
 	float diff2;
 	
-	diff2 = (zz(x)*pow(hypotf(x-x0, zz(x)),2)*zzs(x)+pow((x0-x)*zzp(x)+zz(x),2))/(v0*pow(hypotf(x-x0, zz(x)),3));
+	diff2 = (zzs(x)*zz(x)+pow(zzp(x),2)+1)/(v0*hypotf(x-x0,zz(x))) - pow(x-x0+zz(x)*zzp(x),2)/(v0*pow(hypotf(x-x0,zz(x)),3));
 	
 	return diff2;
 }
