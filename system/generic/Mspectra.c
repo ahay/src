@@ -33,7 +33,7 @@ int main (int argc, char* argv[])
     float d1, o1, dw, *spec=NULL, *trace=NULL, scale;
     kiss_fft_cpx *fft=NULL;
     char key[3], *label=NULL;
-    bool sum;
+    bool sum, opt;
     sf_file in=NULL, out=NULL;
 
 #ifdef SF_HAS_FFTW
@@ -54,6 +54,9 @@ int main (int argc, char* argv[])
     if (!sf_getbool("all",&sum)) sum=false;
     /* if y, compute average spectrum for all traces */
 
+    if (!sf_getbool("opt",&opt)) opt=true;
+    /* if y, determine optimal size for efficiency */
+
     if (!sf_histfloat(in,"d1",&d1)) d1=0.004;
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
@@ -64,7 +67,8 @@ int main (int argc, char* argv[])
     sf_fft_unit(1,sf_histstring(in,"unit1"),out);
 
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
+    nfft = opt? 2*kiss_fft_next_fast_size((n1+1)/2): n1;
+    if (nfft%2) nfft++;
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 

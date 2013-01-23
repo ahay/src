@@ -20,6 +20,7 @@ To programs:
 
 * Added scalebar= option for sfgraph with depth=
 * Added an ability to specify options for sfpen with SFPENOPTS
+* Added opt= parameter in sfspectra
 
 ===Bug fixes===
 
@@ -36,6 +37,7 @@ In the Python package:
 In programs:
 
 * Fixed bug with handling zero values in sfclip
+* Fixed incorrect data size bug in sffindmo
 
 In the build system:
 
