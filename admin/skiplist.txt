@@ -23,6 +23,7 @@ skiplist =  [
                 'book/cwp/geo2006TimeShiftImagingCondition/icomp',
                 'book/cwp/geo2008InterferometricImagingCondition/circle',
                                              # Examples that run more than 2 minutes
+                'book/trip/iwave/data',
                 'book/bei/vela/vscan',
                 'cwp/geo2009VTIModeSeparation/separate5',
                 'book/cwp/geo2006TimeShiftImagingCondition/zicig',
