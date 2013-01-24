@@ -212,6 +212,7 @@ def cc(context):
     else:
         context.Result(context_failure)
         need_pkg('gcc')
+    context.env['LIBS'] = path_get(context,'LIBS')
     text = '''
     int main(int argc,char* argv[]) {
     return 0;

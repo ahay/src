@@ -29,6 +29,7 @@ def rgraph(title):
     graph screenratio=1 title="%s"
     min1=0 min2=0 max1=10 max2=10
     transp=y yreverse=y
+    label1=Z label2=X unit1=km unit2=km
     ''' % title
 
 Flow('iray','vm','rays2a zshot=5 yshot=5 nr=361 nt=600 dt=0.004')
