@@ -6,6 +6,8 @@ skiplist =  [
                 'book/rsf/rsf/sfenvelope',                      # SU not installed
                 'book/rsf/bash/plot',                           # plplot not installed
 		'book/chen/test/fpca',                          # sfpca not installed
+                'book/jsg/lowrank/fio',                         # sflrmatrix not installed
+                'book/jsg/lowrank/fowler',                      # sfisolr2 not installed
 		'book/chen/test/xtime',                         # no results
                 'book/rsf/bash/mpi',
 								# Examples with movies
