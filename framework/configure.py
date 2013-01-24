@@ -946,6 +946,7 @@ def blas(context):
     #else 
     #include <mkl.h>
     #endif
+    #endif
     int main(int argc,char* argv[]) {
     float d, x[]={1.,2.,3.}, y[]={3.,2.,1.};
     d = cblas_sdot(3,x,1,y,1);
