@@ -450,6 +450,10 @@ void segy_init(int nkeys, sf_file hdr)
 {
     int ik, nk, len, namelen;
     char key[11], *name;
+
+    if (nkeys > SF_MAXKEYS) 
+	sf_error("%s: The header is too long: %d > %d",
+		 __FILE__,nkeys,SF_MAXKEYS);
  
     for (ik=0; ik < nkeys; ik++) {
 	if (ik < SF_NKEYS) {

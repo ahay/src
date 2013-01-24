@@ -647,7 +647,7 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     mid.resize(IM1.m(), tmp.n());
     iC( zgemm(1.0, IM1, tmp, 0.0, mid) );
   }
-  if(0) {
+  if(1) {
     int nc = min(npk,n);
     vector<int> cs(nc);
     for(int k=0; k<nc; k++)      cs[k] = int( floor(drand48()*n) );
