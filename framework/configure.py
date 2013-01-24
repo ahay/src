@@ -109,6 +109,7 @@ def check_all(context):
     ffmpeg  (context) # FDNSI
     cairo(context) # FDNSI
     jpeg(context) # FDNSI
+    mkl(context)  # FDNSI
     blas(context) # FDNSI
     lapack(context) # FDNSI
     swig(context)
@@ -344,6 +345,26 @@ def c99(context):
             path_get(context,'CPPDEFINES','NO_COMPLEX')
         context.Result(context_failure)
         need_pkg('c99', fatal=False)
+
+# MKL library
+def mkl(context):
+    context.Message("checking MKL ... ")
+    text = '''
+    #include <mkl.h>
+    int main(int argc,char* argv[]) {
+    float d, x[]={1.,2.,3.}, y[]={3.,2.,1.};
+    d = cblas_sdot(3,x,1,y,1);
+    return 0;
+    }\n'''
+
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+    else:
+        context.env['CPPDEFINES'] = \
+            path_get(context,'CPPDEFINES','NO_MKL')
+        context.Result(context_failure)
+        need_pkg('mkl', fatal=False)
 
 # The two lists below only used in the x11 check
 xinc = [
@@ -919,7 +940,10 @@ def blas(context):
     #ifdef __APPLE__
     #include <vecLib/vBLAS.h>
     #else
+    #ifdef NO_MKL
     #include <cblas.h>
+    #else 
+    #include <mkl.h>
     #endif
     int main(int argc,char* argv[]) {
     float d, x[]={1.,2.,3.}, y[]={3.,2.,1.};
