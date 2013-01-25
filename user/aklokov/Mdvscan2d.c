@@ -1,10 +1,10 @@
 /* Diffraction velocity analysis
 
-Input:
-	dataFile_.rsf - migrated dip-angle gathers
+   Input:
+   dataFile_.rsf - migrated dip-angle gathers
 
-Output:
-	sembFile_.rsf - semblance spectrum
+   Output:
+   sembFile_.rsf - semblance spectrum
 */
 
 /*
@@ -77,121 +77,136 @@ bool  isVelKMS;
 
 // FUNCTIONS
 
-void processGatherStack (float* velTrace, int cigNum, float distShift) {
+void processGatherStack (float* velTrace, int cigNum, float distShift) 
+{
+    int ig, it, velInd, idist, id, tIndBase, ic, tInd, ind;
+    float curGamma, curT, velMig, curStack, curDist, curDip, curDipRad, gammaSin, aux, zd, xi, t, val;
 
-	float* ptrSemb = pSembPanel_;
+    float* ptrSemb = pSembPanel_;
 
-	for (int ig = 0; ig < gammaNum_; ++ig) {
-		const float curGamma = gammaStart_ + ig * gammaStep_;
-		for (int it = 0; it < tNum_; ++it, ++ptrSemb) {			
-			const float curT = tStart_ + it * tStep_;
+    for (ig = 0; ig < gammaNum_; ++ig) {
+	curGamma = gammaStart_ + ig * gammaStep_;
+	for (it = 0; it < tNum_; ++it, ++ptrSemb) {			
+	    curT = tStart_ + it * tStep_;
 
-			const int velInd = (curT - v_tStart_) / v_tStep_;
-			float velMig = *(velTrace + velInd);
+	    velInd = (curT - v_tStart_) / v_tStep_;
+	    velMig = *(velTrace + velInd);
 
-			float curStack = 0.f;
-			for (int idist = 0; idist < cigNum; ++idist) {
-				const float curDist = distStart_ + idist * xStep_ + distShift;
-				for (int id = 0; id < dipNum_; ++id) {
-					const float curDip = dipStart_ + id * dipStep_;
-					if (fabs (curDip) > dlim_) continue;
-					const float curDipRad = curDip * SF_PI / 180.f;
+	    curStack = 0.f;
+	    for (idist = 0; idist < cigNum; ++idist) {
+		curDist = distStart_ + idist * xStep_ + distShift;
+		for (id = 0; id < dipNum_; ++id) {
+		    curDip = dipStart_ + id * dipStep_;
+		    if (fabs (curDip) > dlim_) continue;
+		    curDipRad = curDip * SF_PI / 180.f;
 
-					const float gammaSin = curGamma * sin (curDipRad);
-					const float aux = 1 - pow (gammaSin, 2);
-					const float zd = velMig * curT / (2 * curGamma) + 1e-6;
-					const float xi = curDist / zd;
-
-					const float t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
-
-					const int tIndBase = (t - tStart_) / tStep_;
+		    gammaSin = curGamma * sin (curDipRad);
+		    aux = 1 - pow (gammaSin, 2);
+		    zd = velMig * curT / (2 * curGamma) + 1e-6;
+		    xi = curDist / zd;
+		    
+		    t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
+		    
+		    tIndBase = (t - tStart_) / tStep_;
 	
-					for (int ic = 0; ic < coher_; ++ic) {
-						const int tInd = tIndBase + ic - coher_ / 2;
-						if (tInd < 0 || tInd >= tNum_)
-							continue;
-						const int ind = idist * tNum_ * dipNum_ + id * tNum_ + tInd;
-						const float val = *(pData_ + ind);
+		    for (ic = 0; ic < coher_; ++ic) {
+			tInd = tIndBase + ic - coher_ / 2;
+			if (tInd < 0 || tInd >= tNum_)
+			    continue;
+			ind = idist * tNum_ * dipNum_ + id * tNum_ + tInd;
+			val = *(pData_ + ind);
 
-						curStack += val;
-					}
-				}
-			}	
-			*ptrSemb = fabs (curStack);
+			curStack += val;
+		    }
 		}
+	    }	
+	    *ptrSemb = fabs (curStack);
 	}
+    }
 
-	return;
+    return;
 }
 
-void processGatherSemb (float* velTrace, int cigNum, float distShift) {
+void processGatherSemb (float* velTrace, int cigNum, float distShift) 
+{
+    int ig, it, velInd, count, idist, id, tIndBase, ic, tInd, ind;
+    float curGamma,  curT, velMig, curDist, curDip, curDipRad, gammaSin, aux, zd, xi, t, val;
+    float fullInput, fullOutput, curSemb;
 
-	float* ptrSemb = pSembPanel_;
+    float* ptrSemb = pSembPanel_;
 
-	float* energyInput  = sf_floatalloc (coher_);
-	float* energyOutput = sf_floatalloc (coher_);
+    float* energyInput  = sf_floatalloc (coher_);
+    float* energyOutput = sf_floatalloc (coher_);
 
-	for (int ig = 0; ig < gammaNum_; ++ig) {
-		const float curGamma = gammaStart_ + ig * gammaStep_;
-		for (int it = 0; it < tNum_; ++it, ++ptrSemb) {			
-			const float curT = tStart_ + it * tStep_;
+    for (ig = 0; ig < gammaNum_; ++ig) {
+	curGamma = gammaStart_ + ig * gammaStep_;
+	for (it = 0; it < tNum_; ++it, ++ptrSemb) {			
+	    curT = tStart_ + it * tStep_;
 
-			const int velInd = (curT - v_tStart_) / v_tStep_;
-			float velMig = *(velTrace + velInd);
+	    velInd = (curT - v_tStart_) / v_tStep_;
+	    velMig = *(velTrace + velInd);
 
-		    memset ( energyInput,  0, coher_ * sizeof (float) );   
-    		memset ( energyOutput, 0, coher_ * sizeof (float) );   
+	    memset ( energyInput,  0, coher_ * sizeof (float) );   
+	    memset ( energyOutput, 0, coher_ * sizeof (float) );   
 
-			int count = 0;
+	    count = 0;
 
-			for (int idist = 0; idist < cigNum; ++idist) {
-				const float curDist = distStart_ + idist * xStep_ + distShift;
-				for (int id = 0; id < dipNum_; ++id) {
-					const float curDip = dipStart_ + id * dipStep_;
-					if (fabs (curDip) > dlim_) continue;
-					const float curDipRad = curDip * SF_PI / 180.f;
+	    for (idist = 0; idist < cigNum; ++idist) {
+		curDist = distStart_ + idist * xStep_ + distShift;
+		for (id = 0; id < dipNum_; ++id) {
+		    curDip = dipStart_ + id * dipStep_;
+		    if (fabs (curDip) > dlim_) continue;
+		    curDipRad = curDip * SF_PI / 180.f;
 
-					const float gammaSin = curGamma * sin (curDipRad);
-					const float aux = 1 - pow (gammaSin, 2);
-					const float zd = velMig * curT / (2 * curGamma) + 1e-6;
-					const float xi = curDist / zd;
+		    gammaSin = curGamma * sin (curDipRad);
+		    aux = 1 - pow (gammaSin, 2);
+		    zd = velMig * curT / (2 * curGamma) + 1e-6;
+		    xi = curDist / zd;
 
-					const float t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
+		    t = curT * cos (curDipRad) * ( xi * gammaSin + sqrt (xi*xi + aux ) ) / aux;
 
-					const int tIndBase = (t - tStart_) / tStep_;
+		    tIndBase = (t - tStart_) / tStep_;
 	
-					for (int ic = 0; ic < coher_; ++ic) {
-						const int tInd = tIndBase + ic - coher_ / 2;
-						if (tInd < 0 || tInd >= tNum_)
-							continue;
-						const int ind = idist * tNum_ * dipNum_ + id * tNum_ + tInd;
-						const float val = *(pData_ + ind);
+		    for (ic = 0; ic < coher_; ++ic) {
+			tInd = tIndBase + ic - coher_ / 2;
+			if (tInd < 0 || tInd >= tNum_)
+			    continue;
+			ind = idist * tNum_ * dipNum_ + id * tNum_ + tInd;
+			val = *(pData_ + ind);
 
-						energyOutput [ic] += val;
-						energyInput  [ic] += val * val;
-					}
-					++count;
-				}
-			}	
-			float fullInput  = 0.f;
-			float fullOutput = 0.f;	
-			for (int ic = 0; ic < coher_; ++ic) {
-				fullInput  += energyInput [ic];
-				fullOutput += pow (energyOutput [ic], 2);
-			}
-			const float curSemb = fullInput ? fullOutput / (count * fullInput) : 0.f;
-			*ptrSemb = curSemb;
+			energyOutput [ic] += val;
+			energyInput  [ic] += val * val;
+		    }
+		    ++count;
 		}
+	    }	
+	    fullInput  = 0.f;
+	    fullOutput = 0.f;	
+	    for (ic = 0; ic < coher_; ++ic) {
+		fullInput  += energyInput [ic];
+		fullOutput += pow (energyOutput [ic], 2);
+	    }
+	    curSemb = fullInput ? fullOutput / (count * fullInput) : 0.f;
+	    *ptrSemb = curSemb;
 	}
+    }
 
-	free (energyInput);
-	free (energyOutput);
+    free (energyInput);
+    free (energyOutput);
 
-	return;
+    return;
 }
 
-int main (int argc, char* argv[]) {
-   
+int main (int argc, char* argv[]) 
+{
+    float firstvel, geoX, distShift;
+    // time - in ms
+    char* corUnit;
+    char* unit;
+    int dagSize, sembSize, velSize, halfXApp, iv, ix, xNum, temp, curPanelSize, offset, velInd;
+    float *ptrVel, *velTrace;
+    size_t startInd;
+
 // Initialize RSF 
     sf_init (argc, argv);
 // Input files
@@ -203,14 +218,13 @@ int main (int argc, char* argv[]) {
 
     if ( NULL != sf_getstring("vel") ) {
 	/* velocity model file (velocity in km/s) */ 
-		velFile_  = sf_input ("vel");
-		float firstvel;
-		sf_floatread (&firstvel, 1, velFile_);
-		isVelKMS = true;		
-		if (firstvel > 15.f) {
-		    sf_warning ("it seems that velocity is in m/s - will be divided by 1000");	
-		    isVelKMS = false;					
-		}			
+	velFile_  = sf_input ("vel");
+	sf_floatread (&firstvel, 1, velFile_);
+	isVelKMS = true;		
+	if (firstvel > 15.f) {
+	    sf_warning ("it seems that velocity is in m/s - will be divided by 1000");	
+	    isVelKMS = false;					
+	}			
     } else { sf_error ("Need input: velocity model"); }
 
 // Output file
@@ -228,10 +242,6 @@ int main (int argc, char* argv[]) {
     if ( !sf_histint   (dataFile_, "n3", &xNum_) )     sf_error ("Need n3= in input");
     if ( !sf_histfloat (dataFile_, "d3", &xStep_) )    sf_error ("Need d3= in input");
     if ( !sf_histfloat (dataFile_, "o3", &xStart_) )   sf_error ("Need o3= in input");
-
-    // time - in ms
-    char* corUnit;
-    char* unit;
 
     // time - in ms
     corUnit = (char*) "ms"; unit = sf_histstring (dataFile_, "unit1"); if (!unit) sf_error ("unit1 in data file is not defined");
@@ -259,113 +269,113 @@ int main (int argc, char* argv[]) {
 
     if ( !sf_getint ("gn",    &gammaNum_) ) gammaNum_ = 1;
     /* number of scanned Vm/V values  */
-	if (!gammaNum_) {sf_warning ("gn value is changed to 1"); gammaNum_ = 1;}
+    if (!gammaNum_) {sf_warning ("gn value is changed to 1"); gammaNum_ = 1;}
 
     if ( !sf_getfloat ("go",    &gammaStart_) ) gammaStart_ = 1.0;
     /* start of Vm/V parameter */
-	if (!gammaStart_) {sf_warning ("gn value is changed to 1.0"); gammaStart_ = 1.0;}
+    if (!gammaStart_) {sf_warning ("gn value is changed to 1.0"); gammaStart_ = 1.0;}
 
     if ( !sf_getfloat ("gd",    &gammaStep_) ) gammaStep_ = 1;
     /* increment of Vm/V parameter */
-	if (!gammaStep_) {sf_warning ("gd value is changed to 0.01"); gammaStep_ = 0.01;}
+    if (!gammaStep_) {sf_warning ("gd value is changed to 0.01"); gammaStep_ = 0.01;}
 
     if ( !sf_getint ("coher",   &coher_) )   coher_ = 11;
-	/* height of a vertical window for semblance calculation */
-	if (!coher_) {sf_warning ("coher value is changed to 1"); coher_ = 1;}
+    /* height of a vertical window for semblance calculation */
+    if (!coher_) {sf_warning ("coher value is changed to 1"); coher_ = 1;}
 
     if ( !sf_getint ("cigNum",   &distNum_) ) distNum_ = 1;
-	/* height of a vertical window for semblance calculation */
-	if (!coher_) {sf_warning ("cigNum value is changed to 1"); distNum_ = 1;}
+    /* height of a vertical window for semblance calculation */
+    if (!coher_) {sf_warning ("cigNum value is changed to 1"); distNum_ = 1;}
 
     if ( !sf_getfloat ("dlim",   &dlim_) )   dlim_ = fabs (dipStart_);
-	/* defines dip-angle-window for the analysis */
-	if (!dlim_) {sf_warning ("coher value is changed to 1"); coher_ = fabs (dipStart_);}
+    /* defines dip-angle-window for the analysis */
+    if (!dlim_) {sf_warning ("coher value is changed to 1"); coher_ = fabs (dipStart_);}
 
-	if (!sf_getbool ( "isSemb", &isSemb_) ) isSemb_ = true;
-	/* y - output is semblance; n - stack power */
+    if (!sf_getbool ( "isSemb", &isSemb_) ) isSemb_ = true;
+    /* y - output is semblance; n - stack power */
 
 // OUTPUT FILE
 
     sf_putint (sembFile_, "n1", tNum_); 
-	sf_putint (sembFile_, "n2", gammaNum_); 
-	sf_putint (sembFile_, "n3", xNum_); 
+    sf_putint (sembFile_, "n2", gammaNum_); 
+    sf_putint (sembFile_, "n3", xNum_); 
     sf_putfloat (sembFile_, "d1", tStep_); 
-	sf_putfloat (sembFile_, "d2", gammaStep_); 
-	sf_putfloat (sembFile_, "d3", xStep_); 
+    sf_putfloat (sembFile_, "d2", gammaStep_); 
+    sf_putfloat (sembFile_, "d3", xStep_); 
     sf_putfloat (sembFile_, "o1", tStart_); 
-	sf_putfloat (sembFile_, "o2", gammaStart_); 
-	sf_putfloat (sembFile_, "o3", xStart_); 
+    sf_putfloat (sembFile_, "o2", gammaStart_); 
+    sf_putfloat (sembFile_, "o3", xStart_); 
     sf_putstring (sembFile_, "label1", "time"); 
-	sf_putstring (sembFile_, "label2", "Vm/V");
-	sf_putstring (sembFile_, "label3", "inline");
+    sf_putstring (sembFile_, "label2", "Vm/V");
+    sf_putstring (sembFile_, "label3", "inline");
     sf_putstring (sembFile_, "unit1", "s"); 
     sf_putstring (sembFile_, "unit2", ""); 
     sf_putstring (sembFile_, "unit3", "m"); 
 
-	const int dagSize  = tNum_ * dipNum_;
-	const int sembSize = tNum_ * gammaNum_;
-	const int velSize = v_tNum_ * v_xNum_;
+    dagSize  = tNum_ * dipNum_;
+    sembSize = tNum_ * gammaNum_;
+    velSize = v_tNum_ * v_xNum_;
 
-	int halfXApp = distNum_ / 2;
-	distStart_ = -halfXApp * xStep_;
+    halfXApp = distNum_ / 2;
+    distStart_ = -halfXApp * xStep_;
 
-	pSembPanel_ = sf_floatalloc (sembSize);
+    pSembPanel_ = sf_floatalloc (sembSize);
 
-	pVel_ = sf_floatalloc (velSize);
-	sf_seek (velFile_, 0, SEEK_SET);
-	sf_floatread (pVel_, velSize, velFile_);
+    pVel_ = sf_floatalloc (velSize);
+    sf_seek (velFile_, 0, SEEK_SET);
+    sf_floatread (pVel_, velSize, velFile_);
 	
-	if (!isVelKMS) {
-		float* ptrVel = pVel_;
-		for (int iv = 0; iv < velSize; ++iv, ++ptrVel)
-			*ptrVel /= 1000;
-	}
+    if (!isVelKMS) {
+	ptrVel = pVel_;
+	for (iv = 0; iv < velSize; ++iv, ++ptrVel)
+	    *ptrVel /= 1000;
+    }
 
-	for (int ix = 0; ix < xNum_; ++ix) {
+    for (ix = 0; ix < xNum_; ++ix) {
 
-		sf_warning ("scanning: CIG %d of %d;", ix + 1, xNum_);
+	sf_warning ("scanning: CIG %d of %d;", ix + 1, xNum_);
 
-        int xNum = distNum_;       
-        size_t startInd = ix - halfXApp;
+        xNum = distNum_;       
+        startInd = ix - halfXApp;
 
-		float distShift = 0.f;
+	distShift = 0.f;
 
-		// boundary checking
-        int temp = ix - halfXApp;
-		if (temp < 0) { xNum += temp; startInd -= temp; distShift = -temp * xStep_; }
-		temp = xNum_ - (ix + halfXApp) - 1;
-		if (temp < 0) xNum += temp;
+	// boundary checking
+        temp = ix - halfXApp;
+	if (temp < 0) { xNum += temp; startInd -= temp; distShift = -temp * xStep_; }
+	temp = xNum_ - (ix + halfXApp) - 1;
+	if (temp < 0) xNum += temp;
 
-		// memory allocation
-		const int curPanelSize = dagSize * xNum; 
-	    pData_ = sf_floatalloc (curPanelSize);
+	// memory allocation
+	curPanelSize = dagSize * xNum; 
+	pData_ = sf_floatalloc (curPanelSize);
 
-		// read data
-		int offset = dagSize * startInd * sizeof (float);
-		sf_seek (dataFile_, offset, SEEK_SET);
-		sf_floatread (pData_, curPanelSize, dataFile_);	
+	// read data
+	offset = dagSize * startInd * sizeof (float);
+	sf_seek (dataFile_, offset, SEEK_SET);
+	sf_floatread (pData_, curPanelSize, dataFile_);	
 
-		const float geoX = xStart_ + ix * xStep_;
-		const int velInd = (geoX - v_xStart_) / v_xStep_;
-		float* velTrace = pVel_ + velInd;
+	geoX = xStart_ + ix * xStep_;
+	velInd = (geoX - v_xStart_) / v_xStep_;
+	velTrace = pVel_ + velInd;
 
-		if (isSemb_)
-			processGatherSemb (velTrace, xNum, distShift);
-		else
-			processGatherStack (velTrace, xNum, distShift);
+	if (isSemb_)
+	    processGatherSemb (velTrace, xNum, distShift);
+	else
+	    processGatherStack (velTrace, xNum, distShift);
 
-		sf_floatwrite (pSembPanel_, sembSize, sembFile_);
-	}
+	sf_floatwrite (pSembPanel_, sembSize, sembFile_);
+    }
 
-	sf_warning (".");
+    sf_warning (".");
 
-	free (pSembPanel_);
-	free (pData_);		
-	free (pVel_);		
+    free (pSembPanel_);
+    free (pData_);		
+    free (pVel_);		
 
-	sf_fileclose (dataFile_);
-	sf_fileclose (sembFile_);
-	sf_fileclose (velFile_);
+    sf_fileclose (dataFile_);
+    sf_fileclose (sembFile_);
+    sf_fileclose (velFile_);
 
-	return 0;
+    return 0;
 }
