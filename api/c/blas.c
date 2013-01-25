@@ -26,7 +26,12 @@
 #ifdef __APPLE__
 #include <vecLib/vBLAS.h>
 #else
+#ifdef HAVE_MKL
+#include <mkl.h>
+#else
 #include <cblas.h>
+#endif
+#endif
 /*^*/
 
 #ifdef __sgi

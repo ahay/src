@@ -361,9 +361,9 @@ def mkl(context):
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
-    else:
         context.env['CPPDEFINES'] = \
-            path_get(context,'CPPDEFINES','NO_MKL')
+            path_get(context,'CPPDEFINES','HAVE_MKL')
+    else:
         context.Result(context_failure)
         need_pkg('mkl', fatal=False)
 
@@ -941,10 +941,10 @@ def blas(context):
     #ifdef __APPLE__
     #include <vecLib/vBLAS.h>
     #else
-    #ifdef NO_MKL
-    #include <cblas.h>
-    #else 
+    #ifdef HAVE_MKL
     #include <mkl.h>
+    #else 
+    #include <cblas.h>
     #endif
     #endif
     int main(int argc,char* argv[]) {
