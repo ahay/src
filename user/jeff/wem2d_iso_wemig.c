@@ -28,6 +28,9 @@
 #include "wem2d_iso_wemig.h"
 /*^*/
 
+static void wem2d_iso_rwetaper_init(void);
+static void wem2d_iso_rwetaper(sf_complex **dax, int id);
+
 static int nx; /* num inline */
 static int nw; /* num frequencies */
 static int nz; /* num depths */
@@ -175,16 +178,16 @@ void wem2d_iso_wemig(bool adj,
 	wem2d_iso_shot_ker_onestep(id,iz,sarg,sax,vel,ww);
         
 	/* High-angle filter FFT to kx */
-	fft1_axis2(sax,id);
-	fft1_axis2(rax,id);
+	fft1_axis2((kiss_fft_cpx **) sax,id);
+	fft1_axis2((kiss_fft_cpx **) rax,id);
 	
 	/* Fourier domain filtering */
 	wem2d_iso_phs_correction(id,iz,rax,ww,vmin,rarg);
 	wem2d_iso_phs_correction(id,iz,sax,ww,vmin,sarg);
 	
 	/* High-angle filter FFT to kx */
-	ifft1_axis2(rax,id);
-	ifft1_axis2(sax,id);
+	ifft1_axis2((kiss_fft_cpx **) rax,id);
+	ifft1_axis2((kiss_fft_cpx **) sax,id);
 	
 	/* WAVEFIELD TAPER */
 	wem2d_iso_rwetaper(rax,id);
@@ -258,16 +261,16 @@ void wem2d_iso_wemig(bool adj,
 	wem2d_iso_rwetaper(rax,id); 
 
 	/* High-angle filter FFT to kx */
-	ifft1_axis2(sax,id);
-	ifft1_axis2(rax,id);
+	ifft1_axis2((kiss_fft_cpx **) sax,id);
+	ifft1_axis2((kiss_fft_cpx **) rax,id);
 
 	/* Fourier domain filtering */
 	wem2d_iso_phs_correction(id,iz,sax,ww,vmin,rarg);
 	wem2d_iso_phs_correction(id,iz,rax,ww,vmin,sarg);
 
 	/* High-angle filter FFT to kx */
-	fft1_axis2(rax,id);
-	fft1_axis2(sax,id);
+	fft1_axis2((kiss_fft_cpx **) rax,id);
+	fft1_axis2((kiss_fft_cpx **) sax,id);
 
 	/* Step wavefields */
 	wem2d_iso_shot_ker_onestep(id,iz,rarg,sax,vel,ww);
@@ -294,7 +297,7 @@ void wem2d_iso_wemig(bool adj,
 /*-----------------------------------------------------------------*/
 
 /* Set up taper */
-void wem2d_iso_rwetaper_init() 
+static void wem2d_iso_rwetaper_init(void) 
 {
   int j1,ix;
   
@@ -320,7 +323,7 @@ void wem2d_iso_rwetaper_init()
 /*-----------------------------------------------------------------*/
 
 /* Taper wavefield */
-void wem2d_iso_rwetaper(sf_complex **dax, int id)
+static void wem2d_iso_rwetaper(sf_complex **dax, int id)
 {
   for (int ixx=0; ixx < nx; ixx++) {
     dax[id][ixx] = dax[id][ixx] * tap[ixx];
