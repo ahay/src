@@ -31,7 +31,6 @@
 #else
 #include <cblas.h>
 #endif
-#endif
 /*^*/
 
 #ifdef __sgi

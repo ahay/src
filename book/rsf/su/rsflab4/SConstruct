@@ -10,8 +10,11 @@ Flow('time.asc',None,
      'echo 0.0 115 402 696 900 1068 1586 2112 2738 2983 n1=10 in=$TARGET data_format=ascii_float')
 Flow('vel.asc',None,
      'echo 1521 1719 1827 1936 2030 2471 2774 3302 3539 n1=10 in=$TARGET data_format=ascii_float')
-Flow('velt','vel.asc time.asc',
-     'invbin1 head=${SOURCES[1]} nx=3000 dx=1 x0=0 | dd form=native')
+Flow('time','time.asc','dd form=native')
+Flow('vel', 'vel.asc', 'dd form=native')
+
+Flow('velt','vel time',
+     'cat axis=2 ${SOURCES[1]} | linear n1=3000 d1=1 o1=0')
 Plot('velt',
      '''
      graph wanttitle=n transp=y yreverse=y 
