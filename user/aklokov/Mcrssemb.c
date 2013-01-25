@@ -1,16 +1,17 @@
 /* CRS-based semblance
-Several CIGs are used simultaneously. Dip-angle sections corresponding to the same 
-dip-angle compose a subvolume. The subvolume allows calculating semblance in the
-scattering-angle direction along reflection boundaries.
 
-Input:
-	inDags_.rsf   - dip-angle gathers - stack in the scattering-angle direction
-	InDagsSq_.rsf - stack of amplitude squares in the scattering-angle direction
+   Several CIGs are used simultaneously. Dip-angle sections corresponding to the same 
+   dip-angle compose a subvolume. The subvolume allows calculating semblance in the
+   scattering-angle direction along reflection boundaries.
 
-	Working with just dip-angle gathers use default value of "scatnum" parameter
+   Input:
+   inDags_.rsf   - dip-angle gathers - stack in the scattering-angle direction
+   InDagsSq_.rsf - stack of amplitude squares in the scattering-angle direction
 
-Output:
-	sembFile_.rsf - crs-based semblance file; has the same dimensions as the input files
+   Working with just dip-angle gathers use default value of "scatnum" parameter
+
+   Output:
+   sembFile_.rsf - crs-based semblance file; has the same dimensions as the input files
 */
 
 /*
@@ -74,124 +75,130 @@ int xdipapp_;               /* number of traces in the x-dip direction processed
 
 /* Check if the point with its surounding is inside data volume; */
 /* if not - correct analysis aperture */
-void checkBoundary (int* xPos, int* curXapp) {
+void checkBoundary (int* xPos, int* curXapp) 
+{
+    int diff;
 
     /* checking in X-dimension */
 
     /* left edge */
     if (*xPos < 0) {
-        int diff = -1 * *xPos;
-		*curXapp -= diff;
-		*xPos = 0;
-	}
+        diff = -1 * *xPos;
+	*curXapp -= diff;
+	*xPos = 0;
+    }
 
     /* right edge */
     if (*xPos + *curXapp - 1 >= xNum_) {
-        int diff = *xPos + *curXapp - xNum_; 
+        diff = *xPos + *curXapp - xNum_; 
         *curXapp -= diff;
     }
 
-	return;
+    return;
 }
 
 void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift) {
 
     int startX = xPos - halfXapp;
-    
+    int ix, id, ida, iz, ind, dataShift, tracesShift, pointsNumToRead;
+    size_t startPos;
+    float *ptrToTrace, *ptrToTraceSq, *ptrFrom, *ptrTo, *ptrSqFrom, *ptrSqTo;
+
     /* check if the apperture is adequate... if not - correct it and the start point */
     checkBoundary (&startX, curXapp);
-	*leftShift = xPos - startX;
-	const int pointsNumToRead = dagSize_ * (*curXapp);
+    *leftShift = xPos - startX;
+    pointsNumToRead = dagSize_ * (*curXapp);
 
-	ptrToDags_   = sf_floatalloc (pointsNumToRead);
-	ptrToDagsSq_ = sf_floatalloc (pointsNumToRead);
-	memset (ptrToDags_,   0, pointsNumToRead * sizeof (float));
-	memset (ptrToDagsSq_, 0, pointsNumToRead * sizeof (float));
+    ptrToDags_   = sf_floatalloc (pointsNumToRead);
+    ptrToDagsSq_ = sf_floatalloc (pointsNumToRead);
+    memset (ptrToDags_,   0, pointsNumToRead * sizeof (float));
+    memset (ptrToDagsSq_, 0, pointsNumToRead * sizeof (float));
 
-	ptrToData_   = sf_floatalloc (pointsNumToRead);
-	ptrToDataSq_ = sf_floatalloc (pointsNumToRead);
-	memset (ptrToData_,   0, pointsNumToRead * sizeof (float));
-	memset (ptrToDataSq_, 0, pointsNumToRead * sizeof (float));			
+    ptrToData_   = sf_floatalloc (pointsNumToRead);
+    ptrToDataSq_ = sf_floatalloc (pointsNumToRead);
+    memset (ptrToData_,   0, pointsNumToRead * sizeof (float));
+    memset (ptrToDataSq_, 0, pointsNumToRead * sizeof (float));			
 
-	const size_t startPos = (size_t) startX * dagSize_ * sizeof (float);
+    startPos = (size_t) startX * dagSize_ * sizeof (float);
 
-	sf_seek (inDags_,   startPos, SEEK_SET);
-	sf_seek (inDagsSq_, startPos, SEEK_SET);
+    sf_seek (inDags_,   startPos, SEEK_SET);
+    sf_seek (inDagsSq_, startPos, SEEK_SET);
 
-	sf_floatread (ptrToData_,   pointsNumToRead, inDags_);
-	sf_floatread (ptrToDataSq_, pointsNumToRead, inDagsSq_);
+    sf_floatread (ptrToData_,   pointsNumToRead, inDags_);
+    sf_floatread (ptrToDataSq_, pointsNumToRead, inDagsSq_);
 
-	/* substacking in the x-dip direction */
+    /* substacking in the x-dip direction */
 		
-	for (int ix = 0; ix < *curXapp; ++ix) {
-		for (int id = 0; id < dipNum_; ++id) {
+    for (ix = 0; ix < *curXapp; ++ix) {
+	for (id = 0; id < dipNum_; ++id) {
 			
-			const int tracesShift = ix * dipNum_ + id;
-			float* ptrToTrace   = ptrToDags_ + tracesShift * zNum_;
-			float* ptrToTraceSq = ptrToDagsSq_ + tracesShift * zNum_;
+	    tracesShift = ix * dipNum_ + id;
+	    ptrToTrace   = ptrToDags_ + tracesShift * zNum_;
+	    ptrToTraceSq = ptrToDagsSq_ + tracesShift * zNum_;
 
-			for (int ida = 0; ida < xdipapp_; ++ida) {		
-				int ind = id - xdipapp_ / 2 + ida;
-				if (ind < 0 || ind >= dipNum_) continue;		
+	    for (ida = 0; ida < xdipapp_; ++ida) {		
+		ind = id - xdipapp_ / 2 + ida;
+		if (ind < 0 || ind >= dipNum_) continue;		
 				
-				const int dataShift = ix * dipNum_ + ind;
-				float* ptrFrom   = ptrToData_   + dataShift * zNum_;
-				float* ptrSqFrom = ptrToDataSq_ + dataShift * zNum_;
+		dataShift = ix * dipNum_ + ind;
+		ptrFrom   = ptrToData_   + dataShift * zNum_;
+		ptrSqFrom = ptrToDataSq_ + dataShift * zNum_;
 
-				float* ptrTo     = ptrToTrace;
-				float* ptrSqTo   = ptrToTraceSq;
+		ptrTo     = ptrToTrace;
+		ptrSqTo   = ptrToTraceSq;
 
-				for (int iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
-					*ptrTo += *ptrFrom;
-					*ptrSqTo += *ptrSqFrom;
-				}
-			}
+		for (iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
+		    *ptrTo += *ptrFrom;
+		    *ptrSqTo += *ptrSqFrom;
 		}
+	    }
 	}
+    }
 
-	return;
+    return;
 }
 
 void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* semb) {
    
     double sumOutput, sumInput;
-    int im, it;
+    int im, it, temp, j, trInd, ind;
 
     const int targetZNum     = zNum_; 
-	const int zNumFull    = 2 * halfCoher_ + zNum_;
+    const int zNumFull    = 2 * halfCoher_ + zNum_;
 
-	const int k = tracesNum * scatnum_ * xdipapp_;
+    const int k = tracesNum * scatnum_ * xdipapp_;
 
-	float stackVal   = 0.f;
-	float stackSqVal = 0.f;
+    float stackVal   = 0.f;
+    float stackSqVal = 0.f;
 
-	float* traceSumOutput = sf_floatalloc (zNumFull);
-	float* traceSumInput  = sf_floatalloc (zNumFull);
+    float* traceSumOutput = sf_floatalloc (zNumFull);
+    float* traceSumInput  = sf_floatalloc (zNumFull);
+
     memset (traceSumOutput, 0, zNumFull * sizeof (float));   
     memset (traceSumInput,  0, zNumFull * sizeof (float));   
 
-	for (it = 0; it < targetZNum; ++it) {
-		const int trInd = it + halfCoher_;
+    for (it = 0; it < targetZNum; ++it) {
+	trInd = it + halfCoher_;
         for (im = 0; im < tracesNum; ++im){
-			const int ind = im * zNum_ + it;
-			stackVal   = stack[ind];
-			stackSqVal = stackSq[ind];
+	    ind = im * zNum_ + it;
+	    stackVal   = stack[ind];
+	    stackSqVal = stackSq[ind];
 
-		    traceSumOutput[trInd] += stackVal;
-		    traceSumInput[trInd]  += stackSqVal;
-		}
-		traceSumOutput[trInd] *= traceSumOutput[trInd];
+	    traceSumOutput[trInd] += stackVal;
+	    traceSumInput[trInd]  += stackSqVal;
 	}
+	traceSumOutput[trInd] *= traceSumOutput[trInd];
+    }
  
-    for (int it = 0; it < targetZNum; ++it) {
+    for (it = 0; it < targetZNum; ++it) {
         sumOutput = 0.f;
         sumInput  = 0.f;
-		const int temp = it + coher_;
-		for (int j = it; j < temp; ++j) {
-		    sumOutput += traceSumOutput[j];
-		    sumInput  += traceSumInput[j];
-		}
-		semb[it] = sumInput ? sumOutput / (k * sumInput) : 0.f;
+	temp = it + coher_;
+	for (j = it; j < temp; ++j) {
+	    sumOutput += traceSumOutput[j];
+	    sumInput  += traceSumInput[j];
+	}
+	semb[it] = sumInput ? sumOutput / (k * sumInput) : 0.f;
     }
 
     free (traceSumOutput);
@@ -200,61 +207,69 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
     return;
 }
 
-void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) {
+void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) 
+{
+    int id, tracesNum, ix, depthShiftSamp, dataShift, stackShift;
+    int zInd, iz;
+    float curDip, curDipInRad, tanDipInRad, xShift,  depthShift;
+    float *stackGrid, *stackSqGrid, *ptrDataStack, *ptrDataStackSq;
+    float *ptrStackGrid, *ptrStackSqGrid;
 
-	const int fullSampNumber = 2 * halfCoher_ + zNum_;
-	const int stackGridSize = curxapp * fullSampNumber;
-	const float CONVRATIO = M_PI / 180.f;
+    const int fullSampNumber = 2 * halfCoher_ + zNum_;
+    const int stackGridSize = curxapp * fullSampNumber;
+    const float CONVRATIO = M_PI / 180.f;
 	
-	float* ptrToSembTrace = ptrToSembPanel;
+    float* ptrToSembTrace = ptrToSembPanel;
 
-	for (int id = 0; id < dipNum_; ++id, ptrToSembTrace += zNum_) {
+    for (id = 0; id < dipNum_; ++id, ptrToSembTrace += zNum_) {
 
-		const float curDip = dipStart_ + id * dipStep_;
-		const float curDipInRad = curDip * CONVRATIO;
-		const float tanDipInRad = tan (curDipInRad);
+	curDip = dipStart_ + id * dipStep_;
+	curDipInRad = curDip * CONVRATIO;
+	tanDipInRad = tan (curDipInRad);
 	
-		float* stackGrid   = sf_floatalloc (stackGridSize);
-		float* stackSqGrid = sf_floatalloc (stackGridSize);
-		memset (stackGrid,   0, stackGridSize * sizeof (float));
-		memset (stackSqGrid, 0, stackGridSize * sizeof (float));
+	stackGrid   = sf_floatalloc (stackGridSize);
+	stackSqGrid = sf_floatalloc (stackGridSize);
+	memset (stackGrid,   0, stackGridSize * sizeof (float));
+	memset (stackSqGrid, 0, stackGridSize * sizeof (float));
 		
-	    int tracesNum = 0;
+	tracesNum = 0;
 			
-		for (int ix = 0; ix < curxapp; ++ix) {		
-			const float xShift = (ix - leftShift) * xStep_;
-   		    const float depthShift = xShift * tanDipInRad;
-			const int depthShiftSamp = depthShift / zStep_;
-			const int dataShift = (id + ix * dipNum_) * zNum_;
+	for (ix = 0; ix < curxapp; ++ix) {		
+	    xShift = (ix - leftShift) * xStep_;
+	    depthShift = xShift * tanDipInRad;
+	    depthShiftSamp = depthShift / zStep_;
+	    dataShift = (id + ix * dipNum_) * zNum_;
 		
-			float* ptrDataStack   = ptrToDags_ + dataShift;
-			float* ptrDataStackSq = ptrToDagsSq_ + dataShift;
+	    ptrDataStack   = ptrToDags_ + dataShift;
+	    ptrDataStackSq = ptrToDagsSq_ + dataShift;
 
-			const int stackShift = tracesNum * zNum_;
+	    stackShift = tracesNum * zNum_;
 
-			float* ptrStackGrid   = stackGrid + stackShift;
-			float* ptrStackSqGrid = stackSqGrid + stackShift;
+	    ptrStackGrid   = stackGrid + stackShift;
+	    ptrStackSqGrid = stackSqGrid + stackShift;
 
-			int zInd = -depthShiftSamp;
+	    zInd = -depthShiftSamp;
 				
-			for (int iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
-				if (zInd < 0 || zInd >= zNum_) continue;
-				*ptrStackGrid = *(ptrDataStack + zInd);
-				*ptrStackSqGrid = *(ptrDataStackSq + zInd);
-			}		
-			++tracesNum;
-		}
-
-		getSemblanceForTrace (curxapp, stackGrid, stackSqGrid, ptrToSembTrace);  
-
-		free (stackGrid);
-		free (stackSqGrid);
+	    for (iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
+		if (zInd < 0 || zInd >= zNum_) continue;
+		*ptrStackGrid = *(ptrDataStack + zInd);
+		*ptrStackSqGrid = *(ptrDataStackSq + zInd);
+	    }		
+	    ++tracesNum;
 	}
 
-	return;
+	getSemblanceForTrace (curxapp, stackGrid, stackSqGrid, ptrToSembTrace);  
+
+	free (stackGrid);
+	free (stackSqGrid);
+    }
+
+    return;
 }
 
-int main (int argc, char* argv[]) {
+int main (int argc, char* argv[]) 
+{
+    int ix, curxapp, leftShift;
    
 /* Initialize RSF */
     sf_init (argc,argv);
@@ -286,55 +301,55 @@ int main (int argc, char* argv[]) {
 	
     if ( !sf_getint ("xapp",    &xapp_) )    xapp_ = 1;
     /* number of CIGs in the inline-direction processed simultaneously */
-	if (!xapp_) {sf_warning ("xapp value is changed to 1"); xapp_ = 1;}
+    if (!xapp_) {sf_warning ("xapp value is changed to 1"); xapp_ = 1;}
 
     if ( !sf_getint ("dipapp",    &xdipapp_) ) xdipapp_ = 11;
     /* number of traces in the x-dip direction processed simultaneously */
-	if (!xdipapp_) {sf_warning ("dipapp value is changed to 11"); xdipapp_ = 11;}
+    if (!xdipapp_) {sf_warning ("dipapp value is changed to 11"); xdipapp_ = 11;}
 
     if ( !sf_getint ("coher",   &coher_) )   coher_ = 11;
-	/* height of a vertical window for semblance calculation */
-	if (!coher_) {sf_warning ("coher value is changed to 1"); coher_ = 1;}
+    /* height of a vertical window for semblance calculation */
+    if (!coher_) {sf_warning ("coher value is changed to 1"); coher_ = 1;}
 
     if ( !sf_getint ("scatnum", &scatnum_) ) scatnum_ = 1;
-	/* shows how many traces were stacked in the scattering angle direction; 
-	   if the stack was normalized use the default value 
-	*/ 
+    /* shows how many traces were stacked in the scattering angle direction; 
+       if the stack was normalized use the default value 
+    */ 
 
-	dagSize_ = zNum_ * dipNum_;
-	halfCoher_ = coher_ / 2;    /* yes - this is the integer division */	
-	halfXapp_  = xapp_ / 2;     /* this is the integer division too	*/
+    dagSize_ = zNum_ * dipNum_;
+    halfCoher_ = coher_ / 2;    /* yes - this is the integer division */	
+    halfXapp_  = xapp_ / 2;     /* this is the integer division too	*/
 
-	for (int ix = 0; ix < xNum_; ++ix) {
+    for (ix = 0; ix < xNum_; ++ix) {
 		
-		sf_warning ("CIG %d of %d;", ix + 1, xNum_);
+	sf_warning ("CIG %d of %d;", ix + 1, xNum_);
 		
-		/* xapp for the currect core CIG; it can be changed by the checkBoundary () */
-		int curxapp = xapp_; 
-		/* distance between the core gather and the left side of the aperture */
-		int leftShift = 0;	
+	/* xapp for the currect core CIG; it can be changed by the checkBoundary () */
+	curxapp = xapp_; 
+	/* distance between the core gather and the left side of the aperture */
+	leftShift = 0;	
 
-		ptrToSembPanel_ = sf_floatalloc (dagSize_);
-		memset (ptrToSembPanel_, 0, dagSize_ * sizeof (float));
+	ptrToSembPanel_ = sf_floatalloc (dagSize_);
+	memset (ptrToSembPanel_, 0, dagSize_ * sizeof (float));
 
-		readBlockAroundPoint (ix, halfXapp_, &curxapp, &leftShift);
-		buildFilter (curxapp, leftShift, ptrToSembPanel_);
+	readBlockAroundPoint (ix, halfXapp_, &curxapp, &leftShift);
+	buildFilter (curxapp, leftShift, ptrToSembPanel_);
 
-		free (ptrToDags_);
-		free (ptrToDagsSq_);
+	free (ptrToDags_);
+	free (ptrToDagsSq_);
 
-		free (ptrToData_);
-		free (ptrToDataSq_);
+	free (ptrToData_);
+	free (ptrToDataSq_);
 
-		sf_floatwrite (ptrToSembPanel_, dagSize_, sembFile_);
-		free (ptrToSembPanel_);
-	}
+	sf_floatwrite (ptrToSembPanel_, dagSize_, sembFile_);
+	free (ptrToSembPanel_);
+    }
 
-	sf_warning (".");
+    sf_warning (".");
 
-	sf_fileclose (inDags_);
-	sf_fileclose (inDagsSq_);
-	sf_fileclose (sembFile_);
+    sf_fileclose (inDags_);
+    sf_fileclose (inDagsSq_);
+    sf_fileclose (sembFile_);
 
-	return 0;
+    return 0;
 }

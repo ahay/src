@@ -237,7 +237,7 @@ int main (int argc, char* argv[]) {
 				float sampleSq = 0.f;	
 				float sqSample = 0.f;
 			
-				int ccount = 0;
+				/* int ccount = 0; */
 				int totalCount = 0;
 
 				for (int ic = 0, iw = it - vwhalf; ic < wh_; ++ic, ++iw) {
