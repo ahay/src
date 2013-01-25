@@ -6,15 +6,16 @@ Flow('plane',None,
      nsp=3 k1=8,20,32 k2=4 l2=28 p2=2,1,0 
      ''')
 
-Flow('time.asc',None,
-     'echo 0.0 115 402 696 900 1068 1586 2112 2738 2983 n1=10 in=$TARGET data_format=ascii_float')
-Flow('vel.asc',None,
-     'echo 1521 1719 1827 1936 2030 2471 2774 3302 3539 n1=10 in=$TARGET data_format=ascii_float')
-Flow('time','time.asc','dd form=native')
-Flow('vel', 'vel.asc', 'dd form=native')
+Flow('timevel.asc',None,
+     '''
+     echo 
+     0 0.15 0.2
+     1500 2000 3000 
+     n1=3 n2=2 in=$TARGET data_format=ascii_float
+     ''')
 
-Flow('velt','vel time',
-     'cat axis=2 ${SOURCES[1]} | linear n1=3000 d1=1 o1=0')
+Flow('velt','timevel.asc',
+     'dd form=native | linear n1=64 d1=0.004 o1=0')
 Plot('velt',
      '''
      graph wanttitle=n transp=y yreverse=y 
