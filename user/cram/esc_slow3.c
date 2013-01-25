@@ -225,7 +225,7 @@ static void sf_esc_slowness3_compute_components (sf_esc_slowness3 esc_slow, floa
                                                  float *s, float *sb, float *sa,
                                                  float *sz, float *sx, float *sy)
 {
-    float v2;
+    float v2=0.0;
 /*  float cs, sn, sn2, sqcs, sqsn, prodsq, m2cs, v2;
     float A, B, C, AB, dAdz, dAdx, dAda, dBdz, dBdx, dBda,
           dCdz, dCdx, dCda, dDdz, dDdx, dDda;*/
