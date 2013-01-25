@@ -1497,7 +1497,7 @@ def sse(context):
     #include <xmmintrin.h>
     #include <emmintrin.h>
     #include <pmmintrin.h>
-    __m128 *restrict A_s = (__m128 *)0;
+
     int main(void) {
     double x = 0.0, y = 0.0, z = 0.0;
     __m128 xyz = _mm_set_ps (x, y, z, 0.0);
