@@ -28,6 +28,9 @@
 #include "adjgradient2d.h"
 /*^*/
 
+static void adjgradient2d_rwetaper_init(void);
+static void adjgradient2d_rwetaper(sf_complex **dax, int id);
+
 static int nx; /* num inline */
 static int nw; /* num frequencies */
 static int nz; /* num depths */
@@ -77,7 +80,7 @@ void adjgradient2d_init(int  nx_in,  int nz_in,   int nw_in, int nh_in,
 			int nxtap_in,float **vel)
 /*< initialize >*/
 {
-    int iz,ix;
+    int iz,ix, ith;
 
     nx=nx_in; ox=ox_in; dx=dx_in;
     nz=nz_in; oz=oz_in; dz=dz_in; 
@@ -105,9 +108,9 @@ void adjgradient2d_init(int  nx_in,  int nz_in,   int nw_in, int nh_in,
     raxadj = sf_complexalloc2(nx,nth);
     tgrd = sf_floatalloc3(nx,nth,nz);
 
-    for (int iz=0; iz<nz; iz++) {
-	for (int ith=0; ith<nth; ith++) {
-	    for (int ix=0; ix<nx; ix++) {
+    for (iz=0; iz<nz; iz++) {
+	for (ith=0; ith<nth; ith++) {
+	    for (ix=0; ix<nx; ix++) {
 		tgrd[iz][ith][ix]=0.f;
 	    }
 	}
@@ -256,10 +259,10 @@ void adjgradient2d_wemig( float **vel,
 	    wem2d_iso_shot_ker_onestep(id,iz, caus,raxadj,vel,ww);
 
 	    /* High-angle filter FFT to kx */
-	    fft1_axis2(sax,   id);
-	    fft1_axis2(rax,   id);
-	    fft1_axis2(saxadj,id);
-	    fft1_axis2(raxadj,id);
+	    fft1_axis2((kiss_fft_cpx **) sax,   id);
+	    fft1_axis2((kiss_fft_cpx **) rax,   id);
+	    fft1_axis2((kiss_fft_cpx **) saxadj,id);
+	    fft1_axis2((kiss_fft_cpx **) raxadj,id);
 
 	    /* Fourier domain filtering */
 	    wem2d_iso_phs_correction(id,iz,sax   ,ww,vmin,acaus);
@@ -268,10 +271,10 @@ void adjgradient2d_wemig( float **vel,
 	    wem2d_iso_phs_correction(id,iz,raxadj,ww,vmin, caus);
 
 	    /* High-angle filter FFT to kx */
-	    ifft1_axis2(sax,   id);
-	    ifft1_axis2(rax,   id);
-	    ifft1_axis2(saxadj,id);
-	    ifft1_axis2(raxadj,id);
+	    ifft1_axis2((kiss_fft_cpx **) sax,   id);
+	    ifft1_axis2((kiss_fft_cpx **) rax,   id);
+	    ifft1_axis2((kiss_fft_cpx **) saxadj,id);
+	    ifft1_axis2((kiss_fft_cpx **) raxadj,id);
 
 	    /* WAVEFIELD TAPER */
 	    adjgradient2d_rwetaper(sax,   id); 
@@ -333,7 +336,7 @@ void adjgradient2d_wemig( float **vel,
 /*-----------------------------------------------------------------*/
 
 /* Set up taper */
-void adjgradient2d_rwetaper_init() 
+static void adjgradient2d_rwetaper_init(void) 
 {
     int j1,ix;
   
@@ -359,7 +362,7 @@ void adjgradient2d_rwetaper_init()
 /*-----------------------------------------------------------------*/
 
 /* Taper wavefield */
-void adjgradient2d_rwetaper(sf_complex **dax, int id)
+static void adjgradient2d_rwetaper(sf_complex **dax, int id)
 {
     int ixx;
 
