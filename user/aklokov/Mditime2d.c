@@ -24,29 +24,31 @@
 int main (int argc, char* argv[]) {
 
     sf_file in, out, fileDweight, fileRefl, fileDiff;
-	int dipn;  float dipo, dipd;
-	int dip0n; float dip0o, dip0d;
-	int tn; float to, td;
-	int xin;   float xio, xid;
-	int xn;
-	float *data, *model, *dweight;
-	int im, ix;
-	int invMod;
+    int dipn;  float dipo, dipd;
+    int dip0n; float dip0o, dip0d;
+    int tn; float to, td;
+    int xin;   float xio, xid;
+    int xn;
+    float *data, *model, *dweight;
+    int im, ix;
+    int invMod;
 
     int   niter, liter, iter;
     bool  adj, verb, isAA;
     float eps;
     float *w, *p;
 
+    int dataSize, diffSize, reflSize, modelSize, id;
+
     sf_init (argc, argv);
 
     in  = sf_input  ("in");
     out = sf_output ("out");
 	
-	fileDweight = NULL;
+    fileDweight = NULL;
     if ( NULL != sf_getstring ("dweight") ) {
 	/* input file containing data weights */ 
-		fileDweight = sf_input ("dweight");
+	fileDweight = sf_input ("dweight");
     }
 
     if (!sf_histint   (in, "n1", &tn) ) sf_error("No n1= in input");
@@ -67,149 +69,149 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("invMod", &invMod)) invMod=2; /* number of nonlinear iterations (for inversion) */
 
     if (adj) {
-		fileDiff = out;
-		fileRefl = sf_output ("reflMod");
+	fileDiff = out;
+	fileRefl = sf_output ("reflMod");
 
-		if (!sf_histfloat (in, "o2", &dipo) ) sf_error ("No o2= in input");
-		if (!sf_histfloat (in, "d2", &dipd) ) sf_error ("No d2= in input");
-		if (!sf_histint   (in, "n2", &dipn) ) sf_error ("No n2= in input");
+	if (!sf_histfloat (in, "o2", &dipo) ) sf_error ("No o2= in input");
+	if (!sf_histfloat (in, "d2", &dipd) ) sf_error ("No d2= in input");
+	if (!sf_histint   (in, "n2", &dipn) ) sf_error ("No n2= in input");
 
-		// REFLECTION MODEL
-		if (!sf_getint ("dip0n", &dip0n) ) sf_error ("Need dip0n=");
-		/* number of dip0 values (if adj=y) */
-		if (!sf_getfloat ("dip0d", &dip0d)) sf_error("Need dip0d=");
-		/* dip0 sampling (if adj=y) */
-		if (!sf_getfloat("dip0o",&dip0o)) sf_error("Need dip0d0=");
-		/* dip0 origin (if adj=y) */
+	// REFLECTION MODEL
+	if (!sf_getint ("dip0n", &dip0n) ) sf_error ("Need dip0n=");
+	/* number of dip0 values (if adj=y) */
+	if (!sf_getfloat ("dip0d", &dip0d)) sf_error("Need dip0d=");
+	/* dip0 sampling (if adj=y) */
+	if (!sf_getfloat("dip0o",&dip0o)) sf_error("Need dip0d0=");
+	/* dip0 origin (if adj=y) */
 
-		// DIFFRACTION MODEL
-		if (!sf_getint ("xin", &xin) ) sf_error ("Need xin=");
-		/* number of xi values (if adj=y) */
-		if (!sf_getfloat ("xid", &xid)) sf_error("Need xid=");
-		/* xi sampling (if adj=y) */
-		if (!sf_getfloat("xio",&xio)) sf_error("Need xio=");
-		/* xi origin (if adj=y) */
+	// DIFFRACTION MODEL
+	if (!sf_getint ("xin", &xin) ) sf_error ("Need xin=");
+	/* number of xi values (if adj=y) */
+	if (!sf_getfloat ("xid", &xid)) sf_error("Need xid=");
+	/* xi sampling (if adj=y) */
+	if (!sf_getfloat("xio",&xio)) sf_error("Need xio=");
+	/* xi origin (if adj=y) */
 
-		sf_putint   (fileDiff,  "n2", xin);
-		sf_putfloat (fileDiff,  "d2", xid);
-		sf_putfloat (fileDiff,  "o2", xio);
-		sf_putstring (fileDiff, "label2", "xi");
-		sf_putstring (fileDiff, "unit2", "");
+	sf_putint   (fileDiff,  "n2", xin);
+	sf_putfloat (fileDiff,  "d2", xid);
+	sf_putfloat (fileDiff,  "o2", xio);
+	sf_putstring (fileDiff, "label2", "xi");
+	sf_putstring (fileDiff, "unit2", "");
 
-		sf_putint   (fileRefl,  "n2", dip0n);
-		sf_putfloat (fileRefl,  "d2", dip0d);
-		sf_putfloat (fileRefl,  "o2", dip0o);
-		sf_putstring (fileRefl, "label2", "dip angle");
-		sf_putstring (fileRefl, "unit2", "deg");
+	sf_putint   (fileRefl,  "n2", dip0n);
+	sf_putfloat (fileRefl,  "d2", dip0d);
+	sf_putfloat (fileRefl,  "o2", dip0o);
+	sf_putstring (fileRefl, "label2", "dip angle");
+	sf_putstring (fileRefl, "unit2", "deg");
 
     } else {
 
-		fileDiff = in;
-		fileRefl = sf_input ("reflMod");
+	fileDiff = in;
+	fileRefl = sf_input ("reflMod");
 
-		if (!sf_histint   (fileDiff, "n2", &xin)) sf_error("No n2= in input");	
-		if (!sf_histfloat (fileDiff, "d2", &xid)) sf_error("No d2= in input");	
-		if (!sf_histfloat (fileDiff, "o2", &xio)) sf_error("No o2= in input");
+	if (!sf_histint   (fileDiff, "n2", &xin)) sf_error("No n2= in input");	
+	if (!sf_histfloat (fileDiff, "d2", &xid)) sf_error("No d2= in input");	
+	if (!sf_histfloat (fileDiff, "o2", &xio)) sf_error("No o2= in input");
 
-		if (!sf_histint   (fileRefl, "n2", &dip0n)) sf_error("No n2= in input");	
-		if (!sf_histfloat (fileRefl, "d2", &dip0d)) sf_error("No d2= in input");	
-		if (!sf_histfloat (fileRefl, "o2", &dip0o)) sf_error("No o2= in input");
+	if (!sf_histint   (fileRefl, "n2", &dip0n)) sf_error("No n2= in input");	
+	if (!sf_histfloat (fileRefl, "d2", &dip0d)) sf_error("No d2= in input");	
+	if (!sf_histfloat (fileRefl, "o2", &dip0o)) sf_error("No o2= in input");
 
-		if (!sf_getint ("dipn", &dipn)) sf_error ("Need dipn=");
-		/* number of offsets */
-		if (!sf_getfloat ("dipo", &dipo)) sf_error("Need dipo=");
-		/* offset origin */
-		if (!sf_getfloat ("dipd", &dipd)) sf_error("Need dipd=");
-		/* offset sampling */
+	if (!sf_getint ("dipn", &dipn)) sf_error ("Need dipn=");
+	/* number of offsets */
+	if (!sf_getfloat ("dipo", &dipo)) sf_error("Need dipo=");
+	/* offset origin */
+	if (!sf_getfloat ("dipd", &dipd)) sf_error("Need dipd=");
+	/* offset sampling */
 
-		sf_putint    (out, "n2", dipn);
-		sf_putfloat  (out, "o2", dipo);
-		sf_putfloat  (out, "d2", dipd);
-		sf_putstring (out, "label2", "dip angle");
-		sf_putstring (out, "unit2", "deg");
+	sf_putint    (out, "n2", dipn);
+	sf_putfloat  (out, "o2", dipo);
+	sf_putfloat  (out, "d2", dipd);
+	sf_putstring (out, "label2", "dip angle");
+	sf_putstring (out, "unit2", "deg");
     }
 
-    const int dataSize = tn * dipn;
-	// model sizes
-	const int diffSize = tn * xin;
-	const int reflSize = tn * dip0n;
-	int modelSize = -1;
+    dataSize = tn * dipn;
+    // model sizes
+    diffSize = tn * xin;
+    reflSize = tn * dip0n;
+    modelSize = -1;
     switch (invMod) {
-		case 0: modelSize = diffSize; break;
-		case 1: modelSize = reflSize; break;
-		case 2: modelSize = diffSize + reflSize; break;
+	case 0: modelSize = diffSize; break;
+	case 1: modelSize = reflSize; break;
+	case 2: modelSize = diffSize + reflSize; break;
     }
 
     data    = sf_floatalloc (dataSize);
     dweight = sf_floatalloc (dataSize);
     
-	model  = sf_floatalloc (modelSize);
+    model  = sf_floatalloc (modelSize);
 
     w = (0 == niter) ? NULL : sf_floatalloc (modelSize);
     p = (0 == niter) ? NULL : sf_floatalloc (modelSize);
 
     ditime2d_init (dipo, dipd, dipn, 
-		 xio, xid, xin, 
-		 dip0o, dip0d, dip0n, 
-		 to, td, tn, 
-		 isAA, invMod);
+		   xio, xid, xin, 
+		   dip0o, dip0d, dip0n, 
+		   to, td, tn, 
+		   isAA, invMod);
 
     for (ix = 0; ix < xn; ++ix) { 
-		if (verb) sf_warning ("i=%d of %d", ix + 1, xn);
+	if (verb) sf_warning ("i=%d of %d", ix + 1, xn);
 
-		// read data	
-		if( adj) {
-		    sf_floatread (data, dataSize, in);
-			if (fileDweight) 
-			    sf_floatread (dweight, dataSize, fileDweight);
-			else
-				for (int id = 0; id < dataSize; ++id)
-					dweight[id] = 1.f;
-		} else {
-		    sf_floatread (model, diffSize, fileDiff);
-		    sf_floatread (model + diffSize, reflSize, fileRefl);
-		}
+	// read data	
+	if( adj) {
+	    sf_floatread (data, dataSize, in);
+	    if (fileDweight) 
+		sf_floatread (dweight, dataSize, fileDweight);
+	    else
+		for (id = 0; id < dataSize; ++id)
+		    dweight[id] = 1.f;
+	} else {
+	    sf_floatread (model, diffSize, fileDiff);
+	    sf_floatread (model + diffSize, reflSize, fileRefl);
+	}
 		
-		// perform transform
-		if (!adj || 0 == niter) {
-		    ditime2d_lop (adj, false, modelSize, dataSize, model, data);
-		} else {
-			// initital model weights
-		    for (im = 0; im < modelSize; ++im) {
-				w[im] = 1.f;
-		    }
+	// perform transform
+	if (!adj || 0 == niter) {
+	    ditime2d_lop (adj, false, modelSize, dataSize, model, data);
+	} else {
+	    // initital model weights
+	    for (im = 0; im < modelSize; ++im) {
+		w[im] = 1.f;
+	    }
 
-		    for (iter = 0; iter < niter; ++iter) {
-				sf_solver_prec (ditime2d_lop, sf_cgstep, sf_copy_lop,
-								modelSize, modelSize, dataSize, model, data, liter, eps,
-								"verb", verb, "mwt", w, "xp", p, "wt", dweight, "end");
-				sf_cgstep_close ();
+	    for (iter = 0; iter < niter; ++iter) {
+		sf_solver_prec (ditime2d_lop, sf_cgstep, sf_copy_lop,
+				modelSize, modelSize, dataSize, model, data, liter, eps,
+				"verb", verb, "mwt", w, "xp", p, "wt", dweight, "end");
+		sf_cgstep_close ();
 
-				for (im = 0; im < modelSize; ++im) {
-				    w[im] = fabsf (p[im]); /* weight for sparsity */
-				}
-		    }
+		for (im = 0; im < modelSize; ++im) {
+		    w[im] = fabsf (p[im]); /* weight for sparsity */
 		}
-		// write result
-		if( adj) {
-		    sf_floatwrite (model, diffSize, fileDiff);
-		    sf_floatwrite (model + diffSize, reflSize, fileRefl);
-		} else {
-		    sf_floatwrite (data, dataSize, out);
-		} 
+	    }
+	}
+	// write result
+	if( adj) {
+	    sf_floatwrite (model, diffSize, fileDiff);
+	    sf_floatwrite (model + diffSize, reflSize, fileRefl);
+	} else {
+	    sf_floatwrite (data, dataSize, out);
+	} 
     }
 
-	free (data);
-	free (model);
+    free (data);
+    free (model);
 
     sf_fileclose (in);
     sf_fileclose (out);
     sf_fileclose (fileRefl);
 
-	if (fileDweight) {
-		free (dweight);
-		sf_fileclose (fileDweight);
-	}
+    if (fileDweight) {
+	free (dweight);
+	sf_fileclose (fileDweight);
+    }
 
     return 0;
 }
