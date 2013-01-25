@@ -137,7 +137,7 @@ float sf_cram_data2_get_sample (sf_cram_data2 cram_data, size_t i, float t,
     if (cram_data->kmah)
         i *= 2;
 
-    if (i < 0 || i >= cram_data->n)
+    if (i >= cram_data->n)
         return 0.0;
 
     /* Choose largest trace factor for AA filter length */

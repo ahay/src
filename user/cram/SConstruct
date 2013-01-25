@@ -22,6 +22,8 @@ src = Glob('[a-z]*.c')
 
 sse = None
 #sse = env.get('SSE')
+if string.rfind(env.get('CC'),'icc') >= 0:
+    env.Append(CCFLAGS=['-restrict','-wd188'])
 
 if sse:
     env.Prepend(CPPPATH=['../../include'],

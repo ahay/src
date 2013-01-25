@@ -22,7 +22,7 @@
 #include <emmintrin.h>
 #include <pmmintrin.h>
 
-__m128 * A_s = (__m128 *)0;
+__m128 *restrict A_s = (__m128 *)0;
 
 static void init_sse_data (void)
 {
@@ -74,21 +74,21 @@ const float A44f[16] =
      3.0/6.0, -6.0/6.0,  0.0/6.0, 4.0/6.0,
     -3.0/6.0,  3.0/6.0,  3.0/6.0, 1.0/6.0,
      1.0/6.0,  0.0/6.0,  0.0/6.0, 0.0/6.0 };
-const float*  Af = A44f;
+const float* restrict Af = A44f;
 
 const float dA44f[16] =
   {  0.0, -0.5,  1.0, -0.5,
      0.0,  1.5, -2.0,  0.0,
      0.0, -1.5,  1.0,  0.5,
      0.0,  0.5,  0.0,  0.0 };
-const float*  dAf = dA44f;
+const float* restrict dAf = dA44f;
 
 const float d2A44f[16] = 
   {  0.0, 0.0, -1.0,  1.0,
      0.0, 0.0,  3.0, -2.0,
      0.0, 0.0, -3.0,  1.0,
      0.0, 0.0,  1.0,  0.0 };
-const float*  d2Af = d2A44f;
+const float* restrict d2Af = d2A44f;
 
 /*
  * bspline_create.c
@@ -341,7 +341,7 @@ static void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
 UBspline_1d_s* create_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, float *data) {
   /* Create new spline */
   int M, N;
-  UBspline_1d_s*  spline = malloc (sizeof(UBspline_1d_s));
+  UBspline_1d_s* restrict spline = malloc (sizeof(UBspline_1d_s));
   spline->spcode = U1D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; spline->x_grid = x_grid;
@@ -383,7 +383,7 @@ UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
   int Mx, My;
   int Nx, Ny, iy, ix;
 
-  UBspline_2d_s*  spline = malloc (sizeof(UBspline_2d_s));
+  UBspline_2d_s* restrict spline = malloc (sizeof(UBspline_2d_s));
   spline->spcode = U2D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; 
@@ -475,7 +475,7 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   int Mx, My, Mz;
   int Nx, Ny, Nz, iy, ix, iz;
     
-  UBspline_3d_s*  spline = malloc (sizeof(UBspline_3d_s));
+  UBspline_3d_s* restrict spline = malloc (sizeof(UBspline_3d_s));
   spline->spcode = U3D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; 
@@ -612,8 +612,8 @@ static void destroy_UBspline (Bspline *spline) {
 /************************************************************/
 
 /* Value only */
-void eval_UBspline_1d_s (UBspline_1d_s *  spline, 
-                         double x, float*  val)
+void eval_UBspline_1d_s (UBspline_1d_s * restrict spline, 
+                         double x, float* restrict val)
 {
   x -= spline->x_grid.start;
   float u = x*spline->x_grid.delta_inv;
@@ -623,7 +623,7 @@ void eval_UBspline_1d_s (UBspline_1d_s *  spline,
   
   float tp[4];
   tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -633,8 +633,8 @@ void eval_UBspline_1d_s (UBspline_1d_s *  spline,
 }
 
 /* Value and first derivative */
-void eval_UBspline_1d_s_vg (UBspline_1d_s *  spline, double x, 
-                            float*  val, float*  grad)
+void eval_UBspline_1d_s_vg (UBspline_1d_s * restrict spline, double x, 
+                            float* restrict val, float* restrict grad)
 {
   x -= spline->x_grid.start;
   float u = x*spline->x_grid.delta_inv;
@@ -644,7 +644,7 @@ void eval_UBspline_1d_s_vg (UBspline_1d_s *  spline, double x,
   
   float tp[4];
   tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   *val = 
     (coefs[i+0]*(Af[ 0]*tp[0] + Af[ 1]*tp[1] + Af[ 2]*tp[2] + Af[ 3]*tp[3])+
@@ -664,8 +664,8 @@ void eval_UBspline_1d_s_vg (UBspline_1d_s *  spline, double x,
 
 /* Value only */
 #ifndef HAVE_SSE
-void eval_UBspline_2d_s (UBspline_2d_s *  spline, 
-                         double x, double y, float*  val)
+void eval_UBspline_2d_s (UBspline_2d_s * restrict spline, 
+                         double x, double y, float* restrict val)
 {
   int xs;
   x -= spline->x_grid.start;
@@ -681,7 +681,7 @@ void eval_UBspline_2d_s (UBspline_2d_s *  spline,
   float tpx[4], tpy[4], a[4], b[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -703,8 +703,8 @@ void eval_UBspline_2d_s (UBspline_2d_s *  spline,
 
 }
 #else
-void eval_UBspline_2d_s (UBspline_2d_s *  spline, 
-                         double x, double y, float*  val)
+void eval_UBspline_2d_s (UBspline_2d_s * restrict spline, 
+                         double x, double y, float* restrict val)
 {
   _mm_prefetch ((const char*)  &A_s[0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[3],_MM_HINT_T0);
@@ -775,9 +775,9 @@ void eval_UBspline_2d_s (UBspline_2d_s *  spline,
 
 /* Value and gradient */
 #ifndef HAVE_SSE
-void eval_UBspline_2d_s_vg (UBspline_2d_s *  spline, 
+void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline, 
                             double x, double y, 
-                            float*  val, float*  grad)
+                            float* restrict val, float* restrict grad)
 {
   int xs;
   x -= spline->x_grid.start;
@@ -793,7 +793,7 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s *  spline,
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -834,9 +834,9 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s *  spline,
 
 }
 #else
-void eval_UBspline_2d_s_vg (UBspline_2d_s *  spline, 
+void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline, 
                             double x, double y, 
-                            float*  val, float*  grad)
+                            float* restrict val, float* restrict grad)
 {
   _mm_prefetch ((const char*)  &A_s[0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[3],_MM_HINT_T0);
@@ -924,9 +924,9 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s *  spline,
 
 /* Value only */
 #ifndef HAVE_SSE
-void eval_UBspline_3d_s (UBspline_3d_s *  spline, 
+void eval_UBspline_3d_s (UBspline_3d_s * restrict spline, 
                          double x, double y, double z,
-                         float*  val)
+                         float* restrict val)
 {
   int xs, ys;
   x -= spline->x_grid.start;
@@ -944,7 +944,7 @@ void eval_UBspline_3d_s (UBspline_3d_s *  spline,
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -984,9 +984,9 @@ void eval_UBspline_3d_s (UBspline_3d_s *  spline,
 
 }
 #else
-void eval_UBspline_3d_s (UBspline_3d_s *  spline, 
+void eval_UBspline_3d_s (UBspline_3d_s * restrict spline, 
                          double x, double y, double z,
-                         float*  val)
+                         float* restrict val)
 {
   _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
@@ -1095,9 +1095,9 @@ void eval_UBspline_3d_s (UBspline_3d_s *  spline,
 
 /* Value and gradient */
 #ifndef HAVE_SSE
-void eval_UBspline_3d_s_vg (UBspline_3d_s *  spline, 
+void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline, 
                             double x, double y, double z,
-                            float*  val, float*  grad)
+                            float* restrict val, float* restrict grad)
 {
   int xs, ys;
   x -= spline->x_grid.start;
@@ -1116,7 +1116,7 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s *  spline,
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0]   = (  Af[ 0]*tpx[0] +   Af[ 1]*tpx[1] +  Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]   = (  Af[ 4]*tpx[0] +   Af[ 5]*tpx[1] +  Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1202,9 +1202,9 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s *  spline,
 }
 #else
 /* Value and gradient */
-void eval_UBspline_3d_s_vg (UBspline_3d_s *  spline, 
+void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline, 
                             double x, double y, double z,
-                            float*  val, float*  grad)
+                            float* restrict val, float* restrict grad)
 {
   _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
@@ -1357,7 +1357,7 @@ create_multi_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, int num_splines)
 {
   int Mx, Nx, N;
   /* Create new spline */
-  multi_UBspline_1d_s*  spline = malloc (sizeof(multi_UBspline_1d_s));
+  multi_UBspline_1d_s* restrict spline = malloc (sizeof(multi_UBspline_1d_s));
   spline->spcode = MULTI_U1D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; spline->x_grid = x_grid;
@@ -1409,7 +1409,7 @@ create_multi_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
 {
   int Mx, My, Nx, Ny, N;
   /* Create new spline */
-  multi_UBspline_2d_s*  spline = malloc (sizeof(multi_UBspline_2d_s));
+  multi_UBspline_2d_s* restrict spline = malloc (sizeof(multi_UBspline_2d_s));
   spline->spcode = MULTI_U2D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; 
@@ -1496,7 +1496,7 @@ create_multi_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
 {
   int Mx, My, Mz, Nx, Ny, Nz, N;
   /* Create new spline */
-  multi_UBspline_3d_s*  spline = malloc (sizeof(multi_UBspline_3d_s));
+  multi_UBspline_3d_s* restrict spline = malloc (sizeof(multi_UBspline_3d_s));
   spline->spcode = MULTI_U3D;
   spline->tcode  = SINGLE_REAL;
   spline->xBC = xBC; 
@@ -1616,7 +1616,7 @@ void destroy_multi_UBspline (Bspline *spline)
 /************************************************************/
 void eval_multi_UBspline_1d_s (multi_UBspline_1d_s *spline,
                                double x,
-                               float*  vals)
+                               float* restrict vals)
 {
   int n, i;
   x -= spline->x_grid.start;
@@ -1626,7 +1626,7 @@ void eval_multi_UBspline_1d_s (multi_UBspline_1d_s *spline,
   
   float tpx[4], a[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
   
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1647,8 +1647,8 @@ void eval_multi_UBspline_1d_s (multi_UBspline_1d_s *spline,
 
 void eval_multi_UBspline_1d_s_vg (multi_UBspline_1d_s *spline,
                                   double x,
-                                  float*  vals,
-                                  float*  grads)
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
   int n, i;
   x -= spline->x_grid.start;
@@ -1658,7 +1658,7 @@ void eval_multi_UBspline_1d_s_vg (multi_UBspline_1d_s *spline,
   
   float tpx[4], a[4], da[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1695,7 +1695,7 @@ void eval_multi_UBspline_1d_s_vg (multi_UBspline_1d_s *spline,
 #ifndef HAVE_SSE
 void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
                                double x, double y,
-                               float*  vals)
+                               float* restrict vals)
 {
   int n, i, j;
   x -= spline->x_grid.start;
@@ -1709,7 +1709,7 @@ void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
   float tpx[4], tpy[4], a[4], b[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1738,7 +1738,7 @@ void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
 #else
 void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
                                double x, double y,
-                               float*  vals)
+                               float* restrict vals)
 {
   _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
@@ -1812,7 +1812,7 @@ void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
     for (int j=0; j<4; j++) {
       ab      = _mm_mul_ps (  a[i],   b[j]);
       
-      __m128*  coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys);
+      __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys);
       for (int n=0; n<Nm; n++) 
         mvals[n]     = _mm_add_ps (mvals[n],     _mm_mul_ps(  ab   , coefs[n]));
     }
@@ -1826,8 +1826,8 @@ void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
 #ifndef HAVE_SSE
 void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
                                   double x, double y,
-                                  float*  vals,
-                                  float*  grads)
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
   int n, i, j;
   x -= spline->x_grid.start;
@@ -1841,7 +1841,7 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -1894,8 +1894,8 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
 #else
 void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
                                    double x, double y,
-                                  float*  vals,
-                                  float*  grads)
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
   _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
@@ -1978,7 +1978,7 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
       dab[0]  = _mm_mul_ps ( da[i],   b[j]);
       dab[1]  = _mm_mul_ps (  a[i],  db[j]);
       
-      __m128*  coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys);
+      __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys);
       for (int n=0; n<Nm; n++) {
         mvals[n]     = _mm_add_ps (mvals[n],     _mm_mul_ps(  ab   , coefs[n]));
         mgrad[2*n+0] = _mm_add_ps (mgrad[2*n+0], _mm_mul_ps( dab[0], coefs[n]));
@@ -2005,7 +2005,7 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
 #ifndef HAVE_SSE
 void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
                                double x, double y, double z,
-                               float*  vals)
+                               float* restrict vals)
 {
   int n, i, j, k;
   x -= spline->x_grid.start;
@@ -2023,7 +2023,7 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0] = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1] = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -2059,7 +2059,7 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
 #else
 void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
                                double x, double y, double z,
-                               float*  vals)
+                               float* restrict vals)
 {
   _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
@@ -2142,7 +2142,7 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
     for (int j=0; j<4; j++)
       for (int k=0; k<4; k++) {
         abc      = _mm_mul_ps (  a[i], _mm_mul_ps(  b[j],  c[k]));
-        __m128*  coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
+        __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
         for (int n=0; n<Nm; n++) 
           mvals[n]     = _mm_add_ps (mvals[n], _mm_mul_ps(  abc   , coefs[n]));
       }
@@ -2157,8 +2157,8 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
 #ifndef HAVE_SSE
 void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
                                   double x, double y, double z,
-                                  float*  vals,
-                                  float*  grads)
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
   int n, i, j, k;
   x -= spline->x_grid.start;
@@ -2177,7 +2177,7 @@ void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
   tpy[0] = ty*ty*ty;  tpy[1] = ty*ty;  tpy[2] = ty;  tpy[3] = 1.0;
   tpz[0] = tz*tz*tz;  tpz[1] = tz*tz;  tpz[2] = tz;  tpz[3] = 1.0;
-  float*  coefs = spline->coefs;
+  float* restrict coefs = spline->coefs;
 
   a[0]  = (Af[ 0]*tpx[0] + Af[ 1]*tpx[1] + Af[ 2]*tpx[2] + Af[ 3]*tpx[3]);
   a[1]  = (Af[ 4]*tpx[0] + Af[ 5]*tpx[1] + Af[ 6]*tpx[2] + Af[ 7]*tpx[3]);
@@ -2245,8 +2245,8 @@ void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
 #else
 void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
                                   double x, double y, double z,
-                                  float*  vals,
-                                  float*  grads)
+                                  float* restrict vals,
+                                  float* restrict grads)
 {
   _mm_prefetch ((const char*)  &A_s[ 0],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 1],_MM_HINT_T0);  
   _mm_prefetch ((const char*)  &A_s[ 2],_MM_HINT_T0);  _mm_prefetch ((const char*)  &A_s[ 3],_MM_HINT_T0);
@@ -2346,7 +2346,7 @@ void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
         dabc[1]  = _mm_mul_ps (  a[i], _mm_mul_ps( db[j],  c[k]));
         dabc[2]  = _mm_mul_ps (  a[i], _mm_mul_ps(  b[j],  dc[k]));
 
-        __m128*  coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
+        __m128* restrict coefs = (__m128*)(spline->coefs + (ix+i)*xs + (iy+j)*ys + (iz+k)*zs);
         for (int n=0; n<Nm; n++) {
           mvals[n]     = _mm_add_ps (mvals[n], _mm_mul_ps(  abc   , coefs[n]));
           mgrad[3*n+0] = _mm_add_ps (mgrad[3*n+0], _mm_mul_ps( dabc[0], coefs[n]));

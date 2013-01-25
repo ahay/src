@@ -331,18 +331,18 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
             for (k = j + 1; k < nedge; k++) {
                 if ((edges[j*(size_t)2] == edges[k*(size_t)2 + (size_t)1]) &&
                     (edges[j*(size_t)2 + (size_t)1] == edges[k*(size_t)2])) {
-                    edges[j*(size_t)2] = -1;
-                    edges[j*(size_t)2 + (size_t)1] = -1;
-                    edges[k*(size_t)2] = -1;
-                    edges[k*(size_t)2 + (size_t)1] = -1;
+                    edges[j*(size_t)2] = (size_t)-1;
+                    edges[j*(size_t)2 + (size_t)1] = (size_t)-1;
+                    edges[k*(size_t)2] = (size_t)-1;
+                    edges[k*(size_t)2 + (size_t)1] = (size_t)-1;
                 }
                 /* Shouldn't need the following, see note above */
                 if ((edges[j*(size_t)2] == edges[k*(size_t)2]) &&
                     (edges[j*(size_t)2 + (size_t)1] == edges[k*(size_t)2 + (size_t)1])) {
-                    edges[j*(size_t)2] = -1;
-                    edges[j*(size_t)2 + (size_t)1] = -1;
-                    edges[k*(size_t)2] = -1;
-                    edges[k*(size_t)2 + (size_t)1] = -1;
+                    edges[j*(size_t)2] = (size_t)-1;
+                    edges[j*(size_t)2 + (size_t)1] = (size_t)-1;
+                    edges[k*(size_t)2] = (size_t)-1;
+                    edges[k*(size_t)2 + (size_t)1] = (size_t)-1;
                 }
             }
         }
@@ -352,7 +352,8 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
            All edges are arranged in clockwise order.
         */
         for (j = 0; j < nedge; j++) {
-             if (edges[j*(size_t)2] < 0 || edges[j*(size_t)2 + (size_t)1] < 0)
+             if (edges[j*(size_t)2] == (size_t)-1 ||
+                 edges[j*(size_t)2 + (size_t)1] == (size_t)-1)
                  continue;
              if ((*ntr) >= trimax) {
                  free (complete);
