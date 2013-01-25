@@ -46,6 +46,8 @@ void fft1_axis2_init(int nx_in,int nk_in)
 void fft1_axis2(kiss_fft_cpx **dat, int id)
 /*< 1D FORWARD FOURIER TRANSFORM OVER ONE AXIS >*/
 {
+    int ix;
+
 	/* PULL OUT AT PROPER PLACE */
 //	for (int ix=0; ix < nx; ix++) {
 //		trace1[ix] = dat[id][ix];
@@ -57,8 +59,8 @@ void fft1_axis2(kiss_fft_cpx **dat, int id)
     
 //    kiss_fft_stride (cfg1,ctrace1,ctrace2,1);
 
-	for (int ix=0; ix < nx; ix++) {
-		dat[id][ix] = sf_crmul(dat[id][ix],fftscale);
+	for (ix=0; ix < nx; ix++) {
+	    dat[id][ix] = sf_crmul(dat[id][ix],fftscale);
 	}
 
 	/* RETURN BACK TO PROPER PLACE */
