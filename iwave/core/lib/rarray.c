@@ -943,11 +943,31 @@ int ra_size(const RARR *arr, IPNT n)
 }
 /*----------------------------------------------------------------------------*/
 
+int ra_datasize(const RARR *arr, size_t * n)
+{
+    int d;
+    *n = 1;
+    for ( d = 0; d < arr->ndim; ++d ) *n *= arr->_dims[d].n;
+    
+    return 0;
+}
+/*----------------------------------------------------------------------------*/
+
 int ra_a_size(const RARR *arr, IPNT n)
 {
     int d;
     
     for ( d = 0; d < arr->ndim; ++d ) n[d] = arr->_dims[d].n0;
+    
+    return 0;
+}
+/*----------------------------------------------------------------------------*/
+
+int ra_a_datasize(const RARR *arr, size_t * n)
+{
+    int d;
+    *n=1;
+    for ( d = 0; d < arr->ndim; ++d ) *n *= arr->_dims[d].n0;
     
     return 0;
 }

@@ -458,7 +458,7 @@ void ra_set(RARR *arr, IPNT li, ireal r);
 void ra_gset(RARR *arr, IPNT gi, ireal r);
 /*----------------------------------------------------------------------------*/
 /**
- * Get size of the working (computational virtual) array.
+ * Get axis lengths of the working (computational virtual) array.
  *
  * @param [in] arr - (RARR *)
  * @param [out] n - (IPNT)
@@ -467,7 +467,16 @@ void ra_gset(RARR *arr, IPNT gi, ireal r);
 int ra_size(const RARR *arr, IPNT n);
 /*----------------------------------------------------------------------------*/
 /**
- * Get size of the allocated array.
+ * Get size of the working (computational virtual) array.
+ *
+ * @param [in] arr - arg
+ * @param [out] n -  size of array = prod of axis lengths
+ * @return 0 on successful completion, else error code as in base/include/utils.h.
+ */
+int ra_datasize(const RARR *arr, size_t * n);
+/*----------------------------------------------------------------------------*/
+/**
+ * Get axis lengths of the allocated array.
  *
  * @param [in] arr - (RARR *)
  * @param [out] n - (IPNT)
@@ -475,6 +484,16 @@ int ra_size(const RARR *arr, IPNT n);
  * @return 0 on successful completion, else error code as in base/include/utils.h.
  */
 int ra_a_size(const RARR *arr, IPNT n);
+/*----------------------------------------------------------------------------*/
+/**
+ * Get size of the allocated array.
+ *
+ * @param [in] arr - (RARR *)
+ * @param [out] n -  size of array = prod of axis lengths
+ * @return the value at the specified entry, else error code as in base/include/utils.h.
+ * @return 0 on successful completion, else error code as in base/include/utils.h.
+ */
+int ra_a_datasize(const RARR *arr, size_t * n);
 /*----------------------------------------------------------------------------*/
 /**
  * Get the global start and end indices of the working (computational virtual) array.
@@ -693,5 +712,6 @@ int ra_axpy(RARR * arry, RARR const * arrx, ireal a);
  * @return 0 if arguments have same ndim, gs and ge, 1 otherwise
  */
 int ra_compare_meta(const RARR * a, const RARR * b); 
+/*-----------------------------------------------------------------------------*/
 
 #endif /*__RARRAY_H_*/

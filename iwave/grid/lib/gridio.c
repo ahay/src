@@ -817,6 +817,8 @@ int rsfwrite_proto(ireal * a,
     strcpy(ltype,type);
     lscale=scale;
     copy_grid(&g,protogrid);
+    fprintf(stderr,"IN RSFWRITE: hdr=%s data=%s\n",fname,dname);
+    iwave_fprintall(stderr);
   }
   else {
     fprintf(stream,"Error: rsfwrite_proto - inconsistent values of\n");
