@@ -171,7 +171,11 @@ def identify_platform(context):
                 plat['version'] = dist()[1]   
             elif dist()[0].lower() == 'suse':
                 plat['OS'] = 'linux'
-                plat['distro'] = 'suse'        
+                plat['distro'] = 'suse'       
+            elif dist()[0].lower() == 'linuxmint':
+                plat['OS'] = 'linux'
+                plat['distro'] = 'ubuntu'
+                plat['version'] = dist()[1]
             elif name[-7:] == 'generic':
                 plat['OS'] = 'linux'
                 plat['distro'] = 'ubuntu'
@@ -349,7 +353,7 @@ def c99(context):
 
 # MKL library
 def mkl(context):
-    context.Message("checking MKL ... ")
+    context.Message("checking for MKL ... ")
     text = '''
     #include <mkl.h>
     int main(int argc,char* argv[]) {
@@ -583,6 +587,7 @@ def ppm(context):
     context.env['CPPPATH'] = oldpath
 
 pkg['libtiff'] = {'suse':'libtiff-devel', 
+                  'ubuntu': 'libtiff4-dev',
                   'fedora':'libtiff-devel',
                   'rhel':'libtiff-devel'}
 
@@ -1135,6 +1140,7 @@ def cuda(context):
         context.env['NVCC'] = None
 
 pkg['fftw'] = {'fedora':'fftw-devel',
+               'ubuntu':'libfftw3-dev',
                'darwin':'fftw-3-single'}
 
 def fftw(context):
