@@ -2,7 +2,7 @@
 #include <rsf.h>
 
 float fd1_1(float ***p, int i1, int i2, int i3, char id)
-/* first order difference */
+/*< first order difference >*/
 {
 	int j1, j2, j3;
 	double a=0;
