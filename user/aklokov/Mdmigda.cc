@@ -42,6 +42,8 @@ sf_file imageFile;
 sf_file dagFile;
 sf_file acigFile;
 sf_file mcigFile;
+sf_file xEscFile;
+sf_file tEscFile;
 
 //  Causal integration of a trace[n]
 void applyCasualIntegration (float *trace, int n) {
@@ -209,6 +211,16 @@ int main (int argc, char* argv[]) {
 	/* output file containing multi-CIGs (in the dip-angle and the scattering-angle domain both */ 
 		mcigFile  = sf_output ("mcig"); rp.isMCig = true;
     } else { rp.isMCig = false; }
+
+    if ( NULL != sf_getstring("esct") ) {
+	/* output file containing escqpe times */ 
+		tEscFile  = sf_output ("esct"); rp.isTT = true;
+    } else { rp.isTT = false; }
+
+    if ( NULL != sf_getstring("escx") ) {
+	/* output file containing escape positions */ 
+		xEscFile  = sf_output ("escx"); rp.isTT = true;
+    } else { rp.isTT = false; }
 
     // data params
 
@@ -406,6 +418,8 @@ int main (int argc, char* argv[]) {
     const int acigSize = gp.zNum * gp.scatNum;
 	// multi-gather size
     const int mcigSize = gp.zNum * gp.scatNum * gp.dipNum;
+	// escape tables
+	const int escSize  = gp.zNum * ttRayNum;
 
 	// MEMORY ALLOCATION
 
@@ -421,6 +435,10 @@ int main (int argc, char* argv[]) {
 	float* mcig = sf_floatalloc (mcigSize);
 	// image
 	float* image = sf_floatalloc (gp.zNum);
+	// x-escape
+	float* xEsc = new float (escSize);
+	// t-escape
+	float* tEsc = new float (escSize);
 
 	// DEFINE MIGRATOR
 
@@ -451,14 +469,17 @@ int main (int argc, char* argv[]) {
 		for (int ipx = 0; ipx < ip.xNum; ++ipx) {
 			sf_warning ("gather %d of %d;", ipx + 1, fullGatherNum);	
 			Point2D curGatherPos (ipx, ipy);
+
 		    const size_t startInd = ipx + ipy * ip.xNum;
 
 			memset (dag,   0, dagSize  * sizeof (float));
 			memset (acig,  0, acigSize * sizeof (float));
 			memset (image, 0, gp.zNum  * sizeof (float));
+			memset (xEsc,  0, escSize  * sizeof (float) );
+			memset (tEsc,  0, escSize  * sizeof (float) );
 
 			// the main migration function
-			migrator->processGather (curGatherPos, data, image, dag, acig, mcig);
+			migrator->processGather (curGatherPos, data, image, dag, acig, mcig, xEsc, tEsc);
 
 			// output the image trace
 			size_t startPos = startInd * gp.zNum * sizeof(float);
@@ -483,6 +504,14 @@ int main (int argc, char* argv[]) {
 			    sf_seek (mcigFile, startPos, SEEK_SET);
 			    sf_floatwrite (mcig, mcigSize, mcigFile);
 			}
+			// out travel-time-tables
+			if (rp.isTT) {
+			    startPos = startInd * escSize * sizeof(float);
+				sf_seek (xEscFile, startPos, SEEK_SET);			
+			    sf_floatwrite (xEsc, escSize, xEscFile);
+				sf_seek (tEscFile, startPos, SEEK_SET);			
+			    sf_floatwrite (tEsc, escSize, tEscFile);
+			}
 		}
 	}
 
@@ -490,6 +519,8 @@ int main (int argc, char* argv[]) {
     sf_fileclose (acigFile);
     sf_fileclose (mcigFile);
     sf_fileclose (imageFile);
+	sf_fileclose (xEscFile);
+	sf_fileclose (tEscFile);
 
     sf_fileclose (velFile);
 	sf_fileclose (dataFile);
@@ -500,6 +531,8 @@ int main (int argc, char* argv[]) {
     free (acig);
     free (mcig);
     free (image);
+	free (xEsc);
+	free (tEsc);
 
     free (*velModel);
     free (data);

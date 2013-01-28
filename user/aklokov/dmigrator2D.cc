@@ -12,7 +12,8 @@ void DepthMigrator2D::setWavefrontTracerAxes () {
 	wavefrontTracer_.setAxes ();
 }
 
-void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig, float* mCig) {
+void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* aCig, float* mCig,
+									 float* xEsc, float* tEsc) {
 
 	// CONSTANTS
 
