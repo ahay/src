@@ -1,10 +1,10 @@
 /* 2D picking
 
-Input:
-	dataFile_.rsf - parameter spectrum (semblance) panel
+   Input:
+   dataFile_.rsf - parameter spectrum (semblance) panel
 
-Output:
-	outFile_.rsf - picked optimal values
+   Output:
+   outFile_.rsf - picked optimal values
 */
 
 /*
@@ -58,25 +58,37 @@ float   eps_;
 
 // FUNCTIONS
 
-void TridiagonalSolve (const float *Ma, const float *Mb, float *Mc, float *Md, float *x, unsigned int n) {
+void TridiagonalSolve (const float *Ma, const float *Mb, float *Mc, float *Md, float *x, unsigned int n) 
+{
+    int i;
+    double id;
 
     Mc[0] /= Mb[0];	
     Md[0] /= Mb[0];		
-    for (int i = 1; i < n; ++i) {
-        double id = (Mb[i] - Mc[i - 1] * Ma[i]);
-		Mc[i] /= id;		
-		Md[i] = (Md[i] - Md[i - 1] * Ma[i]) / id;
+    for (i = 1; i < n; ++i) {
+        id = (Mb[i] - Mc[i - 1] * Ma[i]);
+	Mc[i] /= id;		
+	Md[i] = (Md[i] - Md[i - 1] * Ma[i]) / id;
     }
  
     // back substitute
     x[n - 1] = Md[n - 1];
-    for (int i = n - 2; i >= 0; --i)
+    for (i = n - 2; i >= 0; --i)
         x[i] = Md[i] - Mc[i] * x[i + 1];
 
-	return;	
+    return;	
 }
 
-int main (int argc, char* argv[]) {
+int main (int argc, char* argv[]) 
+{
+    int panelSize, ix, ip, it, halfXApp, xNum, startInd, wshift;
+    char *paramTag, *sembTag;
+    float *maxTrace, *paramTrace, *pPanel, *pMax, *pParam, *weight;
+    size_t startPos;
+    float curParam, epsSq, wstack, sembStack, horStack;
+    int temp, curPanelSize, offset, lSamp;
+    float *data, *semb, *res, *Ma, *Mb, *Mc, *rightPart, *pSemb, *pData;
+    float *pMa, *pMb, *pMc, *pR;
    
 // Initialize RSF 
     sf_init (argc, argv);
@@ -87,10 +99,10 @@ int main (int argc, char* argv[]) {
     if ( SF_FLOAT != sf_gettype (dataFile_) )   sf_error ("Need float input: dip-angle gathers");
     /* dip-angle gathers - stacks in the scattering-angle direction */
 // Output auxiliary files
-	char* paramTag = "maxForPicking.rsf";
+    paramTag = "maxForPicking.rsf";
     paramFile_ = sf_output (paramTag);
-	char* sembTag = "sembForPicking.rsf";
-	sembFile_ = sf_output (sembTag);
+    sembTag = "sembForPicking.rsf";
+    sembFile_ = sf_output (sembTag);
     outFile_ = sf_output ("out");
 
 // Depth/time axis 
@@ -130,171 +142,171 @@ int main (int argc, char* argv[]) {
     sf_putstring (outFile_, "label1", "time");   sf_putstring (outFile_, "label2", "inline");
     sf_putstring (outFile_, "unit1", "s");       sf_putstring (outFile_, "unit2", "m"); 
 
-	const int panelSize = tNum_ * paramNum_;	
-	panel_ = sf_floatalloc (panelSize);
-	memset ( panel_, 0, panelSize * sizeof (float) );   
+    panelSize = tNum_ * paramNum_;	
+    panel_ = sf_floatalloc (panelSize);
+    memset ( panel_, 0, panelSize * sizeof (float) );   
 
-	float* maxTrace = sf_floatalloc (tNum_);
-	float* paramTrace = sf_floatalloc (tNum_);
+    maxTrace = sf_floatalloc (tNum_);
+    paramTrace = sf_floatalloc (tNum_);
 
-	// I. PICK MAX VALUES
+    // I. PICK MAX VALUES
 
-	for (int ix = 0; ix < xNum_; ++ix) {
-		sf_warning ("max picking: CIG %d of %d;", ix + 1, xNum_);
+    for (ix = 0; ix < xNum_; ++ix) {
+	sf_warning ("max picking: CIG %d of %d;", ix + 1, xNum_);
 
-		const size_t startPos = (size_t) ix * panelSize * sizeof (float);
-		sf_seek (dataFile_, startPos, SEEK_SET);
-		sf_floatread (panel_, panelSize, dataFile_);
+	startPos = (size_t) ix * panelSize * sizeof (float);
+	sf_seek (dataFile_, startPos, SEEK_SET);
+	sf_floatread (panel_, panelSize, dataFile_);
 
-		memset ( maxTrace, 0, tNum_ * sizeof (float) );   
+	memset ( maxTrace, 0, tNum_ * sizeof (float) );   
 	
-		float* pPanel = panel_;
+	pPanel = panel_;
 
-		for (int ip = 0; ip < paramNum_; ++ip) {
-			float* pMax   = maxTrace;			
-			float* pParam = paramTrace;			
-			const float curParam = paramStart_ + ip * paramStep_;
-			for (int it = 0; it < tNum_; ++it, ++pMax, ++pPanel, ++pParam) {
-				if (*pMax < *pPanel) { *pMax = *pPanel; *pParam = curParam; }							
-			}
-		}
-		sf_floatwrite (maxTrace,   tNum_, sembFile_);
-		sf_floatwrite (paramTrace, tNum_, paramFile_);
+	for (ip = 0; ip < paramNum_; ++ip) {
+	    pMax   = maxTrace;			
+	    pParam = paramTrace;			
+	    curParam = paramStart_ + ip * paramStep_;
+	    for (it = 0; it < tNum_; ++it, ++pMax, ++pPanel, ++pParam) {
+		if (*pMax < *pPanel) { *pMax = *pPanel; *pParam = curParam; }							
+	    }
 	}
+	sf_floatwrite (maxTrace,   tNum_, sembFile_);
+	sf_floatwrite (paramTrace, tNum_, paramFile_);
+    }
 
-	sf_warning (".");
+    sf_warning (".");
 
-	free (panel_);
-	free (maxTrace);		
-	free (paramTrace);		
+    free (panel_);
+    free (maxTrace);		
+    free (paramTrace);		
 
-	sf_fileclose (dataFile_);
-	sf_fileclose (paramFile_);
-	sf_fileclose (sembFile_);
+    sf_fileclose (dataFile_);
+    sf_fileclose (paramFile_);
+    sf_fileclose (sembFile_);
 
-	// II. REGULARIZATION
+    // II. REGULARIZATION
 
-	// constants
-	const int   halfXApp = xApp_ / 2;
-	const float epsSq = eps_ * eps_;
+    // constants
+    halfXApp = xApp_ / 2;
+    epsSq = eps_ * eps_;
 
-	// weight function 
+    // weight function 
 
-	float* weight = sf_floatalloc (xApp_);
-	float wstack = 0.f;
-	for (int ix = 0; ix < xApp_; ++ix) {
-		weight[ix] = xApp_ > 1 ? pow (sin (M_PI * ix / (xApp_ - 1) ), 2) : 1.f;
-		wstack += weight[ix]; 
+    weight = sf_floatalloc (xApp_);
+    wstack = 0.f;
+    for (ix = 0; ix < xApp_; ++ix) {
+	weight[ix] = xApp_ > 1 ? pow (sin (M_PI * ix / (xApp_ - 1) ), 2) : 1.f;
+	wstack += weight[ix]; 
+    }
+    for (ix = 0; ix < xApp_; ++ix) {
+	weight[ix] /= wstack;
+    }
+
+    // input files
+    sembFile_  = sf_input (sembTag);
+    paramFile_ = sf_input (paramTag);
+
+    for (ix = 0; ix < xNum_; ++ix) {
+	sf_warning ("regularization: CIG %d of %d;", ix + 1, xNum_);
+
+        xNum = xApp_;       
+        startInd = ix - halfXApp;
+	wshift = 0;
+
+	// boundary checking
+        temp = ix - halfXApp;
+	if (temp < 0) { xNum += temp; startInd -= temp; wshift = -temp; }
+	temp = xNum_ - (ix + halfXApp) - 1;
+	if (temp < 0) xNum += temp;
+
+	// memory allocation
+	curPanelSize = tNum_ * xNum; 
+
+	data = sf_floatalloc (curPanelSize);
+	semb = sf_floatalloc (curPanelSize);
+	 res = sf_floatalloc (tNum_);
+	  Ma = sf_floatalloc (tNum_);
+	  Mb = sf_floatalloc (tNum_);    
+	  Mc = sf_floatalloc (tNum_);    
+	rightPart = sf_floatalloc (tNum_);
+
+	// read data
+	offset = tNum_ * startInd * sizeof (float);
+	sf_seek (paramFile_, offset, SEEK_SET);
+	sf_seek (sembFile_ , offset, SEEK_SET);
+
+	sf_floatread (data, curPanelSize, paramFile_);	
+	sf_floatread (semb, curPanelSize, sembFile_);	
+
+	// fix if semblance value equals zero
+	pSemb = semb;
+	for (ip = 0; ip < curPanelSize; ++ip, ++pSemb) {
+	    if (*pSemb < 1e-6) *pSemb = 1e-6;
 	}
-	for (int ix = 0; ix < xApp_; ++ix) {
-		weight[ix] /= wstack;
-	}
-
-	// input files
-	sembFile_  = sf_input (sembTag);
-	paramFile_ = sf_input (paramTag);
-
-	for (int ix = 0; ix < xNum_; ++ix) {
-		sf_warning ("regularization: CIG %d of %d;", ix + 1, xNum_);
-
-        int xNum = xApp_;       
-        int startInd = ix - halfXApp;
-		int wshift = 0;
-
-		// boundary checking
-        int temp = ix - halfXApp;
-		if (temp < 0) { xNum += temp; startInd -= temp; wshift = -temp; }
-		temp = xNum_ - (ix + halfXApp) - 1;
-		if (temp < 0) xNum += temp;
-
-		// memory allocation
-		const int curPanelSize = tNum_ * xNum; 
-
-	    float* data = sf_floatalloc (curPanelSize);
-	    float* semb = sf_floatalloc (curPanelSize);
-		float*  res = sf_floatalloc (tNum_);
-		float*   Ma = sf_floatalloc (tNum_);
-		float*   Mb = sf_floatalloc (tNum_);    
-		float*   Mc = sf_floatalloc (tNum_);    
-		float* rightPart = sf_floatalloc (tNum_);
-
-		// read data
-		int offset = tNum_ * startInd * sizeof (float);
-		sf_seek (paramFile_, offset, SEEK_SET);
-		sf_seek (sembFile_ , offset, SEEK_SET);
-
-		sf_floatread (data, curPanelSize, paramFile_);	
-		sf_floatread (semb, curPanelSize, sembFile_);	
-
-		// fix if semblance value equals zero
-		float* pSemb = semb;
-		for (int ip = 0; ip < curPanelSize; ++ip, ++pSemb) {
-			if (*pSemb < 1e-6) *pSemb = 1e-6;
-		}
 	
-		// fill out the equation matrices
-		// - left part
-		float* pMa = Ma;
-		float* pMb = Mb;
-		float* pMc = Mc;
-		// --- basic - D^T D
-		for (int it = 0; it < tNum_; ++it, ++pMa, ++pMb, ++pMc) {
-			*pMa = -epsSq;
-			*pMb = 2 * epsSq;
-			*pMc = -epsSq;
-		}
-		// --- add weigths in the main diagonal
-		pMb = Mb;		
-		float* pR = rightPart;
-		for (int it = 0; it < tNum_; ++it, ++pMb, ++pR) {
-			float* pSemb = semb + it;			
-			float sembStack = 0.f;		    
-			for (int ix = 0; ix < xNum; ++ix, pSemb += tNum_)
-				sembStack += *pSemb * weight [ix + wshift];
-			*pMb += sembStack * sembStack;	
-			*pR = sembStack;	
-		}
-		// - complete right part
-		pR = rightPart;		
-		for (int it = 0; it < tNum_; ++it, ++pR) {
-			float* pSemb = semb + it;			
-			float* pData = data + it;						
-			float horStack = 0.f;		    
-		    for (int ix = 0; ix < xNum; ++ix, pSemb += tNum_, pData += tNum_)
-				horStack += *pData * (*pSemb) * weight [ix + wshift];
-			*pR *= horStack;
-		}	
-		// - correct end values
-		Ma[0] = 0.f;
-		const int lSamp = tNum_ - 1;
-		Mb[lSamp] -= epsSq;
-		Mc[lSamp] = 0.f;
-
-		// solve the equation  
-		TridiagonalSolve (Ma, Mb, Mc, rightPart, res, tNum_);
-
-		// write down the result
-		sf_floatwrite (res, tNum_, outFile_);
-	
-		// free memory
-		free (Ma);
-		free (Mb);
-		free (Mc);
-
-		free (rightPart);
-
-		free (data);
-		free (semb);
-		free (res);
+	// fill out the equation matrices
+	// - left part
+	pMa = Ma;
+	pMb = Mb;
+	pMc = Mc;
+	// --- basic - D^T D
+	for (it = 0; it < tNum_; ++it, ++pMa, ++pMb, ++pMc) {
+	    *pMa = -epsSq;
+	    *pMb = 2 * epsSq;
+	    *pMc = -epsSq;
 	}
+	// --- add weigths in the main diagonal
+	pMb = Mb;		
+	pR = rightPart;
+	for (it = 0; it < tNum_; ++it, ++pMb, ++pR) {
+	    pSemb = semb + it;			
+	    sembStack = 0.f;		    
+	    for (ix = 0; ix < xNum; ++ix, pSemb += tNum_)
+		sembStack += *pSemb * weight [ix + wshift];
+	    *pMb += sembStack * sembStack;	
+	    *pR = sembStack;	
+	}
+	// - complete right part
+	pR = rightPart;		
+	for (it = 0; it < tNum_; ++it, ++pR) {
+	    pSemb = semb + it;			
+	    pData = data + it;						
+	    horStack = 0.f;		    
+	    for (ix = 0; ix < xNum; ++ix, pSemb += tNum_, pData += tNum_)
+		horStack += *pData * (*pSemb) * weight [ix + wshift];
+	    *pR *= horStack;
+	}	
+	// - correct end values
+	Ma[0] = 0.f;
+	lSamp = tNum_ - 1;
+	Mb[lSamp] -= epsSq;
+	Mc[lSamp] = 0.f;
 
-	sf_warning (".");
+	// solve the equation  
+	TridiagonalSolve (Ma, Mb, Mc, rightPart, res, tNum_);
 
-	free (weight);
+	// write down the result
+	sf_floatwrite (res, tNum_, outFile_);
+	
+	// free memory
+	free (Ma);
+	free (Mb);
+	free (Mc);
 
-	sf_fileclose (paramFile_);
-	sf_fileclose (sembFile_);
-	sf_fileclose (outFile_);
+	free (rightPart);
 
-	return 0;
+	free (data);
+	free (semb);
+	free (res);
+    }
+
+    sf_warning (".");
+
+    free (weight);
+
+    sf_fileclose (paramFile_);
+    sf_fileclose (sembFile_);
+    sf_fileclose (outFile_);
+
+    return 0;
 }
