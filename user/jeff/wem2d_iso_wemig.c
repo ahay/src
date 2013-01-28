@@ -138,7 +138,7 @@ void wem2d_iso_wemig(bool adj,
 		     sf_complex **swf,
 		     sf_complex **rwf,
 		     float ***xig)
-/* <Imaging kernel> */
+/*< Imaging kernel >*/
 {
   int iw,ix,iz,ith,ih,rind,sind;
   int id=0;
@@ -332,8 +332,9 @@ static void wem2d_iso_rwetaper(sf_complex **dax, int id)
 
 /*-----------------------------------------------------------------*/
 
-/* Free memory */
+
 void wem2d_iso_close() 
+/*< Free memory >*/
 {
   free (tap);
   free (vmin);
