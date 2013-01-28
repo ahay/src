@@ -18,19 +18,21 @@
 */
 #include <rsf.h>
 
-#include "fft2.h"
+#include "cfft2.h"
 
 int main(int argc, char* argv[])
 {
     bool verb;        
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
-    float c;
+    sf_complex c;
 
-    float  *ww,*rr;      /* I/O arrays*/
-    sf_complex *cwave, *cwavem;
-    float **wave, *curr;
-
+    float  *rr;      /* I/O arrays*/
+    sf_complex *ww, *cwave, *cwavem;
+//  float **wave, *curr;
+    sf_complex **wave, *curr;
+    float *rcurr;
+    
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
 
@@ -44,6 +46,11 @@ int main(int argc, char* argv[])
     Fw = sf_input ("in" );
     Fo = sf_output("out");
     Fr = sf_input ("ref");
+
+    if (SF_COMPLEX != sf_gettype(Fw)) sf_error("Need complex input");
+    if (SF_FLOAT != sf_gettype(Fr)) sf_error("Need float ref");
+
+    sf_settype(Fo,SF_FLOAT);
 
     /* Read/Write axes */
     at = sf_iaxa(Fw,1); nt = sf_n(at); 
@@ -82,22 +89,24 @@ int main(int argc, char* argv[])
 //    sf_fileclose(right);
 
     /* read wavelet & reflectivity */
-    ww=sf_floatalloc(nt);  sf_floatread(ww,nt ,Fw);
-    rr=sf_floatalloc(nzx); sf_floatread(rr,nzx,Fr);
+    ww=sf_complexalloc(nt);  
+    sf_complexread(ww,nt ,Fw);
 
-    curr = sf_floatalloc(nzx2);
+    rr=sf_floatalloc(nzx); 
+    sf_floatread(rr,nzx,Fr);
+
+    curr   = sf_complexalloc(nzx2);
+    rcurr  = sf_floatalloc(nzx2);
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
-    wave = sf_floatalloc2(nzx2,m2);
+    wave   = sf_complexalloc2(nzx2,m2);
 
     ifft2_allocate(cwavem);
 
-    /* read the initial data */
-//    sf_floatread (curr,nxx,Fw);
-
     for (iz=0; iz < nzx2; iz++) {
-	curr[iz]=0.;
+	curr[iz] = sf_cmplx(0.,0.);
+	rcurr[iz]= 0.;
     }
 
     /* MAIN LOOP */
@@ -123,19 +132,25 @@ int main(int argc, char* argv[])
 	    for (iz=0; iz < nz; iz++) {
 		i = iz+ix*nz;  /* original grid */
 		j = iz+ix*nz2; /* padded grid */
- 
-		c = 0.0f;
-		c += ww[it] * rr[i]; // source term
+#ifdef SF_HAS_COMPLEX_H
+		c = ww[it] * rr[i]; // source term
+#else
+		c = sf_crmul(ww[it], rr[i]); // source term
+#endif
 		for (im = 0; im < m2; im++) {
-		    //sf_warning("wave= %g", wave[im][j]);
-		    c += crealf(lt[im][i])*wave[im][j];
+#ifdef SF_HAS_COMPLEX_H
+		    c += lt[im][i]*wave[im][j];
+#else
+		    c += sf_cmul(lt[im][i], wave[im][j]);
+#endif
 		}
 
 		curr[j] = c;
+		rcurr[j] = crealf(c);
 	    }
 //	    	 sf_warning("c= %g", c);
 	    /* write wavefield to output */
-	    sf_floatwrite(curr+ix*nz2,nz,Fo);
+	    sf_floatwrite(rcurr+ix*nz2,nz,Fo);
 	}
     }
     if(verb) sf_warning("."); 
