@@ -410,13 +410,13 @@ int main (int argc, char* argv[]) {
 
     if (rp.isTT) {
 		// x-escape 
-    	sf_putint   (xEscFile, "n1", ip.zNum); sf_putint (xEscFile, "n2", ttRayNum); sf_putint (xEscFile, "n3", ip.xNum);
+    	sf_putint   (xEscFile, "n1", ip.zNum); sf_putint (xEscFile, "n2", ttRayNum); sf_putint (xEscFile, "n3", ip.xNum); sf_putint (xEscFile, "n4", 1);
     	sf_putfloat (xEscFile, "d1", ip.zStep); sf_putfloat (xEscFile, "d2", ttRayStep); sf_putfloat (xEscFile, "d3", ip.xStep);
     	sf_putfloat (xEscFile, "o1", ip.zStart); sf_putfloat (xEscFile, "o2", ttRayStart); sf_putfloat (xEscFile, "o3", ip.xStart); 
 		sf_putstring(xEscFile, "label1", "depth"); sf_putstring (xEscFile, "label2", "ray dip"); sf_putstring (xEscFile, "label3", "inline"); 
 		sf_putstring(xEscFile, "unit1", "m"); sf_putstring(xEscFile, "unit2", "deg"); sf_putstring (xEscFile, "unit3", "m"); 
 		// t-escape 
-    	sf_putint   (tEscFile, "n1", ip.zNum); sf_putint (tEscFile, "n2", ttRayNum); sf_putint (tEscFile, "n3", ip.xNum);
+    	sf_putint   (tEscFile, "n1", ip.zNum); sf_putint (tEscFile, "n2", ttRayNum); sf_putint (tEscFile, "n3", ip.xNum); sf_putint (xEscFile, "n4", 1);
     	sf_putfloat (tEscFile, "d1", ip.zStep); sf_putfloat (tEscFile, "d2", ttRayStep); sf_putfloat (tEscFile, "d3", ip.xStep);
     	sf_putfloat (tEscFile, "o1", ip.zStart); sf_putfloat (tEscFile, "o2", ttRayStart); sf_putfloat (tEscFile, "o3", ip.xStart); 
 		sf_putstring(tEscFile, "label1", "depth"); sf_putstring (tEscFile, "label2", "ray dip"); sf_putstring (tEscFile, "label3", "inline"); 
