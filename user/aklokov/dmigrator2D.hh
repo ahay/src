@@ -12,8 +12,8 @@ public:
 
 	void   processGather             (Point2D& curGatherCoords, const float* const data, float* image, float* gather, float* aCig, float* mCig,
 									  float* xEsc, float* tEsc);
-	void   processDepthSample        (const float curX, const float curZ, const float* const data, double* image, double* dag, double* aCig, float* curMCig);
-
+	void   processDepthSample        (const float curX, const float curZ, const float* const data, double* image, double* dag, double* aCig,
+									  float* curMCig, float* xEsc, float* tEsc);
 	void   calcTravelTimes           (float curZ, float curX, EscapePoint* escPoints);
 	// ray tracing functions
 	void   getEscPointByDirection    (EscapePoint* travelTimes, const float pRec, EscapePoint& resEscPoint);

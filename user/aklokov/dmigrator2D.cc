@@ -54,7 +54,7 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 		const float curZ = zStart + iz * zStep;		
 		if (curZ < velModelDepthMin || curZ > velModelDepthMax)
 			continue;
-		this->processDepthSample (curX, curZ, data, curImage + iz, curDag + iz, curCig + iz, mCig + iz);
+		this->processDepthSample (curX, curZ, data, curImage + iz, curDag + iz, curCig + iz, mCig + iz, xEsc + iz, tEsc + iz);
 	}
 
 	// transfer data from internal gathers (in double) to the external ones (in float)
@@ -79,7 +79,8 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
 }
 
 void DepthMigrator2D::processDepthSample (const float curX, const float curZ, const float* const data, 
-										  double* curImage, double* curDag, double* curCig, float* mCig) {
+										  double* curImage, double* curDag, double* curCig, float* mCig,
+										  float* xEsc, float* tEsc) {
 
 	// CONSTANTS
 
@@ -107,6 +108,11 @@ void DepthMigrator2D::processDepthSample (const float curX, const float curZ, co
 	const float velInPoint = this->getVel (curZ, curX);
 	EscapePoint* travelTimes = new EscapePoint [ttRayNum_];		
 	this->calcTravelTimes (curZ, curX, travelTimes);
+	// travel-time
+	for (int it = 0; it < ttRayNum_; ++it) {
+		*(xEsc + it * zNum) = travelTimes[it].x;
+		*(tEsc + it * zNum) = travelTimes[it].t;
+	}
 
 	for (int is = 0; is < scatNum; ++is) {
 
