@@ -63,7 +63,20 @@ float vStart_;
 
 int   wh_;
 
-int main (int argc, char* argv[]) {
+int main (int argc, char* argv[]) 
+{
+    //
+    char* corUnit;
+    char* unit;
+    int  zoSize, dataSize, tNumRed, velSize;
+    float *zo, *zoSq, *semb, *velModel, *data;
+    int *count;
+    int is, ir, ip, it, forDataInd, vxInd;
+    float shotPos, curOffset, halfOffset, fabsOffset, offsetSq, curPos, l0, forA;
+    float t0, vel, a, t, forLim, limitLeft, limitRight, bef, aft, sample, curSemb;
+    float sampleSq, sqSample;
+    int vtInd, vInd, tInd, dataInd, indZO, vwhalf, ts, totalCount, ind, ic, iw, offset;
+    
 
 // Initialize RSF 
     sf_init (argc,argv);
@@ -74,16 +87,16 @@ int main (int argc, char* argv[]) {
     outFile  = sf_output("out");
     /*  */
 
-	if ( NULL != sf_getstring("aux") ) {
-		/* output file containing semblance measure of CIGs stacking */ 
-		auxFile  = sf_output ("aux");
-	} else {
-		sf_error ("Need output: partial zero-offset sections");
-	}
+    if ( NULL != sf_getstring("aux") ) {
+	/* output file containing semblance measure of CIGs stacking */ 
+	auxFile  = sf_output ("aux");
+    } else {
+	sf_error ("Need output: partial zero-offset sections");
+    }
 
     if ( NULL != sf_getstring ("vel") ) {
 	/* velocity model file (velocity in m/s) */ 
-		velFile  = sf_input ("vel");
+	velFile  = sf_input ("vel");
     } else { sf_error ("Need input: velocity model"); }
 
     // data params
@@ -96,13 +109,13 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (dataFile, "d2", &recStep_)  ) sf_error ("Need d2= in input");
     if ( !sf_histfloat (dataFile, "o2", &recStart_) ) sf_error ("Need o2= in input");
     
-	if ( !sf_histint   (dataFile, "n3", &shotNum_)   ) sf_error ("Need n3= in input");
+    if ( !sf_histint   (dataFile, "n3", &shotNum_)   ) sf_error ("Need n3= in input");
     if ( !sf_histfloat (dataFile, "d3", &shotStep_)  ) sf_error ("Need d3= in input");
     if ( !sf_histfloat (dataFile, "o3", &shotStart_) ) sf_error ("Need o3= in input");
 
-	// velocity params
+    // velocity params
 
-	if ( !sf_histint   (velFile, "n1", &vtNum_)   ) sf_error ("Need n1= in input");
+    if ( !sf_histint   (velFile, "n1", &vtNum_)   ) sf_error ("Need n1= in input");
     if ( !sf_histfloat (velFile, "d1", &vtStep_)  ) sf_error ("Need d1= in input");
     if ( !sf_histfloat (velFile, "o1", &vtStart_) ) sf_error ("Need o1= in input");
 
@@ -114,10 +127,6 @@ int main (int argc, char* argv[]) {
 //    if ( !sf_histint   (dataFile, "n4", &dp.yNum)   ) sf_error ("Need n4= in input");
 //    if ( !sf_histfloat (dataFile, "d4", &dp.yStep)  ) sf_error ("Need d4= in input");
 //    if ( !sf_histfloat (dataFile, "o4", &dp.yStart) ) sf_error ("Need o4= in input");
-
-    //
-    char* corUnit;
-    char* unit;
 	
     // data
     // time - in ms
@@ -131,162 +140,162 @@ int main (int argc, char* argv[]) {
     if ( strcmp (corUnit, unit) ) { shotStep_ *= 1000; shotStart_ *= 1000; }
 
     // offset - in m
- //   corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit4"); if (!unit) sf_error ("unit4 in data file is not defined");
+    //   corUnit = (char*) "m"; unit = sf_histstring (dataFile, "unit4"); if (!unit) sf_error ("unit4 in data file is not defined");
 //    if ( strcmp (corUnit, unit) ) { dp.hStep *= 1000; dp.hStart *= 1000; }
 
     if ( !sf_getfloat ("po",    &pStart_) ) pStart_ = shotStart_;
     /* start position in stack section */
-	if ( !sf_getint ("pn", &pNum_) ) pNum_ = recNum_;
+    if ( !sf_getint ("pn", &pNum_) ) pNum_ = recNum_;
     /* number of positions in stack section */
-	if (!pNum_) {sf_warning ("vn value is changed to 1"); pNum_ = recNum_;}
+    if (!pNum_) {sf_warning ("vn value is changed to 1"); pNum_ = recNum_;}
     if ( !sf_getfloat ("pd",    &pStep_) ) pStep_ = recStep_;
     /* increment of positions in stack section */
-	if (!pStep_) {sf_warning ("pd value is changed to 50"); pStep_ = recStep_;}
+    if (!pStep_) {sf_warning ("pd value is changed to 50"); pStep_ = recStep_;}
 
     if ( !sf_getint ("wh",   &wh_) )   wh_ = 11;
-	/* height of a vertical window for semblance calculation */
-	if (!wh_) {sf_warning ("vertical window size is changed to 1"); wh_ = 1;}
+    /* height of a vertical window for semblance calculation */
+    if (!wh_) {sf_warning ("vertical window size is changed to 1"); wh_ = 1;}
 
     sf_putint    (outFile, "n1", tNum_);
-	sf_putint    (outFile, "n2", pNum_);
-	sf_putint    (outFile, "n3", 1);
+    sf_putint    (outFile, "n2", pNum_);
+    sf_putint    (outFile, "n3", 1);
     sf_putfloat  (outFile, "d1", tStep_); 
-	sf_putfloat  (outFile, "d2", pStep_);
-	sf_putint    (outFile, "d3", 10);
+    sf_putfloat  (outFile, "d2", pStep_);
+    sf_putint    (outFile, "d3", 10);
     sf_putfloat  (outFile, "o1", tStart_); 
-	sf_putfloat  (outFile, "o2", pStart_);
-	sf_putfloat  (outFile, "o3", 0);
+    sf_putfloat  (outFile, "o2", pStart_);
+    sf_putfloat  (outFile, "o3", 0);
     sf_putstring (outFile, "label1", "time");
-	sf_putstring (outFile, "label2", "inline"); 
-	sf_putstring (outFile, "unit2",  "m"); 
+    sf_putstring (outFile, "label2", "inline"); 
+    sf_putstring (outFile, "unit2",  "m"); 
 
     sf_putint    (auxFile, "n1", tNum_);
-	sf_putint    (auxFile, "n2", pNum_);
-	sf_putint    (auxFile, "n3", 1);
+    sf_putint    (auxFile, "n2", pNum_);
+    sf_putint    (auxFile, "n3", 1);
     sf_putfloat  (auxFile, "d1", tStep_); 
-	sf_putfloat  (auxFile, "d2", pStep_);
-	sf_putint    (auxFile, "d3", 10);
+    sf_putfloat  (auxFile, "d2", pStep_);
+    sf_putint    (auxFile, "d3", 10);
     sf_putfloat  (auxFile, "o1", tStart_); 
-	sf_putfloat  (auxFile, "o2", pStart_);
-	sf_putfloat  (auxFile, "o3", 0);
+    sf_putfloat  (auxFile, "o2", pStart_);
+    sf_putfloat  (auxFile, "o3", 0);
     sf_putstring (auxFile, "label1", "time");
-	sf_putstring (auxFile, "label2", "inline");
-	sf_putstring (auxFile, "unit2",  "m"); 
+    sf_putstring (auxFile, "label2", "inline");
+    sf_putstring (auxFile, "unit2",  "m"); 
 
-	const int zoSize = pNum_ * tNum_;
-	const int dataSize = shotNum_ * recNum_ * tNum_;
-	const int tNumRed = tNum_ - 2;
-	const int velSize = vtNum_ * vxNum_;	
+    zoSize = pNum_ * tNum_;
+    dataSize = shotNum_ * recNum_ * tNum_;
+    tNumRed = tNum_ - 2;
+    velSize = vtNum_ * vxNum_;	
 
-    float* zo    = sf_floatalloc (zoSize);
-    float* zoSq  = sf_floatalloc (zoSize);
-    float* semb  = sf_floatalloc (zoSize);
-    int*   count = sf_intalloc (zoSize);
+    zo    = sf_floatalloc (zoSize);
+    zoSq  = sf_floatalloc (zoSize);
+    semb  = sf_floatalloc (zoSize);
+    count = sf_intalloc (zoSize);
 
-    float* velModel = sf_floatalloc (velSize);
+    velModel = sf_floatalloc (velSize);
     sf_floatread (velModel, velSize, velFile);
 
-	float* data = sf_floatalloc (dataSize);
+    data = sf_floatalloc (dataSize);
     sf_floatread (data, dataSize, dataFile);
 
-	memset ( zo,    0, zoSize * sizeof (float) );   
+    memset ( zo,    0, zoSize * sizeof (float) );   
     memset ( zoSq,  0, zoSize * sizeof (float) );   
     memset ( semb,  0, zoSize * sizeof (float) );   
-	memset ( count, 0, zoSize * sizeof (int)   );   
+    memset ( count, 0, zoSize * sizeof (int)   );   
 
-	// loop over shots
-	for (int is = 0; is < shotNum_; ++is) {				
-	    sf_warning ("shot %d of %d;", is + 1, shotNum_);	
-		const float shotPos = shotStart_ + shotStep_ * is;
-		// loop over receivers
-		for (int ir = 0; ir < recNum_; ++ir) {						
-			const float curOffset = recStart_ + recStep_ * ir;
-			const float halfOffset = curOffset / 2.f;
-			const float fabsOffset = fabs (curOffset);
-			const float offsetSq = curOffset * halfOffset;
-			const int forDataInd = (is * recNum_ + ir) * tNum_;
+    // loop over shots
+    for (is = 0; is < shotNum_; ++is) {				
+	sf_warning ("shot %d of %d;", is + 1, shotNum_);	
+	shotPos = shotStart_ + shotStep_ * is;
+	// loop over receivers
+	for (ir = 0; ir < recNum_; ++ir) {						
+	    curOffset = recStart_ + recStep_ * ir;
+	    halfOffset = curOffset / 2.f;
+	    fabsOffset = fabs (curOffset);
+	    offsetSq = curOffset * halfOffset;
+	    forDataInd = (is * recNum_ + ir) * tNum_;
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif					
-			for (int ip = 0; ip < pNum_; ++ip) {
-				const float curPos = pStart_ + ip * pStep_;
-				const float l0 = curPos - shotPos;			
-				if (fabsOffset <= fabs (l0) || curOffset * l0 <= 0) continue;
-				const int vxInd = vtNum_ * (curPos - vxStart_) / vxStep_;
-				const float forA = 4 * l0 * (curOffset - l0);
+	    for (ip = 0; ip < pNum_; ++ip) {
+		curPos = pStart_ + ip * pStep_;
+		l0 = curPos - shotPos;			
+		if (fabsOffset <= fabs (l0) || curOffset * l0 <= 0) continue;
+		vxInd = vtNum_ * (curPos - vxStart_) / vxStep_;
+		forA = 4 * l0 * (curOffset - l0);
 
-				for (int it = 0; it < tNum_; ++it) {	
-					const float t0 = tStart_ + it * tStep_;
+		for (it = 0; it < tNum_; ++it) {	
+		    t0 = tStart_ + it * tStep_;
 
-					// get velocity
-					const int vtInd = (t0 - vtStart_) / vtStep_;
-					const int vInd  = vxInd + vtInd;
-					const float vel = velModel [vInd];
-					// get time
-					const float a = t0 * t0 / forA;
-					const float t = fabsOffset * sqrt (a + 1 / pow (vel, 2) );
+		    // get velocity
+		    vtInd = (t0 - vtStart_) / vtStep_;
+		    vInd  = vxInd + vtInd;
+		    vel = velModel [vInd];
+		    // get time
+		    a = t0 * t0 / forA;
+		    t = fabsOffset * sqrt (a + 1 / pow (vel, 2) );
 
-					// calc curve limits
-					const float forLim = offsetSq / (vel * t);
-					const float limitLeft  = halfOffset - forLim;
-					const float limitRight = halfOffset + forLim;					
-					if (l0 < limitLeft || l0 > limitRight) continue;
+		    // calc curve limits
+		    forLim = offsetSq / (vel * t);
+		    limitLeft  = halfOffset - forLim;
+		    limitRight = halfOffset + forLim;					
+		    if (l0 < limitLeft || l0 > limitRight) continue;
 
-					const int tInd = (t - tStart_) / tStep_;
-					if (tInd < 0 || tInd > tNumRed) continue; 
+		    tInd = (t - tStart_) / tStep_;
+		    if (tInd < 0 || tInd > tNumRed) continue; 
 
-					const float bef = (t - tInd * tStep_) / tStep_;
-					const float aft = 1.f - bef;
+		    bef = (t - tInd * tStep_) / tStep_;
+		    aft = 1.f - bef;
 
-					const int dataInd = forDataInd + tInd;
-					const float sample = data [dataInd] * aft + data [dataInd + 1] * bef;
+		    dataInd = forDataInd + tInd;
+		    sample = data [dataInd] * aft + data [dataInd + 1] * bef;
 
-					const int indZO   = ip * tNum_ + it;
-					zo    [indZO] += sample;
-					zoSq  [indZO] += sample*sample;
-					count [indZO] += 1;									
-				}
-			}
+		    indZO   = ip * tNum_ + it;
+		    zo    [indZO] += sample;
+		    zoSq  [indZO] += sample*sample;
+		    count [indZO] += 1;									
 		}
+	    }
 	}
-	// semblance calculation
-	const int vwhalf = wh_ / 2;
-	for (int ip = 0; ip < pNum_; ++ip) {
-		const int ts = ip * tNum_;
+    }
+    // semblance calculation
+    vwhalf = wh_ / 2;
+    for (ip = 0; ip < pNum_; ++ip) {
+	ts = ip * tNum_;
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif					
-		for (int it = 0; it < tNum_; ++it) {	
+	for (it = 0; it < tNum_; ++it) {	
 
-			float sampleSq = 0.f;	
-			float sqSample = 0.f;
+	    sampleSq = 0.f;	
+	    sqSample = 0.f;
 
-			int totalCount = 0;
+	    totalCount = 0;
 
-			for (int ic = 0, iw = it - vwhalf; ic < wh_; ++ic, ++iw) {
-				if (iw < 0 || iw > tNumRed) continue;
-				const int ind = ts + iw;
-				sampleSq   += pow (zo [ind], 2);
-				sqSample   += zoSq [ind];
-				if (totalCount < count [ind]) totalCount = count [ind];
-			}
-			const float curSemb = sqSample && totalCount ? sampleSq / ( totalCount * sqSample ) : 0.f;
-			semb [ts + it] = curSemb;
-		}
-	}	
+	    for (ic = 0, iw = it - vwhalf; ic < wh_; ++ic, ++iw) {
+		if (iw < 0 || iw > tNumRed) continue;
+		ind = ts + iw;
+		sampleSq   += pow (zo [ind], 2);
+		sqSample   += zoSq [ind];
+		if (totalCount < count [ind]) totalCount = count [ind];
+	    }
+	    curSemb = sqSample && totalCount ? sampleSq / ( totalCount * sqSample ) : 0.f;
+	    semb [ts + it] = curSemb;
+	}
+    }	
 
-	int offset = 0;
-	sf_seek (outFile, offset, SEEK_SET);
-	sf_floatwrite (zo, zoSize, outFile);
-	sf_seek (auxFile, offset, SEEK_SET);
-	sf_floatwrite (semb, zoSize, auxFile);
+    offset = 0;
+    sf_seek (outFile, offset, SEEK_SET);
+    sf_floatwrite (zo, zoSize, outFile);
+    sf_seek (auxFile, offset, SEEK_SET);
+    sf_floatwrite (semb, zoSize, auxFile);
 	
     free (data);
     free (zo);
     free (zoSq);
     free (semb);
     free (count);
-	free (velModel);
+    free (velModel);
 
     sf_fileclose (dataFile);
     sf_fileclose (outFile);
