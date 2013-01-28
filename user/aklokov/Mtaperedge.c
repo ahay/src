@@ -31,7 +31,11 @@ int   yNum;
 
 int length;
 
-int main (int argc, char* argv[]) {
+int main (int argc, char* argv[]) 
+{
+    int surfSize, is, iy, ix, topInd, p, indBot, indLeft, indRight;
+    float *data, *mask, *w1, *w2;
+    float temp;
 
 // Initialize RSF 
     sf_init (argc,argv);
@@ -47,90 +51,90 @@ int main (int argc, char* argv[]) {
     if ( !sf_histint   (dataFile, "n1", &xNum)   ) sf_error ("Need n1= in input");
     if ( !sf_histint   (dataFile, "n2", &yNum)   ) sf_error ("Need n2= in input");
 
-	if ( !sf_getint ("len", &length) ) length = 11;
-	/* length of the taper function*/
+    if ( !sf_getint ("len", &length) ) length = 11;
+    /* length of the taper function*/
 
-	const int surfSize = xNum * yNum;
+    surfSize = xNum * yNum;
 
-    float* data = sf_floatalloc (surfSize);
-	float* mask = sf_floatalloc (surfSize);
+    data = sf_floatalloc (surfSize);
+    mask = sf_floatalloc (surfSize);
 
-	float* w1 = sf_floatalloc (surfSize);
-	float* w2 = sf_floatalloc (surfSize);
-	for (int is = 0; is < surfSize; ++is) {
-		w1[is] = 1.f;
-		w2[is] = 1.f;
-	}
+    w1 = sf_floatalloc (surfSize);
+    w2 = sf_floatalloc (surfSize);
+    for (is = 0; is < surfSize; ++is) {
+	w1[is] = 1.f;
+	w2[is] = 1.f;
+    }
 
     sf_floatread (data, surfSize, dataFile);
 
-	for (int is = 0; is < surfSize; ++is) {
-		mask[is] = data[is] ? 1.f : 0.f;
-	}
+    for (is = 0; is < surfSize; ++is) {
+	mask[is] = data[is] ? 1.f : 0.f;
+    }
 
-	// TOP - BOTTOM
-	for (int iy = 0; iy < yNum; ++iy) {
-		// top
-		int ix = 0;
-		while (!mask[iy*xNum + ix] && ix < xNum) ++ix;
-		if (ix != xNum) {
-			int topInd = ix;	
-			for (int p = 0; p < length && ix < xNum; ++p, ++ix) {
-				float temp = M_PI - M_PI * (ix - topInd) * 1.f / length;
-				w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-			}  		
-		}
-		// bottom
-		ix = xNum - 1;
-		while (!mask[iy*xNum + ix] && ix > -1) --ix;
-		if (ix > -1) {
-			int indBot = ix;	
+    // TOP - BOTTOM
+    for (iy = 0; iy < yNum; ++iy) {
+	// top
+	ix = 0;
+	while (!mask[iy*xNum + ix] && ix < xNum) ++ix;
+	if (ix != xNum) {
+	    topInd = ix;	
+	    for (p = 0; p < length && ix < xNum; ++p, ++ix) {
+		temp = SF_PI - SF_PI * (ix - topInd) * 1.f / length;
+		w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+	    }  		
+	}
+	// bottom
+	ix = xNum - 1;
+	while (!mask[iy*xNum + ix] && ix > -1) --ix;
+	if (ix > -1) {
+	    indBot = ix;	
 	
-			for (int p = 0; p < length && ix > -1; ++p, --ix) {
-				float temp = M_PI - M_PI * (ix - indBot) * 1.f / length;
-				w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-			}  		
-		}
+	    for (p = 0; p < length && ix > -1; ++p, --ix) {
+		temp = SF_PI - SF_PI * (ix - indBot) * 1.f / length;
+		w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+	    }  		
 	}
+    }
 
-	// LEFT - RIGHT
-	for (int ix = 0; ix < xNum; ++ix) {
-		// left
-		int iy = 0;
-		while (!mask[iy*xNum + ix] && iy < yNum) ++iy;
-		if (iy != yNum) {
-			int indLeft = iy;	
-			for (int p = 0; p < length && iy < yNum; ++p, ++iy) {
-				float temp = M_PI - M_PI * (iy - indLeft) * 1.f / length;
-				w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-			}  		
-		}
-		// right
-		iy = yNum - 1;
-		while (!mask[iy*xNum + ix] && iy > -1) --iy;
-		if (iy > -1) {
-			int indRight = iy;	
+    // LEFT - RIGHT
+    for (ix = 0; ix < xNum; ++ix) {
+	// left
+	iy = 0;
+	while (!mask[iy*xNum + ix] && iy < yNum) ++iy;
+	if (iy != yNum) {
+	    indLeft = iy;	
+	    for (p = 0; p < length && iy < yNum; ++p, ++iy) {
+		temp = SF_PI - SF_PI * (iy - indLeft) * 1.f / length;
+		w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+	    }  		
+	}
+	// right
+	iy = yNum - 1;
+	while (!mask[iy*xNum + ix] && iy > -1) --iy;
+	if (iy > -1) {
+	    indRight = iy;	
 	
-			for (int p = 0; p < length && iy > -1; ++p, --iy) {
-				float temp = M_PI - M_PI * (iy - indRight) * 1.f / length;
-				w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-			}  		
-		}
+	    for (p = 0; p < length && iy > -1; ++p, --iy) {
+		temp = SF_PI - SF_PI * (iy - indRight) * 1.f / length;
+		w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+	    }  		
 	}
+    }
 
-	for (int is = 0; is < surfSize; ++is) {
-		mask[is] *= (w1[is] * w2[is]);
-	}
-	sf_floatwrite (mask, surfSize, maskFile);
+    for (is = 0; is < surfSize; ++is) {
+	mask[is] *= (w1[is] * w2[is]);
+    }
+    sf_floatwrite (mask, surfSize, maskFile);
 
-	free (data);
-	free (mask);
+    free (data);
+    free (mask);
 
-	free (w1);
-	free (w2);
+    free (w1);
+    free (w2);
 
     sf_fileclose (dataFile);
     sf_fileclose (maskFile);
 
-	return 0;
+    return 0;
 }
