@@ -297,6 +297,7 @@ anomaly. The white circle a high one.
 
 
 \section{NORSAR WAVEFRONT CONSTRUCTION}
+\inputdir{XFig}
 
 The main idea behind the ``NORSAR'' method \cite[]{Vinje}
 is to compute ray parameters 
@@ -332,7 +333,7 @@ produces a fairly constant density of rays over C1 models
 zones with high geometrical spreading where conventional ray tracing
 have shadow zones.
 
-\passivesideplot {norsar1}{}{.}{New wavefronts (dashed lines)  are
+\sideplot{norsar1}{width=\textwidth}{New wavefronts (dashed lines)  are
 constructed from the previous wavefront (solid line), by ray
 tracing a fix
 number of time steps. New rays are interpolated between points
@@ -376,7 +377,7 @@ The traveltime at the receiver is then estimated to be:
 %
 where $t$ is the traveltime to the old wavefront.
 
-\passivesideplot {norsar2}{}{.}{The new wavefront crosses itself.
+\sideplot{norsar2}{width=\textwidth}{The new wavefront crosses itself.
 If only first arrivals are wanted, the points behind the crossing
 (points no. 7, 8, 9) are removed from the wavefront.
 Adapted from \cite{Vinje}.
@@ -395,7 +396,7 @@ run over a highly contrasted velocity model. The velocity model
 is a pair of Gaussian bell curves. The distance between
 the peaks is 48 meters with a drop of 4 km/s in velocity.
 
-\passivesideplot {norsar3}{}{.}{Traveltimes and amplitudes are found
+\sideplot{norsar3}{width=\textwidth}{Traveltimes and amplitudes are found
 at receivers by interpolating within each ray cell. The ray cell is
 defined by $Ray_{1}$ and $Ray_{2}$, and by the new wavefront and
 the previous wavefront.
@@ -414,7 +415,7 @@ traveltimes, amplitudes, etc.) does not come from a
 posteriori interpolation between single, separate rays,
 but instead directly from previously constructed wavefronts.
 
-\passivesideplot {norsar4}{}{.}{Amplitudes are computed from
+\sideplot {norsar4}{width=\textwidth}{Amplitudes are computed from
 the previous wavefront. The geometrical spreading factor
 gives the ratio between the amplitude $A_{i}$ at the previous
 wavefront and the new amplitude
