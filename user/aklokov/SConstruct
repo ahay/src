@@ -15,13 +15,14 @@ revent
 
 mpi_progs = ''
 
-ccprogs = 'tmigda dmigda diparti dpi'
+ccprogs = 'tmigda dmigda diparti itrace'
 
 subs = '''
 hwt2d support sembler
 tmigratorBase tmigrator2D tmigrator3D 
 dmigratorBase dmigrator2D
 curveDefinerBase curveDefinerDipOffset curveDefinerDipOffset3D
+iTracer2D
 '''
 
 try:  # distributed version
