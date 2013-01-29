@@ -63,32 +63,8 @@ Flow('tshots','tline shotmask',
      put o3=100 d3=1
      ''')
 
-#############################
-# Elevation profile, datuming
-#############################
+Plot('shots','grey title=Shots gainpanel=all pclip=90',view=1)
 
-Flow('spelev','../line31-81/spnElev.txt',
-     '''
-     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
-     dd form=native
-     ''',stdin=0)
-Plot('spelev',
-     '''
-     dd type=complex |
-     window |
-     graph wanttitle=n wantaxis=n symbol=o plotcol=5
-     min2=75 max2=125 min1=85 max1=165
-     ''')
-
-Flow('coord','spelev','window n1=1')
-Flow('elev','spelev coord',
-     'window f1=1 | invbin1 eps=0 head=${SOURCES[1]} x0=85 dx=1 nx=81')
-Plot('elev',
-     '''
-     graph title=Elevation label1=Shot 
-     min2=75 max2=125 min1=85 max1=165 
-     ''')
-Result('elev','elev spelev','Overlay')
 
 ###########################
 # Previous Stack
@@ -123,5 +99,32 @@ Result('zoompwd','pwd',
        window max1=3 |
        grey title="Zoom PWD" pclip=90
        ''')
+
+#############################
+# Elevation profile, datuming
+#############################
+
+Flow('spelev','../line31-81/spnElev.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
+     dd form=native
+     ''',stdin=0)
+Plot('spelev',
+     '''
+     dd type=complex |
+     window |
+     graph wanttitle=n wantaxis=n symbol=o plotcol=5
+     min2=75 max2=125 min1=85 max1=165
+     ''')
+
+Flow('coord','spelev','window n1=1')
+Flow('elev','spelev coord',
+     'window f1=1 | invbin1 eps=0 head=${SOURCES[1]} x0=85 dx=1 nx=81')
+Plot('elev',
+     '''
+     graph title=Elevation label1=Shot 
+     min2=75 max2=125 min1=85 max1=165 
+     ''')
+Result('elev','elev spelev','Overlay')
 
 End()

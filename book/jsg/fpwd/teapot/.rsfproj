@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfintbin', 'sfwindow', 'sfmath', 'sfcat', 'sfput', 'sftransp', 'sfbin', 'sfbyte', 'sfgrey3', 'sfdd', 'sfseislet', 'sfthreshold', 'sfpwd', 'sfstack', 'sfcomp']
+data=['PRIVATE']
+size= 1737075320

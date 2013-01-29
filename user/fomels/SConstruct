@@ -26,7 +26,7 @@ ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 pyprogs = 'cgi fft results zoom'
 pymods = 'conjdir conjgrad dottest steepd'
 
-libsrc = 'apfilt dijkstra predict predk pwd pwdsl repeat2 seislet'
+libsrc = 'apfilt dijkstra mask6 predict predk pwd pwdsl repeat2 seislet'
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')

@@ -116,7 +116,7 @@ Flow ('hdrfile.txt','line',
 # this file had dummy values like -999 or -999999 for dummy traces
 Flow ('hdrfile1.txt',
       'InterpText.py spnElev.txt recnoSpn.txt hdrfile.txt',
-      '${SOURCES}',stdin=0)
+      './${SOURCES}',stdin=0)
 
 # convert the asci file header1.txt to binary (sushw requires binary input)
 Flow ('binary_hdrfile1.dat','hdrfile1.txt',

@@ -1,0 +1,4 @@
+from rsf.tex import *
+
+End(color='fdip dip diff fdip1 fdip2')
+

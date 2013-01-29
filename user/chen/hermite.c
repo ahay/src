@@ -29,7 +29,7 @@ void hermite_init(int m)
 {
 	int i1, i2;
 	n = m;
-	c = sf_floatalloc2(n+1, n+1);
+	c = sf_intalloc2(n+1, n+1);
 
 	c[0][0] = 1;
 	c[1][0] = 0;	c[1][1] = 1;

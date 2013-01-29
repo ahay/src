@@ -24,7 +24,7 @@
 #endif
 
 static int nw, n1, n2;
-static float ***u0, ***u1, **v;
+static float ***u0, ***u1; /* **v; */
 
 static void coh1dip_normalize(float *d, float **dn)
 // normalize a trace

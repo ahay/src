@@ -24,45 +24,45 @@
 
 int main(int argc, char* argv[])
 {
-	int n1, n2, n3, i1, i2 ,i3;
-	float o1, d1;
-	float **u1, *u2, c;
+    int n1, n2, n3, i1, i2 ,i3;
+    float o1, d1;
+    float **u1, *u2, c=0.0;
 
-	sf_file in, out;
+    sf_file in, out;
 
-	sf_init(argc,argv);
+    sf_init(argc,argv);
 
     in = sf_input("in");  	/* seismic age */
     out = sf_output ("out"); 	/*  */
 
 
-	if (!sf_histint(in, "n1", &n1)) sf_error("n1 error");
-	if (!sf_histint(in, "n2", &n2)) sf_error("n2 error");
-	if (!sf_histint(in, "n3", &n3)) n3=1;
-	if (!sf_histfloat(in, "o1", &o1)) sf_error("o1");
-	if (!sf_histfloat(in, "d1", &d1)) sf_error("d1");
-	sf_unshiftdim(in,out,1);
+    if (!sf_histint(in, "n1", &n1)) sf_error("n1 error");
+    if (!sf_histint(in, "n2", &n2)) sf_error("n2 error");
+    if (!sf_histint(in, "n3", &n3)) n3=1;
+    if (!sf_histfloat(in, "o1", &o1)) sf_error("o1");
+    if (!sf_histfloat(in, "d1", &d1)) sf_error("d1");
+    sf_unshiftdim(in,out,1);
 
-	u1 = sf_floatalloc2(n1, n2);
-	u2 = sf_floatalloc(n2);
+    u1 = sf_floatalloc2(n1, n2);
+    u2 = sf_floatalloc(n2);
 
-	for(i3=0; i3<n3; i3++)
+    for(i3=0; i3<n3; i3++)
+    {
+	sf_floatread(u1[0], n1*n2, in);
+	for(i2=0; i2<n2; i2++)
 	{
-		sf_floatread(u1[0], n1*n2, in);
-		for(i2=0; i2<n2; i2++)
-		{
-			for(i1=0; i1<n1; i1++)
-				if(u1[i2][i1] >= c) break;
-			u2[i2] = d1*i1+o1;
-		}
-		sf_floatwrite(u2, n2, out);
+	    for(i1=0; i1<n1; i1++)
+		if(u1[i2][i1] >= c) break;
+	    u2[i2] = d1*i1+o1;
 	}
+	sf_floatwrite(u2, n2, out);
+    }
 
-	free(u1[0]);
-	free(u1);
-	free(u2);
+    free(u1[0]);
+    free(u1);
+    free(u2);
 
-	return 0;
+    return 0;
 }
 
 
