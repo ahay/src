@@ -23,6 +23,12 @@ int sampler_construct(SAMPLER * s,
     err=traceterm_construct(&(s->t),par,
 			    /* sindex[0],mindex[0], */
 			    load,hdrkey,datakey,stream);
+    if (err) {
+      fprintf(stream,"Error: sampler_construct from traceterem_construct, err=%d\n",err);
+      fprintf(stream,"  hdrkey=%s datakey=%s load=%d\n",hdrkey,datakey,load);
+      fprintf(stream,"  PARARRAY:\n");
+      ps_printall(*par,stream);
+    }
     /*  fprintf(stderr,"EXIT SAMPLER_CONSTRUCT err=%d\n",err);*/
     return err;
 }  

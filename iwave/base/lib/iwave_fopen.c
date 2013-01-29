@@ -47,8 +47,9 @@ FILE * iwave_fopen(char ** name,
     for (fpr=filestatlist; fpr != ((struct filestat *)NULL); 
 	 fpr = fpr->nextfpr) {
       if (!(strcmp(proto,fpr->nm)) &&
-	  (fpr->istmp==0) &&
-	  (fpr->md[0]=='r')) break;
+	  /*	  (fpr->istmp==0) && 
+	  (fpr->md[0]=='r')*/
+	  (strcmp("w",fpr->md))) break;
       oldfpr=&fpr->nextfpr;
     }
 
