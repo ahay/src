@@ -88,6 +88,29 @@ int compare_grid(const grid g1, const grid g2) {
   return 0;
 }
 
+int compatible_grid(const grid g1, const grid g2) {
+  int i;
+  ireal rtest;
+  int itest;
+  /* compatibility: 
+     dim must match
+     gdim must match
+     d's must match, to within specified tolerance
+     difference of o's must be int multiple of d
+  */
+  if (g1.gdim != g2.gdim) return 1;
+  if (g1.dim  != g2.dim ) return 2;
+  for (i=0;i<g1.gdim;i++) { 
+    if (iwave_abs(g1.axes[i].d-g2.axes[i].d) > TOL*g1.axes[i].d) return 3;
+    rtest = g1.axes[i].o-g2.axes[i].o;
+    itest = rtest/g1.axes[i].d;
+    if ((iwave_abs((itest-1)*g1.axes[i].d-rtest) > TOL*g1.axes[i].d) &&
+	(iwave_abs((itest+0)*g1.axes[i].d-rtest) > TOL*g1.axes[i].d) &&
+	(iwave_abs((itest+1)*g1.axes[i].d-rtest) > TOL*g1.axes[i].d)) return 4;
+  }
+  return 0;
+}
+
 int get_datasize_grid(grid g) {
   _IPNT _n;
   int i;

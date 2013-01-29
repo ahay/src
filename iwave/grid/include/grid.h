@@ -5,7 +5,7 @@
    from numeric limits. use: two grid locations
    x and y are identified if abs(x-y) < TOL*d.
 */
-#define TOL 0.01
+#define TOL 100.0*REAL_EPS
   
 #include "utils.h"
 
@@ -109,21 +109,23 @@ void print_grid(grid a);
 void fprint_grid(FILE * fp, grid a);
   
 /** compare two grids by comparing their axes 
-@param[in] g1 (grid) - first grid
-@param[in] g2 (grid) - second grid
 @return 0 if grids same, else 1
 */
 int compare_grid(const grid g1, const grid g2);
-  
+
+/** decide if two grids are compatible, that is, 
+    define sublattices of a common parent lattice
+    @return 0 if compatible, else 1
+*/
+int compatible_grid(const grid g1, const grid g2);
+
 /** get number of physical gridpoints (product of n's)
-@param[in] g (grid) - input grid
-@return product of physical axis lengths
+    @return product of physical axis lengths
  */
 int get_datasize_grid(grid g);
 
 /** get total number of gridpoints (product of n's)
-@param[in] g (grid) - input grid
-@return product of axis lengths
+    @return product of axis lengths
  */
 int get_global_datasize_grid(grid g);
 
@@ -135,36 +137,30 @@ ireal get_global_cellvol_grid(grid g);
 
 /** get total number of records = physical grids within global grid
     (product of n's)
-@param[in] g (grid) - input grid
-@return product of nonphysical axis lengths
+    @return product of nonphysical axis lengths
  */
 int get_panelnum_grid(grid g);
 
 /** get axis length array 
-@param[in] g (grid) - input grid
-@param[out] n (IPNT) - axis lengths
+    @param[out] n (IPNT) - axis lengths
 */
 void get_n(IPNT n, grid g);
 /** get step array 
-@param[in] g (grid) - input grid
-@param[out] d (RPNT) - steps
+    @param[out] d (RPNT) - steps
 */
 void get_d(_RPNT d, grid g);
 /** get grid origin coordinate array 
-@param[in] g (grid) - input grid
-@param[out] o (RPNT) - grid origin
+    @param[out] o (RPNT) - grid origin
 */
 void get_o(_RPNT o, grid g);
 /** get array of indices of grid origin in global grid 
-@param[in] g (grid) - input grid
-@param[out] gs (IPNT) - global indices of grid origin
+    @param[out] gs (IPNT) - global indices of grid origin
 */
 void get_gs(IPNT gs, grid g);
 
 /** returns axis order array, i.e. axis index as a function of id,
     rather than id as a function of axis index (which is stored). 
-@param[in] g (grid) - input 9grid
-@param[out] a (IPNT) - axis order array
+    @param[out] a (IPNT) - axis order array
 */
 void get_ord(IPNT a, grid g);
 

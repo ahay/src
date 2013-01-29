@@ -271,9 +271,11 @@ FILE * iwave_fopen(char ** name,
     /* match if 
        - filenames match, and
        - modes match, and
-       - either no prototypes, or prototypes match. and
+       - either no prototype, or prototypes match. and
        - inuse flag unset
        MOD OF 15.01.13: disregard inuse - return copy of pointer regardless
+       MOD OF 15.01.13: r+ and w+ are mode wildcards for already opened file
+       MOD OF 26.01.13: NULL proto is a prototype wildcard for already opened file 
     */
     oldfpr=&filestatlist;
     for (fpr=filestatlist; fpr != (struct filestat *)NULL; 
@@ -283,14 +285,13 @@ FILE * iwave_fopen(char ** name,
 	  (
 	  !(strcmp(mode,fpr->md)) ||
 	  !(strcmp(fpr->md,"r+")) ||
-	  !(strcmp(fpr->md,"w+")) ||
-	  (!(strcmp(fpr->md,"r")) && !(strcmp(mode,"r+"))) ||
-	  (!(strcmp(fpr->md,"w")) && !(strcmp(mode,"w+")))
+	  !(strcmp(fpr->md,"w+")) 
 	   ) &&
 	  (
 	   ((proto) && (fpr->pr) &&
 	   !(strcmp(proto,fpr->pr))) ||
-	   ((!proto) && (!(fpr->pr)))
+	   /*	   ((!proto) && (!(fpr->pr)))*/
+	   !proto
 	   )
 	  /* &&
 	  (!fpr->inuse)
