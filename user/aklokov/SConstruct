@@ -15,7 +15,7 @@ revent
 
 mpi_progs = ''
 
-ccprogs = 'tmigda dmigda diparti'
+ccprogs = 'tmigda dmigda diparti dpi'
 
 subs = '''
 hwt2d support sembler
