@@ -46,7 +46,7 @@ SuiteSparse_long fdprep_n(const int pad1, const int pad2)
 	    break;
 
 	case '9':
-	    n = (pad1-4)*(pad2-4);
+	    n = (pad1-2)*(pad2-2);
 	    break;
 
 	case 'j':
@@ -54,7 +54,7 @@ SuiteSparse_long fdprep_n(const int pad1, const int pad2)
 	    break;
 
 	case 'c':
-	    n = (pad1-4)*(pad2-4);
+	    n = (pad1-2)*(pad2-2);
 	    break;
 
 	default:
@@ -84,16 +84,16 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 	    break;
 
 	case '9':
-	    for (j=2; j < pad2-2; j++) {
-		for (i=2; i < pad1-2; i++) {
-		    if (i > 3) nz++;
+	    for (j=1; j < pad2-1; j++) {
+		for (i=1; i < pad1-1; i++) {
 		    if (i > 2) nz++;
+		    if (i > 1) nz++;
+		    if (i < pad1-2) nz++;
 		    if (i < pad1-3) nz++;
-		    if (i < pad1-4) nz++;
-		    if (j > 3) nz++;
 		    if (j > 2) nz++;
+		    if (j > 1) nz++;
+		    if (j < pad2-2) nz++;
 		    if (j < pad2-3) nz++;
-		    if (j < pad2-4) nz++;
 		    nz++;
 		}
 	    }
@@ -116,32 +116,32 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 	    break;
 
 	case 'c':
-	    for (j=2; j < pad2-2; j++) {
-		for (i=2; i < pad1-2; i++) {
+	    for (j=1; j < pad2-1; j++) {
+		for (i=1; i < pad1-1; i++) {
+		    if (i > 1 && j > 1) nz++;
+		    if (i > 1) nz++;
+		    if (i > 1 && j < pad2-2) nz++;
+		    if (j < pad2-2) nz++;
+		    if (i < pad1-2 && j < pad2-2) nz++;
+		    if (i < pad1-2) nz++;
+		    if (i < pad1-2 && j > 1) nz++;
+		    if (j > 1) nz++;
 		    if (i > 2 && j > 2) nz++;
+		    if (i > 2 && j > 1) nz++;
 		    if (i > 2) nz++;
+		    if (i > 2 && j < pad2-2) nz++;
 		    if (i > 2 && j < pad2-3) nz++;
+		    if (i > 1 && j < pad2-3) nz++;
 		    if (j < pad2-3) nz++;
+		    if (i < pad1-2 && j < pad2-3) nz++;
 		    if (i < pad1-3 && j < pad2-3) nz++;
+		    if (i < pad1-3 && j < pad2-2) nz++;
 		    if (i < pad1-3) nz++;
+		    if (i < pad1-3 && j > 1) nz++;
 		    if (i < pad1-3 && j > 2) nz++;
+		    if (i < pad1-2 && j > 2) nz++;
 		    if (j > 2) nz++;
-		    if (i > 3 && j > 3) nz++;
-		    if (i > 3 && j > 2) nz++;
-		    if (i > 3) nz++;
-		    if (i > 3 && j < pad2-3) nz++;
-		    if (i > 3 && j < pad2-4) nz++;
-		    if (i > 2 && j < pad2-4) nz++;
-		    if (j < pad2-4) nz++;
-		    if (i < pad1-3 && j < pad2-4) nz++;
-		    if (i < pad1-4 && j < pad2-4) nz++;
-		    if (i < pad1-4 && j < pad2-3) nz++;
-		    if (i < pad1-4) nz++;
-		    if (i < pad1-4 && j > 2) nz++;
-		    if (i < pad1-4 && j > 3) nz++;
-		    if (i < pad1-3 && j > 3) nz++;
-		    if (j > 3) nz++;
-		    if (i > 2 && j > 3) nz++;
+		    if (i > 1 && j > 2) nz++;
 		    nz++;
 		}
 	    }

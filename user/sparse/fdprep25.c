@@ -123,9 +123,9 @@ void fdprep25(const double omega,
 
     /* assemble matrix in triplet form */
     count = 0;
-    for (j=2; j < pad2-2; j++) {
-	for (i=2; i < pad1-2; i++) {
-	    index = (j-2)*(pad1-4)+(i-2);
+    for (j=1; j < pad2-1; j++) {
+	for (i=1; i < pad1-1; i++) {
+	    index = (j-1)*(pad1-2)+(i-1);
 	    
 	    cent = 0.+I*0.;
 
@@ -134,9 +134,9 @@ void fdprep25(const double omega,
 		+0.06181325*(s1[i-1]/s2[j]+s1[i-1]/s2[j-1])/(2.*d2*d2)
 		+0.0424801*pow(omega/pad[j-1][i-1],2.)*(s1[i-1]*s2[j-1]);
 	    
-	    if (i > 2 && j > 2) {
+	    if (i > 1 && j > 1) {
 		Ti[count] = index;
-		Tj[count] = index-1-(pad1-4);
+		Tj[count] = index-1-(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -152,7 +152,7 @@ void fdprep25(const double omega,
 		-0.1389664*(s1[i-1]/s2[j+1])/(4.*d2*d2)
 		+0.108598*pow(omega/pad[j][i-1],2.)*(s1[i-1]*s2[j]);
 	    
-	    if (i > 2) {
+	    if (i > 1) {
 		Ti[count] = index;
 		Tj[count] = index-1;
 		Tx[count] = creal(neib);
@@ -166,9 +166,9 @@ void fdprep25(const double omega,
 		+0.06181325*(s1[i-1]/s2[j]+s1[i-1]/s2[j+1])/(2.*d2*d2)
 		+0.0424801*pow(omega/pad[j+1][i-1],2.)*(s1[i-1]*s2[j+1]);
 	    
-	    if (i > 2 && j < pad2-3) {
+	    if (i > 1 && j < pad2-2) {
 		Ti[count] = index;
-		Tj[count] = index-1+(pad1-4);
+		Tj[count] = index-1+(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -184,9 +184,9 @@ void fdprep25(const double omega,
 		-0.1389664*(s2[j+1]/s1[i+1])/(4.*d1*d1)
 		+0.108598*pow(omega/pad[j+1][i],2.)*(s1[i]*s2[j+1]);
 	    
-	    if (j < pad2-3) {
+	    if (j < pad2-2) {
 		Ti[count] = index;
-		Tj[count] = index+(pad1-4);
+		Tj[count] = index+(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -198,9 +198,9 @@ void fdprep25(const double omega,
 		+0.06181325*(s1[i+1]/s2[j]+s1[i+1]/s2[j+1])/(2.*d2*d2)
 		+0.0424801*pow(omega/pad[j+1][i+1],2.)*(s1[i+1]*s2[j+1]);
 	    
-	    if (i < pad1-3 && j < pad2-3) {
+	    if (i < pad1-2 && j < pad2-2) {
 		Ti[count] = index;
-		Tj[count] = index+1+(pad1-4);
+		Tj[count] = index+1+(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -216,7 +216,7 @@ void fdprep25(const double omega,
 		-0.1389664*(s1[i+1]/s2[j+1])/(4.*d2*d2)
 		+0.108598*pow(omega/pad[j][i+1],2.)*(s1[i+1]*s2[j]);
 	    
-	    if (i < pad1-3) {
+	    if (i < pad1-2) {
 		Ti[count] = index;
 		Tj[count] = index+1;
 		Tx[count] = creal(neib);
@@ -230,9 +230,9 @@ void fdprep25(const double omega,
 		+0.06181325*(s1[i+1]/s2[j]+s1[i+1]/s2[j-1])/(2.*d2*d2)
 		+0.0424801*pow(omega/pad[j-1][i+1],2.)*(s1[i+1]*s2[j-1]);
 	    
-	    if (i < pad1-3 && j > 2) {
+	    if (i < pad1-2 && j > 1) {
 		Ti[count] = index;
-		Tj[count] = index+1-(pad1-4);
+		Tj[count] = index+1-(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -248,9 +248,9 @@ void fdprep25(const double omega,
 		-0.1389664*(s2[j-1]/s1[i+1])/(4.*d1*d1)
 		+0.108598*pow(omega/pad[j-1][i],2.)*(s1[i]*s2[j-1]);
 	    
-	    if (j > 2) {
+	    if (j > 1) {
 		Ti[count] = index;
-		Tj[count] = index-(pad1-4);
+		Tj[count] = index-(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -258,13 +258,13 @@ void fdprep25(const double omega,
 	    }
 
 	    /* left left up up */
-	    neib = 0.007436025*(s2[j-2]/s1[i-1])/(4.*d1*d1)
-		+0.007436025*(s1[i-2]/s2[j-1])/(4.*d2*d2)
-		+0.000206312*pow(omega/pad[j-2][i-2],2.)*(s1[i-2]*s2[j-2]);
+	    if (i > 2 && j > 2) {
+		neib = 0.007436025*(s2[j-2]/s1[i-1])/(4.*d1*d1)
+		    +0.007436025*(s1[i-2]/s2[j-1])/(4.*d2*d2)
+		    +0.000206312*pow(omega/pad[j-2][i-2],2.)*(s1[i-2]*s2[j-2]);
 
-	    if (i > 3 && j > 3) {
 		Ti[count] = index;
-		Tj[count] = index-2-2*(pad1-4);
+		Tj[count] = index-2-2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -272,12 +272,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* left up up */
-	    neib = 0.1389664*(s2[j-1]/s1[i-1])/(4.*d1*d1)
-		+0.00188342*pow(omega/pad[j-1][i-2],2.)*(s1[i-2]*s2[j-1]);
+	    if (i > 2 && j > 1) {
+		neib = 0.1389664*(s2[j-1]/s1[i-1])/(4.*d1*d1)
+		    +0.00188342*pow(omega/pad[j-1][i-2],2.)*(s1[i-2]*s2[j-1]);
 
-	    if (i > 3 && j > 2) {
 		Ti[count] = index;
-		Tj[count] = index-2-(pad1-4);
+		Tj[count] = index-2-(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -287,11 +287,12 @@ void fdprep25(const double omega,
 	    /* up up */
 	    neib = 0.29554905*(s2[j]/s1[i-1])/(4.*d1*d1);
 	    cent += -neib;
-	    neib += -0.007436025*(s1[i-2]/s2[j-1])/(4.*d2*d2)
-		-0.007436025*(s1[i-2]/s2[j+1])/(4.*d2*d2)
-		+0.0041487*pow(omega/pad[j][i-2],2.)*(s1[i-2]*s2[j]);
 
-	    if (i > 3) {
+	    if (i > 2) {
+		neib += -0.007436025*(s1[i-2]/s2[j-1])/(4.*d2*d2)
+		    -0.007436025*(s1[i-2]/s2[j+1])/(4.*d2*d2)
+		    +0.0041487*pow(omega/pad[j][i-2],2.)*(s1[i-2]*s2[j]);
+
 		Ti[count] = index;
 		Tj[count] = index-2;
 		Tx[count] = creal(neib);
@@ -301,12 +302,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* right up up */
-	    neib = 0.1389664*(s2[j+1]/s1[i-1])/(4.*d1*d1)
-		+0.00187765*pow(omega/pad[j+1][i-2],2.)*(s1[i-2]*s2[j+1]);
+	    if (i > 2 && j < pad2-2) {
+		neib = 0.1389664*(s2[j+1]/s1[i-1])/(4.*d1*d1)
+		    +0.00187765*pow(omega/pad[j+1][i-2],2.)*(s1[i-2]*s2[j+1]);
 
-	    if (i > 3 && j < pad2-3) {
 		Ti[count] = index;
-		Tj[count] = index-2+(pad1-4);
+		Tj[count] = index-2+(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -314,13 +315,13 @@ void fdprep25(const double omega,
 	    }
 
 	    /* right right up up */
-	    neib = 0.007436025*(s2[j+2]/s1[i-1])/(4.*d1*d1)
-		+0.007436025*(s1[i-2]/s2[j+1])/(4.*d2*d2)
-		+0.000206312*pow(omega/pad[j+2][i-2],2.)*(s1[i-2]*s2[j+2]);
+	    if (i > 2 && j < pad2-3) {
+		neib = 0.007436025*(s2[j+2]/s1[i-1])/(4.*d1*d1)
+		    +0.007436025*(s1[i-2]/s2[j+1])/(4.*d2*d2)
+		    +0.000206312*pow(omega/pad[j+2][i-2],2.)*(s1[i-2]*s2[j+2]);
 
-	    if (i > 3 && j < pad2-4) {
 		Ti[count] = index;
-		Tj[count] = index-2+2*(pad1-4);
+		Tj[count] = index-2+2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -328,12 +329,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* right right up */
-	    neib = 0.1389664*(s1[i-1]/s2[j+1])/(4.*d2*d2)
-		+0.00188342*pow(omega/pad[j+2][i-1],2.)*(s1[i-1]*s2[j+2]);
+	    if (i > 1 && j < pad2-3) {
+		neib = 0.1389664*(s1[i-1]/s2[j+1])/(4.*d2*d2)
+		    +0.00188342*pow(omega/pad[j+2][i-1],2.)*(s1[i-1]*s2[j+2]);
 
-	    if (i > 2 && j < pad2-4) {
 		Ti[count] = index;
-		Tj[count] = index-1+2*(pad1-4);
+		Tj[count] = index-1+2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -342,14 +343,15 @@ void fdprep25(const double omega,
 
 	    /* right right */
 	    neib = 0.29554905*(s1[i]/s2[j+1])/(4.*d2*d2);
-	    cent += -neib;
-	    neib += -0.007436025*(s2[j+2]/s1[i-1])/(4.*d1*d1)
-		-0.007436025*(s2[j+2]/s1[i+1])/(4.*d1*d1)
-		+0.0041487*pow(omega/pad[j+2][i],2.)*(s1[i]*s2[j+2]);
+	    cent += -neib;	    
 
-	    if (j < pad2-4) {
+	    if (j < pad2-3) {
+		neib += -0.007436025*(s2[j+2]/s1[i-1])/(4.*d1*d1)
+		    -0.007436025*(s2[j+2]/s1[i+1])/(4.*d1*d1)
+		    +0.0041487*pow(omega/pad[j+2][i],2.)*(s1[i]*s2[j+2]);
+
 		Ti[count] = index;
-		Tj[count] = index+2*(pad1-4);
+		Tj[count] = index+2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -357,12 +359,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* right right down */
-	    neib = 0.1389664*(s1[i+1]/s2[j+1])/(4.*d2*d2)
-		+0.00187765*pow(omega/pad[j+2][i+1],2.)*(s1[i+1]*s2[j+2]);
+	    if (i < pad1-2 && j < pad2-3) {
+		neib = 0.1389664*(s1[i+1]/s2[j+1])/(4.*d2*d2)
+		    +0.00187765*pow(omega/pad[j+2][i+1],2.)*(s1[i+1]*s2[j+2]);
 
-	    if (i < pad1-3 && j < pad2-4) {
 		Ti[count] = index;
-		Tj[count] = index+1+2*(pad1-4);
+		Tj[count] = index+1+2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -370,13 +372,13 @@ void fdprep25(const double omega,
 	    }
 
 	    /* right right down down */
-	    neib = 0.007436025*(s2[j+2]/s1[i+1])/(4.*d1*d1)
-		+0.007436025*(s1[i+2]/s2[j+1])/(4.*d2*d2)
-		+0.000206312*pow(omega/pad[j+2][i+2],2.)*(s1[i+2]*s2[j+2]);
+	    if (i < pad1-3 && j < pad2-3) {
+		neib = 0.007436025*(s2[j+2]/s1[i+1])/(4.*d1*d1)
+		    +0.007436025*(s1[i+2]/s2[j+1])/(4.*d2*d2)
+		    +0.000206312*pow(omega/pad[j+2][i+2],2.)*(s1[i+2]*s2[j+2]);
 
-	    if (i < pad1-4 && j < pad2-4) {
 		Ti[count] = index;
-		Tj[count] = index+2+2*(pad1-4);
+		Tj[count] = index+2+2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -384,12 +386,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* right down down */
-	    neib = 0.1389664*(s2[j+1]/s1[i+1])/(4.*d1*d1)
-		+0.00188342*pow(omega/pad[j+1][i+2],2.)*(s1[i+2]*s2[j+1]);
+	    if (i < pad1-3 && j < pad2-2) {
+		neib = 0.1389664*(s2[j+1]/s1[i+1])/(4.*d1*d1)
+		    +0.00188342*pow(omega/pad[j+1][i+2],2.)*(s1[i+2]*s2[j+1]);
 
-	    if (i < pad1-4 && j < pad2-3) {
 		Ti[count] = index;
-		Tj[count] = index+2+(pad1-4);
+		Tj[count] = index+2+(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -399,11 +401,12 @@ void fdprep25(const double omega,
 	    /* down down */
 	    neib = 0.29554905*(s2[j]/s1[i+1])/(4.*d1*d1);
 	    cent += -neib;
-	    neib += -0.007436025*(s1[i+2]/s2[j-1])/(4.*d2*d2)
-		-0.007436025*(s1[i+2]/s2[j+1])/(4.*d2*d2)
-		+0.0041487*pow(omega/pad[j][i+2],2.)*(s1[i+2]*s2[j]);
 
-	    if (i < pad1-4) {
+	    if (i < pad1-3) {
+		neib += -0.007436025*(s1[i+2]/s2[j-1])/(4.*d2*d2)
+		    -0.007436025*(s1[i+2]/s2[j+1])/(4.*d2*d2)
+		    +0.0041487*pow(omega/pad[j][i+2],2.)*(s1[i+2]*s2[j]);
+		
 		Ti[count] = index;
 		Tj[count] = index+2;
 		Tx[count] = creal(neib);
@@ -413,12 +416,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* left down down */
-	    neib = 0.1389664*(s2[j-1]/s1[i+1])/(4.*d1*d1)
-		+0.00187765*pow(omega/pad[j-1][i+2],2.)*(s1[i+2]*s2[j-1]);
+	    if (i < pad1-3 && j > 1) {
+		neib = 0.1389664*(s2[j-1]/s1[i+1])/(4.*d1*d1)
+		    +0.00187765*pow(omega/pad[j-1][i+2],2.)*(s1[i+2]*s2[j-1]);
 
-	    if (i < pad1-4 && j > 2) {
 		Ti[count] = index;
-		Tj[count] = index+2-(pad1-4);
+		Tj[count] = index+2-(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -426,13 +429,13 @@ void fdprep25(const double omega,
 	    }
 
 	    /* left left down down */
-	    neib = 0.007436025*(s2[j-2]/s1[i+1])/(4.*d1*d1)
-		+0.007436025*(s1[i+2]/s2[j-1])/(4.*d2*d2)
-		+0.000206312*pow(omega/pad[j-2][i+2],2.)*(s1[i+2]*s2[j-2]);
+	    if (i < pad1-3 && j > 2) {
+		neib = 0.007436025*(s2[j-2]/s1[i+1])/(4.*d1*d1)
+		    +0.007436025*(s1[i+2]/s2[j-1])/(4.*d2*d2)
+		    +0.000206312*pow(omega/pad[j-2][i+2],2.)*(s1[i+2]*s2[j-2]);
 
-	    if (i < pad1-4 && j > 3) {
 		Ti[count] = index;
-		Tj[count] = index+2-2*(pad1-4);
+		Tj[count] = index+2-2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -440,12 +443,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* left left down */
-	    neib = 0.1389664*(s1[i+1]/s2[j-1])/(4.*d2*d2)
-		+0.00188342*pow(omega/pad[j-2][i+1],2.)*(s1[i+1]*s2[j-2]);
+	    if (i < pad1-2 && j > 2) {
+		neib = 0.1389664*(s1[i+1]/s2[j-1])/(4.*d2*d2)
+		    +0.00188342*pow(omega/pad[j-2][i+1],2.)*(s1[i+1]*s2[j-2]);
 
-	    if (i < pad1-3 && j > 3) {
 		Ti[count] = index;
-		Tj[count] = index+1-2*(pad1-4);
+		Tj[count] = index+1-2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -454,14 +457,15 @@ void fdprep25(const double omega,
 
 	    /* left left */
 	    neib = 0.29554905*(s1[i]/s2[j-1])/(4.*d2*d2);
-	    cent += -neib;
-	    neib += -0.007436025*(s2[j-2]/s1[i-1])/(4.*d1*d1)
-		-0.007436025*(s2[j-2]/s1[i+1])/(4.*d1*d1)
-		+0.0041487*pow(omega/pad[j-2][i],2.)*(s1[i]*s2[j-2]);
+	    cent += -neib;	    
 
-	    if (j > 3) {
+	    if (j > 2) {
+		neib += -0.007436025*(s2[j-2]/s1[i-1])/(4.*d1*d1)
+		    -0.007436025*(s2[j-2]/s1[i+1])/(4.*d1*d1)
+		    +0.0041487*pow(omega/pad[j-2][i],2.)*(s1[i]*s2[j-2]);
+
 		Ti[count] = index;
-		Tj[count] = index-2*(pad1-4);
+		Tj[count] = index-2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -469,12 +473,12 @@ void fdprep25(const double omega,
 	    }
 
 	    /* left left up */
-	    neib = 0.1389664*(s1[i-1]/s2[j-1])/(4.*d2*d2)
-		+0.00187765*pow(omega/pad[j-2][i-1],2.)*(s1[i-1]*s2[j-2]);
+	    if (i > 1 && j > 2) {
+		neib = 0.1389664*(s1[i-1]/s2[j-1])/(4.*d2*d2)
+		    +0.00187765*pow(omega/pad[j-2][i-1],2.)*(s1[i-1]*s2[j-2]);
 
-	    if (i > 2 && j > 3) {
 		Ti[count] = index;
-		Tj[count] = index-1-2*(pad1-4);
+		Tj[count] = index-1-2*(pad1-2);
 		Tx[count] = creal(neib);
 		Tz[count] = cimag(neib);
 
@@ -502,15 +506,15 @@ void fdpad25(const int npml,
 {
     int i, j;
 
-    for (j=2; j < pad2-2; j++) {
-	for (i=2; i < pad1-2; i++) {
+    for (j=1; j < pad2-1; j++) {
+	for (i=1; i < pad1-1; i++) {
 	    if (i < npml || i >= pad1-npml || 
 		j < npml || j >= pad2-npml) {
-		Bx[(j-2)*(pad1-4)+(i-2)] = 0.;
-		Bz[(j-2)*(pad1-4)+(i-2)] = 0.;
+		Bx[(j-1)*(pad1-2)+(i-1)] = 0.;
+		Bz[(j-1)*(pad1-2)+(i-1)] = 0.;
 	    } else {
-		Bx[(j-2)*(pad1-4)+(i-2)] = creal(dat[j-npml][i-npml]);
-		Bz[(j-2)*(pad1-4)+(i-2)] = cimag(dat[j-npml][i-npml]);
+		Bx[(j-1)*(pad1-2)+(i-1)] = creal(dat[j-npml][i-npml]);
+		Bz[(j-1)*(pad1-2)+(i-1)] = cimag(dat[j-npml][i-npml]);
 	    }
 	}
     }
@@ -526,8 +530,8 @@ void fdcut25(const int npml,
 
     for (j=npml; j < pad2-npml; j++) {
 	for (i=npml; i < pad1-npml; i++) {
-	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-2)*(pad1-4)+(i-2)], 
-					   (float) Xz[(j-2)*(pad1-4)+(i-2)]);
+	    dat[j-npml][i-npml] = sf_cmplx((float) Xx[(j-1)*(pad1-2)+(i-1)], 
+					   (float) Xz[(j-1)*(pad1-2)+(i-1)]);
 	}	    
     }
 }
