@@ -16,6 +16,8 @@ public:
 
 private:
 
+	bool getSample (float* data, const float curX, const float curZ, const float curP, float &sample);
+
 	int   zNum_;
 	float zStep_;
 	float zStart_;

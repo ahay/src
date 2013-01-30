@@ -47,6 +47,22 @@ void DepthBackfitMigrator2D::processParialImage (float* piData, float curP, floa
 			memset ( zRes, 0, pNum_ * sizeof (float) );
 
 			iTracer.traceImage (xVol, tVol, curX, curZ, curP, xRes, zRes);
+
+			// loop over depth-line
+			float sample (0.f);
+			for (int ip = 0; ip < pNum_; ++ip) {			
+				const float lz = zRes[ip];
+				if (lz < 0) continue; // bad point
+				const float lx = xRes[ip];
+
+				float curSample (0.f);
+				bool goodSample = this->getSample (piData, lx, lz, curP, curSample);
+
+				if (!goodSample) continue; // bad sample
+				sample += curSample;
+			}
+
+			piImage [ix * zNum_ + iz] += sample;
 		}
 	}
 
@@ -56,4 +72,28 @@ void DepthBackfitMigrator2D::processParialImage (float* piData, float curP, floa
 	free (zRes);
 
 	return;
+}
+
+bool DepthBackfitMigrator2D::getSample (float* data, const float curX, const float curZ,
+										const float curP, float &sample) {
+
+	// limits checking	
+	const int izMiddle = (int) ((curZ - zStart_) / zStep_);
+	if (izMiddle < 0 || izMiddle >= zNum_) return false;
+
+	const int xSamp = (int) ((curX - xStart_) / xStep_);
+	if (xSamp < 0 || xSamp >= xNum_) return false;
+
+	float* trace = data + xSamp * zNum_;
+
+	// middle (main) sample
+    
+    const float befMiddle = (curZ - zStart_) * 1.f / zStep_ - izMiddle;
+    const float aftMiddle = 1.f - befMiddle;
+
+	const float sampleMiddle = aftMiddle * trace[izMiddle] + befMiddle * trace[izMiddle + 1];
+    
+	sample = sampleMiddle;
+
+	return true;
 }
