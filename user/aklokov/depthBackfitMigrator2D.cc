@@ -1,7 +1,6 @@
 #include "depthBackfitMigrator2D.hh"
 #include <rsf.hh>
 #include "support.hh"
-#include "iTracer2D.hh"
 
 DepthBackfitMigrator2D::DepthBackfitMigrator2D () {
 }
@@ -12,7 +11,8 @@ DepthBackfitMigrator2D::~DepthBackfitMigrator2D () {
 void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep, 
 			 					   int pNum, float pStart, float pStep,
 							 	   int xNum, float xStart, float xStep,
-							 	   int rNum, float rStart, float rStep) {
+							 	   int rNum, float rStart, float rStep,
+  								   float* xVol, float* tVol) {
 	
 	zNum_   = zNum;
 	zStep_  = zStep;
@@ -30,52 +30,59 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	rStep_  = rStep;
 	rStart_ = rStart;	
 
+	xVol_ = xVol;
+	tVol_ = tVol;
+
 	return;
 }
 
-void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, float* xVol, float* tVol, float* piImage) {
-
-	ITracer2D iTracer;
-	iTracer.init (zNum_, zStart_, zStep_, 
-  			      rNum_, rStart_, rStep_,
-			      xNum_, xStart_, xStep_);
+void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float curZ, float curP, float* sample) {
 
 	float* xRes = sf_floatalloc (rNum_);
 	float* zRes = sf_floatalloc (rNum_);
 
-	for (int ix = 0; ix < xNum_; ++ix) {
-		const float curX = xStart_ + ix * xStep_;
-		for (int iz = 0; iz < zNum_; ++iz) {
-			const float curZ = zStart_ + iz * zStep_;
-			sf_warning ("x %f  z %f", curX, curZ);	
-			memset ( xRes, 0, rNum_ * sizeof (float) );
-			memset ( zRes, 0, rNum_ * sizeof (float) );
+	memset ( xRes, 0, rNum_ * sizeof (float) );
+	memset ( zRes, 0, rNum_ * sizeof (float) );
 
-			iTracer.traceImage (xVol, tVol, curX, curZ, curP, xRes, zRes);
+	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, xRes, zRes);
 
-			// loop over depth-line
-			float sample (0.f);
-			for (int ir = 0; ir < rNum_; ++ir) {			
-				const float lz = zRes[ir];
-				if (lz <= 0) continue; // bad point
-				const float lx = xRes[ir];
+	*sample = 0.f;
 
-				float curSample (0.f);
-				bool goodSample = this->getSample (piData, lx, lz, curP, curSample);
+	// loop over depth-line
+	for (int ir = 0; ir < rNum_; ++ir) {			
+		const float lz = zRes[ir];
+		if (lz <= 0) continue; // bad point
+		const float lx = xRes[ir];
 
-				if (!goodSample) continue; // bad sample
-		
-				sample += curSample;
-			}
+		float curSample (0.f);
+		bool goodSample = this->getSample (piData, lx, lz, curP, curSample);
 
-			piImage [ix * zNum_ + iz] += sample;
-		}
+		if (!goodSample) continue; // bad sample
+		*sample += curSample;
 	}
-
-	// FINISH
 
 	free (xRes);
 	free (zRes);
+
+	return;
+}
+
+void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, float* piImage) {
+
+	iTracer_.init (zNum_, zStart_, zStep_, 
+  			       rNum_, rStart_, rStep_,
+			       xNum_, xStart_, xStep_);
+
+	for (int ix = 0; ix < xNum_; ++ix) {
+		const float curX = xStart_ + ix * xStep_;
+		sf_warning ("%g", curX);
+		float* iTrace = piImage + ix * zNum_;
+#pragma omp parallel for
+		for (int iz = 0; iz < zNum_; ++iz) {
+			const float curZ = zStart_ + iz * zStep_;
+			this->getImageSample (piData, curX, curZ, curP, iTrace + iz);
+		}
+	}
 
 	return;
 }
