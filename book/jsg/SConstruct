@@ -43,5 +43,9 @@ End(use='amsmath,newalg,hyperref,algorithmic',
 \newtheorem{remark}[subsection]{Remark}
 \newtheorem{remarks}[subsection]{Remarks}
 \newtheorem{example}[subsection]{Example}
+\newcommand{\txt}{\textrm}
+\newcommand{\vct}{\mathbf}
+\newcommand{\mtx}{\tensor}
+\newcommand{\discriminant}{D}
    ''')
 
