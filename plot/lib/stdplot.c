@@ -225,10 +225,17 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 	    barmin = barmax-barwd;
 	} else {
 	    if (cube) {
-		yll -= 0.4*barwd;
-		yur -= (0.04*screenht + barwd);
-		barmax = 0.98*screenht;
-		barmin = barmax-barwd;
+                if (!barmove) {
+		    yll -= 0.4*barwd;
+   		    yur -= (0.04*screenht + barwd);
+	   	    barmax = 0.98*screenht;
+		    barmin = barmax-barwd;
+                } else {
+                    barmin = yll - 0.05*screenht;
+                    barmax = barmin+barwd;
+                    yur += 0.4*barwd;
+                    yll += (0.05*screenht + barwd);
+                }
 	    } else {
 		barmin = barmove ? yll : 0.12*screenht;
 		barmax = barmin+barwd;
