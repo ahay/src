@@ -46,9 +46,9 @@ void mpi_err(int err, MPI_Comm comm,FILE * stream) {
 /* common interface for serial and parallel rsfread */
 
 int rsfread(ireal * a, 
-	    IPNT rags, 
-	    IPNT ran, 
-	    char * fname, 
+	    const IPNT rags, 
+	    const IPNT ran, 
+	    const char * fname, 
 	    int extend, 
 	    FILE * stream,
 	    int	panelindex   /* D.S. 01.01.11: extended-model related */
@@ -59,9 +59,9 @@ int rsfread(ireal * a,
 }
 
 int mpirsfread(ireal * a, 
-               IPNT rags, 
-               IPNT ran, 
-               char * fname, 
+               const IPNT rags, 
+               const IPNT ran, 
+               const char * fname, 
                int extend, 
                FILE * stream,
 	       int panelindex  /* D.S. 01.01.11: extended-model related */
@@ -635,9 +635,9 @@ int mpirsfread(ireal * a,
 }
 
 int rsfwrite(ireal * a, 
-	     IPNT rags, 
-	     IPNT ran, 
-	     char * fname, 
+	     const IPNT rags, 
+	     const IPNT ran, 
+	     const char * fname, 
 	     int extend,
 	     FILE * stream,
 	     int panelindex  /* D.S. 01.01.11: extended-model related */
@@ -646,9 +646,9 @@ int rsfwrite(ireal * a,
 }
 
 int mpirsfwrite(ireal * a, 
-		IPNT rags, 
-		IPNT ran, 
-		char * fname, 
+		const IPNT rags, 
+		const IPNT ran, 
+		const char * fname, 
 		int extend,
 		FILE * stream,
 		int panelindex  /* D.S. 01.01.11: extended-model related */

@@ -20,8 +20,8 @@
  *  
  *  @param[in]   panelindex (int) - panel index of extended model (always be 0 for non-extended model) 
 */
-int mpirsfread(ireal * a, IPNT _gs, IPNT _n, 
-	       char * fname, int extend, FILE * fp,
+int mpirsfread(ireal * a, const IPNT _gs, const IPNT _n, 
+	       const char * fname, int extend, FILE * fp,
 	       int panelindex      /* D.S. 01.01.11: extended-model related */
 	       );
 /** read rarray from SEP77/RSF file structure by  reading a chunk of data, then sending part required by each process (deprecated) 
@@ -38,8 +38,8 @@ int mpirsfread_v1(ireal * a, IPNT _gs, IPNT _n,
 int mpirsfwrite(ireal * a, IPNT _gs, IPNT _n, grid g, char * type, char * fname, FILE * fp);
 */
 
-int mpirsfwrite(ireal * a, IPNT _gs, IPNT _n, 
-		char * fname, int extend, FILE * fp,
+int mpirsfwrite(ireal * a, const IPNT _gs, const IPNT _n, 
+		const char * fname, int extend, FILE * fp,
 	       int panelindex      /* D.S. 01.01.11: extended-model related */
 	       );
 #endif /* IWAVE_USE_MPI */
