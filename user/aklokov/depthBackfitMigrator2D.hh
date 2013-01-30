@@ -10,7 +10,8 @@ public:
 
 	void init (int zNum, float zStart, float zStep, 
   			   int pNum, float pStart, float pStep,
-			   int xNum, float xStart, float xStep);
+			   int xNum, float xStart, float xStep,
+			   int rNum, float rStart, float rStep);
 
 	void processParialImage (float* piData, float curP, float* xVol, float* tVol, float* piImage);
 
@@ -29,6 +30,10 @@ private:
 	int   xNum_;
 	float xStep_;
 	float xStart_;
+
+	int   rNum_;
+	float rStep_;
+	float rStart_;
 
 };
 #endif

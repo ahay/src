@@ -11,7 +11,8 @@ DepthBackfitMigrator2D::~DepthBackfitMigrator2D () {
 
 void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep, 
 			 					   int pNum, float pStart, float pStep,
-							 	   int xNum, float xStart, float xStep) {
+							 	   int xNum, float xStart, float xStep,
+							 	   int rNum, float rStart, float rStep) {
 	
 	zNum_   = zNum;
 	zStep_  = zStep;
@@ -25,6 +26,10 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	xStep_  = xStep;
 	xStart_ = xStart;	
 
+	rNum_   = rNum;
+	rStep_  = rStep;
+	rStart_ = rStart;	
+
 	return;
 }
 
@@ -32,7 +37,7 @@ void DepthBackfitMigrator2D::processParialImage (float* piData, float curP, floa
 
 	ITracer2D iTracer;
 	iTracer.init (zNum_, zStart_, zStep_, 
-  			      pNum_, pStart_, pStep_,
+  			      rNum_, rStart_, rStep_,
 			      xNum_, xStart_, xStep_);
 
 	float* xRes = sf_floatalloc (pNum_);
@@ -50,10 +55,10 @@ void DepthBackfitMigrator2D::processParialImage (float* piData, float curP, floa
 
 			// loop over depth-line
 			float sample (0.f);
-			for (int ip = 0; ip < pNum_; ++ip) {			
-				const float lz = zRes[ip];
-				if (lz < 0) continue; // bad point
-				const float lx = xRes[ip];
+			for (int ir = 0; ir < rNum_; ++ir) {			
+				const float lz = zRes[ir];
+				if (lz <= 0) continue; // bad point
+				const float lx = xRes[ir];
 
 				float curSample (0.f);
 				bool goodSample = this->getSample (piData, lx, lz, curP, curSample);

@@ -56,18 +56,23 @@ int main (int argc, char* argv[]) {
 	int zNum; float zStart; float zStep;
 	int pNum; float pStart; float pStep;
 	int xNum; float xStart; float xStep;
+	int rNum; float rStart; float rStep;
 // depth axis 
-    if ( !sf_histint   (xEscFile, "n1", &zNum) )   sf_error ("Need n1= in input");
-    if ( !sf_histfloat (xEscFile, "d1", &zStep) )  sf_error ("Need d1= in input");
-    if ( !sf_histfloat (xEscFile, "o1", &zStart) ) sf_error ("Need o1= in input");
+    if ( !sf_histint   (piFile, "n1", &zNum) )   sf_error ("Need n1= in input");
+    if ( !sf_histfloat (piFile, "d1", &zStep) )  sf_error ("Need d1= in input");
+    if ( !sf_histfloat (piFile, "o1", &zStart) ) sf_error ("Need o1= in input");
 // x-axis 
-    if ( !sf_histint   (xEscFile, "n2", &xNum) )   sf_error ("Need n2= in input");
-    if ( !sf_histfloat (xEscFile, "d2", &xStep) )  sf_error ("Need d2= in input");
-    if ( !sf_histfloat (xEscFile, "o2", &xStart) ) sf_error ("Need o2= in input");
+    if ( !sf_histint   (piFile, "n2", &xNum) )   sf_error ("Need n2= in input");
+    if ( !sf_histfloat (piFile, "d2", &xStep) )  sf_error ("Need d2= in input");
+    if ( !sf_histfloat (piFile, "o2", &xStart) ) sf_error ("Need o2= in input");
 // dip axis
-    if ( !sf_histint   (xEscFile, "n3", &pNum) )     sf_error ("Need n3= in input");
-    if ( !sf_histfloat (xEscFile, "d3", &pStep) )    sf_error ("Need d3= in input");
-    if ( !sf_histfloat (xEscFile, "o3", &pStart) )   sf_error ("Need o3= in input");
+    if ( !sf_histint   (piFile, "n3", &pNum) )     sf_error ("Need n3= in input");
+    if ( !sf_histfloat (piFile, "d3", &pStep) )    sf_error ("Need d3= in input");
+    if ( !sf_histfloat (piFile, "o3", &pStart) )   sf_error ("Need o3= in input");
+// r-axis
+    if ( !sf_histint   (xEscFile, "n2", &rNum) )     sf_error ("Need n2= in input");
+    if ( !sf_histfloat (xEscFile, "d2", &rStep) )    sf_error ("Need d2= in input");
+    if ( !sf_histfloat (xEscFile, "o2", &rStart) )   sf_error ("Need o2= in input");
 
 	// OUTPUT PARAMETERS
 
@@ -92,6 +97,10 @@ int main (int argc, char* argv[]) {
 	// MAIN LOOP
 
 	DepthBackfitMigrator2D dbfmig;
+	dbfmig.init (zNum, zStart, zStep, 
+  	 	         pNum, pStart, pStep,
+			     xNum, xStart, xStep,
+			     rNum, rStart, rStep);
 
 	for (int ip = 0; ip < pNum; ++ip) {
 		const float curP = pStart + ip * pStep;			
@@ -109,7 +118,7 @@ int main (int argc, char* argv[]) {
 
 		// write result
 	 	sf_seek (resFile, startPos, SEEK_SET);
-	    sf_floatread (piImage, piSize, resFile);
+	    sf_floatwrite (piImage, piSize, resFile);
 	}
 
 	// FINISH
