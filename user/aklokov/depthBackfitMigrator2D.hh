@@ -22,6 +22,10 @@ private:
 
 	bool getSample (float* data, const float curX, const float curZ, const float curP, float &sample);
 	void getImageSample (float* piData, float curX, float curZ, float curP, float* sample);
+	void processData    (float* piData); 
+
+	void applyCasualIntegration (float *trace, int n);
+	void applyAnticasualIntegration (float *trace, int n);
 
 	ITracer2D iTracer_;
 
