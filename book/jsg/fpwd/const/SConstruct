@@ -74,7 +74,7 @@ Result('rmse', 'mse-fdip mse-dip ./mseplot.py',
 	| put label1="SNR" unit1="dB"
 	  label="RMSE" unit="dB"
 	| ./${SOURCES[2]} label2="Smoothing radius" unit2="log"
-	''',suffix='.pdf')
+	''',suffix='.eps')
 
 for id in ('fdip','dip'):
 	Result('mse-'+id, ['mse-'+id, './mseplot.py'],
@@ -84,7 +84,7 @@ for id in ('fdip','dip'):
 		  label="MSE" unit="dB"
 		| ./${SOURCES[1]} label2="Smoothing radius" unit2="log scale"
 		  vmin=-4.5 vmax=0.1
-		''',suffix='.pdf')
+		''',suffix='.eps')
 #		| grey wanttitle=n color=j label2="Smoothing radius"
 #		  scalebar=y bias=-2.5 clip=2 minval=-4.5 maxval=-0.5
 #Result('mse12','mse-fdip mse-dip','')

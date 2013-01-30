@@ -95,5 +95,5 @@ xticks( (2,3,10,100,200),('2','3','10','100','200') )
 xlim(o2, o2+(n2-1)*d2)
 ylim(o1+(n1-1)*d1, o1)
 
-savefig(sys.stdout, format='pdf', bbox_inches='tight', transparents=True)
+savefig(sys.stdout, format='eps', bbox_inches='tight', transparents=True)
 
