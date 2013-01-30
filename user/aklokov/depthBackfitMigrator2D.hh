@@ -13,7 +13,7 @@ public:
 			   int xNum, float xStart, float xStep,
 			   int rNum, float rStart, float rStep);
 
-	void processParialImage (float* piData, float curP, float* xVol, float* tVol, float* piImage);
+	void processPartialImage (float* piData, float curP, float* xVol, float* tVol, float* piImage);
 
 private:
 

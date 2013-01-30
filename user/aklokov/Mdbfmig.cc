@@ -79,7 +79,7 @@ int main (int argc, char* argv[]) {
 	// MEMORY ALLOCATION
 
 	const int piSize  = zNum * pNum;
-	const int volSize = piSize * xNum;
+	const int volSize = zNum * rNum * xNum;
 
 	float* tVol = sf_floatalloc (volSize);
 	float* xVol = sf_floatalloc (volSize);
@@ -114,7 +114,7 @@ int main (int argc, char* argv[]) {
 	    sf_floatread (piData, piSize, piFile);
 
 		// get image
-		dbfmig.processParialImage (piData, curP, xVol, tVol, piImage);
+		dbfmig.processPartialImage (piData, curP, xVol, tVol, piImage);
 
 		// write result
 	 	sf_seek (resFile, startPos, SEEK_SET);
@@ -128,6 +128,11 @@ int main (int argc, char* argv[]) {
 	
 	free (piData);
 	free (piImage);
-	
+
+    sf_fileclose (resFile);
+	sf_fileclose (piFile);
+    sf_fileclose (tEscFile);
+	sf_fileclose (xEscFile);
+
 	return 0;
 }

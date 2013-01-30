@@ -33,23 +33,23 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	return;
 }
 
-void DepthBackfitMigrator2D::processParialImage (float* piData, float curP, float* xVol, float* tVol, float* piImage) {
+void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, float* xVol, float* tVol, float* piImage) {
 
 	ITracer2D iTracer;
 	iTracer.init (zNum_, zStart_, zStep_, 
   			      rNum_, rStart_, rStep_,
 			      xNum_, xStart_, xStep_);
 
-	float* xRes = sf_floatalloc (pNum_);
-	float* zRes = sf_floatalloc (pNum_);
+	float* xRes = sf_floatalloc (rNum_);
+	float* zRes = sf_floatalloc (rNum_);
 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		const float curX = xStart_ + ix * xStep_;
 		for (int iz = 0; iz < zNum_; ++iz) {
 			const float curZ = zStart_ + iz * zStep_;
-	
-			memset ( xRes, 0, pNum_ * sizeof (float) );
-			memset ( zRes, 0, pNum_ * sizeof (float) );
+			sf_warning ("x %f  z %f", curX, curZ);	
+			memset ( xRes, 0, rNum_ * sizeof (float) );
+			memset ( zRes, 0, rNum_ * sizeof (float) );
 
 			iTracer.traceImage (xVol, tVol, curX, curZ, curP, xRes, zRes);
 
@@ -64,6 +64,7 @@ void DepthBackfitMigrator2D::processParialImage (float* piData, float curP, floa
 				bool goodSample = this->getSample (piData, lx, lz, curP, curSample);
 
 				if (!goodSample) continue; // bad sample
+		
 				sample += curSample;
 			}
 
