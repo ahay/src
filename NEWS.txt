@@ -4,6 +4,8 @@
 
 To the reproducible documents collection:
 
+* jsg/fpwd: Accelerated plane-wave destruction (Chen, Fomel, and Lu)
+
 To SCons:
 
 To documentation:
@@ -15,6 +17,7 @@ To APIs:
 To the Python package:
 
 * Added an ability to have list arguments in configure
+* Added MLK support in configure
 
 To programs:
 

@@ -932,7 +932,7 @@ class TeXPaper(Environment):
             vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                             self.figdir+'/\\1',
                             os.path.abspath(os.path.realpath(pdir)))
-            for suffix in (vpsuffix,pssuffix):
+            for suffix in (vpsuffix,pssuffix,'.pdf'):
                 for fig in glob.glob('%s/*%s' % (vpldir,suffix)):
                     eps[fig] = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+suffix+'$',
                                       r'%s/%s/\2%s' % (pdir,resdir,pssuffix),
