@@ -111,8 +111,8 @@ int main (int argc, char* argv[]) {
 	 			 xVol, tVol,
 				 isAA);
 
-//	for (int ip = 0; ip < pNum; ++ip) {
-	for (int ip = 55; ip < 66; ++ip) {
+	for (int ip = 0; ip < pNum; ++ip) {
+		sf_warning ("pimage %d of %d;", ip + 1, pNum);		
 		const float curP = pStart + ip * pStep;			
 
 		memset ( piData,  0, piSize * sizeof (int) );
@@ -127,7 +127,7 @@ int main (int argc, char* argv[]) {
 		dbfmig.processPartialImage (piData, curP, piImage);
 
 		// write result
-	 	//sf_seek (resFile, startPos, SEEK_SET);
+	 	sf_seek (resFile, startPos, SEEK_SET);
 	    sf_floatwrite (piImage, piSize, resFile);
 	}
 

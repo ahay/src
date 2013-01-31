@@ -138,7 +138,6 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		const float curX = xStart_ + ix * xStep_;
-		sf_warning ("%g", curX);
 		float* iTrace = piImage + ix * zNum_;
 #pragma omp parallel for
 		for (int iz = 0; iz < zNum_; ++iz) {
