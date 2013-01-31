@@ -30,7 +30,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 			 					   int pNum, float pStart, float pStep,
 							 	   int xNum, float xStart, float xStep,
 							 	   int rNum, float rStart, float rStep,
-  								   float* xVol, float* tVol) {
+  								   float* xVol, float* tVol, bool isAA) {
 	
 	zNum_   = zNum;
 	zStep_  = zStep;
@@ -51,7 +51,38 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	xVol_ = xVol;
 	tVol_ = tVol;
 
+	isAA_ = isAA;
+
 	return;
+}
+
+bool DepthBackfitMigrator2D::getSample (float* piData, const float curX, const float curZ, const float curP, float &sample) {
+
+	const float p = tan (curP * 3.141592 / 180.f);
+
+	const int xInd = (curX - xStart_) / xStep_;
+	
+	float befX = curX - (xStart_ + xInd * xStep_);	
+	float aftX = xStart_ + (xInd + 1) * xStep_ - curX;
+
+	float bef = befX / xStep_;
+	float aft = 1.f - bef;
+
+	float x1 = curX - befX;
+	float z1 = curZ + befX * p;
+
+	float x2 = curX + aftX;
+	float z2 = curZ - aftX * p;
+
+	float sample1, sample2;
+	bool goodSample = this->getSampleFromImage (piData, x1, z1, curP, sample1);
+	if (!goodSample) return false;
+	goodSample = this->getSampleFromImage (piData, x2, z2, curP, sample2);
+	if (!goodSample) return false;
+	
+	sample = bef * sample2 + aft * sample1;
+
+	return true;
 }
 
 void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float curZ, float curP, float* sample) {
@@ -102,7 +133,8 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
   			       rNum_, rStart_, rStep_,
 			       xNum_, xStart_, xStep_);
 
-	this->processData (piData); 
+	if (isAA_)
+		this->processData (piData); 
 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		const float curX = xStart_ + ix * xStep_;
@@ -118,8 +150,8 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 	return;
 }
 
-bool DepthBackfitMigrator2D::getSample (float* data, const float curX, const float curZ,
-										const float p, float &sample) {
+bool DepthBackfitMigrator2D::getSampleFromImage (float* data, const float curX, const float curZ,
+										const float curP, float &sample) {
 
 	// limits checking	
 	const int izMiddle = (int) ((curZ - zStart_) / zStep_);
@@ -137,13 +169,16 @@ bool DepthBackfitMigrator2D::getSample (float* data, const float curX, const flo
 
 	const float sampleMiddle = aftMiddle * trace[izMiddle] + befMiddle * trace[izMiddle + 1];
 
-//	sample = sampleMiddle;
-//	return true;
+	if (!isAA_) {
+		sample = sampleMiddle;
+		return true;
+	}
 
-	// AA part    
-
+	const float p = fabs ( tan (curP * 3.141598 / 180.f) );
 	const float filterLength = p * xStep_ + zStep_;
     
+	sf_warning ("%g", filterLength);
+
   	// left sample
  
  	const float zLeft = curZ - filterLength;

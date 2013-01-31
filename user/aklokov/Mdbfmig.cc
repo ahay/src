@@ -74,6 +74,10 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (xEscFile, "d2", &rStep) )    sf_error ("Need d2= in input");
     if ( !sf_histfloat (xEscFile, "o2", &rStart) )   sf_error ("Need o2= in input");
 
+	bool isAA;
+    if ( !sf_getbool ("isAA", &isAA) ) isAA = true;
+    /* if y, apply anti-aliasing */
+
 	// OUTPUT PARAMETERS
 
 	// MEMORY ALLOCATION
@@ -91,8 +95,11 @@ int main (int argc, char* argv[]) {
 
 	sf_seek (xEscFile, 0, SEEK_SET);		
 	sf_floatread (xVol, volSize, xEscFile);
+	sf_fileclose (xEscFile);
+
 	sf_seek (tEscFile, 0, SEEK_SET);		
 	sf_floatread (tVol, volSize, tEscFile);
+    sf_fileclose (tEscFile);
 
 	// MAIN LOOP
 
@@ -101,10 +108,11 @@ int main (int argc, char* argv[]) {
   	 	         pNum, pStart, pStep,
 			     xNum, xStart, xStep,
 			     rNum, rStart, rStep,
-	 			 xVol, tVol);
+	 			 xVol, tVol,
+				 isAA);
 
 //	for (int ip = 0; ip < pNum; ++ip) {
-	for (int ip = 60; ip < 71; ++ip) {
+	for (int ip = 55; ip < 66; ++ip) {
 		const float curP = pStart + ip * pStep;			
 
 		memset ( piData,  0, piSize * sizeof (int) );
@@ -133,8 +141,6 @@ int main (int argc, char* argv[]) {
 
     sf_fileclose (resFile);
 	sf_fileclose (piFile);
-    sf_fileclose (tEscFile);
-	sf_fileclose (xEscFile);
 
 	return 0;
 }
