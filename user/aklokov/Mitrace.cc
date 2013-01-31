@@ -101,7 +101,7 @@ int main (int argc, char* argv[]) {
 	iTracer.init (zNum, zStart, zStep, 
   			      pNum, pStart, pStep,
 			      xNum, xStart, xStep);
-	iTracer.traceImage (xVol, tVol, x0, z0, p0, xRes, zRes);
+	iTracer.traceImage2 (xVol, tVol, x0, z0, p0, xRes, zRes);
 
 	// WRITE RESULT
     sf_floatwrite (xRes, pNum, xResFile);

@@ -10,13 +10,17 @@ public:
    ~Point2D ();
 
     Point2D& operator= (const Point2D& point);
+   	bool operator < (const Point2D& p) const
+    {
+        return (x_ < p.x_);
+    }
 
     void  setX (float x) {x_ = x;}
     float getX ()        {return x_;}
     void  setY (float y) {y_ = y;}
     float getY ()        {return y_;}
  
-private:
+//private:
     float x_;
     float y_;
 };

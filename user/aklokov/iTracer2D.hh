@@ -1,6 +1,22 @@
 #ifndef ITRACER2D_H
 #define ITRACER2D_H
 
+class ImagePoint2D {
+public:
+
+	 ImagePoint2D ();
+	 ImagePoint2D (float x, float z, int ix, int iz);
+	~ImagePoint2D ();
+
+	 ImagePoint2D& operator= (const ImagePoint2D& point);
+  //   bool operator < (const ImagePoint2D& p) const;
+
+	float x_;
+	float z_;		
+	int   ix_;
+	int   iz_;
+};
+
 class ITracer2D {
 
 public:
@@ -13,6 +29,7 @@ public:
 			   int xNum, float xStart, float xStep);
 
 	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes);
+	void  traceImage2 (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes);
 
 private: 
 
