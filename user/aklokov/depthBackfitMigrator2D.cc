@@ -1,6 +1,9 @@
 #include "depthBackfitMigrator2D.hh"
 #include <rsf.hh>
 #include "support.hh"
+#include <list>
+
+static bool deleteAll (ImagePoint2D* p) { delete p; return true; }
 
 DepthBackfitMigrator2D::DepthBackfitMigrator2D () {
 }
@@ -60,9 +63,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	return;
 }
 
-bool DepthBackfitMigrator2D::getSample (float* piData, const float curX, const float curZ, const float curP, float &sample) {
-
-	const float p = 0;//tan (curP * 3.141592 / 180.f);
+bool DepthBackfitMigrator2D::getSample (float* piData, const float& curX, const float& curZ, const float& curP, float &sample) {
 
 	const int xInd = (curX - xStart_) / xStep_;
 	
@@ -73,15 +74,15 @@ bool DepthBackfitMigrator2D::getSample (float* piData, const float curX, const f
 	float aft = 1.f - bef;
 
 	float x1 = curX - befX;
-	float z1 = curZ + befX * p;
+	float z1 = curZ + befX * curP;
 
 	float x2 = curX + aftX;
-	float z2 = curZ - aftX * p;
+	float z2 = curZ - aftX * curP;
 
 	float sample1, sample2;
-	bool goodSample = this->getSampleFromImage (piData, x1, z1, 0.f, sample1);
+	bool goodSample = this->getSampleFromImage (piData, x1, z1, curP, sample1);
 	if (!goodSample) return false;
-	goodSample = this->getSampleFromImage (piData, x2, z2, 0.f, sample2);
+	goodSample = this->getSampleFromImage (piData, x2, z2, curP, sample2);
 	if (!goodSample) return false;
 	
 	sample = bef * sample2 + aft * sample1;
@@ -99,17 +100,40 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 
 	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, xRes, zRes);
 
-	*sample = 0.f;
-
-	// loop over depth-line
-	int count = 0;
-	for (int ir = 0; ir < rNum_; ++ir) {			
+	// filter points
+	std::list<ImagePoint2D*> goodPoints;
+	for (int ir = 0; ir < rNum_; ++ir) {
 		const float lz = zRes[ir];
 		if (lz <= 0) continue; // bad point
-		const float lx = xRes[ir];
+	    ImagePoint2D* p = new ImagePoint2D (xRes[ir], lz, 0, 0);
+		goodPoints.push_back (p);
+	}				
+
+	const int listSize = goodPoints.size ();
+
+	std::list<ImagePoint2D*>::iterator iter = goodPoints.begin ();
+	*sample = 0.f;
+	int count = 0;
+	int pcount = 0;
+	// loop over depth-line
+	for (iter = goodPoints.begin (); iter != goodPoints.end(); ++iter, ++pcount) {
+		ImagePoint2D* point = *iter;
+		float px = point->x_;
+		float pz = point->z_;
+		float curP = 0.f;
+		if (pcount && pcount != (listSize - 1)) {
+			--iter;
+			ImagePoint2D* prevPoint = *iter;			
+			++iter; ++iter;
+			ImagePoint2D* nextPoint = *iter;			
+			--iter;
+			const float dx = nextPoint->x_ - prevPoint->x_;
+			const float dz = nextPoint->z_ - prevPoint->z_;
+			curP = -dz / dx;
+		}
 
 		float curSample (0.f);
-		bool goodSample = this->getSample (piData, lx, lz, curP, curSample);
+		bool goodSample = this->getSample (piData, px, pz, curP, curSample);			
 
 		if (!goodSample) continue; // bad sample
 		*sample += curSample;
@@ -118,6 +142,10 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 
 	if (count)
 		*sample /= count;
+
+	// FINISH
+
+	goodPoints.remove_if (deleteAll);
 
 	free (xRes);
 	free (zRes);
@@ -145,7 +173,16 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 
 	if (isAA_)
 		this->processData (piData); 
-
+/*
+	for (int ix = 0; ix < 1; ++ix) {
+		const float curX = 6750;
+		float* iTrace = piImage + ix * zNum_;
+		for (int iz = 0; iz < 1; ++iz) {
+			float curZ = 1500;
+			this->getImageSample (piData, curX, curZ, curP, iTrace + iz);
+		}
+	}
+*/
 	for (int ix = 0; ix < xNum_; ++ix) {
 		const float curX = xStart_ + ix * xStep_;
 		float* iTrace = piImage + ix * zNum_;
@@ -183,11 +220,9 @@ bool DepthBackfitMigrator2D::getSampleFromImage (float* data, const float curX, 
 		return true;
 	}
 
-	const float p = fabs ( tan (curP * 3.141598 / 180.f) );
+	const float p = fabs ( curP );
 	const float filterLength = p * xStep_ + zStep_;
     
-	sf_warning ("%g", filterLength);
-
   	// left sample
  
  	const float zLeft = curZ - filterLength;

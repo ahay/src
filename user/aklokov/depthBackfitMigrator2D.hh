@@ -21,7 +21,7 @@ public:
 
 private:
 
-	bool getSample (float* data, const float curX, const float curZ, const float curP, float &sample);
+	bool getSample (float* piData, const float& curX, const float& curZ, const float& curP, float &sample);
 	bool getSampleFromImage (float* data, const float curX, const float curZ, const float curP, float &sample);
 	void getImageSample (float* piData, float curX, float curZ, float curP, float* sample);
 	void processData    (float* piData); 
