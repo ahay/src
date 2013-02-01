@@ -158,29 +158,26 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 		float x1 = curX - dx;
 		float x2 = curX + dx;
 
-		list<ImagePoint2D*>::iterator iter1 = allPoints.begin ();
-		list<ImagePoint2D*>::iterator iter2 = allPoints.end ();
-		--iter2;
+		list<ImagePoint2D*>::iterator iter = allPoints.begin ();
 
 		bool found1 (false);
 		list<ImagePoint2D*>::iterator iterMin;
-		while (!found1 && iter1 != allPoints.end()) {
-			ImagePoint2D* p1 = *iter1;
-			if (p1->x_ > x1) { iterMin = iter1; found1 = true; }
-			++iter1;
+		while (!found1 && iter != allPoints.end()) {
+			ImagePoint2D* p1 = *iter;
+			if (p1->x_ > x1) { iterMin = iter; found1 = true; }
+			++iter;
 		}
 		if (!found1) continue;
 
 		bool found2 = false;
 		list<ImagePoint2D*>::iterator iterMax;
-		while ( !found2 && iter2 != allPoints.begin () ) {
-			ImagePoint2D* p2 = *iter2;
-			if (p2->x_ < x2) {iterMax = iter2; found2 = true; }
-			--iter2;
+		while ( !found2 && iter != allPoints.end () ) {
+			ImagePoint2D* p2 = *iter;
+			if (p2->x_ > x2) {iterMax = iter; found2 = true; }
+			++iter;
 		}
 		if (!found2) continue;
 
-		list<ImagePoint2D*>::iterator iter;
 		bool isOk = false;
 		for (iter = iterMin; iter != iterMax && !isOk; ++iter) {
 			ImagePoint2D* iPoint = *iter;			
