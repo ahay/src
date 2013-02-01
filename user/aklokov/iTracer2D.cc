@@ -7,7 +7,7 @@
 using namespace std;
 
 static bool deleteAll (ImagePoint2D* p) { delete p; return true; }
-static bool pred      (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->x_ < rhs->x_; }
+static bool predPos   (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->x_ < rhs->x_; }
 static bool predTime  (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->z_ < rhs->z_; }
 
 // -- class ImagePoint2D ---
@@ -115,21 +115,14 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	const int zRed = zNum_ - 1;
 
 	// escape line for the diffraction point
-	float* et = sf_floatalloc (pNum_);
-	memset ( et, 0, pNum_ * sizeof (float) );
-	float* ex = sf_floatalloc (pNum_);
-	memset ( ex, 0, pNum_ * sizeof (float) );
-
 	list<ImagePoint2D*> escPoints;
-
 	for (int ip = 0; ip < pNum_; ++ip) {
-		const int pind = xInd * pNum_ * zNum_ + ip * zNum_ + zInd;
-		ex[ip] = xVol [pind];
-		et[ip] = 2 * tVol [pind];
-
-	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * tVol [pind], ip, 0);
+		const int pind = (xInd * pNum_ + ip) * zNum_ + zInd;
+	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * tVol [pind], ip, 0); // double time
 		escPoints.push_back (p);
 	}
+	// sort escape points by position
+	escPoints.sort (predPos);
 
 	// constant-dip panel extraction
 	const int panelSize = zNum_ * xNum_;	
@@ -144,7 +137,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	float* pTPanel = tPanel;
 	for (int ix = 0; ix < xNum_; ++ix) {
 		for (int iz = 0; iz < zNum_; ++iz, ++pXPanel, ++pTPanel) {
-			const int pind = ix * pNum_ * zNum_ + pInd * zNum_ + iz;
+			const int pind = (ix * pNum_ + pInd) * zNum_ + iz;
 			*pXPanel = xVol [pind];
 			*pTPanel = 2 * tVol [pind];
 
@@ -152,25 +145,23 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			allPoints.push_back (p);
 		}
 	}
-
-	// CHANGE ME
-	// sorting by x_
-	allPoints.sort (pred);
+	// sort image points by position
+	allPoints.sort (predPos);
 
 	// loop over escape points
-
+	list<ImagePoint2D*>::iterator iterCurX = allPoints.begin ();
 	list<ImagePoint2D*>::iterator iterEP;
 	for (iterEP = escPoints.begin (); iterEP != escPoints.end(); ++iterEP) {
 
 		ImagePoint2D* escPoint = *iterEP;
 
-		float curT = escPoint->z_; // et[ip];
-		float curX = escPoint->x_;// ex[ip];
+		const float curX = escPoint->x_;
+		const float curT = escPoint->z_;
 
-		float x1 = curX - dx_;
-		float x2 = curX + dx_;
+		const float x1 = curX - dx_;
+		const float x2 = curX + dx_;
 
-		list<ImagePoint2D*>::iterator iter = allPoints.begin ();
+		list<ImagePoint2D*>::iterator iter = iterCurX;
 
 		bool found1 (false);
 		list<ImagePoint2D*>::iterator iterMin;
@@ -180,7 +171,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			++iter;
 		}
 		if (!found1) continue;
-
+		iterCurX = iterMin;
 		bool found2 = false;
 		list<ImagePoint2D*>::iterator iterMax;
 		while ( !found2 && iter != allPoints.end () ) {
@@ -248,8 +239,6 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	allPoints.remove_if (deleteAll);
 	escPoints.remove_if (deleteAll);
 
-	free (ex);
-	free (et);
 	free (xPanel);
 	free (tPanel);	
 
