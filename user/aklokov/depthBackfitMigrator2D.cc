@@ -48,6 +48,9 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	rNum_   = rNum;
 	rStep_  = rStep;
 	rStart_ = rStart;	
+	
+	dx_   = dx;
+	dt_   = dt;
 
 	xVol_ = xVol;
 	tVol_ = tVol;
