@@ -102,6 +102,7 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 	*sample = 0.f;
 
 	// loop over depth-line
+	int count = 0;
 	for (int ir = 0; ir < rNum_; ++ir) {			
 		const float lz = zRes[ir];
 		if (lz <= 0) continue; // bad point
@@ -112,7 +113,11 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 
 		if (!goodSample) continue; // bad sample
 		*sample += curSample;
+		++count;
 	}
+
+	if (count)
+		*sample /= count;
 
 	free (xRes);
 	free (zRes);
