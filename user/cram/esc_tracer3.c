@@ -222,7 +222,8 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
         C = -dy;
     }
     if (4.0*A*C > B*B)
-        sf_error ("Parabola miss");
+/*      sf_error ("Parabola miss");*/
+        return SF_HUGE;
     /* Solve the parabolic equation */
     D = sqrt (B*B - 4.0*A*C);
     if (fabsf (A) > 1e-7 && (-B + D) > 1e-7 && (-B - D) > 1e-7) {
@@ -312,10 +313,18 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         if ((y + dy) > esc_tracer->ymax)
             dy = esc_tracer->ymax - y;
         sp = s;
-        if (esc_tracer->parab) /* Intersection with a parabolic trajectory */
-            sigma = sf_esc_tracer3_pintersect (esc_tracer, &z, &x, &y, &b, &a, &t,
-                                               dz, dx, dy, fz, fx, fy, s, sz, sx, sy);
-        else /* Intersection with a straight trajectory */
+        if (esc_tracer->parab) { /* Intersection with a parabolic trajectory */
+            sigma = SF_HUGE;
+            while (SF_HUGE == sigma) {
+                sigma = sf_esc_tracer3_pintersect (esc_tracer, &z, &x, &y, &b, &a, &t,
+                                                   dz, dx, dy, fz, fx, fy, s, sz, sx, sy);
+                if (SF_HUGE == sigma) {
+                    dz *= 0.5;
+                    dx *= 0.5;
+                    dy *= 0.5;
+                }
+            }
+        } else /* Intersection with a straight trajectory */
             sigma = sf_esc_tracer3_sintersect (esc_tracer, &z, &x, &y, &b, &a,
                                                dz, dx, dy, db, da, fz, fx, fy, fb, fa);
         /* Keep b in [0; pi] and a in [0; 2*pi] range */
