@@ -222,41 +222,36 @@ bool ITracer2D::checkTriangle (float curX, float curT, int ix, int iz, const int
 	dataPoint[2].setX (xPanel [ind2]);
 	dataPoint[2].setY (tPanel [ind2]);
 
-	if ( isPointInsideTriangle (curX, curT,
+	if ( !isPointInsideTriangle (curX, curT,
 								dataPoint[0].getX (), dataPoint[0].getY (), 
 								dataPoint[1].getX (), dataPoint[1].getY (),
-								dataPoint[2].getX (), dataPoint[2].getY ()) ) {
+								dataPoint[2].getX (), dataPoint[2].getY ()) ) 
+		return false;
 		
-		const float x13 = dataPoint[0].getX () - dataPoint[2].getX ();
-		const float x32 = dataPoint[2].getX () - dataPoint[1].getX ();
+	const float x13 = dataPoint[0].getX () - dataPoint[2].getX ();
+	const float x32 = dataPoint[2].getX () - dataPoint[1].getX ();
 
-		const float y23 = dataPoint[1].getY () - dataPoint[2].getY ();
-		const float y13 = dataPoint[0].getY () - dataPoint[2].getY ();
+	const float y23 = dataPoint[1].getY () - dataPoint[2].getY ();
+	const float y13 = dataPoint[0].getY () - dataPoint[2].getY ();
 
-		const float denom = y23 * x13 + x32 * y13; 
+	const float denom = y23 * x13 + x32 * y13; 
+	if (fabs (denom) < 1e-9) return false;
 
-		float w0 = ( y23 * (curX - dataPoint[2].getX())  + x32 * (curT - dataPoint[2].getY()) ) / denom;
-		float w1 = ( -y13 * (curX - dataPoint[2].getX()) + x13 * (curT - dataPoint[2].getY()) ) / denom;
-		float w2 = 1 - w0 - w1;
+	const float w0 = ( y23 * (curX - dataPoint[2].getX())  + x32 * (curT - dataPoint[2].getY()) ) / denom;
+	const float w1 = ( -y13 * (curX - dataPoint[2].getX()) + x13 * (curT - dataPoint[2].getY()) ) / denom;
+	const float w2 = 1.f - w0 - w1;
 
-		Point2D imagePoint [3];	
-		imagePoint[0].setX (xStart_ + (ix + mode) * xStep_);
-		imagePoint[0].setY (zStart_ + iz * zStep_);
-		imagePoint[1].setX (xStart_ + ix * xStep_);
-		imagePoint[1].setY (zStart_ + (iz + mode) * zStep_);
-		imagePoint[2].setX (xStart_ + ix * xStep_);
-		imagePoint[2].setY (zStart_ + iz * zStep_);
+	const float ipx0 = xStart_ + (ix + mode) * xStep_;
+	const float ipy0 = zStart_ + iz * zStep_;
+	const float ipx1 = xStart_ + ix * xStep_;
+	const float ipy1 = zStart_ + (iz + mode) * zStep_;
+	const float ipx2 = xStart_ + ix * xStep_;
+	const float ipy2 = zStart_ + iz * zStep_;
 
-		float x = w0 * imagePoint[0].getX () + w1 * imagePoint[1].getX () + w2 * imagePoint[2].getX ();
-		float z = w0 * imagePoint[0].getY () + w1 * imagePoint[1].getY () + w2 * imagePoint[2].getY ();						
+	*xRes = w0 * ipx0 + w1 * ipx1 + w2 * ipx2;
+	*zRes = w0 * ipy0 + w1 * ipy1 + w2 * ipy2;
 
-		*xRes  = x;
-		*zRes  = z;
-
-		return true;
-	}
-
-	return false;
+	return true;
 }
 
 void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes) {
