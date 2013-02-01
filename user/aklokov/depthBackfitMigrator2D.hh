@@ -14,6 +14,7 @@ public:
   			   int pNum, float pStart, float pStep,
 			   int xNum, float xStart, float xStep,
 			   int rNum, float rStart, float rStep,
+			   float dx, float dt,
 			   float* xVol, float* tVol, bool isAA);
 
 	void processPartialImage (float* piData, float curP, float* piImage);
@@ -48,8 +49,12 @@ private:
 	int   rNum_;
 	float rStep_;
 	float rStart_;
+
+	float dx_;
+	float dt_;
 	
 	bool  isAA_;
+
 
 };
 #endif

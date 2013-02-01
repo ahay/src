@@ -45,7 +45,8 @@ ITracer2D::~ITracer2D () {
 
 void ITracer2D::init (int zNum, float zStart, float zStep, 
 					  int pNum, float pStart, float pStep,
-					  int xNum, float xStart, float xStep) {
+					  int xNum, float xStart, float xStep,
+					  float dx, float dt) {
 	
 	zNum_   = zNum;
 	zStep_  = zStep;
@@ -58,6 +59,9 @@ void ITracer2D::init (int zNum, float zStart, float zStep,
 	xNum_   = xNum;
 	xStep_  = xStep;
 	xStart_ = xStart;	
+
+	dx_     = dx;
+	dt_     = dt;
 
 	return;
 }
@@ -153,9 +157,6 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	// sorting by x_
 	allPoints.sort (pred);
 
-	const float dx = 20;
-	const float dt = 0.0001;
-
 	// loop over escape points
 
 	list<ImagePoint2D*>::iterator iterEP;
@@ -166,8 +167,8 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 		float curT = escPoint->z_; // et[ip];
 		float curX = escPoint->x_;// ex[ip];
 
-		float x1 = curX - dx;
-		float x2 = curX + dx;
+		float x1 = curX - dx_;
+		float x2 = curX + dx_;
 
 		list<ImagePoint2D*>::iterator iter = allPoints.begin ();
 
@@ -194,8 +195,8 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 		goodXPoints.insert (goodXPoints.end(), iterMin, iterMax);
 
 		// narrow by times
-		const float t1 = curT - dt;
-		const float t2 = curT + dt;
+		const float t1 = curT - dt_;
+		const float t2 = curT + dt_;
 
 		goodXPoints.sort (predTime);
 

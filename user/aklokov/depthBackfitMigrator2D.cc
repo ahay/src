@@ -30,6 +30,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 			 					   int pNum, float pStart, float pStep,
 							 	   int xNum, float xStart, float xStep,
 							 	   int rNum, float rStart, float rStep,
+								   float dx, float dt,
   								   float* xVol, float* tVol, bool isAA) {
 	
 	zNum_   = zNum;
@@ -131,7 +132,8 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 
 	iTracer_.init (zNum_, zStart_, zStep_, 
   			       rNum_, rStart_, rStep_,
-			       xNum_, xStart_, xStep_);
+			       xNum_, xStart_, xStep_,
+				   dx_, dt_);
 
 	if (isAA_)
 		this->processData (piData); 

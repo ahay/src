@@ -26,7 +26,8 @@ public:
 
 	void init (int zNum, float zStart, float zStep, 
   			   int pNum, float pStart, float pStep,
-			   int xNum, float xStart, float xStep);
+			   int xNum, float xStart, float xStep,
+			   float dx, float dt);
 
 	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes);
 
@@ -48,5 +49,8 @@ private:
 	int   xNum_;
 	float xStep_;
 	float xStart_;
+
+	float dx_;
+	float dt_;
 };
 #endif

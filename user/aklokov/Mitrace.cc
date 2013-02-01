@@ -62,13 +62,17 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (xEscFile, "d3", &xStep) )  sf_error ("Need d3= in input");
     if ( !sf_histfloat (xEscFile, "o3", &xStart) ) sf_error ("Need o3= in input");
 
-	float x0, z0, p0;
+	float x0, z0, p0, dx, dt;
     if (!sf_getfloat ("x0", &x0)) x0 = 0.f;
 	/* x-coordinate of the diffraction point */
     if (!sf_getfloat ("z0", &z0)) z0 = 0.f;
 	/* z-coordinate of the diffraction point */
     if (!sf_getfloat ("p0", &p0)) p0 = 0.f;
 	/* migration angle */
+    if (!sf_getfloat ("dx", &dx)) dx = xStep;
+	/* x-range for point detection */
+    if (!sf_getfloat ("dt", &dt)) dt = 0.004f;
+	/* time-range for point detection */
 
 	// OUTPUT PARAMETERS
 
@@ -100,7 +104,8 @@ int main (int argc, char* argv[]) {
 	ITracer2D iTracer;
 	iTracer.init (zNum, zStart, zStep, 
   			      pNum, pStart, pStep,
-			      xNum, xStart, xStep);
+			      xNum, xStart, xStep,
+				  dx, dt);
 	iTracer.traceImage (xVol, tVol, x0, z0, p0, xRes, zRes);
 
 	// WRITE RESULT
