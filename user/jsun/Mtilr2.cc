@@ -24,9 +24,10 @@
 
 using namespace std;
 
-static std::valarray<float>  C11, C33, C55, C13, t;
+static std::valarray<float>  vx, vz, vs, et, t;
 static std::valarray<double> kx, kz;
 static double dt;
+static int type;
 
 static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
@@ -36,10 +37,10 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	int i=rs[a];
-	double c11 = C11[i];
-	double c33 = C33[i];
-	double c55 = C55[i];
-	double c13 = C13[i];
+	double wx = vx[i]*vx[i];
+	double wz = vz[i]*vz[i];
+	double ws = vs[i]*vs[i];
+	double etaa = et[i];
 	double tt = t[i];
 	double c = cos(tt);
 	double s = sin(tt);
@@ -50,10 +51,12 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    // rotation of coordinates
 	    double x = x0*c+z0*s;
 	    double z = z0*c-x0*s;
-	    double p1 = (c11+c55)*x*x+(c33+c55)*z*z;
-	    double p2 = (c11-c55)*x*x-(c33-c55)*z*z;
-	    double p3 = 4*(c13+c55)*(c13+c55)*x*x*z*z;
-	    double r  = sqrt(0.5*p1+0.5*sqrt(p2*p2+p3));
+	    double f  = sqrt(wx*(wz-ws)/(2*etaa+1)-wz*ws+ws*ws)-ws;
+	    double p1 = (wx+ws)*x*x+(wz+ws)*z*z;
+	    double p2 = (wx-ws)*x*x-(wz-ws)*z*z;
+	    double p3 = 4*(f+ws)*(f+ws)*x*x*z*z;
+	    double r  =     sqrt(0.5*p1 + 0.5*sqrt(p2*p2+p3));
+	    if(type!=1) r = sqrt(0.5*p1 - 0.5*sqrt(p2*p2+p3));
 	    res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
@@ -65,8 +68,11 @@ int main(int argc, char** argv)
     sf_init(argc,argv); // Initialize RSF
 
     iRSF par(0);
-    int seed;
 
+//    int type;
+    par.get("type",type,1); // wave mode (1=p wave, 2=Sv wave)
+
+    int seed;
     par.get("seed",seed,time(NULL)); // seed for random number generator
     srand48(seed);
 
@@ -78,23 +84,23 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    iRSF c11, c33("c33"), c55("c55"), c13("c13"), theta("theta");
+    iRSF velz, velx("velx"), eta("eta"), theta("theta"), vels("vels");
 
     int nz,nx;
-    c11.get("n1",nz);
-    c11.get("n2",nx);
+    velz.get("n1",nz);
+    velz.get("n2",nx);
     int m = nx*nz;
 
-    C11.resize(m);
-    C33.resize(m);
-    C55.resize(m);
-    C13.resize(m);
+    vx.resize(m);
+    vz.resize(m);
+    vs.resize(m);
+    et.resize(m);
     t.resize(m);
 
-    c11 >> C11;
-    c33 >> C33;
-    c55 >> C55;
-    c13 >> C13;
+    velx >> vx;
+    velz >> vz;
+    vels >> vs;
+    eta >> et;
     theta >> t;
 
 
