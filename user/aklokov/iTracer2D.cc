@@ -8,6 +8,7 @@ using namespace std;
 
 static bool deleteAll (ImagePoint2D* p) { delete p; return true; }
 static bool pred      (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->x_ < rhs->x_; }
+static bool predTime  (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->z_ < rhs->z_; }
 
 // -- class ImagePoint2D ---
 ImagePoint2D::ImagePoint2D () : x_ (0.f), z_ (0.f),
@@ -106,6 +107,9 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	const int pInd = (p0 - pStart_) / pStep_;
 	const int xInd = (x0 - xStart_) / xStep_;
 
+	const int xRed = xNum_ - 1;
+	const int zRed = zNum_ - 1;
+
 	// escape line for the diffraction point
 	float* et = sf_floatalloc (pNum_);
 	memset ( et, 0, pNum_ * sizeof (float) );
@@ -145,7 +149,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	allPoints.sort (pred);
 
 	const float dx = 20;
-	const float dt = 5;
+	const float dt = 0.01;
 
 	// loop over escape points
 	for (int ip = 0; ip < pNum_; ++ip) {
@@ -178,19 +182,54 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 		}
 		if (!found2) continue;
 
-		bool isOk = false;
-		for (iter = iterMin; iter != iterMax && !isOk; ++iter) {
+		// get good x-points
+		list<ImagePoint2D*> goodXPoints;
+		goodXPoints.insert (goodXPoints.end(), iterMin, iterMax);
+
+		// narrow by times
+		const float t1 = curT - dt;
+		const float t2 = curT + dt;
+
+		goodXPoints.sort (predTime);
+
+		iter = goodXPoints.begin ();
+
+		found1 = false;
+		while (!found1 && iter != goodXPoints.end() ) {
+			ImagePoint2D* p1 = *iter;
+			if (p1->z_ > t1) { iterMin = iter; found1 = true; }
+			++iter;
+		}
+		if (!found1) continue;
+
+		found2 = false;
+		while ( !found2 && iter != goodXPoints.end() ) {
+			ImagePoint2D* p2 = *iter;
+			if (p2->z_ > t2) {iterMax = iter; found2 = true; }
+			++iter;
+		}
+		if (!found2) continue;
+
+		// get good points
+		list<ImagePoint2D*> goodPoints;
+		goodPoints.insert (goodPoints.end(), iterMin, iterMax);
+		
+		bool isFound = false;
+		for (iter = goodPoints.begin(); iter != goodPoints.end() && !isFound; ++iter) {
 			ImagePoint2D* iPoint = *iter;			
 			int ix = iPoint->ix_;			
 			int iz = iPoint->iz_;			
 
 			if (ix && iz) {	
 			    const int mode = -1; // upper triangle
-			    isOk = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, xRes + ip, zRes + ip);
+			    isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, xRes + ip, zRes + ip);
 			}
-			if (ix < xNum_ - 1 && iz < zNum_ - 1) {
+
+			if (isFound) continue; // point is found
+
+			if (ix < xRed && iz < zRed) {
 				const int mode = 1; // lower triangle
-				isOk = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, xRes + ip, zRes + ip);
+				isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, xRes + ip, zRes + ip);
 			}
 		}
 	}		
