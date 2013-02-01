@@ -6,10 +6,8 @@
 #include <iostream>
 using namespace std;
 
-bool pred (const ImagePoint2D* lhs, const ImagePoint2D* rhs)
-{
-  return lhs->x_ < rhs->x_;
-}
+static bool deleteAll (ImagePoint2D* p) { delete p; return true; }
+static bool pred      (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->x_ < rhs->x_; }
 
 // -- class ImagePoint2D ---
 ImagePoint2D::ImagePoint2D () : x_ (0.f), z_ (0.f),
@@ -199,6 +197,9 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			}
 		}
 	}		
+
+	// FINISH
+	allPoints.remove_if (deleteAll);
 
 	free (ex);
 	free (et);
