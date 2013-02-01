@@ -29,7 +29,6 @@ public:
 			   int xNum, float xStart, float xStep);
 
 	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes);
-	void  traceImage2 (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes);
 
 private: 
 
