@@ -20,7 +20,7 @@
 
 #include <rsf.hh>
 #include "depthBackfitMigrator2D.hh"
-
+#include <time.h>
 int main (int argc, char* argv[]) {
    
 // INIT RSF 
@@ -75,10 +75,37 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (xEscFile, "o2", &rStart) )   sf_error ("Need o2= in input");
 
 	bool isAA;
+	float dx, dt;
+	int ppn;
+	float ppo, ppd;
+    if (!sf_getint ("ppn", &ppn)) ppn = pNum;
+	/* number of processed partial images */
+    if (!sf_getfloat ("ppo", &ppo)) ppo = pStart;
+	/* first processed partial image */
+    if (!sf_getfloat ("ppd", &ppd)) ppd = pStep;
+	/* step in processed partial images */
     if ( !sf_getbool ("isAA", &isAA) ) isAA = true;
     /* if y, apply anti-aliasing */
+    if (!sf_getfloat ("dx", &dx)) dx = xStep;
+	/* x-range for point detection */
+    if (!sf_getfloat ("dt", &dt)) dt = 0.004f;
+	/* time-range for point detection */
 
 	// OUTPUT PARAMETERS
+  	sf_putint (resFile, "n1", zNum); 
+  	sf_putint (resFile, "n2", xNum); 
+  	sf_putint (resFile, "n3", ppn); 
+  	sf_putint (resFile, "n4", 1); 
+
+  	sf_putfloat (resFile, "d1", zStep); 
+  	sf_putfloat (resFile, "d2", xStep); 
+  	sf_putfloat (resFile, "d3", ppd); 
+  	sf_putfloat (resFile, "d4", 1); 
+
+	sf_putfloat (resFile, "o1", zStart); 
+  	sf_putfloat (resFile, "o2", xStart); 
+  	sf_putfloat (resFile, "o3", ppo); 
+  	sf_putfloat (resFile, "o4", 1); 
 
 	// MEMORY ALLOCATION
 
@@ -108,18 +135,20 @@ int main (int argc, char* argv[]) {
   	 	         pNum, pStart, pStep,
 			     xNum, xStart, xStep,
 			     rNum, rStart, rStep,
-	 			 xVol, tVol,
+				 dx, dt, xVol, tVol,
 				 isAA);
 
-	for (int ip = 0; ip < pNum; ++ip) {
-		sf_warning ("pimage %d of %d;", ip + 1, pNum);		
-		const float curP = pStart + ip * pStep;			
+	for (int ip = 0; ip < ppn; ++ip) {
+		clock_t begin=clock();
+		sf_warning ("pimage %d of %d;", ip + 1, ppn);		
+		const float curP = ppo + ip * ppd;			
 
 		memset ( piData,  0, piSize * sizeof (int) );
 		memset ( piImage, 0, piSize * sizeof (int) );
 
 		// read partial image
-		const size_t startPos = ip * piSize * sizeof(float);
+		const int pind = (curP - pStart) / pStep;
+		size_t startPos = pind * piSize * sizeof(float);
 	    sf_seek (piFile, startPos, SEEK_SET);
 	    sf_floatread (piData, piSize, piFile);
 
@@ -127,8 +156,13 @@ int main (int argc, char* argv[]) {
 		dbfmig.processPartialImage (piData, curP, piImage);
 
 		// write result
+		startPos = ip * piSize * sizeof(float);
 	 	sf_seek (resFile, startPos, SEEK_SET);
 	    sf_floatwrite (piImage, piSize, resFile);
+
+		clock_t end=clock();
+		float time = (end - begin) / (11 * CLOCKS_PER_SEC);
+		sf_warning ("pimage %g s", time);
 	}
 
 	// FINISH

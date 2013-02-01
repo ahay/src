@@ -62,7 +62,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 
 bool DepthBackfitMigrator2D::getSample (float* piData, const float curX, const float curZ, const float curP, float &sample) {
 
-	const float p = tan (curP * 3.141592 / 180.f);
+	const float p = 0;//tan (curP * 3.141592 / 180.f);
 
 	const int xInd = (curX - xStart_) / xStep_;
 	
@@ -79,9 +79,9 @@ bool DepthBackfitMigrator2D::getSample (float* piData, const float curX, const f
 	float z2 = curZ - aftX * p;
 
 	float sample1, sample2;
-	bool goodSample = this->getSampleFromImage (piData, x1, z1, curP, sample1);
+	bool goodSample = this->getSampleFromImage (piData, x1, z1, 0.f, sample1);
 	if (!goodSample) return false;
-	goodSample = this->getSampleFromImage (piData, x2, z2, curP, sample2);
+	goodSample = this->getSampleFromImage (piData, x2, z2, 0.f, sample2);
 	if (!goodSample) return false;
 	
 	sample = bef * sample2 + aft * sample1;
