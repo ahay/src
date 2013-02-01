@@ -116,10 +116,15 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	float* ex = sf_floatalloc (pNum_);
 	memset ( ex, 0, pNum_ * sizeof (float) );
 
+	list<ImagePoint2D*> escPoints;
+
 	for (int ip = 0; ip < pNum_; ++ip) {
 		const int pind = xInd * pNum_ * zNum_ + ip * zNum_ + zInd;
 		ex[ip] = xVol [pind];
 		et[ip] = 2 * tVol [pind];
+
+	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * tVol [pind], ip, 0);
+		escPoints.push_back (p);
 	}
 
 	// constant-dip panel extraction
@@ -149,15 +154,17 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	allPoints.sort (pred);
 
 	const float dx = 20;
-	const float dt = 0.01;
+	const float dt = 0.0001;
 
 	// loop over escape points
-	for (int ip = 0; ip < pNum_; ++ip) {
 
-//		sf_warning ("%d", ip);
+	list<ImagePoint2D*>::iterator iterEP;
+	for (iterEP = escPoints.begin (); iterEP != escPoints.end(); ++iterEP) {
 
-		float curT = et[ip];
-		float curX = ex[ip];
+		ImagePoint2D* escPoint = *iterEP;
+
+		float curT = escPoint->z_; // et[ip];
+		float curX = escPoint->x_;// ex[ip];
 
 		float x1 = curX - dx;
 		float x2 = curX + dx;
@@ -219,6 +226,8 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			ImagePoint2D* iPoint = *iter;			
 			int ix = iPoint->ix_;			
 			int iz = iPoint->iz_;			
+			int ip = escPoint->ix_;
+
 
 			if (ix && iz) {	
 			    const int mode = -1; // upper triangle
@@ -236,6 +245,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 
 	// FINISH
 	allPoints.remove_if (deleteAll);
+	escPoints.remove_if (deleteAll);
 
 	free (ex);
 	free (et);
