@@ -512,6 +512,7 @@ FILE * iwave_const_fopen(const char * name,
 
   if (!fp) {
     fprintf(stream,"NOTE: returning from iwave_const_fopen with null ptr\n");
+    fprintf(stream,"NOTE: input params name=%s mode=%s proto=%s\n",name,mode,proto);
     fprintf(stream,"NOTE: state of file system:\n");
     iwave_fprintall(stream);
   }
