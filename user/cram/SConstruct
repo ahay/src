@@ -15,9 +15,11 @@ try:  # distributed version
     env = env.Clone()
 # OpenMP disables certain optimizations, so disable it (nothing uses it here, anyway)
     env['CFLAGS'] = env.get('CFLAGS','').replace('-openmp','').replace('-D_OPENMP','')
+    env['LINKFLAGS'] = env.get('LINKFLAGS','').replace('-openmp','')
 except: # local version
     env = bldutil.Debug()
     env['CFLAGS'] = env.get('CFLAGS','').replace('-O3','-g').replace('-openmp','').replace('-D_OPENMP','')
+    env['LINKFLAGS'] = env.get('LINKFLAGS','').replace('-openmp','')
     root = None
     SConscript('../../api/c/SConstruct')
 
