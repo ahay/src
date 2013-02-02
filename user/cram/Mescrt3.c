@@ -147,6 +147,7 @@ int main (int argc, char* argv[]) {
     if (spdom) {
         if (!sf_histint (spdom, "n1", &nz)) sf_error ("No n1= in input");
         if (!sf_histint (spdom, "n2", &nx)) sf_error ("No n2= in input");
+        if (!sf_histint (spdom, "n3", &ny)) sf_error ("No n3= in input");
         if (!sf_histfloat (spdom, "d1", &dz)) sf_error ("No d1= in input");
         if (!sf_histfloat (spdom, "o1", &oz)) sf_error ("No o1= in input");
         if (!sf_histfloat (spdom, "d2", &dx)) sf_error ("No d2= in input");
