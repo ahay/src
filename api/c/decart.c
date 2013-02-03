@@ -97,7 +97,8 @@ off_t sf_large_cart2line(int dim         /* number of dimensions */,
 			 const off_t* ii /* cartesian coordinates [dim] */) 
 /*< Convert Cartesian to line >*/
 {
-    int i, axis;
+    off_t i;
+    int  axis;
 
     if (dim < 1) return 0;
 
