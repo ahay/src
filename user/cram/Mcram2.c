@@ -133,7 +133,7 @@ int main (int argc, char* argv[]) {
     sf_cram_point2_set_taper (cram_point, ts, th);
     sf_cram_point2_set_shmax (cram_point, smax, hmax);
     /* Image and gathers accumulator object */
-    cram_gather = sf_cram_gather2_init (na, nz, a0, da, oazmin, dazmin);
+    cram_gather = sf_cram_gather2_init (na, nz, a0, da, oazmax, dazmax);
     sf_cram_gather2_set_sqsmb (cram_gather, sqsmb);
 
     oimag = sf_output ("out");
