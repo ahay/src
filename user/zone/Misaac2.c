@@ -84,7 +84,7 @@ static float zder2(int k,float x)
 /*Main program-------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus;
+	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus,count;
 	float x, dt, t0, bmin, bmax, tt;
 	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *dk_old, *xxtem, *zk,*ck_inv; 
 	double tol;
@@ -150,7 +150,11 @@ int main(int argc, char* argv[])
 	if (!sf_getfloats("layer",updown,nr2+1)) sf_error("Please enter the layer number array [nr2+1]");
 	/* layer sequence*/
 	
-	if (!sf_getfloats("xinitial",xinitial,nr2)) sf_error("Please enter the initial position array [nr2]");
+	if (!sf_getfloats("xinitial",xinitial,nr2)) {
+		for (count=0; count<nr2; count++) {
+			xinitial[count] = xx[0]+(count+1)*(xx[nr2+1]-xx[0])/(nr2+1); /*Divide the distance from s to r equally and set the initial points accordingly*/
+		}	
+	}
 	/* initial position*/
 	
 	if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
@@ -168,17 +172,21 @@ int main(int argc, char* argv[])
 	if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
 	/* assign z-reference point*/
 	
-	if (!sf_getfloat("min",&bmin)) sf_error("Please enter the minimum boundary");
-	/* The minimum boundary*/
+	if (!sf_getfloat("min",&bmin)) {
+		bmin=xx[0];
+	}
+	/* The minimum boundary if not entered, set to xs*/
 	
-	if (!sf_getfloat("max",&bmax)) sf_error("Please enter the maximum boundary");
-	/* The maximum boundary*/
+	if (!sf_getfloat("max",&bmax)) {
+		bmax=xx[nr2+1];
+	}
+	/* The maximum boundary if not entered, set to xr*/
 	
 	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
 	/* The number of iterations*/
 	
 	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
-	/* Velocity status*/
+	/* Velocity status (0 for constant v and other int for gradient v)*/
 	
 	if (!sf_getdouble("tol",&tol)) tol=0.000001/v_inp[0];
 	/* Assign a default value for tolerance*/
@@ -207,8 +215,9 @@ int main(int argc, char* argv[])
 	
 	
 	/*read input------------------------------------------------------------------------------*/
-	int d1,d2,d3,d4,d5,p1; /*counter*/
+	int d1,d2,d3,d4,d5,p1,p3; /*counter*/
 	int p2; /*Temp value*/
+	float p4; /*Temp value*/
 	
 	sf_floatread(temp_rr[0],nr1*N,refl);
 	
@@ -222,45 +231,56 @@ int main(int argc, char* argv[])
 		}
 	}
 	
+	/*Check whether the gradient and vstatus match*/
+	
+	for (p3=0; p3<N-1; p3++) {
+		p4 = gx_inp[p3]+gz_inp[p3];
+		
+		if (p3==N-2 && p4/(2*N-2)!=0 && vstatus==0) {
+			sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
+			exit(0);
+		}
+		if (p3==N-2 && p4/(2*N-2)==0 && vstatus!=0) {
+			sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
+			exit(0);
+		}
+	}
+	
+	
 	/*Generate input according to the reflection sequence-----------------------------*/
 	for (d2=0; d2<nr2+2; d2++) {
 		
 		
 		/*Set velocity, gradient, and reference points arrays*/
-		
-		if (d2 <=1) {
-			v[d2] = v_inp[0];
-			gx[d2] = gx_inp[0];
-			gz[d2] = gz_inp[0];
-			xref[d2] = xref_inp[0];
-			zref[d2] = zref_inp[0];
-		}
-		else {
-			d3 = updown[d2-2]; /*need d3, d4, and d5 because array argument needs to be an interger*/
-			d4 = updown[d2-1];
-			
-			if (d4-d3>0) {
-				
-				gx[d2] = gx_inp[d3];
-				gz[d2] = gz_inp[d3];
-				xref[d2] = xref_inp[d3];
-				zref[d2] = zref_inp[d3];
-				
-			}	
-			
-			if(d4-d3<0){
-				
-				v[d2] = v_inp[d4];
-				gx[d2] = gx_inp[d4];
-				gz[d2] = gz_inp[d4];
-				xref[d2] = xref_inp[d4];
-				zref[d2] = zref_inp[d4];
-				
+			if (d2<1) {
+				v[d2] = v_inp[0];
+				gx[d2] = gx_inp[0];
+				gz[d2] = gz_inp[0];
+				xref[d2] = xref_inp[0];
+				zref[d2] = zref_inp[0];
 			}
-		}
+			else {
+				d3 = updown[d2-1]; /*need d3, d4, and d5 because array argument needs to be an interger*/
+				d4 = updown[d2];
+				
+				if (d4-d3>0) {
+					v[d2] = v_inp[d3];
+					gx[d2] = gx_inp[d3];
+					gz[d2] = gz_inp[d3];
+					xref[d2] = xref_inp[d3];
+					zref[d2] = zref_inp[d3];
+				}	
+				
+				if(d4-d3<0){
+					v[d2] = v_inp[d4];
+					gx[d2] = gx_inp[d4];
+					gz[d2] = gz_inp[d4];
+					xref[d2] = xref_inp[d4];
+					zref[d2] = zref_inp[d4];
+				}
+			}
 		
-		
-		for (d1=0; d1<nr1; d1++) {
+		for (d1=0; d1<nr1; d1++) { /*Set layers according to updown*/
 			
 			if (d2 == 0) {
 				rr[d2][d1] = temp_rr[0][d1];
@@ -321,43 +341,37 @@ int main(int argc, char* argv[])
 	
 	setfunc(vstatus,&f);
 	
+	
 	/*Step 1: Calculate F(y) to see if it is sufficiently close to zero-------------------*/
 	
 	int i,j1,i3,i4; /*counter*/
 	float Ftem=0;
 	
 	for (i3=0; i3<nr2; i3++) {
-		xx[i3+1] = xinitial[i3];
+		xx[i3+1] = xinitial[i3]; /*Create an array of points of intersection from soure to receiver*/
 	}
 	
 	for (i=0; i<nr2; i++) {
 		
-		initialize(i+1,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_k and y_k1*/
+		initialize(i+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_k and y_k1*/
 		
 		F[i+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 		
-		/*F[i+1] = traveltime_1k_k(i+1,v[i],xx[i],xx[i+1],xx[i+2],z,zder,zder2) + traveltime_k_k(i+1,v[i+1],xx[i],xx[i+1],xx[i+2],z,zder,zder2);*/
-		
-		
-		for (i4=0; i4<nr2; i4++) { /*check the tolerance*/
-			
-			Ftem = Ftem+fabsf(F[i4+1]);
-			
-			if (Ftem<nr2*tol) {
-				for (j1=0; j1<nr2; j1++) {
-					sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
-				}
-				goto mark; /*Exit the loop to the writing the result part*/
-			}	
-			
-			if (i4 == nr2-1) {
-				Ftem=0;
-			}
-			
-			
-		}
-		
 	}	
+	
+	for (i4=0; i4<nr2; i4++) { /*check the tolerance*/
+		
+		Ftem = Ftem+fabsf(F[i4+1]);
+		
+		if (Ftem<nr2*tol && i4 == nr2-1) {
+			for (j1=0; j1<nr2; j1++) {
+				sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
+			}
+			goto mark; /*Exit the loop to the part for writing the result*/
+		}	
+		
+		
+	}
 	
 	/*Loop through the output for repeating yk=yk-dk----------------------------------------------------------------------*/
 	
@@ -365,35 +379,28 @@ int main(int argc, char* argv[])
 	int i2,j2,i5; /*counter*/
 	int w = niter; /*number of loops for yk=yk-dk*/
 	
-	Ftem=0; /*reset Ftem to zero*/
 	
 	for (q=0; q<w; q++) {
 		
+		Ftem=0; /*reset Ftem to zero*/
+		
 		for (i2=0; i2<nr2; i2++) { /*Recalculate F for new y*/
 			
-			initialize(i2+1,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			initialize(i2+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
 			
 			F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 			
-			/*F[i2+1] = traveltime_1k_k(i2+1,v[i2],xx[i2],xx[i2+1],xx[i2+2],z,zder,zder2) + traveltime_k_k(i2+1,v[i2+1],xx[i2],xx[i2+1],xx[i2+2],z,zder,zder2);*/
+		}
+		
+		for (i5=0; i5<nr2; i5++) { /*check the tolerance*/
 			
+			Ftem = Ftem+fabsf(F[i5+1]);
 			
-			for (i5=0; i5<nr2; i5++) { /*check the tolerance*/
-				
-				Ftem = Ftem+fabsf(F[i5+1]);
-				
-				if (Ftem<nr2*tol) {
-					for (j2=0; j2<nr2; j2++) {
-						sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
-					}
-					goto mark; /*Exit the loop to the writing the result part*/
+			if (Ftem<nr2*tol && i5 == nr2-1) {
+				for (j2=0; j2<nr2; j2++) {
+					sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
 				}
-				
-				if (i5 == nr2-1) {
-					Ftem=0;
-				}
-				
-				
+				goto mark; /*Exit the loop to the part for writing the result*/
 			}
 			
 		}
@@ -403,23 +410,19 @@ int main(int argc, char* argv[])
 		int l; /*counter*/
 		for (l=0; l<nr2; l++) {
 			
-			initialize(l+1,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			initialize(l+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
 			
 			if (l==0) {
 				
 				ck_inv[1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
 				zk[1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) +T_hat_k_k(f.T_k_k,f.T_k_zk);
 				
-				/*ck_inv[1] = 1/(traveltime_1k_k_k(l+1,v[l],xx[0],xx[1],xx[2],z,zder,zder2) + traveltime_k_k_k(l+1,v[l+1],xx[0],xx[1],xx[2],z,zder,zder2)); */
-				/*zk[1] = traveltime_1k_k(l+1,v[l],xx[0],xx[1],xx[2],z,zder,zder2) + traveltime_k_k(l+1,v[l+1],xx[0],xx[1],xx[2],z,zder,zder2); */
 			}
 			else {
 				
 				ck_inv[l+1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
 				zk[l+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*zk[l];
 				
-				/*ck_inv[l+1] = 1/(traveltime_1k_k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2) + traveltime_k_k_k(l+1,v[l+1],xx[l],xx[l+1],xx[l+2],z,zder,zder2)-traveltime_1k_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2)*ck_inv[l]*traveltime_1k_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2));*/
-				/*zk[l+1] = traveltime_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2) + traveltime_k_k(l+1,v[l+1],xx[l],xx[l+1],xx[l+2],z,zder,zder2)-traveltime_1k_1k_k(l+1,v[l],xx[l],xx[l+1],xx[l+2],z,zder,zder2)*ck_inv[l]*zk[l];*/	
 			}
 			
 			if (isnan(1/ck_inv[l+1]) != 0 || isinf(1/ck_inv[l+1]) != 0) {
@@ -430,22 +433,24 @@ int main(int argc, char* argv[])
 		}	
 		
 		/*Step 3: Backward recursion----------------------------------------------------------*/
-		int m,u,w; /*counter*/
+		int m; /*counter*/
 		for (m=nr2-1; m>=0; m--) { 
 			
-			initialize(m+1,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			initialize(m+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
 			
 			if (m==nr2-1) {
 				dk[m+1] = ck_inv[m+1]*zk[m+1];
 			}
 			else {
 				dk[m+1] = ck_inv[m+1]*(zk[m+1]-T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*dk[m+2]);
-				/*dk[m+1] = ck_inv[m+1]*(zk[m+1]-traveltime_k_k_k1(m+1,v[m+1],xx[m],xx[m+1],xx[m+2],z,zder,zder2)*dk[m+2]);*/
 			}
 			
 		}
 		
-		/*Check whether the increment dk is diverging or not and multiply by 0.5 if it is*/
+		/*Check whether the increment dk is diverging or not and multiply by 0.5 if it is (reduce only 20 times)*/
+		
+		#ifdef NO_CHANCE_THAT_THIS_SYMBOL_WILL_EVER_EXIST
+		int u,w,p5=0; /*counter*/
 		
 		if (q==0) {
 			for (w=0; w<nr2+2; w++) {
@@ -454,54 +459,57 @@ int main(int argc, char* argv[])
 		}
 		
 		for (u=0; u<nr2; u++) {
-			while (fabsf(dk[u+1])>fabsf(dk_old[u+1])) {
+			while (fabsf(dk[u+1])>fabsf(dk_old[u+1]) && p5<nr2*10) {
 				dk[u+1] = 0.5*dk[u+1];
+				p5++; /*update counter*/
 				sf_warning("The increment dk[%d] diverges and is halved to be %g\n",u+1,dk[u+1]);
-				if (fabsf(dk[u+1])<tol) {
+				if (fabsf(dk[u+1])<tol) { /*Break the loop if the reduced increment is smaller than the tolerance*/
 					break;
 				}
 			}
+			
+			if (p5>=nr2*10) {
+				sf_warning("The increment still diverges after being halved for 10 times (at each reflection point). Please reenter a more appropriate set of xinitial\n");
+				exit(0);
+			}
 		} 
+		#endif
+	
+		/*Apply boundary ------------------------------------------*/
 		
-		
-		/*Step 4: Update xx--------------------------------------------------------------------*/
 		int t,a,b1,b2; /*counter*/
-		
-		/*Apply boundary------------------------------------------*/
 		
 		for (a=0; a<nr2; a++) {
 			b1=0;
 			b2=0;
 			xxtem[a+1] = xx[a+1]-dk[a+1];
 			
-			if (xxtem[a+1]<bmin) {
-				switch (b1) {
-					case 20: /*maximum times to multiply is 20*/
-						break;
-					default:
-						dk[a+1]=0.5*dk[a+1];
-						sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
-						xxtem[a+1] = xx[a+1]-dk[a+1];
-						b1++;
-						break;
-				}
+			while (xxtem[a+1]<bmin && b1<20) {/*maximum times to multiply is 10*/
+				
+				dk[a+1]=0.5*dk[a+1];
+				sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+				xxtem[a+1] = xx[a+1]-dk[a+1];
+				b1++;
 			}
-			else if (xxtem[a+1]>bmax) {
-				switch (b2) {
-					case 20: /*maximum times to multiply is 20*/
-						break;
-					default:
-						dk[a+1]=0.5*dk[a+1];
-						sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
-						xxtem[a+1] = xx[a+1]-dk[a+1];
-						b2++;
-						break;
-				}
+			while(xxtem[a+1]>bmax && b1<20) {/*maximum times to multiply is 10*/
+				dk[a+1]=0.5*dk[a+1];
+				sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+				xxtem[a+1] = xx[a+1]-dk[a+1];
+				b2++;
+				
+			}
+			if (b1>=20) {
+				sf_warning("The position x[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
+				exit(0);
+			}
+			if (b2>=20) {
+				sf_warning("The position x[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
+				exit(0);
 			}
 			
 		}
 		
-		/*--------------------------------------------------------*/
+		/*Step 4: Update xx--------------------------------------------------------------------*/
 		
 		vector_sub(nr2+2,xx,nr2+2,dk,xxnew,0);
 		
@@ -513,13 +521,10 @@ int main(int argc, char* argv[])
 			*(xx+t) = *(xxnew+t); /*update xx values*/
 			*(dk_old+t) = *(dk+t); /*store the working dk*/
 			
-			
 		}
-		
-		
+			
 	}
-	
-	
+		
 	/*Write result in 2D & Compute traveltime-----------------------------------------------------------------------*/
 	int c1,c2;
 	int c; /*counter*/
@@ -543,10 +548,9 @@ mark: /*mark point for goto*/
 	
 	for (c=0; c<nr2+1; c++) {
 		
-		half_initialize(c,xx,v,xref,zref,gx,gz,z,zder,zder2);
+		half_initialize(c,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
 		
 		tt = tt + T_hat_k(f.T_k);
-		/*tt = tt + traveltime_k(c, v[c],xx[c],xx[c+1],z,zder,zder2);*/
 		
 		if (c==nr2) {
 			sf_warning("Traveltime is %g",tt);

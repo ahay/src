@@ -53,7 +53,7 @@ static float zder(float x)
 	return f1/dr;
 }
 
-static float zder2(float x) 
+static float zder2_eno(float x) 
 /* second derivative */
 {
 	int i;
@@ -66,7 +66,7 @@ static float zder2(float x)
 	return f1/dr;	
 }
 
-static float zder22(float x) 
+static float zder2_cen(float x) 
 /* second derivative from finite difference */
 {
 	int i;
@@ -90,31 +90,32 @@ static float zder22(float x)
 	return f;
 }
 
-static float d1(float x,float h,float alpha)
-/*Second derivative for hyperbolic reflector*/
-{
-	float f;
+/*static float d1(float x,float h,float alpha)*/
+/*First derivative for hyperbolic reflector*/
+/*{*/
+/*	float f;*/
 	
-	f = x*pow(tan(alpha),2)/hypot(h,x*tan(alpha));
+/*	f = x*pow(tan(alpha),2)/hypot(h,x*tan(alpha));*/
 	
-	return f;
-}
+/*	return f;*/
+/*}*/
 
-static float d2(float x,float h,float alpha)
+/*static float d2(float x,float h,float alpha)*/
 /*Second derivative for hyperbolic reflector*/
-{
-	float f;
+/*{*/
+/*	float f;*/
 	
-	f = pow(h,2)*pow(tan(alpha),2)/pow(hypot(h,x*tan(alpha)),3);
+/*	f = pow(h,2)*pow(tan(alpha),2)/pow(hypot(h,x*tan(alpha)),3);*/
 	
-	return f;
-}
+/*	return f;*/
+/*}*/
 
 int main(int argc, char* argv[])
 {
-	int nt, it, ir, order, niter, nt2, it2;
-	float x, t0, dt, velocity, tol, xinitial,dt2,t02; /*,max_extent, scale,max_x,xmax,hmax;*/
-	float zd1,zd1_real, zd2, zd2_real; /*temp second derivative value*/
+	int nt, it, ir, order, niter, nt2, it2, type, print;
+	float x, t0, dt, velocity, tol, xinitial=0, xmid,dt2,t02; /*,max_extent, scale,max_x,xmax,hmax;*/
+	float zd1, zd2_eno,zd2_cen /*zd2_real,rel_cen,rel_eno,zd1_real*/; /*temp second derivative value*/
+	func1 zder2=0;
 	
 	float *rd, **tt, **xx; 
 	double xs,xr;
@@ -128,7 +129,7 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(refl,"o1",&r0)) r0=0.;
 	if (!sf_histfloat(refl,"d1",&dr)) dr=1.;
 	
-	/* Set output 2D traveltime and 1D reflection point*/
+	/* Set output 2D traveltime and 2D reflection point*/
 	ttime = sf_output("out"); /* Output traveltime */
 	
 	if (!sf_getint("ns",&nt)) nt=nr; /* number of sources for midpoint*/
@@ -149,10 +150,15 @@ int main(int argc, char* argv[])
 	sf_putfloat(ttime,"d2",dt);
 	sf_putfloat(ttime,"o2",t0);
 	
-	xrefl = sf_output("xrefl"); /* Output reflection point */
-	sf_putint(xrefl,"n1",nt);
-	sf_putfloat(xrefl,"d1",dt);
-	sf_putfloat(xrefl,"o1",t0);	
+	xrefl = sf_output("xrefl"); /* Output reflection point*/
+	
+	sf_putint(xrefl,"n1",nt2); /*S&R increment axis (Faster axis)*/
+	sf_putfloat(xrefl,"d1",dt2);
+	sf_putfloat(xrefl,"o1",t02);	
+	
+	sf_putint(xrefl,"n2",nt); /* Midpoint axis*/
+	sf_putfloat(xrefl,"d2",dt);
+	sf_putfloat(xrefl,"o2",t0);
 	
 	/* Allocate space */
 	rr = sf_floatalloc(nr);
@@ -165,23 +171,15 @@ int main(int argc, char* argv[])
 	sf_floatread(rr,nr,refl);
 	
 	/* Initialize interpolation */
-	if (!sf_getint("order",&order)) order=3;/*interpolation order*/
+	if (!sf_getint("print",&type)) print=0;/*print the actual calculated values by sf_eno and central finite difference 0=No and 1=Yes*/
 	
+	if (!sf_getint("type",&type)) type=1;/*interpolation type 0=sf_eno and 1=central finite difference*/
+	
+	if (!sf_getint("order",&order)) order=4;/*interpolation order if choose to use sf_eno*/
 	
 	if (!sf_getfloat("velocity",&velocity)) velocity=2.0;/*assign velocity km/s*/
 	
-	
 	if (!sf_getfloat("tol",&tol)) tol=1/(1000000*velocity);/* assign a default value for tolerance*/
-	
-	
-	/*if (!sf_getfloat("max_extent",&max_extent)) hmax=500;
-	assign max extent from the center of the xs and xr in meter*/
-	
-	/*if (!sf_getfloat("max_x",&max_x)) xmax=500;
-	assign how much x0 go in meter*/
-	
-	/*if (!sf_getfloat("scale",&scale)) scale=5.0;
-	assign the scale of h and x0 for each increment in meter*/
 	
 	eno  = sf_eno_init(order,nr);
 	sf_eno_set (eno,rr);
@@ -198,32 +196,42 @@ int main(int argc, char* argv[])
 	niter = 60000; /* number of iterations for Newton's method*/
 	
 	
+	if (type==0) { /*set the type of interpolation to use*/
+		zder2 = zder2_eno;
+	} else if (type==1) {
+		zder2 = zder2_cen;
+	}
+
+	
+	
 	/* Loop through the output */
 	for (it=0; it < nt; it++){ /*How many times we move the location (Midpoint) =>Each Row*/
 		
-		
-		if (it >= 200) {
-			sf_warning("Line = %d\n",it);
-		}
+		xmid = t0+it*dt;
 		
 		for (it2=0; it2 < nt2; it2++) { /*How many times we compute xs&xr at each location =>Each Column*/
-			xs = t0+it*dt-it2*dt2; /* source location */
-			xr = t0+it*dt+it2*dt2; /* receiver location */
+			xs = xmid-it2*dt2; /* source location */
+			xr = xmid+it2*dt2; /* receiver location */
 			
-			traveltime_init(z,zder,zder22,xs,xr,velocity);
+			traveltime_init(z,zder,zder2,xs,xr,velocity);
 			
-			if (it2==0) {
-				xinitial = t0+it*dt; /*The first calculation starting from the origin*/
+				if (it==1) xinitial = xmid;  /*The first calculation starting from the origin*/
+				
 				x = newton(dtdx,d2tdx2,xinitial,niter,tol);
 				xinitial = x; /*Use the answer of the previous iteration to be the starting point of the next iteration*/
 				
-				zd1 = zder(xinitial);
-				zd1_real = d1(xinitial,1, 45*pi/180.0);
-				zd2 = zder22(xinitial);
-				zd2_real = d2(xinitial,1, 45*pi/180.0);
-				
-				sf_warning("x=%g,zder1=%g,zd1_real=%g \n\tzder2=%g,zd2_real=%g",xinitial,zd1,zd1_real,zd2,zd2_real);
-			}
+				if (print==1) {
+					zd1 = zder(xinitial);
+					/*zd1_real = d1(xinitial,1, 45*pi/180.0);*/
+					zd2_eno = zder2_eno(xinitial);
+					zd2_cen = zder2_cen(xinitial);
+					/*zd2_real = d2(xinitial,1, 45*pi/180.0);*/
+					
+					/*rel_eno = fabs(zd2_eno-zd2_real)/zd2_real;*/
+					/*rel_cen = fabs(zd2_cen-zd2_real)/zd2_real;*/
+					
+					sf_warning("x=%g, zder1=%g, zder2_eno=%g, zder2_cen=%g",xinitial,zd1,zd2_eno,zd2_cen);
+				}
 			
 			tt[it][it2] = traveltime(x);
 			xx[it][it2] = x;
