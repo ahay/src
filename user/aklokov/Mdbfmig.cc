@@ -76,14 +76,30 @@ int main (int argc, char* argv[]) {
 
 	bool isAA;
 	float dx, dt;
-	int ppn;
-	float ppo, ppd;
+	int ppn; float ppo, ppd;
+	int izn, ixn; float izo, ixo, izd, ixd;
+
     if (!sf_getint ("ppn", &ppn)) ppn = pNum;
 	/* number of processed partial images */
     if (!sf_getfloat ("ppo", &ppo)) ppo = pStart;
 	/* first processed partial image */
     if (!sf_getfloat ("ppd", &ppd)) ppd = pStep;
 	/* step in processed partial images */
+
+    // IMAGE PARAMS
+    if (!sf_getint ("izn", &izn))        izn = zNum;	
+    /* number of imaged depth samples */
+    if (!sf_getint ("ixn", &ixn))        ixn = xNum;	
+    /* number of imaged positions */
+    if (!sf_getfloat ("izo", &izo))      izo = zStart;
+    /* first imaged depth (in meters) */
+    if (!sf_getfloat ("ixo", &ixo))      ixo = xStart;
+    /* first imaged position (in meters) */
+    if (!sf_getfloat ("izd", &izd))      izd = zStep;
+    /* step in depth (in meters) */
+    if (!sf_getfloat ("ixd", &ixd))      ixd = xStep;
+    /* step in positions (in meters) */
+
     if ( !sf_getbool ("isAA", &isAA) ) isAA = true;
     /* if y, apply anti-aliasing */
     if (!sf_getfloat ("dx", &dx)) dx = xStep;
@@ -92,31 +108,32 @@ int main (int argc, char* argv[]) {
 	/* time-range for point detection */
 
 	// OUTPUT PARAMETERS
-  	sf_putint (resFile, "n1", zNum); 
-  	sf_putint (resFile, "n2", xNum); 
+  	sf_putint (resFile, "n1", izn); 
+  	sf_putint (resFile, "n2", ixn); 
   	sf_putint (resFile, "n3", ppn); 
   	sf_putint (resFile, "n4", 1); 
 
-  	sf_putfloat (resFile, "d1", zStep); 
-  	sf_putfloat (resFile, "d2", xStep); 
+  	sf_putfloat (resFile, "d1", izd); 
+  	sf_putfloat (resFile, "d2", ixd); 
   	sf_putfloat (resFile, "d3", ppd); 
   	sf_putfloat (resFile, "d4", 1); 
 
-	sf_putfloat (resFile, "o1", zStart); 
-  	sf_putfloat (resFile, "o2", xStart); 
+	sf_putfloat (resFile, "o1", izo); 
+  	sf_putfloat (resFile, "o2", ixo); 
   	sf_putfloat (resFile, "o3", ppo); 
   	sf_putfloat (resFile, "o4", 1); 
 
 	// MEMORY ALLOCATION
 
-	const int piSize  = zNum * xNum;
-	const int volSize = zNum * rNum * xNum;
+	const int piSize    = zNum * xNum;
+	const int volSize   = zNum * rNum * xNum;
+	const int piResSize = izn * ixn;
 
 	float* tVol = sf_floatalloc (volSize);
 	float* xVol = sf_floatalloc (volSize);
 
 	float* piData  = sf_floatalloc (piSize);
-	float* piImage = sf_floatalloc (piSize);
+	float* piImage = sf_floatalloc (piResSize);
 
 	// READ ESCAPE VOLUMES
 
@@ -135,6 +152,8 @@ int main (int argc, char* argv[]) {
   	 	         pNum, pStart, pStep,
 			     xNum, xStart, xStep,
 			     rNum, rStart, rStep,
+				 izn, izo, izd,
+			     ixn, ixo, ixd,
 				 dx, dt, xVol, tVol,
 				 isAA);
 
@@ -144,7 +163,7 @@ int main (int argc, char* argv[]) {
 		const float curP = ppo + ip * ppd;			
 
 		memset ( piData,  0, piSize * sizeof (int) );
-		memset ( piImage, 0, piSize * sizeof (int) );
+		memset ( piImage, 0, piResSize * sizeof (int) );
 
 		// read partial image
 		const int pind = (curP - pStart) / pStep;
@@ -156,9 +175,9 @@ int main (int argc, char* argv[]) {
 		dbfmig.processPartialImage (piData, curP, piImage);
 
 		// write result
-		startPos = ip * piSize * sizeof(float);
+		startPos = ip * piResSize * sizeof(float);
 	 	sf_seek (resFile, startPos, SEEK_SET);
-	    sf_floatwrite (piImage, piSize, resFile);
+	    sf_floatwrite (piImage, piResSize, resFile);
 
 		clock_t end=clock();
 		float time = (end - begin) / (11 * CLOCKS_PER_SEC);

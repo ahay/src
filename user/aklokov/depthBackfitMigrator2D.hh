@@ -14,6 +14,8 @@ public:
   			   int pNum, float pStart, float pStep,
 			   int xNum, float xStart, float xStep,
 			   int rNum, float rStart, float rStep,
+		 	   int izn,  float izo,    float izd,
+		 	   int ixn,  float ixo,    float ixd,
 			   float dx, float dt,
 			   float* xVol, float* tVol, bool isAA);
 
@@ -49,7 +51,17 @@ private:
 	int   rNum_;
 	float rStep_;
 	float rStart_;
+	
+	// backfit image params
+	int   izn_;
+	float izd_;
+	float izo_;
 
+	int   ixn_;
+	float ixd_;
+	float ixo_;
+
+	// point-search params
 	float dx_;
 	float dt_;
 	

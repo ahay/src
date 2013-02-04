@@ -33,6 +33,8 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 			 					   int pNum, float pStart, float pStep,
 							 	   int xNum, float xStart, float xStep,
 							 	   int rNum, float rStart, float rStep,
+							 	   int izn,  float izo,    float izd,
+							 	   int ixn,  float ixo,    float ixd,
 								   float dx, float dt,
   								   float* xVol, float* tVol, bool isAA) {
 	
@@ -51,7 +53,15 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	rNum_   = rNum;
 	rStep_  = rStep;
 	rStart_ = rStart;	
-	
+
+	izn_    = izn;
+	izo_    = izo;
+	izd_    = izd;
+
+	ixn_    = ixn;
+	ixo_    = ixo;
+	ixd_    = ixd;
+
 	dx_   = dx;
 	dt_   = dt;
 
@@ -183,12 +193,12 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 		}
 	}
 */
-	for (int ix = 0; ix < xNum_; ++ix) {
-		const float curX = xStart_ + ix * xStep_;
-		float* iTrace = piImage + ix * zNum_;
+	for (int ix = 0; ix < ixn_; ++ix) {
+		const float curX = ixo_ + ix * ixd_;
+		float* iTrace = piImage + ix * izn_;
 #pragma omp parallel for
-		for (int iz = 0; iz < zNum_; ++iz) {
-			const float curZ = zStart_ + iz * zStep_;
+		for (int iz = 0; iz < izn_; ++iz) {
+			const float curZ = izo_ + iz * izd_;
 			this->getImageSample (piData, curX, curZ, curP, iTrace + iz);
 		}
 	}
