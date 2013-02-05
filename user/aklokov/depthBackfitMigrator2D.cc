@@ -3,6 +3,9 @@
 #include "support.hh"
 #include <list>
 
+#include <iostream>
+using namespace std;
+
 static bool deleteAll (ImagePoint2D* p) { delete p; return true; }
 
 DepthBackfitMigrator2D::DepthBackfitMigrator2D () {
@@ -122,33 +125,53 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 	const int listSize = goodPoints.size ();
 
 	std::list<ImagePoint2D*>::iterator iter = goodPoints.begin ();
+	std::list<ImagePoint2D*>::iterator iterLast = goodPoints.end ();
+	iterLast--;
+
 	*sample = 0.f;
 	int count = 0;
-	int pcount = 0;
-	// loop over depth-line
-	for (iter = goodPoints.begin (); iter != goodPoints.end(); ++iter, ++pcount) {
-		ImagePoint2D* point = *iter;
-		float px = point->x_;
-		float pz = point->z_;
-		float curP = 0.f;
-		if (pcount && pcount != (listSize - 1)) {
-			--iter;
-			ImagePoint2D* prevPoint = *iter;			
-			++iter; ++iter;
-			ImagePoint2D* nextPoint = *iter;			
-			--iter;
-			const float dx = nextPoint->x_ - prevPoint->x_;
-			const float dz = nextPoint->z_ - prevPoint->z_;
-			curP = -dz / dx;
+	for (iter = goodPoints.begin (); iter != iterLast;) {
+		ImagePoint2D* point1 = *iter;
+		++iter;		
+		ImagePoint2D* point2 = *iter;
+		
+		float px1 = point1->x_;		
+		float px2 = point2->x_;				
+
+		float pz1 = point1->z_;		
+		float pz2 = point2->z_;		
+
+		if (px1 > px2) {
+			float temp (0.f);
+			temp = px2; px2 = px1; px1 = temp; 
+			temp = pz2;	pz2 = pz1; pz1 = temp;
 		}
 
-		float curSample (0.f);
-		bool goodSample = this->getSample (piData, px, pz, curP, curSample);			
+		// slope
+		const float dx = px2 - px1;
+		const float dz = pz2 - pz1;
+		curP = -dz / dx;
 
-		if (!goodSample) continue; // bad sample
-		*sample += curSample;
-		++count;
-	}
+		// integrate amps
+		const int pind = (px1 - xStart_) / xStep_ + 1;
+		float px = pind * xStep_ + xStart_;
+
+		while (px < px2) {
+			const float bef = (px - px1) / dx;
+			
+			float pz = pz1 + bef * dz;
+
+			float curSample (0.f);
+			bool goodSample = this->getSample (piData, px, pz, curP, curSample);			
+
+			if (!goodSample) {px += xStep_; continue;} // bad sample
+			
+			*sample += curSample;
+			++count;
+
+			px += xStep_;
+		}
+	}		
 
 	if (count)
 		*sample /= count;
@@ -183,16 +206,7 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 
 	if (isAA_)
 		this->processData (piData); 
-/*
-	for (int ix = 0; ix < 1; ++ix) {
-		const float curX = 6750;
-		float* iTrace = piImage + ix * zNum_;
-		for (int iz = 0; iz < 1; ++iz) {
-			float curZ = 1500;
-			this->getImageSample (piData, curX, curZ, curP, iTrace + iz);
-		}
-	}
-*/
+
 	for (int ix = 0; ix < ixn_; ++ix) {
 		const float curX = ixo_ + ix * ixd_;
 		float* iTrace = piImage + ix * izn_;
