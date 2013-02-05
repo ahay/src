@@ -1,0 +1,23 @@
+from rsf.proj import *
+
+nz = 401; z0 = 0.; dz=10.
+nT = 251; T0 = 0.; dT=.0064
+
+freq = 5
+omega= 2. * 3.1415927 * freq
+
+graph = 'graph plotcol=7 transp=y plotfat=8 title= wantaxis2=n grid2=y '
+
+Flow('vC',None,'math n1=%d o1=%g d1=%g output="1500+.7*x1" | put label1=Depth unit1=m' % (nz,z0,dz))
+Flow('tau','vC','math output="1./input" | integral1 rule=s')
+Flow('vT','vC tau','pseudodepth tau=${SOURCES[1]} inv=n n=%d o=%g d=%g | put label1=Tau unit1=s' % (nT,T0,dT))
+
+Flow('uC','vC','math output="sin(%g/input*x1)"' % omega)
+Flow('uT','vT','math output="sin(%g*x1)"' % omega)
+
+Plot('uC','put d1=%g unit1=km | reverse | ' % (.001*dz) +  graph + ' min1=4 max1=0 o2num=0 d2num=.5 n2tic=8 title="(a)"')
+Plot('uT','reverse | ' + graph + ' min1=1.6 max1=0 o2num=0 d2num=.2 n2tic=8 title="(b)"')
+
+Result('uCT','uC uT','SideBySideAniso')
+
+End()

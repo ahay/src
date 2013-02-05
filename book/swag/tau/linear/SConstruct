@@ -1,0 +1,65 @@
+from rsf.proj import *
+import rsf.recipes.tau as tau
+
+nx = 501; x0 = 0.; dx = 5.
+nz = 401; z0 = 0.; dz = 5
+nt = 301; t0 = 0.; dt = .0034 # orthogonal
+nT = 301; T0 = 0.; dT = .0044 # nonorthogonal
+
+v0 = 1050; dvdx= .35; dvdz= .55
+
+par = {'nx' : nx, 'x0' : x0, 'dx' : dx,
+	   'nz' : nz, 'z0' : z0, 'dz' : dz}
+
+m2kmC = 'put d2=%g unit2=km d1=%g unit1=km' % (.001*dx,.001*dz)
+m2kmT = 'put d2=%g unit2=km' % (.001*dx)
+
+screen = 'screenwd=12 screenht=10 labelsz=10'
+contt = 'contour c0=0 dc=.05 allpos=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n wanttitle=n scalebar=y ' + screen
+contx = 'contour c0=0 dc=%g allpos=y plotcol=7 plotfat=5 wantaxis=n wanttitle=n wanttitle=n scalebar=y ' % (25.*dx) + screen
+vgrey =  'scale rscale=.001 | grey color=i scalebar=y barreverse=y title= barlabel=Velocity barunit="km/s" bias=0 allpos=y ' + screen
+
+Flow('velo',None,'''
+math n1=%d o1=0 d1=%g
+     n2=%d o2=0 d2=%g output="%g+%g*x1+%g*x2" |
+put label1=Depth unit1=m label2=Distance unit2=m
+''' % (nz,dz,nx,dx,v0,dvdz,dvdx))
+
+Flow('vofz','velo','''
+stack axis=2 | spray axis=2 n=%d o=%g d=%g label=x unit=m
+''' % (nx,x0,dx))
+
+for (i,t) in enumerate(['t','T']):
+	if 0 == i:
+		par['nT'] = nt; par['T0'] = t0; par['dT'] = dt
+		vmap = 'vofz'
+	else:
+		par['nT'] = nT; par['T0'] = T0; par['dT'] = dT;
+		vmap = 'velo'
+
+	tauc = 'tau' + t
+	Velo = 'Velo' + t
+	grid = 'grid' + t
+	Grid = 'Grid' + t
+
+	Flow(tauc,vmap,'math output="1./input" | integral1 rule=s')
+
+	tau.init(par)
+	tau.mapping(Velo,'velo',tauc,False)
+
+	Plot(Velo,m2kmT + ' | ' + vgrey)
+
+	Plot(grid + '1',tauc,contt)
+	Plot(grid + '2',tauc,'math output=x2 | ' + contx)
+
+	Plot(Grid + '1',Velo,'math output=x1 | ' + contt)
+	Plot(Grid + '2',Velo,'math output=x2 | ' + contx)
+
+Plot('velo',m2kmC + ' | ' + vgrey)
+
+Result('linA','velo gridt2 gridt1','Overlay')
+Result('linB','Velot Gridt2 Gridt1','Overlay')
+Result('linC','velo gridT2 gridT1','Overlay')
+Result('linD','VeloT GridT2 GridT1','Overlay')
+
+End()

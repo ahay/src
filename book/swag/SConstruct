@@ -8,6 +8,7 @@ Papers(copyr='KAUST',
        introDTI/article.tex
        waveds
        eikds
+       tau
        '''),
        authors = {'introDTI-article':'Tariq Alkhalifah and Paul Sava',
                   'anisogath-article':'Tariq Alkhalifah and Sergey Fomel'},

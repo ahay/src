@@ -5,6 +5,7 @@ try:
     glob_build = True
     srcroot = '../..'
     Import('env bindir pkgdir')
+    env = env.Clone()
 except:
     glob_build = False
     srcroot = os.environ.get('RSFSRC', '../..')
@@ -14,7 +15,7 @@ except:
     bindir = pkgdir = None
 
 progs = '''
-integral1 swapbyte
+integral1 swapbyte 
 '''
 
 lapack = env.get('LAPACK')
@@ -27,10 +28,18 @@ elif glob_build:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')      
         env.Install(bindir,prog)
 
-#env.Append(CPPPATH='/usr/include',
-#		   LIBPATH='/usr/lib64',
-#		   LIBS=['lapack'])
-    
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(LIBS=[fftw])
+    progs += ' zomiso zomvti'
+elif glob_build:
+    for prog in Split('zomiso zomvti'):
+        prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw')
+        env.Install(bindir,prog)
+
+
+
+
 targets = bldutil.UserSconsTargets()
 targets.c = progs
 

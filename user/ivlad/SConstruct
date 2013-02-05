@@ -5,6 +5,7 @@ try:
     glob_build = True # scons command launched in RSFSRC
     srcroot = '../..' # cwd is RSFSRC/build/user/ivlad
     Import('env bindir pkgdir')
+    env = env.Clone()
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')

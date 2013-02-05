@@ -5,6 +5,8 @@
 To the reproducible documents collection:
 
 * jsg/fpwd: Accelerated plane-wave destruction (Chen, Fomel, and Lu)
+* swag/tau: Wavefield extrapolation in pseudodepth domain (Ma and
+  Alkhalifah)
 
 To SCons:
 
