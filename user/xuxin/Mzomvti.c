@@ -70,38 +70,38 @@ sf_file Fsigm; float *sigm; /*     [nx][nz] */
 
 void init()
 {
-	int i,b[4];
+    int i,b[4];
     float c[4],czl,czh,cxl,cxh,z_,x_,tmpf,eps;
-	bool opt,verb,heta_posi;
+    bool opt,verb,heta_posi;
 
-	if (!sf_getbool("inv",&inv))   inv = false; /* if y, modeling; if n, migration */
-	if (!sf_getbool("tau",&tau))   tau = false; /* if y, tau domain; if n, cartesian */
-	if (!sf_getbool("verb",&verb)) verb= false; /* verbosity */
-	if (!sf_getbool("opt",&opt))   opt = false; /* optimze fft size */
+    if (!sf_getbool("inv",&inv))   inv = false; /* if y, modeling; if n, migration */
+    if (!sf_getbool("tau",&tau))   tau = false; /* if y, tau domain; if n, cartesian */
+    if (!sf_getbool("verb",&verb)) verb= false; /* verbosity */
+    if (!sf_getbool("opt",&opt))   opt = false; /* optimze fft size */
 
-	Fvnmo = sf_input("vnmo");
-	Fvver = sf_input("vz");
-	Fheta = sf_input("eta");
+    Fvnmo = sf_input("vnmo");
+    Fvver = sf_input("vz");
+    Fheta = sf_input("eta");
     Fcr   = sf_input("cr");
-	Fwave = sf_output("wave");
+    Fwave = sf_output("wave");
     if (inv) { Fimag = sf_input("in");   Fdata = sf_output("out"); }
     else     { Fimag = sf_output("out"); Fdata = sf_input("in");   }
     if (tau) { Fvmap = sf_input("vmap"); Fsigm = sf_input("sigm"); }
 
-	if (!sf_histint  (Fvnmo,"n1",&nz) ||
-		!sf_histint  (Fvnmo,"n2",&nx) || 
+    if (!sf_histint  (Fvnmo,"n1",&nz) ||
+	!sf_histint  (Fvnmo,"n2",&nx) || 
         !sf_histfloat(Fvnmo,"d1",&dz) ||
         !sf_histfloat(Fvnmo,"d2",&dx)) sf_error("Need n1= n2= d1= d2= in vnmo");
     if (!sf_histfloat(Fvnmo,"o1",&z0)) z0 = 0.;
     if (!sf_histfloat(Fvnmo,"o2",&x0)) x0 = 0.;
 
-	if (!sf_histint  (Fvver,"n1",&i) || i != nz ||
-		!sf_histint  (Fvver,"n2",&i) || i != nx)
-		sf_error("Need n1=%d n2=%d in vver",nz,nx);
+    if (!sf_histint  (Fvver,"n1",&i) || i != nz ||
+	!sf_histint  (Fvver,"n2",&i) || i != nx)
+	sf_error("Need n1=%d n2=%d in vver",nz,nx);
 
-	if (!sf_histint  (Fheta,"n1",&i) || i != nz ||
-		!sf_histint  (Fheta,"n2",&i) || i != nx)
-		sf_error("Need n1=%d n2=%d in heta",nz,nx);
+    if (!sf_histint  (Fheta,"n1",&i) || i != nz ||
+	!sf_histint  (Fheta,"n2",&i) || i != nx)
+	sf_error("Need n1=%d n2=%d in heta",nz,nx);
 
     if (!sf_histint(Fcr,"n1",&i) || i != 2) sf_error("Need n1=2 in cr");
     if (!sf_histint(Fcr,"n2",&nr)) nr = 1;
@@ -131,28 +131,28 @@ void init()
         sf_putstring(Fimag,"label2","x"); sf_putstring(Fimag,"unit2","m");
     }
 
-	if (!sf_getint  ("bzl",&bzl)) bzl = 0;
-	if (!sf_getint  ("bzh",&bzh)) bzh = 0;
-	if (!sf_getint  ("bxl",&bxl)) bxl = 0;
-	if (!sf_getint  ("bxh",&bxh)) bxh = 0;
-	if (!sf_getfloat("czl",&czl)) czl = 1.;
-	if (!sf_getfloat("czh",&czh)) czh = 1.;
-	if (!sf_getfloat("cxl",&cxl)) cxl = 1.;
-	if (!sf_getfloat("cxh",&cxh)) cxh = 1.;
-	if (!sf_getint  ("n3",&n3))   n3 = nt; /* wave time n */
+    if (!sf_getint  ("bzl",&bzl)) bzl = 0;
+    if (!sf_getint  ("bzh",&bzh)) bzh = 0;
+    if (!sf_getint  ("bxl",&bxl)) bxl = 0;
+    if (!sf_getint  ("bxh",&bxh)) bxh = 0;
+    if (!sf_getfloat("czl",&czl)) czl = 1.;
+    if (!sf_getfloat("czh",&czh)) czh = 1.;
+    if (!sf_getfloat("cxl",&cxl)) cxl = 1.;
+    if (!sf_getfloat("cxh",&cxh)) cxh = 1.;
+    if (!sf_getint  ("n3",&n3))   n3 = nt; /* wave time n */
     if (tau && !sf_getfloat("eps",&eps)) eps = 1; /* regularize sigma */
 
     if ((nt-1) % (n3-1)) sf_warning("j3 not round nt=%d n3=%d",nt,n3);
     j3 = (nt-1) / (n3-1);
     d3 = (inv ? 1. : -1.) * dt * j3;
 
-	if (opt) {
-		fft_expand(nz,&bzl,&bzh);
-		fft_expand(nx,&bxl,&bxh);
-	}
+    if (opt) {
+	fft_expand(nz,&bzl,&bzh);
+	fft_expand(nx,&bxl,&bxh);
+    }
 
-	Nz = nz + bzl + bzh;
-	Nx = nx + bxl + bxh;
+    Nz = nz + bzl + bzh;
+    Nx = nx + bxl + bxh;
 
     z = sf_floatalloc(Nz);
     x = sf_floatalloc(Nx);
@@ -162,16 +162,16 @@ void init()
     for (i=0; i < Nx; i++) x[i] = x0 + dx * (i-bxl);
     for (i=0; i < nt; i++) t[inv ? i : nt-1-i] = dt * i;
 
-	sf_putint(Fwave,"n1",Nz); sf_putfloat(Fwave,"d1",dz); sf_putfloat(Fwave,"o1",z[0]);
-	sf_putint(Fwave,"n2",Nx); sf_putfloat(Fwave,"d2",dx); sf_putfloat(Fwave,"o2",x[0]);
-	sf_putint(Fwave,"n3",n3); sf_putfloat(Fwave,"d3",d3); sf_putfloat(Fwave,"o3",t[0]);
+    sf_putint(Fwave,"n1",Nz); sf_putfloat(Fwave,"d1",dz); sf_putfloat(Fwave,"o1",z[0]);
+    sf_putint(Fwave,"n2",Nx); sf_putfloat(Fwave,"d2",dx); sf_putfloat(Fwave,"o2",x[0]);
+    sf_putint(Fwave,"n3",n3); sf_putfloat(Fwave,"d3",d3); sf_putfloat(Fwave,"o3",t[0]);
     sf_putstring(Fwave,"label1",tau ? "tau" : "z");
     sf_putstring(Fwave,"unit1",tau ? "sec" : "m");
     sf_putstring(Fwave,"label2","x"); sf_putstring(Fwave,"unit2","m");
     sf_putstring(Fwave,"label3","t"); sf_putstring(Fwave,"unit3","sec");
 
-	nxz = nx * nz;
-	Nxz = Nx * Nz;
+    nxz = nx * nz;
+    Nxz = Nx * Nz;
     nrt = nr * nt;
 
     kz = sf_floatalloc(Nz); compute_k(kz,Nz);
@@ -181,30 +181,30 @@ void init()
     c[0] = czl; c[1] = czh; c[2] = cxl; c[3] = cxh;
     sponge = sponge_init(b,c);
 
-	vnmo = sf_floatalloc(nxz);
-	vver = sf_floatalloc(nxz);
-	heta = sf_floatalloc(nxz);
+    vnmo = sf_floatalloc(nxz);
+    vver = sf_floatalloc(nxz);
+    heta = sf_floatalloc(nxz);
     imag = sf_floatalloc(nxz);
     data = sf_floatalloc(nrt);
     cr   = sf_floatalloc(nr*2);
 
-	sf_floatread(vnmo,nxz,Fvnmo);
-	sf_floatread(vver,nxz,Fvver);
-	sf_floatread(heta,nxz,Fheta);
+    sf_floatread(vnmo,nxz,Fvnmo);
+    sf_floatread(vver,nxz,Fvver);
+    sf_floatread(heta,nxz,Fheta);
 
     if (inv) sf_floatread(imag,nxz,Fimag);
     else     sf_floatread(data,nrt,Fdata);
 
-	for (i=0; i < nr; i++) {
+    for (i=0; i < nr; i++) {
         sf_floatread(&cr[i*2],2,Fcr);
 
         z_ = cr[i*2  ];
         x_ = cr[i*2+1];
 
-		if (z_ < z[0] || z_ > z[Nz-1] ||
+	if (z_ < z[0] || z_ > z[Nz-1] ||
             x_ < x[0] || x_ > x[Nx-1])
-			sf_error("receiver %d at x=%g z=%g outside domain",i,x_,z_);
-	}
+	    sf_error("receiver %d at x=%g z=%g outside domain",i,x_,z_);
+    }
 
     /* epsilon > delta */
     for (heta_posi = true, i=0; i < nxz; i++)
@@ -226,27 +226,27 @@ void init()
         sf_floatread(vmap,nxz,Fvmap);
         sf_floatread(sigm,nxz,Fsigm);
 
-		/* regularize sigma */
-		/* usually sigma ~ 1e-4 */
+	/* regularize sigma */
+	/* usually sigma ~ 1e-4 */
         for (i=0; i < nxz; i++)
             if (fabs(tmpf = sigm[i]) >= eps) sigm[i] = eps * (tmpf > 0 ? 1. : -1.);
     }
 
     if (verb) {
-    sf_warning("%s domain VTI %s",tau ? "tau" : "cartesian",inv ? "modeling" : "migration");
-    sf_warning("receiver ir=%4d at x=%g z=%g",0,cr[1],cr[0]);
-    sf_warning("receiver ir=%4d at x=%g z=%g",nr-1,cr[2*nr-1],cr[2*nr-2]);
-    sf_warning("bzl=%d wzl[%d]=%g wzl[%d]=%g",bzl,0,sponge->wzl[0],sponge->bzl-1,sponge->wzl[bzl-1]);
-    sf_warning("bzh=%d wzh[%d]=%g wzh[%d]=%g",bzh,0,sponge->wzh[0],sponge->bzh-1,sponge->wzh[bzh-1]);
-    sf_warning("bxl=%d wxl[%d]=%g wxl[%d]=%g",bxl,0,sponge->wxl[0],sponge->bxl-1,sponge->wxl[bxl-1]);
-    sf_warning("bxh=%d wxh[%d]=%g wxh[%d]=%g",bxh,0,sponge->wxh[0],sponge->bxh-1,sponge->wxh[bxh-1]);
-    sf_warning("n3=%d j3=%d d3=%g",n3,j3,d3);
+	sf_warning("%s domain VTI %s",tau ? "tau" : "cartesian",inv ? "modeling" : "migration");
+	sf_warning("receiver ir=%4d at x=%g z=%g",0,cr[1],cr[0]);
+	sf_warning("receiver ir=%4d at x=%g z=%g",nr-1,cr[2*nr-1],cr[2*nr-2]);
+	sf_warning("bzl=%d wzl[%d]=%g wzl[%d]=%g",bzl,0,sponge->wzl[0],sponge->bzl-1,sponge->wzl[bzl-1]);
+	sf_warning("bzh=%d wzh[%d]=%g wzh[%d]=%g",bzh,0,sponge->wzh[0],sponge->bzh-1,sponge->wzh[bzh-1]);
+	sf_warning("bxl=%d wxl[%d]=%g wxl[%d]=%g",bxl,0,sponge->wxl[0],sponge->bxl-1,sponge->wxl[bxl-1]);
+	sf_warning("bxh=%d wxh[%d]=%g wxh[%d]=%g",bxh,0,sponge->wxh[0],sponge->bxh-1,sponge->wxh[bxh-1]);
+	sf_warning("n3=%d j3=%d d3=%g",n3,j3,d3);
     }
 
 #ifdef _OPENMP
 #pragma omp parallel
-	omp_nth = omp_get_num_threads();
-	sf_warning("omp using %d threads",omp_nth);
+    omp_nth = omp_get_num_threads();
+    sf_warning("omp using %d threads",omp_nth);
 #endif
 
     sf_fileclose(Fvnmo);
@@ -258,10 +258,10 @@ void init()
 
 void update()
 {
-	int i,j,k,it,iit,ic,ir,ix,iz,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
-	float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*cpx,*cpz,*cqx,*cqz,*pa,*po,*pb,*qa,*qo,*qb,*wa,*wo,*wb,*ua,*uo,*ub,*tmp,*RZ,*RX;
-	float complex tt,*CZ,*CX,*DZ,*DX;
-	fftwf_plan fwdz,invz,fwdx,invx;
+    int i,j,k,it,iit,ic,ir,ix,iz,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
+    float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*cpx,*cpz,*cqx,*cqz,*pa,*po,*pb,*qa,*qo,*qb,*wa,*wo,*wb,*ua,*uo,*ub,*tmp,*RZ,*RX;
+    float complex tt,*CZ,*CX,*DZ,*DX;
+    fftwf_plan fwdz,invz,fwdx,invx;
     Int2 *I2;
 
     N[0] = Nz; d[0] = dz; o[0] = z[0];
@@ -271,9 +271,9 @@ void update()
 
     dt2 = dt * 2.;
 
-	n[0] = nz;  n[1] = nx;
-	l[0] = bzl; l[1] = bxl;
-	h[0] = bzh; h[1] = bxh;
+    n[0] = nz;  n[1] = nx;
+    l[0] = bzl; l[1] = bxl;
+    h[0] = bzh; h[1] = bxh;
 
     vnmo2= sf_floatalloc(Nxz);
     vver2= sf_floatalloc(Nxz);
@@ -297,35 +297,35 @@ void update()
         cqz[i] = dt2 * vver2[i]*vver2[i];
     }
 
-	Nrz = 2 * (Ncz = Nz/2 + 1);
-	Nrx = 2 * (Ncx = Nx/2 + 1);
+    Nrz = 2 * (Ncz = Nz/2 + 1);
+    Nrx = 2 * (Ncx = Nx/2 + 1);
 
-	RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
-	RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
+    RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
+    RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
 
-	fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
-	invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
-	fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
-	invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
-	if (NULL == fwdz || NULL == invz ||
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
+    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
+    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
+    if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx)
-		sf_error("fftw planning failed");
+	sf_error("fftw planning failed");
 
-	DZ = sf_complexalloc(Ncz);
-	DX = sf_complexalloc(Ncx);
+    DZ = sf_complexalloc(Ncz);
+    DX = sf_complexalloc(Ncx);
 
-    for (tt=I * 2./Nz * M_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt=I * 2./Nx * M_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt=sf_cmplx(0.,2./Nz * M_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt=sf_cmplx(0.,2./Nx * M_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     pa = sf_floatalloc(Nxz); po = sf_floatalloc(Nxz); pb = sf_floatalloc(Nxz);
     qa = sf_floatalloc(Nxz); qo = sf_floatalloc(Nxz); qb = sf_floatalloc(Nxz);
     ua = sf_floatalloc(Nxz); uo = sf_floatalloc(Nxz); ub = sf_floatalloc(Nxz);
     wa = sf_floatalloc(Nxz); wo = sf_floatalloc(Nxz); wb = sf_floatalloc(Nxz);
-	for (i=0; i < Nxz; i++) {
+    for (i=0; i < Nxz; i++) {
         pa[i] = po[i] = pb[i] = \
-        qa[i] = qo[i] = qb[i] = \
-        ua[i] = uo[i] = ub[i] = \
-        wa[i] = wo[i] = wb[i] = 0.;
+	    qa[i] = qo[i] = qb[i] = \
+	    ua[i] = uo[i] = ub[i] = \
+	    wa[i] = wo[i] = wb[i] = 0.;
     }
     
     /* load image */
@@ -333,18 +333,18 @@ void update()
         for    (ix=0; ix < nx; ix++)
             for(iz=0; iz < nz; iz++)
                 pa[(ix+bxl) * Nz + iz+bzl] = \
-                po[(ix+bxl) * Nz + iz+bzl] = imag[ix * nz + iz];
+		    po[(ix+bxl) * Nz + iz+bzl] = imag[ix * nz + iz];
     }
 
-	for (it = 0; it < nt; it++) {
-		sf_warning("it=%d;",iit = inv ? it : nt-1-it);
+    for (it = 0; it < nt; it++) {
+	sf_warning("it=%d;",iit = inv ? it : nt-1-it);
 
         /* update particle momentum */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 #endif
-		for     (ix=0; ix < Nx; ix++)
-			for (iz=0; iz < Nz; iz++) {
+	for     (ix=0; ix < Nx; ix++)
+	    for (iz=0; iz < Nz; iz++) {
                 i = ix * Nz + iz;
                 RX[iz * Nrx + ix] = po[i];
                 RZ[ix * Nrz + iz] = qo[i];
@@ -374,23 +374,23 @@ void update()
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i,j,k)
 #endif
-		for     (ix=0; ix < Nx; ix++) {
-			for (iz=0; iz < Nz; iz++) {
-				i = ix * Nz  + iz;
-				j = ix * Nrz + iz;
+	for     (ix=0; ix < Nx; ix++) {
+	    for (iz=0; iz < Nz; iz++) {
+		i = ix * Nz  + iz;
+		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
                 ub[i] = ua[i] + dt2 * RX[k];
                 wb[i] = wa[i] + dt2 * RZ[j];
-			}
-		}
+	    }
+	}
 
         /* update stress */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 #endif
-		for     (ix=0; ix < Nx; ix++)
-			for (iz=0; iz < Nz; iz++) {
+	for     (ix=0; ix < Nx; ix++)
+	    for (iz=0; iz < Nz; iz++) {
                 i = ix * Nz + iz;
                 RX[iz * Nrx + ix] = uo[i];
                 RZ[ix * Nrz + iz] = wo[i];
@@ -420,18 +420,18 @@ void update()
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i,j,k)
 #endif
-		for     (ix=0; ix < Nx; ix++) {
-			for (iz=0; iz < Nz; iz++) {
-				i = ix * Nz  + iz;
-				j = ix * Nrz + iz;
+	for     (ix=0; ix < Nx; ix++) {
+	    for (iz=0; iz < Nz; iz++) {
+		i = ix * Nz  + iz;
+		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
                 pb[i] = pa[i] + cpx[i] * RX[k] + cpz[i] * RZ[j];
                 qb[i] = qa[i] + cqx[i] * RX[k] + cqz[i] * RZ[j];
-			}
-		}
+	    }
+	}
 
-		/* source shall be applied to both p and q, see Fowler's paper */
+	/* source shall be applied to both p and q, see Fowler's paper */
         if (inv) {
             int2_apply(&data[iit*nr],pb,nr,cr,I2);
             int2_apply(&data[iit*nr],qb,nr,cr,I2);
@@ -445,15 +445,15 @@ void update()
         sponge_apply(ub,n,sponge);
         sponge_apply(wb,n,sponge);
 
-		if (!(it % j3))
-			sf_floatwrite(pb,Nxz,Fwave);
+	if (!(it % j3))
+	    sf_floatwrite(pb,Nxz,Fwave);
 
-		tmp = pa; pa = po; po = pb; pb = tmp;
-		tmp = qa; qa = qo; qo = qb; qb = tmp;
-		tmp = ua; ua = uo; uo = ub; ub = tmp;
-		tmp = wa; wa = wo; wo = wb; wb = tmp;
-	} /* it */
-	sf_warning("\n");
+	tmp = pa; pa = po; po = pb; pb = tmp;
+	tmp = qa; qa = qo; qo = qb; qb = tmp;
+	tmp = ua; ua = uo; uo = ub; ub = tmp;
+	tmp = wa; wa = wo; wo = wb; wb = tmp;
+    } /* it */
+    sf_warning("\n");
 
     if (inv) {
         sf_floatwrite(data,nrt,Fdata);
@@ -482,10 +482,10 @@ void update()
 
 void update_tau()
 {
-	int i,j,k,it,iit,ic,ir,ix,iz,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
-	float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*vmap2,*sigm2,*cpx,*cpz,*cqx,*cqz,*pa,*po,*pb,*qa,*qo,*qb,*wa,*wo,*wb,*ua,*uo,*ub,*tmp,*RZ,*RX,*RS;
-	float complex tt,*CZ,*CX,*CS,*DZ,*DX;
-	fftwf_plan fwdz,invz,fwdx,invx,fwds,invs;
+    int i,j,k,it,iit,ic,ir,ix,iz,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
+    float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*vmap2,*sigm2,*cpx,*cpz,*cqx,*cqz,*pa,*po,*pb,*qa,*qo,*qb,*wa,*wo,*wb,*ua,*uo,*ub,*tmp,*RZ,*RX,*RS;
+    float complex tt,*CZ,*CX,*CS,*DZ,*DX;
+    fftwf_plan fwdz,invz,fwdx,invx,fwds,invs;
     Int2 *I2;
 
     N[0] = Nz; d[0] = dz; o[0] = z[0];
@@ -495,9 +495,9 @@ void update_tau()
 
     dt2 = dt * 2.;
 
-	n[0] = nz;  n[1] = nx;
-	l[0] = bzl; l[1] = bxl;
-	h[0] = bzh; h[1] = bxh;
+    n[0] = nz;  n[1] = nx;
+    l[0] = bzl; l[1] = bxl;
+    h[0] = bzh; h[1] = bxh;
 
     vnmo2= sf_floatalloc(Nxz);
     vver2= sf_floatalloc(Nxz);
@@ -525,39 +525,39 @@ void update_tau()
         cqz[i] = dt2 * vver2[i]*vver2[i] / vmap2[i];
     }
 
-	Nrz = 2 * (Ncz = Nz/2 + 1);
-	Nrx = 2 * (Ncx = Nx/2 + 1);
+    Nrz = 2 * (Ncz = Nz/2 + 1);
+    Nrx = 2 * (Ncx = Nx/2 + 1);
 
-	RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
-	RS = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CS = (float complex *)RS;
-	RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
+    RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
+    RS = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CS = (float complex *)RS;
+    RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
 
-	fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
-	invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
-	fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
-	invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
-	fwds = fftwf_plan_dft_r2c_1d(Nz,RS,CS,FFTW_MEASURE);
-	invs = fftwf_plan_dft_c2r_1d(Nz,CS,RS,FFTW_MEASURE);
-	if (NULL == fwdz || NULL == invz ||
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
+    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
+    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
+    fwds = fftwf_plan_dft_r2c_1d(Nz,RS,CS,FFTW_MEASURE);
+    invs = fftwf_plan_dft_c2r_1d(Nz,CS,RS,FFTW_MEASURE);
+    if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx ||
         NULL == fwds || NULL == invs)
-		sf_error("fftw planning failed");
+	sf_error("fftw planning failed");
 
-	DZ = sf_complexalloc(Ncz);
-	DX = sf_complexalloc(Ncx);
+    DZ = sf_complexalloc(Ncz);
+    DX = sf_complexalloc(Ncx);
 
-    for (tt=I * 2./Nz * M_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt=I * 2./Nx * M_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt=sf_cmplx(0.,2./Nz * M_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt=sf_cmplx(0.,2./Nx * M_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     pa = sf_floatalloc(Nxz); po = sf_floatalloc(Nxz); pb = sf_floatalloc(Nxz);
     qa = sf_floatalloc(Nxz); qo = sf_floatalloc(Nxz); qb = sf_floatalloc(Nxz);
     ua = sf_floatalloc(Nxz); uo = sf_floatalloc(Nxz); ub = sf_floatalloc(Nxz);
     wa = sf_floatalloc(Nxz); wo = sf_floatalloc(Nxz); wb = sf_floatalloc(Nxz);
-	for (i=0; i < Nxz; i++) {
+    for (i=0; i < Nxz; i++) {
         pa[i] = po[i] = pb[i] = \
-        qa[i] = qo[i] = qb[i] = \
-        ua[i] = uo[i] = ub[i] = \
-        wa[i] = wo[i] = wb[i] = 0.;
+	    qa[i] = qo[i] = qb[i] = \
+	    ua[i] = uo[i] = ub[i] = \
+	    wa[i] = wo[i] = wb[i] = 0.;
     }
     
     /* load image */
@@ -565,18 +565,18 @@ void update_tau()
         for    (ix=0; ix < nx; ix++)
             for(iz=0; iz < nz; iz++)
                 pa[(ix+bxl) * Nz + iz+bzl] = \
-                po[(ix+bxl) * Nz + iz+bzl] = imag[ix * nz + iz];
+		    po[(ix+bxl) * Nz + iz+bzl] = imag[ix * nz + iz];
     }
 
-	for (it = 0; it < nt; it++) {
-		sf_warning("it=%d;",iit = inv ? it : nt-1-it);
+    for (it = 0; it < nt; it++) {
+	sf_warning("it=%d;",iit = inv ? it : nt-1-it);
 
         /* update particle momentum */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 #endif
-		for     (ix=0; ix < Nx; ix++)
-			for (iz=0; iz < Nz; iz++) {
+	for     (ix=0; ix < Nx; ix++)
+	    for (iz=0; iz < Nz; iz++) {
                 i = ix * Nz + iz;
                 RS[ix * Nrz + iz] = RX[iz * Nrx + ix] = po[i];
                 RZ[ix * Nrz + iz]                     = qo[i];
@@ -610,23 +610,23 @@ void update_tau()
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i,j,k)
 #endif
-		for     (ix=0; ix < Nx; ix++) {
-			for (iz=0; iz < Nz; iz++) {
-				i = ix * Nz  + iz;
-				j = ix * Nrz + iz;
+	for     (ix=0; ix < Nx; ix++) {
+	    for (iz=0; iz < Nz; iz++) {
+		i = ix * Nz  + iz;
+		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
                 ub[i] = ua[i] + dt2 * RX[k] + dt2 * sigm2[i] * RS[j];
                 wb[i] = wa[i]               + dt2 / vmap2[i] * RZ[j];
-			}
-		}
+	    }
+	}
 
         /* update stress */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 #endif
-		for     (ix=0; ix < Nx; ix++)
-			for (iz=0; iz < Nz; iz++) {
+	for     (ix=0; ix < Nx; ix++)
+	    for (iz=0; iz < Nz; iz++) {
                 i = ix * Nz + iz;
                 RS[ix * Nrz + iz] = RX[iz * Nrx + ix] = uo[i];
                 RZ[ix * Nrz + iz]                     = wo[i];
@@ -660,18 +660,18 @@ void update_tau()
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i,j,k)
 #endif
-		for     (ix=0; ix < Nx; ix++) {
-			for (iz=0; iz < Nz; iz++) {
-				i = ix * Nz  + iz;
-				j = ix * Nrz + iz;
+	for     (ix=0; ix < Nx; ix++) {
+	    for (iz=0; iz < Nz; iz++) {
+		i = ix * Nz  + iz;
+		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
                 pb[i] = pa[i] + cpx[i] * (RX[k] + sigm2[i] * RS[j]) + cpz[i] * RZ[j];
                 qb[i] = qa[i] + cqx[i] * (RX[k] + sigm2[i] * RS[j]) + cqz[i] * RZ[j];
-			}
-		}
+	    }
+	}
 
-		/* source shall be applied to both p and q, see Fowler's paper */
+	/* source shall be applied to both p and q, see Fowler's paper */
         if (inv) {
             int2_apply(&data[iit*nr],pb,nr,cr,I2);
             int2_apply(&data[iit*nr],qb,nr,cr,I2);
@@ -685,15 +685,15 @@ void update_tau()
         sponge_apply(ub,n,sponge);
         sponge_apply(wb,n,sponge);
 
-		if (!(it % j3))
-			sf_floatwrite(pb,Nxz,Fwave);
+	if (!(it % j3))
+	    sf_floatwrite(pb,Nxz,Fwave);
 
-		tmp = pa; pa = po; po = pb; pb = tmp;
-		tmp = qa; qa = qo; qo = qb; qb = tmp;
-		tmp = ua; ua = uo; uo = ub; ub = tmp;
-		tmp = wa; wa = wo; wo = wb; wb = tmp;
-	} /* it */
-	sf_warning("\n");
+	tmp = pa; pa = po; po = pb; pb = tmp;
+	tmp = qa; qa = qo; qo = qb; qb = tmp;
+	tmp = ua; ua = uo; uo = ub; ub = tmp;
+	tmp = wa; wa = wo; wo = wb; wb = tmp;
+    } /* it */
+    sf_warning("\n");
 
     if (inv) {
         sf_floatwrite(data,nrt,Fdata);
@@ -726,9 +726,9 @@ int main(int argc, char *argv[])
 {
     time_t ta,tb;
 
-	sf_init(argc,argv);
+    sf_init(argc,argv);
 
-	init();
+    init();
 
     ta = time(NULL);
 
@@ -739,5 +739,5 @@ int main(int argc, char *argv[])
 
     sf_warning("%d seconds elapsed.",tb-ta);
 
-	return 0;
+    return 0;
 }
