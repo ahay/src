@@ -88,6 +88,7 @@ down = map(int,down.split())
 ind = arange(len(down))
 width=0.75
 
+clf()
 p1 = bar(ind,down,width)
 ylabel('Downloads')
 xticks(ind[::12]+width/2, 
