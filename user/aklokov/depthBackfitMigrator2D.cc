@@ -38,7 +38,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 							 	   int rNum, float rStart, float rStep,
 							 	   int izn,  float izo,    float izd,
 							 	   int ixn,  float ixo,    float ixd,
-								   float dx, float dt,
+								   float dx, float dt, float xlim,
   								   float* xVol, float* tVol, bool isAA) {
 	
 	zNum_   = zNum;
@@ -67,7 +67,8 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 
 	dx_   = dx;
 	dt_   = dt;
-
+	xlim_ = xlim;
+	
 	xVol_ = xVol;
 	tVol_ = tVol;
 
@@ -118,7 +119,8 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 	for (int ir = 0; ir < rNum_; ++ir) {
 		const float lz = zRes[ir];
 		if (lz <= 0) continue; // bad point
-	    ImagePoint2D* p = new ImagePoint2D (xRes[ir], lz, 0, 0);
+		const float lx = xRes[ir];
+	    ImagePoint2D* p = new ImagePoint2D (lx, lz, 0, 0);
 		goodPoints.push_back (p);
 	}				
 
@@ -149,20 +151,21 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 
 		// slope
 		const float dx = px2 - px1;
+		if (fabs (dx) > xlim_) continue;
 		const float dz = pz2 - pz1;
 		curP = -dz / dx;
 
 		// integrate amps
 		const int pind = (px1 - xStart_) / xStep_ + 1;
 		float px = pind * xStep_ + xStart_;
-
+		int pointsBetween = 0;
 		while (px < px2) {
 			const float bef = (px - px1) / dx;
 			
 			float pz = pz1 + bef * dz;
 
 			float curSample (0.f);
-			bool goodSample = this->getSample (piData, px, pz, curP, curSample);			
+			bool goodSample = this->getSampleFromImage (piData, px, pz, curP, curSample);			
 
 			if (!goodSample) {px += xStep_; continue;} // bad sample
 			
@@ -170,10 +173,20 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 			++count;
 
 			px += xStep_;
+			++pointsBetween;
 		}
+	
+		if (!pointsBetween) {
+			float curSample (0.f);
+			bool goodSample = this->getSample (piData, px1, pz1, curP, curSample);						
+			if (goodSample) {
+	 			*sample += curSample;
+				++count;
+			}
+		}			
 	}		
 
-	if (count)
+	if (count) 
 		*sample /= count;
 
 	// FINISH

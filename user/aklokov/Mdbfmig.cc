@@ -75,7 +75,7 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (xEscFile, "o2", &rStart) )   sf_error ("Need o2= in input");
 
 	bool isAA;
-	float dx, dt;
+	float dx, dt, xlim;
 	int ppn; float ppo, ppd;
 	int izn, ixn; float izo, ixo, izd, ixd;
 
@@ -106,6 +106,8 @@ int main (int argc, char* argv[]) {
 	/* x-range for point detection */
     if (!sf_getfloat ("dt", &dt)) dt = 0.004f;
 	/* time-range for point detection */
+    if (!sf_getfloat ("xlim", &xlim)) xlim = 2 * xStep;
+	/* maximum distance between depth-line points */
 
 	// OUTPUT PARAMETERS
   	sf_putint (resFile, "n1", izn); 
@@ -154,7 +156,7 @@ int main (int argc, char* argv[]) {
 			     rNum, rStart, rStep,
 				 izn, izo, izd,
 			     ixn, ixo, ixd,
-				 dx, dt, xVol, tVol,
+				 dx, dt, xlim, xVol, tVol,
 				 isAA);
 
 	for (int ip = 0; ip < ppn; ++ip) {

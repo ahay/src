@@ -16,7 +16,7 @@ public:
 			   int rNum, float rStart, float rStep,
 		 	   int izn,  float izo,    float izd,
 		 	   int ixn,  float ixo,    float ixd,
-			   float dx, float dt,
+			   float dx, float dt, float xlim,
 			   float* xVol, float* tVol, bool isAA);
 
 	void processPartialImage (float* piData, float curP, float* piImage);
@@ -64,7 +64,8 @@ private:
 	// point-search params
 	float dx_;
 	float dt_;
-	
+	float xlim_;	
+
 	bool  isAA_;
 
 
