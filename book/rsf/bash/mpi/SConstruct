@@ -11,7 +11,7 @@ Flow('b',None,'math n1=512 n2=256 output="-x1-x2"')
 
 Flow('c','a b',
      '''
-     mpihello input=${SOURCES[1]} b=${SOURCES[2]}
+     mpihello input=${SOURCES[0]} b=${SOURCES[1]}
      ''',stdin=0,np=NP)
 
 End()
