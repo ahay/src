@@ -135,7 +135,7 @@ float sf_cram_data2_get_sample (sf_cram_data2 cram_data, size_t i, float t,
     float *trace = NULL;
 
     if (cram_data->kmah)
-        i *= 2;
+        i *= (size_t)2;
 
     if (i >= cram_data->n)
         return 0.0;

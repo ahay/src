@@ -204,33 +204,33 @@ static bool sf_cram_circum_circle (double xp, double yp, double x1, double y1,
 }
 
 /*
-    Takes array xy[np+3] as input (x_i = xy[i*2], y_i = xy[i*2+1],
+    Takes array xy[np+3] as input (x_i = xy[i*st], y_i = xy[i*st+1],
     returns a list of ntr vertices[3*np] for all detected triangles.
     The vertex array xy must be sorted in the order of increasing x values.
 */
 
-int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
+int sf_cram_triangulate (int np, int st, float *xy, int *vertices, int *ntr)
 /*< 2-D Delaunay triangulation of an raay of points >*/
 {
     bool *complete = NULL;
-    size_t *edges = NULL;
-    size_t nedge = 0;
-    size_t trimax, emax = 200;
+    int *edges = NULL;
+    int nedge = 0;
+    int trimax, emax = 200;
 
     bool inside;
-    size_t i, j, k;
+    int i, j, k;
     double xp, yp, x1, y1, x2, y2, x3, y3, xc, yc, r;
     double xmin, xmax, ymin, ymax, xmid, ymid;
     double dx, dy, dmax;
 
     /* Allocate memory for the completeness list, flag for each triangle */
     trimax = 4*np;
-    if ((complete = (bool*)malloc (trimax*(size_t)sizeof(bool))) == NULL) {
+    if ((complete = (bool*)malloc (trimax*sizeof(bool))) == NULL) {
         return 1;
     }
 
     /* Allocate memory for the edge list */
-    if ((edges = (size_t*)malloc (emax*(size_t)(2*sizeof(size_t)))) == NULL) {
+    if ((edges = (int*)malloc (emax*2*sizeof(int))) == NULL) {
         free (complete);
         return 2;
     }
@@ -244,10 +244,10 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
     xmax = xmin;
     ymax = ymin;
     for (i = 1; i < np; i++) {
-        if (xy[i*(size_t)2] < xmin) xmin = xy[i*(size_t)2];
-        if (xy[i*(size_t)2] > xmax) xmax = xy[i*(size_t)2];
-        if (xy[i*(size_t)2 + (size_t)1] < ymin) ymin = xy[i*(size_t)2 + (size_t)1];
-        if (xy[i*(size_t)2 + (size_t)1] > ymax) ymax = xy[i*(size_t)2 + (size_t)1];
+        if (xy[i*st] < xmin) xmin = xy[i*st];
+        if (xy[i*st] > xmax) xmax = xy[i*st];
+        if (xy[i*st + 1] < ymin) ymin = xy[i*st + 1];
+        if (xy[i*st + 1] > ymax) ymax = xy[i*st + 1];
     }
     dx = xmax - xmin;
     dy = ymax - ymin;
@@ -261,12 +261,12 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
        vertex list. The supertriangle is the first triangle in
        the triangle list.
     */
-    xy[np*(size_t)2] = xmid - 20*dmax;
-    xy[np*(size_t)2 + (size_t)1] = ymid - dmax;
-    xy[(np + 1)*(size_t)2] = xmid;
-    xy[(np + 1)*(size_t)2 + (size_t)1] = ymid + 20*dmax;
-    xy[(np + 2)*(size_t)2] = xmid + 20*dmax;
-    xy[(np + 2)*(size_t)2 + (size_t)1] = ymid - dmax;
+    xy[np*st] = xmid - 20*dmax;
+    xy[np*st + 1] = ymid - dmax;
+    xy[(np + 1)*st] = xmid;
+    xy[(np + 1)*st + 1] = ymid + 20*dmax;
+    xy[(np + 2)*st] = xmid + 20*dmax;
+    xy[(np + 2)*st + 1] = ymid - dmax;
     vertices[0] = np;
     vertices[1] = np + 1;
     vertices[2] = np + 2;
@@ -276,8 +276,8 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
        Include each point one at a time into the existing mesh
     */
     for (i = 0; i < np; i++) {
-        xp = xy[i*(size_t)2];
-        yp = xy[i*(size_t)2 + (size_t)1];
+        xp = xy[i*st];
+        yp = xy[i*st + 1];
         nedge = 0;
         /*
            Set up the edge buffer.
@@ -288,12 +288,12 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
         for (j = 0; j < (*ntr); j++) {
             if (complete[j])
                 continue;
-            x1 = xy[vertices[j*(size_t)3]*(size_t)2];
-            y1 = xy[vertices[j*(size_t)3]*(size_t)2 + (size_t)1];
-            x2 = xy[vertices[j*(size_t)3 + (size_t)1]*(size_t)2];
-            y2 = xy[vertices[j*(size_t)3 + (size_t)1]*(size_t)2 + (size_t)1];
-            x3 = xy[vertices[j*(size_t)3 + (size_t)2]*(size_t)2];
-            y3 = xy[vertices[j*(size_t)3 + (size_t)2]*(size_t)2 + (size_t)1];
+            x1 = xy[vertices[j*3]*st];
+            y1 = xy[vertices[j*3]*st + 1];
+            x2 = xy[vertices[j*3 + 1]*st];
+            y2 = xy[vertices[j*3 + 1]*st + 1];
+            x3 = xy[vertices[j*3 + 2]*st];
+            y3 = xy[vertices[j*3 + 2]*st + 1];
             inside = sf_cram_circum_circle (xp, yp, x1, y1, x2, y2, x3, y3, &xc, &yc, &r);
             if (xc < xp && ((xp - xc)*(xp - xc)) > r)
                 complete[j] = true;
@@ -301,22 +301,22 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
                 /* Check that we haven't exceeded the edge list size */
                 if (nedge + 3 >= emax) {
                     emax += 100;
-                    if ((edges = (size_t*)realloc (edges, emax*(size_t)(2*sizeof(size_t)))) == NULL) {
+                    if ((edges = (int*)realloc (edges, emax*2*sizeof(int))) == NULL) {
                         free (complete);
                         return 3;
                     }
                 }
                 /* Triangle sides */
-                edges[nedge*(size_t)2] = vertices[j*(size_t)3];
-                edges[nedge*(size_t)2 + (size_t)1] = vertices[j*(size_t)3 + (size_t)1];
-                edges[(nedge + 1)*(size_t)2] = vertices[j*(size_t)3 + (size_t)1];
-                edges[(nedge + 1)*(size_t)2 + (size_t)1] = vertices[j*(size_t)3 + (size_t)2];
-                edges[(nedge + 2)*(size_t)2] = vertices[j*(size_t)3 + (size_t)2];
-                edges[(nedge + 2)*(size_t)2 + (size_t)1] = vertices[j*(size_t)3];
+                edges[nedge*2] = vertices[j*3];
+                edges[nedge*2 + 1] = vertices[j*3 + 1];
+                edges[(nedge + 1)*2] = vertices[j*3 + 1];
+                edges[(nedge + 1)*2 + 1] = vertices[j*3 + 2];
+                edges[(nedge + 2)*2] = vertices[j*3 + 2];
+                edges[(nedge + 2)*2 + 1] = vertices[j*3];
                 nedge += 3;
-                vertices[j*(size_t)3] = vertices[((*ntr) - 1)*(size_t)3];
-                vertices[j*(size_t)3 + (size_t)1] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)1];
-                vertices[j*(size_t)3 + (size_t)2] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)2];
+                vertices[j*3] = vertices[((*ntr) - 1)*3];
+                vertices[j*3 + 1] = vertices[((*ntr) - 1)*3 + 1];
+                vertices[j*3 + 2] = vertices[((*ntr) - 1)*3 + 2];
                 complete[j] = complete[(*ntr) - 1];
                 (*ntr)--;
                 j--;
@@ -329,20 +329,20 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
         */
         for (j = 0; j < (nedge - 1); j++) {
             for (k = j + 1; k < nedge; k++) {
-                if ((edges[j*(size_t)2] == edges[k*(size_t)2 + (size_t)1]) &&
-                    (edges[j*(size_t)2 + (size_t)1] == edges[k*(size_t)2])) {
-                    edges[j*(size_t)2] = (size_t)-1;
-                    edges[j*(size_t)2 + (size_t)1] = (size_t)-1;
-                    edges[k*(size_t)2] = (size_t)-1;
-                    edges[k*(size_t)2 + (size_t)1] = (size_t)-1;
+                if ((edges[j*2] == edges[k*2 + 1]) &&
+                    (edges[j*2 + 1] == edges[k*2])) {
+                    edges[j*2] = -1;
+                    edges[j*2 + 1] = -1;
+                    edges[k*2] = -1;
+                    edges[k*2 + 1] = -1;
                 }
                 /* Shouldn't need the following, see note above */
-                if ((edges[j*(size_t)2] == edges[k*(size_t)2]) &&
-                    (edges[j*(size_t)2 + (size_t)1] == edges[k*(size_t)2 + (size_t)1])) {
-                    edges[j*(size_t)2] = (size_t)-1;
-                    edges[j*(size_t)2 + (size_t)1] = (size_t)-1;
-                    edges[k*(size_t)2] = (size_t)-1;
-                    edges[k*(size_t)2 + (size_t)1] = (size_t)-1;
+                if ((edges[j*2] == edges[k*2]) &&
+                    (edges[j*2 + 1] == edges[k*2 + 1])) {
+                    edges[j*2] = -1;
+                    edges[j*2 + 1] = -1;
+                    edges[k*2] = -1;
+                    edges[k*2 + 1] = -1;
                 }
             }
         }
@@ -352,17 +352,16 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
            All edges are arranged in clockwise order.
         */
         for (j = 0; j < nedge; j++) {
-             if (edges[j*(size_t)2] == (size_t)-1 ||
-                 edges[j*(size_t)2 + (size_t)1] == (size_t)-1)
+             if (edges[j*2] < 0 || edges[j*2 + 1] < 0)
                  continue;
              if ((*ntr) >= trimax) {
                  free (complete);
                  free (edges);
                  return 4;;
              }
-             vertices[(*ntr)*(size_t)2] = edges[j*(size_t)2];
-             vertices[(*ntr)*(size_t)3 + (size_t)1] = edges[j*(size_t)2 + (size_t)1];
-             vertices[(*ntr)*(size_t)3 + (size_t)2] = i;
+             vertices[(*ntr)*3] = edges[j*2];
+             vertices[(*ntr)*3 + 1] = edges[j*2 + 1];
+             vertices[(*ntr)*3 + 2] = i;
              complete[*ntr] = false;
              (*ntr)++;
         }
@@ -372,12 +371,12 @@ int sf_cram_triangulate (size_t np, float *xy, size_t *vertices, size_t *ntr)
        These are triangles which have a vertex number greater than np
     */
     for (i = 0; i < (*ntr); i++) {
-        if (vertices[i*(size_t)3] >= np ||
-            vertices[i*(size_t)3 + (size_t)1] >= np ||
-            vertices[i*(size_t)3 + (size_t)2] >= np) {
-            vertices[i*(size_t)3] = vertices[((*ntr) - 1)*(size_t)3];
-            vertices[i*(size_t)3 + (size_t)1] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)1];
-            vertices[i*(size_t)3 + (size_t)2] = vertices[((*ntr) - 1)*(size_t)3 + (size_t)2];
+        if (vertices[i*3] >= np ||
+            vertices[i*3 + 1] >= np ||
+            vertices[i*3 + 2] >= np) {
+            vertices[i*3] = vertices[((*ntr) - 1)*3];
+            vertices[i*3 + 1] = vertices[((*ntr) - 1)*3 + 1];
+            vertices[i*3 + 2] = vertices[((*ntr) - 1)*3 + 2];
             (*ntr)--;
             i--;
         }

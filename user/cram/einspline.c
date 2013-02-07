@@ -95,8 +95,8 @@ const float* restrict d2Af = d2A44f;
  */
 
 static void solve_deriv_interp_1d_s (float bands[], float coefs[],
-                                      int M, int cstride) {
-  int row;
+                                     intptr_t M, intptr_t cstride) {
+  intptr_t row;
   /* Solve interpolating equations
      First and last rows are different */
   bands[4*(0)+1] /= bands[4*(0)+0];
@@ -145,9 +145,9 @@ static void solve_deriv_interp_1d_s (float bands[], float coefs[],
    cstride gives the stride between values in coefs.
    On exit, coefs with contain interpolating B-spline coefs */
 static void solve_periodic_interp_1d_s (float bands[], float coefs[],
-                                        int M, int cstride) {
+                                        intptr_t M, intptr_t cstride) {
   float *lastCol;
-  int row;
+  intptr_t row;
 
   lastCol = (float*) malloc(M*sizeof(float));
 
@@ -203,11 +203,11 @@ static void solve_periodic_interp_1d_s (float bands[], float coefs[],
    cstride gives the stride between values in coefs.
    On exit, coefs with contain interpolating B-spline coefs */
 static void solve_antiperiodic_interp_1d_s (float bands[], float coefs[],
-                                            int M, int cstride)
+                                            intptr_t M, intptr_t cstride)
 {
   bands[4*0+0]     *= -1.0;
   bands[4*(M-1)+2] *= -1.0;
-  int row;
+  intptr_t row;
 
   float lastCol[M];
   /* Now solve:
@@ -258,7 +258,7 @@ static void solve_antiperiodic_interp_1d_s (float bands[], float coefs[],
 static void find_coefs_1d_s (Ugrid grid, BCtype_s bc, 
                              float *data,  intptr_t dstride,
                              float *coefs, intptr_t cstride) {
-  int M = grid.num, i, j;
+  intptr_t M = grid.num, i, j;
   float basis[4] = {1.0/6.0, 2.0/3.0, 1.0/6.0, 0.0};
   float *bands;
 
@@ -340,7 +340,7 @@ static void find_coefs_1d_s (Ugrid grid, BCtype_s bc,
 
 UBspline_1d_s* create_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, float *data) {
   /* Create new spline */
-  int M, N;
+  intptr_t M, N;
   UBspline_1d_s* restrict spline = malloc (sizeof(UBspline_1d_s));
   spline->spcode = U1D;
   spline->tcode  = SINGLE_REAL;
@@ -361,11 +361,11 @@ UBspline_1d_s* create_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, float *data) {
   x_grid.delta_inv = 1.0/x_grid.delta;
   spline->x_grid   = x_grid;
 #ifndef HAVE_SSE
-  spline->coefs = malloc ((size_t)sizeof(float)*(size_t)N);
+  spline->coefs = malloc ((intptr_t)sizeof(float)*(intptr_t)N);
 #else
   posix_memalign ((void**)&spline->coefs, 16, (sizeof(float)*N));
 #endif
-  spline->nc = (size_t)sizeof(float)*(size_t)N;
+  spline->nc = (intptr_t)sizeof(float)*(intptr_t)N;
   find_coefs_1d_s (spline->x_grid, xBC, data, 1, spline->coefs, 1);
 #ifdef HAVE_SSE
   init_sse_data ();
@@ -380,8 +380,8 @@ void recompute_UBspline_1d_s (UBspline_1d_s* spline, float *data) {
 UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
                                      BCtype_s xBC, BCtype_s yBC, float *data) {
   /* Create new spline */
-  int Mx, My;
-  int Nx, Ny, iy, ix;
+  intptr_t Mx, My;
+  intptr_t Nx, Ny, iy, ix;
 
   UBspline_2d_s* restrict spline = malloc (sizeof(UBspline_2d_s));
   spline->spcode = U2D;
@@ -410,11 +410,11 @@ UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
   spline->y_grid   = y_grid;
   spline->x_stride = Ny;
 #ifndef HAVE_SSE
-  spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny);
+  spline->coefs = malloc ((intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny);
 #else
   posix_memalign ((void**)&spline->coefs, 16, sizeof(float)*Nx*Ny);
 #endif
-  spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny;
+  spline->nc = (intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny;
 
   /* First, solve in the X-direction */
   for (iy=0; iy<My; iy++) {
@@ -438,9 +438,9 @@ UBspline_2d_s* create_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
 }
 
 void recompute_UBspline_2d_s (UBspline_2d_s* spline, float *data) {
-  int Mx = spline->x_grid.num;
-  int My = spline->y_grid.num;
-  int Nx, Ny, iy, ix;
+  intptr_t Mx = spline->x_grid.num;
+  intptr_t My = spline->y_grid.num;
+  intptr_t Nx, Ny, iy, ix;
 
   if (spline->xBC.lCode == PERIODIC || spline->xBC.lCode == ANTIPERIODIC)
     Nx = Mx+3;
@@ -472,8 +472,8 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
                                      BCtype_s xBC, BCtype_s yBC, BCtype_s zBC,
                                      float *data) {
   /* Create new spline */
-  int Mx, My, Mz;
-  int Nx, Ny, Nz, iy, ix, iz;
+  intptr_t Mx, My, Mz;
+  intptr_t Nx, Ny, Nz, iy, ix, iz;
     
   UBspline_3d_s* restrict spline = malloc (sizeof(UBspline_3d_s));
   spline->spcode = U3D;
@@ -513,11 +513,11 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->x_stride = Ny*Nz;
   spline->y_stride = Nz;
 #ifndef HAVE_SSE
-  spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz);
+  spline->coefs = malloc ((intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny*(intptr_t)Nz);
 #else
   posix_memalign ((void**)&spline->coefs, 16, (sizeof(float)*Nx*Ny*Nz));
 #endif
-  spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz;
+  spline->nc = (intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny*(intptr_t)Nz;
 
   /* First, solve in the X-direction */
   for (iy=0; iy<My; iy++) 
@@ -552,10 +552,10 @@ UBspline_3d_s* create_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
 }
 
 void recompute_UBspline_3d_s (UBspline_3d_s* spline, float *data) {
-  int Mx = spline->x_grid.num;
-  int My = spline->y_grid.num;
-  int Mz = spline->z_grid.num;
-  int Nx, Ny, Nz, ix, iy, iz;
+  intptr_t Mx = spline->x_grid.num;
+  intptr_t My = spline->y_grid.num;
+  intptr_t Mz = spline->z_grid.num;
+  intptr_t Nx, Ny, Nz, ix, iy, iz;
 
   if (spline->xBC.lCode == PERIODIC || spline->xBC.lCode == ANTIPERIODIC)
     Nx = Mx+3;
@@ -619,7 +619,7 @@ void eval_UBspline_1d_s (UBspline_1d_s * restrict spline,
   float u = x*spline->x_grid.delta_inv;
   float ipart, t;
   t = modff (u, &ipart);
-  int i = (int) ipart;
+  intptr_t i = (intptr_t) ipart;
   
   float tp[4];
   tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
@@ -640,7 +640,7 @@ void eval_UBspline_1d_s_vg (UBspline_1d_s * restrict spline, double x,
   float u = x*spline->x_grid.delta_inv;
   float ipart, t;
   t = modff (u, &ipart);
-  int i = (int) ipart;
+  intptr_t i = (intptr_t) ipart;
   
   float tp[4];
   tp[0] = t*t*t;  tp[1] = t*t;  tp[2] = t;  tp[3] = 1.0;
@@ -667,7 +667,7 @@ void eval_UBspline_1d_s_vg (UBspline_1d_s * restrict spline, double x,
 void eval_UBspline_2d_s (UBspline_2d_s * restrict spline, 
                          double x, double y, float* restrict val)
 {
-  int xs;
+  intptr_t xs;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   float ux = x*spline->x_grid.delta_inv;
@@ -675,8 +675,8 @@ void eval_UBspline_2d_s (UBspline_2d_s * restrict spline,
   float ipartx, iparty, tx, ty;
   tx = modff (ux, &ipartx);
   ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  intptr_t ix = (intptr_t) ipartx;
+  intptr_t iy = (intptr_t) iparty;
   
   float tpx[4], tpy[4], a[4], b[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -779,7 +779,7 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline,
                             double x, double y, 
                             float* restrict val, float* restrict grad)
 {
-  int xs;
+  intptr_t xs;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   float ux = x*spline->x_grid.delta_inv;
@@ -787,8 +787,8 @@ void eval_UBspline_2d_s_vg (UBspline_2d_s * restrict spline,
   float ipartx, iparty, tx, ty;
   tx = modff (ux, &ipartx);
   ty = modff (uy, &iparty);
-  int ix = (int) ipartx;
-  int iy = (int) iparty;
+  intptr_t ix = (intptr_t) ipartx;
+  intptr_t iy = (intptr_t) iparty;
   
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -928,7 +928,7 @@ void eval_UBspline_3d_s (UBspline_3d_s * restrict spline,
                          double x, double y, double z,
                          float* restrict val)
 {
-  int xs, ys;
+  intptr_t xs, ys;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
@@ -936,9 +936,9 @@ void eval_UBspline_3d_s (UBspline_3d_s * restrict spline,
   float uy = y*spline->y_grid.delta_inv;
   float uz = z*spline->z_grid.delta_inv;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
+  ty = modff (uy, &iparty);  intptr_t iy = (intptr_t) iparty;
+  tz = modff (uz, &ipartz);  intptr_t iz = (intptr_t) ipartz;
 
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -1099,7 +1099,7 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline,
                             double x, double y, double z,
                             float* restrict val, float* restrict grad)
 {
-  int xs, ys;
+  intptr_t xs, ys;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
@@ -1107,9 +1107,9 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline,
   float uy = y*spline->y_grid.delta_inv;
   float uz = z*spline->z_grid.delta_inv;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;  
-  ty = modff (uy, &iparty);  int iy = (int) iparty; 
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz; 
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;  
+  ty = modff (uy, &iparty);  intptr_t iy = (intptr_t) iparty; 
+  tz = modff (uz, &ipartz);  intptr_t iz = (intptr_t) ipartz; 
   
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], da[4], db[4], dc[4], 
     cP[16], bcP[4], dbcP[4];
@@ -1355,7 +1355,7 @@ void eval_UBspline_3d_s_vg (UBspline_3d_s * restrict spline,
 multi_UBspline_1d_s*
 create_multi_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, int num_splines)
 {
-  int Mx, Nx, N;
+  intptr_t Mx, Nx, N;
   /* Create new spline */
   multi_UBspline_1d_s* restrict spline = malloc (sizeof(multi_UBspline_1d_s));
   spline->spcode = MULTI_U1D;
@@ -1384,12 +1384,12 @@ create_multi_UBspline_1d_s (Ugrid x_grid, BCtype_s xBC, int num_splines)
   x_grid.delta_inv = 1.0/x_grid.delta;
   spline->x_grid   = x_grid;
 #ifndef HAVE_SSE
-  spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)N);
+  spline->coefs = malloc ((intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)N);
 #else
   posix_memalign ((void**)&spline->coefs, 64, (sizeof(float)*Nx*N));
   init_sse_data();    
 #endif
-  spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)N;
+  spline->nc = (intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)N;
 
   return spline;
 }
@@ -1398,7 +1398,7 @@ void set_multi_UBspline_1d_s (multi_UBspline_1d_s *spline, int num,
                               float *data)
 {
   float *coefs = spline->coefs + num;
-  int xs = spline->x_stride;
+  intptr_t xs = spline->x_stride;
   find_coefs_1d_s (spline->x_grid, spline->xBC, data, 1, 
                    coefs, xs);
 }
@@ -1407,7 +1407,7 @@ multi_UBspline_2d_s*
 create_multi_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
                             BCtype_s xBC, BCtype_s yBC, int num_splines)
 {
-  int Mx, My, Nx, Ny, N;
+  intptr_t Mx, My, Nx, Ny, N;
   /* Create new spline */
   multi_UBspline_2d_s* restrict spline = malloc (sizeof(multi_UBspline_2d_s));
   spline->spcode = MULTI_U2D;
@@ -1444,22 +1444,22 @@ create_multi_UBspline_2d_s (Ugrid x_grid, Ugrid y_grid,
   spline->x_stride = Ny*N;
   spline->y_stride = N;
 #ifndef HAVE_SSE
-  spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)N);
+  spline->coefs = malloc ((intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny*(intptr_t)N);
 #else
   posix_memalign ((void**)&spline->coefs, 64, 
                   sizeof(float)*Nx*Ny*N);
   init_sse_data();
 #endif
-  spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)N;
+  spline->nc = (intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny*(intptr_t)N;
 
   return spline;
 }
 
 void set_multi_UBspline_2d_s (multi_UBspline_2d_s* spline, int num, float *data)
 {
-  int Mx = spline->x_grid.num;
-  int My = spline->y_grid.num;
-  int Nx, Ny, ys, iy, ix;
+  intptr_t Mx = spline->x_grid.num;
+  intptr_t My = spline->y_grid.num;
+  intptr_t Nx, Ny, ys, iy, ix;
 
   if (spline->xBC.lCode == PERIODIC || spline->xBC.lCode == ANTIPERIODIC)     
     Nx = Mx+3;
@@ -1494,7 +1494,7 @@ create_multi_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
                             BCtype_s xBC, BCtype_s yBC, BCtype_s zBC,
                             int num_splines)
 {
-  int Mx, My, Mz, Nx, Ny, Nz, N;
+  intptr_t Mx, My, Mz, Nx, Ny, Nz, N;
   /* Create new spline */
   multi_UBspline_3d_s* restrict spline = malloc (sizeof(multi_UBspline_3d_s));
   spline->spcode = MULTI_U3D;
@@ -1539,23 +1539,23 @@ create_multi_UBspline_3d_s (Ugrid x_grid, Ugrid y_grid, Ugrid z_grid,
   spline->y_stride      = Nz*N;
   spline->z_stride      = N;
 #ifndef HAVE_SSE
-  spline->coefs = malloc ((size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz*(size_t)N);
+  spline->coefs = malloc ((intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny*(intptr_t)Nz*(intptr_t)N);
 #else
   posix_memalign ((void**)&spline->coefs, 64, 
-                  ((size_t)sizeof(float)*Nx*Ny*Nz*N));
+                  ((intptr_t)sizeof(float)*Nx*Ny*Nz*N));
   init_sse_data();
 #endif
-  spline->nc = (size_t)sizeof(float)*(size_t)Nx*(size_t)Ny*(size_t)Nz*(size_t)N;
+  spline->nc = (intptr_t)sizeof(float)*(intptr_t)Nx*(intptr_t)Ny*(intptr_t)Nz*(intptr_t)N;
 
   return spline;
 }
 
 void set_multi_UBspline_3d_s (multi_UBspline_3d_s* spline, int num, float *data)
 {
-  int Mx = spline->x_grid.num;
-  int My = spline->y_grid.num;
-  int Mz = spline->z_grid.num;
-  int Nx, Ny, Nz, zs, ix, iy, iz;
+  intptr_t Mx = spline->x_grid.num;
+  intptr_t My = spline->y_grid.num;
+  intptr_t Mz = spline->z_grid.num;
+  intptr_t Nx, Ny, Nz, zs, ix, iy, iz;
 
   if (spline->xBC.lCode == PERIODIC || spline->xBC.lCode == ANTIPERIODIC)     
     Nx = Mx+3;
@@ -1618,11 +1618,11 @@ void eval_multi_UBspline_1d_s (multi_UBspline_1d_s *spline,
                                double x,
                                float* restrict vals)
 {
-  int n, i;
+  intptr_t n, i;
   x -= spline->x_grid.start;
   float ux = x*spline->x_grid.delta_inv;
   float ipartx, tx;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
   
   float tpx[4], a[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -1650,11 +1650,11 @@ void eval_multi_UBspline_1d_s_vg (multi_UBspline_1d_s *spline,
                                   float* restrict vals,
                                   float* restrict grads)
 {
-  int n, i;
+  intptr_t n, i;
   x -= spline->x_grid.start;
   float ux = x*spline->x_grid.delta_inv;
   float ipartx, tx;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
   
   float tpx[4], a[4], da[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -1697,14 +1697,14 @@ void eval_multi_UBspline_2d_s (multi_UBspline_2d_s *spline,
                                double x, double y,
                                float* restrict vals)
 {
-  int n, i, j;
+  intptr_t n, i, j;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   float ux = x*spline->x_grid.delta_inv;
   float uy = y*spline->y_grid.delta_inv;
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
+  ty = modff (uy, &iparty);  intptr_t iy = (intptr_t) iparty;
   
   float tpx[4], tpy[4], a[4], b[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -1829,14 +1829,14 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
                                   float* restrict vals,
                                   float* restrict grads)
 {
-  int n, i, j;
+  intptr_t n, i, j;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   float ux = x*spline->x_grid.delta_inv;
   float uy = y*spline->y_grid.delta_inv;
   float ipartx, iparty, tx, ty;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
+  ty = modff (uy, &iparty);  intptr_t iy = (intptr_t) iparty;
   
   float tpx[4], tpy[4], a[4], b[4], da[4], db[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -1893,7 +1893,7 @@ void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
 }
 #else
 void eval_multi_UBspline_2d_s_vg (multi_UBspline_2d_s *spline,
-                                   double x, double y,
+                                  double x, double y,
                                   float* restrict vals,
                                   float* restrict grads)
 {
@@ -2007,7 +2007,7 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
                                double x, double y, double z,
                                float* restrict vals)
 {
-  int n, i, j, k;
+  intptr_t n, i, j, k;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
@@ -2015,9 +2015,9 @@ void eval_multi_UBspline_3d_s (multi_UBspline_3d_s *spline,
   float uy = y*spline->y_grid.delta_inv;
   float uz = z*spline->z_grid.delta_inv;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
+  ty = modff (uy, &iparty);  intptr_t iy = (intptr_t) iparty;
+  tz = modff (uz, &ipartz);  intptr_t iz = (intptr_t) ipartz;
   
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4];
   tpx[0] = tx*tx*tx;  tpx[1] = tx*tx;  tpx[2] = tx;  tpx[3] = 1.0;
@@ -2160,7 +2160,7 @@ void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
                                   float* restrict vals,
                                   float* restrict grads)
 {
-  int n, i, j, k;
+  intptr_t n, i, j, k;
   x -= spline->x_grid.start;
   y -= spline->y_grid.start;
   z -= spline->z_grid.start;
@@ -2168,9 +2168,9 @@ void eval_multi_UBspline_3d_s_vg (multi_UBspline_3d_s *spline,
   float uy = y*spline->y_grid.delta_inv;
   float uz = z*spline->z_grid.delta_inv;
   float ipartx, iparty, ipartz, tx, ty, tz;
-  tx = modff (ux, &ipartx);  int ix = (int) ipartx;
-  ty = modff (uy, &iparty);  int iy = (int) iparty;
-  tz = modff (uz, &ipartz);  int iz = (int) ipartz;
+  tx = modff (ux, &ipartx);  intptr_t ix = (intptr_t) ipartx;
+  ty = modff (uy, &iparty);  intptr_t iy = (intptr_t) iparty;
+  tz = modff (uz, &ipartz);  intptr_t iz = (intptr_t) ipartz;
   
   float tpx[4], tpy[4], tpz[4], a[4], b[4], c[4], 
     da[4], db[4], dc[4];
