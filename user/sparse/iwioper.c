@@ -231,19 +231,9 @@ void iwi_free()
 {
     int its;
 
-    free(us); free(ur); free(as); free(ar);
-
-    if (!load) {
-	free(Ti); free(Tj); free(Tx); free(Tz); 
-	free(Ap); free(Ai); free(Map); free(Ax); free(Az);
-    }
-
     for (its=0; its < uts; its++) {
-	free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
+	free(tempx[its]); free(tempr[its]);
     }
-
-    free(Bx); free(Bz); free(Xx); free(Xz);
-
     free(tempx); free(tempr);
 }
 

@@ -219,16 +219,13 @@ void iwi_free()
 {
     int its;
 
-    free(insert); free(append);
-
-    free(us); free(ur); free(as); free(ar);
-    
     for (its=0; its < uts; its++) {
+	free(insert[its]); free(append[its]);
 	free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
+	free(tempx[its]); free(tempr[its]);
     }
-
+    free(insert); free(append);
     free(Bx); free(Bz); free(Xx); free(Xz);
-
     free(tempx); free(tempr);
 }
 

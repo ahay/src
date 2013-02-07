@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+#include <lbfgs.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -38,9 +39,13 @@ int main(int argc, char* argv[])
     int uts, mts;
     char *order;
 
+    lbfgs_parameter_t param;
+
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");    
+
+    lbfgs_parameter_init(&param);
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */

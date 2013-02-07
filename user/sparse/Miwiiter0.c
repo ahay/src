@@ -27,11 +27,11 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, load;
+    bool verb, load, shape;
     int n1, n2, cgiter; 
-    int nh, ns, nw;
-    float vpml, alpha, f0, d1, d2, dw, ow;
-    float *di, *dm, ***wght, reg, **prec, **xmov, **rmov;
+    int nh, ns, nw, n[2], rect[2];
+    float vpml, alpha, f0, d1, d2, dw, ow, tol;
+    float *di, *dm, ***wght, reg, **prec, **xmov, **rmov, *p=NULL;
     char *datapath;
     sf_file in, out, model, us, ur;
     sf_file weight, precon, miter, riter;
@@ -76,6 +76,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("cgiter",&cgiter)) cgiter=10;
     /* number of conjugate-gradient iterations */
+
+    if (!sf_getbool("shape",&shape)) shape=false;
+    /* regularization (default Tikhnov) */
 
     if (!sf_getfloat("reg",&reg)) reg=0.;
     /* regularization parameter */
@@ -164,35 +167,57 @@ int main(int argc, char* argv[])
 	     us,ur, datapath, uts, order);
 
     /* initialize regularization */
-    sf_igrad2_init(n1,n2);
+    if (shape) {
+	n[0] = n1; n[1] = n2;
+
+	if (!sf_getfloat("tol",&tol)) tol=1.e-6;
+	/* tolerance for shaping regularization */
+
+	if (!sf_getint("rect1",&rect[0])) rect[0]=1;
+	/* smoothing radius on axis 1 */
+	if (!sf_getint("rect2",&rect[1])) rect[1]=1;
+	/* smoothing radius on axis 2 */
+	
+	/* triangle smoothing operator */
+	sf_trianglen_init(2,rect,n);
+	sf_repeat_init(n1*n2,1,sf_trianglen_lop);
+
+	sf_conjgrad_init(n1*n2,n1*n2,n1*n2*(2*nh+1),n1*n2*(2*nh+1),reg,tol,verb,false);
+	p = sf_floatalloc(n1*n2);
+    } else {
+	/* 2D gradient operator */
+	sf_igrad2_init(n1,n2);
+    }
 
     /* set weight and preconditioner */
     iwi_set(wght,prec);
 
     /* solve update */
-    if (NULL == miter && NULL == riter) {
-	sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
-		      2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
-		      cgiter,reg,"verb",verb,"end");
+    if (shape) {
+	sf_conjgrad(NULL,iwi_oper,sf_repeat_lop,p,dm,di,cgiter);
     } else {
-	sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
-		      2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
-		      cgiter,reg,"xmov",xmov,"rmov",rmov,"verb",verb,"end");
-    }
+	if (NULL == miter && NULL == riter) {
+	    sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
+			  2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
+			  cgiter,reg,"verb",verb,"end");
+	} else {
+	    sf_solver_reg(iwi_oper,sf_cgstep,sf_igrad2_lop,
+			  2*n1*n2,n1*n2,n1*n2*(2*nh+1),dm,di,
+			  cgiter,reg,"xmov",xmov,"rmov",rmov,"verb",verb,"end");
+	}
     
-    sf_cgstep_close();
+	sf_cgstep_close();
+    }
 
     /* write output */
     sf_floatwrite(dm,n1*n2,out);
 
-    if (NULL != miter || NULL != riter) {
-	sf_floatwrite(xmov[0],n1*n2*cgiter,miter);
-	sf_floatwrite(rmov[0],n1*n2*(2*nh+1)*cgiter,riter);
+    if (!shape) {
+	if (NULL != miter || NULL != riter) {
+	    sf_floatwrite(xmov[0],n1*n2*cgiter,miter);
+	    sf_floatwrite(rmov[0],n1*n2*(2*nh+1)*cgiter,riter);
+	}
     }
-
-    /* free */
-    iwi_free();
-    free(dm); free(di);
     
     exit(0);
 }

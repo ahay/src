@@ -193,9 +193,5 @@ int main(int argc, char* argv[])
 	sf_floatwrite(rmov[0],n1*n2*(2*nh+1)*cgiter,riter);
     }
 
-    /* free */
-    iwi_free();
-    free(dm); free(di);
-    
     exit(0);
 }
