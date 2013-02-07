@@ -220,14 +220,17 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 	if (isAA_)
 		this->processData (piData); 
 
-	for (int ix = 0; ix < ixn_; ++ix) {
-		const float curX = ixo_ + ix * ixd_;
-		float* iTrace = piImage + ix * izn_;
+	const int pNum = ixn_ * izn_;
 #pragma omp parallel for
-		for (int iz = 0; iz < izn_; ++iz) {
-			const float curZ = izo_ + iz * izd_;
-			this->getImageSample (piData, curX, curZ, curP, iTrace + iz);
-		}
+	for (int ip = 0; ip < pNum; ++ip) {
+		const int ix = ip / izn_;
+		const int iz = ip % izn_;
+
+		const float curX = ixo_ + ix * ixd_;
+		const float curZ = izo_ + iz * izd_;
+
+		float* iPoint = piImage + (ix * izn_ + iz);
+		this->getImageSample (piData, curX, curZ, curP, iPoint);
 	}
 
 	return;
