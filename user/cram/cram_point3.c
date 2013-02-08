@@ -44,7 +44,8 @@ struct CRAMPoint3 {
     float                   b0, a0, db, da, ds, dh;
     float                   dym, dxm, atw;
     int                     mioz, midz;
-    bool                    amp, mute, taper, agath, dipgath;
+    bool                    amp, mute, taper, extrap;
+    bool                    agath, dipgath;
     float                 **oimage;
     float                 **osqimg;
     float                 **ohits;
@@ -87,6 +88,8 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
     cram_point->taper = false;
     cram_point->dxm = 0.0;
     cram_point->dym = 0.0;
+
+    cram_point->extrap = false;
 
     cram_point->data = data;
     cram_point->survey = survey;
@@ -377,8 +380,9 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         /* Obliquity factor for 3-D */
         smp *= cosf (0.5*oac)*cosf (0.5*oac);
         smp *= sqrtf (ss*sr);
-
-        smp /= sqrtf (cram_point->src_exits[ies].s*cram_point->rcv_exits[ier].s);
+/*
+        smp *= sqrtf (cram_point->src_exits[ies].s*cram_point->rcv_exits[ier].s*
+                      cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs);*/
     }
 
     cram_point->img += smp;
@@ -387,47 +391,54 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
     if (!cram_point->agath && !cram_point->dipgath)
         return;
 
-    /* Compute change in inclination and azimuth angles for the source and receiver branches
-       using db/dx,db/dy and da/dx,da/dy with respect to a displacement away from the
-       source and receiver on the surface; then find dip and opening angle deviation,
-       which correspond to this displacement */
-    for (isxy = 0; isxy < 2; isxy++) { /* d/dx, d/dy, source side */
-        for (jsxy = 0; jsxy < 2; jsxy++) { /* +/- shift in x/y on the source side */
-            ds = jsxy != 0 ? 2.0*cram_point->ds : -2.0*cram_point->ds;
-            sb = cram_point->b0 +
-                 (cram_point->src_exits[ies].ib + cram_point->src_exits[ies].ibxy[isxy]*ds)*
-                 cram_point->db;
-            sa = cram_point->a0 +
-                 (cram_point->src_exits[ies].ia + cram_point->src_exits[ies].iaxy[isxy]*ds)*
-                 cram_point->da;
-            for (ihxy = 0; ihxy < 2; ihxy++) { /* d/dx, d/dy, receiver side */
-                for (jhxy = 0; jhxy < 2; jhxy++) { /* +/- shift in x/y on the receiver side */
-                    dh = jhxy != 0 ? 2.0*cram_point->ds : -2.0*cram_point->ds;
-                    hb = cram_point->b0 +
-                         (cram_point->rcv_exits[ier].ib + cram_point->rcv_exits[ier].ibxy[ihxy]*dh)*
-                         cram_point->db;
-                    ha = cram_point->a0 +
-                         (cram_point->rcv_exits[ier].ia + cram_point->rcv_exits[ier].iaxy[ihxy]*dh)*
-                         cram_point->da;
-                    /* New system of subsurface angles for the surface displacment */
-                    sf_cram_point3_angles (sb, sa, hb, ha, &oa, &oz, &da, &dz);
-                    /* Opening angle spread with respect to the initial values */
-                    sf_cram_point3_aaz_spread (oac, ozc, oa, oz, &doa, &doz);
-                    /* Dip angle spread with respect to the initial values */
-                    sf_cram_point3_aaz_spread (dac, dzc, da, dz, &dda, &ddz);
+    if (cram_point->extrap) {
+        /* Compute change in inclination and azimuth angles for the source and receiver branches
+           using db/dx,db/dy and da/dx,da/dy with respect to a displacement away from the
+           source and receiver on the surface; then find dip and opening angle deviation,
+           which correspond to this displacement */
+        for (isxy = 0; isxy < 2; isxy++) { /* d/dx, d/dy, source side */
+            for (jsxy = 0; jsxy < 2; jsxy++) { /* +/- shift in x/y on the source side */
+                ds = jsxy != 0 ? 2.0*cram_point->ds : -2.0*cram_point->ds;
+                sb = cram_point->b0 +
+                     (cram_point->src_exits[ies].ib + cram_point->src_exits[ies].ibxy[isxy]*ds)*
+                     cram_point->db;
+                sa = cram_point->a0 +
+                     (cram_point->src_exits[ies].ia + cram_point->src_exits[ies].iaxy[isxy]*ds)*
+                     cram_point->da;
+                for (ihxy = 0; ihxy < 2; ihxy++) { /* d/dx, d/dy, receiver side */
+                    for (jhxy = 0; jhxy < 2; jhxy++) { /* +/- shift in x/y on the receiver side */
+                        dh = jhxy != 0 ? 2.0*cram_point->ds : -2.0*cram_point->ds;
+                        hb = cram_point->b0 +
+                             (cram_point->rcv_exits[ier].ib + cram_point->rcv_exits[ier].ibxy[ihxy]*dh)*
+                             cram_point->db;
+                        ha = cram_point->a0 +
+                             (cram_point->rcv_exits[ier].ia + cram_point->rcv_exits[ier].iaxy[ihxy]*dh)*
+                             cram_point->da;
+                        /* New system of subsurface angles for the surface displacment */
+                        sf_cram_point3_angles (sb, sa, hb, ha, &oa, &oz, &da, &dz);
+                        /* Opening angle spread with respect to the initial values */
+                        sf_cram_point3_aaz_spread (oac, ozc, oa, oz, &doa, &doz);
+                        /* Dip angle spread with respect to the initial values */
+                        sf_cram_point3_aaz_spread (dac, dzc, da, dz, &dda, &ddz);
+                    }
                 }
             }
         }
+        /* Average changes in dip and opening angles and their azimuths */
+        doa /= 16.0;
+        doz /= 16.0;
+        dda /= 16.0;
+        ddz /= 16.0;
+        /* Extrapolate dip only in the vicinity of a receiver */
+        dw = cram_point->dh/cram_point->ds;
+        dda *= 0.5*dw;
+        ddz *= 0.25*dw;
+    } else {
+        doa = 0.5*cram_point->db;
+        doz = cram_point->da;
+        dda = 0.25*cram_point->db;
+        ddz = cram_point->da;
     }
-    /* Average changes in dip and opening angles and their azimuths */
-    doa /= 16.0;
-    doz /= 16.0;
-    dda /= 16.0;
-    ddz /= 16.0;
-    /* Extrapolate dip only in the vicinity of a receiver */
-    dw = cram_point->dh/cram_point->ds;
-    dda *= 0.5*dw;
-    ddz *= 0.25*dw;
 
     /* Contribute sample to the opening angle gather */
     if (cram_point->agath) {

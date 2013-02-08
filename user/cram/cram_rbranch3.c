@@ -33,9 +33,10 @@ typedef struct {
     int   kmah;
     float ib, ia; /* Inclination and azimuth angles */
     float t, cs, s; /* Exit time, exit cosine, exist surface */
-    float j; /* Determinant of d(esc_x/y)/d(x/y) */
+    float j; /* Determinant of d(esc_x/y)/d(b/a) */
     float p[3]; /* Slope and its d/dx, d/dy components */
     float ibxy[2], iaxy[2]; /* db/dx, db/dy; da/dx, da/dy */
+    float jxy;
 } sf_cram_surface_exit3;
 /*^*/
 
@@ -45,9 +46,10 @@ typedef struct {
     int   ib[3], ia[3], kmah; /* Angles, caustic index */
     float xmin, xmax, ymin, ymax; /* Span on the surface */
     float x[3], y[3], t[3]; /* Exit locations and times */
-    float p[3], cs, s; /* Slope, slope components (d/dx, d/dy), exit cosing, exit surface */
+    float p[3], cs, s; /* Slope, slope components (d/dx, d/dy), exit cosine, exit area */
     float j; /* Determinant of d(esc_x/y)/d(x/y) */
     float ibxy[2], iaxy[2]; /* db/dx, db/dy; da/dx, da/dy */
+    float jxy; /* Determinant of d(ib/ia)/d(x/y) */
 } sf_cram_surface_branch3;
 
 struct CRAMRBranch3 {
@@ -283,11 +285,15 @@ static bool sf_cram_rbranch3_check_exit (sf_cram_rbranch3 cram_rbranch,
     branch->s = s;
     /* Exit cosine */
     branch->cs = sqrt (1.0 - sn*sn);
-    /* Determinant of d(esc_x/y)/d(x/y) */
+    /* Determinant of d(esc_x/y)/d(b/a) */
     branch->j = (esc2[ESC3_X] - esc1[ESC3_X])/(float)(ibs[1] - ibs[0])*
                 (esc3[ESC3_Y] - esc1[ESC3_Y])/(float)(ias[2] - ias[0]) -
                 (esc2[ESC3_Y] - esc1[ESC3_Y])/(float)(ibs[1] - ibs[0])*
                 (esc3[ESC3_X] - esc1[ESC3_X])/(float)(ias[2] - ias[0]);
+    /* Determinant of d(ib/ia)/d(x/y) */
+    branch->jxy = branch->ibxy[0]*branch->iaxy[1] - 
+                  branch->ibxy[1]*branch->iaxy[0];
+
     branch->kmah = kmah;
     for (i = 0; i < 3; i++) { 
         branch->ib[i] = ibs[i];
@@ -494,6 +500,7 @@ int sf_cram_rbranch3_find_exits (sf_cram_rbranch3 cram_rbranch, float x, float y
                 exits[ie].ia = branch->ia[0]*(1.0 - u - v) + branch->ia[1]*v + branch->ia[2]*u;
                 exits[ie].t = t;
                 exits[ie].j = branch->j;
+                exits[ie].jxy = branch->jxy;
                 exits[ie].s = branch->s;
                 exits[ie].cs = branch->cs;
                 exits[ie].p[0] = branch->p[0];

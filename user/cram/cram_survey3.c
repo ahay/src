@@ -144,7 +144,7 @@ sf_cram_survey3 sf_cram_survey3_init (sf_file survey, bool verb)
     }
     if (cram_survey->nh > 1) {
         dhx = fabsf (cram_survey->h[2] - cram_survey->h[0]);
-        dhy = fabsf (cram_survey->h[3] - cram_survey->h[0]);
+        dhy = fabsf (cram_survey->h[3] - cram_survey->h[1]);
     }
     if (1 == cram_survey->ns) {
         dsx = dhx;
