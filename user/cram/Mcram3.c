@@ -35,7 +35,7 @@ int main (int argc, char* argv[]) {
     sf_file imag = NULL, oimag = NULL, dimag = NULL, osmap = NULL,
             dsmap = NULL, oimap = NULL, dimap = NULL;
 
-    bool amp, mute, outaz;
+    bool amp, mute, outaz, extrap;
     sf_cram_data2 cram_data;
     sf_cram_survey3 cram_survey;
     sf_cram_slowness3 cram_slowness;
@@ -79,6 +79,8 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getbool ("amp", &amp)) amp = true;
     /* n - do not apply amplitude correction weights */
+    if (!sf_getbool ("extrap", &extrap)) extrap = false;
+    /* y - extrapolate migrated samples in gathers */
     if (!sf_getbool ("mute", &mute)) mute = false;
     /* y - mute signal in constant z plane before stacking */
     if (!sf_getbool ("outaz", &outaz)) outaz = true;
@@ -160,6 +162,7 @@ int main (int argc, char* argv[]) {
                                       cram_slowness, cram_rbranch);
     sf_cram_point3_set_amp (cram_point, amp);
     sf_cram_point3_set_taper (cram_point, dxm, dym);
+    sf_cram_point3_set_extrap (cram_point, extrap);
     /* Image and gathers accumulator object */
     cram_gather = sf_cram_gather3_init (nb, na, nz, b0, db, a0, da,
                                         oazmax, dazmax, outaz);

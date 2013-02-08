@@ -150,6 +150,12 @@ void sf_cram_point3_set_compute_dipgath (sf_cram_point3 cram_point, bool dipgath
     cram_point->dipgath = dipgath;
 }
 
+void sf_cram_point3_set_extrap (sf_cram_point3 cram_point, bool extrap)
+/*< Set extrapolation flag for gathers >*/
+{
+    cram_point->extrap = extrap;
+}
+
 void sf_cram_point3_set_mute (sf_cram_point3 cram_point, float oam, float dam)
 /*< Set mute limits in constant z plane >*/
 {
