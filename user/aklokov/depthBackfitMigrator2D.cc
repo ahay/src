@@ -38,7 +38,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 							 	   int rNum, float rStart, float rStep,
 							 	   int izn,  float izo,    float izd,
 							 	   int ixn,  float ixo,    float ixd,
-								   float dx, float dt, float xlim,
+								   float dx, float dt, float xlim, float xapert,
   								   float* xVol, float* tVol, bool isAA) {
 	
 	zNum_   = zNum;
@@ -68,6 +68,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	dx_   = dx;
 	dt_   = dt;
 	xlim_ = xlim;
+	xapert_ = xapert;
 	
 	xVol_ = xVol;
 	tVol_ = tVol;
@@ -120,6 +121,7 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 		const float lz = zRes[ir];
 		if (lz <= 0) continue; // bad point
 		const float lx = xRes[ir];
+		if (fabs (lx - curX) > xapert_) continue;
 	    ImagePoint2D* p = new ImagePoint2D (lx, lz, 0, 0);
 		goodPoints.push_back (p);
 	}				
