@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-dispelem diff mulawefd2d mulawefd2dtest
+dispelem diff mulawefd2d emd
 '''
 
 try: # distributed version

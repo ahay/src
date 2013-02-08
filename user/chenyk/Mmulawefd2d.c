@@ -1,10 +1,10 @@
-/* 2D multisource acoustic time-domain FD modeling
+/* 2D multisource acoustic time-domain FD modeling for testing
 4th order in space, 2nd order in time. Absorbing boundary conditions.
 Invisible parameter due to self-doc parsing bug: 
 nb=[2] Boundary padding in grid points */
 /*
   Copyright (C) 2013 the University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -46,17 +46,15 @@ nb=[2] Boundary padding in grid points */
 int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,dabc,cden; 
-//  bool ifmul; 
-   int  jsnap,ntsnap,jdata;
+    int  jsnap,ntsnap,jdata;
 #ifdef _OPENMP
     int ompnth=1;
 #endif
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
-    
-    sf_file Fsou1=NULL; /* sources1   */
-    sf_file Fsou2=NULL; /*sources2   */
+    sf_file Fsou1=NULL; /* sources   */
+    sf_file Fsou2=NULL; /* sources   */
     sf_file Frec=NULL; /* receivers */
     sf_file Fvel=NULL; /* velocity  */
     sf_file Fden=NULL; /* density   */
@@ -78,11 +76,10 @@ int main(int argc, char* argv[])
 
     /* I/O arrays */
     float  *ww=NULL;           /* wavelet   */
-    pt2d   *ss1=NULL;           /* sources1  */
-    pt2d   *ss2=NULL;	       /* sources2  */
+    pt2d   *ss1=NULL;           /* sources   */
+    pt2d   *ss2=NULL;           /* sources   */
     pt2d   *rr=NULL;           /* receivers */
     float  *dd=NULL;           /* data      */
-
     float **tt=NULL;
     float **ro=NULL;           /* density */
     float **roz=NULL;          /* normalized 1st derivative of density on axis 1 */
@@ -121,15 +118,14 @@ int main(int argc, char* argv[])
     if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
     if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
     if(! sf_getbool("cden",&cden)) cden=false; /* Constant density */
-    //if(! sf_getbool("ifmul",&ifmul)) ifmul=false; /* if multisource */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
     /* I/O files */
     Fwav = sf_input ("in" ); /* wavelet   */
     Fvel = sf_input ("vel"); /* velocity  */
-    Fsou1 = sf_input ("sou1"); /* sources1 */
-    Fsou2 = sf_input ("sou2"); /* sources2 */
+    Fsou1 = sf_input ("sou1"); /* sources   */
+    Fsou2 = sf_input ("sou2"); /* sources   */
     Frec = sf_input ("rec"); /* receivers */
     Fdat = sf_output("out"); /* data      */
     if( snap) Fwfl = sf_output("wfl"); /* wavefield */
@@ -209,8 +205,11 @@ int main(int argc, char* argv[])
     sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
 
+    //if(expl) {
+//	ww = sf_floatalloc( 1);
+  //  } else {
 	ww = sf_floatalloc(ns);
-
+    //}
     dd = sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
@@ -223,8 +222,8 @@ int main(int argc, char* argv[])
     pt2dread1(Fsou2,ss2,ns,2); /* read (x,z) coordinates */
     pt2dread1(Frec,rr,nr,2); /* read (x,z) coordinates */
 
-    cs1=lint2d_make(ns,ss1,fdm);
-    cs2=lint2d_make(ns,ss2,fdm);
+    cs1 = lint2d_make(ns,ss1,fdm);
+    cs2 = lint2d_make(ns,ss2,fdm);
     cr = lint2d_make(nr,rr,fdm);
 
     /*------------------------------------------------------------*/
@@ -342,20 +341,15 @@ int main(int argc, char* argv[])
             }
 	}   
 
-	/* inject acceleration source, the commented part is following the psava's awefd2d method */
+	/* inject acceleration source */
 	//if(expl) {
-	//   sf_floatread(ww, 1,Fwav);
-	//    lint2d_inject1(ua,ww[0],cs);
-	//} else {
-        //    sf_floatread(ww,ns,Fwav);	
-	//    lint2d_inject(ua,ww,cs);
-	//}
+	  //  sf_floatread(ww, 1,Fwav);
+	    //lint2d_inject1(ua,ww[0],cs);
 
-	    sf_floatread(ww, ns,Fwav);
-	//    lint2d_inject1(ua,ww,cs1);
-	 //   lint2d_inject1(ua,ww,cs2);
-	    
-	
+	    sf_floatread(ww,ns,Fwav);	
+	    lint2d_inject(ua,ww,cs1);
+	    lint2d_inject(ua,ww,cs2);
+	//}
 
 	/* step forward in time */
 #ifdef _OPENMP
