@@ -1,5 +1,5 @@
 from rsf.proj import *
-import stack
+import rsf.recipes.stack as stack
 
 Fetch('gomnearoffset.H','gom')
 

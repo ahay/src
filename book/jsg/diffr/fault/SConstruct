@@ -1,5 +1,5 @@
 from rsf.proj import *
-import stack
+import rsf.recipes.stack as stack
 
 Fetch('midpts.hh','midpts')
 Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
