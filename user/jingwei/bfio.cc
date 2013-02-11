@@ -11,10 +11,12 @@
 //                  fi=1 reflection Radon;            fi=2 diffraction Radon;
 //                  fi=3 adjoint of reflection Radon; fi=4 adjoin of diffraction Radon
 //   bfio.dikernel3 fi=1 direct reflection Radon;     fi=2 direct diffraction Radon
+//   bfio.kernel34  fi=1 full Radon
 //   
 //   bfio.check2    2D to 2D Radon
 //   bfio.apcheck2  apex shifted hyper Radon 
 //   bfio.check3    3D to 3D Radon 
+//   bfio.check34   3D to 4D Radon
 //
 //
 //   Copyright (C) 2011 University of Texas at Austin
@@ -697,6 +699,49 @@ int BFIO::dikernel3(const int fi, const float tau, const float p, const float q,
 }
 
 //---------------------------------------
+int BFIO::kernel34(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& res, const float xx)
+{
+  if(_fi==1) {
+    // full Radon
+    //--------------------------
+    int m = trg.size();
+    int n = src.size();
+    //
+    vector<float> taus(m), ps(m), qs(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    for(int i=0; i<m; i++)      qs[i] = trg[i](2)*(qmax-qmin) + qmin;
+    //
+    vector<float> ws(n), xs(n), ys(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
+    //
+    FltNumMat phs(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+	  phs(i,j) = COEF * sqrt(taus[i]*taus[i] + ps[i]*xs[j]*xs[j] + qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j]) * ws[j];
+      }
+    FltNumMat ss(m,n), cc(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++) {
+	ss(i,j) = sin(phs(i,j));
+	cc(i,j) = cos(phs(i,j));
+      }
+    res.resize(m,n);
+    for(int j=0; j<n; j++)
+      for(int i=0; i<m; i++)
+	res(i,j) = cpx( cc(i,j), ss(i,j) );
+  } else {
+     //--------------------------
+    iA(0);
+  }
+  return 0;
+}
+
+
+//---------------------------------------
 int BFIO::check2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr)
 {
   int N1 = f.m();
@@ -814,6 +859,58 @@ int BFIO::check3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec&
     //
     vector<Point3> trg;  trg.push_back( Point3((tau(x1)-taumin)/(taumax-taumin), (p(x2)-pmin)/(pmax-pmin), (q(x3)-qmin)/(qmax-qmin)) );
     CpxNumMat res(1,N1*N2*N3);  iC( kernel3(N, trg, src, res) );
+    CpxNumTns resaux(N1,N2,N3,false,res.data());
+    cpx ttl(0,0);
+    for(int k=0; k<N3; k++)
+      for(int j=0; j<N2; j++)
+        for(int i=0; i<N1; i++)
+	  ttl = ttl + resaux(i,j,k) * f(i,j,k);
+    dir[g] = ttl;
+  }
+  vector<cpx> err(NC);
+  for(int g=0; g<NC; g++)
+    err[g] = app[g] - dir[g];
+  float dn = 0;
+  float en = 0;
+  for(int g=0; g<NC; g++) {
+    dn += abs(dir[g])*abs(dir[g]);
+    en += abs(err[g])*abs(err[g]);
+  }
+  dn = sqrt(dn);
+  en = sqrt(en);
+  relerr = en/dn;
+  //
+  return 0;
+}
+
+//---------------------------------------
+int BFIO::check34(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec& x, const FltNumVec& y, const CpxNumTns& u, const FltNumVec& tau, const FltNumVec& p, const FltNumVec& q, const float xx, int NC, float& relerr)
+{
+  int N1 = f.m();
+  int N2 = f.n();
+  int N3 = f.p();
+  int M1 = u.m();
+  int M2 = u.n();
+  int M3 = u.p();
+  //
+  vector<Point3> src;
+  for(int k=0; k<N3; k++)
+    for(int j=0; j<N2; j++)
+      for(int i=0; i<N1; i++)
+        src.push_back( Point3((w(i)-wmin)/(wmax-wmin), (x(j)-xmin)/(xmax-xmin), (y(k)-ymin)/(ymax-ymin)) );
+  //
+  vector<cpx> app(NC);
+  vector<cpx> dir(NC);
+  //
+  for(int g=0; g<NC; g++) {
+    int x1 = int( floor(drand48()*M1) );
+    int x2 = int( floor(drand48()*M2) );
+    int x3 = int( floor(drand48()*M3) );
+    //
+    app[g] = u(x1,x2,x3);
+    //
+    vector<Point3> trg;  trg.push_back( Point3((tau(x1)-taumin)/(taumax-taumin), (p(x2)-pmin)/(pmax-pmin), (q(x3)-qmin)/(qmax-qmin)) );
+    CpxNumMat res(1,N1*N2*N3);  iC( kernel34(N, trg, src, res, xx) );
     CpxNumTns resaux(N1,N2,N3,false,res.data());
     cpx ttl(0,0);
     for(int k=0; k<N3; k++)
