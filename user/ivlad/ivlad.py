@@ -512,8 +512,14 @@ def list_valid_rsf_files(dirname, flist, chk4nan=False):
 def msg(message, verb=True):
     'Print message using stderr stream'
 
-    if verb:
-        sys.stderr.write(str(message)+'\n')
+    if type(verb) == int:
+        if verb == 0:
+            verb = False
+        elif verb > 0:
+            verb = True    
+
+    if verb:    
+        sys.stderr.write(str(message) + os.linesep)
 
 ################################################################################
 
