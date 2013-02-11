@@ -125,6 +125,20 @@ def add(out, files=None, scale=None, add=None, sqrt=None, abs=None, log=None,
 
 ################################################################################
 
+def pad2nextfastsize(n, out=None, verb=False, exe=None):
+
+    if exe == None and out==None: # invalid combination, fix the call
+        exe = 'g'
+
+    #def postproc(out_str):
+    #    return int(out_str)
+
+    return __run('sfpad2nextfastsize', __parse(locals()), 
+        None, out, 
+        verb, __x(exe,glob_exe), lambda x: int(x))
+
+################################################################################
+
 def attr(inp=None, out=None, lval=None, want=None, verb=False, exe=None):
 
     if exe == None and out==None: # invalid combination, fix the call
