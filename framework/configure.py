@@ -968,9 +968,9 @@ def blas(context):
                                          ':/lib/lapack'
     else:
         # some systems require cblas and atlas
-        atlas_dir_64 = '/usr/lib64/atlas/'
-        if os.path.isdir(atlas_dir_64):
-            context.env['LIBPATH'].append(atlas_dir_64)
+        for atlas_dir in ('/usr/lib64/atlas/','/usr/lib/atlas/'):
+            if os.path.isdir(atlas_dir):
+                context.env['LIBPATH'].append(atlas_dir)
         LIBS.pop()
         LIBS.append('cblas')
         LIBS.append('atlas')
