@@ -1,4 +1,4 @@
-//   special 3-D to 2-D Radon transform
+//   azimuthally isotropic 3-D to 2-D Radon transform
 //   Input f(w,x1,x2) complex
 //   Output u(tau,p) complex
 //   Call bfio.setup32 bfio.kernel2 bfio.check2 bfio.eval2
@@ -98,6 +98,7 @@ int main(int argc, char** argv)
   oRSF output;
   output.put("n1",ntau);
   output.put("n2",np);
+  output.put("n3",1);
 
   output.put("o1",tau0);
   output.put("d1",dtau);
@@ -132,7 +133,7 @@ int main(int argc, char** argv)
   }
   //
   float relerr = 0;
-  int NC = 64;
+  int NC = 128;
   ck0 = clock();
   iC( bfio.check2(N,f,w,x,u,tau,p,NC,relerr) );
   ck1 = clock();

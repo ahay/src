@@ -3,7 +3,7 @@
 //   Output u(tau,p) complex
 //   Call bfio.setup2 bfio.kernel2 bfio.check2 bfio.eval2
 //   In bfio.kernel2: fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
-//                    fi=3 x*k;         fi=4 -x*k;
+//                    fi=3 x*k;         fi=4 -x*k
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
   }
   //
   float relerr = 0;
-  int NC = 64;
+  int NC = 128;
   ck0 = clock();
   iC( bfio.check2(N,f,w,x,u,tau,p,NC,relerr) );
   ck1 = clock();

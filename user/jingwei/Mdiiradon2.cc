@@ -1,9 +1,6 @@
-//   direct 2-D to 2-D Radon transform / double integral
+//   direct 2-D to 2-D hyper Radon transform / double integral
 //   Input f(w,x) complex
 //   Output u(tau,p) complex
-//   Call bfio.setup2 bfio.kernel2 bfio.diicheck2
-//   In bfio.kernel2: fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
-//                    fi=3 x*k;         fi=4 -x*k;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -50,9 +47,7 @@ int main(int argc, char** argv)
   input.get("o2",x0);
   input.get("d2",dx);
 
-
   std::valarray<sf_complex> fdata(nw*nx);
-  //fdata.resize(nw*nx);
 
   input >> fdata;
 
@@ -60,14 +55,10 @@ int main(int argc, char** argv)
   for (int i=0; i<nw; i++)
     for (int j=0; j<nx; j++)
       f(i,j) = cpx(crealf(fdata[nw*j+i]),cimagf(fdata[nw*j+i]));
-  FltNumVec w(nw);
-  for (int i=0; i<nw; i++)  w(i) = w0+i*dw;
-  FltNumVec x(nx);   
-  for (int j=0; j<nx; j++)  x(j) = x0+j*dx;
  
-
   // Set output
   iRSF par(0);
+
   int ntau, np;
   par.get("ntau",ntau); 
   par.get("np",np); 
@@ -79,12 +70,6 @@ int main(int argc, char** argv)
   float p0, dp;
   par.get("p0",p0);
   par.get("dp",dp);
- 
-  CpxNumMat u(ntau,np);  setvalue(u,cpx(0,0));
-  FltNumVec tau(ntau);   
-  for (int i=0; i<ntau; i++)  tau(i) = tau0+i*dtau;
-  FltNumVec p(np);
-  for (int j=0; j<np; j++)  p(j) = p0+j*dp;
 
   oRSF output;
   output.put("n1",ntau);
@@ -96,18 +81,36 @@ int main(int argc, char** argv)
   output.put("o2",p0);
   output.put("d2",dp);
  
-  //output.type(SF_FLOAT);
-  // this has be there if the input and output types are different
+  std::valarray<sf_complex> udata(ntau*np);
 
-  // BFIO setup
-  BFIO bfio("bfio_");
-  iC( bfio.setup2(par,input) );
+  CpxNumMat u(ntau,np);  setvalue(u,cpx(0,0));
+ 
+  cerr<<"wmin "<<w0<<" wmax "<<w0+nw*dw<<endl;
+  cerr<<"xmin "<<x0<<" xmax "<<x0+nx*dx<<endl;
+  cerr<<"taumin "<<tau0<<" taumax "<<tau0+ntau*dtau<<endl;
+  cerr<<"pmin "<<p0<<" pmax "<<p0+np*dp<<endl;
+
 
   float time_eval1, time_eval2;
+  float w, x, tau, p; 
 
   ck0 = clock(); 
   tt0 = time(0);
-  iC( bfio.diicheck2(f,w,x,u,tau,p) );
+  for(int i=0; i<ntau; i++)
+    for(int j=0; j<np; j++)
+      for(int m=0; m<nw; m++)
+        for(int n=0; n<nx; n++) {
+          tau = tau0 + i*dtau;
+          p = p0 + j*dp;
+          w = w0 + m*dw;
+          x = x0 + n*dx;
+	  float phs = 2*M_PI*w*sqrt(tau*tau+p*p*x*x);
+          cpx res(0,0);
+          float cc=cos(phs);
+          float ss=sin(phs);
+          res = cpx(cc,ss);
+          u(i,j) += res*f(m,n);
+	}
   ck1 = clock();    
   tt1 = time(0);  
   time_eval1 = float(ck1-ck0)/CLOCKS_PER_SEC;
@@ -115,15 +118,10 @@ int main(int argc, char** argv)
   cerr<<"Teval1 "<<time_eval1<<endl;
   cerr<<"Teval2 "<<time_eval2<<endl;
 
-  std::valarray<sf_complex> udata(ntau*np);
-  //std::valarray<float> udata(ntau*np);
-  //udata.resize(ntau*np);
-    
   for (int i=0; i<ntau; i++)
     for (int j=0; j<np; j++)
       udata[ntau*j+i]=sf_cmplx(real(u(i,j)),imag(u(i,j)));
-      //udata[ntau*j+i]=real(u(i,j));
-
+ 
   output << udata;
 
   exit(0);

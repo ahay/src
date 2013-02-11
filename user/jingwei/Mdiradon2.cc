@@ -1,8 +1,6 @@
-//   direct 2-D to 2-D Radon transform / single integral
+//   direct 2-D to 2-D hyper Radon transform / single integral
 //   Input f(t,x) real
 //   Output u(tau,p) real
-//   Call bfio.dikernel2
-//   In bfio.dikernel2: fi=1 hyper Radon;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -55,9 +53,6 @@ int main(int argc, char** argv)
 
   // Set output
   iRSF par(0);
-  int fi;
-  par.get("fi",fi);
-  cerr<<"fi "<<fi<<endl;
 
   int ntau, np;
   par.get("ntau",ntau); 
@@ -88,27 +83,24 @@ int main(int argc, char** argv)
   cerr<<"taumin "<<tau0<<" taumax "<<tau0+ntau*dtau<<endl;
   cerr<<"pmin "<<p0<<" pmax "<<p0+np*dp<<endl;
 
-  // BFIO setup
-  BFIO bfio("bfio_");
 
   float time_eval1, time_eval2;
   float t, x, tau, p; 
-  int l;
+  int m;
 
   ck0 = clock(); 
   tt0 = time(0);
   for (int i=0; i<ntau; i++)
     for (int j=0; j<np; j++) {
       udata[ntau*j+i] = 0.0;
-      for (int m=0; m<nx; m++) {
+      for (int n=0; n<nx; n++) {
         tau = tau0 + i*dtau;
         p = p0 + j*dp;
-        x = x0 + m*dx;
-        iC( bfio.dikernel2(fi,tau,p,x,t) );
-        l = int(round((t-t0)/dt));
-        if (l>=0 && l<nt) {
-          udata[ntau*j+i] += fdata[nt*m+l];    
-        }
+        x = x0 + n*dx;
+        t = sqrt(tau*tau+p*p*x*x);
+        m = int(round((t-t0)/dt));
+        if (m>=0 && m<nt)
+          udata[ntau*j+i] += fdata[nt*n+m];   
       }
     }
   ck1 = clock();    

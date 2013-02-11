@@ -1,18 +1,21 @@
 //   butterfly algorithm
 //
-//   bfio.setup2, bfio.setup32, bfio.setup23, bfio.setup3
-//   bfio.kernel2, bfio.kernel3, bfio.apkernel2, bfio.dikernel2, bfio.dikernel3
-//   bfio.check2, bfio.check3, bfio.apcheck2
+//   bfio.setup2    2D to 2D Radon
+//   bfio.setup32   azimuthally isotropic 3D to 2D Radon 
+//   bfio.setup3    3D to 3D Radon
 //
-//   In bfio.kernel2 fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
-//                   fi=3 x*k;         fi=4 -x*k;   
-//   In bfio.kernel3 fi=0 linear Radon; 
-//                   fi=1 reflection Radon;            fi=2 diffraction Radon;
-//                   fi=3 adjoint of reflection Radon; fi=4 adjoin of diffraction Radon;
-//   In bfio.apkernel2 fi=1 apex shifted hyper Radon
+//   bfio.kernel2   fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
+//                  fi=3 x*k;         fi=4 -x*k
+//   bfio.apkernel2 fi=1 apex shifted hyper Radon
+//   bfio.kernel3   fi=0 linear Radon; 
+//                  fi=1 reflection Radon;            fi=2 diffraction Radon;
+//                  fi=3 adjoint of reflection Radon; fi=4 adjoin of diffraction Radon
+//   bfio.dikernel3 fi=1 direct reflection Radon;     fi=2 direct diffraction Radon
+//   
+//   bfio.check2    2D to 2D Radon
+//   bfio.apcheck2  apex shifted hyper Radon 
+//   bfio.check3    3D to 3D Radon 
 //
-//   In bfio.dikernel2 fi=1 hyper Radon;
-//   In bfio.dikernel3 fi=1 reflection Radon;          fi=2 diffraction Radon;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -189,79 +192,6 @@ int BFIO::setup32(iRSF& par, iRSF& inp)
   return 0;
 }
 
-//---------------------------------------
-int BFIO::setup23(iRSF& par, iRSF& inp)
-{
-  vector<int> all(1,1);
-  
-  par.get("EPSx1", _EPSx1); // number of chebyshev points
-  par.get("EPSx2", _EPSx2);
-  par.get("EPSk1", _EPSk1);
-  par.get("EPSk2", _EPSk2);
-  par.get("fi", _fi);
-  par.get("EL", _EL);
-
-  ifstream fin("bfio.bin");
-
-  iC( deserialize(_e2dmap, fin, all) );
-  
-  int nw, nx;
-  inp.get("n1",nw);
-  inp.get("n2",nx);
-
-  float w0, dw;
-  inp.get("o1",w0);
-  inp.get("d1",dw);  
-
-  float x0, dx;
-  inp.get("o2",x0);
-  inp.get("d2",dx);
-
-  wmin = w0;
-  wmax = w0+nw*dw;
-
-  xmin = x0;
-  xmax = x0+nx*dx;
-
-  int ntau;
-  float tau0, dtau;
-  par.get("ntau",ntau);
-  par.get("tau0",tau0);
-  par.get("dtau",dtau);
-  taumin = tau0;
-  taumax = tau0+ntau*dtau;
-
-  int np1, np2;
-  float p10, p20;
-  float dp1, dp2;
-  par.get("np1",np1);
-  par.get("np2",np2);
-
-  par.get("p10",p10);
-  par.get("p20",p20);
-
-  par.get("dp1",dp1);
-  par.get("dp2",dp2);
-
-  float p1min = p10;
-  float p1max = p10+np1*dp1;
-  float p2min = p20;
-  float p2max = p20+np2*dp2; 
-  pmin = 0.0;
-  pmax = sqrt(p1max*p1max+p2max*p2max);
-  
-  cerr<<"nw "<<nw<<" nx "<<nx<<endl;
-  cerr<<"wmin "<<wmin<<" wmax "<<wmax<<endl;
-  cerr<<"xmin "<<xmin<<" xmax "<<xmax<<endl;
-  cerr<<"ntau "<<ntau<<" np1*np2 "<<np1*np2<<endl;
-  cerr<<"taumin "<<taumin<<" taumax "<<taumax<<endl;
-  cerr<<"p1min "<<p1min<<" p1max "<<p1max<<endl;
-  cerr<<"p2min "<<p2min<<" p2max "<<p2max<<endl;
-  cerr<<"pmin "<<pmin<<" pmax "<<pmax<<endl;
-
-  cerr<<"fi "<<_fi<<endl;
-  return 0;
-}
 
 //---------------------------------------
 int BFIO::setup3(iRSF& par, iRSF& inp)
@@ -736,6 +666,37 @@ int BFIO::kernel3(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& re
 }
 
 //---------------------------------------
+int BFIO::dikernel3(const int fi, const float tau, const float p, const float q, const float x, const float y, float& t)
+{
+  if(fi==1) {
+    // reflection Radon
+    // tau --> tau0; p --> a0x; q --> a0y
+    // t --> tau; x --> ax; y --> ay
+    float tana0x = tan(p*M_PI/180); 
+    float tana0y = tan(q*M_PI/180);
+    float tanax = tan(x*M_PI/180);
+    float tanay = tan(y*M_PI/180);
+    float a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
+    float b = sqrt(1 + tanax*tanax + tanay*tanay);
+    float c = tana0x*tanax + tana0y*tanay;
+    t = tau / (a*b-c);
+  } else if(fi==2) {
+    // diffraction Radon
+    // tau --> tau0; p --> kix; q --> kiy
+    // t --> tau; x --> ax; y --> ay
+    float tanax = tan(x*M_PI/180);
+    float tanay = tan(y*M_PI/180);
+    float K1 = p*tanax + q*tanay;
+    float K = sqrt(K1*K1 + p*p + q*q + 1);
+    t = tau * (K1+K);
+  } else {
+    //--------------------------
+    iA(0);
+  }
+  return 0;
+}
+
+//---------------------------------------
 int BFIO::check2(int N, const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, const CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p, int NC, float& relerr)
 {
   int N1 = f.m();
@@ -877,78 +838,6 @@ int BFIO::check3(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec&
   return 0;
 }
 
-
-//---------------------------------------
-int BFIO::dikernel2(const int fi, const float tau, const float p, const float x, float& t)
-{
-  if(fi==1) {
-    // hyperbolic Radon
-    t = sqrt(tau*tau + p*p*x*x);
-  } else {
-    //--------------------------
-    iA(0);
-  }
-  return 0;
-}
-
-//---------------------------------------
-int BFIO::dikernel3(const int fi, const float tau, const float p, const float q, const float x, const float y, float& t)
-{
-  if(fi==1) {
-    // reflection Radon
-    // tau --> tau0; p --> a0x; q --> a0y
-    // t --> tau; x --> ax; y --> ay
-    float tana0x = tan(p*M_PI/180); 
-    float tana0y = tan(q*M_PI/180);
-    float tanax = tan(x*M_PI/180);
-    float tanay = tan(y*M_PI/180);
-    float a = sqrt(1 + tana0x*tana0x + tana0y*tana0y);
-    float b = sqrt(1 + tanax*tanax + tanay*tanay);
-    float c = tana0x*tanax + tana0y*tanay;
-    t = tau / (a*b-c);
-  } else if(fi==2) {
-    // diffraction Radon
-    // tau --> tau0; p --> kix; q --> kiy
-    // t --> tau; x --> ax; y --> ay
-    float tanax = tan(x*M_PI/180);
-    float tanay = tan(y*M_PI/180);
-    float K1 = p*tanax + q*tanay;
-    float K = sqrt(K1*K1 + p*p + q*q + 1);
-    t = tau * (K1+K);
-  } else {
-    //--------------------------
-    iA(0);
-  }
-  return 0;
-}
-
-//----------------------------------
-//---------------------------------------
-int BFIO::diicheck2(const CpxNumMat& f, const FltNumVec& w, const FltNumVec& x, CpxNumMat& u, const FltNumVec& tau, const FltNumVec& p)
-{
-  int N1 = f.m();
-  int N2 = f.n();
-  int M1 = u.m();
-  int M2 = u.n();
-  vector<Point2> src;
-  for(int j=0; j<N2; j++)
-    for(int i=0; i<N1; i++)
-      src.push_back( Point2((w(i)-wmin)/(wmax-wmin), (x(j)-xmin)/(xmax-xmin)) );
-  //
-  for(int j1=0; j1<M2; j1++)
-    for(int i1=0; i1<M1; i1++) {
-      vector<Point2> trg;  trg.push_back( Point2((tau(i1)-taumin)/(taumax-taumin), (p(j1)-pmin)/(pmax-pmin)) );
-      CpxNumMat res(1,N1*N2);  iC( kernel2(1, trg, src, res) );
-      CpxNumMat resaux(N1,N2,false,res.data());
-      cpx ttl(0,0);
-      for(int j=0; j<N2; j++)
-        for(int i=0; i<N1; i++)
-          ttl = ttl + resaux(i,j) * f(i,j);
-      u(i1,j1) = ttl;
-    }
-  //
-  return 0;
-}
 
 
 

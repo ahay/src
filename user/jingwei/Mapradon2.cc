@@ -129,7 +129,7 @@ int main(int argc, char** argv)
  
     //
     float relerr = 0;
-    int NC = 64;
+    int NC = 128;
     ck0 = clock();
     iC( bfio.apcheck2(N,f,w,x,utemp,tau,p,xx,NC,relerr) );
     ck1 = clock();
