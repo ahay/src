@@ -26,6 +26,9 @@ To programs:
 * Added scalebar= option for sfgraph with depth=
 * Added an ability to specify options for sfpen with SFPENOPTS
 * Added opt= parameter in sfspectra
+* sfpad2nextfastsize: wrapper for kiss_fft_next_fast_size so it can be
+  called from scripts and SConstruct files. Python wrapper for it:
+  rsf.user.sf.pad2nextfastsize()
 
 ===Bug fixes===
 
@@ -110,9 +113,6 @@ To programs:
 * retired su2rsf and segy2rsf to avoid code duplication with suread
   and segyread
 * user/jsun: new contributor (Junzhe Sun)
-* sfpad2nextfastsize: wrapper for kiss_fft_next_fast_size so it can be
-  called from scripts and SConstruct files. Python wrapper for it:
-  rsf.user.sf.pad2nextfastsize()
 
 ===Bug fixes===
 
