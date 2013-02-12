@@ -24,9 +24,9 @@
 int main (int argc, char *argv[])
 {
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
-    int n[SF_MAX_DIM], rect[3], nr, ir; 
-    float p0, *u, *p, pmin, pmax;
-    bool verb, **mm;
+    int n[SF_MAX_DIM], rect[3], rect2, n3, i3, i1, n1, i2, n2, jt, j2, it, nt, is; 
+    float p0, *u, *p, *u2, *p2, pmin, pmax;
+    bool verb, **mm, *m2;
     sf_file in, out, mask, idip0;
 
     sf_init(argc,argv);
@@ -35,20 +35,29 @@ int main (int argc, char *argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
 
+    /* get dimensions */
     dim = sf_filedims(in,n);
-    if (dim < 2) n[1]=1;
-    for (j=1; j < n[1]; j *= 2) ;
-    if (j!= n[1]) sf_error("n2=%d, need pow(2,n)",n[1]);
-    sf_putint(out,"n2",2*n[1]);
 
-    n123 = n[0]*n[1];
+    n1 = n[0]; /* number of time samples */
+    n2 = n[1]; /* number of traces */
+    
+    if (dim < 2) n2=1;
 
-    nr = 1;
+    /* make sure that n2 is a power of 2 */
+    for (j=1; j < n2; j *= 2) ;
+    if (j!= n2) sf_error("n2=%d, need pow(2,n)",n2);
+
+    /* the output has twice more traces */ 
+    sf_putint(out,"n2",2*n2-2);
+
+    n123 = n1*n2;
+
+    /* get number of 2-D frames */
+    n3 = 1;
     for (j=2; j < dim; j++) {
-	nr *= n[j];
+	n3 *= n[j];
     }
     
-    n[2]= 1;
     rect[2]=1;
     nj2=1;
     
@@ -61,6 +70,7 @@ int main (int argc, char *argv[])
     /* dip smoothness on 1st axis */
     if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* dip smoothness on 2nd axis */
+    rect2 = rect[1];
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial dip */
@@ -77,18 +87,18 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("pmax",&pmax)) pmax = +FLT_MAX;
     /* maximum dip */
 
-    /* initialize dip estimation */
-    dip3_init(n[0], n[1], n[2], rect, liter, false);
-
-    u = sf_floatalloc(n123);
-    p = sf_floatalloc(n123);
+    u  = sf_floatalloc(n123);
+    p  = sf_floatalloc(n123);
+    u2 = sf_floatalloc(n123);
+    p2 = sf_floatalloc(n123);
 
     if (NULL != sf_getstring("mask")) {
 	mm = sf_boolalloc2(n123,2);
+	m2 = sf_boolalloc(n123);
 	mask = sf_input("mask");
     } else {
 	mm = (bool**) sf_alloc(2,sizeof(bool*));
-	mm[0] = mm[1] = NULL;
+	m2 = mm[0] = mm[1] = NULL;
 	mask = NULL;
     }
 
@@ -99,17 +109,17 @@ int main (int argc, char *argv[])
 	idip0 = NULL;
     }
 
-    for (ir=0; ir < nr; ir++) {
-	if (verb) sf_warning("slice %d of %d", ir+1, nr);
+    for (i3=0; i3 < n3; i3++) {
+	if (verb) sf_warning("slice %d of %d;", i3+1, n3);
+
     	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
-	    mask32 (false, order, nj1, nj2, n[0], n[1], n[2], u, mm);
+	    mask32 (false, order, nj1, nj2, n1, n2, 1, u, mm);
 	}
 
 	/* read data */
 	sf_floatread(u,n123,in);
 	
-
 	/* initialize t-x dip */
 	if (NULL != idip0) {
 	    sf_floatread(p,n123,idip0);
@@ -118,14 +128,47 @@ int main (int argc, char *argv[])
 		p[i] = p0;
 	    }
 	}
+
+	rect[1]=rect2;
 	
-	/* estimate t-x dip */
-	dip3(false, 1, niter, order, nj1, verb, u, p, mm[0], pmin, pmax);
-	
-	/* write t-x dip */
-	sf_floatwrite(p,n123,out);
-	
+	/* loop over scales */
+	for (nt=n2, is=1; nt >= 2; nt /= 2, is *= 2) {
+
+	    /* copy data */
+	    for (it=i2=0; it < nt; it++, i2 += is) {
+		for (i1=0; i1 < n1; i1++) {
+		    jt = it*n1+i1;
+		    j2 = i2*n1+i1;
+		    u2[jt] = u[j2];
+		    p2[jt] = is*p[j2];
+		    if (NULL != m2) m2[jt] = mm[0][j2];
+		}
+	    }
+
+	    /* estimate dip */
+	    dip3_init(n1, nt, 1, rect, liter, false);
+
+	    /* Either scale the order or scale nj1 */
+
+	    dip3(false, 1, niter, is*order, nj1, verb, u2, p2, m2, is*pmin, is*pmax);
+	    dip3_close();
+
+	    /* scale dip */
+	    for (i1=0; i1 < n123; i1++) p2[i1] /= is;
+	    
+	    /* write dip */
+	    sf_floatwrite(p2,n1*nt,out);	
+	    
+	    /* decrease smoothness for the next scale */
+	    rect[1] = SF_MAX(rect[1]/2,1);
+
+	    /* save dip from first scale */
+	    if (1==is) {
+		for (i1=0; i1 < n123; i1++) p[i1] = p2[i1];
+	    }
+	}
     }
+    sf_warning(".");
     
     exit (0);
 }

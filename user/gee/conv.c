@@ -21,7 +21,9 @@
 
 #include "compress.h"
 
-sf_filter conv(const sf_filter aa, const sf_filter bb) 
+sf_filter conv(const sf_filter aa, 
+	       const sf_filter bb,
+               bool one /* include leading one */) 
 /*< convolve aa and bb >*/
 {
     sf_filter ss;
@@ -45,14 +47,17 @@ sf_filter conv(const sf_filter aa, const sf_filter bb)
 	ss->flt[i] = 0.;
     }
 
-    for (ia=0; ia < na; ia++) {
-	i = aa->lag[ia];
-	ss->flt[i-1] = aa->flt[ia];
+    if (one) {
+	for (ia=0; ia < na; ia++) {
+	    i = aa->lag[ia];
+	    ss->flt[i-1] = aa->flt[ia];
+	}
+	for (ib=0; ib < nb; ib++) {
+	    i = bb->lag[ib];
+	    ss->flt[i-1] += bb->flt[ib];
+	}
     }
-    for (ib=0; ib < nb; ib++) {
-	i = bb->lag[ib];
-	ss->flt[i-1] += bb->flt[ib];
-    }
+
     for (ia=0; ia < na; ia++) {
 	for (ib=0; ib < nb; ib++) {
 	    i = aa->lag[ia] + bb->lag[ib]; 

@@ -22,6 +22,7 @@
 
 int main(int argc, char* argv[]) 
 {
+    bool one;
     int na, nb, ns;
     sf_filter ss, aa, bb;
     char* file;
@@ -49,7 +50,10 @@ int main(int argc, char* argv[])
     sf_floatread(bb->flt,nb,oth);
     free(file);
 
-    ss = conv (aa, bb);
+    if (!sf_getbool("one",&one)) one=true;
+    /* include leading one */
+
+    ss = conv (aa, bb, one);
     ns = ss->nh;
 
     if (NULL == (file = sf_getstring("lag"))) sf_error("Need lag=");
@@ -62,7 +66,6 @@ int main(int argc, char* argv[])
     sf_putint(out,"n1",ns);
     sf_putstring(out,"lag",file);
     sf_floatwrite(ss->flt,ns,out);
-
 
     exit(0);
 }
