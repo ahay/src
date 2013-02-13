@@ -68,7 +68,7 @@ typedef struct
   float* restrict coefs;
   Ugrid x_grid;
   BCtype_s xBC;
-  size_t nc;
+  intptr_t nc;
 } UBspline_1d_s;
 
 typedef struct
@@ -79,7 +79,7 @@ typedef struct
   int x_stride;
   Ugrid x_grid, y_grid;
   BCtype_s xBC, yBC;
-  size_t nc;
+  intptr_t nc;
 } UBspline_2d_s;
 
 typedef struct
@@ -90,7 +90,7 @@ typedef struct
   int x_stride, y_stride;
   Ugrid x_grid, y_grid, z_grid;
   BCtype_s xBC, yBC, zBC;
-  size_t nc;
+  intptr_t nc;
 } UBspline_3d_s;
 
 /************************************************************/
@@ -215,7 +215,7 @@ typedef struct
   Ugrid x_grid;
   BCtype_s xBC;
   int num_splines;
-  size_t nc;
+  intptr_t nc;
 } multi_UBspline_1d_s;
 
 typedef struct
@@ -227,7 +227,7 @@ typedef struct
   Ugrid x_grid, y_grid;
   BCtype_s xBC, yBC;
   int num_splines;
-  size_t nc;
+  intptr_t nc;
 } multi_UBspline_2d_s;
 
 typedef struct
@@ -239,7 +239,7 @@ typedef struct
   Ugrid x_grid, y_grid, z_grid;
   BCtype_s xBC, yBC, zBC;
   int num_splines;
-  size_t nc;
+  intptr_t nc;
 } multi_UBspline_3d_s;
 
 /************************************************************/

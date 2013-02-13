@@ -41,6 +41,7 @@ struct CRAMPoint3 {
     float                   oam; /* Maximum opening angle */
     float                   dam; /* Maximum dip angle (abs.value of) */
     float                   img, hits;
+    float                   z, x, y;
     float                   b0, a0, db, da, ds, dh;
     float                   dym, dxm, atw;
     int                     mioz, midz;
@@ -84,6 +85,10 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
     cram_point->atw = 0.8;
     cram_point->mioz = nb;
     cram_point->midz = 2*nb;
+
+    cram_point->z = 0;
+    cram_point->y = 0;
+    cram_point->x = 0;
 
     cram_point->taper = false;
     cram_point->dxm = 0.0;
@@ -347,8 +352,10 @@ static float sf_cram_point3_gataper (sf_cram_point3 cram_point, float oa, float 
               da*da/(cram_point->dam*cram_point->dam);
     if (d < cram_point->atw)
         return 1.0;
+    else if (d > 1.0)
+        return 0.0;
     else
-        return (1.0 - d)/cram_point->atw;
+        return (1.0 - d)/(1.0 - cram_point->atw);
 }
 
 /* Compute how much azimuth and angle change from [ac, azc] to [a, az] pair,
@@ -383,12 +390,14 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
 
     /* Integral weight */
     if (cram_point->amp) {
-        /* Obliquity factor for 3-D */
-        smp *= cosf (0.5*oac)*cosf (0.5*oac);
-        smp *= sqrtf (ss*sr);
-/*
-        smp *= sqrtf (cram_point->src_exits[ies].s*cram_point->rcv_exits[ier].s*
-                      cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs);*/
+        /* See Bleistein et al (2003), equation (21) for details */
+        dw = sqrtf (ss*sr);
+        dw *= cosf (0.5*oac);
+        dw /= sqrtf (fabsf (cram_point->src_exits[ies].j*cram_point->rcv_exits[ier].j));
+        dw *= cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs;
+        dw *= sqrtf (fabsf (sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db)*
+                            sinf (cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db)));
+        smp *= dw;
     }
 
     cram_point->img += smp;
@@ -404,7 +413,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
            which correspond to this displacement */
         for (isxy = 0; isxy < 2; isxy++) { /* d/dx, d/dy, source side */
             for (jsxy = 0; jsxy < 2; jsxy++) { /* +/- shift in x/y on the source side */
-                ds = jsxy != 0 ? 2.0*cram_point->ds : -2.0*cram_point->ds;
+                ds = jsxy != 0 ? cram_point->ds : -cram_point->ds;
                 sb = cram_point->b0 +
                      (cram_point->src_exits[ies].ib + cram_point->src_exits[ies].ibxy[isxy]*ds)*
                      cram_point->db;
@@ -413,7 +422,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                      cram_point->da;
                 for (ihxy = 0; ihxy < 2; ihxy++) { /* d/dx, d/dy, receiver side */
                     for (jhxy = 0; jhxy < 2; jhxy++) { /* +/- shift in x/y on the receiver side */
-                        dh = jhxy != 0 ? 2.0*cram_point->ds : -2.0*cram_point->ds;
+                        dh = jhxy != 0 ? cram_point->ds : -cram_point->ds;
                         hb = cram_point->b0 +
                              (cram_point->rcv_exits[ier].ib + cram_point->rcv_exits[ier].ibxy[ihxy]*dh)*
                              cram_point->db;
@@ -435,9 +444,11 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         doz /= 16.0;
         dda /= 16.0;
         ddz /= 16.0;
+        /* Extrapolate azimuth further away */
+        doa *= 0.75;
         /* Extrapolate dip only in the vicinity of a receiver */
         dw = cram_point->dh/cram_point->ds;
-        dda *= 0.5*dw;
+        dda *= 0.25*dw;
         ddz *= 0.25*dw;
     } else {
         doa = 0.5*cram_point->db;
@@ -455,14 +466,16 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         /* Opening angle last index */
         ioal = sf_cram_point3_angle_idx (oac + doa, -SF_PI, cram_point->db, NULL);
         ioal += 1;
-        if (ioal >= (cram_point->nb + cram_point->mioz))
-            ioal = cram_point->nb + cram_point->mioz - 1;
+        if (ioal > (cram_point->nb + cram_point->mioz))
+            ioal = cram_point->nb + cram_point->mioz;
+        if (ioal >= 2*cram_point->nb)
+            ioal = 2*cram_point->nb - 1;
         /* Opening angle azimuth first index */
         iozf = sf_cram_point3_angle_idx (ozc - doz, 0.0, 2.0*cram_point->da, NULL);
         /* Opening angle azimuth last index */
         iozl = sf_cram_point3_angle_idx (ozc + doz, 0.0, 2.0*cram_point->da, NULL);
         iozl += 1;
-        dw = 1.0/((ioal - ioaf + 1)*(iozl - iozf + 1));
+        dw = 1.0/*((idal - idaf + 1)*(idzl - idzf + 1))*/;
         for (ioz = iozf; ioz <= iozl; ioz++) { /* Opening angle azimuths */
             iz = ioz;
             if (iz < 0) {
@@ -481,7 +494,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                 }
                 cram_point->oimage[iz][ia] += dw*smp;
                 cram_point->osqimg[iz][ia] += (dw*smp)*(dw*smp);
-                cram_point->ohits[iz][ia] += dw;
+                cram_point->ohits[iz][ia] += 1.0;
             }
             flip = false;
         }
@@ -496,14 +509,19 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         /* Dip angle last index */
         idal = sf_cram_point3_angle_idx (dac + dda, -SF_PI, 0.5*cram_point->db, NULL);
         idal += 1;
-        if (idal >= (2*cram_point->nb + cram_point->midz))
-            idal = 2*cram_point->nb + cram_point->midz - 1;
+        if (idal > (2*cram_point->nb + cram_point->midz))
+            idal = 2*cram_point->nb + cram_point->midz;
+        if (idal >= 4*cram_point->nb)
+            idal = 4*cram_point->nb - 1;
         /* Dip angle azimuth first index */
         idzf = sf_cram_point3_angle_idx (dzc - ddz, 0.0, 2.0*cram_point->da, NULL);
         /* Dip angle azimuth last index */
         idzl = sf_cram_point3_angle_idx (dzc + ddz, 0.0, 2.0*cram_point->da, NULL);
         idzl += 1;
-        dw = 1.0/((idal - idaf + 1)*(idzl - idzf + 1));
+        if (cram_point->amp)
+            dw = 1.0/(sinf (0.5*cram_point->oam)*sinf (0.5*cram_point->oam));
+        else
+            dw = 1.0;
         for (idz = idzf; idz <= idzl; idz++) { /* Dip angle azimuths */
             iz = idz;
             if (iz < 0) {
@@ -522,7 +540,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                 }
                 cram_point->dimage[iz][ia] += dw*smp;
                 cram_point->dsqimg[iz][ia] += (dw*smp)*(dw*smp);
-                cram_point->dhits[iz][ia] += dw;
+                cram_point->dhits[iz][ia] += 1.0;
             }
             flip = false;
         }
@@ -623,6 +641,10 @@ void sf_cram_point3_compute (sf_cram_point3 cram_point,
     }
     cram_point->hits = 0.0;
     cram_point->img = 0.0;
+
+    cram_point->z = z;
+    cram_point->x = x;
+    cram_point->y = y;
 
     /* Reinit escape branches */
     sf_cram_rbranch3_set_escapes (cram_point->rbranch, esc);
