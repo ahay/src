@@ -389,6 +389,7 @@ extern int      ipat;
 extern struct pat pat[];
 
 static bool force_color;
+static bool force_bw;
 static bool dumb_fat; 
 static bool rgb_colorspace;
 static char *label;
@@ -943,6 +944,7 @@ void ps_grey_map (int coltab)
 void ps_set_color (int value)
 /*< set color >*/
 {
+    bool force;
     new_ps_curcolor_no = value;
 
 
@@ -972,9 +974,14 @@ void ps_set_color (int value)
     {
 	if (new_ps_curcolor_no != ps_curcolor_no || !ps_curcolor_set)
 	{
+
+	    force = force_color && (!force_bw || ((  0!=red[new_ps_curcolor_no] ||   0!=green[new_ps_curcolor_no] ||   0!=blue[new_ps_curcolor_no]) &&
+						  (255!=red[new_ps_curcolor_no] || 255!=green[new_ps_curcolor_no] || 255!=blue[new_ps_curcolor_no])));
+
+
             if (rgb_colorspace)
             {
-	        if (force_color)
+	        if (force)
 	        {
 		    fprintf (pltout, "%.2g %.2g %.2g setrgbcolor\n", red[new_ps_curcolor_no] / 255., green[new_ps_curcolor_no] / 255., blue[new_ps_curcolor_no] / 255.);
 	        }
@@ -985,7 +992,7 @@ void ps_set_color (int value)
             }
             else
             {
-	        if (force_color)
+	        if (force)
 	        {
 		    rgb_to_cmyk(red[new_ps_curcolor_no], green[new_ps_curcolor_no], blue[new_ps_curcolor_no], &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
                 }
@@ -1604,6 +1611,8 @@ void opendev (int argc, char* argv[])
     /* use color */
     if (!sf_getbool("force",&force_color)) force_color=false;
     /* if y, don't replace colors with their compliments */
+     if (!sf_getbool("forcebw",&force_bw)) force_bw=false;
+    /* if y, don't replace black and white colors with their compliments */
 
 /*
  * GEOPHYSICS now requires the cmyk color space. However,
