@@ -2,9 +2,7 @@
 #include <rsf.hh>
 #include "support.hh"
 #include <algorithm>
-#include <list>
 #include <iostream>
-using namespace std;
 
 static bool deleteAll (ImagePoint2D* p) { delete p; return true; }
 static bool predPos   (const ImagePoint2D* lhs, const ImagePoint2D* rhs) { return lhs->x_ < rhs->x_; }
@@ -105,7 +103,7 @@ bool ITracer2D::isPointInsideTriangle (float x0, float y0, float x1, float y1, f
 	return (u >= 0) && (v >= 0) && (u + v < 1);
 }
 
-void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes) {
+void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float p0, list<float>* xRes, list<float>* zRes) {
 
 	const int zInd = (z0 - zStart_) / zStep_;
 	const int pInd = (p0 - pStart_) / pStep_;
@@ -121,6 +119,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * tVol [pind], ip, 0); // double time
 		escPoints.push_back (p);
 	}
+
 	// sort escape points by position
 	escPoints.sort (predPos);
 
@@ -135,6 +134,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 
 	float* pXPanel = xPanel;
 	float* pTPanel = tPanel;
+
 	for (int ix = 0; ix < xNum_; ++ix) {
 		for (int iz = 0; iz < zNum_; ++iz, ++pXPanel, ++pTPanel) {
 			const int pind = (ix * pNum_ + pInd) * zNum_ + iz;
@@ -145,8 +145,12 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			allPoints.push_back (p);
 		}
 	}
+
 	// sort image points by position
 	allPoints.sort (predPos);
+
+	const float minX = allPoints.front()->x_;
+	const float maxX = allPoints.back()->x_;	
 
 	// loop over escape points
 	list<ImagePoint2D*>::iterator iterCurX = allPoints.begin ();
@@ -156,6 +160,8 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 		ImagePoint2D* escPoint = *iterEP;
 
 		const float curX = escPoint->x_;
+		if (curX < minX || curX > maxX) continue;		
+	
 		const float curT = escPoint->z_;
 
 		const float x1 = curX - dx_;
@@ -179,12 +185,14 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			if (p2->x_ > x2) {iterMax = iter; found2 = true; }
 			++iter;
 		}
-		if (!found2) continue;
+		if (!found2) {
+			iterMax = iter;
+		}
 
 		// get good x-points
 		list<ImagePoint2D*> goodXPoints;
 		goodXPoints.insert (goodXPoints.end(), iterMin, iterMax);
-
+		
 		// narrow by times
 		const float t1 = curT - dt_;
 		const float t2 = curT + dt_;
@@ -207,33 +215,76 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			if (p2->z_ > t2) {iterMax = iter; found2 = true; }
 			++iter;
 		}
-		if (!found2) continue;
+		if (!found2) {
+			iterMax = iter;
+		}
 
 		// get good points
 		list<ImagePoint2D*> goodPoints;
 		goodPoints.insert (goodPoints.end(), iterMin, iterMax);
 		
 		bool isFound = false;
-		for (iter = goodPoints.begin(); iter != goodPoints.end() && !isFound; ++iter) {
+		for (iter = goodPoints.begin(); iter != goodPoints.end(); ++iter) {
 			ImagePoint2D* iPoint = *iter;			
 			int ix = iPoint->ix_;			
 			int iz = iPoint->iz_;			
 			int ip = escPoint->ix_;
 
+			float x;
+			float z;
 
 			if (ix && iz) {	
 			    const int mode = -1; // upper triangle
-			    isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, xRes + ip, zRes + ip);
+			    isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, &x, &z);
+				if (isFound) {
+					xRes->push_back (x);
+					zRes->push_back (z);
+				}
 			}
-
-			if (isFound) continue; // point is found
 
 			if (ix < xRed && iz < zRed) {
 				const int mode = 1; // lower triangle
-				isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, xRes + ip, zRes + ip);
+				isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, &x, &z);
+				if (isFound) {
+					xRes->push_back (x);
+					zRes->push_back (z);
+				}
 			}
 		}
 	}		
+
+	// remove duplicate values 
+	xRes->unique ();
+	zRes->unique ();	
+
+	// the following part of the code was written to remove dublicate values from the UNsorted lists
+	// However, we may see that the source point dublicates only and, moreover, 
+	// this values go one by one.
+
+	// therefore, I use list::unique ()
+
+/*	list<float>::iterator iterZ0 = zRes->begin ();
+	for (list<float>::iterator iterX0 = xRes->begin (); iterX0 != xRes->end (); ++iterX0, ++iterZ0) {
+		const float x0 = *iterX0;
+		const float z0 = *iterZ0;
+
+		//
+		list<float>::iterator iterX	= iterX0; ++iterX;
+		list<float>::iterator iterZ	= iterZ0; ++iterZ;
+
+		while ( iterX != xRes->end() ) {
+			const float x = *iterX;
+			const float z = *iterZ;
+			if (fabs (x0 - x) < 1e-6 && fabs (z0 - z) < 1e-6) {
+				iterX = xRes->erase (iterX);
+				iterZ = zRes->erase (iterZ);
+			} else {
+				++iterX;
+				++iterZ;
+			}
+		}
+	}
+*/
 
 	// FINISH
 	allPoints.remove_if (deleteAll);
