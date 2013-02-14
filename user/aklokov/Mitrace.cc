@@ -20,6 +20,7 @@
 
 #include <rsf.hh>
 #include "iTracer2D.hh"
+#include <list>
 
 int main (int argc, char* argv[]) {
    
@@ -69,9 +70,9 @@ int main (int argc, char* argv[]) {
 	/* z-coordinate of the diffraction point */
     if (!sf_getfloat ("p0", &p0)) p0 = 0.f;
 	/* migration angle */
-    if (!sf_getfloat ("dx", &dx)) dx = xStep;
+    if (!sf_getfloat ("dx", &dx)) dx = 2*xStep;
 	/* x-range for point detection */
-    if (!sf_getfloat ("dt", &dt)) dt = 0.004f;
+    if (!sf_getfloat ("dt", &dt)) dt = 0.008f;
 	/* time-range for point detection */
 
 	// OUTPUT PARAMETERS
@@ -106,8 +107,22 @@ int main (int argc, char* argv[]) {
   			      pNum, pStart, pStep,
 			      xNum, xStart, xStep,
 				  dx, dt);
-	iTracer.traceImage (xVol, tVol, x0, z0, p0, xRes, zRes);
+	// trace image
+	list<float> xpnts;
+	list<float> zpnts;
 
+	iTracer.traceImage (xVol, tVol, x0, z0, p0, &xpnts, &zpnts);
+	const int lsize = xpnts.size ();
+
+	std::list<float>::iterator iterx = xpnts.begin ();
+	std::list<float>::iterator iterz = zpnts.begin ();
+
+	const int pLim = lsize < pNum ? lsize : pNum;
+	for (int ip = 0; ip < pLim; ++ip, ++iterx, ++iterz) {
+		xRes[ip] = *iterx;
+		zRes[ip] = *iterz;
+	}
+	
 	// WRITE RESULT
     sf_floatwrite (xRes, pNum, xResFile);
     sf_floatwrite (zRes, pNum, zResFile);
