@@ -1,23 +1,17 @@
-//   butterfly algorithm
+//   BFIO::setup2    
+//   BFIO::setup32    
+//   BFIO::setup3   
 //
-//   bfio.setup2    2D to 2D Radon
-//   bfio.setup32   azimuthally isotropic 3D to 2D Radon 
-//   bfio.setup3    3D to 3D Radon
-//
-//   bfio.kernel2   fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
-//                  fi=3 x*k;         fi=4 -x*k
-//   bfio.apkernel2 fi=1 apex shifted hyper Radon
-//   bfio.kernel3   fi=0 linear Radon; 
-//                  fi=1 reflection Radon;            fi=2 diffraction Radon;
-//                  fi=3 adjoint of reflection Radon; fi=4 adjoin of diffraction Radon
-//   bfio.dikernel3 fi=1 direct reflection Radon;     fi=2 direct diffraction Radon
-//   bfio.kernel34  fi=1 full Radon
+//   BFIO::kernel2   
+//   BFIO::apkernel2 
+//   BFIO::kernel3   
+//   BFIO::dikernel3 
+//   BFIO::kernel34  
 //   
-//   bfio.check2    2D to 2D Radon
-//   bfio.apcheck2  apex shifted hyper Radon 
-//   bfio.check3    3D to 3D Radon 
-//   bfio.check34   3D to 4D Radon
-//
+//   BFIO::check2    
+//   BFIO::apcheck2  
+//   BFIO::check3    
+//   BFIO::check34   
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -718,23 +712,23 @@ int BFIO::kernel34(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& r
     for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
     //
     FltNumMat phs(m,n);
+    FltNumMat ss(m,n), cc(m,n);
+    res.resize(m,n);
     float COEF = 2*M_PI;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-	  phs(i,j) = COEF * sqrt(taus[i]*taus[i] + ps[i]*xs[j]*xs[j] + qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j]) * ws[j];
+	phs(i,j) = taus[i]*taus[i] + ps[i]*ps[i]*xs[j]*xs[j] + qs[i]*qs[i]*ys[j]*ys[j] + 2*xx*xx*xs[j]*ys[j];
+        if (phs(i,j)>=0) {
+	  phs(i,j) = COEF * sqrt(phs(i,j)) * ws[j];
+          ss(i,j) = sin(phs(i,j));
+	  cc(i,j) = cos(phs(i,j));
+          res(i,j) = cpx( cc(i,j), ss(i,j) );
+	} else {
+          res(i,j) = cpx(0,0);
+        }
       }
-    FltNumMat ss(m,n), cc(m,n);
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++) {
-	ss(i,j) = sin(phs(i,j));
-	cc(i,j) = cos(phs(i,j));
-      }
-    res.resize(m,n);
-    for(int j=0; j<n; j++)
-      for(int i=0; i<m; i++)
-	res(i,j) = cpx( cc(i,j), ss(i,j) );
   } else {
-     //--------------------------
+    //--------------------------
     iA(0);
   }
   return 0;

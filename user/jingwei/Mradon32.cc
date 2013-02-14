@@ -1,8 +1,9 @@
-//   azimuthally isotropic 3-D to 2-D Radon transform
-//   Input f(w,x1,x2) complex
-//   Output u(tau,p) complex
-//   Call bfio.setup32 bfio.kernel2 bfio.check2 bfio.eval2
-//   In bfio.kernel2: fi=1 hyper Radon
+//   azimuthally isotropic 3to2 Radon transform (using 2to2 butterfly)
+//   complex f(w,x1,x2) --> complex u(tau,p)
+//   BFIO::setup32    
+//   BFIO::kernel2    fi=1 hyper Radon
+//   BFIO::check2
+//   BFIO::eval2
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

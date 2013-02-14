@@ -1,4 +1,8 @@
-//   3-D to 3-D butterfly algorithm
+//   3to3 butterfly
+//   BFIO::prep_aux
+//   BFIO::eval_addaux
+//   BFIO::eval3       if fi=1 or 2, switch at L/2 (even L), (L-1)/2 (odd L)
+//                     if fi=3 or 4, switch at L/2 (even L), (L+1)/2 (odd L)
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

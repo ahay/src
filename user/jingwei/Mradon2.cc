@@ -1,9 +1,12 @@
-//   2-D to 2-D Radon transform
-//   Input f(w,x) complex
-//   Output u(tau,p) complex
-//   Call bfio.setup2 bfio.kernel2 bfio.check2 bfio.eval2
-//   In bfio.kernel2: fi=1 hyper Radon; fi=2 adjoint of hyper Radon;
-//                    fi=3 x*k;         fi=4 -x*k
+//   2to2 Radon transform (using 2to2 butterfly)
+//   complex f(w,x) --> complex u(tau,p)
+//   BFIO::setup2
+//   BFIO::kernel2    fi=1 hyper Radon
+//                    fi=2 adjoint of hyper Radon
+//                    fi=3 x*k
+//                    fi=4 -x*k
+//   BFIO::check2
+//   BFIO::eval2
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

@@ -1,5 +1,5 @@
-//   direct azimuthally isotropic 3to2 hyper Radon transform
-//   real f(t,x1,x2) --> real u(tau,p)
+//   direct azimuthally anisotropic 3to4 full Radon transform (double integral, nearest point interpolation)
+//   real f(t,x,y) --> real u(tau,p,q,s)
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -34,33 +34,35 @@ int main(int argc, char** argv)
   // Get input
   iRSF input;
 
-  int nt, nx1, nx2;
+  int nt, nx, ny;
   input.get("n1",nt);
-  input.get("n2",nx1);
-  input.get("n3",nx2);
+  input.get("n2",nx);
+  input.get("n3",ny);
 
   float t0, dt;
   input.get("o1",t0);
   input.get("d1",dt);  
 
-  float x10, dx1;
-  input.get("o2",x10);
-  input.get("d2",dx1);
+  float x0, dx;
+  input.get("o2",x0);
+  input.get("d2",dx);
 
-  float x20, dx2;
-  input.get("o3",x20);
-  input.get("d3",dx2);
+  float y0, dy;
+  input.get("o3",y0);
+  input.get("d3",dy);
 
-  std::valarray<float> fdata(nt*nx1*nx2);
+  std::valarray<float> fdata(nt*nx*ny);
 
   input >> fdata;
 
   // Set output
   iRSF par(0);
 
-  int ntau, np;
+  int ntau, np, nq, ns;
   par.get("ntau",ntau); 
   par.get("np",np); 
+  par.get("nq",nq); 
+  par.get("ns",ns);
 
   float tau0, dtau;
   par.get("tau0",tau0);
@@ -70,10 +72,19 @@ int main(int argc, char** argv)
   par.get("p0",p0);
   par.get("dp",dp);
 
+  float q0, dq;
+  par.get("q0",q0);
+  par.get("dq",dq);
+
+  float s0, ds;
+  par.get("s0",s0);
+  par.get("ds",ds);
+
   oRSF output;
   output.put("n1",ntau);
   output.put("n2",np);
-  output.put("n3",1);
+  output.put("n3",nq);
+  output.put("n4",ns);
 
   output.put("o1",tau0);
   output.put("d1",dtau);
@@ -81,36 +92,51 @@ int main(int argc, char** argv)
   output.put("o2",p0);
   output.put("d2",dp);
 
-  std::valarray<float> udata(ntau*np);
+  output.put("o3",q0);
+  output.put("d3",dq);
+  
+  output.put("o4",s0);
+  output.put("d4",ds);
+
+  std::valarray<float> udata(ntau*np*nq*ns);
 
   cerr<<"tmin "<<t0<<" tmax "<<t0+nt*dt<<endl;
-  cerr<<"x1min "<<x10<<" x1max "<<x10+nx1*dx1<<endl;
-  cerr<<"x2min "<<x20<<" x2max "<<x20+nx2*dx2<<endl;
+  cerr<<"xmin "<<x0<<" xmax "<<x0+nx*dx<<endl;
+  cerr<<"ymin "<<y0<<" ymax "<<y0+ny*dy<<endl;
   cerr<<"taumin "<<tau0<<" taumax "<<tau0+ntau*dtau<<endl;
   cerr<<"pmin "<<p0<<" pmax "<<p0+np*dp<<endl;
+  cerr<<"qmin "<<q0<<" qmax "<<q0+nq*dq<<endl;
+  cerr<<"smin "<<s0<<" smax "<<s0+ns*ds<<endl;
 
 
   float time_eval1, time_eval2;
-  float t, x1, x2, tau, p; 
-  int l;
+  float t, x, y, tau, p, q, s; 
+  int w;
 
   ck0 = clock(); 
   tt0 = time(0);
   for (int i=0; i<ntau; i++)
-    for (int j=0; j<np; j++) {
-      udata[ntau*j+i] = 0.0;
-      for (int m=0; m<nx1; m++) 
-        for (int n=0; n<nx2; n++) {
-          tau = tau0 + i*dtau;
-          p = p0 + j*dp;
-          x1 = x10 + m*dx1;
-          x2 = x20 + n*dx2;
-          t = sqrt(tau*tau+p*p*(x1*x1+x2*x2));
-          l = int(round((t-t0)/dt));
-          if (l>=0 && l<nt)
-            udata[ntau*j+i] += fdata[nt*nx1*n+nt*m+l];   
+    for (int j=0; j<np; j++)
+      for (int k=0; k<nq; k++) 
+        for (int l=0; l<ns; l++) {
+          udata[ntau*np*nq*l+ntau*np*k+ntau*j+i] = 0.0;
+	  for (int m=0; m<nx; m++)
+	    for (int n=0; n<ny; n++) {
+              tau = tau0 + i*dtau;
+              p = p0 + j*dp;
+              q = q0 + k*dq;
+              s = s0 + l*ds;
+              x = x0 + m*dx;
+              y = y0 + n*dy;
+              t = tau*tau+p*p*x*x+q*q*y*y+2*s*s*x*y;
+              if (t>=0) {
+		t = sqrt(t);
+                w = int(round((t-t0)/dt));
+                if (w>=0 && w<nt) 
+                  udata[ntau*np*nq*l+ntau*np*k+ntau*j+i] += fdata[nt*nx*n+nt*m+w];    
+	      }         
+	    }
         }
-    }
   ck1 = clock();    
   tt1 = time(0);  
   time_eval1 = float(ck1-ck0)/CLOCKS_PER_SEC;

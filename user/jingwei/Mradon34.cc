@@ -1,8 +1,9 @@
-//   3-D to 4-D azimuthally anisotropic Radon transform
-//   Input f(w,x,y) complex
-//   Output u(tau,p,q,ss) complex
-//   Call bfio.setup3 bfio.kernel34 bfio.check34 bfio.eval34
-//   In bfio.kernel34: fi=1 full Radon
+//   azimuthally anisotropic 3to4 Radon transform (using 3to3 butterfly)
+//   complex f(w,x,y) --> complex u(tau,p,q,s)
+//   BFIO::setup3
+//   BFIO::kernel34    fi=1 full Radon
+//   BFIO::check34
+//   BFIO::eval34
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

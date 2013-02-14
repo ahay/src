@@ -1,4 +1,7 @@
-//   3-D to 4-D butterfly algorithm
+//   3to3 butterfly (full Radon)
+//   BFIO::prep_aux
+//   BFIO::eval_addaux
+//   BFIO::eval34
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -391,8 +394,13 @@ int BFIO::eval34(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec&
 		      CpxNumTns sclaux(NGk1,NGk2,NGk3,false,scl.data());
                       for(int k=0; k<NGk3; k++)
 		        for(int j=0; j<NGk2; j++)
-		          for(int i=0; i<NGk1; i++)
-			    all(i,j,k) = all(i,j,k) / sclaux(i,j,k);
+			  for(int i=0; i<NGk1; i++) {
+			    if (real(sclaux(i,j,k))==0 && imag(sclaux(i,j,k))==0) {
+			      all(i,j,k) = cpx(0,0);
+			    } else {
+			      all(i,j,k) = all(i,j,k) / sclaux(i,j,k);
+			    }
+			  }
 		      //put
 		      NOW(k1,k2,k3)(x1,x2,x3) = all;
 	            }//x1x2x3
@@ -518,8 +526,12 @@ int BFIO::eval34(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec&
                       for(int k=0; k<NGx3; k++)
 	                for(int j=0; j<NGx2; j++)
 		          for(int i=0; i<NGx1; i++) {
-			    all(i,j,k) = all(i,j,k) / sclaux(i,j,k);
-		          }
+			    if (real(sclaux(i,j,k))==0 && imag(sclaux(i,j,k))==0) {
+			      all(i,j,k) = cpx(0,0);
+			    } else {
+			      all(i,j,k) = all(i,j,k) / sclaux(i,j,k);
+			    }
+			  }
 		      //
 		      if(ell!=EL) {
 		        int q1 = int(floor(k1/2));    int q2 = int(floor(k2/2));    int q3 = int(floor(k3/2));

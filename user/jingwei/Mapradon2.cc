@@ -1,8 +1,9 @@
-//   2-D to 3-D apex shifted Radon transform
-//   Input f(w,x) complex
-//   Output u(tau,p,x) complex
-//   Call bfio.setup2 bfio.apkernel2 bfio.apcheck2 bfio.apeval2
-//   In bfio.apkernel2: fi=1 apex shifted hyper Radon
+//   apex shifted 2to3 Radon transform (using 2to2 butterfly)
+//   complex f(w,x) --> complex u(tau,p,x)
+//   BFIO::setup2 
+//   BFIO::apkernel2   fi=1 apex shifted hyper Radon
+//   BFIO::apcheck2
+//   BFIO::apeval2
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -102,10 +103,6 @@ int main(int argc, char** argv)
   //output.type(SF_FLOAT);
   // this has be there if the input and output types are different
 
-  
-
-  //**********************************************
-  
   // BFIO setup
   BFIO bfio("bfio_");
   iC( bfio.setup2(par,input) );
@@ -115,23 +112,22 @@ int main(int argc, char** argv)
   cerr<<"N "<<N<<endl;
 
   float time_eval;
-  CpxNumMat utemp(ntau,np);   
+  CpxNumMat utmp(ntau,np);   
 
   {
     int k=0;
     float xx=x(k);
-    setvalue(utemp,cpx(0,0));
+    setvalue(utmp,cpx(0,0));
 
     ck0 = clock();
-    iC( bfio.apeval2(N,f,w,x,utemp,tau,p,xx) );
+    iC( bfio.apeval2(N,f,w,x,utmp,tau,p,xx) );
     ck1 = clock();    
     time_eval = float(ck1-ck0)/CLOCKS_PER_SEC;
- 
     //
     float relerr = 0;
     int NC = 128;
     ck0 = clock();
-    iC( bfio.apcheck2(N,f,w,x,utemp,tau,p,xx,NC,relerr) );
+    iC( bfio.apcheck2(N,f,w,x,utmp,tau,p,xx,NC,relerr) );
     ck1 = clock();
     float time_chck = float(ck1-ck0)/CLOCKS_PER_SEC*float(ntau)*float(np)/float(NC);
     //
@@ -140,28 +136,23 @@ int main(int argc, char** argv)
     cerr<<"Rt "<<time_chck/time_eval<<endl;
     cerr<<"Ea "<<relerr<<endl;
     //
-   
     for (int i=0; i<ntau; i++)
       for (int j=0; j<np; j++)
-	u(i,j,k)=utemp(i,j);
+	u(i,j,k)=utmp(i,j);
   }
 
   for (int k=1; k<nx; k++) {
     float xx=x(k);
-    setvalue(utemp,cpx(0,0));
-
-    iC( bfio.apeval2(N,f,w,x,utemp,tau,p,xx) );
-
+    setvalue(utmp,cpx(0,0));
+    iC( bfio.apeval2(N,f,w,x,utmp,tau,p,xx) );
     cerr<<"k = "<<k<<endl;
     //
    
     for (int i=0; i<ntau; i++)
       for (int j=0; j<np; j++)
-	u(i,j,k)=utemp(i,j);
+	u(i,j,k)=utmp(i,j);
   }
 
-  //*******************************************
-  
   std::valarray<sf_complex> udata(ntau*np*nx);
   //std::valarray<float> udata(ntau*np*nx);
   //udata.resize(ntau*np*nx);

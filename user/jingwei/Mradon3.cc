@@ -1,10 +1,13 @@
-//   3-D to 3-D Radon transform
-//   Input f(w,x,y) complex
-//   Output u(tau,p,q) complex
-//   Call bfio.setup3 bfio.kernel3 bfio.check3 bfio.eval3
-//   In bfio.kernel3: fi=0 linear Radon;
-//                    fi=1 reflection Radon;            fi=2 diffraction Radon;
-//                    fi=3 adjoint of reflection Radon; fi=4 adjoint of diffraction Radon
+//   3to3 Radon transform (using 3to3 butterfly)
+//   complex f(w,x,y) --> complex u(tau,p,q)
+//   BFIO::setup3
+//   BFIO::kernel3    fi=0 linear Radon
+//                    fi=1 reflection Radon             
+//                    fi=2 diffraction Radon
+//                    fi=3 adjoint of reflection Radon  
+//                    fi=4 adjoint of diffraction Radon
+//   BFIO::check3
+//   BFIO::eval3
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

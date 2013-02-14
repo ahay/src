@@ -1,4 +1,4 @@
-//   Soft thresholding function
+//   soft thresholding function
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

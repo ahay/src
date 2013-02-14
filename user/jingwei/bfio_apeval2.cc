@@ -1,4 +1,6 @@
-//   2-D to 2-D apex butterfly algorithm
+//   2to2 butterfly (apex shifted Radon)
+//   BFIO::prep_aux
+//   BFIO::apeval2
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

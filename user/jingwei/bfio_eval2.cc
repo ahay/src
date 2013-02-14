@@ -1,4 +1,7 @@
-//   2-D to 2-D butterfly algorithm
+//   2to2 butterfly
+//   BFIO::prep_aux
+//   BFIO::eval2       if fi=1 or 3, switch at L/2 (even L), (L-1)/2 (odd L)
+//                     if fi=2 or 4, switch at L/2 (even L), (L+1)/2 (odd L)
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

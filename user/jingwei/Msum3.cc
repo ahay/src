@@ -1,6 +1,6 @@
+//   adjoint test
 //   check <f1,f2>?=<g1,g2>
-//   input f1(t,x,y), f2(t,x,y) complex
-//   input g1(t,x,y), g2(t,x,y) complex
+//   complex f1(t,x,y), f2(t,x,y), g1(t,x,y), g2(t,x,y)
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

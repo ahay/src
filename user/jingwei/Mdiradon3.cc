@@ -1,8 +1,7 @@
-//   direct 3-D to 3-D Radon transform
-//   Input f(t,x,y) real
-//   Output u(tau,p,q) real
-//   Call bfio.dikernel3
-//   In bfio.dikernel3: fi=1 reflection Radon; fi=2 diffraction Radon;
+//   direct 3to3 reflection/diffraction Radon transform
+//   real f(t,x,y) --> real u(tau,p,q)
+//   BFIO::dikernel3    fi=1 direct reflection Radon      
+//                      fi=2 direct diffraction Radon
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

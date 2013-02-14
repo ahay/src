@@ -1,6 +1,5 @@
-//   direct 2-D to 2-D hyper Radon transform / single integral
-//   Input f(t,x) real
-//   Output u(tau,p) real
+//   direct 2to2 hyper Radon transform (single integral, nearest point interpolation)
+//   real f(t,x) --> real u(tau,p)
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

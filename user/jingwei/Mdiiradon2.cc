@@ -1,6 +1,5 @@
-//   direct 2-D to 2-D hyper Radon transform / double integral
-//   Input f(w,x) complex
-//   Output u(tau,p) complex
+//   direct 2to2 hyper Radon transform (double integral, exact)
+//   complex f(w,x) --> complex u(tau,p)
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
