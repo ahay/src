@@ -1,5 +1,5 @@
 /*
- *  vectoradd.c
+ *  vectorsub.c
  *  Multi-Layered
  *
  *  Created by Yanadet Sripanich on 8/3/12.
@@ -31,7 +31,7 @@ void vector_sub(int count1, float *inp /*y_old*/,
 	
 	
 	
-	for(i=count3;i<n+count3;i++){
+	for(i=count3;i<n;i++){
 		*(outp+i) = *(inp+i) - *(inp_d+i); /*adding step*/
 	}
 	

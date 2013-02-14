@@ -84,7 +84,7 @@ static float zder2(int k,float x)
 /*Main program-------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus,count;
+	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus,count,debug;
 	float x, dt, t0, bmin, bmax, tt;
 	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *dk_old, *xxtem, *zk,*ck_inv; 
 	double tol;
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 	rr = sf_floatalloc2(nr1,nr2+2);
 	temp_rr = sf_floatalloc2(nr1,N);
 	rd = sf_floatalloc2(nr1,nr2+2);
-	ans = sf_floatalloc2(nr2+2,2);
+	ans = sf_floatalloc2(2,nr2+2);
 	
 	xx = sf_floatalloc(nr2+2);
 	xxnew = sf_floatalloc(nr2+2);
@@ -188,6 +188,9 @@ int main(int argc, char* argv[])
 	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
 	/* Velocity status (0 for constant v and other int for gradient v)*/
 	
+	if (!sf_getint("debug",&debug)) sf_error("Please enter the debug (0 for for not printing values at each step and other int for printing)");
+	/* Velocity status (0 for constant v and other int for gradient v)*/
+	
 	if (!sf_getdouble("tol",&tol)) tol=0.000001/v_inp[0];
 	/* Assign a default value for tolerance*/
 	
@@ -195,11 +198,12 @@ int main(int argc, char* argv[])
 	/*Set output 2D array reflection point---------------------------------------*/
 	xrefl = sf_output("out"); /* Output reflection points*/
 	
-	if (!sf_getint("ns",&nt)) nt=nr2+2;
+	if (!sf_getint("ns",&nt)) nt=2;
+	/* Dimension of output reflection points (2 dim)*/
+	
+	if (!sf_getint("ns2",&nt2)) nt2=nr2+2; 
 	/* Dimension of output reflection points (the number of points)*/
 	
-	if (!sf_getint("ns2",&nt2)) nt2=2; 
-	/* Dimension of output reflection points (2 dim)*/
 	
 	if (!sf_getfloat("ds",&dt)) dt=1; 
 	/* Step increment*/
@@ -217,7 +221,7 @@ int main(int argc, char* argv[])
 	/*read input------------------------------------------------------------------------------*/
 	int d1,d2,d3,d4,d5,p1,p3; /*counter*/
 	int p2; /*Temp value*/
-	float p4; /*Temp value*/
+	float p4=0; /*Temp value*/
 	
 	sf_floatread(temp_rr[0],nr1*N,refl);
 	
@@ -234,7 +238,7 @@ int main(int argc, char* argv[])
 	/*Check whether the gradient and vstatus match*/
 	
 	for (p3=0; p3<N-1; p3++) {
-		p4 = gx_inp[p3]+gz_inp[p3];
+		p4 = p4 + gx_inp[p3]+gz_inp[p3];
 		
 		if (p3==N-2 && p4/(2*N-2)!=0 && vstatus==0) {
 			sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
@@ -316,7 +320,7 @@ int main(int argc, char* argv[])
 		}
 		
 		deno[ir2] = sf_eno_init(order,nr1);	/*derivatives*/	
-		sf_eno_set (deno[ir2],rr[ir2]);
+		sf_eno_set (deno[ir2],rd[ir2]);
 	}
 	
 	/*Set vconstant or vgradient----------------------------------------------------------*/
@@ -446,34 +450,6 @@ int main(int argc, char* argv[])
 			}
 			
 		}
-		
-		/*Check whether the increment dk is diverging or not and multiply by 0.5 if it is (reduce only 20 times)*/
-		
-		#ifdef NO_CHANCE_THAT_THIS_SYMBOL_WILL_EVER_EXIST
-		int u,w,p5=0; /*counter*/
-		
-		if (q==0) {
-			for (w=0; w<nr2+2; w++) {
-				*(dk_old+w) = *(dk+w); /*The first loop >> set dk_old = dk*/
-			}
-		}
-		
-		for (u=0; u<nr2; u++) {
-			while (fabsf(dk[u+1])>fabsf(dk_old[u+1]) && p5<nr2*10) {
-				dk[u+1] = 0.5*dk[u+1];
-				p5++; /*update counter*/
-				sf_warning("The increment dk[%d] diverges and is halved to be %g\n",u+1,dk[u+1]);
-				if (fabsf(dk[u+1])<tol) { /*Break the loop if the reduced increment is smaller than the tolerance*/
-					break;
-				}
-			}
-			
-			if (p5>=nr2*10) {
-				sf_warning("The increment still diverges after being halved for 10 times (at each reflection point). Please reenter a more appropriate set of xinitial\n");
-				exit(0);
-			}
-		} 
-		#endif
 	
 		/*Apply boundary ------------------------------------------*/
 		
@@ -484,16 +460,20 @@ int main(int argc, char* argv[])
 			b2=0;
 			xxtem[a+1] = xx[a+1]-dk[a+1];
 			
-			while (xxtem[a+1]<bmin && b1<20) {/*maximum times to multiply is 10*/
+			while (xxtem[a+1]<bmin && b1<20) {/*maximum times to multiply is 20*/
 				
 				dk[a+1]=0.5*dk[a+1];
-				sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+				if (debug!=0) {
+				sf_warning("The new x value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+				}
 				xxtem[a+1] = xx[a+1]-dk[a+1];
 				b1++;
 			}
-			while(xxtem[a+1]>bmax && b1<20) {/*maximum times to multiply is 10*/
+			while(xxtem[a+1]>bmax && b2<20) {/*maximum times to multiply is 20*/
 				dk[a+1]=0.5*dk[a+1];
-				sf_warning("The new y value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+				if (debug!=0) {
+				sf_warning("The new x value exceeds the maximum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
+				}
 				xxtem[a+1] = xx[a+1]-dk[a+1];
 				b2++;
 				
@@ -514,10 +494,14 @@ int main(int argc, char* argv[])
 		vector_sub(nr2+2,xx,nr2+2,dk,xxnew,0);
 		
 		for (t=0; t<nr2+2;t++) {
-			sf_warning("The original value of y[%d] is %g, d[%d] is %g and the new value of y[%d] is %g\n",t,*(xx+t),t,*(dk+t),t,*(xxnew+t));
-			if (t==nr2+1) {
-				printf("\n\n");
-			}	
+			
+			if (debug!=0) {
+				sf_warning("The original value of y[%d] is %g, d[%d] is %g and the new value of y[%d] is %g\n",t,*(xx+t),t,*(dk+t),t,*(xxnew+t));
+				if (t==nr2+1) {
+					sf_warning("Iteration:%d\n\n",q+1);
+				}					
+			}
+			
 			*(xx+t) = *(xxnew+t); /*update xx values*/
 			*(dk_old+t) = *(dk+t); /*store the working dk*/
 			
@@ -535,10 +519,10 @@ mark: /*mark point for goto*/
 		for (c1=0; c1<2; c1++) {
 			
 			if (c1==0) {
-				ans[c1][c2] = xx[c2];
+				ans[c2][c1] = xx[c2];
 			}
 			else {
-				ans[c1][c2] = z(c2,xx[c2]);
+				ans[c2][c1] = z(c2,xx[c2]);
 			}
 			
 		}
@@ -553,7 +537,7 @@ mark: /*mark point for goto*/
 		tt = tt + T_hat_k(f.T_k);
 		
 		if (c==nr2) {
-			sf_warning("Traveltime is %g",tt);
+			sf_warning("Traveltime is %g and the total number of iterations is %d",tt,q);
 		}
 	}
 	

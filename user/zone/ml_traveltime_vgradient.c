@@ -42,7 +42,6 @@ float v(twod y_k, twod x_ref)
 	return y_k.v2;
 } 
 
-/*calculate z outsideeeeee !!!*/
 
 float T1_k(twod y_k,twod y_k1)
 /*<Traveltime>*/
