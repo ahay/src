@@ -104,7 +104,7 @@ int main (int argc, char* argv[]) {
     /* if y, apply anti-aliasing */
     if (!sf_getfloat ("dx", &dx)) dx = xStep;
 	/* x-range for point detection */
-    if (!sf_getfloat ("dt", &dt)) dt = 0.004f;
+    if (!sf_getfloat ("dt", &dt)) dt = 0.008f;
 	/* time-range for point detection */
     if (!sf_getfloat ("xlim", &xlim)) xlim = 2 * xStep;
 	/* maximum distance between depth-line points */
