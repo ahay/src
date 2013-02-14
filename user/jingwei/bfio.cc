@@ -717,8 +717,9 @@ int BFIO::kernel34(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& r
     float COEF = 2*M_PI;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-	//phs(i,j) = taus[i]*taus[i] + ps[i]*ps[i]*xs[j]*xs[j] + qs[i]*qs[i]*ys[j]*ys[j] + 2*xx*xx*xs[j]*ys[j];
-        phs(i,j) = taus[i]*taus[i] + ps[i]*xs[j]*xs[j] + qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j];
+	//phs(i,j) = taus[i]*taus[i] + ps[i]*xs[j]*xs[j] + qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j];
+        //phs(i,j) = taus[i]*taus[i] + ps[i]*ps[i]*xs[j]*xs[j] + qs[i]*qs[i]*ys[j]*ys[j] + 2*xx*xx*xs[j]*ys[j];
+        phs(i,j) = taus[i]*taus[i] + ps[i]*ps[i]*xs[j]*xs[j] + qs[i]*qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j];
         if (phs(i,j)>=0) {
 	  phs(i,j) = COEF * sqrt(phs(i,j)) * ws[j];
           ss(i,j) = sin(phs(i,j));

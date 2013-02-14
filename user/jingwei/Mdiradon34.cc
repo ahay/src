@@ -128,7 +128,9 @@ int main(int argc, char** argv)
               s = s0 + l*ds;
               x = x0 + m*dx;
               y = y0 + n*dy;
-              t = tau*tau+p*x*x+q*y*y+2*s*x*y;
+              //t = tau*tau+p*x*x+q*y*y+2*s*x*y;
+              //t = tau*tau+p*p*x*x+q*q*y*y+2*s*s*x*y;
+              t = tau*tau+p*p*x*x+q*q*y*y+2*s*x*y;
               if (t>=0) {
 		t = sqrt(t);
                 w = int(round((t-t0)/dt));
