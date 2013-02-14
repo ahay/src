@@ -302,10 +302,10 @@ void update()
     RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
     RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
 
-    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
-    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
-    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
-    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_ESTIMATE);
+    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_ESTIMATE);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_ESTIMATE);
+    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_ESTIMATE);
     if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx)
 	sf_error("fftw planning failed");
@@ -313,8 +313,8 @@ void update()
     DZ = sf_complexalloc(Ncz);
     DX = sf_complexalloc(Ncx);
 
-    for (tt=sf_cmplx(0.,2./Nz * M_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt=sf_cmplx(0.,2./Nx * M_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt=sf_cmplx(0.,2./Nz * SF_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt=sf_cmplx(0.,2./Nx * SF_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     pa = sf_floatalloc(Nxz); po = sf_floatalloc(Nxz); pb = sf_floatalloc(Nxz);
     ua = sf_floatalloc(Nxz); uo = sf_floatalloc(Nxz); ub = sf_floatalloc(Nxz);
@@ -339,13 +339,13 @@ void update()
         /* update particle momentum */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix)
-#endif
+#endif 
 	for     (ix=0; ix < Nx; ix++)
 	    for (iz=0; iz < Nz; iz++)
                 RX[iz * Nrx + ix] = RZ[ix * Nrz + iz] = po[ix * Nz + iz];
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
-#endif
+#endif 
         for (ix=0; ix < Nx; ix++) {
             ic = ix * Ncz;
             ir = ix * Nrz;
@@ -512,10 +512,10 @@ void update_tau()
     RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
     RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
 
-    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
-    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
-    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
-    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_ESTIMATE);
+    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_ESTIMATE);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_ESTIMATE);
+    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_ESTIMATE);
     if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx)
 	sf_error("fftw planning failed");
@@ -523,8 +523,8 @@ void update_tau()
     DZ = sf_complexalloc(Ncz);
     DX = sf_complexalloc(Ncx);
 
-    for (tt=sf_cmplx(0.,2./Nz * M_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt=sf_cmplx(0.,2./Nx * M_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt=sf_cmplx(0.,2./Nz * SF_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt=sf_cmplx(0.,2./Nx * SF_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     pa = sf_floatalloc(Nxz); po = sf_floatalloc(Nxz); pb = sf_floatalloc(Nxz);
     ua = sf_floatalloc(Nxz); uo = sf_floatalloc(Nxz); ub = sf_floatalloc(Nxz);

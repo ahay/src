@@ -303,10 +303,10 @@ void update()
     RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (float complex *)RZ;
     RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
 
-    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
-    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
-    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
-    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_ESTIMATE);
+    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_ESTIMATE);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_ESTIMATE);
+    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_ESTIMATE);
     if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx)
 	sf_error("fftw planning failed");
@@ -314,8 +314,8 @@ void update()
     DZ = sf_complexalloc(Ncz);
     DX = sf_complexalloc(Ncx);
 
-    for (tt=sf_cmplx(0.,2./Nz * M_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt=sf_cmplx(0.,2./Nx * M_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt=sf_cmplx(0.,2./Nz * SF_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt=sf_cmplx(0.,2./Nx * SF_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     pa = sf_floatalloc(Nxz); po = sf_floatalloc(Nxz); pb = sf_floatalloc(Nxz);
     qa = sf_floatalloc(Nxz); qo = sf_floatalloc(Nxz); qb = sf_floatalloc(Nxz);
@@ -532,12 +532,12 @@ void update_tau()
     RS = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CS = (float complex *)RS;
     RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (float complex *)RX;
 
-    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_MEASURE);
-    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_MEASURE);
-    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_MEASURE);
-    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_MEASURE);
-    fwds = fftwf_plan_dft_r2c_1d(Nz,RS,CS,FFTW_MEASURE);
-    invs = fftwf_plan_dft_c2r_1d(Nz,CS,RS,FFTW_MEASURE);
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,CZ,FFTW_ESTIMATE);
+    invz = fftwf_plan_dft_c2r_1d(Nz,CZ,RZ,FFTW_ESTIMATE);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,CX,FFTW_ESTIMATE);
+    invx = fftwf_plan_dft_c2r_1d(Nx,CX,RX,FFTW_ESTIMATE);
+    fwds = fftwf_plan_dft_r2c_1d(Nz,RS,CS,FFTW_ESTIMATE);
+    invs = fftwf_plan_dft_c2r_1d(Nz,CS,RS,FFTW_ESTIMATE);
     if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx ||
         NULL == fwds || NULL == invs)
@@ -546,8 +546,8 @@ void update_tau()
     DZ = sf_complexalloc(Ncz);
     DX = sf_complexalloc(Ncx);
 
-    for (tt=sf_cmplx(0.,2./Nz * M_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt=sf_cmplx(0.,2./Nx * M_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt=sf_cmplx(0.,2./Nz * SF_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt=sf_cmplx(0.,2./Nx * SF_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     pa = sf_floatalloc(Nxz); po = sf_floatalloc(Nxz); pb = sf_floatalloc(Nxz);
     qa = sf_floatalloc(Nxz); qo = sf_floatalloc(Nxz); qb = sf_floatalloc(Nxz);
