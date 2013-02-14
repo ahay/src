@@ -28,7 +28,7 @@ Rays and wavefronts can be displayed with sfplotrays.
 
 int main(int argc, char* argv[])
 {
-    bool velocity;
+    bool velocity, lsint;
     int is, nz, nx, im, nm, order, nshot, ndim, nsr;
     int nt, nr, ir, it;
     float da=0., a0, amax, *t;
@@ -64,6 +64,8 @@ int main(int argc, char* argv[])
     /* If y, the input is velocity; if n, slowness */
     if(!sf_getint("order",&order)) order=4;
     /* Interpolation accuracy */
+    if (!sf_getbool("lsint",&lsint)) lsint=false;
+    /* if use least-squares interpolation */
 
     if (!sf_getint("nt",&nt)) nt=nx*nz;
     /* number of time steps */
@@ -139,7 +141,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize ray tracing object */
-    ct = sf_celltrace_init (order, nt, nz, nx, dz, dx, z0, x0, slow);
+    ct = sf_celltrace_init (lsint, order, nt, nz, nx, dz, dx, z0, x0, slow);
     
     free (slow);
 

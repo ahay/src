@@ -58,9 +58,9 @@ int main(int argc, char* argv[])
 
     if (NULL == (file = sf_getstring("lag"))) sf_error("Need lag=");
     lagout = sf_output(file);
-    sf_fileflush(lagout,lagin);
     sf_settype(lagout,SF_INT);
     sf_putint(lagout,"n1",ns);
+    sf_fileflush(lagout,lagin);
     sf_intwrite(ss->lag,ns,lagout);
 
     sf_putint(out,"n1",ns);

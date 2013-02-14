@@ -20,6 +20,7 @@ To the Python package:
 
 * Added an ability to have list arguments in configure
 * Added MLK support in configure
+* Added selfdocs for placeholders in bldutil
 
 To programs:
 
@@ -29,6 +30,7 @@ To programs:
 * sfpad2nextfastsize: wrapper for kiss_fft_next_fast_size so it can be
   called from scripts and SConstruct files. Python wrapper for it:
   rsf.user.sf.pad2nextfastsize()
+* Added forcebw= option for pspen
 
 ===Bug fixes===
 

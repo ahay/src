@@ -21,8 +21,12 @@
 
 #include "celltrace.h"
 #include "eno2.h"
+#include "lsint2.h"
 #include "alloc.h"
 #include "cell.h"
+
+#include "_bool.h"
+/*^*/
 
 #ifndef _sf_celltrace_h
 
@@ -36,10 +40,12 @@ struct sf_CellTrace {
     int nt, nx, nz;
     float dx, dz, x0, z0;
     sf_eno2 pnt;
+    sf_lsint2 lnt;
 };  
 
 
-sf_celltrace sf_celltrace_init (int order   /* interpolation accuracy */, 
+sf_celltrace sf_celltrace_init (bool lsint  /* use local ls interpolation */,
+				int order   /* interpolation accuracy */, 
 				int nt      /* maximum time steps */,
 				int nz      /* depth samples */, 
 				int nx      /* lateral samples */, 
@@ -58,8 +64,16 @@ sf_celltrace sf_celltrace_init (int order   /* interpolation accuracy */,
     ct->dx = dx; ct->dz = dz;
     ct->nx = nx; ct->nz = nz;
     ct->x0 = x0; ct->z0 = z0;
-    ct->pnt = sf_eno2_init (order, nz, nx); 
-    sf_eno2_set1 (ct->pnt, slow); 
+
+    if (lsint) {
+	ct->lnt = sf_lsint2_init (nz, nx); 
+	sf_lsint2_set1 (ct->lnt, slow);
+	ct->pnt = NULL;
+    } else {
+	ct->pnt = sf_eno2_init (order, nz, nx); 
+	sf_eno2_set1 (ct->pnt, slow); 
+	ct->lnt = NULL;
+    }
     
     return ct;
 } 
@@ -67,7 +81,8 @@ sf_celltrace sf_celltrace_init (int order   /* interpolation accuracy */,
 void sf_celltrace_close (sf_celltrace ct)
 /*< Free allocated storage >*/
 {
-    sf_eno2_close (ct->pnt);
+    if (NULL != ct->pnt) sf_eno2_close (ct->pnt);
+    if (NULL != ct->lnt) sf_lsint2_close (ct->lnt);
     free (ct);
 }
 
@@ -88,7 +103,11 @@ float sf_cell_trace (sf_celltrace ct,
     onx = sf_cell_snap (&x,&ix,eps);
     onz = sf_cell_snap (&z,&iz,eps);
 
-    sf_eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
+    if (NULL != ct->lnt) {
+	sf_lsint2_apply(ct->lnt,iz,ix,z,x,&v,g,BOTH);
+    } else {
+	sf_eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
+    }
     g[1] /= ct->dx;
     g[0] /= ct->dz;
 
@@ -132,7 +151,11 @@ float sf_cell_trace (sf_celltrace ct,
 	    traj[i+1][1] = ct->x0 + (x+ix)*ct->dx;
 	}    
 	
-	sf_eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
+	if (NULL != ct->lnt) {
+	    sf_lsint2_apply(ct->lnt,iz,ix,z,x,&v,g,BOTH);
+	} else {
+	    sf_eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
+	}
 	g[1] /= ct->dx;
 	g[0] /= ct->dz;
 

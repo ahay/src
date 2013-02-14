@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     int nx, na, na2, ia, nz, order, maxsplit, ix, iz, *siz;
     float **place, *slow, **out, dx,dz, x0,z0, x[2];
     float max1, min1, max2, min2;
-    bool isvel;
+    bool isvel, lsint;
     agrid grd;
     sf_file vel, outp, size, grid;
         
@@ -96,6 +96,8 @@ int main(int argc, char* argv[])
     /* y: velocity, n: slowness */
     if(!sf_getint("order",&order)) order=3;
     /* velocity interpolation order */
+    if (!sf_getbool("lsint",&lsint)) lsint=false;
+    /* if use least-squares interpolation */
 
     slow  = sf_floatalloc(nz*nx);
     place = sf_floatalloc2(5,na);
@@ -109,7 +111,7 @@ int main(int argc, char* argv[])
       }
     }
 
-    ct = sf_celltrace_init (order, nz*nx, nz, nx, dz, dx, z0, x0, slow);
+    ct = sf_celltrace_init (lsint, order, nz*nx, nz, nx, dz, dx, z0, x0, slow);
     free (slow);
 
     grd = agrid_init (na, 5, maxsplit);

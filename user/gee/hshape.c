@@ -20,6 +20,8 @@
 #include <rsf.h>
 /*^*/
 
+#include "conv.h"
+
 static sf_filter aa, bb;
 static float *t1, *t2, wt;
 
@@ -28,19 +30,32 @@ void hshape_init( int nd       /* data size */,
 		  sf_filter ff /* filter */) 
 /*< initialize >*/
 {
-    int ia, na;
+    int is, ia, na;
+    sf_filter cc;
 
     aa = ff;
-
     na = aa->nh;
-    bb = sf_allocatehelix(na);
-    free (bb->flt);
-    bb->flt = aa->flt;
-    for (ia=0; ia < na; ia++) {
-	bb->lag[ia] = ns * aa->lag[ia];
-    }
-    wt = 1.0/ns;
 
+    bb =  sf_allocatehelix(na);
+    for (ia=0; ia < na; ia++) {
+	bb->lag[ia] = aa->lag[ia];
+	bb->flt[ia] = aa->flt[ia];
+    }
+
+    /* convolve ns times */
+    for (is=0; is < ns-1; is++) {
+	cc = conv (bb, aa, false);
+	sf_deallocatehelix(bb);
+	bb = cc;
+    }
+
+    if (0==(ns%2)) {
+	for (ia=0; ia < bb->nh; ia++) {
+	    bb->flt[ia] = - bb->flt[ia];
+	}
+    }
+
+    wt = 1.0/ns;
     t1 = sf_floatalloc (nd);
     t2 = sf_floatalloc (nd);
 
@@ -80,8 +95,7 @@ void hshape_close (void)
 {
     free (t1);
     free (t2);
-    free (bb->lag);
-    free (bb);
+    sf_deallocatehelix(bb);
     sf_polydiv_close();
 }
 

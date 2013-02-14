@@ -456,6 +456,7 @@ class UserSconsTargets:
     def __init__(self):
         self.c = None # C mains
         self.c_mpi = None # C with MPI
+        self.c_place = None # C with placeholders
         self.c_libs = None
         self.f90 = None # F90 mains
         self.py = None # Python mains
@@ -473,9 +474,13 @@ class UserSconsTargets:
                 SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
             
         if not self.c:
-            docs_c = None
+            docs_c = []
         else:
             docs_c = build_install_c(env, self.c, srcroot, bindir, glob_build, bldroot)
+
+        if self.c_place:
+            docs_c += map(lambda prog: env.Doc(prog,'M'+prog),Split(self.c_place))
+
         if not self.c_mpi:
             docs_c_mpi = None
         else:
