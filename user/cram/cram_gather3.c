@@ -88,17 +88,16 @@ void sf_cram_gather3_close (sf_cram_gather3 cram_gather)
 }
 
 void sf_cram_gather3_image_output (sf_cram_gather3 cram_gather, sf_cram_point3 cram_point,
-                                   sf_file imfile)
+                                   sf_file imfile, sf_file ilfile)
 /*< Write one spatial location from the image to disk >*/
 {
     float smp, hits;
 
     smp = sf_cram_point3_get_image (cram_point, &hits);
-    if (hits != 0.0)
-        smp /= hits;
     sf_floatwrite (&smp, 1, imfile);
+    if (ilfile)
+        sf_floatwrite (&hits, 1, ilfile);
 }
-
 
 void sf_cram_gather3_oangle_output (sf_cram_gather3 cram_gather, sf_cram_point3 cram_point,
                                     sf_file oafile, sf_file sqfile, sf_file ilfile)

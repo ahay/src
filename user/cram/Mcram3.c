@@ -32,8 +32,8 @@ int main (int argc, char* argv[]) {
     float oaz, daz, armin, armax;
     float ***esc;
     sf_file esct, data = NULL, survey = NULL, vz = NULL;
-    sf_file imag = NULL, oimag = NULL, dimag = NULL, osmap = NULL,
-            dsmap = NULL, oimap = NULL, dimap = NULL;
+    sf_file imag = NULL, hits = NULL, oimag = NULL, dimag = NULL,
+            osmap = NULL, dsmap = NULL, oimap = NULL, dimap = NULL;
 
     bool amp, mute, outaz, extrap;
     sf_cram_data2 cram_data;
@@ -168,7 +168,14 @@ int main (int argc, char* argv[]) {
                                         oazmax, dazmax, outaz);
 
     imag = sf_output ("out");
+    /* Image (z, x, y) */
     sf_cram_gather3_setup_image_output (cram_gather, esct, imag);
+
+    if (sf_getstring ("hits")) {
+        /* Image illumination (z, x, y) */
+        hits = sf_output ("hits");
+        sf_cram_gather3_setup_image_output (cram_gather, esct, hits);
+    }
 
     if (sf_getstring ("agath")) {
         /* Opening angle gathers (angle, azimuth, z, x, y) */
@@ -226,7 +233,7 @@ int main (int argc, char* argv[]) {
                 /* Image for one (z, x, y) location */
                 if (z > zd)
                     sf_cram_point3_compute (cram_point, z, x, y, esc);
-                sf_cram_gather3_image_output (cram_gather, cram_point, imag);
+                sf_cram_gather3_image_output (cram_gather, cram_point, imag, hits);
                 /* Add to the angle gathers */
                 if (oimag)
                     sf_cram_gather3_oangle_output (cram_gather, cram_point,
@@ -248,6 +255,8 @@ int main (int argc, char* argv[]) {
     sf_fileclose (data);
     if (vz)
         sf_fileclose (vz);
+    if (hits)
+        sf_fileclose (hits);
     if (dimag)
         sf_fileclose (dimag);
     if (osmap)
