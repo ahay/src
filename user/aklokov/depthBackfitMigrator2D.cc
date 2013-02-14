@@ -113,14 +113,21 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 	memset ( xRes, 0, rNum_ * sizeof (float) );
 	memset ( zRes, 0, rNum_ * sizeof (float) );
 
-	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, xRes, zRes);
+	list<float> xpnts;
+	list<float> zpnts;
+
+	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, &xpnts, &zpnts);
+
+	const int isize = xpnts.size ();
+	std::list<float>::iterator iterx = xpnts.begin ();
+	std::list<float>::iterator iterz = zpnts.begin ();
 
 	// filter points
 	std::list<ImagePoint2D*> goodPoints;
-	for (int ir = 0; ir < rNum_; ++ir) {
-		const float lz = zRes[ir];
+	for (int ir = 0; ir < isize; ++ir, ++iterx, ++iterz) {
+		const float lz = *iterz;
 		if (lz <= 0) continue; // bad point
-		const float lx = xRes[ir];
+		const float lx = *iterx;
 		if (fabs (lx - curX) > xapert_) continue;
 	    ImagePoint2D* p = new ImagePoint2D (lx, lz, 0, 0);
 		goodPoints.push_back (p);
@@ -158,8 +165,10 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 		curP = -dz / dx;
 
 		// integrate amps
-		const int pind = (px1 - xStart_) / xStep_ + 1;
+		const int pind = (px1 - xStart_) / xStep_;
 		float px = pind * xStep_ + xStart_;
+		if (px - px1 < -1e-6) px += xStep_;
+
 		int pointsBetween = 0;
 		while (px < px2) {
 			const float bef = (px - px1) / dx;
