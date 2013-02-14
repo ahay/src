@@ -1,6 +1,9 @@
 #ifndef ITRACER2D_H
 #define ITRACER2D_H
 
+#include <list>
+using namespace std;
+
 class ImagePoint2D {
 public:
 
@@ -29,7 +32,7 @@ public:
 			   int xNum, float xStart, float xStep,
 			   float dx, float dt);
 
-	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float* xRes, float* zRes);
+	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, list<float>* xRes, list<float>* zRes);
 
 private: 
 
