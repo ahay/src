@@ -78,6 +78,7 @@ int main (int argc, char* argv[]) {
 	float dx, dt, xlim, xapert;
 	int ppn; float ppo, ppd;
 	int izn, ixn; float izo, ixo, izd, ixd;
+	int pj;
 
     if (!sf_getint ("ppn", &ppn)) ppn = pNum;
 	/* number of processed partial images */
@@ -110,6 +111,8 @@ int main (int argc, char* argv[]) {
 	/* maximum distance between depth-line points */
     if (!sf_getfloat ("xapert", &xapert)) xapert = xNum * xStep;
 	/* migration aperture size */
+    if (!sf_getint ("pj", &pj)) pj = 1;
+	/* jump in points */
 
 
 	// OUTPUT PARAMETERS
@@ -159,7 +162,7 @@ int main (int argc, char* argv[]) {
 			     rNum, rStart, rStep,
 				 izn, izo, izd,
 			     ixn, ixo, ixd,
-				 dx, dt, xlim, xapert,
+				 dx, dt, xlim, xapert, pj,
 				 xVol, tVol, isAA);
 
 	for (int ip = 0; ip < ppn; ++ip) {
