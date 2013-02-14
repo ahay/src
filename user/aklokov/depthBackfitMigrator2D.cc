@@ -38,7 +38,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 							 	   int rNum, float rStart, float rStep,
 							 	   int izn,  float izo,    float izd,
 							 	   int ixn,  float ixo,    float ixd,
-								   float dx, float dt, float xlim, float xapert,
+								   float dx, float dt, float xlim, float xapert, int pj,
   								   float* xVol, float* tVol, bool isAA) {
 	
 	zNum_   = zNum;
@@ -70,6 +70,8 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	xlim_ = xlim;
 	xapert_ = xapert;
 	
+	pj_   = pj;
+
 	xVol_ = xVol;
 	tVol_ = tVol;
 
@@ -129,11 +131,12 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 		if (lz <= 0) continue; // bad point
 		const float lx = *iterx;
 		if (fabs (lx - curX) > xapert_) continue;
+
+		if (ir % pj_) continue; // each pj-th point is used
+
 	    ImagePoint2D* p = new ImagePoint2D (lx, lz, 0, 0);
 		goodPoints.push_back (p);
 	}				
-
-	const int listSize = goodPoints.size ();
 
 	std::list<ImagePoint2D*>::iterator iter = goodPoints.begin ();
 	std::list<ImagePoint2D*>::iterator iterLast = goodPoints.end ();
