@@ -116,7 +116,9 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	list<ImagePoint2D*> escPoints;
 	for (int ip = 0; ip < pNum_; ++ip) {
 		const int pind = (xInd * pNum_ + ip) * zNum_ + zInd;
-	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * tVol [pind], ip, 0); // double time
+		const float t = tVol [pind];
+		if (t < 0) continue; // this is a "bad" escape point
+	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * t, ip, 0); // double time
 		escPoints.push_back (p);
 	}
 
@@ -137,6 +139,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 
 	for (int ix = 0; ix < xNum_; ++ix) {
 		for (int iz = 0; iz < zNum_; ++iz, ++pXPanel, ++pTPanel) {
+
 			const int pind = (ix * pNum_ + pInd) * zNum_ + iz;
 			*pXPanel = xVol [pind];
 			*pTPanel = 2 * tVol [pind];
@@ -228,10 +231,9 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			ImagePoint2D* iPoint = *iter;			
 			int ix = iPoint->ix_;			
 			int iz = iPoint->iz_;			
-			int ip = escPoint->ix_;
 
-			float x;
-			float z;
+			float x (0.f);
+			float z (0.f);
 
 			if (ix && iz) {	
 			    const int mode = -1; // upper triangle
@@ -302,9 +304,21 @@ bool ITracer2D::checkTriangle (float curX, float curT, int ix, int iz, const int
 	const int   ind0 = (ix + mode) * zNum_ + iz;
 	const float dpx0 = xPanel [ind0];
 	const float dpt0 = tPanel [ind0];
+	if (fabs (curX - dpx0) < 1e-6 && fabs (curT - dpt0) < 1e-6) { 
+		*xres = xStart_ + (ix + mode) * xStep_;
+		*zres = zStart_ + iz * zStep_;
+		return true;
+	}
+
 	const int   ind1 = ix * zNum_ + iz + mode;
 	const float dpx1 = xPanel [ind1];
 	const float dpt1 = tPanel [ind1];
+	if (fabs (curX - dpx1) < 1e-6 && fabs (curT - dpt1) < 1e-6) { 
+		*xres = xStart_ + ix * xStep_;
+		*zres = zStart_ + (iz + mode) * zStep_;
+		return true;
+	}
+
 	const int   ind2 = ix * zNum_ + iz;
 	const float dpx2 = xPanel [ind2];
 	const float dpt2 = tPanel [ind2];

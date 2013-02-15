@@ -169,7 +169,7 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 
 	EscapePoint* pPoint = ep + 1; 
 	const int rNumReduced = rNum - 1;   
-    for (int ir = 1; ir < rNumReduced; ++ir, ++pPoint) {
+	for (int ir = 1; ir < rNumReduced; ++ir, ++pPoint) {
 		// start direction
 		pPoint->startDir = rStart + ir * rStep - 180.f;
 		pPoint->startDir *= -1;
@@ -187,6 +187,11 @@ void WavefrontTracer::getEscapePoints (float xSource, float zSource, EscapePoint
 	ep[0].startDir *= -1;
 	ep[rNum - 1].startDir = rStart + (rNum - 1) * rStep - 180.f;
     ep[rNum - 1].startDir *= -1;
+
+	pPoint = ep;
+    for (int ir = 0; ir < rNum; ++ir, ++pPoint) {
+		if (!pPoint->isSurf) pPoint->t = -1.f;
+	}
 
 	pt2dfree1 (prevWF);
 	pt2dfree1 (curWF);
