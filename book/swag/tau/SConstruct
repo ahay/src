@@ -1,7 +1,4 @@
 from rsf.tex import *
 
-End(use='amsmath,ulem',include=r'''
-\newcommand{\Rev}[2]{#2}
-\renewcommand\thesubfigure{\alph{subfigure}}
-''')
+End(use='amsmath',include=r'\renewcommand\thesubfigure{\alph{subfigure}}')
 
