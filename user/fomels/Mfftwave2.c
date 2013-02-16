@@ -23,9 +23,9 @@
 int main(int argc, char* argv[])
 {
     bool verb, cmplx;        
-    int it,iz,im,ik,ix,i,j;     /* index variables */
+    int it,iz,im,ik,ix,i,j, snap;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
-    float c, old;
+    float c, old, dt;
 
     float  *ww,*rr;      /* I/O arrays*/
     sf_complex *cwave, *cwavem;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     sf_axis at,az,ax;    /* cube axes */
 
     float **lt, **rt;
-    sf_file left, right;
+    sf_file left, right, snaps;
 
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
@@ -46,14 +46,32 @@ int main(int argc, char* argv[])
     Fr = sf_input ("ref");
 
     /* Read/Write axes */
-    at = sf_iaxa(Fw,1); nt = sf_n(at); 
+    at = sf_iaxa(Fw,1); nt = sf_n(at); dt = sf_d(at);
     az = sf_iaxa(Fr,1); nz = sf_n(az); 
     ax = sf_iaxa(Fr,2); nx = sf_n(ax); 
 
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
-    sf_oaxa(Fo,at,3);
     
+    if (!sf_getint("snap",&snap)) snap=0;
+    /* interval for snapshots */
+
+    if (snap > 0) {
+	snaps = sf_output("snaps");
+	/* (optional) snapshot file */
+	
+	sf_oaxa(snaps,az,1); 
+	sf_oaxa(snaps,ax,2);
+	sf_oaxa(snaps,at,3);
+
+	sf_putint(snaps,"n3",nt/snap);
+	sf_putfloat(snaps,"d3",dt*snap);
+	sf_putfloat(snaps,"o3",0.);
+    } else {
+	snaps = NULL;
+    }
+
+
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
@@ -134,11 +152,18 @@ int main(int argc, char* argv[])
 		curr[j] = c;
 	    }
 	    	
-	    /* write wavefield to output */
-	    sf_floatwrite(curr+ix*nz2,nz,Fo);
+	    if (NULL != snaps && 0 == it%snap) {
+		/* write wavefield snapshots */
+		sf_floatwrite(curr+ix*nz2,nz,snaps);
+	    }
 	}
     }
-    if(verb) sf_warning(".");    
+    if(verb) sf_warning(".");   
+
+    /* write final wavefield to output */
+    for (ix = 0; ix < nx; ix++) {
+	sf_floatwrite(curr+ix*nz2,nz,Fo); 
+    }
     
     exit (0);
 }

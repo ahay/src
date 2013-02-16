@@ -31,6 +31,7 @@ To programs:
   called from scripts and SConstruct files. Python wrapper for it:
   rsf.user.sf.pad2nextfastsize()
 * Added forcebw= option for pspen
+* Added snap= option for sffftwave2
 
 ===Bug fixes===
 

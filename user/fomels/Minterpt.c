@@ -64,7 +64,7 @@ int main (int argc, char* argv[])
 
     ng = 0;
     for (iz=0; iz<nz; iz++) {
-	sf_warning("depth %d of %d",iz+1, nz);
+	sf_warning("depth %d of %d;",iz+1, nz);
 	for (ix=0; ix<nx; ix++) {	    
 	    for (it=0; it < nt; it++) {
 		sf_floatread(xztp,four,in);
@@ -106,7 +106,8 @@ int main (int argc, char* argv[])
 	    }
 	    sf_floatwrite (tx,nt,out);
 	}
-    }
+    } 
+    sf_warning(".");
     
     sf_eno_close (tfnt);
     sf_eno_close (pfnt);

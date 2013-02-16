@@ -38,14 +38,13 @@ Flow('refl',None,'spike n1=400 n2=401 d1=15 d2=15 k1=200 k2=201') # | bandpass f
 
 Flow('fwave','source refl left right',
      '''
-     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=n
-     ''')
+     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=n snap=10 snaps=$TARGET
+     ''',stdout=0)
 
 # CPU = 9.44 s 
 
 Plot('fwave',
      '''
-     window j3=10 |
      grey screenratio=1 wanttitle=n label1=Depth unit1=m label2=Distance unit2=m gainpanel=all
      ''',view=1)
 

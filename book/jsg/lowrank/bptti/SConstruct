@@ -115,8 +115,8 @@ Flow('tright','taper right','spray axis=1 n=11 | put n3=1 n2=3686400 | mul ${SOU
 
 Flow('wave','source refl left right',
      '''
-     fftwave2 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y 
-     ''')
+     fftwave2 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
+     ''',stdout=0)
 
 Plot('wave',
      ''' 

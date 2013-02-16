@@ -20,7 +20,7 @@ Result('sub',
        title='Migration Velocity' barlabel=Velocity barunit=m/s
        ''')
 
-nt=4001
+nt=3201
 dt=0.001
 
 Flow('source',None,
@@ -39,13 +39,11 @@ Flow('refl',None,'spike n1=956 n2=500 d1=12.5 d2=37.5 o2=26250 k1=3 k2=200 | smo
 
 Flow('wave','source refl left right',
      '''
-     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y 
      ''')
-
 
 Result('snap','wave',
        '''
-       window n3=1 f3=3200 |
        grey label1=Z label2=X wanttitle=n unit1=m unit2=m
        ''')
 

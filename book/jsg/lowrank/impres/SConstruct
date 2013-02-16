@@ -34,23 +34,23 @@ Flow('refl',None,'spike n1=512 d1=5 n2=512 d2=5 k1=256 k2=256')
 
 Flow('wave','source7 refl left right',
      '''
-     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=n
-     ''')
+     fftwave2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=n snap=20 snaps=$TARGET
+     ''',stdout=0)
 
 # CPU = 45.89 s 
 
-Plot('wave','window j3=20 | grey gainpanel=all screenratio=1 wanttitle=n',view=1)
+Plot('wave','grey gainpanel=all screenratio=1 wanttitle=n',view=1)
 
 Result('wave',
        '''
-       window n3=1 f3=1600 |
+       window n3=1 f3=80 |
        grey label2=Z label1=X title="Lowrank Approximation" screenratio=1
        yreverse=y transp=n unit1=m unit2=m 
        ''')
 
 Result('slice','wave',
        '''
-       window n3=1 f3=1600 n1=1 f1=256 |
+       window n3=1 f3=80 n1=1 f1=256 |
        graph label1=X unit1=m title="Lowrank Approximation"
        label2=Amplitude unit2=
        ''')

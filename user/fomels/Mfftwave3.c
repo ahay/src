@@ -68,11 +68,11 @@ int main(int argc, char* argv[])
 	sf_oaxa(snaps,az,1); 
 	sf_oaxa(snaps,ax,2);
 	sf_oaxa(snaps,ay,3);
+	sf_oaxa(snaps,at,4);
 
 	sf_putint(snaps,"n4",nt/snap);
 	sf_putfloat(snaps,"d4",dt*snap);
 	sf_putfloat(snaps,"o4",0.);
-	sf_putstring(snaps,"label4","Time");
     } else {
 	snaps = NULL;
     }
