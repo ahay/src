@@ -159,8 +159,8 @@ static float sf_cram_rbranch3_tridata (float *esc1, float *esc2, float *esc3,
                                        float *ibs, float *ias, float a,
                                        float *ibxy, float *iaxy, float *pxy,
                                        float *cp, float *dp) {
-    float s, l1, l2, l3, b1, b2, det;
-    float dx1, dy1, dx2, dy2, dx3, dy3; 
+    double s, l1, l2, l3, b1, b2, det;
+    double dx1, dy1, dx2, dy2, dx3, dy3; 
 
     /* Vector 1 */
     dx1 = esc2[ESC3_X] - esc1[ESC3_X];
@@ -466,8 +466,9 @@ int sf_cram_rbranch3_find_exits (sf_cram_rbranch3 cram_rbranch, float x, float y
 /*< Find all exit triangles for the point x, y on the surface
     and fill exits[ne] array with pointers to them >*/
 {
-    int i, ie, iix, iiy, n;
+    int i, ie, iie, iix, iiy, n;
     float t;
+    bool same;
     double u, v;
     sf_cram_surface_branch3 *branch;
     sf_cram_surface_branch3 **bin;
@@ -498,20 +499,37 @@ int sf_cram_rbranch3_find_exits (sf_cram_rbranch3 cram_rbranch, float x, float y
             if (t <= cram_rbranch->tmax) {
                 exits[ie].ib = branch->ib[0]*(1.0 - u - v) + branch->ib[1]*v + branch->ib[2]*u;
                 exits[ie].ia = branch->ia[0]*(1.0 - u - v) + branch->ia[1]*v + branch->ia[2]*u;
-                exits[ie].t = t;
-                exits[ie].j = branch->j;
-                exits[ie].jxy = branch->jxy;
-                exits[ie].s = branch->s;
-                exits[ie].cs = branch->cs;
-                exits[ie].p[0] = branch->p[0];
-                exits[ie].p[1] = branch->p[1];
-                exits[ie].p[2] = branch->p[2];
-                exits[ie].ibxy[0] = branch->ibxy[0];
-                exits[ie].ibxy[1] = branch->ibxy[1];
-                exits[ie].iaxy[0] = branch->iaxy[0];
-                exits[ie].iaxy[1] = branch->iaxy[1];
-                exits[ie].kmah = branch->kmah;
-                ie++;
+                same = false;
+                /* Check if this arrival is different from those previously found;
+                   duplication of arrivals can happen if very small exit triangles
+                   are not filtered out */
+                for (iie = 0; iie < ie; iie++) {
+                    if (fabsf (t - exits[iie].t) < 1e-3 && /* Same traveltime */
+                        exits[ie].kmah == branch->kmah &&  /* and same caustic */
+                        ((fabsf (exits[ie].ib - exits[iie].ib) < 1e-3 && /* + Same angles */
+                          fabsf (exits[ie].ia - exits[iie].ia) < 1e-3) ||
+                         fabsf (branch->p[0] - exits[iie].p[0] < 1e-2) || /* or same data slope */
+                         (exits[ie].ib < 0.5 && exits[iie].ib < 0.5))) {  /* or close to the pole */
+                        same = true;
+                        break;
+                    }
+                }
+                if (!same) {
+                    exits[ie].t = t;
+                    exits[ie].j = branch->j;
+                    exits[ie].jxy = branch->jxy;
+                    exits[ie].s = branch->s;
+                    exits[ie].cs = branch->cs;
+                    exits[ie].p[0] = branch->p[0];
+                    exits[ie].p[1] = branch->p[1];
+                    exits[ie].p[2] = branch->p[2];
+                    exits[ie].ibxy[0] = branch->ibxy[0];
+                    exits[ie].ibxy[1] = branch->ibxy[1];
+                    exits[ie].iaxy[0] = branch->iaxy[0];
+                    exits[ie].iaxy[1] = branch->iaxy[1];
+                    exits[ie].kmah = branch->kmah;
+                    ie++;
+                }
             }
         }
         i++;
