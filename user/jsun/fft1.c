@@ -36,7 +36,7 @@ int fft1_init(int n1  /* input data size */,
 	      int *n2 /* padded data size */)
 /*< initialize >*/
 {
-    int nk;
+    int nk,nk1;
 
     nk = kiss_fft_next_fast_size((n1+1)/2)+1;
     n = 2*(nk-1);

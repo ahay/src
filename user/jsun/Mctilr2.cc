@@ -29,12 +29,12 @@ static std::valarray<double> kx, kz;
 static double dt;
 static int type;
 
-static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
-    setvalue(res,0.0);
+    setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	int i=rs[a];
 	double wx = vx[i]*vx[i];
@@ -57,7 +57,9 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    double p3 = 4*(f+ws)*(f+ws)*x*x*z*z;
 	    double r  =     sqrt(0.5*p1 + 0.5*sqrt(p2*p2+p3));
 	    if(type!=1) r = sqrt(0.5*p1 - 0.5*sqrt(p2*p2+p3));
-	    res(a,b) = 2*(cos(r*dt)-1); 
+	    float phase = r*dt;
+//	    res(a,b) = 2*(cos(r*dt)-1); 
+	    res(a,b) = cpx(cos(phase),sin(phase));
 	}
     }
     return 0;
@@ -136,9 +138,9 @@ int main(int argc, char** argv)
     }
 
     vector<int> lidx, ridx;
-    DblNumMat mid;
+    CpxNumMat mid;
 
-    iC( ddlowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
+    iC( lowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
 
     int m2=mid.m();
     int n2=mid.n();
@@ -149,29 +151,31 @@ int main(int argc, char** argv)
     for (int k=0; k < n; k++) 
 	nidx[k] = k;    
 
-    DblNumMat lmat(m,m2);
+    CpxNumMat lmat(m,m2);
     iC ( sample(midx,lidx,lmat) );
 
-    DblNumMat lmat2(m,n2);
-    iC( ddgemm(1.0, lmat, mid, 0.0, lmat2) );
+    CpxNumMat lmat2(m,n2);
+    iC( zgemm(1.0, lmat, mid, 0.0, lmat2) );
 
-    double *ldat = lmat2.data();
-    std::valarray<float> ldata(m*n2);
+    cpx *ldat = lmat2.data();
+    std::valarray<sf_complex> ldata(m*n2);
     for (int k=0; k < m*n2; k++) 
-	ldata[k] = ldat[k];
+	ldata[k] = sf_cmplx(real(ldat[k]),imag(ldat[k]));
     oRSF left("left");
+    left.type(SF_COMPLEX);
     left.put("n1",m);
     left.put("n2",n2);
     left << ldata;
 
-    DblNumMat rmat(n2,n);
+    CpxNumMat rmat(n2,n);
     iC ( sample(ridx,nidx,rmat) );
 
-    double *rdat = rmat.data();
-    std::valarray<float> rdata(n2*n);    
+    cpx *rdat = rmat.data();
+    std::valarray<sf_complex> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
-	rdata[k] = rdat[k];
+	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
     oRSF right;
+    right.type(SF_COMPLEX);
     right.put("n1",n2);
     right.put("n2",n);
     right << rdata;

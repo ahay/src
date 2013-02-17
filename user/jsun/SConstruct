@@ -2,9 +2,9 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'cfftwave1d cfftwave2d slantopt'
+progs = 'cfftwave1d cfftwave1dd cfftwave2d slantopt'
 
-ccprogs = 'tilr2 orthoESlr orthoES2lr orthoEPlr cisolr2 ortiltEPlr ortiltESlr ortiltES2lr'
+ccprogs = 'tilr2 orthoESlr orthoES2lr orthoEPlr ortiltEPlr ortiltESlr ortiltES2lr cisolr2 ctilr2'
 
 pyprogs = 'fft'
 pymods = ''
