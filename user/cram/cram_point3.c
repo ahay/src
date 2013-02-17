@@ -380,7 +380,8 @@ static void sf_cram_point3_aaz_spread (float ac, float azc, float a, float az,
 
 static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp, 
                                        float ss, float sr, int ies, int ier,
-                                       float oac, float ozc, float dac, float dzc) {
+                                       float oac, float ozc, float dac, float dzc,
+                                       bool zoffset) {
     int isxy, jsxy, ihxy, jhxy, ia, iz, ida, ioa, ioz, idz;
     int ioaf, ioal, iozf, iozl, idaf, idal, idzf, idzl;
     float doa = 0.0, doz = 0.0, dda = 0.0, ddz = 0.0;
@@ -395,8 +396,9 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         dw *= cosf (0.5*oac);
         dw /= sqrtf (fabsf (cram_point->src_exits[ies].j*cram_point->rcv_exits[ier].j));
         dw *= cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs;
-        dw *= sqrtf (fabsf (sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db)*
-                            sinf (cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db)));
+        sb = sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db);
+        hb = zoffset ? sb : sinf (cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db);
+        dw *= sqrtf (fabsf (sb*hb));
         smp *= dw;
     }
 
@@ -406,7 +408,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
     if (!cram_point->agath && !cram_point->dipgath)
         return;
 
-    if (cram_point->extrap) {
+    if (cram_point->extrap && !zoffset) {
         /* Compute change in inclination and azimuth angles for the source and receiver branches
            using db/dx,db/dy and da/dx,da/dy with respect to a displacement away from the
            source and receiver on the surface; then find dip and opening angle deviation,
@@ -551,7 +553,8 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
    get data samples and fill dip and opening angle bins in the image */
 static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx, float gy,
                                              size_t i, int nes, int ner,
-                                             float ss, float sr, float tw) {
+                                             float ss, float sr, float tw,
+                                             bool zoffset) {
     int ies, ier, ht;
     float oa, da, oz, dz, aw;
     float smp, sa, sb, ha, hb;
@@ -562,12 +565,22 @@ static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx
         /* Shot ray angles */
         sb = cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db;
         sa = cram_point->a0 + cram_point->src_exits[ies].ia*cram_point->da;
-        ier = 0;
+        if (zoffset) {
+            /* Prevent double summation in the zero offset case */
+            ier = ies;
+            ner = ies + 1;
+        } else
+            ier = 0;
         /* Loop over found receiver ray branches */
         while (ier < ner) {
             /* Receiver ray angles */
-            hb = cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db;
-            ha = cram_point->a0 + cram_point->rcv_exits[ier].ia*cram_point->da;
+            if (zoffset) {
+                hb = sb;
+                ha = sa;
+            } else {
+                hb = cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db;
+                ha = cram_point->a0 + cram_point->rcv_exits[ier].ia*cram_point->da;
+            }
             /* Convert to dip and opening angles */
             sf_cram_point3_angles (sb, sa, hb, ha, &oa, &oz, &da, &dz);
             if (sf_cram_point3_gangles_are_mute (cram_point, oa, da)) {
@@ -576,12 +589,15 @@ static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx
             }
             ht = 0;
             smp = sf_cram_data2_get_sample (cram_point->data, i,
-                                            cram_point->src_exits[ies].t +
-                                            cram_point->rcv_exits[ier].t,
+                                            zoffset ? 2.0*cram_point->src_exits[ies].t
+                                                    : cram_point->src_exits[ies].t +
+                                                      cram_point->rcv_exits[ier].t,
                                             cram_point->rcv_exits[ier].p[0],
                                             cram_point->dh,
-                                            cram_point->src_exits[ies].kmah +
-                                            cram_point->rcv_exits[ier].kmah, &ht);
+                                            zoffset ? 2*cram_point->src_exits[ies].kmah
+                                                    : cram_point->src_exits[ies].kmah +
+                                                      cram_point->rcv_exits[ier].kmah,
+                                            &ht);
             if (0 == ht || 0.0 == smp) { /* No data samples have been extracted */
                 ier++;
                 continue;
@@ -590,7 +606,7 @@ static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx
             aw = sf_cram_point3_gataper (cram_point, oa, da);
             /* Add sample to the opening and dip angle gathers */
             sf_cram_point3_fill_abins (cram_point, aw*tw*smp, ss, sr, ies, ier,
-                                       oa, oz, da, dz);
+                                       oa, oz, da, dz, zoffset);
             ier++;
         } /* Loop over known receiver branches */
         ies++;
@@ -672,7 +688,9 @@ void sf_cram_point3_compute (sf_cram_point3 cram_point,
                     else
                         w = 1.0;
                     /* Extract samples from data and contribute to the image */
-                    sf_cram_point3_process_branches (cram_point, gx, gy, i, nes, ner, ss, sr, w);
+                    sf_cram_point3_process_branches (cram_point, gx, gy, i, nes, ner, ss, sr, w,
+                                                     1 == nh && nes == ner && 
+                                                     hypotf (sx - gx, sy - gy) < 0.1*cram_point->dh);
                 }
                 ih = sf_cram_survey3_get_next_receiver (cram_point->survey, is, ih,
                                                         &i, &gx, &gy);

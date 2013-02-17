@@ -34,7 +34,7 @@ struct CRAMData2 {
     int            nt;
     size_t         n, offs;
     float          t0, dt;
-    bool           kmah, filter;
+    bool           kmah, filter, erefl;
     float         *data;
     unsigned char *mmaped;
 };
@@ -52,6 +52,8 @@ sf_cram_data2 sf_cram_data2_init (sf_file data)
     if (!sf_histbool (data, "filter", &cram_data->filter)) sf_error ("No filter= in data");
     /* Use KMAH phase shifts */
     if (!sf_histbool (data, "KMAH", &cram_data->kmah)) sf_error ("No KMAH= in data");
+    /* Use exploding reflector assumption */
+    if (!sf_histbool (data, "ExplRefl", &cram_data->erefl)) cram_data->erefl = false;
 
     if (!sf_histint (data, "n1", &cram_data->nt)) sf_error ("No n1= in data");
     if (!sf_histfloat (data, "d1", &cram_data->dt)) sf_error ("No d1= in data");
@@ -66,6 +68,8 @@ sf_cram_data2 sf_cram_data2_init (sf_file data)
         sf_warning ("Using data prepared for KMAH shifts");
     if (cram_data->filter)
         sf_warning ("Using data prepared for anti-aliasing filter");
+    if (cram_data->erefl)
+        sf_warning ("Assuming data modeled by exploding reflector");
     sf_warning ("Total data size: %g Mb", 1e-6*(float)n);
 
     stream = sf_filestream (data);
@@ -133,6 +137,11 @@ float sf_cram_data2_get_sample (sf_cram_data2 cram_data, size_t i, float t,
     size_t off;
     float trf, w = 1.0;
     float *trace = NULL;
+
+    if (cram_data->erefl) {
+        t *= 0.5;
+        kmah /= 2;
+    }
 
     if (cram_data->kmah)
         i *= (size_t)2;

@@ -26,7 +26,7 @@ int main (int argc, char* argv[]) {
     float *tracein, *traceout, dt;
     sf_file data, out;
 
-    bool filter, kmah, diff, verb;
+    bool filter, kmah, diff, erefl, verb;
 
     sf_init (argc, argv);
 
@@ -38,6 +38,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* verbosity flag */
 
+    if (!sf_getbool ("erefl", &erefl)) erefl = false;
+    /* y - assume data modeled with exploding reflector */
     if (!sf_getbool ("filter", &filter)) filter = true;
     /* y - antialiasing filter for data */
     if (!sf_getbool ("KMAH", &kmah)) kmah = true;
@@ -61,6 +63,7 @@ int main (int argc, char* argv[]) {
         sf_putstring (out, "label1", "");
         sf_putstring (out, "unit1", "");
     }
+    sf_putstring (out, "ExplRefl", erefl ? "y" : "n");
     sf_putstring (out, "filter", filter ? "y" : "n");
     sf_putstring (out, "KMAH", kmah ? "y" : "n");
 
