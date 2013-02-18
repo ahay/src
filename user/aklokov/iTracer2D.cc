@@ -114,11 +114,32 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 
 	// escape line for the diffraction point
 	list<ImagePoint2D*> escPoints;
-	for (int ip = 0; ip < pNum_; ++ip) {
+/*	for (int ip = 0; ip < pNum_; ++ip) {
 		const int pind = (xInd * pNum_ + ip) * zNum_ + zInd;
 		const float t = tVol [pind];
 		if (t < 0) continue; // this is a "bad" escape point
 	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * t, ip, 0); // double time
+		escPoints.push_back (p);
+	}
+*/
+	const float halfScatNum = 0.f;
+	for (int ip = 0; ip < pNum_; ++ip) {
+		const float curP = pStart_ + ip * pStep_;
+		const float p1 = curP;// - halfScatNum;
+		const int ip1 = (p1 - pStart_) / pStep_;
+		if (ip1 < 0 || ip1 > pNum_ - 1) continue;
+		const int pind1 = (xInd * pNum_ + ip1) * zNum_ + zInd;		
+	    const float t1 = tVol [pind1];
+		if (t1 < 0) continue; // this is a "bad" escape point
+
+		const float p2 = curP + halfScatNum;
+		const int ip2 = (p2 - pStart_) / pStep_;
+		if (ip2 < 0 || ip2 > pNum_ - 1) continue;
+		const int pind2 = (xInd * pNum_ + ip2) * zNum_ + zInd;				
+		const float t2 = tVol [pind2];
+		if (t2 < 0) continue; // this is a "bad" escape point
+		
+	    ImagePoint2D* p = new ImagePoint2D (xVol [pind2], t1 + t2, ip, 0); // two-way time
 		escPoints.push_back (p);
 	}
 
@@ -137,12 +158,24 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	float* pXPanel = xPanel;
 	float* pTPanel = tPanel;
 
+	const float p1 = p0 - halfScatNum;
+	const float p2 = p0 + halfScatNum;
+
 	for (int ix = 0; ix < xNum_; ++ix) {
 		for (int iz = 0; iz < zNum_; ++iz, ++pXPanel, ++pTPanel) {
 
-			const int pind = (ix * pNum_ + pInd) * zNum_ + iz;
-			*pXPanel = xVol [pind];
-			*pTPanel = 2 * tVol [pind];
+			const int ip1 = (p1 - pStart_) / pStep_;
+			if (ip1 < 0 || ip1 > pNum_ - 1) continue;
+			const int pind1 = (ix * pNum_ + ip1) * zNum_ + iz;		
+			float t1 = tVol [pind1];
+
+			const int ip2 = (p2 - pStart_) / pStep_;
+			if (ip2 < 0 || ip2 > pNum_ - 1) continue;
+			const int pind2 = (ix * pNum_ + ip2) * zNum_ + iz;		
+			float t2 = tVol [pind2];
+
+			*pXPanel = xVol [pind2];
+			*pTPanel = t1 + t2;
 
 		    ImagePoint2D* p = new ImagePoint2D (*pXPanel, *pTPanel, ix, iz);
 			allPoints.push_back (p);
