@@ -11,13 +11,12 @@ env = Environment()
 Import('MADAGASCAR TMPDATAPATH ROOT jobs scripts')
 
 ###### INDICES INTO JOB PARAM LIST
-n_pre         = 0
-n_cmd         = 1
-n_dep         = 2
-n_bat         = 3
-n_clk         = 4
-n_res         = 5
-n_que         = 6
+n_cmd         = 0
+n_dep         = 1
+n_bat         = 2
+n_clk         = 3
+n_res         = 4
+n_que         = 5
 
 def scriptwriter(batch,job,path,queue,mail,acct,wall,res,exe):
     if batch == 'pbs':
@@ -63,7 +62,6 @@ def make(target, source, env):
     except OSError:
         pass	 
     os.mkdir('./' + tgt)
-    os.system('touch ./' + tgt + '/scons_token')
     if tgt in scripts.keys():
         Export('MADAGASCAR TMPDATAPATH ROOT')
         SConscript('./' + tgt + '.sc')
@@ -73,11 +71,10 @@ def make(target, source, env):
         fout = open('./parfile','w')
 	for line in fin:
             fout.write(line.format(TMPDATAPATH=TMPDATAPATH))
-#	fout.write('datapath=' + TMPDATAPATH)
 	fin.close()
         fout.close()
         if (jobs[tgt][n_bat] == ''):
-            os.system('cd ./' + tgt + '; ' + jobs[tgt][n_pre] + ' ' + jobs[tgt][n_cmd] + ' par=../parfile')
+            os.system('cd ./' + tgt + '; ' + jobs[tgt][n_cmd] + ' par=../parfile')
         else: 
             scriptwriter(jobs[tgt][n_bat], tgt, thispath, jobs[tgt][n_que], MAIL, ACCT, jobs[tgt][n_clk], jobs[tgt][n_res], jobs[tgt][n_cmd])
 	    if len(jobs[tgt][n_dep]) == 0:
@@ -94,8 +91,6 @@ for i in jobs.keys():
     else: 
 #        print 'job = ' + i + ' deps = ' 
 #        print jobs[i][n_dep] + [i + '.par', 'SConstruct']
-        for j in jobs[i][n_dep]:
-            Depends(i,j)
         t = env.Command([i], jobs[i][n_dep], make)
     Clean(t,i)
 
@@ -103,13 +98,9 @@ for i in scripts.keys():
     if len(scripts[i]) == 0:
         t = env.Command([i], [], make)
     else:
-	for j in scripts[i]:
-            print i + ' depends on ' + j 
-	    Depends(Dir(i),j)
-        t = env.Command(Dir(i), scripts[i], make)
-        Decider('timestamp-match')
+        t = env.Command([i], scripts[i], make)
     if (i == 'tmpdata'):
-        Clean(t,[i, '/var/tmp/iwave'])
+        Clean(t,[i, TMPDATAPATH])
     else:
         Clean(t,i)
 

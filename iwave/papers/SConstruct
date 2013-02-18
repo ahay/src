@@ -1,40 +1,28 @@
-import os
-thispath = os.getcwd()
-env = Environment();
-Decider('make')
+from rsf.tex import *
 
-papername = 'paper1'
-texsources = ['paper1_main.tex', 'paper1_suplot.tex', 'paper1_append.tex'] 
-bibname = 'masterref'
+Paper('paper1',color='vp2d_5m dn2d_5m trace wtrace trace8k wtrace8k',
+      use='hyperref',
+      include='''
+              \\newcommand{\\du}{\\delta u}
+              \\newcommand{\\dm}{\\delta m}
+              \\newcommand{\\lu}{\\lambda u}
+              \\newcommand{\\lm}{\\lambda m}
+              \\newcommand{\\muu}{\\mu u}
+              \\newcommand{\\bF}{{\\bf F}}
+              \\newcommand{\\bS}{{\\bf S}}
+              \\newcommand{\\bH}{{\\bf H}}
+              \\newcommand{\\bM}{{\\bf M}}
+              \\newcommand{\\bR}{{\\bf R}}
+              \\newcommand{\\bu}{{\\bf u}}
+              \\newcommand{\\bx}{{\\bf x}}
+              \\newcommand{\\bv}{{\\bf v}}
+              \\newcommand{\\be}{{\\bf e}}
+              \\newcommand{\\bp}{{\\bf p}}
+              \\newcommand{\\cS}{{\\cal S}}
+              
+              \\newcommand{\\peq}{\\,+\\hspace{-0.15cm}=}
+              \\newcommand{\\pp}{\\,+\\hspace{-0.1cm}+}
+              \\newcommand{\\mm}{\\,-\\hspace{-0.1cm}-}
+              ''')
 
-def ltx(target, source, env):
-    lname = str(source[0])
-    name = (lname.split('.'))[0]
-    f = open(papername+'.ltx','w')
-    f.write('\documentclass [12pt]{georeport}\n\n')
-    g = open(name + '.fmt','r')
-    for line in g.read():
-        f.write(line)
-    g.close()
-    f.write('\\begin{document}\n\n')
-    for i in range(len(source)):
-        f.write('\\input{' + str(source[i]) + '}\n')
-    f.write('\end{document}\n')
-    f.close()
-
-def paper(target, source, env): 
-    lname = str(source[0])
-    name = (lname.split('.'))[0]
-    os.system('latex ' + name + '.ltx; bibtex ' + name + '; latex ' + name + '.ltx; latex ' + name + '.ltx')
-
-def final(target, source, env):
-    os.system('dvipdf ' + str(source[0]))
-
-t_ltx = env.Command([papername + '.ltx'], texsources, ltx)
-
-t_paper = env.Command([papername + '.dvi'], [papername + '.ltx'], paper)
-Clean(t_paper,[papername + '.aux', papername + '.bbl', papername + '.log', papername + '.blg'])
-
-t_final = env.Command([papername + '.pdf'], [papername + '.dvi'], final)
-
-
+End()

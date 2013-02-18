@@ -26,7 +26,7 @@ typedef struct {
     @param[in] sindex - (IPNT) up to dim indices of fields to be sampled
     @param[in] mindex - (RPNT) coefficienqt array for linear comb of fields spec'd in sindex
     @param[in] scoord - (RPNT) coordinate offset vector, applied to all s/r positions
-    @param[in] load - (int) if set, run method loads data from traces into grid, else saves data from grid into traces.
+    @param[in] load - (int) if set, run method loads data from traces into grid, else saves data from grid into traces. [mod 02/13] Can be set two ways: if > 0, loads data into internal \ref tracegeom buffer using cubic spline interpolation onto internal time grid; if < 0, uses adjoint cubic spline interpolation.
     @param[in] hdrkey - (const char *) key identifying header file name in parameter table 
     @param[in] datakey - (const char *) key identifying data file name in parameter table 
     @param[in] stream - (FILE *) verbose output stream
