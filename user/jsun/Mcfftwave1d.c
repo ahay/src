@@ -1,4 +1,4 @@
-/* 1-D complex lowrank FFT wave extrapolation */
+/* 1-D complex lowrank FFT wave extrapolation using real-complex fft*/
 /*
   Copyright (C) 2008 University of Texas at Austin
   
