@@ -1,5 +1,5 @@
 #include "traceio.h"
-
+/*#define IWAVE_VERBOSE*/
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
 /** helper function to determine whether an index tuple is within rarray */
@@ -1509,9 +1509,14 @@ int init_tracegeom(tracegeom * tg,
      active traces onto simulation time grid.
   */
   if (initbuf) {
+
     if (traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]))) return E_FILE;
     iinit=0;
-    wlen=cubicadj_getworksize(tg->nt,tmpnt);
+
+    /* set length of work buffer appropriately */
+    if (initbuf < 0) wlen=cubicadj_getworksize(tg->nt,tmpnt);
+    else wlen=cubic_getworksize(tg->nt);
+
     work=(float *)usermalloc_(wlen*sizeof(float));
     if (!work) {
       fprintf(stream,"Error: tracegeom_init - failed to allocate work\n");
@@ -1546,9 +1551,14 @@ int init_tracegeom(tracegeom * tg,
 	 in particular if ntraces=0 for this domain then cubicadj is 
 	 never called */
       if (init[i]) {
-	err=cubicadj_(&tmpt0,   &tmpdt,   (otr.tr).data,             &tmpnt,
-		      &(tg->t0),&(tg->dt),&((tg->buf)[iinit*tg->nt]),&(tg->nt),
-		      &iend,    work,     &wlen);
+	if (initbuf < 0) 
+	  err=cubicadj_(&tmpt0,   &tmpdt,   (otr.tr).data,             &tmpnt,
+			&(tg->t0),&(tg->dt),&((tg->buf)[iinit*tg->nt]),&(tg->nt),
+			&iend,    work,     &wlen);
+	else 
+	  err=cubic_(&tmpt0,   &tmpdt,   (otr.tr).data,             &tmpnt,
+		     &(tg->t0),&(tg->dt),&((tg->buf)[iinit*tg->nt]),&(tg->nt),
+		     &iend,    work,     &wlen);
 	if (err) {
 	  fprintf(stream,"Error: tracegeom_init from cubicadj, err=%d\n",
 		  err);

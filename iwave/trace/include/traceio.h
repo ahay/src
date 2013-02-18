@@ -250,8 +250,8 @@ int construct_tracegeom(tracegeom * tg,
       onto the time sampling of the file used to initialized the tracegeom.
     @param[in] initbuf (int)
       flag for data initiation. If set, data traces are read
-        and transferred to the internal simulation (tg->dt,tg->nt,tg->t0) grid by adjoint cubic
-	interpolation (see \ref cubic). To avoid temp storage, this option implemented by
+        and transferred to the internal simulation (tg->dt,tg->nt,tg->t0) grid by cubic spline interpolation (initbuf > 0) or adjoint cubic
+	interpolation (initbut < 0) (see \ref cubic). To avoid temp storage, this option implemented by
 	another pass through file.
 
 	ADDED 22.10.08: AXIS ORDERING
