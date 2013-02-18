@@ -840,9 +840,6 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
   IPNT s;                         // loop starts 
   IPNT e;                         // loop ends
   IPNT d;                        // loop shift uc, up -> csq
-  ireal * restrict tmp0;
-  ireal ** restrict tmp2;
-  ireal *** restrict tmp3;
 
   ireal tmp;
   IPNT i;
@@ -893,14 +890,6 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
       fprintf(stderr,"called with half-order != 1, 2, 4\n");
       return E_BADINPUT;
     }
-    /*
-    tmp0=(dom->_s)[D_UC]._s0;
-    tmp2=(dom->_s)[D_UC]._s2;
-    (dom->_s)[D_UC]._s0=(dom->_s)[D_UP]._s0;
-    (dom->_s)[D_UC]._s2=(dom->_s)[D_UP]._s2;
-    (dom->_s)[D_UP]._s0=tmp0;
-    (dom->_s)[D_UP]._s2=tmp2;
-    */
 
     for (i[1]=0;i[1]<n[1];i[1]++) {
       for (i[0]=0;i[0]<n[0];i[0]++) {
@@ -946,12 +935,16 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
       fprintf(stderr,"called with half-order != 1, 2, 4\n");
       return E_BADINPUT;
     }
-    tmp0=(dom->_s)[D_UC]._s0;
-    tmp3=(dom->_s)[D_UC]._s3;
-    (dom->_s)[D_UC]._s0=(dom->_s)[D_UP]._s0;
-    (dom->_s)[D_UC]._s3=(dom->_s)[D_UP]._s3;
-    (dom->_s)[D_UP]._s0=tmp0;
-    (dom->_s)[D_UP]._s3=tmp3;
+
+    for (i[2]=0;i[2]<n[2];i[2]++) {
+      for (i[1]=0;i[1]<n[1];i[1]++) {
+	for (i[0]=0;i[0]<n[0];i[0]++) {
+	  tmp=((dom->_s)[D_UC]._s3)[i[2]][i[1]][i[0]];
+	  ((dom->_s)[D_UC]._s3)[i[2]][i[1]][i[0]]=((dom->_s)[D_UP]._s3)[i[2]][i[1]][i[0]];
+	  ((dom->_s)[D_UP]._s3)[i[2]][i[1]][i[0]]=tmp;
+	}
+      }
+    }
   }
   else {
     fprintf(stderr,"ERROR: acd_step\n");
