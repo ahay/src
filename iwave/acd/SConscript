@@ -9,6 +9,7 @@ try:  # madagascar version
     thispath = buildpath.replace('build/','')
     thisname = buildname.replace('build/','')
     testflag = 'no'
+    docflag  = 'no'
 except: # autonomous version
     # import compiler variables, testflag
     Import('vars', 'testflag', 'docflag')
