@@ -118,7 +118,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	list<ImagePoint2D*> escPoints;
 	for (int ip = 0; ip < pNum_; ++ip) {
 		const float curP = pStart_ + ip * pStep_;
-		const float p1 = curP;// - halfScatNum;
+		const float p1 = curP - halfScatNum;
 		const int ip1 = (p1 - pStart_) / pStep_;
 		if (ip1 < 0 || ip1 > pNum_ - 1) continue;
 		const int pind1 = (xInd * pNum_ + ip1) * zNum_ + zInd;		
