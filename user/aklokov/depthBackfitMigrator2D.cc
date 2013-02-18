@@ -117,8 +117,9 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 
 	list<float> xpnts;
 	list<float> zpnts;
-
-	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, &xpnts, &zpnts);
+	
+	const float sa = 0; // scattering-angle
+	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, sa, &xpnts, &zpnts);
 
 	const int isize = xpnts.size ();
 	std::list<float>::iterator iterx = xpnts.begin ();

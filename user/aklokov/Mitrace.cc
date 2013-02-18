@@ -63,13 +63,15 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (xEscFile, "d3", &xStep) )  sf_error ("Need d3= in input");
     if ( !sf_histfloat (xEscFile, "o3", &xStart) ) sf_error ("Need o3= in input");
 
-	float x0, z0, p0, dx, dt;
+	float x0, z0, p0, dx, dt, sa0;
     if (!sf_getfloat ("x0", &x0)) x0 = 0.f;
 	/* x-coordinate of the diffraction point */
     if (!sf_getfloat ("z0", &z0)) z0 = 0.f;
 	/* z-coordinate of the diffraction point */
     if (!sf_getfloat ("p0", &p0)) p0 = 0.f;
 	/* migration angle */
+    if (!sf_getfloat ("sa0", &sa0)) sa0 = 0.f;
+	/* scattering-angle */
     if (!sf_getfloat ("dx", &dx)) dx = 2*xStep;
 	/* x-range for point detection */
     if (!sf_getfloat ("dt", &dt)) dt = 0.008f;
@@ -111,7 +113,7 @@ int main (int argc, char* argv[]) {
 	list<float> xpnts;
 	list<float> zpnts;
 
-	iTracer.traceImage (xVol, tVol, x0, z0, p0, &xpnts, &zpnts);
+	iTracer.traceImage (xVol, tVol, x0, z0, p0, sa0, &xpnts, &zpnts);
 	const int lsize = xpnts.size ();
 
 	std::list<float>::iterator iterx = xpnts.begin ();

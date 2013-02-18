@@ -103,7 +103,7 @@ bool ITracer2D::isPointInsideTriangle (float x0, float y0, float x1, float y1, f
 	return (u >= 0) && (v >= 0) && (u + v < 1);
 }
 
-void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float p0, list<float>* xRes, list<float>* zRes) {
+void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float sa, list<float>* xRes, list<float>* zRes) {
 
 	const int zInd = (z0 - zStart_) / zStep_;
 	const int pInd = (p0 - pStart_) / pStep_;
@@ -112,17 +112,10 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 	const int xRed = xNum_ - 1;
 	const int zRed = zNum_ - 1;
 
+	const float halfScatNum = 0.5 * sa;
+
 	// escape line for the diffraction point
 	list<ImagePoint2D*> escPoints;
-/*	for (int ip = 0; ip < pNum_; ++ip) {
-		const int pind = (xInd * pNum_ + ip) * zNum_ + zInd;
-		const float t = tVol [pind];
-		if (t < 0) continue; // this is a "bad" escape point
-	    ImagePoint2D* p = new ImagePoint2D (xVol [pind], 2 * t, ip, 0); // double time
-		escPoints.push_back (p);
-	}
-*/
-	const float halfScatNum = 0.f;
 	for (int ip = 0; ip < pNum_; ++ip) {
 		const float curP = pStart_ + ip * pStep_;
 		const float p1 = curP;// - halfScatNum;

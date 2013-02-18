@@ -32,7 +32,7 @@ public:
 			   int xNum, float xStart, float xStep,
 			   float dx, float dt);
 
-	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, list<float>* xRes, list<float>* zRes);
+	void  traceImage (float* xVol, float* tVol, float x0, float z0, float p0, float sa, list<float>* xRes, list<float>* zRes);
 
 private: 
 
