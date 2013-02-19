@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
     wave = sf_complexalloc2(nzx2,m2);
 
     for (iz=0; iz < nzx2; iz++) {
-	curr[iz]=0.;
+	curr[iz]=sf_cmplx(0.,0.);
 	rcurr[iz]=0.;
     }
 
