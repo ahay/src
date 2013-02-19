@@ -18,23 +18,25 @@
 */
 #include <rsf.h>
 
-#include "fft3.h"
+#include "cfft3.h"
 
 int main(int argc, char* argv[])
 {
-    bool verb, cmplx;        
+    bool verb;        
     int it,iz,im,ik,ix,iy,i,j, snap;     /* index variables */
     int nt,nz,nx,ny, m2, nk, nzx, nz2, nx2, ny2, nzx2, n2, pad1;
-    float c, old, dt;
+    float dt;
+    sf_complex c;
 
-    float  *ww,*rr;      /* I/O arrays*/
-    sf_complex *cwave, *cwavem;
-    float **wave, *curr, *prev;
+    float  *rr;      /* I/O arrays*/
+    sf_complex *cwave, *cwavem, *ww;
+    sf_complex **wave, *curr;
+    float *rcurr;
 
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax,ay;    /* cube axes */
 
-    float **lt, **rt;
+    sf_complex **lt, **rt;
     sf_file left, right, snaps;
 
     sf_init(argc,argv);
@@ -55,7 +57,8 @@ int main(int argc, char* argv[])
     sf_oaxa(Fo,ax,2);
     sf_oaxa(Fo,ay,3);
     
-    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
+    sf_settype(Fo,SF_FLOAT);
+
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
     if (!sf_getint("snap",&snap)) snap=0;
@@ -69,7 +72,7 @@ int main(int argc, char* argv[])
 	sf_oaxa(snaps,ax,2);
 	sf_oaxa(snaps,ay,3);
 	sf_oaxa(snaps,at,4);
-
+	sf_settype(snaps,SF_FLOAT);
 	sf_putint(snaps,"n4",nt/snap);
 	sf_putfloat(snaps,"d4",dt*snap);
 	sf_putfloat(snaps,"o4",0.);
@@ -77,7 +80,7 @@ int main(int argc, char* argv[])
 	snaps = NULL;
     }
 
-    nk = fft3_init(cmplx,pad1,nz,nx,ny,&nz2,&nx2,&ny2);
+    nk = cfft3_init(pad1,nz,nx,ny,&nz2,&nx2,&ny2);
 
     nzx = nz*nx*ny;
     nzx2 = nz2*nx2*ny2;
@@ -92,31 +95,26 @@ int main(int argc, char* argv[])
     if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
     if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
  
-    lt = sf_floatalloc2(nzx,m2);
-    rt = sf_floatalloc2(m2,nk);
+    lt = sf_complexalloc2(nzx,m2);
+    rt = sf_complexalloc2(m2,nk);
 
-    sf_floatread(lt[0],nzx*m2,left);
-    sf_floatread(rt[0],m2*nk,right);
+    sf_complexread(lt[0],nzx*m2,left);
+    sf_complexread(rt[0],m2*nk,right);
 
     /* read wavelet & reflectivity */
-    ww=sf_floatalloc(nt);  sf_floatread(ww,nt ,Fw);
+    ww=sf_complexalloc(nt);  sf_complexread(ww,nt ,Fw);
     rr=sf_floatalloc(nzx); sf_floatread(rr,nzx,Fr);
 
-    curr = sf_floatalloc(nzx2);
-    prev = sf_floatalloc(nzx);
+    curr = sf_complexalloc(nzx2);
+    rcurr= sf_floatalloc(nzx2);
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
-    wave = sf_floatalloc2(nzx2,m2);
-
-    ifft3_allocate(cwavem);
-
-    for (iz=0; iz < nzx; iz++) {
-	prev[iz]=0.;
-    }
+    wave = sf_complexalloc2(nzx2,m2);
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz]=0.;
+	rcurr[iz]=0.;
     }
 
 
@@ -125,17 +123,17 @@ int main(int argc, char* argv[])
 	if(verb) sf_warning("it=%d;",it);
 
 	/* matrix multiplication */
-	fft3(curr,cwave);
+	cfft3(curr,cwave);
 
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
 		cwavem[ik] = cwave[ik]*rt[ik][im];
 #else
-		cwavem[ik] = sf_crmul(cwave[ik],rt[ik][im]);
+		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]);
 #endif
 	    }
-	    ifft3(wave[im],cwavem);
+	    icfft3(wave[im],cwavem);
 	}
 
 	for (iy = 0; iy < ny; iy++) {
@@ -143,16 +141,22 @@ int main(int argc, char* argv[])
 		for (iz=0; iz < nz; iz++) {
 		    i = iz+nz *(ix+nx *iy); /* original grid */
 		    j = iz+nz2*(ix+nx2*iy); /* padded grid */
-		
-		    old = c = curr[j];
-		    c += c + ww[it] * rr[i] - prev[i];
-		    prev[i] = old;
+#ifdef SF_HAS_COMPLEX_H		
+		    c = ww[it] * rr[i];
+#else
+		    c = sf_crmul(ww[it],rr[i]);
+#endif
 
 		    for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
 			c += lt[im][i]*wave[im][j];
+#else
+			c += sf_cmul(lt[im][i],wave[im][j]);
+#endif
 		    }
 		    
 		    curr[j] = c;
+		    rcurr[j]= crealf(c);
 		}
 	    }
 	}
@@ -160,7 +164,7 @@ int main(int argc, char* argv[])
 	if (NULL != snaps && 0 == it%snap) {
 	    for (iy = 0; iy < ny; iy++) {
 		for (ix = 0; ix < nx; ix++) {
-		    sf_floatwrite(curr+nz2*(ix+nx2*iy),nz,snaps);
+		    sf_floatwrite(rcurr+nz2*(ix+nx2*iy),nz,snaps);
 		}
 	    }
 	}
@@ -171,7 +175,7 @@ int main(int argc, char* argv[])
     
     for (iy = 0; iy < ny; iy++) {
 	for (ix = 0; ix < nx; ix++) {
-	    sf_floatwrite(curr+nz2*(ix+nx2*iy),nz,Fo);
+	    sf_floatwrite(rcurr+nz2*(ix+nx2*iy),nz,Fo);
 	}
     }
     
