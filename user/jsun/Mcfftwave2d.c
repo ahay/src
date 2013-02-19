@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
     float  *rr;      /* I/O arrays*/
     sf_complex *ww, *cwave, *cwavem;
-//  float **wave, *curr;
+
     sf_complex **wave, *curr;
     float *rcurr;
     
@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
 
     sf_complex **lt, **rt;
     sf_file left, right;
+
 
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
@@ -63,7 +64,7 @@ int main(int argc, char* argv[])
     
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
-    nk = fft2_init(true,pad1,nz,nx,&nz2,&nx2);
+    nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
 
     nzx = nz*nx;
     nzx2 = nz2*nx2;
@@ -102,7 +103,6 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave   = sf_complexalloc2(nzx2,m2);
 
-    ifft2_allocate(cwavem);
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 	if(verb) sf_warning("it=%d;",it);
 
 	/* matrix multiplication */
-	fft2(curr,cwave);
+	cfft2(curr,cwave);
 
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 #endif
 //		sf_warning("realcwave=%g, imagcwave=%g", crealf(cwavem[ik]),cimagf(cwavem[ik]));
 	    }
-	    ifft2(wave[im],cwavem);
+	    icfft2(wave[im],cwavem);
 	}
 
 	for (ix = 0; ix < nx; ix++) {
@@ -146,9 +146,10 @@ int main(int argc, char* argv[])
 		}
 
 		curr[j] = c;
-		rcurr[j] = crealf(c);
+		rcurr[j] = cimagf(c);
+//		rcurr[j] = crealf(c);
 	    }
-//	    	 sf_warning("c= %g", c);
+
 	    /* write wavefield to output */
 	    sf_floatwrite(rcurr+ix*nz2,nz,Fo);
 	}

@@ -1,4 +1,4 @@
-/* 1-D complex lowrank FFT wave extrapolation using complex to complex fft using initial condition*/
+/* 1-D complex lowrank FFT wave extrapolation using complex to complex fft BY INJECTION*/
 /*
   Copyright (C) 2008 University of Texas at Austin
   
@@ -23,31 +23,30 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nx2, nk, nt, m, ix, ik, it, im, n2;
-    sf_complex *curr, **wave, c;
-    float *rcurr, dt;
+    sf_complex *curr, **wave, c, *ww;
+    float *rcurr;
     sf_complex **lft, **rht, *cwave, *cwavem;
-    sf_file Fw, Fo, right, left;
+    sf_file Fw, Fr, Fo, right, left;
+    sf_axis at,ax;
+    float *rr;
 
     sf_init(argc,argv);
     Fw = sf_input("in");
     Fo = sf_output("out");
+    Fr = sf_input("refl");
 
     if (SF_COMPLEX != sf_gettype(Fw)) sf_error("Need complex input");
+    if (SF_FLOAT != sf_gettype(Fr)) sf_error("Need float refl");
 
     sf_settype(Fo,SF_FLOAT);
 
     /* Read/Write axes */
+    at = sf_iaxa(Fw,1); nt = sf_n(at);
+    ax = sf_iaxa(Fr,1); nx = sf_n(ax);
 
-    if (!sf_histint(Fw,"n1",&nx)) sf_error("No n1= in input");
+    sf_oaxa(Fo,ax,1);
+    sf_oaxa(Fo,at,2);
 
-    if (!sf_getint("nt",&nt)) sf_error("No nt= in input");
-    if (!sf_getfloat("dt",&dt)) sf_error("No dt= in input");
-
-    sf_putint(Fo,"n2",nt);
-    sf_putfloat(Fo,"d2",dt);
-    sf_putfloat(Fo,"o2",0.);
-    sf_putstring(Fo,"label2","Time");
-    sf_putstring(Fo,"unit2","s");
 
     nk = cfft1_init(nx,&nx2);
     sf_warning("nk=%d\n", nk);
@@ -70,8 +69,8 @@ int main(int argc, char* argv[])
     sf_complexread(lft[0],nx*m,left);
     sf_complexread(rht[0],nk*m,right);
 	
-    sf_fileclose(left);
-    sf_fileclose(right);
+    //    sf_fileclose(left);
+    //    sf_fileclose(right);
 
     curr = sf_complexalloc(nx2);
     rcurr= sf_floatalloc(nx2);
@@ -80,15 +79,15 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_complexalloc2(nx2,m);
 
-    sf_complexread (curr,nx,Fw);
-
-    for (ix = nx; ix < nx2; ix++) {
-	curr[ix] = sf_cmplx(0.,0.);
-    }
+    /* read wavelet & reflectivity */
+    ww=sf_complexalloc(nt);  sf_complexread(ww,nt,Fw);
+    rr=sf_floatalloc(nx); sf_floatread(rr,nx,Fr);
 
     for (ix = 0; ix < nx2; ix++) {
-	rcurr[ix]=0.;
+	curr[ix] = sf_cmplx(0.,0.);
+	rcurr[ix]= 0.;
     }
+
 
     /* propagation in time */
     for (it=0; it < nt; it++) {
@@ -111,8 +110,11 @@ int main(int argc, char* argv[])
 	}
 
 	for (ix = 0; ix < nx; ix++) {
-
-	    c = sf_cmplx(0.,0.);
+#ifdef SF_HAS_COMPLEX_H
+	    c = ww[it] * rr[ix]; // source term
+#else
+	    c = sf_crmul(ww[it],rr[ix]);
+#endif
 	    for (im = 0; im < m; im++) {
 #ifdef SF_HAS_COMPLEX_H
 		c += lft[im][ix]*wave[im][ix];
