@@ -91,11 +91,11 @@ int main(int argc,char**argv)
 	
     for(ir=0;ir<nr;ir++){
 	if(verb)	sf_warning(" %d/%d;", ir, nr);
-	sf_floatread(u,n123,in);
 	if (NULL != mask) {
 	    sf_floatread(u,n123,mask);
 	    mask32 (false, 1, 1, 1, n[0], n[1], n[2], u, m);
 	}
+	sf_floatread(u,n123,in);
 	fdip( u, p, m, n4);
 	if( n4 == 2 )	sf_floatwrite(p, n123*2, out);
 	else	sf_floatwrite(p, n123, out);

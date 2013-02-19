@@ -28,7 +28,7 @@ int main(int argc, char*argv[])
 	int ir, is;
 	int *pdelay, nn[SF_MAX_DIM], ndim;
 	float *pi, **po;
-	char buf[4];
+	/* char buf[4]; */
 	sf_axis ax;
 	int jt;
 
