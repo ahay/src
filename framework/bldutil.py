@@ -334,7 +334,14 @@ def build_install_f90(env, progs_f90, srcroot, bindir, api, bldroot, glob_build)
                 chk_exists(prog, 'f90')
             obj_dep = []
             sources = ['M' + prog]
-            depends90(env,sources,'M'+prog)
+            # Allow concatenating all modules in one file and injecting job
+            # parameters for job-specific optimization:
+            run_depends90 = True
+            if env.has_key('findF90depends'):
+                if env['findF90depends'] == 'n':
+                    run_depends90 = False
+            if run_depends90:
+                depends90(env,sources,'M'+prog)
             for f90_src in sources:
                 obj = env.StaticObject(f90_src+'.f90')
                 # SCons mistakenly treats ".mod" files as ".o" files, and
