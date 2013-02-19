@@ -254,7 +254,8 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
 }
 
 void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float y,
-                             float b, float a, float t, float l, sf_esc_point3 point)
+                             float b, float a, float t, float l,
+                             sf_esc_point3 point, sf_esc_point3f pointf)
 /*< Compute escape values for a point with subsurface coordinates (z, x, y, b, a) >*/
 {
     int pit = -1, it = 0;
@@ -389,13 +390,26 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         }
     }
 
-    sf_esc_point3_set_esc_var (point, ESC3_Z, z);
-    sf_esc_point3_set_esc_var (point, ESC3_X, x);
-    sf_esc_point3_set_esc_var (point, ESC3_Y, y);
-    sf_esc_point3_set_esc_var (point, ESC3_T, t);
+    if (point) {
+        sf_esc_point3_set_esc_var (point, ESC3_Z, z);
+        sf_esc_point3_set_esc_var (point, ESC3_X, x);
+        sf_esc_point3_set_esc_var (point, ESC3_Y, y);
+        sf_esc_point3_set_esc_var (point, ESC3_T, t);
 #ifdef ESC_EQ_WITH_L
-    sf_esc_point3_set_esc_var (point, ESC3_L, l);
+        sf_esc_point3_set_esc_var (point, ESC3_L, l);
 #endif
-    sf_esc_point3_set_col (point, col);
+        sf_esc_point3_set_col (point, col);
+    } else {
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_Z, z);
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_X, x);
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_Y, y);
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_T, t);
+#ifdef ESC_EQ_WITH_L
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_L, l);
+#endif
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_PZ, cosf (b));
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_PX, sinf (b)*cosf (a));
+        sf_esc_point3f_set_esc_var (pointf, ESC3F_PY, sinf (b)*sinf (a));
+    }
 }
 
