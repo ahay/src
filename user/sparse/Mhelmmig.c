@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     int npml, pad1, pad2, n1, n2; 
     int ih, nh, is, ns, iw, nw, i, j;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float d1, d2, **vel, vpml, alpha, f0, ****image, dw, ow;
+    float d1, d2, **vel, vpml, ****image, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long *Ap, *Ai, *Map;
     double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
@@ -91,18 +91,15 @@ int main(int argc, char* argv[])
     /* horizontal space-lag */
 
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
+    /* PML velocity */
+
+    if (!sf_getint("npml",&npml)) npml=20;
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
 
     fdprep_order(order);
-
-    if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
-    /* PML damping */
-
-    if (!sf_getfloat("f0",&f0)) f0=25.;
-    /* PML dominant frequency */
 
     /* read model */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -199,7 +196,6 @@ int main(int argc, char* argv[])
 	omega = (double) 2.*SF_PI*(ow+iw*dw);
 
 	/* PML padding */
-	npml = vpml/((ow+iw*dw)*fminf(d1,d2))+0.5;
 	pad1 = n1+2*npml;
 	pad2 = n2+2*npml;
 
@@ -245,7 +241,7 @@ int main(int argc, char* argv[])
 
 	if (!load) {
 	    /* assemble matrix */
-	    fdprep(omega, alpha, f0,
+	    fdprep(omega, vpml,
 		   n1, n2, d1, d2, vel,
 		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);	    

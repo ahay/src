@@ -117,7 +117,7 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 
 	case 'c':
 	    for (j=1; j < pad2-1; j++) {
-		for (i=1; i < pad1-1; i++) {
+		for (i=1; i < pad1-1; i++) {		    
 		    if (i > 1 && j > 1) nz++;
 		    if (i > 1) nz++;
 		    if (i > 1 && j < pad2-2) nz++;
@@ -155,7 +155,7 @@ SuiteSparse_long fdprep_nz(const int pad1, const int pad2)
 }
 
 void fdprep(const double omega,
-	    const float a0, const float f0,
+	    const float vpml,
 	    const int n1, const int n2,
 	    const float d1, const float d2,
 	    float **v,
@@ -167,19 +167,19 @@ void fdprep(const double omega,
 {
     switch (order[0]) {
 	case '5':
-	    fdprep5 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
+	    fdprep5 (omega, vpml, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	case '9':
-	    fdprep9 (omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
+	    fdprep9 (omega, vpml, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	case 'j':
-	    fdprep9o(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
+	    fdprep9o(omega, vpml, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	case 'c':
-	    fdprep25(omega, a0,f0, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
+	    fdprep25(omega, vpml, n1,n2, d1,d2, v, npml,pad1,pad2, Ti,Tj,Tx,Tz);
 	    break;
 
 	default:

@@ -24,7 +24,7 @@
 #include "fdprep9.h"
 
 void fdprep9(const double omega,
-	     const float a0, const float f0,
+	     const float vpml,
 	     const int n1, const int n2,
 	     const float d1, const float d2,
 	     float **v,
@@ -35,7 +35,7 @@ void fdprep9(const double omega,
 /*< discretization >*/
 {
     int i, j, index;
-    double eta1, eta2, c;
+    double eta1, eta2, c1, c2;
     double *g1, *g2, **pad;
     double complex *s1, *s2, neib, cent;
     SuiteSparse_long count;
@@ -43,15 +43,16 @@ void fdprep9(const double omega,
     /* prepare PML */
     eta1 = (double) npml*d1;
     eta2 = (double) npml*d2;
-    
-    c = 2.*SF_PI*a0*f0;
+
+    c1 = -3./(2.*eta1)*vpml*log(pow(10.,-log2(npml/10.)-3.));
+    c2 = -3./(2.*eta2)*vpml*log(pow(10.,-log2(npml/10.)-3.));
 
     g1 = (double*) sf_alloc(pad1,sizeof(double));
     for (i=0; i < pad1; i++) {
 	if (i < npml) {
-	    g1[i] = c*pow(((npml-i)*d1/eta1),2.);
+	    g1[i] = c1*pow(((npml-i)*d1/eta1),2.);
 	} else if (i >= pad1-npml) {
-	    g1[i] = c*pow(((i-(pad1-npml-1))*d1/eta1),2.);
+	    g1[i] = c1*pow(((i-(pad1-npml-1))*d1/eta1),2.);
 	} else {
 	    g1[i] = 0.;
 	}
@@ -65,9 +66,9 @@ void fdprep9(const double omega,
     g2 = (double*) sf_alloc(pad2,sizeof(double));
     for (j=0; j < pad2; j++) {
 	if (j < npml) {
-	    g2[j] = c*pow(((npml-j)*d2/eta2),2.);
+	    g2[j] = c2*pow(((npml-j)*d2/eta2),2.);
 	} else if (j >= pad2-npml) {
-	    g2[j] = c*pow(((j-(pad2-npml-1))*d2/eta2),2.);
+	    g2[j] = c2*pow(((j-(pad2-npml-1))*d2/eta2),2.);
 	} else {
 	    g2[j] = 0.;
 	}

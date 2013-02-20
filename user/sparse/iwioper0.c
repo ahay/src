@@ -27,10 +27,10 @@
 #include "fdprep.h"
 #include "iwioper0.h"
 
-static float vpml, alpha, f0, d1, d2, ow, dw;
+static float vpml, d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
-static int n1, n2, nh, ns, nw;
+static int n1, n2, nh, ns, nw, npml;
 static void **Numeric;
 static double Control[UMFPACK_CONTROL];
 static double **Xx, **Xz, **Bx, **Bz;
@@ -149,7 +149,7 @@ void iwiadd(double omega,
     }
 }
 
-void iwi_init(float vpml0, float alpha0, float f00,
+void iwi_init(int npml0, float vpml0, 
 	      int nn1, int nn2, 
 	      float dd1, float dd2,
 	      int nh0, int ns0, 
@@ -160,10 +160,9 @@ void iwi_init(float vpml0, float alpha0, float f00,
 	      char *order0)
 /*< initialize >*/
 {
+    npml = npml0;
     vpml = vpml0;
-    alpha = alpha0;
-    f0 = f00;
-
+    
     n1 = nn1;
     n2 = nn2;
     d1 = dd1;
@@ -241,15 +240,21 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
     int iw, is, its, i;
-    int npml, pad1, pad2;
+    int pad1, pad2;
     SuiteSparse_long n;
     double omega;
 
     sf_adjnull(adj,add,nx,nr,x,r);
 
+    /* PML padding */
+    pad1 = n1+2*npml;
+    pad2 = n2+2*npml;
+	    
+    n = fdprep_n (pad1,pad2);
+
     /* loop over frequency */
 #ifdef _OPENMP
-#pragma omp parallel num_threads(uts) private(its,omega,inslen,is,npml,pad1,pad2,n)
+#pragma omp parallel num_threads(uts) private(its,omega,inslen,is)
 #endif
     {
 #ifdef _OPENMP
@@ -262,15 +267,8 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 #pragma omp for
 #endif
 	for (iw=0; iw < nw; iw++) {
-	    omega = (double) 2.*SF_PI*(ow+iw*dw);
+	    omega = (double) 2.*SF_PI*(ow+iw*dw);	    
 	    
-	    /* PML padding */
-	    npml = vpml/((ow+iw*dw)*fminf(d1,d2))+0.5;
-	    pad1 = n1+2*npml;
-	    pad2 = n2+2*npml;
-	    
-	    n = fdprep_n (pad1,pad2);
-
 	    Bx[its] = (double*) sf_alloc(n,sizeof(double));
 	    Bz[its] = (double*) sf_alloc(n,sizeof(double));
 	    Xx[its] = (double*) sf_alloc(n,sizeof(double));

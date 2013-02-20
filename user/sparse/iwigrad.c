@@ -1,6 +1,6 @@
-/* Image-domain waveform tomography (linear operator). */
+/* IWI interface for computing gradient */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,13 +25,13 @@
 #endif
 
 #include "fdprep.h"
-#include "iwioper.h"
+#include "iwigrad.h"
 
 static float vpml, **vel, d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
 static int n1, n2, nh, ns, nw, npml;
-static sf_file sfile, rfile;
+static sf_fslice sfile, rfile;
 static SuiteSparse_long *Ti, *Tj;
 static SuiteSparse_long *Ap, *Ai, *Map;
 static void *Symbolic, **Numeric;
@@ -43,7 +43,6 @@ static bool load;
 static int uts, ss[3];
 static char *datapath, *insert, *append;
 static size_t srclen, inslen;
-static char *order;
 
 void adjsrce(sf_complex **recv /* receiver wavefield */,
 	     sf_complex **adjs /* adjoint-source */,
@@ -154,16 +153,15 @@ void iwiadd(double omega,
     }
 }
 
-void iwi_init(int npml0, float vpml0, 
-	      int nn1, int nn2, 
-	      float dd1, float dd2,
-	      int nh0, int ns0, 
-	      float ow0, float dw0, int nw0,
-	      sf_file us0, sf_file ur0,
-	      bool load0, char *datapath0,
-	      int uts0,
-	      char *order0)
-/*< initialize >*/
+void iwigrad_init(int npml0, float vpml0, 
+		  int nn1, int nn2, 
+		  float dd1, float dd2,
+		  int nh0, int ns0, 
+		  float ow0, float dw0, int nw0,
+		  sf_fslice sfile0, sf_fslice rfile0,
+		  bool load0, char *datapath0,
+		  int uts0)
+/*< initialization >*/
 {
     npml = npml0;
     vpml = vpml0;
@@ -176,16 +174,13 @@ void iwi_init(int npml0, float vpml0,
     nh = nh0; ns = ns0;
     ow = ow0; dw = dw0; nw = nw0;
 
-    sfile = us0;
-    rfile = ur0;
+    sfile = sfile0;
+    rfile = rfile0;
 
     load = load0;
     datapath = datapath0;
     
     uts = uts0;
-
-    order = order0;
-    fdprep_order(order);
 
     ss[0] = 1; ss[1] = n1; ss[2] = n1*n2;
 
@@ -225,10 +220,13 @@ void iwi_init(int npml0, float vpml0,
     Control [UMFPACK_IRSTEP] = 0;
 }
 
-void iwi_free()
-/*< free memories >*/
+void iwigrad_free()
+/*< free >*/
 {
     int its;
+
+    free(us[0][0]); free(ur[0][0]);
+    free(as[0][0]); free(ar[0][0]);
 
     for (its=0; its < uts; its++) {
 	free(tempx[its]); free(tempr[its]);
@@ -236,17 +234,17 @@ void iwi_free()
     free(tempx); free(tempr);
 }
 
-void iwi_set(float **vel0,
-	     float ***wght0,
-	     float **prec0)
-/*< set velocity, weight and preconditioner >*/
+void iwigrad_set(float **vel0,
+		 float ***wght0,
+		 float **prec0)
+/*< set-up >*/
 {
     vel = vel0;
     wght = wght0;
     prec = prec0;
 }
 
-void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
+void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 /*< linear operator >*/
 {
     int iw, is, its, i;
@@ -338,9 +336,9 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 
 	if (load) free(append);
 
-	/* background wavefields */
-	sf_complexread(us[0][0],n1*n2*ns,sfile);	    
-	sf_complexread(ur[0][0],n1*n2*ns,rfile);
+	/* read wavefields from temporary file */
+	sf_fslice_get(sfile,iw,us[0][0]);
+	sf_fslice_get(rfile,iw,ur[0][0]);
 
 	/* loop over shots */
 #ifdef _OPENMP
@@ -398,10 +396,6 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    free(Bx[its]); free(Bz[its]); free(Xx[its]); free(Xz[its]);
 	}
     }
-
-    /* rewind file stream */
-    rewind(sf_filestream(sfile));
-    rewind(sf_filestream(rfile));
 
 #ifdef _OPENMP
     if (adj) {

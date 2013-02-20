@@ -29,9 +29,9 @@
 int main(int argc, char* argv[])
 {
     bool adj;
-    int n1, n2; 
+    int n1, n2, npml; 
     int nh, ns, nw;
-    float vpml, alpha, f0, d1, d2, dw, ow;
+    float vpml, d1, d2, dw, ow;
     float *di, *dm, ***wght, **prec;
     char *datapath;
     sf_file in, out, model, us, ur;
@@ -39,13 +39,9 @@ int main(int argc, char* argv[])
     int uts, mts;
     char *order;
 
-    lbfgs_parameter_t param;
-
     sf_init(argc,argv);
     in  = sf_input("in");
     out = sf_output("out");    
-
-    lbfgs_parameter_init(&param);
 
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
@@ -65,16 +61,13 @@ int main(int argc, char* argv[])
     uts = (uts < 1)? mts: uts;
 
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
+    /* PML velocity */
+
+    if (!sf_getint("npml",&npml)) npml=20;
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
-
-    if (!sf_getfloat("alpha",&alpha)) alpha=1.79;
-    /* PML damping */
-
-    if (!sf_getfloat("f0",&f0)) f0=25.;
-    /* PML dominant frequency */
 
     /* read model */
     if (NULL == sf_getstring("model"))
@@ -143,7 +136,7 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n3",2*nh+1);    
     
     /* initialize */
-    iwi_init(vpml,alpha,f0, n1,n2,d1,d2, nh,ns,ow,dw,nw,
+    iwi_init(npml,vpml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
 	     us,ur, datapath, uts, order);
 
     /* set weight and preconditioner */
