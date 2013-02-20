@@ -62,6 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	printf("\t\torigin holds row vector of o# float values for header\n");
 	printf("\t\tlabel holds cell array of label# string for from header\n");
 	printf("\t\tunit holds cell array of unit# string values for header\n");
+	printf("\tNote: the file is closed on exit from this function\n");
     	return;
     }
     if (nrhs < 3 || nrhs > 7)
