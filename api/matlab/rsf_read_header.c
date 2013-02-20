@@ -1,7 +1,7 @@
 /* Read complete RSF file, both header and data, in one call.
  *
  * MATLAB usage:
- *   [ size[ delta[ origin[ label[ unit]]]]] = rsf_read_all(file)
+ *   [size [delta [origin [label [unit]]]]] = rsf_read_all(file)
  *
  * Written by Henryk Modzelewski, UBC EOS SLIM
  * Created February 2013
@@ -49,7 +49,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (nlhs==0 && nrhs==0) {
 	printf("RSF_READ_HEADER Reads header of RSF file into MATLAB\n");
 	printf("Usage:\n");
-	printf("\t[ size[ delta[ origin[ label[ unit]]]]] = rsf_read_header(file)\n");
+	printf("\t[size [delta [origin [label [unit]]]]] = rsf_read_header(file)\n");
 	printf("Where:\n");
 	printf("\tInput:\n");
 	printf("\t\tfile is the RSF-file name\n");
