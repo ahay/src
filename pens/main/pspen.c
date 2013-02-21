@@ -388,8 +388,7 @@ char            name[] = "pspen";
 extern int      ipat;
 extern struct pat pat[];
 
-static bool force_color;
-static bool force_bw;
+static bool force_color, force_bw, force_raster;
 static bool dumb_fat; 
 static bool rgb_colorspace;
 static char *label;
@@ -1611,8 +1610,10 @@ void opendev (int argc, char* argv[])
     /* use color */
     if (!sf_getbool("force",&force_color)) force_color=false;
     /* if y, don't replace colors with their compliments */
-     if (!sf_getbool("forcebw",&force_bw)) force_bw=false;
+    if (!sf_getbool("forcebw",&force_bw)) force_bw=false;
     /* if y, don't replace black and white colors with their compliments */
+    if (!sf_getbool("force_raster",&force_raster)) force_raster=true;
+    /* if y, don't replace raster colors with their compliments */
 
 /*
  * GEOPHYSICS now requires the cmyk color space. However,
@@ -2091,9 +2092,15 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
 	        if (!corners && ci == (int) raster_block[0][i])
-	            fprintf (pltout, "%2.2x%2.2x%2.2x", 0, 0, 0);
+		    if (force_raster) 
+			fprintf (pltout, "%2.2x%2.2x%2.2x", 0, 0, 0);
+		    else
+			fprintf (pltout, "%2.2x%2.2x%2.2x", 255, 255, 255);
 	        else
-		    fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
+		    if (force_raster) 
+			fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
+		    else
+			fprintf (pltout, "%2.2x%2.2x%2.2x", 255 - red[(int) raster_block[0][i]],255 - green[(int) raster_block[0][i]],255 - blue[(int) raster_block[0][i]]);
 	    }
 	    fprintf (pltout, "\n");
 	}
@@ -2121,13 +2128,21 @@ void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
 	    for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	    {
 	        if (!corners && ci == (int) raster_block[0][i]) {
-		    rgb_to_cmyk(0, 0, 0,
-			        &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		    if (force_raster)
+			rgb_to_cmyk(0, 0, 0,
+				    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		    else
+			rgb_to_cmyk(255, 255, 255,
+				    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
 		    fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
 			     cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
                 } else {
-		    rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
-			        &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		    if (force_raster)
+			rgb_to_cmyk(red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]],
+				    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
+		    else
+			rgb_to_cmyk(255 - red[(int) raster_block[0][i]],255 - green[(int) raster_block[0][i]],255 - blue[(int) raster_block[0][i]],
+				    &cmyk_cyan, &cmyk_magenta, &cmyk_yellow, &cmyk_black);
 		    fprintf (pltout, "%2.2x%2.2x%2.2x%2.2x",
 			     cmyk_cyan, cmyk_magenta, cmyk_yellow, cmyk_black);
                 }
