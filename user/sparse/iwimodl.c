@@ -117,10 +117,11 @@ void iwimodl_free()
 {
     int its;
 
-    free(srce[0][0]); free(recv[0][0]);
+    free(srce[0][0]); free(srce[0]); free(srce);
+    free(recv[0][0]); free(recv[0]); free(recv);
 
     for (its=0; its < uts; its++) {
-	free(image[its][0][0]);
+	free(image[its][0][0]); free(image[its][0]); free(image[its]);
     }
     free(image);
 }

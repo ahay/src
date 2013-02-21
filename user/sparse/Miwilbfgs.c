@@ -20,10 +20,214 @@
 #include <rsf.h>
 #include <lbfgs.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "iwilbfgs.h"
+
+static float ***mask, ***wght, **prec;
+
+static lbfgsfloatval_t evaluate(void *instance,
+				const lbfgsfloatval_t *x,
+				lbfgsfloatval_t *g,
+				const int n,
+				const lbfgsfloatval_t step)
+/* evaluate objective function and gradient */
+{
+    lbfgsfloatval_t fx;
+
+    fx = iwilbfgs_eval(x,mask,wght);
+
+    iwilbfgs_grad(x,wght,prec,g);
+
+    return fx;
+}
+
+static int progress(void *instance,
+		    const lbfgsfloatval_t *x,
+		    const lbfgsfloatval_t *g,
+		    const lbfgsfloatval_t fx,
+		    const lbfgsfloatval_t xnorm,
+		    const lbfgsfloatval_t gnorm,
+		    const lbfgsfloatval_t step,
+		    int n,
+		    int k,
+		    int ls)
+/* report optimization progress */
+{
+    sf_warning("L-BFGS iteration %d:",k);
+    sf_warning("fx = %g, xnorm = %g, gnorm = %g, step = %g.",fx,xnorm,gnorm,step);
+
+    return 0;
+}
 
 int main(int argc, char* argv[])
 {
+    bool verb, load;
+    int n1, n2, npml, nh, ns, nw;
+    int prect[3], porder, pniter, pliter;
+    int dorder, grect[2], gliter;
+    float pthres, geps;
+    float vpml, d1, d2, **vel, dw, ow;
+    char *datapath;
+    sf_file in, out, source, data;
+    sf_file imask, weight, precon;
+    int uts, mts, ret;
+    char *order;
+    lbfgsfloatval_t fx, *x;
+    lbfgs_parameter_t param;
+
+    sf_init(argc,argv);
+    in  = sf_input("in");
+    out = sf_output("out");
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
+    if (!sf_getint("nh",&nh)) nh=0;
+    /* horizontal space-lag */
+
+    if (!sf_getbool("load",&load)) load=false;
+    /* load LU */
+
+    if (!sf_getint("uts",&uts)) uts=0;
+    /* number of OMP threads */
+
+#ifdef _OPENMP
+    mts = omp_get_max_threads();
+#else
+    mts = 1;
+#endif
+
+    uts = (uts < 1)? mts: uts;
+
+    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
+    /* PML velocity */
+
+    if (!sf_getint("npml",&npml)) npml=20;
+    /* PML width */
+
+    if (NULL == (order = sf_getstring("order"))) order="j";
+    /* discretization scheme (default optimal 9-point) */
+
+    if (!sf_getint("prect1",&prect[0])) prect[0]=10;
+    /* slope smoothing radius on axis 1 */
+    if (!sf_getint("prect2",&prect[1])) prect[1]=1;
+    /* slope smoothing radius on axis 2 */
+    if (!sf_getint("prect3",&prect[2])) prect[2]=10;
+    /* slope smoothing radius on axis 3 */
+
+    if (!sf_getint("porder",&porder)) porder=3;
+    /* slope estimation accuracy order */
+    if (!sf_getint("pniter",&pniter)) pniter=5;
+    /* slope estimation # of nonlinear iterations */
+    if (!sf_getint("pliter",&pliter)) pliter=20;
+    /* slope estimation # of linear iterations */
+
+    if (!sf_getfloat("pthres",&pthres)) pthres=0.1;
+    /* slope thresholding */
+
+    if (!sf_getint("dorder",&dorder)) dorder=6;
+    /* image derivative accuracy order */
     
+    if (!sf_getint("grect1",&grect[0])) grect[0]=10;
+    /* gradient smoothing radius on axis 1 */
+    if (!sf_getint("grect2",&grect[1])) grect[1]=10;
+    /* gradient smoothing radius on axis 2 */
+
+    if (!sf_getint("gliter",&gliter)) gliter=3;
+    /* gradient # of CG iterations */
+
+    if (!sf_getfloat("geps",&geps)) geps=1.;
+    /* gradient regularization parameter */
+
+    /* read initial model */
+    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
+    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input.");
+
+    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input.");
+    if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input.");
+
+    vel = sf_floatalloc2(n1,n2);
+    sf_floatread(vel[0],n1*n2,in);
+
+    if (load)
+	datapath = sf_histstring(in,"in");	
+    else
+	datapath = NULL;
+
+    /* read source */
+    if (NULL == sf_getstring("source"))
+	sf_error("Need source=");
+    source = sf_input("source");
+
+    if (!sf_histint(source,"n3",&ns)) sf_error("No ns=.");
+    if (!sf_histint(source,"n4",&nw)) sf_error("No nw=.");
+    if (!sf_histfloat(source,"d4",&dw)) sf_error("No dw=.");
+    if (!sf_histfloat(source,"o4",&ow)) sf_error("No ow=.");
+
+    /* read data */
+    if (NULL == sf_getstring("data"))
+	sf_error("Need data=");
+    data = sf_input("data");
+
+    /* read image mask */
+    if (NULL == sf_getstring("imask")) {
+	imask = NULL;
+	mask = NULL;
+    } else {
+	imask = sf_input("imask");
+	mask = sf_floatalloc3(n1,n2,2*nh+1);
+	sf_floatread(mask[0][0],n1*n2*(2*nh+1),imask);
+	sf_fileclose(imask);
+    }
+
+    /* read image weight */
+    if (NULL == sf_getstring("weight")) {
+	weight = NULL;
+	wght = NULL;
+    } else {
+	weight = sf_input("weight");
+	wght = sf_floatalloc3(n1,n2,2*nh+1);
+	sf_floatread(wght[0][0],n1*n2*(2*nh+1),weight);
+	sf_fileclose(weight);
+    }
+
+    /* read model preconditioner */
+    if (NULL == sf_getstring("precon")) {
+	precon = NULL;
+	prec = NULL;
+    } else {
+	precon = sf_input("precon");
+	prec = sf_floatalloc2(n1,n2);
+	sf_floatread(prec[0],n1*n2,precon);
+	sf_fileclose(precon);
+    }
+
+    /* allocate temporary memory */
+    x = lbfgs_malloc(n1*n2);
+
+    /* initialize */
+    iwilbfgs_init(order, npml,vpml,
+		  n1,n2, d1,d2,
+		  nh,ns, ow,dw,nw,
+		  source,data, load,datapath, uts,
+		  prect[0],prect[1],prect[2],
+		  porder,pniter,pliter,pthres,
+		  dorder,
+		  grect[0],grect[1],
+		  gliter,geps);
+    
+    lbfgs_parameter_init(&param);
+
+    /* L-BFSG optimization */
+    ret = lbfgs(n1*n2,x,&fx, evaluate,progress, NULL,&param);
+
+    /* clean-up */
+    sf_warning("L-BFGS optimization terminated with status code %d.",ret);
+
+    lbfgs_free(x);
+
     exit(0);
 }

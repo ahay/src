@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+#include <lbfgs.h>
 
 #include "iwidip.h"
 #include "iwimodl.h"
@@ -25,13 +26,14 @@
 
 #include "iwilbfgs.h"
 
-static int nn[3], dorder;
+static int nn[3], dorder, grect[2], gliter;
+static float dd[3], **vel, pthres, geps;
 static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
 
 void iwilbfgs_init(char *order,
-		   int npml, float vpml, 
-		   int n1, int n2, 
+		   int npml, float vpml,
+		   int n1, int n2,
 		   float d1, float d2,
 		   int nh, int ns, 
 		   float ow, float dw, int nw,
@@ -40,17 +42,29 @@ void iwilbfgs_init(char *order,
 		   int uts,
 		   int prect1, int prect2, int prect3,
 		   int porder, int pniter, int pliter,
-		   int dorder0)
+		   float pthres0, int dorder0,
+		   int grect1, int grect2,
+		   int gliter0,
+		   float geps0)
 /*< initialization >*/
 {
+    /* model */
     nn[0] = n1; nn[1] = n2; nn[2] = 2*nh+1;
+    dd[0] = d1; dd[1] = d2; dd[2] = d2;
+
+    /* control */
+    pthres = pthres0;
     dorder = dorder0;
+    grect[0] = grect1; grect[1] = grect2;
+    gliter = gliter0; geps = geps0;
 
     /* open temporary file */
     sfile = sf_fslice_init(n1*n2*ns,nw,sizeof(sf_complex));
     rfile = sf_fslice_init(n1*n2*ns,nw,sizeof(sf_complex));
 
     /* allocate temporary memory */
+    vel = sf_floatalloc2(n1,n2);
+
     image  = sf_floatalloc(n1*n2*(2*nh+1));
     pimage = sf_floatalloc(n1*n2*(2*nh+1));
 
@@ -64,7 +78,7 @@ void iwilbfgs_init(char *order,
 		 source,data, sfile,rfile,
 		 load,datapath, uts);
 
-    /* PWD dip estimator */
+    /* dip estimator */
     iwidip_init(n1,n2,nh, d1,d2,
 		prect1,prect2,prect3,
 		porder,pniter,pliter);
@@ -89,11 +103,18 @@ void iwilbfgs_free()
     free(piph);
 }
 
-void iwilbfgs_eval(float **vel,
-		   float ***mask, float ***wght)
+lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
+			      float ***mask, float ***wght)
 /*< forward modeling and evaluate objective function >*/
 {
-    int i;
+    int i, j;
+    lbfgsfloatval_t fx=0.;
+
+    for (j=0; j < nn[1]; j++) {
+	for (i=0; i < nn[0]; i++) {
+	    vel[j][i] = (float) x[j*nn[0]+i];
+	}
+    }
 
     /* clean temporary image */
     iwimodl_clean();
@@ -108,16 +129,26 @@ void iwilbfgs_eval(float **vel,
     }
 
     /* evaluate objective function */
+    for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
+	fx += image[i]*wght[0][0][i]*wght[0][0][i];
+    }
+
+    return fx;
 }
 
-void iwilbfgs_grad(float **vel,
+void iwilbfgs_grad(const lbfgsfloatval_t *x,
 		   float ***wght, float **prec,
-		   int ng, float *grad,
-		   int ni, float *image)
+		   lbfgsfloatval_t *grad)
 /*< prepare image perturbation and compute gradient >*/
 {
-    int i1, i2, i3;
-    float *din, *dout;
+    int i1, i2, i3, ii;
+    float *din, *dout, *p;
+
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    vel[i2][i1] = (float) x[i2*nn[0]+i1];
+	}
+    }
 
     /* set-up linear operator */
     iwigrad_set(vel, wght,prec);
@@ -138,15 +169,12 @@ void iwilbfgs_grad(float **vel,
 	    }
 	    sf_deriv(din,dout);
 	    for (i1=0; i1 < nn[0]; i1++) {
-		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1];
+		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1]/dd[0];
 	    }
 	}
     }
 
-    sf_deriv_free();
-
-    free(din);
-    free(dout);
+    sf_deriv_free(); free(din); free(dout);
 
     /* partial i partial h */
     din  = sf_floatalloc(nn[2]);
@@ -161,25 +189,66 @@ void iwilbfgs_grad(float **vel,
 	    }
 	    sf_deriv(din,dout);
 	    for (i3=0; i3 < nn[2]; i3++) {
-		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3];
+		piph[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3]/dd[2];
 	    }
 	}
     }
 
-    sf_deriv_free();
+    sf_deriv_free(); free(din); free(dout);
 
-    free(din);
-    free(dout);
-
-    /* assemble image derivative */
+    /* prepare image perturbation */
     for (i3=0; i3 < nn[2]; i3++) {
 	for (i2=0; i2 < nn[1]; i2++) {
 	    for (i1=0; i1 < nn[0]; i1++) {
-		
+		ii = i3*nn[0]*nn[1]+i2*nn[0]+i1;
+
+		/* thresholding */
+		if (fabsf(pimage[ii]) < pthres) {
+		    pimage[ii] = 0.;
+		    continue;
+		}
+
+		/* non-stationary focusing */
+		if (i3 < (nn[2]-1)/2) {
+		    pimage[ii] = (pimage[ii]>0.? 1.: -1.)
+			*(pipz[ii]-pimage[ii]*piph[ii])
+			/sqrtf(1.+pimage[ii]*pimage[ii])
+			*wght[0][0][ii];
+		} else if (i3 == (nn[2]-1)/2) {
+		    pimage[ii] = 0.;
+		} else {
+		    pimage[ii] = (pimage[ii]<0.? 1.: -1.)
+			*(pipz[ii]-pimage[ii]*piph[ii])
+			/sqrtf(1.+pimage[ii]*pimage[ii])
+			*wght[0][0][ii];
+		}
 	    }
 	}
     }
 
-    /* conjugate-gradient */
-    iwigrad_oper(true, false, ng, ni, grad, pimage);
+    /* conjugate-gradient loop */
+    if (gliter == 0) {
+	iwigrad_oper(true,false, nn[0]*nn[1],nn[0]*nn[1]*nn[2], image,pimage);
+    } else {
+	sf_trianglen_init(2,grect,nn);
+	sf_repeat_init(nn[0]*nn[1],1,sf_trianglen_lop);
+	
+	/* shaping regularization */
+	sf_conjgrad_init(nn[0]*nn[1],nn[0]*nn[1],
+			 nn[0]*nn[1]*nn[2],nn[0]*nn[1]*nn[2],
+			 geps,1.e-6,false,false);
+	p = sf_floatalloc(nn[0]*nn[1]);
+	
+	sf_conjgrad(NULL, iwigrad_oper,sf_repeat_lop, p,image,pimage,gliter);
+	
+	free(p); sf_conjgrad_close(); sf_trianglen_close();
+    }
+
+    /* convert to velocity update */
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    grad[i2*nn[0]+i1] = (lbfgsfloatval_t) 
+		(-0.5*powf(x[i2*nn[0]+i1],3.)*image[i2*nn[0]+i1]);
+	}
+    }
 }

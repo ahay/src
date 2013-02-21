@@ -63,18 +63,18 @@ void iwidip_both(float *image, float *dip)
     /* left->right */    
     for(i=0; i < n123; i++) {
 	pl[i] = 0.;
-    }    
+    }
     dip3(false, 2,pniter,porder,1,false, image,pl, NULL,-FLT_MAX,+FLT_MAX);
     
     /* right->left */
     for(i=0; i < n123; i++) {
 	pr[i] = 0.;
-    }    
+    }
     dip3(true,  2,pniter,porder,1,false, image,pr, NULL,-FLT_MAX,+FLT_MAX);
 
     /* average */
     for(i=0; i < n123; i++) {
-	dip[i] = 0.5*pl[i]-0.5*pr[i];
+	dip[i] = (0.5*pl[i]-0.5*pr[i])*(d[0]/d[2]);
     }
 
     dip3_close();
