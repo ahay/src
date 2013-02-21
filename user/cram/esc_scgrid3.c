@@ -176,6 +176,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid,
             case ESC3_SIDE_FAR:
                 iscy++;
                 break;
+	    default:
+		break;
         }
         ic++;
     }

@@ -24,7 +24,7 @@
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i;
+    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy; /* i; */
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y, a, b, t, l;
     float ***e;

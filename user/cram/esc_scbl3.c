@@ -22,6 +22,7 @@
 
 #include <rsf.h>
 
+#include "esc_scbl3.h"
 #include "einspline.h"
 
 #ifndef _esc_scbl3_h
@@ -37,8 +38,6 @@ typedef struct EscSCBlock3 *sf_esc_scblock3;
 /*^*/
 
 #endif
-
-#include "esc_scbl3.h"
 
 struct EscSCBlock3 {
     int                  nz, nx, ny, na, nb;

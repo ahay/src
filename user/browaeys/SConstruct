@@ -9,6 +9,7 @@ cplxatt cplxcoh cplxcor cplxloc
 differr gsray
 karman karmans karman2 
 mcbmcgauss
+pde2dadp
 radonslope2 tan2dang
 velmap velsteer 
 '''
