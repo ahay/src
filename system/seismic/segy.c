@@ -865,7 +865,7 @@ int segykey (const char* key)
     
     int i;
 
-    for (i=0; i < SF_NKEYS; i++) {
+    for (i=0; i < SF_MAXKEYS; i++) {
 	if (0==strcmp(key,segy_key[i].name)) return i;
     }
     sf_error("no such key %s",key);
