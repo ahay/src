@@ -336,7 +336,7 @@ int main (int argc, char* argv[]) {
                     a = oa + ia*da;
                     for (ib = 0; ib < nb; ib++) {
                         sf_esc_tracer3_compute (esc_tracer, z, x, y, ob + ib*db, a,
-                                                0.0, 0.0, esc_point, NULL);
+                                                0.0, 0.0, esc_point, NULL, NULL);
                         /* Copy escape values to the output buffer */
                         for (i = 0; i < ESC3_NUM; i++)
                             e[ia][ib][i] = sf_esc_point3_get_esc_var (esc_point, i);

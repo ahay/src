@@ -255,7 +255,7 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
 
 void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float y,
                              float b, float a, float t, float l,
-                             sf_esc_point3 point, sf_esc_point3f pointf)
+                             sf_esc_point3 point, float *ae, float *be)
 /*< Compute escape values for a point with subsurface coordinates (z, x, y, b, a) >*/
 {
     int pit = -1, it = 0;
@@ -329,7 +329,7 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
             sigma = sf_esc_tracer3_sintersect (esc_tracer, &z, &x, &y, &b, &a,
                                                dz, dx, dy, db, da, fz, fx, fy, fb, fa);
         /* Keep b in [0; pi] and a in [0; 2*pi] range */
-         if (a < 0.0)
+        if (a < 0.0)
             a += 2.0*SF_PI;
         else if (a > 2.0*SF_PI)
             a -= 2.0*SF_PI;
@@ -399,17 +399,10 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         sf_esc_point3_set_esc_var (point, ESC3_L, l);
 #endif
         sf_esc_point3_set_col (point, col);
-    } else {
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_Z, z);
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_X, x);
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_Y, y);
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_T, t);
-#ifdef ESC_EQ_WITH_L
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_L, l);
-#endif
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_PZ, cosf (b));
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_PX, sinf (b)*cosf (a));
-        sf_esc_point3f_set_esc_var (pointf, ESC3F_PY, sinf (b)*sinf (a));
     }
+    if (ae)
+        *ae = a;
+    if (be)
+        *be = b;
 }
 

@@ -1,4 +1,4 @@
-/* Prepare supercells for stitching escape tables with escape equations in 3-D. */
+/* Prepare supercells for stitching escape tables in 3-D. */
 /*
   Copyright (C) 2012 University of Texas at Austin
 
@@ -22,9 +22,6 @@
 #include "esc_bgrid3.h"
 #include "esc_tracer3.h"
 
-#define ESC3_BSC_BMAX 128
-#define NSPLINES 6
-
 static char *dbname = "scblock";
 
 int main (int argc, char* argv[]) {
@@ -34,8 +31,8 @@ int main (int argc, char* argv[]) {
     float dz, oz, dx, ox, dy, oy;
     float oscz, oscx, oscy, dscz, dscx, dscy;
     float zmin, zmax, xmin, xmax, ymin, ymax;
-    multi_UBspline_3d_s **splines[NSPLINES];
-    sf_file scmap, vspline = NULL, scspline = NULL, out;
+    multi_UBspline_3d_s **splines[ESC3_SIDE_NUM];
+    sf_file scmap, vspline = NULL, scblock = NULL, out;
 
     char sbuf[ESC3_BSC_BMAX];
     char *bname = NULL;
@@ -157,19 +154,19 @@ int main (int argc, char* argv[]) {
                                 i + 1, n, oy, ox, oz, nz, nx, ny, nsb, nsa);
                 esc_bgrid = sf_esc_bgrid3_init (nz, nx, ny, nsa, nsb,
                                                 oz, ox, oy, dz, dx, dy,
-                                                esc_slow, esc_tracer);
+                                                esc_tracer);
                 sf_esc_bgrid3_set_verb (esc_bgrid, verb);
                 /* Compute escape function on all of the six faces of the
                    supercell */
-                splines[0] = sf_esc_bgrid3_compute_topbottom (esc_bgrid, true);
-                splines[1] = sf_esc_bgrid3_compute_topbottom (esc_bgrid, false);
-                splines[2] = sf_esc_bgrid3_compute_leftright (esc_bgrid, true);
-                splines[3] = sf_esc_bgrid3_compute_leftright (esc_bgrid, false);
-                splines[4] = sf_esc_bgrid3_compute_nearfar (esc_bgrid, true);
-                splines[5] = sf_esc_bgrid3_compute_nearfar (esc_bgrid, false);
+                splines[ESC3_SIDE_TOP] = sf_esc_bgrid3_compute_topbottom (esc_bgrid, true);
+                splines[ESC3_SIDE_BOTTOM] = sf_esc_bgrid3_compute_topbottom (esc_bgrid, false);
+                splines[ESC3_SIDE_LEFT] = sf_esc_bgrid3_compute_leftright (esc_bgrid, true);
+                splines[ESC3_SIDE_RIGHT] = sf_esc_bgrid3_compute_leftright (esc_bgrid, false);
+                splines[ESC3_SIDE_NEAR] = sf_esc_bgrid3_compute_nearfar (esc_bgrid, true);
+                splines[ESC3_SIDE_FAR] = sf_esc_bgrid3_compute_nearfar (esc_bgrid, false);
                 nc = 0;
                 /* Compute total size occupied by the spline function */
-                for (ic = 0; ic < NSPLINES; ic++) {
+                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
                     for (ia = 0; ia < nsa; ia++) {
                         nc += (size_t)sizeof(multi_UBspline_3d_s) +
                               (size_t)splines[ic][ia]->nc;
@@ -177,44 +174,58 @@ int main (int argc, char* argv[]) {
                     }
                 }
                 /* Create a separate output file for each supercell */
-                snprintf (sbuf, ESC3_BSC_BMAX, "%s_%f_%f_%f", bname, oz, ox, oy);
+                snprintf (sbuf, ESC3_BSC_BMAX, "%s_%f_%f_%f.rsf", bname, oz, ox, oy);
+                sbuf[ESC3_BSC_BMAX - 1] = '\0';
                 if (verb)
                     sf_warning ("Writing supercell block splines, %g Mb", nc*1e-6);
+                /* Add a key for the new filename - the only way to
+                   create a new RSF file without a command line parameter */
                 sf_simtab_enter (simtab, bname, sbuf);
-                scspline = sf_output (bname);
-                sf_settype (scspline, SF_UCHAR);
-                sf_putlargeint (scspline, "n1", nc);
-                sf_putfloat (scspline, "o1", 0.0);
-                sf_putfloat (scspline, "d1", 1.0);
-                sf_putstring (scspline, "label1", "Spline coefficients");
-                sf_putstring (scspline, "unit1", "");
-                sf_putint (scspline, "n2", 1);
-                sf_putint (scspline, "n3", 1);
-                sf_putint (scspline, "n4", 1);
-                sf_putint (scspline, "Nz", nz);
-                sf_putint (scspline, "Nx", nx);
-                sf_putint (scspline, "Ny", ny);
-                sf_putint (scspline, "Na", nsa);
-                sf_putint (scspline, "Nb", nsb);
-                sf_putfloat (scspline, "Oz", oz);
-                sf_putfloat (scspline, "Ox", ox);
-                sf_putfloat (scspline, "Oy", oy);
-                sf_putfloat (scspline, "Dz", dz);
-                sf_putfloat (scspline, "Dx", dx);
-                sf_putfloat (scspline, "Dy", dy);
-                sf_putlargeint (scspline, "Nc", nc);
-                for (ic = 0; ic < NSPLINES; ic++) {
+                scblock = sf_output (bname);
+                sf_settype (scblock, SF_UCHAR);
+                sf_putlargeint (scblock, "n1", nc);
+                sf_putfloat (scblock, "o1", 0.0);
+                sf_putfloat (scblock, "d1", 1.0);
+                sf_putstring (scblock, "label1", "Spline coefficients");
+                sf_putstring (scblock, "unit1", "");
+                sf_putint (scblock, "n2", 1);
+                sf_putint (scblock, "n3", 1);
+                sf_putint (scblock, "n4", 1);
+                sf_putint (scblock, "Nz", nz);
+                sf_putint (scblock, "Nx", nx);
+                sf_putint (scblock, "Ny", ny);
+                sf_putint (scblock, "Na", nsa);
+                sf_putint (scblock, "Nb", nsb);
+                sf_putfloat (scblock, "Oz", oz);
+                sf_putfloat (scblock, "Ox", ox);
+                sf_putfloat (scblock, "Oy", oy);
+                sf_putfloat (scblock, "Dz", dz);
+                sf_putfloat (scblock, "Dx", dx);
+                sf_putfloat (scblock, "Dy", dy);
+                sf_putlargeint (scblock, "Nc", nc);
+                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
                     for (ia = 0; ia < nsa; ia++) {
                         sf_ucharwrite ((unsigned char*)splines[ic][ia],
-                                       (size_t)sizeof(multi_UBspline_3d_s), scspline);
+                                       (size_t)sizeof(multi_UBspline_3d_s), scblock);
+                    }
+                }
+                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
+                    for (ia = 0; ia < nsa; ia++) {
                         sf_ucharwrite ((unsigned char*)splines[ic][ia]->coefs,
-                                       (size_t)splines[ic][ia]->nc, scspline);
+                                       (size_t)splines[ic][ia]->nc, scblock);
                     }
                 }
                 /* Done with this cell */
-                sf_fileclose (scspline);
+                sf_fileclose (scblock);
                 sf_ucharwrite ((unsigned char*)sbuf, ESC3_BSC_BMAX, out);
                 sf_esc_bgrid3_close (esc_bgrid);
+                /* Delete splines */
+                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
+                    for (ia = 0; ia < nsa; ia++) {
+                        destroy_Bspline (splines[ic][ia]);
+                    }
+                    free (splines[ic]);
+                }
                 i++;
             }
         }

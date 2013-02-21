@@ -25,7 +25,6 @@
 /*^*/
 
 typedef struct EscPoint3 *sf_esc_point3;
-typedef struct EscPoint3f *sf_esc_point3f;
 /* abstract data type */
 /*^*/
 
@@ -45,19 +44,9 @@ typedef enum { ESC3_Z = 0, ESC3_X = 1, ESC_Y = 2, ESC3_T = 3, ESC3_L = 4,
 typedef enum { ESC3_Z = 0, ESC3_X = 1, ESC3_Y = 2, ESC3_T = 3,
                ESC3_NUM = 4 } EscType3;
 #endif
-#ifdef ESC_EQ_WITH_L
-typedef enum { ESC3F_Z = 0, ESC3F_X = 1, ESC3F_Y = 2, ESC3F_T = 3, ESC3F_L = 4,
-               ESC3F_PZ = 5, ESC3F_PX = 6, ESC3F_PY = 7, 
-               ESC3F_NUM = 8 } EscType3f;
-#else
-typedef enum { ESC3F_Z = 0, ESC3F_X = 1, ESC3F_Y = 2, ESC3F_T = 3,
-               ESC3F_PZ = 4, ESC3F_PX = 5, ESC3F_PY = 6,
-               ESC3F_NUM = 7 } EscType3f;
-#endif
 /*^*/
 
 extern const char* sf_esc_point3_str[ESC3_NUM];
-extern const char* sf_esc_point3f_str[ESC3F_NUM];
 /*^*/
 
 #endif
@@ -66,11 +55,6 @@ extern const char* sf_esc_point3f_str[ESC3F_NUM];
 const char* sf_esc_point3_str[ESC3_NUM] = { "z", "x", "y", "t", "l" };
 #else
 const char* sf_esc_point3_str[ESC3_NUM] = { "z", "x", "y", "t" };
-#endif
-#ifdef ESC_EQ_WITH_L
-const char* sf_esc_point3f_str[ESC3F_NUM] = { "z", "x", "y", "t", "l", "pz", "px", "py" };
-#else
-const char* sf_esc_point3f_str[ESC3F_NUM] = { "z", "x", "y", "t", "pz", "px", "py" };
 #endif
 
 struct EscPoint3 {
@@ -81,21 +65,11 @@ struct EscPoint3 {
     uint32_t col:6; /* Color (origin) */
 };
 /* concrete data type */
-struct EscPoint3f {
-    float    e[ESC3F_NUM]; /* Escape variables */
-};
-/* concrete data type */
 
 int sf_esc_point3_sizeof (void)
 /*< Returns size of object in bytes >*/
 {
     return sizeof (struct EscPoint3);
-}
-
-int sf_esc_point3f_sizeof (void)
-/*< Returns size of object in bytes >*/
-{
-    return sizeof (struct EscPoint3f);
 }
 
 void sf_esc_point3_reset (sf_esc_point3 esc_point)
@@ -112,15 +86,6 @@ void sf_esc_point3_reset (sf_esc_point3 esc_point)
     esc_point->col = 0;
 }
 
-void sf_esc_point3f_reset (sf_esc_point3f esc_point)
-/*< Reset object to default state >*/
-{
-    int i;
-
-    for (i = 0; i < ESC3F_NUM; i++)
-        esc_point->e[i] = 0.0;
-}
-
 sf_esc_point3 sf_esc_point3_init (void)
 /*< Initialize object >*/
 {
@@ -131,36 +96,13 @@ sf_esc_point3 sf_esc_point3_init (void)
     return esc_point;
 }
 
-sf_esc_point3f sf_esc_point3f_init (void)
-/*< Initialize object >*/
-{
-    sf_esc_point3f esc_point = (sf_esc_point3f)sf_alloc (1, sizeof (struct EscPoint3f));
-
-    sf_esc_point3f_reset (esc_point);
-
-    return esc_point;
-}
-
-
 void sf_esc_point3_close (sf_esc_point3 esc_point)
 /*< Destroy object >*/
 {
     free (esc_point);
 }
 
-void sf_esc_point3f_close (sf_esc_point3f esc_point)
-/*< Destroy object >*/
-{
-    free (esc_point);
-}
-
 float sf_esc_point3_get_esc_var (sf_esc_point3 esc_point, EscType3 i)
-/*< Get escape length >*/
-{
-    return esc_point->e[i];
-}
-
-float sf_esc_point3f_get_esc_var (sf_esc_point3f esc_point, EscType3f i)
 /*< Get escape length >*/
 {
     return esc_point->e[i];
@@ -173,12 +115,6 @@ EscColor3 sf_esc_point3_get_col (sf_esc_point3 esc_point)
 }
 
 void sf_esc_point3_set_esc_var (sf_esc_point3 esc_point, EscType3 i, float f)
-/*< Set escape variable >*/
-{
-    esc_point->e[i] = f;
-}
-
-void sf_esc_point3f_set_esc_var (sf_esc_point3f esc_point, EscType3f i, float f)
 /*< Set escape variable >*/
 {
     esc_point->e[i] = f;

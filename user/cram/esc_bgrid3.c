@@ -24,9 +24,6 @@
 #include "einspline.h"
 /*^*/
 
-#include "esc_slow3.h"
-/*^*/
-
 #include "esc_point3.h"
 /*^*/
 
@@ -37,7 +34,15 @@ typedef struct EscBGrid3 *sf_esc_bgrid3;
 /* abstract data type */
 /*^*/
 
+#define ESC3_BSC_BMAX 128
 #define ESC3_BGRID3_APRON 2
+/*^*/
+
+/* Colors for different boundaries */
+typedef enum { ESC3_SIDE_TOP = 0, ESC3_SIDE_BOTTOM = 1,
+               ESC3_SIDE_LEFT = 2, ESC3_SIDE_RIGHT = 3,
+               ESC3_SIDE_NEAR = 4, ESC3_SIDE_FAR = 5,
+               ESC3_SIDE_NUM = 6 } EscSide3;
 /*^*/
 
 #endif
@@ -49,7 +54,6 @@ struct EscBGrid3 {
     float                 zmax, xmax, ymax;
     bool                  verb;
     sf_timer              ttime;
-    sf_esc_slowness3      esc_slow;
     sf_esc_tracer3        esc_tracer;
 };
 /* concrete data type */
@@ -81,7 +85,7 @@ float sf_esc_bgrid3_get_oa (int na)
 sf_esc_bgrid3 sf_esc_bgrid3_init (int nz, int nx, int ny, int na, int nb,
                                   float oz, float ox, float oy,
                                   float dz, float dx, float dy, 
-                                  sf_esc_slowness3 esc_slow, sf_esc_tracer3 esc_tracer)
+                                  sf_esc_tracer3 esc_tracer)
 /*< Initialize object >*/
 {
     sf_esc_bgrid3 esc_bgrid = (sf_esc_bgrid3)sf_alloc (1, sizeof (struct EscBGrid3));
@@ -112,7 +116,6 @@ sf_esc_bgrid3 sf_esc_bgrid3_init (int nz, int nx, int ny, int na, int nb,
 
     esc_bgrid->ttime = sf_timer_init (); /* Total time */
 
-    esc_bgrid->esc_slow = esc_slow;
     esc_bgrid->esc_tracer = esc_tracer;
 
     return esc_bgrid;
@@ -154,23 +157,23 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
 /*< Run escape values computations for the top or bottom boundary >*/
 {
     int ix, iy, ib, ia, iap, i, j;
-    float z, x, y, b, a;
+    float z, x, y, b, a, be, ae;
     float *****top;
-    sf_esc_point3f esc_pointf;
+    sf_esc_point3 esc_point;
     Ugrid z_grid, x_grid, y_grid;
     BCtype_s zBC, xBC, yBC;
     multi_UBspline_3d_s **splines;
 
     sf_esc_bgrid3_set_tracer_limits (esc_bgrid);
     top = sf_floatalloc5 (esc_bgrid->nx, esc_bgrid->ny, esc_bgrid->nb + 2*ESC3_BGRID3_APRON,
-                          esc_bgrid->na, ESC3F_NUM);
+                          ESC3_NUM + 3, esc_bgrid->na);
 
     if (esc_bgrid->verb) {
          sf_timer_reset (esc_bgrid->ttime);
          sf_timer_start (esc_bgrid->ttime);
     }
 
-    esc_pointf = sf_esc_point3f_init ();
+    esc_point = sf_esc_point3_init ();
 
     z = istop ? esc_bgrid->oz : esc_bgrid->zmax;
     for (ia = 0; ia < esc_bgrid->na; ia++) {
@@ -182,11 +185,14 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
                 for (ix = 0; ix < esc_bgrid->nx; ix++) {
                     x = esc_bgrid->ox + ix*esc_bgrid->dx;
                     sf_esc_tracer3_compute (esc_bgrid->esc_tracer, z, x, y, b, a,
-                                            0.0, 0.0, NULL, esc_pointf);
+                                            0.0, 0.0, esc_point, &ae, &be);
                     /* Copy escape values to the output buffer */
-                    for (i = 0; i < ESC3F_NUM; i++)
+                    for (i = 0; i < ESC3_NUM; i++)
                         top[i][ia][ib + ESC3_BGRID3_APRON][iy][ix] =
-                        sf_esc_point3f_get_esc_var (esc_pointf, i);
+                        sf_esc_point3_get_esc_var (esc_point, i);
+                    top[ia][ESC3_NUM][ib + ESC3_BGRID3_APRON][iy][ix] = cosf (be);
+                    top[ia][ESC3_NUM + 1][ib + ESC3_BGRID3_APRON][iy][ix] = /*sinf (be)*/cosf (ae);
+                    top[ia][ESC3_NUM + 2][ib + ESC3_BGRID3_APRON][iy][ix] = /*sinf (be)*/sinf (ae);
                 }
             }
         }
@@ -194,7 +200,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
     /* Copy boundary values in b direction to the apron area -
        this will later help with the proper boundary conditions
        during interpolation */
-    for (i = 0; i < ESC3F_NUM; i++) {
+    for (i = 0; i < (ESC3_NUM + 3); i++) {
         for (ia = 0; ia < esc_bgrid->na; ia++) {
             /* Boundary condition on b - as we go past 0 or PI,
                we add +/-PI to a */
@@ -205,10 +211,10 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
             for (iy = 0; iy < esc_bgrid->ny; iy++) {
                 for (ix = 0; ix < esc_bgrid->ny; ix++) {
                     for (j = 0; j < ESC3_BGRID3_APRON; j++) {
-                        top[i][ia][ESC3_BGRID3_APRON - 1 - j][iy][ix] =
-                        top[i][iap][ESC3_BGRID3_APRON + j][iy][ix];
-                        top[i][ia][esc_bgrid->nb + ESC3_BGRID3_APRON + j][iy][ix] =
-                        top[i][iap][esc_bgrid->nb + ESC3_BGRID3_APRON - 1 - j][iy][ix];
+                        top[ia][i][ESC3_BGRID3_APRON - 1 - j][iy][ix] =
+                        top[iap][i][ESC3_BGRID3_APRON + j][iy][ix];
+                        top[ia][i][esc_bgrid->nb + ESC3_BGRID3_APRON + j][iy][ix] =
+                        top[iap][i][esc_bgrid->nb + ESC3_BGRID3_APRON - 1 - j][iy][ix];
                     }
                 }
             }
@@ -230,9 +236,9 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
     yBC.lCode = yBC.rCode = NATURAL;
     /* Create splines for each constant azimuth hyperplane */
     for (ia = 0; ia < esc_bgrid->na; ia++) {
-        splines[ia] = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3F_NUM);
-        for (i = 0; i < ESC3F_NUM; i++) {
-            set_multi_UBspline_3d_s (splines[ia], i, &top[i][ia][0][0][0]);
+        splines[ia] = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 3);
+        for (i = 0; i < (ESC3_NUM + 3); i++) {
+            set_multi_UBspline_3d_s (splines[ia], i, &top[ia][i][0][0][0]);
         }
     }
     sf_esc_bgrid3_free5 (top);
@@ -243,7 +249,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
                    sf_timer_get_total_time (esc_bgrid->ttime)/60000.0);
     }
 
-    sf_esc_point3f_close (esc_pointf);
+    sf_esc_point3_close (esc_point);
 
     return splines;
 }
@@ -252,23 +258,23 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_leftright (sf_esc_bgrid3 esc_bgrid, 
 /*< Run escape values computations for the left of right boundary >*/
 {
     int iz, iy, ib, ia, iap, i, j;
-    float z, x, y, b, a;
+    float z, x, y, b, a, be, ae;
     float *****left;
-    sf_esc_point3f esc_pointf;
+    sf_esc_point3 esc_point;
     Ugrid z_grid, x_grid, y_grid;
     BCtype_s zBC, xBC, yBC;
     multi_UBspline_3d_s **splines;
 
     sf_esc_bgrid3_set_tracer_limits (esc_bgrid);
     left = sf_floatalloc5 (esc_bgrid->nz, esc_bgrid->ny, esc_bgrid->nb + 2*ESC3_BGRID3_APRON,
-                           esc_bgrid->na, ESC3F_NUM);
+                           ESC3_NUM + 3, esc_bgrid->na);
 
     if (esc_bgrid->verb) {
          sf_timer_reset (esc_bgrid->ttime);
          sf_timer_start (esc_bgrid->ttime);
     }
 
-    esc_pointf = sf_esc_point3f_init ();
+    esc_point = sf_esc_point3_init ();
 
     x = isleft ? esc_bgrid->ox : esc_bgrid->xmax;
     for (ia = 0; ia < esc_bgrid->na; ia++) {
@@ -280,11 +286,14 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_leftright (sf_esc_bgrid3 esc_bgrid, 
                 for (iz = 0; iz < esc_bgrid->nz; iz++) {
                     z = esc_bgrid->oz + iz*esc_bgrid->dz;
                     sf_esc_tracer3_compute (esc_bgrid->esc_tracer, z, x, y, b, a,
-                                            0.0, 0.0, NULL, esc_pointf);
+                                            0.0, 0.0, esc_point, &ae, &be);
                     /* Copy escape values to the output buffer */
-                    for (i = 0; i < ESC3F_NUM; i++)
-                        left[i][ia][ib + ESC3_BGRID3_APRON][iy][iz] =
-                        sf_esc_point3f_get_esc_var (esc_pointf, i);
+                    for (i = 0; i < ESC3_NUM; i++)
+                        left[ia][i][ib + ESC3_BGRID3_APRON][iy][iz] =
+                        sf_esc_point3_get_esc_var (esc_point, i);
+                    left[ia][ESC3_NUM][ib + ESC3_BGRID3_APRON][iy][iz] = cosf (be);
+                    left[ia][ESC3_NUM + 1][ib + ESC3_BGRID3_APRON][iy][iz] = /*sinf (be)*/cosf (ae);
+                    left[ia][ESC3_NUM + 2][ib + ESC3_BGRID3_APRON][iy][iz] = /*sinf (be)*/sinf (ae);
                 }
             }
         }
@@ -292,7 +301,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_leftright (sf_esc_bgrid3 esc_bgrid, 
     /* Copy boundary values in b direction to the apron area -
        this will later help with the proper boundary conditions
        during interpolation */
-    for (i = 0; i < ESC3F_NUM; i++) {
+    for (i = 0; i < (ESC3_NUM + 3); i++) {
         for (ia = 0; ia < esc_bgrid->na; ia++) {
             /* Boundary condition on b - as we go past 0 or PI,
                we add +/-PI to a */
@@ -303,10 +312,10 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_leftright (sf_esc_bgrid3 esc_bgrid, 
             for (iy = 0; iy < esc_bgrid->ny; iy++) {
                 for (iz = 0; iz < esc_bgrid->nz; iz++) {
                     for (j = 0; j < ESC3_BGRID3_APRON; j++) {
-                        left[i][ia][ESC3_BGRID3_APRON - 1 - j][iy][iz] =
-                        left[i][iap][ESC3_BGRID3_APRON + j][iy][iz];
-                        left[i][ia][esc_bgrid->nb + ESC3_BGRID3_APRON + j][iy][iz] =
-                        left[i][iap][esc_bgrid->nb + ESC3_BGRID3_APRON - 1 - j][iy][iz];
+                        left[ia][i][ESC3_BGRID3_APRON - 1 - j][iy][iz] =
+                        left[iap][i][ESC3_BGRID3_APRON + j][iy][iz];
+                        left[ia][i][esc_bgrid->nb + ESC3_BGRID3_APRON + j][iy][iz] =
+                        left[iap][i][esc_bgrid->nb + ESC3_BGRID3_APRON - 1 - j][iy][iz];
                     }
                 }
             }
@@ -328,9 +337,9 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_leftright (sf_esc_bgrid3 esc_bgrid, 
     yBC.lCode = yBC.rCode = NATURAL;
     /* Create splines for each constant azimuth hyperplane */
     for (ia = 0; ia < esc_bgrid->na; ia++) {
-        splines[ia] = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3F_NUM);
-        for (i = 0; i < ESC3F_NUM; i++) {
-            set_multi_UBspline_3d_s (splines[ia], i, &left[i][ia][0][0][0]);
+        splines[ia] = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 3);
+        for (i = 0; i < (ESC3_NUM + 3); i++) {
+            set_multi_UBspline_3d_s (splines[ia], i, &left[ia][i][0][0][0]);
         }
     }
     sf_esc_bgrid3_free5 (left);
@@ -340,7 +349,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_leftright (sf_esc_bgrid3 esc_bgrid, 
                    sf_timer_get_total_time (esc_bgrid->ttime)/60000.0);
     }
 
-    sf_esc_point3f_close (esc_pointf);
+    sf_esc_point3_close (esc_point);
 
     return splines;
 }
@@ -349,23 +358,23 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
 /*< Run escape values computations for the near of far boundary >*/
 {
     int iz, ix, ib, ia, iap, i, j;
-    float z, x, y, b, a;
+    float z, x, y, b, a, be, ae;
     float *****near;
-    sf_esc_point3f esc_pointf;
+    sf_esc_point3 esc_point;
     Ugrid z_grid, x_grid, y_grid;
     BCtype_s zBC, xBC, yBC;
     multi_UBspline_3d_s **splines;
 
     sf_esc_bgrid3_set_tracer_limits (esc_bgrid);
     near = sf_floatalloc5 (esc_bgrid->nz, esc_bgrid->nx, esc_bgrid->nb + 2*ESC3_BGRID3_APRON,
-                           esc_bgrid->na, ESC3F_NUM);
+                           ESC3_NUM + 3, esc_bgrid->na);
 
     if (esc_bgrid->verb) {
          sf_timer_reset (esc_bgrid->ttime);
          sf_timer_start (esc_bgrid->ttime);
     }
 
-    esc_pointf = sf_esc_point3f_init ();
+    esc_point = sf_esc_point3_init ();
 
     y = isnear ? esc_bgrid->oy : esc_bgrid->ymax;
     for (ia = 0; ia < esc_bgrid->na; ia++) {
@@ -377,11 +386,14 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
                 for (iz = 0; iz < esc_bgrid->nz; iz++) {
                     z = esc_bgrid->oz + iz*esc_bgrid->dz;
                     sf_esc_tracer3_compute (esc_bgrid->esc_tracer, z, x, y, b, a,
-                                            0.0, 0.0, NULL, esc_pointf);
+                                            0.0, 0.0, esc_point, &ae, &be);
                     /* Copy escape values to the output buffer */
-                    for (i = 0; i < ESC3F_NUM; i++)
-                        near[i][ia][ib + ESC3_BGRID3_APRON][ix][iz] =
-                        sf_esc_point3f_get_esc_var (esc_pointf, i);
+                    for (i = 0; i < ESC3_NUM; i++)
+                        near[ia][i][ib + ESC3_BGRID3_APRON][ix][iz] =
+                        sf_esc_point3_get_esc_var (esc_point, i);
+                    near[ia][ESC3_NUM][ib + ESC3_BGRID3_APRON][ix][iz] = cosf (be);
+                    near[ia][ESC3_NUM + 1][ib + ESC3_BGRID3_APRON][ix][iz] = /*sinf (be)*/cosf (ae);
+                    near[ia][ESC3_NUM + 2][ib + ESC3_BGRID3_APRON][ix][iz] = /*sinf (be)*/sinf (ae);
                 }
             }
         }
@@ -389,7 +401,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
     /* Copy boundary values in b direction to the apron area -
        this will later help with the proper boundary conditions
        during interpolation */
-    for (i = 0; i < ESC3F_NUM; i++) {
+    for (i = 0; i < (ESC3_NUM + 3); i++) {
         for (ia = 0; ia < esc_bgrid->na; ia++) {
             /* Boundary condition on b - as we go past 0 or PI,
                we add +/-PI to a */
@@ -400,10 +412,10 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
             for (ix = 0; ix < esc_bgrid->ny; ix++) {
                 for (iz = 0; iz < esc_bgrid->nz; iz++) {
                     for (j = 0; j < ESC3_BGRID3_APRON; j++) {
-                        near[i][ia][ESC3_BGRID3_APRON - 1 - j][ix][iz] =
-                        near[i][iap][ESC3_BGRID3_APRON + j][ix][iz];
-                        near[i][ia][esc_bgrid->nb + ESC3_BGRID3_APRON + j][ix][iz] =
-                        near[i][iap][esc_bgrid->nb + ESC3_BGRID3_APRON - 1 - j][ix][iz];
+                        near[ia][i][ESC3_BGRID3_APRON - 1 - j][ix][iz] =
+                        near[iap][i][ESC3_BGRID3_APRON + j][ix][iz];
+                        near[ia][i][esc_bgrid->nb + ESC3_BGRID3_APRON + j][ix][iz] =
+                        near[iap][i][esc_bgrid->nb + ESC3_BGRID3_APRON - 1 - j][ix][iz];
                     }
                 }
             }
@@ -425,9 +437,9 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
     yBC.lCode = yBC.rCode = NATURAL;
     /* Create splines for each constant azimuth hyperplane */
     for (ia = 0; ia < esc_bgrid->na; ia++) {
-        splines[ia] = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3F_NUM);
-        for (i = 0; i < ESC3F_NUM; i++) {
-            set_multi_UBspline_3d_s (splines[ia], i, &near[i][ia][0][0][0]);
+        splines[ia] = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 3);
+        for (i = 0; i < (ESC3_NUM + 3); i++) {
+            set_multi_UBspline_3d_s (splines[ia], i, &near[ia][i][0][0][0]);
         }
     }
     sf_esc_bgrid3_free5 (near);
@@ -438,7 +450,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
                    sf_timer_get_total_time (esc_bgrid->ttime)/60000.0);
     }
 
-    sf_esc_point3f_close (esc_pointf);
+    sf_esc_point3_close (esc_point);
 
     return splines;
 }

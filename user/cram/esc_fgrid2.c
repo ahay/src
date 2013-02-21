@@ -1,4 +1,4 @@
-/* 3-D full phase-space grid for 2-D medium */
+/* 3-D full phase-space grid for 2-D medium, uses finite differences with Gauss-Seidel updates */
 /*
   Copyright (C) 2012 University of Texas at Austin
 
