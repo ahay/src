@@ -153,7 +153,8 @@ void iwiadd(double omega,
     }
 }
 
-void iwigrad_init(int npml0, float vpml0, 
+void iwigrad_init(char *order,
+		  int npml0, float vpml0, 
 		  int nn1, int nn2, 
 		  float dd1, float dd2,
 		  int nh0, int ns0, 
@@ -163,6 +164,8 @@ void iwigrad_init(int npml0, float vpml0,
 		  int uts0)
 /*< initialization >*/
 {
+    fdprep_order(order);
+
     npml = npml0;
     vpml = vpml0;
     

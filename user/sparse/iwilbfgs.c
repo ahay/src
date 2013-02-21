@@ -25,7 +25,8 @@
 
 static sf_fslice sfile, rfile;
 
-void iwilbfgs_init(int npml, float vpml, 
+void iwilbfgs_init(char *order,
+		   int npml, float vpml, 
 		   int n1, int n2, 
 		   float d1, float d2,
 		   int nh, int ns, 
@@ -40,14 +41,14 @@ void iwilbfgs_init(int npml, float vpml,
     rfile = sf_fslice_init(n1*n2*ns,nw,sizeof(sf_complex));
 
     /* forward modeling */
-    iwimodl_init(npml,vpml,
+    iwimodl_init(order,npml,vpml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 source,data, sfile,rfile,
 		 load,datapath, uts);
 
     /* tomography operator */
-    iwigrad_init(npml,vpml,
+    iwigrad_init(order,npml,vpml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 sfile,rfile,
