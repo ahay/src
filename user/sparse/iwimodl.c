@@ -27,7 +27,7 @@
 #include "fdprep.h"
 #include "iwimodl.h"
 
-static float vpml, d1, d2, ow, dw;
+static float vpml, d1, d2, ow, dw, ****image;
 static int n1, n2, nh, ns, nw, npml;
 static sf_file source, data;
 static sf_fslice sfile, rfile;
@@ -55,6 +55,8 @@ void iwimodl_init(char *order,
 		  int uts0)
 /*< initialization >*/
 {
+    int its;
+
     fdprep_order(order);
 
     npml = npml0;
@@ -98,6 +100,11 @@ void iwimodl_init(char *order,
     Xx = (double**) sf_alloc(uts,sizeof(double*));
     Xz = (double**) sf_alloc(uts,sizeof(double*));
 
+    image = (float****) sf_alloc(uts,sizeof(float***));
+    for (its=0; its < uts; its++) {
+	image[its] = sf_floatalloc3(n1,n2,2*nh+1);
+    }
+
     Numeric = (void**) sf_alloc(uts,sizeof(void*));
 
     /* LU control */
@@ -108,11 +115,37 @@ void iwimodl_init(char *order,
 void iwimodl_free()
 /*< free >*/
 {
+    int its;
+
     free(srce[0][0]); free(recv[0][0]);
+
+    for (its=0; its < uts; its++) {
+	free(image[its][0][0]);
+    }
+    free(image);
 }
 
-void iwimodl_modl(float **vel     /* current velocity */,
-		  float ****image /* extended image */)
+void iwimodl_clean()
+/*< clean up >*/
+{
+    int its, ih, j, i;
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(uts) private(ih,j,i)
+#endif
+    for (its=0; its < uts; its++) {
+	for (ih=-nh; ih < nh+1; ih++) {
+	    for (j=0; j < n2; j++) {
+		for (i=0; i < n1; i++) {
+		    image[its][ih+nh][j][i] = 0.;
+		}
+	    }
+	}
+    }
+}
+
+void iwimodl_modl(float **vel   /* current velocity */,
+		  float *image0 /* extended image */)
 /*< modeling >*/
 {
     int iw, is, its, ih, j, i;
@@ -267,13 +300,22 @@ void iwimodl_modl(float **vel     /* current velocity */,
     rewind(sf_filestream(source));
     rewind(sf_filestream(data));
 
+    /* output extended image */
+    for (ih=-nh; ih < nh+1; ih++) {
+	for (j=0; j < n2; j++) {
+	    for (i=0; i < n1; i++) {
+		image0[(ih+nh)*n1*n2+j*n1+i] = image[0][ih+nh][j][i];
+	    }
+	}
+    }
+
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(uts) private(j,i,its)
     for (ih=-nh; ih < nh+1; ih++) {
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {
 		for (its=1; its < uts; its++) {
-		    image[0][ih+nh][j][i] += image[its][ih+nh][j][i];
+		    image0[(ih+nh)*n1*n2+j*n1+i] += image[its][ih+nh][j][i];
 		}
 	    }
 	}
