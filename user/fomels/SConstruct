@@ -3,14 +3,14 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-abalance analytical angle angle2 approx bdix beamform bil1 blur
-cameron cfftwave1 cdivn cflow chebvc clpf cltft constperm cosftwave1
-cpef dealias dealias2 deblur dijkstra dip dip2 diplet dips distance
-divn dix dixshape dpeiko eikonal eikonalvti erf exgr explanesignoi
-expsignoi fft2 fftexp0 fftexp1 fftexp3 fftone ffttest fftwave1
-fftwave2 fftwave3 focus fpow freqest gaussmooth gbeamform imray
-interp2 interpt iphase kron locov lpf lsfit mdip median mffit mig3
-miss3 nconv nsmooth nsmooth1 ocparcel octentwt odip2 ofilp ofpwd
+abalance analytical angle angle2 approx arrival bdix beamform bil1
+blur cameron cfftwave1 cdivn cflow chebvc clpf cltft constperm
+cosftwave1 cpef dealias dealias2 deblur dijkstra dip dip2 diplet dips
+distance divn dix dixshape dpeiko eikonal eikonalvti eno2 erf exgr
+explanesignoi expsignoi fft2 fftexp0 fftexp1 fftexp3 fftone ffttest
+fftwave1 fftwave2 fftwave3 focus fpow freqest gaussmooth gbeamform
+imray interp2 interpt iphase kron locov lpf lsfit mdip median mffit
+mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt odip2 ofilp ofpwd
 ofpwd2 ofsemb opwd2 patch phaserot pick pick3 plane planemis2
 planemis3 planereg2 planereg3 planesignoi pmshape2 predict pwd pwcoh
 pwdix pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray pwspray2
@@ -18,7 +18,7 @@ pwspray3 regr rdiv reshape riesz rsin seislet seisigk semblance shape
 shapeagc shapesigk shearer shift1 similarity simenv smoothderw
 smoothreg taupfit thin timecont timefreq timeshift tomo tree trace2
 trismooth2 tristack tristack2 twodip2 twofreq2 velcon velinv vidattr
-vofzperm warp1 warpadd warpscan zero ztrace
+vofzperm warp1 warpadd warpscan zero zmarch ztrace
 '''
 
 ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'

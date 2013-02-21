@@ -5,9 +5,11 @@ def TPX(tpx,data,
         np,               # number of slopes
         nw=0,             # number of frequencies
         p0=-1,            # first slope
+        dp=None,          # slope increment
         ):
 
-    dp=-2.0*p0/(np-1)
+    if not dp:
+        dp=-2.0*p0/(np-1)
 
     nt2=nt
     if nt2%2:

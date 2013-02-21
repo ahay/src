@@ -6,6 +6,7 @@ progs = '''
 beamsteer bmcgauss
 catan2 comblist
 cplxatt cplxcoh cplxcor cplxloc
+differr gsray
 karman karmans karman2 
 mcbmcgauss
 radonslope2 tan2dang
