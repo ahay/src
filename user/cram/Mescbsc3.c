@@ -136,18 +136,18 @@ int main (int argc, char* argv[]) {
     /* Loop over supercells */
     for (iscy = 0; iscy < nscy; iscy++) {
         oy = ymin + oscy + iscy*dscy;
-        ny = nsy;
-        while ((oy + (ny + 0.999)*dy) > ymax)
+        ny = nsy + 1;
+        while ((oy + (ny - 1.01)*dy) > ymax)
             ny--;
         for (iscx = 0; iscx < nscx; iscx++) {
             ox = xmin + oscx + iscx*dscx;
-            nx = nsx;
-            while ((ox + (nx + 0.999)*dx) > xmax)
+            nx = nsx + 1;
+            while ((ox + (nx - 1.01)*dx) > xmax)
                 nx--;
             for (iscz = 0; iscz < nscz; iscz++) {
                 oz = zmin + oscz + iscz*dscz;
-                nz = nsz;
-                while ((oz + (nz + 0.999)*dz) > zmax)
+                nz = nsz + 1;
+                while ((oz + (nz - 1.01)*dz) > zmax)
                     nz--;
                 if (verb)
                     sf_warning ("Processing supercell block %lu of %lu at y=%g, x=%g, z=%g [%dx%dx%dx%dx%d]",

@@ -22,7 +22,6 @@
 
 #include <rsf.h>
 
-#include "esc_scbl3.h"
 #include "einspline.h"
 
 #ifndef _esc_scbl3_h
@@ -38,6 +37,8 @@ typedef struct EscSCBlock3 *sf_esc_scblock3;
 /*^*/
 
 #endif
+
+#include "esc_scbl3.h"
 
 struct EscSCBlock3 {
     int                  nz, nx, ny, na, nb;
@@ -142,22 +143,26 @@ void sf_esc_scblock3_close (sf_esc_scblock3 esc_scbl)
 #define SPEPS 1e-3
 
 /* Return boundary (side of the supercell) index correpsonding to z,x,y coordinate */
-static EscSide3 sf_esc_scblock3_xyz_side (sf_esc_scblock3 esc_scbl,
-                                          float z, float x, float y) {
+static EscColor3 sf_esc_scblock3_xyz_side (sf_esc_scblock3 esc_scbl,
+                                           float z, float x, float y) {
+    EscColor3 side = 0;
+
     if (z <= esc_scbl->zmin + SPEPS*esc_scbl->dz)
-        return ESC3_SIDE_TOP;
+        side |= ESC3_TOP;
     if (z >= esc_scbl->zmax - SPEPS*esc_scbl->dz)
-        return ESC3_SIDE_BOTTOM;
+        side |= ESC3_BOTTOM;
     if (x <= esc_scbl->xmin + SPEPS*esc_scbl->dx)
-        return ESC3_SIDE_LEFT;
+        side |= ESC3_LEFT;
     if (x >= esc_scbl->xmax - SPEPS*esc_scbl->dx)
-        return ESC3_SIDE_RIGHT;
+        side |= ESC3_RIGHT;
     if (y <= esc_scbl->ymin + SPEPS*esc_scbl->dy)
-        return ESC3_SIDE_NEAR;
+        side |= ESC3_NEAR;
     if (y >= esc_scbl->ymax - SPEPS*esc_scbl->dy)
-        return ESC3_SIDE_FAR;
+        side |= ESC3_FAR;
     /* Not on any of the six sides */
-    return ESC3_SIDE_NUM;
+    if (0 == side)
+        side = ESC3_INSIDE;
+    return side;
 }
 
 /* Convert normalized phase vector components into polar angles */
@@ -194,12 +199,13 @@ static void sf_esc_scblock3_p_to_ab (sf_esc_scblock3 esc_scbl,
         *a -= 2.0*SF_PI;
 }
 
-static void sf_esc_scblock3_interpolate (sf_esc_scblock3 esc_scbl,
+static void sf_esc_scblock3_interpolate (sf_esc_scblock3 esc_scbl, EscColor3 side,
                                          float *z, float *x, float *y,
                                          float *t, float *l, float *a, float *b) {
     int i, ia, iap;
     float af;
     float vals[2][ESC3_NUM + 3], p[3];
+    EscSide3 is;
 
     /* Make small shifts to account for the lack of boundary checks
        in the spline interpolation routine */
@@ -221,14 +227,30 @@ static void sf_esc_scblock3_interpolate (sf_esc_scblock3 esc_scbl,
     ia = floorf (af);
     af -= (float)ia;
 
+    /* Previous azimuth plane */
+    if (ia < 0)
+        ia += esc_scbl->na;
+    if (ia >= esc_scbl->na)
+        ia -= esc_scbl->na;
     /* Next azimuth plane */
     iap = ia + 1;
-    if (ia == esc_scbl->na)
-        iap = 0;
+    if (iap >= esc_scbl->na)
+        iap -= esc_scbl->na;
 
     /* Get values for the both planes */
-    eval_multi_UBspline_3d_s (esc_scbl->scsplines[ia], *y, *x, *z, &vals[0][0]);
-    eval_multi_UBspline_3d_s (esc_scbl->scsplines[iap], *y, *x, *z, &vals[1][0]);
+    if ((side & ESC3_TOP) || (side & ESC3_BOTTOM)) {
+        is = (side & ESC3_TOP) ? ESC3_SIDE_TOP : ESC3_SIDE_BOTTOM;
+        eval_multi_UBspline_3d_s (&esc_scbl->scsplines[is][ia], *b, *y, *x, &vals[0][0]);
+        eval_multi_UBspline_3d_s (&esc_scbl->scsplines[is][iap], *b, *y, *x, &vals[1][0]);
+    } else if ((side & ESC3_LEFT) || (side & ESC3_RIGHT)) {
+        is = (side & ESC3_LEFT) ? ESC3_SIDE_LEFT : ESC3_SIDE_RIGHT;
+        eval_multi_UBspline_3d_s (&esc_scbl->scsplines[is][ia], *b, *y, *z, &vals[0][0]);
+        eval_multi_UBspline_3d_s (&esc_scbl->scsplines[is][iap], *b, *y, *z, &vals[1][0]);
+    } else if ((side & ESC3_NEAR) || (side & ESC3_FAR)) {
+        is = (side & ESC3_NEAR) ? ESC3_SIDE_NEAR : ESC3_SIDE_FAR;
+        eval_multi_UBspline_3d_s (&esc_scbl->scsplines[is][ia], *b, *x, *z, &vals[0][0]);
+        eval_multi_UBspline_3d_s (&esc_scbl->scsplines[is][iap], *b, *x, *z, &vals[1][0]);
+    }
 
     /* Interpolate phase components */
     for (i = 0; i < 3; i++)
@@ -252,16 +274,16 @@ static void sf_esc_scblock3_interpolate (sf_esc_scblock3 esc_scbl,
 #endif
 }
 
-EscSide3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
-                                        float *ze, float *xe, float *ye,
-                                        float *te, float *le, float *be, float *ae,
-                                        size_t *rt, double *rd)
+EscColor3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
+                                         float *ze, float *xe, float *ye,
+                                         float *te, float *le, float *be, float *ae,
+                                         size_t *rt, double *rd)
 /*< Project point (z, x, y, b, a) to the boundary of the supercell,
     return new interpolated exit values >*/
 {
     float z = *ze, x = *xe, y = *ye, b = *be, a = *ae;
     float zp = z, xp = x, yp = y, t = *te, l = *le;
-    EscSide3 side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y);
+    EscColor3 side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y);
 
     if (z < (esc_scbl->zmin - SPEPS*esc_scbl->dz) ||
         z > (esc_scbl->zmax + SPEPS*esc_scbl->dz) ||
@@ -273,13 +295,27 @@ EscSide3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
 
     /* If point is on any of the side, do interpolation
        and get a new exit location */ 
-    if (ESC3_SIDE_NUM != side)
-        sf_esc_scblock3_interpolate (esc_scbl, &z, &x, &y, &t, &l, &a, &b);
+    if (ESC3_INSIDE != side) {
+        sf_esc_scblock3_interpolate (esc_scbl, side,
+                                     &z, &x, &y, &t, &l, &a, &b);
+        /* Snap to the boundary */
+/*      if (z < esc_scbl->zmin)
+            z = esc_scbl->zmin;
+        if (z > esc_scbl->zmax)
+            z = esc_scbl->zmax;
+        if (x < esc_scbl->xmin)
+            x = esc_scbl->xmin;
+        if (x > esc_scbl->xmax)
+            x = esc_scbl->xmax;
+        if (y < esc_scbl->ymin)
+            y = esc_scbl->ymin;
+        if (y > esc_scbl->ymax)
+            y = esc_scbl->ymax;*/
+        /* Check what side we are landed on */
+        side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y);
+    }
 
-    /* Check what side we are landed on */
-    side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y);
-
-    if (ESC3_SIDE_NUM == side) {
+    if (ESC3_INSIDE == side) {
         /* Point is not on the boundary, project it;
            this might happen due to inaccuracies in the interpolation,
            or if the original point is not on the boundary */
@@ -289,6 +325,9 @@ EscSide3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
         sf_esc_tracer3_set_xmax (esc_scbl->esc_tracer, esc_scbl->xmax);
         sf_esc_tracer3_set_ymin (esc_scbl->esc_tracer, esc_scbl->ymin);
         sf_esc_tracer3_set_ymax (esc_scbl->esc_tracer, esc_scbl->ymax);
+        zp = z;
+        xp = x;
+        yp = y;
         sf_esc_tracer3_compute (esc_scbl->esc_tracer, z, x, y, b, a,
                                 t, l, esc_scbl->esc_point, ae, be);
         b = *be;

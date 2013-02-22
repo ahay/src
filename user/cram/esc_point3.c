@@ -31,7 +31,8 @@ typedef struct EscPoint3 *sf_esc_point3;
 /* Colors for different boundaries */
 typedef enum { ESC3_LEFT = 1 << 0, ESC3_RIGHT = 1 << 1,
                ESC3_TOP = 1 << 2, ESC3_BOTTOM = 1 << 3,
-               ESC3_NEAR = 1 << 4, ESC3_FAR = 1 << 5 } EscColor3;
+               ESC3_NEAR = 1 << 4, ESC3_FAR = 1 << 5,
+               ESC3_INSIDE = 1 << 6 } EscColor3;
 typedef enum { ESC3_AXIS_Z = 0, ESC3_AXIS_X = 1, ESC3_AXIS_Y = 2,
                ESC3_AXIS_A = 3, ESC3_AXIS_B = 4, ESC3_DIMS = 5 } EscAxisDim3;
 /* Direction along an axis */

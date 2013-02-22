@@ -188,7 +188,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
                                             0.0, 0.0, esc_point, &ae, &be);
                     /* Copy escape values to the output buffer */
                     for (i = 0; i < ESC3_NUM; i++)
-                        top[i][ia][ib + ESC3_BGRID3_APRON][iy][ix] =
+                        top[ia][i][ib + ESC3_BGRID3_APRON][iy][ix] =
                         sf_esc_point3_get_esc_var (esc_point, i);
                     top[ia][ESC3_NUM][ib + ESC3_BGRID3_APRON][iy][ix] = cosf (be);
                     top[ia][ESC3_NUM + 1][ib + ESC3_BGRID3_APRON][iy][ix] = /*sinf (be)*/cosf (ae);

@@ -278,6 +278,8 @@ static void sf_esc_slowness3_compute_components (sf_esc_slowness3 esc_slow, floa
            slowness beforehand */
         if (s)
             *s = vz2;
+        if (sb)
+            *sb = 0.0;
         if (sa)
             *sa = 0.0;
         if (sz)

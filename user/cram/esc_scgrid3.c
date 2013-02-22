@@ -139,7 +139,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid,
 {
     size_t i;
     int ic = 0, iscz, iscx, iscy;
-    EscSide3 side = ESC3_SIDE_NUM;
+    EscColor3 side = ESC3_SIDE_NUM;
 
     /* Initial supercell */
     iscz = floorf ((*z - esc_scgrid->oscz)/esc_scgrid->dscz);
@@ -157,28 +157,20 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid,
                                               ic != 0 ? &esc_scgrid->nrt : NULL,
                                               ic != 0 ? &esc_scgrid->drt : NULL);
         /* Move to the neighbor supercell */
-        switch (side) {
-            case ESC3_SIDE_TOP:
-                iscz--;
-                break;
-            case ESC3_SIDE_BOTTOM:
-                iscz++;
-                break;
-            case ESC3_SIDE_LEFT:
-                iscx--;
-                break;
-            case ESC3_SIDE_RIGHT:
-                iscx++;
-                break;
-            case ESC3_SIDE_NEAR:
-                iscy--;
-                break;
-            case ESC3_SIDE_FAR:
-                iscy++;
-                break;
-	    default:
-		break;
-        }
+        if (side & ESC3_TOP)
+            iscz--;
+        if (side & ESC3_BOTTOM)
+            iscz++;
+        if (side & ESC3_LEFT)
+            iscx--;
+        if (side & ESC3_RIGHT)
+            iscx++;
+        if (side & ESC3_NEAR)
+            iscy--;
+        if (side & ESC3_FAR)
+            iscy++;
+        if (ESC3_INSIDE == side)
+            sf_error ("sf_esc_scgrid3_compute: point projection error");
         ic++;
     }
     esc_scgrid->nr++;

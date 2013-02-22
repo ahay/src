@@ -24,9 +24,10 @@
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy; /* i; */
+    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y, a, b, t, l;
+    float ze, xe, ye, ae, be;
     float ***e;
     sf_file spdom, vspline = NULL, scgrid = NULL, out;
 
@@ -182,12 +183,17 @@ int main (int argc, char* argv[]) {
                         b = ob + ib*db;
                         t = 0.0;
                         l = 0.0;
+                        ze = z;
+                        xe = x;
+                        ye = y;
+                        ae = a;
+                        be = b;
                         sf_esc_scgrid3_compute (esc_scgrid,
-                                                &z, &x, &y, &t, &l, &b, &a);
+                                                &ze, &xe, &ye, &t, &l, &be, &ae);
                         /* Copy escape values to the output buffer */
-                        e[ia][ib][ESC3_Z] = z;
-                        e[ia][ib][ESC3_X] = x;
-                        e[ia][ib][ESC3_Y] = y;
+                        e[ia][ib][ESC3_Z] = ze;
+                        e[ia][ib][ESC3_X] = xe;
+                        e[ia][ib][ESC3_Y] = ye;
                         e[ia][ib][ESC3_T] = t;
 #ifdef ESC_EQ_WITH_L
                         e[ia][ib][ESC3_L] = l;
