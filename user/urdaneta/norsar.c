@@ -26,8 +26,7 @@
 /*^*/
 
 #include "raytrace.h"
-
-#define IN_BOUNDS     	0
+#include "interp.h"
 
 static int gnx, gnz;
 
@@ -144,6 +143,170 @@ void wavefront (struct heptagon *cube, int nr, float *vel,
 	else sf_error("Use lomx=1, no other option is available");
 	cube[ii].x1 = makepoint(ra[1], ra[2]);
 	cube[ii].angle = ra[0];
+    }
+    return;
+}
+
+void mark_pts_outofbounds (struct heptagon *cube, int nr, float x0, float x1, float z0, float z1)
+/*< "mark_pts_outofbounds" raises a flag on any point of the wavefront 
+* that goes out of bounds. The boundary is define by points x0, x1,
+* z0, z1. >*/
+{
+    int ii;
+    struct point pt;
+	
+    for(ii=0;ii<nr;ii++) {
+	pt = cube[ii].x1;
+	if(smaller(pt.x, x0) || bigger(pt.x, x1) || smaller(pt.z, z0) || bigger(pt.z, z1)) 
+	    cube[ii].cf=OUT_OF_BOUNDS;
+    }
+    return;
+}
+
+void makeup (struct heptagon *cube, int *nr)
+/*< "makeup" takes off, from the wavefront, any point that goes
+ * out of boundaries or that belongs to a caustic. >*/
+{
+    int ii;
+    struct heptagon temp;
+    int sp;
+
+    sp = 0;
+    for(ii=0;ii<*nr;ii++) {
+	temp = cube[ii];
+	switch (temp.cf) {
+	    case OUT_OF_BOUNDS:
+		if(cube[(ii-1+*nr)%*nr].cf != OUT_OF_BOUNDS) 		{
+		    if(cube[(ii-sp-2+*nr)%*nr].cf!=END) 
+			cube[(ii-sp-1+*nr)%*nr].cf = END;
+		    else sp++;						}
+	    case CAUSTIC:
+		sp++;
+		break;
+	    case IN_BOUNDS:
+	    default:
+		cube[(ii-sp+*nr)%*nr] = temp;
+		break;
+	}
+    }
+    *nr -= sp;
+    return;
+}
+
+void amplitudes (struct heptagon *cube,int  nr)
+/*< This subroutine obtains the amplitudes of the new wavefront
+* by calculating the geometrical spreading factor and 
+* multiplying it with the old amplitude value.
+*
+* Notice that in order to calculate the amplitude for ending
+* points of the wavefront; i.e., ii==0 or ii==nr-1, the code
+* "wraps" to the other end of the wavefront by using moduli
+* nr. >*/ 
+{
+    int ii;
+    struct point A0, A1, A2;
+    struct point B0, B1, B2;
+    float R1, R2, r1, r2;
+
+    for(ii=0;ii<nr;ii++) {
+	A1 = cube[ii].x0;
+	B1 = cube[ii].x1;
+
+	if(cube[(ii-1+nr)%nr].cf==END) {
+	    A0 = A1; B0 = B1;
+	} else {
+	    A0 = cube[(ii-1+nr)%nr].x0;
+	    B0 = cube[(ii-1+nr)%nr].x1;
+	}
+
+	if(cube[(ii+nr)%nr].cf==END) {
+	    A2 = A1; B2 = B1;
+	} else {
+	    A2 = cube[(ii+1+nr)%nr].x0;
+	    B2 = cube[(ii+1+nr)%nr].x1;
+	}
+
+	r1 = dist(A0, A1); r2 = dist(A1, A2);
+	R1 = dist(B0, B1); R2 = dist(B1, B2);
+	if(R1+R2 > 0)
+	    cube[ii].ampl *= sqrt((r1+r2) / (R1+R2));
+    }
+    return;
+}
+
+void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
+/*< interpolation checks the distance between two contiguos points in
+* the wavefront, if its bigger than DSmax, then it calculates how
+* many rays does it has to interpolate in between.
+*
+* interpolation calls a pair of subroutines which lay in ./interp.c
+* Both subroutines use a third order polynome interpolation. >*/
+{
+    int ii, jj;
+    struct point pt0, pt1, pt2, pt3;
+    float A0, A1, A2, A3, s;
+    float an0, an1, an2, an3;
+    int cf2, sp, nnc;
+    struct heptagon temp;
+
+    for(ii=0;ii<*nr;ii++) {
+
+	if(cube[ii].cf == END)  continue;	
+	nnc = ROUND(dist(cube[ii].x1, cube[(ii+1+*nr)%*nr].x1) / DSmax);
+	if(nnc==0) continue;
+
+        if(*nr + 1 >= nrmax)
+            sf_error("The wavefront has grown bigger than the amount of \nmemory you alocated for it. %d", *nr);
+
+	pt1 = cube[ii].x1;
+	pt2 = cube[(ii+1+*nr)%*nr].x1;
+	A1 = cube[ii].ampl;
+        A2 = cube[(ii+1+*nr)%*nr].ampl;
+	an1 = cube[ii].angle;
+	an2 = cube[(ii+1+*nr)%*nr].angle;
+	if(ii==*nr-1) an2 += 2.*SF_PI;
+	cf2 = cube[(ii+1+*nr)%*nr].cf;
+
+	sp=ii-1;
+	while(cube[(sp+*nr)%*nr].cf==NEWC) sp--;
+	sp = (sp+*nr)%*nr;
+	if(cube[sp].cf==END) {
+	    pt0 = pt1;
+	    A0 = A1;
+	    an0 = an1;
+	} else {
+	    pt0 = cube[sp].x1;
+	    A0 = cube[sp].ampl;
+	    an0 = cube[sp].angle;
+	    if(ii==0) an0 -= 2.*SF_PI;
+	}
+
+	sp=ii+2;
+	while(cube[(sp+*nr)%*nr].cf==NEWC) sp++;
+	sp = (sp+*nr)%*nr;
+	if(cube[sp].cf==END) {
+	    pt3 = pt2;
+	    A3 = A2;	
+	    an3 = an2;
+	} else {
+	    pt3 = cube[sp].x1;
+	    A3 = cube[sp].ampl;
+	    an3 = cube[sp].angle;
+	    if(ii>=*nr-2) an3 += 2.*SF_PI;
+	}
+
+	for(jj=0;jj<nnc;jj++) {	
+	    s = (float) (jj + 1) / (nnc + 1);
+	    temp.x0 = cube[ii].x0;
+	    temp.cf = NEWC;
+/* Call interpolating subroutines to obtain ray angle, amplitude, and
+   position on the wavefront, for the new points.		*/
+	    temp.angle = realinterp (pt0, pt1, pt2, pt3, an0, an1, an2, an3, s);
+	    temp.ampl = realinterp (pt0, pt1, pt2, pt3, A0, A1, A2, A3, s);
+	    temp.x1 = ptinterp (pt0, pt1, pt2, pt3, s);
+/* Push new wavefront point into cube				*/
+	    push(temp, cube, nr, ++ii);
+	}
     }
     return;
 }

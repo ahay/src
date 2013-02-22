@@ -23,9 +23,9 @@
 int main(int argc, char* argv[])
 {
     int n1,n2, n12, n3, i1, i3, niter;
-    float *map=NULL, *msk=NULL;
-    bool *known=NULL, grad;
-    sf_file in=NULL, out=NULL, mask=NULL;
+    float *map, *msk;
+    bool *known, grad, verb;
+    sf_file in, out, mask;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -40,6 +40,8 @@ int main(int argc, char* argv[])
     /* number of iterations */
     if (!sf_getbool("grad",&grad)) grad=false;
     /* if y, use gradient instead of laplacian */
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     map = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
@@ -53,7 +55,7 @@ int main(int argc, char* argv[])
 	msk = map;
     }
 
-    lapfill_init (n1,n2,grad);
+    lapfill_init (n1,n2,grad,verb);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(map,n12,in);

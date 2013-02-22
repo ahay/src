@@ -44,14 +44,26 @@ struct grid {
 };
 /*^*/
 
+#define IN_BOUNDS     	0
+#define OUT_OF_BOUNDS 	1
+#define CAUSTIC	      	2
+#define END	      	3
+#define NEWC	      	4
+/*^*/
+
+#define ROUND(x)	 ((int) (x))
+/*^*/
+
 #endif
 
 #define DIST(A, B, C, D) sqrt((float) ((A)-(C))*((A)-(C))+((B)-(D))*((B)-(D)))
 #define EPS 0.00001
 
+
 /*----------------------------------------------------------------------------*/
 
 float dist (struct point pt1, struct point pt2)
+/*< distance >*/
 {
     return DIST(pt1.x, pt1.z, pt2.x, pt2.z);
 }
@@ -66,6 +78,7 @@ bool equal (float x, float X)
 /*----------------------------------------------------------------------------*/
 
 bool bigger (float x, float X)
+/*< bigger >*/
 {
     return (x - X) > EPS? true : false;
 }
@@ -74,6 +87,7 @@ bool bigger (float x, float X)
 /*----------------------------------------------------------------------------*/
 
 bool smaller (float x, float X)
+/*< smaller >*/
 {
     return (x - X) < -EPS? true : false;
 }
@@ -93,29 +107,17 @@ struct point makepoint (float x, float z)
 
 /*----------------------------------------------------------------------------*/
 
-/*
-* float slope (pti, ptj)
-*
-* Calculates the slope of the line that goes through points pti - ptj
-*
-*/
-
 float slope (struct point pti, struct point ptj)
+/*< Calculates the slope of the line that goes through points pti - ptj >*/
 {
     return (ptj.z - pti.z) / (ptj.x - pti.x);
 }
 
 /*----------------------------------------------------------------------------*/
 
-/*
-* float ordinate (pti, m)
-*
-* Calculates the intersection of the line that goes through point
-* pti with a slope m with the z axis.
-*
-*/
-
 float ordinate (struct point pti, float m)
+/*< Calculates the intersection of the line that goes through point
+ * pti with a slope m with the z axis. >*/
 {
     return pti.z - m * pti.x;
 }
@@ -123,15 +125,9 @@ float ordinate (struct point pti, float m)
 
 /*----------------------------------------------------------------------------*/
 
-/*
-* int bel (X, x1, x2)
-*
-* Check to see whether x1 <= X <= x2 in case x1 < x2,
-* or x1 >= X >= x2 in case x1 >= x2.
-*
-*/
-
 int bel (float X, float x1, float x2)
+/*< Check to see whether x1 <= X <= x2 in case x1 < x2,
+ * or x1 >= X >= x2 in case x1 >= x2. >*/
 {
     return (x2>x1) ? ((X-x2<=EPS)&&(X-x1>=-EPS)) : ((X-x2>=-EPS)&&(X-x1<=EPS));
 }
@@ -139,6 +135,7 @@ int bel (float X, float x1, float x2)
 /*----------------------------------------------------------------------------*/
 
 int eq_pts (struct point pt1, struct point pt2)
+/*< equal points >*/
 {
     float x, z;
     x = (float) fabs(pt1.x - pt2.x);
@@ -150,6 +147,7 @@ int eq_pts (struct point pt1, struct point pt2)
 /*----------------------------------------------------------------------------*/
 
 void printcube (struct heptagon *cube, int nr, FILE *outfile)
+/*< print cube for debugging >*/
 {
     int ii;
 

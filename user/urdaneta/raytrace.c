@@ -19,15 +19,14 @@
 #include <rsf.h>
 
 #include "norgen.h"
+#include "raytrace.h"
 
 #define LN2      0.69314718
-#define ROUND(x) ((int) (x))
 
 static int N, inter, nx, nz;
 static float TETAMAX, alpha2, ox, oz, dx, dz;
 static struct point length;
 
-static float velo (float X, float Z, float *vel);
 static int s(float x, float z);
 
 #define CHECKX(X)       (X)<ox ? ox : (X)>ox+length.x ? ox+length.x :(X)
@@ -120,7 +119,8 @@ void lomax (struct point pt0, float angle, float *vel,
 
 /*----------------------------------------------------------------------------*/
 
-static float velo (float X, float Z, float *vel)
+float velo (float X, float Z, float *vel)
+/*< velocity >*/
 {
     float u1, u2, xo, zo;
     float V0, V1, V2, V3;

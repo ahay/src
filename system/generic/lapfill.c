@@ -26,10 +26,11 @@
 
 static int n12;
 static float* zero;
-static bool grad;
+static bool grad, verb;
 
 void lapfill_init (int m1, int m2 /* model size */, 
-		   bool grad1     /* gradient (or Laplacian) */)
+		   bool grad1     /* gradient (or Laplacian) */,
+                   bool verb1     /* verbosity */)
 /*< initialize >*/
 {
     int i;
@@ -37,6 +38,7 @@ void lapfill_init (int m1, int m2 /* model size */,
 
     n12 = m1*m2;
     grad = grad1;
+    verb = verb1;
 
     n = grad? 2*n12: n12;
 
@@ -66,10 +68,10 @@ void lapfill(int niter   /* number of iterations */,
 {
     if (grad) {
 	sf_solver (sf_igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, 
-		   niter, "x0", mm, "known", known, "end");
+		   niter, "x0", mm, "known", known, "verb", verb, "end");
     } else {
 	sf_solver (laplac2_lop, sf_cgstep, n12, n12, mm, zero, 
-		   niter, "x0", mm, "known", known, "end");
+		   niter, "x0", mm, "known", known, "verb", verb, "end");
     }
     sf_cgstep_close ();
 }
