@@ -38,8 +38,6 @@ typedef struct EscSCBlock3 *sf_esc_scblock3;
 
 #endif
 
-#include "esc_scbl3.h"
-
 struct EscSCBlock3 {
     int                  nz, nx, ny, na, nb;
     float                oz, ox, oy, oa, ob;
@@ -59,7 +57,7 @@ sf_esc_scblock3 sf_esc_scblock3_init (sf_file scblock, sf_esc_tracer3 esc_tracer
 /*< Initialize object >*/
 {
     int i, ia;
-    size_t nc = 0, offs;
+    size_t offs;
     FILE *stream;
     sf_esc_scblock3 esc_scbl = (sf_esc_scblock3)sf_alloc (1, sizeof (struct EscSCBlock3));
 
