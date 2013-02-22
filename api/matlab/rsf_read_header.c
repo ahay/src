@@ -90,6 +90,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
      	if (!sf_histint(file,key,&nn[i]))
 	   {printf("FATAL ERROR: missing %s in file %s\n",key,strtag); sf_close(); return;}
     }
+    for (i=dim; i < SF_MAX_DIM; i++) {
+	sprintf(key,"n%d",i+1);
+	if (sf_histint(file,key,&nn[i]) && nn[i]>0) dim++;
+	else break;
+    }
 
     /* Return size */
     {
