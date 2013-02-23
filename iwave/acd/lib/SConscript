@@ -5,8 +5,9 @@ imports = ' libname cpplist srclist'
 try:  # madagascar version
     Import('env root pkgdir libdir' + imports)
     env = env.Clone()
-    env.Append(CPPPATH = cpplist,
-               CFLAGS = ' -march=native')
+    env.Append(CPPPATH = cpplist)
+    if env['PLATFORM'] != 'darwin':
+        env.Append(CFLAGS = ' -march=native')
 except:  # autonomous version    
     Import('vars' + imports)
     root = None

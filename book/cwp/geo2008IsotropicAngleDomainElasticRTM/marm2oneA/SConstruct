@@ -1,5 +1,7 @@
 from rsf.proj import *
-import fdmod,wefd,marm2,stiff
+import rsf.recipes.fdmod as fdmod
+import rsf.recipes.stiff as stiff
+import wefd,marm2
 
 # ------------------------------------------------------------
 par = {

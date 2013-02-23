@@ -58,11 +58,11 @@ main (int argc, char *argv[])
     if (all) {
         if (large) for (i=ndims; i < SF_MAX_DIM; i++) {
 	    sprintf(key,"n%d",i+1);
-	    if (sf_histint(in,key,&nlarge[i]) && nlarge[i]>0) ndims++;
+	    if (sf_histlargeint(in,key,&nlarge[i]) && nlarge[i]>0) ndims++;
 	    else break; }
         else for (i=ndims; i < SF_MAX_DIM; i++) {
 	    sprintf(key,"n%d",i+1);
-	    if (sf_histlargeint(in,key,&n[i]) && n[i]>0) ndims++;
+	    if (sf_histint(in,key,&n[i]) && n[i]>0) ndims++;
 	    else break; }
     }
 
