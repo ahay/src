@@ -68,15 +68,17 @@ int main(int argc, char* argv[])
     int n1, n2, npml, nh, ns, nw;
     int prect[3], porder, pniter, pliter;
     int dorder, grect[2], gliter;
-    float pthres, geps;
+    float pthres, geps, gscale;
     float vpml, d1, d2, **vel, dw, ow;
     char *datapath;
     sf_file in, out, source, data;
     sf_file imask, weight, precon;
-    int uts, mts, ret;
+    int uts, mts, ret, i, j;
     char *order;
-    lbfgsfloatval_t fx, *x;
+    lbfgsfloatval_t fx, *x, *g;
     lbfgs_parameter_t param;
+    float delta;
+    int nhess, miter;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -141,6 +143,18 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("geps",&geps)) geps=1.;
     /* gradient regularization parameter */
+
+    if (!sf_getfloat("gscale",&gscale)) gscale=0.1;
+    /* gradient re-scaling maximum */
+
+    if (!sf_getfloat("delta",&delta)) delta=0.05;
+    /* L-BFGS minimum rate of objective function decrease */
+
+    if (!sf_getint("nhess",&nhess)) nhess=6;
+    /* L-BFGS # of Hessian corrections */
+
+    if (!sf_getint("miter",&miter)) miter=10;
+    /* L-BFGS maximum # of iterations */
 
     /* read initial model */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -207,9 +221,16 @@ int main(int argc, char* argv[])
 
     /* allocate temporary memory */
     x = lbfgs_malloc(n1*n2);
+    g = lbfgs_malloc(n1*n2);
 
-    /* initialize */
-    iwilbfgs_init(order, npml,vpml,
+    for (j=0; j < n2; j++) {
+	for (i=0; i < n1; i++) {
+	    x[j*n1+i] = (lbfgsfloatval_t) vel[j][i];
+	}
+    }
+
+    /* initialize operators */
+    iwilbfgs_init(verb,order, npml,vpml,
 		  n1,n2, d1,d2,
 		  nh,ns, ow,dw,nw,
 		  source,data, load,datapath, uts,
@@ -217,17 +238,33 @@ int main(int argc, char* argv[])
 		  porder,pniter,pliter,pthres,
 		  dorder,
 		  grect[0],grect[1],
-		  gliter,geps);
+		  gliter,geps,gscale);
     
-    lbfgs_parameter_init(&param);
+    /* initialize L-BFGS */
+    lbfgs_parameter_init(&param);    
 
-    /* L-BFSG optimization */
-    ret = lbfgs(n1*n2,x,&fx, evaluate,progress, NULL,&param);
+    param.past = 1;    
+    param.delta = (lbfgsfloatval_t) delta;
+    param.m = nhess;
+    param.max_iterations = miter;
 
-    /* clean-up */
-    sf_warning("L-BFGS optimization terminated with status code %d.",ret);
+    /* L-BFGS optimization */
+    if (verb) {
+	ret = lbfgs(n1*n2,x,&fx, evaluate,progress, NULL,&param);
+    } else {
+	ret = lbfgs(n1*n2,x,&fx, evaluate,NULL,     NULL,&param);
+    }
 
-    lbfgs_free(x);
+    if (verb) sf_warning("L-BFGS optimization terminated with status code %d.",ret);
+
+    /* write output */
+    for (j=0; j < n2; j++) {
+	for (i=0; i < n1; i++) {
+	    vel[j][i] = (float) x[j*n1+i];
+	}
+    }
+
+    sf_floatwrite(vel[0],n1*n2,out);
 
     exit(0);
 }

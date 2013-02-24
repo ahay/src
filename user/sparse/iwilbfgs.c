@@ -26,12 +26,40 @@
 
 #include "iwilbfgs.h"
 
+static bool verb;
 static int nn[3], dorder, grect[2], gliter;
 static float dd[3], **vel, pthres, geps;
 static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
+static lbfgsfloatval_t gscale;
 
-void iwilbfgs_init(char *order,
+void scale(const lbfgsfloatval_t *x,
+	   lbfgsfloatval_t *g)
+/* re-scale gradient before passing to L-BFGS */
+{
+    int i, j;
+    lbfgsfloatval_t temp, scale;
+
+    scale = gscale;
+
+    for (j=0; j < nn[1]; j++) {
+	for (i=0; i < nn[0]; i++) {
+	    temp = (lbfgsfloatval_t) fabs(g[j*nn[0]+i])/x[j*nn[0]+i];
+	    scale = (temp>scale)? temp: scale;
+	}
+    }
+
+    scale = (scale>gscale)? (gscale/scale): 1.;
+
+    for (j=0; j < nn[1]; j++) {
+	for (i=0; i < nn[0]; i++) {
+	    g[j*nn[0]+i] *= scale;
+	}
+    }
+}
+
+void iwilbfgs_init(bool verb0,
+		   char *order,
 		   int npml, float vpml,
 		   int n1, int n2,
 		   float d1, float d2,
@@ -45,9 +73,12 @@ void iwilbfgs_init(char *order,
 		   float pthres0, int dorder0,
 		   int grect1, int grect2,
 		   int gliter0,
-		   float geps0)
+		   float geps0,
+		   float gscale0)
 /*< initialization >*/
 {
+    verb = verb0;
+
     /* model */
     nn[0] = n1; nn[1] = n2; nn[2] = 2*nh+1;
     dd[0] = d1; dd[1] = d2; dd[2] = d2;
@@ -57,6 +88,7 @@ void iwilbfgs_init(char *order,
     dorder = dorder0;
     grect[0] = grect1; grect[1] = grect2;
     gliter = gliter0; geps = geps0;
+    gscale = (lbfgsfloatval_t) gscale0;
 
     /* open temporary file */
     sfile = sf_fslice_init(n1*n2*ns,nw,sizeof(sf_complex));
@@ -116,9 +148,11 @@ lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
 	}
     }
 
+    if (verb) sf_warning("Forward modeling...");
+
     /* clean temporary image */
     iwimodl_clean();
-    
+
     /* forward modeling */
     iwimodl_modl(vel,image);
     
@@ -138,7 +172,7 @@ lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
 
 void iwilbfgs_grad(const lbfgsfloatval_t *x,
 		   float ***wght, float **prec,
-		   lbfgsfloatval_t *grad)
+		   lbfgsfloatval_t *g)
 /*< prepare image perturbation and compute gradient >*/
 {
     int i1, i2, i3, ii;
@@ -152,9 +186,13 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 
     /* set-up linear operator */
     iwigrad_set(vel, wght,prec);
+    
+    if (verb) sf_warning("Estimate slope...");
 
     /* estimate slope */
     iwidip_both(image, pimage);
+
+    if (verb) sf_warning("Assemble image perturbation...");
 
     /* partial i partial z */
     din  = sf_floatalloc(nn[0]);
@@ -210,14 +248,14 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 
 		/* non-stationary focusing */
 		if (i3 < (nn[2]-1)/2) {
-		    pimage[ii] = (pimage[ii]>0.? 1.: -1.)
+		    pimage[ii] = (pimage[ii]<0.? 1.: -1.)
 			*(pipz[ii]-pimage[ii]*piph[ii])
 			/sqrtf(1.+pimage[ii]*pimage[ii])
 			*wght[0][0][ii];
 		} else if (i3 == (nn[2]-1)/2) {
 		    pimage[ii] = 0.;
 		} else {
-		    pimage[ii] = (pimage[ii]<0.? 1.: -1.)
+		    pimage[ii] = (pimage[ii]>0.? 1.: -1.)
 			*(pipz[ii]-pimage[ii]*piph[ii])
 			/sqrtf(1.+pimage[ii]*pimage[ii])
 			*wght[0][0][ii];
@@ -225,6 +263,8 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	    }
 	}
     }
+
+    if (verb) sf_warning("CG iteration...");
 
     /* conjugate-gradient loop */
     if (gliter == 0) {
@@ -244,11 +284,13 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	free(p); sf_conjgrad_close(); sf_trianglen_close();
     }
 
-    /* convert to velocity update */
+    /* convert to velocity and re-scale */
     for (i2=0; i2 < nn[1]; i2++) {
 	for (i1=0; i1 < nn[0]; i1++) {
-	    grad[i2*nn[0]+i1] = (lbfgsfloatval_t) 
+	    g[i2*nn[0]+i1] = (lbfgsfloatval_t) 
 		(-0.5*powf(x[i2*nn[0]+i1],3.)*image[i2*nn[0]+i1]);
 	}
     }
+
+    scale(x,g);
 }
