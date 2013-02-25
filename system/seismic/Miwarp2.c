@@ -57,9 +57,9 @@ int main(int argc, char* argv[])
     if (inv && !sf_getint("n2",&n2)) n2=nx;
     /* output samples - for inv=y */
     if (!sf_getfloat("d2",&d2) && !sf_histfloat(in,"d2",&d2)) d2=1.;
-    /*( d1=1 output sampling - for inv=y )*/
+    /*( d2=1 output sampling - for inv=y )*/
     if (!sf_getfloat("o2",&o2) && !sf_histfloat(in,"o2",&o2)) o2=0.;
-    /*( o1=0 output origin - for inv=y )*/ 
+    /*( o2=0 output origin - for inv=y )*/ 
 
     if (inv) {
        sf_putint(out,"n1",n1);
