@@ -31,7 +31,7 @@ static int nn[3], dorder, grect[2], gliter;
 static float dd[3], **vel, pthres, geps;
 static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
-static lbfgsfloatval_t gscale;
+static lbfgsfloatval_t gscale, lower, upper;
 
 void scale(const lbfgsfloatval_t *x,
 	   lbfgsfloatval_t *g)
@@ -74,7 +74,8 @@ void iwilbfgs_init(bool verb0,
 		   int grect1, int grect2,
 		   int gliter0,
 		   float geps0,
-		   float gscale0)
+		   float gscale0,
+		   float lower0, float upper0)
 /*< initialization >*/
 {
     verb = verb0;
@@ -89,6 +90,8 @@ void iwilbfgs_init(bool verb0,
     grect[0] = grect1; grect[1] = grect2;
     gliter = gliter0; geps = geps0;
     gscale = (lbfgsfloatval_t) gscale0;
+    lower = (lbfgsfloatval_t) lower0;
+    upper = (lbfgsfloatval_t) upper0;
 
     /* open temporary file */
     sfile = sf_fslice_init(n1*n2*ns,nw,sizeof(sf_complex));
@@ -144,6 +147,9 @@ lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
 
     for (j=0; j < nn[1]; j++) {
 	for (i=0; i < nn[0]; i++) {
+	    if (x[j*nn[0]+i] < lower) return DBL_MAX;
+	    if (x[j*nn[0]+i] > upper) return DBL_MAX;
+
 	    vel[j][i] = (float) x[j*nn[0]+i];
 	}
     }
@@ -284,13 +290,11 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	free(p); sf_conjgrad_close(); sf_trianglen_close();
     }
 
-    /* convert to velocity and re-scale */
+    /* convert to velocity */
     for (i2=0; i2 < nn[1]; i2++) {
 	for (i1=0; i1 < nn[0]; i1++) {
 	    g[i2*nn[0]+i1] = (lbfgsfloatval_t) 
 		(-0.5*powf(x[i2*nn[0]+i1],3.)*image[i2*nn[0]+i1]);
 	}
     }
-
-    scale(x,g);
 }

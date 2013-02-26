@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     char *order;
     lbfgsfloatval_t fx, *x, *g;
     lbfgs_parameter_t param;
-    float delta;
+    float delta, lower, upper;
     int nhess, miter;
 
     sf_init(argc,argv);
@@ -155,6 +155,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("miter",&miter)) miter=10;
     /* L-BFGS maximum # of iterations */
+
+    if (!sf_getfloat("lower",&lower)) lower=1.5;
+    /* lower bound of feasible set */
+
+    if (!sf_getfloat("upper",&upper)) lower=7.5;
+    /* upper bound of feasible set */
 
     /* read initial model */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -238,15 +244,17 @@ int main(int argc, char* argv[])
 		  porder,pniter,pliter,pthres,
 		  dorder,
 		  grect[0],grect[1],
-		  gliter,geps,gscale);
+		  gliter,geps,gscale,
+		  lower,upper);
     
     /* initialize L-BFGS */
-    lbfgs_parameter_init(&param);    
+    lbfgs_parameter_init(&param);
 
     param.past = 1;    
     param.delta = (lbfgsfloatval_t) delta;
     param.m = nhess;
     param.max_iterations = miter;
+    param.linesearch = 3;
 
     /* L-BFGS optimization */
     if (verb) {
@@ -265,6 +273,9 @@ int main(int argc, char* argv[])
     }
 
     sf_floatwrite(vel[0],n1*n2,out);
+
+    /* free */
+    iwilbfgs_free();
 
     exit(0);
 }
