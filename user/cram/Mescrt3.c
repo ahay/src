@@ -354,10 +354,10 @@ int main (int argc, char* argv[]) {
                 sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
             } /* Loop over z */
-            if (verb)
-                sf_warning (".");
         } /* Loop over x */
     } /* Loop over y */
+    if (verb)
+        sf_warning (".");
 
     sf_esc_point3_close (esc_point);
     sf_esc_tracer3_close (esc_tracer);

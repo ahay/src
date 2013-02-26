@@ -42,6 +42,7 @@ struct EscSCBlock3 {
     int                  nz, nx, ny, na, nb;
     float                oz, ox, oy, oa, ob;
     float                dz, dx, dy, da, db;
+    float                md;
     float                zmin, zmax;
     float                xmin, xmax;
     float                ymin, ymax;
@@ -84,6 +85,9 @@ sf_esc_scblock3 sf_esc_scblock3_init (sf_file scblock, sf_esc_tracer3 esc_tracer
     esc_scbl->xmax = esc_scbl->ox + (esc_scbl->nx - 1)*esc_scbl->dx;
     esc_scbl->ymin = esc_scbl->oy;
     esc_scbl->ymax = esc_scbl->oy + (esc_scbl->ny - 1)*esc_scbl->dy;
+    esc_scbl->md = 0.5*sqrtf (esc_scbl->dz*esc_scbl->dz +
+                              esc_scbl->dx*esc_scbl->dx + 
+                              esc_scbl->dy*esc_scbl->dy);
 
     stream = sf_filestream (scblock);
     if (stdin == stream)
@@ -279,9 +283,9 @@ EscColor3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
 /*< Project point (z, x, y, b, a) to the boundary of the supercell,
     return new interpolated exit values >*/
 {
-    float z = *ze, x = *xe, y = *ye, b = *be, a = *ae;
-    float zp = z, xp = x, yp = y, t = *te, l = *le;
-    EscColor3 side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y);
+    float z = *ze, x = *xe, y = *ye, b = *be, a = *ae, t = *te, l = *le;
+    float zp = z, xp = x, yp = y, ap = a, bp = b, tp = t, lp = l;
+    EscColor3 side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y), pside = side;
 
     if (z < (esc_scbl->zmin - SPEPS*esc_scbl->dz) ||
         z > (esc_scbl->zmax + SPEPS*esc_scbl->dz) ||
@@ -297,7 +301,7 @@ EscColor3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
         sf_esc_scblock3_interpolate (esc_scbl, side,
                                      &z, &x, &y, &t, &l, &a, &b);
         /* Snap to the boundary */
-/*      if (z < esc_scbl->zmin)
+        if (z < esc_scbl->zmin)
             z = esc_scbl->zmin;
         if (z > esc_scbl->zmax)
             z = esc_scbl->zmax;
@@ -308,9 +312,24 @@ EscColor3 sf_esc_scblock3_project_point (sf_esc_scblock3 esc_scbl,
         if (y < esc_scbl->ymin)
             y = esc_scbl->ymin;
         if (y > esc_scbl->ymax)
-            y = esc_scbl->ymax;*/
+            y = esc_scbl->ymax;
         /* Check what side we are landed on */
         side = sf_esc_scblock3_xyz_side (esc_scbl, z, x, y);
+        /* Check for interpolation error - usually that leads
+           to short path and exit on the same side */
+        if (sqrtf ((z - zp)*(z - zp) +
+                   (x - xp)*(x - xp) +
+                   (y - yp)*(y - yp)) < esc_scbl->md/* &&
+            (pside & side)*/) {
+            side = ESC3_INSIDE; /* Do ray tracing instead */
+            z = zp;
+            x = xp;
+            y = yp;
+            a = ap;
+            b = bp;
+            t = tp;
+            l = lp;
+        }
     }
 
     if (ESC3_INSIDE == side) {

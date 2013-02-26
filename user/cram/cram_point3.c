@@ -394,7 +394,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         /* See Bleistein et al (2003), equation (21) for details */
         dw = sqrtf (ss*sr);
         dw *= cosf (0.5*oac);
-        dw /= sqrtf (fabsf (cram_point->src_exits[ies].j*cram_point->rcv_exits[ier].j));
+        dw /= sqrtf (fabsf (cram_point->src_exits[ies].s*cram_point->rcv_exits[ier].s));
         dw *= cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs;
         sb = sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db);
         hb = zoffset ? sb : sinf (cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db);

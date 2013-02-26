@@ -19,87 +19,91 @@
 
 #include <rsf.h>
 
-#include "esc_bgrid3.h"
+#include "einspline.h"
+#include "esc_point3.h"
 #include "esc_tracer3.h"
 
-static char *dbname = "scblock";
-
 int main (int argc, char* argv[]) {
-    size_t i, n, nc, nnc;
-    int nz, nx, ny, nsb, nsa, ic, ia, iscz, iscx, iscy;
-    int nsz, nsx, nsy, nscz, nscx, nscy;
-    float dz, oz, dx, ox, dy, oy;
-    float oscz, oscx, oscy, dscz, dscx, dscy;
-    float zmin, zmax, xmin, xmax, ymin, ymax;
-    multi_UBspline_3d_s **splines[ESC3_SIDE_NUM];
-    sf_file scmap, vspline = NULL, scblock = NULL, out;
+    size_t nc = 0;
+    int nz, nx, ny, nb, na, iz, ix, iy, ib, ia, i;
+    float dz, oz, dx, ox, dy, oy, da, oa, db, ob;
+    float z, x, y, a, b, ae, be;
+    float zmin, zmax, xmin, xmax, ymin, ymax, md;
+    float ****e;
+    Ugrid z_grid, x_grid, y_grid;
+    BCtype_s zBC, xBC, yBC;
+    multi_UBspline_3d_s *zxyspline;
+    sf_file adom, vspline = NULL, out;
 
-    char sbuf[ESC3_BSC_BMAX];
-    char *bname = NULL;
     bool verb, parab;
     sf_esc_slowness3 esc_slow;
     sf_esc_tracer3 esc_tracer;
-    sf_esc_bgrid3 esc_bgrid;
-    sf_simtab simtab;
+    sf_esc_point3 esc_point;
 
     sf_init (argc, argv);
 
-    scmap = sf_input ("in");
-    /* Map of supercells to build */
+    if (!sf_stdin ()) {
+        adom = NULL;
+    } else {
+        adom = sf_input ("in");
+        /* Angle (b,a) domain */
+    }
+
     out = sf_output ("out");
-    /* List of supercell objects */
+    /* Spline coefficients for local escape functions in supercells */
 
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* verbosity flag */
 
-    bname = sf_getstring ("bname");
-    /* Prefix for supercell block file */
-    if (NULL == bname)
-        bname = dbname;
+    if (!sf_getint ("nz", &nz)) sf_error ("Need nz=");
+    /* Number of samples in z axis */
+    if (!sf_getfloat ("oz", &oz)) sf_error ("Need oz=");
+    /* Beginning of z axis */
+    if (!sf_getfloat ("dz", &dz)) sf_error ("Need dz=");
+    /* Sampling of z axis */
+    if (!sf_getint ("nx", &nx)) sf_error ("Need nx=");
+    /* Number of samples in x axis */
+    if (!sf_getfloat ("ox", &ox)) sf_error ("Need ox=");
+    /* Beginning of x axis */
+    if (!sf_getfloat ("dx", &dx)) sf_error ("Need dx=");
+    /* Sampling of x axis */
+    if (!sf_getint ("ny", &ny)) sf_error ("Need ny=");
+    /* Number of samples in y axis */
+    if (!sf_getfloat ("oy", &oy)) sf_error ("Need oy=");
+    /* Beginning of y axis */
+    if (!sf_getfloat ("dy", &dy)) sf_error ("Need dy=");
+    /* Sampling of y axis */
 
-    if (!sf_histint (scmap, "n1", &nscz)) sf_error ("No n1= in input");
-    /* Number of supercells in z */
-    if (!sf_histint (scmap, "n2", &nscx)) sf_error ("No n2= in input");
-    /* Number of supercells in x */
-    if (!sf_histint (scmap, "n3", &nscy)) sf_error ("No n3= in input");
-    /* Number of supercells in y */
+    if (adom) {
+        if (!sf_histint (adom, "n1", &nb)) sf_error ("No n1= in input");
+        if (!sf_histfloat (adom, "d1", &db)) sf_error ("No d1= in input");
+        if (!sf_histfloat (adom, "o1", &ob)) sf_error ("No o1= in input");
+        if (!sf_histint (adom, "n2", &na)) sf_error ("No n2= in input");
+        if (!sf_histfloat (adom, "d2", &da)) sf_error ("No d2= in input");
+        if (!sf_histfloat (adom, "o2", &oa)) sf_error ("No o2= in input");
+    }
+    if (!sf_getint ("na", &na) && !adom) sf_error ("Need na=");
+    /* Number of samples in azimuth dimension */
+    if (!sf_getfloat ("da", &da) && !adom) da = 360.0/(float)na;
+    /* Sampling of azimtuh dimension */
+    if (!sf_getfloat ("oa", &oa) && !adom) oa = 0.5*da;
+    /* Beginning of azimuth dimension */
 
-    if (!sf_histfloat (scmap, "Dscz", &dscz)) sf_error ("No Dscz= in input");
-    /* Supercell size in z  */
-    if (!sf_histfloat (scmap, "Dscx", &dscx)) sf_error ("No Dscx= in input");
-    /* Supercell size in x */
-    if (!sf_histfloat (scmap, "Dscy", &dscy)) sf_error ("No Dscy= in input");
-    /* Supercell size in y */
-    if (!sf_histfloat (scmap, "o1", &oscz)) sf_error ("No Dscz= in input");
-    /* Supercell start in z  */
-    if (!sf_histfloat (scmap, "o2", &oscx)) sf_error ("No Dscx= in input");
-    /* Supercell start in x */
-    if (!sf_histfloat (scmap, "o3", &oscy)) sf_error ("No Dscy= in input");
-    /* Supercell start in y */
-    if (!sf_histint (scmap, "Nz", &nsz)) sf_error ("No Nz= in input");
-    /* Supercell sampling in z */
-    if (!sf_histint (scmap, "Nx", &nsx)) sf_error ("No Nx= in input");
-    /* Supercell sampling in x */
-    if (!sf_histint (scmap, "Ny", &nsy)) sf_error ("No Ny= in input");
-    /* Supercell sampling in y */
-    if (!sf_histint (scmap, "Na", &nsa)) sf_error ("No Na= in input");
-    /* Supercell sampling in a */
-    if (!sf_histint (scmap, "Nb", &nsb)) sf_error ("No Nb= in input");
-    /* Supercell sampling in b */
+    if (!sf_getint ("nb", &nb) && !adom) sf_error ("Need nb=");
+    /* Number of samples in inclination dimension */
+    if (!sf_getfloat ("db", &db) && !adom) db = 180.0/(float)nb;
+    /* Sampling of inclination dimension */
+    if (!sf_getfloat ("ob", &ob) && !adom) ob = 0.5*db;
+    /* Beginning of inclination dimension */
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
     /* Spline coefficients for velocity model */
     vspline = sf_input ("vspl");
 
-    /* Sampling size in the supercell */
-    dz = dscz/(float)nsz;
-    dx = dscx/(float)nsx;
-    dy = dscy/(float)nsy;
-
     /* Slowness components module [(an)isotropic] */
     esc_slow = sf_esc_slowness3_init (vspline, verb);
 
-    /* Global limits */
+    /* Global spatial limits */
     zmin = sf_esc_slowness3_oz (esc_slow);
     zmax = sf_esc_slowness3_oz (esc_slow) +
            (sf_esc_slowness3_nz (esc_slow) - 1)*
@@ -113,6 +117,23 @@ int main (int argc, char* argv[]) {
            (sf_esc_slowness3_ny (esc_slow) - 1)*
            sf_esc_slowness3_dy (esc_slow);
 
+    /* Check spatial domain boundaries */
+    while (oz < (zmin - 0.001*dz))
+        oz += iz*dz;
+    while (oz > (zmax + 0.001*dz))
+        iz--;
+    if (iz < 0) sf_error ("z axis is out of bounds");
+    while (ox < (xmin - 0.001*dx))
+        ox += ix*dx;
+    while (ox > (xmax + 0.001*dx))
+        ix--;
+    if (ix < 0) sf_error ("x axis is out of bounds");
+    while (oy < (ymin - 0.001*dy))
+        oy += iy*dy;
+    while (oy > (ymax + 0.001*dy))
+        iy--;
+    if (iy < 0) sf_error ("y axis is out of bounds");
+
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
 
@@ -120,119 +141,131 @@ int main (int argc, char* argv[]) {
     esc_tracer = sf_esc_tracer3_init (esc_slow, NULL, 0.0, NULL);
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
-    sf_shiftdim (scmap, out, 1);
+    /* Set up output */
     sf_settype (out, SF_UCHAR);
-    sf_putint (out, "n1", ESC3_BSC_BMAX);
     sf_putfloat (out, "o1", 0.0);
     sf_putfloat (out, "d1", 1.0);
-    sf_putstring (out, "label1", "Array of pointers to supercells");
+    sf_putstring (out, "label1", "Spline coefficients");
     sf_putstring (out, "unit1", "");
+    sf_putint (out, "n2", nb);
+    sf_putfloat (out, "d2", db);
+    sf_putfloat (out, "o2", ob);
+    sf_putstring (out, "label2", "Inclination");
+    sf_putstring (out, "unit2", "Degrees");
+    sf_putint (out, "n3", na);
+    sf_putfloat (out, "d3", da);
+    sf_putfloat (out, "o3", oa);
+    sf_putstring (out, "label3", "Azimuth");
+    sf_putstring (out, "unit3", "Degrees");
 
-    simtab = sf_getpars ();
+    sf_putint (out, "Nz", nz);
+    sf_putfloat (out, "Dz", dz);
+    sf_putfloat (out, "Oz", oz);
+    sf_putint (out, "Nx", nx);
+    sf_putfloat (out, "Dx", dx);
+    sf_putfloat (out, "Ox", ox);
+    sf_putint (out, "Ny", ny);
+    sf_putfloat (out, "Dy", dy);
+    sf_putfloat (out, "Oy", oy);
 
-    n = (size_t)nscy*(size_t)nscx*(size_t)nscz;
-    i = 0;
-    nnc = 0;
-    /* Loop over supercells */
-    for (iscy = 0; iscy < nscy; iscy++) {
-        oy = ymin + oscy + iscy*dscy;
-        ny = nsy + 1;
-        while ((oy + (ny - 1.01)*dy) > ymax)
-            ny--;
-        for (iscx = 0; iscx < nscx; iscx++) {
-            ox = xmin + oscx + iscx*dscx;
-            nx = nsx + 1;
-            while ((ox + (nx - 1.01)*dx) > xmax)
-                nx--;
-            for (iscz = 0; iscz < nscz; iscz++) {
-                oz = zmin + oscz + iscz*dscz;
-                nz = nsz + 1;
-                while ((oz + (nz - 1.01)*dz) > zmax)
-                    nz--;
-                if (verb)
-                    sf_warning ("Processing supercell block %lu of %lu at y=%g, x=%g, z=%g [%dx%dx%dx%dx%d]",
-                                i + 1, n, oy, ox, oz, nz, nx, ny, nsb, nsa);
-                esc_bgrid = sf_esc_bgrid3_init (nz, nx, ny, nsa, nsb,
-                                                oz, ox, oy, dz, dx, dy,
-                                                esc_tracer);
-                sf_esc_bgrid3_set_verb (esc_bgrid, verb);
-                /* Compute escape function on all of the six faces of the
-                   supercell */
-                splines[ESC3_SIDE_TOP] = sf_esc_bgrid3_compute_topbottom (esc_bgrid, true);
-                splines[ESC3_SIDE_BOTTOM] = sf_esc_bgrid3_compute_topbottom (esc_bgrid, false);
-                splines[ESC3_SIDE_LEFT] = sf_esc_bgrid3_compute_leftright (esc_bgrid, true);
-                splines[ESC3_SIDE_RIGHT] = sf_esc_bgrid3_compute_leftright (esc_bgrid, false);
-                splines[ESC3_SIDE_NEAR] = sf_esc_bgrid3_compute_nearfar (esc_bgrid, true);
-                splines[ESC3_SIDE_FAR] = sf_esc_bgrid3_compute_nearfar (esc_bgrid, false);
-                nc = 0;
-                /* Compute total size occupied by the spline function */
-                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
-                    for (ia = 0; ia < nsa; ia++) {
-                        nc += (size_t)sizeof(multi_UBspline_3d_s) +
-                              (size_t)splines[ic][ia]->nc;
-                        nnc += nc;
-                    }
-                }
-                /* Create a separate output file for each supercell */
-                snprintf (sbuf, ESC3_BSC_BMAX, "%s_%f_%f_%f.rsf", bname, oz, ox, oy);
-                sbuf[ESC3_BSC_BMAX - 1] = '\0';
-                if (verb)
-                    sf_warning ("Writing supercell block splines, %g Mb", nc*1e-6);
-                /* Add a key for the new filename - the only way to
-                   create a new RSF file without a command line parameter */
-                sf_simtab_enter (simtab, bname, sbuf);
-                scblock = sf_output (bname);
-                sf_settype (scblock, SF_UCHAR);
-                sf_putlargeint (scblock, "n1", nc);
-                sf_putfloat (scblock, "o1", 0.0);
-                sf_putfloat (scblock, "d1", 1.0);
-                sf_putstring (scblock, "label1", "Spline coefficients");
-                sf_putstring (scblock, "unit1", "");
-                sf_putint (scblock, "n2", 1);
-                sf_putint (scblock, "n3", 1);
-                sf_putint (scblock, "n4", 1);
-                sf_putint (scblock, "Nz", nz);
-                sf_putint (scblock, "Nx", nx);
-                sf_putint (scblock, "Ny", ny);
-                sf_putint (scblock, "Na", nsa);
-                sf_putint (scblock, "Nb", nsb);
-                sf_putfloat (scblock, "Oz", oz);
-                sf_putfloat (scblock, "Ox", ox);
-                sf_putfloat (scblock, "Oy", oy);
-                sf_putfloat (scblock, "Dz", dz);
-                sf_putfloat (scblock, "Dx", dx);
-                sf_putfloat (scblock, "Dy", dy);
-                sf_putlargeint (scblock, "Nc", nc);
-                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
-                    for (ia = 0; ia < nsa; ia++) {
-                        sf_ucharwrite ((unsigned char*)splines[ic][ia],
-                                       (size_t)sizeof(multi_UBspline_3d_s), scblock);
-                    }
-                }
-                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
-                    for (ia = 0; ia < nsa; ia++) {
-                        sf_ucharwrite ((unsigned char*)splines[ic][ia]->coefs,
-                                       (size_t)splines[ic][ia]->nc, scblock);
-                    }
-                }
-                /* Done with this cell */
-                sf_fileclose (scblock);
-                sf_ucharwrite ((unsigned char*)sbuf, ESC3_BSC_BMAX, out);
-                sf_esc_bgrid3_close (esc_bgrid);
-                /* Delete splines */
-                for (ic = 0; ic < ESC3_SIDE_NUM; ic++) {
-                    for (ia = 0; ia < nsa; ia++) {
-                        destroy_Bspline (splines[ic][ia]);
-                    }
-                    free (splines[ic]);
-                }
-                i++;
-            }
-        }
+    if (verb) {
+        sf_warning ("Spatial domain dimensions: nz=%d, z=[%g, %g]", nz,
+                    oz, oz + (nz - 1)*dz);
+        sf_warning ("Spatial domain dimensions: nx=%d, x=[%g, %g]", nx,
+                    ox, ox + (nx - 1)*dx);
+        sf_warning ("Spatial domain dimensions: ny=%d, y=[%g, %g]", ny,
+                    oy, oy + (ny - 1)*dy);
+        sf_warning ("Angular domain dimensions: nb=%d, b=[%g, %g]", nb,
+                    ob, ob + (nb - 1)*db);
+        sf_warning ("Angular domain dimensions: na=%d, a=[%g, %g]", na,
+                    oa, oa + (na - 1)*da);
     }
-    if (verb)
-        sf_warning ("%lu supercell block processed, %g Mb of spline coefficients produced", i, nnc*1e-6);
 
+    da *= SF_PI/180.0;
+    oa *= SF_PI/180.0;
+    db *= SF_PI/180.0;
+    ob *= SF_PI/180.0;
+
+    z_grid.start = oz;
+    z_grid.end = oz + (nz - 1)*dz;
+    z_grid.num = nz;
+    x_grid.start = ox;
+    x_grid.end = ox + (nx - 1)*dx;
+    x_grid.num = nx;
+    y_grid.start = oy;
+    y_grid.end = oy + (ny - 1)*dy;
+    y_grid.num = ny;
+    zBC.lCode = zBC.rCode = NATURAL;
+    xBC.lCode = xBC.rCode = NATURAL;
+    yBC.lCode = yBC.rCode = NATURAL;
+
+    if (!sf_getfloat ("md", &md)) md = dz;
+    /* Half-width of a supercell */
+
+    e = sf_floatalloc4 (nz, nx, ny, ESC3_NUM + 3);
+
+    esc_point = sf_esc_point3_init ();
+
+    /* Loop over angular domain and create constant-angle
+       local escape solutions */
+    for (ia = 0; ia < na; ia++) {
+        a = oa + ia*da;
+        if (verb)
+            sf_warning ("Processing azimuth %d of %d;", ia + 1, na);
+        for (ib = 0; ib < nb; ib++) {
+            b = ob + ib*db;
+            for (iy = 0; iy < ny; iy++) {
+                y = oy + iy*dy;
+                sf_esc_tracer3_set_ymin (esc_tracer, y - md);
+                sf_esc_tracer3_set_ymax (esc_tracer, y + md);
+                for (ix = 0; ix < nx; ix++) {
+                    x = ox + ix*dx;
+                    sf_esc_tracer3_set_xmin (esc_tracer, x - md);
+                    sf_esc_tracer3_set_xmax (esc_tracer, x + md);
+                    for (iz = 0; iz < nz; iz++) {
+                        z = oz + iz*dz;
+                        sf_esc_tracer3_set_zmin (esc_tracer, z - md);
+                        sf_esc_tracer3_set_zmax (esc_tracer, z + md);
+                        sf_esc_tracer3_compute (esc_tracer, z, x, y, b, a,
+                                                0.0, 0.0, esc_point, &ae, &be);
+                        /* Copy escape values to the output buffer */
+                        for (i = 0; i < ESC3_NUM; i++)
+                            e[i][iy][ix][iz] = sf_esc_point3_get_esc_var (esc_point, i);
+                        e[ESC3_NUM][iy][ix][iz] = cosf (be);
+                        e[ESC3_NUM + 1][iy][ix][iz] = cosf (ae);
+                        e[ESC3_NUM + 2][iy][ix][iz] = sinf (ae);
+                    } /* z */
+                } /* x */
+            } /* y */
+            /* Create for this constant-azimuth volume */
+            zxyspline = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 3);
+            for (i = 0; i < (ESC3_NUM + 3); i++) {
+                set_multi_UBspline_3d_s (zxyspline, i, &e[i][0][0][0]);
+            }
+            if (0 == ia && 0 == ib) {
+                sf_putint (out, "n1", (size_t)sizeof(multi_UBspline_3d_s) +
+                                      (size_t)zxyspline->nc);
+            }
+            sf_ucharwrite ((unsigned char*)zxyspline,
+                           (size_t)sizeof(multi_UBspline_3d_s), out);
+            sf_ucharwrite ((unsigned char*)zxyspline->coefs,
+                           (size_t)zxyspline->nc, out);
+            nc += (size_t)zxyspline->nc;
+            destroy_Bspline (zxyspline);
+        } /* b */
+    } /* a */
+    if (verb) {
+        sf_warning (".");
+        sf_warning ("%lu blocks computed, %g Mb of spline coefficients produced",
+                    (size_t)na*(size_t)nb, nc*1e-6);
+    }
+
+    free (e[0][0][0]);
+    free (e[0][0]);
+    free (e[0]);
+    free (e);
+
+    sf_esc_point3_close (esc_point);
     sf_esc_tracer3_close (esc_tracer);
     sf_esc_slowness3_close (esc_slow);
 

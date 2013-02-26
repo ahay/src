@@ -258,9 +258,9 @@ int main (int argc, char* argv[]) {
             } /* Loop over a */
             sf_floatwrite (e[0], (size_t)na*(size_t)ESC2_NUM, out);
         } /* Loop over z */
-        if (verb)
-            sf_warning (".");
     } /* Loop over x */
+    if (verb)
+        sf_warning (".");
 
     sf_esc_point2_close (esc_point);
     sf_esc_tracer2_close (esc_tracer);

@@ -209,7 +209,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_topbottom (sf_esc_bgrid3 esc_bgrid, 
             else
                 iap = ia - esc_bgrid->na/2;
             for (iy = 0; iy < esc_bgrid->ny; iy++) {
-                for (ix = 0; ix < esc_bgrid->ny; ix++) {
+                for (ix = 0; ix < esc_bgrid->nx; ix++) {
                     for (j = 0; j < ESC3_BGRID3_APRON; j++) {
                         top[ia][i][ESC3_BGRID3_APRON - 1 - j][iy][ix] =
                         top[iap][i][ESC3_BGRID3_APRON + j][iy][ix];
@@ -381,7 +381,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
         a = esc_bgrid->oa + ia*esc_bgrid->da;
         for (ib = 0; ib < esc_bgrid->nb; ib++) {
             b = esc_bgrid->ob + ib*esc_bgrid->db;
-            for (ix = 0; ix < esc_bgrid->ny; ix++) {
+            for (ix = 0; ix < esc_bgrid->nx; ix++) {
                 x = esc_bgrid->ox + ix*esc_bgrid->dx;
                 for (iz = 0; iz < esc_bgrid->nz; iz++) {
                     z = esc_bgrid->oz + iz*esc_bgrid->dz;
@@ -409,7 +409,7 @@ multi_UBspline_3d_s** sf_esc_bgrid3_compute_nearfar (sf_esc_bgrid3 esc_bgrid, bo
                 iap = esc_bgrid->na/2 + ia;
             else
                 iap = ia - esc_bgrid->na/2;
-            for (ix = 0; ix < esc_bgrid->ny; ix++) {
+            for (ix = 0; ix < esc_bgrid->nx; ix++) {
                 for (iz = 0; iz < esc_bgrid->nz; iz++) {
                     for (j = 0; j < ESC3_BGRID3_APRON; j++) {
                         near[ia][i][ESC3_BGRID3_APRON - 1 - j][ix][iz] =
