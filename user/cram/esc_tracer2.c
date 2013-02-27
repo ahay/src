@@ -204,6 +204,40 @@ float sf_esc_tracer2_pintersect (sf_esc_tracer2 esc_tracer, float *z, float *x, 
     return sigma;
 }
 
+bool sf_esc_tracer2_inside (sf_esc_tracer2 esc_tracer, float *z, float *x,
+                            bool snap)
+/*< Return true, if point (z,x) is inside the current limits;
+    snap point to the boundary otherwise, if snap=true >*/
+{
+    float eps = 1e-2;
+    float ezmin, ezmax, exmin, exmax;
+
+    /* Bounding box + epsilon */
+    ezmin = esc_tracer->zmin + eps*esc_tracer->dz;
+    ezmax = esc_tracer->zmax - eps*esc_tracer->dz;
+    exmin = esc_tracer->xmin + eps*esc_tracer->dx;
+    exmax = esc_tracer->xmax - eps*esc_tracer->dx;
+
+    if (*x > exmin && *x < exmax &&
+        *z > ezmin && *z < ezmax)
+        return true;
+
+    if (snap) {
+        if (*z <= ezmin) {
+            *z = esc_tracer->zmin;
+        } else if (*z >= ezmax) {
+            *z = esc_tracer->zmax;
+        }
+        if (*x <= exmin) {
+            *x = esc_tracer->xmin;
+        } else if (*x >= exmax) {
+            *x = esc_tracer->xmax;
+        }
+    }
+
+    return false;
+}
+
 void sf_esc_tracer2_compute (sf_esc_tracer2 esc_tracer, float z, float x, float a,
                              float t, float l, sf_esc_point2 point)
 /*< Compute escape values for a point with subsurface coordinates (z, x, a) >*/

@@ -39,7 +39,7 @@ typedef void (*sf_esc_tracer3_traj)(float z, float x, float y, float b,
 struct EscTracer3 {
     int                  nz, nx, ny, na, nb;
     float                oz, ox, oy, oa, ob;
-    float                dz, dx, dy, da, db, dt;
+    float                dz, dx, dy, da, db, dt, md;
     float                zmin, zmax;
     float                xmin, xmax;
     float                ymin, ymax;
@@ -80,6 +80,8 @@ sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow,
        in the straght ray approximation below */
     esc_tracer->da = 0.25*SF_PI/180.0;
     esc_tracer->db = 0.25*SF_PI/180.0;
+
+    esc_tracer->md = SF_HUGE; /* Maximum allowed distance along a ray */
 
     sf_esc_tracer3_reset_bounds (esc_tracer);
 
@@ -143,6 +145,12 @@ void sf_esc_tracer3_set_parab (sf_esc_tracer3 esc_tracer, bool parab)
     esc_tracer->parab = parab;
 }
 
+void sf_esc_tracer3_set_mdist (sf_esc_tracer3 esc_tracer, float md)
+/*< Set maximum allowed distance to travel for a ray >*/
+{
+    esc_tracer->md = md;
+}
+
 float sf_esc_tracer3_sintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, float *y,
                                  float *b, float *a, float dz, float dx, float dy,
                                  float db, float da, float fz, float fx, float fy,
@@ -182,13 +190,13 @@ float sf_esc_tracer3_sintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
 }
 
 float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, float *y,
-                                 float *b, float *a, float *t, float dz, float dx, float dy,
+                                 float *b, float *a, float *t, float *dd, float dz, float dx, float dy,
                                  float fz, float fx, float fy, float s, float sz, float sx, float sy)
 /*< Compute intersection of a parabolic trajectory from (z, x, y, b, a) with 
     the nearest wall defined by (dz, dx, dy), return pseudotime along the trajectory >*/
 {
     float A, B, C, D, s1, s2, sigma, az, ax, ay,
-          pz, px, py, pz0, px0, py0, l, aold;
+          pz, px, py, pz0, px0, py0, l, aold, ddz, ddx, ddy;
 
     /* Assume locally constant slowness and slowness gradients */
     /* Parabola - dz = -v_z*sigma + 0.5*a_z*sigma^2 */
@@ -232,9 +240,12 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
         sigma = fabsf (s1) < fabsf (s2) ? s1 : s2;
     } else
         sigma = -C/B;
-    *z += fz*sigma + 0.5*az*sigma*sigma;
-    *x += fx*sigma + 0.5*ax*sigma*sigma;
-    *y += fy*sigma + 0.5*ay*sigma*sigma;
+    ddz = fz*sigma + 0.5*az*sigma*sigma;
+    ddx = fx*sigma + 0.5*ax*sigma*sigma;
+    ddy = fy*sigma + 0.5*ay*sigma*sigma;
+    *z += ddz;
+    *x += ddx;
+    *y += ddy;
     pz = pz0 + az*sigma;
     px = px0 + ax*sigma;
     py = py0 + ay*sigma;
@@ -250,7 +261,50 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     *b = acosf (-pz/l);
     *t += (pz0*pz0 + px0*px0 + py0*py0)*sigma + (pz0*az + px0*ax + py0*ay)*sigma*sigma +
           (az*az + ax*ax + ay*ay)*sigma*sigma*sigma/3.0;
+    *dd = sqrtf (ddz*ddz + ddx*ddx + ddy*ddy);
     return sigma;
+}
+
+bool sf_esc_tracer3_inside (sf_esc_tracer3 esc_tracer, float *z, float *x, float *y,
+                            bool snap)
+/*< Return true, if point (z,x,y) is inside the current limits;
+    snap point to the boundary otherwise, if snap=true >*/
+{
+    float eps = 1e-2;
+    float ezmin, ezmax, exmin, exmax, eymin, eymax;
+
+    /* Bounding box + epsilon */
+    ezmin = esc_tracer->zmin + eps*esc_tracer->dz;
+    ezmax = esc_tracer->zmax - eps*esc_tracer->dz;
+    exmin = esc_tracer->xmin + eps*esc_tracer->dx;
+    exmax = esc_tracer->xmax - eps*esc_tracer->dx;
+    eymin = esc_tracer->ymin + eps*esc_tracer->dy;
+    eymax = esc_tracer->ymax - eps*esc_tracer->dy;
+
+    if (*y > eymin && *y < eymax &&
+        *x > exmin && *x < exmax &&
+        *z > ezmin && *z < ezmax)
+        return true;
+
+    if (snap) {
+        if (*z <= ezmin) {
+            *z = esc_tracer->zmin;
+        } else if (*z >= ezmax) {
+            *z = esc_tracer->zmax;
+        }
+        if (*x <= exmin) {
+            *x = esc_tracer->xmin;
+        } else if (*x >= exmax) {
+            *x = esc_tracer->xmax;
+        }
+        if (*y <= eymin) {
+            *y = esc_tracer->ymin;
+        } else if (*y >= eymax) {
+            *y = esc_tracer->ymax;
+        }
+    }
+
+    return false;
 }
 
 void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float y,
@@ -261,7 +315,7 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
     int pit = -1, it = 0;
     float eps = 1e-2;
     float s, sp, sb, sa, sz, sx, sy, dd;
-    float dz, dx, dy, db, da, fz, fx, fy, fb, fa, sigma;
+    float dz, dx, dy, db, da, fz, fx, fy, fb, fa, ll = 0.0, sigma, r;
     float ezmin, ezmax, exmin, exmax, eymin, eymax;
     EscColor3 col = 0;
 
@@ -297,9 +351,9 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         da = fa < 0.0 ? esc_tracer->da : -esc_tracer->da;
         db = fb < 0.0 ? esc_tracer->db : -esc_tracer->db;
         /* Use smaller spatial steps than thos in the velocity model */
-        dz *= 1.0/3.0;
-        dx *= 1.0/3.0;
-        dy *= 1.0/3.0;
+        dz *= 1.0/4.0;
+        dx *= 1.0/4.0;
+        dy *= 1.0/4.0;
         /* Adjust if near boundaries */
         if ((z + dz) < esc_tracer->zmin)
             dz = esc_tracer->zmin - z;
@@ -317,12 +371,21 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         if (esc_tracer->parab) { /* Intersection with a parabolic trajectory */
             sigma = SF_HUGE;
             while (SF_HUGE == sigma) {
-                sigma = sf_esc_tracer3_pintersect (esc_tracer, &z, &x, &y, &b, &a, &t,
+                sigma = sf_esc_tracer3_pintersect (esc_tracer, &z, &x, &y, &b, &a, &t, &dd,
                                                    dz, dx, dy, fz, fx, fy, s, sz, sx, sy);
                 if (SF_HUGE == sigma) {
+                    /* Adjust cell sizes, if the analytic solution failed;
+                       this happens in case of overturning rays */
                     dz *= 0.5;
                     dx *= 0.5;
                     dy *= 0.5;
+                } else if (esc_tracer->md != SF_HUGE && 
+                           (ll + dd) > 1.05*esc_tracer->md) {
+                    /* Adjust cell sizes, if maximum allowed length is exceeded */
+                    r = 1.05*esc_tracer->md/(ll + dd);
+                    dz *= r;
+                    dx *= r;
+                    dy *= r;
                 }
             }
         } else /* Intersection with a straight trajectory */
@@ -347,16 +410,19 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         /* Update slowness and it components at the new location */
         sf_esc_slowness3_get_components (esc_tracer->esc_slow, z, x, y, b, a,
                                          &s, &sb, &sa, &sz, &sx, &sy);
-        /* Length of this segment of the characteristic */
-        dd = fabsf (sigma*sqrt (fz*fz + fx*fx));
-        if (!esc_tracer->parab)
+        if (!esc_tracer->parab) {
+            /* Length of this segment of the characteristic */
+            dd = fabsf (sigma*sqrt (fz*fz + fx*fx + fy*fy));
             t += dd*(s + sp)*0.5;
+        }
+        ll += dd;
 #ifdef ESC_EQ_WITH_L
         l += dd;
 #endif
     } while (y > eymin && y < eymax &&
              x > exmin && x < exmax &&
-             z > ezmin && z < ezmax);
+             z > ezmin && z < ezmax &&
+             ll < esc_tracer->md);
     /* Snap to boundary */
     if (z <= ezmin) {
         z = esc_tracer->zmin;

@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "esc_point3.h"
 #include "esc_tracer3.h"
 
 #define TRAJ3_COMPS 6

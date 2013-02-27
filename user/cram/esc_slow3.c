@@ -90,7 +90,7 @@ sf_esc_slowness3 sf_esc_slowness3_init (sf_file vspline, bool verb)
     esc_slow->aniso = (esc_slow->velspline.num_splines != 1);
 
     if (verb) {
-        sf_warning ("Number of spline coefficients: %lu",
+        sf_warning ("Number of velocity spline coefficients: %lu",
                     esc_slow->velspline.nc/(size_t)sizeof(float));
         if (esc_slow->aniso) {
             if (1 == esc_slow->velspline.num_splines)

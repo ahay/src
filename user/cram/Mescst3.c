@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "esc_point3.h"
-#include "esc_tracer3.h"
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
@@ -203,10 +201,10 @@ int main (int argc, char* argv[]) {
                 sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
             } /* Loop over z */
-            if (verb)
-                sf_warning (".");
         } /* Loop over x */
     } /* Loop over y */
+    if (verb)
+        sf_warning (".");
 
     sf_esc_scgrid3_close (esc_scgrid, verb);
     sf_esc_tracer3_close (esc_tracer);
