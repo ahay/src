@@ -1,4 +1,4 @@
-/* Angle migration of one depth point */
+/* Auxiliary functions for angle migration */
 /*
   Copyright (C) 2011 University of Texas at Austin
 
@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #define DHORDER 3
-
 
 /* F-D coefficients (FDo9p) from Bogey and Bailly, 2004, JCP */
 #define C1 0.841570125482
