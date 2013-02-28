@@ -69,8 +69,8 @@ int main(int argc, char* argv[])
     sf_complexread(lft[0],nx*m,left);
     sf_complexread(rht[0],nk*m,right);
 	
-    //    sf_fileclose(left);
-    //    sf_fileclose(right);
+    sf_fileclose(left);
+    sf_fileclose(right);
 
     curr = sf_complexalloc(nx2);
     rcurr= sf_floatalloc(nx2);
