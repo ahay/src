@@ -3,14 +3,33 @@
  *  
  *
  *  Created by Yanadet Sripanich on 10/31/12.
- *  Copyright 2012 __MyCompanyName__. All rights reserved.
+ * 
  *
  */
 
-#include "ml_traveltime_vgradient.h"
+/*
+ Copyright (C) 2009 University of Texas at Austin
+ 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "ml_traveltime_vgradient.h"
 
 #include "general_traveltime.h"
 /*^*/
@@ -18,22 +37,21 @@
 #ifndef _ml_traveltime_vgradient_h
 
 typedef struct twod {
-	float x; /*x-coordinate*/
-	float z; /*z-coordinate*/
-	float d1; /*First derivative*/
-	float d2; /*Second derivative*/
-	float v; /*velocity at the reflector*/
-	float gx;/*x-direction velocity gradient*/
-	float gz;/*z-diection velocity gradient*/
+	float x; /* x-coordinate*/
+	float z; /* z-coordinate*/
+	float d1; /* First derivative*/
+	float d2; /* Second derivative*/
+	float v; /* Velocity at the reflector*/
+	float gx;/* x-direction velocity gradient*/
+	float gz;/* z-diection velocity gradient*/
 } twod;
-/* structure pointer */
+/* Structure pointer */
 
 #endif
 
-
+/* Traveltime functions for gradient velocity------------------------------------------------------------------------------*/
 float v(twod y_k, twod x_ref)
 {
-	
 	float v;
 	
 	v = x_ref.v2 + y_k.gx2*(y_k.x-x_ref.x)+y_k.gz2*(y_k.z-x_ref.z);
@@ -41,7 +59,6 @@ float v(twod y_k, twod x_ref)
 	
 	return y_k.v2;
 } 
-
 
 float T1_k(twod y_k,twod y_k1)
 /*<Traveltime>*/
@@ -66,7 +83,6 @@ float T1_k_k(twod y_k, twod y_k1)
 	return t_k_k;
 	
 }
-	
 
 float T1_k_k1(twod y_k, twod y_k1)
 /*<Derivative of T with respect to x_k1>*/
@@ -107,7 +123,6 @@ float T1_k_k1_k1(twod y_k, twod y_k1)
 	
 }
 
-
 float T1_k_k_k1(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
@@ -120,7 +135,6 @@ float T1_k_k_k1(twod y_k, twod y_k1)
 	return t_k_k_k1;
 	
 }
-
 
 float T1_k_zk(twod y_k, twod y_k1) 
 /*<Derivative of T with respect to z_k>*/
@@ -186,7 +200,6 @@ float T1_k_zk_zk1(twod y_k, twod y_k1)
 	return t_k_zk_zk1;
 	
 }
-
 
 float T1_k_k_zk(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k and z_k>*/

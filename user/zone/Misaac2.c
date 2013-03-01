@@ -3,10 +3,9 @@
  *  
  *
  *  Created by Yanadet Sripanich on 11/11/12.
- *  Copyright 2012 __MyCompanyName__. All rights reserved.
+ * 
  *
  */
-
 
 /* Reflection traveltime for Multi-layered at any specified source and receiver location */
 /*
@@ -26,6 +25,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #include <rsf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,13 +36,13 @@
 #include "ml_traveltime_vgradient.h"
 #include "setvelocity.h"
 
-/*Reflector function--------------------------------------------------------------------------------*/
+/* Reflector function----------------------------------------------------------------------------------*/
 
-static sf_eno *eno, *deno; /* interpolation structure */	
+static sf_eno *eno, *deno; /* Interpolation structure */	
 static float r0, dr,r1,dr1;
 
 static float z(int k,float x) 
-/* function */
+/* Function */
 {
 	int i;
 	float f, f1;
@@ -55,7 +55,7 @@ static float z(int k,float x)
 }
 
 static float zder(int k,float x) 
-/* first derivative */
+/* First derivative */
 {
 	int i;
 	float f, f1;
@@ -68,7 +68,7 @@ static float zder(int k,float x)
 }
 
 static float zder2(int k,float x) 
-/* second derivative */
+/* Second derivative */
 {
 	int i;
 	float f, f1;
@@ -81,18 +81,18 @@ static float zder2(int k,float x)
 }
 
 
-/*Main program-------------------------------------------------------------------------------------------*/
+/* Main program------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus,count,debug;
+	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus, count, debug, q=0/* Counter for the bog loop*/;
 	float x, dt, t0, bmin, bmax, tt;
-	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *dk_old, *xxtem, *zk,*ck_inv; 
+	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *xxtem, *zk,*ck_inv; 
 	double tol;
 	sf_file refl, xrefl;
 	
 	sf_init(argc,argv); /* initialize - always call first */
 	
-	/*Set input------------------------------------------------------------------------------*/
+	/* Set input-----------------------------------------------------------------------------------------*/
 	refl = sf_input("in"); /* reflector */
 	if (!sf_histint(refl,"n1",&nr1)) sf_error("No n1= in input");
 	if (!sf_histint(refl,"n2",&N)) sf_error("No n2= in input");
@@ -107,16 +107,18 @@ int main(int argc, char* argv[])
 	if (!sf_getint("number",&nr2)) sf_error("Please enter the number of reflections [nr2]");
 	/* Number of reflectors*/
 	
-	/*Allocate space--------------------------------------------------------------------------*/
-	rr = sf_floatalloc2(nr1,nr2+2);
-	temp_rr = sf_floatalloc2(nr1,N);
-	rd = sf_floatalloc2(nr1,nr2+2);
-	ans = sf_floatalloc2(2,nr2+2);
+	/* Allocate space-------------------------------------------------------------------------------------*/
+	temp_rr = sf_floatalloc2(nr1,N); /* Input reflector values*/
+	rr = sf_floatalloc2(nr1,nr2+2); /* Reflector values according to updown*/
+	rd = sf_floatalloc2(nr1,nr2+2); /* Slope values according to updown*/
+	ans = sf_floatalloc2(2,nr2+2); /* Final answer x- and z- coordinates*/
 	
-	xx = sf_floatalloc(nr2+2);
-	xxnew = sf_floatalloc(nr2+2);
-	xinitial = sf_floatalloc(nr2);
-	updown = sf_floatalloc(nr2+1);
+	xx = sf_floatalloc(nr2+2); /* Positions of intersection points to be iteratively perturbed*/
+	xxnew = sf_floatalloc(nr2+2); /* Temporary array for xx*/
+	if (nr2!=0) {
+		xinitial = sf_floatalloc(nr2); /* Initial guess of intersection points*/
+	}
+	updown = sf_floatalloc(nr2+1); /* Array indicating direction of the ray*/
 	
 	v_inp = sf_floatalloc(N-1); /* Input velocity array*/
 	gx_inp = sf_floatalloc(N-1); /* Input velocity gradient in x-direction*/
@@ -130,16 +132,15 @@ int main(int argc, char* argv[])
 	xref = sf_floatalloc(nr2+2); /* Reference point x-coordinate used in calculation generated according to where the ray travels*/
 	zref = sf_floatalloc(nr2+2); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
 	
-	F = sf_floatalloc(nr2+2);
-	dk = sf_floatalloc(nr2+2);
-	dk_old = sf_floatalloc(nr2+2);
-	xxtem = sf_floatalloc(nr2+2);
+	F = sf_floatalloc(nr2+2); /* Array of first derivative of traveltime (Snell's law at each interface)*/
+	dk = sf_floatalloc(nr2+2); /* Changes to xx*/
+	xxtem = sf_floatalloc(nr2+2); /* Pre-calculated xx to check the boundary condition*/
 	ck_inv = sf_floatalloc(nr2+2);
 	zk = sf_floatalloc(nr2+2);
 	
 	
 	
-	/*Set input------------------------------------------------------------------------------*/
+	/* Set input------------------------------------------------------------------------------------------*/
 	
 	if (!sf_getfloat("xs",&xx[0])) sf_error("Please enter the source position");
 	/* Source*/
@@ -148,29 +149,22 @@ int main(int argc, char* argv[])
 	/* Receiver*/
 	
 	if (!sf_getfloats("layer",updown,nr2+1)) sf_error("Please enter the layer number array [nr2+1]");
-	/* layer sequence*/
-	
-	if (!sf_getfloats("xinitial",xinitial,nr2)) {
-		for (count=0; count<nr2; count++) {
-			xinitial[count] = xx[0]+(count+1)*(xx[nr2+1]-xx[0])/(nr2+1); /*Divide the distance from s to r equally and set the initial points accordingly*/
-		}	
-	}
-	/* initial position*/
+	/* Layer sequence*/
 	
 	if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
-	/* assign velocity km/s*/
+	/* Assign velocity km/s*/
 	
 	if (!sf_getfloats("xgradient",gx_inp,N-1)) sf_error("Please enter the x-gradient array [N-1]");
-	/* assign x-gradient*/
+	/* Assign x-gradient*/
 	
 	if (!sf_getfloats("zgradient",gz_inp,N-1)) sf_error("Please enter the z-gradient array [N-1]");
-	/* assign z-gradient */
+	/* Assign z-gradient */
 	
 	if (!sf_getfloats("xref",xref_inp,N-1)) sf_error("Please enter the x-reference points array [N-1]");
-	/* assign x-reference point*/
+	/* Assign x-reference point*/
 	
 	if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
-	/* assign z-reference point*/
+	/* Assign z-reference point*/
 	
 	if (!sf_getfloat("min",&bmin)) {
 		bmin=xx[0];
@@ -195,7 +189,7 @@ int main(int argc, char* argv[])
 	/* Assign a default value for tolerance*/
 	
 	
-	/*Set output 2D array reflection point---------------------------------------*/
+	/* Set output 2D array reflection point----------------------------------------------------------------*/
 	xrefl = sf_output("out"); /* Output reflection points*/
 	
 	if (!sf_getint("ns",&nt)) nt=2;
@@ -218,14 +212,14 @@ int main(int argc, char* argv[])
 	sf_putfloat(xrefl,"o1",t0);
 	
 	
-	/*read input------------------------------------------------------------------------------*/
+	/* Read input-----------------------------------------------------------------------------------------*/	
+	sf_floatread(temp_rr[0],nr1*N,refl);
+	
+	/* Check the array, consecutive two inputs must not differ by more than 1-----------------------------*/
+	
 	int d1,d2,d3,d4,d5,p1,p3; /*counter*/
 	int p2; /*Temp value*/
 	float p4=0; /*Temp value*/
-	
-	sf_floatread(temp_rr[0],nr1*N,refl);
-	
-	/*Check the array, consecutive two inputs must not differ by more than 1*/
 	
 	for (p1=0; p1<nr2-1; p1++) {
 		p2 = updown[p1]-updown[p1+1];
@@ -235,7 +229,7 @@ int main(int argc, char* argv[])
 		}
 	}
 	
-	/*Check whether the gradient and vstatus match*/
+	/* Check whether the gradient and vstatus match-------------------------------------------------------*/
 	
 	for (p3=0; p3<N-1; p3++) {
 		p4 = p4 + gx_inp[p3]+gz_inp[p3];
@@ -251,11 +245,10 @@ int main(int argc, char* argv[])
 	}
 	
 	
-	/*Generate input according to the reflection sequence-----------------------------*/
+	/* Generate input according to the reflection sequence-----------------------------------------------*/
 	for (d2=0; d2<nr2+2; d2++) {
 		
-		
-		/*Set velocity, gradient, and reference points arrays*/
+		/* Set velocity, gradient, and reference points arrays-------------------------------------------*/
 			if (d2<1) {
 				v[d2] = v_inp[0];
 				gx[d2] = gx_inp[0];
@@ -264,7 +257,7 @@ int main(int argc, char* argv[])
 				zref[d2] = zref_inp[0];
 			}
 			else {
-				d3 = updown[d2-1]; /*need d3, d4, and d5 because array argument needs to be an interger*/
+				d3 = updown[d2-1]; /* Need d3, d4, and d5 because array argument needs to be an interger*/
 				d4 = updown[d2];
 				
 				if (d4-d3>0) {
@@ -274,7 +267,6 @@ int main(int argc, char* argv[])
 					xref[d2] = xref_inp[d3];
 					zref[d2] = zref_inp[d3];
 				}	
-				
 				if(d4-d3<0){
 					v[d2] = v_inp[d4];
 					gx[d2] = gx_inp[d4];
@@ -284,50 +276,43 @@ int main(int argc, char* argv[])
 				}
 			}
 		
-		for (d1=0; d1<nr1; d1++) { /*Set layers according to updown*/
+		for (d1=0; d1<nr1; d1++) { /* Set layers according to updown*/
 			
 			if (d2 == 0) {
 				rr[d2][d1] = temp_rr[0][d1];
 			}
+			else {
 			d5 = updown[d2-1];
-			
 			rr[d2][d1] = temp_rr[d5][d1];
+			}	
 		}
-		
 	}
 	
-	/*Initialize interpolation-------------------------------------------------------------------*/
-	if (!sf_getint("order",&order)) order=3;/*interpolation order*/
+	/* Initialize interpolation------------------------------------------------------------------------*/
 	
-	
-	/*Compute reflector slope--------------------------------------------------------------------*/
-	
-	eno = (sf_eno*) sf_alloc(nr2+2,sizeof(*eno)); /*allocation for eno array*/
+	if (!sf_getint("order",&order)) order=3;/* Interpolation order*/
+	eno = (sf_eno*) sf_alloc(nr2+2,sizeof(*eno)); /* Allocation for eno array*/
 	deno = (sf_eno*) sf_alloc(nr2+2,sizeof(*deno));
+
+		/* Compute reflector slope---------------------------------------------------------------------*/
 	
-	for (ir2=0; ir2 < nr2+2; ir2++) {
-		
-		
-		/*Loop through eno*/
-		
-		eno[ir2]  = sf_eno_init(order,nr1); /*function values*/
-		sf_eno_set (eno[ir2],rr[ir2]); 
-		
-		for (ir1=0; ir1 < nr1; ir1++) {
+		for (ir2=0; ir2 < nr2+2; ir2++) { /* Loop through eno*/
+			eno[ir2]  = sf_eno_init(order,nr1); /* Function values*/
+			sf_eno_set (eno[ir2],rr[ir2]); 
 			
-			x = r0+ir1*dr; /* distance */
-			rd[ir2][ir1] = zder(ir2,x);
+			for (ir1=0; ir1 < nr1; ir1++) {
+				x = r0+ir1*dr; /* Distance */
+				rd[ir2][ir1] = zder(ir2,x);
+			}
+			deno[ir2] = sf_eno_init(order,nr1);	/* Derivatives*/	
+			sf_eno_set (deno[ir2],rd[ir2]);
 		}
-		
-		deno[ir2] = sf_eno_init(order,nr1);	/*derivatives*/	
-		sf_eno_set (deno[ir2],rd[ir2]);
-	}
 	
-	/*Set vconstant or vgradient----------------------------------------------------------*/
+	/* Set vconstant or vgradient----------------------------------------------------------------------*/
 	
 	func3 f;
 	
-	f.T_k = 0; /*Initialize structure f*/
+	f.T_k = 0; /* Initialize structure f*/
 	f.T_k_k = 0;
 	f.T_k_k1 = 0;
 	f.T_k_k_k = 0;
@@ -343,140 +328,125 @@ int main(int argc, char* argv[])
 	f.T_k_k_zk1 = 0;
 	f.T_k_k1_zk = 0;
 	
-	setfunc(vstatus,&f);
+	setfunc(vstatus,&f); /* Set value of structure f*/
+	
+	/* To avoid the case where there is NO reflection*/
+	if (nr2==0) {
+		goto mark; /* If there is no reflection*/
+	}
+	
+	if (!sf_getfloats("xinitial",xinitial,nr2)) {
+		for (count=0; count<nr2; count++) {
+			xinitial[count] = xx[0]+(count+1)*(xx[nr2+1]-xx[0])/(nr2+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
+		}	
+	}
+	/* Initial position*/
 	
 	
-	/*Step 1: Calculate F(y) to see if it is sufficiently close to zero-------------------*/
+/* Step 1: Calculate F(y) to see if it is sufficiently close to zero----------------------------------*/
 	
-	int i,j1,i3,i4; /*counter*/
+	int i,j1,i3,i4; /* Counter*/
 	float Ftem=0;
 	
 	for (i3=0; i3<nr2; i3++) {
-		xx[i3+1] = xinitial[i3]; /*Create an array of points of intersection from soure to receiver*/
+		xx[i3+1] = xinitial[i3]; /* Create an array of points of intersection from soure to receiver*/
 	}
 	
 	for (i=0; i<nr2; i++) {
-		
-		initialize(i+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_k and y_k1*/
-		
+		initialize(i+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_1k, y_k and y_k1*/
 		F[i+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
-		
 	}	
 	
-	for (i4=0; i4<nr2; i4++) { /*check the tolerance*/
-		
+	for (i4=0; i4<nr2; i4++) { /* Check the tolerance*/
 		Ftem = Ftem+fabsf(F[i4+1]);
-		
 		if (Ftem<nr2*tol && i4 == nr2-1) {
 			for (j1=0; j1<nr2; j1++) {
 				sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
 			}
-			goto mark; /*Exit the loop to the part for writing the result*/
+			goto mark; /* Exit the loop to the part for writing the result*/
 		}	
-		
-		
 	}
 	
-	/*Loop through the output for repeating yk=yk-dk----------------------------------------------------------------------*/
+/* MAIN LOOP through the output for repeating yk=yk-dk-----------------------------------------------*/
 	
-	int q; /*counter for big loop*/
-	int i2,j2,i5; /*counter*/
-	int w = niter; /*number of loops for yk=yk-dk*/
-	
+	int i2,j2,i5; /* Counter*/
+	int w = niter; /* Number of loops for yk=yk-dk*/
 	
 	for (q=0; q<w; q++) {
+		Ftem=0; /* Reset Ftem to zero*/
 		
-		Ftem=0; /*reset Ftem to zero*/
-		
-		for (i2=0; i2<nr2; i2++) { /*Recalculate F for new y*/
-			
+		for (i2=0; i2<nr2; i2++) { /* Recalculate F for new y (Repeat Step 1)*/
 			initialize(i2+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
-			
 			F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
-			
 		}
 		
-		for (i5=0; i5<nr2; i5++) { /*check the tolerance*/
-			
+		for (i5=0; i5<nr2; i5++) { /* Check the tolerance*/
 			Ftem = Ftem+fabsf(F[i5+1]);
-			
 			if (Ftem<nr2*tol && i5 == nr2-1) {
 				for (j2=0; j2<nr2; j2++) {
 					sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
 				}
-				goto mark; /*Exit the loop to the part for writing the result*/
+				goto mark; /* Exit the loop to the part for writing the result*/
 			}
-			
 		}
 		
-		/*Step 2: Forward recursion-----------------------------------------------------------*/
+/* Step 2: Forward recursion-------------------------------------------------------------------------*/
 		
-		int l; /*counter*/
+		int l; /* Counter*/
 		for (l=0; l<nr2; l++) {
-			
 			initialize(l+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
-			
 			if (l==0) {
-				
 				ck_inv[1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
 				zk[1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) +T_hat_k_k(f.T_k_k,f.T_k_zk);
-				
 			}
 			else {
-				
 				ck_inv[l+1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
 				zk[l+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_inv[l]*zk[l];
-				
 			}
-			
+
 			if (isnan(1/ck_inv[l+1]) != 0 || isinf(1/ck_inv[l+1]) != 0) {
 				sf_warning("ck_inv doesn't exist. The solutions do not converge.\n");
 				exit(0);
 			}
-			
 		}	
 		
-		/*Step 3: Backward recursion----------------------------------------------------------*/
-		int m; /*counter*/
+/* Step 3: Backward recursion-----------------------------------------------------------------------*/
+		
+		int m; /* Counter*/
 		for (m=nr2-1; m>=0; m--) { 
-			
 			initialize(m+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
-			
 			if (m==nr2-1) {
 				dk[m+1] = ck_inv[m+1]*zk[m+1];
 			}
 			else {
 				dk[m+1] = ck_inv[m+1]*(zk[m+1]-T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*dk[m+2]);
 			}
-			
 		}
 	
-		/*Apply boundary ------------------------------------------*/
+		/*Apply boundary---------------------------------------------------------------------------*/
 		
-		int t,a,b1,b2; /*counter*/
-		
+		int t,a,b1,b2; /* Counter*/
 		for (a=0; a<nr2; a++) {
 			b1=0;
 			b2=0;
 			xxtem[a+1] = xx[a+1]-dk[a+1];
-			
-			while (xxtem[a+1]<bmin && b1<20) {/*maximum times to multiply is 20*/
+			while (xxtem[a+1]<bmin && b1<20) {/* Maximum times to multiply is 20*/
 				
-				dk[a+1]=0.5*dk[a+1];
+				dk[a+1]=0.5*dk[a+1]; /* Decrease the change by half*/
 				if (debug!=0) {
 				sf_warning("The new x value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
 				}
-				xxtem[a+1] = xx[a+1]-dk[a+1];
+				xxtem[a+1] = xx[a+1]-dk[a+1]; /* Recompute xxtem to see if it is still exceed the boundary*/
 				b1++;
 			}
-			while(xxtem[a+1]>bmax && b2<20) {/*maximum times to multiply is 20*/
+			while(xxtem[a+1]>bmax && b2<20) {/* Maximum times to multiply is 20*/
+				
 				dk[a+1]=0.5*dk[a+1];
 				if (debug!=0) {
 				sf_warning("The new x value exceeds the maximum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
 				}
 				xxtem[a+1] = xx[a+1]-dk[a+1];
 				b2++;
-				
 			}
 			if (b1>=20) {
 				sf_warning("The position x[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
@@ -486,62 +456,52 @@ int main(int argc, char* argv[])
 				sf_warning("The position x[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
 				exit(0);
 			}
-			
 		}
 		
-		/*Step 4: Update xx--------------------------------------------------------------------*/
+/* Step 4: Update xx------------------------------------------------------------------------------*/
 		
-		vector_sub(nr2+2,xx,nr2+2,dk,xxnew,0);
-		
+		vector_sub(nr2+2,xx,nr2+2,dk,xxnew,0); /* Update xx (Newton)*/
 		for (t=0; t<nr2+2;t++) {
-			
 			if (debug!=0) {
 				sf_warning("The original value of y[%d] is %g, d[%d] is %g and the new value of y[%d] is %g\n",t,*(xx+t),t,*(dk+t),t,*(xxnew+t));
 				if (t==nr2+1) {
 					sf_warning("Iteration:%d\n\n",q+1);
 				}					
 			}
-			
-			*(xx+t) = *(xxnew+t); /*update xx values*/
-			*(dk_old+t) = *(dk+t); /*store the working dk*/
-			
+			*(xx+t) = *(xxnew+t); /* Update xx values*/
 		}
-			
 	}
-		
-	/*Write result in 2D & Compute traveltime-----------------------------------------------------------------------*/
-	int c1,c2;
-	int c; /*counter*/
 	
-mark: /*mark point for goto*/
+/* END OF MAIN LOOP--------------------------------------------------------------------------------*/	
+	
+	/* Write result in 2D & Compute traveltime-----------------------------------------------------*/
+	int c1,c2;
+	int c; /* Counter*/
+	
+mark: /* Mark point for goto*/
 	
 	for (c2=0; c2<nr2+2; c2++) {
 		for (c1=0; c1<2; c1++) {
-			
 			if (c1==0) {
 				ans[c2][c1] = xx[c2];
 			}
 			else {
 				ans[c2][c1] = z(c2,xx[c2]);
 			}
-			
 		}
 	}
 	
-	tt=0; /*initialize traveltime tt*/
+	tt=0; /* Initialize traveltime tt*/
 	
 	for (c=0; c<nr2+1; c++) {
-		
 		half_initialize(c,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
-		
 		tt = tt + T_hat_k(f.T_k);
-		
 		if (c==nr2) {
 			sf_warning("Traveltime is %g and the total number of iterations is %d",tt,q);
 		}
 	}
 	
-	/* write output */
+	/* Write output*/
 	sf_floatwrite(ans[0],2*(nr2+2),xrefl);
 	
 	exit(0);

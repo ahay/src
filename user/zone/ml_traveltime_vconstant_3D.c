@@ -3,16 +3,31 @@
  *  
  *
  *  Created by Yanadet Sripanich on 2/5/13.
- *  Copyright 2013 __MyCompanyName__. All rights reserved.
+ * 
  *
  */
-
+/*
+ Copyright (C) 2009 University of Texas at Austin
+ 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
 
 #include "ml_traveltime_vconstant_3D.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
 
 #include "general_traveltime_3D.h"
 /*^*/
@@ -20,28 +35,28 @@
 #ifndef _ml_traveltime_vconstant_3D_h
 
 typedef struct threed {
-	float x; /*x-coordinate*/
-	float y; /*y-coordinate*/
-	float z; /*z-coordinate*/
-	float dx1; /*First derivative in x-direction*/
-	float dx2; /*Second derivative in x-direction*/
-	float dy1; /*First derivative in y-direction*/
-	float dy2; /*Second derivative in y-direction*/
-	float dxy2; /*Cross-derivative of x and y*/
-	float v1; /*velocity at the reflector from above*/
-	float v2; /*velocity at the reflector from below*/
-	float gx1;/*x-direction velocity gradient from above*/
-	float gx2;/*x-direction velocity gradient from below*/
-	float gy1;/*y-direction velocity gradient from above*/
-	float gy2;/*y-direction velocity gradient from below*/
-	float gz1;/*z-direction velocity gradient from above*/
-	float gz2;/*z-direction velocity gradient from below*/
+	float x; /* x-coordinate*/
+	float y; /* y-coordinate*/
+	float z; /* z-coordinate*/
+	float dx1; /* First derivative in x-direction*/
+	float dx2; /* Second derivative in x-direction*/
+	float dy1; /* First derivative in y-direction*/
+	float dy2; /* Second derivative in y-direction*/
+	float dxy2; /* Cross-derivative of x and y*/
+	float v1; /* Velocity at the reflector from above*/
+	float v2; /* Velocity at the reflector from below*/
+	float gx1;/* x-direction velocity gradient from above*/
+	float gx2;/* x-direction velocity gradient from below*/
+	float gy1;/* y-direction velocity gradient from above*/
+	float gy2;/* y-direction velocity gradient from below*/
+	float gz1;/* z-direction velocity gradient from above*/
+	float gz2;/* z-direction velocity gradient from below*/
 } threed;
-/* structure pointer */
+/* Structure pointer */
 
 #endif
 
-
+/*Traveltime functions for constant velocity---------------------------------------------------------------------------*/
 float T0_k(threed y_k,threed y_k1)
 /*<Traveltime>*/
 {
@@ -53,7 +68,7 @@ float T0_k(threed y_k,threed y_k1)
 	
 }
 
-/*First Derivative (6)---------------------------------------------------------------------------------------*/
+/* First Derivative (6)---------------------------------------------------------------------------------------*/
 
 float T0_k_k_1(threed y_k, threed y_k1) 
 /*<Derivative of T with respect to x_k>*/
@@ -125,9 +140,9 @@ float T0_k_zk1(threed y_k, threed y_k1)
 
 
 
-/*Second Derivative------------------------------------------------------------------------------------------*/
+/* Second Derivative------------------------------------------------------------------------------------------*/
 
-/*k_k_k Family (6)-----------------------------------*/
+/* k_k_k Family (6)-----------------------------------*/
 
 float T0_k_k_k_1(threed y_k, threed y_k1)
 /*<Second derivative of T with respect to x_k>*/
@@ -195,7 +210,7 @@ float T0_k_zk_zk(threed y_k, threed y_k1)
 	
 }
 
-/*k_k1_k1 Family & 1k_k_k Family (6)----------------------------------*/
+/* k_k1_k1 Family & 1k_k_k Family (6)----------------------------------*/
 
 float T0_k_k1_k1_1(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k1>*/
@@ -263,7 +278,7 @@ float T0_k_zk1_zk1(threed y_k, threed y_k1)
 	
 }
 
-/*k_k_k1 Family & 1k_1k_k Family (9)----------------------------------*/
+/* k_k_k1 Family & 1k_1k_k Family (9)----------------------------------*/
 
 float T0_k_k_k1_1(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
