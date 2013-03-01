@@ -20,6 +20,7 @@
 #include <rsf.h>
 
 #include "einspline.h"
+#include "esc_helper.h"
 #include "esc_point3.h"
 #include "esc_tracer3.h"
 
@@ -27,7 +28,7 @@ int main (int argc, char* argv[]) {
     size_t nc = 0;
     int nz, nx, ny, nb, na, iz, ix, iy, ib, ia, i;
     float dz, oz, dx, ox, dy, oy, da, oa, db, ob;
-    float z, x, y, a, b, ae, be, pz, px, py;
+    float z, x, y, a, b, ae, be, vf[3], vt[3], q[4];
     float zmin, zmax, xmin, xmax, ymin, ymax, md;
     float ****e;
     Ugrid z_grid, x_grid, y_grid;
@@ -203,7 +204,7 @@ int main (int argc, char* argv[]) {
     /* Half-width of a supercell */
     sf_esc_tracer3_set_mdist (esc_tracer, md);
 
-    e = sf_floatalloc4 (nz, nx, ny, ESC3_NUM + 3);
+    e = sf_floatalloc4 (nz, nx, ny, ESC3_NUM + 4);
 
     esc_point = sf_esc_point3_init ();
 
@@ -213,11 +214,12 @@ int main (int argc, char* argv[]) {
         a = oa + ia*da;
         if (verb)
             sf_warning ("Processing azimuth %d of %d;", ia + 1, na);
-        px = cosf (a);
-        py = sinf (a);
         for (ib = 0; ib < nb; ib++) {
             b = ob + ib*db;
-            pz = cosf (b);
+            /* Initial phase vector */
+            vf[0] = cosf (b);
+            vf[1] = sinf (b)*cosf (a);
+            vf[2] = sinf (b)*sinf (a);
             for (iy = 0; iy < ny; iy++) {
                 y = oy + iy*dy;
                 sf_esc_tracer3_set_ymin (esc_tracer, y - md);
@@ -238,15 +240,22 @@ int main (int argc, char* argv[]) {
                         e[ESC3_Z][iy][ix][iz] -= z;
                         e[ESC3_X][iy][ix][iz] -= x;
                         e[ESC3_Y][iy][ix][iz] -= y;
-                        e[ESC3_NUM][iy][ix][iz] = cosf (be) - pz;
-                        e[ESC3_NUM + 1][iy][ix][iz] = cosf (ae) - px;
-                        e[ESC3_NUM + 2][iy][ix][iz] = sinf (ae) - py;
+                        /* New phase vector */
+                        vt[0] = cosf (be);
+                        vt[1] = sinf (be)*cosf (ae);
+                        vt[2] = sinf (be)*sinf (ae);
+                        /* Encode rotation to the new phase vector */
+                        sf_quat_vecrot (vf, vt, q);
+                        e[ESC3_NUM][iy][ix][iz] = q[0];
+                        e[ESC3_NUM + 1][iy][ix][iz] = q[1];
+                        e[ESC3_NUM + 2][iy][ix][iz] = q[2];
+                        e[ESC3_NUM + 3][iy][ix][iz] = q[3];
                     } /* z */
                 } /* x */
             } /* y */
             /* Create for this constant-azimuth volume */
-            zxyspline = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 3);
-            for (i = 0; i < (ESC3_NUM + 3); i++) {
+            zxyspline = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 4);
+            for (i = 0; i < (ESC3_NUM + 4); i++) {
                 set_multi_UBspline_3d_s (zxyspline, i, &e[i][0][0][0]);
             }
             if (0 == ia && 0 == ib) {

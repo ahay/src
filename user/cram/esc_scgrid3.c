@@ -38,6 +38,7 @@ typedef struct EscSCgrid3 *sf_esc_scgrid3;
 
 struct EscSCgrid3 {
     size_t               n, offs, is, ir;
+    int                  morder;
     int                  nz, nx, ny, na, nb;
     float                oz, ox, oy, oa, ob;
     float                dz, dx, dy, da, db;
@@ -109,9 +110,9 @@ static int sf_scgrid3_tps_ia_stencil3[SCGRID3_TPS_STENCIL3] =
 
 /* Initialize thin-plane spline structures */
 static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
-    const int ns = SCGRID3_TPS_STENCIL1;
-    int *bs = sf_scgrid3_tps_ib_stencil1;
-    int *as = sf_scgrid3_tps_ia_stencil1;
+    const int ns = SCGRID3_TPS_STENCIL2;
+    int *bs = sf_scgrid3_tps_ib_stencil2;
+    int *as = sf_scgrid3_tps_ia_stencil2;
     int i;
 
     esc_scgrid->L = sf_floatalloc2 (ns + 3, ns + 3);
@@ -135,8 +136,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_esc_tracer3 esc_tracer, b
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
-    int i, ia, ib;
-    size_t offs;
+    int ia, ib;
     FILE *stream;
     sf_esc_scgrid3 esc_scgrid = (sf_esc_scgrid3)sf_alloc (1, sizeof (struct EscSCgrid3));
 
@@ -221,6 +221,8 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_esc_tracer3 esc_tracer, b
     esc_scgrid->is = 0; /* Total number of interpolation steps */
     esc_scgrid->ir = 0; /* Total number of processed points */
 
+    esc_scgrid->morder = 2; /* Interpolation accuracy */
+
     esc_scgrid->esc_tracer = esc_tracer;
     esc_scgrid->esc_point = sf_esc_point3_init ();
 
@@ -249,6 +251,12 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     free (esc_scgrid);
 }
 
+void sf_esc_scgrid3_set_morder (sf_esc_scgrid3 esc_scgrid, int morder)
+/*< Set order of interpolation accuracy in the angular domain >*/
+{
+    esc_scgrid->morder = morder;
+}
+
 /* Compute interger index for a float value v according to sampling df
    and zero at f0, store fractional part in f */
 static int sf_cram_scgrid3_ftoi (float v, float f0, float df, float *f) {
@@ -263,37 +271,44 @@ static int sf_cram_scgrid3_ftoi (float v, float f0, float df, float *f) {
 }
 
 /* Convert normalized phase vector components into polar angles */
-static void sf_esc_scgrid3_p_to_ab (sf_esc_scgrid3 esc_scgrid,
-                                    float pz, float px, float py,
+static void sf_esc_scgrid3_p_to_ab (float pz, float px, float py,
                                     float *a, float *b) {
-    if (pz < -1.0) pz = -1.0;
-    if (pz > 1.0) pz = 1.0;
-    if (px < -1.0) px = -1.0;
-    if (px > 1.0) px = 1.0;
-    if (py < -1.0) py = -1.0;
-    if (py > 1.0) py = 1.0;
+    float l;
 
-    *b = acosf (pz);
-    *a = acosf (px);
-    if (py < 0.0)
-        *a = 2.0*SF_PI - *a;
+    l = sqrt (px*px + py*py);
+    if (l > 1e-6) {
+        if (py >= 0.0)
+            *a = acosf (px/l);
+        else
+            *a = 2.0*SF_PI - acosf (px/l);
+    }
+    l = sqrt (pz*pz + px*px + py*py);
+    *b = acosf (pz/l);
+}
 
-    /* Make sure that a is in [0;2PI] and b is in [0;PI] */
-    if (*a < 0.0)
-        *a += 2.0*SF_PI;
-    else if (*a > 2.0*SF_PI)
-        *a -= 2.0*SF_PI;
-    if (*b < 0.0) {
-        *a += SF_PI;
-        *b = fabsf (*b);
-    } else if (*b > SF_PI) {
-        *a -= SF_PI;
-        *b = 2.0*SF_PI - *b;
-    }  
-    if (*a < 0.0)
-        *a += 2.0*SF_PI;
-    else if (*a > 2.0*SF_PI)
-        *a -= 2.0*SF_PI;
+/* Convert quaternion of rotation into a new phase direction */
+static void sf_esc_scgrid3_q_to_ab (float *q, float *a, float *b) {
+    int i, j;
+    float vf[3], vt[3];
+    float M[3][3];
+
+    vf[0] = cosf (*b);
+    vf[1] = sinf (*b)*cosf (*a);
+    vf[2] = sinf (*b)*sinf (*a);
+
+    /* Obtain rotation to the new phase position */
+    sf_quat_norm (q);
+    sf_quat_rotmat (q, &M[0][0]);
+
+    /* Rotate the old phase vector */
+    for (i = 0; i < 3; i++) {
+        vt[i] = 0.0;
+        for (j = 0; j < 3; j++) {
+            vt[i] += M[i][j]*vf[j];
+        }
+    }
+    /* Convert to azimuth and inclination */
+    sf_esc_scgrid3_p_to_ab (vt[0], vt[1], vt[2], a, b);
 }
 
 /* Flip azimuth by +/-PI (this happens when inclination is moved back to
@@ -336,7 +351,7 @@ static void sf_esc_scgrid3_bilinear_interp (sf_esc_scgrid3 esc_scgrid,
                                             float *z, float *x, float *y,
                                             float *t, float *l, float *b, float *a) {
     int i, ib[4], ia[4];
-    float vals[4][ESC3_NUM + 3], v[ESC3_NUM + 3];
+    float vals[4][ESC3_NUM + 4], v[ESC3_NUM + 4];
     float fb, fa, pz, px, py;
 
     /* ib, ia */
@@ -359,7 +374,7 @@ static void sf_esc_scgrid3_bilinear_interp (sf_esc_scgrid3 esc_scgrid,
                                   *y, *x, *z, &vals[i][0]);
     }
     /* Bilinear interpolation */
-    for (i = 0; i < (ESC3_NUM + 3); i++) {
+    for (i = 0; i < (ESC3_NUM + 4); i++) {
         v[i] = vals[0][i]*(1.0 - fb)*(1.0 - fa) +
                vals[1][i]*fb*(1.0 - fa) +
                vals[2][i]*(1.0 - fb)*fa +
@@ -372,10 +387,7 @@ static void sf_esc_scgrid3_bilinear_interp (sf_esc_scgrid3 esc_scgrid,
 #ifdef ESC_EQ_WITH_L
     *l += v[ESC3_L];
 #endif
-    pz = cosf (*b) + v[ESC3_NUM];
-    px = cosf (*a) + v[ESC3_NUM + 1];
-    py = sinf (*a) + v[ESC3_NUM + 2];
-    sf_esc_scgrid3_p_to_ab (esc_scgrid, pz, px, py, a, b);
+    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], a, b);
 }
 
 /* Perform spline interpolation of the local escape solution */
@@ -383,7 +395,7 @@ static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
                                           float *z, float *x, float *y,
                                           float *t, float *l, float *b, float *a) {
     int i, j, k, ia, ib, iia, iib;
-    float vals[6][6][ESC3_NUM + 3], f[ESC3_NUM + 3][6][6], v[ESC3_NUM + 3];
+    float vals[6][6][ESC3_NUM + 4], f[ESC3_NUM + 4][6][6], v[ESC3_NUM + 3];
     float fa, fb, pz, px, py;
     Ugrid z_grid, x_grid;
     BCtype_s zBC, xBC;
@@ -403,7 +415,7 @@ static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
                                       *y, *x, *z, &vals[i][j][0]);
         }
     }
-    for (k = 0; k < (ESC3_NUM + 3); k++) {
+    for (k = 0; k < (ESC3_NUM + 4); k++) {
         for (i = 0; i < 6; i++) {
             for (j = 0; j < 6; j++) {
                 f[k][i][j] = vals[i][j][k];
@@ -415,8 +427,8 @@ static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
     x_grid.start = 0; x_grid.end = 5; x_grid.num = 6;
     zBC.lCode = zBC.rCode = NATURAL;
     xBC.lCode = xBC.rCode = NATURAL;
-    escspline = create_multi_UBspline_2d_s (x_grid, z_grid, xBC, zBC, ESC3_NUM + 3);
-    for (k = 0; k < (ESC3_NUM + 3); k++) {
+    escspline = create_multi_UBspline_2d_s (x_grid, z_grid, xBC, zBC, ESC3_NUM + 4);
+    for (k = 0; k < (ESC3_NUM + 4); k++) {
         set_multi_UBspline_2d_s (escspline, k, &f[k][0][0]);
     }
     eval_multi_UBspline_2d_s (escspline, 2.0 + fa, 2.0 + fb, v);
@@ -427,10 +439,7 @@ static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
 #ifdef ESC_EQ_WITH_L
     *l += v[ESC3_L];
 #endif
-    pz = cosf (*b) + v[ESC3_NUM];
-    px = cosf (*a) + v[ESC3_NUM + 1];
-    py = sinf (*a) + v[ESC3_NUM + 2];
-    sf_esc_scgrid3_p_to_ab (esc_scgrid, pz, px, py, a, b);
+    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], a, b);
     destroy_Bspline (escspline);
 }
 
@@ -441,7 +450,7 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
     int i, j, ia, ib, iia, iib;
     float vals[SCGRID3_TPS_MAX_STENCIL][SCGRID3_TPS_MAX_STENCIL],
           f[SCGRID3_TPS_MAX_STENCIL + 3], w[SCGRID3_TPS_MAX_STENCIL + 3],
-          v[ESC3_NUM + 3];
+          v[ESC3_NUM + 4];
     float fa, fb, pz, px, py;
 
     /* ib, ia */
@@ -458,7 +467,7 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
         
     }
     /* Loop over escape functions */
-    for (i = 0; i < (ESC3_NUM + 3); i++) {
+    for (i = 0; i < (ESC3_NUM + 4); i++) {
         /* Put one escape function type into a contiguous array */ 
         for (j = 0; j < esc_scgrid->ns; j++) {
             f[j] = vals[j][i];
@@ -483,10 +492,7 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
 #ifdef ESC_EQ_WITH_L
     *l += v[ESC3_L];
 #endif
-    pz = cosf (*b) + v[ESC3_NUM];
-    px = cosf (*a) + v[ESC3_NUM + 1];
-    py = sinf (*a) + v[ESC3_NUM + 2];
-    sf_esc_scgrid3_p_to_ab (esc_scgrid, pz, px, py, a, b);
+    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], a, b);
 }
 
 #define SPEPS 1e-3
@@ -512,7 +518,12 @@ static void sf_esc_scgrid3_project_point (sf_esc_scgrid3 esc_scgrid,
 #endif
     } else {
         /* Do interpolation of local escape values across the supercells */
-        sf_esc_scgrid3_tps_interp (esc_scgrid, z, x, y, t, l, b, a);
+        if (3 == esc_scgrid->morder)
+            sf_esc_scgrid3_spline_interp (esc_scgrid, z, x, y, t, l, b, a);
+        else if (2 == esc_scgrid->morder)
+            sf_esc_scgrid3_tps_interp (esc_scgrid, z, x, y, t, l, b, a);
+        else
+            sf_esc_scgrid3_bilinear_interp (esc_scgrid, z, x, y, t, l, b, a);
     }
 }
 

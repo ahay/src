@@ -19,6 +19,68 @@
 
 #include <rsf.h>
 
+void sf_quat_rotmat (float *q, float *M)
+/*< Build rotation matrix[3][3] from quaternion q[4] >*/
+{
+    M[0] = 1.0 - 2.0*q[2]*q[2] - 2.0*q[3]*q[3];
+    M[1] = 2.0*q[1]*q[2] - 2.0*q[3]*q[0];
+    M[2] = 2.0*q[1]*q[3] + 2.0*q[2]*q[0];
+    M[3] = 2.0*q[1]*q[2] + 2.0*q[3]*q[0];
+    M[4] = 1.0 - 2.0*q[1]*q[1] - 2.0*q[3]*q[3];
+    M[5] = 2.0*q[3]*q[2] - 2.0*q[1]*q[0];
+    M[6] = 2.0*q[1]*q[3] - 2.0*q[2]*q[0];
+    M[7] = 2.0*q[3]*q[2] + 2.0*q[1]*q[0];
+    M[8] = 1.0 - 2.0*q[1]*q[1] - 2.0*q[2]*q[2];
+}
+
+void sf_quat_norm (float *q)
+/*< Normalize quaternion q[4] >*/
+{
+    float f = sqrtf (q[0]*q[0] + q[1]*q[1] + 
+               q[2]*q[2] + q[3]*q[3]);
+    q[0] /= f;
+    q[1] /= f;
+    q[2] /= f;
+    q[3] /= f;
+    return;
+}
+
+void sf_quat_vecrot (float *vf, float *vt, float *q)
+/*< Find quaternion q[4] from rotation of vector vf[3] to vt[3] >*/
+{
+    float s, invs, d, f, c[3];
+    
+    /* Dot product */
+    d = vf[0]*vt[0] + vf[1]*vt[1] + vf[2]*vt[2];
+    
+    if (d > 0.99) { /* Same vectors */
+        q[0] = 1.0;
+        q[1] = 0.0;
+        q[2] = 0.0;
+        q[3] = 0.0;
+        return;
+    } else if (d < -0.99) { /* Opposite vectors */
+        /* Cross product with the vertical direction */
+        c[0] = 0.0;
+        c[1] = vf[2];
+        c[2] = -vf[1];
+        q[0] = 0.0;
+    } else {
+        s = sqrtf ((1.0 + d)*2.0);
+        invs = 1.0/s;
+        c[0] = (vf[1]*vt[2] - vf[2]*vt[1])*invs;
+        c[1] = (vf[2]*vt[0] - vf[0]*vt[2])*invs;
+        c[2] = (vf[0]*vt[1] - vf[1]*vt[0])*invs;
+        q[0] = 0.5*s;
+    }
+    q[1] = c[0];
+    q[2] = c[1];
+    q[3] = c[2];
+    /* Normalize */
+    sf_quat_norm (q);
+    return;
+}
+
 /* LU decomposition with Doolittle method, original code can
    be found at http://mymathlib.com */
 
@@ -26,8 +88,8 @@ int sf_ludlt_decomposition (float *A, int *pivot, int n)
 /*< Find LU decomposition of matrix A[nxn], return
     -1 for singular matrix, otherwise - 0 >*/
 {
-    int i, j, k, p;
-    float *p_k, *p_row, *p_col;
+    int i, j, k;
+    float *p_k, *p_row, *p_col = NULL;
     float max;
 
     /* For each row and column, k = 0, ..., n-1, */
@@ -127,8 +189,8 @@ void sf_tps_build_matrix (float **L, float *x, float *y, int nd,
 /*< Build thin plate spline matrix L[nd+3][nd+3] for coordinate
     locations x[nd] and y[nd]; eps is bending energy >*/
 {
-    int i, j, k;
-    double a = 0.0, elen, h;
+    int i, j;
+    double a = 0.0, elen;
 
     if (nd < 3)
         return;
@@ -174,7 +236,7 @@ float sf_tps_compute_point (float *w, float *x, float *y, int nd,
 /*< Compute point at xc,yc using thin-plate spline coefficients w[nd+3]
     and control nodes at x[nd], y[nd] >*/
 {
-    int i, j, k;
+    int i;
     float h;
 
     /* Do interpolation */

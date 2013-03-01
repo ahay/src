@@ -43,6 +43,9 @@ struct EscTracer3 {
     float                zmin, zmax;
     float                xmin, xmax;
     float                ymin, ymax;
+    float                zgmin, zgmax;
+    float                xgmin, xgmax;
+    float                ygmin, ygmax;
     bool                 parab;
     sf_esc_slowness3     esc_slow;
     sf_esc_tracer3_traj  traj;
@@ -53,12 +56,12 @@ struct EscTracer3 {
 void sf_esc_tracer3_reset_bounds (sf_esc_tracer3 esc_tracer)
 /*< Reset spatial bounds >*/
 {
-    esc_tracer->zmin = esc_tracer->oz;
-    esc_tracer->zmax = esc_tracer->oz + (esc_tracer->nz - 1)*esc_tracer->dz;
-    esc_tracer->xmin = esc_tracer->ox;
-    esc_tracer->xmax = esc_tracer->ox + (esc_tracer->nx - 1)*esc_tracer->dx;
-    esc_tracer->ymin = esc_tracer->oy;
-    esc_tracer->ymax = esc_tracer->oy + (esc_tracer->ny - 1)*esc_tracer->dy;
+    esc_tracer->zmin = esc_tracer->zgmin;
+    esc_tracer->zmax = esc_tracer->zgmax;
+    esc_tracer->xmin = esc_tracer->xgmin;
+    esc_tracer->xmax = esc_tracer->xgmax;
+    esc_tracer->ymin = esc_tracer->ygmin;
+    esc_tracer->ymax = esc_tracer->ygmax;
 }
 
 sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow,
@@ -83,6 +86,14 @@ sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow,
 
     esc_tracer->md = SF_HUGE; /* Maximum allowed distance along a ray */
 
+    /* Global limits */
+    esc_tracer->zgmin = esc_tracer->oz;
+    esc_tracer->zgmax = esc_tracer->oz + (esc_tracer->nz - 1)*esc_tracer->dz;
+    esc_tracer->xgmin = esc_tracer->ox;
+    esc_tracer->xgmax = esc_tracer->ox + (esc_tracer->nx - 1)*esc_tracer->dx;
+    esc_tracer->ygmin = esc_tracer->oy;
+    esc_tracer->ygmax = esc_tracer->oy + (esc_tracer->ny - 1)*esc_tracer->dy;
+
     sf_esc_tracer3_reset_bounds (esc_tracer);
 
     esc_tracer->parab = true;
@@ -106,37 +117,55 @@ void sf_esc_tracer3_close (sf_esc_tracer3 esc_tracer)
 void sf_esc_tracer3_set_zmin (sf_esc_tracer3 esc_tracer, float zmin)
 /*< Set spatial bound >*/
 {
-    esc_tracer->zmin = zmin;
+    if (zmin > esc_tracer->zgmin)
+        esc_tracer->zmin = zmin;
+    else
+        esc_tracer->zmin = esc_tracer->zgmin;
 }
 
 void sf_esc_tracer3_set_zmax (sf_esc_tracer3 esc_tracer, float zmax)
 /*< Set spatial bound >*/
 {
-    esc_tracer->zmax = zmax;
+    if (zmax < esc_tracer->zgmax)
+        esc_tracer->zmax = zmax;
+    else
+        esc_tracer->zmax = esc_tracer->zgmax;
 }
 
 void sf_esc_tracer3_set_xmin (sf_esc_tracer3 esc_tracer, float xmin)
 /*< Set spatial bound >*/
 {
-    esc_tracer->xmin = xmin;
+    if (xmin > esc_tracer->xgmin)
+        esc_tracer->xmin = xmin;
+    else
+        esc_tracer->xmin = esc_tracer->xgmin;
 }
 
 void sf_esc_tracer3_set_xmax (sf_esc_tracer3 esc_tracer, float xmax)
 /*< Set spatial bound >*/
 {
-    esc_tracer->xmax = xmax;
+    if (xmax < esc_tracer->xgmax)
+        esc_tracer->xmax = xmax;
+    else
+        esc_tracer->xmax = esc_tracer->xgmax;
 }
 
 void sf_esc_tracer3_set_ymin (sf_esc_tracer3 esc_tracer, float ymin)
 /*< Set spatial bound >*/
 {
-    esc_tracer->ymin = ymin;
+    if (ymin > esc_tracer->ygmin)
+        esc_tracer->ymin = ymin;
+    else
+        esc_tracer->ymin = esc_tracer->ygmin;
 }
 
 void sf_esc_tracer3_set_ymax (sf_esc_tracer3 esc_tracer, float ymax)
 /*< Set spatial bound >*/
 {
-    esc_tracer->ymax = ymax;
+    if (ymax < esc_tracer->ygmax)
+        esc_tracer->ymax = ymax;
+    else
+        esc_tracer->ymax = esc_tracer->ygmax;
 }
 
 void sf_esc_tracer3_set_parab (sf_esc_tracer3 esc_tracer, bool parab)
