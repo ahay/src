@@ -1,0 +1,75 @@
+from rsf.proj import *
+#import fdmod
+# Fetch Files from repository
+Fetch('bpaitvel.hh','bpait')
+# Convert Files to RSF and append header
+Flow('bpaitvel','bpaitvel.hh', '''dd form=native | put
+    label1=Depth\ Z label2=Distance\ X unit1=m unit2=m''')
+# ------------------------------------------------------------
+#par = {
+#    'nt':500, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+#    'kt':100,    # wavelet delay
+#    'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=x unit2=km',
+#    'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=z unit1=km'
+#    }
+# add F-D modeling parameters
+#fdmod.param(par)
+
+# Plotting Section
+Result('bpaitvel','''window $SOURCE  | grey  
+    color=j gainpanel=a title=BPait\ Velocity\ Model
+    scalebar=y barreverse=y allpos=y barlabel=Velocity barunit=m/s 
+    screenratio=%g screenht=4 labelsz=5 titlesz=6''' % (12.0/32.0))
+Flow('sub','bpaitvel','window j1=2 j2=3 | window n2=500 f2=700')
+Result('sub',
+       '''
+       grey color=j scalebar=y allpos=y transp=y screenht=7 screenratio=0.5
+       wheretitle=t title='Migration Velocity' labelsz=6 titlesz=6 barlabel='m/s'
+       bartype=h
+       ''')
+Flow('sub1','bpaitvel','window j1=2 j2=1 | window n2=1000 f2=2400')
+Result('sub1',
+       '''
+       grey color=j scalebar=y allpos=y transp=y screenht=7 screenratio=0.5
+       wheretitle=t title='Migration Velocity' labelsz=6 titlesz=6 barlabel='m/s'
+       bartype=h
+       ''')
+
+nt=3201
+dt=0.001
+dt=0.0015
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=100 | 
+     ricker1 frequency=17 
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+
+Flow('subl','sub1','window n2=1 | spray axis=2 n=40')
+Flow('subr','sub1','window n2=1 f2=-1 | spray axis=2 n=40')
+Flow('sublr','subl sub1 subr','cat ${SOURCES[1]} ${SOURCES[2]} axis=2')
+Flow('subt','sublr','window n1=1 | spray axis=1 n=100')
+Flow('subb','sublr','window n1=1 f1=-1 | spray axis=1 n=10')
+Flow('subabc','subt sublr subb','cat ${SOURCES[1]} ${SOURCES[2]} axis=1')
+
+Flow('G_10_abc s1_abc s2_abc','subabc',
+     '''
+     lfdc2_25 dt=%g eps=0.000001 npk=30 size=9  
+     s1=${TARGETS[1]} s2=${TARGETS[2]}
+     '''%(dt))
+Flow('wav_abc','source sub1 G_10_abc s1_abc s2_abc',
+     '''
+     lfd2_25b vel=${SOURCES[1]} G=${SOURCES[2]} isx=500 isz=5
+     s1=${SOURCES[3]} s2=${SOURCES[4]}
+     dt=%g nt=%d nbt=100 nbb=10 nbl=40 nbr=40 
+     '''%(dt,nt))
+Flow('wavsnapabc','wav_abc','window n3=1 f3=187')
+
+Result('wavsnapabc',
+      '''
+      grey poly=y label2="Distance" label1="Depth" title=" " unit1=m unit2=m
+      yreverse=y transp=y 
+      ''' )
+
+End()
+

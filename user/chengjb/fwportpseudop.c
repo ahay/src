@@ -264,7 +264,7 @@ void fwportpseudop(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
         
     double C23_44,C12_66,C13_55;
 
-    double tmp;
+    /* double tmp; */
 
 /*
 omp_set_num_threads(4);

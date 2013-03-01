@@ -7,6 +7,9 @@ To the reproducible documents collection:
 * jsg/fpwd: Accelerated plane-wave destruction (Chen, Fomel, and Lu)
 * swag/tau: Wavefield extrapolation in pseudodepth domain (Ma and
   Alkhalifah)
+* jsg/lfd: Lowrank finite-differences and lowrank Fourier
+finite-differences for seismic wave extrapolation in the acoustic
+approximation (Song, Fomel, and Ying)
 
 To SCons:
 
