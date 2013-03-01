@@ -1,4 +1,4 @@
-// Complex lowrank decomposition for 2-D isotropic wave propagation. 
+// Complex lowrank decomposition for 2-D isotropic wave propagation (including velocity gradient term). 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -22,9 +22,10 @@
 
 using namespace std;
 
-static std::valarray<float> vs;
-static std::valarray<float> ks;
+static std::valarray<float> vs,vg1,vg2;
+static std::valarray<float> ksz,ksx;
 static float dt;
+static int nkzs;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -34,9 +35,10 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    float phase = -vs[rs[a]]*ks[cs[b]]*dt; 
+	    int iz = cs[b] % nkzs;
+	    int ix = (int) cs[b]/nkzs;
+	    float phase = vs[rs[a]]*hypot(ksz[iz],ksx[ix])*dt + vs[rs[a]]*(vg1[rs[a]]*ksz[iz]+vg2[rs[a]]*ksx[ix])*dt*dt/2.; 
 	    res(a,b) = cpx(cos(phase),sin(phase)); 
-//	    sf_warning("real=%g, imag=%g", real(res(a,b)),imag(res(a,b)));
 	}
     }
     return 0;
@@ -70,12 +72,25 @@ int main(int argc, char** argv)
     vel >> vels;
     vs.resize(m);
     vs = vels;
+
+    iRSF grad1("grad1");
+    std::valarray<float> vgrad1(m);
+    grad1 >> vgrad1;
+    vg1.resize(m);
+    vg1 = vgrad1;
+
+    iRSF grad2("grad2");
+    std::valarray<float> vgrad2(m);
+    grad2 >> vgrad2;
+    vg2.resize(m);
+    vg2 = vgrad2;
     
     iRSF fft("fft");
 
     int nkz,nkx;
     fft.get("n1",nkz);
     fft.get("n2",nkx);
+    nkzs= nkz;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -85,19 +100,20 @@ int main(int argc, char** argv)
     fft.get("o1",kz0);
     fft.get("o2",kx0);
 
-    float kx, kz;
-
     int n = nkx*nkz;
-    std::valarray<float> k(n);
-    for (int ix=0; ix < nkx; ix++) {
-	kx = kx0+ix*dkx;
-	for (int iz=0; iz < nkz; iz++) {
-	    kz = kz0+iz*dkz;
-	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
-	}
-    }
-    ks.resize(n);
-    ks = k;
+
+    std::valarray<float> kz(nkz),kx(nkx);
+    for (int iz=0; iz < nkz; iz++)
+	kz[iz] = 2*SF_PI*(kz0+iz*dkz);
+    for (int ix=0; ix < nkx; ix++)
+	kx[ix] = 2*SF_PI*(kx0+ix*dkx);
+
+    ksz.resize(nkz);
+    ksz = kz;
+    ksx.resize(nkx);
+    ksx = kx;
+
+//    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
 
     vector<int> lidx, ridx;
     CpxNumMat mid;
