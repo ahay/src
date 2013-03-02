@@ -1,23 +1,26 @@
-\published{Geophysical Journal International, DOI 10.1093/gji/ggt017 (2013)}
+\published{Geophysical Journal International, DOI 10.1093/gji/ggt017
+  (2013)}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
-\lefthead{Song et el.}
+\lefthead{Song, Fomel, \& Ying}
 \righthead{LFD and LFFD}
 
-\title[LFD and LFFD]{Lowrank finite-differences and lowrank Fourier finite-differences for seismic wave extrapolation 
+\title{Lowrank finite-differences and lowrank Fourier finite-differences for seismic wave extrapolation 
 in the acoustic approximation}
 
-\author[X. Song, S. Fome,l and L. Ying]{Xiaolei Song$^1$, Sergey Fomel$^1$, and Lexing Ying$^2$\\
-$^1$Bureau of Economic Geology, 
+\author{Xiaolei Song\footnotemark[1], Sergey Fomel\footnotemark[1], and Lexing Ying\footnotemark[2]}
+
+\address{\footnotemark[1]Bureau of Economic Geology, 
 John A. and Katherine G. Jackson School of Geosciences, \\
-The University of Texas at Austin,
-University Station, Box X,
-Austin, TX 78713-8972,
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8924 \\
 USA \\
 sergey.fomel@beg.utexas.edu \\ 
-$^2$Department of Mathematics,
-The University of Texas at Austin,
-1 University Station,
-Austin, TX 78712,
+\footnotemark[2]Department of Mathematics \\
+The University of Texas at Austin \\
+1 University Station \\
+Austin, TX 78712 \\
 USA \\
 lexing@math.utexas.edu
 }
@@ -69,7 +72,9 @@ To satisfy the general criterion for optimal accuracy \cite[]{gellerg},
 synthetic seismograms for 1-D problems extended later to 2-D and 3-D \cite[]{geller2}.
 \cite{liu} proposed FD schemes for two-way scalar waves on the basis of time-space dispersion relations and plane-wave theory.
 Later on, they suggested adaptive variable-length spatial operators in order to decrease computing costs significantly without reducing accuracy \cite[]{adapt}.
-The Liu-Sen scheme satifies the exact dispersion relation and has greater accuracy and better stability than a conventional one. However, it still uses an expansion around the zero wavenumber.\\
+The Liu-Sen scheme satifies the exact dispersion relation and has
+greater accuracy and better stability than a conventional one. 
+However, it still uses an expansion around the zero wavenumber.
 
 In sedimentary rocks, anisotropic phenomena are often observed as a result 
 of layering lithification, which is described as transversely isotropic (TI). 
@@ -190,11 +195,17 @@ The main observation is that the columns of $W(\mathbf{x},\mathbf{k}_m)$ need to
 
 Representation~(\ref{eq:lra}) speeds up the computation of
 $p(\mathbf{x},t+\Delta t)$ because 
-\begin{equation}
+\begin{eqnarray}
+\nonumber
+  p(\mathbf{x},t+\Delta t) + p(\mathbf{x},t-\Delta t) = 2 \int e^{-i
+    \mathbf{x} \mathbf{k}} W(\mathbf{x},\mathbf{k})
+  \hat{p}(\mathbf{k},t) d \mathbf{k} \\
+ \approx 2 \sum\limits_{m=1}^M W(\mathbf{x},\mathbf{k}_m) \left(
+   \sum\limits_{n=1}^N a_{mn} \left(\int e^{-i \mathbf{x}\mathbf{k}}
+     W(\mathbf{x}_n,\mathbf{k}) \hat{p}(\mathbf{k},t) d\mathbf{k}
+   \right) \right).
   \label{eq:lrapp}
-  p(\mathbf{x},t+\Delta t) + p(\mathbf{x},t-\Delta t) = 2 \int e^{-i \mathbf{x} \mathbf{k}} W(\mathbf{x},\mathbf{k}) \hat{p}(\mathbf{k},t) d \mathbf{k}
- \approx 2 \sum\limits_{m=1}^M W(\mathbf{x},\mathbf{k}_m) \left( \sum\limits_{n=1}^N a_{mn} \left(\int e^{-i \mathbf{x}\mathbf{k}} W(\mathbf{x}_n,\mathbf{k}) \hat{p}(\mathbf{k},t) d\mathbf{k} \right) \right).
-\end{equation}
+\end{eqnarray}
 %\begin{equation}
 %\begin{array}{*{20}c}
 %  p(\mathbf{x},t+\Delta t) + p(\mathbf{x},t-\Delta t) = 2 \int e^{-i \mathbf{x} \mathbf{k}} W(\mathbf{x},\mathbf{k}) \hat{p}(\mathbf{k},t) d \mathbf{k}\\
@@ -252,13 +263,22 @@ where $\mathbf{G}$ is an $N_x\times L$ matrix,
   \mathbf{G} = \mathbf{W}_1 \cdot \mathbf{A} \cdot \mathbf{C},
 \end{equation} 
 and
-\begin{equation}
+\begin{eqnarray}
+\nonumber
+  p(\mathbf{x},t+\Delta t) + p(\mathbf{x},t-\Delta t) = \\
+\nonumber
+2 \int e^{-i \mathbf{x} \mathbf{k}} W(\mathbf{x},\mathbf{k})
+\hat{p}(\mathbf{k},t) d \mathbf{k} \approx 2 \sum\limits_{m=1}^L
+G(\mathbf{x},m)  \left(\int e^{-i \mathbf{x}\mathbf{k}}
+  B(\mathbf{\xi}_m,\mathbf{k}) \hat{p}(\mathbf{k},t) d\mathbf{k}
+\right)\\
+\nonumber
+ \approx  \sum\limits_{m=1}^L G(\mathbf{x},m)  \left(\int e^{-i
+     \mathbf{x}\mathbf{k}} 2\cos(\sum\limits_{j=1}^3{\xi_m^j k_j\Delta
+     x_j}) \hat{p}(\mathbf{k},t) d\mathbf{k} \right) \\
+\approx  \sum\limits_{m=1}^L G(\mathbf{x},m)  \left[\int e^{-i \mathbf{x} \cdot \mathbf{k}} (e^{i \sum\limits_{j=1}^3{\xi_m^j k_j\Delta x_j}} + e^{-i \sum\limits_{j=1}^3{\xi_m^j k_j\Delta x_j}})\hat{p}(\mathbf{k},t) d\mathbf{k} \right].
 \label{eq:la}
-\begin{array}{*{20}c}
-  p(\mathbf{x},t+\Delta t) + p(\mathbf{x},t-\Delta t) = 2 \int e^{-i \mathbf{x} \mathbf{k}} W(\mathbf{x},\mathbf{k}) \hat{p}(\mathbf{k},t) d \mathbf{k} \approx 2 \sum\limits_{m=1}^L G(\mathbf{x},m)  \left(\int e^{-i \mathbf{x}\mathbf{k}} B(\mathbf{\xi}_m,\mathbf{k}) \hat{p}(\mathbf{k},t) d\mathbf{k} \right)\\
- \approx  \sum\limits_{m=1}^L G(\mathbf{x},m)  \left(\int e^{-i \mathbf{x}\mathbf{k}} 2\cos(\sum\limits_{j=1}^3{\xi_m^j k_j\Delta x_j}) \hat{p}(\mathbf{k},t) d\mathbf{k} \right) \approx  \sum\limits_{m=1}^L G(\mathbf{x},m)  \left[\int e^{-i \mathbf{x} \cdot \mathbf{k}} (e^{i \sum\limits_{j=1}^3{\xi_m^j k_j\Delta x_j}} + e^{-i \sum\limits_{j=1}^3{\xi_m^j k_j\Delta x_j}})\hat{p}(\mathbf{k},t) d\mathbf{k} \right].\\
-\end{array}
-\end{equation}
+\end{eqnarray}
 According to the shift property of FFTs, we finally obtain an expression in the space-domain 
 \begin{equation}
   \label{eq:stencil}
@@ -318,7 +338,7 @@ a wider range of wavenumbers (up to 70\% of the Nyquist frequency).
 
 \inputdir{dispersion1}
 
-\multiplot{2}{app,fd10}{width=0.4\textwidth}{{Plot of 1-D dispersion curves for different velocities, $v=2500$ (red), $3000$ (pink), $3500$ (green), $4000$ (blue) $m/s$, $\Delta t=1$ ms, $\Delta x=10$ m by: (a) the 10th-order  LFD (b) the 10th-order conventional FD.}
+\multiplot{2}{app,fd10}{width=0.4\textwidth}{Plot of 1-D dispersion curves for different velocities, $v=2500$ (red), $3000$ (pink), $3500$ (green), $4000$ (blue) $m/s$, $\Delta t=1$ ms, $\Delta x=10$ m by: (a) the 10th-order  LFD (b) the 10th-order conventional FD.}
 
 %As Figure~\ref{fig:Mlr_err} and Figure~\ref{fig:slice} show, lowrank FD has relatively larger error in big wavenumber part. 
 %We apply weighted inversion for matrix $\mathbf{C}$ in equation~\ref{eq:w2}: putting high weight to small wavenumbers but low weight to big ones.
