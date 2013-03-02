@@ -40,7 +40,7 @@ cases = dict(Mexact='Exact Matrix',
              Mfd10err='Error by 10th-order conventional FD')
 
 for key in cases.keys():
-    Result(key,'window max2=0.035 | grey  minval=0.3 maxval=2.0 color=j bias=0 transp=n scalebar=y parallel2=n label2=Wavenumber unit2=1/m label1=Distance unit1=m pclip=100 title="%s" ' % cases[key])
+    Result(key,'window max2=0.035 | grey color=j transp=n scalebar=y parallel2=n label2=Wavenumber unit2=1/m label1=Distance unit1=m pclip=100 title="%s" ' % cases[key])
 
 Flow('Mlrerr','Mlr Mexact','add ${SOURCES[1]} scale=1,-1')
 Flow('Mapperr','Mapp Mexact','add ${SOURCES[1]} scale=1,-1')
