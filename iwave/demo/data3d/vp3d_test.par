@@ -1,2 +1,0 @@
-model=8 hfile=vp3d_test.rsf choose=2 d1=100 d2=100 d3=100 n1=5 n2=11 n3=11 
- datapath={TMPDATAPATH}
