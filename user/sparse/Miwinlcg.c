@@ -1,4 +1,4 @@
-/* Image-domain waveform tomography (L-BFGS). */
+/* Image-domain waveform tomography (Non-linear CG). */
 /*
   Copyright (C) 2013 University of Texas at Austin
   
@@ -18,49 +18,12 @@
 */
 
 #include <rsf.h>
-#include <lbfgs.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-#include "iwilbfgs.h"
-
-static float ***mask, ***wght, **prec;
-
-static lbfgsfloatval_t evaluate(void *instance,
-				const lbfgsfloatval_t *x,
-				lbfgsfloatval_t *g,
-				const int n,
-				const lbfgsfloatval_t step)
-/* evaluate objective function and gradient */
-{
-    lbfgsfloatval_t fx;
-
-    fx = iwilbfgs_eval(x,mask,wght);
-
-    iwilbfgs_grad(x,wght,prec,g);
-
-    return fx;
-}
-
-static int progress(void *instance,
-		    const lbfgsfloatval_t *x,
-		    const lbfgsfloatval_t *g,
-		    const lbfgsfloatval_t fx,
-		    const lbfgsfloatval_t xnorm,
-		    const lbfgsfloatval_t gnorm,
-		    const lbfgsfloatval_t step,
-		    int n,
-		    int k,
-		    int ls)
-/* report optimization progress */
-{
-    sf_warning("L-BFGS iteration %d: fx=%g, xnorm=%g, gnorm=%g, step=%g after %d."
-	       ,k,fx,xnorm,gnorm,step,ls);
-
-    return 0;
-}
+#include "iwinlcg.h"
 
 int main(int argc, char* argv[])
 {
@@ -68,17 +31,17 @@ int main(int argc, char* argv[])
     int n1, n2, npml, nh, ns, nw;
     int prect[3], porder, pniter, pliter;
     int dorder, grect[2], gliter;
-    float plower, pupper, geps, gscale;
+    float plower, pupper;
     float vpml, d1, d2, **vel, dw, ow;
+    float ***mask, ***wght, **prec;
     char *datapath;
     sf_file in, out, source, data;
     sf_file imask, weight, precon;
-    int uts, mts, ret, i, j;
+    int uts, mts, i, j;
     char *order;
-    lbfgsfloatval_t fx, *x, *g;
-    lbfgs_parameter_t param;
-    float lower, upper;
-    int nhess, miter;
+    float fx0, fx1, fx2, *x0, *x1, *g0, *g1, *s, beta;
+    float geps, gscale, delta, lower, upper, alpha, ltol, armijo;
+    int iter, miter, liter;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -149,11 +112,14 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("gscale",&gscale)) gscale=0.5;
     /* gradient re-scale */
 
-    if (!sf_getint("nhess",&nhess)) nhess=6;
-    /* L-BFGS # of Hessian corrections */
+    if (!sf_getfloat("delta",&delta)) delta=0.05;
+    /* Nonlinear-CG termination */
+
+    if (!sf_getfloat("ltol",&ltol)) ltol=1.e-4;
+    /* Armijo condition parameter */
 
     if (!sf_getint("miter",&miter)) miter=10;
-    /* L-BFGS maximum # of iterations */
+    /* Nonlinear-CG maximum # of iterations */
 
     if (!sf_getfloat("lower",&lower)) lower=1.5;
     /* lower bound of feasible set */
@@ -225,55 +191,112 @@ int main(int argc, char* argv[])
     }
 
     /* allocate temporary memory */
-    x = lbfgs_malloc(n1*n2);
-    g = lbfgs_malloc(n1*n2);
+    x0 = sf_floatalloc(n1*n2);
+    x1 = sf_floatalloc(n1*n2);
+    g0 = sf_floatalloc(n1*n2);
+    g1 = sf_floatalloc(n1*n2);
+    s  = sf_floatalloc(n1*n2);
 
     for (j=0; j < n2; j++) {
 	for (i=0; i < n1; i++) {
-	    x[j*n1+i] = (lbfgsfloatval_t) vel[j][i];
+	    x0[j*n1+i] = vel[j][i];
 	}
     }
 
     /* initialize operators */
-    iwilbfgs_init(verb,order, npml,vpml,
-		  n1,n2, d1,d2,
-		  nh,ns, ow,dw,nw,
-		  source,data, load,datapath, uts,
-		  prect[0],prect[1],prect[2],
-		  porder,pniter,pliter,plower,pupper,
-		  dorder,
-		  grect[0],grect[1],
-		  gliter,geps,gscale,
-		  lower,upper);
+    iwinlcg_init(false,order, npml,vpml,
+		 n1,n2, d1,d2,
+		 nh,ns, ow,dw,nw,
+		 source,data, load,datapath, uts,
+		 prect[0],prect[1],prect[2],
+		 porder,pniter,pliter,plower,pupper,
+		 dorder,
+		 grect[0],grect[1],
+		 gliter,geps,gscale,
+		 lower,upper);
     
-    /* initialize L-BFGS */
-    lbfgs_parameter_init(&param);
+    /* non-linear CG optimization */
+    fx0 = iwinlcg_eval(x0, mask,wght);
+    iwinlcg_grad(x0, wght,prec,g0);
 
-    param.m = nhess;
-    param.max_iterations = miter;
-    param.linesearch = LBFGS_LINESEARCH_BACKTRACKING_ARMIJO;
-    param.ftol = 1.e-4;
-
-    /* L-BFGS optimization */
-    if (verb) {
-	ret = lbfgs(n1*n2,x,&fx, evaluate,progress, NULL,&param);
-    } else {
-	ret = lbfgs(n1*n2,x,&fx, evaluate,NULL,     NULL,&param);
-    }
-
-    if (verb) sf_warning("L-BFGS optimization terminated with status code %d.",ret);
-
-    /* write output */
     for (j=0; j < n2; j++) {
 	for (i=0; i < n1; i++) {
-	    vel[j][i] = (float) g[j*n1+i];
+	    s[j*n1+i] = -g0[j*n1+i];
 	}
     }
 
-    sf_floatwrite(vel[0],n1*n2,out);
+    for (iter=0; iter < miter; iter++) {
+	if (verb) sf_warning("Iteration %d...",iter+1);
 
-    /* free */
-    iwilbfgs_free();
+	/* line-search */
+	alpha = 1.; fx2 = SF_HUGE;
+	for (liter=0; liter < 10; liter++) {
+	    for (j=0; j < n2; j++) {
+		for (i=0; i < n1; i++) {
+		    x1[j*n1+i] = x0[j*n1+i]+alpha*s[j*n1+i];
+		}
+	    }
+
+	    fx1 = iwinlcg_eval(x1, mask,wght);
+	    iwinlcg_grad(x1, wght,prec,g1);
+
+	    armijo = alpha*cblas_sdot(n1*n2,s,1,g0,1);
+
+	    if (verb) sf_warning("Line search %d: fx0=%g, fx1=%g, armijo=%g."
+				 ,liter+1,fx0,fx1,armijo);
+
+	    if (fx1 <= fx0+ltol*armijo)
+		break;
+	    
+	    if (fx1 < fx2) {
+		alpha *= 0.5;
+	    } else {
+		liter = 10;
+		break;
+	    }
+
+	    fx2 = fx1;
+	}
+	if (liter == 10) {
+	    sf_warning("Iteration terminated due to line search failure.");
+	    
+	    sf_floatwrite(x0,n1*n2,out);
+	    iwinlcg_free();
+
+	    exit(0);
+	}	
+
+	/* replace model */
+	for (j=0; j < n2; j++) {
+	    for (i=0; i < n1; i++) {
+		x0[j*n1+i] = x1[j*n1+i];
+	    }
+	}
+
+	/* test convergence */
+	if (cblas_snrm2(n1*n2,g1,1) <= 
+	    delta*SF_MAX(1.,cblas_snrm2(n1*n2,x1,1))) {
+	    if (verb) sf_warning("Iteration terminated due to convergence.");
+	    break;
+	}
+
+	beta = SF_MAX(0.,(cblas_sdot(n1*n2,g1,1,g1,1)
+			  -cblas_sdot(n1*n2,g1,1,g0,1))
+		      /cblas_sdot(n1*n2,g0,1,g0,1));
+
+	if (verb) sf_warning("Done with update beta=%g.",beta);
+
+	for (j=0; j < n2; j++) {
+	    for (i=0; i < n1; i++) {
+		s[j*n1+i] = -g1[j*n1+i]+beta*s[j*n1+i];
+		g0[j*n1+i] = g1[j*n1+i];
+	    }
+	}
+	fx0 = fx1;
+    }
+
+    sf_floatwrite(x0,n1*n2,out);
+    iwinlcg_free();
 
     exit(0);
 }

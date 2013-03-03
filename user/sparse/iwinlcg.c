@@ -1,4 +1,4 @@
-/* Interface for image-domain waveform tomography (L-BFGS). */
+/* Interface for image-domain waveform tomography (Non-linear CG). */
 /*
   Copyright (C) 2013 University of Texas at Austin
   
@@ -18,31 +18,30 @@
 */
 
 #include <rsf.h>
-#include <lbfgs.h>
 
 #include "iwidip.h"
 #include "iwimodl.h"
 #include "iwigrad.h"
 
-#include "iwilbfgs.h"
+#include "iwinlcg.h"
 
 static bool verb, bound;
 static int nn[3], ss[2], dorder, grect[2], gliter;
-static float dd[3], **vel, plower, pupper, geps;
+static float dd[3], **vel, plower, pupper, geps, gscale;
 static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
-static lbfgsfloatval_t gscale, lower, upper;
+static float lower, upper;
 
-void scale(const lbfgsfloatval_t *x, lbfgsfloatval_t *g)
+void scale(const float *x, float *g)
 /* re-scale gradient */
 {
     int i1, i2;
-    lbfgsfloatval_t scale=0.;
+    float scale=0.;
 
     for (i2=0; i2 < nn[1]; i2++) {
 	for (i1=0; i1 < nn[0]; i1++) {
-	    scale = (fabs(g[i2*nn[0]+i1])/x[i2*nn[0]+i1])>scale? 
-		fabs(g[i2*nn[0]+i1])/x[i2*nn[0]+i1]: scale;
+	    scale = (fabsf(g[i2*nn[0]+i1])/x[i2*nn[0]+i1])>scale? 
+		fabsf(g[i2*nn[0]+i1])/x[i2*nn[0]+i1]: scale;
 	}
     }
 
@@ -57,23 +56,23 @@ void scale(const lbfgsfloatval_t *x, lbfgsfloatval_t *g)
     }
 }
 
-void iwilbfgs_init(bool verb0,
-		   char *order,
-		   int npml, float vpml,
-		   int n1, int n2,
-		   float d1, float d2,
-		   int nh, int ns, 
-		   float ow, float dw, int nw,
-		   sf_file source, sf_file data,
-		   bool load, char *datapath,
-		   int uts,
-		   int prect1, int prect2, int prect3,
-		   int porder, int pniter, int pliter,
-		   float plower0, float pupper0, 
-		   int dorder0,
-		   int grect1, int grect2,
-		   int gliter0, float geps0, float gscale0,
-		   float lower0, float upper0)
+void iwinlcg_init(bool verb0,
+		  char *order,
+		  int npml, float vpml,
+		  int n1, int n2,
+		  float d1, float d2,
+		  int nh, int ns, 
+		  float ow, float dw, int nw,
+		  sf_file source, sf_file data,
+		  bool load, char *datapath,
+		  int uts,
+		  int prect1, int prect2, int prect3,
+		  int porder, int pniter, int pliter,
+		  float plower0, float pupper0, 
+		  int dorder0,
+		  int grect1, int grect2,
+		  int gliter0, float geps0, float gscale0,
+		  float lower0, float upper0)
 /*< initialization >*/
 {
     verb = verb0;
@@ -89,9 +88,8 @@ void iwilbfgs_init(bool verb0,
     dorder = dorder0;
     grect[0] = grect1; grect[1] = grect2;
     gliter = gliter0; geps = geps0;
-    gscale = (lbfgsfloatval_t) gscale0;
-    lower = (lbfgsfloatval_t) lower0;
-    upper = (lbfgsfloatval_t) upper0;
+    gscale = gscale0;    
+    lower = lower0; upper = upper0;
 
     /* open temporary file */
     sfile = sf_fslice_init(n1*n2*ns,nw,sizeof(sf_complex));
@@ -126,7 +124,7 @@ void iwilbfgs_init(bool verb0,
 		 load,datapath, uts);
 }
 
-void iwilbfgs_free()
+void iwinlcg_free()
 /*< free allocated memory >*/
 {
     sf_fslice_close(sfile);
@@ -138,26 +136,26 @@ void iwilbfgs_free()
     free(piph);
 }
 
-lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
-			      float ***mask, float ***wght)
+float iwinlcg_eval(const float *x,
+		   float ***mask, float ***wght)
 /*< forward modeling and evaluate objective function >*/
 {
     int i, j;
-    lbfgsfloatval_t fx=0.;
+    float fx=0.;
 
     bound = false;
     for (j=0; j < nn[1]; j++) {
 	for (i=0; i < nn[0]; i++) {
 	    if (x[j*nn[0]+i] < lower) {
 		bound = true;
-		return DBL_MAX;
+		return SF_HUGE;
 	    }
 	    if (x[j*nn[0]+i] > upper) {
 		bound = true;
-		return DBL_MAX;
+		return SF_HUGE;
 	    }
 
-	    vel[j][i] = (float) x[j*nn[0]+i];
+	    vel[j][i] = x[j*nn[0]+i];
 	}
     }
 
@@ -183,17 +181,16 @@ lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
 	/* thresholding */
 	if (fabsf(pimage[i]) >= plower && 
 	    fabsf(pimage[i]) <= pupper) {
-	    fx += (lbfgsfloatval_t) 
-		image[i]*wght[0][0][i]*image[i]*wght[0][0][i];
+	    fx += image[i]*wght[0][0][i]*image[i]*wght[0][0][i];
 	}
     }
 
     return fx;
 }
 
-void iwilbfgs_grad(const lbfgsfloatval_t *x,
-		   float ***wght, float **prec,
-		   lbfgsfloatval_t *g)
+void iwinlcg_grad(const float *x,
+		  float ***wght, float **prec,
+		  float *g)
 /*< prepare image perturbation and compute gradient >*/
 {
     int i1, i2, i3, ii;
@@ -294,7 +291,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	tr = sf_triangle_init(grect[0],nn[0]);
 	for (i2=0; i2 < nn[1]; i2++) {
 	    i1 = sf_first_index(0,i2,2,nn,ss);
-
+	    
 	    sf_smooth (tr,i1,ss[0],false,false,image);
 	    sf_smooth2(tr,i1,ss[0],false,false,image);
 	}
@@ -305,7 +302,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	    i2 = sf_first_index(1,i1,2,nn,ss);
 	    
 	    sf_smooth (tr,i2,ss[1],false,false,image);
-	    sf_smooth2(tr,i2,ss[1],false,false,image);
+	sf_smooth2(tr,i2,ss[1],false,false,image);
 	}
 	sf_triangle_close(tr);
     } else {
@@ -327,8 +324,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     /* convert to velocity */
     for (i2=0; i2 < nn[1]; i2++) {
 	for (i1=0; i1 < nn[0]; i1++) {
-	    g[i2*nn[0]+i1] = (lbfgsfloatval_t) 
-		(-0.5*powf(x[i2*nn[0]+i1],3.)*image[i2*nn[0]+i1]);
+	    g[i2*nn[0]+i1] = (-0.5*powf(x[i2*nn[0]+i1],3.)*image[i2*nn[0]+i1]);
 	}
     }
 
