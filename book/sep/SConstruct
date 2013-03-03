@@ -3,7 +3,7 @@ from rsf.book import *
 report = (('Optimization','cdstep stack forwd spitz oc2 pwd bspl'),
           ('Helix Transform','precon findif burg specfac plane steer lines texture helft'),
           ('Imaging','fat stoltst antial angle'),
-          ('Traveltimes','lineiko huygens fmeiko fmsec'),
+          ('Traveltimes','waverays lineiko huygens fmeiko fmsec'),
           ('Azimuth Moveout','oc1 norm fkamo'),
           ('Velocities','aniso vc1 velspec vc2 banana fractal'))
 

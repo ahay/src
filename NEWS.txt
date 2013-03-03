@@ -10,6 +10,7 @@ To the reproducible documents collection:
 * jsg/lfd: Lowrank finite-differences and lowrank Fourier
 finite-differences for seismic wave extrapolation in the acoustic
 approximation (Song, Fomel, and Ying)
+* sep/waverays: Wavefront construction using waverays (Urdaneta)
 
 To SCons:
 
