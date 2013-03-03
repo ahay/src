@@ -67,7 +67,7 @@ void iwinlcg_init(bool verb0,
 		  bool load, char *datapath,
 		  int uts,
 		  int prect1, int prect2, int prect3,
-		  int porder, int pniter, int pliter,
+		  int pliter,
 		  float plower0, float pupper0, 
 		  int dorder0,
 		  int grect1, int grect2,
@@ -114,7 +114,7 @@ void iwinlcg_init(bool verb0,
     /* dip estimator */
     iwidip_init(n1,n2,nh, d1,d2,
 		prect1,prect2,prect3,
-		porder,pniter,pliter);
+		pliter);
 
     /* tomography operator */
     iwigrad_init(order,npml,vpml,
@@ -134,6 +134,10 @@ void iwinlcg_free()
     free(pimage);
     free(pipz);
     free(piph);
+
+    iwimodl_free();
+    iwidip_free();
+    iwigrad_free();
 }
 
 float iwinlcg_eval(const float *x,
@@ -174,7 +178,7 @@ float iwinlcg_eval(const float *x,
     }
 
     /* estimate slope */
-    iwidip_both(image, pimage);
+    iwidip_fdip(image, pimage);
 
     /* evaluate objective function */
     for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
@@ -329,5 +333,5 @@ void iwinlcg_grad(const float *x,
     }
 
     /* re-scale */
-    scale(x,g);
+    /* scale(x,g); */
 }

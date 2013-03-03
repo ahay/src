@@ -19,18 +19,18 @@
 
 #include <rsf.h>
 
-#include "dip3.h"
+#include "fdip.h"
 #include "iwidip.h"
 
 static int n[3], n123, prect[3];
 static float d[3];
-static int porder, pniter, pliter;
-static float *pl, *pr;
+static int pliter;
+static float *p;
 
 void iwidip_init(int n1, int n2, int nh,
 		 float d1, float d2,
 		 int rect1, int rect2, int rect3,
-		 int order, int niter, int liter)
+		 int liter)
 /*< initialization >*/
 {
     n[0] = n1; n[1] = n2; n[2] = 2*nh+1;
@@ -40,42 +40,25 @@ void iwidip_init(int n1, int n2, int nh,
 
     prect[0] = rect1; prect[1] = rect2; prect[2] = rect3;
 
-    porder = order; pniter = niter; pliter = liter;
+    pliter = liter;
 
     /* allocate memory */
-    pl = sf_floatalloc(n123);
-    pr = sf_floatalloc(n123);
+    p = sf_floatalloc(n123);
 }
 
 void iwidip_free()
 /*< free >*/
 {
-    free(pl); free(pr);
+    free(p);
 }
 
-void iwidip_both(float *image, float *dip)
-/*< estimate dip from both directions >*/
+void iwidip_fdip(float *image, float *dip)
+/*< estimate dip >*/
 {
-    int i;
+    fdip_init(n[0],n[1],n[2], prect,pliter,false);
 
-    dip3_init(n[0],n[1],n[2], prect,pliter,false);
+    /* fast dip estimation */
+    fdip(image, p, 1);
 
-    /* left->right */    
-    for(i=0; i < n123; i++) {
-	pl[i] = 0.;
-    }
-    dip3(false, 2,pniter,porder,1,false, image,pl, NULL,-FLT_MAX,+FLT_MAX);
-    
-    /* right->left */
-    for(i=0; i < n123; i++) {
-	pr[i] = 0.;
-    }
-    dip3(true,  2,pniter,porder,1,false, image,pr, NULL,-FLT_MAX,+FLT_MAX);
-
-    /* average */
-    for(i=0; i < n123; i++) {
-	dip[i] = (0.5*pl[i]-0.5*pr[i])*(d[0]/d[2]);
-    }
-
-    dip3_close();
+    fdip_close();
 }

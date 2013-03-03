@@ -66,9 +66,9 @@ int main(int argc, char* argv[])
 {
     bool verb, load;
     int n1, n2, npml, nh, ns, nw;
-    int prect[3], porder, pniter, pliter;
-    int dorder, grect[2], gliter;
-    float plower, pupper, geps, gscale;
+    int prect[3], pliter;
+    int dorder, grect[2], gliter, mline;
+    float plower, pupper, geps, gscale, delta;
     float vpml, d1, d2, **vel, dw, ow;
     char *datapath;
     sf_file in, out, source, data;
@@ -113,17 +113,13 @@ int main(int argc, char* argv[])
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
 
-    if (!sf_getint("prect1",&prect[0])) prect[0]=10;
+    if (!sf_getint("prect1",&prect[0])) prect[0]=5;
     /* slope smoothing radius on axis 1 */
     if (!sf_getint("prect2",&prect[1])) prect[1]=1;
     /* slope smoothing radius on axis 2 */
-    if (!sf_getint("prect3",&prect[2])) prect[2]=10;
+    if (!sf_getint("prect3",&prect[2])) prect[2]=5;
     /* slope smoothing radius on axis 3 */
 
-    if (!sf_getint("porder",&porder)) porder=3;
-    /* slope estimation accuracy order */
-    if (!sf_getint("pniter",&pniter)) pniter=5;
-    /* slope estimation # of nonlinear iterations */
     if (!sf_getint("pliter",&pliter)) pliter=20;
     /* slope estimation # of linear iterations */
 
@@ -135,9 +131,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("dorder",&dorder)) dorder=6;
     /* image derivative accuracy order */
     
-    if (!sf_getint("grect1",&grect[0])) grect[0]=10;
+    if (!sf_getint("grect1",&grect[0])) grect[0]=5;
     /* gradient smoothing radius on axis 1 */
-    if (!sf_getint("grect2",&grect[1])) grect[1]=10;
+    if (!sf_getint("grect2",&grect[1])) grect[1]=5;
     /* gradient smoothing radius on axis 2 */
 
     if (!sf_getint("gliter",&gliter)) gliter=1;
@@ -154,6 +150,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("miter",&miter)) miter=10;
     /* L-BFGS maximum # of iterations */
+
+    if (!sf_getint("mline",&mline)) mline=10;
+    /* L-BFGS maximum # of line search */
+
+    if (!sf_getfloat("delta",&delta)) delta=0.05;
+    /* L-BFGS termination delta */
 
     if (!sf_getfloat("lower",&lower)) lower=1.5;
     /* lower bound of feasible set */
@@ -240,7 +242,7 @@ int main(int argc, char* argv[])
 		  nh,ns, ow,dw,nw,
 		  source,data, load,datapath, uts,
 		  prect[0],prect[1],prect[2],
-		  porder,pniter,pliter,plower,pupper,
+		  pliter,plower,pupper,
 		  dorder,
 		  grect[0],grect[1],
 		  gliter,geps,gscale,
@@ -251,8 +253,9 @@ int main(int argc, char* argv[])
 
     param.m = nhess;
     param.max_iterations = miter;
-    param.linesearch = LBFGS_LINESEARCH_BACKTRACKING_ARMIJO;
-    param.ftol = 1.e-4;
+    param.max_linesearch = mline;
+    param.past = 1;
+    param.delta = (lbfgsfloatval_t) delta;
 
     /* L-BFGS optimization */
     if (verb) {
