@@ -103,7 +103,8 @@ jobs = {
 'vp3d_40m': {CMD : mdl, DEPS : ['d.tmpdata'] },
 'dome3d40m' : {CMD : asg, DEPS : ['d.sudata', 'd.dn3d_40m', 'd.vp3d_40m'] },
 'dome3d40mp' : {CMD : asg, DEPS : ['d.sudata', 'd.dn3d_40m', 'd.vp3d_40m'], EXEC : 'mpi', NODES : 1, PPN : 2 },
-'dome3d40m_pt' : {CMD : asg, DEPS : ['d.sudata', 'd.dn3d_40m', 'd.vp3d_40m'], EXEC : 'mpi', NODES : 1, PPN : 2 },
+'dome3d40m_pt2' : {CMD : asg, DEPS : ['d.sudata', 'd.dn3d_40m', 'd.vp3d_40m'], EXEC : 'mpi', NODES : 1, PPN : 2 },
+'dome3d40m_pt4' : {CMD : asg, DEPS : ['d.sudata', 'd.dn3d_40m', 'd.vp3d_40m'], EXEC : 'mpi', NODES : 1, PPN : 4 },
 }
 
 ### scripts:
@@ -151,13 +152,23 @@ for file in fetches.keys():
         for script in scripts.keys():
             Depends('d.'+script,tgt)
 
-# necessary if any scripts use SU
+# necessary if any scripts use SU, MPI
 CWPPATH = os.getenv('CWPROOT','.')
+MPIPATH = os.getenv('MPIROOT','.')
+print 'CWPPATH='+CWPPATH+' MPIPATH='+MPIPATH
 
 for tgt in jobs.keys():
-    make = '/bin/rm -rf d.' + tgt + '; /bin/mkdir d.' + tgt + '; cd d.' + tgt + '; cat ../' + tgt + '.par| sed s:"{TMPDATAPATH}":' + TMPDATAPATH + ': > parfile; ' + jobs[tgt][CMD] + ' par=parfile';
-    print make
-    t=Flow('d.'+ tgt, jobs[tgt][DEPS], make, stdin=0, stdout=0)
+    prep = '/bin/rm -rf d.' + tgt + '; /bin/mkdir d.' + tgt + '; cd d.' + tgt + '; cat ../' + tgt + '.par| sed s:"{TMPDATAPATH}":' + TMPDATAPATH + ': > parfile; ' 
+    if EXEC in jobs[tgt].keys():
+        if jobs[tgt][EXEC] == '':
+            make = jobs[tgt][CMD] + ' par=parfile';
+        if jobs[tgt][EXEC] == 'mpi':
+	    MPIRUN = os.path.join(MPIPATH,'bin/mpirun')
+	    print 'MPIRUN='+MPIRUN
+            make = MPIRUN + ' -np ' + str(int(jobs[tgt][NODES]) * int(jobs[tgt][PPN])) + ' ' + jobs[tgt][CMD] + ' par=./parfile' 
+    else:
+        make = jobs[tgt][CMD] + ' par=parfile';	
+    t=Flow('d.'+ tgt, jobs[tgt][DEPS], prep + make, stdin=0, stdout=0)
     Clean(t,'d.'+tgt)
       
 for tgt in scripts.keys():
