@@ -24,4 +24,17 @@ Flow('vel',None,
 Plot('vel',
      'grey allpos=y scalebar=y bartype=h wanttitle=n wherexlabel=t')
 
+Plot('gauss-wv time.rsf ampl.rsf','vel',
+     '''
+     norsar time=${TARGETS[1]} ampl=${TARGETS[2]}
+     model=4
+     gox=-120
+     nang=21 rays=1 wfront=1 gap=1 inter=1
+     DSmax=4. dt=0.0005 nt=2 nrmax=2000
+     first=1 nou=1 ns=1 ds=1. os=120. depth=175.
+     freq=80. N=3
+     ''')
+
+Result('gauss-wv','vel gauss-wv','Overlay')
+
 End()

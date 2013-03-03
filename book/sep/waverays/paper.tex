@@ -38,8 +38,8 @@ are well known and well documented.  They include ray
 bending \cite[]{Julian}, shooting rays \cite[]{Dines} and paraxial
 extrapolation \cite[]{Cervenys}. More recently, several new methods
 have appeared and are enjoying an increasing popularity.  They include
-finite differences \cite[]{GEO55.05.05210526,Podvin,GEO56.06.08120821}
-and shortest path rays \cite[]{GEO56.01.00590067}.
+finite differences \cite[]{GEO55-05-05210526,Podvin,GEO56-06-08120821}
+and shortest path rays \cite[]{GEO56-01-00590067}.
 
 This paper presents a review of two new ray tracing methods and
 explores some of the possibilities produced by their fusion.  The
@@ -422,14 +422,14 @@ wavefront and the new amplitude
 value $A_{i+1}$.
 }
 
-\activeplot {gauss-wv}{width=6.in}{.}{The ``NORSAR'' or
+\inputdir{gauss}
+\plot {gauss-wv}{width=6.in}{The ``NORSAR'' or
 wavefront construction
 method covers the whole model with wavefronts and rays.
 The model presents a strong variation
 in velocity, given by a Gaussian bell with a maximum amplitude of 5000 m/s
 and a second Gaussian bell with a minimum amplitude of 1000 m/s. The
-background is 3000 m/s.
-}
+background is 3000 m/s.}
 
 %\newpage
 
@@ -556,6 +556,25 @@ point ({\it cube\/}[ii].x0 = {\it cube\/}[ii].x1).
 
 
 \subsection{Travel-times and amplitudes in the Marmousi model}
+\inputdir{marm}
+
+\plot {marm80-time}{height=3.5in}{Traveltime contours
+computed from the combined method, overlaid on a section of 
+the Marmousi model.
+A frequency of 80~Hz is used.
+}
+
+\plot {marm10-time}{height=3.5in}{As in 
+the previous Figure, but for a frequency of 10 Hz.
+}
+
+\plot {marm80-ampl}{height=3.5in}{Amplitude maps from the
+combined method at a frequency of 80~Hz.
+}
+
+\plot {marm10-ampl}{height=3.5in}{As in 
+the previous Figure, but for a frequency of 10 Hz.
+}
 
 Figures \ref{fig:marm80-time} to \ref{fig:marm10-ampl} display 
 the results of a simulation that used the combined 
@@ -583,7 +602,7 @@ For these experiments, the mesh of the model is re-sampled
 from the original model at 8 x 8 meters. The traveltime
 and amplitude outputs are placed in a mesh of 25 x 12.5 meters.
 
-\CON
+\section{Conclusions}
 
 I have presented a review of two ray tracing methods. I have 
 implemented both of them in a combined version. The method 
@@ -613,24 +632,7 @@ Production of seismograms and a {\mbox 3-D} version are also
 sources of future work.
 
 %\newpage
-\bibliographystyle{sep}
+\bibliographystyle{seg}
 \bibliography{SEP2,SEG,paper}
 
-\activeplot {marm80-time}{height=3.5in}{.}{Traveltime contours
-computed from the combined method, overlaid on a section of 
-the Marmousi model.
-A frequency of 80~Hz is used.
-}
-
-\activeplot {marm10-time}{height=3.5in}{.}{As in 
-the previous Figure, but for a frequency of 10 Hz.
-}
-
-\activeplot {marm80-ampl}{height=3.5in}{.}{Amplitude maps from the
-combined method at a frequency of 80~Hz.
-}
-
-\activeplot {marm10-ampl}{height=3.5in}{.}{As in 
-the previous Figure, but for a frequency of 10 Hz.
-}
 %\newpage
