@@ -66,6 +66,10 @@ from rsf.proj import *
 ###### 'email'= email for notification
 ###### 'acct' = account name 
 ######
+###### For fetch commands:
+###### 'subd' = subdirectory of server data directory in which to search
+###### 'url'  = URL of server
+
 ###### convenient strings literals for these:
 
 CMD   = 'cmd'
@@ -77,6 +81,8 @@ PPN   = 'ppn'
 MAIL  = 'mail'
 ACCT  = 'acct'
 Q     = 'queue'
+DATA  = 'subd'
+URL   = 'url'
 
 import os
 
@@ -134,13 +140,12 @@ for file in fetches.keys():
     tgt = TMPDATAPATH + '/' + file
     Default(tgt)
 
-# all fetches must be done here, to satisfy implicit dependencies
 # all other tasks are assumed to be dependencies of the fetches
 #if len(fetches.keys()) > 0 :
     from rsf.proj import *
     for file in fetches.keys():
         tgt = TMPDATAPATH + '/' + file
-        Fetch(tgt,fetches[file][0],server=fetches[file][1])   
+        Fetch(tgt,fetches[file][DATA],server=fetches[file][URL])   
 	for job in jobs.keys():
 	    Depends('d.'+job,tgt)
         for script in scripts.keys():
@@ -156,7 +161,7 @@ for tgt in jobs.keys():
     Clean(t,'d.'+tgt)
       
 for tgt in scripts.keys():
-    make = 'CWPROOT=' + CWPPATH + '; export CWPROOT; DATAPATH=' + TMPDATAPATH + '/; export DATAPATH; /bin/rm -rf d.' + tgt + '; /bin/mkdir d.' + tgt + '; . ' + tgt + '.sc'
+    make = 'CWPROOT=' + CWPPATH + '; export CWPROOT; DATAPATH=' + TMPDATAPATH + '/; export DATAPATH; /bin/rm -rf d.' + tgt + '; /bin/mkdir d.' + tgt + '; . ./' + tgt + '.sc'
     print tgt + ' = ' + make
     t=Flow('./d.' + tgt, scripts[tgt][DEPS], make, stdin=0, stdout=0)
     if tgt == 'tmpdata':
