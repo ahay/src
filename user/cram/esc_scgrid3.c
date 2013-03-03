@@ -125,7 +125,7 @@ static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
         esc_scgrid->as[i] = (float)as[i];
     }
     sf_tps_build_matrix (esc_scgrid->L, esc_scgrid->bs, esc_scgrid->as, ns, 0.0);
-    if (0 != sf_ludlt_decomposition (&esc_scgrid->L[0][0], esc_scgrid->pvt,
+    if (0 != sf_ludlt_decomposition (&esc_scgrid->L[0][0], esc_scgrid->pvt,            
                                      ns + 3)) {
         sf_error ("sf_esc_scgrid3_init_tps: TPS matrix inverse failed"); 
     }
@@ -346,13 +346,41 @@ static void sf_esc_scgrid3_bound_iaib (sf_esc_scgrid3 esc_scgrid, int *ia, int *
     }
 }
 
+/* Perform nearest neighbor interpolation of the local escape solution */
+static void sf_esc_scgrid3_nearest_interp (sf_esc_scgrid3 esc_scgrid,
+                                           float *z, float *x, float *y,
+                                           float *t, float *l, float *b, float *a) {
+    int ib, ia;
+    float vals[ESC3_NUM + 4];
+    float fb, fa;
+
+    ib = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
+    ia = sf_cram_scgrid3_ftoi (*a, esc_scgrid->oa, esc_scgrid->da, &fa);
+
+    ib = (int)((float)ib + fb + 0.5);
+    ia = (int)((float)ia + fa + 0.5);
+
+    /* Get escape values in space */
+    sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia, &ib);
+    eval_multi_UBspline_3d_s (&esc_scgrid->scsplines[ia*esc_scgrid->nb + ib],
+                              *y, *x, *z, vals);
+    *z += vals[ESC3_Z];
+    *x += vals[ESC3_X];
+    *y += vals[ESC3_Y];
+    *t += vals[ESC3_T];
+#ifdef ESC_EQ_WITH_L
+    *l += vals[ESC3_L];
+#endif
+    sf_esc_scgrid3_q_to_ab (&vals[ESC3_NUM], a, b);
+}
+
 /* Perform bilinear interpolation of the local escape solution */
 static void sf_esc_scgrid3_bilinear_interp (sf_esc_scgrid3 esc_scgrid,
                                             float *z, float *x, float *y,
                                             float *t, float *l, float *b, float *a) {
     int i, ib[4], ia[4];
     float vals[4][ESC3_NUM + 4], v[ESC3_NUM + 4];
-    float fb, fa, pz, px, py;
+    float fb, fa;
 
     /* ib, ia */
     ib[0] = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
@@ -396,7 +424,7 @@ static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
                                           float *t, float *l, float *b, float *a) {
     int i, j, k, ia, ib, iia, iib;
     float vals[6][6][ESC3_NUM + 4], f[ESC3_NUM + 4][6][6], v[ESC3_NUM + 3];
-    float fa, fb, pz, px, py;
+    float fa, fb;
     Ugrid z_grid, x_grid;
     BCtype_s zBC, xBC;
     multi_UBspline_2d_s *escspline = NULL;
@@ -448,10 +476,10 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
                                        float *z, float *x, float *y,
                                        float *t, float *l, float *b, float *a) {
     int i, j, ia, ib, iia, iib;
-    float vals[SCGRID3_TPS_MAX_STENCIL][SCGRID3_TPS_MAX_STENCIL],
+    float vals[SCGRID3_TPS_MAX_STENCIL][ESC3_NUM + 4],
           f[SCGRID3_TPS_MAX_STENCIL + 3], w[SCGRID3_TPS_MAX_STENCIL + 3],
           v[ESC3_NUM + 4];
-    float fa, fb, pz, px, py;
+    float fa, fb;
 
     /* ib, ia */
     iib = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
@@ -522,6 +550,8 @@ static void sf_esc_scgrid3_project_point (sf_esc_scgrid3 esc_scgrid,
             sf_esc_scgrid3_spline_interp (esc_scgrid, z, x, y, t, l, b, a);
         else if (2 == esc_scgrid->morder)
             sf_esc_scgrid3_tps_interp (esc_scgrid, z, x, y, t, l, b, a);
+        else if (0 == esc_scgrid->morder)
+            sf_esc_scgrid3_nearest_interp (esc_scgrid, z, x, y, t, l, b, a);
         else
             sf_esc_scgrid3_bilinear_interp (esc_scgrid, z, x, y, t, l, b, a);
     }

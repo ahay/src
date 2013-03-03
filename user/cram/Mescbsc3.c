@@ -266,6 +266,7 @@ int main (int argc, char* argv[]) {
                            (size_t)sizeof(multi_UBspline_3d_s), out);
             sf_ucharwrite ((unsigned char*)zxyspline->coefs,
                            (size_t)zxyspline->nc, out);
+            fflush (sf_filestream (out));
             nc += (size_t)zxyspline->nc;
             destroy_Bspline (zxyspline);
         } /* b */

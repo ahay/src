@@ -48,18 +48,18 @@ void sf_quat_norm (float *q)
 void sf_quat_vecrot (float *vf, float *vt, float *q)
 /*< Find quaternion q[4] from rotation of vector vf[3] to vt[3] >*/
 {
-    float s, invs, d, f, c[3];
-    
+    float s, invs, d, c[3];
+
     /* Dot product */
     d = vf[0]*vt[0] + vf[1]*vt[1] + vf[2]*vt[2];
     
-    if (d > 0.99) { /* Same vectors */
+    if (d >= 1.0) { /* Same vectors */
         q[0] = 1.0;
         q[1] = 0.0;
         q[2] = 0.0;
         q[3] = 0.0;
         return;
-    } else if (d < -0.99) { /* Opposite vectors */
+    } else if (d <= -1.0) { /* Opposite vectors */
         /* Cross product with the vertical direction */
         c[0] = 0.0;
         c[1] = vf[2];
@@ -96,10 +96,10 @@ int sf_ludlt_decomposition (float *A, int *pivot, int n)
     for (k = 0, p_k = A; k < n; p_k += n, k++) {
         /* Find the pivot row */
         pivot[k] = k;
-        max = fabs (*(p_k + k));
+        max = fabsf (*(p_k + k));
         for (j = k + 1, p_row = p_k + n; j < n; j++, p_row += n) {
-            if (max < fabs(*(p_row + k))) {
-                max = fabs(*(p_row + k));
+            if (max < fabsf (*(p_row + k))) {
+                max = fabsf (*(p_row + k));
                 pivot[k] = j;
                 p_col = p_row;
             }
