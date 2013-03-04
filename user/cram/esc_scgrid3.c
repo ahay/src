@@ -42,7 +42,7 @@ struct EscSCgrid3 {
     int                  nz, nx, ny, na, nb;
     float                oz, ox, oy, oa, ob;
     float                dz, dx, dy, da, db;
-    float                zmin, zmax, xmin, xmax, ymin, ymax;
+    float                zmin, zmax, xmin, xmax, ymin, ymax, md;
     bool                 quad;
     multi_UBspline_3d_s *scsplines;
     unsigned char       *mmaped;
@@ -66,11 +66,13 @@ struct EscSCgrid3 {
    |   |   |   |
    +---X---+---+--->a
 */
+/*
 #define SCGRID3_TPS_STENCIL1 8
 static int sf_scgrid3_tps_ib_stencil1[SCGRID3_TPS_STENCIL1] = 
 { 2, 0, 1, 2, 1, 2, 3, 1 };
 static int sf_scgrid3_tps_ia_stencil1[SCGRID3_TPS_STENCIL1] = 
 { 0, 1, 1, 1, 2, 2, 2, 3 };
+*/
 /* 8-point stencil, version two:
    b
    ^
@@ -100,12 +102,13 @@ static int sf_scgrid3_tps_ia_stencil2[SCGRID3_TPS_STENCIL2] =
    |   |   |   |
    +---X---X---+--->a
 */
+/*
 #define SCGRID3_TPS_STENCIL3 12
 static int sf_scgrid3_tps_ib_stencil3[SCGRID3_TPS_STENCIL3] = 
 { 1, 2, 0, 1, 2, 1, 0, 1, 2, 3, 1, 2 };
 static int sf_scgrid3_tps_ia_stencil3[SCGRID3_TPS_STENCIL3] = 
 { 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3 };
-
+*/
 #define SCGRID3_TPS_MAX_STENCIL 12
 
 /* Initialize thin-plane spline structures */
@@ -160,6 +163,8 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_esc_tracer3 esc_tracer, b
     if (!sf_histint (scgrid, "n3", &esc_scgrid->na)) sf_error ("No n3= in supercell file");
     if (!sf_histfloat (scgrid, "d3", &esc_scgrid->da)) sf_error ("No d3= in supercell file");
     if (!sf_histfloat (scgrid, "o3", &esc_scgrid->oa)) sf_error ("No o3= in supercell file");
+
+    if (!sf_histfloat (scgrid, "Mdist", &esc_scgrid->md)) esc_scgrid->md = esc_scgrid->dz;
 
     esc_scgrid->zmin = esc_scgrid->oz;
     esc_scgrid->zmax = esc_scgrid->oz + (esc_scgrid->nz - 1)*esc_scgrid->dz;
@@ -224,6 +229,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_esc_tracer3 esc_tracer, b
     esc_scgrid->morder = 2; /* Interpolation accuracy */
 
     esc_scgrid->esc_tracer = esc_tracer;
+    sf_esc_tracer3_set_mdist (esc_tracer, esc_scgrid->md);
     esc_scgrid->esc_point = sf_esc_point3_init ();
 
     sf_esc_scgrid3_init_tps (esc_scgrid);

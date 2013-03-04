@@ -118,23 +118,6 @@ int main (int argc, char* argv[]) {
            (sf_esc_slowness3_ny (esc_slow) - 1)*
            sf_esc_slowness3_dy (esc_slow);
 
-    /* Check spatial domain boundaries */
-    while (oz < (zmin - 0.001*dz))
-        oz += iz*dz;
-    while (oz > (zmax + 0.001*dz))
-        iz--;
-    if (iz < 0) sf_error ("z axis is out of bounds");
-    while (ox < (xmin - 0.001*dx))
-        ox += ix*dx;
-    while (ox > (xmax + 0.001*dx))
-        ix--;
-    if (ix < 0) sf_error ("x axis is out of bounds");
-    while (oy < (ymin - 0.001*dy))
-        oy += iy*dy;
-    while (oy > (ymax + 0.001*dy))
-        iy--;
-    if (iy < 0) sf_error ("y axis is out of bounds");
-
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
 
@@ -203,6 +186,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getfloat ("md", &md)) md = dz;
     /* Half-width of a supercell */
     sf_esc_tracer3_set_mdist (esc_tracer, md);
+
+    sf_putfloat (out, "Mdist", md);
 
     e = sf_floatalloc4 (nz, nx, ny, ESC3_NUM + 4);
 
