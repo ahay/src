@@ -32,6 +32,7 @@ encode shot2grid
 boxfilter
 lwefd
 awefd2d awefd3d ewefd2d ewefd3d
+hdefd
 hic2ang
 zowei wei weigwf weiajs weiajw
 ttifd2d ttifd3d

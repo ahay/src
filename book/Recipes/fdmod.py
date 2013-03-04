@@ -969,7 +969,7 @@ def anifd2d(odat,owfl,idat,velo,dens,sou,rec,custom,par):
 
     Flow([odat,owfl],[idat,velo,dens,sou,rec],
          '''
-         anifd2d
+         ttifd2d
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
          nb=%(nb)d dabc=%(dabc)s

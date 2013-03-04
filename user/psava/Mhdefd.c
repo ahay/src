@@ -1,6 +1,6 @@
 /* Heat diffusion equation FD modeling */
 /*
-  Copyright (C) 2007 Colorado School of Mines
+  Copyright (C) 2010 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -32,8 +32,10 @@
 int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap; 
-    int  jsnap;
-    int  jdata;
+    int  jsnap,ntsnap,jdata;
+#ifdef _OPENMP
+    int ompnth=1;
+#endif
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
@@ -43,8 +45,17 @@ int main(int argc, char* argv[])
     sf_file Fdat=NULL; /* data      */
     sf_file Fwfl=NULL; /* wavefield */
 
+    /* cube axes */
+    sf_axis at,az,ax,as,ar;
+    int     nt,nz,nx,ns,nr,nb;
+    int     it,iz,ix;
+    float   dt,dz,dx,idz,idx;
+
+    /* FDM structures */
+    fdm2d    fdm;
+
     /* I/O arrays */
-    float **ww=NULL;           /* wavelet   */
+    float  *ww=NULL;           /* wavelet   */
     float  *dd=NULL;           /* data      */
     pt2d   *ss=NULL;           /* sources   */
     pt2d   *rr=NULL;           /* receivers */
@@ -54,26 +65,13 @@ int main(int argc, char* argv[])
 
     float **uo,**up,**ua,**ut; /* wavefield: uo = U @ t; up = U @ t+1 */
 
-    /* cube axes */
-    sf_axis at,a1,a2,as,ar;
-    int     nt,n1,n2,ns,nr,nb;
-    int     it,i1,i2;
-    float   dt,d1,d2,id1,id2;
-
     /* linear interpolation weights/indices */
     lint2d cs,cr;
 
-    fdm2d    fdm;
-
     /* FD operator size */
-    float co,ca2,cb2,ca1,cb1;
+    float co,cax,cbx,caz,cbz;
 
-    int ompchunk; 
-#ifdef _OPENMP
-    int ompnth,ompath;
-#endif
-
-    sf_axis   ac1=NULL,ac2=NULL;
+    sf_axis   acz=NULL,acx=NULL;
     int       nqz,nqx;
     float     oqz,oqx;
     float     dqz,dqx;
@@ -82,18 +80,13 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
-    /* OpenMP data chunk size */
-#ifdef _OPENMP
-    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
-    /* OpenMP available threads */
 
-#pragma omp parallel
-    ompath=omp_get_num_threads();
-    if(ompnth<1) ompnth=ompath;
-    omp_set_num_threads(ompnth);
-    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+    /*------------------------------------------------------------*/
+    /* OMP parameters */
+#ifdef _OPENMP
+    ompnth=omp_init();
 #endif
+    /*------------------------------------------------------------*/
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
@@ -110,28 +103,33 @@ int main(int argc, char* argv[])
     at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
-    a1 = sf_iaxa(Fcon,1); sf_setlabel(a1,"z"); if(verb) sf_raxa(a1); /* depth */
-    a2 = sf_iaxa(Fcon,2); sf_setlabel(a2,"x"); if(verb) sf_raxa(a2); /* space */
+    az = sf_iaxa(Fcon,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
+    ax = sf_iaxa(Fcon,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
 
     nt = sf_n(at); dt = sf_d(at);
     ns = sf_n(as);
     nr = sf_n(ar);
-    n1 = sf_n(a1); d1 = sf_d(a1);
-    n2 = sf_n(a2); d2 = sf_d(a2);
+    nz = sf_n(az); dz = sf_d(az);
+    nx = sf_n(ax); dx = sf_d(ax);
 
+   /*------------------------------------------------------------*/
+    /* other execution parameters */
     if(! sf_getint("jdata",&jdata)) jdata=1;
-    if(snap) {  /* save wavefield every *jsnap* time steps */
-	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
+    /* # of t steps at which to save receiver data */
+    if(snap) {
+	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;        
+        /* # of t steps at which to save wavefield */ 
     }
+    /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
     /* expand domain for FD operators */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
+    fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
 
-    sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
-    sf_setn(a2,fdm->n2pad); sf_seto(a2,fdm->o2pad); if(verb) sf_raxa(a2);
+    sf_setn(az,fdm->nzpad); sf_seto(az,fdm->ozpad); if(verb) sf_raxa(az);
+    sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
 
     /* setup output data header */
@@ -143,30 +141,34 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(a1);
-	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(a2);
-	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(a1);
-	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(a2);
-	dqz=sf_d(a1);
-	dqx=sf_d(a2);
+	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az);
+	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax);
+	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az);
+	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax);
+	dqz=sf_d(az);
+	dqx=sf_d(ax);
 
-	ac1 = sf_maxa(nqz,oqz,dqz);
-	ac2 = sf_maxa(nqx,oqx,dqx);
-
+	acz = sf_maxa(nqz,oqz,dqz);
+	acx = sf_maxa(nqx,oqx,dqx);
 	/* check if the imaging window fits in the wavefield domain */
 
-	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
+	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
 
-	sf_setn(at,nt/jsnap);
+	ntsnap=0;
+	for(it=0; it<nt; it++) {
+	    if(it%jsnap==0) ntsnap++;
+	}
+	sf_setn(at,  ntsnap);
 	sf_setd(at,dt*jsnap);
+	if(verb) sf_raxa(at);
 
-	sf_oaxa(Fwfl,a1,1);
-	sf_oaxa(Fwfl,a2,2);
+	sf_oaxa(Fwfl,az,1);
+	sf_oaxa(Fwfl,ax,2);
 	sf_oaxa(Fwfl,at,3);
     }
 
-    ww  =sf_floatalloc2(ns,nt); sf_floatread(  ww[0],nt*ns,Fwav);
-    dd  =sf_floatalloc (nr);
+    ww  =sf_floatalloc(ns);
+    dd  =sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
     /* setup source/receiver coordinates */
@@ -181,34 +183,34 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
-    id1 = 1/d1;
-    id2 = 1/d2;
+    idz = 1/dz;
+    idx = 1/dx;
 
-    co = C0 * (id2*id2+id1*id1);
-    ca2= CA *  id2*id2;
-    cb2= CB *  id2*id2;
-    ca1= CA *          id1*id1;
-    cb1= CB *          id1*id1;
+    co = C0 * (idx*idx+idz*idz);
+    cax= CA *  idx*idx;
+    cbx= CB *  idx*idx;
+    caz= CA *          idz*idz;
+    cbz= CB *          idz*idz;
 
     /*------------------------------------------------------------*/ 
     /* setup model */
-    kkin=sf_floatalloc2(n1,   n2   ); 
-    kk  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
-    sf_floatread(kkin[0],n1*n2,Fcon);
+    kkin=sf_floatalloc2(nz,   nx   ); 
+    kk  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
+    sf_floatread(kkin[0],nz*nx,Fcon);
     expand(kkin,kk,fdm);
     free(*kkin); free(kkin);
 
     /*------------------------------------------------------------*/
     /* allocate wavefield arrays */
-    uo=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    up=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    ua=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    uo=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    up=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    ua=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
 
-    for    (i2=0; i2<fdm->n2pad; i2++) {
-	for(i1=0; i1<fdm->n1pad; i1++) {
-	    uo[i2][i1]=0;
-	    up[i2][i1]=0;
-	    ua[i2][i1]=0;
+    for    (ix=0; ix<fdm->nxpad; ix++) {
+	for(iz=0; iz<fdm->nzpad; iz++) {
+	    uo[ix][iz]=0;
+	    up[ix][iz]=0;
+	    ua[ix][iz]=0;
 	}
     }
 
@@ -222,32 +224,33 @@ int main(int argc, char* argv[])
 	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b%d",it);
 
 	/* inject heat source */
-	lint2d_hold(uo,ww[it],cs);
+	sf_floatread(ww,ns,Fwav);	
+	lint2d_inject(uo,ww,cs);
 	
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,co,ca2,ca1,cb2,cb1,id2,id1)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(ix,iz) shared(fdm,ua,uo,co,cax,caz,cbx,cbz,idx,idz)
 #endif
-	for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
-	    for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+	for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 		/* 4th order Laplacian operator */
-		ua[i2][i1] = 
-		    co * uo[i2  ][i1  ] + 
-		    ca2*(uo[i2-1][i1  ] + uo[i2+1][i1  ]) +
-		    cb2*(uo[i2-2][i1  ] + uo[i2+2][i1  ]) +
-		    ca1*(uo[i2  ][i1-1] + uo[i2  ][i1+1]) +
-		    cb1*(uo[i2  ][i1-2] + uo[i2  ][i1+2]);
+		ua[ix][iz] = 
+		    co * uo[ix  ][iz  ] + 
+		    cax*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+		    cbx*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+		    caz*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+		    cbz*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);
 	    }
 	}   
 	
 	/* step forward in time */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,up,kk,dt)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(ix,iz) shared(fdm,ua,uo,up,kk,dt)
 #endif
-	for    (i2=0; i2<fdm->n2pad; i2++) {
-	    for(i1=0; i1<fdm->n1pad; i1++) {
-		up[i2][i1] = uo[i2][i1] 
-		    +        ua[i2][i1] * kk[i2][i1] * dt;
+	for    (ix=0; ix<fdm->nxpad; ix++) {
+	    for(iz=0; iz<fdm->nzpad; iz++) {
+		up[ix][iz] = uo[ix][iz] 
+		    +        ua[ix][iz] * kk[ix][iz] * dt;
 	    }
 	}
 	/* circulate wavefield arrays */
@@ -260,15 +263,28 @@ int main(int argc, char* argv[])
 
 	/* extract data */
 	lint2d_extract(uo,dd,cr);
+	if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
 
+	/* extract wavefield in the "box" */
 	if(snap && it%jsnap==0) {
-	    cut2d(uo,uc,fdm,ac1,ac2);
-	    sf_floatwrite(uo[0],sf_n(ac1)*sf_n(ac2),Fwfl);
+	    cut2d(uo,uc,fdm,acz,acx);
+	    sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 	}
-	if(        it    %jdata==0) 
-	    sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
+
+/* deallocate arrays */
+    free(*up); free(up);
+    free(*uo); free(uo);
+    free(*ua); free(ua);
+    if(snap) {
+        free(*uc); free(uc);
+    }
+
+    free(ww);
+    free(ss);
+    free(rr);
+    free(dd);
 
     exit (0);
 }
