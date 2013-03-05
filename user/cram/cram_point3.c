@@ -46,7 +46,7 @@ struct CRAMPoint3 {
     float                   dym, dxm, atw;
     int                     mioz, midz;
     bool                    amp, mute, taper, extrap;
-    bool                    agath, dipgath;
+    bool                    agath, dipgath, erefl;
     float                 **oimage;
     float                 **osqimg;
     float                 **ohits;
@@ -100,6 +100,8 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
     cram_point->survey = survey;
     cram_point->slowness = slowness;
     cram_point->rbranch = rbranch;
+
+    cram_point->erefl = sf_cram_data2_get_erefl (data);
 
     cram_point->oimage = sf_floatalloc2 (2*nb, na/4); /* Regular image, opening angle */
     cram_point->osqimg = sf_floatalloc2 (2*nb, na/4); /* RMS image, opening angle */
@@ -394,14 +396,23 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
     /* Integral weight */
     if (cram_point->amp) {
         /* See Bleistein et al (2003), equation (21) for details */
-        dw = sqrtf (ss*sr);
-        dw *= cosf (0.5*oac);
-        dw /= sqrtf (fabsf (cram_point->src_exits[ies].j*cram_point->rcv_exits[ier].j));
-        dw *= cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs;
-        sb = sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db);
-        hb = zoffset ? sb : sinf (cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db);
-        dw *= sqrtf (fabsf (sb*hb));
-        smp *= dw;
+        if (cram_point->erefl) {
+            dw = sqrtf (ss);
+            dw /= sqrtf (fabsf (cram_point->src_exits[ies].j));
+            dw *= cram_point->src_exits[ies].cs;
+            sb = sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db);
+            dw *= sqrtf (fabsf (sb));
+            smp *= dw;
+        } else {
+            dw = sqrtf (ss*sr);
+            dw *= cosf (0.5*oac);
+            dw /= sqrtf (fabsf (cram_point->src_exits[ies].j*cram_point->rcv_exits[ier].j));
+            dw *= cram_point->src_exits[ies].cs*cram_point->rcv_exits[ier].cs;
+            sb = sinf (cram_point->b0 + cram_point->src_exits[ies].ib*cram_point->db);
+            hb = zoffset ? sb : sinf (cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db);
+            dw *= sqrtf (fabsf (sb*hb));
+            smp *= dw;
+        }
     }
 
     if ((cram_point->oam - fabsf (oac)) < 2.0*otw)

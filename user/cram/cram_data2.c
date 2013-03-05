@@ -93,6 +93,12 @@ void sf_cram_data2_close (sf_cram_data2 cram_data)
     free (cram_data);
 }
 
+bool sf_cram_data2_get_erefl (sf_cram_data2 cram_data)
+/*< Return true if data is from exploding reflector modeling >*/
+{
+    return cram_data->erefl;
+}
+
 /* Return one sample from propely filtered trace according to requested slope */
 static float sf_cram_data2_get_sample_from_trace (sf_cram_data2 cram_data, float *trace,
                                                   float trfact, float t, int *hits) {
