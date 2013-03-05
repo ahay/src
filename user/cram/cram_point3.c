@@ -163,16 +163,20 @@ void sf_cram_point3_set_extrap (sf_cram_point3 cram_point, bool extrap)
     cram_point->extrap = extrap;
 }
 
+/* Tapering zone in degrees near the muting boundary */
+#define OAM_TP 5.0
+#define DAM_TP 10.0
+
 void sf_cram_point3_set_mute (sf_cram_point3 cram_point, float oam, float dam)
 /*< Set mute limits in constant z plane >*/
 {
     cram_point->mute = true;
     /* Maximum opening angle + tapering zone */
-    cram_point->oam = (oam + 5.0)*SF_PI/180.0;
+    cram_point->oam = (oam + OAM_TP)*SF_PI/180.0;
     if (cram_point->oam > SF_PI)
         cram_point->oam = SF_PI;
     /* Maximum dip angle + tapering zone */
-    cram_point->dam = (dam + 5.0)*SF_PI/180.0;
+    cram_point->dam = (dam + DAM_TP)*SF_PI/180.0;
     if (cram_point->dam > SF_PI)
         cram_point->dam = SF_PI;
     /* Zone without tapering (as a fraction of the full unmuted zone) */
@@ -384,7 +388,8 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                                        float ss, float sr, int ies, int ier,
                                        float oac, float ozc, float dac, float dzc,
                                        bool zoffset) {
-    float dtw = 5.0*SF_PI/180.0, otw = 5.0*SF_PI/180.0; /* Tapering width in degrees */
+    float dtw = DAM_TP*SF_PI/180.0,
+          otw = OAM_TP*SF_PI/180.0; /* Tapering width in degrees */
     int dnw = 2*(int)(dtw/cram_point->db + 0.5), onw = (int)(otw/cram_point->db + 0.5); /* Taper width in samples */
     int isxy, jsxy, ihxy, jhxy, ia, iz, ida, ioa, ioz, idz;
     int ioaf, ioal, iozf, iozl, idaf, idal, idzf, idzl;
@@ -415,10 +420,23 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         }
     }
 
-    if ((cram_point->oam - fabsf (oac)) < 2.0*otw)
-        tw *= (cram_point->oam - fabsf (oac))/(2.0*otw);
-    if ((cram_point->dam - fabsf (dac)) < 2.0*dtw)
-        tw *= (cram_point->dam - fabsf (dac))/(2.0*dtw);
+    /* Compute tapeting weights at the edges of the mute zone */
+    dw = cram_point->oam - fabsf (oac);
+    if (dw < 2.0*otw) {
+        if (dw < otw)
+            tw = 0.0;
+        else
+            tw *= (dw - otw)/otw;
+    }
+    dw = cram_point->dam - fabsf (dac);
+    if (dw < 2.0*dtw) {
+        if (dw < dtw)
+            tw = 0.0;
+        else
+            tw *= (dw - dtw)/dtw;
+    }
+
+    /* Contribute sample to the stacked image */
     cram_point->img += tw*smp;
     cram_point->hits += 1.0;
 
