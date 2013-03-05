@@ -23,27 +23,20 @@
 #include "sembler.hh"
 
 // dip-angle gathers dimensions
-int zNum_;   float zStart_;   float zStep_;
-int dipNum_; float dipStart_; float dipStep_;
-int xNum_;	 float xStart_;   float xStep_;
-
-int ppn; float ppo, ppd;
-int itn; float ito, itd;
-int ixn; float ixo, ixd;
-
+int tNum_;     float tStart_;   float tStep_;
+int dipNum_;   float dipStart_; float dipStep_;
+int xNum_;	   float xStart_;   float xStep_;
+// secondary images
+int ppn;       float ppo;       float ppd;
+int itn;       float ito;       float itd;
+int ixn;       float ixo;       float ixd;
 // velocity model dimensions:
-int   v_tNum_;                 
-float v_tStart_;
-float v_tStep_;
-
-int   v_xNum_;
-float v_xStart_;
-float v_xStep_;
-
+int   v_tNum_; float v_tStart_; float v_tStep_;
+int   v_xNum_; float v_xStart_; float v_xStep_;
+// run parameters
+int sembWindow_;
 float apert_;
 float gamma_;
-int sembWindow_;
-
 
 void processPartImage (const float migDip, float* partImage, float* dPartImage, float* sembMap, float* velModel) {
 
@@ -53,8 +46,8 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 	for (int ix = 0; ix < ixn; ++ix) {
 		const float curX = ixo + ix * ixd;
 		// loop over z
-		float* trace2 = sf_floatalloc (zNum_);
-		memset (trace2, 0, zNum_ * sizeof (float) );
+		float* trace2 = sf_floatalloc (tNum_);
+		memset (trace2, 0, tNum_ * sizeof (float) );
 		for (int iz = 0; iz < itn; ++iz) {
 			const float curT = ito + iz * itd;
 			// get velocity
@@ -76,11 +69,11 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 
 				const float t = curT * (xi * tan (curDipRad) + sqrt ( pow (xi / cos (curDipRad), 2) + 1) );
 
-				const int tInd = (t - zStart_) / zStep_;	
-				if (tInd < 0 || tInd >= zNum_)
+				const int tInd = (t - tStart_) / tStep_;	
+				if (tInd < 0 || tInd >= tNum_)
 						continue;
 
-				const int ind = ip * zNum_ + tInd;
+				const int ind = ip * tNum_ + tInd;
 				const float sample = partImage [ind];		
 
 				diffStack  += sample;
@@ -149,9 +142,9 @@ int main (int argc, char* argv[]) {
 
 
 // Depth/time axis 
-    if ( !sf_histint   (piFile, "n1", &zNum_) )   sf_error ("Need n1= in input");
-    if ( !sf_histfloat (piFile, "d1", &zStep_) )  sf_error ("Need d1= in input");
-    if ( !sf_histfloat (piFile, "o1", &zStart_) ) sf_error ("Need o1= in input");
+    if ( !sf_histint   (piFile, "n1", &tNum_) )   sf_error ("Need n1= in input");
+    if ( !sf_histfloat (piFile, "d1", &tStep_) )  sf_error ("Need d1= in input");
+    if ( !sf_histfloat (piFile, "o1", &tStart_) ) sf_error ("Need o1= in input");
 // Dip angle axis 
     if ( !sf_histint   (piFile, "n2", &xNum_) )   sf_error ("Need n2= in input");
     if ( !sf_histfloat (piFile, "d2", &xStep_) )  sf_error ("Need d2= in input");
@@ -186,18 +179,18 @@ int main (int argc, char* argv[]) {
 	/* step in processed partial images */
 
     // IMAGE PARAMS
-    if (!sf_getint ("itn", &itn))        itn = zNum_;	
+    if (!sf_getint ("itn", &itn))        itn = tNum_;	
     /* number of imaged depth samples */
     if (!sf_getint ("ixn", &ixn))        ixn = xNum_;	
     /* number of imaged positions */
-    if (!sf_getfloat ("ito", &ito))      ito = zStart_;
-    /* first imaged depth (in meters) */
+    if (!sf_getfloat ("ito", &ito))      ito = tStart_;
+    /* first imaged time (in ms) */
     if (!sf_getfloat ("ixo", &ixo))      ixo = xStart_;
-    /* first imaged position (in meters) */
-    if (!sf_getfloat ("itd", &itd))      itd = zStep_;
-    /* step in depth (in meters) */
+    /* first imaged position (in m) */
+    if (!sf_getfloat ("itd", &itd))      itd = tStep_;
+    /* step in time (in ms) */
     if (!sf_getfloat ("ixd", &ixd))      ixd = xStep_;
-    /* step in positions (in meters) */
+    /* step in positions (in m) */
 
 	// OUTPUT PARAMETERS
   	sf_putint (resFile, "n1", itn); 
@@ -230,12 +223,9 @@ int main (int argc, char* argv[]) {
   	sf_putfloat (sembFile, "o3", ppo); 
   	sf_putfloat (sembFile, "o4", 1); 
 
-
-
-
 // main part
 
-	const int inSize = xNum_ * zNum_;
+	const int inSize = xNum_ * tNum_;
 	float* partImage  = sf_floatalloc (inSize);
 	const int outSize = ixn * itn;
 	float* dPartImage = sf_floatalloc (outSize);
