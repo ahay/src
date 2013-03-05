@@ -27,6 +27,10 @@ int zNum_;   float zStart_;   float zStep_;
 int dipNum_; float dipStart_; float dipStep_;
 int xNum_;	 float xStart_;   float xStep_;
 
+int ppn; float ppo, ppd;
+int itn; float ito, itd;
+int ixn; float ixo, ixd;
+
 // velocity model dimensions:
 int   v_tNum_;                 
 float v_tStart_;
@@ -37,25 +41,27 @@ float v_xStart_;
 float v_xStep_;
 
 float apert_;
+float gamma_;
 int sembWindow_;
+
 
 void processPartImage (const float migDip, float* partImage, float* dPartImage, float* sembMap, float* velModel) {
 
 	const float curDipRad = migDip * SF_PI / 180.f;
 
 	// loop over x
-	for (int ix = 0; ix < xNum_; ++ix) {
-		const float curX = xStart_ + ix * xStep_;
+	for (int ix = 0; ix < ixn; ++ix) {
+		const float curX = ixo + ix * ixd;
 		// loop over z
 		float* trace2 = sf_floatalloc (zNum_);
 		memset (trace2, 0, zNum_ * sizeof (float) );
-		for (int iz = 0; iz < zNum_; ++iz) {
-			const float curT = zStart_ + iz * zStep_;
+		for (int iz = 0; iz < itn; ++iz) {
+			const float curT = ito + iz * itd;
 			// get velocity
 			const int velInd = (curT - v_tStart_) / v_tStep_;
 			float velMig = *(velModel + velInd);
 
-			const float zd = 0.5 * velMig * curT + 1e-6;		
+			const float zd = 0.5 * velMig * curT / gamma_ + 1e-6;		
 
 			float diffStack  = 0.f;
 			float diffStack2 = 0.f;
@@ -81,17 +87,17 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 				diffStack2 += sample * sample;
 			}
 
-			const int sInd = ix * zNum_ + iz;
+			const int sInd = ix * itn + iz;
 			dPartImage [sInd] += diffStack;
 
 			trace2 [iz] += diffStack2;
 		}
 
-		float* sembTrace = sf_floatalloc (zNum_);
-		Sembler::getSemblanceForTrace (xNum_, dPartImage + ix*zNum_, trace2, zNum_, sembWindow_, sembTrace);		
-		float* pMap = sembMap + ix*zNum_;
+		float* sembTrace = sf_floatalloc (itn);
+		Sembler::getSemblanceForTrace (xNum_, dPartImage + ix*itn, trace2, itn, sembWindow_, sembTrace);		
+		float* pMap = sembMap + ix*itn;
 		float* pTrace = sembTrace;
-		for (int iz = 0; iz < zNum_; ++iz, ++pMap, ++pTrace)
+		for (int iz = 0; iz < itn; ++iz, ++pMap, ++pTrace)
 			*pMap = *pTrace;
 		free (sembTrace);
 		free (trace2);
@@ -138,6 +144,8 @@ int main (int argc, char* argv[]) {
     /* diffraction summation aperture */
     if ( !sf_getint ("sembWindow", &sembWindow_) ) sembWindow_ = 11;
     /* vertical window for semblance calculation (in samples) */
+    if ( !sf_getfloat ("gamma", &gamma_) ) gamma_ = 1.f;
+    /* velocity-model-accuracy parameter */
 
 
 // Depth/time axis 
@@ -170,12 +178,68 @@ int main (int argc, char* argv[]) {
     corUnit = (char*) "m"; unit = sf_histstring (velFile, "unit2"); if (!unit) sf_error ("unit2 in velocity model is not defined");
     if ( strcmp (corUnit, unit) ) { v_xStep_ *= 1000; v_xStart_ *= 1000; }
 
+    if (!sf_getint ("ppn", &ppn)) ppn = dipNum_;
+	/* number of processed partial images */
+    if (!sf_getfloat ("ppo", &ppo)) ppo = dipStart_;
+	/* first processed partial image */
+    if (!sf_getfloat ("ppd", &ppd)) ppd = dipStep_;
+	/* step in processed partial images */
+
+    // IMAGE PARAMS
+    if (!sf_getint ("itn", &itn))        itn = zNum_;	
+    /* number of imaged depth samples */
+    if (!sf_getint ("ixn", &ixn))        ixn = xNum_;	
+    /* number of imaged positions */
+    if (!sf_getfloat ("ito", &ito))      ito = zStart_;
+    /* first imaged depth (in meters) */
+    if (!sf_getfloat ("ixo", &ixo))      ixo = xStart_;
+    /* first imaged position (in meters) */
+    if (!sf_getfloat ("itd", &itd))      itd = zStep_;
+    /* step in depth (in meters) */
+    if (!sf_getfloat ("ixd", &ixd))      ixd = xStep_;
+    /* step in positions (in meters) */
+
+	// OUTPUT PARAMETERS
+  	sf_putint (resFile, "n1", itn); 
+  	sf_putint (resFile, "n2", ixn); 
+  	sf_putint (resFile, "n3", ppn); 
+  	sf_putint (resFile, "n4", 1); 
+
+  	sf_putfloat (resFile, "d1", itd); 
+  	sf_putfloat (resFile, "d2", ixd); 
+  	sf_putfloat (resFile, "d3", ppd); 
+  	sf_putfloat (resFile, "d4", 1); 
+
+	sf_putfloat (resFile, "o1", ito); 
+  	sf_putfloat (resFile, "o2", ixo); 
+  	sf_putfloat (resFile, "o3", ppo); 
+  	sf_putfloat (resFile, "o4", 1); 
+
+  	sf_putint (sembFile, "n1", itn); 
+  	sf_putint (sembFile, "n2", ixn); 
+  	sf_putint (sembFile, "n3", ppn); 
+  	sf_putint (sembFile, "n4", 1); 
+
+  	sf_putfloat (sembFile, "d1", itd); 
+  	sf_putfloat (sembFile, "d2", ixd); 
+  	sf_putfloat (sembFile, "d3", ppd); 
+  	sf_putfloat (sembFile, "d4", 1); 
+
+	sf_putfloat (sembFile, "o1", ito); 
+  	sf_putfloat (sembFile, "o2", ixo); 
+  	sf_putfloat (sembFile, "o3", ppo); 
+  	sf_putfloat (sembFile, "o4", 1); 
+
+
+
+
 // main part
 
-	const int piSize = xNum_ * zNum_;
-	float* partImage  = sf_floatalloc (piSize);
-	float* dPartImage = sf_floatalloc (piSize);
-	float* sembMap  = sf_floatalloc (piSize);
+	const int inSize = xNum_ * zNum_;
+	float* partImage  = sf_floatalloc (inSize);
+	const int outSize = ixn * itn;
+	float* dPartImage = sf_floatalloc (outSize);
+	float* sembMap  = sf_floatalloc (outSize);
 
 	const int velSize = v_tNum_ * v_xNum_;
 	float* vel = sf_floatalloc (velSize);
@@ -187,27 +251,30 @@ int main (int argc, char* argv[]) {
 			*ptrVel *= 0.001f;
 	}
 
-	for (int id = 0; id < dipNum_; ++id) {
+	for (int id = 0; id < ppn; ++id) {
 
-		sf_warning ("dip %d of %d;", id + 1, dipNum_);	
+		sf_warning ("dip %d of %d;", id + 1, ppn);	
 
-		const float curDip = dipStart_ + id * dipStep_;
+		const float curDip = ppo + id * ppd;
 
-		memset ( partImage,  0, piSize * sizeof (float) );
-		memset ( dPartImage, 0, piSize * sizeof (float) );
-		memset ( sembMap,    0, piSize * sizeof (float) );
+		memset ( partImage,  0, inSize * sizeof (float) );
+
+		memset ( dPartImage, 0, outSize * sizeof (float) );
+		memset ( sembMap,    0, outSize * sizeof (float) );
 
 		// read partial image
-		const int startPos = id * piSize * sizeof (float);
+		const int idp = (curDip - dipStart_) / dipStep_;
+
+		const int startPos = idp * inSize * sizeof (float);
 		sf_seek (piFile, startPos, SEEK_SET);		
-		sf_floatread (partImage, piSize, piFile);
+		sf_floatread (partImage, inSize, piFile);
 
 		// process partial image
 		processPartImage (curDip, partImage, dPartImage, sembMap, vel);
 
 		// write down the result
-		sf_floatwrite (dPartImage, piSize, resFile);
-		sf_floatwrite (sembMap, piSize, sembFile);
+		sf_floatwrite (dPartImage, outSize, resFile);
+		sf_floatwrite (sembMap, outSize, sembFile);
 	}	
 
 	sf_warning (".");
