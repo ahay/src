@@ -35,7 +35,7 @@ int main (int argc, char* argv[]) {
     sf_file imag = NULL, hits = NULL, oimag = NULL, dimag = NULL,
             osmap = NULL, dsmap = NULL, oimap = NULL, dimap = NULL;
 
-    bool amp, mute, outaz, extrap;
+    bool amp, mute, outaz, extrap, inorm;
     sf_cram_data2 cram_data;
     sf_cram_survey3 cram_survey;
     sf_cram_slowness3 cram_slowness;
@@ -85,6 +85,8 @@ int main (int argc, char* argv[]) {
     /* y - mute signal in constant z plane before stacking */
     if (!sf_getbool ("outaz", &outaz)) outaz = true;
     /* n - stack azimuth direction before output */
+    if (!sf_getbool ("inorm", &inorm)) inorm = false;
+    /* y - normalize gathers for illumination */
 
     if (mute) {
         if (!sf_getfloat ("oazmin", &oazmin)) oazmin = 180.0;
@@ -165,7 +167,7 @@ int main (int argc, char* argv[]) {
     sf_cram_point3_set_extrap (cram_point, extrap);
     /* Image and gathers accumulator object */
     cram_gather = sf_cram_gather3_init (nb, na, nz, b0, db, a0, da,
-                                        oazmax, dazmax, outaz);
+                                        oazmax, dazmax, outaz, inorm);
 
     imag = sf_output ("out");
     /* Image (z, x, y) */

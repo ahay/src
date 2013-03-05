@@ -382,11 +382,13 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                                        float ss, float sr, int ies, int ier,
                                        float oac, float ozc, float dac, float dzc,
                                        bool zoffset) {
+    float dtw = 5.0*SF_PI/180.0, otw = 5.0*SF_PI/180.0; /* Tapering width in degrees */
+    int dnw = 2*(int)(dtw/cram_point->db + 0.5), onw = (int)(otw/cram_point->db + 0.5); /* Taper width in samples */
     int isxy, jsxy, ihxy, jhxy, ia, iz, ida, ioa, ioz, idz;
     int ioaf, ioal, iozf, iozl, idaf, idal, idzf, idzl;
     float doa = 0.0, doz = 0.0, dda = 0.0, ddz = 0.0;
     float oa, da, oz, dz;
-    float ds, dh, sa, sb, ha, hb, dw;
+    float ds, dh, sa, sb, ha, hb, dw, tw = 1.0;
     bool flip = false;
 
     /* Integral weight */
@@ -402,7 +404,11 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         smp *= dw;
     }
 
-    cram_point->img += smp;
+    if ((cram_point->oam - fabsf (oac)) < 2.0*otw)
+        tw *= (cram_point->oam - fabsf (oac))/(2.0*otw);
+    if ((cram_point->dam - fabsf (dac)) < 2.0*dtw)
+        tw *= (cram_point->dam - fabsf (dac))/(2.0*dtw);
+    cram_point->img += tw*smp;
     cram_point->hits += 1.0;
 
     if (!cram_point->agath && !cram_point->dipgath)
@@ -490,12 +496,17 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                 flip = true;
             }
             for (ioa = ioaf; ioa <= ioal; ioa++) { /* Opening angles */
+                tw = dw;
                 ia = ioa;
                 if (flip && ia != 0) {
                     ia = 2*cram_point->nb - ia;
                 }
-                cram_point->oimage[iz][ia] += dw*smp;
-                cram_point->osqimg[iz][ia] += (dw*smp)*(dw*smp);
+                /* Tapering at the edges */
+                if ((cram_point->mioz - abs (ia - cram_point->nb)) < onw) {
+                    tw *= (cram_point->mioz - abs (ia - cram_point->nb))/(float)onw;
+                }
+                cram_point->oimage[iz][ia] += tw*smp;
+                cram_point->osqimg[iz][ia] += (tw*smp)*(tw*smp);
                 cram_point->ohits[iz][ia] += 1.0;
             }
             flip = false;
@@ -536,12 +547,17 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                 flip = true;
             }
             for (ida = idaf; ida <= idal; ida++) { /* Dip angles */
+                tw = dw;
                 ia = ida;
                 if (flip && ia != 0) {
                     ia = 4*cram_point->nb - ia;
                 }
-                cram_point->dimage[iz][ia] += dw*smp;
-                cram_point->dsqimg[iz][ia] += (dw*smp)*(dw*smp);
+                /* Tapering at the edges */
+                if ((cram_point->midz - abs (ia - 2*cram_point->nb)) < dnw) {
+                    tw *= (cram_point->midz - abs (ia - 2*cram_point->nb))/(float)dnw;
+                }
+                cram_point->dimage[iz][ia] += tw*smp;
+                cram_point->dsqimg[iz][ia] += (tw*smp)*(tw*smp);
                 cram_point->dhits[iz][ia] += 1.0;
             }
             flip = false;

@@ -36,13 +36,13 @@ struct CRAMGather3 {
     float *stack;
     float *energy;
     float *illum;
-    bool   outaz;
+    bool   outaz, inorm;
 };
 /* concrete data type */
 
 sf_cram_gather3 sf_cram_gather3_init (int nb, int na, int nz,
                                       float b0, float db, float a0, float da,
-                                      float oamax, float damax, bool outaz)
+                                      float oamax, float damax, bool outaz, bool inorm)
 /*< Initialize object >*/
 {
     sf_cram_gather3 cram_gather = (sf_cram_gather3)sf_alloc (1, sizeof (struct CRAMGather3));
@@ -56,6 +56,7 @@ sf_cram_gather3 sf_cram_gather3_init (int nb, int na, int nz,
     cram_gather->nz = nz; /* Number of depth samples */
 
     cram_gather->outaz = outaz; /* Whether to output azimuth dimension */
+    cram_gather->inorm = inorm; /* Whether to normalize gathers */
 
     /* Maximum number of opening angles in the output */
     cram_gather->noa = (int)(oamax/db + 0.5) + 1;
@@ -107,6 +108,17 @@ void sf_cram_gather3_oangle_output (sf_cram_gather3 cram_gather, sf_cram_point3 
     float **oimage, **osqimg, **ohits;
 
     oimage = sf_cram_point3_get_oimage (cram_point, &osqimg, &ohits);
+
+    if (cram_gather->inorm) {
+        for (ia = 0; ia < cram_gather->na/4; ia++) {
+            for (ib = 0; ib < 2*cram_gather->nb; ib++) {
+                if (ohits[ia][ib] >= 1.0) {
+                    oimage[ia][ib] /= ohits[ia][ib];
+                    osqimg[ia][ib] /= ohits[ia][ib];
+                }
+            }
+        }
+    }
 
     if (cram_gather->outaz) {
         for (ia = 0; ia < cram_gather->na/4; ia++) { /* [0; PI) */
@@ -171,6 +183,17 @@ void sf_cram_gather3_dangle_output (sf_cram_gather3 cram_gather, sf_cram_point3 
     float **dimage, **dsqimg, **dhits;
 
     dimage = sf_cram_point3_get_dimage (cram_point, &dsqimg, &dhits);
+
+    if (cram_gather->inorm) {
+        for (ia = 0; ia < cram_gather->na/4; ia++) {
+            for (ib = 0; ib < 4*cram_gather->nb; ib++) {
+                if (dhits[ia][ib] >= 1.0) {
+                    dimage[ia][ib] /= dhits[ia][ib];
+                    dsqimg[ia][ib] /= dhits[ia][ib];
+                }
+            }
+        }
+    }
 
     if (cram_gather->outaz) {
         for (ia = 0; ia < cram_gather->na/4; ia++) {
