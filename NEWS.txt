@@ -53,6 +53,7 @@ In programs:
 
 * Fixed bug with handling zero values in sfclip
 * Fixed incorrect data size bug in sffindmo
+* Fixed true colors in gdpen
 
 In the build system:
 
