@@ -6,8 +6,6 @@
  * 
  *
  */
-
-
 /* Kirchhoff 2-D/2.5-D modeling with analytical Green's functions. 
  
  October 2012 program of the month:
@@ -49,7 +47,7 @@ int main(int argc, char* argv[])
 	int niter, vstatus, order, count, count1, count2, count3;
 	double tolerance;
 	float **rr, **rd, *updown;
-	bool newton, debug;
+	bool newton, debug, fwdxini;
 	velocity2 vn; 
 	/*------------------------*/
 
@@ -278,6 +276,9 @@ int main(int argc, char* argv[])
 		if (!sf_getbool("debug",&debug)) debug=false;
 		/* (NT)debug flag */
 		
+		if (!sf_getbool("fwdxini",&fwdxini)) fwdxini=false;
+		/* (NT)use the result of previous iteration to be the xinitial of the next one */
+		
 		rr = sf_floatalloc2(nx,nc+1);
 		rd = sf_floatalloc2(nx,nc+1);
 		
@@ -461,7 +462,7 @@ int main(int argc, char* argv[])
 		kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz);
 		
 		/*** Compute traveltime table ***/
-		kirmodnewton2_table(inc, debug /* Debug Newton */, niter, tolerance);
+		kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);
 	}
 	else {
 		/*** Compute traveltime table ***/
@@ -559,10 +560,6 @@ int main(int argc, char* argv[])
 						theta = 0.5*(SF_SIG(tg->tx)*tg->an - 
 									 SF_SIG(ts->tx)*ts->an);
 						theta = sinf(theta);
-						
-						if (ix>69 && ix<71) {
-							sf_warning(" %g %g %g ",ava, obl, amp);
-						}
 						
 						ava = rfl[ic][ix]+rgd[ic][ix]*theta*theta;
 						if (ref != inc) ava *= theta;

@@ -60,7 +60,7 @@ static velocity2 v;
 static sf_eno *eno, *deno; /* Interpolation structure */	
 
 static float z(int k,float x) 
-/*<Function>*/
+/*Function*/
 {
 	int i;
 	float f, f1;
@@ -73,7 +73,7 @@ static float z(int k,float x)
 }
 
 static float zder(int k,float x) 
-/*<First derivative>*/
+/*First derivative*/
 {
 	int i;
 	float f, f1;
@@ -86,7 +86,7 @@ static float zder(int k,float x)
 }
 
 static float zder2(int k,float x) 
-/*<Second derivative>*/
+/*Second derivative*/
 {
 	int i;
 	float f, f1;
@@ -305,6 +305,7 @@ surface kirmodnewton2_init(int ns,  float s0,  float ds  /* source/midpoint axis
 
 void kirmodnewton2_table(surface y /* Surface structure*/,
 				   bool debug /* Debug Newton */,
+				   bool fwdxini /* Use the result of the previous iteration for the next one*/,
 				   int niter /* Number of iteration for Newton */,
 				   double tolerance /* Tolerance level for Newton */)
 /*<Compute traveltime map>*/
@@ -312,8 +313,10 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	
 	int ix, iy, ic, in, iu, iv, num;
     float x2, x1, xp=0.;
-	float *updown, *xinitial;
+	float *updown, *xinitial, **oldans;
     ktable **ta=NULL;
+	
+	oldans = sf_floatalloc2(nc-1,nc-1); /* To store old ans for the case of fwdxini*/
 	
     for (iy=0; iy < ny; iy++) {	/* soure/midpoint and offset axes */
 		x1 = y[iy].x; /* x1 is on the surface */
@@ -338,19 +341,31 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 						
 						if (num!=0) {
 							xinitial = sf_floatalloc(num);
-							for (iv=0; iv<num; iv++) {
-								xinitial[iv] = x1+(iv+1)*(x2-x1)/(num+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
-							}
 							
+							for (iv=0; iv<num; iv++) { /* How many reflection axis*/
+								if (fwdxini) {
+										
+									if (ix==0) { /* Initialize this old result array for the very first calculation*/
+										oldans[iv][num-1] = x1+(iv+1)*(x2-x1)/(num+1);
+									}
+									
+									xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
+								
+								}
+								else {
+									xinitial[iv] = x1+(iv+1)*(x2-x1)/(num+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
+									
+								}
+							}
 						}
 						else {
 							xinitial = sf_floatalloc(1);
-							xinitial[0] = 0; /* The case where there is NO reflection*/
+							xinitial[0] = 0; /* The case where there is NO reflection (to avoid warning)*/
 						}
 
 					}
 					
-					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, updown, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, ta[ix][ic]);
+					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, updown, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, oldans, ta[ix][ic]);
 				
 				} 
 			} 

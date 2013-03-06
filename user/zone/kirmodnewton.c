@@ -73,11 +73,12 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 						func1 z /* z(k,x) */,
 						func1 zder /* z'(k,x) */,
 						func1 zder2 /* z''(k,x) */,
+						float **oldans /* To export old answer*/,
 						ktable table /* [5] output table */)
 /*< Compute traveltime attributes >*/
 {
 	float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
-	float tt, tx_s, tx_r, ty, tz_s, tz_r, tn, at, v_1r, v_r, alpha, theta;
+	float tt, tx_s, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
 	int q=0; /* Counter for big loop*/
 	
 	/* Allocate space-------------------------------------------------------------------------------------*/
@@ -91,6 +92,15 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	xxtem = sf_floatalloc(n+2); /* Pre-calculated xx to check the boundary condition*/
 	ck_inv = sf_floatalloc(n+2);
 	zk = sf_floatalloc(n+2);	
+	
+	/*Switch bmin and bmax if necessary*/
+	
+	if(bmin>bmax) {
+		float value;
+		value = bmin;
+		bmin = bmax;
+		bmax = value;
+	}
 	
 	/* Set vconstant or vgradient----------------------------------------------------------------------*/
 	
@@ -140,7 +150,9 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		Ftem = Ftem+fabsf(F[i4+1]);
 		if (Ftem<n*tol && i4 == n-1) {
 			for (j1=0; j1<n; j1++) {
-				sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
+				if (debug) {
+					sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
+				}
 			}
 			goto mark; /* Exit the loop to the part for writing the result*/
 		}	
@@ -163,7 +175,9 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 			Ftem = Ftem+fabsf(F[i5+1]);
 			if (Ftem<n*tol && i5 == n-1) {
 				for (j2=0; j2<n; j2++) {
-					sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
+					if (debug) {
+						sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
+					}
 				}
 				goto mark; /* Exit the loop to the part for writing the result*/
 			}
@@ -255,12 +269,13 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	
 	/* Write Compute traveltime-----------------------------------------------------*/
 	float ck_in, ck_in_temp;
-	int c1,c2,c3;
+	int c1,c2,c3,c4;
 	int c; /* Counter*/
 	
 mark: /* Mark point for goto*/
 	
 	for (c2=0; c2<n+2; c2++) {
+		
 		for (c1=0; c1<2; c1++) {
 			if (c1==0) {
 				ans[c2][c1] = xx[c2];
@@ -271,6 +286,12 @@ mark: /* Mark point for goto*/
 		}
 	}
 	
+	/* To export the old ans for fwdxini-------------------------------------------*/
+	
+	for (c4=0; c4<n; c4++) {
+		oldans[c4][n-1] = xx[c4+1];
+	}
+	
 	tt=0; /* Initialize traveltime tt*/
 	at=1; /* Initializa at*/
 	
@@ -279,7 +300,7 @@ mark: /* Mark point for goto*/
 		tt = tt + T_hat_k(f.T_k);
 		
 		if (c==0) {
-			at = sqrt(fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1))); 
+			at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
 			tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); /* x-direction on the surface*/
 			tz_s = T_hat_k(f.T_k_zk);
 		}
@@ -291,11 +312,12 @@ mark: /* Mark point for goto*/
 			v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
 			tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
 			ty = 0; /* For 3D or 2.5D & at the reflector*/
-			tn = (T_hat_k_k1(f.T_k_k1,f.T_k_zk1)*zder(c+1,xx[c+1])+T_hat_k(f.T_k_zk1))/(hypotf(1,zder(c+1,xx[c+1]))); /* Normal-direction at the reflector*/
 			tz_r = T_hat_k(f.T_k_zk1); /* z-direction  need to return T_k_zk >> use T_hat_k which return the function itself & at the reflector*/
+			tn = ((-1)*T_hat_k(f.T_k_k1)*zder(c+1,xx[c+1])+tz_r)/hypotf(1,zder(c+1,xx[c+1])); /* Normal-direction at the reflector*/
+			dip = atan(zder(c+1,xx[c+1])); /* The dipping angle of the reflector*/
 			
 			if (debug) {
-				sf_warning("Traveltime is %g and the total number of iterations is %d",tt,q);
+				sf_warning("Traveltime is %g and the total number of iterations is %d s=%g r=%g xini=%g",tt,q,xx[0],xx[n+1],xinitial[0]);
 			}
 		}
 	}
@@ -310,35 +332,24 @@ mark: /* Mark point for goto*/
 			ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_in_temp*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
 		}
 		
-		at = at*sqrt(fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)));
+		at = at*fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
 		ck_in_temp = ck_in;
 	}	
-	
 	
 	table->t = tt; /* output the data to table */
 	table->tx = tx_r;
 	table->ty = ty;
-	table->tn = sqrt(fabsf(1/(v_r*v_r)-tx_r*tx_r)); /* To make it compatible with the convention of the old kirmod*/
+	table->tn = sqrt(fabsf(1/(v_r*v_r)-tx_r*tx_r)); /* To make it compatible with the convention of the old kirmod (Actually in z-direction)*/
 	
-	alpha = acos(tz_s*v_1r); /* Angle from vertical of the ray on the surface */
-	theta = acos(tn*v_r); /* Angle from the normal at the reflection point of the last reflection */
-	/*theta = (-1)*acos(tz_r*v_r/hypotf(1,zder(n+1,xx[n+1]))); */
+	alpha = (-1)*tz_s*v_1r; /* Cosine of the angle from vertical of the ray on the surface */
+	theta = tn*v_r; /* Cosine of the angle from the normal at the reflection point of the last reflection */
 	 
-	table->a = pow(-1,n)*sqrt(fabsf(cos(alpha)*cos(theta)))/at*v_r; /* Geometrical spreading is 1/amplitude */
-	table->an = theta;
+	table->a = pow(-1,n)*sqrt(alpha*theta/(at*cos(dip)))/v_r; /* Amplitude = 1/sqrt(geometrical spreading) but we want the reciprocal of amplitude */
+	an = -acosf((tz_r-xx[n+1]*zder(n+1,xx[n+1])/(v_r*hypotf(xx[n]-xx[n+1],z(n,xx[n])-z(n+1,xx[n+1]))))*v_r*cos(dip)); /* Angle from vertical*/
+	if (isnan(an) != 0) { /*Just in case the argument of acosf exceeds the proper boundary due to error in computation*/
+		an = 0;
+	}
+	table->an = an;
 	table->ar = 0.5;
 	
-}	
-						
-						
-						
-						
-/*(T_hat_k_k1(f.T_k_k1,f.T_k_zk1)*zder(c+1,xx[c+1])-T_hat_k(f.T_k_zk1))/(hypotf(1,zder(c+1,xx[c+1])))*/
-						
-						
-						
-						
-						
-						
-						
-		
+}
