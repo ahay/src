@@ -4,8 +4,10 @@ import bldutil
 
 progs = '''
 helmlu helmmig iwioper iwiiter 
-iwioper0 iwiiter0 iwilbfgs iwinlcg
+iwioper0 iwiiter0 iwilbfgs
 '''
+
+# iwinlcg iwigrad
 
 try:  # distributed version
     Import('env root pkgdir bindir')

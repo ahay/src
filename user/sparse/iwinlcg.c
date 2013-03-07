@@ -134,10 +134,6 @@ void iwinlcg_free()
     free(pimage);
     free(pipz);
     free(piph);
-
-    iwimodl_free();
-    iwidip_free();
-    iwigrad_free();
 }
 
 float iwinlcg_eval(const float *x,
@@ -204,7 +200,7 @@ void iwinlcg_grad(const float *x,
     if (bound) {
 	for (i2=0; i2 < nn[1]; i2++) {
 	    for (i1=0; i1 < nn[0]; i1++) {
-		g[i2*nn[0]+i1] = 0.;
+		g[i2*nn[0]+i1] = SF_HUGE;
 	    }
 	}
 
@@ -229,7 +225,7 @@ void iwinlcg_grad(const float *x,
 	    }
 	    sf_deriv(din,dout);
 	    for (i1=0; i1 < nn[0]; i1++) {
-		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1];
+		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1]/dd[0];
 	    }
 	}
     }
@@ -249,7 +245,7 @@ void iwinlcg_grad(const float *x,
 	    }
 	    sf_deriv(din,dout);
 	    for (i3=0; i3 < nn[2]; i3++) {
-		piph[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3];
+		piph[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3]/dd[2];
 	    }
 	}
     }
@@ -306,7 +302,7 @@ void iwinlcg_grad(const float *x,
 	    i2 = sf_first_index(1,i1,2,nn,ss);
 	    
 	    sf_smooth (tr,i2,ss[1],false,false,image);
-	sf_smooth2(tr,i2,ss[1],false,false,image);
+	    sf_smooth2(tr,i2,ss[1],false,false,image);
 	}
 	sf_triangle_close(tr);
     } else {
@@ -334,4 +330,16 @@ void iwinlcg_grad(const float *x,
 
     /* re-scale */
     /* scale(x,g); */
+}
+
+void iwinlcg_image(sf_file fimage)
+/*< output image >*/
+{
+    sf_floatwrite(image,nn[0]*nn[1]*nn[2],fimage);
+}
+
+void iwinlcg_slope(sf_file fslope)
+/*< output slope >*/
+{
+    sf_floatwrite(pimage,nn[0]*nn[1]*nn[2],fslope);
 }

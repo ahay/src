@@ -25,7 +25,6 @@
 static int n[3], n123, prect[3];
 static float d[3];
 static int pliter;
-static float *p;
 
 void iwidip_init(int n1, int n2, int nh,
 		 float d1, float d2,
@@ -41,16 +40,11 @@ void iwidip_init(int n1, int n2, int nh,
     prect[0] = rect1; prect[1] = rect2; prect[2] = rect3;
 
     pliter = liter;
-
-    /* allocate memory */
-    p = sf_floatalloc(n123);
 }
 
 void iwidip_free()
 /*< free >*/
-{
-    free(p);
-}
+{}
 
 void iwidip_fdip(float *image, float *dip)
 /*< estimate dip >*/
@@ -58,7 +52,7 @@ void iwidip_fdip(float *image, float *dip)
     fdip_init(n[0],n[1],n[2], prect,pliter,false);
 
     /* fast dip estimation */
-    fdip(image, p, 1);
+    fdip(image, dip, 1);
 
     fdip_close();
 }

@@ -136,10 +136,6 @@ void iwilbfgs_free()
     free(pimage);
     free(pipz);
     free(piph);
-
-    iwimodl_free();
-    iwidip_free();
-    iwigrad_free();
 }
 
 lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
@@ -207,7 +203,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     if (bound) {
 	for (i2=0; i2 < nn[1]; i2++) {
 	    for (i1=0; i1 < nn[0]; i1++) {
-		g[i2*nn[0]+i1] = 0.;
+		g[i2*nn[0]+i1] = DBL_MAX;
 	    }
 	}
 
@@ -232,7 +228,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	    }
 	    sf_deriv(din,dout);
 	    for (i1=0; i1 < nn[0]; i1++) {
-		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1];
+		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1]/dd[0];
 	    }
 	}
     }
@@ -252,7 +248,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	    }
 	    sf_deriv(din,dout);
 	    for (i3=0; i3 < nn[2]; i3++) {
-		piph[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3];
+		piph[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3]/dd[2];
 	    }
 	}
     }

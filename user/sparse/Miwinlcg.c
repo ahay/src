@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, load;
+    bool verb, load, update;
     int n1, n2, npml, nh, ns, nw;
     int prect[3], pliter;
     int dorder, grect[2], gliter;
@@ -35,13 +35,13 @@ int main(int argc, char* argv[])
     float vpml, d1, d2, **vel, dw, ow;
     float ***mask, ***wght, **prec;
     char *datapath;
-    sf_file in, out, source, data;
+    sf_file in, out, source, data, image, slope, grad;
     sf_file imask, weight, precon;
     int uts, mts, i, j;
     char *order;
-    float fx0, fx1, fx2, *x0, *x1, *g0, *g1, *s, beta;
-    float geps, gscale, delta, lower, upper, alpha, ltol, armijo;
-    int iter, miter, liter;
+    float fx0, fx1, *x0, *x1, *g0, *g1, *s, beta;
+    float geps, gscale, lower, upper, alpha;
+    int iter, miter, iliter, liter;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -55,7 +55,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("load",&load)) load=false;
     /* load LU */
-
+    
+    if (!sf_getbool("update",&update)) update=true;
+    /* Non-linear CG update */
+	
     if (!sf_getint("uts",&uts)) uts=0;
     /* number of OMP threads */
 
@@ -88,7 +91,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("plower",&plower)) plower=0.1;
     /* slope thresholding lower limit */
-    if (!sf_getfloat("pupper",&pupper)) pupper=4.;
+    if (!sf_getfloat("pupper",&pupper)) pupper=3.;
     /* slope thresholding upper limit */
 
     if (!sf_getint("dorder",&dorder)) dorder=6;
@@ -108,14 +111,11 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("gscale",&gscale)) gscale=0.5;
     /* gradient re-scale */
 
-    if (!sf_getfloat("delta",&delta)) delta=0.05;
-    /* Nonlinear-CG termination */
-
-    if (!sf_getfloat("ltol",&ltol)) ltol=1.e-4;
-    /* Armijo condition parameter */
-
     if (!sf_getint("miter",&miter)) miter=10;
     /* Nonlinear-CG maximum # of iterations */
+
+    if (!sf_getint("liter",&liter)) liter=5;
+    /* Nonlinear-CG maximum # of line searches */
 
     if (!sf_getfloat("lower",&lower)) lower=1.5;
     /* lower bound of feasible set */
@@ -186,6 +186,39 @@ int main(int argc, char* argv[])
 	sf_fileclose(precon);
     }
 
+    /* write output header */
+    sf_putint(out,"n3",miter);
+
+    /* output image */
+    if (NULL == sf_getstring("image")) {
+	image = NULL;
+    } else {
+	image = sf_output("image");
+	sf_putint(image,"n3",2*nh+1);
+	sf_putfloat(image,"d3",d2);
+	sf_putfloat(image,"o3",(float) -nh*d2);
+	sf_putint(image,"n4",miter+1);
+    }
+
+    /* output slope */
+    if (NULL == sf_getstring("slope")) {
+	slope = NULL;
+    } else {
+	slope = sf_output("slope");
+	sf_putint(slope,"n3",2*nh+1);
+	sf_putfloat(slope,"d3",d2);
+	sf_putfloat(slope,"o3",(float) -nh*d2);
+	sf_putint(slope,"n4",miter+1);
+    }
+
+    /* output gradient */
+    if (NULL == sf_getstring("grad")) {
+	grad = NULL;
+    } else {
+	grad = sf_output("grad");	
+	sf_putint(grad,"n3",miter+1);
+    }
+
     /* allocate temporary memory */
     x0 = sf_floatalloc(n1*n2);
     x1 = sf_floatalloc(n1*n2);
@@ -215,6 +248,10 @@ int main(int argc, char* argv[])
     fx0 = iwinlcg_eval(x0, mask,wght);
     iwinlcg_grad(x0, wght,prec,g0);
 
+    if (image != NULL) iwinlcg_image(image);
+    if (slope != NULL) iwinlcg_slope(slope);
+    if (grad  != NULL) sf_floatwrite(g0,n1*n2,grad);
+
     for (j=0; j < n2; j++) {
 	for (i=0; i < n1; i++) {
 	    s[j*n1+i] = -g0[j*n1+i];
@@ -225,8 +262,8 @@ int main(int argc, char* argv[])
 	if (verb) sf_warning("Iteration %d...",iter+1);
 
 	/* line-search */
-	alpha = 1.; fx2 = SF_HUGE;
-	for (liter=0; liter < 10; liter++) {
+	iliter=0; alpha = 1.;
+	while (iliter < liter) {
 	    for (j=0; j < n2; j++) {
 		for (i=0; i < n1; i++) {
 		    x1[j*n1+i] = x0[j*n1+i]+alpha*s[j*n1+i];
@@ -234,53 +271,46 @@ int main(int argc, char* argv[])
 	    }
 
 	    fx1 = iwinlcg_eval(x1, mask,wght);
+	    if (fx1 == SF_HUGE) {
+		alpha *= 0.5;
+		continue;
+	    }
 	    iwinlcg_grad(x1, wght,prec,g1);
 
-	    armijo = alpha*cblas_sdot(n1*n2,s,1,g0,1);
+	    if (verb) sf_warning("Line search %d: fx0=%g, fx1=%g."
+				 ,iliter+1,fx0,fx1);
 
-	    if (verb) sf_warning("Line search %d: fx0=%g, fx1=%g, armijo=%g."
-				 ,liter+1,fx0,fx1,armijo);
-
-	    if (fx1 <= fx0+ltol*armijo)
+	    if (fx1 < fx0) {
 		break;
-	    
-	    if (fx1 < fx2) {
-		alpha *= 0.5;
 	    } else {
-		liter = 10;
-		break;
+		iliter++;
+		alpha *= 0.5;
 	    }
-
-	    fx2 = fx1;
 	}
-	if (liter == 10) {
+
+	if (iliter == liter) {
 	    sf_warning("Iteration terminated due to line search failure.");
 	    
-	    sf_floatwrite(x0,n1*n2,out);
 	    iwinlcg_free();
-
 	    exit(0);
 	}
 
-	/* replace model */
+	/* update model */
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {
 		x0[j*n1+i] = x1[j*n1+i];
 	    }
 	}
+	fx0 = fx1;
 
-	/* test convergence */
-	if (cblas_snrm2(n1*n2,g1,1) <= 
-	    delta*SF_MAX(1.,cblas_snrm2(n1*n2,x1,1))) {
-	    if (verb) sf_warning("Iteration terminated due to convergence.");
-	    break;
+	/* update search direction */
+	if (update) {
+	    beta = SF_MAX(0.,(cblas_sdot(n1*n2,g1,1,g1,1)
+			      -cblas_sdot(n1*n2,g1,1,g0,1))
+			  /cblas_sdot(n1*n2,g0,1,g0,1));
+	} else {
+	    beta = 0.;
 	}
-
-	beta = SF_MAX(0.,(cblas_sdot(n1*n2,g1,1,g1,1)
-			  -cblas_sdot(n1*n2,g1,1,g0,1))
-		      /cblas_sdot(n1*n2,g0,1,g0,1));
-
-	if (verb) sf_warning("Done with update beta=%g.",beta);
 
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {
@@ -288,11 +318,15 @@ int main(int argc, char* argv[])
 		g0[j*n1+i] = g1[j*n1+i];
 	    }
 	}
-	fx0 = fx1;
+
+	/* write output */
+	sf_floatwrite(x0,n1*n2,out);
+
+	if (image != NULL) iwinlcg_image(image);
+	if (slope != NULL) iwinlcg_slope(slope);
+	if (grad  != NULL) sf_floatwrite(g0,n1*n2,grad);
     }
 
-    sf_floatwrite(x0,n1*n2,out);
     iwinlcg_free();
-
     exit(0);
 }

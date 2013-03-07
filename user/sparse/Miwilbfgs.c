@@ -68,14 +68,14 @@ int main(int argc, char* argv[])
     int n1, n2, npml, nh, ns, nw;
     int prect[3], pliter;
     int dorder, grect[2], gliter, mline;
-    float plower, pupper, geps, gscale, delta;
+    float plower, pupper, geps, gscale, epsilon;
     float vpml, d1, d2, **vel, dw, ow;
     char *datapath;
     sf_file in, out, source, data;
     sf_file imask, weight, precon;
     int uts, mts, ret, i, j;
     char *order;
-    lbfgsfloatval_t fx, *x, *g;
+    lbfgsfloatval_t fx, *x;
     lbfgs_parameter_t param;
     float lower, upper;
     int nhess, miter;
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("plower",&plower)) plower=0.1;
     /* slope thresholding lower limit */
-    if (!sf_getfloat("pupper",&pupper)) pupper=4.;
+    if (!sf_getfloat("pupper",&pupper)) pupper=3.;
     /* slope thresholding upper limit */
 
     if (!sf_getint("dorder",&dorder)) dorder=6;
@@ -154,8 +154,8 @@ int main(int argc, char* argv[])
     if (!sf_getint("mline",&mline)) mline=10;
     /* L-BFGS maximum # of line search */
 
-    if (!sf_getfloat("delta",&delta)) delta=0.05;
-    /* L-BFGS termination delta */
+    if (!sf_getfloat("epsilon",&epsilon)) epsilon=1.e-2;
+    /* L-BFGS termination epsilon */
 
     if (!sf_getfloat("lower",&lower)) lower=1.5;
     /* lower bound of feasible set */
@@ -228,7 +228,6 @@ int main(int argc, char* argv[])
 
     /* allocate temporary memory */
     x = lbfgs_malloc(n1*n2);
-    g = lbfgs_malloc(n1*n2);
 
     for (j=0; j < n2; j++) {
 	for (i=0; i < n1; i++) {
@@ -254,8 +253,7 @@ int main(int argc, char* argv[])
     param.m = nhess;
     param.max_iterations = miter;
     param.max_linesearch = mline;
-    param.past = 1;
-    param.delta = (lbfgsfloatval_t) delta;
+    param.epsilon = (lbfgsfloatval_t) epsilon;
 
     /* L-BFGS optimization */
     if (verb) {
@@ -269,7 +267,7 @@ int main(int argc, char* argv[])
     /* write output */
     for (j=0; j < n2; j++) {
 	for (i=0; i < n1; i++) {
-	    vel[j][i] = (float) g[j*n1+i];
+	    vel[j][i] = (float) x[j*n1+i];
 	}
     }
 
