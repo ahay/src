@@ -1,0 +1,16 @@
+from rsf.proj import *
+from rsf.recipes.beg import server
+
+Fetch(['vel_hessiso.H',
+       'vel_hessiso.H@',
+       'density_hessiso.H',
+       'densityfinal.H@'],'hess',server)
+
+Flow('vel','vel_hessiso.H vel_hessiso.H@',
+     'dd form=native | put label1=z label2=x unit1=ft unit2=ft')
+Flow('den','density_hessiso.H densityfinal.H@',
+     'dd form=native | put label1=z label2=x unit1=ft unit2=ft')
+
+
+
+End()

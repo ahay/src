@@ -155,7 +155,7 @@ void int2_inject2(const float *F, /* [m] */
 }
 
 void int2_free(Int2 *I2)
-/*< >*/
+/*< >*/ 
 {
     free(I2->z); free(I2->x); free(I2);
 }

@@ -1,4 +1,4 @@
-/* isotropic reverse-time migration */
+/* VTI reverse-time migration */
 /*
   Copyright (C) 2012 KAUST
 
@@ -18,26 +18,32 @@
 */
 
 /* ----------------------------------- */
+/* Copyright (C) 2012 KAUST            */
 /* Author : Xuxin Ma 2012              */
 /* ----------------------------------- */
 
-/* ------------ Equations ----------- */
-/*                                    */
-/* dp/dt = v^2 * (du/dx + dw/dz + f)  */
-/* du/dt = dp/dx                      */
-/* dw/dt = dp/dz                      */
-/*                                    */
-/* p     : stress                     */
-/* u,w   : particle momentum * (-1)   */
-/* v     : P-wave velocity            */
-/* f  : volume source                 */
-/* ---------------------------------- */
+/* ------------ Equations ------------------------------ */
+/*                                                       */
+/* dp/dt = (1+2*eta)*vnmo^2 * du/dx + vnmo*vver * dw/dz + f */
+/* dq/dt =        vnmo*vver * du/dx +    vver^2 * dw/dz + f */
+/* du/dt = dp / dx                                       */
+/* dw/dt = dq / dz                                       */
+/*                                                       */
+/* p,q   : stress                                        */
+/* u,w   : particle momentum                             */
+/* eta   : anellipticity                                 */
+/* vnmo  : nmo velocity                                  */
+/* vver  : vertical velocity                             */
+/* f     : volume source                                 */
+/* ----------------------------------------------------- */
 
 /* ------------------------------------------------------------ */
 /* I/O        File      Type   Size          Description        */
 /* ------------------------------------------------------------ */
 /* [In/Out]   par.txt   ascii                parameters         */
-/* [In]       velo.bin  float      [nx][nz]  velocity           */
+/* [In]       vver.bin  float      [nx][nz]  vertical velocity  */
+/* [In]       vnmo.bin  float      [nx][nz]  nmo velocity       */
+/* [In]       heta.bin  float      [nx][nz]  eta                */
 /* [In]       sour.bin  float          [nt]  source function    */
 /* [In/Out]   data.bin  float  [ns][nh][nt]  shot gathers       */
 /* [In/Out]   uus.bin   float  [n3][Nx][Nz]  source wavefield   */
@@ -103,7 +109,9 @@ int nr,nxz,Nxz,nrt,NHCz;
 Sponge *sponge;
 
 char fname_par []="par.txt";
-char fname_velo[]="velo.bin"; float *velo;
+char fname_vver[]="vver.bin"; float *vver;
+char fname_vnmo[]="vnmo.bin"; float *vnmo;
+char fname_heta[]="heta.bin"; float *heta;
 char fname_sour[]="sour.bin"; float *sour;
 char fname_data[]="data.bin"; float *data,*datat;
 char fname_uus[128];          float *uus;
@@ -303,13 +311,19 @@ void init()
 
     /* read velocity */
 
-    velo = (float *)calloc(nxz,sizeof(float));
+    vver = (float *)calloc(nxz,sizeof(float));
+    vnmo = (float *)calloc(nxz,sizeof(float));
+    heta = (float *)calloc(nxz,sizeof(float));
 
     if (MASTER == mpi_rank) {
-        read_float(velo,nxz,fname_velo);
+        read_float(vver,nxz,fname_vver);
+        read_float(vnmo,nxz,fname_vnmo);
+        read_float(heta,nxz,fname_heta);
     }
 
-    MPI_Bcast(velo,nxz,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
+    MPI_Bcast(vver,nxz,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
+    MPI_Bcast(vnmo,nxz,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
+    MPI_Bcast(heta,nxz,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
 
     /* read vmap and sigm */
     if (tau) {
@@ -374,9 +388,6 @@ void init()
     /* --------------------------------- */
     /* initialize backward extrapolation */
     /* --------------------------------- */
-
-    /* read -> cut -> transpose */
-    /* shall be re-organized. for example, MASTER cut each shot gather then send to workers */
 
     /* offset to receiver positions */
 
@@ -467,7 +478,7 @@ void init()
 void update(int back)
 {
     int i,j,k,it,ic,ir,is,ih,ix,iz,iit,nrt_w,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
-    float dt2,o[2],d[2],*velo2,*alfa,*tmp,*pa,*po,*pb,*ua,*uo,*ub,*wa,*wo,*wb,*RZ,*RX;
+    float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*cpx,*cpz,*cqx,*cqz,*tmp,*pa,*po,*pb,*qa,*qo,*qb,*ua,*uo,*ub,*wa,*wo,*wb,*RZ,*RX;
     sf_complex tt,*CZ,*CX,*DZ,*DX;
     fftwf_plan fwdz,invz,fwdx,invx;
     FILE *Fuus,*Fimg=NULL,*Fcig=NULL,*Fdata;
@@ -488,14 +499,24 @@ void update(int back)
     l[0] = bzl; l[1] = bxl;
     h[0] = bzh; h[1] = bxh;
 
-    velo2= (float *)calloc(Nxz,sizeof(float));
+    vnmo2= (float *)calloc(Nxz,sizeof(float));
+    vver2= (float *)calloc(Nxz,sizeof(float));
+    heta2= (float *)calloc(Nxz,sizeof(float));
 
-    expand(velo2,velo,n,l,h);
+    expand(vnmo2,vnmo,n,l,h);
+    expand(vver2,vver,n,l,h);
+    expand(heta2,heta,n,l,h);
 
-    alfa = (float *)calloc(Nxz,sizeof(float));
+    cpx = (float *)calloc(Nxz,sizeof(float));
+    cpz = (float *)calloc(Nxz,sizeof(float));
+    cqx = (float *)calloc(Nxz,sizeof(float));
+    cqz = (float *)calloc(Nxz,sizeof(float));
 
     for (i=0; i < Nxz; i++) {
-        alfa[i] = dt2 * velo2[i] * velo2[i];
+        cpx[i] = dt2 * vnmo2[i]*vnmo2[i] * (1.+2.*heta2[i]);
+        cpz[i] = dt2 * vnmo2[i]*vver2[i];
+        cqx[i] = dt2 * vnmo2[i]*vver2[i];
+        cqz[i] = dt2 * vver2[i]*vver2[i];
     }
 
     Nrz = 2 * (Ncz = Nz/2 + 1);
@@ -515,8 +536,8 @@ void update(int back)
     DZ = (sf_complex *)calloc(Ncz,sizeof(sf_complex));
     DX = (sf_complex *)calloc(Ncx,sizeof(sf_complex));
 	
-    for (tt = sf_cmplx(0.,2./Nz * SF_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt = sf_cmplx(0.,2./Nx * SF_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt = I * 2./Nz * M_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt = I * 2./Nx * M_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     if (back) {
 	if (NULL == (Fuus = fopen(fname_uus,"r")))
@@ -546,6 +567,9 @@ void update(int back)
     pa = (float *)calloc(Nxz,sizeof(float));
     po = (float *)calloc(Nxz,sizeof(float));
     pb = (float *)calloc(Nxz,sizeof(float));
+    qa = (float *)calloc(Nxz,sizeof(float));
+    qo = (float *)calloc(Nxz,sizeof(float));
+    qb = (float *)calloc(Nxz,sizeof(float));
     ua = (float *)calloc(Nxz,sizeof(float));
     uo = (float *)calloc(Nxz,sizeof(float));
     ub = (float *)calloc(Nxz,sizeof(float));
@@ -553,8 +577,9 @@ void update(int back)
     wo = (float *)calloc(Nxz,sizeof(float));
     wb = (float *)calloc(Nxz,sizeof(float));
     for (i=0; i < Nxz; i++)
-        pa[i] = po[i] = pb[i] = \
-	    ua[i] = uo[i] = ub[i] = \
+        pa[i] = po[i] = pb[i] = 
+	    qa[i] = qo[i] = qb[i] = 
+	    ua[i] = uo[i] = ub[i] = 
 	    wa[i] = wo[i] = wb[i] = 0.;
 
     for (it = 0; it < nt; it++) {
@@ -602,27 +627,30 @@ void update(int back)
 	}
 
         /* update particle momentum */
-#pragma omp parallel for schedule(dynamic) private(iz,ix)
+#pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 	for     (ix=0; ix < Nx; ix++)
-	    for (iz=0; iz < Nz; iz++)
-                RX[iz * Nrx + ix] = RZ[ix * Nrz + iz] = po[ix * Nz + iz];
+	    for (iz=0; iz < Nz; iz++) {
+                i = ix * Nz + iz;
+                RX[iz * Nrx + ix] = po[i];
+                RZ[ix * Nrz + iz] = qo[i];
+            }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (ix=0; ix < Nx; ix++) {
             ic = ix * Ncz;
             ir = ix * Nrz;
-            fftwf_execute_dft_r2c(fwdz,&RZ[ir],(fftwf_complex *)&CZ[ic]);
+            fftwf_execute_dft_r2c(fwdz,&RZ[ir],(fftwf_complex *) &CZ[ic]);
             for (iz=0; iz < Ncz; iz++)
                 CZ[ix*Ncz + iz] *= DZ[iz];
-            fftwf_execute_dft_c2r(invz,(fftwf_complex *)&CZ[ic],&RZ[ir]);
+            fftwf_execute_dft_c2r(invz,(fftwf_complex *) &CZ[ic],&RZ[ir]);
         }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (iz=0; iz < Nz; iz++) {
             ic = iz * Ncx;
             ir = iz * Nrx;
-            fftwf_execute_dft_r2c(fwdx,&RX[ir],(fftwf_complex *)&CX[ic]);
+            fftwf_execute_dft_r2c(fwdx,&RX[ir],(fftwf_complex *) &CX[ic]);
             for (ix=0; ix < Ncx; ix++)
                 CX[iz*Ncx + ix] *= DX[ix];
-            fftwf_execute_dft_c2r(invx,(fftwf_complex *)&CX[ic],&RX[ir]);
+            fftwf_execute_dft_c2r(invx,(fftwf_complex *) &CX[ic],&RX[ir]);
         }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i,j,k)
 	for     (ix=0; ix < Nx; ix++) {
@@ -648,19 +676,19 @@ void update(int back)
         for (ix=0; ix < Nx; ix++) {
             ic = ix * Ncz;
             ir = ix * Nrz;
-            fftwf_execute_dft_r2c(fwdz,&RZ[ir],(fftwf_complex *)&CZ[ic]);
+            fftwf_execute_dft_r2c(fwdz,&RZ[ir],(fftwf_complex *) &CZ[ic]);
             for (iz=0; iz < Ncz; iz++)
                 CZ[ix*Ncz + iz] *= DZ[iz];
-            fftwf_execute_dft_c2r(invz,(fftwf_complex *)&CZ[ic],&RZ[ir]);
+            fftwf_execute_dft_c2r(invz,(fftwf_complex *) &CZ[ic],&RZ[ir]);
         }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (iz=0; iz < Nz; iz++) {
             ic = iz * Ncx;
             ir = iz * Nrx;
-            fftwf_execute_dft_r2c(fwdx,&RX[ir],(fftwf_complex *)&CX[ic]);
+            fftwf_execute_dft_r2c(fwdx,&RX[ir],(fftwf_complex *) &CX[ic]);
             for (ix=0; ix < Ncx; ix++)
                 CX[iz*Ncx + ix] *= DX[ix];
-            fftwf_execute_dft_c2r(invx,(fftwf_complex *)&CX[ic],&RX[ir]);
+            fftwf_execute_dft_c2r(invx,(fftwf_complex *) &CX[ic],&RX[ir]);
         }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i,j,k)
 	for     (ix=0; ix < Nx; ix++) {
@@ -669,16 +697,19 @@ void update(int back)
 		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
-                pb[i] = pa[i] + alfa[i] * RX[k] + alfa[i] * RZ[j];
+                pb[i] = pa[i] + cpx[i] * RX[k] + cpz[i] * RZ[j];
+                qb[i] = qa[i] + cqx[i] * RX[k] + cqz[i] * RZ[j];
 	    }
 	}
 
         sponge_apply(pb,n,sponge);
+        sponge_apply(qb,n,sponge);
         sponge_apply(ub,n,sponge);
         sponge_apply(wb,n,sponge);
 
         if (!back) {
             int2_inject(&sour[it],pb,1,cs,I2);
+            int2_inject(&sour[it],qb,nr,cr,I2);
         }
 
 	/* read/write data */
@@ -689,6 +720,7 @@ void update(int back)
 	    int2_apply(&data[iit*nr],pb,nr,cr,I2);
 
 	tmp = pa; pa = po; po = pb; pb = tmp;
+	tmp = qa; qa = qo; qo = qb; qb = tmp;
 	tmp = ua; ua = uo; uo = ub; ub = tmp;
 	tmp = wa; wa = wo; wo = wb; wb = tmp;
     } /* it */
@@ -728,9 +760,11 @@ void update(int back)
     fftwf_free(RZ); free(DZ);
     fftwf_free(RX); free(DX);
     free(pa); free(po); free(pb);
+    free(qa); free(qo); free(qb);
     free(ua); free(uo); free(ub);
     free(wa); free(wo); free(wb);
-    free(velo2); free(alfa);
+    free(vnmo2); free(vver2); free(heta2);
+    free(cpx); free(cpz); free(cqx); free(cqz);
     if (fclose(Fuus)) exit_error("failed closing %s",fname_uus);
     if (back) {
 	free(uus); free(img);
@@ -745,8 +779,8 @@ void update(int back)
 void update_tau(int back)
 {
     int i,j,k,it,ic,ir,is,ih,ix,iz,iit,nrt_w,Ncz,Nrz,Ncx,Nrx,n[2],l[2],h[2],N[2];
-    float dt2,o[2],d[2],*velo2,*vmap2,*sigm2,*alfa,*beta,*gama,*tmp,*pa,*po,*pb,*ua,*uo,*ub,*wa,*wo,*wb,*RZ,*RX;
-    sf_complex tt,*CZ,*CX,*DZ,*DX;
+    float dt2,o[2],d[2],*vnmo2,*vver2,*heta2,*vmap2,*sigm2,*cpx,*cpz,*cps,*cqx,*cqz,*cqs,*cus,*cwz,*tmp,*pa,*po,*pb,*qa,*qo,*qb,*ua,*uo,*ub,*wa,*wo,*wb,*RZ,*RX,*RS;
+    sf_complex tt,*CZ,*CX,*CS,*DZ,*DX;
     fftwf_plan fwdz,invz,fwdx,invx;
     FILE *Fuus,*Fimg=NULL,*Fcig=NULL,*Fdata;
 #ifdef DEBUG
@@ -766,34 +800,49 @@ void update_tau(int back)
     l[0] = bzl; l[1] = bxl;
     h[0] = bzh; h[1] = bxh;
 
-    velo2= (float *)calloc(Nxz,sizeof(float));
+    vnmo2= (float *)calloc(Nxz,sizeof(float));
+    vver2= (float *)calloc(Nxz,sizeof(float));
+    heta2= (float *)calloc(Nxz,sizeof(float));
     vmap2= (float *)calloc(Nxz,sizeof(float));
     sigm2= (float *)calloc(Nxz,sizeof(float));
 
-    expand(velo2,velo,n,l,h);
+    expand(vnmo2,vnmo,n,l,h);
+    expand(vver2,vver,n,l,h);
+    expand(heta2,heta,n,l,h);
     expand(vmap2,vmap,n,l,h);
     expand(sigm2,sigm,n,l,h);
 
-    alfa = (float *)calloc(Nxz,sizeof(float));
-    beta = (float *)calloc(Nxz,sizeof(float));
-    gama = (float *)calloc(Nxz,sizeof(float));
+    cpx = (float *)calloc(Nxz,sizeof(float));
+    cpz = (float *)calloc(Nxz,sizeof(float));
+    cps = (float *)calloc(Nxz,sizeof(float));
+    cqx = (float *)calloc(Nxz,sizeof(float));
+    cqz = (float *)calloc(Nxz,sizeof(float));
+    cqs = (float *)calloc(Nxz,sizeof(float));
+    cus = (float *)calloc(Nxz,sizeof(float));
+    cwz = (float *)calloc(Nxz,sizeof(float));
 
     for (i=0; i < Nxz; i++) {
-        alfa[i] = dt2 * velo2[i] * velo2[i] / vmap2[i];
-        beta[i] = dt2 * sigm2[i];
-        gama[i] = dt2 * (1./vmap2[i]*1./vmap2[i] + sigm2[i]*sigm2[i]);
+        cpx[i] = dt2 * vnmo2[i]*vnmo2[i] * (1.+2.*heta2[i]);
+        cpz[i] = dt2 * vnmo2[i]*vver2[i] / vmap2[i];
+        cqx[i] = dt2 * vnmo2[i]*vver2[i];
+        cqz[i] = dt2 * vver2[i]*vver2[i] / vmap2[i];
+        cps[i] = cpx[i] * sigm2[i];
+        cqs[i] = cqx[i] * sigm2[i];
+        cus[i] = dt2 * sigm2[i];
+        cwz[i] = dt2 / vmap2[i];
     }
 
     Nrz = 2 * (Ncz = Nz/2 + 1);
     Nrx = 2 * (Ncx = Nx/2 + 1);
 
     RZ = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CZ = (sf_complex *)RZ;
+    RS = (float *)fftwf_malloc(sizeof(float) * Nx * Nrz); CS = (sf_complex *)RS;
     RX = (float *)fftwf_malloc(sizeof(float) * Nz * Nrx); CX = (sf_complex *)RX;
 
-    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,(fftwf_complex *)CZ,FFTW_PATIENT);
-    invz = fftwf_plan_dft_c2r_1d(Nz,(fftwf_complex *)CZ,RZ,FFTW_PATIENT);
-    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,(fftwf_complex *)CX,FFTW_PATIENT);
-    invx = fftwf_plan_dft_c2r_1d(Nx,(fftwf_complex *)CX,RX,FFTW_PATIENT);
+    fwdz = fftwf_plan_dft_r2c_1d(Nz,RZ,(fftwf_complex *) CZ,FFTW_PATIENT);
+    invz = fftwf_plan_dft_c2r_1d(Nz,(fftwf_complex *) CZ,RZ,FFTW_PATIENT);
+    fwdx = fftwf_plan_dft_r2c_1d(Nx,RX,(fftwf_complex *) CX,FFTW_PATIENT);
+    invx = fftwf_plan_dft_c2r_1d(Nx,(fftwf_complex *) CX,RX,FFTW_PATIENT);
     if (NULL == fwdz || NULL == invz ||
         NULL == fwdx || NULL == invx)
 	exit_error("fftw planning failed");
@@ -801,8 +850,8 @@ void update_tau(int back)
     DZ = (sf_complex *)calloc(Ncz,sizeof(sf_complex));
     DX = (sf_complex *)calloc(Ncx,sizeof(sf_complex));
 	
-    for (tt = sf_cmplx(0.,2./Nz * SF_PI/dz), iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
-    for (tt = sf_cmplx(0.,2./Nx * SF_PI/dx), ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
+    for (tt = I * 2./Nz * M_PI/dz, iz=0; iz < Ncz; iz++) DZ[iz] = kz[iz] * tt;
+    for (tt = I * 2./Nx * M_PI/dx, ix=0; ix < Ncx; ix++) DX[ix] = kx[ix] * tt;
 
     if (back) {
 	if (NULL == (Fuus = fopen(fname_uus,"r")))
@@ -832,6 +881,9 @@ void update_tau(int back)
     pa = (float *)calloc(Nxz,sizeof(float));
     po = (float *)calloc(Nxz,sizeof(float));
     pb = (float *)calloc(Nxz,sizeof(float));
+    qa = (float *)calloc(Nxz,sizeof(float));
+    qo = (float *)calloc(Nxz,sizeof(float));
+    qb = (float *)calloc(Nxz,sizeof(float));
     ua = (float *)calloc(Nxz,sizeof(float));
     uo = (float *)calloc(Nxz,sizeof(float));
     ub = (float *)calloc(Nxz,sizeof(float));
@@ -839,8 +891,9 @@ void update_tau(int back)
     wo = (float *)calloc(Nxz,sizeof(float));
     wb = (float *)calloc(Nxz,sizeof(float));
     for (i=0; i < Nxz; i++)
-        pa[i] = po[i] = pb[i] = \
-	    ua[i] = uo[i] = ub[i] = \
+        pa[i] = po[i] = pb[i] =  
+	    qa[i] = qo[i] = qb[i] = 
+	    ua[i] = uo[i] = ub[i] = 
 	    wa[i] = wo[i] = wb[i] = 0.;
 
     for (it = 0; it < nt; it++) {
@@ -888,18 +941,25 @@ void update_tau(int back)
 	}
 
         /* update particle momentum */
-#pragma omp parallel for schedule(dynamic) private(iz,ix)
+#pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 	for     (ix=0; ix < Nx; ix++)
-	    for (iz=0; iz < Nz; iz++)
-                RX[iz * Nrx + ix] = RZ[ix * Nrz + iz] = po[ix * Nz + iz];
+	    for (iz=0; iz < Nz; iz++) {
+                i = ix * Nz + iz;
+                RS[ix * Nrz + iz] = RX[iz * Nrx + ix] = po[i];
+                RZ[ix * Nrz + iz]                     = qo[i];
+            }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (ix=0; ix < Nx; ix++) {
             ic = ix * Ncz;
             ir = ix * Nrz;
             fftwf_execute_dft_r2c(fwdz,&RZ[ir],(fftwf_complex *) &CZ[ic]);
-            for (iz=0; iz < Ncz; iz++)
+            fftwf_execute_dft_r2c(fwdz,&RS[ir],(fftwf_complex *) &CS[ic]);
+            for (iz=0; iz < Ncz; iz++) {
                 CZ[ix*Ncz + iz] *= DZ[iz];
+                CS[ix*Ncz + iz] *= DZ[iz];
+            }
             fftwf_execute_dft_c2r(invz,(fftwf_complex *) &CZ[ic],&RZ[ir]);
+            fftwf_execute_dft_c2r(invz,(fftwf_complex *) &CS[ic],&RS[ir]);
         }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (iz=0; iz < Nz; iz++) {
@@ -917,8 +977,8 @@ void update_tau(int back)
 		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
-                ub[i] = ua[i] +     dt2 * RX[k] + beta[i] * RZ[j];
-                wb[i] = wa[i] + beta[i] * RX[k] + gama[i] * RZ[j];
+                ub[i] = ua[i] + dt2 * RX[k] + cus[i] * RS[j];
+                wb[i] = wa[i]               + cwz[i] * RZ[j];
 	    }
 	}
 
@@ -926,18 +986,22 @@ void update_tau(int back)
 #pragma omp parallel for schedule(dynamic) private(iz,ix,i)
 	for     (ix=0; ix < Nx; ix++)
 	    for (iz=0; iz < Nz; iz++) {
-		i = ix * Nz + iz;
-                RX[iz * Nrx + ix] = uo[i] * vmap2[i];
-                RZ[ix * Nrz + iz] = wo[i] * vmap2[i];
+                i = ix * Nz + iz;
+                RS[ix * Nrz + iz] = RX[iz * Nrx + ix] = uo[i];
+                RZ[ix * Nrz + iz]                     = wo[i];
             }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (ix=0; ix < Nx; ix++) {
             ic = ix * Ncz;
             ir = ix * Nrz;
             fftwf_execute_dft_r2c(fwdz,&RZ[ir],(fftwf_complex *) &CZ[ic]);
-            for (iz=0; iz < Ncz; iz++)
+            fftwf_execute_dft_r2c(fwdz,&RS[ir],(fftwf_complex *) &CS[ic]);
+            for (iz=0; iz < Ncz; iz++) {
                 CZ[ix*Ncz + iz] *= DZ[iz];
+                CS[ix*Ncz + iz] *= DZ[iz];
+            }
             fftwf_execute_dft_c2r(invz,(fftwf_complex *) &CZ[ic],&RZ[ir]);
+            fftwf_execute_dft_c2r(invz,(fftwf_complex *) &CS[ic],&RS[ir]);
         }
 #pragma omp parallel for schedule(dynamic) private(iz,ix,ic,ir)
         for (iz=0; iz < Nz; iz++) {
@@ -955,16 +1019,19 @@ void update_tau(int back)
 		j = ix * Nrz + iz;
                 k = iz * Nrx + ix;
 
-                pb[i] = pa[i] + alfa[i] * RX[k] + alfa[i] * RZ[j];
+                pb[i] = pa[i] + cpx[i] * RX[k] + cps[i] * RS[j] + cpz[i] * RZ[j];
+                qb[i] = qa[i] + cqx[i] * RX[k] + cqs[i] * RS[j] + cqz[i] * RZ[j];
 	    }
 	}
 
         sponge_apply(pb,n,sponge);
+        sponge_apply(qb,n,sponge);
         sponge_apply(ub,n,sponge);
         sponge_apply(wb,n,sponge);
 
         if (!back) {
             int2_inject(&sour[it],pb,1,cs,I2);
+            int2_inject(&sour[it],qb,1,cs,I2);
         }
 
 	/* read/write data */
@@ -975,6 +1042,7 @@ void update_tau(int back)
 	    int2_apply(&data[iit*nr],pb,nr,cr,I2);
 
 	tmp = pa; pa = po; po = pb; pb = tmp;
+	tmp = qa; qa = qo; qo = qb; qb = tmp;
 	tmp = ua; ua = uo; uo = ub; ub = tmp;
 	tmp = wa; wa = wo; wo = wb; wb = tmp;
     } /* it */
@@ -1011,12 +1079,16 @@ void update_tau(int back)
     /* cleanup */
     fftwf_destroy_plan(fwdz);	fftwf_destroy_plan(invz);
     fftwf_destroy_plan(fwdx);	fftwf_destroy_plan(invx);
-    fftwf_free(RZ); free(DZ);
-    fftwf_free(RX); free(DX);
+    fftwf_free(RZ); fftwf_free(RS); free(DZ);
+    fftwf_free(RX);                 free(DX);
     free(pa); free(po); free(pb);
+    free(qa); free(qo); free(qb);
     free(ua); free(uo); free(ub);
     free(wa); free(wo); free(wb);
-    free(velo2); free(alfa);
+    free(vnmo2); free(vver2); free(heta2); free(vmap2); free(sigm2);
+    free(cpx); free(cpz); free(cps);
+    free(cqx); free(cqz); free(cqs);
+    free(cus); free(cwz);
     if (fclose(Fuus)) exit_error("failed closing %s",fname_uus);
     if (back) {
 	free(uus); free(img);
@@ -1036,7 +1108,7 @@ int main(int argc, char *argv[])
 
     init();
 
-    if (forward)  {
+    if (forward) {
         if (tau) update_tau(0);
         else     update(0);
     }
@@ -1044,7 +1116,6 @@ int main(int argc, char *argv[])
         if (tau) update_tau(1);
         else     update(1);
     }
-
     MPI_Finalize();
 
     exit(EXIT_SUCCESS);
