@@ -1985,6 +1985,7 @@ void weicic_one(weiop3d weop,
     
     if(cub->dflg) { /* deconvolution */
 
+/* 
 	meps=0;
 	for(iy=0;iy<sf_n(cub->amy);iy++){
 	    for(ix=0;ix<sf_n(cub->amx);ix++){
@@ -1995,6 +1996,8 @@ void weicic_one(weiop3d weop,
 	}
 	meps *= cub->deps;
 	meps = SF_MAX(meps,1e-5);
+*/
+	meps = cub->deps;
 
 	for(iy=0;iy<sf_n(cub->amy);iy++){
 	    for(ix=0;ix<sf_n(cub->amx);ix++){
