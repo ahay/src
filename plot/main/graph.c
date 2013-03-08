@@ -39,7 +39,7 @@ static void getminmax(const float* f, float* min, float* max);
 
 int main(int argc, char* argv[])
 {
-    bool transp, start, scalebar, nomin=true, nomax=true, barreverse;
+    bool transp, start, scalebar, nomin=true, nomax=true, barreverse, framenum;
     int n1, n2, n3, i1, i2, i3, len, nreserve;
     float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt;
     float **x, **y, **tmp, *symbolsz=NULL, symsize, xc, yc;    
@@ -76,6 +76,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("scalebar",&scalebar)) scalebar=false;
     /* if y, draw scalebar */
+
+    if (!sf_getbool("wantframenum",&framenum)) framenum = (bool) (n3 > 1);
+    /* if y, display third axis position in the corner */
     
     if (NULL != depth) {
 	z = sf_ucharalloc2(n1,n2);
@@ -190,6 +193,8 @@ int main(int argc, char* argv[])
 	}
 
 	if (i3 > 0) vp_erase();
+
+	if (framenum) vp_framenum(o3+i3*d3);
 	vp_frame();
 
 	for (i2=0; i2 < n2; i2++) {
