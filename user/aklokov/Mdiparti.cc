@@ -68,7 +68,7 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 				const float xi = dx / zd;				
 
 				const float aux = 1 - pow (gamma_ * sin (curDipRad), 2);
-				const float t = curT * (xi * gamma_ * sin (curDipRad) + sqrt (xi*xi + aux) ) / aux;
+				const float t = curT * cos (curDipRad) * (xi * gamma_ * sin (curDipRad) + sqrt (xi*xi + aux) ) / aux;
 
 				const int tInd = (t - tStart_) / tStep_;	
 				if (tInd < 0 || tInd >= tNum_)
