@@ -57,6 +57,7 @@ int main (int argc, char* argv[]) {
 	int pNum; float pStart; float pStep;
 	int xNum; float xStart; float xStep;
 	int rNum; float rStart; float rStep;
+
 // depth axis 
     if ( !sf_histint   (piFile, "n1", &zNum) )   sf_error ("Need n1= in input");
     if ( !sf_histfloat (piFile, "d1", &zStep) )  sf_error ("Need d1= in input");
@@ -79,6 +80,7 @@ int main (int argc, char* argv[]) {
 	int ppn; float ppo, ppd;
 	int izn, ixn; float izo, ixo, izd, ixd;
 	int pj;
+	int sNum; float sStart; float sStep;
 
     if (!sf_getint ("ppn", &ppn)) ppn = pNum;
 	/* number of processed partial images */
@@ -100,6 +102,13 @@ int main (int argc, char* argv[]) {
     /* step in depth (in meters) */
     if (!sf_getfloat ("ixd", &ixd))      ixd = xStep;
     /* step in positions (in meters) */
+
+    if (!sf_getint ("sn", &sNum)) sNum = 1;
+	/* number of scattering-angles */
+    if (!sf_getfloat ("so", &sStart)) sStart = 0.f;
+	/* first scattering-angle */
+    if (!sf_getfloat ("sd", &sStep)) sStep = 1.f;
+	/* step in scattering-angles */
 
     if ( !sf_getbool ("isAA", &isAA) ) isAA = true;
     /* if y, apply anti-aliasing */
@@ -160,6 +169,7 @@ int main (int argc, char* argv[]) {
   	 	         pNum, pStart, pStep,
 			     xNum, xStart, xStep,
 			     rNum, rStart, rStep,
+				 sNum, sStart, sStep,
 				 izn, izo, izd,
 			     ixn, ixo, ixd,
 				 dx, dt, xlim, xapert, pj,

@@ -14,6 +14,7 @@ public:
   			   int pNum, float pStart, float pStep,
 			   int xNum, float xStart, float xStep,
 			   int rNum, float rStart, float rStep,
+			   int sNum, float sStart, float sStep,
 		 	   int izn,  float izo,    float izd,
 		 	   int ixn,  float ixo,    float ixd,
 			   float dx, float dt, float xlim, float xapert, int pj,
@@ -51,6 +52,10 @@ private:
 	int   rNum_;
 	float rStep_;
 	float rStart_;
+
+	int   sNum_;
+	float sStep_;
+	float sStart_;
 	
 	// backfit image params
 	int   izn_;

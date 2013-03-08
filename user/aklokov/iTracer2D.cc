@@ -257,26 +257,46 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 			ImagePoint2D* iPoint = *iter;			
 			int ix = iPoint->ix_;			
 			int iz = iPoint->iz_;			
-
+	
+			float foundX (0.f);	
+			float foundZ (0.f);	
+			float foundDist (FLT_MAX);	
+	
 			float x (0.f);
 			float z (0.f);
+			float dist (FLT_MAX);
 
 			if (ix && iz) {	
 			    const int mode = -1; // upper triangle
-			    isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, &x, &z);
+			    isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, &x, &z, dist);
 				if (isFound) {
-					xRes->push_back (x);
-					zRes->push_back (z);
+//					xRes->push_back (x);
+//					zRes->push_back (z);
+				}
+				if (isFound && dist < foundDist) {
+					foundX = x;
+					foundZ = z;
+					foundDist = dist;
 				}
 			}
 
 			if (ix < xRed && iz < zRed) {
 				const int mode = 1; // lower triangle
-				isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, &x, &z);
+				isFound = this->checkTriangle (curX, curT, ix, iz, mode, xPanel, tPanel, &x, &z, dist);
 				if (isFound) {
-					xRes->push_back (x);
-					zRes->push_back (z);
+//					xRes->push_back (x);
+//					zRes->push_back (z);
 				}
+				if (isFound && dist < foundDist) {
+					foundX = x;
+					foundZ = z;
+					foundDist = dist;
+				}
+			}
+
+			if (foundDist < FLT_MAX) {
+				xRes->push_back (foundX);
+				zRes->push_back (foundZ);
 			}
 		}
 	}		
@@ -325,7 +345,7 @@ void ITracer2D::traceImage (float* xVol, float* tVol, float x0, float z0, float 
 
 }
 
-bool ITracer2D::checkTriangle (float curX, float curT, int ix, int iz, const int mode, float* xPanel, float* tPanel, float* xres, float* zres) {
+bool ITracer2D::checkTriangle (float curX, float curT, int ix, int iz, const int mode, float* xPanel, float* tPanel, float* xres, float* zres, float& dist) {
 
 	const int   ind0 = (ix + mode) * zNum_ + iz;
 	const float dpx0 = xPanel [ind0];
@@ -363,6 +383,10 @@ bool ITracer2D::checkTriangle (float curX, float curT, int ix, int iz, const int
 
 	const float fX = curX - dpx2;
 	const float fT = curT - dpt2;
+
+	dist = sqrt (fX*fX + 9*fT*fT);  // average velocity - 3 km/s
+								    // x in m
+								    // t in ms -> 1ms ~ 3m
 
 	const float w0 = (  y23 * fX + x32 * fT) / denom;
 	const float w1 = ( -y13 * fX + x13 * fT) / denom;

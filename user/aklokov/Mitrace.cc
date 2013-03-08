@@ -72,9 +72,9 @@ int main (int argc, char* argv[]) {
 	/* migration angle */
     if (!sf_getfloat ("sa0", &sa0)) sa0 = 0.f;
 	/* scattering-angle */
-    if (!sf_getfloat ("dx", &dx)) dx = 2*xStep;
+    if (!sf_getfloat ("dx", &dx)) dx = 5*xStep;
 	/* x-range for point detection */
-    if (!sf_getfloat ("dt", &dt)) dt = 0.008f;
+    if (!sf_getfloat ("dt", &dt)) dt = 0.02f;
 	/* time-range for point detection */
 
 	// OUTPUT PARAMETERS

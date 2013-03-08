@@ -587,9 +587,9 @@ DocCmd: %s
             for cue in ['<','>']:
                 try:
                     filename = tokens[tokens.index(cue)+1]
+                    data, ext  = filename.split('.')
                 except:
-                    continue
-                data, ext  = filename.split('.')
+                    continue                
                 if data in ['in','out']:
                     data = '(no hint on content)'
                 else:

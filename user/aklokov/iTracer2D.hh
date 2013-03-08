@@ -36,7 +36,7 @@ public:
 
 private: 
 
-	bool  checkTriangle (float curX, float curT, int ix, int iz, const int mode, float* xPanel, float* tPanel, float* xRes, float* zRes);
+	bool  checkTriangle (float curX, float curT, int ix, int iz, const int mode, float* xPanel, float* tPanel, float* xRes, float* zRes, float& dist);
 
 	bool  isPointInsideTriangle (float x0, float y0, float x1, float y1, 
 								 float x2, float y2, float x3, float y3);

@@ -36,6 +36,7 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 			 					   int pNum, float pStart, float pStep,
 							 	   int xNum, float xStart, float xStep,
 							 	   int rNum, float rStart, float rStep,
+							 	   int sNum, float sStart, float sStep,
 							 	   int izn,  float izo,    float izd,
 							 	   int ixn,  float ixo,    float ixd,
 								   float dx, float dt, float xlim, float xapert, int pj,
@@ -56,6 +57,10 @@ void DepthBackfitMigrator2D::init (int zNum, float zStart, float zStep,
 	rNum_   = rNum;
 	rStep_  = rStep;
 	rStart_ = rStart;	
+
+	sNum_   = sNum;
+	sStep_  = sStep;
+	sStart_ = sStart;	
 
 	izn_    = izn;
 	izo_    = izo;
@@ -118,8 +123,7 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 	list<float> xpnts;
 	list<float> zpnts;
 	
-	const float sa = 0; // scattering-angle
-	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, sa, &xpnts, &zpnts);
+	iTracer_.traceImage (xVol_, tVol_, curX, curZ, curP, sStart_, &xpnts, &zpnts);
 
 	const int isize = xpnts.size ();
 	std::list<float>::iterator iterx = xpnts.begin ();
@@ -173,7 +177,6 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 		float px = pind * xStep_ + xStart_;
 		if (px - px1 < -1e-6) px += xStep_;
 
-		int pointsBetween = 0;
 		while (px < px2) {
 			const float bef = (px - px1) / dx;
 			
@@ -188,18 +191,23 @@ void DepthBackfitMigrator2D::getImageSample (float* piData, float curX, float cu
 			++count;
 
 			px += xStep_;
-			++pointsBetween;
 		}
-	
-		if (!pointsBetween) {
-			float curSample (0.f);
-			bool goodSample = this->getSample (piData, px1, pz1, curP, curSample);						
-			if (goodSample) {
-	 			*sample += curSample;
-				++count;
-			}
-		}			
 	}		
+
+	// every point
+	for (iter = goodPoints.begin (); iter != iterLast; ++iter) {
+		ImagePoint2D* point1 = *iter;
+
+		float px1 = point1->x_;		
+		float pz1 = point1->z_;		
+
+		float curSample (0.f);
+		bool goodSample = this->getSample (piData, px1, pz1, curP, curSample);						
+		if (goodSample) {
+	 		*sample += curSample;
+			++count;
+		}
+	}
 
 	if (count) 
 		*sample /= count;
@@ -243,6 +251,8 @@ void DepthBackfitMigrator2D::processPartialImage (float* piData, float curP, flo
 
 		const float curX = ixo_ + ix * ixd_;
 		const float curZ = izo_ + iz * izd_;
+
+//		if (curX != 18800 || curZ != 9000) continue;
 
 		float* iPoint = piImage + (ix * izn_ + iz);
 		this->getImageSample (piData, curX, curZ, curP, iPoint);
