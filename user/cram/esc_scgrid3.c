@@ -85,11 +85,13 @@ static int sf_scgrid3_tps_ia_stencil1[SCGRID3_TPS_STENCIL1] =
    |   |   |   |
    X---+---+---X--->a
 */
+/*
 #define SCGRID3_TPS_STENCIL2 8
 static int sf_scgrid3_tps_ib_stencil2[SCGRID3_TPS_STENCIL2] = 
 { 0, 3, 1, 2, 1, 2, 0, 3 };
 static int sf_scgrid3_tps_ia_stencil2[SCGRID3_TPS_STENCIL2] = 
 { 0, 0, 1, 1, 2, 2, 3, 3 };
+*/
 /* 12-point stencil:
    b
    ^
@@ -102,20 +104,39 @@ static int sf_scgrid3_tps_ia_stencil2[SCGRID3_TPS_STENCIL2] =
    |   |   |   |
    +---X---X---+--->a
 */
-/*
+
 #define SCGRID3_TPS_STENCIL3 12
 static int sf_scgrid3_tps_ib_stencil3[SCGRID3_TPS_STENCIL3] = 
-{ 1, 2, 0, 1, 2, 1, 0, 1, 2, 3, 1, 2 };
+{ 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 1, 2 };
 static int sf_scgrid3_tps_ia_stencil3[SCGRID3_TPS_STENCIL3] = 
 { 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3 };
+
+/* 16-point stencil:
+   b
+   ^
+   |
+   X---X---X---X
+   |   |   |   |
+   X---X---X---X
+   |   |   |   |
+   X---X---x---X
+   |   |   |   |
+   X---X---X---X--->a
 */
-#define SCGRID3_TPS_MAX_STENCIL 12
+/*
+#define SCGRID3_TPS_STENCIL4 16
+static int sf_scgrid3_tps_ib_stencil4[SCGRID3_TPS_STENCIL4] = 
+{ 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3 };
+static int sf_scgrid3_tps_ia_stencil4[SCGRID3_TPS_STENCIL4] = 
+{ 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3 };
+*/
+#define SCGRID3_TPS_MAX_STENCIL 16
 
 /* Initialize thin-plane spline structures */
 static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
-    const int ns = SCGRID3_TPS_STENCIL2;
-    int *bs = sf_scgrid3_tps_ib_stencil2;
-    int *as = sf_scgrid3_tps_ia_stencil2;
+    const int ns = SCGRID3_TPS_STENCIL3;
+    int *bs = sf_scgrid3_tps_ib_stencil3;
+    int *as = sf_scgrid3_tps_ia_stencil3;
     int i;
 
     esc_scgrid->L = sf_floatalloc2 (ns + 3, ns + 3);
