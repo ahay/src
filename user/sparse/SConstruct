@@ -18,15 +18,18 @@ except: # local version
     SConscript('../../api/c/SConstruct')
 
 src = Glob('[a-z]*.c')
+src.remove(File('lbfgs.c'))
 
+sparsepath = env.get('SPARSEPATH')
 sparselibs = env.get('SPARSELIBS')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-if sparselibs:
-    env.Prepend(LIBS=sparselibs)
+if sparsepath and sparselibs:
+    env.Prepend(CPPPATH=sparsepath,
+                LIBS=sparselibs)
     
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -39,7 +42,7 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
 
-    if sparselibs:
+    if sparsepath and sparselibs:
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',

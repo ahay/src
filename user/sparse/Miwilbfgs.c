@@ -18,12 +18,12 @@
 */
 
 #include <rsf.h>
-#include <lbfgs.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
+#include "lbfgs.h"
 #include "iwilbfgs.h"
 
 static float ***mask, ***wght, **prec;

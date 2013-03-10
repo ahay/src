@@ -22,7 +22,14 @@
 */
 
 #include <rsf.h>
+
 #include <umfpack.h>
+/*^*/
+
+#ifdef UF_long
+#define SuiteSparse_long UF_long
+#endif
+/*^*/
 
 #include "fdprep9o.h"
 

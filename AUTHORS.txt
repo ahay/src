@@ -45,8 +45,6 @@ Robin Weiss <robin.weiss@uwa.edu.au>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
 
-
-
 Vplot authors:
 
 Jon Claerbout
@@ -68,6 +66,7 @@ Includes sinint by Gerard Jungman
 Includes dsyevv3 and dsyevc3 by Joachim Kopp
 Includes gmres.c by Kengo Ichiki
 Includes selected codes from einspline by Kenneth P. Esler, Jr.
+Includes lbfgs.c by Jorge Nocedal and Naoaki Okazaki
 
 Includes selected codes from CWP/SU by Dave Hale and others (c) Colorado School of Mines 
 Includes selected codes from TRIP by William Symes and others (c) Rice University

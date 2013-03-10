@@ -1343,12 +1343,20 @@ def psp(context):
         context.Result(context_failure)
         need_pkg('psp', fatal=False)
 
+pkg['SuiteSparse'] = {'ubuntu':'libsuitesparse-dev'}
+
 def sparse(context):
     context.Message("checking for SuiteSparse ... ")
 
+    oldpath = path_get(context,'CPPPATH')
+    sparsepath = ['/usr/include/suitesparse']
+    context.env['CPPPATH'] = oldpath+sparsepath
+
     oldlibs = path_get(context,'LIBS')
-    sparselibs = ['umfpack','suitesparseconfig','cholmod',
-                  'amd','camd','colamd','ccolamd','metis','goto2']
+#    sparselibs = ['umfpack','suitesparseconfig','cholmod',
+#                  'amd','camd','colamd','ccolamd','metis','goto2']
+    sparselibs = ['umfpack','cholmod',
+                  'amd','camd','colamd','ccolamd']
     context.env['LIBS'] = oldlibs+sparselibs
 
     text = '''
@@ -1366,11 +1374,13 @@ def sparse(context):
     }\n'''
     res = context.TryLink(text,'.c')
 
+    context.env['CPPPATH'] = oldpath
     context.env['LIBS'] = oldlibs
 
     if res:
         context.Result(res)
-        context.env['SPARSELIBS'] = sparselibs
+        context.env['SPARSEPATH'] = sparsepath
+        context.env['SPARSELIBS'] = sparselibs        
     else:
         context.Result(context_failure)
         need_pkg('SuiteSparse', fatal=False)
@@ -1954,7 +1964,8 @@ def options(file):
     opts.Add('PSPLIBS','PSP - libraries')
     opts.Add('PSPEXTRA','PSP - extra libraries')
     opts.Add('PSPCXX','PSP - compiler')
-    opts.Add('SPARSELIBS','The SuiteSparse library')
+    opts.Add('SPARSEPATH','SuiteSparse - path to headers')
+    opts.Add('SPARSELIBS','SuiteSparse - libraries')
     opts.Add('FFTW','The FFTW library')
     opts.Add('OMP','OpenMP support')
     opts.Add('PTHREADS','Posix threads support')

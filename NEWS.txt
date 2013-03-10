@@ -37,6 +37,7 @@ To programs:
 * Added forcebw= and force_raster options for pspen
 * Added snap= option for sffftwave2
 * Added frame numbers for movies made with sfgraph
+* Included lbfgs in user/sparse
 
 ===Bug fixes===
 

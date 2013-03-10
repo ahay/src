@@ -18,7 +18,8 @@
 */
 
 #include <rsf.h>
-#include <lbfgs.h>
+
+#include "lbfgs.h"
 
 #include "iwidip.h"
 #include "iwimodl.h"
