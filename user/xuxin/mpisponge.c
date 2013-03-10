@@ -19,7 +19,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 typedef struct {
     int bzl; float *wzl;

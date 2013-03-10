@@ -26,8 +26,10 @@
 #include <umfpack.h>
 /*^*/
 
+#ifndef SuiteSparse_long
 #ifdef UF_long
 #define SuiteSparse_long UF_long
+#endif
 #endif
 /*^*/
 

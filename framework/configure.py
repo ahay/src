@@ -1356,7 +1356,7 @@ def sparse(context):
 #    sparselibs = ['umfpack','suitesparseconfig','cholmod',
 #                  'amd','camd','colamd','ccolamd','metis','goto2']
     sparselibs = ['umfpack','cholmod',
-                  'amd','camd','colamd','ccolamd']
+                  'amd','camd','colamd','ccolamd','SuiteSparse']
     context.env['LIBS'] = oldlibs+sparselibs
 
     text = '''

@@ -25,8 +25,10 @@
 #include <umfpack.h>
 /*^*/
 
+#ifndef SuiteSparse_long
 #ifdef UF_long
 #define SuiteSparse_long UF_long
+#endif
 #endif
 /*^*/
 
@@ -46,7 +48,7 @@ void fdprep25(const double omega,
     int i, j, index;
     double eta1, eta2, c1, c2;
     double *g1, *g2, **pad;
-    double complex *s1, *s2, neib, cent;
+    sf_double_complex *s1, *s2, neib, cent;
     SuiteSparse_long count;
     
     /* prepare PML */
@@ -67,9 +69,9 @@ void fdprep25(const double omega,
 	}
     }
 
-    s1 = (double complex*) sf_alloc(pad1,sizeof(double complex));
+    s1 = (sf_double_complex*) sf_alloc(pad1,sizeof(sf_double_complex));
     for (i=0; i < pad1; i++) {
-	s1[i] = 1.-I*g1[i]/omega;
+	s1[i] = sf_dcmplx(1.,-g1[i]/omega);
     }
 
     g2 = (double*) sf_alloc(pad2,sizeof(double));
@@ -83,9 +85,9 @@ void fdprep25(const double omega,
 	}
     }
 
-    s2 = (double complex*) sf_alloc(pad2,sizeof(double complex));
+    s2 = (sf_double_complex*) sf_alloc(pad2,sizeof(sf_double_complex));
     for (j=0; j < pad2; j++) {
-	s2[j] = 1.-I*g2[j]/omega;
+	s2[j] = sf_dcmplx(1.,-g2[j]/omega);
     }
 
     /* extend model */
@@ -135,7 +137,7 @@ void fdprep25(const double omega,
 	for (i=1; i < pad1-1; i++) {
 	    index = (j-1)*(pad1-2)+(i-1);
 	    
-	    cent = 0.+I*0.;
+	    cent = sf_dcmplx(0.,0.);
 	    
 	    /* left up */
 	    neib = 0.247253*(s1[i-1]/s2[j-1]+s1[i]/s2[j])/(2.*(d1*d1+d2*d2));

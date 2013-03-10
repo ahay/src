@@ -71,7 +71,10 @@
 
 #include <fftw3.h>
 #include <mpi.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 #include <rsf.h>
 
@@ -344,10 +347,12 @@ void init()
     sprintf(fname_img,"%s%d.bin",PREFIX_IMG,mpi_rank);
     sprintf(fname_cig,"%s%d.bin",PREFIX_CIG,mpi_rank);
 
+#ifdef _OPENMP
 #pragma omp parallel
     omp_nth = omp_get_num_threads();
     printf("process %3d : omp using %d threads\n",mpi_rank,omp_nth);
     printf("process %3d : forward=%d backward=%d savedata=%d\n",mpi_rank,forward,backward,savedata);
+#endif
 
     /* -------------------------------- */
     /* initialize forward extrapolation */
