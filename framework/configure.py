@@ -1356,7 +1356,7 @@ def sparse(context):
 #    sparselibs = ['umfpack','suitesparseconfig','cholmod',
 #                  'amd','camd','colamd','ccolamd','metis','goto2']
     sparselibs = ['umfpack','cholmod',
-                  'amd','camd','colamd','ccolamd','SuiteSparse']
+                  'amd','camd','colamd','ccolamd']
     context.env['LIBS'] = oldlibs+sparselibs
 
     text = '''
@@ -1374,16 +1374,25 @@ def sparse(context):
     }\n'''
     res = context.TryLink(text,'.c')
 
-    context.env['CPPPATH'] = oldpath
-    context.env['LIBS'] = oldlibs
-
     if res:
         context.Result(res)
         context.env['SPARSEPATH'] = sparsepath
         context.env['SPARSELIBS'] = sparselibs        
     else:
-        context.Result(context_failure)
-        need_pkg('SuiteSparse', fatal=False)
+        sparselibs.append('SuiteSparse')
+        context.env['LIBS'] = oldlibs+sparselibs
+        
+        res = context.TryLink(text,'.c')
+        if res:            
+            context.Result(res)
+            context.env['SPARSEPATH'] = sparsepath
+            context.env['SPARSELIBS'] = sparselibs
+        else:
+            ext.Result(context_failure)
+            need_pkg('SuiteSparse', fatal=False)
+
+    context.env['CPPPATH'] = oldpath
+    context.env['LIBS'] = oldlibs
 
 def ncpus():
     'Detects number of CPUs'
