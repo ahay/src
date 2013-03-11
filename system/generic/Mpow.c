@@ -1,4 +1,8 @@
-/* Apply power gain. */
+/* Apply power gain. 
+
+March 2013 program of the month:
+http://www.ahay.org/rsflog/index.php?/archives/327-Program-of-the-month-sfpow.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 
