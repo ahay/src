@@ -21,6 +21,10 @@
 
 #include <rsf.hh>
 #include "sembler.hh"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 
 // dip-angle gathers dimensions
 int tNum_;     float tStart_;   float tStep_;
@@ -48,6 +52,9 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 		// loop over z
 		float* trace2 = sf_floatalloc (tNum_);
 		memset (trace2, 0, tNum_ * sizeof (float) );
+#ifdef _OPENMP 
+#pragma omp parallel for
+#endif		
 		for (int iz = 0; iz < itn; ++iz) {
 			const float curT = ito + iz * itd;
 			// get velocity
