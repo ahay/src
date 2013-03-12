@@ -1343,7 +1343,9 @@ def psp(context):
         context.Result(context_failure)
         need_pkg('psp', fatal=False)
 
-pkg['SuiteSparse'] = {'ubuntu':'libsuitesparse-dev'}
+pkg['SuiteSparse'] = {'ubuntu':'libsuitesparse-dev',
+                      'rhel':'suitesparse-devel',
+                      'fedora':'suitesparse-devel'}
 
 def sparse(context):
     context.Message("checking for SuiteSparse ... ")
