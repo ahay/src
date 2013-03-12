@@ -139,7 +139,6 @@ int main(int argc, char** argv)
     std::valarray<sf_complex> ldata(m*n2);
     for (int k=0; k < m*n2; k++) {
 	ldata[k] = sf_cmplx(real(ldat[k]),imag(ldat[k]));
-//	sf_warning("real of ldat=%g, imag of ldat=%g", real(ldat[k]),imag(ldat[k]));
     }
 
     oRSF left("left");
@@ -155,7 +154,6 @@ int main(int argc, char** argv)
     std::valarray<sf_complex> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) {
 	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
-//    	sf_warning("real of rdat=%g, imag of rdat=%g", real(rdat[k]),imag(rdat[k]));
     }
     oRSF right;
     right.type(SF_COMPLEX);
