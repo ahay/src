@@ -37,8 +37,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	for(int b=0; b<nc; b++) {
 	    int iz = cs[b] % nkzs;
 	    int ix = (int) cs[b]/nkzs;
-//	    if (abs(vg1[rs[a]])<100 && abs(vg2[rs[a]])<100)
-	    float phase = vs[rs[a]]*hypot(ksz[iz],ksx[ix])*dt + vs[rs[a]]*(vg1[rs[a]]*ksz[iz]+vg2[rs[a]]*ksx[ix])*dt*dt/2.;
+	    float phase = vs[rs[a]]*hypot(ksz[iz],ksx[ix])*dt - vs[rs[a]]*(vg1[rs[a]]*ksz[iz]+vg2[rs[a]]*ksx[ix])*dt*dt/2.;
 	    res(a,b) = cpx(cos(phase),sin(phase)); 
 	}
     }

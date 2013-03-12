@@ -146,8 +146,7 @@ int main(int argc, char* argv[])
 		}
 
 		curr[j] = c;
-		rcurr[j] = cimagf(c);
-//		rcurr[j] = crealf(c);
+		rcurr[j] = crealf(c);
 	    }
 
 	    /* write wavefield to output */
