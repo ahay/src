@@ -437,7 +437,8 @@ xlib = [
     '/usr/openwin/share/lib'
     ]
 
-pkg['xaw']={'fedora':'libXaw-devel',
+pkg['xaw']={'rhel':'libXaw-devel',
+            'fedora':'libXaw-devel',
             'ubuntu':'libxaw7-dev'}
 
 # If this check is failed
@@ -1390,7 +1391,7 @@ def sparse(context):
             context.env['SPARSEPATH'] = sparsepath
             context.env['SPARSELIBS'] = sparselibs
         else:
-            ext.Result(context_failure)
+            context.Result(context_failure)
             need_pkg('SuiteSparse', fatal=False)
 
     context.env['CPPPATH'] = oldpath
