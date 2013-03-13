@@ -5,7 +5,6 @@ void acd_2d_2(float ** uc,
 	      float ** csq, 
 	      int * s, 
 	      int * e, 
-	      int * d, 
 	      float c0, 
 	      float * c1) {
 
@@ -14,7 +13,7 @@ void acd_2d_2(float ** uc,
   for (i1=s[1]; i1<=e[1]; i1++) {
     for (i0=s[0]; i0<=e[0]; i0++) {
       up[i1][i0] = 2.0*uc[i1][i0] - up[i1][i0] +
-	csq[i1+d[1]][i0+d[0]] * 
+	csq[i1][i0] * 
 	( c0*uc[i1][i0] +
 	  c1[0]*(uc[i1][i0+1] + uc[i1][i0-1]) +
 	  c1[1]*(uc[i1+1][i0] + uc[i1-1][i0])

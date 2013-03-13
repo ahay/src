@@ -20,14 +20,12 @@ extern void acd_2d_2(float **,
 		     float **, 
 		     int *, 
 		     int *, 
-		     int *, 
 		     float, 
 		     float *);
 
 extern void acd_2d_4(float **, 
 		     float **, 
 		     float **, 
-		     int *, 
 		     int *, 
 		     int *, 
 		     float, 
@@ -39,7 +37,6 @@ extern void acd_2d_4(float **,
 extern void acd_2d_8(float **, 
 		     float **, 
 		     float **, 
-		     int *, 
 		     int *, 
 		     int *, 
 		     float, 
@@ -55,14 +52,12 @@ extern void acd_3d_2(float ***,
 		     float ***, 
 		     int *, 
 		     int *, 
-		     int *, 
 		     float, 
 		     float *);
 
 extern void acd_3d_4(float ***, 
 		     float ***, 
 		     float ***, 
-		     int *, 
 		     int *, 
 		     int *, 
 		     float, 
@@ -74,7 +69,6 @@ extern void acd_3d_4(float ***,
 extern void acd_3d_8(float ***, 
 		     float ***, 
 		     float ***, 
-		     int *, 
 		     int *, 
 		     int *, 
 		     float, 
@@ -837,9 +831,8 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
   register ireal *** restrict up3;
   register ireal *** restrict csq3;
   int ndim;                       // problem dmn
-  IPNT s;                         // loop starts 
-  IPNT e;                         // loop ends
-  IPNT d;                        // loop shift uc, up -> csq
+  IPNT s, s0;                     // loop starts 
+  IPNT e, e0;                     // loop ends
 
   ireal tmp;
   IPNT i;
@@ -850,9 +843,8 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
 
   // extract dimn info
   ra_ndim(&(dom->_s[D_UC]),&ndim);
-  ra_se(&(dom->_s[D_UC]),s,e);
-  ra_ds(&(dom->_s[D_CSQ]),&(dom->_s[D_UC]),d);
-  ra_a_size(&(dom->_s[D_UC]),n);
+  ra_gse(&(dom->_s[D_UC]),s,e);
+  ra_a_gse(&(dom->_s[D_UC]),s0,e0);
 
   if (ndim == 2) {
 
@@ -864,14 +856,14 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
     // 2nd order case 
     if (acdpars->k == 1) {
       acd_2d_2(uc2, up2, csq2, 
-	       s, e, d, 
+	       s, e,
 	       acdpars->c0, 
 	       acdpars->c1);
     }
     // 4th order case
     else if (acdpars->k == 2) {
       acd_2d_4(uc2, up2, csq2,
-	       s, e, d, 
+	       s, e, 
 	       acdpars->c0, 
 	       acdpars->c1, acdpars->c2,
 	       acdpars->lbc, acdpars->rbc);
@@ -879,7 +871,7 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
     // 8th order case
     else if (acdpars->k == 4) {
       acd_2d_8(uc2, up2, csq2,
-	       s, e, d, 
+	       s, e, 
 	       acdpars->c0, 
 	       acdpars->c1, acdpars->c2,
 	       acdpars->c3, acdpars->c4,
@@ -891,8 +883,8 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
       return E_BADINPUT;
     }
 
-    for (i[1]=0;i[1]<n[1];i[1]++) {
-      for (i[0]=0;i[0]<n[0];i[0]++) {
+    for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
+      for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	tmp=((dom->_s)[D_UC]._s2)[i[1]][i[0]];
 	((dom->_s)[D_UC]._s2)[i[1]][i[0]]=((dom->_s)[D_UP]._s2)[i[1]][i[0]];
 	((dom->_s)[D_UP]._s2)[i[1]][i[0]]=tmp;
@@ -909,14 +901,14 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
     // 2nd order case 
     if (acdpars->k == 1) {
       acd_3d_2(uc3, up3, csq3, 
-	       s, e, d, 
+	       s, e, 
 	       acdpars->c0, 
 	       acdpars->c1);
     }
     // 4th order case
     else if (acdpars->k == 2) {
       acd_3d_4(uc3, up3, csq3,
-	       s, e, d, 
+	       s, e, 
 	       acdpars->c0, 
 	       acdpars->c1, acdpars->c2,
 	       acdpars->lbc, acdpars->rbc);
@@ -924,7 +916,7 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
     // 8th order case
     else if (acdpars->k == 4) {
       acd_3d_8(uc3, up3, csq3,
-	       s, e, d, 
+	       s, e, 
 	       acdpars->c0, 
 	       acdpars->c1, acdpars->c2,
 	       acdpars->c3, acdpars->c4,
@@ -936,9 +928,9 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
       return E_BADINPUT;
     }
 
-    for (i[2]=0;i[2]<n[2];i[2]++) {
-      for (i[1]=0;i[1]<n[1];i[1]++) {
-	for (i[0]=0;i[0]<n[0];i[0]++) {
+    for (i[2]=s0[2];i[2]<=e0[2];i[2]++) {
+      for (i[1]=s0[1];i[1]<=e0[1];i[1]++) {
+	for (i[0]=s0[0];i[0]<=e0[0];i[0]++) {
 	  tmp=((dom->_s)[D_UC]._s3)[i[2]][i[1]][i[0]];
 	  ((dom->_s)[D_UC]._s3)[i[2]][i[1]][i[0]]=((dom->_s)[D_UP]._s3)[i[2]][i[1]][i[0]];
 	  ((dom->_s)[D_UP]._s3)[i[2]][i[1]][i[0]]=tmp;

@@ -132,6 +132,9 @@ int ra_allocate(RARR *arr) {
   long size;                          /* size to allocate */
 #if RARR_MAX_NDIM > 1
   long psize;                         /* size of slice    */
+  IPNT s0;                            /* start indices    */
+  IPNT e0;                            /* end indices      */
+  IPNT n0;                            /* axis lengths     */
 #endif
   
   if ( arr->_s0 != NULL ) return E_ALREADYALLOC;
@@ -153,52 +156,41 @@ int ra_allocate(RARR *arr) {
     
 #if RARR_MAX_NDIM > 1
 
+    ra_a_gse(arr,s0,e0);
+    ra_a_size(arr,n0);
+
     psize = 1L;
     for (d=1; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
-      arr->_s2 = (ireal **)usermalloc_(psize * sizeof(ireal*));
-      arr->_s2[0] = arr->_s0;
-      for (d=1;d<psize; ++d) 
-	arr->_s2[d]=arr->_s2[d-1]+arr->_dims[0].n0;
-      /*
       arr->_s02 = (ireal **)usermalloc_(psize * sizeof(ireal*));
-      arr->_s2_alloc = (ireal **)usermalloc_(psize * sizeof(ireal*));
-      if ((!arr->_s02) || (!arr->_s2_alloc)) return E_ALLOC;
-      arr->_s2 = arr->_s2_alloc;
-      arr->_s02[0] = arr->_s0;
-      arr->_s2[0] = arr->_s0;
-      for (d=1;d<psize; ++d) {
-	arr->_s02[d]=arr->_s02[d-1]+arr->_dims[0].n0;
-	arr->_s2[d]=arr->_s2[d-1]+arr->_dims[0].n0;
+      arr->_s2 = arr->_s02-s0[1];
+      for (d=0;d<psize; ++d)  {
+	arr->_s02[d]=&(arr->_s0[d*n0[0]]);
+	arr->_s2[d+s0[1]]=arr->_s02[d]-s0[0];
       }
-      */
     }
-
+    else {
+      arr->_s02=NULL;
+      arr->_s2=NULL;
+    }
 #endif
 
 #if RARR_MAX_NDIM > 2
 
     psize = 1L;
     for (d=2; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
-    if (psize > 0L) {
-      arr->_s3 = (ireal ***)usermalloc_(psize * sizeof(ireal**));
-      arr->_s3[0] = arr->_s2;
-      for (d=1;d<psize; ++d) 
-	arr->_s3[d]=arr->_s3[d-1]+arr->_dims[1].n0;
-      /*
+    if ((psize > 0L) && arr->_s02) {
       arr->_s03 = (ireal ***)usermalloc_(psize * sizeof(ireal**));
-      arr->_s3_alloc = (ireal ***)usermalloc_(psize * sizeof(ireal**));
-      if ((!arr->_s03) || (!arr->_s3_alloc)) return E_ALLOC;
-      arr->_s3 = arr->_s3_alloc;
-      arr->_s03[0] = arr->_s02;
-      arr->_s3[0] = arr->_s02;
-      for (d=1;d<psize; ++d) {
-	arr->_s03[d]=arr->_s03[d-1]+arr->_dims[1].n0;
-	arr->_s3[d]=arr->_s3[d-1]+arr->_dims[1].n0;
+      arr->_s3 = arr->_s03-s0[2];
+      for (d=0;d<psize; ++d) {
+	arr->_s03[d]=&(arr->_s2[d*n0[0]*n0[1]]);
+	arr->_s3[d+s0[2]]=arr->_s03[d]-s0[1];
       }
-      */
     }
-
+    else {
+      arr->_s03=NULL;
+      arr->_s3=NULL;
+    }
 #endif
 
 #if RARR_MAX_NDIM > 3
@@ -260,32 +252,16 @@ int ra_allocate(RARR *arr) {
 int ra_destroy(RARR *arr) {
   if (arr->_s0) userfree_(arr->_s0);
 #if RARR_MAX_NDIM > 1
-  if (arr->_s2) userfree_(arr->_s2);
-  /*
   if (arr->_s02) userfree_(arr->_s02);
-  if (arr->_s2_alloc) userfree_(arr->_s2_alloc);
-  */
 #endif
 #if RARR_MAX_NDIM > 2
-  if (arr->_s3) userfree_(arr->_s3);
-  /*
   if (arr->_s03) userfree_(arr->_s03);
-  if (arr->_s3_alloc) userfree_(arr->_s3_alloc);
-  */
 #endif
 #if RARR_MAX_NDIM > 3
-  if (arr->s4) userfree_(arr->_s4);
-  /*
-  if (arr->s04) userfree_(arr->_s04);
-  if (arr->s4_alloc) userfree_(arr->_s4_alloc);
-  */
+  if (arr->_s04) userfree_(arr->_s04);
 #endif
 #if RARR_MAX_NDIM > 4
-  if (arr->s5) userfree_(arr->_s5);
-  /*
-  if (arr->s05) userfree_(arr->_s05);
-  if (arr->s5_alloc) userfree_(arr->_s5_alloc);
-  */
+  if (arr->_s05) userfree_(arr->_s05);
 #endif
 
   ra_setnull(arr);
@@ -366,55 +342,11 @@ int ra_greset(RARR *arr, const IPNT gs, const IPNT ge) {
     eoff[d] = (long)(dim->ge0 - dim->ge);
     */
     pshift = pshift * (long)(dim->n0) + soff[d];
+
   }
   
   if ( arr->_s != NULL ) arr->_s = arr->_s0 + pshift;
 
-  /* non-functional attempt to create multi-d access to 
-     resized array 
-
-#if RARR_MAX_NDIM > 1
-
-  if (arr->ndim == 2 && arr->_s02) {
-    arr->_s2 = arr->_s2_alloc + soff[1];
-    for (idx[1]=-soff[1];
-	 idx[1]<arr->_dims[1].n + eoff[1];
-	 idx[1]++) 
-      arr->_s2[idx[1]] = 
-	arr->_s02[soff[1]+idx[1]] + soff[0];
-  }
-    
-#endif
-    
-#if RARR_MAX_NDIM > 2 
-	
-  if (arr->ndim == 3 && arr->_s03) {
-    arr->_s2 = arr->_s2_alloc + soff[1]+soff[2]*arr->_dims[1].n0;
-    arr->_s3 = arr->_s3_alloc + soff[2];
-
-    for (idx[2]=-soff[2]; 
-	 idx[2] < arr->_dims[2].n + eoff[2];
-	 idx[2]++) {
-      for (idx[1]=-soff[1];
-	   idx[1]<arr->_dims[1].n + eoff[1];
-	   idx[1]++) {
-	arr->_s2[idx[1]+idx[2]*arr->_dims[1].n0] = 
-	  arr->_s02[soff[1]+idx[1] +
-		    (soff[2]+idx[2])*arr->_dims[1].n0] + soff[0];
-      }
-      arr->_s3[idx[2]]=&(arr->_s2[idx[2]*arr->_dims[1].n0]); 
-    }
-  }
-#endif
-
-#if RARR_MAX_NDIM > 3
-  fprintf(stderr,"ERROR: max dim > 3 not implemented yet\n");
-  return E_OTHER;
-#else
-  return 0;
-#endif
-
-  */
   return 0;
 }
 /*----------------------------------------------------------------------------*/

@@ -72,31 +72,19 @@ typedef struct
   /* added 03.11.12 WWS: multidim array access */
 #if RARR_MAX_NDIM > 1
   ireal ** _s2;
-  /*
-  ireal ** _s2_alloc;
   ireal ** _s02;
-  */
 #endif
 #if RARR_MAX_NDIM > 2
   ireal *** _s3;
-  /*
-  ireal *** _s3_alloc;
   ireal *** _s03;
-  */
 #endif
 #if RARR_MAX_NDIM > 3
   ireal **** _s4;
-  /*
-  ireal **** _s4_alloc;
   ireal **** _s04;
-  */
 #endif
 #if RARR_MAX_NDIM > 4
   ireal ***** _s5;
-  /*
-  ireal ***** _s5_alloc;
   ireal ***** _s05;
-  */
 #endif
 } RARR;
 /*----------------------------------------------------------------------------*/
