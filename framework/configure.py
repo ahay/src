@@ -541,6 +541,7 @@ def sfpen(context):
 
 pkg['netpbm'] = {'cygwin':'libnetpbm-devel (Setup...Devel)',
                  'darwin':'netpbm (fink)',
+                 'rhel':'netpbm-devel',
                  'fedora':'netpbm-devel',
                  'suse'  :'libnetpbm-devel',
                  'ubuntu':'libnetpbm10-dev'}
@@ -875,7 +876,8 @@ def jpeg(context):
 
     LIBS.pop()
 
-pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut + freeglut-devel',
+pkg['opengl'] = {'fedora':'mesa-libGL-devel + freeglut-devel',
+                 'rhel':'freeglut-devel',
                  'suse'  :'freeglut-devel',
                  'ubuntu':'freeglut3-dev',
                  'cygwin':'opengl (Setup...Graphics)'}
@@ -936,6 +938,7 @@ def opengl(context):
     context.env['CPPPATH'] = CPPPATH
 
 pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
+               'rhel':'blas-devel + atlas-devel',
                'ubuntu':'libblas-dev'}
 
 def blas(context):
@@ -1025,13 +1028,14 @@ def lapack(context):
     LIBS.pop()
     LIBS.pop()
 
-pkg['mpi'] = {'fedora':'openmpi, openmpi-devel, openmpi-libs'}
+pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
+              'rhel':'openmpi-devel'}
 
 def mpi(context):
     context.Message("checking for MPI ... ")
     path = os.environ['PATH']
     if plat['OS'] == 'linux':
-        if plat['distro'] == 'fedora':
+        if plat['distro'] == 'fedora' or plat['distro'] == 'rhel':
             path += ':/usr/lib64/openmpi/bin/'
     mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
     if mpicc:
@@ -1141,6 +1145,7 @@ def cuda(context):
         context.env['NVCC'] = None
 
 pkg['fftw'] = {'fedora':'fftw-devel',
+               'rhel':'fftw-devel',
                'ubuntu':'libfftw3-dev',
                'darwin':'fftw-3-single'}
 
