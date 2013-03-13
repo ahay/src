@@ -1862,7 +1862,8 @@ def swig(context):
         need_pkg('numpy', fatal = False)
         context.env['NUMPY'] = None
 
-pkg['java-devel'] = {'ubuntu':'openjdk-6-jdk'}
+pkg['java-devel'] = {'ubuntu':'openjdk-6-jdk',
+                     'rhel':'java-1.7.0-openjdk'}
 pkg['minesjtk'] = {}
 
 def java(context):
@@ -1879,9 +1880,12 @@ def java(context):
 
     JAVA_HOME = context.env.get('JAVA_SDK',os.environ.get('JAVA_SDK', None))
     if not JAVA_HOME:  # Check for JAVA_SDK as well, Mac fix
-        JAVA_HOME = context.env.get('JAVA_HOME',
-                                    os.environ.get('JAVA_HOME',
-                                                   '/usr/lib/jvm/java-6-openjdk'))
+        JAVA_HOME = context.env.get('JAVA_HOME',os.environ.get('JAVA_HOME'))
+        if not JAVA_HOME:
+            for java in ('/usr/lib/jvm/java-6-openjdk',
+                         '/usr/lib/jvm/java-openjdk'):
+                if os.path.isdir(java):
+                    JAVA_HOME=java
     if JAVA_HOME:
         context.Result(JAVA_HOME)
         context.env['JAVA_HOME'] = JAVA_HOME
