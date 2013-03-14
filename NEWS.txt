@@ -61,6 +61,7 @@ In the build system:
 
 * Replaced WhereIs('python') with sys.executable
 * Check for OpenMP even at a single-CPU system
+* Use integer*8 in f77 examples
 
 ===Changes in defaults and interfaces===
 

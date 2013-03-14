@@ -3,7 +3,7 @@
       integer sf_gettype
       integer type, n1, i
       logical sf_histint
-      integer in, out, sf_input, sf_output
+      integer*8 in, out, sf_input, sf_output
       character*100 sf_histstring, label1
       real trace(100)
 

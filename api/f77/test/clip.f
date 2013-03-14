@@ -1,7 +1,8 @@
 	program Clipit
 	implicit none
-	integer n1, n2, i1, i2, in, out
-	integer sf_input, sf_output, sf_leftsize, sf_gettype
+	integer n1, n2, i1, i2
+	integer*8 in, out
+	integer*8 sf_input, sf_output, sf_leftsize, sf_gettype
 	logical sf_getfloat, sf_histint
 	real clip, trace(1000)
 
