@@ -1423,9 +1423,9 @@ def ncpus():
 pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
-    if ncpus() == 1:
-        context.env['OMP'] = False
-        return # only 1 cpu. OMP not needed
+#    if ncpus() == 1:
+#        context.env['OMP'] = False
+#        return # only 1 cpu. OMP not needed
     context.Message("checking for OpenMP ... ")
     LIBS  = path_get(context,'LIBS')
     CC    = context.env.get('CC','gcc')

@@ -144,7 +144,7 @@ void adjgradient2d_wemig( float **vel,
 			  sf_complex **swf,
 			  sf_complex **rwf,
 			  float **grd)
-/* <Imaging kernel> */
+/*< Imaging kernel >*/
 {
     int iw,ix,iz,ih,ith,pind,mind,id=0;
     float  caus= 1.f;
@@ -373,8 +373,8 @@ static void adjgradient2d_rwetaper(sf_complex **dax, int id)
 
 /*-----------------------------------------------------------------*/
 
-/* Free memory */
-void adjgradient2d_close() 
+void adjgradient2d_close(void)
+/*< Free memory >*/ 
 {
     free (tap);
     free (vmin);

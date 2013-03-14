@@ -81,9 +81,6 @@ int main(int argc, char* argv[])
 {
     bool verb,fsrf,snap,ssou,dabc,opot;
     int  jsnap,ntsnap,jdata;
-#ifdef _OPENMP
-    int ompnth=1;
-#endif
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
@@ -161,7 +158,7 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* OMP parameters */
 #ifdef _OPENMP
-    ompnth=omp_init();
+    omp_init();
 #endif
     /*------------------------------------------------------------*/
 

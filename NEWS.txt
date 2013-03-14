@@ -60,6 +60,7 @@ In programs:
 In the build system:
 
 * Replaced WhereIs('python') with sys.executable
+* Check for OpenMP even at a single-CPU system
 
 ===Changes in defaults and interfaces===
 
