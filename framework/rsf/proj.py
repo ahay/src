@@ -345,8 +345,8 @@ class Project(Environment):
                 par_sfiles[j] = source
 
                 self.Flow(source,sfiles[j],
-                          'window n%d=%d f%d=%d squeeze=n' % 
-                          (split[0],chunk,split[0],skip))
+                          'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
+                          (split[0],chunk,split[0],skip,i,jobs))
 
             par_tfiles = []
             for j in range(len(tfiles)):
