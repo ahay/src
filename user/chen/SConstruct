@@ -10,7 +10,7 @@ fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
 ss ssblend sscrg
 epfbe epfbil epfws coherence epfad  
 frt pca fault fir fastpwd fbgabor apick orientation slopescan
-divn2d divnls
+divn2d divnls dipcoh
 '''
 
 pyprogs='''
@@ -58,7 +58,7 @@ mains = Split(progs)
 for prog in mains:
 	sources = ['M' + prog]
 	bldutil.depends(env,sources,'M'+prog)	
-	if not prog in Split('frt pca epfws orientation') or blas:		
+	if not prog in Split('frt pca epfws orientation coherence') or blas:		
 		prog = env.Program(prog,map(lambda x: x + '.c',sources))
 	else:
 		prog = env.RSF_Place('sf'+prog,
