@@ -31,6 +31,13 @@ typedef struct EscSCgrid3 *sf_esc_scgrid3;
 /* abstract data type */
 /*^*/
 
+typedef struct {
+    int   iab;
+    float z, x, y;
+} sf_esc_scgrid3_areq;
+/* Structure for requesting one (z,x,y) point in angle space */
+/*^*/
+
 #endif
 
 #include "einspline.h"
@@ -178,12 +185,12 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_esc_tracer3 esc_tracer, b
     if (!sf_histint (scgrid, "Ny", &esc_scgrid->ny)) sf_error ("No Ny= in supercell file");
     if (!sf_histfloat (scgrid, "Dy", &esc_scgrid->dy)) sf_error ("No Dy= in supercell file");
     if (!sf_histfloat (scgrid, "Oy", &esc_scgrid->oy)) sf_error ("No Oy= in supercell file");
-    if (!sf_histint (scgrid, "n2", &esc_scgrid->nb)) sf_error ("No n2= in supercell file");
-    if (!sf_histfloat (scgrid, "d2", &esc_scgrid->db)) sf_error ("No d2= in supercell file");
-    if (!sf_histfloat (scgrid, "o2", &esc_scgrid->ob)) sf_error ("No o2= in supercell file");
-    if (!sf_histint (scgrid, "n3", &esc_scgrid->na)) sf_error ("No n3= in supercell file");
-    if (!sf_histfloat (scgrid, "d3", &esc_scgrid->da)) sf_error ("No d3= in supercell file");
-    if (!sf_histfloat (scgrid, "o3", &esc_scgrid->oa)) sf_error ("No o3= in supercell file");
+    if (!sf_histint (scgrid, "Nb", &esc_scgrid->nb)) sf_error ("No Nb= in supercell file");
+    if (!sf_histfloat (scgrid, "Db", &esc_scgrid->db)) sf_error ("No Db= in supercell file");
+    if (!sf_histfloat (scgrid, "Ob", &esc_scgrid->ob)) sf_error ("No Ob= in supercell file");
+    if (!sf_histint (scgrid, "Na", &esc_scgrid->na)) sf_error ("No Na= in supercell file");
+    if (!sf_histfloat (scgrid, "Da", &esc_scgrid->da)) sf_error ("No Da= in supercell file");
+    if (!sf_histfloat (scgrid, "Oa", &esc_scgrid->oa)) sf_error ("No Oa= in supercell file");
 
     if (!sf_histfloat (scgrid, "Mdist", &esc_scgrid->md)) esc_scgrid->md = esc_scgrid->dz;
 
@@ -202,12 +209,23 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_esc_tracer3 esc_tracer, b
 
     esc_scgrid->scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)esc_scgrid->na*(size_t)esc_scgrid->nb,
                                                             sizeof(multi_UBspline_3d_s));
+#ifdef DEBUG
+    esc_scgrid->mmaped = sf_ucharalloc ((size_t)esc_scgrid->offs +
+                                        (size_t)esc_scgrid->n*
+                                        (size_t)esc_scgrid->na*
+                                        (size_t)esc_scgrid->nb);
+    sf_ucharread (esc_scgrid->mmaped, (size_t)esc_scgrid->offs +
+                                      (size_t)esc_scgrid->n*
+                                      (size_t)esc_scgrid->na*
+                                      (size_t)esc_scgrid->nb, scgrid);
+#else
     esc_scgrid->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_scgrid->offs +
                                                      (size_t)esc_scgrid->n*
                                                      (size_t)esc_scgrid->na*
                                                      (size_t)esc_scgrid->nb,
                                                PROT_READ, MAP_SHARED,
                                                fileno (stream), 0);
+#endif
     nc = esc_scgrid->offs;
     for (ia = 0; ia < esc_scgrid->na; ia++) {
         for (ib = 0; ib < esc_scgrid->nb; ib++) {
@@ -269,10 +287,14 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     free (esc_scgrid->as);
     free (esc_scgrid->bs);
     free (esc_scgrid->pvt);
+#ifdef DEBUG
+    free (esc_scgrid->mmaped);
+#else
     munmap (esc_scgrid->mmaped, (size_t)esc_scgrid->offs +
                                 (size_t)esc_scgrid->n*
                                 (size_t)esc_scgrid->na*
                                 (size_t)esc_scgrid->nb);
+#endif
     free (esc_scgrid->scsplines);
     sf_esc_point3_close (esc_scgrid->esc_point);
     free (esc_scgrid);

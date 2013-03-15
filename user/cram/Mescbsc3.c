@@ -26,10 +26,9 @@
 
 int main (int argc, char* argv[]) {
     size_t nc = 0;
-    int nz, nx, ny, nb, na, iz, ix, iy, ib, ia, i;
-    float dz, oz, dx, ox, dy, oy, da, oa, db, ob;
-    float z, x, y, a, b, ae, be, vf[3], vt[3], q[4];
-    float zmin, zmax, xmin, xmax, ymin, ymax, md;
+    int nz, nx, ny, nb, na, nab, iz, ix, iy, ib, ia, iab, i;
+    float dz, oz, dx, ox, dy, oy, da, oa, db, ob, oab;
+    float z, x, y, a, b, ae, be, vf[3], vt[3], q[4], md;
     float ****e;
     Ugrid z_grid, x_grid, y_grid;
     BCtype_s zBC, xBC, yBC;
@@ -47,7 +46,7 @@ int main (int argc, char* argv[]) {
         adom = NULL;
     } else {
         adom = sf_input ("in");
-        /* Angle (b,a) domain */
+        /* Angle (a*b) domain */
     }
 
     out = sf_output ("out");
@@ -76,25 +75,25 @@ int main (int argc, char* argv[]) {
     /* Sampling of y axis */
 
     if (adom) {
-        if (!sf_histint (adom, "n1", &nb)) sf_error ("No n1= in input");
-        if (!sf_histfloat (adom, "d1", &db)) sf_error ("No d1= in input");
-        if (!sf_histfloat (adom, "o1", &ob)) sf_error ("No o1= in input");
-        if (!sf_histint (adom, "n2", &na)) sf_error ("No n2= in input");
-        if (!sf_histfloat (adom, "d2", &da)) sf_error ("No d2= in input");
-        if (!sf_histfloat (adom, "o2", &oa)) sf_error ("No o2= in input");
+        if (!sf_histint (adom, "Nb", &nb)) sf_error ("No Na= in input");
+        if (!sf_histint (adom, "Na", &na)) sf_error ("No Nb= in input");
+        if (!sf_histint (adom, "n1", &nab)) sf_error ("No n1= in input");
+        if (!sf_histfloat (adom, "o1", &oab)) sf_error ("No o1= in input");
+    } else {
+        if (!sf_getint ("na", &na)) sf_error ("Need na=");
+        /* Number of samples in azimuth dimension */
+        if (!sf_getint ("nb", &nb)) sf_error ("Need nb=");
+        /* Number of samples in inclination dimension */
+        nab = na*nb;
+        oab = 0.0;
     }
-    if (!sf_getint ("na", &na) && !adom) sf_error ("Need na=");
-    /* Number of samples in azimuth dimension */
-    if (!sf_getfloat ("da", &da) && !adom) da = 360.0/(float)na;
+    da = 360.0/(float)na;
     /* Sampling of azimtuh dimension */
-    if (!sf_getfloat ("oa", &oa) && !adom) oa = 0.5*da;
+    oa = 0.5*da;
     /* Beginning of azimuth dimension */
-
-    if (!sf_getint ("nb", &nb) && !adom) sf_error ("Need nb=");
-    /* Number of samples in inclination dimension */
-    if (!sf_getfloat ("db", &db) && !adom) db = 180.0/(float)nb;
+    db = 180.0/(float)nb;
     /* Sampling of inclination dimension */
-    if (!sf_getfloat ("ob", &ob) && !adom) ob = 0.5*db;
+    ob = 0.5*db;
     /* Beginning of inclination dimension */
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
@@ -103,20 +102,6 @@ int main (int argc, char* argv[]) {
 
     /* Slowness components module [(an)isotropic] */
     esc_slow = sf_esc_slowness3_init (vspline, verb);
-
-    /* Global spatial limits */
-    zmin = sf_esc_slowness3_oz (esc_slow);
-    zmax = sf_esc_slowness3_oz (esc_slow) +
-           (sf_esc_slowness3_nz (esc_slow) - 1)*
-           sf_esc_slowness3_dz (esc_slow);
-    xmin = sf_esc_slowness3_ox (esc_slow);
-    xmax = sf_esc_slowness3_ox (esc_slow) +
-           (sf_esc_slowness3_nx (esc_slow) - 1)*
-           sf_esc_slowness3_dx (esc_slow);
-    ymin = sf_esc_slowness3_oy (esc_slow);
-    ymax = sf_esc_slowness3_oy (esc_slow) +
-           (sf_esc_slowness3_ny (esc_slow) - 1)*
-           sf_esc_slowness3_dy (esc_slow);
 
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
@@ -131,16 +116,11 @@ int main (int argc, char* argv[]) {
     sf_putfloat (out, "d1", 1.0);
     sf_putstring (out, "label1", "Spline coefficients");
     sf_putstring (out, "unit1", "");
-    sf_putint (out, "n2", nb);
-    sf_putfloat (out, "d2", db);
-    sf_putfloat (out, "o2", ob);
-    sf_putstring (out, "label2", "Inclination");
-    sf_putstring (out, "unit2", "Degrees");
-    sf_putint (out, "n3", na);
-    sf_putfloat (out, "d3", da);
-    sf_putfloat (out, "o3", oa);
-    sf_putstring (out, "label3", "Azimuth");
-    sf_putstring (out, "unit3", "Degrees");
+    sf_putint (out, "n2", nab);
+    sf_putfloat (out, "d2", 1.0);
+    sf_putfloat (out, "o2", oab);
+    sf_putstring (out, "label2", "Inclination*Azimuth");
+    sf_putstring (out, "unit2", "");
 
     sf_putint (out, "Nz", nz);
     sf_putfloat (out, "Dz", dz);
@@ -151,6 +131,12 @@ int main (int argc, char* argv[]) {
     sf_putint (out, "Ny", ny);
     sf_putfloat (out, "Dy", dy);
     sf_putfloat (out, "Oy", oy);
+    sf_putint (out, "Na", na);
+    sf_putfloat (out, "Da", da);
+    sf_putfloat (out, "Oa", oa);
+    sf_putint (out, "Nb", nb);
+    sf_putfloat (out, "Db", db);
+    sf_putfloat (out, "Ob", ob);
 
     if (verb) {
         sf_warning ("Spatial domain dimensions: nz=%d, z=[%g, %g]", nz,
@@ -159,10 +145,15 @@ int main (int argc, char* argv[]) {
                     ox, ox + (nx - 1)*dx);
         sf_warning ("Spatial domain dimensions: ny=%d, y=[%g, %g]", ny,
                     oy, oy + (ny - 1)*dy);
-        sf_warning ("Angular domain dimensions: nb=%d, b=[%g, %g]", nb,
-                    ob, ob + (nb - 1)*db);
-        sf_warning ("Angular domain dimensions: na=%d, a=[%g, %g]", na,
-                    oa, oa + (na - 1)*da);
+        ia = ((int)(oab + 0.5)) / na;
+        ib = ((int)(oab + 0.5)) % na;
+        sf_warning ("Angular domain starts at: a=%g, b=%g",
+                    oa + ia*da, ob + ib*db);
+        ia = ((int)(oab + nab - 0.5)) / na;
+        ib = ((int)(oab + nab - 0.5)) % na;
+        sf_warning ("Angular domain ends at: a=%g, b=%g (%d angles total)",
+                    oa + ia*da, ob + ib*db, nab);
+        sf_warning ("Angular domain sampling: da=%g, db=%g", da, db);
     }
 
     da *= SF_PI/180.0;
@@ -193,73 +184,71 @@ int main (int argc, char* argv[]) {
 
     esc_point = sf_esc_point3_init ();
 
-    /* Loop over angular domain and create constant-angle
+    /* Loop over angle domain and create constant-angle
        local escape solutions */
-    for (ia = 0; ia < na; ia++) {
+    for (iab = 0; iab < nab; iab++) {
+        ia = (int)(oab + iab + 0.5) / na;
+        ib = (int)(oab + iab + 0.5) % na;
         a = oa + ia*da;
-        if (verb)
-            sf_warning ("Processing azimuth %d of %d;", ia + 1, na);
-        for (ib = 0; ib < nb; ib++) {
-            b = ob + ib*db;
-            /* Initial phase vector */
-            vf[0] = cosf (b);
-            vf[1] = sinf (b)*cosf (a);
-            vf[2] = sinf (b)*sinf (a);
-            for (iy = 0; iy < ny; iy++) {
-                y = oy + iy*dy;
-                sf_esc_tracer3_set_ymin (esc_tracer, y - md);
-                sf_esc_tracer3_set_ymax (esc_tracer, y + md);
-                for (ix = 0; ix < nx; ix++) {
-                    x = ox + ix*dx;
-                    sf_esc_tracer3_set_xmin (esc_tracer, x - md);
-                    sf_esc_tracer3_set_xmax (esc_tracer, x + md);
-                    for (iz = 0; iz < nz; iz++) {
-                        z = oz + iz*dz;
-                        sf_esc_tracer3_set_zmin (esc_tracer, z - md);
-                        sf_esc_tracer3_set_zmax (esc_tracer, z + md);
-                        sf_esc_tracer3_compute (esc_tracer, z, x, y, b, a,
-                                                0.0, 0.0, esc_point, &ae, &be);
-                        /* Copy escape values to the output buffer */
-                        for (i = 0; i < ESC3_NUM; i++)
-                            e[i][iy][ix][iz] = sf_esc_point3_get_esc_var (esc_point, i);
-                        e[ESC3_Z][iy][ix][iz] -= z;
-                        e[ESC3_X][iy][ix][iz] -= x;
-                        e[ESC3_Y][iy][ix][iz] -= y;
-                        /* New phase vector */
-                        vt[0] = cosf (be);
-                        vt[1] = sinf (be)*cosf (ae);
-                        vt[2] = sinf (be)*sinf (ae);
-                        /* Encode rotation to the new phase vector */
-                        sf_quat_vecrot (vf, vt, q);
-                        e[ESC3_NUM][iy][ix][iz] = q[0];
-                        e[ESC3_NUM + 1][iy][ix][iz] = q[1];
-                        e[ESC3_NUM + 2][iy][ix][iz] = q[2];
-                        e[ESC3_NUM + 3][iy][ix][iz] = q[3];
-                    } /* z */
-                } /* x */
-            } /* y */
-            /* Create for this constant-azimuth volume */
-            zxyspline = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 4);
-            for (i = 0; i < (ESC3_NUM + 4); i++) {
-                set_multi_UBspline_3d_s (zxyspline, i, &e[i][0][0][0]);
-            }
-            if (0 == ia && 0 == ib) {
-                sf_putint (out, "n1", (size_t)sizeof(multi_UBspline_3d_s) +
-                                      (size_t)zxyspline->nc);
-            }
-            sf_ucharwrite ((unsigned char*)zxyspline,
-                           (size_t)sizeof(multi_UBspline_3d_s), out);
-            sf_ucharwrite ((unsigned char*)zxyspline->coefs,
-                           (size_t)zxyspline->nc, out);
-            fflush (sf_filestream (out));
-            nc += (size_t)zxyspline->nc;
-            destroy_Bspline (zxyspline);
-        } /* b */
-    } /* a */
+        b = ob + ib*db;
+        /* Initial phase vector */
+        vf[0] = cosf (b);
+        vf[1] = sinf (b)*cosf (a);
+        vf[2] = sinf (b)*sinf (a);
+        for (iy = 0; iy < ny; iy++) {
+            y = oy + iy*dy;
+            sf_esc_tracer3_set_ymin (esc_tracer, y - md);
+            sf_esc_tracer3_set_ymax (esc_tracer, y + md);
+            for (ix = 0; ix < nx; ix++) {
+                x = ox + ix*dx;
+                sf_esc_tracer3_set_xmin (esc_tracer, x - md);
+                sf_esc_tracer3_set_xmax (esc_tracer, x + md);
+                for (iz = 0; iz < nz; iz++) {
+                    z = oz + iz*dz;
+                    sf_esc_tracer3_set_zmin (esc_tracer, z - md);
+                    sf_esc_tracer3_set_zmax (esc_tracer, z + md);
+                    sf_esc_tracer3_compute (esc_tracer, z, x, y, b, a,
+                                            0.0, 0.0, esc_point, &ae, &be);
+                    /* Copy escape values to the output buffer */
+                    for (i = 0; i < ESC3_NUM; i++)
+                        e[i][iy][ix][iz] = sf_esc_point3_get_esc_var (esc_point, i);
+                    e[ESC3_Z][iy][ix][iz] -= z;
+                    e[ESC3_X][iy][ix][iz] -= x;
+                    e[ESC3_Y][iy][ix][iz] -= y;
+                    /* New phase vector */
+                    vt[0] = cosf (be);
+                    vt[1] = sinf (be)*cosf (ae);
+                    vt[2] = sinf (be)*sinf (ae);
+                    /* Encode rotation to the new phase vector */
+                    sf_quat_vecrot (vf, vt, q);
+                    e[ESC3_NUM][iy][ix][iz] = q[0];
+                    e[ESC3_NUM + 1][iy][ix][iz] = q[1];
+                    e[ESC3_NUM + 2][iy][ix][iz] = q[2];
+                    e[ESC3_NUM + 3][iy][ix][iz] = q[3];
+                } /* z */
+            } /* x */
+        } /* y */
+        /* Create for this constant-azimuth volume */
+        zxyspline = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 4);
+        for (i = 0; i < (ESC3_NUM + 4); i++) {
+            set_multi_UBspline_3d_s (zxyspline, i, &e[i][0][0][0]);
+        }
+        if (0 == iab) {
+            sf_putint (out, "n1", (size_t)sizeof(multi_UBspline_3d_s) +
+                                  (size_t)zxyspline->nc);
+        }
+        sf_ucharwrite ((unsigned char*)zxyspline,
+                       (size_t)sizeof(multi_UBspline_3d_s), out);
+        sf_ucharwrite ((unsigned char*)zxyspline->coefs,
+                       (size_t)zxyspline->nc, out);
+        fflush (sf_filestream (out));
+        nc += (size_t)zxyspline->nc;
+        destroy_Bspline (zxyspline);
+    } /* a*b */
     if (verb) {
         sf_warning (".");
         sf_warning ("%lu blocks computed, %g Mb of spline coefficients produced",
-                    (size_t)na*(size_t)nb, nc*1e-6);
+                    (size_t)nab, nc*1e-6);
     }
 
     free (e[0][0][0]);

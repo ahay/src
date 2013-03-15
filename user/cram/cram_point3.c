@@ -512,7 +512,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         /* Opening angle azimuth last index */
         iozl = sf_cram_point3_angle_idx (ozc + doz, 0.0, 2.0*cram_point->da, NULL);
         iozl += 1;
-        dw = 1.0/*((idal - idaf + 1)*(idzl - idzf + 1))*/;
+        dw = 1.0/*((ioal - ioaf + 1)*(iozl - iozf + 1))*/;
         for (ioz = iozf; ioz <= iozl; ioz++) { /* Opening angle azimuths */
             iz = ioz;
             if (iz < 0) {

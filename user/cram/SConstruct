@@ -6,7 +6,7 @@ progs = '''
 bspvel2 bspvel3
 cram2 cram3
 escbsc3 escfgrid2 escnband2
-escrt2 escrt3 escst3
+escrt2 escrt3 escscd3 escst3
 esctbl2
 pcrdata2 pcrdata3 pcrsurv3
 rpslow2
@@ -30,6 +30,7 @@ except: # local version
     lflags = env.get('LINKFLAGS','')
     if isinstance (lflags, str):
         env['LINKFLAGS'] = lflags.replace('-openmp','').replace('-fopenmp','')
+    env.Prepend(CPPDEFINES=['DEBUG'])
     root = None
     SConscript('../../api/c/SConstruct')
 
@@ -39,6 +40,9 @@ sse = None
 #sse = env.get('SSE')
 if string.rfind(env.get('CC'),'icc') >= 0:
     env.Append(CCFLAGS=['-restrict','-wd188'])
+threads = env.get('PTHREADS')
+if threads:
+    env.Prepend(CPPDEFINES=['PTHREADS'])
 
 if sse:
     env.Prepend(CPPPATH=['../../include'],
