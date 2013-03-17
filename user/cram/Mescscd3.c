@@ -34,6 +34,7 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 
 #include <rsf.h>
@@ -419,6 +420,14 @@ int main (int argc, char* argv[]) {
                         close (new_sd);
                         break;
                     }
+                    on = 1;
+                    if (setsockopt (new_sd, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) {
+                        fprintf (logf, "Can not set TCP_NODELAY for a new connection\n");
+                        fprintf (logf, "Rejecting connection from %s\n", ip);
+                        fflush (logf);
+                        close (new_sd);
+                        break;
+                    }
                     fprintf (logf, "Accepted client from %s, socket %d\n", ip, new_sd);
                     fflush (logf);
                     /* Add the new incoming connection to the master read set */
@@ -428,57 +437,67 @@ int main (int argc, char* argv[]) {
                     pthread_mutex_init (&smutex[i], NULL);
                 } while (new_sd != -1);
             } else { /* Receive incoming data on this socket */
-                ijob++;
-                /* Find a free block for storing this job request */
-                if (ijob == mjobs) {
-                    if (old_qjobs && sf_thpool_jobsn (tpool) <= mjobs)
-                        free (old_qjobs);
-                    else if (old_qjobs)
-                        fprintf (logf, "Number of jobs in the queue has exceeded %d, can not free memory\n", mjobs);
-                    old_qjobs = qjobs;
-                    qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
-                    ijob = 0;
-                }
-                rwork = &qjobs[ijob];                    
-                close_conn = false;
-                rwork->sd = i;
-                rwork->iab0 = iab0;
-                rwork->iab1 = iab1;
-                rwork->nab = na*nb;
-                rwork->scsplines = scsplines;
-                rwork->smutex = &smutex[i];
-                len = 0;
-                while (len < sizeof(sf_esc_scgrid3_areq)) {
-                    /* Receive job request from the client */
-                    rc = recv (i, (void*)(((unsigned char*)&rwork->areq) + len),
-                               sizeof(sf_esc_scgrid3_areq) - len, 0);
-                    if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                        /* Connection terminated */
-                        fprintf (logf, "Connection with socket %d is terminated\n", i);
-                        close_conn = true;
-                        break;
+                do { /* Receive one or more requests */
+                    rwork = &qjobs[ijob];                    
+                    close_conn = false;
+                    rwork->sd = i;
+                    rwork->iab0 = iab0;
+                    rwork->iab1 = iab1;
+                    rwork->nab = na*nb;
+                    rwork->scsplines = scsplines;
+                    rwork->smutex = &smutex[i];
+                    len = 0;
+                    while (len < sizeof(sf_esc_scgrid3_areq)) {
+                        /* Receive job request from the client */
+                        rc = recv (i, (void*)(((unsigned char*)&rwork->areq) + len),
+                                   sizeof(sf_esc_scgrid3_areq) - len, 0);
+                        if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                            /* Connection terminated */
+                            fprintf (logf, "Connection with socket %d is terminated\n", i);
+                            close_conn = true;
+                            break;
+                        }
+                        if (0 == rc) {
+                            /* Normal shutdown */
+                            fprintf (logf, "Socket %d has been closed by the remote party\n", i);
+                            close_conn = true;
+                            break;
+                        }
+                        if (rc < 0 && errno == EAGAIN)
+                            /* Nothing to receive */
+                            break;
+                        if (rc > 0)
+                            len += rc;
                     }
-                    if (0 == rc) {
-                        /* Normal shutdown */
-                        fprintf (logf, "Socket %d has been closed by the remote party\n", i);
-                        close_conn = true;
-                        break;
+                    if (close_conn) {
+                        /* Clean up after disconnect */
+                        close (i);
+                        FD_CLR(i, &master_set);
+                        if (i == max_sd) {
+                            while (FD_ISSET(max_sd, &master_set) == false)
+                                max_sd -= 1;
+                        }
+                        len = 0;
+                        pthread_mutex_destroy (&smutex[i]);
+                    } else if (len > 0 && len < sizeof(sf_esc_scgrid3_areq)) {
+                        fprintf (logf, "Partial receive from socket %d\n", i);
+                        len = 0;
+                    } else if (len) {
+                        /* Otherwise - add to the work queue */
+                        sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork);
+                        ijob++;
+                        /* Find a free block for the next job request */
+                        if (ijob == mjobs) {
+                            if (old_qjobs && sf_thpool_jobsn (tpool) <= mjobs)
+                                free (old_qjobs);
+                            else if (old_qjobs)
+                                fprintf (logf, "Number of jobs in the queue has exceeded %d, can not free memory\n", mjobs);
+                            old_qjobs = qjobs;
+                            qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
+                            ijob = 0;
+                        }
                     }
-                    if (rc > 0)
-                        len += rc;
-                }
-                if (close_conn) {
-                    /* Clean up after disconnect */
-                    close (i);
-                    FD_CLR(i, &master_set);
-                    if (i == max_sd) {
-                        while (FD_ISSET(max_sd, &master_set) == false)
-                            max_sd -= 1;
-                    }
-                    pthread_mutex_destroy (&smutex[i]);
-                } else { /* Otherwise - add to the work queue */
-                    sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork);
-                }
+                } while (len != 0);
             } /* If a new connection */
         } /* Loop through selectable descriptors */
     } while (true);

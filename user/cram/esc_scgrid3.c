@@ -29,6 +29,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include <rsf.h>
 
@@ -258,6 +259,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                                             sizeof(multi_UBspline_3d_s));
 /*
 #ifdef DEBUG
+
     esc_scgrid->mmaped = sf_ucharalloc ((size_t)esc_scgrid->offs +
                                         (size_t)esc_scgrid->n*
                                         (size_t)esc_scgrid->na*
@@ -266,6 +268,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                       (size_t)esc_scgrid->n*
                                       (size_t)esc_scgrid->na*
                                       (size_t)esc_scgrid->nb, scgrid);
+
 #else
 */
     esc_scgrid->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_scgrid->offs +
@@ -277,6 +280,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 /*
 #endif
 */
+
     nc = esc_scgrid->offs;
     for (ia = 0; ia < esc_scgrid->na; ia++) {
         for (ib = 0; ib < esc_scgrid->nb; ib++) {
@@ -349,9 +353,14 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 continue;
             }
             /* Allow socket descriptor to be reuseable */
-            if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR,
-                            (char *)&on, sizeof(on)) < 0) {
+            if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
                 sf_warning ("setsockopt() failed");
+                close (is);
+                continue;
+            }
+            on = 1;
+            if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
+                sf_warning ("setsockopt()[TCP_NODELAY] failed");
                 close (is);
                 continue;
             }
@@ -512,13 +521,15 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, floa
     fd_set sset, wset;
     struct timeval timeout;
 
+    for (i = 0; i < n; i++)
+         local[i] = true;
+
     if (esc_scgrid->remote) {
         /* Message ID for this batch of points */
         id = rand ()*rand ();
         FD_ZERO(&sset);
         /* Choose a subset of servers to communicate to */
         for (i = 0; i < n; i++) {
-            local[i] = true; /* Will be set to false, if transmission is finished */
             iab = ia[i]*esc_scgrid->nb + ib[i];
             sc[i] = -1;
             if (0 == esc_scgrid->nsck[iab])
@@ -576,36 +587,47 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, floa
                 if (!FD_ISSET (is, &wset))
                     continue;
                 desc_ready--;
-                len = 0;
-                avals.id = -1;
-                /* Receive loop */
-                while (len < sizeof(sf_esc_scgrid3_avals)) {
-                    /* Receive job result from the client */
-                    rc = recv (is, (void*)(((unsigned char*)&avals) + len),
-                               sizeof(sf_esc_scgrid3_avals) - len, 0);
-                    if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                        /* Connection terminated */
-                        if (0 == rc)
-                            sf_warning ("The server has closed connection for socket %d", is);
-                        else
-                            sf_warning ("Can not receive data for socket %d, disconnecting", is);
-                        sf_cram_scgrid3_disconnect (esc_scgrid, is);
-                        FD_CLR(is, &sset);
-                        break;
+                do {
+                    len = 0;
+                    avals.id = -1;
+                    /* Receive loop */
+                    while (len < sizeof(sf_esc_scgrid3_avals)) {
+                        /* Receive job result from the client */
+                        rc = recv (is, (void*)(((unsigned char*)&avals) + len),
+                                   sizeof(sf_esc_scgrid3_avals) - len, 0);
+                        if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
+                            /* Connection terminated */
+                            if (0 == rc)
+                                sf_warning ("The server has closed connection for socket %d", is);
+                            else
+                                sf_warning ("Can not receive data for socket %d, disconnecting", is);
+                            sf_cram_scgrid3_disconnect (esc_scgrid, is);
+                            FD_CLR(is, &sset);
+                            len = 0;
+                            break;
+                        }
+                        if (rc < 0 && errno == EAGAIN)
+                            /* Nothing to receive */
+                            break;
+                        if (rc > 0)
+                            len += rc;
                     }
-                    if (rc > 0)
-                        len += rc;
-                }
-                if (avals.id >= id && avals.id < (id + (size_t)n)) {
-                    if (avals.vals[0] != SF_HUGE) {
-                        i = avals.id - id;
-                        local[i] = false;
-                        memcpy (&vals[i*(ESC3_NUM + 4)], avals.vals, sizeof(float)*(ESC3_NUM + 4));
-                        ns--;
-                    } else
-                        sf_warning ("Server replied that the angle is out of bounds"); 
-                } else
-                    sf_warning ("Received garbage from socket %d", is);
+                    if (len > 0) {
+                        if (len < sizeof(sf_esc_scgrid3_avals)) {
+                            sf_warning ("Partial receive from socket %d\n", i);
+                            len = 0;
+                        } else if (avals.id >= id && avals.id < (id + (size_t)n)) {
+                            if (avals.vals[0] != SF_HUGE) {
+                                i = avals.id - id;
+                                local[i] = false;
+                                memcpy (&vals[i*(ESC3_NUM + 4)], avals.vals, sizeof(float)*(ESC3_NUM + 4));
+                                ns--;
+                            } else
+                                sf_warning ("Server replied that the angle is out of bounds"); 
+                        } else
+                            sf_warning ("Received garbage from socket %d", is);
+                    }
+                } while (len != 0);
             } /* Loop over ready sockets */
         } /* End of polling */
         if (ns)
@@ -614,8 +636,8 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, floa
 
     /* Extract values locally */
     for (i = 0; i < n; i++) {
-        if (local[i] || false == esc_scgrid->remote)
-            sf_cram_scgrid3_get_lvalue (esc_scgrid, z, x, y, ia[i], ib[i], &vals[i*ESC3_NUM + 4]);
+        if (local[i])
+            sf_cram_scgrid3_get_lvalue (esc_scgrid, z, x, y, ia[i], ib[i], &vals[i*(ESC3_NUM + 4)]);
     }
 }
 
