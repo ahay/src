@@ -109,8 +109,8 @@ int* sf_prepare_cram_survey3_tri (int n, float *s, float emax, int *ntr) {
 }
 
 int main (int argc, char* argv[]) {
-    int nt, nst, *sh, **hh;
-    size_t i, is, n, ns, nh, nht, *irec, *ihtr, sz;
+    int nt, nst, *sh = NULL, **hh = NULL;
+    size_t i, is, n, ns, nh, nht = 0, *irec = NULL, *ihtr = NULL, sz;
     float gx, gy, esmax, ehmax, *buf, *src, *rec, *minmax;
     sf_complex s, ps, r;
     sf_file data, survey, sxsy = NULL, gxgy = NULL;

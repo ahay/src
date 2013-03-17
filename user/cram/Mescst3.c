@@ -27,7 +27,8 @@ int main (int argc, char* argv[]) {
     float z, x, y, a, b, t, l;
     float ze, xe, ye, ae, be;
     float ***e;
-    sf_file spdom, vspline = NULL, scgrid = NULL, out;
+    sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
+            out;
 
     bool verb, parab;
     sf_esc_slowness3 esc_slow;
@@ -103,6 +104,11 @@ int main (int argc, char* argv[]) {
     /* Grid of supercells of local escape solutions */
     scgrid = sf_input ("scgrid");
 
+    if (sf_getstring ("scdaemon")) {
+        /* Daemon for distributed computation */
+        scdaemon = sf_input ("scdaemon");
+    }
+
     if (!sf_getint ("morder", &morder)) morder = 1;
     /* Order of interpolation accuracy in the angular domain (1-3) */
    
@@ -167,7 +173,7 @@ int main (int argc, char* argv[]) {
     esc_tracer = sf_esc_tracer3_init (esc_slow, NULL, 0.0, NULL);
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
-    esc_scgrid = sf_esc_scgrid3_init (scgrid, esc_tracer, verb);
+    esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, verb);
     sf_esc_scgrid3_set_morder (esc_scgrid, morder);
 
     for (iy = 0; iy < ny; iy++) {

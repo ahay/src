@@ -145,14 +145,14 @@ int main (int argc, char* argv[]) {
                     ox, ox + (nx - 1)*dx);
         sf_warning ("Spatial domain dimensions: ny=%d, y=[%g, %g]", ny,
                     oy, oy + (ny - 1)*dy);
-        ia = ((int)(oab + 0.5)) / na;
-        ib = ((int)(oab + 0.5)) % na;
-        sf_warning ("Angular domain starts at: a=%g, b=%g",
-                    oa + ia*da, ob + ib*db);
-        ia = ((int)(oab + nab - 0.5)) / na;
-        ib = ((int)(oab + nab - 0.5)) % na;
-        sf_warning ("Angular domain ends at: a=%g, b=%g (%d angles total)",
-                    oa + ia*da, ob + ib*db, nab);
+        ia = ((int)(oab + 0.5)) / nb;
+        ib = ((int)(oab + 0.5)) % nb;
+        sf_warning ("Angular domain starts at: a(%d)=%g, b(%d)=%g",
+                    ia, oa + ia*da, ib, ob + ib*db);
+        ia = ((int)(oab + nab - 0.5)) / nb;
+        ib = ((int)(oab + nab - 0.5)) % nb;
+        sf_warning ("Angular domain ends at: a(%d)=%g, b(%d)=%g (%d angles total)",
+                    ia, oa + ia*da, ib, ob + ib*db, nab);
         sf_warning ("Angular domain sampling: da=%g, db=%g", da, db);
     }
 
@@ -187,8 +187,8 @@ int main (int argc, char* argv[]) {
     /* Loop over angle domain and create constant-angle
        local escape solutions */
     for (iab = 0; iab < nab; iab++) {
-        ia = (int)(oab + iab + 0.5) / na;
-        ib = (int)(oab + iab + 0.5) % na;
+        ia = (int)(oab + iab + 0.5) / nb;
+        ib = (int)(oab + iab + 0.5) % nb;
         a = oa + ia*da;
         b = ob + ib*db;
         /* Initial phase vector */

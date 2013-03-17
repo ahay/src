@@ -63,6 +63,7 @@ static char* sf_escscd3_local_ip () {
 typedef struct {
     sf_esc_scgrid3_areq  areq;
     int                  sd; /* Socket to write to */
+    pthread_mutex_t     *smutex; /* Mutex for serial access to the socket */
     int                  iab0, iab1, nab;
     multi_UBspline_3d_s *scsplines;
 } sf_escscd3_work;
@@ -70,10 +71,11 @@ typedef struct {
 /* Elementary task to be peformed by the workers */
 static void* sf_escscd3_extract_point (void *ud) {
     sf_escscd3_work *data = (sf_escscd3_work*)ud;
-    float vals[ESC3_NUM + 4];
+    sf_esc_scgrid3_avals avals;
     int iab = data->areq.iab;
     int len = 0, rc;
 
+    avals.id = data->areq.id;
     if (iab > data->iab1)
         iab -= data->nab;
     else if (iab < data->iab0)
@@ -81,18 +83,20 @@ static void* sf_escscd3_extract_point (void *ud) {
     /* Interpolate */
     if (iab >= data->iab0 && iab <= data->iab1)
         eval_multi_UBspline_3d_s (&data->scsplines[iab - data->iab0],
-                                  data->areq.y, data->areq.x, data->areq.z, vals);
+                                  data->areq.y, data->areq.x, data->areq.z, avals.vals);
     else
-        vals[0] = SF_HUGE;
-    /* Send back the result */
-    while (len < sizeof(float)*(ESC3_NUM + 4)) {
-        rc = send (data->sd, (const void*)(((unsigned char*)vals) + len),
-                   sizeof(float)*(ESC3_NUM + 4) - len, 0);
+        avals.vals[0] = SF_HUGE; /* Return error */
+    /* Send the result back */
+    pthread_mutex_lock (data->smutex);
+    while (len < sizeof(sf_esc_scgrid3_avals)) {
+        rc = send (data->sd, (const void*)(((unsigned char*)&avals) + len),
+                   sizeof(sf_esc_scgrid3_avals) - len, 0);
         if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
-            break;
+            break; /* The connection is gone */
         if (rc > 0)
             len += rc;
     }
+    pthread_mutex_unlock (data->smutex);
     return NULL;
 }
 
@@ -107,20 +111,22 @@ int main (int argc, char* argv[]) {
     sf_file in, scgrid = NULL, out;
     FILE *logf;
     char sbuffer[MAX_BUF];
-    char *str;
+    char *str = NULL;
     /* Fork variables */
     pid_t pid, sid;
     /* Server network variables */
-    char *ip;
+    char *ip = NULL;
     int len, rc, on = 1, ijob, mjobs;
     int listen_sd, max_sd, new_sd, desc_ready;
     bool close_conn = false;
     struct sockaddr_in serv_addr, client_addr;
     struct timeval timeout;
     fd_set master_set, working_set;
+    socklen_t clen;
     /* Thread pool */
     sf_thpool tpool;
     sf_escscd3_work *rwork, *qjobs, *old_qjobs;
+    pthread_mutex_t smutex[FD_SETSIZE];
 
     sf_init (argc, argv);
 
@@ -201,7 +207,7 @@ int main (int argc, char* argv[]) {
     sf_putint (out, "Port", port);
     sf_putstring (out, "Remote", ith ? "y" : "n");
 
-    if (nab*(ncpu/ith) < na*nb)
+    if (ith && nab*(ncpu/ith) < na*nb)
         sf_error ("Incomplete angle coverage; increase nab= or number of CPUs");
     /* Determine how much data from the supercell grid to hold per CPU */
     if (ith && 0 == (icpu % ith)) {
@@ -224,6 +230,9 @@ int main (int argc, char* argv[]) {
         }
         sf_warning ("Serving angular patch from iab=%d to iab=%d [CPU %d]",
                     iab0, iab1, icpu);
+    } else {
+        iab0 = nab;
+        iab1 = -nab;
     }
 
     sf_ucharwrite ((unsigned char*)&serv_addr, sizeof (serv_addr), out);
@@ -270,7 +279,7 @@ int main (int argc, char* argv[]) {
         /* Wait for the parent to complete data preparation */
         while (lockf (tmpfile, F_LOCK, 1))
             sleep (1);
-        sf_warning ("Exiting child process");
+        sf_warning ("Exiting parent process");
         close (tmpfile);
         unlink (str);
         free (str);
@@ -342,10 +351,6 @@ int main (int argc, char* argv[]) {
     max_sd = listen_sd;
     FD_SET(listen_sd, &master_set);
 
-    /* Die after a certain period of inactivity */
-    timeout.tv_sec  = tout*60;
-    timeout.tv_usec = 0;
-
     /* Open log file */
     snprintf (sbuffer, MAX_BUF, "sfescscd3_%s_%d.log", ip, icpu/ith);
     logf = fopen (sbuffer, "w+");
@@ -366,12 +371,15 @@ int main (int argc, char* argv[]) {
     qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
     /* Position in the buffer for the next job */
     ijob = 0;
+    clen = sizeof(client_addr);
 
     /* Loop waiting for incoming connects or for incoming data */
     do {
+        /* Die after a certain period of inactivity */
+        timeout.tv_sec  = tout*60;
+        timeout.tv_usec = 0;
         memcpy (&working_set, &master_set, sizeof(master_set));
-
-        /* Call select() and wait 5 minutes for it to complete */
+        /* Poll sockets for incoming data */
         rc = select (max_sd + 1, &working_set, NULL, NULL, &timeout);
         if (rc < 0) {
             fprintf (logf, "select() failed");
@@ -387,82 +395,92 @@ int main (int argc, char* argv[]) {
         desc_ready = rc;
         for (i = 0; i <= max_sd && desc_ready > 0; i++) {
             /* Check to see if this descriptor is ready */
-            if (FD_ISSET (i, &working_set)) {
-                desc_ready -= 1;
-                /* Check to see if this is the listening socket */
-                if (i == listen_sd) {
-                    /* Accept all incoming connections */
-                    do {
-                        new_sd = accept (listen_sd, (struct sockaddr*)&client_addr, NULL);
-                        if (new_sd < 0) {
-                            if (errno != EWOULDBLOCK) {
-                                fprintf (logf, "accept() failed");
-                                fflush (logf);
-                                return -1;
-                            }
-                            break;
+            if (!FD_ISSET (i, &working_set))
+                continue;
+            desc_ready--;
+            /* Check to see if this is the listening socket */
+            if (i == listen_sd) {
+                /* Accept all incoming connections */
+                do {
+                    new_sd = accept (listen_sd, (struct sockaddr*)&client_addr, &clen);
+                    if (new_sd < 0) {
+                        if (errno != EWOULDBLOCK) {
+                            fprintf (logf, "accept() failed");
+                            fflush (logf);
+                            return -1;
                         }
-                        ip = inet_ntoa (client_addr.sin_addr);
-                        fprintf (logf, "Accepted client from %s, socket %d\n", ip, new_sd);
+                        break;
+                    }
+                    ip = inet_ntoa (client_addr.sin_addr);
+                    if (new_sd >= FD_SETSIZE) {
+                        fprintf (logf, "Maximum number of connections (FD_SETSIZE) is exceeded\n");
+                        fprintf (logf, "Rejecting connection from %s\n", ip);
                         fflush (logf);
-                        /* Add the new incoming connection to the master read set */
-                        FD_SET(new_sd, &master_set);
-                        if (new_sd > max_sd)
-                            max_sd = new_sd;
-                    } while (new_sd != -1);
-                } else { /* Receive incoming data on this socket */
-                    ijob++;
-                    /* Find a free block for storing this job request */
-                    if (ijob == mjobs) {
-                        if (old_qjobs && sf_thpool_jobsn (tpool) <= mjobs)
-                            free (old_qjobs);
-                        else if (old_qjobs)
-                            fprintf (logf, "Number of jobs in the queue has exceeded %d, can not free memory\n", mjobs);
-                        old_qjobs = qjobs;
-                        qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
-                        ijob = 0;
+                        close (new_sd);
+                        break;
                     }
-                    rwork = &qjobs[ijob];                    
-                    close_conn = false;
-                    rwork->sd = i;
-                    rwork->iab0 = iab0;
-                    rwork->iab1 = iab1;
-                    rwork->nab = na*nb;
-                    rwork->scsplines = scsplines;
-                    len = 0;
-                    while (len < sizeof(sf_esc_scgrid3_areq)) {
-                        /* Receive job request from the client */
-                        rc = recv (i, (void*)(((unsigned char*)&rwork->areq) + len),
-                                   sizeof(sf_esc_scgrid3_areq) - len, 0);
-                        if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                            /* Connection terminated */
-                            fprintf (logf, "Connection with socket %d is terminated\n", i);
-                            close_conn = true;
-                            break;
-                        }
-                        if (0 == rc) {
-                            /* Normal shutdown */
-                            fprintf (logf, "Socket %d has been closed by the remote party\n", i);
-                            close_conn = true;
-                            break;
-                        }
-                        if (rc > 0)
-                            len += rc;
+                    fprintf (logf, "Accepted client from %s, socket %d\n", ip, new_sd);
+                    fflush (logf);
+                    /* Add the new incoming connection to the master read set */
+                    FD_SET(new_sd, &master_set);
+                    if (new_sd > max_sd)
+                        max_sd = new_sd;
+                    pthread_mutex_init (&smutex[i], NULL);
+                } while (new_sd != -1);
+            } else { /* Receive incoming data on this socket */
+                ijob++;
+                /* Find a free block for storing this job request */
+                if (ijob == mjobs) {
+                    if (old_qjobs && sf_thpool_jobsn (tpool) <= mjobs)
+                        free (old_qjobs);
+                    else if (old_qjobs)
+                        fprintf (logf, "Number of jobs in the queue has exceeded %d, can not free memory\n", mjobs);
+                    old_qjobs = qjobs;
+                    qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
+                    ijob = 0;
+                }
+                rwork = &qjobs[ijob];                    
+                close_conn = false;
+                rwork->sd = i;
+                rwork->iab0 = iab0;
+                rwork->iab1 = iab1;
+                rwork->nab = na*nb;
+                rwork->scsplines = scsplines;
+                rwork->smutex = &smutex[i];
+                len = 0;
+                while (len < sizeof(sf_esc_scgrid3_areq)) {
+                    /* Receive job request from the client */
+                    rc = recv (i, (void*)(((unsigned char*)&rwork->areq) + len),
+                               sizeof(sf_esc_scgrid3_areq) - len, 0);
+                    if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                        /* Connection terminated */
+                        fprintf (logf, "Connection with socket %d is terminated\n", i);
+                        close_conn = true;
+                        break;
                     }
-                    if (close_conn) {
-                        /* Clean up after disconnect */
-                        close (i);
-                        FD_CLR(i, &master_set);
-                        if (i == max_sd) {
-                            while (FD_ISSET(max_sd, &master_set) == false)
-                                max_sd -= 1;
-                        }
-                    } else { /* Otherwise - add to the work queue */
-                        sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork);
+                    if (0 == rc) {
+                        /* Normal shutdown */
+                        fprintf (logf, "Socket %d has been closed by the remote party\n", i);
+                        close_conn = true;
+                        break;
                     }
-                } /* End of existing connection is readable */
-            } /* End of if (FD_ISSET(i, &working_set)) */
-        } /* End of loop through selectable descriptors */
+                    if (rc > 0)
+                        len += rc;
+                }
+                if (close_conn) {
+                    /* Clean up after disconnect */
+                    close (i);
+                    FD_CLR(i, &master_set);
+                    if (i == max_sd) {
+                        while (FD_ISSET(max_sd, &master_set) == false)
+                            max_sd -= 1;
+                    }
+                    pthread_mutex_destroy (&smutex[i]);
+                } else { /* Otherwise - add to the work queue */
+                    sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork);
+                }
+            } /* If a new connection */
+        } /* Loop through selectable descriptors */
     } while (true);
 
     fprintf (logf, "%d jobs are left in the queue\n", sf_thpool_jobsn (tpool));
@@ -471,8 +489,10 @@ int main (int argc, char* argv[]) {
 
     /* Shutdown all connections */
     for (i=0; i <= max_sd; i++) {
-        if (FD_ISSET(i, &master_set))
+        if (FD_ISSET(i, &master_set)) {
+            pthread_mutex_destroy (&smutex[i]);
             close (i);
+        }
     }
     /* Clean up */
     sf_thpool_destroy (tpool);

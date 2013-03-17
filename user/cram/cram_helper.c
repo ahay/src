@@ -218,7 +218,7 @@ int sf_cram_triangulate (int np, int st, float *xy, int *vertices, int *ntr)
 
     bool inside;
     int i, j, k;
-    double xp, yp, x1, y1, x2, y2, x3, y3, xc, yc, r;
+    double xp, yp, x1, y1, x2, y2, x3, y3, xc = 0, yc = 0, r = 0;
     double xmin, xmax, ymin, ymax, xmid, ymid;
     double dx, dy, dmax;
 
