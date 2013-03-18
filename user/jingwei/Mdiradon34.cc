@@ -1,5 +1,7 @@
 //   direct azimuthally anisotropic 3to4 full Radon transform (double integral, nearest point interpolation)
 //   real f(t,x,y) --> real u(tau,p,q,s)
+//   fi=1  p=sqrt(W11);  q=sqrt(W22);  s=W12;
+//   f2=2  p=Vcos^-2;    q=Vsin^-2;    s=Vavg^-2;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  
@@ -57,6 +59,9 @@ int main(int argc, char** argv)
 
   // Set output
   iRSF par(0);
+  int fi;
+  par.get("fi",fi);
+  cerr<<"fi "<<fi<<endl;
 
   int ntau, np, nq, ns;
   par.get("ntau",ntau); 
@@ -128,9 +133,11 @@ int main(int argc, char** argv)
               s = s0 + l*ds;
               x = x0 + m*dx;
               y = y0 + n*dy;
-              //t = tau*tau+p*x*x+q*y*y+2*s*x*y;
-              //t = tau*tau+p*p*x*x+q*q*y*y+2*s*s*x*y;
-              t = tau*tau+p*p*x*x+q*q*y*y+2*s*x*y;
+              if (fi==1) {
+                t = tau*tau+p*p*x*x+q*q*y*y+2*s*x*y;
+              } else if (fi==2) {
+                t = tau*tau + s*(x*x+y*y) + p*(x*x-y*y) + 2*q*x*y;
+	      }
               if (t>=0) {
 		t = sqrt(t);
                 w = int(round((t-t0)/dt));

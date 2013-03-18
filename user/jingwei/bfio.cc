@@ -696,7 +696,7 @@ int BFIO::dikernel3(const int fi, const float tau, const float p, const float q,
 int BFIO::kernel34(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& res, const float xx)
 {
   if(_fi==1) {
-    // full Radon
+    // ps=sqrt(W11);  qs=sqrt(W22);  xx=W12;
     //--------------------------
     int m = trg.size();
     int n = src.size();
@@ -717,9 +717,39 @@ int BFIO::kernel34(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& r
     float COEF = 2*M_PI;
     for(int j=0; j<n; j++) 
       for(int i=0; i<m; i++) {
-	//phs(i,j) = taus[i]*taus[i] + ps[i]*xs[j]*xs[j] + qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j];
-        //phs(i,j) = taus[i]*taus[i] + ps[i]*ps[i]*xs[j]*xs[j] + qs[i]*qs[i]*ys[j]*ys[j] + 2*xx*xx*xs[j]*ys[j];
         phs(i,j) = taus[i]*taus[i] + ps[i]*ps[i]*xs[j]*xs[j] + qs[i]*qs[i]*ys[j]*ys[j] + 2*xx*xs[j]*ys[j];
+        if (phs(i,j)>=0) {
+	  phs(i,j) = COEF * sqrt(phs(i,j)) * ws[j];
+          ss(i,j) = sin(phs(i,j));
+	  cc(i,j) = cos(phs(i,j));
+          res(i,j) = cpx( cc(i,j), ss(i,j) );
+	} else {
+          res(i,j) = cpx(0,0);
+        }
+      }
+ } else if(_fi==2) {
+    // ps=Vcos^-2;  qs=Vsin^-2;  xx=Vavg^-2;
+    //--------------------------
+    int m = trg.size();
+    int n = src.size();
+    //
+    vector<float> taus(m), ps(m), qs(m);
+    for(int i=0; i<m; i++)      taus[i] = trg[i](0)*(taumax-taumin) + taumin;
+    for(int i=0; i<m; i++)      ps[i] = trg[i](1)*(pmax-pmin) + pmin;
+    for(int i=0; i<m; i++)      qs[i] = trg[i](2)*(qmax-qmin) + qmin;
+    //
+    vector<float> ws(n), xs(n), ys(n);
+    for(int i=0; i<n; i++)      ws[i] = src[i](0)*(wmax-wmin) + wmin;
+    for(int i=0; i<n; i++)      xs[i] = src[i](1)*(xmax-xmin) + xmin; 
+    for(int i=0; i<n; i++)      ys[i] = src[i](2)*(ymax-ymin) + ymin; 
+    //
+    FltNumMat phs(m,n);
+    FltNumMat ss(m,n), cc(m,n);
+    res.resize(m,n);
+    float COEF = 2*M_PI;
+    for(int j=0; j<n; j++) 
+      for(int i=0; i<m; i++) {
+	phs(i,j) = taus[i]*taus[i] + xx*(xs[j]*xs[j]+ys[j]*ys[j]) + ps[i]*(xs[j]*xs[j]-ys[j]*ys[j]) + 2*qs[i]*(xs[j]*ys[j]);
         if (phs(i,j)>=0) {
 	  phs(i,j) = COEF * sqrt(phs(i,j)) * ws[j];
           ss(i,j) = sin(phs(i,j));
