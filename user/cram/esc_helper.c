@@ -334,24 +334,21 @@ static void* thpool_thread_do (void *ud) {
             exit (-1);
         }
 
-        if (tp_p->alive) {
-            /* Read job from queue and execute it */
-            void*(*func_buff)(void* arg);
-            void* arg_buff;
-            thpool_job_t* job_p;
+        /* Read job from queue and execute it */
+        void*(*func_buff)(void* arg);
+        void* arg_buff;
+        thpool_job_t* job_p;
 
-            pthread_mutex_lock (&tp_p->mutex);
+        pthread_mutex_lock (&tp_p->mutex);
 
-            job_p = thpool_jobqueue_peek (tp_p);
-            func_buff = job_p->function;
-            arg_buff  = job_p->arg;
-            thpool_jobqueue_removelast (tp_p);
+        job_p = thpool_jobqueue_peek (tp_p);
+        func_buff = job_p->function;
+        arg_buff  = job_p->arg;
+        thpool_jobqueue_removelast (tp_p);
 
-            pthread_mutex_unlock (&tp_p->mutex);
+        pthread_mutex_unlock (&tp_p->mutex);
 
-            func_buff (arg_buff); /* run job */
-        } else
-            return NULL; /* Terminate thread */
+        func_buff (arg_buff); /* run job */
     }
     return NULL;
 }

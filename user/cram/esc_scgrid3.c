@@ -57,6 +57,9 @@ typedef struct {
 /* Structure for getting requested escape values back */
 /*^*/
 
+#define SCGRID3_MAX_STENCIL 36
+/*^*/
+
 #endif
 
 #include "einspline.h"
@@ -162,8 +165,6 @@ static int sf_scgrid3_tps_ia_stencil4[SCGRID3_TPS_STENCIL4] =
 { 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3 };
 */
 #define SCGRID3_TPS_MAX_STENCIL 16
-
-#define SCGRID3_MAX_STENCIL 36
 
 /* Initialize the random numbers generator */
 static void sf_esc_scgrid3_init_rand () {
@@ -375,7 +376,8 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             if (rc < 0) { 
                 if (EINPROGRESS == errno) { 
                     do {
-                        timeout.tv_sec = 30; 
+                        /* Connection timeout */
+                        timeout.tv_sec = 5*60; 
                         timeout.tv_usec = 0; 
                         FD_ZERO(&sset); 
                         FD_SET(is, &sset); 
@@ -562,6 +564,8 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, floa
                 }
                 if (rc > 0)
                     len += rc;
+                else
+                    break;
             }
             if (len == sizeof(sf_esc_scgrid3_areq)) {
                 if (!FD_ISSET (sc[i], &sset))
@@ -611,6 +615,8 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, floa
                             break;
                         if (rc > 0)
                             len += rc;
+                        else
+                            break;
                     }
                     if (len > 0) {
                         if (len < sizeof(sf_esc_scgrid3_avals)) {
