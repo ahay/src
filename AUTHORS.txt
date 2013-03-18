@@ -11,6 +11,7 @@ Zhonghuan Chen <isaacthu@gmail.com>
 Jiubing Cheng <cjb1206@tongji.edu.cn>
 Joseph Dellinger <geojoe@freeusp.org>
 Esteban Diaz <ediazpan@mines.edu>
+Gang Fang <fanggang723@gmail.com>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>

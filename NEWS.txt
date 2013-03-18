@@ -38,6 +38,7 @@ To programs:
 * Added snap= option for sffftwave2
 * Added frame numbers for movies made with sfgraph
 * Included lbfgs in user/sparse
+* user/fangg: new contributor (Gang Fang)
 
 ===Bug fixes===
 

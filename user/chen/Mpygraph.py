@@ -127,6 +127,7 @@ if wantlegend:
 xlim(min1,max1)
 ylim(min2,max2)
 
+format=par.string("format","pdf")
 
-savefig(sys.stdout, format='pdf', bbox_inches='tight', transparents=True)
+savefig(sys.stdout, format=format, bbox_inches='tight', transparents=True)
 

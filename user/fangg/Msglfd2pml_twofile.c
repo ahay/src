@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
     spara sp={0};
 
     int pmlout, pmld0, decaybegin;
-    float decay;
+    int decay;
     float gamma = GAMMA;
 
 
