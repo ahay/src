@@ -218,7 +218,7 @@ int main (int argc, char* argv[]) {
         } else {
             /* Find out displacement */
             wcpu = (int)((float)(na*nb/(ncpu/ith)) + 1.0);
-            bcpu = n1 - (ncpu/ith)*(wcpu - 1);
+            bcpu = na*nb - (ncpu/ith)*(wcpu - 1);
             if ((icpu/ith) < bcpu)
                 iab0 = (icpu/ith)*wcpu;
             else
