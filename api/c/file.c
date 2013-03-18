@@ -1005,7 +1005,7 @@ void sf_complexread (/*@out@*/ sf_complex* arr, size_t size, sf_file file)
 		default:
 			got = fread(arr,sizeof(sf_complex),size,file->stream);
 			if (got != size) 
-				sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+				sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
 			break;
     }
 }
@@ -1115,7 +1115,7 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 		default:
 			got = fread(arr,sizeof(char),size,file->stream);
 			if (got != size) 
-				sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+				sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
 			break;
     }
 }
@@ -1151,7 +1151,7 @@ void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
 		default:
 			got = fread(arr,sizeof(unsigned char),size,file->stream);
 			if (got != size) 
-				sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+				sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
 			break;
     }
 }
@@ -1228,7 +1228,7 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 		default:
 			got = fread(arr,sizeof(int),size,file->stream);
 			if (got != size) 
-				sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+				sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
 			break;
     }
 }
@@ -1264,7 +1264,7 @@ void sf_shortread (/*@out@*/ short* arr, size_t size, sf_file file)
 		default:
 			got = fread(arr,sizeof(short),size,file->stream);
 			if (got != size) 
-				sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+				sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
 			break;
     }
 }
@@ -1382,7 +1382,7 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 		default:
 			got = fread(arr,sizeof(float),size,file->stream);
 			if (got != size) 
-				sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+				sf_error ("%s: trouble reading: %lu of %lu",__FILE__,got,size);
 			break;
     }
 }

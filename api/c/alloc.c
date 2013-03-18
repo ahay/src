@@ -49,7 +49,7 @@
     ptr = malloc (size);
 
     if (NULL == ptr)
-	sf_error ("%s: cannot allocate %d bytes:", __FILE__,size);
+	sf_error ("%s: cannot allocate %lu bytes:", __FILE__,size);
 
     return ptr;
 }
