@@ -62,6 +62,7 @@ if root:
         install_list.append(dlib)
     install = env.Install(libdir,install_list)
     env.Install(incdir,inc)
+    env.Install(incdir,'cubeyf1.csv')
 
     if dynlib and env['PLATFORM'] == 'darwin':                
         env.AddPostAction(install,

@@ -59,6 +59,7 @@
 #include <math.h>
 #include <string.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #include <rsfplot.h>
 
@@ -1272,7 +1273,7 @@ static void mov (double hadd, double vadd)
 static void load_font (int ifont)
 {
     int             fd, length;
-    char            filename[120], *fname;
+    char            filename[PATH_MAX], *fname;
     char            string[80];
     char           *newfont;
     int             offs[7];

@@ -62,5 +62,12 @@ for col in ('i','iC'):
          transp=n wantaxis=n
          ''' % (col,colors[col],col))
 Result('monaclip','mona+i mona+iC','SideBySideIso',vppen='ysize=10 xsize=10')
+
+Result('cubeyf1','mona',
+       '''
+       grey allpos=y pclip=100 scalebar=y crowd1=0.8
+       color=cubeyf1 title="Perceptual Rainbow (color=cubeyf1)"
+       transp=n wantaxis=n screenratio=1 titlesz=8
+       ''')
     
 End()

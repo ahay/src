@@ -20,7 +20,7 @@ for prog in rsf.doc.progs.keys():
     Depends('prog.ltx',prog+'.tex')
     Depends('prog.wiki',prog+'.wiki')
 
-Paper('tour',use='listings,color,hyperref',color='mona monacap monaclip')
+Paper('tour',use='listings,color,hyperref')
 Paper('format',use='hyperref')
 Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
@@ -356,5 +356,5 @@ End(options='manuscript',use='hyperref',
     color='''
           const rand logo fern man spiral t10
           fig1 fig2 fig3 fig4 fig5 fig6 fig7 fig8 fig9
-          xyz
+          xyz cubeyf1 mona monacap monaclip
           ''')
