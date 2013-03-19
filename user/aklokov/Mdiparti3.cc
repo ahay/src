@@ -65,6 +65,11 @@ void processPartImage (const float migDipY, const float migDipX, float* partImag
 			// loop over z
 			float* trace2 = sf_floatalloc (tNum_);
 			memset (trace2, 0, tNum_ * sizeof (float) );
+
+			const size_t shiftForTrace = (iy * ixn + ix) * itn;
+
+			int tcount;
+
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif		
@@ -78,6 +83,7 @@ void processPartImage (const float migDipY, const float migDipX, float* partImag
 
 				float diffStack  = 0.f;
 				float diffStack2 = 0.f;
+				tcount = 0;				
 				// loop over y - the second one 
 				for (int ipy = 0; ipy < yNum_; ++ipy) {
 					const float curPosY = yStart_ + ipy * yStep_;	
@@ -107,21 +113,23 @@ void processPartImage (const float migDipY, const float migDipX, float* partImag
 
 						diffStack  += sample;
 						diffStack2 += sample * sample;
+						++tcount;
 					}
 				}
 					
-				const int sInd = (iy * ixn + ix) * itn + iz;
+				const int sInd = shiftForTrace + iz;
 				dPartImage [sInd] += diffStack;
 				trace2 [iz] += diffStack2;
-
-				float* sembTrace = sf_floatalloc (itn);
-				Sembler::getSemblanceForTrace (xNum_, dPartImage + (iy*ixn+ix)*itn, trace2, itn, sembWindow_, sembTrace);		
-				float* pMap = sembMap + (iy*ixn + ix) * itn;
-				float* pTrace = sembTrace;
-				for (int iz = 0; iz < itn; ++iz, ++pMap, ++pTrace)
-					*pMap = *pTrace;
-				free (sembTrace);
 			}
+
+			float* sembTrace = sf_floatalloc (itn);
+			Sembler::getSemblanceForTrace (tcount, dPartImage + shiftForTrace, trace2, itn, sembWindow_, sembTrace);		
+//			Sembler::getSemblanceForTrace (tcount, dPartImage + shiftForTrace, trace2, itn, sembWindow_, sembMap + shiftForTrace);		
+			float* pMap = sembMap + shiftForTrace;
+			float* pTrace = sembTrace;
+			for (int iz = 0; iz < itn; ++iz, ++pMap, ++pTrace)
+				*pMap = *pTrace;
+			free (sembTrace);
 			free (trace2);
 		}
 	}
@@ -321,7 +329,7 @@ int main (int argc, char* argv[]) {
 			memset ( sembMap,    0, outSize * sizeof (float) );
 
 			// read partial image
-			const int startPos = (idpy * dipNum_ + idpx) * inSize * sizeof (float);
+			const size_t startPos = (idpy * dipNum_ + idpx) * inSize * sizeof (float);
 			sf_seek (piFile, startPos, SEEK_SET);		
 			sf_floatread (partImage, inSize, piFile);
 
