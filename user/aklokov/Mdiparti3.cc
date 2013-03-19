@@ -321,7 +321,7 @@ int main (int argc, char* argv[]) {
 			memset ( sembMap,    0, outSize * sizeof (float) );
 
 			// read partial image
-			const int startPos = (idpy * xNum_ + idpx) * inSize * sizeof (float);
+			const int startPos = (idpy * dipNum_ + idpx) * inSize * sizeof (float);
 			sf_seek (piFile, startPos, SEEK_SET);		
 			sf_floatread (partImage, inSize, piFile);
 
