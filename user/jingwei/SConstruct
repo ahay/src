@@ -25,6 +25,10 @@ except: # local version
     #    SConscript('../../api/c++/SConstruct')
     SConscript('../lexing/SConstruct')
 
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../lib'],
+            LIBS=[env.get('DYNLIB','')+'rsf'])
+
 ##added by XZ
 ccinc = Glob('[a-z]*.h*')
 
@@ -42,11 +46,9 @@ else:
     lapack = None
 
 if lapack:
-    env.Prepend(CPPPATH=['../../include'],
-                LIBPATH=['../../lib'],
-                LIBS=['vecmatop',
-                      env.get('DYNLIB','')+'rsf++',
-                      env.get('DYNLIB','')+'rsf']+lapack)
+    env.Prepend(LIBS=['vecmatop',
+                      env.get('DYNLIB','')+'rsf++'])
+    env.Append(LIBS=lapack)
 
     ccfiles = map(lambda x: x+'.cc',Split(subs))
 
