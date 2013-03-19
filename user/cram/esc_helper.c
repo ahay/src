@@ -259,264 +259,259 @@ float sf_tps_compute_point (float *w, float *x, float *y, int nd,
 /* ================================= Pthreads work queue ================================================ */
                
 #include <pthread.h>
-#include <semaphore.h>
+#include <unistd.h>
+
+/* Original code by Mathias Brossard <mathias@brossard.org> */
+
+typedef enum {
+    SF_THPOOL_NOERROR = 0,
+    SF_THPOOL_INVALID = -1,
+    SF_THPOOL_LOCK_FAILURE = -2,
+    SF_THPOOL_QUEUE_FULL = -3,
+    SF_THPOOL_SHUTDOWN = -4,
+    SF_THPOOL_THREAD_FAILURE = -5
+} SF_THPOOL_ERROR;
 /*^*/
 
-/* Original code by Johan Hanssen Seferidis, Licence: LGPL */
-
-/* Individual job */
-typedef struct thpool_job_t {
-        void*  (*function)(void* arg); /* function pointer         */
-        void*                     arg; /* function's argument      */
-        struct thpool_job_t*     next; /* pointer to next job      */
-        struct thpool_job_t*     prev; /* pointer to previous job  */
-} thpool_job_t;
-
-/* Job queue as doubly linked list */
-typedef struct thpool_jobqueue {
-        thpool_job_t    *head;      /* pointer to head of queue */
-        thpool_job_t    *tail;      /* pointer to tail of queue */
-        int              jobsN;     /* amount of jobs in queue  */
-        sem_t           *queueSem;  /* semaphore(this is probably just holding the same as jobsN) */
-} thpool_jobqueue;
-
-typedef struct thpool_t *sf_thpool;
+typedef struct threadpool_t *sf_thpool;
 /* abstract data type */
 /*^*/
 
+/* Individual job */
+typedef struct {
+    void (*function)(void *);
+    void *argument;
+} threadpool_task_t;
+
 /* The thread pool */
-typedef struct thpool_t {
-        pthread_t*       threads;   /* pointer to threads' ID   */
-        int              threadsN;  /* amount of threads        */
-        thpool_jobqueue* jobqueue;  /* pointer to the job queue */
-        pthread_mutex_t  mutex;     /* used to serialize queue access */
-        bool             alive;
-} thpool_t;
+struct threadpool_t {
+    pthread_mutex_t    lock;
+    pthread_cond_t     notify;
+    pthread_t         *threads;
+    threadpool_task_t *queue;
+    int                thread_count;
+    int                queue_size;
+    int                head;
+    int                tail;
+    int                count;
+    int                shutdown;
+    int                started;
+};
 
-/* Remove job from queue */
-static bool thpool_jobqueue_removelast (thpool_t* tp_p) {
-    thpool_job_t *oldLastJob;
-    oldLastJob = tp_p->jobqueue->tail;
+/* Thread worker */
+static void *threadpool_thread (void *threadpool) {
+    sf_thpool pool = (sf_thpool)threadpool;
+    threadpool_task_t task;
 
-    /* fix jobs' pointers */
-    switch(tp_p->jobqueue->jobsN){        
-        case 0:     /* if there are no jobs in queue */
-            return false;
-            break;
-        case 1:     /* if there is only one job in queue */
-            tp_p->jobqueue->tail = NULL;
-            tp_p->jobqueue->head = NULL;
-            break;
-        default:     /* if there are more than one jobs in queue */
-            oldLastJob->prev->next = NULL;
-            tp_p->jobqueue->tail = oldLastJob->prev;
-    }
+    for(;;) {
+        /* Lock must be taken to wait on conditional variable */
+        pthread_mutex_lock (&(pool->lock));
 
-    (tp_p->jobqueue->jobsN)--;
-
-    int sval;
-    sem_getvalue (tp_p->jobqueue->queueSem, &sval);
-    return true;
-}
-
-/* Get first element from queue */
-static thpool_job_t* thpool_jobqueue_peek (thpool_t* tp_p) {
-    return tp_p->jobqueue->tail;
-}
-
-/* What each individual thread is doing */
-static void* thpool_thread_do (void *ud) {
-    thpool_t* tp_p = (thpool_t*)ud;
-
-    while (tp_p->alive) {
-        if (sem_wait (tp_p->jobqueue->queueSem)) { /* Waiting until there is work in the queue */
-            perror ("thpool_thread_do(): Waiting for semaphore");
-            exit (-1);
+        /* Wait on condition variable, check for spurious wakeups.
+           When returning from pthread_cond_wait(), we own the lock. */
+        while ((pool->count == 0) && (!pool->shutdown)) {
+            pthread_cond_wait (&(pool->notify), &(pool->lock));
         }
 
-        /* Read job from queue and execute it */
-        void*(*func_buff)(void* arg);
-        void* arg_buff;
-        thpool_job_t* job_p;
+        if (pool->shutdown) {
+            break;
+        }
 
-        pthread_mutex_lock (&tp_p->mutex);
+        /* Grab our task */
+        task.function = pool->queue[pool->head].function;
+        task.argument = pool->queue[pool->head].argument;
+        pool->head += 1;
+        pool->head = (pool->head == pool->queue_size) ? 0 : pool->head;
+        pool->count -= 1;
 
-        job_p = thpool_jobqueue_peek (tp_p);
-        func_buff = job_p->function;
-        arg_buff  = job_p->arg;
-        thpool_jobqueue_removelast (tp_p);
+        /* Unlock */
+        pthread_mutex_unlock (&(pool->lock));
 
-        pthread_mutex_unlock (&tp_p->mutex);
+        /* Get to work */
+        (*(task.function))(task.argument);
+    }
 
-        func_buff (arg_buff); /* run job */
+    pool->started--;
+
+    pthread_mutex_unlock (&(pool->lock));
+    pthread_exit (NULL);
+    return (NULL);
+}
+
+static int threadpool_free (sf_thpool pool) {
+    if (pool == NULL || pool->started > 0) {
+        return -1;
+    }
+
+    /* Did we manage to allocate ? */
+    if (pool->threads) {
+        free (pool->threads);
+        free (pool->queue);
+
+        /* Because we allocate pool->threads after initializing the
+           mutex and condition variable, we're sure they're 
+           initialized. Let's lock the mutex just in case. */
+        pthread_mutex_lock (&(pool->lock));
+        pthread_mutex_destroy (&(pool->lock));
+        pthread_cond_destroy (&(pool->notify));
+    }
+
+    free (pool);
+    return 0;
+}
+
+SF_THPOOL_ERROR sf_thpool_close (sf_thpool pool)
+/*< Destroy thread pool object >*/
+{
+    int i;
+    SF_THPOOL_ERROR err = SF_THPOOL_NOERROR;
+
+    if (pool == NULL) {
+        return SF_THPOOL_INVALID;
+    }
+
+    if (pthread_mutex_lock (&(pool->lock)) != 0) {
+        return SF_THPOOL_LOCK_FAILURE;
+    }
+
+    do {
+        /* Already shutting down */
+        if (pool->shutdown) {
+            err = SF_THPOOL_SHUTDOWN;
+            break;
+        }
+
+        pool->shutdown = 1;
+
+        /* Wake up all worker threads */
+        if ((pthread_cond_broadcast (&(pool->notify)) != 0) ||
+            (pthread_mutex_unlock (&(pool->lock)) != 0)) {
+            err = SF_THPOOL_LOCK_FAILURE;
+            break;
+        }
+
+        /* Join all worker thread */
+        for (i = 0; i < pool->thread_count; i++) {
+            if (pthread_join (pool->threads[i], NULL) != 0) {
+                err = SF_THPOOL_THREAD_FAILURE;
+            }
+        }
+    } while (false);
+
+    if (pthread_mutex_unlock (&pool->lock) != 0) {
+        err = SF_THPOOL_LOCK_FAILURE;
+    }
+
+    /* Only if everything went well do we deallocate the pool */
+    if (!err) {
+        threadpool_free (pool);
+    }
+    return err;
+}
+
+sf_thpool sf_thpool_init (int thread_count, int queue_size)
+/*< Initialize thread pool >*/
+{
+    sf_thpool pool = NULL;
+    int i;
+
+    if((pool = (sf_thpool)malloc(sizeof(struct threadpool_t))) == NULL) {
+        goto err;
+    }
+
+    /* Initialize */
+    pool->thread_count = thread_count;
+    pool->queue_size = queue_size;
+    pool->head = pool->tail = pool->count = 0;
+    pool->shutdown = pool->started = 0;
+
+    /* Allocate thread and task queue */
+    pool->threads = (pthread_t *)malloc(sizeof(pthread_t)*thread_count);
+    pool->queue = (threadpool_task_t *)malloc(sizeof(threadpool_task_t)*queue_size);
+
+    /* Initialize mutex and conditional variable first */
+    if ((pthread_mutex_init (&(pool->lock), NULL) != 0) ||
+        (pthread_cond_init (&(pool->notify), NULL) != 0) ||
+        (pool->threads == NULL) ||
+        (pool->queue == NULL)) {
+        goto err;
+    }
+
+    /* Start worker threads */
+    for (i = 0; i < thread_count; i++) {
+        if (pthread_create (&(pool->threads[i]), NULL,
+                            threadpool_thread, (void*)pool) != 0) {
+            sf_thpool_close (pool);
+            return NULL;
+        } else {
+            pool->started++;
+        }
+    }
+
+    return pool;
+
+ err:
+    if (pool) {
+        threadpool_free (pool);
     }
     return NULL;
 }
 
-/* Initialize queue */
-static int thpool_jobqueue_init (thpool_t* tp_p) {
-    tp_p->jobqueue = (thpool_jobqueue*)malloc (sizeof(thpool_jobqueue));
-    if (tp_p->jobqueue == NULL)
-        return -1;
-    tp_p->jobqueue->tail = NULL;
-    tp_p->jobqueue->head = NULL;
-    tp_p->jobqueue->jobsN = 0;
-    return 0;
-}
-
-sf_thpool sf_thpool_init (int threadsN)
-/*< Initialize thread pool >*/
-{
-    thpool_t* tp_p;
-
-    if (!threadsN || threadsN < 1)
-        threadsN = 1;
-
-    /* Make new thread pool */
-    tp_p = (thpool_t*)malloc (sizeof(thpool_t));
-    if (tp_p == NULL) {
-        fprintf (stderr, "thpool_init(): Could not allocate memory for thread pool\n");
-        return NULL;
-    }
-    tp_p->threads = (pthread_t*)malloc (threadsN*sizeof(pthread_t));
-    if (tp_p->threads == NULL) {
-        fprintf (stderr, "thpool_init(): Could not allocate memory for thread IDs\n");
-        return NULL;
-    }
-    tp_p->threadsN = threadsN;
-
-    /* Initialise the job queue */
-    if (thpool_jobqueue_init (tp_p) == -1) {
-        fprintf (stderr, "thpool_init(): Could not allocate memory for job queue\n");
-        return NULL;
-    }
-
-    /* Initialise semaphore */
-    tp_p->jobqueue->queueSem = (sem_t*)malloc (sizeof(sem_t));
-    sem_init (tp_p->jobqueue->queueSem, 0, 0); /* no shared, initial value */
-
-    if (pthread_mutex_init (&tp_p->mutex, NULL) != 0) {
-        fprintf (stderr, "sem_init(): Could not create a semaphore\n");
-        return NULL;
-    }
-    tp_p->alive = true;
-
-    /* Make threads in pool */
-    int t;
-    for (t = 0; t < threadsN; t++) {
-        pthread_create (&(tp_p->threads[t]), NULL, thpool_thread_do,
-                        (void *)tp_p);
-    }
-
-    return tp_p;
-}
-
-/* Remove and deallocate all jobs in queue */
-static void thpool_jobqueue_empty (thpool_t* tp_p) {
-    
-    thpool_job_t* curjob;
-    curjob=tp_p->jobqueue->tail;
-
-    while (tp_p->jobqueue->jobsN) {
-        tp_p->jobqueue->tail = curjob->prev;
-        free (curjob);
-        curjob = tp_p->jobqueue->tail;
-        tp_p->jobqueue->jobsN--;
-    }
-
-    /* Fix head and tail */
-    tp_p->jobqueue->tail = NULL;
-    tp_p->jobqueue->head = NULL;
-}
-
-int sf_thpool_jobsn (sf_thpool tp_p)
-/*< Return number of jobs in the queue >*/
-{
-    return tp_p->jobqueue->jobsN;
-}
-
-void sf_thpool_destroy (sf_thpool tp_p)
-/*< Destroy the thread pool >*/
-{
-    int t;
-
-    /* End each thread's infinite loop */
-    tp_p->alive = false; 
-
-    /* Awake idle threads waiting at semaphore */
-    for (t = 0; t < (tp_p->threadsN); t++){
-        if (sem_post (tp_p->jobqueue->queueSem)) {
-            fprintf (stderr, "thpool_destroy(): Could not bypass sem_wait()\n");
-        }
-    }
-
-    /* Kill semaphore */
-    if (sem_destroy (tp_p->jobqueue->queueSem) != 0) {
-        fprintf (stderr, "thpool_destroy(): Could not destroy semaphore\n");
-    }
-
-    /* Wait for threads to finish */
-    for (t = 0; t < (tp_p->threadsN); t++) {
-        pthread_join (tp_p->threads[t], NULL);
-    }
-
-    thpool_jobqueue_empty (tp_p);
-
-    pthread_mutex_destroy (&tp_p->mutex);
-    free (tp_p->threads);
-    free (tp_p->jobqueue->queueSem);
-    free (tp_p->jobqueue);
-    free (tp_p);
-}
-
-/* Add job to queue */
-static void thpool_jobqueue_add (thpool_t* tp_p, thpool_job_t* newjob_p) {
-    newjob_p->next = NULL;
-    newjob_p->prev = NULL;
-
-    thpool_job_t *oldFirstJob;
-    oldFirstJob = tp_p->jobqueue->head;
-
-    /* fix jobs' pointers */
-    switch(tp_p->jobqueue->jobsN) {
-        case 0:     /* if there are no jobs in queue */
-            tp_p->jobqueue->tail = newjob_p;
-            tp_p->jobqueue->head = newjob_p;
-            break;
-        default:     /* if there are already jobs in queue */
-            oldFirstJob->prev = newjob_p;
-            newjob_p->next = oldFirstJob;
-            tp_p->jobqueue->head = newjob_p;
-    }
-
-    (tp_p->jobqueue->jobsN)++;     /* increment amount of jobs in queue */
-    sem_post (tp_p->jobqueue->queueSem);
-
-    int sval;
-    sem_getvalue (tp_p->jobqueue->queueSem, &sval);
-}
-
-bool sf_thpool_add_work (sf_thpool tp_p, void *(*function_p)(void*), void* arg_p)
+SF_THPOOL_ERROR sf_thpool_add_work (sf_thpool pool, void (*function)(void *),
+                                    void *argument)
 /*< Add work to the thread pool >*/
 {
-    thpool_job_t* newJob;
+    SF_THPOOL_ERROR err = SF_THPOOL_NOERROR;
+    int next;
 
-    newJob = (thpool_job_t*)malloc (sizeof(thpool_job_t));
-    if (newJob == NULL) {
-        fprintf (stderr, "thpool_add_work(): Could not allocate memory for new job\n");
-        exit (-1);
+    if (pool == NULL || function == NULL) {
+        return SF_THPOOL_INVALID;
     }
 
-    /* add function and argument */
-    newJob->function = function_p;
-    newJob->arg = arg_p;
+    if (pthread_mutex_lock (&(pool->lock)) != 0) {
+        return SF_THPOOL_LOCK_FAILURE;
+    }
 
-    /* add job to queue */
-    pthread_mutex_lock (&tp_p->mutex);
-    thpool_jobqueue_add (tp_p, newJob);
-    pthread_mutex_unlock (&tp_p->mutex);
+    next = pool->tail + 1;
+    next = (next == pool->queue_size) ? 0 : next;
 
-    return true;
+    do {
+        /* Are we full ? */
+        if (pool->count == pool->queue_size) {
+            err = SF_THPOOL_QUEUE_FULL;
+            break;
+        }
+
+        /* Are we shutting down ? */
+        if (pool->shutdown) {
+            err = SF_THPOOL_SHUTDOWN;
+            break;
+        }
+
+        /* Add task to queue */
+        pool->queue[pool->tail].function = function;
+        pool->queue[pool->tail].argument = argument;
+        pool->tail = next;
+        pool->count += 1;
+
+        /* pthread_cond_broadcast */
+        if (pthread_cond_signal(&(pool->notify)) != 0) {
+            err = SF_THPOOL_LOCK_FAILURE;
+            break;
+        }
+    } while (false);
+
+    if (pthread_mutex_unlock (&pool->lock) != 0) {
+        err = SF_THPOOL_LOCK_FAILURE;
+    }
+
+    return err;
+}
+
+int sf_thpool_jobsn (sf_thpool pool)
+/*< Return number of jobs >*/
+{
+    return pool->count;
 }
 
 #endif /* PTHREADS */

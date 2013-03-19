@@ -258,9 +258,9 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 
     esc_scgrid->scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)esc_scgrid->na*(size_t)esc_scgrid->nb,
                                                             sizeof(multi_UBspline_3d_s));
-/*
-#ifdef DEBUG
 
+#ifdef DEBUG
+/*
     esc_scgrid->mmaped = sf_ucharalloc ((size_t)esc_scgrid->offs +
                                         (size_t)esc_scgrid->n*
                                         (size_t)esc_scgrid->na*
@@ -269,18 +269,16 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                       (size_t)esc_scgrid->n*
                                       (size_t)esc_scgrid->na*
                                       (size_t)esc_scgrid->nb, scgrid);
-
-#else
 */
+#else
+
     esc_scgrid->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_scgrid->offs +
                                                      (size_t)esc_scgrid->n*
                                                      (size_t)esc_scgrid->na*
                                                      (size_t)esc_scgrid->nb,
                                                PROT_READ, MAP_SHARED,
                                                fileno (stream), 0);
-/*
-#endif
-*/
+
 
     nc = esc_scgrid->offs;
     for (ia = 0; ia < esc_scgrid->na; ia++) {
@@ -297,6 +295,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             nnc += esc_scgrid->scsplines[ia*esc_scgrid->nb + ib].nc;
         }
     }
+#endif
 
     if (verb) {
         sf_warning ("Spatial domain dimensions: nz=%d, z=[%g, %g]", esc_scgrid->nz,
@@ -480,18 +479,18 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     free (esc_scgrid->as);
     free (esc_scgrid->bs);
     free (esc_scgrid->pvt);
-/*
+
 #ifdef DEBUG
-    free (esc_scgrid->mmaped);
+//    free (esc_scgrid->mmaped);
 #else
-*/
+
     munmap (esc_scgrid->mmaped, (size_t)esc_scgrid->offs +
                                 (size_t)esc_scgrid->n*
                                 (size_t)esc_scgrid->na*
                                 (size_t)esc_scgrid->nb);
-/*
+
 #endif
-*/
+
     free (esc_scgrid->scsplines);
     sf_esc_point3_close (esc_scgrid->esc_point);
     free (esc_scgrid);
@@ -514,10 +513,10 @@ static void sf_cram_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, float z, floa
 static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
                                         int n, int *ia, int *ib, float *vals) {
     sf_esc_scgrid3_areq areqs[SCGRID3_MAX_STENCIL];
-    sf_esc_scgrid3_avals avals;
+    sf_esc_scgrid3_avals avals[SCGRID3_MAX_STENCIL];
     int sc[SCGRID3_MAX_STENCIL];
     bool local[SCGRID3_MAX_STENCIL];
-    int i, iab, is, mis = -1;
+    int i, j, iab, is, mis = -1;
     int len = 0, rc, ns = 0, desc_ready;
     size_t id;
     fd_set sset, wset;
@@ -591,49 +590,49 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, floa
                 if (!FD_ISSET (is, &wset))
                     continue;
                 desc_ready--;
-                do {
-                    len = 0;
-                    avals.id = -1;
-                    /* Receive loop */
-                    while (len < sizeof(sf_esc_scgrid3_avals)) {
-                        /* Receive job result from the client */
-                        rc = recv (is, (void*)(((unsigned char*)&avals) + len),
-                                   sizeof(sf_esc_scgrid3_avals) - len, 0);
-                        if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                            /* Connection terminated */
-                            if (0 == rc)
-                                sf_warning ("The server has closed connection for socket %d", is);
-                            else
-                                sf_warning ("Can not receive data for socket %d, disconnecting", is);
-                            sf_cram_scgrid3_disconnect (esc_scgrid, is);
-                            FD_CLR(is, &sset);
-                            len = 0;
-                            break;
-                        }
-                        if (rc < 0 && errno == EAGAIN)
-                            /* Nothing to receive */
-                            break;
-                        if (rc > 0)
-                            len += rc;
+                len = 0;
+                /* Receive loop */
+                while (len < sizeof(sf_esc_scgrid3_avals)*SCGRID3_MAX_STENCIL) {
+                    /* Receive job result from the client */
+                    rc = recv (is, (void*)(((unsigned char*)avals) + len),
+                               sizeof(sf_esc_scgrid3_avals)*SCGRID3_MAX_STENCIL - len, 0);
+                    if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
+                        /* Connection terminated */
+                        if (0 == rc)
+                            sf_warning ("The server has closed connection for socket %d", is);
                         else
-                            break;
+                            sf_warning ("Can not receive data for socket %d, disconnecting", is);
+                        sf_cram_scgrid3_disconnect (esc_scgrid, is);
+                        FD_CLR(is, &sset);
+                        len = 0;
+                        break;
                     }
-                    if (len > 0) {
-                        if (len < sizeof(sf_esc_scgrid3_avals)) {
-                            sf_warning ("Partial receive from socket %d\n", i);
-                            len = 0;
-                        } else if (avals.id >= id && avals.id < (id + (size_t)n)) {
-                            if (avals.vals[0] != SF_HUGE) {
-                                i = avals.id - id;
-                                local[i] = false;
-                                memcpy (&vals[i*(ESC3_NUM + 4)], avals.vals, sizeof(float)*(ESC3_NUM + 4));
-                                ns--;
+                    if (rc > 0)
+                        len += rc;
+                    if ((rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) || /* Nothing to receive */
+                        0 == len % sizeof(sf_esc_scgrid3_avals)) /* A few complete patches have been received */
+                        break;
+                }
+                if (len > 0) {
+                    if (len % sizeof(sf_esc_scgrid3_avals)) {
+                        sf_warning ("Partial receive from socket %d\n", i);
+                        len = 0;
+                    } else {
+                        len /= sizeof(sf_esc_scgrid3_avals);
+                        for (i = 0; i < len; i++) {
+                            if (avals[i].id >= id && avals[i].id < (id + (size_t)n)) {
+                                if (avals[i].vals[0] != SF_HUGE) {
+                                    j = avals[i].id - id;
+                                    local[j] = false;
+                                    memcpy (&vals[j*(ESC3_NUM + 4)], avals[i].vals, sizeof(float)*(ESC3_NUM + 4));
+                                    ns--;
+                                } else
+                                    sf_warning ("Server replied that the angle is out of bounds"); 
                             } else
-                                sf_warning ("Server replied that the angle is out of bounds"); 
-                        } else
-                            sf_warning ("Received garbage from socket %d", is);
+                                sf_warning ("Received garbage from socket %d", is);
+                        }
                     }
-                } while (len != 0);
+                }
             } /* Loop over ready sockets */
         } /* End of polling */
         if (ns)
