@@ -63,11 +63,17 @@ for col in ('i','iC'):
          ''' % (col,colors[col],col))
 Result('monaclip','mona+i mona+iC','SideBySideIso',vppen='ysize=10 xsize=10')
 
-Result('cubeyf1','mona',
-       '''
-       grey allpos=y pclip=100 scalebar=y crowd1=0.8
-       color=cubeyf1 title="Perceptual Rainbow (color=cubeyf1)"
-       transp=n wantaxis=n screenratio=1 titlesz=8
-       ''')
+colors = {
+    'cubeyf1': 'Perceptual Rainbow',
+    'linearlfb': 'LinearL Face Based'
+}
+
+for col in colors.keys():
+    Result(col,'mona',
+           '''
+           grey allpos=y pclip=100 scalebar=y crowd1=0.8
+           color=%s title="%s (color=%s)"
+           transp=n wantaxis=n screenratio=1 titlesz=8
+           ''' % (col,colors[col],col))
     
 End()
