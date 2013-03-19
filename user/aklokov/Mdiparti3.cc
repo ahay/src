@@ -298,7 +298,7 @@ int main (int argc, char* argv[]) {
 
 // main part
 
-	const int inSize = yNum_ * xNum_ * tNum_;
+	const size_t inSize = yNum_ * xNum_ * tNum_;
 	float* partImage  = sf_floatalloc (inSize);
 	const int outSize = iyn * ixn * itn;
 	float* dPartImage = sf_floatalloc (outSize);
