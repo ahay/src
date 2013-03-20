@@ -68,7 +68,7 @@ void processPartImage (const float migDipY, const float migDipX, float* partImag
 
 			const size_t shiftForTrace = (iy * ixn + ix) * itn;
 
-			int tcount;
+			int tcountMain = 0;
 
 #ifdef _OPENMP 
 #pragma omp parallel for
@@ -83,7 +83,7 @@ void processPartImage (const float migDipY, const float migDipX, float* partImag
 
 				float diffStack  = 0.f;
 				float diffStack2 = 0.f;
-				tcount = 0;				
+				int tcount = 0;				
 				// loop over y - the second one 
 				for (int ipy = 0; ipy < yNum_; ++ipy) {
 					const float curPosY = yStart_ + ipy * yStep_;	
@@ -117,18 +117,21 @@ void processPartImage (const float migDipY, const float migDipX, float* partImag
 					}
 				}
 					
+				if (tcount > tcountMain) tcountMain = tcount;
+
 				const int sInd = shiftForTrace + iz;
 				dPartImage [sInd] += diffStack;
 				trace2 [iz] += diffStack2;
 			}
 
 			float* sembTrace = sf_floatalloc (itn);
-			Sembler::getSemblanceForTrace (tcount, dPartImage + shiftForTrace, trace2, itn, sembWindow_, sembTrace);		
+			Sembler::getSemblanceForTrace (tcountMain, dPartImage + shiftForTrace, trace2, itn, sembWindow_, sembTrace);		
 //			Sembler::getSemblanceForTrace (tcount, dPartImage + shiftForTrace, trace2, itn, sembWindow_, sembMap + shiftForTrace);		
 			float* pMap = sembMap + shiftForTrace;
 			float* pTrace = sembTrace;
 			for (int iz = 0; iz < itn; ++iz, ++pMap, ++pTrace)
 				*pMap = *pTrace;
+
 			free (sembTrace);
 			free (trace2);
 		}
