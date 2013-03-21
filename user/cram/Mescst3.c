@@ -22,7 +22,7 @@
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, morder;
+    int nz, nx, ny, nb, na, iz, ix, iy, morder;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y, a, b, t, l;
     float ze, xe, ye, ae, be;
@@ -173,8 +173,7 @@ int main (int argc, char* argv[]) {
     esc_tracer = sf_esc_tracer3_init (esc_slow, NULL, 0.0, NULL);
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
-    esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, verb);
-    sf_esc_scgrid3_set_morder (esc_scgrid, morder);
+    esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder, verb);
 
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
@@ -185,29 +184,7 @@ int main (int argc, char* argv[]) {
                             iy*nx + ix + 1, ny*nx, y, x);
             for (iz = 0; iz < nz; iz++) {
                 z = oz + iz*dz;
-                for (ia = 0; ia < na; ia++) {
-                    a = oa + ia*da;
-                    for (ib = 0; ib < nb; ib++) {
-                        b = ob + ib*db;
-                        t = 0.0;
-                        l = 0.0;
-                        ze = z;
-                        xe = x;
-                        ye = y;
-                        ae = a;
-                        be = b;
-                        sf_esc_scgrid3_compute (esc_scgrid,
-                                                &ze, &xe, &ye, &t, &l, &be, &ae);
-                        /* Copy escape values to the output buffer */
-                        e[ia][ib][ESC3_Z] = ze;
-                        e[ia][ib][ESC3_X] = xe;
-                        e[ia][ib][ESC3_Y] = ye;
-                        e[ia][ib][ESC3_T] = t;
-#ifdef ESC_EQ_WITH_L
-                        e[ia][ib][ESC3_L] = l;
-#endif
-                    } /* Loop over b */
-                } /* Loop over a */
+                sf_esc_scgrid3_compute (esc_scgrid, z, x, y, oa, da, ob, db, na, nb, e[0][0]);
                 sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
             } /* Loop over z */

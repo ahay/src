@@ -43,16 +43,18 @@ typedef struct EscSCgrid3 *sf_esc_scgrid3;
 /*^*/
 
 typedef struct {
-    size_t id;
-    int    iab;
-    float  z, x, y;
+    size_t id;          /* Message ID */
+    int    ud1, ud2;    /* User defined IDs */
+    int    iab;         /* Requested angle index */
+    float  z, x, y;     /* Position in space */
 } sf_esc_scgrid3_areq;
 /* Structure for requesting one (z,x,y) point in angle space */
 /*^*/
 
 typedef struct {
-    size_t id;
-    float  vals[ESC3_NUM + 4];
+    size_t id;                 /* Message ID */
+    int    ud1, ud2;           /* User defined IDs */
+    float  vals[ESC3_NUM + 4]; /* Position in space */
 } sf_esc_scgrid3_avals;
 /* Structure for getting requested escape values back */
 /*^*/
@@ -62,29 +64,38 @@ typedef struct {
 
 #endif
 
+typedef struct {
+    int    iab;            /* Initial angle index */
+    float  a, b, fa, fb;   /* Azimuth, inclination, fractions */
+    float  vals[ESC3_NUM]; /* Position in space */
+} sf_esc_scgrid3_invals;
+/* Structure for storing values in progress */
+
 #include "einspline.h"
 #include "esc_helper.h"
 
 struct EscSCgrid3 {
-    size_t               n, offs, is, ir;
-    int                  morder;
-    int                  nz, nx, ny, na, nb;
-    float                oz, ox, oy, oa, ob;
-    float                dz, dx, dy, da, db;
-    float                zmin, zmax, xmin, xmax, ymin, ymax, md;
-    bool                 quad;
-    multi_UBspline_3d_s *scsplines;
-    unsigned char       *mmaped;
-    sf_esc_point3        esc_point;
-    sf_esc_tracer3       esc_tracer;
+    size_t                  n, offs, is, ir;
+    int                     morder, ma, mb;
+    int                     nz, nx, ny, na, nb;
+    float                   oz, ox, oy, oa, ob;
+    float                   dz, dx, dy, da, db;
+    float                   zmin, zmax, xmin, xmax, ymin, ymax, md;
+    multi_UBspline_3d_s    *scsplines;
+    unsigned char          *mmaped;
+    sf_esc_point3           esc_point;
+    sf_esc_tracer3          esc_tracer;
     /* Thin plate spline data */
-    float              **L;
-    int                 *pvt, ns;
-    float               *bs, *as;
+    float                 **L;
+    int                    *pvt, ns;
+    float                  *bs, *as;
     /* Remote access data for distributed computations */
-    bool                 remote;
-    int                 *nsck;
-    int                **sockets;
+    bool                    remote;
+    int                    *nsck;
+    int                   **sockets;
+    sf_esc_scgrid3_invals  *invals;
+    sf_esc_scgrid3_areq    *areqs;
+    sf_esc_scgrid3_avals   *avals;
 };
 /* concrete data type */
 
@@ -206,7 +217,8 @@ static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
     esc_scgrid->ns = ns;
 }
 
-sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer, bool verb)
+sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer,
+                                    int morder, bool verb)
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
@@ -260,7 +272,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                                             sizeof(multi_UBspline_3d_s));
 
 #ifdef DEBUG
-/*
+
     esc_scgrid->mmaped = sf_ucharalloc ((size_t)esc_scgrid->offs +
                                         (size_t)esc_scgrid->n*
                                         (size_t)esc_scgrid->na*
@@ -269,7 +281,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                       (size_t)esc_scgrid->n*
                                       (size_t)esc_scgrid->na*
                                       (size_t)esc_scgrid->nb, scgrid);
-*/
+
 #else
 
     esc_scgrid->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_scgrid->offs +
@@ -278,6 +290,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                                      (size_t)esc_scgrid->nb,
                                                PROT_READ, MAP_SHARED,
                                                fileno (stream), 0);
+#endif
 
 
     nc = esc_scgrid->offs;
@@ -295,7 +308,6 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             nnc += esc_scgrid->scsplines[ia*esc_scgrid->nb + ib].nc;
         }
     }
-#endif
 
     if (verb) {
         sf_warning ("Spatial domain dimensions: nz=%d, z=[%g, %g]", esc_scgrid->nz,
@@ -320,21 +332,49 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     esc_scgrid->is = 0; /* Total number of interpolation steps */
     esc_scgrid->ir = 0; /* Total number of processed points */
 
-    esc_scgrid->morder = 2; /* Interpolation accuracy */
+    esc_scgrid->morder = morder; /* Interpolation accuracy */
 
     esc_scgrid->esc_tracer = esc_tracer;
     sf_esc_tracer3_set_mdist (esc_tracer, esc_scgrid->md);
     esc_scgrid->esc_point = sf_esc_point3_init ();
 
-    sf_esc_scgrid3_init_tps (esc_scgrid);
+    if (2 != morder) {
+        esc_scgrid->L = NULL;
+        esc_scgrid->as = NULL;
+        esc_scgrid->bs = NULL;
+        esc_scgrid->pvt = NULL;
+        switch (morder) {
+            /* Interpolation stencil length */
+            case 3:
+                /* Spline interpolation of local 6x6 patch */
+                esc_scgrid->ns = 36;
+                break;
+            case 1:
+                /* Bilinear interpolation */
+                esc_scgrid->ns = 4;
+                break;
+            case 0:
+                /* Nearest neighbor interpolation */
+                esc_scgrid->ns = 1;
+                break;
+        }
+    } else {
+        /* Thin plate spline; can work with different stencils */
+        sf_esc_scgrid3_init_tps (esc_scgrid);
+    }
+
     sf_esc_scgrid3_init_rand ();
 
     nc = 0;
     esc_scgrid->nsck = NULL;
     esc_scgrid->sockets = NULL;
+    esc_scgrid->ma = 1;
+    esc_scgrid->mb = 1;
     if (scdaemon) {
         nab = esc_scgrid->na*esc_scgrid->nb;
         if (!sf_histint (scdaemon, "n2", &nd)) sf_error ("No n2= in supercell daemon file");
+        if (!sf_histint (scdaemon, "Ma", &esc_scgrid->ma)) sf_error ("No Ma= in supercell daemon file");
+        if (!sf_histint (scdaemon, "Mb", &esc_scgrid->mb)) sf_error ("No Mb= in supercell daemon file");
         esc_scgrid->sockets = (int**)sf_alloc (nab, sizeof(int*)); /* All sockets for an angle */
         esc_scgrid->nsck = (int*)sf_alloc (nab, sizeof(int)); /* Number of sockets for an angle */
         for (i = 0; i < nab; i++) {
@@ -430,6 +470,12 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     }
     esc_scgrid->remote = nc != 0;
 
+    esc_scgrid->invals = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb,
+                                   sizeof(sf_esc_scgrid3_invals));
+    esc_scgrid->areqs = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb*(size_t)esc_scgrid->ns,
+                                  sizeof(sf_esc_scgrid3_areq));
+    esc_scgrid->avals = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb*(size_t)esc_scgrid->ns,
+                                  sizeof(sf_esc_scgrid3_avals));
     if (nc)
         sf_warning ("Using %d remote daemons for accessing escape solutions", nc);
     else
@@ -474,14 +520,18 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
         free (esc_scgrid->nsck);
         free (esc_scgrid->sockets);
     }
-    free (esc_scgrid->L[0]);
-    free (esc_scgrid->L);
-    free (esc_scgrid->as);
-    free (esc_scgrid->bs);
-    free (esc_scgrid->pvt);
-
+    if (2 == esc_scgrid->morder) {
+        free (esc_scgrid->L[0]);
+        free (esc_scgrid->L);
+        free (esc_scgrid->as);
+        free (esc_scgrid->bs);
+        free (esc_scgrid->pvt);
+    }
+    free (esc_scgrid->invals);
+    free (esc_scgrid->areqs);
+    free (esc_scgrid->avals);
 #ifdef DEBUG
-//    free (esc_scgrid->mmaped);
+    free (esc_scgrid->mmaped);
 #else
 
     munmap (esc_scgrid->mmaped, (size_t)esc_scgrid->offs +
@@ -496,154 +546,187 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     free (esc_scgrid);
 }
 
-void sf_esc_scgrid3_set_morder (sf_esc_scgrid3 esc_scgrid, int morder)
-/*< Set order of interpolation accuracy in the angular domain >*/
-{
-    esc_scgrid->morder = morder;
+/* Compute one value locally */
+static void sf_cram_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areq,
+                                        sf_esc_scgrid3_avals *aval) {
+    eval_multi_UBspline_3d_s (&esc_scgrid->scsplines[areq->iab],
+                              areq->y, areq->x, areq->z, aval->vals);
+    aval->ud1 = areq->ud1;
+    aval->ud2 = areq->ud2;
 }
 
-/* Compute one value either locally */
-static void sf_cram_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
-                                        int ia, int ib, float *vals) {
-    eval_multi_UBspline_3d_s (&esc_scgrid->scsplines[ia*esc_scgrid->nb + ib],
-                              y, x, z, vals);
+/* Check if angle index iab is reachable through socket is */
+static bool sf_cram_scgrid3_has_socket (sf_esc_scgrid3 esc_scgrid, int is, int iab) {
+    int i;
+
+    for (i = 0; i < esc_scgrid->nsck[iab]; i++) {
+        if (is == esc_scgrid->sockets[iab][i])
+            return true;
+    }
+    return false;
 }
 
 /* Compute multiple values either locally or remotely */
-static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
-                                        int n, int *ia, int *ib, float *vals) {
-    sf_esc_scgrid3_areq areqs[SCGRID3_MAX_STENCIL];
-    sf_esc_scgrid3_avals avals[SCGRID3_MAX_STENCIL];
-    int sc[SCGRID3_MAX_STENCIL];
-    bool local[SCGRID3_MAX_STENCIL];
-    int i, j, iab, is, mis = -1;
+static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
+                                        sf_esc_scgrid3_avals *avals, int n) {
+    int i, ii, ie, is, mis = -1, iab;
     int len = 0, rc, ns = 0, desc_ready;
     size_t id;
     fd_set sset, wset;
     struct timeval timeout;
 
-    for (i = 0; i < n; i++)
-         local[i] = true;
+    if (0 == n)
+        return;
 
-    if (esc_scgrid->remote) {
-        /* Message ID for this batch of points */
-        id = rand ()*rand ();
-        FD_ZERO(&sset);
-        /* Choose a subset of servers to communicate to */
+    /* Extract values locally */
+    if (false == esc_scgrid->remote) {
         for (i = 0; i < n; i++) {
-            iab = ia[i]*esc_scgrid->nb + ib[i];
-            sc[i] = -1;
-            if (0 == esc_scgrid->nsck[iab])
-                /* No remote servers to get data from for this angle */
-                continue;
-            /* Choose server randomly */
-            is = rand () % esc_scgrid->nsck[iab];
-            /* Store socket id locally for faster access later */
-            sc[i] = esc_scgrid->sockets[iab][is];
-            /* Create work request packet */
-            areqs[i].id = id + (size_t)i;
-            areqs[i].z = z;
-            areqs[i].x = x;
-            areqs[i].y = y;
-            areqs[i].iab = iab;
+            sf_cram_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[i]);
         }
-        /* Send all the requests */
-        for (i = 0; i < n; i++) {
-            if (-1 == sc[i])
+        return;
+    }
+
+    /* Message ID for this batch of points */
+    id = 0;
+    while (0 == id && id >= (size_t)(-n))
+        id = rand ()*rand ();
+    FD_ZERO(&sset);
+
+    /* Skip patches without receivers */
+    ii = 0;
+    while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].ud1]) {
+        areqs[ii].id = id;
+        ii++;
+    }
+    if (ii == n)
+        sf_error ("Lost all connections");
+
+    /* Socket */
+    is = esc_scgrid->sockets[areqs[ii].ud1][rand () % esc_scgrid->nsck[areqs[ii].ud1]];
+    ie = ii; /* Last and first requests in the patch */
+    iab = areqs[ie].ud1;
+    /* Find maximum consecutive patch of angles to
+       be sent to a single socket */
+    do {
+        while (ie < n && (iab == areqs[ie].ud1 ||
+                          sf_cram_scgrid3_has_socket (esc_scgrid, is, areqs[ie].ud1))) {
+            iab = areqs[ie].ud1;
+            areqs[ie].id = id + ie;
+            ie++;
+        }
+        /* Send loop for this patch */
+        len = 0;
+        while (len < sizeof(sf_esc_scgrid3_areq)*(ie - ii)) {
+            rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
+                       sizeof(sf_esc_scgrid3_areq) - len, 0);
+            if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                sf_warning ("Can not send data for iab=[%d - %d], disconnecting",
+                            areqs[ii].ud1, areqs[ie].ud1 - 1);
+                sf_cram_scgrid3_disconnect (esc_scgrid, is);
+                break;
+            }
+            if (rc > 0)
+                len += rc;
+            else
+                break;
+        }
+        if (!FD_ISSET (is, &sset))
+            FD_SET(is, &sset);
+        ns++;
+        if (esc_scgrid->nsck[areqs[ie].ud1])
+        if (ie < n) { /* Next patch */
+            ii = ie;
+            /* Find next socket */
+            while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].ud1]) {
+                areqs[ii].id = id; /* Skip requests without receivers */
+                ii++;
+            }
+            ie = ii;
+            if (ie < n) {
+                is = esc_scgrid->sockets[areqs[ii].ud1][rand () % esc_scgrid->nsck[areqs[ie].ud1]];
+                iab = areqs[ie].ud1;
+            }
+        }
+    } while (ie < n); /* Done sending */
+    /* Now, try to get results back */
+    ii = 0;
+    while (ns) { /* Poll sockets for incoming data */
+        /* Wait for 60 secs max */
+        timeout.tv_sec  = 60;
+        timeout.tv_usec = 0;
+        memcpy (&wset, &sset, sizeof(sset));
+        rc = select (mis + 1, &wset, NULL, NULL, &timeout);
+        if (0 == rc)
+            break;
+        if (rc < 0)
+            sf_error ("select() failed");
+        desc_ready = rc;
+        for (is = 0; is <= mis && desc_ready > 0; is++) {
+            /* Check to see if this descriptor is ready */
+            if (!FD_ISSET (is, &wset))
                 continue;
+            desc_ready--;
             len = 0;
-            /* Send loop */
-            while (len < sizeof(sf_esc_scgrid3_areq)) {
-                rc = send (sc[i], (const void*)(((unsigned char*)&areqs[i]) + len),
-                           sizeof(sf_esc_scgrid3_areq) - len, 0);
-                if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                    sf_warning ("Can not send data for iab=%d, disconnecting", areqs[i].iab);
-                    sf_cram_scgrid3_disconnect (esc_scgrid, sc[i]);
+            /* Receive loop */
+            while (len < sizeof(sf_esc_scgrid3_avals)*(ns - ii)) {
+                /* Receive job result from the client */
+                rc = recv (is, (void*)(((unsigned char*)&avals[ii]) + len),
+                           sizeof(sf_esc_scgrid3_avals)*SCGRID3_MAX_STENCIL - len, 0);
+                if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
+                    /* Connection terminated */
+                    if (0 == rc)
+                        sf_warning ("The server has closed connection for socket %d", is);
+                    else
+                        sf_warning ("Can not receive data for socket %d, disconnecting", is);
+                    sf_cram_scgrid3_disconnect (esc_scgrid, is);
+                    FD_CLR(is, &sset);
+                    len = 0;
                     break;
                 }
                 if (rc > 0)
                     len += rc;
-                else
+                if ((rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) || /* Nothing to receive */
+                    0 == len % sizeof(sf_esc_scgrid3_avals)) /* A few complete patches have been received */
                     break;
             }
-            if (len == sizeof(sf_esc_scgrid3_areq)) {
-                if (!FD_ISSET (sc[i], &sset))
-                    FD_SET(sc[i], &sset);
-                if (sc[i] > mis)
-                    mis = sc[i];
-                ns++;
-            }
-        } /* Loop over requests */
-        while (ns) { /* Poll sockets for incoming data */
-            /* Wait for 60 secs max */
-            timeout.tv_sec  = 60;
-            timeout.tv_usec = 0;
-            memcpy (&wset, &sset, sizeof(sset));
-            rc = select (mis + 1, &wset, NULL, NULL, &timeout);
-            if (0 == rc)
-                break;
-            if (rc < 0)
-                sf_error ("select() failed");
-            desc_ready = rc;
-            for (is = 0; is <= mis && desc_ready > 0; is++) {
-                /* Check to see if this descriptor is ready */
-                if (!FD_ISSET (is, &wset))
-                    continue;
-                desc_ready--;
-                len = 0;
-                /* Receive loop */
-                while (len < sizeof(sf_esc_scgrid3_avals)*SCGRID3_MAX_STENCIL) {
-                    /* Receive job result from the client */
-                    rc = recv (is, (void*)(((unsigned char*)avals) + len),
-                               sizeof(sf_esc_scgrid3_avals)*SCGRID3_MAX_STENCIL - len, 0);
-                    if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                        /* Connection terminated */
-                        if (0 == rc)
-                            sf_warning ("The server has closed connection for socket %d", is);
-                        else
-                            sf_warning ("Can not receive data for socket %d, disconnecting", is);
-                        sf_cram_scgrid3_disconnect (esc_scgrid, is);
-                        FD_CLR(is, &sset);
-                        len = 0;
-                        break;
-                    }
-                    if (rc > 0)
-                        len += rc;
-                    if ((rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) || /* Nothing to receive */
-                        0 == len % sizeof(sf_esc_scgrid3_avals)) /* A few complete patches have been received */
-                        break;
-                }
-                if (len > 0) {
-                    if (len % sizeof(sf_esc_scgrid3_avals)) {
-                        sf_warning ("Partial receive from socket %d\n", i);
-                        len = 0;
-                    } else {
-                        len /= sizeof(sf_esc_scgrid3_avals);
-                        for (i = 0; i < len; i++) {
-                            if (avals[i].id >= id && avals[i].id < (id + (size_t)n)) {
-                                if (avals[i].vals[0] != SF_HUGE) {
-                                    j = avals[i].id - id;
-                                    local[j] = false;
-                                    memcpy (&vals[j*(ESC3_NUM + 4)], avals[i].vals, sizeof(float)*(ESC3_NUM + 4));
-                                    ns--;
-                                } else
-                                    sf_warning ("Server replied that the angle is out of bounds"); 
-                            } else
-                                sf_warning ("Received garbage from socket %d", is);
+            if (len > 0) {
+                if (len % sizeof(sf_esc_scgrid3_avals)) {
+                    sf_warning ("Partial receive from socket %d\n", i);
+                    len = 0;
+                } else {
+                    len /= sizeof(sf_esc_scgrid3_avals);
+                    for (i = 0; i < len; i++) {
+                        if (avals[ii].id >= id && avals[ii].id < (id + (size_t)n)) {
+                            if (avals[ii].vals[0] != SF_HUGE) {
+                                areqs[avals[ii].id - id].id = 0; /* Mark as received */
+                                ns--;
+                                ii++;
+                            } else {
+                                sf_warning ("Server replied that the angle is out of bounds");
+                                break;
+                            }
+                        } else {
+                            sf_warning ("Received garbage from socket %d", is);
+                            break;
                         }
                     }
                 }
-            } /* Loop over ready sockets */
-        } /* End of polling */
-        if (ns)
-            sf_warning ("Timeout, %d angles are left", ns);
-    } /* Extraction of values through remote servers */
+            }
+        } /* Loop over ready sockets */
+    } /* End of polling */
+    if (ns)
+        sf_warning ("Timeout, %d angles are left", ns);
 
     /* Extract values locally */
+    ie = 0;
     for (i = 0; i < n; i++) {
-        if (local[i])
-            sf_cram_scgrid3_get_lvalue (esc_scgrid, z, x, y, ia[i], ib[i], &vals[i*(ESC3_NUM + 4)]);
+        if (areqs[i].id != 0) {
+            ie++;
+            sf_cram_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[ii]);
+        }
     }
+    if (ie)
+        sf_warning ("%d angles have been exctracted locally", ie);
 }
 
 /* Compute interger index for a float value v according to sampling df
@@ -735,105 +818,55 @@ static void sf_esc_scgrid3_bound_iaib (sf_esc_scgrid3 esc_scgrid, int *ia, int *
     }
 }
 
-/* Perform nearest neighbor interpolation of the local escape solution */
+/* Perform nearest neighbor interpolation of the local escape solution
+   from stencil values (avals), update the previous iteration (inval) */
 static void sf_esc_scgrid3_nearest_interp (sf_esc_scgrid3 esc_scgrid,
-                                           float *z, float *x, float *y,
-                                           float *t, float *l, float *b, float *a) {
-    int ib, ia;
-    float vals[ESC3_NUM + 4];
-    float fb, fa;
+                                           sf_esc_scgrid3_invals *inval,
+                                           sf_esc_scgrid3_avals *avals) {
+    int i;
+    float v[ESC3_NUM + 3];
 
-    ib = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
-    ia = sf_cram_scgrid3_ftoi (*a, esc_scgrid->oa, esc_scgrid->da, &fa);
-
-    ib = (int)((float)ib + fb + 0.5);
-    ia = (int)((float)ia + fa + 0.5);
-
-    /* Get escape values in space */
-    sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia, &ib);
-    sf_cram_scgrid3_get_values (esc_scgrid, *z, *x, *y,
-                                1, &ia, &ib, vals);
-    *z += vals[ESC3_Z];
-    *x += vals[ESC3_X];
-    *y += vals[ESC3_Y];
-    *t += vals[ESC3_T];
-#ifdef ESC_EQ_WITH_L
-    *l += vals[ESC3_L];
-#endif
-    sf_esc_scgrid3_q_to_ab (&vals[ESC3_NUM], a, b);
+    for (i = 0; i < ESC3_NUM; i++)
+        inval->vals[i] += avals->vals[i];
+    sf_esc_scgrid3_q_to_ab (&avals->vals[ESC3_NUM], &inval->a, &inval->b);
 }
 
-/* Perform bilinear interpolation of the local escape solution */
+/* Perform bilinear interpolation of the local escape solution
+   from stencil values (avals), update the previous iteration (inval) */
 static void sf_esc_scgrid3_bilinear_interp (sf_esc_scgrid3 esc_scgrid,
-                                            float *z, float *x, float *y,
-                                            float *t, float *l, float *b, float *a) {
-    int i, ib[4], ia[4];
-    float vals[4][ESC3_NUM + 4], v[ESC3_NUM + 4];
-    float fb, fa;
+                                          sf_esc_scgrid3_invals *inval,
+                                          sf_esc_scgrid3_avals *avals) {
+    int i;
+    float v[ESC3_NUM + 3];
 
-    /* ib, ia */
-    ib[0] = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
-    ia[0] = sf_cram_scgrid3_ftoi (*a, esc_scgrid->oa, esc_scgrid->da, &fa);
-    /* ib+1, ia */
-    ib[1] = ib[0] + 1;
-    ia[1] = ia[0];
-    /* ib, ia+1 */
-    ib[2] = ib[0];
-    ia[2] = ia[0] + 1;
-    /* ib+1, ia+1 */
-    ib[3] = ib[0] + 1;
-    ia[3] = ia[2];
-
-    /* Get escape values in space */
-    for (i = 0; i < 4; i++)
-        sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia[i], &ib[i]);
-    sf_cram_scgrid3_get_values (esc_scgrid, *z, *x, *y,
-                                4, ia, ib, vals[0]);
     /* Bilinear interpolation */
     for (i = 0; i < (ESC3_NUM + 4); i++) {
-        v[i] = vals[0][i]*(1.0 - fb)*(1.0 - fa) +
-               vals[1][i]*fb*(1.0 - fa) +
-               vals[2][i]*(1.0 - fb)*fa +
-               vals[3][i]*fb*fa;
+        v[i] = avals[0].vals[i]*(1.0 - inval->fb)*(1.0 - inval->fa) +
+               avals[1].vals[i]*inval->fb*(1.0 - inval->fa) +
+               avals[2].vals[i]*(1.0 - inval->fb)*inval->fa +
+               avals[3].vals[i]*inval->fb*inval->fa;
     }
-    *z += v[ESC3_Z];
-    *x += v[ESC3_X];
-    *y += v[ESC3_Y];
-    *t += v[ESC3_T];
-#ifdef ESC_EQ_WITH_L
-    *l += v[ESC3_L];
-#endif
-    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], a, b);
+    /* Update previous values */
+    for (i = 0; i < ESC3_NUM; i++)
+        inval->vals[i] += v[i];
+    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], &inval->a, &inval->b);
 }
 
-/* Perform spline interpolation of the local escape solution */
+/* Perform spline interpolation of the local escape solution
+   from stencil values (avals), update the previous iteration (inval) */
 static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
-                                          float *z, float *x, float *y,
-                                          float *t, float *l, float *b, float *a) {
-    int i, j, k, ia[36], ib[36], iia, iib;
-    float vals[36][ESC3_NUM + 4], f[ESC3_NUM + 4][36], v[ESC3_NUM + 3];
-    float fa, fb;
+                                          sf_esc_scgrid3_invals *inval,
+                                          sf_esc_scgrid3_avals *avals) {
+    int i, k;
+    float f[ESC3_NUM + 4][36], v[ESC3_NUM + 3];
     Ugrid z_grid, x_grid;
     BCtype_s zBC, xBC;
     multi_UBspline_2d_s *escspline = NULL;
 
-    /* ib, ia */
-    iib = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
-    iia = sf_cram_scgrid3_ftoi (*a, esc_scgrid->oa, esc_scgrid->da, &fa);
-
-    /* Collect 6x6 array of escape values for 2-D spline interpolation */
-    for (i = 0; i < 6; i++) {
-        for (j = 0; j < 6; j++) {
-            ia[i*6 + j] = iia + i - 2;
-            ib[i*6 + j] = iib + j - 2;
-            sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia[i*6 + j], &ib[i*6 + j]);
-        }
-    }
-    sf_cram_scgrid3_get_values (esc_scgrid, *z, *x, *y,
-                                36, ia, ib, vals[0]);
+    /* Put escape functions into separate arrays */ 
     for (k = 0; k < (ESC3_NUM + 4); k++) {
         for (i = 0; i < 36; i++) {
-            f[k][i] = vals[i][k];
+            f[k][i] = avals[i].vals[k];
         }
     }
     /* Spline interpolation */
@@ -845,49 +878,31 @@ static void sf_esc_scgrid3_spline_interp (sf_esc_scgrid3 esc_scgrid,
     for (k = 0; k < (ESC3_NUM + 4); k++) {
         set_multi_UBspline_2d_s (escspline, k, &f[k][0]);
     }
-    eval_multi_UBspline_2d_s (escspline, 2.0 + fa, 2.0 + fb, v);
-    *z += v[ESC3_Z];
-    *x += v[ESC3_X];
-    *y += v[ESC3_Y];
-    *t += v[ESC3_T];
-#ifdef ESC_EQ_WITH_L
-    *l += v[ESC3_L];
-#endif
-    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], a, b);
+    eval_multi_UBspline_2d_s (escspline, 2.0 + inval->fa, 2.0 + inval->fb, v);
+    /* Update previous values */
+    for (i = 0; i < ESC3_NUM; i++)
+        inval->vals[i] += v[i];
+    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], &inval->a, &inval->b);
     destroy_Bspline (escspline);
 }
 
-/* Perform thin plate spline interpolation of the local escape solution */
+/* Perform thin plate spline interpolation of the local escape solution
+   from stencil values (avals), update the previous iteration (inval) */
 static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
-                                       float *z, float *x, float *y,
-                                       float *t, float *l, float *b, float *a) {
-    int i, j, ia[SCGRID3_TPS_MAX_STENCIL], ib[SCGRID3_TPS_MAX_STENCIL], iia, iib;
-    float vals[SCGRID3_TPS_MAX_STENCIL][ESC3_NUM + 4],
-          f[SCGRID3_TPS_MAX_STENCIL + 3], w[SCGRID3_TPS_MAX_STENCIL + 3],
+                                       sf_esc_scgrid3_invals *inval,
+                                       sf_esc_scgrid3_avals *avals) {
+    int i, j;
+    float f[SCGRID3_TPS_MAX_STENCIL + 3], w[SCGRID3_TPS_MAX_STENCIL + 3],
           v[ESC3_NUM + 4];
-    float fa, fb;
 
-    /* ib, ia */
-    iib = sf_cram_scgrid3_ftoi (*b, esc_scgrid->ob, esc_scgrid->db, &fb);
-    iia = sf_cram_scgrid3_ftoi (*a, esc_scgrid->oa, esc_scgrid->da, &fa);
-
-    /* Extract escape values according to the interpolation stencil */
-    for (i = 0; i < esc_scgrid->ns; i++) {
-        ib[i] = esc_scgrid->bs[i] - 1 + iib;
-        ia[i] = esc_scgrid->as[i] - 1 + iia;
-        sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia[i], &ib[i]);
-        
+    for (j = esc_scgrid->ns; j < (esc_scgrid->ns + 3); j++) {
+        f[j] = 0.0;
     }
-    sf_cram_scgrid3_get_values (esc_scgrid, *z, *x, *y,
-                                esc_scgrid->ns, ia, ib, vals[0]);
     /* Loop over escape functions */
     for (i = 0; i < (ESC3_NUM + 4); i++) {
         /* Put one escape function type into a contiguous array */ 
         for (j = 0; j < esc_scgrid->ns; j++) {
-            f[j] = vals[j][i];
-        }
-        for (j = esc_scgrid->ns; j < (esc_scgrid->ns + 3); j++) {
-            f[j] = 0.0;
+            f[j] = avals[j].vals[i];
         }
         /* Compute thin-plate spline coefficients */
         if (0 != sf_ludtl_solve (&esc_scgrid->L[0][0], f, esc_scgrid->pvt,
@@ -897,62 +912,275 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
         }
         /* Do interpolation */
         v[i] = sf_tps_compute_point (w, esc_scgrid->bs, esc_scgrid->as,
-                                     esc_scgrid->ns, 1.0 + fb, 1.0 + fa);
+                                     esc_scgrid->ns, 1.0 + inval->fb, 1.0 + inval->fa);
+        /* Update previous values */
+        if (i < ESC3_NUM)
+            inval->vals[i] += v[i];
     }
-    *z += v[ESC3_Z];
-    *x += v[ESC3_X];
-    *y += v[ESC3_Y];
-    *t += v[ESC3_T];
-#ifdef ESC_EQ_WITH_L
-    *l += v[ESC3_L];
-#endif
-    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], a, b);
+    sf_esc_scgrid3_q_to_ab (&v[ESC3_NUM], &inval->a, &inval->b);
+}
+
+/* Perform interpolation of the local escape solution from stencil values (avals)
+   according to the current interpolation order, update the previous iteration (inval) */
+static void sf_esc_scgrid3_interp_point (sf_esc_scgrid3 esc_scgrid,
+                                         sf_esc_scgrid3_invals *inval,
+                                         sf_esc_scgrid3_avals *avals) {
+    if (3 == esc_scgrid->morder)
+        sf_esc_scgrid3_spline_interp (esc_scgrid, inval, avals);
+    else if (2 == esc_scgrid->morder)
+        sf_esc_scgrid3_tps_interp (esc_scgrid, inval, avals);
+    else if (0 == esc_scgrid->morder)
+        sf_esc_scgrid3_nearest_interp (esc_scgrid, inval, avals);
+    else
+        sf_esc_scgrid3_bilinear_interp (esc_scgrid, inval, avals);
+}
+
+/* Prepare phase space values request (areq) accoring to the point (aval)
+   for the nearest interpolation */
+static void sf_esc_scgrid3_nearest_prepare (sf_esc_scgrid3 esc_scgrid, int iia, int iib,
+                                            sf_esc_scgrid3_invals *aval,
+                                            sf_esc_scgrid3_areq *areq) {
+    int ia, ib;
+
+    ia = iia;
+    ib = iib;
+    sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia, &ib);
+    areq->iab = ia*esc_scgrid->nb + ib;
+}
+
+/* Prepare phase space values request (areq) accoring to the point (aval)
+   for the spline interpolation stencil */
+static void sf_esc_scgrid3_bilinear_prepare (sf_esc_scgrid3 esc_scgrid, int iia, int iib,
+                                             sf_esc_scgrid3_invals *aval,
+                                             sf_esc_scgrid3_areq *areq) {
+    int i, j, ia, ib;
+
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < 2; j++) {
+            ia = iia + i;
+            ib = iib + j;
+            sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia, &ib);
+            areq[i].iab = ia*esc_scgrid->nb + ib;
+        }
+    }
+}
+
+/* Prepare phase space values request (areq) accoring to the point (aval)
+   for the spline interpolation stencil */
+static void sf_esc_scgrid3_spline_prepare (sf_esc_scgrid3 esc_scgrid, int iia, int iib,
+                                           sf_esc_scgrid3_invals *aval,
+                                           sf_esc_scgrid3_areq *areq) {
+    int i, j, ia, ib;
+
+    for (i = 0; i < 6; i++) {
+        for (j = 0; j < 6; j++) {
+            ia = iia + i - 2;
+            ib = iib + j - 2;
+            sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia, &ib);
+            areq[i].iab = ia*esc_scgrid->nb + ib;
+        }
+    }
+}
+
+/* Prepare phase space values request (areq) accoring to the point (aval)
+   for the thin plate spline interpolation stencil */
+static void sf_esc_scgrid3_tps_prepare (sf_esc_scgrid3 esc_scgrid, int iia, int iib,
+                                        sf_esc_scgrid3_invals *aval,
+                                        sf_esc_scgrid3_areq *areq) {
+    int i, ia, ib;
+
+    for (i = 0; i < esc_scgrid->ns; i++) {
+        ib = esc_scgrid->bs[i] - 1 + iib;
+        ia = esc_scgrid->as[i] - 1 + iia;
+        sf_esc_scgrid3_bound_iaib (esc_scgrid, &ia, &ib);
+        areq[i].iab = ia*esc_scgrid->nb + ib;
+    }
+}
+
+
+/* Prepare phase space values request (areq) accoring to the point (aval)
+   and the current interpolation order */
+static void sf_esc_scgrid3_prepare_request (sf_esc_scgrid3 esc_scgrid, int in,
+                                            sf_esc_scgrid3_invals *aval,
+                                            sf_esc_scgrid3_areq *areq) {
+    int i, iib, iia;
+    /* ib, ia */
+    iib = sf_cram_scgrid3_ftoi (aval->b, esc_scgrid->ob, esc_scgrid->db, &aval->fb);
+    iia = sf_cram_scgrid3_ftoi (aval->a, esc_scgrid->oa, esc_scgrid->da, &aval->fa);
+
+    if (3 == esc_scgrid->morder)
+        sf_esc_scgrid3_spline_prepare (esc_scgrid, iia, iib, aval, areq);
+    else if (2 == esc_scgrid->morder)
+        sf_esc_scgrid3_tps_prepare (esc_scgrid, iia, iib, aval, areq);
+    else if (0 == esc_scgrid->morder)
+        sf_esc_scgrid3_nearest_prepare (esc_scgrid, iia, iib, aval, areq);
+    else
+        sf_esc_scgrid3_bilinear_prepare (esc_scgrid, iia, iib, aval, areq);
+
+    for (i = 0; i < esc_scgrid->ns; i++) {
+        areq[i].z = aval->vals[ESC3_Z];
+        areq[i].x = aval->vals[ESC3_X];
+        areq[i].y = aval->vals[ESC3_Y];
+        areq[i].ud1 = in; /* Index in the outer input array */
+        areq[i].ud2 = i; /* Stencil index */
+    }
+
 }
 
 #define SPEPS 1e-3
 
-static void sf_esc_scgrid3_project_point (sf_esc_scgrid3 esc_scgrid,
-                                          float *z, float *x, float *y,
-                                          float *t, float *l, float *b, float *a) {
-    if ((*z <= esc_scgrid->zmin + SPEPS*esc_scgrid->dz) ||
-        (*z >= esc_scgrid->zmax - SPEPS*esc_scgrid->dz) ||
-        (*x <= esc_scgrid->xmin + SPEPS*esc_scgrid->dx) ||
-        (*x >= esc_scgrid->xmax - SPEPS*esc_scgrid->dx) ||
-        (*y <= esc_scgrid->ymin + SPEPS*esc_scgrid->dy) ||
-        (*y >= esc_scgrid->ymax - SPEPS*esc_scgrid->dy)) {
+/* Check if the point (avals) is inside the phase space supercell grid,
+   if not, then project it to the global boundary */
+static bool sf_esc_scgrid3_is_inside (sf_esc_scgrid3 esc_scgrid,
+                                      sf_esc_scgrid3_invals *aval, bool project)
+{
+    if ((aval->vals[ESC3_Z] <= esc_scgrid->zmin + SPEPS*esc_scgrid->dz) ||
+        (aval->vals[ESC3_Z] >= esc_scgrid->zmax - SPEPS*esc_scgrid->dz) ||
+        (aval->vals[ESC3_X] <= esc_scgrid->xmin + SPEPS*esc_scgrid->dx) ||
+        (aval->vals[ESC3_X] >= esc_scgrid->xmax - SPEPS*esc_scgrid->dx) ||
+        (aval->vals[ESC3_Y] <= esc_scgrid->ymin + SPEPS*esc_scgrid->dy) ||
+        (aval->vals[ESC3_Y] >= esc_scgrid->ymax - SPEPS*esc_scgrid->dy)) {
         /* Do ray tracing, if the point is outside of the supergrid bounds */
-        sf_esc_tracer3_compute (esc_scgrid->esc_tracer, *z, *x, *y, *b, *a,
-                                *t, *l, esc_scgrid->esc_point, a, b);
-        *z = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Z);
-        *x = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_X);
-        *y = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Y);
-        *t = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_T);
+        if (project && sf_esc_tracer3_inside (esc_scgrid->esc_tracer, &aval->vals[ESC3_Z],
+                                              &aval->vals[ESC3_X], &aval->vals[ESC3_Y], true)) {
+            sf_esc_tracer3_compute (esc_scgrid->esc_tracer, aval->vals[ESC3_Z], aval->vals[ESC3_X],
+                                    aval->vals[ESC3_Y], aval->vals[ESC3_T],
 #ifdef ESC_EQ_WITH_L
-        *l = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_L);
+                                    aval->vals[ESC3_L],
+#else
+                                    0.0,
 #endif
-    } else {
-        /* Do interpolation of local escape values across the supercells */
-        if (3 == esc_scgrid->morder)
-            sf_esc_scgrid3_spline_interp (esc_scgrid, z, x, y, t, l, b, a);
-        else if (2 == esc_scgrid->morder)
-            sf_esc_scgrid3_tps_interp (esc_scgrid, z, x, y, t, l, b, a);
-        else if (0 == esc_scgrid->morder)
-            sf_esc_scgrid3_nearest_interp (esc_scgrid, z, x, y, t, l, b, a);
-        else
-            sf_esc_scgrid3_bilinear_interp (esc_scgrid, z, x, y, t, l, b, a);
+                                    aval->b, aval->a, esc_scgrid->esc_point, &aval->a, &aval->b);
+            aval->vals[ESC3_Z] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Z);
+            aval->vals[ESC3_X] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_X);
+            aval->vals[ESC3_Y] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Y);
+            aval->vals[ESC3_T] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_T);
+        }
+        return false;
+    }
+    return true;
+}
+
+/* Comparison routine for qsort() by anglex indices */
+static int sf_esc_scgrid3_areq_sort (const void *v1, const void *v2) {
+    sf_esc_scgrid3_areq *areq1 = (sf_esc_scgrid3_areq*)v1;
+    sf_esc_scgrid3_areq *areq2 = (sf_esc_scgrid3_areq*)v2;
+
+    if (areq1->iab < areq2->iab)
+        return -1;
+    else if (areq1->iab > areq2->iab)
+        return 1;
+    else
+        return 0;
+}
+
+/* Comparison routine for qsort() of avals by point and stencil indices */
+static int sf_esc_scgrid3_avals_sort (const void *v1, const void *v2) {
+    sf_esc_scgrid3_avals *aval1 = (sf_esc_scgrid3_avals*)v1;
+    sf_esc_scgrid3_avals *aval2 = (sf_esc_scgrid3_avals*)v2;
+
+    /* Point index */
+    if (aval1->ud1 < aval2->ud1)
+        return -1;
+    else if (aval1->ud1 > aval2->ud1)
+        return 1;
+    else {
+        /* Stencil index */
+        if (aval1->ud2 < aval2->ud2)
+            return -1;
+        else if (aval1->ud2 > aval2->ud2)
+            return 1;
+        else       
+            return 0;
     }
 }
 
-void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid,
-                             float *z, float *x, float *y,
-                             float *t, float *l, float *b, float *a)
+
+void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
+                             float a0, float da, float b0, float db, int na, int nb,
+                             float *avals)
 /*< Compute escape values for a point with subsurface coordinates (z, x, y, b, a)
     by stitching local escape solutions in supercells of a phase-space grid >*/
 {
-    while (sf_esc_tracer3_inside (esc_scgrid->esc_tracer, z, x, y, true)) {
-        sf_esc_scgrid3_project_point (esc_scgrid, z, x, y, t, l, b, a);
-        esc_scgrid->is++;
-    }
-    esc_scgrid->ir++;
+    int i, ii, ie, io, in, ia, ib, iap, ibp;
+    int nap = na/esc_scgrid->ma, nbp = nb/esc_scgrid->mb;
+    sf_esc_scgrid3_invals *input = esc_scgrid->invals;
+    sf_esc_scgrid3_areq *areqs = esc_scgrid->areqs;
+    sf_esc_scgrid3_avals *output = esc_scgrid->avals;
+
+    if (na % esc_scgrid->ma)
+        sf_warning ("na should be divisible by ma");
+    if (nb % esc_scgrid->mb)
+        sf_warning ("nb should be divisible by mb");
+
+    for (iap = 0; iap < nap; iap++) { /* Loop over patches */
+        for (ibp = 0; ibp < nbp; ibp++) { /* Loop over patches */
+            /* Initialize starting positions in the phase space */
+            for (ia = 0; ia < esc_scgrid->ma; ia++) {
+                for (ib = 0; ib < esc_scgrid->mb; ib++) {
+                    input[ia*esc_scgrid->mb + ib].vals[ESC3_Z] = z;
+                    input[ia*esc_scgrid->mb + ib].vals[ESC3_X] = x;
+                    input[ia*esc_scgrid->mb + ib].vals[ESC3_Y] = y;
+                    input[ia*esc_scgrid->mb + ib].vals[ESC3_T] = 0.0;
+#ifdef ESC_EQ_WITH_L
+                    input[ia*esc_scgrid->mb + ib].vals[ESC3_L] = 0.0;
+#endif
+                    input[ia*esc_scgrid->mb + ib].b = b0 + (ibp*esc_scgrid->mb + ib)*db;
+                    input[ia*esc_scgrid->mb + ib].a = a0 + (iap*esc_scgrid->ma + ia)*da;
+                    /* Output index */
+                    input[ia*esc_scgrid->mb + ib].iab = (iap*esc_scgrid->ma + ia)*nb +
+                                                        (ibp*esc_scgrid->mb + ib);
+                }
+            }
+            /* Number of elements in the input array */
+            in = esc_scgrid->ma*esc_scgrid->mb;
+            /* First and last indices in the input array */
+            ii = 0;
+            ie = esc_scgrid->ma*esc_scgrid->mb - 1;
+
+            do {
+                io = 0;
+                for (i = ii; i <= ie; i++) {
+                    if (input[i].iab >= 0) {
+                        sf_esc_scgrid3_prepare_request (esc_scgrid, i, &input[i],
+                                                        &areqs[io*esc_scgrid->ns]);
+                        io++;
+                    }
+                }
+                /* Sort the outgoing requests by angle index */
+                qsort (areqs, in*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
+                       sf_esc_scgrid3_areq_sort);
+
+                /* Extract values from across the phase space; remotely or locally */
+                sf_cram_scgrid3_get_values (esc_scgrid, areqs, output, in*esc_scgrid->ns);
+
+                /* Sort the incoming angle values by point and stencil index */
+                qsort (output, in*esc_scgrid->ns, sizeof(sf_esc_scgrid3_avals),
+                       sf_esc_scgrid3_avals_sort);
+
+                /* Find completed points */
+                io = in;
+                for (i = 0; i < io; i++) {
+                    sf_esc_scgrid3_interp_point (esc_scgrid, &input[output[i*esc_scgrid->ns].ud1],
+                                                 &output[i*esc_scgrid->ns]);
+                    if (false == sf_esc_scgrid3_is_inside (esc_scgrid, &input[output[i*esc_scgrid->ns].ud1],
+                                                           true)) {
+                        /* Move completed points to the output array */
+                        memcpy (&avals[input[output[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
+                                input[output[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
+                        in--;
+                        input[output[i*esc_scgrid->ns].ud1].iab = -1;
+                        esc_scgrid->ir++;
+                    } else
+                        esc_scgrid->is++;
+                }
+                /* Find new first and last indices in the input array */
+                while (input[ii].iab == -1 && ii < ie)
+                    ii++;
+                while (input[ie].iab == -1 && ie > ii)
+                    ie--;
+            } while (in);
+        }
+    }        
 }
 

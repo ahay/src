@@ -63,23 +63,47 @@ static char* sf_escscd3_local_ip () {
 
 /* Chunk of work to be added to the queue */
 typedef struct {
-    sf_esc_scgrid3_areq  areqs[SCGRID3_MAX_STENCIL];
-    int                  n; /* Number of requests */
-    int                  sd; /* Socket to write to */
-    pthread_mutex_t     *smutex; /* Mutex for serial access to the socket */
-    int                  iab0, iab1, nab;
-    multi_UBspline_3d_s *scsplines;
+    sf_esc_scgrid3_areq  *areqs;
+    sf_esc_scgrid3_avals *avals;
+    int                   n; /* Number of requests */
+    int                   sd; /* Socket to write to */
+    pthread_mutex_t      *smutex; /* Mutex for serial access to the socket */
+    int                   iab0, iab1, nab;
+    multi_UBspline_3d_s  *scsplines;
 } sf_escscd3_work;
+
+static sf_escscd3_work* sf_escscd3_alloc_work (int mjobs, int ma, int mb) {
+    sf_esc_scgrid3_areq *areqs;
+    sf_esc_scgrid3_avals *avals;
+    sf_escscd3_work* work;
+    int i;
+
+    work = (sf_escscd3_work*)sf_alloc (mjobs, sizeof(sf_escscd3_work));
+    areqs = (sf_esc_scgrid3_areq*)sf_alloc (mjobs*ma*mb, sizeof(sf_esc_scgrid3_areq));
+    avals = (sf_esc_scgrid3_avals*)sf_alloc (mjobs*ma*mb, sizeof(sf_esc_scgrid3_avals));
+    for (i = 0; i < mjobs; i++) {
+        work[i].areqs = &areqs[i*ma*mb];
+        work[i].avals = &avals[i*ma*mb];
+    }
+    return work;
+}
+
+static void sf_escscd3_free_work (sf_escscd3_work* work) {
+    free (work->avals);
+    free (work->areqs);
+    free (work);
+}
 
 /* Elementary task to be peformed by the workers */
 static void sf_escscd3_extract_point (void *ud) {
     sf_escscd3_work *data = (sf_escscd3_work*)ud;
-    sf_esc_scgrid3_avals avals[SCGRID3_MAX_STENCIL];
     int iab;
     int i, len = 0, rc;
 
     for (i = 0; i < data->n; i++) {
-        avals[i].id = data->areqs[i].id;
+        data->avals[i].id = data->areqs[i].id;
+        data->avals[i].ud1 = data->areqs[i].ud1;
+        data->avals[i].ud2 = data->areqs[i].ud2;
         iab = data->areqs[i].iab;
         if (iab > data->iab1)
             iab -= data->nab;
@@ -89,14 +113,14 @@ static void sf_escscd3_extract_point (void *ud) {
         if (iab >= data->iab0 && iab <= data->iab1)
             eval_multi_UBspline_3d_s (&data->scsplines[iab - data->iab0],
                                       data->areqs[i].y, data->areqs[i].x, data->areqs[i].z,
-                                      avals[i].vals);
+                                      data->avals[i].vals);
         else
-            avals[i].vals[0] = SF_HUGE; /* Return error */
+            data->avals[i].vals[0] = SF_HUGE; /* Return error */
     }
     /* Send the result back */
     pthread_mutex_lock (data->smutex);
     while (len < sizeof(sf_esc_scgrid3_avals)*data->n) {
-        rc = send (data->sd, (const void*)(((unsigned char*)avals) + len),
+        rc = send (data->sd, (const void*)(((unsigned char*)data->avals) + len),
                    sizeof(sf_esc_scgrid3_avals)*data->n - len, 0);
         if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
             break; /* The connection is gone */
@@ -113,6 +137,7 @@ static void sf_escscd3_extract_point (void *ud) {
 int main (int argc, char* argv[]) {
     size_t nc;
     off_t nsp;
+    int ma, mb;
     int ith = 1, n1, na, nb, nab, icpu, ncpu, bcpu, wcpu, tout;
     int i, iab, iab0, iab1, port, nthreads, tmpfile = 0;
     multi_UBspline_3d_s *scsplines = NULL;
@@ -124,7 +149,7 @@ int main (int argc, char* argv[]) {
     pid_t pid, sid;
     /* Server network variables */
     char *ip = NULL;
-    int len, rc, on = 1, ijob, mjobs, ib, ir;
+    int len, rc, on = 1, ijob, mjobs;
     int listen_sd, max_sd, new_sd, desc_ready;
     bool close_conn = false;
     struct sockaddr_in serv_addr, client_addr;
@@ -152,7 +177,7 @@ int main (int argc, char* argv[]) {
     /* Total number of CPUs */
 
     if (!sf_getint ("nab", &nab)) nab = 1;
-    /* Number of angular blocks per node */
+    /* Number of angular blocks to keep in memory per daemon */
     if (!sf_getint ("port", &port)) port = 29542;
     /* TCP port for listening */
     if (!sf_getint ("ith", &ith)) ith = 0;
@@ -175,7 +200,11 @@ int main (int argc, char* argv[]) {
     if (ith && icpu % ith)
         sf_warning ("Making room for the daemon on CPU %d, shutting down [CPU %d]", (icpu/ith)*ith, icpu);
 
-    if (!sf_getint ("mjobs", &mjobs)) mjobs = ncpu*100;
+    if (!sf_getint ("ma", &ma)) ma = 20;
+    /* How many azimuth angles to expect per job */
+    if (!sf_getint ("mb", &mb)) mb = 20;
+    /* How many inclination angles to expect per job */
+    if (!sf_getint ("mjobs", &mjobs)) mjobs = ncpu*10;
     /* Maximum number of jobs to hold in the queue */
     if (!sf_getint ("nthreads", &nthreads)) nthreads = ith;
     /* Number of threads per daemon */
@@ -215,6 +244,8 @@ int main (int argc, char* argv[]) {
 
     sf_putint (out, "Ndaemon", ith ? ncpu/ith : 0);
     sf_putint (out, "Port", port);
+    sf_putint (out, "Ma", ma);
+    sf_putint (out, "Mb", mb);
     sf_putstring (out, "Remote", ith ? "y" : "n");
 
     if (ith && nab*(ncpu/ith) < na*nb)
@@ -377,7 +408,7 @@ int main (int argc, char* argv[]) {
 
     /* Buffer for job requests */
     old_qjobs = NULL;
-    qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
+    qjobs = sf_escscd3_alloc_work (mjobs, ma, mb);
     /* Position in the buffer for the next job */
     ijob = 0;
     clen = sizeof(client_addr);
@@ -453,7 +484,6 @@ int main (int argc, char* argv[]) {
             if (!FD_ISSET (i, &working_set))
                 continue;
             desc_ready--;
-            ib = 0;
             rwork = &qjobs[ijob];                    
             rwork->sd = i;
             rwork->iab0 = iab0;
@@ -464,10 +494,10 @@ int main (int argc, char* argv[]) {
             close_conn = false;
             /* Receive incoming data on this socket */
             len = 0;
-            while (len < sizeof(sf_esc_scgrid3_areq)*SCGRID3_MAX_STENCIL) {
+            while (len < sizeof(sf_esc_scgrid3_areq)*ma*mb) {
                 /* Receive job request from the client */
-                rc = recv (i, (void*)(((unsigned char*)&rwork->areqs[ib]) + len),
-                           sizeof(sf_esc_scgrid3_areq)*SCGRID3_MAX_STENCIL - len, 0);
+                rc = recv (i, (void*)(((unsigned char*)rwork->areqs) + len),
+                           sizeof(sf_esc_scgrid3_areq)*ma*mb - len, 0);
                 if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                     /* Connection terminated */
                     fprintf (logf, "Connection with socket %d is terminated\n", i);
@@ -506,8 +536,7 @@ int main (int argc, char* argv[]) {
                     fprintf (logf, "Partial receive from socket %d\n", i);
                     fflush (logf);
                 } else { /* Otherwise - add to the work queue */
-                    ib = len / sizeof(sf_esc_scgrid3_areq);
-                    rwork->n = ib;
+                    rwork->n = len / sizeof(sf_esc_scgrid3_areq);
                     if (SF_THPOOL_QUEUE_FULL == /* Add requests to the work queue */
                         sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork)) {
                         fprintf (logf, "The queue is full, dropping request from socket %d\n", i);
@@ -516,9 +545,9 @@ int main (int argc, char* argv[]) {
                         /* Find a free block for the next job request */
                         if (ijob == mjobs) {
                             if (old_qjobs && sf_thpool_jobsn (tpool) <= mjobs)
-                                free (old_qjobs);
+                                sf_escscd3_free_work (old_qjobs);
                             old_qjobs = qjobs;
-                            qjobs = sf_alloc (mjobs, sizeof(sf_escscd3_work));
+                            qjobs = sf_escscd3_alloc_work (mjobs, ma, mb);
                             ijob = 0;
                         }
                     }
@@ -541,8 +570,8 @@ int main (int argc, char* argv[]) {
     /* Clean up */
     sf_thpool_close (tpool);
     if (old_qjobs)
-        free (old_qjobs);
-    free (qjobs);
+        sf_escscd3_free_work (old_qjobs);
+    sf_escscd3_free_work (qjobs);
 
     for (iab = iab0; iab <= iab1; iab++) {
         free (scsplines[iab - iab0].coefs);
