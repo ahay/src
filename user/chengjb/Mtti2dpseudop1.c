@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
 	int	ix, iz, jx, jz, ixf, izf,ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
 	float   kxmax,kzmax;
 
-        float   f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
-        int     A, mm, nvx, nvz, ns;
+        float   A, f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
+        int     mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
         /*  wavelet parameter for source definition */
         f0=30.0;                  
         t0=0.04;                  
-        A=1;                  
+        A=1.0;                  
 
         /* time samping paramter */
         if (!sf_getint("ns",&ns)) ns=301;
@@ -184,14 +184,14 @@ int main(int argc, char* argv[])
            nzf=nz/nstep+1;
 
            /* operators length for calculation */
-           hnkx=400.0/dx;
-           hnkz=400.0/dz;
+           hnkx=800.0/dx;
+           hnkz=800.0/dz;
            nkx=2*hnkx+1;   /* operator length in kx-direction */
            nkz=2*hnkz+1;   /* operator length in kz-direction */
 
            /* truncated spatial operators length for filtering*/
-           hnkx1=300.0/dx;
-           hnkz1=300.0/dz;
+           hnkx1=600.0/dx;
+           hnkz1=600.0/dz;
            nkx1=2*hnkx1+1;
            nkz1=2*hnkz1+1;
 

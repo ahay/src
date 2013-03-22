@@ -25,7 +25,11 @@
 int main(int argc, char* argv[])
 {
 
-       int   m=9, i;
+       int   m=11, i;
+
+       sf_warning("point number m=%d",m);
+       sf_warning("========================================");
+
 
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar
  
@@ -43,12 +47,15 @@ int main(int argc, char* argv[])
        xpi=fftwf_plan_dft_1d(m,(fftwf_complex *) xin, (fftwf_complex *) xout,
 			    FFTW_BACKWARD,FFTW_ESTIMATE);
 
-       /* FFT: forward */
+       // FFT: forward 
        for(i=0;i<m;i++) 
+       {
           xin[i]=sf_cmplx(sin(i*1.0), 0.);
-
+          sf_warning("i=%d xin=(%f,%f)",i,creal(xin[i]));
+       }
        fftwf_execute(xp);
            
+       sf_warning("========================================");
        for(i=0;i<m;i++) 
          sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i]),cimag(xout[i]));
 
@@ -57,6 +64,7 @@ int main(int argc, char* argv[])
 
        fftwf_execute(xpi);
            
+       sf_warning("========================================");
        for(i=0;i<m;i++) 
          sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i])/m,cimag(xout[i])/m);
 
@@ -65,6 +73,7 @@ int main(int argc, char* argv[])
        free(xin);
        free(xout);
 #else  // using FFTW in user's own computer
+
 
        fftw_complex *xin, *xout;
 
@@ -84,18 +93,20 @@ int main(int argc, char* argv[])
        for(i=0;i<m;i++) 
           xin[i]=sf_cmplx(1.0, 0.);
 
-       fftwf_execute(xp);
+       fftw_execute(xp);
            
        for(i=0;i<m;i++) 
-         sf_warning("i=%d xout=(%f,%f)",i,xout[i][0],xout[i][1]);
+         //sf_warning("i=%d xout=(%f,%f)",i,xout[i][0],xout[i][1]);
+         sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i]),cimag(xout[i]));
 
        for(i=0;i<m;i++) 
           xin[i]=xout[i];
 
-       fftwf_execute(xpi);
+       fftw_execute(xpi);
            
        for(i=0;i<m;i++) 
-         sf_warning("i=%d xout=(%f,%f)",i,xout[i][0]/m,xout[i][1]/m);
+         //sf_warning("i=%d xout=(%f,%f)",i,xout[i][0]/m,xout[i][1]/m);
+         sf_warning("i=%d xout=(%f,%f)",i,creal(xout[i])/m,cimag(xout[i])/m);
 
        fftw_destroy_plan(xp);
        fftw_destroy_plan(xpi);

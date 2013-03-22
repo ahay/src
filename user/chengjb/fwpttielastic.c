@@ -33,10 +33,10 @@
 #include "zero.h"
 
 void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float** q2,float** q3,
-               float* coeff_2dx,float* coeff_2dz, float* coeff_1dx,float* coeff_1dz,
-               float dx, float dz, int nx, int nz, int nxpad, int nzpad, 
-               float **vp0,float **vs0, float **epsilon,float **delta, float **theta)
-/*< fwpttielastic: forward-propagating using original elastic equation of displacement in TTI media>*/
+                   float* coeff_2dx,float* coeff_2dz, float* coeff_1dx,float* coeff_1dz,
+                   float dx, float dz, int nx, int nz, int nxpad, int nzpad, 
+                   float **vp0,float **vs0, float **epsilon,float **delta, float **theta)
+/*< fwpttielastic: forward-propagating using original elastic equation of displacement in 2D TTI media>*/
 {
         int   i,j,l, lm, im, jm;
         float px,pxz,qxz,qx,px1, qxz1, qx1, pxz1,hpx,hqx,hpz,hqz;
@@ -122,4 +122,351 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 
 	free(*px_tmp);	
 	free(*qx_tmp);	
+}
+
+void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float***q2,float***q3,float***r1,float***r2,float***r3,
+                     float* coeff_2dx,float* coeff_2dy,float* coeff_2dz, float* coeff_1dx,float* coeff_1dy,float* coeff_1dz,
+                     float dx, float dy, float dz, int nx, int ny, int nz, int nxpad, int nypad, int nzpad, 
+                     float ***vp0,float ***vs0, float ***epsilon, float ***delta, float ***gama, float ***theta, float ***phai)
+/*< fwpttielastic3d: forward-propagating using original elastic equation of displacement in 3D TTI media>*/
+{
+        int   i,j,k,l,lm,km,im,jm;
+        float vp2,vs2,ep,de,ga,vpn2,the,phi;
+        float sinthe,costhe,sinphi,cosphi;
+        float a11, a33, a44, a66, a11a66, a13a44;
+        //float r11, r12, r13, r21, r22, r23, r31, r32, r33;
+        float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
+        float qxy1, rxz1, pxy1, ryz1, pxz1, qyz1;
+        float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
+        float pxy, pxz, pyz, qxy, qxz, qyz, rxy, rxz, ryz;
+		
+	float ***px_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***qx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***py_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***qy_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***ry_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+
+	zero3float(px_tmp,nzpad,nxpad,nypad);	
+	zero3float(qx_tmp,nzpad,nxpad,nypad);	
+	zero3float(rx_tmp,nzpad,nxpad,nypad);	
+	zero3float(py_tmp,nzpad,nxpad,nypad);	
+	zero3float(qy_tmp,nzpad,nxpad,nypad);	
+	zero3float(ry_tmp,nzpad,nxpad,nypad);	
+
+        for(k=m;k<ny+m;k++)
+        for(i=m;i<nx+m;i++)
+	for(j=m;j<nz+m;j++)
+	{
+		for(l=-mix;l<=mix;l++)
+		{
+                        lm=l+mix;
+			px_tmp[k][i][j]+=coeff_1dx[lm]*p2[k][i+l][j]/2.0/dx;
+			qx_tmp[k][i][j]+=coeff_1dx[lm]*q2[k][i+l][j]/2.0/dx;
+			rx_tmp[k][i][j]+=coeff_1dx[lm]*r2[k][i+l][j]/2.0/dx;
+			py_tmp[k][i][j]+=coeff_1dy[lm]*p2[k+l][i][j]/2.0/dy;
+			qy_tmp[k][i][j]+=coeff_1dy[lm]*q2[k+l][i][j]/2.0/dy;
+			ry_tmp[k][i][j]+=coeff_1dy[lm]*r2[k+l][i][j]/2.0/dy;
+		}
+	}
+
+        for(k=m;k<ny+m;k++)
+        {
+           km=k-m;
+           for(i=m;i<nx+m;i++)
+           {
+              im=i-m;
+	      for(j=m;j<nz+m;j++)
+	      {
+                 jm=j-m;
+
+                 vp2=vp0[km][im][jm]*vp0[km][im][jm];
+                 vs2=vs0[km][im][jm]*vs0[km][im][jm];
+                 ep=1+2*epsilon[km][im][jm];
+                 de=1+2*delta[km][im][jm];
+                 ga=1+2*gama[km][im][jm];
+                 the=theta[km][im][jm];
+                 phi=phai[km][im][jm];
+
+                 costhe=cos(the);
+                 sinthe=sin(the);
+                 cosphi=cos(phi);
+                 sinphi=sin(phi);
+
+	         a11=vp2*ep;
+	         a33=vp2;
+	         a44=vs2;
+	         a66=vs2*ga;
+                 vpn2=vp2*de;
+                 a11a66=a11-a66;
+                 a13a44=sqrt((vp2-vs2)*(vpn2-vs2));
+
+                 //sf_warning("vp0=%f vs0=%f epsi=%f del=%f gama=%f",vp0[km][im][jm],vs0[km][im][jm],epsilon[km][im][jm],delta[km][im][jm],gama[km][im][jm]);
+                 //sf_warning("a11=%f a33=%f a44=%f a66=%f a11a66=%f a13a44=%f ",a11,a33,a44,a66,a11a66,a13a44);
+                 //sf_warning("r11=%f r12=%f r13=%f r21=%f r22=%f r23=%f r31=%f r32=%f r33=%f",r11,r12,r13,r21,r22,r23,r31,r32,r33);
+
+		  pxy=0;
+		  pxz=0;
+		  pyz=0;
+		  qxy=0;
+		  qxz=0;
+		  qyz=0;
+		  rxy=0;
+		  rxz=0;
+		  ryz=0;
+                  for(l=-mix;l<=mix;l++)
+                  {
+                     lm=l+mix;
+                     pxy+=coeff_1dy[lm]*px_tmp[k+l][i][j]/2.0/dy;
+                     pxz+=coeff_1dz[lm]*px_tmp[k][i][j+l]/2.0/dz;
+                     pyz+=coeff_1dz[lm]*py_tmp[k][i][j+l]/2.0/dz;
+                     qxy+=coeff_1dy[lm]*qx_tmp[k+l][i][j]/2.0/dy;
+                     qxz+=coeff_1dz[lm]*qx_tmp[k][i][j+l]/2.0/dz;
+                     qyz+=coeff_1dz[lm]*qy_tmp[k][i][j+l]/2.0/dz;
+                     rxy+=coeff_1dy[lm]*rx_tmp[k+l][i][j]/2.0/dy;
+                     rxz+=coeff_1dz[lm]*rx_tmp[k][i][j+l]/2.0/dz;
+                     ryz+=coeff_1dz[lm]*ry_tmp[k][i][j+l]/2.0/dz;
+                  }
+
+		  hpy=0;
+		  hqy=0;
+		  hry=0;
+		  hpx=0;
+		  hqx=0;
+		  hrx=0;
+                  hpz=0;
+                  hqz=0;
+                  hrz=0;
+		  for(l=-m;l<=m;l++)
+		  {
+                     lm=l+m;
+                     hpy+=coeff_2dy[lm]*p2[k+l][i][j];
+                     hqy+=coeff_2dy[lm]*q2[k+l][i][j];
+                     hry+=coeff_2dy[lm]*r2[k+l][i][j];
+                     hpx+=coeff_2dx[lm]*p2[k][i+l][j];
+                     hqx+=coeff_2dx[lm]*q2[k][i+l][j];
+                     hrx+=coeff_2dx[lm]*r2[k][i+l][j];
+                     hpz+=coeff_2dz[lm]*p2[k][i][j+l];
+                     hqz+=coeff_2dz[lm]*q2[k][i][j+l];
+                     hrz+=coeff_2dz[lm]*r2[k][i][j+l];
+		  }
+
+                  // x-component
+                  px2 = hpx;
+                  py2 = hpy;
+                  pz2 = hpz;
+
+                  qxy1 = qxy;
+                  rxz1 = rxz;
+               
+                  p3[k][i][j]=2*p2[k][i][j] - p1[k][i][j] + dt2*( a11*px2 +  a66*py2 + a44*pz2 + a11a66*qxy1 + a13a44*rxz1);
+
+                  // y-component
+                  qx2 = hqx;
+                  qy2 = hqy;
+                  qz2 = hqz;
+
+                  pxy1 = pxy;
+                  ryz1 = ryz;
+               
+                  q3[k][i][j]=2*q2[k][i][j] - q1[k][i][j] + dt2*( a66*qx2 +  a11*qy2 + a44*qz2 + a11a66*pxy1 + a13a44*ryz1);
+
+                  // z-component
+                  rx2 = hrx;
+                  ry2 = hry;
+                  rz2 = hrz;
+
+                  pxz1 = pxy;
+                  qyz1 = qyz;
+               
+                  r3[k][i][j]=2*r2[k][i][j] - r1[k][i][j] + dt2*( a44*rx2 +  a44*ry2 + a33*rz2 + a13a44*pxz1 + a13a44*qyz1);
+                  //sf_warning("p3[k][i][j]=%f q3[k][i][j]=%f r3[k][i][j]=%f", p3[k][i][j],q3[k][i][j],r3[k][i][j]);
+            }
+          }
+	}
+
+	free(*px_tmp);	
+	free(*qx_tmp);	
+	free(*rx_tmp);	
+	free(*py_tmp);	
+	free(*qy_tmp);	
+	free(*ry_tmp);	
+}
+
+void fwpttielastic3d0(float dt2,float***p1,float***p2,float***p3,float***q1,float***q2,float***q3,float***r1,float***r2,float***r3,
+                     float* coeff_2dx,float* coeff_2dy,float* coeff_2dz, float* coeff_1dx,float* coeff_1dy,float* coeff_1dz,
+                     float dx, float dy, float dz, int nx, int ny, int nz, int nxpad, int nypad, int nzpad, 
+                     float ***vp0,float ***vs0, float ***epsilon, float ***delta, float ***gama, float ***theta, float ***phai)
+/*< fwpttielastic3d: forward-propagating using original elastic equation of displacement in 3D TTI media>*/
+{
+        int   i,j,k,l,lm,km,im,jm;
+        float vp2,vs2,ep,de,ga,vpn2,the,phi;
+        float sinthe,costhe,sinphi,cosphi;
+        float a11, a33, a44, a66, a11a66, a13a44;
+        float r11, r12, r13, r21, r22, r23, r31, r32, r33;
+        float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
+        float qxy1, rxz1, pxy1, ryz1, pxz1, qyz1;
+        float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
+        float pxy, pxz, pyz, qxy, qxz, qyz, rxy, rxz, ryz;
+		
+	float ***px_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***qx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***py_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***qy_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+	float ***ry_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+
+	zero3float(px_tmp,nzpad,nxpad,nypad);	
+	zero3float(qx_tmp,nzpad,nxpad,nypad);	
+	zero3float(rx_tmp,nzpad,nxpad,nypad);	
+	zero3float(py_tmp,nzpad,nxpad,nypad);	
+	zero3float(qy_tmp,nzpad,nxpad,nypad);	
+	zero3float(ry_tmp,nzpad,nxpad,nypad);	
+
+        for(k=m;k<ny+m;k++)
+        for(i=m;i<nx+m;i++)
+	for(j=m;j<nz+m;j++)
+	{
+		for(l=-mix;l<=mix;l++)
+		{
+                        lm=l+mix;
+			px_tmp[k][i][j]+=coeff_1dx[lm]*p2[k][i+l][j]/2.0/dx;
+			qx_tmp[k][i][j]+=coeff_1dx[lm]*q2[k][i+l][j]/2.0/dx;
+			rx_tmp[k][i][j]+=coeff_1dx[lm]*r2[k][i+l][j]/2.0/dx;
+			py_tmp[k][i][j]+=coeff_1dy[lm]*p2[k+l][i][j]/2.0/dy;
+			qy_tmp[k][i][j]+=coeff_1dy[lm]*q2[k+l][i][j]/2.0/dy;
+			ry_tmp[k][i][j]+=coeff_1dy[lm]*r2[k+l][i][j]/2.0/dy;
+		}
+	}
+
+        for(k=m;k<ny+m;k++)
+        {
+           km=k-m;
+           for(i=m;i<nx+m;i++)
+           {
+              im=i-m;
+	      for(j=m;j<nz+m;j++)
+	      {
+                 jm=j-m;
+
+                 vp2=vp0[km][im][jm]*vp0[km][im][jm];
+                 vs2=vs0[km][im][jm]*vs0[km][im][jm];
+                 ep=1+2*epsilon[km][im][jm];
+                 de=1+2*delta[km][im][jm];
+                 ga=1+2*gama[km][im][jm];
+                 the=theta[km][im][jm];
+                 phi=phai[km][im][jm];
+
+                 costhe=cos(the);
+                 sinthe=sin(the);
+                 cosphi=cos(phi);
+                 sinphi=sin(phi);
+
+                 r11=costhe*cosphi;
+                 r12=-sinphi;
+                 r13=-sinthe*cosphi;
+                 r21=costhe*sinphi;
+                 r22=cosphi;
+                 r23=-sinthe*sinphi;
+                 r31=sinthe;
+                 r32=0.0;
+                 r33=costhe;
+
+	         a11=vp2*ep;
+	         a33=vp2;
+	         a44=vs2;
+	         a66=vs2*ga;
+                 vpn2=vp2*de;
+                 a11a66=a11-a66;
+                 a13a44=sqrt((vp2-vs2)*(vpn2-vs2));
+
+                 //sf_warning("a11=%f a33=%f a44=%f a66=%f a11a66=%f a13a44=%f ",a11,a33,a44,a66,a11a66,a13a44);
+                 //sf_warning("r11=%f r12=%f r13=%f r21=%f r22=%f r23=%f r31=%f r32=%f r33=%f",r11,r12,r13,r21,r22,r23,r31,r32,r33);
+
+		  pxy=0;
+		  pxz=0;
+		  pyz=0;
+		  qxy=0;
+		  qxz=0;
+		  qyz=0;
+		  rxy=0;
+		  rxz=0;
+		  ryz=0;
+                  for(l=-mix;l<=mix;l++)
+                  {
+                     lm=l+mix;
+                     pxy+=coeff_1dy[lm]*px_tmp[k+l][i][j]/2.0/dy;
+                     pxz+=coeff_1dz[lm]*px_tmp[k][i][j+l]/2.0/dz;
+                     pyz+=coeff_1dz[lm]*py_tmp[k][i][j+l]/2.0/dz;
+                     qxy+=coeff_1dy[lm]*qx_tmp[k+l][i][j]/2.0/dy;
+                     qxz+=coeff_1dz[lm]*qx_tmp[k][i][j+l]/2.0/dz;
+                     qyz+=coeff_1dz[lm]*qy_tmp[k][i][j+l]/2.0/dz;
+                     rxy+=coeff_1dy[lm]*rx_tmp[k+l][i][j]/2.0/dy;
+                     rxz+=coeff_1dz[lm]*rx_tmp[k][i][j+l]/2.0/dz;
+                     ryz+=coeff_1dz[lm]*ry_tmp[k][i][j+l]/2.0/dz;
+                  }
+
+		  hpy=0;
+		  hqy=0;
+		  hry=0;
+		  hpx=0;
+		  hqx=0;
+		  hrx=0;
+                  hpz=0;
+                  hqz=0;
+                  hrz=0;
+		  for(l=-m;l<=m;l++)
+		  {
+                     lm=l+m;
+                     hpy+=coeff_2dy[lm]*p2[k+l][i][j];
+                     hqy+=coeff_2dy[lm]*q2[k+l][i][j];
+                     hry+=coeff_2dy[lm]*r2[k+l][i][j];
+                     hpx+=coeff_2dx[lm]*p2[k][i+l][j];
+                     hqx+=coeff_2dx[lm]*q2[k][i+l][j];
+                     hrx+=coeff_2dx[lm]*r2[k][i+l][j];
+                     hpz+=coeff_2dz[lm]*p2[k][i][j+l];
+                     hqz+=coeff_2dz[lm]*q2[k][i][j+l];
+                     hrz+=coeff_2dz[lm]*r2[k][i][j+l];
+		  }
+
+                  // x-component
+                  px2 = r11*r11*hpx+r21*r21*hpy+r31*r31*hpz+2*r11*r21*pxy+2*r11*r31*pxz+2*r21*r31*pyz;
+                  py2 = r12*r12*hpx+r22*r22*hpy+r32*r32*hpz+2*r12*r22*pxy+2*r12*r32*pxz+2*r22*r32*pyz;
+                  pz2 = r13*r13*hpx+r23*r23*hpy+r33*r33*hpz+2*r13*r23*pxy+2*r13*r33*pxz+2*r23*r33*pyz;
+
+                  qxy1 = r11*r12*hqx+r21*r22*hqy+r31*r32*hqz+(r11*r22+r21*r12)*qxy+(r11*r32+r31*r12)*qxz+(r21*r32+r31*r22)*qyz;
+                  rxz1 = r11*r13*hrx+r21*r23*hry+r31*r33*hrz+(r11*r23+r21*r13)*rxy+(r11*r33+r31*r13)*rxz+(r21*r33+r31*r23)*ryz;
+               
+                  p3[k][i][j]=2*p2[k][i][j] - p1[k][i][j] + dt2*( a11*px2 +  a66*py2 + a44*pz2 + a11a66*qxy1 + a13a44*rxz1);
+
+                  // y-component
+                  qx2 = r11*r11*hqx+r21*r21*hqy+r31*r31*hqz+2*r11*r21*qxy+2*r11*r31*qxz+2*r21*r31*qyz;
+                  qy2 = r12*r12*hqx+r22*r22*hqy+r32*r32*hqz+2*r12*r22*qxy+2*r12*r32*qxz+2*r22*r32*qyz;
+                  qz2 = r13*r13*hqx+r23*r23*hqy+r33*r33*hqz+2*r13*r23*qxy+2*r13*r33*qxz+2*r23*r33*qyz;
+
+                  pxy1 = r11*r12*hpx+r21*r22*hpy+r31*r32*hpz+(r11*r22+r21*r12)*pxy+(r11*r32+r31*r12)*pxz+(r21*r32+r31*r22)*pyz;
+                  ryz1 = r12*r13*hrx+r22*r23*hry+r32*r33*hrz+(r12*r23+r22*r13)*rxy+(r12*r33+r32*r13)*rxz+(r22*r33+r32*r23)*ryz;
+               
+                  q3[k][i][j]=2*q2[k][i][j] - q1[k][i][j] + dt2*( a66*qx2 +  a11*qy2 + a44*qz2 + a11a66*pxy1 + a13a44*ryz1);
+
+                  // z-component
+                  rx2 = r11*r11*hrx+r21*r21*hry+r31*r31*hrz+2*r11*r21*rxy+2*r11*r31*rxz+2*r21*r31*ryz;
+                  ry2 = r12*r12*hrx+r22*r22*hry+r32*r32*hrz+2*r12*r22*rxy+2*r12*r32*rxz+2*r22*r32*ryz;
+                  rz2 = r13*r13*hrx+r23*r23*hry+r33*r33*hrz+2*r13*r23*rxy+2*r13*r33*rxz+2*r23*r33*ryz;
+
+                  pxz1 = r11*r13*hpx+r21*r23*hpy+r31*r33*hpz+(r11*r23+r21*r13)*pxy+(r11*r33+r31*r13)*pxz+(r21*r33+r31*r23)*pyz;
+                  qyz1 = r12*r13*hqx+r22*r23*hqy+r32*r33*hqz+(r12*r23+r22*r13)*qxy+(r12*r33+r32*r13)*qxz+(r22*r33+r32*r23)*qyz;
+               
+                  r3[k][i][j]=2*r2[k][i][j] - r1[k][i][j] + dt2*( a44*rx2 +  a44*ry2 + a33*rz2 + a13a44*pxz1 + a13a44*qyz1);
+                  //sf_warning("p3[k][i][j]=%f q3[k][i][j]=%f r3[k][i][j]=%f", p3[k][i][j],q3[k][i][j],r3[k][i][j]);
+            }
+          }
+	}
+
+	free(*px_tmp);	
+	free(*qx_tmp);	
+	free(*rx_tmp);	
+	free(*py_tmp);	
+	free(*qy_tmp);	
+	free(*ry_tmp);	
 }

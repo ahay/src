@@ -105,7 +105,7 @@ void engein2dvti2(double ve[2][2], double va[2], double kx, double kz, double vp
 /*< engein2dvti2: Calculate eigeinvalues and eigeinvectors for 2D VTI media
                   using 2*2 matrix analytic solution>*/
 {
-        double u1, u2, c11, c33, c44, c13, a11, a12, a22;
+        double u1, u2, c11, c33, c44, c13c44, a11, a12, a22;
         double a[2][2];
 
         c33=vp2;
@@ -115,20 +115,16 @@ void engein2dvti2(double ve[2][2], double va[2], double kx, double kz, double vp
         //c13=sqrt((2*c33*de+(c33-c44))*(c33-c44))-c44;
         //c13=sqrt((2*c33*de+c33-c44)*(c33-c44))-c44;
         //c13=sqrt((2*de+1.0)*c33-c44)*(c33-c44))-c44;
-        c13=sqrt((de2*c33-c44)*(c33-c44))-c44;
+        c13c44=sqrt((de2*c33-c44)*(c33-c44));
 
-        a11=  c11*kx*kx+
-              c44*kz*kz;
+        a11= c11*kx*kx+c44*kz*kz;
+        a12= c13c44*kx*kz;
+        a22= c44*kx*kx+c33*kz*kz;
 
-        a12= (c13+c44)*kx*kz;
-
-        a22=  c44*kx*kx+
-              c33*kz*kz;
-
-         a[0][0] = a11;
-         a[0][1] = a12;
-         a[1][0] = a12;
-         a[1][1] = a22;
+        a[0][0] = a11;
+        a[0][1] = a12;
+        a[1][0] = a12;
+        a[1][1] = a22;
 
         dsolveSymmetric22(a, ve, va);
 

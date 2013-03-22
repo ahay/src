@@ -16,9 +16,8 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#define FLT_EPSILON 0.000001
-#define DBL_EPSILON 0.0000000001
 #include <math.h> 
+#include <float.h> 
 
 /* ** */
 /*  * Special-purpose eigensolvers for digital signal processing. */

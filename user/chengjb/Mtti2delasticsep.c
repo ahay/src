@@ -1,7 +1,7 @@
-/* 2-D two-components wavefield modeling using original elastic displacement wave equation in VTI media.
+/* 2-D two-components wavefield modeling using original elastic displacement wave equation in TTI media.
 
    Copyright (C) 2012 Tongji University, Shanghai, China 
-   Authors: Jiubing Cheng and Tengfei Wang
+   Authors: Jiubing Cheng, Wei Kang and Tengfei Wang
      
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -36,20 +36,20 @@
 #include "clipsmthspec.h"
 
 /* wave-mode separation operators */
-#include "polvtipsv.h"
+#include "polttipsv.h"
 #include "filter2dsep.h"
 
 /* wavefield propagators */
-#include "fwpvtielastic.h"
+#include "fwpttielastic.h"
 
 /*****************************************************************************************/
 int main(int argc, char* argv[])
 {
-	int	ix, iz, jx, jz, ixf, izf,ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
+	int	ix, iz, jx, jz,ixx,izz,ixf,izf,i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
 	float   kxmax,kzmax;
 
-        float   f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2;
-        int     A, mm, nvx, nvz, ns;
+        float   f0, t, t0, dx, dz, dxf, dzf,dt, dkx, dkz, dt2;
+        int     mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
@@ -67,21 +67,21 @@ int main(int argc, char* argv[])
         float **exx, **ezz;                        /* operator for constant model for P-wave*/
         float **exxs, **ezzs;                      /* operator for constant model for SV-wave*/
 
-        float **vp0, **vs0, **epsi, **del;         /* velocity model */
+        float **vp0, **vs0, **epsi, **del, **theta;         /* velocity model */
         float **p1, **p2, **p3, **q1, **q2, **q3, **p3c, **q3c, **sum;  /* wavefield array */
 
         float *kx, *kz, *kkx, *kkz, *kx2, *kz2, **taper;
 
         clock_t t1, t2, t3, t4;
         float   timespent; 
-        float   fx, fz;
+        float   A, fx, fz;
 
         int     isep=1;
         int     ihomo=1;
 
         char    *tapertype;
 
-	double  vp2, vs2, ep2, de2;
+	double  vp2, vs2, ep2, de2, the;
 
         sf_init(argc,argv);
 
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
         /*  wavelet parameter for source definition */
         f0=30.0;                  
         t0=0.04;                  
-        A=1;                  
+        A=1.0;                  
 
         /* time samping paramter */
         if (!sf_getint("ns",&ns)) ns=301;
@@ -111,12 +111,13 @@ int main(int argc, char* argv[])
         sf_warning("read velocity model parameters");
 
         /* setup I/O files */
-        sf_file Fvp0, Fvs0, Feps, Fdel;
+        sf_file Fvp0, Fvs0, Feps, Fdel, Fthe;
 
         Fvp0 = sf_input ("in");  /* vp0 using standard input */
         Fvs0 = sf_input ("vs0");  /* vs0 */
         Feps = sf_input ("epsi");  /* epsi */
         Fdel = sf_input ("del");  /* delta */
+        Fthe = sf_input ("the");  /* theta */
 
         /* Read/Write axes */
         sf_axis az, ax;
@@ -144,6 +145,7 @@ int main(int argc, char* argv[])
 	vs0=sf_floatalloc2(nz,nx);	
 	epsi=sf_floatalloc2(nz,nx);	
 	del=sf_floatalloc2(nz,nx);	
+	theta=sf_floatalloc2(nz,nx);	
 
         nxz=nx*nz;
         mm=2*m+1;
@@ -157,6 +159,11 @@ int main(int argc, char* argv[])
         sf_floatread(vs0[0],nxz,Fvs0);
         sf_floatread(epsi[0],nxz,Feps);
         sf_floatread(del[0],nxz,Fdel);
+        sf_floatread(theta[0],nxz,Fthe);
+
+        for(i=0;i<nx;i++)
+        for(j=0;j<nz;j++)
+           theta[i][j] *= PI/180.0;
 
         t2=clock();
 
@@ -225,10 +232,10 @@ int main(int argc, char* argv[])
               exxs=sf_floatalloc2(nkz1, nkx1);
               ezzs=sf_floatalloc2(nkz1, nkx1);
            }else{
-	      ex=sf_floatalloc4(nkz1, nkx1, nzf, nxf);
-	      ez=sf_floatalloc4(nkz1, nkx1, nzf, nxf);
-	      exs=sf_floatalloc4(nkz1, nkx1, nzf, nxf);
-	      ezs=sf_floatalloc4(nkz1, nkx1, nzf, nxf);
+	      ex=sf_floatalloc4(nkz1, nkx1, nz, nx);
+	      ez=sf_floatalloc4(nkz1, nkx1, nz, nx);
+	      exs=sf_floatalloc4(nkz1, nkx1, nz, nx);
+	      ezs=sf_floatalloc4(nkz1, nkx1, nz, nx);
            }
            /*****************************************************************************
            *  Calculating polarization operator for wave-mode separation
@@ -276,8 +283,9 @@ int main(int argc, char* argv[])
 	        vs2=vs0[ix][iz]*vs0[ix][iz];
 	        ep2=1.0+2*epsi[ix][iz];
 	        de2=1.0+2*del[ix][iz];
+                the=theta[ix][iz];
 
-                if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=%f",nxf, ixf,izf,vp2,vs2);
+               if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=%f",nxf, ixf,izf,vp2,vs2);
 
    	        /*************calculate projection operrate with tapering **********/
                 zero2float(apx, nkz, nkx);
@@ -287,8 +295,8 @@ int main(int argc, char* argv[])
                
                 /* polvtipsv: P- and SV-wave polarization operators in VTI media  */
                 itaper=1;
-                polvtipsv(apx,apz,apxs,apzs,kx,kz,kkx,kkz,kx2,kz2,taper,hnkx,hnkz,dkx,dkz,
-                          vp2,vs2,ep2,de2,itaper);
+                polttipsv(apx,apz,apxs,apzs,kx,kz,kkx,kkz,taper,hnkx,hnkz,dkx,dkz,
+                          vp2,vs2,ep2,de2,the,itaper);
 
                 ikxkz2xz(apx, apxx, hnkx, hnkz, nkx, nkz);
                 ikxkz2xz(apz, apzz, hnkx, hnkz, nkx, nkz);
@@ -364,11 +372,10 @@ int main(int argc, char* argv[])
         sf_warning("==================================================");
         sf_warning("==      Porpagation Using Elastic Wave Eq.      ==");
         sf_warning("==================================================");
-
-        coeff_2dx=sf_floatalloc(mm);
-        coeff_2dz=sf_floatalloc(mm);
-        coeff_1dx=sf_floatalloc(mm);
-        coeff_1dz=sf_floatalloc(mm);
+       coeff_2dx=sf_floatalloc(mm);
+       coeff_2dz=sf_floatalloc(mm);
+       coeff_1dx=sf_floatalloc(mm);
+       coeff_1dz=sf_floatalloc(mm);
 
         coeff2d(coeff_2dx,dx);
         coeff2d(coeff_2dz,dz);
@@ -410,23 +417,37 @@ int main(int argc, char* argv[])
 	{
 		t=it*dt;
 
-                /* it seems that the following two lines not produce isotropic source */
-		//p2[isxm][iszm]+=Ricker(t, f0, t0, A);
-		//q2[isxm][iszm]+=Ricker(t, f0, t0, A);
-                
-		for(i=-1;i<=1;i++)
-                  for(j=-1;j<=1;j++)
-                  {
+                // 2D exploding force source (e.g., Wu's PhD
+                for(i=-1;i<=1;i++)
+                for(j=-1;j<=1;j++)
+                {
                      if(fabs(i)+fabs(j)==2)
                      {
-                       p2[isxm+i][iszm+j]+=(i*1.0)/4.0*Ricker(t, f0, t0, A);
-                       q2[isxm+i][iszm+j]+=(j*1.0)/4.0*Ricker(t, f0, t0, A);  
+                          p2[isxm+i][iszm+j]+=i*Ricker(t, f0, t0, A);
+                          q2[isxm+i][iszm+j]+=j*Ricker(t, f0, t0, A);
                      }
-                  }
-
+                }
+        // 2D equil-energy force source (e.g., Wu's PhD)
+        /*
+        for(i=-1;i<=1;i++)
+        for(j=-1;j<=1;j++)
+        {
+             if(fabs(i)+fabs(j)==2)
+             {
+                  if(i==-1&&j==1)  
+                    q2[isxm+i][iszm+j]+=sqrt(2.0)*Ricker(t, f0, t0, A);
+                  if(i==-1&&j==-1) 
+                   p2[isxm+i][iszm+j]+=-sqrt(2.0)*Ricker(t, f0, t0, A);
+                  if(i==1&&j==1)  
+                   p2[isxm+i][iszm+j]+=sqrt(2.0)*Ricker(t, f0, t0, A);
+                  if(i==1&&j==-1) 
+                    q2[isxm+i][iszm+j]+=-sqrt(2.0)*Ricker(t, f0, t0, A);
+             }
+        }
+        */
                 /* fwpvtielastic: forward-propagating using original elastic equation of displacement in VTI media*/
-		fwpvtielastic(dt2, p1, p2, p3, q1, q2, q3, coeff_2dx, coeff_2dz, coeff_1dx, coeff_1dz,
-                              dx, dz, nx, nz, nxpad, nzpad, vp0, vs0, epsi, del);
+		fwpttielastic(dt2, p1, p2, p3, q1, q2, q3, coeff_2dx, coeff_2dz, coeff_1dx, coeff_1dz,
+                              dx, dz, nx, nz, nxpad, nzpad, vp0, vs0, epsi, del, theta);
 
                /******* output wavefields: component and divergence *******/
 	       if(it==ns-1)
@@ -519,10 +540,6 @@ int main(int argc, char* argv[])
               free(***ezs);
           }
         }
-        free(coeff_2dx);
-        free(coeff_2dz);
-        free(coeff_1dx);
-        free(coeff_1dz);
 
         free(*p1);
         free(*p2);
@@ -535,6 +552,7 @@ int main(int argc, char* argv[])
         free(*vs0);
         free(*epsi);
         free(*del);
+        free(*theta);
 
 	exit(0);
 }

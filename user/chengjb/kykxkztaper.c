@@ -23,8 +23,9 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+
 #include "_cjb.h"
+#include <rsf.h>
 
 /* The tapering operators is borrowed from J. Yan */
 
@@ -77,6 +78,30 @@
 #define TAPERB(kmag)  (kmag<PI  ? filterB(kmag)  :0 )
 #define TAPERBR(kmag) (kmag<PI  ? filterBreal(kmag)  :0 )
 #define TAPERBI(kmag) (kmag<PI  ? filterBimag(kmag)  :0 ) 
+
+void ikx(int *ijkx, int nkx)
+/*< ikx: re-define the index for kx axis after FFT >*/
+{
+    int ix;
+ 
+    if(nkx%2==0){
+      for(ix=0;ix<nkx;ix++)
+      {
+       if(ix<nkx/2)
+          ijkx[ix]=nkx/2+ix;
+       else
+          ijkx[ix]=ix-nkx/2;
+      }
+    }else{
+      for(ix=0;ix<nkx;ix++)
+      {
+       if(ix<=nkx/2)
+          ijkx[ix]=nkx/2+ix;
+       else
+          ijkx[ix]=ix-nkx/2-1;
+      }
+    }
+}
 
 void ikxikz(int *ijkx, int *ijkz, int nkx, int nkz)
 /*< ikxikz: re-define the index for kx and kz axis after FFT >*/

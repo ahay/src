@@ -62,6 +62,7 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
 
        int ii, jj, kk;
 
+       i=0;
        for(iy=0;iy<ny;iy++){
           iyf=ijky[iy];
           ii = iy*nx*nz;
@@ -71,15 +72,17 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
             for(iz=0;iz<nz;iz++){
               izf=ijkz[iz];
               kk = ii + jj + iz;
-/*
-              if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
+              //if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
                  if(iflag==1)
                   xin[kk] = xout[kk]*sf_cmplx(f[iyf][ixf][izf], 0.0);    
                  else
                   xin[kk] = xout[kk]*sf_cmplx(0.0, f[iyf][ixf][izf]);    
-              }else
+              //}else
+              //   xin[kk] = xout[kk];    
+/*
+                  xin[i] = xout[i];    
+                  i++;
 */
-                  xin[kk] = xout[kk];    
             }// iz loop
           }// ix loop
        }//iy loop
@@ -89,8 +92,10 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
        i=0;
        for(iy=0;iy<ny;iy++)
        for(ix=0;ix<nx;ix++)
-       for(iz=0;iz<nz;iz++)
+       for(iz=0;iz<nz;iz++){
             d[iy][ix][iz] = creal(xout[i])/m;
+            i++;
+       }
 
        fftwf_destroy_plan(xf);
        fftwf_destroy_plan(yr);
@@ -139,13 +144,13 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
             for(iz=0;iz<nz;iz++){
               izf=ijkz[iz];
               kk = ii + jj + iz;
-              if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
+              //if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
                  if(iflag==1)
                   xin[kk] = xout[kk]*cmplx(f[iyf][ixf][izf], 0.0);    
                  else
                   xin[kk] = xout[kk]*cmplx(0.0, f[iyf][ixf][izf]);    
-              }else
-                  xin[kk] = xout[kk];    
+              //}else
+              //    xin[kk] = xout[kk];    
             }// iz loop
           }// ix loop
        }//iy loop

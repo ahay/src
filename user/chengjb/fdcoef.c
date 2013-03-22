@@ -40,6 +40,20 @@ int fac(int n)
         return s;
 } 
 
+void calc_coeff_1d(float* x)
+/*< mix-th order coefficients for 1st-order spatial derivatives >*/
+{
+        int i;
+        for(i=-mix;i<=mix;i++)
+        {
+            if(i==0)
+                x[i+mix]=0;
+            else
+                x[i+mix]=2*fac(mix)*fac(mix)*pow(-1,i+1)/(i*fac(i+mix)*fac(mix-i));
+        }
+
+}
+
 void coeff1d(float* x,float delta)
 /*< m-th order coefficients for 1st-order spatial derivatives >*/
 {

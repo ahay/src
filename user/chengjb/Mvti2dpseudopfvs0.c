@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
 	int	ix, iz, jx, jz, ixf, izf, ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
 	float   kxmax,kzmax;
 
-        float   f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
-        int     A, mm, nvx, nvz, ns;
+        float   A, f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2, div;
+        int     mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
         /*  wavelet parameter for source definition */
         f0=30.0;                  
         t0=0.04;                  
-        A=1;                  
+        A=1.0;                  
 
         /* time samping paramter */
         if (!sf_getint("ns",&ns)) ns=301;
@@ -171,8 +171,8 @@ int main(int argc, char* argv[])
         for(j=0;j<nz;j++)
         {
            float eta = epsi[i][j]-del[i][j];
-           if(eta<=0.0001)
-              vs0[i][j]=0.1*vp0[i][j];
+           if(eta<=0.0004)
+              vs0[i][j]=0.2*vp0[i][j];
            else
               vs0[i][j]=vp0[i][j]*sqrt(eta);
            //sf_warning("vp0=%f ep=%f de=%f vs0= %f",vp0[i][j],epsi[i][j],del[i][j],vs0[i][j]);

@@ -46,8 +46,8 @@
 int main(int argc, char* argv[])
 {
 	int	ix, iz, jx, jz, ixf, izf, ixx, izz, i,j,im, jm,nx,nz,nxf,nzf,nxpad,nzpad,it,ii,jj;
-        float   t, f0, t0, dx, dz, dxf, dzf, dt, dt2, div;
-        int     A, mm, nvx, nvz, ns;
+        float   A, t, f0, t0, dx, dz, dxf, dzf, dt, dt2, div;
+        int     mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
         int     hnkx1, hnkz1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
         /*  wavelet parameter for source definition */
         f0=30.0;                  
         t0=0.04;                  
-        A=1;                  
+        A=1.0;                  
 
         /* time samping paramter */
         if (!sf_getint("ns",&ns)) ns=301;
