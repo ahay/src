@@ -22,7 +22,7 @@
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, iz, ix, iy, morder;
+    int nz, nx, ny, nb, na, iz, ix, iy, ia, ib, morder;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y, a, b, t, l;
     float ze, xe, ye, ae, be;
@@ -184,7 +184,21 @@ int main (int argc, char* argv[]) {
                             iy*nx + ix + 1, ny*nx, y, x);
             for (iz = 0; iz < nz; iz++) {
                 z = oz + iz*dz;
-                sf_esc_scgrid3_compute (esc_scgrid, z, x, y, oa, da, ob, db, na, nb, e[0][0]);
+                if (sf_esc_tracer3_inside (esc_tracer, &z, &x, &y, false)) {
+                    sf_esc_scgrid3_compute (esc_scgrid, z, x, y, oa, da, ob, db, na, nb, e[0][0]);
+                } else {
+                    for (ia = 0; ia < na; ia++) {
+                        for (ib = 0; ib < nb; ib++) {
+                            e[ia][ib][ESC3_Z] = z;
+                            e[ia][ib][ESC3_X] = x;
+                            e[ia][ib][ESC3_Y] = y;
+                            e[ia][ib][ESC3_T] = 0.0;
+#ifdef ESC_EQ_WITH_L
+                            e[ia][ib][ESC3_L] = 0.0;                            
+#endif
+                        }
+                    }
+                }
                 sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
             } /* Loop over z */

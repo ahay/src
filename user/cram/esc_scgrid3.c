@@ -73,7 +73,17 @@ typedef struct {
 
 #include "einspline.h"
 #include "esc_helper.h"
-
+/*
+#ifdef HAVE_MKL
+#include <mkl.h>
+#define MKL_LU
+typedef MKL_INT lu_int;
+#else
+*/
+typedef int lu_int;
+/*
+#endif
+*/
 struct EscSCgrid3 {
     size_t                  n, offs, is, ir;
     int                     morder, ma, mb;
@@ -87,7 +97,7 @@ struct EscSCgrid3 {
     sf_esc_tracer3          esc_tracer;
     /* Thin plate spline data */
     float                 **L;
-    int                    *pvt, ns;
+    lu_int                 *pvt, ns;
     float                  *bs, *as;
     /* Remote access data for distributed computations */
     bool                    remote;
@@ -198,22 +208,29 @@ static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
     const int ns = SCGRID3_TPS_STENCIL3;
     int *bs = sf_scgrid3_tps_ib_stencil3;
     int *as = sf_scgrid3_tps_ia_stencil3;
+    lu_int n = ns + 3, info;
     int i;
 
     esc_scgrid->L = sf_floatalloc2 (ns + 3, ns + 3);
     esc_scgrid->as = sf_floatalloc (ns);
     esc_scgrid->bs = sf_floatalloc (ns);
-    esc_scgrid->pvt = sf_intalloc (ns + 3);
+    esc_scgrid->pvt = (lu_int*)sf_alloc (ns + 3, sizeof(lu_int));
 
     for (i = 0; i < ns; i++) {
         esc_scgrid->bs[i] = (float)bs[i];
         esc_scgrid->as[i] = (float)as[i];
     }
-    sf_tps_build_matrix (esc_scgrid->L, esc_scgrid->bs, esc_scgrid->as, ns, 0.0);
-    if (0 != sf_ludlt_decomposition (&esc_scgrid->L[0][0], esc_scgrid->pvt,            
-                                     ns + 3)) {
-        sf_error ("sf_esc_scgrid3_init_tps: TPS matrix inverse failed"); 
+    for (i = 0; i < (ns + 3); i++) {
+        esc_scgrid->pvt[i] = 0;
     }
+    sf_tps_build_matrix (esc_scgrid->L, esc_scgrid->bs, esc_scgrid->as, ns, 0.0);
+#ifdef MKL_LU
+    sgetrf_ (&n, &n, &esc_scgrid->L[0][0], &n, esc_scgrid->pvt, &info);                    
+#else
+    info = sf_ludlt_decomposition (&esc_scgrid->L[0][0], esc_scgrid->pvt, n);
+#endif
+    if (info != 0)
+        sf_error ("sf_esc_scgrid3_init_tps: TPS matrix inverse failed"); 
     esc_scgrid->ns = ns;
 }
 
@@ -227,7 +244,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     struct sockaddr_in serv_addr;
     fd_set sset; 
     struct timeval timeout; 
-    int valopt, rc; 
+    int valopt, rc, bsiz; 
     socklen_t lon; 
 
     sf_esc_scgrid3 esc_scgrid = (sf_esc_scgrid3)sf_alloc (1, sizeof (struct EscSCgrid3));
@@ -270,7 +287,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 
     esc_scgrid->scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)esc_scgrid->na*(size_t)esc_scgrid->nb,
                                                             sizeof(multi_UBspline_3d_s));
-
+/*
 #ifdef DEBUG
 
     esc_scgrid->mmaped = sf_ucharalloc ((size_t)esc_scgrid->offs +
@@ -283,16 +300,16 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                                       (size_t)esc_scgrid->nb, scgrid);
 
 #else
-
+*/
     esc_scgrid->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_scgrid->offs +
                                                      (size_t)esc_scgrid->n*
                                                      (size_t)esc_scgrid->na*
                                                      (size_t)esc_scgrid->nb,
                                                PROT_READ, MAP_SHARED,
                                                fileno (stream), 0);
+/*
 #endif
-
-
+*/
     nc = esc_scgrid->offs;
     for (ia = 0; ia < esc_scgrid->na; ia++) {
         for (ib = 0; ib < esc_scgrid->nb; ib++) {
@@ -401,6 +418,17 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             on = 1;
             if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
                 sf_warning ("setsockopt()[TCP_NODELAY] failed");
+                close (is);
+                continue;
+            }
+            bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*SCGRID3_MAX_STENCIL;
+            if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
+                sf_warning ("setsockopt()[SO_RCVBUF] failed");
+                close (is);
+                continue;
+            }
+            if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
+                sf_warning ("setsockopt()[SO_SNDBUF] failed");
                 close (is);
                 continue;
             }
@@ -530,17 +558,18 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     free (esc_scgrid->invals);
     free (esc_scgrid->areqs);
     free (esc_scgrid->avals);
+/*
 #ifdef DEBUG
     free (esc_scgrid->mmaped);
 #else
-
+*/
     munmap (esc_scgrid->mmaped, (size_t)esc_scgrid->offs +
                                 (size_t)esc_scgrid->n*
                                 (size_t)esc_scgrid->na*
                                 (size_t)esc_scgrid->nb);
-
+/*
 #endif
-
+*/
     free (esc_scgrid->scsplines);
     sf_esc_point3_close (esc_scgrid->esc_point);
     free (esc_scgrid);
@@ -594,7 +623,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
 
     /* Skip patches without receivers */
     ii = 0;
-    while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].ud1]) {
+    while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].iab]) {
         areqs[ii].id = id;
         ii++;
     }
@@ -602,15 +631,17 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         sf_error ("Lost all connections");
 
     /* Socket */
-    is = esc_scgrid->sockets[areqs[ii].ud1][rand () % esc_scgrid->nsck[areqs[ii].ud1]];
+    is = esc_scgrid->sockets[areqs[ii].iab][rand () % esc_scgrid->nsck[areqs[ii].iab]];
+    if (is > mis)
+        mis = is;
     ie = ii; /* Last and first requests in the patch */
-    iab = areqs[ie].ud1;
+    iab = areqs[ie].iab;
     /* Find maximum consecutive patch of angles to
        be sent to a single socket */
     do {
-        while (ie < n && (iab == areqs[ie].ud1 ||
-                          sf_cram_scgrid3_has_socket (esc_scgrid, is, areqs[ie].ud1))) {
-            iab = areqs[ie].ud1;
+        while (ie < n && (iab == areqs[ie].iab ||
+                          sf_cram_scgrid3_has_socket (esc_scgrid, is, areqs[ie].iab))) {
+            iab = areqs[ie].iab;
             areqs[ie].id = id + ie;
             ie++;
         }
@@ -618,10 +649,10 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         len = 0;
         while (len < sizeof(sf_esc_scgrid3_areq)*(ie - ii)) {
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
-                       sizeof(sf_esc_scgrid3_areq) - len, 0);
+                       sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, 0);
             if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 sf_warning ("Can not send data for iab=[%d - %d], disconnecting",
-                            areqs[ii].ud1, areqs[ie].ud1 - 1);
+                            areqs[ii].iab, areqs[ie].iab - 1);
                 sf_cram_scgrid3_disconnect (esc_scgrid, is);
                 break;
             }
@@ -632,19 +663,20 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         }
         if (!FD_ISSET (is, &sset))
             FD_SET(is, &sset);
-        ns++;
-        if (esc_scgrid->nsck[areqs[ie].ud1])
+        ns += len/sizeof(sf_esc_scgrid3_areq);
         if (ie < n) { /* Next patch */
             ii = ie;
             /* Find next socket */
-            while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].ud1]) {
+            while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].iab]) {
                 areqs[ii].id = id; /* Skip requests without receivers */
                 ii++;
             }
             ie = ii;
             if (ie < n) {
-                is = esc_scgrid->sockets[areqs[ii].ud1][rand () % esc_scgrid->nsck[areqs[ie].ud1]];
-                iab = areqs[ie].ud1;
+                is = esc_scgrid->sockets[areqs[ii].iab][rand () % esc_scgrid->nsck[areqs[ie].iab]];
+                if (is > mis)
+                    is = mis;
+                iab = areqs[ie].iab;
             }
         }
     } while (ie < n); /* Done sending */
@@ -668,10 +700,10 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             desc_ready--;
             len = 0;
             /* Receive loop */
-            while (len < sizeof(sf_esc_scgrid3_avals)*(ns - ii)) {
+            while (len < sizeof(sf_esc_scgrid3_avals)*ns) {
                 /* Receive job result from the client */
                 rc = recv (is, (void*)(((unsigned char*)&avals[ii]) + len),
-                           sizeof(sf_esc_scgrid3_avals)*SCGRID3_MAX_STENCIL - len, 0);
+                           sizeof(sf_esc_scgrid3_avals)*ns - len, 0);
                 if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                     /* Connection terminated */
                     if (0 == rc)
@@ -685,7 +717,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                 }
                 if (rc > 0)
                     len += rc;
-                if ((rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) || /* Nothing to receive */
+                if (/*(rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) ||*/ /* Nothing to receive */
                     0 == len % sizeof(sf_esc_scgrid3_avals)) /* A few complete patches have been received */
                     break;
             }
@@ -894,24 +926,29 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
     int i, j;
     float f[SCGRID3_TPS_MAX_STENCIL + 3], w[SCGRID3_TPS_MAX_STENCIL + 3],
           v[ESC3_NUM + 4];
+    bool overwrt = false;
+    lu_int n = esc_scgrid->ns + 3, nrhs = 1, ldb = n, info;
 
-    for (j = esc_scgrid->ns; j < (esc_scgrid->ns + 3); j++) {
-        f[j] = 0.0;
-    }
     /* Loop over escape functions */
     for (i = 0; i < (ESC3_NUM + 4); i++) {
         /* Put one escape function type into a contiguous array */ 
         for (j = 0; j < esc_scgrid->ns; j++) {
             f[j] = avals[j].vals[i];
         }
-        /* Compute thin-plate spline coefficients */
-        if (0 != sf_ludtl_solve (&esc_scgrid->L[0][0], f, esc_scgrid->pvt,
-                                 w, esc_scgrid->ns + 3)) {
-            sf_error ("sf_esc_scgrid3_tps_interp: linear system solution error");
-            exit (-1);
+        for (j = esc_scgrid->ns; j < (esc_scgrid->ns + 3); j++) {
+            f[j] = 0.0;
         }
+        /* Compute thin-plate spline coefficients */
+#ifdef MKL_LU
+        overwrt = true;
+        sgetrs_ ("N", &n, &nrhs, &esc_scgrid->L[0][0], &n, esc_scgrid->pvt, f, &ldb, &info);
+#else
+        info = sf_ludtl_solve (&esc_scgrid->L[0][0], f, esc_scgrid->pvt, w, n);
+#endif
+        if (info != 0)
+            sf_error ("sf_esc_scgrid3_tps_interp: linear system solution error");
         /* Do interpolation */
-        v[i] = sf_tps_compute_point (w, esc_scgrid->bs, esc_scgrid->as,
+        v[i] = sf_tps_compute_point (overwrt ? f : w, esc_scgrid->bs, esc_scgrid->as,
                                      esc_scgrid->ns, 1.0 + inval->fb, 1.0 + inval->fa);
         /* Update previous values */
         if (i < ESC3_NUM)
@@ -1032,36 +1069,39 @@ static void sf_esc_scgrid3_prepare_request (sf_esc_scgrid3 esc_scgrid, int in,
 /* Check if the point (avals) is inside the phase space supercell grid,
    if not, then project it to the global boundary */
 static bool sf_esc_scgrid3_is_inside (sf_esc_scgrid3 esc_scgrid,
-                                      sf_esc_scgrid3_invals *aval, bool project)
+                                      float *aval, float *a, float *b, bool project)
 {
-    if ((aval->vals[ESC3_Z] <= esc_scgrid->zmin + SPEPS*esc_scgrid->dz) ||
-        (aval->vals[ESC3_Z] >= esc_scgrid->zmax - SPEPS*esc_scgrid->dz) ||
-        (aval->vals[ESC3_X] <= esc_scgrid->xmin + SPEPS*esc_scgrid->dx) ||
-        (aval->vals[ESC3_X] >= esc_scgrid->xmax - SPEPS*esc_scgrid->dx) ||
-        (aval->vals[ESC3_Y] <= esc_scgrid->ymin + SPEPS*esc_scgrid->dy) ||
-        (aval->vals[ESC3_Y] >= esc_scgrid->ymax - SPEPS*esc_scgrid->dy)) {
+    if ((aval[ESC3_Z] <= esc_scgrid->zmin + SPEPS*esc_scgrid->dz) ||
+        (aval[ESC3_Z] >= esc_scgrid->zmax - SPEPS*esc_scgrid->dz) ||
+        (aval[ESC3_X] <= esc_scgrid->xmin + SPEPS*esc_scgrid->dx) ||
+        (aval[ESC3_X] >= esc_scgrid->xmax - SPEPS*esc_scgrid->dx) ||
+        (aval[ESC3_Y] <= esc_scgrid->ymin + SPEPS*esc_scgrid->dy) ||
+        (aval[ESC3_Y] >= esc_scgrid->ymax - SPEPS*esc_scgrid->dy)) {
         /* Do ray tracing, if the point is outside of the supergrid bounds */
-        if (project && sf_esc_tracer3_inside (esc_scgrid->esc_tracer, &aval->vals[ESC3_Z],
-                                              &aval->vals[ESC3_X], &aval->vals[ESC3_Y], true)) {
-            sf_esc_tracer3_compute (esc_scgrid->esc_tracer, aval->vals[ESC3_Z], aval->vals[ESC3_X],
-                                    aval->vals[ESC3_Y], aval->vals[ESC3_T],
+        if (project && sf_esc_tracer3_inside (esc_scgrid->esc_tracer, &aval[ESC3_Z],
+                                              &aval[ESC3_X], &aval[ESC3_Y], true)) {
+            sf_esc_tracer3_compute (esc_scgrid->esc_tracer, aval[ESC3_Z], aval[ESC3_X],
+                                    aval[ESC3_Y], *b, *a, aval[ESC3_T],
 #ifdef ESC_EQ_WITH_L
-                                    aval->vals[ESC3_L],
+                                    aval[ESC3_L],
 #else
                                     0.0,
 #endif
-                                    aval->b, aval->a, esc_scgrid->esc_point, &aval->a, &aval->b);
-            aval->vals[ESC3_Z] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Z);
-            aval->vals[ESC3_X] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_X);
-            aval->vals[ESC3_Y] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Y);
-            aval->vals[ESC3_T] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_T);
+                                    esc_scgrid->esc_point, a, b);
+            aval[ESC3_Z] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Z);
+            aval[ESC3_X] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_X);
+            aval[ESC3_Y] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Y);
+            aval[ESC3_T] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_T);
+#ifdef ESC_EQ_WITH_L
+            aval[ESC3_L] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_L);
+#endif
         }
         return false;
     }
     return true;
 }
 
-/* Comparison routine for qsort() by anglex indices */
+/* Comparison routine for qsort() by angle indices */
 static int sf_esc_scgrid3_areq_sort (const void *v1, const void *v2) {
     sf_esc_scgrid3_areq *areq1 = (sf_esc_scgrid3_areq*)v1;
     sf_esc_scgrid3_areq *areq2 = (sf_esc_scgrid3_areq*)v2;
@@ -1113,6 +1153,30 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
     if (nb % esc_scgrid->mb)
         sf_warning ("nb should be divisible by mb");
 
+    /* Check if can process this point */
+    avals[ESC3_Z] = z;
+    avals[ESC3_X] = x;
+    avals[ESC3_Y] = y;
+    if (false == sf_esc_scgrid3_is_inside (esc_scgrid, avals, NULL, NULL, false)) {
+        /* Just trace it to the boundary then */
+        for (ia = 0; ia < na; ia++) {
+            for (ib = 0; ib < nb; ib++) {
+                sf_esc_tracer3_compute (esc_scgrid->esc_tracer, z, x, y,
+                                        b0 + ib*db, a0 + ia*da, 0.0, 0.0,
+                                        esc_scgrid->esc_point, NULL, NULL);
+                i = (ia*nb + ib)*ESC3_NUM;
+                avals[i + ESC3_Z] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Z);
+                avals[i + ESC3_X] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_X);
+                avals[i + ESC3_Y] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_Y);
+                avals[i + ESC3_T] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_T);
+#ifdef ESC_EQ_WITH_L
+                avals[i + ESC3_L] = sf_esc_point3_get_esc_var (esc_scgrid->esc_point, ESC3_L);
+#endif                
+            }
+        }
+        return;
+    }
+
     for (iap = 0; iap < nap; iap++) { /* Loop over patches */
         for (ibp = 0; ibp < nbp; ibp++) { /* Loop over patches */
             /* Initialize starting positions in the phase space */
@@ -1163,8 +1227,9 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                 for (i = 0; i < io; i++) {
                     sf_esc_scgrid3_interp_point (esc_scgrid, &input[output[i*esc_scgrid->ns].ud1],
                                                  &output[i*esc_scgrid->ns]);
-                    if (false == sf_esc_scgrid3_is_inside (esc_scgrid, &input[output[i*esc_scgrid->ns].ud1],
-                                                           true)) {
+                    if (false == sf_esc_scgrid3_is_inside (esc_scgrid, input[output[i*esc_scgrid->ns].ud1].vals,
+                                                           &input[output[i*esc_scgrid->ns].ud1].a,
+                                                           &input[output[i*esc_scgrid->ns].ud1].b, true)) {
                         /* Move completed points to the output array */
                         memcpy (&avals[input[output[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
                                 input[output[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);

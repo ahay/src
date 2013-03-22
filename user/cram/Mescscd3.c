@@ -79,11 +79,13 @@ static sf_escscd3_work* sf_escscd3_alloc_work (int mjobs, int ma, int mb) {
     int i;
 
     work = (sf_escscd3_work*)sf_alloc (mjobs, sizeof(sf_escscd3_work));
-    areqs = (sf_esc_scgrid3_areq*)sf_alloc (mjobs*ma*mb, sizeof(sf_esc_scgrid3_areq));
-    avals = (sf_esc_scgrid3_avals*)sf_alloc (mjobs*ma*mb, sizeof(sf_esc_scgrid3_avals));
+    areqs = (sf_esc_scgrid3_areq*)sf_alloc (mjobs*ma*mb*SCGRID3_MAX_STENCIL,
+                                            sizeof(sf_esc_scgrid3_areq));
+    avals = (sf_esc_scgrid3_avals*)sf_alloc (mjobs*ma*mb*SCGRID3_MAX_STENCIL,
+                                             sizeof(sf_esc_scgrid3_avals));
     for (i = 0; i < mjobs; i++) {
-        work[i].areqs = &areqs[i*ma*mb];
-        work[i].avals = &avals[i*ma*mb];
+        work[i].areqs = &areqs[i*ma*mb*SCGRID3_MAX_STENCIL];
+        work[i].avals = &avals[i*ma*mb*SCGRID3_MAX_STENCIL];
     }
     return work;
 }
@@ -126,8 +128,6 @@ static void sf_escscd3_extract_point (void *ud) {
             break; /* The connection is gone */
         if (rc > 0)
             len += rc;
-        else
-            break;
     }
     pthread_mutex_unlock (data->smutex);
 }
@@ -149,7 +149,7 @@ int main (int argc, char* argv[]) {
     pid_t pid, sid;
     /* Server network variables */
     char *ip = NULL;
-    int len, rc, on = 1, ijob, mjobs;
+    int len, rc, on = 1, ijob, mjobs, bsiz;
     int listen_sd, max_sd, new_sd, desc_ready;
     bool close_conn = false;
     struct sockaddr_in serv_addr, client_addr;
@@ -466,6 +466,21 @@ int main (int argc, char* argv[]) {
                 close (new_sd);
                 break;
             }
+            bsiz = sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL;
+            if (setsockopt (new_sd, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
+                fprintf (logf, "Can not set SO_RCVBUF for a new connection\n");
+                fprintf (logf, "Rejecting connection from %s\n", ip);
+                fflush (logf);
+                close (new_sd);
+                break;
+            }
+            if (setsockopt (new_sd, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
+                fprintf (logf, "Can not set SO_SNDBUF for a new connection\n");
+                fprintf (logf, "Rejecting connection from %s\n", ip);
+                fflush (logf);
+                close (new_sd);
+                break;
+            }
             fprintf (logf, "Accepted client from %s, socket %d\n", ip, new_sd);
             fflush (logf);
             /* Add the new incoming connection to the master read set */
@@ -494,10 +509,10 @@ int main (int argc, char* argv[]) {
             close_conn = false;
             /* Receive incoming data on this socket */
             len = 0;
-            while (len < sizeof(sf_esc_scgrid3_areq)*ma*mb) {
+            while (len < sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL) {
                 /* Receive job request from the client */
                 rc = recv (i, (void*)(((unsigned char*)rwork->areqs) + len),
-                           sizeof(sf_esc_scgrid3_areq)*ma*mb - len, 0);
+                           sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL - len, 0);
                 if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                     /* Connection terminated */
                     fprintf (logf, "Connection with socket %d is terminated\n", i);
@@ -544,7 +559,7 @@ int main (int argc, char* argv[]) {
                         ijob++;
                         /* Find a free block for the next job request */
                         if (ijob == mjobs) {
-                            if (old_qjobs && sf_thpool_jobsn (tpool) <= mjobs)
+                            if (old_qjobs)
                                 sf_escscd3_free_work (old_qjobs);
                             old_qjobs = qjobs;
                             qjobs = sf_escscd3_alloc_work (mjobs, ma, mb);
