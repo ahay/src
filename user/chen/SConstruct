@@ -10,7 +10,7 @@ fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
 ss ssblend sscrg
 epfbe epfbil epfws coherence epfad  
 frt pca fault fir fastpwd fbgabor apick orientation slopescan
-divn2d divnls dipcoh
+divn2d divnls dipcoh curv2
 '''
 
 pyprogs='''
