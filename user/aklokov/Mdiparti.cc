@@ -66,6 +66,7 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 			float diffStack  = 0.f;
 			float diffStack2 = 0.f;
 			// loop over x - the second one 
+			int count = 0;
 			for (int ip = 0; ip < xNum_; ++ip) {
 				const float curPos = xStart_ + ip * xStep_;	
 				const float dx = curX - curPos;
@@ -86,12 +87,13 @@ void processPartImage (const float migDip, float* partImage, float* dPartImage, 
 
 				diffStack  += sample;
 				diffStack2 += sample * sample;
+				++count;
 			}
 
 			const int sInd = ix * itn + iz;
-			dPartImage [sInd] += diffStack;
+			dPartImage [sInd] += diffStack / count;
 
-			trace2 [iz] += diffStack2;
+			trace2 [iz] += diffStack2 / count;
 		}
 
 		float* sembTrace = sf_floatalloc (itn);
