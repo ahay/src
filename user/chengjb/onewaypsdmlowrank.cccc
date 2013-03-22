@@ -1,0 +1,99 @@
+/* one-way wave equation PSDM based on low-rank decomposition 
+ 
+  Copyright (C) 2012 Tongji University (Jiubing Cheng) 
+  and The University of Texas at Austin (Sergey Fomel)
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+ 
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+ 
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+#include <rsf.h>
+#include "_cjb.h"
+#include <fftw3.h>
+
+void psuplowrank2d((fftwf_complex *)ldata, (fftwf_complex *)rdata, (fftwf_complex *)fmid, (fftwf_complex *)x, int *ijkx, int m,int n,int m2,int n2)
+/*< psuplowrank2d: one-way phase-shift migration based on low-rank decomposition >*/ 
+{
+       int i, im, im2, jn2, ik, ikx;
+       sf_complex sum1, sum2, *wp;
+
+       wp = sf_complexalloc(m*n2);
+
+       sf_warning("m2= %d n2=%d",m2,n2);
+
+       sf_warning("============= using SF_HAS_FFTW ====");
+
+       sf_complex *xx, *xin, *xout;
+
+       fftwf_plan xp;
+       fftwf_plan xpi;
+
+       xin=sf_complexalloc(m);
+       xout=sf_complexalloc(n);
+       xx=sf_complexalloc(n);
+
+       xp=fftwf_plan_dft_1d(m, (fftwf_complex *) xin, (fftwf_complex *) xout,
+			    FFTW_FORWARD,FFTW_ESTIMATE);
+
+       xpi=fftwf_plan_dft_1d(m,(fftwf_complex *) xin, (fftwf_complex *) xout,
+			    FFTW_BACKWARD,FFTW_ESTIMATE);
+
+       /* FFT: from (x) to (kx) domain */
+       for(i=0;i<m;i++) xin[i]=x[i];
+
+       fftwf_execute(xp);
+           
+       for(i=0;i<n;i++) xx[i] = xout[i];
+
+       /* n2 IFFT from (kx) to (x) domain*/
+       for(jn2=0;jn2<n2;jn2++)
+       {
+           i=0;
+           int jn2n=jn2*n;
+           for(ik=0;ik<m;ik++)
+           {
+              // Note: Spectrum of the operator is differently orderred as the spectrum after FFT
+              ikx=ijkx[ik];
+              int ii=jn2n+ikx;
+              xin[i]=rdata[ii]*xx[ik];          
+            }
+            // (kx) to (x) domain
+            fftwf_execute(xpi);
+
+            for(im=0;im<m;im++)
+                wp[jn2*m+im] = creal(xout[im])/n;
+       }
+       fftwf_destroy_plan(xp);
+       fftwf_destroy_plan(xpi);
+       free(xx);
+       free(xin);
+       free(xout);
+
+       // Matrix multiplication in space-domain 
+       for(im=0;im<m;im++)
+       {
+         sum1=0.0;
+         for(im2=0;im2<m2;im2++)
+         {
+           sum2=0.0;
+           for(jn2=0;jn2<n2;jn2++)
+              sum2 += fmid[im2*n2+jn2]*wp[jn2*m+im];
+
+           sum1 += ldata[im*m2+im2]*sum2;
+         }//im2 loop
+         x[im] = sum1;
+       } 
+
+       free(wp);
+}
+
