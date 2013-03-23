@@ -144,11 +144,15 @@ int ra_allocate(RARR *arr) {
   
   if ( size > 0L ) {                   /* allocate memory */
 
+    ra_a_gse(arr,s0,e0);
+    ra_a_size(arr,n0);
+
 #if RARR_MAX_NDIM > 0 
 
     arr->_s0 = (ireal*)usermalloc_(size * sizeof(ireal));
     if ( arr->_s0 == NULL ) return E_ALLOC;
     arr->_s = arr->_s0;
+    arr->_s1 = arr->_s0-s0[0];
     
 #endif
     
@@ -156,10 +160,8 @@ int ra_allocate(RARR *arr) {
     
 #if RARR_MAX_NDIM > 1
 
-    ra_a_gse(arr,s0,e0);
-    ra_a_size(arr,n0);
-
     psize = 1L;
+
     for (d=1; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
       arr->_s02 = (ireal **)usermalloc_(psize * sizeof(ireal*));
@@ -183,7 +185,7 @@ int ra_allocate(RARR *arr) {
       arr->_s03 = (ireal ***)usermalloc_(psize * sizeof(ireal**));
       arr->_s3 = arr->_s03-s0[2];
       for (d=0;d<psize; ++d) {
-	arr->_s03[d]=&(arr->_s2[d*n0[0]*n0[1]]);
+	arr->_s03[d]=&(arr->_s02[d*n0[1]]);
 	arr->_s3[d+s0[2]]=arr->_s03[d]-s0[1];
       }
     }
@@ -198,22 +200,16 @@ int ra_allocate(RARR *arr) {
     psize = 1L;
     for (d=3; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
-      arr->_s4 = (ireal ****)usermalloc_(psize * sizeof(ireal***));
-      arr->_s4[0] = arr->_s3;
-      for (d=1;d<arr->_dims[4].n0; ++d) 
-	arr->_s4[d]=arr->_s4[d-1]+arr->_dims[2].n0;
-      /*
       arr->_s04 = (ireal ****)usermalloc_(psize * sizeof(ireal***));
-      arr->_s4_alloc = (ireal ****)usermalloc_(psize * sizeof(ireal***));
-      if ((!arr->_s04) || (!arr->_s4_alloc)) return E_ALLOC;      
-      arr->_s4 = arr->_s4_alloc;
-      arr->_s04[0] = arr->_s03;
-      arr->_s4_alloc[0] = arr->_s03;
-      for (d=1;d<arr->_dims[4].n0; ++d) {
-	arr->_s04[d]=arr->_s04[d-1]+arr->_dims[2].n0;
-	arr->_s4[d]=arr->_s4[d-1]+arr->_dims[2].n0;
+      arr->_s4 = arr->_s04-s0[3];
+      for (d=0;d<psize; ++d) {
+	arr->_s04[d]=&(arr->_s3[d*n0[2]]);
+	arr->_s4[d+s0[3]]=arr->_s04[d]-s0[2];
       }
-      */
+    }
+    else {
+      arr->_s04=NULL;
+      arr->_s4=NULL;
     }
 
 #endif
@@ -223,22 +219,16 @@ int ra_allocate(RARR *arr) {
     psize = 1L;
     for (d=4; d<arr->ndim; ++d) psize *= (long)(arr->_dims[d].n0);
     if (psize > 0L) {
-      arr->_s5 = (ireal *****)usermalloc_(psize * sizeof(ireal****));
-      arr->_s5[0] = arr->_s4;
-      for (d=1;d<arr->_dims[5].n0; ++d) 
-	arr->_s5[d]=arr->_s5[d-1]+arr->_dims[3].n0;
-      /*
       arr->_s05 = (ireal *****)usermalloc_(psize * sizeof(ireal****));
-      arr->_s5_alloc = (ireal *****)usermalloc_(psize * sizeof(ireal****));
-      if ((!arr->_s05) || (!arr->_s5_alloc)) return E_ALLOC;      
-      arr->_s5 = arr->_s5_alloc;
-      arr->_s05[0] = arr->_s04;
-      arr->_s5[0] = arr->_s04;
-      for (d=1;d<arr->_dims[5].n0; ++d) {
-	arr->_s05[d]=arr->_s05[d-1]+arr->_dims[3].n0;
-	arr->_s5[d]=arr->_s5[d-1]+arr->_dims[3].n0;
+      arr->_s5 = arr->_s05-s0[4];
+      for (d=0;d<psize; ++d) {
+	arr->_s05[d]=&(arr->_s4[d*n[3]]);
+	arr->_s5[d+s0[4]]=arr->_s05[d]-s0[3];
       }
-      */
+    }
+    else {
+      arr->_s04=NULL;
+      arr->_s4=NULL;
     }
 
 #endif
@@ -1283,6 +1273,7 @@ int ra_axpy(RARR * arry, RARR const * arrx, ireal a) {
       
 int ra_compare_meta(const RARR * a, const RARR * b) {
 
+  int i;
   int ndima;
   int ndimb;
   IPNT gea;
@@ -1293,14 +1284,16 @@ int ra_compare_meta(const RARR * a, const RARR * b) {
   ra_ndim(a,&ndima);
   ra_ndim(b,&ndimb);
 
-  if (ndima == ndimb) {
-    ra_a_gse(a,gsa,gea);
-    ra_a_gse(b,gsb,geb);
-    if ((gsa==gsb) && (gea==geb)) {
-      ra_gse(a,gsa,gea);
-      ra_gse(b,gsb,geb);
-      if ((gsa==gsb) && (gea==geb)) return 0;
-    }
+  if (ndima != ndimb) return 1;
+
+  ra_a_gse(a,gsa,gea);
+  ra_a_gse(b,gsb,geb);
+
+  for (i=0;i<ndima;i++) {
+    if (gsa[i] != gsb[i]) return 2+2*i;
+    if (gea[i] != geb[i]) return 2+2*i+1;
   }
-  return 1;
+  return 0
+;
+
 }

@@ -836,7 +836,6 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
 
   ireal tmp;
   IPNT i;
-  IPNT n;
 
   // acd struct
   ACD_TS_PARS * acdpars = (ACD_TS_PARS *)tspars;

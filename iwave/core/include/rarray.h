@@ -70,6 +70,8 @@ typedef struct
    */
   INFODIM _dims[RARR_MAX_NDIM];  
   /* added 03.11.12 WWS: multidim array access */
+  /* revised 03.13 WWS: offset index ranges [s0,e0]*/
+  ireal * _s1;
 #if RARR_MAX_NDIM > 1
   ireal ** _s2;
   ireal ** _s02;
