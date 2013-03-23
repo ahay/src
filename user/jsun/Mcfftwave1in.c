@@ -124,6 +124,7 @@ int main(int argc, char* argv[])
 	    }
 	    curr[ix] = c;
 	    rcurr[ix] = crealf(c);
+//	    rcurr[ix] = cimagf(c);
 	} 
 
 	sf_floatwrite(rcurr,nx,Fo);

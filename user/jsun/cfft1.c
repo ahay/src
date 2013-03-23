@@ -19,7 +19,7 @@
 #include <rsf.h>
 
 static int n1, nk1;
-//static float wt;
+static float wt;
 
 static sf_complex *cc=NULL;
 
@@ -46,7 +46,7 @@ int cfft1_init(int nx             /* input data size */,
     *nx2 = n1;
 	
 //    wt =  1.0/n1;
-	
+    wt = 1.0;
     return (nk1);
 }
 
@@ -56,7 +56,7 @@ void cfft1(sf_complex *inp /* [n1] */,
 {
     int i;
 
-    /* FFT centering
+    /* FFT centering */
     for (i=0; i<n1; i++) {
 
 #ifdef SF_HAS_COMPLEX_H
@@ -64,11 +64,6 @@ void cfft1(sf_complex *inp /* [n1] */,
 #else
 	cc[i] = i%2? inp[i]:sf_cneg(inp[i]);
 #endif
-    }
-    */
-
-    for (i=0; i<n1; i++) {
-	cc[i] = inp [i];
     }
 
     kiss_fft_stride(cfg1,(kiss_fft_cpx *) cc,tmp,1);
@@ -87,7 +82,7 @@ void icfft1(sf_complex *out /* [n1] */,
     kiss_fft_stride(icfg1,(kiss_fft_cpx *) inp,tmp,1);
 
     
-    /* FFT centering and normalization
+    /* FFT centering and normalization */
     for (i=0; i<n1; i++) {
 
 #ifdef SF_HAS_COMPLEX_H
@@ -95,11 +90,6 @@ void icfft1(sf_complex *out /* [n1] */,
 #else
 	out[i] = sf_crmul(tmp2[i],(i%2? wt:-wt));
 #endif
-    }
-    */
-
-    for (i=0; i<n1; i++) {
-	out[i] = tmp2[i];
     }
 
 }
