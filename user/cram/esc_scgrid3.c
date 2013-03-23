@@ -416,7 +416,12 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 continue;
             }
             on = 1;
-            if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
+#ifdef SOL_TCP
+            if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
+#else
+	    if (setsockopt (is, SOL_SOCKET, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
+#endif	
+            {
                 sf_warning ("setsockopt()[TCP_NODELAY] failed");
                 close (is);
                 continue;
