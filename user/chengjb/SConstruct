@@ -102,7 +102,7 @@ ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog] 
     if lapack:
-        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=env.get('LIBS')+lapackpp)
+        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=lapackpp+env.get('LIBS'))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
