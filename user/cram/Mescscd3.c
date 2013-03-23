@@ -65,9 +65,11 @@ static char* sf_escscd3_local_ip () {
 typedef struct {
     sf_esc_scgrid3_areq  *areqs;
     sf_esc_scgrid3_avals *avals;
-    int                   n; /* Number of requests */
-    int                   sd; /* Socket to write to */
-    pthread_mutex_t      *smutex; /* Mutex for serial access to the socket */
+    int                   nd; /* Maximum number of requests to expect */
+    int                   sd; /* Socket to read/write from/to */
+    int                   bp; /* Pipe for feedback to the main thread */
+    pthread_mutex_t      *smutex; /* Mutex for serial access to fd_set */
+    FILE                 *logf; /* Log file */
     int                   iab0, iab1, nab;
     multi_UBspline_3d_s  *scsplines;
 } sf_escscd3_work;
@@ -100,9 +102,39 @@ static void sf_escscd3_free_work (sf_escscd3_work* work) {
 static void sf_escscd3_extract_point (void *ud) {
     sf_escscd3_work *data = (sf_escscd3_work*)ud;
     int iab;
-    int i, len = 0, rc;
+    int i, len = 0, rc, n;
 
-    for (i = 0; i < data->n; i++) {
+    /* Receive incoming data on this socket */
+    len = 0;
+    while (len < sizeof(sf_esc_scgrid3_areq)*data->nd) {
+        /* Receive job request from the client */
+        rc = recv (data->sd, (void*)(((unsigned char*)data->areqs) + len),
+                   sizeof(sf_esc_scgrid3_areq)*data->nd - len, 0);
+        if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            /* Connection terminated */
+            len = 0;
+            break;
+        }
+        if (0 == rc) {
+            /* Normal shutdown */
+            len = 0;
+            break;
+        }
+        if (rc > 0)
+            len += rc;
+        if (0 == len % sizeof(sf_esc_scgrid3_areq)) /* A few complete requests have been received */
+            break;
+    }
+    /* Enable listening on this socket in the master thread */
+    pthread_mutex_unlock (data->smutex);
+
+    if (len > 0)
+        n = len / sizeof(sf_esc_scgrid3_areq);
+    else /* Nothing to work on */
+        return;
+
+    /* Process the received requests */
+    for (i = 0; i < n; i++) {
         data->avals[i].id = data->areqs[i].id;
         data->avals[i].ud1 = data->areqs[i].ud1;
         data->avals[i].ud2 = data->areqs[i].ud2;
@@ -120,16 +152,15 @@ static void sf_escscd3_extract_point (void *ud) {
             data->avals[i].vals[0] = SF_HUGE; /* Return error */
     }
     /* Send the result back */
-    pthread_mutex_lock (data->smutex);
-    while (len < sizeof(sf_esc_scgrid3_avals)*data->n) {
+    len = 0;
+    while (len < sizeof(sf_esc_scgrid3_avals)*n) {
         rc = send (data->sd, (const void*)(((unsigned char*)data->avals) + len),
-                   sizeof(sf_esc_scgrid3_avals)*data->n - len, 0);
+                   sizeof(sf_esc_scgrid3_avals)*n - len, 0/*MSG_NOSIGNAL*/);
         if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK)
             break; /* The connection is gone */
         if (rc > 0)
             len += rc;
     }
-    pthread_mutex_unlock (data->smutex);
 }
 
 #define MAX_BUF 1024
@@ -151,11 +182,10 @@ int main (int argc, char* argv[]) {
     char *ip = NULL;
     int len, rc, on = 1, ijob, mjobs, bsiz;
     int listen_sd, max_sd, new_sd, desc_ready;
-    bool close_conn = false;
     struct sockaddr_in serv_addr, client_addr;
     struct timeval timeout;
     fd_set master_set, working_set;
-    socklen_t clen;
+    socklen_t clen, lon;
     /* Thread pool */
     sf_thpool tpool;
     sf_escscd3_work *rwork, *qjobs, *old_qjobs;
@@ -314,7 +344,7 @@ int main (int argc, char* argv[]) {
         }
         sf_warning ("%g Mb of spline coefficients buffered [CPU %d]", 1e-6*(float)nc, icpu);
         sf_warning ("Running as a daemon now [CPU %d]", icpu);
-    } 
+    }
 
     if (tmpfile && pid != 0) {
         /* Wait for the parent to complete data preparation */
@@ -382,14 +412,19 @@ int main (int argc, char* argv[]) {
     }
 
     /* Set the listen back log */
-    if (listen (listen_sd, 32) < 0) {
+    if (listen (listen_sd, 128) < 0) {
         close (listen_sd);
         sf_error ("listen() failed");
     }
 
+    for (i = 0; i < FD_SETSIZE; i++) {
+        pthread_mutex_init (&smutex[i], NULL);
+    }
+
+    max_sd = listen_sd;
+
     /* Initialize the master set of file descriptors */
     FD_ZERO(&master_set);
-    max_sd = listen_sd;
     FD_SET(listen_sd, &master_set);
 
     /* Open log file */
@@ -462,15 +497,24 @@ int main (int argc, char* argv[]) {
 #ifdef SOL_TCP
             if (setsockopt (new_sd, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) 
 #else
-	    if (setsockopt (new_sd, SOL_SOCKET, TCP_NODELAY, &on, sizeof(on)) < 0) 
+            if (setsockopt (new_sd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) 
 #endif	
-	   {
                 fprintf (logf, "Can not set TCP_NODELAY for a new connection\n");
                 fprintf (logf, "Rejecting connection from %s\n", ip);
                 fflush (logf);
                 close (new_sd);
                 break;
             }
+/*
+            on = 1;
+            if (setsockopt (new_sd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
+                fprintf (logf, "Can not set SO_NOSIGPIPE for a new connection\n");
+                fprintf (logf, "Rejecting connection from %s\n", ip);
+                fflush (logf);
+                close (new_sd);
+                break;
+            }
+*/
             bsiz = sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL;
             if (setsockopt (new_sd, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
                 fprintf (logf, "Can not set SO_RCVBUF for a new connection\n");
@@ -492,7 +536,6 @@ int main (int argc, char* argv[]) {
             FD_SET(new_sd, &master_set);
             if (new_sd > max_sd)
                 max_sd = new_sd;
-            pthread_mutex_init (&smutex[new_sd], NULL);
             FD_CLR(listen_sd, &working_set);
             rc--;
         }
@@ -504,6 +547,28 @@ int main (int argc, char* argv[]) {
             if (!FD_ISSET (i, &working_set))
                 continue;
             desc_ready--;
+            if (pthread_mutex_trylock (&smutex[i]) != 0)
+                continue; /* Work in progress on this socket */
+            /* Check if the connection is still alive and if there is anything to read */
+            rc = recv (i, (void*)&len, 1, MSG_PEEK);
+            if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
+                if (rc != 0)
+                    fprintf (logf, "Connection was terminated for socket %d\n", i);
+                else
+                    fprintf (logf, "Connection was closed for socket %d\n", i);
+                FD_CLR(i, &master_set);
+                if (i == max_sd) {
+                    while (FD_ISSET(max_sd, &master_set) == false)
+                        max_sd -= 1;
+                }
+                fflush (logf);
+                close (i);
+            }
+            if (rc <= 0) {
+                pthread_mutex_unlock (&smutex[i]);
+                continue;
+            }
+
             rwork = &qjobs[ijob];                    
             rwork->sd = i;
             rwork->iab0 = iab0;
@@ -511,66 +576,20 @@ int main (int argc, char* argv[]) {
             rwork->nab = na*nb;
             rwork->scsplines = scsplines;
             rwork->smutex = &smutex[i];
-            close_conn = false;
-            /* Receive incoming data on this socket */
-            len = 0;
-            while (len < sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL) {
-                /* Receive job request from the client */
-                rc = recv (i, (void*)(((unsigned char*)rwork->areqs) + len),
-                           sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL - len, 0);
-                if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-                    /* Connection terminated */
-                    fprintf (logf, "Connection with socket %d is terminated\n", i);
-                    fflush (logf);
-                    close_conn = true;
-                    break;
-                }
-                if (0 == rc) {
-                    /* Normal shutdown */
-                    fprintf (logf, "Socket %d has been closed by the remote party\n", i);
-                    fflush (logf);
-                    close_conn = true;
-                    break;
-                }
-                if (rc > 0)
-                    len += rc;
-                if ((rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) || /* Nothing to receive */
-                    0 == len % sizeof(sf_esc_scgrid3_areq)) /* A few complete requests have been received */
-                    break;
-            }
-            if (close_conn) {
-                /* Clean up after disconnect */
-                pthread_mutex_lock (&smutex[i]);
-                close (i);
-                pthread_mutex_unlock (&smutex[i]);
-                FD_CLR(i, &master_set);
-                if (i == max_sd) {
-                    while (FD_ISSET(max_sd, &master_set) == false)
-                        max_sd -= 1;
-                }
-                pthread_mutex_destroy (&smutex[i]);
-                len = 0;
-            }
-            if (len > 0) { /* Check if received a complete set of requests */
-                if (len % sizeof(sf_esc_scgrid3_areq)) {
-                    fprintf (logf, "Partial receive from socket %d\n", i);
-                    fflush (logf);
-                } else { /* Otherwise - add to the work queue */
-                    rwork->n = len / sizeof(sf_esc_scgrid3_areq);
-                    if (SF_THPOOL_QUEUE_FULL == /* Add requests to the work queue */
-                        sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork)) {
-                        fprintf (logf, "The queue is full, dropping request from socket %d\n", i);
-                    } else {
-                        ijob++;
-                        /* Find a free block for the next job request */
-                        if (ijob == mjobs) {
-                            if (old_qjobs)
-                                sf_escscd3_free_work (old_qjobs);
-                            old_qjobs = qjobs;
-                            qjobs = sf_escscd3_alloc_work (mjobs, ma, mb);
-                            ijob = 0;
-                        }
-                    }
+            rwork->nd = mjobs*ma*mb*SCGRID3_MAX_STENCIL;
+
+            if (SF_THPOOL_QUEUE_FULL == /* Add requests to the work queue */
+                sf_thpool_add_work (tpool, sf_escscd3_extract_point, (void*)rwork)) {
+                fprintf (logf, "The queue is full, dropping request from socket %d\n", i);
+            } else {
+                ijob++;
+                /* Find a free block for the next job request */
+                if (ijob == mjobs) {
+                    if (old_qjobs)
+                        sf_escscd3_free_work (old_qjobs);
+                    old_qjobs = qjobs;
+                    qjobs = sf_escscd3_alloc_work (mjobs, ma, mb);
+                    ijob = 0;
                 }
             }
         } /* Loop through selectable descriptors */
@@ -583,9 +602,11 @@ int main (int argc, char* argv[]) {
     /* Shutdown all connections */
     for (i=0; i <= max_sd; i++) {
         if (FD_ISSET(i, &master_set)) {
-            pthread_mutex_destroy (&smutex[i]);
             close (i);
         }
+    }
+    for (i = 0; i < FD_SETSIZE; i++) {
+        pthread_mutex_destroy (&smutex[i]);
     }
     /* Clean up */
     sf_thpool_close (tpool);

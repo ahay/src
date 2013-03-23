@@ -24,8 +24,7 @@
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, iz, ix, iy, ia, ib, morder;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
-    float z, x, y, a, b, t, l;
-    float ze, xe, ye, ae, be;
+    float z, x, y;
     float ***e;
     sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
             out;

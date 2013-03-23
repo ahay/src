@@ -85,7 +85,7 @@ typedef int lu_int;
 #endif
 */
 struct EscSCgrid3 {
-    size_t                  n, offs, is, ir;
+    size_t                  n, offs, is, ir, il;
     int                     morder, ma, mb;
     int                     nz, nx, ny, na, nb;
     float                   oz, ox, oy, oa, ob;
@@ -348,6 +348,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 
     esc_scgrid->is = 0; /* Total number of interpolation steps */
     esc_scgrid->ir = 0; /* Total number of processed points */
+    esc_scgrid->il = 0; /* Total number of locally processed points */
 
     esc_scgrid->morder = morder; /* Interpolation accuracy */
 
@@ -419,13 +420,20 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 #ifdef SOL_TCP
             if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
 #else
-	    if (setsockopt (is, SOL_SOCKET, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
-#endif	
-            {
+            if (setsockopt (is, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
+#endif
                 sf_warning ("setsockopt()[TCP_NODELAY] failed");
                 close (is);
                 continue;
             }
+/*
+            on = 1;
+            if (setsockopt (new_sd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0 ||) {
+                sf_warning ("setsockopt()[SO_NOSIGPIPE] failed");
+                close (is);
+                continue;
+            }
+*/
             bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*SCGRID3_MAX_STENCIL;
             if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
                 sf_warning ("setsockopt()[SO_RCVBUF] failed");
@@ -543,6 +551,8 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     if (verb)
         sf_warning ("%lu points processed, %g interpolation steps per point performed",
                     esc_scgrid->ir, (float)esc_scgrid->is/(float)esc_scgrid->ir);
+        sf_warning ("%lu points processed locally (%g%%)",
+                    esc_scgrid->il, 100.0*(float)esc_scgrid->il/(float)esc_scgrid->ir);
     /* Close all existing connections */
     if (esc_scgrid->nsck && esc_scgrid->sockets) {
         for (iab = 0; iab < nab; iab++) {
@@ -616,6 +626,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     if (false == esc_scgrid->remote) {
         for (i = 0; i < n; i++) {
             sf_cram_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[i]);
+            esc_scgrid->il++;
         }
         return;
     }
@@ -654,19 +665,18 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         len = 0;
         while (len < sizeof(sf_esc_scgrid3_areq)*(ie - ii)) {
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
-                       sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, 0);
-            if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                       sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, 0/*MSG_NOSIGNAL*/);
+            if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                 sf_warning ("Can not send data for iab=[%d - %d], disconnecting",
                             areqs[ii].iab, areqs[ie].iab - 1);
                 sf_cram_scgrid3_disconnect (esc_scgrid, is);
+                len = 0;
                 break;
             }
             if (rc > 0)
                 len += rc;
-            else
-                break;
         }
-        if (!FD_ISSET (is, &sset))
+        if (len && !FD_ISSET (is, &sset))
             FD_SET(is, &sset);
         ns += len/sizeof(sf_esc_scgrid3_areq);
         if (ie < n) { /* Next patch */
@@ -722,8 +732,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                 }
                 if (rc > 0)
                     len += rc;
-                if (/*(rc < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) ||*/ /* Nothing to receive */
-                    0 == len % sizeof(sf_esc_scgrid3_avals)) /* A few complete patches have been received */
+                if (0 == len % sizeof(sf_esc_scgrid3_avals)) /* A few complete patches have been received */
                     break;
             }
             if (len > 0) {
@@ -755,15 +764,13 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         sf_warning ("Timeout, %d angles are left", ns);
 
     /* Extract values locally */
-    ie = 0;
     for (i = 0; i < n; i++) {
         if (areqs[i].id != 0) {
-            ie++;
             sf_cram_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[ii]);
+            esc_scgrid->il++;
+            ii++;
         }
     }
-    if (ie)
-        sf_warning ("%d angles have been exctracted locally", ie);
 }
 
 /* Compute interger index for a float value v according to sampling df
@@ -861,7 +868,6 @@ static void sf_esc_scgrid3_nearest_interp (sf_esc_scgrid3 esc_scgrid,
                                            sf_esc_scgrid3_invals *inval,
                                            sf_esc_scgrid3_avals *avals) {
     int i;
-    float v[ESC3_NUM + 3];
 
     for (i = 0; i < ESC3_NUM; i++)
         inval->vals[i] += avals->vals[i];
@@ -932,7 +938,10 @@ static void sf_esc_scgrid3_tps_interp (sf_esc_scgrid3 esc_scgrid,
     float f[SCGRID3_TPS_MAX_STENCIL + 3], w[SCGRID3_TPS_MAX_STENCIL + 3],
           v[ESC3_NUM + 4];
     bool overwrt = false;
-    lu_int n = esc_scgrid->ns + 3, nrhs = 1, ldb = n, info;
+    lu_int n = esc_scgrid->ns + 3, info;
+#ifdef MKL_LU
+    lu_int nrhs = 1, ldb = n
+#endif
 
     /* Loop over escape functions */
     for (i = 0; i < (ESC3_NUM + 4); i++) {

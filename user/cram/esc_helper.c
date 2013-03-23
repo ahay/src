@@ -495,7 +495,7 @@ SF_THPOOL_ERROR sf_thpool_add_work (sf_thpool pool, void (*function)(void *),
         pool->count += 1;
 
         /* pthread_cond_broadcast */
-        if (pthread_cond_signal(&(pool->notify)) != 0) {
+        if (pthread_cond_signal (&(pool->notify)) != 0) {
             err = SF_THPOOL_LOCK_FAILURE;
             break;
         }
