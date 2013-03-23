@@ -495,10 +495,10 @@ int main (int argc, char* argv[]) {
             }
             on = 1;
 #ifdef SOL_TCP
-            if (setsockopt (new_sd, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) 
+            if (setsockopt (new_sd, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) { 
 #else
-            if (setsockopt (new_sd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) 
-#endif	
+            if (setsockopt (new_sd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) { 
+#endif
                 fprintf (logf, "Can not set TCP_NODELAY for a new connection\n");
                 fprintf (logf, "Rejecting connection from %s\n", ip);
                 fflush (logf);
