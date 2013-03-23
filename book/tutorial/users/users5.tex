@@ -111,7 +111,7 @@ def ricker(out='wave',freq=20.0,kt=100,nt=1001,dt=0.01,ot=0.0,**kwargs):
 		sfspike n1=%(nt)d o1=%(ot)f d1=%(d1)f 
         nsp=1 mag=1.0 k1=%(kt)d l1=%(kt)d | 
 		sfricker1 frequency=%(freq)f 
-		''' % (locals())
+		''' % locals())
 \end{verbatimtab}
 
 Notice that we use the python function \textbf{locals()} for string substitution.  This function returns a dictionary that contains only the names and values of the named arguments for the function.  
