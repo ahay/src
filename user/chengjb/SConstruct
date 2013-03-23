@@ -45,11 +45,10 @@ except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../lexing/SConstruct')  # include lexing's head and lib files
-#    SConscript('../../api/c++/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf','lapack','vecmatop'])
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
 ##############################################################################
 # ADD FFTW3 LIB
@@ -57,9 +56,15 @@ env.Prepend(CPPPATH=['../../include'],
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'],
-#                LIBS=[env.get('DYNLIB','')+'fftw3f'])
                 LIBS=[env.get('DYNLIB','')+fftw])
 
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+    if lapack:
+        lapackpp=[env.get('DYNLIB','')+'rsf++','vecmatop']+lapack
+        env.Append(LIBS=lapack)
+else:
+    lapack = None
 
 ##############################################################################
 # Compiling C programs 
@@ -77,15 +82,16 @@ for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
     env.StaticObject('M'+prog+'.c')
-    prog = env.Program (prog, map (lambda x: x + '.c',sources))
+    if prog in ('ort3dhomodevK',) and not lapack:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    else:
+        prog = env.Program (prog, map (lambda x: x + '.c',sources))
     if root:
         env.Install (bindir, prog)
 
 ##############################################################################
 # Compiling C++ programs 
 ##############################################################################
-
-libcpp=[env.get('DYNLIB','')+'rsf++','rsf','lapack','vecmatop','fftw3f']
 
 #subs    = Split(subs)
 #if 'c++' in env.get('API',[]):
@@ -95,8 +101,10 @@ libcpp=[env.get('DYNLIB','')+'rsf++','rsf','lapack','vecmatop','fftw3f']
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog] 
-    prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=libcpp)
-
+    if lapack:
+        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=env.get('LIBS')+lapackpp)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 
