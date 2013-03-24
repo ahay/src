@@ -728,7 +728,7 @@ int BFIO::kernel34(int N, vector<Point3>& trg, vector<Point3>& src, CpxNumMat& r
         }
       }
  } else if(_fi==2) {
-    // ps=Vcos^-2;  qs=Vsin^-2;  xx=Vavg^-2;
+    // ps=Wcos;  qs=Wsin;  xx=Wavg;
     //--------------------------
     int m = trg.size();
     int n = src.size();

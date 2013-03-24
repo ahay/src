@@ -1,7 +1,7 @@
 //   direct azimuthally anisotropic 3to4 full Radon transform (double integral, nearest point interpolation)
 //   real f(t,x,y) --> real u(tau,p,q,s)
 //   fi=1  p=sqrt(W11);  q=sqrt(W22);  s=W12;
-//   f2=2  p=Vcos^-2;    q=Vsin^-2;    s=Vavg^-2;
+//   f2=2  p=Wcos;    q=Wsin;    s=Wavg;
 //
 //   Copyright (C) 2011 University of Texas at Austin
 //  

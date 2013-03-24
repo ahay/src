@@ -1,6 +1,6 @@
 /* 3-D Inverse normal moveout using orthogonal parametrization
 
-velocity file contains slowness squared with n2=3 (Vavg^-2,Vcos^-2,Vsin^-2)
+velocity file contains slowness squared with n2=3 (Wavg,Wcos,Wsin)
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

@@ -2,7 +2,7 @@
 //   complex f(w,x,y) --> complex u(tau,p,q,s)
 //   BFIO::setup3
 //   BFIO::kernel34    fi=1  p=sqrt(W11);  q=sqrt(W22);  s=W12;
-//                     fi=2  p=Vcos^-2;    q=Vsin^-2;    s=Vavg^-2;
+//                     fi=2  p=Wcos;    q=Wsin;    s=Wavg;
 //   BFIO::check34
 //   BFIO::eval34
 //

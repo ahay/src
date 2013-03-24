@@ -1,7 +1,7 @@
 /* 3-D Normal moveout using orthogonal parametrization
 
 input data has gathers along *4th* axis; 
-velocity file contains slowness squared with n2=3 (Vavg^-2,Vcos^-2,Vsin^-2);
+velocity file contains slowness squared with n2=3 (Wavg,Wcos,Wsin);
 offset file contains x,y offset pairs for input data
 */
 /*
