@@ -21,6 +21,9 @@
 
 #include <rsf.h>
 #include "recursion.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 struct tag_tls2{
 	void *h;
@@ -39,6 +42,11 @@ static void ls_mean3(float *out, float **in, int m1, int m2, int *par)
 {
 	int i1, i2;
 
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+	schedule(dynamic,10)         \
+	private(i1,i2)
+#endif
 	for(i1=0; i1<m1; i1++)
 	for(out[i1]=0.0, i2=0; i2<m2; i2++)
 	{
@@ -68,6 +76,9 @@ void* tls2_init(int m1, int m2, int *rect, bool istls, bool ang)
 	p->u1 = sf_floatalloc2(m1*p->n0, m2);
 	p->u2 = sf_floatalloc2(m1*p->n0, m2);
 
+#ifdef _OPENMP
+    omp_init();
+#endif
 	return p;
 }
 
@@ -94,6 +105,11 @@ void tls2(void *h, float *u1, float *u2)
 	n1 = p->n1;
 	n2 = p->n2;
 
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+	schedule(dynamic,10)         \
+	private(i1,i2,i0,k1,a,b)
+#endif
 	for (i2=0; i2<n2; i2++)
 	for (i1=0; i1<n1; i1++)
 	{
@@ -111,6 +127,11 @@ void tls2(void *h, float *u1, float *u2)
 		}
 	}
 
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+	schedule(dynamic,n1)         \
+	private(i1,i2,k2)
+#endif
 	for (i1=0; i1<n1*n0; i1++)
 	for (i2=0; i2<n2; i2++)
 	{
@@ -125,6 +146,11 @@ void tls2(void *h, float *u1, float *u2)
 	if(p->rc3 > 0)
 		recursion(p->h, p->u2[0]);
 
+#ifdef _OPENMP
+#pragma omp parallel for                    \
+	schedule(dynamic,10)         \
+	private(i1,i2,a,b)
+#endif
 	for (i2=0; i2<n2; i2++)
 	for (i1=0; i1<n1; i1++)
 	{

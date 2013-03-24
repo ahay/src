@@ -102,7 +102,7 @@ if label1 != None:
 	if unit1 == None:
 		unit1=par.string("unit1",None)
 	if unit1 != None:
-		label =label+': ('+ unit1+')'
+		label =label+' ('+ unit1+')'
 	ylabel(label)
 
 label2=par.string("label2")
@@ -114,7 +114,7 @@ if label2 != None:
 	if unit2 == None:
 		unit2=par.string("unit2",None)
 	if unit2 != None:
-		label =label+': ('+ unit2+')'
+		label =label+' ('+ unit2+')'
 	xlabel(label)
 
 

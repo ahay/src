@@ -47,13 +47,14 @@ int main(int argc, char*argv[])
 	/*< interpolation method: nearest, linear >*/
 
 	intp = sinterp_c2f(interp);
-	if(n2!=n3 || m2!= m3) sf_error("horizon file not match");
+	if(n2!=m2 || n3!= m3) sf_error("horizon file not match");
 
+	sf_unshiftdim(in,out,1);
 	u = sf_floatalloc2(n1, n2);
 	v = sf_floatalloc2(n2, n3);
 	h = sf_floatalloc2(n2, n3);
 
-	sf_floatread(h[0], n3*n2, in);
+	sf_floatread(h[0], n3*n2, hor);
 	for(i3=0; i3<n3; i3++)
 	{
 		sf_floatread(u[0], n1*n2, in);
