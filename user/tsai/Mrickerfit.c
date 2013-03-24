@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     if (sf_getint("n",&n) && !sf_getfloats("m",m0,n)) {
 	m0 = sf_floatalloc(n);
 	for (i=0; i<n; i++) {
-	    m0[i] = f0+0.4/n*(i+1)*(na-1)*df;
+	    m0[i] = f0+0.3/n*(i+1)*(na-1)*df;
 	}
     } 
     else

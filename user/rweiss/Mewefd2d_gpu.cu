@@ -3,7 +3,7 @@
 /*
   Authors: Robin M. Weiss and Jeffrey Shragge
 
-  Use of this code is freely avaiable. In publications, please reference the paper: 
+  Use of this code is freely available. In publications, please reference the paper: 
   Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave Equations on Parallel 
   GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063
 
@@ -480,7 +480,7 @@ int main(int argc, char* argv[]) {
     /*------------------------------------------------------------*/
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
-		if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+		if(verb) fprintf(stderr,"\b\b\b\b\b\b%d",it);
 		/*------------------------------------------------------------*/
 		/* from displacement to strain AND strain to stress           */
 		/*		- Compute strains from displacements as in equation 1 */

@@ -4,7 +4,7 @@
   Authors: Robin M. Weiss and Jeffrey Shragge
 
   This file contains the GPU kernel functions called in the ewefd2d_gpu module from
-  the Madagascar software package (http://www.reproducilitibly.org).  The calling
+  the Madagascar software package (http://www.reproducibility.org).  The calling
   functions for these kernels can be found in the file Mewefd2d_gpu.cu.  For more 
   information, see (Weiss and Shragge, "Solving 3D Anisotropic Elastic Wave 
   Equations on Parallel GPU Devices", GEOPHYSICS. http://software.seg.org/2012/0063)

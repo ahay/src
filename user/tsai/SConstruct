@@ -5,8 +5,6 @@ import bldutil
 progs = ''' rickerfit rickback
 '''
 
-# Mrickerfit.c needs gaussel.c to compile.
-
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()

@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
   	for (i1=0; i1 < n1; i1++) {  x=i1/(n1-1.);	
 		for (i2=0; i2 < n2; i2++) {y=i2/(n2-1.);
   			shit[i1][i2] = fminf(n3,fmaxf(1,((d-a*x-b*y)/c)));
-  			smean =+ shit[i1][i2];
+  			smean += shit[i1][i2];
 		}
   	}
   

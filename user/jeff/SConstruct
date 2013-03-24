@@ -31,7 +31,10 @@ if 'f90' in api and F90:
 
 # C mains
 targets.c = '''
+norm
+axplusy
 adjgradient2d
+adjgradient2d_coupled
 wem2d_iso
 modelcreate
 ewefd2d_omp

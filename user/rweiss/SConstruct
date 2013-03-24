@@ -14,8 +14,8 @@ except: # local version
 
 # YOU MAY HAVE TO EDIT THIS SECTION!!!
 # MPI_LIB and MPI_INC must be defined for your specific system
-MPI_LIB = '/usr/lib/openmpi/lib'		# MPI lib directory (contains libmpi.so)
-MPI_INC = '/usr/lib/openmpi/include'		# MPI include directory	(contains mpi.h)
+MPI_LIB = '/opt/openmpi/1.6.0/gcc/4.4.6/lib'		# MPI lib directory (contains libmpi.so)
+MPI_INC = '/opt/openmpi/1.6.0/gcc/4.4.6/include'		# MPI include directory	(contains mpi.h)
 
 
 mpi_err = 0
@@ -28,12 +28,18 @@ if not os.path.exists(MPI_INC + "/mpi.h"):
 
 
 cuda_progs = '''
+adjgradient2d_coupled_gpu
 ewefd2d_gpu
 ewefd3d_gpu_p2p
+wem2d_gpu
+wem3d_gpu
+adjgradient2d_gpu
+ewefd2d_gpu_dev
 '''
 
 cuda_mpi_progs = '''
 ewefd3d_gpu_mpi
+ewefd3d_multiNode
 '''
 
 
@@ -46,7 +52,7 @@ env.Append(LIBS=[env.get('DYNLIB','')+'rsf'],
            LIBPATH=['../../lib'])
 
 if CTP:
-    env.Append(LIBS=['cuda','cudart'],
+    env.Append(LIBS=['cuda','cudart','cufft','cusparse'],
                LIBPATH=[os.path.join(CTP,'lib64'),os.path.join(CTP,'lib')])
 
 
