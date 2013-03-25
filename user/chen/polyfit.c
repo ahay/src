@@ -33,7 +33,7 @@ void* polyfit_init(int n1, int n2, int o1, int o2)
 {
 	POLYFIT *p;
 
-	if(n2 > n1) sf_error("polyfit: n2 > n1");
+	if(n2 > n1) sf_error("polyfit: n2 > n1 is unstable");
 
 	p = (POLYFIT*) sf_alloc(1, sizeof(POLYFIT));
 	
