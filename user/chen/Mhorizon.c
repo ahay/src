@@ -36,7 +36,7 @@ int main(int argc, char*argv[])
 	out = sf_output("out");
 
 	if(!sf_histint(in, "n1", &n1)) sf_error("n1 needed in input");
-	if(!sf_histfloat(in, "o1", &d1)) o1=0.0;
+	if(!sf_histfloat(in, "o1", &o1)) o1=0.0;
 	if(!sf_histfloat(in, "d1", &d1)) d1=1.0;
 	if(!sf_histint(in, "n2", &n2)) sf_error("n2 needed in input");
 	if(!sf_histint(in, "n3", &n3)) n3=1; 
