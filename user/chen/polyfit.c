@@ -25,8 +25,20 @@
 
 typedef struct{
 	int n1, n2, o1, o2;
-	float **v, *w, *f;
+	float **v, *w, *f, **v0;
 }POLYFIT;
+
+
+void vandermonde(int n1, int n2, int o1, int o2, float **v)
+{
+	int i1, i2;
+	for(i2=0; i2 < n2; i2++)
+	for(i1=0; i1 < n1; i1++)
+	if(i2 + o2 == 0) v[i2][i1] = 1.0;
+	else v[i2][i1] = powf(i1 + o1, i2 + o2);
+}
+
+
 
 void* polyfit_init(int n1, int n2, int o1, int o2)
 /*< initialize >*/
@@ -43,19 +55,12 @@ void* polyfit_init(int n1, int n2, int o1, int o2)
 	p->o2 = o2;
 
 	p->v = sf_floatalloc2(n1, n2);
+	p->v0 = sf_floatalloc2(n1, n2);
 	p->w = sf_floatalloc(n1*n2);
 	p->f = sf_floatalloc(n1);
 
+	vandermonde(p->n1, p->n2, p->o1, p->o2, p->v0);
 	return p;
-}
-
-void vandermonde(int n1, int n2, int o1, int o2, float **v)
-{
-	int i1, i2;
-	for(i2=0; i2 < n2; i2++)
-	for(i1=0; i1 < n1; i1++)
-	if(i2 + o2 == 0) v[i2][i1] = 1.0;
-	else v[i2][i1] = powf(i1 + o1, i2 + o2);
 }
 
 void polyfit_close(void*h)
@@ -65,6 +70,8 @@ void polyfit_close(void*h)
 	p = (POLYFIT *) h;
 	free(p->v[0]);
 	free(p->v);
+	free(p->v0[0]);
+	free(p->v0);
 	free(p->w);
 	free(p->f);
 	free(p);
@@ -78,10 +85,10 @@ void polyfit_coef(void *h, float *u, float *c)
 	POLYFIT *p;
 	p = (POLYFIT *) h;
 
-	vandermonde(p->n1, p->n2, p->o1, p->o2, p->v);
+	lwork = p->n1 * p->n2;
+	memcpy(p->v[0], p->v0[0], lwork);
 
 	for(i1=0; i1<p->n1; i1++) p->f[i1] = u[i1];
-	lwork = p->n1 * p->n2;
 	nrhs = 1;
 	sgels_("N", &p->n1, &p->n2, &nrhs, p->v[0], &p->n1, 
 		p->f, &p->n1, p->w, &lwork, &info);
@@ -98,8 +105,7 @@ void polyfit(void *h, float *c, float *d)
 	POLYFIT *p;
 	p = (POLYFIT *) h;
 
-	vandermonde(p->n1, p->n2, p->o1, p->o2, p->v);
-
+	memcpy(p->v[0], p->v0[0], p->n1*p->n2);
 	sgemv_("N", &p->n1, &p->n2, &alpha, p->v[0], &p->n1, 
 		c, &inx, &beta, d, &inx);
 }
