@@ -20,21 +20,17 @@
 
 
 #include <rsf.h>
-#include "comp.h"
-#include "polyfit.h"
-
-
-static void *h1, *h2;
+#include "fcoh1.h"
 
 int main(int argc, char* argv[])
 {
 	sf_file in, out, idip, xdip;
-	int n1, n2, n3, ntw, m1;
-	int i1, i2, i3, j1, k1, k2, ix, iy, it;
-	float ***u1, ***u2, **u3,  *c1, *c2;
-	float max, ***v1, ***v2, d1, d2, c[3];
+	int n1, n2, n3, ntw;
+	int i1, i2, i3;
+	float **u1, **u2, **pu, **p1, **p2;
 	bool twod, verb;
 	int min1, min2, max1, max2;
+	void *h1, *h2;
 
 	sf_init(argc, argv);
 
@@ -65,113 +61,79 @@ int main(int argc, char* argv[])
 	/* xline slope */
 
 
-	h1 = polyfit_init(max1-min1+1, 3, min1, 0);
-
 	if(n3==1)  twod=true;
 
-	u1 = sf_floatalloc3(n1, n2, n3);
-	u2 = sf_floatalloc3(n1, n2, n3);
-	if(idip)v1 = sf_floatalloc3(n1, n2, n3);
+	u1 = sf_floatalloc2(n1, n2);
+	p1 = sf_floatalloc2(n1, n2);
 
-	m1 = 2*ntw+1;
-	u3 = sf_floatalloc2(m1, 2);
-	c1 = sf_floatalloc(max1-min1+1);
+	h1 = fcoh1_init(n1, min1, max1, ntw);
 
-	if(twod) {min2=0; max=2; h2=NULL;}
-	else {
-		h2 = polyfit_init(max2-min2+1, 3, min2, 0);
-		if(xdip)v2 = sf_floatalloc3(n1, n2, n3);
-		c2 = sf_floatalloc(max2-min2+1);
-	}
+	if(twod) {
+		sf_floatread(u1[0], n1*n2, in);
 
-	sf_floatread(u1[0][0], n1*n2*n3, in);
-	for(i3=0; i3<n3; i3++)
-	{
-		for(i2=0; i2<n2; i2++)
+		// initial for first trace
+		fcoh1_acorr(u1[0], p1[0], n1, ntw);
+
+		for(i2=1; i2<n2; i2++)
+		{
+			fcoh1_acorr(u1[i2], p1[i2], n1, ntw);
+			fcoh1_tr(h1, u1[i2-1], u1[i2], p1[i2-1], p1[i2]);
+		}
 		for(i1=0; i1<n1; i1++)
 		{
-			max = 0.0;
-			for(j1=-ntw; j1<=ntw; j1++)
-			{
-				it =i1 + j1;
-				if(it<0 || it>n1-1) u3[0][j1+ntw] = 0.0;
-				else u3[0][j1+ntw] = u1[i3][i2][it];
-			}
+			u1[n2-1][i1] = u1[n2-2][i1];
+			if (idip) p1[n2-1][i1] = p1[n2-2][i1];
+		}
 
-			for(k1=min1; k1<=max1; k1++)
-			{
-				ix = i2 + 1;
-				if(ix>= n2 || ix <0) c1[k1-min1] = 0.0;
-				else {
-					for(j1=-ntw; j1<=ntw; j1++)
-					{
-						it = i1 + k1 + j1;
-						if(it <0 || it>=n1)	u3[1][j1+ntw] = 0.0;
-						else u3[1][j1+ntw] = u1[i3][ix][it];
-					}
-					c1[k1-min1] = comp_ncc(u3[0], u3[1], m1);
-				}
-			}
-			polyfit_coef(h1, c1, c);
-			d1 = -0.5*c[1]/c[2];
-			max = c[0] + 0.5 * d1*c[1];
-			u2[i3][i2][i1] = max;
-			if(idip) v1[i3][i2][i1] = d1;
-			
-			if(!twod){
-				for(k2=min2; k2<=max2; k2++)
-				{
-					iy = i3 + 1;
-					if(iy>= n3 || iy <0) c2[k2-min2] = 0.0;
-					else {
-						for(j1=-ntw; j1<=ntw; j1++)
-						{
-							it = i1 + k2 + j1;
-							if(it <0 || it>=n1)	u3[1][j1+ntw] = 0.0;
-							else u3[1][j1+ntw] = u1[iy][i2][it];
-						}	
-						c2[k2-min2] = comp_ncc(u3[0], u3[1], m1);
-					}
-				}
-				polyfit_coef(h2, c2, c);
-				d2 = -0.5*c[1]/c[2];
-				max = c[0] + 0.5 * d2*c[1];
-				u2[i3][i2][i1] *= max;
-				if(xdip) v2[i3][i2][i1] = d2;
-			}
-		}
-		if(verb) sf_warning("%d of %d;", i3, n3);
-	}
-	sf_floatwrite(u2[0][0], n1*n2*n3, out);
-	if(idip)sf_floatwrite(v1[0][0], n1*n2*n3, idip);
-	if(!twod)
-	{
-		free(c2);
-		polyfit_close(h2);
-		if(xdip)
+		sf_floatwrite(u1[0], n1*n2, out);
+		if(idip) sf_floatwrite(p1[0], n1*n2, idip);
+	}else {  // end 2D begin 3D
+		u2 = sf_floatalloc2(n1, n2);
+		p2 = sf_floatalloc2(n1, n2);
+
+		h2 = fcoh1_init(n1, min2, max2, ntw);
+
+		sf_floatread(u2[0], n1*n2, in);
+		for(i2=0; i2<n2; i2++)
+			fcoh1_acorr(u2[i2], p2[i2], n1, ntw);
+		for(i3=1; i3<n3; i3++)
 		{
-			sf_floatwrite(v2[0][0], n1*n2*n3, xdip);
-			free(**v2);
-			free(*v2);
-			free(v2);
+			sf_floatread(u1[0], n1*n2, in);
+
+			fcoh1_acorr(u1[0], p1[0], n1, ntw);
+			fcoh1_tr(h2, u2[0], u1[0], p2[0], p1[0]);
+
+			for(i2=1; i2<n2; i2++)
+			{
+				fcoh1_acorr(u1[i2], p1[i2], n1, ntw);
+				fcoh1_tr(h2, u2[i2], u1[i2], p2[i2], p1[i2]);
+				fcoh1_tr(h1, u1[i2-1], u1[i2], p1[i2-1], p1[i2]);
+				for(i1=0; i1<n1; i1++)
+					u2[i2-1][i1] = u1[i2-1][i1]*u2[i2-1][i1];
+			}
+			for(i1=0; i1<n1; i1++)
+			{
+				u2[n2-1][i1] = u1[n2-1][i1]*u2[n2-1][i1];
+				p1[n2-1][i1] = p1[n2-2][i1];
+			}
+			pu = u2; u2 = u1; u1 = pu;
+			sf_floatwrite(u2[0], n1*n2, out);
+			if(idip) sf_floatwrite(p1[0], n1*n2, idip);
+			if(xdip) sf_floatwrite(p2[0], n1*n2, xdip);
+			if(verb) sf_warning("%d of %d;", i3, n3);
 		}
+		sf_floatwrite(u2[0], n1*n2, out);
+		free(*u2);
+		free(u2);
+		free(*p2);
+		free(p2);
+		fcoh1_close(h2);
 	}
-	free(c1);
-	polyfit_close(h1);
-	free(**u1);
+	fcoh1_close(h1);
 	free(*u1);
 	free(u1);
-	free(**u2);
-	free(*u2);
-	free(u2);
-	free(*u3);
-	free(u3);
-	if(idip)
-	{
-		free(**v1);
-		free(*v1);
-		free(v1);
-	}
+	free(*p1);
+	free(p1);
 	return 0;
 }
 
