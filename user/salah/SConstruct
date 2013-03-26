@@ -8,7 +8,7 @@ progs='''
 pyprogs = 'handvel2rsf'
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
