@@ -9,6 +9,7 @@ Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
 Yangkang Chen <chenyk1990@gmail.com>
 Zhonghuan Chen <isaacthu@gmail.com>
 Jiubing Cheng <cjb1206@tongji.edu.cn>
+Luke Decker <deckerla@gmail.com>
 Joseph Dellinger <geojoe@freeusp.org>
 Esteban Diaz <ediazpan@mines.edu>
 Gang Fang <fanggang723@gmail.com>
