@@ -1,4 +1,4 @@
-/* n-dimensional sliding absolute value mean.  The initial value of a unit is used for indicies falling  between within the edge and the sampling length for each dimension.
+/* Local absolute value determination for an array of arbitrary dimension.  The absolute value of a unit is used for indicies falling  between within the edge and the sampling length for each dimension.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -22,8 +22,8 @@
 
 int main (int argc, char* argv[]) 
 {
-    int dim, dim1, i, k, l, m, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM], test;
-    int n1, n2, n3, indexalloc, call, indexalloc1, dataindexpoint;
+    int dim, dim1, i, i2, k, l, m, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM], test;
+    int n1, n2, indexalloc, call, indexalloc1, dataindexpoint;
     char key[6];
     float* data;
     float* attr;
@@ -48,6 +48,8 @@ int main (int argc, char* argv[])
 
     }//end i loop
 
+
+//this loop determines the number of points to read and write.  n1 is the number of points in rectified dimensions.  n2 is the number of unrectified dimensional points, the number of loops around which you must run n1 iterations to complete the analysis. n1*n2=total number of poitns in the read data.
     n1 = n2 = 1;
     for (i=0; i < dim; i++) {
 	if (i <= dim1) {
@@ -58,10 +60,7 @@ int main (int argc, char* argv[])
 	}
 
     }
-
-    n3=n1*n2;
     
-
 //Determine Array of values for calling desired cells to perform attribue analysis on.
                   indexalloc = 1;
                   dataindex = sf_intalloc (indexalloc);
@@ -94,41 +93,39 @@ int main (int argc, char* argv[])
                            dataindex[l] = dataindex1[l];
 
                            } // end l loop
- 
-
-
                   free (dataindex1);
-
               }//end k loop
- 
 //Read Data
-data = sf_floatalloc (n3);
-sf_floatread(data,n3,in);
-//attr = sf_floatalloc (n3);    
-attr = sf_floatalloc (1);  
+
+//allocate data matrix.  This has value of the size of all datapoints in rectified dimensions.  Unrectified dimensions are read in loop.
+data = sf_floatalloc (n1);
+attr = sf_floatalloc (1);  //only need to read & write item at a time
 
 //figure out which values you want to call to use attribute analysis on.
 //let's do this the easy way:  boundary conflict regions are unaltered
 
+int coord[dim1]; //only need to know coordinates in rectified dimensions
 
-int coord[dim]; 
-//loop through all data points
-for (i=0; i<n3; i++){
+for (i2=0; i2 < n2; i2++) { //loop through unrectified dimensions for greater memory efficiency
+	sf_floatread(data,n1,in);  //read data each time looping through an unrectified dimension
+
+
+//loop through rectified data points.  Remember n1*n2=total points
+for (i=0; i<n1; i++){
 //first, determine the coordinate of each called point for boundary conflict test
 
           //determine coordinate
           coordnum = i;
 //                      sf_warning("initial index!%g",coordnum);
           test = 0;
-          for (m=0; m<dim; m++){
-               k = dim - m - 1; // make it a falling value loop
+          for (m=0; m<dim1; m++){
+               k = dim1 - m - 1; // make it a falling value loop
                if (k > 0){
                      coord[k] = floor(coordnum/n[k-1]);
                      coordnum = coordnum - floor(coordnum/n[k-1])*n[k-1];
                }else{
                      coord[k] = coordnum;
                }//end declare coordinate conditional
-
 
                //test boundary conditions
                if ((coord[k] - rect[k] >=0) && (coord[k] + rect[k] <= n[k])){
@@ -141,22 +138,29 @@ for (i=0; i<n3; i++){
           attr[0] = 0;
           holder = 0;
 
-          if (test == dim){//go ahead, BC ARE A-O-K!
+          if (test == dim1){//go ahead, BC ARE A-O-K!
               //loop through dataindex values to call data for the attribute analysis.
-//              sf_warning("in loop"); 
+
               attr[0] = 0; //zero out attribute
               m = 0; //zero out mean number
 
-//sf_warning("indexalloc1 %i",indexalloc1);
+
+//TIME TO COOK UP THE ACTUAL ATTRIBTUE ANALYSIS
+//                           ))
+//                          ((
+//                    ___o___)
+//      ___           |     |====O
+//     (0 0)          |_____|
+//--ooO-(_)-Ooo--------------------
+
               for (k=0; k < indexalloc1; k++){
                    call = i + dataindex[k];
-//                   sf_warning("call %i",call);
+
                    anal = data[call];//value used for attribute analysis.
 
-                   holder += fabsf(anal); //add the square of the analysis number
+                   holder += fabsf(anal); //add the amplitude of the analysis number
                    m += 1.; //add index for mean, is a float for division purposes
-//                           sf_warning("m %i",m);             
-//                           sf_warning("holder %g",holder); 
+
                    }//end k loop
               if (m > 0){
                  mean = holder/m;
@@ -165,20 +169,31 @@ for (i=0; i<n3; i++){
                  }else{
                  mean = fabsf(data[i]);
                  }
-
               //and finally the result
               attr[0] = mean;
              }//end determine attribute if
           else{
              attr[0]=fabsf(data[i]);//call edge effect regions their initial value.
               }//end attribute else for boundary conditions.
+
+//                   - -
+//                 { 0 0 }
+// +===========oOO===(_)===OOo=========+
+// |_____|_____|_____|_____|_____|_____|
+// |__|_____|_____|_____|_____|_____|__|
+// |_____| And this is the end   |_____|
+// |__|__|      of actual        |__|__|
+// |_____| Attribute Analysis    |_____|
+// |__|__|_______________________|__|__|
+// |_____|_____|_____|_____|_____|_____|
+// +===================================+
+
+
    sf_floatwrite(attr,1,out);//write data 
 }//end i loop
 
-    // write data
-//   sf_floatwrite(attr,n3,out); //no longer writing completed data
-                                 //writing partial data saves memory.
-
+}//end i2 loop
+    //free up used files and arrays
     sf_fileclose (in);
     sf_fileclose (out);
 
