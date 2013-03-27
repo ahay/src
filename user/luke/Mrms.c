@@ -1,4 +1,4 @@
-/* Local RMS Determination for an array of arbitrary dimension.  The absolute value of a unit is used for indicies falling  between within the edge and the sampling length for each dimension.
+/* Local RMS Determination for an array of arbitrary dimension.  The absolute value of a unit is used for indicies falling  between within the edge and the sampling length for each dimension.  This only currently works for rectification in n-1 dimensions for an array of n dimensions.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
