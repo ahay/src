@@ -68,23 +68,23 @@ int main(int argc, char* argv[])
 
 	h1 = fcoh1_init(n1, min1, max1, ntw);
 
-	if(twod) {
+	if(twod) for(i3=0; i3<n3; i3++)
+	{
 		sf_floatread(u1[0], n1*n2, in);
 
 		// initial for first trace
 		fcoh1_acorr(u1[0], p1[0], n1, ntw);
 
-		for(i2=1; i2<n2; i2++)
+		for(i2=0; i2<n2-1; i2++)
 		{
-			fcoh1_acorr(u1[i2], p1[i2], n1, ntw);
-			fcoh1_tr(h1, u1[i2-1], u1[i2], p1[i2-1], p1[i2]);
+			fcoh1_acorr(u1[i2+1], p1[i2+1], n1, ntw);
+			fcoh1_tr(h1, u1[i2], u1[i2+1], p1[i2], p1[i2+1], NULL);
 		}
 		for(i1=0; i1<n1; i1++)
 		{
 			u1[n2-1][i1] = u1[n2-2][i1];
 			if (idip) p1[n2-1][i1] = p1[n2-2][i1];
 		}
-
 		sf_floatwrite(u1[0], n1*n2, out);
 		if(idip) sf_floatwrite(p1[0], n1*n2, idip);
 	}else {  // end 2D begin 3D
@@ -101,19 +101,17 @@ int main(int argc, char* argv[])
 			sf_floatread(u1[0], n1*n2, in);
 
 			fcoh1_acorr(u1[0], p1[0], n1, ntw);
-			fcoh1_tr(h2, u2[0], u1[0], p2[0], p1[0]);
+			fcoh1_tr(h2, u2[0], u1[0], p2[0], p1[0], NULL);
 
 			for(i2=1; i2<n2; i2++)
 			{
 				fcoh1_acorr(u1[i2], p1[i2], n1, ntw);
-				fcoh1_tr(h2, u2[i2], u1[i2], p2[i2], p1[i2]);
-				fcoh1_tr(h1, u1[i2-1], u1[i2], p1[i2-1], p1[i2]);
-				for(i1=0; i1<n1; i1++)
-					u2[i2-1][i1] = u1[i2-1][i1]*u2[i2-1][i1];
+				fcoh1_tr(h2, u2[i2], u1[i2], p2[i2], p1[i2], NULL);
+				fcoh1_tr(h1, u1[i2-1], u1[i2], p1[i2-1], p1[i2], u2[i2-1]);
 			}
 			for(i1=0; i1<n1; i1++)
 			{
-				u2[n2-1][i1] = u1[n2-1][i1]*u2[n2-1][i1];
+				u2[n2-1][i1] = u2[n2-1][i1];
 				p1[n2-1][i1] = p1[n2-2][i1];
 			}
 			pu = u2; u2 = u1; u1 = pu;
