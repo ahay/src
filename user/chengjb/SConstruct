@@ -55,8 +55,7 @@ env.Prepend(CPPPATH=['../../include'],
 ##############################################################################
 fftw = env.get('FFTW')
 if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'],
-                LIBS=[env.get('DYNLIB','')+fftw])
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'],LIBS=[fftw])
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')

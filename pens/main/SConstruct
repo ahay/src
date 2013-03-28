@@ -40,7 +40,7 @@ sfpen = env.get('SFPEN')
 
 env.RSF_Include('vppen',prefix='pen_')
 obj = env.StaticObject('vppen.c')
-env.Depends(obj,['vppen.h','../include/gendoc.h'])
+env.Depends(obj,['vppen.h','../include/gendoc.h','_vp.h'])
 main = env.Program('vppen',[obj,]+objects)
 
 if root:
