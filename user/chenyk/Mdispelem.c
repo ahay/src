@@ -46,7 +46,7 @@ int main (int argc, char *argv[])
     trace = sf_floatalloc(n12);
  
     sf_floatread(trace,n12,in);
-    sf_warning("The element is %f", trace[(i1-1)*n2+(i2-1)]);
+    sf_warning("The element is %f", trace[(i1-1)+(i2-1)*n1]);
     
     exit (0);
 }
