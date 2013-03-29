@@ -3,7 +3,7 @@
 
 int main (int argc, char* argv[])
 {
-    int n1,n2,n3, i1,i2,i3;
+    int n1,n2,n3, i1,i2,i3,skip;
     float **xy, o1,d1,o2,d2,o3,d3;
     sf_file in, out;
 
@@ -17,6 +17,9 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1=");
     if (!sf_histint(in,"n2",&n2)) sf_error("Need n2=");
     if (!sf_histint(in,"n3",&n2)) n3=1;
+   
+    if (!sf_getint ("skip",&skip)) skip=4;
+    /* number of distance bins */
 
     if (!sf_histfloat(in,"o1",&o1)) sf_error("Need o1=");
     if (!sf_histfloat(in,"o2",&o2)) sf_error("Need o2=");
@@ -33,11 +36,12 @@ int main (int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(xy[0],n1*n2,in);	
 	for (i2=0; i2 < n2; i2++) {
-            printf( "%-8s%8d\n", "VFUNC", i2);
-	    for (i1=0; i1 < n1; i1++) {
-		if ((i1+1)%8==0) printf ("\n");
-                printf ("%8d%8d", i1*1000,xy[i2][i1]);
+            printf( "%-8s%-8d\n", "VFUNC", i2);
+	    for (i1=0; i1 < n1; i1+=skip) {
+		if (i1%(4*skip)==0 && i1!=0) printf ("\n");
+                printf ("%8d%8.0f", i1*1000,xy[i2][i1]);
             }
+            printf ("\n");
         }
     }
 //    sf_floatwrite (vari,nx,out);
