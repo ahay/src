@@ -35,6 +35,7 @@ parameters.
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import sys, os, string , tempfile, subprocess
 import rsf.path, rsf.prog
+import re
 try: 
     import subprocess
 except:
@@ -96,9 +97,9 @@ def myfunction(l,its):
     tb,tpathb = tempfile.mkstemp(suffix=".rsf",dir=datapath)
     vb,vpathb = tempfile.mkstemp(suffix=".rsf",dir=datapath)
     tvd,tvpath = tempfile.mkstemp(suffix=".rsf",dir=datapath)
-
+    
     # let me put vel for time o1
-    if its[0] != o1 :
+    if its[0] != o1:
         t=o1
         v=its[1]
         # insert v then t
@@ -120,7 +121,8 @@ def myfunction(l,its):
     nx=n1
     dx=d1
     x0=o1
-    tvcmd=''' %s head=%s nx=%d dx=%f x0=%f \
+    #time velocity command
+    tvcmd=''' %s head=%s nx=%d dx=%f x0=%f pef=y  \
           '''%(sfinvbin1,tpathb,nx,dx,x0)
     #print tvpath
     #print vpathb
@@ -133,7 +135,8 @@ def myfunction(l,its):
     subprocess.call('%s form=native'%(sfdd),stdin=td,stdout=tb,shell=True)
     subprocess.call('%s form=native'%(sfdd),stdin=vd,stdout=vb,shell=True)
     os.lseek(tb,0,0)
-    os.lseek(vb,0,0)  
+    os.lseek(vb,0,0)
+    #print tvcmd  
     subprocess.call(tvcmd,stdin=vb,stdout=tvd,shell=True)
 
     # maintain a list of interpolated traces
@@ -170,13 +173,24 @@ if __name__ == "__main__":
        sys.exit(2)
     items=[]
     for line in sys.stdin:
-        if line.startswith("HANDVEL"):
+        line=line.strip()
+        if re.match(r"^\*", line):
+           continue 
+        if re.match(r"^\HANDVEL|^\VFUNC", line):
+           # get the second element in the line
            loc=line.split()[1]
+           # if not the first handvel of vfunc
            if items:
               myfunction(loc,items)
+              #print "sss"
+              #print items
+              #sys.exit(0)
               items=[]
         else:
+           #sys.stderr.write(line.split())
+           #print items
            items = items + line.split()
+ 
     myfunction(loc,items)
     
     # concatinate traces in the second axis
