@@ -1,5 +1,5 @@
 from rsf.proj import *
-import rsf.recipes.fdmod as fdmod
+from rsf.recipes import fdmod
 
 # ------------------------------------------------------------
 # Sigsbee 2A parameters
