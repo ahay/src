@@ -197,7 +197,7 @@ if os.path.isdir('plot'):
         else:
             BuildDir(build,dir)
         if dir in ('plot/main','plot/test'):
-            plot_exports = 'env root bindir pkgdir'
+            plot_exports = 'env root bindir libdir pkgdir'
         elif dir == 'plot/lib':
             plot_exports = 'env root libdir incdir pkgdir'
         elif dir == 'plot/plplot':
@@ -218,7 +218,7 @@ if os.path.isdir('pens'):
         else:
             BuildDir(build,dir)
         if dir == 'pens/main':
-            pens_exports = 'env root pkgdir bindir'
+            pens_exports = 'env root pkgdir libdir bindir'
             sconscript = 'SConstruct'
         elif dir == 'pens/scripts':
             pens_exports = 'env bindir pkgdir'

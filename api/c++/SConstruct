@@ -12,9 +12,11 @@ except: # local version
     root = None
     SConscript('../c/SConstruct')
 
+dynpre = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','') + 'rsf'])
+            LIBS=[dynpre + 'rsf'])
 
 dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 dlibs = ['drsf']+env.get('LIBS',[])
@@ -37,8 +39,15 @@ if 'c++' in env.get('API',[]):
         env.Install('../../lib',dlib)
 
         if root:
-            env.Install(libdir,dlib)
+            install = env.Install(libdir,dlib)
 
+            if dynpre and env['PLATFORM'] == 'darwin':                
+                env.AddPostAction(install,
+                          'install_name_tool -change '
+                          'build/api/c/libdrsf.dylib '
+                          '%s/libdrsf.dylib %s' % \
+                              (libdir,install[0]))
+        
     for file in ['getpar','file']:
         test = 'Test' + file + '.cc'
         env.Program(file,[test,lib],PROGSUFFIX='.x',PROGPREFIX='Test')

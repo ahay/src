@@ -37,6 +37,7 @@ Colin Russell <crussell@eos.ubc.ca>
 Christos Saragiotis <christos.saragiotis@gmail.com>
 Paul Sava <psava@mines.edu>
 Karl Schleicher <k_schleicher@hotmail.com>
+Reza Shahidi <rshahidi@gmail.com>
 Jeffrey Shragge <jshragge@gmail.com>
 Eduardo Filpo Silva <effsilva@mines.edu>
 Xiaolei Song <songxl1984@gmail.com>

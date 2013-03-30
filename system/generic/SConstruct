@@ -3,19 +3,19 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-agc aliasp bandpass bin bin1 boxsmooth canny causint clip cmatmult
-cmatmult2 cosft costaper deriv dipfilter dwt enoint2 equal extract
-fern fft1 fft3 grad2 grad3 heat histogram igrad intshow inttest1
-inttest2 impl1 impl2 impl3 jacobi jacobi2 lapfill laplac linear
-linefit lorenz lpad mandelbrot matmult max1 miss2 monof monof2 mutter
-noise otsu polymask postfilter2 pow reg2tri remap1 roots shapebin
-shapebin1 sharpen slice smooth smoothder smoothreg2 spectra spectra2
-spline splinefilter swtdenoise threshold trapez tri2reg trishape
-trirand unif2 unif3
+agc aliasp bandpass bin bin1 boxsmooth canny causint clip clip2
+cmatmult cmatmult2 cosft costaper deriv dipfilter dwt enoint2 equal
+extract fern fft1 fft3 grad2 grad3 heat histogram igrad intshow
+inttest1 inttest2 impl1 impl2 impl3 jacobi jacobi2 lapfill laplac
+linear linefit lorenz lpad mandelbrot matmult max1 miss2 monof monof2
+mutter noise otsu polymask postfilter2 pow reg2tri remap1 roots
+shapebin shapebin1 sharpen slice smooth smoothder smoothreg2 spectra
+spectra2 spline splinefilter swtdenoise threshold trapez tri2reg
+trishape trirand unif2 unif3
 '''
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir libdir bindir')
     env = env.Clone()
     alias = {'pow':'tpow'}
 except: # local version
@@ -26,9 +26,11 @@ except: # local version
 src = Glob('[a-z]*.c')
 src.remove(File('predicates.c'))
 
+dynlib = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[dynlib+'rsf'])
 
 fftw = env.get('FFTW')
 if fftw:
@@ -48,7 +50,13 @@ for prog in mains:
     bldutil.depends(env,sources,'M'+prog)
     main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,main[0])
+        install = env.Install(bindir,main[0])
+
+        if dynlib and env['PLATFORM'] == 'darwin':
+             env.AddPostAction(install,
+             'install_name_tool -change '
+             'build/api/c/libdrsf.dylib '
+             '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
         if prog in alias.keys():
             other = string.replace(str(main[0]),prog,alias[prog])

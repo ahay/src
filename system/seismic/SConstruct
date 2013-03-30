@@ -37,9 +37,11 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+dynlib = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[dynlib+'rsf'])
 
 objects = []
 includes = []
@@ -73,7 +75,13 @@ for prog in mains:
     bldutil.depends(env,sources,'M'+prog)
     main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,main[0])
+        install = env.Install(bindir,main[0])
+
+        if dynlib and env['PLATFORM'] == 'darwin':
+             env.AddPostAction(install,
+             'install_name_tool -change '
+             'build/api/c/libdrsf.dylib '
+             '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
         if prog in alias.keys():
             for al in Split(alias[prog]):

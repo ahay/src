@@ -8,7 +8,7 @@ plotrays thplot vplotdiff wiggle
 '''
 
 try:
-    Import('env root bindir pkgdir')
+    Import('env root bindir libdir pkgdir')
     env = env.Clone()
     alias = {'grey':['byte','bar'],'grey3':['cubeplot']}
 except:
@@ -28,7 +28,18 @@ docalias={}
 for prog in mains:
     main = env.Program(prog + '.c')
     if root:
-         env.Install(bindir,main[0])
+         install = env.Install(bindir,main[0])
+
+         if libprefix and env['PLATFORM'] == 'darwin':
+             env.AddPostAction(install,
+             'install_name_tool -change '
+             'build/api/c/libdrsf.dylib '
+             '%s/libdrsf.dylib %s' % (libdir,install[0]))
+             env.AddPostAction(install,
+             'install_name_tool -change '
+             'build/plot/lib/libdrsfplot.dylib '
+             '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
+         
          if prog in alias.keys():
              for al in Split(alias[prog]):
                  copy = string.replace(str(main[0]),prog,al)
