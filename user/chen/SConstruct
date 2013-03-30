@@ -29,7 +29,7 @@ opwd fbdip pca fcoh2
 docs = []
 
 try:  # distributed version
-	Import('env root pkgdir bindir')
+	Import('env root pkgdir libdir bindir')
 	env = env.Clone()
 except: # local version
 	env = bldutil.Debug()
@@ -38,10 +38,12 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+dynpre = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
 	    LIBPATH=['../../lib'],
-	    LIBS=[env.get('DYNLIB','')+'rsfpwd',
-		  env.get('DYNLIB','')+'rsf'])
+	    LIBS=[dynpre+'rsfpwd',
+		  dynpre+'rsf'])
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
@@ -61,11 +63,24 @@ for prog in mains:
 	bldutil.depends(env,sources,'M'+prog)	
 	if not prog in Split('frt pca epfws orientation coherence fcoh1') or blas:		
 		prog = env.Program(prog,map(lambda x: x + '.c',sources))
+		if root:
+			install = env.Install(bindir,prog)
+
+			if dynpre and env['PLATFORM'] == 'darwin':
+				env.AddPostAction(install,
+						  'install_name_tool -change '
+						  'build/api/c/libdrsf.dylib '
+	                                          '%s/libdrsf.dylib %s' % (libdir,install[0]))
+				env.AddPostAction(install,
+						  'install_name_tool -change '
+						  'build/user/fomels/libdrsfpwd.dylib '
+	                                          '%s/libdrsfpwd.dylib %s' % (libdir,install[0]))
+				
 	else:
 		prog = env.RSF_Place('sf'+prog,
 				     None,var='LAPACK',package='lapack')
-	if root:
-		env.Install(bindir,prog)
+		if root:
+			env.Install(bindir,prog)
 
 for prog in Split(tprogs):
 	sources = ['T' + prog,prog]

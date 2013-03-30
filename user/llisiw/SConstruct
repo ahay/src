@@ -12,7 +12,7 @@ kirmigsr kirdatsr ftoper dsreiko0
 '''
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir libdir bindir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
@@ -21,9 +21,11 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+dynlib = env.get('DYNLIB','')
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[dynlib+'rsf'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -36,7 +38,13 @@ for prog in mains:
     bldutil.depends(env,sources,'M'+prog)
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,prog)
+        install = env.Install(bindir,prog)
+
+        if dynlib and env['PLATFORM'] == 'darwin':
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
 ######################################################################
 # SELF-DOCUMENTATION

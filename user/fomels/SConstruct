@@ -87,7 +87,13 @@ if dynlib:
     dlib = env.SharedLibrary('rsfpwd',dobjects,SHLIBPREFIX='libd',LIBS=dlibs)
     env.Install('../../lib',dlib)
     if root:
-        env.Install(libdir,dlib)
+        install = env.Install(libdir,dlib)
+
+        if dynpre and env['PLATFORM'] == 'darwin':
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
 mains = Split(progs)
 for prog in mains:
