@@ -31,6 +31,10 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 #include <rsf.h>
 
 #ifndef _esc_scgrid3_h
@@ -187,19 +191,19 @@ static int sf_scgrid3_tps_ia_stencil4[SCGRID3_TPS_STENCIL4] =
 #define SCGRID3_TPS_MAX_STENCIL 16
 
 /* Initialize the random numbers generator */
-static void sf_esc_scgrid3_init_rand () {
+static void sf_esc_scgrid3_init_rand (bool devrandom) {
     unsigned int seed;
     struct timeval tv;
-    FILE *devrandom;
+    FILE *drand;
 
-    if ((devrandom = fopen ("/dev/random","r")) == NULL) {
+    if (false == devrandom || (drand = fopen ("/dev/random","r")) == NULL) {
         gettimeofday (&tv, 0);
         seed = tv.tv_sec + tv.tv_usec;
-   } else {
-        fread (&seed, sizeof(seed), 1, devrandom);
-        fclose (devrandom);
-   }
-   srand (seed);
+    } else {
+        fread (&seed, sizeof(seed), 1, drand);
+        fclose (drand);
+    }
+    srand (seed);
 }
 
 /* Initialize thin-plane spline structures */
@@ -381,7 +385,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         sf_esc_scgrid3_init_tps (esc_scgrid);
     }
 
-    sf_esc_scgrid3_init_rand ();
+    sf_esc_scgrid3_init_rand (false);
 
     nc = 0;
     esc_scgrid->sockets = NULL;
@@ -676,7 +680,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         len = 0;
         while (len < sizeof(sf_esc_scgrid3_areq)*(ie - ii)) {
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
-                       sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, 0/*MSG_NOSIGNAL*/);
+                       sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, MSG_NOSIGNAL);
             if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                 sf_warning ("Can not send data for iab=[%d - %d], disconnecting",
                             areqs[ii].iab, areqs[ie].iab - 1);

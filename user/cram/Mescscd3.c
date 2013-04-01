@@ -38,6 +38,10 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 #include <rsf.h>
 
 #include "einspline.h"
@@ -105,9 +109,6 @@ static void* sf_escscd3_process_requests (void *ud) {
     int i, len = 0, rc, n;
     fd_set fset;
     struct timeval timeout;
-#ifndef MSG_NOSIGNAL
-    int onoff = 1;
-#endif
 
     /* Send/receive loop while connection exists */
     do {
@@ -173,12 +174,8 @@ static void* sf_escscd3_process_requests (void *ud) {
         /* Send the result back */
         len = 0;
         while (len < sizeof(sf_esc_scgrid3_avals)*n) {
-#ifdef MSG_NOSIGNAL
             rc = send (data->sd, (const void*)(((unsigned char*)data->avals) + len),
                        sizeof(sf_esc_scgrid3_avals)*n - len, MSG_NOSIGNAL);
-#else
-	    setsockopt(data->sd, SOL_SOCKET, SO_NOSIGPIPE, (void *)&onoff, sizeof(onoff));
-#endif
             if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 fprintf (data->logf, "Connection was terminated for socket %d\n", data->sd);
                 fflush (data->logf);
@@ -216,12 +213,12 @@ int main (int argc, char* argv[]) {
     pid_t pid, sid;
     /* Server network variables */
     char *ip = NULL;
-    int len, rc, on = 1, ijob, bsiz;
+    int rc, on = 1, ijob, bsiz;
     int listen_sd, new_sd, njobs = 0;
     struct sockaddr_in serv_addr, client_addr;
     struct timeval timeout;
     fd_set sset;
-    socklen_t clen, lon;
+    socklen_t clen;
     /* Threading */
     sf_escscd3_work *rwork, *qjobs, *old_qjobs;
     pthread_t pthread;
