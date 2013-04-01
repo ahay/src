@@ -549,6 +549,8 @@ static char* getdatapath (void)
  3. check .datapath file in the current directory
  4. check .datapath in the home directory
  5. use '.' (not a SEPlib behavior)
+
+13245 is more reasonable (Zhonghuan Chen)
  */
 {
     char *path, *penv, *home, file[PATH_MAX];
@@ -558,14 +560,14 @@ static char* getdatapath (void)
 	
     path = sf_charalloc(PATH_MAX+1);
 	
+    if (readpathfile (".datapath",path)) return path;
+    
     penv = getenv("DATAPATH");
     if (NULL != penv) {
 		strncpy(path,penv,PATH_MAX);
 		return path;
     }
 	
-    if (readpathfile (".datapath",path)) return path;
-    
     home = getenv("HOME");
     if (NULL != home) {
 		(void) snprintf(file,PATH_MAX,"%s/.datapath",home);
