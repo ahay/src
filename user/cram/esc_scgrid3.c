@@ -101,8 +101,7 @@ struct EscSCgrid3 {
     float                  *bs, *as;
     /* Remote access data for distributed computations */
     bool                    remote;
-    int                    *nsck;
-    int                   **sockets;
+    int                    *sockets;
     sf_esc_scgrid3_invals  *invals;
     sf_esc_scgrid3_areq    *areqs;
     sf_esc_scgrid3_avals   *avals;
@@ -235,13 +234,14 @@ static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
 }
 
 sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer,
-                                    int morder, bool verb)
+                                    int morder, float frac, bool verb)
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
-    int ia, ib, i, j, nab, iab0, iab1, nd, is, on = 1;
+    int ia, ib, i, j, jj, nab, iab0, iab1, nd, is, on = 1;
+    int *nsck, **sck;
     FILE *stream;
-    struct sockaddr_in serv_addr;
+    struct sockaddr_in *serv_addr;
     fd_set sset; 
     struct timeval timeout; 
     int valopt, rc, bsiz; 
@@ -368,7 +368,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 esc_scgrid->ns = 36;
                 break;
             case 1:
-                /* Bilinear interpolation */
+                /* Bilinear interpolation, 2x2 patch */
                 esc_scgrid->ns = 4;
                 break;
             case 0:
@@ -384,7 +384,6 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     sf_esc_scgrid3_init_rand ();
 
     nc = 0;
-    esc_scgrid->nsck = NULL;
     esc_scgrid->sockets = NULL;
     esc_scgrid->ma = 1;
     esc_scgrid->mb = 1;
@@ -393,30 +392,57 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         if (!sf_histint (scdaemon, "n2", &nd)) sf_error ("No n2= in supercell daemon file");
         if (!sf_histint (scdaemon, "Ma", &esc_scgrid->ma)) sf_error ("No Ma= in supercell daemon file");
         if (!sf_histint (scdaemon, "Mb", &esc_scgrid->mb)) sf_error ("No Mb= in supercell daemon file");
-        esc_scgrid->sockets = (int**)sf_alloc (nab, sizeof(int*)); /* All sockets for an angle */
-        esc_scgrid->nsck = (int*)sf_alloc (nab, sizeof(int)); /* Number of sockets for an angle */
+        serv_addr = sf_alloc (nd, sizeof(struct sockaddr_in));
+        sck = (int**)sf_alloc (nab, sizeof(int*)); /* All daemons for an angle */
+        nsck = (int*)sf_alloc (nab, sizeof(int)); /* Number of sockets for an angle */
+        esc_scgrid->sockets = (int*)sf_alloc (nab, sizeof(int)); /* Connection socket for each angle */
         for (i = 0; i < nab; i++) {
-            esc_scgrid->nsck[i] = 0;
-            esc_scgrid->sockets[i] = (int*)sf_alloc (nd, sizeof(int));
+            nsck[i] = 0;
+            sck[i] = (int*)sf_alloc (nd, sizeof(int));
         }
+        /* Find out how many daemons cover each angle */
         for (j = 0; j < nd; j++) {
-            sf_ucharread ((unsigned char*)&serv_addr, sizeof (serv_addr), scdaemon);
+            sf_ucharread ((unsigned char*)&serv_addr[j], sizeof (serv_addr[j]), scdaemon);
             sf_ucharread ((unsigned char*)&iab0, sizeof (int), scdaemon);
             sf_ucharread ((unsigned char*)&iab1, sizeof (int), scdaemon);
             if (iab0 > iab1)
                 continue;
+            /* Store daemon index for this angle patch */
+            for (i = iab0; i <= iab1; i++) {
+                jj = i;
+                if (jj < 0)
+                    jj += nab;
+                else if (jj >= nab)
+                    jj -= nab;
+                sck[jj][nsck[jj]] = j;
+                nsck[jj]++;
+            }
+        }
+        jj = -1; /* Current daemon index */
+        is = -1; /* Current socket */
+        for (i = 0; i < nab; i++) {
+            j = sck[i][(int)(frac*(float)nsck[i])];
+            if (jj == j) { /* Same daemon */
+                esc_scgrid->sockets[i] = is;
+                continue;
+            }
+            /* Next daemon, try to establish a connection */
+            jj = j;
             /* Create TCP socket */
             if ((is = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
                 sf_warning ("socket() failed");
+                is = -1;
                 continue;
             }
             /* Allow socket descriptor to be reuseable */
             if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
                 sf_warning ("setsockopt() failed");
                 close (is);
+                is = -1;
                 continue;
             }
             on = 1;
+            /* Disable TCP buffering of outgoing packets */
 #ifdef SOL_TCP
             if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
 #else
@@ -424,6 +450,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 #endif
                 sf_warning ("setsockopt()[TCP_NODELAY] failed");
                 close (is);
+                is = -1;
                 continue;
             }
 /*
@@ -434,25 +461,29 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 continue;
             }
 */
-            bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*SCGRID3_MAX_STENCIL;
+            /* Set send and receive buffers */
+            bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
             if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
                 sf_warning ("setsockopt()[SO_RCVBUF] failed");
                 close (is);
+                is = -1;
                 continue;
             }
             if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
                 sf_warning ("setsockopt()[SO_SNDBUF] failed");
                 close (is);
+                is = -1;
                 continue;
             }
             /* Set socket to be non-blocking */
             if (ioctl (is, FIONBIO, (char *)&on) < 0) {
                 sf_warning ("ioctl() failed");
                 close (is);
+                is = -1;
                 continue;
             }
             /* Try to establish a connection */
-            rc = connect (is, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+            rc = connect (is, (struct sockaddr *)&serv_addr[j], sizeof(serv_addr[j]));
             if (rc < 0) { 
                 if (EINPROGRESS == errno) { 
                     do {
@@ -498,16 +529,14 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             }
             if (is < 0)
                 continue;
+            esc_scgrid->sockets[i] = is;
             nc++;
-            for (i = 0; i < nab; i++) {
-                if ((i >= iab0 && i <= iab1) ||
-                    ((i - nab) >= iab0 && (i - nab) <= iab1) ||
-                    ((i + nab) >= iab0 && (i + nab) <= iab1)) {
-                    esc_scgrid->sockets[i][esc_scgrid->nsck[i]] = is;
-                    esc_scgrid->nsck[i]++;
-                }
-            }
         }
+        free (serv_addr);
+        for (i = 0; i < nab; i++)
+            free (sck[i]);
+        free (sck);
+        free (nsck);
     }
     esc_scgrid->remote = nc != 0;
 
@@ -527,43 +556,36 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 
 /* Disconnect from a socket */
 static void sf_cram_scgrid3_disconnect (sf_esc_scgrid3 esc_scgrid, int is) {
-    int i, j;
+    int i;
 
     close (is);
 
-    /* Remove socket number from all angle references */
+    /* Remove socket id from all angle references */
     for (i = 0; i < esc_scgrid->na*esc_scgrid->nb; i++) {
-        for (j = 0; j < esc_scgrid->nsck[i]; j++) {
-            if (is == esc_scgrid->sockets[i][j]) {
-                for (j = j + 1; j < esc_scgrid->nsck[i]; j++) {
-                    esc_scgrid->sockets[i][j - 1] = esc_scgrid->sockets[i][j];
-                }
-                esc_scgrid->nsck[i] = esc_scgrid->nsck[i] - 1;
-            }
-        }
+        if (esc_scgrid->sockets[i] == is)
+            esc_scgrid->sockets[i] = -1;
     }
 }
 
 void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
 /*< Destroy object >*/
 {
-    int is, iab, nab = esc_scgrid->na*esc_scgrid->nb;
+    int iab, nab = esc_scgrid->na*esc_scgrid->nb;
     if (verb)
         sf_warning ("%lu points processed, %g interpolation steps per point performed",
                     esc_scgrid->ir, (float)esc_scgrid->is/(float)esc_scgrid->ir);
         sf_warning ("%lu points processed locally (%g%%)",
                     esc_scgrid->il, 100.0*(float)esc_scgrid->il/(float)esc_scgrid->ir);
     /* Close all existing connections */
-    if (esc_scgrid->nsck && esc_scgrid->sockets) {
+    if (esc_scgrid->sockets) {
         for (iab = 0; iab < nab; iab++) {
-            for (is = 0; is < esc_scgrid->nsck[iab]; is++)
-                sf_cram_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab][is]);
-            free (esc_scgrid->sockets[iab]);
+            if (esc_scgrid->sockets[iab] != -1)
+                sf_cram_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab]);
         }
-        free (esc_scgrid->nsck);
         free (esc_scgrid->sockets);
     }
     if (2 == esc_scgrid->morder) {
+        /* Release special structures used for thin plate spline interpolation */
         free (esc_scgrid->L[0]);
         free (esc_scgrid->L);
         free (esc_scgrid->as);
@@ -599,17 +621,6 @@ static void sf_cram_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     aval->ud2 = areq->ud2;
 }
 
-/* Check if angle index iab is reachable through socket is */
-static bool sf_cram_scgrid3_has_socket (sf_esc_scgrid3 esc_scgrid, int is, int iab) {
-    int i;
-
-    for (i = 0; i < esc_scgrid->nsck[iab]; i++) {
-        if (is == esc_scgrid->sockets[iab][i])
-            return true;
-    }
-    return false;
-}
-
 /* Compute multiple values either locally or remotely */
 static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
                                         sf_esc_scgrid3_avals *avals, int n) {
@@ -639,7 +650,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
 
     /* Skip patches without receivers */
     ii = 0;
-    while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].iab]) {
+    while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab]) {
         areqs[ii].id = id;
         ii++;
     }
@@ -647,7 +658,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         sf_error ("Lost all connections");
 
     /* Socket */
-    is = esc_scgrid->sockets[areqs[ii].iab][rand () % esc_scgrid->nsck[areqs[ii].iab]];
+    is = esc_scgrid->sockets[areqs[ii].iab];
     if (is > mis)
         mis = is;
     ie = ii; /* Last and first requests in the patch */
@@ -656,7 +667,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
        be sent to a single socket */
     do {
         while (ie < n && (iab == areqs[ie].iab ||
-                          sf_cram_scgrid3_has_socket (esc_scgrid, is, areqs[ie].iab))) {
+                          is == esc_scgrid->sockets[areqs[ie].iab])) {
             iab = areqs[ie].iab;
             areqs[ie].id = id + ie;
             ie++;
@@ -682,13 +693,13 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         if (ie < n) { /* Next patch */
             ii = ie;
             /* Find next socket */
-            while (ii < n && 0 == esc_scgrid->nsck[areqs[ii].iab]) {
+            while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab]) {
                 areqs[ii].id = id; /* Skip requests without receivers */
                 ii++;
             }
             ie = ii;
             if (ie < n) {
-                is = esc_scgrid->sockets[areqs[ii].iab][rand () % esc_scgrid->nsck[areqs[ie].iab]];
+                is = esc_scgrid->sockets[areqs[ii].iab];
                 if (is > mis)
                     is = mis;
                 iab = areqs[ie].iab;

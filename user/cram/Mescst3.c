@@ -22,7 +22,8 @@
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, iz, ix, iy, ia, ib, morder;
+    int nz, nx, ny, nb, na, iz, ix, iy, ia, ib;
+    int icpu = 0, ncpu = 1, morder = 2;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y;
     float ***e;
@@ -57,6 +58,10 @@ int main (int argc, char* argv[]) {
         if (!sf_histfloat (spdom, "o2", &ox)) sf_error ("No o2= in input");
         if (!sf_histfloat (spdom, "d3", &dy)) sf_error ("No d3= in input");
         if (!sf_histfloat (spdom, "o3", &oy)) sf_error ("No o3= in input");
+        if (!sf_histint (spdom, "icpu", &icpu)) icpu = 0;
+        /* Current CPU number */
+        if (!sf_histint (spdom, "ncpu", &ncpu)) ncpu = 1;
+        /* Total number of CPUs */
     }
     if (!sf_getint ("nz", &nz) && !spdom) sf_error ("Need nz=");
     /* Number of samples in z axis */
@@ -172,7 +177,8 @@ int main (int argc, char* argv[]) {
     esc_tracer = sf_esc_tracer3_init (esc_slow, NULL, 0.0, NULL);
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
-    esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder, verb);
+    esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,
+                                      (float)icpu/(float)ncpu, verb);
 
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
