@@ -457,14 +457,14 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 is = -1;
                 continue;
             }
-/*
+#ifdef SO_NOSIGPIPE
             on = 1;
             if (setsockopt (new_sd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0 ||) {
                 sf_warning ("setsockopt()[SO_NOSIGPIPE] failed");
                 close (is);
                 continue;
             }
-*/
+#endif
             /* Set send and receive buffers */
             bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
             if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {

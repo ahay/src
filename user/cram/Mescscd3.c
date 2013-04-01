@@ -525,7 +525,7 @@ int main (int argc, char* argv[]) {
             close (new_sd);
             break;
         }
-/*
+#ifdef SO_NOSIGPIPE
         on = 1;
         if (setsockopt (new_sd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
             fprintf (logf, "Can not set SO_NOSIGPIPE for a new connection\n");
@@ -534,7 +534,7 @@ int main (int argc, char* argv[]) {
             close (new_sd);
             break;
         }
-*/
+#endif
         bsiz = sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL;
         if (setsockopt (new_sd, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
             fprintf (logf, "Can not set SO_RCVBUF for a new connection\n");
