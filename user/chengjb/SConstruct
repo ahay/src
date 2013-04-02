@@ -113,8 +113,9 @@ for prog in ccmains:
 for prog in Split(tprogs):
         sources = ['T'+prog]
         bldutil.depends(env,sources,'T'+prog)
-        env.StaticObject('T'+prog+'.c')
-        prog = env.Program(prog,map(lambda x: x + '.o',sources),PROGPREFIX='T',PROGSUFFIX='.x')
+        if fftw:
+            env.StaticObject('T'+prog+'.c')
+            prog = env.Program(prog,map(lambda x: x + '.o',sources),PROGPREFIX='T',PROGSUFFIX='.x')
 
 ######################################################################
 # SELF-DOCUMENTATION
