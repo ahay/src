@@ -20,7 +20,9 @@
 #include <rsf.h>
 #include "_cjb.h"
 
+#ifdef SF_HAS_FFTW
 #include <fftw3.h>
+#endif
 
 /*****************************************************************************************/
 void decomplowrank2dp(float *ldataxx,float *rdataxx,float *fmidxx,
