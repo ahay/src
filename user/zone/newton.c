@@ -72,7 +72,7 @@ float newton(func1 function /*f(x)*/,
 			x = x_back - h;
 			f = function(x);
 			fp = derivative(x);
-			sf_warning("Increment diverges-->decrease x to %g, f(x)=%g, fp(x)=%g, f/fp=%g, h(previous)=%g",x,f,fp,f/fp,h);
+			sf_warning("Increment diverges-->reduce x to %g, f(x)=%g, fp(x)=%g, f/fp=%g, h(previous)=%g",x,f,fp,f/fp,h);
 
 		}
 
@@ -108,7 +108,7 @@ float newton(func1 function /*f(x)*/,
 	x -= h;
 		
 	/*Print out output*/
-	sf_warning("x=%8.3g x_back=%8.3g f(x_back)=%8.3g f'(x_back)=%8.3g ",x,x_back,f,fp);
+	sf_warning("x=%8.3g x_prev=%8.3g f(x_prev)=%8.3g f'(x_prev)=%8.3g ",x,x_back,f,fp);
     }
 	
     return x;

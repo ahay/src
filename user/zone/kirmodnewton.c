@@ -74,12 +74,14 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 						func1 zder /* z'(k,x) */,
 						func1 zder2 /* z''(k,x) */,
 						float **oldans /* To export old answer*/,
+						bool skip /* To tell the kirmodnewton2 to generate xinitial in the case where the previous ray can't be traced (can't fwdxini)*/,
 						ktable table /* [5] output table */)
 /*< Compute traveltime attributes >*/
 {
 	float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
 	float tt, tx_s, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
 	int q=0; /* Counter for big loop*/
+	int b3; /* To check whether the ray is tracable*/
 	
 	/* Allocate space-------------------------------------------------------------------------------------*/
 	
@@ -138,6 +140,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		}
 	}
 	else {
+		b3 = 0;
 		goto mark;
 	}
 
@@ -222,6 +225,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		for (a=0; a<n; a++) {
 			b1=0;
 			b2=0;
+			b3=0;
 			xxtem[a+1] = xx[a+1]-dk[a+1];
 			while (xxtem[a+1]<bmin && b1<20) {/* Maximum times to multiply is 20*/
 				
@@ -242,12 +246,14 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 				b2++;
 			}
 			if (b1>=20) {
-				sf_warning("The position x[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
-				exit(0);
+				sf_warning("The ray can't be traced at x[%d] s=%g and r=%g \n", a+1,xx[0],xx[n+1]);
+				b3 = -1;
+				goto mark;
 			}
 			if (b2>=20) {
-				sf_warning("The position x[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
-				exit(0);
+				sf_warning("The ray can't be traced at x[%d] s=%g and r=%g \n", a+1,xx[0],xx[n+1]);
+				b3= -1;
+				goto mark;
 			}
 		}
 		
@@ -274,82 +280,102 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	
 mark: /* Mark point for goto*/
 	
-	for (c2=0; c2<n+2; c2++) {
+	if (b3!=0) { /* output the data to table in the case where the ray can't be traced*/
+		skip = true;
+		table->t = -1; 
+		table->tx = 0;
+		table->ty = 0;
+		table->tn = 0;
+		table->a = 0;
+		table->an = 0;
+		table->ar = 0;
 		
-		for (c1=0; c1<2; c1++) {
-			if (c1==0) {
-				ans[c2][c1] = xx[c2];
+		b3 = 0; /* Return value to 0*/
+	}
+	else {
+		skip = false;
+		for (c2=0; c2<n+2; c2++) {
+			
+			for (c1=0; c1<2; c1++) {
+				if (c1==0) {
+					ans[c2][c1] = xx[c2];
+				}
+				else {
+					ans[c2][c1] = z(c2,xx[c2]);
+				}
+			}
+		}
+		
+		/* To export the old ans for fwdxini-------------------------------------------*/
+		
+		for (c4=0; c4<n; c4++) {
+			oldans[c4][n-1] = xx[c4+1];
+		}
+		
+		tt=0; /* Initialize traveltime tt*/
+		at=1; /* Initializa at*/
+		
+		for (c=0; c<n+1; c++) {
+			half_initialize(c,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			tt = tt + T_hat_k(f.T_k);
+			
+			if (c==0) {
+				at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
+				tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); /* x-direction on the surface*/
+				tz_s = T_hat_k(f.T_k_zk);
+			}
+			
+			
+			if (c==n) {
+				
+				v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
+				v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
+				tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
+				ty = 0; /* For 3D or 2.5D & at the reflector*/
+				tz_r = T_hat_k(f.T_k_zk1); /* z-direction  need to return T_k_zk >> use T_hat_k which return the function itself & at the reflector*/
+				tn = ((-1)*T_hat_k(f.T_k_k1)*zder(c+1,xx[c+1])+tz_r)/hypotf(1,zder(c+1,xx[c+1])); /* Normal-direction at the reflector*/
+				dip = atan(zder(c+1,xx[c+1])); /* The dipping angle of the reflector*/
+				
+				if (debug) {
+					sf_warning("Traveltime is %g and the total number of iterations is %d where s=%g r=%g \n\n",tt,q,xx[0],xx[n+1]);
+				}
+			}
+		}
+		
+		for (c3=0; c3<n; c3++) {
+			initialize(c3+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			
+			if (c3==0) {
+				ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
 			}
 			else {
-				ans[c2][c1] = z(c2,xx[c2]);
+				ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_in_temp*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
 			}
-		}
-	}
-	
-	/* To export the old ans for fwdxini-------------------------------------------*/
-	
-	for (c4=0; c4<n; c4++) {
-		oldans[c4][n-1] = xx[c4+1];
-	}
-	
-	tt=0; /* Initialize traveltime tt*/
-	at=1; /* Initializa at*/
-	
-	for (c=0; c<n+1; c++) {
-		half_initialize(c,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
-		tt = tt + T_hat_k(f.T_k);
-		
-		if (c==0) {
-			at = fabsf(T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1)); 
-			tx_s = T_hat_k_k(f.T_k_k,f.T_k_zk); /* x-direction on the surface*/
-			tz_s = T_hat_k(f.T_k_zk);
-		}
-
-		
-		if (c==n) {
 			
-			v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
-			v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
-			tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
-			ty = 0; /* For 3D or 2.5D & at the reflector*/
-			tz_r = T_hat_k(f.T_k_zk1); /* z-direction  need to return T_k_zk >> use T_hat_k which return the function itself & at the reflector*/
-			tn = ((-1)*T_hat_k(f.T_k_k1)*zder(c+1,xx[c+1])+tz_r)/hypotf(1,zder(c+1,xx[c+1])); /* Normal-direction at the reflector*/
-			dip = atan(zder(c+1,xx[c+1])); /* The dipping angle of the reflector*/
-			
-			if (debug) {
-				sf_warning("Traveltime is %g and the total number of iterations is %d s=%g r=%g xini=%g",tt,q,xx[0],xx[n+1],xinitial[0]);
-			}
-		}
-	}
-	
-	for (c3=0; c3<n; c3++) {
-		initialize(c3+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			at = at*fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
+			ck_in_temp = ck_in;
+		}	
 		
-		if (c3==0) {
-			ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
-		}
-		else {
-			ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk) - T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1)*ck_in_temp*T_hat_1k_1k_k(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1,f.T_k_zk_zk1));
-		}
+		table->t = tt; /* output the data to table */
+		table->tx = tx_r;
+		table->ty = ty;
+		table->tn = sqrt(fabsf(1/(v_r*v_r)-tx_r*tx_r)); /* To make it compatible with the convention of the old kirmod (Actually in z-direction)*/
 		
-		at = at*fabsf(ck_in*T_hat_k_k_k1(f.T_k_k_k1,f.T_k_k1_zk,f.T_k_k_zk1, f.T_k_zk_zk1));
-		ck_in_temp = ck_in;
-	}	
+		alpha = tz_s*v_1r; /* Cosine of the angle from vertical of the ray on the surface */
+		theta = tn*v_r; /* Cosine of the angle from the normal at the reflection point of the last reflection */
+		
+		if (alpha < 0) alpha *= -1;
+		
+		if(theta < 0) theta *= -1;
+		
+		table->a = pow(-1,n)*sqrt(alpha*theta/(at*cos(dip)))/v_r; /* Amplitude = 1/sqrt(geometrical spreading) but we want the reciprocal of amplitude */
+		an = -acosf((tz_r-xx[n+1]*zder(n+1,xx[n+1])/(v_r*hypotf(xx[n]-xx[n+1],z(n,xx[n])-z(n+1,xx[n+1]))))*v_r*cos(dip)); /* Angle from vertical*/
+		if (isnan(an) != 0) { /*Just in case the argument of acosf exceeds the proper boundary due to error in computation*/
+			an = 0;
+		}
+		table->an = an;
+		table->ar = 0.5;
 	
-	table->t = tt; /* output the data to table */
-	table->tx = tx_r;
-	table->ty = ty;
-	table->tn = sqrt(fabsf(1/(v_r*v_r)-tx_r*tx_r)); /* To make it compatible with the convention of the old kirmod (Actually in z-direction)*/
-	
-	alpha = (-1)*tz_s*v_1r; /* Cosine of the angle from vertical of the ray on the surface */
-	theta = tn*v_r; /* Cosine of the angle from the normal at the reflection point of the last reflection */
-	 
-	table->a = pow(-1,n)*sqrt(alpha*theta/(at*cos(dip)))/v_r; /* Amplitude = 1/sqrt(geometrical spreading) but we want the reciprocal of amplitude */
-	an = -acosf((tz_r-xx[n+1]*zder(n+1,xx[n+1])/(v_r*hypotf(xx[n]-xx[n+1],z(n,xx[n])-z(n+1,xx[n+1]))))*v_r*cos(dip)); /* Angle from vertical*/
-	if (isnan(an) != 0) { /*Just in case the argument of acosf exceeds the proper boundary due to error in computation*/
-		an = 0;
 	}
-	table->an = an;
-	table->ar = 0.5;
 	
 }

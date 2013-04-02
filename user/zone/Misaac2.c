@@ -84,10 +84,11 @@ static float zder2(int k,float x)
 /* Main program------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus, count, debug, q=0/* Counter for the bog loop*/;
+	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus, count, q=0/* Counter for the bog loop*/;
 	float x, dt, t0, bmin, bmax, tt;
 	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *xxtem, *zk,*ck_inv; 
 	double tol;
+	bool  debug;
 	sf_file refl, xrefl;
 	
 	sf_init(argc,argv); /* initialize - always call first */
@@ -105,7 +106,7 @@ int main(int argc, char* argv[])
 	
 	
 	if (!sf_getint("number",&nr2)) sf_error("Please enter the number of reflections [nr2]");
-	/* Number of reflectors*/
+	/* Number of reflections*/
 	
 	/* Allocate space-------------------------------------------------------------------------------------*/
 	temp_rr = sf_floatalloc2(nr1,N); /* Input reflector values*/
@@ -182,7 +183,7 @@ int main(int argc, char* argv[])
 	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
 	/* Velocity status (0 for constant v and other int for gradient v)*/
 	
-	if (!sf_getint("debug",&debug)) sf_error("Please enter the debug (0 for for not printing values at each step and other int for printing)");
+	if (!sf_getbool("debug",&debug)) debug=false;
 	/* Velocity status (0 for constant v and other int for gradient v)*/
 	
 	if (!sf_getdouble("tol",&tol)) tol=0.000001/v_inp[0];
@@ -433,7 +434,7 @@ int main(int argc, char* argv[])
 			while (xxtem[a+1]<bmin && b1<20) {/* Maximum times to multiply is 20*/
 				
 				dk[a+1]=0.5*dk[a+1]; /* Decrease the change by half*/
-				if (debug!=0) {
+				if (debug) {
 				sf_warning("The new x value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
 				}
 				xxtem[a+1] = xx[a+1]-dk[a+1]; /* Recompute xxtem to see if it is still exceed the boundary*/
@@ -442,7 +443,7 @@ int main(int argc, char* argv[])
 			while(xxtem[a+1]>bmax && b2<20) {/* Maximum times to multiply is 20*/
 				
 				dk[a+1]=0.5*dk[a+1];
-				if (debug!=0) {
+				if (debug) {
 				sf_warning("The new x value exceeds the maximum boundary. dk[%d] is reduced to %g\n",a+1,dk[a+1]);
 				}
 				xxtem[a+1] = xx[a+1]-dk[a+1];
@@ -462,7 +463,7 @@ int main(int argc, char* argv[])
 		
 		vector_sub(nr2+2,xx,nr2+2,dk,xxnew,0); /* Update xx (Newton)*/
 		for (t=0; t<nr2+2;t++) {
-			if (debug!=0) {
+			if (debug) {
 				sf_warning("The original value of y[%d] is %g, d[%d] is %g and the new value of y[%d] is %g\n",t,*(xx+t),t,*(dk+t),t,*(xxnew+t));
 				if (t==nr2+1) {
 					sf_warning("Iteration:%d\n\n",q+1);

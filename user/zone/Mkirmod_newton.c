@@ -28,9 +28,9 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
 #include <float.h>
 #include <math.h>
-
 #include <rsf.h>
 
 #include "kirmod.h"
@@ -471,6 +471,7 @@ int main(int argc, char* argv[])
 		if (ref != inc) kirmod2_table (ref, vel2, type2[0], twod, crv, dip);
 	}
 
+	
     if (lin) {
 		if (adj) {
 			for (ic=0; ic < nc; ic++) {

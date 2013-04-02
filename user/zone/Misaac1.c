@@ -90,31 +90,12 @@ static float zder2_cen(float x)
 	return f;
 }
 
-/*static float d1(float x,float h,float alpha)*/
-/*First derivative for hyperbolic reflector*/
-/*{*/
-/*	float f;*/
-	
-/*	f = x*pow(tan(alpha),2)/hypot(h,x*tan(alpha));*/
-	
-/*	return f;*/
-/*}*/
-
-/*static float d2(float x,float h,float alpha)*/
-/*Second derivative for hyperbolic reflector*/
-/*{*/
-/*	float f;*/
-	
-/*	f = pow(h,2)*pow(tan(alpha),2)/pow(hypot(h,x*tan(alpha)),3);*/
-	
-/*	return f;*/
-/*}*/
-
 int main(int argc, char* argv[])
 {
 	int nt, it, ir, order, niter, nt2, it2, type, print;
 	float x, t0, dt, velocity, tol, xinitial=0, xmid,dt2,t02; /*,max_extent, scale,max_x,xmax,hmax;*/
 	float zd1, zd2_eno,zd2_cen /*zd2_real,rel_cen,rel_eno,zd1_real*/; /*temp second derivative value*/
+	bool stop;
 	func1 zder2=0;
 	
 	float *rd, **tt, **xx; 
@@ -164,22 +145,24 @@ int main(int argc, char* argv[])
 	rr = sf_floatalloc(nr);
 	rd = sf_floatalloc(nr);
 	
-	tt = sf_floatalloc2(nt2,nt);/*Row is always for midpoint and column is always for offset*/
+	tt = sf_floatalloc2(nt2,nt);/* Row is always for midpoint and column is always for offset*/
 	xx = sf_floatalloc2(nt2,nt);
 	
 	/* read input */
 	sf_floatread(rr,nr,refl);
 	
 	/* Initialize interpolation */
-	if (!sf_getint("print",&type)) print=0;/*print the actual calculated values by sf_eno and central finite difference 0=No and 1=Yes*/
+	if (!sf_getint("print",&type)) print=0;/* Print the actual calculated values by sf_eno and central finite difference 0=No and 1=Yes*/
 	
-	if (!sf_getint("type",&type)) type=1;/*interpolation type 0=sf_eno and 1=central finite difference*/
+	if (!sf_getint("type",&type)) type=1;/* Interpolation type 0=sf_eno and 1=central finite difference*/
 	
-	if (!sf_getint("order",&order)) order=4;/*interpolation order if choose to use sf_eno*/
+	if (!sf_getint("order",&order)) order=4;/* Interpolation order if choose to use sf_eno*/
 	
-	if (!sf_getfloat("velocity",&velocity)) velocity=2.0;/*assign velocity km/s*/
+	if (!sf_getfloat("velocity",&velocity)) velocity=2.0;/* Assign velocity km/s*/
 	
-	if (!sf_getfloat("tol",&tol)) tol=1/(1000000*velocity);/* assign a default value for tolerance*/
+	if (!sf_getfloat("tol",&tol)) tol=1/(1000000*velocity);/* Assign a default value for tolerance*/
+	
+	if (!sf_getbool("break",&stop)) stop=false;/* Go beyond zero or not*/
 	
 	eno  = sf_eno_init(order,nr);
 	sf_eno_set (eno,rr);
@@ -213,23 +196,22 @@ int main(int argc, char* argv[])
 			xs = xmid-it2*dt2; /* source location */
 			xr = xmid+it2*dt2; /* receiver location */
 			
+			if ((xs<0 || xr<0) && stop) { /* To stop thr program from going beyond zero*/
+				break;
+			}
+			
 			traveltime_init(z,zder,zder2,xs,xr,velocity);
 			
-				if (it==1) xinitial = xmid;  /*The first calculation starting from the origin*/
+				if (it==0) xinitial = xmid;  /*The first calculation starting from the origin*/
 				
 				x = newton(dtdx,d2tdx2,xinitial,niter,tol);
 				xinitial = x; /*Use the answer of the previous iteration to be the starting point of the next iteration*/
 				
 				if (print==1) {
 					zd1 = zder(xinitial);
-					/*zd1_real = d1(xinitial,1, 45*pi/180.0);*/
 					zd2_eno = zder2_eno(xinitial);
 					zd2_cen = zder2_cen(xinitial);
-					/*zd2_real = d2(xinitial,1, 45*pi/180.0);*/
-					
-					/*rel_eno = fabs(zd2_eno-zd2_real)/zd2_real;*/
-					/*rel_cen = fabs(zd2_cen-zd2_real)/zd2_real;*/
-					
+				
 					sf_warning("x=%g, zder1=%g, zder2_eno=%g, zder2_cen=%g",xinitial,zd1,zd2_eno,zd2_cen);
 				}
 			

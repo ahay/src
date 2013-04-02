@@ -314,9 +314,17 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	int ix, iy, ic, in, iu, iv, num;
     float x2, x1, xp=0.;
 	float *updown, *xinitial, **oldans;
+	bool skip;
     ktable **ta=NULL;
 	
+	if (fwdxini && nc==1) {
+		sf_warning("Cannot fwdxini in the case of 1 reflector (nc=1). Please enter fwdxini=n");
+		exit(0);
+	}
+	
+	if (fwdxini) {
 	oldans = sf_floatalloc2(nc-1,nc-1); /* To store old ans for the case of fwdxini*/
+	}
 	
     for (iy=0; iy < ny; iy++) {	/* soure/midpoint and offset axes */
 		x1 = y[iy].x; /* x1 is on the surface */
@@ -345,7 +353,7 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 							for (iv=0; iv<num; iv++) { /* How many reflection axis*/
 								if (fwdxini) {
 										
-									if (ix==0) { /* Initialize this old result array for the very first calculation*/
+									if (ix==0 || skip) { /* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
 										oldans[iv][num-1] = x1+(iv+1)*(x2-x1)/(num+1);
 									}
 									
@@ -365,7 +373,7 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 
 					}
 					
-					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, updown, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, oldans, ta[ix][ic]);
+					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, updown, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, oldans, skip, ta[ix][ic]);
 				
 				} 
 			} 
