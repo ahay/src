@@ -576,10 +576,9 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
 {
     int iab, nab = esc_scgrid->na*esc_scgrid->nb;
     if (verb)
-        sf_warning ("%lu points processed, %g interpolation steps per point performed",
-                    esc_scgrid->ir, (float)esc_scgrid->is/(float)esc_scgrid->ir);
-        sf_warning ("%lu points processed locally (%g%%)",
-                    esc_scgrid->il, 100.0*(float)esc_scgrid->il/(float)esc_scgrid->ir);
+        sf_warning ("%g interpolation steps per point performed, %g%% processed locally",
+                    (float)(esc_scgrid->is*esc_scgrid->ns)/(float)esc_scgrid->ir,
+                    100.0*(float)esc_scgrid->il/(float)esc_scgrid->ir);
     /* Close all existing connections */
     if (esc_scgrid->sockets) {
         for (iab = 0; iab < nab; iab++) {
@@ -1238,6 +1237,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                         sf_esc_scgrid3_prepare_request (esc_scgrid, i, &input[i],
                                                         &areqs[io*esc_scgrid->ns]);
                         io++;
+                        esc_scgrid->ir += esc_scgrid->ns;
                     }
                 }
                 /* Sort the outgoing requests by angle index */
@@ -1264,7 +1264,6 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                                 input[output[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
                         in--;
                         input[output[i*esc_scgrid->ns].ud1].iab = -1;
-                        esc_scgrid->ir++;
                     } else
                         esc_scgrid->is++;
                 }
