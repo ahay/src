@@ -81,7 +81,7 @@ int main (int argc, char* argv[])
           for (k=0; k <= dim1; k++){//loop through rectified dimensions
    
                   indexalloc1 *= 2*rect[k];
-                      sf_warning("rect[k]=%i",rect[k]);
+ //                     sf_warning("rect[k]=%i",rect[k]);
                    dataindex1 = sf_intalloc (indexalloc1);
               for (m = 0; m<indexalloc; m++){
                   for (l=0; l < 2*rect[k]; l++){
@@ -161,7 +161,7 @@ for (i=0; i<n3; i++){
  //         sf_warning("test %i",test);
           if (test == dim){//go ahead, BC ARE A-O-K!
               //loop through dataindex values to call data for the attribute analysis.
-//              sf_warning("in loop"); 
+//             sf_warning("in loop"); 
               attr[0] = 0; //zero out attribute
               m = 0; //zero out mean number
 
