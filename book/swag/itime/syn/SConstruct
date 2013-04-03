@@ -138,7 +138,7 @@ grid2 = 'gridcol=5  grid2=y g2num0=0.  g2num=1'
 Plot('tau_t0', 
      '''graph %s crowd2=0.5  
         wanttitle=n plotfat=10 %s %s %s''' %(sz1,axes,grid1,grid2))
-Result('tau_t0','tau_t0 vtimesyn','Overlay') 
+Result('tau-t0','tau_t0 vtimesyn','Overlay') 
 
 
 
