@@ -11,6 +11,8 @@ To the reproducible documents collection:
 finite-differences for seismic wave extrapolation in the acoustic
 approximation (Song, Fomel, and Ying)
 * sep/waverays: Wavefront construction using waverays (Urdaneta)
+* swag/itime: Automatic traveltime picking using the instantaneous
+  traveltime (Saragiotis, Alkhalifah, and Fomel)
 
 To SCons:
 
