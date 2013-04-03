@@ -17,5 +17,5 @@ Papers(copyr='KAUST',
        line='Selected papers',
        fig=('introDTI/Math','kz','width=\\textwidth'))
        
-End(use='amsmath,amssymb,amsbsy,dsfont,hyperref,ulem,setspace')
+End(use='amsmath,amssymb,amsbsy,dsfont,hyperref,color,ulem,setspace')
 
