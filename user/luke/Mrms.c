@@ -22,7 +22,7 @@
 
 int main (int argc, char* argv[]) 
 {
-    int dim, dim1, i, k, l, m, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM], test;
+    int dim, dim1, i, k, l, m, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM], t[SF_MAX_DIM], test;
     int n1, n2, n3, indexalloc, call, indexalloc1, dataindexpoint;
     char key[6];
     float* data;
@@ -44,21 +44,22 @@ int main (int argc, char* argv[])
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
 	/*( rect#=(1,1,...) number of samples to use on #-th axis )*/ 
-	if (rect[i] > 1) dim1 = i;
+	if (rect[i] > 0) dim1 = i;
 
     }//end i loop
-
     n1 = n2 = 1;
     for (i=0; i < dim; i++) {
+        t[i] = 0;
 	if (i <= dim1) {
 	    s[i] = n1;
 	    n1 *= n[i];
+            t[i] = n1;
 	} else {
 	    n2 *= n[i];
 	}
 
     }
-
+//                      sf_warning("dim1=%i",dim1);
     n3=n1*n2;
     
 
@@ -77,16 +78,16 @@ int main (int argc, char* argv[])
                   dataindex[0]=0;
                   indexalloc1 = 1;
                   
-          for (k=0; k<dim1; k++){//loop through rectified dimensions
+          for (k=0; k <= dim1; k++){//loop through rectified dimensions
    
                   indexalloc1 *= 2*rect[k];
-
+                      sf_warning("rect[k]=%i",rect[k]);
                    dataindex1 = sf_intalloc (indexalloc1);
               for (m = 0; m<indexalloc; m++){
                   for (l=0; l < 2*rect[k]; l++){
                          dataindexpoint = 2*m*rect[k]+l;
                          if (k > 0){
-                         dataindex1[dataindexpoint] = dataindex[m] + (l-rect[k])*s[k-1];
+                         dataindex1[dataindexpoint] = dataindex[m] + (l-rect[k])*t[k-1];
                          }else{
                          dataindex1[dataindexpoint] = dataindex[m]+ l - rect[k];
                          }//end dataindex conditional
@@ -104,7 +105,7 @@ int main (int argc, char* argv[])
 
                            } // end l loop
  
-
+//                      sf_warning("indexalloc=%i",indexalloc);
 
                   free (dataindex1);
 
@@ -132,13 +133,14 @@ for (i=0; i<n3; i++){
           for (m=0; m<dim; m++){
                k = dim - m - 1; // make it a falling value loop
                if (k > 0){
-                     coord[k] = floor(coordnum/n[k-1]);
-                     coordnum = coordnum - floor(coordnum/n[k-1])*n[k-1];
+                     coord[k] = floor(coordnum/t[k-1]);
+                     coordnum = coordnum - floor(coordnum/t[k-1])*t[k-1];
                }else{
                      coord[k] = coordnum;
                }//end declare coordinate conditional
+//                      sf_warning("i=%i",i);
 //                      sf_warning("k!%i",k);
-//                       sf_warning("n[k]!%i",n[k]);
+//                       sf_warning("t[k-1]!%i",t[k-1]);
 //                       sf_warning("Coord!%i",coord[k]);
 //                       sf_warning("Coordnum!%g",coordnum);
 
@@ -177,7 +179,7 @@ for (i=0; i<n3; i++){
               if (m > 0){
                  mean = holder/m;
 
-
+//                sf_warning("m %i",m);
                  }else{
                  mean = data[i]*data[i];
                  }
@@ -185,6 +187,7 @@ for (i=0; i<n3; i++){
               rootmean = sqrtf(mean);
               //and finally the result
               attr[0] = rootmean;
+//             sf_warning("rootmean %g",attr[0]);
              }//end determine attribute if
           else{
              attr[0]=sqrtf(data[i]*data[i]);//call edge effect regions their initial value.
