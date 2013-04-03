@@ -150,7 +150,7 @@ Having estimated the local frequency, $\mu_\omega(t)$, and its variance, $\sigma
 In Figures \ref{fig:ltf0} and \ref{fig:tt0}, the dashed lines denote the effective bandwidth. 
 
 The result of the averaging operation is shown in Figure~\ref{fig:taut0}, in which $\tau(t,\omega)$ is averaged over the frequencies in its effective bandwidth. (Figure \ref{fig:syn0} is the same as Figure \ref{fig:syn} and shown here just to illustrate the agreement between the actual arrivals and the picked arrivals.) Parameter $\tau(t)$ equals the recording $t$ (dashed line) at the times of arrival of the spikes, namely at $t_1=0.3996$, 1.1991 and 1.3978 s. It should be noted that although there are actually no arrivals between two consecutive arrivals, $\tau(t)$ is not zero in that interval. This is due to the smooth division we employed, when dividing $\frac{dU}{d\omega}$ over $U$. Smooth division does not allow the result to vary erratically from sample to sample. 
-Figure \ref{fig:tau_t0} shows the difference $\tau(t)-t$. This difference equals 0 at the times of arrival of the two spikes. 
+Figure \ref{fig:tau-t0} shows the difference $\tau(t)-t$. This difference equals 0 at the times of arrival of the two spikes. 
 However not all zeros of $\tau(t)-t$ are of interest; rather, only the zero crossings from positive to negative values yield valid traveltimes. Positive maxima of $\tau(t)-t$ (as in $t\approx0.3, 1.1, 1.3$) denote an imminent arrival of a signal. Let's assume a strong (compared to neighboring events) event at some time $t_0$. According to equation~\ref{eq:tau}, $\tau(t)$ is a weighted some of the times of arrivals around $t$. The closer $t$ is to the imminent arrival at $t_0>t$, the more the value of $\tau(t)$ will be biased towards the value $t_0$. Therefore $\tau(t)$ will be greater than $t$, i.e., $t<\tau(t)<t_0$. For $t>t_0$, the value of $\tau(t)$ will still be biased towards $t_0$, therefore $t_0<\tau(t)<t$. In fact, the higher the energy of the arriving signal at some time $t_0$ compared with that of neighboring events, the closer the value of $\tau(t_0)$ to $t_0$ will be. 
 Accordingly, an event is identified by the non-zero values of the function 
 \begin{equation}
@@ -159,7 +159,7 @@ Accordingly, an event is identified by the non-zero values of the function
 where $H$ is the Heaviside step function and $\delta$ is the Dirac delta. This function is zero if $\tau(t)\neq t$ as imposed by the Dirac delta factor as well as if $\tau(t)=t$ but $\tau(t)$ is increasing as imposed by the Heaviside step factor.
 
 
-\multiplot{3}{syn0,taut0,tau_t0}{width=0.55\linewidth}
+\multiplot{3}{syn0,taut0,tau-t0}{width=0.55\linewidth}
 {(a) Synthetic signal (sampling period is 4 ms). Arrivals are at 0.4, 1.2 and 1.4 s. 
  (b) $\tau(t)$ after averaging over the frequencies in the effective bandwidth. The dashed line indicates the recording time. 
  (c) $\tau(t)-t$. Zero crossings occur at 0.3996, 1.1991 and 1.3978 s.}%\label{fig:syn_tau}
