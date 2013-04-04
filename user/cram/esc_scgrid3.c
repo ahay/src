@@ -459,7 +459,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             }
 #ifdef SO_NOSIGPIPE
             on = 1;
-            if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0 ||) {
+            if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
                 sf_warning ("setsockopt()[SO_NOSIGPIPE] failed");
                 close (is);
                 continue;
