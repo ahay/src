@@ -1,4 +1,4 @@
-/* 2D Hybrid Radon transform - diffractions + reflections in time domain */
+/* 2D Hybrid Radon transform - diffractions + reflections in time dip-angle domain */
 /*
   Copyright (C) 2012 University of Texas at Austin
   
