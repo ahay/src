@@ -227,10 +227,10 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 						if (isAA_) {
 						    aastretch_define (str, tx, amp);
 						    sf_chain (sf_halfint_lop, aastretch_lop,
-								      adj, true, tn_, tn_, tn_, modl + ixi * tn_, data + id * tn_, tmp);
+								      adj, true, tn_, tn_, tn_, modl + (sixi * xin_ + ixi) * tn_, data + (sid * dipn_ + id) * tn_, tmp);
 						} else {
 						    stretch_define (str);
-						    stretch_lop (adj, true, tn_, tn_, modl + ixi * tn_, data + id * tn_);
+						    stretch_lop (adj, true, tn_, tn_, modl + (sixi * xin_ + ixi) * tn_, data + (sid * dipn_ + id) * +tn_);
 						}
 		    		}
 				}		
@@ -238,7 +238,7 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 	
 			// reflection part
 			if (0 != invMod_) {
-			    offset = (1 == invMod_) ? 0 : xin_*sxin_;
+			    offset = (1 == invMod_) ? 0 : xin_*sxin_*tn_;
 	
 				for (sid0 = 0; sid0 < sdip0n_; ++sid0) { 
 				    for (id0 = 0; id0 < dip0n_; ++id0) { 
@@ -260,10 +260,10 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 						if (isAA_) {
 						    aastretch_define (str, tx, amp);
 						    sf_chain (sf_halfint_lop, aastretch_lop,
-								      adj, true, tn_, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_, tmp);
+								      adj, true, tn_, tn_, tn_, modl + (sid0*dip0n_ + id0) * tn_ + offset, data + (sid*dipn_+id) * tn_, tmp);
 						} else {
 						    stretch_define (str);
-						    stretch_lop (adj, true, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_);
+						    stretch_lop (adj, true, tn_, tn_, modl + (sid0*dip0n_ + id0) * tn_ + offset, data + (sid*dipn_+id) * tn_);
 						}
 			    	}
 				}	

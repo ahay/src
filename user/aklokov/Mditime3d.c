@@ -275,6 +275,8 @@ int main (int argc, char* argv[]) {
 		} 
     }
 
+	sf_warning ("end");
+
     free (data);
     free (model);
 
