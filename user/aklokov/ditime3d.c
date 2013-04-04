@@ -1,6 +1,6 @@
-/* 2D Hybrid Radon transform - diffractions + reflections in time domain */
+/* 3D Hybrid Radon transform - diffractions + reflections in the time dip-angle domain */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -111,9 +111,9 @@ void ditime3d_init (float dipo,   float dipd,   int dipn,   // x-dip angle axis
 			    scurXi = sxio_ + sixi * sxid_;
 				for (ixi = 0; ixi < xin_; ++ixi) { 
 				    curXi = xio_ + ixi * xid_;
-		
+
 					k2 = scurXi * tan_sa + curXi * tan_a;
-					ke = scurXi*scurXi + curXi*curXi + 1;
+					ke = scurXi*scurXi + curXi*curXi + 1.f;
 	
 				    aux_diff = k2 + sqrt (k2 * k2 + ke);
 	
@@ -129,13 +129,15 @@ void ditime3d_init (float dipo,   float dipd,   int dipn,   // x-dip angle axis
 			    scurDip0 = sdip0o_ + sid0 * sdip0d_;
 			    sa0 = scurDip0 * CONVPARAM;
 			    tan_sa0 = tan (sa0);	
+
+				k0 = sqrt (1.f + tan_a0*tan_a0 + tan_sa0*tan_sa0);
+
 				for (id0 = 0; id0 < dip0n_; ++id0) { 
 				    curDip0 = dip0o_ + id0 * dip0d_;
 				    a0 = curDip0 * CONVPARAM;
 				    tan_a0 = tan (a0);	
 	
-					k0 = sqrt (1 + tan_a0*tan_a0 + tan_sa0*tan_sa0);
-					kM = sqrt (1 + tan_a*tan_a + tan_sa*tan_sa);
+					kM = sqrt (1.f + tan_a*tan_a + tan_sa*tan_sa);
 					k1 = tan_sa0*tan_sa + tan_a0*tan_a;
 			
 				    aux_refl = 1.f / (k0 * kM - k1);
@@ -153,7 +155,7 @@ void ditime3d_init (float dipo,   float dipd,   int dipn,   // x-dip angle axis
     return;
 }
 
-void ditime2d_close (void)
+void ditime3d_close (void)
 /*< free allocated storage >*/
 {
     free(amp);
@@ -174,8 +176,8 @@ void ditime2d_close (void)
     return;
 }
 
-void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize, 
-		   float* modl, float* data) 
+void ditime3d_lop (bool adj, bool add, int modelSize, int dataSize, 
+				   float* modl, float* data) 
 /*< operator >*/
 {
     float *pTableR, *pTableD;

@@ -1,6 +1,6 @@
-/* 3D Hybrid Radon transform for diffraction imaging in the time domain */
+/* 3D Hybrid Radon transform for diffraction imaging in the time dip-angle domain */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ int main (int argc, char* argv[]) {
     int sxin; float sxio, sxid; // xi in y-direction
 
     int xn, yn, dagNum;
-    float *data, *model, *dweight;
+    float *data = NULL, *model = NULL, *dweight = NULL;
     int im, ix;
     int invMod;
 
@@ -211,8 +211,6 @@ int main (int argc, char* argv[]) {
     }
 
     data    = sf_floatalloc (dataSize);
-    dweight = sf_floatalloc (dataSize);
-    
     model  = sf_floatalloc (modelSize);
 
     w = (0 == niter) ? NULL : sf_floatalloc (modelSize);
@@ -235,19 +233,26 @@ int main (int argc, char* argv[]) {
 		// read data	
 		if (adj) { // data -> model
 		    sf_floatread (data, dataSize, in);
+		    dweight = sf_floatalloc (dataSize);
 		    if (fileDweight) {
 				sf_floatread (dweight, dataSize, fileDweight);
 			} else {
 				for (id = 0; id < dataSize; ++id) dweight[id] = 1.f;
 			}
 		} else { // model -> data
-		    sf_floatread (model, diffSize, fileDiff);
-		    sf_floatread (model + diffSize, reflSize, fileRefl);
+			if (0 == invMod) { // difffraction
+			    sf_floatread (model, diffSize, fileDiff);
+			} else if (1 == invMod) { // reflection
+				sf_floatread (model, reflSize, fileRefl);
+			} else { // diffraction + reflection
+			    sf_floatread (model, diffSize, fileDiff);
+			    sf_floatread (model + diffSize, reflSize, fileRefl);
+			}
 		}
 		
 		// perform transform
 		if (!adj || 0 == niter) {
-		    ditime2d_lop (adj, false, modelSize, dataSize, model, data);
+		    ditime3d_lop (adj, false, modelSize, dataSize, model, data);
 		} else {
 		    // initital model weights
 		    for (im = 0; im < modelSize; ++im) {
@@ -255,7 +260,7 @@ int main (int argc, char* argv[]) {
 		    }
 
 		    for (iter = 0; iter < niter; ++iter) {
-				sf_solver_prec (ditime2d_lop, sf_cgstep, sf_copy_lop,
+				sf_solver_prec (ditime3d_lop, sf_cgstep, sf_copy_lop,
 								modelSize, modelSize, dataSize, model, data, liter, eps,
 								"verb", verb, "mwt", w, "xp", p, "wt", dweight, "end");
 				sf_cgstep_close ();
@@ -267,15 +272,26 @@ int main (int argc, char* argv[]) {
 		}
 
 		// write result
-		if( adj) { // data -> model
-		    sf_floatwrite (model, diffSize, fileDiff);
-		    sf_floatwrite (model + diffSize, reflSize, fileRefl);
+		if (adj) { // data -> model
+			if (0 == invMod) { // difffraction
+			    sf_floatwrite (model, diffSize, fileDiff);
+			} else if (1 == invMod) { // reflection
+				sf_floatwrite (model, reflSize, fileRefl);
+			} else { // diffraction + reflection
+			    sf_floatwrite (model, diffSize, fileDiff);
+			    sf_floatwrite (model + diffSize, reflSize, fileRefl);
+			}
 		} else { // model -> data
 		    sf_floatwrite (data, dataSize, out);
 		} 
     }
 
-	sf_warning ("end");
+	// finish
+	ditime3d_close ();
+
+	if (w) free (w);
+	if (p) free (p);
+	if (dweight) free (dweight);    
 
     free (data);
     free (model);
@@ -283,11 +299,7 @@ int main (int argc, char* argv[]) {
     sf_fileclose (in);
     sf_fileclose (out);
     sf_fileclose (fileRefl);
-
-    if (fileDweight) {
-		free (dweight);
-		sf_fileclose (fileDweight);
-    }
+    if (fileDweight) sf_fileclose (fileDweight);
 
     return 0;
 }
