@@ -46,8 +46,13 @@ void ditime2d_init (float dipo,  float dipd,  int dipn,  // dip angle axis
     int reflSize, diffSize;
     float CONVPARAM;
     float *pTableR, *pTableD;
-    int id, ixi, id0, curDip0, it;
-    float curDip, a, cos_a, sin_a, curXi,aux_diff, curTime, a0, cos_a0, sin_a0,  aux_refl;
+
+	float curTime; int it;
+    float curXi; int ixi;
+	float curDip,  a,  cos_a,  sin_a; int id;
+	float curDip0, a0, cos_a0, sin_a0; int id0;
+
+	float aux_refl, aux_diff;
 
     to_   = to;   td_   = td;   tn_   = tn;  
     dipo_ = dipo; dipd_ = dipd; dipn_ = dipn;  
