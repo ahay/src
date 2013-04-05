@@ -27,12 +27,17 @@ for font in src:
     bin = base+'.bin'
        
     aux = string.join(map(lambda x: '%s%s_%s' % (top,base,x),attr))
+
+    ldpath = ''
+    for key in os.environ.keys():
+        if key[-15:] == 'LD_LIBRARY_PATH':
+            ldpath += '%s=%s ' % (key,os.environ[key])
                           
     env.Command([include,bin],[prog,font],
-                'LD_LIBRARY_PATH=%s ${SOURCES[0].abspath} %s '
+                '%s ${SOURCES[0].abspath} %s '
                 '< ${SOURCES[1]} > ${TARGETS[0]} && '
                 'cat %s > ${TARGETS[1]} && '
-                'rm %s' % (os.environ.get('LD_LIBRARY_PATH',''),base,aux,aux))
+                'rm %s' % (ldpath,base,aux,aux))
 
     env.Install('../../include',include)
 
