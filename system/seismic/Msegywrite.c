@@ -3,7 +3,9 @@
 Merges trace headers with data.
 
 "suwrite" is equivalent to "segywrite su=y"
-*/
+
+If bfile= and/or hfile= are not provided, they will be created automatically
+using information from the trace headers.*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
