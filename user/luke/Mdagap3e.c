@@ -51,6 +51,8 @@ int main (int argc, char* argv[])
     float fixd, X, Y, radius, radiusC, slope;
     float y0, y1, x0, x1, e0, e1, esqr1, esqr0, ey0, ey1, t, t0, t1, r0, r1, f, d0, d1, distance, e0y0, x0de0, x0de0sqr, denom0;
     float y0a, y1a, inner_distance, outer_distance;
+    const int imax = 2 * FLT_MAX_EXP;
+    int i;
 
 // Initialize RSF 
     sf_init (argc,argv);
@@ -248,8 +250,7 @@ for (iy = 0; iy < yNum_; ++iy){
                    			        t0 = -esqr1 + ey1;
                      			        t1 = -esqr1 + sqrt(ey0*ey0+ey1*ey1);
                         			t = t0;
-						const int imax = 2 * FLT_MAX_EXP;
-						for (int i=0; i < imax; i++){
+						for (i=0; i < imax; i++){
 							t = (0.5)*(t0+t1);
                         				if (t == t0 || t == t1){
 								break;
@@ -323,8 +324,7 @@ for (iy = 0; iy < yNum_; ++iy){
                    			        t0 = -esqr1 + ey1;
                      			        t1 = -esqr1 + sqrt(ey0*ey0+ey1*ey1);
                         			t = t0;
-						const int imax = 2 * FLT_MAX_EXP;
-						for (int i=0; i < imax; i++){
+						for (i=0; i < imax; i++){
 							t = (0.5)*(t0+t1);
                         				if (t == t0 || t == t1){
 								break;
