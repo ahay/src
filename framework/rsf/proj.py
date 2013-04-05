@@ -179,7 +179,9 @@ combine ={
     }
 
 # Environmental variables to pass to SCons
-keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','RSFMEMSIZE','PYTHONPATH')
+keepenv = ('DISPLAY','VPLOTFONTDIR','HOME',
+           'LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','MIC_LD_LIBRARY_PATH',
+           'RSFMEMSIZE','PYTHONPATH')
 
 #############################################################################
 class Project(Environment):
