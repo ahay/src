@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 #include <rsfpwd.h>
-#include "wavelet.h"
 
 int main(int argc, char* argv[])
 {
@@ -91,7 +90,7 @@ int main(int argc, char* argv[])
     dperc = 100.0/(nperc-1);
 
     seislet_init(n1,n2,true,true,eps,order,type[0]);
-    wavelet_init(n1,true,true,type[0]);
+    sf_wavelet_init(n1,true,true,type[0]);
 
     seislet_set(pp);
     sf_floatread(pp[0],n12,dip);
@@ -111,7 +110,7 @@ int main(int argc, char* argv[])
 		    for (j=0; j < n1; j++) {
 			d1[j] = mm[i2*n1+j];
 		    }
-		    wavelet_lop(false,false,n1,n1,d1,m1);
+		    sf_wavelet_lop(false,false,n1,n1,d1,m1);
 		    for (j=0; j < n1; j++) {
 			mm[i2*n1+j] = m1[j];
 		    }
@@ -124,7 +123,7 @@ int main(int argc, char* argv[])
 		    for (j=0; j < n1; j++) {
 			m1[j] = mm[i2*n1+j];
 		    }
-		    wavelet_lop(true,false,n1,n1,d1,m1);
+		    sf_wavelet_lop(true,false,n1,n1,d1,m1);
 		    for (j=0; j < n1; j++) {
 			mm[i2*n1+j] = d1[j];
 		    }
@@ -148,7 +147,7 @@ int main(int argc, char* argv[])
 			for (j=0; j < n1; j++) {
 			    d1[j] = mm[i2*n1+j];
 			}
-			wavelet_lop(false,false,n1,n1,d1,m1);
+			sf_wavelet_lop(false,false,n1,n1,d1,m1);
 			for (j=0; j < n1; j++) {
 			    mm[i2*n1+j] = m1[j];
 			}
@@ -161,7 +160,7 @@ int main(int argc, char* argv[])
 			for (j=0; j < n1; j++) {
 			    m1[j] = mm[i2*n1+j];
 			}
-			wavelet_lop(true,false,n1,n1,d1,m1);
+			sf_wavelet_lop(true,false,n1,n1,d1,m1);
 			for (j=0; j < n1; j++) {
 			    mm[i2*n1+j] = d1[j];
 			}
@@ -280,7 +279,7 @@ int main(int argc, char* argv[])
 		    for (j=0; j < n1; j++) {
 			d1[j] = mm[i2*n1+j];
 		    }
-		    wavelet_lop(false,false,n1,n1,d1,m1);
+		    sf_wavelet_lop(false,false,n1,n1,d1,m1);
 		    for (j=0; j < n1; j++) {
 			mm[i2*n1+j] = m1[j];
 		    }
@@ -293,7 +292,7 @@ int main(int argc, char* argv[])
 		    for (j=0; j < n1; j++) {
 			m1[j] = mm[i2*n1+j];
 		    }
-		    wavelet_lop(true,false,n1,n1,d1,m1);
+		    sf_wavelet_lop(true,false,n1,n1,d1,m1);
 		    for (j=0; j < n1; j++) {
 			mm[i2*n1+j] = d1[j];
 		    }

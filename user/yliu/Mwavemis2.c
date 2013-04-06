@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include "wavelet.h"
 
 int main(int argc, char* argv[])
 {
@@ -133,27 +132,27 @@ int main(int argc, char* argv[])
 		    /* Forward 2-D DWT */
 		    for (i2=0; i2 < n2; i2++) {
 			/* Vertical direction */
-			wavelet_init(n1,true,true,type[0]);
+			sf_wavelet_init(n1,true,true,type[0]);
 			for (j=0; j < n1; j++) {
 			    d1[j] = dd2[i2*n1+j];
 			}
-			wavelet_lop(false,false,n1,n1,d1,m1);
+			sf_wavelet_lop(false,false,n1,n1,d1,m1);
 			for (j=0; j < n1; j++) {
 			    mm[i2*n1+j] = m1[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    } 
 		    for (i1=0; i1 < n1; i1++) { 
 			/* Horizontal direction */
-			wavelet_init(n2,true,true,type[0]);
+			sf_wavelet_init(n2,true,true,type[0]);
 			for (j=0; j < n2; j++) {
 			    d2[j] = mm[j*n1+i1];
 			}
-			wavelet_lop(false,false,n2,n2,d2,m2);
+			sf_wavelet_lop(false,false,n2,n2,d2,m2);
 			for (j=0; j < n2; j++) {
 			    mm[j*n1+i1] = m2[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    } /* Forward 2-D DWT end */	
 
 		    /* Thresholding */
@@ -172,27 +171,27 @@ int main(int argc, char* argv[])
 		    /* Inverse 2-D DWT */
 		    for (i1=0; i1 < n1; i1++) { 
 			/* Horizontal direction */
-			wavelet_init(n2,true,true,type[0]);
+			sf_wavelet_init(n2,true,true,type[0]);
 			for (j=0; j < n2; j++) {
 			    m2[j] = mm[j*n1+i1];
 			}
-			wavelet_lop(true,false,n2,n2,d2,m2);
+			sf_wavelet_lop(true,false,n2,n2,d2,m2);
 			for (j=0; j < n2; j++) {
 			    dd2[j*n1+i1] = d2[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    }
 		    for (i2=0; i2 < n2; i2++) {
 			/* Vertical direction */
-			wavelet_init(n1,true,true,type[0]);
+			sf_wavelet_init(n1,true,true,type[0]);
 			for (j=0; j < n1; j++) {
 			    m1[j] = dd2[i2*n1+j];
 			}
-			wavelet_lop(true,false,n1,n1,d1,m1);
+			sf_wavelet_lop(true,false,n1,n1,d1,m1);
 			for (j=0; j < n1; j++) {
 			    dd2[i2*n1+j] = d1[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    } /* Inverse 2-D DWT end */	
 		} /* End outer interation */
 		
@@ -213,27 +212,27 @@ int main(int argc, char* argv[])
 		    /* Forward 2-D DWT */
 		    for (i2=0; i2 < n2; i2++) {
 			/* Vertical direction */
-			wavelet_init(n1,true,true,type[0]);
+			sf_wavelet_init(n1,true,true,type[0]);
 			for (j=0; j < n1; j++) {
 			    d1[j] = dd2[i2*n1+j];
 			}
-			wavelet_lop(false,false,n1,n1,d1,m1);
+			sf_wavelet_lop(false,false,n1,n1,d1,m1);
 			for (j=0; j < n1; j++) {
 			    mm[i2*n1+j] = m1[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    } 
 		    for (i1=0; i1 < n1; i1++) { 
 			/* Horizontal direction */
-			wavelet_init(n2,true,true,type[0]);
+			sf_wavelet_init(n2,true,true,type[0]);
 			for (j=0; j < n2; j++) {
 			    d2[j] = mm[j*n1+i1];
 			}
-			wavelet_lop(false,false,n2,n2,d2,m2);
+			sf_wavelet_lop(false,false,n2,n2,d2,m2);
 			for (j=0; j < n2; j++) {
 			    mm[j*n1+i1] = m2[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    } /* Forward 2-D DWT end */	
 
 		    /* Thresholding */
@@ -252,27 +251,27 @@ int main(int argc, char* argv[])
 		    /* Inverse 2-D DWT */
 		    for (i1=0; i1 < n1; i1++) { 
 			/* Horizontal direction */
-			wavelet_init(n2,true,true,type[0]);
+			sf_wavelet_init(n2,true,true,type[0]);
 			for (j=0; j < n2; j++) {
 			    m2[j] = mm[j*n1+i1];
 			}
-			wavelet_lop(true,false,n2,n2,d2,m2);
+			sf_wavelet_lop(true,false,n2,n2,d2,m2);
 			for (j=0; j < n2; j++) {
 			    dd2[j*n1+i1] = d2[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    }
 		    for (i2=0; i2 < n2; i2++) {
 			/* Vertical direction */
-			wavelet_init(n1,true,true,type[0]);
+			sf_wavelet_init(n1,true,true,type[0]);
 			for (j=0; j < n1; j++) {
 			    m1[j] = dd2[i2*n1+j];
 			}
-			wavelet_lop(true,false,n1,n1,d1,m1);
+			sf_wavelet_lop(true,false,n1,n1,d1,m1);
 			for (j=0; j < n1; j++) {
 			    dd2[i2*n1+j] = d1[j];
 			}
-			wavelet_close();
+			sf_wavelet_close();
 		    } /* Inverse 2-D DWT end */	
 
 		    for (i1=0; i1 < n12; i1++) {
@@ -312,27 +311,27 @@ int main(int argc, char* argv[])
 			/* Forward 2-D DWT */
 			for (i2=0; i2 < n2; i2++) {
 			    /* Vertical direction */
-			    wavelet_init(n1,true,true,type[0]);
+			    sf_wavelet_init(n1,true,true,type[0]);
 			    for (j=0; j < n1; j++) {
 				d1[j] = dd2[i2*n1+j];
 			    }
-			    wavelet_lop(false,false,n1,n1,d1,m1);
+			    sf_wavelet_lop(false,false,n1,n1,d1,m1);
 			    for (j=0; j < n1; j++) {
 				mm[i2*n1+j] = m1[j];
 			    }
-			    wavelet_close();
+			    sf_wavelet_close();
 			} 
 			for (i1=0; i1 < n1; i1++) { 
 			    /* Horizontal direction */
-			    wavelet_init(n2,true,true,type[0]);
+			    sf_wavelet_init(n2,true,true,type[0]);
 			    for (j=0; j < n2; j++) {
 				d2[j] = mm[j*n1+i1];
 			    }
-			    wavelet_lop(false,false,n2,n2,d2,m2);
+			    sf_wavelet_lop(false,false,n2,n2,d2,m2);
 			    for (j=0; j < n2; j++) {
 				mm[j*n1+i1] = m2[j];
 			    }
-			    wavelet_close();
+			    sf_wavelet_close();
 			} /* Forward 2-D DWT end */	
 			
 
@@ -343,27 +342,27 @@ int main(int argc, char* argv[])
 			/* Inverse 2-D DWT */
 			for (i1=0; i1 < n1; i1++) { 
 			    /* Horizontal direction */
-			    wavelet_init(n2,true,true,type[0]);
+			    sf_wavelet_init(n2,true,true,type[0]);
 			    for (j=0; j < n2; j++) {
 				m2[j] = mm[j*n1+i1];
 			    }
-			    wavelet_lop(true,false,n2,n2,d2,m2);
+			    sf_wavelet_lop(true,false,n2,n2,d2,m2);
 			    for (j=0; j < n2; j++) {
 				dd2[j*n1+i1] = d2[j];
 			    }
-			    wavelet_close();
+			    sf_wavelet_close();
 			}
 			for (i2=0; i2 < n2; i2++) {
 			    /* Vertical direction */
-			    wavelet_init(n1,true,true,type[0]);
+			    sf_wavelet_init(n1,true,true,type[0]);
 			    for (j=0; j < n1; j++) {
 				m1[j] = dd2[i2*n1+j];
 			    }
-			    wavelet_lop(true,false,n1,n1,d1,m1);
+			    sf_wavelet_lop(true,false,n1,n1,d1,m1);
 			    for (j=0; j < n1; j++) {
 				dd2[i2*n1+j] = d1[j];
 			    }
-			    wavelet_close();
+			    sf_wavelet_close();
 			} /* Inverse 2-D DWT end */	
 			
 		    } /* End inner interation */

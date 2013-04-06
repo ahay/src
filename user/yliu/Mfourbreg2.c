@@ -22,8 +22,8 @@
 int main(int argc, char* argv[])
 {
     int i, niter, nfft, nw, nk, n1, n2, n12;
-    int i1, i2, i3, n3, iter, intk, intf, nk0, nf0; 
-    float dw, dk, d1, o1, d2, o2, wt, wk, shift;
+    int i1, i2, i3, n3, iter; 
+    float dw, /* dk, */ d1, o1, d2, o2, wt, wk, shift;
     float *dd, *dd2=NULL, *d, *dd3=NULL, *m, perc;
     float ddif;
     float *err=NULL, *refd=NULL, *temp=NULL;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
     /* determine wavenumber sampling (for complex FFT) */
     nk = kiss_fft_next_fast_size(n2*2);
-    dk = 1./(2.*nk*d2);
+    /* dk = 1./(2.*nk*d2); */
     /* k0 = -0.5/d2; */
 
     if (!sf_getint("niter",&niter)) niter=20;
@@ -82,10 +82,6 @@ int main(int argc, char* argv[])
     xfft = kiss_fft_alloc(nk,0,NULL,NULL);
     itfft = kiss_fftr_alloc(nfft,1,NULL,NULL);
     ixfft = kiss_fft_alloc(nk,1,NULL,NULL);
-    nf0 = 0;
-    nk0 = 0;
-    intf = 0;
-    intk = 0;
     ddif = 0.;
 
     if (NULL != sf_getstring ("mask")) {

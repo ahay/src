@@ -16,8 +16,11 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
+#include "adjnull.h"
+#include "alloc.h"
+#include "error.h"
+#include "_bool.h"
 #include "wavelet.h"
 
 static int nt;
@@ -243,7 +246,7 @@ static void haar(bool adj)
     }
 }
 
-void wavelet_init(int n /* data size */, bool inv1, bool unit1, char type) 
+void sf_wavelet_init(int n /* data size */, bool inv1, bool unit1, char type) 
 /*< allocate space >*/
 {
     int i, j;
@@ -284,14 +287,14 @@ void wavelet_init(int n /* data size */, bool inv1, bool unit1, char type)
     }
 }
 
-void wavelet_close(void) 
+void sf_wavelet_close(void) 
 /*< deallocate space >*/
 {
     free (t);
     if (unit) free(w);
 }
 
-void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
+void sf_wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j;

@@ -42,7 +42,7 @@ int main (int argc, char **argv)
     float k0;                /* starting wavenumber */
     float wt;                /* Fourier scaling */
 
-    kiss_fft_cpx **cp, *ctrace; /* frequency-wavenumber */
+    kiss_fft_cpx **cp;       /* frequency-wavenumber */
 
     bool inv;                /* forward or inverse */
     bool sym;                /* symmetric scaling */
@@ -56,6 +56,7 @@ int main (int argc, char **argv)
 #ifdef SF_HAS_FFTW
     fftwf_plan cfg;
 #else 
+    kiss_fft_cpx *ctrace;
     kiss_fft_cfg cfg;
 #endif
 
@@ -161,7 +162,6 @@ int main (int argc, char **argv)
     sf_fft_unit(axis,sf_histstring(in,varname),out);
 
     cp     = (kiss_fft_cpx**) sf_complexalloc2(n1,nk);
-    ctrace = (kiss_fft_cpx*)  sf_complexalloc(nk);
 
 #ifdef SF_HAS_FFTW
     ix = nk;
@@ -172,6 +172,7 @@ int main (int argc, char **argv)
 			      FFTW_ESTIMATE);
     if (NULL == cfg) sf_error("FFTW failure.");
 #else
+    ctrace = (kiss_fft_cpx*)  sf_complexalloc(nk);
     cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
 #endif
 

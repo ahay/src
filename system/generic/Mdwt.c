@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "wavelet.h"
-
 int main(int argc, char *argv[])
 {
     int n1, i2, n2;
@@ -52,14 +50,14 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
 
-    wavelet_init(n1,inv,unit,type[0]);
+    sf_wavelet_init(n1,inv,unit,type[0]);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(pp,n1,in);
 	if (adj) {
-	    wavelet_lop(adj,false,n1,n1,qq,pp);
+	    sf_wavelet_lop(adj,false,n1,n1,qq,pp);
 	} else {
-	    wavelet_lop(adj,false,n1,n1,pp,qq);
+	    sf_wavelet_lop(adj,false,n1,n1,pp,qq);
 	}
 	sf_floatwrite(qq,n1,out);
     }
