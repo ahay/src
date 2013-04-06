@@ -25,8 +25,8 @@
 static int m, n;
 static float *s, *e, *w;
 
-void svdinit( int n2, int n1, int ka, float *u, float *o, float *v)
-/* initiate svd and allocate memory */
+void svdinit( int n2, int n1, int ka)
+/*< initiate svd and allocate memory >*/
 {
     m=n2;
     n=n1;
@@ -37,7 +37,7 @@ void svdinit( int n2, int n1, int ka, float *u, float *o, float *v)
 }
 
 void svdclose( void )
-/* release memory */
+/*< release memory >*/
 {
     free(s);
     free(e);
@@ -90,7 +90,7 @@ void sss(float fg[2], float cs[2] )
 }
 
 int svduov(float *a, float *u,float *o, float *v,double eps,int ka) 
-/*<SVD decomposition, A->UOV >, borrow from Yang Liu (2007) */
+/*< SVD decomposition, A->UOV , borrow from Yang Liu (2007) >*/
 {
     int i,j,k,l,it,ll,kk,ix,iy,mm,nn,iz,m1,ks;
     float d,dd,t,sm,sm1,em1,sk,ek,b,c,shh,fg[2],cs[2];

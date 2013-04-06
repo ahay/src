@@ -18,9 +18,7 @@
 */
 
 #include <rsf.h>
-
-#include "seislet.h"
-#include "dip3.h"
+#include <rsfpwd.h>
 
 int main(int argc, char *argv[])
 {

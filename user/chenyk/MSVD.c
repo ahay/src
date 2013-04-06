@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     sf_putint(outv, "n2", n1);
     sf_putint(outv, "n3", n3);}
 
-    svdinit(n2, n1, ka, u, o, v);
+    svdinit(n2, n1, ka);
     a = sf_floatalloc(n1*n2);
     u = sf_floatalloc(n2*n2);
     o = sf_floatalloc(n1*n2);
