@@ -612,7 +612,7 @@ int acd_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
   else {
   
     if (ps_flreal(*pars,"cmax",&cmax)) { 
-      fprintf(stream,"ERROR: acd_readtimegrid - failed to read cmax from parameters \n",cmax);
+      fprintf(stream,"ERROR: acd_readtimegrid - failed to read cmax from parameters \n");
       return E_BADINPUT;
     }
 
