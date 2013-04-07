@@ -11,7 +11,8 @@ ss ssblend sscrg
 epfbe epfbil epfws epfad  
 frt pca fault fir fastpwd fbgabor apick orientation slopescan
 divn2d divnls curv2 horizon 
-coherence dipcoh fcoh1 fcoh2
+coherence dipcoh fcoh1 fcoh2 horwrite
+psvp
 '''
 
 pyprogs='''
@@ -43,7 +44,7 @@ dynpre = env.get('DYNLIB','')
 env.Prepend(CPPPATH=['../../include'],
 	    LIBPATH=['../../lib'],
 	    LIBS=[dynpre+'rsfpwd',
-		  dynpre+'rsf'])
+		  dynpre+'rsf', dynpre+'rsfplot'])
 
 for source in src:
 	inc = env.RSF_Include(source,prefix='')
