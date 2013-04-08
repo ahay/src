@@ -117,9 +117,7 @@ Plot('spelev',
      min2=75 max2=125 min1=85 max1=165
      ''')
 
-Flow('coord','spelev','window n1=1')
-Flow('elev','spelev coord',
-     'window f1=1 | invbin1 eps=0 head=${SOURCES[1]} x0=85 dx=1 nx=81')
+Flow('elev','spelev','transp | linear o1=85 d1=1 n1=81 rect=2 niter=100')
 Plot('elev',
      '''
      graph title=Elevation label1=Shot 

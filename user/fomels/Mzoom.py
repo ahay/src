@@ -30,16 +30,15 @@ if len(sys.argv) < 2:
     sys.exit(2)
 
 inp = sys.argv[1]
-gif = os.path.splitext(inp)[0]+'.gif'
+ppm = os.path.splitext(inp)[0]+'.ppm'
 
 bindir = os.path.join(rsf.prog.RSFROOT,'bin')
 sfgrey = os.path.join(bindir,'sfgrey')
 sfget  = os.path.join(bindir,'sfget')
-gdpen  = os.path.join(bindir,'gdpen')
+ppmpen  = os.path.join(bindir,'ppmpen')
 
-command = '< %s %s %s | %s bgcolor=b type=gif > %s' % \
-          (inp,sfgrey,' '.join(sys.argv[2:]),gdpen,gif)
-if os.system(command) or not os.path.isfile(gif):
+command = '< %s %s %s | %s > %s' % (inp,sfgrey,' '.join(sys.argv[2:]),ppmpen,ppm)
+if os.system(command) or not os.path.isfile(ppm):
     sys.stderr.write('Failed to execute "%s"\n\n' % command)
     sys.exit(3)
 
@@ -91,7 +90,7 @@ def display(event):
     else:
 	coords.set("")
 
-image = PhotoImage(file=gif)
+image = PhotoImage(file=ppm)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
 canvas.bind("<Motion>",display)
 
@@ -99,8 +98,8 @@ canvas.pack(side=BOTTOM)
 
 @atexit.register
 def cleanup():
-    if os.path.isfile(gif):
-        os.unlink(gif)
+    if os.path.isfile(ppm):
+        os.unlink(ppm)
 
 root.mainloop()
 
