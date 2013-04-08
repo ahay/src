@@ -93,7 +93,6 @@ def display(event):
 image = PhotoImage(file=ppm)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
 canvas.bind("<Motion>",display)
-
 canvas.pack(side=BOTTOM)
 
 @atexit.register
@@ -101,5 +100,9 @@ def cleanup():
     if os.path.isfile(ppm):
         os.unlink(ppm)
 
+def bye(event):
+    sys.exit(0)
+
+root.bind("q",bye)
 root.mainloop()
 

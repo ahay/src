@@ -35,7 +35,7 @@ void divn2_init(int ndim   /* number of dimensions */,
     n = nd;
 
     sf_trianglen_init(ndim, nbox, ndat);
-    sf_conjgrad_init(nd, nd, nd, nd, 1., 1.e-6, verb, false);
+    sf_conjgrad_init(nd, nd, 2*nd, 2*nd, 1., 1.e-6, verb, false);
     p = sf_floatalloc (nd);
 }
 
