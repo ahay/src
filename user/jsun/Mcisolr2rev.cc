@@ -1,4 +1,4 @@
-// Complex lowrank decomposition for 2-D isotropic wave propagation with absorbing boundaries. 
+// Complex lowrank decomposition for 2-D isotropic wave propagation. 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -23,9 +23,8 @@
 using namespace std;
 
 static std::valarray<float> vs;
-static std::valarray<float> ksz,ksx;
-static float dt,ct,cb,cl,cr;
-static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
+static std::valarray<float> ks;
+static float dt;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -35,22 +34,9 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    int ikz = cs[b] % nkzs;
-	    int ikx = (int) cs[b]/nkzs;
-	    int iz  = rs[a] % nz;
-	    int ix  = (int) rs[a]/nz;
-	    float hypk = hypot(ksz[ikz],ksx[ikx]);
-	    float phase = vs[rs[a]]*hypk*dt;
-	    float phf = 1.;
-	    if (iz < nbt)
-		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
-	    else if (iz > nz-1-nbb)
-		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
-	    if (ix < nbl)
-		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
-	    else if (ix > nx-1-nbr)
-		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
-	    res(a,b) = cpx(cos(phase),sin(phase))*phf; 
+	    float phase = -vs[rs[a]]*ks[cs[b]]*dt; 
+	    res(a,b) = cpx(cos(phase),sin(phase)); 
+//	    sf_warning("real=%g, imag=%g", real(res(a,b)),imag(res(a,b)));
 	}
     }
     return 0;
@@ -74,19 +60,9 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    par.get("nbt",nbt,0);
-    par.get("nbb",nbb,0);
-    par.get("nbl",nbl,0);
-    par.get("nbr",nbr,0);
-
-    par.get("ct",ct,0.0);
-    par.get("cb",cb,0.0);
-    par.get("cl",cl,0.0);
-    par.get("cr",cr,0.0);
-
     iRSF vel;
 
-//    int nz,nx;
+    int nz,nx;
     vel.get("n1",nz);
     vel.get("n2",nx);
     int m = nx*nz;
@@ -94,13 +70,12 @@ int main(int argc, char** argv)
     vel >> vels;
     vs.resize(m);
     vs = vels;
-
+    
     iRSF fft("fft");
 
     int nkz,nkx;
     fft.get("n1",nkz);
     fft.get("n2",nkx);
-    nkzs= nkz;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -110,18 +85,19 @@ int main(int argc, char** argv)
     fft.get("o1",kz0);
     fft.get("o2",kx0);
 
+    float kx, kz;
+
     int n = nkx*nkz;
-
-    std::valarray<float> kz(nkz),kx(nkx);
-    for (int iz=0; iz < nkz; iz++)
-	kz[iz] = 2*SF_PI*(kz0+iz*dkz);
-    for (int ix=0; ix < nkx; ix++)
-	kx[ix] = 2*SF_PI*(kx0+ix*dkx);
-
-    ksz.resize(nkz);
-    ksz = kz;
-    ksx.resize(nkx);
-    ksx = kx;
+    std::valarray<float> k(n);
+    for (int ix=0; ix < nkx; ix++) {
+	kx = kx0+ix*dkx;
+	for (int iz=0; iz < nkz; iz++) {
+	    kz = kz0+iz*dkz;
+	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
+	}
+    }
+    ks.resize(n);
+    ks = k;
 
     vector<int> lidx, ridx;
     CpxNumMat mid;

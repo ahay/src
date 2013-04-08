@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     par.get("nbt",nbt,0);
     par.get("nbb",nbb,0);
     par.get("nbl",nbl,0);
-    par.get("nbb",nbr,0);
+    par.get("nbr",nbr,0);
 
     par.get("ct",ct,0.0);
     par.get("cb",cb,0.0);

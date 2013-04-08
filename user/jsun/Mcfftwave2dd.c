@@ -1,4 +1,4 @@
-/* Complex 2-D wave propagation (outputs real wavefield)*/
+/* Complex 2-D wave propagation (outputs complex wavefield)*/
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     sf_complex *ww, *cwave, *cwavem;
 
     sf_complex **wave, *curr;
-    float *rcurr;
     
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
@@ -51,7 +50,7 @@ int main(int argc, char* argv[])
     if (SF_COMPLEX != sf_gettype(Fw)) sf_error("Need complex input");
     if (SF_FLOAT != sf_gettype(Fr)) sf_error("Need float ref");
 
-    sf_settype(Fo,SF_FLOAT);
+    sf_settype(Fo,SF_COMPLEX);
 
     /* Read/Write axes */
     at = sf_iaxa(Fw,1); nt = sf_n(at); 
@@ -97,7 +96,6 @@ int main(int argc, char* argv[])
     sf_floatread(rr,nzx,Fr);
 
     curr   = sf_complexalloc(nzx2);
-    rcurr  = sf_floatalloc(nzx2);
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
@@ -106,7 +104,6 @@ int main(int argc, char* argv[])
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
-	rcurr[iz]= 0.;
     }
 
     /* MAIN LOOP */
@@ -146,12 +143,10 @@ int main(int argc, char* argv[])
 		}
 
 		curr[j] = c;
-		rcurr[j] = crealf(c);
-//		rcurr[j] = cimagf(c);
 	    }
 
 	    /* write wavefield to output */
-	    sf_floatwrite(rcurr+ix*nz2,nz,Fo);
+	    sf_complexwrite(curr+ix*nz2,nz,Fo);
 	}
     }
     if(verb) sf_warning("."); 

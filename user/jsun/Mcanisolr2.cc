@@ -1,4 +1,4 @@
-// Complex lowrank decomposition for 2-D isotropic wave propagation with absorbing boundaries. 
+// Lowrank decomposition for 2-D anisotropic wave propagation. 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -15,6 +15,8 @@
 //   along with this program; if not, write to the Free Software
 //   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <time.h>
+#include <assert.h>
+
 #include <rsf.hh>
 
 #include "vecmatop.hh"
@@ -22,35 +24,39 @@
 
 using namespace std;
 
-static std::valarray<float> vs;
-static std::valarray<float> ksz,ksx;
-static float dt,ct,cb,cl,cr;
-static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
+static std::valarray<float>  vx, vz, q, t;
+static std::valarray<double> kx, kz;
+static double dt;
 
-int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
+static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
     res.resize(nr,nc);  
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
+	int i=rs[a];
+	double wx = vx[i]*vx[i];
+	double wz = vz[i]*vz[i];
+	double qq = q[i];
+	double tt = t[i];
+	double c = cos(tt);
+	double s = sin(tt);
+	
 	for(int b=0; b<nc; b++) {
-	    int ikz = cs[b] % nkzs;
-	    int ikx = (int) cs[b]/nkzs;
-	    int iz  = rs[a] % nz;
-	    int ix  = (int) rs[a]/nz;
-	    float hypk = hypot(ksz[ikz],ksx[ikx]);
-	    float phase = vs[rs[a]]*hypk*dt;
-	    float phf = 1.;
-	    if (iz < nbt)
-		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
-	    else if (iz > nz-1-nbb)
-		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
-	    if (ix < nbl)
-		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
-	    else if (ix > nx-1-nbr)
-		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
-	    res(a,b) = cpx(cos(phase),sin(phase))*phf; 
+	    double x0 = kx[cs[b]];
+	    double z0 = kz[cs[b]];
+	    // rotation of coordinates
+	    double x = x0*c+z0*s;
+	    double z = z0*c-x0*s;
+
+	    z = wz*z*z;
+	    x = wx*x*x;
+	    double r = x+z;
+	    r = r+sqrt(r*r-qq*x*z);
+	    r = sqrt(0.5*r)*dt;
+	    res(a,b) = cpx(cos(r),sin(r));
+//	    res(a,b) = 2*(cos(r*dt)-1); 
 	}
     }
     return 0;
@@ -74,33 +80,38 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    par.get("nbt",nbt,0);
-    par.get("nbb",nbb,0);
-    par.get("nbl",nbl,0);
-    par.get("nbr",nbr,0);
+    iRSF velz, velx("velx"), eta("eta"), theta("theta");
 
-    par.get("ct",ct,0.0);
-    par.get("cb",cb,0.0);
-    par.get("cl",cl,0.0);
-    par.get("cr",cr,0.0);
-
-    iRSF vel;
-
-//    int nz,nx;
-    vel.get("n1",nz);
-    vel.get("n2",nx);
+    int nz,nx;
+    velz.get("n1",nz);
+    velz.get("n2",nx);
     int m = nx*nz;
-    std::valarray<float> vels(m);
-    vel >> vels;
-    vs.resize(m);
-    vs = vels;
 
+    vx.resize(m);
+    vz.resize(m);
+    q.resize(m);
+    t.resize(m);
+
+    velx >> vx;
+    velz >> vz;
+    eta >> q;
+    theta >> t;
+
+    /* from eta to q */
+    for (int im=0; im < m; im++) {
+	q[im] = 8*q[im]/(1.0+2*q[im]);
+    }
+
+    /* fram degrees to radians */
+    for (int im=0; im < m; im++) {
+	t[im] *= SF_PI/180.;
+    }
+    
     iRSF fft("fft");
 
     int nkz,nkx;
     fft.get("n1",nkz);
     fft.get("n2",nkx);
-    nkzs= nkz;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -111,25 +122,24 @@ int main(int argc, char** argv)
     fft.get("o2",kx0);
 
     int n = nkx*nkz;
-
-    std::valarray<float> kz(nkz),kx(nkx);
-    for (int iz=0; iz < nkz; iz++)
-	kz[iz] = 2*SF_PI*(kz0+iz*dkz);
-    for (int ix=0; ix < nkx; ix++)
-	kx[ix] = 2*SF_PI*(kx0+ix*dkx);
-
-    ksz.resize(nkz);
-    ksz = kz;
-    ksx.resize(nkx);
-    ksx = kx;
+    kx.resize(n);
+    kz.resize(n);
+    int i = 0;
+    for (int ix=0; ix < nkx; ix++) {
+	for (int iz=0; iz < nkz; iz++) {
+	    kx[i] = 2*SF_PI*(kx0+ix*dkx);
+	    kz[i] = 2*SF_PI*(kz0+iz*dkz);
+	    i++;
+	}
+    }
 
     vector<int> lidx, ridx;
     CpxNumMat mid;
 
     iC( lowrank(m,n,sample,eps,npk,lidx,ridx,mid) );
 
-    int n2=mid.n();
     int m2=mid.m();
+    int n2=mid.n();
 
     vector<int> midx(m), nidx(n);
     for (int k=0; k < m; k++) 
@@ -145,11 +155,8 @@ int main(int argc, char** argv)
 
     cpx *ldat = lmat2.data();
     std::valarray<sf_complex> ldata(m*n2);
-    for (int k=0; k < m*n2; k++) {
+    for (int k=0; k < m*n2; k++) 
 	ldata[k] = sf_cmplx(real(ldat[k]),imag(ldat[k]));
-//	sf_warning("real of ldat=%g, imag of ldat=%g", real(ldat[k]),imag(ldat[k]));
-    }
-
     oRSF left("left");
     left.type(SF_COMPLEX);
     left.put("n1",m);
@@ -161,10 +168,8 @@ int main(int argc, char** argv)
 
     cpx *rdat = rmat.data();
     std::valarray<sf_complex> rdata(n2*n);    
-    for (int k=0; k < n2*n; k++) {
+    for (int k=0; k < n2*n; k++) 
 	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
-//    	sf_warning("real of rdat=%g, imag of rdat=%g", real(rdat[k]),imag(rdat[k]));
-    }
     oRSF right;
     right.type(SF_COMPLEX);
     right.put("n1",n2);

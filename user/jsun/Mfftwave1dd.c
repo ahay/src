@@ -1,4 +1,4 @@
-/* 1-D lowrank FFT wave extrapolation using real to complex to real fft*/
+/* 1-D lowrank FFT wave extrapolation using real to complex to real fft (with wavelet injection)*/
 /*
   Copyright (C) 2008 University of Texas at Austin
   
