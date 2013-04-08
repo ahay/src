@@ -1,6 +1,9 @@
 /* Normal moveout.
 
 Compatible with sfvscan.
+
+April 2013 program of the month:
+http://ahay.org/rsflog/index.php?/archives/334-Program-of-the-month-sfnmo.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
