@@ -8,7 +8,7 @@ crssemb crssemb3d
 diptaper dvscan2d
 pick2d gammapick2d pickvert
 pdrscan2d pdr2d
-dagap
+dagap sumamp
 taperedge
 revent
 '''
