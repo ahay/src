@@ -32,18 +32,18 @@ typedef struct CRAMData2 *sf_cram_data2;
 
 struct CRAMData2 {
     int            nt;
-    size_t         n, offs;
+    size_t         i, n, offs;
     float          t0, dt;
-    bool           kmah, filter, erefl;
+    bool           kmah, filter, erefl, mtrace;
     float         *data;
     unsigned char *mmaped;
+    FILE          *stream;
 };
 /* concrete data type */
 
-sf_cram_data2 sf_cram_data2_init (sf_file data)
+sf_cram_data2 sf_cram_data2_init (sf_file data, bool mtrace)
 /*< Initialize object >*/
 {
-    FILE *stream;
     size_t n;
 
     sf_cram_data2 cram_data = (sf_cram_data2)sf_alloc (1, sizeof (struct CRAMData2));
@@ -72,14 +72,25 @@ sf_cram_data2 sf_cram_data2_init (sf_file data)
         sf_warning ("Assuming data modeled by exploding reflector");
     sf_warning ("Total data size: %g Mb", 1e-6*(float)n);
 
-    stream = sf_filestream (data);
-    cram_data->offs = ftello (stream);
-    cram_data->mmaped = (unsigned char*)mmap (NULL, n + cram_data->offs,
-                                              PROT_READ, MAP_SHARED,
-                                              fileno (stream), 0);
-    if (cram_data->mmaped == MAP_FAILED)
-        sf_error ("Data mmap failed: %s", strerror (errno));
-    cram_data->data = (float*)(cram_data->mmaped + cram_data->offs);
+    cram_data->mtrace = mtrace;
+    if (cram_data->mtrace)
+        sf_warning ("Expecting trace-by-trace sequential access to data");
+
+    cram_data->stream = sf_filestream (data);
+    cram_data->offs = ftello (cram_data->stream);
+
+    if (false == cram_data->mtrace) {
+        cram_data->mmaped = (unsigned char*)mmap (NULL, n + cram_data->offs,
+                                                  PROT_READ, MAP_SHARED,
+                                                  fileno (cram_data->stream), 0);
+        if (cram_data->mmaped == MAP_FAILED)
+            sf_error ("Data mmap failed: %s", strerror (errno));
+        cram_data->data = (float*)(cram_data->mmaped + cram_data->offs);
+    } else {
+        /* Trace-by-trace mode */
+        cram_data->data = sf_floatalloc (cram_data->kmah ? 2*cram_data->nt : cram_data->nt);
+        cram_data->i = (size_t)-1; /* Current buffered trace */
+    }
 
     return cram_data;
 }
@@ -89,7 +100,10 @@ void sf_cram_data2_close (sf_cram_data2 cram_data)
 {
     size_t n = (size_t)cram_data->nt*(size_t)cram_data->n*(size_t)sizeof(float);
 
-    munmap (cram_data->mmaped, n + cram_data->offs);
+    if (cram_data->mtrace)
+        free (cram_data->data);
+    else
+        munmap (cram_data->mmaped, n + cram_data->offs);
     free (cram_data);
 }
 
@@ -164,7 +178,19 @@ float sf_cram_data2_get_sample (sf_cram_data2 cram_data, size_t i, float t,
     } else {
         kmah = 0;
     }
+
     off = (size_t)i*(size_t)cram_data->nt;
+
+    if (cram_data->mtrace) { /* Trace-by-trace mode */
+        if (cram_data->i != i) { /* New trace */
+            fseek (cram_data->stream, cram_data->offs + off, SEEK_SET);
+            fread (cram_data->data, 1, cram_data->kmah ? 2*cram_data->nt*sizeof(float)
+                                                       : cram_data->nt*sizeof(float),
+                   cram_data->stream);
+            cram_data->i = i;
+        }
+        off = 0;
+    }
 
     switch (kmah) {
         case 0:

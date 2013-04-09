@@ -24,24 +24,29 @@
 #include "esc_point3.h"
 
 int main (int argc, char* argv[]) {
+    size_t i, j, is, ih, nh;
+    float sx, sy, gx, gy, w;
+    float gxmin, gxmax, gymin, gymax;
     int iz, ix, iy, nz, nx, ny, nb, na, nt;
     float dt, db, da, t0, b0, a0, dbx, dby, dxm, dym;
     float dz, z0, dx, x0, dy, y0, zd, z, x, y, zf, vconst = 1.5;
     float oazmin = 180.0, oazmax = 180.0, dazmin = 180.0, dazmax = 180.0;
     float xbmin, xbmax, ybmin, ybmax, zbmin, zbmax;
     float oaz, daz, armin, armax;
-    float ***esc;
+    float ***esc, *s;
     sf_file esct, data = NULL, survey = NULL, vz = NULL;
     sf_file imag = NULL, hits = NULL, oimag = NULL, dimag = NULL,
             osmap = NULL, dsmap = NULL, oimap = NULL, dimap = NULL;
 
-    bool amp, mute, outaz, extrap, inorm;
+    bool amp, mute, outaz, extrap, inorm, mtrace;
     sf_cram_data2 cram_data;
     sf_cram_survey3 cram_survey;
     sf_cram_slowness3 cram_slowness;
+    sf_cram_gather3 cram_gather;
     sf_cram_rbranch3 cram_rbranch;
     sf_cram_point3 cram_point;
-    sf_cram_gather3 cram_gather;
+    sf_cram_rbranch3 *cram_rbranches;
+    sf_cram_point3 *cram_points;
 
     sf_init (argc, argv);
 
@@ -87,6 +92,8 @@ int main (int argc, char* argv[]) {
     /* n - stack azimuth direction before output */
     if (!sf_getbool ("inorm", &inorm)) inorm = false;
     /* y - normalize gathers for illumination */
+    if (!sf_getbool ("mtrace", &mtrace)) mtrace = false;
+    /* y - sequential trace access (needs more memory) */
 
     if (mute) {
         if (!sf_getfloat ("oazmin", &oazmin)) oazmin = 180.0;
@@ -148,23 +155,13 @@ int main (int argc, char* argv[]) {
     }
 
     /* Data object */
-    cram_data = sf_cram_data2_init (data);
+    cram_data = sf_cram_data2_init (data, mtrace);
     /* Survey object */
     cram_survey = sf_cram_survey3_init (survey, true);
     sf_fileclose (survey);
     /* Slowness object */
     cram_slowness = sf_cram_slowness3_init (vz, vconst);
-    /* Exit ray branches object */
-    cram_rbranch = sf_cram_rbranch3_init (nb, na, zd, t0 + (nt - 1)*dt,
-                                          xbmin, xbmax, ybmin, ybmax,
-                                          dbx, dby, cram_slowness);
-    sf_cram_rbranch3_set_arminmax (cram_rbranch, armin, armax);
-    /* Subsurface point image object */
-    cram_point = sf_cram_point3_init (nb, b0, db, na, a0, da, cram_data, cram_survey,
-                                      cram_slowness, cram_rbranch);
-    sf_cram_point3_set_amp (cram_point, amp);
-    sf_cram_point3_set_taper (cram_point, dxm, dym);
-    sf_cram_point3_set_extrap (cram_point, extrap);
+
     /* Image and gathers accumulator object */
     cram_gather = sf_cram_gather3_init (nb, na, nz, b0, db, a0, da,
                                         oazmax, dazmax, outaz, inorm);
@@ -193,7 +190,6 @@ int main (int argc, char* argv[]) {
             osmap = sf_output ("smap");
             sf_cram_gather3_setup_oangle_output (cram_gather, esct, osmap);
         }
-        sf_cram_point3_set_compute_agath (cram_point, true);
     }
 
     if (sf_getstring ("dipagath")) {
@@ -210,9 +206,33 @@ int main (int argc, char* argv[]) {
             dsmap = sf_output ("dipsmap");
             sf_cram_gather3_setup_dangle_output (cram_gather, esct, dsmap);
         }
-        sf_cram_point3_set_compute_dipgath (cram_point, true);
     }
 
+    j = mtrace ? (size_t)ny*(size_t)nx*(size_t)nz : 1;
+    cram_points = (sf_cram_point3*)sf_alloc (j, sizeof (sf_cram_point3));
+    cram_rbranches = (sf_cram_rbranch3*)sf_alloc (j, sizeof (sf_cram_rbranch3));
+    s = sf_floatalloc (j);
+
+    for (i = 0; i < j; i++) {
+        /* Exit ray branches object */
+        cram_rbranches[i] = sf_cram_rbranch3_init (nb, na, zd, t0 + (nt - 1)*dt,
+                                                   xbmin, xbmax, ybmin, ybmax,
+                                                   dbx, dby, cram_slowness);
+        sf_cram_rbranch3_set_arminmax (cram_rbranches[i], armin, armax);
+        /* Subsurface point image object */
+        cram_points[i] = sf_cram_point3_init (nb, b0, db, na, a0, da, cram_data, cram_survey,
+                                              cram_slowness, cram_rbranches[i]);
+        sf_cram_point3_set_amp (cram_points[i], amp);
+        sf_cram_point3_set_taper (cram_points[i], dxm, dym);
+        sf_cram_point3_set_extrap (cram_points[i], extrap);
+        if (oimag)
+            sf_cram_point3_set_compute_agath (cram_points[i], true);
+        if (dimag)
+            sf_cram_point3_set_compute_dipgath (cram_points[i], true);
+    }
+
+    if (mtrace)
+        sf_warning ("Accumulating escape tables");
     for (iy = 0; iy < ny; iy++) { /* Loop over image y */
         y = y0 + iy*dy;
         for (ix = 0; ix < nx; ix++) { /* Loop over image x */
@@ -220,8 +240,9 @@ int main (int argc, char* argv[]) {
             sf_warning ("Lateral %d of %d (x=%g, y=%g)", iy*nx + ix + 1, nx*ny, x, y);
             for (iz = 0; iz < nz; iz++) { /* Loop over image z */
                 z = z0 + iz*dz;
-                if (1 == nx && 1 == ny)
-                    sf_warning ("z=%g;", z);
+                j = (size_t)iy*(size_t)nz*nx + (size_t)ix*(size_t)nz + (size_t)iz;
+                cram_point = mtrace ? cram_points[j] : cram_points[0];
+                cram_rbranch = mtrace ? cram_rbranches[j] : cram_rbranches[0];
                 /* Escape variables for this (z, x, y) location */
                 sf_floatread (esc[0][0], ESC3_NUM*na*nb, esct);
                 if (mute) {
@@ -232,24 +253,85 @@ int main (int argc, char* argv[]) {
                     daz = dazmax - zf*(dazmax - dazmin);
                     sf_cram_point3_set_mute (cram_point, oaz, daz);
                 }
-                /* Image for one (z, x, y) location */
-                if (z > zd)
-                    sf_cram_point3_compute (cram_point, z, x, y, esc);
-                sf_cram_gather3_image_output (cram_gather, cram_point, imag, hits);
-                /* Add to the angle gathers */
-                if (oimag)
-                    sf_cram_gather3_oangle_output (cram_gather, cram_point,
-                                                   oimag, osmap, oimap);
-                if (dimag)
-                    sf_cram_gather3_dangle_output (cram_gather, cram_point,
-                                                   dimag, dsmap, dimap);
+                if (mtrace) {
+                    s[j] = sf_cram_slowness3_get_value (cram_slowness, z, x, y);
+                    sf_cram_rbranch3_set_escapes (cram_rbranch, esc);
+                } else {
+                    /* Image for one (z, x, y) location */
+                    if (z > zd)
+                        sf_cram_point3_compute (cram_point, z, x, y, esc);
+                    sf_cram_gather3_image_output (cram_gather, cram_point, imag, hits);
+                    /* Add to the angle gathers */
+                    if (oimag)
+                        sf_cram_gather3_oangle_output (cram_gather, cram_point,
+                                                       oimag, osmap, oimap);
+                    /* Dip gathers */
+                    if (dimag)
+                        sf_cram_gather3_dangle_output (cram_gather, cram_point,
+                                                       dimag, dsmap, dimap);
+                }
             } /* iz */
         } /* ix */
     } /* iy */
+    /* In trace-by-trace mode, the actual migration takes place now,
+       once all the escape functions are known */
+    if (mtrace) {
+        sf_warning ("Migrating data");
+        /* Loop over known sources */
+        is = sf_cram_survey3_get_first_source (cram_survey, &sx, &sy, &nh,
+                                               &gxmin, &gxmax, &gymin, &gymax);
+        while (is != (size_t)-1) {
+            /* Loop over known receivers */
+            ih = sf_cram_survey3_get_first_receiver (cram_survey, is,
+                                                     &i, &gx, &gy);
+            while (ih != (size_t)-1) {
+                for (iy = 0; iy < ny; iy++) { /* Loop over image y */
+                    for (ix = 0; ix < nx; ix++) { /* Loop over image x */
+                        for (iz = 0; iz < nz; iz++) { /* Loop over image z */
+                            j = (size_t)iy*(size_t)nz*nx + (size_t)ix*(size_t)nz + (size_t)iz;
+                            sf_cram_point3_compute_one_trace (cram_points[j], sx, sy,
+                                                              gx, gy, gxmin, gxmax,
+                                                              gymin, gymax, s[j],
+                                                              i, nh);
+                        }
+                    }
+                }
+                ih = sf_cram_survey3_get_next_receiver (cram_survey, is, ih,
+                                                        &i, &gx, &gy);
+            } /* Loop over known receivers */
+            is = sf_cram_survey3_get_next_source (cram_survey, is, &sx, &sy, &nh,
+                                                  &gxmin, &gxmax, &gymin, &gymax);
+        } /* Loop over known sources */
+        sf_warning ("Writing image");
+        /* Write image */
+        for (iy = 0; iy < ny; iy++) { /* Loop over image y */
+            for (ix = 0; ix < nx; ix++) { /* Loop over image x */
+                for (iz = 0; iz < nz; iz++) { /* Loop over image z */
+                    j = (size_t)iy*(size_t)nz*nx + (size_t)ix*(size_t)nz + (size_t)iz;
+                    cram_point = cram_points[j];
+                    sf_cram_gather3_image_output (cram_gather, cram_point, imag, hits);
+                    /* Add to the angle gathers */
+                    if (oimag)
+                        sf_cram_gather3_oangle_output (cram_gather, cram_point,
+                                                       oimag, osmap, oimap);
+                    /* Dip gathers */
+                    if (dimag)
+                        sf_cram_gather3_dangle_output (cram_gather, cram_point,
+                                                       dimag, dsmap, dimap);
+                }
+            }
+        }
+    }
+
+    j = mtrace ? (size_t)ny*(size_t)nx*(size_t)nz : 1;
+    for (i = 0; i < j; i++) {
+       sf_cram_point3_close (cram_points[i]);
+       sf_cram_rbranch3_close (cram_rbranches[i]);
+    }
+    free (cram_points);
+    free (cram_rbranches);
 
     sf_cram_gather3_close (cram_gather);
-    sf_cram_point3_close (cram_point);
-    sf_cram_rbranch3_close (cram_rbranch);
     sf_cram_slowness3_close (cram_slowness);
     sf_cram_survey3_close (cram_survey);
     sf_cram_data2_close (cram_data);
@@ -269,6 +351,8 @@ int main (int argc, char* argv[]) {
         sf_fileclose (oimap);
     if (dimap)
         sf_fileclose (dimap);
+
+    free (s);
 
     free (esc[0][0]);
     free (esc[0]);

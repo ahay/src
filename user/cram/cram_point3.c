@@ -41,7 +41,6 @@ struct CRAMPoint3 {
     float                   oam; /* Maximum opening angle */
     float                   dam; /* Maximum dip angle (abs.value of) */
     float                   img, hits;
-    float                   z, x, y;
     float                   b0, a0, db, da, ds, dh;
     float                   dym, dxm, atw;
     int                     mioz, midz;
@@ -85,10 +84,6 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
     cram_point->atw = 0.8;
     cram_point->mioz = nb;
     cram_point->midz = 2*nb;
-
-    cram_point->z = 0;
-    cram_point->y = 0;
-    cram_point->x = 0;
 
     cram_point->taper = false;
     cram_point->dxm = 0.0;
@@ -703,10 +698,6 @@ void sf_cram_point3_compute (sf_cram_point3 cram_point,
     cram_point->hits = 0.0;
     cram_point->img = 0.0;
 
-    cram_point->z = z;
-    cram_point->x = x;
-    cram_point->y = y;
-
     /* Reinit escape branches */
     sf_cram_rbranch3_set_escapes (cram_point->rbranch, esc);
 
@@ -734,7 +725,7 @@ void sf_cram_point3_compute (sf_cram_point3 cram_point,
                         w = 1.0;
                     /* Extract samples from data and contribute to the image */
                     sf_cram_point3_process_branches (cram_point, gx, gy, i, nes, ner, ss, sr, w,
-                                                     1 == nh && nes == ner && 
+                                                     1 == nh && nes == ner && /* Zero offset */
                                                      hypotf (sx - gx, sy - gy) < 0.1*cram_point->dh);
                 }
                 ih = sf_cram_survey3_get_next_receiver (cram_point->survey, is, ih,
@@ -744,5 +735,36 @@ void sf_cram_point3_compute (sf_cram_point3 cram_point,
         is = sf_cram_survey3_get_next_source (cram_point->survey, is, &sx, &sy, &nh,
                                               &gxmin, &gxmax, &gymin, &gymax);
     } /* Loop over known sources */
+}
+
+bool sf_cram_point3_compute_one_trace (sf_cram_point3 cram_point, float sx, float sy,
+                                       float gx, float gy, float gxmin, float gxmax,
+                                       float gymin, float gymax, float s,
+                                       size_t i, size_t nh)
+/*< Compute image for one trace with source position (sx,sy) and receiver position(gx,gy);
+    s - phase slowness at the image point, nh - number of traces in the current gather,
+    i - current trace index according to cram_survey3 >*/
+{
+    int nes, ner;
+    float w;
+
+    nes = sf_cram_rbranch3_find_exits (cram_point->rbranch, sx, sy,
+                                       cram_point->na, cram_point->src_exits);
+    if (nes) { /* Proceed to receivers, if shot branches are found */
+        ner = sf_cram_rbranch3_find_exits (cram_point->rbranch, gx, gy,
+                                           cram_point->na, cram_point->rcv_exits);
+        if (ner) {
+            if (nh > 1 && cram_point->taper)
+                w = sf_cram_point3_staper (cram_point, gx, gy, gxmin, gxmax, gymin, gymax);
+            else
+                w = 1.0;
+            /* Extract samples from data and contribute to the image */
+            sf_cram_point3_process_branches (cram_point, gx, gy, i, nes, ner, s, s, w,
+                                             1 == nh && nes == ner && /* Zero offset */
+                                             hypotf (sx - gx, sy - gy) < 0.1*cram_point->dh);
+            return true;
+       }
+    }
+    return false;
 }
 
