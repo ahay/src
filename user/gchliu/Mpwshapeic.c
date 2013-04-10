@@ -28,7 +28,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 #include <rsf.h>
 #include <rsfpwd.h>
 
-#include "smoothshape.h"
+#include "smoothdown.h"
 
 int main(int argc, char* argv[])
 {
@@ -76,12 +76,12 @@ int main(int argc, char* argv[])
 	}
     }
 
-    smoothshape_init(n1, n2, order, rect1, rect2, lam, dp, dw[0]);
+    smoothdown_init(n1, n2, order, rect1, rect2, lam, dp, dw[0]);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
 	
-    smoothshape(niter, wt[0], uw[0], rf[0]);
+    smoothdown(niter, wt[0], uw[0], rf[0]);
     sf_floatwrite(rf[0],nd,refl);
 
     exit(0);

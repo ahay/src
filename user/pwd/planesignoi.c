@@ -25,7 +25,7 @@
 #include "allp2.h"
 
 static float eps, *tmp;
-static allpass2 noi, sig;
+static allpas2 noi, sig;
 
 void planesignoi_init (int nw           /* filter size */, 
 		       int nj1, int nj2 /* dealiasing stretch */, 

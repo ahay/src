@@ -35,7 +35,7 @@ try:  # distributed version
 except: # local version
 	env = bldutil.Debug()
 	root = None
-	SConscript('../fomels/SConstruct')
+	SConscript('../pwd/SConstruct')
 
 src = Glob('[a-z]*.c')
 
@@ -74,7 +74,7 @@ for prog in mains:
 	                                          '%s/libdrsf.dylib %s' % (libdir,install[0]))
 				env.AddPostAction(install,
 						  'install_name_tool -change '
-						  'build/user/fomels/libdrsfpwd.dylib '
+						  'build/user/pwd/libdrsfpwd.dylib '
 	                                          '%s/libdrsfpwd.dylib %s' % (libdir,install[0]))
 				
 	else:

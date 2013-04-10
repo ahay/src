@@ -43,6 +43,7 @@ To programs:
 * user/fangg: new contributor (Gang Fang)
 * Added an ability to specify a colortable in a CSV file
 * user/luke: new contributor (Luke Decker)
+* Moved some programs from user/fomels to user/pwd
 
 ===Bug fixes===
 

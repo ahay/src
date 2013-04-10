@@ -18,35 +18,35 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
 
 #include "allp4.h"
-#include "apfilt.h"
 
 #ifndef _allp4_h
 
-typedef struct Allpass *allpass;
+typedef struct Allpass4 *allpass4;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Allpass {
+struct Allpass4 {
     int nx, ny, nz, nw, nj;
     float *flt, *pp, *ani;
 };
 
-static allpass ap1, ap2;
+static allpass4 ap1, ap2;
 
-allpass allpass_init(int nw          /* filter size (1,2,3) */, 
+allpass4 allpass4_init(int nw          /* filter size (1,2,3) */, 
 		     int nj                  /* filter step */, 
 		     int nx, int ny, int nz  /* data size */, 
 		     float *pp               /* data [nz*ny*nx] */,
 			 float *ani              /* anisotropy [nz*ny*nx] */)
 /*< Initialize >*/
 {
-    allpass ap;
+    allpass4 ap;
 
-    ap = (allpass) sf_alloc(1,sizeof(*ap));
+    ap = (allpass4) sf_alloc(1,sizeof(*ap));
 
     ap->nw = nw;
     ap->nj = nj;
@@ -62,7 +62,7 @@ allpass allpass_init(int nw          /* filter size (1,2,3) */,
     return ap;
 }
 
-void allpass_close(allpass ap)
+void allpass4_close(allpass4 ap)
 /*< free allocated storage >*/
 {
     apfilt_close();
@@ -70,8 +70,8 @@ void allpass_close(allpass ap)
     free(ap);
 }
 
-void allpass1 (bool der         /* derivative flag */, 
-	       const allpass ap /* PWD object */, 
+void allpass41 (bool der         /* derivative flag */, 
+	       const allpass4 ap /* PWD object */, 
 	       float* xx        /* input */, 
 	       float* yy        /* output */)
 /*< in-line plane-wave destruction >*/
@@ -113,8 +113,8 @@ void allpass1 (bool der         /* derivative flag */,
     }
 }
 
-void allpass2 (bool der         /* derivative flag */, 
-	       const allpass ap /* PWD object */, 
+void allpass42 (bool der         /* derivative flag */, 
+	       const allpass4 ap /* PWD object */, 
 	       float* xx        /* input */, 
 	       float* yy        /* output */)
 /*< cross-line plane-wave destruction >*/
@@ -155,14 +155,14 @@ void allpass2 (bool der         /* derivative flag */,
     }
 }
 
-void allpass3_init (allpass ap, allpass aq)
+void allpass43_init (allpass4 ap, allpass4 aq)
 /*< Initialize linear operator >*/
 {
     ap1 = ap;
     ap2 = aq;
 }
 
-void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
+void allpass43_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 /*< PWD as linear operator >*/
 {
     int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj;

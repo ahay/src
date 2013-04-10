@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     int i1, i2, n1, n2, np, ip, nw, nj;
     float p0, dp, p, **pp, **xx, **yy, *obj;
-    allpass2 ap;
+    allpas2 ap;
     sf_file in, of;
 
     sf_init (argc,argv);

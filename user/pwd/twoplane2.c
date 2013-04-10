@@ -24,7 +24,7 @@
 #include "allp2.h"
 
 static int nx, ny, nw; 
-static allpass2 p, q;
+static allpas2 p, q;
 static float *tmp1, *tmp2;
 
 void twoplane2_init (int nw_in            /* filter size */, 

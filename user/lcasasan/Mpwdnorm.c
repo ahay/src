@@ -27,8 +27,8 @@ int main (int argc, char *argv[])
     float *u1, *u2, *p;
     sf_file in, out, dip;
     off_t pos=0;
-    allpass ap;
-	bool norm;
+    allpassn ap;
+    bool norm;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -87,12 +87,12 @@ int main (int argc, char *argv[])
 		/* read t-x dip */
 		sf_floatread(p,n12,dip);
 		
-		ap = allpass_init (nw,nj1,n1,n2,1,p);
+		ap = allpassn_init (nw,nj1,n1,n2,1,p);
 		
 	
 		
 		/* apply */
-		allpass1(norm, ap, u1, u2);
+		allpassn1(norm, ap, u1, u2);
 		
 		/* write t-x destruction */
 		sf_floatwrite(u2,n12,out);
@@ -116,10 +116,10 @@ int main (int argc, char *argv[])
 	    /* read t-y dip */
 	    sf_floatread(p,n123,dip);
 		
-	    ap = allpass_init(nw,nj2,n1,n2,n3,p);
+	    ap = allpassn_init(nw,nj2,n1,n2,n3,p);
 	    		
 	    /* apply */
-	    allpass2(norm, ap, u1, u2);
+	    allpassn2(norm, ap, u1, u2);
 	    
 	    /* write t-y destruction */
 	    sf_floatwrite(u2,n123,out);

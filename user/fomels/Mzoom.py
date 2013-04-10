@@ -53,6 +53,12 @@ label.pack(side=BOTTOM,fill=X)
 width = 1024
 height = 768
 
+x0 = 170
+x1 = 937
+
+y0 = 96
+y1 = 671
+
 canvas = Canvas(root,cursor='crosshair',
                 width=width,height=height,
                 background='black')
@@ -71,28 +77,60 @@ d1 = hist(float,'d1',1.0)
 o1 = hist(float,'o1',0.0)
 label1 = hist(str,'label1','Y')
 unit1  = hist(str,'unit1','')
+yscale = (n1-1)*d1/(y1-y0)
 
 n2 = hist(int,'n2',1)
 d2 = hist(float,'d2',1.0)
 o2 = hist(float,'o2',0.0)
 label2 = hist(str,'label2','X')
 unit2  = hist(str,'unit2','')
+xscale = (n2-1)*d2/(x1-x0)
 
 def display(event):
     canvas = event.widget
     x = canvas.canvasx(event.x)
     y = canvas.canvasx(event.y)    
-    if x >= 170 and y >= 96 and x <= 937 and y <= 671:
-        x = o2+(x-170)*(n2-1)*d2/(937-170)
-        y = o1+(y-96 )*(n1-1)*d1/(671-96 )
+    if x >= x0 and y >= y0 and x <= x1 and y <= y1:
+        x = o2+(x-x0)*xscale
+        y = o1+(y-y0)*yscale
 	coords.set("(%s = %g %s, %s = %g %s)" % (label1,y,unit1,
                                                  label2,x,unit2))
     else:
 	coords.set("")
 
+def startwin(event):
+    global xstart, ystart
+    canvas = event.widget
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasx(event.y)
+    xstart = min(max(x,x0),x1)
+    ystart = min(max(y,y0),y1)
+    canvas.delete('window')
+    canvas.create_rectangle(xstart,ystart,xstart,ystart,
+                            outline='yellow',tags='window')
+
+def drawwin(event):
+    canvas = event.widget
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasx(event.y)
+    x = min(max(x,x0),x1)
+    y = min(max(y,y0),y1)
+    canvas.coords('window',xstart,ystart,x,y)
+
+def endwin(event):
+    canvas = event.widget
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasx(event.y)
+    xend = min(max(x,x0),x1)
+    yend = min(max(y,y0),y1)
+    print "end with (xend,yend)"
+
 image = PhotoImage(file=ppm)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
 canvas.bind("<Motion>",display)
+canvas.bind("<ButtonPress-1>",startwin)
+canvas.bind("<B1-Motion>",drawwin)
+canvas.bind("<ButtonRelease-1>",endwin)
 canvas.pack(side=BOTTOM)
 
 @atexit.register

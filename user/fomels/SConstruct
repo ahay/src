@@ -3,21 +3,16 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-abalance analytical angle angle2 approx arrival bdix beamform bil1
-blur cameron cfftwave1 cdivn cflow chebvc clpf cltft constperm
-cosftwave1 cpef dealias dealias2 deblur dijkstra dip dip2 diplet dips
-distance divn dix dixshape dpeiko eikonal eikonalvti eno2 erf exgr
-explanesignoi expsignoi fft2 fftexp0 fftexp1 fftexp3 fftone ffttest
-fftwave1 fftwave2 fftwave3 focus fpow freqest gaussmooth gbeamform
-imray interp2 interpt iphase kron locov lpf lsfit mdip median mffit
-mig3 miss3 nconv nsmooth nsmooth1 ocparcel octentwt odip2 ofilp ofpwd
-ofpwd2 ofsemb opwd2 patch phaserot pick pick3 plane planemis2
-planemis3 planereg2 planereg3 planesignoi pmshape2 predict pwd pwcoh
-pwdix pwdsigk pwdsmooth2 pwpaint pwpaint2 pwpaint3 pwspray pwspray2
-pwspray3 regr rdiv reshape riesz rsin seislet seisigk semblance shape
-shapeagc shapesigk shearer shift1 similarity similarity2 simenv
-smoothderw smoothreg taupfit thin timecont timefreq timeshift tomo
-tree trace2 trismooth2 tristack tristack2 twodip2 twofreq2 velcon
+abalance analytical angle angle2 approx arrival bdix bil1 blur cameron
+cfftwave1 cdivn cflow chebvc clpf cltft constperm cosftwave1 cpef
+deblur distance divn dix dpeiko eikonal eikonalvti eno2 erf exgr fft2
+fftexp0 fftexp1 fftexp3 fftone ffttest fftwave1 fftwave2 fftwave3
+focus fpow freqest gaussmooth gbeamform imray interp2 interpt iphase
+kron locov lpf lsfit median mffit mig3 miss3 nconv nsmooth nsmooth1
+ocparcel octentwt odip2 ofilp ofsemb opwd2 patch phaserot pick pick3
+plane regr rdiv reshape riesz rsin semblance shape shapeagc shearer
+shift1 similarity similarity2 simenv smoothderw smoothreg taupfit thin
+timecont timefreq tomo tree trace2 tristack tristack2 twofreq2 velcon
 velinv vidattr vofzperm warp1 warpadd warpscan zero zmarch ztrace
 '''
 
@@ -25,10 +20,6 @@ ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 
 pyprogs = 'cgi fft results zoom'
 pymods = 'conjdir conjgrad dottest steepd'
-
-libsrc = '''
-apfilt allp3 dip3 dijkstra mask6 predict predk pwd pwdsl repeat2 seislet
-'''
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
@@ -53,8 +44,6 @@ if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
     libs.insert(0,fftw)
 
-dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
-
 objects = []
 dobjects = []
 includes = []
@@ -62,41 +51,7 @@ for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
-
-    if os.path.splitext(str(source))[0] in libsrc:
-        objects.append(obj)
-        includes.append(inc)
-
-        if dynlib:
-            obj = env.SharedObject(source)
-            env.Depends(obj,inc)
-            dobjects.append(obj)
         
-##############################################################################
-# PLANE-WAVE-DESTRUCTION LIBRARY
-##############################################################################
-lib = env.StaticLibrary('rsfpwd',objects)
-inc = env.Command('rsfpwd.h',includes,Action(bldutil.__merge))
-
-env.Install('../../lib',lib)
-env.Install('../../include',inc)
-
-if root:
-    env.Install(libdir,lib)
-    env.Install(incdir,inc)
-
-if dynlib:
-    dlib = env.SharedLibrary('rsfpwd',dobjects,SHLIBPREFIX='libd',LIBS=dlibs)
-    env.Install('../../lib',dlib)
-    if root:
-        install = env.Install(libdir,dlib)
-
-        if dynpre and env['PLATFORM'] == 'darwin':
-            env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/api/c/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
-
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
@@ -166,11 +121,7 @@ for conv in ('byte2tif','tif2byte'):
     if root:
         env.Install(bindir,prog)
 
-for prog in Split(
-    '''
-    agrid allp3 burg cburg gauss2 gaussel grid1 matmult matmult2
-    ntriangle1 predict predict2 pwdsl trisl
-    '''):
+for prog in Split('agrid burg cburg gaussel grid1 matmult2 ntriangle1'):
     sources = ['Test' + prog,prog]
     if prog=='matmult2':
         sources.append('gmres')

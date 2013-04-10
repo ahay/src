@@ -26,7 +26,7 @@
 
 static int n1,n2,n12;
 static float eps, *a, *b, *c, *d, *tmp, *tmp2;
-static allpass2 noi, sig;
+static allpas2 noi, sig;
 
 void explanesignoi_init (int m1,int m2 /* data size */, 
 			 float eps1    /* signal/noise scaling */, 

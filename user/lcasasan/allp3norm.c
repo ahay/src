@@ -18,34 +18,34 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
 
 #include "allp3norm.h"
-#include "apfilt.h"
 
 #ifndef _allp3norm_h
 
-typedef struct Allpass *allpass;
+typedef struct Allpassn *allpassn;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Allpass {
+struct Allpassn {
     int nx, ny, nz, nw, nj;
     float *flt, *pp;
 };
 
 
 
-allpass allpass_init(int nw         /* filter size (1,2,3) */, 
+allpassn allpassn_init(int nw         /* filter size (1,2,3) */, 
 		     int nj                 /* filter step */, 
 		     int nx, int ny, int nz /* data size */, 
 		     float *pp              /* data [nz*ny*nx] */)
 /*< Initialize >*/
 {
-    allpass ap;
+    allpassn ap;
 
-    ap = (allpass) sf_alloc(1,sizeof(*ap));
+    ap = (allpassn) sf_alloc(1,sizeof(*ap));
 
     ap->nw = nw;
     ap->nj = nj;
@@ -60,7 +60,7 @@ allpass allpass_init(int nw         /* filter size (1,2,3) */,
     return ap;
 }
 
-void allpass_close(allpass ap)
+void allpassn_close(allpassn ap)
 /*< free allocated storage >*/
 {
     apfilt_close();
@@ -68,8 +68,8 @@ void allpass_close(allpass ap)
     free(ap);
 }
 
-void allpass1 (bool norm         /* normalization flag */, 
-	       const allpass ap /* PWD object */, 
+void allpassn1 (bool norm         /* normalization flag */, 
+	       const allpassn ap /* PWD object */, 
 	       float* xx        /* input */, 
 	       float* yy        /* output */)
 /*< in-line plane-wave destruction >*/
@@ -123,8 +123,8 @@ void allpass1 (bool norm         /* normalization flag */,
     }
 }
 
-void allpass2 (bool norm         /* normliaztion flag */, 
-	       const allpass ap /* PWD object */, 
+void allpassn2 (bool norm         /* normliaztion flag */, 
+	       const allpassn ap /* PWD object */, 
 	       float* xx        /* input */, 
 	       float* yy        /* output */)
 /*< cross-line plane-wave destruction >*/

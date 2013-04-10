@@ -24,7 +24,7 @@
 
 #ifndef _allp2_h
 
-typedef struct Allpass2 *allpass2;
+typedef struct Allpass2 *allpas2;
 /* abstract data type */
 /*^*/
 
@@ -35,17 +35,17 @@ struct Allpass2 {
     float *flt, **pp;
 };
 
-static allpass2 ap2;
+static allpas2 ap2;
 
-allpass2 allpass2_init(int nw         /* filter order */, 
+allpas2 allpass2_init(int nw         /* filter order */, 
 		       int nj         /* filter step */, 
 		       int nx, int ny /* data size */, 
 		       float **pp     /* dip [ny][nx] */) 
 /*< Initialize >*/
 {
-    allpass2 ap;
+    allpas2 ap;
     
-    ap = (allpass2) sf_alloc(1,sizeof(*ap));
+    ap = (allpas2) sf_alloc(1,sizeof(*ap));
     
     ap->nw = nw;
     ap->nj = nj;
@@ -59,7 +59,7 @@ allpass2 allpass2_init(int nw         /* filter order */,
     return ap;
 }
 
-void allpass2_close(allpass2 ap)
+void allpass2_close(allpas2 ap)
 /*< free allocated storage >*/
 {
     apfilt_close();
@@ -67,7 +67,7 @@ void allpass2_close(allpass2 ap)
     free(ap);
 }
 
-void allpass22_init (allpass2 ap1)
+void allpass22_init (allpas2 ap1)
 /*< Initialize linear operator >*/
 {
     ap2 = ap1;
@@ -103,7 +103,7 @@ void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 }
 
 void allpass21 (bool der          /* derivative flag */, 
-		const allpass2 ap /* PWD object */, 
+		const allpas2 ap /* PWD object */, 
 		float** xx        /* input */, 
 		float** yy        /* output */)
 /*< plane-wave destruction >*/

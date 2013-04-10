@@ -1,8 +1,7 @@
 #include <stdio.h>
 
 #include <rsf.h>
-
-#include "matmult.h"
+#include <rsfpwd.h>
 
 int main (void) {
     float** a;

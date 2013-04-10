@@ -20,12 +20,12 @@
 #include <rsf.h>
 #include <rsfpwd.h>
 
-#include "smoothshape.h"
+#include "smoothdown.h"
 #include "down.h"
 
 static float *tmp;
 
-void smoothshape_init(int n1, int n2        /* data size */, 
+void smoothdown_init(int n1, int n2        /* data size */, 
 		      int order             /* accuracy order */,
 		      int rect1, int rect2  /* smoothing radius */,
 		      float lam             /* operator scaling */,
@@ -45,7 +45,7 @@ void smoothshape_init(int n1, int n2        /* data size */,
     sf_conjgrad_init(n, n, n, n, lam, 10*FLT_EPSILON, true, false);    
 }
 
-void smoothshape_close(void)
+void smoothdown_close(void)
 /*< free allocated storage >*/
 {
     free(tmp);
@@ -53,7 +53,7 @@ void smoothshape_close(void)
     pwdsl_close();
 }
 
-void smoothshape(int niter     /* number of iterations */, 
+void smoothdown(int niter     /* number of iterations */, 
 		 float* weight /* data weighting */, 
 		 float* data   /* input data */, 
 		 float* der    /* output derivative */) 
