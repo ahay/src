@@ -271,7 +271,7 @@ surface kirmodnewton2_init(int ns,  float s0,  float ds  /* source/midpoint axis
 		s = s0 + is*ds;
 		if (cmp) {
 			for (ih=0; ih < nh; ih++, yi++) {
-				h = 0.5*(h0 + ih*dh); /*SEEM LIKE ONE-LEG*/
+				h = 0.5*(h0 + ih*dh);
 				yi->x = s - h;
 				yi->is = is;
 				yi->ih = 2*ih;
@@ -326,7 +326,7 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	oldans = sf_floatalloc2(nc-1,nc-1); /* To store old ans for the case of fwdxini*/
 	}
 	
-    for (iy=0; iy < ny; iy++) {	/* soure/midpoint and offset axes */
+    for (iy=0; iy < ny; iy++) {	/* source/midpoint and offset axes */
 		x1 = y[iy].x; /* x1 is on the surface */
 		if (0==iy || x1 != xp) { /* new point */
 			ta = (ktable**) sf_alloc(nx,sizeof(ktable*));
