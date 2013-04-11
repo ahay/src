@@ -22,6 +22,7 @@
 
 int main (int argc, char* argv[])
 {
+    bool verb;
     int i3, n3, dim1, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *num, *den, *rat1, *rat2, *dat, mean;
     char key[6];
@@ -59,7 +60,9 @@ int main (int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     
-    sf_divn_init(dim1, n12, n, rect, niter,true);
+    if (!sf_getbool("verb",&verb)) verb=true;
+
+    sf_divn_init(dim1, n12, n, rect, niter,verb);
     
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(dat,n12,in);

@@ -36,10 +36,10 @@ int main(int argc, char* argv[])
 {
     bool verb;
     char *sort;
-    int j, k, n, m, i2, n2, iter, niter;
-    sf_complex **a=NULL, *e=NULL;
-    float s2,s0=1.,tol;
-    sf_file poly=NULL, root=NULL;
+    int j, k, n, m, i2, n2, iter, niter, *map;
+    sf_complex **a, *e, *old;
+    float s2,s0=1.,tol, dist, dk;
+    sf_file poly, root;
 
     sf_init(argc,argv);
     poly = sf_input("in");
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     /* verbosity flag */
 
     if (NULL == (sort = sf_getstring("sort"))) sort="real";
-    /* attribute for sorting */
+    /* attribute for sorting (phase,amplitude,real,imaginary) */
 
     switch (sort[0]) {
 	case 'p':
@@ -81,6 +81,8 @@ int main(int argc, char* argv[])
 
     a = sf_complexalloc2(n,n);
     e = sf_complexalloc(n);
+    old = sf_complexalloc(n-1);
+    map = sf_intalloc(n-1);
     jacobi2_init(n,verb);
 
     for (i2=0; i2 < n2; i2++) {
@@ -128,8 +130,36 @@ int main(int argc, char* argv[])
 	    e[j]=sf_cmplx(0.,0.);
 	}
 	
-	qsort(e,n-1,sizeof(sf_complex),compare);
-	sf_complexwrite(e,n-1, root);
+	if (0==i2) {
+	    /* sort the first set of roots */
+	    qsort(e,n-1,sizeof(sf_complex),compare);
+	    for (j=0; j < n-1; j++) {
+		old[j]=e[j];
+	    }
+	} else {
+	    /* find nearest to previous */
+	    for (j=0; j < n-1; j++) {
+		map[j] = -1;
+	    }
+	    /* loop through old roots */
+	    for (j=0; j < n-1; j++) {
+		dist = SF_HUGE;
+		/* find nearest not taken */
+		for (k=0; k < n-1; k++) {
+		    if (map[k] >= 0) continue;
+		    /* Euclidean distance */
+		    dk = cabsf(old[j]-e[k]);
+		    if (dk < dist) {
+			m = k;
+			dist = dk;
+		    }
+		}
+		map[m] = j;
+		old[j] = e[m];
+	    }
+	}
+
+	sf_complexwrite(old,n-1, root);
     }
 
     exit(0);
