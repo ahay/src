@@ -334,5 +334,5 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     }
 
     /* re-scale */
-    /* scale(x,g); */
+    scale(x,g);
 }

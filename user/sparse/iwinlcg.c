@@ -25,7 +25,7 @@
 
 #include "iwinlcg.h"
 
-static bool verb, bound;
+static bool verb;
 static int nn[3], ss[2], dorder, grect[2], gliter;
 static float dd[3], **vel, plower, pupper, geps, gscale;
 static sf_fslice sfile, rfile;
@@ -143,15 +143,12 @@ float iwinlcg_eval(const float *x,
     int i, j;
     float fx=0.;
 
-    bound = false;
     for (j=0; j < nn[1]; j++) {
 	for (i=0; i < nn[0]; i++) {
 	    if (x[j*nn[0]+i] < lower) {
-		bound = true;
 		return SF_HUGE;
 	    }
 	    if (x[j*nn[0]+i] > upper) {
-		bound = true;
 		return SF_HUGE;
 	    }
 
@@ -197,14 +194,10 @@ void iwinlcg_grad(const float *x,
     float *din, *dout, *p;
     sf_triangle tr;
 
-    if (bound) {
-	for (i2=0; i2 < nn[1]; i2++) {
-	    for (i1=0; i1 < nn[0]; i1++) {
-		g[i2*nn[0]+i1] = SF_HUGE;
-	    }
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    vel[i2][i1] = x[i2*nn[0]+i1];
 	}
-
-	return;
     }
 
     if (verb) sf_warning("Computing gradient...");
@@ -329,17 +322,11 @@ void iwinlcg_grad(const float *x,
     }
 
     /* re-scale */
-    /* scale(x,g); */
+    scale(x,g);
 }
 
 void iwinlcg_image(sf_file fimage)
 /*< output image >*/
 {
     sf_floatwrite(image,nn[0]*nn[1]*nn[2],fimage);
-}
-
-void iwinlcg_slope(sf_file fslope)
-/*< output slope >*/
-{
-    sf_floatwrite(pimage,nn[0]*nn[1]*nn[2],fslope);
 }

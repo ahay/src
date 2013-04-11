@@ -406,6 +406,7 @@ void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	for (i=0; i < n1*n2; i++) {
 	    for (its=0; its < uts; its++) {
 		x[i] += tempx[its][i];
+		tempx[its][i] = 0.;
 	    }
 	}
     } else {
@@ -413,6 +414,7 @@ void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	for (i=0; i < n1*n2*(2*nh+1); i++) {
 	    for (its=0; its < uts; its++) {
 		r[i] += tempr[its][i];
+		tempr[its][i] = 0.;
 	    }
 	}
     }
@@ -420,10 +422,12 @@ void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
     if (adj) {
 	for (i=0; i < n1*n2; i++) {
 	    x[i] = tempx[0][i];
+	    tempx[0][i] = 0.;
 	}
     } else {
 	for (i=0; i < n1*n2*(2*nh+1); i++) {
 	    r[i] = tempr[0][i];
+	    tempr[0][i] = 0.;
 	}
     }
 #endif

@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, load, shape;
+    bool verb, shape;
     int n1, n2, cgiter, npml; 
     int nh, ns, nw, n[2], rect[2];
     float vpml, d1, d2, dw, ow, tol;
@@ -47,9 +47,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("nh",&nh)) nh=0;
     /* horizontal space-lag */
-
-    if (!sf_getbool("load",&load)) load=false;
-    /* load LU */
 
     if (!sf_getint("uts",&uts)) uts=0;
     /* number of OMP threads */
@@ -91,10 +88,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(model,"d1",&d1)) sf_error("No d1= in model.");
     if (!sf_histfloat(model,"d2",&d2)) sf_error("No d2= in model.");
 
-    if (load)
-	datapath = sf_histstring(model,"in");	
-    else
-	datapath = NULL;
+    datapath = sf_histstring(model,"in");	
 
     /* allocate memory */
     dm = sf_floatalloc(n1*n2);

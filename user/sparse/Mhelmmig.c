@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     int npml, pad1, pad2, n1, n2; 
     int ih, nh, is, ns, iw, nw, i, j;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float d1, d2, **vel, vpml, ****image, dw, ow;
+    float d1, d2, **vel, vpml, ****image, ****timage, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long *Ap, *Ai, *Map;
     double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     sf_complex ***srce, ***recv;
     char *datapath, *insert, *append;
     size_t srclen, inslen;
-    sf_file in, out, source, data, us, ur;
+    sf_file in, out, source, data, us, ur, timg;
     int uts, its, mts;
     sf_timer timer;
     char *order;
@@ -167,6 +167,23 @@ int main(int argc, char* argv[])
 	sf_putstring(ur,"unit4","Hz");
     } else {
 	ur = NULL;
+    }
+
+    /* output time-shift image derivative */
+    if (NULL != sf_getstring("timg")) {
+	timg = sf_output("timg");
+
+	sf_putint(timg,"n3",2*nh+1);
+	sf_putfloat(timg,"d3",d2);
+	sf_putfloat(timg,"o3",(float) -nh*d2);
+
+	timage = (float****) sf_alloc(uts,sizeof(float***));
+	for (its=0; its < uts; its++) {
+	    timage[its] = sf_floatalloc3(n1,n2,2*nh+1);
+	}
+    } else {
+	timg = NULL;
+	timage = NULL;
     }
 
     /* allocate temporary memory */    
@@ -324,6 +341,8 @@ int main(int argc, char* argv[])
 		    for (i=0; i < n1; i++) {
 			if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
 			    image[its][ih+nh][j][i] += crealf(conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
+			    if (timg != NULL) timage[its][ih+nh][j][i] 
+						  += crealf(2.*I*omega*conjf(srce[is][j-ih][i])*recv[is][j+ih][i]);
 			}
 		    }
 		}
@@ -360,6 +379,8 @@ int main(int argc, char* argv[])
 	    for (i=0; i < n1; i++) {
 		for (its=1; its < uts; its++) {
 		    image[0][ih+nh][j][i] += image[its][ih+nh][j][i];
+		    if (timg != NULL) timage[0][ih+nh][j][i] 
+					  += timage[its][ih+nh][j][i];
 		}
 	    }
 	}
@@ -367,6 +388,7 @@ int main(int argc, char* argv[])
 #endif
     
     sf_floatwrite(image[0][0][0],n1*n2*(2*nh+1),out);
-    
+    if (timg != NULL) sf_floatwrite(timage[0][0][0],n1*n2*(2*nh+1),timg);
+
     exit(0);
 }
