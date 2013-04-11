@@ -1362,14 +1362,16 @@ def sparse(context):
     context.env['CPPPATH'] = oldpath+sparsepath
 
     oldlibs = path_get(context,'LIBS')
-#    sparselibs = ['umfpack','suitesparseconfig','cholmod',
-#                  'amd','camd','colamd','ccolamd','metis','goto2']
+#    sparselibs = ['umfpack','suitesparseconfig',
+#                  'cholmod','amd','camd','colamd','ccolamd',
+#                  'metis','goto2','lbfgs']
     sparselibs = ['umfpack','cholmod',
                   'amd','camd','colamd','ccolamd']
     context.env['LIBS'] = oldlibs+sparselibs
 
     text = '''
     #include <umfpack.h>
+    /* #include <lbfgs.h> */
     int main(void) {
     int    n = 3;
     int    Ap [ ] = {0,2,4,6};
@@ -1377,8 +1379,10 @@ def sparse(context):
     double Ax [ ] = {2.,3.,3.,-1.,4.,-3.};
     double *null = (double *) NULL;
     void *Symbolic;
+    /* lbfgs_parameter_t param; */
     (void) umfpack_di_symbolic (n, n, Ap, Ai, Ax, &Symbolic, null, null);
     umfpack_di_free_symbolic (&Symbolic) ;
+    /* lbfgs_parameter_init (&param); */
     return 0;
     }\n'''
     res = context.TryLink(text,'.c')
@@ -1424,9 +1428,6 @@ def ncpus():
 pkg['omp'] = {'fedora':'libgomp'}
 
 def omp(context):
-#    if ncpus() == 1:
-#        context.env['OMP'] = False
-#        return # only 1 cpu. OMP not needed
     context.Message("checking for OpenMP ... ")
     LIBS  = path_get(context,'LIBS')
     CC    = context.env.get('CC','gcc')
