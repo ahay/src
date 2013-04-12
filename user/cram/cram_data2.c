@@ -183,9 +183,9 @@ float sf_cram_data2_get_sample (sf_cram_data2 cram_data, size_t i, float t,
 
     if (cram_data->mtrace) { /* Trace-by-trace mode */
         if (cram_data->i != i) { /* New trace */
-            fseek (cram_data->stream, cram_data->offs + off, SEEK_SET);
-            fread (cram_data->data, 1, cram_data->kmah ? 2*cram_data->nt*sizeof(float)
-                                                       : cram_data->nt*sizeof(float),
+            fseek (cram_data->stream, cram_data->offs + off*sizeof(float), SEEK_SET);
+            fread (cram_data->data, sizeof(float), cram_data->kmah ? 2*cram_data->nt
+                                                                   : cram_data->nt,
                    cram_data->stream);
             cram_data->i = i;
         }
