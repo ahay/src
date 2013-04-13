@@ -18,25 +18,32 @@ int traceterm_construct(TRACE_TERM * tr,
   dfile=NULL;
   /* 09.12.09: added keys as parameters; data key must always be non-void
      string, but hdr key may not be */
-  if (hdrkey) ps_flcstring(*par,hdrkey,&hfile);
-  if (!datakey) {
+  /* 13.04.13: force hdrkey to be present. This is a big change: no longer
+     possible to specify simulation with just one input/output file. Must 
+     supply separate header file.
+  */
+  if (!datakey || !hdrkey) {
     fprintf(stream,"ERROR: traceterm_construct\n");
-    fprintf(stream,"data key is null string");
+    fprintf(stream,"  either key hdrfile (source of trace headers)\n");
+    fprintf(stream,"  or key datafile (data trace input/output) not provided\n");
     return E_FILE;
   }
+  ps_flcstring(*par,hdrkey,&hfile);
   ps_flcstring(*par,datakey,&dfile);
 
   /* major change for this edition: if just a datafile name is given, then
      the header and data files are presumed to be the same, and the data file
      is used to supply headers. */
+  /* major change 13.04.13: BOTH header and data filenames must be present in parfile.*/
+  if (!hfile) {
+    fprintf(stream,"ERROR: traceterm_construct\n");
+    fprintf(stream,"failed to extract header (prototype) filename from partable");
+    return E_FILE;
+  }
   if (!dfile) {
     fprintf(stream,"ERROR: traceterm_construct\n");
     fprintf(stream,"failed to extract data filename from partable");
     return E_FILE;
-  }
-  if (!hfile) {
-    hfile=(char *)usermalloc_(sizeof(char)*(strlen(dfile)+1));
-    strcpy(hfile,dfile);
   }
 
   /* construct trace geometry object */

@@ -366,7 +366,7 @@ int traceserver_init(FILE ** fpin, char * fin,
       
       /* set tracr, write trace to output file */
       tr.tracr=ntr[ir];
-      fputtr(*fpout,&tr);
+      //      fputtr(*fpout,&tr);
       
       /* trace reading loop */
       while (fgettr(*fpin,&tr)) {
@@ -465,7 +465,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 	}
 	/* set tracr, write trace to output */
 	tr.tracr=ntr[ir];
-	fputtr(*fpout,&tr);
+	//	fputtr(*fpout,&tr);
       }
       /* set tracr, write trace to output */
       
@@ -941,8 +941,6 @@ int construct_tracegeom(tracegeom * tg,
   return err;
 
 }
-
-
 
 int init_tracegeom(tracegeom * tg,
 		   RPNT og,
@@ -1510,7 +1508,8 @@ int init_tracegeom(tracegeom * tg,
   */
   if (initbuf) {
 
-    if (traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]))) return E_FILE;
+    /*if (traceserver_seek(tg->fpin,&(tg->recoff[tg->irec]))) return E_FILE; */
+    if (traceserver_seek(tg->fpout,&(tg->recoff[tg->irec]))) return E_FILE;
     iinit=0;
 
     /* set length of work buffer appropriately */
@@ -1532,7 +1531,8 @@ int init_tracegeom(tracegeom * tg,
     /*  fprintf(stream,"loop over %d traces\n",tg->ntraces); fflush(stream);*/
     for (i=0;i<(tg->ntr)[tg->irec];i++) {
       /*      fprintf(stream,"get tr=%d\n"); fflush(stream);*/
-      err=traceserver_get(tg->fpin,
+      /*      err=traceserver_get(tg->fpin, */
+      err=traceserver_get(tg->fpout,
 #ifdef IWAVE_USE_MPI
 			  &(tg->p),
 #endif

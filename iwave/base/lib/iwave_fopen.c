@@ -47,7 +47,8 @@ FILE * iwave_fopen(char ** name,
     for (fpr=filestatlist; fpr != ((struct filestat *)NULL); 
 	 fpr = fpr->nextfpr) {
       if (!(strcmp(proto,fpr->nm)) &&
-	  /*	  (fpr->istmp==0) && 
+	  (fpr->istmp==0) && 
+	  /*
 	  (fpr->md[0]=='r')*/
 	  (strcmp("w",fpr->md))) break;
       oldfpr=&fpr->nextfpr;
@@ -58,6 +59,7 @@ FILE * iwave_fopen(char ** name,
       fprintf(stream,"Error: iwave_fopen\n");
       fprintf(stream,"requested proto file %s not in database\n",proto);
       iwave_fprintall(stream);
+      fflush(stream);
       return retfp;
     }      
 

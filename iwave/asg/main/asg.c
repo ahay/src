@@ -373,7 +373,6 @@ int main(int argc, char ** argv) {
       fprintf(stderr,"IWAVE::asg rkw=%d rk=%d isrc=%d\n",
               retrieveGlobalRank(),retrieveRank(),trace.t.tg.irec);
 
-
       if (dump_term) sampler_fprint(&trace, stream);
     
       /* pointsrc_init: initializes source wavelet with proper
@@ -409,7 +408,7 @@ int main(int argc, char ** argv) {
 	IASN(sindex,D_P);
 	for (i=0;i<RARR_MAX_NDIM;i++) smult[i]=REAL_ONE;
 
-	err=sampler_construct(arrsrc,pars,sindex,smult,scoord,-1,NULL,srckey,stream);
+	err=sampler_construct(arrsrc,pars,sindex,smult,scoord,-1,srckey,srckey,stream);
 	if (err) {
 	  fprintf(stream,"ERROR: main from sampler_construct. ABORT\n");
 	  abortexit(err,pars,&stream);
