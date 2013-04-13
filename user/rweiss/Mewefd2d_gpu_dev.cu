@@ -516,8 +516,8 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from displacement to strain AND strain to stress           */
 		/*------------------------------------------------------------*/
-			dim3 dimGrid9(ceil(fdm->nxpad/32.0f), ceil(fdm->nzpad/32.0f));
-			dim3 dimBlock9(32,32);
+			dim3 dimGrid9(ceil(fdm->nxpad/16.0f), ceil(fdm->nzpad/16.0f));
+			dim3 dimBlock9(16,16);
 			dispToStrain_strainToStress<<<dimGrid9, dimBlock9>>>(d_txx, d_tzz, d_tzx, d_uox, d_uoz, d_c11, d_c33, d_c55, d_c13, idx, idz, fdm->nxpad, fdm->nzpad, NOP);
 			sf_check_gpu_error("dispToStrainToStress Kernel");
 
@@ -548,8 +548,8 @@ int main(int argc, char* argv[]) {
 		/*------------------------------------------------------------*/
 		/* from stress to acceleration                                */
 		/*------------------------------------------------------------*/
-			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/32.0f),ceil((fdm->nzpad-(2*NOP))/32.0f));
-			dim3 dimBlock4(32,32);
+			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/16.0f),ceil((fdm->nzpad-(2*NOP))/16.0f));
+			dim3 dimBlock4(16,16);
 			stressToAcceleration<<<dimGrid4, dimBlock4>>>(d_uax, d_uaz, d_txx, d_tzz, d_tzx, idx, idz, fdm->nxpad, fdm->nzpad);
 			sf_check_gpu_error("stressToAcceleration Kernel");
 		
