@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
     fdm=fdutil_init(verb,fsrf,az,ax,nb,1);
 
 	if (nbell * 2 + 1 > 32){
-		sf_error("nbell must be <= 15\n");
+		sf_error("nbell must be <= 15\n"); 
 	}
 
 	float *h_bell;
@@ -488,8 +488,8 @@ int main(int argc, char* argv[]) {
 		/*		- Compute stress from strain as in equation 2		  */
 		/*			- Step #2										  */
 		/*------------------------------------------------------------*/
-			dim3 dimGrid9(ceil(fdm->nxpad/32.0f), ceil(fdm->nzpad/32.0f));
-			dim3 dimBlock9(32,32);
+			dim3 dimGrid9(ceil(fdm->nxpad/16.0f), ceil(fdm->nzpad/16.0f));
+			dim3 dimBlock9(16,16);
 			dispToStrain_strainToStress<<<dimGrid9, dimBlock9>>>(d_txx, d_tzz, d_tzx, d_uox, d_uoz, d_c11, d_c33, d_c55, d_c13, idx, idz, fdm->nxpad, fdm->nzpad, NOP);
 			sf_check_gpu_error("dispToStrainToStress Kernel");
 
@@ -525,8 +525,8 @@ int main(int argc, char* argv[]) {
 		/* from stress to acceleration (first term in RHS of eq. 3)	  */
 		/*		- Step #5											  */
 		/*------------------------------------------------------------*/
-			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/32.0f),ceil((fdm->nzpad-(2*NOP))/32.0f));
-			dim3 dimBlock4(32,32);
+			dim3 dimGrid4(ceil((fdm->nxpad-(2*NOP))/16.0f),ceil((fdm->nzpad-(2*NOP))/16.0f));
+			dim3 dimBlock4(16,16);
 			stressToAcceleration<<<dimGrid4, dimBlock4>>>(d_uax, d_uaz, d_txx, d_tzz, d_tzx, idx, idz, fdm->nxpad, fdm->nzpad);
 			sf_check_gpu_error("stressToAcceleration Kernel");
 		
