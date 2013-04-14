@@ -4,7 +4,7 @@ try:
     import bldutil
     glob_build = True # scons command launched in RSFSRC
     srcroot = '../..' # cwd is RSFSRC/build/user/psava
-    Import('env bindir pkgdir')
+    Import('env bindir libdir pkgdir')
     env = env.Clone()
 except:
     glob_build = False # scons command launched in the local directory
@@ -12,7 +12,7 @@ except:
     sys.path.append(os.path.join(srcroot,'framework'))
     import bldutil
     env = bldutil.Debug() # Debugging flags for compilers
-    bindir = pkgdir = None
+    bindir = libdir = pkgdir = None
 
 targets = bldutil.UserSconsTargets()
 
@@ -44,4 +44,4 @@ srbin3d
 # anifd2d
 # awefd
 
-targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

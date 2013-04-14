@@ -277,12 +277,14 @@ def build_install_c_mpi(env, progs_c, srcroot, bindir, glob_build, bldroot):
 
 ################################################################################
 
-def build_install_c(env, progs_c, srcroot, bindir, glob_build, bldroot):
+def build_install_c(env, progs_c, srcroot, bindir, libdir, glob_build, bldroot):
     'Build and install C programs'
+
+    dynlib = env.get('DYNLIB','')
 
     env.Prepend(CPPPATH=[os.path.join(srcroot,'include')],
                 LIBPATH=[os.path.join(srcroot,'lib')],
-                LIBS=[env.get('DYNLIB','')+'rsf'])
+                LIBS=[dynlib+'rsf'])
 
     src = Glob('[a-z]*.c')
 
@@ -299,7 +301,13 @@ def build_install_c(env, progs_c, srcroot, bindir, glob_build, bldroot):
         depends(env, sources, 'M'+prog)
         prog = env.Program(prog, map(lambda x: x + '.c',sources))
         if glob_build:
-            env.Install(bindir,prog)
+            install = env.Install(bindir,prog)
+
+            if dynlib and env['PLATFORM'] == 'darwin':
+                env.AddPostAction(install,
+                'install_name_tool -change '
+                'build/api/c/libdrsf.dylib '
+                '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
     if glob_build:
         docs_c = map(lambda prog: env.Doc(prog,'M'+prog),mains_c)
@@ -468,7 +476,7 @@ class UserSconsTargets:
         self.f90 = None # F90 mains
         self.py = None # Python mains
         self.py_modules = None # Python modules that do not need SWIG and numpy
-    def build_all(self, env, glob_build, srcroot, bindir, pkgdir):
+    def build_all(self, env, glob_build, srcroot, bindir, libdir, pkgdir):
         # Needed for both C and F90 programs:
         bldroot = '../..' # aka RSFSRC/build
         if glob_build:
@@ -483,7 +491,7 @@ class UserSconsTargets:
         if not self.c:
             docs_c = []
         else:
-            docs_c = build_install_c(env, self.c, srcroot, bindir, glob_build, bldroot)
+            docs_c = build_install_c(env, self.c, srcroot, bindir, libdir, glob_build, bldroot)
 
         if self.c_place:
             docs_c += map(lambda prog: env.Doc(prog,'M'+prog),Split(self.c_place))

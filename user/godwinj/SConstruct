@@ -4,7 +4,7 @@ try:
     import bldutil
     glob_build = True 
     srcroot = '../..'
-    Import('env bindir pkgdir')
+    Import('env bindir libdir pkgdir')
     env = env.Clone()
 except:
     glob_build = False
@@ -12,7 +12,7 @@ except:
     sys.path.append(os.path.join(srcroot,'framework'))
     import bldutil
     env = bldutil.Debug() 
-    bindir = pkgdir = None
+    bindir = libdir = pkgdir = None
 
 targets = bldutil.UserSconsTargets()
 
@@ -23,12 +23,4 @@ gui
 browser
 '''
 
-try:  # distributed version
-    Import('env root pkgdir bindir')
-    env = env.Clone()
-except: # local version
-    env = bldutil.Debug()
-    root = None
-    bindir = pkgdir = None
-
-targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
