@@ -18,9 +18,9 @@ contains
   	!----------------------------------------------------------------
   	!! . . Initialization routine - parameter passing and array allocation
   	subroutine wemig_axes_init(nx_in,ox_in,dx_in,nz_in,oz_in,dz_in,nw_in,ow_in,dw_in,nh_in,oh_in,dh_in,&
-  	         source_norm_in,verbose_in,forward_in,ntaper_in)
+  	         source_norm_in,verbose_in,forward_in,ntaper_in,eps_in)
     	integer ::nx_in,nz_in,nw_in,nh_in,ntaper_in
-     	real :: ox_in,dx_in,oz_in,dz_in,ow_in,dw_in,oh_in,dh_in
+     	real :: ox_in,dx_in,oz_in,dz_in,ow_in,dw_in,oh_in,dh_in,eps_in
         logical :: source_norm_in, verbose_in,forward_in
         
 		!! For OMP
@@ -43,6 +43,8 @@ contains
   	 	source_norm = source_norm_in
   	 	verbose = verbose_in
   	 	ntaper=ntaper_in
+  	 	forward=forward_in
+  	 	eps=eps_in
   	 	
   	 	!$OMP PARALLEL
     		nth = omp_get_num_threads()
@@ -98,8 +100,8 @@ contains
     	!$OMP END PARALLEL
 
 		!! . . Source directivity
-    	sarg =-1.;    if (forward) sarg=1.
-    	rarg = 1.
+    	sarg =-1.;    
+    	rarg = 1.; if (forward) rarg=-1.
 
  		!! . . Get the minimum velocity for phase filtering
  		vminS = minval( velS )

@@ -22,7 +22,7 @@ program Mtelemig2d
   implicit none
 
   integer :: nx,nz,nh,testint,nw,ns,is,ix,iz,iw,ntaper
-  real  :: ox,dx,oz,dz,oh,dh,ow,dw,ds,os
+  real  :: ox,dx,oz,dz,oh,dh,ow,dw,ds,os,eps
   logical :: source_norm,verbose,forward
   real, allocatable,dimension(:,:,:) :: Svel,Rvel
   real, allocatable,dimension(:,:) :: img
@@ -70,9 +70,10 @@ program Mtelemig2d
    call from_par("verbose", verbose, .false.) ! Verbose (T/F)
    call from_par("forward", forward, .false.) ! Forward scattering (T/F)
    call from_par("ntaper", ntaper, 40) ! Taper on the side boundaries (npts)
+   call from_par("eps", eps, 0.01) ! Taper on the side boundaries (npts)
    
    if (nh .lt. 0 .or. nh .gt. 128) call sf_error("Number of offsets not between 1<nh<128")
-   nh = 2*nh+1; dh = dx;  oh=-nh*dh
+   nh = 2*nh+1; dh = dx;  oh=-(nh-1)*dh
    
    if (nh .eq. 0)  then
       write(0,*) 'Not computing CIGs'
@@ -102,7 +103,7 @@ program Mtelemig2d
    call to_par(cigfile,"esize",4)
    
    !! . . Initialize propagation module
-   call wemig_axes_init(nx,ox,dz,nz,oz,dz,nw,ow,dw,nh,oh,dh,source_norm,verbose,forward,ntaper)
+   call wemig_axes_init(nx,ox,dz,nz,oz,dz,nw,ow,dw,nh,oh,dh,source_norm,verbose,forward,ntaper,eps)
    
    write(0,*) 'nx,ox,dx ... ',nx,ox,dx
    write(0,*) 'nz,oz,dz ... ',nz,oz,dz
