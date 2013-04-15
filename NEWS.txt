@@ -16,6 +16,8 @@ approximation (Song, Fomel, and Ying)
 
 To SCons:
 
+* Upgraded to scons-2.3.0
+
 To documentation:
 
 * Selfdocs include links for programs of the month
