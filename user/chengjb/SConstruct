@@ -80,7 +80,8 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    env.StaticObject('M'+prog+'.c')
+    so = env.StaticObject('M'+prog+'.c')
+    env.Depends(so,['_cjb.h','_cjbsegy.h'])
     if prog in ('ort3dhomodevK',) and not lapack:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     else:
