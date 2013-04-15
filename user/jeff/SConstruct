@@ -34,7 +34,6 @@ targets.c = '''
 wexmig
 wexwfl
 wexmva
-norm
 norm2
 reciprocity
 axplusy

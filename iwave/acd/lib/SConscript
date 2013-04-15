@@ -9,7 +9,7 @@ try:  # madagascar version
     CC = env.get('CC','gcc')
     if CC.rfind('gcc') >= 0:
         gcc_version = float(os.popen(CC + " -dumpversion | cut -f1,2 -d.").read().rstrip())
-        if gcc_version >= 4.2:
+        if gcc_version > 4.2:
             env.Append(CFLAGS = ' -march=native')
 except:  # autonomous version    
     Import('vars' + imports)
