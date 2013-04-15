@@ -1,0 +1,797 @@
+/* Kernel routines. */
+
+/*
+  Copyright (C) 2006 The Board of Trustees of Stanford University
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+#include <rsf.h>
+
+#include "kernel.h"
+
+#ifndef _kernel_h
+
+struct shot_ker_par_type
+{
+    int op,nx,ny,nref;
+    float dx,dy,dz,fkx,dkx,fky,dky;
+    float ax,ay,bx,by,axnoa,aynoa,bxnob,bynob,tx,ty,fda,fdb;
+    int is2d;
+    sf_complex *ux,*vx,*uy,*vy,*ra,*rb,*rc;
+    float *cax,*cbx,*cay,*cby;
+    float *axvector,*bxvector,*avector,*bvector;
+    sf_complex *tmp_fft, *add_wld,*tmp_wld;
+    float *v0_z,*v_zw,*v_zw0;
+    float *sin,*cos,*sqrt;
+    float dsin,dqrt;
+    int Nsin;
+    float rotate;
+};
+struct shot_ker_ani_type
+{
+    float phi,f;
+    float o_ep,d_ep,o_dl,d_dl,o_w_vp,d_w_vp;
+    int m,n,n_ep,n_dl,n_w_vp;
+    sf_complex *contablepp,*contablepm,*conapp,*conapm;
+};
+struct shot_ker_ani_implicit_type
+{
+    float o_ep,d_ep,o_dl,d_dl;
+    int n_ep,n_dl;
+    float ***fdcoe;
+    int nfdcoe;
+};
+/*^*/
+
+#endif
+
+struct shot_ker_par_type shot_ker_p_init(int op,int nx,int ny,float dx,float dy,float dz,
+					 float a,float b,float trick,int is2d,float rotate)
+/*< initialize >*/
+{
+    struct shot_ker_par_type ker_par;
+
+
+    float pi=3.1415926; int i;
+    ker_par.nref=3;
+    ker_par.op=op;
+    ker_par.fda=a; ker_par.fdb=b;
+    ker_par.nx=nx; ker_par.ny=ny;
+    ker_par.dx=dx; ker_par.dy=dy; ker_par.dz=dz;
+    ker_par.fkx=-pi/ker_par.dx; ker_par.fky=-pi/ker_par.dy;  //change tilt 
+    ker_par.dkx=2.0*pi/(nx*ker_par.dx); ker_par.dky=2.0*pi/(ny*ker_par.dy);  //change in tilt
+    ker_par.ax=a*dz/(2.0*ker_par.dx*ker_par.dx); ker_par.ay=a*dz/(2.0*ker_par.dy*ker_par.dy);
+    ker_par.bx=b/(ker_par.dx*ker_par.dx); ker_par.by=b/(ker_par.dy*ker_par.dy);
+    ker_par.axnoa=dz/(2.0*ker_par.dx*ker_par.dx); ker_par.aynoa=dz/(2.0*ker_par.dy*ker_par.dy);
+    ker_par.bxnob=1.0/(ker_par.dx*ker_par.dx); ker_par.bynob=1.0/(ker_par.dy*ker_par.dy);
+    ker_par.tx=trick;     ker_par.ty=trick;
+    ker_par.is2d=is2d;
+    ker_par.axvector=allocatef(nx); ker_par.bxvector=allocatef(nx);
+    ker_par.avector=allocatef(nx); ker_par.bvector=allocatef(nx);
+    ker_par.ux=allocatec(nx);  ker_par.vx=allocatec(nx); 
+    ker_par.cax=allocatef(nx); ker_par.cbx=allocatef(nx);
+    ker_par.uy=allocatec(ny);  ker_par.vy=allocatec(ny); 
+    ker_par.cay=allocatef(ny); ker_par.cby=allocatef(ny);
+    ker_par.ra=allocatec(nx);  ker_par.rb=allocatec(nx); ker_par.rc=allocatec(nx);
+    ker_par.tmp_fft=allocatec(2*nx); ker_par.add_wld=allocatec(nx*ny); ker_par.tmp_wld=allocatec(nx*ny);
+    //printf ("nx in initial kernel:nx=%d\n",nx);
+    ker_par.v_zw=allocatef(nx*ny); ker_par.v_zw0=allocatef(nx*ny);
+    ker_par.v0_z=allocatef(ker_par.nref);
+    ker_par.rotate=rotate;
+
+    ker_par.Nsin=2000;
+    ker_par.sin=allocatef(ker_par.Nsin); 
+    ker_par.cos=allocatef(ker_par.Nsin); 
+
+    ker_par.sqrt=allocatef(ker_par.Nsin);
+    ker_par.dsin=pi*2.0/(float)(ker_par.Nsin);
+    ker_par.dqrt=1.0/(float)(ker_par.Nsin);
+
+    for (i=0;i<ker_par.Nsin;i++){
+	ker_par.sin[i]=sin(ker_par.dsin*i);
+	ker_par.cos[i]=cos(ker_par.dsin*i);
+	ker_par.sqrt[i]=sqrt(ker_par.dqrt*i);
+    }
+  
+    return ker_par;
+}
+
+
+
+void shot_ker_release(struct shot_ker_par_type *ker_par)
+/*< release >*/
+{
+    free(ker_par->ux); 
+    free(ker_par->vx); free(ker_par->cax); free(ker_par->cbx);
+    free(ker_par->uy); free(ker_par->vy); free(ker_par->cay); free(ker_par->cby);
+    free(ker_par->ra); free(ker_par->rb); free(ker_par->rc); 
+    free(ker_par->tmp_fft);free(ker_par->add_wld); free(ker_par->tmp_wld);
+    free(ker_par->v_zw); free(ker_par->v_zw0); free(ker_par->v0_z);
+    free(ker_par->sin); 
+    free(ker_par->cos); 
+    free(ker_par->sqrt);
+    free(ker_par->axvector); free(ker_par->bxvector); free(ker_par->avector); free(ker_par->bvector);
+}
+
+void tilt_nx_dkx_change_iz(struct shot_ker_par_type *ker_par, int nx_iz, float dkx_iz)
+{
+    ker_par->dkx=dkx_iz; ker_par->nx=nx_iz;
+}
+
+
+
+
+
+
+void shot_ker_depth_onestep(sf_complex *wld_z,float *v_z,float w,int signn, struct shot_ker_par_type ker_par){
+    int op,nref,nx,ny,is2d;
+
+    float wvx,dref,wvx_all;
+    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    int iref,ix,iy,ivx,iiref;
+    float w_v0_z,maxvz,minvz;
+    float *v0_z,*v_zw,*v_zw0;
+    nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
+//old tmp_fft=ker_par.tmp_fft; 
+    add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+    tmp_fft=allocatec(nx*2);
+//old !v0_z(1)=minval(v_z);//!v0_z(nref)=maxval(v_z);//!dref=(v0_z(nref)-v0_z(1))/(nref-1)
+
+
+
+    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  dref=(maxvz-minvz)/(nref+1);
+    if ( fabs(maxvz-minvz)<50.0 ) { ///?????????????wait
+	nref=1;  v0_z[0]=0.5*(maxvz+minvz);
+    }
+    else{
+	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  dref=(v0_z[nref-1]-v0_z[0])/(float)(nref-1); v0_z[1]=(minvz+maxvz)*0.5;  
+	//old v0_z(2)=(minval(v_z)+maxval(v_z))*0.5; //!  do iref=1,nref //!    v0_z(iref)=iref*dref //!  end do
+    }
+
+
+//old!v0_z(2)=0.5*v0_z(1)+0.5*v0_z(3);//!v0_z(1)=0.5*v0_z(1)+0.5*v0_z(2);//!v0_z(3)=0.5*v0_z(3)+0.5*v0_z(2)
+//old  v0_z[0]=0.5*(v0_z[0]+v0_z[1]); v0_z[2]=0.5*(v0_z[1]+v0_z[2]); dref=v0_z[1]-v0_z[0];
+//old nref=1;  v0_z[0]=minvz;
+//old printf("nx=%d,ny=%d\n",nx,ny); 
+
+
+
+    for (iy=0;iy<ny;iy++)
+	for(ix=0;ix<nx;ix++)
+	    v_zw[i2(iy,ix,nx)]=v_z[i2(iy,ix,nx)]/w;
+
+    if (op == 2){
+   
+	w_v0_z=0.0;
+	shot_ker_ssf(wld_z,w_v0_z,w,v_z,ker_par,signn);
+	shot_ker_fd(wld_z,v_zw,v_zw,ker_par,signn);
+      
+
+   
+	if (is2d){
+	    vector_value_c(tmp_fft,cmplx(0.0,0.0),nx);
+	    rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
+	    cwpfft1d(tmp_fft,nx,+1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	}
+	w_v0_z=w/(0.75*minvz+0.25*maxvz);
+	li_filter_new(wld_z,w_v0_z,ker_par,signn); 
+	if (is2d){
+	    rowc(wld_z,tmp_fft,0,nx,1); //tmp_fft=tmp_wld(:,1);
+	    cwpfft1d(tmp_fft,nx,-1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //tmp_wld(:,1)=tmp_fft(:);
+	}
+   
+
+    }
+    else{
+	if (is2d){
+	    //printf("nx in fft nx=%d\n",nx);
+	    vector_value_c(tmp_fft,cmplx(0.0,0.0),nx);
+	    //printf("in before iso max0=%f\n",maxvalc(wld_z,nx));
+	    rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
+	    cwpfft1d(tmp_fft,nx,+1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	    //printf("in iso max0=%f\n",maxvalc(wld_z,nx));
+	}
+	else{
+	    //printf ("bbbbb iam 3d");
+	    for(iy=0;iy<ny;iy++){
+		rowc(wld_z,tmp_fft,iy,nx,1);  //tmp_fft=wld_z(1,:);
+		cwpfft1d(tmp_fft,nx,+1);
+		rowc(wld_z,tmp_fft,iy,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	    }
+	    if (ny!=1){
+		for(ix=0;ix<nx;ix++){
+		    colc(wld_z,tmp_fft,ix,nx,ny,1);
+		    cwpfft1d(tmp_fft,ny,+1);
+		    colc(wld_z,tmp_fft,ix,nx,ny,0);   // wait tmp_fftx tmp_ffty
+		}
+	    }
+  
+	}
+  
+  
+	for( iy=0;iy<ny;iy++)
+	    for(ix=0;ix<nx;ix++)
+		add_wld[i2(iy,ix,nx)]=cmplx(0.0,0.0);   //add_wld=0.0;
+
+	for( iref=0;iref<nref;iref++){
+	    matrix_equ_c(tmp_wld,wld_z,ny,nx);//tmp_wld=wld_z;
+	    w_v0_z=w/v0_z[iref];
+	    shot_phase_shift(tmp_wld,w_v0_z,ker_par,signn);
+	    //shot_phase_shift_vti(tmp_wld,w_v0_z,0.4,0.2,ker_par,signn);
+    
+
+	    if (is2d){
+		rowc(tmp_wld,tmp_fft,0,nx,1); //tmp_fft=tmp_wld(:,1);
+		cwpfft1d(tmp_fft,nx,-1);
+		rowc(tmp_wld,tmp_fft,0,nx,0);  //tmp_wld(:,1)=tmp_fft(:);
+	    }
+	    else{
+		if (ny!=1){
+		    for(ix=0;ix<nx;ix++){
+			colc(tmp_wld,tmp_fft,ix,nx,ny,1);
+			cwpfft1d(tmp_fft,ny,-1);
+			colc(tmp_wld,tmp_fft,ix,nx,ny,0);   // wait tmp_fftx tmp_ffty
+		    }
+		}
+		for(iy=0;iy<ny;iy++){
+		    rowc(tmp_wld,tmp_fft,iy,nx,1);  //tmp_fft=wld_z(1,:);
+		    cwpfft1d(tmp_fft,nx,-1);
+		    rowc(tmp_wld,tmp_fft,iy,nx,0);  //wld_z(1,:)=tmp_fft(:);
+		}
+
+	    }
+	    shot_ker_ssf(tmp_wld,w_v0_z,w,v_z,ker_par,signn);
+    
+	    if (op==3){ 
+		for( iy=0;iy<ny;iy++)
+		    for(ix=0;ix<nx;ix++)
+			v_zw0[i2(iy,ix,nx)]=v_zw[i2(iy,ix,nx)]-v0_z[iref]/w;
+		shot_ker_fd(tmp_wld,v_zw0,v_zw,ker_par,signn);
+	    }
+    
+	    if ( nref==1) vector_cp_c(add_wld,tmp_wld,ny*nx); //add_wld=tmp_wld;
+	    else{
+      
+		for(iy=0;iy<ny;iy++){      
+		    for(ix=0;ix<nx;ix++){  
+			ivx=(int)((v_z[i2(iy,ix,nx)]-v0_z[0])/dref); //wait ???
+			wvx=(v_z[i2(iy,ix,nx)]-(v0_z[0]+(float)(ivx)*dref))/dref;   //wait ???
+			if (v_z[i2(iy,ix,nx)] >= v0_z[nref-1]){
+			    if (iref==nref-1) add_wld[i2(iy,ix,nx)]+=tmp_wld[i2(iy,ix,nx)];
+			}
+			else{
+			    if (v_z[i2(iy,ix,nx)] <= v0_z[0]){ 
+				if (iref==0)  add_wld[i2(iy,ix,nx)]+=tmp_wld[i2(iy,ix,nx)];
+			    }
+			    else{
+				if (ivx==iref) add_wld[i2(iy,ix,nx)] += tmp_wld[i2(iy,ix,nx)]*(1-wvx);
+				if (ivx+1==iref) add_wld[i2(iy,ix,nx)] += tmp_wld[i2(iy,ix,nx)]*wvx;
+			    }
+			}
+		    }
+		}
+      
+	    }
+    
+	}
+	vector_cp_c(wld_z,add_wld,ny*nx);  //wld_z=add_wld;
+    }
+    free(tmp_fft);
+}
+
+
+
+void li_filter(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,int signn)
+{
+    int nx,ny;
+    float fkx,fky,dkx,dky,dz;
+
+    int ix,iy,ipi,isin,ikz2;
+    float kx,ky,kz,kz2,phsft,pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft,kx2;
+    float a,b;
+    float rotate,pfiltercut;
+    rotate=ker_par.rotate;
+    pfiltercut=60.0;
+    pio2=3.1415926*2.0;
+    nx=ker_par.nx; ny=ker_par.ny;
+    fkx=ker_par.fkx; fky=ker_par.fky;
+    dkx=ker_par.dkx; dky=ker_par.dky;
+    dz=ker_par.dz; a=ker_par.fda; b=ker_par.fdb;
+    for(iy=0;iy<1;iy++){
+	for(ix=0;ix<nx;ix++){  //do ix=1,nx
+	    kx=fkx+ix*dkx;
+	    kx2=(kx*kx)/(w_v0_z*w_v0_z);
+	    if (kx2 <=1) {
+		kz2=1.0-kx2;
+		phsft=-signn*dz*w_v0_z*(sqrt(kz2)-(1-(a*kx2)/(1-b*kx2) ));
+		//phsft=-signn*dz*w_v0_z*(sqrt(kz2));
+		//phsft=-signn*dz*w_v0_z*((1-(a*kx2)/(1-b*kx2) ));
+		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+	    }
+	    else{
+		if (kx2>2) kx2=2.0;
+		kz2=fabs(kx2- 1);
+		//ikz2=(int)(kz2/ker_par.dqrt);
+		phsft=dz*w_v0_z*(sqrt(kz2));
+		wld_z[i2(iy,ix,nx)]=0.0;
+		//wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
+	    }
+
+
+	}
+    }
+
+}
+
+
+void li_filter_new(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,int signn)
+{
+    int nx,ny;
+    float fkx,fky,dkx,dky,dz;
+
+    int ix,iy,ipi,isin,ikz2;
+    float kx,ky,kz,kz2,phsft,pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft,kx2;
+    float a,b;
+    float rotate,pfiltercut;
+    float deltx2,dx,dx2,aterm,bterm,tr;
+    sf_complex leftterm,rightterm;
+
+    rotate=ker_par.rotate;
+    pfiltercut=60.0;
+    pio2=3.1415926*2.0;
+    nx=ker_par.nx; ny=ker_par.ny;
+    fkx=ker_par.fkx; fky=ker_par.fky;
+    dkx=ker_par.dkx; dky=ker_par.dky;
+    dz=ker_par.dz; a=ker_par.fda; b=ker_par.fdb;
+    dx=ker_par.dx; dx2=dx*dx; tr=ker_par.tx;
+    for(iy=0;iy<1;iy++){
+	for(ix=0;ix<nx;ix++){  //do ix=1,nx
+	    kx=fkx+ix*dkx;
+	    kx2=(kx*kx)/(w_v0_z*w_v0_z);
+	    if (kx2 <=1) {
+		kz2=1.0-kx2;
+		//phsft=-signn*dz*w_v0_z*(sqrt(kz2)-1);
+		//phsft=-signn*dz*w_v0_z*(1);
+		//wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+		deltx2=2.0*(cos(kx*dx)-1.0)/dx2;
+		bterm=tr*dx2+b/(w_v0_z*w_v0_z);
+		aterm=-a*dz/(2.0*w_v0_z);
+		leftterm=1.0+cmplx(bterm,-aterm)*deltx2;
+		rightterm=1.0+cmplx(bterm,aterm)*deltx2; 
+		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*(rightterm/leftterm);
+
+	    }
+	    else{
+		if (kx2>2) kx2=2.0;
+		kz2=fabs(kx2- 1);
+		phsft=dz*w_v0_z*(sqrt(kz2));
+		//wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
+		wld_z[i2(iy,ix,nx)]=0.0;  
+	    }
+	}
+    }
+}
+
+
+
+
+void shot_phase_shift(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,int signn)
+{// wld_z(ker_par.ny,ker_par.nx)
+    int nx,ny;
+    float fkx,fky,dkx,dky,dz;
+  
+    int ix,iy,ipi,isin,ikz2;
+    float kx,ky,kz,kz2,phsft,pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft;
+    pio2=3.1415926*2.0;
+    nx=ker_par.nx; ny=ker_par.ny; 
+    fkx=ker_par.fkx; fky=ker_par.fky; 
+    dkx=ker_par.dkx; dky=ker_par.dky;
+    dz=ker_par.dz;
+
+    for(iy=0;iy<ny;iy++){ //do iy=1,ny
+	if (ker_par.is2d) 
+	    ky=0.0;
+	else
+	    ky=fky+iy*dky;
+	if (ny==1) ky=0.0;
+ 
+	for(ix=0;ix<nx;ix++){  //do ix=1,nx
+	    kx=fkx+ix*dkx;
+	    kz2=(kx*kx+ky*ky)/(w_v0_z*w_v0_z);
+	    if (kz2 <=1.0) {
+		kz2=1.0-kz2;
+		phsft=-signn*dz*w_v0_z*(sqrt(kz2));
+		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+	    }
+	    else{
+		if (kz2>2) kz2=2.0;
+		kz2=kz2-1;
+		ikz2=(int)(kz2/ker_par.dqrt);
+		phsft=dz*w_v0_z*(sqrt(kz2));
+		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
+	    }     
+	} 
+    }
+}
+
+
+void shot_ker_ssf(sf_complex *wld_z,float w_v0_z,float w,float *v_z, struct shot_ker_par_type ker_par,int signn)
+{ // wld_z(ny,nx) v_z(ny,nx)
+    int nx,ny,ix,iy;
+    float phsft,dz;
+    int ipi,isin;
+    float pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft;
+    pio2=3.1415926*2.0;
+
+    nx=ker_par.nx; ny=ker_par.ny; dz=ker_par.dz;
+  
+    for(iy=0;iy<ny;iy++){
+	for(ix=0;ix<nx;ix++){
+	    phsft=-signn*dz*(w/v_z[i2(iy,ix,nx)]-w_v0_z);
+	    wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+	}
+    }
+}
+
+void shot_ker_fd(sf_complex *wld_z,float *ca,float *cb,struct shot_ker_par_type ker_par,int signn)
+{
+
+    int nx,ny,ix,iy;
+    float tx,ty,ax,ay,bx,by;
+    sf_complex *ux,*vx,*uy,*vy;
+    float *cax,*cbx,*cay,*cby;
+
+    ax=-signn*ker_par.ax; ay=-signn*ker_par.ay; 
+    bx=ker_par.bx; by=ker_par.by; 
+    nx=ker_par.nx; ny=ker_par.ny;
+    tx=ker_par.tx; ty=ker_par.ty;
+
+    ux=ker_par.ux; vx=ker_par.vx; cax=ker_par.cax; cbx=ker_par.cbx;
+    uy=ker_par.uy; vy=ker_par.vy; cay=ker_par.cay; cby=ker_par.cby;
+
+    for(iy=0;iy<ny;iy++){
+	rowc(wld_z,ux,iy,nx,1);  //ux=wld_z(iy,:)
+	rowf(ca,cax,iy,nx,1);   //  cax=ca(iy,:)
+	rowf(cb,cbx,iy,nx,1);   //  cbx=cb(iy,:)
+	fd(ux,vx,tx,ax,bx,cax,cbx,nx,ker_par); //,rax,rbx,rcx);
+	rowc(wld_z,vx,iy,nx,0);//  wld_z(iy,:,:)=vx
+    }
+}
+
+
+void fd(sf_complex *u,sf_complex *v,float tr,float a,float b,float *ca,float *cb,int nx,struct shot_ker_par_type ker_par)
+{ // u(nx),v(nx),ca(nx),cb(nx)
+
+    sf_complex *ra,*rb,*rc;
+    sf_complex  url,urr,ror,rol,rorr,rorl;
+    int  ix;
+
+    ra=ker_par.ra; rb=ker_par.rb; rc=ker_par.rc;
+    for(ix=0;ix<nx;ix++){
+	if (ix==0)    url=cmplx(0.0,0.0);
+	else          url=u[ix-1];
+	if (ix==nx-1) urr=cmplx(0.0,0.0);
+	else          urr=u[ix+1];
+	ror=cmplx(tr+b*cb[ix]*cb[ix],a*ca[ix]);
+	if (ix==nx-1) rorr=ror;
+	else rorr=cmplx(tr+b*cb[ix]*cb[ix+1],a*ca[ix]);
+	if (ix==0) rorl=ror;
+	else rorl=cmplx(tr+b*cb[ix]*cb[ix-1],a*ca[ix]);
+	v[ix]=u[ix]-2.0*ror*u[ix]+rorr*urr+rorl*url;
+    
+
+	rol=conjg(ror);
+	ra[ix]=1.0-2.0*rol;
+	if (ix <nx-1) rb[ix] =cmplx(tr+b*cb[ix]*cb[ix+1],-a*ca[ix]);
+	if (ix >0) rc[ix-1]=cmplx(tr+b*cb[ix]*cb[ix-1],-a*ca[ix]);
+    }
+    thryj(ra,rb,rc,v,nx,1);
+}
+
+
+
+
+void shot_ker_depth_onestep_ani_phaseshift(sf_complex *wld_z,float *v_z,float w,float ep,float dl,float phi, float f,int signn, struct shot_ker_par_type ker_par){
+    int op,nref,nx,ny,is2d;
+
+    float wvx,dref,wvx_all;
+    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    int iref,ix,iy,ivx,iiref;
+    float w_v0_z,maxvz,minvz;
+    float *v0_z,*v_zw,*v_zw0;
+    nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
+    tmp_fft=ker_par.tmp_fft; add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+
+    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  dref=(maxvz-minvz)/(nref+1);
+
+    if ( fabs(maxvz-minvz)<50.0 ) { ///?????????????wait
+	nref=1;  v0_z[0]=0.5*(maxvz+minvz);
+    }
+    else{
+	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  dref=(v0_z[nref-1]-v0_z[0])/(float)(nref-1); v0_z[1]=(minvz+maxvz)*0.5;  
+    }
+
+    for (iy=0;iy<ny;iy++)
+	for(ix=0;ix<nx;ix++)
+	    v_zw[i2(iy,ix,nx)]=v_z[i2(iy,ix,nx)]/w;
+    if (op == 2){
+	w_v0_z=0.0;
+	shot_ker_ssf(wld_z,w_v0_z,w,v_z,ker_par,signn);
+	shot_ker_fd(wld_z,v_zw,v_zw,ker_par,signn);
+    }
+    else{
+	if (is2d){
+	    rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
+	    cwpfft1d(tmp_fft,nx,+1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	}
+	else{
+	    for(iy=0;iy<ny;iy++){
+		rowc(wld_z,tmp_fft,iy,nx,1);  //tmp_fft=wld_z(1,:);
+		cwpfft1d(tmp_fft,nx,+1);
+		rowc(wld_z,tmp_fft,iy,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	    }
+	    for(ix=0;ix<nx;ix++){
+		colc(wld_z,tmp_fft,ix,nx,ny,1);
+		cwpfft1d(tmp_fft,ny,+1);
+		colc(wld_z,tmp_fft,ix,nx,ny,0);   // wait tmp_fftx tmp_ffty
+	    }
+  
+	}
+
+	for( iy=0;iy<ny;iy++)
+	    for(ix=0;ix<nx;ix++)
+		add_wld[i2(iy,ix,nx)]=cmplx(0.0,0.0);   //add_wld=0.0;
+
+	for( iref=0;iref<nref;iref++){
+	    matrix_equ_c(tmp_wld,wld_z,ny,nx);//tmp_wld=wld_z;
+	    w_v0_z=w/v0_z[iref];
+	    shot_phase_shift_ani(tmp_wld,w_v0_z,ep,dl,phi,f,ker_par,signn);
+	    if (is2d){
+		rowc(tmp_wld,tmp_fft,0,nx,1); //tmp_fft=tmp_wld(:,1);
+		cwpfft1d(tmp_fft,nx,-1);
+		rowc(tmp_wld,tmp_fft,0,nx,0);  //tmp_wld(:,1)=tmp_fft(:);
+	    }
+	    else{
+		for(ix=0;ix<nx;ix++){
+		    colc(tmp_wld,tmp_fft,ix,nx,ny,1);
+		    cwpfft1d(tmp_fft,ny,-1);
+		    colc(tmp_wld,tmp_fft,ix,nx,ny,0);   // wait tmp_fftx tmp_ffty
+		}
+		for(iy=0;iy<ny;iy++){
+		    rowc(tmp_wld,tmp_fft,iy,nx,1);  //tmp_fft=wld_z(1,:);
+		    cwpfft1d(tmp_fft,nx,-1);
+		    rowc(tmp_wld,tmp_fft,iy,nx,0);  //wld_z(1,:)=tmp_fft(:);
+		}
+
+	    }
+	    //shot_ker_ssf(tmp_wld,w_v0_z,w,v_z,ker_par,signn);
+	    if (op==3){ 
+		for( iy=0;iy<ny;iy++)
+		    for(ix=0;ix<nx;ix++)
+			v_zw0[i2(iy,ix,nx)]=v_zw[i2(iy,ix,nx)]-v0_z[iref]/w;
+		shot_ker_fd(tmp_wld,v_zw0,v_zw,ker_par,signn);
+	    }
+	    if ( nref==1) vector_cp_c(add_wld,tmp_wld,ny*nx); //add_wld=tmp_wld;
+	    else{
+		for(iy=0;iy<ny;iy++){      
+		    for(ix=0;ix<nx;ix++){  
+			ivx=(int)((v_z[i2(iy,ix,nx)]-v0_z[0])/dref); //wait ???
+			wvx=(v_z[i2(iy,ix,nx)]-(v0_z[0]+(float)(ivx)*dref))/dref;   //wait ???
+			if (v_z[i2(iy,ix,nx)] >= v0_z[nref-1]){
+			    if (iref==nref-1) add_wld[i2(iy,ix,nx)]+=tmp_wld[i2(iy,ix,nx)];
+			}
+			else{
+			    if (v_z[i2(iy,ix,nx)] <= v0_z[0]){ 
+				if (iref==0)  add_wld[i2(iy,ix,nx)]+=tmp_wld[i2(iy,ix,nx)];
+			    }
+			    else{
+				if (ivx==iref) add_wld[i2(iy,ix,nx)] += tmp_wld[i2(iy,ix,nx)]*(1-wvx);
+				if (ivx+1==iref) add_wld[i2(iy,ix,nx)] += tmp_wld[i2(iy,ix,nx)]*wvx;
+			    }
+			}
+		    }
+		}
+	    }
+    
+	}
+
+	vector_cp_c(wld_z,add_wld,ny*nx);  //wld_z=add_wld;
+    }
+
+}
+
+
+
+
+void shot_ker_depth_onestep_vti_phaseshift(sf_complex *wld_z,float w_v0_z,float ep,float dl,int signn, struct shot_ker_par_type ker_par){
+    int op,nref,nx,ny,is2d;
+
+    float wvx,dref,wvx_all;
+    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    int iref,ix,iy,ivx,iiref;
+    float maxvz,minvz;
+    float *v0_z,*v_zw,*v_zw0;
+    nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
+    tmp_fft=ker_par.tmp_fft; add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+
+    rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
+    cwpfft1d(tmp_fft,nx,+1);
+    rowc(wld_z,tmp_fft,0,nx,0);  //wld_z(1,:)=tmp_fft(:);
+
+    shot_phase_shift(wld_z,w_v0_z,ker_par,signn);
+
+    rowc(wld_z,tmp_fft,0,nx,1); //tmp_fft=tmp_wld(:,1);
+    cwpfft1d(tmp_fft,nx,-1);
+    rowc(wld_z,tmp_fft,0,nx,0);  //tmp_wld(:,1)=tmp_fft(:);
+
+}
+
+void shot_ker_depth_onestep_impulse(sf_complex *wld_z,float *v_z,float w,int signn, float ep,float dl,
+				    struct shot_ker_par_type ker_par)
+/*< onestep impulse >*/
+{
+    int op,nref,nx,ny,is2d;
+
+    float wvx,dref,wvx_all;
+    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    int iref,ix,iy,ivx,iiref;
+    float w_v0_z,maxvz,minvz;
+    float *v0_z,*v_zw,*v_zw0;
+    nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
+    add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+    tmp_fft=allocatec(nx*2);
+    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  dref=(maxvz-minvz)/(nref+1);
+    if ( fabs(maxvz-minvz)<50.0 ) { ///?????????????wait
+	nref=1;  v0_z[0]=0.5*(maxvz+minvz);
+    }
+    else{
+	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  dref=(v0_z[nref-1]-v0_z[0])/(float)(nref-1); v0_z[1]=(minvz+maxvz)*0.5;  
+    }
+
+    for (iy=0;iy<ny;iy++)
+	for(ix=0;ix<nx;ix++)
+	    v_zw[i2(iy,ix,nx)]=v_z[i2(iy,ix,nx)]/w;
+
+    if (op == 2){
+	w_v0_z=0.0;
+	shot_ker_ssf(wld_z,w_v0_z,w,v_z,ker_par,signn);
+	shot_ker_fd(wld_z,v_zw,v_zw,ker_par,signn);
+    }
+
+    else{
+	if (is2d){
+	    vector_value_c(tmp_fft,cmplx(0.0,0.0),nx);
+	    rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
+	    cwpfft1d(tmp_fft,nx,+1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	}
+	w_v0_z=w/v0_z[0];
+	shot_phase_shift_vti(wld_z,w_v0_z,ep,dl,ker_par,signn);
+	if (is2d){
+	    rowc(wld_z,tmp_fft,0,nx,1); //tmp_fft=tmp_wld(:,1);
+	    cwpfft1d(tmp_fft,nx,-1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //tmp_wld(:,1)=tmp_fft(:);
+	}
+    }
+    free(tmp_fft);
+}
+
+
+
+
+void shot_ker_depth_onestep_fd2(sf_complex *wld_z,float *v_z,float w,int signn, 
+				float a1,float b1,float a2,float b2,struct shot_ker_par_type ker_par)
+/*< onestep fd2 >*/
+{
+    int op,nref,nx,ny,is2d;
+
+    float wvx,dref,wvx_all;
+    sf_complex  *tmp_fft,*add_wld,*tmp_wld;
+    int iref,ix,iy,ivx,iiref;
+    float w_v0_z,maxvz,minvz;
+    float *v0_z,*v_zw,*v_zw0;
+    nref=ker_par.nref;  nx=ker_par.nx;  ny=ker_par.ny;  is2d=ker_par.is2d;  op=ker_par.op; //! op:1:ssf 2:fd 3:ffd
+    v0_z=ker_par.v0_z; v_zw=ker_par.v_zw; v_zw0=ker_par.v_zw0;
+    add_wld=ker_par.add_wld; tmp_wld=ker_par.tmp_wld;
+    tmp_fft=allocatec(nx*2);
+
+    maxvz=maxval(v_z,nx*ny); minvz=minval(v_z,nx*ny);  dref=(maxvz-minvz)/(nref+1);
+    if ( fabs(maxvz-minvz)<50.0 ) { ///?????????????wait
+	nref=1;  v0_z[0]=0.5*(maxvz+minvz);
+    }
+    else{
+	v0_z[0]=minvz;  v0_z[nref-1]=maxvz;  dref=(v0_z[nref-1]-v0_z[0])/(float)(nref-1); v0_z[1]=(minvz+maxvz)*0.5;  
+    }
+    for (iy=0;iy<ny;iy++)
+	for(ix=0;ix<nx;ix++)
+	    v_zw[i2(iy,ix,nx)]=v_z[i2(iy,ix,nx)]/w;
+
+    if (op == 2){
+	if (is2d){
+	    vector_value_c(tmp_fft,cmplx(0.0,0.0),nx);
+	    rowc(wld_z,tmp_fft,0,nx,1);  //tmp_fft=wld_z(1,:);
+	    cwpfft1d(tmp_fft,nx,+1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //wld_z(1,:)=tmp_fft(:);
+	}
+	w_v0_z=w/(0.75*minvz+0.25*maxvz);
+	li_filter_fd2(wld_z,w_v0_z,a1,b1,a2,b2,ker_par,signn); 
+	if (is2d){
+	    rowc(wld_z,tmp_fft,0,nx,1); //tmp_fft=tmp_wld(:,1);
+	    cwpfft1d(tmp_fft,nx,-1);
+	    rowc(wld_z,tmp_fft,0,nx,0);  //tmp_wld(:,1)=tmp_fft(:);
+	}
+	w_v0_z=0.0;
+	shot_ker_ssf(wld_z,w_v0_z,w,v_z,ker_par,signn);
+   
+	ker_par.ax=a1*ker_par.dz/(2.0*ker_par.dx*ker_par.dx); ker_par.ay=a1*ker_par.dz/(2.0*ker_par.dy*ker_par.dy);
+	ker_par.bx=b1/(ker_par.dx*ker_par.dx);        ker_par.by=b1/(ker_par.dy*ker_par.dy);
+	shot_ker_fd(wld_z,v_zw,v_zw,ker_par,signn);
+	ker_par.ax=a2*ker_par.dz/(2.0*ker_par.dx*ker_par.dx); ker_par.ay=a2*ker_par.dz/(2.0*ker_par.dy*ker_par.dy);
+	ker_par.bx=b2/(ker_par.dx*ker_par.dx);        ker_par.by=b2/(ker_par.dy*ker_par.dy);
+	shot_ker_fd(wld_z,v_zw,v_zw,ker_par,signn);
+   
+   
+    }
+    free(tmp_fft);
+}
+
+
+void li_filter_fd2(sf_complex *wld_z,float w_v0_z,float a1,float b1,float a2,float b2,struct shot_ker_par_type ker_par,int signn)
+{
+    int nx,ny;
+    float fkx,fky,dkx,dky,dz;
+
+    int ix,iy,ipi,isin,ikz2;
+    float kx,ky,kz,kz2,phsft,pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft,kx2;
+    float a,b;
+    float rotate,pfiltercut;
+    rotate=ker_par.rotate;
+    pfiltercut=60.0;
+    pio2=3.1415926*2.0;
+    nx=ker_par.nx; ny=ker_par.ny;
+    fkx=ker_par.fkx; fky=ker_par.fky;
+    dkx=ker_par.dkx; dky=ker_par.dky;
+    dz=ker_par.dz; a=ker_par.fda; b=ker_par.fdb;
+    for(iy=0;iy<1;iy++){
+	for(ix=0;ix<nx;ix++){  //do ix=1,nx
+	    kx=fkx+ix*dkx;
+	    kx2=(kx*kx)/(w_v0_z*w_v0_z);
+	    if (kx2 <=1) {
+		if (kx2> sin(3.1415926*80/180)*sin(3.1415926*80/180)){
+		    kz2=1.0-kx2;
+		    phsft=-signn*dz*w_v0_z*(sqrt(kz2)-  (1-(a1*kx2)/(1-b1*kx2)-(a2*kx2)/(1-b2*kx2) )   );
+		    wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+		}
+	    }
+	    else{
+		if (kx2>2) kx2=2.0;
+		kz2=fabs(kx2- 1);
+		phsft=dz*w_v0_z*(sqrt(kz2));
+		wld_z[i2(iy,ix,nx)]=0.0;
+	    }
+
+
+	}
+    }
+
+}
