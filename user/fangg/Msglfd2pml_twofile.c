@@ -37,8 +37,6 @@ static float ldx(float **data, int ix, int iz)
     float res = 0.0;
     int il;
     for (il = 0; il < lenx; il++) {
-	//res += 0.5*(data[ix+sxx[il]][iz+sxz[il]] - data[ix-sxx[il]+1][iz-sxz[il]])*Gx[il][ix][iz];
-	//res += -0.5*(data[ix+sxx[il]][iz+sxz[il]] - data[ix-sxx[il]-1][iz-sxz[il]])*Gx[il][ix][iz];
 	res += 0.5*(data[ix-sxx[il]][iz-sxz[il]] - data[ix+sxx[il]-1][iz+sxz[il]])*Gx[il][ix][iz];
     }
     return res;
@@ -66,11 +64,12 @@ int main(int argc, char* argv[])
     float **txxn1, **txxn0, **vxn1, **vzn1, **vxn0, **vzn0;
     float **vel, **den, **c11, *source;
     float **denx, **denz;
-    int spx, spz;
-    
+    float **record;
+    int spx, spz, gdep;
+    int snapinter;
     int mx, mz; /*margin*/
  
-    sf_file fvel, fden, fsource, fwf/*wave field*/; 
+    sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/; 
     sf_file fGx, fGz, fsxx, fsxz, fszx, fszz;
     float *sxxtmp, *sxztmp, *szxtmp, *szztmp;
     sf_axis at, ax, az;
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
     spara sp={0};
 
     int pmlout, pmld0, decaybegin;
-    int decay;
+    int   decay;
     float gamma = GAMMA;
 
 
@@ -91,6 +90,7 @@ int main(int argc, char* argv[])
     fvel    = sf_input("vel"); /*velocity*/
     fden    = sf_input("den"); /*density*/
     fwf     = sf_output("out");/*wavefield snap*/
+    frec    = sf_output("rec"); /*record*/
     
     /* Read/Write axes */
     at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     az = sf_iaxa(fvel, 1); nzb = sf_n(az); dz = sf_d(az);
 
 
-    fGx = sf_input("Gx");
+    fGx = sf_input("Gx"); 
     fGz = sf_input("Gz");
     fsxx = sf_input("sxx");
     fsxz = sf_input("sxz");
@@ -113,13 +113,16 @@ int main(int argc, char* argv[])
     /*source point in x */
     if (!sf_getint("spz", &spz)) sf_error("Need spz input");
     /* source point in z */
+    if (!sf_getint("gdep", &gdep)) gdep=0;
+    /* recorder depth */
+    if (!sf_getint("snapinter", &snapinter)) snapinter=10;
+    /* snap interval */
     if (!sf_getint("pmlsize", &pmlout)) pmlout=PMLOUT;
     /* size of PML layer */
     if (!sf_getint("pmld0", &pmld0)) pmld0=PMLD0;
     /* PML parameter */
     if (!sf_getint("decay",&decay)) decay=DECAY_FLAG;
-    /* Flag of decay boundary condtion: 1 = use ; 
-                                        0 = not use */
+    /* Flag of decay boundary condtion: 1 = use ; 0 = not use */
     if (!sf_getint("decaybegin",&decaybegin)) decaybegin=DECAY_BEGIN;
     /* Begin time of using decay boundary condition */
     if (!sf_histint(fGx, "n1", &nxz)) sf_error("No n1= in input");
@@ -158,12 +161,19 @@ int main(int argc, char* argv[])
     nx = nxb - 2*pmlout - 2*marg;
     nz = nzb - 2*pmlout - 2*marg;
     
-    //sf_setn(az, nz);
-    //sf_setn(ax, nx);
+    /*set axis for record file*/
+    //sf_setn(at, nt);
+    sf_setn(ax, nx);
+    sf_oaxa(frec, at, 1);
+    sf_oaxa(frec, ax, 2);
+
+    /*set axis for snap file*/
+    sf_setn(az, nz);
+    sf_setn(at, (int)(nt-1)/snapinter+1);
     sf_oaxa(fwf, az, 1);
     sf_oaxa(fwf, ax, 2);
     sf_oaxa(fwf, at, 3);
-
+    
     Gx = sf_floatalloc3(nzb, nxb, lenx);
     Gz = sf_floatalloc3(nzb, nxb, lenz);
     sf_floatread(Gx[0][0], nzb*nxb*lenx, fGx);
@@ -210,6 +220,8 @@ int main(int argc, char* argv[])
     vzn1  = sf_floatalloc2(nzb, nxb);
     vxn0  = sf_floatalloc2(nzb, nxb);
     vzn0  = sf_floatalloc2(nzb, nxb);
+    
+    record = sf_floatalloc2(nt, nx);
 
     init_pml(nz, nx, dt, pmlout, marg, pmld0, decay, decaybegin, gamma);
     
@@ -243,7 +255,12 @@ int main(int argc, char* argv[])
 	    vzn0[ix][iz] = 0.0;
 	}
     }  
-   
+    for (it = 0; it < nt; it++) {
+	for (ix = 0; ix < nx; ix++) {
+	    record[ix][it] = 0.0;
+	}
+    }  
+       
     /* MAIN LOOP */
     sp.trunc=160;
     sp.srange=10;
@@ -253,7 +270,7 @@ int main(int argc, char* argv[])
     sf_warning("============================");
     sf_warning("nx=%d nz=%d nt=%d", nx, nz, nt);
     sf_warning("dx=%f dz=%f dt=%f", dx, dz, dt);
-    sf_warning("lenx=%d lenz=%d marg=%d", lenx, lenz, marg);
+    sf_warning("lenx=%d lenz=%d marg=%d pmlout=%d", lenx, lenz, marg, pmlout);
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx,sxz]=[%d,%d] Gx=%f",sxx[ix], sxz[ix], Gx[ix][0][0]);
     }
@@ -262,7 +279,7 @@ int main(int argc, char* argv[])
     } 
     
     for (it = 0; it < nt; it++) {
-	if (it%10==0) sf_warning("it=%d;", it);
+	if (it%10==0) sf_warning("it=%d/%d;", it, nt);
 	if (it<=sp.trunc) {
 	    explsourcet(txxn0, source, it, spx+pmlout+marg, spz+pmlout+marg, nxb, nzb, &sp);
 	}
@@ -287,25 +304,30 @@ int main(int argc, char* argv[])
 	/*Stress PML */
 	pml_txx(txxn1, vxn1, vzn1, c11, ldx, ldz);
 
-	/*exchange n1 -> n0*/
+	/*n1 -> n0*/
 	time_step_exch(txxn0, txxn1, it);
 	time_step_exch(vxn0, vxn1, it);
 	time_step_exch(vzn0, vzn1, it);
 	pml_tstep_exch(it);
 	
 
-	
-	for ( ix = 0; ix < nxb; ix++) {
-	    sf_floatwrite(txxn0[ix], nzb, fwf);
+       	if ( it%snapinter==0 ) {
+	    for ( ix = pmlout+marg; ix < nx+pmlout+marg; ix++) {
+		sf_floatwrite(txxn0[ix]+pmlout+marg, nz, fwf);
+	    }
 	}
 	
+	for ( ix =0 ; ix < nx; ix++) {
+	    record[ix][it] = txxn0[ix+pmlout+marg][pmlout+marg+gdep];
+	}
     }/*End of LOOP TIME*/
     sf_warning(".");
-
+    for ( ix = 0; ix < nx; ix++) {
+	    sf_floatwrite(record[ix], nt, frec);
+	} 
     tend = clock();
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
     sf_warning(">> The CPU time of sfsglfd2 is: %f seconds << ", duration);
-
     exit(0);
 }    
     

@@ -41,7 +41,7 @@ static float fdx(float **xx, int ii, int jj, float ffdx, int oo)
     else if(oo==1)
 	return (xx[ii+1][jj]-xx[ii][jj])/ffdx;
     else
-    {sf_error("ERROE: in fuction ssgddx()!\n");}
+    {sf_error("ERROE: in fuction sfsglfd2_tfd!\n");}
     
     return 0;
 }
@@ -62,7 +62,7 @@ static float fdz(float **xx, int ii, int jj, float ffdz, int oo)
     else if(oo==1)
 	return (xx[ii][jj+1]-xx[ii][jj])/ffdz;
     else
-    {sf_error("ERROE: in fuction ssgddz()!\n");}
+    {sf_error("ERROE: in fuction sfsglfd2_tfd!\n");}
 
     return 0;
 }
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fden)) sf_error("Need float input");
     
-    if(!sf_getint("oo",&oo)) oo=8;
+    if(!sf_getint("oo",&oo)) oo=4;
     if (!sf_getint("spx", &spx)) sf_error("Need spx input");
     /*source point in x */
     if (!sf_getint("spz", &spz)) sf_error("Need spz input");
