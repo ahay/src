@@ -1,0 +1,27 @@
+This file describes the procedure for re-compiling the manuscript entitled "Solving 3D Anisotropic Elastic Wave Equations on Parallel GPU Devices" including re-computing all figures contained therein.  
+
+PLEASE NOTE: The examples contained in the manuscript we have submitted were computed using an NVIDIA Tesla C2070 GPU with an available 6.0GB of global memory.  Some figures in our manuscript require nearly 6GB of GPU memory and therefore may exceed the amount of memory that your local GPU resources can provide.  For this reason, all figures may not compile on your local system and we have included static PDF images for each figure in case of this scencario.  By default, our software will utilize only one GPU device.  Setting the 'ngpu' parameter to 'n' in the appropriate SConstruct files will cause the software to use 'n' GPUs in your local system.
+
+Also note that each directory contained in this tarball will function as a stand-alone numerical experiment which can be computed by calling the 'scons' command from each directory.
+
+
+Pre-requisites for building the manuscript:
+
+1) Madagascar software package has been installed and all user-submitted codes have been compiled and installed.
+
+2) An up-to-date LaTeX distribution has been installed.
+
+3) Our manuscript relies on the geophysics.cls LaTeX class file which can be obtained from the SEGTeX package for geophysical publications (http://www.ahay.org/wiki/SEGTeX).
+
+
+To build the manuscript:
+
+From the directory where the contents of paper.tar was extracted to...
+
+1) Execute the command 'sftour scons lock' to initiate the computation of the necessary figures contained in the manuscript.  
+NOTE: This step may take a few hours to complete.
+
+2) Execute the command 'scons paper.pdf' to compile the pdf version of the manuscript
+
+The compiled manuscript can be found in the file paper.pdf
+

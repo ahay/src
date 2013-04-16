@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfpad', 'sfricker1', 'sfwindow', 'sfscale', 'sfput', 'sfmath', 'sfcat', 'sftransp', 'sfgrey', 'sfewefd2d_omp', 'sfewefd2d_gpu']
+data=[]
+size=  812721908

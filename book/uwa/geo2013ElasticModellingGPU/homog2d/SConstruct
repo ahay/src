@@ -1,0 +1,142 @@
+# . . Set up generic project files
+from rsf.proj import *
+
+# . . Import modules
+import math,fdmod,encode,wemig,stiffness
+
+# . . Set parameter for the modelling.  Applies for all situations.
+par = {
+    # Model Dimensions
+    'nx':601, 'ox':0, 'dx':0.005,  'lx':'x', 'ux':'km',
+    'ny':1,   'oy':0, 'dy':0.005,  'ly':'y', 'uy':'km',
+    'nz':401, 'oz':0, 'dz':0.005,  'lz':'z', 'uz':'km',
+
+    # Time parameters
+    'nt':5000,'ot':0, 'dt':0.0005,  'lt':'t', 'ut':'s',
+    'kt':100,'frq':40,
+
+    # Shot locations
+    'nsx':1,  'dsx':0.0050, 'osx':1.5,
+    'nsy':1,  'dsy':0.0050, 'osy':0,
+
+    # EWEFD2D paramteres
+    'snap':'y','jsnap':100,'height':6,
+    'nb':100,'nbell':5,'jdata':5,'dabc':'y',
+    'free':'n','ssou':'y',
+    }
+
+# . . Initialize parameters in fdm module   
+fdmod.param(par)
+par['nframe']=20
+par['iframe']=8
+
+# . . Thomsen parameters
+par['vp']=2.0
+par['vs']=1.1547
+par['ro']=2000
+par['eps1']=+0.2
+par['eps2']=+0.3
+par['del1']=-0.1
+par['del2']=-0.05
+par['del3']=-0.075
+par['gam1']=+0.2
+par['gam2']=+0.5
+
+# . . Set up a wavelet
+fdmod.wavelet('wav_',par['frq'],par)
+
+# --------------------------------------------------------------------
+# . . Source Section
+#
+Flow('souz','wav_','math output=input*1')
+Flow('soux','wav_','math output=input*1')
+
+# . . Make 2D elastic source
+Flow('wave-2d',['souz','soux'],
+    '''
+    cat axis=2 space=n ${SOURCES[1:2]} |
+    transp plane=12 |
+    transp plane=23 |
+    transp plane=12
+    ''')
+#fdmod.ewavelet('wave-2d','',par)
+
+# --------------------------------------------------------------------
+# . . Coordinate Section
+# . . Locate source position
+xsou=par['osx'];
+zsou=par['oz'];
+
+# . . 2D Sources
+fdmod.point('ss-2d',xsou,zsou,par) # . . 2D Point Sources
+fdmod.horizontal('rr-2d',0,par)    # . . 2D receivers
+
+# --------------------------------------------------------------------
+# . .  2D model section
+
+# . . Create zero array size of 2D model
+Flow('zero-2d',None,
+     '''
+     spike nsp=1 mag=0.0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     put label1=%(lz)s label2=%(lx)s unit1=%(uz)s unit2=%(ux)s
+     ''' % par)
+
+# . . Create 2D Vp, Vs, rho, eps1, del1 models
+Flow('vp-2d','zero-2d','math output="%(vp)g"' %par)
+Flow('vs-2d','zero-2d','math output="%(vs)g"' %par)
+Flow('ro-2d','zero-2d','math output="%(ro)g"' %par)
+Flow('eps-2d','zero-2d','math output="%(eps1)g"' %par)
+Flow('del-2d','zero-2d','math output="%(del1)g"' %par)
+
+# . . Create stiffness models
+stiffness.iso2d('ISOc-2d','vp-2d','vs-2d','ro-2d',par)
+stiffness.vti2d('VTIc-2d','vp-2d','vs-2d','ro-2d','eps-2d','del-2d',par)
+
+# ------------------------------------------------------------
+# . . Elastic Modeling Section
+#
+# . . 2D Modelling cases CPU
+for m in ['ISO','VTI']:
+    stiffness.cplot2d(m+'c-2d',1,1,par)
+    Flow([m+'d-2d-CPU',m+'w-2d-CPU'],['wave-2d',m+'c-2d','ro-2d','ss-2d','rr-2d'],
+        '''
+        ewefd2d_omp
+        jdata=%(jdata)d dabc=%(dabc)s free=%(free)s opot=n
+        verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
+        nb=%(nb)d nbell=%(nbell)d
+        ccc=${SOURCES[1]}
+        den=${SOURCES[2]}
+        sou=${SOURCES[3]}
+        rec=${SOURCES[4]}
+        wfl=${TARGETS[1]}
+        ''' % par)
+    Result( m+'d-2d-CPU','window n2=1 | transp |' + fdmod.dgrey('',par))
+
+for m in ['ISO','VTI']:
+    Flow([m+'d-2d-GPU',m+'w-2d-GPU'],['wave-2d',m+'c-2d','ro-2d','ss-2d','rr-2d'],
+        '''
+        ewefd2d_gpu
+        jdata=%(jdata)d dabc=%(dabc)s free=%(free)s opot=n
+        verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
+        nb=%(nb)d nbell=%(nbell)d
+        ccc=${SOURCES[1]}
+        den=${SOURCES[2]}
+        sou=${SOURCES[3]}
+        rec=${SOURCES[4]}
+        wfl=${TARGETS[1]}
+        ''' % par)
+    Result( m+'d-2d-GPU','window n2=1 | transp |' + fdmod.dgrey('',par))
+
+# . . Output sections
+Result('ISO-UZ','ISOw-2d-GPU',
+    'window n3=1 f3=0 n4=1 f4=12 |'+fdmod.cgrey(' ',par))
+Result('ISO-UX','ISOw-2d-GPU',
+    'window n3=1 f3=1 n4=1 f4=12 |'+fdmod.cgrey(' ',par))
+Result('VTI-UZ','VTIw-2d-GPU',
+    'window n3=1 f3=0 n4=1 f4=12 |'+fdmod.cgrey(' ',par))
+Result('VTI-UX','VTIw-2d-GPU',
+    'window n3=1 f3=1 n4=1 f4=12 |'+fdmod.cgrey(' ',par))
+
+End()
