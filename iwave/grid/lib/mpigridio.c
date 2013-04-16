@@ -90,8 +90,6 @@ int mpirsfread(ireal * a,
   IPNT g_gsa;        /* start indices, global */
   IPNT l_gsa;        /* start indices, local  */
   IPNT gea;          /* end   indices of grid intersection */
-  IPNT g_gea;        /* end   indices, global */
-  IPNT l_gea;        /* end   indices, local */
   IPNT n;            /* lengths of grid (file) axes */
   IPNT na;           /* lengths of grid intersection axes */
   IPNT gl_na;        /* lengths of grid intersection axes, local or global */
@@ -107,8 +105,6 @@ int mpirsfread(ireal * a,
   float * fbuf;      /* input buffer for read */
 
   MPI_Comm wcomm;    /* global communicator */
-  int wsize;         /* size of the global communicator */
-  int wrank;         /* rank in the global communicator  */
   MPI_Comm lcomm;    /* local communicator */
   int lsize;         /* size of the local communicator */
   int lrank;         /* rank in the local communicator  */
@@ -144,13 +140,11 @@ int mpirsfread(ireal * a,
 
   fflush(stream);
   /* local variables for mpi info */
-  wrank=retrieveGlobalRank();
-  wsize=retrieveGlobalSize();
   wcomm=retrieveGlobalComm();
 
 #ifdef WC_ONLY
-  lrank=wrank;
-  lsize=wsize;
+  lrank=retrieveGlobalRank();
+  lsize=retrieveGlobalSize();
   lcomm=wcomm;
 #else
   lrank=retrieveRank();
@@ -466,9 +460,7 @@ int mpirsfread(ireal * a,
 	/* rarray to left of garray */
 	if (rags[ii] + ran[ii] - 1 < read_gs[ii]) {
 	  g_gsa[ii] = read_gs[ii];
-	  g_gea[ii] = read_gs[ii];
 	  l_gsa[ii] = rags[ii] + ran[ii] - 1;
-	  l_gea[ii] = rags[ii] + ran[ii] - 1;
 	  if (read_gs[ii] == gs[ii]) { 
 	    gl_na[ii] = 1;
 	  }
@@ -479,9 +471,7 @@ int mpirsfread(ireal * a,
 	/* rarray to right of garray */
 	else if (rags[ii] > read_gs[ii] + read_gn[ii] - 1) {
 	  g_gsa[ii] = read_gs[ii] + read_gn[ii] - 1;
-	  g_gea[ii] = read_gs[ii] + read_gn[ii] - 1;
 	  l_gsa[ii] = rags[ii];
-	  l_gea[ii] = rags[ii];
 	  if (read_gs[ii]+read_gn[ii] == gs[ii]+n[ii]) {
 	    gl_na[ii] = 1;
 	  }
@@ -494,7 +484,6 @@ int mpirsfread(ireal * a,
       if ((rags[ii] + ran[ii] - 1 >= read_gs[ii]) &&
 	  (rags[ii] <= read_gs[ii]+read_gn[ii]-1)) {
 	g_gsa[ii] = gsa[ii];
-	g_gea[ii] = gea[ii];
 	l_gsa[ii] = gsa[ii];
 	l_gea[ii] = gea[ii];
 	gl_na[ii] = na[ii];
@@ -577,25 +566,19 @@ int mpirsfread(ireal * a,
     /* rarray to left of garray */
     if ( (rags[ii] + ran[ii] - 1 < gs[ii]) && extend ) { 
       g_gsa[ii] = gs[ii];
-      g_gea[ii] = gs[ii];
       l_gsa[ii] = rags[ii] + ran[ii] - 1;
-      l_gea[ii] = rags[ii] + ran[ii] - 1;
       gl_na[ii] = 1;
     }
     /* rarray to right of garray */
     else if ( (rags[ii] > gs[ii] + n[ii] -1) && extend ) {
       g_gsa[ii] = gs[ii] + n[ii] - 1;
-      g_gea[ii] = gs[ii] + n[ii] - 1;
       l_gsa[ii] = rags[ii];
-      l_gea[ii] = rags[ii];
       gl_na[ii] = 1;
     }
     /* intersection nonempty */
     else {
       g_gsa[ii] = gsa[ii];
-      g_gea[ii] = gea[ii];
       l_gsa[ii] = gsa[ii];
-      l_gea[ii] = gea[ii];
       gl_na[ii] = na[ii];
     }
   } 
@@ -677,8 +660,6 @@ int mpirsfwrite(ireal * a,
   IPNT g_gsa;        /* start indices, global */
   IPNT l_gsa;        /* start indices, local  */
   IPNT gea;          /* end   indices of grid intersection */
-  IPNT g_gea;        /* end   indices, global */
-  IPNT l_gea;        /* end   indices, local */
   IPNT n;            /* lengths of grid (file) axes */
   IPNT na;           /* lengths of grid intersection axes */
   IPNT gl_na;        /* lengths of grid intersection axes, local or global */
@@ -695,8 +676,7 @@ int mpirsfwrite(ireal * a,
   float * rbuf;      /* rank 0 reduction buffer */
 
   MPI_Comm wcomm;    /* local communicator */
-  int wsize;         /* size of the local communicator */
-  int wrank;         /* rank in the local communicator  */
+  int wrank;
 
   /* XDR buffers etc. */
 #ifdef SUXDR
@@ -731,7 +711,6 @@ int mpirsfwrite(ireal * a,
   fflush(stream);
   /* local variables for mpi info */
   wrank=retrieveRank();
-  wsize=retrieveSize();
   wcomm=retrieveComm();
 
   fflush(stream);
@@ -961,9 +940,7 @@ int mpirsfwrite(ireal * a,
 	/* rarray to left of garray */
 	if (rags[ii] + ran[ii] - 1 < read_gs[ii]) {
 	  g_gsa[ii] = read_gs[ii];
-	  g_gea[ii] = read_gs[ii];
 	  l_gsa[ii] = rags[ii] + ran[ii] - 1;
-	  l_gea[ii] = rags[ii] + ran[ii] - 1;
 	  if (read_gs[ii] == gs[ii]) { 
 	    gl_na[ii] = 1;
 	  }
@@ -974,9 +951,7 @@ int mpirsfwrite(ireal * a,
 	/* rarray to right of garray */
 	else if (rags[ii] > read_gs[ii] + read_gn[ii] - 1) {
 	  g_gsa[ii] = read_gs[ii] + read_gn[ii] - 1;
-	  g_gea[ii] = read_gs[ii] + read_gn[ii] - 1;
 	  l_gsa[ii] = rags[ii];
-	  l_gea[ii] = rags[ii];
 	  if (read_gs[ii]+read_gn[ii] == gs[ii]+n[ii]) {
 	    gl_na[ii] = 1;
 	  }
@@ -989,9 +964,7 @@ int mpirsfwrite(ireal * a,
       if ((rags[ii] + ran[ii] - 1 >= read_gs[ii]) &&
 	  (rags[ii] <= read_gs[ii]+read_gn[ii]-1)) {
 	g_gsa[ii] = gsa[ii];
-	g_gea[ii] = gea[ii];
 	l_gsa[ii] = gsa[ii];
-	l_gea[ii] = gea[ii];
 	gl_na[ii] = na[ii];
       }
     }
