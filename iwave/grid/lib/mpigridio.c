@@ -485,7 +485,6 @@ int mpirsfread(ireal * a,
 	  (rags[ii] <= read_gs[ii]+read_gn[ii]-1)) {
 	g_gsa[ii] = gsa[ii];
 	l_gsa[ii] = gsa[ii];
-	l_gea[ii] = gea[ii];
 	gl_na[ii] = na[ii];
       }
     }
