@@ -825,7 +825,7 @@ comment['c'] = re.compile(r'\/\*(?P<comment>(?:[^*]+|\*[^/])+)\*\/')
 param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
                         '(?P<type>bool|largeint|int|float|double)'
                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                        '\s*\&(?P<var>[\w\_\[\]\.]+)\s*[\)]\s*[\)]?\s*'
+                        '\s*\&(?P<var>[\w\_\[\]\.\+\-]+)\s*[\)]\s*[\)]?\s*'
                         '(?:[\{]|' # either \{ or
                         '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
                         'sf_[^\;]+)?' # or sf_error
@@ -835,7 +835,7 @@ param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
 params['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                          '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                          '\s*(?P<var>[\w\_\[\]\.]+)\s*\,'
-                         '\s*(?P<size>[\w\_]+)\s*\)\s*'
+                         '\s*(?P<size>[\w\_\-\+]+)\s*\)\s*'
                          '[^\;\{]*[\;\{]\s*' # ending with ; or {
                          '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                          '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
