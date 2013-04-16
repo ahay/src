@@ -61,54 +61,50 @@ struct shot_image_par_type shot_image_grab_par(void)
 void shot_image_init(float dx,float dy,float dz,int nz,struct shot_image_par_type *image_par)
 /*< initialize image >*/
 {
-    sf_file image;
-    float *tmpimg=sf_floatalloc(nz);
-    int ohx,ohy;
-    int stat,i; 
+    sf_file imagex, imagez;
+    float *tmpimg;
+    float ohx,ohy;
+    int i; 
+
+    tmpimg=sf_floatalloc(nz);
  
     vector_value_f(tmpimg,0.0,nz);
     image_par->dx=dx; image_par->dy=dy; image_par->dz=dz;
     image_par->nx=(image_par->max_x-image_par->min_x)/(image_par->dx)+1;
     image_par->ny=(image_par->max_y-image_par->min_y)/(image_par->dy)+1;
     image_par->nz=nz;
-    if (!sf_getint("imageohx","f",&ohx)) ohx=-image_par->dx*image_par->nhx/2;
-    if (!sf_getint("imageohy","f",&ohy)) ohy=-image_par->dy*image_par->nhy/2;
+    if (!sf_getfloat("imageohx",&ohx)) ohx=-image_par->dx*image_par->nhx/2;
+    if (!sf_getfloat("imageohy",&ohy)) ohy=-image_par->dy*image_par->nhy/2;
     image_par->ohx=ohx;   image_par->ohy=ohy;
+    
+    imagex = sf_output("Image_hx");
+    imagez = sf_output("Image_hz");
 
-    image.ndims=5; 
-    image.o[0]=0.0;            image.d[0]=image_par->dz; image.n[0]=image_par->nz;
-    image.o[1]=image_par->ohx; image.d[1]=image_par->dx; image.n[1]=image_par->nhx;
-    image.o[2]=image_par->ohy; image.d[2]=image_par->dy; image.n[2]=image_par->nhy;
-    image.o[3]=image_par->min_x;image.d[3]=image_par->dx;image.n[3]=image_par->nx;
-    image.o[4]=image_par->min_y;image.d[4]=image_par->dy;image.n[4]=image_par->ny;
+    sf_putfloat(imagex,"o1",0.0);              sf_putfloat(imagex,"d1",image_par->dz); sf_putint(imagex,"n1",image_par->nz);
+    sf_putfloat(imagex,"o2",image_par->ohx);   sf_putfloat(imagex,"d2",image_par->dx); sf_putint(imagex,"n2",image_par->nhx);
+    sf_putfloat(imagex,"o3",image_par->ohy);   sf_putfloat(imagex,"d3",image_par->dy); sf_putint(imagex,"n3",image_par->nhy);
+    sf_putfloat(imagex,"o4",image_par->min_x); sf_putfloat(imagex,"d4",image_par->dx); sf_putint(imagex,"n4",image_par->nx);
+    sf_putfloat(imagex,"o5",image_par->min_y); sf_putfloat(imagex,"d5",image_par->dy); sf_putint(imagex,"n5",image_par->ny);
 
+    sf_putfloat(imagez,"o1",0.0);              sf_putfloat(imagez,"d1",image_par->dz); sf_putint(imagez,"n1",image_par->nz);
+    sf_putfloat(imagez,"o2",image_par->ohx);   sf_putfloat(imagez,"d2",image_par->dx); sf_putint(imagez,"n2",image_par->nhx);
+    sf_putfloat(imagez,"o3",image_par->ohy);   sf_putfloat(imagez,"d3",image_par->dy); sf_putint(imagez,"n3",image_par->nhy);
+    sf_putfloat(imagez,"o4",image_par->min_x); sf_putfloat(imagez,"d4",image_par->dx); sf_putint(imagez,"n4",image_par->nx);
+    sf_putfloat(imagez,"o5",image_par->min_y); sf_putfloat(imagez,"d5",image_par->dy); sf_putint(imagez,"n5",image_par->ny);
 
-    printf("image n[0]=%d  n[1]=%d  n[2]=%d \n", image.n[0],image.n[3],image.n[4]);
-    stat=file_open_output("Image_hx",image); 
-    stat=file_open_output("Image_hz",image);
-    for(i=0;i<image.n[4]*image.n[3]*image.n[2]*image.n[1];i++){
-	if ( srite("Image_hx",tmpimg,image_par->nz*4)!=image_par->nz*4 ) seperr("err init image");
-	if ( srite("Image_hz",tmpimg,image_par->nz*4)!=image_par->nz*4 ) seperr("err init image");
+    for(i=0;i<image_par->ny*image_par->nx*image_par->nhy*image_par->nhx;i++) {
+	sf_floatwrite(tmpimg,image_par->nz,imagex);
+	sf_floatwrite(tmpimg,image_par->nz,imagez);
     }
     free(tmpimg);
-    stat=file_release("Image_hx"); 
-    stat=file_release("Image_hz");
-    stat=file_open_scratch("Image_hx",&image);
-    stat=file_open_scratch("Image_hz",&image);
 }
-
-
-
-
-
 
 void shot_image_sinc_table(struct shot_image_par_type *image_par){
     int ihx;
     float *sincx_table=image_par->sincx_table;
     image_par->sincx_table=sf_floatalloc(8*2001);
-    for(ihx=0;ihx<2001;ihx++) sinc_mksinc((float)(ihx)*0.0005,8,sincx_table+ihx*8);
+    for(ihx=0;ihx<2001;ihx++) mksinc((float)(ihx)*0.0005,8,sincx_table+ihx*8);
 }
-
 
 void shot_image_cross(sf_complex *wld_s,sf_complex *wld_r,float *image_z,int nx,int ny,struct shot_image_par_type image_par){
     sf_complex ws,wr;
@@ -132,7 +128,7 @@ void shot_image_cross(sf_complex *wld_s,sf_complex *wld_r,float *image_z,int nx,
 		    if (shift_iy_s <0) shift_iy_s=0; if (shift_iy_s >=ny) shift_iy_s=ny-1;
 		    if (shift_iy_r <0) shift_iy_r=0; if (shift_iy_r >=ny) shift_iy_r=ny-1;
 		    ws=wld_s[i2(shift_iy_s,shift_ix_s,nx)]; wr=wld_r[i2(shift_iy_r,shift_ix_r,nx)];  
-		    image_z[i4(iy,ix,ihy,ihx,nimg)]+=real( conj(ws)*wr);
+		    image_z[i4(iy,ix,ihy,ihx,nimg)]+=crealf( conjf(ws)*wr);
             
 		}
 	    }

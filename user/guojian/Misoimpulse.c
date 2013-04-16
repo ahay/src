@@ -58,14 +58,14 @@ int main(int argc, char **argv)
     float epvalue,dlvalue;
 
     int i_sy,i_sx,iw,iz;
-    float *vel,*ep,*dl,*image_z,*image,*image_rotate,*v_z,*ep_z,*dl_z;
+    float *vel,*ep,*dl,*image_z,*image,*image_rotate,*v_z;
     sf_complex *wld_s,*wld_r,*wld_s_z0,*wld_r_z0,*wld_s_tilt,*wld_r_tilt;
     float *image_1hx,**image_rotate_allhx,**image_rotate_allhz;
     int ixz,ihx;
-    int data_nsy, data_nsx,ix;
+    int data_nsy, ix;
     int mig_size,image_size;
     float dkx; int bx,ex,nx_iz;
-    float tmprotate,ttmprotate;
+    float ttmprotate=1.0;
     float t;
     bool vti;
     float a1,b1,a2,b2;
@@ -97,21 +97,19 @@ int main(int argc, char **argv)
     sf_putfloat(wave,"d2",mig_dy);
     sf_putfloat(wave,"d3",mig_dz);
   
-    data_nsy=data_par.nsy; data_nsx=data_par.nsx;
+    data_nsy=data_par.nsy; 
+    /* data_nsx=data_par.nsx; */
 
     for(i_sy=0;i_sy< data_nsy;i_sy++){
-	//for(i_sx=0;i_sx< data_nsx;i_sx++){
 	for(i_sx=0;i_sx< 1;i_sx++){
 	    shot_data_plane_grab_mig_par(i_sx,i_sy,&mig_min_x,&mig_min_y,&tmp_mig_nx,&mig_ny,data_par,&plane_par );
 	    mig_nx=tmp_mig_nx;
 	    sf_warning("nx---------------%d",mig_nx); 
 	    rotate_angle=asin( (i_sx*data_par.dsx+data_par.osx)*1500.0);
-	    sf_warning("original rotateaaaaa=%f",tmprotate);
       
 	    rotate_angle=-50.0/180.0*SF_PI;
 	    rotate_angle=0.0/180.0*SF_PI;
 
-	    sf_warning("rotate2=%f",rotate_angle/SF_PI*180.0);
 	    rotate_par=shot_rotate_init(rotate_angle,tmp_mig_nx,mig_nz,mig_dx,mig_dz);
 	    sf_warning("nx=%d,nz=%d,ny=%d",rotate_par.nx_rotate,rotate_par.nz_rotate,rotate_par.ny_rotate);
 	    mig_nx_rotate=rotate_par.nx_rotate; mig_ny_rotate=rotate_par.ny_rotate;
@@ -163,10 +161,10 @@ int main(int argc, char **argv)
 			shot_rotate_get_bx_ex_iz(&dkx,&bx,&ex,iz,20,rotate_par);
 			nx_iz=ex-bx+1;  ker_par.dkx=dkx; ker_par.nx=nx_iz;
 			v_z=vel+iz*mig_size+bx; wld_s_tilt=wld_s+bx; wld_r_tilt=wld_r+bx; image_z+=image_par.nhy*image_par.nhx*bx;
-			ep_z=ep+iz*mig_size+bx; dl_z=dl+iz*mig_size+bx; 
+			/* ep_z=ep+iz*mig_size+bx; dl_z=dl+iz*mig_size+bx; */
 		    }
 		    else{
-			v_z=vel+iz*mig_size; wld_s_tilt=wld_s; wld_r_tilt=wld_r; ep_z=ep+iz*mig_size; dl_z=dl+iz*mig_size;
+			v_z=vel+iz*mig_size; wld_s_tilt=wld_s; wld_r_tilt=wld_r; /* ep_z=ep+iz*mig_size; dl_z=dl+iz*mig_size; */
 			nx_iz=mig_nx_rotate;
 		    }
 		    if (vti)

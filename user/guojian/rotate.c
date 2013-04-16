@@ -19,6 +19,7 @@
 #include <rsf.h>
 
 #include "rotate.h"
+#include "fft.h"
 
 #ifndef _rotate_h
 

@@ -64,14 +64,14 @@ struct shot_ker_par_type shot_ker_p_init(int op,int nx,int ny,float dx,float dy,
     struct shot_ker_par_type ker_par;
 
 
-    float pi=3.1415926; int i;
+    int i;
     ker_par.nref=3;
     ker_par.op=op;
     ker_par.fda=a; ker_par.fdb=b;
     ker_par.nx=nx; ker_par.ny=ny;
     ker_par.dx=dx; ker_par.dy=dy; ker_par.dz=dz;
-    ker_par.fkx=-pi/ker_par.dx; ker_par.fky=-pi/ker_par.dy;  //change tilt 
-    ker_par.dkx=2.0*pi/(nx*ker_par.dx); ker_par.dky=2.0*pi/(ny*ker_par.dy);  //change in tilt
+    ker_par.fkx=-SF_PI/ker_par.dx; ker_par.fky=-SF_PI/ker_par.dy;  //change tilt 
+    ker_par.dkx=2.0*SF_PI/(nx*ker_par.dx); ker_par.dky=2.0*SF_PI/(ny*ker_par.dy);  //change in tilt
     ker_par.ax=a*dz/(2.0*ker_par.dx*ker_par.dx); ker_par.ay=a*dz/(2.0*ker_par.dy*ker_par.dy);
     ker_par.bx=b/(ker_par.dx*ker_par.dx); ker_par.by=b/(ker_par.dy*ker_par.dy);
     ker_par.axnoa=dz/(2.0*ker_par.dx*ker_par.dx); ker_par.aynoa=dz/(2.0*ker_par.dy*ker_par.dy);
@@ -96,7 +96,7 @@ struct shot_ker_par_type shot_ker_p_init(int op,int nx,int ny,float dx,float dy,
     ker_par.cos=allocatef(ker_par.Nsin); 
 
     ker_par.sqrt=allocatef(ker_par.Nsin);
-    ker_par.dsin=pi*2.0/(float)(ker_par.Nsin);
+    ker_par.dsin=SF_PI*2.0/(float)(ker_par.Nsin);
     ker_par.dqrt=1.0/(float)(ker_par.Nsin);
 
     for (i=0;i<ker_par.Nsin;i++){
@@ -308,7 +308,7 @@ void li_filter(sf_complex *wld_z,float w_v0_z,struct shot_ker_par_type ker_par,i
     float rotate,pfiltercut;
     rotate=ker_par.rotate;
     pfiltercut=60.0;
-    pio2=3.1415926*2.0;
+    pio2=SF_PI*2.0;
     nx=ker_par.nx; ny=ker_par.ny;
     fkx=ker_par.fkx; fky=ker_par.fky;
     dkx=ker_par.dkx; dky=ker_par.dky;
