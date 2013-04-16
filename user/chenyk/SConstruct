@@ -1,29 +1,27 @@
-import os, sys, re,string
+import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
 progs = '''
 dispelem diff mulawefd2d emd norm blend xcorr SVD matoper lesolver pclipc2 dwtdenoise trisolver symposolver seiscut seisthr Testsolver Testsolver1 trapepass lagrange heatexplitest heatimplitest hyperdif
 '''
-
 ccprogs = ''
 
 tprogs='''
 clapack cblas
 '''
-
-mpi_progs = ''
-
 pyprogs='''
-
+pyran
 '''
-
 pymods='''
 
 '''
 
-docs = []
+tprogs='''
 
+'''
+
+docs = []
 
 try: # distributed version
     Import('env root pkgdir bindir')
@@ -32,7 +30,6 @@ except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../pwd/SConstruct')
-
 src = Glob('[a-z]*.c')
 dynpre = env.get('DYNLIB','') 
 libs = [dynpre+'rsf', 'lapack']+env.get('LIBS',[])
@@ -103,22 +100,22 @@ for prog in tmains:
 ######################################################################
 
 if root: # no compilation, just rename
-    pymains = Split(pyprogs)
-    exe = env.get('PROGSUFFIX','')
-    for prog in pymains:
-        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
-    for mod in Split(pymods):
-        env.Install(pkgdir,mod+'.py')
+	pymains = Split(pyprogs)
+	exe = env.get('PROGSUFFIX','')
+	for prog in pymains:
+		env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+	bldutil.install_py_modules(env,Split(pymods),pkgdir)
+
 
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    user = os.path.basename(os.getcwd())
-    main = 'sf%s.py' % user
-    
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains)
-    env.Depends(docs,'#/framework/rsf/doc.py')	
-    doc = env.RSF_Docmerge(main,docs)
-    env.Install(pkgdir,doc)
+	user = os.path.basename(os.getcwd())
+	main = 'sf%s.py' % user
+	
+	docs += map(lambda prog: env.Doc(prog,'M' + prog),mains)  + \
+		map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
+	env.Depends(docs,'#/framework/rsf/doc.py')	
+	doc = env.RSF_Docmerge(main,docs)
+	env.Install(pkgdir,doc)
