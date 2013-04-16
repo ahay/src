@@ -101,7 +101,7 @@ int main (int argc, char* argv[]) {
     if (!sf_getbool ("diff", &diff)) diff = true;
     /* Differentiation flag */
 
-    cuInit (0);
+    cudaSetDevice (0);
     sf_check_gpu_error ("Device initialization");
     cudaGetDeviceCount (&devcnt);
     if (verb)

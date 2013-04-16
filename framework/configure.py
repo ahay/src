@@ -1115,7 +1115,6 @@ def cuda(context):
         #include <cuda.h>
         #include <cuda_runtime_api.h>
         int main(int argc,char* argv[]) {
-        cuInit (0); /* Use first GPU device */
         cudaSetDevice (0);
         }\n'''
         cc = context.env.get('CC')
@@ -1125,7 +1124,7 @@ def cuda(context):
         linkflags = context.env.get('LINKFLAGS')
         context.env['CC'] = nvcc
         context.env['CFLAGS'] = '--x=cu'
-        context.env['LIBS'] = ['cuda','cudart']
+        context.env['LIBS'] = ['cudart']
         context.env['LIBPATH'] = [os.path.join(CUDA_TOOLKIT_PATH,'lib64'),
                                   os.path.join(CUDA_TOOLKIT_PATH,'lib')]
         context.env['LINKFLAGS'] = ''
@@ -1885,7 +1884,8 @@ def java(context):
         JAVA_HOME = context.env.get('JAVA_HOME',os.environ.get('JAVA_HOME'))
         if not JAVA_HOME:
             for java in ('/usr/lib/jvm/java-6-openjdk',
-                         '/usr/lib/jvm/java-openjdk'):
+                         '/usr/lib/jvm/java-openjdk',
+                         '/usr/lib/jvm/java'):
                 if os.path.isdir(java):
                     JAVA_HOME=java
     if JAVA_HOME:
