@@ -700,7 +700,6 @@ int mpirsfwrite(ireal * a,
   size_t ntot;       /* total length of constructed local array */
 
   /* vars used to read extended model*/  
-  int panel_size = 1; 
   off_t cur_pos = 0;
 
   /**************************
