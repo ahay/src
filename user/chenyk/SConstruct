@@ -7,6 +7,8 @@ dispelem diff mulawefd2d emd norm blend xcorr SVD matoper lesolver pclipc2 dwtde
 '''
 ccprogs = ''
 
+mpiprogs='petsctest'
+
 tprogs='''
 clapack cblas
 '''
@@ -14,10 +16,6 @@ pyprogs='''
 pyran
 '''
 pymods='''
-
-'''
-
-tprogs='''
 
 '''
 
@@ -32,6 +30,7 @@ except: # local version
     SConscript('../pwd/SConstruct')
 src = Glob('[a-z]*.c')
 dynpre = env.get('DYNLIB','') 
+
 libs = [dynpre+'rsf', 'lapack']+env.get('LIBS',[])
 dlibs = ['drsf']+env.get('LIBS',[])
 
@@ -45,6 +44,31 @@ for source in src:
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    libsxx = [dynpre+'rsf++','vecmatop']+lapack+libs
+
+######################################################################
+#USING PETSC (One should specify the absolute dir in petsccpp and petsclib.)
+######################################################################
+
+petsccpp=os.environ.get("PETSCCPP")
+petsclib=os.environ.get("PETSCLIB")
+
+if petsclib:
+    env.Prepend(CPPPATH=[petsccpp],
+            LIBPATH=[petsclib],
+            LIBS='')
+    libs = [libs, 'petsc']
+
+######################################################################
+# Compiling main programs
+######################################################################
+
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
@@ -53,13 +77,9 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
-if lapack:
-    libsxx = [dynpre+'rsf++','vecmatop']+lapack+libs
+######################################################################
+# Compiling c++ programs
+######################################################################
 
 ccmains = Split(ccprogs)
 for prog in ccmains:
@@ -82,6 +102,34 @@ for prog in ccmains:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
         if root:
             env.Install(bindir,prog)
+
+######################################################################
+# Compiling mpi programs ("MPILIB MPICPP" is user defined.)
+######################################################################
+
+mpicc  = env.get('MPICC')
+mpimains = Split(mpiprogs)
+
+mpilib = os.environ.get("MPILIB")
+mpicpp = os.environ.get("MPICPP")
+ 
+for prog in mpimains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    if mpicc:
+	if mpilib:
+		env.Prepend(CPPPATH=[mpicpp],
+               		LIBPATH=[mpilib],
+              		LIBS='')
+		prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc,LIBS=[libs,'X11'])
+    else:
+	prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
+
+######################################################################
+# Compiling testing programs
+######################################################################
 
 tmains = Split(tprogs)
 for prog in tmains:

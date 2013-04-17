@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 'Add random noise using python.'
 
-##   Copyright (C) 2012 Zhonghuan Chen, UT Austin, Tsinghua University
+##   Copyright (C) 2013 University of Texas at Austin
 ##  
 ##   This program is free software; you can redistribute it and/or modify
 ##   it under the terms of the GNU General Public License as published by
@@ -31,16 +31,25 @@ po=rsf.Output()
 
 nn=pi.shape()
 nd=len(nn)
-n1=nn[-1]
-n2=nn[-2]
-n3=1
-for i1 in range(nd-2):
-	n3=n3*nn[i1]
 
-rangea=par.float("rangea",-1)# noise rangea (default=-1)
-rangeb=par.float("rangeb",1)#  noise rangeb (default= 1)
+axis=par.int("axis",2)
+if axis>nd:
+	sys.stderr.write('axis=%d greater than nd=%d'%(axis, nd))
+n2=nn[-axis]
+
+rang=par.float("range",1)# noise range (default=1)
 seed=par.int("seed", n2) # random seed (default=n2)
-rep=par.bool("rep",False) # if y, replace data with noise
+typ=par.string("type", y)# noise type, y: normal, n: uniform
+mu=par.float("mean",0)  # noise mean (default=0)
+var=par.float("var",1)   # noise variance (default=1)
+rep=par.bool("rep",false) # if y, replace data with noise
+
+n1=1
+n3=1
+for i1 in range(axis-1):
+	n1=n1*nn[-1-i1]
+for i1 in range(nd-axis):
+	n3=n3*nn[i1]
 
 sys.stderr.write('n1=%d n2=%d n3=%d\n'%(n1, n2, n3))
 
@@ -48,15 +57,19 @@ u1=zeros((n2,n1),'f')
 u2=zeros((n2,n1),'f')
 
 random.seed(seed)
+j1=range(n2)
+j2=j1
+random.shuffle(j1)
+
 for i3 in range(n3):
-    pi.read(u1)
-    for i2 in range(n2):
-	for i1 in range(n1):	
-	    if rep==False :    
-		u2[i2,i1]=u1[i2,i1]+random.uniform(rangea,rangeb)
-	    else:
-		u2[i2,i1]=random.uniform(rangea,rangeb)
-    po.write(u2)
+	pi.read(u1)
+	for i2 in range(n2):
+
+		if inv:
+			u2[j1[i2],:]=u1[i2,:]
+		else:	
+			u2[i2,:]=u1[j1[i2],:]
+	po.write(u2)
 
 po.close()
 
