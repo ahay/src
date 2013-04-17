@@ -29,7 +29,7 @@ void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* co
 
 //#pragma omp parallel for
     for (int it = 0; it < tNum; ++it) {	  
-//    for (int it = 1000; it < 1001; ++it) {	  
+//    for (int it = 1200; it < 1201; ++it) {	  
 		const float curT = tStart + it * tStep;		
 //		if (curT < velModelDepthMin || curT > velModelDepthMax)
 //			continue;
@@ -219,7 +219,7 @@ bool VSPTimeMigrator2D::getSampleByBeam (float curX, float curZ, float vel, floa
 	// calc recs lane
 	float dir1 = baseDir - shiftDir;
 	float r1 = 0.f;
-	int res = this->getReceiverByDirection (curX, curZ, dir1, r1);
+	bool res = this->getReceiverByDirection (curX, curZ, dir1, r1);
 	if (!res) return false;
 
 	float dir2 = baseDir + shiftDir;
@@ -263,19 +263,18 @@ bool VSPTimeMigrator2D::getSampleByBeam (float curX, float curZ, float vel, floa
 			// get escape point
 			float timeToRec = sqrt ( pow (curX, 2) + pow (curZ - curRecPos, 2) ) / vel;
 
+			// for anti-aliasing
 			float dz = 1;
 			float time1 = sqrt ( pow (curX, 2) + pow (curZ - curRecPos + dz, 2) ) / vel;
 			float time2 = sqrt ( pow (curX, 2) + pow (curZ - curRecPos - dz, 2) ) / vel;
-			float p = fabs (1000 * (time1 - time2) / (2 * dz) );
+			float p = fabs ( (time1 - time2) / (2 * dz) );
 
 			float timeToSrc = sqrt ( pow (curX - curSrcPos, 2) + pow (curZ, 2) ) / vel;
 
 			float curTime = (timeToRec + timeToSrc) * 1000; // transform time to "ms"
-
-			cout << curRecPos << " " << curTime << endl;
-
 			float curSample (0.f);
 			bool goodRes = this->getSampleFromData (curSrcPos, curRecPos, curTime, p, curSample);
+
 			if (!goodRes) continue;
 			sample += curSample;
 			++count;
@@ -289,22 +288,25 @@ bool VSPTimeMigrator2D::getSampleByBeam (float curX, float curZ, float vel, floa
 	return true;
 }
 
+bool VSPTimeMigrator2D::getReceiverByDirection (float curX, float curZ, float dir2, float& rec) {
 
-int VSPTimeMigrator2D::getReceiverByDirection (float curX, float curZ, float dir2, float& rec) {
-
-	if (dir2 == 0) return -1;
-
-	rec = curZ + curX / tan ( dir2 * M_PI / 180.f );	
+	if (dir2 == 0) return -1; // vertical direction
+	const float tang = tan ( dir2 * M_PI / 180.f );	
+	if (tang > 0) return 0; // wrong direction - not to the receivers
 	
-	float rTop = dp_->xStart;
+	// get receiver
+	rec = curZ + curX / tang;
+	
+	// limit checking
+	const float rTop = dp_->xStart;
 	if (rec < rTop) return 0;
-	float rBot= dp_->xStart + dp_->xStep * (dp_->xNum - 1);
+	const float rBot = dp_->xStart + dp_->xStep * (dp_->xNum - 1);
 	if (rec > rBot) return 0;
 
-	return 1;
+	return 1; // good receiver
 }
 
-int VSPTimeMigrator2D::getSourceByDirection (float curX, float curZ, float dir2, float& src) {
+bool VSPTimeMigrator2D::getSourceByDirection (float curX, float curZ, float dir2, float& src) {
 
 	if (dir2 == 0) return -1;
 
@@ -315,5 +317,3 @@ int VSPTimeMigrator2D::getSourceByDirection (float curX, float curZ, float dir2,
 
 	return 1;
 }
-
-

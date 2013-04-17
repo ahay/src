@@ -27,8 +27,8 @@ private:
 
 					      const float yEmAngle, const float xEmAngle);
 
-	int getReceiverByDirection (float curX, float curZ, float dir2, float& rec);
-	int getSourceByDirection (float curX, float curZ, float dir2, float& src);
+	bool getReceiverByDirection (float curX, float curZ, float dir2, float& rec);
+	bool getSourceByDirection (float curX, float curZ, float dir2, float& src);
 
 	void processTimeSample (const float curX, const float curZ, const float* const data, 
 											float* curImage, float* curDag, float* curCig);
