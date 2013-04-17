@@ -89,7 +89,7 @@ stiffness.iso2d('cc','vp','vs','ro',par)
 #
 # . . 2D Modelling cases CPU
 par['begmod']=432
-par['endmod']=4000
+par['endmod']=3792
 par['dmod']=240
 
 mindex=range(par['begmod'],par['endmod'],par['dmod'])
