@@ -156,7 +156,8 @@ void pml_vxz(float **vxn1, float **vzn1, float **vxn0, float **vzn0,
 
 void pml_txx(float **txxn1, float **vxn1, float **vzn1, float **c11, 
 	     float (*ldx)(float **, int, int), 
-	     float (*ldz)(float **, int, int))
+	     float (*ldz)(float **, int, int),
+             bool freesurface )
 /*<stress decay in pml>*/
 {
     int ix, iz;

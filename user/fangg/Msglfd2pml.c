@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     /* Flag of decay boundary condtion: 1 = use ; 0 = not use */
     if (!sf_getint("decaybegin",&decaybegin)) decaybegin=DECAY_BEGIN;
     /* Begin time of using decay boundary condition */
-    if (!sf_getbool("freesurface, &freesurface")) freesurface=false;
+    if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
     if (!sf_histint(fGx, "n1", &nxz)) sf_error("No n1= in input");
     if (nxz != nxb*nzb) sf_error (" Need nxz = nxb*nzb");
