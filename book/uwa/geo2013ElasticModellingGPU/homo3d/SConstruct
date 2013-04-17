@@ -7,14 +7,14 @@ par = {
     # Space parameters
     'nx':88,  'ox':0, 'dx':0.010,  'lx':'x', 'ux':'km',
     'ny':88,  'oy':0, 'dy':0.010,  'ly':'y', 'uy':'km',
-    'nz':176, 'oz':0, 'dz':0.005,  'lz':'z', 'uz':'km',
+    'nz':88,  'oz':0, 'dz':0.010,  'lz':'z', 'uz':'km',
 
     # Time Parameters
     'nt':408,'ot':0, 'dt':0.0005,  'lt':'t', 'ut':'s',
     'kt':100,'frq':35,
 
     # Modelling parameters
-    'snap':'y','jsnap':100,'nb':36, 'verb':'y',
+    'snap':'y','jsnap':100,'nb':44, 'verb':'y',
     'nbell':5, 'jdata':8,'ssou':'y',
 
     # Output
