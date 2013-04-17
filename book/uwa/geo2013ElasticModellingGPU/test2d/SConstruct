@@ -1,5 +1,6 @@
 # . . Set up generic project files
 from rsf.proj import *
+from rsf.prog import RSFROOT
 
 # . . Import modules
 import math,os
@@ -95,7 +96,7 @@ mindex=range(par['begmod'],par['endmod'],par['dmod'])
 par['ntest']=1
 rindex=range(0,par['ntest'],1)
 
-par['SDIR']=os.environ.get("RSFROOT")+'/bin'
+par['SDIR']=os.path.join(RSFROOT,'bin')
 
 for msou in mindex:
     mtag="-%04d" % msou
@@ -118,12 +119,10 @@ for msou in mindex:
 			''' %par)
 
         # . . Do GPU modelling
-        Flow(['Dgpu'+alltag,'Wgpu'+alltag],
+        Flow(['Dgpu'+alltag,'Wgpu'+alltag,'timegpu%s.rsf@' % alltag],
 			['wave','cc'+mtag,'ro'+mtag,'ss','rr'+mtag,'timegpu'+alltag],
         	'''
-        	/usr/bin/time -o timegpu%s.rsf@ ''' %alltag
-			+'--format="\t%e \t%U \t%S" ' +
-        	'''
+        	/usr/bin/time -o ${TARGETS[2]} --format="\t%%e \t%%U \t%%S" 
         	%(SDIR)s/sfewefd2d_gpu
         	jdata=%(jdata)d dabc=%(dabc)s free=%(free)s opot=n
         	verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
@@ -148,12 +147,10 @@ for msou in mindex:
 			''' %par)
 
     	# . . Run modelling
-    	Flow(['Dcpu'+alltag,'Wcpu'+alltag],
+    	Flow(['Dcpu'+alltag,'Wcpu'+alltag,'timecpu%s.rsf@' % alltag],
 			['wave','cc'+mtag,'ro'+mtag,'ss','rr'+mtag,'timecpu'+alltag],
         	'''
-        	/usr/bin/time -o timecpu%s.rsf@ ''' %alltag
-			+'--format="\t%e \t%U \t%S" ' +
-        	'''
+        	/usr/bin/time -o ${TARGETS[2]} --format="\t%%e \t%%U \t%%S" 
         	%(SDIR)s/sfewefd2d_omp
         	jdata=%(jdata)d dabc=%(dabc)s free=%(free)s opot=n
         	verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
