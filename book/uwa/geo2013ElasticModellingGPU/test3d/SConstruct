@@ -85,7 +85,6 @@ par['dmod']=24
 mindex=range(par['begmod'],par['endmod'],par['dmod'])
 
 mpirun = WhereIs('mpirun')
-par['SDIR']=os.path.join(RSFROOT,'bin')
 par['ntest']=10
 rindex=range(0,par['ntest'],1)
 
@@ -250,65 +249,65 @@ rindex=range(0,par['ntest'],1)
 
 ###########
 # . . OUR TEST CPU results
-Flow('CPUx',None,
+Flow('CPUx cpux.rsf@  cpux.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=cpux.rsf@ > cpux.rsf;
-    echo 128 152 176 200 224 248 272 296 > cpux.rsf@;
-    %(SDIR)s/sfdd < cpux.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} &&
+    echo 128 152 176 200 224 248 272 296 > ${TARGETS[1]} &&
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
-Flow('CPUy',None,
+Flow('CPUy cpuy.rsf@ cpuy.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=cpuy.rsf@ > cpuy.rsf;
-    echo 159.6 236 360.2 521.6 787.5 1098 1490 1926 > cpuy.rsf@;
-    %(SDIR)s/sfdd < cpuy.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} &&
+    echo 159.6 236 360.2 521.6 787.5 1098 1490 1926 > ${TARGETS[1]} &&
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
 Flow('CPU','CPUx CPUy','cmplx ${SOURCES[1]}')
 
 ###########
 # . . OUR TEST SINGLE results
-Flow('SINx',None,
+Flow('SINx sinx.rsf@ sinx.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=sinx.rsf@ > sinx.rsf;
-    echo 128 152 176 200 224 224 224 224 > sinx.rsf@;
-    %(SDIR)s/sfdd < sinx.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} && 
+    echo 128 152 176 200 224 224 224 224 > ${TARGETS[1]} && 
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
-Flow('SINy',None,
+Flow('SINy siny.rsf@ siny.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=siny.rsf@ > siny.rsf;
-    echo 14.22 21.18 29.29 41.1 53.01 53.01 53.01 53.01 > siny.rsf@;
-    %(SDIR)s/sfdd < siny.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} && 
+    echo 14.22 21.18 29.29 41.1 53.01 53.01 53.01 53.01 > ${TARGETS[1]} && 
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
 Flow('SIN','SINx SINy','cmplx ${SOURCES[1]}')
 
 ###########
 # . . OUR TEST MPI results
-Flow('MPIx',None,
+Flow('MPIx mpix.rsf@ mpix.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=mpix.rsf@ > mpix.rsf;
-    echo 128 152 176 200 224 248 272 296 > mpix.rsf@;
-    %(SDIR)s/sfdd < mpix.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} && 
+    echo 128 152 176 200 224 248 272 296 > ${TARGETS[1]} && 
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
-Flow('MPIy',None,
+Flow('MPIy mpiy.rsf@ mpiy.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=mpiy.rsf@ > mpiy.rsf;
-    echo 12.79	17.93	24.21	33.06	42.28	49.72	63.26	79.16 > mpiy.rsf@;
-    %(SDIR)s/sfdd < mpiy.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} && 
+    echo 12.79	17.93	24.21	33.06	42.28	49.72	63.26	79.16 > ${TARGETS[1]} && 
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
 Flow('MPI','MPIx MPIy','cmplx ${SOURCES[1]}')
 
 ############
 # . . OUR TEST CPU results
-Flow('P2Px',None,
+Flow('P2Px p2px.rsf@ p2px.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=p2px.rsf@ > p2px.rsf;
-    echo 128 152 176 200 224 248 272 296 > p2px.rsf@;
-    %(SDIR)s/sfdd < p2px.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} && 
+    echo 128 152 176 200 224 248 272 296 > ${TARGETS[1]} && 
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
-Flow('P2Py',None,
+Flow('P2Py p2py.rsf@  p2py.rsf',None,
     '''
-    echo ; echo n1=8 o1=0 d1=1 esize=0 in=p2py.rsf@ > p2py.rsf;
-    echo  11.26	15.92	21.28	28.9	36.65	45.27	58.26	68.95 > p2py.rsf@;
-    %(SDIR)s/sfdd < p2py.rsf form=native 
+    echo ; echo n1=8 o1=0 d1=1 esize=0 in=${TARGETS[1]} > ${TARGETS[2]} && 
+    echo  11.26	15.92	21.28	28.9	36.65	45.27	58.26	68.95 > ${TARGETS[1]} && 
+    dd < ${TARGETS[2]} form=native 
     ''' %par) 
 Flow('P2P','P2Px P2Py','cmplx ${SOURCES[1]}')
 
