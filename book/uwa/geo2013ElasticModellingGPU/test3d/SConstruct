@@ -1,5 +1,7 @@
 # . . Set up generic project files
 from rsf.proj import *
+from rsf.prog import RSFROOT
+
 import math,os,fdmod,encode,wemig,stiffness
 
 # . . Set parameter for the modelling. 
@@ -83,7 +85,7 @@ par['dmod']=24
 mindex=range(par['begmod'],par['endmod'],par['dmod'])
 
 mpirun = WhereIs('mpirun')
-par['SDIR']=os.environ.get("RSFROOT")+'/bin'
+par['SDIR']=os.path.join(RSFROOT,'bin')
 par['ntest']=10
 rindex=range(0,par['ntest'],1)
 

@@ -149,8 +149,10 @@ int main(int argc, char* argv[]) {
     Fden = sf_input ("den"); /* density   */
     Fsou = sf_input ("sou"); /* sources   */
     Frec = sf_input ("rec"); /* receivers */
-    Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
+    if(snap)
+	Fwfl = sf_output("wfl"); /* wavefield */
+    
     /*------------------------------------------------------------*/
 
 

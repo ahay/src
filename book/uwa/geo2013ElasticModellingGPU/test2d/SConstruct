@@ -119,17 +119,17 @@ for msou in mindex:
 			''' %par)
 
         # . . Do GPU modelling
-        Flow(['Dgpu'+alltag,'Wgpu'+alltag,'timegpu%s.rsf@' % alltag],
+        Flow(['Dgpu'+alltag,'timegpu%s.rsf@' % alltag],
 			['wave','cc'+mtag,'ro'+mtag,'ss','rr'+mtag,'timegpu'+alltag],
         	'''
-        	/usr/bin/time -o ${TARGETS[2]} --format="\t%%e \t%%U \t%%S" 
+        	/usr/bin/time -o ${TARGETS[1]} --format="\t%%e \t%%U \t%%S" 
         	%(SDIR)s/sfewefd2d_gpu
         	jdata=%(jdata)d dabc=%(dabc)s free=%(free)s opot=n
         	verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
         	nb=%(nb)d nbell=%(nbell)d
         	in1=${SOURCES[0]} ccc=${SOURCES[1]}
         	den=${SOURCES[2]} sou=${SOURCES[3]}
-        	rec=${SOURCES[4]} wfl=${TARGETS[1]}
+        	rec=${SOURCES[4]} 
         	''' % par)
         # . . Back to native format
         Flow('gputiming'+alltag,['timegpu'+alltag,'Dgpu'+alltag],'dd form=native')
@@ -147,17 +147,17 @@ for msou in mindex:
 			''' %par)
 
     	# . . Run modelling
-    	Flow(['Dcpu'+alltag,'Wcpu'+alltag,'timecpu%s.rsf@' % alltag],
+    	Flow(['Dcpu'+alltag,'timecpu%s.rsf@' % alltag],
 			['wave','cc'+mtag,'ro'+mtag,'ss','rr'+mtag,'timecpu'+alltag],
         	'''
-        	/usr/bin/time -o ${TARGETS[2]} --format="\t%%e \t%%U \t%%S" 
+        	/usr/bin/time -o ${TARGETS[1]} --format="\t%%e \t%%U \t%%S" 
         	%(SDIR)s/sfewefd2d_omp
         	jdata=%(jdata)d dabc=%(dabc)s free=%(free)s opot=n
         	verb=y snap=%(snap)s jsnap=%(jsnap)d ssou=%(ssou)s
         	nb=%(nb)d nbell=%(nbell)d
         	in1=${SOURCES[0]} ccc=${SOURCES[1]}
         	den=${SOURCES[2]} sou=${SOURCES[3]}
-        	rec=${SOURCES[4]} wfl=${TARGETS[1]}
+        	rec=${SOURCES[4]} 
         	''' % par)
     	# . . Back to native format
     	Flow('cputiming'+alltag,['timecpu'+alltag,'Dcpu'+alltag],'dd form=native')
