@@ -161,7 +161,7 @@ for m in ['ISO','VTI','ORT','HTI']:
 	sou=${SOURCES[3]} 
 	rec=${SOURCES[4]}
 	wfl=${TARGETS[1]}
-        ngpu=2 jdata=%(jdata)d verb=%(verb)s free=n ssou=%(ssou)s 
+        ngpu=1 jdata=%(jdata)d verb=%(verb)s free=n ssou=%(ssou)s 
 	opot=n snap=%(snap)s jsnap=%(jsnap)d 
 	dabc=%(dabc)s nb=%(nb)d nbell=%(nbell)d
         ''' %par)

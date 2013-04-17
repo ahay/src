@@ -78,7 +78,7 @@ Flow(velsegy,velsegy+'.gz','zcat $SOURCE',stdin=0)
 # . . P-wave velocity model
 Flow('VP-BP',velsegy,
     '''
-    segyread tape=${SOURCES[0]} | 
+    segyread read=data | 
     put d1=%(dz)g d2=%(dxbeg)g | transp plane=12 | 
     spline d1=%(dx)g n1=10790 o1=0 | transp | 
     put label1=Depth label2=Distance unit1=m unit2=m | 
@@ -96,7 +96,7 @@ Flow(densegy,densegy+'.gz','zcat $SOURCE',stdin=0)
 
 Flow('RO-BP',densegy,
     '''
-    segyread tape=${SOURCES[0]} | 
+    segyread read=data | 
     put d1=%(dz)g d2=%(dxbeg)g | transp plane=12 | 
     spline d1=%(dx)g n1=10790 o1=0| transp | 
     put label1=Depth label2=Distance unit1=m unit2=m | 
