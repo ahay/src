@@ -18,72 +18,37 @@
 */
 #include <rsf.h>
 
+static int n1;
+static float wt;
+static kiss_fft_cfg cfg1=NULL, icfg1=NULL;
+
 #include "fft.h"
 
-void fftshift(sf_complex *a,int n)
-{
-  sf_complex tmp;
-  //sf_complex *b;
-  //b=allocatec(n);
-  int n0=(n-1)/2;
-  int i;
-//  if (n%2==0){
-    n0=n/2;
-    for (i=0;i<n0;i++){
-      tmp=a[i];
-      a[i]=a[n0+i];
-      a[n0+i]=tmp;
-    }
-//  }
-/*  else{
-    for(i=0;i<n;i++) b[i]=a[i];
-    n0=n/2;
-    for(i=0;i<=n0;i++)a[i]=b[i+n0];
-    for(i=1;i<=n0;i++) a[n0+i]=b[i-1];
-  }
-*/
-  //free(b);
-}
-
-
-
-
-void cwpfft(void *fz, int n, int isign)
+void kissfft(void *fz, int n, int isign)
 { 
-  register int i; 
-  register float  scale;
-  float  *fp  = (float *)fz; 
-  sf_complex *cz = (sf_complex *)fz;
+  int i; 
+  kiss_fft_cpx *cz = (kiss_fft_cpx *) fz;
+  sf_complex *cc = (sf_complex *) fz;
   
-  //printf("in ccc1 max0=%f,%d\n",maxvalc(cz,n),n);
-  pfacc(isign, n, cz);
-  //printf("in ccc2 max0=%f\n",maxvalc(cz,n));
-  if( isign < 0 ) {
-    scale = 1.0/(float)(n); 
-    for(i=0; i < 2*n; i++) 
-    {
-       *fp *= scale; fp++;
-    }
+  if (isign > 0) {
+      for (i=0; i<n1; i++) { /* FFT centering */
+	  cc[i] = (i%2? 1:-1) * cc[i];
+      }      
+      kiss_fft_stride(cfg1,cz,cz,1);
+  } else {
+      kiss_fft_stride(icfg1,cz,cz,1);
+      for (i=0; i<n1; i++) {
+	  cc[i] = (i%2? wt:-wt) * cc[i];
+      }
   }
 }
 
-void  cwpfft1d(sf_complex *a,int n,int inv)
-{
-  if(inv==-1){
-    fftshift(a,n);
-    cwpfft(a,n,-1);
-  }
-  else{
-  //printf("in before fft max0=%f\n",maxvalc(a,n));
-    cwpfft(a,n,1);
-  //printf("in end fft 1 max0=%f\n",maxvalc(a,n));
-    fftshift(a,n);
-  //printf("in end fft 2 max0=%f\n",maxvalc(a,n));
-  }
-}      
-
-int fftn(int nmin)
+int kissfftn(int nmin)
 /*< next size >*/
 {
-   return npfao(nmin,nmin+50);
+    n1 = kiss_fft_next_fast_size(nmin);
+    cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
+    icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
+    wt =  1.0/n1;
+    return n1;
 }

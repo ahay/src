@@ -110,7 +110,6 @@ void shot_image_cross(sf_complex *wld_s,sf_complex *wld_r,float *image_z,int nx,
     sf_complex ws,wr;
     int ihx,ihy,ix,iy,iihx,iihy,iohx,iohy;
     int shift_ix_s,shift_iy_s,shift_ix_r,shift_iy_r;
-    float hx,hy;
     int nimg[3];
     d4(nx,image_par.nhy,image_par.nhx,nimg);
     iohy=(int)(image_par.ohy/image_par.dy); iohx=(int)(image_par.ohx/image_par.dx);
@@ -145,9 +144,9 @@ void shot_image_cross_tilt(sf_complex *wld_s,sf_complex *wld_r,float *image_z,in
     sf_complex ws,wr;
     int ihx,ihy,ix,iy,iihx,iihy,iohx,iohy;
     int shift_ix_s,shift_iy_s,shift_ix_r,shift_iy_r;
-    float hx,hy,eps,de;
+    float eps;
     int nimg[3];
-    int nsmooth,ismooth,ixsmooth;
+    int nsmooth;
     nsmooth=200;
     eps=1200;
     d4(nx,image_par.nhy,image_par.nhx,nimg);
@@ -180,7 +179,7 @@ void shot_image_cross_tilt(sf_complex *wld_s,sf_complex *wld_r,float *image_z,in
          
 		    //image_z[i4(iy,ix,ihy,ihx,nimg)]+=real( conjg(ws)*wr/(conjg(ws)*ws+eps)   );
 		    //image_z[i4(iy,ix,ihy,ihx,nimg)]+=real( conjg(ws)*wr/(de)   );
-		    image_z[i4(iy,ix,ihy,ihx,nimg)]+=real( conjg(ws)*wr);
+		    image_z[i4(iy,ix,ihy,ihx,nimg)]+=crealf( conjf(ws)*wr);
 		    //image_z[i4(iy,ix,ihy,ihx,nimg)]+=real( conjg(ws)*ws);
        
 		}
@@ -213,8 +212,8 @@ void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int 
 
     mig_max_x=((float)(mig_nx-1))*img_dx+mig_min_x;
 
-    rite_min_x=MAX(img_min_x,mig_min_x); 
-    rite_max_x=MIN(img_max_x,mig_max_x);
+    rite_min_x=SF_MAX(img_min_x,mig_min_x); 
+    rite_max_x=SF_MIN(img_max_x,mig_max_x);
     rite_nx=(rite_max_x-rite_min_x)/img_dx+1;
 
     n_hy_hx= img_nhy*img_nhx;  d3(n_hy_hx,nz,ntmp_img); d4(mig_ny,mig_nx,n_hy_hx,nimg);

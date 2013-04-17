@@ -285,7 +285,7 @@ Flow('SIN','SINx SINy','cmplx ${SOURCES[1]}')
 Flow('MPIx',None,
     '''
     echo ; echo n1=8 o1=0 d1=1 esize=0 in=mpix.rsf@ > mpix.rsf;
-    echo 128 152 176 200 224 248 272 296> mpix.rsf@;
+    echo 128 152 176 200 224 248 272 296 > mpix.rsf@;
     %(SDIR)s/sfdd < mpix.rsf form=native 
     ''' %par) 
 Flow('MPIy',None,
