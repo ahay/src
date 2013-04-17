@@ -1,6 +1,6 @@
-/* 3D time scattering-angle Kirchhoff migration  */
+/* 3D time scattering-angle Kirchhoff migration for VSP data */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013c University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -305,16 +305,15 @@ int main (int argc, char* argv[]) {
 
     // GATHER PARAMS
     gp.zNum = ip.zNum;
-    if (!sf_getint ("dipn" , &gp.dipNum))      gp.dipNum = 1;	
+    if (!sf_getint ("dipn" , &gp.dipNum))       gp.dipNum = 1;	
     /* number of dip-angles */
     gp.zStart = ip.zStart;
     if (!sf_getfloat ("dipo",  &gp.dipStart))   gp.dipStart = 0.f;	
     /* first dip-angle */
-    gp.zStep = ip.zStep;
-    if (!sf_getfloat ("dipd",  &gp.dipStep))   gp.dipStep = 1.f;	
+    gp.zStep = ip.zStep; 
+    if (!sf_getfloat ("dipd",  &gp.dipStep) )   gp.dipStep = 1.f;	
     /* step in dip-angle */
-    
-    if (!sf_getint ("iscatn", &gp.scatNum))   gp.scatNum = 1;	
+    if (!sf_getint ("iscatn", &gp.scatNum))     gp.scatNum = 1;	
     /* number of scattering-angles */
     if (!sf_getfloat ("iscato", &gp.scatStart)) gp.scatStart = 0.f;	
     /* first scattering-angle (in degree) */
@@ -329,8 +328,8 @@ int main (int argc, char* argv[]) {
     sf_putfloat (imageFile, "d4", 1);   
     sf_putfloat (imageFile, "o1", ip.zStart); sf_putfloat (imageFile, "o2", ip.xStart); sf_putfloat (imageFile, "o3", ip.yStart);    
     sf_putfloat (imageFile, "o4", 0);   
-    sf_putstring(imageFile, "label1", "depth"); sf_putstring(imageFile, "label2", "inline"); sf_putstring(imageFile, "label3", "crossline");
-    sf_putstring(imageFile, "unit1", "m"); sf_putstring(imageFile, "unit2", "m"); sf_putstring(imageFile, "unit3", "m");
+    sf_putstring(imageFile, "label1", "time"); sf_putstring(imageFile, "label2", "inline"); sf_putstring(imageFile, "label3", "crossline");
+    sf_putstring(imageFile, "unit1", "ms"); sf_putstring(imageFile, "unit2", "m"); sf_putstring(imageFile, "unit3", "m");
 
     if (rp.isCig) {
 		// angle gathers file
@@ -340,9 +339,9 @@ int main (int argc, char* argv[]) {
 		sf_putfloat (cigFile, "d4", ip.yStep); 
     	sf_putfloat (cigFile, "o1", ip.zStart); sf_putfloat (cigFile, "o2", gp.scatStart); sf_putfloat (cigFile, "o3", ip.xStart);
 		sf_putfloat (cigFile, "o4", ip.yStart);    
-		sf_putstring(cigFile, "label1", "depth"); sf_putstring(cigFile, "label2", "scattering angle"); 
+		sf_putstring(cigFile, "label1", "time"); sf_putstring(cigFile, "label2", "scattering angle"); 
 		sf_putstring(cigFile, "label3", "inline"); sf_putstring(cigFile, "label4", "crossline");
-		sf_putstring(cigFile, "unit1", "m"); sf_putstring(cigFile, "unit2", "deg"); 
+		sf_putstring(cigFile, "unit1", "ms"); sf_putstring(cigFile, "unit2", "deg"); 
 		sf_putstring(cigFile, "unit3", "m"); sf_putstring(cigFile, "unit4", "m");
     }
 
@@ -354,9 +353,9 @@ int main (int argc, char* argv[]) {
 		sf_putfloat (dagFile, "d3", ip.xStep); sf_putfloat (dagFile, "d4", ip.yStep);    
     	sf_putfloat (dagFile, "o1", ip.zStart); sf_putfloat (dagFile, "o2", gp.dipStart);
 		sf_putfloat (dagFile, "o3", ip.xStart); sf_putfloat (dagFile, "o4", ip.yStart);    
-		sf_putstring(dagFile, "label1", "depth"); sf_putstring(dagFile, "label2", "dip angle");
+		sf_putstring(dagFile, "label1", "time"); sf_putstring(dagFile, "label2", "dip angle");
 		sf_putstring(dagFile, "label3", "inline");	sf_putstring(dagFile, "label4", "crossline");
-		sf_putstring(dagFile, "unit1", "m"); sf_putstring(dagFile, "unit2", "deg");
+		sf_putstring(dagFile, "unit1", "ms"); sf_putstring(dagFile, "unit2", "deg");
 		sf_putstring(dagFile, "unit3", "m"); sf_putstring(dagFile, "unit4", "m");
     }
 
@@ -381,38 +380,24 @@ int main (int argc, char* argv[]) {
     float* dag  = sf_floatalloc (dagSize);
 	// scattering-angle gather    
 	float* acig = sf_floatalloc (acigSize);
-	// multi-gather    
-	float* mcig = sf_floatalloc (mcigSize);
 	// image
 	float* image = sf_floatalloc (gp.zNum);
-
-
-
-
-
 
     // set migrator
     VSPTimeMigrator2D* migrator;
     if (rp.is3D) {
-//		migrator = new TimeMigrator3D ();
-//		migrator->initCurveDefiner (true);
+//		migrator = new VSPTimeMigrator3D (); // not ready yet
     } else {
 		migrator = new VSPTimeMigrator2D ();
-//		migrator->initCurveDefiner (false);
     }
-//    migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
-//    migrator->setDataLimits ();
-
-
     migrator->setImagingParams (&dp, data, rp.isAA, axis2label, &vp, &ip, &gp);
     migrator->setVelModel (velModel);
 
-    const int fullGatherNum = ip.yNum * ip.xNum;
-
-	int cigind = 1;
-
+	// read data 
 	readData     (data);
 	readVelocity (velModel);	
+
+    const int fullGatherNum = ip.yNum * ip.xNum;
 
 	for (int ipy = 0; ipy < ip.yNum; ++ipy) {
 		for (int ipx = 0; ipx < ip.xNum; ++ipx) {
@@ -451,7 +436,6 @@ int main (int argc, char* argv[]) {
     sf_fileclose (dagFile);
     sf_fileclose (cigFile);
     sf_fileclose (imageFile);
-
 
     sf_fileclose (velFile);
 	sf_fileclose (dataFile);

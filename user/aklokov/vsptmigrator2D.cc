@@ -8,15 +8,11 @@
 #include <omp.h>
 #endif
 
-#include <iostream>
-using namespace std;
-
 VSPTimeMigrator2D::VSPTimeMigrator2D () {
 }
 
 VSPTimeMigrator2D::~VSPTimeMigrator2D () {
 }
-
 
 void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* const data, float* image, float* dag, float* cig) {
    
@@ -27,12 +23,9 @@ void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* co
     const int   curX     = (int) curGatherCoords.getX ();    
     const float xCIG     = ip_->xStart + curX * ip_->xStep;
 
-//#pragma omp parallel for
+#pragma omp parallel for
     for (int it = 0; it < tNum; ++it) {	  
-//    for (int it = 1200; it < 1201; ++it) {	  
 		const float curT = tStart + it * tStep;		
-//		if (curT < velModelDepthMin || curT > velModelDepthMax)
-//			continue;
 		this->processTimeSample (xCIG, curT, data, image + it, dag + it, cig + it);
 	}
    
@@ -42,7 +35,6 @@ void VSPTimeMigrator2D::processGather (Point2D& curGatherCoords, const float* co
 float VSPTimeMigrator2D::getSampleByRay (const float yCIG, const float xCIG, const float curZeroTime, 
 									     const float curDip, const float curAz, const float migVel, const bool isAzDip,
 									     const float yEmAngle, const float xEmAngle) {
-
     
     return 0.f;
 }
@@ -133,7 +125,7 @@ float VSPTimeMigrator2D::getVel (float curZ, float xCIG) {
 	return velField_[xInd][zInd];
 }
 
-void VSPTimeMigrator2D::processTimeSample (const float curX, const float curZ, const float* const data, 
+void VSPTimeMigrator2D::processTimeSample (const float curX, const float curT, const float* const data, 
 										   float* curImage, float* curDag, float* curCig) {
 
 	// CONSTANTS
@@ -157,7 +149,9 @@ void VSPTimeMigrator2D::processTimeSample (const float curX, const float curZ, c
 	memset ( maskCig, 0, scatNum * sizeof (int) );
 	int maskImage (0);
 
-	const float velInPoint = this->getVel (curZ, curX);
+	const float velInPoint = this->getVel (curT, curX);
+
+	const float curZ = 0.5 * curT * velInPoint / 1000; // imaged point position
 
 	for (int is = 0; is < scatNum; ++is) {
 
@@ -166,7 +160,6 @@ void VSPTimeMigrator2D::processTimeSample (const float curX, const float curZ, c
 
 		// loop over dip-angle
 		for (int id = 0; id < dipNum; ++id)	{
-//			const float curDipAngle = -1 * (dipStart + id * dipStep); // "-1" is to consist with an agreement
 			const float curDipAngle = dipStart + id * dipStep;
 	
 			float sample (0.f);
@@ -290,30 +283,29 @@ bool VSPTimeMigrator2D::getSampleByBeam (float curX, float curZ, float vel, floa
 
 bool VSPTimeMigrator2D::getReceiverByDirection (float curX, float curZ, float dir2, float& rec) {
 
-	if (dir2 == 0) return -1; // vertical direction
+	if (dir2 == 0) return false; // vertical direction
 	const float tang = tan ( dir2 * M_PI / 180.f );	
-	if (tang > 0) return 0; // wrong direction - not to the receivers
+	if (tang > 0) return false; // wrong direction - not to the receivers
 	
 	// get receiver
 	rec = curZ + curX / tang;
 	
 	// limit checking
 	const float rTop = dp_->xStart;
-	if (rec < rTop) return 0;
+	if (rec < rTop) return false;
 	const float rBot = dp_->xStart + dp_->xStep * (dp_->xNum - 1);
-	if (rec > rBot) return 0;
+	if (rec > rBot) return false;
 
-	return 1; // good receiver
+	return true; // good receiver
 }
 
 bool VSPTimeMigrator2D::getSourceByDirection (float curX, float curZ, float dir2, float& src) {
 
-	if (dir2 == 0) return -1;
+	if (dir2 == 0) return false;
 
 	src = curX + curZ * tan ( dir2 * M_PI / 180.f );	
 	
-	if (src < 0)  return 0;
-	if (src > 40000) return 0;
+	if (src < 0) return false; // temporary condition
 
-	return 1;
+	return true;
 }
