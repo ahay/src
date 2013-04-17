@@ -46,6 +46,7 @@ To programs:
 * Added an ability to specify a colortable in a CSV file
 * user/luke: new contributor (Luke Decker)
 * Moved some programs from user/fomels to user/pwd
+* sfzoom: example Tkinter script for interactive zooming
 
 ===Bug fixes===
 
