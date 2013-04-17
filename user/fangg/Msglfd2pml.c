@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
     float **vel, **den, **c11, *source;
     float **denx, **denz;
     float **record;
+    bool freesurface;
     int spx, spz, gdep;
     int snapinter;
     int mx, mz; /*margin*/
@@ -125,10 +126,13 @@ int main(int argc, char* argv[])
     /* Flag of decay boundary condtion: 1 = use ; 0 = not use */
     if (!sf_getint("decaybegin",&decaybegin)) decaybegin=DECAY_BEGIN;
     /* Begin time of using decay boundary condition */
+    if (!sf_getbool("freesurface, &freesurface")) freesurface=false;
+    /*free surface*/
     if (!sf_histint(fGx, "n1", &nxz)) sf_error("No n1= in input");
     if (nxz != nxb*nzb) sf_error (" Need nxz = nxb*nzb");
     if (!sf_histint(fGx,"n2", &lenx)) sf_error("No n2= in input");
     if (!sf_histint(fGz,"n2", &lenz)) sf_error("No n2= in input");
+    
     
     sxxtmp = sf_floatalloc(lenx);
     sxztmp = sf_floatalloc(lenx);
@@ -293,7 +297,7 @@ int main(int argc, char* argv[])
 	}
 
 	/*Velocity PML */
-	pml_vxz(vxn1, vzn1, vxn0, vzn0, txxn0, denx, denz, ldx, ldz);
+	pml_vxz(vxn1, vzn1, vxn0, vzn0, txxn0, denx, denz, ldx, ldz, freesurface);
 
 	/*Stress*/
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
@@ -302,7 +306,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	/*Stress PML */
-	pml_txx(txxn1, vxn1, vzn1, c11, ldx, ldz);
+	pml_txx(txxn1, vxn1, vzn1, c11, ldx, ldz, freesurface);
 
 	/*n1 -> n0*/
 	time_step_exch(txxn0, txxn1, it);
