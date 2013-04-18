@@ -33,7 +33,7 @@ Result('synt',
 # Adding saltpepper random noise to data
 #########################################################
 
-Flow('noise','synt','saltpepper inten=2 ')
+Flow('noise','synt','saltpepper inten=2 seed=2013')
 
 #########################################################
 # Generating the temporary figure file about noisy data
