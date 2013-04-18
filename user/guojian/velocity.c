@@ -19,6 +19,9 @@
 */
 #include <rsf.h>
 
+#include "velocity.h"
+#include "arrayindex.h"
+
 void velocity_init(sf_file *velocity)
 /*< open velocity file >*/
 {
@@ -32,32 +35,34 @@ void velocity_ani_init(sf_file *eps,sf_file *dlt)
    *dlt=sf_input("Dlt");
 }
 
-void velocity_read(sf_file velocity,float *vel,sf_file wave,float theta,int ix_center,char *tag)
+void velocity_read(sf_file velocity,float *vel,sf_file wave,float theta,int ix_center)
 /*< read velocity or anisotropy parameter in tilted coordinates >*/
 {
   float *tmpvel;
   int nvel[2],ntmpvel[2];
-  float mig_dx,mig_dz,mig_nx,mig_nz,mig_ox,mig_oz;
-  float vel_dx,vel_dz,vel_nx,vel_nz,vel_ox,vel_oz;
-  int iy,ix,iz,n_block,blocksize; 
+  int mig_nx, mig_nz, vel_nx, vel_nz;
+  float mig_dx,mig_dz,mig_ox,mig_oz;
+  float vel_dx,vel_dz,vel_ox,vel_oz;
+  int iy,ix,iz,n_block; 
   float tmp_x,tmp_z,tmp_wx,tmp_wz,dtmp_x,dtmp_z;
   int tmp_ix,tmp_iz;
  
-  mig_dx=wave.d[1]; mig_dz=wave.d[0]; mig_nx=wave.n[1]; mig_nz=wave.n[0]; mig_ox=wave.o[1]; mig_oz=wave.o[0];
-  vel_dx=velocity.d[1]; vel_dz=velocity.d[0]; vel_nx=velocity.n[1]; vel_nz=velocity.n[0];
-  vel_ox=velocity.o[1]; vel_oz=velocity.o[0];
+  sf_histfloat(wave,"d2",&mig_dx); sf_histfloat(wave,"o2",&mig_ox); sf_histint(wave,"n2",&mig_nx); 
+  sf_histfloat(wave,"d1",&mig_dz); sf_histfloat(wave,"o1",&mig_oz); sf_histint(wave,"n1",&mig_nz); 
+
+  sf_histfloat(velocity,"d2",&vel_dx); sf_histfloat(velocity,"o2",&vel_ox); sf_histint(velocity,"n2",&vel_nx); 
+  sf_histfloat(velocity,"d1",&vel_dz); sf_histfloat(velocity,"o1",&vel_oz); sf_histint(velocity,"n1",&vel_nz); 
 
   d3(mig_nx,mig_nz,nvel);
   d3(vel_nx,vel_nz,ntmpvel);
 
-  tmpvel=allocatef(vel_nz*vel_nx);
+  tmpvel=sf_floatalloc(vel_nz*vel_nx);
   if (theta >=0)
   {
     for(iy=0;iy<1;iy++){    //do iy=1,ny
       n_block=iy*vel_nx;
-      if (sseek_block(tag,n_block,vel_nz*4,0)!= n_block) seperr("velocity seek wrong");
-      blocksize=vel_nz*vel_nx*4;
-      if(sreed(tag,tmpvel,blocksize)!=blocksize) seperr("velocity read wrong");
+      sf_seek(velocity,n_block*vel_nz*sizeof(float),SEEK_SET);
+      sf_floatread(tmpvel,vel_nz*vel_nx,velocity);
 
       for(ix=0;ix<mig_nx;ix++){
         dtmp_x=ix*mig_dx-(ix_center-1.0)*mig_dx;
@@ -98,9 +103,8 @@ void velocity_read(sf_file velocity,float *vel,sf_file wave,float theta,int ix_c
     theta=-theta;
     for(iy=0;iy<1;iy++){
       n_block=iy*vel_nx;
-      if (sseek_block(tag,n_block,vel_nz*4,0)!= n_block) seperr("velocity seek wrong");
-      blocksize=vel_nz*vel_nx*4;
-      if(sreed(tag,tmpvel,blocksize)!=blocksize) seperr("velocity read wrong");
+      sf_seek(velocity,n_block*vel_nz*sizeof(float),SEEK_SET);
+      sf_floatread(tmpvel,vel_nz*vel_nx,velocity);
         
       for(ix=mig_nx-1;ix>=0;ix--){
         dtmp_x=(mig_nx-1-ix)*mig_dx-(ix_center-1)*mig_dx;
@@ -138,7 +142,7 @@ void velocity_read(sf_file velocity,float *vel,sf_file wave,float theta,int ix_c
   free(tmpvel);
 }
 
-/* find max and min value of velocity or anisotropy parameters */
+/* find max and min value of velocity or anisotropy parameters 
 void velocity_minmax(char *tag,sf_file velocity,float *minvel,float *maxvel){
   int n,idim;
   float *vel;
@@ -146,10 +150,10 @@ void velocity_minmax(char *tag,sf_file velocity,float *minvel,float *maxvel){
   for(n=1,idim=0;idim<ndim; idim++){
     n*=velocity.n[idim];
   }
-  vel=allocatef(n);
+  vel=sf_floatalloc(n);
   if(sreed(tag,vel,n*4)!=n*4) seperr("velocity read wrong");
   *maxvel=maxval(vel,n);
   *minvel=minval(vel,n);
   free(vel);
 }
-
+*/

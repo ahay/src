@@ -5,17 +5,17 @@ import fdmod,encode,wemig,stiffness
 # . . Set modelling parameters 
 par = {
 # . . Space parameters
-'nx':200, 'ox':0, 'dx':0.005,  'lx':'x', 'ux':'km',
-'ny':200, 'oy':0, 'dy':0.005,  'ly':'y', 'uy':'km',
-'nz':200, 'oz':0, 'dz':0.005,  'lz':'z', 'uz':'km',
+'nx':100, 'ox':0, 'dx':0.01,  'lx':'x', 'ux':'km',
+'ny':100, 'oy':0, 'dy':0.01,  'ly':'y', 'uy':'km',
+'nz':100, 'oz':0, 'dz':0.01,  'lz':'z', 'uz':'km',
 
 # . . Time parameters
 'nt':1000,'ot':0, 'dt':0.0005,  'lt':'t', 'ut':'s',
 'kt':60,'frq':40,
 
 # . . Modelling parameters
-'snap':'y','jsnap':100, 'nb':24,'dabc':'y',
-'nbell':5,'jdata':16,'verb':'y', 'ssou':'y','ngpu':2,
+'snap':'y','jsnap':100, 'nb':26,'dabc':'y',
+'nbell':5,'jdata':16,'verb':'y', 'ssou':'y','ngpu':1,
 
 # . . Output parameters
 'height':10, 'labelattr':' ','nframe':10,'iframe':7,

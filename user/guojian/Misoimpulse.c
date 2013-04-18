@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 	    else 
 		sf_putfloat(wave,"o2",mig_min_x+(mig_nx-1)*mig_dx);
 
-	    velocity_read(velocity,vel,wave,rotate_par.rotate_angle,rotate_par.ix_rotate_center,"Velocity"); 
+	    velocity_read(velocity,vel,wave,rotate_par.rotate_angle,rotate_par.ix_rotate_center); 
 	    veltranspose(vel,mig_ny_rotate,mig_nx_rotate,mig_nz_rotate);
       
 	    for(iw=0;iw<data_par.nw; iw++){ 
@@ -210,13 +210,13 @@ int main(int argc, char **argv)
 			   maxval(*image_rotate_allhx,mig_nx*mig_nz*image_par.nhx),
 			   maxval(*image_rotate_allhz,mig_nx*mig_nz*image_par.nhx));
         
-		shot_image_stack(*image_rotate_allhz,mig_min_x,mig_min_y,mig_nx,mig_ny,"Image_hz",image_par);
+		shot_image_stack(*image_rotate_allhz,mig_min_x,mig_min_y,mig_nx,mig_ny,image_par.imagez,image_par);
 		free(*image_rotate_allhz);
 		free(image_rotate_allhz);
 	    }
 
 
-	    shot_image_stack(*image_rotate_allhx,mig_min_x,mig_min_y,mig_nx,mig_ny,"Image_hx",image_par); 
+	    shot_image_stack(*image_rotate_allhx,mig_min_x,mig_min_y,mig_nx,mig_ny,image_par.imagex,image_par); 
 	    free(image_rotate); // rite image
       
 	    free(image_1hx); 

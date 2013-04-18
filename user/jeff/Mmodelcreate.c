@@ -199,6 +199,7 @@ int main(int argc, char* argv[])
   			smean += shit[i1][i2];
 		}
   	}
+	smean /= (n1*n2);
   
   	/* Scale to desired location */
   	for (i1=0;i1<n1;i1++){

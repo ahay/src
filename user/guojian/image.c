@@ -32,6 +32,7 @@ struct shot_image_par_type
     float ohx,ohy;
     int nx,ny,nz,nhx,nhy;
     float *sincx_table; 
+    sf_file imagex,imagez;
 };
 /*^*/
 
@@ -97,6 +98,9 @@ void shot_image_init(float dx,float dy,float dz,int nz,struct shot_image_par_typ
 	sf_floatwrite(tmpimg,image_par->nz,imagez);
     }
     free(tmpimg);
+
+    image_par->imagex = imagex;
+    image_par->imagez = imagez;
 }
 
 void shot_image_sinc_table(struct shot_image_par_type *image_par){
@@ -189,10 +193,7 @@ void shot_image_cross_tilt(sf_complex *wld_s,sf_complex *wld_r,float *image_z,in
 
 }
 
-
-
-
-void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int mig_ny,char *tag,
+void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int mig_ny,sf_file tag,
 		      struct shot_image_par_type image_par)
 /*< stack image >*/
 {
@@ -228,8 +229,8 @@ void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int 
 	    rite_iy= iy+(mig_min_y-img_min_y)/img_dy;
 	    if (rite_iy < img_ny && rite_iy>= 0){
 		block_i=rite_iy*img_nx+rite_ix_b;
-		if ( sseek_block(tag,block_i,block_size,0)!=block_i) seperr("Image seek wrong");
-		if (sreed(tag,tmp_img,block_size*rite_nx)!=block_size*rite_nx )seperr("Image read wrong ?");
+		sf_seek(tag,block_i*block_size,SEEK_SET);
+		sf_floatread(tmp_img,rite_nx*n_hy_hx*nz,tag);
 		for(ix=0;ix<rite_nx;ix++){
 		    for(i_hy_hx=0;i_hy_hx<n_hy_hx;i_hy_hx++){
 			for(iz=0;iz<nz;iz++){
@@ -237,8 +238,8 @@ void shot_image_stack(float *img,float mig_min_x,float mig_min_y,int mig_nx,int 
 			}
 		    }
 		} 
-		if ( sseek_block(tag,block_i,block_size,0)!=block_i) seperr("Image seek wrong");
-		if (srite(tag,tmp_img,block_size*rite_nx)!=block_size*rite_nx) seperr("Image write wrong");
+		sf_seek(tag,block_i*block_size,SEEK_SET);
+		sf_floatwrite(tmp_img,rite_nx*n_hy_hx*nz,tag);
 	    }
 	}
 	free(tmp_img);
@@ -274,11 +275,13 @@ void shot_image_decompose(float *image_hx,float *image_hz,int nx,int nz,float ro
 
 
 
-void shot_image_decompose_1imagepoint(float *image_hx,float *image_hz,int nx,int nz,float rotate_angle,struct shot_image_par_type image_par)
+void shot_image_decompose_1imagepoint(float *image_hx,float *image_hz,int nx,int nz,float rotate_angle,
+				      struct shot_image_par_type image_par)
+/*< one image point >*/
 {
     float *image_dip,*sincx_table;
-    int ix,iz,i_ihz,i_ihx,ihdip,ihx,ihz,ii_hz,ii_hx,iwx;
-    float hx,hz,whx,whz,ohx,hdip,ddx,wwx;
+    int i_ihz,i_ihx,ihdip,ihx,ihz,ii_hz,ii_hx,iwx;
+    float hx,hz,whx,whz,ohx,hdip,ddx;
     float sincz[8],sincx[8];
     float *i0sinc;
     float dwx;

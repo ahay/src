@@ -26,7 +26,7 @@ int i2(int i, int j, int n1)
     ij=i*n1+j;
     return ij;
 }
- 
+
 int i3(int i, int j, int k, int *n)
 /*< index-3 >*/
 {
@@ -85,6 +85,7 @@ void d6(int n2,int n3,int n4,int n5,int n6, int *n){
 }
 
 void rowf( float *a,float *rowofa,int iy, int nx, int forward)
+/*< float row >*/
 {
     int ix;
     if (forward){
@@ -98,6 +99,7 @@ void rowf( float *a,float *rowofa,int iy, int nx, int forward)
 }
 
 void rowc(sf_complex *a,sf_complex *rowofa,int iy, int nx,int forward)
+/*< complex row >*/
 {
     int ix;
     if (forward){
@@ -109,7 +111,9 @@ void rowc(sf_complex *a,sf_complex *rowofa,int iy, int nx,int forward)
 	    a[i2(iy,ix,nx)]=rowofa[ix];
     }
 }
+
 void colc(sf_complex *a,sf_complex *rowofa,int ix, int nx,int ny,int forward)
+/*< complex column >*/
 {
     int iy;
     if (forward){
@@ -147,7 +151,9 @@ float maxval( float *a, int nx)
     return mxval;
 }
 
-float maxvalc(sf_complex *a,int nx){
+float maxvalc(sf_complex *a,int nx)
+/*< maximum value >*/
+{
     float mxval;
     int ix;
     for(ix=0,mxval=fabs(crealf(a[0]));ix<nx;ix++){
@@ -156,7 +162,9 @@ float maxvalc(sf_complex *a,int nx){
     return mxval;
 }
 
-float minval( float *a,int nx){
+float minval( float *a,int nx)
+/*< minimum value >*/
+{
     float mnval;
     int ix;
     for(ix=0,mnval=a[0]; ix<nx; ix++){
@@ -165,8 +173,9 @@ float minval( float *a,int nx){
     return mnval;
 }
 
-void matrix_equ_c(sf_complex *a,sf_complex *b,int ny,int nx){
-    // a(ny,nx) b(ny,nx)
+void matrix_equ_c(sf_complex *a,sf_complex *b,int ny,int nx)
+/*< matrix >*/
+{
     int iy,ix;
     for(iy=0;iy<ny;iy++)
 	for(ix=0;ix<nx;ix++)
@@ -188,7 +197,10 @@ void vector_value_c(sf_complex *a,sf_complex value,int nx)
     for (i=0;i<nx;i++)
 	a[i]=value;
 }
-void vector_cp_c(sf_complex *a, sf_complex *b, int nx){
+
+void vector_cp_c(sf_complex *a, sf_complex *b, int nx)
+/*< copy complex vector >*/
+{
     int i;
     for(i=0;i<nx;i++) a[i]=b[i];
 }

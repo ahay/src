@@ -25,6 +25,7 @@ static kiss_fft_cfg cfg1=NULL, icfg1=NULL;
 #include "fft.h"
 
 void kissfft(void *fz, int n, int isign)
+/*< 1-D complex FFT >*/
 { 
   int i; 
   kiss_fft_cpx *cz = (kiss_fft_cpx *) fz;
