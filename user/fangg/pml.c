@@ -165,16 +165,16 @@ void pml_txx(float **txxn1, float **vxn1, float **vzn1, float **c11,
     if (freesurface == false) {
 	for (ix=marg; ix<nx+2*pmlout+marg; ix++) {
 	    for (iz=marg; iz<marg+pmlout; iz++) {
-		txxn1x[ix][iz]=((1-dt*pmldx[ix]/2)*txxn0x[ix][iz]-dt*0.0*ldx(vxn1,ix+1,iz))/(1+dt*pmldx[ix]/2);
-		txxn1z[ix][iz]=((1-dt*pmldz[iz]/2)*txxn0z[ix][iz]-dt*0.0*ldz(vzn1,ix,iz+1))/(1+dt*pmldz[iz]/2);
+		txxn1x[ix][iz]=((1-dt*pmldx[ix]/2)*txxn0x[ix][iz]-dt*c11[ix][iz]*ldx(vxn1,ix+1,iz))/(1+dt*pmldx[ix]/2);
+		txxn1z[ix][iz]=((1-dt*pmldz[iz]/2)*txxn0z[ix][iz]-dt*c11[ix][iz]*ldz(vzn1,ix,iz+1))/(1+dt*pmldz[iz]/2);
 		txxn1[ix][iz] = txxn1x[ix][iz]+txxn1z[ix][iz];
 	    }
 	}
     } else {
 	for (ix=marg; ix<nx+2*pmlout+marg; ix++) {
 	    for (iz=marg; iz<marg+pmlout; iz++) {
-		txxn1x[ix][iz]=((1-dt*pmldx[ix]/2)*txxn0x[ix][iz]-dt*c11[ix][iz]*ldx(vxn1,ix+1,iz))/(1+dt*pmldx[ix]/2);
-		txxn1z[ix][iz]=((1-dt*pmldz[iz]/2)*txxn0z[ix][iz]-dt*c11[ix][iz]*ldz(vzn1,ix,iz+1))/(1+dt*pmldz[iz]/2);
+		txxn1x[ix][iz]=((1-dt*pmldx[ix]/2)*txxn0x[ix][iz]-dt*0.0*ldx(vxn1,ix+1,iz))/(1+dt*pmldx[ix]/2);
+		txxn1z[ix][iz]=((1-dt*pmldz[iz]/2)*txxn0z[ix][iz]-dt*0.0*ldz(vzn1,ix,iz+1))/(1+dt*pmldz[iz]/2);
 		txxn1[ix][iz] = txxn1x[ix][iz]+txxn1z[ix][iz];
 	    }
 	}

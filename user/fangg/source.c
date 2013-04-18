@@ -47,3 +47,27 @@ void explsourcet(float **vtxx/*@out@*/,
 	vtxx[vsx][vsdepth] += vwavlet[it];
     } 
 }
+
+void explsourcet1(float *vtxx/*@out@*/,
+		 float *vwavlet, 
+		 int it, int vsdepth, int vnx, 
+		 spara *vps/*decay parameters*/)
+/*<1D explosive source for stress txx>*/ 
+{
+    float phi = 0.0;
+    int cent = vps->srange/2;
+    int ix;
+
+    if (vps->decay ==1){
+	for (ix=0; ix<2*cent; ix++){
+	    phi = exp(-1*vps->alpha*vps->alpha*(ix-cent)*(ix-cent));
+	    vtxx[vsdepth-cent+ix] += vwavlet[it]*phi;
+	}
+    } else {
+	vtxx[vsdepth] += vwavlet[it];
+    } 
+}
+
+
+
+

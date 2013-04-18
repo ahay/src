@@ -46,7 +46,7 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	   res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*ks[cs[b]]*dt);
+	    res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*fabs(ks[cs[b]])*dt);
 	}
     }
     return 0;
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
     float CUT = N/3.0*dk;
     for (int k=0; k < N; k++) {
 	ks[k] = -dk*N/2.0+k*dk;
-        if (abs(ks[k]) < CUT) count++;
+        if (fabs(ks[k]) < CUT) count++;
     }
     vector<int> ksc(count);
     int nk = 0;
@@ -156,6 +156,8 @@ int main(int argc, char** argv)
     iC( sample(ridx,cs,M2) );
     DblNumMat Mexact(N,N);
     iC( sample(rs,cs,Mexact) );
+    //for(int k=0;k<m;k++) cerr<<"rs"<<k<<"="<<rs[k]<<"  "<<vs[rs[k]]<<"cs"<<k<<"="<<cs[k]<<"  "<<ks[cs[k]]<<endl;
+    
 
     float dk2=dk/2.0;
     Mexactfile.put("n1",N);

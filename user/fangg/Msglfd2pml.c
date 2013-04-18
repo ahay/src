@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     float **vel, **den, **c11, *source;
     float **denx, **denz;
     float **record;
-    bool freesurface;
+    bool freesurface, srcdecay;
     int spx, spz, gdep;
     int snapinter;
     int mx, mz; /*margin*/
@@ -80,6 +80,8 @@ int main(int argc, char* argv[])
     int pmlout, pmld0, decaybegin;
     int   decay;
     float gamma = GAMMA;
+
+    int srcrange;
 
 
     tstart = clock();
@@ -128,6 +130,10 @@ int main(int argc, char* argv[])
     /* Begin time of using decay boundary condition */
     if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
+    if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=true;
+    /*source decay*/
+    if (!sf_getint("srcrange", &srcrange)) srcrange=10;
+    /*source decay range*/
     if (!sf_histint(fGx, "n1", &nxz)) sf_error("No n1= in input");
     if (nxz != nxb*nzb) sf_error (" Need nxz = nxb*nzb");
     if (!sf_histint(fGx,"n2", &lenx)) sf_error("No n2= in input");
@@ -267,14 +273,15 @@ int main(int argc, char* argv[])
        
     /* MAIN LOOP */
     sp.trunc=160;
-    sp.srange=10;
+    sp.srange=srcrange;
     sp.alpha=0.5;
-    sp.decay=1;
+    sp.decay=srcdecay?1:0;
 	
     sf_warning("============================");
     sf_warning("nx=%d nz=%d nt=%d", nx, nz, nt);
     sf_warning("dx=%f dz=%f dt=%f", dx, dz, dt);
     sf_warning("lenx=%d lenz=%d marg=%d pmlout=%d", lenx, lenz, marg, pmlout);
+    sf_warning("sp.decay=%d sp.srange=%d",sp.decay,sp.srange);
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx,sxz]=[%d,%d] Gx=%f",sxx[ix], sxz[ix], Gx[ix][0][0]);
     }
