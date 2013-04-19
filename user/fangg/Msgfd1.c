@@ -81,6 +81,7 @@ int main(int argc, char* argv[])
     float *denx, *denz;
     float *record;
     int spx, gdep;
+    int oo;
     sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/;
     sf_axis at, ax;
     int marg;
@@ -131,6 +132,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
     
+    oo=marg;
     nx = nxb - 2*pmlout - 2*marg;
     
     vel = sf_floatalloc(nxb);
@@ -145,10 +147,10 @@ int main(int argc, char* argv[])
     for (ix = 0; ix < nxb; ix++) {
 	    c11[ix] = den[ix]*vel[ix]*vel[ix];
 	    denx[ix] = den[ix];
-	    if(c11[ix] == 0.0) sf_warning("c11=0: ix=%d iz%d", ix, iz);
+	    if(c11[ix] == 0.0) sf_warning("c11=0: ix=%d ", ix);
 	
     }
-    /*den[ix+1/2][iz]*/
+    /*den[ix+1/2]*/
     for ( ix = 0; ix < nxb-1; ix++) {
 	    denx[ix] = (den[ix+1] + den[ix])*0.5;
     }
@@ -177,12 +179,6 @@ int main(int argc, char* argv[])
     for (ix = 0; ix < nxb; ix++) {
 	vxn0[ix] = 0.0;
     } 
-    for (ix = 0; ix < nxb; ix++) {
-	vzn1[ix] = 0.0;  
-    }
-    for (ix = 0; ix < nxb; ix++) {
-	vzn0[ix] = 0.0;
-    }  
     for (it = 0; it < nt; it++) {
 	record[it] = 0.0;
     } 
@@ -196,7 +192,7 @@ int main(int argc, char* argv[])
     sf_warning("============================");
     sf_warning("nx=%d  nt=%d", nx, nt);
     sf_warning("dx=%f  dt=%f", dx, dt);
-    sf_warning("lenx=%d marg=%d pmlout=%d", lenx, marg, pmlout);
+    sf_warning("marg=%d pmlout=%d", marg, pmlout);
     
     
     for (it = 0; it < nt; it++) {
@@ -207,19 +203,19 @@ int main(int argc, char* argv[])
     
 	/*velocity*/
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++) {
-		vxn1[ix] = vxn0[ix] + dt/den[ix][iz]*fdx(txxn0, ix-1, dx, oo);
+		vxn1[ix] = vxn0[ix] + dt/den[ix]*fdx(txxn0, ix-1, dx, oo);
 	}
 	
 	/*Velocity PML*/
-	pml1_vxz(vxn1, vxn0, txxn0, denx, ldx, freesurface);
+	fdpml1_vxz(vxn1, vxn0, txxn0, denx, dx, oo, fdx, freesurface);
 
 	/*Stress*/
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
-		txxn1[ix] = txxn0[ix] + dt*c11[ix][iz]*fdx(vxn1, ix, dx, oo);
+		txxn1[ix] = txxn0[ix] + dt*c11[ix]*fdx(vxn1, ix, dx, oo);
 	}
 	
 	/*Stress PML */
-	pml1_txx(txxn1, vxn1, c11, ldx, freesurface);
+	fdpml1_txx(txxn1, vxn1, c11, dx, oo, fdx, freesurface);
 	
 	/*n1 -> n0*/
 	time_step_exch1(txxn0, txxn1, it);
@@ -236,10 +232,15 @@ int main(int argc, char* argv[])
 
     sf_warning(".");
     sf_floatwrite(record, nt, frec);
+    
+    pml1_close();
  
     tend = clock();
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
     sf_warning(">> The CPU time of sfsgfd1 is: %f seconds << ", duration);
+    
+    
+    
     exit(0);
 }    
     

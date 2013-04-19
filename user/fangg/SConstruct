@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-expand sglr sglfd2  sglfd2_tfd sglfd2pml sglfd1pml
+expand sglr sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1
 '''
 #fftwave2
 

@@ -108,7 +108,7 @@ void pml1_vxz(float *vxn1, float *vxn0,
 	
     }
 
-}
+ }
 
 void pml1_txx(float *txxn1, float *vxn1, float *c11, 
 	     float (*ldx)(float *, int),
@@ -140,7 +140,8 @@ void pml1_txx(float *txxn1, float *vxn1, float *c11,
 
 void fdpml1_vxz(float *vxn1, float *vxn0, 
 		float *txxn0, float *denx, 
-		float (*fdx)(float *, int, float, int), 
+		float dx, int oo, 
+		float (*fdx)(float *, int, float, int),
 		bool freesurface)
 /*<velocity vx,vz  decay in pml --FD method>*/
 {
@@ -148,31 +149,44 @@ void fdpml1_vxz(float *vxn1, float *vxn0,
     /*Velocity PML --top*/
     if (freesurface == false) {
 	for (ix=marg; ix<marg+pmlout; ix++) {
-	    vxn1[ix]=((1-dt*pmldx[ix]/2)*vxn0[ix]-dt/denx[ix]*ldx(txxn0,ix))/(1+dt*pmldx[ix]/2);
-	}
+	    vxn1[ix] = ((1-dt*pmldx[ix]/2)*vxn0[ix] + dt/denx[ix]*fdx(txxn0, ix-1, dx, oo))/(1+dt*pmldx[ix]/2);
+	    
+    }
     } 
 	
     /*Velocity PML  --bottom*/
-    for (ix=nx+pmlout+marg; ix<nx+2*pmlout+marg; ix++) {
-	vxn1[ix]=((1-dt*pmldx[ix]/2)*vxn0[ix]-dt/denx[ix]*ldx(txxn0,ix))/(1+dt*pmldx[ix]/2);
-	
+    for (ix=nx+pmlout+marg; ix<nx+2*pmlout+marg; ix++) {	
+	vxn1[ix] = ((1-dt*pmldx[ix]/2)*vxn0[ix] + dt/denx[ix]*fdx(txxn0, ix-1, dx, oo))/(1+dt*pmldx[ix]/2);
     }
 
 }
 
+void fdpml1_txx(float *txxn1, float *vxn1, float *c11, float dx, int oo,
+		float (*fdx)(float *, int, float, int),
+		bool freesurface )
+/*<stress decay in pml>*/
+{
+    int ix;
+    /*Stress PML -- top*/
+    if (freesurface == false) {
+	for (ix=marg; ix<marg+pmlout; ix++) {
+	    txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]+dt*c11[ix]*fdx(vxn1,ix, dx, oo))/(1+dt*pmldx[ix]/2);
+	    txxn1[ix] = txxn1x[ix];
+	}
+    } else {
+	for (ix=marg; ix<marg+pmlout; ix++) {
+	    txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]+dt*0.0*fdx(vxn1,ix,dx,oo))/(1+dt*pmldx[ix]/2);
+	    txxn1[ix]= txxn1x[ix];
+	}
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    /*Stress PML -- bottom*/
+    for (ix=nx+pmlout+marg; ix<nx+2*pmlout+marg; ix++) {
+	txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]+dt*c11[ix]*fdx(vxn1,ix,dx,oo))/(1+dt*pmldx[ix]/2);
+	txxn1[ix] = txxn1x[ix];
+    }	
+}
 
 void time_step_exch1(float *dn0, float *dn1, int it)
 /*<exchange >*/
