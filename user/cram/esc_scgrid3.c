@@ -466,13 +466,14 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             }
 #endif
             /* Set send and receive buffers */
-            bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
+            bsiz = sizeof(sf_esc_scgrid3_avals)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
             if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
                 sf_warning ("setsockopt()[SO_RCVBUF] failed");
                 close (is);
                 is = -1;
                 continue;
             }
+            bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
             if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
                 sf_warning ("setsockopt()[SO_SNDBUF] failed");
                 close (is);
@@ -730,7 +731,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             len = 0;
             /* Receive loop */
             while (len < sizeof(sf_esc_scgrid3_avals)*ns) {
-                /* Receive job result from the client */
+                /* Receive job result from the server */
                 rc = recv (is, (void*)(((unsigned char*)&avals[ii]) + len),
                            sizeof(sf_esc_scgrid3_avals)*ns - len, 0);
                 if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {

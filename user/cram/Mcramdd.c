@@ -1,4 +1,4 @@
-/* Daemon for distributed computation of stitched escape solutions in supercells in 3-D. */
+/* Daemon for distributed storage of prestack data for angle migration. */
 /*
   Copyright (C) 2013 University of Texas at Austin
 
@@ -44,12 +44,10 @@
 
 #include <rsf.h>
 
-#include "einspline.h"
-#include "esc_scgrid3.h"
-#include "esc_helper.h"
+#include "cram_data2.h"
 
 /* Convert local domain name into an ASCII string with IP address */
-static char* sf_escscd3_local_ip () {
+static char* sf_cramdd_local_ip () {
     char hostname[1024];
     struct hostent *he;
     struct in_addr **addr_list;
@@ -65,48 +63,47 @@ static char* sf_escscd3_local_ip () {
     return NULL;
 }
 
-/* Every servicing thread gets necessary data via this structure */
+/* Every connection servicing thread gets necessary data via this structure */
 typedef struct {
-    sf_esc_scgrid3_areq  *areqs;
-    sf_esc_scgrid3_avals *avals;
+    sf_cram_data_trreq   *trreq;
+    sf_cram_data_trvals  *trvals;
     pthread_mutex_t      *smutex;
     int                  *njobs; /* Pointer to the job counter */
-    int                   nd; /* Maximum number of requests to expect */
     int                   sd; /* Socket to read/write from/to */
     FILE                 *logf; /* Log file */
-    int                   iab0, iab1, nab;
-    multi_UBspline_3d_s  *scsplines;
-} sf_escscd3_work;
+    size_t                i0, i1; /* Min/max trace indices */
+    int                   nt; /* Number of time samples in each trace */
+    bool                  kmah;
+    float                *traces;
+} sf_cramdd_work;
 
-static sf_escscd3_work* sf_escscd3_alloc_work (int nthreads, int ma, int mb) {
-    sf_esc_scgrid3_areq *areqs;
-    sf_esc_scgrid3_avals *avals;
-    sf_escscd3_work* work;
+static sf_cramdd_work* sf_cramdd_alloc_work (int nthreads) {
+    sf_cram_data_trreq *trreqs;
+    sf_cram_data_trvals *trvals;
+    sf_cramdd_work* work;
     int i;
 
-    work = (sf_escscd3_work*)sf_alloc (nthreads, sizeof(sf_escscd3_work));
-    areqs = (sf_esc_scgrid3_areq*)sf_alloc (nthreads*ma*mb*SCGRID3_MAX_STENCIL,
-                                            sizeof(sf_esc_scgrid3_areq));
-    avals = (sf_esc_scgrid3_avals*)sf_alloc (nthreads*ma*mb*SCGRID3_MAX_STENCIL,
-                                             sizeof(sf_esc_scgrid3_avals));
+    work = (sf_cramdd_work*)sf_alloc (nthreads, sizeof(sf_cramdd_work));
+    trreqs = (sf_cram_data_trreq*)sf_alloc (nthreads, sizeof(sf_cram_data_trreq));
+    trvals = (sf_cram_data_trvals*)sf_alloc (nthreads, sizeof(sf_cram_data_trvals));
     for (i = 0; i < nthreads; i++) {
-        work[i].areqs = &areqs[i*ma*mb*SCGRID3_MAX_STENCIL];
-        work[i].avals = &avals[i*ma*mb*SCGRID3_MAX_STENCIL];
+        work[i].trreq = &trreqs[i];
+        work[i].trvals = &trvals[i];
     }
     return work;
 }
 
-static void sf_escscd3_free_work (sf_escscd3_work* work) {
-    free (work->avals);
-    free (work->areqs);
+static void sf_cramdd_free_work (sf_cramdd_work* work) {
+    free (work->trvals);
+    free (work->trreq);
     free (work);
 }
 
 /* This is a send/receive loop for each connection; performed in a separate thread */
-static void* sf_escscd3_process_requests (void *ud) {
-    sf_escscd3_work *data = (sf_escscd3_work*)ud;
-    int iab;
-    int i, len = 0, rc, n;
+static void* sf_cramdd_process_requests (void *ud) {
+    sf_cramdd_work *data = (sf_cramdd_work*)ud;
+    int len = 0, rc, elen;
+    float *traces;
     fd_set fset;
     struct timeval timeout;
 
@@ -114,7 +111,7 @@ static void* sf_escscd3_process_requests (void *ud) {
     do {
         FD_ZERO(&fset);
         FD_SET(data->sd, &fset);
-        timeout.tv_sec  = 60;
+        timeout.tv_sec = 86400;
         timeout.tv_usec = 0;
         rc = select (data->sd + 1, &fset, NULL, NULL, &timeout);
         if (rc <= 0) {
@@ -131,10 +128,10 @@ static void* sf_escscd3_process_requests (void *ud) {
         }
         /* Receive incoming data on this socket */
         len = 0;
-        while (len < sizeof(sf_esc_scgrid3_areq)*data->nd) {
+        while (len < sizeof(sf_cram_data_trreq)) {
             /* Receive job request from the client */
-            rc = recv (data->sd, (void*)(((unsigned char*)data->areqs) + len),
-                       sizeof(sf_esc_scgrid3_areq)*data->nd - len, 0);
+            rc = recv (data->sd, (void*)(((unsigned char*)data->trreq) + len),
+                       sizeof(sf_cram_data_trreq) - len, 0);
             if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                 if (rc != 0)
                     fprintf (data->logf, "Connection was terminated for socket %d\n", data->sd);
@@ -149,33 +146,42 @@ static void* sf_escscd3_process_requests (void *ud) {
             }
             if (rc > 0)
                 len += rc;
-            if (0 == len % sizeof(sf_esc_scgrid3_areq)) /* A few complete requests have been received */
-                break;
         }
-        /* Process the received requests */
-        n = len / sizeof(sf_esc_scgrid3_areq);
-        for (i = 0; i < n; i++) {
-            data->avals[i].id = data->areqs[i].id;
-            data->avals[i].ud1 = data->areqs[i].ud1;
-            data->avals[i].ud2 = data->areqs[i].ud2;
-            iab = data->areqs[i].iab;
-            if (iab > data->iab1)
-                iab -= data->nab;
-            else if (iab < data->iab0)
-                iab += data->nab;
-            /* Interpolate */
-            if (iab >= data->iab0 && iab <= data->iab1)
-                eval_multi_UBspline_3d_s (&data->scsplines[iab - data->iab0],
-                                          data->areqs[i].y, data->areqs[i].x, data->areqs[i].z,
-                                          data->avals[i].vals);
-            else
-                data->avals[i].vals[0] = SF_HUGE; /* Return error */
+        /* Process the received request */
+        data->trvals->id = data->trreq->id;
+        if (data->trreq->i < data->i0 || data->trreq->i > data->i1)
+            /* Request is out of range */
+            data->trvals->n = 0;
+        else if (data->trreq->i + data->trreq->n > (data->i1 + (size_t)1))
+            /* Return fewer traces than requested */
+            data->trvals->n = data->i1 - data->trreq->i + (size_t)1;
+        else
+            data->trvals->n = data->trreq->n;
+        if (data->trvals->n) {
+            traces = data->kmah ? &data->traces[(data->trreq->i - data->i0)*(size_t)data->nt*(size_t)2]
+                                : &data->traces[(data->trreq->i - data->i0)*(size_t)data->nt];
         }
         /* Send the result back */
         len = 0;
-        while (len < sizeof(sf_esc_scgrid3_avals)*n) {
-            rc = send (data->sd, (const void*)(((unsigned char*)data->avals) + len),
-                       sizeof(sf_esc_scgrid3_avals)*n - len, MSG_NOSIGNAL);
+        while (len < sizeof(sf_cram_data_trvals)) { /* Header */
+            rc = send (data->sd, (const void*)(((unsigned char*)data->trvals) + len),
+                       sizeof(sf_cram_data_trvals) - len, MSG_NOSIGNAL);
+            if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+                fprintf (data->logf, "Connection was terminated for socket %d\n", data->sd);
+                fflush (data->logf);
+                close (data->sd);
+                pthread_mutex_lock (data->smutex);
+                (*data->njobs)--;
+                pthread_mutex_unlock (data->smutex);
+                return NULL;
+            }
+            if (rc > 0)
+                len += rc;
+        }
+        elen = data->trvals->n*data->nt*sizeof(float);
+        while (len < elen) { /* Traces */
+            rc = send (data->sd, (const void*)(((unsigned char*)traces) + len),
+                       elen - len, MSG_NOSIGNAL);
             if (rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
                 fprintf (data->logf, "Connection was terminated for socket %d\n", data->sd);
                 fflush (data->logf);
@@ -199,13 +205,12 @@ static void* sf_escscd3_process_requests (void *ud) {
 #define MAX_BUF 1024
 
 int main (int argc, char* argv[]) {
-    size_t nc;
-    off_t nsp;
-    int ma, mb;
-    int ith = 1, na, nb, nab, icpu, ncpu, bcpu, wcpu, tout;
-    int i, iab, iab0, iab1, port, nthreads, tmpfile = 0;
-    multi_UBspline_3d_s *scsplines = NULL;
-    sf_file in, scgrid = NULL, out;
+    size_t i0, i1, n;
+    int ith = 1, nt, icpu, ncpu, bcpu, wcpu, tout;
+    int port, nthreads, tmpfile = 0;
+    bool kmah;
+    float trd, *traces = NULL;
+    sf_file in, data = NULL, out;
     FILE *logf;
     char sbuffer[MAX_BUF];
     char *str = NULL;
@@ -220,7 +225,7 @@ int main (int argc, char* argv[]) {
     fd_set sset;
     socklen_t clen;
     /* Threading */
-    sf_escscd3_work *rwork, *qjobs, *old_qjobs;
+    sf_cramdd_work *rwork, *qjobs, *old_qjobs;
     pthread_t pthread;
     pthread_mutex_t smutex;
 
@@ -237,9 +242,8 @@ int main (int argc, char* argv[]) {
     if (!sf_histint (in, "ncpu", &ncpu)) ncpu = 1;
     /* Total number of CPUs */
 
-    if (!sf_getint ("nab", &nab)) nab = 1;
     /* Number of angular blocks to keep in memory per daemon */
-    if (!sf_getint ("port", &port)) port = 29542;
+    if (!sf_getint ("port", &port)) port = 18003;
     /* TCP port for listening */
     if (!sf_getint ("ith", &ith)) ith = 0;
     /* Make every ith process a daemon */
@@ -247,7 +251,7 @@ int main (int argc, char* argv[]) {
     memset (&serv_addr, 0, sizeof (serv_addr));
 
     if (ith) {
-        if ((ip = sf_escscd3_local_ip ())) {
+        if ((ip = sf_cramdd_local_ip ())) {
             if (0 == icpu % ith)
                 sf_warning ("Assuming IP address %s [CPU %d]", ip, icpu);
             serv_addr.sin_family = AF_INET; /* Internet address family */
@@ -261,10 +265,6 @@ int main (int argc, char* argv[]) {
     if (ith && icpu % ith)
         sf_warning ("Making room for the daemon on CPU %d, shutting down [CPU %d]", (icpu/ith)*ith, icpu);
 
-    if (!sf_getint ("ma", &ma)) ma = 20;
-    /* How many azimuth angles to expect per request */
-    if (!sf_getint ("mb", &mb)) mb = 20;
-    /* How many inclination angles to expect per request */
     if (!sf_getint ("nthreads", &nthreads)) nthreads = 2*ncpu;
     /* Number of threads (connections) per daemon */
     if (!sf_getint ("timeout", &tout)) tout = 10;
@@ -273,22 +273,37 @@ int main (int argc, char* argv[]) {
     if (ith && 0 == (icpu % ith))
         sf_warning ("Running no more than %d threads on %s [CPU %d]", nthreads, ip, icpu);
 
-    if (!sf_getstring ("scgrid")) sf_error ("Need scgrid=");
+    if (!sf_getstring ("data")) sf_error ("Need data=");
     /* Grid of supercells of local escape solutions */
-    scgrid = sf_input ("scgrid");
+    data = sf_input ("data");
 
-    if (!sf_histlargeint (scgrid, "n1", &nsp)) sf_error ("No n1= in supercell file");
-    /* Size of one angular direction */
-    if (!sf_histint (scgrid, "Nb", &nb)) sf_error ("No Nb= in supercell file");
-    /* Number of inclination angles */
-    if (!sf_histint (scgrid, "Na", &na)) sf_error ("No Na= in supercell file");
-    /* Number of azimuth angles */
+    if (!sf_histbool (data, "KMAH", &kmah)) sf_error ("No KMAH= in data");
+    if (!sf_histint (data, "n1", &nt)) sf_error ("No n1= in data");
+    n = sf_leftsize (data, 1);
+    if (kmah)
+        n /= (size_t)2;
+    /* Traces per daemon */
+    trd = ith ? (float)n/((float)ncpu/(float)ith) : n;
+    /* First and last trace indices to store */
+    if (ith) {
+        i0 = (int)(icpu/ith*trd);
+        if (i0 > 0)
+            i0 -= (size_t)1;
+        i1 = (int)((icpu/ith + 1)*trd);
+        if (i1 >= n)
+            i1 = n;
+        else
+            i1 += (size_t)1;
+    } else {
+        i0 = 0;
+        i1 = n - 1;
+    }
 
     sf_settype (out, SF_UCHAR);
-    sf_putlargeint (out, "n1", sizeof (serv_addr) + 2*sizeof (int));
+    sf_putlargeint (out, "n1", sizeof (serv_addr) + 2*sizeof (size_t));
     sf_putfloat (out, "o1", 0.0);
     sf_putfloat (out, "d1", 1.0);
-    sf_putstring (out, "label1", "Supercell grid distributed access info");
+    sf_putstring (out, "label1", "Prestack data distributed access info");
     sf_putstring (out, "unit1", "");
     sf_putint (out, "n2", 1);
     sf_putfloat (out, "o2", 0.0);
@@ -303,45 +318,23 @@ int main (int argc, char* argv[]) {
 
     sf_putint (out, "Ndaemon", ith ? ncpu/ith : 0);
     sf_putint (out, "Port", port);
-    sf_putint (out, "Ma", ma);
-    sf_putint (out, "Mb", mb);
+    sf_putfloat (out, "trd", trd);
     sf_putstring (out, "Remote", ith ? "y" : "n");
 
-    if (ith && nab*(ncpu/ith) < na*nb)
-        sf_error ("Incomplete angle coverage; increase nab= or number of CPUs");
-    /* Determine how much data from the supercell grid to hold per CPU */
     if (ith && 0 == (icpu % ith)) {
-        if (nab >= na*nb) {
-            iab0 = 0;
-            iab1 = na*nb - 1;
-        } else {
-            /* Find out displacement */
-            wcpu = (int)((float)(na*nb/(ncpu/ith)) + 1.0);
-            bcpu = na*nb - (ncpu/ith)*(wcpu - 1);
-            if ((icpu/ith) < bcpu)
-                iab0 = (icpu/ith)*wcpu;
-            else
-                iab0 = bcpu*wcpu + (icpu/ith - bcpu)*(wcpu - 1);
-            iab1 = iab0 + nab/2;
-            if (nab % 2)
-                iab0 -= nab/2;
-            else
-                iab0 -= (nab/2 - 1);
-        }
-        sf_warning ("Serving angular patch from iab=%d to iab=%d [CPU %d]",
-                    iab0, iab1, icpu);
+        sf_warning ("Trace range: %lu - %lu [CPU %d]", i0, i1, icpu);
     } else {
-        iab0 = nab;
-        iab1 = -nab;
+        i0 = n;
+        i1 = 0;
     }
 
     sf_ucharwrite ((unsigned char*)&serv_addr, sizeof (serv_addr), out);
-    sf_ucharwrite ((unsigned char*)&iab0, sizeof (int), out);
-    sf_ucharwrite ((unsigned char*)&iab1, sizeof (int), out);
+    sf_ucharwrite ((unsigned char*)&i0, sizeof (size_t), out);
+    sf_ucharwrite ((unsigned char*)&i1, sizeof (size_t), out);
 
     if (ith && 0 == (icpu % ith)) {
         /* Temporary file for synchronizing forked processes */
-        str = strdup ("/tmp/sfescscd3.XXXXXX");
+        str = strdup ("/tmp/sfcramdd.XXXXXX");
         tmpfile = mkstemp (str);
         /* Daemonize */
         pid = fork ();
@@ -354,24 +347,13 @@ int main (int argc, char* argv[]) {
     } else
         pid = 1;
 
-    /* Read spline coefficients for the determined range of angles */
+    /* Buffer seismic traces */
     if (ith && 0 == (icpu % ith) && 0 == pid) {
-        nc = 0;
-        scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)(iab1 - iab0 + 1),
-                                                    sizeof(multi_UBspline_3d_s));
-        for (iab = iab0; iab <= iab1; iab++) {
-            i = iab;
-            if (i < 0)
-                i += na*nb;
-            else if (i >= na*nb)
-                i -= na*nb;
-            sf_seek (scgrid, (off_t)i*(off_t)nsp, SEEK_SET);
-            sf_ucharread ((unsigned char*)&scsplines[iab - iab0], sizeof(multi_UBspline_3d_s), scgrid);
-            scsplines[iab - iab0].coefs = sf_floatalloc (scsplines[iab - iab0].nc/sizeof(float));
-            sf_ucharread ((unsigned char*)scsplines[iab - iab0].coefs, scsplines[iab - iab0].nc, scgrid);
-            nc += scsplines[iab - iab0].nc;
-        }
-        sf_warning ("%g Mb of spline coefficients buffered [CPU %d]", 1e-6*(float)nc, icpu);
+        traces = sf_floatalloc (kmah ? n*(size_t)nt*(size_t)2 : n*(size_t)nt);
+        sf_floatread (traces, kmah ? n*(size_t)nt*(size_t)2 : n*(size_t)nt, data);
+        sf_warning ("%g Mb of traces buffered [CPU %d]",
+                    kmah ? 1e-6*(float)n*(float)nt*2.0*sizeof(float)
+                         : 1e-6*(float)n*(float)nt*sizeof(float), icpu);
         sf_warning ("Running as a daemon now [CPU %d]", icpu);
     }
 
@@ -385,7 +367,7 @@ int main (int argc, char* argv[]) {
         free (str);
     }
 
-    sf_fileclose (scgrid);
+    sf_fileclose (data);
     sf_fileclose (in);
     sf_fileclose (out);
 
@@ -447,10 +429,9 @@ int main (int argc, char* argv[]) {
     pthread_mutex_init (&smutex, NULL);
 
     /* Open log file */
-    snprintf (sbuffer, MAX_BUF, "sfescscd3_%s_%d.log", ip, icpu/ith);
+    snprintf (sbuffer, MAX_BUF, "sfcramdd_%s_%d.log", ip, icpu/ith);
     logf = fopen (sbuffer, "w+");
     fprintf (logf, "Listening on %s\n", ip);
-    fprintf (logf, "Servicing angle patch %d - %d\n", iab0, iab1);
     fflush (logf);
     sf_warning ("Log file is %s [CPU %d]", sbuffer, icpu);
 
@@ -462,7 +443,7 @@ int main (int argc, char* argv[]) {
 
     /* Buffer for job requests */
     old_qjobs = NULL;
-    qjobs = sf_escscd3_alloc_work (nthreads, ma, mb);
+    qjobs = sf_cramdd_alloc_work (nthreads);
     /* Position in the buffer for the next client */
     ijob = 0;
     clen = sizeof(client_addr);
@@ -533,13 +514,8 @@ int main (int argc, char* argv[]) {
             break;
         }
 #endif
-        bsiz = sizeof(sf_esc_scgrid3_areq)*ma*mb*SCGRID3_MAX_STENCIL;
-        if (setsockopt (new_sd, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
-            fprintf (logf, "Can not set SO_RCVBUF for a new connection\n");
-            close (new_sd);
-            break;
-        }
-        bsiz = sizeof(sf_esc_scgrid3_avals)*ma*mb*SCGRID3_MAX_STENCIL;
+        /* Send buffer size */
+        bsiz = sizeof(sf_cram_data_trvals) + CRAM_TRBUF*nt*sizeof(float);
         if (setsockopt (new_sd, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
             fprintf (logf, "Can not set SO_SNDBUF for a new connection\n");
             close (new_sd);
@@ -550,19 +526,19 @@ int main (int argc, char* argv[]) {
            prepare data for processing its requests */
         rwork = &qjobs[ijob];                    
         rwork->sd = new_sd;
-        rwork->iab0 = iab0;
-        rwork->iab1 = iab1;
-        rwork->nab = na*nb;
-        rwork->scsplines = scsplines;
+        rwork->i0 = i0;
+        rwork->i1 = i1;
+        rwork->nt = nt;
+        rwork->kmah = kmah;
+        rwork->traces = traces;
         rwork->logf = logf;
-        rwork->nd = ma*mb*SCGRID3_MAX_STENCIL;
         rwork->smutex = &smutex;
         rwork->njobs = &njobs;
 
         pthread_mutex_lock (&smutex);
         if (njobs < nthreads) {
             if (pthread_create (&pthread, NULL,
-                                sf_escscd3_process_requests, (void*)rwork) != 0) {
+                                sf_cramdd_process_requests, (void*)rwork) != 0) {
                 fprintf (logf, "pthread_create() failed\n");
                 close (new_sd);
                 pthread_mutex_unlock (&smutex);
@@ -573,9 +549,9 @@ int main (int argc, char* argv[]) {
             /* Find a free block for the new client incoming requests */
             if (ijob == nthreads) {
                 if (old_qjobs)
-                    sf_escscd3_free_work (old_qjobs);
+                    sf_cramdd_free_work (old_qjobs);
                 old_qjobs = qjobs;
-                qjobs = sf_escscd3_alloc_work (nthreads, ma, mb);
+                qjobs = sf_cramdd_alloc_work (nthreads);
                 ijob = 0;
             }
             fprintf (logf, "Accepted client from %s, socket %d\n", ip, new_sd);
@@ -594,13 +570,9 @@ int main (int argc, char* argv[]) {
     /* Clean up */
     pthread_mutex_destroy (&smutex);
     if (old_qjobs)
-        sf_escscd3_free_work (old_qjobs);
-    sf_escscd3_free_work (qjobs);
-
-    for (iab = iab0; iab <= iab1; iab++) {
-        free (scsplines[iab - iab0].coefs);
-    }
-    free (scsplines);
+        sf_cramdd_free_work (old_qjobs);
+    sf_cramdd_free_work (qjobs);
+    free (traces);
     fclose (logf);
 
     return 0;
@@ -611,7 +583,7 @@ int main (int argc, char* argv[]) {
 #include <rsf.h>
 
 int main (int argc, char* argv[]) {
-    fprintf (stderr, "sfescscd3 can not work without pthreads; reconfigure Madagascar with pthreads support and recompile\n");
+    fprintf (stderr, "sfcramdd can not work without pthreads; reconfigure Madagascar with pthreads support and recompile\n");
     return -1;
 }
 #endif

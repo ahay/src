@@ -34,7 +34,7 @@ int main (int argc, char* argv[]) {
     float xbmin, xbmax, ybmin, ybmax, zbmin, zbmax;
     float oaz, daz, armin, armax;
     float ***esc, *s;
-    sf_file esct, data = NULL, survey = NULL, vz = NULL;
+    sf_file esct, data = NULL, survey = NULL, vz = NULL, ddaemon = NULL;
     sf_file imag = NULL, hits = NULL, oimag = NULL, dimag = NULL,
             osmap = NULL, dsmap = NULL, oimap = NULL, dimap = NULL;
 
@@ -134,6 +134,11 @@ int main (int argc, char* argv[]) {
         sf_error ("Need data=");
     }
 
+    if (sf_getstring ("ddaemon")) {
+        /* Daemon for distributed data storage */
+        ddaemon = sf_input ("ddaemon");
+    }
+
     if (sf_getstring ("survey")) {
         /* Survey info for input data */
         survey = sf_input ("survey");
@@ -155,7 +160,9 @@ int main (int argc, char* argv[]) {
     }
 
     /* Data object */
-    cram_data = sf_cram_data2_init (data, mtrace);
+    cram_data = sf_cram_data2_init (data, ddaemon, mtrace);
+    if (ddaemon)
+        sf_fileclose (ddaemon);
     /* Survey object */
     cram_survey = sf_cram_survey3_init (survey, true);
     sf_fileclose (survey);

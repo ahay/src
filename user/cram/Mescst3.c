@@ -180,6 +180,9 @@ int main (int argc, char* argv[]) {
     esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,
                                       (float)icpu/(float)ncpu, verb);
 
+    if (scdaemon)
+        sf_fileclose (scdaemon);
+
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
         for (ix = 0; ix < nx; ix++) {
