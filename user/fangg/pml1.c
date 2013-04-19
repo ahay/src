@@ -138,6 +138,42 @@ void pml1_txx(float *txxn1, float *vxn1, float *c11,
     }	
 }
 
+void fdpml1_vxz(float *vxn1, float *vxn0, 
+		float *txxn0, float *denx, 
+		float (*fdx)(float *, int, float, int), 
+		bool freesurface)
+/*<velocity vx,vz  decay in pml --FD method>*/
+{
+    int ix;
+    /*Velocity PML --top*/
+    if (freesurface == false) {
+	for (ix=marg; ix<marg+pmlout; ix++) {
+	    vxn1[ix]=((1-dt*pmldx[ix]/2)*vxn0[ix]-dt/denx[ix]*ldx(txxn0,ix))/(1+dt*pmldx[ix]/2);
+	}
+    } 
+	
+    /*Velocity PML  --bottom*/
+    for (ix=nx+pmlout+marg; ix<nx+2*pmlout+marg; ix++) {
+	vxn1[ix]=((1-dt*pmldx[ix]/2)*vxn0[ix]-dt/denx[ix]*ldx(txxn0,ix))/(1+dt*pmldx[ix]/2);
+	
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void time_step_exch1(float *dn0, float *dn1, int it)
 /*<exchange >*/
 {
