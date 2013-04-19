@@ -10,7 +10,7 @@ ccprogs = ''
 mpiprogs='petsctest'
 
 tprogs='''
-clapack cblas
+clapack cblas csolver
 '''
 pyprogs='''
 pyran
