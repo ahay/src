@@ -26,6 +26,7 @@ Roman Kazinnik <roman.only@gmail.com>
 Alexander Klokov <alexander.klokov@gmail.com>
 Siwei Li <llisiw@hotmail.com>
 Guochang Liu <guochang.liu@yahoo.com>
+Yujin Liu <seisinv@gmail.com>
 Yang Liu <yangliu1979@gmail.com> 
 Xuxin Ma <xuxin.ma@kaust.edu.sa>
 Douglas McCowan <dwmccowan@windstream.net>

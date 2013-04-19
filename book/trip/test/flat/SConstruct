@@ -1,0 +1,64 @@
+from rsf.proj import *
+
+# Paramters
+par = {
+    'nt': 1001,    'dt': 0.001,    'kt': 50,     'ft': 0.025,
+    'nz': 151,     'dz': 0.01,     'nx': 151,    'dx': 0.01,
+    'fpeak': 10,   'vel': 1.5,
+    'nh': 31,      'pad': 15,      'oh': -15
+    }
+
+# function
+def cgrey(par):
+    return '''
+    window f3=%(start)d j3=%(jump)d |
+    grey labelfat=4 font=2 titlefat=4 title=%(title)s
+    ''' % par
+  
+# velocity
+Flow('vmod',None,
+     '''
+     spike n1=%(nz)d n2=%(nx)d d1=%(dz)g d2=%(dx)g mag=%(vel)g |
+     put label1=Depth unit1=km label2=Distance unit2=km
+     label=Velocity unit=m/s
+     ''' % par)
+
+Result('vmod','grey color=e mean=y scalebar=y labelfat=4 font=2 titlefat=4 screenht=7 screenwd=14 title="True Velocity"')
+
+# wavelet
+Flow('src',None,'spike n1=%(nt)d d1=%(dt)g k1=%(kt)d nsp=1 |ricker1 frequency=%(fpeak)g' %par)
+
+# source
+Flow('point',None,'spike nsp=1 mag=1 n1=%(nz)d n2=%(nx)d d1=%(dz)g d2=%(dx)g k1=75 k2=75' %par)
+
+# Modeling
+Flow('wav','src vmod point','sfacd2d vel=${SOURCES[1]} ref=${SOURCES[2]} verb=1 |window min3=%(ft)g |put o3=0' % par)
+
+par['start']=50
+par['jump']=10
+par['title']="Modeling wavefield"
+
+Plot('wav',cgrey(par),view=1)
+
+# Extended modeling
+Flow('vex','vmod','pad beg3=%(pad)d end3=%(pad)d |put n3=%(nh)d d3=1 o3=%(oh)d' %par)
+
+Flow('wav_ex','src vex point','sfeacd2d vel=${SOURCES[1]} ref=${SOURCES[2]} verb=1 |window min3=%(ft)g |put o3=0' % par)
+
+par['title']="Extended modeling wavefield"
+Plot('wav_ex',cgrey(par),view=1)
+
+# Show the results
+times=['0.2','0.6','0.8']
+cntr=0
+for itime in ['200','600','800']:
+    print time
+    fig1 = 'atime'+itime
+    fig2 = 'btime'+itime
+    fig = 'time'+itime
+    Plot(fig1,'wav','window n3=1 f3=%s |grey title=%s labelfat=4 font=2 titlefat=4' % (itime,times[cntr]))
+    Plot(fig2,'wav_ex','window n3=1 f3=%s |grey title=%s labelfat=4 font=2 titlefat=4' %(itime,times[cntr]))
+    Result(fig,[fig1,fig2],'SideBySideAniso')
+    cntr=cntr+1
+
+End()

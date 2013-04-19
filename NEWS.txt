@@ -13,6 +13,9 @@ approximation (Song, Fomel, and Ying)
 * sep/waverays: Wavefront construction using waverays (Urdaneta)
 * swag/itime: Automatic traveltime picking using the instantaneous
   traveltime (Saragiotis, Alkhalifah, and Fomel)
+* trip/test: Extended modeling in Madagascar (Liu and Symes)
+* uwa/geo2013ElasticModellingGPU: Solving 3D anisotropic elastic wave
+  equations on parallel GPU devices (Weiss and Shragge)
 
 To SCons:
 
