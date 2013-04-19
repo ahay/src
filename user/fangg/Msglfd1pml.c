@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     
     G = sf_floatalloc2(nxb, lenx);
     sf_floatread(G[0], nxb*lenx, fG);
-    free(sxtmp); 
+    free(sxtmp);
     vel = sf_floatalloc(nxb);
     den = sf_floatalloc(nxb);
     c11 = sf_floatalloc(nxb);
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
     for (it = 0; it < nt; it++) {
 	record[it] = 0.0;
     }  
-       
+    
     /* MAIN LOOP */
     sp.trunc=160;
     sp.srange=20;

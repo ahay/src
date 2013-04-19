@@ -106,9 +106,7 @@ int main(int argc, char* argv[])
     /* Read/Write axes */
     at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
     ax = sf_iaxa(fvel, 1); nxb = sf_n(ax); dx = sf_d(ax);
-
-    sf_oaxa(fwf, ax, 1);
-    sf_oaxa(fwf, at, 2);
+    
 
     if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
@@ -133,14 +131,20 @@ int main(int argc, char* argv[])
     /*free surface*/
     
     oo=marg;
-    nx = nxb - 2*pmlout - 2*marg;
     
+    nx = nxb - 2*pmlout - 2*marg;
+    sf_setn(ax, nx);
+    sf_oaxa(frec, at, 1);
+    sf_setn(at, (int)(nt-1)/snapinter+1);
+    sf_oaxa(fwf, ax, 1);
+    sf_oaxa(fwf, at, 2);
+
     vel = sf_floatalloc(nxb);
     den = sf_floatalloc(nxb);
     c11 = sf_floatalloc(nxb);
     
-    denx = sf_floatalloc(nx);
-    denz = sf_floatalloc(nx);
+    denx = sf_floatalloc(nxb);
+    denz = sf_floatalloc(nxb);
     
     sf_floatread(vel, nxb, fvel);
     sf_floatread(den, nxb, fden);
@@ -188,19 +192,18 @@ int main(int argc, char* argv[])
     sp.srange=10;
     sp.alpha=0.5;
     sp.decay=1;
-	
+    
     sf_warning("============================");
-    sf_warning("nx=%d  nt=%d", nx, nt);
+    sf_warning("nx=%d  nxb=%d nt=%d", nx, nxb, nt);
     sf_warning("dx=%f  dt=%f", dx, dt);
     sf_warning("marg=%d pmlout=%d", marg, pmlout);
-    
     
     for (it = 0; it < nt; it++) {
 	sf_warning("it=%d;", it);
 	if (it<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
 	}
-    
+
 	/*velocity*/
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++) {
 		vxn1[ix] = vxn0[ix] + dt/den[ix]*fdx(txxn0, ix-1, dx, oo);
@@ -232,8 +235,6 @@ int main(int argc, char* argv[])
 
     sf_warning(".");
     sf_floatwrite(record, nt, frec);
-    
-    pml1_close();
  
     tend = clock();
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
