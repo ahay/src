@@ -238,6 +238,10 @@ def latify(target=None,source=None,env=None):
     use = env.get('use')
     resdir = env.get('resdir','Fig')
     include = env.get('include')
+    if 'endfloat' in options.split(','):
+        notendfloat=False
+    else:
+        notendfloat=True
     if use:
          if type(use) is not types.ListType:
               use = use.split(',')
@@ -250,8 +254,11 @@ def latify(target=None,source=None,env=None):
          ltx.write('\n')
     if include:
         ltx.write(include+'\n\n')
-    if lclass in ('geophysics','segabs','georeport'):
+    if lclass in ('segabs','georeport'):
         ltx.write('\\setfigdir{%s}\n\n' % resdir)
+    if lclass == 'geophysics':
+        if notendfloat:
+            ltx.write('\\setfigdir{%s}\n\n' % resdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)
