@@ -86,8 +86,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     odim = mxGetNumberOfElements(prhs[1]);
     argc = 2;
     argv = mxCalloc((argc+odim),sizeof(char*));
-    argv[0] = malloc(7*sizeof(char*)); sprintf(argv[0],"matlab");
-    argv[1] = malloc(2*sizeof(char*)); sprintf(argv[1],"-");
+    argv[0] = mxCalloc(7,sizeof(char)); sprintf(argv[0],"matlab");
+    argv[1] = mxCalloc(2,sizeof(char)); sprintf(argv[1],"-");
     for (i=0; i<odim; i++) {
     	pca = mxGetCell(prhs[1], i);
 	if (!(mxIsChar(pca)&&mxGetM(pca)==1)) mexErrMsgTxt("Command-line option must be a string.");
