@@ -25,9 +25,7 @@ dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 includes = map(lambda x: x+'.h',psrc)
 
 objects = []
-
-if dynlib:
-    dobjects = []
+dobjects = []
 
 for source in psrc:
     env.RSF_Include(source,prefix='vp_')
@@ -45,22 +43,21 @@ for source in psrc:
 # MAIN LIBRARY
 ##############################################################################
 slib = env.StaticLibrary('rsfplot',objects)
+inc = env.Command('rsfplot.h',includes,Action(bldutil.__merge))
+env.Install('../../lib',slib)   
+env.Install('../../include',inc)
+
 if dynlib:
     dlib = env.SharedLibrary('rsfplot',dobjects,
                          SHLIBPREFIX='libd',
                          LIBS=['drsf']+env.get('LIBS',[]))
-
-inc = env.Command('rsfplot.h',includes,Action(bldutil.__merge))
-env.Install('../../lib',slib)
-if dynlib:
     env.Install('../../lib',dlib)
-env.Install('../../include',inc)
 
 if root:
-    install_list = [slib]
+    libs = [slib]
     if dynlib:
-        install_list.append(dlib)
-    install = env.Install(libdir,install_list)
+        libs.append(dlib)
+    install = env.Install(libdir,libs)
     env.Install(incdir,inc)
 
     for color in Split('cubeyf1 linearlfb'):

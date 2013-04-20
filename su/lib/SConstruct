@@ -23,12 +23,16 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
+dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
+
 ##############################################################################
 # INCLUDES
 ##############################################################################
 
 objects = []
 includes = []
+dobjects = []
+
 for source in Split(src):
     inc = env.RSF_Include(source,prefix='sf_')
     obj = env.StaticObject(source+'.c')
@@ -36,14 +40,28 @@ for source in Split(src):
     objects.append(obj)
     includes.append(inc)
 
+    if dynlib:
+        obj = env.SharedObject(source+'.c')
+        env.Depends(obj,inc)
+        dobjects.append(obj)
+
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
-lib = env.StaticLibrary('su',objects)
+slib = env.StaticLibrary('su',objects)
 inc = env.Command('rsf_su.h',includes,Action(bldutil.__merge))
-env.Install('../../lib',lib)
+env.Install('../../lib',slib)
 env.Install('../../include',inc)
 
+if dynlib:
+    dlib = env.SharedLibrary('su',dobjects,
+                             SHLIBPREFIX='libd',
+                             LIBS=['drsf']+env.get('LIBS',[]))
+    env.Install('../../lib',dlib)
+
 if root:
-    env.Install(libdir,lib)
+    libs = [slib]
+    if dynlib:
+        libs.append(dlib)
+    env.Install(libdir,libs)
     env.Install(incdir,inc)
