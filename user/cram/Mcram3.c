@@ -25,7 +25,7 @@
 
 int main (int argc, char* argv[]) {
     size_t i, j, is, ih, nh;
-    float sx, sy, gx, gy, w;
+    float sx, sy, gx, gy;
     float gxmin, gxmax, gymin, gymax;
     int iz, ix, iy, nz, nx, ny, nb, na, nt;
     float dt, db, da, t0, b0, a0, dbx, dby, dxm, dym;
@@ -288,6 +288,7 @@ int main (int argc, char* argv[]) {
         is = sf_cram_survey3_get_first_source (cram_survey, &sx, &sy, &nh,
                                                &gxmin, &gxmax, &gymin, &gymax);
         while (is != (size_t)-1) {
+            sf_warning ("Shot gather %d;", is);
             /* Loop over known receivers */
             ih = sf_cram_survey3_get_first_receiver (cram_survey, is,
                                                      &i, &gx, &gy);
@@ -309,6 +310,7 @@ int main (int argc, char* argv[]) {
             is = sf_cram_survey3_get_next_source (cram_survey, is, &sx, &sy, &nh,
                                                   &gxmin, &gxmax, &gymin, &gymax);
         } /* Loop over known sources */
+        sf_warning (".");
         sf_warning ("Writing image");
         /* Write image */
         for (iy = 0; iy < ny; iy++) { /* Loop over image y */

@@ -179,6 +179,9 @@ static void* sf_cramdd_process_requests (void *ud) {
                 len += rc;
         }
         elen = data->trvals->n*data->nt*sizeof(float);
+        if (data->kmah)
+            elen *= 2;
+        len = 0;
         while (len < elen) { /* Traces */
             rc = send (data->sd, (const void*)(((unsigned char*)traces) + len),
                        elen - len, MSG_NOSIGNAL);
@@ -206,7 +209,7 @@ static void* sf_cramdd_process_requests (void *ud) {
 
 int main (int argc, char* argv[]) {
     size_t i0, i1, n;
-    int ith = 1, nt, icpu, ncpu, bcpu, wcpu, tout;
+    int ith = 1, nt, icpu, ncpu, tout;
     int port, nthreads, tmpfile = 0;
     bool kmah;
     float trd, *traces = NULL;
@@ -349,6 +352,20 @@ int main (int argc, char* argv[]) {
 
     /* Buffer seismic traces */
     if (ith && 0 == (icpu % ith) && 0 == pid) {
+        /* Stream socket for incoming connections on */
+        listen_sd = socket (AF_INET, SOCK_STREAM, 0);
+        if (listen_sd < 0)
+            sf_error ("socket() failed [CPU %d]", icpu);
+        new_sd = connect (listen_sd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        if (0 == new_sd) {
+            sf_warning ("Daemon is already running [CPU %d]", icpu);
+            close (new_sd);
+            close (listen_sd);
+            lockf (tmpfile, F_ULOCK, 1);
+            close (tmpfile);
+            free (str);
+            return 0;
+        }
         traces = sf_floatalloc (kmah ? n*(size_t)nt*(size_t)2 : n*(size_t)nt);
         sf_floatread (traces, kmah ? n*(size_t)nt*(size_t)2 : n*(size_t)nt, data);
         sf_warning ("%g Mb of traces buffered [CPU %d]",
@@ -379,7 +396,7 @@ int main (int argc, char* argv[]) {
     /* Create a new SID for the child process */
     sid = setsid ();
     if (sid < 0)
-        sf_error ("setsid() failed");
+        sf_error ("setsid() failed [CPU %d]", icpu);
     /* Change to the root directory to prevent locking the current one */
 /*
     if ((chdir ("/")) < 0)
@@ -390,23 +407,18 @@ int main (int argc, char* argv[]) {
     /* Server part, use non-blocking I/O */
     /*************************************/
 
-    /* Stream socket for incoming connections on */
-    listen_sd = socket (AF_INET, SOCK_STREAM, 0);
-    if (listen_sd < 0)
-        sf_error ("socket() failed");
-
     /* Allow socket descriptor to be reuseable */
     if (setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR,
                     (char *)&on, sizeof(on)) < 0) {
         close (listen_sd);
-        sf_error ("setsockopt() failed");
+        sf_error ("setsockopt() failed [CPU %d]", icpu);
     }
 
     /* Set socket to be non-blocking; all of the sockets for
        the incoming connections will also be non-blocking */
     if (ioctl (listen_sd, FIONBIO, (char *)&on) < 0) {
         close (listen_sd);
-        sf_error ("ioctl() failed");
+        sf_error ("ioctl() failed [CPU %d]", icpu);
     }
 
     /* Bind the socket */
@@ -417,13 +429,13 @@ int main (int argc, char* argv[]) {
     if (bind (listen_sd,
               (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         close (listen_sd);
-        sf_error ("bind() failed");
+        sf_error ("bind() failed [CPU %d]", icpu);
     }
 
     /* Set the listen back log */
     if (listen (listen_sd, 128) < 0) {
         close (listen_sd);
-        sf_error ("listen() failed");
+        sf_error ("listen() failed [CPU %d]", icpu);
     }
 
     pthread_mutex_init (&smutex, NULL);

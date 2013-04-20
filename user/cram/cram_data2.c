@@ -334,7 +334,6 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
         /* Data daemon index */
         is = (int)((float)i/cram_data->trd);
         if (cram_data->nc && cram_data->sockets[is] != -1) {
-            FD_ZERO(&sset);
             len = 0;       
             /* Send trace request */
             trreq.id = rand ()*rand ();
@@ -354,61 +353,24 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
                 if (rc > 0)
                     len += rc;
             }
-            do {
-                if (0 == len)
-                    break;
+            if (len) {
+                FD_ZERO(&sset);
                 FD_SET(is, &sset);
                 timeout.tv_sec = 60;
                 timeout.tv_usec = 0;
                 len = 0;
                 /* Wait for a response from the server */
                 rc = select (cram_data->sockets[is] + 1, &sset, NULL, NULL, &timeout);
-                if (0 == rc) {
+                if (0 == rc)
                     sf_warning ("Timeout reached for socket %d while expecting a response",
                                 cram_data->sockets[is]);
-                    break;
-                }
-                if (rc < 0)
+                else if (rc < 0)
                     sf_error ("select() failed");
-                /* Receive reponse header from the server */
-                while (len < sizeof(sf_cram_data_trvals)) {
-                    rc = recv (cram_data->sockets[is], (void*)(((unsigned char*)&cram_data->trvals) + len),
-                               sizeof(sf_cram_data_trvals) - len, 0);
-                    if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                        /* Connection terminated */
-                        if (0 == rc)
-                            sf_warning ("The server has closed connection for socket %d",
-                                        cram_data->sockets[is]);
-                        else
-                            sf_warning ("Can not receive data for socket %d, disconnecting",
-                                        cram_data->sockets[is]);
-                        close (cram_data->sockets[is]);
-                        len = 0;
-                        break;
-                    }
-                    if (rc > 0)
-                        len += rc;
-                }
-                /* Check correctness of the response header */
-                if (len) {
-                    if (cram_data->trvals->id != trreq.id) {
-                        sf_warning ("Received garbage from socket %d", cram_data->sockets[is]);
-                        len = 0;
-                    }
-                    if (0 == cram_data->trvals->n) {
-                        sf_warning ("Server replied that the trace index is out of bounds");
-                        len = 0;
-                    }
-                }
-                if (len) {
-                    /* Expected length of traces */
-                    elen = cram_data->trvals->n*cram_data->nt*sizeof(float);
-                    if (cram_data->kmah)
-                        elen *= 2;
-                    /* Receive traces from the server */
-                    while (len < elen) {
-                        rc = recv (cram_data->sockets[is], (void*)(((unsigned char*)&cram_data->trvals->samples[0]) + len),
-                                   elen - len, 0);
+                else {
+                    /* Receive reponse header from the server */
+                    while (len < sizeof(sf_cram_data_trvals)) {
+                        rc = recv (cram_data->sockets[is], (void*)(((unsigned char*)cram_data->trvals) + len),
+                                   sizeof(sf_cram_data_trvals) - len, 0);
                         if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                             /* Connection terminated */
                             if (0 == rc)
@@ -424,12 +386,49 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
                         if (rc > 0)
                             len += rc;
                     }
+                    /* Check correctness of the response header */
                     if (len) {
-                        local = false;
-                        cram_data->ntr = cram_data->trvals->n;
+                        if (cram_data->trvals->id != trreq.id) {
+                            sf_warning ("Received garbage from socket %d", cram_data->sockets[is]);
+                            len = 0;
+                        }
+                        if (0 == cram_data->trvals->n) {
+                            sf_warning ("Server replied that the trace index is out of bounds");
+                            len = 0;
+                        }
                     }
-                } /* Trace samples receive branch */
-            } while (true); /* Receive branch */
+                    if (len) {
+                        /* Expected length of traces */
+                        elen = cram_data->trvals->n*cram_data->nt*sizeof(float);
+                        if (cram_data->kmah)
+                            elen *= 2;
+                        /* Receive traces from the server */
+                        len = 0;
+                        while (len < elen) {
+                            rc = recv (cram_data->sockets[is], (void*)(((unsigned char*)&cram_data->trvals->samples[0]) + len),
+                                       elen - len, 0);
+                            if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
+                                /* Connection terminated */
+                                if (0 == rc)
+                                    sf_warning ("The server has closed connection for socket %d",
+                                                cram_data->sockets[is]);
+                                else
+                                    sf_warning ("Can not receive data for socket %d, disconnecting",
+                                                cram_data->sockets[is]);
+                                close (cram_data->sockets[is]);
+                                len = 0;
+                                break;
+                            }
+                            if (rc > 0)
+                                len += rc;
+                        }
+                        if (len) {
+                            local = false;
+                            cram_data->ntr = cram_data->trvals->n;
+                        }
+                    } /* Trace samples receive branch */
+                }
+            } /* Receive branch */
         } /* Send branch */
         if (local) {
             if (cram_data->nc)
