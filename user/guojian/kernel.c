@@ -43,20 +43,6 @@ struct shot_ker_par_type
     int Nsin;
     float rotate;
 };
-struct shot_ker_ani_type
-{
-    float phi,f;
-    float o_ep,d_ep,o_dl,d_dl,o_w_vp,d_w_vp;
-    int m,n,n_ep,n_dl,n_w_vp;
-    sf_complex *contablepp,*contablepm,*conapp,*conapm;
-};
-struct shot_ker_ani_implicit_type
-{
-    float o_ep,d_ep,o_dl,d_dl;
-    int n_ep,n_dl;
-    float ***fdcoe;
-    int nfdcoe;
-};
 /*^*/
 
 #endif

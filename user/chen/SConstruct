@@ -76,6 +76,10 @@ for prog in mains:
 						  'install_name_tool -change '
 						  'build/user/pwd/libdrsfpwd.dylib '
 	                                          '%s/libdrsfpwd.dylib %s' % (libdir,install[0]))
+				env.AddPostAction(install,
+						  'install_name_tool -change '
+						  'build/plot/lib/libdrsfplot.dylib '
+	                                          '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
 				
 	else:
 		prog = env.RSF_Place('sf'+prog,
