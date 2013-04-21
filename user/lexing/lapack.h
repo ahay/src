@@ -3,7 +3,11 @@
 
 #include "blas.h"
 
-#ifndef HAVE_MKL
+#ifdef HAVE_MKL
+
+#include <mkl.h>
+
+#else
 
 extern "C"
 {
