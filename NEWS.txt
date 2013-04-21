@@ -30,7 +30,7 @@ To APIs:
 To the Python package:
 
 * Added an ability to have list arguments in configure
-* Added MLK support in configure
+* Added MKL support in configure
 * Added selfdocs for placeholders in bldutil
 
 To programs:

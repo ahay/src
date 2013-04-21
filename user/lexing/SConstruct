@@ -18,7 +18,7 @@ except: # local version
     root = None
     SConscript('../../api/c++/SConstruct')
 
-inc = Glob('[a-z]*.h*')
+inc = Glob('[a-z]*.hh')
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')
