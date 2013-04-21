@@ -25,6 +25,10 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
+# a bug in Apple's gcc
+if string.rfind(env.get('CC'),'gcc') >= 0 and env['PLATFORM'] == 'darwin':
+    env.Append(CPPDEFINES=['_FORTIFY_SOURCE=0'])
+    
 if sparsepath and sparselibs:
     env.Prepend(CPPPATH=sparsepath,
                 LIBS=sparselibs)

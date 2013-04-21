@@ -278,7 +278,7 @@ void iwi_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    sprintf(insert[its],"_lu%d",iw);
 	    inslen = strlen(insert[its]);
 	    
-	    append[its] = malloc(srclen+inslen+1);
+	    append[its] = sf_charalloc(srclen+inslen+1);
 	    
 	    memcpy(append[its],datapath,srclen-5);
 	    memcpy(append[its]+srclen-5,insert[its],inslen);

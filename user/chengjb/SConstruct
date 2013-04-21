@@ -60,8 +60,9 @@ if fftw:
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')
     if lapack:
-        lapackpp=[env.get('DYNLIB','')+'rsf++','vecmatop']+lapack
-        env.Append(LIBS=lapack)
+        lapackpp=[env.get('DYNLIB','')+'rsf++','vecmatop']
+        if not isinstance(lapack, bool):
+            env.Append(LIBS=lapack)
 else:
     lapack = None
 

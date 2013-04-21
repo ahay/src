@@ -76,8 +76,10 @@ else:
     lapack = None
 
 if lapack:
-    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++',
-                      'vecmatop']+lapack)
+    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    env.Prepend(LIBS=libsxx)
 
 ccmains = Split(ccprogs)
 for prog in ccmains:

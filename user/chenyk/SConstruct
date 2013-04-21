@@ -31,7 +31,7 @@ except: # local version
 src = Glob('[a-z]*.c')
 dynpre = env.get('DYNLIB','') 
 
-libs = [dynpre+'rsf', 'lapack']+env.get('LIBS',[])
+libs = [dynpre+'rsf']+env.get('LIBS',[])
 dlibs = ['drsf']+env.get('LIBS',[])
 
 env.Prepend(CPPPATH=['../../include'],
@@ -50,7 +50,10 @@ else:
     lapack = None
 
 if lapack:
-    libsxx = [dynpre+'rsf++','vecmatop']+lapack+libs
+    libsxx = [dynpre+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    libsxx.extend(libs)
 
 ######################################################################
 #USING PETSC (One should specify the absolute dir in petsccpp and petsclib.)

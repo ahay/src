@@ -35,7 +35,8 @@ for source in src:
 
 lapack = env.get('LAPACK')
 if lapack:
-    env.Prepend(LIBS=lapack)
+    if not isinstance(lapack,bool):
+        env.Prepend(LIBS=lapack)
     progs += ' pseudodepth'
 elif root:
     place += ' pseudodepth'

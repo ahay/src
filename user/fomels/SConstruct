@@ -74,7 +74,10 @@ else:
     lapack = None
 
 if lapack:
-    libsxx = [dynpre+'rsf++','vecmatop']+lapack+libs
+    libsxx = [dynpre+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    libsxx.extend(libs)
 
 ccmains = Split(ccprogs)
 for prog in ccmains:

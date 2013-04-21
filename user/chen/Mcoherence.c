@@ -21,6 +21,8 @@
 
 #include <rsf.h>
 
+#include "_lapack.h"
+
 float coh1(float **u, int n1, int n2);
 float coh2(float **u, int n1, int n2);
 float coh3(float **u, int n1, int n2);

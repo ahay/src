@@ -967,6 +967,7 @@ def blas(context):
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
+        context.env['BLAS'] = True
     else:
         # first try blas
         LIBS = path_get(context,'LIBS')
@@ -1002,39 +1003,47 @@ def blas(context):
 
 def lapack(context):
     context.Message("checking for LAPACK ... ")
-    LIBS = path_get(context,'LIBS')
-    blas = context.env.get('BLAS','blas')
-    lapack = context.env.get('LAPACK','lapack')
-    mylibs = [lapack,blas]
-    LIBS.extend(mylibs)
     text = '''
+    void dgesv_(int *n, int *nrhs, double *a,
+    int *lda, int *ipiv, double *b, int *ldb, int *info);
     int main(int argc,char* argv[]) {
-    int i=1;
+    int N=2, NRHS=1, LDA=2, LDB=2;
+    double A[]={0.0,1.0,2.0,3.0};
+    double B[]={0.0,1.0};
+    int IPIV[2], INFO;
+    dgesv_(&N, &NRHS, A, &LDA, &IPIV, B, &LDB, &INFO);
     return 0;
     }\n'''
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
-        context.env['LAPACK'] = mylibs
-        if plat['OS'] == 'cygwin':
-            context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
-                                         ':/lib/lapack'
+        context.env['LAPACK'] = True
     else:
-        # some systems require cblas and atlas
-        LIBS.pop()
-        mylibs.extend(['cblas','atlas'])
-        LIBS.extend(['cblas','atlas'])
+        LIBS = path_get(context,'LIBS')
+        blas = context.env.get('BLAS','blas')
+        lapack = context.env.get('LAPACK','lapack')
+        mylibs = [lapack,blas]
+        LIBS.extend(mylibs)
         res = context.TryLink(text,'.c')
         if res:
             context.Result(res)
             context.env['LAPACK'] = mylibs
         else:
-            context.Result(context_failure)
-            context.env['LAPACK'] = None
-            need_pkg('lapack', fatal=False)
-        LIBS.pop()
-    LIBS.pop()
-    LIBS.pop()
+            # some systems require cblas and atlas
+            LIBS.pop()
+            LIBS.pop()
+            mylibs = ['cblas','atlas']
+            LIBS.extend(mylibs)
+            res = context.TryLink(text,'.c')
+            if res:
+                context.Result(res)
+                context.env['LAPACK'] = mylibs
+            else:
+                context.Result(context_failure)
+                context.env['LAPACK'] = None
+                need_pkg('lapack', fatal=False)
+                LIBS.pop()
+                LIBS.pop()
 
 pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
               'rhel':'openmpi-devel'}
