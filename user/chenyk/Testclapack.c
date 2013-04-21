@@ -1,7 +1,8 @@
 /* Test clapack */
 #include<rsf.h>
-#include"_lapack.h"
+
 #include"solver.h"
+
 int main(void)
 {
 /* 3x3 matrix A

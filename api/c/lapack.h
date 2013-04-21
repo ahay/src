@@ -1,7 +1,14 @@
-#ifndef _LAPACK_INC_
-#define _LAPACK_INC_
+#ifndef _sf_lapack_h_
+#define _sf_lapack_h_
 
-#include "_blas.h"
+#ifdef HAVE_MKL
+
+#include <mkl.h>
+
+#else
+
+#define MKL_Complex8 cpx8
+#define MKL_Complex16 cpx16
 
 void cbdsqr_(char *uplo, int *n, int *ncvt, int *nru, int *ncc, float *d, float *e, cpx8 *vt, int *ldvt, cpx8 *u, int *ldu, cpx8 *c, int *ldc, float *rwork, int *info);
 void cgbbrd_(char *vect, int *m, int *n, int *ncc, int *kl, int *ku, cpx8 *ab, int *ldab, float *d, float *e, cpx8 *q, int *ldq, cpx8 *pt, int *ldpt, cpx8 *c, int *ldc, cpx8 *work, float *rwork, int *info);
@@ -804,5 +811,10 @@ void zunmrq_(char *side, char *trans, int *m, int *n, int *k, cpx16 *a, int *lda
 void zunmtr_(char *side, char *uplo, char *trans, int *m, int *n, cpx16 *a, int *lda, cpx16 *tau, cpx16 *c, int *ldc, cpx16 *work, int *lwork, int *info);
 void zupgtr_(char *uplo, int *n, cpx16 *ap, cpx16 *tau, cpx16 *q, int *ldq, cpx16 *work, int *info);
 void zupmtr_(char *side, char *uplo, char *trans, int *m, int *n, cpx16 *ap, cpx16 *tau, cpx16 *c, int *ldc, cpx16 *work, int *info);
+
+void cgeqpf_(int *m, int *n, cpx8 *a, int *lda, int *jpvt, cpx8 *tau, cpx8 *work, float* rwork, int *info);
+void zgeqpf_(int *m, int *n, cpx16 *a, int *lda, int *jpvt, cpx16 *tau, cpx16 *work, double* rwork, int *info);
+
+#endif
 
 #endif

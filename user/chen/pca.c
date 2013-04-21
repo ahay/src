@@ -19,7 +19,6 @@
 */
 
 #include <rsf.h>
-#include "_blas.h"
 
 int pca_rank(int n0, float *s, float eta)
 /*< rank of signal subspace >*/

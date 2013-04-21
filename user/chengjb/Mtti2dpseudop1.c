@@ -23,7 +23,6 @@
 
 /* prepared head files by myself */
 #include "_cjb.h"
-#include "_lapack.h"
 #include "_fd.h"
 
 /* head files aumatically produced from *.c */

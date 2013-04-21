@@ -33,7 +33,7 @@
 int main(int argc, char* argv[])
 {
     /* declarations */
-  int i,n,nb_imfs,max_imfs,iteration_counter,stop_status,allocated_x,stop_EMD,M;
+  int i,n,nb_imfs,max_imfs,iteration_counter,stop_status,allocated_x,stop_EMD;
   extrema_t ex;
   input_t input;
   envelope_t env;

@@ -1,12 +1,16 @@
+#ifndef _sf_fblas_h_
+#define _sf_fblas_h_
 
-#ifndef _BLAS_H_
-#define _BLAS_H_
+#include "komplex.h"
 
-#include <complex.h>
+#ifndef cpx8
+#define cpx8 sf_complex
+#endif
 
-typedef complex float cpx8;
-typedef complex double cpx16;
-
+#ifndef cpx16
+#define cpx16 sf_double_complex
+#endif
+  
 float sasum_(int *n,float *x,int *incx);
 void  saxpy_(int *n,float *alpha,float *x,int *incx,float *y,int *incy);
 void  saxpyi_(int *nz,float *a,float *x,int *indx,float *y);
@@ -87,7 +91,7 @@ void zswap_(int *n,cpx16 *x,int *incx,cpx16 *y,int *incy);
 int  izamax_(int *n,cpx16 *x,int *incx); 
 int  izamin_(int *n,cpx16 *x,int *incx); 
   
-  /* blas level2 */
+/* blas level2 */
   
 void sgbmv_(char *trans,int *m,int *n,int *kl,int *ku,float *alpha,float *a,int *lda,float *x,int *incx,float *beta,float *y,int *incy);
 void sgemv_(char *trans,int *m,int *n,float *alpha,float *a,int *lda,float *x,int *incx,float *beta,float *y,int *incy);
@@ -159,7 +163,7 @@ void ztpsv_(char *uplo,char *trans,char *diag,int *n,cpx16 *ap,cpx16 *x,int *inc
 void ztrmv_(char *uplo,char *transa,char *diag,int *n,cpx16 *a,int *lda,cpx16 *b,int *incx); 
 void ztrsv_(char *uplo,char *trans,char *diag,int *n,cpx16 *a,int *lda,cpx16 *x,int *incx); 
   
-  /* blas level3 */
+/* blas level3 */
   
 void sgemm_(char *transa,char *transb,int *m,int *n,int *k,float *alpha,float *a,int *lda,float *b,int *ldb,float *beta,float *c,int *ldc);
 void ssymm_(char *side,char *uplo,int *m,int *n,float *alpha,float *a,int *lda,float *b,int *ldb,float *beta,float *c,int *ldc);
@@ -195,6 +199,7 @@ void zsyr2k_(char *uplo,char *trans,int *n,int *k,cpx16 *alpha,cpx16 *a,int *lda
 void zsyrk_(char *uplo,char *trans,int *n,int *k,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *beta,cpx16 *c,int *ldc); 
 void ztrmm_(char *side,char *uplo,char *transa,char *diag,int *m,int *n,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *b,int *ldb); 
 void ztrsm_(char *side,char *uplo,char *transa,char *diag,int *m,int *n,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *b,int *ldb); 
+
 
 #endif
 

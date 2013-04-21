@@ -34,7 +34,8 @@ dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 # INCLUDES
 ##############################################################################
 sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src2)+Split(src))
+includes = map(lambda x: x+'.h',
+               Split(src2)+Split(src)+Split('fblas lapack'))
 
 version = env.get('version','unknown')
 env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])

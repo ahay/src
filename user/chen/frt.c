@@ -23,8 +23,6 @@
 
 #include <rsf.h>
 
-#include "_lapack.h"
-
 typedef struct tag_frt
 {
 	int nx,np;			// fart firt fhrt

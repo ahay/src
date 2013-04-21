@@ -7,8 +7,15 @@
 
 #include <valarray>
 
+#include <complex>
+typedef std::complex<float> Complex8;
+typedef std::complex<double> Complex16;
+
 // to simplify main program includes
 extern "C" {
+#define cpx8 Complex8
+#define cpx16 Complex16
+
 #include <rsf.h>
 }
 

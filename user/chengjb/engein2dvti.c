@@ -30,7 +30,6 @@
 #include <rsf.h>
 
 #include "_cjb.h"
-#include "_lapack.h"
 #include "eigen2x2.h"
 
 void engein2dvti1(double ve[2][2], double va[2], double sinx, double cosx, double vp2, double vs2,

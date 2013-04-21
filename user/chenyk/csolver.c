@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+
 #include "csolver.h"
 #include "solver.h"
 #include "classicsolver.h"
@@ -91,9 +92,9 @@ void sor_csolve(kiss_fft_cpx *x, int niter, float w)
     for(i1=0;i1<n;i1++)
     {x[i1].r=xx[2*i1]; x[i1].i=xx[2*i1+1];}
 }
- 
+
 void sd_csolve(kiss_fft_cpx *x, int niter)
-/* Steepest descent complex solver */
+/*< Steepest descent complex solver >*/
 {
     sd_solve(aa, xx, bb, 2*n, niter);
     for(i1=0;i1<n;i1++)

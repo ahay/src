@@ -39,8 +39,6 @@ typedef struct{
 /* lapack driver */
 static void sgtsv(int n,int nrhs,float *dl,float *d,float *du,float *b,int ldb)
 {
-	extern void sgtsv_(const int *n,const int *nrhs,float *dl,float *d,float *du,float *b,const int *ldb,int *info);
-
 	int info;
 	sgtsv_(&n,&nrhs,dl,d,du,b,&ldb,&info);
 	if (info)

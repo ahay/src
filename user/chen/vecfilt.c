@@ -20,7 +20,6 @@
 
 #include <rsf.h>
 #include "recursion.h"
-#include "_lapack.h"
 
 static	float **buf, **b1, *b2, *d1, *d2;
 static int n0, n1, n2, rect[3], n00;

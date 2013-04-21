@@ -17,9 +17,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
-#include "_blas.h"
 
 void fpca1(float **a, int n1, int n2, float *p, float *t, int niter)
 {

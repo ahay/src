@@ -22,7 +22,6 @@
 #include <assert.h>
 
 /* low rank decomposition  */
-#include <lapack.h>
 #include <vecmatop.hh>
 #include <serialize.hh>
 

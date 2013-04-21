@@ -1,6 +1,5 @@
 /* Test cblas */
 #include<rsf.h>
-#include"_blas.h"
 
 int main(void)
 {

@@ -54,10 +54,8 @@ for source in src:
 lapack = env.get('LAPACK')
 blas   = env.get('BLAS') and lapack
 
-if blas:
-	if not isinstance(lapack,bool):
-		env.Prepend(LIBS=lapack)
-	env.Depends('_lapack.h','_blas.h')
+if blas and not isinstance(lapack,bool):
+	env.Prepend(LIBS=lapack)
 
 mains = Split(progs)
 for prog in mains:

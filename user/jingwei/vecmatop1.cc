@@ -1,5 +1,4 @@
-#include <blas.h>
-#include <lapack.h>
+#include <rsf.hh>
 
 #include "numvec1.hh"
 #include "nummat1.hh"

@@ -23,7 +23,7 @@
 #include "matrix.h"
 
 void mul(float *a,float *b,int m,int n,int k,float *c) 
-/* multiplication: a->m*n, b->n*k */
+/*< multiplication: a->m*n, b->n*k >*/
 {
     int i,j,l,u;
     for (i=0; i<=m-1; i++)
@@ -36,7 +36,7 @@ void mul(float *a,float *b,int m,int n,int k,float *c)
 }
 
 void add(float *a,float *b,int m,int n,float *c) 
-/* add: a->m*n, b->m*n */
+/*< add: a->m*n, b->m*n >*/
 {
     int i,j;
     for (i=0; i<=m-1; i++)
@@ -47,7 +47,7 @@ void add(float *a,float *b,int m,int n,float *c)
 }
 
 void sub(float *a,float *b,int m,int n,float *c) 
-/* subtract: a->m*n, b->m*n */
+/*< subtract: a->m*n, b->m*n >*/
 {
     int i,j;
     for (i=0; i<=m-1; i++)
@@ -58,7 +58,7 @@ void sub(float *a,float *b,int m,int n,float *c)
 }
 
 void dotmul(float *a,float *b,int m,int n,float *c) 
-/* dot multiplication: a->m*n, b->m*n */
+/*< dot multiplication: a->m*n, b->m*n >*/
 {
     int i,j;
     for (i=0; i<=m-1; i++)

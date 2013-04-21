@@ -20,12 +20,6 @@
 #include <utility>
 #include <algorithm>
 
-//external libraries
-//#include "fftw3.h"
-
-#include <blas.h>
-#include <lapack.h>
-
 //complex number
 #define cpx cpx8
 

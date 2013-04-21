@@ -20,14 +20,9 @@
 #include <utility>
 #include <algorithm>
 
-//external libraries
-//#include "fftw3.h"
-
-#include "blas.h"
-#include "lapack.h"
 
 //complex number
-typedef std::complex<float> cpx;
+#define cpx cpx8
 
 //aux functions
 inline int pow2(int l) { assert(l>=0); return (1<<l); }

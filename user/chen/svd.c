@@ -19,7 +19,6 @@
 */
 
 #include <rsf.h>
-#include "_lapack.h"
 
 
 void svd( int n1, int n2, float **a, bool vt,

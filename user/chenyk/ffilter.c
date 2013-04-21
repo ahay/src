@@ -59,7 +59,7 @@ void trapezoid_init(int n /*length of time series*/,
 
 void trapezoid_apply(float *xx /*input time series*/,
 		     float *yy /*output time seires*/,
-		     float *n /*length of time series*/)
+		     float n /*length of time series*/)
 /*< applying trapezoid bandpass filter >*/
 {
     kiss_fftr(forw, xx, cdata);
