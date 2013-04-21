@@ -87,11 +87,15 @@ int main(int argc, char* argv[])
     int marg;
     int snapinter;
     bool freesurface;
+    
     spara sp={0};
+    bool srcdecay;
+    int srctrunc;
     
     int pmlout, pmld0, decaybegin;
     int   decay;
     float gamma = GAMMA;
+    
     
     tstart = clock();
     sf_init(argc, argv);
@@ -129,7 +133,10 @@ int main(int argc, char* argv[])
     /* Begin time of using decay boundary condition */
     if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
-    
+    if (!sf_getbool("srcdecay",&srcdecay)) srcdecay=true;
+    /*source decay y=use*/
+    if (!sf_getint("srctrunc",&srctrunc)) srctrunc=300;
+    /*source trunc*/
     oo=marg;
     
     nx = nxb - 2*pmlout - 2*marg;
@@ -188,15 +195,16 @@ int main(int argc, char* argv[])
     } 
    
     /* MAIN LOOP */
-    sp.trunc=160;
+    sp.trunc=srctrunc;
     sp.srange=10;
     sp.alpha=0.5;
-    sp.decay=1;
+    sp.decay=srcdecay?1:0;
     
     sf_warning("============================");
     sf_warning("nx=%d  nxb=%d nt=%d", nx, nxb, nt);
     sf_warning("dx=%f  dt=%f", dx, dt);
     sf_warning("marg=%d pmlout=%d", marg, pmlout);
+    sf_warning("srctrunc=%d srcdecay=%d", sp.trunc, sp.decay);
     
     for (it = 0; it < nt; it++) {
 	sf_warning("it=%d;", it);

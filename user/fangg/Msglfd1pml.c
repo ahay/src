@@ -65,6 +65,8 @@ int main(int argc, char* argv[])
     sf_axis at, ax;
 
     spara sp={0};
+    bool srcdecay;
+    int srctrunc;
 
     int pmlout, pmld0, decaybegin;
     int   decay;
@@ -111,7 +113,10 @@ int main(int argc, char* argv[])
     if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
     if (!sf_histint(fG,"n2", &lenx)) sf_error("No n2= in input");
-    
+    if (!sf_getbool("srcdecay",&srcdecay)) srcdecay=true;
+    /*source decay y=use*/
+    if (!sf_getint("srctrunc",&srctrunc)) srctrunc=300;
+    /*source trunc*/
     
     
     sxtmp = sf_floatalloc(lenx);
@@ -192,15 +197,16 @@ int main(int argc, char* argv[])
     }  
     
     /* MAIN LOOP */
-    sp.trunc=160;
-    sp.srange=20;
+    sp.trunc=srctrunc;
+    sp.srange=10;
     sp.alpha=0.5;
-    sp.decay=1;
-	
+    sp.decay=srcdecay?1:0;
+   	
     sf_warning("============================");
     sf_warning("nx=%d nt=%d", nx, nt);
     sf_warning("dx=%f dt=%f", dx, dt);
     sf_warning("lenx=%d marg=%d pmlout=%d", lenx, marg, pmlout);
+    sf_warning("srctrunc=%d srcdecay=%d", sp.trunc, sp.decay);
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx]=[%d,] G=%f",sx[ix], G[ix][0]);
     }
