@@ -27,96 +27,96 @@
 int main(int argc, char* argv[])
 {
 
-  	sf_file Fin=NULL; /* Input model size */
-  	sf_file Fout=NULL; /* Stiffness model */
+    sf_file Fin=NULL; /* Input model size */
+    sf_file Fout=NULL; /* Stiffness model */
 
-  	float ***in=NULL;
-	float ***out=NULL;
+    float ***in=NULL;
+    float ***out=NULL;
 
-  	int nt,nr,ns,nrout,nr2;
-  	float dr,ds,or,os,maxr;
+    int nt,nr,ns,nrout,nr2;
+    float dr,ds,or,os,maxr;
 
-  	/*----------------------------------------*/
-  	/* init RSF */
-  	sf_init(argc,argv);
+    float rr;
+    int rloc,sloc,isr,irr;
 
-  	sf_axis at,ar,as,aout; /* Cube axes */
-  	
-  	Fin  = sf_input ("in") ; /* Input field */
-  	Fout = sf_output("out"); /* Output field */
+    sf_axis at,ar,as,aout; /* Cube axes */
+    int is, ir, it;
+  
+    /*----------------------------------------*/
+    /* init RSF */
+    sf_init(argc,argv);
+	
+    Fin  = sf_input ("in") ; /* Input field */
+    Fout = sf_output("out"); /* Output field */
 
-  	at=sf_iaxa(Fin,1); sf_setlabel(at,"at"); sf_raxa(at);
-  	ar=sf_iaxa(Fin,2); sf_setlabel(ar,"ar"); sf_raxa(ar);
-  	as=sf_iaxa(Fin,3); sf_setlabel(as,"as"); sf_raxa(as);
+    at=sf_iaxa(Fin,1); sf_setlabel(at,"at"); sf_raxa(at);
+    ar=sf_iaxa(Fin,2); sf_setlabel(ar,"ar"); sf_raxa(ar);
+    as=sf_iaxa(Fin,3); sf_setlabel(as,"as"); sf_raxa(as);
 
-	aout=ar;
+    aout=ar;
 
     nt = sf_n(at); 
     nr = sf_n(ar); dr = sf_d(ar); or = sf_o(ar);
-	ns = sf_n(as); ds = sf_d(as); os = sf_o(as);
+    ns = sf_n(as); ds = sf_d(as); os = sf_o(as);
 
     maxr=-((float)(nr-1)*dr+or);
     nrout = 2*(int)(-maxr/dr)+1;
 
-	/* Allocate input/output */
-  	in  = sf_floatalloc3(nt,nr   ,ns);
-  	out = sf_floatalloc3(nt,nrout,ns);
+    /* Allocate input/output */
+    in  = sf_floatalloc3(nt,nr   ,ns);
+    out = sf_floatalloc3(nt,nrout,ns);
    
-  	sf_setn(aout,nrout);
-  	sf_seto(aout,maxr);
-  	sf_setd(aout,dr);	
-	sf_setlabel(aout,"aout"); sf_raxa(aout);
+    sf_setn(aout,nrout);
+    sf_seto(aout,maxr);
+    sf_setd(aout,dr);	
+    sf_setlabel(aout,"aout"); sf_raxa(aout);
 
-  	sf_oaxa(Fout,at  ,1);
-  	sf_oaxa(Fout,aout,2);
-  	sf_oaxa(Fout,as  ,3);
+    sf_oaxa(Fout,at  ,1);
+    sf_oaxa(Fout,aout,2);
+    sf_oaxa(Fout,as  ,3);
 
-	/* Read in Data */
-  	sf_floatread( in[0][0],ns*nr*nt,Fin );
-
-	float rr;
-	int rloc,sloc,isr,irr;
+    /* Read in Data */
+    sf_floatread( in[0][0],ns*nr*nt,Fin );
 	
-	
-	for (int is=0; is < ns; is++) {
-		sloc = (int)((os+is*ds)/dr);
+    for (is=0; is < ns; is++) {
+	sloc = (int)((os+is*ds)/dr);
 		
-		for (int ir=0; ir < nr; ir++) {
+	for (ir=0; ir < nr; ir++) {
 
-			/* receiver location in split-spread */
-			rr = ((float)(ir-1)*dr+or-maxr);
+	    /* receiver location in split-spread */
+	    rr = ((float)(ir-1)*dr+or-maxr);
 			
-			/* receiver integer location */
-			rloc = (int)(rr/dr)+1;
+	    /* receiver integer location */
+	    rloc = (int)(rr/dr)+1;
 			
-			/* Compute location of true trace */
-			for (int it=0; it < nt; it++) {
-				out[is][rloc][it]=in[is][ir][it];
-			}
+	    /* Compute location of true trace */
+	    for (it=0; it < nt; it++) {
+		out[is][rloc][it]=in[is][ir][it];
+	    }
 			
-			/* Reciprocal source and receiver*/
-			isr=(int)(ir*dr/ds)+(int)(or/ds)+is;
-			irr=(nrout-1)/2-ir-(int)(or/dr);
+	    /* Reciprocal source and receiver*/
+	    isr=(int)(ir*dr/ds)+(int)(or/ds)+is;
+	    irr=(nrout-1)/2-ir-(int)(or/dr);
 			
-			if (isr > 0 && isr < ns){
-				for (int it=0; it < nt; it++) {
-					out[isr][irr][it]=in[is][ir][it];
-				}			
-			}
+	    if (isr > 0 && isr < ns){
+		for (int it=0; it < nt; it++) {
+		    out[isr][irr][it]=in[is][ir][it];
+		}			
+	    }
 			
-			/* Compute reciprocal trace */
+	    /* Compute reciprocal trace */
 			
 			
-		}
 	}
+    }
 
-	/* Output section */
-  	sf_floatwrite(out[0][0],nt*nrout*ns,Fout);
+    /* Output section */
+    sf_floatwrite(out[0][0],nt*nrout*ns,Fout);
 
-  	/*----------------------------------------*/
-  	/* deallocate */
-  	free(**in); free(*in); free(in);
-  	free(**out);free(*out);free(out);
+    /*----------------------------------------*/
+    /* deallocate */
+    free(**in); free(*in); free(in);
+    free(**out);free(*out);free(out);
 
-  	exit(0);
+    exit(0);
 }
