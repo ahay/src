@@ -27,14 +27,68 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 void box(float x1, float x2, float a1, float a2, float th);
 void ell(float x1, float x2, float a1, float a2, float th);
 
+int parsplit(char*buf, char**par)
+{
+	char *p1, *p2;
+	int n2=0;
+	bool inquote, loop;
+
+	p1 = buf;
+	p2 = par[n2];
+
+	inquote=false;
+	loop=true;
+	while(loop)
+	{
+		switch(*p1)
+		{
+		case '"':
+		case '\'':
+			inquote=~inquote;
+			p1++;
+			break;
+		case ' ':
+		case '\t':
+			if(inquote==false){
+				*p2 = '\0';
+				n2++;
+				p2 = par[n2];
+				p1++;
+			}else{
+				*p2++=*p1++;
+			}
+			break;
+		case '#':
+		case '\0':
+			*p2 = '\0';
+			n2++;
+			loop=false;
+			break;
+		case '\\':
+			p1++;
+			*p2++=*p1++;
+			break;
+		default:
+			*p2++=*p1++;
+			break;
+		} 
+	}
+	
+	return n2;
+}
+
 int main (int argc, char **argv)
 {
 	int np, nl;
-	char buf[BUFSZ*PARSZ], para[PARSZ][BUFSZ];
-	char *sep = " \t", *p;
-	float x1, x2;
+	char buf[BUFSZ*PARSZ], **para;
+	float x1, x2, w, h;
+	int fontsz=7;
 
 	sf_init(argc, argv);
+
+	para = (char **)sf_alloc(PARSZ, sizeof(char*));
+	*para = (char *)sf_alloc(PARSZ*BUFSZ, sizeof(char));
+	for(np=1;np<PARSZ; np++) para[np] = para[np-1] + BUFSZ;
 
     vp_init();
 
@@ -43,13 +97,17 @@ int main (int argc, char **argv)
 	{
 		nl++;
 		np = 0;
-		for(p=strtok(buf,sep);
+		if(buf[0]=='#' || buf[0]=='\n') continue;
+/*		for(p=strtok(buf,sep);
 			p;
 			p=strtok(NULL,sep))
 		{
 			strcpy(para[np], p);
 			if(np++ >= PARSZ) sf_error("L%d: too many parameters", nl);
 		}
+*/
+		np = parsplit(buf, para);
+//		fprintf(stderr, "cmd=%s np=%d: %s \n", para[0], np, buf);
 		if(np<=0) continue;
 		if(strcmp(para[0],"dash")==0 && np==2)
 			vp_set_dash(atof(para[1]));
@@ -59,6 +117,8 @@ int main (int argc, char **argv)
 			vp_style(atoi(para[1]));
 		else if(strcmp(para[0],"fat")==0 && np==2)
 			vp_fat(atoi(para[1]));
+		else if(strcmp(para[0],"fontsz")==0 && np==2)
+			fontsz=atoi(para[1]);
 		else if(strcmp(para[0],"move")==0 && np==3)
 		{
 			x1 = atof(para[1]);
@@ -67,16 +127,45 @@ int main (int argc, char **argv)
 		}
 		else if(strcmp(para[0],"line")==0 && np==3)
 			vp_draw(atof(para[1]), atof(para[2]));
-		else if(strcmp(para[0],"text")==0 && np==4)
+		else if(strcmp(para[0],"text")==0)
+			switch(np)
+			{
+			case 4:
 			vp_text(x1, x2, atoi(para[1]), atof(para[2]), para[3]);
-		else if(strcmp(para[0],"box")==0 && np==4)
+			break;
+			case 3:
+			vp_text(x1, x2, fontsz, atof(para[1]), para[2]);
+			break;
+			case 2:
+			vp_text(x1, x2, fontsz, 0.0, para[1]);
+			break;
+			default: break;
+			}
+		else if(strcmp(para[0],"box")==0)
+			switch(np)
+			{
+			case 4:
 			box(x1, x2, atof(para[1]), atof(para[2]), atof(para[3])*SF_PI/180);
-		else if(strcmp(para[0],"ell")==0 && np==4)
+			break;
+			case 3:
+			box(x1, x2, atof(para[1]), atof(para[2]), 0.0);
+			break;
+			default: break;
+			}
+		else if(strcmp(para[0],"frame")==0 && np==4 )
+		{
+			w = atof(para[1]);
+			h = atof(para[2]);
+			box(x1+w/2, x2+h/2, w, h, 0.0);
+			vp_text(x1+0.1, x2+0.1, fontsz, 0.0, para[3]);
+		}else if(strcmp(para[0],"ell")==0 && np==4)
 			ell(x1, x2, atof(para[1]), atof(para[2]), atof(para[3])*SF_PI/180);
 		else if(strcmp(para[0],"arrow")==0 && np==4)
 			vp_arrow(x1, x2, atof(para[1]), atof(para[2]), atof(para[3]));
 		else sf_error("L%d: unknown cmd %s", nl, para[0]);
 	}
+	free(*para);
+	free(para);
     return 0;
 }
 
