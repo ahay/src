@@ -15,6 +15,8 @@ typedef MKL_Complex16 cpx16;
 typedef std::complex<float> cpx8;
 typedef std::complex<double> cpx16;
 
+#endif
+
 extern "C"
 {
   float sasum_(int *n,float *x,int *incx);
@@ -206,8 +208,6 @@ extern "C"
   void ztrmm_(char *side,char *uplo,char *transa,char *diag,int *m,int *n,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *b,int *ldb); 
   void ztrsm_(char *side,char *uplo,char *transa,char *diag,int *m,int *n,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *b,int *ldb); 
 }
-
-#endif
 
 #endif
 
