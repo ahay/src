@@ -9,8 +9,8 @@
 
 #else
 
-#define lapack_complex_float cpx8
-#define lapack_complex_double cpx16
+#define MKL_Complex8 cpx8
+#define MKL_Complex16 cpx16
 
 extern "C"
 {

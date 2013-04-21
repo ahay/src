@@ -281,10 +281,10 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 	FltNumVec rwork(10*(j+2));
 	int info;
 	cgelss_(&m,&n,&nrhs,
-		(lapack_complex_float*) Hjtmp.data(),&lda,
-		(lapack_complex_float*) betmp.data(),&ldb,
+		(MKL_Complex8*) Hjtmp.data(),&lda,
+		(MKL_Complex8*) betmp.data(),&ldb,
 		s.data(),&rcond,&rank,
-		(lapack_complex_float*) work.data(),&lwork,
+		(MKL_Complex8*) work.data(),&lwork,
 		rwork.data(),&info);
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }
@@ -390,10 +390,10 @@ int pinv(const CpxNumMat& M, float eps, CpxNumMat& R)
       FltNumVec rwork(lwork);
       int info;
       cgesvd_(&jobu, &jobvt, &m, &n, 
-	      (lapack_complex_float*) MC.data(), &m, S.data(), 
-	      (lapack_complex_float*) U.data(), &m, 
-	      (lapack_complex_float*) VT.data(), &k, 
-	      (lapack_complex_float*) work.data(), &lwork, 
+	      (MKL_Complex8*) MC.data(), &m, S.data(), 
+	      (MKL_Complex8*) U.data(), &m, 
+	      (MKL_Complex8*) VT.data(), &k, 
+	      (MKL_Complex8*) work.data(), &lwork, 
 	      rwork.data(), &info);    
       iA(info==0);
     }
@@ -586,9 +586,9 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     FltNumVec rwork(6*n);
     int info;
     cgeqpf_(&m, &n, 
-	    (lapack_complex_float*) M2.data(), &lda, jpvt.data(), 
-	    (lapack_complex_float*) tau.data(), 
-	    (lapack_complex_float*) work.data(), rwork.data(), &info);    
+	    (MKL_Complex8*) M2.data(), &lda, jpvt.data(), 
+	    (MKL_Complex8*) tau.data(), 
+	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
     iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
@@ -623,9 +623,9 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     FltNumVec rwork(6*n);
     int info;
     cgeqpf_(&m, &n, 
-	    (lapack_complex_float*) M1.data(), &lda, jpvt.data(), 
-	    (lapack_complex_float*) tau.data(), 
-	    (lapack_complex_float*) work.data(), rwork.data(), &info);    
+	    (MKL_Complex8*) M1.data(), &lda, jpvt.data(), 
+	    (MKL_Complex8*) tau.data(), 
+	    (MKL_Complex8*) work.data(), rwork.data(), &info);    
     iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;

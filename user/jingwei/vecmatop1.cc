@@ -285,10 +285,10 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 	FltNumVec rwork(10*(j+2));
 	int info;
 	cgelss_(&m,&n,&nrhs,
-		(lapack_complex_float*) Hjtmp.data(),&lda,
-		(lapack_complex_float*) betmp.data(),&ldb,
+		(MKL_Complex8*) Hjtmp.data(),&lda,
+		(MKL_Complex8*) betmp.data(),&ldb,
 		s.data(),&rcond,&rank,
-		(lapack_complex_float*) work.data(),&lwork,
+		(MKL_Complex8*) work.data(),&lwork,
 		rwork.data(),&info);
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }
