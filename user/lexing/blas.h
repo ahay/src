@@ -1,21 +1,10 @@
 #ifndef _BLAS_H_
 #define _BLAS_H_
 
-#ifdef HAVE_MKL
-
-#include <mkl.h>
-
-typedef MKL_Complex8 cpx8;
-typedef MKL_Complex16 cpx16;
-
-#else
-
 //#include "bltypes.h"
 #include <complex>
 typedef std::complex<float> cpx8;
 typedef std::complex<double> cpx16;
-
-#endif
 
 extern "C"
 {
