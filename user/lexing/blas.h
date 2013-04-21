@@ -1,6 +1,15 @@
 #ifndef _BLAS_H_
 #define _BLAS_H_
 
+#ifdef HAVE_MKL
+
+#include <mkl.h>
+
+typedef MKL_Complex8 cpx8;
+typedef MKL_Complex16 cpx16;
+
+#else
+
 //#include "bltypes.h"
 #include <complex>
 typedef std::complex<float> cpx8;
@@ -197,6 +206,8 @@ extern "C"
   void ztrmm_(char *side,char *uplo,char *transa,char *diag,int *m,int *n,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *b,int *ldb); 
   void ztrsm_(char *side,char *uplo,char *transa,char *diag,int *m,int *n,cpx16 *alpha,cpx16 *a,int *lda,cpx16 *b,int *ldb); 
 }
+
+#endif
 
 #endif
 
