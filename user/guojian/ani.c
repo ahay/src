@@ -20,6 +20,8 @@
 #include <rsf.h>
 
 #include "ani.h"
+#include "mymath.h"
+#include "arrayindex.h"
 
 void coe(float* a,float phi,float ep,float dl,float w_vp,float f,float kx)
 {
@@ -28,19 +30,19 @@ void coe(float* a,float phi,float ep,float dl,float w_vp,float f,float kx)
 
     fm1=f-1;
     epdl=ep-dl;
-    sin2phi=sin(2.0*phi);
-    cos2phi=cos(2.0*phi);
-    sin4phi=sin(4.0*phi);
-    sinphi=sin(phi);
-    cosphi=cos(phi);
+    sin2phi=sinf(2.0*phi);
+    cos2phi=cosf(2.0*phi);
+    sin4phi=sinf(4.0*phi);
+    sinphi=sinf(phi);
+    cosphi=cosf(phi);
 
-    a4=fm1+2.0*ep*fm1*pow(sinphi,2)-f/2.0*epdl*pow(sin2phi,2);
+    a4=fm1+2.0*ep*fm1*powf(sinphi,2)-f/2.0*epdl*powf(sin2phi,2);
     a3=(f*epdl*sin4phi-2.0*ep*fm1*sin2phi)*kx;
-    b2=f*epdl*pow(sin2phi,2)+2.0*fm1*(1+ep)-2.0*f*epdl*pow(cos2phi,2);
-    a2=b2*kx*kx+w_vp*w_vp*(2.0+2.0*ep*pow(sinphi,2)-f);
+    b2=f*epdl*powf(sin2phi,2)+2.0*fm1*(1+ep)-2.0*f*epdl*powf(cos2phi,2);
+    a2=b2*kx*kx+w_vp*w_vp*(2.0+2.0*ep*powf(sinphi,2)-f);
     b1=2.0*ep*(-fm1)*sin2phi-f*epdl*sin4phi;
-    a1=b1*pow(kx,3)-2.0*ep*sin2phi*w_vp*w_vp*kx;
-    a0=(2.0+2.0*ep*pow(cosphi,2)-f)*w_vp*w_vp*kx*kx-pow(w_vp,4)-(-fm1*(1.0+2.0*ep*pow(cosphi,2))+f/2.0*epdl*pow(sin2phi,2))*pow(kx,4);
+    a1=b1*powf(kx,3)-2.0*ep*sin2phi*w_vp*w_vp*kx;
+    a0=(2.0+2.0*ep*powf(cosphi,2)-f)*w_vp*w_vp*kx*kx-powf(w_vp,4)-(-fm1*(1.0+2.0*ep*powf(cosphi,2))+f/2.0*epdl*powf(sin2phi,2))*powf(kx,4);
     a[0]=a0; a[1]=a1; a[2]=a2; a[3]=a3; a[4]=a4;
 }
 
@@ -49,36 +51,36 @@ void coe3d(float *a, float phi,float ep,float dl,float w_vp,float f, float kx,fl
     float a0,a1,a2,a3,a4;
     float sinphi,cosphi,fm1,epdl,sin2phi,cos2phi,sin4phi;
     float A,B,C,D,E,F;
-    sinphi=-sin(phi); cosphi=cos(phi);
-    fm1=f-1; epdl=ep-dl; sin2phi=-sin(2.0*phi); cos2phi=cos(2.0*phi); sin4phi=-sin(4.0*phi);
+    sinphi=-sinf(phi); cosphi=cosf(phi);
+    fm1=f-1; epdl=ep-dl; sin2phi=-sinf(2.0*phi); cos2phi=cosf(2.0*phi); sin4phi=-sinf(4.0*phi);
     //printf("sin=%f\n",sinphi);
     A=f-1;
     B=(f-1.0)*(1.0+2.0*ep);
     C=2.0*( (f-1.0)*(1.0+ep)-f*(ep-dl)    );
     D=(2.0+2.0*ep-f)*w_vp*w_vp;
     E=w_vp*w_vp*(2.0-f);
-    F=-pow(w_vp,4);
+    F=-powf(w_vp,4);
    
-    //printf("pow=%f,%f,%f,%f\n",pow(cosphi,4),A,B,C);   
+    //printf("pow=%f,%f,%f,%f\n",powf(cosphi,4),A,B,C);   
  
-    a4=A*pow(cosphi,4)+B*pow(sinphi,4)+C*pow(cosphi*sinphi,2);
-    a3=(-A*4.0*pow(cosphi,3)*sinphi+4.0*B*cosphi*pow(sinphi,3)+2.0*C*(pow(cosphi,3)*sinphi-cosphi*pow(sinphi,3) ))*kx;
-    a2=A*6.0*pow(cosphi*sinphi*kx,2)+B*( 6.0*pow(cosphi*sinphi*kx,2)+2.0*pow(sinphi*ky,2)  ) +
-	C*( pow(cosphi,2)*(pow(cosphi*kx,2)+ky*ky)+ pow(sinphi,4)*kx*kx- 4.0*pow(cosphi*sinphi*kx,2))+D*pow(sinphi,2)+E*pow(cosphi,2);
-    a1=A*(-4.0*cosphi*pow(sinphi*kx,3) )+B*4.0*(sinphi*pow(cosphi*kx,3)+cosphi*sinphi*kx*ky*ky) + 
-	C*( 2.0*cosphi*pow(sinphi*kx,3) -2.0*cosphi*sinphi*kx*(pow(cosphi*kx,2)+ky*ky  )   ) +D*2.0*cosphi*sinphi*kx-2.0*E*cosphi*sinphi*kx;
-    a0=A*pow(sinphi*kx,4)+B*( pow(cosphi*kx,4)+pow(ky,4)+2.0*pow(cosphi*kx*ky,2))+C*(pow(sinphi*kx,2)*(pow(cosphi*kx,2)+ky*ky  )   )+
-	D*(pow(cosphi*kx,2)+ky*ky)+E*(pow(sinphi*kx,2)+ky*ky)+F;
+    a4=A*powf(cosphi,4)+B*powf(sinphi,4)+C*powf(cosphi*sinphi,2);
+    a3=(-A*4.0*powf(cosphi,3)*sinphi+4.0*B*cosphi*powf(sinphi,3)+2.0*C*(powf(cosphi,3)*sinphi-cosphi*powf(sinphi,3) ))*kx;
+    a2=A*6.0*powf(cosphi*sinphi*kx,2)+B*( 6.0*powf(cosphi*sinphi*kx,2)+2.0*powf(sinphi*ky,2)  ) +
+	C*( powf(cosphi,2)*(powf(cosphi*kx,2)+ky*ky)+ powf(sinphi,4)*kx*kx- 4.0*powf(cosphi*sinphi*kx,2))+D*powf(sinphi,2)+E*powf(cosphi,2);
+    a1=A*(-4.0*cosphi*powf(sinphi*kx,3) )+B*4.0*(sinphi*powf(cosphi*kx,3)+cosphi*sinphi*kx*ky*ky) + 
+	C*( 2.0*cosphi*powf(sinphi*kx,3) -2.0*cosphi*sinphi*kx*(powf(cosphi*kx,2)+ky*ky  )   ) +D*2.0*cosphi*sinphi*kx-2.0*E*cosphi*sinphi*kx;
+    a0=A*powf(sinphi*kx,4)+B*( powf(cosphi*kx,4)+powf(ky,4)+2.0*powf(cosphi*kx*ky,2))+C*(powf(sinphi*kx,2)*(powf(cosphi*kx,2)+ky*ky  )   )+
+	D*(powf(cosphi*kx,2)+ky*ky)+E*(powf(sinphi*kx,2)+ky*ky)+F;
     //printf("%f,%f,%f,%f,%f\n",a0,a1,a2,a3,a4);
 
-/*   a4=fm1+2.0*ep*fm1*pow(sinphi,2)-f/2.0*epdl*pow(sin2phi,2);
+/*   a4=fm1+2.0*ep*fm1*powf(sinphi,2)-f/2.0*epdl*powf(sin2phi,2);
      a3=(2.0*fm1*ep*sin2phi-f*epdl*sin4phi)*kx;
      a2=( 2*(f-1.0)*(1.0+ep)-f*epdl*(2.0*cos2phi*cos2phi-sin2phi*sin2phi ) )*kx*kx+ w_vp*w_vp*(2.0*ep*sinphi*sinphi+2.0-f)+
      2.0*ky*ky*( (f-1.0)*(1.0+ep)+(f-1.0)*ep*sinphi*sinphi-f*epdl*cosphi*cosphi);
-     a1=pow(kx,3)*( 2.0*(f-1.0)*ep*sin2phi+f*epdl*sin4phi)+2.0*ep*pow(w_vp,2)*sin2phi*kx+ky*ky*2.0*sin2phi*kx*( (f-1.0)*ep+f*epdl);
-     a0=pow(kx,4)*( fm1*(1.0+2.0*ep*cosphi*cosphi)-f*0.5*epdl*sin2phi*sin2phi  )+fm1*(1.0+2.0*ep)*pow(ky,4)+
-     pow(kx*ky,2)*( fm1*(2.0*(1.0+ep)+2.0*ep*cosphi*cosphi)-2.0*f*epdl*sinphi*sinphi   )+
-     pow(w_vp*kx,2)*(2.0-f+2.0*ep*cosphi*cosphi)-pow(w_vp,4)+pow(w_vp*ky,2)*(4.0+2.0*ep-2.0*f);
+     a1=powf(kx,3)*( 2.0*(f-1.0)*ep*sin2phi+f*epdl*sin4phi)+2.0*ep*powf(w_vp,2)*sin2phi*kx+ky*ky*2.0*sin2phi*kx*( (f-1.0)*ep+f*epdl);
+     a0=powf(kx,4)*( fm1*(1.0+2.0*ep*cosphi*cosphi)-f*0.5*epdl*sin2phi*sin2phi  )+fm1*(1.0+2.0*ep)*powf(ky,4)+
+     powf(kx*ky,2)*( fm1*(2.0*(1.0+ep)+2.0*ep*cosphi*cosphi)-2.0*f*epdl*sinphi*sinphi   )+
+     powf(w_vp*kx,2)*(2.0-f+2.0*ep*cosphi*cosphi)-powf(w_vp,4)+powf(w_vp*ky,2)*(4.0+2.0*ep-2.0*f);
 */
 //   printf("fromaa%f,%f,%f,%f,%f\n",a0,a1,a2,a3,a4);
 
@@ -98,9 +100,9 @@ sf_complex kzani(float phi,float ep,float dl,float w_vp,float f,float kx)
 	coe(a,0.0,ep,dl,w_vp,1.0,kx);
 	kzsq=-a[0]/a[2];
 	if (kzsq >= 0 ) 
-	    x1=cmplx(sqrt(kzsq),0.0);
+	    x1=sf_cmplx(sqrtf(kzsq),0.0);
 	else
-	    x1=cmplx(0.0, -sqrt(-kzsq));
+	    x1=sf_cmplx(0.0, -sqrtf(-kzsq));
     }
     else{
 	coe(a,phi,ep,dl,w_vp,f,kx);
@@ -122,9 +124,9 @@ sf_complex kzani3d(float phi,float ep,float dl,float w_vp,float f,float kx,float
 	coe3d(a,0.0,ep,dl,w_vp,1.0,kx,ky);
 	kzsq=-a[0]/a[2];
 	if (kzsq >= 0 ) 
-	    x1=cmplx(sqrt(kzsq),0.0);
+	    x1=sf_cmplx(sqrtf(kzsq),0.0);
 	else
-	    x1=cmplx(0.0, -sqrt(-kzsq));
+	    x1=sf_cmplx(0.0, -sqrtf(-kzsq));
     }
     else{
 	coe3d(a,phi,ep,dl,w_vp,f,kx,ky);
@@ -149,15 +151,15 @@ sf_complex dkz(float phi,float ep,float dl,float w_vp,float f,float kx)
     //kkz1=kz1
     test=w_vp*w_vp-kx*kx;
     if (test >0.0)
-	kz=sqrt(test);
+	kz=sqrtf(test);
     else
 	kz=0.0;
 
-    if ( fabs(aimag(kz1)) <0.0000001*fabs(real(kz1)) )
-	dkzp=cmplx(fabs(real(kz1))-kz,0.0);    
-    //dkzp=cmplx(fabs(real(kz1)),0.0);
+    if ( fabsf(cimagf(kz1)) <0.0000001*fabsf(crealf(kz1)) )
+	dkzp=sf_cmplx(fabsf(crealf(kz1))-kz,0.0);    
+    //dkzp=sf_cmplx(fabsf(crealf(kz1)),0.0);
     else
-	dkzp=cmplx(0.0,-fabs(aimag(kz1)));
+	dkzp=sf_cmplx(0.0,-fabsf(cimagf(kz1)));
 
     return dkzp;
 }
@@ -171,16 +173,16 @@ sf_complex dkz3d(float phi,float ep,float dl,float w_vp,float f,float kx,float k
     //kkz1=kz1
     test=w_vp*w_vp-(kx*kx+ky*ky);
     if (test >0.0){
-	kz=sqrt(test);
+	kz=sqrtf(test);
     }
     else{
 	kz=0.0;
     }
-    if ( fabs(aimag(kz1)) <0.0000001*fabs(real(kz1)) )
-	dkzp=cmplx(fabs(real(kz1))-kz,0.0);    
-    //dkzp=cmplx(fabs(real(kz1)),0.0);
+    if ( fabsf(cimagf(kz1)) <0.0000001*fabsf(crealf(kz1)) )
+	dkzp=sf_cmplx(fabsf(crealf(kz1))-kz,0.0);    
+    //dkzp=sf_cmplx(fabsf(crealf(kz1)),0.0);
     else
-	dkzp=cmplx(0.0,-fabs(aimag(kz1)));
+	dkzp=sf_cmplx(0.0,-fabsf(cimagf(kz1)));
     return dkzp;
 }
 
@@ -191,13 +193,13 @@ sf_complex dphase(float phi,float ep,float dl,float w_vp,float f,float kx,float 
     float pshift;
 
     dkzp=dkz(phi,ep,dl,w_vp,f,kx);
-    if (fabs(real(dkzp))*0.000001 > fabs(aimag(dkzp))){
-	pshift=dz*real(dkzp);
-	dphp=cmplx(cos(pshift),sin(pshift));
+    if (fabsf(crealf(dkzp))*0.000001 > fabsf(cimagf(dkzp))){
+	pshift=dz*crealf(dkzp);
+	dphp=sf_cmplx(cosf(pshift),sinf(pshift));
     }
     else{
-	pshift=dz*(-fabs(aimag(dkzp)));
-	dphp=cmplx(exp(pshift),0.0);
+	pshift=dz*(-fabsf(cimagf(dkzp)));
+	dphp=sf_cmplx(exp(pshift),0.0);
     }
     return dphp;
 }
@@ -208,13 +210,13 @@ sf_complex dphase3d(float phi,float ep,float dl,float w_vp,float f,float kx,floa
     float pshift;
 
     dkzp=dkz3d(phi,ep,dl,w_vp,f,kx,ky);
-    if (fabs(real(dkzp))*0.000001 > fabs(aimag(dkzp))){
-	pshift=dz*real(dkzp);
-	dphp=cmplx(cos(pshift),sin(pshift));
+    if (fabsf(crealf(dkzp))*0.000001 > fabsf(cimagf(dkzp))){
+	pshift=dz*crealf(dkzp);
+	dphp=sf_cmplx(cosf(pshift),sinf(pshift));
     }
     else{
-	pshift=dz*(-fabs(aimag(dkzp)));
-	dphp=cmplx(exp(pshift),0.0);
+	pshift=dz*(-fabsf(cimagf(dkzp)));
+	dphp=sf_cmplx(exp(pshift),0.0);
     }
     return dphp;
 }
@@ -261,13 +263,13 @@ void dph(float phi,float ep,float dl,float w_vp,float f,float dkx,float dz,int m
     for (im=0;im<=weitm;im++){
 	kx=im*dkx;
 	dkzp=dkz(phi,ep,dl,w_vp,f,kx);
-	pshift=dz*real(dkzp);
-	dpp[im]=cmplx(cos(pshift),sin(pshift));
+	pshift=dz*crealf(dkzp);
+	dpp[im]=sf_cmplx(cosf(pshift),sinf(pshift));
     }
-    dkzpweitm=real( dkz(phi,ep,dl,w_vp,f,dkx*weitm));
-    dkzpweitm1=real( dkz(phi,ep,dl,w_vp,f,dkx*(weitm-1)));
+    dkzpweitm=crealf( dkz(phi,ep,dl,w_vp,f,dkx*weitm));
+    dkzpweitm1=crealf( dkz(phi,ep,dl,w_vp,f,dkx*(weitm-1)));
     bb=(dkzpweitm- dkzpweitm1)/dkx;
-    cc=fabs(real(dkz(phi,ep,dl,w_vp,f,weitm*dkx)-dkz(phi,ep,dl,w_vp,f,0.0*dkx)));
+    cc=fabsf(crealf(dkz(phi,ep,dl,w_vp,f,weitm*dkx)-dkz(phi,ep,dl,w_vp,f,0.0*dkx)));
     if (cc==0.0) cc=1.0;
     //printf("cc=%f,bb=%f\n",cc,bb); 
 
@@ -275,10 +277,10 @@ void dph(float phi,float ep,float dl,float w_vp,float f,float dkx,float dz,int m
     for (im=weitm+1;im<m;im++){
 	kx=weitm*dkx;
 	kx=(im-weitm)*dkx;
-	dkzp=cc*sin(1.0/cc*bb*kx)+dkz(phi,ep,dl,w_vp,f,weitm*dkx);
+	dkzp=cc*sinf(1.0/cc*bb*kx)+dkz(phi,ep,dl,w_vp,f,weitm*dkx);
 	//dkzp=dkz(phi,ep,dl,w_vp,f,kx);
-	pshift=dz*real(dkzp);
-	dpp[im]=cmplx(cos(pshift),sin(pshift));
+	pshift=dz*crealf(dkzp);
+	dpp[im]=sf_cmplx(cosf(pshift),sinf(pshift));
 	//if (dkx <0)
 	//  printf("im=%d,(%f,%f)\n",im,__real__ dpp[im], __imag__ dpp[im]);
     }
@@ -286,7 +288,7 @@ void dph(float phi,float ep,float dl,float w_vp,float f,float dkx,float dz,int m
     nn=(m-weitm-2)/2;
     for(im=weitm;im<=weitm+2*nn+1;im++){
 	if (im < m)
-	    dpp[im]*=0.8+0.1*( 1.0+cos((float)(im-weitm)*3.1415926/(float)(2*nn)  ));
+	    dpp[im]*=0.8+0.1*( 1.0+cosf((float)(im-weitm)*SF_PI/(float)(2*nn)  ));
     }
     //for(im=weitm+nn+nn+1;im<m;im++){
     //  dpp[im]*=0.9;
@@ -294,7 +296,7 @@ void dph(float phi,float ep,float dl,float w_vp,float f,float dkx,float dz,int m
   
 /*
   printf("ep=%f  dl=%f  w_vp=%f,f=%f, phi=%f\n",ep,dl,w_vp,f,phi);
-  printf("dpppppppppppppp=%f\n",real(dpp[0]));
+  printf("dpppppppppppppp=%f\n",crealf(dpp[0]));
   printf("wwwwwwwwwwwwwwwwwwwwww=%d\n",weitm);
 */
     //weight(1:275)=1.0; weight(276:m)=0.001
@@ -341,28 +343,28 @@ void dph3d(float phi,float ep,float dl,float w_vp,float f,float dkx,float dky,fl
 	for(imx=0;imx<mx;imx++){
 	    kx=imx*dkx;
 	    tmpr=(float)(imy*imy)/(float)(weitmy*weitmy)+(float)(imx*imx)/(float)(weitmx*weitmx);
-	    nn=sqrt((float)(my*my)/(float)(weitmy*weitmy))-1.0;
+	    nn=sqrtf((float)(my*my)/(float)(weitmy*weitmy))-1.0;
 	    if (tmpr >=1){
-		tmpr=sqrt(tmpr);
+		tmpr=sqrtf(tmpr);
 		kx1=kx/tmpr; ky1=ky/tmpr;
 		kx2=kx1*(1.0-dkx/kx1); ky2=ky1*(1.0-dkx/kx1);
 		if (imy==0){
-		    dkzpweitm=real(dkz3d(phi,ep,dl,w_vp,f,kx1,ky1));
-		    dkzpweitm1=real(dkz3d(phi,ep,dl,w_vp,f,kx2,ky2));
-		    dkzp0=real(dkz3d(phi,ep,dl,w_vp,f,0.0,0.0));
+		    dkzpweitm=crealf(dkz3d(phi,ep,dl,w_vp,f,kx1,ky1));
+		    dkzpweitm1=crealf(dkz3d(phi,ep,dl,w_vp,f,kx2,ky2));
+		    dkzp0=crealf(dkz3d(phi,ep,dl,w_vp,f,0.0,0.0));
 		    bb=(dkzpweitm-dkzpweitm1);
 		}
-		dkzp0=real(dkz3d(phi,ep,dl,w_vp,f,0.0,0.0)); 
-		dkzpweitm=real(dkz3d(phi,ep,dl,w_vp,f,kx1,ky1));
-		cc=fabs(dkzpweitm-dkzp0);
-		pshift=cc*sin(bb/cc*weitmx*(tmpr-1))+real(dkz3d(phi,ep,dl,w_vp,f,kx1,ky1));
+		dkzp0=crealf(dkz3d(phi,ep,dl,w_vp,f,0.0,0.0)); 
+		dkzpweitm=crealf(dkz3d(phi,ep,dl,w_vp,f,kx1,ky1));
+		cc=fabsf(dkzpweitm-dkzp0);
+		pshift=cc*sinf(bb/cc*weitmx*(tmpr-1))+crealf(dkz3d(phi,ep,dl,w_vp,f,kx1,ky1));
 		pshift=pshift*dz;
-		//pshift=-3.1415926/6.0;
-		phab=cmplx(cos(pshift),sin(pshift));
+		//pshift=-SF_PI/6.0;
+		phab=sf_cmplx(cosf(pshift),sinf(pshift));
 		dpp[i2(imy,imx,mx)]=phab;//dphase3d(phi,ep,dl,w_vp,f,kx1,ky1,dz)+phab;
 		//if (imy==0) printf("%d,%f,%f\n",imx,bb,cc);
 		//dpp[i2(imy,imx,mx)]=dphase3d(phi,ep,dl,w_vp,f,kx1,ky1,dz);
-		scale=0.2+0.4*( 1.0+cos(3.1415926*(tmpr-1.0)/nn));
+		scale=0.2+0.4*( 1.0+cosf(SF_PI*(tmpr-1.0)/nn));
 		if ((tmpr-1.0)>nn ) scale=0.2;
 		dpp[i2(imy,imx,mx)]*=scale;
 	    }
@@ -389,8 +391,8 @@ int weit(float phi,float ep,float dl,float w_vp,float f,float dkx,int m)
 	kx=im*dkx;
 	kz1=kzani(phi,ep,dl,w_vp,f,-kx);
 	kzp1=kzani(phi,ep,dl,w_vp,f,kx);
-	if ( fabs(aimag(kz1)) <0.0000001*fabs(real(kz1)) &&  fabs(aimag(kzp1)) <0.0000001*fabs(real(kzp1))){
-	    if (real(kz1) >w_vp*0.0 && real(kzp1) >w_vp*0.0  )
+	if ( fabsf(cimagf(kz1)) <0.0000001*fabsf(crealf(kz1)) &&  fabsf(cimagf(kzp1)) <0.0000001*fabsf(crealf(kzp1))){
+	    if (crealf(kz1) >w_vp*0.0 && crealf(kzp1) >w_vp*0.0  )
 		weight=1.00;
 	    else
 		weight=0.001;
@@ -404,13 +406,13 @@ int weit(float phi,float ep,float dl,float w_vp,float f,float dkx,int m)
     }
     if (im==m) weitm=m-2;
     if (phi==0.0) weitm-=2;
-    if ( phi<=15.0/180.0*3.1415926)
+    if ( phi<=15.0/180.0*SF_PI)
 	weitm=weitm*(1.0-1.0/4.0);
     else
 	weitm=weitm*(1-1.0/6.0);
   
     //printf("phi=%f,weitm=%d,m=%d\n",phi,weitm,m);
-    if (phi<=15.0/180.0*3.1415926 && weitm >1.5/3.0*m) weitm=1.5/3.0*m;
+    if (phi<=15.0/180.0*SF_PI && weitm >1.5/3.0*m) weitm=1.5/3.0*m;
     return weitm;
 }
 
@@ -428,8 +430,8 @@ void weit3d(float *weight,float phi,float ep,float dl,float w_vp,float f,float d
 	    im=i_my*mx+i_mx;
 	    kz1= kzani3d(phi,ep,dl,w_vp,f,-kx,ky);
 	    kzp1=kzani3d(phi,ep,dl,w_vp,f,kx,ky);
-	    if ( fabs(aimag(kz1)) <0.0000001*fabs(real(kz1)) &&  fabs(aimag(kzp1)) <0.0000001*fabs(real(kzp1))){
-		if (real(kz1) >w_vp*0.0 && real(kzp1) >w_vp*0.0  )
+	    if ( fabsf(cimagf(kz1)) <0.0000001*fabsf(crealf(kz1)) &&  fabsf(cimagf(kzp1)) <0.0000001*fabsf(crealf(kzp1))){
+		if (crealf(kz1) >w_vp*0.0 && crealf(kzp1) >w_vp*0.0  )
 		    weight[im]=1.00;
 		else
 		    weight[im]=0.001;
@@ -489,7 +491,7 @@ void phase_apro_matrix_cos(float *a,float dx,float dkx,int m,int n)
 	kx=i_m*dkx;
 	for(i_n=0;i_n<n; i_n++){ 
 	    x=i_n*dx;
-	    a[i2(i_m,i_n,n)]=cos(x*kx);
+	    a[i2(i_m,i_n,n)]=cosf(x*kx);
 	}
     }
 } 
@@ -510,7 +512,7 @@ void phase_apro_matrix_cos3d(float *a,float dx,float dy,float dkx,float dky,int 
 		for(i_nx=0;i_nx<nx;i_nx++){
 		    x=i_nx*dx;
 		    i_n=i_ny*nx+i_nx;
-		    a[i2(i_m,i_n,n)]=cos(y*ky)*cos(x*kx);
+		    a[i2(i_m,i_n,n)]=cosf(y*ky)*cosf(x*kx);
 		}
 	    }
 	}
@@ -528,7 +530,7 @@ void phase_apro_matrix_sin(float *a,float dx,float dkx,int m,int n)
 	kx=(i_m+1)*dkx;
 	for(i_n=0; i_n <n-1; i_n++){
 	    x=(i_n+1)*dx;
-	    a[i2(i_m,i_n,n-1)]=sin(x*kx); // ??????????????/
+	    a[i2(i_m,i_n,n-1)]=sinf(x*kx); // ??????????????/
 	}
     }
 }
@@ -549,7 +551,7 @@ void phase_apro_matrix_sin3d(float *a,float dx,float dy,float dkx,float dky,int 
 		for(i_nx=0;i_nx<nx-1;i_nx++){
 		    x=(i_nx+1)*dx;
 		    i_n=i_ny*(nx-1)+i_nx;
-		    a[i2(i_m,i_n,n)]=cos(y*ky)*sin(x*kx);
+		    a[i2(i_m,i_n,n)]=cosf(y*ky)*sinf(x*kx);
 
 		}
 	    } 
@@ -579,8 +581,8 @@ void convlv_coe(int m,int n,sf_complex *conap,sf_complex *conam,sf_complex *dpc,
     qrcon(qc,rc,dpc,conap,m,n);
     qrcon(qs,rs,dps,conas,m-1,n-1);
     for(i=1;i<n;i++){
-	conam[i]=0.5*conap[i]-0.5*(cmplx(0.0,1.0))*conas[i-1];
-	conap[i]=0.5*conap[i]+0.5*(cmplx(0.0,1.0))*conas[i-1];
+	conam[i]=0.5*conap[i]-0.5*(sf_cmplx(0.0,1.0))*conas[i-1];
+	conap[i]=0.5*conap[i]+0.5*(sf_cmplx(0.0,1.0))*conas[i-1];
     }
 //for (i=0;i<n;i++)
 //   printf("1conap[%d]=(%f,%f)\n",i+1,__real__ conap[i],__imag__ conap[i]);
@@ -594,7 +596,7 @@ void convlv_coe3d(int mx,int my,int nx,int ny,sf_complex *conap,sf_complex *cona
     int sing,im,i,m,n,mm1,nm1,imx,imy,imm,inx,iny,inm,in;
     m=mx*my; n=nx*ny; mm1=my*(mx-1); nm1=ny*(nx-1);
 //conas=(sf_complex *)malloc((nm1)*sizeof(sf_complex));
-    conas=allocatec(nm1);
+    conas=sf_complexalloc(nm1);
     for(imy=0;imy<my;imy++){
 	for(imx=0;imx<mx;imx++){
 	    im=imy*mx+imx;
@@ -618,8 +620,8 @@ void convlv_coe3d(int mx,int my,int nx,int ny,sf_complex *conap,sf_complex *cona
 	for(inx=1;inx<nx;inx++){
 	    in=iny*nx+inx;
 	    inm=iny*(nx-1)+inx-1;
-	    conam[in]=0.5*conap[in]-0.5*(cmplx(0.0,1.0))*conas[inm];
-	    conap[in]=0.5*conap[in]+0.5*(cmplx(0.0,1.0))*conas[inm];
+	    conam[in]=0.5*conap[in]-0.5*(sf_cmplx(0.0,1.0))*conas[inm];
+	    conap[in]=0.5*conap[in]+0.5*(sf_cmplx(0.0,1.0))*conas[inm];
 	}
     }
 
@@ -636,9 +638,9 @@ void ani_equation_con(float dx,float dkx,int m,int n,int weitm,float *qc,float *
     float *ma,*q,*tmpd;
     int  sing,im,in;
 
-    ma=allocatef(m*n);
-    q=allocatef(m*m);
-    tmpd=allocatef(n);
+    ma=sf_floatalloc(m*n);
+    q=sf_floatalloc(m*m);
+    tmpd=sf_floatalloc(n);
     //allocate(ma(m,n),q(m,m),tmpd(n))
 
     phase_apro_matrix_cos(ma,dx,dkx,m,n);
@@ -680,9 +682,9 @@ void ani_equation_con3d(float dx,float dy,float dkx,float dky,int mx,int my,int 
     float *ma,*q,*tmpd;
     int  sing,im,in,m,n,mm1,nm1,imx,imy,iwm;
     m=mx*my; n=nx*ny;
-    ma=allocatef(m*n);
-    q=allocatef(m*m);
-    tmpd=allocatef(n);
+    ma=sf_floatalloc(m*n);
+    q=sf_floatalloc(m*m);
+    tmpd=sf_floatalloc(n);
     //allocate(ma(m,n),q(m,m),tmpd(n))
     printf("1\n");
     phase_apro_matrix_cos3d(ma,dx,dy,dkx,dky,mx,my,nx,ny);
@@ -735,7 +737,7 @@ void ani_init(float dx,float dkx,int m,int n,int nweit,int *weitm,float *qc_tabl
     int nqc[2],nrc[2],nqs[2],nrs[2];
     float *qc,*rc,*qs,*rs;
     d3(m,n,nqc); d3(n,n,nrc); d3(m-1,n-1,nqs); d3(n-1,n-1,nrs); 
-    qc=allocatef(m*n); rc=allocatef(n*n); qs=allocatef((m-1)*(n-1)); rs=allocatef((n-1)*(n-1));
+    qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); qs=sf_floatalloc((m-1)*(n-1)); rs=sf_floatalloc((n-1)*(n-1));
     // qc(m,n),rc(n,n),qs(m-1,n-1),rs(n-1,n-1)
 
     for(iweit=0;iweit<nweit; iweit++){
@@ -765,8 +767,8 @@ void explicit_table3d(sf_complex *conapp,sf_complex *conapm,
     //float *qc,*rc,*qs,*rs,*weight;
     sf_complex *dppc,*dpps;
     m=my*mx; n=ny*nx; mm1=my*(mx-1); nm1=ny*(nx-1);
-    //qc=allocatef(m*n); rc=allocatef(n*n); qs=allocatef(mm1*nm1); rs=allocatef(nm1*nm1); weight=allocatef(m);
-    dppc=allocatec(m); dpps=allocatec(m);
+    //qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); qs=sf_floatalloc(mm1*nm1); rs=sf_floatalloc(nm1*nm1); weight=sf_floatalloc(m);
+    dppc=sf_complexalloc(m); dpps=sf_complexalloc(m);
     printf("bbbbbbbbbbbbb\n");
     //weit3d(weight,phi,ep,dl,w_vp,f,dkx,dky,mx,my);
     dph3d(phi,ep,dl,w_vp,f,dkx,dky,dz,mx,my,dppc,weight);
@@ -794,8 +796,8 @@ void explicit_table2d(sf_complex *conapp,sf_complex *conapm,
     my=1; ny=1; dy=dx; dky=dkx;
     sf_complex *dppc,*dpps;
     m=my*mx; n=ny*nx; mm1=my*(mx-1); nm1=ny*(nx-1);
-    qc=allocatef(m*n); rc=allocatef(n*n); qs=allocatef(mm1*nm1); rs=allocatef(nm1*nm1); weight=allocatef(m);
-    dppc=allocatec(m); dpps=allocatec(m);
+    qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); qs=sf_floatalloc(mm1*nm1); rs=sf_floatalloc(nm1*nm1); weight=sf_floatalloc(m);
+    dppc=sf_complexalloc(m); dpps=sf_complexalloc(m);
     printf("bbbbbbbbbbbbb\n");
     weit3d(weight,phi,ep,dl,w_vp,f,dkx,dky,mx,my);
     dph3d(phi,ep,dl,w_vp,f,dkx,dky,dz,mx,my,dppc,weight);
@@ -829,16 +831,16 @@ void explicit_table(sf_complex *contablepp,sf_complex *contablepm,
     printf("begin 11111\n");
     d3(m,n,nqc); d3(n,n,nrc); d3(m-1,n-1,nqs); d3(n-1,n-1,nrs); d4(n_ep,n_dl,n,nconp);
     printf("begin 22222\n");
-    weitm=allocatei(m);
+    weitm=sf_intalloc(m);
     printf("begin 33333\n");
     nweit=weitmlist(weitm,phi,dkx,f,m,o_ep,d_ep,n_ep,o_dl,d_dl,n_dl,o_w_vp,d_w_vp,n_w_vp);
     printf("begin 44444\n");
     printf("mmmm=%d,nweit=%d\n",m,nweit);
-    conapp=allocatec(n); conapm=allocatec(n); dppc=allocatec(m); dpps=allocatec(m);
-    qc_table=allocatef(nweit*m*n); 
-    rc_table=allocatef(nweit*n*n); 
-    qs_table=allocatef(nweit*(m-1)*(n-1) ); rs_table=allocatef(nweit*(n-1)*(n-1));
-    qc=allocatef(m*n); rc=allocatef(n*n); qs=allocatef((m-1)*(n-1)); rs=allocatef((n-1)*(n-1));
+    conapp=sf_complexalloc(n); conapm=sf_complexalloc(n); dppc=sf_complexalloc(m); dpps=sf_complexalloc(m);
+    qc_table=sf_floatalloc(nweit*m*n); 
+    rc_table=sf_floatalloc(nweit*n*n); 
+    qs_table=sf_floatalloc(nweit*(m-1)*(n-1) ); rs_table=sf_floatalloc(nweit*(n-1)*(n-1));
+    qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); qs=sf_floatalloc((m-1)*(n-1)); rs=sf_floatalloc((n-1)*(n-1));
 
 //write(*,*) "begin ani_init"
     ani_init(dx,dkx,m,n,nweit,weitm,qc_table,rc_table,qs_table,rs_table);
@@ -905,12 +907,12 @@ void explicit_table(sf_complex *contablepp,sf_complex *contablepm,
 		    contablepm[i4(i_w_vp,i_ep,i_dl,in,nconp)]=conapm[in];  //contablepm(:,i_dl,i_ep,i_w_vp)=conapm(:)
 		}
       
-		if (d_ep>fabs(ep) && d_dl>fabs(dl)){
+		if (d_ep>fabsf(ep) && d_dl>fabsf(dl)){
 		    for(in=0;in<n;in++){
-			contablepp[i4(i_w_vp,i_ep,i_dl,in,nconp)]=cmplx(0.0,0.0);
-			contablepm[i4(i_w_vp,i_ep,i_dl,in,nconp)]=cmplx(0.0,0.0);
+			contablepp[i4(i_w_vp,i_ep,i_dl,in,nconp)]=sf_cmplx(0.0,0.0);
+			contablepm[i4(i_w_vp,i_ep,i_dl,in,nconp)]=sf_cmplx(0.0,0.0);
 		    }
-		    contablepp[i4(i_w_vp,i_ep,i_dl,0,nconp)]=cmplx(1.0,0.0);
+		    contablepp[i4(i_w_vp,i_ep,i_dl,0,nconp)]=sf_cmplx(1.0,0.0);
 		}
 	    }
 	}
@@ -925,7 +927,10 @@ void explicit_table(sf_complex *contablepp,sf_complex *contablepm,
 }
 
 int weitmlist(int *weitm,float phi,float dkx,float f,int m,
-	      float o_ep,float d_ep,int n_ep,float o_dl,float d_dl,int n_dl,float o_w_vp,float d_w_vp,int n_w_vp)
+	      float o_ep,float d_ep,int n_ep,
+	      float o_dl,float d_dl,int n_dl,
+	      float o_w_vp,float d_w_vp,int n_w_vp)
+/*< WEI >*/
 {
     int i_w_vp, i_ep,i_dl;
     float w_vp,ep,dl;
@@ -933,7 +938,7 @@ int weitmlist(int *weitm,float phi,float dkx,float f,int m,
     int *weitm_tmp;
     int nweit,iweit;
     /*
-      weitm_tmp=allocatei(m);  
+      weitm_tmp=sf_intalloc(m);  
       printf("weit1\n");
       nweit=0;
       for(i_w_vp=0;i_w_vp<n_w_vp; i_w_vp++){
@@ -971,49 +976,49 @@ float kycoe3d(float phi,float ep,float dl,float w_vp,float f, float kx,float kz)
     float A,B,C,D,E,F;
     float b0,b2,b4;
     float b24ac,ab,ky,ky2;
-    sinphi=-sin(phi); cosphi=cos(phi);
-    fm1=f-1; epdl=ep-dl; sin2phi=-sin(2.0*phi); cos2phi=cos(2.0*phi); sin4phi=-sin(4.0*phi);
+    sinphi=-sinf(phi); cosphi=cosf(phi);
+    fm1=f-1; epdl=ep-dl; sin2phi=-sinf(2.0*phi); cos2phi=cosf(2.0*phi); sin4phi=-sinf(4.0*phi);
     //printf("sin=%f\n",sinphi);
     A=f-1;
     B=(f-1.0)*(1.0+2.0*ep);
     C=2.0*( (f-1.0)*(1.0+ep)-f*(ep-dl)    );
     D=(2.0+2.0*ep-f)*w_vp*w_vp;
     E=w_vp*w_vp*(2.0-f);
-    F=-pow(w_vp,4);
+    F=-powf(w_vp,4);
    
-    //printf("pow=%f,%f,%f,%f\n",pow(cosphi,4),A,B,C);   
-    b4=B; b2=(B*(2.0*pow(sinphi,2))+C*pow(cosphi,2))*pow(kz,2)+(B*4.0*(cosphi*sinphi*kx)-C*2.0*cosphi*sinphi*kx)*kz+
-	      B*2.0*pow(cosphi*kx,2)+C*pow(sinphi*kx,2)+D+E;
-    b0=(A*pow(cosphi,4)+B*pow(sinphi,4)+C*pow(cosphi*sinphi,2))*pow(kz,4)+((-A*4.0*pow(cosphi,3)*sinphi+4.0*B*cosphi*pow(sinphi,3)+2.0*C*(pow(cosphi,3)*sinphi-cosphi*pow(sinphi,3) ))*kx)*pow(kz,3)+(A*6.0*pow(cosphi*sinphi*kx,2)+
-																								      B*( 6.0*pow(cosphi*sinphi*kx,2))+ 
-																								      C*( pow(cosphi,2)*pow(cosphi*kx,2)+pow(sinphi,4)*kx*kx- 4.0*pow(cosphi*sinphi*kx,2))+D*pow(sinphi,2)+E*pow(cosphi,2))*pow(kz,2)+(A*(-4.0*cosphi*pow(sinphi*kx,3) )+B*4.0*(sinphi*pow(cosphi*kx,3))+
+    //printf("pow=%f,%f,%f,%f\n",powf(cosphi,4),A,B,C);   
+    b4=B; b2=(B*(2.0*powf(sinphi,2))+C*powf(cosphi,2))*powf(kz,2)+(B*4.0*(cosphi*sinphi*kx)-C*2.0*cosphi*sinphi*kx)*kz+
+	      B*2.0*powf(cosphi*kx,2)+C*powf(sinphi*kx,2)+D+E;
+    b0=(A*powf(cosphi,4)+B*powf(sinphi,4)+C*powf(cosphi*sinphi,2))*powf(kz,4)+((-A*4.0*powf(cosphi,3)*sinphi+4.0*B*cosphi*powf(sinphi,3)+2.0*C*(powf(cosphi,3)*sinphi-cosphi*powf(sinphi,3) ))*kx)*powf(kz,3)+(A*6.0*powf(cosphi*sinphi*kx,2)+
+																								      B*( 6.0*powf(cosphi*sinphi*kx,2))+ 
+																								      C*( powf(cosphi,2)*powf(cosphi*kx,2)+powf(sinphi,4)*kx*kx- 4.0*powf(cosphi*sinphi*kx,2))+D*powf(sinphi,2)+E*powf(cosphi,2))*powf(kz,2)+(A*(-4.0*cosphi*powf(sinphi*kx,3) )+B*4.0*(sinphi*powf(cosphi*kx,3))+
 																																								       D*2.0*cosphi*sinphi*kx-2.0*E*cosphi*sinphi*kx+
-																																								       C*( 2.0*cosphi*pow(sinphi*kx,3) -2.0*cosphi*sinphi*kx*(pow(cosphi*kx,2))))*kz+A*pow(sinphi*kx,4)+B*pow(cosphi*kx,4)+C*pow(sinphi*kx,2)*pow(cosphi*kx,2)+D*pow(cosphi*kx,2)+E*pow(sinphi*kx,2)+F;
+																																								       C*( 2.0*cosphi*powf(sinphi*kx,3) -2.0*cosphi*sinphi*kx*(powf(cosphi*kx,2))))*kz+A*powf(sinphi*kx,4)+B*powf(cosphi*kx,4)+C*powf(sinphi*kx,2)*powf(cosphi*kx,2)+D*powf(cosphi*kx,2)+E*powf(sinphi*kx,2)+F;
 
 
     //printf("b0=%f,b2=%f,b4=%f\n",b0,b2,b4);
 
-    b0=(fm1+2.0*ep*fm1*pow(sinphi,2)-f/2.0*epdl*pow(sin2phi,2))*pow(kz,4)+
-	((2.0*fm1*ep*sin2phi-f*epdl*sin4phi)*kx)*pow(kz,3)+
-	(( 2*(f-1.0)*(1.0+ep)-f*epdl*(2.0*cos2phi*cos2phi-sin2phi*sin2phi ) )*kx*kx+w_vp*w_vp*(2.0*ep*sinphi*sinphi+2.0-f))*pow(kz,2)+
-	(pow(kx,3)*(2.0*(f-1.0)*ep*sin2phi+f*epdl*sin4phi)+2.0*ep*pow(w_vp,2)*sin2phi*kx)*kz+
-	pow(kx,4)*( fm1*(1.0+2.0*ep*cosphi*cosphi)-f*0.5*epdl*sin2phi*sin2phi  )+pow(w_vp*kx,2)*(2.0-f+2.0*ep*cosphi*cosphi)-pow(w_vp,4);
+    b0=(fm1+2.0*ep*fm1*powf(sinphi,2)-f/2.0*epdl*powf(sin2phi,2))*powf(kz,4)+
+	((2.0*fm1*ep*sin2phi-f*epdl*sin4phi)*kx)*powf(kz,3)+
+	(( 2*(f-1.0)*(1.0+ep)-f*epdl*(2.0*cos2phi*cos2phi-sin2phi*sin2phi ) )*kx*kx+w_vp*w_vp*(2.0*ep*sinphi*sinphi+2.0-f))*powf(kz,2)+
+	(powf(kx,3)*(2.0*(f-1.0)*ep*sin2phi+f*epdl*sin4phi)+2.0*ep*powf(w_vp,2)*sin2phi*kx)*kz+
+	powf(kx,4)*( fm1*(1.0+2.0*ep*cosphi*cosphi)-f*0.5*epdl*sin2phi*sin2phi  )+powf(w_vp*kx,2)*(2.0-f+2.0*ep*cosphi*cosphi)-powf(w_vp,4);
 
     b4=fm1*(1.0+2.0*ep);
-    b2=pow(kx,2)*( fm1*(2.0*(1.0+ep)+2.0*ep*cosphi*cosphi)-2.0*f*epdl*sinphi*sinphi)+pow(w_vp,2)*(4.0+2.0*ep-2.0*f)+
-	2.0*sin2phi*kx*( (f-1.0)*ep+f*epdl)*kz+2.0*( (f-1.0)*(1.0+ep)+(f-1.0)*ep*sinphi*sinphi-f*epdl*cosphi*cosphi)*pow(kz,2);
+    b2=powf(kx,2)*( fm1*(2.0*(1.0+ep)+2.0*ep*cosphi*cosphi)-2.0*f*epdl*sinphi*sinphi)+powf(w_vp,2)*(4.0+2.0*ep-2.0*f)+
+	2.0*sin2phi*kx*( (f-1.0)*ep+f*epdl)*kz+2.0*( (f-1.0)*(1.0+ep)+(f-1.0)*ep*sinphi*sinphi-f*epdl*cosphi*cosphi)*powf(kz,2);
     //printf("b0=%f,b2=%f,b4=%f,b^2-4ac=%f\n",b0,b2,b4,b2*b2-4*b4*b0);
     b24ac=b2*b2-4.0*b4*b0;
     ab=b4*b2;
     if (b24ac*10E9>0.0){
 	if (ab*10E9<0.0){
           
-	    ky=sqrt((-b2-sqrt(b24ac))/(2.0*b4));
-	    ky2=sqrt((-b2+sqrt(b24ac))/(2.0*b4));
-	    //printf("ky=%f,ky2=%f,%f,%f,%f\n",ky,ky2,b24ac,(-b2+sqrt(b24ac))/(2.0*b4),ab);
-	    if ((-b2+sqrt(b24ac))/(2.0*b4)>0) ky=ky2;
+	    ky=sqrtf((-b2-sqrtf(b24ac))/(2.0*b4));
+	    ky2=sqrtf((-b2+sqrtf(b24ac))/(2.0*b4));
+	    //printf("ky=%f,ky2=%f,%f,%f,%f\n",ky,ky2,b24ac,(-b2+sqrtf(b24ac))/(2.0*b4),ab);
+	    if ((-b2+sqrtf(b24ac))/(2.0*b4)>0) ky=ky2;
 	    else ky=0.0;
-	    //if (ky2>0) ky=sqrt(ky2);
+	    //if (ky2>0) ky=sqrtf(ky2);
 	    //else ky=0.0;
 	    //if (ky>ky2) ky=ky2;
 	}
@@ -1032,7 +1037,7 @@ void kzvti(sf_complex *sz,float dsx,float ep,float dl,int nsx){
     int isx;
     for (isx=0;isx<nsx;isx++){
 	sx=isx*dsx;
-	sz[isx]=sqrt((1-sx*sx*(1+2*ep))/(1-sx*sx*2.0*(ep-dl)))-1.0;
+	sz[isx]=sqrtf((1-sx*sx*(1+2*ep))/(1-sx*sx*2.0*(ep-dl)))-1.0;
 
     }
 }
@@ -1070,7 +1075,7 @@ void qrsolver(float **leftmatrix,sf_complex *kz,sf_complex *conap,int m,int n)
     float *q,*qc,*rc,*tmpd;
     int sing;
     int im,in; 
-    q=allocatef(m*m); qc=allocatef(m*n); rc=allocatef(n*n); tmpd=allocatef(n);
+    q=sf_floatalloc(m*m); qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); tmpd=sf_floatalloc(n);
   
     qrdcmp(*leftmatrix,m,n,tmpd,sing);
     qrdpost(*leftmatrix,m,n,tmpd,q,rc);
@@ -1089,19 +1094,19 @@ void imfd1coesolver(float ep,float dl,int nsxall, float *alpha1,float *beta1)
     int nsx,nfd1=2;
     int isx,in,stat;
     float dsx,sx,weight,maxsx;
-    maxsx=sqrt(1.0/(1.0+2.0*ep));
+    maxsx=sqrtf(1.0/(1.0+2.0*ep));
     dsx=maxsx/(nsxall-1);
-    sz=allocatec(nsxall);  conapfd1=allocatec(nfd1);
+    sz=sf_complexalloc(nsxall);  conapfd1=sf_complexalloc(nfd1);
     kzvti(sz,dsx,ep,dl,nsxall);
     for(isx=nsxall-1;isx>=0; isx--){
 	sx=isx*dsx;
-	if (sqrt(sx*sx/(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0)))<=sin(65.0/180.0*3.1415926)) break;
+	if (sqrtf(sx*sx/(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0)))<=sinf(65.0/180.0*SF_PI)) break;
     }
     nsx=isx;
-    leftmatrixfd1=allocate_f2(nsx,nfd1);
+    leftmatrixfd1=sf_floatalloc2(nsx,nfd1);
     implicitleftmatrixisovtifd1(leftmatrixfd1,sz,nsx,dsx);
     for(isx=0;isx<nsx;isx++){
-	weight=sqrt(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0))/(sz[isx]+1.0);
+	weight=sqrtf(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0))/(sz[isx]+1.0);
 	sz[isx]=sz[isx]*weight;
 	for(in=0;in<nfd1;in++){
 	    leftmatrixfd1[isx][in]=leftmatrixfd1[isx][in]*weight;
@@ -1110,7 +1115,7 @@ void imfd1coesolver(float ep,float dl,int nsxall, float *alpha1,float *beta1)
     qrsolver(leftmatrixfd1,sz,conapfd1,nsx,nfd1);
     *beta1=__real__ conapfd1[0];      
     *alpha1=__real__ conapfd1[1];  
-    free(sz); free_f2(leftmatrixfd1); free(conapfd1);
+    free(sz); free(*leftmatrixfd1); free(leftmatrixfd1); free(conapfd1);
 }
 
 
@@ -1121,29 +1126,29 @@ void imfd2coesolver(float ep,float dl,int nsxall, float *alpha1,float *alpha2,fl
     int nsx,nfd2=4;
     int isx,in,stat;
     float dsx,sx,b2,b4,a2,a4,weight,maxsx;
-    maxsx=sqrt(1.0/(1.0+2.0*ep));
+    maxsx=sqrtf(1.0/(1.0+2.0*ep));
     dsx=maxsx/(nsxall-1);
-    sz=allocatec(nsxall);  conapfd2=allocatec(nfd2);
+    sz=sf_complexalloc(nsxall);  conapfd2=sf_complexalloc(nfd2);
     kzvti(sz,dsx,ep,dl,nsxall);
     for(isx=nsxall-1;isx>=0; isx--){
 	sx=isx*dsx;
-	if (sqrt(sx*sx/(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0)))<=sin(83.5/180.0*3.1415926)) break;
+	if (sqrtf(sx*sx/(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0)))<=sinf(83.5/180.0*SF_PI)) break;
     }
     nsx=isx;
-    leftmatrixfd2=allocate_f2(nsx,nfd2);
+    leftmatrixfd2=sf_floatalloc2(nsx,nfd2);
     implicitleftmatrixisovtifd2(leftmatrixfd2,sz,nsx,dsx);
     for(isx=0;isx<nsx;isx++){
-	weight=sqrt(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0))/(sz[isx]+1.0);
-	sz[isx]=sz[isx]*weight*weight*pow(weight,0.75);
+	weight=sqrtf(sx*sx+(sz[isx]+1.0)*(sz[isx]+1.0))/(sz[isx]+1.0);
+	sz[isx]=sz[isx]*weight*weight*powf(weight,0.75);
 	for(in=0;in<nfd2;in++){
-	    leftmatrixfd2[isx][in]=leftmatrixfd2[isx][in]*weight*weight*pow(weight,0.75);
+	    leftmatrixfd2[isx][in]=leftmatrixfd2[isx][in]*weight*weight*powf(weight,0.75);
 	}
     } 
     qrsolver(leftmatrixfd2,sz,conapfd2,nsx,nfd2);
     b2=__real__ conapfd2[0]; b4=__real__ conapfd2[1]; a2=__real__ conapfd2[2]; a4=__real__ conapfd2[3];
-    *beta1=0.5*(b2+sqrt(b2*b2-4*b4));     *beta2=0.5*(b2-sqrt(b2*b2-4*b4));
+    *beta1=0.5*(b2+sqrtf(b2*b2-4*b4));     *beta2=0.5*(b2-sqrtf(b2*b2-4*b4));
     *alpha1=(a4-a2*(*beta1))/((*beta2)-(*beta1));  *alpha2=(a4-a2*(*beta2))/((*beta1)-(*beta2));
-    free(sz); free_f2(leftmatrixfd2); free(conapfd2);
+    free(sz); free(*leftmatrixfd2); free(leftmatrixfd2); free(conapfd2);
 }
 
 

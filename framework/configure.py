@@ -944,9 +944,6 @@ pkg['blas'] = {'fedora':'blas + blas-devel + atlas + atlas-devel',
 
 def blas(context):
     context.Message("checking for BLAS ... ")
-    LIBS = path_get(context,'LIBS')
-    blas = context.env.get('BLAS','blas')
-    LIBS.append(blas)
     text = '''
     #ifdef __APPLE__
     #include <vecLib/vBLAS.h>
@@ -963,35 +960,45 @@ def blas(context):
     return 0;
     }\n'''
 
+    if plat['OS'] == 'cygwin':
+        context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
+                                         ':/lib/lapack'
+        
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
-        context.env['LIBS'] = LIBS
-        context.env['BLAS'] = blas
-        if plat['OS'] == 'cygwin':
-            context.env['ENV']['PATH'] = context.env['ENV']['PATH'] + \
-                                         ':/lib/lapack'
     else:
-        # some systems require cblas and atlas
-        for atlas_dir in ('/usr/lib64/atlas/','/usr/lib/atlas/'):
-            if os.path.isdir(atlas_dir):
-                context.env['LIBPATH'].append(atlas_dir)
-        LIBS.pop()
-        LIBS.append('cblas')
-        LIBS.append('atlas')
+        # first try blas
+        LIBS = path_get(context,'LIBS')
+        blas = context.env.get('BLAS','blas')
+        LIBS.append(blas)
         res = context.TryLink(text,'.c')
         if res:
             context.Result(res)
             context.env['LIBS'] = LIBS
-            context.env['BLAS'] = 'cblas'
-        else:
-            context.Result(context_failure)
-            context.env['CPPDEFINES'] = \
-                path_get(context,'CPPDEFINES','NO_BLAS')
+            context.env['BLAS'] = blas
+        else:       
+            # some systems require cblas and atlas
+            for atlas_dir in filter(os.path.isdir,
+                                    ['/usr/lib64/atlas/',
+                                     '/usr/lib/atlas/']):
+                context.env['LIBPATH'].append(atlas_dir)
             LIBS.pop()
-            LIBS.pop()
-            context.env['BLAS'] = None
-            need_pkg('blas', fatal=False)
+            LIBS.append('cblas')
+            LIBS.append('atlas')
+            res = context.TryLink(text,'.c')
+            if res:
+                context.Result(res)
+                context.env['LIBS'] = LIBS
+                context.env['BLAS'] = 'cblas'
+            else:
+                context.Result(context_failure)
+                context.env['CPPDEFINES'] = \
+                    path_get(context,'CPPDEFINES','NO_BLAS')
+                LIBS.pop()
+                LIBS.pop()
+                context.env['BLAS'] = None
+                need_pkg('blas', fatal=False)
 
 def lapack(context):
     context.Message("checking for LAPACK ... ")

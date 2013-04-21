@@ -767,3 +767,47 @@ void li_filter_fd2(sf_complex *wld_z,float w_v0_z,float a1,float b1,float a2,flo
     }
 
 }
+
+void shot_ani_convlv(sf_complex *wld_z,float *v_z,float *ep_z,float *dl_z,float w,struct shot_ker_par_type ker_par,struct shot_ker_ani_type ani_par,int signn)
+{
+    float w_vp,ep,dl;
+    int nx,ny;
+    sf_complex  *tmpwld_z; //(:,:)
+    sf_complex *conapp,*conapm;
+    int  iy,ix,ic,i;
+    nx=ker_par.nx; ny=ker_par.ny;
+    tmpwld_z=ker_par.tmp_wld;   //allocate(tmpwld_z(nx,ny)) ker_par.tmp_wld is allocated in ker_init in kernal.c
+    conapp=ani_par.conapp; conapm=ani_par.conapm; 
+    // both  ani_par.conapp ani_par.conapm allocated in ker_ani_init() released in ker_ani_release
+
+    vector_cp_c(tmpwld_z,wld_z,nx*ny); //tmpwld_z=wld_z;
+    vector_value_c(wld_z,cmplx(0.0,0.0),nx*ny);
+    for( iy=0;iy<ny;iy++){
+	for(ix=0;ix<nx;ix++){
+	    w_vp=w/v_z[i2(iy,ix,nx)]; ep=ep_z[i2(iy,ix,nx)]; dl=dl_z[i2(iy,ix,nx)];
+	    if (ep == 0.0 && dl==0.0) wld_z[i2(iy,ix,nx)]=tmpwld_z[i2(iy,ix,nx)];
+	    else{
+		//printf("%d,%f,%f,%f\n",ix,w_vp,ep,dl);
+		get_convlv_coe(w_vp,ep,dl,&ani_par);
+         
+		if (signn==+1) {
+		    for(ic=0;ic<ani_par.n;ic++){
+			conapp[ic]=conjg(conapp[ic]); conapm[ic]=conjg(conapm[ic]);
+		    } //for(ic)
+		}
+		//for (ic=0;ic<ani_par.n;ic++){
+		//  printf("conapp[%d]=(%f,%f),conapm[%d]=(%f,%f)\n",ic,__real__ conapp[ic],__imag__ conapp[ic],ic,__real__ conapm[ic],__imag__ conapm[ic]);
+		//}       
+ 
+		wld_z[i2(iy,ix,nx)]=conapp[0]*tmpwld_z[i2(iy,ix,nx)];
+		for(ic=1;ic<=ani_par.n-1;ic++){
+		    if (ix+ic <nx ) wld_z[i2(iy,ix,nx)]+=conapp[ic]*tmpwld_z[i2(iy,ix+ic,nx)];
+		    if (ix-ic >= 0 )wld_z[i2(iy,ix,nx)]+=conapm[ic]*tmpwld_z[i2(iy,ix-ic,nx)]; 
+		}// for(ic)
+        
+
+	    }// if
+	}// for(ix) 
+    }// for(iy)
+
+}

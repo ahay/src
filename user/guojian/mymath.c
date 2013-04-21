@@ -68,6 +68,7 @@ void thrnew(sf_complex *a, sf_complex *b,sf_complex *c,
 
 
 void p4solver(float *a, sf_complex* z) 
+/*< solver >*/
 {
     sf_complex y[3];
     float b3,b2,b1,b0,b[4];
@@ -145,13 +146,14 @@ void p3solver(float* a, sf_complex* x)
 } 
 
 
-void qrdcmp(float* a,int m,int n,float* d,int sing){
-// a(m,n) d(n)
+void qrdcmp(float* a,int m,int n,float* d,int sing)
+/*< QR >*/
+{
     float scale,sigma,sum,tau;
     float* c;
     int i,j,k;
 
-    c=(float *)malloc(n*sizeof(float)); 
+    c=sf_floatalloc(n); 
     scale=0.0;
     sing=0;
 
@@ -191,15 +193,15 @@ void qrdcmp(float* a,int m,int n,float* d,int sing){
 
 
 void qrdpost(float* a,int m,int n,float* d,float* q,float* r)
+/*< QR >*/
 {
-// a[m][n] d[n] q[m][m] r[n][n]
     float* qt; 
     float  *qtr,*atr;
     int k,l,i,j; 
     float con,akicon;   
 
 
-    qt=(float *)malloc(m*m*sizeof(float));  
+    qt=sf_floatalloc(m*m);  
     qtr=sf_floatalloc(m*m); atr=sf_floatalloc(m*n);
     for(i=0;i<n;i++)
 	for(j=0;j<m;j++)
@@ -262,8 +264,10 @@ void qrdpost(float* a,int m,int n,float* d,float* q,float* r)
 }
 
 
-void qrcon(float* q,float* r,sf_complex* dpp,sf_complex* conap,int m,int n){
-// q(m,n) r(n,n) dpp(m) conap(n)
+void qrcon(float* q,float* r,
+	   sf_complex* dpp,sf_complex* conap,int m,int n)
+/*< QR >*/
+{
     int i_n,i_m; 
     for(i_n=0; i_n<n; i_n++){ 
 	conap[i_n]=sf_cmplx(0.0,0.0);
@@ -289,8 +293,8 @@ void uptrisolver(float* r,sf_complex* conap,int n)
 
 
 sf_complex chooseproot(sf_complex *allroot)
+/*< choose positive root >*/
 {
-// allroot(4)
     sf_complex  z1,z2,z3,z4,x1,x2;
     sf_complex  z[4],xx1,xx2,tmpxx,zz[2];
     int i,j,k;

@@ -21,6 +21,7 @@
 
 #include "anikernel.h"
 #include "ani.h"
+#include "arrayindex.h"
 
 #ifndef _anikernel_h
 
@@ -51,7 +52,7 @@ struct shot_ker_ani_type shot_ker_ani_init(float *phi,int nx,float dx,float dy,f
     float pphi,dkx,oangle,dangle;
     int stat,blocksize;
 
-    pphi=fabs(*phi);
+    pphi=fabsf(*phi);
     anitable=sf_input("Extable");
   
     sf_histfloat(anitable,"o5",&oangle);
@@ -126,7 +127,7 @@ struct shot_ker_ani_type shot_ker_ani_init_impulse(float phi,int nx,float dx,flo
     float pphi,dkx;
 
     printf("begin here\n");
-    pphi=fabs(phi);
+    pphi=fabsf(phi);
     f=1.0-10.0*10.0/(27.0*27.0);
     f=0.6913580;
     o_ep=0.03; d_ep=0.01; n_ep=40; o_dl=0.0; d_dl=0.01; n_dl=5; o_w_vp=0.003; d_w_vp=0.001; n_w_vp=200;
@@ -166,49 +167,6 @@ void shot_ker_ani_release(struct shot_ker_ani_type *ani_par){
 }
 
 
-void shot_ani_convlv(sf_complex *wld_z,float *v_z,float *ep_z,float *dl_z,float w,struct shot_ker_par_type ker_par,struct shot_ker_ani_type ani_par,int signn)
-{
-    float w_vp,ep,dl;
-    int nx,ny;
-    sf_complex  *tmpwld_z; //(:,:)
-    sf_complex *conapp,*conapm;
-    int  iy,ix,ic,i;
-    nx=ker_par.nx; ny=ker_par.ny;
-    tmpwld_z=ker_par.tmp_wld;   //allocate(tmpwld_z(nx,ny)) ker_par.tmp_wld is allocated in ker_init in kernal.c
-    conapp=ani_par.conapp; conapm=ani_par.conapm; 
-    // both  ani_par.conapp ani_par.conapm allocated in ker_ani_init() released in ker_ani_release
-
-    vector_cp_c(tmpwld_z,wld_z,nx*ny); //tmpwld_z=wld_z;
-    vector_value_c(wld_z,cmplx(0.0,0.0),nx*ny);
-    for( iy=0;iy<ny;iy++){
-	for(ix=0;ix<nx;ix++){
-	    w_vp=w/v_z[i2(iy,ix,nx)]; ep=ep_z[i2(iy,ix,nx)]; dl=dl_z[i2(iy,ix,nx)];
-	    if (ep == 0.0 && dl==0.0) wld_z[i2(iy,ix,nx)]=tmpwld_z[i2(iy,ix,nx)];
-	    else{
-		//printf("%d,%f,%f,%f\n",ix,w_vp,ep,dl);
-		get_convlv_coe(w_vp,ep,dl,&ani_par);
-         
-		if (signn==+1) {
-		    for(ic=0;ic<ani_par.n;ic++){
-			conapp[ic]=conjg(conapp[ic]); conapm[ic]=conjg(conapm[ic]);
-		    } //for(ic)
-		}
-		//for (ic=0;ic<ani_par.n;ic++){
-		//  printf("conapp[%d]=(%f,%f),conapm[%d]=(%f,%f)\n",ic,__real__ conapp[ic],__imag__ conapp[ic],ic,__real__ conapm[ic],__imag__ conapm[ic]);
-		//}       
- 
-		wld_z[i2(iy,ix,nx)]=conapp[0]*tmpwld_z[i2(iy,ix,nx)];
-		for(ic=1;ic<=ani_par.n-1;ic++){
-		    if (ix+ic <nx ) wld_z[i2(iy,ix,nx)]+=conapp[ic]*tmpwld_z[i2(iy,ix+ic,nx)];
-		    if (ix-ic >= 0 )wld_z[i2(iy,ix,nx)]+=conapm[ic]*tmpwld_z[i2(iy,ix-ic,nx)]; 
-		}// for(ic)
-        
-
-	    }// if
-	}// for(ix) 
-    }// for(iy)
-
-}
 
 void inadd(sf_complex *app,sf_complex *p,float scale,int n){
     int i;
@@ -244,7 +202,7 @@ void  get_convlv_coe(float w_vp,float ep,float dl,struct shot_ker_ani_type *ani_
     p000=i_dl*n+i_ep*n_dl*n+i_w_vp*n_ep*n_dl*n+contablepp; p100=p000+n; p010=p000+n_dl*n; p110=p010+n; 
     p001=p000+n_ep*n_dl*n; p101=p001+n; p011=p001+n_dl*n; p111=p011+n;
     p111=contablepp+(i_dl+1)*n+(i_ep+1)*n_dl*n+(i_w_vp+1)*n_ep*n_dl*n;
-    vector_value_c(conapp,cmplx(0.0,0.0),ani_par->n);
+    vector_value_c(conapp,sf_cmplx(0.0,0.0),ani_par->n);
     inadd(conapp,p000,w000,n); inadd(conapp,p100,w100,n); inadd(conapp,p010,w010,n); inadd(conapp,p110,w110,n); 
     inadd(conapp,p001,w001,n); inadd(conapp,p101,w101,n); inadd(conapp,p011,w011,n); inadd(conapp,p111,w111,n);
 //for(i=0;i<n;i++)
@@ -252,7 +210,7 @@ void  get_convlv_coe(float w_vp,float ep,float dl,struct shot_ker_ani_type *ani_
 //printf("\n");
  
 
-    vector_value_c(conapm,cmplx(0.0,0.0),ani_par->n);
+    vector_value_c(conapm,sf_cmplx(0.0,0.0),ani_par->n);
     p000=i_dl*n+i_ep*n_dl*n+i_w_vp*n_ep*n_dl*n+contablepm; p100=p000+n; p010=p000+n_dl*n; p110=p010+n; 
     p001=p000+n_ep*n_dl*n; p101=p001+n; p011=p001+n_dl*n; p111=p011+n;
     inadd(conapm,p000,w000,n); inadd(conapm,p100,w100,n); inadd(conapm,p010,w010,n); inadd(conapm,p110,w110,n); 
@@ -278,7 +236,7 @@ void shot_ani_convlv3dtest(sf_complex *wld_z,sf_complex *conapp,sf_complex *cona
     conap=sf_complexalloc(tn); conam=sf_complexalloc(tn);
     vector_cp_c(tmpwld_z,wld_z,nx*ny); //tmpwld_z=wld_z;
     vector_cp_c(conap,conapp,tn); vector_cp_c(conam,conapm,tn);
-    vector_value_c(wld_z,cmplx(0.0,0.0),nx*ny);
+    vector_value_c(wld_z,sf_cmplx(0.0,0.0),nx*ny);
     if (signn==+1) {
 	for(ic=0;ic<tn;ic++){
 	    conap[ic]=conjg(conapp[ic]); conam[ic]=conjg(conapm[ic]);
@@ -374,24 +332,24 @@ void shot_phase_shift_ani(sf_complex *wld_z,float w_v0_z,float ep,float dl,float
 	    kx=fkx+ix*dkx;
 	    kza[i2(iy,ix,nx)]=kzani3d(phi,ep,dl,w_v0_z,f,kx,ky);
 
-	    if ( fabs(aimag( kza[i2(iy,ix,nx)]  ))<0.00000000000001){
-		if ( fabs(aimag( kza[i2(iy,ix,nx)]  )) <0.00000000001*fabs(real( kza[i2(iy,ix,nx)]  )) )
-		    kza[i2(iy,ix,nx)]=cmplx(fabs(real(kza[i2(iy,ix,nx)])),0.0);    
+	    if ( fabsf(aimag( kza[i2(iy,ix,nx)]  ))<0.00000000000001){
+		if ( fabsf(aimag( kza[i2(iy,ix,nx)]  )) <0.00000000001*fabsf(real( kza[i2(iy,ix,nx)]  )) )
+		    kza[i2(iy,ix,nx)]=sf_cmplx(fabsf(real(kza[i2(iy,ix,nx)])),0.0);    
 		else
-		    kza[i2(iy,ix,nx)]=cmplx(0.0,-fabs(aimag(kza[i2(iy,ix,nx)])));
+		    kza[i2(iy,ix,nx)]=sf_cmplx(0.0,-fabsf(aimag(kza[i2(iy,ix,nx)])));
 	    }
 	    else
-		kza[i2(iy,ix,nx)]=cmplx(0.0,-fabs(aimag(kza[i2(iy,ix,nx)])));
+		kza[i2(iy,ix,nx)]=sf_cmplx(0.0,-fabsf(aimag(kza[i2(iy,ix,nx)])));
 	}
     }  
 
     for (iy=0;iy<ny;iy++){
 	for(ix=0;ix<nx;ix++){
-	    if (fabs(__imag__ kza[i2(iy,ix,nx)])<0.000001){
-		if ( fabs(__imag__ kza[i2(iy,ix+1,nx)])>0.000001 && fabs(__imag__ kza[i2(iy,ix-1,nx)])>0.000001   )
-		    kza[i2(iy,ix,nx)]=cmplx( 0.0,1.0);
-		if ( fabs(__imag__ kza[i2(iy+1,ix,nx)])>0.000001 && fabs(__imag__ kza[i2(iy-1,ix,nx)])>0.000001   )
-		    kza[i2(iy,ix,nx)]=cmplx( 0.0,1.0);
+	    if (fabsf(__imag__ kza[i2(iy,ix,nx)])<0.000001){
+		if ( fabsf(__imag__ kza[i2(iy,ix+1,nx)])>0.000001 && fabsf(__imag__ kza[i2(iy,ix-1,nx)])>0.000001   )
+		    kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
+		if ( fabsf(__imag__ kza[i2(iy+1,ix,nx)])>0.000001 && fabsf(__imag__ kza[i2(iy-1,ix,nx)])>0.000001   )
+		    kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
 
 	    }
 	}
@@ -399,24 +357,24 @@ void shot_phase_shift_ani(sf_complex *wld_z,float w_v0_z,float ep,float dl,float
 
     iy=ny/2;
     for(ix=nx/2;ix<nx;ix++)
-	if (fabs(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabs(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
+	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
     weitmx2=ix;
     for(ix=0;ix<nx/2;ix++)
-	if (fabs(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabs(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
+	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
     weitmx1=ix; 
     ix=nx/2;
     for(iy=ny/2;iy<ny;iy++)
-	if (fabs(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabs(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
+	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
     weitmy2=iy;
     for(iy=0;iy<ny/2;iy++)
-	if (fabs(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabs(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
+	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
     weitmy1=iy;
     for (iy=0;iy<ny;iy++){
 	for(ix=0;ix<nx;ix++){
 	    if (iy<weitmy1 || iy>weitmy2)
-		kza[i2(iy,ix,nx)]=cmplx( 0.0,1.0);
+		kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
 	    if (ix<weitmx1 || ix>weitmx2)
-		kza[i2(iy,ix,nx)]=cmplx( 0.0,1.0);
+		kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
 	}
     }
 
@@ -431,13 +389,13 @@ void shot_phase_shift_ani(sf_complex *wld_z,float w_v0_z,float ep,float dl,float
 	    kx=fkx+ix*dkx;
 	    //kz1=kzani3d(phi,ep,dl,w_v0_z,f,kx,ky);
 	    kz1=kza[i2(iy,ix,nx)];
-	    if ( fabs(aimag(kz1)) <0.0000001*fabs(real(kz1)) ){
-		phsft=-signn*dz*fabs(real(kz1));
-		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+	    if ( fabsf(aimag(kz1)) <0.0000001*fabsf(real(kz1)) ){
+		phsft=-signn*dz*fabsf(real(kz1));
+		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*sf_cmplx(cos(phsft),sin(phsft));
 	    }
 	    else{
-		wld_z[i2(iy,ix,nx)]=cmplx(0.0,0.0);
-		//phsft=dz*fabs(aimag(kz1));  
+		wld_z[i2(iy,ix,nx)]=sf_cmplx(0.0,0.0);
+		//phsft=dz*fabsf(aimag(kz1));  
 		//wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
 	    }
       
@@ -470,7 +428,7 @@ void shot_phase_shift_vti(sf_complex *wld_z,float w_v0_z,float ep,float dl,struc
 	kz2=(1-kx*kx*(1.0+2.0*ep))/(1.0-kx*kx*2.0*(ep-dl));
 	if (kz2>=0){
 	    phsft=-signn*dz*w_v0_z*(sqrt(kz2));
-	    wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*cmplx(cos(phsft),sin(phsft));
+	    wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*sf_cmplx(cos(phsft),sin(phsft));
 	}
 	else{
 	    if (kz2<-1) kz2=-1;
