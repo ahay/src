@@ -22,14 +22,14 @@
 #include <assert.h>
 
 /* low rank decomposition  */
-#include "vecmatop.hh"
-#include "serialize.hh"
+#include <lapack.h>
+#include <vecmatop.hh>
+#include <serialize.hh>
 
 using namespace std;
 
 /* prepared head files by myself */
 #include "_cjb.h"
-#include "_lapack.h"
 
 /* head files aumatically produced from C programs */
 extern "C"{
