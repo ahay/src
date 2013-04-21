@@ -179,10 +179,10 @@ int dgmres(int (*A)(const FltNumVec&, FltNumVec&), const FltNumVec& b, const Flt
 	//FltNumVec rwork(10*(j+2));
 	int info;
 	sgelss_(&m,&n,&nrhs,
-		(lapack_complex_float*) Hjtmp.data(),&lda,
-		(lapack_complex_float*) betmp.data(),&ldb,
+		Hjtmp.data(),&lda,
+		betmp.data(),&ldb,
 		s.data(),&rcond,&rank,
-		(lapack_complex_float*) work.data(), &lwork,
+		work.data(), &lwork,
 		&info);
 	//cerr<<info<<endl;
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
@@ -284,8 +284,12 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 	int lwork = 10*(j+2);
 	FltNumVec rwork(10*(j+2));
 	int info;
-	cgelss_(&m,&n,&nrhs,Hjtmp.data(),&lda,betmp.data(),&ldb,s.data(),&rcond,&rank,work.data(),
-		&lwork,rwork.data(),&info);
+	cgelss_(&m,&n,&nrhs,
+		(lapack_complex_float*) Hjtmp.data(),&lda,
+		(lapack_complex_float*) betmp.data(),&ldb,
+		s.data(),&rcond,&rank,
+		(lapack_complex_float*) work.data(),&lwork,
+		rwork.data(),&info);
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }
       iC( zgemv(-1.0, Hj, y, 1, be) );
