@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	    irr=(nrout-1)/2-ir-(int)(or/dr);
 			
 	    if (isr > 0 && isr < ns){
-		for (int it=0; it < nt; it++) {
+		for (it=0; it < nt; it++) {
 		    out[isr][irr][it]=in[is][ir][it];
 		}			
 	    }
