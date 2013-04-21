@@ -280,8 +280,12 @@ int zgmres(int (*A)(const CpxNumVec&, CpxNumVec&), const CpxNumVec& b, const Cpx
 	int lwork = 10*(j+2);
 	FltNumVec rwork(10*(j+2));
 	int info;
-	cgelss_(&m,&n,&nrhs,Hjtmp.data(),&lda,betmp.data(),&ldb,s.data(),&rcond,&rank,work.data(),
-		&lwork,rwork.data(),&info);
+	cgelss_(&m,&n,&nrhs,
+		(lapack_complex_float*) Hjtmp.data(),&lda,
+		(lapack_complex_float*) betmp.data(),&ldb,
+		s.data(),&rcond,&rank,
+		(lapack_complex_float*) work.data(),&lwork,
+		rwork.data(),&info);
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }
       iC( zgemv(-1.0, Hj, y, 1, be) );
@@ -385,7 +389,13 @@ int pinv(const CpxNumMat& M, float eps, CpxNumMat& R)
       CpxNumVec work(lwork);
       FltNumVec rwork(lwork);
       int info;
-      cgesvd_(&jobu, &jobvt, &m, &n, MC.data(), &m, S.data(), U.data(), &m, VT.data(), &k, work.data(), &lwork, rwork.data(), &info);    iA(info==0);
+      cgesvd_(&jobu, &jobvt, &m, &n, 
+	      (lapack_complex_float*) MC.data(), &m, S.data(), 
+	      (lapack_complex_float*) U.data(), &m, 
+	      (lapack_complex_float*) VT.data(), &k, 
+	      (lapack_complex_float*) work.data(), &lwork, 
+	      rwork.data(), &info);    
+      iA(info==0);
     }
     //threshold
     float cutoff=eps*S(0); //relative thresholding
@@ -575,7 +585,11 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     CpxNumVec work(3*n);
     FltNumVec rwork(6*n);
     int info;
-    cgeqpf_(&m, &n, M2.data(), &lda, jpvt.data(), tau.data(), work.data(), rwork.data(), &info);    iA(info==0);
+    cgeqpf_(&m, &n, 
+	    (lapack_complex_float*) M2.data(), &lda, jpvt.data(), 
+	    (lapack_complex_float*) tau.data(), 
+	    (lapack_complex_float*) work.data(), rwork.data(), &info);    
+    iA(info==0);
     float cutoff = eps*abs(M2(0,0));
     int cnt=0;
     for(int k=0; k<min(m,n); k++)      if(abs(M2(k,k))>cutoff)	cnt++;
@@ -608,7 +622,11 @@ int lowrank(int m, int n, int (*sample)(vector<int>&, vector<int>&, CpxNumMat&),
     CpxNumVec work(3*n);
     FltNumVec rwork(6*n);
     int info;
-    cgeqpf_(&m, &n, M1.data(), &lda, jpvt.data(), tau.data(), work.data(), rwork.data(), &info);    iA(info==0);
+    cgeqpf_(&m, &n, 
+	    (lapack_complex_float*) M1.data(), &lda, jpvt.data(), 
+	    (lapack_complex_float*) tau.data(), 
+	    (lapack_complex_float*) work.data(), rwork.data(), &info);    
+    iA(info==0);
     float cutoff = eps*abs(M1(0,0)); //the diagonal element
     int cnt=0;
     for(int k=0; k<min(m,n); k++)	if(abs(M1(k,k))>cutoff)	  cnt++;
