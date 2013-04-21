@@ -3,6 +3,8 @@
 
 #include "blas.h"
 
+#ifndef HAVE_MKL
+
 extern "C"
 {
     void cbdsqr_(char *uplo, int *n, int *ncvt, int *nru, int *ncc, float *d, float *e, cpx8 *vt, int *ldvt, cpx8 *u, int *ldu, cpx8 *c, int *ldc, float *rwork, int *info);
@@ -810,5 +812,7 @@ extern "C"
     void cgeqpf_(int *m, int *n, cpx8 *a, int *lda, int *jpvt, cpx8 *tau, cpx8 *work, float* rwork, int *info);
     void zgeqpf_(int *m, int *n, cpx16 *a, int *lda, int *jpvt, cpx16 *tau, cpx16 *work, double* rwork, int *info);
 }
+
+#endif
 
 #endif
