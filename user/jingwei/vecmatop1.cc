@@ -1,5 +1,5 @@
-#include "blas.h"
-#include "lapack.h"
+#include <blas.h>
+#include <lapack.h>
 
 #include "numvec1.hh"
 #include "nummat1.hh"
@@ -178,8 +178,12 @@ int dgmres(int (*A)(const FltNumVec&, FltNumVec&), const FltNumVec& b, const Flt
 	int lwork = 10*(j+2);
 	//FltNumVec rwork(10*(j+2));
 	int info;
-	sgelss_(&m,&n,&nrhs,Hjtmp.data(),&lda,betmp.data(),&ldb,s.data(),&rcond,&rank,work.data(),
-		&lwork,&info);
+	sgelss_(&m,&n,&nrhs,
+		(lapack_complex_float*) Hjtmp.data(),&lda,
+		(lapack_complex_float*) betmp.data(),&ldb,
+		s.data(),&rcond,&rank,
+		(lapack_complex_float*) work.data(), &lwork,
+		&info);
 	//cerr<<info<<endl;
 	for(int a=0; a<j+1; a++)	  y(a) = betmp(a);
       }

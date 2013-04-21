@@ -9,6 +9,9 @@
 
 #else
 
+#define lapack_complex_float cpx8
+#define lapack_complex_double cpx16
+
 extern "C"
 {
     void cbdsqr_(char *uplo, int *n, int *ncvt, int *nru, int *ncc, float *d, float *e, cpx8 *vt, int *ldvt, cpx8 *u, int *ldu, cpx8 *c, int *ldc, float *rwork, int *info);
