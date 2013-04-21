@@ -125,6 +125,9 @@ void slvsec3(double d[3], double z[3], double w[3],
   double t[3];            // Temporary storage used for evaluating f
   double alpha, beta, gamma;       // Coefficients of polynomial f(x) * Product [ d_i - x ]
   double p, sqrt_p, q, c, s, phi;  // Intermediate results of analytical calculation
+  int i, j;
+  double t1;
+  int nIter;
   
   // Determine intervals which must contain the roots
   if (z[0] > 0)
@@ -181,7 +184,7 @@ void slvsec3(double d[3], double z[3], double w[3],
   }
 
   // Refine roots with a combined Bisection/Newton-Raphson method
-  for (int i=0; i < 3; i++)
+  for (i=0; i < 3; i++)
   {
     xl = a[i];               // Lower bound of bracketing interval
     xh = a[i+1];             // Upper bound of bracketing interval
@@ -191,7 +194,7 @@ void slvsec3(double d[3], double z[3], double w[3],
     if (dx == 0.0)
     {
       w[i] = xl;
-      for (int j=0; j < 3; j++)
+      for (j=0; j < 3; j++)
         R[j][i] = d[j] - xl;
       continue;
     }
@@ -201,7 +204,7 @@ void slvsec3(double d[3], double z[3], double w[3],
     {
       delta = xh;
       x     = -dx;
-      for (int j=0; j < 3; j++)
+      for (j=0; j < 3; j++)
       {
         dd[j]   = d[j] - delta;
         R[j][i] = dd[j] - x;
@@ -211,7 +214,7 @@ void slvsec3(double d[3], double z[3], double w[3],
     {
       delta = xl;
       x     = dx;
-      for (int j=0; j < 3; j++)
+      for (j=0; j < 3; j++)
       {
         dd[j]   = d[j] - delta;
         R[j][i] = dd[j] - x;
@@ -221,7 +224,7 @@ void slvsec3(double d[3], double z[3], double w[3],
     {
       delta = x0[i];
       x     = 0.0;
-      for (int j=0; j < 3; j++)
+      for (j=0; j < 3; j++)
         R[j][i] = dd[j] = d[j] - delta;
     }
     xl -= delta;
@@ -230,19 +233,19 @@ void slvsec3(double d[3], double z[3], double w[3],
     // Make sure that f(xl) < 0 and f(xh) > 0 
     if (z[0] < 0.0)
     {
-      double t = xh;
+      t1 = xh;
       xh = xl;
-      xl = t;
+      xl = t1;
     }
 
     // Main iteration loop
-    for (int nIter=0; nIter < 500; nIter++)
+    for (nIter=0; nIter < 500; nIter++)
     {
       // Evaluate f and f', and calculate an error estimate
       F     = 1.0;
       dF    = 0.0;
       error = 1.0;
-      for (int j=0; j < 3; j++)
+      for (j=0; j < 3; j++)
       {
         t[0]   = 1.0 / R[j][i];
         t[1]   = z[j] * t[0];
@@ -282,7 +285,7 @@ void slvsec3(double d[3], double z[3], double w[3],
       }
 
       // Prepare next iteration
-      for (int j=0; j < 3; j++)
+      for (j=0; j < 3; j++)
         R[j][i] = dd[j] - x;
     }
      
@@ -306,13 +309,14 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
   double u[n], q[n];
   double omega, f;
   double K, h, g;
+  int i, j;
   
   // Initialize Q to the identitity matrix
 #ifndef EVALS_ONLY
-  for (int i=0; i < n; i++)
+  for (i=0; i < n; i++)
   {
     Q[i][i] = 1.0;
-    for (int j=0; j < i; j++)
+    for (j=0; j < i; j++)
       Q[i][j] = Q[j][i] = 0.0;
   }
 #endif
@@ -333,7 +337,7 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
   {
     omega = 1.0 / omega;
     K     = 0.0;
-    for (int i=1; i < n; i++)
+    for (i=1; i < n; i++)
     {
       f    = A[1][i] * u[1] + A[i][2] * u[2];
       q[i] = omega * f;                  // p
@@ -341,7 +345,7 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
     }
     K *= 0.5 * SQR(omega);
 
-    for (int i=1; i < n; i++)
+    for (i=1; i < n; i++)
       q[i] = q[i] - K * u[i];
     
     d[0] = A[0][0];
@@ -350,10 +354,10 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
     
     // Store inverse Householder transformation in Q
 #ifndef EVALS_ONLY
-    for (int j=1; j < n; j++)
+    for (j=1; j < n; j++)
     {
       f = omega * u[j];
-      for (int i=1; i < n; i++)
+      for (i=1; i < n; i++)
         Q[i][j] = Q[i][j] - f*u[i];
     }
 #endif
@@ -363,7 +367,7 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
   }
   else
   {
-    for (int i=0; i < n; i++)
+    for (i=0; i < n; i++)
       d[i] = A[i][i];
     e[1] = A[1][2];
   }
@@ -661,6 +665,7 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
   double c, s;                   // Eigenvector of 2x2 block in the "divide" step
   double z[3];                   // Numerators of secular equation / Updating vector
   double t;                      // Miscellaenous temporary stuff
+  int i, j, k;
 
   // Initialize Q
 #ifndef EVALS_ONLY
@@ -675,7 +680,7 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
   // --------
   
   // Detect matrices that factorize to avoid multiple eigenvalues in the Divide/Conquer algorithm
-  for (int i=0; i < n-1; i++)
+  for (i=0; i < n-1; i++)
   {
     t = fabs(w[i]) + fabs(w[i+1]);
     if (fabs(e[i]) <= 8.0*DBL_EPSILON*t)
@@ -687,7 +692,7 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
         w[2] = d[2];
 #ifndef EVALS_ONLY
         Q[0][0] = 1.0;
-        for (int j=1; j < n; j++)
+        for (j=1; j < n; j++)
         {
           Q[j][1] = s*R[j][2] + c*R[j][1];
           Q[j][2] = c*R[j][2] - s*R[j][1];
@@ -748,7 +753,7 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
   t = 8.0*DBL_EPSILON*(fabs(d[0]) + fabs(d[1]) + fabs(d[2]));
   if (fabs(d[1] - d[0]) <= t)
   {
-    for (int j=0; j < n; j++)
+    for (j=0; j < n; j++)
     {
       if (P[0][j] * P[1][j] <= 0.0)
       {
@@ -757,13 +762,13 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
         P[2][j] = 0.0;
       }
       else
-        for (int i=0; i < n; i++)
+        for (i=0; i < n; i++)
           P[i][j] = z[i]/P[i][j];
     }
   }
   else if (fabs(d[2] - d[0]) <= t)
   {
-    for (int j=0; j < n; j++)
+    for (j=0; j < n; j++)
     {
       if (P[0][j] * P[2][j] <= 0.0)
       {
@@ -772,14 +777,14 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
         P[2][j] = -z[0];
       }
       else
-        for (int i=0; i < n; i++)
+        for (i=0; i < n; i++)
           P[i][j] = z[i]/P[i][j];
     }
   }
   else
   {
-    for (int j=0; j < n; j++)
-      for (int i=0; i < n; i++)
+    for (j=0; j < n; j++)
+      for (i=0; i < n; i++)
       {
         if (P[i][j] == 0.0)
         {
@@ -794,16 +799,16 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
   }
 
   // Normalize eigenvectors of D + beta * z * z^t
-  for (int j=0; j < n; j++)
+  for (j=0; j < n; j++)
   {
     t = SQR(P[0][j]) + SQR(P[1][j]) + SQR(P[2][j]);
     t = 1.0 / sqrt(t);
-    for (int i=0; i < n; i++)
+    for (i=0; i < n; i++)
       P[i][j] *= t;
   }
   
   // Undo diagonalization of 2x2 block
-  for (int j=0; j < n; j++)
+  for (j=0; j < n; j++)
   {
     t       = P[1][j];
     P[1][j] = c*t - s*P[2][j];
@@ -811,11 +816,11 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
   }
 
   // Undo Householder transformation
-  for (int j=0; j < n; j++)
-    for (int k=0; k < n; k++)
+  for (j=0; j < n; j++)
+    for (k=0; k < n; k++)
     {
       t = P[k][j];
-      for (int i=0; i < n; i++)
+      for (i=0; i < n; i++)
         Q[i][j] += t * R[i][k];
     }
 #endif
@@ -848,7 +853,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
   double e[3];                   // The third element is used only as temporary workspace
   double g, r, p, f, b, s, c, t; // Intermediate storage
   int nIter;
-  int m;
+  int l, m, i, k;
 
   // Transform A to real tridiagonal form by the Householder method
   dsytrd3(A, Q, w, e);
@@ -857,7 +862,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
   // with the QL method
   //
   // Loop over all off-diagonal elements
-  for (int l=0; l < n-1; l++)
+  for (l=0; l < n-1; l++)
   {
     nIter = 0;
     while (1)
@@ -886,7 +891,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
 
       s = c = 1.0;
       p = 0.0;
-      for (int i=m-1; i >= l; i--)
+      for (i=m-1; i >= l; i--)
       {
         f = s * e[i];
         b = c * e[i];
@@ -913,7 +918,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
 
         // Form eigenvectors
 #ifndef EVALS_ONLY
-        for (int k=0; k < n; k++)
+        for (k=0; k < n; k++)
         {
           t = Q[k][i+1];
           Q[k][i+1] = s*Q[k][i] + c*t;
