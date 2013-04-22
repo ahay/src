@@ -53,6 +53,7 @@ else:
     lapack = None
 
 if lapack:
+    libs.extend(lapack)
     libsxx = [dynpre+'rsf++','vecmatop']
     if not isinstance(lapack,bool):
         libsxx.extend(lapack)
@@ -160,7 +161,6 @@ if root: # no compilation, just rename
 	for prog in pymains:
 		env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
 	bldutil.install_py_modules(env,Split(pymods),pkgdir)
-
 
 ######################################################################
 # SELF-DOCUMENTATION
