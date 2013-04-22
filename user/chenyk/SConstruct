@@ -3,7 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-dispelem diff mulawefd2d emd norm blend xcorr SVD matoper lesolver pclipc2 dwtdenoise trisolver symposolver seiscut seisthr Testsolver Testsolver1 trapepass lagrange heatexplitest heatimplitest hyperdif
+dispelem diff mulawefd2d emd norm blend xcorr SVD matoper lesolver 
+pclipc2 dwtdenoise trisolver symposolver seiscut seisthr Testsolver 
+Testsolver1 trapepass lagrange heatexplitest heatimplitest hyperdif
+
 '''
 ccprogs = ''
 
@@ -50,6 +53,7 @@ else:
     lapack = None
 
 if lapack:
+    libs.extend('laback')
     libsxx = [dynpre+'rsf++','vecmatop']
     if not isinstance(lapack,bool):
         libsxx.extend(lapack)
@@ -119,17 +123,18 @@ mpicpp = os.environ.get("MPICPP")
 for prog in mpimains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if mpicc and mpilib:
-        env.Prepend(CPPPATH=[mpicpp],
+    if lapack:	
+    	if mpicc and mpilib:
+           env.Prepend(CPPPATH=[mpicpp],
                     LIBPATH=[mpilib],
                     LIBS='')
-        prog = env.Program(prog,
+           prog = env.Program(prog,
                            map(lambda x: x + '.c',sources),
                            CC=mpicc,LIBS=[libs,'X11'])
-    else:
-	prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
-    if root:
-        env.Install(bindir,prog)
+    	else:
+	   prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+        if root:
+           env.Install(bindir,prog)
 
 ######################################################################
 # Compiling testing programs
@@ -137,15 +142,16 @@ for prog in mpimains:
 
 tmains = Split(tprogs)
 for prog in tmains:
-    sources = ['Test' + prog]
-    if prog=='clapack':
-        sources.append('solver')
-    bldutil.depends(env,sources,'Test'+prog)
-    sources = map(lambda x: x + '.o',sources)
-    env.Object('Test' + prog + '.c')
-    prog=env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
-    if root:
-        env.Install(bindir,prog)
+    if lapack:
+    	sources = ['Test' + prog]
+    	if prog=='clapack':
+           sources.append('solver')
+    	bldutil.depends(env,sources,'Test'+prog)
+    	sources = map(lambda x: x + '.o',sources)
+    	env.Object('Test' + prog + '.c')
+    	prog=env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x',LIBS=libs)
+    	if root:
+           env.Install(bindir,prog)
 
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
