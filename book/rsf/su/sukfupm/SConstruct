@@ -1,0 +1,14 @@
+from rsf.suproj import *
+import os
+
+# Download SEGY data
+server=os.environ.get('RSF_DATASERVER','http://www.ahay.org')
+Fetch('data2013.sgy','kfupm',server=server)
+
+# Convert to SU
+Flow('data ./binary ./header','data2013.sgy','segyread tape=$SOURCE verbose=1 endian=0 | segyclean',stdin=0)
+
+# Display first 6 shot records
+Result('data','suwind key=ep min=1 max=6 | suxwigb')
+
+End()
