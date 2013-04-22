@@ -293,10 +293,10 @@ int main (int argc, char* argv[]) {
         if (i0 > 0)
             i0 -= (size_t)1;
         i1 = (int)((icpu/ith + 1)*trd);
-        if (i1 >= n)
-            i1 = n;
-        else
+        if (i1 < (n - 1))
             i1 += (size_t)1;
+        else
+            i1 = n - 1;
     } else {
         i0 = 0;
         i1 = n - 1;
@@ -366,6 +366,7 @@ int main (int argc, char* argv[]) {
             free (str);
             return 0;
         }
+        n = i1 - i0 + 1;
         traces = sf_floatalloc (kmah ? n*(size_t)nt*(size_t)2 : n*(size_t)nt);
         sf_floatread (traces, kmah ? n*(size_t)nt*(size_t)2 : n*(size_t)nt, data);
         sf_warning ("%g Mb of traces buffered [CPU %d]",
@@ -527,7 +528,8 @@ int main (int argc, char* argv[]) {
         }
 #endif
         /* Send buffer size */
-        bsiz = sizeof(sf_cram_data_trvals) + CRAM_TRBUF*nt*sizeof(float);
+        bsiz = kmah ? sizeof(sf_cram_data_trvals) + CRAM_TRBUF*nt*sizeof(float)*2
+                    : sizeof(sf_cram_data_trvals) + CRAM_TRBUF*nt*sizeof(float);
         if (setsockopt (new_sd, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
             fprintf (logf, "Can not set SO_SNDBUF for a new connection\n");
             close (new_sd);

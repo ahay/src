@@ -177,7 +177,8 @@ sf_cram_data2 sf_cram_data2_init (sf_file data, sf_file ddaemon, bool mtrace)
                 }
 #endif
                 /* Set receive buffer size */
-                bsiz = sizeof(sf_cram_data_trvals) + CRAM_TRBUF*cram_data->nt*sizeof(float);
+                bsiz = cram_data->kmah ? sizeof(sf_cram_data_trvals) + CRAM_TRBUF*cram_data->nt*sizeof(float)*2
+                                       : sizeof(sf_cram_data_trvals) + CRAM_TRBUF*cram_data->nt*sizeof(float);
                 if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
                     sf_warning ("setsockopt()[SO_RCVBUF] failed");
                     close (is);
@@ -245,8 +246,12 @@ sf_cram_data2 sf_cram_data2_init (sf_file data, sf_file ddaemon, bool mtrace)
             sf_warning ("Using direct access to data file");
         else
             sf_warning ("Using %d daemons for remote access to data file", cram_data->nc);
-        cram_data->trvals = sf_alloc (1, sizeof(sf_cram_data_trvals) +
-                                         CRAM_TRBUF*cram_data->nt*sizeof(float));
+        if (cram_data->kmah)
+            cram_data->trvals = sf_alloc (1, sizeof(sf_cram_data_trvals) +
+                                             CRAM_TRBUF*cram_data->nt*sizeof(float)*2);
+        else
+            cram_data->trvals = sf_alloc (1, sizeof(sf_cram_data_trvals) +
+                                             CRAM_TRBUF*cram_data->nt*sizeof(float));
         cram_data->data = &cram_data->trvals->samples[0];
         cram_data->i = (size_t)-1; /* Current buffered trace */
         cram_data->ntr = 0; /* Number of buffered traces */
