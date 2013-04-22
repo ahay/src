@@ -46,11 +46,9 @@ struct shot_ker_ani_implicit_type
 struct shot_ker_ani_type shot_ker_ani_init(float *phi,int nx,float dx,float dy,float dz){
     struct shot_ker_ani_type ani_par;
     sf_file anitable;
-    float f,o_ep,d_ep,o_dl,d_dl,o_w_vp,d_w_vp;
-    int n_ep,n_dl,n_w_vp,nangle,iangle;
-    int m,n;
-    float pphi,dkx,oangle,dangle;
-    int stat,blocksize;
+    int nangle,iangle;
+    float pphi,oangle,dangle;
+    int blocksize;
 
     pphi=fabsf(*phi);
     anitable=sf_input("Extable");
@@ -174,10 +172,12 @@ void inadd(sf_complex *app,sf_complex *p,float scale,int n){
 	app[i]+=scale*p[i];
 }
 
-void  get_convlv_coe(float w_vp,float ep,float dl,struct shot_ker_ani_type *ani_par){
+void  get_convlv_coe(float w_vp,float ep,float dl,struct shot_ker_ani_type *ani_par)
+/*< get coefficients >*/
+{
     int i_w_vp,i_ep,i_dl;
     float w_w_vp, w_ep,w_dl;
-    int n,n_ep,n_dl,n_w_vp,i;
+    int n,n_ep,n_dl,n_w_vp;
     float w00,w01,w10,w11,w000,w001,w010,w011,w100,w101,w110,w111;
     sf_complex *conapp,*conapm,*contablepp,*contablepm;
     sf_complex *p000,*p001,*p010,*p011,*p100,*p101,*p110,*p111;
@@ -220,227 +220,3 @@ void  get_convlv_coe(float w_vp,float ep,float dl,struct shot_ker_ani_type *ani_
   conapm=contablepm(:,i_dl,i_ep,i_w_vp)*w000+contablepm(:,i_dl+1,i_ep,i_w_vp)*w100+contablepm(:,i_dl,i_ep+1,i_w_vp)*w010+contablepm(:,i_dl+1,i_ep+1,i_w_vp)*w110+contablepm(:,i_dl,i_ep,i_w_vp+1)*w001+contablepm(:,i_dl+1,i_ep,i_w_vp+1)*w101+contablepm(:,i_dl,i_ep+1,i_w_vp+1)*w011+contablepm(:,i_dl+1,i_ep+1,i_w_vp)*w111;
 */
 }
-
-
-
-
-void shot_ani_convlv3dtest(sf_complex *wld_z,sf_complex *conapp,sf_complex *conapm,int tnx,int tny,struct shot_ker_par_type ker_par, int signn)
-{
-    int nx,ny,tn;
-    sf_complex  *tmpwld_z; //(:,:)
-    sf_complex *conap,*conam;
-    int  iy,ix,ic,i,icx,icy;
-    tn=tnx*tny;
-    nx=ker_par.nx; ny=ker_par.ny;
-    tmpwld_z=ker_par.tmp_wld;   //allocate(tmpwld_z(nx,ny)) ker_par.tmp_wld is allocated in ker_init in kernal.c
-    conap=sf_complexalloc(tn); conam=sf_complexalloc(tn);
-    vector_cp_c(tmpwld_z,wld_z,nx*ny); //tmpwld_z=wld_z;
-    vector_cp_c(conap,conapp,tn); vector_cp_c(conam,conapm,tn);
-    vector_value_c(wld_z,sf_cmplx(0.0,0.0),nx*ny);
-    if (signn==+1) {
-	for(ic=0;ic<tn;ic++){
-	    conap[ic]=conjg(conapp[ic]); conam[ic]=conjg(conapm[ic]);
-	} //for(ic)
-    }
-    else{
-	for(ic=0;ic<tn;ic++){
-	    conap[ic]=(conapp[ic]); conam[ic]=(conapm[ic]);
-	} //for(ic)
-    }
-    for(icy=1;icy<tny;icy++){
-	for(icx=0; icx<tnx; icx++){
-	    ic=icy*tnx+icx;
-	    conap[ic]=0.5*conap[ic];
-	    conam[ic]=0.5*conam[ic];
-	}
-    }
-
-//  for (ic=0;ic<tn;ic++){
-//    printf("ic=%d,(%f,%f)",ic,__real__ conap[ic],__imag__ conap[ic]);
-//  }
-    printf("begin convlv\n");
-
-    for( iy=0;iy<ny;iy++){
-	for(ix=0;ix<nx;ix++){
-	    wld_z[i2(iy,ix,nx)]=conap[0]*tmpwld_z[i2(iy,ix,nx)]; 
-                            
-	    for(icy=1,icx=0; icy<tny;icy++){ 
-		ic=icy*tnx+icx;    
-		if (iy+icy <ny)    
-		    wld_z[i2(iy,ix,nx)]+=conap[ic]*(tmpwld_z[i2(iy+icy,ix,nx)]);
-		if (iy-icy >=0)
-		    wld_z[i2(iy,ix,nx)]+=conap[ic]*(tmpwld_z[i2(iy-icy,ix,nx)]);
-	    }
-
-	    for(icy=0,icx=1;icx<tnx; icx++){
-		ic=icy*tnx+icx;
-		if (ix+icx <nx) wld_z[i2(iy,ix,nx)]+=conap[ic]*tmpwld_z[i2(iy,ix+icx,nx)];
-		if (ix-ic >= 0 )wld_z[i2(iy,ix,nx)]+=conam[ic]*tmpwld_z[i2(iy,ix-icx,nx)];
-	    }
-	    for(icy=1;icy<tny; icy++){
-		if (iy+icy <ny && iy-icy >=0 ){
-		    for(icx=1;icx<tnx; icx++){
-			ic=icy*tnx+icx;
-			if (ix+icx <nx) wld_z[i2(iy,ix,nx)]+=conap[ic]*(tmpwld_z[i2(iy+icy,ix+icx,nx)]+tmpwld_z[i2(iy-icy,ix+icx,nx)]);
-			if (ix-icx >=0) wld_z[i2(iy,ix,nx)]+=conam[ic]*(tmpwld_z[i2(iy+icy,ix-icx,nx)]+tmpwld_z[i2(iy-icy,ix-icx,nx)]);
-		    }
-		}
-		if (iy+icy<ny && iy-icy <0){
-		    for(icx=1;icx<tnx; icx++){
-			ic=icy*tnx+icx;
-			if (ix+icx <nx) wld_z[i2(iy,ix,nx)]+=conap[ic]*(tmpwld_z[i2(iy+icy,ix+icx,nx)]);
-			if (ix-icx >=0) wld_z[i2(iy,ix,nx)]+=conam[ic]*(tmpwld_z[i2(iy+icy,ix-icx,nx)]);
-		    }
-		}
-		if (iy+icy >=ny && iy-icy >=0){
-		    for(icx=1;icx<tnx; icx++){
-			ic=icy*tnx+icx;
-			if (ix+icx <nx) wld_z[i2(iy,ix,nx)]+=conap[ic]*(tmpwld_z[i2(iy-icy,ix+icx,nx)]);
-			if (ix-icx >=0) wld_z[i2(iy,ix,nx)]+=conam[ic]*(tmpwld_z[i2(iy-icy,ix-icx,nx)]);
-		    }
-		}
-
-	    } 
-     
-	}// for(ix) 
-    }// for(iy)
-    free(conap); free(conam);
-  
-}
-
-
-
-void shot_phase_shift_ani(sf_complex *wld_z,float w_v0_z,float ep,float dl,float phi,float f,struct shot_ker_par_type ker_par,int signn)
-{// wld_z(ker_par.ny,ker_par.nx)
-    int nx,ny,weitmx1,weitmx2,weitmy1,weitmy2;
-    float fkx,fky,dkx,dky,dz;
-  
-    int ix,iy,ipi,isin,ikz2;
-    float kx,ky,kz,kz2,phsft,pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft;
-    sf_complex kz1;
-    sf_complex *kza;
-    pio2=SF_PI*2.0;
-    nx=ker_par.nx; ny=ker_par.ny; 
-    fkx=ker_par.fkx; fky=ker_par.fky; 
-    dkx=ker_par.dkx; dky=ker_par.dky;
-    dz=ker_par.dz;
-  
-    kza=sf_complexalloc(nx*ny);
-    for(iy=0;iy<ny; iy++){
-	ky=fky+iy*dky;
-	for(ix=0;ix<nx;ix++){
-	    kx=fkx+ix*dkx;
-	    kza[i2(iy,ix,nx)]=kzani3d(phi,ep,dl,w_v0_z,f,kx,ky);
-
-	    if ( fabsf(aimag( kza[i2(iy,ix,nx)]  ))<0.00000000000001){
-		if ( fabsf(aimag( kza[i2(iy,ix,nx)]  )) <0.00000000001*fabsf(real( kza[i2(iy,ix,nx)]  )) )
-		    kza[i2(iy,ix,nx)]=sf_cmplx(fabsf(real(kza[i2(iy,ix,nx)])),0.0);    
-		else
-		    kza[i2(iy,ix,nx)]=sf_cmplx(0.0,-fabsf(aimag(kza[i2(iy,ix,nx)])));
-	    }
-	    else
-		kza[i2(iy,ix,nx)]=sf_cmplx(0.0,-fabsf(aimag(kza[i2(iy,ix,nx)])));
-	}
-    }  
-
-    for (iy=0;iy<ny;iy++){
-	for(ix=0;ix<nx;ix++){
-	    if (fabsf(__imag__ kza[i2(iy,ix,nx)])<0.000001){
-		if ( fabsf(__imag__ kza[i2(iy,ix+1,nx)])>0.000001 && fabsf(__imag__ kza[i2(iy,ix-1,nx)])>0.000001   )
-		    kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
-		if ( fabsf(__imag__ kza[i2(iy+1,ix,nx)])>0.000001 && fabsf(__imag__ kza[i2(iy-1,ix,nx)])>0.000001   )
-		    kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
-
-	    }
-	}
-    }
-
-    iy=ny/2;
-    for(ix=nx/2;ix<nx;ix++)
-	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
-    weitmx2=ix;
-    for(ix=0;ix<nx/2;ix++)
-	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
-    weitmx1=ix; 
-    ix=nx/2;
-    for(iy=ny/2;iy<ny;iy++)
-	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
-    weitmy2=iy;
-    for(iy=0;iy<ny/2;iy++)
-	if (fabsf(__imag__ kza[i2(iy,ix,nx)])>0.001 && fabsf(__real__ kza[i2(iy,ix,nx)])<0.00000001) break;
-    weitmy1=iy;
-    for (iy=0;iy<ny;iy++){
-	for(ix=0;ix<nx;ix++){
-	    if (iy<weitmy1 || iy>weitmy2)
-		kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
-	    if (ix<weitmx1 || ix>weitmx2)
-		kza[i2(iy,ix,nx)]=sf_cmplx( 0.0,1.0);
-	}
-    }
-
-
-
-    for(iy=0;iy<ny;iy++){ //do iy=1,ny
-	if (ker_par.is2d) 
-	    ky=0.0;
-	else
-	    ky=fky+iy*dky;
-	for(ix=0;ix<nx;ix++){  //do ix=1,nx
-	    kx=fkx+ix*dkx;
-	    //kz1=kzani3d(phi,ep,dl,w_v0_z,f,kx,ky);
-	    kz1=kza[i2(iy,ix,nx)];
-	    if ( fabsf(aimag(kz1)) <0.0000001*fabsf(real(kz1)) ){
-		phsft=-signn*dz*fabsf(real(kz1));
-		wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*sf_cmplx(cos(phsft),sin(phsft));
-	    }
-	    else{
-		wld_z[i2(iy,ix,nx)]=sf_cmplx(0.0,0.0);
-		//phsft=dz*fabsf(aimag(kz1));  
-		//wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
-	    }
-      
-	} 
-    }
-
-
-    free(kza);
-}
-
-
-void shot_phase_shift_vti(sf_complex *wld_z,float w_v0_z,float ep,float dl,struct shot_ker_par_type ker_par,int signn)
-{// wld_z(ker_par.ny,ker_par.nx)
-    int nx,ny,weitmx1,weitmx2,weitmy1,weitmy2;
-    float fkx,fky,dkx,dky,dz;
-  
-    int ix,iy,ipi,isin,ikz2;
-    float kx,ky,kz,kz2,phsft,pio2,wpi,tphsft,wsin,sin_phsft,cos_phsft;
-    sf_complex kz1;
-    sf_complex *kza;
-    pio2=SF_PI*2.0;
-    nx=ker_par.nx; ny=ker_par.ny; 
-    fkx=ker_par.fkx; fky=ker_par.fky; 
-    dkx=ker_par.dkx; dky=ker_par.dky;
-    dz=ker_par.dz;
-    iy=0;
-    for (ix=0;ix<nx;ix++){
-	kx=fkx+ix*dkx;
-	kx=kx/w_v0_z;
-	kz2=(1-kx*kx*(1.0+2.0*ep))/(1.0-kx*kx*2.0*(ep-dl));
-	if (kz2>=0){
-	    phsft=-signn*dz*w_v0_z*(sqrt(kz2));
-	    wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*sf_cmplx(cos(phsft),sin(phsft));
-	}
-	else{
-	    if (kz2<-1) kz2=-1;
-	    phsft=dz*w_v0_z*(sqrt(-kz2));
-	    //wld_z[i2(iy,ix,nx)]=wld_z[i2(iy,ix,nx)]*exp(-phsft);
-	    wld_z[i2(iy,ix,nx)]=0.0;
-	}
-    }
-  
-}
-
-
-
-
-

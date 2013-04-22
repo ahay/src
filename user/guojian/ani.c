@@ -93,7 +93,6 @@ sf_complex kzani(float phi,float ep,float dl,float w_vp,float f,float kx)
     
     sf_complex x1,z[4];
     float  a[5];
-    int i,j;
     float kzsq;
 
     if (phi==0){
@@ -114,10 +113,10 @@ sf_complex kzani(float phi,float ep,float dl,float w_vp,float f,float kx)
 }
 
 sf_complex kzani3d(float phi,float ep,float dl,float w_vp,float f,float kx,float ky)
+/*< kz anisotropic >*/
 {
     sf_complex x1,z[4];
     float  a[5];
-    int i,j;
     float kzsq;
 
     if (phi==0){
@@ -144,7 +143,7 @@ sf_complex kzani3d(float phi,float ep,float dl,float w_vp,float f,float kx,float
 
 sf_complex dkz(float phi,float ep,float dl,float w_vp,float f,float kx)
 {
-    sf_complex  kz1,dkzp,kkz1;
+    sf_complex  kz1,dkzp;
     float kz,test;
 
     kz1=kzani(phi,ep,dl,w_vp,f,kx);
@@ -166,7 +165,7 @@ sf_complex dkz(float phi,float ep,float dl,float w_vp,float f,float kx)
 
 sf_complex dkz3d(float phi,float ep,float dl,float w_vp,float f,float kx,float ky)
 {
-    sf_complex  kz1,dkzp,kkz1;
+    sf_complex  kz1,dkzp;
     float kz,test;
 
     kz1=kzani3d(phi,ep,dl,w_vp,f,kx,ky);
@@ -313,7 +312,6 @@ void dph3d(float phi,float ep,float dl,float w_vp,float f,float dkx,float dky,fl
 {
     // dpp(m)
     float kx,ky;
-    sf_complex dkzp;
     float pshift;
     int imx,imy,weitmx,weitmy;
     float cc,bb,dkzpweitm,dkzpweitm1,nn,kx1,ky1,tmpr,scale,kx2,ky2,dkzp0;
@@ -418,7 +416,7 @@ int weit(float phi,float ep,float dl,float w_vp,float f,float dkx,int m)
 
 void weit3d(float *weight,float phi,float ep,float dl,float w_vp,float f,float dkx,float dky,int mx,int my)
 {
-    int i_mx,i_my,im,ii_mx,ii_my,weitmy;
+    int i_mx,i_my,im,ii_mx,ii_my;
     sf_complex  kz1,kzp1;
     float kx,ky;
     float tmpr;
@@ -530,7 +528,7 @@ void phase_apro_matrix_sin(float *a,float dx,float dkx,int m,int n)
 	kx=(i_m+1)*dkx;
 	for(i_n=0; i_n <n-1; i_n++){
 	    x=(i_n+1)*dx;
-	    a[i2(i_m,i_n,n-1)]=sinf(x*kx); // ??????????????/
+	    a[i2(i_m,i_n,n-1)]=sinf(x*kx); 
 	}
     }
 }
@@ -564,7 +562,7 @@ void phase_apro_matrix_sin3d(float *a,float dx,float dy,float dkx,float dky,int 
 void convlv_coe(int m,int n,sf_complex *conap,sf_complex *conam,sf_complex *dpc,sf_complex *dps, float *qc,float *rc,float *qs,float *rs){ // conap(n) conam(n) dpc(m) dps(m) qc(m,n) rc(n,n) qs(m-1,n-1) rs(n-1,n-1)
     sf_complex dpp1,dpp2;
     sf_complex *conas;
-    int sing,im,i;
+    int i;
     conas=(sf_complex *)malloc((n-1)*sizeof(sf_complex));
     for(i=0;i<m;i++){
 	dpp1=(dpc[i]+dps[i])/2.0;
@@ -593,7 +591,7 @@ void convlv_coe(int m,int n,sf_complex *conap,sf_complex *conam,sf_complex *dpc,
 void convlv_coe3d(int mx,int my,int nx,int ny,sf_complex *conap,sf_complex *conam,sf_complex *dpc,sf_complex *dps, float *qc,float *rc,float *qs,float *rs){ // conap(n) conam(n) dpc(m) dps(m) qc(m,n) rc(n,n) qs(m-1,n-1) rs(n-1,n-1)
     sf_complex dpp1,dpp2;
     sf_complex *conas;
-    int sing,im,i,m,n,mm1,nm1,imx,imy,imm,inx,iny,inm,in;
+    int im,m,n,mm1,nm1,imx,imy,imm,inx,iny,inm,in;
     m=mx*my; n=nx*ny; mm1=my*(mx-1); nm1=ny*(nx-1);
 //conas=(sf_complex *)malloc((nm1)*sizeof(sf_complex));
     conas=sf_complexalloc(nm1);
@@ -636,7 +634,7 @@ void ani_equation_con(float dx,float dkx,int m,int n,int weitm,float *qc,float *
 {  // qc(m,n),rc(n,n),qs(m-1,n-1),rs(n-1,n-1)
 //real :: weight(:)
     float *ma,*q,*tmpd;
-    int  sing,im,in;
+    int  sing=0,im,in;
 
     ma=sf_floatalloc(m*n);
     q=sf_floatalloc(m*m);
@@ -680,7 +678,7 @@ void ani_equation_con3d(float dx,float dy,float dkx,float dky,int mx,int my,int 
 {  // qc(m,n),rc(n,n),qs(m-1,n-1),rs(n-1,n-1)
 //real :: weight(:)
     float *ma,*q,*tmpd;
-    int  sing,im,in,m,n,mm1,nm1,imx,imy,iwm;
+    int  sing=0,im,in,m,n,mm1,nm1,imx,imy,iwm;
     m=mx*my; n=nx*ny;
     ma=sf_floatalloc(m*n);
     q=sf_floatalloc(m*m);
@@ -763,7 +761,7 @@ void explicit_table3d(sf_complex *conapp,sf_complex *conapm,
                       float phi,float f,float dx,float dy,float dkx,float dky,float dz,int mx,int my,int nx,int ny,
                       float ep,float dl,float w_vp,float *weight,float *qc,float *rc,float *qs,float *rs)
 {
-    int im,in,imx,imy,inx,iny,m,n,mm1,nm1;
+    int m,n,mm1,nm1;
     //float *qc,*rc,*qs,*rs,*weight;
     sf_complex *dppc,*dpps;
     m=my*mx; n=ny*nx; mm1=my*(mx-1); nm1=ny*(nx-1);
@@ -789,7 +787,7 @@ void explicit_table2d(sf_complex *conapp,sf_complex *conapm,
                       float phi,float f,float dx,float dkx,float dz,int mx,int nx,
                       float ep,float dl,float w_vp)
 {
-    int im,in,imx,imy,inx,iny,m,n,mm1,nm1;
+    int m,n,mm1,nm1;
     float *qc,*rc,*qs,*rs,*weight;
     int my,ny; 
     float dy,dky;
@@ -827,7 +825,6 @@ void explicit_table(sf_complex *contablepp,sf_complex *contablepm,
     int *weitm,nweit,theweitm,iweit;
     int im,in,i_w_vp,i_ep,i_dl;
     int nqc[2],nrc[2],nqs[2],nrs[2],nconp[3];
-    int i;
     printf("begin 11111\n");
     d3(m,n,nqc); d3(n,n,nrc); d3(m-1,n-1,nqs); d3(n-1,n-1,nrs); d4(n_ep,n_dl,n,nconp);
     printf("begin 22222\n");
@@ -932,10 +929,6 @@ int weitmlist(int *weitm,float phi,float dkx,float f,int m,
 	      float o_w_vp,float d_w_vp,int n_w_vp)
 /*< WEI >*/
 {
-    int i_w_vp, i_ep,i_dl;
-    float w_vp,ep,dl;
-    int theweitm;
-    int *weitm_tmp;
     int nweit,iweit;
     /*
       weitm_tmp=sf_intalloc(m);  
@@ -971,7 +964,6 @@ int weitmlist(int *weitm,float phi,float dkx,float f,int m,
 
 
 float kycoe3d(float phi,float ep,float dl,float w_vp,float f, float kx,float kz){
-    float a0,a1,a2,a3,a4;
     float sinphi,cosphi,fm1,epdl,sin2phi,cos2phi,sin4phi;
     float A,B,C,D,E,F;
     float b0,b2,b4;
@@ -1073,7 +1065,7 @@ void implicitleftmatrixisovtifd1(float **leftmatrix, sf_complex * sz,int nsx,flo
 void qrsolver(float **leftmatrix,sf_complex *kz,sf_complex *conap,int m,int n)
 {
     float *q,*qc,*rc,*tmpd;
-    int sing;
+    int sing=0;
     int im,in; 
     q=sf_floatalloc(m*m); qc=sf_floatalloc(m*n); rc=sf_floatalloc(n*n); tmpd=sf_floatalloc(n);
   
@@ -1092,7 +1084,7 @@ void imfd1coesolver(float ep,float dl,int nsxall, float *alpha1,float *beta1)
     float **leftmatrixfd1;
     sf_complex *sz,*conapfd1;
     int nsx,nfd1=2;
-    int isx,in,stat;
+    int isx,in;
     float dsx,sx,weight,maxsx;
     maxsx=sqrtf(1.0/(1.0+2.0*ep));
     dsx=maxsx/(nsxall-1);
@@ -1113,8 +1105,8 @@ void imfd1coesolver(float ep,float dl,int nsxall, float *alpha1,float *beta1)
 	}
     } 
     qrsolver(leftmatrixfd1,sz,conapfd1,nsx,nfd1);
-    *beta1=__real__ conapfd1[0];      
-    *alpha1=__real__ conapfd1[1];  
+    *beta1=crealf(conapfd1[0]);      
+    *alpha1=crealf(conapfd1[1]);  
     free(sz); free(*leftmatrixfd1); free(leftmatrixfd1); free(conapfd1);
 }
 
@@ -1124,7 +1116,7 @@ void imfd2coesolver(float ep,float dl,int nsxall, float *alpha1,float *alpha2,fl
     float **leftmatrixfd2;
     sf_complex *sz,*conapfd2;
     int nsx,nfd2=4;
-    int isx,in,stat;
+    int isx,in;
     float dsx,sx,b2,b4,a2,a4,weight,maxsx;
     maxsx=sqrtf(1.0/(1.0+2.0*ep));
     dsx=maxsx/(nsxall-1);
@@ -1145,7 +1137,7 @@ void imfd2coesolver(float ep,float dl,int nsxall, float *alpha1,float *alpha2,fl
 	}
     } 
     qrsolver(leftmatrixfd2,sz,conapfd2,nsx,nfd2);
-    b2=__real__ conapfd2[0]; b4=__real__ conapfd2[1]; a2=__real__ conapfd2[2]; a4=__real__ conapfd2[3];
+    b2=crealf(conapfd2[0]); b4=crealf(conapfd2[1]); a2=crealf(conapfd2[2]); a4=crealf(conapfd2[3]);
     *beta1=0.5*(b2+sqrtf(b2*b2-4*b4));     *beta2=0.5*(b2-sqrtf(b2*b2-4*b4));
     *alpha1=(a4-a2*(*beta1))/((*beta2)-(*beta1));  *alpha2=(a4-a2*(*beta2))/((*beta1)-(*beta2));
     free(sz); free(*leftmatrixfd2); free(leftmatrixfd2); free(conapfd2);

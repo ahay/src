@@ -3,8 +3,9 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
+isoimpulse
 '''
-# isoimpulse
+
 
 try:  # distributed version
     Import('env root pkgdir bindir')
