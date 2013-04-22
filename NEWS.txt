@@ -50,6 +50,7 @@ To programs:
 * user/luke: new contributor (Luke Decker)
 * Moved some programs from user/fomels to user/pwd
 * sfzoom: example Tkinter script for interactive zooming
+* sfsegyheader can take tfile= parameter for input trace headers
 
 ===Bug fixes===
 

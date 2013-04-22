@@ -26,12 +26,12 @@
 
 int main(int argc, char* argv[])
 {
-    int i, i2, n1, nbuf, *buf[SF_NKEYS], buf2[SF_NKEYS];
+    int i, i2, n1, nbuf, **buf, *buf1, nk;
     float o1, d1;
-    sf_file in=NULL, keys[SF_NKEYS], out=NULL;
     off_t n2, nleft;
     const char *key;
-    char *arg=NULL, zero[BUFSIZ];
+    char *arg;
+    sf_file in, keys[SF_MAXKEYS], out, tfile;
 
     sf_init (argc,argv);
     in = sf_input ("in");
@@ -48,66 +48,86 @@ int main(int argc, char* argv[])
     /* trace origin */
 
     n2 = sf_leftsize(in,1);
-    sf_putint(out,"n1",SF_NKEYS);
-    sf_settype(out,SF_INT);
 
     nbuf = BUFSIZ/sizeof(int);
-    memset(zero,0,BUFSIZ);
 
-    segy_init(SF_NKEYS,NULL);
+    if (NULL != sf_getstring("tfile")) {
+	tfile = sf_input("tfile"); /* trace header file */
+	if (SF_INT != sf_gettype(tfile))
+	    sf_error("Need integer data in tfile");
+	if (!sf_histint(tfile,"n1",&nk) || (SF_NKEYS > nk))
+	    sf_error ("Need at least n1=%d keys in tfile",SF_NKEYS);
+	if (nk*n2 != sf_filesize(tfile))
+	    sf_error ("Wrong number of traces in tfile");
+    } else {
+	tfile = NULL;
+	nk = SF_NKEYS;
+    }
 
-    for (i=0; i < SF_NKEYS; i++) {
+    sf_putint(out,"n1",nk);
+    sf_settype(out,SF_INT);
+
+    if (NULL != tfile) sf_fileflush(out,tfile);
+
+    buf = sf_intalloc2(nk,nbuf);
+    buf1 = sf_intalloc(nbuf);
+
+    segy_init(nk,tfile);
+
+    for (i=0; i < nk; i++) {
 	key = segykeyword(i);
-	if (0==strcmp(key,"ns")) {
-	    keys[i] = NULL;
-	    buf[i] = sf_intalloc(nbuf);
-	    for (i2=0; i2 < nbuf; i2++) {
-		buf[i][i2] = n1;
-	    }
-	} else if (0==strcmp(key,"dt")) {
-	    keys[i] = NULL;
-	    buf[i] = sf_intalloc(nbuf);
-	    for (i2=0; i2 < nbuf; i2++) {
-		buf[i][i2] = (int) (d1*1000000.);
-	    }
-	} else if (0==strcmp(key,"delrt") && o1 != 0) {
-	    keys[i] = NULL;
-	    buf[i] = sf_intalloc(nbuf);
-	    for (i2=0; i2 < nbuf; i2++) {
-		buf[i][i2] = (int) (o1*1000.);
-	    }
-	} else if (NULL != (arg = sf_getstring(key))) {
+	if (NULL != (arg = sf_getstring(key))) {
 	    keys[i] = sf_input(key);
 	    if (SF_INT != sf_gettype(keys[i]))
 		sf_error("Need integer data in file \"%s\"",arg); 
 	    if (n2 != sf_filesize(keys[i])) 
 		sf_error("Need filesize=%lld in file \"%s\"",n2,arg); 
 	    free(arg);
-
-	    buf[i] = sf_intalloc(nbuf);
 	} else {
 	    keys[i] = NULL;
-	    buf[i] = (int*) zero;
+	    for (i2=0; i2 < nbuf; i2++) {
+		buf[i2][i] = 0;
+	    }
 	}
     }
 
     for (nleft=n2; nleft > 0; nleft -= nbuf) {
 	if (nbuf > nleft) nbuf = nleft;
 
-	
-	for (i=0; i < SF_NKEYS; i++) {
-	    if (NULL != keys[i]) {
-		sf_intread(buf[i],nbuf,keys[i]);
-	    }
-	}
+	/* read from initial trace header file */
+	if (NULL != tfile) sf_intread(buf[0],nk*nbuf,tfile);
 
-	for (i2=0; i2 < nbuf; i2++) {
-	    for (i=0; i < SF_NKEYS; i++) {
-		buf2[i] = buf[i][i2];
+	for (i=0; i < nk; i++) {
+	    key = segykeyword(i);
+
+	    if (NULL != keys[i]) {
+		sf_intread(buf1,nbuf,keys[i]);
+		for (i2=0; i2 < nbuf; i2++) {
+		    buf[i2][i] = buf1[i2];
+		}
+	    } else { /* change ns, dt, and delrt */
+		if (0==strcmp(key,"ns")) {
+		    for (i2=0; i2 < nbuf; i2++) {
+			buf[i2][i] = n1;
+		    }
+		} else if (0==strcmp(key,"dt")) {
+		    for (i2=0; i2 < nbuf; i2++) {
+			buf[i2][i] = (int) (d1*1000000.);
+		    }
+		} else if (0==strcmp(key,"delrt") && o1 != 0) {
+		    keys[i] = NULL;
+		    for (i2=0; i2 < nbuf; i2++) {
+			buf[i2][i] = (int) (o1*1000.);
+		    }
+		}
 	    }
-	    sf_intwrite(buf2,SF_NKEYS,out);
 	}
+	
+	sf_intwrite(buf[0],nk*nbuf,out);
     }
+
+    free(buf1);
+    free(*buf); free(buf);
 
     exit(0);
 }

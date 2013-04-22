@@ -70,7 +70,7 @@ Result('rxy','dd type=complex | graph symbol=x wanttitle=n plotcol=6',local=1)
 Flow('win1','win2','window min2=0.8 max2=1.8')
 
 Flow('bin2','win1 rxy',
-     'bin head=${SOURCES[1]} interp=2 xkey=0 nx=81 dx=0.1 x0=-4 ykey=1 ny=81 dy=0.1 y0=-4 ')
+     'bin head=${SOURCES[1]} interp=2 xkey=0 nx=321 dx=0.025 x0=-4 ykey=1 ny=321 dy=0.025 y0=-4 ')
 
 Flow('super2','bin2',
      '''
