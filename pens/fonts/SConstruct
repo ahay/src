@@ -12,6 +12,11 @@ except: # local version
     
 src = Glob('[a-z]*.vplot_font')
 
+for flags in ('CFLAGS','LINKFLAGS'):
+    flag = env.get(flags,'')
+    if isinstance (flag, str):
+        env[flags] = flag.replace('-mmic','')
+
 prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')
 
 attr = ('check','header','dim','addr','widthl','widthr','symbol','svec','lig')
