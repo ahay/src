@@ -1,8 +1,3 @@
-"""
-#scons; sh vpl2eps.sh; 
-#vpconvert Fig/tt1.vpl color=y Fig/tt1.eps; 
-"""
-
 ## Oz data gather 6 (dynamite, nt=1300, dt=0.004, nx=48, dx=100m)
 #  Bandwidth is about 10-30 Hz
 from rsf.proj import *
@@ -17,7 +12,6 @@ sz2=' labelsz=10 titlesz=10 '
 #### Data (Oz shot gather #6)
 #  Bandwidth is about 10-30 Hz
 o1=0; n1=1300; d1=0.004; n2=48;
-#f2  = 35; # which trace to plot
 ticks='';
 grid='';
 data = 'data6';
@@ -31,14 +25,7 @@ Flow(data,'wz.06.H',
 
 taxis='''min1=0. max1=%f min2=-1. max2=1. grid2=y g2num0=0 g2num=10''' %(o1+(n1-1)*d1)
 
-##Plot  (data,'grey wanttitle=n wantaxis=n')
-#Result(data,data,'grey wheretitle=top wherexlabel=bottom title="Data"')
-#Result('trace6','data6', 
-#       'window f2=%d n2=1 | graph %s title="Trace %d"' %(f2,taxis,f2))
-#Plot  ('trace6','data6', 
-#       'window f2=%d n2=1 | graph %s title="Trace %d"' %(f2,taxis,f2))
-
-Result('spec6','data6','spectra all=y | graph')
+#Result('spec6','data6','spectra all=y | graph')
 
 
 #### LTFT
@@ -53,8 +40,6 @@ cltf  = 'rect=%d w0=%f dw=%f nw=%d' %(rc1,w0,dw,nw)
 
 itimec('itime6',data,cltf=cltf,
        div='rect1=%d rect2=%d rect3=2 niter=150'%(rc1,rc2))
-#Flow('ltf6_trace%d'   %f2, 'data6_cltf','window f3=%d n3=1' %f2)
-#Flow('itime6_trace%d' %f2, 'itime6',    'window f3=%d n3=1' %f2)
 
 Flow('zc6', 'itime6', 'math output="input-x1" | zerocross levels=3') 
 
@@ -62,89 +47,37 @@ Flow('zc6', 'itime6', 'math output="input-x1" | zerocross levels=3')
 tfaxes='min1=0. max1=%f. min2=0. max2=%f' %(o1+n1*d1,fmax2)
 tfpar ='grey color=j scalebar=y'
 
-#Plot('ltf6','ltf6_trace%d' %f2,
-#       '''math output="abs(input)" | real | 
-#          %s allpos=y title="u(t,f) (trace %d)" scalebar=n
-#          wherexlabel=bottom wheretitle=top %s labelsz=10 titlesz=10
-#       ''' %(tfpar,f2,tfaxes))
-
-
-#Plot('ltf6','ltf6_trace%d' %f2,
-#       '''math output="abs(input)" | real | 
-#          %s allpos=y title="u(t,f)" scalebar=y wherexlabel=bottom
-#          wheretitle=top %s %s %s %s''' %(tfpar,tfaxes,ticks,grid,sz2))
-#Plot('itime6','itime6_trace%d' %f2,
-#       '''%s allpos=y title="tau(t,f)" scalebar=y 
-#          wherexlabel=bottom wheretitle=top %s %s %s %s''' %(tfpar,tfaxes,ticks,grid,sz2))
-#Plot('zc6', 'zc6',
-#     '''window f3=%d n3=1| math output="input-x1" | zerocross levels=3 |  
-#        contour plotfat=10 allpos=n nc=1 c0=-1 scalebar=y wanttitle=n wantaxis=n %s %s %s 
-#     ''' %(f2,tfaxes,ticks,grid)) 
-
 
 # mean and std of frequency 
 Freqmean('data6_cltf',r=2,std='y')  # generates data6_cltf_s0,  data6_cltf_s1,data6_cltf_s2,
                                     #           data6_cltf_fmn, data6_cltf_fstd
 Flow('data6_flo','data6_cltf_fmn data6_cltf_fstd','add ${SOURCES[1]} scale=1,-1')
 Flow('data6_fhi','data6_cltf_fmn data6_cltf_fstd','add ${SOURCES[1]} ')
-#Flow('data6_fhi','data6_cltf_fmn',                'math output="input"')
-
-#Flow('data6_flo_trace%d'%f2, 'data6_flo', 'window f2=%d n2=1' %f2)
-#Flow('data6_fhi_trace%d'%f2, 'data6_fhi', 'window f2=%d n2=1' %f2)
-
-#Freqplots('data6_flo', 'data6_flo_trace%d'%f2, axes=tfaxes, scalebar='y')
-#Freqplots('data6_fhi', 'data6_fhi_trace%d'%f2, axes=tfaxes, scalebar='y')
-#Plot('data6_freq', 'data6_flo data6_fhi', 'Overlay')
-#              plotfat=10,plotcol=1, dash=1, transp='y', yreverse='y')
 
 # Figures
-#Result('itime6', 'itime6 zc6 data6_freq', 'Overlay')
-#Result('ltf6','ltf6 data6_freq','Overlay')
-
-
-
 #### inst. traveltime (t)
 Flow('tau6', 'itime6 data6_flo data6_fhi',
      'stackn min=${SOURCES[1]} max=${SOURCES[2]} | window')
 
 axes  = 'min1=0. max1=5. min2=-0.2. max2=5' 
 ticks = 'o1num=0. d1num=1 n1tic=6 o2num=-1 d2num=0.5 n2tic=5'
-#grid1  = 'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
-#grid2  = 'gridcol=5  grid2=y g2num0=0.4 g2num=0.8'
-
-
-#Plot('time12', 'time11', 
-#     '''graph wanttitle=n wantaxis=n 
-#        dash=1 %s %s crowd2=0.5''' %(sz1,axes))
-#Plot('tau6','tau6', 
-#       '''window f2=%d n2=1 | graph wanttitle=n 
-#          %s %s %s crowd2=0.5 plotfat=10''' %(f2, sz1,axes,ticks))
-#Plot('tau11', 'tau6 time12', 'Overlay')
-#Result('taut6', 'tau6 time12', 'Overlay') # plot of tau and t vs. t
 
 Flow('tau_t6', 'tau6', ' math output="input-x1"')
 axes  = 'min1=0. max1=5. min2=-0.5. max2=0.5' 
 ticks= 'o2num=-0.5 d2num=0.5 n2tic=3' 
-#grid1 = '' #'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
-#grid2 = 'gridcol=5  grid2=y g2num0=0.  g2num=1'
-
-#Plot('tau_t6','tau_t6', 
-#     '''window f2=%d n2=1 | graph %s crowd2=0.5  
-#        wanttitle=n plotfat=10 %s %s %s''' %(f2,sz1,axes,grid1,grid2))
-##Result('tau_t6','tau_t6 vtimesyn','Overlay') 
-#Result('tau_t6','trace6 tau_t6','OverUnderAniso') 
 
 
 #### Gather figures
 txaxis='min1=0. max1=5.'
-#Flow('zctau6', 'tau_t6', 'zerocross levels=3 | clip2 lower=0  | ricker1 frequency=30 | mutter v0=9400 x0=4700''')
 Flow('zctau6', 'tau_t6',
-     'zerocross levels=3 | clip2 upper=0 | add scale=-1 | mutter v0=94 x0=47')# | ricker1 frequency=60')
+     '''zerocross levels=3 | clip2 upper=0 | add scale=-1 | 
+        mutter v0=94 x0=47')# | ricker1 frequency=60''')
 
-#Plot('zctau6', 'wiggle transp=y yreverse=y plotcol=5 wanttitle=n wantaxis=n') 
 Plot('data6', data,
-     '''agc | put d2=1 label2="Trace" unit2="" | wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 
-        grid1=n grid2=n wanttitle=n wherexlabel=bottom wheretitle=top %s'''%txaxis)
+     '''agc | put d2=1 label2="Trace" unit2="" | 
+        wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 
+        grid1=n grid2=n wanttitle=n wherexlabel=bottom wheretitle=top %s
+     '''%txaxis)
 Plot('events6','zctau6',
       '''wiggle transp=y yreverse=y pclip=100. plotcol=5 plotfat=1 
                 grid1=n gridcol=7 g1num0=0 g1num=1 grid2=n gridfat=2
@@ -152,15 +85,7 @@ Plot('events6','zctau6',
 Plot('zeros6','data6',
      '''math output="0" | wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 
         grid1=n grid2=n wanttitle=n wherexlabel=bottom wantaxis2=n %s'''%txaxis) # trick to get a better Figure
-#Result('zctau6', 'wiggle transp=y yreverse=y pclip=100. title="Picked events"')
 Result('oz6','data6 events6 zeros6','Overlay')
-
-
-
-
-#from rsf.recipes.epsfigs import Epsfigs
-#Epsfigs()
-#Epsfigs('ltf6 itime6 oz6 ',color='y')
 
 
 End()

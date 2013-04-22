@@ -60,7 +60,6 @@ Result(trace,trace,'graph wanttitle=n crowd2=0.5 plotfat=5 max1=2 '+sz2)
 Result('syn0',trace,'graph wanttitle=n crowd2=0.5 plotfat=5 max1=2 '+sz2)
 
 Flow('time11',  trace,  'math output="x1"')
-#Plot('time12', 'time11','graph wanttitle=n')
 
 
 #### LTFT synthetic
@@ -95,7 +94,6 @@ Flow('syn_fhi','syn_cltf_fmn syn_cltf_fstd','add ${SOURCES[1]} ')
 Freqplots('syn_flo', 'syn_flo',axes=axes, scalebar='y')
 Freqplots('syn_fhi', 'syn_fhi',axes=axes, scalebar='y')
 Plot('syn_freq','syn_flo syn_fhi','Overlay')
-#              plotfat=10,plotcol=1, dash=1, transp='y', yreverse='y')
 
 # Figures
 Result('tt0', 'tt0 zc0 syn_freq', 'Overlay')
@@ -105,13 +103,9 @@ Result('ltf0','ltf0 syn_freq','Overlay')
 #### inst. traveltime (t)
 Flow('tau0', 'tt0 syn_flo syn_fhi',
      'stackn min=${SOURCES[1]} max=${SOURCES[2]} | put label2="tau(t)" unit2=s')
-#     'window min2=10 max2=60 | stack | put label2="tau(t)" unit2=s')
 
 axes  = 'min1=0. max1=2. min2=0. max2=2.' 
 ticks = 'o1num=0. d1num=0.4 n1tic=6 o2num=0.4 d2num=0.8 n2tic=3'
-#grid1  = 'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
-#grid2  = 'gridcol=5  grid2=y g2num0=0.4 g2num=0.8'
-
 
 Plot('time12', 'time11', 
      '''graph wanttitle=n wantaxis=n 
@@ -131,7 +125,6 @@ Result('taut0', 'tau0 time12 vtimesyn htimesyn', 'Overlay') # plot of tau and t 
 Flow('tau_t0', 'tau0',
      ''' math output="input-x1" | put label2="tau(t)-t"''')
 axes = 'min1=0. max1=2. min2=-1 max2=1' 
-#ticks= 'o1num=0. d1num=0.4 n1tic=6 o2num=-0.4 d2num=0.4 n2tic=3' 
 grid1 = 'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
 grid2 = 'gridcol=5  grid2=y g2num0=0.  g2num=1'
 
@@ -139,8 +132,6 @@ Plot('tau_t0',
      '''graph %s crowd2=0.5  
         wanttitle=n plotfat=10 %s %s %s''' %(sz1,axes,grid1,grid2))
 Result('tau-t0','tau_t0 vtimesyn','Overlay') 
-
-
 
 
 End()

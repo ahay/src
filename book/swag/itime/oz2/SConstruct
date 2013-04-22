@@ -26,14 +26,7 @@ Flow(data,'wz.02.H',
 
 taxis='''min1=0. max1=%f min2=-1. max2=1. grid2=y g2num0=0 g2num=10''' %(o1+(n1-1)*d1)
 
-#Result(data,data,'grey wheretitle=top wherexlabel=bottom title="Data"')
-#Result('trace2','data2', 
-#       'window f2=%d n2=1 | graph %s title="Trace %d"' %(f2,taxis,f2))
-#Plot  ('trace2','data2', 
-#       'window f2=%d n2=1 | graph %s title="Trace %d"' %(f2,taxis,f2))
-
 #Result('spec2','data2','spectra all=y | graph')
-
 
 #### LTFT
 # inst. time (t,f)
@@ -49,33 +42,10 @@ cltf  = 'rect=%d w0=%f dw=%f nw=%d' %(rc1,w0,dw,nw)
 itimec('itime2',data,cltf=cltf,
        div='rect1=%d rect2=%d rect3=%d niter=100'%(rc1,rc2,rc3))
 
-#Flow('ltf2_trace%d'   %f2, 'data2_cltf','window f3=%d n3=1' %f2)
-#Flow('itime2_trace%d' %f2, 'itime2',    'window f3=%d n3=1' %f2)
-
 Flow('zc2', 'itime2', 'math output="input-x1" | zerocross levels=3') 
-
 
 tfaxes='min1=0. max1=%f. min2=0. max2=%f' %(o1+(n1-1)*d1,fmax2)
 tfpar ='grey color=j scalebar=y'
-
-#Plot('ltf2','ltf2_trace%d' %f2,
-#       '''math output="abs(input)" | real | 
-#          %s allpos=y title="u(t,f) (trace %d)" scalebar=n
-#          wherexlabel=bottom wheretitle=top %s labelsz=10 titlesz=10
-#       ''' %(tfpar,f2,tfaxes))
-
-
-#Plot('ltf2','ltf2_trace%d' %f2,
-#       '''math output="abs(input)" | real | 
-#          %s allpos=y title="u(t,f)" scalebar=y wherexlabel=bottom
-#          wheretitle=top %s %s %s %s''' %(tfpar,tfaxes,ticks,grid,sz2))
-#Plot('itime2','itime2_trace%d' %f2,
-#       '''%s allpos=y title="tau(t,f)" scalebar=y 
-#          wherexlabel=bottom wheretitle=top %s %s %s %s''' %(tfpar,tfaxes,ticks,grid,sz2))
-#Plot('zc2', 'zc2',
-#     '''window f3=%d n3=1| math output="input-x1" | zerocross levels=3 |  
-#        contour plotfat=10 allpos=n nc=1 c0=-1 scalebar=y wanttitle=n wantaxis=n %s %s %s 
-#     ''' %(f2,tfaxes,ticks,grid)) 
 
 
 # mean and std of frequency 
@@ -83,40 +53,11 @@ Freqmean('data2_cltf',r=5,std='y')  # generates data2_cltf_s0,  data2_cltf_s1,da
                                     #           data2_cltf_fmn, data2_cltf_fstd
 Flow('data2_flo','data2_cltf_fmn data2_cltf_fstd','add ${SOURCES[1]} scale=1,-1')
 Flow('data2_fhi','data2_cltf_fmn data2_cltf_fstd','add ${SOURCES[1]} ')
-#Flow('data2_fhi','data2_cltf_fmn',                'math output="input"')
-
-#Flow('data2_flo_trace%d'%f2, 'data2_flo', 'window f2=%d n2=1' %f2)
-#Flow('data2_fhi_trace%d'%f2, 'data2_fhi', 'window f2=%d n2=1' %f2)
-
-#Freqplots('data2_flo', 'data2_flo_trace%d'%f2, axes=tfaxes, scalebar='y')
-#Freqplots('data2_fhi', 'data2_fhi_trace%d'%f2, axes=tfaxes, scalebar='y')
-#Plot('data2_freq', 'data2_flo data2_fhi', 'Overlay')
-#              plotfat=10,plotcol=1, dash=1, transp='y', yreverse='y')
 
 # Figures
-#Result('itime2', 'itime2 zc2 data2_freq', 'Overlay')
-#Result('ltf2','ltf2 data2_freq','Overlay')
-
-
-
 #### inst. traveltime (t)
 Flow('tau2', 'itime2 data2_flo data2_fhi',
      'stackn min=${SOURCES[1]} max=${SOURCES[2]} | window')
-
-#axes  = 'min1=0. max1=%g. min2=-0.2. max2=5'%(o1+(n1-1)*d1) 
-#ticks = 'o1num=0. d1num=1 n1tic=6 o2num=-1 d2num=0.5 n2tic=5'
-#grid1  = 'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
-#grid2  = 'gridcol=5  grid2=y g2num0=0.4 g2num=0.8'
-
-
-#Plot('time12', 'time11', 
-#     '''graph wanttitle=n wantaxis=n 
-#        dash=1 %s %s crowd2=0.5''' %(sz1,axes))
-#Plot('tau2','tau2', 
-#       '''window f2=%d n2=1 | graph wanttitle=n 
-#          %s %s %s crowd2=0.5 plotfat=10''' %(f2, sz1,axes,ticks))
-#Plot('tau11', 'tau2 time12', 'Overlay')
-#Result('taut2', 'tau2 time12', 'Overlay') # plot of tau and t vs. t
 
 Flow('tau_t2', 'tau2', ' math output="input-x1"')
 axes  = 'min1=0. max1=%g. min2=-0.5. max2=0.5'%(o1+(n1-1)*d1) 
@@ -124,22 +65,15 @@ ticks= 'o2num=-0.5 d2num=0.5 n2tic=3'
 grid1 = '' #'gridcol=5  grid1=y g1num0=0.4 g1num=0.8'
 grid2 = 'gridcol=5  grid2=y g2num0=0.  g2num=1'
 
-#Plot('tau_t2','tau_t2', 
-#     '''window f2=%d n2=1 | graph %s crowd2=0.5  
-#        wanttitle=n plotfat=10 %s %s %s''' %(f2,sz1,axes,grid1,grid2))
-#Result('tau_t2','tau_t2 vtimesyn','Overlay') 
-#Result('tau_t2','trace2 tau_t2','OverUnderAniso') 
-
 
 #### Gather figures
 txaxis='min1=0. max1=%g.'%(o1+(n1-1)*d1)
-#Flow('zctau2', 'tau_t2', 'zerocross levels=3 | clip2 lower=0  | ricker1 frequency=30 | mutter v0=9400 x0=4700''')
 Flow('zctau2', 'tau_t2',
      'zerocross levels=3 | clip2 upper=0 | add scale=-1 | mutter x0=90 v0=200')# | ricker1 frequency=60')
 
-#Plot('zctau2', 'wiggle transp=y yreverse=y plotcol=5 wanttitle=n wantaxis=n %s'%txaxis) 
 Plot('data2', data,
-     '''agc | put d2=1 label2="Trace" unit2="" | wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 plotfat=1
+     '''agc | put d2=1 label2="Trace" unit2="" | 
+        wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 plotfat=1
         grid1=n grid2=n wanttitle=n wherexlabel=bottom wheretitle=top %s'''%txaxis)
 Plot('events2','zctau2',
       '''wiggle transp=y yreverse=y pclip=100. plotcol=5 plotfat=1
@@ -148,16 +82,7 @@ Plot('events2','zctau2',
 Plot('zeros2','data2',
      '''math output="0" | wiggle transp=y yreverse=y pclip=100. poly=y plotcol=7 plotfat=1
         grid1=n grid2=n wanttitle=n wherexlabel=bottom wantaxis2=n %s'''%txaxis)
-#Result('zctau2', 'wiggle transp=y yreverse=y pclip=100. title="Picked events"')
 Result('oz2','data2 events2 zeros2','Overlay')
-
-
-
-
-
-#from rsf.recipes.epsfigs import Epsfigs
-#Epsfigs()
-#Epsfigs('ltf2 itime2 oz2 ',color='y')
 
 
 End()
