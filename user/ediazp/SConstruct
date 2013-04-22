@@ -25,6 +25,12 @@ vel1d
 picks2rsf
 '''
 
+# Python targets
+targets.py = '''
+correlate
+'''
+
+
 # mask2pick 
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
