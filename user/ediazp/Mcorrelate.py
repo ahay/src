@@ -24,8 +24,7 @@ Fout = rsf.Output()
 ntau = par.int("ntau",100) # number of tau lags 
 
 # parameters from input file
-n1a = Fa.int("n1")    # number of samples from input
-n1b = Fb.int("n1")    # number of samples from signal
+n1 = Fa.int("n1")    # number of samples from input
 
 d1 = Fa.float("d1")  # dt
 
@@ -51,10 +50,10 @@ if not d1 == Fb.float("d1"):
 
   
 
-a = np.zeros(n1a,'f')
-b = np.zeros(n1b,'f')
+a = np.zeros(n1,'f')
+b = np.zeros(n1,'f')
 
-center = (n1a+n1b-1)/2 # center sample of the correlation
+center = (n1*n1-1)/2 # center sample of the correlation
 l1 = center-ntau
 l2 = center+ntau+1
 
