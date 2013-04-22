@@ -140,6 +140,7 @@ int main(int argc, char* argv[])
 
     /*set axis for snap file*/
     sf_setn(at, (int)(nt-1)/snapinter+1);
+    sf_setd(at,dt*snapinter);
     sf_oaxa(fwf, ax, 1);
     sf_oaxa(fwf, at, 2);
     
