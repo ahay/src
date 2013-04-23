@@ -199,6 +199,8 @@ int main (int argc, char *argv[])
 		amx = sf_iaxa(Fi,1); sf_setlabel(amx,"mx"); sf_oaxa(Fd,amx,1);
 		amy = sf_iaxa(Fi,2); sf_setlabel(amy,"my"); sf_oaxa(Fd,amy,2);
 		amz = sf_iaxa(Fi,3); sf_setlabel(amz, "z"); sf_oaxa(Fd,aw ,3);
+		
+		sf_fileflush(Fd,Fi);  /* for --dryrun=y */
 
 		n = sf_n(amx)*sf_n(amy);
 
@@ -214,6 +216,9 @@ int main (int argc, char *argv[])
 		amx = sf_iaxa(Fd,1); sf_setlabel(amx,"mx"); sf_oaxa(Fi,amx,1);
 		amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fi,amy,2);
 		aw  = sf_iaxa(Fd,3); sf_setlabel(aw , "w"); sf_oaxa(Fi,amz,3);
+
+		sf_fileflush(Fi,Fd); /* for --dryrun=y */
+
 		ae  = sf_maxa(1,0,1); 
 
 		n  = sf_n(amx)*sf_n(amy);
