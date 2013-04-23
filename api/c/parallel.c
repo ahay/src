@@ -80,7 +80,7 @@ char** sf_split(sf_file inp          /* input file */,
     split = n[axis];
     
     jobs = nodes-1;
-    if (nodes < split) {
+    if (jobs < split) {
 	w = 1+(float) split/jobs;
     } else {
 	w = 1;

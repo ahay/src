@@ -105,8 +105,9 @@ int nr,nxz,Nxz,nrt,NHCz;
 
 Sponge *sponge;
 
-char fname_par []="par.txt";
-char fname_velo[]="velo.bin"; float *velo;
+/* char fname_par []="par.txt"; */
+/* char fname_velo[]="velo.bin"; */
+sf_file fvelo; float *velo; 
 char fname_sour[]="sour.bin"; float *sour;
 char fname_data[]="data.bin"; float *data,*datat;
 char fname_uus[128];          float *uus;
@@ -123,12 +124,11 @@ int tau; /* if true, tau domain */
 char fname_vmap[]="vmap.bin"; float *vmap;
 char fname_sigm[]="sigm.bin"; float *sigm;
 
-void init()
+static void init(int argc, char* argv[])
 {
     int i,j,ns,nh,b[4],n[3],mode;
     float czl,czh,cxl,cxh,s0,ds,h0,dh,zs=0.0f,zr=0.0f,z_,x_,cs_w[2],*cr_w,c[4],*temp;
-    char line[128],*key,*val;
-    FILE *Fdata,*Fpar=NULL;
+    FILE *Fdata;
     MPI_Status status;
 
     /* default values */
@@ -144,45 +144,52 @@ void init()
     mode = 0; tau = 0;
 
     if (MASTER == mpi_rank) {
-        if (NULL == (Fpar = fopen(fname_par,"r+")))
-            exit_error("failed to open %s",fname_par);
+	sf_init(argc,argv);
 
-        while (EOF != fscanf(Fpar,"%s\n",line)) {
-            key = strtok(line,"=");
-            val = strtok(NULL,"=");
-            if (!strcmp(key,"nz"))  nz = atoi(val);
-            if (!strcmp(key,"nx"))  nx = atoi(val);
-            if (!strcmp(key,"nt"))  nt = atoi(val);
-            if (!strcmp(key,"dz"))  dz = atof(val);
-            if (!strcmp(key,"dx"))  dx = atof(val);
-            if (!strcmp(key,"dt"))  dt = atof(val);
-            if (!strcmp(key,"z0"))  z0 = atof(val);
-            if (!strcmp(key,"x0"))  x0 = atof(val);
-            if (!strcmp(key,"bzl")) bzl= atoi(val);
-            if (!strcmp(key,"bzh")) bzh= atoi(val);
-            if (!strcmp(key,"bxl")) bxl= atoi(val);
-            if (!strcmp(key,"bxh")) bxh= atoi(val);
-            if (!strcmp(key,"czl")) czl= atof(val);
-            if (!strcmp(key,"czh")) czh= atof(val);
-            if (!strcmp(key,"cxl")) cxl= atof(val);
-            if (!strcmp(key,"cxh")) cxh= atof(val);
-            if (!strcmp(key,"j3"))  j3 = atoi(val);
-            if (!strcmp(key,"nh"))  nh = atoi(val);
-            if (!strcmp(key,"ns"))  ns = atoi(val);
-            if (!strcmp(key,"dh"))  dh = atof(val);
-            if (!strcmp(key,"ds"))  ds = atof(val);
-            if (!strcmp(key,"h0"))  h0 = atof(val);
-            if (!strcmp(key,"s0"))  s0 = atof(val);
-            if (!strcmp(key,"zr"))  zr = atof(val);
-            if (!strcmp(key,"zs"))  zs = atof(val);
-            if (!strcmp(key,"nH"))  nH = atoi(val);
-            if (!strcmp(key,"nC"))  nC = atoi(val);
-            if (!strcmp(key,"dH"))  dH = atoi(val);
-            if (!strcmp(key,"dC"))  dC = atoi(val);
-            if (!strcmp(key,"C0"))  C0 = atoi(val);
-            if (!strcmp(key,"mode")) mode = atoi(val);
-            if (!strcmp(key,"tau")) tau = atoi(val);
-        }
+	sf_getint("nz",&nz);
+	sf_getint("nz",&nx);
+	sf_getint("tz",&nt);
+
+	sf_getfloat("dz",&dz);
+	sf_getfloat("dz",&dx);
+	sf_getfloat("dt",&dt);
+
+	sf_getfloat("z0",&z0);
+	sf_getfloat("x0",&x0);
+
+	sf_getint("bzl",&bzl);
+	sf_getint("bzh",&bzl);
+	sf_getint("bxl",&bzl);
+	sf_getint("bxh",&bzl);
+	
+	sf_getfloat("czl",&czl);
+	sf_getfloat("czh",&czl);
+	sf_getfloat("cxl",&czl);
+	sf_getfloat("cxh",&czl);
+
+	sf_getint("j3",&j3);
+
+	sf_getint("nh",&nh);
+	sf_getint("ns",&ns);
+
+	sf_getfloat("dh",&dh);
+	sf_getfloat("ds",&ds);
+
+	sf_getfloat("h0",&h0);
+	sf_getfloat("s0",&s0);
+
+	sf_getfloat("zr",&zr);
+	sf_getfloat("zs",&zs);
+
+	sf_getint("nH",&nH);
+	sf_getint("nC",&nC);
+
+	sf_getint("dH",&dH);
+	sf_getint("dC",&dC);
+	sf_getint("C0",&C0);
+
+	sf_getint("mode",&mode);
+	sf_getint("tau",&tau);
 
         if (mpi_size != ns) exit_error("Need one shot per process");
     }
@@ -279,7 +286,7 @@ void init()
     MPI_Bcast(&n3,1,MPI_INT  ,MASTER,MPI_COMM_WORLD);
     MPI_Bcast(&d3,1,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
 
-    /* write new parameters */
+    /* write new parameters 
 
     if (MASTER == mpi_rank) {
         fseek(Fpar,0,SEEK_END);
@@ -298,6 +305,8 @@ void init()
         fclose(Fpar);
     }
 
+    */
+
     /* initialize sponge boundary */
 
     b[0] = bzl; b[1] = bzh; b[2] = bxl; b[3] = bxh;
@@ -306,10 +315,11 @@ void init()
 
     /* read velocity */
 
-    velo = (float *)calloc(nxz,sizeof(float));
+    velo = sf_floatalloc(nxz);
 
     if (MASTER == mpi_rank) {
-        read_float(velo,nxz,fname_velo);
+	fvelo = sf_input("velo");
+        sf_floatread(velo,nxz,fvelo);
     }
 
     MPI_Bcast(velo,nxz,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
@@ -1039,7 +1049,7 @@ int main(int argc, char *argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
     MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-    init();
+    init(argc,argv);
 
     if (forward)  {
         if (tau) update_tau(0);
