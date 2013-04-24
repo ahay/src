@@ -294,6 +294,11 @@ class Project(Environment):
             self.timer = ''
 
         self.mpirun = self.get('MPIRUN',WhereIs('ibrun') or WhereIs('mpirun'))
+        wsplit = os.environ.get('RSF_WSPLIT', None)
+        if wsplit:
+            self.wsplit = True
+        else:
+            self.wsplit = False
 
         checkpar = self.get('CHECKPAR')
         self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
@@ -341,14 +346,20 @@ class Project(Environment):
             else:
                 chunk=w-1
                 skip=bigjobs*w+(i-bigjobs)*chunk
-                
             for j in split[2]:
-                source = sfiles[j] + '_' + str(i)
-                par_sfiles[j] = source
+                if 0 == j and True == self.wsplit:
+                    par_sfiles[j] = sfiles[j]
+                    cflow = 'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d | ' % \
+                            (split[0],chunk,split[0],skip,i,jobs)
+                    cflow = cflow + flow
+                else:
+                    cflow = flow
+                    source = sfiles[j] + '_' + str(i)
+                    par_sfiles[j] = source
 
-                self.Flow(source,sfiles[j],
-                          'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
-                          (split[0],chunk,split[0],skip,i,jobs))
+                    self.Flow(source,sfiles[j],
+                              'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
+                              (split[0],chunk,split[0],skip,i,jobs))
 
             par_tfiles = []
             for j in range(len(tfiles)):
@@ -359,7 +370,7 @@ class Project(Environment):
                 par_targets[tfile].append(par_tfile)
  
             # operation on one chunk    
-            self.Flow(par_tfiles,par_sfiles,flow,
+            self.Flow(par_tfiles,par_sfiles,cflow,
                       stdout,stdin,1,
                       suffix,prefix,src_suffix)
 
