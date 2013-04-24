@@ -1,4 +1,4 @@
-/* Complex 2-D exploding reflector migration */
+/* Complex 2-D exploding reflector migration (read in initial complex wavefield in depth) */
 /*
   Copyright (C) 2009 University of Texas at Austin
   
