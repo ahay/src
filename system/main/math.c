@@ -69,6 +69,7 @@ int main (int argc, char* argv[])
     sf_file *in, out;
     char *eq, *output, *key, *arg, xkey[8], *ctype, *label, *unit;
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
+    bool nostdin;
     sf_complex **cbuf, **cst;
     sf_datatype type;
 
@@ -80,8 +81,11 @@ int main (int argc, char* argv[])
     out = sf_output ("out");
     bufsiz = sf_bufsiz(out);
 
+    if (!sf_getbool("nostdin", &nostdin)) nostdin=false;
+    /* y - ignore stdin */
+
     /* find number of input files */
-    if (!sf_stdin()) { /* no input file in stdin */
+    if (nostdin || !sf_stdin()) { /* no input file in stdin */
 	nin=0;
     } else {
 	in[0] = sf_input("in");
@@ -94,6 +98,7 @@ int main (int argc, char* argv[])
 	eq  = strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
     if (0 == strncmp(arg,"datapath=",9) ||
+        0 == strncmp(arg, "nostdin=",8) ||
         0 == strncmp(arg,  "output=",7) ||
         0 == strncmp(arg,    "type=",5) ||
         0 == strncmp(arg,     "out=",4) ||
