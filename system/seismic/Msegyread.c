@@ -284,9 +284,9 @@ int main(int argc, char *argv[])
     char *filename, *trace, *prog, key[7], *name;
     sf_file out, hdr, msk=NULL;
     int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik;
-    off_t pos, nsegy;
+    off_t pos, nsegy=0;
     FILE *head, *file;
-    float *ftrace, dt;
+    float *ftrace, dt=0.0, t0;
     extern int fseeko(FILE *stream, off_t offset, int whence);
     extern off_t ftello (FILE *stream);
 
@@ -349,22 +349,7 @@ int main(int argc, char *argv[])
     }
     segy_init(nkeys,NULL);
 
-    if (su) { /* figure out ns and ntr */
-	trace = sf_charalloc (SF_HDRBYTES);
-	if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
-	    sf_error ("Error reading first trace header");
-	fseeko(file,0,SEEK_SET);
-
-	segy2head(trace, itrace, SF_NKEYS);
-	ns = itrace[ segykey("ns")];
-	dt = itrace[ segykey("dt")]/1000000.;
-	free (trace);
-
-	nsegy = SF_HDRBYTES + ns*4;
-	if (0==ntr) ntr = pos/nsegy;	
-
-	if (suxdr) format=5;
-    } else { /* get data headers */
+    if (!su) { /* read ascii and binary headers */
 	if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, file)) 
 	    sf_error("Error reading ebcdic header");
 	
@@ -442,7 +427,32 @@ int main(int argc, char *argv[])
 	dt = segydt (bhead);
 	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
 	if (0==ntr) ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
+
+        pos = ftello(file);
+    } else {
+        pos = 0;
+    }
+
+    /* read first trace header */
+    trace = sf_charalloc (SF_HDRBYTES);
+    if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
+	sf_error ("Error reading first trace header");
+    fseeko(file,pos,SEEK_SET); /* rewind */
+
+    segy2head(trace, itrace, SF_NKEYS);
+    t0 = itrace[ segykey("delrt")]/1000.;
+
+    if (su) { /* figure out ns, dt, and ntr */
+	ns = itrace[ segykey("ns")];
+	dt = itrace[ segykey("dt")]/1000000.;
+	free (trace);
+
+	nsegy = SF_HDRBYTES + ns*4;
+	if (0==ntr) ntr = pos/nsegy;	
+
+	if (suxdr) format=5;
     } 
+
     if (verbose) sf_warning("Expect %d traces",ntr);
 
     if (NULL != sf_getstring("mask")) {
@@ -470,7 +480,7 @@ int main(int argc, char *argv[])
 	sf_putint(out,"n1",ns);
 	sf_putint(out,"n2",n2);
 	sf_putfloat(out,"d1",dt);
-	sf_putfloat(out,"o1",0.);
+	sf_putfloat(out,"o1",t0);
 	sf_putstring(out,"label1","Time");
 	sf_putstring(out,"unit1","s");
 	sf_putfloat(out,"d2",1.);

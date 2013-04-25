@@ -70,6 +70,7 @@ In programs:
 * Fixed incorrect data size bug in sffindmo
 * Fixed true colors in gdpen
 * Fixed parallel split in sfomp and sfmpi
+* Set o1= in sfsegyread
 
 In the build system:
 
