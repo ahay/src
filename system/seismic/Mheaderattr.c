@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
 		    indxmax[i1],lrint(max[i1]),
 		    mean[i1]/n2);
 	  } else {
-	    fprintf(stdout,"%4d %8s %10d %14lf %10d %14lf %14le\n",
+	    fprintf(stdout,"%4d %8s %10d %14le %10d %14le %14le\n",
 		    i1,segykeyword(i1),
 		    indxmin[i1],min[i1],
 		    indxmax[i1],max[i1],
