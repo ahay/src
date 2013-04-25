@@ -430,7 +430,9 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
                         if (len) {
                             local = false;
                             cram_data->ntr = cram_data->trvals->n;
-                        }
+                        } else
+                            sf_warning ("Only %d out of %d bytes received for trace %lu, expecting %n traces",
+                                        len, elen, i, cram_data->trvals->n);
                     } /* Trace samples receive branch */
                 }
             } /* Receive branch */
