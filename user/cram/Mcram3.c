@@ -221,6 +221,7 @@ int main (int argc, char* argv[]) {
     s = sf_floatalloc (j);
 
     for (i = 0; i < j; i++) {
+        sf_warning ("Object %d of %d;", i, j);
         /* Exit ray branches object */
         cram_rbranches[i] = sf_cram_rbranch3_init (nb, na, zd, t0 + (nt - 1)*dt,
                                                    xbmin, xbmax, ybmin, ybmax,

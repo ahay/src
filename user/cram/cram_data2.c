@@ -339,7 +339,7 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
         /* Data daemon index */
         is = (int)((float)i/cram_data->trd);
         if (cram_data->nc && cram_data->sockets[is] != -1) {
-            len = 0;       
+            len = 0; 
             /* Send trace request */
             trreq.id = rand ()*rand ();
             trreq.i = i;
@@ -360,15 +360,15 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
             }
             if (len) {
                 FD_ZERO(&sset);
-                FD_SET(is, &sset);
+                FD_SET(cram_data->sockets[is], &sset);
                 timeout.tv_sec = 60;
                 timeout.tv_usec = 0;
                 len = 0;
                 /* Wait for a response from the server */
                 rc = select (cram_data->sockets[is] + 1, &sset, NULL, NULL, &timeout);
                 if (0 == rc)
-                    sf_warning ("Timeout reached for socket %d while expecting a response",
-                                cram_data->sockets[is]);
+                    sf_warning ("Timeout reached for socket[%d]=%d while expecting a response for trace %lu",
+                                is, cram_data->sockets[is], i);
                 else if (rc < 0)
                     sf_error ("select() failed");
                 else {
