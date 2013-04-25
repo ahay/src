@@ -28,72 +28,80 @@ Only nonzero values are reported.
 int main(int argc, char* argv[])
 {
     int i1, i2, n1, n2;
-    int *max=NULL, *min=NULL, *inp=NULL, *imax=NULL, *imin=NULL;
-    double *mean=NULL;
-    char pad[] = "                    ", out[21];
+    double *max=NULL, *min=NULL, *mean=NULL;
+    int *inp=NULL, *indxmax=NULL, *indxmin=NULL;
+    float *inpfloat=NULL;
+    double value;
     sf_file head=NULL;
+    sf_datatype typehead;
 
     sf_init (argc,argv);
     head = sf_input("in");
 
-    if (SF_INT != sf_gettype(head)) sf_error("Need int input");
+    typehead = sf_gettype(head);
+    if (SF_INT != typehead && SF_FLOAT != typehead ) sf_error("Need float or int input headers");
     if (!sf_histint(head,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(head,1);
 
     fprintf(stdout,"******************************************* \n");
     fprintf(stdout,"%d headers, %d traces\n",n1,n2);
  
-    inp = sf_intalloc(n1);
+    if (SF_INT == typehead) inp = sf_intalloc(n1);
+    else                    inpfloat = sf_floatalloc(n1);  /* input must be float or int */
 
-    min = sf_intalloc(n1);
-    max = sf_intalloc(n1);
+    min = (double*) sf_alloc(n1,sizeof(double));
+    max = (double*) sf_alloc(n1,sizeof(double));
 
-    imin = sf_intalloc(n1);
-    imax = sf_intalloc(n1);
+    indxmin = sf_intalloc(n1);
+    indxmax = sf_intalloc(n1);
 
     mean = (double*) sf_alloc(n1,sizeof(double));
 
-    sf_intread(inp,n1,head);
     for (i1=0; i1 < n1; i1++) {
-	min [i1] = inp[i1];
-	max [i1] = inp[i1];
-	
-	imin[i1] = 0;
-	imax[i1] = 0;
-
-	mean[i1] = inp[i1];
+	mean[i1] = 0;
     }
 
-    for (i2=1; i2 < n2; i2++) {
-	sf_intread(inp,n1,head);
-	for (i1=0; i1 < n1; i1++) {
-	    if (min[i1] > inp[i1]) {
-		min [i1] = inp[i1];
-		imin[i1] = i2;
-	    }
-	    if (max[i1] < inp[i1]) {
-		max [i1] = inp[i1];
-		imax[i1] = i2;
-	    }
-	    mean[i1] += inp[i1];
+    for (i2=0; i2 < n2; i2++) {
+      if (SF_INT == typehead) sf_intread  (inp,n1,head);
+      else                    sf_floatread(inpfloat,n1,head);
+      for (i1=0; i1 < n1; i1++) {
+	if (SF_INT == typehead) value=inp[i1];
+	else                    value=inpfloat[i1];
+	if (i2==0 || (min[i1] > value)) {
+	  min [i1] = value;
+	  indxmin[i1] = i2;
 	}
+	if (i2==0 || (max[i1] < value)) {
+	  max [i1] = value;
+	  indxmax[i1] = i2;
+	}
+	mean[i1] += value;
+      }
     }
 
     segy_init(n1,head);
     
     /* put headers on table of numbers */
     fprintf(stdout,"\n");
-    fprintf(stdout,"indx     key        indx         min       ");
-    fprintf(stdout,"indx         max           mean\n");
-    fprintf(stdout," key    name         min       value       ");
-    fprintf(stdout," max       value          value\n");
+    fprintf(stdout,"indx     key        indx            min       ");
+    fprintf(stdout,"indx            max           mean\n");
+    fprintf(stdout," key    name         min          value       ");
+    fprintf(stdout," max          value          value\n");
     for (i1=0; i1 < n1; i1++) {
 	if (min[i1] != 0 || max[i1] != 0) {
-	  fprintf(stdout,"%4d %8s %10d %11d %10d %11d %14e\n",
-		  i1,segykeyword(i1),
-		  imin[i1],min[i1],
-		  imax[i1],max[i1],
-		  mean[i1]/n2);
+	  if (SF_INT == typehead){
+	    fprintf(stdout,"%4d %8s %10d %14ld %10d %14ld %14le\n",
+		    i1,segykeyword(i1),
+		    indxmin[i1],lrint(min[i1]),
+		    indxmax[i1],lrint(max[i1]),
+		    mean[i1]/n2);
+	  } else {
+	    fprintf(stdout,"%4d %8s %10d %14lf %10d %14lf %14le\n",
+		    i1,segykeyword(i1),
+		    indxmin[i1],min[i1],
+		    indxmax[i1],max[i1],
+		    mean[i1]/n2);
+	  }
 	}
     }
 
