@@ -57,7 +57,7 @@ void sf_grad2fill(int niter   /* number of iterations */,
 	       bool *known /* mask */)
 /*< Run optimization >*/
 {
-    sf_solver (sf_igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, niter, 
-	       "x0", mm, "known", known, "end");
+    sf_solver (sf_igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, 
+	       niter, "x0", mm, "known", known, "end");
     sf_cgstep_close ();
 }

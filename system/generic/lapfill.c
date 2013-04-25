@@ -68,10 +68,12 @@ void lapfill(int niter   /* number of iterations */,
 {
     if (grad) {
 	sf_solver (sf_igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, 
-		   niter, "x0", mm, "known", known, "verb", verb, "end");
+		   niter, "x0", mm, "known", known, 
+		   "verb", verb, "end");
     } else {
 	sf_solver (laplac2_lop, sf_cgstep, n12, n12, mm, zero, 
-		   niter, "x0", mm, "known", known, "verb", verb, "end");
+		   niter, "x0", mm, "known", known, 
+		   "verb", verb, "end");
     }
     sf_cgstep_close ();
 }
