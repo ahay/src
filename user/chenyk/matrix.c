@@ -32,7 +32,6 @@ void mul(float *a,float *b,int m,int n,int k,float *c)
 	    for (l=0; l<=n-1; l++)
 		c[u]+=a[i*n+l]*b[l*k+j];
 	}
-    return;
 }
 
 void add(float *a,float *b,int m,int n,float *c) 
@@ -43,7 +42,6 @@ void add(float *a,float *b,int m,int n,float *c)
 	for (j=0; j<=n-1; j++)	{ 
 		c[i*n+j]=a[i*n+j]+b[i*n+j];
 	}
-    return;
 }
 
 void sub(float *a,float *b,int m,int n,float *c) 
@@ -54,7 +52,6 @@ void sub(float *a,float *b,int m,int n,float *c)
 	for (j=0; j<=n-1; j++)	{ 
 		c[i*n+j]=a[i*n+j]-b[i*n+j];
 	}
-    return;
 }
 
 void dotmul(float *a,float *b,int m,int n,float *c) 
@@ -65,7 +62,55 @@ void dotmul(float *a,float *b,int m,int n,float *c)
 	for (j=0; j<=n-1; j++)	{ 
 		c[i*n+j]=a[i*n+j]*b[i*n+j];
 	}
-    return;
 }
+
+void tran(float *a, int m, int n, float *b)
+/*< matrix transpose: a->m*n, b->n*m >*/
+{
+    int i, j;
+    for(i=0;i<n;i++)
+	for(j=0;j<m;j++)
+		b[i*m+j]=a[j*n+i];
+}
+
+void zero(float *a, int m)
+/*< zero a specific part of an array, like initialization >*/
+{
+    int i;
+    for(i=0;i<m;i++)
+	{ a[i]=0; }   
+}
+
+void cmatmul(kiss_fft_cpx *a,kiss_fft_cpx *b,int m,int n,int k,kiss_fft_cpx *c) 
+/*< complex matrix multiplication: a->m*n, b->n*k >*/
+{
+    int i,j,l,u;
+    for (i=0; i<=m-1; i++)
+	for (j=0; j<=k-1; j++)	
+	{ 
+	    u=i*k+j; c[u].r=0.0; c[u].i=0.0;
+	    for (l=0; l<=n-1; l++)
+		c[u]=sf_cadd(c[u],sf_cmul(a[i*n+l],b[l*k+j]));
+	}
+}
+
+void cmattran(kiss_fft_cpx *a, int m, int n, kiss_fft_cpx *b)
+/*< complex matrix transpose: a->m*n, b->n*k >*/
+{
+    int i, j;
+    for(i=0;i<n;i++)
+	for(j=0;j<m;j++)
+		b[i*m+j]=a[j*n+i];	
+
+}
+
+void czero(kiss_fft_cpx *a, int m )
+/*< zero a specific part of a complex array, like initialization >*/
+{
+    int i;
+    for(i=0;i<m;i++)
+	{a[i].r=0;a[i].i=0;}   
+}
+
 
 

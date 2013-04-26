@@ -1,4 +1,4 @@
-/* Solver for linear equations  */
+/* Solver for linear equations (Gauss elimination) */
 /*
   Copyright (C) 2013 University of Texas at Austin
   

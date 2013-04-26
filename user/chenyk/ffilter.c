@@ -50,16 +50,15 @@ void trapezoid_init(int n /*length of time series*/,
    for(iw=0;iw<nw;iw++)
    {
 	if(iw<i1) shape[iw]=0;
-	if(iw>=i1 && iw<i2) shape[iw]=(iw-i1)/(i2-i1);
-	if(iw>=i2 && iw<i3) shape[iw]=1;
-	if(iw>=i3 && iw<i4) shape[iw]=(i4-iw)/(i4-i3);
+	if(iw>=i1 && iw<i2) shape[iw]=(iw-i1)/(i2-i1)/nfft;
+	if(iw>=i2 && iw<i3) shape[iw]=1/nfft;
+	if(iw>=i3 && iw<i4) shape[iw]=(i4-iw)/(i4-i3)/nfft;
 	if(iw>=i4) shape[iw]=0;
-    }
+   }
 }
 
 void trapezoid_apply(float *xx /*input time series*/,
-		     float *yy /*output time seires*/,
-		     float n /*length of time series*/)
+		     float *yy /*output time seires*/)
 /*< applying trapezoid bandpass filter >*/
 {
     kiss_fftr(forw, xx, cdata);

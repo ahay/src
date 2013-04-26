@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
   for(i=0;i<n2;i++)
   {
 	sf_floatread(dd,n1,in);
- 	trapezoid_apply(dd,trace,n1);
+ 	trapezoid_apply(dd,trace);
         sf_floatwrite(trace,n1,out);
   }
 
