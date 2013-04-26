@@ -33,130 +33,121 @@
 int main(int argc, char* argv[])
 {
     /* declarations */
-  int i,n,nb_imfs,max_imfs,iteration_counter,stop_status,allocated_x,stop_EMD;
-  extrema_t ex;
-  input_t input;
-  envelope_t env;
-  stop_t stop_params;
-  double *x,*y,*z,*m,*a;
-  float *dat,*imf,dt;
-  imf_list_t list;
-  sf_file inp, outp; 
+    int i,n,nb_imfs,max_imfs,iteration_counter,stop_status,allocated_x,stop_EMD;
+    extrema_t ex;
+    input_t input;
+    envelope_t env;
+    stop_t stop_params;
+    double *x,*y,*z,*m,*a;
+    float *dat,*imf,dt;
+    imf_list_t list;
+    sf_file inp, outp; 
 
-  sf_init(argc,argv);
-  inp  = sf_input("in");
-  outp = sf_output("out");
-  if (!sf_histint(inp,"n1",&n)) sf_error("No n1= in input");
-  if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
-  x=(double*)sf_alloc(n,sizeof(double));
-  y=(double*)sf_alloc(n,sizeof(double)); 
+    sf_init(argc,argv);
+    inp  = sf_input("in");
+    outp = sf_output("out");
+    if (!sf_histint(inp,"n1",&n)) sf_error("No n1= in input");
+    if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
+    x=(double*)sf_alloc(n,sizeof(double));
+    y=(double*)sf_alloc(n,sizeof(double)); 
 
-  sf_warning("alloc\n");
-  dat=sf_floatalloc(n);
-  imf=sf_floatalloc(n*20);
+    dat=sf_floatalloc(n);
+    imf=sf_floatalloc(n*20);
 
-  sf_floatread(dat,n,inp);
-  for(i=0;i<n;i++){y[i]=dat[i];x[i]=i*dt;}
-
-
-
+    sf_floatread(dat,n,inp);
+    for(i=0;i<n;i++){y[i]=dat[i];x[i]=i*dt;}
 
     /* get input data */
-  input.stop_params.threshold=DEFAULT_THRESHOLD;
-  input.stop_params.tolerance=DEFAULT_TOLERANCE;
-  input.allocated_x=0;
+    input.stop_params.threshold=DEFAULT_THRESHOLD;
+    input.stop_params.tolerance=DEFAULT_TOLERANCE;
+    input.allocated_x=0;
 #ifdef _ALT_MEXERRMSGTXT
-  input.error_flag=0;
+    input.error_flag=0;
 #endif  
-  input.max_imfs=0;
-  input.n=n;  
-  input.x=x;
-  input.y=y;
+    input.max_imfs=0;
+    input.n=n;  
+    input.x=x;
+    input.y=y;
 
-  max_imfs=input.max_imfs;
-  stop_params=input.stop_params;
-  allocated_x=input.allocated_x;
-  x=input.x;
-  y=input.y;
+    max_imfs=input.max_imfs;
+    stop_params=input.stop_params;
+    allocated_x=input.allocated_x;
+    x=input.x;
+    y=input.y;
   
     /* initialisations */
-  ex=init_extr(n+2*NBSYM);
-  list=init_imf_list(n);
-  z=(double *)malloc(n*sizeof(double));
-  m=(double *)malloc(n*sizeof(double));
-  a=(double *)malloc(n*sizeof(double));
-  env=init_local_mean(n+2*NBSYM);
-  
+    ex=init_extr(n+2*NBSYM);
+    list=init_imf_list(n);
+    z=(double *)malloc(n*sizeof(double));
+    m=(double *)malloc(n*sizeof(double));
+    a=(double *)malloc(n*sizeof(double));
+    env=init_local_mean(n+2*NBSYM);
   
     /* MAIN LOOP */
-  
-  nb_imfs=0;
-  stop_EMD=0;
-  sf_warning("start main loop\n");
-  while ((!max_imfs || (nb_imfs < max_imfs)) && !stop_EMD) {
+    nb_imfs=0;
+    stop_EMD=0;
+    while ((!max_imfs || (nb_imfs < max_imfs)) && !stop_EMD) {
     
         /* initialisation */
-    for (i=0;i<n;i++) z[i]=y[i];
-    for (i=0;i<n;i++) m[i]=y[i];
-    iteration_counter=0;
+	for (i=0;i<n;i++) z[i]=y[i];
+	for (i=0;i<n;i++) m[i]=y[i];
+	iteration_counter=0;
     
-    stop_status = mean_and_amplitude(x,z,m,a,n,&ex,&env);
+	stop_status = mean_and_amplitude(x,z,m,a,n,&ex,&env);
     
         /* SIFTING LOOP */
     
-    while (!stop_status && !stop_sifting(m,a,&ex,&stop_params,n,iteration_counter)) {
+	while (!stop_status && !stop_sifting(m,a,&ex,&stop_params,n,iteration_counter)) {
       
             /* subtract the local mean */
-      for (i=0;i<n;i++) z[i]=z[i]-m[i];
-      iteration_counter++;
+	    for (i=0;i<n;i++) z[i]=z[i]-m[i];
+	    iteration_counter++;
       
-      stop_status = mean_and_amplitude(x,z,m,a,n,&ex,&env);
+	    stop_status = mean_and_amplitude(x,z,m,a,n,&ex,&env);
       
       
-    }
+	}
     
         /* save current IMF into list if at least     */
         /* one sifting iteration has been performed */
-    if (iteration_counter) {
-      add_imf(&list,z,iteration_counter);
+	if (iteration_counter) {
+	    add_imf(&list,z,iteration_counter);
 
-      nb_imfs++;
-      for (i=0;i<n;i++){
-	 y[i]=y[i]-z[i];
-	 imf[i+(nb_imfs-1)*n]=z[i];	
-	}      
+	    nb_imfs++;
+	    for (i=0;i<n;i++){
+		y[i]=y[i]-z[i];
+		imf[i+(nb_imfs-1)*n]=z[i];	
+	    }      
+	}
+	else
+	    stop_EMD = 1;    
     }
-    else
-      stop_EMD = 1;
-sf_warning("Stop\n");
-    
-  }
   
     /* save the residual into list */
-  add_imf(&list,y,0);
-  for (i=0;i<n;i++) imf[i+nb_imfs*n]=y[i];	
+    add_imf(&list,y,0);
+    for (i=0;i<n;i++) imf[i+nb_imfs*n]=y[i];	
 
-  sf_putint(outp,"n1",n);
-  sf_putint(outp,"n2",nb_imfs+1);
-  sf_putfloat(outp,"d1",dt);
-  sf_putfloat(outp,"d2",1);
-  sf_putfloat(outp,"o1",0);
-  sf_putfloat(outp,"o2",0);  
+    sf_putint(outp,"n1",n);
+    sf_putint(outp,"n2",nb_imfs+1);
+    sf_putfloat(outp,"d1",dt);
+    sf_putfloat(outp,"d2",1);
+    sf_putfloat(outp,"o1",0);
+    sf_putfloat(outp,"o2",0);  
 
     /* output  */
-   sf_floatwrite(imf,n*(nb_imfs+1),outp);
-   sf_warning("outwrite\n");
+    sf_floatwrite(imf,n*(nb_imfs+1),outp);
+    sf_warning("outwrite\n");
   
     /* free allocated memory */
-  if (allocated_x)
-  free(x);
-  free(y);
-  free(m);
-  free(a);
-  free_local_mean(env);
-  free(z);
-  free_imf_list(list);
-  free_extr(ex);
+    if (allocated_x)
+	free(x);
+    free(y);
+    free(m);
+    free(a);
+    free_local_mean(env);
+    free(z);
+    free_imf_list(list);
+    free_extr(ex);
 
     exit (0);
 }

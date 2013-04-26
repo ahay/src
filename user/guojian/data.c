@@ -318,9 +318,9 @@ void shot_plane_receiver(float min_x,float min_y,int nx,int ny,int iw,int i_sx,i
     nx_read=(max_x_read-min_x_read)/fabs(plane_dx)+1;      ny_read=(max_y_read-min_y_read)/fabs(plane_dy)+1;
     i_ox_read=(min_x_read-min_x_d)/fabs(plane_dx);         i_oy_read=(min_y_read-min_y_d)/fabs(plane_dy);
     i_ox_wld=(min_x_read-min_x)/fabs(plane_dx);            i_oy_wld=(min_y_read-min_y)/fabs(plane_dy);
-    n_block=i_s*data_par.nw+iw;        blocksize=plane_ny*plane_nx*8;
+    n_block=i_s*data_par.nw+iw;        blocksize=plane_ny*plane_nx;
 //printf("plane_ny=%d, plane_nx=%d,nblock=%d,i_s=%d\n",plane_ny,plane_nx,n_block,i_s);
-    sf_seek(data_par.data,n_block*blocksize,SEEK_SET);
+    sf_seek(data_par.data,n_block*blocksize*sizeof(sf_complex),SEEK_SET);
     sf_complexread(tmp_wld,blocksize,data_par.data);
     for(iy=0;iy<ny_read;iy++)
 	for(ix=0;ix<nx_read;ix++)
