@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     clock_t tstart,tend;
     double duration;
     bool verb;
-    int nx, nt, ix, it;
+    int nx, nt, ix, it, it0;
     int nxb;
     float dt, dx;
     float *txxn1, *txxn0, *vxn1, *vxn0;
@@ -55,11 +55,12 @@ int main(int argc, char* argv[])
     float *denx;
     float *record;
     bool freesurface;
+    bool inject = false;
     int spx, gdep;
     int snapinter;
     int mx; /*margin*/
  
-    sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/; 
+    sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/, fic/*Initial Condition*/; 
     sf_file fG, fsx;
     float *sxtmp;
     sf_axis at, ax;
@@ -72,29 +73,35 @@ int main(int argc, char* argv[])
     int   decay;
     float gamma = GAMMA;
 
+    int icnx;
+    sf_axis icaxis;
+    float *ic;
 
     tstart = clock();
     sf_init(argc, argv);
     if (!sf_getbool("verb", &verb)) verb=false; /*verbosity*/
 
     /*Set I/O file*/
-    fsource = sf_input("in");  /*source wavelet*/
-    fvel    = sf_input("vel"); /*velocity*/
-    fden    = sf_input("den"); /*density*/
-    fwf     = sf_output("out");/*wavefield snap*/
-    frec    = sf_output("rec"); /*record*/
+    fsource = sf_input("in");  
+    /*source wavelet*/
+    fic     = sf_input("ic");  
+    /*initial condition*/
+    fvel    = sf_input("vel");
+    /*velocity*/
+    fden    = sf_input("den");
+    /*density*/
+    fwf     = sf_output("out");
+    /*wavefield snap*/
+    frec    = sf_output("rec");
+    /*record*/
     
-    /* Read/Write axes */
-    at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
-    ax = sf_iaxa(fvel,1); nxb = sf_n(ax); dx = sf_d(ax);
-
-
     fG  = sf_input("G"); 
     fsx = sf_input("sx");
         
     if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fden)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(fic))  inject = true;
     
     if (!sf_getint("spx", &spx)) sf_error("Need spx input");
     /*source point in x */
@@ -118,6 +125,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("srctrunc",&srctrunc)) srctrunc=300;
     /*source trunc*/
     
+    /* Read/Write axes */
+    at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
+    ax = sf_iaxa(fvel,1); nxb = sf_n(ax); dx = sf_d(ax);
     
     sxtmp = sf_floatalloc(lenx);
     sx = sf_intalloc(lenx);
@@ -131,7 +141,7 @@ int main(int argc, char* argv[])
     marg = mx;
     
     nx = nxb - 2*pmlout - 2*marg;
-       
+    
     /*set axis for record file*/
     //sf_setn(at, nt);
     sf_setn(ax, nx);
@@ -176,6 +186,18 @@ int main(int argc, char* argv[])
     vxn0  = sf_floatalloc(nxb);
         
     record = sf_floatalloc(nt);
+    
+    
+    /*Initial Condition*/
+    if (inject == false) {
+	
+	icaxis = sf_iaxa(fic, 1); 
+	icnx = sf_n(icaxis);
+	if (nx != icnx) sf_error("I.C. and velocity should be the same size.");
+	ic = sf_floatalloc(nx);
+	sf_floatread(ic, nx, fic);	
+    }
+    
 
     init_pml1(nx, dt, pmlout, marg, pmld0, decay, decaybegin, gamma);
     
@@ -197,7 +219,7 @@ int main(int argc, char* argv[])
 	record[it] = 0.0;
     }  
     
-    /* MAIN LOOP */
+    
     sp.trunc=srctrunc;
     sp.srange=10;
     sp.alpha=0.5;
@@ -211,10 +233,20 @@ int main(int argc, char* argv[])
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx]=[%d,] G=%f",sx[ix], G[ix][0]);
     }
-        
-    for (it = 0; it < nt; it++) {
-	if (it%10==0) sf_warning("it=%d/%d;", it, nt);
-	if (it<=sp.trunc) {
+    
+    it0=0;
+    if (inject == false) {
+	it0=1;
+	for(ix = 0; ix < nx; ix++) {
+	    txxn0[ix+marg+pmlout] = ic[ix];
+	    //vxn0[ix+marg+pmlout] = ic[ix];
+	}
+    }
+    
+    /* MAIN LOOP */
+    for (it = it0; it < nt; it++) {
+	sf_warning("it=%d/%d;", it, nt);
+	if (inject ==true && it<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
 	}
 	

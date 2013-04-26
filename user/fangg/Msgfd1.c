@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     clock_t tstart,tend;
     double duration;
     bool verb;
-    int nx, nt, ix, it;
+    int nx, nt, ix, it, it0;
     int nxb;
     float dt, dx;
     float *txxn1, *txxn0, *vxn1, *vxn0;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
     float *record;
     int spx, gdep;
     int oo;
-    sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/;
+    sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/, fic;
     sf_axis at, ax;
     int marg;
     int snapinter;
@@ -95,6 +95,11 @@ int main(int argc, char* argv[])
     int pmlout, pmld0, decaybegin;
     int   decay;
     float gamma = GAMMA;
+
+    bool inject = false;
+    int icnx;
+    sf_axis icaxis;
+    float *ic;
     
     
     tstart = clock();
@@ -104,17 +109,22 @@ int main(int argc, char* argv[])
     /*Set I/O file*/
     fsource = sf_input("in");  /*source wavelet*/
     fvel    = sf_input("vel"); /*velocity*/
+    fic     = sf_input("ic"); 
     fden    = sf_input("den"); /*density*/
     fwf     = sf_output("out");/*wavefield snap*/
-     frec    = sf_output("rec"); /*record*/
+    frec    = sf_output("rec"); /*record*/
+    
+
+
     /* Read/Write axes */
     at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
     ax = sf_iaxa(fvel, 1); nxb = sf_n(ax); dx = sf_d(ax);
     
-
+    
     if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fden)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(fic))  inject = true;
     
     if(!sf_getint("size",&marg)) marg=4;
     if (!sf_getint("gdep", &gdep)) gdep=0;
@@ -176,6 +186,17 @@ int main(int argc, char* argv[])
     vxn0  = sf_floatalloc(nxb);
 
     record = sf_floatalloc(nt);
+    
+    /*Initial Condition*/
+    if (inject == false) {
+	icaxis = sf_iaxa(fic, 1); 
+	icnx = sf_n(icaxis);
+	if (nx != icnx) sf_error("I.C. and velocity should be the same size.");
+	ic = sf_floatalloc(nx);
+	sf_floatread(ic, nx, fic);	
+    }
+    
+    
     init_pml1(nx, dt, pmlout, marg, pmld0, decay, decaybegin, gamma);
     
 
@@ -194,6 +215,16 @@ int main(int argc, char* argv[])
     for (it = 0; it < nt; it++) {
 	record[it] = 0.0;
     } 
+    
+    it0=0;
+    if (inject == false) {
+	it0=1;
+	for(ix = 0; ix < nx; ix++) {
+	    txxn0[ix+marg+pmlout] = ic[ix];
+	    //vxn0[ix+marg+pmlout] = ic[ix];
+	}
+    }
+    
    
     /* MAIN LOOP */
     sp.trunc=srctrunc;
@@ -207,9 +238,9 @@ int main(int argc, char* argv[])
     sf_warning("marg=%d pmlout=%d", marg, pmlout);
     sf_warning("srctrunc=%d srcdecay=%d", sp.trunc, sp.decay);
     
-    for (it = 0; it < nt; it++) {
-	sf_warning("it=%d;", it);
-	if (it<=sp.trunc) {
+    for (it = it0; it < nt; it++) {
+	sf_warning("it=%d/%d;", it, nt-1);
+	if (inject ==true && it<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
 	}
 
