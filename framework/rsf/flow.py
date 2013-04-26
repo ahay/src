@@ -64,7 +64,12 @@ def Flow(sources,flow,bindir,rsfflow=1,
             # special rule for metaprograms
             if rsfprog and rsfprog[len(prefix):] in \
                     ('conjgrad','cconjgrad','mpi','omp'):
-                command2 = pars.pop(1)
+                n = 1
+                command2 = pars.pop(n)
+                while '=' in command2:
+                    pars.insert(n,command2)
+                    n += 1
+                    command2 = pars.pop(n)
                 # check if this command is in our list
                 if rsfflow:
                     if command2[:len(prefix)]==prefix:
@@ -78,7 +83,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
                             coms.append(rsfprog2)
                 if re.match(r'[^/]+\.exe$',command2): # local program
                     command2 = os.path.join('.',command2)                 
-                pars.insert(1,command2)
+                pars.insert(n,command2)
             # special rule for MPI programs
             if rsfprog and rsfprog.startswith(prefix+'mpi') and mpirun:
                 pars.insert(0,mpirun)

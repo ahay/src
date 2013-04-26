@@ -414,9 +414,9 @@ class Project(Environment):
                 reduction = reduce
 
             if split[1] == 'omp': 
-                flow = 'omp ' + flow
+                flow = 'omp split=%d ' % split[0] + flow
             elif split[1] == 'mpi':
-                flow = 'mpi ' + flow
+                flow = 'mpi split=%d ' % split[0] + flow
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
