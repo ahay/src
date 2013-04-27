@@ -34,8 +34,9 @@ env.Prepend(CPPPATH=['../../include'],
 
 fftw = env.get('FFTW')
 if fftw:
-    env.Prepend(LIBS=[fftw],
-                CPPDEFINES=['SF_HAS_FFTW'])
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Prepend(LIBS=[fftw])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

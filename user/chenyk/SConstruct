@@ -54,9 +54,9 @@ else:
     lapack = None
 
 if lapack:
-    libs.extend(lapack)
     libsxx = [dynpre+'rsf++','vecmatop']
     if not isinstance(lapack,bool):
+        libs.extend(lapack)
         libsxx.extend(lapack)
     libsxx.extend(libs)
 

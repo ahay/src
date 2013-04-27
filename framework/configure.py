@@ -1171,7 +1171,11 @@ def fftw(context):
     LIBS = path_get(context,'LIBS')
     
     text = '''
+    #ifdef HAVE_MKL
+    #include <mkl.h>
+    #else 
     #include <fftw3.h>
+    #endif
     int main(int argc,char* argv[]) {
     fftwf_complex *in;
     fftwf_plan p;
@@ -1181,18 +1185,22 @@ def fftw(context):
     fftwf_free(in); 
     return 0;
     }\n'''
-    fftw = context.env.get('FFTW','fftw3f')
-    LIBS.append(fftw)
     res = context.TryLink(text,'.c')
-
     if res:
         context.Result(res)
-        context.env['FFTW'] = fftw
+        context.env['FFTW'] = True
     else:
-        context.Result(context_failure)
-        context.env['FFTW'] = None
-        need_pkg('fftw', fatal=False)
-    LIBS.pop()
+        fftw = context.env.get('FFTW','fftw3f')
+        LIBS.append(fftw)
+        res = context.TryLink(text,'.c')
+        if res:
+            context.Result(res)
+            context.env['FFTW'] = fftw
+        else:
+            context.Result(context_failure)
+            context.env['FFTW'] = None
+            need_pkg('fftw', fatal=False)
+        LIBS.pop()
 
 pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}

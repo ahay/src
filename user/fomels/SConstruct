@@ -43,7 +43,8 @@ env.Prepend(CPPPATH=['../../include'],
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    libs.insert(0,fftw)
+    if not isinstance(fftw,bool):
+        libs.insert(0,fftw)
 
 objects = []
 dobjects = []
