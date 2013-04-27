@@ -1171,11 +1171,7 @@ def fftw(context):
     LIBS = path_get(context,'LIBS')
     
     text = '''
-    #ifdef HAVE_MKL
-    #include <mkl.h>
-    #else 
     #include <fftw3.h>
-    #endif
     int main(int argc,char* argv[]) {
     fftwf_complex *in;
     fftwf_plan p;
