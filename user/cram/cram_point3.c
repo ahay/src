@@ -135,10 +135,10 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
         cram_point->dhits = NULL;
     }
 
-    sf_cram_point3_reset (cram_point);
-
     cram_point->agath = agath; /* Compute opening angle gather */
     cram_point->dipgath = dipgath; /* Compute dip angle gather */
+
+    sf_cram_point3_reset (cram_point);
 
     cram_point->src_exits = (sf_cram_surface_exit3*)sf_alloc (na, sizeof (sf_cram_surface_exit3));
     cram_point->rcv_exits = (sf_cram_surface_exit3*)sf_alloc (na, sizeof (sf_cram_surface_exit3));
