@@ -61,8 +61,26 @@ struct CRAMPoint3 {
 };
 /* concrete data type */
 
+void sf_cram_point3_reset (sf_cram_point3 cram_point)
+/*< Zero out internal image >*/
+{
+    if (cram_point->agath) {
+        memset (cram_point->oimage[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
+        memset (cram_point->osqimg[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
+        memset (cram_point->ohits[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
+    }
+    if (cram_point->dipgath) {
+        memset (cram_point->dimage[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
+        memset (cram_point->dsqimg[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
+        memset (cram_point->dhits[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
+    }
+    cram_point->hits = 0.0;
+    cram_point->img = 0.0;
+}
+
 sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
                                     int na, float a0, float da,
+                                    bool agath, bool dipgath,
                                     sf_cram_data2 data, sf_cram_survey3 survey,
                                     sf_cram_slowness3 slowness, sf_cram_rbranch3 rbranch)
 /*< Initialize object >*/
@@ -98,24 +116,29 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
 
     cram_point->erefl = sf_cram_data2_get_erefl (data);
 
-    cram_point->oimage = sf_floatalloc2 (2*nb, na/4); /* Regular image, opening angle */
-    cram_point->osqimg = sf_floatalloc2 (2*nb, na/4); /* RMS image, opening angle */
-    cram_point->ohits = sf_floatalloc2 (2*nb, na/4); /* Hit counts, opening angle */
-    cram_point->dimage = sf_floatalloc2 (4*nb, na/4); /* Regular image, dip angle */
-    cram_point->dsqimg = sf_floatalloc2 (4*nb, na/4); /* RMS image, dip angle */
-    cram_point->dhits = sf_floatalloc2 (4*nb, na/4); /* Hit counts, dip angle */
+    if (agath) {
+        cram_point->oimage = sf_floatalloc2 (2*nb, na/4); /* Regular image, opening angle */
+        cram_point->osqimg = sf_floatalloc2 (2*nb, na/4); /* RMS image, opening angle */
+        cram_point->ohits = sf_floatalloc2 (2*nb, na/4); /* Hit counts, opening angle */
+    } else {
+        cram_point->oimage = NULL;
+        cram_point->osqimg = NULL;
+        cram_point->ohits = NULL;
+    }
+    if (dipgath) {
+        cram_point->dimage = sf_floatalloc2 (4*nb, na/4); /* Regular image, dip angle */
+        cram_point->dsqimg = sf_floatalloc2 (4*nb, na/4); /* RMS image, dip angle */
+        cram_point->dhits = sf_floatalloc2 (4*nb, na/4); /* Hit counts, dip angle */
+    } else {
+        cram_point->dimage = NULL;
+        cram_point->dsqimg = NULL;
+        cram_point->dhits = NULL;
+    }
 
-    memset (cram_point->oimage[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
-    memset (cram_point->osqimg[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
-    memset (cram_point->ohits[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
-    memset (cram_point->dimage[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
-    memset (cram_point->dsqimg[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
-    memset (cram_point->dhits[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
-    cram_point->hits = 0.0;
-    cram_point->img = 0.0;
+    sf_cram_point3_reset (cram_point);
 
-    cram_point->agath = false; /* Compute opening angle gather */
-    cram_point->dipgath = false; /* Compute dip angle gather */
+    cram_point->agath = agath; /* Compute opening angle gather */
+    cram_point->dipgath = dipgath; /* Compute dip angle gather */
 
     cram_point->src_exits = (sf_cram_surface_exit3*)sf_alloc (na, sizeof (sf_cram_surface_exit3));
     cram_point->rcv_exits = (sf_cram_surface_exit3*)sf_alloc (na, sizeof (sf_cram_surface_exit3));
@@ -131,25 +154,17 @@ void sf_cram_point3_close (sf_cram_point3 cram_point)
 {
     free (cram_point->src_exits);
     free (cram_point->rcv_exits);
-    free (cram_point->oimage[0]); free (cram_point->oimage);
-    free (cram_point->osqimg[0]); free (cram_point->osqimg);
-    free (cram_point->ohits[0]); free (cram_point->ohits);
-    free (cram_point->dimage[0]); free (cram_point->dimage);
-    free (cram_point->dsqimg[0]); free (cram_point->dsqimg);
-    free (cram_point->dhits[0]); free (cram_point->dhits);
+    if (cram_point->agath) {
+        free (cram_point->oimage[0]); free (cram_point->oimage);
+        free (cram_point->osqimg[0]); free (cram_point->osqimg);
+        free (cram_point->ohits[0]); free (cram_point->ohits);
+    }
+    if (cram_point->dipgath) {
+        free (cram_point->dimage[0]); free (cram_point->dimage);
+        free (cram_point->dsqimg[0]); free (cram_point->dsqimg);
+        free (cram_point->dhits[0]); free (cram_point->dhits);
+    }
     free (cram_point);
-}
-
-void sf_cram_point3_set_compute_agath (sf_cram_point3 cram_point, bool agath)
-/*< Set compute opening angle gathers flag >*/
-{
-    cram_point->agath = agath;
-}
-
-void sf_cram_point3_set_compute_dipgath (sf_cram_point3 cram_point, bool dipgath)
-/*< Set compute dip angle gathers flag >*/
-{
-    cram_point->dipgath = dipgath;
 }
 
 void sf_cram_point3_set_extrap (sf_cram_point3 cram_point, bool extrap)
@@ -684,19 +699,7 @@ void sf_cram_point3_compute (sf_cram_point3 cram_point,
     float sx, sy, gx, gy, ss, sr, w;
     float gxmin, gxmax, gymin, gymax;
 
-    /* Clean up */
-    if (cram_point->agath) {
-        memset (cram_point->oimage[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
-        memset (cram_point->osqimg[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
-        memset (cram_point->ohits[0], 0, sizeof(float)*cram_point->nb*cram_point->na/2);
-    }
-    if (cram_point->dipgath) {
-        memset (cram_point->dimage[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
-        memset (cram_point->dsqimg[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
-        memset (cram_point->dhits[0], 0, sizeof(float)*cram_point->nb*cram_point->na);
-    }
-    cram_point->hits = 0.0;
-    cram_point->img = 0.0;
+    sf_cram_point3_reset (cram_point);
 
     /* Reinit escape branches */
     sf_cram_rbranch3_set_escapes (cram_point->rbranch, esc);

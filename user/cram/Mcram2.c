@@ -111,7 +111,7 @@ int main (int argc, char* argv[]) {
     }
 
     /* Data object */
-    cram_data = sf_cram_data2_init (data, NULL, false);
+    cram_data = sf_cram_data2_init (data, NULL);
     /* Survey object */
     cram_survey = sf_cram_survey2_init (data);
 

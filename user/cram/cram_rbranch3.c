@@ -36,7 +36,9 @@ typedef struct {
     float j; /* Determinant of d(esc_x/y)/d(b/a) */
     float p[3]; /* Slope and its d/dx, d/dy components */
     float ibxy[2], iaxy[2]; /* db/dx, db/dy; da/dx, da/dy */
+/*
     float jxy;
+*/
 } sf_cram_surface_exit3;
 /*^*/
 
@@ -49,7 +51,10 @@ typedef struct {
     float p[3], cs, s; /* Slope, slope components (d/dx, d/dy), exit cosine, exit area */
     float j; /* Determinant of d(esc_x/y)/d(x/y) */
     float ibxy[2], iaxy[2]; /* db/dx, db/dy; da/dx, da/dy */
-    float jxy; /* Determinant of d(ib/ia)/d(x/y) */
+    /* Determinant of d(ib/ia)/d(x/y) */
+/*
+    float jxy;
+*/
 } sf_cram_surface_branch3;
 
 struct CRAMRBranch3 {
@@ -71,7 +76,7 @@ sf_cram_rbranch3 sf_cram_rbranch3_init (int nb, int na, float z0, float tmax,
                                         float dbx, float dby, sf_cram_slowness3 slowness)
 /*< Initialize object >*/
 {
-    sf_cram_rbranch3 cram_rbranch = (sf_cram_rbranch3)sf_alloc (1, sizeof (struct CRAMRBranch3));
+    sf_cram_rbranch3 cram_rbranch = (sf_cram_rbranch3)sf_alloc (1, sizeof(struct CRAMRBranch3));
 
     cram_rbranch->nb = nb; /* Number of escape inclination angles */
     cram_rbranch->na = na; /* Number of escape azimuth angles */
@@ -96,7 +101,7 @@ sf_cram_rbranch3 sf_cram_rbranch3_init (int nb, int na, float z0, float tmax,
     cram_rbranch->armax = SF_HUGE;
     cram_rbranch->armin = 1e-5;
 
-    cram_rbranch->surface_branches = (sf_cram_surface_branch3*)sf_alloc (na*nb*2, sizeof (sf_cram_surface_branch3));
+    cram_rbranch->surface_branches = NULL;
 
     /* Number of search bins */
     cram_rbranch->nnx = (int)((cram_rbranch->xbmax - cram_rbranch->xbmin)/
@@ -105,7 +110,7 @@ sf_cram_rbranch3 sf_cram_rbranch3_init (int nb, int na, float z0, float tmax,
                               cram_rbranch->dby) + 1;
     /* Pointers to the array of search bins */
     cram_rbranch->surface_ibins = (sf_cram_surface_branch3***)sf_alloc (cram_rbranch->nnx*cram_rbranch->nny,
-                                                                        sizeof (sf_cram_surface_branch3**));
+                                                                        sizeof(sf_cram_surface_branch3**));
     /* Array for the number of triangles in each search bin */
     cram_rbranch->ns = sf_intalloc2 (cram_rbranch->nnx, cram_rbranch->nny);
     memset (cram_rbranch->ns[0], 0, cram_rbranch->nnx*cram_rbranch->nny*sizeof(int));
@@ -125,7 +130,8 @@ void sf_cram_rbranch3_close (sf_cram_rbranch3 cram_rbranch)
     free (cram_rbranch->surface_ibins);
     free (cram_rbranch->ns[0]);
     free (cram_rbranch->ns);
-    free (cram_rbranch->surface_branches);
+    if (cram_rbranch)
+        free (cram_rbranch->surface_branches);
     free (cram_rbranch);
 }
 
@@ -291,9 +297,10 @@ static bool sf_cram_rbranch3_check_exit (sf_cram_rbranch3 cram_rbranch,
                 (esc2[ESC3_Y] - esc1[ESC3_Y])/(float)(ibs[1] - ibs[0])*
                 (esc3[ESC3_X] - esc1[ESC3_X])/(float)(ias[2] - ias[0]);
     /* Determinant of d(ib/ia)/d(x/y) */
+/*
     branch->jxy = branch->ibxy[0]*branch->iaxy[1] - 
                   branch->ibxy[1]*branch->iaxy[0];
-
+*/
     branch->kmah = kmah;
     for (i = 0; i < 3; i++) { 
         branch->ib[i] = ibs[i];
@@ -335,8 +342,13 @@ void sf_cram_rbranch3_set_escapes (sf_cram_rbranch3 cram_rbranch, float ***esc)
     int ib, ia, i, iam, iix, iiy;
     int iix0, iix1, iiy0, iiy1;
     float ibs[3], ias[3], cap[ESC3_NUM];
-    sf_cram_surface_branch3 *branch;
+    sf_cram_surface_branch3 *branch, *branches;
     sf_cram_surface_branch3 **bin;
+
+    if (NULL == cram_rbranch->surface_branches)
+        free (cram_rbranch->surface_branches);
+    cram_rbranch->surface_branches = (sf_cram_surface_branch3*)sf_alloc (cram_rbranch->na*cram_rbranch->nb*2,
+                                                                         sizeof(sf_cram_surface_branch3));
 
     cram_rbranch->xmin = SF_HUGE;
     cram_rbranch->xmax = -SF_HUGE;
@@ -379,6 +391,12 @@ void sf_cram_rbranch3_set_escapes (sf_cram_rbranch3 cram_rbranch, float ***esc)
     if (0 == cram_rbranch->n)
         return;
 
+    /* Reallocate branches storage to the actual useful size */
+    branches = (sf_cram_surface_branch3*)sf_alloc (cram_rbranch->n, sizeof(sf_cram_surface_branch3));
+    memcpy (branches, cram_rbranch->surface_branches, sizeof(sf_cram_surface_branch3)*cram_rbranch->n);
+    free (cram_rbranch->surface_branches);
+    cram_rbranch->surface_branches = branches;
+
     /* Find out how many triangles are in each search bin */
     for (i = 0; i < cram_rbranch->n; i++) {
         branch = &cram_rbranch->surface_branches[i];
@@ -405,7 +423,7 @@ void sf_cram_rbranch3_set_escapes (sf_cram_rbranch3 cram_rbranch, float ***esc)
     if (cram_rbranch->surface_bins)
         free (cram_rbranch->surface_bins);
     cram_rbranch->surface_bins = (sf_cram_surface_branch3**)sf_alloc (cram_rbranch->nn,
-                                                                      sizeof (sf_cram_surface_branch3*));
+                                                                      sizeof(sf_cram_surface_branch3*));
     /* Create indices for search bins */
     i = 0;
     for (iiy = 0; iiy < cram_rbranch->nny; iiy++) {
@@ -517,7 +535,9 @@ int sf_cram_rbranch3_find_exits (sf_cram_rbranch3 cram_rbranch, float x, float y
                 if (!same) {
                     exits[ie].t = t;
                     exits[ie].j = branch->j;
+/*
                     exits[ie].jxy = branch->jxy;
+*/
                     exits[ie].s = branch->s;
                     exits[ie].cs = branch->cs;
                     exits[ie].p[0] = branch->p[0];
