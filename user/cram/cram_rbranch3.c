@@ -345,7 +345,7 @@ void sf_cram_rbranch3_set_escapes (sf_cram_rbranch3 cram_rbranch, float ***esc)
     sf_cram_surface_branch3 *branch, *branches;
     sf_cram_surface_branch3 **bin;
 
-    if (NULL == cram_rbranch->surface_branches)
+    if (cram_rbranch->surface_branches)
         free (cram_rbranch->surface_branches);
     cram_rbranch->surface_branches = (sf_cram_surface_branch3*)sf_alloc (cram_rbranch->na*cram_rbranch->nb*2,
                                                                          sizeof(sf_cram_surface_branch3));
