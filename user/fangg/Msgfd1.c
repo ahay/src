@@ -109,7 +109,6 @@ int main(int argc, char* argv[])
     /*Set I/O file*/
     fsource = sf_input("in");  /*source wavelet*/
     fvel    = sf_input("vel"); /*velocity*/
-    fic     = sf_input("ic"); 
     fden    = sf_input("den"); /*density*/
     fwf     = sf_output("out");/*wavefield snap*/
     frec    = sf_output("rec"); /*record*/
@@ -124,8 +123,7 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fden)) sf_error("Need float input");
-    if (SF_FLOAT != sf_gettype(fic))  inject = true;
-    
+        
     if(!sf_getint("size",&marg)) marg=4;
     if (!sf_getint("gdep", &gdep)) gdep=0;
     /* recorder depth */
@@ -147,6 +145,8 @@ int main(int argc, char* argv[])
     /*source decay y=use*/
     if (!sf_getint("srctrunc",&srctrunc)) srctrunc=300;
     /*source trunc*/
+    if (!sf_getbool("inject", &inject)) inject = true;
+    /*inject = y use inject source; inject =n use initial condition*/
     oo=marg;
     
     nx = nxb - 2*pmlout - 2*marg;
@@ -189,6 +189,8 @@ int main(int argc, char* argv[])
     
     /*Initial Condition*/
     if (inject == false) {
+	fic    = sf_input("ic"); 
+	if (SF_FLOAT != sf_gettype(fic)) sf_error("Need float input of ic");
 	icaxis = sf_iaxa(fic, 1); 
 	icnx = sf_n(icaxis);
 	if (nx != icnx) sf_error("I.C. and velocity should be the same size.");

@@ -184,6 +184,16 @@ int main(int argc, char* argv[])
 	curvx[iz]=0.;
 	curvz[iz]=0.;
     }
+
+    /* Check parameters*/
+    if(verb) {
+	sf_warning("======================================");
+	sf_warning("nx=%d nz=%d nzx=%d dx=%f dz=%f", nx, nz, nzx, dx, dz);
+	sf_warning("nkx=%d nkz=%d dkx=%f dkz=%f nk=%d", nkx, nkz, dkx, dkz, nk);
+	sf_warning("nx2=%d nz2=%d nzx2=%d", nx2, nz2, nzx2);
+	sf_warning("======================================");
+    } //End if
+    
    
     /* MAIN LOOP */
     for (it=0; it<nt; it++) {
@@ -191,10 +201,12 @@ int main(int argc, char* argv[])
 	
 	/*vx, vz--- matrix multiplication */
 	fft2(curtxx,cwavex);   /* P^(k,t) */
-     	for (im = 0; im < m2; im++) {
+	
+	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 		kx = kx0+dkx*(ik/nkz);  
 		kz = kz0+dkz*(ik%nkz);
+		
 #ifdef SF_HAS_COMPLEX_H
 		cwavemz[ik] = cwavex[ik]*rt[ik][im];
 		cwavemx[ik] = fplus(kx,dx)*cwavemz[ik];
@@ -207,8 +219,9 @@ int main(int argc, char* argv[])
 	    }
 	    ifft2(wavex[im], cwavemx); /* dp/dx  */
 	    ifft2(wavez[im], cwavemz); /* dp/dz  */
+	    
 	}
-
+	
 	for (ix = 0; ix < nx; ix++) {
 	    for (iz = 0; iz < nz; iz++) {
 		i = iz+ix*nz;  /* original grid */
