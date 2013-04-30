@@ -208,7 +208,7 @@ static void* sf_cramdd_process_requests (void *ud) {
 #define MAX_BUF 1024
 
 int main (int argc, char* argv[]) {
-    size_t i0, i1, n;
+    size_t i0, i1, n, nb;
     int ith = 1, nt, icpu, ncpu, tout;
     int port, nthreads, tmpfile = 0;
     bool kmah;
@@ -290,13 +290,20 @@ int main (int argc, char* argv[]) {
     /* First and last trace indices to store */
     if (ith) {
         i0 = (int)(icpu/ith*trd);
-        if (i0 > 0)
-            i0 -= (size_t)1;
         i1 = (int)((icpu/ith + 1)*trd);
-        if (i1 < (n - 1))
-            i1 += (size_t)1;
-        else
+        /* Add padding to compensate for possible truncation errors */
+        nb = 1;
+        if ((i1 - i0) > 100000)
+            nb = 1000;
+        else if ((i1 - i0) > 10000)
+            nb = 100;
+        else if ((i1 - i0) > 1000)
+            nb = 10;
+        i1 += nb;
+        if (i1 >= n)
             i1 = n - 1;
+        if (i0 != 0)
+            i0 -= nb;
     } else {
         i0 = 0;
         i1 = n - 1;

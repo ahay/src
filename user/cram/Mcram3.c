@@ -262,7 +262,7 @@ int main (int argc, char* argv[]) {
                 if (np == j || (iy == (ny - 1) && ix == (nx - 1) && iz == (nz - 1))) {
                     /* Buffer is full or last set of escape tables is here - access data now */
                     if (np != 1)
-                        sf_warning ("Migrating data, iz=%d, ix=%d, iy=%d", iz, ix, iy);
+                        sf_warning ("Migrating data, z=%g, x=%g, y=%g", z, x, y);
                     /* Loop over known sources */
                     is = sf_cram_survey3_get_first_source (cram_survey, &sx, &sy, &nh,
                                                            &gxmin, &gxmax, &gymin, &gymax);
