@@ -37,7 +37,7 @@ static kiss_fft_cpx **tmp, *ctrace2;
 static sf_complex *trace2;
 #endif
 
-int cfft2_init(int pad1           /* padding on the first axis */,
+int cfft2w_init(int pad1           /* padding on the first axis */,
 	       int nx,   int ny   /* input data size */, 
 	       int *nx2, int *ny2 /* padded data size */)
 /*< initialize >*/
@@ -86,7 +86,7 @@ int cfft2_init(int pad1           /* padding on the first axis */,
     return (nk*n2);
 }
 
-void cfft2(sf_complex *inp /* [n1*n2] */, 
+void cfft2w(sf_complex *inp /* [n1*n2] */, 
 	   sf_complex *out /* [nk*n2] */)
 /*< 2-D FFT >*/
 {
@@ -97,10 +97,10 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
     fftw_plan_with_nthreads(omp_get_max_threads());
 #endif
     if (NULL==cfg) {
-	fftwf_plan_dft_2d(n2,n1,
-			  (fftwf_complex *) cc[0], 
-			  (fftwf_complex *) out,
-			  FFTW_FORWARD, FFTW_MEASURE);
+	cfg = fftwf_plan_dft_2d(n2,n1,
+				(fftwf_complex *) cc[0], 
+				(fftwf_complex *) out,
+				FFTW_FORWARD, FFTW_MEASURE);
 	if (NULL == cfg) sf_error("FFTW failure.");
     }
 #endif
@@ -132,19 +132,19 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 #endif
 }
 
-void icfft2_allocate(sf_complex *inp /* [nk*n2] */)
+void icfft2w_allocate(sf_complex *inp /* [nk*n2] */)
 /*< allocate inverse transform >*/
 {
 #ifdef SF_HAS_FFTW
-    fftwf_plan_dft_2d(n2,n1,
-		      (fftwf_complex *) inp, 
-		      (fftwf_complex *) cc[0],
-		      FFTW_BACKWARD, FFTW_MEASURE);
+    icfg = fftwf_plan_dft_2d(n2,n1,
+			     (fftwf_complex *) inp, 
+			     (fftwf_complex *) cc[0],
+			     FFTW_BACKWARD, FFTW_MEASURE);
     if (NULL == icfg) sf_error("FFTW failure.");
 #endif
 }
 
-void icfft2(sf_complex *out /* [n1*n2] */, 
+void icfft2w(sf_complex *out /* [n1*n2] */, 
 	    sf_complex *inp /* [nk*n2] */)
 /*< 2-D inverse FFT >*/
 {
@@ -177,7 +177,7 @@ void icfft2(sf_complex *out /* [n1*n2] */,
     }
 }
 
-void cfft2_finalize()
+void cfft2w_finalize()
 /*< clean up fftw >*/
 {
 #ifdef SF_HAS_FFTW
