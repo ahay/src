@@ -45,12 +45,12 @@ int cfft2_init(int pad1           /* padding on the first axis */,
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
     fftw_init_threads();
+    sf_warning("Using threaded FFTW3! \n");
 #endif
 #endif
 
 #ifndef SF_HAS_FFTW
     int i2;
-    sf_warning("Using FFTW3! \n");
 #endif
 
     nk = n1 = kiss_fft_next_fast_size(nx*pad1);
