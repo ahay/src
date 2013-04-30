@@ -71,6 +71,7 @@ In programs:
 * Fixed true colors in gdpen
 * Fixed parallel split in sfomp and sfmpi
 * Set o1= in sfsegyread
+* Fixed memsize= checking in sftransp
 
 In the build system:
 

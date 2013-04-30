@@ -37,10 +37,10 @@ static off_t make_map (int dim1, int dim2, const off_t* n, off_t i2);
 
 int main(int argc, char* argv[])
 {
-    int i, dim, n1, n3;
+    int i, dim, n3;
     int dim1, dim2;
     int mem; /* for avoiding int to off_t typecast warning */
-    off_t n[SF_MAX_DIM], pos, memsize, n2, nsiz, i2, i3, *map, nbuf;
+    off_t n[SF_MAX_DIM], pos, memsize, n1, n2, nsiz, i2, i3, *map, nbuf, n12;
     char key1[7], key2[7], *val, **dat1, **dat2, *buf, *mapf;
     sf_file in, out;
     FILE *mapfile;
@@ -127,9 +127,10 @@ int main(int argc, char* argv[])
 	    n2 *= n[i]; /* read n2 blocks at a time */
 	}
     }
+    n12 = n1*n2;
 
-    if (n2 < memsize) { /* keep map incore */
-	map = (off_t*)sf_alloc (n2, sizeof(off_t));
+    if (n12 + n2*sizeof(off_t) < memsize) { /* keep map incore */
+	map = (off_t*) sf_alloc (n2, sizeof(off_t));
 	nbuf = 0;
 
 	for (i2=0; i2 < n2; i2++) {
@@ -152,21 +153,21 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if ((off_t)n1*(off_t)n2 < memsize) {
+    if (n12 < memsize) {
 	dat1 = sf_charalloc2 (n1,n2);
 	dat2 = sf_charalloc2 (n1,n2);
 	
 	for (i3=0; i3 < n3; i3++) {
-	    sf_charread(dat1[0],(off_t)n1*(off_t)n2,in);
+	    sf_charread(dat1[0],n12,in);
 	    for (i2=0; i2 < n2; i2++) {
 		memcpy(dat2[i2],dat1[map[i2]],n1); 
 	    }
-	    sf_charwrite(dat2[0],(off_t)n1*(off_t)n2,out);
+	    sf_charwrite(dat2[0],n12,out);
 	}
     } else {
 	sf_warning("Going out of core... "
 		   "(increase memsize=%zu for in-core)",memsize/(1 << 20));
-	sf_unpipe(in,(off_t)n1*(off_t)n2*(off_t)n3);
+	sf_unpipe(in,n12*(off_t)n3);
 
 	buf = sf_charalloc (n1);
 	
@@ -174,7 +175,7 @@ int main(int argc, char* argv[])
 	for (i3=0; i3 < n3; i3++) {
 	    if (NULL == mapfile) {
 		for (i2=0; i2 < n2; i2++) {
-		    sf_seek(in,pos+(off_t) (map[i2]+i3*(off_t)n2)*(off_t)n1,SEEK_SET);
+		    sf_seek(in,pos+(map[i2]+i3*n2)*n1,SEEK_SET);
 		    sf_charread (buf,n1,in);
 		    sf_charwrite(buf,n1,out);
 		}
@@ -187,7 +188,7 @@ int main(int argc, char* argv[])
 		    if (nbuf != fread(map,sizeof(off_t),nbuf,mapfile)) 
 			sf_error("map read error:");
 		    for (i=0; i < nbuf; i++) {
-			sf_seek(in,pos+(off_t) (map[i]+i3*(off_t)n2)*(off_t)n1,SEEK_SET);
+			sf_seek(in,pos+(map[i]+i3*n2)*n1,SEEK_SET);
 			sf_charread (buf,n1,in);
 			sf_charwrite(buf,n1,out);
 		    }
@@ -196,10 +197,7 @@ int main(int argc, char* argv[])
 	}
 
 	if (NULL != mapfile) unlink(mapf);
-	
-	
     }
-
 
     exit (0);
 }
