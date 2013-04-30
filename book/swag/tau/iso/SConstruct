@@ -73,7 +73,7 @@ else:
 tau.make_par(forward,backward,pseudo)
 tau.make_job(num_procs,num_nodes,pseudo)
 
-Flow(' ',' ',
+Flow('isomig','velo sour',
      '''
      mpirtmiso tau=1
      nz=751 z0=0 dz=0.0067 zs=0.00508 zr=0.00508
@@ -87,7 +87,8 @@ Flow(' ',' ',
      nh=348 h0=0       dh=22.86
      nH=64 dH=1
      nC=3  dC=800 C0=800
-     ''')
+     velo=${SOURCES[0]} sour=${SOURCES[1]}
+     ''',stdin=0,stdout=-1)
 
 End()
 

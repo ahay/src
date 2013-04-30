@@ -108,7 +108,8 @@ Sponge *sponge;
 /* char fname_par []="par.txt"; */
 /* char fname_velo[]="velo.bin"; */
 sf_file fvelo; float *velo; 
-char fname_sour[]="sour.bin"; float *sour;
+/* char fname_sour[]="sour.bin"; */
+sf_file fsour; float *sour;
 char fname_data[]="data.bin"; float *data,*datat;
 char fname_uus[128];          float *uus;
 char fname_uur[128];
@@ -320,6 +321,7 @@ static void init(int argc, char* argv[])
     if (MASTER == mpi_rank) {
 	fvelo = sf_input("velo");
         sf_floatread(velo,nxz,fvelo);
+	sf_fileclose(fvelo);
     }
 
     MPI_Bcast(velo,nxz,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
@@ -378,9 +380,12 @@ static void init(int argc, char* argv[])
 
         /* source signature */
 
-        sour = (float *)calloc(nt,sizeof(float));
-        if (MASTER == mpi_rank)
-            read_float(sour,nt,fname_sour);
+        sour = sf_floatalloc(nt);
+        if (MASTER == mpi_rank) {
+	    fsour = sf_input("sour");
+	    sf_floatread(sour,nt,fsour);
+	    sf_fileclose(fsour);
+	}
         MPI_Bcast(sour,nt,MPI_FLOAT,MASTER,MPI_COMM_WORLD);
 
         printf("process %3d : shot at x=%8.2f z=%8.2f\n",mpi_rank,x_,z_);

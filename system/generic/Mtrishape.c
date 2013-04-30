@@ -171,8 +171,9 @@ int main(int argc, char* argv[])
 	}
 
 	for (iter=0; iter < niter; iter++) {
+	    /* m -> d */
 	    sf_int2_lop (false,false,n1*n2,nd,m[0],d);
-	    NodeValues(4, nd, d);
+	    NodeValues(3, nd, d);
 
 	    for (i2 =0; i2 < n2; i2++) {
 		for (i1 =0; i1 < n1; i1++) {
