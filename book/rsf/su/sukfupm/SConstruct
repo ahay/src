@@ -8,7 +8,14 @@ Fetch('data2013.sgy','kfupm',server=server)
 # Convert to SU
 Flow('data ./binary ./header','data2013.sgy','segyread tape=$SOURCE verbose=1 endian=0 | segyclean',stdin=0)
 
+# Gain using AGC
+Flow('data-agc','data','sugain agc=1 wagc=0.5')
+
+# Gain using t^2
+Flow('data-tm','data','sugain agc=0 tpow=2 qclip=0.95 qbal=1')
+
 # Display first 6 shot records
-Result('data','suwind key=ep min=1 max=6 | suxwigb')
+for data in Split('data data-agc data-tm'):
+    Result(data,'suwind key=ep min=1 max=6 | suxwigb')
 
 End()

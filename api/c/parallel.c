@@ -228,9 +228,9 @@ char** sf_split(sf_file inp          /* input file */,
     return commands;
 }
 
-void sf_out(sf_file out          /* output file */, 
-	    int axis             /* join axis */,
-	    const char *iname    /* name of the input file */)
+void sf_out(sf_file out        /* output file */, 
+	    int axis           /* join axis */,
+	    const char *iname  /* name of the input file */)
 /*< prepare output >*/
 {
     char *oname, cmdline[SF_CMDLEN];
@@ -262,7 +262,8 @@ void sf_out(sf_file out          /* output file */,
     sf_rm(oname,true,false,false);
 }
 
-void sf_join(sf_file out, int job)
+void sf_join(sf_file out /* output file */, 
+	     int job     /* job number */)
 /*< join outputs >*/
 {
     int i, chunk;
@@ -295,5 +296,90 @@ void sf_join(sf_file out, int job)
     for (i=0; i < splitargc; i++) {
 	iname = spnames[job][i];
 	sf_rm(iname,true,false,false);
+    }
+}
+
+void sf_add(sf_file out, int jobs)
+/*< add outputs >*/
+{
+    int *ibuf=NULL, job, i;
+    float *fbuf=NULL;
+    char buffout[BUFSIZ];
+    sf_complex *cbuf=NULL;
+    sf_datatype type;
+    size_t nbuf;
+    off_t nsiz;
+    char *oname;
+    sf_file *ins;
+
+    type = sf_gettype(out);
+
+    nbuf=BUFSIZ;
+    nsiz=size1;
+
+    switch(type) {
+	case SF_FLOAT:
+	    fbuf = (float*) buffout;
+	    for (i=0; i < nbuf; i++) {
+		fbuf[i] = 0.0f;
+	    }
+	    break;
+	default:
+	    sf_error("wrong type");
+	    break;
+    }
+
+    ins = (sf_file*) sf_alloc(jobs,sizeof(sf_file));
+    for (job=0; job < jobs; job++) {
+	oname = onames[job];
+	ins[job] = sf_input(oname);
+    }
+
+    for (nbuf /= sf_esize(out); nsiz > 0; nsiz -= nbuf) {
+	if (nbuf > nsiz) nbuf=nsiz;
+
+	for (job=0; job < jobs; job++) {
+	    switch(type) {
+		case SF_FLOAT:
+		    sf_floatread((float*) buffer,nbuf,ins[job]);
+		    for (i=0; i < nbuf; i++) {
+			if (job) {
+			    fbuf[i] += ((float*) buffer)[i];
+			} else {
+			    fbuf[i] = ((float*) buffer)[i];
+			}
+		    }
+		    break;
+		default:
+		    sf_error("wrong type");
+		    break;  
+	    }
+	}
+
+	switch(type) {
+	    case SF_FLOAT:
+		sf_floatwrite(fbuf,nbuf,out);
+		break;
+	    case SF_COMPLEX:
+		sf_complexwrite(cbuf,nbuf,out);
+		break;
+	    case SF_INT:
+		sf_intwrite(ibuf,nbuf,out);
+		break;
+	    default:
+		sf_error("wrong type");
+		break;
+	}
+    }
+
+    free(ins);
+    
+    for (job=0; job < jobs; job++) {
+	sf_rm(inames[job],true,false,false);
+	sf_rm(onames[job],true,false,false);
+	for (i=0; i < splitargc; i++) {
+	    oname = spnames[job][i];
+	    sf_rm(oname,true,false,false);
+	}
     }
 }
