@@ -77,11 +77,7 @@ int main(int argc, char* argv[])
     float *ic;
     int icnx;
     sf_axis icaxis;
-    int it0;
-
-
     
-
     tstart = clock();
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
@@ -199,16 +195,7 @@ int main(int argc, char* argv[])
     } //End if
    
     /* MAIN LOOP */
-    it0=0;
-    if (inject == false) {
-	it0=1;
-	for(ix = 0; ix < nx; ix++) {
-	    curtxx[ix] = ic[ix];
-	    //vxn0[ix+marg+pmlout] = ic[ix];
-	}
-    }
-
-    for (it=0; it<nt; it++) {
+   for (it=0; it<nt; it++) {
 	if(verb) sf_warning("it=%d;", it);
 	
 	/*vx--- matrix multiplication */
@@ -250,7 +237,7 @@ int main(int argc, char* argv[])
 		cwavemx[ik] = fminu(kx,dx)*cwavemx[ik];
 #else
 		cwavemx[ik] = sf_crmul(cwavex[ik],rt[ik][im]);
-		cwavemx[ik] = sf_cmul(fplus(kx,dx), cwavemx[ik]);
+		cwavemx[ik] = sf_cmul(fminu(kx,dx), cwavemx[ik]);
 		
 #endif
 	    }
@@ -273,18 +260,27 @@ int main(int argc, char* argv[])
 	    /* write wavefield to output */
 	    
 	}
-	
+
+	 
+	if (it==0 && inject == false) {
+	    for(ix = 0; ix < nx; ix++) {
+		curtxx[ix] = ic[ix];
+		pretxx[ix] = curtxx[ix];
+		//vxn0[ix+marg+pmlout] = ic[ix];
+	    }
+	}
+		
 	sf_floatwrite(curtxx,nx,Fo);
 	
-    }/*End of MAIN LOOP*/
-    
-    if(verb) sf_warning(".");
-    
-    tend = clock();
-    duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
-    sf_warning(">> The CPU time of sfsglr is: %f seconds << ", duration);
-    exit (0);	
-    
+   }/*End of MAIN LOOP*/
+   
+   if(verb) sf_warning(".");
+   
+   tend = clock();
+   duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
+   sf_warning(">> The CPU time of sfsglr is: %f seconds << ", duration);
+   exit (0);	
+   
 }
 
 

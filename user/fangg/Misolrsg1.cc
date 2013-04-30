@@ -67,10 +67,9 @@ int main(int argc, char** argv)
 
     iRSF vel;
 
-    int nz,nx;
+    int nz;
     vel.get("n1",nz);
-    vel.get("n2",nx);
-    int m = nx*nz;
+    int m = nz;
     std::valarray<float> vels(m);
     vel >> vels;
     vs.resize(m);
@@ -78,28 +77,21 @@ int main(int argc, char** argv)
     
     iRSF fft("fft");
 
-    int nkz,nkx;
+    int nkz;
     fft.get("n1",nkz);
-    fft.get("n2",nkx);
-
-    float dkz,dkx;
-    fft.get("d1",dkz);
-    fft.get("d2",dkx);
     
-    float kz0,kx0;
+    float dkz;
+    fft.get("d1",dkz);
+        
+    float kz0;
     fft.get("o1",kz0);
-    fft.get("o2",kx0);
+    
+    
 
-    float kx, kz;
-
-    int n = nkx*nkz;
+    int n = nkz;
     std::valarray<float> k(n);
-    for (int ix=0; ix < nkx; ix++) {
-	kx = kx0+ix*dkx;
-	for (int iz=0; iz < nkz; iz++) {
-	    kz = kz0+iz*dkz;
-	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
-	}
+    for (int iz=0; iz < nkz; iz++) {
+	k[iz] = 2*SF_PI*(kz0+iz*dkz);
     }
     ks.resize(n);
     ks = k;

@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     clock_t tstart,tend;
     double duration;
     bool verb;
-    int nx, nt, ix, it, it0;
+    int nx, nt, ix, it;
     int nxb;
     float dt, dx;
     float *txxn1, *txxn0, *vxn1, *vxn0;
@@ -218,16 +218,6 @@ int main(int argc, char* argv[])
 	record[it] = 0.0;
     } 
     
-    it0=0;
-    if (inject == false) {
-	it0=1;
-	for(ix = 0; ix < nx; ix++) {
-	    txxn0[ix+marg+pmlout] = ic[ix];
-	    //vxn0[ix+marg+pmlout] = ic[ix];
-	}
-    }
-    
-   
     /* MAIN LOOP */
     sp.trunc=srctrunc;
     sp.srange=10;
@@ -240,7 +230,7 @@ int main(int argc, char* argv[])
     sf_warning("marg=%d pmlout=%d", marg, pmlout);
     sf_warning("srctrunc=%d srcdecay=%d", sp.trunc, sp.decay);
     
-    for (it = it0; it < nt; it++) {
+    for (it = 0; it < nt; it++) {
 	sf_warning("it=%d/%d;", it, nt-1);
 	if (inject ==true && it<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
@@ -266,7 +256,15 @@ int main(int argc, char* argv[])
 	time_step_exch1(txxn0, txxn1, it);
 	time_step_exch1(vxn0, vxn1, it);
 	pml1_tstep_exch(it);
-
+	
+	
+	if (it ==0 && inject == false) {
+	    for(ix = 0; ix < nx; ix++) {
+		txxn0[ix+marg+pmlout] = ic[ix];
+		//vxn0[ix+marg+pmlout] = ic[ix];
+	    }
+	}
+	
 	if ( it%snapinter==0 ) {
 	    sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
 	}

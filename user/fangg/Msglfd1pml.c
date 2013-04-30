@@ -235,17 +235,9 @@ int main(int argc, char* argv[])
 	sf_warning("[sxx]=[%d,] G=%f",sx[ix], G[ix][0]);
     }
     
-    it0=0;
-    if (inject == false) {
-	it0=1;
-	for(ix = 0; ix < nx; ix++) {
-	    txxn0[ix+marg+pmlout] = ic[ix];
-	    //vxn0[ix+marg+pmlout] = ic[ix];
-	}
-    }
     
     /* MAIN LOOP */
-    for (it = it0; it < nt; it++) {
+    for (it = 0; it < nt; it++) {
 	sf_warning("it=%d/%d;", it, nt);
 	if (inject ==true && it<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
@@ -272,9 +264,16 @@ int main(int argc, char* argv[])
 	time_step_exch1(vxn0, vxn1, it);
 	pml1_tstep_exch(it);
 	
-
+	
+	if (it ==0 && inject == false) {
+	    for(ix = 0; ix < nx; ix++) {
+		txxn0[ix+marg+pmlout] = ic[ix];
+		//vxn0[ix+marg+pmlout] = ic[ix];
+	    }
+	}
+	
        	if ( it%snapinter==0 ) {
-	   sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
+	    sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
 	}
 	
 	record[it] = txxn0[pmlout+marg+gdep];
