@@ -46,6 +46,8 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     inp  = sf_input("in");
     outp = sf_output("out");
+
+    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
     if (!sf_histint(inp,"n1",&n)) sf_error("No n1= in input");
     if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
     x=(double*)sf_alloc(n,sizeof(double));
@@ -136,7 +138,6 @@ int main(int argc, char* argv[])
 
     /* output  */
     sf_floatwrite(imf,n*(nb_imfs+1),outp);
-    sf_warning("outwrite\n");
   
     /* free allocated memory */
     if (allocated_x)
