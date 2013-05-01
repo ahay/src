@@ -1,4 +1,4 @@
-// 2D Lowrank FD coefficient of d/dx on staggered grid (optimized)
+// 1D Lowrank FD coefficient of d/dx on staggered grid (optimized)
 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
@@ -25,8 +25,6 @@
 
 using namespace std;
 
-//FltNumVec vs; //c
-//FltNumVec ks; //k
 static std::valarray<float> vs;
 static std::valarray<double> ks;
 static float pi=SF_PI;
@@ -74,6 +72,8 @@ int main(int argc, char** argv)
     oRSF outm;  
     oRSF fsx("sx");//, Mexactfile("Mexact"),Mlrfile("Mlr"), Mappfile("Mapp"); 
 
+    float wavnumcut;
+    par.get("wavnumcut",wavnumcut,0.66); // wavenumber cut percentile
     int nx;
     velf.get("n1",nx);
     float dk;
@@ -91,7 +91,8 @@ int main(int argc, char** argv)
     int n = nx;
 
     int COUNT= 0;
-    float CUT = nx/3.0*dk; 
+    //float CUT = nx/3.0*dk;
+    float CUT =nx*dk/2.0*wavnumcut;
     int SMK=0;
     for (int ix=0; ix < nx; ix++) {
         ks[ix] = -dk*nx/2.0+ix*dk; 

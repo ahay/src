@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
     int   decay;
     float gamma = GAMMA;
 
+    int it0;
     bool inject = false;
     int icnx;
     sf_axis icaxis;
@@ -217,8 +218,7 @@ int main(int argc, char* argv[])
     for (it = 0; it < nt; it++) {
 	record[it] = 0.0;
     } 
-    
-    /* MAIN LOOP */
+        
     sp.trunc=srctrunc;
     sp.srange=10;
     sp.alpha=0.5;
@@ -230,7 +230,19 @@ int main(int argc, char* argv[])
     sf_warning("marg=%d pmlout=%d", marg, pmlout);
     sf_warning("srctrunc=%d srcdecay=%d", sp.trunc, sp.decay);
     
-    for (it = 0; it < nt; it++) {
+    /* MAIN LOOP */
+    it0 = 0;
+    if (inject == false) {
+	it0 = 1;
+	for(ix = 0; ix < nx; ix++) {
+		txxn0[ix+marg+pmlout] = ic[ix];
+		//vxn0[ix+marg+pmlout] = ic[ix];
+	}
+	sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
+	record[0] = txxn0[pmlout+marg+gdep];
+    }
+        
+    for (it = it0; it < nt; it++) {
 	sf_warning("it=%d/%d;", it, nt-1);
 	if (inject ==true && it<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
@@ -258,13 +270,7 @@ int main(int argc, char* argv[])
 	pml1_tstep_exch(it);
 	
 	
-	if (it ==0 && inject == false) {
-	    for(ix = 0; ix < nx; ix++) {
-		txxn0[ix+marg+pmlout] = ic[ix];
-		//vxn0[ix+marg+pmlout] = ic[ix];
-	    }
-	}
-	
+
 	if ( it%snapinter==0 ) {
 	    sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
 	}

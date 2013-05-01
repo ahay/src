@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
     float *vel, *den, *c11;
     sf_file Fvel, Fden, Ffft, Fic;
     
+    int it0;
     bool inject;
     float *ic;
     int icnx;
@@ -195,7 +196,18 @@ int main(int argc, char* argv[])
     } //End if
    
     /* MAIN LOOP */
-   for (it=0; it<nt; it++) {
+    it0 = 0;
+    if (inject == false) {
+	it0 = 1;
+	for(ix = 0; ix < nx; ix++) {
+	    curtxx[ix] = ic[ix];
+	    pretxx[ix] = curtxx[ix];
+	    //vxn0[ix+marg+pmlout] = ic[ix];
+	}
+	sf_floatwrite(curtxx,nx,Fo);
+    }
+    
+    for (it=it0; it<nt; it++) {
 	if(verb) sf_warning("it=%d;", it);
 	
 	/*vx--- matrix multiplication */
@@ -260,16 +272,7 @@ int main(int argc, char* argv[])
 	    /* write wavefield to output */
 	    
 	}
-
-	 
-	if (it==0 && inject == false) {
-	    for(ix = 0; ix < nx; ix++) {
-		curtxx[ix] = ic[ix];
-		pretxx[ix] = curtxx[ix];
-		//vxn0[ix+marg+pmlout] = ic[ix];
-	    }
-	}
-		
+	
 	sf_floatwrite(curtxx,nx,Fo);
 	
    }/*End of MAIN LOOP*/
