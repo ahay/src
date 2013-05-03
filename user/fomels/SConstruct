@@ -126,10 +126,8 @@ for conv in ('byte2tif','tif2byte'):
     if root:
         env.Install(bindir,prog)
 
-for prog in Split('agrid burg cburg gaussel grid1 matmult2 ntriangle1'):
+for prog in Split('agrid burg cburg gaussel grid1 ntriangle1'):
     sources = ['Test' + prog,prog]
-    if prog=='matmult2':
-        sources.append('gmres')
     bldutil.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
     env.Object('Test' + prog + '.c')
