@@ -14,7 +14,7 @@ ccprogs = ''
 mpiprogs='petsctest'
 
 tprogs='''
-clapack cblas csolver
+clapack cblas csolver eno1 eno2 eno3
 '''
 pyprogs='''
 pyran
