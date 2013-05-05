@@ -523,8 +523,8 @@ int main(int argc, char **argv) {
     }
   }
   else {
-    fprintf(stderr,"Warning: standardmodel.x\n");
-    fprintf(stderr,"no model index given, so using model=1\n");
+    fprintf(stdout,"Warning: standardmodel.x\n");
+    fprintf(stdout,"no model index given, so using model=1\n");
     model=1;
   }
   /*   if(ps_getparint("choose",&choose)) { */
@@ -536,8 +536,8 @@ int main(int argc, char **argv) {
     }
   }
   else {
-    fprintf(stderr,"Warning: standardmodel.x\n");
-    fprintf(stderr,"no choose index given, so using choose=1 (density)\n");
+    fprintf(stdout,"Warning: standardmodel.x\n");
+    fprintf(stdout,"no choose index given, so using choose=1 (density)\n");
     choose=1;
   }
   
@@ -556,26 +556,26 @@ int main(int argc, char **argv) {
     if(!ps_getparint("n3",&n3)) {n3 = 1321; fprintf(stderr, "WARNING: n3 is set to the default value!\n"); }
   */
 
-  if(ps_fffloat(*par,"f1",&f1)) {f1=0.; fprintf(stderr, "WARNING: f1 is set to the default value!\n"); }
-  if(ps_fffloat(*par,"f2",&f2)) {f2=0.; fprintf(stderr, "WARNING: f2 is set to the default value!\n"); }
-  if(ps_fffloat(*par,"f3",&f3)) {f3=0.; fprintf(stderr, "WARNING: f3 is set to the default value!\n"); }
+  if(ps_fffloat(*par,"f1",&f1)) {f1=0.; fprintf(stdout, "WARNING: f1 is set to the default value!\n"); }
+  if(ps_fffloat(*par,"f2",&f2)) {f2=0.; fprintf(stdout, "WARNING: f2 is set to the default value!\n"); }
+  if(ps_fffloat(*par,"f3",&f3)) {f3=0.; fprintf(stdout, "WARNING: f3 is set to the default value!\n"); }
 
-  if(ps_fffloat(*par,"d1",&d1)) {d1=5.0; fprintf(stderr, "WARNING: d1 is set to the default value!\n"); }
-  if(ps_fffloat(*par,"d2",&d2)) {d2=5.0; fprintf(stderr, "WARNING: d2 is set to the default value!\n"); }
-  if(ps_fffloat(*par,"d3",&d3)) {d3=5.0; fprintf(stderr, "WARNING: d3 is set to the default value!\n"); }
+  if(ps_fffloat(*par,"d1",&d1)) {d1=5.0; fprintf(stdout, "WARNING: d1 is set to the default value!\n"); }
+  if(ps_fffloat(*par,"d2",&d2)) {d2=5.0; fprintf(stdout, "WARNING: d2 is set to the default value!\n"); }
+  if(ps_fffloat(*par,"d3",&d3)) {d3=5.0; fprintf(stdout, "WARNING: d3 is set to the default value!\n"); }
 
 
-  if(ps_ffint(*par,"n1",&n1)) {n1 = 361; fprintf(stderr, "WARNING: n1 is set to the default value!\n"); }
-  if(ps_ffint(*par,"n2",&n2)) {n2 = 1321; fprintf(stderr, "WARNING: n2 is set to the default value!\n"); }
-  if(ps_ffint(*par,"n3",&n3)) {n3 = 1321; fprintf(stderr, "WARNING: n3 is set to the default value!\n"); }
+  if(ps_ffint(*par,"n1",&n1)) {n1 = 361; fprintf(stdout, "WARNING: n1 is set to the default value!\n"); }
+  if(ps_ffint(*par,"n2",&n2)) {n2 = 1321; fprintf(stdout, "WARNING: n2 is set to the default value!\n"); }
+  if(ps_ffint(*par,"n3",&n3)) {n3 = 1321; fprintf(stdout, "WARNING: n3 is set to the default value!\n"); }
 
   e1 = f1 + d1 * (n1 - 1);
   e2 = f2 + d2 * (n2 - 1);
   e3 = f3 + d3 * (n3 - 1);
    
-  fprintf(stderr," f1=%f e1=%f d1=%f n1=%d\n",f1,e1,d1,n1);
-  fprintf(stderr," f2=%f e2=%f d2=%f n2=%d\n",f2,e2,d2,n2);
-  fprintf(stderr," f3=%f e3=%f d3=%f n3=%d\n",f3,e3,d3,n3);
+  fprintf(stdout," f1=%f e1=%f d1=%f n1=%d\n",f1,e1,d1,n1);
+  fprintf(stdout," f2=%f e2=%f d2=%f n2=%d\n",f2,e2,d2,n2);
+  fprintf(stdout," f3=%f e3=%f d3=%f n3=%d\n",f3,e3,d3,n3);
 
 
   /* DS */
@@ -585,7 +585,7 @@ int main(int argc, char **argv) {
       /* set up layer numbers for velocity, density, bulkmod and buoyancy */
       if (ps_ffint(*par,numlname,numl+i)) numl[i] = 1;
        
-      fprintf(stderr,"%s, numl[%d]=%d \n",numlname, i, numl[i]);
+      fprintf(stdout,"%s, numl[%d]=%d \n",numlname, i, numl[i]);
 
       /* allocate merroy for reflector depths and model values */
       if(numl[i] > 1)
@@ -597,19 +597,19 @@ int main(int argc, char **argv) {
 	  sprintf(x1rsname,"m%d_rf%d",i+1,j+1);
 	  if(ps_fffloat(*par,x1rsname,x1rs[i]+j)) 
 	    { x1rs[i][j] = e1; 
-	      fprintf(stderr, "WARNING: x1rs[%d][%d] is set to the default value %f!\n",i,j,e1);
+	      fprintf(stdout, "WARNING: x1rs[%d][%d] is set to the default value %f!\n",i,j,e1);
 	    } 
 	  else 
-	    fprintf(stderr,"%s=%e\n",x1rsname,*(x1rs[i]+j));
+	    fprintf(stdout,"%s=%e\n",x1rsname,*(x1rs[i]+j));
 
 	}
 	sprintf(valname,"m%d_val%d",i+1,j+1);
 	if(ps_fffloat(*par,valname,values[i]+j)) 
 	  { values[i][j] = Vdefault[i]; 
-	    fprintf(stderr, "WARNING: values[%d][%d] is set to the default value %f!\n",i,j,Vdefault[i]);
+	    fprintf(stdout, "WARNING: values[%d][%d] is set to the default value %f!\n",i,j,Vdefault[i]);
 	  }
 	else 
-	  fprintf(stderr,"%s=%e\n",valname,*(values[i]+j));
+	  fprintf(stdout,"%s=%e\n",valname,*(values[i]+j));
 
       }  
     } 
@@ -620,17 +620,17 @@ int main(int argc, char **argv) {
        
     if(ps_fffloat(*par,"radius",values[choose-1])) { 
       values[choose -1][0] = default_radius; 
-      fprintf(stderr, "WARNING: camembert_radius is set to the default value %f!\n",default_radius);
+      fprintf(stdout, "WARNING: camembert_radius is set to the default value %f!\n",default_radius);
     }
 
     if(ps_fffloat(*par,"bgvalue",values[choose-1]+1)) { 
       values[choose -1][1] = Vbgdefault[choose-1]; 
-      fprintf(stderr, "WARNING: camembert_bgvalue is set to the default value %f!\n",Vbgdefault[choose-1]);
+      fprintf(stdout, "WARNING: camembert_bgvalue is set to the default value %f!\n",Vbgdefault[choose-1]);
     }
      
     if(ps_fffloat(*par,"relpert",values[choose-1]+2)) { 
       values[choose-1][2] = default_relpert; 
-      fprintf(stderr, "WARNING: camembert_relpert is set to the default value %f!\n",default_relpert);
+      fprintf(stdout, "WARNING: camembert_relpert is set to the default value %f!\n",default_relpert);
     } 
   }
 
@@ -660,11 +660,11 @@ int main(int argc, char **argv) {
     }
     dname=malloc(strlen(cwdpath)+strlen(fname)+2);
     strcpy(dname,cwdpath);
-    strcat(dname,"/");
+    if (cwdpath[strlen(cwdpath)-1] != '/') strcat(dname,"/");
     strcat(dname,fname);
     strcat(dname,"@");
 
-    fprintf(stderr,"writing header file %s\n",fname);
+    fprintf(stdout,"writing header file %s\n",fname);
     if (!(fp=fopen(fname,"w"))) {
       fprintf(stderr,"Error: standardmodel\n");
       fprintf(stderr,"failed to open new header file %s\n",fname);
@@ -688,7 +688,7 @@ int main(int argc, char **argv) {
     fprintf(fp,"in=%s\n",dname);
     fclose(fp);
 
-    fprintf(stderr,"writing data to %s\n",dname);
+    fprintf(stdout,"writing data to %s\n",dname);
     if (!(fp=fopen(dname,"w"))) {
       fprintf(stderr,"Error: standardmodel\n");
       fprintf(stderr,"failed to open new data file %s\n",dname);
