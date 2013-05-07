@@ -288,9 +288,9 @@ void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	    Xz[its] = (double*) sf_alloc(n,sizeof(double));
 	}
 
-	/* LU file (append _lu* after velocity file) */
+	/* LU file (append _inv* after velocity file) */
 	if (load) {
-	    sprintf(insert,"_lu%d",iw);
+	    sprintf(insert,"_inv%d",iw);
 	    inslen = strlen(insert);
 	    
 	    append = malloc(srclen+inslen+1);
@@ -363,7 +363,7 @@ void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 				     NULL, NULL, NULL, NULL, 
 				     Xx[its], Xz[its], Bx[its], Bz[its], 
 				     Numeric[its], Control, NULL);
-	    	    
+	    
 	    fdcut(npml,pad1,pad2, as[is],Xx[its],Xz[its]);
 
 	    /* adjoint receiver */

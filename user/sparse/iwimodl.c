@@ -184,9 +184,9 @@ void iwimodl_modl(float **vel   /* current velocity */,
 	    Xz[its] = (double*) sf_alloc(n,sizeof(double));
 	}
 
-	/* LU file (append _lu* after velocity file) */
+	/* LU file (append _inv* after velocity file) */
 	if (load) {
-	    sprintf(insert,"_lu%d",iw);
+	    sprintf(insert,"_inv%d",iw);
 	    inslen = strlen(insert);
 	    
 	    append = malloc(srclen+inslen+1);

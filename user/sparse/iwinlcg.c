@@ -26,6 +26,7 @@
 #include "iwinlcg.h"
 
 static bool verb;
+static char *cost;
 static int nn[3], ss[2], dorder, grect[2], gliter;
 static float dd[3], **vel, plower, pupper, geps, gscale;
 static sf_fslice sfile, rfile;
@@ -57,7 +58,7 @@ void scale(const float *x, float *g)
 }
 
 void iwinlcg_init(bool verb0,
-		  char *order,
+		  char *order, char *cost0,
 		  int npml, float vpml,
 		  int n1, int n2,
 		  float d1, float d2,
@@ -76,6 +77,7 @@ void iwinlcg_init(bool verb0,
 /*< initialization >*/
 {
     verb = verb0;
+    cost = cost0;
 
     /* model */
     nn[0] = n1; nn[1] = n2; nn[2] = 2*nh+1;
@@ -140,19 +142,19 @@ float iwinlcg_eval(const float *x,
 		   float ***mask, float ***wght)
 /*< forward modeling and evaluate objective function >*/
 {
-    int i, j;
-    float fx=0.;
+    int i1, i2, i3;
+    float *din, *dout, fx=0.;
 
-    for (j=0; j < nn[1]; j++) {
-	for (i=0; i < nn[0]; i++) {
-	    if (x[j*nn[0]+i] < lower) {
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    if (x[i2*nn[0]+i1] < lower) {
 		return SF_HUGE;
 	    }
-	    if (x[j*nn[0]+i] > upper) {
+	    if (x[i2*nn[0]+i1] > upper) {
 		return SF_HUGE;
 	    }
 
-	    vel[j][i] = x[j*nn[0]+i];
+	    vel[i2][i1] = x[i2*nn[0]+i1];
 	}
     }
 
@@ -165,45 +167,10 @@ float iwinlcg_eval(const float *x,
     iwimodl_modl(vel,image);
     
     if (mask != NULL) {
-	for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
-	    image[i] *= mask[0][0][i];
+	for (i1=0; i1 < nn[0]*nn[1]*nn[2]; i1++) {
+	    image[i1] *= mask[0][0][i1];
 	}
     }
-
-    /* estimate slope */
-    iwidip_fdip(image, pimage);
-
-    /* evaluate objective function */
-    for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
-	/* thresholding */
-	if (fabsf(pimage[i]) >= plower && 
-	    fabsf(pimage[i]) <= pupper) {
-	    fx += image[i]*wght[0][0][i]*image[i]*wght[0][0][i];
-	}
-    }
-
-    return fx;
-}
-
-void iwinlcg_grad(const float *x,
-		  float ***wght, float **prec,
-		  float *g)
-/*< prepare image perturbation and compute gradient >*/
-{
-    int i1, i2, i3, ii;
-    float *din, *dout, *p;
-    sf_triangle tr;
-
-    for (i2=0; i2 < nn[1]; i2++) {
-	for (i1=0; i1 < nn[0]; i1++) {
-	    vel[i2][i1] = x[i2*nn[0]+i1];
-	}
-    }
-
-    if (verb) sf_warning("Computing gradient...");
-
-    /* set-up linear operator */
-    iwigrad_set(vel, wght,prec);
 
     /* partial i partial z */
     din  = sf_floatalloc(nn[0]);
@@ -244,6 +211,50 @@ void iwinlcg_grad(const float *x,
     }
 
     sf_deriv_free(); free(din); free(dout);
+
+    /* estimate slope */
+    iwidip_fdip(image, pimage);
+
+    /* evaluate objective function */
+     switch (cost[0]) {
+	 case 'c':
+	     for (i1=0; i1 < nn[0]*nn[1]*nn[2]; i1++) {
+		 fx += 0.5*image[i1]*wght[0][0][i1]*image[i1]*wght[0][0][i1];
+	     }
+	     break;
+
+	 case 'd':
+	     for (i1=0; i1 < nn[0]*nn[1]*nn[2]; i1++) {
+		 fx += 0.5*pipz[i1]*wght[0][0][i1]*pipz[i1]*wght[0][0][i1];
+	     }
+	     break;
+
+	 default:
+	     sf_error("Cost functional type not supported.");
+     }
+
+    return fx;
+}
+
+void iwinlcg_grad(const float *x,
+		  float ***wght, float **prec,
+		  float *g)
+/*< prepare image perturbation and compute gradient >*/
+{
+    int i1, i2, i3, ii;
+    float *p;
+    sf_triangle tr;
+
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    vel[i2][i1] = x[i2*nn[0]+i1];
+	}
+    }
+
+    if (verb) sf_warning("Computing gradient...");
+
+    /* set-up linear operator */
+    iwigrad_set(vel, wght,prec);    
 
     /* prepare image perturbation */
     for (i3=0; i3 < nn[2]; i3++) {

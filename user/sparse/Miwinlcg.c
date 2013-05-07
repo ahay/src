@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
     sf_file in, out, source, data, grad;
     sf_file imask, weight, precon;
     int uts, mts, i, j;
-    char *order;
+    char *order, *cost;
     float fx0, fx1, fx2, *x0, *x1, *x2, *g0, *g1, *s, beta;
     float geps, gscale, lower, upper, alpha;
     int iter, miter, iliter, liter;
@@ -78,6 +78,9 @@ int main(int argc, char* argv[])
 
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
+
+    if (NULL == (cost = sf_getstring("cost"))) cost="c";
+    /* cost functional type (default classic DSO) */
 
     if (!sf_getint("prect1",&prect[0])) prect[0]=5;
     /* slope smoothing radius on axis 1 */
@@ -215,7 +218,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize operators */
-    iwinlcg_init(false,order, npml,vpml,
+    iwinlcg_init(false,order,cost, npml,vpml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 source,data, load,datapath, uts,
@@ -239,7 +242,7 @@ int main(int argc, char* argv[])
     }
 
     for (iter=0; iter < miter; iter++) {
-	if (verb) sf_warning("Iteration %d, fx0=%g.",iter+1,fx0);
+	if (verb) sf_warning("Iteration %d, fx0=%g.",iter,fx0);
 
 	/* line-search */
 	iliter = 0; alpha = 1.; fx2 = SF_HUGE;
@@ -256,8 +259,8 @@ int main(int argc, char* argv[])
 		alpha *= 0.5;
 		continue;
 	    }
-	    if (verb) sf_warning("Line search %d, fx1=%g, alpha=%g."
-				 ,iliter+1,fx1,alpha);
+	    if (verb) sf_warning("Line search %d, fx1=%g, alpha=%g.",
+				 iliter+1,fx1,alpha);
 
 	    if (fx1 >= fx2) {
 		fx2 = iwinlcg_eval(x2, mask,wght);
