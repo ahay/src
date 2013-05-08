@@ -94,15 +94,20 @@ int main(int argc, char** argv)
 
     int m = nxz;
     int n = nxz;
-
+    
+    float wavnumcut;
+    par.get("wavnumcut",wavnumcut,1.0); // wavenumber cut percentile
+    
     int COUNT= 0;
     kx.resize(nxz);
     kz.resize(nxz);
     float kx1, kz1;
     float kx0 = -dkx*nx/2.0; 
     float kz0 = -dkz*nz/2.0; 
-    float a = nx/4.0*dkx; 
-    float b = nz/4.0*dkz; 
+    //float a = nx/4.0*dkx; 
+    //float b = nz/4.0*dkz; 
+    float a = nx/3.0*dkx*wavnumcut; 
+    float b = nz/3.0*dkz*wavnumcut;
     int i=0;
     float dkxz=dkx+dkz;
     int SMK=0;

@@ -91,43 +91,78 @@ int main(int argc, char** argv)
     int n = nx;
 
     int COUNT= 0;
-    //float CUT = nx/3.0*dk;
-    float CUT =nx*dk/2.0*wavnumcut;
+    //float CUT = nx/3.0*dk ;
+    float CUT =nx*1.0/3.0*dk*wavnumcut;
     int SMK=0;
+    // ks: -fn --- fn
     for (int ix=0; ix < nx; ix++) {
         ks[ix] = -dk*nx/2.0+ix*dk; 
-	if (fabs(ks[ix]) < CUT) COUNT++;
-	if (ks[ix] < (dk+0.00001)) SMK++;
-     }
+	if (fabs(ks[ix]) < CUT) {
+	    COUNT++;
+	    //sf_warning("ix=%d:COUNT=%d,ks[ix]=%f", ix, COUNT ,ks[ix]);
+	}
+	if (fabs(ks[ix]) < (dk+0.00001)) SMK++;
+	
+    }
+    /*
+    // ks: 0 --- fn,-fn --- 0
+    for (int ix=0; ix<nx/2; ix++) {
+	ks[ix] = ix*dk; 
+	if (fabs(ks[ix])<CUT) COUNT++;
+	if (fabs(ks[ix]) < (dk+0.00001)) SMK++;
+    }
+    for (int ix=nx/2; ix < nx; ix++) {
+	ks[ix] = (-nx+ix)*dk; 
+	if (fabs(ks[ix])<CUT) COUNT++;
+	if (fabs(ks[ix]) < (dk+0.00001)) SMK++;
+    }
+    */
 
     vector<int> ksc(COUNT), smallk(SMK);
     sf_warning("COUNT=%d",COUNT);
     sf_warning("SMK=%d",SMK);
     int nk=0, mk=0; 
+
+    // ks: -fn --- fn
+    for (int ix=0; ix < nx; ix++) {
+        ks[ix] = -dk*nx/2.0+ix*dk; 
+	if (fabs(ks[ix])<CUT) {
+	    ksc[nk] = ix;
+	    nk++;
+	}
+	if (fabs(ks[ix]) < (dk+0.00001)){ 
+	    smallk[mk] = ix;
+	    mk++;
+	}
+	
+    }
+    // ks: 0 --- fn,-fn --- 0
+    /*
     for (int ix=0; ix < nx/2; ix++) {
         ks[ix] = ix*dk; 
         if (fabs(ks[ix])<CUT) {
                ksc[nk] = ix;
                nk++;
 	}
-	if (ks[ix] < (dk+0.00001)){ 
+	if (fabs(ks[ix]) < (dk+0.00001)){ 
 	    smallk[mk] = ix;
 	    mk++;
 	}
     }
-
     for (int ix=nx/2; ix < nx; ix++) {
         ks[ix] = (-nx+ix)*dk; 
         if (fabs(ks[ix]) < CUT) {
                ksc[nk] = ix;
                nk++;
 	}
-	if (ks[ix] < (dk+0.00001)){ 
+	if (fabs(ks[ix]) < (dk+0.00001)){ 
 	    smallk[mk] = ix;
 	    mk++;
 	}
     }
+    */
     sf_warning("nk=%d",nk);
+    sf_warning("mk=%d",mk);
     
     /*Low rank decomposition*/   
 
@@ -191,7 +226,7 @@ int main(int argc, char** argv)
     for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=sin(Bc._data[k]);
     DblNumMat IB(nx,LEN);    iC( ddpinv(B, 1e-16, IB) );
     DblNumMat IBc(COUNT,LEN);    iC( ddpinv(Bc, 1e-16, IBc) );
-      
+          
     DblNumMat coef(ridx.size(),LEN);
     DblNumMat M2c;
     iC( samplex(ridx,ksc,M2c) );
@@ -200,35 +235,37 @@ int main(int argc, char** argv)
     DblNumMat G(nx,LEN), tmpG(mid._m,LEN);
     iC(ddgemm(1.0,mid,coef,0.0,tmpG));
     iC(ddgemm(1.0,M1,tmpG,0.0,G));
-
-    /*Bc.resize(LEN,SMK);
+    
+    /*
+    Bc.resize(LEN,SMK);
     for(int k=0; k<LEN; k++) {
        for (int j=0; j<SMK; j++) {
            Bc(k,j) =B(k,smallk[j]);
        }
     }
     
-    DblNumMat tmpB(nxz,SMK), maxB(nxz,1);
+    DblNumMat tmpB(nx,SMK), maxB(nx,1);
     iC(ddgemm(1.0,G,Bc,0.0,tmpB));
     float tmpmax;
-    for (int k=0; k<nxz; k++) {
+    for (int k=0; k<nx; k++) {
         tmpmax=-9999999.0;
         for (int j=0; j<SMK; j++) {
             if (fabs(tmpB(k,j)) > tmpmax) tmpmax=fabs(tmpB(k,j));
         }
         maxB._data[k]=tmpmax;
     }
-    i=0;
-    for(int k=0; k<nxz; k++) if (maxB._data[k]>2.0) i++;
+    int i=0;
+    for(int k=0; k<nx; k++) if (maxB._data[k]>2.0) i++;
     sf_warning("i=%d",i);
     if (i>0) {
-	for(int k=0; k<nxz; k++) { maxB._data[k]=2.0/fabs(maxB._data[k]); }
-	for (int x=0; x<nxz; x++){
+	for(int k=0; k<nx; k++) { maxB._data[k]=2.0/fabs(maxB._data[k]); }
+	for (int x=0; x<nx; x++){
 	    for (int k=0; k<LEN; k++){
 		G(x,k) = G(x,k)*maxB._data[x];
 	    }
 	} 
-	}*/
+	}
+    */
 
     std::valarray<float> fMlr(nx*LEN);
     double *ldat = G.data();
@@ -248,7 +285,7 @@ int main(int argc, char** argv)
          fs[k] = (ldat[k]+0.5);
     } 
     fsx << fs;
-  
+    
     /*
     // Exact matre
     DblNumMat Mexact(nx,nx);

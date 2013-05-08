@@ -38,6 +38,7 @@ static float ldx(float *data, int ix)
     int il;
     for (il = 0; il < lenx; il++) {
 	res += 0.5*(data[ix-sx[il]] - data[ix+sx[il]-1])*G[il][ix];
+	//res += 0.5*(data[ix+sx[il]] - data[ix-sx[il]+1])*G[il][ix];
     }
     return res;
 }
@@ -267,6 +268,7 @@ int main(int argc, char* argv[])
 	/*Stress*/
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
 	    txxn1[ix] = txxn0[ix] - dt*c11[ix+1]*ldx(vxn1, ix+1);
+	    //txxn1[ix] = txxn0[ix] - dt*c11[ix-1]*ldx(vxn1, ix-1);
 	}
 	
 	/*Stress PML */
