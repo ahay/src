@@ -12,6 +12,8 @@
 #$ -M salah.alhadab@gmail.com         # Where to send "End of job" note to
 #$ -m e                               # "End of job" email only
 
+# this should be upgraded for slurm, the replacement for sge (nqs)
+
 source $RSFSRC/env.sh
 
 # CHANGE the number of jobs per node

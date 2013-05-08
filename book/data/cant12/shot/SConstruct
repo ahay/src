@@ -39,7 +39,7 @@ Plot('pick0','pick','graph yreverse=y min2=0 max2=3 pad=n wanttitle=n wantaxis=n
 Result('sf','window pick','Overlay')
 
 # sea floor overlayed over the near offset section
-Result('SF','near_offset pick0','Overlay')
+Result('sfbig','near_offset pick0','Overlay')
 
 #################################
 # create mute for above sea floor
