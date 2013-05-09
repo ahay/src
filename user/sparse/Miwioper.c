@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
     /* PML velocity */
 
-    if (!sf_getint("npml",&npml)) npml=20;
+    if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";

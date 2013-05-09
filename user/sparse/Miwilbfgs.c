@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("vpml",&vpml)) vpml=4.;
     /* PML velocity */
 
-    if (!sf_getint("npml",&npml)) npml=20;
+    if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("miter",&miter)) miter=10;
     /* L-BFGS maximum # of iterations */
 
-    if (!sf_getint("mline",&mline)) mline=10;
+    if (!sf_getint("mline",&mline)) mline=5;
     /* L-BFGS maximum # of line search */
 
     if (!sf_getfloat("epsilon",&epsilon)) epsilon=1.e-2;
