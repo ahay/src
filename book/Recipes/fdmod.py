@@ -362,7 +362,7 @@ def wavelet(wav,frequency,par):
          ''' % par)    
 
 # ------------------------------------------------------------
-def horizontal(cc,coord,par):
+def oldhorizontal(cc,coord,par):
     Temp(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
     Temp(cc+'_z',cc+'_','math output="%g" ' % coord)
     Temp(cc+'_x',cc+'_','math output="x1" ')
@@ -372,6 +372,33 @@ def horizontal(cc,coord,par):
          transp |
          put label1="" unit1="" label2="" unit2=""
          ''')
+
+def horizontal(cc,coord,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+    
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+    
+    Flow(cc,None,
+         '''
+         %smath output=0 n1=%d o1=%g d1=%g >%s datapath=%s/;
+         '''%(M8R,par['nz'],par['oz'],par['dz'],cco,DPT) +
+         '''
+         %smath <%s output="%g" >%s datapath=%s/;
+         '''%(M8R,cco,coord,ccz,DPT) +
+         '''
+         %smath <%s output="x1" >%s datapath=%s/;
+         '''%(M8R,cco,ccx,DPT) +
+         '''
+         %scat axis=2 space=n %s %s | transp | put label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''     
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
 
 # ------------------------------------------------------------
 def horizontal3d(cc,coord,par):
@@ -400,7 +427,7 @@ def horizontal3d(cc,coord,par):
 	     put label1="" unit1="" label2="" unit2=""
          ''')
 
-def vertical(cc,coord,par):
+def oldvertical(cc,coord,par):
     Temp(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
     Temp(cc+'_x',cc+'_','math output="%g" '% coord)
     Temp(cc+'_z',cc+'_','math output="x1" ')
@@ -410,6 +437,34 @@ def vertical(cc,coord,par):
          transp |
          put label1="" unit1="" label2="" unit2=""
          ''')
+    
+def vertical(cc,coord,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+    
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+    
+    Flow(cc,None,
+         '''
+         %smath output=0 n1=%d o1=%g d1=%g >%s datapath=%s/;
+         '''%(M8R,par['nz'],par['oz'],par['dz'],cco,DPT) +
+         '''
+         %smath <%s output="x1" >%s datapath=%s/;
+         '''%(M8R,cco,ccz,DPT) +
+         '''
+         %smath <%s output="%g" >%s datapath=%s/;
+         '''%(M8R,cco,coord,ccx,DPT) +
+         '''
+         %scat axis=2 space=n %s %s | transp | put label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''     
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
+    
 
 def vertical3d(cc,coordx,coordy,par):
     M8R='$RSFROOT/bin/sf'
@@ -876,9 +931,6 @@ def awefd_rwfl(owfl,idat,velo,dens,rec,custom,par):
          $RSFROOT/bin/sfreverse opt=i which=4 <%s_junk >${TARGETS[0]};
          $RSFROOT/bin/sfrm %s_junk
          ''' %(owfl,par['fdcustom'],owfl,owfl,owfl,owfl),stdout=0)
-
-
-
 
 def awefd1(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     awefd(odat,owfl,idat,velo,dens,sou,rec,custom+' expl=y ',par)
