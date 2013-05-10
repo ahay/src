@@ -1,6 +1,6 @@
 /* Integer header attributes. 
 
-Only nonzero values are reported.
+   Only nonzero values are reported.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -43,7 +43,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(head,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(head,1);
 
-    fprintf(stdout,"******************************************* \n");
     fprintf(stdout,"%d headers, %d traces\n",n1,n2);
  
     if (SF_INT == typehead) inp = sf_intalloc(n1);
@@ -62,50 +61,47 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < n2; i2++) {
-      if (SF_INT == typehead) sf_intread  (inp,n1,head);
-      else                    sf_floatread(inpfloat,n1,head);
-      for (i1=0; i1 < n1; i1++) {
-	if (SF_INT == typehead) value=inp[i1];
-	else                    value=inpfloat[i1];
-	if (i2==0 || (min[i1] > value)) {
-	  min [i1] = value;
-	  indxmin[i1] = i2;
+	if (SF_INT == typehead) sf_intread  (inp,n1,head);
+	else                    sf_floatread(inpfloat,n1,head);
+	for (i1=0; i1 < n1; i1++) {
+	    if (SF_INT == typehead) value=inp[i1];
+	    else                    value=inpfloat[i1];
+	    if (i2==0 || (min[i1] > value)) {
+		min [i1] = value;
+		indxmin[i1] = i2;
+	    }
+	    if (i2==0 || (max[i1] < value)) {
+		max [i1] = value;
+		indxmax[i1] = i2;
+	    }
+	    mean[i1] += value;
 	}
-	if (i2==0 || (max[i1] < value)) {
-	  max [i1] = value;
-	  indxmax[i1] = i2;
-	}
-	mean[i1] += value;
-      }
     }
 
     segy_init(n1,head);
     
     /* put headers on table of numbers */
-    fprintf(stdout,"\n");
-    fprintf(stdout,"indx     key        indx            min       ");
-    fprintf(stdout,"indx            max           mean\n");
-    fprintf(stdout," key    name         min          value       ");
-    fprintf(stdout," max          value          value\n");
+    fprintf(stdout,"******************************************************************************* \n");
+    fprintf(stdout,"     key     \t            min     \t              max    \t          mean\n");
+    fprintf(stdout,"------------------------------------------------------------------------------- \n");
     for (i1=0; i1 < n1; i1++) {
 	if (min[i1] != 0 || max[i1] != 0) {
-	  if (SF_INT == typehead){
-	    fprintf(stdout,"%4d %8s %10d %14ld %10d %14ld %14le\n",
-		    i1,segykeyword(i1),
-		    indxmin[i1],lrint(min[i1]),
-		    indxmax[i1],lrint(max[i1]),
-		    mean[i1]/n2);
-	  } else {
-	    fprintf(stdout,"%4d %8s %10d %14le %10d %14le %14le\n",
-		    i1,segykeyword(i1),
-		    indxmin[i1],min[i1],
-		    indxmax[i1],max[i1],
-		    mean[i1]/n2);
-	  }
+	    if (SF_INT == typehead){
+		fprintf(stdout,"%8s %4d %14ld @ %d\t%14ld @ %d\t%14g\n",
+			segykeyword(i1),i1,
+			lrint(min[i1]),indxmin[i1],
+			lrint(max[i1]),indxmax[i1],
+			mean[i1]/n2);
+	    } else {
+		fprintf(stdout,"%4d %8s %10d %14le %10d %14le %14le\n",
+			i1,segykeyword(i1),
+			indxmin[i1],min[i1],
+			indxmax[i1],max[i1],
+			mean[i1]/n2);
+	    }
 	}
     }
-
-    fprintf(stdout,"******************************************* \n");
+    fprintf(stdout,"******************************************************************************* \n");
 
     exit(0);
 }
