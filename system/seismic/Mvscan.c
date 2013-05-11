@@ -1,6 +1,9 @@
 /* Velocity analysis.
 
-Inverse of sfvelmod
+Inverse of sfvelmod.
+
+May 2013 program of the month:
+http://www.ahay.org/rsflog/index.php?/archives/338-Program-of-the-month-sfvscan.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
