@@ -10,8 +10,9 @@ int read_grid(grid * g, char * fname, FILE * fp) {
   PARARRAY * par = ps_new();
 
   /* parser file for key=value pairs */
-  if (ps_createfile(par,fname)) {
+  if (err=ps_createfile(par,fname)) {
     fprintf(fp,"ERROR: read_grid from ps_createfile, err=%d\n",err); 
+    fprintf(fp,"failed to parse file = %s\n",fname);
     return E_FILE;
   }
 

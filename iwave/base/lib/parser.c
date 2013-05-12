@@ -1,6 +1,6 @@
 #include "parser.h"
 
-/* #define VERBOSE */
+/*#define VERBOSE */
 #undef VERBOSE
 
 /* max length of conversion string in set functions */
@@ -741,9 +741,9 @@ int ps_createfile_fproto(PARARRAY *parr,
   if ( *fp == NULL ) {
 #ifdef VERBOSE
     if (proto) 
-      fprintf(stderr,"Error: ps_createfile_fproto - failed to open file=%s proto=%s\n",filename,proto);
+      fprintf(stderr,"Error: ps_createfile_fproto - failed to open file=%s proto=%s\n",fname,proto);
     else
-      fprintf(stderr,"Error: ps_createfile_fproto - failed to open file=%s proto=NULL\n",filename);
+      fprintf(stderr,"Error: ps_createfile_fproto - failed to open file=%s proto=NULL\n",fname);
 #endif
     return E_FILEOPEN;
   }
@@ -751,7 +751,7 @@ int ps_createfile_fproto(PARARRAY *parr,
   err = ps_createfp(parr,*fp);
 #ifdef VERBOSE
   if (err) 
-    fprintf(stderr,"Error: ps_createfile_fproto from ps_createfp, filename=%s, err=%d\n",filename,err);
+    fprintf(stderr,"Error: ps_createfile_fproto from ps_createfp, filename=%s, err=%d\n",fname,err);
 #endif
   
   return err;
@@ -766,7 +766,7 @@ int ps_createfile(PARARRAY *parr, const char *fname) {
   err = ps_createfile_fproto(parr,&stream,proto,fname);
 #ifdef VERBOSE
   if (err || !stream) 
-    fprintf(stderr,"Error: ps_createfile from ps_createfile_fproto, filename=%s, err=%d\n",filename,err);
+    fprintf(stderr,"Error: ps_createfile from ps_createfile_fproto, filename=%s, err=%d\n",fname,err);
 #endif
 
   iwave_fclose(stream);

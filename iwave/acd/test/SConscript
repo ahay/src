@@ -31,11 +31,12 @@ g = open(thispath + '/' + 'summary.rpt','w')
 
 def cmdx(target, source, env):
     os.system('/bin/rm -rf ' + str(target[0]) + '; mkdir ' + str(target[0]))
-    base = str(target[0]).split('/')[1]
+    baselist = str(target[0]).split('/')
+    base = baselist[len(baselist)-1]
     tgt = str(target[0]) + '/' + base + '.rpt';
-    print 'tgt = ' + tgt
+    print 'base = ' + base + ' tgt = ' + tgt
     cmdl='cd ' + str(target[0]) +'; ../' + base + '.x ' + '>& ' + base + '.rpt'
-#    print 'cmdl = ' + cmdl
+    print 'cmdl = ' + cmdl
     os.system(cmdl)
     ref = thispath + '/' + base + '.rpt_ref'
     if os.path.exists(ref):
