@@ -1,8 +1,9 @@
+Salah Al-Hadab <salah.alhadab@gmail.com>
 Tariq Alkhalifah <tariq.alkhalifah@kaust.edu.sa>
 Vladimir Bashkardin <bash@mail.utexas.edu>
 Jules Browaeys <jules.browaeys@total.com>
-William Burnett <will.burnett@gmail.com>
 Cody Brown <cbrown@eos.ubc.ca>
+William Burnett <will.burnett@gmail.com>
 Yihua Cai <caiyihua@gmail.com>
 Maria Cameron <kourkina@earthlink.net>
 Lorenzo Casasanta <lorenzo.casasanta@gmail.com>
@@ -26,8 +27,8 @@ Roman Kazinnik <roman.only@gmail.com>
 Alexander Klokov <alexander.klokov@gmail.com>
 Siwei Li <llisiw@hotmail.com>
 Guochang Liu <guochang.liu@yahoo.com>
-Yujin Liu <seisinv@gmail.com>
 Yang Liu <yangliu1979@gmail.com> 
+Yujin Liu <seisinv@gmail.com>
 Xuxin Ma <xuxin.ma@kaust.edu.sa>
 Douglas McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
