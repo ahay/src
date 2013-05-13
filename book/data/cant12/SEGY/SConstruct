@@ -7,12 +7,12 @@ tparts  = [] # for header files
 coords  = [] # shot coordinates file
 
 # To test, take one segy file (403), then change back to (413)
-#  to get from internet:
-#  wget http://s3.amazonaws.com/open.source.geoscience/open_data/cant12/cant12.406.segy
 
 for n in range(403,413):
         inp = 'cant12.%d.segy' % n
         out = 'cant12-%d' % n
+
+	Fetch(inp,'cant12',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
 
         Flow([out,'t'+out,out+'.asc',out+'.bin'],inp,
              'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
