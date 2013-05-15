@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-backdireazi backdire curvature shuffle2
+backdireazi backdire curvature shuffle2 stcurvature
 '''
 
 # kirr33 kirm3 rtmpar shuffle
