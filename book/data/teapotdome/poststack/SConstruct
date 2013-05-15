@@ -1,13 +1,12 @@
 from rsf.proj import *
 from rsf.recipes.beg import server
 
-indir='/home/karl/data/TeapotDome/Poststack/'
 file='filt_mig'
 
-# Fetch(file+'.segy','fairfield',server)
+Fetch(file+'.sgy','teapot',server)
 # tshot=184 gets cdpy 
 # tshot=180 gets cdpx
-Flow([file,file+'_hdr',file+'.asc',file+'.bin'],indir+'/'+file+'.sgy',
+Flow([file,file+'_hdr',file+'.asc',file+'.bin'],file+'.sgy',
       '''
       segyread 
          tfile=${TARGETS[1]} 
