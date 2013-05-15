@@ -117,7 +117,7 @@ void p3solver(float* a, sf_complex* x)
     double a0,a1,a2,a3;
     double p,q,aa;
     sf_double_complex  x1,x2,x3,sqrtaa;
-    sf_double_complex w3,w,w1,w2,r1,r2;
+    sf_double_complex w3,w,w1,w2;
 
     a0=a[0]; a1=a[1]; a2=a[2]; a3=a[3];
     //printf("a33333=%f,%f,%f,%f\n",a3,a2,a1,a0);

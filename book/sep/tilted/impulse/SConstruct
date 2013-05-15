@@ -28,7 +28,7 @@ Flow('impulsed',None,
      o2=0 n2=1    d2=20 
      n3=%d d3=%g o3=%g 
      n4=1 d4=0.1 o4=0 
-     n5=1 d5=0.1 o5=0 |
+     n5=1 d5=0.1 o5=0 | rtoc |
      put plane_os_x=38400 plane_ds_x=50 plane_ns_x=1 plane_os_y=0 plane_ds_y=12.5 plane_ns_y=1
      ''' % (nf,dw,w0))
 Flow('wavelet',None,

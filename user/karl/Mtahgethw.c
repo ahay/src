@@ -21,14 +21,10 @@
    date       Who             What
    04/26/2012 Karl Schleicher Original program
 */
-
 #include <string.h>
-#include <rsf.h>
 
-/* I do not know how to include this header or link to the right library
-   obviously this is a terrible cludge */
-#include "/home/karl/RSFSRC/system/seismic/segy.h"
-#include "/home/karl/RSFSRC/system/seismic/segy.c"
+#include <rsf.h>
+#include <rsfsegy.h>
 
 int main(int argc, char* argv[])
 {
@@ -48,7 +44,6 @@ int main(int argc, char* argv[])
   int tempint;
   char type_input_record[5];
   int input_record_length;
-  int i;
   char* key;
   char* copy_of_key;
   char* one_key;

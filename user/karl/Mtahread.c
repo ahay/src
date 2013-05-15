@@ -23,12 +23,9 @@
 */
 
 #include <string.h>
-#include <rsf.h>
 
-/* I do not know how to include this header or link to the right library
-   obviously this is a terrible cludge */
-#include "/home/karl/RSFSRC/system/seismic/segy.h"
-#include "/home/karl/RSFSRC/system/seismic/segy.c"
+#include <rsf.h>
+#include <rsfsegy.h>
 
 int main(int argc, char* argv[])
 {

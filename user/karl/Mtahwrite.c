@@ -21,15 +21,10 @@
    date       Who             What
    04/26/2012 Karl Schleicher Original program
 */
-
 #include <string.h>
-#include <rsf.h>
-#include <math.h>
 
-/* I do not know how to include this header or link to the right library
-   obviously this is a terrible cludge */
-#include "/home/karl/RSFSRC/system/seismic/segy.h"
-#include "/home/karl/RSFSRC/system/seismic/segy.c"
+#include <rsf.h>
+#include <rsfsegy.h>
 
 /* very sparingly make some global variables. */
 int verbose;
@@ -120,8 +115,8 @@ void sf_tahwritemapped(float* trace, int* iheader,
 		iaxis,indx_of_keys[iaxis]);
 	if(typehead == SF_INT)fprintf(stderr,"%d\n",
 				              iheader[indx_of_keys[iaxis]]);
-	else                  fprintf(stderr,"%f\n",
-				      (float*)iheader[indx_of_keys[iaxis]]);
+	else                  fprintf(stderr,"%g\n",
+				      (float) iheader[indx_of_keys[iaxis]]);
       }
       fprintf(stderr,"\n");
     }

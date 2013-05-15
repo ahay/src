@@ -24,14 +24,56 @@
 #include "list_struct.h"
 #include "delaunay.h"
 
+static int nd, n1, n2;
+static float o1,d1, o2,d2;
+static float *d;
+static Node q;
+static sf_triangle tr1=NULL, tr2=NULL;
+
+static void shape(int n12, const float *inp, float *out, void *data)
+/* I + S (BF - I) */
+{
+    int i1, i2, i;
+
+    /* B F - I */
+
+    sf_int2_lop (false,false,n12,nd,(float*) inp,d);
+    NodeValues(3, nd, d);
+
+    for (i=0; i < n12; i++) {
+	i1 = i%n1;
+	i2 = i/n1;
+
+	MoveNode (q,  o1+i1*d1,  o2+i2*d2);
+	out[i] = Interpolate (q) - inp[i];
+    }
+
+    /* S */
+
+    if (NULL != tr1) {
+	for (i2=0; i2 < n2; i2++) {
+	    sf_smooth2 (tr1, 0, 1, false, false, out+i2*n1);
+	}
+    }
+    if (NULL != tr2) {
+	for (i1=0; i1 < n1; i1++) {
+	    sf_smooth2 (tr2, i1, n1, false, false, out);
+	}
+    }   
+
+    /* + I */
+
+    for (i=0; i < n12; i++) {
+	out[i] += inp[i];
+    }
+}
+    
 int main(int argc, char* argv[])
 {
-    float o1, o2, g1, g2, o3, g3, d1, d2;
-    int n1, n2, nd, id, i2, i1, three, iter, niter, rect1, rect2, nw;
-    float **xyz, **z, **m, *d;
-    Node q;
+    float g1, g2, o3, g3;
+    int n12, id, i2, i1, three, iter, niter, rect1, rect2, nw;
+    float **xyz, **z, **m;
     float zero, xi, xmax, xmin, ymin, ymax, dx, dy, dz;
-    sf_triangle tr1=NULL, tr2=NULL;
     sf_file in, out, pattern;
 
     sf_init(argc,argv);
@@ -63,6 +105,8 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("o1",&o1)) o1=0.;
 	if (!sf_getfloat("o2",&o2)) o2=0.;
     }
+
+    n12 = n1*n2;
 
     sf_putint(out,"n1",n1);
     sf_putint(out,"n2",n2);
@@ -172,7 +216,7 @@ int main(int argc, char* argv[])
 
 	for (iter=0; iter < niter; iter++) {
 	    /* m -> d */
-	    sf_int2_lop (false,false,n1*n2,nd,m[0],d);
+	    sf_int2_lop (false,false,n12,nd,m[0],d);
 	    NodeValues(3, nd, d);
 
 	    for (i2 =0; i2 < n2; i2++) {
@@ -196,7 +240,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    sf_floatwrite (m[0], n1*n2, out);
+    sf_floatwrite (m[0], n12, out);
 
     exit(0);
 }
