@@ -284,7 +284,7 @@ int main(int argc, char *argv[])
     char *filename, *trace, *prog, key[7], *name;
     sf_file out, hdr, msk=NULL;
     int format, ns, itr, ntr, n2, itrace[SF_MAXKEYS], *mask, nkeys=SF_NKEYS, ik;
-    off_t pos, nsegy=0;
+    off_t pos, start, nsegy=0;
     FILE *head, *file;
     float *ftrace, dt=0.0, t0;
     extern int fseeko(FILE *stream, off_t offset, int whence);
@@ -428,16 +428,16 @@ int main(int argc, char *argv[])
 	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
 	if (0==ntr) ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
 
-        pos = ftello(file);
+        start = ftello(file);
     } else {
-        pos = 0;
+        start = 0;
     }
 
     /* read first trace header */
     trace = sf_charalloc (SF_HDRBYTES);
     if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
 	sf_error ("Error reading first trace header");
-    fseeko(file,pos,SEEK_SET); /* rewind */
+    fseeko(file,start,SEEK_SET); /* rewind */
 
     segy2head(trace, itrace, SF_NKEYS);
     t0 = itrace[ segykey("delrt")]/1000.;

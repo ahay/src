@@ -43,6 +43,6 @@ Flow('twoway','impulsed vel wavelet',
      mig_nz=2700 mig_dz=6 nhx=1 image_min_x=0 image_max_x=60000.0 
      Image_hx=$TARGET fd_a=0.664820 fd_b=0.948380 fd_trick=0.11 operator=1 
      vti=0 t=5.328 tilt=1
-     ''',stdin=0)
+     ''',stdin=0,stdout=0)
 
 End()
