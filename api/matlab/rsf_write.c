@@ -45,11 +45,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* Check for proper number of arguments. */
     if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
 
-    /* First input must be a string. */
+    /* Second input must be a string. */
     if (!mxIsChar(prhs[1]))
 	mexErrMsgTxt("First input must be a string.");
 
-    /* First input must be a row vector. */
+    /* Second input must be a row vector. */
     if (mxGetM(prhs[1]) != 1)
 	mexErrMsgTxt("First input must be a row vector.");
 
@@ -105,7 +105,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	file2 = NULL;
     }
 
-    /* Input 2 must be a number. */
+    /* Input 1 must be a number. */
     if (!mxIsDouble(prhs[0])) mexErrMsgTxt("Input 2 must be double.");
 
     /* get data dimensions */

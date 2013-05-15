@@ -34,10 +34,10 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int strlen, status, argc, i, ndim, odim, len;
+    int strlen, status, argc, i, ndim, odim;
     const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
-    char *strtag=NULL, **argv, *par=NULL, *filename=NULL;
+    char *strtag=NULL, **argv, *filename=NULL;
     double *dr=NULL, *di=NULL;
     double *ddlt=NULL, *dorg=NULL;
     mxArray *pca;
