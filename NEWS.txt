@@ -32,6 +32,7 @@ To the Python package:
 * Added an ability to have list arguments in configure
 * Added MKL support in configure
 * Added selfdocs for placeholders in bldutil
+* Extended parallel split for sfomp and sfmpi
 
 To programs:
 
@@ -51,6 +52,7 @@ To programs:
 * Moved some programs from user/fomels to user/pwd
 * sfzoom: example Tkinter script for interactive zooming
 * sfsegyheader can take tfile= parameter for input trace headers
+* Extended join= option in sfomp and sfmpi to support adding (join=0)
 
 ===Bug fixes===
 

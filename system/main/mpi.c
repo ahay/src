@@ -58,14 +58,15 @@ int main(int argc, char* argv[])
 	iname = sf_getstring("input");
 
 	if (!sf_getint("join",&axis2)) axis2=axis;
-	/* axis to join */
+	/* axis to join (0 means add) */
 
 	sf_out(out,axis2,iname);
 	
 	for (job=1; job < nodes; job++) {
 	    MPI_Recv(&rank,1, MPI_INT, job, 1, MPI_COMM_WORLD,&stat);
-	    sf_join(out,job-1);
+	    if (axis2 > 0) sf_join(out,job-1);
 	}
+	if (0==axis2) sf_add(out,nodes-1);
 
 	sf_fileclose(inp);
     } else { /* slave nodes */

@@ -168,6 +168,7 @@ char** sf_split(sf_file inp          /* input file */,
 
 	sf_putint(in,nkey,chunk);
 	sf_putfloat(in,okey,o+skip*d);
+	sf_settype(in,sf_gettype(inp));
 	sf_fileflush(in,inp);
 	sf_setform(in,SF_NATIVE);
 
@@ -199,6 +200,7 @@ char** sf_split(sf_file inp          /* input file */,
 
 	    sf_putint(in,nkey,chunk);
 	    sf_putfloat(in,okey,oi+skip*di);
+	    sf_settype(in,sf_gettype(splitfile[i]));
 	    sf_fileflush(in,splitfile[i]);
 	    sf_setform(in,SF_NATIVE);
 
@@ -307,19 +309,17 @@ void sf_add(sf_file out, int jobs)
     char buffout[BUFSIZ];
     sf_complex *cbuf=NULL;
     sf_datatype type;
-    size_t nbuf;
+    size_t nbuf=BUFSIZ;
     off_t nsiz;
     char *oname;
     sf_file *ins;
 
     type = sf_gettype(out);
 
-    nbuf=BUFSIZ;
-    nsiz=size1;
-
     switch(type) {
 	case SF_FLOAT:
 	    fbuf = (float*) buffout;
+	    nbuf /= sizeof(float);
 	    for (i=0; i < nbuf; i++) {
 		fbuf[i] = 0.0f;
 	    }
@@ -330,12 +330,13 @@ void sf_add(sf_file out, int jobs)
     }
 
     ins = (sf_file*) sf_alloc(jobs,sizeof(sf_file));
+
     for (job=0; job < jobs; job++) {
 	oname = onames[job];
 	ins[job] = sf_input(oname);
     }
 
-    for (nbuf /= sf_esize(out); nsiz > 0; nsiz -= nbuf) {
+    for (nsiz = size2; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 
 	for (job=0; job < jobs; job++) {
@@ -372,9 +373,8 @@ void sf_add(sf_file out, int jobs)
 	}
     }
 
-    free(ins);
-    
     for (job=0; job < jobs; job++) {
+	sf_fileclose(ins[job]);
 	sf_rm(inames[job],true,false,false);
 	sf_rm(onames[job],true,false,false);
 	for (i=0; i < splitargc; i++) {
@@ -382,4 +382,6 @@ void sf_add(sf_file out, int jobs)
 	    sf_rm(oname,true,false,false);
 	}
     }
+
+    free(ins);
 }
