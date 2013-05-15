@@ -1,4 +1,4 @@
-/* Curvature in stratigraphic curvature */
+/* Curvature in stratigraphic coordinates */
 
 /*
   Copyright (C) 2004 University of Texas at Austin
