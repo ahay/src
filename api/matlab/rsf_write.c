@@ -47,11 +47,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     /* Second input must be a string. */
     if (!mxIsChar(prhs[1]))
-	mexErrMsgTxt("First input must be a string.");
+	mexErrMsgTxt("Second input must be a string.");
 
     /* Second input must be a row vector. */
     if (mxGetM(prhs[1]) != 1)
-	mexErrMsgTxt("First input must be a row vector.");
+	mexErrMsgTxt("Second input must be a row vector.");
 
     /* Get the length of the input string. */
     taglen = mxGetN(prhs[1]) + 1;
@@ -106,7 +106,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     /* Input 1 must be a number. */
-    if (!mxIsDouble(prhs[0])) mexErrMsgTxt("Input 2 must be double.");
+    if (!mxIsDouble(prhs[0])) mexErrMsgTxt("First input must be double.");
 
     /* get data dimensions */
     ndim=mxGetNumberOfDimensions(prhs[0]);

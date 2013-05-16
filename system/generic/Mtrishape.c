@@ -23,56 +23,13 @@
 
 #include "list_struct.h"
 #include "delaunay.h"
-
-static int nd, n1, n2;
-static float o1,d1, o2,d2;
-static float *d;
-static Node q;
-static sf_triangle tr1=NULL, tr2=NULL;
-
-static void shape(int n12, const float *inp, float *out, void *data)
-/* I + S (BF - I) */
-{
-    int i1, i2, i;
-
-    /* B F - I */
-
-    sf_int2_lop (false,false,n12,nd,(float*) inp,d);
-    NodeValues(3, nd, d);
-
-    for (i=0; i < n12; i++) {
-	i1 = i%n1;
-	i2 = i/n1;
-
-	MoveNode (q,  o1+i1*d1,  o2+i2*d2);
-	out[i] = Interpolate (q) - inp[i];
-    }
-
-    /* S */
-
-    if (NULL != tr1) {
-	for (i2=0; i2 < n2; i2++) {
-	    sf_smooth2 (tr1, 0, 1, false, false, out+i2*n1);
-	}
-    }
-    if (NULL != tr2) {
-	for (i1=0; i1 < n1; i1++) {
-	    sf_smooth2 (tr2, i1, n1, false, false, out);
-	}
-    }   
-
-    /* + I */
-
-    for (i=0; i < n12; i++) {
-	out[i] += inp[i];
-    }
-}
+#include "trishape.h"
     
 int main(int argc, char* argv[])
 {
-    float g1, g2, o3, g3;
-    int n12, id, i2, i1, three, iter, niter, rect1, rect2, nw;
-    float **xyz, **z, **m;
+    float g1, g2, o3, g3, o1,d1, o2,d2;
+    int nd, n1, n2, n12, id, i, three, iter, niter, rect1, rect2, nw;
+    float **xyz, *z, *m, *m2, *d;
     float zero, xi, xmax, xmin, ymin, ymax, dx, dy, dz;
     sf_file in, out, pattern;
 
@@ -121,20 +78,19 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=0;
     /* number of iterations */
 
+    xyz = sf_floatalloc2(3,nd);
+    sf_floatread(xyz[0],nd*3,in);
+
     if (niter > 0) {
 	if (!sf_getint("rect1",&rect1)) rect1=1;
 	if (!sf_getint("rect2",&rect2)) rect2=1;
 	/* smoothing regularization */
 
-	if (rect1 > 1) tr1 = sf_triangle_init (rect1,n1);
-	if (rect2 > 1) tr2 = sf_triangle_init (rect2,n2);
-    }
+	if (!sf_getint("nw",&nw)) nw=2;
+	/* interpolator size */
 
-    if (!sf_getint("nw",&nw)) nw=2;
-    /* interpolator size */
-    
-    xyz = sf_floatalloc2(3,nd);
-    sf_floatread(xyz[0],nd*3,in);
+	trishape_init(nd, n1,n2, o1,o2, d1,d2, rect1,rect2, nw, xyz);
+    }
 
     xmax = xmin = xyz[0][0]; 
     ymax = ymin = xyz[0][1]; 
@@ -187,60 +143,39 @@ int main(int argc, char* argv[])
 			       (double) xyz[id][2], BOUNDARY));
     }
 
-    z = sf_floatalloc2 (n1,n2);
+    z = sf_floatalloc (n12);
 
     if (niter > 0) {
-	m = sf_floatalloc2 (n1,n2);
+	m = sf_floatalloc (n12);
 	d = sf_floatalloc(nd);
+	m2 = sf_floatalloc (n12);
     } else {
 	m = z;
 	d = NULL;
+	m2 = NULL;
     }
 
-    q = AppendNode (0.,0.,0.,EMPTY);
-    for (i2 =0; i2 < n2; i2++) {
-	for (i1 =0; i1 < n1; i1++) {
-	    MoveNode (q,  o1+i1*d1,  o2+i2*d2);
-	    z[i2][i1] = Interpolate (q);
-	}
-    }
+    trishape_back(NULL,z);
 
     if (niter > 0) {
-	sf_int2_init (xyz, o1, o2, d1, d2, n1, n2, sf_lg_int, nw, nd);
-
-	for (i2 =0; i2 < n2; i2++) {
-	    for (i1 =0; i1 < n1; i1++) {
-		m[i2][i1] = z[i2][i1];
-	    }
+	for (i =0; i < n12; i++) {
+	    m[i] = z[i];
 	}
 
 	for (iter=0; iter < niter; iter++) {
 	    /* m -> d */
-	    sf_int2_lop (false,false,n12,nd,m[0],d);
-	    NodeValues(3, nd, d);
+	    trishape_forw(m,d);
+	    trishape_back(d,m2);
 
-	    for (i2 =0; i2 < n2; i2++) {
-		for (i1 =0; i1 < n1; i1++) {
-		    MoveNode (q,  o1+i1*d1,  o2+i2*d2);
-		    m[i2][i1] += z[i2][i1] - Interpolate (q);
-		}
+	    for (i =0; i < n12; i++) {
+		m[i] += z[i] - m2[i];
 	    }
-	    
-	    /* 2-D smoothing */
-	    if (NULL != tr1) {
-		for (i2=0; i2 < n2; i2++) {
-		    sf_smooth2 (tr1, 0, 1, false, false, m[i2]);
-		}
-	    }
-	    if (NULL != tr2) {
-		for (i1=0; i1 < n1; i1++) {
-		    sf_smooth2 (tr2, i1, n1, false, false, m[0]);
-		}
-	    }   
+
+	    trishape_smooth(m);
 	}
     }
     
-    sf_floatwrite (m[0], n12, out);
+    sf_floatwrite (m, n12, out);
 
     exit(0);
 }

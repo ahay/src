@@ -132,7 +132,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	mexWarnMsgTxt("Not enough space. String is truncated.");
     
     snprintf(cmdline,SF_CMDLEN,"%s < %s > %s",cmd,iname,oname);
-    mexWarnMsgTxt(cmdline);
+/*    mexWarnMsgTxt(cmdline); */
     sf_system(cmdline);
  
     inp = sf_input(oname);
