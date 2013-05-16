@@ -68,6 +68,16 @@ void sf_quat_vecrot (float *vf, float *vt, float *q)
         c[2] = -vf[1];
         q[0] = 0.0;
     } else {
+        /* If phi is rotation angle, then d = cos(phi),
+           d = 2*cos(0.5*phi)^2 - 1, 2*cos(0.5*phi)^2 = d + 1,
+           4*cos(0.5*phi)^2 = 2*(d + 1),
+           s = 2*cos(0.5*phi) = sqrt(2*(d + 1)), and
+           sin(phi) = 2*sin(0.5*phi)*cos(0.5*phi),
+           sin(phi) = sin(0.5*phi)*s,
+           s = sin(phi)/sin(0.5*phi), and
+           vfxvt cross product is sin(phi)*n [n - unit vector],
+           then (vfxvt)/s = n*sin(phi)/(sin(phi)/sin(0.5*phi)) = n*sin(0.5*phi)
+         */
         s = sqrtf ((1.0 + d)*2.0);
         invs = 1.0/s;
         c[0] = (vf[1]*vt[2] - vf[2]*vt[1])*invs;
