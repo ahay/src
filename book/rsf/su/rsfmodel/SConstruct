@@ -8,14 +8,16 @@ layers = ((0.30,0.50,0.20,0.30),
           (0.65,0.85,0.55,0.65),
           (1.30,1.30,1.60,1.20))
 
-velocities = (0.44,
-              0.40,
-              0.35,
-              0.30,
-              0.25)
+velocities = (1.508,
+              1.581,
+              1.690,
+              1.826,
+              2.000)
 
 def arr2str(array,sep=' '):
     return string.join(map(str,array),sep)
+
+vstr = arr2str(velocities,',')
 
 n1 = len(layers[0])
 n2 = len(layers)
@@ -31,21 +33,42 @@ Flow('layers','layers.asc','dd form=native')
 
 d = 0.0101 # non-round for reproducibility
 
-Flow('mod1','layers',
+Flow('refs','layers',
+     'spline o1=0 d1=%g n1=%d' % (d,int(1.5+xmax/d)))
+Flow('dips','refs','deriv scale=y')
+
+Flow('mod1','refs',
      '''
-     spline o1=0 d1=%g n1=%d |
      unif2 d1=%g n1=%d v00=%s 
-     ''' % (d,int(1.5+xmax/d),
-            d,int(1.5+zmax/d),
-            arr2str(velocities,','),))
+     ''' % (d,int(1.5+zmax/d),vstr))
 
 Result('mod1',
        '''
        grey color=j title="Model 1" 
        screenratio=%g screenht=4
-       allpos=y titlesz=8 labelsz=6
+       mean=y titlesz=8 labelsz=6
        label1="Depth (km)"
        label2="Distance (km)"
        ''' % (zmax/xmax))
+
+shots = (2.0,2.6,3.3,3.95)
+plots = []
+for s in range(4):
+    shot = 'shot%d' % s
+    Flow(shot,'refs dips',
+         '''
+         kirmod_newton newton=y nt=751 dt=0.004 freq=15
+         ns=1 s0=%g ds=0.01 nh=60 dh=0.04 h0=-1.2 verb=y 
+         vstatus=0 velocity=%s debug=n fwdxini=y
+         xref=0 zref=0 Xdip=${SOURCES[1]}
+         ''' % (shots[s],vstr))
+    Plot(shot,
+         '''
+         wiggle transp=y yreverse=y poly=y
+         title="Shot at %g km"
+         ''' % shots[s])
+    plots.append(shot)
+
+Result('shots',plots,'SideBySideAniso')
 
 End()
