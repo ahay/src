@@ -4,7 +4,7 @@ This program implements Fornberg, 1988
 paper for digital differentiators
 of arbitrary order.
 
-So, it computes first, second, n derivative.
+So, it computes first, second, n derivative along axis 1,2 or 3.
 '''
 
 
@@ -13,6 +13,10 @@ import numpy as np
 
 
 def Fornberg_filter(Nlenght,order):
+  '''
+  This function computes the Fornberg filters
+  '''
+
   x = np.arange(-int(Nlenght/2),Nlenght/2+1,1)
   z = 0.0
   k = order
@@ -42,32 +46,93 @@ def Fornberg_filter(Nlenght,order):
   return c.T[k]  
 
 
-par = rsf.Par()
+def goFilter1(Fin,Fout,f,order,scale=True):
+  n1 = Fin.int("n1")
+  d1 = Fin.float("d1")
+  ntraces = Fin.size(1)
 
-Fa = rsf.Input()
+  idn = np.ones(1,'f')
+  idn[0] = (1./(d1**order))
+
+  a = np.zeros(n1,'f')
+
+  for ir in range(ntraces):
+    Fin.read(a)
+    out = np.convolve(f,a,'same')
+    if scale:
+      out *= idn
+    Fout.write(out)
+
+def goFilter2(Fin,Fout,f,order,scale=True):
+  n1 = Fin.int("n1")
+  n2 = Fin.int("n2")
+  d2 = Fin.float("d2")
+  
+  ntraces = Fin.size(2)
+  idn = np.ones(1,'f')
+  idn[0] = (1./(d2**order))
+  a = np.zeros((n2,n1),'f')
+  aux = np.zeros(n2,'f')
+
+  for i3 in range(ntraces):
+    Fin.read(a)
+    for i1 in range(n1):
+      aux = a[:,i1]
+      out = np.convolve(f,aux,'same')
+      a[:,i1] = out
+    if scale:
+      a *= idn
+    Fout.write(a)
+    
+def goFilter3(Fin,Fout,f,order,scale=True):
+  n1 = Fin.int("n1")
+  n2 = Fin.int("n2")
+  n3 = Fin.int("n3")
+  d3 = Fin.float("d3")
+  
+  ntraces = Fin.size(3)
+  idn = np.ones(1,'f')
+  idn[0] = (1./(d3**order))
+
+  a = np.zeros((n3,n2,n1),'f')
+  aux = np.zeros(n3,'f')
+
+  for i4 in range(ntraces):
+    Fin.read(a)
+    for i2 in range(n2):
+      for i1 in range(n1):
+        aux = a[:,i2,i1]
+        out = np.convolve(f,aux,'same')
+        a[:,i2,i1] = out
+    if scale:
+      a *= idn
+    Fout.write(a)
+
+
+
+#############################################################################################
+#                               MAIN PROGRAM BEGINS:                                        #
+#############################################################################################
+par = rsf.Par()
+Fin = rsf.Input()
 Fout = rsf.Output()
 
+functions = {1:goFilter1, 2:goFilter2, 3:goFilter3}
 # pars from command line
 order  = par.int("order",1) # order of the derivative, default first derivative 
 lenght = par.int("lenght",5) # filter lenght, the lenghtier the accurate, but also gets costlier 
 scale  = par.bool("scale",True) # scales by 1/d^order
 axis   = par.int("axis",1) # apply differentiator along axis, default is fast axis
 
-# parameters from input file
-n1 = Fa.int("n1")    # number of samples from input
-d1 = Fa.float("d1")  # dt
-
-a = np.zeros(n1,'f')
 f = Fornberg_filter(lenght,order)
+try:
+  functions[axis](Fin,Fout,f,order,scale)
+except:
+  import sys
+  print >> sys.stderr, '========== sfnderiv ERROR ==========='
+  print >> sys.stderr, 'Error: valid axis values are 1,2 or 3'
+  print >> sys.stderr, '====================================='
+  sys.exit(1)
 
-ntraces = Fa.size(1) # number of traces of input file
-idn = 1./(d1)**order
-for i2 in range(ntraces):
-  Fa.read(a)
-  out = np.convolve(f,a,'same')
-  
-  Fout.write(out)
-
-Fa.close()
+Fin.close()
 Fout.close()
-
