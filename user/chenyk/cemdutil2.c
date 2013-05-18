@@ -1,8 +1,9 @@
 #include <rsf.h>
-#include "emdutil.h"
+#include "cemdutil2.h"
 
 #define DEFAULT_THRESHOLD 0.05
 #define DEFAULT_TOLERANCE 0.05
+#define DEFAULT_NBPHASES 4
 #define MAX_ITERATIONS 1000
 #define LIM_GMP 30000
 #define NBSYM 2
@@ -10,9 +11,32 @@
 #define CUBE(A) (A*A*A)
 #define GREATER(A,B) ((A) >= (B) ? (A) : (B))
 #define SMALLER(A,B) ((A) <  (B) ? (A) : (B))
+#ifdef C99_OK
+#include <complex.h>
+#define COMPLEX_T double complex
+#define CREAL creal
+#define CIMAG cimag
+#define CABS cabs
+#else
+#define COMPLEX_T complex_data_t
+#define CREAL emd_creal
+#define CIMAG emd_cimag
+#define CABS emd_cabs
+#endif
 /*^*/
 
-#ifndef _emdutil_h
+#ifndef _cemdutil2_h
+//emd_complex.h
+#ifndef EMD_COMPLEX_H
+#define EMD_COMPLEX_H
+
+typedef struct {
+  double r;
+  double i;
+} complex_data_t;
+/*^*/
+#endif
+
 //extr.h
 #ifndef EXTR_H
 #define EXTR_H
@@ -34,7 +58,7 @@ typedef struct {
 #define INTERPOLATION_H
 #endif
 
-//io.h
+//cio.h
 #ifndef EMD_IO_H
 #define EMD_IO_H
 
@@ -47,7 +71,7 @@ typedef struct {
 /* structure used to store an IMF and the associated number of iterations */
 typedef struct i {
   int nb_iterations;
-  double *pointer;
+  COMPLEX_T *pointer;
   struct i *next;
 } imf_t;
 /*^*/
@@ -62,9 +86,9 @@ typedef struct {
 /*^*/
 #endif
 
-//local_mean.h
-#ifndef LOCAL_MEAN_H
-#define LOCAL_MEAN_H
+//clocal_mean2.h
+#ifndef CLOCAL_MEAN2_H
+#define CLOCAL_MEAN2_H
 
 /* structure used to store envelopes and temporary data */
 typedef struct {
@@ -76,9 +100,10 @@ typedef struct {
 } envelope_t;
 /*^*/
 #endif
+
 #endif
 
-//extr.c
+//cextr.c
 /************************************************************************/
 /*                                                                      */
 /* INITIALIZATION OF EXTREMA STRUCTURE                                  */
@@ -103,9 +128,9 @@ extrema_t init_extr(int n)
 /*                                                                      */
 /************************************************************************/
 
-void extr(double x[],double y[],int n,extrema_t *ex)
+void extr(double x[],double y[],int n,extrema_t *ex) 
 /*< extract extremas >*/
- {
+{
     int cour;
     ex->n_min=0;
     ex->n_max=0;
@@ -281,6 +306,13 @@ void boundary_conditions(double x[],double y[],int n,extrema_t *ex)
     (ex->n_max) = ex->n_max + nbsym + 1;
 }
 
+
+/************************************************************************/
+/*                                                                      */
+/* FREE ALLOCATED MEMORY                                                */
+/*                                                                      */
+/************************************************************************/
+
 void free_extr(extrema_t ex) 
 /*<free allocated extrema struct>*/
 {
@@ -349,7 +381,7 @@ void interpolation(double y[],double xs[],double ys[],int n,double x[], int nx,d
   }
 }
 
-//io.c
+//cio.c
 /************************************************************************/
 /*                                                                      */
 /* INITIALIZATION OF THE LIST                                           */
@@ -374,10 +406,10 @@ imf_list_t init_imf_list(int n)
 /*                                                                      */
 /************************************************************************/
 
-void add_imf(imf_list_t *list,double *p,int nb_it) 
+void add_imf(imf_list_t *list,COMPLEX_T *p,int nb_it) 
 /*< adding imf to imf list >*/
 {
-  double *v=(double *)malloc(list->n*sizeof(double));
+  COMPLEX_T *v=(COMPLEX_T *)malloc(list->n*sizeof(COMPLEX_T));
   int i;
   imf_t *mode=(imf_t *)malloc(sizeof(imf_t));
   for (i=0;i<list->n;i++) v[i]=p[i];
@@ -401,7 +433,7 @@ void add_imf(imf_list_t *list,double *p,int nb_it)
 /************************************************************************/
 
 void free_imf_list(imf_list_t list) 
-/*< initialization for local mean of bivariate emd >*/
+/*<free allocated imf list struct >*/
 {
   imf_t *current=list.first, *previous;
   while (current) {
@@ -412,13 +444,13 @@ void free_imf_list(imf_list_t list)
   }
 }
 
-//local_mean.c
+//clocal_mean2.c
 /********************************************************/
 /* ALLOCATE MEMORY FOR THE ENVELOPES AND TEMPORARY DATA */
 /********************************************************/
 
 envelope_t init_local_mean(int n) 
-/*<free allocated local mean struct >*/
+/*< initialization for local mean of bivariate emd >*/
 {
   envelope_t env;
   env.e_min = (double*)malloc(n*sizeof(double));
@@ -433,7 +465,7 @@ envelope_t init_local_mean(int n)
 /*************************/
 
 void free_local_mean(envelope_t env) 
-/*< free_local_mean >*/
+/*<free allocated local mean struct >*/
 {
   free(env.e_min);
   free(env.e_max);
@@ -441,77 +473,179 @@ void free_local_mean(envelope_t env)
   free(env.tmp2);
 }
 
-/*********************************************************/
-/* COMPUTES THE MEAN OF THE ENVELOPES OF THE CURRENT IMF */
-/*********************************************************/
-
-int mean(double *x,double *z,double *m,int n,extrema_t *ex,envelope_t *env) 
-/*< compute the mean of the envelopes and the amplitude of the current imf >*/
-{
-  int i;
-  /* detect maxima and minima */
-  extr(x,z,n,ex);
-  /* if not enough extrema -> stop */
-  if (ex->n_min+ex->n_max <7)
-    return 1;
-  /* add extra points at the edges */
-  boundary_conditions(x,z,n,ex);
-  /* interpolation - upper envelope */
-  interpolation(env->e_max,ex->x_max,ex->y_max,ex->n_max,x,n,env->tmp1,env->tmp2);
-  /* interpolation - lower envelope */
-  interpolation(env->e_min,ex->x_min,ex->y_min,ex->n_min,x,n,env->tmp1,env->tmp2);
-  if ((ex->n_min > LIM_GMP)||(ex->n_min > LIM_GMP)) {
-    sf_warning("Too many extrema, interpolation may be unreliable\n");
-  }
-  /* compute the mean */
-  for (i=0;i<n;i++) m[i]=(env->e_max[i]+env->e_min[i])/2;
-  return 0;
-}
-
 /***************************************************************************/
 /* COMPUTES THE MEAN OF THE ENVELOPES AND THE AMPLITUDE OF THE CURRENT IMF */
 /***************************************************************************/
 
-int mean_and_amplitude(double *x,double *z,double *m,double *a,int n,extrema_t *ex,envelope_t *env) 
-/*< compute the mean of the envelopes of the current imf >*/
+int mean_and_amplitude(double *x,COMPLEX_T *z,COMPLEX_T *m,double *a,int n,int nbphases,extrema_t *ex,envelope_t *env) 
+/*< compute the mean of the envelopes and the amplitude of the current imf >*/
 {
-  int i;
-  /* detect maxima and minima */
-  extr(x,z,n,ex);
-  /* if not enough extrema -> stop */
-  if (ex->n_min+ex->n_max <7)
-    return 1;
-  /* add extra points at the edges */
-  boundary_conditions(x,z,n,ex);
-  /* interpolation - upper envelope */
-  interpolation(env->e_max,ex->x_max,ex->y_max,ex->n_max,x,n,env->tmp1,env->tmp2);
-  /* interpolation - lower envelope */
-  interpolation(env->e_min,ex->x_min,ex->y_min,ex->n_min,x,n,env->tmp1,env->tmp2);
-  /* compute the mean */
-  for (i=0;i<n;i++) m[i]=(env->e_max[i]+env->e_min[i])/2;
-  /* compute the amplitude */
-  for (i=0;i<n;i++) a[i]=(env->e_max[i]-env->e_min[i])/2;
+  int i,k;
+  #ifdef C99_OK
+  COMPLEX_T eiphi;
+  #else
+  double phi,cphi,sphi;
+  #endif
+  
+  #ifdef C99_OK
+  for (i=0;i<n;i++) m[i]=0;
+  #else
+  for (i=0;i<n;i++) {
+    m[i].r=0;
+    m[i].i=0;
+  }
+  #endif
+  for (i=0;i<n;i++) a[i]=0;
+  
+  for(k=0;k<nbphases;k++) {
+    
+    #ifdef C99_OK
+    eiphi = cexp(-I*k*M_PI/(nbphases));
+    for(i=0;i<n;i++) env->tmp1[i] = CREAL(eiphi*z[i]);
+    #else
+    phi = k*M_PI/(nbphases);
+    for(i=0;i<n;i++) env->tmp1[i] = crealeiphi(phi,z[i]);
+    #endif
+
+    /* detect maxima and minima in direction phi=k*M_PI/nbphases*/
+    extr(x,env->tmp1,n,ex);
+    if (ex->n_max+ex->n_min <7){ /* not enough extrema in a direction -> stop */
+      return 1;
+    }
+    
+    /* add extra points at the edges */
+    boundary_conditions(x,env->tmp1,n,ex);
+    
+    /* interpolation - upper envelope */
+    interpolation(env->e_max,ex->x_max,ex->y_max,ex->n_max,x,n,env->tmp1,env->tmp2);
+    
+    /* interpolation - lower envelope */
+    interpolation(env->e_min,ex->x_min,ex->y_min,ex->n_min,x,n,env->tmp1,env->tmp2);
+    
+    if ((ex->n_min > LIM_GMP)||(ex->n_min > LIM_GMP)) {
+      sf_warning("Too many extrema, interpolation may be unreliable\n");
+    }
+    
+    /* compute the mean and amplitude*/
+    #ifdef C99_OK
+    eiphi=conj(eiphi);
+    for (i=0;i<n;i++) m[i]+=eiphi*(env->e_max[i]+env->e_min[i])/(nbphases);
+    #else
+    cphi = cos(-phi);
+    sphi = sin(-phi);
+    for (i=0;i<n;i++) {
+      m[i].r+=cphi*(env->e_max[i]+env->e_min[i])/(nbphases);
+      m[i].i+=sphi*(env->e_max[i]+env->e_min[i])/(nbphases);
+    }
+    #endif
+    for (i=0;i<n;i++) a[i]+=(env->e_max[i]-env->e_min[i])/(nbphases);
+    
+  }
   return 0;
 }
 
-//emdc.c
-/************************************************************************/
-/* ABSOLUTE VALUE                                                       */
-/************************************************************************/
+/*********************************************************/
+/* COMPUTES THE MEAN OF THE ENVELOPES OF THE CURRENT IMF */
+/*********************************************************/
+/*< compute the mean of the envelopes of the current imf >*/
+int mean(double *x,COMPLEX_T *z,COMPLEX_T *m,int n,int nbphases,extrema_t *ex,envelope_t *env) 
 
-double emd_fabs(double x) 
-/*< absolute value  >*/
 {
-  if (x <0) return -x;
-  else return x;
+  int i,k;
+  #ifdef C99_OK
+  COMPLEX_T eiphi;
+  #else
+  double phi,cphi,sphi;
+  #endif
+  
+  #ifdef C99_OK
+  for (i=0;i<n;i++) m[i]=0;
+  #else
+  for (i=0;i<n;i++) {
+    m[i].r=0;
+    m[i].i=0;
+  }
+  #endif
+  
+  for(k=0;k<nbphases;k++) {
+    
+    #ifdef C99_OK
+    eiphi = cexp(-I*k*M_PI/(nbphases));
+    for(i=0;i<n;i++) env->tmp1[i] = CREAL(eiphi*z[i]);
+    #else
+    phi = k*M_PI/(nbphases);
+    for(i=0;i<n;i++) env->tmp1[i] = crealeiphi(phi,z[i]);
+    #endif
+
+    /* detect maxima and minima in direction phi=k*M_PI/nbphases*/
+    extr(x,env->tmp1,n,ex);
+    if (ex->n_max+ex->n_min <7){ /* not enough extrema in a direction -> stop */
+      return 1;
+    }
+    
+    /* add extra points at the edges */
+    boundary_conditions(x,env->tmp1,n,ex);
+    
+    /* interpolation - upper envelope */
+    interpolation(env->e_max,ex->x_max,ex->y_max,ex->n_max,x,n,env->tmp1,env->tmp2);
+    
+    /* interpolation - lower envelope */
+    interpolation(env->e_min,ex->x_min,ex->y_min,ex->n_min,x,n,env->tmp1,env->tmp2);
+    
+    if ((ex->n_min > LIM_GMP)||(ex->n_min > LIM_GMP)) {
+      sf_warning("Too many extrema, interpolation may be unreliable\n");
+    }
+    
+    /* compute the mean*/
+    #ifdef C99_OK
+    eiphi=conj(eiphi);
+    for (i=0;i<n;i++) m[i]+=eiphi*(env->e_max[i]+env->e_min[i])/(nbphases);
+    #else
+    cphi = cos(-phi);
+    sphi = sin(-phi);
+    for (i=0;i<n;i++) {
+      m[i].r+=cphi*(env->e_max[i]+env->e_min[i])/(nbphases);
+      m[i].i+=sphi*(env->e_max[i]+env->e_min[i])/(nbphases);
+    }
+    #endif
+    
+  }
+  return 0;
 }
 
+//emd_complex.c
+
+double CREAL(complex_data_t c)
+/*< creal >*/
+{
+  return c.r;
+}
+
+double CIMAG(complex_data_t c)
+/*< cimag >*/
+{
+  return c.i;
+}
+
+double CABS(complex_data_t c)
+/*< cabs >*/
+{  
+  return sqrt((c.r)*(c.r)+(c.i)*(c.i));
+}
+
+double crealeiphi(double phi,complex_data_t c)
+/*< crealeiphi >*/
+{
+  return cos(phi)*c.r-sin(phi)*c.i;
+}
+
+//cemdc.c
 
 /************************************************************************/
-/* STOP TEST FOR THE SIFTING LOOP                                       */
+/* STOP TEST FOR THE SIFTING LOOP                                    */
 /************************************************************************/
 
-int stop_sifting(double *m, double *a,extrema_t *ex,stop_t *sp,int n, int counter, int max_iterations)
+int stop_sifting(COMPLEX_T *m, double *a,extrema_t *ex,stop_t *sp,int n, int counter, int max_iterations) 
 /*< decide if stop sifting >*/
 {
   int i,count;
@@ -520,10 +654,8 @@ int stop_sifting(double *m, double *a,extrema_t *ex,stop_t *sp,int n, int counte
   eps = sp->threshold;
   count = 0;
   if (counter >= MAX_ITERATIONS) return 1;
-  for (i=0;i<ex->n_min;i++) if (ex->y_min[i] > 0) return 0;
-  for (i=0;i<ex->n_max;i++) if (ex->y_max[i] < 0) return 0;
   for (i=0;i<n;i++) {
-    if (emd_fabs(m[i]) > eps*emd_fabs(a[i])) if (++count>tol) return 0;
+    if (CABS(m[i]) > eps*a[i]) if (++count>tol) return 0;
   }
   return 1;
 }

@@ -1,8 +1,9 @@
-/* Empirical Mode Decomposition */
+/* Bivariate empirical mode decomposition using first algorithm. */
+
 /*
   Copyright (C) 2013 the University of Texas at Austin
 
-  This program is the Madagascar version of emd program written by G. Rilling (2007).
+  This program is the Madagascar version of cemdc program written by G. Rilling (2007).
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,37 +20,45 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include "emdutil.h"
+#include "cemdutil1.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 int main(int argc, char* argv[])
 {
     /* declarations */
-    int i,n,nb_imfs,max_imfs,iteration_counter,max_iterations,stop_status,allocated_x,stop_EMD;
+    int i,n,nb_imfs,max_imfs,max_iterations,iteration_counter,stop_status,allocated_x,stop_EMD,nbphases;
+    float dt;
+    double *x,*a;
+
     extrema_t ex;
     envelope_t env;
     stop_t stop_params;
-    double *x,*y,*z,*m,*a;
-    float *dat,*imf,dt;
+    COMPLEX_T *y,*m,*z;
     imf_list_t list;
+    kiss_fft_cpx *ind, *imf;
     sf_file inp, outp; 
 
     sf_init(argc,argv);
     inp  = sf_input("in");
     outp = sf_output("out");
 
-    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+    if (SF_COMPLEX != sf_gettype(inp)) sf_error("Need complex input");
     if (!sf_histint(inp,"n1",&n)) sf_error("No n1= in input");
     if (!sf_histfloat(inp,"d1",&dt)) sf_error("No d1= in input");
-    x=(double*)sf_alloc(n,sizeof(double));
-    y=(double*)sf_alloc(n,sizeof(double)); 
 
-    dat=sf_floatalloc(n);
-    imf=sf_floatalloc(n*20);
+    ind=(kiss_fft_cpx*) sf_complexalloc(n);
+    imf=(kiss_fft_cpx*) sf_complexalloc(n*20);
+    sf_floatread((float*)ind,n*2,inp);
 
-    sf_floatread(dat,n,inp);
-    for(i=0;i<n;i++){y[i]=dat[i];x[i]=i*dt;}
+    x = (double *)malloc(n*sizeof(double));
+    y=(COMPLEX_T *)malloc(n*sizeof(COMPLEX_T));
+
+    for(i=0;i<n;i++)
+	{
+	y[i].r=ind[i].r;y[i].i=ind[i].i;
+	x[i]=i*dt;
+	}
 
     if(!sf_getfloat("threshold",&stop_params.threshold)) stop_params.threshold=DEFAULT_THRESHOLD;
     /* Sifting stoping parameter: threshold, the default is 0.05. */
@@ -69,51 +78,71 @@ int main(int argc, char* argv[])
     if(!sf_getint("mimf", &max_imfs)) max_imfs = 0;
     /* Maximum number of IMFs, the default is as many as possible. */
 
+    if(!sf_getint("nbdir", &nbphases)) nbphases = DEFAULT_NBPHASES;
+    /* Number of directions used to compute the local mean, the default is 4. */
+
     allocated_x=0;
 
     /* initialisations */
-    ex=init_extr(n+2*NBSYM);
     list=init_imf_list(n);
-    z=(double *)malloc(n*sizeof(double));
-    m=(double *)malloc(n*sizeof(double));
+    z=(COMPLEX_T *)malloc(n*sizeof(COMPLEX_T));
+    m=(COMPLEX_T *)malloc(n*sizeof(COMPLEX_T));
     a=(double *)malloc(n*sizeof(double));
+    ex=init_extr(n+2*NBSYM);
     env=init_local_mean(n+2*NBSYM);
   
     /* MAIN LOOP */
     nb_imfs=0;
     stop_EMD=0;
-    while ((!max_imfs || (nb_imfs < max_imfs)) && !stop_EMD) {   
-        /* initialisation */
-	for (i=0;i<n;i++) z[i]=y[i];
-	for (i=0;i<n;i++) m[i]=y[i];
-	iteration_counter=0;
-	stop_status = mean_and_amplitude(x,z,m,a,n,&ex,&env);
-        /* SIFTING LOOP */
-	while (!stop_status && !stop_sifting(m,a,&ex,&stop_params,n,iteration_counter, max_iterations)) {
-            /* subtract the local mean */
-	    for (i=0;i<n;i++) z[i]=z[i]-m[i];
-	    iteration_counter++;
-	    stop_status = mean_and_amplitude(x,z,m,a,n,&ex,&env);      
-	}  
-        /* save current IMF into list if at least   */
-        /* one sifting iteration has been performed */
-	if (iteration_counter) {
-	    add_imf(&list,z,iteration_counter);
 
-	    nb_imfs++;
-	    for (i=0;i<n;i++){
-		y[i]=y[i]-z[i];
-		imf[i+(nb_imfs-1)*n]=z[i];	
-	    }      
-	}
-	else
-	    stop_EMD = 1;    
+    while ((!max_imfs || (nb_imfs < max_imfs)) && !stop_EMD) {    
+    /* initialisation */
+    for (i=0;i<n;i++) z[i]=y[i];
+    for (i=0;i<n;i++) m[i]=y[i];
+    iteration_counter=0;    
+    stop_status = mean_and_amplitude(x,z,m,a,n,nbphases,&ex,&env);
+   
+    /* SIFTING LOOP */
+    while (!stop_status && !stop_sifting(m,a,&ex,&stop_params,n,iteration_counter,max_iterations)) {      
+      /* subtract the local mean */
+      #ifdef C99_OK
+      for (i=0;i<n;i++) z[i]=z[i]-m[i];
+      #else
+      for (i=0;i<n;i++) {
+        z[i].r=z[i].r-m[i].r;
+        z[i].i=z[i].i-m[i].i;
+      }
+      #endif
+      iteration_counter++;
+      stop_status = mean_and_amplitude(x,z,m,a,n,nbphases,&ex,&env);      
     }
-  
+    
+    /* save current IMF into list if at least     */
+    /* one sifting iteration has been performed */
+    if (iteration_counter) {
+      add_imf(&list,z,iteration_counter);
+      nb_imfs++;
+      #ifdef C99_OK
+      for (i=0;i<n;i++) y[i]=y[i]-z[i];
+      #else
+      for (i=0;i<n;i++) {
+        y[i].r=y[i].r-z[i].r;
+        y[i].i=y[i].i-z[i].i;
+	imf[i].r=z[i].r;
+	imf[i].i=z[i].i;
+      }
+      #endif
+    }
+    else
+      stop_EMD = 1;   
+    }
+
     /* save the residual into list */
     add_imf(&list,y,0);
-    for (i=0;i<n;i++) imf[i+nb_imfs*n]=y[i];	
 
+    for (i=0;i<n;i++) {imf[i+nb_imfs*n].r=y[i].r; imf[i+nb_imfs*n].i=y[i].i;};	
+
+    sf_settype(outp, SF_COMPLEX);
     sf_putint(outp,"n1",n);
     sf_putint(outp,"n2",nb_imfs+1);
     sf_putfloat(outp,"d1",dt);
@@ -122,11 +151,11 @@ int main(int argc, char* argv[])
     sf_putfloat(outp,"o2",0);  
 
     /* output  */
-    sf_floatwrite(imf,n*(nb_imfs+1),outp);
+    sf_complexwrite(imf,n*(nb_imfs+1),outp);
   
     /* free allocated memory */
     if (allocated_x)
-	free(x);
+       free(x);
     free(y);
     free(m);
     free(a);
