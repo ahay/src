@@ -12,15 +12,15 @@ import rsf.api as rsf
 import numpy as np
 
 
-def Fornberg_filter(Nlenght,order):
+def Fornberg_filter(Nlength,order):
   '''
   This function computes the Fornberg filters
   '''
 
-  x = np.arange(-int(Nlenght/2),Nlenght/2+1,1)
+  x = np.arange(-int(Nlength/2),Nlength/2+1,1)
   z = 0.0
   k = order
-  n = Nlenght
+  n = Nlength
   m = n -1
   c1 = 1
   c4 = x[0] - z
@@ -120,11 +120,11 @@ Fout = rsf.Output()
 functions = {1:goFilter1, 2:goFilter2, 3:goFilter3}
 # pars from command line
 order  = par.int("order",1) # order of the derivative, default first derivative 
-lenght = par.int("lenght",5) # filter lenght, the lenghtier the accurate, but also gets costlier 
+length = par.int("length",5) # filter length, the lengthier the accurate, but also gets costlier 
 scale  = par.bool("scale",True) # scales by 1/d^order
 axis   = par.int("axis",1) # apply differentiator along axis, default is fast axis
 
-f = Fornberg_filter(lenght,order)
+f = Fornberg_filter(length,order)
 try:
   functions[axis](Fin,Fout,f,order,scale)
 except:
