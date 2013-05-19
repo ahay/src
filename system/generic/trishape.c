@@ -101,7 +101,7 @@ void trishape_forw(const float *modl, float *data)
 }
 
 void trishape(int n12, const float *inp, float *out, void *data)
-/* I + S (BF - I) */
+/*< I + S (BF - I) >*/
 {
     int i;
 

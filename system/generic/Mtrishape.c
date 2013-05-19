@@ -24,10 +24,12 @@
 #include "list_struct.h"
 #include "delaunay.h"
 #include "trishape.h"
+#include "gmres.h"
     
 int main(int argc, char* argv[])
 {
-    float g1, g2, o3, g3, o1,d1, o2,d2;
+    bool fast;
+    float g1, g2, o3, g3, o1,d1, o2,d2, tol;
     int nd, n1, n2, n12, id, i, three, iter, niter, rect1, rect2, nw;
     float **xyz, *z, *m, *m2, *d;
     float zero, xi, xmax, xmin, ymin, ymax, dx, dy, dz;
@@ -90,6 +92,10 @@ int main(int argc, char* argv[])
 	/* interpolator size */
 
 	trishape_init(nd, n1,n2, o1,o2, d1,d2, rect1,rect2, nw, xyz);
+
+	if (!sf_getbool("fast",&fast)) fast=false;
+	/* if y, use GMRES inversion */
+	if (!sf_getfloat("tol",&tol)) tol=1e-7;
     }
 
     xmax = xmin = xyz[0][0]; 
@@ -158,20 +164,29 @@ int main(int argc, char* argv[])
     trishape_back(NULL,z);
 
     if (niter > 0) {
-	for (i =0; i < n12; i++) {
-	    m[i] = z[i];
-	}
+	if (fast) {
+	    gmres_init(n12,niter); 
 
-	for (iter=0; iter < niter; iter++) {
-	    /* m -> d */
-	    trishape_forw(m,d);
-	    trishape_back(d,m2);
-
+	    /* make right-hand side */
+	    trishape_smooth(z);
+	    /* invert */
+	    gmres(z,m,trishape,NULL,niter,tol,true);
+	} else {
 	    for (i =0; i < n12; i++) {
-		m[i] += z[i] - m2[i];
+		m[i] = z[i];
 	    }
-
-	    trishape_smooth(m);
+	    
+	    for (iter=0; iter < niter; iter++) {
+		/* m -> d */
+		trishape_forw(m,d);
+		trishape_back(d,m2);
+		
+		for (i =0; i < n12; i++) {
+		    m[i] += z[i] - m2[i];
+		}
+		
+		trishape_smooth(m);
+	    }
 	}
     }
     
