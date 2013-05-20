@@ -27,6 +27,7 @@ picks2rsf
 # Python targets
 targets.py = '''
 correlate
+nderiv
 '''
 
 try:  # distributed version

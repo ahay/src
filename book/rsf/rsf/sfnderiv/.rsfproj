@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfderiv', 'sffft1', 'sfmath', 'sfreal', 'sfgraph', 'sfnderiv']
+data=[]
+size=       4100
