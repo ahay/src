@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfshapeagc', 'sfpow', 'sfwindow', 'sfmask', 'sfheaderwindow', 'sfwiggle']
+data=['data/kfupm/data2013.sgy']
+size=   24460044

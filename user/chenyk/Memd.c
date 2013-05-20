@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     extrema_t ex;
     envelope_t env;
     stop_t stop_params;
+    float threshold, tolerance;
     double *x,*y,*z,*m,*a;
     float *dat,*imf,dt;
     imf_list_t list;
@@ -51,11 +52,13 @@ int main(int argc, char* argv[])
     sf_floatread(dat,n,inp);
     for(i=0;i<n;i++){y[i]=dat[i];x[i]=i*dt;}
 
-    if(!sf_getfloat("threshold",&stop_params.threshold)) stop_params.threshold=DEFAULT_THRESHOLD;
+    if(!sf_getfloat("threshold",&threshold)) threshold=DEFAULT_THRESHOLD;
     /* Sifting stoping parameter: threshold, the default is 0.05. */
+    stop_params.threshold=threshold;
 
-    if(!sf_getfloat("tolerance",&stop_params.tolerance)) stop_params.tolerance=DEFAULT_TOLERANCE;
+    if(!sf_getfloat("tolerance",&tolerance)) tolerance=DEFAULT_TOLERANCE;
     /* Sifting stoping parameter: tolerance, the default is 0.05. */
+    stop_params.tolerance=tolerance;
     
     /* input checking */
     if (stop_params.threshold <= 0 || stop_params.threshold >=1)
