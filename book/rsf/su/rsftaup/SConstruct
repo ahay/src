@@ -47,8 +47,38 @@ Flow('data','refs refl',
      put label2=Distance unit2=km
      ''')
 
-Result('data','grey title="Input Data" ')
+Result('data','grey title="Input Data" clip=0.0025')
 
 Result('wdata','data','wiggle poly=y transp=y yreverse=y title="Input Data" ')
+
+pmin=-0.6   # minimum moveout in s/km
+pmax=0.6    # maximum moveout in s/km
+np=100
+dp=(pmax-pmin)/(np-1)
+
+Flow('taup','data','radon np=%d p0=%g dp=%g spk=n' % (np,pmin,dp))
+
+Result('taup',
+       '''
+       grey label1="Intercept Time" label2=Slope unit2=s/km 
+       title="Forward Transform" pclip=99.9
+       ''')
+Result('wtaup','taup',
+       '''
+       wiggle poly=y transp=y yreverse=y title="Forward Transform" pclip=99.9
+       label1="Intercept Time" label2=Slope unit2=s/km 
+       ''')
+
+Flow('back','taup','radon adj=n nx=101 dx=0.02 ox=0')
+
+Result('back','grey title="Inverse Transform" clip=0.0025')
+
+Result('wback','back',
+       'wiggle poly=y transp=y yreverse=y title="Inverse Transform" ')
+
+
+Flow('diff','back data','add scale=1,-1 ${SOURCES[1]}')
+
+Result('diff','grey title="Difference" clip=0.0025')
 
 End()
