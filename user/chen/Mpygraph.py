@@ -70,6 +70,7 @@ max2=par.float("max2",max2)
 
 font = {'family' : 'serif'}
 
+rc('text', usetex=True)
 rc('font', **font)
 
 for i2 in range (n2):
