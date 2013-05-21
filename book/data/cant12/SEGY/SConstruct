@@ -56,7 +56,7 @@ for n in range(403,413):
 Flow('rshots',parts,'cat axis=3 ${SOURCES[1:%d]}' % len(parts))
 
 # reverse traces in each shot
-Flow('shots','rshots','reverse which=2 opt=i', split=[3,4791],reduce='cat axis=3')
+Flow('shots','rshots','reverse which=2 opt=i', split=[3,4791])
 
 # concatenate header files
 Flow('tshots',tparts,'cat axis=2 ${SOURCES[1:%d]}' % len(tparts))
