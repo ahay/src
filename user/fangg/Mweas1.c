@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
 
     Fout= sf_output("out");
     sf_putint(Fout,"n1",nx);
-    sf_putint(Fout,"d1",dx);
+    sf_putfloat(Fout,"d1",dx);
 
     at = sf_iaxa(Fin, 1); nt = sf_n(at); dt = sf_d(at);
     

@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
     float gamma = GAMMA;
 
     int srcrange;
+    int srctrunc;  
 
 
     tstart = clock();
@@ -134,6 +135,8 @@ int main(int argc, char* argv[])
     /*source decay*/
     if (!sf_getint("srcrange", &srcrange)) srcrange=10;
     /*source decay range*/
+    if (!sf_getint("srctrunc", &srctrunc)) srctrunc=300;
+    /*trunc source after srctrunc steps*/
     if (!sf_histint(fGx, "n1", &nxz)) sf_error("No n1= in input");
     if (nxz != nxb*nzb) sf_error (" Need nxz = nxb*nzb");
     if (!sf_histint(fGx,"n2", &lenx)) sf_error("No n2= in input");
@@ -273,7 +276,7 @@ int main(int argc, char* argv[])
     }  
        
     /* MAIN LOOP */
-    sp.trunc=160;
+    sp.trunc=srctrunc;
     sp.srange=srcrange;
     sp.alpha=0.5;
     sp.decay=srcdecay?1:0;

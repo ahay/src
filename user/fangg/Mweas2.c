@@ -78,7 +78,6 @@ int main(int argc, char* argv[])
     float t, tau, dist;
     float x, ox, x0;
     int spx; //source point in x
-    int kt; 
     char *rule;
     sf_file Fin, Fout;
     sf_axis at;
@@ -96,13 +95,13 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dx", &dx)) sf_error("Need dx");
     if (!sf_getint("spx", &spx)) sf_error("Need spx");
     /*source point in x*/
-    if (!sf_getint("kt", &kt)) sf_error("Need time");
+    if (!sf_getfloat("selt", &t)) sf_error("Need time");
     /*selected time*/
     if (!sf_getfloat("ox", &ox)) ox=0.0;
 
     Fout= sf_output("out");
     sf_putint(Fout,"n1",nx);
-    sf_putint(Fout,"d1",dx);
+    sf_putfloat(Fout,"d1",dx);
 
     at = sf_iaxa(Fin, 1); nt = sf_n(at); dt = sf_d(at);
     
@@ -111,10 +110,9 @@ int main(int argc, char* argv[])
     u = sf_floatalloc(nx);
     sf_floatread(f,nt,Fin);
     
-    x0 = spx*dx;
-    t   = kt*dt;
+    x0 = spx*dx; 
     sf_warning("=====================");
-    sf_warning("nx=%d nt=%d dx=%f dt=%f kt=%d", nx, nt, dx, dt, kt);
+    sf_warning("nx=%d nt=%d dx=%f dt=%f t=%f", nx, nt, dx, dt, t);
     sf_warning("vel=%f ", vel);
     sf_warning("x0=%f t=%f", x0, t);
     
