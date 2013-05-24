@@ -28,11 +28,11 @@
 int main(int argc, char* argv[])
 {
     int n, n2, nd, nw, i2;
-    float *mm=NULL, *coord=NULL, *z=NULL, o, oo, d, dd, kai;
-    char *intp=NULL;
+    float *mm, *coord, *z, o, d, kai;
+    char *intp;
     sf_interpolator interp=NULL;
     sf_bands spl=NULL;
-    sf_file in=NULL, out=NULL, crd=NULL;
+    sf_file in, out, crd;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -42,16 +42,11 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_histint(crd,"n1",&nd)) sf_error("No n1= in coord");
-    sf_putint(out,"n1",nd);
-
     if (!sf_histfloat(in,"d1",&d))   sf_error("No d1= in input");
-    if (!sf_histfloat(crd,"d1",&dd)) sf_error("No d1= in coord");
-    sf_putfloat(out,"d1",dd);
-
     if (!sf_histfloat(in,"o1",&o))   sf_error("No o1= in input");
-    if (!sf_histfloat(crd,"o1",&oo)) sf_error("No o1= in coord");
-    sf_putfloat(out,"o1",oo);
+
+    nd = sf_filesize(crd);
+    sf_fileflush(out,crd);
 
     intp = sf_getstring("interp");
     /* interpolation (lagrange,cubic,kaiser,lanczos,cosine,welch,spline,mom) */

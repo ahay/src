@@ -47,24 +47,18 @@ Flow('shotmask','tline',
      ''')
 
 # Convert to shots
-Flow('shots','line shotmask',
-     '''
-     headerwindow mask=${SOURCES[1]} |
-     put n2=101 n3=67 |
-     window n2=96 f3=10 |
-     put o3=100 d3=1
-     ''')
+maskshot = '''
+headerwindow mask=${SOURCES[1]} |
+put n2=101 n3=67 |
+window n2=96 f3=10 |
+put o3=100 d3=1 label3=Shot
+o2=-5225 d2=110 label2=Offset unit2=ft
+'''
 
-Flow('tshots','tline shotmask',
-     '''
-     headerwindow mask=${SOURCES[1]} |
-     put n2=101 n3=67 |
-     window n2=96 f3=10 |
-     put o3=100 d3=1
-     ''')
+Flow('shots',  'line shotmask',maskshot)
+Flow('tshots','tline shotmask',maskshot)
 
 Plot('shots','grey title=Shots gainpanel=all pclip=90',view=1)
-
 
 ###########################
 # Previous Stack
@@ -107,22 +101,49 @@ Result('zoompwd','pwd',
 Flow('spelev','../line31-81/spnElev.txt',
      '''
      echo in=$SOURCE data_format=ascii_float n1=2 n2=33 |
-     dd form=native
+     dd form=native 
      ''',stdin=0)
 Plot('spelev',
      '''
      dd type=complex |
      window |
      graph wanttitle=n wantaxis=n symbol=o plotcol=5
-     min2=75 max2=125 min1=85 max1=165
+     min2=75 max2=125 min1=85 max1=172
      ''')
 
-Flow('elev','spelev','transp | linear o1=85 d1=1 n1=81 rect=2 niter=100')
+Flow('elev','spelev','transp | linear o1=85 d1=1 n1=88 rect=2 niter=100')
 Plot('elev',
      '''
-     graph title=Elevation label1=Shot 
-     min2=75 max2=125 min1=85 max1=165 
+     graph title=Elevation label1=Shot label2=Elevation unit2=ft
+     min2=75 max2=125 min1=85 max1=172
      ''')
 Result('elev','elev spelev','Overlay')
+
+# Shot elevation
+Flow('spoint','tshots','window n1=1 f1=2 | dd type=float') # fldr
+Flow('selev','elev spoint','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+Result('selev','window n1=1 | graph title="Shot Elevation" label2=Elevation unit2=ft')
+
+# observer log says shot holes 82.5 ft before spn 123, then changes to 67.5 ft.
+Flow('sdepth','spoint',
+     'mask max=123 | dd type=float | math output="82.5*input+67.5*(1-input)" ')
+
+# Receiver elevation
+Flow('gpoint','tshots','window n1=1 f1=2 | dd type=float | math output="input+x1/440" ')
+Flow('gelev','elev gpoint','inttest1 coord=${SOURCES[1]} interp=lag nw=2')
+
+vnear = 10000 # replacement velocity (ft/s)
+
+# Elevation statics
+Flow('estat','selev sdepth gelev','add scale=1,-1,1 ${SOURCES[1:3]} | scale dscale=%g' % (1.0/vnear))
+Result('estat','grey color=j mean=y scalebar=y barlabel=Time barunit=s title="Elevation Statics" ')
+
+Flow('eshots','shots estat','datstretch datum=${SOURCES[1]}')
+
+############################
+# Gain, mute, and dip filter
+############################
+
+
 
 End()
