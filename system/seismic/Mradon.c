@@ -26,7 +26,7 @@
 
 int main (int argc, char **argv)
 {
-    bool verb;                /* verbosity flag */
+    bool verb, cmplx;         /* verbosity flag */
     int nx2;                  /* number of entries in the offset file */
     int nt,it;                /* number of time samples, time counter */
     int nt2;                  /* extended number of time samples */
@@ -39,7 +39,7 @@ int main (int argc, char **argv)
     bool adj, inv, spk, par;  /* adjoint, inversion, spiking, parabolic */
     float dt,t0;              /* time increment, starting time */
     float dp,p0;              /* slope increment, starting slope */
-    float dw,w;               /* frequency increment, frequency */
+    float dw,w0,w;            /* frequency increment, frequency */
     float eps,tol;            /* damping and tolerance for inversion */ 
     float x0, dx, ox;         /* reference offset, increment, origin */
     sf_complex *dd;           /* data (CMP gather)    */
@@ -49,13 +49,17 @@ int main (int argc, char **argv)
     sf_complex **cm, **cd;    /* model and data storage */
     float *xx;                /* offset header */
     float *tt;                /* trace */
+    sf_complex *cc;           /* complex trace */
     float perc;               /* percentage for sharpening */
-    kiss_fftr_cfg forw, invs;
+    kiss_fftr_cfg forw=NULL, invs=NULL;
+    kiss_fft_cfg cfor=NULL, cinv=NULL;
     sf_file in, out, offset;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
+    
+    cmplx = (SF_COMPLEX == sf_gettype(in))? true: false;
 
     if (!sf_getbool("adj",&adj)) adj=true;
     /* if y, perform adjoint operation */
@@ -109,13 +113,25 @@ int main (int argc, char **argv)
 	nx2 = nx;
     }
     
-    /* determine frequency sampling (for real to complex FFT) */
-    nt2 = 2*kiss_fft_next_fast_size(nt);
-    nw  = nt2/2+1;
-    dw  = 2.0*SF_PI/(nt2*dt);
+    if (cmplx) {
+	/* determine frequency sampling (for complex to complex FFT) */
+	nt2 = kiss_fft_next_fast_size(nx*2);
+	nw = nt2;
+	dw = 2.0*SF_PI/(nw*dt);
+	w0 = -SF_PI/dt;
 
-    forw = kiss_fftr_alloc(nt2,0,NULL,NULL);
-    invs = kiss_fftr_alloc(nt2,1,NULL,NULL);
+	cfor = kiss_fft_alloc(nw,0,NULL,NULL);
+	cinv = kiss_fft_alloc(nw,1,NULL,NULL);
+    } else {
+	/* determine frequency sampling (for real to complex FFT) */
+	nt2 = 2*kiss_fft_next_fast_size(nt);
+	nw  = nt2/2+1;
+	dw  = 2.0*SF_PI/(nt2*dt);
+	w0  = 0.0f;
+	
+	forw = kiss_fftr_alloc(nt2,0,NULL,NULL);
+	invs = kiss_fftr_alloc(nt2,1,NULL,NULL);
+    }
 
     if (adj && inv) {
 	if (!sf_getfloat("eps",&eps)) eps=1.;
@@ -184,7 +200,8 @@ int main (int argc, char **argv)
 	}
     }
 
-    tt = sf_floatalloc (nt2);
+    tt = cmplx? NULL: sf_floatalloc(nt2);
+    cc = cmplx? sf_complexalloc(nt2): NULL;
     cm = sf_complexalloc2 (nw,np);
     cd = sf_complexalloc2 (nw,nx);
 
@@ -193,23 +210,43 @@ int main (int argc, char **argv)
 
 	if (adj) {
 	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
-		sf_floatread(tt,nt,in);
-		for (it=nt; it < nt2; it++) {
-		    tt[it]=0.;
+		if (cmplx) {
+		    sf_complexread(cc,nt,in);
+		    for (it=nt; it < nt2; it++) {
+			cc[it]=sf_cmplx(0.,0.);
+		    }
+		    
+		    /* FFT to frequency */
+		    kiss_fft(cfor,(kiss_fft_cpx *) cc, (kiss_fft_cpx *) cd[ix]);
+		} else {
+		    sf_floatread(tt,nt,in);
+		    for (it=nt; it < nt2; it++) {
+			tt[it]=0.;
+		    }
+		    
+		    /* FFT to frequency */
+		    kiss_fftr(forw,tt, (kiss_fft_cpx *) cd[ix]);
 		}
-		
-		/* FFT to frequency */
-		kiss_fftr(forw,tt, (kiss_fft_cpx *) cd[ix]);
 	    }
 	} else { /* modeling */
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
-		sf_floatread(tt,nt,in);
-		for (it=nt; it < nt2; it++) {
-		    tt[it]=0.;
+		if (cmplx) {
+		    sf_complexread(cc,nt,in);
+		    for (it=nt; it < nt2; it++) {
+			cc[it]=sf_cmplx(0.,0.);
+		    }
+		    
+		    /* FFT to frequency */
+		    kiss_fft(cfor,(kiss_fft_cpx *) cc, (kiss_fft_cpx *) cm[ip]);
+		} else {
+		    sf_floatread(tt,nt,in);
+		    for (it=nt; it < nt2; it++) {
+			tt[it]=0.;
+		    }
+		    
+		    /* FFT to frequency */
+		    kiss_fftr(forw,tt, (kiss_fft_cpx *) cm[ip]);
 		}
-
-		/* FFT to frequency */
-		kiss_fftr(forw,tt, (kiss_fft_cpx *) cm[ip]);
 	    }
 	}
 	
@@ -268,18 +305,32 @@ int main (int argc, char **argv)
 
 	if (adj) {
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
-	      /* FFT to time */
-	      kiss_fftri(invs,(const kiss_fft_cpx *) cm[ip], tt);
+		if (cmplx) {
+		    /* FFT to time */
+		    kiss_fft(cinv,(const kiss_fft_cpx *) cm[ip], (kiss_fft_cpx *) cc);
+		    
+		    sf_complexwrite(cc,nt,out);
+		} else {
+		    /* FFT to time */
+		    kiss_fftri(invs,(const kiss_fft_cpx *) cm[ip], tt);
 		
-	      sf_floatwrite(tt,nt,out);
+		    sf_floatwrite(tt,nt,out);
+		}
 	    }
 	} else { /* modeling */
-	  for (ix=0; ix < nx; ix++) { /* loop over offsets */
-	    /* FFT to time */
-	    kiss_fftri(invs,(const kiss_fft_cpx *) cd[ix], tt);
-	    
-	    sf_floatwrite(tt,nt,out);
-	  }
+	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
+		if (cmplx) {
+		    /* FFT to time */
+		    kiss_fft(cinv,(const kiss_fft_cpx *) cd[ix], (kiss_fft_cpx *) cc);
+		    
+		    sf_complexwrite(cc,nt,out);
+		} else {
+		    /* FFT to time */
+		    kiss_fftri(invs,(const kiss_fft_cpx *) cd[ix], tt);
+		    
+		    sf_floatwrite(tt,nt,out);
+		}
+	    }
 	}
     } /* loop over CMPs */
     if(verb) sf_warning(".");
