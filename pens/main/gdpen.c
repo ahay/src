@@ -254,7 +254,7 @@ static void gd_write (void)
                 ffmpeg_write ();
                 frame_mark += frame_delay;
                 if ((frame_mark % 500) == 0)
-                    fprintf (stderr, "Encoding video: finished %d seconds.\n", frame_mark / 100);
+                    ERR (FATAL, name, "Encoding video: finished %d seconds.\n", frame_mark / 100);
             }
 	    break;
 #endif
@@ -511,10 +511,8 @@ static void ffmpeg_write (void) {
     av_init_packet (&mpeg_pkt);
     mpeg_pkt.data = NULL;
     mpeg_pkt.size = 0;
-    if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, mpeg_frame, &mpeg_gout) < 0) {
-        fprintf (stderr, "MPEG encoding error\n");
-        exit (-1);
-    }
+    if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, mpeg_frame, &mpeg_gout) < 0)
+        ERR (FATAL, name, "MPEG encoding error\n");
     if (mpeg_gout) {
         fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
         av_free_packet (&mpeg_pkt);
@@ -536,10 +534,8 @@ static void ffmpeg_finish (void) {
     }
 #else
     for (mpeg_gout = 1; mpeg_gout; i++) {
-        if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, NULL, &mpeg_gout) < 0) {
-            fprintf (stderr, "MPEG encoding error\n");
-            exit (-1);
-        }
+        if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, NULL, &mpeg_gout) < 0)
+            ERR (FATAL, name, "MPEG encoding error\n");
         if (mpeg_gout) {
             fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
             av_free_packet (&mpeg_pkt);
