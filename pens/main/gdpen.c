@@ -57,6 +57,10 @@ static const char *image_type;
 static AVCodec *codec = NULL;
 static AVCodecContext *codec_ctx = NULL;
 static AVFrame *mpeg_frame = NULL;
+#if LIBAVCODEC_VERSION_MAJOR >= 54
+static AVPacket mpeg_pkt;
+static int mpeg_gout;
+#endif
 static int frame_out_size, frame_size, frame_outbuf_size;
 static uint8_t *frame_outbuf, *frame_buf;
 static int bitrate;
@@ -378,7 +382,9 @@ void gdarea (int npts, struct vertex *head)
 /* Open and initialize codec + buffers */
 static void ffmpeg_init (void) {
     /* must be called before using avcodec lib */
-    avcodec_init ();
+#if LIBAVCODEC_VERSION_MAJOR < 54
+    avcodec_init();
+#endif
     /* register all the codecs */
     avcodec_register_all ();
 
@@ -388,7 +394,11 @@ static void ffmpeg_init (void) {
         ERR (FATAL, name, "Could not initialize MPEG1 codec\n");
     }
 
+#if LIBAVCODEC_VERSION_MAJOR < 54
     codec_ctx = avcodec_alloc_context ();
+#else
+    codec_ctx = avcodec_alloc_context3 (codec);
+#endif
     mpeg_frame = avcodec_alloc_frame ();
 
     codec_ctx->bit_rate = bitrate;
@@ -403,7 +413,11 @@ static void ffmpeg_init (void) {
     codec_ctx->pix_fmt = PIX_FMT_YUV420P;
 
     /* open it */
+#if LIBAVCODEC_VERSION_MAJOR < 54
     if (avcodec_open (codec_ctx, codec) < 0) {
+#else
+    if (avcodec_open2 (codec_ctx, codec, NULL) < 0) {
+#endif
         ERR (FATAL, name, "Could not open MPEG1 codec\n");
     }
 
@@ -487,14 +501,29 @@ static void ffmpeg_write (void) {
     }
 
     /* encode the image */
+#if LIBAVCODEC_VERSION_MAJOR < 54
     frame_out_size = avcodec_encode_video (codec_ctx, frame_outbuf,
                                            frame_outbuf_size, mpeg_frame);
     fwrite (frame_outbuf, 1, frame_out_size, pltout);
+#else
+    av_init_packet (&mpeg_pkt);
+    mpeg_pkt.data = NULL;
+    mpeg_pkt.size = 0;
+    if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, mpeg_frame, &mpeg_gout) < 0) {
+        fprintf (stderr, "MPEG encoding error\n");
+        exit (-1);
+    }
+    if (mpeg_gout) {
+        fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
+        av_free_packet (&mpeg_pkt);
+    }
+#endif
 }
 
 static void ffmpeg_finish (void) {
     int i = 0;
     /* get the delayed frames */
+#if LIBAVCODEC_VERSION_MAJOR < 54
     for (; frame_out_size; i++) {
         fflush (pltout);
         frame_out_size = avcodec_encode_video (codec_ctx,
@@ -503,6 +532,18 @@ static void ffmpeg_finish (void) {
                                                NULL);
         fwrite (frame_outbuf, 1, frame_out_size, pltout);
     }
+#else
+    for (mpeg_gout = 1; mpeg_gout; i++) {
+        if (avcodec_encode_video2 (codec_ctx, &mpeg_pkt, NULL, &mpeg_gout) < 0) {
+            fprintf (stderr, "MPEG encoding error\n");
+            exit (-1);
+        }
+        if (mpeg_gout) {
+            fwrite (mpeg_pkt.data, 1, mpeg_pkt.size, pltout);
+            av_free_packet (&mpeg_pkt);
+        }
+    }
+#endif
     /* add sequence end code to have a real mpeg file */
     frame_outbuf[0] = 0x00;
     frame_outbuf[1] = 0x00;
