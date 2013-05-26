@@ -47,13 +47,15 @@ plotcol=par.string("plotcol", "0,1,2,3,4,5,6,7")
 dash=par.string("dash", "0") 
 # dash styles \n 0	solid line \n 1	dash line \n 2	dotted line \n 3	dash dot
 symbol=par.string("symbol", None) # mark symbols
-legends=par.string("legend", ":") # legends
+legends=par.string("legend", None) # legends
 plotcol=plotcol.split(',')
 dash=dash.split(',')
-legends=legends.split(':')
+if legends != None:
+	legends=legends.split(':')
 if symbol != None:
 	symbol=symbol.split(',')
 
+usetex=par.bool("usetex", False) # use tex symbol
 
 x1=arange(n1)*d1+o1
 x=zeros((n2,n1),'f')
@@ -70,12 +72,15 @@ max2=par.float("max2",max2)
 
 font = {'family' : 'serif'}
 
-rc('text', usetex=True)
+rc('text', usetex=usetex)
 rc('font', **font)
 
 for i2 in range (n2):
-	if i2 < len(legends):
-		label0=legends[i2]
+	if legends != None:
+		if i2 < len(legends):
+			label0=legends[i2]
+		else:
+			label0=None
 	else:
 		label0=None
 	id=int(plotcol[i2%len(plotcol)])%len(colortable)

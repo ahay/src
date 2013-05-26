@@ -23,7 +23,7 @@
 
 int main(int argc, char*argv[])
 {
-	int n1, n2, n3, i2, i3, m2, m3;
+	int n1, n2, n3,n4, i2, i3, i4, m2, m3;
 	sf_file in, hor, out;
 	float **u, **v, **h, o1, d1;
 	char *interp;
@@ -40,6 +40,7 @@ int main(int argc, char*argv[])
 	if(!sf_histfloat(in, "d1", &d1)) d1=1.0;
 	if(!sf_histint(in, "n2", &n2)) sf_error("n2 needed in input");
 	if(!sf_histint(in, "n3", &n3)) n3=1; 
+	if(!sf_histint(in, "n4", &n4)) n4=1; 
 	if(!sf_histint(hor, "n1", &m2)) sf_error("n1 needed in horizon file");
 	if(!sf_histint(hor, "n2", &m3)) m3=1; 
 
@@ -55,13 +56,16 @@ int main(int argc, char*argv[])
 	h = sf_floatalloc2(n2, n3);
 
 	sf_floatread(h[0], n3*n2, hor);
-	for(i3=0; i3<n3; i3++)
+	for(i4=0; i4<n4; i4++)
 	{
-		sf_floatread(u[0], n1*n2, in);
-		for(i2=0; i2<n2; i2++)
-		v[i3][i2] = intp(u[i2], (h[i3][i2]-o1)/d1, n1);
+		for(i3=0; i3<n3; i3++)
+		{
+			sf_floatread(u[0], n1*n2, in);
+			for(i2=0; i2<n2; i2++)
+			v[i3][i2] = intp(u[i2], (h[i3][i2]-o1)/d1, n1);
+		}
+		sf_floatwrite(*v, n2*n3, out);
 	}
-	sf_floatwrite(*v, n2*n3, out);
 
 	free(*u);
 	free(u);
