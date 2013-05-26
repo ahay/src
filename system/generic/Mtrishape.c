@@ -28,7 +28,7 @@
     
 int main(int argc, char* argv[])
 {
-    bool fast;
+    bool fast, sym;
     float g1, g2, o3, g3, o1,d1, o2,d2, tol;
     int nd, n1, n2, n12, id, i, three, iter, niter, rect1, rect2, nw;
     float **xyz, *z, *m, *m2, *d;
@@ -91,11 +91,15 @@ int main(int argc, char* argv[])
 	if (!sf_getint("nw",&nw)) nw=2;
 	/* interpolator size */
 
-	trishape_init(nd, n1,n2, o1,o2, d1,d2, rect1,rect2, nw, xyz);
+	trishape_init(sym,nd, n1,n2, o1,o2, d1,d2, 
+		      rect1,rect2, nw, xyz);
 
 	if (!sf_getbool("fast",&fast)) fast=false;
 	/* if y, use GMRES inversion */
-	if (!sf_getfloat("tol",&tol)) tol=1e-7;
+	if (!sf_getbool("sym",&sym)) sym=false;
+	/* if y, use symmetric shaping */
+	if (!sf_getfloat("tol",&tol)) tol=1e-3;
+	/* tolerance for stopping iteration */
     }
 
     xmax = xmin = xyz[0][0]; 
@@ -171,6 +175,7 @@ int main(int argc, char* argv[])
 	    trishape_smooth(z);
 	    /* invert */
 	    gmres(z,m,trishape,NULL,niter,tol,true);
+	    if (sym) trishape_smooth(m);
 	} else {
 	    for (i =0; i < n12; i++) {
 		m[i] = z[i];

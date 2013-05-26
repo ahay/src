@@ -21,18 +21,20 @@
 #include "list_struct.h"
 #include "delaunay.h"
 
+static bool sym;
 static int nd, n1, n2, n12;
 static float o1,d1, o2,d2;
-static float *d;
+static float *d, *m;
 static Node q=NULL;
 static sf_triangle tr1, tr2;
 
-void trishape_init(int nd1, int n11, int n21, 
+void trishape_init(bool sym1, int nd1, int n11, int n21, 
 		   float o11, float o21, float d11, float d21,
 		   int rect1, int rect2, int nw,
 		   float **xy)
 /*< initialize >*/
 {
+    sym = sym1;
     nd = nd1;
     n1 = n11;
     n2 = n21;
@@ -47,6 +49,7 @@ void trishape_init(int nd1, int n11, int n21,
     sf_int2_init (xy, o1, o2, d1, d2, n1, n2, sf_lg_int, nw, nd);
 
     d = sf_floatalloc(nd);
+    if (sym) m = sf_floatalloc(n12);
 }
 
 void trishape_close(void)
@@ -57,6 +60,7 @@ void trishape_close(void)
 
     sf_int2_close();
     free(d);
+    if (sym) free(m);
 }
 
 void trishape_smooth(float *modl)
@@ -105,20 +109,34 @@ void trishape(int n12, const float *inp, float *out, void *data)
 {
     int i;
 
-    /* B F - I */
+    if (sym) {
+	/* (B F - I) S */
+	for (i=0; i < n12; i++) {
+	    m[i] = inp[i];
+	}
+	trishape_smooth(m);
 
-    trishape_forw(inp,d);
-    trishape_back(d,out);
+	trishape_forw(m,d);
+	trishape_back(d,out);
 
-    for (i=0; i < n12; i++) {
-	out[i] -= inp[i];
+	for (i=0; i < n12; i++) {
+	    out[i] -= m[i];
+	}
+    } else {
+	/* B F - I  */
+
+	trishape_forw(inp,d);
+	trishape_back(d,out);
+
+	for (i=0; i < n12; i++) {
+	    out[i] -= inp[i];
+	}
     }
 
     /* S */
     trishape_smooth(out);
 
     /* + I */
-
     for (i=0; i < n12; i++) {
 	out[i] += inp[i];
     }
