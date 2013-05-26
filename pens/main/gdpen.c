@@ -60,8 +60,10 @@ static AVFrame *mpeg_frame = NULL;
 #if LIBAVCODEC_VERSION_MAJOR >= 54
 static AVPacket mpeg_pkt;
 static int mpeg_gout;
+#else
+static int frame_out_size;
 #endif
-static int frame_out_size, frame_size, frame_outbuf_size;
+static int frame_size, frame_outbuf_size;
 static uint8_t *frame_outbuf, *frame_buf;
 static int bitrate;
 static int frame_num = 0;

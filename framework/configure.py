@@ -740,7 +740,8 @@ def ffmpeg(context):
         context.env['CPPPATH'] = oldpath + [ffmpegpath]
     else:
         for top in ('/usr/include','/usr/local/include',
-                    '/sw/include','/opt/local/include'):
+                    '/sw/include','/opt/local/include',
+                    '/usr/include/ffmpeg'):
             ffmpegpath = os.path.join(top,'ffmpeg')
             if os.path.isfile(os.path.join(ffmpegpath,'avcodec.h')):
                 context.env['CPPPATH'] = oldpath + [ffmpegpath]
@@ -761,7 +762,9 @@ def ffmpeg(context):
     text = '''
     #include <avcodec.h>
     int main (int argc, char *argv[]) {
+    #if LIBAVCODEC_VERSION_MAJOR < 54
     avcodec_init ();
+    #endif
     avcodec_register_all ();
     return 0;
     }\n'''
