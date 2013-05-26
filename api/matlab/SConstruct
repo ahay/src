@@ -21,8 +21,11 @@ if 'matlab' in env.get('API',[]):
     if mex:
         mexcom = mex + " CC=$CC CFLAGS='$CFLAGS $_CCCOMCOM -fPIC' $SOURCE $_LIBDIRFLAGS $_LIBFLAGS -output $TARGET"
 
-    for inp in Split('par dim filter read_header read read_all write write_all create'):
-        cfile = 'rsf_' + inp
+    for inp in Split('m8r par dim filter read_header read read_all write write_all create'):
+        if inp == 'm8r':
+            cfile = inp
+        else:
+            cfile = 'rsf_' + inp
 
         if mex:
             mfile = env.Command(cfile+suffix,cfile+'.c',mexcom)
