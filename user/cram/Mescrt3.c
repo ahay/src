@@ -17,6 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <rsf.h>
 
 #include "esc_tracer3.h"
@@ -33,7 +37,6 @@ typedef struct {
     int       it, nt;
     float     dt;
     float   **pnts;
-    sf_file   traj;
 } sf_escrt3_traj_cbud;
 
 /* Callback to output points along a ray trajectory; this one is
@@ -117,16 +120,16 @@ void sf_escrt3_traj (float z, float x, float y, float b,
 }
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it;
-    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a;
-    float ***e;
-    sf_file spdom, vspline = NULL, out;
-    sf_escrt3_traj_cbud tdata; 
+    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz;
+    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt;
+    float ****e;
+    sf_file spdom, vspline = NULL, out, traj = NULL;
+    sf_escrt3_traj_cbud *tdata = NULL; 
 
     bool verb, parab;
     sf_esc_slowness3 esc_slow;
-    sf_esc_tracer3 esc_tracer;
-    sf_esc_point3 esc_point;
+    sf_esc_tracer3 *esc_tracers;
+    sf_esc_point3 *esc_points;
 
     sf_init (argc, argv);
 
@@ -139,8 +142,6 @@ int main (int argc, char* argv[]) {
 
     out = sf_output ("out");
     /* Escape values */
-
-    tdata.traj = NULL;
 
     /* Spatial dimensions */
     if (spdom) {
@@ -183,6 +184,9 @@ int main (int argc, char* argv[]) {
     db = SF_PI/(float)nb;
     ob = 0.5*db;
 
+#ifdef _OPENMP
+    nc =  omp_init ();
+#endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
@@ -192,16 +196,21 @@ int main (int argc, char* argv[]) {
 
     if (sf_getstring ("traj")) {
         /* Trajectory output */
-        tdata.traj = sf_output ("traj");
-        if (!sf_getint ("nt", &tdata.nt)) tdata.nt = 1001;
+        traj = sf_output ("traj");
+        if (!sf_getint ("nt", &nt)) nt = 1001;
         /* Number of time samples for each trajectory */
-        if (!sf_getfloat ("dt", &tdata.dt)) tdata.dt = 0.001;
+        if (!sf_getfloat ("dt", &dt)) dt = 0.001;
+        tdata = (sf_escrt3_traj_cbud*)sf_alloc (nc, sizeof(sf_escrt3_traj_cbud));
         /* Time sampling */
-        tdata.it = 0;
-        tdata.pnts = sf_floatalloc2 (TRAJ3_COMPS - 1, tdata.nt);
+        for (ic = 0; ic < nc; ic++) {
+            tdata[ic].it = 0;
+            tdata[ic].nt = nt;
+            tdata[ic].dt = dt;
+            tdata[ic].pnts = sf_floatalloc2 (TRAJ3_COMPS - 1, nt);
+        }
     }
 
-    e = sf_floatalloc3 (ESC3_NUM, nb, na);
+    e = sf_floatalloc4 (ESC3_NUM, nb, na, nc);
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
     /* Spline coefficients for velocity model */
@@ -265,19 +274,19 @@ int main (int argc, char* argv[]) {
                               (sf_esc_slowness3_ny (esc_slow) - 1)*
                               sf_esc_slowness3_dy (esc_slow));
 
-    if (tdata.traj) {
+    if (traj) {
         if (spdom)
-            sf_shiftdimn (spdom, tdata.traj, 1, 4);
+            sf_shiftdimn (spdom, traj, 1, 4);
         sf_putint (out, "n1", ESC3_NUM);
         sf_putfloat (out, "o1", 0.0);
         sf_putfloat (out, "d1", 1.0);
         sf_putstring (out, "label1", "Escape variable");
         sf_putstring (out, "unit1", "");
-        sf_putint (tdata.traj, "n2", tdata.nt);
-        sf_putfloat (tdata.traj, "o2", 0.0);
-        sf_putfloat (tdata.traj, "d2", tdata.dt);
-        sf_putstring (tdata.traj, "label2", "Time");
-        sf_putstring (tdata.traj, "unit2", "s");
+        sf_putint (traj, "n2", nt);
+        sf_putfloat (traj, "o2", 0.0);
+        sf_putfloat (traj, "d2", dt);
+        sf_putstring (traj, "label2", "Time");
+        sf_putstring (traj, "unit2", "s");
         sf_putint (out, "n3", nb);
         sf_putfloat (out, "d3", db*180.0/SF_PI);
         sf_putfloat (out, "o3", ob*180.0/SF_PI);
@@ -312,16 +321,20 @@ int main (int argc, char* argv[]) {
         }
     }
 
-    if (tdata.traj)
-        esc_tracer = sf_esc_tracer3_init (esc_slow,
-                                          sf_escrt3_traj, tdata.dt, (void*)&tdata);
-    else
-        esc_tracer = sf_esc_tracer3_init (esc_slow,
-                                          NULL, 0.0, NULL);
-    sf_esc_tracer3_set_parab (esc_tracer, parab);
+    esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
+    esc_points = (sf_esc_point3*)sf_alloc (nc, sizeof(sf_esc_point3));
+    for (ic = 0; ic < nc; ic++) {
+        if (traj)
+            esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
+                                                   sf_escrt3_traj, dt, (void*)&tdata[ic]);
+        else
+            esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
+                                                   NULL, 0.0, NULL);
+        sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
+        esc_points[ic] = sf_esc_point3_init ();
+    }
 
-    esc_point = sf_esc_point3_init ();
-
+    /* Ray tracing loop */
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
         for (ix = 0; ix < nx; ix++) {
@@ -329,49 +342,72 @@ int main (int argc, char* argv[]) {
             if (verb)
                 sf_warning ("Shooting from lateral location %d of %d at y=%g, x=%g;",
                             iy*nx + ix + 1, ny*nx, y, x);
-            for (iz = 0; iz < nz; iz++) {
-                z = oz + iz*dz;
-                for (ia = 0; ia < na; ia++) {
-                    a = oa + ia*da;
-                    for (ib = 0; ib < nb; ib++) {
-                        sf_esc_tracer3_compute (esc_tracer, z, x, y, ob + ib*db, a,
-                                                0.0, 0.0, esc_point, NULL, NULL);
-                        /* Copy escape values to the output buffer */
-                        for (i = 0; i < ESC3_NUM; i++)
-                            e[ia][ib][i] = sf_esc_point3_get_esc_var (esc_point, i);
-                        if (tdata.traj) {
-                            /* Fill the rest of the trajectory with the last point */
-                            for (it = tdata.it + 1; it < tdata.nt; it++) {
-                                for (i = 0; i < TRAJ3_COMPS - 1; i++)
-                                    tdata.pnts[it][i] = tdata.pnts[tdata.it][i];
+            /* Loop over chunks */
+            for (ic = 0; ic < (nz/nc + ((nz % nc) != 0)); ic++) {
+                fz = ic*nc;
+                lz = (ic + 1)*nc - 1;
+                if (lz >= nz)
+                    lz = nz - 1;
+#ifdef _OPENMP
+#pragma omp parallel for        \
+                schedule(dynamic,1)        \
+                private(iz,ia,ib,a,z,it,i)  \
+                shared(fz,lz,iy,ix,nb,na,nz,nx,ny,ob,oa,oz,ox,oy,db,da,dz,dx,dy,x,y,tdata,esc_tracers,esc_points,e,out,traj)
+#endif
+                for (iz = fz; iz <= lz; iz++) {
+                    z = oz + iz*dz;
+                    for (ia = 0; ia < na; ia++) {
+                        a = oa + ia*da;
+                        for (ib = 0; ib < nb; ib++) {
+                            sf_esc_tracer3_compute (esc_tracers[iz - fz], z, x, y, ob + ib*db, a,
+                                                    0.0, 0.0, esc_points[iz - fz], NULL, NULL);
+                            /* Copy escape values to the output buffer */
+                            for (i = 0; i < ESC3_NUM; i++)
+                                e[iz - fz][ia][ib][i] = sf_esc_point3_get_esc_var (esc_points[iz - fz], i);
+                            if (traj) {
+                                /* Fill the rest of the trajectory with the last point */
+                                for (it = tdata[iz - fz].it + 1; it < tdata[iz - fz].nt; it++) {
+                                    for (i = 0; i < TRAJ3_COMPS - 1; i++)
+                                        tdata[iz - fz].pnts[it][i] = tdata[iz - fz].pnts[tdata[iz - fz].it][i];
+                                }
                             }
-                            sf_floatwrite (tdata.pnts[0], (size_t)tdata.nt*
-                                                          (size_t)(TRAJ3_COMPS - 1), tdata.traj);
-                        }
-                    } /* Loop over b */
-                } /* Loop over a */
-                sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
+                        } /* Loop over b */
+                    } /* Loop over a */
+                } /* Loop over z */
+                sf_floatwrite (e[0][0][0], (size_t)(lz - fz + 1)*(size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
-            } /* Loop over z */
+                if (tdata) {
+                    for (iz = fz; iz <= lz; iz++)
+                        sf_floatwrite (tdata[iz - fz].pnts[0], (size_t)tdata[iz - fz].nt*
+                                       (size_t)(TRAJ3_COMPS - 1), traj);
+                }
+            } /* Loop over z chunks */
         } /* Loop over x */
     } /* Loop over y */
     if (verb)
         sf_warning (".");
 
-    sf_esc_point3_close (esc_point);
-    sf_esc_tracer3_close (esc_tracer);
+    for (ic = 0; ic < nc; ic++) {
+        sf_esc_point3_close (esc_points[ic]);
+        sf_esc_tracer3_close (esc_tracers[ic]);
+        if (traj) {
+            free (tdata[ic].pnts[0]);
+            free (tdata[ic].pnts);
+        }
+    }
+    free (esc_points);
+    free (esc_tracers);
+    free (tdata);
     sf_esc_slowness3_close (esc_slow);
 
-    if (tdata.traj) {
-        free (tdata.pnts[0]);
-        free (tdata.pnts);
-        sf_fileclose (tdata.traj);
-    }
+    free (e[0][0][0]);
     free (e[0][0]);
     free (e[0]);
     free (e);
 
     sf_fileclose (vspline);
+    if (traj)
+        sf_fileclose (traj);
 
     return 0;
 }
