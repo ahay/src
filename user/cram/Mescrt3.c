@@ -185,7 +185,9 @@ int main (int argc, char* argv[]) {
     ob = 0.5*db;
 
 #ifdef _OPENMP
-    nc =  omp_init ();
+    if (!sf_getint ("nc", &nc)) nc = 1;
+    /* Number of threads to use for ray tracing */
+    omp_set_num_threads (nc);
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
