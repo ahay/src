@@ -31,9 +31,6 @@ if 'f90' in api and F90:
 
 # C mains
 targets.c = '''
-wexmig
-wexwfl
-wexmva
 norm2
 reciprocity
 axplusy
@@ -44,6 +41,10 @@ modelcreate
 ewefd2d_omp
 ewefd3d_omp
 '''
+
+#wexmig
+#wexwfl
+#wexmva
 
 # F90 mains
 targets.f90 = '''
