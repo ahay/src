@@ -159,8 +159,22 @@ int main(int argc, char* argv[])
 	
 	for (i3=0; i3 < n3; i3++) {
 	    sf_charread(dat1[0],n12,in);
-	    for (i2=0; i2 < n2; i2++) {
-		memcpy(dat2[i2],dat1[map[i2]],n1); 
+	    if (NULL == mapfile) {
+		for (i2=0; i2 < n2; i2++) {
+		    memcpy(dat2[i2],dat1[map[i2]],n1); 
+		}
+	    } else {
+		if (0 > fseeko(mapfile,0,SEEK_SET))
+		    sf_error ("map seek error:");
+
+		for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf, i2 += nbuf) {
+		    if (nbuf > nsiz) nbuf=nsiz;
+		    if (nbuf != fread(map,sizeof(off_t),nbuf,mapfile)) 
+			sf_error("map read error:");
+		    for (i=0; i < nbuf; i++) {
+			memcpy(dat2[i2+i],dat1[map[i]],n1); 
+		    }
+		}
 	    }
 	    sf_charwrite(dat2[0],n12,out);
 	}
@@ -183,7 +197,7 @@ int main(int argc, char* argv[])
 		if (0 > fseeko(mapfile,0,SEEK_SET))
 		    sf_error ("map seek error:");
 
-		for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf) {
+		for (nsiz=n2; nsiz > 0; nsiz -= nbuf) {
 		    if (nbuf > nsiz) nbuf=nsiz;
 		    if (nbuf != fread(map,sizeof(off_t),nbuf,mapfile)) 
 			sf_error("map read error:");
