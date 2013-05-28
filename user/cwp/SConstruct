@@ -29,6 +29,10 @@ mpiencode bigmpiencode
 mpistack  bigmpistack
 '''
 
+targets.py = '''
+dbmerge
+'''
+
 env.Install(bindir,'cscons')
 binary = os.path.join(bindir,'cscons')
 env.AddPostAction(binary,Chmod(str(binary),0755))
