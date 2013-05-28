@@ -18,6 +18,7 @@
 */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "dottest.h"
 #include "alloc.h"
@@ -27,6 +28,7 @@
 #include "_solver.h"
 /*^*/
 
+/*------------------------------------------------------------*/
 void sf_dot_test(sf_operator oper /* linear operator */, 
 		 int nm           /* model size */, 
 		 int nd           /* data size */, 
@@ -47,12 +49,14 @@ void sf_dot_test(sf_operator oper /* linear operator */,
     sf_random( nm, mod1);
     sf_random( nd, dat2);
 
+    /* < L m1, d2 > = < m1, L* d2 > (w/o add) */
     oper(false, false, nm, nd, mod1, dat1);
     dot1[0] = cblas_dsdot( nd, dat1, 1, dat2, 1);
 
     oper(true, false, nm, nd, mod2, dat2);
     dot1[1] = cblas_dsdot( nm, mod1, 1, mod2, 1);
 
+    /* < L m1, d2 > = < m1, L* d2 > (w/  add) */
     oper(false, true, nm, nd, mod1, dat1);
     dot2[0] = cblas_dsdot( nd, dat1, 1, dat2, 1);
 
@@ -65,3 +69,18 @@ void sf_dot_test(sf_operator oper /* linear operator */,
     free (dat2);
 }
 
+
+/*------------------------------------------------------------*/
+void sf_dot_report(double* dot1 /* test w/o add */, 
+		   double* dot2 /* test w/  add */) 
+{
+/*< Dot test report >*/ 
+	fprintf(stderr,"\n < L m1, d2 > =?= < m1, L' d2 > \n");
+	/* < L m1, d2 > = < m1, L' d2 > (w/o add) */
+	fprintf(stderr,"%13.7f =?= %13.7f\n",dot1[0],dot1[1]);
+	
+	/* < L m1, d2 > = < m1, L' d2 > (w/  add) */
+	fprintf(stderr,"%13.7f =?= %13.7f\n",dot2[0],dot2[1]);
+
+	fprintf(stderr,"\n");
+}
