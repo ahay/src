@@ -17,13 +17,17 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <rsf.h>
 
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, iz, ix, iy, ia, ib;
-    int icpu = 0, ncpu = 1, morder = 2;
+    int icpu = 0, ncpu = 1, morder = 2, nc = 1;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y;
     float ***e;
@@ -91,6 +95,12 @@ int main (int argc, char* argv[]) {
     /* Number of inclination phase angles */
     db = SF_PI/(float)nb;
     ob = 0.5*db;
+
+#ifdef _OPENMP
+    if (!sf_getint ("nc", &nc)) nc = 1;
+    /* Number of threads to use for interpolation */
+    omp_set_num_threads (nc);
+#endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */

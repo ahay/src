@@ -356,6 +356,21 @@ int main (int argc, char* argv[]) {
 
     /* Read spline coefficients for the determined range of angles */
     if (ith && 0 == (icpu % ith) && 0 == pid) {
+        /* Stream socket for incoming connections on */
+        listen_sd = socket (AF_INET, SOCK_STREAM, 0);
+        if (listen_sd < 0)
+            sf_error ("socket() failed [CPU %d]", icpu);
+        new_sd = connect (listen_sd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+        if (0 == new_sd) {
+            sf_warning ("Daemon is already running [CPU %d]", icpu);
+            close (new_sd);
+            close (listen_sd);
+            lockf (tmpfile, F_ULOCK, 1);
+            close (tmpfile);
+            free (str);
+            return 0;
+        }
+
         nc = 0;
         scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)(iab1 - iab0 + 1),
                                                     sizeof(multi_UBspline_3d_s));
@@ -397,34 +412,29 @@ int main (int argc, char* argv[]) {
     /* Create a new SID for the child process */
     sid = setsid ();
     if (sid < 0)
-        sf_error ("setsid() failed");
+        sf_error ("setsid() failed [CPU %d]", icpu);
     /* Change to the root directory to prevent locking the current one */
 /*
     if ((chdir ("/")) < 0)
-        sf_error ("chdir() failed");
+        sf_error ("chdir() failed [CPU %d]", icpu);
 */
 
     /*************************************/
     /* Server part, use non-blocking I/O */
     /*************************************/
 
-    /* Stream socket for incoming connections on */
-    listen_sd = socket (AF_INET, SOCK_STREAM, 0);
-    if (listen_sd < 0)
-        sf_error ("socket() failed");
-
     /* Allow socket descriptor to be reuseable */
     if (setsockopt (listen_sd, SOL_SOCKET, SO_REUSEADDR,
                     (char *)&on, sizeof(on)) < 0) {
         close (listen_sd);
-        sf_error ("setsockopt() failed");
+        sf_error ("setsockopt() failed [CPU %d]", icpu);
     }
 
     /* Set socket to be non-blocking; all of the sockets for
        the incoming connections will also be non-blocking */
     if (ioctl (listen_sd, FIONBIO, (char *)&on) < 0) {
         close (listen_sd);
-        sf_error ("ioctl() failed");
+        sf_error ("ioctl() failed [CPU %d]", icpu);
     }
 
     /* Bind the socket */
@@ -435,13 +445,13 @@ int main (int argc, char* argv[]) {
     if (bind (listen_sd,
               (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
         close (listen_sd);
-        sf_error ("bind() failed");
+        sf_error ("bind() failed [CPU %d]", icpu);
     }
 
     /* Set the listen back log */
     if (listen (listen_sd, 128) < 0) {
         close (listen_sd);
-        sf_error ("listen() failed");
+        sf_error ("listen() failed [CPU %d]", icpu);
     }
 
     pthread_mutex_init (&smutex, NULL);
@@ -449,7 +459,7 @@ int main (int argc, char* argv[]) {
     /* Open log file */
     snprintf (sbuffer, MAX_BUF, "sfescscd3_%s_%d.log", ip, icpu/ith);
     logf = fopen (sbuffer, "w+");
-    fprintf (logf, "Listening on %s\n", ip);
+    fprintf (logf, "Listening on %s [CPU %d]\n", ip, icpu);
     fprintf (logf, "Servicing angle patch %d - %d\n", iab0, iab1);
     fflush (logf);
     sf_warning ("Log file is %s [CPU %d]", sbuffer, icpu);

@@ -408,7 +408,7 @@ int main (int argc, char* argv[]) {
     /* Change to the root directory to prevent locking the current one */
 /*
     if ((chdir ("/")) < 0)
-        sf_error ("chdir() failed");
+        sf_error ("chdir() failed [CPU %d]", icpu);
 */
 
     /*************************************/
@@ -451,7 +451,7 @@ int main (int argc, char* argv[]) {
     /* Open log file */
     snprintf (sbuffer, MAX_BUF, "sfcramdd_%s_%d.log", ip, icpu/ith);
     logf = fopen (sbuffer, "w+");
-    fprintf (logf, "Listening on %s\n", ip);
+    fprintf (logf, "Listening on %s [CPU %d]\n", ip, icpu);
     fflush (logf);
     sf_warning ("Log file is %s [CPU %d]", sbuffer, icpu);
 

@@ -1254,6 +1254,13 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
 
                 /* Find completed points */
                 io = in;
+                /* Interpolate points */
+#ifdef _OPENMP
+#pragma omp parallel for        \
+                schedule(dynamic,1)        \
+                private(i)  \
+                shared(io,in,nap,nbp,areqs,input,output,esc_scgrid)
+#endif
                 for (i = 0; i < io; i++) {
                     sf_esc_scgrid3_interp_point (esc_scgrid, &input[output[i*esc_scgrid->ns].ud1],
                                                  &output[i*esc_scgrid->ns]);
@@ -1263,11 +1270,32 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                         /* Move completed points to the output array */
                         memcpy (&avals[input[output[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
                                 input[output[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
+                        /* Decrease number of input points atomically */
+#if defined(__ICC)
+                        _InterlockedExchangeAdd ((void*)&in, -1);
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+                        __sync_fetch_and_add (&in, -1);
+#else
+#pragma omp critical
+                        {
                         in--;
+                        }
+#endif
                         input[output[i*esc_scgrid->ns].ud1].iab = -1;
-                    } else
+                    } else {
+                        /* Increment interpolation step counter atomically */
+#if defined(__ICC)
+                        _InterlockedExchangeAdd ((void*)&esc_scgrid->is, 1);
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+                        __sync_fetch_and_add (&esc_scgrid->is, 1);
+#else
+#pragma omp critical
+                        {
                         esc_scgrid->is++;
-                }
+                        }
+#endif
+                    }
+                } /* Loop over processed points */
                 /* Find new first and last indices in the input array */
                 while (input[ii].iab == -1 && ii < ie)
                     ii++;
