@@ -59,10 +59,16 @@ cuda_mains = Split(cuda_progs)
 for prog in cuda_mains:
     if CTP and NVCC:
         cfile = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
+        cc = env.get('CC')
+        cflags = '-prec-div=true -arch=sm_21 --x=cu'
+        ldflags = ''
+        if string.rfind(cc,'icc') >= 0:
+            cflags = cflags + ' -ccbin=%s' % cc
+            ldflags = '-ccbin=%s' % cc
         prog = env.Program(cfile,
                            CC=NVCC,
-                           LINKFLAGS=' ',
-                           CFLAGS='-prec-div=true -arch=sm_21 --x=cu')
+                           LINKFLAGS=ldflags,
+                           CFLAGS=cflags)
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
