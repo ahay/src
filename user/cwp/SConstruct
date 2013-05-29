@@ -33,9 +33,10 @@ targets.py = '''
 dbmerge
 '''
 
-env.Install(bindir,'cscons')
-binary = os.path.join(bindir,'cscons')
-env.AddPostAction(binary,Chmod(str(binary),0755))
-env.Install(pkgdir,'cluster.py')
+if glob_build:
+    binary = env.Install(bindir,'cscons')
+    env.AddPostAction(binary,Chmod(str(binary),0755))
+
+    env.Install(pkgdir,'cluster.py')
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

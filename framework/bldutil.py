@@ -255,7 +255,8 @@ def build_install_c_mpi(env, progs_c, srcroot, bindir, glob_build, bldroot):
                 CPPPATH=[os.path.join(srcroot,'include')],
                 LIBPATH=[os.path.join(srcroot,'lib')],
                 LIBS=[env.get('DYNLIB','')+'rsf'])
-    tenv['CC'] = tenv['MPICC']
+    mpicc = tenv['MPICC']
+    tenv['CC'] = mpicc
 
     mains_c = Split(progs_c)
     for prog in mains_c:
@@ -263,7 +264,11 @@ def build_install_c_mpi(env, progs_c, srcroot, bindir, glob_build, bldroot):
             chk_exists(prog)
         sources = ['M' + prog]
         depends(tenv, sources, 'M'+prog)
-        prog = tenv.Program(prog, map(lambda x: x + '.c',sources))
+        if mpicc:
+            prog = tenv.Program(prog, map(lambda x: x + '.c',sources))
+        else:
+            prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+
         if glob_build:
             tenv.Install(bindir,prog)
 
@@ -273,7 +278,6 @@ def build_install_c_mpi(env, progs_c, srcroot, bindir, glob_build, bldroot):
         docs_c = None
 
     return docs_c
-
 
 ################################################################################
 

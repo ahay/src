@@ -29,7 +29,7 @@ static float func_eno(float t);
 
 int main (int argc, char* argv[])
 {
-    int nt,nx,nz, ig, ix,iy,iz, ng, nw;
+    int nt,nx,nz, ig, ix,iz, ng, nw;
     float t, a, b, dz, f, g;
     float *tx, *px, *zx;
     sf_file in, out, place, depth;
@@ -69,7 +69,7 @@ int main (int argc, char* argv[])
     pfnt = sf_eno_init (nw, nt);
 
     ng = 0;
-    iy = nx*nz;
+    /* iy = nx*nz; */
     for (iz=0; iz<nz; iz++) {
 	for (ix=0; ix<nx; ix++) {
 	    sf_floatread(tx,nt,in);
