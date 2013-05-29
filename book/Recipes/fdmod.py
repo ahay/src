@@ -384,7 +384,7 @@ def horizontal(cc,coord,par):
     Flow(cc,None,
          '''
          %smath output=0 n1=%d o1=%g d1=%g >%s datapath=%s/;
-         '''%(M8R,par['nz'],par['oz'],par['dz'],cco,DPT) +
+         '''%(M8R,par['nx'],par['ox'],par['dx'],cco,DPT) +
          '''
          %smath <%s output="%g" >%s datapath=%s/;
          '''%(M8R,cco,coord,ccz,DPT) +
