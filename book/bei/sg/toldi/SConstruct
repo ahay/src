@@ -3,10 +3,19 @@ from rsf.proj import *
 Fetch('dynamics.H','toldi')
 
 Result('toldi','dynamics.H',
-       'window n1=375 n2=1 f2=9 | dd form=native type=float | grey wanttitle=n allpos=y')
+       '''
+       window n1=375 n2=1 f2=9 |
+       dd form=native type=float |
+       grey wanttitle=n allpos=y
+       ''')
 
 Flow('cmp','dynamics.H',
-     'window f3=5 n3=1 | dd form=native type=float | add add=-128 | nmostretch v0=1.5 half=n inv=y')
+     '''
+     window f3=5 n3=1 |
+     dd form=native type=float |
+     add add=-128 |
+     nmostretch v0=1.5 half=n inv=y
+     ''')
 
 near = [0,5,9]
 far = map(lambda x: 27-x,near)
@@ -20,7 +29,8 @@ for case in range(2):
     Plot(plot,'win%d  win%d win%d' % map(tuple,[near,far])[case],
          '''
          cat axis=2 ${SOURCES[1:3]} |
-         wiggle wanttitle=n plotcol=%d zplot=.4 wantaxis2=n xll=0 xur=13 yll=.5 yur=10.
+         wiggle wanttitle=n plotcol=%d zplot=.4
+         wantaxis2=n xll=0 xur=13 yll=.5 yur=10
          ''' % (6-case))
 
 Result('reciptrace','case0 case1','Overlay')
@@ -28,7 +38,11 @@ Result('reciptrace','case0 case1','Overlay')
 for s in range(2):
     slice = 'slice%d' % s
     Plot(slice,'dynamics.H',
-         'window min1=%g n1=1 | dd form=native type=float | grey wanttitle=n allpos=y' % (1,2.5-0.004)[s])
+         '''
+         window min1=%g n1=1 |
+         dd form=native type=float |
+         grey wanttitle=n allpos=y
+         ''' % (1,2.5-0.004)[s])
 
 Result('recipslice','slice0 slice1','OverUnderAniso')
 
