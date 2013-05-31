@@ -114,7 +114,7 @@ static void* sf_escscd3_process_requests (void *ud) {
     do {
         FD_ZERO(&fset);
         FD_SET(data->sd, &fset);
-        timeout.tv_sec  = 60;
+        timeout.tv_sec  = 86400;
         timeout.tv_usec = 0;
         rc = select (data->sd + 1, &fset, NULL, NULL, &timeout);
         if (rc <= 0) {
@@ -164,12 +164,13 @@ static void* sf_escscd3_process_requests (void *ud) {
             else if (iab < data->iab0)
                 iab += data->nab;
             /* Interpolate */
-            if (iab >= data->iab0 && iab <= data->iab1)
+            if (iab >= data->iab0 && iab <= data->iab1) {
                 eval_multi_UBspline_3d_s (&data->scsplines[iab - data->iab0],
                                           data->areqs[i].y, data->areqs[i].x, data->areqs[i].z,
                                           data->avals[i].vals);
-            else
+            } else {
                 data->avals[i].vals[0] = SF_HUGE; /* Return error */
+            }
         }
         /* Send the result back */
         len = 0;
