@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	    // integral kernel
 	    for (it=0; it<nt; it++) {
 		tau = it*dt;
-		if (tau>=0 && tau<= t && dist<vel*(t-tau) ) {
+		if (tau>=0 && tau<=t && (dist+vel*dt)<=vel*(t-tau) ) {
 		    fker[it] = kernel(f[it], vel, tau, t, x, x0);
 		}else {
 		    fker[it] = 0.0;
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 	
 	if (rule[0] == 't') {
 	    u[ix] = trape(fker, nt, dt);
-	    sf_warning("trape intergration is used");
+	    //sf_warning("trape intergration is used");
 	} else {
 	    u[ix] = simpson(fker, nt, dt);
 	}

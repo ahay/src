@@ -48,29 +48,36 @@ int main(int argc, char* argv[])
 {
     clock_t tstart, tend;
     double duration;
-    bool verb, cmplx;        
-    int it,iz,im,ik,ix,i,j;     /* index variables */
+    /*Flag*/
+    bool verb, cmplx;
+    
+    /*I/O*/
+    sf_file Fw,Fr,Fo,Frec;    /* I/O files */
+    sf_file left, right;      /*left/right matrix*/
+    sf_file Fvel, Fden, Ffft; /*Model*/
+
+    sf_axis at,az,ax;         /* cube axes */
+    
+    float  *ww,*rr;           /* I/O arrays*/
+    float **lt, **rt;
+    float **vel, **den, **c11;
+
+    /*options*/
+    int gdep;
+    
+    /* Grid index variables */
+    int it,iz,im,ik,ix,i,j;     
     int nt,nz,nx, m2, nk, nkx, nkz, nzx, nz2, nx2, nzx2, n1, n2, pad1;
     float cx, cz;
     float kx, kz, dkx, dkz, kx0, kz0;
     float dx, dz, dt, d1, d2;
     
-    float  *ww,*rr;      /* I/O arrays*/
     sf_complex *cwavex, *cwavez, *cwavemx, *cwavemz;
+    float **record;
     float **wavex, **wavez;
     float *curtxx, *pretxx;
     float *curvx, *prevx, *curvz, *prevz;
-    
-
-    sf_file Fw,Fr,Fo;    /* I/O files */
-    sf_axis at,az,ax;    /* cube axes */
-
-    float **lt, **rt;
-    sf_file left, right;
-
-    float **vel, **den, **c11;
-    sf_file Fvel, Fden, Ffft; 
-
+ 
     tstart = clock();
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
@@ -79,6 +86,7 @@ int main(int argc, char* argv[])
     Fw = sf_input ("in" );
     Fo = sf_output("out");
     Fr = sf_input ("ref");
+    Frec = sf_output("rec"); /*record*/
 
     /* Read/Write axes */
     at = sf_iaxa(Fw,1); nt = sf_n(at); dt = sf_d(at);
@@ -88,6 +96,9 @@ int main(int argc, char* argv[])
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
     sf_oaxa(Fo,at,3);
+    /*set for record*/
+    sf_oaxa(Frec, at, 1);
+    sf_oaxa(Frec, ax, 2);
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
@@ -139,7 +150,7 @@ int main(int argc, char* argv[])
 	    c11[ix][iz] = den[ix][iz]*vel[ix][iz]*vel[ix][iz];
 	}
     }
-    
+        
     /*parameters of fft*/
     Ffft = sf_input("fft");
     if (!sf_histint(Ffft,"n1", &nkz)) sf_error("Need n1 in fft");
@@ -150,8 +161,10 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(Ffft,"o1", &kz0)) sf_error("Need o1 in fft");
     if (!sf_histfloat(Ffft,"o2", &kx0)) sf_error("Need o2 in fft");
 
-    
-
+    /*parameters of geometry*/
+    if (!sf_getint("gdep", &gdep)) gdep = 0;
+    /*depth of geophone (grid points)*/
+  
     /* read wavelet & reflectivity */
     ww=sf_floatalloc(nt); sf_floatread(ww, nt, Fw);
     rr=sf_floatalloc(nzx); sf_floatread(rr,nzx,Fr);
@@ -169,6 +182,8 @@ int main(int argc, char* argv[])
     cwavemz = sf_complexalloc(nk);
     wavex = sf_floatalloc2(nzx2,m2);
     wavez = sf_floatalloc2(nzx2,m2);
+
+    record = sf_floatalloc2(nt,nx);
 
     ifft2_allocate(cwavemx);
     ifft2_allocate(cwavemz);
@@ -197,7 +212,7 @@ int main(int argc, char* argv[])
    
     /* MAIN LOOP */
     for (it=0; it<nt; it++) {
-	if(verb) sf_warning("it=%d;",it);
+	if(verb) sf_warning("it=%d/%d;",it,nt-1);
 	
 	/*vx, vz--- matrix multiplication */
 	fft2(curtxx,cwavex);   /* P^(k,t) */
@@ -287,11 +302,20 @@ int main(int argc, char* argv[])
 	    /* write wavefield to output */
 	    sf_floatwrite(curtxx+ix*nz2,nz,Fo); 
 	}
+	
+	/*record*/
+	for (ix = 0; ix < nx; ix++){
+	    record[ix][it] = curtxx[ix*nz2+gdep];
+	}
+	
 
     }/*End of MAIN LOOP*/
 
     if(verb) sf_warning(".");
     
+    for ( ix = 0; ix < nx; ix++) {
+	    sf_floatwrite(record[ix], nt, Frec);
+	} 
     tend = clock();
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
     sf_warning(">> The CPU time of sfsglr is: %f seconds << ", duration);

@@ -22,7 +22,7 @@ typedef struct {
     int srange;
     float alpha;
     int decay;
-    int trunc;
+    float trunc;
 }spara; /*source parameter*/
 /*^*/
 

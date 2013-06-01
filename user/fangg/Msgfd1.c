@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     
     spara sp={0};
     bool srcdecay;
-    int srctrunc;
+    float srctrunc;
     
     int pmlout, pmld0, decaybegin;
     int   decay;
@@ -144,8 +144,8 @@ int main(int argc, char* argv[])
     /*free surface*/
     if (!sf_getbool("srcdecay",&srcdecay)) srcdecay=true;
     /*source decay y=use*/
-    if (!sf_getint("srctrunc",&srctrunc)) srctrunc=300;
-    /*source trunc*/
+    if (!sf_getfloat("srctrunc",&srctrunc)) srctrunc=0.2;
+    /*source trunc time (s)*/
     if (!sf_getbool("inject", &inject)) inject = true;
     /*inject = y use inject source; inject =n use initial condition*/
     oo=marg;
@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
         
     for (it = it0; it < nt; it++) {
 	sf_warning("it=%d/%d;", it, nt-1);
-	if (inject ==true && it<=sp.trunc) {
+	if (inject ==true && (it*dt)<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
 	}
 

@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
     }  
    
     /* MAIN LOOP */
-    sp.trunc=160;
+    sp.trunc=0.2;
     sp.srange=10;
     sp.alpha=0.5;
     sp.decay=1.0;

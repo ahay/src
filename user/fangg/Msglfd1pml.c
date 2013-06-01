@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     spara sp={0};
     bool srcdecay;
-    int srctrunc;
+    float srctrunc;
 
     int pmlout, pmld0, decaybegin;
     int   decay;
@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(fG,"n2", &lenx)) sf_error("No n2= in input");
     if (!sf_getbool("srcdecay",&srcdecay)) srcdecay=true;
     /*source decay y=use*/
-    if (!sf_getint("srctrunc",&srctrunc)) srctrunc=300;
-    /*source trunc*/
+    if (!sf_getfloat("srctrunc",&srctrunc)) srctrunc=0.2;
+    /*source trunc time (s)*/
     if (!sf_getbool("inject", &inject)) inject = true;
     /* inject=y use inject source; inject=n use initial condition*/
     
@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
     sf_warning("nx=%d nt=%d", nx, nt);
     sf_warning("dx=%f dt=%f", dx, dt);
     sf_warning("lenx=%d marg=%d pmlout=%d", lenx, marg, pmlout);
-    sf_warning("srctrunc=%d srcdecay=%d", sp.trunc, sp.decay);
+    sf_warning("srctrunc=%f srcdecay=%d", sp.trunc, sp.decay);
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx]=[%d,] G=%f",sx[ix], G[ix][0]);
     }
@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
     
     for (it = it0; it < nt; it++) {
 	sf_warning("it=%d/%d;", it, nt);
-	if (inject ==true && it<=sp.trunc) {
+	if (inject ==true && (it*dt)<=sp.trunc) {
 	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
 	}
 	
