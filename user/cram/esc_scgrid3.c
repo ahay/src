@@ -561,7 +561,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 }
 
 /* Disconnect from a socket */
-static void sf_cram_scgrid3_disconnect (sf_esc_scgrid3 esc_scgrid, int is) {
+static void sf_esc_scgrid3_disconnect (sf_esc_scgrid3 esc_scgrid, int is) {
     int i;
 
     close (is);
@@ -585,7 +585,7 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     if (esc_scgrid->sockets) {
         for (iab = 0; iab < nab; iab++) {
             if (esc_scgrid->sockets[iab] != -1)
-                sf_cram_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab]);
+                sf_esc_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab]);
         }
         free (esc_scgrid->sockets);
     }
@@ -618,7 +618,7 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
 }
 
 /* Compute one value locally */
-static void sf_cram_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areq,
+static void sf_esc_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areq,
                                         sf_esc_scgrid3_avals *aval) {
     eval_multi_UBspline_3d_s (&esc_scgrid->scsplines[areq->iab],
                               areq->y, areq->x, areq->z, aval->vals);
@@ -626,46 +626,36 @@ static void sf_cram_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     aval->ud2 = areq->ud2;
 }
 
-/* Compute multiple values either locally or remotely */
-static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
-                                        sf_esc_scgrid3_avals *avals, int n) {
-    int i, ii, ie, is, mis = -1, iab;
-    int len = 0, rc, ns = 0, desc_ready;
-    size_t id;
-    fd_set sset, wset;
-    struct timeval timeout;
+/* Send compute requests, return number of sent requests, highest socket is (mis)
+   and file descriptors set (fd_set) for a later select() at the receive stage */
+static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
+                                        int n, fd_set *sset, int *mis, size_t *id) {
+    int ii, ie, is, iab;
+    int len = 0, rc, ns = 0;
 
-    if (0 == n)
-        return;
-
-    /* Extract values locally */
-    if (false == esc_scgrid->remote) {
-        for (i = 0; i < n; i++) {
-            sf_cram_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[i]);
-            esc_scgrid->il++;
-        }
-        return;
-    }
+    if (false == esc_scgrid->remote || 0 == n)
+        return 0;
 
     /* Message ID for this batch of points */
-    id = 0;
-    while (0 == id && id >= (size_t)(-n))
-        id = rand ()*rand ();
-    FD_ZERO(&sset);
+    *id = 0;
+    while (0 == *id && *id >= (size_t)(-n))
+        *id = rand ()*rand ();
+    FD_ZERO(sset);
 
     /* Skip patches without receivers */
     ii = 0;
     while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab]) {
-        areqs[ii].id = id;
+        areqs[ii].id = *id;
         ii++;
     }
     if (ii == n)
         sf_error ("Lost all connections");
 
+    *mis = -1;
     /* Socket */
     is = esc_scgrid->sockets[areqs[ii].iab];
-    if (is > mis)
-        mis = is;
+    if (is > *mis)
+        *mis = is;
     ie = ii; /* Last and first requests in the patch */
     iab = areqs[ie].iab;
     /* Find maximum consecutive patch of angles to
@@ -674,7 +664,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         while (ie < n && (iab == areqs[ie].iab ||
                           is == esc_scgrid->sockets[areqs[ie].iab])) {
             iab = areqs[ie].iab;
-            areqs[ie].id = id + ie;
+            areqs[ie].id = *id + ie;
             ie++;
         }
         /* Send loop for this patch */
@@ -685,39 +675,61 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                 sf_warning ("Can not send data for iab=[%d - %d], disconnecting",
                             areqs[ii].iab, areqs[ie].iab - 1);
-                sf_cram_scgrid3_disconnect (esc_scgrid, is);
+                sf_esc_scgrid3_disconnect (esc_scgrid, is);
                 len = 0;
                 break;
             }
             if (rc > 0)
                 len += rc;
         }
-        if (len && !FD_ISSET (is, &sset))
-            FD_SET(is, &sset);
+        if (len && !FD_ISSET (is, sset))
+            FD_SET(is, sset);
         ns += len/sizeof(sf_esc_scgrid3_areq);
         if (ie < n) { /* Next patch */
             ii = ie;
             /* Find next socket */
             while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab]) {
-                areqs[ii].id = id; /* Skip requests without receivers */
+                areqs[ii].id = *id; /* Skip requests without receivers */
                 ii++;
             }
             ie = ii;
             if (ie < n) {
                 is = esc_scgrid->sockets[areqs[ii].iab];
-                if (is > mis)
-                    mis = is;
+                if (is > *mis)
+                    *mis = is;
                 iab = areqs[ie].iab;
             }
         }
     } while (ie < n); /* Done sending */
+
+    return ns;
+}
+
+/* Receive responses to previously sent requests, n - total number of requests,
+   ns - number of remote requests, id - message id for the remote requests */
+static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
+                                         sf_esc_scgrid3_avals *avals, fd_set *sset,
+                                         int mis, int ns, int n, size_t id) {
+    int i, ii = 0, is;
+    int len = 0, rc, desc_ready;
+    fd_set wset;
+    struct timeval timeout;
+
+    /* Extract values locally */
+    if (false == esc_scgrid->remote) {
+        for (i = 0; i < n; i++) {
+            sf_esc_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[i]);
+            esc_scgrid->il++;
+        }
+        return;
+    }
+
     /* Now, try to get results back */
-    ii = 0;
     while (ns) { /* Poll sockets for incoming data */
         /* Wait for 60 secs max */
         timeout.tv_sec  = 60;
         timeout.tv_usec = 0;
-        memcpy (&wset, &sset, sizeof(sset));
+        memcpy (&wset, sset, sizeof(fd_set));
         rc = select (mis + 1, &wset, NULL, NULL, &timeout);
         if (0 == rc)
             break;
@@ -741,8 +753,8 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                         sf_warning ("The server has closed connection for socket %d", is);
                     else
                         sf_warning ("Can not receive data for socket %d, disconnecting", is);
-                    sf_cram_scgrid3_disconnect (esc_scgrid, is);
-                    FD_CLR(is, &sset);
+                    sf_esc_scgrid3_disconnect (esc_scgrid, is);
+                    FD_CLR(is, sset);
                     len = 0;
                     break;
                 }
@@ -782,7 +794,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     /* Extract values locally */
     for (i = 0; i < n; i++) {
         if (areqs[i].id != 0) {
-            sf_cram_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[ii]);
+            sf_esc_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[ii]);
             esc_scgrid->il++;
             ii++;
         }
@@ -791,7 +803,7 @@ static void sf_cram_scgrid3_get_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
 
 /* Compute interger index for a float value v according to sampling df
    and zero at f0, store fractional part in f */
-static int sf_cram_scgrid3_ftoi (float v, float f0, float df, float *f) {
+static int sf_esc_scgrid3_ftoi (float v, float f0, float df, float *f) {
     int i;
     float ff;
 
@@ -1072,8 +1084,8 @@ static void sf_esc_scgrid3_prepare_request (sf_esc_scgrid3 esc_scgrid, int in,
                                             sf_esc_scgrid3_areq *areq) {
     int i, iib, iia;
     /* ib, ia */
-    iib = sf_cram_scgrid3_ftoi (aval->b, esc_scgrid->ob, esc_scgrid->db, &aval->fb);
-    iia = sf_cram_scgrid3_ftoi (aval->a, esc_scgrid->oa, esc_scgrid->da, &aval->fa);
+    iib = sf_esc_scgrid3_ftoi (aval->b, esc_scgrid->ob, esc_scgrid->db, &aval->fb);
+    iia = sf_esc_scgrid3_ftoi (aval->a, esc_scgrid->oa, esc_scgrid->da, &aval->fa);
 
     if (3 == esc_scgrid->morder)
         sf_esc_scgrid3_spline_prepare (esc_scgrid, iia, iib, aval, areq);
@@ -1172,11 +1184,13 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
 /*< Compute escape values for a point with subsurface coordinates (z, x, y, b, a)
     by stitching local escape solutions in supercells of a phase-space grid >*/
 {
-    int i, ii, ie, io, in, ia, ib, iap, ibp;
+    int i, ii, ie, io, in, ia, ib, iap, ibp, mis, ns;
+    size_t mid;
     int nap = na/esc_scgrid->ma, nbp = nb/esc_scgrid->mb;
     sf_esc_scgrid3_invals *input = esc_scgrid->invals;
     sf_esc_scgrid3_areq *areqs = esc_scgrid->areqs;
     sf_esc_scgrid3_avals *output = esc_scgrid->avals;
+    fd_set sset;
 
     if (na % esc_scgrid->ma)
         sf_warning ("na should be divisible by ma");
@@ -1247,7 +1261,10 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                        sf_esc_scgrid3_areq_sort);
 
                 /* Extract values from across the phase space; remotely or locally */
-                sf_cram_scgrid3_get_values (esc_scgrid, areqs, output, in*esc_scgrid->ns);
+                ns = sf_esc_scgrid3_send_values (esc_scgrid, areqs, in*esc_scgrid->ns,
+                                                  &sset, &mis, &mid);
+                sf_esc_scgrid3_recv_values (esc_scgrid, areqs, output, &sset, mis, ns,
+                                             in*esc_scgrid->ns, mid);
 
                 /* Sort the incoming angle values by point and stencil index */
                 qsort (output, in*esc_scgrid->ns, sizeof(sf_esc_scgrid3_avals),
