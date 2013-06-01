@@ -31,6 +31,9 @@ except: # local version
     root = None
     SConscript('../../api/c/SConstruct')
 
+if sys.platform.startswith('linux'):
+    env.Prepend(CPPDEFINES=['LINUX'])
+
 src = Glob('[a-z]*.c')
 
 sse = None
