@@ -188,6 +188,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for ray tracing */
     omp_set_num_threads (nc);
+    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
+                nc, omp_get_max_threads ());
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
@@ -351,9 +353,9 @@ int main (int argc, char* argv[]) {
                 if (lz >= nz)
                     lz = nz - 1;
 #ifdef _OPENMP
-#pragma omp parallel for        \
+#pragma omp parallel for                   \
                 schedule(dynamic,1)        \
-                private(iz,ia,ib,a,z,it,i)  \
+                private(iz,ia,ib,a,z,it,i) \
                 shared(fz,lz,iy,ix,nb,na,nz,nx,ny,ob,oa,oz,ox,oy,db,da,dz,dx,dy,x,y,tdata,esc_tracers,esc_points,e,out,traj)
 #endif
                 for (iz = fz; iz <= lz; iz++) {

@@ -100,6 +100,9 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for interpolation */
     omp_set_num_threads (nc);
+    omp_set_num_threads (nc);
+    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
+                nc, omp_get_max_threads ());
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;

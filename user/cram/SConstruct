@@ -15,18 +15,11 @@ rpslow2
 try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
-## OpenMP disables certain optimizations, so disable it (nothing uses it here, anyway)
-#    cflags = env.get('CFLAGS','')
-#    if isinstance (cflags, str):
-#        env['CFLAGS'] = cflags.replace('-openmp','').replace('-D_OPENMP','')
-#    lflags = env.get('LINKFLAGS','')
-#    if isinstance (lflags, str):
-#        env['LINKFLAGS'] = lflags.replace('-openmp','').replace('-fopenmp','')
 except: # local version
     env = bldutil.Debug()
     cflags = env.get('CFLAGS','')
     if isinstance (cflags, str):
-        env['CFLAGS'] = cflags.replace('-O3','-g')
+        env['CFLAGS'] = cflags.replace('-O3','-g').replace('-xHOST','')
     env.Prepend(CPPDEFINES=['DEBUG'])
     root = None
     SConscript('../../api/c/SConstruct')

@@ -434,7 +434,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                     break;
                 }
             }
-            if (jj != -1) {
+            if (jj != -1) { /* This daemon has been connected to already */
                 esc_scgrid->sockets[i] = esc_scgrid->sockets[jj];
                 nsck[i] = -1;
                 sck[i][0] = j;
@@ -505,17 +505,20 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                         if (rc < 0 && errno != EINTR) { 
                             sf_warning ("connect() failed");
                             close (is);
+                            is = -1;
                             break; 
                         } else if (rc > 0) { 
                             lon = sizeof(int); 
                             if (getsockopt (is, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) { 
                                 sf_warning ("getsockopt() failed");
                                 close (is);
+                                is = -1;
                                 break;
                             }
                             if (valopt) {
                                 sf_warning ("Error in establishing connection for id=%d", j);
                                 close (is);
+                                is = -1;
                                 break;
                             }
                             /* Sucessful connect */
@@ -523,12 +526,14 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                         } else { 
                             sf_warning ("Connection timeout for id=%d", j);
                             close (is);
+                            is = -1;
                             break;
                         } 
                     } while (true);
                 } else { 
                     sf_warning ("Connection error for id=%d", j);
                     close (is);
+                    is = -1;
                 }
             }
             if (is < 0)
@@ -1270,7 +1275,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
     }
 
     nabp = (nap*nbp)/2; /* Number of angle patches */
-    for (iabp = 0; i < nabp; iabp++) { /* Loop over angle patches */
+    for (iabp = 0; iabp < nabp; iabp++) { /* Loop over angle patches */
         /* Initialize two angle patches */
         iap = (iabp*2) / nbp;
         ibp = (iabp*2) % nbp;
@@ -1288,6 +1293,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
         ii_prev = 0;
         ie_curr = esc_scgrid->ma*esc_scgrid->mb - 1;
         ie_prev = esc_scgrid->ma*esc_scgrid->mb - 1;
+        ns_curr = 0;
+        ns_prev = 0;
         
         /* Prepare-send-receive-process loop; there is an overlap
            in communication here to hide transmission latency;

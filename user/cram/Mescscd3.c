@@ -243,7 +243,7 @@ int main (int argc, char* argv[]) {
     size_t nc;
     off_t nsp;
     int ma, mb;
-    int ith = 1, na, nb, nab, icpu, ncpu, bcpu, wcpu, tout;
+    int ith = 1, na, nb, nab, icpu, ncpu, bcpu, wcpu, tout, tdel;
     int i, iab, iab0, iab1, port, nthreads, tmpfile = 0;
 #ifdef LINUX
     int inet = 0;
@@ -323,6 +323,8 @@ int main (int argc, char* argv[]) {
     /* Number of threads (connections) per daemon */
     if (!sf_getint ("timeout", &tout)) tout = 10;
     /* Inactivity time before shutdown (mins) */
+    if (!sf_getint ("tdelay", &tdel)) tdel = 0;
+    /* Time delay before accessing data, tdel*icpu (secs) */
 
     if (ith && 0 == (icpu % ith))
         sf_warning ("Running no more than %d threads on %s [CPU %d]", nthreads, ip, icpu);
@@ -425,6 +427,7 @@ int main (int argc, char* argv[]) {
             return 0;
         }
 
+        sleep (tdel*(icpu/ith));
         nc = 0;
         scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)(iab1 - iab0 + 1),
                                                     sizeof(multi_UBspline_3d_s));
