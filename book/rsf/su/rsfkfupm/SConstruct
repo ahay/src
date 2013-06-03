@@ -16,8 +16,24 @@ Flow('data-tm','data','pow pow1=2')
 # Display first 6 shot records
 Flow('first6','tdata','window n1=1 f1=4 | mask max=6')
 
+display6 = '''
+headerwindow mask=${SOURCES[1]} | 
+wiggle transp=y yreverse=y poly=y title=Shots
+'''
+
 for data in Split('data data-agc data-tm'):
-    Result(data,[data,'first6'],
-           'headerwindow mask=${SOURCES[1]} | wiggle transp=y yreverse=y poly=y title=Shots')
+    Result(data,[data,'first6'],display6)
+
+# Take Fourier transform and compute amplitude spectrum
+Flow('data-tm-as','data-tm','spectra')
+Result('data-tm-as','data-tm-as first6',
+       '''
+       headerwindow mask=${SOURCES[1]} | 
+       grey allpos=y color=j title="Amplitude Spectra"
+       ''')
+
+# Filter data to remove ground-roll
+Flow('data-tm-filt','data-tm','trapez frequency=15,20,50,60')
+Result('data-tm-filt','data-tm-filt first6',display6)
     
 End()

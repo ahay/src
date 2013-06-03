@@ -128,7 +128,7 @@ void srmig3(ssroperator3d weop,
 	    ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	    if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>",
+	    if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>;",
 				      ompith,iw+1,cub->aw.n,ie+1,cub->ae.n);
 	    
 	    ws = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /*      causal */
@@ -175,6 +175,7 @@ void srmig3(ssroperator3d weop,
 
 	    imop(cub,img,iw,ompith); /* imaging condition */
 	} /* w */
+	if(cub->verb) sf_warning (".");
 	
     } /* e */
 }
