@@ -237,19 +237,117 @@ static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
     esc_scgrid->ns = ns;
 }
 
+/* Try to conenct to a remote daemon, return socket id */
+static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sockaddr_in *serv_addr) {
+    int is, on = 1;
+    fd_set sset; 
+    struct timeval timeout; 
+    int valopt, rc, bsiz; 
+    socklen_t lon; 
+
+    /* Create TCP socket */
+    if ((is = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
+        sf_warning ("socket() failed");
+        return -1;
+    }
+    /* Allow socket descriptor to be reuseable */
+    if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
+        sf_warning ("setsockopt() failed");
+        close (is);
+        return -1;
+    }
+    on = 1;
+    /* Disable TCP buffering of outgoing packets */
+#ifdef SOL_TCP
+    if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
+#else
+    if (setsockopt (is, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
+#endif
+    {
+        sf_warning ("setsockopt()[TCP_NODELAY] failed");
+        close (is);
+        return 1;
+    }
+#ifdef SO_NOSIGPIPE
+    on = 1;
+    if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
+        sf_warning ("setsockopt()[SO_NOSIGPIPE] failed");
+        close (is);
+        return -1;
+    }
+#endif
+    /* Set send and receive buffers */
+    bsiz = sizeof(sf_esc_scgrid3_avals)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
+    if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
+        sf_warning ("setsockopt()[SO_RCVBUF] failed");
+        close (is);
+        return -1;
+    }
+    bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
+    if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
+        sf_warning ("setsockopt()[SO_SNDBUF] failed");
+        close (is);
+        return -1;
+    }
+    /* Set socket to be non-blocking */
+    if (ioctl (is, FIONBIO, (char *)&on) < 0) {
+        sf_warning ("ioctl() failed");
+        close (is);
+        return -1;
+    }
+    /* Try to establish a connection */
+    rc = connect (is, (struct sockaddr *)serv_addr, sizeof(*serv_addr));
+    if (rc < 0) { 
+        if (EINPROGRESS == errno) { 
+            do {
+                /* Connection timeout */
+                timeout.tv_sec = 5*60; 
+                timeout.tv_usec = 0; 
+                FD_ZERO(&sset); 
+                FD_SET(is, &sset); 
+                rc = select (is + 1, NULL, &sset, NULL, &timeout); 
+                if (rc < 0 && errno != EINTR) { 
+                    sf_warning ("connect() failed");
+                    close (is);
+                    return -1;
+                } else if (rc > 0) { 
+                    lon = sizeof(int); 
+                    if (getsockopt (is, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) { 
+                        sf_warning ("getsockopt() failed");
+                        close (is);
+                        return -1;
+                    }
+                    if (valopt) {
+                        sf_warning ("Error in establishing connection");
+                        close (is);
+                        return -1;
+                    }
+                    /* Sucessful connect */
+                    return is;
+                } else { 
+                    sf_warning ("Connection timeout");
+                    close (is);
+                    return -1;
+                }
+            } while (true);
+        } else { 
+            sf_warning ("Connection error, errno=%d", errno);
+            close (is);
+            return -1;
+        }
+    }
+    return is;
+}
+
 sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer,
                                     int morder, float frac, bool verb)
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
-    int ia, ib, i, j, k, jj, nab, iab0, iab1, nd, is, on = 1;
+    int ia, ib, i, j, k, jj, nab, iab0, iab1, nd, is;
     int *nsck, **sck;
-    FILE *stream;
     struct sockaddr_in *serv_addr;
-    fd_set sset; 
-    struct timeval timeout; 
-    int valopt, rc, bsiz; 
-    socklen_t lon; 
+    FILE *stream;
 
     sf_esc_scgrid3 esc_scgrid = (sf_esc_scgrid3)sf_alloc (1, sizeof (struct EscSCgrid3));
 
@@ -399,11 +497,12 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         serv_addr = sf_alloc (nd, sizeof(struct sockaddr_in));
         sck = (int**)sf_alloc (nab, sizeof(int*)); /* All daemons for an angle */
         nsck = (int*)sf_alloc (nab, sizeof(int)); /* Number of daemons for an angle */
-        esc_scgrid->sockets = (int*)sf_alloc (nab, sizeof(int)); /* Connection socket for each angle */
+        esc_scgrid->sockets = (int*)sf_alloc (2*nab, sizeof(int)); /* Connection socket for each angle */
         for (i = 0; i < nab; i++) {
             nsck[i] = 0;
             sck[i] = (int*)sf_alloc (nd, sizeof(int));
-            esc_scgrid->sockets[i] = -1;
+            esc_scgrid->sockets[i*2] = -1;
+            esc_scgrid->sockets[i*2 + 1] = -1;
         }
         /* Find out how many daemons cover each angle */
         for (j = 0; j < nd; j++) {
@@ -435,110 +534,24 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 }
             }
             if (jj != -1) { /* This daemon has been connected to already */
-                esc_scgrid->sockets[i] = esc_scgrid->sockets[jj];
+                esc_scgrid->sockets[2*i] = esc_scgrid->sockets[2*jj];
+                esc_scgrid->sockets[2*i + 1] = esc_scgrid->sockets[2*jj + 1];
                 nsck[i] = -1;
                 sck[i][0] = j;
                 continue;
             }
             /* Next daemon, try to establish a connection */
-            /* Create TCP socket */
-            if ((is = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
-                sf_warning ("socket() failed");
-                continue;
-            }
-            /* Allow socket descriptor to be reuseable */
-            if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-                sf_warning ("setsockopt() failed");
-                close (is);
-                continue;
-            }
-            on = 1;
-            /* Disable TCP buffering of outgoing packets */
-#ifdef SOL_TCP
-            if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
-#else
-            if (setsockopt (is, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
-#endif
-            {
-                sf_warning ("setsockopt()[TCP_NODELAY] failed");
-                close (is);
-                continue;
-            }
-#ifdef SO_NOSIGPIPE
-            on = 1;
-            if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
-                sf_warning ("setsockopt()[SO_NOSIGPIPE] failed");
-                close (is);
-                continue;
-            }
-#endif
-            /* Set send and receive buffers */
-            bsiz = sizeof(sf_esc_scgrid3_avals)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
-            if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
-                sf_warning ("setsockopt()[SO_RCVBUF] failed");
-                close (is);
-                continue;
-            }
-            bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
-            if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
-                sf_warning ("setsockopt()[SO_SNDBUF] failed");
-                close (is);
-                continue;
-            }
-            /* Set socket to be non-blocking */
-            if (ioctl (is, FIONBIO, (char *)&on) < 0) {
-                sf_warning ("ioctl() failed");
-                close (is);
-                continue;
-            }
-            /* Try to establish a connection */
-            rc = connect (is, (struct sockaddr *)&serv_addr[j], sizeof(serv_addr[j]));
-            if (rc < 0) { 
-                if (EINPROGRESS == errno) { 
-                    do {
-                        /* Connection timeout */
-                        timeout.tv_sec = 5*60; 
-                        timeout.tv_usec = 0; 
-                        FD_ZERO(&sset); 
-                        FD_SET(is, &sset); 
-                        rc = select (is + 1, NULL, &sset, NULL, &timeout); 
-                        if (rc < 0 && errno != EINTR) { 
-                            sf_warning ("connect() failed");
-                            close (is);
-                            is = -1;
-                            break; 
-                        } else if (rc > 0) { 
-                            lon = sizeof(int); 
-                            if (getsockopt (is, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) { 
-                                sf_warning ("getsockopt() failed");
-                                close (is);
-                                is = -1;
-                                break;
-                            }
-                            if (valopt) {
-                                sf_warning ("Error in establishing connection for id=%d", j);
-                                close (is);
-                                is = -1;
-                                break;
-                            }
-                            /* Sucessful connect */
-                            break; 
-                        } else { 
-                            sf_warning ("Connection timeout for id=%d", j);
-                            close (is);
-                            is = -1;
-                            break;
-                        } 
-                    } while (true);
-                } else { 
-                    sf_warning ("Connection error for id=%d", j);
-                    close (is);
-                    is = -1;
-                }
-            }
+            is = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j]);
             if (is < 0)
                 continue;
-            esc_scgrid->sockets[i] = is;
+            esc_scgrid->sockets[2*i] = is;
+            is = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j]);
+            if (is < 0) {
+                close (esc_scgrid->sockets[2*i]);
+                esc_scgrid->sockets[2*i] = -1;
+                continue;
+            }
+            esc_scgrid->sockets[2*i + 1] = is;
             sck[i][0] = j;
             nsck[i] = -1;
             nc++;
@@ -579,8 +592,10 @@ static void sf_esc_scgrid3_disconnect (sf_esc_scgrid3 esc_scgrid, int is) {
 
     /* Remove socket id from all angle references */
     for (i = 0; i < esc_scgrid->na*esc_scgrid->nb; i++) {
-        if (esc_scgrid->sockets[i] == is)
-            esc_scgrid->sockets[i] = -1;
+        if (esc_scgrid->sockets[i*2] == is)
+            esc_scgrid->sockets[i*2] = -1;
+        if (esc_scgrid->sockets[i*2 + 1] == is)
+            esc_scgrid->sockets[i*2 + 1] = -1;
     }
 }
 
@@ -595,8 +610,10 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     /* Close all existing connections */
     if (esc_scgrid->sockets) {
         for (iab = 0; iab < nab; iab++) {
-            if (esc_scgrid->sockets[iab] != -1)
-                sf_esc_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab]);
+            if (esc_scgrid->sockets[iab*2] != -1)
+                sf_esc_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab*2]);
+            if (esc_scgrid->sockets[iab*2 + 1] != -1)
+                sf_esc_scgrid3_disconnect (esc_scgrid, esc_scgrid->sockets[iab*2 + 1]);
         }
         free (esc_scgrid->sockets);
     }
@@ -643,7 +660,7 @@ static void sf_esc_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
 /* Send compute requests, return number of sent requests, highest socket is (mis)
    and file descriptors set (fd_set) for a later select() at the receive stage */
 static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areqs,
-                                        int n, fd_set *sset, int *mis, size_t *id) {
+                                        int n, int isshift, fd_set *sset, int *mis, size_t *id) {
     int ii, ie, is, iab;
     int len = 0, rc, ns = 0;
 
@@ -658,7 +675,7 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
 
     /* Skip patches without receivers */
     ii = 0;
-    while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab]) {
+    while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab*2 + isshift]) {
         areqs[ii].id = *id;
         ii++;
     }
@@ -667,7 +684,7 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
 
     *mis = -1;
     /* Socket */
-    is = esc_scgrid->sockets[areqs[ii].iab];
+    is = esc_scgrid->sockets[areqs[ii].iab*2 + isshift];
     if (is > *mis)
         *mis = is;
     ie = ii; /* Last and first requests in the patch */
@@ -676,7 +693,7 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
        be sent to a single socket */
     do {
         while (ie < n && (iab == areqs[ie].iab ||
-                          is == esc_scgrid->sockets[areqs[ie].iab])) {
+                          is == esc_scgrid->sockets[areqs[ie].iab*2 + isshift])) {
             iab = areqs[ie].iab;
             areqs[ie].id = *id + ie;
             ie++;
@@ -702,13 +719,13 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
         if (ie < n) { /* Next patch */
             ii = ie;
             /* Find next socket */
-            while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab]) {
+            while (ii < n && -1 == esc_scgrid->sockets[areqs[ii].iab*2 + isshift]) {
                 areqs[ii].id = *id; /* Skip requests without receivers */
                 ii++;
             }
             ie = ii;
             if (ie < n) {
-                is = esc_scgrid->sockets[areqs[ii].iab];
+                is = esc_scgrid->sockets[areqs[ii].iab*2 + isshift];
                 if (is > *mis)
                     *mis = is;
                 iab = areqs[ie].iab;
@@ -1235,7 +1252,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
     by stitching local escape solutions in supercells of a phase-space grid >*/
 {
     int i, io, ia, ib, iap, ibp, iabp, nabp;
-    int ii_prev, ii_curr, ie_prev, ie_curr, in_prev, in_curr, mis_prev, mis_curr, ns_prev, ns_curr;
+    int ii_prev, ii_curr, ie_prev, ie_curr, in_prev, in_curr;
+    int is_prev, is_curr, mis_prev, mis_curr, ns_prev, ns_curr;
     size_t mid_prev, mid_curr;
     int nap = na/esc_scgrid->ma, nbp = nb/esc_scgrid->mb;
     sf_esc_scgrid3_invals *input_prev = esc_scgrid->invals1, *input_curr = esc_scgrid->invals2;
@@ -1295,7 +1313,10 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
         ie_prev = esc_scgrid->ma*esc_scgrid->mb - 1;
         ns_curr = 0;
         ns_prev = 0;
-        
+        /* Socket id shift to prevent mixing up contents for the two patches at the receive stage */
+        is_curr = 0;
+        is_prev = 1;
+
         /* Prepare-send-receive-process loop; there is an overlap
            in communication here to hide transmission latency;
            one patch is sent, then another one is prepared and sent too,
@@ -1320,7 +1341,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                 
                 /* Send requests for values in this current patch */
                 ns_curr = sf_esc_scgrid3_send_values (esc_scgrid, areqs_curr, in_curr*esc_scgrid->ns,
-                                                      sset_curr, &mis_curr, &mid_curr);
+                                                      is_curr, sset_curr, &mis_curr, &mid_curr);
             } /* if in_curr */
             if (ns_prev) {
                 /* Receive values for the previous patch */
@@ -1384,6 +1405,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
             sf_esc_scgrid3_swap_ints (&in_prev, &in_curr);
             sf_esc_scgrid3_swap_ints (&mis_prev, &mis_curr);
             sf_esc_scgrid3_swap_ints (&ns_prev, &ns_curr);
+            sf_esc_scgrid3_swap_ints (&is_prev, &is_curr);
             sf_esc_scgrid3_swap_sizets (&mid_prev, &mid_curr);
             sf_esc_scgrid3_swap_pointers ((void**)&input_prev, (void**)&input_curr);
             sf_esc_scgrid3_swap_pointers ((void**)&areqs_prev, (void**)&areqs_curr);
