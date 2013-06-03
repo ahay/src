@@ -1,0 +1,37 @@
+from rsf.proj import *
+
+Fetch('sonic.txt','cwp')
+
+nval=28306
+
+# convert to RSF
+Flow('sonic','sonic.txt',
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=%d |
+     dd form=native
+     ''' % nval,stdin=0)
+
+Flow('vel','sonic','window n1=1 f1=1 | put o1=89.4 d1=0.1 label1=Depth unit1=m')
+Flow('den','sonic','window n1=1 f1=2 | put o1=89.4 d1=0.1 label1=Depth unit1=m')
+
+Plot('vel','graph title="Sonic Velocity" label2=Velocity unit2=m/s        transp=y yreverse=y')
+Plot('den','graph title="Sonic Density"  label2=Density unit2="kg/m\^3\_" transp=y yreverse=y')
+
+Result('sonic','vel den','SideBySideAniso')
+
+# compute reflectivity function 
+Flow('data','vel den',
+     '''
+     mul ${SOURCES[1]} | 
+     depth2time velocity=${SOURCES[0]} nt=221 dt=0.008 | 
+     ai2refl | ricker1 freq=0.3 | put label1=Time unit1=s
+     ''')
+
+# plot
+Result('data',
+       '''
+       spray axis=2 n=50 o=1 label=Trace | 
+       wiggle poly=y yreverse=y transp=y title="Reflectivity generated from welllog data" 
+       ''')
+
+End()
