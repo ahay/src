@@ -21,7 +21,7 @@
 #include <math.h>
 
 int main (int argc, char* argv[])
-{   bool opt,mvo;
+{   bool opt,comp;
     double n1;
     float nw1,b,a,dw,pi;
     int nt,nw,i,j,N,m1,M,k,f;                    
@@ -56,8 +56,8 @@ int main (int argc, char* argv[])
     out = sf_output("out");
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
-    if (!sf_getbool("mvo",&mvo)) mvo=true;
-    /* if (!sf_histdouble(in,"d1",&d1)) sf_error("No d1= in input"); */
+    if (!sf_getbool("comp",&comp)) comp=true;
+    /* component selection */
     if (!sf_histdouble(in,"n1",&n1)) sf_error("No n1= in input");
   
     bb= sf_floatalloc(n1);
@@ -388,8 +388,11 @@ int main (int argc, char* argv[])
 	EyHxres[k]=0.2*sf_cabsf(Zyx[k])*sf_cabsf(Zyx[k])/a;
 	ExHypha[k]=sf_cargf(Zxy[k]);
 	EyHxpha[k]=sf_cargf(Zyx[k]);
-	if(mvo) outp[k]=ExHyres[k];
-	if(!mvo) outp[k]= EyHxres[k];
+	if(comp) {
+	    outp[k]=ExHyres[k];
+	} else {
+	    outp[k]= EyHxres[k];
+	}
 	b=b+0.1;
     } 
         
