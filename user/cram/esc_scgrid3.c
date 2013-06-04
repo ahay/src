@@ -35,6 +35,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+
 #include <rsf.h>
 
 #ifndef _esc_scgrid3_h
@@ -258,16 +262,13 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     }
     on = 1;
     /* Disable TCP buffering of outgoing packets */
-#ifdef SOL_TCP
-    if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
-#else
-    if (setsockopt (is, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0)
-#endif
-    {
+#ifndef TCP_CORK
+    if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
         sf_warning ("setsockopt()[TCP_NODELAY] failed");
         close (is);
         return 1;
     }
+#endif
 #ifdef SO_NOSIGPIPE
     on = 1;
     if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
@@ -699,6 +700,10 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
             ie++;
         }
         /* Send loop for this patch */
+#ifdef TCP_CORK
+        rc = 1;
+        setsockopt (is, SOL_TCP, TCP_CORK, &rc, sizeof(rc));
+#endif
         len = 0;
         while (len < sizeof(sf_esc_scgrid3_areq)*(ie - ii)) {
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
@@ -713,6 +718,10 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
             if (rc > 0)
                 len += rc;
         }
+#ifdef TCP_CORK
+        rc = 0;
+        setsockopt (is, SOL_TCP, TCP_CORK, &rc, sizeof(rc));
+#endif
         if (len && !FD_ISSET (is, sset))
             FD_SET(is, sset);
         ns += len/sizeof(sf_esc_scgrid3_areq);
@@ -1175,7 +1184,7 @@ static bool sf_esc_scgrid3_is_inside (sf_esc_scgrid3 esc_scgrid,
 }
 
 /* Comparison routine for qsort() by angle indices */
-static int sf_esc_scgrid3_areq_sort (const void *v1, const void *v2) {
+static int sf_esc_scgrid3_areq_iab_sort (const void *v1, const void *v2) {
     sf_esc_scgrid3_areq *areq1 = (sf_esc_scgrid3_areq*)v1;
     sf_esc_scgrid3_areq *areq2 = (sf_esc_scgrid3_areq*)v2;
 
@@ -1185,6 +1194,26 @@ static int sf_esc_scgrid3_areq_sort (const void *v1, const void *v2) {
         return 1;
     else
         return 0;
+}
+
+/* Comparison routine for qsort() by socket id */
+static int sf_esc_scgrid3_areq_id_sort (const void *v1, const void *v2) {
+    sf_esc_scgrid3_areq *areq1 = (sf_esc_scgrid3_areq*)v1;
+    sf_esc_scgrid3_areq *areq2 = (sf_esc_scgrid3_areq*)v2;
+
+    if (areq1->id < areq2->id)
+        return -1;
+    else if (areq1->id > areq2->id)
+        return 1;
+    else {
+        /* Within same socket range, sort by angle index */
+        if (areq1->iab < areq2->iab)
+            return -1;
+        else if (areq1->iab > areq2->iab)
+            return 1;
+        else
+            return 0;
+    }
 }
 
 /* Comparison routine for qsort() of avals by point and stencil indices */
@@ -1339,10 +1368,19 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                     esc_scgrid->ir += esc_scgrid->ns;
                 }
             }
-            /* Sort the outgoing requests by angle index */
+            /* Store socket id as a part of request for sorting; this way,
+               requests for the same socket will be continous in memory
+               and prevent message fragmentation later */
+            for (i = 0; i < io*esc_scgrid->ns; i++) {
+                areqs_curr[i].id = esc_scgrid->sockets[areqs_curr[i].iab*2 + is_curr];
+            }
             qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
-                   sf_esc_scgrid3_areq_sort);
-            
+                   sf_esc_scgrid3_areq_id_sort);
+            /* Sort the outgoing requests by angle index */
+/*
+            qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
+                   sf_esc_scgrid3_areq_iab_sort);
+*/          
             /* Send requests for values in this current patch */
             ns_curr = sf_esc_scgrid3_send_values (esc_scgrid, areqs_curr, in_curr*esc_scgrid->ns,
                                                   is_curr, sset_curr, &mis_curr, &mid_curr);

@@ -45,6 +45,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+
 #include <rsf.h>
 
 #include "einspline.h"
@@ -213,6 +217,10 @@ static void* sf_escscd3_process_requests (void *ud) {
             }
         }
         /* Send the result back */
+#ifdef TCP_CORK
+        rc = 1;
+        setsockopt (data->sd, SOL_TCP, TCP_CORK, &rc, sizeof(rc));
+#endif
         len = 0;
         while (len < sizeof(sf_esc_scgrid3_avals)*n) {
             rc = send (data->sd, (const void*)(((unsigned char*)data->avals) + len),
@@ -229,6 +237,10 @@ static void* sf_escscd3_process_requests (void *ud) {
             if (rc > 0)
                 len += rc;
         }
+#ifdef TCP_CORK
+        rc = 0;
+        setsockopt (data->sd, SOL_TCP, TCP_CORK, &rc, sizeof(rc));
+#endif
     } while (true);
 
     pthread_mutex_lock (data->smutex);
@@ -581,15 +593,13 @@ int main (int argc, char* argv[]) {
             break;
         }
         on = 1;
-#ifdef SOL_TCP
+#ifndef TCP_CORK
         if (setsockopt (new_sd, SOL_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) { 
-#else
-        if (setsockopt (new_sd, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) < 0) { 
-#endif
             fprintf (logf, "Can not set TCP_NODELAY for a new connection\n");
             close (new_sd);
             break;
         }
+#endif
 #ifdef SO_NOSIGPIPE
         on = 1;
         if (setsockopt (new_sd, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {

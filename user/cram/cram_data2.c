@@ -35,6 +35,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#ifndef SOL_TCP
+#define SOL_TCP IPPROTO_TCP
+#endif
+
 #include <rsf.h>
 
 #ifndef _cram_data2_h
@@ -148,15 +152,13 @@ sf_cram_data2 sf_cram_data2_init (sf_file data, sf_file ddaemon)
             }
             on = 1;
             /* Disable TCP buffering of outgoing packets */
-#ifdef SOL_TCP
+#ifndef TCP_CORK
             if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
-#else
-            if (setsockopt (is, IPPROTO_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
-#endif
                 sf_warning ("setsockopt()[TCP_NODELAY] failed");
                 close (is);
                 continue;
             }
+#endif
 #ifdef SO_NOSIGPIPE
             on = 1;
             if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
@@ -345,6 +347,10 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
             trreq.id = rand ()*rand ();
             trreq.i = i;
             trreq.n = CRAM_TRBUF;
+#ifdef TCP_CORK
+            rc = 1;
+            setsockopt (cram_data->sockets[is], SOL_TCP, TCP_CORK, &rc, sizeof(rc));
+#endif
             while (len < sizeof(sf_cram_data_trreq)) {
                 rc = send (cram_data->sockets[is], (const void*)(((unsigned char*)&trreq) + len),
                            sizeof(sf_cram_data_trreq) - len, MSG_NOSIGNAL);
@@ -359,6 +365,10 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
                 if (rc > 0)
                     len += rc;
             }
+#ifdef TCP_CORK
+            rc = 0;
+            setsockopt (cram_data->sockets[is], SOL_TCP, TCP_CORK, &rc, sizeof(rc));
+#endif
             if (len) {
                 FD_ZERO(&sset);
                 FD_SET(cram_data->sockets[is], &sset);
