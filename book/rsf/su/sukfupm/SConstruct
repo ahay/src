@@ -6,7 +6,9 @@ server=os.environ.get('RSF_DATASERVER','http://www.ahay.org')
 Fetch('data2013.sgy','kfupm',server=server)
 
 # Convert to SU
-Flow('data ./binary ./header','data2013.sgy','segyread tape=$SOURCE verbose=1 endian=0 | segyclean',stdin=0)
+Flow('data ./binary ./header','data2013.sgy',
+     'segyread tape=$SOURCE verbose=1 endian=0 | segyclean',
+     stdin=0)
 
 # Gain using AGC
 Flow('data-agc','data','sugain agc=1 wagc=0.5')
@@ -27,5 +29,9 @@ Result('data-tm-as',display6)
 # Filter data to remove ground-roll
 Flow('data-tm-filt','data-tm','sufilter f=15,20,50,60')
 Result('data-tm-filt',display6)
+
+# Autocorrelation
+Flow('data-tm-filt-ac','data-tm-filt','suacor ntout=1001 sym=0')
+Result('data-tm-filt-ac',display6)
 
 End()
