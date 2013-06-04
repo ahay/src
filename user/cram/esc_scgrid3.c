@@ -1251,11 +1251,11 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
 /*< Compute escape values for a point with subsurface coordinates (z, x, y, b, a)
     by stitching local escape solutions in supercells of a phase-space grid >*/
 {
-    int i, io, ia, ib, iap, ibp, iabp, nabp;
+    int i, io, ia, ib, iab, iap, ibp, iiap, iibp;
     int ii_prev, ii_curr, ie_prev, ie_curr, in_prev, in_curr;
     int is_prev, is_curr, mis_prev, mis_curr, ns_prev, ns_curr;
     size_t mid_prev, mid_curr;
-    int nap = na/esc_scgrid->ma, nbp = nb/esc_scgrid->mb;
+    int nap = na/esc_scgrid->ma, nbp = nb/esc_scgrid->mb, mab = esc_scgrid->ma*esc_scgrid->mb;
     sf_esc_scgrid3_invals *input_prev = esc_scgrid->invals1, *input_curr = esc_scgrid->invals2;
     sf_esc_scgrid3_areq *areqs_prev = esc_scgrid->areqs1, *areqs_curr = esc_scgrid->areqs2;
     sf_esc_scgrid3_avals *output_prev = esc_scgrid->avals1, *output_curr = esc_scgrid->avals2;
@@ -1265,6 +1265,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
         sf_error ("na should be divisible by ma");
     if (nb % esc_scgrid->mb)
         sf_error ("nb should be divisible by mb");
+    if (1 == na / esc_scgrid->ma && 1 == nb / esc_scgrid->mb)
+        sf_error ("Only one angle patch is possible, need at least two");
     if ((nap*nbp) % 2)
         sf_error ("Number of angle patches should be even");
 
@@ -1292,126 +1294,166 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
         return;
     }
 
-    nabp = (nap*nbp)/2; /* Number of angle patches */
-    for (iabp = 0; iabp < nabp; iabp++) { /* Loop over angle patches */
-        /* Initialize two angle patches */
-        iap = (iabp*2) / nbp;
-        ibp = (iabp*2) % nbp;
-        sf_esc_scgrid3_init_patch (esc_scgrid, input_prev, ibp, iap,
-                                   z, x, y, a0, da, b0, db, na, nb);
-        iap = (iabp*2 + 1) / nbp;
-        ibp = (iabp*2 + 1) % nbp;
-        sf_esc_scgrid3_init_patch (esc_scgrid, input_curr, ibp, iap,
-                                   z, x, y, a0, da, b0, db, na, nb);
-        /* Number of elements in the input array */
-        in_curr = esc_scgrid->ma*esc_scgrid->mb;
-        in_prev = esc_scgrid->ma*esc_scgrid->mb;
-        /* First and last indices in the input array */
-        ii_curr = 0;
-        ii_prev = 0;
-        ie_curr = esc_scgrid->ma*esc_scgrid->mb - 1;
-        ie_prev = esc_scgrid->ma*esc_scgrid->mb - 1;
-        ns_curr = 0;
-        ns_prev = 0;
-        /* Socket id shift to prevent mixing up contents for the two patches at the receive stage */
-        is_curr = 0;
-        is_prev = 1;
+    /* Initialize first two angle patches */
+    sf_esc_scgrid3_init_patch (esc_scgrid, input_prev, 0, 0,
+                               z, x, y, a0, da, b0, db, na, nb);
+    sf_esc_scgrid3_init_patch (esc_scgrid, input_curr,
+                               nbp > 1 ? 1 : 0, nbp > 1 ? 0 : 1,
+                               z, x, y, a0, da, b0, db, na, nb);
+    /* Next angle patch to process */ 
+    iap = 0;
+    ibp = 2;
+    if (ibp >= nbp) {
+        iap = 1;
+        ibp = 0;
+    }
+    /* Indices with angle patch */
+    iiap = 0;
+    iibp = 0;
+    /* Absolute angle index */
+    iab = (iap*esc_scgrid->ma + iiap)*nb + (ibp*esc_scgrid->mb + iibp);
+    /* Number of elements in the input array */
+    in_curr = mab;
+    in_prev = mab;
+    /* First and last indices in the input array */
+    ii_curr = 0;
+    ii_prev = 0;
+    ie_curr = mab - 1;
+    ie_prev = mab - 1;
+    ns_curr = 0;
+    ns_prev = 0;
+    /* Socket id shift to prevent mixing up contents for the two patches at the receive stage */
+    is_curr = 0;
+    is_prev = 1;
 
-        /* Prepare-send-receive-process loop; there is an overlap
-           in communication here to hide transmission latency;
-           one patch is sent, then another one is prepared and sent too,
-           then the first one is received while the second one is being
-           processed remotely; and so on */
-        do {
-            io = 0;
-            ns_curr = 0;
-            if (in_curr) {
-                /* Prepare requests for the current patch */
-                for (i = ii_curr; i <= ie_curr; i++) {
-                    if (input_curr[i].iab >= 0) {
-                        sf_esc_scgrid3_prepare_request (esc_scgrid, i, &input_curr[i],
-                                                        &areqs_curr[io*esc_scgrid->ns]);
-                        io++;
-                        esc_scgrid->ir += esc_scgrid->ns;
-                    }
+    do {
+        io = 0;
+        ns_curr = 0;
+        if (in_curr) {
+            /* Prepare requests for the current patch */
+            for (i = ii_curr; i <= ie_curr; i++) {
+                if (input_curr[i].iab >= 0) {
+                    sf_esc_scgrid3_prepare_request (esc_scgrid, i, &input_curr[i],
+                                                    &areqs_curr[io*esc_scgrid->ns]);
+                    io++;
+                    esc_scgrid->ir += esc_scgrid->ns;
                 }
-                /* Sort the outgoing requests by angle index */
-                qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
-                       sf_esc_scgrid3_areq_sort);
-                
-                /* Send requests for values in this current patch */
-                ns_curr = sf_esc_scgrid3_send_values (esc_scgrid, areqs_curr, in_curr*esc_scgrid->ns,
-                                                      is_curr, sset_curr, &mis_curr, &mid_curr);
-            } /* if in_curr */
-            if (ns_prev) {
-                /* Receive values for the previous patch */
-                sf_esc_scgrid3_recv_values (esc_scgrid, areqs_prev, output_prev, sset_prev,
-                                            mis_prev, ns_prev, in_prev*esc_scgrid->ns, mid_prev);
-                /* Sort the incoming angle values by point and stencil index */
-                qsort (output_prev, in_prev*esc_scgrid->ns, sizeof(sf_esc_scgrid3_avals),
-                       sf_esc_scgrid3_avals_sort);        
-                /* Find completed points */
-                io = in_prev;
-                /* Interpolate points */
+            }
+            /* Sort the outgoing requests by angle index */
+            qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
+                   sf_esc_scgrid3_areq_sort);
+            
+            /* Send requests for values in this current patch */
+            ns_curr = sf_esc_scgrid3_send_values (esc_scgrid, areqs_curr, in_curr*esc_scgrid->ns,
+                                                  is_curr, sset_curr, &mis_curr, &mid_curr);
+        } /* if in_curr */
+        if (ns_prev) {
+            /* Receive values for the previous patch */
+            sf_esc_scgrid3_recv_values (esc_scgrid, areqs_prev, output_prev, sset_prev,
+                                        mis_prev, ns_prev, in_prev*esc_scgrid->ns, mid_prev);
+            /* Sort the incoming angle values by point and stencil index */
+            qsort (output_prev, in_prev*esc_scgrid->ns, sizeof(sf_esc_scgrid3_avals),
+                   sf_esc_scgrid3_avals_sort);        
+            /* Find completed points */
+            io = in_prev;
+            /* Interpolate points */
 #ifdef _OPENMP
 #pragma omp parallel for                \
-                schedule(dynamic,1) \
-                private(i)          \
-                shared(io,in_curr,in_prev,nap,nbp,areqs_curr,areqs_prev,input_curr,input_prev,output_curr,output_prev,esc_scgrid)
+            schedule(dynamic,1) \
+            private(i)          \
+            shared(io,in_curr,in_prev,nap,nbp,areqs_curr,areqs_prev,input_curr,input_prev,output_curr,output_prev,esc_scgrid)
 #endif  
-                for (i = 0; i < io; i++) {
-                    sf_esc_scgrid3_interp_point (esc_scgrid, &input_prev[output_prev[i*esc_scgrid->ns].ud1],
-                                                 &output_prev[i*esc_scgrid->ns]);
-                    if (false == sf_esc_scgrid3_is_inside (esc_scgrid, input_prev[output_prev[i*esc_scgrid->ns].ud1].vals,
-                                                           &input_prev[output_prev[i*esc_scgrid->ns].ud1].a,
-                                                           &input_prev[output_prev[i*esc_scgrid->ns].ud1].b, true)) {
-                        /* Move completed points to the output array */
-                        memcpy (&avals[input_prev[output_prev[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
-                                input_prev[output_prev[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
-                        /* Decrease number of input points atomically */
+            for (i = 0; i < io; i++) {
+                sf_esc_scgrid3_interp_point (esc_scgrid, &input_prev[output_prev[i*esc_scgrid->ns].ud1],
+                                             &output_prev[i*esc_scgrid->ns]);
+                if (false == sf_esc_scgrid3_is_inside (esc_scgrid, input_prev[output_prev[i*esc_scgrid->ns].ud1].vals,
+                                                       &input_prev[output_prev[i*esc_scgrid->ns].ud1].a,
+                                                       &input_prev[output_prev[i*esc_scgrid->ns].ud1].b, true)) {
+                    /* Move completed points to the output array */
+                    memcpy (&avals[input_prev[output_prev[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
+                            input_prev[output_prev[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
+                    /* Decrease number of input points atomically */
 #if defined(__ICC)
-                        _InterlockedExchangeAdd ((void*)&in_prev, -1);
+                    _InterlockedExchangeAdd ((void*)&in_prev, -1);
 #elif defined(__GNUC__) && (__GNUC__ >= 4)
-                        __sync_fetch_and_add (&in_prev, -1);
+                    __sync_fetch_and_add (&in_prev, -1);
 #else
 #pragma omp critical
-                        {
-                        in_prev--;
-                        }
-#endif
-                        input_prev[output_prev[i*esc_scgrid->ns].ud1].iab = -1;
-                    } else {
-                        /* Increment interpolation step counter atomically */
-#if defined(__ICC)
-                        _InterlockedExchangeAdd ((void*)&esc_scgrid->is, 1);
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
-                        __sync_fetch_and_add (&esc_scgrid->is, 1);
-#else
-#pragma omp critical
-                        {
-                        esc_scgrid->is++;
-                        }
-#endif
+                    {
+                    in_prev--;
                     }
-                } /* Loop over processed points */
-                /* Find new first and last indices in the input array */
-                while (input_prev[ii_prev].iab == -1 && ii_prev < ie_prev)
-                    ii_prev++;
-                while (input_prev[ie_prev].iab == -1 && ie_prev > ii_prev)
-                    ie_prev--;
-            } /* if in_prev */
-            sf_esc_scgrid3_swap_ints (&ii_prev, &ii_curr);
-            sf_esc_scgrid3_swap_ints (&ie_prev, &ie_curr);
-            sf_esc_scgrid3_swap_ints (&in_prev, &in_curr);
-            sf_esc_scgrid3_swap_ints (&mis_prev, &mis_curr);
-            sf_esc_scgrid3_swap_ints (&ns_prev, &ns_curr);
-            sf_esc_scgrid3_swap_ints (&is_prev, &is_curr);
-            sf_esc_scgrid3_swap_sizets (&mid_prev, &mid_curr);
-            sf_esc_scgrid3_swap_pointers ((void**)&input_prev, (void**)&input_curr);
-            sf_esc_scgrid3_swap_pointers ((void**)&areqs_prev, (void**)&areqs_curr);
-            sf_esc_scgrid3_swap_pointers ((void**)&output_prev, (void**)&output_curr);
-            sf_esc_scgrid3_swap_pointers ((void**)&sset_prev, (void**)&sset_curr);
-        } while (in_prev || in_curr);
-    } /* Loop over angle patches */        
+#endif
+                    input_prev[output_prev[i*esc_scgrid->ns].ud1].iab = -1;
+                } else {
+                    /* Increment interpolation step counter atomically */
+#if defined(__ICC)
+                    _InterlockedExchangeAdd ((void*)&esc_scgrid->is, 1);
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+                    __sync_fetch_and_add (&esc_scgrid->is, 1);
+#else
+#pragma omp critical
+                    {
+                    esc_scgrid->is++;
+                    }
+#endif
+                }
+            } /* Loop over processed points */
+            if (iab < na*nb) {
+                for (i = 0; i < mab; i++) {
+                    if (input_prev[i].iab == -1) {
+                        /* Add new input point */
+                        input_prev[i].vals[ESC3_Z] = z;
+                        input_prev[i].vals[ESC3_X] = x;
+                        input_prev[i].vals[ESC3_Y] = y;
+                        input_prev[i].vals[ESC3_T] = 0.0;
+#ifdef ESC_EQ_WITH_L
+                        input_prev[i].vals[ESC3_L] = 0.0;
+#endif
+                        input_prev[i].b = b0 + (ibp*esc_scgrid->mb + iibp)*db;
+                        input_prev[i].a = a0 + (iap*esc_scgrid->ma + iiap)*da;
+                        input_prev[i].iab = iab;
+                        in_prev++;
+                        /* Next input angle */
+                        iab++;
+                        if (iab == na*nb)
+                            break;
+                        iibp++;
+                        if (esc_scgrid->mb == iibp) {
+                            /* End of vertical line in a patch */
+                            iibp = 0;
+                            iiap++;
+                            if (esc_scgrid->ma == iiap) {
+                                /* End of patch */ 
+                                iiap = 0;
+                                ibp++;
+                                if (nbp == ibp) {
+                                    /* End of vertical group of patches */
+                                    ibp = 0;
+                                    iap++;
+                                }
+                            }
+                            iab = (iap*esc_scgrid->ma + iiap)*nb + (ibp*esc_scgrid->mb + iibp);
+                        }
+                    }
+                }
+            }
+            /* Find new first and last indices in the input array */
+            while (input_prev[ii_prev].iab == -1 && ii_prev < ie_prev)
+                ii_prev++;
+            while (input_prev[ie_prev].iab == -1 && ie_prev > ii_prev)
+                ie_prev--;
+        } /* if in_prev */
+        sf_esc_scgrid3_swap_ints (&ii_prev, &ii_curr);
+        sf_esc_scgrid3_swap_ints (&ie_prev, &ie_curr);
+        sf_esc_scgrid3_swap_ints (&in_prev, &in_curr);
+        sf_esc_scgrid3_swap_ints (&mis_prev, &mis_curr);
+        sf_esc_scgrid3_swap_ints (&ns_prev, &ns_curr);
+        sf_esc_scgrid3_swap_ints (&is_prev, &is_curr);
+        sf_esc_scgrid3_swap_sizets (&mid_prev, &mid_curr);
+        sf_esc_scgrid3_swap_pointers ((void**)&input_prev, (void**)&input_curr);
+        sf_esc_scgrid3_swap_pointers ((void**)&areqs_prev, (void**)&areqs_curr);
+        sf_esc_scgrid3_swap_pointers ((void**)&output_prev, (void**)&output_curr);
+        sf_esc_scgrid3_swap_pointers ((void**)&sset_prev, (void**)&sset_curr);
+    } while (in_prev || in_curr);
 }
 
