@@ -51,7 +51,7 @@
 #include "esc_scgrid3.h"
 #include "esc_helper.h"
 
-/* AF_INET_SDP - Socket Direct Protocol */
+/* This can be replaced with AF_INET_SDP(27) for Socket Direct Protocol */
 #define ESC_SCD3_FAMILY AF_INET
 
 /* Convert local domain name into an ASCII string with IP address */
@@ -416,6 +416,7 @@ int main (int argc, char* argv[]) {
         listen_sd = socket (ESC_SCD3_FAMILY, SOCK_STREAM, 0);
         if (listen_sd < 0)
             sf_error ("socket() failed [CPU %d], errno=%d", icpu, errno);
+/*      
         new_sd = connect (listen_sd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
         if (0 == new_sd) {
             sf_warning ("Daemon is already running [CPU %d]", icpu);
@@ -426,7 +427,7 @@ int main (int argc, char* argv[]) {
             free (str);
             return 0;
         }
-
+*/
         sleep (tdel*(icpu/ith));
         nc = 0;
         scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)(iab1 - iab0 + 1),
@@ -486,7 +487,6 @@ int main (int argc, char* argv[]) {
         close (listen_sd);
         sf_error ("setsockopt() failed [CPU %d], errno=%d", icpu, errno);
     }
-
     /* Set socket to be non-blocking; all of the sockets for
        the incoming connections will also be non-blocking */
     if (ioctl (listen_sd, FIONBIO, (char *)&on) < 0) {

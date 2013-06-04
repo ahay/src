@@ -37,6 +37,9 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
+#ifdef LINUX
+#include <net/if.h>
+#endif
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -46,8 +49,44 @@
 
 #include "cram_data2.h"
 
+/* This can be replaced with AF_INET_SDP(27) for Socket Direct Protocol */
+#define CRAM_DATA_FAMILY AF_INET
+
 /* Convert local domain name into an ASCII string with IP address */
-static char* sf_cramdd_local_ip () {
+#ifdef LINUX
+static char *ip_linux = NULL;
+
+static char* sf_escscd3_local_ip (int i) {
+    int s;
+    struct ifconf ifconf;
+    struct ifreq ifr[50];
+    struct sockaddr_in *s_in = NULL;
+    int ifs;
+
+    s = socket (AF_INET, SOCK_STREAM, 0);
+    if (s < 0)
+        sf_error ("socket() failed, errno=%d", errno);
+
+    ifconf.ifc_buf = (char*)ifr;
+    ifconf.ifc_len = sizeof(ifr);
+
+    if (ioctl(s, SIOCGIFCONF, &ifconf) == -1)
+        sf_error ("ioctl()[SIOCGIFCONF] failed, errno=%d", errno);
+    ifs = ifconf.ifc_len/sizeof(ifr[0]);
+
+    if (i >= ifs)
+        sf_error ("Can not choose interface %d, only %d available", i, ifs);
+
+    ip_linux = (char*)malloc(INET_ADDRSTRLEN);
+    s_in = (struct sockaddr_in*)&ifr[i].ifr_addr;
+
+    if (!inet_ntop (AF_INET, &s_in->sin_addr, ip_linux, INET_ADDRSTRLEN))
+        sf_error ("inet_ntop() failed, errno=%d", errno);
+
+    close (s);
+    return ip_linux;
+#else
+static char* sf_escscd3_local_ip () {
     char hostname[1024];
     struct hostent *he;
     struct in_addr **addr_list;
@@ -61,6 +100,7 @@ static char* sf_cramdd_local_ip () {
         return (inet_ntoa (*addr_list[0]));
 
     return NULL;
+#endif
 }
 
 /* Every connection servicing thread gets necessary data via this structure */
@@ -211,6 +251,9 @@ int main (int argc, char* argv[]) {
     size_t i0, i1, n, nb;
     int ith = 1, nt, icpu, ncpu, tout;
     int port, nthreads, tmpfile = 0;
+#ifdef LINUX
+    int inet = 0;
+#endif
     bool kmah;
     float trd, *traces = NULL;
     sf_file in, data = NULL, out;
@@ -253,8 +296,18 @@ int main (int argc, char* argv[]) {
 
     memset (&serv_addr, 0, sizeof (serv_addr));
 
+#ifdef LINUX
+    if (!sf_getint ("inet", &inet)) inet = 1;
+    /* Network interface index */
+#endif
+
     if (ith) {
-        if ((ip = sf_cramdd_local_ip ())) {
+#ifdef LINUX
+        if ((ip = sf_escscd3_local_ip (inet)))
+#else
+        if ((ip = sf_escscd3_local_ip ()))
+#endif
+        {
             if (0 == icpu % ith)
                 sf_warning ("Assuming IP address %s [CPU %d]", ip, icpu);
             serv_addr.sin_family = AF_INET; /* Internet address family */
