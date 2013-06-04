@@ -362,7 +362,7 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
             if (len) {
                 FD_ZERO(&sset);
                 FD_SET(cram_data->sockets[is], &sset);
-                timeout.tv_sec = 60;
+                timeout.tv_sec = 3600;
                 timeout.tv_usec = 0;
                 len = 0;
                 /* Wait for a response from the server */

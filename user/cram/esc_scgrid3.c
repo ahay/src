@@ -757,8 +757,8 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
 
     /* Now, try to get results back */
     while (ns) { /* Poll sockets for incoming data */
-        /* Wait for 60 secs max */
-        timeout.tv_sec  = 60;
+        /* Wait for a while for results to get back */
+        timeout.tv_sec  = 3600;
         timeout.tv_usec = 0;
         memcpy (&wset, sset, sizeof(fd_set));
         rc = select (mis + 1, &wset, NULL, NULL, &timeout);
