@@ -1184,6 +1184,7 @@ static bool sf_esc_scgrid3_is_inside (sf_esc_scgrid3 esc_scgrid,
 }
 
 /* Comparison routine for qsort() by angle indices */
+/*
 static int sf_esc_scgrid3_areq_iab_sort (const void *v1, const void *v2) {
     sf_esc_scgrid3_areq *areq1 = (sf_esc_scgrid3_areq*)v1;
     sf_esc_scgrid3_areq *areq2 = (sf_esc_scgrid3_areq*)v2;
@@ -1195,6 +1196,7 @@ static int sf_esc_scgrid3_areq_iab_sort (const void *v1, const void *v2) {
     else
         return 0;
 }
+*/
 
 /* Comparison routine for qsort() by socket id */
 static int sf_esc_scgrid3_areq_id_sort (const void *v1, const void *v2) {
@@ -1261,40 +1263,30 @@ static void sf_esc_scgrid3_init_patch (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
 }
 
 /* Basic value swapping routines */
-static void sf_esc_scgrid3_swap_pointers (void **p1, void **p2) {
-    void *p = *p1;
-    *p1 = *p2; *p2 = p;
-}
-static void sf_esc_scgrid3_swap_ints (int *i1, int *i2) {
-    int i = *i1;
-    *i1 = *i2; *i2 = i;
-}
-static void sf_esc_scgrid3_swap_sizets (size_t *i1, size_t *i2) {
-    int i = *i1;
-    *i1 = *i2; *i2 = i;
-}
+#define SWAP_TYPE(T) static void swap_##T (T *t1, T *t2) { T t = *t1; *t1 = *t2; *t2 = t; }
+#define SWAP_PTYPE(T) static void swap_ptr_##T (T **p1, T **p2) { T *p = *p1; *p1 = *p2; *p2 = p; }
+SWAP_TYPE(int)
+SWAP_TYPE(size_t)
+SWAP_PTYPE(sf_esc_scgrid3_invals)
+SWAP_PTYPE(sf_esc_scgrid3_areq)
+SWAP_PTYPE(sf_esc_scgrid3_avals)
+SWAP_PTYPE(fd_set)
 
-static inline void sf_esc_scgrid3_atomic_add (void *ptr, int i) {
+/* Use compiler intrinsics for atomic adds on Linux,
+   all other platforms will use this slower version to avoid compilation problems */ 
 #ifdef LINUX
-/* Use compiler intrinsics for atomic adds on Linux */
 #if defined(__ICC)
-    _InterlockedExchangeAdd (ptr, i);
+#define ATOMIC_ADD(p,i) _InterlockedExchangeAdd (p, i)
 #elif defined(__GNUC__) && (__GNUC__ >= 4)
-    __sync_fetch_and_add (ptr, i);
+#define ATOMIC_ADD(p,i) __sync_fetch_and_add (p, i)
 #else
-#pragma omp critical
-    {
-    *ptr = *ptr + i;
-    }
+#define ATOMIC_ADD(T) #pragma omp critical \
+{ *p = *p + i; } }
 #endif
-/* All other platforms will use this slower version to avoid compilation problems */ 
 #else
-#pragma omp critical
-    {
-    *ptr = *ptr + i;
-    }
+#define ATOMIC_ADD(T) #pragma omp critical \
+{ *p = *p + i; } }
 #endif
-}
 
 void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
                              float a0, float da, float b0, float db, int na, int nb,
@@ -1304,8 +1296,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
 {
     int i, io, ia, ib, iab, iap, ibp, iiap, iibp;
     int ii_prev, ii_curr, ie_prev, ie_curr, in_prev, in_curr;
-    int is_prev, is_curr, mis_prev, mis_curr, ns_prev, ns_curr;
-    size_t mid_prev, mid_curr;
+    int is_prev = -1, is_curr = -1, mis_prev = -1, mis_curr = -1, ns_prev = 0, ns_curr = 0;
+    size_t mid_prev = 0, mid_curr = 0;
     int nap = na/esc_scgrid->ma, nbp = nb/esc_scgrid->mb, mab = esc_scgrid->ma*esc_scgrid->mb;
     sf_esc_scgrid3_invals *input_prev = esc_scgrid->invals1, *input_curr = esc_scgrid->invals2;
     sf_esc_scgrid3_areq *areqs_prev = esc_scgrid->areqs1, *areqs_curr = esc_scgrid->areqs2;
@@ -1433,11 +1425,11 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                     memcpy (&avals[input_prev[output_prev[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
                             input_prev[output_prev[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
                     /* Decrease number of input points atomically */
-                    sf_esc_scgrid3_atomic_add ((void*)&in_prev, -1);
+                    ATOMIC_ADD (&in_prev, -1);
                     input_prev[output_prev[i*esc_scgrid->ns].ud1].iab = -1;
                 } else {
                     /* Increment interpolation step counter atomically */
-                    sf_esc_scgrid3_atomic_add ((void*)&esc_scgrid->is, 1);
+                    ATOMIC_ADD (&esc_scgrid->is, (size_t)1);
                 }
             } /* Loop over processed points */
             if (iab < na*nb) {
@@ -1486,17 +1478,17 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
             while (input_prev[ie_prev].iab == -1 && ie_prev > ii_prev)
                 ie_prev--;
         } /* if in_prev */
-        sf_esc_scgrid3_swap_ints (&ii_prev, &ii_curr);
-        sf_esc_scgrid3_swap_ints (&ie_prev, &ie_curr);
-        sf_esc_scgrid3_swap_ints (&in_prev, &in_curr);
-        sf_esc_scgrid3_swap_ints (&mis_prev, &mis_curr);
-        sf_esc_scgrid3_swap_ints (&ns_prev, &ns_curr);
-        sf_esc_scgrid3_swap_ints (&is_prev, &is_curr);
-        sf_esc_scgrid3_swap_sizets (&mid_prev, &mid_curr);
-        sf_esc_scgrid3_swap_pointers ((void**)&input_prev, (void**)&input_curr);
-        sf_esc_scgrid3_swap_pointers ((void**)&areqs_prev, (void**)&areqs_curr);
-        sf_esc_scgrid3_swap_pointers ((void**)&output_prev, (void**)&output_curr);
-        sf_esc_scgrid3_swap_pointers ((void**)&sset_prev, (void**)&sset_curr);
+        swap_int (&ii_prev, &ii_curr);
+        swap_int (&ie_prev, &ie_curr);
+        swap_int (&in_prev, &in_curr);
+        swap_int (&mis_prev, &mis_curr);
+        swap_int (&ns_prev, &ns_curr);
+        swap_int (&is_prev, &is_curr);
+        swap_size_t (&mid_prev, &mid_curr);
+        swap_ptr_sf_esc_scgrid3_invals (&input_prev, &input_curr);
+        swap_ptr_sf_esc_scgrid3_areq (&areqs_prev, &areqs_curr);
+        swap_ptr_sf_esc_scgrid3_avals (&output_prev, &output_curr);
+        swap_ptr_fd_set (&sset_prev, &sset_curr);
     } while (in_prev || in_curr);
 }
 
