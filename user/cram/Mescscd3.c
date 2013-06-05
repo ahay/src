@@ -115,6 +115,7 @@ typedef struct {
     sf_esc_scgrid3_avals *avals;
     pthread_mutex_t      *smutex;
     int                  *njobs; /* Pointer to the job counter */
+    size_t                ns, nr, ir, is; /* Send/receive statistics */
     int                   nd; /* Maximum number of requests to expect */
     int                   sd; /* Socket to read/write from/to */
     FILE                 *logf; /* Log file */
@@ -184,6 +185,12 @@ static void* sf_escscd3_process_requests (void *ud) {
                     fprintf (data->logf, "Connection was terminated for socket %d\n", data->sd);
                 else
                     fprintf (data->logf, "Connection was closed for socket %d\n", data->sd);
+                fprintf (data->logf, "%g GBytes received, %lu requests processed, average request %g KBytes for socket %d\n",
+                         1e-9*(float)data->nr, data->ir, data->ir ? 1e-3*(float)data->nr/(float)data->ir : 0.0,
+                         data->sd);
+                fprintf (data->logf, "%g GBytes sent, %lu responses prepared, average response %g KBytes for socket %d\n",
+                         1e-9*(float)data->ns, data->is, data->is ? 1e-3*(float)data->ns/(float)data->is : 0.0,
+                         data->sd);
                 fflush (data->logf);
                 close (data->sd);
                 pthread_mutex_lock (data->smutex);
@@ -198,6 +205,8 @@ static void* sf_escscd3_process_requests (void *ud) {
         }
         /* Process the received requests */
         n = len / sizeof(sf_esc_scgrid3_areq);
+        data->ir++;
+        data->nr += len;
         for (i = 0; i < n; i++) {
             data->avals[i].id = data->areqs[i].id;
             data->avals[i].ud1 = data->areqs[i].ud1;
@@ -237,6 +246,8 @@ static void* sf_escscd3_process_requests (void *ud) {
             if (rc > 0)
                 len += rc;
         }
+        data->is++;
+        data->ns += len;
 #ifdef TCP_CORK
         rc = 0;
         setsockopt (data->sd, SOL_TCP, TCP_CORK, &rc, sizeof(rc));
@@ -635,6 +646,10 @@ int main (int argc, char* argv[]) {
         rwork->nd = ma*mb*SCGRID3_MAX_STENCIL;
         rwork->smutex = &smutex;
         rwork->njobs = &njobs;
+        rwork->is = 0;
+        rwork->ir = 0;
+        rwork->ns = 0;
+        rwork->nr = 0;
 
         pthread_mutex_lock (&smutex);
         if (njobs < nthreads) {
