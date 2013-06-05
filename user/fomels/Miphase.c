@@ -77,7 +77,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 	
-    if (!sf_getint("order",&nh)) nh=10;
+    if (!sf_getint("order",&nh)) nh=100;
     /* Hilbert transformer order */
     if (!sf_getfloat("ref",&c)) c=1.;
     /* Hilbert transformer reference (0.5 < ref <= 1) */

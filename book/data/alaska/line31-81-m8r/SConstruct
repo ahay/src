@@ -60,6 +60,13 @@ Flow('tshots','tline shotmask',maskshot)
 
 Plot('shots','grey title=Shots gainpanel=all pclip=90',view=1)
 
+Result('shots',
+       '''
+       byte gainpanel=all pclip=90 |
+       grey3 frame1=1000 frame2=50 frame3=30 title=Shots 
+       flat=n point1=0.7 point2=0.7
+       ''')
+
 ###########################
 # Previous Stack
 ###########################
@@ -140,10 +147,31 @@ Result('estat','grey color=j mean=y scalebar=y barlabel=Time barunit=s title="El
 
 Flow('eshots','shots estat','datstretch datum=${SOURCES[1]}')
 
+Result('eshots',
+       '''
+       byte gainpanel=all pclip=90 |
+       grey3 frame1=1000 frame2=50 frame3=30 title="Elevation Statics"
+       flat=n point1=0.7 point2=0.7
+       ''')
+
 ############################
 # Gain, mute, and dip filter
 ############################
 
+Flow('gshots','eshots',
+     '''
+     pow pow1=1 | put d3= |
+     mutter half=n v0=%g tp=0 |
+     shapeagc rect1=250
+     ''' % (5280/0.488))
 
+Result('gshots',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=50 frame3=30 title="Gain & Mute"
+       flat=n point1=0.7 point2=0.7
+       ''')
+
+# dip filter
 
 End()
