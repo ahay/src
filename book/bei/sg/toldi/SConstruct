@@ -42,7 +42,7 @@ for s in range(2):
          '''
          window min1=%g n1=1 |
          dd form=native type=float |
-         grey wanttitle=n allpos=y
+         grey wanttitle=n allpos=y color=j
          ''' % (1,2.5-0.004)[s])
 
 Result('recipslice','slice0 slice1','OverUnderAniso')
