@@ -1280,12 +1280,10 @@ SWAP_PTYPE(fd_set)
 #elif defined(__GNUC__) && (__GNUC__ >= 4)
 #define ATOMIC_ADD(p,i) __sync_fetch_and_add (p, i)
 #else
-#define ATOMIC_ADD(T) #pragma omp critical \
-{ *p = *p + i; } }
+#define ATOMIC_ADD(p,i) { *(p) = *(p) + (i); }
 #endif
 #else
-#define ATOMIC_ADD(T) #pragma omp critical \
-{ *p = *p + i; } }
+#define ATOMIC_ADD(p,i) { *(p) = *(p) + (i); }
 #endif
 
 void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
@@ -1425,10 +1423,16 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                     memcpy (&avals[input_prev[output_prev[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
                             input_prev[output_prev[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
                     /* Decrease number of input points atomically */
+#ifndef LINUX
+#pragma omp critical
+#endif
                     ATOMIC_ADD (&in_prev, -1);
                     input_prev[output_prev[i*esc_scgrid->ns].ud1].iab = -1;
                 } else {
                     /* Increment interpolation step counter atomically */
+#ifndef LINUX
+#pragma omp critical
+#endif
                     ATOMIC_ADD (&esc_scgrid->is, (size_t)1);
                 }
             } /* Loop over processed points */
