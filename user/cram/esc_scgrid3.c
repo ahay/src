@@ -1274,6 +1274,28 @@ static void sf_esc_scgrid3_swap_sizets (size_t *i1, size_t *i2) {
     *i1 = *i2; *i2 = i;
 }
 
+static inline void sf_esc_scgrid3_atomic_add (void *ptr, int i) {
+#ifdef LINUX
+/* Use compiler intrinsics for atomic adds on Linux */
+#if defined(__ICC)
+    _InterlockedExchangeAdd (ptr, i);
+#elif defined(__GNUC__) && (__GNUC__ >= 4)
+    __sync_fetch_and_add (ptr, i);
+#else
+#pragma omp critical
+    {
+    *ptr = *ptr + i;
+    }
+#endif
+/* All other platforms will use this slower version to avoid compilation problems */ 
+#else
+#pragma omp critical
+    {
+    *ptr = *ptr + i;
+    }
+#endif
+}
+
 void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float y,
                              float a0, float da, float b0, float db, int na, int nb,
                              float *avals)
@@ -1411,32 +1433,15 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                     memcpy (&avals[input_prev[output_prev[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
                             input_prev[output_prev[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
                     /* Decrease number of input points atomically */
-#if defined(__ICC)
-                    _InterlockedExchangeAdd ((void*)&in_prev, -1);
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
-                    __sync_fetch_and_add (&in_prev, -1);
-#else
-#pragma omp critical
-                    {
-                    in_prev--;
-                    }
-#endif
+                    sf_esc_scgrid3_atomic_add ((void*)&in_prev, -1);
                     input_prev[output_prev[i*esc_scgrid->ns].ud1].iab = -1;
                 } else {
                     /* Increment interpolation step counter atomically */
-#if defined(__ICC)
-                    _InterlockedExchangeAdd ((void*)&esc_scgrid->is, 1);
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
-                    __sync_fetch_and_add (&esc_scgrid->is, 1);
-#else
-#pragma omp critical
-                    {
-                    esc_scgrid->is++;
-                    }
-#endif
+                    sf_esc_scgrid3_atomic_add ((void*)&esc_scgrid->is, 1);
                 }
             } /* Loop over processed points */
             if (iab < na*nb) {
+                /* Fill vacant positions with new input points */
                 for (i = 0; i < mab; i++) {
                     if (input_prev[i].iab == -1) {
                         /* Add new input point */
