@@ -299,6 +299,11 @@ class Project(Environment):
             self.wsplit = True
         else:
             self.wsplit = False
+        raddenv = os.environ.get('RSF_RADDENV', None)
+        if raddenv:
+            self.raddenv = raddenv
+        else:
+            self.raddenv = ''
 
         checkpar = self.get('CHECKPAR')
         self.checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
@@ -448,7 +453,10 @@ class Project(Environment):
                 self.ip = 0
                 
         if node != 'localhost':
-            remote = '%s %s ' % (WhereIs('env'),self.environ)
+            if self.raddenv:
+                remote = ' '
+            else:
+                remote = '%s %s ' % (WhereIs('env'),self.environ)
         else:
             remote = ''
             
@@ -459,8 +467,12 @@ class Project(Environment):
         # May need to do it remotely
         if remote:
             command = re.sub('"','\\"',command)
-            command = string.join([WhereIs('ssh'),node,'\"cd ',
-                                   self.cwd,';',command,'\"'])
+            if self.raddenv:
+                command = string.join([WhereIs('ssh'),node,'\"',self.raddenv,
+                                      '; cd ',self.cwd,';',command,'\"'])
+            else:
+                command = string.join([WhereIs('ssh'),node,'\"cd ',
+                                       self.cwd,';',command,'\"'])
                         
         targets = []
         for file in tfiles:
