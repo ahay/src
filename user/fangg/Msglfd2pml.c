@@ -286,6 +286,7 @@ int main(int argc, char* argv[])
     sf_warning("dx=%f dz=%f dt=%f", dx, dz, dt);
     sf_warning("lenx=%d lenz=%d marg=%d pmlout=%d", lenx, lenz, marg, pmlout);
     sf_warning("sp.decay=%d sp.srange=%d",sp.decay,sp.srange);
+    
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx,sxz]=[%d,%d] Gx=%f",sxx[ix], sxz[ix], Gx[ix][0][0]);
     }
@@ -295,9 +296,9 @@ int main(int argc, char* argv[])
     
     for (it = 0; it < nt; it++) {
 	if (it%10==0) sf_warning("it=%d/%d;", it, nt);
-	if ((it*dt)<=sp.trunc) {
+	/*if ((it*dt)<=sp.trunc) {
 	    explsourcet(txxn0, source, it, spx+pmlout+marg, spz+pmlout+marg, nxb, nzb, &sp);
-	}
+	    }*/
     
 	/*velocity*/
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++ ) {
@@ -316,8 +317,13 @@ int main(int argc, char* argv[])
 		txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix+1, iz) + ldz(vzn1, ix, iz+1));
 	    }
 	}
+
 	/*Stress PML */
 	pml_txx(txxn1, vxn1, vzn1, c11, ldx, ldz, freesurface);
+	
+	if ((it*dt)<=sp.trunc) {
+	    explsourcet(txxn1, source, it, spx+pmlout+marg, spz+pmlout+marg, nxb, nzb, &sp);
+	}
 
 	/*n1 -> n0*/
 	time_step_exch(txxn0, txxn1, it);
