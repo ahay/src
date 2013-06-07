@@ -32,7 +32,10 @@ sf_file inFile, outFile;
 
 }*/
 
-void getTrace (int i2r, int i3r) {
+void getTrace (float xr, float yr) {
+
+	const int i2r = (xr - o2) / d2;
+	const int i3r = (yr - o3) / d3;
 
 	const size_t posr = (i3r * n2 + i2r) * n1 * sizeof (float);
 	sf_seek (inFile, posr, SEEK_SET);		
@@ -80,8 +83,11 @@ int main (int argc, char* argv[]) {
 	const float sint = sin (-thetaRad);
 	const float cost = cos (-thetaRad);
 
-	const float yLim = n3 - 1;
-	const float xLim = n2 - 1;
+	// limits
+	const float yMin = o3;
+	const float yMax = o3 + (n3-1)*d3;
+	const float xMin = o2;
+	const float xMax = o2 + (n2-1)*d2;
 
     trace  = sf_floatalloc (n1);	
 
@@ -94,12 +100,10 @@ int main (int argc, char* argv[]) {
 				trace[it] = 0.f;
 
 			float xr = cost * x - sint * y + xf;
-			const int i2r = (xr - o2) / d2;
 			float yr = sint * x + cost * y + yf;
-			const int i3r = (yr - o3) / d3;
 
-			if (i3r > 0 && i3r < yLim && i2r > 0 && i2r < xLim) 
-				getTrace (i2r, i3r);
+			if (yr > yMin && yr < yMax && xr > xMin && xr < xMax) 
+				getTrace (xr, yr);
 			
 			sf_floatwrite (trace, n1, outFile);					
 		}
