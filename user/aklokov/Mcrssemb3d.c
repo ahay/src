@@ -165,56 +165,56 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
 
     for (iy = 0; iy < *curYapp; ++iy) {
 		
-	startPos = (size_t) ((iy + startY) * xNum_ + startX) * dagSize_ * sizeof (float);
+		startPos = (size_t) ((iy + startY) * xNum_ + startX) * dagSize_ * sizeof (float);
 			
-	sf_seek (inDags_,   startPos, SEEK_SET);
-	sf_seek (inDagsSq_, startPos, SEEK_SET);
+		sf_seek (inDags_,   startPos, SEEK_SET);
+		sf_seek (inDagsSq_, startPos, SEEK_SET);
 
-	shift = iy * pointsNumToRead;
+		shift = iy * pointsNumToRead;
 
-	sf_floatread (ptrToData_   + shift, pointsNumToRead, inDags_);
-	sf_floatread (ptrToDataSq_ + shift, pointsNumToRead, inDagsSq_);
+		sf_floatread (ptrToData_   + shift, pointsNumToRead, inDags_);
+		sf_floatread (ptrToDataSq_ + shift, pointsNumToRead, inDagsSq_);
     }
 
     // substacking in the y-dip and x-dip directions
     for (iy = 0; iy < *curYapp; ++iy) {
-	yShift = iy * (*curXapp) * dipyNum_ * dipxNum_ * zNum_;
-	for (ix = 0; ix < *curXapp; ++ix) {
-	    xShift = ix * dipyNum_ * dipxNum_ * zNum_;
-	    shiftToGather = yShift + xShift;
-#ifdef _OPENMP 
-#pragma omp parallel for
-#endif
-	    for (idy = 0; idy < dipyNum_; ++idy) {
-		for (idx = 0; idx < dipxNum_; ++idx) {
-		    tracesShift = shiftToGather + (idy * dipxNum_ + idx) * zNum_;
+		yShift = iy * (*curXapp) * dipyNum_ * dipxNum_ * zNum_;
+		for (ix = 0; ix < *curXapp; ++ix) {
+		    xShift = ix * dipyNum_ * dipxNum_ * zNum_;
+		    shiftToGather = yShift + xShift;
+//#ifdef _OPENMP 
+//#pragma omp parallel for
+//#endif
+		    for (idy = 0; idy < dipyNum_; ++idy) {
+				for (idx = 0; idx < dipxNum_; ++idx) {
+				    tracesShift = shiftToGather + (idy * dipxNum_ + idx) * zNum_;
 		
-		    ptrToTrace   = ptrToDags_   + tracesShift;
-		    ptrToTraceSq = ptrToDagsSq_ + tracesShift;
+				    ptrToTrace   = ptrToDags_   + tracesShift;
+				    ptrToTraceSq = ptrToDagsSq_ + tracesShift;
 
-		    for (idya = 0; idya < ydipapp_; ++idya) {		
-			indy = idy - ydipapp_ / 2 + idya;
-			if (indy < 0 || indy >= dipyNum_) continue;		
-			for (idxa = 0; idxa < xdipapp_; ++idxa) {		
-			    indx = idx - xdipapp_ / 2 + idxa;
-			    if (indx < 0 || indx >= dipxNum_) continue;		
+				    for (idya = 0; idya < ydipapp_; ++idya) {		
+						indy = idy - ydipapp_ / 2 + idya;
+						if (indy < 0 || indy >= dipyNum_) continue;		
+						for (idxa = 0; idxa < xdipapp_; ++idxa) {		
+						    indx = idx - xdipapp_ / 2 + idxa;
+						    if (indx < 0 || indx >= dipxNum_) continue;		
 			
-			    dataShift = shiftToGather + (indy * dipxNum_ + indx) * zNum_;
-			    ptrFrom   = ptrToData_   + dataShift;
-			    ptrSqFrom = ptrToDataSq_ + dataShift;
+						    dataShift = shiftToGather + (indy * dipxNum_ + indx) * zNum_;
+						    ptrFrom   = ptrToData_   + dataShift;
+						    ptrSqFrom = ptrToDataSq_ + dataShift;
 
-			    ptrTo     = ptrToTrace;
-			    ptrSqTo   = ptrToTraceSq;
+						    ptrTo     = ptrToTrace;
+						    ptrSqTo   = ptrToTraceSq;
 
-			    for (iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
-				*ptrTo += *ptrFrom;
-				*ptrSqTo += *ptrSqFrom;
-			    }
-			}
-		    }
+						    for (iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
+								*ptrTo += *ptrFrom;
+								*ptrSqTo += *ptrSqFrom;
+						    }
+						}
+				    }
+				}
+	    	}		
 		}
-	    }
-	}
     }
 
     substackNum_ = ydipapp_ * xdipapp_;
@@ -287,33 +287,33 @@ void getTaperTrace (int curyapp, int bottomShift, int curxapp, int leftShift,
 
     tracesNum = 0;
     for (iy = 0; iy < curyapp; ++iy) {					
-	yShift = (iy - bottomShift) * yStep_;
-	yDepthShift = yShift * tanyDipInRad;
-	yDepthShiftSamp = yDepthShift / zStep_;
-	for (ix = 0; ix < curxapp; ++ix) {		
-	    xShift = (ix - leftShift) * xStep_;
-	    xDepthShift = xShift * tanxDipInRad;
-	    xDepthShiftSamp = xDepthShift / zStep_;
+		yShift = (iy - bottomShift) * yStep_;
+		yDepthShift = yShift * tanyDipInRad;
+		yDepthShiftSamp = yDepthShift / zStep_;
+		for (ix = 0; ix < curxapp; ++ix) {		
+		    xShift = (ix - leftShift) * xStep_;
+		    xDepthShift = xShift * tanxDipInRad;
+		    xDepthShiftSamp = xDepthShift / zStep_;
 
-	    dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize_;
+		    dataShift  = shiftInDag + (iy * curxapp + ix) * dagSize_;
 
-	    ptrDataStack   = ptrToDags_   + dataShift;
-	    ptrDataStackSq = ptrToDagsSq_ + dataShift;
+		    ptrDataStack   = ptrToDags_   + dataShift;
+		    ptrDataStackSq = ptrToDagsSq_ + dataShift;
 
-	    stackShift = tracesNum * zNum_;
+		    stackShift = tracesNum * zNum_;
+			
+		    ptrStackGrid   = stackGrid + stackShift;
+		    ptrStackSqGrid = stackSqGrid + stackShift;
+
+		    zInd = -yDepthShiftSamp - xDepthShiftSamp;
 		
-	    ptrStackGrid   = stackGrid + stackShift;
-	    ptrStackSqGrid = stackSqGrid + stackShift;
-
-	    zInd = -yDepthShiftSamp - xDepthShiftSamp;
-		
-	    for (iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
-		if (zInd < 0 || zInd >= zNum_) continue;
-		*(ptrStackGrid) = *(ptrDataStack + zInd);
-		*(ptrStackSqGrid) = *(ptrDataStackSq + zInd);
-	    }		
-	    ++tracesNum;
-	}
+		    for (iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
+				if (zInd < 0 || zInd >= zNum_) continue;
+				*(ptrStackGrid) = *(ptrDataStack + zInd);
+				*(ptrStackSqGrid) = *(ptrDataStackSq + zInd);
+		    }		
+		    ++tracesNum;
+		}
     }
 
     getSemblanceForTrace (tracesNum, stackGrid, stackSqGrid, ptrTaper);  
@@ -333,23 +333,23 @@ void buildFilter (int curyapp, int bottomShift, int curxapp, int leftShift, floa
     float* ptrToSembTrace = ptrToSembPanel;
     const float CONVRATIO = SF_PI / 180.f;
 		
-#ifdef _OPENMP 
-#pragma omp parallel for
-#endif
+//#ifdef _OPENMP 
+//#pragma omp parallel for
+//#endif
     for (idy = 0; idy < dipyNum_; ++idy) {
-	curyDip = dipyStart_ + idy * dipyStep_;
-	curyDipInRad = curyDip * CONVRATIO;
-	tanyDipInRad = tan (curyDipInRad);
-	for (idx = 0; idx < dipxNum_; ++idx) {
-	    curxDip = dipxStart_ + idx * dipxStep_;
-	    curxDipInRad = curxDip * CONVRATIO;
-	    tanxDipInRad = tan (curxDipInRad);
+		curyDip = dipyStart_ + idy * dipyStep_;
+		curyDipInRad = curyDip * CONVRATIO;
+		tanyDipInRad = tan (curyDipInRad);
+		for (idx = 0; idx < dipxNum_; ++idx) {
+		    curxDip = dipxStart_ + idx * dipxStep_;
+		    curxDipInRad = curxDip * CONVRATIO;
+		    tanxDipInRad = tan (curxDipInRad);
 
-	    ptrToSembTrace = ptrToSembPanel + (idy * dipxNum_ + idx) * zNum_;	
-	    shiftInDag = (idy * dipxNum_ + idx) * zNum_;
-	    getTaperTrace (curyapp, bottomShift, curxapp, leftShift, 
-			   tanyDipInRad, tanxDipInRad, shiftInDag, ptrToSembTrace);
-	}
+		    ptrToSembTrace = ptrToSembPanel + (idy * dipxNum_ + idx) * zNum_;	
+		    shiftInDag = (idy * dipxNum_ + idx) * zNum_;
+		    getTaperTrace (curyapp, bottomShift, curxapp, leftShift, 
+						   tanyDipInRad, tanxDipInRad, shiftInDag, ptrToSembTrace);
+		}
     }
 
     return;
