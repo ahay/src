@@ -345,8 +345,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
-    int ia, ib, i, j, k, jj, nab, iab0, iab1, nd, is;
-    int *nsck, **sck;
+    int ia, ib, i, j, k, jj, nab, iab0, iab1, nd, is0, is1, ndab, ncv, nad;
     struct sockaddr_in *serv_addr;
     FILE *stream;
 
@@ -495,73 +494,50 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         if (!sf_histint (scdaemon, "n2", &nd)) sf_error ("No n2= in supercell daemon file");
         if (!sf_histint (scdaemon, "Ma", &esc_scgrid->ma)) sf_error ("No Ma= in supercell daemon file");
         if (!sf_histint (scdaemon, "Mb", &esc_scgrid->mb)) sf_error ("No Mb= in supercell daemon file");
+        /* ndab - number of angle volumes per daemon */
+        if (!sf_histint (scdaemon, "Nab", &ndab)) sf_error ("No Nab= in supercell daemon file");
+        /* ncv - number of daemons that cover the full range of angles */
+        if (!sf_histint (scdaemon, "Ncv", &ncv)) sf_error ("No Ncv= in supercell daemon file");
+        /* nad - total number of active daemons */
+        if (!sf_histint (scdaemon, "Ndaemon", &nad)) sf_error ("No Ndaemon= in supercell daemon file");
+
         serv_addr = sf_alloc (nd, sizeof(struct sockaddr_in));
-        sck = (int**)sf_alloc (nab, sizeof(int*)); /* All daemons for an angle */
-        nsck = (int*)sf_alloc (nab, sizeof(int)); /* Number of daemons for an angle */
         esc_scgrid->sockets = (int*)sf_alloc (2*nab, sizeof(int)); /* Connection socket for each angle */
         for (i = 0; i < nab; i++) {
-            nsck[i] = 0;
-            sck[i] = (int*)sf_alloc (nd, sizeof(int));
             esc_scgrid->sockets[i*2] = -1;
             esc_scgrid->sockets[i*2 + 1] = -1;
         }
-        /* Find out how many daemons cover each angle */
+        /* Read daemon information */
+        k = 0;
         for (j = 0; j < nd; j++) {
-            sf_ucharread ((unsigned char*)&serv_addr[j], sizeof (serv_addr[j]), scdaemon);
+            sf_ucharread ((unsigned char*)&serv_addr[k], sizeof (serv_addr[k]), scdaemon);
             sf_ucharread ((unsigned char*)&iab0, sizeof (int), scdaemon);
             sf_ucharread ((unsigned char*)&iab1, sizeof (int), scdaemon);
-            if (iab0 > iab1)
-                continue;
-            /* Store daemon index for this angle patch */
-            for (i = iab0; i <= iab1; i++) {
-                jj = i;
-                if (jj < 0)
-                    jj += nab;
-                else if (jj >= nab)
-                    jj -= nab;
-                sck[jj][nsck[jj]] = j;
-                nsck[jj]++;
-            }
+            if (iab0 <= iab1)
+                k++;
         }
-        for (i = 0; i < nab; i++) {
-            /* Choose daemon to connect to */
-            j = sck[i][(int)(frac*(float)nsck[i])];
-            /* Check if this daemon has been used for one of the earlier angles */
-            jj = -1;
-            for (k = 0; k < i; k++) {
-                if (-1 == nsck[k] && j == sck[k][0]) {
-                    jj = k;
-                    break;
-                }
-            }
-            if (jj != -1) { /* This daemon has been connected to already */
-                esc_scgrid->sockets[2*i] = esc_scgrid->sockets[2*jj];
-                esc_scgrid->sockets[2*i + 1] = esc_scgrid->sockets[2*jj + 1];
-                nsck[i] = -1;
-                sck[i][0] = j;
-                continue;
-            }
+        /* Choose a particular coverage, if more than one is available */
+        jj = ncv*(frac*(float)(nad/ncv));
+        sf_warning ("Choosing deamons %d-%d for remote access to escape solutions", jj, jj + ncv);
+        is0 = -1;
+        is1 = -1;
+        /* Connect to the daemons in this coverage */
+        for (j = 0; j < ncv; j++) {
             /* Next daemon, try to establish a connection */
-            is = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j]);
-            if (is < 0)
-                continue;
-            esc_scgrid->sockets[2*i] = is;
-            is = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j]);
-            if (is < 0) {
-                close (esc_scgrid->sockets[2*i]);
-                esc_scgrid->sockets[2*i] = -1;
-                continue;
+            is0 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj]);
+            if (is0 > 0)
+                is1 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj]);
+            if (is1 < 0) {
+                close (is0);
+                is0 = -1;
             }
-            esc_scgrid->sockets[2*i + 1] = is;
-            sck[i][0] = j;
-            nsck[i] = -1;
+            for (i = j*ndab; i < (j + 1)*ndab; i++) {
+                esc_scgrid->sockets[2*i] = is0;
+                esc_scgrid->sockets[2*i + 1] = is1;
+            }
             nc++;
         }
         free (serv_addr);
-        for (i = 0; i < nab; i++)
-            free (sck[i]);
-        free (sck);
-        free (nsck);
     }
     esc_scgrid->remote = nc != 0;
 
@@ -578,7 +554,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     esc_scgrid->avals2 = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb*(size_t)esc_scgrid->ns,
                                    sizeof(sf_esc_scgrid3_avals));
     if (nc)
-        sf_warning ("Using %d remote daemons for accessing escape solutions", nc);
+        sf_warning ("Connected %d remote daemons for accessing escape solutions", nc);
     else
         sf_warning ("Using local data for accessing escape solutions");
 
