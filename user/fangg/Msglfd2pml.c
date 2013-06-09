@@ -37,7 +37,8 @@ static float ldx(float **data, int ix, int iz)
     float res = 0.0;
     int il;
     for (il = 0; il < lenx; il++) {
-	res += 0.5*(data[ix-sxx[il]][iz-sxz[il]] - data[ix+sxx[il]-1][iz+sxz[il]])*Gx[il][ix][iz];
+	//res += 0.5*(data[ix-sxx[il]][iz-sxz[il]] - data[ix+sxx[il]-1][iz+sxz[il]])*Gx[il][ix][iz];
+	res += 0.5*(-1*data[ix-sxx[il]+1][iz-sxz[il]] + data[ix+sxx[il]][iz+sxz[il]])*Gx[il][ix][iz];
     }
     return res;
 }
@@ -48,7 +49,8 @@ static float ldz(float **data, int ix, int iz)
     float res = 0.0;
     int il;
     for (il = 0; il < lenz; il++) {
-	res += 0.5*(data[ix-szx[il]][iz-szz[il]] - data[ix+szx[il]][iz+szz[il]-1])*Gz[il][ix][iz];
+	//res += 0.5*(data[ix-szx[il]][iz-szz[il]] - data[ix+szx[il]][iz+szz[il]-1])*Gz[il][ix][iz];
+	res += 0.5*(-1*data[ix-szx[il]][iz-szz[il]+1] + data[ix+szx[il]][iz+szz[il]])*Gz[il][ix][iz];
     }
     return res;
 }
@@ -314,7 +316,8 @@ int main(int argc, char* argv[])
 	/*Stress*/
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
 	    for ( iz = marg+pmlout; iz < nz+marg+pmlout; iz++) { 
-		txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix+1, iz) + ldz(vzn1, ix, iz+1));
+		//txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix+1, iz) + ldz(vzn1, ix, iz+1));
+		txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix-1, iz) + ldz(vzn1, ix, iz-1));
 	    }
 	}
 
