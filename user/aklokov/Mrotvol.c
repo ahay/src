@@ -1,7 +1,6 @@
-/* Rotate data */
-
+/* 3D volume rotation about the vertical axes */
 /*
-  Copyright (C) 2012 University of Texas at Austin
+  Copyright (C) 2013 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -24,7 +23,6 @@ int n1, n2, n3;
 float d1, d2, d3, o1, o2, o3;
 float* trace;
 sf_file inFile, outFile;
-
 
 bool isPointInsideTriangle (float x0, float y0, float x1, float y1, float x2, float y2, float x3, float y3) {
 
@@ -104,7 +102,7 @@ void getTrace (float xr, float yr, float* restrace) {
 	const float m2 = ( (yr - y1)*x31 - (xr - x1)*y31 ) / denom2;
 	const float m1 = 1.f - m2 - m3;
 	
-	//
+	// interpolation
 	float* trace1 = sf_floatalloc (n1);	
 	float* trace2 = sf_floatalloc (n1);	
 	float* trace3 = sf_floatalloc (n1);	
@@ -113,11 +111,11 @@ void getTrace (float xr, float yr, float* restrace) {
 	size_t posr = (ind1y * n2 + ind1x) * n1 * sizeof (float);
 	sf_seek (inFile, posr, SEEK_SET);		
 	sf_floatread (trace1, n1, inFile);	
-	
+	// trace2
 	posr = (ind2y * n2 + ind2x) * n1 * sizeof (float);
 	sf_seek (inFile, posr, SEEK_SET);		
 	sf_floatread (trace2, n1, inFile);	
-
+	// trace3 
 	posr = (ind3y * n2 + ind3x) * n1 * sizeof (float);
 	sf_seek (inFile, posr, SEEK_SET);		
 	sf_floatread (trace3, n1, inFile);	
@@ -161,12 +159,12 @@ int main (int argc, char* argv[]) {
 
 
 	float xf, yf, theta;			
-    /* x-coord of the fixed point */
     if ( !sf_getfloat ("xf", &xf) ) xf = 0.f;
-    /* z-coord of the fixed point */
+    /* inline-coord of the vertical axes */
     if ( !sf_getfloat ("yf", &yf) ) yf = 0.f;
-    /* rotation angle */	
+    /* xline-coord of the vertical axes */
 	if ( !sf_getfloat ("theta", &theta) ) theta = 0.f;	
+    /* rotation angle */	
 
 	const float thetaRad = theta * M_PI / 180.f;
 	const float sint = sin (-thetaRad);
@@ -197,6 +195,8 @@ int main (int argc, char* argv[]) {
 			sf_floatwrite (trace, n1, outFile);					
 		}
 	}
+
+	free (trace);
 
 	sf_fileclose (inFile);
     sf_fileclose (outFile);
