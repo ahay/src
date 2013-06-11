@@ -107,8 +107,8 @@ void getTrace (float xr, float yr, float* restrace) {
 	float* trace2 = sf_floatalloc (n1);	
 	float* trace3 = sf_floatalloc (n1);	
 
-	int xshift = o2 / d2;
-	int yshift = o3 / d3;
+	int xshift = o2 / d2 + 0.5;
+	int yshift = o3 / d3 + 0.5;
 
 	ind1x -= xshift;
 	ind2x -= xshift;
