@@ -65,8 +65,8 @@ bool isPointInsideTriangle (float x0, float y0, float x1, float y1, float x2, fl
 
 void getTrace (float xr, float yr, float* restrace) {
 
-	int ind1x = (xr - o2) / d2;
-	int ind1y = (yr - o3) / d3;
+	int ind1x = xr / d2;
+	int ind1y = yr / d3;
 	int ind2x = ind1x + 1;
 	int ind2y = ind1y;
 	int ind3x = ind1x;
@@ -107,6 +107,16 @@ void getTrace (float xr, float yr, float* restrace) {
 	float* trace2 = sf_floatalloc (n1);	
 	float* trace3 = sf_floatalloc (n1);	
 
+	int xshift = o2 / d2;
+	int yshift = o3 / d3;
+
+	ind1x -= xshift;
+	ind2x -= xshift;
+	ind3x -= xshift;
+	ind1y -= yshift;
+	ind2y -= yshift;
+	ind3y -= yshift;
+
 	// trace1 
 	size_t posr = (ind1y * n2 + ind1x) * n1 * sizeof (float);
 	sf_seek (inFile, posr, SEEK_SET);		
@@ -120,8 +130,11 @@ void getTrace (float xr, float yr, float* restrace) {
 	sf_seek (inFile, posr, SEEK_SET);		
 	sf_floatread (trace3, n1, inFile);	
 
+	float m = m1 + m2 + m3;
+
 	for (int i = 0; i < n1; ++i) {
 		restrace[i] = m1 * trace1[i] + m2 * trace2[i] + m3 * trace3[i];
+		
 	}
 
 	free (trace1);
