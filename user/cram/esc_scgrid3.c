@@ -517,8 +517,8 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
                 k++;
         }
         /* Choose a particular coverage, if more than one is available */
-        jj = ncv*(frac*(float)(nad/ncv));
-        sf_warning ("Choosing deamons %d-%d for remote access to escape solutions", jj, jj + ncv);
+        jj = ncv*(int)(frac*(float)(nad/ncv));
+        sf_warning ("Choosing deamons %d-%d for remote access to escape solutions", jj, jj + ncv - 1);
         is0 = -1;
         is1 = -1;
         /* Connect to the daemons in this coverage */

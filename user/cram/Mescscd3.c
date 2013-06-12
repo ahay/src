@@ -266,7 +266,7 @@ int main (int argc, char* argv[]) {
     size_t nc;
     off_t nsp;
     int ma, mb;
-    int ith = 1, na, nb, nab, ncv, icpu, ncpu, bcpu, wcpu, tout, tdel;
+    int ith = 1, na, nb, nab, ncv, icpu, ncpu, tout, tdel;
     int i, iab, iab0, iab1, port, nthreads, tmpfile = 0;
 #ifdef LINUX
     int inet = 0;
@@ -401,7 +401,7 @@ int main (int argc, char* argv[]) {
 
     /* Determine how much data from the supercell grid to hold per CPU */
     if (ith && 0 == (icpu % ith)) {
-        iab0 = ((icpu % ith)*nab) % (na*nb);
+        iab0 = ((icpu / ith)*nab) % (na*nb);
         iab1 = iab0 + nab - 1;
         sf_warning ("Serving angular patch from iab=%d to iab=%d [CPU %d]",
                     iab0, iab1, icpu);
