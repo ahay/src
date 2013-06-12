@@ -67,6 +67,12 @@ int main (int argc, char *argv[])
 		snprintf(key,4,"n%d",both? j+4:j+2);
 		sf_putint(out,key,n[j]);
 	    }
+	} else if (both) {
+	    sf_putint(out,"n4",2);
+	    for (j=3; j < dim; j++) {
+		snprintf(key,4,"n%d",j+2);
+		sf_putint(out,key,n[j]);
+	    }
 	}
     }
 

@@ -90,10 +90,10 @@ Result('zoomcheckstack','checkstack',
        ''')
 
 # Local slope
-Flow('dip','checkstack','dip rect1=50 rect2=10 order=2')
+Flow('dip','checkstack','fdip rect1=50 rect2=10 verb=y')
 Result('dip','grey color=j scalebar=y title=Slope')
 
-Flow('pwd','checkstack dip','pwd dip=${SOURCES[1]} order=2')
+Flow('pwd','checkstack dip','pwd dip=${SOURCES[1]}')
 Result('pwd','grey title=PWD')
 Result('zoompwd','pwd',
        '''
@@ -161,7 +161,7 @@ Result('eshots',
 Flow('gshots','eshots',
      '''
      pow pow1=1 | put d3= |
-     mutter half=n v0=%g tp=0 |
+     mutter half=n v0=%g tp=0 | put d3=1 |
      shapeagc rect1=250
      ''' % (5280/0.488))
 
@@ -173,5 +173,34 @@ Result('gshots',
        ''')
 
 # dip filter
+Flow('fft','gshots','fft1 | fft3')
+
+Result('fft',
+       '''
+       window max1=100 |
+       math output="abs(input)" | real |
+       byte gainpanel=all allpos=y |
+       grey3 frame1=200 frame2=100 frame3=30 title="2-D Fourier"
+       flat=n point1=0.7 point2=0.7 color=j
+       ''')
+
+Flow('filt','fft','dipfilter v1=-167 v2=-250 v3=84 v4=72 taper=2 pass=0')
+
+Result('filt',
+       '''
+       window max1=100 |
+       math output="abs(input)" | real |
+       byte gainpanel=all allpos=y |
+       grey3 frame1=200 frame2=100 frame3=30 title="2-D Fourier"
+       flat=n point1=0.7 point2=0.7 color=j
+       ''')
+
+
+#sfdipfilter < in.rsf > out.rsf dim=2 angle=n v=-1. ang1=-50. ang2=-45. ang3=45. ang4=50. v1=0. v2=0.1 v3=99999. v4=999999. pass=y
+
+#       bias=.003 \
+#        dx=1 \
+#        slopes=-.006,-.004,.012,.014 \
+#        amps=0.0,1.0,1.0,0.0 
 
 End()

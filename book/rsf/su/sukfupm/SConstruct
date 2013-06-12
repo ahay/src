@@ -34,4 +34,9 @@ Result('data-tm-filt',display6)
 Flow('data-tm-filt-ac','data-tm-filt','suacor ntout=1001 sym=0')
 Result('data-tm-filt-ac',display6)
 
+# Spiking deconvolution
+Flow('data-tm-filt-dec','data-tm-filt',
+     'supef minlag=0.002 maxlag=0.2 pnoise=0.001 mincorr=0 maxcorr=3')
+Result('data-tm-filt-dec',display6)
+
 End()

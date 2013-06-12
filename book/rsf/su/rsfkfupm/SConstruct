@@ -35,7 +35,8 @@ Result('data-tm-as','data-tm-as first6',
        ''')
 
 # Filter data to remove ground-roll
-Flow('data-tm-filt','data-tm','trapez frequency=15,20,50,60')
+Flow('data-tm-filt','data-tm',
+     'trapez frequency=15,20,50,60 | scale axis=2')
 Result6('data-tm-filt','Filtered')
 
 # Autocorrelation
@@ -45,5 +46,10 @@ Flow('data-tm-filt-ac','data-tm-filt',
      window n1=1001 | scale axis=1
      ''')
 Result6('data-tm-filt-ac','Autocorrelation')
-    
+
+# Spiking deconvolution
+Flow('pef lag','data-tm-filt','pef a=100,1 niter=10 lag=${TARGETS[1]}')
+Flow('data-tm-filt-dec','data-tm-filt pef','helicon filt=${SOURCES[1]}')
+Result6('data-tm-filt-dec','Deconvolution')
+
 End()

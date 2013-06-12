@@ -3,6 +3,9 @@
 Takes: > plot.vpl
 
 Run "sfdoc stdplot" for more parameters.
+
+June 2013 program of the month:
+http://www.ahay.org/rsflog/index.php?/archives/340-Program-of-the-month-sfwiggle.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

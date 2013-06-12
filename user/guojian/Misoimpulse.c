@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 
 	    image_rotate=sf_floatalloc(mig_nx*mig_nz);  
 	    image_1hx=sf_floatalloc(mig_size*mig_nz_rotate);
-	    image_rotate_allhx=sf_floatalloc2(mig_nx*mig_nz, image_par.nhx);
+	    image_rotate_allhx=sf_floatalloc2(image_par.nhx,mig_nx*mig_nz);
      
 	    for (ihx=0;ihx<image_par.nhx;ihx++){
 		//printf("ihx=%d\n",ihx);
