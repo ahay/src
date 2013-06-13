@@ -32,23 +32,26 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int cmdlen, status, argc=2, i, ndim, esize, dims[SF_MAX_DIM];
+    int cmdlen, status, argc=2, i, ndim, esize, ddim, dims[SF_MAX_DIM], strlen;
     const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
-    char *cmd=NULL, *argv[] = {"matlab","-"};
-    double *dr=NULL, *di=NULL;
+    char *cmd=NULL, *argv[] = {"matlab","-"}, *strtag=NULL;
+    double *dr=NULL, *di=NULL, *ds=NULL;
     float *p=NULL;
     sf_complex *c=NULL;
-    char buf[BUFSIZ], key[5], *iname, *oname, cmdline[SF_CMDLEN];
+    char buf[BUFSIZ], key[10], *iname, *oname, cmdline[SF_CMDLEN];
     sf_file inp;
     sf_datatype type;
     FILE *ifile, *ofile;
+    mxArray *cell;
 
     /* Check for proper number of arguments. */
     if (nrhs < 2) mexErrMsgTxt("At least two inputs are required.");
 
     /* initialize Madagascar */
     sf_init(argc,argv);
+
+    /* 1. First, collect input */
 
     /* Input 2 must be a number. */
     if (!mxIsDouble(prhs[1])) mexErrMsgTxt("Input 2 must be double.");
@@ -73,6 +76,66 @@ void mexFunction(int nlhs, mxArray *plhs[],
     for (i=0; i < ndim; i++) {
 	sprintf(key,"n%d",i+1);
 	sf_putint(inp,key,dim[i]);
+    }
+
+    if (nrhs > 2) { /* deltas */
+	if (!mxIsDouble(prhs[2])) mexErrMsgTxt("Deltas must be double.");
+	if (mxGetM(prhs[2]) != 1) mexErrMsgTxt("Deltas must be a row vector.");
+	ddim = mxGetN(prhs[2]);
+	ds = mxGetPr(prhs[2]);
+	for (i=0; i < ndim; i++) {
+	    sprintf(key,"d%d",i+1);
+	    if (i < ddim) {
+		sf_putfloat(inp,key,(float)ds[i]);
+	    } else {
+		sf_putfloat(inp,key,1.0f);
+	    }
+	}
+    }
+
+    if (nrhs > 3) { /* origins */
+	if (!mxIsDouble(prhs[3])) mexErrMsgTxt("Origins must be double.");
+	if (mxGetM(prhs[3]) != 1) mexErrMsgTxt("origins must be a row vector.");
+	ddim = mxGetN(prhs[3]);
+	ds = mxGetPr(prhs[3]);
+	for (i=0; i < ndim; i++) {
+	    sprintf(key,"o%d",i+1);
+	    if (i < ddim) {
+		sf_putfloat(inp,key,(float)ds[i]);
+	    } else {
+		sf_putfloat(inp,key,0.0f);
+	    }
+	}
+    }
+
+    if (nrhs > 4) { /* labels */
+	if (!mxIsCell(prhs[4])) mexErrMsgTxt("Labels must be a cell array.");
+	ddim = mxGetNumberOfElements(prhs[4]);
+	for (i=0; i < ddim; i++) {
+	    sprintf(key,"label%d",i+1);
+	    cell = mxGetCell(prhs[4], i);
+	    if (!mxIsChar(cell)) mexErrMsgTxt("Label must be a string.");
+	    strlen = mxGetN(cell) + 1;
+	    strtag = mxCalloc(strlen, sizeof(char));
+	    status = mxGetString(cell, strtag, strlen);
+	    if (strlen > 1) sf_putstring(inp,key,strtag);
+	    mxFree(strtag);
+	}
+    }
+
+    if (nrhs > 5) { /* units */
+	if (!mxIsCell(prhs[5])) mexErrMsgTxt("Units must be a cell array.");
+	ddim = mxGetNumberOfElements(prhs[5]);
+	for (i=0; i < ddim; i++) {
+	    sprintf(key,"unit%d",i+1);
+	    cell = mxGetCell(prhs[5], i);
+	    if (!mxIsChar(cell)) mexErrMsgTxt("Unit must be a string.");
+	    strlen = mxGetN(cell) + 1;
+	    strtag = mxCalloc(strlen, sizeof(char));
+	    status = mxGetString(cell, strtag, strlen);
+	    if (strlen > 1) sf_putstring(inp,key,strtag);
+	    mxFree(strtag);
+	}
     }
     
     if (mxIsComplex(prhs[1])) {
@@ -130,10 +193,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
     status = mxGetString(prhs[0], cmd, cmdlen);
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
+
+    /* 2. Run the command */
     
     snprintf(cmdline,SF_CMDLEN,"%s < %s > %s",cmd,iname,oname);
-/*    mexWarnMsgTxt(cmdline); */
+
+    /* mexWarnMsgTxt(cmdline); */
+
     sf_system(cmdline);
+
+    /* 3. Now collect the output */
  
     inp = sf_input(oname);
 
@@ -184,6 +253,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
     sf_fileclose(inp);
 
-    sf_rm(iname,true,false,false);
+    sf_rm(iname,true,false,false); 
     sf_rm(oname,true,false,false);
 }

@@ -27,7 +27,7 @@ To documentation:
 
 To APIs:
 
-* Added rsf_filter for running Madagscar programs from MATLAB
+* Added m8r function for running Madagscar programs from MATLAB
 
 To the Python package:
 
