@@ -345,7 +345,7 @@ int main(int argc, char **argv){
             int shot = os;
 
             if (encoding < 0) { /* We aren't writing to an encoding */
-                   for(int is = 0; is < ns; ++is){
+                   for(is = 0; is < ns; ++is){
                         MPI_Bcast((int *)shot_pars,6,MPI_INT,0,MPI_COMM_WORLD);
                         nxi = shot_pars[0]; nyi = shot_pars[1];
                         iox = shot_pars[2]; ioy = shot_pars[3];
@@ -365,7 +365,7 @@ int main(int argc, char **argv){
             else {
                     zero_array(receiver_encoding,nx,ny,nw);
 
-                    for(int is = 0; is < ns; ++is){
+                    for(is = 0; is < ns; ++is){
                         
                         float timeDelay = delays[encoding][is];
                         float ampWeight = ampls[encoding][is];
