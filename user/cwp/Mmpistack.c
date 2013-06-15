@@ -59,6 +59,8 @@ int main(int argc, char **argv){
 
     int mode;
     char **filenames = NULL;
+
+    int i, j, ir, ip;
     
     MPI_Comm_size(MPI_COMM_WORLD,&PROCS);
     MPI_Comm_rank(MPI_COMM_WORLD,&RANK);
@@ -87,7 +89,7 @@ int main(int argc, char **argv){
 
         filenames = (char **) sf_alloc((size_t) nf, sizeof(char*));
 
-        for(int i = 0; i < nf; ++i){
+        for(i = 0; i < nf; ++i){
             char *tfilename = sf_charalloc(1024);
             sprintf(tfilename,prefix,shotnumbers[i]);
             filenames[i] = tfilename;
@@ -107,7 +109,7 @@ int main(int argc, char **argv){
         if (prefix == NULL) sf_error("Must specify prefix");
 
         filenames = (char**) sf_alloc ((size_t) nf,sizeof(char*));
-        for (int i = of; i < nf*jf+of; i = i + jf){
+        for (i = of; i < nf*jf+of; i = i + jf){
             char *tfilename = sf_charalloc(1024);
             sprintf(tfilename,prefix,i);
             filenames[i] = tfilename;
@@ -115,7 +117,7 @@ int main(int argc, char **argv){
     } else {
         sf_warning("Using filenames from command line");
         int nfiles = 0;
-        for (int i = 1; i < argc; ++i){
+        for (i = 1; i < argc; ++i){
             if (strchr(argv[i],'=') == NULL) { /* did not find a key=val pair*/
                 nfiles++;
             } else {
@@ -126,7 +128,7 @@ int main(int argc, char **argv){
         filenames = (char**) sf_alloc ((size_t) nfiles,sizeof(char*));
 
         int ifile = 0;
-        for(int j = 1; j < argc; ++j){
+        for(j = 1; j < argc; ++j){
             if (strchr(argv[j],'=') == NULL) { /* did not find a key=val pair*/
                 filenames[ifile] = argv[j];
                 if (verb && RANK==0) sf_warning("file %d - %s",ifile,argv[j]);
@@ -149,10 +151,10 @@ int main(int argc, char **argv){
     
     int **MPI_MAP = sf_intalloc2(PROCS,nrounds);
     int file = of;
-    for(int ir = 0; ir < nrounds; ++ir){
+    for(ir = 0; ir < nrounds; ++ir){
         if (verb && RANK==0) fprintf(stderr,"ROUND %d .... ", ir);
        
-        for(int ip=0; ip < PROCS; ++ip){
+        for(ip=0; ip < PROCS; ++ip){
             if(file < of+jf*nf) {
                 MPI_MAP[ir][ip] = file;
                 file += jf;
@@ -185,7 +187,7 @@ int main(int argc, char **argv){
             frarray = sf_floatalloc(fsize);
             fsarray = sf_floatalloc(fsize);
             if (RANK == 0) foarray = sf_floatalloc(fsize);
-            for(int i = 0; i < fsize; ++i){
+            for(i = 0; i < fsize; ++i){
                 frarray[i] = 0;
                 fsarray[i] = 0;
                 if (RANK == 0) foarray[i] = 0;
@@ -195,7 +197,7 @@ int main(int argc, char **argv){
             irarray = sf_intalloc(fsize);
             isarray = sf_intalloc(fsize);
             if (RANK == 0) ioarray = sf_intalloc(fsize);
-            for(int i = 0; i < fsize; ++i){
+            for(i = 0; i < fsize; ++i){
                 irarray[i] = 0;
                 isarray[i] = 0;
                 if (RANK == 0) ioarray[i] = 0;
@@ -214,7 +216,7 @@ int main(int argc, char **argv){
     }
     
     MPI_Barrier(MPI_COMM_WORLD);
-    for(int ir = 0; ir < nrounds; ++ir){
+    for(ir = 0; ir < nrounds; ++ir){
         
         int fnumber = MPI_MAP[ir][RANK];
         
@@ -225,7 +227,7 @@ int main(int argc, char **argv){
             switch (type){
                 case SF_FLOAT:
                     
-                    for(int i = 0; i < fsize; ++i){
+                    for(i = 0; i < fsize; ++i){
                         fsarray[i] = 0;
                         frarray[i] = 0;
                     }
@@ -238,13 +240,13 @@ int main(int argc, char **argv){
                     }
                         
                     if (RANK == 0){
-                        for(int i = 0; i < fsize; ++i){
+                        for(i = 0; i < fsize; ++i){
                             foarray[i] += frarray[i];
                         }
                     }
                     break;
                 case SF_INT:
-                    for(int i = 0; i < fsize; ++i){
+                    for(i = 0; i < fsize; ++i){
                         isarray[i] = 0;
                     }
                     if (mode == 0){
@@ -256,7 +258,7 @@ int main(int argc, char **argv){
                     }
                         
                     if (RANK == 0){
-                        for(int i = 0; i < fsize; ++i){
+                        for(i = 0; i < fsize; ++i){
                             ioarray[i] += irarray[i];
                         }
                     }
@@ -291,7 +293,7 @@ int main(int argc, char **argv){
                             MPI_FLOAT,MPI_PROD,0,MPI_COMM_WORLD);
                     }
                     if (RANK == 0){
-                        for(int i = 0; i < fsize; ++i){
+                        for(i = 0; i < fsize; ++i){
                             foarray[i] += frarray[i];
                         }
                     }
@@ -307,7 +309,7 @@ int main(int argc, char **argv){
                     }
 
                     if (RANK == 0){
-                        for(int i = 0; i < fsize; ++i){
+                        for(i = 0; i < fsize; ++i){
                             ioarray[i] += irarray[i];
                         }
                     }
@@ -373,7 +375,7 @@ int main(int argc, char **argv){
 
     if (seq) free(prefix);
 
-    /*for(int i = 0; i < nf; ++i){
+    /*for(i = 0; i < nf; ++i){
         free(filenames[i]);
     }*/
     free(filenames);

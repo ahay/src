@@ -16,9 +16,11 @@ void save_encoding(sf_complex ***encoding, char *prefix, int iencoding, sf_axis 
 
 void zero_array(sf_complex ***array, int n1, int n2, int n3)
 {
-    for(int i3 = 0; i3 < n3; ++i3){
-        for(int i2 = 0; i2 < n2; ++i2){
-            for(int i1 = 0; i1 < n1; ++i1){
+    int i3, i2, i1;
+
+    for(i3 = 0; i3 < n3; ++i3){
+        for(i2 = 0; i2 < n2; ++i2){
+            for(i1 = 0; i1 < n1; ++i1){
                 array[i3][i2][i1] = sf_cmplx(0.0f,0.0f);
             } // w
         } // y
@@ -27,8 +29,10 @@ void zero_array(sf_complex ***array, int n1, int n2, int n3)
 
 void update_receiver_encoding(sf_complex ***encoding, sf_complex *data, float ow, float dw, float time, float* weight, float *phase, int n1, int n2, int n3)
 {
+    int i3, i2, i1, index;
+    
 //    cprint(cp);
-    for(int i3 = 0; i3 < n3; ++i3){
+    for(i3 = 0; i3 < n3; ++i3){
         float shift = -2.0*PI*(ow+dw*i3)*time;
         float pshift = -2.0*PI*phase[i3];
         sf_complex cp = sf_cmplx(cosf(pshift),sinf(pshift));
@@ -36,9 +40,9 @@ void update_receiver_encoding(sf_complex ***encoding, sf_complex *data, float ow
         sf_complex cw = sf_cmplx(weight[i3], 0.0f);
         sf_complex cs = sf_cmplx(cosf(shift),sinf(shift));
         sf_complex tot = cw*cp*cs;
-        for(int i2 = 0; i2 < n2; ++i2){
-            for(int i1 = 0; i1 < n1; ++i1){
-                int index = i1 + i2*n1 + i3*n2*n1; // linear index
+        for(i2 = 0; i2 < n2; ++i2){
+            for(i1 = 0; i1 < n1; ++i1){
+                index = i1 + i2*n1 + i3*n2*n1; // linear index
                 encoding[i3][i2][i1] += tot*data[index];
              } // w
         } // y
@@ -85,6 +89,8 @@ int main(int argc, char **argv){
     
     int RANK;  // this processes rank
     int PROCS; // total number of processes initialized
+
+    int ir, is, ip, iw;
     
     MPI_Init(&argc,&argv);
     
@@ -136,9 +142,9 @@ int main(int argc, char **argv){
     /* Map encodings to processes */
     emap = sf_intalloc2(PROCS,nrounds);
     int te = 0;
-    for(int ir = 0; ir < nrounds; ++ir){
+    for(ir = 0; ir < nrounds; ++ir){
         if (verb && RANK==0) fprintf(stderr,"ROUND %d .... ", ir);
-        for(int ip=0; ip < PROCS; ++ip){
+        for(ip=0; ip < PROCS; ++ip){
             if(te < ne) {
                 emap[ir][ip] = te;
                 ++te;
@@ -163,7 +169,7 @@ int main(int argc, char **argv){
     weights = sf_floatalloc(nw);
     phase_shifts = sf_floatalloc(nw);
 
-    for(int iw = 0; iw < nw; ++iw){
+    for(iw = 0; iw < nw; ++iw){
         weights[iw] = 0.0;
         phase_shifts[iw] = 0;
     }
@@ -172,19 +178,19 @@ int main(int argc, char **argv){
     receiver_encoding = sf_complexalloc3(nx,ny,nw);
     
     if (RANK == 0) {  
-        for (int ir = 0; ir < nrounds; ++ir){
+        for (ir = 0; ir < nrounds; ++ir){
             
             int encoding = emap[ir][RANK];
             int shot = os;
 
             zero_array(receiver_encoding,nx,ny,nw);
 
-            for (int is = 0; is < ns; ++is){
+            for (is = 0; is < ns; ++is){
                 fprintf(stderr,"Round %d ---- %d / %d ---- \r", ir, is+1, ns);
                     
                 float timeDelay = delays[encoding][is];
 
-                for(int iw = 0; iw < nw; ++iw){
+                for(iw = 0; iw < nw; ++iw){
                     weights[iw] = ampls[iw][encoding][is];
                     phase_shifts[iw] = phase[iw][encoding][is]; 
                 }
@@ -222,13 +228,13 @@ int main(int argc, char **argv){
             MPI_Barrier(MPI_COMM_WORLD);
         } // rounds
     } else {
-        for (int ir = 0; ir < nrounds; ++ir){
+        for (ir = 0; ir < nrounds; ++ir){
            
             int encoding = emap[ir][RANK]; // which encoding should I write?
             int shot = os;
 
             if (encoding < 0) { /* We aren't writing to an encoding */
-                   for(int is = 0; is < ns; ++is){
+                   for(is = 0; is < ns; ++is){
                         MPI_Bcast((float *)data,nx*ny*nw*2, 
                             MPI_FLOAT,0,MPI_COMM_WORLD);
                         // Wait
@@ -239,11 +245,11 @@ int main(int argc, char **argv){
             else {
                     zero_array(receiver_encoding,nx,ny,nw);
 
-                    for(int is = 0; is < ns; ++is){
+                    for(is = 0; is < ns; ++is){
                         
                         float timeDelay = delays[encoding][is];
 
-                        for(int iw = 0; iw < nw; ++iw){
+                        for(iw = 0; iw < nw; ++iw){
                             weights[iw] = ampls[iw][encoding][is];
                             phase_shifts[iw] = phase[iw][encoding][is]; 
                         }

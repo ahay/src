@@ -40,9 +40,11 @@ int roundupdown(float val){
 void zero_array1(sf_complex *array, int n1, int n2, int n3)
 {
     int index;
-    for(int i3=0; i3 < n3; ++i3){
-        for(int i2=0; i2 < n2; ++i2){
-            for(int i1=0; i1 < n1; ++i1){
+    int i3, i2, i1;
+
+    for(i3=0; i3 < n3; ++i3){
+        for(i2=0; i2 < n2; ++i2){
+            for(i1=0; i1 < n1; ++i1){
                 index = i1 + i2*n1 + i3*n2*n1;
                 array[index] = sf_cmplx(0.0f,0.0f);
             }
@@ -51,9 +53,11 @@ void zero_array1(sf_complex *array, int n1, int n2, int n3)
 }
 void zero_array(sf_complex ***array, int n1, int n2, int n3)
 {
-    for(int i3 = 0; i3 < n3; ++i3){
-        for(int i2 = 0; i2 < n2; ++i2){
-            for(int i1 = 0; i1 < n1; ++i1){
+    int i3, i2, i1;
+
+    for(i3 = 0; i3 < n3; ++i3){
+        for(i2 = 0; i2 < n2; ++i2){
+            for(i1 = 0; i1 < n1; ++i1){
                 array[i3][i2][i1] = sf_cmplx(0.0f,0.0f);
             } // x
         } // y
@@ -62,15 +66,20 @@ void zero_array(sf_complex ***array, int n1, int n2, int n3)
 
 void update_receiver_encoding(sf_complex ***encoding, sf_complex *data, float ow, float dw, float time, float weight, float phase, int nx, int ny, int nw, int ox, int jx, int oy, int jy )
 {
+    int iw, iy, ix, index;
+    float shift;
+    sf_complex cs;
     float pshift = -2.0*PI*phase;
     sf_complex cw = sf_cmplx(weight, 0.0f);
     sf_complex cp = sf_cmplx(cosf(pshift),sinf(pshift));
-    for(int iw = 0; iw < nw; ++iw){
-        float shift = -2.0*PI*(ow+dw*iw)*time;
-        sf_complex cs = sf_cmplx(cosf(shift),sinf(shift));
-        for(int iy = 0; iy < ny; ++iy){
-            for(int ix = 0; ix < nx; ++ix){
-                int index = ix + iy*nx + iw*nx*ny; // linear index
+
+
+    for(iw = 0; iw < nw; ++iw){
+        shift = -2.0*PI*(ow+dw*iw)*time;
+        cs = sf_cmplx(cosf(shift),sinf(shift));
+        for(iy = 0; iy < ny; ++iy){
+            for(ix = 0; ix < nx; ++ix){
+                index = ix + iy*nx + iw*nx*ny; // linear index
                 encoding[iw][iy*jy+oy][ix*jx+ox] += cw*cs*cp*data[index];
              } // x
         } // y
@@ -330,7 +339,7 @@ int main(int argc, char **argv){
         } // rounds
         if(verb) fprintf(stderr,"\nFinished encoding\n");
     } else {
-        for (int ir = 0; ir < nrounds; ++ir){
+        for (ir = 0; ir < nrounds; ++ir){
            
             int encoding = emap[ir][RANK]; // which encoding should I write?
             int shot = os;

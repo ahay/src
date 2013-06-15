@@ -55,9 +55,11 @@ int roundupdown(float val){
 void zero_array1(float *array, int n1, int n2, int n3)
 {
     int index;
-    for(int i3=0; i3 < n3; ++i3){
-        for(int i2=0; i2 < n2; ++i2){
-            for(int i1=0; i1 < n1; ++i1){
+    int i3, i2, i1;
+
+    for(i3=0; i3 < n3; ++i3){
+        for(i2=0; i2 < n2; ++i2){
+            for(i1=0; i1 < n1; ++i1){
                 index = i1 + i2*n1 + i3*n2*n1;
                 array[index] = 0.0f;
             }
@@ -66,9 +68,11 @@ void zero_array1(float *array, int n1, int n2, int n3)
 }
 void zero_array(float ***array, int n1, int n2, int n3)
 {
-    for(int i3 = 0; i3 < n3; ++i3){
-        for(int i2 = 0; i2 < n2; ++i2){
-            for(int i1 = 0; i1 < n1; ++i1){
+    int i3, i2, i1;
+
+    for(i3 = 0; i3 < n3; ++i3){
+        for(i2 = 0; i2 < n2; ++i2){
+            for(i1 = 0; i1 < n1; ++i1){
                 array[i3][i2][i1] = 0.0;
             } // x
         } // y
@@ -97,6 +101,7 @@ int main(int argc, char **argv){
     int PROCS;
     
     bool debug,verb,useShots =0;
+    int ir, ip, iz, iy, ix;
     
     MPI_Comm_size(MPI_COMM_WORLD,&PROCS);
     MPI_Comm_rank(MPI_COMM_WORLD,&RANK);
@@ -149,9 +154,9 @@ int main(int argc, char **argv){
         MPI_MAP = sf_intalloc2(PROCS,nrounds);
 
         int is = 0;
-        for(int ir = 0; ir < nrounds; ++ir){
+        for(ir = 0; ir < nrounds; ++ir){
             if (verb&& RANK==0) fprintf(stderr,"ROUND %d .... ", ir);
-            for(int ip=0; ip < PROCS; ++ip){
+            for(ip=0; ip < PROCS; ++ip){
                 if(is < ns) {
                     MPI_MAP[ir][ip] = shots[is];
                     is += 1;
@@ -170,10 +175,10 @@ int main(int argc, char **argv){
         if (nf % PROCS != 0) nrounds++;
         MPI_MAP = sf_intalloc2(PROCS,nrounds);
         int file = of;
-        for(int ir = 0; ir < nrounds; ++ir){
+        for(ir = 0; ir < nrounds; ++ir){
             if (verb&& RANK==0) fprintf(stderr,"ROUND %d .... ", ir);
            
-            for(int ip=0; ip < PROCS; ++ip){
+            for(ip=0; ip < PROCS; ++ip){
                 if(file < of+jf*nf) {
                     MPI_MAP[ir][ip] = file;
                     file += jf;
@@ -196,7 +201,7 @@ int main(int argc, char **argv){
     zero_array(array,nx,ny,nz);
     sf_axis fileX,fileY,fileZ;
 
-    for(int ir = 0; ir < nrounds; ++ir){
+    for(ir = 0; ir < nrounds; ++ir){
         
         int fnumber = MPI_MAP[ir][RANK];
         
@@ -245,9 +250,9 @@ int main(int argc, char **argv){
             if(debug) sf_warning("%d starting updating", RANK);
 
             int iiz,iiy,iix;
-            for(int iz = 0; iz < inz; ++iz){
-                for(int iy = 0; iy < iny; ++iy){
-                    for(int ix = 0; ix < inx; ++ix){
+            for(iz = 0; iz < inz; ++iz){
+                for(iy = 0; iy < iny; ++iy){
+                    for(ix = 0; ix < inx; ++ix){
                         iiz = ioz+iz*idz;
                         iiy = ioy+iy*idy;
                         iix = iox+ix*idx;
