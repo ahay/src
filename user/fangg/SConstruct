@@ -3,17 +3,12 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2
+expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2 mmssrc 
 '''
-#fftwave2
-
-
 
 ccprogs = '''isolrsg1 isolrsg2  sglfdcx2_7 sglfdcz2_7 
  sglfdcx1 sglfdc1
 '''
-#isolr2 lfdc2_25 lfdc2_7
-
 
 pyprogs = 'fft'
 
@@ -30,6 +25,12 @@ src = Glob('[a-z]*.c')
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
+
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        libs.insert(0,fftw)
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

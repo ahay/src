@@ -37,7 +37,6 @@ static float ldx(float **data, int ix, int iz)
     float res = 0.0;
     int il;
     for (il = 0; il < lenx; il++) {
-	//res += 0.5*(data[ix-sxx[il]][iz-sxz[il]] - data[ix+sxx[il]-1][iz+sxz[il]])*Gx[il][ix][iz];
 	res += 0.5*(-1*data[ix-sxx[il]+1][iz-sxz[il]] + data[ix+sxx[il]][iz+sxz[il]])*Gx[il][ix][iz];
     }
     return res;
@@ -49,7 +48,6 @@ static float ldz(float **data, int ix, int iz)
     float res = 0.0;
     int il;
     for (il = 0; il < lenz; il++) {
-	//res += 0.5*(data[ix-szx[il]][iz-szz[il]] - data[ix+szx[il]][iz+szz[il]-1])*Gz[il][ix][iz];
 	res += 0.5*(-1*data[ix-szx[il]][iz-szz[il]+1] + data[ix+szx[il]][iz+szz[il]])*Gz[il][ix][iz];
     }
     return res;
@@ -64,7 +62,7 @@ int main(int argc, char* argv[])
     int nxb, nzb;
     float dt, dx, dz;
     float **txxn1, **txxn0, **vxn1, **vzn1, **vxn0, **vzn0;
-    float **vel, **den, **c11, *source;
+    float **vel, **den, **c11, *sourcep, ***sourced;
     float **denx, **denz;
     float **record;
     bool freesurface, srcdecay;
@@ -75,7 +73,7 @@ int main(int argc, char* argv[])
     sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/; 
     sf_file fGx, fGz, fsxx, fsxz, fszx, fszz;
     float *sxxtmp, *sxztmp, *szxtmp, *szztmp;
-    sf_axis at, ax, az;
+    sf_axis at, ax, az, a3;
 
     spara sp={0};
 
@@ -84,7 +82,8 @@ int main(int argc, char* argv[])
     float gamma = GAMMA;
 
     int srcrange;
-    float srctrunc;  
+    float srctrunc; 
+    bool srcpoint;
 
 
     tstart = clock();
@@ -97,12 +96,6 @@ int main(int argc, char* argv[])
     fden    = sf_input("den"); /*density*/
     fwf     = sf_output("out");/*wavefield snap*/
     frec    = sf_output("rec"); /*record*/
-    
-    /* Read/Write axes */
-    at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
-    ax = sf_iaxa(fvel, 2); nxb = sf_n(ax); dx = sf_d(ax); 
-    az = sf_iaxa(fvel, 1); nzb = sf_n(az); dz = sf_d(az);
-
 
     fGx = sf_input("Gx"); 
     fGz = sf_input("Gz");
@@ -110,15 +103,15 @@ int main(int argc, char* argv[])
     fsxz = sf_input("sxz");
     fszx = sf_input("szx");
     fszz = sf_input("szz");
-    
-    if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
+ 
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fden)) sf_error("Need float input");
-    
-    if (!sf_getint("spx", &spx)) sf_error("Need spx input");
-    /*source point in x */
-    if (!sf_getint("spz", &spz)) sf_error("Need spz input");
-    /* source point in z */
+    if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
+
+    /* Read/Write axes */
+    ax = sf_iaxa(fvel, 2); nxb = sf_n(ax); dx = sf_d(ax); 
+    az = sf_iaxa(fvel, 1); nzb = sf_n(az); dz = sf_d(az);
+   
     if (!sf_getint("gdep", &gdep)) gdep=0;
     /* recorder depth on grid*/
     if (!sf_getint("snapinter", &snapinter)) snapinter=10;
@@ -133,17 +126,23 @@ int main(int argc, char* argv[])
     /* Begin time of using decay boundary condition */
     if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
+    
+    if (!sf_getbool("srcpoint", &srcpoint)) srcpoint = true;
+    /*source type: if y, use point source */
+    if (srcpoint && !sf_getint("spx", &spx)) sf_error("Need spx input");
+    /*source point in x */
+    if (srcpoint && !sf_getint("spz", &spz)) sf_error("Need spz input");
+    /* source point in z */
     if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=true;
     /*source decay*/
     if (!sf_getint("srcrange", &srcrange)) srcrange=10;
     /*source decay range*/
-    if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=0.2;
+    if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=100;
     /*trunc source after srctrunc time (s)*/
     if (!sf_histint(fGx, "n1", &nxz)) sf_error("No n1= in input");
     if (nxz != nxb*nzb) sf_error (" Need nxz = nxb*nzb");
     if (!sf_histint(fGx,"n2", &lenx)) sf_error("No n2= in input");
     if (!sf_histint(fGz,"n2", &lenz)) sf_error("No n2= in input");
-    
     
     sxxtmp = sf_floatalloc(lenx);
     sxztmp = sf_floatalloc(lenx);
@@ -160,7 +159,8 @@ int main(int argc, char* argv[])
     sf_floatread(szxtmp, lenz, fszx);
     sf_floatread(szztmp, lenz, fszz);
     mx = 0; mz = 0;
-    for (ix=0; ix<lenx; ix++) {
+ 
+   for (ix=0; ix<lenx; ix++) {
 	sxx[ix] = (int)sxxtmp[ix];
 	sxz[ix] = (int)sxztmp[ix];
 	mx = abs(sxx[ix])>mx? abs(sxx[ix]):mx;
@@ -175,7 +175,23 @@ int main(int argc, char* argv[])
     
     nx = nxb - 2*pmlout - 2*marg;
     nz = nzb - 2*pmlout - 2*marg;
-    
+
+    /*Source*/
+    if (srcpoint) { /*Point Source*/
+	at = sf_iaxa(fsource, 1);
+	nt = sf_n(at); dt = sf_d(at);
+	sourcep = sf_floatalloc(nt);
+	sf_floatread(sourcep, nt, fsource);
+    } else {
+	at = sf_iaxa(fsource, 3);
+	nt = sf_n(at); dt = sf_d(at);
+	sourced = sf_floatalloc3(nz,nx,nt);
+	sf_floatread(sourced[0][0], nx*nz*nt, fsource);
+	a3 = ax;
+	sf_setn(a3,1);
+	sf_oaxa(frec, a3, 3);
+    }
+
     /*set axis for record file*/
     //sf_setn(at, nt);
     sf_setn(ax, nx);
@@ -227,9 +243,6 @@ int main(int argc, char* argv[])
 	}
     } 
 
-    source = sf_floatalloc(nt);
-    sf_floatread(source, nt, fsource);
-    
     txxn1 = sf_floatalloc2(nzb, nxb);
     txxn0 = sf_floatalloc2(nzb, nxb);
     vxn1  = sf_floatalloc2(nzb, nxb);
@@ -288,6 +301,7 @@ int main(int argc, char* argv[])
     sf_warning("dx=%f dz=%f dt=%f", dx, dz, dt);
     sf_warning("lenx=%d lenz=%d marg=%d pmlout=%d", lenx, lenz, marg, pmlout);
     sf_warning("sp.decay=%d sp.srange=%d",sp.decay,sp.srange);
+    sf_warning("srcpoint=%d", srcpoint);
     
     for(ix=0; ix<lenx; ix++){
 	sf_warning("[sxx,sxz]=[%d,%d] Gx=%f",sxx[ix], sxz[ix], Gx[ix][0][0]);
@@ -298,10 +312,7 @@ int main(int argc, char* argv[])
     
     for (it = 0; it < nt; it++) {
 	if (it%10==0) sf_warning("it=%d/%d;", it, nt);
-	/*if ((it*dt)<=sp.trunc) {
-	    explsourcet(txxn0, source, it, spx+pmlout+marg, spz+pmlout+marg, nxb, nzb, &sp);
-	    }*/
-    
+	    
 	/*velocity*/
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++ ) {
 	    for (iz = marg+pmlout; iz < nz+pmlout+marg; iz++) {
@@ -316,7 +327,6 @@ int main(int argc, char* argv[])
 	/*Stress*/
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
 	    for ( iz = marg+pmlout; iz < nz+marg+pmlout; iz++) { 
-		//txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix+1, iz) + ldz(vzn1, ix, iz+1));
 		txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix-1, iz) + ldz(vzn1, ix, iz-1));
 	    }
 	}
@@ -324,8 +334,11 @@ int main(int argc, char* argv[])
 	/*Stress PML */
 	pml_txx(txxn1, vxn1, vzn1, c11, ldx, ldz, freesurface);
 	
-	if ((it*dt)<=sp.trunc) {
-	    explsourcet(txxn1, source, it, spx+pmlout+marg, spz+pmlout+marg, nxb, nzb, &sp);
+	if (srcpoint && (it*dt)<=sp.trunc) {
+	    explsourcet(txxn1, sourcep, it, spx+pmlout+marg, spz+pmlout+marg, nxb, nzb, &sp);
+	}
+	if (!srcpoint && (it*dt)<=sp.trunc) {
+	    distrsrc(txxn1, sourced[it], nx, nz, marg+pmlout, marg+pmlout);
 	}
 
 	/*n1 -> n0*/

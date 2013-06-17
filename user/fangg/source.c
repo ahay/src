@@ -68,6 +68,16 @@ void explsourcet1(float *vtxx/*@out@*/,
     } 
 }
 
+void distrsrc(float **vtxx, float **dissrc, int nx, int nz, int shiftx, int shiftz)
+/*<2D distribute source>*/
+{
+    int ix, iz;
+    for (ix=0; ix<nx; ix++) {
+	for (iz=0; iz<nz; iz++) {
+	    vtxx[ix+shiftx][iz+shiftz] += dissrc[ix][iz];
+	}
+    }
+}
 
 
 
