@@ -242,6 +242,12 @@ int main(int argc, char* argv[])
     /* Check parameters*/
     if(verb) {
 	sf_warning("======================================");
+#ifdef SF_HAS_FFTW
+	sf_warning("FFTW is defined");
+#endif
+#ifdef SF_HAS_COMPLEX_H
+	sf_warning("Complex is defined");
+#endif
 	sf_warning("nx=%d nz=%d nzx=%d dx=%f dz=%f", nx, nz, nzx, dx, dz);
 	sf_warning("nkx=%d nkz=%d dkx=%f dkz=%f nk=%d", nkx, nkz, dkx, dkz, nk);
 	sf_warning("nx2=%d nz2=%d nzx2=%d", nx2, nz2, nzx2);

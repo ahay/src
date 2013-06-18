@@ -82,14 +82,17 @@ int main(int argc, char* argv[])
     /*Manufactured Solution Source*/
     beta2 = beta*beta;
     for (it=0; it<nt; it++) {
-	tt = cosf(it*dt*beta)/beta;
+	//tt = cosf(it*dt*beta)/beta;
+	tt = expf(-1*(it*dt-0.15)*beta);
 	for (ix=0; ix<nx; ix++) {
 	    xx = ix*dx;
 	    for (iz=0; iz<nz; iz++) {
 		zz = iz*dz;
 		dist2 = (xx-slx)*(xx-slx) + (zz-slz)*(zz-slz);
 		tmp = expf(-1*alpha*dist2)*tt;
-		src[ix][iz] = tmp*(beta2+4*alpha*vel[ix][iz]*vel[ix][iz]*(alpha*dist2-1)); 
+		//src[ix][iz] = tmp*(beta2+4*alpha*vel[ix][iz]*vel[ix][iz]*(alpha*dist2-1)); 
+		src[ix][iz] = tmp*(-1*beta2+4*alpha*vel[ix][iz]*vel[ix][iz]*(alpha*dist2-1)); 
+
 	    }
 	    sf_floatwrite(src[ix], nz, Fsrc);
 	}
@@ -98,7 +101,8 @@ int main(int argc, char* argv[])
     
     /*solution*/
     for (it=0; it<nt; it++) {
-	tt = sinf(it*dt*beta);
+	//tt = sinf(it*dt*beta);
+	tt = expf(-1*(it*dt-0.15)*beta);
 	for (ix=0; ix<nx; ix++) {
 	    xx = ix*dx;
 	    for (iz=0; iz<nz; iz++) {

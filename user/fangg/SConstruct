@@ -10,7 +10,7 @@ ccprogs = '''isolrsg1 isolrsg2  sglfdcx2_7 sglfdcz2_7
  sglfdcx1 sglfdc1
 '''
 
-pyprogs = 'fft'
+#pyprogs = 'fft'
 
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
@@ -22,15 +22,24 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
+dynpre = env.get('DYNLIB','') ##
+ 
+libs = [dynpre+'rsf']+env.get('LIBS',[]) ##
+dlibs = ['drsf']+env.get('LIBS',[])   ##
+
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-fftw = env.get('FFTW')
-if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
-        libs.insert(0,fftw)
+#env.Prepend(CPPPATH=['../../include'],
+#            LIBPATH=['../../lib'])
+ 
+
+#fftw = env.get('FFTW')
+#if fftw:
+#    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+#    if not isinstance(fftw,bool):
+#        libs.insert(0,fftw)
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

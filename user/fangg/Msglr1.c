@@ -1,4 +1,4 @@
-/* Simple 1-D wave propagation on staggered grid*/
+/* 1-D lowrank wave propagation on staggered grid*/
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -21,7 +21,8 @@
 #include <time.h>
 
 #include "fft1.h"
-//#include "fft2.h"
+#include "source.h"
+
 
 sf_complex fplus(float _kx, float dx)
 /*i*kx*exp(i*kx*dx/2)*/
@@ -49,57 +50,97 @@ int main(int argc, char* argv[])
 {
     clock_t tstart, tend;
     double duration;
+    /*Flag*/
     bool verb, cmplx;        
-    int it,im,ik,ix;     /* index variables */
+    
+    /*I/O*/
+    sf_file Fsrc,Fo,Frec;    /* I/O files */
+    sf_file left, right;
+    sf_file Fvel, Fden, Ffft, Fic;
+
+    sf_axis at,ax;    /* cube axes */
+    sf_axis icaxis;
+
+    /* I/O arrays*/
+    float *srcp,**srcd; /*point source, distributed source*/        
+    float **lt, **rt;
+    float *ic, *vel, *den, *c11;
+
+    /*Grid index variables*/
+    int it,im,ik,ix;    
     int nt, nx, m2, nk, nx2, n1, n2, pad1;
     float cx;
     float kx, dkx, kx0;
     float dx, dt, d1;
     
-    float  *ww,*rr;      /* I/O arrays*/
+   
     sf_complex *cwavex, *cwavemx;
-    
+    float *record;
     float **wavex;
     float *curtxx, *pretxx;
     float *curvx, *prevx;
+       
+    /*source*/
+    spara sp={0};
+    int   srcrange;
+    float srctrunc; 
+    bool  srcpoint, srcdecay;
+    int   spx;
     
-
-    sf_file Fw,Fr,Fo;    /* I/O files */
-    sf_axis at,ax;    /* cube axes */
-
-    float **lt, **rt;
-    sf_file left, right;
-
-    float *vel, *den, *c11;
-    sf_file Fvel, Fden, Ffft, Fic;
-    
-    int it0;
+    /*options*/
+    int  gdep;
     bool inject;
-    float *ic;
-    int icnx;
-    sf_axis icaxis;
+    int  it0,icnx;
+
     
     tstart = clock();
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
+    
+    /*model veloctiy & density*/
+    Fvel = sf_input("vel");
+    Fden = sf_input("den");
 
     /* setup I/O files */
-    Fw = sf_input ("in");
+    Fsrc = sf_input ("in");
     Fo = sf_output("out");
-    Fr = sf_input ("ref");
+    Frec = sf_output ("rec");
+
+    /*parameters of source*/
+    if (!sf_getbool("srcpoint", &srcpoint)) srcpoint = true;
+    /*source type: if y, use point source */
+    if (srcpoint && !sf_getint("spx", &spx)) sf_error("Need spx input");
+    /*source point in x */
+    if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=true;
+    /*source decay*/
+    if (!sf_getint("srcrange", &srcrange)) srcrange=10;
+    /*source decay range*/
+    if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=100;
+    /*trunc source after srctrunc time (s)*/
 
     /* Read/Write axes */
-    at = sf_iaxa(Fw,1); nt = sf_n(at); dt = sf_d(at);
-    ax = sf_iaxa(Fr,1); nx = sf_n(ax); dx = sf_d(ax);
-    
-    
+    if (srcpoint) {
+	at = sf_iaxa(Fsrc,1);
+    } else {
+	at = sf_iaxa(Fsrc,2);
+    }
+    nt = sf_n(at); dt = sf_d(at);
+    ax = sf_iaxa(Fvel,1); nx = sf_n(ax); dx = sf_d(ax);
+     
     sf_oaxa(Fo,ax,1); 
     sf_oaxa(Fo,at,2);
+    /*set for record*/
+    sf_oaxa(Frec, at, 1);
+    if (!srcpoint) {
+	sf_setn(ax,1);
+	sf_oaxa(Frec, ax, 2);
+    }
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
     if (!sf_getbool("inject", &inject)) inject=true; 
     /*=y inject source; =n initial condition*/
+    
 
     nk = fft1_init(nx,&nx2);
 
@@ -120,8 +161,6 @@ int main(int argc, char* argv[])
     sf_floatread(rt[0],m2*nk,right);
 
     /*model veloctiy & density*/
-    Fvel = sf_input("vel");
-    Fden = sf_input("den");
     
     if (!sf_histint(Fvel,"n1", &n1) || n1 != nx) sf_error("Need n1=%d in vel", nx);
     if (!sf_histfloat(Fvel,"d1", &d1) || d1 != dx) sf_error("Need d1=%d in vel", dx);
@@ -146,10 +185,19 @@ int main(int argc, char* argv[])
     if (!sf_histint(Ffft,"n1", &nk)) sf_error("Need n1 in fft");
     if (!sf_histfloat(Ffft,"d1", &dkx)) sf_error("Need d1 in fft");
     if (!sf_histfloat(Ffft,"o1", &kx0)) sf_error("Need o1 in fft");
+
+    /*parameters of geometry*/
+    if (!sf_getint("gdep", &gdep)) gdep = 0;
+    /*depth of geophone (grid points)*/
     
     /* read wavelet & reflectivity */
-    ww=sf_floatalloc(nt); sf_floatread(ww, nt, Fw);
-    rr=sf_floatalloc(nx); sf_floatread(rr,nx,Fr);
+    if (srcpoint) {
+	srcp = sf_floatalloc(nt);
+	sf_floatread(srcp,nt,Fsrc);
+    } else {
+	srcd = sf_floatalloc2(nx,nt);
+	sf_floatread(srcd[0], nx*nt, Fsrc);
+    }
 
     curtxx = sf_floatalloc(nx2);
     curvx  = sf_floatalloc(nx2);
@@ -160,6 +208,10 @@ int main(int argc, char* argv[])
     cwavex = sf_complexalloc(nk);
     cwavemx = sf_complexalloc(nk);
     wavex = sf_floatalloc2(nx2,m2);
+    
+    record = sf_floatalloc(nt);
+   
+    ifft1_allocate(cwavemx);
 
     /*Initial Condition*/
     if (inject == false) {
@@ -174,7 +226,7 @@ int main(int argc, char* argv[])
     }
 
     
-    ifft1_allocate(cwavemx);
+    
     
     for (ix=0; ix < nx; ix++) {
 	pretxx[ix]=0.;
@@ -189,12 +241,24 @@ int main(int argc, char* argv[])
     /* Check parameters*/
     if(verb) {
 	sf_warning("======================================");
+#ifdef SF_HAS_FFTW
+	sf_warning("FFTW is defined");
+#endif
+#ifdef SF_HAS_COMPLEX_H
+	sf_warning("Complex is defined");
+#endif
 	sf_warning("nx=%d dx=%f ", nx, dx);
 	sf_warning("nk=%d dkx=%f kx0=%f", nk, dkx, kx0);
 	sf_warning("nx2=%d", nx2);
 	sf_warning("======================================");
     } //End if
-   
+
+    /*set source*/
+    sp.trunc=srctrunc;
+    sp.srange=srcrange;
+    sp.alpha=0.5;
+    sp.decay=srcdecay?1:0; 
+
     /* MAIN LOOP */
     it0 = 0;
     if (inject == false) {
@@ -216,6 +280,7 @@ int main(int argc, char* argv[])
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 		kx = kx0+dkx*ik;
+
 #ifdef SF_HAS_COMPLEX_H
 		cwavemx[ik] = cwavex[ik]*rt[ik][im];
 		cwavemx[ik] = fplus(kx,dx)*cwavemx[ik];
@@ -261,29 +326,40 @@ int main(int argc, char* argv[])
 	    for (im=0; im<m2; im++) {
 		cx += lt[im][ix]*wavex[im][ix];
 	    }
-	    if (inject == true) {
-		curtxx[ix] = -1*dt*c11[ix]*cx + pretxx[ix]+ ww[it] * rr[ix];
-	    } else {
-		curtxx[ix] = -1*dt*c11[ix]*cx + pretxx[ix];
-	    }
-
+	    
+	    curtxx[ix] = -1*dt*c11[ix]*cx + pretxx[ix];
 	    pretxx[ix] = curtxx[ix];
 	    
 	    /* write wavefield to output */
 	    
 	}
 	
+	if (inject) {
+	    if (srcpoint && (it*dt)<=sp.trunc ) {
+		curtxx[spx] += srcp[it];
+		pretxx[spx] = curtxx[spx];
+	    }
+	    if (!srcpoint && (it*dt)<=sp.trunc){
+		for (ix = 0; ix < nx; ix++) {
+		    curtxx[ix] += srcd[it][ix];
+		    pretxx[ix] = curtxx[ix];
+		}
+	    }
+	}
+	/* write wavefield to output */
 	sf_floatwrite(curtxx,nx,Fo);
+	record[it] = curtxx[gdep];
 	
-   }/*End of MAIN LOOP*/
-   
-   if(verb) sf_warning(".");
-   
-   tend = clock();
-   duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
-   sf_warning(">> The CPU time of sfsglr is: %f seconds << ", duration);
-   exit (0);	
-   
+    }/*End of MAIN LOOP*/
+    
+    if(verb) sf_warning(".");
+    sf_floatwrite(record, nt, Frec);
+    
+    tend = clock();
+    duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
+    sf_warning(">> The CPU time of sfsglr is: %f seconds << ", duration);
+    exit (0);	
+    
 }
 
 
