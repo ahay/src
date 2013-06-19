@@ -224,8 +224,8 @@ int main(int argc, char* argv[])
 
     record = sf_floatalloc2(nt,nx);
 
-    ifft2_allocate(cwavemx);
-    ifft2_allocate(cwavemz);
+    //ifft2_allocate(cwavemx);
+    //ifft2_allocate(cwavemz);
 
     for (iz=0; iz < nzx; iz++) {
 	pretxx[iz]=0.;

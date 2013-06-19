@@ -129,7 +129,11 @@ void fft2(float *inp      /* [n1*n2] */,
     }
     
 #ifdef SF_HAS_FFTW
-    fftwf_execute(cfg);
+    if (cmplx) {
+      fftwf_execute_dft(cfg, cc[0], out);
+    } else {
+      fftwf_execute_dft_r2c(cfg, ff[0], out);
+    }
 #else	
     for (i2=0; i2 < n2; i2++) {
 	if (cmplx) {
@@ -168,35 +172,52 @@ void ifft2(float *out      /* [n1*n2] */,
 	   sf_complex *inp /* [nk*n2] */)
 /*< 2-D inverse FFT >*/
 {
-    int i1, i2;
-
+   int i1, i2;
 #ifdef SF_HAS_FFTW
-    fftwf_execute(icfg);
-#else
-    for (i1=0; i1 < nk; i1++) {
-	kiss_fft_stride(icfg2,(kiss_fft_cpx *) (inp+i1),ctrace2,nk);
-		
-	for (i2=0; i2<n2; i2++) {
-	    tmp[i2][i1] = ctrace2[i2];
-	}
-    }
-    for (i2=0; i2 < n2; i2++) {
-	if (cmplx) {
-	    kiss_fft_stride(icfg1,tmp[i2],(kiss_fft_cpx *) cc[i2],1);
-	} else {
-	    kiss_fftri(icfg,tmp[i2],ff[i2]);
-	}
-    }
+   if (icfg == NULL) {
+     icfg = cmplx?
+       fftwf_plan_dft_2d(n2,n1,
+			 (fftwf_complex *) inp,
+			 (fftwf_complex *) cc[0],
+			 FFTW_BACKWARD, FFTW_MEASURE):
+       fftwf_plan_dft_c2r_2d(n2,n1,
+			     (fftwf_complex *) inp, ff[0],
+			     FFTW_MEASURE);
+     if (NULL == icfg) sf_error("FFTW failure.");
+   }
 #endif
-    
-    /* FFT centering and normalization */
-    for (i2=0; i2<n2; i2++) {
-	for (i1=0; i1<n1; i1++) {
-	    if (cmplx) {
-		out[i2*n1+i1] = (((i2%2==0)==(i1%2==0))? wt:-wt) * crealf(cc[i2][i1]);
-	    } else {
-		out[i2*n1+i1] = (i2%2? -wt: wt)*ff[i2][i1];
-	    }
-	}
+   
+#ifdef SF_HAS_FFTW
+   if (cmplx) {
+     fftwf_execute_dft(icfg, inp, cc[0]);
+   } else {
+     fftwf_execute_dft_c2r(icfg, inp, ff[0]);
+   }
+#else
+   for (i1=0; i1 < nk; i1++) {
+     kiss_fft_stride(icfg2,(kiss_fft_cpx *) (inp+i1),ctrace2,nk);
+     
+     for (i2=0; i2<n2; i2++) {
+       tmp[i2][i1] = ctrace2[i2];
+     }
+   }
+   for (i2=0; i2 < n2; i2++) {
+     if (cmplx) {
+       kiss_fft_stride(icfg1,tmp[i2],(kiss_fft_cpx *) cc[i2],1);
+     } else {
+       kiss_fftri(icfg,tmp[i2],ff[i2]);
+     }
+   }
+#endif
+   
+   /* FFT centering and normalization */
+   for (i2=0; i2<n2; i2++) {
+     for (i1=0; i1<n1; i1++) {
+       if (cmplx) {
+	 out[i2*n1+i1] = (((i2%2==0)==(i1%2==0))? wt:-wt) * crealf(cc[i2][i1]);
+       } else {
+	 out[i2*n1+i1] = (i2%2? -wt: wt)*ff[i2][i1];
+       }
     }
+   }
 }
