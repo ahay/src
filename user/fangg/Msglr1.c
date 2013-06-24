@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     float srctrunc; 
     bool  srcpoint, srcdecay;
     float slx;
-    int spx;
+    int   spx;
     
     /*options*/
     float gdep; int gp;
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
     /*source decay range*/
     if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=100;
     /*trunc source after srctrunc time (s)*/
-
+    
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
     if (!sf_getbool("inject", &inject)) inject=true; 
@@ -341,6 +341,8 @@ int main(int argc, char* argv[])
 	if (inject && it < nt) {
 	    if (srcpoint && (it*dt)<=sp.trunc ) {
 		curtxx[spx] += srcp[it]*dt;
+		//curtxx[spx] += 0.5*(srcp[it]+srcp[it+1])*dt;
+		/*dp/dt(t+dt/2) = -rho*v^2*du/dx(t+dt/2) + s(t+dt)*/
 		pretxx[spx] = curtxx[spx];
 	    }
 	    if (!srcpoint && (it*dt)<=sp.trunc){
