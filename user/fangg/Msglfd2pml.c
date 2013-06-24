@@ -144,6 +144,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(fGx,"n2", &lenx)) sf_error("No n2= in input");
     if (!sf_histint(fGz,"n2", &lenz)) sf_error("No n2= in input");
     
+   
     sxxtmp = sf_floatalloc(lenx);
     sxztmp = sf_floatalloc(lenx);
     szxtmp = sf_floatalloc(lenz);
@@ -205,7 +206,7 @@ int main(int argc, char* argv[])
     sf_oaxa(fwf, az, 1);
     sf_oaxa(fwf, ax, 2);
     sf_oaxa(fwf, at, 3);
-    
+
     Gx = sf_floatalloc3(nzb, nxb, lenx);
     Gz = sf_floatalloc3(nzb, nxb, lenz);
     sf_floatread(Gx[0][0], nzb*nxb*lenx, fGx);

@@ -20,8 +20,6 @@
 #include <rsf.h>
 #include <math.h>
 
-
-
 int main(int argc, char* argv[])
 {
     /*grid parameters*/
@@ -38,6 +36,7 @@ int main(int argc, char* argv[])
     float slx;
     float alpha, beta, beta2;
     float dist2, xx, tt, tmp;
+    float cosbdt2;
     
     sf_file Fvel, Fsrc, Fslt;
     sf_init(argc, argv);
@@ -59,7 +58,7 @@ int main(int argc, char* argv[])
     /*source parameter*/
     if (!sf_getfloat("beta", &beta)) beta = 1.0;
     /*source parameter*/
-
+    
     at = sf_maxa(nt, 0.0, dt);
         
     vel = sf_floatalloc(nx);
@@ -77,26 +76,28 @@ int main(int argc, char* argv[])
 
     /*Manufactured Solution Source*/
     beta2 = beta*beta;
+    cosbdt2 = cosf(beta*dt*0.5);
     for (it=0; it<nt; it++) {
-	//tt = cosf(it*dt*beta)/beta;
-	tt = expf(-1*(it*dt-0.15)*beta);
+	//tt = sinf(it*dt*beta);
+	tt = (1.0*it+0.5)*dt;
+	tt = cosf(tt*beta);
+	//tt = expf(-1*(it*dt-0.15)*beta);
 	for (ix=0; ix<nx; ix++) {
 	    xx = ix*dx;
 	    dist2 = (xx-slx)*(xx-slx);
-	    tmp = expf(-1*alpha*dist2)*tt;
-	    //src[ix][iz] = tmp*(beta2+4*alpha*vel[ix][iz]*vel[ix][iz]*(alpha*dist2-1)); 
-	    src[it][ix] = tmp*(-1*beta2+4*alpha*vel[ix]*vel[ix]*(alpha*dist2-1)); 
-
+	    tmp = expf(-1*alpha*dist2)/beta;
+	    //src[it][ix] = -1*tmp*(beta2*tt+2*alpha*vel[ix]*vel[ix]*(2*alpha*dist2-1)*(tt)); 
+	    src[it][ix] = tmp*(beta2*tt+2*alpha*vel[ix]*vel[ix]*(2*alpha*dist2-1)*(tt-cosbdt2)); 
+	    //src[it][ix] = tmp*(-1*beta2+4*alpha*vel[ix]*vel[ix]*(alpha*dist2-1)); 
 	}
 	sf_floatwrite(src[it], nx, Fsrc);
     }
 
-    
-    
     /*solution*/
     for (it=0; it<nt; it++) {
-	//tt = sinf(it*dt*beta);
-	tt = expf(-1*(it*dt-0.15)*beta);
+	//tt = cosf(it*dt*beta);
+	tt =sinf(it*dt*beta);
+	//tt = expf(-1*(it*dt-0.15)*beta);
 	for (ix=0; ix<nx; ix++) {
 	    xx = ix*dx;
 	    dist2 = (xx-slx)*(xx-slx);

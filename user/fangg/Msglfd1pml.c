@@ -37,8 +37,7 @@ static float ldx(float *data, int ix)
     float res = 0.0;
     int il;
     for (il = 0; il < lenx; il++) {
-	res += 0.5*(data[ix-sx[il]] - data[ix+sx[il]-1])*G[il][ix];
-	//res += 0.5*(data[ix+sx[il]] - data[ix-sx[il]+1])*G[il][ix];
+	res += 0.5*(-1*data[ix-sx[il]+1] + data[ix+sx[il]])*G[il][ix];
     }
     return res;
 }
@@ -46,45 +45,62 @@ static float ldx(float *data, int ix)
 int main(int argc, char* argv[]) 
 {
     clock_t tstart,tend;
-    double duration;
+    double  duration;
+   
+    /*flag*/
     bool verb;
+    
+    /*I/O*/
+    sf_file fvel, fden, fsrc;
+    sf_file fwf/*wave field*/, frec/*record*/, fic/*Initial Condition*/; 
+    sf_file fG, fsx;
+    
+    sf_axis at, ax;
+    sf_axis icaxis;
+
+    /*I/O arrays*/
+    float *srcp, **srcd; /*point source, distributed source*/ 
+    float *vel, *den, *c11, *record;
+    float *ic;
+    float *sxtmp;
+    
+    /*Grid index variables*/
     int nx, nt, ix, it;
     int nxb;
     float dt, dx;
+
+    /*caculate arrays*/
     float *txxn1, *txxn0, *vxn1, *vxn0;
-    float *vel, *den, *c11, *source;
     float *denx;
-    float *record;
-    bool freesurface;
-    bool inject = false;
-    int spx, gdep;
-    int snapinter;
-    int mx; /*margin*/
- 
-    sf_file fvel, fden, fsource, fwf/*wave field*/, frec/*record*/, fic/*Initial Condition*/; 
-    sf_file fG, fsx;
-    float *sxtmp;
-    sf_axis at, ax;
 
+    /*source*/
     spara sp={0};
-    bool srcdecay;
+    bool  srcdecay, srcpoint, inject;
     float srctrunc;
+    float slx;
+    int   spx;
 
-    int pmlout, pmld0, decaybegin;
+    /*PML*/
+    int   pmlout, pmld0, decaybegin;
     int   decay;
     float gamma = GAMMA;
-
+    int   mx; /*margin*/
+    
+    /*options*/
+    bool  freesurface;
+    int   gp;
+    float gdep;
+    int   snapinter;
+      
     int it0;
     int icnx;
-    sf_axis icaxis;
-    float *ic;
-
+    
     tstart = clock();
     sf_init(argc, argv);
     if (!sf_getbool("verb", &verb)) verb=false; /*verbosity*/
 
     /*Set I/O file*/
-    fsource = sf_input("in");  
+    fsrc = sf_input("in");  
     /*source wavelet*/
     fvel    = sf_input("vel");
     /*velocity*/
@@ -97,16 +113,31 @@ int main(int argc, char* argv[])
     
     fG  = sf_input("G"); 
     fsx = sf_input("sx");
-        
-    if (SF_FLOAT != sf_gettype(fsource)) sf_error("Need float input");
+    
+    if (SF_FLOAT != sf_gettype(fsrc)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(fden)) sf_error("Need float input");
-        
-    if (!sf_getint("spx", &spx)) sf_error("Need spx input");
-    /*source point in x */
-    if (!sf_getint("gdep", &gdep)) gdep=0;
-    /* recorder depth */
-    if (!sf_getint("snapinter", &snapinter)) snapinter=10;
+    
+    /*parameters of source*/
+    if (!sf_getbool("srcpoint", &srcpoint)) srcpoint = true;
+    /*source type: if y, use point source */
+    if (srcpoint && !sf_getfloat("slx", &slx)) sf_error("Need slx input");
+    /*source location in x */
+    if (srcpoint && slx<0.0) sf_error("slx need >=0.0");
+    if (!sf_getbool("srcdecay",&srcdecay)) srcdecay=false;
+    /*source decay y=use*/
+    if (!sf_getfloat("srctrunc",&srctrunc)) srctrunc=1000;
+    /*source trunc time (s)*/
+    if (!sf_getbool("inject", &inject)) inject = true;
+    /* inject=y use inject source; inject=n use initial condition*/
+    
+     /*parameters of geometry*/
+    if (!sf_getfloat("gdep", &gdep)) gdep = 0.0;
+    /*depth of geophone */
+    if (gdep <0.0) sf_error("gdep need to be >=0.0");
+    /*source and receiver location*/
+
+    if (!sf_getint("snapinter", &snapinter)) snapinter=1;
     /* snap interval */
     if (!sf_getint("pmlsize", &pmlout)) pmlout=PMLOUT;
     /* size of PML layer */
@@ -119,20 +150,23 @@ int main(int argc, char* argv[])
     if (!sf_getbool("freesurface", &freesurface)) freesurface=false;
     /*free surface*/
     if (!sf_histint(fG,"n2", &lenx)) sf_error("No n2= in input");
-    if (!sf_getbool("srcdecay",&srcdecay)) srcdecay=true;
-    /*source decay y=use*/
-    if (!sf_getfloat("srctrunc",&srctrunc)) srctrunc=0.2;
-    /*source trunc time (s)*/
-    if (!sf_getbool("inject", &inject)) inject = true;
-    /* inject=y use inject source; inject=n use initial condition*/
-    
-    /* Read/Write axes */
-    at = sf_iaxa(fsource, 1); nt = sf_n(at); dt = sf_d(at); 
-    ax = sf_iaxa(fvel,1); nxb = sf_n(ax); dx = sf_d(ax);
-    
+
+    /* Read/Write axes */   
+    if (srcpoint) {
+	at = sf_iaxa(fsrc,1);
+    } else {
+	at = sf_iaxa(fsrc,2);
+    }
+    nt = sf_n(at); dt = sf_d(at);
+    ax = sf_iaxa(fvel,1); nxb = sf_n(ax); dx = sf_d(ax);   
+
+    /*read FD coefficients*/
+    G = sf_floatalloc2(nxb, lenx);
+    sf_floatread(G[0], nxb*lenx, fG);
+
+    /*read FD schemes*/
     sxtmp = sf_floatalloc(lenx);
     sx = sf_intalloc(lenx);
-    
     sf_floatread(sxtmp, lenx, fsx);
     mx = 0;
     for (ix=0; ix<lenx; ix++) {
@@ -143,25 +177,10 @@ int main(int argc, char* argv[])
     
     nx = nxb - 2*pmlout - 2*marg;
     
-    /*set axis for record file*/
-    //sf_setn(at, nt);
-    sf_setn(ax, nx);
-    sf_oaxa(frec, at, 1);
-    
-
-    /*set axis for snap file*/
-    sf_setn(at, (int)(nt-1)/snapinter+1);
-    sf_setd(at,dt*snapinter);
-    sf_oaxa(fwf, ax, 1);
-    sf_oaxa(fwf, at, 2);
-    
-    G = sf_floatalloc2(nxb, lenx);
-    sf_floatread(G[0], nxb*lenx, fG);
-    free(sxtmp);
-    vel = sf_floatalloc(nxb);
-    den = sf_floatalloc(nxb);
-    c11 = sf_floatalloc(nxb);
-    
+    /*read model*/
+    vel  = sf_floatalloc(nxb);
+    den  = sf_floatalloc(nxb);
+    c11  = sf_floatalloc(nxb);
     denx = sf_floatalloc(nxb);
     
     sf_floatread(vel, nxb, fvel);
@@ -171,27 +190,47 @@ int main(int argc, char* argv[])
 	denx[ix] = den[ix];
 	if(c11[ix] <= 0.0) sf_warning("c11=%f: ix=%d ",c11[ix], ix);
     }
-    
-    
-    /*den[ix+1/2][iz]*/
+    /*den[ix+1/2]*/
     for ( ix = 0; ix < nxb-1; ix++) {
 	denx[ix] = (den[ix+1] + den[ix])*0.5;
     }
     
-    source = sf_floatalloc(nt);
-    sf_floatread(source, nt, fsource);
-    
+    /*read source*/
+    if (srcpoint) {
+	srcp = sf_floatalloc(nt);
+	sf_floatread(srcp,nt,fsrc);
+    } else {
+	srcd = sf_floatalloc2(nx,nt);
+	sf_floatread(srcd[0], nx*nt, fsrc);
+    }
+        
     txxn1 = sf_floatalloc(nxb);
     txxn0 = sf_floatalloc(nxb);
     vxn1  = sf_floatalloc(nxb);
     vxn0  = sf_floatalloc(nxb);
         
     record = sf_floatalloc(nt);
-    
+
+    /*set wavefield axes*/     
+    sf_setn(at, (int)(nt-1)/snapinter+1); /*set axis for snap file*/
+    sf_setd(at,dt*snapinter);
+    sf_setn(ax, nx);   
+    sf_oaxa(fwf,ax,1); 
+    sf_oaxa(fwf,at,2);
+
+    /*set for record*/
+    sf_oaxa(frec, at, 1);
+    if (!srcpoint) {
+	sf_setn(ax,1);
+	sf_oaxa(frec, ax, 2);
+    }
+
+    spx = (int)(slx/dx+0.5);
+    gp  = (int)(gdep/dx+0.5);
     
     /*Initial Condition*/
     if (inject == false) {
-	fic     = sf_input("ic");  
+	fic = sf_input("ic");  
 	/*initial condition*/
 	if (SF_FLOAT != sf_gettype(fic)) sf_error("Need float input of ic");
 	icaxis = sf_iaxa(fic, 1); 
@@ -200,7 +239,6 @@ int main(int argc, char* argv[])
 	ic = sf_floatalloc(nx);
 	sf_floatread(ic, nx, fic);	
     }
-    
 
     init_pml1(nx, dt, pmlout, marg, pmld0, decay, decaybegin, gamma);
     
@@ -210,11 +248,9 @@ int main(int argc, char* argv[])
     for (ix = 0; ix < nxb; ix++) {
 	txxn0[ix] = 0.0;
     }
-    
     for (ix = 0; ix < nxb; ix++) {
 	vxn1[ix] = 0.0;  
     }
-    
     for (ix = 0; ix < nxb; ix++) {
 	vxn0[ix] = 0.0;
     }
@@ -228,16 +264,19 @@ int main(int argc, char* argv[])
     sp.alpha=0.5;
     sp.decay=srcdecay?1:0;
    	
-    sf_warning("============================");
-    sf_warning("nx=%d nt=%d", nx, nt);
-    sf_warning("dx=%f dt=%f", dx, dt);
-    sf_warning("lenx=%d marg=%d pmlout=%d", lenx, marg, pmlout);
-    sf_warning("srctrunc=%f srcdecay=%d", sp.trunc, sp.decay);
-    for(ix=0; ix<lenx; ix++){
-	sf_warning("[sxx]=[%d,] G=%f",sx[ix], G[ix][0]);
-    }
-    
-    
+    if (verb) {
+	sf_warning("============================");
+	sf_warning("nx=%d nt=%d", nx, nt);
+	sf_warning("dx=%f dt=%f", dx, dt);
+	sf_warning("lenx=%d marg=%d pmlout=%d", lenx, marg, pmlout);
+	sf_warning("srctrunc=%f srcdecay=%d", sp.trunc, sp.decay);
+	sf_warning("slx=%f, spx=%d, gdep=%f gp=%d",slx,spx,gdep,gp);
+	for(ix=0; ix<lenx; ix++){
+	    sf_warning("[sxx]=[%d,] G=%f",sx[ix], G[ix][0]);
+	}
+	sf_warning("============================"); 
+    } //End if
+
     /* MAIN LOOP */
     it0 = 0;
     if (inject == false) {
@@ -247,15 +286,11 @@ int main(int argc, char* argv[])
 	    //vxn0[ix+marg+pmlout] = ic[ix];
 	}
 	sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
-	record[0] = txxn0[pmlout+marg+gdep];
+	record[0] = txxn0[pmlout+marg+gp];
     }
 
-    
     for (it = it0; it < nt; it++) {
-	sf_warning("it=%d/%d;", it, nt);
-	if (inject ==true && (it*dt)<=sp.trunc) {
-	    explsourcet1(txxn0, source, it, spx+pmlout+marg, nxb, &sp);
-	}
+	if(verb) sf_warning("it=%d/%d;", it, nt-1);
 	
 	/*velocity*/
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++ ) {
@@ -267,25 +302,35 @@ int main(int argc, char* argv[])
 
 	/*Stress*/
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
-	    txxn1[ix] = txxn0[ix] - dt*c11[ix+1]*ldx(vxn1, ix+1);
-	    //txxn1[ix] = txxn0[ix] - dt*c11[ix-1]*ldx(vxn1, ix-1);
+	    txxn1[ix] = txxn0[ix] - dt*c11[ix]*ldx(vxn1, ix-1);
 	}
 	
 	/*Stress PML */
 	pml1_txx(txxn1, vxn1, c11, ldx, freesurface);
 
+	if (inject) {
+	    if (srcpoint && (it*dt)<=sp.trunc) {
+		explsourcet1(txxn1, srcp, dt, it, spx+pmlout+marg, nt, &sp);
+    		//txxn1[marg+pmlout+spx] += srcp[it]*dt;
+	    }
+	    if (!srcpoint && (it*dt)<=sp.trunc) {
+		for (ix = 0; ix < nx; ix++) 
+	    	    txxn1[ix+marg+pmlout] +=srcd[it][ix]*dt;
+	    }
+	}
+	    
 	/*n1 -> n0*/
 	time_step_exch1(txxn0, txxn1, it);
 	time_step_exch1(vxn0, vxn1, it);
 	pml1_tstep_exch(it);
-       
-       	if ( it%snapinter==0 ) {
-	    sf_floatwrite(txxn0+pmlout+marg, nx, fwf);
+	if ( it%snapinter==0 ) {
+	    sf_floatwrite(txxn1+pmlout+marg, nx, fwf);
 	}
 	
-	record[it] = txxn0[pmlout+marg+gdep];
+	record[it] = txxn1[pmlout+marg+gp];
 	
     }/*End of LOOP TIME*/
+    
     sf_warning(".");
     sf_floatwrite(record, nt, frec);
  

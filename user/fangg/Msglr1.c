@@ -85,12 +85,13 @@ int main(int argc, char* argv[])
     int   srcrange;
     float srctrunc; 
     bool  srcpoint, srcdecay;
-    int   spx;
+    float slx;
+    int spx;
     
     /*options*/
-    int  gdep;
-    bool inject;
-    int  it0,icnx;
+    float gdep; int gp;
+    bool  inject;
+    int   it0, icnx;
 
     
     tstart = clock();
@@ -109,14 +110,20 @@ int main(int argc, char* argv[])
     /*parameters of source*/
     if (!sf_getbool("srcpoint", &srcpoint)) srcpoint = true;
     /*source type: if y, use point source */
-    if (srcpoint && !sf_getint("spx", &spx)) sf_error("Need spx input");
-    /*source point in x */
+    if (srcpoint && !sf_getfloat("slx", &slx)) sf_error("Need slx input");
+    /*source location in x */
+    if (srcpoint && slx<0.0) sf_error("slx need to be >=0.0");
     if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=true;
     /*source decay*/
     if (!sf_getint("srcrange", &srcrange)) srcrange=10;
     /*source decay range*/
     if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=100;
     /*trunc source after srctrunc time (s)*/
+
+    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
+    if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
+    if (!sf_getbool("inject", &inject)) inject=true; 
+    /*=y inject source; =n initial condition*/
 
     /* Read/Write axes */
     if (srcpoint) {
@@ -135,12 +142,6 @@ int main(int argc, char* argv[])
 	sf_setn(ax,1);
 	sf_oaxa(Frec, ax, 2);
     }
-
-    if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
-    if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
-    if (!sf_getbool("inject", &inject)) inject=true; 
-    /*=y inject source; =n initial condition*/
-    
 
     nk = fft1_init(nx,&nx2);
 
@@ -187,10 +188,15 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(Ffft,"o1", &kx0)) sf_error("Need o1 in fft");
 
     /*parameters of geometry*/
-    if (!sf_getint("gdep", &gdep)) gdep = 0;
+    if (!sf_getfloat("gdep", &gdep)) gdep = 0.0;
     /*depth of geophone (grid points)*/
+    if (gdep <0.0) sf_error("gdep need to be >=0.0");
+    /*source and receiver location*/
+    spx = (int)(slx/dx+0.5);
+    gp  = (int)(gdep/dx+0.5);
     
-    /* read wavelet & reflectivity */
+
+    /* read source */
     if (srcpoint) {
 	srcp = sf_floatalloc(nt);
 	sf_floatread(srcp,nt,Fsrc);
@@ -225,9 +231,6 @@ int main(int argc, char* argv[])
 	sf_floatread(ic, nx, Fic);	
     }
 
-    
-    
-    
     for (ix=0; ix < nx; ix++) {
 	pretxx[ix]=0.;
 	prevx[ix] =0.;
@@ -250,6 +253,7 @@ int main(int argc, char* argv[])
 	sf_warning("nx=%d dx=%f ", nx, dx);
 	sf_warning("nk=%d dkx=%f kx0=%f", nk, dkx, kx0);
 	sf_warning("nx2=%d", nx2);
+	sf_warning("slx=%f, spx=%d, gdep=%f gp=%d",slx,spx,gdep,gp);
 	sf_warning("======================================");
     } //End if
 
@@ -334,21 +338,21 @@ int main(int argc, char* argv[])
 	    
 	}
 	
-	if (inject) {
+	if (inject && it < nt) {
 	    if (srcpoint && (it*dt)<=sp.trunc ) {
-		curtxx[spx] += srcp[it];
+		curtxx[spx] += srcp[it]*dt;
 		pretxx[spx] = curtxx[spx];
 	    }
 	    if (!srcpoint && (it*dt)<=sp.trunc){
 		for (ix = 0; ix < nx; ix++) {
-		    curtxx[ix] += srcd[it][ix];
+		    curtxx[ix] += srcd[it][ix]*dt;
 		    pretxx[ix] = curtxx[ix];
 		}
 	    }
 	}
 	/* write wavefield to output */
 	sf_floatwrite(curtxx,nx,Fo);
-	record[it] = curtxx[gdep];
+	record[it] = curtxx[gp];
 	
     }/*End of MAIN LOOP*/
     

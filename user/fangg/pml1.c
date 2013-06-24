@@ -60,9 +60,7 @@ void init_pml1(int vnx, float vdt,/* Modle size*/
     
     txxn1x  =   sf_floatalloc(nxb);
     txxn0x  =   sf_floatalloc(nxb);
-    
-    
-
+ 
     /* PML and absorb */
     for (ix=0; ix<nxb; ix++){
 	pmldx[ix] = 0.0;
@@ -119,12 +117,12 @@ void pml1_txx(float *txxn1, float *vxn1, float *c11,
     /*Stress PML -- top*/
     if (freesurface == false) {
 	for (ix=marg; ix<marg+pmlout; ix++) {
-	    txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]-dt*c11[ix]*ldx(vxn1,ix+1))/(1+dt*pmldx[ix]/2);
+	    txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]-dt*c11[ix]*ldx(vxn1,ix-1))/(1+dt*pmldx[ix]/2);
 	    txxn1[ix] = txxn1x[ix];
 	}
     } else {
 	for (ix=marg; ix<marg+pmlout; ix++) {
-	    txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]-dt*0.0*ldx(vxn1,ix+1))/(1+dt*pmldx[ix]/2);
+	    txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]-dt*0.0*ldx(vxn1,ix-1))/(1+dt*pmldx[ix]/2);
 	    txxn1[ix]= txxn1x[ix];
 	}
 	
@@ -133,7 +131,7 @@ void pml1_txx(float *txxn1, float *vxn1, float *c11,
     
     /*Stress PML -- bottom*/
     for (ix=nx+pmlout+marg; ix<nx+2*pmlout+marg; ix++) {
-	txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]-dt*c11[ix]*ldx(vxn1,ix+1))/(1+dt*pmldx[ix]/2);
+	txxn1x[ix]=((1-dt*pmldx[ix]/2)*txxn0x[ix]-dt*c11[ix]*ldx(vxn1,ix-1))/(1+dt*pmldx[ix]/2);
 	txxn1[ix] = txxn1x[ix];
     }	
 }
@@ -192,15 +190,15 @@ void time_step_exch1(float *dn0, float *dn1, int it)
 /*<exchange >*/
 {
     int ix;
-    if ( DECAY_FLAG == 1 && DECAY_BEGIN >= it){
-	for (ix = marg; ix<nx+pmlout*2+marg; ix++) {
-	    dn0[ix]  = dn1[ix]*decdx[ix];
-	}
-    } else {
+    //if ( DECAY_FLAG == 1 && DECAY_BEGIN >= it){
+    //for (ix = marg; ix<nx+pmlout*2+marg; ix++) {
+    //dn0[ix]  = dn1[ix]*decdx[ix];
+	    //}
+    //} else {
 	for (ix = marg; ix<nx+pmlout*2+marg; ix++) {
 	    dn0[ix]  = dn1[ix];
 	}
-    }
+//    }
 }
     
 
