@@ -20,6 +20,9 @@ approximation (Song, Fomel, and Ying)
   traveltime source-derivatives (Li and Fomel)
 * jsg/butterfly: A fast butterfly algorithm for generalized Radon
   transforms (Hu, Fomel, Demanet, and Ying)
+* jsg/orthorhombic: Modeling of pseudo-acoustic P-waves in
+  orthorhombic media with a lowrank approximation (Song and
+  Alkhalifah)
 
 To SCons:
 
