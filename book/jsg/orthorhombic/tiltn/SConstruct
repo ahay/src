@@ -1,0 +1,258 @@
+from rsf.proj import *
+Flow('velx',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output="1500+30*(x2-1.5)*(x2-1.5)+30*(x3-1)*(x3-1)+40*(x1)*(x1)"
+| scale dscale=0.001
+     ''')
+Result('velx',
+       '''
+       byte clip=820 bias=860 bar=bar1.rsf barreverse=y |
+       grey3 transp=n pclip=100 screenration=1 color=j
+       label1="X" label2="Y" label3="Z" scalebar=y poly=y bias=1000
+       frame1=200 frame2=550 frame3=600
+       unit1= unit2=  title="V1" 
+       ''')
+Flow('vely',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output="1500+40*(x2-1.5)*(x2-1.5)+40*(x3-1)*(x3-1)+60*(x1)*(x1)"
+| scale dscale=0.001
+     ''')
+Result('vely',
+       '''
+       byte clip=820 bias=860 bar=bar2.rsf barreverse=y |
+       grey3 transp=n pclip=100 screenration=1 color=j
+       frame1=200 frame2=550 frame3=600
+       unit1= unit2=   title="V2" 
+       ''')
+Flow('velz',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output="1500+35*(x2-1.5)*(x2-1.5)+40*(x3-1)*(x3-1)+50*(x1)*(x1)"
+| scale dscale=0.001
+     ''')
+Result('velz',
+       '''
+       byte clip=820 bias=860 bar=bar3.rsf barreverse=y |
+       grey3 transp=n pclip=100 screenration=1 color=j
+       frame1=200 frame2=550 frame3=600
+       unit1= unit2=   title="Vz" 
+       ''')
+Flow('eta1',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=0.3
+     ''')
+Flow('eta2',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=0.1
+     ''')
+Flow('mu',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=3 k2=251 k3=126 |
+     math output=1.03
+     ''')
+Flow('seta1','mu','math output=45')
+Flow('seta2','mu','math output=45')
+Flow('seta','seta1 seta2','cat ${SOURCES[1]}  axis=4') 
+nt=1201
+dt=0.001
+Flow('source',None,
+     '''
+     spike n1=%d d1=%g k1=101 | 
+     ricker1 frequency=15 
+     '''%(nt,dt))
+Result('source','graph  title="Source Wavelet" ')
+nt=2001
+dt=0.001
+Flow('source1',None,
+     '''
+     spike n1=%d d1=%g k1=101 | 
+     ricker1 frequency=15 
+     '''%(nt,dt))
+
+Flow('fft','velx','fft1 pad=1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+
+Flow('mid left right','velz fft velx vely eta1 eta2 mu seta',
+     '''
+     ortlr seed=2010 npk=30 eps=0.0001 dt=%g 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     etax=${SOURCES[4]} etay=${SOURCES[5]} mu=${SOURCES[6]}
+     seta1=${SOURCES[7]} 
+     left=${TARGETS[1]} right=${TARGETS[2]} 
+     '''%dt)
+Flow('refl',None,
+     '''
+     spike n1=256 n2=256 n3=256 d1=0.025 d2=0.025 d3=0.025 o1=-3.175 o2=-3.175 o3=-3.175 unit1=km unit2=km unit3=km k1=128 k2=128 k3=128 |
+     smooth rect1=3 rect2=3 rect3=3 repeat=3
+     ''')
+#Flow('wave snaps','source refl left mid right',
+Flow('wave snaps','source1 refl left mid right',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y 
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+
+Result('wave',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+       ''')
+
+Plot('snaps2','snaps',
+     '''
+     put n4=23 |
+     byte gainpanel=all |
+     grey4 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+     wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+     ''')
+Flow('snapss','snaps','window n4=1 f4=24')
+Result('snapxy','snapss','window n1=1 f1=127 | grey screenratio=1 transp=n title="Depth Slice" label1=X label2=Y unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8')
+Result('snapxz','snapss','window n3=1 f3=127 |  grey screenratio=1 title="Crossline Slice" label1=Z label2=X unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8')
+Result('snapyz','snapss','window n2=1 f2=127 | grey screenratio=1 title="Inline Slice" label1=Z label2=Y unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 ')
+Flow('source4','source1','window j1=4')
+Flow('mid4 left4 right4','velz fft velx vely eta1 eta2 mu seta',
+     '''
+     ortlr seed=2010 npk=30 eps=0.0001 dt=0.004 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     etax=${SOURCES[4]} etay=${SOURCES[5]} mu=${SOURCES[6]}
+     seta1=${SOURCES[7]} 
+     left=${TARGETS[1]} right=${TARGETS[2]} 
+     ''')
+Flow('wave4 snaps4','source4 refl left4 mid4 right4',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y 
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+Flow('mid4l left4l right4l','velz fft velx vely eta1 eta2 mu seta',
+     '''
+     ortllr seed=2010 npk=30 eps=0.0001 dt=0.004 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     etax=${SOURCES[4]} etay=${SOURCES[5]} mu=${SOURCES[6]}
+     seta1=${SOURCES[7]} 
+     left=${TARGETS[1]} right=${TARGETS[2]}
+     ''')
+Flow('wave4l snaps4l','source4 refl left4l mid4l right4l',
+     '''
+     orthowave ref=${SOURCES[1]} left=${SOURCES[2]} mid=${SOURCES[3]} right=${SOURCES[4]} verb=y 
+     snap=50 snaps=${TARGETS[1]}
+     ''')
+Flow('snapssl','snaps4l','window n4=1 f4=6')
+Result('snapxyl','snapssl','window n1=1 f1=127 | grey screenratio=1 transp=n title="Depth Slice" label1=X label2=Y unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8')
+Result('snapxzl','snapssl','window n3=1 f3=127 |  grey screenratio=1 title="Crossline Slice" label1=Z label2=X unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8')
+Result('snapyzl','snapssl','window n2=1 f2=127 | grey screenratio=1 title="Inline Slice" label1=Z label2=Y unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 ')
+Plot('snapsl','snaps4l',
+     '''
+     window n4=8 |
+     byte gainpanel=all |
+     grey4 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+     wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+     ''')
+Result('wave4l','snaps4l',
+       '''
+       window n4=1 f4=7 |
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+       ''')
+Result('wave4','snaps4',
+       '''
+       window n4=1 f4=7 |
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+       ''')
+Flow('snapss4','snaps4','window n4=1 f4=6')
+Result('snapxy4','snapss4','window n1=1 f1=127 | grey screenratio=1 transp=n title="Depth Slice" label1=X label2=Y unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8')
+Result('snapxz4','snapss4','window n3=1 f3=127 |  grey screenratio=1 title="Crossline Slice" label1=Z label2=X unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8')
+Result('snapyz4','snapss4','window n2=1 f2=127 | grey screenratio=1 title="Inline Slice" label1=Z label2=Y unit1=km unit2=km min1=-2.8 min2=-2.8 max1=2.8 max2=2.8 ')
+Flow('diff','snapssl snapss4',
+     '''
+     add scale=1,-1 ${SOURCES[1]} 
+     ''')
+Result('diff',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=128 frame2=128 frame3=128 point1=0.7 point2=0.7
+       wanttitle=n label1=Z label2=X label3=Y flat=n screenratio=1.0
+       ''')
+
+
+Flow('bar','velx','bar clip=0.6 bias=2.0')
+Result('velxfig','velx bar',
+       '''
+       byte clip=0.6 bias=2.0 |
+       grey3 frame1=100 frame2=50 frame3=120 point1=0.4 point2=0.7
+       label1=Z label2=X label3=Y flat=n maxval=3.4 minval=1.5
+       color=j title="V\_1" scalebar=y bar=${SOURCES[1]} barlabel='km/s'
+       ''')
+Result('velyfig','vely bar',
+       '''
+       byte clip=0.6 bias=2.0 |
+       grey3 frame1=100 frame2=50 frame3=120 point1=0.4 point2=0.7
+       label1=Z label2=X label3=Y flat=n maxval=3.4 minval=1.5
+       color=j title="V\_2" scalebar=y bar=${SOURCES[1]} barlabel='km/s' 
+       ''')
+Result('velzfig','velz bar',
+       '''
+       byte clip=0.6 bias=2.0 |
+       grey3 frame1=100 frame2=50 frame3=120 point1=0.4 point2=0.7
+       label1=Z label2=X label3=Y flat=n maxval=3.4 minval=1.5
+       color=j title="V\_v" scalebar=y bar=${SOURCES[1]} barlabel='km/s' 
+       ''')
+Flow('midtest app real','velz fft velx vely eta1 eta2 mu',
+     '''
+     ormatrix seed=2010 npk=30 eps=0.0001 dt=0.004 
+     fft=${SOURCES[1]} velx=${SOURCES[2]} vely=${SOURCES[3]} 
+     etax=${SOURCES[4]} etay=${SOURCES[5]} mu=${SOURCES[6]}
+     app=${TARGETS[1]} real=${TARGETS[2]} 
+     xx1=3289650 xx2=6579300 xx3=9868950
+     ''')
+#Flow('err','app real','add  ${SOURCES[1]} scale=1,-1 | window n3=129 n4=129')
+Flow('err','app real','add  ${SOURCES[1]} scale=1,-1 | window f3=128 f4=128')
+Flow('err1','err','window n1=1')
+Flow('err2','err','window n1=1 f1=1')
+Flow('err3','err','window n1=1 f1=2')
+Flow('barerr1','err1','bar clip=0.00004 bias=0')
+Result('errfig1','err1 barerr1',
+       '''
+       byte clip=0.00004 bias=0 |
+       sfput o1=0 n1=129 d1=0.78125 o2=0 n2=128 d2=0.78125 
+       o3=0 d3=0.78125 n3=128  |
+       grey3 frame1=80 frame2=90 frame3=90 point1=0.4 point2=0.7
+       label1="kz (% of the Nyquist)" unit1= 
+       label2="kx (% of the Nyquist)" unit2= 
+       label3="ky (% of the Nyquist)" unit3= 
+       flat=n
+       color=j title="err1" scalebar=y bar=${SOURCES[1]} barreverse=y 
+       ''')
+Result('errfig2','err2 barerr1',
+       '''
+       byte clip=0.00008 bias=0 |
+       sfput o1=0 n1=129 d1=0.78125 o2=0 n2=128 d2=0.78125 
+       o3=0 d3=0.78125 n3=128  |
+       grey3 frame1=80 frame2=90 frame3=90 point1=0.4 point2=0.7
+       label1="kz (% of the Nyquist)" unit1= 
+       label2="kx (% of the Nyquist)" unit2= 
+       label3="ky (% of the Nyquist)" unit3= 
+       flat=n
+       color=j title="err2" scalebar=y bar=${SOURCES[1]} barreverse=y 
+       ''')
+Result('errfig3','err3 barerr1',
+       '''
+       byte clip=0.0001 bias=0 |
+       sfput o1=0 n1=129 d1=0.78125 o2=0 n2=128 d2=0.78125 
+       o3=0 d3=0.78125 n3=128  |
+       grey3 frame1=80 frame2=90 frame3=90 point1=0.4 point2=0.7
+       label1="kz (% of the Nyquist)" unit1= 
+       label2="kx (% of the Nyquist)" unit2= 
+       label3="ky (% of the Nyquist)" unit3= 
+       flat=n
+       color=j title="err3" scalebar=y bar=${SOURCES[1]} barreverse=y 
+       ''')
+
+End()
+
