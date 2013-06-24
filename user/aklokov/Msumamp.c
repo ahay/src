@@ -24,6 +24,7 @@ int main (int argc, char* argv[])
 {
 
     int n1, n2, n3;
+	int n2top, n2bot, n3top, n3bot;
     float d1, o1;
     float badSample;
     int size;
@@ -64,6 +65,16 @@ int main (int argc, char* argv[])
     if ( !sf_histint   (dataFile, "n2", &n2) )  sf_error ("Need n2= in input");
     if ( !sf_histint   (dataFile, "n3", &n3) )  sf_error ("Need n3= in input");
 
+    if ( !sf_histint   (hTopFile, "n2", &n2top) )  sf_error ("Need n2= in top horizon file");
+    if ( !sf_histint   (hTopFile, "n3", &n3top) )  sf_error ("Need n3= in top horizon file");	
+
+    if ( !sf_histint   (hTopFile, "n2", &n2bot) )  sf_error ("Need n2= in bottom horizon file");
+    if ( !sf_histint   (hTopFile, "n3", &n3bot) )  sf_error ("Need n3= in bottom horizon file");	
+
+	// files-consistency checking
+	if (n2bot != n2 || n3bot != n3 || n2top != n2 || n3top != n3)
+		sf_error ("Horizons are not consistent with data");
+
     sf_putint (stackFile, "n1", 1);
 
     // run parameters
@@ -83,8 +94,8 @@ int main (int argc, char* argv[])
 		    sf_floatread (&bottom, 1, hBotFile);
 		    sf_floatread (trace, n1, dataFile);
 
-		    if (fabs (top - badSample) < 1e-6) continue;    // non-interpreted sample in the horizons
-		    if (fabs (bottom - badSample) < 1e-6) continue;			
+		    if (fabs (top - badSample) < 1.f) continue;    // non-interpreted sample in the horizons
+		    if (fabs (bottom - badSample) < 1.f) continue;			
 
 		    t = o1;
 		    ind = 0;
