@@ -1,0 +1,141 @@
+from rsf.proj import *
+
+# Create a reflector model
+##########################
+
+Flow('dome',None,
+     '''
+     math d1=0.01 n1=2001 o1=-5 unit1=km label1=Distance
+     output="5-3*exp(-(x1-8.5)^2/9)"
+     ''')
+Flow('ref','dome',
+     '''
+     spray axis=2 n=5 o=0 d=0.25 |
+     math output="(input-1)*x2*x2+1"
+     ''')
+Flow('dip','ref',
+     'math output="2*(x1-8.5)/3*exp(-(x1-8.5)^2/9)*x2*x2" ')
+
+Plot('ref',
+     '''
+     graph min1=0 max1=10 min2=0 max2=5.5 scalebar=y
+     yreverse=y wanttitle=n wantaxis=n
+     plotcol=0 plotfat=5
+     ''')
+
+# Model zero-offset data
+########################
+
+Flow('zodata','ref dip',
+     '''
+     kirmod cmp=y dip=${SOURCES[1]} 
+     nh=1  dh=0.1  h0=0 refx=0 refz=0
+     ns=251 ds=0.04 s0=0
+     freq=25 dt=0.01 nt=801 type=v
+     vel=1. gradz=0.25 gradx=0.5 verb=y |
+     tpow tpow=1 |
+     put label3=Midpoint unit3=km |
+     window |
+     costaper nw2=50
+     ''',split=[1,2001],reduce='add')
+
+Result('zodata',
+       '''
+       window n1=401 | grey title="Zero Offset Data" 
+       labelsz=6 titlesz=8 titlefat=4 labelfat=4
+       ''')
+
+# Half-order derivative
+Flow('hzodata','zodata',
+     'halfint inv=y adj=y')
+
+# Physical-domain Kirchhoff
+###########################
+
+# velocity model
+Flow('model',None,
+     '''
+     math
+     n1=551  d1=0.01 label1=Depth    unit1=km
+     n2=1001 d2=0.01 label2=Position unit2=km
+     n3=1
+     output="1.+0.25*x1+0.5*x2" label=Velocity unit=km/s
+     ''')
+
+Plot('model',
+     '''
+     grey title=Model color=j mean=y scalebar=y labelsz=6 titlesz=8
+     barreverse=y pclip=100 titlefat=4 labelfat=4
+     ''')
+
+Result('modl','model ref','Overlay')
+
+# Traveltime table
+nshot=11
+
+Flow('yshot',None,'math n1=%d o1=0. d1=%g output=x1' % (nshot,10./(nshot-1)))
+Flow('szero','yshot','math output=0.')
+Flow('shots','szero yshot','cat axis=2 ${SOURCES[1]} ${SOURCES[0]} | transp')
+
+Flow('time tdl tds','model shots',
+     '''
+     put d3=0.01 o3=0. label3= unit3= |
+     eikods shotfile=${SOURCES[1]} tdl1=${TARGETS[1]} tds1=${TARGETS[2]} |
+     put o4=0. d4=%g | window
+     ''' % (10./(nshot-1)))
+
+Flow('times','time',
+     '''
+     transp plane=13 memsize=2048 |
+     deriv |
+     transp plane=13 memsize=2048 |
+     scale dscale=%g
+     ''' % ((nshot-1)/10.))
+
+anti = 0.5
+clip = 99.7
+
+# Post-stack migration (Hermite)
+Flow('hzodmig','hzodata time tds',
+     'kirmig0 table=${SOURCES[1]} deriv=${SOURCES[2]} antialias=%g' % anti)
+
+Plot('hzodmig',
+     '''
+     grey title="Zero Offset Image (Hermite)" pclip=%g
+     label2=Position label1=Depth unit1=km labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''' % clip)
+
+# Post-stack migration (linear)
+Flow('lzodmig','hzodata time times',
+     'kirmig0 type=linear table=${SOURCES[1]} deriv=${SOURCES[2]} antialias=%g' % anti)
+
+Plot('lzodmig',
+     '''
+     grey title="Zero Offset Image (linear)" pclip=%g
+     label2=Position label1=Depth unit1=km labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''' % clip)
+
+# Post-stack migration (partial)
+Flow('pzodmig','hzodata time times',
+     'kirmig0 type=partial table=${SOURCES[1]} deriv=${SOURCES[2]} antialias=%g' % anti)
+
+Plot('pzodmig',
+     '''
+     grey title="Zero Offset Image (shift)" pclip=%g
+     label2=Position label1=Depth unit1=km labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''' % clip)
+
+# Post-stack migration (no anti-aliasing)
+Flow('azodmig','hzodata time tds',
+     'kirmig0 table=${SOURCES[1]} deriv=${SOURCES[2]} antialias=0')
+
+Plot('azodmig',
+     '''
+     grey title="Zero Offset Image (Hermite without anti-anliasing)" pclip=%g
+     label2=Position label1=Depth unit1=km labelsz=10 titlesz=12 titlefat=6 labelfat=6
+     ''' % clip)
+
+Result('hzodmig','hzodmig pzodmig','OverUnderAniso')
+Result('lzodmig','lzodmig azodmig','OverUnderAniso')
+
+End()
