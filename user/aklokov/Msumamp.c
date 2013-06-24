@@ -43,13 +43,17 @@ int main (int argc, char* argv[])
 
     if ( NULL != sf_getstring ("top") ) {
 	/* top horizon */
-	hTopFile = sf_input ("top");
-    }
+		hTopFile = sf_input ("top");
+    } else {
+		sf_error ("Need float input: top horizon");
+	}
 
     if ( NULL != sf_getstring ("bot") ) {
 	/* bottom horizon */
-	hBotFile = sf_input ("bot");
-    }
+		hBotFile = sf_input ("bot");
+    } else {
+		sf_error ("Need float input: bottom horizon");
+	}
 // Output file
     stackFile = sf_output ("out");
 
@@ -72,29 +76,29 @@ int main (int argc, char* argv[])
 
     pind = 0;
     for (i3 = 0; i3 < n3; ++i3) {
-	for (i2 = 0; i2 < n2; ++i2, ++pind) {
-	    panel [pind] = 0.f;
+		for (i2 = 0; i2 < n2; ++i2, ++pind) {
+		    panel [pind] = 0.f;
 
-	    sf_floatread (&top, 1, hTopFile);
-	    if (fabs (top - badSample) < 1e-6) continue;
-	    sf_floatread (&bottom, 1, hBotFile);
-	    if (fabs (bottom - badSample) < 1e-6) continue;			
+		    sf_floatread (&top, 1, hTopFile);
+		    sf_floatread (&bottom, 1, hBotFile);
+		    sf_floatread (trace, n1, dataFile);
 
-	    sf_floatread (trace, n1, dataFile);
+		    if (fabs (top - badSample) < 1e-6) continue;    // non-interpreted sample in the horizons
+		    if (fabs (bottom - badSample) < 1e-6) continue;			
 
-	    t = o1;
-	    ind = 0;
-	    while (t < top && ind < n1) { t += d1; ++ind; }
+		    t = o1;
+		    ind = 0;
+		    while (t < top && ind < n1) { t += d1; ++ind; }
 		
-	    stack = 0.f;
-	    while (t < bottom && ind < n1) {
-		stack += pow (trace [ind], 2);
-		++ind;
-		t += d1;
-	    }
+		    stack = 0.f;
+		    while (t < bottom && ind < n1) {
+				stack += pow (trace [ind], 2);
+				++ind;
+				t += d1;
+	    	}
 
-	    panel [pind] = stack;
-	}
+	    	panel [pind] = stack;
+		}
     }
 
     sf_floatwrite (panel, size, stackFile);
@@ -103,7 +107,6 @@ int main (int argc, char* argv[])
     sf_fileclose (hTopFile);
     sf_fileclose (hBotFile);
     sf_fileclose (stackFile);
-
 
     free (panel);
     free (trace);
