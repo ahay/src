@@ -1315,14 +1315,14 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
     sf_esc_scgrid3_init_patch (esc_scgrid, input_prev, 0, 0,
                                z, x, y, a0, da, b0, db, na, nb);
     sf_esc_scgrid3_init_patch (esc_scgrid, input_curr,
-                               nbp > 1 ? 1 : 0, nbp > 1 ? 0 : 1,
+                               nap > 1 ? 0 : 1, nap > 1 ? 1 : 0,
                                z, x, y, a0, da, b0, db, na, nb);
     /* Next angle patch to process */ 
-    iap = 0;
-    ibp = 2;
-    if (ibp >= nbp) {
-        iap = 1;
-        ibp = 0;
+    iap = 2;
+    ibp = 0;
+    if (iap >= nap) {
+        iap = 0;
+        ibp = 1;
     }
     /* Indices with angle patch */
     iiap = 0;
@@ -1429,26 +1429,26 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                         input_prev[i].iab = iab;
                         in_prev++;
                         /* Next input angle */
-                        iab++;
-                        if (iab == na*nb)
-                            break;
-                        iibp++;
-                        if (esc_scgrid->mb == iibp) {
-                            /* End of vertical line in a patch */
-                            iibp = 0;
-                            iiap++;
-                            if (esc_scgrid->ma == iiap) {
+                        iiap++;
+                        if (esc_scgrid->ma == iiap) {
+                            /* End of horizontal line in a patch */
+                            iiap = 0;
+                            iibp++;
+                            if (esc_scgrid->mb == iibp) {
                                 /* End of patch */ 
-                                iiap = 0;
-                                ibp++;
-                                if (nbp == ibp) {
-                                    /* End of vertical group of patches */
-                                    ibp = 0;
-                                    iap++;
+                                iibp = 0;
+                                iap++;
+                                if (nap == iap) {
+                                    /* End of horizontal group of patches */
+                                    iap = 0;
+                                    ibp++;
                                 }
                             }
-                            iab = (iap*esc_scgrid->ma + iiap)*nb + (ibp*esc_scgrid->mb + iibp);
                         }
+                        iab = (iap*esc_scgrid->ma + iiap)*nb + (ibp*esc_scgrid->mb + iibp);
+                        if (iab == na*nb)
+                            break;
+//                        sf_warning ("%d %d %d %d %d", iiap, iibp, iap, ibp, iab);
                     }
                 }
             }
