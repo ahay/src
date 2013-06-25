@@ -18,7 +18,8 @@ Papers(copyr='The University of Texas at Austin',
                 'lowrank': 'Sergey Fomel, Lexing Ying, and Xiaolei Song',
                 'fpwd': 'Zhonghuan Chen, Sergey Fomel, and Wenkai Lu',
                 'crs': 'Sergey Fomel and Roman Kazinnik',
-                'lfd': 'Xiaolei Song, Sergey Fomel, and Lexing Ying'
+                'lfd': 'Xiaolei Song, Sergey Fomel, and Lexing Ying',
+                'orthorhombic': 'Xiaolei Song and Tariq Alkhalifah'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
