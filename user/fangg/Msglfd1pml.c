@@ -310,8 +310,8 @@ int main(int argc, char* argv[])
 
 	if (inject) {
 	    if (srcpoint && (it*dt)<=sp.trunc) {
-		explsourcet1(txxn1, srcp, dt, it, spx+pmlout+marg, nt, &sp);
-    		//txxn1[marg+pmlout+spx] += srcp[it]*dt;
+		//explsourcet1(txxn1, srcp, dt, it, spx+pmlout+marg, nt, &sp);
+    		txxn1[marg+pmlout+spx] += srcp[it]*dt;
 	    }
 	    if (!srcpoint && (it*dt)<=sp.trunc) {
 		for (ix = 0; ix < nx; ix++) 

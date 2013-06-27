@@ -57,14 +57,20 @@ int main(int argc, char* argv[])
     sf_file Fsrc,Fo,Frec;    /* I/O files */
     sf_file left, right;
     sf_file Fvel, Fden, Ffft, Fic;
-
+    
+    /*I/O for MMS*/
+    sf_file Fpsrc, Fvsrc, Fpint, Fvint, Fmms;
+    
     sf_axis at,ax;    /* cube axes */
     sf_axis icaxis;
 
     /* I/O arrays*/
-    float *srcp,**srcd; /*point source, distributed source*/        
+    float *src; /*point source*/        
     float **lt, **rt;
     float *ic, *vel, *den, *c11;
+    /*I/O arrays for MMS*/
+    float **psrc, **vsrc, *pint, *vint, **mms;
+
 
     /*Grid index variables*/
     int it,im,ik,ix;    
@@ -84,7 +90,7 @@ int main(int argc, char* argv[])
     spara sp={0};
     int   srcrange;
     float srctrunc; 
-    bool  srcpoint, srcdecay;
+    bool  srcmms, srcdecay;
     float slx;
     int   spx;
     
@@ -108,11 +114,11 @@ int main(int argc, char* argv[])
     Frec = sf_output ("rec");
 
     /*parameters of source*/
-    if (!sf_getbool("srcpoint", &srcpoint)) srcpoint = true;
-    /*source type: if y, use point source */
-    if (srcpoint && !sf_getfloat("slx", &slx)) sf_error("Need slx input");
+    if (!sf_getbool("srcmms", &srcmms)) srcmms = false;
+    /*use MMS source */
+    if (!srcmms && !sf_getfloat("slx", &slx)) sf_error("Need slx input");
     /*source location in x */
-    if (srcpoint && slx<0.0) sf_error("slx need to be >=0.0");
+    if (!srcmms && slx<0.0) sf_error("slx need to be >=0.0");
     if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=true;
     /*source decay*/
     if (!sf_getint("srcrange", &srcrange)) srcrange=10;
@@ -124,25 +130,18 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
     if (!sf_getbool("inject", &inject)) inject=true; 
     /*=y inject source; =n initial condition*/
+    if (!inject && srcmms) sf_error("Initial condition and MMS are conflicted");
+
 
     /* Read/Write axes */
-    if (srcpoint) {
-	at = sf_iaxa(Fsrc,1);
-    } else {
-	at = sf_iaxa(Fsrc,2);
-    }
-    nt = sf_n(at); dt = sf_d(at);
+    at = sf_iaxa(Fsrc,1); nt = sf_n(at); dt = sf_d(at);
     ax = sf_iaxa(Fvel,1); nx = sf_n(ax); dx = sf_d(ax);
      
     sf_oaxa(Fo,ax,1); 
     sf_oaxa(Fo,at,2);
     /*set for record*/
     sf_oaxa(Frec, at, 1);
-    if (!srcpoint) {
-	sf_setn(ax,1);
-	sf_oaxa(Frec, ax, 2);
-    }
-
+    
     nk = fft1_init(nx,&nx2);
 
     /* propagator matrices */
@@ -197,14 +196,49 @@ int main(int argc, char* argv[])
     
 
     /* read source */
-    if (srcpoint) {
-	srcp = sf_floatalloc(nt);
-	sf_floatread(srcp,nt,Fsrc);
-    } else {
-	srcd = sf_floatalloc2(nx,nt);
-	sf_floatread(srcd[0], nx*nt, Fsrc);
+    src = sf_floatalloc(nt);
+    sf_floatread(src,nt,Fsrc);
+    
+    /* Initial Condition */
+    if (inject == false) {
+	Fic     = sf_input("ic");  
+	/*initial condition*/
+	if (SF_FLOAT != sf_gettype(Fic)) sf_error("Need float input of ic");
+	icaxis = sf_iaxa(Fic, 1); 
+	icnx = sf_n(icaxis);
+	if (nx != icnx) sf_error("I.C. and velocity should be the same size.");
+	ic = sf_floatalloc(nx);
+	sf_floatread(ic, nx, Fic);	
     }
 
+    /* Method of Manufactured Solution*/
+    if (srcmms == true) {
+	Fpsrc = sf_input("presrc");
+	Fvsrc = sf_input("velsrc");
+	Fpint = sf_input("preinit");
+	Fvint = sf_input("velinit");
+	Fmms  = sf_output("mms");
+	
+	if (SF_FLOAT != sf_gettype(Fpsrc)) sf_error("Need float input of presrc");
+	if (SF_FLOAT != sf_gettype(Fvsrc)) sf_error("Need float input of velsrc");
+	if (SF_FLOAT != sf_gettype(Fpint)) sf_error("Need float input of preinit");
+	if (SF_FLOAT != sf_gettype(Fvint)) sf_error("Need float input of velinit");
+	
+	psrc = sf_floatalloc2(nx, nt);
+	vsrc = sf_floatalloc2(nx, nt);
+	pint = sf_floatalloc(nx);
+	vint = sf_floatalloc(nx);
+	mms  = sf_floatalloc2(nx, nt);
+
+	sf_floatread(psrc[0], nx*nt, Fpsrc);
+	sf_floatread(vsrc[0], nx*nt, Fvsrc);
+	sf_floatread(pint, nx, Fpint);
+	sf_floatread(vint, nx, Fvint);
+
+	sf_oaxa(Fmms,ax,1); 
+	sf_oaxa(Fmms,at,2);
+    }
+	
     curtxx = sf_floatalloc(nx2);
     curvx  = sf_floatalloc(nx2);
     pretxx  = sf_floatalloc(nx);
@@ -218,19 +252,7 @@ int main(int argc, char* argv[])
     record = sf_floatalloc(nt);
    
     ifft1_allocate(cwavemx);
-
-    /*Initial Condition*/
-    if (inject == false) {
-	Fic     = sf_input("ic");  
-	/*initial condition*/
-	if (SF_FLOAT != sf_gettype(Fic)) sf_error("Need float input of ic");
-	icaxis = sf_iaxa(Fic, 1); 
-	icnx = sf_n(icaxis);
-	if (nx != icnx) sf_error("I.C. and velocity should be the same size.");
-	ic = sf_floatalloc(nx);
-	sf_floatread(ic, nx, Fic);	
-    }
-
+    
     for (ix=0; ix < nx; ix++) {
 	pretxx[ix]=0.;
 	prevx[ix] =0.;
@@ -240,7 +262,7 @@ int main(int argc, char* argv[])
 	curtxx[ix]=0.;
 	curvx[ix]=0.;
     }
-
+ 
     /* Check parameters*/
     if(verb) {
 	sf_warning("======================================");
@@ -274,6 +296,15 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(curtxx,nx,Fo);
     }
+    /* MMS */
+    if (srcmms == true) {
+	it0 = 0;
+	for (ix=0; ix < nx; ix++) {
+	    curtxx[ix] = pint[ix]; /*P(x,0)*/
+	    pretxx[ix] = pint[ix];
+	    prevx[ix]  = vint[ix]; /*U(x, -dt/2)*/
+	}
+    }
     
     for (it=it0; it<nt; it++) {
 	if(verb) sf_warning("it=%d;", it);
@@ -302,9 +333,15 @@ int main(int argc, char* argv[])
 	    for (im=0; im<m2; im++) {
 		cx += lt[im][ix]*wavex[im][ix];
 	    } 
-	    curvx[ix] = -1*dt/den[ix]*cx + prevx[ix];  /*vx(t+dt) = -dt/rho*dp/dx + vx(t) */
-	    prevx[ix] = curvx[ix];
+	    curvx[ix] = -1*dt/den[ix]*cx + prevx[ix];  /*vx(t+dt/2) = -dt/rho*dp/dx(t) + vx(t-dt/2) */
 	} //ix
+
+	/* MMS */
+	if (srcmms == true) 
+	    for (ix = 0; ix < nx; ix++)
+		curvx[ix] += vsrc[it][ix]*dt;
+	
+	for (ix = 0; ix < nx; ix++) prevx[ix] = curvx[ix];
 	
 	/*txx--- matrix multiplication */
 	fft1(curvx, cwavex);
@@ -332,30 +369,25 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    curtxx[ix] = -1*dt*c11[ix]*cx + pretxx[ix];
-	    pretxx[ix] = curtxx[ix];
-	    
-	    /* write wavefield to output */
-	    
 	}
 	
-	if (inject && it < nt) {
-	    if (srcpoint && (it*dt)<=sp.trunc ) {
-		curtxx[spx] += srcp[it]*dt;
+	if (inject) {
+	    if (!srcmms && (it*dt)<=sp.trunc ) {
+		curtxx[spx] += src[it]*dt;
 		//curtxx[spx] += 0.5*(srcp[it]+srcp[it+1])*dt;
 		/*dp/dt(t+dt/2) = -rho*v^2*du/dx(t+dt/2) + s(t+dt)*/
-		pretxx[spx] = curtxx[spx];
 	    }
-	    if (!srcpoint && (it*dt)<=sp.trunc){
+	    if (srcmms && (it*dt)<=sp.trunc){
 		for (ix = 0; ix < nx; ix++) {
-		    curtxx[ix] += srcd[it][ix]*dt;
-		    pretxx[ix] = curtxx[ix];
+		    curtxx[ix] += psrc[it][ix]*dt;
 		}
 	    }
 	}
 	/* write wavefield to output */
-	sf_floatwrite(curtxx,nx,Fo);
-	record[it] = curtxx[gp];
+	sf_floatwrite(pretxx,nx,Fo);
+	record[it] = pretxx[gp];
 	
+	for (ix=0; ix<nx; ix++) pretxx[ix] = curtxx[ix];
     }/*End of MAIN LOOP*/
     
     if(verb) sf_warning(".");
