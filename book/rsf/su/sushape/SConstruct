@@ -1,0 +1,44 @@
+from rsf.suproj import *
+# original from Chris Liner 10Mar2011
+
+Fetch('data.sgy','cwp',
+      server=os.environ.get('RSF_DATASERVER','http://www.ahay.org'))
+
+# data.sgy contains 3 traces
+Flow('data','data.sgy','segyread tape=$SOURCE | segyclean',stdin=0)
+
+# pull off 3 traces named (a,b,c)
+
+for trace in range(2,5):
+    Flow('xxabc'[trace],'data','suwind key=cdp min=%d max=%d' % (trace,trace))
+
+Result('fig1','b a',
+       '''
+       fcat ${SOURCES[:2]} |
+       suxgraph lineon=1,2 lineoff=0,2 
+       title="TRb (solid) TRa (dash)" 
+       x2beg=-1.5 x2end=1.5
+       ''',stdin=0)
+
+# shape a.su to look like b.su
+# result is a2b.su and ascii shaping filter 
+# is captured in the file shape_a2b.txt
+
+Flow('a2b','a b',
+     '''
+     sushape 
+     wfile=${SOURCES[0]} dfile=${SOURCES[1]}
+     showshaper=1 
+     ''')
+
+Result('a2b','a b a2b','fcat ${SOURCES[:3]} | suxwigb',stdin=0)
+
+Result('fig2','b a2b',
+       '''
+       fcat ${SOURCES[:2]} |
+       suxgraph lineon=1,2 lineoff=0,2 
+       title="TRb (solid) TRa2b (dash)" 
+       x2beg=-1.5 x2end=1.5
+       ''',stdin=0)
+
+End()

@@ -48,7 +48,7 @@ Flow('data-tm-filt-ac','data-tm-filt',
 Result6('data-tm-filt-ac','Autocorrelation')
 
 # Spiking deconvolution
-Flow('pef lag','data-tm-filt','pef a=100,1 niter=10 lag=${TARGETS[1]}')
+Flow('pef lag','data-tm-filt','pef a=100,1 niter=100 lag=${TARGETS[1]}')
 Flow('data-tm-filt-dec','data-tm-filt pef','helicon filt=${SOURCES[1]}')
 Result6('data-tm-filt-dec','Deconvolution')
 

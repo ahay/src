@@ -1,0 +1,61 @@
+from rsf.proj import *
+from rsf.prog import RSFROOT
+
+# Download real data
+Fetch('samiss1.rsf','bp') # wrong data
+Flow('samiss','samiss1','dd form=native')
+
+Result('samiss1','samiss','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
+Flow('datacpx','samiss','rtoc')
+
+Nt=1500
+dt=0.004
+t0=0
+
+Nx=240
+dx=0.0125
+x0=0.262
+
+Ntau=Nt
+dtau=dt
+tau0=t0
+
+Np=800
+p0=0.4
+dp=(0.8-p0)/Np
+
+
+# Apply FFT in time
+Flow('fftdata','datacpx','fft3 axis=1 pad=1 | window n1=750 f1=750')
+Result('fftreal','fftdata','real | grey title="real" ')
+Result('fftimag','fftdata','imag | grey title="imag" ')
+Result('fftabs','fftdata','math output="abs(input)" | real | grey title=" " label1=Frequency unit1=Hz label2=Offset unit2=km')
+
+Flow('fftdatac1','fftdata','window n1=150 f1=50')
+Result('fftrealc1','fftdatac1','real | grey title="realc" ')
+Result('fftimagc1','fftdatac1','imag | grey title="imagc" ')
+Result('fftabsc1','fftdatac1','math output="abs(input)" | real | grey title="absc1" ')
+
+Flow('fftdatac2','fftdata','window n1=150 f1=200')
+Result('fftrealc2','fftdatac2','real | grey title="realc" ')
+Result('fftimagc2','fftdatac2','imag | grey title="imagc" ')
+Result('fftabsc2','fftdatac2','math output="abs(input)" | real | grey title="absc2" ')
+
+# direct Radon / single integral (vscan)
+Flow('smod','samiss','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+Result('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
+
+# direct Radon / single integral (nearest integer interpolation)
+Flow('dimod','samiss','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
+Result('dimod','grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
+
+
+# Fast Radon
+Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TARGET',stdin=0,stdout=-1)
+
+Flow('fmod1','fftdatac1 bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=5 EPSx2=5 EPSk1=5 EPSk2=5 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+Flow('fmod2','fftdatac2 bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=5 EPSx2=5 EPSk1=5 EPSk2=5 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+Flow('fmod','fmod1 fmod2','add scale=1,1 ${SOURCES[1]}')
+Result('fmod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km wanttitle=n scalebar=n')
+
+End()
