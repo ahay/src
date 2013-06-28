@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
     for (it=0; it<nt; it++) {
 	tt = it*dt; /*time derivative is caculted on main grid */
 	for (ix=0; ix<nx; ix++) {
-	    xx = ix*dx;
+	    xx = (ix+0.5)*dx;
 	    dist = xx - slx;
 	    gg = gauss(ix, xx, tt);    
 	    vsrc[it][ix] = 2.0*alpha*(dist-vel[ix]*tt)*(vel[ix]+(dvel[ix]*tt-1)/den[ix])*gg;
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
     /* velocity:  U(x, -dt/2)*/
     tt = -0.5*dt;
     for (ix=0; ix<nx; ix++) {
-	xx = ix*dx;
+	xx = (ix+0.5)*dx;
 	vint[ix] = gauss(ix, xx, tt);
     }
     sf_floatwrite(vint, nx, Fvint);

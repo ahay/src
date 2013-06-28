@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
     sf_file Fvel, Fden, Ffft, Fic;
     
     /*I/O for MMS*/
-    sf_file Fpsrc, Fvsrc, Fpint, Fvint, Fmms;
+    sf_file Fpsrc, Fvsrc, Fpint, Fvint;
     
     sf_axis at,ax;    /* cube axes */
     sf_axis icaxis;
@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     float **lt, **rt;
     float *ic, *vel, *den, *c11;
     /*I/O arrays for MMS*/
-    float **psrc, **vsrc, *pint, *vint, **mms;
+    float **psrc, **vsrc, *pint, *vint;
 
 
     /*Grid index variables*/
@@ -212,13 +212,12 @@ int main(int argc, char* argv[])
     }
 
     /* Method of Manufactured Solution*/
-    if (srcmms == true) {
+    if (inject && srcmms) {
 	Fpsrc = sf_input("presrc");
 	Fvsrc = sf_input("velsrc");
 	Fpint = sf_input("preinit");
 	Fvint = sf_input("velinit");
-	Fmms  = sf_output("mms");
-	
+		
 	if (SF_FLOAT != sf_gettype(Fpsrc)) sf_error("Need float input of presrc");
 	if (SF_FLOAT != sf_gettype(Fvsrc)) sf_error("Need float input of velsrc");
 	if (SF_FLOAT != sf_gettype(Fpint)) sf_error("Need float input of preinit");
@@ -228,26 +227,22 @@ int main(int argc, char* argv[])
 	vsrc = sf_floatalloc2(nx, nt);
 	pint = sf_floatalloc(nx);
 	vint = sf_floatalloc(nx);
-	mms  = sf_floatalloc2(nx, nt);
-
+	
 	sf_floatread(psrc[0], nx*nt, Fpsrc);
 	sf_floatread(vsrc[0], nx*nt, Fvsrc);
 	sf_floatread(pint, nx, Fpint);
 	sf_floatread(vint, nx, Fvint);
-
-	sf_oaxa(Fmms,ax,1); 
-	sf_oaxa(Fmms,at,2);
     }
 	
-    curtxx = sf_floatalloc(nx2);
-    curvx  = sf_floatalloc(nx2);
+    curtxx  = sf_floatalloc(nx2);
+    curvx   = sf_floatalloc(nx2);
     pretxx  = sf_floatalloc(nx);
     prevx   = sf_floatalloc(nx);
     
 
-    cwavex = sf_complexalloc(nk);
+    cwavex  = sf_complexalloc(nk);
     cwavemx = sf_complexalloc(nk);
-    wavex = sf_floatalloc2(nx2,m2);
+    wavex   = sf_floatalloc2(nx2,m2);
     
     record = sf_floatalloc(nt);
    
@@ -292,12 +287,11 @@ int main(int argc, char* argv[])
 	for(ix = 0; ix < nx; ix++) {
 	    curtxx[ix] = ic[ix];
 	    pretxx[ix] = curtxx[ix];
-	    //vxn0[ix+marg+pmlout] = ic[ix];
 	}
 	sf_floatwrite(curtxx,nx,Fo);
     }
     /* MMS */
-    if (srcmms == true) {
+    if (inject && srcmms ) {
 	it0 = 0;
 	for (ix=0; ix < nx; ix++) {
 	    curtxx[ix] = pint[ix]; /*P(x,0)*/
@@ -337,11 +331,12 @@ int main(int argc, char* argv[])
 	} //ix
 
 	/* MMS */
-	if (srcmms == true) 
+	if (inject && srcmms) 
 	    for (ix = 0; ix < nx; ix++)
 		curvx[ix] += vsrc[it][ix]*dt;
-	
-	for (ix = 0; ix < nx; ix++) prevx[ix] = curvx[ix];
+
+	for (ix = 0; ix < nx; ix++)
+	    prevx[ix] = curvx[ix];
 	
 	/*txx--- matrix multiplication */
 	fft1(curvx, cwavex);
@@ -356,7 +351,6 @@ int main(int argc, char* argv[])
 #else
 		cwavemx[ik] = sf_crmul(cwavex[ik],rt[ik][im]);
 		cwavemx[ik] = sf_cmul(fminu(kx,dx), cwavemx[ik]);
-		
 #endif
 	    }
 	    ifft1(wavex[im], cwavemx); /* dux/dx */
@@ -368,7 +362,7 @@ int main(int argc, char* argv[])
 		cx += lt[im][ix]*wavex[im][ix];
 	    }
 	    
-	    curtxx[ix] = -1*dt*c11[ix]*cx + pretxx[ix];
+	    curtxx[ix] = -1*dt*c11[ix]*cx + pretxx[ix]; /*P(x,t+dt)*/
 	}
 	
 	if (inject) {
@@ -377,17 +371,17 @@ int main(int argc, char* argv[])
 		//curtxx[spx] += 0.5*(srcp[it]+srcp[it+1])*dt;
 		/*dp/dt(t+dt/2) = -rho*v^2*du/dx(t+dt/2) + s(t+dt)*/
 	    }
-	    if (srcmms && (it*dt)<=sp.trunc){
-		for (ix = 0; ix < nx; ix++) {
+	    if (srcmms)
+		for (ix = 0; ix < nx; ix++) 
 		    curtxx[ix] += psrc[it][ix]*dt;
-		}
-	    }
 	}
 	/* write wavefield to output */
-	sf_floatwrite(pretxx,nx,Fo);
+	sf_floatwrite(pretxx,nx,Fo);/* write P(x,t)*/
 	record[it] = pretxx[gp];
 	
-	for (ix=0; ix<nx; ix++) pretxx[ix] = curtxx[ix];
+	for (ix=0; ix<nx; ix++)
+	    pretxx[ix] = curtxx[ix];
+	 
     }/*End of MAIN LOOP*/
     
     if(verb) sf_warning(".");
