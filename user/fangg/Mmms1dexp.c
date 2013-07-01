@@ -21,14 +21,18 @@
 #include <math.h>
 
 
-static float *vel, *dvel, *den;
+static float *vel, *dvel, *velhf, *dvelhf, *den, *denhf;
 static float alpha;
 static float dt, dx, slx;
 
-float gauss(int ix, float xx, float tt)
+float gauss(int ix, float xx, float tt, bool hf)
 {
     float tmp;
-    tmp = xx-slx-vel[ix]*tt;
+    if (hf) {
+	tmp = xx-slx-velhf[ix]*tt;
+    } else {
+	tmp = xx-slx-vel[ix]*tt;
+    }
     //tmp = slx-vel[ix]*tt;
     return expf(-1*alpha*tmp*tmp);
 }
@@ -39,6 +43,7 @@ int main(int argc, char* argv[])
 
     /*I/O*/
     sf_file Fvel, Fdvel, Fden;
+    sf_file Fvelhf, Fdvelhf, Fdenhf;
     sf_file Fpsrc, Fvsrc, Fpint, Fvint, Fmms;
     
     /*I/O array*/
@@ -54,11 +59,17 @@ int main(int argc, char* argv[])
     
     float gg, dist;
     float xx, tt;
+    
+    bool hf = true;
+    bool mg = false;
   
     sf_init(argc, argv);
     Fvel  = sf_input("in");
     Fdvel = sf_input("dvel");
     Fden  = sf_input("den");
+    Fvelhf= sf_input("velhf");
+    Fdvelhf=sf_input("dvelhf");
+    Fdenhf =sf_input("denhf");
     
     Fpsrc = sf_output("presrc");
     Fvsrc = sf_output("velsrc");
@@ -69,6 +80,9 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(Fvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(Fdvel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(Fden)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(Fvelhf)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(Fdvelhf)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(Fdenhf)) sf_error("Need float input");
     
     ax = sf_iaxa(Fvel, 1); nx = sf_n(ax); dx = sf_d(ax); 
 
@@ -100,8 +114,11 @@ int main(int argc, char* argv[])
 
     /*allocate memory*/
     vel  = sf_floatalloc(nx);
+    velhf= sf_floatalloc(nx);
     dvel = sf_floatalloc(nx);
+    dvelhf=sf_floatalloc(nx);
     den  = sf_floatalloc(nx);
+    denhf =sf_floatalloc(nx);
     
     psrc = sf_floatalloc2(nx, nt);
     vsrc = sf_floatalloc2(nx, nt);
@@ -114,16 +131,18 @@ int main(int argc, char* argv[])
     sf_floatread(vel, nx, Fvel);
     sf_floatread(dvel, nx, Fdvel);
     sf_floatread(den, nx, Fden);
-    /* manufactured solution */
-  
+    sf_floatread(velhf, nx, Fvelhf);
+    sf_floatread(dvelhf, nx, Fdvelhf);
+    sf_floatread(denhf, nx, Fdenhf);
+
     /* velocity source */
     for (it=0; it<nt; it++) {
 	tt = it*dt; /*time derivative is caculted on main grid */
 	for (ix=0; ix<nx; ix++) {
 	    xx = (ix+0.5)*dx;
 	    dist = xx - slx;
-	    gg = gauss(ix, xx, tt);    
-	    vsrc[it][ix] = 2.0*alpha*(dist-vel[ix]*tt)*(vel[ix]+(dvel[ix]*tt-1)/den[ix])*gg;
+	    gg = gauss(ix, xx, tt, hf);    
+	    vsrc[it][ix] = 2.0*alpha*(dist-velhf[ix]*tt)*(velhf[ix]+(dvelhf[ix]*tt-1)/denhf[ix])*gg;
 	}
 	sf_floatwrite(vsrc[it], nx, Fvsrc);
     }
@@ -134,7 +153,7 @@ int main(int argc, char* argv[])
 	for (ix=0; ix<nx; ix++) {
 	    xx = ix*dx;
 	    dist = xx - slx;
-	    gg = gauss(ix, xx, tt);
+	    gg = gauss(ix, xx, tt, mg);
 	    psrc[it][ix] = 2.0*alpha*(dist-vel[ix]*tt)*(vel[ix]+den[ix]*vel[ix]*vel[ix]* \
 							(dvel[ix]*tt-1))*gg;
 	}
@@ -146,13 +165,13 @@ int main(int argc, char* argv[])
     tt = -0.5*dt;
     for (ix=0; ix<nx; ix++) {
 	xx = (ix+0.5)*dx;
-	vint[ix] = gauss(ix, xx, tt);
+	vint[ix] = gauss(ix, xx, tt, hf);
     }
     sf_floatwrite(vint, nx, Fvint);
     
     /*pressure: P(x, 0)*/
     for (ix=0; ix<nx; ix++) {
-	xx = ix*dx;
+	xx = (ix)*dx;
 	dist = xx - slx;
 	dist = dist*dist;
 	pint[ix] = expf(-1*alpha*dist);
@@ -164,7 +183,7 @@ int main(int argc, char* argv[])
 	tt = it*dt;
 	for (ix=0; ix<nx; ix++) {
 	    xx = ix*dx;
-	    mms[it][ix] = gauss(ix, xx, tt);
+	    mms[it][ix] = gauss(ix, xx, tt, mg);
 	}
 	sf_floatwrite(mms[it], nx, Fmms);
     }

@@ -91,8 +91,8 @@ int main(int argc, char* argv[])
     int   srcrange;
     float srctrunc; 
     bool  srcmms, srcdecay;
-    float slx;
-    int   spx;
+    float slx=0;
+    int   spx=0;
     
     /*options*/
     float gdep; int gp;
