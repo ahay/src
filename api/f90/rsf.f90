@@ -365,7 +365,7 @@ contains
     external sf_histint, sf_getint
 
     if(.not. sf_histint(hist%tag,name,value)) then
-       if (.not. sf_getint(hist%tag,name,value)) then
+       if (.not. sf_getint(name,value)) then
           if (present (default)) then
              value = default
           else
@@ -404,7 +404,7 @@ contains
     external sf_histfloat, sf_getfloat
 
     if(.not. sf_histfloat(hist%tag,name,value)) then
-       if (.not. sf_getfloat(hist%tag,name,value)) then
+       if (.not. sf_getfloat(name,value)) then
           if (present (default)) then
              value = default
           else
