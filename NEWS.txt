@@ -62,6 +62,7 @@ To programs:
 * sfzoom: example Tkinter script for interactive zooming
 * sfsegyheader can take tfile= parameter for input trace headers
 * Extended join= option in sfomp and sfmpi to support adding (join=0)
+* user/seisinv: new contributor (Yujin Liu)
 
 ===Bug fixes===
 
@@ -72,6 +73,8 @@ In documentation:
 * Fixed nb= parameter in sfawefd2d and sfawefd3d
 
 In APIs:
+
+* Fixed from_either bug in F90 API
 
 In the Python package:
 
