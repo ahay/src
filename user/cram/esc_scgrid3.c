@@ -525,11 +525,14 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         for (j = 0; j < ncv; j++) {
             /* Next daemon, try to establish a connection */
             is0 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj]);
-            if (is0 > 0)
-                is1 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj]);
+            if (is0 < 0) {
+                continue;
+            }
+            is1 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj]);
             if (is1 < 0) {
                 close (is0);
                 is0 = -1;
+                continue;
             }
             for (i = j*ndab; i < (j + 1)*ndab; i++) {
                 esc_scgrid->sockets[2*i] = is0;
@@ -1231,6 +1234,8 @@ static void sf_esc_scgrid3_init_patch (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
 #endif
             input[ia*esc_scgrid->mb + ib].b = b0 + (ibp*esc_scgrid->mb + ib)*db;
             input[ia*esc_scgrid->mb + ib].a = a0 + (iap*esc_scgrid->ma + ia)*da;
+            input[ia*esc_scgrid->mb + ib].fb = 0.0;
+            input[ia*esc_scgrid->mb + ib].fa = 0.0;
             /* Output index */
             input[ia*esc_scgrid->mb + ib].iab = (iap*esc_scgrid->ma + ia)*nb +
                                                 (ibp*esc_scgrid->mb + ib);
@@ -1317,12 +1322,16 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
     sf_esc_scgrid3_init_patch (esc_scgrid, input_curr,
                                nap > 1 ? 0 : 1, nap > 1 ? 1 : 0,
                                z, x, y, a0, da, b0, db, na, nb);
-    /* Next angle patch to process */ 
-    iap = 2;
-    ibp = 0;
-    if (iap >= nap) {
+    /* Next angle patch to process */
+    if (nap > 2) {
+        iap = 2;
+        ibp = 0;
+    } else if (2 == nap) {
         iap = 0;
         ibp = 1;
+    } else {
+        iap = 0;
+        ibp = 2;
     }
     /* Indices with angle patch */
     iiap = 0;
@@ -1362,9 +1371,9 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
             for (i = 0; i < io*esc_scgrid->ns; i++) {
                 areqs_curr[i].id = esc_scgrid->sockets[areqs_curr[i].iab*2 + is_curr];
             }
+            /* Sort the outgoing requests by angle index */
             qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
                    sf_esc_scgrid3_areq_id_sort);
-            /* Sort the outgoing requests by angle index */
 /*
             qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
                    sf_esc_scgrid3_areq_iab_sort);
@@ -1412,7 +1421,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                     ATOMIC_ADD (&esc_scgrid->is, (size_t)1);
                 }
             } /* Loop over processed points */
-            if (iab < na*nb) {
+            if (ibp < nbp && iap < nap) {
                 /* Fill vacant positions with new input points */
                 for (i = 0; i < mab; i++) {
                     if (input_prev[i].iab == -1) {
@@ -1426,6 +1435,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
 #endif
                         input_prev[i].b = b0 + (ibp*esc_scgrid->mb + iibp)*db;
                         input_prev[i].a = a0 + (iap*esc_scgrid->ma + iiap)*da;
+                        input_prev[i].fb = 0.0;
+                        input_prev[i].fa = 0.0;
                         input_prev[i].iab = iab;
                         in_prev++;
                         /* Next input angle */
@@ -1446,9 +1457,8 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                             }
                         }
                         iab = (iap*esc_scgrid->ma + iiap)*nb + (ibp*esc_scgrid->mb + iibp);
-                        if (iab == na*nb)
+                        if (ibp == nbp)
                             break;
-//                        sf_warning ("%d %d %d %d %d", iiap, iibp, iap, ibp, iab);
                     }
                 }
             }
