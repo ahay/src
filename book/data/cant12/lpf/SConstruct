@@ -21,7 +21,8 @@ for i in range (n2):
         Flow(shift,mult,'window n1=%d | pad beg1=%d' % (3000-s,s))
         shifts.append(shift)
     Flow('shifts%03d'%i,shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
-    shifts.insert(0, 'shifts%d'%i)
+    shifts.insert(0, 'shifts%03d'%i)
+    #print("shifts=",shifts)
     Flow('junk_%03d'%i,shifts, 'rm ${SOURCES[2:%d]}' % len(shifts), stdout=-1,stdin=0)
 
 # Let us compute filters first
