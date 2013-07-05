@@ -12,7 +12,10 @@ coords  = [] # shot coordinates file
 # following range to range(403,414).  Probably will require other script changes to make
 # lines longer.  There are splits and sfwindows.  
 for n in range(403,413):
-        # to run locally use this Fetch and inp.  To run on stampede I used a fetch directory.
+        # to run locally use this Fetch and inp.  To run on stampede I logonto a computer
+        # that had the data and ran:
+        # rcp cant12.*.segy karls@stampede.tacc.utexas.edu:/work/02167/karls/data/cant12/fetch
+        
 	#Fetch(inp,'cant12',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
         #inp = 'cant12.%d.segy' % n
 	inp = '/work/02167/karls/data/cant12/fetch/cant12.%d.segy' % n
