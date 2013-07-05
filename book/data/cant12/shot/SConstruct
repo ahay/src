@@ -8,7 +8,11 @@ Flow('shot0',data,
      '''
      bandpass flo=20 fhi=180 
      | pow pow1=2
-     ''', split=[3,'omp'],np=10)
+     ''', split=[3,4791])
+#    ''', split=[3,'mpi',[0]],np=10)
+#     ''', split=[3,4791])
+#''', split=[3,'omp',[0]],np=10)  
+#     ''', split=[3,'omp'],np=10)
 #     ''', split=[3,4791])
 
 ##################
@@ -55,7 +59,8 @@ Flow('mute','pick',
      | dd type=float
      | smooth rect1=7 rect2=5
      | nmostretch inv=y half=n v0=1500
-     ''',split=[1,'omp'],reduce="cat axis=3",np=10)
+     ''')
+#     ''',split=[1,'omp'],reduce="cat axis=3",np=10)
 #     ''',split=[1,ns],reduce="cat axis=3")
 
 mute='mute'
