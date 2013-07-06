@@ -1,0 +1,179 @@
+#!/bin/bash
+
+#SBATCH -o slurm_lpf.job.o%j 
+#SBATCH -e slurm_lpf.job.e%j 
+#SBATCH -p normal #queue to run on 
+#SBATCH -N 1           #Number nodes to run on 
+#SBATCH -n 1           # total number of MPI tasks.  I guess each node gets n/N
+#SBATCH -t 24:00:00    #maximum time
+#SBATCH -A TCCS        #account to charge
+
+export mycores=16
+
+echo SLURM_NNODES=$SLURM_NNODES
+echo SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE
+
+# previous sge code has seperate path if mycores -lt 16
+export MY_NSLOTS=`expr $mycores \\* $SLURM_NNODES`
+export RSF_THREADS=$MY_NSLOTS
+
+# number of nodes
+# $SLURM_NNODES
+echo SLURM_NODELIST=$SLURM_NODELIST
+
+# for two nodes, slurm provides:
+# SLURM_NODELIST=c558-[101-102]  how do I process this?  Certainly not this 
+# blend of slurm and sge:
+#export RSF_CLUSTER=`awk -v p=$mycores 'NF>=2 {print $1" "p}' $SLURM_NODELIST`
+
+# should I use python?  For now I'll just do:
+
+export RSF_CLUSTER=`echo $SLURM_NODELIST | awk  -v p=16 '{print $1" "p}' `
+
+echo RSF_THREADS=$RSF_THREADS
+echo RSF_CLUSTER=$RSF_CLUSTER
+
+#echo $NSLOTS
+#echo $PE_HOSTFILE
+
+
+scons flt_000.rsf
+scons flt_001.rsf
+scons flt_002.rsf
+scons flt_003.rsf
+scons flt_004.rsf
+scons flt_005.rsf
+scons flt_006.rsf
+scons flt_007.rsf
+scons flt_008.rsf
+scons flt_009.rsf
+
+scons flt_010.rsf
+scons flt_011.rsf
+scons flt_012.rsf
+scons flt_013.rsf
+scons flt_014.rsf
+scons flt_015.rsf
+scons flt_016.rsf
+scons flt_017.rsf
+scons flt_018.rsf
+scons flt_019.rsf
+
+scons flt_020.rsf
+scons flt_021.rsf
+scons flt_022.rsf
+scons flt_023.rsf
+scons flt_024.rsf
+scons flt_025.rsf
+scons flt_026.rsf
+scons flt_027.rsf
+scons flt_028.rsf
+scons flt_029.rsf
+
+scons flt_030.rsf
+scons flt_031.rsf
+scons flt_032.rsf
+scons flt_033.rsf
+scons flt_034.rsf
+scons flt_035.rsf
+scons flt_036.rsf
+scons flt_037.rsf
+scons flt_038.rsf
+scons flt_039.rsf
+
+scons flt_040.rsf
+scons flt_041.rsf
+scons flt_042.rsf
+scons flt_043.rsf
+scons flt_044.rsf
+scons flt_045.rsf
+scons flt_046.rsf
+scons flt_047.rsf
+scons flt_048.rsf
+scons flt_049.rsf
+
+scons flt_050.rsf
+scons flt_051.rsf
+scons flt_052.rsf
+scons flt_053.rsf
+scons flt_054.rsf
+scons flt_055.rsf
+scons flt_056.rsf
+scons flt_057.rsf
+scons flt_058.rsf
+scons flt_059.rsf
+
+scons flt_060.rsf
+scons flt_061.rsf
+scons flt_062.rsf
+scons flt_063.rsf
+scons flt_064.rsf
+scons flt_065.rsf
+scons flt_066.rsf
+scons flt_067.rsf
+scons flt_068.rsf
+scons flt_069.rsf
+
+scons flt_070.rsf
+scons flt_071.rsf
+scons flt_072.rsf
+scons flt_073.rsf
+scons flt_074.rsf
+scons flt_075.rsf
+scons flt_076.rsf
+scons flt_077.rsf
+scons flt_078.rsf
+scons flt_079.rsf
+
+scons flt_080.rsf
+scons flt_081.rsf
+scons flt_082.rsf
+scons flt_083.rsf
+scons flt_084.rsf
+scons flt_085.rsf
+scons flt_086.rsf
+scons flt_087.rsf
+scons flt_088.rsf
+scons flt_089.rsf
+
+scons flt_090.rsf
+scons flt_091.rsf
+scons flt_092.rsf
+scons flt_093.rsf
+scons flt_094.rsf
+scons flt_095.rsf
+scons flt_096.rsf
+scons flt_097.rsf
+scons flt_098.rsf
+scons flt_099.rsf
+
+scons flt_100.rsf
+scons flt_101.rsf
+scons flt_102.rsf
+scons flt_103.rsf
+scons flt_104.rsf
+scons flt_105.rsf
+scons flt_106.rsf
+scons flt_107.rsf
+scons flt_108.rsf
+scons flt_109.rsf
+
+scons flt_110.rsf
+scons flt_111.rsf
+scons flt_112.rsf
+scons flt_113.rsf
+scons flt_114.rsf
+scons flt_115.rsf
+scons flt_116.rsf
+scons flt_117.rsf
+scons flt_118.rsf
+scons flt_119.rsf
+
+scons demultiple.rsf
+scons pred.rsf
+scons cmp.rsf
+
+
+
+
+
