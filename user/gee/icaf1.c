@@ -43,7 +43,7 @@ void icaf1_lop (bool adj, bool add, int nb, int ny, float* bb, float* yy)
     sf_adjnull (adj, add, nb, ny, bb, yy);
     
     for( b=0; b < nb; b++) {
-	for( y = nb; y <= ny; y++) { x = y - b - 1;
+	for( y = SF_MAX(lag,b+1); y <= ny; y++) { x = y - b - 1;
 	    if( adj) bb[b] += yy[y-lag] * xx[x];
 	    else     yy[y-lag] += bb[b] * xx[x];
 	}
