@@ -1,0 +1,86 @@
+
+/*************************************************
+ *            BEGIN RVL UNIT TEST 9              *
+ * Purpose: exercise RnSpace<complex> comparison,*
+ * Vector inner product methods, RVLAssignConst  *
+ *************************************************/
+
+1. construct 5-diml RnSpace<complex<float> >
+
+2. construct RVL::Vector x in this space
+
+3. construct RVLAssignConst<complex<float> > FO, val = 1.0
+
+4. evaluate, which makes x the const vector, val = 1
+
+5. write out x
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = (1,0)
+data[1] = (1,0)
+data[2] = (1,0)
+data[3] = (1,0)
+data[4] = (1,0)
+
+6. compute norm squared of x = (5,0)
+
+7. construct a second vector y in space
+
+8. construct RVLAssignConst FO, val = 2.0i 
+
+9. evaluate, which makes y the const.vector, val = 2i
+
+10. write out y
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = (0,2)
+data[1] = (0,2)
+data[2] = (0,2)
+data[3] = (0,2)
+data[4] = (0,2)
+
+11. compute inner product of x, y = (0,-10)
+    should = -10i
+
+12. overwrite x with 1*x + 2*y, which should be const
+    vector, val = 1+4i
+
+13. write out altered x
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = (1,4)
+data[1] = (1,4)
+data[2] = (1,4)
+data[3] = (1,4)
+data[4] = (1,4)
+
+14. Create another Cn, dim = 4.
+
+15. Create a vector z in the second Cn
+
+16. evaluate RVLAssignConst, val = 2.0i, on z
+
+17. Attempt to evaluate inner product of x and z
+    This should FAIL (throw an exception) because the
+    spaces have different dimensions.
+/*************************************************
+ *              END RVL UNIT TEST 9              *
+ *************************************************/

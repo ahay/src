@@ -1,0 +1,118 @@
+/* CSS Document */
+
+p, li, dl, dt, dd, td {
+	font: 10pt "verdana";
+	color:black;
+	}  
+
+body {
+	padding: 0;
+	margin: 0;
+	}
+
+a:link, a:visited {
+	color:#771111;
+	}
+
+/* This sets the header that goes across the top of the screen */
+#header {
+	background: url(images/rocks.png)/* no-repeat*/;
+	position: absolute;
+	left: 175px;
+	top: 2%;
+	width: 88%;
+	height: 95px;
+	}
+
+/* This allows text to be written over the background of the header */
+#headertext {
+	padding: 0 0.25em;
+	color: #FFFFFF;
+	font: 50pt "Times";
+	}
+
+/* This sets the appearance of links in the header text.  It is a bit of a cheat to make the ordinary text so drastically different from the link in order to get the different size, but it works for now. */
+#headertext a {
+	text-decoration: none;
+	color: #FFFFFF;
+	font: 12pt "Arial";
+	font-weight: 900;
+	}
+
+/* The content environment is where everything other than the header and the navigation bar will live.  All this is really doing here is ensuring that it doesn't run into either the header above or the navigation bar to the side. */
+#content {
+	text-align: justify;
+	/*width: 75%;*/
+	padding-right: 40px;
+	padding-top: 125px;
+	padding-left: 175px;
+	padding-bottom: 25px;
+	}
+
+/* Everything below is to make the navigation bar on the left of the page a "fly-out" navigation menu.  In the code it will look like an ordinary nested list */
+#navigation {
+	color: black;
+	position: absolute;
+	top: 2%;
+	left: 1%;
+	width: 125px;
+	}
+
+/* This sets the general environment for the top-level list */
+#navigation ul {
+	background: #64748C;
+	list-style-type: none;	padding: 0.3em;	margin: 0;	}
+
+/* This is the basic structure of the individual list elements.  This could probably be folded into #navigation ul li since I change it up for the deeper list. */
+#navigation li {
+	color: white;
+	background: #314159;
+	margin: 0.5em 0;	padding: 0.3em;	border-right: 0.5em solid black }
+
+#navigation a {
+	color: white;	text-decoration: none }
+
+#navigation li:hover {
+	background: #440000;
+	color: white;
+	}
+
+/* This keeps the sub-menus from expanding inside the main menu when you hover over the link. */
+#navigation ul li {
+	position: relative;
+	}
+
+/* The first command is a companion to the one above, keeping sub-menus from expanding the whole main menu.  Since now the list won't expand when you hover on a sub-list, the second command moves the sub-list to the side so that way it's readable. */
+#navigation li ul {
+	position: absolute;
+	left: 100%;
+	}
+
+#navigation ul ul {
+	background: none;
+	width: 100%; /* This makes the sub-list as wide as the main list. */
+	top: 0;
+	display: none; /* This hides the sub-lists when not in use. */
+	}
+
+/* I want to have a little separation between the elements of the sub-lists.  I do this with basic lines, but I don't want them to be too obvious, so I take out all the space around them, and make sure they fit within the sub-list. */
+#navigation ul ul hr {
+	margin: 0 0 0 0.5em;
+	}
+
+/* This customizes the appearance of the elements of the sub-lists so that they are not identical to the main list. */
+#navigation ul ul li {
+	margin: 0 0 0 0;
+	background: #440000;
+	left: 0.5em;
+	border-right: 0.5em solid #314159;
+	}
+
+#navigation ul ul a:hover {
+	color: #FFAA33;
+	}
+
+/* This final command is needed to make the sub-lists appear when you hover over their parent in the main list. */
+#navigation ul li:hover ul {
+	display: block;
+	}

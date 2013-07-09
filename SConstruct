@@ -273,6 +273,29 @@ if os.path.isdir('iwave'):
         Default(build)
 
 ##########################################################################
+# RVL BUILD
+##########################################################################
+
+if os.path.isdir('rvl'):
+    try:
+        subpathfile = os.path.join('rvl','hsubpath')
+        f = open(subpathfile,'r')
+        sublist = (f.read().strip('\n')).split(':')
+        f.close()
+    except:
+        sublist = []
+    for sub in sublist:
+        dir = os.path.join('rvl',sub)
+        build = os.path.join('build',dir)
+        if configure.version[0] > 1:
+            VariantDir(build,dir)
+        else:
+            BuildDir(build,dir)
+        rvl_exports = 'env root libdir bindir incdir pkgdir'
+        SConscript(dirs=build,exports=rvl_exports,name='SConscript')
+        Default(build)
+
+##########################################################################
 # INSTALLATION
 ##########################################################################
 

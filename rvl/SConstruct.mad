@@ -1,0 +1,31 @@
+# determine path to here, package name
+import os
+import shutil
+
+buildpath = os.getcwd()
+buildname = os.path.basename(buildpath)
+
+Import('env root pkgdir bindir incdir libdir')
+
+try:  # madagascar version
+#    Import('env root pkgdir bindir')
+    thispath = buildpath.replace('build/','')
+    thisname = buildname.replace('build/','')
+    testflag = 'no'
+    docflag  = 'no'
+
+    # determine subpackages
+    sublist=[]
+    if os.path.exists(thispath+'/hsubpath'):
+        f = open(thispath + '/hsubpath','r')
+        sublist = (f.read().strip('\n')).split(':')
+        f.close()   
+
+    #  all other opts recursive over subpackages
+    for n in sublist:
+        Export('env root bindir pkgdir incdir libdir')
+        SConscript(n + '/SConscript')
+
+except: # autonomous version
+    print 'rvl: madagascar build must be initiated from RSFSRC'
+

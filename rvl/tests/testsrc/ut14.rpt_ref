@@ -1,0 +1,22 @@
+/*************************************************
+ *            BEGIN RVL UNIT TEST 14             *
+ * Test of Operator - domain/range sanity test   *
+ *************************************************/
+
+1. construct 10D RnSpace, several FOs
+
+
+2. construct OpFO
+
+
+3. construct different space, vector in it
+
+
+4. attempt to evaluate - should throw exception
+
+
+successful conclusion - error trapped - see output in ut14/ut14.out
+
+/*************************************************
+ *              END RVL UNIT TEST 14             *
+ *************************************************/

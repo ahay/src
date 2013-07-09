@@ -1,0 +1,75 @@
+ifdef LAPACK
+ALL   = rand rvl local tests mpirvl alg umin uminmat tsopt seq
+DOCS  = rvl local tests mpirvl alg umin uminmat tsopt seq
+LIBS  = rand mpirvl tests umin tsopt seq
+REGR  = tests mpirvl umin uminmat tsopt seq
+else
+ALL   = rand rvl local tests mpirvl alg umin tsopt seq
+DOCS  = rvl local tests mpirvl alg umin tsopt seq
+LIBS  = rand mpirvl tests umin tsopt seq
+REGR  = tests mpirvl umin tsopt seq
+endif
+
+default:
+	@(for i in $(ALL) ; \
+	do \
+		(cd $$i; echo "making in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( /bin/rm -f main/*.x; $(MAKE) COMP=$(COMP) ) ; \
+		else ( /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+		fi) ; \
+	done)
+
+	
+clean:
+	@(/bin/rm -f regress.rpt; \
+	for i in $(ALL) ; \
+	do \
+		(cd $$i; echo "cleaning in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( make clean ) ; \
+		fi) ; \
+	done)
+
+burn:
+	@(/bin/rm -f regress.rpt; \
+	for i in $(ALL) ; \
+	do \
+		(cd $$i; echo "burning in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( make burn ) ; \
+		fi) ; \
+	done)
+
+install:
+	@(for i in $(ALL) ; \
+	do \
+		( cd $$i ; /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+	done)
+
+lib:
+	@(for i in $(LIBS) ; \
+	do \
+		(cd $$i; echo "making lib in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( $(MAKE) lib COMP=$(COMP) ) ; \
+		else ( /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+		fi) ;\
+	done)
+
+docs:
+	@(/bin/rm -f doc/html/build.html; \
+	/bin/cp $(TRIPADMIN)/doc/html/build.html doc/html; \
+	for i in $(DOCS) ; \
+	do \
+		( cd $$i/doc ; ${DOXYGEN} ) ; \
+	done)
+
+regress: install
+	@/bin/rm -f regress.rpt; \
+	(for i in $(REGR) ; \
+	do \
+	   ( cd $$i/testsrc; make regress; echo "\n\n" >> ../../regress.rpt; cat regress.rpt >> ../../regress.rpt ) ; \
+	done)
+
+	   	   

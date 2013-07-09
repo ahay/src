@@ -1,0 +1,13 @@
+Vector Object
+member of space:
+SeqSpace: preHilbert space of finite sequences
+data container:
+RVL Sequence Data Container of 6 doubles
+ *** begin list:
+  item 0 = 0
+  item 1 = 1
+  item 2 = 4
+  item 3 = 9
+  item 4 = 16
+  item 5 = 25
+ *** end list

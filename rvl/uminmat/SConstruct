@@ -1,0 +1,39 @@
+# determine path to here, package name
+import os
+import shutil
+thispath = os.getcwd()
+thisname = os.path.basename(thispath)
+
+# if local config file installed, use it, else defaults
+thisconfigfile=thispath+'/config.py'
+if os.path.exists(thisconfigfile):
+    vars=Variables(thisconfigfile)
+else:
+    vars=Variables()
+
+vars.Add('CC','path or alias for C compiler','gcc')
+vars.Add('CFLAGS','flags passed to C compiler only (not C++)','-std=c99')
+vars.Add('CCFLAGS','flags passed to C/C++ compiler','-g -pedantic -Wunused -Wimplicit -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE')
+vars.Add('CXX','path or alias for C++ compiler','g++')
+vars.Add('CXXFLAGS','flags passed to C++ compiler only (not C)','')
+vars.Add('LINKFLAGS','flags passed only to linker','')
+vars.Add('AR','static library (object archive) creation','ar')
+
+# initialize build environment
+env = Environment(variables = vars,
+                  CC={'CC' : '${CC}'},
+		  CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                  CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                  CXX={'CXX' : '${CXX}'},
+	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+		  LINKFLAGS={'LINKFLAGS' : '${LINKFLAGS}'},
+		  AR={'AR' : '${AR}'})
+Help(vars.GenerateHelpText(env))
+
+print thisname
+
+testflag='no'
+docflag='no'
+Export('vars', 'testflag', 'docflag')
+SConscript('./SConscript')
+

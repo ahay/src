@@ -1,0 +1,37 @@
+*********************************************
+*   Polynomial Multiplcation Operator Test  *
+*********************************************
+
+input vector: 
+Vector Object
+member of space:
+SeqSpace: preHilbert space of finite sequences
+data container:
+RVL Sequence Data Container of 3 doubles
+ *** begin list:
+  item 0 = 0
+  item 1 = 1
+  item 2 = 2
+ *** end list
+
+multiplication operator 
+PolyMultOp: polynomial multiplication in finite sequence space
+by factor:
+RVL Sequence Data Container of 2 doubles
+ *** begin list:
+  item 0 = 1
+  item 1 = 1
+ *** end list
+
+output vector:
+Vector Object
+member of space:
+SeqSpace: preHilbert space of finite sequences
+data container:
+RVL Sequence Data Container of 4 doubles
+ *** begin list:
+  item 0 = 0
+  item 1 = 1
+  item 2 = 3
+  item 3 = 2
+ *** end list

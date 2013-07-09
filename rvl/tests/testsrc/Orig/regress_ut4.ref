@@ -1,0 +1,264 @@
+
+/*************************************************
+ *            BEGIN RVL UNIT TEST 4              *
+ * Purpose: exercise StdProductSpace, Components *
+ *************************************************/
+
+1. construct 5, 10-diml RnSpace<float>s
+
+2. build StdProductSpace with these two spaces as components
+
+3. construct Vector in the StdProductSpace
+
+4. initialize with val = 2.0 via RVLAssignConst FO eval
+
+5. construct RVLAssignConst with val = 3.0
+
+6. within a new scope, construct Components from Vector in 
+   product space (step 3)
+
+7. write out components:
+Components of a Vector
+  number = 2
+***component 0:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 2
+data[1] = 2
+data[2] = 2
+data[3] = 2
+data[4] = 2
+***component 1:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = 2
+data[1] = 2
+data[2] = 2
+data[3] = 2
+data[4] = 2
+data[5] = 2
+data[6] = 2
+data[7] = 2
+data[8] = 2
+data[9] = 2
+
+8. evaluate FO constructed in 5 on 2nd component, setting
+   its coordinates all to 3
+
+9. exit scope, which destroys Components object
+
+10. write product vector - first component should still be 2's,
+    second component should now be 3's
+Vector Object
+member of space:
+Product Space
+size = 2
+***factor 0:
+RnSpace: simple dense vector space
+dimension = 5
+***factor 1:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+Product Data Container
+***factor 0:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 2
+data[1] = 2
+data[2] = 2
+data[3] = 2
+data[4] = 2
+***factor 1:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = 3
+data[1] = 3
+data[2] = 3
+data[3] = 3
+data[4] = 3
+data[5] = 3
+data[6] = 3
+data[7] = 3
+data[8] = 3
+data[9] = 3
+
+11. construct another vector in same product space
+
+12. initialize all coords to 3
+
+13. write it out
+Vector Object
+member of space:
+Product Space
+size = 2
+***factor 0:
+RnSpace: simple dense vector space
+dimension = 5
+***factor 1:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+Product Data Container
+***factor 0:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 3
+data[1] = 3
+data[2] = 3
+data[3] = 3
+data[4] = 3
+***factor 1:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = 3
+data[1] = 3
+data[2] = 3
+data[3] = 3
+data[4] = 3
+data[5] = 3
+data[6] = 3
+data[7] = 3
+data[8] = 3
+data[9] = 3
+
+14. compute L2 inner product = 120, value should = 120
+14a. compute L2 inner product of pv with itself - should be 110.
+15. build another product space, all components having dim 5,
+    by default-constructing a StdProductSpace and pushing the 
+    5D RnSpace constructed in step 1 onto it 3 times
+
+16. construct a Vector in this 3-component space, construct its
+    Components object, initialize the first component to 1, second
+    to 2, third to 3, using appropriate FOs
+
+18. write out the Vector
+Vector Object
+member of space:
+Product Space
+size = 3
+***factor 0:
+RnSpace: simple dense vector space
+dimension = 5
+***factor 1:
+RnSpace: simple dense vector space
+dimension = 5
+***factor 2:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+Product Data Container
+***factor 0:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 1
+data[1] = 1
+data[2] = 1
+data[3] = 1
+data[4] = 1
+***factor 1:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 2
+data[1] = 2
+data[2] = 2
+data[3] = 2
+data[4] = 2
+***factor 2:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 3
+data[1] = 3
+data[2] = 3
+data[3] = 3
+data[4] = 3
+
+18.5 write out the Components
+Components of a Vector
+  number = 3
+***component 0:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 1
+data[1] = 1
+data[2] = 1
+data[3] = 1
+data[4] = 1
+***component 1:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 2
+data[1] = 2
+data[2] = 2
+data[3] = 2
+data[4] = 2
+***component 2:
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 3
+data[1] = 3
+data[2] = 3
+data[3] = 3
+data[4] = 3
+
+19. construct a vector in the first component space (5D RnSpace)
+
+20. overwrite the sum of the three components of the Vector
+    constructed in steps 16 and 17 on the Vector construced in 
+    step 19, using two applications of RVL::Vector::linComb
+
+21. write out the sum
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 5
+data container:
+RnArray Local Data Container object
+length = 5
+samples: 
+data[0] = 6
+data[1] = 6
+data[2] = 6
+data[3] = 6
+data[4] = 6
+
+/*************************************************
+ *              END RVL UNIT TEST 4              *
+ *************************************************/

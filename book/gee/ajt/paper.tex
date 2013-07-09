@@ -137,7 +137,7 @@ $\bold F$ by $\bold F^{\rm T}$.
 In physics and engineering we often encounter complex numbers.
 There the adjoint is the complex-conjugate transposed matrix
 denoted $\bold F^\ast$.
-In this book, the adjoint is simply written as $\bold F\T$.
+%In this book, the adjoint is simply written as $\bold F\T$.
 What this book calls the adjoint is more properly called the Hilbert adjoint.
 
 %\par
@@ -230,7 +230,7 @@ in this book alone.
 \begin{comment}
 Notice that the module \texttt{matmult}
 does not explicitly erase its output before it begins,
-as does the psuedo code.
+as does the pseudo code.
 That is because Loptran will always erase for you
 the space required for the operator's output.
 Loptran also defines a logical variable {\tt adj}
@@ -243,7 +243,7 @@ that take compact bits of information which expand
 into the verbose boilerplate that Fortran requires.
 Loptran is Fortran with these macro expansions.
 You can always see how they expand by looking at
-\texttt{http://sep.stanford.edu/sep/prof/}.
+\url{http://sep.stanford.edu/sep/prof/}.
 
 \par
 What is new in Fortran 90, and will be a big help to us,
@@ -309,7 +309,7 @@ It is important that the math code contain nothing about
 the geophysical particulars.  This enables us to use
 the same math code on many different geophysical applications.
 This concept of ``information hiding'' arrived late in
-human understanding of what is desireable in a computer language.
+human understanding of what is desirable in a computer language.
 \begin{comment}
 This feature alone is valuable enough to warrant
 upgrading from Fortran 77 to Fortran 90, and likewise from C to C++.
@@ -333,6 +333,11 @@ If the inner loop of a matrix multiply ranges within a
 {\bf row,} \quad\ \ the operator is called {\em  sum} or {\em  pull}.
 \par\noindent
 {\bf column,}       the operator is called {\em  spray} or {\em  push}.
+\par\noindent
+Generally, inputs and outputs will be high dimensional such as signals or images.
+Push gives ugly outputs.   Some output locations will be empty,
+each having an erratic number of contributions to it.
+Consequently, most data processing (adjoint) is done by {\em pull}.
 
 \par
 A basic aspect of adjointness is that the
@@ -509,7 +514,7 @@ To apply \texttt{igrad1} along the 1-axis for each point on the 2-axis
 of a two-dimensional map, we use the loop
 \begin{verbatim}
 for (iy=0; iy < ny; iy++) 
-     igrad1_lop(adj, add, nx, nx, map[iy], ruf[iy])
+     igrad1_lop(adj, add, nx, nx, map[iy], ruf[iy]);
 \end{verbatim}
 \begin{comment}
 On the other hand, to see the east-west gradient, we use the loop
@@ -1299,7 +1304,7 @@ of the \bx{differential equation} $dy/dt+y (1-\rho)/\Delta t=x(t)$.)
 When it comes time to think about the adjoint, however,
 it is easier to think of equation~(\ref{eqn:leakinteq}) than of~(\ref{eqn:myrecur}).
 Let the matrix of equation~(\ref{eqn:leakinteq}) be called $\bold C$.
-Transposing to get $\bold C '$ and applying it to $\bold y$
+Transposing to get $\bold{C}\T$ and applying it to $\bold y$
 gives us something back in the space of $\bold x$,
 namely $\tilde{\bold x} = \bold C\T \bold y$.
 From it we see that the adjoint calculation,
@@ -1729,9 +1734,9 @@ We will do more with multidimensional data in later chapters.
 %have tridiagonal matrices.
 %We can express the same thought in $Z$-transform notation as
 %\begin{equation}
-%\left({-1\over Z} +(2+\epsilon^2) -Z\right)
+%\left(\frac{-1}{Z} +(2+\epsilon^2) -Z\right)
 %Y \eq
-%\left({-1\over Z} +2 -Z\right)
+%\left(\frac{-1}{Z} +2 -Z\right)
 %X
 %\end{equation}
 %and we can factor the polynomials
@@ -2220,6 +2225,9 @@ Likewise the operator product
 $\bold A = \bold B \bold C \bold D$
 is represented in the in the subroutine 
 \texttt{ chain3( op1, op2, op3,...)}.
+As you read these codes, please remember the
+output is the last argument only when the output is $\bold d$.
+When the output is $\bold m$, the output is the second from last.
 \par
 Another amazing thing about matrices is that their elements
 may themselves be matrices.
@@ -2343,8 +2351,8 @@ as a matrix multiplication.
 (Examples are differential equations and fast Fourier transforms.)
 What we find in practice is that an application and its adjoint 
 amounts to two routines. The first routine
-amounts to the matrix multiplication $ \bold F \bold x$.
-The adjoint routine computes $\bold F\T \bold y$,
+amounts to the matrix multiplication $ \bold F \bold m$.
+The adjoint routine computes $\bold F\T \bold d$,
 where $\bold F\T$ is the \bx{conjugate-transpose} matrix.
 In later chapters we will be solving huge sets of simultaneous equations,
 in which both routines are required.
@@ -2356,29 +2364,29 @@ routines are adjoint to each other.
 \par
 The associative property of linear algebra says that
 we do not need parentheses in a vector-matrix-vector product
-like $\bold y\T \bold F \bold x $ because we get the same
+like $\bold d\T \bold F \bold m $ because we get the same
 result no matter where we put the parentheses.
 They serve only to determine the
 sequence of computation.
 Thus,
 \begin{eqnarray}
-\bold y\T ( \bold F \bold x ) &=& ( \bold y\T \bold F )  \bold x   \\
-\bold y\T ( \bold F \bold x ) &=& ( \bold F\T \bold y )\T \bold x 
+\bold d\T ( \bold F \bold m ) &=& ( \bold d\T \bold F )  \bold m   \\
+\bold d\T ( \bold F \bold m ) &=& ( \bold F\T \bold d )\T \bold m 
 \label{eqn:bilin2}
 \end{eqnarray}
 (In general, the matrix is not square.)
 To perform the dot-product test,
-load the vectors $\bold x$ and $\bold y$ with random numbers.
+load the vectors $\bold m$ and $\bold d$ with random numbers.
 Using your program for $\bold F$,
-compute the vector $\tilde{\bold{y}} = \bold{F}\bold{x}$,
+compute the vector $\tilde{\bold{d}} = \bold{F}\bold{m}$,
 and using your program for $\bold{F}\T$,
-compute $\tilde{\bold{x}} = \bold{F}\T\bold{y}$.
+compute $\tilde{\bold{m}} = \bold{F}\T\bold{d}$.
 Inserting these into equation~(\ref{eqn:bilin2})
 gives you two scalars that should be equal.
 \begin{equation}
-\bold{y}\T ( \bold F \bold x ) \eq
-\bold y\T \tilde{\bold y} \eq \tilde{\bold x} ' \bold x
-\eq ( \bold F\T \bold y )\T \bold x
+\bold{d}\T ( \bold F \bold m ) \eq
+\bold d\T \tilde{\bold d} \eq \tilde{\bold m}\T \bold m
+\eq ( \bold F\T \bold d )\T \bold m
 \label{eqn:bilin}
 \end{equation}
 The left and right sides of this equation will be computationally equal
@@ -2402,11 +2410,11 @@ the operator itself (the \texttt{\_lop} function) to the test program.
 You also need to specify the sizes of the model and data vectors so
 that temporary arrays can be constructed. The program runs the dot
 product test twice, second time with \texttt{add = true} to test if
-the operator can be used properly for accumulating the result like
-$\bold y \leftarrow \bold y+\bold B\bold x$.
+the operator can be used properly for accumulating results, for example.
+$\bold d \leftarrow \bold d+\bold F\bold m$.
 
 %\begin{notforlecture}
-\moddex{dottest}{dot-product test}{50}{60}{api/c}
+\moddex{dottest}{dot-product test}{52}{64}{api/c}
 %\end{notforlecture}
 
 \par
@@ -2448,6 +2456,8 @@ The input or the output or both can be given
 either on a continuum or in a discrete domain.
 So the dot-product test
 $\bold y\T \tilde{\bold y} = \tilde{\bold x}\T \bold x$
+alternately
+$ \bold m_2 \cdot \bold m_2 = \bold d_2 \cdot \bold d_1) $
 could have an integration on one side of the equal sign
 and a summation on the other.
 Linear-operator theory is rich with concepts not developed here.
@@ -2455,7 +2465,7 @@ Linear-operator theory is rich with concepts not developed here.
 %and that it is my job to show you how to use it.
 
 \subsection{The word ``adjoint''}
-In mathematics the word ``\bx{adjoint}'' has three meanings.
+In mathematics the word ``\bx{adjoint}'' has two meanings.
 One of them, the so-called \bx{Hilbert adjoint},
 is the one generally found in physics and engineering
 and it is the one used in this book.
@@ -2699,7 +2709,7 @@ Ralf Giering
 offers a program for converting linear operator programs into their
 adjoints.
 Actually, it does more than that.
-He says:\footnote{ http://www.autodiff.com/tamc/ }
+He says:\footnote{\url{http://www.autodiff.com/tamc/}}
 \begin{quote}
 Given a Fortran routine (or collection of routines) for a function,
 TAMC produces Fortran routines for the computation

@@ -1,0 +1,147 @@
+
+/******************************************************************
+ *                 BEGIN RVL UNIT TEST 8                          *
+ * Purpose: exercise RnArray<complex>, StdSpace, RnSpace<complex>,*
+ * and Vector constructors, also RVLRandomize for complex types   *
+ ******************************************************************/
+
+1. construct 10-diml RnSpace<complex<float> >
+
+2. construct RVL::Vector in this space
+
+3. construct std::vector of RVL::Vector * cloning RVL::Vector
+   just constructed - exercises copy constructor
+
+4. construct RVLRandomize<complex<float> > FO
+
+5. loop through components of std::vector<RVL::Vector>,
+   evaluating RVLRandomize FO on each, and printing it out
+   using write method of Vector class, which calls CnSpace
+   and CnArray write methods
+
+*** component 0
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = (0.108797,0.728763)
+data[1] = (0.109489,0.131133)
+data[2] = (0.924143,0.312103)
+data[3] = (0.523156,0.26092)
+data[4] = (0.851918,0.940463)
+data[5] = (0.102822,0.342666)
+data[6] = (0.810382,0.955235)
+data[7] = (0.166588,0.356361)
+data[8] = (0.880276,0.815589)
+data[9] = (0.315654,0.930433)
+
+*** component 1
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = (0.919427,0.650622)
+data[1] = (0.171092,0.776692)
+data[2] = (0.683219,0.640661)
+data[3] = (0.362017,0.900816)
+data[4] = (0.292981,0.472198)
+data[5] = (0.48476,0.844594)
+data[6] = (0.400518,0.382634)
+data[7] = (0.146926,0.245046)
+data[8] = (0.608391,0.631475)
+data[9] = (0.951349,0.568274)
+
+*** component 2
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = (0.144476,0.989142)
+data[1] = (0.849193,0.40601)
+data[2] = (0.529715,0.883193)
+data[3] = (0.617763,0.0226404)
+data[4] = (0.873135,0.116418)
+data[5] = (0.623006,0.126538)
+data[6] = (0.0938657,0.992963)
+data[7] = (0.330447,0.998108)
+data[8] = (0.652365,0.330575)
+data[9] = (0.174303,0.763319)
+
+*** component 3
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = (0.18188,0.530071)
+data[1] = (0.0476823,0.671415)
+data[2] = (0.89235,0.618479)
+data[3] = (0.609778,0.578119)
+data[4] = (0.390509,0.269211)
+data[5] = (0.0844936,0.591121)
+data[6] = (0.0182471,0.807476)
+data[7] = (0.658478,0.41422)
+data[8] = (0.826989,0.56285)
+data[9] = (0.327164,0.534728)
+
+*** component 4
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = (0.844665,0.82829)
+data[1] = (0.405967,0.412473)
+data[2] = (0.506743,0.0131626)
+data[3] = (0.37323,0.189655)
+data[4] = (0.85743,0.0201761)
+data[5] = (0.920437,0.43633)
+data[6] = (0.0681288,0.646926)
+data[7] = (0.74998,0.273013)
+data[8] = (0.628372,0.160024)
+data[9] = (0.53455,0.281381)
+
+6. use RVL::Vector::linComb to form 1.0 * 2nd component
+   plus 0.5 * 3rd component, store over first component,
+   write latter out.
+
+Vector Object
+member of space:
+RnSpace: simple dense vector space
+dimension = 10
+data container:
+RnArray Local Data Container object
+length = 10
+samples: 
+data[0] = (0.991665,1.14519)
+data[1] = (0.595688,0.979697)
+data[2] = (0.948076,1.08226)
+data[3] = (0.670898,0.912136)
+data[4] = (0.729548,0.530407)
+data[5] = (0.796263,0.907863)
+data[6] = (0.44745,0.879116)
+data[7] = (0.312149,0.7441)
+data[8] = (0.934574,0.796763)
+data[9] = (1.0385,0.949933)
+
+/*************************************************
+ *              END RVL UNIT TEST 8              *
+ *************************************************/

@@ -1,0 +1,187 @@
+#
+# Doxygen options relating to the environment
+#
+
+# Doxyfile 1.2.8.1
+
+#---------------------------------------------------------------------------
+# Configuration::addtions related to external references   
+#---------------------------------------------------------------------------
+PERL_PATH              = 
+#---------------------------------------------------------------------------
+# Configuration options related to the dot tool   
+#---------------------------------------------------------------------------
+HAVE_DOT               = NO
+DOT_PATH               = 
+
+#
+# Doxygen options that are univeral for all the projects
+#
+
+# Doxyfile 1.2.8.1
+
+#---------------------------------------------------------------------------
+# General configuration options
+#---------------------------------------------------------------------------
+OUTPUT_LANGUAGE        = English
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+BRIEF_MEMBER_DESC      = YES
+REPEAT_BRIEF           = YES
+ALWAYS_DETAILED_SEC    = YES
+FULL_PATH_NAMES        = NO
+STRIP_FROM_PATH        = 
+INTERNAL_DOCS          = NO
+CLASS_DIAGRAMS         = YES
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = NO
+STRIP_CODE_COMMENTS    = YES
+CASE_SENSE_NAMES       = YES
+SHORT_NAMES            = NO
+HIDE_SCOPE_NAMES       = NO
+VERBATIM_HEADERS       = YES
+SHOW_INCLUDE_FILES     = YES
+JAVADOC_AUTOBRIEF      = YES
+INHERIT_DOCS           = NO
+INLINE_INFO            = NO
+SORT_MEMBER_DOCS       = NO
+DISTRIBUTE_GROUP_DOC   = NO
+TAB_SIZE               = 4
+ENABLED_SECTIONS       = 
+GENERATE_TODOLIST      = YES
+GENERATE_TESTLIST      = YES
+GENERATE_BUGLIST       = YES
+ALIASES                = 
+MAX_INITIALIZER_LINES  = 30
+OPTIMIZE_OUTPUT_FOR_C  = NO
+SHOW_USED_FILES        = YES
+#---------------------------------------------------------------------------
+# configuration options related to warning and progress messages
+#---------------------------------------------------------------------------
+QUIET                  = NO
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = YES
+WARN_FORMAT            = 
+WARN_LOGFILE           = 
+#---------------------------------------------------------------------------
+# configuration options related to the alphabetical class index
+#---------------------------------------------------------------------------
+ALPHABETICAL_INDEX     = NO
+COLS_IN_ALPHA_INDEX    = 5
+IGNORE_PREFIX          = 
+#---------------------------------------------------------------------------
+# configuration options related to the HTML output
+#---------------------------------------------------------------------------
+GENERATE_HTML          = YES
+HTML_OUTPUT            = 
+HTML_HEADER            = 
+HTML_FOOTER            = 
+HTML_STYLESHEET        = 
+HTML_ALIGN_MEMBERS     = YES
+GENERATE_HTMLHELP      = NO
+GENERATE_CHI           = NO
+BINARY_TOC             = NO
+TOC_EXPAND             = NO
+DISABLE_INDEX          = NO
+ENUM_VALUES_PER_LINE   = 4
+GENERATE_TREEVIEW      = NO
+TREEVIEW_WIDTH         = 250
+#---------------------------------------------------------------------------
+# configuration options related to the LaTeX output
+#---------------------------------------------------------------------------
+GENERATE_LATEX         = NO
+LATEX_OUTPUT           = 
+COMPACT_LATEX          = NO
+PAPER_TYPE             = a4wide
+EXTRA_PACKAGES         = 
+LATEX_HEADER           = 
+PDF_HYPERLINKS         = NO
+USE_PDFLATEX           = NO
+LATEX_BATCHMODE        = NO
+#---------------------------------------------------------------------------
+# configuration options related to the RTF output
+#---------------------------------------------------------------------------
+GENERATE_RTF           = NO
+RTF_OUTPUT             = 
+COMPACT_RTF            = NO
+RTF_HYPERLINKS         = NO
+RTF_STYLESHEET_FILE    = 
+RTF_EXTENSIONS_FILE    = 
+#---------------------------------------------------------------------------
+# configuration options related to the man page output
+#---------------------------------------------------------------------------
+GENERATE_MAN           = NO
+MAN_OUTPUT             = 
+MAN_EXTENSION          = 
+MAN_LINKS              = NO
+#---------------------------------------------------------------------------
+# Configuration options related to the preprocessor   
+#---------------------------------------------------------------------------
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+SEARCH_INCLUDES        = YES
+INCLUDE_PATH           = ../include 
+INCLUDE_FILE_PATTERNS  = *.hh *.h
+PREDEFINED             += DOXYGEN_COMPILE \
+                         REF_COUNT_PTR_TEMPLATE_CLASS_TEMPLATE_FUNCTIONS
+EXPAND_AS_DEFINED      = STANDARD_MEMBER_COMPOSITION_MEMBERS \
+                         STANDARD_COMPOSITION_MEMBERS \
+                         STANDARD_CONST_AGGREGATION_MEMBERS                         
+SKIP_FUNCTION_MACROS   = YES
+#---------------------------------------------------------------------------
+# Configuration::addtions related to external references   
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+# Configuration options related to the dot tool   
+#---------------------------------------------------------------------------
+CLASS_GRAPH            = YES
+COLLABORATION_GRAPH    = YES
+INCLUDE_GRAPH          = YES
+INCLUDED_BY_GRAPH      = YES
+GRAPHICAL_HIERARCHY    = YES
+MAX_DOT_GRAPH_WIDTH    = 1024
+MAX_DOT_GRAPH_HEIGHT   = 1024
+GENERATE_LEGEND        = YES
+DOT_CLEANUP            = YES
+
+
+#
+# Doxygen options specific to Alg
+#
+
+# Doxyfile 1.2.8.1
+
+#---------------------------------------------------------------------------
+# General configuration options
+#---------------------------------------------------------------------------
+PROJECT_NAME           = RVLUnitTests
+PROJECT_NUMBER         = 1.0
+OUTPUT_DIRECTORY       = ./
+EXTRACT_ALL            = YES
+#---------------------------------------------------------------------------
+# configuration options related to the input files
+#---------------------------------------------------------------------------
+INPUT                  = ../include
+FILE_PATTERNS          = *.cc *.hh *.c *.h
+RECURSIVE              = NO
+EXCLUDE                = 
+EXCLUDE_PATTERNS       = 
+EXAMPLE_PATH           += 
+EXAMPLE_PATTERNS       = 
+IMAGE_PATH             = 
+INPUT_FILTER           = 
+FILTER_SOURCE_FILES    = NO
+#---------------------------------------------------------------------------
+# Configuration::addtions related to external references   
+#---------------------------------------------------------------------------
+TAGFILES               = ../../rvl/doc/RVL.tag=../../../rvl/doc/html/ ../../local/doc/LOCALRVL.tag=../../../local/doc/html
+GENERATE_TAGFILE       = RVLUT.tag
+ALLEXTERNALS           = YES
+#---------------------------------------------------------------------------
+# Configuration options related to the preprocessor   
+#---------------------------------------------------------------------------
+PREDEFINED             += REF_COUNT_PTR_INLINE=

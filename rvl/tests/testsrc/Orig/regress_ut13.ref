@@ -1,0 +1,22 @@
+
+/*************************************************
+ *            BEGIN RVL UNIT TEST 13             *
+ * Purpose: compare LinearOpFO with explicit     *
+ * construction                                  *
+ *************************************************/
+
+1. Construct domain, range spaces
+
+2. Build matvec
+
+3. Build GenMat
+
+4. Build LinearOpFO
+
+5. Compare actions - norm of diff should = 0 exactly
+norm of difference in fwd dir = 0
+norm of difference in fwd dir = 0
+
+/*************************************************
+ *              END RVL UNIT TEST 13             *
+ *************************************************/

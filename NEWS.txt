@@ -63,6 +63,7 @@ To programs:
 * sfsegyheader can take tfile= parameter for input trace headers
 * Extended join= option in sfomp and sfmpi to support adding (join=0)
 * user/seisinv: new contributor (Yujin Liu)
+* RVL package from Bill Symes and The Rice Inversion Project
 
 ===Bug fixes===
 
