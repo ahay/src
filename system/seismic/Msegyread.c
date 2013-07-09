@@ -443,7 +443,8 @@ int main(int argc, char *argv[])
     t0 = itrace[ segykey("delrt")]/1000.;
 
     if (su) { /* figure out ns, dt, and ntr */
-	ns = itrace[ segykey("ns")];
+	if (!sf_getint("ns",&ns)) ns = itrace[ segykey("ns")];
+	if (verbose) sf_warning("Detected trace length of %d",ns);
 	dt = itrace[ segykey("dt")]/1000000.;
 	free (trace);
 
