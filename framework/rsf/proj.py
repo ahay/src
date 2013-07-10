@@ -419,14 +419,14 @@ class Project(Environment):
                 reduction = reduce
 
             if split[1] == 'omp' or split[1] == 'mpi': 
-                flow = ' split=%d ' % split[0] + flow
+                splitpar = 'split=%d ' % split[0]
                 if reduce == 'add':
-                    flow = ' join=0' + flow
+                    splitpar += ' join=0'
                 else:
                     join = re.search('cat\s+axis=(\d)',reduce)
                     if join:
-                        flow = ' join=%s' % join.group(1) + flow
-                flow = split[1] + flow
+                        splitpar += ' join=%s' % join.group(1)
+                flow = '|'.join(map(lambda x: ' '.join([split[1],splitpar,x]),flow.split('|')))
             elif self.jobs > 1 and rsfflow and sfiles:
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
