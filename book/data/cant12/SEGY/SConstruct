@@ -16,9 +16,10 @@ for n in range(403,413):
         # that had the data and ran:
         # rcp cant12.*.segy karls@stampede.tacc.utexas.edu:/work/02167/karls/data/cant12/fetch
         
-	#Fetch(inp,'cant12',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
-        #inp = 'cant12.%d.segy' % n
-	inp = '/work/02167/karls/data/cant12/fetch/cant12.%d.segy' % n
+	inp = 'cant12.%d.segy' % n
+	Fetch(inp,'cant12',server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
+        
+#	inp = '/work/02167/karls/data/cant12/fetch/cant12.%d.segy' % n
 
         out = 'cant12-%d' % n
 

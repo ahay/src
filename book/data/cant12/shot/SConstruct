@@ -2,6 +2,7 @@ from rsf.proj import *
 
 ###############################################################################
 data='../SEGY/shots.rsf'
+SConscript('../SEGY/SConstruct')
 
 # Passband filter the data
 Flow('shot0',data,
@@ -9,11 +10,20 @@ Flow('shot0',data,
      bandpass flo=20 fhi=180 
      | pow pow1=2
      ''', split=[3,4791])
-#    ''', split=[3,'mpi',[0]],np=10)
-#     ''', split=[3,4791])
-#''', split=[3,'omp',[0]],np=10)  
-#     ''', split=[3,'omp'],np=10)
-#     ''', split=[3,4791])
+
+Flow('band_mpi',data,
+     'bandpass flo=20 fhi=180', 
+     split=[3,'mpi'],np=5)
+Flow('shot_mpi','band_mpi',
+     'pow pow1=2',
+     split=[3,'mpi'],np=5)
+
+Flow('band_omp',data,
+     'bandpass flo=20 fhi=180', 
+     split=[3,'omp'])
+Flow('shot_omp','band_omp',
+     'pow pow1=2',
+     split=[3,'omp'])
 
 ##################
 # common offset

@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
     if (nodes < 2) {
 	fprintf(stderr,"Need at least two nodes!\n");
 	MPI_Finalize();
+	exit(1);
     }
 
     if (!rank) { /* master node */
