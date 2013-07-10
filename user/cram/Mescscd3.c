@@ -448,7 +448,7 @@ int main (int argc, char* argv[]) {
             return 0;
         }
 */
-        sleep (tdel*(icpu/ith));
+        sleep ((tdel + 1)*(icpu/ith));
         nc = 0;
         scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)(iab1 - iab0 + 1),
                                                     sizeof(multi_UBspline_3d_s));
