@@ -35,6 +35,7 @@ To documentation:
 To APIs:
 
 * Added m8r function for running Madagscar programs from MATLAB
+* If C++ compiler works, C++ interface is installed by default
 
 To the Python package:
 

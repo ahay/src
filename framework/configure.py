@@ -114,8 +114,8 @@ def check_all(context):
     lapack(context) # FDNSI
     swig(context)
     api = api_options(context)
-    if 'c++' in api:
-        cxx(context)
+    # C++ is checked by default
+    cxx(context)
     if 'f77' in api:
         f77(context)
     if 'f90' in api:
@@ -1613,33 +1613,44 @@ pkg['c++'] = {'fedora':'gcc-c++',
 def cxx(context):
     context.Message("checking for C++ compiler ... ")
     CXX = context.env.get('CXX')
-    if CXX:
-        context.Result(CXX)
-    else:
+    api = context.env['API']
+    if not CXX:
         context.Result(context_failure)
-        need_pkg('c++')
-    context.Message("checking if %s works ... " % CXX)
-    text = '''
-    #include <valarray>
-    int main(int argc,char* argv[]) {
-    return 0;
-    }\n'''
-    res = context.TryLink(text,'.cc')
-    context.Result(res)
-    if not res:
-        del context.env['CXX']
-        sys.exit(unix_failure)
-    if CXX[-3:]=='g++':
-        oldflag = context.env.get('CXXFLAGS')
-        for flag in ['-Wall -pedantic']:
-            context.Message("checking if g++ accepts '%s' ... " % flag)
-            context.env['CXXFLAGS'] = oldflag + ' ' + flag
-            res = context.TryCompile(text,'.cc')
-            context.Result(res)
-            if res:
-                break
+        need_pkg('c++', fatal = False)
+        if 'c++' in api:
+            api.remove('c++')
+            context.env['API'] = api
+    else:
+        context.Result(CXX)
+        context.Message("checking if %s works ... " % CXX)
+        text = '''
+        #include <valarray>
+        int main(int argc,char* argv[]) {
+        return 0;
+        }\n'''
+        res = context.TryLink(text,'.cc')
+        context.Result(res)
         if not res:
-            context.env['CXXFLAGS'] = oldflag
+            del context.env['CXX']
+            if 'c++' in api:
+                api.remove('c++')
+                context.env['API'] = api
+        else:
+            if not 'c++' in api:
+                api.append('c++')
+                context.env['API'] = api
+
+            if CXX[-3:]=='g++':
+                oldflag = context.env.get('CXXFLAGS')
+                for flag in ['-Wall -pedantic']:
+                    context.Message("checking if g++ accepts '%s' ... " % flag)
+                    context.env['CXXFLAGS'] = oldflag + ' ' + flag
+                    res = context.TryCompile(text,'.cc')
+                    context.Result(res)
+                    if res:
+                        break
+                if not res:
+                    context.env['CXXFLAGS'] = oldflag
 
 # Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
