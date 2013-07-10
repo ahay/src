@@ -4,8 +4,8 @@ imports = ' cpplist liblist libname libdirlist'
 
 try:  # madagascar version
     Import('env root pkgdir bindir libdir' + imports)
-    print libdir
-    print libdirlist
+#    print libdir
+#    print libdirlist
     env = env.Clone()
     env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist+[libdir])
 except:  # autonomous version

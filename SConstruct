@@ -96,17 +96,22 @@ if os.path.isdir('user'):
 else:
     user = []
 
-iwave = []
-if os.path.isdir('iwave') and os.path.exists('iwave/hsubpath'):
-    f = open('iwave/hsubpath','r')
-    iwave = (f.read().strip('\n')).split(':')
-    f.close() 
+trip = []
+if os.path.isdir('trip'):
+    tripdirs = ('iwave','rvl','iwave++')
+    for dir in map(lambda x: os.path.join('trip',x), tripdirs):
+        subpath = os.path.join(dir,'hsubpath')
+        if os.path.exists(subpath):
+            f = open(subpath,'r')
+            dirs = (f.read().strip('\n')).split(':')
+            f.close() 
 
-    iwave = filter(lambda x: os.path.isdir(os.path.join('iwave',x,'main')), iwave)
+            dirs = filter(lambda x: os.path.isdir(os.path.join(dir,x,'main')), dirs)
+            trip.extend(map(lambda x: os.path.join(dir,x), dirs))
 
 dotproj = Glob('book/[a-z]*/[a-z]*/[a-z]*/.rsfproj')
 
-frame_exports = 'env bindir libdir pkgdir shrdir srcdir system user iwave dotproj'
+frame_exports = 'env bindir libdir pkgdir shrdir srcdir system user trip dotproj'
 
 for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     build = os.path.join('build',dir)
@@ -250,73 +255,29 @@ if os.path.isdir('su'):
         Default(build)
 
 ##########################################################################
-# IWAVE BUILD
+# TRIP BUILD
 ##########################################################################
 
-if os.path.isdir('iwave'):
-    try:
-        subpathfile = os.path.join('iwave','hsubpath')
-        f = open(subpathfile,'r')
-        sublist = (f.read().strip('\n')).split(':')
-        f.close()
-    except:
-        sublist = []
-    for sub in sublist:
-        dir = os.path.join('iwave',sub)
-        build = os.path.join('build',dir)
-        if configure.version[0] > 1:
-            VariantDir(build,dir)
-        else:
-            BuildDir(build,dir)
-        iwave_exports = 'env root libdir bindir incdir pkgdir'
-        SConscript(dirs=build,exports=iwave_exports)
-        Default(build)
-
-##########################################################################
-# RVL BUILD
-##########################################################################
-
-if os.path.isdir('rvl'):
-    try:
-        subpathfile = os.path.join('rvl','hsubpath')
-        f = open(subpathfile,'r')
-        sublist = (f.read().strip('\n')).split(':')
-        f.close()
-    except:
-        sublist = []
-    for sub in sublist:
-        dir = os.path.join('rvl',sub)
-        build = os.path.join('build',dir)
-        if configure.version[0] > 1:
-            VariantDir(build,dir)
-        else:
-            BuildDir(build,dir)
-        rvl_exports = 'env root libdir bindir incdir pkgdir'
-        SConscript(dirs=build,exports=rvl_exports,name='SConscript')
-        Default(build)
-
-##########################################################################
-# IWAVE++ BUILD
-##########################################################################
-
-if os.path.isdir('iwave++'):
-    try:
-        subpathfile = os.path.join('iwave++','hsubpath')
-        f = open(subpathfile,'r')
-        sublist = (f.read().strip('\n')).split(':')
-        f.close()
-    except:
-        sublist = []
-    for sub in sublist:
-        dir = os.path.join('iwave++',sub)
-        build = os.path.join('build',dir)
-        if configure.version[0] > 1:
-            VariantDir(build,dir)
-        else:
-            BuildDir(build,dir)
-        iwavepp_exports = 'env root libdir bindir incdir pkgdir'
-        SConscript(dirs=build,exports=iwavepp_exports,name='SConscript')
-        Default(build)
+if os.path.isdir('trip'):
+    tripdirs = ('iwave','rvl','iwave++')
+    for dir in map(lambda x: os.path.join('trip',x), tripdirs):
+        try:
+            subpathfile = os.path.join(dir,'hsubpath')
+            f = open(subpathfile,'r')
+            sublist = (f.read().strip('\n')).split(':')
+            f.close()
+        except:
+            sublist = []
+        for sub in sublist:
+            subdir = os.path.join(dir,sub)
+            build = os.path.join('build',subdir)
+            if configure.version[0] > 1:
+                VariantDir(build,subdir)
+            else:
+                BuildDir(build,subdir)
+            trip_exports = 'env root libdir bindir incdir pkgdir'
+            SConscript(dirs=build,exports=trip_exports)
+            Default(build)
 
 ##########################################################################
 # INSTALLATION

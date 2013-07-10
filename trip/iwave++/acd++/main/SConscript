@@ -4,8 +4,8 @@ imports = ' cpplist liblist libname libdirlist'
 
 try:  # madagascar version
     Import('env root pkgdir bindir libdir' + imports)
-    print libdir
-    print libdirlist
+#    print libdir
+#    print libdirlist
     env = env.Clone()
     env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist+[libdir])
 except:  # autonomous version
@@ -65,6 +65,7 @@ if len(ccsrcs) > 0:
 # Madagascar self-docs
 if root:
     main = 'sf%s.py' % libname
+    main = main.replace('++','pp')
     
     cdocs = map(lambda prog: env.Doc(prog, '%s.c' % prog, lang='c'), cprogs)
     ccdocs = map(lambda prog: env.Doc(prog, '%s.cc' % prog, lang='c++'), ccprogs)

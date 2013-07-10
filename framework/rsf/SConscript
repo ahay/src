@@ -3,22 +3,24 @@ import bldutil, rsf.doc
 
 ################################################################################
 
-Import('env bindir pkgdir system user iwave dotproj')
+Import('env bindir pkgdir system user trip dotproj')
 
 bldutil.py_install('__init__', env, pkgdir)
 bldutil.py_install('__init__', env, os.path.join(pkgdir,'user'))
 
-dirs = Split('plot libplot plplot pens sumain suplot') + system + user + iwave
+dirs = Split('plot libplot plplot pens sumain suplot') + system + user 
 
 for usr in user:
     py = 'sf'+usr+'.py'
     env.InstallAs(os.path.join('.',py),
                   os.path.join('../../user',usr,py))
 
-for sub in iwave:
-    py = 'sf'+sub+'.py'
+for sub in trip:
+    name = os.path.basename(sub).replace('++','pp')
+    dirs.append(name)
+    py = 'sf'+name+'.py'
     env.InstallAs(os.path.join('.',py),
-                  os.path.join('../../iwave',sub,'main',py))
+                  os.path.join('../..',sub,'main',py))
 
 env.Command('prog.py',map(lambda x: 'sf'+x+'.py',dirs),
             action=Action(rsf.doc.getprogs))

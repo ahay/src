@@ -65,6 +65,7 @@ To programs:
 * user/seisinv: new contributor (Yujin Liu)
 * RVL package from Bill Symes and The Rice Inversion Project
 * iwave++ package from Bill Symes and The Rice Inversion Project
+* Moved iwave, rvl, and iwav++ to trip
 
 ===Bug fixes===
 
