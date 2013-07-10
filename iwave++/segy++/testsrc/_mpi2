@@ -1,0 +1,3 @@
+# for mpich, n=2
+
+EXEC = mpirun -np 2

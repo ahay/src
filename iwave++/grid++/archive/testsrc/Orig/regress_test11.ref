@@ -1,0 +1,5 @@
+GRIDPP Unit Test 9
+create GridDCF, use public build method from base class to
+create DC, assign to perm old file=testdata.rsf
+all data samples in file = 11.0, compute max and min
+test11 result: max=11 min=11

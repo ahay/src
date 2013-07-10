@@ -1,0 +1,2 @@
+SEGYSpace: StdSpace based on SEGYDC trace data container class
+ - header file = hdr.su

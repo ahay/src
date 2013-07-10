@@ -296,6 +296,29 @@ if os.path.isdir('rvl'):
         Default(build)
 
 ##########################################################################
+# IWAVE++ BUILD
+##########################################################################
+
+if os.path.isdir('iwave++'):
+    try:
+        subpathfile = os.path.join('iwave++','hsubpath')
+        f = open(subpathfile,'r')
+        sublist = (f.read().strip('\n')).split(':')
+        f.close()
+    except:
+        sublist = []
+    for sub in sublist:
+        dir = os.path.join('iwave++',sub)
+        build = os.path.join('build',dir)
+        if configure.version[0] > 1:
+            VariantDir(build,dir)
+        else:
+            BuildDir(build,dir)
+        iwavepp_exports = 'env root libdir bindir incdir pkgdir'
+        SConscript(dirs=build,exports=iwavepp_exports,name='SConscript')
+        Default(build)
+
+##########################################################################
 # INSTALLATION
 ##########################################################################
 

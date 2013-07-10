@@ -64,6 +64,7 @@ To programs:
 * Extended join= option in sfomp and sfmpi to support adding (join=0)
 * user/seisinv: new contributor (Yujin Liu)
 * RVL package from Bill Symes and The Rice Inversion Project
+* iwave++ package from Bill Symes and The Rice Inversion Project
 
 ===Bug fixes===
 

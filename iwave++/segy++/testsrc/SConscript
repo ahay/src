@@ -1,0 +1,69 @@
+import os
+import shutil
+
+Import('vars', 'cpplist', 'liblist', 'libdirlist')
+
+# this version assumes that all source files in this directory
+# define test programs, whose output is directed into files with
+# suffix .rpt
+
+# initialize build environment
+env = Environment(ENV = os.environ,
+                  variables = vars,
+                  CC={'CC' : '${CC}'},
+		  CFLAGS={'CFLAGS' : '${CFLAGS}'},
+                  CCFLAGS={'CCFLAGS' : '${CCFLAGS}'},
+                  CXX={'CXX' : '${CXX}'},
+	          CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
+                  CPPPATH = cpplist, 
+                  LIBS = liblist, 
+	          LIBPATH = libdirlist)
+
+# find sources
+srcs=[]
+srcs = srcs + Glob('*.c')
+srcs = srcs + Glob('*.cc')
+srcs = srcs + Glob('*.cpp')
+
+thispath = os.getcwd()
+
+g = open(thispath + '/' + 'summary.rpt','w')
+
+def cmdx(target, source, env):
+    os.system('/bin/rm -rf ' + str(target[0]) + '; mkdir ' + str(target[0]))
+    baselist = str(target[0]).split('/')
+    base = baselist[len(baselist)-1]
+    tgt = str(target[0]) + '/' + base + '.rpt';
+    print 'base = ' + base + ' tgt = ' + tgt
+    cmdl='cd ' + str(target[0]) +'; ../' + base + '.x ' + '>& ' + base + '.rpt'
+    print 'cmdl = ' + cmdl
+    os.system(cmdl)
+    ref = thispath + '/' + base + '.rpt_ref'
+    if os.path.exists(ref):
+        f = open(tgt,'r')
+        testres = f.read()
+        f.close()
+        f = open(ref,'r')
+        refres = f.read()
+        f.close()
+        if testres == refres:
+            os.system('echo ' + base + ': TRUE  = normal termination, output identical to reference >> ' + thispath + '/summary.rpt')
+        else:
+            os.system('echo ' + base + ': FALSE = normal termination, output differs from reference >> ' + thispath + '/summary.rpt')
+    else:
+        shutil.copy(tgt, ref)	        
+
+if len(srcs) > 0:
+    for prog in srcs:
+        pname = str(prog).split('.')[0].strip('/')
+        pprog = pname + '.x'
+        env.Program(pprog,prog)
+        prout = pname + '/' + pname + '.rpt'
+	praux = pname + '.aux'
+#	print 'pname = ' + pname + ' prout = ' + prout + ' praux = ' + praux
+        t = env.Command([pname],[pprog],cmdx) 
+	Clean(t, pname)
+
+g.close()
+
+	

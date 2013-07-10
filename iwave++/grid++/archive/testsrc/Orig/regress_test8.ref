@@ -1,0 +1,4 @@
+GRIDPP Unit Test 8
+create GridDCF, GridDC, perm old file=testgrid.rsf, assign
+8.0 to all data samples, double case, compute max and min
+test8 result: max=8 min=8

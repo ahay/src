@@ -1,0 +1,81 @@
+ifndef FFTWROOT 
+$(warning FFTWROOT not defined, turn off fftw apps)
+DIRS  = grid++ segy++ iwave++ asg++ demo
+DOCS  = oc grid++ segy++ iwave++ asg++
+LIBS  = segy++ iwave++ asg++	  
+BINS  = asg++
+else
+ifdef FFTWLIB
+$(warning both FFTWROOT and FFTWLIB defined, turn on fftw apps)
+DIRS  = grid++ segy++ iwave++ asg++ fftwops asgfftw++ demo	
+DOCS  = oc grid++ segy++ iwave++ asg++ asgfftw++
+LIBS  = segy++ iwave++ asg++ fftwops
+BINS  = asg++ asgfftw++
+else
+$(warning FFTWLIB not defined, turn off fftw apps)
+DIRS  = grid++ segy++ iwave++ asg++ demo
+DOCS  = oc grid++ segy++ iwave++ asg++
+LIBS  = segy++ iwave++ asg++	  
+BINS  = asg++
+endif
+endif
+
+default:
+	@(for i in $(DIRS) ; \
+	do \
+		(cd $$i; echo "making in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( /bin/rm -f main/*.x; $(MAKE) COMP=$(COMP) ) ; \
+		else ( /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+		fi) ; \
+	done)
+
+lib:
+	@(for i in $(LIBS) ; \
+	do \
+		(cd $$i; echo "making lib in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( $(MAKE) lib COMP=$(COMP) ) ; \
+		else ( /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+		fi) ;\
+	done)
+
+bin: lib
+	@(for i in $(BINS) ; \
+	do \
+		(cd $$i; echo "making in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( cd ./main; /bin/rm -f *.x; $(MAKE) COMP=$(COMP) ) ; \
+		else ( /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+		fi) ;\
+	done)
+
+clean:
+	@(for i in $(DIRS) ; \
+	do \
+		(cd $$i; echo "cleaning in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( make clean ) ; \
+		fi) ; \
+	done)
+
+burn:
+	@(for i in $(DIRS) ; \
+	do \
+		(cd $$i; echo "burning in $$i"; \
+		if [ -f Makefile ] ; \
+		then ( make burn ) ; \
+		fi) ; \
+	done)
+
+install:
+	@(for i in $(DIRS) ; \
+	do \
+		( cd $$i ; /bin/cp ${TRIPADMIN}/makefile.boot Makefile; $(MAKE) install COMP=$(COMP) ) ; \
+	done)
+
+docs: 
+	@(for i in $(DOCS) ; \
+	do \
+		( cd $$i/doc ; ${DOXYGEN} ) ; \
+	done)

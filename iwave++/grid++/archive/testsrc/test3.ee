@@ -1,0 +1,92 @@
+#include "usempi.h"
+#include "gridpp_top.hh"
+#include "create_hfile.hh"
+
+using namespace RVL;
+using namespace TSOpt;
+
+int main(int argc, char ** argv) {
+
+  int rk=0;
+
+#ifdef IWAVE_USE_MPI
+  MPI_Init(&argc,&argv);
+  MPI_Comm_rank(MPI_COMM_WORLD, &rk);
+#endif 
+
+  try {
+
+    string fname="testsrc/test3/testgrid.rsf";
+
+#ifdef IWAVE_USE_MPI
+    if (rk==0) {
+#endif
+      cout<<"GRIDPP Unit Test 2"<<endl;
+      cout<<"test of grid load from file, float and double"<<endl;
+
+      create_hfile(fname,0);
+
+#ifdef IWAVE_USE_MPI
+    }
+#endif
+
+    if (rk==0) cout<<"float case:\n";
+
+    Grid<float> g;
+
+    if (rk==0) {
+      cout<<"\nbefore read:\n";
+      g.write(cout);
+    }
+
+#ifdef IWAVE_USE_MPI
+    if (rk==0) {
+#endif
+
+    g.readFile(fname);
+
+#ifdef IWAVE_USE_MPI
+    }
+#endif
+
+    if (rk==0) {
+      cout<<"\nafter read:\n";
+      g.write(cout);
+    }
+
+    if (rk==0) cout<<"\ndouble case:\n";
+    Grid<double> h;
+
+    if (rk==0) {
+      cout<<"\nbefore read:\n";
+      h.write(cout);
+    }
+
+#ifdef IWAVE_USE_MPI
+    if (rk==0) {
+#endif
+
+    h.readFile(fname);
+
+#ifdef IWAVE_USE_MPI
+    }
+#endif
+
+    if (rk==0) {
+      cout<<"\nafter read:\n";
+      h.write(cout);
+      cout<<endl;
+    }
+
+#ifdef IWAVE_USE_MPI
+    MPI_Finalize();
+#endif
+
+    return(0);
+
+  }
+  catch (RVLException & e) {
+    e.write(cerr);
+    exit(1);
+  }
+}

@@ -1,0 +1,704 @@
+#ifndef __TSOPT_GRIDPP_OPS__
+#define __TSOPT_GRIDPP_OPS__
+
+#include "rn.hh"
+#include "griddec.hh"
+#include "gridrwfos.hh"
+#include "op.hh"
+#include "productspace.hh"
+#include "mpiserialfo.hh"
+
+using RVL::ScalarFieldTraits;
+using RVL::SpaceTest;
+using RVL::Operator;
+using RVL::LinearOp;
+using RVL::Space;
+using RVL::ProductSpace;
+using RVL::Vector;
+using RVL::Components;
+using RVL::ProtectedDivision;
+using RVL::RnArray;
+using RVL::RVLScale;
+//using RVL::MPISerialFunctionObjectRedn;
+
+/** returns smooth monotone increasing function of first input,
+asymptotic to 2nd input at -infty, third input at +infty. To create FO
+encapsulating this, use ScalarFO3<Scalar,Scalar
+bound(Scalar,Scalar,Scalar) > defined in RVLROOT/local/include/fcnfo.hh
+*/
+template<typename Scalar>
+inline Scalar bound(Scalar x, Scalar l, Scalar u) {
+  return 0.5*(((x*(u-l))/(sqrt(ScalarFieldTraits<Scalar>::One() + x*x)))+u+l);
+}
+
+template<typename Scalar>
+inline Scalar dbound(Scalar x, Scalar dx, Scalar l, Scalar u) {
+  return 0.5*(dx*(u-l))/((ScalarFieldTraits<Scalar>::One() + x*x)*sqrt(ScalarFieldTraits<Scalar>::One() + x*x));
+}
+
+template<typename Scalar>
+inline Scalar unbound(Scalar y, Scalar l, Scalar u) {
+  float z=min(0.499,max(-0.499,(y-0.5*(u+l))/(u-l)));
+  return 2.0*z/sqrt(1.0-4.0*z*z);
+}
+
+/** piecewise linear taper function. no sanity check - calling unit
+    responsible for assuring that w > 0 */
+template<typename Scalar>
+inline Scalar window(Scalar a, Scalar b, Scalar w, Scalar x) {
+  return min(min(ScalarFieldTraits<Scalar>::One(),max(ScalarFieldTraits<Scalar>::Zero(),(x-a)/w)),min(ScalarFieldTraits<Scalar>::One(),max(ScalarFieldTraits<Scalar>::Zero(),(b-x)/w)));
+}
+
+namespace TSOpt {
+
+  using RVL::BinaryLocalFunctionObject;
+  using RVL::RVLException;
+  using RVL::ContentPackage;
+  using RVL::LocalDataContainer;
+
+  /** function object for tapering a 1D grid function, in the form of
+      a CP with Grid metadata. Scalar arrays ffset between input and
+      output grids computed by calling unit
+  */
+
+  template<typename Scalar> 
+  class GridWindowFO: public BinaryLocalFunctionObject<Scalar> {
+
+  private:
+
+    std::vector<Scalar> a;
+    std::vector<Scalar> b;
+    Scalar w;
+    bool bias;
+    
+    GridWindowFO();
+    
+  public:
+    
+    GridWindowFO(std::vector<Scalar> const & _a,
+		 std::vector<Scalar> const & _b,
+		 Scalar _w,
+		 bool _bias=false) 
+      : a(_a), b(_b), w(_w), bias(_bias) {}
+
+    GridWindowFO(Grid<Scalar> const & g,
+		 Scalar _w, bool _bias=false)
+      : a(g.getDim()), b(g.getDim()), w(_w), bias(_bias) {
+      for (int i=0;i<g.getDim();i++) {
+	a[i]=g.getAxis(i).o;
+	b[i]=a[i]+g.getAxis(i).d*(g.getAxis(i).n-1);
+      }
+    }
+
+    GridWindowFO(GridWindowFO<Scalar> const & f) 
+      : a(f.a), b(f.b), w(f.w), bias(f.bias) {}
+
+    using RVL::LocalEvaluation<Scalar>::operator();
+    void operator()(LocalDataContainer<Scalar> & x,
+		    LocalDataContainer<Scalar> const & y) {
+
+      try {
+	ContentPackage< Scalar, Grid<Scalar> > const & gy = 
+	  dynamic_cast<ContentPackage< Scalar, Grid<Scalar> > const &>(y);
+
+	ContentPackage< Scalar, Grid<Scalar> > & gx = 
+	  dynamic_cast<ContentPackage< Scalar, Grid<Scalar> > &>(x);
+      
+	// must define window in same dimension as data, and - for this
+	// implementation - grids must be same
+	if ((gx.getMetadata() != gy.getMetadata())) {
+	  RVLException e;
+	  e<<"Error: GridWindowFO::operator()\n";
+	  e<<"called with incompatible data\n";
+	  throw e;
+	}
+      
+	// local defn of w to avoid zerodivide - must be at least
+	// one grid cell wide in each dimn (so the boundary is always
+	// set to zero!!!
+	Scalar wtmp;
+
+	Scalar fac = ScalarFieldTraits<Scalar>::One();
+	for (int i=1;i<a.size();i++) {
+	  wtmp = max(w,gy.getMetadata().getData()[i].d);
+	  fac *= window(a[i],b[i],wtmp,gy.getMetadata().getData()[i].o);
+	  //  cerr<<"i="<<i<<" w="<<w<<" wtmp="<<wtmp<<" a="<<a[i]<<" b="<<b[i]<<" x="<<gy.getMetadata().getData()[i].o<<" fac="<<fac<<endl;
+	}
+
+	wtmp = max(w,gy.getMetadata().getData()[0].d);
+
+	for (int i=0; i<gy.getSize();i++) {
+	  if (bias) 
+	    x.getData()[i]+=y.getData()[i]
+	      *fac*window(a[0],b[0],wtmp,
+			  gy.getMetadata().getData()[0].o+
+			  gy.getMetadata().getData()[0].d*i);
+	  else
+	    x.getData()[i]=y.getData()[i]
+	      *fac*window(a[0],b[0],wtmp,
+			  gy.getMetadata().getData()[0].o+
+			  gy.getMetadata().getData()[0].d*i);
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from GridWindowFO::operator()\n";
+	throw e;
+      }
+    }
+    
+    string getName() const { string tmp = "GridWindoFO"; return tmp; }
+    
+  };
+
+  /** Affine window operator for grid objects. Apply method outputs 
+      windowed increment of background Vector data member: thus 
+
+      \f$ y = x_{bg} + \phi x\f$
+
+      Derivative and adjoint derivative are independent of
+      \f$x_{bg}\f$ and implement standard linear injection and
+      projection operators.
+  */
+  template<typename Scalar> 
+  class GridWindowOp: public Operator<Scalar> {
+
+  private:
+
+    Vector<Scalar> const & bg;
+    mutable GridWindowFO<Scalar> fbias;
+    mutable GridWindowFO<Scalar> fnobias;
+    
+    GridWindowOp();
+
+  protected:
+
+    void apply(Vector<Scalar> const & x,
+	       Vector<Scalar> & y) const {
+      SpaceTest<Scalar>(bg.getSpace(),x,"GridWindowOp::apply (input)");
+      SpaceTest<Scalar>(bg.getSpace(),y,"GridWindowOp::apply (output)");
+      y.copy(bg);
+      Components<Scalar> cx(x);
+      Components<Scalar> cy(y);
+      for (int i=0;i<cx.getSize();i++)
+	cy[i].eval(fbias,cx[i]);    
+    }
+
+    void applyDeriv(Vector<Scalar> const & x,
+		    Vector<Scalar> const & dx,
+		    Vector<Scalar> & dy) const {
+      SpaceTest<Scalar>(bg.getSpace(),x,"GridWindowOp::apply (input)");
+      SpaceTest<Scalar>(bg.getSpace(),dx,"GridWindowOp::apply (pert input)");
+      SpaceTest<Scalar>(bg.getSpace(),dy,"GridWindowOp::apply (pert output)");
+      dy.zero();
+      Components<Scalar> cx(x);
+      Components<Scalar> cdx(dx);
+      Components<Scalar> cdy(dy);
+      for (int i=0;i<cx.getSize();i++)
+	cdy[i].eval(fnobias,cdx[i]);
+    }
+
+    void applyAdjDeriv(Vector<Scalar> const & x,
+		       Vector<Scalar> const & dy,
+		       Vector<Scalar> & dx) const {
+      SpaceTest<Scalar>(bg.getSpace(),x,"GridWindowOp::apply (input)");
+      SpaceTest<Scalar>(bg.getSpace(),dy,"GridWindowOp::apply (pert input)");
+      SpaceTest<Scalar>(bg.getSpace(),dx,"GridWindowOp::apply (pert output)");
+      dx.zero();
+      Components<Scalar> cx(x);
+      Components<Scalar> cdx(dx);
+      Components<Scalar> cdy(dy);
+      for (int i=0;i<cx.getSize();i++)
+	cdx[i].eval(fnobias,cdy[i]);
+    }
+
+    Operator<Scalar> * clone() const { return new GridWindowOp(*this); }
+    
+  public:
+    
+    /** main constructor: takes Grid defining increment window, and width
+	parameter defining zone of smooth taper - same on all sides. 
+    */
+    GridWindowOp(Vector<Scalar> const & _bg,
+		 Grid<Scalar> const & g, float w) 
+      : bg(_bg), fbias(g,w,true), fnobias(g,w,false) {}
+
+    /** Copy constructor - memberwise */
+    GridWindowOp(GridWindowOp<Scalar> const & op) 
+      : bg(op.bg), fbias(op.fbias), fnobias(op.fnobias) {}
+
+    ~GridWindowOp() {}
+    
+    Space<Scalar> const & getDomain() const { return bg.getSpace(); }
+    Space<Scalar> const & getRange() const { return bg.getSpace(); }
+
+    ostream & write(ostream & str) const {
+      str<<"GridWindowOp\n";
+      return str;
+    }
+  };
+
+  /** spread 1D grid function over other dimensions */
+  template<typename Scalar> 
+  class Grid1DFwdFO: public UnaryLocalFunctionObject<Scalar> {
+
+  private:
+
+    RnArray<Scalar> const & buf;
+    Grid1DFwdFO();
+
+  public:
+    
+    Grid1DFwdFO(RnArray<Scalar> const & _buf): buf(_buf) {}
+    Grid1DFwdFO(Grid1DFwdFO<Scalar> const & f): buf(f._buf) {}
+
+    using RVL::LocalEvaluation<Scalar>::operator();
+    void operator()(LocalDataContainer<Scalar> & x) {
+
+      try {
+
+	ContentPackage< Scalar, Grid<Scalar> > & gx = 
+	  dynamic_cast<ContentPackage< Scalar, Grid<Scalar> > &>(x);
+      
+	// number of columns
+	int n1   = gx.getMetadata().getAxis(0).n;
+	if (n1 < 1 || n1 > buf.getSize()) {
+	  RVLException e;
+	  e<<"Error: Grid1DFwdFO::operator()\n";
+	  e<<"input axis has length = "<<n1<<" < 1 or > buffer len = "<<buf.getSize()<<"\n";
+	  throw e;
+	}
+
+	for (int j=0; j<n1; j++) {
+	  gx.getData()[j]=buf.getData()[j];
+	}
+
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from Grid1DFwdFO::operator()\n";
+	throw e;
+      }
+    }
+    
+    string getName() const { string tmp = "Grid1DFwdFO"; return tmp; }
+    
+  };
+  
+  /** stacks grid into 1D column, with scaling by covolume */
+  template<typename Scalar> 
+  class Grid1DAdjFO: public UnaryLocalFunctionObject<Scalar> {
+
+  private:
+
+    RnArray<Scalar> & buf;
+    Grid1DAdjFO();
+ 
+  public:
+    
+    Grid1DAdjFO(RnArray<Scalar> & _buf): buf(_buf) {}
+    Grid1DAdjFO(Grid1DAdjFO<Scalar> const & f) {}
+
+    using RVL::LocalEvaluation<Scalar>::operator();
+    void operator()(LocalDataContainer<Scalar> & x) {
+
+      try {
+
+	ContentPackage< Scalar, Grid<Scalar> > & gx = 
+	  dynamic_cast<ContentPackage< Scalar, Grid<Scalar> > &>(x);
+      
+	int n1   = gx.getMetadata().getAxis(0).n;
+	if (n1 < 1 || n1 > buf.getSize()) {
+	  RVLException e;
+	  e<<"Error: Grid1DAdjFO::operator()\n";
+	  e<<"input axis has length = "<<n1<<" < 1 or > buffer len = "<<buf.getSize()<<"\n";
+	  throw e;
+	}
+
+	for (int j=0; j<n1; j++) 
+	  buf.getData()[j]+=gx.getData()[j];
+
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from Grid1DAdjFO::operator()\n";
+	throw e;
+      }
+    }
+    
+    string getName() const { string tmp = "Grid1DAdjFO"; return tmp; }
+    
+  };
+  
+  /** Spread/stack operator to 1D (first dimension)
+  */
+  template<typename Scalar> 
+  class Grid1DOp: public LinearOp<Scalar> {
+
+  private:
+
+    // runtime error if these are not products of gridspaces
+    Space<Scalar> const & dom;
+    Space<Scalar> const & rng;
+
+    Grid1DOp();
+
+  protected:
+
+    using LinearOp<Scalar>::apply;
+
+    // spread x over the columns of y
+    void apply(Vector<Scalar> const & x,
+	       Vector<Scalar> & y) const {
+      try {
+	SpaceTest<Scalar>(dom,x,"Grid1DOp::applyOp (input)");
+	SpaceTest<Scalar>(rng,y,"Grid1DOp::applyOp (output)");
+
+	Components<Scalar> cx(x);
+	Components<Scalar> cy(y);
+	if (cx.getSize() != cy.getSize()) {
+	  RVLException e;
+	  e<<"Error: Grid1D::applyOp\n";
+	  e<<"domain, range have differing numbers of components\n";
+	  throw e;
+	}
+	for (int i=0;i<cx.getSize();i++) {
+	  // extract n1
+#ifdef IWAVE_USE_MPI
+	  MPIGridSpace<Scalar> const & xsp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cx[i].getSpace());
+#else
+	  GridSpace<Scalar> const & xsp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cx[i].getSpace());	  
+#endif
+	  Grid<Scalar> const & g = xsp.getGrid();
+	  int n1 = g.getAxis(0).n;
+	  if (n1<1) {
+	    RVLException e;
+	    e<<"Error: Grid1DOp::applyOp\n";
+	    e<<"nonpos first axis length\n";
+	    throw e;
+	  }
+	  // create buffer, read input component
+	  RnArray<Scalar> buf(n1);
+// #ifdef IWAVE_USE_MPI
+// 	  GridReader<Scalar> grd1(g,buf.getData());
+// 	  MPISerialFunctionObjectRedn<Scalar,Scalar> grd(grd1);
+// #else
+// 	  GridReader<Scalar> grd(g,buf.getData());
+// #endif
+	  GridReader<Scalar> grd(g,buf.getData());
+	  cx[i].eval(grd);
+	  // spread column over output 
+	  Grid1DFwdFO<Scalar> fwr(buf);
+	  cy[i].eval(fwr);
+	  
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from Grid1DOp::applyAdjOp\n";
+	throw e;
+      }
+    }
+
+    using LinearOp<Scalar>::applyAdj;
+    // stack x onto y
+    void applyAdj(Vector<Scalar> const & x,
+		  Vector<Scalar> & y) const {
+      try {
+	SpaceTest<Scalar>(rng,x,"Grid1DOp::applyAdjOp (input)");
+	SpaceTest<Scalar>(dom,y,"Grid1DOp::applyAdjOp (output)");
+
+	Components<Scalar> cx(x);
+	Components<Scalar> cy(y);
+	if (cx.getSize() != cy.getSize()) {
+	  RVLException e;
+	  e<<"Error: Grid1D::applyAdjOp\n";
+	  e<<"domain, range have differing numbers of components\n";
+	  throw e;
+	}
+	for (int i=0;i<cx.getSize();i++) {
+	  // extract n1
+#ifdef IWAVE_USE_MPI
+	  MPIGridSpace<Scalar> const & ysp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cy[i].getSpace());
+#else
+	  GridSpace<Scalar> const & ysp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cy[i].getSpace());	  
+#endif
+	  Grid<Scalar> const & gy = ysp.getGrid();
+	  int n1 = gy.getAxis(0).n;
+	  if (n1<1) {
+	    RVLException e;
+	    e<<"Error: Grid1DOp::applyOp\n";
+	    e<<"nonpos first axis length\n";
+	    throw e;
+	  }
+	  // stack input into buf
+	  RnArray<Scalar> buf(n1);
+	  for (int k=0;k<n1;k++) buf.getData()[k]=0.0;
+	  Grid1DAdjFO<Scalar> frd(buf);
+	  cx[i].eval(frd);
+	  // scale by cell covol
+#ifdef IWAVE_USE_MPI
+	  MPIGridSpace<Scalar> const & xsp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cx[i].getSpace());
+#else
+	  GridSpace<Scalar> const & xsp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cx[i].getSpace());	  
+#endif
+	  Grid<Scalar> const & gx = xsp.getGrid();
+	  Scalar covol;
+	  if (ProtectedDivision<Scalar>(gx.getCellVol(),gx.getAxis(0).d,covol)) {
+	    RVLException e;
+	    e<<"Error: Grid1DOp::applyAdjOp\n";
+	    e<<"zerodivide by d1\n";
+	    throw e;
+	  }
+	  RVLScale<Scalar> scl(covol);
+	  scl(buf);
+	  // write to output
+	  GridWriter<Scalar> gwr(gy,buf.getData());
+	  cy[i].eval(gwr);    
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from Grid1DOp::applyAdjOp\n";
+	throw e;
+      }
+    }
+
+    LinearOp<Scalar> * clone() const { return new Grid1DOp(*this); }
+    
+  public:
+    
+    /** main constructor: takes Grid defining increment window, and width
+	parameter defining zone of smooth taper - same on all sides. 
+    */
+    Grid1DOp(Space<Scalar> const & _dom,
+	     Space<Scalar> const & _rng) 
+      : dom(_dom), rng(_rng) {}
+
+    /** Copy constructor - memberwise */
+    Grid1DOp(Grid1DOp<Scalar> const & op) 
+      : dom(op.dom), rng(op.rng) {}
+
+    ~Grid1DOp() {}
+    
+    Space<Scalar> const & getDomain() const { return dom; }
+    Space<Scalar> const & getRange() const { return rng; }
+
+  
+    ostream & write(ostream & str) const {
+      str<<"Grid1DOp\n";
+      return str;
+    }
+  };
+  
+  /** Extend/Stack operator 
+  */
+  template<typename Scalar> 
+  class GridExdOp: public LinearOp<Scalar> {
+
+  private:
+
+    // runtime error if these are not products of gridspaces
+    Space<Scalar> const & dom;
+    Space<Scalar> const & rng;
+
+    GridExdOp();
+
+  protected:
+
+
+    using LinearOp<Scalar>::apply;
+
+    // extend x to y along extended axis
+    void apply(Vector<Scalar> const & x,
+	       Vector<Scalar> & y) const {
+      try {
+	SpaceTest<Scalar>(dom,x,"GridExdOp::applyOp (input)");
+	SpaceTest<Scalar>(rng,y,"GridExdOp::applyOp (output)");
+
+	Components<Scalar> cx(x);
+	Components<Scalar> cy(y);
+	int cxsize = cx.getSize();
+	int cysize = cy.getSize();
+	if (cxsize != cysize) {
+	  RVLException e;
+	  e<<"Error: GridExdOp::applyOp\n";
+	  e<<"domain, range have differing numbers of components\n";
+	  throw e;
+	}
+	y.zero();
+	for (int i=0;i<cxsize;i++) {
+#ifdef IWAVE_USE_MPI
+	  MPIGridSpace<Scalar> const & xsp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cx[i].getSpace());
+	  MPIGridSpace<Scalar> const & ysp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cy[i].getSpace());
+#else
+	  GridSpace<Scalar> const & xsp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cx[i].getSpace());
+	  GridSpace<Scalar> const & ysp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cy[i].getSpace());	  	  
+#endif
+	  Grid<Scalar> const & nmlg = xsp.getGrid();
+	  Grid<Scalar> const & exdg = ysp.getGrid();
+	  int nmlgsize = nmlg.getDataSize();
+	  int exdgsize = exdg.getDataSize();
+	  int exd_n = exdg.getExdAxis().n;
+	  // sanity check
+	  int pnum;
+	  if (ProtectedDivision<int>(exdgsize,nmlgsize,pnum) || (pnum != exd_n) || (exdgsize % nmlgsize) ) {
+	    RVLException e;
+	    e<<"Error: GridExdOp::applyOp \n";
+	    e<<" nml_grid size not compatiable with exd_grid size \n";
+	    e<<" nml_grid size = "<<nmlgsize<<"\n";
+	    e<<" exd_grid size = "<<exdgsize<<"\n";
+	    e<<" exd_n = "<<exd_n<<"\n";
+	    throw e;
+	  } 
+	  // creat working buffer
+	  Grid<Scalar> sg(nmlg);
+	  sg.getExdAxis().d = exdg.getExdAxis().d;
+	  ContentPackage<Scalar, Grid<Scalar> > cpbuf;
+	  cpbuf.initialize(sg);
+	  
+// #ifdef IWAVE_USE_MPI
+// 	  GridReader<Scalar> r1(cpbuf);
+// 	  MPISerialFunctionObjectRedn<Scalar,Scalar> r(r1);
+// #else
+// 	  GridReader<Scalar> r(cpbuf);
+// #endif
+	  GridReader<Scalar> r(cpbuf);
+	  // r.reset();
+	  cx[i].eval(r);
+	  for (int j=0; j< exd_n; j++) {
+	    sg.getExdAxis().o = exdg.getExdAxis().o + j*exdg.getExdAxis().d;
+	    GridWriter<Scalar> w(sg,cpbuf.getData());
+	    cy[i].eval(w);
+	  }
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from GridExdOp::applyAdjOp\n";
+	throw e;
+      }
+    }
+
+    using LinearOp<Scalar>::applyAdj;
+    // stack extended model onto normal grid (no scaling via extended.d at this time)  
+    void applyAdj(Vector<Scalar> const & x,
+		  Vector<Scalar> & y) const {
+      try {
+	SpaceTest<Scalar>(rng,x,"Grid1DOp::applyAdjOp (input)");
+	SpaceTest<Scalar>(dom,y,"Grid1DOp::applyAdjOp (output)");
+
+	Components<Scalar> cx(x);
+	Components<Scalar> cy(y);
+	int cxsize = cx.getSize();
+	int cysize = cy.getSize();
+
+	if (cxsize != cysize) {
+	  RVLException e;
+	  e<<"Error: GridExdOp::applyAdjOp\n";
+	  e<<"domain, range have differing numbers of components\n";
+	  throw e;
+	}
+	y.zero();
+	for (int i=0;i<cxsize;i++) {
+#ifdef IWAVE_USE_MPI
+	  MPIGridSpace<Scalar> const & xsp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cx[i].getSpace());
+	  MPIGridSpace<Scalar> const & ysp = 
+	    dynamic_cast<MPIGridSpace<Scalar> const &>(cy[i].getSpace());
+#else
+	  GridSpace<Scalar> const & xsp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cx[i].getSpace());
+	  GridSpace<Scalar> const & ysp = 
+	    dynamic_cast<GridSpace<Scalar> const &>(cy[i].getSpace());	  	  
+#endif
+
+	  Grid<Scalar> const & nmlg = ysp.getGrid();
+	  Grid<Scalar> const & exdg = xsp.getGrid();
+	  int nmlgsize = nmlg.getDataSize();
+	  int exdgsize = exdg.getDataSize();
+	  int exd_n = exdg.getExdAxis().n;
+	  // sanity check
+	  int pnum;
+	  if (ProtectedDivision<int>(exdgsize,nmlgsize,pnum) || (pnum != exd_n) || (exdgsize % nmlgsize) ) {
+	    RVLException e;
+	    e<<"Error: GridExdOp::applyAdjOp \n";
+	    e<<" nml_grid size not compatiable with exd_grid size \n";
+	    e<<" nml_grid size = "<<nmlgsize<<"\n";
+	    e<<" exd_grid size = "<<exdgsize<<"\n";
+	    e<<" exd_n = "<<exd_n<<"\n";
+	    throw e;
+	  } 
+	  // scaling factor
+	  /*
+	  Scalar covol = 1;
+	  if (ProtectedDivision<Scalar>(exdg.getCellVol(),nmlg.getCellVol(),covol)) {
+	    RVLException e;
+	    e<<"Error: GridExdOp::applyAdjOp\n";
+	    e<<"zerodivide by normgrid cell-volume\n";
+	    throw e;
+	  }
+	  RVLScale<Scalar> scl(covol);
+	  */
+
+	  // creat working buffer
+	  Grid<Scalar> sg(nmlg);
+	  sg.getExdAxis().d = exdg.getExdAxis().d;
+	  ContentPackage<Scalar, Grid<Scalar> > cpbuf;
+	  cpbuf.initialize(sg);
+	  GridWriter<Scalar> w(cpbuf,1);
+	  for (int j=0; j< exd_n; j++) {
+	    sg.getExdAxis().o = exdg.getExdAxis().o + j*exdg.getExdAxis().d;
+// #ifdef IWAVE_USE_MPI
+// 	    GridReader<Scalar> r1(sg,cpbuf.getData());
+// 	    MPISerialFunctionObjectRedn<Scalar,Scalar> r(r1);
+// #else
+// 	    GridReader<Scalar> r(sg,cpbuf.getData());
+// #endif
+	    GridReader<Scalar> r(sg,cpbuf.getData());
+	    cx[i].eval(r);
+	    //scl(cpbuf);
+	    w.reset();
+	    cy[i].eval(w);
+	  }
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from GridExdOp::applyAdjOp\n";
+	throw e;
+      }
+    }
+
+    LinearOp<Scalar> * clone() const { return new GridExdOp(*this); }
+    
+  public:
+    
+    /** main constructor: takes Grid defining increment window, and width
+	parameter defining zone of smooth taper - same on all sides. 
+    */
+    GridExdOp(Space<Scalar> const & _dom,
+	      Space<Scalar> const & _rng) 
+      : dom(_dom), rng(_rng) {}
+
+    /** Copy constructor - memberwise */
+    GridExdOp(Grid1DOp<Scalar> const & op) 
+      : dom(op.dom), rng(op.rng) {}
+
+    ~GridExdOp() {}
+    
+    Space<Scalar> const & getDomain() const { return dom; }
+    Space<Scalar> const & getRange() const { return rng; }
+    ostream & write(ostream & str) const {
+      str<<"GridExdOp\n";
+      return str;
+    }
+  };
+
+
+}
+
+#endif
