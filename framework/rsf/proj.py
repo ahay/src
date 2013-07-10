@@ -352,7 +352,9 @@ class Project(Environment):
                 chunk=w-1
                 skip=bigjobs*w+(i-bigjobs)*chunk
             for j in split[2]:
-                if 0 == j and True == self.wsplit:
+                if 0 == j and True == self.wsplit and True == stdin:
+                    # For the first input (if stdin), use windowing to
+                    # avoid creation of a chunk file (provided that RSF_WSPLIT is set)
                     par_sfiles[j] = sfiles[j]
                     cflow = 'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d | ' % \
                             (split[0],chunk,split[0],skip,i,jobs)
@@ -361,10 +363,15 @@ class Project(Environment):
                     cflow = flow
                     source = sfiles[j] + '_' + str(i)
                     par_sfiles[j] = source
+                    nrotate = True
+                    # Prevent nodelist rotation in a special case - no input file
+                    # splitting and no stdin
+                    if True == self.wsplit and False == stdin:
+                        nrotate = False
 
                     self.Flow(source,sfiles[j],
                               'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
-                              (split[0],chunk,split[0],skip,i,jobs))
+                              (split[0],chunk,split[0],skip,i,jobs),noderotate=nrotate)
 
             par_tfiles = []
             for j in range(len(tfiles)):
@@ -387,7 +394,7 @@ class Project(Environment):
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
-             split=[],np=1,reduce='cat',local=0):
+             split=[],np=1,reduce='cat',local=0,noderotate=1):
 
         if not flow:
             return None     
@@ -448,10 +455,11 @@ class Project(Environment):
             node = 'localhost'
         else: # get it from the rotating list
             node = self.nodes[self.ip]
-            self.ip = self.ip + 1
-            if self.ip == len(self.nodes):
-                self.ip = 0
-                
+            if noderotate:
+                self.ip = self.ip + 1
+                if self.ip == len(self.nodes):
+                    self.ip = 0
+
         if node != 'localhost':
             if self.raddenv:
                 remote = ' '
