@@ -16,7 +16,7 @@ else:
     sublist.append('root')
 
 # if local config file installed, use it, else defaults
-thisconfigfile=thispath+'/config.py'
+thisconfigfile=os.path.join(thispath,'../config.py')
 if os.path.exists(thisconfigfile):
     vars=Variables(thisconfigfile)
 else:
