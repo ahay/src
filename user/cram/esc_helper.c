@@ -39,7 +39,7 @@ void sf_quat_norm (float *q)
 /*< Normalize quaternion q[4] >*/
 {
     float f = sqrtf (q[0]*q[0] + q[1]*q[1] + 
-               q[2]*q[2] + q[3]*q[3]);
+                     q[2]*q[2] + q[3]*q[3]);
     q[0] /= f;
     q[1] /= f;
     q[2] /= f;
@@ -54,7 +54,7 @@ void sf_quat_vecrot (float *vf, float *vt, float *q)
 
     /* Dot product */
     d = vf[0]*vt[0] + vf[1]*vt[1] + vf[2]*vt[2];
-    
+
     if (d >= 1.0) { /* Same vectors */
         q[0] = 1.0;
         q[1] = 0.0;
@@ -260,7 +260,7 @@ float sf_tps_compute_point (float *w, float *x, float *y, int nd,
     for (i = 0; i < nd; i++) {
         h += w[i]*sf_tps_base_func (sqrtf ((x[i] - xc)*(x[i] - xc) + 
                                            (y[i] - yc)*(y[i] - yc)));
-            }
+    }
     return h;
 }
 

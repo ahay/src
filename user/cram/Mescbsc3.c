@@ -17,6 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <rsf.h>
 
 #include "einspline.h"
@@ -25,11 +29,12 @@
 #include "esc_tracer3.h"
 
 int main (int argc, char* argv[]) {
-    size_t nc = 0;
-    int nz, nx, ny, nb, na, nab, iz, ix, iy, ib, ia, iab, i;
+    size_t ncoef = 0;
+    int nz, nx, ny, nb, na, nab, iz, ix, iy, ib, ia;
+    int iab, i, fy, ly, ic, nc = 1;
     float dz, oz, dx, ox, dy, oy, da, oa, db, ob, oab;
-    float z, x, y, a, b, ae, be, vf[3], vt[3], q[4], md;
-    float ****e;
+    float z, x, y, a, b, vf[3], md;
+    float ****e, **vt, **q, *ae, *be;
     Ugrid z_grid, x_grid, y_grid;
     BCtype_s zBC, xBC, yBC;
     multi_UBspline_3d_s *zxyspline;
@@ -37,8 +42,8 @@ int main (int argc, char* argv[]) {
 
     bool verb, parab;
     sf_esc_slowness3 esc_slow;
-    sf_esc_tracer3 esc_tracer;
-    sf_esc_point3 esc_point;
+    sf_esc_tracer3 *esc_tracers;
+    sf_esc_point3 *esc_points;
 
     sf_init (argc, argv);
 
@@ -96,6 +101,14 @@ int main (int argc, char* argv[]) {
     ob = 0.5*db;
     /* Beginning of inclination dimension */
 
+#ifdef _OPENMP
+    if (!sf_getint ("nc", &nc)) nc = 1;
+    /* Number of threads to use for computations */
+    omp_set_num_threads (nc);
+    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
+                nc, omp_get_max_threads ());
+#endif
+
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
     /* Spline coefficients for velocity model */
     vspline = sf_input ("vspl");
@@ -105,10 +118,6 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
-
-    /* Ray tracer object */
-    esc_tracer = sf_esc_tracer3_init (esc_slow, NULL, 0.0, NULL);
-    sf_esc_tracer3_set_parab (esc_tracer, parab);
 
     /* Set up output */
     sf_settype (out, SF_UCHAR);
@@ -176,13 +185,24 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getfloat ("md", &md)) md = dz;
     /* Half-width of a supercell */
-    sf_esc_tracer3_set_mdist (esc_tracer, md);
 
     sf_putfloat (out, "Mdist", md);
 
     e = sf_floatalloc4 (nz, nx, ny, ESC3_NUM + 4);
+    vt = sf_floatalloc2 (3, nc);
+    q = sf_floatalloc2 (4, nc);
+    ae = sf_floatalloc (nc);
+    be = sf_floatalloc (nc);
 
-    esc_point = sf_esc_point3_init ();
+    esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
+    esc_points = (sf_esc_point3*)sf_alloc (nc, sizeof(sf_esc_point3));
+    for (ic = 0; ic < nc; ic++) {
+        esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
+                                               NULL, 0.0, NULL);
+        sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
+        sf_esc_tracer3_set_mdist (esc_tracers[ic], md);
+        esc_points[ic] = sf_esc_point3_init ();
+    }
 
     /* Loop over angle domain and create constant-angle
        local escape solutions */
@@ -195,39 +215,53 @@ int main (int argc, char* argv[]) {
         vf[0] = cosf (b);
         vf[1] = sinf (b)*cosf (a);
         vf[2] = sinf (b)*sinf (a);
-        for (iy = 0; iy < ny; iy++) {
-            y = oy + iy*dy;
-            sf_esc_tracer3_set_ymin (esc_tracer, y - md);
-            sf_esc_tracer3_set_ymax (esc_tracer, y + md);
-            for (ix = 0; ix < nx; ix++) {
-                x = ox + ix*dx;
-                sf_esc_tracer3_set_xmin (esc_tracer, x - md);
-                sf_esc_tracer3_set_xmax (esc_tracer, x + md);
-                for (iz = 0; iz < nz; iz++) {
-                    z = oz + iz*dz;
-                    sf_esc_tracer3_set_zmin (esc_tracer, z - md);
-                    sf_esc_tracer3_set_zmax (esc_tracer, z + md);
-                    sf_esc_tracer3_compute (esc_tracer, z, x, y, b, a,
-                                            0.0, 0.0, esc_point, &ae, &be);
-                    /* Copy escape values to the output buffer */
-                    for (i = 0; i < ESC3_NUM; i++)
-                        e[i][iy][ix][iz] = sf_esc_point3_get_esc_var (esc_point, i);
-                    e[ESC3_Z][iy][ix][iz] -= z;
-                    e[ESC3_X][iy][ix][iz] -= x;
-                    e[ESC3_Y][iy][ix][iz] -= y;
-                    /* New phase vector */
-                    vt[0] = cosf (be);
-                    vt[1] = sinf (be)*cosf (ae);
-                    vt[2] = sinf (be)*sinf (ae);
-                    /* Encode rotation to the new phase vector */
-                    sf_quat_vecrot (vf, vt, q);
-                    e[ESC3_NUM][iy][ix][iz] = q[0];
-                    e[ESC3_NUM + 1][iy][ix][iz] = q[1];
-                    e[ESC3_NUM + 2][iy][ix][iz] = q[2];
-                    e[ESC3_NUM + 3][iy][ix][iz] = q[3];
-                } /* z */
-            } /* x */
-        } /* y */
+        /* Loop over chunks */
+        for (ic = 0; ic < (ny/nc + ((ny % nc) != 0)); ic++) {
+             fy = ic*nc;
+             ly = (ic + 1)*nc - 1;
+             if (ly >= ny)
+                 ly = ny - 1;
+#ifdef _OPENMP
+#pragma omp parallel for                \
+            schedule(dynamic,1)             \
+            private(iy,ix,iz,y,x,z,i) \
+            shared(fy,ly,b,a,oy,ox,oz,dy,dx,dz,ny,nx,nz,md,vf,vt,q,e,ae,be,esc_tracers)
+#endif
+            for (iy = fy; iy <= ly; iy++) {
+                y = oy + iy*dy;
+                sf_esc_tracer3_set_ymin (esc_tracers[iy - fy], y - md);
+                sf_esc_tracer3_set_ymax (esc_tracers[iy - fy], y + md);
+                for (ix = 0; ix < nx; ix++) {
+                    x = ox + ix*dx;
+                    sf_esc_tracer3_set_xmin (esc_tracers[iy - fy], x - md);
+                    sf_esc_tracer3_set_xmax (esc_tracers[iy - fy], x + md);
+                    for (iz = 0; iz < nz; iz++) {
+                        z = oz + iz*dz;
+                        sf_esc_tracer3_set_zmin (esc_tracers[iy - fy], z - md);
+                        sf_esc_tracer3_set_zmax (esc_tracers[iy - fy], z + md);
+                        sf_esc_tracer3_compute (esc_tracers[iy - fy], z, x, y, b, a,
+                                                0.0, 0.0, esc_points[iy - fy],
+                                                &ae[iy - fy], &be[iy - fy]);
+                        /* Copy escape values to the output buffer */
+                        for (i = 0; i < ESC3_NUM; i++)
+                            e[i][iy][ix][iz] = sf_esc_point3_get_esc_var (esc_points[iy - fy], i);
+                        e[ESC3_Z][iy][ix][iz] -= z;
+                        e[ESC3_X][iy][ix][iz] -= x;
+                        e[ESC3_Y][iy][ix][iz] -= y;
+                        /* New phase vector */
+                        vt[iy - fy][0] = cosf (be[iy - fy]);
+                        vt[iy - fy][1] = sinf (be[iy - fy])*cosf (ae[iy - fy]);
+                        vt[iy - fy][2] = sinf (be[iy - fy])*sinf (ae[iy - fy]);
+                        /* Encode rotation to the new phase vector */
+                        sf_quat_vecrot (vf, vt[iy - fy], q[iy - fy]);
+                        e[ESC3_NUM][iy][ix][iz] = q[iy - fy][0];
+                        e[ESC3_NUM + 1][iy][ix][iz] = q[iy - fy][1];
+                        e[ESC3_NUM + 2][iy][ix][iz] = q[iy - fy][2];
+                        e[ESC3_NUM + 3][iy][ix][iz] = q[iy - fy][3];
+                    } /* z */
+                } /* x */
+            } /* y */
+        } /* Parallel chunks */
         /* Create for this constant-azimuth volume */
         zxyspline = create_multi_UBspline_3d_s (y_grid, x_grid, z_grid, yBC, xBC, zBC, ESC3_NUM + 4);
         for (i = 0; i < (ESC3_NUM + 4); i++) {
@@ -242,13 +276,13 @@ int main (int argc, char* argv[]) {
         sf_ucharwrite ((unsigned char*)zxyspline->coefs,
                        (size_t)zxyspline->nc, out);
         fflush (sf_filestream (out));
-        nc += (size_t)zxyspline->nc;
+        ncoef += (size_t)zxyspline->nc;
         destroy_Bspline (zxyspline);
     } /* a*b */
     if (verb) {
         sf_warning (".");
         sf_warning ("%lu blocks computed, %g Mb of spline coefficients produced",
-                    (size_t)nab, nc*1e-6);
+                    (size_t)nab, ncoef*1e-6);
     }
 
     free (e[0][0][0]);
@@ -256,8 +290,20 @@ int main (int argc, char* argv[]) {
     free (e[0]);
     free (e);
 
-    sf_esc_point3_close (esc_point);
-    sf_esc_tracer3_close (esc_tracer);
+    free (vt[0]);
+    free (vt);
+    free (q[0]);
+    free (q);
+
+    free (ae);
+    free (be);
+
+    for (ic = 0; ic < nc; ic++) {
+        sf_esc_point3_close (esc_points[ic]);
+        sf_esc_tracer3_close (esc_tracers[ic]);
+    }
+    free (esc_points);
+    free (esc_tracers);
     sf_esc_slowness3_close (esc_slow);
 
     sf_fileclose (vspline);

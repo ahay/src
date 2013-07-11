@@ -123,6 +123,8 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getint ("np", &np)) np = 1;
     /* number of image points to buffer before accessing data */
+    if (np > nz*nx*ny)
+        np = nz*nx*ny;
 
     esc = sf_floatalloc3 (ESC3_NUM, nb, na);
 
