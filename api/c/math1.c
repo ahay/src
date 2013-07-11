@@ -117,7 +117,24 @@ static cfunc cfunctable[] = {
     myimag
 };
 
-enum {GRP, NUM, INDX, FUN, POW, MULDIV, UNARY, PLUSMIN};
+
+static int myisign(int i)
+{
+    return SF_SIG(i);
+}
+
+static int myiabs(int i)
+{
+    return SF_ABS(i);
+}
+
+typedef int (*ifunc)(int);
+static ifunc ifunctable[] = {
+    myisign,
+    myiabs
+};
+    
+enum {GRP, NUM, INDX, FUN, POW, MOD, MULDIV, UNARY, PLUSMIN};
 
 static sf_stack st1, st2;
 
@@ -205,6 +222,98 @@ void sf_math_evaluate (int     len  /* stack length */,
 	}
     }
 }
+
+void sf_int_math_evaluate (int   len  /* stack length */, 
+			   int   nbuf /* buffer length */, 
+			   int** ibuf /* number buffers */, 
+			   int** ist  /* stack */)
+/*< Evaluate a mathematical expression from stack (integer numbers) >*/
+{
+    char *op;
+    int *indx, i, *num, j, k, *iarr;
+    ifunc fun;
+
+    sf_stack_set(st2,len);
+
+    while (sf_full (st2)) {
+	switch (sf_top (st2)) {
+	    case NUM: 
+		iarr = *(++ist);
+		num = (int*) sf_pop(st2);
+		j = *num;
+		for (i=0; i < nbuf; i++) { iarr[i] = j; }
+		break;
+	    case INDX:
+		iarr = *(++ist);
+		indx = (int*) sf_pop(st2);
+		/* convert index to number */
+		num = *(ibuf + (*indx));
+		for (i=0; i < nbuf; i++) { iarr[i] = num[i]; }
+		break;
+	    case FUN:
+		indx = (int*) sf_pop(st2);
+		fun = ifunctable[*indx];
+		iarr = *ist;
+		for (i=0; i < nbuf; i++) { iarr[i] = fun(iarr[i]); }
+		break;
+	    case UNARY:
+		op = (char*) sf_pop(st2);
+		iarr = *ist;
+		if ('-' == *op) {
+		    for (i=0; i < nbuf; i++) { iarr[i] = -iarr[i]; }
+		}
+		break;
+	    case POW:
+		op = (char*) sf_pop(st2);
+		num = *ist;
+		iarr = *(--ist);
+		if ('^' == *op) {
+		    for (i=0; i < nbuf; i++) {
+			j=1;
+			for (k=0; k < num[i]; k++) {
+			    j *= iarr[i];
+			}
+			iarr[i] = j;
+		    }
+		} else {
+		    sf_error("unsupported \"%s\" operation",op);
+		}
+		break;
+	    case MOD:
+		op = (char*) sf_pop(st2);
+		num = *ist;
+		iarr = *(--ist);
+		for (i=0; i < nbuf; i++) {
+		    iarr[i] = iarr[i]%num[i];
+		}
+		break;
+	    case MULDIV:
+		op = (char*) sf_pop(st2);
+		num = *ist;
+		iarr = *(--ist);
+		if ('*' == *op) {
+		    for (i=0; i < nbuf; i++) { iarr[i] *= num[i]; }
+		} else {
+		    for (i=0; i < nbuf; i++) { iarr[i] /= num[i]; }
+		}
+		break;
+	    case PLUSMIN:
+		op = (char*) sf_pop(st2);
+		num = *ist;
+		iarr = *(--ist);
+		if ('+' == *op) {
+		    for (i=0; i < nbuf; i++) { iarr[i] += num[i]; }
+		} else {
+		    for (i=0; i < nbuf; i++) { iarr[i] -= num[i]; }
+		}
+		break;
+	    default:
+		sf_error ("%s: syntax error in output",__FILE__);
+		break;
+	}
+    }
+}
+
 
 void sf_complex_math_evaluate (int          len  /* stack length */, 
 			       int          nbuf /* buffer length */, 
@@ -320,7 +429,7 @@ size_t sf_math_parse (char*       output /* expression */,
 		      sf_datatype datatype)
 /*< Parse a mathematical expression, returns stack length >*/ 
 {
-    int *indx, type=-1, top, c, c2;
+    int *indx, type=-1, top, c, c2, *inum;
     size_t i, j, keylen, len;
     char *key;
     float *num;
@@ -361,36 +470,63 @@ size_t sf_math_parse (char*       output /* expression */,
 	    continue;
 	}
 	
-	if ('.' == (char) c || isdigit(c)) { /* number */
-	    hasleft = true;
-	    c2 = ' ';
-	    for (j=i+1; j < len; j++) {
-		c2 = output[j];
-		if ('.' != c2 && !isdigit(c2) && 
-		    'e' != c2) break;
-	    }
-	    if ('e' == output[j-1] && ('-' == c2 || '+' == c2)) {
-		for (j++; j < len; j++) {
+	if (SF_INT == datatype) {
+	    if (isdigit(c)) { /* number */
+		hasleft = true;
+		c2 = ' ';
+		for (j=i+1; j < len; j++) {
 		    c2 = output[j];
 		    if (!isdigit(c2)) break;
 		}
+
+		keylen = j-i;
+		key = sf_charalloc(keylen+1);
+		strncpy(key,output+i,keylen);
+		key[keylen]='\0';
+		
+		inum = sf_intalloc(1);
+		if (0 == sscanf(key,"%d",inum)) 
+		    sf_error("%s: ill-formated number: %s, position %d in output",
+			     __FILE__,key,i);
+		free(key);
+		
+		sf_push(st1,inum,NUM); /* st1 is out */
+		
+		i=j-1;
+		continue;
 	    }
+	} else {
+	    if ('.' == (char) c || isdigit(c)) { /* number */
+		hasleft = true;
+		c2 = ' ';
+		for (j=i+1; j < len; j++) {
+		    c2 = output[j];
+		    if ('.' != c2 && !isdigit(c2) && 
+			'e' != c2) break;
+		}
+		if ('e' == output[j-1] && ('-' == c2 || '+' == c2)) {
+		    for (j++; j < len; j++) {
+			c2 = output[j];
+			if (!isdigit(c2)) break;
+		    }
+		}
 
-	    keylen = j-i;
-	    key = sf_charalloc(keylen+1);
-	    strncpy(key,output+i,keylen);
-	    key[keylen]='\0';
- 
-	    num = sf_floatalloc(1);
-	    if (0 == sscanf(key,"%f",num)) 
-		sf_error("%s: ill-formated number: %s, position %d in output",
-			 __FILE__,key,i);
-	    free(key);
-
-	    sf_push(st1,num,NUM); /* st1 is out */
-
-	    i=j-1;
-	    continue;
+		keylen = j-i;
+		key = sf_charalloc(keylen+1);
+		strncpy(key,output+i,keylen);
+		key[keylen]='\0';
+		
+		num = sf_floatalloc(1);
+		if (0 == sscanf(key,"%f",num)) 
+		    sf_error("%s: ill-formated number: %s, position %d in output",
+			     __FILE__,key,i);
+		free(key);
+		
+		sf_push(st1,num,NUM); /* st1 is out */
+		
+		i=j-1;
+		continue;
+	    }
 	}
 
 	if (isalpha (c)) { /* identifier */
@@ -410,7 +546,15 @@ size_t sf_math_parse (char*       output /* expression */,
 		sf_push(st1,indx,INDX); 
 	    } else {
 		hasleft = false;
-		if (       0==strcmp(key,"cos"))   { *indx =  0;
+		if (SF_INT==datatype) {
+		    if        (0==strcmp(key,"sign")) { *indx = 0;
+		    } else if (0==strcmp(key,"abs"))  { *indx = 1;
+		    } else {
+			sf_error("%s: unrecognized identifier: "
+				 "%s, position %d in output",
+				 __FILE__,key,i);
+		    }
+		} else if (0==strcmp(key,"cos"))   { *indx =  0;
 		} else if (0==strcmp(key,"sin"))   { *indx =  1;
 		} else if (0==strcmp(key,"tan"))   { *indx =  2;    
 		} else if (0==strcmp(key,"acos"))  { *indx =  3;
@@ -459,6 +603,9 @@ size_t sf_math_parse (char*       output /* expression */,
 	    case '^':
 	    case '&':
 		type = POW;
+		break;
+	    case '%':
+		type = MOD;
 		break;
 	    default:
 		sf_error("%s: wrong character: %c, position %d in output",
@@ -517,6 +664,7 @@ static void check (void)
 			      __FILE__,__LINE__);
 		break;
 	    case POW:
+	    case MOD:
 	    case MULDIV:
 	    case PLUSMIN:
 		(void) sf_pop(st2);

@@ -1,12 +1,15 @@
 /* Mathematical operations, possibly on header keys. 
 
-Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
-                 cosh, sinh, tanh, acosh, asinh, atanh,
-                 exp,  log,  sqrt, abs
+Known functions for float data: 
+cos,  sin,  tan,  acos,  asin,  atan, 
+cosh, sinh, tanh, acosh, asinh, atanh,
+exp,  log,  sqrt, abs, erf, erfc, sign
+
+Known functions for int data: sign, abs
 
 See also sfmath.
 
-An addition operation can be performed by sfstack.
+An addition operation can be performed by sfadd.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -33,11 +36,13 @@ An addition operation can be performed by sfstack.
 int main(int argc, char* argv[])
 {
     int i, i1, i2, n1, n2, n3, n, nt, len, nkey;
-    sf_file in=NULL, out=NULL;
+    sf_file in, out;
     int mem; /* for avoiding int to off_t typecast warning */
     off_t memsize;
     char *eq=NULL, *output=NULL, *key=NULL, *arg=NULL;
     float **ftra=NULL, **fbuf=NULL, **fst=NULL, d2, o2;
+    int **itra=NULL, **ibuf=NULL, **ist=NULL;
+    sf_datatype type;
 
     sf_init (argc,argv);
     in = sf_input ("in");
@@ -47,7 +52,9 @@ int main(int argc, char* argv[])
     sf_putint(out,"T",1);
     sf_putint(out,"input",2);
 
-    if (SF_FLOAT != sf_gettype (in)) sf_error("Need float input");
+    type = sf_gettype(in);
+
+    if (SF_FLOAT != type && SF_INT != type) sf_error("Need float or int input");
 
     if (!sf_histint(in,"n1",&n1)) n1=1;
     if (!sf_histint(in,"n2",&n2)) n2=1;
@@ -97,33 +104,58 @@ int main(int argc, char* argv[])
     /* Max amount of RAM (in Mb) to be used */
     memsize = mem * (1<<20); /* convert Mb to bytes */
 
-    len = sf_math_parse (output,out,SF_FLOAT);
+    len = sf_math_parse (output,out,type);
 
     /* number of traces for optimal I/O */
     nt = SF_MAX(1,memsize/((2*n1+len+6)*sizeof(float)));
 
-    ftra = sf_floatalloc2(n1,nt);
-    fbuf = sf_floatalloc2(nt,n1+3);
-    fst  = sf_floatalloc2(nt,len+3);
+    if (SF_FLOAT == type) { /* float type */
+	ftra = sf_floatalloc2(n1,nt);
+	fbuf = sf_floatalloc2(nt,n1+3);
+	fst  = sf_floatalloc2(nt,len+3);
+    } else {               /* int type */
+	itra = sf_intalloc2(n1,nt);
+	ibuf = sf_intalloc2(nt,n1+3);
+	ist  = sf_intalloc2(nt,len+3);
+    }
 
     for (n=n2*n3; n > 0; n -= nt) {
 	if (n < nt) nt=n;
 
-	sf_floatread(ftra[0],n1*nt,in);
+	if (SF_FLOAT == type) { 
+	    sf_floatread(ftra[0],n1*nt,in);
+	} else {
+	    sf_intread(itra[0],n1*nt,in);
+	}
 
 	for (i2=0; i2 < nt; i2++) {
-	    fbuf[0][i2]=(float) i2;  /* N */
-	    fbuf[1][i2]=o2+i2*d2;    /* T */
-	    fbuf[2][i2]=ftra[0][i2]; /* input */
+	    if (SF_FLOAT == type) { 
+		fbuf[0][i2]=(float) i2;  /* N */
+		fbuf[1][i2]=o2+i2*d2;    /* T */
+		fbuf[2][i2]=ftra[0][i2]; /* input */
+	    } else {
+		ibuf[0][i2]=i2;          /* N */
+		ibuf[1][i2]=o2+i2*d2;    /* T */
+		ibuf[2][i2]=itra[0][i2]; /* input */
+	    }
 	}
 	for (i1=0; i1 < n1; i1++) {
 	    for (i2=0; i2 < nt; i2++) {
-		fbuf[i1+3][i2]=ftra[i2][i1];
+		if (SF_FLOAT == type) { 
+		    fbuf[i1+3][i2]=ftra[i2][i1];
+		} else {
+		    ibuf[i1+3][i2]=itra[i2][i1];
+		}
 	    }
 	}
 	
-	sf_math_evaluate (len, nt, fbuf, fst);
-	sf_floatwrite(fst[1],nt,out);
+	if (SF_FLOAT == type) { 
+	    sf_math_evaluate (len, nt, fbuf, fst);
+	    sf_floatwrite(fst[1],nt,out);
+	} else {
+	    sf_int_math_evaluate (len, nt, ibuf, ist);
+	    sf_intwrite(ist[1],nt,out);
+	}
     }
 
     exit(0);

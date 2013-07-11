@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
 {
     bool verb, up2, up3;
     unsigned char update;
-    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, n23, n12;
+    int n1,n2,n3, i1,i2,i3, ns2, ns3, ip, np2, np3, n23;
     int order, np, i4, n4, k2, k3, j2, j3, i, jp, j;
     float eps, ***u, **p1, **p2, **cost, *trace, *q2=NULL, *q3=NULL;
     sf_file inp, out, dip;
@@ -39,7 +39,6 @@ int main (int argc, char *argv[])
     if (!sf_histint(inp,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(inp,"n3",&n3)) sf_error("No n3= in input");
     n23 = n2*n3;
-    n12 = n1*n23;
     n4 = sf_leftsize(inp,3);
 
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -82,8 +81,10 @@ int main (int argc, char *argv[])
     p1 = sf_floatalloc2(n1,n23);
     p2 = sf_floatalloc2(n1,n23);
 
-    sf_floatread(p1[0],n12,dip);
-    sf_floatread(p2[0],n12,dip);
+    for (i=0; i < n23; i++) { 
+	sf_floatread(p1[i],n1,dip);
+	sf_floatread(p2[i],n1,dip);
+    }
 
     for (i4=0; i4 < n4; i4++) {
 	for (i=0; i < n23; i++) { 
@@ -152,10 +153,12 @@ int main (int argc, char *argv[])
 	    }
 	}
 
-	sf_floatwrite(u[0][0],n12*np,out);
+	for (i=0; i < n23; i++) {
+	    for (ip=0; ip < np; ip++) {
+		sf_floatwrite(u[i][ip],n1,out);
+	    }
+	}
     }
 
     exit (0);
 }
-
-

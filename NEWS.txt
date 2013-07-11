@@ -67,6 +67,7 @@ To programs:
 * RVL package from Bill Symes and The Rice Inversion Project
 * iwave++ package from Bill Symes and The Rice Inversion Project
 * Moved iwave, rvl, and iwav++ to trip
+* sfheadermath works with integer input
 
 ===Bug fixes===
 
@@ -90,6 +91,7 @@ In programs:
 * Fixed parallel split in sfomp and sfmpi
 * Set o1= in sfsegyread
 * Fixed memsize= checking in sftransp
+* Fixed large-size limitation in sfpwspray2
 
 In the build system:
 
