@@ -130,6 +130,7 @@ int main (int argc, char* argv[]) {
     sf_esc_slowness3 esc_slow;
     sf_esc_tracer3 *esc_tracers;
     sf_esc_point3 *esc_points;
+    sf_timer timer;
 
     sf_init (argc, argv);
 
@@ -338,6 +339,8 @@ int main (int argc, char* argv[]) {
         esc_points[ic] = sf_esc_point3_init ();
     }
 
+    timer = sf_timer_init ();
+
     /* Ray tracing loop */
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
@@ -363,8 +366,10 @@ int main (int argc, char* argv[]) {
                     for (ia = 0; ia < na; ia++) {
                         a = oa + ia*da;
                         for (ib = 0; ib < nb; ib++) {
+                            sf_timer_start (timer);
                             sf_esc_tracer3_compute (esc_tracers[iz - fz], z, x, y, ob + ib*db, a,
                                                     0.0, 0.0, esc_points[iz - fz], NULL, NULL);
+                            sf_timer_stop (timer);
                             /* Copy escape values to the output buffer */
                             for (i = 0; i < ESC3_NUM; i++)
                                 e[iz - fz][ia][ib][i] = sf_esc_point3_get_esc_var (esc_points[iz - fz], i);
@@ -388,8 +393,13 @@ int main (int argc, char* argv[]) {
             } /* Loop over z chunks */
         } /* Loop over x */
     } /* Loop over y */
-    if (verb)
+    if (verb) {
         sf_warning (".");
+        sf_warning ("Total kernel time: %g s, per depth point: %g ms",
+                    sf_timer_get_total_time (timer)/1000.0,
+                    (sf_timer_get_total_time (timer)/(float)((size_t)nx*(size_t)ny*(size_t)nz))/1000.0);
+    }
+    sf_timer_close (timer);
 
     for (ic = 0; ic < nc; ic++) {
         sf_esc_point3_close (esc_points[ic]);

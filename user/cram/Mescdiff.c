@@ -24,6 +24,7 @@
 
 int main (int argc, char* argv[]) {
     int i, ia, n, na;
+    float maxd, maxt, mask;
     float **esc0, **esc1, **diff;
     bool is3d = false;
     sf_file esct0, esct1 = NULL, out;
@@ -49,6 +50,13 @@ int main (int argc, char* argv[]) {
         sf_error ("Need esct=");
     }
 
+    if (!sf_getfloat ("maxd", &maxd)) maxd = SF_HUGE;
+    /* Maximum allowed distance */
+    if (!sf_getfloat ("maxt", &maxt)) maxt = SF_HUGE;
+    /* Maximum allowed time */
+    if (!sf_getfloat ("mask", &mask)) mask = SF_HUGE;
+    /* Mask for values above maxd= and maxt= thresholds */
+
     sf_putint (out, "n1", 2);
     sf_putstring (out, "label1", "Diff");
 
@@ -70,6 +78,10 @@ int main (int argc, char* argv[]) {
                                      (esc1[ia][ESC2_X] - esc0[ia][ESC2_X])*(esc1[ia][ESC2_X] - esc0[ia][ESC2_X]));
                 diff[ia][1] = fabsf (esc1[ia][ESC2_T] - esc0[ia][ESC2_T]);
             }
+            if (diff[ia][0] > maxd)
+                diff[ia][0] = mask;
+            if (diff[ia][1] > maxt)
+                diff[ia][1] = mask;
         }
         sf_floatwrite (diff[0], 2*na, out);
     }

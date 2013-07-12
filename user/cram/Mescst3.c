@@ -34,10 +34,11 @@ int main (int argc, char* argv[]) {
     sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
             out;
 
-    bool verb, parab;
+    bool verb, parab, mmaped;
     sf_esc_slowness3 esc_slow;
     sf_esc_tracer3 esc_tracer;
     sf_esc_scgrid3 esc_scgrid;
+    sf_timer timer;
 
     sf_init (argc, argv);
 
@@ -107,6 +108,9 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
+
+    if (!sf_getbool ("mmaped", &mmaped)) mmaped = true;
+    /* n - do not use memory mapping for local data access */
 
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* verbosity flag */
@@ -191,10 +195,12 @@ int main (int argc, char* argv[]) {
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
     esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,
-                                      (float)icpu/(float)ncpu, verb);
+                                      (float)icpu/(float)ncpu, mmaped, verb);
 
     if (scdaemon)
         sf_fileclose (scdaemon);
+
+    timer = sf_timer_init ();
 
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
@@ -206,7 +212,9 @@ int main (int argc, char* argv[]) {
             for (iz = 0; iz < nz; iz++) {
                 z = oz + iz*dz;
                 if (sf_esc_tracer3_inside (esc_tracer, &z, &x, &y, false)) {
+                    sf_timer_start (timer);
                     sf_esc_scgrid3_compute (esc_scgrid, z, x, y, oa, da, ob, db, na, nb, e[0][0]);
+                    sf_timer_stop (timer);
                 } else {
                     for (ia = 0; ia < na; ia++) {
                         for (ib = 0; ib < nb; ib++) {
@@ -225,8 +233,13 @@ int main (int argc, char* argv[]) {
             } /* Loop over z */
         } /* Loop over x */
     } /* Loop over y */
-    if (verb)
+    if (verb) {
         sf_warning (".");
+        sf_warning ("Total kernel time: %g s, per depth point: %g ms",
+                    sf_timer_get_total_time (timer)/1000.0,
+                    (sf_timer_get_total_time (timer)/(float)((size_t)nx*(size_t)ny*(size_t)nz))/1000.0);
+    }
+    sf_timer_close (timer);
 
     sf_esc_scgrid3_close (esc_scgrid, verb);
     sf_esc_tracer3_close (esc_tracer);
