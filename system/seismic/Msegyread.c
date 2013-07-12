@@ -398,6 +398,7 @@ int main(int argc, char *argv[])
 	   2 is 4-byte integer
 	   3 is 2-byte integer
 	   5 is IEEE floating point
+       6 is native_float (same as RSF binary default)
 	*/
 
 	switch (format) {
@@ -413,6 +414,10 @@ int main(int argc, char *argv[])
 	    case 5:
 		if (verbose) sf_warning("Assuming IEEE floating point format");
 		break;
+        case 6:
+        if (verbose) sf_warning("Assuming native_float format");
+        suxdr=false;
+        break;
 	    default:
 		sf_error("Nonstandard format: %d",format);
 		break;
