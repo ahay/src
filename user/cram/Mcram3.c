@@ -17,6 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <rsf.h>
 
 #include "cram_gather3.h"
@@ -27,7 +31,7 @@ int main (int argc, char* argv[]) {
     size_t i, j, is, ih, nh;
     float sx, sy, gx, gy;
     float gxmin, gxmax, gymin, gymax;
-    int iz, ix, iy, nz, nx, ny, nb, na, nt, np;
+    int iz, ix, iy, nz, nx, ny, nb, na, nt, np, nc = 1;
     float dt, db, da, t0, b0, a0, dbx, dby, dxm, dym;
     float dz, z0, dx, x0, dy, y0, zd, z, x, y, zf, vconst = 1.5;
     float oazmin = 180.0, oazmax = 180.0, dazmin = 180.0, dazmax = 180.0;
@@ -160,6 +164,14 @@ int main (int argc, char* argv[]) {
         /* Constant velocity, if vz= is not used */
     }
 
+#ifdef _OPENMP
+    if (!sf_getint ("nc", &nc)) nc = 1;
+    /* Number of threads to use for computations */
+    omp_set_num_threads (nc);
+    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
+                nc, omp_get_max_threads ());
+#endif
+
     /* Data object */
     cram_data = sf_cram_data2_init (data, ddaemon);
     if (ddaemon)
@@ -273,6 +285,12 @@ int main (int argc, char* argv[]) {
                         ih = sf_cram_survey3_get_first_receiver (cram_survey, is,
                                                                  &i, &gx, &gy);
                         while (ih != (size_t)-1) {
+#ifdef _OPENMP
+#pragma omp parallel for                        \
+                            schedule(dynamic,1) \
+                            private(j)          \
+                            shared(np,sx,sy,gx,gy,gxmin,gxmax,gymin,gymax,nh,i,s,cram_points)
+#endif
                             for (j = 0; j < np; j++) {
                                 if (s[j] > 0.0)
                                     sf_cram_point3_compute_one_trace (cram_points[j], sx, sy,

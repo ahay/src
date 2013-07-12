@@ -44,6 +44,7 @@ int main (int argc, char* argv[]) {
     sf_esc_slowness3 esc_slow;
     sf_esc_tracer3 *esc_tracers;
     sf_esc_point3 *esc_points;
+    sf_timer timer;
 
     sf_init (argc, argv);
 
@@ -204,6 +205,8 @@ int main (int argc, char* argv[]) {
         esc_points[ic] = sf_esc_point3_init ();
     }
 
+    timer = sf_timer_init ();
+
     /* Loop over angle domain and create constant-angle
        local escape solutions */
     for (iab = 0; iab < nab; iab++) {
@@ -215,6 +218,7 @@ int main (int argc, char* argv[]) {
         vf[0] = cosf (b);
         vf[1] = sinf (b)*cosf (a);
         vf[2] = sinf (b)*sinf (a);
+        sf_timer_start (timer);
         /* Loop over chunks */
         for (ic = 0; ic < (ny/nc + ((ny % nc) != 0)); ic++) {
              fy = ic*nc;
@@ -267,6 +271,7 @@ int main (int argc, char* argv[]) {
         for (i = 0; i < (ESC3_NUM + 4); i++) {
             set_multi_UBspline_3d_s (zxyspline, i, &e[i][0][0][0]);
         }
+        sf_timer_stop (timer);
         if (0 == iab) {
             sf_putint (out, "n1", (size_t)sizeof(multi_UBspline_3d_s) +
                                   (size_t)zxyspline->nc);
@@ -283,7 +288,11 @@ int main (int argc, char* argv[]) {
         sf_warning (".");
         sf_warning ("%lu blocks computed, %g Mb of spline coefficients produced",
                     (size_t)nab, ncoef*1e-6);
+        sf_warning ("Total kernel time: %g s, per angle plane: %g s",
+                    sf_timer_get_total_time (timer)/1000.0,
+                    (sf_timer_get_total_time (timer)/(float)nab)/1000.0);
     }
+    sf_timer_close (timer);
 
     free (e[0][0][0]);
     free (e[0][0]);

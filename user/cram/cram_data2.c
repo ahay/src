@@ -338,6 +338,9 @@ static size_t sf_cram_data2_access_trace (sf_cram_data2 cram_data, size_t i) {
     sf_cram_data_trreq trreq;
 
     /* Trace is not buffered */
+#ifdef _OPENMP
+#pragma omp critical
+#endif
     if (i < cram_data->i || i >= (cram_data->i + cram_data->ntr)) {
         /* Data daemon index */
         is = (int)((float)i/cram_data->trd);

@@ -235,7 +235,7 @@ int main (int argc, char* argv[]) {
     } /* Loop over y */
     if (verb) {
         sf_warning (".");
-        sf_warning ("Total kernel time: %g s, per depth point: %g ms",
+        sf_warning ("Total kernel time: %g s, per depth point: %g s",
                     sf_timer_get_total_time (timer)/1000.0,
                     (sf_timer_get_total_time (timer)/(float)((size_t)nx*(size_t)ny*(size_t)nz))/1000.0);
     }
