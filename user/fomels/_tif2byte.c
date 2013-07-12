@@ -1,4 +1,7 @@
-/* Convert TIFF image to byte RSF. */
+/* Convert TIFF image to byte RSF. 
+
+Takes: < file.tiff 
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   

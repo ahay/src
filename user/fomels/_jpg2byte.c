@@ -1,4 +1,7 @@
-/* Convert JPEG image to byte RSF. */
+/* Convert JPEG image to byte RSF. 
+
+Takes: < file.jpeg 
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
