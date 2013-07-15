@@ -1,0 +1,19 @@
+import os, sys, string
+sys.path.append('../../framework')
+import bldutil
+
+try:  # distributed version
+    Import('env root bindir pkgdir incdir')
+    env = env.Clone()
+except: # local version
+    env = bldutil.Debug()
+    root = None
+    SConscript('../../api/c++/SConstruct')
+
+if 'c++' in env.get('API',[]):
+    CXX = env.get('CXX')
+    if CXX.rfind('icpc') >= 0: # Intel compiler
+        env.Program('flexSerial.cc',
+                    CXXFLAGS='-openmp -inline-forceinline')
+        env.Program('flexSerial1.cc',
+                    CXXFLAGS='-O3 -xHost -vec_report2')
