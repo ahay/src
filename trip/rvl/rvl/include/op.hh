@@ -343,7 +343,7 @@ namespace RVL {
     /** Primary clone method returns object of this type;
 	parent clone method delegates. */
     virtual OperatorProductDomain<Scalar> * clonePD() const = 0;
-    Operator<Scalar> * clone() { return clonePD(); }
+    Operator<Scalar> * clone() const { return clonePD(); }
 
 
   public:
@@ -1057,7 +1057,9 @@ namespace RVL {
 
   /** Evaluation for product domain case, provided only for type-safety */
   template<class Scalar>
-  class OperatorProductDomainEvaluation: OperatorEvaluation<Scalar> {
+  class OperatorProductDomainEvaluation: public OperatorEvaluation<Scalar> {
+
+    friend class PartialDerivEvaluation<Scalar>;  // added by Yin at 07.15.2013
 
     PartialDerivEvaluation<Scalar> deriv;
 
@@ -1154,6 +1156,8 @@ namespace RVL {
     }
 
     const Space<Scalar> & getRange() const { return fx.getRange(); }
+
+    void setBlock(int i) { ic=i; }  // added by Yin at 07.15.2013
 
     ostream & write(ostream & str) const{
       str<<"Partial Derivative operator"<<"\n";

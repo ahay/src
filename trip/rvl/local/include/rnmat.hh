@@ -117,7 +117,7 @@ namespace RVL {
 
       if (adj) {
 
-	if (y.getSize() < (size_t(cols) || x.getSize() < size_t(rows)) {
+	if (y.getSize() < (size_t(cols)) || x.getSize() < size_t(rows)) {
 	  RVLException e;
 	  e<<"Error: matvec::operator(), adjoint\n";
 	  e<<"either input or output too short\n";
