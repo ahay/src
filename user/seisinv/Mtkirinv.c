@@ -28,7 +28,7 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, n123, niter;
+    int n1, n2, n3, n123, niter, i1, i2, i3, iter;
     float o1, o2, o3, d1, d2, d3, dip, norm;
     bool verb, half;
     int  reg;
@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
 
     sf_floatread(data[0][0],n123,in);
 
-    for (int i3=0; i3 < n3; i3++) {
-        for (int i2=0; i2 < n2; i2++) {
+    for (i3=0; i3 < n3; i3++) {
+        for (i2=0; i2 < n2; i2++) {
             mask[i3][i2]=cblas_sdot(n1,data[i3][i2],1,data[i3][i2],1);
         }
     }
@@ -181,15 +181,15 @@ int main(int argc, char* argv[])
     sf_floatwrite(modl[0][0],n123,out);
 
     if (NULL != err) {
-       for (int i3=0; i3 < n3; i3++) {
-           for (int i2=0; i2 < n2; i2++) {
-               for (int i1=0; i1 < n1; i1++) {
+       for (i3=0; i3 < n3; i3++) {
+           for (i2=0; i2 < n2; i2++) {
+               for (i1=0; i1 < n1; i1++) {
                    norm += data[i3][i2][i1];
                }
            }
         }
         
-        for (int iter=0; iter < niter; iter++) error[iter] /=norm;
+        for (iter=0; iter < niter; iter++) error[iter] /=norm;
         sf_floatwrite(error,niter,err);
     }
 
