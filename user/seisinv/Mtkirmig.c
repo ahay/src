@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, n123;
+    int n1, n2, n3, n123, i2, i3;
     float o1, o2, o3, d1, d2, d3, dip;
     bool adj, verb, half;
     float *data, *modl, **vrms, **mask;
@@ -65,8 +65,8 @@ int main(int argc, char* argv[])
 
 //    sf_triangle1_init(10,n1);
 
-    for (int i3=0; i3 < n3; i3++) {
-        for (int i2=0; i2 < n2; i2++) {
+    for (i3=0; i3 < n3; i3++) {
+        for (i2=0; i2 < n2; i2++) {
             mask[i3][i2]=1.;
         }
     }
