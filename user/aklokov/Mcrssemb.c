@@ -71,6 +71,11 @@ int xapp_;                  /* number of CIGs in the inline-direction processed 
 int halfXapp_;              /* half of the "xapp" */
 int xdipapp_;               /* number of traces in the x-dip direction processed simultaneously */
 
+bool makeWeight_;
+float s1_;
+float s2_;
+float ds_;
+
 /* FUNCTIONS */
 
 /* Check if the point with its surounding is inside data volume; */
@@ -84,8 +89,8 @@ void checkBoundary (int* xPos, int* curXapp)
     /* left edge */
     if (*xPos < 0) {
         diff = -1 * *xPos;
-	*curXapp -= diff;
-	*xPos = 0;
+		*curXapp -= diff;
+		*xPos = 0;
     }
 
     /* right edge */
@@ -130,29 +135,29 @@ void readBlockAroundPoint (int xPos, int halfXapp, int* curXapp, int* leftShift)
     /* substacking in the x-dip direction */
 		
     for (ix = 0; ix < *curXapp; ++ix) {
-	for (id = 0; id < dipNum_; ++id) {
+		for (id = 0; id < dipNum_; ++id) {
 			
-	    tracesShift = ix * dipNum_ + id;
-	    ptrToTrace   = ptrToDags_ + tracesShift * zNum_;
-	    ptrToTraceSq = ptrToDagsSq_ + tracesShift * zNum_;
+		    tracesShift = ix * dipNum_ + id;
+		    ptrToTrace   = ptrToDags_ + tracesShift * zNum_;
+		    ptrToTraceSq = ptrToDagsSq_ + tracesShift * zNum_;
 
-	    for (ida = 0; ida < xdipapp_; ++ida) {		
-		ind = id - xdipapp_ / 2 + ida;
-		if (ind < 0 || ind >= dipNum_) continue;		
+		    for (ida = 0; ida < xdipapp_; ++ida) {		
+				ind = id - xdipapp_ / 2 + ida;
+				if (ind < 0 || ind >= dipNum_) continue;		
 				
-		dataShift = ix * dipNum_ + ind;
-		ptrFrom   = ptrToData_   + dataShift * zNum_;
-		ptrSqFrom = ptrToDataSq_ + dataShift * zNum_;
+				dataShift = ix * dipNum_ + ind;
+				ptrFrom   = ptrToData_   + dataShift * zNum_;
+				ptrSqFrom = ptrToDataSq_ + dataShift * zNum_;
 
-		ptrTo     = ptrToTrace;
-		ptrSqTo   = ptrToTraceSq;
+				ptrTo     = ptrToTrace;
+				ptrSqTo   = ptrToTraceSq;
 
-		for (iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
-		    *ptrTo += *ptrFrom;
-		    *ptrSqTo += *ptrSqFrom;
+				for (iz = 0; iz < zNum_; ++iz, ++ptrTo, ++ptrSqTo, ++ptrFrom, ++ptrSqFrom) {
+				    *ptrTo += *ptrFrom;
+				    *ptrSqTo += *ptrSqFrom;
+				}
+	    	}
 		}
-	    }
-	}
     }
 
     return;
@@ -163,8 +168,8 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
     double sumOutput, sumInput;
     int im, it, temp, j, trInd, ind;
 
-    const int targetZNum     = zNum_; 
-    const int zNumFull    = 2 * halfCoher_ + zNum_;
+    const int targetZNum = zNum_; 
+    const int zNumFull   = 2 * halfCoher_ + zNum_;
 
     const int k = tracesNum * scatnum_ * xdipapp_;
 
@@ -178,27 +183,34 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
     memset (traceSumInput,  0, zNumFull * sizeof (float));   
 
     for (it = 0; it < targetZNum; ++it) {
-	trInd = it + halfCoher_;
+		trInd = it + halfCoher_;
         for (im = 0; im < tracesNum; ++im){
-	    ind = im * zNum_ + it;
-	    stackVal   = stack[ind];
-	    stackSqVal = stackSq[ind];
-
-	    traceSumOutput[trInd] += stackVal;
-	    traceSumInput[trInd]  += stackSqVal;
-	}
-	traceSumOutput[trInd] *= traceSumOutput[trInd];
+		    ind = im * zNum_ + it;
+		    stackVal   = stack[ind];
+		    stackSqVal = stackSq[ind];
+	
+		    traceSumOutput[trInd] += stackVal;
+		    traceSumInput[trInd]  += stackSqVal;
+		}
+		traceSumOutput[trInd] *= traceSumOutput[trInd];
     }
  
     for (it = 0; it < targetZNum; ++it) {
         sumOutput = 0.f;
         sumInput  = 0.f;
-	temp = it + coher_;
-	for (j = it; j < temp; ++j) {
-	    sumOutput += traceSumOutput[j];
-	    sumInput  += traceSumInput[j];
-	}
-	semb[it] = sumInput ? sumOutput / (k * sumInput) : 0.f;
+		temp = it + coher_;
+		for (j = it; j < temp; ++j) {
+		    sumOutput += traceSumOutput[j];
+		    sumInput  += traceSumInput[j];
+		}
+
+		const float sembval = sumInput ? sumOutput / (k * sumInput) : 0.f;
+
+		if (makeWeight_) {
+			if (sembval > s2_) semb [it] = 1.0;
+			else if (sembval < s1_) semb [it] = 0.0;
+			else semb[it] = (sembval - s1_) / ds_;
+		}
     }
 
     free (traceSumOutput);
@@ -207,8 +219,8 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
     return;
 }
 
-void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) 
-{
+void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel) {
+
     int id, tracesNum, ix, depthShiftSamp, dataShift, stackShift;
     int zInd, iz;
     float curDip, curDipInRad, tanDipInRad, xShift,  depthShift;
@@ -223,45 +235,45 @@ void buildFilter (int curxapp, int leftShift, float* ptrToSembPanel)
 
     for (id = 0; id < dipNum_; ++id, ptrToSembTrace += zNum_) {
 
-	curDip = dipStart_ + id * dipStep_;
-	curDipInRad = curDip * CONVRATIO;
-	tanDipInRad = tan (curDipInRad);
+		curDip = dipStart_ + id * dipStep_;
+		curDipInRad = curDip * CONVRATIO;
+		tanDipInRad = tan (curDipInRad);
 	
-	stackGrid   = sf_floatalloc (stackGridSize);
-	stackSqGrid = sf_floatalloc (stackGridSize);
-	memset (stackGrid,   0, stackGridSize * sizeof (float));
-	memset (stackSqGrid, 0, stackGridSize * sizeof (float));
+		stackGrid   = sf_floatalloc (stackGridSize);
+		stackSqGrid = sf_floatalloc (stackGridSize);
+		memset (stackGrid,   0, stackGridSize * sizeof (float));
+		memset (stackSqGrid, 0, stackGridSize * sizeof (float));
 		
-	tracesNum = 0;
+		tracesNum = 0;
 			
-	for (ix = 0; ix < curxapp; ++ix) {		
-	    xShift = (ix - leftShift) * xStep_;
-	    depthShift = xShift * tanDipInRad;
-	    depthShiftSamp = depthShift / zStep_;
-	    dataShift = (id + ix * dipNum_) * zNum_;
+		for (ix = 0; ix < curxapp; ++ix) {		
+		    xShift = (ix - leftShift) * xStep_;
+		    depthShift = xShift * tanDipInRad;
+		    depthShiftSamp = depthShift / zStep_;
+		    dataShift = (id + ix * dipNum_) * zNum_;
 		
-	    ptrDataStack   = ptrToDags_ + dataShift;
-	    ptrDataStackSq = ptrToDagsSq_ + dataShift;
+		    ptrDataStack   = ptrToDags_ + dataShift;
+		    ptrDataStackSq = ptrToDagsSq_ + dataShift;
 
-	    stackShift = tracesNum * zNum_;
+		    stackShift = tracesNum * zNum_;
 
-	    ptrStackGrid   = stackGrid + stackShift;
-	    ptrStackSqGrid = stackSqGrid + stackShift;
+		    ptrStackGrid   = stackGrid + stackShift;
+		    ptrStackSqGrid = stackSqGrid + stackShift;
 
-	    zInd = -depthShiftSamp;
+		    zInd = -depthShiftSamp;
 				
-	    for (iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
-		if (zInd < 0 || zInd >= zNum_) continue;
-		*ptrStackGrid = *(ptrDataStack + zInd);
-		*ptrStackSqGrid = *(ptrDataStackSq + zInd);
-	    }		
-	    ++tracesNum;
-	}
+		    for (iz = 0; iz < zNum_; ++iz, ++ptrStackGrid, ++ptrStackSqGrid, ++zInd) {
+				if (zInd < 0 || zInd >= zNum_) continue;
+				*ptrStackGrid = *(ptrDataStack + zInd);
+				*ptrStackSqGrid = *(ptrDataStackSq + zInd);
+		    }		
+		    ++tracesNum;
+		}
 
-	getSemblanceForTrace (curxapp, stackGrid, stackSqGrid, ptrToSembTrace);  
+		getSemblanceForTrace (curxapp, stackGrid, stackSqGrid, ptrToSembTrace);  
 
-	free (stackGrid);
-	free (stackSqGrid);
+		free (stackGrid);
+		free (stackSqGrid);
     }
 
     return;
@@ -316,33 +328,40 @@ int main (int argc, char* argv[])
        if the stack was normalized use the default value 
     */ 
 
+	makeWeight_ = true;
+    if ( !sf_getfloat ("s1", &s1_) ) {s1_ = -1.f; makeWeight_ = false; }
+    /* minimum semblance value */ 
+    if ( !sf_getfloat ("s2", &s2_) ) {s2_ = -1.f; makeWeight_ = false; }
+    /* maximum semblance value */ 
+	ds_ = s2_ - s1_;
+
     dagSize_ = zNum_ * dipNum_;
     halfCoher_ = coher_ / 2;    /* yes - this is the integer division */	
     halfXapp_  = xapp_ / 2;     /* this is the integer division too	*/
 
     for (ix = 0; ix < xNum_; ++ix) {
 		
-	sf_warning ("CIG %d of %d;", ix + 1, xNum_);
+		sf_warning ("CIG %d of %d;", ix + 1, xNum_);
 		
-	/* xapp for the currect core CIG; it can be changed by the checkBoundary () */
-	curxapp = xapp_; 
-	/* distance between the core gather and the left side of the aperture */
-	leftShift = 0;	
+		/* xapp for the currect core CIG; it can be changed by the checkBoundary () */
+		curxapp = xapp_; 
+		/* distance between the core gather and the left side of the aperture */
+		leftShift = 0;	
 
-	ptrToSembPanel_ = sf_floatalloc (dagSize_);
-	memset (ptrToSembPanel_, 0, dagSize_ * sizeof (float));
+		ptrToSembPanel_ = sf_floatalloc (dagSize_);
+		memset (ptrToSembPanel_, 0, dagSize_ * sizeof (float));
 
-	readBlockAroundPoint (ix, halfXapp_, &curxapp, &leftShift);
-	buildFilter (curxapp, leftShift, ptrToSembPanel_);
+		readBlockAroundPoint (ix, halfXapp_, &curxapp, &leftShift);
+		buildFilter (curxapp, leftShift, ptrToSembPanel_);
 
-	free (ptrToDags_);
-	free (ptrToDagsSq_);
+		free (ptrToDags_);
+		free (ptrToDagsSq_);
 
-	free (ptrToData_);
-	free (ptrToDataSq_);
+		free (ptrToData_);
+		free (ptrToDataSq_);
 
-	sf_floatwrite (ptrToSembPanel_, dagSize_, sembFile_);
-	free (ptrToSembPanel_);
+		sf_floatwrite (ptrToSembPanel_, dagSize_, sembFile_);
+		free (ptrToSembPanel_);
     }
 
     sf_warning (".");
