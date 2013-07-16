@@ -17,3 +17,14 @@ if 'c++' in env.get('API',[]):
                     CXXFLAGS='-openmp -inline-forceinline')
         env.Program('flexSerial1.cc',
                     CXXFLAGS='-O3 -xHost -vec_report2')
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
+    
+    doc = env.RSF_Docmerge(main,[])
+    env.Install(pkgdir,doc)
+#####################################################################
