@@ -411,8 +411,6 @@ void strtri_(char *uplo, char *diag, int *n, float *a, int *lda, int *info);
 void strtrs_(char *uplo, char *trans, char *diag, int *n, int *nrhs, float *a, int *lda, float *b, int *ldb, int *info);
 void stzrqf_(int *m, int *n, float *a, int *lda, float *tau, int *info);
 
-
-
 void dbdsqr_(char *uplo, int *n, int *ncvt, int *nru, int *ncc, double *d, double *e, double *vt, int *ldvt, double *u, int *ldu, double *c, int *ldc, double *work, int *info);
 void ddisna_(char *job, int *m, int *n, double *d, double *sep, int *info);
 void dgbbrd_(char *vect, int *m, int *n, int *ncc, int *kl, int *ku, double *ab, int *ldab, double *d, double *e, double *q, int *ldq, double *pt, int *ldpt, double *c, int *ldc, double *work, int *info);

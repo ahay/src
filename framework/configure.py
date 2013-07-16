@@ -988,6 +988,7 @@ def blas(context):
                                      '/usr/lib/atlas/']):
                 context.env['LIBPATH'].append(atlas_dir)
             LIBS.pop()
+            LIBS.append('f77blas')
             LIBS.append('cblas')
             LIBS.append('atlas')
             res = context.TryLink(text,'.c')
@@ -1035,7 +1036,7 @@ def lapack(context):
             # some systems require cblas and atlas
             LIBS.pop()
             LIBS.pop()
-            mylibs = ['cblas','atlas']
+            mylibs = ['f77blas','cblas','atlas']
             LIBS.extend(mylibs)
             res = context.TryLink(text,'.c')
             if res:
