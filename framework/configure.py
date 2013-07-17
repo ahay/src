@@ -1425,6 +1425,8 @@ def sparse(context):
             context.env['SPARSELIBS'] = sparselibs
         else:
             context.Result(context_failure)
+            context.env['SPARSEPATH'] = None
+            context.env['SPARSELIBS'] = None
             need_pkg('SuiteSparse', fatal=False)
 
     context.env['CPPPATH'] = oldpath

@@ -184,7 +184,7 @@ Result('fft',
        flat=n point1=0.7 point2=0.7 color=j
        ''')
 
-Flow('filt','fft','dipfilter v1=-167 v2=-250 v3=84 v4=72 taper=2 pass=0')
+Flow('filt','fft','dipfilter ang1=-250 ang2=-167 ang3=72 ang4=84 taper=2 pass=1')
 
 Result('filt',
        '''
