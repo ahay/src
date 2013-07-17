@@ -62,7 +62,7 @@ if len(ccsrcs) > 0:
         if cxx:
             exe = env.Program(prout,prog)
         elif root:
-            exe = RSF_Place('sf'+prout,None,var='C++')
+            exe = env.RSF_Place('sf'+prout,None,var='C++')
 
         # Madagascar installation
         if root:
