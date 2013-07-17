@@ -8,6 +8,7 @@ try:  # madagascar version
 #    print libdirlist
     env = env.Clone()
     env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist+[libdir])
+    cxx =  'c++' in env.get('API',[])
 except:  # autonomous version
     Import('vars' + imports)
     root = None
@@ -23,6 +24,7 @@ except:  # autonomous version
                       CPPPATH = cpplist, 
                       LIBS = liblist, 
                       LIBPATH = libdirlist)
+    cxx = env.get('CXX')
     
 # this version assumes that all source files in this directory
 # define main programs
@@ -56,7 +58,11 @@ if len(ccsrcs) > 0:
             ccprogs.append(prout)
         else:
             prout = os.path.splitext(str(prog))[0] + '.x'
-        exe = env.Program(prout,prog)
+
+        if cxx:
+            exe = env.Program(prout,prog)
+        elif root:
+            exe = env.RSF_Place('sf'+prout,None,var='C++')
 
         # Madagascar installation
         if root:
