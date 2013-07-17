@@ -1002,6 +1002,7 @@ def blas(context):
                     path_get(context,'CPPDEFINES','NO_BLAS')
                 LIBS.pop()
                 LIBS.pop()
+                LIBS.pop()
                 context.env['BLAS'] = None
                 need_pkg('blas', fatal=False)
 
@@ -1046,6 +1047,7 @@ def lapack(context):
                 context.Result(context_failure)
                 context.env['LAPACK'] = None
                 need_pkg('lapack', fatal=False)
+                LIBS.pop()
                 LIBS.pop()
                 LIBS.pop()
 
