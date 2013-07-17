@@ -24,7 +24,7 @@ except:  # autonomous version
                       CPPPATH = cpplist, 
                       LIBS = liblist, 
                       LIBPATH = libdirlist)
-     cxx = env.get('CXX')
+    cxx = env.get('CXX')
     
 # this version assumes that all source files in this directory
 # define main programs
