@@ -18,7 +18,7 @@ except:  # autonomous version
                        CXX={'CXX' : '${CXX}'},
                        CXXFLAGS={'CXXFLAGS' : '${CXXFLAGS}'},
                        CPPPATH = cpplist)
-    cxx = env.get('CXX',None)
+    cxx = env.get('CXX')
 
 # create list of source files found in prescribed source directories
 srcs=[]
