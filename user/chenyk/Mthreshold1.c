@@ -1,5 +1,5 @@
 /* Soft or hard thresholding using exact-value or percentile thresholding.
-   When mode=soft and ifperc=y, sfthreshold1 is equal to sfthreshold.
+   When type=soft and ifperc=1, sfthreshold1 is equal to sfthreshold.
 */
 /*
   Copyright (C) 2013 University of Texas at Austin
@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, n, n1, ifperc;
+    int i, n, n1, ifperc, ifverb;
     float *dat=NULL, *adat=NULL, t, thr, d;
     char *type;
     sf_complex *cdat=NULL;
@@ -41,34 +41,56 @@ int main(int argc, char* argv[])
     if(!sf_getint("ifperc",&ifperc)) ifperc=1;
     /* 0, exact-value thresholding; 1, percentile thresholding. */
 
+    if(!sf_getint("ifverb",&ifverb)) ifverb=0;
+    /* 0, not print threshold value; 1, print threshold value. */
+
     if (!sf_getfloat("thr",&thr)) sf_error("Need thr=");
-    /* thresholding level */
-    
+    /* thresholding level */ 
+
     if(ifperc==1)
     {
-    n1 = 0.5+n*(1.-0.01*thr);
-    if (n1 < 0) n1=0;
-    if (n1 >= n) n1=n-1;
+    	n1 = 0.5+n*(1.-0.01*thr);
+    	if (n1 < 0) n1=0;
+    	if (n1 >= n) n1=n-1;
 
-    if (SF_FLOAT == sf_gettype(in)) {
-	dat = sf_floatalloc(n);
-	sf_floatread(dat,n,in);
-	for (i=0; i < n; i++) {
-	    adat[i] = fabsf(dat[i]);
-	}
-    } else if (SF_COMPLEX == sf_gettype(in)) {
-	cdat = sf_complexalloc(n);
-	sf_complexread(cdat,n,in);
-	for (i=0; i < n; i++) {
-	    adat[i] = cabsf(cdat[i]);
-	}
-    } else {
-	sf_error("Need float or complex input");
-    }
-    t = sf_quantile(n1,n,adat);
+    	if (SF_FLOAT == sf_gettype(in)) {
+		dat = sf_floatalloc(n);
+		sf_floatread(dat,n,in);
+		for (i=0; i < n; i++) {
+	    		adat[i] = fabsf(dat[i]);
+		}
+    	} else if (SF_COMPLEX == sf_gettype(in)) {
+		cdat = sf_complexalloc(n);
+		sf_complexread(cdat,n,in);
+		for (i=0; i < n; i++) {
+	    		adat[i] = cabsf(cdat[i]);
+		}
+    	} else {
+		sf_error("Need float or complex input");
+    	}
+    	t = sf_quantile(n1,n,adat);
     }
     else 
-	t=thr;
+    {
+    	if (SF_FLOAT == sf_gettype(in)) {
+		dat = sf_floatalloc(n);
+		sf_floatread(dat,n,in);
+		for (i=0; i < n; i++) {
+	    		adat[i] = fabsf(dat[i]);
+		}
+    	} else if (SF_COMPLEX == sf_gettype(in)) {
+		cdat = sf_complexalloc(n);
+		sf_complexread(cdat,n,in);
+		for (i=0; i < n; i++) {
+	    		adat[i] = cabsf(cdat[i]);
+		}
+    	} else {
+		sf_error("Need float or complex input");
+    	}
+    	t=thr;
+    }
+
+    if(ifverb==1) sf_warning("Threshold=%g",t);   	
 
     if (NULL != dat) {
 	for (i=0; i < n; i++) {
