@@ -68,6 +68,7 @@ To programs:
 * iwave++ package from Bill Symes and The Rice Inversion Project
 * Moved iwave, rvl, and iwav++ to trip
 * sfheadermath works with integer input
+* user/zedong: new contributor (Zedong Wu)
 
 ===Bug fixes===
 

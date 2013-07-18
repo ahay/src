@@ -47,6 +47,7 @@ Yanadet Sripanich <sripanichy@utexas.edu>
 Junzhe Sun <sunjzhe@gmail.com>
 Ioan Vlad <i.vlad@yahoo.com>
 Robin Weiss <robin.weiss@uwa.edu.au>
+Zedong Wu <zedong.wu@kaust.edu.sa>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
 
