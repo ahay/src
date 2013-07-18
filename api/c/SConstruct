@@ -40,6 +40,10 @@ includes = map(lambda x: x+'.h',
 version = env.get('version','unknown')
 env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+
 sobjs = []
 
 if dynlib:

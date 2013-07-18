@@ -481,11 +481,17 @@ class UserSconsTargets:
         self.py = None # Python mains
         self.py_modules = None # Python modules that do not need SWIG and numpy
     def build_all(self, env, glob_build, srcroot, bindir, libdir, pkgdir):
-        # Needed for both C and F90 programs:
-        bldroot = '../..' # aka RSFSRC/build
         if glob_build:
             env = env.Clone()
-        else:
+
+        fftw = env.get('FFTW')
+        if fftw and not isinstance(fftw,bool):
+            env.Prepend(LIBS=[fftw])
+
+        # Needed for both C and F90 programs:
+        bldroot = '../..' # aka RSFSRC/build
+
+        if not glob_build:
             bldroot = env.get('RSFROOT',os.environ.get('RSFROOT',sys.prefix))
             if self.f90:
                 SConscript(os.path.join(srcroot, 'api', 'f90', 'SConstruct'))

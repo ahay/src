@@ -36,6 +36,7 @@ To APIs:
 
 * Added m8r function for running Madagscar programs from MATLAB
 * If C++ compiler works, C++ interface is installed by default
+* added support for FFTW in cosft
 
 To the Python package:
 

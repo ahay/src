@@ -5,7 +5,6 @@ try:
     glob_build = True 
     srcroot = '../..'
     Import('env bindir libdir pkgdir')
-    env = env.Clone()
 except:
     glob_build = False
     srcroot = os.environ.get('RSFSRC', '../..')

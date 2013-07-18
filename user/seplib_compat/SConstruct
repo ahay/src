@@ -6,7 +6,6 @@ try:
     srcroot = '../..' # cwd is build/user/seplib_compat
     # Import('env bindir pkgdir incdir')
     Import('env bindir libdir pkgdir')
-    env = env.Clone()
 except:
     glob_build = False # scons command launched in the local directory
 

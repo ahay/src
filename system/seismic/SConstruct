@@ -43,6 +43,10 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[dynlib+'rsf'])
 
+fftw = env.get('FFTW')
+if fftw and not isinstance(fftw,bool):
+        env.Prepend(LIBS=[fftw])
+
 objects = []
 includes = []
 for source in src:

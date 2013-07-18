@@ -24,6 +24,10 @@ env['LINK']=F90
 
 mains = Split(progs)
 
+fftw = env.get('FFTW')
+if fftw and not isinstance(fftw,bool):
+    env.Prepend(LIBS=[fftw])
+
 if 'f90' in api and F90:
 
     F90base =  os.path.basename(F90)
