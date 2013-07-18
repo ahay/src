@@ -69,6 +69,7 @@ To programs:
 * Moved iwave, rvl, and iwav++ to trip
 * sfheadermath works with integer input
 * user/zedong: new contributor (Zedong Wu)
+* add Misolr25.cc which is double precision version using lowrank 
 
 ===Bug fixes===
 
