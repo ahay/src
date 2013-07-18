@@ -11,6 +11,7 @@ skiplist =  [
 		'book/chen/test/xtime',                         # no results
                 'book/rsf/bash/mpi',
 								# Examples with movies
+		'book/trip/test/flat',
                 'book/geo391/hw2/sorting',						
 		'book/rsf/rsf/fractal',
 		'book/rsf/rsf/sfawefd',

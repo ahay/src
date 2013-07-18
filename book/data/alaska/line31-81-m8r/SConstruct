@@ -172,8 +172,16 @@ Result('gshots',
        flat=n point1=0.7 point2=0.7
        ''')
 
-# dip filter
-Flow('fft','gshots','fft1 | fft3')
+# Dip filter
+############
+
+# FFT and bias
+Flow('fft','gshots',
+     '''
+     put d2=1 o2=-47.5 | fft1 | 
+     math output="input*exp(-I*0.003*x2*x1)" |
+     fft3
+     ''')
 
 Result('fft',
        '''
@@ -184,7 +192,7 @@ Result('fft',
        flat=n point1=0.7 point2=0.7 color=j
        ''')
 
-Flow('filt','fft','dipfilter ang1=-250 ang2=-167 ang3=72 ang4=84 taper=2 pass=1')
+Flow('filt','fft','dipfilter v1=-90 v2=-83 v3=83 v4=90 pass=n')
 
 Result('filt',
        '''
@@ -195,12 +203,24 @@ Result('filt',
        flat=n point1=0.7 point2=0.7 color=j
        ''')
 
+Flow('dshots','filt',
+     '''
+     fft3 inv=y | 
+     math output="input*exp(I*0.003*x2*x1)" |
+     fft1 inv=y | put d2=110 o2=-5225
+     ''')
 
-#sfdipfilter < in.rsf > out.rsf dim=2 angle=n v=-1. ang1=-50. ang2=-45. ang3=45. ang4=50. v1=0. v2=0.1 v3=99999. v4=999999. pass=y
+Result('dshots',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=50 frame3=30 title="Dip Filter"
+       flat=n point1=0.7 point2=0.7
+       ''')
 
-#       bias=.003 \
-#        dx=1 \
-#        slopes=-.006,-.004,.012,.014 \
-#        amps=0.0,1.0,1.0,0.0 
+Plot('dshots','grey title=Shots gainpanel=all pclip=90',view=1)
+
+# Sort to CMP and mute
+
+# velfiltcdpsmute
 
 End()

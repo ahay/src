@@ -1,3 +1,3 @@
-uses=['sfsegyread', 'sfcat', 'sfwindow', 'sfgrey', 'sfmask', 'sfadd', 'sfheaderwindow', 'sfput', 'sfbyte', 'sfgrey3', 'sfdip', 'sfpwd', 'sfdd', 'sfgraph', 'sftransp', 'sflinear', 'sfinttest1', 'sfmath', 'sfscale', 'sfdatstretch', 'sfpow', 'sfmutter', 'sfshapeagc']
+uses=['sfsegyread', 'sfcat', 'sfwindow', 'sfgrey', 'sfmask', 'sfadd', 'sfheaderwindow', 'sfput', 'sfbyte', 'sfgrey3', 'sffdip', 'sfpwd', 'sfdd', 'sfgraph', 'sftransp', 'sflinear', 'sfinttest1', 'sfmath', 'sfscale', 'sfdatstretch', 'sfpow', 'sfmutter', 'sfshapeagc', 'sffft1', 'sffft3', 'sfreal', 'sfdipfilter']
 data=['nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23535.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23536.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/DMUX/L23537.SGY', 'nersl/NPRA/SEISMIC/1981/31_81/PROCESSED/31_81_PR.SGY']
-size=  378788428
+size=  707283532
