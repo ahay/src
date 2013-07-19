@@ -45,7 +45,7 @@ env.Prepend(CPPPATH=['../../include'],
 
 fftw = env.get('FFTW')
 if fftw and not isinstance(fftw,bool):
-        env.Prepend(LIBS=[fftw])
+        env.Append(LIBS=[fftw])
 
 objects = []
 includes = []

@@ -44,7 +44,7 @@ fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
     if not isinstance(fftw,bool):
-        libs.insert(0,fftw)
+        libs.append(fftw)
 
 objects = []
 dobjects = []
