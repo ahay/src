@@ -2,7 +2,6 @@ from rsf.proj import *
 import string, sys
 import version
 
-
 def stack(name,
           v0,
           nv,
@@ -206,9 +205,7 @@ def diffimg(name,
 
     Flow(vlf+'q',pwd,
          '''
-         halfint inv=y adj=y |
-         math output="input*input" |
-         halfint adj=y | %s | clip2 lower=0
+         math output="input*input" | %s | clip2 lower=0
          ''' % velcon)
 
     if j3 > 1:
