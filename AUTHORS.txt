@@ -18,6 +18,7 @@ Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Jingwei Hu <hu@ices.utexas.edu>
+Yin Huang <maggiehuangyin@gmail.com>
 Trevor Irons <tirons@mines.edu>
 Jim Jennings <jenningsjwj@mac.com>
 Jun Ji <junji64@gmail.com>

@@ -43,6 +43,8 @@ env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=[fftw])
 
 sobjs = []
 
