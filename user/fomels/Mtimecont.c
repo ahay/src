@@ -1,4 +1,4 @@
-/* Reverse time continuation using fast marching. */
+/* Forward or reverse time continuation using fast marching. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
