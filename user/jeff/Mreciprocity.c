@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     float ***in=NULL;
     float ***out=NULL;
 
-    int nt,nr,ns,nrout,nr2;
+    int nt,nr,ns,nrout;
     float dr,ds,or,os,maxr;
 
     float rr;

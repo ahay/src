@@ -129,7 +129,7 @@ def check_all(context):
     mpi (context) # FDNSI
     pthreads (context) # FDNSI
     omp (context) # FDNSI
-    sse (context) # FDNSI
+    #    sse (context) # FDNSI
     cuda(context) # FDNSI
     fftw(context) # FDNSI
     petsc(context) # FDNSI

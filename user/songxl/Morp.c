@@ -23,7 +23,7 @@
 #include "srcsm.h"
 int main(int argc, char* argv[]) 
 {
-    int nx,  nz,  ny, k, aj, j;
+    int nx,  nz,  ny, k, aj;
     float dx, dz, dy, ox, oz, oy, dx2, dz2, dy2;
     float vx, vy, vz, e1, e2, e3, wx, wy, wz, aa, bb, cc, r, mm;
     sf_file out, vel;

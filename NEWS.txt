@@ -44,6 +44,7 @@ To the Python package:
 * Added MKL support in configure
 * Added selfdocs for placeholders in bldutil
 * Extended parallel split for sfomp and sfmpi
+* Disabled SSE check in configure
 
 To programs:
 

@@ -53,8 +53,6 @@ int main(int argc, char* argv[])
 
   	int i1,i2,i3;
   	int n1,n2,n3,n4;
-  	int d1,d2,d3;
-  	int o1,o2,o3;
   	int lind;
 
  	int ompchunk;
