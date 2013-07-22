@@ -667,7 +667,7 @@ namespace RVL {
 	      vector<Vector<Scalar> const *> & x) const {
       try {
 	vector<DataContainer const *> dx(x.size());
-	for (int i=0;i<x.size();i++) {
+	for (int i=0;i<(int)x.size();i++) {
 	  dx[i] = x[i]->getDataContainer();
 	}
 	(this->getDataContainer())->eval(f,dx);
@@ -884,7 +884,7 @@ namespace RVL {
   private:
 
     Vector<Scalar> & x;
-    mutable int ver;
+    mutable unsigned int ver;
     WatchedVecRef() {}
 
   public:

@@ -63,7 +63,7 @@ namespace TSOpt {
     
     IWaveState(PARARRAY & _pars, FILE * _stream,
 	       GFDM_INIT_FUN _minit);
-    ~IWaveState();
+    virtual ~IWaveState();
     
     virtual void setTime(Time const & t);
     virtual Time & getTime() { return tsi; }
@@ -118,7 +118,7 @@ namespace TSOpt {
     IWaveLinState(PARARRAY & _pars, FILE * _stream,
 		  //		  int (*gminit)(GFD_MODEL * mdl));
 		  GFDM_INIT_FUN _minit);
-    ~IWaveLinState();
+    virtual ~IWaveLinState();
 
     /** overrides */
     void setTime(Time const & t);

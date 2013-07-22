@@ -34,8 +34,8 @@ namespace TSOpt {
 
   IWaveState::IWaveState(PARARRAY  & _pars, FILE * _stream,
 			 GFDM_INIT_FUN _minit)
-    : pars(_pars), tsi(iwstate.model.tsind), stream(_stream), 
-      isinit(false) {
+      : stream(_stream), pars(_pars), isinit(false), tsi(iwstate.model.tsind)
+       {
     _minit(&gfdm);
   }
 
@@ -95,8 +95,8 @@ namespace TSOpt {
 			       //			       int (*gminit)(GFD_MODEL * mdf))
 			       GFDM_INIT_FUN _minit)
     : IWaveState(_pars,_stream,_minit), 
-      ltsi(linstate.model.tsind),
-      isinit(false) {  }
+      isinit(false),
+      ltsi(linstate.model.tsind) {  }
 
   IWaveLinState::~IWaveLinState() {
     if (isinit) iwave_destroy(&linstate); 

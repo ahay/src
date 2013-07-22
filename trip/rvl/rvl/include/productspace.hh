@@ -479,7 +479,7 @@ namespace RVL {
     /* Constructor. Uses protected Vector constructor to build
        (STL) vector of component Vector(s). */
     Components(const Vector<Scalar> & v)
-      : size(1), comp(1), pdc(NULL), psp(NULL) {
+	: size(1), pdc(NULL), psp(NULL), comp(1) {
       if ((pdc = 
 	   dynamic_cast<ProductDataContainer *>
 	   (v.getDataContainer())) 

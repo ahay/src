@@ -523,10 +523,11 @@ namespace RVL {
 	Functional clones are needed. */
     FunctionalEvaluation(const Functional<Scalar> & _f, 
 			 const Vector<Scalar> & x)
-      : wx(x), f(_f.clone()), fref(_f), 
-	grad(fref.getDomain()), cg(grad), 
-	hess(*this),
-	applied(false), gapplied(false), gnormapplied(false) {
+      : fref(_f), wx(x), f(_f.clone()), 
+	applied(false), grad(fref.getDomain()), 
+	gapplied(false), gnormapplied(false),
+	cg(grad), hess(*this)
+	 {
       grad.zero();
       
       if (x.getSpace() != fref.getDomain()) {

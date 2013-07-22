@@ -49,7 +49,7 @@ namespace TSOpt{
 	oc_itstack.push_back(it);
       } 
       else { /* case 2 starts: */
-	if(ic_itstack.size() < max_ic_size) {
+	  if((int) ic_itstack.size() < max_ic_size) {
 	  /* case 2a: store dynamic fields into incore stack */
 	  
 	  /* allocate storage */

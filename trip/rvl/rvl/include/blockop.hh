@@ -59,7 +59,7 @@ namespace RVL {
 		       Vector<Scalar> & y) const {
       try {
 	Components<Scalar> yc(y);
-	for (int i=0;i<yc.getSize();i++) 
+	for (int i=0;i<(int)yc.getSize();i++) 
 	  applyComponent(i,x,yc[i]);
       }
       catch (RVLException & e) {
@@ -83,7 +83,7 @@ namespace RVL {
 			    Vector<Scalar> & dy) const {
       try {
 	Components<Scalar> dyc(dy);
-	for (int i=0;i<dyc.getSize();i++) 
+	for (int i=0;i<(int)dyc.getSize();i++) 
 	  applyComponentDeriv(i,x,dx,dyc[i]);
       }
       catch (RVLException & e) {
@@ -109,7 +109,7 @@ namespace RVL {
 	applyComponentAdjDeriv(0,x,dyc[0],dx);
 	if (dyc.getSize()>0) {
 	  Vector<Scalar> tmp(dx);
-	  for (int i=1; i<dyc.getSize(); i++) {
+	  for (int i=1; i<(int)dyc.getSize(); i++) {
 	    applyComponentAdjDeriv(i,x,dyc[i],tmp);
 	    dx.linComb(1.0,tmp);
 	  }

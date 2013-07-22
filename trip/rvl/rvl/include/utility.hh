@@ -249,6 +249,8 @@ namespace RVL {
     /** Report state of object to ostream. */
     virtual ostream & write(ostream & str) const = 0;
 
+      virtual ~Writeable() {};
+
     /** Report state of object to RVLException. */
     void write(RVLException & e) const {
       std::ostringstream ss;

@@ -510,15 +510,15 @@ namespace RVLUmin {
 	       atype _Delta = numeric_limits<atype>::max(),
 	       int _maxcount = 0,
 	       bool _verbose = true)
-      : rtol(_rtol), nrtol(_nrtol), Delta(_Delta), maxcount(_maxcount), verbose(_verbose), nullstr(0) {}
+      : Delta(_Delta), rtol(_rtol), nrtol(_nrtol), maxcount(_maxcount), verbose(_verbose), nullstr(0) {}
 
     CGNEPolicy(CGNEPolicy<Scalar> const & p)
-      : rtol(p.rtol), 
-	nrtol(p.nrtol), 
-	Delta(p.Delta), 
-	maxcount(p.maxcount), 
-	verbose(p.verbose), 
-	nullstr(0) {}
+      : 	Delta(p.Delta), 
+		rtol(p.rtol), 
+		nrtol(p.nrtol), 
+		maxcount(p.maxcount), 
+		verbose(p.verbose), 
+		nullstr(0) {}
       
   private:
     mutable atype rtol;

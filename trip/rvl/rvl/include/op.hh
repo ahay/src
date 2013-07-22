@@ -712,7 +712,7 @@ namespace RVL {
 
     OperatorEvaluation(const Operator<Scalar> & _f, 
 		       const Vector<Scalar> & x)
-      : wx(x), fref(_f),
+      : fref(_f), wx(x), 
 	val(fref.getRange()), applied(false), 
 	deriv(_f.createDerivEvaluation(*this)),
 	deriv2(_f.createDeriv2Evaluation(*this)) { 
@@ -1532,7 +1532,7 @@ namespace RVL {
 	val.scale(wtvec[0]);
 	if (opvec.size() > 1) {
 	  Vector<Scalar> tmp(opvec[0]->getRange());
-	  for (int i=i; i<opvec.size(); i++) {
+	  for (int i=i; i<(int)opvec.size(); i++) {
 	    this->export_apply(*(opvec[i]),x,tmp);
 	    val.linComb(wtvec[i],tmp);
 	  }
@@ -1559,7 +1559,7 @@ namespace RVL {
 	dy.scale(wtvec[0]);
 	if (opvec.size() > 1) {
 	  Vector<Scalar> tmp(opvec[0]->getRange());
-	  for (int i=i; i<opvec.size(); i++) {
+	  for (int i=i; i<(int)opvec.size(); i++) {
 	    this->export_applyDeriv(*(opvec[i]),x,dx,tmp);
 	    dy.linComb(wtvec[i],tmp);
 	  }
@@ -1586,7 +1586,7 @@ namespace RVL {
 	dx.scale(wtvec[0]);
 	if (opvec.size() > 1) {
 	  Vector<Scalar> tmp(opvec[0]->getDomain());
-	  for (int i=i; i<opvec.size(); i++) {
+	  for (int i=i; i<(int)opvec.size(); i++) {
 	    this->export_applyAdjDeriv(*(opvec[i]),x,dy,tmp);
 	    dx.linComb(wtvec[i],tmp);
 	  }
@@ -1682,7 +1682,7 @@ namespace RVL {
     }
 
     ~LinCombOperator() {
-      for (int i=0;i<opvec.size(); i++) if (opvec[i]) delete opvec[i];
+	for (int i=0;i<(int)opvec.size(); i++) if (opvec[i]) delete opvec[i];
     }
 
     /** access to domain and range */
@@ -1724,7 +1724,7 @@ namespace RVL {
 	str<<"not initialized\n";
       }
       else {
-	for (int i=0;i<opvec.size();i++) {
+	  for (int i=0;i<(int)opvec.size();i++) {
 	  str<<" --- Operator "<<i<<" with weight "<<wtvec[i]<<"\n";
 	  opvec[i]->write(str);
 	}
@@ -1757,7 +1757,7 @@ namespace RVL {
 
     LinearOpEvaluation(LinearOp<Scalar> const & _op,
 		       Vector<Scalar> const & _ref)
-     : op(_op), ref(_ref), val(op.getRange()), applied(false) {
+     : ref(_ref), op(_op), val(op.getRange()), applied(false) {
       if (ref.getSpace() != op.getDomain()) {
 	RVLException e;
 	e<<"Error: LinearOpEvaluation constructor\n";
@@ -1804,7 +1804,7 @@ namespace RVL {
 
     LinearOpAdjEvaluation(LinearOp<Scalar> const & _op,
 			  Vector<Scalar> const & _ref)
-      : op(_op), ref(_ref), val(op.getDomain()), applied(false) {
+      : ref(_ref), op(_op), val(op.getDomain()), applied(false) {
       if (ref.getSpace() != op.getRange()) {
 	RVLException e;
 	e<<"Error: LinearOpAdjEvaluation constructor\n";
@@ -1954,7 +1954,7 @@ namespace RVL {
 	else {
 	  std::vector<OperatorEvaluation<Scalar> *> opeval(opvec.size()-1);
 	  opeval[0] = new OperatorEvaluation<Scalar>(*(opvec[0]),x);
-	  for (int i=1;i<opvec.size()-1;i++) 
+	  for (int i=1;i<(int)opvec.size()-1;i++) 
 	    opeval[i] = new OperatorEvaluation<Scalar>(*(opvec[i]),opeval[i-1]->getValue());
 	  this->export_apply(*(opvec[opvec.size()-1]),opeval[opvec.size()-2]->getValue(),val);
 	  for (int i=opvec.size()-2;i>-1;i--) delete opeval[i];
@@ -2007,7 +2007,7 @@ namespace RVL {
 	      opeval[i] = new OperatorEvaluation<Scalar>(*(opvec[i]),x);
 	      lineval[i] = new LinearOpEvaluation<Scalar>(opeval[i]->getDeriv(),dx);
 	    }
-	    else if (i==opvec.size()-1) {
+	    else if (i==(int)opvec.size()-1) {
 	      opeval[i] = new OperatorEvaluation<Scalar>(*(opvec[i]),opeval[i-1]->getValue());
 	      opeval[i]->getDeriv().applyOp(lineval[i-1]->getValue(),dy);	
 	    }
@@ -2016,10 +2016,10 @@ namespace RVL {
 	      lineval[i] = new LinearOpEvaluation<Scalar>(opeval[i]->getDeriv(),lineval[i-1]->getValue());
 	    }
 	  }
-	  for (int i=lastlin;i<opvec.size();i++) {
+	  for (int i=lastlin;i<(int)opvec.size();i++) {
 	    //	    cerr<<"linear loop i="<<i<<"\n";
 	    // last
-	    if (i==opvec.size()-1) 
+	      if (i==(int)opvec.size()-1) 
 	      this->export_apply(*(opvec[i]),lineval[i-1]->getValue(),dy);    
 	    // middle
 	    else if (i > 0) 
@@ -2095,7 +2095,7 @@ namespace RVL {
 	    //	    cerr<<"OpComp::applyAdjDeriv adjoint loop - fully linear part step="<<i<<"\n";
 	    // note that opvec.size() > 1 here, so these branches are indep.
 	    // last
-	    if (i==opvec.size()-1)  
+	      if (i==(int)opvec.size()-1)  
 	      lineval[i]=new LinearOpAdjEvaluation<Scalar>(*(linop[i]),dy);
 	    // middle
 	    else if (i>0)
@@ -2111,7 +2111,7 @@ namespace RVL {
 	      opeval[i]->getDeriv().applyAdjOp(lineval[i+1]->getValue(),dx);	
 	    }
 	    // in case it's ALL nonlinear
-	    else if (i==opvec.size()-1) {
+	    else if (i==(int)opvec.size()-1) {
 	      lineval[i] = new LinearOpAdjEvaluation<Scalar>(opeval[i]->getDeriv(),dy);
 	    }
 	    // generic nonlinear step
@@ -2122,7 +2122,7 @@ namespace RVL {
 	  
 	  // cerr<<"OpComp::applyAdjDeriv cleanup\n";
 	  for (int i=opvec.size()-1;i>-1;i--) if (opeval[i]) delete opeval[i];
-	  for (int i=0;i<opvec.size();i++)  if (lineval[i]) delete lineval[i];
+	  for (int i=0;i<(int)opvec.size();i++)  if (lineval[i]) delete lineval[i];
 	 
 	}
       }
@@ -2143,7 +2143,7 @@ namespace RVL {
 
     OpComp(OpComp<Scalar> const & oc)
       : opvec(oc.opvec.size()), applied(false) {
-      for (int i=0;i<opvec.size(); i++) {
+	for (int i=0;i<(int)opvec.size(); i++) {
 	opvec[i]=oc.opvec[i]->clone();
       }
     }
@@ -2217,7 +2217,7 @@ namespace RVL {
     }
 
     ~OpComp() {
-      for (int i=0;i<opvec.size();i++) { delete opvec[i]; }
+	for (int i=0;i<(int)opvec.size();i++) { delete opvec[i]; }
     }
 
     /** access to domain and range */
@@ -2262,7 +2262,7 @@ namespace RVL {
 	  applied = true;
 	  str<<"OpComp: Operator composition\n";
 	  str<<"-- number of factors = "<<opvec.size()<<"\n";
-	  for (int i=0;i<opvec.size(); i++) {
+	  for (int i=0;i<(int)opvec.size(); i++) {
 	    str<<"\nfactor "<<i<<":\n";
 	    opvec[i]->write(str);
 	  }

@@ -336,8 +336,10 @@ namespace RVL {
 
     FunctionObject & fwdfo;
     FunctionObject & adjfo;
+
     const Space<Scalar> & dom;
     const Space<Scalar> & rng;
+
     LinearOpFO();
 
   protected:
@@ -375,7 +377,7 @@ namespace RVL {
 	       FunctionObject & _fwdfo,
 	       FunctionObject & _adjfo)
       : LinearOp<Scalar>(), 
-	dom(_dom), rng(_rng), fwdfo(_fwdfo), adjfo(_adjfo) {}
+	fwdfo(_fwdfo), adjfo(_adjfo), dom(_dom), rng(_rng)  {}
     LinearOpFO( const LinearOpFO<Scalar> & l)
       : LinearOp<Scalar>(l), 
 	fwdfo(l.fwdfo), adjfo(l.adjfo), dom(l.dom), rng(l.rng) {}
