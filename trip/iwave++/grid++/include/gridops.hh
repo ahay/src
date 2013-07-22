@@ -85,8 +85,8 @@ namespace TSOpt {
 
   private:
 
-    Vector<ireal> const & bg;
     Space<ireal> const & dom;
+    Vector<ireal> const & bg;
     IPNT iw;
     GridWindowOp();
 
@@ -130,8 +130,8 @@ namespace TSOpt {
 
   private:
 
-    ireal fac; 
     int dir;
+    ireal fac; 
 
     GridFwdDerivFO();
 
@@ -151,8 +151,9 @@ namespace TSOpt {
   class GridAdjDerivFO: public BinaryLocalFunctionObject<ireal> {
 
   private:
-    ireal fac; 
+
     int dir;
+    ireal fac; 
 
     GridAdjDerivFO();
 

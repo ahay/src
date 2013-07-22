@@ -97,7 +97,7 @@ int sg_linreadmedia(RDOM dom,
   }
   else {
     /* if no data read, set to ref value */
-    for (j=0;j<ntot;j++) dom._s[D_MP0]._s0[j]=refdkappa;
+      for (j=0;j<(int)ntot;j++) dom._s[D_MP0]._s0[j]=refdkappa;
   }
 
   /* read dbuoyancy */
@@ -214,11 +214,11 @@ namespace ASG {
 
   ASGSampler::ASGSampler(IWaveState & _state)
     : state(_state), 
+      trs(_state,trace),
+      aps(_state,trace.t.tg),
       tt(_state), 
       tstart(ct),
       tfinal(cte), 
-      aps(_state,trace.t.tg),
-      trs(_state,trace),
       is_samplerinit(false) {
    
     //    ps_printall(state.getPAR(),stderr);
@@ -226,7 +226,7 @@ namespace ASG {
     RPNT mult;
     for (int i=0;i<RARR_MAX_NDIM;i++) mult[i]=REAL_ONE/((ireal)(state.getIWAVE().model.g.dim));
 
-    if (err=sampler_construct(&trace,
+    if ((err=sampler_construct(&trace,
 			      &(state.getPAR()),
 			      D_P,
 			      mult,
@@ -234,7 +234,7 @@ namespace ASG {
 			      0,
 			      "hdrfile",
 			      "datafile",
-			      state.getStream())) {
+			       state.getStream()))) {
       RVLException e;
       e<<"Error: TraceSampler constructor from sampler_construct\n";
       e<<"returned code "<<err<<"\n";
@@ -249,7 +249,7 @@ namespace ASG {
 
     int err=0;
 
-    if (err=sampler_destroy(&trace)) {
+    if ((err=sampler_destroy(&trace))) {
       RVLException e;
       e<<"Error: ASGSampler destructor from sampler_destroy\n";
       e<<"returned code "<<err<<"\n";
@@ -382,13 +382,13 @@ namespace ASG {
 
   ASGLinSampler::ASGLinSampler(IWaveLinState & _state)
     : state(_state), 
-      tt(_state), 
-      tstart(ct), 
-      tfinal(cte),
-      ltt(_state),
-      aps(_state,trace.t.tg),
       trs(_state,trace),
       ltrs(_state,trace),
+      aps(_state,trace.t.tg),
+      tt(_state), 
+      ltt(_state),
+      tstart(ct), 
+      tfinal(cte),
       //      abs(_state),
       is_samplerinit(false) {
      
@@ -397,7 +397,7 @@ namespace ASG {
     RPNT mult;
     for (int i=0;i<RARR_MAX_NDIM;i++) mult[i]=REAL_ONE/((ireal)(state.getIWAVE().model.g.dim));
 
-    if (err=sampler_construct(&trace,
+    if ((err=sampler_construct(&trace,
 			      &(state.getPAR()),
 			      D_P,
 			      mult,
@@ -405,7 +405,7 @@ namespace ASG {
 			      0,
 			      "hdrfile",
 			      "ldatafile",
-			      state.getStream())) {
+			       state.getStream()))) {
       RVLException e;
       e<<"Error: TraceSampler constructor from sampler_construct\n";
       e<<"returned code "<<err<<"\n";
@@ -416,7 +416,7 @@ namespace ASG {
 
   ASGLinSampler::~ASGLinSampler() {
     int err=0;
-    if (err=sampler_destroy(&trace)) {
+    if ((err=sampler_destroy(&trace))) {
       RVLException e;
       e<<"Error: ASGSampler destructor from sampler_destroy\n";
       e<<"returned code "<<err<<"\n";
@@ -568,13 +568,13 @@ namespace ASG {
  
   ASGAdjSampler::ASGAdjSampler(IWaveLinState & _state)
     : state(_state), 
+      trs(_state,trace),
+      adjtrs(_state,trace),
+      aps(_state,trace.t.tg),
       tt(_state,false,cerr), 
       bwdtt(_state,false,cerr), 
       tstart(ct), 
       tfinal(cte),
-      aps(_state,trace.t.tg),
-      trs(_state,trace),
-      adjtrs(_state,trace),
       is_samplerinit(false) {  
 
     int err=0;
@@ -584,7 +584,7 @@ namespace ASG {
     for (int i=0;i<RARR_MAX_NDIM;i++) mult[i]=REAL_ONE/((ireal)(state.getIWAVE().model.g.dim));
     // mod 02.13: initbuf=-1 causes adjoint spline interp, as opposed to
     // initbuf=1 which is straight spline interp, onto internal time grid    
-    if (err=sampler_construct(&trace,
+    if ((err=sampler_construct(&trace,
 			      &(state.getPAR()),
 			      D_P,
 			      mult,
@@ -592,7 +592,7 @@ namespace ASG {
 			      -1,
 			      "hdrfile",
 			      "rdatafile",
-			      state.getStream())) {
+			       state.getStream()))) {
       RVLException e;
       e<<"Error: ASGAdjSampler constructor from sampler_construct\n";
       e<<"returned code "<<err<<"\n";
@@ -618,7 +618,7 @@ namespace ASG {
    
     int err=0;
 
-    if (err=sampler_destroy(&trace)) {
+    if ((err=sampler_destroy(&trace))) {
       RVLException e;
       e<<"Error: ASGSampler destructor from sampler_destroy\n";
       e<<"returned code "<<err<<"\n";
@@ -696,7 +696,7 @@ namespace ASG {
 	ntot=1;
 	for (int i=0;i<dim;i++) ntot*=ran[i];
 	
-	for (int j=0;j<ntot;j++) ddom->_s[D_MP0]._s0[j]= REAL_ZERO;
+	for (int j=0;j<(int)ntot;j++) ddom->_s[D_MP0]._s0[j]= REAL_ZERO;
 	
 	/*
 

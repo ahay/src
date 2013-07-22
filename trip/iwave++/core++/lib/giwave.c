@@ -157,7 +157,7 @@ int giwave_dmod2(IWAVE * ddstate,
   }
 
   if ( printact > 5 ) {
-    fprintf(stream,"giwave_dmod2: extreme verbose dump not implemented yet\n",iv);
+    fprintf(stream,"giwave_dmod2: extreme verbose dump not implemented yet\n");
     fflush(stream); 
   }
 

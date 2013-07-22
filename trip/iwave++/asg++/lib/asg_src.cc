@@ -3,7 +3,7 @@
 namespace ASG {
 
   ASGSource::ASGSource(IWaveState & _state, tracegeom & _tg)
-    : state(_state), src(NULL), arr(NULL), ready(false), ans(true), tg(_tg) {
+      : tg(_tg), src(NULL), arr(NULL), state(_state), ready(false), ans(true)  {
 
     RASN(scoord,RPNT_0);
    
@@ -34,7 +34,7 @@ namespace ASG {
 
       // change of 03.12: for sources, all weights are 1!
       int err = 0;
-      if (err=sampler_construct(arr,
+      if ((err=sampler_construct(arr,
 				&state.getPAR(),
 				D_P,
 				RPNT_1,
@@ -42,7 +42,7 @@ namespace ASG {
 				1,
 				"source",
 				"source",
-				state.getStream())) {
+				 state.getStream()))) {
 	RVLException e;
 	e<<"ERROR: ASGSource constructor from sampler_construct\n";
 	e<<"returned code "<<err<<"\n";

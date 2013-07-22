@@ -12,19 +12,19 @@ namespace TSOpt {
 			FILE ** stream) {
     int err=0;
     initparallel_global(ts);
-    if (err=initoutstream(stream,retrieveGlobalRank(),retrieveGlobalSize())) {
+    if ((err=initoutstream(stream,retrieveGlobalRank(),retrieveGlobalSize()))) {
       RVLException e;
       e<<"Error: IWaveEnvironment from initoutstream, err="<<err<<"\n";
       e<<"failed to initialize output stream\n";
       throw e;
     }
-    if (err=readinput(par,*stream,argc,argv)) {
+    if ((err=readinput(par,*stream,argc,argv))) {
       RVLException e;
       e<<"Error: IWaveEnvironment from readinput, err="<<err<<"\n";
       e<<"failed to parse param file\n";
       throw e;
     }
-    if (err=initparallel_local(*(*par),*stream)) {
+    if ((err=initparallel_local(*(*par),*stream))) {
       RVLException e;
       e<<"Error: IWaveEnvironment from initparallel_local, err="<<err<<"\n";
       e<<"failed to create cartesian grid or local comm\n";
@@ -194,9 +194,9 @@ namespace TSOpt {
       ud = iw.getGFDM().udam;
       // in adjoint case, zero receive arrays, as they will be used
       // as buffers to accumulate non-local updates
-      if (err=giwave_zero_recv(&(iw.getIWAVE()),
+      if ((err=giwave_zero_recv(&(iw.getIWAVE()),
 			       ud,
-			       iw.getStream())) {
+				iw.getStream()))) {
 	RVLException e;;
 	e<<"ERROR: IWaveLinStep::run from giwave_synch, err="<<err<<"\n";
 	throw e;
@@ -206,10 +206,10 @@ namespace TSOpt {
 #ifdef LALA
     ud=iw.getGFDM().udfm;
     if (!fwd) {
-      if (err=giwave_synch(&(iw.getIWAVE()),
+	if ((err=giwave_synch(&(iw.getIWAVE()),
 			   ud,
 			   fwd,
-			   iw.getStream())) {
+			      iw.getStream()))) {
 	RVLException e;;
 	e<<"ERROR: IWaveLinStep::run from giwave_synch, err="<<err<<"\n";
 	throw e;
@@ -217,11 +217,11 @@ namespace TSOpt {
     }    
 #endif
 
-    if (err=giwave_dmod(&(iw.getIWAVE()),
+    if ((err=giwave_dmod(&(iw.getIWAVE()),
 			&(iw.IWaveState::getIWAVE()),
 			ts,
 			//			ud,
-			iw.getStream())) {
+			 iw.getStream()))) {
       RVLException e;;
       e<<"ERROR: IWaveLinStep::run from giwave_dmod, err="<<err<<"\n";
       throw e;
@@ -230,10 +230,10 @@ namespace TSOpt {
 #ifdef LALA
     if (fwd) {
 #endif
-      if (err=giwave_synch(&(iw.getIWAVE()),
+	if ((err=giwave_synch(&(iw.getIWAVE()),
 			   ud,
 			   fwd,
-			   iw.getStream())) {
+			      iw.getStream()))) {
 	RVLException e;;
 	e<<"ERROR: IWaveLinStep::run from giwave_synch, err="<<err<<"\n";
 	throw e;

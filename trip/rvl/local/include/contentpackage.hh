@@ -545,16 +545,16 @@ namespace RVL {
 
     virtual bool compare( DataContainerFactory const & dcf) const {
       PackageContainerFactory<DataType,MetaType> const * ptr = NULL;
-      if (ptr = 
-	  dynamic_cast< PackageContainerFactory<DataType,MetaType> const * >(&dcf))
+      if ((ptr = 
+	   dynamic_cast< PackageContainerFactory<DataType,MetaType> const * >(&dcf)))
 	return true;
       return false;
     }
 
     virtual bool isCompatible(DataContainer const & dc) const {
       PackageContainer<DataType,MetaType> const * ptr = NULL;
-      if (ptr = 
-	  dynamic_cast< PackageContainer<DataType,MetaType> const * >(&dc))
+      if ((ptr = 
+	   dynamic_cast< PackageContainer<DataType,MetaType> const * >(&dc)))
 	return true;
       return false;
     }

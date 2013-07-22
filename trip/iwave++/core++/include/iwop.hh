@@ -53,18 +53,20 @@ namespace TSOpt {
   {
       
   private:
-    
-    mutable FILE * stream;              /* output stream            */
-    // Change 11.05.10 - copy mutable, const ref copy
-    mutable PARARRAY * lpars;           /* parameter array workspace */
-    // change 23.06.10 - ref mutable too, to facilitate 
-    // under-the-table definiton of operator on source space
-    mutable PARARRAY * pars;            /* parameter array ref copy */
-
-    mutable GFDM_INIT_FUN minit;
 
     Space<ireal> const & dom;
     Space<ireal> const & rng;
+    
+    mutable FILE * stream;              /* output stream            */
+    // Change 11.05.10 - copy mutable, const ref copy
+
+    mutable PARARRAY * lpars;           /* parameter array workspace */
+    // change 23.06.10 - ref mutable too, to facilitate 
+    // under-the-table definiton of operator on source space
+
+    mutable GFDM_INIT_FUN minit;
+
+    mutable PARARRAY * pars;            /* parameter array ref copy */
 
     // verbosity control
     int dump_steps;
@@ -717,9 +719,9 @@ namespace TSOpt {
 	    GFDM_INIT_FUN _minit)
       : dom(_dom), rng(_rng), 
 	stream(_stream),
-	pars(NULL),
 	lpars(NULL),
 	minit(_minit),
+	pars(NULL),
         dump_steps(0),
 	dump_pars(0),
 	dump_term(0)
@@ -732,7 +734,7 @@ namespace TSOpt {
       int err=0;
 
       /* copy input par array to data member */
-      if (err=ps_copy(&pars,_pars)) {
+      if ((err=ps_copy(&pars,_pars))) {
 	RVLException e;
 	e<<"Error: IWOP constructor from ps_copy, err="<<err<<"\n";
 	throw e;
@@ -763,16 +765,16 @@ namespace TSOpt {
 	    > const & x)
       : dom(x.dom), rng(x.rng), 
 	stream(x.stream), 
+	lpars(NULL),
 	minit(x.minit),
 	pars(NULL),
-	lpars(NULL),
 	dump_steps(x.dump_steps),
 	dump_pars(x.dump_pars),
 	dump_term(x.dump_term)
     {
       // cerr<<"literal copy, so pararray is copied"<<endl;
       int err=0;
-      if (err=ps_copy(&pars,*(x.pars))) {
+      if ((err=ps_copy(&pars,*(x.pars)))) {
 	RVLException e;
 	e<<"Error: IWOP copy constructor from ps_copy, err="<<err<<"\n";
 	throw e;

@@ -54,9 +54,9 @@ int main(int argc, char ** argv) {
   FILE * fp3;      /* output file pointer */ 
   segy tr1;        /* input 1 trace workspace */
   segy * tr2;      /* input 2 trace workspace */
-  int sx;          /* workspace */
-  int sy;          /* workspace */
-  int selev;       /* workspace */
+  int sx=0;        /* workspace */
+  int sy=0;        /* workspace */
+  int selev=0;     /* workspace */
   int tsx;         /* workspace */
   int tsy;         /* workspace */
   int tselev;      /* workspace */

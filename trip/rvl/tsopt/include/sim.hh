@@ -147,8 +147,9 @@ namespace TSOpt {
   private:
     TimeStep<State> & main;
     Algorithm & pre;
-    bool preflag;
     Algorithm & post;
+
+    bool preflag;
     bool postflag;
     TimeStepList();
   public:

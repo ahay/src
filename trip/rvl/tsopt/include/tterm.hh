@@ -74,9 +74,9 @@ namespace TSOpt {
     FwdTimeTerm(State const & t,
 		bool _verbose=false,
 		ostream & _str=cout)
-      : s(t), verbose(_verbose), str(_str) {}
+	: verbose(_verbose), str(_str), s(t) {}
     FwdTimeTerm(FwdTimeTerm<State> const & t)
-      : s(t.s), verbose(t.verbose), str(t.str) {}
+	: verbose(t.verbose), str(t.str), s(t.s) {}
     virtual ~FwdTimeTerm() {}    
     virtual bool query() { 
       try {
@@ -121,9 +121,9 @@ namespace TSOpt {
     BwdTimeTerm(State const & t,
 		bool _verbose=false,
 		ostream & _str=cout)
-      : s(t), verbose(_verbose), str(_str) {}
+	: verbose(_verbose), str(_str), s(t) {}
     BwdTimeTerm(BwdTimeTerm<State> const & t)
-      : s(t.s), verbose(t.verbose), str(t.str) {}
+	: verbose(t.verbose), str(t.str), s(t.s) {}
     virtual ~BwdTimeTerm() {}    
     virtual bool query() { 
       try {

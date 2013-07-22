@@ -155,7 +155,7 @@ namespace TSOpt {
 	// with 0th domain component - then they are all compatible
 
 	myGridSpace const & gref = dynamic_cast<myGridSpace const &>((*pdom)[0]);
-	for (int j=0; j<pdom->getSize(); j++) {
+	for (int j=0; j<(int)pdom->getSize(); j++) {
 	  myGridSpace const & gdom = dynamic_cast<myGridSpace const &>((*pdom)[j]);
 	  myGridSpace const & grng = dynamic_cast<myGridSpace const &>((*prng)[j]);
 	  
@@ -660,7 +660,7 @@ namespace TSOpt {
     try {
       Components<ireal> cx(x);
       Components<ireal> cy(y);
-      for (int j=0;j<cx.getSize();j++) {
+      for (int j=0;j<(int)cx.getSize();j++) {
 	GridFwdDerivFO f(dir,fac[j]);
 	MPISerialFunctionObject<ireal> mpif(f);
     	cy[j].eval(mpif,cx[j]);
@@ -677,7 +677,7 @@ namespace TSOpt {
     try {
       Components<ireal> cx(x);
       Components<ireal> cy(y);
-      for (int j=0;j<cx.getSize();j++) {
+      for (int j=0;j<(int)cx.getSize();j++) {
 	GridAdjDerivFO f(dir,fac[j]);
 	MPISerialFunctionObject<ireal> mpif(f);
 	cy[j].eval(mpif,cx[j]);

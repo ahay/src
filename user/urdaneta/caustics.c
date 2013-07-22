@@ -216,7 +216,7 @@ void caustics_down (struct heptagon *cube, int start, int nr)
 
 static int crosschk (struct point pt0, struct point pt1, struct point pp0, struct point pp1)
 {
-    float mt, bt, mp, bp;
+    float mt=0.0f, bt=0.0f, mp=0.0f, bp=0.0f;
     float X, Z;
     int inft, infp;
 

@@ -12,14 +12,15 @@ namespace TSOpt {
   class SEGYLinMute: public BinaryLocalFunctionObject<float> {
     
   private:
-   
-    int mute_type; // muting type: 0, conic-like (point source); 1, rectangle (plane-wave src)
-
     float s;   // type 0: slope of mute (dt/dx)
                // type 1: minimum value of gx where taper starts (amp=0.)
+
     float tm;  // type 0: mute onset at zero offset, time AFTER first sample
                // type 1: maximum value of gx where taper starts (amp=0.)    
+
     float w;   // width of mute zone
+   
+    int mute_type; // muting type: 0, conic-like (point source); 1, rectangle (plane-wave src)
     
     float gxbeg;  
     float gxend; 

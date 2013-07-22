@@ -321,7 +321,7 @@ namespace TSOpt {
 	list. Used as a criteria to store simulaton state
     */
     bool timeToCheck(const myDiscTime & myDT) {
-      for (int k=0; k< _checklist.size(); ++k){
+	for (int k=0; k< (int)_checklist.size(); ++k){
 	if (_checklist[k] == myDT )  {
 #ifdef CP_INFO
 	  cerr<<"timeToCheck: found time match k = "<<k<<endl;

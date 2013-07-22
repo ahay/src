@@ -298,7 +298,7 @@ int movie_run(MOVIE * mt,
     }
 
     if (ndim==2) {
-      if (err=rsfwrite(aptr, gs, n, mt->smovie[i], 0, stream, mt->frameindex)) {
+	if ((err=rsfwrite(aptr, gs, n, mt->smovie[i], 0, stream, mt->frameindex))) {
 	fprintf(stream,"ERROR: movie_run from rsfwrite, err=%d\n",err);
 	fflush(stream);
 	return err;
@@ -306,7 +306,7 @@ int movie_run(MOVIE * mt,
     }
     else if (mt->dim3d==2) {
       aoff=mt->slice3d*n[0]*n[1];
-      if (err=rsfwrite(&(aptr[aoff]), gs, np, mt->smovie[i], 0, stream, mt->frameindex)) {
+      if ((err=rsfwrite(&(aptr[aoff]), gs, np, mt->smovie[i], 0, stream, mt->frameindex))) {
 	fprintf(stream,"ERROR: movie_run from rsfwrite, err=%d\n",err);
 	fflush(stream);
 	return err;

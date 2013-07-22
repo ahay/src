@@ -31,7 +31,7 @@ namespace TSOpt {
     //    SAMPLER const & get_traceterm() const {return trace;}
     virtual void run() {
       int err=0;
-      if (err=sampler_run(&trace,&(state.State::getIWAVE().model))) {
+      if ((err=sampler_run(&trace,&(state.State::getIWAVE().model)))) {
 	RVLException e;
 	e<<"Error: TraceSampler::init from sampler_run\n";
 	e<<"returned code "<<err<<"\n";
