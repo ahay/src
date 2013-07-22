@@ -9,8 +9,8 @@ diptaper dvscan2d
 pick2d gammapick2d pickvert
 pdrscan2d pdr2d
 dagap sumamp
-taperedge
-revent rotvol
+taperedge heal
+revent rotvol todel
 '''
 
 mpi_progs = ''
