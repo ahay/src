@@ -191,6 +191,7 @@ int main(int argc, char* argv[])
   	/* Dipping layer */
   	shit = sf_floatalloc2(n2,n1);
   	shit2= sf_floatalloc2(n2,n1);
+	smean = 0.0f;
   	for (i1=0; i1 < n1; i1++) {  x=i1/(n1-1.);	
 		for (i2=0; i2 < n2; i2++) {y=i2/(n2-1.);
   			shit[i1][i2] = fminf(n3,fmaxf(1,((d-a*x-b*y)/c)));

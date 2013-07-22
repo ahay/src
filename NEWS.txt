@@ -18,8 +18,6 @@ approximation (Song, Fomel, and Ying)
   equations on parallel GPU devices (Weiss and Shragge)
 * jsg/eikods: Kirchhoff migration using eikonal-based computation of
   traveltime source-derivatives (Li and Fomel)
-* jsg/butterfly: A fast butterfly algorithm for generalized Radon
-  transforms (Hu, Fomel, Demanet, and Ying)
 * jsg/orthorhombic: Modeling of pseudo-acoustic P-waves in
   orthorhombic media with a lowrank approximation (Song and
   Alkhalifah)

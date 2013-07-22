@@ -100,7 +100,7 @@ void sf_tahwritemapped(float* trace, int* iheader,
 	  iaxis+1,output_axa_array[iaxis]->n); */
   if(trace_fits_in_output_file){
     file_offset=sf_large_cart2line(dim_output,n_output,i_output)*sizeof(float);
-    if(verbose>2)fprintf(stderr,"file_offset=%lld\n",file_offset);
+    if(verbose>2)fprintf(stderr,"file_offset=%lld\n",(long long) file_offset);
     sf_seek(output,file_offset,SEEK_SET);
     sf_floatwrite(trace,n1_traces,output);
     
@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
     sprintf(parameter,"n%d",iaxis+1);
     fprintf(stderr,"try to read %s\n",parameter);
     if (sf_getlargeint  (parameter,&n_output[iaxis])) {
-      fprintf(stderr,"got %s=%lld\n",parameter,n_output[iaxis]);
+	fprintf(stderr,"got %s=%lld\n",parameter,(long long) n_output[iaxis]);
       sf_putint(output    ,parameter,n_output[iaxis]);
       sf_putint(outheaders,parameter,n_output[iaxis]);
       n_argparmread=true;
@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
   if(verbose>1){
     for (iaxis=0; iaxis<SF_MAX_DIM; iaxis++){
       fprintf(stderr,"from sf_largefiledims(output.. n%d=%lld outheaders=%lld\n",
-	              iaxis+1,n_output[iaxis],n_outheaders[iaxis]);
+	      iaxis+1,(long long) n_output[iaxis],(long long) n_outheaders[iaxis]);
     }
   }
 

@@ -510,8 +510,8 @@ int sf_neighbors_nearsource(float* xs   /* source location [3] */,
 }
 
 int sf_neighbors_surface(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
-						 float* tt0  /* surface traveltime [n[1]*n[2]] */,
-						 bool forw /* forward or backward continuation */)
+			 float* tt0  /* surface traveltime [n[1]*n[2]] */,
+			 bool forw /* forward or backward continuation */)
 /*< initialize the source at the surface >*/
 {
     int npoints, i, j, ix, iy;

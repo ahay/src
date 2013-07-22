@@ -27,7 +27,8 @@ void timecont (float* time                /* time */,
 	       int* in                    /* in/front/out flag */, 
 	       int   n3,  int n2,  int n1 /* dimensions */,
 	       float d3,float d2,float d1 /* sampling */,
-	       int order                  /* accuracy order (1,2,3) */)
+	       int order                  /* accuracy order (1,2,3) */,
+	       bool forwd                 /* forward or backward */)
 /*< Run fast marching eikonal solver >*/
 {
     float d[3], *p;
@@ -47,22 +48,42 @@ void timecont (float* time                /* time */,
     sf_pqueue_start();
     sf_neighbors_init (in, d, n, order, time);
 
-    for (npoints =  sf_neighbors_surface (v, t0, false);
-	 npoints > 0;
-	 npoints -= sf_neighbours2(i)) {
-	/* Pick largest value in the NarrowBand
-	   mark as good, decrease points_left */
+    if (forwd) {
+	for (npoints =  sf_neighbors_surface (v, t0, true);
+	     npoints > 0;
+	     npoints -= sf_neighbours(i)) {
+	    /* Pick smallest value in the NarrowBand
+	       mark as good, decrease points_left */
 	
-	p = sf_pqueue_extract2();
+	    p = sf_pqueue_extract();
 
-	if (p == NULL) {
-	    sf_warning("%s: heap exausted!",__FILE__);
-	    break;
+	    if (p == NULL) {
+		sf_warning("%s: heap exausted!",__FILE__);
+		break;
+	    }
+	
+	    i = p - time;
+
+	    in[i] = SF_IN;
 	}
+    } else {
+	for (npoints =  sf_neighbors_surface (v, t0, false);
+	     npoints > 0;
+	     npoints -= sf_neighbours2(i)) {
+	    /* Pick largest value in the NarrowBand
+	       mark as good, decrease points_left */
 	
-	i = p - time;
+	    p = sf_pqueue_extract2();
 
-	in[i] = SF_IN;
+	    if (p == NULL) {
+		sf_warning("%s: heap exausted!",__FILE__);
+		break;
+	    }
+	
+	    i = p - time;
+
+	    in[i] = SF_IN;
+	}
     }
     
     sf_pqueue_close();

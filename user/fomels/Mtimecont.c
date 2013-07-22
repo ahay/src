@@ -28,7 +28,7 @@ int main (int argc,char* argv[])
     int n1, n2, n3, i, order,n123, n23, *p;
     float d1, d2, d3, slow;
     float *t, *t0, *v;
-    bool isvel;
+    bool isvel, forwd;
     sf_file vel, time, time0;
 
     sf_init (argc, argv);
@@ -45,6 +45,9 @@ int main (int argc,char* argv[])
     if(!sf_histfloat(vel,"d1",&d1)) sf_error("No d1= in input");
     if(!sf_histfloat(vel,"d2",&d2)) sf_error("No d2= in input");
     if(!sf_histfloat(vel,"d3",&d3)) d3=d2;
+
+    if(!sf_getbool("forwd",&forwd)) forwd=false;
+    /* continue forward or backward */
 
     if(!sf_getbool("vel",&isvel)) isvel=true;
     /* if y, the input is velocity; n, slowness squared */
@@ -74,7 +77,7 @@ int main (int argc,char* argv[])
     timecont(t,t0,v,p,
 	     n3,n2,n1,
 	     d3,d2,d1,
-	     order);
+	     order,forwd);
 	
     sf_floatwrite (t,n123,time);
 
