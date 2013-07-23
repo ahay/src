@@ -81,12 +81,12 @@ int main(int argc, char* argv[])
     float **new,  **old,  **cur, **ukr, **dercur, **derold, *wav, **rvr, **snap, **image;
     float **v, v0, v02, v2;
     float ***aa, dx2, dz2, w, g1, g2, ct, cb, cl, cr; /* top, bottom, left, right */
-    float tmpvk, k2, err, dt2;
+    float tmpvk, err, dt2;
     float alpha; /* source smoothing */
     kiss_fft_cpx **uk, **ctracex, **ctracez;
     sf_file input, vel, source, geo, output;
     FILE *out;
-    bool opt,de;    /* optimal padding */
+    bool opt;    /* optimal padding */
     float **fcos;
     int nth=1, ith=0, esize, shot_num, n1, n2;
     int i, rank, nodes;

@@ -231,7 +231,7 @@ static int seg_cross_chck (struct point pt0, struct point pt1, struct point pp0,
 * The subroutine returns a one in case they intersect and zero
 * in case they don't. */
 {
-    float mt, bt, mp, bp;
+    float mt=0.0f, bt=0.0f, mp=0.0f, bp=0.0f;
     float X, Z;
     int inft, infp;
 
