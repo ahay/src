@@ -24,8 +24,8 @@ void acd_3d_2(float *** uc,
     }
   }
 
-  // boundary condns: up[-1][i]=0 etc. these do not need to be enforced as they are 
+  /* boundary condns: up[-1][i]=0 etc. these do not need to be enforced as they are 
   // a by-product of initialization and involve only non-updated allocated array 
-  // entries
+  // entries */
 }
 

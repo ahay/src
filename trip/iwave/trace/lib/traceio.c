@@ -366,7 +366,7 @@ int traceserver_init(FILE ** fpin, char * fin,
       
       /* set tracr, write trace to output file */
       tr.tracr=ntr[ir];
-      //      fputtr(*fpout,&tr);
+      /*      fputtr(*fpout,&tr); */
       
       /* trace reading loop */
       while (fgettr(*fpin,&tr)) {
@@ -465,7 +465,7 @@ int traceserver_init(FILE ** fpin, char * fin,
 	}
 	/* set tracr, write trace to output */
 	tr.tracr=ntr[ir];
-	//	fputtr(*fpout,&tr);
+	/*	fputtr(*fpout,&tr); */
       }
       /* set tracr, write trace to output */
       

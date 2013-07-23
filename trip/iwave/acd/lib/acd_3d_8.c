@@ -37,7 +37,7 @@ void acd_3d_8(float *** uc,
       }
     }
   }
-  // boundary conditions - note that uc[-1][i]=0 etc.
+  /* boundary conditions - note that uc[-1][i]=0 etc. */
   if (lbc[2]) {
     for (i1=s[1];i1<=e[1];i1++) {
       for (i0=s[0];i0<=e[0];i0++) {

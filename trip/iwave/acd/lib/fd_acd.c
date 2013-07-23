@@ -141,9 +141,9 @@ int acd_modelinit(PARARRAY *pars,
     fd=(FD_MODEL *)usermalloc_(sizeof(FD_MODEL));
     if (fd==NULL) return E_ALLOC;
     /* first the "base class" behaviour */
-    //  fprintf(stream,"top of acd_modelinit: im->specs=%x\n",im->specs);
+    /*  fprintf(stream,"top of acd_modelinit: im->specs=%x\n",im->specs); */
     im->specs=(void *)fd;
-    //  fprintf(stream,"top of acd_modelinit: im->specs=%x after assignment\n",im->specs);
+    /*  fprintf(stream,"top of acd_modelinit: im->specs=%x after assignment\n",im->specs); */
 
     /* allocate sgn model ----------------------------------------------------*/   
     acdpars = (ACD_TS_PARS*)usermalloc_(sizeof(ACD_TS_PARS));
@@ -154,12 +154,12 @@ int acd_modelinit(PARARRAY *pars,
 	return err;
     }
 	    
-    // assign heritage pars
+    /* assign heritage pars
     // 11.04.12: remove these
-    //  sgnm->psingle = 0; /* TODO: single pressures in Step 3 */
-    //  IASN(sgnm->eflags,IPNT_1); /* this is related - with code from old sg added, could try using this device */
+    //  sgnm->psingle = 0; // TODO: single pressures in Step 3 
+    //  IASN(sgnm->eflags,IPNT_1); // this is related - with code from old sg added, could try using this device */
 
-    // decode dimensions, parallel rank - read grid dimn on rank 0, broadcast
+    /* decode dimensions, parallel rank - read grid dimn on rank 0, broadcast */
 
     IASN(cdims, IPNT_1); /* default grid size */ 
     IASN(crank, IPNT_0); /* default cartisian ranks */ 
@@ -175,7 +175,7 @@ int acd_modelinit(PARARRAY *pars,
 
     if (rk==0) {
 #endif
-	// must read grid here, even though it's read again later
+	/* must read grid here, even though it's read again later */
 	m_ndim=0;
     
 	if (!acd_readgrid(pars, stream, im)) {
@@ -216,17 +216,17 @@ int acd_modelinit(PARARRAY *pars,
 #endif
 
 
-    // initialize scaled Courant arrays
+    /* initialize scaled Courant arrays */
     acdpars->c0=REAL_ONE;
     RASN(acdpars->c1,RPNT_0);
     RASN(acdpars->c2,RPNT_0);
     RASN(acdpars->c3,RPNT_0);
     RASN(acdpars->c4,RPNT_0);
 
-    // assign param object pointer
+    /* assign param object pointer */
     fd->fdpars = (void*)acdpars;
 
-    // assign function pointers for ACD model
+    /* assign function pointers for ACD model */
     fd->isarr  = acd_isarr;
     fd->numsubsteps = acd_numsubsteps;
     fd->update = acd_update;
@@ -243,7 +243,7 @@ int acd_modelinit(PARARRAY *pars,
     fd->fd_model_init = acd_modelinit;
     fd->fd_model_dest = acd_modeldest;
 
-    // choose time step
+    /* choose time step */
     fd->tsf=acd_step;
 
     return 0;
@@ -254,7 +254,7 @@ int acd_numsubsteps() { return 1; }
 
 int acd_modeldest(IMODEL * model) {
     FD_MODEL * fdm = (FD_MODEL *)(model->specs);
-    // since the FD_MODEL is allocated here, destroy here
+    /* since the FD_MODEL is allocated here, destroy here */
     if (fdm) userfree_(fdm);
     return 0;
 }
@@ -278,29 +278,29 @@ void acd_ts_parcopy(void * tgt, const void * src) {
 
 /*----------------------------------------------------------------------------*/
 int acd_isarr(int i) {
-    // exactly three arrays:
+    /* exactly three arrays:
     // uc = array 0
     // up = array 1
-    // csq = array 2
+    // csq = array 2 */
     if (i>-1 && i<3) return 1;
     return 0;
 }
 
 /*----------------------------------------------------------------------------*/
-// only return true for arrays actually updated!!!!!
+/* only return true for arrays actually updated!!!!! */
 int acd_update(int ia, int iv) {
-    // update all dynamical arrays on iv = 0 - this would be correct
-    // for any one-step update
+    /* update all dynamical arrays on iv = 0 - this would be correct
+    // for any one-step update */
     if (((ia==0) || (ia==1)) && iv==0) return 1;
     return 0;
 }
 
 /*----------------------------------------------------------------------------*/
 int acd_set_grid_type(FILE *stream, int ndim, IPNT gtype[RDOM_MAX_NARR] ) {
-    // all arrays defined on primal grid for ACD modeling
+    /* all arrays defined on primal grid for ACD modeling */
     int iv; 
     for (iv = 0;iv < RDOM_MAX_NARR;iv ++)  IASN(gtype[iv], IPNT_0);
-    // just an additional sanity check
+    /* just an additional sanity check */
     if ( ndim < 1 || ndim > RARR_MAX_NDIM ) return E_BADINPUT;
     return 0;
 }
@@ -328,12 +328,12 @@ int acd_modelinfo(FILE *stream, IMODEL *model)
 }
 
 /*----------------------------------------------------------------------------*/
-// this variant so simple that might as well write it from
+/* this variant so simple that might as well write it from
 // scratch, so no need for sten_dep_mat - note that all arrays in this
 // app are primal, so no
 // need for gtype. Clearly this interface should be refactored so that
 // these things can be hidden.
-// ndim (from fdpars) gtype and sten_dep_mat should be internal details
+// ndim (from fdpars) gtype and sten_dep_mat should be internal details */
 
 int acd_create_sten(FD_MODEL * fdm,
 		    FILE * stream, 
@@ -342,50 +342,50 @@ int acd_create_sten(FD_MODEL * fdm,
 		    int sten_dep_mat[RDOM_MAX_NARR][RDOM_MAX_NARR], 
 		    STENCIL * sten) {
     ACD_TS_PARS * acdpars = (ACD_TS_PARS *)(fdm->fdpars);
-    STENCIL_MASK mask;// workspace
-    int nmask;        // number of masks - dependent pairs of dynamic arrays
-    int ipair[2][2];  // index pairs for use in defining mask
-    int imask;        // mask counter
-    int idim;         // dim counter
-    int iv;           // mask entry counter
-    int len;          // length of mask - number of entries
-    int j;            // counter
-    int k;            // scheme order
-    IPNT ind;         // workspace for mask entry
+    STENCIL_MASK mask;/* workspace */
+    int nmask;        /* number of masks - dependent pairs of dynamic arrays */
+    int ipair[2][2];  /* index pairs for use in defining mask */
+    int imask;        /* mask counter */
+    int idim;         /* dim counter */
+    int iv;           /* mask entry counter */
+    int len;          /* length of mask - number of entries */
+    int j;            /* counter */
+    int k;            /* scheme order */
+    IPNT ind;         /* workspace for mask entry */
     int err = 0;
 
-    // set order variable
+    /* set order variable */
     k = acdpars->k;
 
-    // initialize index pairs
-    // first - uc->up
+    /* initialize index pairs */
+    /* first - uc->up */
     ipair[0][0] = D_UC;
     ipair[0][1] = D_UP;
-    // second - up->uc
+    /* second - up->uc */
     ipair[1][0] = D_UP;
     ipair[1][1] = D_UC;
 
-    // initialize STENCIL to null stencil
+    /* initialize STENCIL to null stencil */
     sten_setnull(sten);
   
-    // sanity check
+    /* sanity check */
     if (k < 1) {
 	fprintf(stream,"ERROR: acd_create_sten - illegal value of k = %d\n",k);
 	return E_BADINPUT;
     }
 
-    // declare number of masks: one for shape of uc->up stencil, one for
-    // shape of up->uc stencil
+    /* declare number of masks: one for shape of uc->up stencil, one for
+    // shape of up->uc stencil */
     nmask=2;
 
-    // nontrivial STENCIL initialization
+    /* nontrivial STENCIL initialization */
     if ((err = sten_create(sten,nmask))) {
 	fprintf(stream,"ERROR: acd_create_sten - failed to create stencil\n");
 	return err;
     }
 
-    // length of stencil is 2k+1 in each direction, but origin is common to all
-    // directions, so
+    /* length of stencil is 2k+1 in each direction, but origin is common to all
+    // directions, so */
     len = 2*k*ndim+1;
     for (imask=0;imask<nmask;imask++) {
 	if ((err = mask_create(&mask, ipair[imask][0], ipair[imask][1], len))) {
@@ -393,7 +393,7 @@ int acd_create_sten(FD_MODEL * fdm,
 	    sten_destroy(sten);
 	    return err;
 	}
-	// "cross stencil" - same in every dimension
+	/* "cross stencil" - same in every dimension
 	// 2d 4th order - k=0
 	// idim = 0
 	//   j = 0
@@ -402,12 +402,12 @@ int acd_create_sten(FD_MODEL * fdm,
 	//     iv=1: ind[0]=-2
 	//     iv=3  ind[0]= 2
 	// etc
-	// eventually iv = ndim*4, ind=IPNT_0
+	// eventually iv = ndim*4, ind=IPNT_0 */
 
 	for (idim=0;idim<ndim;idim++) {
 	    IASN(ind,IPNT_0);
 	    for (j=0;j<k;j++) {
-		// left half of mask on axis idim
+		/* left half of mask on axis idim */
 		ind[idim]=-j-1;
 		iv = idim*2*k+j;
 		if ((err = mask_set(&mask,iv,ind))) {
@@ -415,7 +415,7 @@ int acd_create_sten(FD_MODEL * fdm,
 		    sten_destroy(sten);
 		    return err;
 		}	
-		// right half of mask on axis idim
+		/* right half of mask on axis idim */
 		ind[idim]=j+1;
 		iv = idim*2*k+j+k;
 		if ((err = mask_set(&mask,iv,ind))) {
@@ -575,7 +575,7 @@ int acd_readtimegrid(PARARRAY *pars, FILE * stream, IMODEL * model) {
 	fprintf(stream,"  using default cfl fraction %g\n",cfl);;
 #endif
     }
-    // branch on max_step
+    /* branch on max_step */
     ps_flint(*pars,"max_step",&max_step);		
 
     ndim=(model->g).dim;
@@ -693,8 +693,8 @@ int acd_readmedia(PARARRAY * pars,
     ntot=1;
     for (i=0;i<dim;i++) ntot*=ran[i];
 
-    // set velocity limits
-    // default values - zero and infinity, not much use!
+    /* set velocity limits
+    // default values - zero and infinity, not much use! */
     if (ps_flreal(*pars,"cmax",&cmax))  {
 #ifdef IWAVE_VERBOSE
 	fprintf(stream,"NOTE: asg_readmedia - using default max velocity = %e\n",cmax);
@@ -822,44 +822,44 @@ int acd_movie_construct(MOVIE * mt, FILE * stream) {
 
 int acd_step(RDOM* dom, int iv, void * tspars) {
 
-    // pointers for 2D case
+    /* pointers for 2D case */
     register ireal ** restrict uc2;
     register ireal ** restrict up2;
     register ireal ** restrict csq2;
-    // pointers for 3D case
+    /* pointers for 3D case */
     register ireal *** restrict uc3;
     register ireal *** restrict up3;
     register ireal *** restrict csq3;
-    int ndim;                       // problem dmn
-    IPNT s, s0;                     // loop starts 
-    IPNT e, e0;                     // loop ends
+    int ndim;                       /* problem dmn */
+    IPNT s, s0;                     /* loop starts  */
+    IPNT e, e0;                     /* loop ends */
 
     ireal tmp;
     IPNT i;
 
-    // acd struct
+    /* acd struct */
     ACD_TS_PARS * acdpars = (ACD_TS_PARS *)tspars;
 
-    // extract dimn info
+    /* extract dimn info */
     ra_ndim(&(dom->_s[D_UC]),&ndim);
     ra_gse(&(dom->_s[D_UC]),s,e);
     ra_a_gse(&(dom->_s[D_UC]),s0,e0);
 
     if (ndim == 2) {
 
-	// 2D computational arrays
+	/* 2D computational arrays */
 	uc2   = (dom->_s)[D_UC ]._s2;
 	up2   = (dom->_s)[D_UP ]._s2;
 	csq2  = (dom->_s)[D_CSQ]._s2;
 
-	// 2nd order case 
+	/* 2nd order case */
 	if (acdpars->k == 1) {
 	    acd_2d_2(uc2, up2, csq2, 
 		     s, e,
 		     acdpars->c0, 
 		     acdpars->c1);
 	}
-	// 4th order case
+	/* 4th order case */
 	else if (acdpars->k == 2) {
 	    acd_2d_4(uc2, up2, csq2,
 		     s, e, 
@@ -867,7 +867,7 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
 		     acdpars->c1, acdpars->c2,
 		     acdpars->lbc, acdpars->rbc);
 	}
-	// 8th order case
+	/* 8th order case */
 	else if (acdpars->k == 4) {
 	    acd_2d_8(uc2, up2, csq2,
 		     s, e, 
@@ -897,14 +897,14 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
 	up3   = (dom->_s)[D_UP ]._s3;
 	csq3  = (dom->_s)[D_CSQ]._s3;
     
-	// 2nd order case 
+	/* 2nd order case */
 	if (acdpars->k == 1) {
 	    acd_3d_2(uc3, up3, csq3, 
 		     s, e, 
 		     acdpars->c0, 
 		     acdpars->c1);
 	}
-	// 4th order case
+	/* 4th order case */
 	else if (acdpars->k == 2) {
 	    acd_3d_4(uc3, up3, csq3,
 		     s, e, 
@@ -912,7 +912,7 @@ int acd_step(RDOM* dom, int iv, void * tspars) {
 		     acdpars->c1, acdpars->c2,
 		     acdpars->lbc, acdpars->rbc);
 	}
-	// 8th order case
+	/* 8th order case */
 	else if (acdpars->k == 4) {
 	    acd_3d_8(uc3, up3, csq3,
 		     s, e, 

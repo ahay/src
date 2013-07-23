@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     float **um,**uo,**up,**ud;/* tmp arrays */
  
     sf_init(argc,argv);
-    if(! sf_getbool("verb",&verb)) verb=0;
+    if(! sf_getbool("verb",&verb)) verb=false;
  
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-//    sf_warning("vel=%f,ww=%f,rr=%f",vv[10][10],ww[100],rr[74][74]);
+/*    sf_warning("vel=%f,ww=%f,rr=%f",vv[10][10],ww[100],rr[74][74]); */
     /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {

@@ -174,8 +174,7 @@ namespace RVL {
       //cerr<<"*** metadata:"<<endl;
       //writeMeta<MetaType>(*md,cerr);
       if (p) {
-	if (getDataSize<MetaType>(*md) <= p->getSize()-start 
-	    && start >= 0) {
+	if (getDataSize<MetaType>(*md) <= p->getSize()-start) {
 	  d = &((p->getData())[start]);
 	  own = false;
 	  return true;

@@ -9,17 +9,17 @@
 #define nx 200
 #define ny 200
 #define nz 200
-#define nt 800 //this is also the maximum iteration times
-#define C 1 //velocity speed
+#define nt 800 /* this is also the maximum iteration times */
+#define C 1 /* velocity speed */
 
-//kernel code performing the iteration
+/* kernel code performing the iteration */
 void kernel_4(float*** __restrict__ Uc, float*** __restrict__ Up, float* __restrict__ c);
 
 int main(){
     time_t start,end;
     time(&start);
     
-    //building data array Up
+    /* building data array Up */
     int i,j,k;
     float*** Up_tmp_1 = (float***)calloc(nx+3,sizeof(float**));
     if(Up_tmp_1==NULL){
@@ -46,7 +46,7 @@ int main(){
     
     float*** Up = &Up_tmp_1[1];
     
-    //building data array Uc
+    /* building data array Uc */
     float*** Uc_tmp_1 = (float***)calloc(nx+3,sizeof(float**));
     if(Uc_tmp_1==NULL){
         fprintf(stderr, "Could not allocate memory.\n");
@@ -72,13 +72,13 @@ int main(){
     
     float*** Uc = &Uc_tmp_1[1];
     
-    //initialize u0
+    /* initialize u0 */
     Uc[nx/2][ny/2][nz/2] = 1;
     
-    //iteration process...
-    //====================
+    /* iteration process... */
+    /* ==================== */
     
-    int n = 0; //iteration index
+    int n = 0; /* iteration index */
         
     float c[7];
     c[1] = C*C*T*T*nx*nx*4;
@@ -92,12 +92,12 @@ int main(){
     c[6] = -c[3]/16;
     c[0] = -15*(c[1]+c[2]+c[3])/8+1;
     
-    //calculate U(1,x,y,z)
+    /* calculate U(1,x,y,z) */
     kernel_4(Uc, Up, c); 
     
     n++;
     
-    //swipe and iterate
+    /* swipe and iterate */
     for(i=0;i<7;i++)
         c[i] *= 2;
     
@@ -114,8 +114,8 @@ int main(){
     }
     
     time(&end);
-    //Output results...
-    //=================
+    /* Output results...
+       ================= */
     float dif = difftime(end, start);
     printf("The time duration for the initilization and the loop section is %.6f seconds.\n",dif);
     
@@ -144,8 +144,8 @@ int main(){
     fclose(ofp);
     
     
-    //clean up...
-    //===========
+    /* clean up...
+       =========== */
     free(Up_tmp_1);
     free(Up_tmp_2);
     free(Up_tmp_3);

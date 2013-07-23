@@ -136,7 +136,7 @@ int movie_init(MOVIE * mt,
   (mt->mg).axes[i].n  = 1+(mt->framestop-mt->framestart)/mt->framestep;
   (mt->mg).axes[i].d  = dt;
   (mt->mg).axes[i].o  = tg->t0;
-  //  if ((mt->mg).dim>2) (mt->mg).axes[i].id = (m->g.axes[mt->dim3d].id);  
+  /*  if ((mt->mg).dim>2) (mt->mg).axes[i].id = (m->g.axes[mt->dim3d].id);  */
   (mt->mg).axes[i].id = i+1;
 
   /* compute length of each frame, create null buffer */

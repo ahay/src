@@ -30,6 +30,12 @@ for dir in srclist:
     srcs=srcs+Glob(os.path.join('..',dir,'*.cc'))
     srcs=srcs+Glob(os.path.join('..',dir,'*.cpp'))
 
+    # Solaris
+    if env['PLATFORM'] == 'sunos':
+        for x in Glob(os.path.join('..',dir,'CFL_4_*.c')):
+            if x in srcs:
+                srcs.remove(x)
+    
 # create library
 if len(srcs) > 0:
     env.Library(libname,srcs)

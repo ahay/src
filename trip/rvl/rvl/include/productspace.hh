@@ -512,7 +512,7 @@ namespace RVL {
     size_t getSize() const { return size; }
     /** return ith component; throw exception if index is out of bounds. */
     Vector<Scalar> & operator[](size_t i) {
-      if (i<0 || i>size-1) {
+      if (i>size-1) {
 	RVLException e; e<<"Error: Components::operator[]\n"; 
 	e<<"index out of range [0, "<<size-1<<"]\n";
 	throw e;
@@ -520,7 +520,7 @@ namespace RVL {
       return *(comp[i]);
     }
     Vector<Scalar> const & operator[](size_t i) const {
-      if (i<0 || i>size-1) {
+      if (i>size-1) {
 	RVLException e; e<<"Error: Components::operator[]\n"; 
 	e<<"index out of range [0, "<<size-1<<"]\n";
 	throw e;

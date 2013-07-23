@@ -53,7 +53,7 @@ namespace RVL {
   
   template<class T>
   void dejavu(size_t * i, std::vector<T *> vec) {
-    if (*i<0 || *i>vec.size()-1) { 
+    if (*i>vec.size()-1) { 
       RVLException e;
       e<<"Error: function dejavu\n";
       e<<"input int "<<*i<<" out of range [0, "<<vec.size()-1<<"].\n";

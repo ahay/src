@@ -1,9 +1,9 @@
 #ifndef _LARGEFILE_SOURCE
 #define _LARGEFILE_SOURCE
 #endif
-//#include <sys/types.h>
+/* #include <sys/types.h>
 //#include <unistd.h>
-//#include <stdio.h>
+//#include <stdio.h> */
 
 #include "iwave_fopen.h"
 
