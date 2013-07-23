@@ -18,7 +18,7 @@ namespace RVL {
   template<>
   ireal * newData<ireal,RARR>(RARR & md) {
     int err=0;
-    if (err=ra_allocate(&md)) {
+    if ((err=ra_allocate(&md))) {
       RVLException e;
       e<<"Error: newData<ireal,RARR> ContentPackage aux fcn\n";
       e<<"from ra_allocate, err="<<err<<"\n";

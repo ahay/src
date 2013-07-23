@@ -521,12 +521,13 @@ namespace TSOpt {
       protodata(_protodata),
       protog(_protog),
       data_format(_data_format),
-      fp(NULL),
+      outfile(_outfile),
       fph(NULL),
-      rd(false),
+      fp(NULL),
       panelindex(0),
       panelnum(1),
-      outfile(_outfile) {
+      rd(false)
+       {
 
     // NB: no sanity tests here, compatibility presumed
     // inherited from DCF.
@@ -624,11 +625,11 @@ namespace TSOpt {
   GridDCF::GridDCF(string _protohdr, bool _incore, ostream & _outfile)
     : protohdr(_protohdr),
       protodata(""),
-      data_type(""),
       data_format("native_float"),
+      data_type(""),
+      outfile(_outfile), 
       scfac(REAL_ONE),
       incore(_incore),
-      outfile(_outfile), 
       vol(REAL_ONE) {
 
     // sanity check
@@ -715,11 +716,12 @@ namespace TSOpt {
   GridDCF::GridDCF(GridDCF const & f) 
     : protohdr(f.protohdr),
       protodata(f.protodata),
-      incore(f.incore),
       outfile(f.outfile),
       protog(f.protog),
-      vol(f.vol),
-      scfac(f.scfac) {}
+      scfac(f.scfac),
+      incore(f.incore),
+      vol(f.vol)
+       {}
     
   GridDCF::~GridDCF() {}
     
@@ -810,7 +812,7 @@ namespace TSOpt {
     }
     userfree_(name);
     userfree_(x);
-    if (ftello(fp) != get_global_datasize_grid(g)*sizeof(ireal)) {
+    if (ftello(fp) != (off_t) (get_global_datasize_grid(g)*sizeof(ireal))) {
       RVLException e;
       e<<"Error: GridSpace constructor from grid \n";
       e<<"failed to initialize data file\n";

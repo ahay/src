@@ -15,6 +15,7 @@ namespace TSOpt {
     virtual int getPanelInd() const = 0;
     /** get the number of model-panels/records*/
     virtual int getPanelNum() const = 0;
+      virtual ~Coords() {}
   };
 
 }

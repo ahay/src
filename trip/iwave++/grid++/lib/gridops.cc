@@ -179,7 +179,7 @@ namespace TSOpt {
 	if (retrieveGlobalRank()==0) {
 	  grid const & g = gref.getGrid();
 	  for (int i=0; i< g.dim; i++) {
-	    iw[i]=w[i]/(g.axes[i].d) + 0.1;
+	      iw[i]=(int) (w[i]/(g.axes[i].d) + 0.1);
 	    iw[i]=iwave_max(iw[i],1);
 	  }
 	}
@@ -202,7 +202,7 @@ namespace TSOpt {
 	  }
 	  grid const & g = gdom.getGrid();
 	  for (int i=0; i< g.dim; i++) {
-	    iw[i]=w[i]/(g.axes[i].d) + 0.1;
+	      iw[i]=(int) (w[i]/(g.axes[i].d) + 0.1);
 	    iw[i]=iwave_max(iw[i],0);
 	  }
 	}
@@ -616,7 +616,7 @@ namespace TSOpt {
 
   GridDerivOp::GridDerivOp(Space<ireal> const & _dom,
 			   int _dir, ireal scale)
-    : dom(_dom), dir(_dir), fac(0) {
+      : dir(_dir), fac(0), dom(_dom) {
     try {
       ProductSpace<ireal> const * pdom = NULL;
       pdom = dynamic_cast<ProductSpace<ireal> const *>(&dom);
@@ -653,7 +653,7 @@ namespace TSOpt {
   }
 
   GridDerivOp::GridDerivOp(GridDerivOp const & op)
-    : dom(op.dom), dir(op.dir), fac(op.fac) {}
+      : dir(op.dir), fac(op.fac), dom(op.dom) {}
 
   void GridDerivOp::apply(Vector<ireal> const & x,
 			  Vector<ireal> & y) const {

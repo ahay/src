@@ -43,14 +43,15 @@ int acd_tsfm(RDOM * p, RDOM * r, int ia, void * fdpars) {
   register ireal ** restrict up2d;
   register ireal ** restrict csq2d;
 
-  // pointers for 3D case
+  /* pointers for 3D case
   register ireal *** restrict uc3;
   register ireal *** restrict up3;
   register ireal *** restrict csq3;
   register ireal *** restrict uc3d;
   register ireal *** restrict up3d;
   register ireal *** restrict csq3d;
-  
+  */ 
+ 
   int ndim;                       // problem dmn
   IPNT s, s0;                     // loop starts 
   IPNT e, e0;                     // loop ends
@@ -119,13 +120,15 @@ int acd_tsfm(RDOM * p, RDOM * r, int ia, void * fdpars) {
   }
   else if (ndim == 3) {
     
+      /*
     uc3    = (r->_s)[D_UC ]._s3;
     up3    = (r->_s)[D_UP ]._s3;
     csq3   = (r->_s)[D_CSQ]._s3;
     uc3d   = (p->_s)[D_UC ]._s3;
     up3d   = (p->_s)[D_UP ]._s3;
     csq3d  = (p->_s)[D_CSQ]._s3;
-    
+      */    
+
     // 2nd order case 
     if (acdpars->k == 1) {
       /*
@@ -196,14 +199,15 @@ int acd_tsam(RDOM * p, RDOM * r, int ia, void * fdpars) {
   register ireal ** restrict up2d;
   register ireal ** restrict csq2d;
 
-  // pointers for 3D case
+  /* pointers for 3D case
   register ireal *** restrict uc3;
   register ireal *** restrict up3;
   register ireal *** restrict csq3;
   register ireal *** restrict uc3d;
   register ireal *** restrict up3d;
   register ireal *** restrict csq3d;
-  
+  */
+
   int ndim;                       // problem dmn
   IPNT s, s0;                     // loop starts 
   IPNT e, e0;                     // loop ends
@@ -283,13 +287,15 @@ int acd_tsam(RDOM * p, RDOM * r, int ia, void * fdpars) {
       }
     }
 
+/*
     uc3    = (r->_s)[D_UC ]._s3;
     up3    = (r->_s)[D_UP ]._s3;
     csq3   = (r->_s)[D_CSQ]._s3;
     uc3d   = (p->_s)[D_UC ]._s3;
     up3d   = (p->_s)[D_UP ]._s3;
     csq3d  = (p->_s)[D_CSQ]._s3;
-    
+*/
+  
     // 2nd order case 
     if (acdpars->k == 1) {
       /*

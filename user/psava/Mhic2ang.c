@@ -31,10 +31,6 @@ int main(int argc, char* argv[])
     bool verb;
     bool  adj;
     bool anis;
-#ifdef _OPENMP
-    int ompnth=1;
-#endif
-
     sf_file Fcip=NULL;	/*   lag-domain CIPs */
     sf_file Fang=NULL;	/* angle-domain CIPs */
     sf_file Fvel=NULL;  /*   velocity @ CIPs */
@@ -84,7 +80,7 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);    
     
 #ifdef _OPENMP
-    ompnth=omp_init(); /* OMP parameters */
+    omp_init(); /* OMP parameters */
 #endif
 
     if(! sf_getbool("verb",&verb)) verb=false;	/* verbosity flag */

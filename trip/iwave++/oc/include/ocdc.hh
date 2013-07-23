@@ -211,9 +211,10 @@ namespace RVL {
 
     OCDC(ostream & _outfile = cerr) 
       : PackageContainer<T,M>(),
+	outfile(_outfile),
 	filename(""), 
-	tag(""),
-	outfile(_outfile) {}
+	tag("")
+	 {}
 
     virtual ~OCDC() {}
     
@@ -237,10 +238,10 @@ namespace RVL {
 	// ConstContainer<string> should be eval'd on all 
 	// processors in same way
 	ConstContainer<string> * ff = NULL;
-	if (ff=dynamic_cast<ConstContainer<string> *>(&f)) {
+	if ((ff=dynamic_cast<ConstContainer<string> *>(&f))) {
 	  AssignFilename * af = NULL;
 	  AssignTag * at = NULL;
-	  if (af=dynamic_cast<AssignFilename *>(ff)) {
+	  if ((af=dynamic_cast<AssignFilename *>(ff))) {
 	    if (filename!="") {
 	      RVLException e;
 	      e<<"Error: OCDC::eval(FO)\n";
@@ -269,7 +270,7 @@ namespace RVL {
 	  
 	    this->reset();
 	  }
-	  else if (at=dynamic_cast<AssignTag *>(ff)) {
+	  else if ((at=dynamic_cast<AssignTag *>(ff))) {
 	    this->setTag(ff->get());
 	  }
 	  else {
@@ -307,7 +308,7 @@ namespace RVL {
 		      vector<DataContainer const *> & x) const {
       try {
 	AssignParams * ff = NULL;
-	if (ff=dynamic_cast<AssignParams *>(&f)) {
+	if ((ff=dynamic_cast<AssignParams *>(&f))) {
 
 	  // reset has to be called here in case the data is temp -
 	  // then AssignFilename will not have been called prior to

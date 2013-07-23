@@ -107,7 +107,7 @@ void opendev (int argc, char* argv[])
 /*< open >*/
 {
     const char *color;
-    int dwidth, dheight, mwidth, mheight;
+    int dwidth, dheight, mwidth; /*, mheight; */
     int win_width, win_height;
 
     sf_parenv("SFPENOPTS");
@@ -144,7 +144,7 @@ void opendev (int argc, char* argv[])
     dwidth = glutGet (GLUT_SCREEN_WIDTH);
     dheight = glutGet (GLUT_SCREEN_HEIGHT);
     mwidth = glutGet (GLUT_SCREEN_WIDTH_MM);
-    mheight = glutGet (GLUT_SCREEN_HEIGHT_MM);
+/*    mheight = glutGet (GLUT_SCREEN_HEIGHT_MM); */
 
     win_height = WIN_HEIGHT;
     if (win_height > 0.85*dheight)

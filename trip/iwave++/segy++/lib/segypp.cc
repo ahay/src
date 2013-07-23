@@ -11,11 +11,11 @@ namespace TSOpt {
   SEGYDC::SEGYDC(string _hdr, ostream & _outfile)
     : OCDC<float,segy>(_outfile), 
       hdr(_hdr),
-      rd(false),
       fp(NULL),
-      off_eof(0L),
+      rd(false),
       off_cur(0L),
-      outfile(_outfile) {
+      outfile(_outfile),
+      off_eof(0L) {
     buf=new ContentPackage<float,segy>;
     segy tr;
     buf->initialize(tr);

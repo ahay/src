@@ -20,6 +20,7 @@ namespace RVL {
 	object, across processes
     */
     virtual void synch() = 0;
+      virtual ~MPISynchRoot() {};
   };
 
   /** MPI-enabled function object for serial evaluation. Simplest

@@ -36,9 +36,6 @@ int main(int argc, char* argv[])
 {
     bool verb,rflg;
     int  axis;
-#ifdef _OPENMP
-    int ompnth=1;
-#endif
 
     sf_file Fs,Fr,Fi;    /* I/O files */
     sf_axis a1,a2,a3,aa; /* cube axes */
@@ -58,7 +55,7 @@ int main(int argc, char* argv[])
 
     /* OMP parameters */
 #ifdef _OPENMP
-    ompnth=omp_init();
+    omp_init();
 #endif
     
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
