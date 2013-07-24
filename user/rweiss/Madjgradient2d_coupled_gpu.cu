@@ -356,8 +356,8 @@ int main(int argc, char* argv[])
   /**************************************************************/
   /* Handle tridiagonal solver */
   cusparseHandle_t cusparseHandle = 0;
-  cusparseStatus_t cusparseStatus;
-  cusparseStatus = cusparseCreate(&cusparseHandle);
+//  cusparseStatus_t cusparseStatus;
+//  cusparseStatus = cusparseCreate(&cusparseHandle);
 
   /**************************************************************/
   /**************************************************************/
@@ -469,60 +469,60 @@ int main(int argc, char* argv[])
   		
   		/* BASELINE */
 		setup_FD<<<dimGrid,dimBlock>>>(us1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,us1_d,nx,nw); /* US1 */
 		setup_FD<<<dimGrid,dimBlock>>>(us1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,us1_d,nx,nw);
 
 		setup_FD<<<dimGrid,dimBlock>>>(ur1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow, -caus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ur1_d,nx,nw); /* UR1 */
 		setup_FD<<<dimGrid,dimBlock>>>(ur1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow, -caus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ur1_d,nx,nw);
  
 		setup_FD<<<dimGrid,dimBlock>>>(as1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,as1_d,nx,nw); /* AS1 */
 		setup_FD<<<dimGrid,dimBlock>>>(as1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,as1_d,nx,nw);
 
 		setup_FD<<<dimGrid,dimBlock>>>(ar1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow, -caus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ar1_d,nx,nw); /* AS1 */
 		setup_FD<<<dimGrid,dimBlock>>>(ar1_d,v_d,rax_d,rbx_d,rcx_d,vel1_d,dw,ow, -caus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ar1_d,nx,nw);
   
   	 	/* MONITOR */
 		setup_FD<<<dimGrid,dimBlock>>>(us2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,us2_d,nx,nw); /* US2 */
 		setup_FD<<<dimGrid,dimBlock>>>(us2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,us2_d,nx,nw);
 
 		setup_FD<<<dimGrid,dimBlock>>>(ur2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow, -caus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ur2_d,nx,nw); /* UR2 */
 		setup_FD<<<dimGrid,dimBlock>>>(ur2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow, -caus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ur2_d,nx,nw);
  
 		setup_FD<<<dimGrid,dimBlock>>>(as2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,as2_d,nx,nw); /* AS2 */
 		setup_FD<<<dimGrid,dimBlock>>>(as2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,as2_d,nx,nw);
 
 		setup_FD<<<dimGrid,dimBlock>>>(ar2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow, -caus*aabb_h[0],aabb_h[1],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ar2_d,nx,nw); /* AS2 */
 		setup_FD<<<dimGrid,dimBlock>>>(ar2_d,v_d,rax_d,rbx_d,rcx_d,vel2_d,dw,ow, -caus*aabb_h[2],aabb_h[3],nx,nw,iz);
-		cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+		cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
 		copy_wfld<<<dimGrid,dimBlock>>>(v_d,ar2_d,nx,nw);  
   
    		/**************************************************************/

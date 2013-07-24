@@ -513,7 +513,7 @@ __global__ void make_adj_wflds_coupled( cuComplex *xig1_d,
   
       if ( ix+ih > 0 && ix-ih > 0 && ix-ih < nx && ix+ih < nx) {
 		int iaddr = ix*nh+ih+(int)(nh-1)/2;		
-		int  ind  = iw*nx+ix   ;
+		/* int  ind  = iw*nx+ix   ; */
 		int mind  = iw*nx+ix-ih;
 		int pind  = iw*nx+ix+ih;
 		
@@ -580,7 +580,7 @@ __global__ void compute_gradient(float *grd_d,
     float sum = 0.f;
     for (int iw=0; iw<nw; iw++) {
       int wa = iw*nx+ix;
-      float ww = (float)(iw-1.f)*dw+ow;
+      //float ww = (float)(iw-1.f)*dw+ow;
       //sum+=cuCimagf(cuCmulf(ur_d[wa],cuConjf(ar_d[wa])));// - cuCimagf(cuCmulf(ar_d[wa],cuConjf(ur_d[wa])));
       sum+=cuCimagf(cuCaddf(cuCmulf((us_d[wa]),cuConjf(as_d[wa])),cuCmulf((ur_d[wa]),cuConjf(ar_d[wa]))));
     }
