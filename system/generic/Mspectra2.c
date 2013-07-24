@@ -29,7 +29,7 @@ int main (int argc, char* argv[])
 {
     int nw, n1, n2, nk, n3, ni, nfft, i, i1, i2, i3;
     float d1, o1, d2, o2, dw, dk, k0, **spec, scale, *trace, **traces;
-    kiss_fft_cpx **fft, *ctrace, *ctrace2;
+    kiss_fft_cpx **fft;
     char key[3];
     bool sum;
     sf_file in, out;
@@ -37,6 +37,7 @@ int main (int argc, char* argv[])
 #ifdef SF_HAS_FFTW
     fftwf_plan txfft;
 #else
+    kiss_fft_cpx *ctrace, *ctrace2;
     kiss_fftr_cfg tfft;
     kiss_fft_cfg  xfft;
 #endif
@@ -71,8 +72,6 @@ int main (int argc, char* argv[])
     k0 = -0.5/d2;
 
     traces = sf_floatalloc2 (nfft,nk);
-    ctrace = (kiss_fft_cpx*) sf_complexalloc (nw);
-    ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
     fft = (kiss_fft_cpx**) sf_complexalloc2(nw,nk);
     spec = sf_floatalloc2(nw,nk);
 
@@ -82,6 +81,9 @@ int main (int argc, char* argv[])
 				  FFTW_ESTIMATE);
     if (NULL == txfft) sf_error("FFTW failure.");
 #else
+    ctrace = (kiss_fft_cpx*) sf_complexalloc (nw);
+    ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
+
     tfft = kiss_fftr_alloc(nfft,0,NULL,NULL);
     xfft = kiss_fft_alloc(nk,0,NULL,NULL);
 #endif

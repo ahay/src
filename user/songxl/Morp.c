@@ -24,7 +24,7 @@
 int main(int argc, char* argv[]) 
 {
     int nx,  nz,  ny, k, aj;
-    float dx, dz, dy, ox, oz, oy, dx2, dz2, dy2;
+    float dx, dz, dy, ox, oz, oy; /* dx2, dz2, dy2; */
     float vx, vy, vz, e1, e2, e3, wx, wy, wz, aa, bb, cc, r, mm;
     sf_file out, vel;
     float dkx, dkz, dky, dk2, dangle, gt, seta, phi;
@@ -76,9 +76,9 @@ int main(int argc, char* argv[])
     }
 
 
-    dx2 = dx*dx;
-    dz2 = dz*dz;
-    dy2 = dy*dy;
+/*    dx2 = dx*dx;
+      dz2 = dz*dz;
+      dy2 = dy*dy; */
     wx = vx*vx;
     wy = vy*vy;
     wz = vz*vz;

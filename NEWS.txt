@@ -101,6 +101,7 @@ In the build system:
 * Check for OpenMP even at a single-CPU system
 * Use integer*8 in f77 examples
 * Fixed suitesparse configuration
+* Fixed missing _vp.h dependence in pens/main
 
 ===Changes in defaults and interfaces===
 

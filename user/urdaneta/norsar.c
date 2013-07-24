@@ -246,7 +246,7 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
     struct point pt0, pt1, pt2, pt3;
     float A0, A1, A2, A3, s;
     float an0, an1, an2, an3;
-    int cf2, sp, nnc;
+    int sp, nnc;
     struct heptagon temp;
 
     for(ii=0;ii<*nr;ii++) {
@@ -265,7 +265,7 @@ void interpolation (struct heptagon *cube, int *nr, int nrmax, float DSmax)
 	an1 = cube[ii].angle;
 	an2 = cube[(ii+1+*nr)%*nr].angle;
 	if(ii==*nr-1) an2 += 2.*SF_PI;
-	cf2 = cube[(ii+1+*nr)%*nr].cf;
+	/* cf2 = cube[(ii+1+*nr)%*nr].cf; */
 
 	sp=ii-1;
 	while(cube[(sp+*nr)%*nr].cf==NEWC) sp--;

@@ -158,7 +158,7 @@ static int  initialized   = 0;          /* test for stream initialization */
 {
   long   i;
   long   x;
-  double u;
+  double u; 
   char   ok = 0;  
 
   SelectStream(0);                  /* select the default stream */

@@ -251,7 +251,7 @@ int main (int argc, char **argv)
 	}
 	
 	for (iw=0; iw < nw; iw++) { /* loop over frequencies */
-	    w = iw*dw;
+	    w = w0+iw*dw;
 
 	    if (adj) {
 		for (ix=0; ix < nx; ix++) { /* loop over offsets */

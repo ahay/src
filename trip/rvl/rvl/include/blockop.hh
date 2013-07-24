@@ -160,8 +160,8 @@ namespace RVL {
 			const Vector<Scalar> & x,
 			Vector<Scalar> & yi) const {
       try {
-	if (i==0) export_apply(op1,x,yi);
-	else if (i==1) export_apply(op2,x,yi);
+	if (i==0) this->export_apply(op1,x,yi);
+	else if (i==1) this->export_apply(op2,x,yi);
 	else {
 	  RVLException e;
 	  e<<"Error: TensorOp::applyComponent\n";
@@ -180,8 +180,8 @@ namespace RVL {
 			   const Vector<Scalar> & dx,
 			   Vector<Scalar> & dyi) const {
       try {
-	if (i==0) export_applyDeriv(op1,x,dx,dyi);
-	else if (i==1) export_applyDeriv(op2,x,dx,dyi);
+	if (i==0) this->export_applyDeriv(op1,x,dx,dyi);
+	else if (i==1) this->export_applyDeriv(op2,x,dx,dyi);
 	else {
 	  RVLException e;
 	  e<<"Error: TensorOp::applyPartialDeriv\n";
@@ -200,8 +200,8 @@ namespace RVL {
 			      const Vector<Scalar> & dyi,
 			      Vector<Scalar> & dx) const {
       try {
-	if (i==0) export_applyAdjDeriv(op1,x,dyi,dx);
-	else if (i==1) export_applyAdjDeriv(op2,x,dyi,dx);
+	if (i==0) this->export_applyAdjDeriv(op1,x,dyi,dx);
+	else if (i==1) this->export_applyAdjDeriv(op2,x,dyi,dx);
 	else {
 	  RVLException e;
 	  e<<"Error: TensorOp::applyComponentAdjDeriv\n";

@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     float dr,ds,or,os,maxr;
 
     float rr;
-    int rloc,sloc,isr,irr;
+    int rloc, /* sloc, */ isr,irr;
 
     sf_axis at,ar,as,aout; /* Cube axes */
     int is, ir, it;
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     sf_floatread( in[0][0],ns*nr*nt,Fin );
 	
     for (is=0; is < ns; is++) {
-	sloc = (int)((os+is*ds)/dr);
+	/* sloc = (int)((os+is*ds)/dr); */
 		
 	for (ir=0; ir < nr; ir++) {
 

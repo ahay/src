@@ -57,7 +57,7 @@ env.RSF_Include('xtpen',prefix='pen_')
 
 if inc and lib:
     obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
-    env.Depends(obj,['xtpen.h','../include/gendoc.h'])
+    env.Depends(obj,['xtpen.h','../include/gendoc.h','_vp.h'])
     xtmain = env.Program('xtpen',[obj,]+objects,
                          LIBPATH=env.get('LIBPATH',[])+lib,
                          LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
@@ -74,7 +74,7 @@ env.RSF_Include('x11pen',prefix='pen_')
 
 if inc and lib:
     obj = env.StaticObject('x11pen.c',CPPPATH=env.get('CPPPATH',[])+inc)
-    env.Depends(obj,['x11pen.h','../include/gendoc.h'])
+    env.Depends(obj,['x11pen.h','../include/gendoc.h','_vp.h'])
     main = env.Program('x11pen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
@@ -89,7 +89,7 @@ mains.append(main)
 
 env.RSF_Include('pspen',prefix='pen_')
 obj = env.StaticObject('pspen.c')
-env.Depends(obj,['pspen.h','../include/gendoc.h'])
+env.Depends(obj,['pspen.h','../include/gendoc.h','_vp.h'])
 main = env.Program('pspen',[obj,]+objects)
 mains.append(main)
 
@@ -113,7 +113,7 @@ for pen in ('ppm','tiff','jpeg'):
         else:
             obj = env.StaticObject(name+'.o','raspen.c',
                                    CPPDEFINES=defines)
-        env.Depends(obj,['raspen.h','../include/gendoc.h'])
+        env.Depends(obj,['raspen.h','../include/gendoc.h','_vp.h'])
         main = env.Program(name,[obj,]+objects,
                            LIBS=[lib]+env.get('LIBS',[]))
     else:
@@ -156,7 +156,7 @@ if gd:
     obj = env.StaticObject('gdpen.o','gdpen.c',
                            CPPPATH=path,
                            CPPDEFINES=defines)
-    env.Depends(obj,['gdpen.h','../include/gendoc.h'])
+    env.Depends(obj,['gdpen.h','../include/gendoc.h','_vp.h'])
     main = env.Program('gdpen',[obj,]+objects,LIBS=libs)
 else:
     main = env.RSF_Place('gdpen',None,var='GD',package='libgd2-noxpm-dev')
@@ -184,7 +184,7 @@ for pen in ('png','pdf','svg'):
         else:
             obj = env.StaticObject(name+'.o','crpen.c',
                                    CPPDEFINES=defines)
-        env.Depends(obj,['crpen.h','../include/gendoc.h'])
+        env.Depends(obj,['crpen.h','../include/gendoc.h','_vp.h'])
         main = env.Program(name,[obj,]+objects,
                            LIBS=[lib]+env.get('LIBS',[]))
     else:
@@ -211,7 +211,7 @@ if ogl or oglflags:
             oglflags = Split(oglflags)
     obj = env.StaticObject('oglpen.c',
                            CPPPATH=[oglpath]+env.get('CPPPATH',[]))
-    env.Depends(obj,['oglpen.h','../include/gendoc.h']) 
+    env.Depends(obj,['oglpen.h','../include/gendoc.h','_vp.h']) 
     oglmain = env.Program('oglpen',[obj,]+objects,
                        LIBS=[ogl]+env.get('LIBS',[]),
                        LINKFLAGS=[oglflags]+Split(env.get('LINKFLAGS',[])))

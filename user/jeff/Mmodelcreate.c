@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
   	float **shit=NULL,**shit2=NULL;
 
   	int i1,i2,i3;
-  	int n1,n2,n3,n4;
+  	int n1,n2,n3;
   	int lind;
 
  	int ompchunk;
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
   	n1 = sf_n(a1); 
   	n2 = sf_n(a2);
   	n3 = sf_n(a3);
-  	n4 = sf_n(a4);
+/*  	n4 = sf_n(a4); */
 
   	/* Model parameter */
   	if (! sf_getfloat("d",&d)) d=n3/6.; /*Parameter in dipping plane: ax+by+cz+d=0 */

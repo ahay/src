@@ -345,10 +345,10 @@ int main(int argc, char* argv[])
   }
 
   for (iaxis=0; iaxis<SF_MAX_DIM; iaxis++){
-    sf_axis temp;
+      /* sf_axis temp; */
     output_axa_array[iaxis]=sf_iaxa(output,iaxis+1);
     if(verbose>2){
-      temp=output_axa_array[iaxis];
+	/* temp=output_axa_array[iaxis]; */
       fprintf(stderr,"axis=%d sf_n(output_axa_array[iaxis])=%d\n",
 	              iaxis+1,sf_n(output_axa_array[iaxis]));
     }

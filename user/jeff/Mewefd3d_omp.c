@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
 
     /* FDM structure */
     fdm3d    fdm=NULL;
-    abcone3d abcp=NULL,abcs=NULL;
+    abcone3d /* abcp=NULL, */ abcs=NULL;
     sponge   spo=NULL;
 
     /* I/O arrays */
@@ -365,7 +365,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-	abcp = abcone3d_make(NOP,dt,vp,fsrf,fdm);
+/*	abcp = abcone3d_make(NOP,dt,vp,fsrf,fdm); */
 	abcs = abcone3d_make(NOP,dt,vs,fsrf,fdm);
 	free(**vp); free(*vp); free(vp);
 	free(**vs); free(*vs); free(vs);

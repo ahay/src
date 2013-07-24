@@ -28,12 +28,12 @@ float dehf(float k /*current frequency*/,
 int main(int argc, char* argv[]) 
 {
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, isx, isz;
-    float dt, dx, dkx, kx, dz, dkz, kz, knx, knz, tmpdt, tmpk, pi=SF_PI, o1, o2, kx0, kz0;
+    float dt, dx, dkx, kx, dz, dkz, kz, /* knx, knz, */ tmpdt, pi=SF_PI, o1, o2, kx0, kz0;
     float **new,  **old,  **cur,  **ukr, *wav;
     float vx0, vx02,  vz0, vz02,  yi0, se0;
-    float kmax;
-    float cosg0, cosg02, sing0, sing02;
-    float vk, vk2, tmpvk, k2,  kx1, kz1;
+    /* float kmax; */
+    float cosg0, /* cosg02, */ sing0 /* , sing02 */;
+    float vk, vk2, tmpvk, /* k2,  */ kx1, kz1;
     float ***B;  
     int len;
     int *s1, *s2, is;
@@ -96,10 +96,11 @@ int main(int argc, char* argv[])
     kx0 = -0.5/dx;
     dkz = 1./(nkz*dz);
     kz0 = -0.5/dz;
+    /*
     knx = 0.5/dx*2.0*pi;
     knz = 0.5/dz*2.0*pi;
-
-    kmax = (0.5/dx > 0.5/dz)?0.5/dx*2*pi : 0.5/dz*2*pi;
+    */
+    /* kmax = (0.5/dx > 0.5/dz)?0.5/dx*2*pi : 0.5/dz*2*pi; */
     cfgx = kiss_fft_alloc(nkx,0,NULL,NULL);
     cfgxi = kiss_fft_alloc(nkx,1,NULL,NULL);
     cfgz = kiss_fft_alloc(nkz,0,NULL,NULL);
@@ -141,9 +142,9 @@ int main(int argc, char* argv[])
 
     sf_warning("vz0=%g,vx0=%g,yi0=%g,se0=%g",vz0,vx0,yi0,se0);
     cosg0 = cosf(se0);
-    cosg02 = cosg0*cosg0;
+    /* cosg02 = cosg0*cosg0; */
     sing0 = sinf(se0);
-    sing02 = sing0*sing0; 
+    /* sing02 = sing0*sing0; */ 
     vx02=vx0*vx0; 
     vz02=vz0*vz0; 
     for (ikx=0; ikx < nkx; ikx++) {
@@ -153,12 +154,12 @@ int main(int argc, char* argv[])
             kx = kx1*cosg0+kz1*sing0;
             kz = kz1*cosg0-kx1*sing0;
             tmpvk = (vx02*kx*kx+vz02*kz*kz);
-            k2 = kx1*kx1+kz1*kz1;
+            /* k2 = kx1*kx1+kz1*kz1; */
             vk2 = 0.5*tmpvk+0.5*sqrtf(tmpvk*tmpvk-8.0*yi0/(1.0+2.0*yi0)*vx02*vz02*kx*kx*kz*kz);
             vk = sqrtf(vk2);
-            tmpk = vk *dt;
+            /* tmpk = vk *dt; */
             tmpdt = 2.0*(cosf(vk*dt));
-     //       tmpdt = tmpdt * dehf(fabsf(kx1),knx,ax,factor)*dehf(fabsf(kz1),knz,az,factor);
+	    /*       tmpdt = tmpdt * dehf(fabsf(kx1),knx,ax,factor)*dehf(fabsf(kz1),knz,az,factor); */
             fcos[ikx][ikz] = tmpdt;
          }
     }
