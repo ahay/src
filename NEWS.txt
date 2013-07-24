@@ -4,6 +4,8 @@
 
 To the reproducible documents collection:
 
+* gallery: migration gallery
+
 To SCons:
 
 To documentation:

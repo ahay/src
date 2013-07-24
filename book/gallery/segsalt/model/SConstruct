@@ -1,0 +1,144 @@
+from rsf.proj import *
+
+sys.path.append('..')
+import segsalt
+
+segsalt.getvel2D('salt2')
+
+Result('salt2',
+       '''
+       grey color=j title="Velocity Model" scalebar=y bias=2500 barreverse=y
+       ''')
+
+Flow('refl','salt2',
+     '''
+     depth2time velocity=$SOURCE nt=2001 dt=0.004 |
+     ai2refl | ricker1 frequency=10 |
+     time2depth velocity=$SOURCE
+     ''')
+
+Result('refl','grey title=Reflectivity')
+
+dt = 0.002
+nt = 5001
+
+# Lowrank decomposition
+
+Flow('fft','refl','transp | fft1 | fft3 axis=2 pad=1')
+
+Flow('right left','salt2 fft',
+     '''
+     transp | scale dscale=0.5 |
+     isolr2 seed=2011 dt=%g fft=${SOURCES[1]} 
+     left=${TARGETS[1]} 
+     ''' % dt)
+
+
+# Modeling
+
+Flow('exp','refl left right',
+     '''
+     fftexp0 left=${SOURCES[1]} right=${SOURCES[2]} 
+     nt=%d dt=%g 
+     ''' % (nt,dt))
+
+Flow('exp0','exp','transp memsize=1000')
+
+Result('exp0',
+       '''
+       window n1=2501 |
+       grey title="Zero-Offset Exploding Reflector Modeling"
+       ''')
+
+# 3-D
+#####
+segsalt.getvel3D('salt3')
+     
+Result('salt3',
+       '''
+       byte clip=1 bias=2.5 |
+       grey3 frame1=100 frame2=350 frame3=350 point1=0.4 point2=0.7
+       flat=n color=j title="SEG/EAGE Salt Model" 
+       ''')
+
+Flow('refl3','salt3',
+     '''
+     depth2time velocity=$SOURCE nt=2001 dt=0.004 |
+     ai2refl | ricker1 frequency=10 |
+     time2depth velocity=$SOURCE    |
+     window j1=2 j2=2 j3=2 
+     ''')
+
+Result('refl3',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=50 frame2=175 frame3=175 point1=0.4 point2=0.7
+       flat=n title="SEG/EAGE Reflectivity" 
+       ''')
+
+# Lowrank decomposition
+
+# (z,x,y) -> (x,y,z)
+Flow('wsalt','salt3',
+     '''
+     window j1=2 j2=2 j3=2        |
+     transp plane=12 memsize=1000 | 
+     transp plane=23 memsize=1000
+     ''')
+Flow('wfft','wsalt','fft1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+
+Flow('wright wleft','wsalt wfft',
+     'isolr3 seed=2010 npk=10 eps=1e-6 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}' % dt)
+
+# Wave Propagation
+
+Flow('source',None,
+     '''
+     spike n1=800 d1=%g k1=100 | 
+     ricker1 frequency=15
+     '''% dt)
+
+Flow('wspike',None,
+     '''
+     spike n1=338 d1=0.04 o1=0 n2=338 d2=0.04 o2=0 n3=105 d3=0.04 o3=0 unit1=km k3=3 k1=169 k2=169 label1=X label3=Z |
+     smooth rect1=2 rect2=2 rect3=3 repeat=3 
+     ''')
+
+Flow('wave3 snaps','source wspike wleft wright',
+     '''
+     fftwave3 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y
+     snap=25 snaps=${TARGETS[1]}
+     ''')
+
+Result('wave3',
+       '''
+       byte gainpanel=all | transp plane=13 memsize=1000 |
+       grey3 frame2=175 frame3=175 frame1=50 point1=0.4 point2=0.7
+       flat=n title="Wave Snapshot" 
+       ''')
+
+# Modeling
+Flow('wexp','refl3 wleft wright',
+     '''
+     fftexp3
+     left=${SOURCES[1]} right=${SOURCES[2]} 
+     nt=%d dt=%g 
+     ''' % (nt,dt))
+
+# (x,y,t) -> (t,x,y)
+Flow('wexp0','wexp',
+     '''
+     transp plane=23 memsize=1000 | 
+     transp plane=12 memsize=1000 |
+     bandpass flo=2
+     ''')
+
+Result('wexp0',
+       '''
+       window n1=2501 |
+       byte gainpanel=all |
+       grey3 frame1=1250 frame2=175 frame3=175 point1=0.4 point2=0.7
+       flat=n title="Zero-Offset Exploding Reflector Modeling" 
+       ''')
+
+End()

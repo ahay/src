@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfscale', 'sfput', 'sfgrey', 'sftransp', 'sfspline', 'sfreverse', 'sfffd0']
+data=['data/marm/marmvel.hh', 'data/marm/marmexp.hh']
+size=   52959816

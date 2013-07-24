@@ -1,0 +1,50 @@
+\author{Sergey Fomel, Parvaneh Karimi, Alexander Klokov, and Xiaolei Song}
+\title{BP 1997 2.5-D model}
+
+\maketitle
+
+\begin{abstract}
+John Etgen describes this model as ``The Carpathians thrusting over the North Sea''. It was created for the 1998 SEG talk \cite[]{SEG-1998-0066} and is also mentioned by \cite{GEO65-03-09430950}. It is provided courtesy of BP.
+\end{abstract}
+
+\section{Model}
+\inputdir{model}
+
+\plot{model}{width=\textwidth}{Velocity model (section from 2.5-D).} \clearpage
+
+\plot{shots}{width=\textwidth}{Shot gathers from
+  finite-difference modeling.} \clearpage
+\plot{zo}{width=\textwidth}{Zero-offset data from
+  finite-difference modeling.} \clearpage
+
+\plot{refl}{width=\textwidth}{Exploding reflector.} \clearpage
+\plot{twexp}{width=\textwidth}{High-resolution zero-offset data modeled from exploding-reflector modeling.} \clearpage
+
+
+\section{Lowrank RTM}
+\inputdir{lowrank}
+
+\plot{zomigt}{width=\textwidth}{Zero-offset RTM image by the lowrank method using high-resolution data.} \clearpage
+
+\section{FFD RTM}
+\inputdir{ffd}
+
+%\plot{rtm}{width=\textwidth}{Prestack RTM image by Fourier finite-differences.} \clearpage
+\plot{rtmth}{width=\textwidth}{Prestack RTM image by Fourier finite-differences.} \clearpage
+
+\section{Multi-arrival Kirchhoff migration}
+\inputdir{kirMulti}
+
+\plot{twohalf-timage}{width=\textwidth}{Prestack multi-arrival Kirchhoff migration.} \clearpage
+\plot{fig8800}{width=\textwidth}{Common-image gather in (a) the dip-angle domain and 
+(b) the scattering-angle domain from position 8.8~km.} \clearpage
+\plot{fig15500}{width=\textwidth}{Common-image gather in (a) the dip-angle domain and 
+(b) the scattering-angle domain from position 15.5~km.} \clearpage
+
+\section{One-way wave extrapolation}
+\inputdir{oway}
+
+\plot{mig}{width=\textwidth}{Zero-offset image by one-way wave-equation migration using extended split-step approximation.} \clearpage
+
+\bibliographystyle{seg}
+\bibliography{SEG}

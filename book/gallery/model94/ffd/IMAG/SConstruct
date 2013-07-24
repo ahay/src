@@ -1,0 +1,43 @@
+from rsf.proj import *
+#for shot in range(4,6297,4):
+#Flow('tapl','Imag_0','window n1=20 | put o1=0 d1=1 n1=20 | math output="x1/20.0" | put d1=12.5')
+#Flow('tapr','Imag_0','window n1=20 | put o1=0 d1=1 n1=20 | math output="(20.0-x1)/20.0" | put d1=12.5')
+#Flow('tapm','Imag_0','window f1=40 | math output="1.0" ')
+#Flow('tap','tapl tapm tapr','cat ${SOURCES[1:3]} axis=1')
+#for shot in range(0,900,5):
+imgs=[]
+for shot in range(0,1668,6):
+    img = 'Imag_'+str(shot)
+    imgpad = 'Pad_'+str(shot)
+    Flow(imgpad,img,'pad beg1=%d end1=%d | window f1=500 n1=1668' %(shot,2668-shot))
+    imgs.append(imgpad)
+Flow('img_s',imgs,
+     '''
+     add ${SOURCES[1:278]}  | put o1=0 out=stdout 
+     ''')
+Flow('img_ps','img_s',
+     '''
+     laplace |
+     pow pow2=1.5 out=stdout  
+     ''')
+#     agc rect1=400 rect2=400 out=stdout 
+Result('img_ps',
+       '''
+       agc rect1=200 rect2=200 |
+       grey poly=y label2="Depth" label1="Distance" title="RTM Image"
+       yreverse=y transp=n gainpanel=each pclip=99 unit1="km" unit2="km"
+       screenratio=0.5 screenht=9 labelsz=6 titlesz=8
+      ''')
+Result('ffdrtm94','img_ps',
+       '''
+       agc rect1=200 rect2=200 |
+       grey poly=y label2="Depth" label1="Distance" title="RTM Image"
+       yreverse=y transp=n gainpanel=each pclip=99 unit1="km" unit2="km"
+       screenht=9 labelsz=6 titlesz=8
+      ''')
+End()
+
+
+
+
+

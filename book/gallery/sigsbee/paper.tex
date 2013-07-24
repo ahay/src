@@ -1,0 +1,76 @@
+\author{Vladimir Bashkardin, Sergey Fomel, Parvaneh Karimi, Alexander Klokov, and Xiaolei Song}
+\title{Sigsbee model}
+
+\maketitle
+
+\begin{abstract}
+The Subsalt Multiples Attenuation and Reduction Technology Joint
+Venture (SMAART JV) publicly released several data sets between
+September 2001 and November 2002.  These synthetic data model the
+geologic setting found on the Sigsbee escarpment in the deep water
+Gulf of Mexico.  Additional information may be found
+at \url{http://www.delphi.tudelft.nl/SMAART/}.  The data sets remain
+the property of SMAART and are used under the agreement found at the
+SMAART site listed above.
+\end{abstract}
+
+\section{Model}
+\inputdir{model}
+
+
+\plot{strvel}{width=\textwidth}{``Stratigraphic'' velocity model.} \clearpage
+\plot{migvel}{width=\textwidth}{``Migration'' velocity model.} \clearpage
+
+\plot{zodata}{width=\textwidth}{Zero-offset data from
+  finite-difference modeling.} \clearpage
+\plot{shots}{width=\textwidth}{Shot gathers from
+  finite-difference modeling.} \clearpage
+
+\plot{refl}{width=\textwidth}{Exploding reflector.} \clearpage
+\plot{sigexp}{width=\textwidth}{High-resolution zero-offset data modeled from exploding-reflector modeling.} \clearpage
+
+\section{Lowrank RTM}
+\inputdir{lowrank}
+
+\plot{zomig}{width=\textwidth}{Zero-offset RTM image by the lowrank method.} \clearpage
+\plot{zomigs}{width=\textwidth}{Zero-offset RTM image by the lowrank method using high-resolution data.} \clearpage
+
+\section{FFD RTM}
+\inputdir{ffd}
+
+\plot{source}{width=\textwidth}{Source wavelet for FFD RTM} \clearpage
+\plot{zomig}{width=\textwidth}{Zero-offset RTM image by Fourier finite-differences.} \clearpage
+\plot{img-ps}{width=\textwidth}{Full-offset RTM image by Fourier finite-differences.} \clearpage
+
+
+
+\section{One-way wave extrapolation}
+\inputdir{oway}
+
+
+\plot{mig}{width=\textwidth}{Zero-offset image by one-way wave-equation migration using extended split-step approximation.} \clearpage
+\plot{agc}{width=\textwidth}{PSPI wave equation image.} \clearpage
+
+
+\section{Multi-arrival Kirchhoff migration}
+\inputdir{kirMulti}
+\plot{sigs-image}{width=\textwidth}{Prestack multi-arrival Kirchhoff migration.} \clearpage
+\plot{fig6150}{width=\textwidth}{Common-image gather in (a) the dip-angle domain and 
+(b) the scattering-angle domain from position 6.15~km - sedimentary area.} \clearpage
+\plot{fig23000}{width=\textwidth}{Common-image gather in (a) the dip-angle domain and 
+(b) the scattering-angle domain from position 23~km - salt area.} \clearpage
+
+\section{Common Reflection Angle Migration}
+\inputdir{cram}
+
+\plot{sigsbdcrstk}{width=\textwidth}{Common reflection angle migration.}
+\multiplot{2}{sigsbocig0,sigsbdcig0}{width=0.45\textwidth}
+{Opening (a) and dip (b) angle gathers at 7 km.}
+\multiplot{2}{sigsbocig1,sigsbdcig1}{width=0.45\textwidth}
+{Opening (a) and dip (b) angle gathers at 11 km.}
+\multiplot{2}{sigsbocig2,sigsbdcig2}{width=0.45\textwidth}
+{Opening (a) and dip (b) angle gathers at 15 km.}
+\multiplot{2}{sigsbocig3,sigsbdcig3}{width=0.45\textwidth}
+{Opening (a) and dip (b) angle gathers at 19 km.}
+\multiplot{2}{sigsbocig4,sigsbdcig4}{width=0.45\textwidth}
+{Opening (a) and dip (b) angle gathers at 23 km.} \clearpage

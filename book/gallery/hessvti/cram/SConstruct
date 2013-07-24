@@ -1,0 +1,192 @@
+from rsf.proj import *
+
+par = {
+    'nz':1500, 'dz':0.006096, 'oz':0.0,  # Depth
+    'nx':3617, 'dx':0.006096, 'ox':0.0,  # Lateral
+    'smz':13, 'smx':13,                  # Smoothing radius for slowness
+    'na':360,                            # Number of take-off angles
+    'oazmin':80,'oazmax':60,             # Opening angle mute
+    'dazmin':90,'dazmax':40,             # Dip angle mute
+    'ts':4,'th':6,                       # Tapering in traces (shot, receiver axes)
+    'smax':1.0,'hmax':1.0,               # Escape tables filter
+# Screen params for the model
+    'scrpar':'''screenratio=0.41 screenht=5.5
+                yll=2.0 xll=1.5 crowd=0.8 labelsz=6
+                o2num=1.0 d2num=2.0 n2tic=5
+                o1num=1.0 d1num=2.0 n1tic=11
+                barmove=y tickscale=0.3
+                barwidth=0.2 label2= unit2=''',
+# Screen params for CIGs
+    'scrpar2':'''yreverse=y wanttitle=n wherexlabel=top
+                 transp=y poly=y plotcol=7 gridcol=8
+                 screenht=10 screenratio=1.25
+                 unit2="\F16 \^g\_\F-1 "'''
+}
+
+# Prepare model
+###############
+
+mods=['timodel_vp','timodel_delta','timodel_epsilon']
+for m in mods:
+    sgy = m + '.segy'
+    md5 = m + '.md5'
+    Fetch(sgy,'hessvti')
+    Flow([m,'t' + m],[sgy,md5],'''
+         segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
+         md5sum --status -c ${SOURCES[1]}
+         ''',stdin=0,stdout=0)
+
+Flow('vz',mods[0],'''
+     put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Velocity unit=km/s
+         o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
+     scale rscale=.0003048 |
+     math output="1.0/input" |
+     smooth rect1=%(smz)d rect2=%(smx)d repeat=2 |
+     math output="1.0/input"
+     ''' % par)
+Flow('delta',mods[1],'''
+     put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Delta unit=
+         o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
+     smooth rect1=%(smz)d rect2=%(smx)d repeat=2
+     ''' % par)
+Flow('epsilon',mods[2],'''
+     put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Epsilon unit=
+         o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
+     smooth rect1=%(smz)d rect2=%(smx)d repeat=2
+     ''' % par)
+
+Flow('vx',['vz','epsilon'],'''
+     math epsilon=${SOURCES[1]} output="input*sqrt(1.0 + 2.0*epsilon)"
+     ''')
+Flow('eta',['epsilon','delta'],'''
+     math delta=${SOURCES[1]} output="(input - delta)/(1.0 + 2.0*delta)" |
+     put label="Anellipticity"
+     ''')
+
+Result('hessvtivz','vz','''
+       grey title= wantitle=n allpos=y color=j
+            pclip=100 scalebar=y bartype=h
+            barlabel="V\_z\^ " barunit="km/s"
+            dbarnum=1.0 obarnum=1.5
+            bias=1.5 minval=1.5 maxval=4.5
+            %(scrpar)s
+       ''' % par)
+Result('hessvtivx','vx','''
+       grey title= wantitle=n allpos=y color=j
+            pclip=100 scalebar=y bartype=h
+            barlabel="V\_x\^ " barunit="km/s"
+            dbarnum=1.0 obarnum=1.5
+            bias=1.5 minval=1.5 maxval=4.5
+            %(scrpar)s
+       ''' % par)
+Result('hessvtieta','eta','''
+       grey title= wantitle=n allpos=y color=j
+            pclip=100 scalebar=y bartype=h
+            barlabel="\s200 \^ \F10 h \_ \F-1 \s100 "
+            dbarnum=0.025 obarnum=0.0 barunit=""
+            bias=0.0 minval=0 maxval=0.1
+            %(scrpar)s
+       ''' % par)
+
+
+Flow('vspl',['vz','vx','eta'],'''
+     bspvel2 vx=${SOURCES[1]} eta=${SOURCES[2]}
+             verb=y
+     ''')
+
+# Escape tables with ray tracing in reduced phase space
+###############
+
+Flow('hessvtinesc',['vz','vspl'],'''
+     escrt2 verb=y na=%(na)d vspl=${SOURCES[1]}
+     ''' % par, split=[2,par['nx'],[0]], reduce='cat axis=4')
+
+# Angle migration
+###############
+
+# Shot data
+data1 = 'timodel_shot_data_II_shot001-320'
+data2 = 'timodel_shot_data_II_shot321-720'
+#Fetch(data1 ,'hessvti')
+#Fetch(data2 ,'hessvti')
+Flow(['data1','tdata1'],[data1 + '.segy',data1 + '.md5'],'''
+     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
+     md5sum --status -c ${SOURCES[1]}
+     ''',stdin=0,stdout=0)
+Flow(['data2','tdata2'],[data2 + '.segy',data2 + '.md5'],'''
+     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
+     md5sum --status -c ${SOURCES[1]}
+     ''',stdin=0,stdout=0)
+Flow('tdata',['tdata1','tdata2'],'''
+     cat axis=2 space=n ${SOURCES[1]}
+     ''')
+# Data binning
+Flow('si','tdata','''
+     dd type=float | headermath output="sy" |
+     window | math output="input/100"
+     ''')
+Flow('oi','tdata','''
+     dd type=float | headermath output="offset" |
+     window | math output="input/40"
+     ''')
+Flow('os',['oi','si'],'''
+     cat axis=2 space=n ${SOURCES[1]} |
+     transp | dd type=int
+     ''')
+
+# Compose data into common-shot gathers,
+# remove bad sample at shot 388, receiver 1053,
+# pad by 70ms to account for the shift in the source
+Flow('data',['data1','data2','os'],'''
+     cat axis=2 space=n ${SOURCES[1]} |
+     intbin head=${SOURCES[2]} xkey=0 ykey=1 |
+     put label1=Time unit1=s o1=-0.07
+         label2=Offset unit2=km o2=0.0 d2=0.012192
+         label3=Shot unit3=km o3=0.0 d3=0.03048 |
+     cut n3=1 f3=172 n2=1 f2=387 n1=1 f1=1052 |
+     pcrdata2 absoff=n KMAH=y filter=y verb=y
+     ''')
+
+# Migration
+Flow(['hessvtiocram','hessvtidcram','hessvtioill','hessvtidill','hessvtiosmb'],
+     ['hessvtinesc','data','vz'],'''
+     cram2 data=${SOURCES[1]} vz=${SOURCES[2]}
+           mute=y oazmin=%(oazmin)g oazmax=%(oazmax)g
+                  dazmin=%(dazmin)g dazmax=%(dazmax)g
+           ts=%(ts)d th=%(th)d
+           dipagath=${TARGETS[1]} smax=%(smax)g hmax=%(hmax)g
+           imap=${TARGETS[2]} dipimap=${TARGETS[3]}
+           smap=${TARGETS[4]}
+     ''' % par, split=[4,par['nx'],[0]], reduce='cat axis=3')
+
+# Plotting
+###############
+
+# Stack
+Flow('hessvtidcrstk',['hessvtidill','hessvtidcram'],'''
+     dd type=float |
+     math d=${SOURCES[1]} output="d/(input+1)" |
+     stack axis=1
+     ''')
+
+Result('hessvtidcrstk','''
+       grey title= wantitle=n pclip=99.7 scalebar=n
+            %(scrpar)s
+       ''' % par)
+
+# Image gathers
+cigs = [7,11.5,17]
+for i in range(len(cigs)):
+    ocig = 'hessvtiocig%d' % i
+    dcig = 'hessvtidcig%d' % i
+    Result(ocig,'hessvtiocram','''
+           window sfwindow min3=%g max3=%g j1=2 | transp |
+           wiggle pclip=99.8 zplot=1.2 label2="\F10 g \F-1 " %s
+           ''' % (cigs[i],cigs[i],par['scrpar2']))
+    Result(dcig,'hessvtidcram','''
+           window sfwindow min3=%g max3=%g j1=6 | transp |
+           wiggle pclip=99.8 zplot=1.2 label2="\F10 v \F-1 " %s
+           ''' % (cigs[i],cigs[i],par['scrpar2']))
+
+End()
+

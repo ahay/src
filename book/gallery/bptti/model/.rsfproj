@@ -1,0 +1,3 @@
+uses=['sfsegyread', 'sfput', 'sftransp', 'sfwindow', 'sfgrey', 'sfscale', 'sfmath', 'sfcat', 'sfintbin', 'sfbyte', 'sfgrey3', 'sfcut', 'sfpow']
+data=['LOCAL', 'LOCAL', 'LOCAL', 'LOCAL', 'LOCAL']
+size= 19640116668
