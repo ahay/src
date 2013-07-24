@@ -70,6 +70,7 @@ To programs:
 * sfheadermath works with integer input
 * user/zedong: new contributor (Zedong Wu)
 * add Misolr25.cc which is double precision version using lowrank 
+* sfsegyheader: round-up for "delrt" and "dt" was fixed (aklokov)
 
 ===Bug fixes===
 
