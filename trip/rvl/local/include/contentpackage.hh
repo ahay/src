@@ -682,7 +682,7 @@ namespace RVL {
 	  return false;
 	}
 	SingleDataContainerFactory<Datatype,Metatype> const * dcfptr = NULL;
-	if (dcfptr = dynamic_cast<SingleDataContainerFactory<Datatype,Metatype> const *>(dcfptr)) {
+	if ((dcfptr = dynamic_cast<SingleDataContainerFactory<Datatype,Metatype> const *>(dcfptr))) {
 	  if (!(dcfptr->g)) {
 	    cerr<<"Warning: GridDataContainerFactory::compare\n";
 	    cerr<<"cannot compare this to uninitialized factory\n";
@@ -705,7 +705,7 @@ namespace RVL {
 	  return false;
 	}
 	SingleDataContainer<Datatype,Metatype> const * dcptr = NULL;
-	if (dcptr = dynamic_cast<SingleDataContainer<Datatype,Metatype> const *>(&dc)) 
+	if ((dcptr = dynamic_cast<SingleDataContainer<Datatype,Metatype> const *>(&dc))) 
 	if (*g == dcptr->getMetadata()) return true;
 	return false;
       }

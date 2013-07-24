@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     float ***out=NULL;
 
     int nt,nr,ns,nrout;
-    float dr,ds,or,os,maxr;
+    float dr,ds,or,maxr;
 
     float rr;
     int rloc, /* sloc, */ isr,irr;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 
     nt = sf_n(at); 
     nr = sf_n(ar); dr = sf_d(ar); or = sf_o(ar);
-    ns = sf_n(as); ds = sf_d(as); os = sf_o(as);
+    ns = sf_n(as); ds = sf_d(as); /* os = sf_o(as); */
 
     maxr=-((float)(nr-1)*dr+or);
     nrout = 2*(int)(-maxr/dr)+1;

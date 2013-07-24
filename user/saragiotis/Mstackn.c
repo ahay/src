@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 		sf_floatread(dat[0],n12,in);
 		
 		if (i3==0 || nm2>1) {	
-			if (minflag) {	// read min values and transform them to indices
+		    if (minflag) {	/* read min values and transform them to indices */
 				sf_floatread(min,n1,minin);
 				for (i1=0; i1<n1; i1++) {
 					min[i1] = SF_MIN(SF_MAX(o2,min[i1]), o2+(n2-1)*d2);
@@ -101,7 +101,7 @@ int main (int argc, char* argv[])
 				for (i1=0; i1<n1; i1++) im1[i1] = 0;
 			}
 			
-			if (maxflag) {	// read max values and transform them to indices
+		    if (maxflag) {	/* read max values and transform them to indices */
 				sf_floatread(max,n1,maxin);
 				for (i1=0; i1<n1; i1++) {
 					max[i1] = SF_MIN(SF_MAX(o2,max[i1]), o2+(n2-1)*d2);

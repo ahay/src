@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     vel = sf_input("in");   /* velocity */
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histfloat(vel,"d1",&dz)) sf_error("No d1= in input");
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
     dky = 1.0/(dy*ny);
     dk2=sqrtf(dkx*dkx+dkz*dkz+dky*dky)*2.0*pi;
     dangle = pi/4;
-//    phi = pi/4;
+/*    phi = pi/4; */
     sf_putint(out,"n1",nz);
     sf_putfloat(out,"d1",dk2);
     sf_putfloat(out,"o1",oz); 

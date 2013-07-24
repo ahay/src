@@ -1874,7 +1874,7 @@ pkg['swig'] = {'fedora':'swig',
                'ubuntu':'swig',
                'darwin':'swig-python'}
 pkg['numpy'] = {'fedora':'numpy',
-                'ubuntu':'python-numpy'}
+                'ubuntu':'python-dev python-numpy'}
 
 def swig(context):
     if '-static-intel' in context.env.get('LINKFLAGS',''):

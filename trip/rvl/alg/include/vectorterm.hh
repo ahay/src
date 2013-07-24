@@ -256,7 +256,7 @@ public:
   IPThresholdTerminator( Vector<Scalar> & tx, Vector<Scalar> & ty, Scalar ttol)
     : x(tx), y(ty), tol(ttol) {
     if( ! x.inSameSpace(y) ) {
-      RVLException e; e = "Error in DiffThresholdTerminator constructor: Vectors not in same space.";
+	RVLException e; e << "Error in DiffThresholdTerminator constructor: Vectors not in same space.";
       throw e;
     }
   }

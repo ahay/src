@@ -19,7 +19,7 @@
 */
 
 #include <rsf.h>
-//#include <math.h>
+/* #include <math.h> */
 
 float comp_ncc(float *a, float *b, int n)
 /*< normalized cross-correlation >*/

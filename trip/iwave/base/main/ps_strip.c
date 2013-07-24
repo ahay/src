@@ -1,12 +1,14 @@
 #include <parser.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv) 
+{
+  PARARRAY * par = NULL;
 
   if (argc != 2) {
     fprintf(stderr,"Usage: ps_strip.x <file name>, writes to stdout\n");	
     exit(1);
   }
-  PARARRAY * par = NULL;
+
   par = ps_new();
   if (!par) {
     fprintf(stderr,"Error: ps_strip.x\n");

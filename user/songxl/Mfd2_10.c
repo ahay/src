@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     vel = sf_input("vel");   /* velocity */
     source = sf_input("in");   /* source wavlet*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nz)) sf_error("No n1= in input");

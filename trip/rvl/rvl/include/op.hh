@@ -583,7 +583,7 @@ namespace RVL {
 
       try {
 	OperatorProductDomain<Scalar> * pf = NULL;
-	if (pf = dynamic_cast<OperatorProductDomain<Scalar> *>(f)) {
+	if ((pf = dynamic_cast<OperatorProductDomain<Scalar> *>(f))) {
 	  return pf->getProductDomain();
 	}
 	else {
@@ -606,7 +606,7 @@ namespace RVL {
       try {
 	if (wx.update()) reset();
 	OperatorProductDomain<Scalar> * pf = NULL;
-	if (pf = dynamic_cast<OperatorProductDomain<Scalar> *>(f)) {
+	if ((pf = dynamic_cast<OperatorProductDomain<Scalar> *>(f))) {
 	  pf->applyPartialDeriv(i,wx.get(),yin,yout);
 	}
 	else {
@@ -631,7 +631,7 @@ namespace RVL {
       try {
 	if (wx.update()) reset();
 	OperatorProductDomain<Scalar> * pf = NULL;
-	if (pf = dynamic_cast<OperatorProductDomain<Scalar> *>(f)) {
+	if ((pf = dynamic_cast<OperatorProductDomain<Scalar> *>(f))) {
 	  pf->applyAdjPartialDeriv(i,wx.get(),yin,yout);
 	}
 	else {

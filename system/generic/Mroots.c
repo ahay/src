@@ -148,7 +148,11 @@ int main(int argc, char* argv[])
 		for (k=0; k < n-1; k++) {
 		    if (map[k] >= 0) continue;
 		    /* Euclidean distance */
+#ifdef SF_HAS_COMPLEX_H
 		    dk = cabsf(old[j]-e[k]);
+#else
+		    dk = cabsf(sf_cadd(old[j],sf_crmul(e[k],-1.0)));
+#endif
 		    if (dk < dist) {
 			m = k;
 			dist = dk;

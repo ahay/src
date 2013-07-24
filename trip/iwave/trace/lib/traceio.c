@@ -1371,7 +1371,7 @@ int init_tracegeom(tracegeom * tg,
     tmpz = vtof(hdtype("gelev"),val);
     if (tg->scalel > 0) { tmpz *=  tg->scalel; }
     if (tg->scalel < 0) { tmpz /= -tg->scalel; }
-    tmpz =- tmpz; 
+    tmpz = -tmpz; 
     
     /* For all subsequent traces read, check that traces 
        are all same length */

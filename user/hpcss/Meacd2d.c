@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     at = sf_iaxa(Fw,1); nt = sf_n(at); dt = sf_d(at);
     az = sf_iaxa(Fv,1); nz = sf_n(az); dz = sf_d(az);
     ax = sf_iaxa(Fv,2); nx = sf_n(ax); dx = sf_d(ax);
-    ah = sf_iaxa(Fv,3); nh = sf_n(ah); oh = sf_o(ah); // assume dh = dx
+    ah = sf_iaxa(Fv,3); nh = sf_n(ah); oh = sf_o(ah); /* assume dh = dx */
  
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
  
     /* read wavelet, velocity & reflectivity */
     ww=sf_floatalloc(nt);     sf_floatread(ww   ,nt   ,Fw);
-    vv=sf_floatalloc3(nz,nx,nh); sf_floatread(vv[0][0],nz*nx*nh,Fv); // Input extended model
+    vv=sf_floatalloc3(nz,nx,nh); sf_floatread(vv[0][0],nz*nx*nh,Fv); /* Input extended model */
     rr=sf_floatalloc2(nz,nx); sf_floatread(rr[0],nz*nx,Fr);
  
     /* allocate temporary arrays */
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-//    sf_warning("vel=%f,ww=%f,rr=%f,nh=%d,oh=%d",vv[15][10][10],ww[100],rr[74][74],nh,oh);
+/*    sf_warning("vel=%f,ww=%f,rr=%f,nh=%d,oh=%d",vv[15][10][10],ww[100],rr[74][74],nh,oh); */
 
     /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");

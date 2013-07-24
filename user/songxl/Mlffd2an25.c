@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
         }
     }
     srcsm_init(dx,dz);
-//    source_smooth(cur,isx,isz,wav[0]);
+/*    source_smooth(cur,isx,isz,wav[0]); */
     /* propagation in time */
     for (it=0; it < nt; it++) {
         cur[isx][isz] += wav[it];
@@ -227,21 +227,21 @@ int main(int argc, char* argv[])
                   ukr[ix][iz] /= (nkx*nkz); 
                 }
          }
-	// for (ix=4; ix < nx-4; ix++) {  
-	  //   for (iz=4; iz < nz-4; iz++) {  
+	 /* for (ix=4; ix < nx-4; ix++) {  
+	 //   for (iz=4; iz < nz-4; iz++) {  */
 	 for (ix=4; ix < nx-4; ix++) {  
 	     for (iz=4; iz < nz-4; iz++) {  
                  for (is=0; is < len; is++) {
                      new[ix][iz]  += 0.5*(ukr[ix+s2[is]][iz+s1[is]]+ukr[ix-s2[is]][iz-s1[is]])*B[is][ix][iz];
                  }
-                 //new[ix][iz] += 2.0*cur[ix][iz]-old[ix][iz];
+                 /* new[ix][iz] += 2.0*cur[ix][iz]-old[ix][iz]; */
              }
          }
                  
 	 for (ix=0; ix < nx; ix++) {  
              for(iz=0; iz < nz; iz++) {
                 new[ix][iz] += -old[ix][iz];
-               //new[ix][iz] += 2.0*cur[ix][iz]-old[ix][iz];
+		/* new[ix][iz] += 2.0*cur[ix][iz]-old[ix][iz]; */
 	        old[ix][iz] = cur[ix][iz]; 
 	        cur[ix][iz] = new[ix][iz]; 
              }
@@ -273,11 +273,11 @@ float dehf(float k /*current frequency*/,
        }
     else
          {
-       //depress =cosf(((float)(k-kmax))/((float)(kn-kmax))*pi/2.0);
-       //depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax))));
+	     /* depress =cosf(((float)(k-kmax))/((float)(kn-kmax))*pi/2.0);
+	     //depress = exp(-a*(float)((k-kmax)*(k-kmax))/((float)((kn-kmax)*(kn-kmax)))); */
        depress = exp(-a*((k-kmax)*(k-kmax))/((kn-kmax)*(kn-kmax)));
     }
-    //sf_warning("%f",depress);
+    /* sf_warning("%f",depress); */
     return(depress);
 }
            

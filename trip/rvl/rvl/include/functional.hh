@@ -482,7 +482,7 @@ namespace RVL {
       try {
 	if (wx.update()) reset();
 	FunctionalProductDomain<Scalar> * pf = NULL;
-	if (pf = dynamic_cast<FunctionalProductDomain<Scalar> *>(f)) {
+	if ((pf = dynamic_cast<FunctionalProductDomain<Scalar> *>(f))) {
 	  pf->applyHessianBlock(i,j,wx.get(),dxi,dxj);
 	}
 	else {

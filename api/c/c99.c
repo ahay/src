@@ -249,6 +249,14 @@ float hypotf(float x, float y)
 { extern double hypot(double x, double y);
  return (float) hypot(x,y);}
 
+long lrint(double num)
+/*< round to integer >*/
+{ return (long)(num < 0.0 ? (num - 0.5) : (num + 0.5)); }
+
+long long llround(double num)
+/*< round to integer >*/
+{ return (long long)(num < 0.0 ? (num - 0.5) : (num + 0.5)); }
+
 #if defined(hpux) || defined(__hpux)
 /*^*/
 

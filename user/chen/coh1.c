@@ -27,7 +27,7 @@ static int nw, n1, n2, lag1, lag2;
 static float ***u0, ***u1, **v;
 
 static void coh1_normalize(float *d, float **dn)
-// normalize a trace
+/* normalize a trace */
 {
 	int i1, iw;
 	double t1, t2;
@@ -59,7 +59,7 @@ static void coh1_normalize(float *d, float **dn)
 }
 
 static int dipscan(int n, int minl, int maxl, float *x, float **y, float *pv)
-// dip scan
+/* dip scan */
 {
 	int il, i1, max, nl;
 
@@ -86,7 +86,7 @@ void coh1_init(int win, int m1, int m2, int l1, int l2)
 	u0 = sf_floatalloc3(2*nw+1, n1, n2);
 	u1 = sf_floatalloc3(2*nw+1, n1, n2);
 	v = sf_floatalloc2(2*(l1>l2? l1:l2)+1, n2);
-	// use two d memory for OPENMP
+	/* use two d memory for OPENMP */
 }
 
 

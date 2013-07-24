@@ -1,5 +1,5 @@
 class VAI {
-    int ii;
+//    int ii;
 public:
     // constructor
     VAI(int,int);

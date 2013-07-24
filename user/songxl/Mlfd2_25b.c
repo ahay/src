@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     files1 = sf_input("s1");   /* source wavlet*/
     files2 = sf_input("s2");   /* source wavlet*/
 
-//    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input");
+/*    if (SF_FLOAT != sf_gettype(inp)) sf_error("Need float input"); */
     if (SF_FLOAT != sf_gettype(vel)) sf_error("Need float input");
     if (SF_FLOAT != sf_gettype(source)) sf_error("Need float input");
     if (!sf_histint(vel,"n1",&nz)) sf_error("No n1= in input");
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("isz",&isz)) sf_error("Need isz input");
     if (!sf_histint(G,"n1",&nxz)) sf_error("No n1= in input");
     if (!sf_histint(G,"n2",&na)) sf_error("No n2= in input");
-    //if (nx*nz != nxz) sf_error("nx*nz != nxz");
+    /* if (nx*nz != nxz) sf_error("nx*nz != nxz"); */
     if (!sf_histint(files1,"n1",&len)) sf_error("No n1= in input");
 
     if (!sf_getint("nbt",&nbt)) nbt=100;
@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
                  cur[ix][iz] = new[ix][iz];
              }
          }  
-         //bd_decay(new);
+         /* bd_decay(new); */
          bd_decay(cur);
          bd_decay(old);
          

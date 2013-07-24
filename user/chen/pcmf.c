@@ -26,9 +26,9 @@ typedef struct tag_pcmf
 	int n;
 	double **c;	
 }pcmf;
-//    n   2n
+/*    n   2n
 //   SUM  SUM  c_ij * Z^ip^j
-//   i=-n j=0
+//   i=-n j=0 */
 
 static double prod_n_m(double f0,double df,int n, int m)
 {

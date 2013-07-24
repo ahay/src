@@ -80,6 +80,8 @@ namespace TSOpt {
   /* for test purposes - nada */  
   template<typename C, typename T>
   class PolicyBase {
+  public:
+      virtual ~PolicyBase() {}
   protected:
     virtual T * create(C & c) const {
       RVLException e;

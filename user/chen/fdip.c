@@ -78,27 +78,27 @@ void fdip(float *in,float *out,
     for(i23=0;i23<n23;i23++)
 	fdip_flt1(in+n1*i23,u1+n1x3*i23);
 	
-    if(dim != 1) // need inline
+    if(dim != 1) /* need inline */
     {
 	fdip_dim2(u1,out,mask[0]);
 	out += n;
     }
 
-    if(dim != 0) // need xline
+    if(dim != 0) /* need xline */
     {
 	fdip_dim3(u1,out,mask[1]);
     }
 }
 
 static void fdip_flt1(float *in,float *out)
-// filter in time direction
+/* filter in time direction */
 {
     int i1;
 
-    // 0 boundary
+    /* 0 boundary
 //	*out++ = in[1] - 2.0*in[0];
 //	*out++ = 1.5*in[1];
-//	*out++ = 8.0*in[0] + 2.0*in[1];
+//	*out++ = 8.0*in[0] + 2.0*in[1]; */
     *out++ = 0.0;
     *out++ = 0.0;
     *out++ = 0.0;
@@ -109,13 +109,13 @@ static void fdip_flt1(float *in,float *out)
 	*out++ = 1.5 * (in[1] - in[-1]);
 	*out++ = 2.0* (in[-1] + 4.0*in[0] + in[1]);
     }
-    // n1 boundary
+    /* n1 boundary */
     *out++ = 0.0;
     *out++ = 0.0;
     *out++ = 0.0;
-//	*out++ = in[-1] - 2.0*in[0];
+/*	*out++ = in[-1] - 2.0*in[0];
 //	*out++ = -1.5*in[-1];
-//	*out++ = 8.0*in[0] + 2.0*in[-1];
+//	*out++ = 8.0*in[0] + 2.0*in[-1]; */
     in++;
 }
 

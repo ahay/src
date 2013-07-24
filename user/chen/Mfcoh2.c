@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 		
 		sf_floatwrite(u1[0], n1*n2, out);
 		if(idip) sf_floatwrite(p1[0], n1*n2, idip);
-	}else {  // end 2D begin 3D
+	}else {  /* end 2D begin 3D */
 	
 	}
 	fcoh2_close(h1);

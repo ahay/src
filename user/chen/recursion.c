@@ -38,8 +38,8 @@ void* recursion_init(int n1, int n2, op_func pop, int *para)
 	struct tag_recursion *p;
 	p=sf_alloc(1, sizeof(struct tag_recursion));
 
-	p->n1 = n1; // array size
-	p->n2 = n2; // operator size
+	p->n1 = n1; /* array size */
+	p->n2 = n2; /* operator size */
 	p->op = pop;
 
 	p->b = sf_floatalloc2(n1, p->n2);
@@ -68,13 +68,13 @@ void recursion(void *h, float*d)
 	float *pp;
 	p=(struct tag_recursion*)h;
 	
-	// update
+	/* update */
 	pp = p->b[p->n2-1];
 	for(i2=p->n2-1; i2>0; i2--) p->b[i2] = p->b[i2-1];
 	p->b[0] = pp;
 	for(i1=0; i1<p->n1; i1++) p->b[0][i1] = d[i1];
 
-//	p->upd(p->b, p->n2);
+/*	p->upd(p->b, p->n2); */
 	p->op(d, p->b, p->n1, p->n2, p->par);
 }
 

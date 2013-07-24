@@ -68,7 +68,7 @@ namespace RVLAlg {
   public:
 
     Algorithm() {}
-    ~Algorithm() {}
+    virtual ~Algorithm() {}
 
     /** 
 	This is the only required member function.  When called

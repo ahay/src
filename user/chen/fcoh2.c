@@ -24,7 +24,7 @@
 float para_intp_max(float *u, int n, int d)
 {
 	int imax, i;
-	float a, b, x, fx; // f(x) = a x^2 + b x + c
+	float a, b, x, fx; /* f(x) = a x^2 + b x + c */
 
 	for(i=1, imax=0; i<n; i++)	if(u[i*d] > u[imax*d])  imax = i;
 
@@ -37,7 +37,7 @@ float para_intp_max(float *u, int n, int d)
 	if (imax == n-1) imax = n - 2;
 
 	
-//	c = u[imax];
+/*	c = u[imax]; */
 	a = (u[(imax+1)*d] + u[(imax-1)*d]) / 2 - u[imax*d];
 	b = u[(imax+1)*d] - u[imax*d] - a;
 	x = -0.5 * b*a / (a*a+0.00000000001);

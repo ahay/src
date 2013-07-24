@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 	{
 		sf_floatread(u1[0], n1*n2, in);
 
-		// initial for first trace
+		/* initial for first trace */
 		fcoh1_acorr(u1[0], p1[0], n1, ntw);
 
 		for(i2=0; i2<n2-1; i2++)
@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 		}
 		sf_floatwrite(u1[0], n1*n2, out);
 		if(idip) sf_floatwrite(p1[0], n1*n2, idip);
-	}else {  // end 2D begin 3D
+	}else {  /* end 2D begin 3D */
 		u2 = sf_floatalloc2(n1, n2);
 		p2 = sf_floatalloc2(n1, n2);
 
