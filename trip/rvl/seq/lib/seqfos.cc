@@ -85,8 +85,8 @@ void PolyMult::operator()(SeqDC & y, SeqDC const & x) {
   //  fac.write(cerr);
 
   int deg = 0;
-  std::list<double>::iterator iy = y.get().begin();  
-  std::list<double>::const_iterator ix = x.get().begin();
+//  std::list<double>::iterator iy = y.get().begin();  
+//  std::list<double>::const_iterator ix = x.get().begin();
   std::list<double>::const_iterator ifac = fac.get().begin();
   while (ifac != fac.get().end()) {
     //    cerr<<"degree "<<deg<<endl;
@@ -121,8 +121,8 @@ void PolyMultAdj::operator()(SeqDC & y, SeqDC const & x) {
   //  fac.write(cerr);
 
   int deg = 0;
-  std::list<double>::iterator iy = y.get().begin();  
-  std::list<double>::const_iterator ix = x.get().begin();
+//  std::list<double>::iterator iy = y.get().begin();  
+//  std::list<double>::const_iterator ix = x.get().begin();
   std::list<double>::const_iterator ifac = fac.get().begin();
   //  cerr<<"loop\n";
   while (ifac != fac.get().end()) {

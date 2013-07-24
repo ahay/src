@@ -63,7 +63,7 @@ int main(int argc, char ** argv) {
   int tgx;         /* workspace */
   int tgy;         /* workspace */
   int tgelev;      /* workspace */
-  int err;         /* global error flag */
+/*  int err;         global error flag */
   int itr;         /* trace counter */
   int jtr;         /* trace counter */
   int ktr;         /* trace counter */
@@ -73,7 +73,7 @@ int main(int argc, char ** argv) {
   xargc=argc; xargv=argv;
   requestdoc(1);
 
-  err=0;
+  /* err=0; */
 
   /* extract input parameters */
   par=ps_new();
