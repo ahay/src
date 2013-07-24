@@ -315,8 +315,8 @@ int main(int argc, char* argv[])
   /**************************************************************/
   /* Handle tridiagonal solver. */
   cusparseHandle_t cusparseHandle = 0;
-  cusparseStatus_t cusparseStatus;
-  cusparseStatus = cusparseCreate(&cusparseHandle);
+  /* cusparseStatus_t cusparseStatus;
+     cusparseStatus = cusparseCreate(&cusparseHandle); */
   sf_warning("FINISHED TRIDIAG SOLVER PLAN");
 
   /**************************************************************/
@@ -331,23 +331,23 @@ int main(int argc, char* argv[])
     /* Set up FD coefficients for SWF and solve using CUSPARSE*/
     /* FIRST STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(swf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-caus*aabb_h[0],aabb_h[1],nx,nw,iz);
-    cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,swf_d,nx,nw);
     
     /* SECOND STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(swf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-caus*aabb_h[2],aabb_h[3],nx,nw,iz);
-    cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,swf_d,nx,nw);
     
     /* Set up FD coefficients for RWF and solve using CUSPARSE*/
     /* FIRST STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(rwf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[0],aabb_h[1],nx,nw,iz);
-    cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwf_d,nx,nw);
     
     /* SECOND STEP*/
     setup_FD<<<dimGrid,dimBlock>>>(rwf_d,v_d,rax_d,rbx_d,rcx_d,vel_d,dw,ow,-acaus*aabb_h[2],aabb_h[3],nx,nw,iz);
-    cusparseStatus = cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
+    cusparseCgtsvStridedBatch(cusparseHandle, nx, rcx_d, rax_d, rbx_d, v_d, nw, nx);
     copy_wfld<<<dimGrid,dimBlock>>>(v_d,rwf_d,nx,nw);
     
     /* High-angle filter FFT to kx */
