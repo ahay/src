@@ -112,12 +112,12 @@ int main(int argc, char* argv[])
 		    }
 		} else if (0==strcmp(key,"dt")) {
 		    for (i2=0; i2 < nbuf; i2++) {
-			buf[i2][i] = (int) (d1*1000000.);
+			buf[i2][i] = (int) (d1*1000000. + 0.5);
 		    }
 		} else if (0==strcmp(key,"delrt") && o1 != 0) {
 		    keys[i] = NULL;
 		    for (i2=0; i2 < nbuf; i2++) {
-			buf[i2][i] = (int) (o1*1000.);
+			buf[i2][i] = (int) (o1*1000. + 0.5);
 		    }
 		}
 	    }
