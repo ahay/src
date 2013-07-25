@@ -29,7 +29,7 @@ static float get_bias (sf_file in, float **data, int n1, int n2, int step,
 
 static void gain (sf_file in, float **data, int n1, int n2,int step,
 		  float pclip,float phalf,
-		  float *clip, float *gpow, float bias, int nt, float* buf);
+		  float *clip, float *gpow, float bias, int nt, float* buf, int cpanel);
 
 void vp_gainpar (sf_file in, float **data, 
 		 int n1, int n2 /* panel size */,
@@ -48,6 +48,7 @@ void vp_gainpar (sf_file in, float **data,
     float *buf, *clipnp, *gpownp, **data2;
     double sum;
     off_t pos=0;
+    int cpanel; /* panel counter */
 
     nt = n1 / step;
     buf = sf_floatalloc(nt*n2);
@@ -58,8 +59,12 @@ void vp_gainpar (sf_file in, float **data,
 	    *bias = get_bias(in, data, n1, n2, step, nt);
 	    if (NULL != in) sf_seek(in, pos, SEEK_SET);
 	}
-	gain (in, data, n1, n2, step, pclip, phalf,
-	      clip, gpow, *bias, nt, buf);
+	*clip = 0;
+	cpanel = 0;
+	while (*clip < 1e-6 && cpanel < n3) { /* analyze the 1st non-zero plane */
+	    gain (in, data, n1, n2, step, pclip, phalf, clip, gpow, *bias, nt, buf, cpanel);
+	    ++cpanel;
+	} 
     } else { /* gainpanel=each */
 	if (mean) {
 	    if (NULL != in) pos = sf_tell(in);
@@ -78,9 +83,9 @@ void vp_gainpar (sf_file in, float **data,
 
 	for (i3=0; i3<n3; i3++) {
 	    clipnp[i3] = 0.;
-	    gpownp[i3] = 0.;	    
+	    gpownp[i3] = 0.;
 	    gain (in, data, n1, n2, step, pclip, phalf,
-		  clipnp+i3, gpownp+i3, *bias, nt, buf);
+		  clipnp+i3, gpownp+i3, *bias, nt, buf, 0); // "0" - zero-panel is considered
 	    if (NULL == in) data += n1*n2; /* next panel */
 	}
 
@@ -118,15 +123,18 @@ static float get_bias (sf_file in, float **data, int n1, int n2, int step,
  
 static void gain (sf_file in, float **data, int n1, int n2, int step,
 		  float pclip,float phalf, float *clipp, float *gpowp, 
-		  float bias, int nt, float *buf)
+		  float bias, int nt, float *buf, int cpanel)
 {
     int j, i2, it, ntest, n;
     float clip, gpow, half;
 
     n = n2*nt;
+    const int panelsize = n1 * n2;	
 
-    if (NULL != in) sf_floatread (data[0],n1*n2,in);
-
+    if (NULL != in) {
+	sf_seek (in, cpanel * panelsize * sizeof(float), SEEK_SET);
+	sf_floatread (data[0], panelsize, in);
+    }
     for (j=i2=0; i2<n2; i2++) {
 	for (it=0; it<nt; it++, j++) {
 	    buf[j] = fabsf(data[i2][it*step]- bias);
