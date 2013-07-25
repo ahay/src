@@ -40,7 +40,7 @@ float helify(float a, float b  /* filter coefficients */,
 	cy[i1] = a + b*(middle -2*gamma*(z1+z2) - 2*(1-gamma)*z1*z2); 
     }
 
-    kolmog_init(N12,0);
+    kolmog_init(N12,0,0);
     kolmog2(cy);
 
     scale = 1./cy[0];

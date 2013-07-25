@@ -22,15 +22,16 @@
 #include "kolmog.h"
 
 static kiss_fftr_cfg forw, invs;
-static int nfft, nw, lag;
+static int nfft, nw, lag, shift;
 static sf_complex *fft;
 
-void kolmog_init(int n1, int lag1)
+void kolmog_init(int n1, int lag1, int shift1)
 /*< initialize with data length >*/
 {
     nfft = n1;
     nw = nfft/2+1;
     lag = lag1;
+    shift = shift1;
 
     fft = sf_complexalloc(nw);   
 
@@ -100,6 +101,12 @@ void kolmog2(float *trace)
 #else
 	fft[i1] = sf_crmul(cexpf(fft[i1]),1./nfft);
 #endif
+    }
+
+    if (0 != shift) {
+	for (i1=0; i1 < nw; i1++) {
+	    fft[i1] *= cexpf(sf_cmplx(0.0,2*SF_PI*i1*shift/nfft));
+	}
     }
 
     /* Inverse transform */

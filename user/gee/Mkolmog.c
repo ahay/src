@@ -21,8 +21,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "kolmog.h"
 
-int main(int argc, char* argv[]) {
-    int i1, n1, nfft, nw, lag;
+int main(int argc, char* argv[]) 
+{
+    int i1, n1, nfft, nw, lag, shift;
     float *trace;
     bool spec;
     sf_file in, out;
@@ -37,6 +38,9 @@ int main(int argc, char* argv[]) {
     if (!sf_getint("lag",&lag)) lag=0;
     /* lag for asymmetric part */
 
+    if (!sf_getint("shift",&shift)) shift=0;
+    /* time shift */
+
     if (spec) { 
 	if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
 	nfft = 2*(nw-1);
@@ -47,7 +51,7 @@ int main(int argc, char* argv[]) {
 	trace = sf_floatalloc(nfft);
 
 	sf_floatread(trace,nw,in);
-	kolmog_init(nfft,lag);
+	kolmog_init(nfft,lag,shift);
 	kolmog2(trace);
 	
 	sf_floatwrite(trace,nfft,out);
@@ -64,7 +68,7 @@ int main(int argc, char* argv[]) {
 	    trace[i1]=0.;
 	}
 
-	kolmog_init(nfft,lag);
+	kolmog_init(nfft,lag,shift);
 	kolmog(trace);
 
 	sf_floatwrite(trace,n1,out);
