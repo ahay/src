@@ -43,25 +43,25 @@ Plot('slo','graph transp=y yreverse=y min2=0.1 max2=0.6985 plotfat=0.2 plotcol=4
 
 # Apply FFT in time
 Flow('fftdata','datacpx','fft3 axis=1 pad=1 | window n1=2000 f1=2000')
-Result('fftreal','fftdata','real | grey title="real" ')
-Result('fftimag','fftdata','imag | grey title="imag" ')
-Result('fftabs','fftdata','math output="abs(input)" | real | grey title="abs" ')
+#Result('fftreal','fftdata','real | grey title="real" ')
+#Result('fftimag','fftdata','imag | grey title="imag" ')
+#Result('fftabs','fftdata','math output="abs(input)" | real | grey title="abs" ')
 
 Flow('fftdatac','fftdata','window n1=100 f1=5')
-Result('fftrealc','fftdatac','real | grey title="realc" ')
-Result('fftimagc','fftdatac','imag | grey title="imagc" ')
-Result('fftabsc','fftdatac','math output="abs(input)" | real | grey title="absc" ')
+#Result('fftrealc','fftdatac','real | grey title="realc" ')
+#Result('fftimagc','fftdatac','imag | grey title="imagc" ')
+#Result('fftabsc','fftdatac','math output="abs(input)" | real | grey title="absc" ')
 
 
 # direct Radon / single integral (vscan)
-Flow('smod','data','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
-Plot('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
-Result('smod','smod slo','Overlay')
+#Flow('smod','data','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+#Plot('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
+#Result('smod','smod slo','Overlay')
 
 # direct Radon / single integral (nearest integer interpolation)
 Flow('dimod','data','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
-Plot('dimod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="dimod" scalebar=y')
-Result('dimod','dimod slo','Overlay')
+#Plot('dimod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="dimod" scalebar=y')
+#Result('dimod','dimod slo','Overlay')
 
 # Fast Radon
 Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TARGET',stdin=0,stdout=-1)
