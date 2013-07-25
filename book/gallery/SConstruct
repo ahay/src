@@ -8,7 +8,7 @@ constant gradient marmousi sigsbee bp model94 statics94 twohalf hessvti bptti se
 # impulse responses
 # one-way wave equation
 
-Papers(copyr='Texas Consortium for Computational Seismology',
+Papers(copyr='Madagascar Developers',
        group='Madagascar Community',
        line='Migration Gallery Project',
        papers=Split(papers))

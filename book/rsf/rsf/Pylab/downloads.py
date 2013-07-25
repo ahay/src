@@ -97,7 +97,7 @@ clf()
 p1 = bar(ind,down,width)
 ylabel('Downloads')
 xticks(ind[::12]+width/2, 
-       ('6/06','6/07','6/08','6/09','6/10','6/11','6/12'))
+       ('6/06','6/07','6/08','6/09','6/10','6/11','6/12','6/13'))
 title('Cumulative Downloads')
 #grid(True)
 
