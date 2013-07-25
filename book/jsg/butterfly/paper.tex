@@ -1,4 +1,4 @@
-\published{Geophysics, 78, no. 4, S211-S219, (2013)}
+\published{Geophysics, 78, no. 4, U41-U51, (2013)}
 
 %%%%%%%%%%%%%%%%%%%%%%
 \title{A fast butterfly algorithm for generalized Radon transforms\footnote{Part of this work was presented at 82nd Annual International Meeting, SEG.}}
@@ -267,19 +267,20 @@ There is no general rule for selecting parameters $N$, $q_{k_1}$, $q_{k_2}$, ...
 
 \subsection{Synthetic data --- square sampling}
 
-We start with a simple 2D example of square sampling. Figure \ref{fig:S1_data} is a synthetic CMP gather sampled on $N_t=N_h=1000$. Figure \ref{fig:S1_fftabs} shows the absolute value of its Fourier transform on time axis. These band-limited data allow us to shorten the computational range for $f$, which can be crucial as $N$ depends on this range. In model space, the sampling sizes are chosen as $N_{\tau}=N_p=1000$. Figure \ref{fig:S1_fmod} is the output of the fast butterfly algorithm for $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$ (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125). Figure \ref{fig:S1_dimod} is the output of the {\it velocity scan}. The two methods yield nearly the same results. The fast algorithm runs in only $1.75$ s of CPU time, while the {\it velocity scan} takes about 37 s. In Figure \ref{fig:S1_diff1_rescale}, we plot the difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum}, where the relative error is $0.0178$. For reference, if we let $N=64$ and run the same test, the error decreases to $O(10^{-3})$ and the running time is 3.63 s.
+We start with a simple 2D example of square sampling. Figure \ref{fig:data} is a synthetic CMP gather sampled on $N_t=N_h=1000$. Figure \ref{fig:fftabs} shows the absolute value of its Fourier transform on time axis. These band-limited data allow us to shorten the computational range for $f$, which can be crucial as $N$ depends on this range. In model space, the sampling sizes are chosen as $N_{\tau}=N_p=1000$. Figure \ref{fig:fmod} is the output of the fast butterfly algorithm for $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$ (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125). Figure \ref{fig:dimod} is the output of the {\it velocity scan}. The two methods yield nearly the same results. The fast algorithm runs in only $1.75$ s of CPU time, while the {\it velocity scan} takes about 37 s. In Figure \ref{fig:diimod}, we plot the difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum}, where the relative error is $0.0178$. For reference, if we let $N=64$ and run the same test, the error decreases to $O(10^{-3})$ and the running time is 3.63 s.
 
 \inputdir{synth2D-1-timer}
 
 \plot{data}{width=1\textwidth}{2D synthetic CMP gather. $N_t=N_h=1000$. $\Delta t=0.004$ s, $\Delta h=0.005$ km.}
 
-\plot{fftabs}{width=1\textwidth}{The Fourier transform (absolute value) on time axis of the synthetic data in Figure \ref{fig:S1_data}.}
+\plot{fftabs}{width=1\textwidth}{The Fourier transform (absolute value) on time axis of the synthetic data in Figure \ref{fig:data}.}
 
-\plot{fmod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:S1_data}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 1.75 s}. Purple curve overlaid is the true slowness.}
+\plot{fmod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 1.75 s}. Purple curve overlaid is the true slowness.}
 
-\plot{dimod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:S1_data}. CPU time: {\bf 37.23 s}. Purple curve overlaid is the true slowness.}
+\plot{dimod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:data}. CPU time: {\bf 37.23 s}. Purple curve overlaid is the true slowness.}
 
-\plot{diimod}{width=1\textwidth}{Difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum} plotted at the same scale as in Figure \ref{fig:S1_fmod}.}
+\inputdir{.}
+\plot{diimod}{width=1\textwidth}{Difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum} plotted at the same scale as in Figure \ref{fig:fmod}.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -287,19 +288,19 @@ We start with a simple 2D example of square sampling. Figure \ref{fig:S1_data} i
 
 \subsection{Synthetic data --- rectangular sampling}
 
-We now make two synthetic datasets using rectangular sampling $N_t=4000$, $N_h=400$. The first one (Figure \ref{fig:S2_data}) has the same range as the previous example (Figure \ref{fig:S1_data}), while the second one (Figure \ref{fig:S3_data}) doubles the range of time and offset. Results of the fast algorithm are shown in Figures \ref{fig:S2_fmod} and \ref{fig:S3_fmod}. The purpose of showing these two examples is to demonstrate that the choice of $N$ does not depend on the problem size, but rather on the range of parameters --- for the data in Figure \ref{fig:S3_data}, one has to increase $N$ to preserve the same accuracy (the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125 for the first dataset, and 250 for the second one).
+We now make two synthetic datasets using rectangular sampling $N_t=4000$, $N_h=400$. The first one (Figure \ref{fig:data-2}) has the same range as the previous example (Figure \ref{fig:data}), while the second one (Figure \ref{fig:data-3}) doubles the range of time and offset. Results of the fast algorithm are shown in Figures \ref{fig:fmod-2} and \ref{fig:fmod-3}. The purpose of showing these two examples is to demonstrate that the choice of $N$ does not depend on the problem size, but rather on the range of parameters --- for the data in Figure \ref{fig:data-3}, one has to increase $N$ to preserve the same accuracy (the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125 for the first dataset, and 250 for the second one).
 
 \inputdir{synth2D-2}
-\plot{data}{width=1\textwidth}{2D synthetic CMP gather. $N_t=4000$, $N_h=400$. $\Delta t=0.001$ s, $\Delta h=0.0125$ km.}
+\plot{data-2}{width=1\textwidth}{2D synthetic CMP gather. $N_t=4000$, $N_h=400$. $\Delta t=0.001$ s, $\Delta h=0.0125$ km.}
 
 \inputdir{synth2D-3}
-\plot{data}{width=1\textwidth}{2D synthetic CMP gather. $N_t=4000$, $N_h=400$. $\Delta t=0.002$ s, $\Delta h=0.025$ km.}
+\plot{data-3}{width=1\textwidth}{2D synthetic CMP gather. $N_t=4000$, $N_h=400$. $\Delta t=0.002$ s, $\Delta h=0.025$ km.}
 
 \inputdir{synth2D-2}
-\plot{fmod}{width=1\textwidth}{$N_{\tau}=4000$, $N_p=400$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:S2_data}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 2.46 s}. Ref: CPU time of {\it velocity scan}: {\bf 21.84 s}. Purple curve overlaid is the true slowness.}
+\plot{fmod-2}{width=1\textwidth}{$N_{\tau}=4000$, $N_p=400$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data-2}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 2.46 s}. Ref: CPU time of {\it velocity scan}: {\bf 21.84 s}. Purple curve overlaid is the true slowness.}
 
 \inputdir{synth2D-3}
-\plot{fmod}{width=1\textwidth}{$N_{\tau}=4000$, $N_p=400$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:S3_data}. $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 4.35 s}. Ref: CPU time of {\it velocity scan}: {\bf 21.93 s}. Purple curve overlaid is the true slowness.}
+\plot{fmod-3}{width=1\textwidth}{$N_{\tau}=4000$, $N_p=400$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data-3}. $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$. CPU time: {\bf 4.35 s}. Ref: CPU time of {\it velocity scan}: {\bf 21.93 s}. Purple curve overlaid is the true slowness.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -311,14 +312,14 @@ Going back to the five steps of the butterfly algorithm, it is clear that the in
 \begin{equation}
 (Rd)(\tau,p)=\iint d(\sqrt{\tau^2+p^2(h_1^2+h_2^2)},h_1,h_2)\,dh_1\,dh_2,
 \end{equation}
-where $d(t,h_1,h_2)$ is a 3D function. All we need is to introduce a new variable for the absolute offset $h=\sqrt{h_1^2+h_2^2}$, and reorder the values $d(t,h_1,h_2)$ according to $h$. Figure \ref{fig:S4_data} shows such synthetic data sampled on $N_t=1000$, $N_{h_1}=N_{h_2}=128$. The output is obtained on $N_{\tau}=1000$, $N_p=128$. The fast algorithm (Figure \ref{fig:S4_fmod}) runs in only 1.67 s for $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=5$ (here the range of $\Phi=f\sqrt{\tau^2+p^2(h_1^2+h_2^2)}$ is about 162), while the {\it velocity scan} (Figure \ref{fig:S4_dimod}) takes more than 125 s.
+where $d(t,h_1,h_2)$ is a 3D function. All we need is to introduce a new variable for the absolute offset $h=\sqrt{h_1^2+h_2^2}$, and reorder the values $d(t,h_1,h_2)$ according to $h$. Figure \ref{fig:data-4} shows such synthetic data sampled on $N_t=1000$, $N_{h_1}=N_{h_2}=128$. The output is obtained on $N_{\tau}=1000$, $N_p=128$. The fast algorithm (Figure \ref{fig:fmod-4}) runs in only 1.67 s for $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=5$ (here the range of $\Phi=f\sqrt{\tau^2+p^2(h_1^2+h_2^2)}$ is about 162), while the {\it velocity scan} (Figure \ref{fig:dimod-4}) takes more than 125 s.
  
 \inputdir{synth2D-4}
-\plot{data}{width=1\textwidth}{3D synthetic CMP gather. $N_t=1000$, $N_{h_1}=N_{h_2}=128$. $\Delta t=0.004$ s, $\Delta h_1=\Delta h_2=0.08$ km.}
+\plot{data-4}{width=1\textwidth}{3D synthetic CMP gather. $N_t=1000$, $N_{h_1}=N_{h_2}=128$. $\Delta t=0.004$ s, $\Delta h_1=\Delta h_2=0.08$ km.}
 
-\plot{fmod}{width=1\textwidth}{$N_{\tau}=1000$, $N_p=128$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:S4_data}. $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=5$. CPU time: {\bf 1.67 s}. Purple curve overlaid is the true slowness.}
+\plot{fmod-4}{width=1\textwidth}{$N_{\tau}=1000$, $N_p=128$. Output of the fast butterfly algorithm applied to the synthetic data in Figure \ref{fig:data-4}. $N=64$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=5$. CPU time: {\bf 1.67 s}. Purple curve overlaid is the true slowness.}
 
-\plot{dimod}{width=1\textwidth}{$N_{\tau}=1000$, $N_p=128$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:S4_data}. CPU time: {\bf 125.54 s}. Purple curve overlaid is the true slowness.}
+\plot{dimod-4}{width=1\textwidth}{$N_{\tau}=1000$, $N_p=128$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:data-4}. CPU time: {\bf 125.54 s}. Purple curve overlaid is the true slowness.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -328,16 +329,16 @@ where $d(t,h_1,h_2)$ is a 3D function. All we need is to introduce a new variabl
 
 \subsection{Field data}
 
-We now consider a 2D field seismic gather shown in Figure \ref{fig:F1_samiss1}. Its Fourier transform is shown in Figure \ref{fig:F1_fftabs}. Due to the comparatively wide frequency bandwidth, $N$ cannot be chosen too small (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 306). The input sampling sizes are $N_t=1500$, $N_h=240$, while the output sizes are chosen as $N_{\tau}=1500$, $N_p=800$. Although this small dataset is not very suitable for showcasing the fast algorithm, our method runs in 6.62 s for $N=128$, $q_{k_1}=q_{x_1}=7$, $q_{k_2}=q_{x_2}=5$ (Figure \ref{fig:F1_fmod}), still outperforming the {\it velocity scan} which takes about 10 s (Figure \ref{fig:F1_dimod}). Note that the simplest interpolation is used in the {\it velocity scan}, any other higher order interpolation should take longer computation time.
+We now consider a 2D field seismic gather shown in Figure \ref{fig:samiss}. Its Fourier transform is shown in Figure \ref{fig:fftabs-f}. Due to the comparatively wide frequency bandwidth, $N$ cannot be chosen too small (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 306). The input sampling sizes are $N_t=1500$, $N_h=240$, while the output sizes are chosen as $N_{\tau}=1500$, $N_p=800$. Although this small dataset is not very suitable for showcasing the fast algorithm, our method runs in 6.62 s for $N=128$, $q_{k_1}=q_{x_1}=7$, $q_{k_2}=q_{x_2}=5$ (Figure \ref{fig:fmod-f}), still outperforming the {\it velocity scan} which takes about 10 s (Figure \ref{fig:dimod-f}). Note that the simplest interpolation is used in the {\it velocity scan}, any other higher order interpolation should take longer computation time.
 
 \inputdir{field2}
 \plot{samiss}{width=1\textwidth}{2D field CMP gather. $N_t=1500$, $N_h=240$. $\Delta t=0.004$ s, $\Delta h=0.0125$ km.}
 
-\plot{fftabs}{width=1\textwidth}{The Fourier transform (absolute value) on time axis of the field data in Figure \ref{fig:F1_samiss1}.}
+\plot{fftabs-f}{width=1\textwidth}{The Fourier transform (absolute value) on time axis of the field data in Figure \ref{fig:samiss}.}
 
-\plot{fmod}{width=1\textwidth}{$N_{\tau}=1500$, $N_p=800$. Output of the fast butterfly algorithm applied to the field data in Figure \ref{fig:F1_samiss1}. $N=128$, $q_{k_1}=q_{x_1}=7$, $q_{k_2}=q_{x_2}=5$ (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 306). CPU time: {\bf 6.62 s}.}
+\plot{fmod-f}{width=1\textwidth}{$N_{\tau}=1500$, $N_p=800$. Output of the fast butterfly algorithm applied to the field data in Figure \ref{fig:samiss}. $N=128$, $q_{k_1}=q_{x_1}=7$, $q_{k_2}=q_{x_2}=5$. CPU time: {\bf 6.62 s}.}
 
-\plot{dimod}{width=1\textwidth}{$N_{\tau}=1500$, $N_p=800$. Output of the {\it velocity scan} applied to the field data in Figure \ref{fig:F1_samiss1}. CPU time: {\bf 9.91 s}.}
+\plot{dimod-f}{width=1\textwidth}{$N_{\tau}=1500$, $N_p=800$. Output of the {\it velocity scan} applied to the field data in Figure \ref{fig:samiss}. CPU time: {\bf 9.91 s}.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -361,14 +362,14 @@ then it is easy to verify that the adjoint operator $R^*$ is given by
 \end{equation}
 where $\mathcal{F}^{-1}_{f\rightarrow t}$ is the inverse Fourier transform from variable $f$ to $t$. The summation in equation \ref{invsum} again resembles an oscillatory integral operator, therefore the fast algorithm for computing $R$ applies with minor modifications. The computational cost remains the same.
 
-We consider still the first example and apply the (discrete) adjoint operators of the fast butterfly algorithm and the {\it velocity scan} respectively to the data in Figures \ref{fig:S1_fmod} and \ref{fig:S1_dimod}. The two methods produce similar results (see Figures \ref{fig:S1_fdat}, \ref{fig:S1_didat}). It is also clear that the adjoint is far from the inverse, at least for this geometry, hence some kind of least-squares implementation is needed for inversion process.
+We consider still the first example and apply the (discrete) adjoint operators of the fast butterfly algorithm and the {\it velocity scan} respectively to the data in Figures \ref{fig:fmod} and \ref{fig:dimod}. The two methods produce similar results (see Figures \ref{fig:fdat}, \ref{fig:didat}). It is also clear that the adjoint is far from the inverse, at least for this geometry, hence some kind of least-squares implementation is needed for inversion process.
 
 To further verify that the numerically computed $R^*$ is the adjoint operator of $R$, one can compare the values of $\langle Rd,Rd\rangle$ and $\langle R^*Rd,d\rangle$ for arbitrary $d$. Indeed, the proposed algorithm passed this dot-product test with a relative error of $O(10^{-7})$ in single precision.
 
 \inputdir{synth2D-1-timer}
-\plot{fdat}{width=1\textwidth}{Output of the adjoint fast butterfly algorithm applied to the data in Figure \ref{fig:S1_fmod}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$.}
+\plot{fdat}{width=1\textwidth}{Output of the adjoint fast butterfly algorithm applied to the data in Figure \ref{fig:fmod}. $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$.}
 
-\plot{didat}{width=1\textwidth}{Output of the adjoint {\it velocity scan} applied to the data in Figure \ref{fig:S1_dimod}.}
+\plot{didat}{width=1\textwidth}{Output of the adjoint {\it velocity scan} applied to the data in Figure \ref{fig:dimod}.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -394,6 +395,8 @@ We are grateful to Tariq Alkhalifah, Anatoly Baumstein, Ian Moore, Daniel Trad, 
 \append{The mathematical derivation of the fast butterfly algorithm}
 
 This appendix gives a complete derivation and description of the butterfly algorithm, which combines the low-rank approximations and the butterfly structure introduced in the main text. For more mathematical exposition, the reader is referred to \cite{CDY09}.
+
+\inputdir {.}
 
 To facilitate the presentation, we add a new figure (Figure \ref{fig:illus}) to illustrate the notations.
 
