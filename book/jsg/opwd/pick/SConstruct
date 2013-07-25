@@ -1,0 +1,83 @@
+from rsf.proj import *
+import math
+
+ref1=120
+ref2=280
+
+server={'server':os.environ.get('DATA_SERVER'),
+	'login':os.environ.get('DATA_LOGIN'),
+	'password':os.environ.get('DATA_PASSWORD')}
+
+Fetch('profile1.sgy', 'g322', server, top='pridata')
+
+Flow('g322 tfile', 'profile1.sgy',
+	'''
+	segyread tape=$SOURCE key2=cdp tfile=${TARGETS[1]}
+	| dd form=native 
+	| put o2=280
+	''', stdin=None)
+
+Flow('data','g322','window min1=1 max1=3')
+
+Plot('data', 'grey wanttitle=n')
+Result('data', 'grey wanttitle=n')
+
+Flow('dip', 'g322',
+     'dip verb=n niter=10 rect1=25 rect2=25 order=2')
+
+Flow('dip7', 'g322',
+     'dip verb=n niter=10 rect1=25 rect2=25 order=7')
+
+Flow('odip', 'g322',
+	'''
+	odip verb=n niter=10 rect1=25 rect2=25 m=2 n=2
+	| math output="tan(input)"
+	''')
+
+Flow('data-pad','data','pad beg1=50 end1=50 | bandpass fhi=60')
+Flow('data-seed','data-pad','window n2=1 f2=%d' % ref1)
+
+for case in Split('dip dip7 odip'):
+	Flow(case+'-pad', case,'window min1=0.9 max1=3.1 ')
+
+	for ref in (ref1,ref2):
+		Flow('%s-%d'%(case,ref),'%s-pad' % case,
+		     'pwpaint order=%d i0=%d eps=0.1' % ((2,7)[case=='dip7'],ref))
+	Flow('pick-'+case,'%s-%d %s-%d' % (case,ref1,case,ref2),
+	     'add ${SOURCES[1]} scale=0.5,0.5')
+		
+	Result(case,
+		'''
+		window min1=1 max1=3
+		| grey color=j scalebar=y wanttitle=n
+		clip=7 minval=-7 maxval=7 barlabel=Slope barunit=samples
+		''')
+	Plot('cont-'+case, 'pick-'+case,
+		'''
+		window min1=1 max1=3
+		| contour plotcol=0 wanttitle=n plotfat=3
+		  Xc=1.2,1.4,1.7,1.8,2.0,2.2,2.4,2.64,2.8,3.0
+		''')#
+		#c=1.3,1.45,1.6,1.8,2.0,2.2,2.4,2.6,2.8,3.0
+		#  nc=10 c0=1.2 dc=0.2
+	Plot('pick-'+case, 
+		'''
+		window min1=1 max1=3
+		| grey wanttitle=n color=j allpos=y
+		''')
+	Result('pick-'+case, 'data cont-%s'%(case), 'Overlay' )
+
+	Flow('pred-'+case,[case+'-pad','data-seed'],
+	     '''
+             pwpaint seed=${SOURCES[1]} order=%d i0=%d eps=1
+             ''' % ((2,7)[case=='dip7'],ref1))
+	Result('pred-'+case,'grey wanttitle=n')
+
+	Flow('flat-'+case,['data-pad','pick-'+case],
+	     'iwarp warp=${SOURCES[1]} eps=0.1 o1=1 n1=1001')
+	Result('flat-'+case,'grey wanttitle=n')
+
+
+End()
+
+
