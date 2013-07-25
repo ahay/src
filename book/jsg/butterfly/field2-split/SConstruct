@@ -2,8 +2,8 @@ from rsf.proj import *
 from rsf.prog import RSFROOT
 
 # Download real data
-Result('samiss1','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
-Flow('datacpx','samiss1','rtoc')
+Result('samiss','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
+Flow('datacpx','samiss','rtoc')
 
 Nt=1500
 dt=0.004
