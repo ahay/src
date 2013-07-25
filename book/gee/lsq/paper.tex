@@ -32,7 +32,7 @@ is variously called
 ``\bx{inversion}.''
 We inspect the \bx{conjugate-direction method} of fitting
 and write a subroutine for it that will be used in most of
-the examples in this monograph.
+the examples in this book.
 %\end{notforlecture}
 
 \section{HOW TO DIVIDE NOISY SIGNALS}
@@ -168,9 +168,9 @@ Equation~(\ref{eqn:z1}) gives us one way to divide by zero.
 Another way is stated by the equation
 \begin{equation}
 X(\omega) = \frac{ \overline{F}(\omega) Y(\omega) }
-{\left(
+{\left<
 \overline{F}(\omega)  F(\omega)
-\right) }
+\right> }
 \label{eqn:z6}
 \end{equation}
 where the strange notation in the denominator means
@@ -204,15 +204,9 @@ $F(\omega, k_x)$.
 The data and its autocorrelation are in Figure~\ref{fig:antoine10}.
 
 \par
-\plot{antoine10}{width=6in,height=8.0in}{
-  2-D data (right) and a quadrant of its autocorrelation (left).
-  Notice the longest nonzero time lag on the data is about 5.5 sec
-  which is the latest nonzero signal on the autocorrelation.
-}
-\par
 The autocorrelation $a(t,x)$ of $f(t,x)$ is
 the inverse 2-D Fourier Transform  of 
-$ \overline{F}(\omega, k_x) F(\omega, k_x)$.
+$\overline{F}(\omega, k_x) F(\omega, k_x)$.
 Autocorrelations $a(x,y)$
 satisfy the symmetry relation
 $a(x,y)=a(-x,-y)$.
@@ -239,7 +233,13 @@ and with
 \label{eqn:z8}
 1 = F/F \quad \approx\quad  \frac{\overline{F}F}{\left< \overline{F}F \right>}
 \end{equation}
-
+%
+\plot{antoine10}{width=\textwidth,height=7in}{
+  2-D data (right) and a quadrant of its autocorrelation (left).
+  Notice the longest nonzero time lag on the data is about 5.5 sec
+  which is the latest nonzero signal on the autocorrelation.
+}
+%
 From Figure~\ref{fig:antoine11} we notice that both methods of
 avoiding zero division give similar results.
 By playing with the $\epsilon$ and the smoothing width
@@ -252,8 +252,8 @@ The smoothing window is in $(\omega,k_x)$ space,
 but Fourier transformation tells us its effect in $(t,x)$ space.
 
 \plot{antoine11}{width=\textwidth,height=7in}{
-  Equation~(\ref{eqn:z7}) (left) and
-  equation~(\ref{eqn:z8}) (right).
+  Equation~\ref{eqn:z7} (left) and
+  equation~\ref{eqn:z8} (right).
   Both ways of dividing by zero give similar results.
 }
 
@@ -265,7 +265,7 @@ It's not my purpose here to give a lecture on imaging theory, but
 here is an over-brief explanation.
 \par
 Imagine a downgoing wavefield $D(\omega,x,z)$. Propagating against irregularities in  the medium $D(\omega, x , z )$
-creates an upgoing wavefield $U(\omega,x,z)$.
+creates by scattering  an upgoing wavefield $U(\omega,x,z)$.
 Given $U$ and $D$, if there is a strong temporal correlation between them
 at any $(x,z)$ it likely means there is a reflector nearby that is
 manufacturing $U$ from $D$.
@@ -314,7 +314,7 @@ or
 m \eq  {\omega^2 \over \omega^2+ \epsilon^2}\  d
 \label{eqn:lowcut}
 \end{equation}
-which is a low-cut filter
+which is the low-cut filter
 with a cutoff frequency of $\omega_0=\epsilon$.
 %we found less formally earlier, equation (\ref{ajt/eqn:locut}).
 
@@ -323,7 +323,7 @@ Of some curiosity and significance is the numerical choice of $\epsilon$.
 The general theory says we need an epsilon,
 but does not say how much.
 For now let us simply rename $\epsilon=\omega_0$
-and think of it as a ``cut off frequency''.
+and think of it as a ``cut-off frequency''.
 
 %Our low-pass filter approach in Chapter \ref{ajt/paper:ajt}
 %made it quite clear that $\epsilon$ is a filter cutoff
@@ -412,7 +412,7 @@ including one trace that is slightly delayed
 as if recorded on a patch of unconsolidated {\bf soil}. 
 
 \par
-Figure~\ref{fig:residual} shows the {\bf residual}.
+Figure~\ref{fig:residual5} shows the {\bf residual}.
 The residual is small in the central region of the data;
 it is large where there is {\bf spatial alias}ing;
 and it is large at the transient onset of the signal.
@@ -500,7 +500,7 @@ we will also encounter them in abstract vector space.
 We consider first a hypothetical application
 with one data vector $\dd$ and two
 fitting vectors $\bold f_1$ and $\bold f_2$.
-Each fitting vector is also known as a ``\bx{regressor}."
+Each fitting vector is also known as a ``\bx{regressor}.''
 Our first task is to approximate the data vector $\dd$
 by a scaled combination of the two regressor vectors.
 The scale factors $x_1$ and $x_2$
@@ -521,6 +521,7 @@ gives a \bx{regressor}.
 \boxit{
         A \bx{regressor} is a column in the
         matrix of partial-derivatives, 
+
         $\partial d_i /\partial m_j$.
         }
 
@@ -548,7 +549,7 @@ We use a dot product to construct a sum of squares (also called a ``\bx{quadrati
 of the components of the residual vector:
 \begin{eqnarray}
 Q(x_1,x_2) &=& \bold r \cdot \bold r \\
-           &=&
+Q(x_1,x_2) &=&
                    (\ff_1 x_1 + \ff_2 x_2 - \dd )
            \cdot
                    (\ff_1 x_1 + \ff_2 x_2 - \dd )
@@ -744,17 +745,42 @@ We see it everywhere.
 }
 
 \par
-In our first manipulation of matrix algebra,
-we move around some parentheses in 
-(\ref{eqn:analytic}):
+Let us examine all the second derivatives of $Q(x_1,x_2)$ defined by equation (\ref{eqn:allquadratics}).
+Any multiplying $\dd$ will not survive the second derivative, so the terms we are left with are
+\begin{equation}
+Q(x_1,x_2) = (\ff_1\cdot\ff_1) x_1^2 +
+           2 (\ff_1\cdot\ff_2) x_1 x_2 +
+             (\ff_2\cdot\ff_2) x_2^2
+\end{equation}
+After taking the second derivative, we can organize all these terms in a matrix
+\begin{equation}
+\frac{\partial^2 Q}{\partial x_i\partial x_j} \eq
+        \left[
+                \begin{array}{cc}
+                        (\ff_1\cdot  \ff_1) &  (\ff_1 \cdot \ff_2)   \\
+                        (\ff_2\cdot  \ff_1) &  (\ff_2 \cdot \ff_2)  
+                \end{array}
+        \right]
+\end{equation}
+Comparing this to equation (\ref{eqn:covmat}) we conclude
+that $\bold F\T \bold F$ is a matrix of second derivatives.
+This matrix is also known as the
+\bxbx{Hessian}{Hessian}.
+This matrix often plays an important role in small problems.
+
+\par
+Larger problems tend to have insufficient computer memory for the Hessian matrix
+because it is the size of model space squared.
+Where model space is a multidimensional earth image,
+that's a large number of values even before squaring.
+Therefore, this book rarely works with the Hessian,
+working instead with gradients.
+\par
+Rearrange parentheses representing (\ref{eqn:allmats}).
 \begin{equation}
 \bold F\T \dd \eq  \bold F\T \; (\bold F   \bold x )
 \label{eqn:comp}
 \end{equation}
-Moving the parentheses implies a regrouping of terms
-or a reordering of a computation.
-You can verify the validity of moving the parentheses
-if you write (\ref{eqn:comp}) in full as the set of two equations it represents.
 Equation
 (\ref{eqn:analytic})
 led to the ``analytic'' solution (\ref{eqn:sln}).
@@ -843,13 +869,13 @@ The word ``normal'' means perpendicular.
 We can rewrite equation
 (\ref{eqn:comp})
 to emphasize the perpendicularity.
-Bring both terms to the left,
+Bring both terms to the right,
 and recall the definition of the residual $\bold r$
 from equation (\ref{eqn:resdef}):
 \begin{eqnarray}
 \label{eqn:fitorth1}
-\bold F\T ( \bold F   \bold x - \dd)  &=& \bold 0  \\
-\bold F\T  \bold r                    &=& \bold 0 
+\bold 0  &=& \bold F\T ( \bold F   \bold x - \dd)  \\
+\bold 0  &=& \bold F\T  \bold r 
 \label{eqn:fitorth2}
 \end{eqnarray}
 Equation (\ref{eqn:fitorth2}) says that the \bx{residual} vector $\bold r$
@@ -1026,12 +1052,6 @@ are required in some applications.
 This is an issue we must be continuously alert to,
 whether the cost of a method is justified by its need.
 
-
-
-
-
-
-
 %\item
 %Try other lags in~\EQN{2conv} such as
 %$(0,1,0)'$ and 
@@ -1079,9 +1099,9 @@ when he defined his temperature scale.
 %and what are the two model parameters?
 Do not solve this problem!
 Instead, cast it in the form of equation (\ref{eqn:wish1}),
-identifying the data $\bold d$ and the two column vectors
-$\bold f_1$ and
-$\bold f_2$
+identifying the data $d$ and the two column vectors
+$f_1$ and
+$f_2$
 that are the fitting functions.
 Relate the model parameters $x_1$ and $x_2$
 to the physical parameters $\alpha$ and $T_0$.
@@ -1278,8 +1298,6 @@ of the \bx{residual} vector given by
   \right]
 \label{eqn:cg1b}
 \end{eqnarray}
-
-
 \par
 A \bx{contour plot} is based on an altitude function of space.
 The altitude is the \bx{dot product}  $\bold r \cdot \bold r$.
@@ -1288,7 +1306,7 @@ we are driving the residual vector  $\bold r$  as close as we can to zero.
 If the residual vector  $\bold r$  reaches zero, then we have solved
 the simultaneous equations  $\bold d= \bold F \bold x$.
 In a two-dimensional world the vector  $\bold x$  has two components,
-$(x_1 , x_2 )$.
+$(x_1,x_2)$.
 A contour is a curve of constant
 $\bold r \cdot \bold r$  in $(x_1 , x_2 )$-space.
 These contours have a statistical interpretation as contours
@@ -1538,23 +1556,11 @@ then you should be running your solver through more iterations.
         }
 
 \subsection{Why steepest descent is so slow}
+\inputdir{Matlab}
 Before we can understand why the \bx{conjugate-direction method} is so fast,
 we need to see why the
 \bxbx{steepest-descent method}{steepest descent}
 is so slow.
-Imagine yourself sitting on the edge of a circular bowl.
-If you jump off the rim, you'll slide straight to the bottom
-at the center.
-Now imagine an ellipsoidal bowl of very large ellipticity.
-As you jump off the rim, you'll first move in the
-direction of the gradient.
-This is not towards the bottom at the center of the ellipse
-(unless you were sitting on the major or minor axis).
-\par
-We can formalize the situation.
-A parametric equation for a line is
-$\bold x=\bold x_{\rm old} +\alpha \Delta \bold x$
-where $\alpha$ is the parameter for moving on the line.
 The process of selecting $\alpha$ is called ``\bx{line search}'',
 but for a linear problem like the one we have chosen here,
 we hardly recognize choosing $\alpha$ as searching a line.
@@ -1564,7 +1570,9 @@ where the vector of unknowns $\bold x$
 has just two components, $x_1$ and $x_2$.
 Then the size of the residual vector $\bold r \cdot \bold r$ can be
 displayed with a contour plot in the plane of $(x_1,x_2)$.
-Visualize a contour map of a mountainous terrain.
+Figure \ref{fig:yunyue}
+shows a contour plot of the penalty function
+of $(x_1,x_2)=(m_1,m_2)$.
 The gradient is perpendicular to the contours.
 Contours and gradients are {\it curved lines}.
 When we use the steepest-descent method we start at a point
@@ -1579,6 +1587,11 @@ There we stop, compute another gradient vector,
 turn in that direction, and descend along a new straight line.
 The process repeats until we get to the bottom,
 or until we get tired.
+
+\sideplot{yunyue}{width=3.6in}{
+	Route of steepest descent (black)
+	and route of conjugate direction (light grey or green).
+	}
 
 \par
 What could be wrong with such a direct strategy?
@@ -1781,15 +1794,6 @@ The solution is
   (S\cdot R) \end{array} \right]
 \end{equation}
 
-This may look complicated.
-The steepest descent method requires us to compute
-only the two dot products
-$       \bold r \cdot \Delta \bold r$ and
-$\Delta \bold r \cdot \Delta \bold r$
-while equation (\ref{eqn:cgqf}) contains five dot products,
-but the extra trouble is well worth while because the ``conjugate direction''
-is such a much better direction than the gradient direction.
-
 \par
 The many applications in this book all need to
 find $\alpha$ and $\beta$ with (\ref{eqn:twobytwosln}) and then
@@ -1938,14 +1942,14 @@ would write the call
 \texttt{tinysolver ( matmult\_lop, cgstep, ...}
 \par
 The other required parameters to \texttt{tinysolver()} 
-are \texttt{d} (the data we want to fit),
-\texttt{m} (the model we want to estimate),
+are \texttt{dat} (the data we want to fit),
+\texttt{x} (the model we want to estimate),
 and \texttt{niter} (the maximum number of iterations).
 There is also a couple of optional arguments.
-For example, \texttt{m0} is the starting guess for the model.
+For example, \texttt{x0} is the starting guess for the model.
 If this parameter is omitted, the model is initialized to zero.
 To output the final residual vector,
-we include a parameter called \texttt{resd},
+we include a parameter called \texttt{res},
 which is optional as well.
 We will watch how the list of optional parameters
 to the generic solver routine grows
@@ -1971,7 +1975,7 @@ it should be incorporated in $\bold F$ and $\bold d$.)
 \par
 While the modeling success is of interest to everyone, the second number
 $1-|\bold F\T\bold r|/|\bold F\T\bold d|$,
-to be called the ``solver success at achiving goals,''
+to be called the ``solver success at achieving goals,''
 is more of interest to us, the analysts.
 It tells us to what extent our program
 has achieved our stated goals
@@ -2450,10 +2454,10 @@ but because these generally have spatially consistent phase,
 I would not describe the data as containing noise bursts.
 \plot{vesuvio}{width=6in,height=3in}{
   Radar image of Mt. Vesuvius.
-  Left is the amplitude.
+  Left is the amplitude $|Z(x,y)|$.
   Non-reflecting ocean in upper left corner.
-  Right is the phase.
-  (Umberto Spagnolini)
+  Right is the phase $\arctan( \Re Z(x,y), \Im Z(x,y)\;)$.
+  (from Umberto Spagnolini)
 }
 
 \par
@@ -2597,7 +2601,7 @@ $Z_{i,j}$ are given. Define a shorthand $a , b, c$, and $d$ as follows:
                 \end{array}
         \right]
 \end{equation}
-ith this shorthand, the difference equation representation of the fitting goal (\ref{eqn:integrateme}) is: 
+With this shorthand, the difference equation representation of the fitting goal (\ref{eqn:integrateme}) is: 
 \begin{equation}
         \begin{array}{rcl}
                 \phi_{i+1,j} -\phi_{i,j} &\approx& \Delta\phi_{ac} \\
@@ -2854,7 +2858,7 @@ the transpose of a derivative is the negative of a derivative.
 Since the transpose of a column vector is a row vector,
 the adjoint of a gradient $\nabla$, namely,
 $\nabla\T$ is more commonly known as the vector divergence 
-$\nabla \cdot$.
+($\nabla \cdot$).
 Likewise $\nabla\T\nabla$ is a positive definite matrix,
 the negative of the Laplacian $\nabla^2$.
 Thus, in more conventional mathematical notation,
@@ -2909,6 +2913,138 @@ With the Vesuvius data we might we construct the weight ${\bf W}$ from the signa
 strength. We also have available the curl, which should vanish. Its non-vanishing 
 is an indicator of questionable data which could be weighted down relative to other 
 data.
+
+%\begin{notforlecture}
+\section{OPERATOR SCALING (BINORMALIZATION)}
+%
+We can accept model $\bold m$ and data $\bold d$ as they arise from the geometry
+or geophysics of an application,
+or we can transform them to forms that are computationally convenient,
+work with them, and finally transform back.
+Say we transform them to new variables, $\bold u$ and $\bold v$.
+\begin{eqnarray}
+\bold u &=& \bold M \bold m
+\\
+\bold v &=& \bold D \bold d
+\end{eqnarray}
+These transformations change the $\bold F$ operator to $ \bold D \bold F \bold M^{-1} $ because
+\begin{eqnarray}
+\bold d &=& \bold F \bold m
+\\
+\bold D \bold d &=& \bold D \bold F \bold M^{-1} \bold M \bold m
+\\
+\bold v &=& \bold D \bold F \bold M^{-1} \bold u
+\end{eqnarray}
+The game is looking for the best
+$\bold M$ and
+$\bold D$.
+\par
+If I were able and willing to handle linear algebra in a modern way,
+I would show you this matrix iteration
+\begin{equation}
+\lambda\ 
+\left[
+	\begin{array}{c}
+	\bold d   \\
+	\bold m 
+	\end{array}
+\right]_{i+1}
+\eq
+\left[
+	\begin{array}{cc}
+	\bold 0 & \bold F  \\
+	\bold F\T & \bold 0
+	\end{array}
+\right]
+\left[
+	\begin{array}{c}
+	\bold d   \\
+	\bold m 
+	\end{array}
+\right]_i
+\end{equation}
+What is $\lambda$?  
+It is a scale factor that you use to keep the vectors normalized
+as the iteration proceeds.
+You may recognize a path leading to eigenvectors, eigenvalues, Hermitian matrices,
+and singular-value decomposition.
+You'll need to find other sources to go further on that path because
+it has not led me to a solution to the problem at hand
+which is how to choose the best $\bold M$ and $\bold D$.
+\par
+If you have an operator that you are using millions of times 
+it is worth seeking good choices.
+Good choices are those
+that make the adjoint of your new operator
+$ \bold D \bold F \bold M^{-1}$
+a good approximation to its inverse.
+These are the two conditions we seek:
+\begin{eqnarray}
+\bold I &\approx &
+(\bold D \bold F \bold M^{-1})\T \ 
+(\bold D \bold F \bold M^{-1})
+\\
+\bold I &\approx &
+(\bold D \bold F \bold M^{-1}) \ 
+(\bold D \bold F \bold M^{-1})\T
+\end{eqnarray}
+If these were true, we could probe with any test vectors we wished
+\begin{eqnarray}
+\hat {\bold t}_m
+&=&
+(\bold M^{-1})\T \ (\rm something)\ \bold M^{-1}\ \bold t_m
+\\
+\hat {\bold t}_d
+&=&
+\bold D \ {(\rm something\ else)} \
+\bold D\T \ \bold t_d
+\end{eqnarray}
+and find both $\hat {\bold t}_m\approx \bold t_m$
+and  $\hat {\bold t}_d\approx \bold t_d$.
+So, the game is to play with
+$\bold M$ and $\bold D$
+to try to get this to happen.
+\par
+About the only trick I know is to try $\bold M$ and $\bold D$ as diagonal matrices.
+For test functions $\bold t$, I generally use a pattern of moderately spaced impulses.
+In physical space we may see places where
+$\hat {\bold t}$ is smaller than $\bold t$.
+Those are the places to boost the corresponding diagonal.
+\par
+There are many test functions you could use.
+You could use all ones.
+You could use random numbers.
+You could use a pile of random old data,
+though I'm not sure what you would use for old models.
+Take the output.
+Take its absolute value.
+Maybe smooth it.
+Take the square root since the half you put in
+$\bold F$ appears a second time in $\bold F\T$.
+\par
+I know one more trick.
+In seismology many operators appear as integrals.
+One of many such operators is called ``Kirchhoff migration''.
+Because these operators and their adjoints contain integrations they boost low frequencies.
+We can attenuate them back to their original size
+by having $\bold M$ or $\bold D$ apply $\sqrt{-i\omega}$
+(known in the time domain as the ``Hankel tail'').
+%\par
+%Sometimes Jacobians or determinents
+%give guidance to finding the inverse and thereby deducing the diagonal matrices.
+%That's a nice start, but practicalities often arise
+%(such as data truncation, depth variable velocity)
+%that keep the guessing game alive.
+%
+\par
+What, may we ask is the interpretation of the $(\bold u, \bold v)$ variables?
+They feel like ``energy conservation'' variables, though it makes no sense
+to say the physical energy in $\bold m$ or $\bold d$ should be conserved
+in the way of Parseval's theorem of Fourier transforms.
+I imagined the $(\bold u,\bold v)$ variables might be especially suitable for display
+(like preconditioned variables) but now I am less certain.
+
+%\end{notforlecture}
 
 \section{THE WORLD OF CONJUGATE GRADIENTS}
 
@@ -3112,6 +3248,7 @@ Saunders method is reviewed by Nolet in a geophysical context.
 %explicitly in the program and that we cannot start from a nonzero
 %initial model.  \moddex{lsqr}{LSQR solver}
 
+\begin{comment}
 \subsection{Understanding CG magic and advanced methods}
 This section includes Sergey Fomel's explanation on the ``magic''
 convergence properties of the conjugate-direction methods. It also
@@ -3369,6 +3506,7 @@ $\beta \padarrow \frac{ (\Delta \bold x \cdot \Delta \bold x )}
 \>      \> $\bold r\  \padarrow \bold r\  + \alpha\Delta \bold r$       \\
 \>      \> \}                                                   
 \end{tabbing}
+\end{comment}
 
 %Module \texttt{conjgrad} \vpageref{lst:conjgrad} provides an
 %implementation of this method. The interface is exactly similar to
