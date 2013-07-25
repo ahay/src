@@ -2,11 +2,8 @@ from rsf.proj import *
 from rsf.prog import RSFROOT
 
 # Download real data
-Fetch('samiss1.rsf','bp') # wrong data
-Flow('samiss','samiss1','dd form=native')
-
-Result('samiss1','samiss','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
-Flow('datacpx','samiss','rtoc')
+Result('samiss1','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
+Flow('datacpx','samiss1','rtoc')
 
 Nt=1500
 dt=0.004
@@ -42,11 +39,11 @@ Result('fftimagc2','fftdatac2','imag | grey title="imagc" ')
 Result('fftabsc2','fftdatac2','math output="abs(input)" | real | grey title="absc2" ')
 
 # direct Radon / single integral (vscan)
-Flow('smod','samiss','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+Flow('smod','samiss1','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
 Result('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
 
 # direct Radon / single integral (nearest integer interpolation)
-Flow('dimod','samiss','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
+Flow('dimod','samiss1','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
 Result('dimod','grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
 
 
@@ -56,6 +53,6 @@ Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TAR
 Flow('fmod1','fftdatac1 bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=5 EPSx2=5 EPSk1=5 EPSk2=5 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
 Flow('fmod2','fftdatac2 bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=5 EPSx2=5 EPSk1=5 EPSk2=5 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
 Flow('fmod','fmod1 fmod2','add scale=1,1 ${SOURCES[1]}')
-Result('fmod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km wanttitle=n scalebar=n')
+Result('fmod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " scalebar=n')
 
 End()
