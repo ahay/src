@@ -44,24 +44,24 @@ Plot('slo','graph transp=y yreverse=y min2=0.1 max2=0.6994 plotfat=0.2 plotcol=4
 
 # Apply FFT in time
 Flow('fftdata','datacpx','fft3 axis=1 pad=1 | window n1=500 f1=500')
-Result('fftreal','fftdata','real | grey title="real" ')
-Result('fftimag','fftdata','imag | grey title="imag" ')
+#Result('fftreal','fftdata','real | grey title="real" ')
+#Result('fftimag','fftdata','imag | grey title="imag" ')
 Result('fftabs','fftdata','math output="abs(input)" | real | grey title=" " ')
 
 Flow('fftdatac','fftdata','window n1=100 f1=5')
-Result('fftrealc','fftdatac','real | grey title="realc" ')
-Result('fftimagc','fftdatac','imag | grey title="imagc" ')
-Result('fftabsc','fftdatac','math output="abs(input)" | real | grey title="absc" ')
+#Result('fftrealc','fftdatac','real | grey title="realc" ')
+#Result('fftimagc','fftdatac','imag | grey title="imagc" ')
+#Result('fftabsc','fftdatac','math output="abs(input)" | real | grey title="absc" ')
 
 
 # direct Radon / single integral (vscan)
-Flow('smod','data','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
-Plot('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
-Result('smod','smod slo','Overlay')
+#Flow('smod','data','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+#Plot('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
+#Result('smod','smod slo','Overlay')
 
 # direct adjoint Radon / single integral (velmod)
-Flow('sdat','smod','velmod half=n slowness=y nh=%d dh=%g h0=%g extend=0 | math output=input*%g' % (Nx,dx,x0,Nt*Nx*dp))
-Result('sdat','grey label1=Time unit1=s label2=Offset unit2=km title="sdat" scalebar=y')
+#Flow('sdat','smod','velmod half=n slowness=y nh=%d dh=%g h0=%g extend=0 | math output=input*%g' % (Nx,dx,x0,Nt*Nx*dp))
+#Result('sdat','grey label1=Time unit1=s label2=Offset unit2=km title="sdat" scalebar=y')
 
 # direct Radon / single integral (nearest integer interpolation)
 Flow('dimod','data','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
@@ -79,9 +79,9 @@ Flow('fmod','fftdatac bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%
 Plot('fmod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
 Result('fmod','fmod slo','Overlay')
 
-Flow('fmod1','fftdatac bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=9 EPSx2=9 EPSk1=9 EPSk2=9 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
-Plot('fmod1','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="fmod1" scalebar=y')
-Result('fmod1','fmod1 slo','Overlay')
+#Flow('fmod1','fftdatac bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=9 EPSx2=9 EPSk1=9 EPSk2=9 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+#Plot('fmod1','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="fmod1" scalebar=y')
+#Result('fmod1','fmod1 slo','Overlay')
 
 dw=1/Nt/dt
 Flow('fdatmid','fmod bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=2 EL=0 N=32 EPSx1=9 EPSx2=9 EPSk1=9 EPSk2=9' % (100,dw,5*dw,Nx,dx,x0))
@@ -90,42 +90,11 @@ Result('fdat','real | grey label1=Time unit1=s label2=Offset unit2=km title=" " 
 
 # direct Radon / double integral
 Flow('diimod','fftdatac','diiradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
-Plot('diimod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="diimod" scalebar=y')
+Plot('diimod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="diimod" ')
 Result('diimod','diimod slo','Overlay')
 
 
 # compute inner product
 Flow('fhu','fmod fmod fdat datacpx','sum input2=${SOURCES[1]} input3=${SOURCES[2]} input4=${SOURCES[3]}')
-
-Flow('sdatc','sdat','rtoc')
-Flow('smodc','smod','rtoc')
-Flow('shu','smodc smodc sdatc datacpx','sum input2=${SOURCES[1]} input3=${SOURCES[2]} input4=${SOURCES[3]}')
-
-Flow('didatc','didat','rtoc')
-Flow('dimodc','dimod','rtoc')
-Flow('dihu','dimodc dimodc didatc datacpx','sum input2=${SOURCES[1]} input3=${SOURCES[2]} input4=${SOURCES[3]}')
-
-
-Flow('diimodr','diimod','real')
-Flow('fmodr','fmod','real')
-
-# compare
-Flow('diff1','fmod diimod','add scale=1,-1 ${SOURCES[1]}')
-Result('diff1','real | grey title=" " clip=4.49516 label1=Time unit1=s label2=Slowness unit2=s/km')
-
-Flow('diff2','dimod diimodr','add scale=1,-1 ${SOURCES[1]}')
-Result('diff2','grey title="dimod-diimod" scalebar=y')
-
-Flow('diff3','smod diimodr','add scale=1,-1 ${SOURCES[1]}')
-Result('diff3','grey title="smod-diimod" scalebar=y')
-
-Flow('diff4','smod dimod','add scale=1,-1 ${SOURCES[1]}')
-Result('diff4','grey title="smod-dimod" scalebar=y')
-
-Flow('diff5','smod fmodr','add scale=1,-1 ${SOURCES[1]}')
-Result('diff5','grey title="smod-fmod" scalebar=y')
-
-Flow('diff6','dimod fmodr','add scale=1,-1 ${SOURCES[1]}')
-Result('diff6','grey title="dimod-fmod" scalebar=y')
 
 End()
