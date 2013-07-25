@@ -1,4 +1,4 @@
-/* 2-D Fourth-order Finite-difference wave extrapolation with timing option*/
+/* 2-D Fourth-order Finite-difference wave extrapolation with timing option (no ABC)*/
 /*
   Copyright (C) 2013 University of Texas at Austin
   

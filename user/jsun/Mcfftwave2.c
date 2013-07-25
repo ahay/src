@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft2w.h"
+#include "cfft2.h"
 
 int main(int argc, char* argv[])
 {
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
     
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
-    nk = cfft2w_init(pad1,nz,nx,&nz2,&nx2);
+    nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
 
     nzx = nz*nx;
     nzx2 = nz2*nx2;
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave   = sf_complexalloc2(nzx2,m2);
 
-    icfft2w_allocate(cwavem);
+    icfft2_allocate(cwavem);
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 	if(verb) sf_warning("it=%d;",it);
 
 	/* matrix multiplication */
-	cfft2w(curr,cwave);
+	cfft2(curr,cwave);
 
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 #endif
 //		sf_warning("realcwave=%g, imagcwave=%g", crealf(cwavem[ik]),cimagf(cwavem[ik]));
 	    }
-	    icfft2w(wave[im],cwavem);
+	    icfft2(wave[im],cwavem);
 	}
 
 	for (ix = 0; ix < nx; ix++) {
@@ -156,6 +156,6 @@ int main(int argc, char* argv[])
     }
     if(verb) sf_warning("."); 
     
-    cfft2w_finalize();
+    cfft2_finalize();
     exit (0);
 }
