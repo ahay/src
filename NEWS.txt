@@ -29,6 +29,7 @@ In APIs:
 In the Python package:
 
 In programs:
+sfbyte: "clip" determination when the first plane is zero (aklokov)
 
 In the build system:
 
