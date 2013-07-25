@@ -89,9 +89,10 @@ Flow('fdat','fdatmid','pad beg1=505 end1=395 | fft3 inv=y axis=1 pad=1 | math ou
 Result('fdat','real | grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
 
 # direct Radon / double integral
-Flow('diimod','fftdatac','diiradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
-Plot('diimod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="diimod" ')
-Result('diimod','diimod slo','Overlay')
+# TEMPORARY !!!
+#Flow('diimod','fftdatac','diiradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+#Plot('diimod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="diimod" ')
+#Result('diimod','diimod slo','Overlay')
 
 
 # compute inner product
