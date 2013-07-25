@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "cfft2.h"
+#include "cfft2w.h"
 #include "timer.h"
 
 int main(int argc, char* argv[])
@@ -155,6 +155,11 @@ int main(int argc, char* argv[])
 	it2 = nt;
 	its = +1;
     }
+
+//testing
+#ifdef SF_HAS_FFTW
+    sf_warning("have fftw3");
+#endif
 
     if (timer) t0 = gtod_timer();
 

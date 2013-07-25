@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft2.h"
+#include "cfft2w.h"
 
 int main(int argc, char* argv[])
 {
