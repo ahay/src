@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     ax = sf_iaxa(Fv,2); nx = sf_n(ax); dx = sf_d(ax);
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
-    sf_oaxa(Fo,at,3);
+    //sf_oaxa(Fo,at,3);
 
     dt2 =    dt*dt;
     idz = 1/(dz*dz);
@@ -121,16 +121,17 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-        sf_floatwrite(curr[0],nz*nx,Fo);
+        //sf_floatwrite(curr[0],nz*nx,Fo);
     }
-    if(verb) fprintf(stderr,"\n"); 
     if(timer) 
     {
 	t1 = gtod_timer();
 	time = t1-t0;
 	sf_warning("Time = %lf\n",time);
     }
-
-    sf_close();
+    if(verb) fprintf(stderr,"\n"); 
+    /* write final wavefield to output */
+    sf_floatwrite(curr[0],nz*nx,Fo);
+    //sf_close();
     exit(0); 
 }           
