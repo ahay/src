@@ -6,7 +6,7 @@
 
 \label{paper:iin}
 	
-
+\begin{comment}
 \par
 Let us review the big picture.
 In Chapter \ref{paper:ajt} we developed adjoints and
@@ -117,24 +117,15 @@ The first pitfall is that the data is rarely able to
 determine a complete solution reliably.
 Generally there are aspects of the image that are not learnable
 from the data.
+\end{comment}
 
 \par
-In this chapter we study the simplest, most transparant example
+In this chapter we study the simplest, most transparent example
 of data insufficiency.
 Data exists at irregularly spaced positions in a plane.
 We set up a cartesian mesh and we discover that some
 of the bins contain no data points.
 What then?
-
-%Having developed optimization methodology
-%in Chapters \ref{ajt/paper:ajt} and \ref{lsq/paper:lsq},
-%we now use it in more applications.
-%First we cover basic concepts of \bx{missing data}
-%illustrating them with tiny one-dimensional toys.
-%Then we jump to some two-dimensional real-data sets
-%where ``missing data'' really means ``empty bins.''
-%Finally we return to 1-D synthetic data sampled irregularly.
-%\sx{irregular spacing}
 
 \section{MISSING DATA IN ONE DIMENSION}
 \inputdir{miss1figs}
@@ -534,13 +525,13 @@ I could have passed a new operator $\bold F \bold J$
 into the old solver,
 but found it worthwhile to write a new,
 more powerful solver having built-in constraints.
-To introduce the masking operator $\bold J$ into the \texttt{solver_smp}
-subroutine \vpageref{lst:solver_tiny},
+To introduce the masking operator $\bold J$ into the \texttt{solver-smp}
+subroutine \vpageref{lst:solver-tiny},
 I introduce an optional operator \texttt{Jop},
 which is initialized with a logical array of the model size.
  %The values of \texttt{known} are \texttt{.true.}~for the known data locations,
  %and \texttt{.false.}~for the unknown data.
-Two lines in the \texttt{solver_tiny} module \vpageref{lst:solver_tiny}
+Two lines in the \texttt{solver-tiny} module \vpageref{lst:solver-tiny}
 \par\indent
 \footnotesize
 \begin{verbatim}
@@ -564,9 +555,9 @@ stat = Fop( F, F, g, gg)                                  # G = F g
 
 \par
 The full code includes all the definitions we had earlier
-in \texttt{solver_tiny} module \vpageref{lst:solver_tiny}.
+in \texttt{solver-tiny} module \vpageref{lst:solver-tiny}.
 Merging it with the above bits of code we have
-the simple solver \texttt{solver_smp}.
+the simple solver \texttt{solver-smp}.
 
 
 %In Fortran77, I simply multiplied by $\bold J$.
@@ -582,7 +573,7 @@ the simple solver \texttt{solver_smp}.
 %In other words, we are not going to change the given, known data values.
 
 
-\moddex{solver_smp}{simple solver}
+\moddex{solver-smp}{simple solver}
 
 \par
 There are two methods of invoking the solver.
@@ -760,7 +751,7 @@ The map would contain discontinuities around each well.
 Our philosophy of finding an earth model $\bold m$
 is that our earth map should contain no obvious 
 ``footprint'' of the data acquisition (well locations).
-We adopt the philosopy that the difference
+We adopt the philosophy that the difference
 between the final map (extended wells)
 and the seismic information $\bold x=\bold m-\bold s$ should be smooth.
 Thus,
@@ -1107,9 +1098,9 @@ The model residual is the roughened model.
 \par
 Two fitting goals (\ref{eqn:invintwish}) are so common in practice
 that it is convenient to adopt our least-square fitting
-subroutine \texttt{solver_smp} \vpageref{lst:solver_smp} accordingly.
+subroutine \texttt{solver-smp} \vpageref{lst:solver-smp} accordingly.
 The modification
-is shown in module \texttt{solver_reg} \vpageref{lst:solver_reg}.
+is shown in module \texttt{solver-reg} \vpageref{lst:solver-reg}.
 In addition to specifying the ``data fitting'' operator $\bold F$
 (parameter \texttt{Fop}),
 we need to pass the ``model regularization'' operator $\bold A$
@@ -1118,7 +1109,7 @@ size of its output (parameter \texttt{nAop}) for proper memory allocation.
 
 %\begin{notforlecture}
 \par
-(When I first looked at module \texttt{solver_reg} I was appalled
+(When I first looked at module \texttt{solver-reg} I was appalled
 by the many lines of code, especially all the declarations.
 Then I realized how much much worse was Fortran 77 where
 I needed to write a new solver for every pair of operators.
@@ -1135,7 +1126,7 @@ Otherwise, the definitions must go in the surrounding natural language
 where they are not easily made precise.)
 
 
-\moddex{solver_reg}{generic solver with regularization}
+\moddex{solver-reg}{generic solver with regularization}
 \end{comment}
 
 \par
