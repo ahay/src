@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-#include "wcfft2.h"
+#include "cfft2.h"
 #include "timer.h"
 
 int main(int argc, char* argv[])
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 	sf_putstring(data,"unit2","s");
     }
 
-    nk = wcfft2_init(pad1,nx,nz,&nx2,&nz2);
+    nk = cfft2_init(pad1,nx,nz,&nx2,&nz2);
 
     nzx = nz*nx;
     nzx2 = nz2*nx2;
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     cwavem = sf_complexalloc(nk);
     wave = sf_complexalloc2(nzx2,m2);
 
-    iwcfft2_allocate(cwavem);
+    icfft2_allocate(cwavem);
 
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* matrix multiplication */
-	wcfft2(curr,cwave);
+	cfft2(curr,cwave);
 
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
 		cwavem[ik] = sf_cmul(cwave[ik],rht[ik][im]);
 #endif
 	    }
-	    iwcfft2(wave[im],cwavem);
+	    icfft2(wave[im],cwavem);
 	}
 
 
@@ -239,6 +239,6 @@ int main(int argc, char* argv[])
 	sf_complexwrite(img[0],nzx,image);
     }
 
-    wcfft2_finalize();
+    cfft2_finalize();
     exit(0);
 }
