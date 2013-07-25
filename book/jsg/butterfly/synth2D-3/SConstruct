@@ -15,7 +15,7 @@ Flow('vel',None,'math n1=%d d1=%g o1=%g output="(1.5+0.5*x1)" ' % (Nt,dt,t0))
 # From velocity to slowness
 Flow('slo','vel','math output="1/input" ')
 
-Flow('data','vel',
+Flow('data-3','vel',
      '''
      noise seed=1999 rep=y |
      math output="input^3" |
@@ -26,8 +26,8 @@ Flow('data','vel',
      put label1=Time unit1=s |
      mutter half=n tp=0.1 v0=1.5 
      ''' % (Nx,dx,x0))
-Result('data','grey title=" " ')
-Flow('datacpx','data','rtoc')
+Result('data-3','grey title=" " ')
+Flow('datacpx','data-3','rtoc')
 
 
 Ntau=Nt
@@ -54,12 +54,12 @@ Flow('fftdatac','fftdata','window n1=200 f1=10')
 
 
 # direct Radon / single integral (vscan)
-#Flow('smod','data','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
+#Flow('smod','data-3','vscan half=n slowness=y nv=%d dv=%g v0=%g type=power weight=n extend=0 mute=0 str=0 | math output=input*%g' % (Np,dp,p0,Nt*Nx*dx))
 #Plot('smod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="smod" scalebar=y')
 #Result('smod','smod slo','Overlay')
 
 # direct Radon / single integral (nearest integer interpolation)
-Flow('dimod','data','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
+Flow('dimod','data-3','diradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,dx))
 #Plot('dimod','grey label1=Time unit1=s label2=Slowness unit2=s/km title="dimod" scalebar=y')
 #Result('dimod','dimod slo','Overlay')
 
@@ -68,7 +68,7 @@ Flow('bfio.bin',os.path.join(RSFROOT,'include','bfio.bin'),'/bin/cp $SOURCE $TAR
 
 Flow('fmod','fftdatac bfio.bin','radon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g fi=1 EL=0 N=64 EPSx1=9 EPSx2=9 EPSk1=9 EPSk2=9 | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
 Plot('fmod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title=" " ')
-Result('fmod','fmod slo','Overlay')
+Result('fmod-3','fmod slo','Overlay')
 
 
 End()
