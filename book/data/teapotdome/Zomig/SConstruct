@@ -45,4 +45,67 @@ Result('Vint3D',
      sfbyte | sfgrey3 color=j flat=n 
      ''')
 
+
+Flow('Vint3Dz','Vint3D','time2depth dz=30 intime=y nz=1200 velocity=Vint3D.rsf')
+
+Result('Vint3Dz',
+     '''
+     byte | sfgrey3 color=j  flat=n title=Interval Velocity interpolated
+     ''')
+########    Change velocity to slowness  ##########################
+
+Flow('slo','Vint3Dz','put d2=110 d3=110 | transp | transp plane=23 | math output=1/input')
+
+Result('slo',
+     '''
+     byte | sfgrey3 color=j  flat=n title=Interval Velocity interpolated
+     ''')
+
+
+
+
+########    FFT  ##########################
+
+
+
+
+
+Flow('fft','final_stack',
+     'put d2=110 d3=110 | fft1 | window max1=20 | transp plane=12 | transp plane=23')
+
+
+
+Flow('real','fft','real')
+
+
+
+Result('real',
+     '''
+     byte | sfgrey3 color=j  flat=n title=FFT
+     ''')
+
+
+
+
+# Extended split-step migration
+Flow('mig','fft slo',
+     '''
+     zomig3 ompnth=1 mode=m --readwrite=y verb=y
+     nrmax=1 slo=${SOURCES[1]}
+     ''',split=[4,87],reduce='add')
+
+Result('mig',
+       '''
+       window | grey title=Migration transp=n
+       label2=Depth    unit2=km 
+       label1=Distance unit1=km
+       ''')
+
+
+
+
+
+
 End()
+
+
