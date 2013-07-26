@@ -156,11 +156,6 @@ int main(int argc, char* argv[])
 	its = +1;
     }
 
-//testing
-#ifdef SF_HAS_FFTW
-    sf_warning("have fftw3");
-#endif
-
     if (timer) t0 = gtod_timer();
 
     /* time stepping */
