@@ -17,6 +17,7 @@ Gang Fang <fanggang723@gmail.com>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
+Jie Hou <jasonhupc@gmail.com>
 Jingwei Hu <hu@ices.utexas.edu>
 Yin Huang <maggiehuangyin@gmail.com>
 Trevor Irons <tirons@mines.edu>
