@@ -90,13 +90,14 @@ Result('fdat','real | grey label1=Time unit1=s label2=Offset unit2=km title=" " 
 
 # direct Radon / double integral
 # TEMPORARY !!!
-#Flow('diimod','fftdatac','diiradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
-#Plot('diimod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="diimod" ')
-#Result('diimod','diimod slo','Overlay')
+Flow('diimod','fftdatac','diiradon2 ntau=%d dtau=%g tau0=%g np=%d dp=%g p0=%g | math output=input*%g' % (Ntau,dtau,tau0,Np,dp,p0,2*dx/Nt))
+Plot('diimod','real | grey label1=Time unit1=s label2=Slowness unit2=s/km title="diimod" ')
+Result('diimod','diimod slo','Overlay')
 
+Flow('diff','fmod diimod','add scale=1,-1 ${SOURCES[1]}')
+Result('diff','real | grey title=" " clip=4.49516 label1=Time unit1=s label2=Slowness unit2=s/km')
 
 # compute inner product
 Flow('fhu','fmod fmod fdat datacpx','sum input2=${SOURCES[1]} input3=${SOURCES[2]} input4=${SOURCES[3]}')
-
 
 End()

@@ -267,7 +267,7 @@ There is no general rule for selecting parameters $N$, $q_{k_1}$, $q_{k_2}$, ...
 
 \subsection{Synthetic data --- square sampling}
 
-We start with a simple 2D example of square sampling. Figure \ref{fig:data} is a synthetic CMP gather sampled on $N_t=N_h=1000$. Figure \ref{fig:fftabs} shows the absolute value of its Fourier transform on time axis. These band-limited data allow us to shorten the computational range for $f$, which can be crucial as $N$ depends on this range. In model space, the sampling sizes are chosen as $N_{\tau}=N_p=1000$. Figure \ref{fig:fmod} is the output of the fast butterfly algorithm for $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$ (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125). Figure \ref{fig:dimod} is the output of the {\it velocity scan}. The two methods yield nearly the same results. The fast algorithm runs in only $1.75$ s of CPU time, while the {\it velocity scan} takes about 37 s. In Figure \ref{fig:diimod}, we plot the difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum}, where the relative error is $0.0178$. For reference, if we let $N=64$ and run the same test, the error decreases to $O(10^{-3})$ and the running time is 3.63 s.
+We start with a simple 2D example of square sampling. Figure \ref{fig:data} is a synthetic CMP gather sampled on $N_t=N_h=1000$. Figure \ref{fig:fftabs} shows the absolute value of its Fourier transform on time axis. These band-limited data allow us to shorten the computational range for $f$, which can be crucial as $N$ depends on this range. In model space, the sampling sizes are chosen as $N_{\tau}=N_p=1000$. Figure \ref{fig:fmod} is the output of the fast butterfly algorithm for $N=32$, $q_{k_1}=q_{k_2}=q_{x_1}=q_{x_2}=9$ (here the range of $\Phi=f\sqrt{\tau^2+p^2h^2}$ is about 125). Figure \ref{fig:dimod} is the output of the {\it velocity scan}. The two methods yield nearly the same results. The fast algorithm runs in only $1.75$ s of CPU time, while the {\it velocity scan} takes about 37 s. In Figure \ref{fig:diff}, we plot the difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum}, where the relative error is $0.0178$. For reference, if we let $N=64$ and run the same test, the error decreases to $O(10^{-3})$ and the running time is 3.63 s.
 
 \inputdir{synth2D-1-timer}
 
@@ -279,8 +279,7 @@ We start with a simple 2D example of square sampling. Figure \ref{fig:data} is a
 
 \plot{dimod}{width=1\textwidth}{$N_{\tau}=N_p=1000$. Output of the {\it velocity scan} applied to the synthetic data in Figure \ref{fig:data}. CPU time: {\bf 37.23 s}. Purple curve overlaid is the true slowness.}
 
-\inputdir{.}
-\plot{diimod}{width=1\textwidth}{Difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum} plotted at the same scale as in Figure \ref{fig:fmod}.}
+\plot{diff}{width=1\textwidth}{Difference between the results of the fast algorithm and the direct evaluation of equation \ref{sum} plotted at the same scale as in Figure \ref{fig:fmod}.}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
