@@ -25,4 +25,18 @@ Result('Vint',
      graph  title=Interval Velocity 
      ''')
 
+Flow ('spray2','Vint','spray axis=2 n=188 d=1 o=1')
+
+Result('spray2',
+     '''
+     graph  title=Interval Velocity interpolated
+     ''')
+
+Flow ('Vint3D','spray2','spray axis=3 n=345 d=1 o=1')
+
+Result('Vint3D',
+     '''
+     graph  title=Interval Velocity interpolated
+     ''')
+
 End()
