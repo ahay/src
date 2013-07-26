@@ -306,8 +306,8 @@ def libs(context):
         
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
-    elif plat['OS'] == 'cygwin':
-        LIBS.append('tirpc')
+#    elif plat['OS'] == 'cygwin':
+#        LIBS.append('tirpc')
     elif plat['OS'] == 'darwin':
         LIBS.append('mx')
     elif plat['OS'] == 'interix':

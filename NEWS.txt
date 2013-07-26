@@ -5,6 +5,11 @@
 To the reproducible documents collection:
 
 * gallery: migration gallery
+* Moved jsg to tccs
+* tccs/buttefly: A fast butterfly algorithm for generalized Radon
+  transforms (Hu, Fomel, Demanet, and Ying)
+* tccs/opwd: Omnidirectional plane-wave destruction (Chen, Fomel, and
+  Lu)
 
 To SCons:
 
@@ -13,6 +18,8 @@ To documentation:
 To APIs:
 
 To the Python package:
+
+* Cygwin no longer provides libtirpc, removed it from configure 
 
 To programs:
 
