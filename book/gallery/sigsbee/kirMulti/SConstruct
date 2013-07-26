@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-sys.path.append('..')
+sys.path.insert (0,'..')
 import sigsbee
 
 # fetch data
