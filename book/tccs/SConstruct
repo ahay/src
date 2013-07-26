@@ -19,12 +19,16 @@ Papers(copyr='The University of Texas at Austin',
                 'fpwd': 'Zhonghuan Chen, Sergey Fomel, and Wenkai Lu',
                 'crs': 'Sergey Fomel and Roman Kazinnik',
                 'lfd': 'Xiaolei Song, Sergey Fomel, and Lexing Ying',
+                'opwd': 'Zhonghuan Chen, Sergey Fomel, and Wenkai Lu',
                 'butterfly': 'Jingwei Hu, Sergey Fomel, Laurent Demanet, and Lexing Ying'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
 End(use='amsmath,newalg,hyperref,algorithmic',
     include=r'''
+\makeatletter
+\@addtoreset{section}{part}
+\makeatother
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\Z}{\mathbb{Z}}

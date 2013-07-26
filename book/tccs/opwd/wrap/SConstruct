@@ -1,5 +1,5 @@
 from rsf.proj import *
-import math
+import math, sys
 from numpy import *
 
 pp=(0.2,1.2,5.2)
@@ -35,14 +35,20 @@ Flow('wrap','wrap-0 wrap-1 wrap-2',
 	| math output="input/3.1415926"
 	| put
 	''')
-Result('wrap', 'wrap ./Mpygraph.py',
-	'''
-	./Mpygraph.py label1="Phase" unit1="\$\pi\$"
-	label2="Normalized frequency" unit2="cycles/sample"
-	legend="ideal:N=1:N=2" wherelegend=3
-	plotcol=0 dash=0,1,2,0,1,2,0,1,2
-	min2=-1.6 max2=1.1 
-	''', suffix='.pdf')
+
+python = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s %s' % \
+    (os.environ.get('PYTHONPATH',''),
+     os.environ.get('LD_LIBRARY_PATH',''),
+     sys.executable)
+
+Result('wrap', 'wrap Mpygraph.py',
+       python + '''
+       ${SOURCES[1]} label1="Phase" unit1="\$\pi\$"
+       label2="Normalized frequency" unit2="cycles/sample"
+       legend="ideal:N=1:N=2" wherelegend=3
+       plotcol=0 dash=0,1,2,0,1,2,0,1,2
+       min2=-1.6 max2=1.1 format="eps" 
+       ''', suffix='.eps')
 
 End()
 

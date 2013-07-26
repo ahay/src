@@ -133,5 +133,6 @@ text(0.45, 0.24, 'p=0.2')
 text(0.45, 0.95, 'p=1.2')
 text(0.12, 0.95, 'p=5.2')
 
-savefig(sys.stdout, format='pdf', bbox_inches='tight', transparents=True)
+format=par.string("format","pdf")
 
+savefig(sys.stdout, format=format, bbox_inches='tight', transparents=True)

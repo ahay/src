@@ -402,7 +402,7 @@ to the wave field and estimate the slope by the proposed method.
 To compare with the iterative algorithm by \cite{fomel:1946},
 the mean square error (MSE) is used as the criterion:
 \begin{equation}
-\txt{MSE}(p)=\txt E\{(p-p_0)^2\}.
+\textrm{MSE}(p)=\textrm E\{(p-p_0)^2\}.
 \end{equation}
 
 \multiplot{2}{mse-fdip,mse-dip}{width=0.46\textwidth}
@@ -650,7 +650,7 @@ Differently from that, we use the following condition,
 \end{equation}
 where $b_k$ can be proved to be polynomials of $p$.
 
-Let vector $\vct b=[b_0,b_N,\dots,b_1,b_{-1},\dots,b_{-N}]^\txt T$.
+Let vector $\vct b=[b_0,b_N,\dots,b_1,b_{-1},\dots,b_{-N}]^\textrm T$.
 Combining equations \ref{eq:mf:cond} and \ref{eq:pc:cond},
 we rewrite them into the following matrix form:
 \[
@@ -684,7 +684,7 @@ Following the \textit{lemma of matrix inversion},
 \end{equation}
 therefore the coefficients
 \begin{equation}\label{eq:sltn}
-\vct b=\mtx V^{-1}[1,0,\dots,0]^\txt T=
+\vct b=\mtx V^{-1}[1,0,\dots,0]^\textrm T=
 \left[\begin{array}{c}
 (\mtx A-\mtx B\mtx D^{-1}\mtx C)^{-1} \\
 -\mtx D^{-1}\mtx C(\mtx A-\mtx B\mtx D^{-1}\mtx C)^{-1} 
@@ -702,7 +702,7 @@ Submatrix $\mtx D$ can be expressed as
 (d-N)^4 & \dots & (d-1)^4 &(d+1)^4 & \dots & (d+N)^4 \\
 \vdots & \dots & \vdots  & \vdots &\dots &\vdots \\
 (d-N)^{4N-2} & \dots & (d-1)^{4N-2} & (d+1)^{4N-2} & \dots & (d+N)^{4N-2}
-\end{array}\right]\txt{diag}
+\end{array}\right]\textrm{diag}
 \left[\begin{array}{c}
 x_{-N}\\ \vdots \\ x_{-1} \\ x_1 \\ \vdots \\ x_N
 \end{array}\right],
