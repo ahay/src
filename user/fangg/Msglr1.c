@@ -188,7 +188,7 @@ int main(int argc, char* argv[])
 
     /*parameters of geometry*/
     if (!sf_getfloat("gdep", &gdep)) gdep = 0.0;
-    /*depth of geophone (grid points)*/
+    /*depth of geophone (meter)*/
     if (gdep <0.0) sf_error("gdep need to be >=0.0");
     /*source and receiver location*/
     spx = (int)(slx/dx+0.5);
@@ -301,7 +301,7 @@ int main(int argc, char* argv[])
     }
     
     for (it=it0; it<nt; it++) {
-	if(verb) sf_warning("it=%d;", it);
+	if(verb) sf_warning("it=%d/%d;", it, nt-1);
 	
 	/*vx--- matrix multiplication */
 	fft1(curtxx,cwavex);   /* P^(k,t) */

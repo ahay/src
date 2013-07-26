@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     sf_axis at,az,ax;         /* cube axes */
     
     /* I/O arrays*/
-    float  *srcp, ***srcd; /*point source, distributed source*/           
+    float  *src; /*point source, distributed source*/           
     float **lt, **rt;
     float **vel, **den, **c11;
 
@@ -79,13 +79,15 @@ int main(int argc, char* argv[])
 
     /*source*/
     spara sp={0};
-    int srcrange;
+    int   srcrange;
     float srctrunc; 
-    bool srcpoint, srcdecay;
-    int spx, spz;
+    bool  srcdecay;
+    float slx, slz;
+    int   spx, spz;
     
     /*options*/
-    int gdep;
+    float gdep;
+    int   gp;
     	
     tstart = clock();
     sf_init(argc,argv);
@@ -100,13 +102,11 @@ int main(int argc, char* argv[])
     Frec = sf_output("rec"); /*record*/
     
     /*parameters of source*/
-    if (!sf_getbool("srcpoint", &srcpoint)) srcpoint = true;
-    /*source type: if y, use point source */
-    if (srcpoint && !sf_getint("spx", &spx)) sf_error("Need spx input");
-    /*source point in x */
-    if (srcpoint && !sf_getint("spz", &spz)) sf_error("Need spz input");
-    /* source point in z */
-    if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=true;
+    if (!sf_getfloat("slx", &slx)) sf_error("Need slx input");
+    /*source location in x */
+    if (!sf_getfloat("slz", &slz)) sf_error("Need slz input");
+    /* source location in z */
+    if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=false;
     /*source decay*/
     if (!sf_getint("srcrange", &srcrange)) srcrange=10;
     /*source decay range*/
@@ -115,27 +115,17 @@ int main(int argc, char* argv[])
 
 
     /* Read/Write axes */
-    if (srcpoint) {
-	at = sf_iaxa(Fsrc,1);
-    } else {
-	at = sf_iaxa(Fsrc,3);
-    }
-    nt = sf_n(at); dt = sf_d(at);
+    at = sf_iaxa(Fsrc,1); nt = sf_n(at); dt = sf_d(at);
     ax = sf_iaxa(Fvel,2); nx = sf_n(ax); dx = sf_d(ax);
     az = sf_iaxa(Fvel,1); nz = sf_n(az); dz = sf_d(az);
-    
-    
+        
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
     sf_oaxa(Fo,at,3);
     /*set for record*/
     sf_oaxa(Frec, at, 1);
     sf_oaxa(Frec, ax, 2);
-    if (!srcpoint) {
-	sf_setn(ax,1);
-	sf_oaxa(Frec, ax, 3);
-    }
-
+    
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
@@ -196,18 +186,20 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(Ffft,"o2", &kx0)) sf_error("Need o2 in fft");
 
     /*parameters of geometry*/
-    if (!sf_getint("gdep", &gdep)) gdep = 0;
-    /*depth of geophone (grid points)*/
+    if (!sf_getfloat("gdep", &gdep)) gdep = 0.0;
+    /*depth of geophone (meter)*/
+    if (gdep <0.0) sf_error("gdep need to be >=0.0");
+    /*source and receiver location*/
+    spx = (int)(slx/dx+0.5);
+    spz = (int)(slz/dz+0.5);
+    gp  = (int)(gdep/dz+0.5);
+
+
 
     /* read wavelet & reflectivity */
-    if (srcpoint) {
-	srcp = sf_floatalloc(nt);
-	sf_floatread(srcp,nt,Fsrc);
-    } else {
-	srcd = sf_floatalloc3(nz,nx,nt);
-	sf_floatread(srcd[0][0], nx*nz*nt, Fsrc);
-    }
-
+    src = sf_floatalloc(nt);
+    sf_floatread(src,nt,Fsrc);
+   
     curtxx = sf_floatalloc(nzx2);
     curvx  = sf_floatalloc(nzx2);
     curvz  = sf_floatalloc(nzx2);
@@ -224,8 +216,8 @@ int main(int argc, char* argv[])
 
     record = sf_floatalloc2(nt,nx);
 
-    //ifft2_allocate(cwavemx);
-    //ifft2_allocate(cwavemz);
+    ifft2_allocate(cwavemx); //
+    ifft2_allocate(cwavemz); //
 
     for (iz=0; iz < nzx; iz++) {
 	pretxx[iz]=0.;
@@ -299,7 +291,8 @@ int main(int argc, char* argv[])
 		    cz += lt[im][i]*wavez[im][j];
 		}
 
-		curvx[j] = -1*dt/den[ix][iz]*cx + prevx[i];  /*vx(t+dt) = -dt/rho*dp/dx + vx(t) */
+		curvx[j] = -1*dt/den[ix][iz]*cx + prevx[i];  
+                /*vx(t+dt/2) = -dt/rho*dp/dx(t) + vx(t-dt/2) */
 		prevx[i] = curvx[j];
 
 		curvz[j] = -1*dt/den[ix][iz]*cz + prevz[i];
@@ -346,36 +339,34 @@ int main(int argc, char* argv[])
 		}	
 		
 		curtxx[j] = -1*dt*c11[ix][iz]*(cx+cz) + pretxx[i];
-		pretxx[i] = curtxx[j];
+		//pretxx[i] = curtxx[j];
 	    }
 	}
 	
-	if (srcpoint && (it*dt)<=sp.trunc ) {
-	    curtxx[spz+spx*nz2] += srcp[it];
-	    pretxx[spz+spx*nz] = curtxx[spz+spx*nz2];
+	if ((it*dt)<=sp.trunc ) {
+	    curtxx[spz+spx*nz2] += src[it]*dt;
+	    //pretxx[spz+spx*nz] = curtxx[spz+spx*nz2];
 	}
-	if (!srcpoint && (it*dt)<=sp.trunc){
-	    for (ix = 0; ix < nx; ix++) {
-		for (iz = 0; iz < nz; iz++) {
-		    i = iz+ix*nz;  /* original grid */
-		    j = iz+ix*nz2; /* padded grid */
-		    curtxx[j] += srcd[it][ix][iz];
-		    pretxx[i] = curtxx[j];
-		}
-	    }
-	} 
-	
 
 	for (ix = 0; ix < nx; ix++) {
 	    /* write wavefield to output */
-	    sf_floatwrite(curtxx+ix*nz2,nz,Fo); 
+	    //sf_floatwrite(curtxx+ix*nz2,nz,Fo); 
+	    sf_floatwrite(pretxx+ix*nz,nz,Fo); 
 	}
 	
 	/*record*/
 	for (ix = 0; ix < nx; ix++){
-	    record[ix][it] = curtxx[ix*nz2+gdep];
+	    //record[ix][it] = curtxx[ix*nz2+gdep];
+	    record[ix][it] = pretxx[ix*nz+gp];
 	}
 	
+	for (ix = 0; ix < nx; ix++) {
+	    for (iz = 0; iz < nz; iz++) {
+		i = iz+ix*nz;  /* original grid */
+		j = iz+ix*nz2; /* padded grid */
+		pretxx[i] = curtxx[j];
+	    }
+	}
 
     }/*End of MAIN LOOP*/
 

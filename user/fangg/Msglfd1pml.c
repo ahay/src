@@ -1,4 +1,4 @@
-/* 1-D Low Rank Finite-difference wave extrapolation */
+/* 1-D Lowrank Finite-difference wave extrapolation */
 /*
   Copyright (C) 2008 University of Texas at Austin
   

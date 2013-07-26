@@ -202,7 +202,7 @@ int main(int argc, char* argv[])
     for (it = 0; it < nt; it++) {
 	sf_warning("it=%d;", it);
 	if (it<=sp.trunc) {
-	    explsourcet(txxn0, source, it, spx, spz, nx, nz, &sp);
+	    explsourcet(txxn0, source, it, dt, spx, spz, nx, nz, &sp);
 	}
     
 	/*velocity*/

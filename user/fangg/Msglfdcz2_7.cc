@@ -75,7 +75,8 @@ int main(int argc, char** argv)
     par.get("size",size,6); // stencil length 
     iRSF velf;
     oRSF outm;  // FD coefficient of d/dx
-    oRSF fsx("sx"), fsz("sz"); 
+    oRSF fsx("sx");
+    oRSF fsz("sz"); 
     float dx, dz;
 
     int nz, nx;

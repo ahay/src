@@ -75,7 +75,8 @@ int main(int argc, char** argv)
     par.get("size",size,6); // stencil length 
     iRSF velf;
     oRSF outm;  // FD coefficient of d/dx
-    oRSF fsx("sx"), fsz("sz"); 
+    oRSF fsx("sx");
+    oRSF fsz("sz"); 
     float dx, dz;
     
     float wavnumcut;
@@ -106,8 +107,8 @@ int main(int argc, char** argv)
     float kz0 = -dkz*nz/2.0; 
     //float a = nx/4.0*dkx; 
     //float b = nz/4.0*dkz; 
-    float a = nx/3.0*dkx*wavnumcut; 
-    float b = nz/3.0*dkz*wavnumcut;
+    float a = nx/4.0*dkx*wavnumcut; 
+    float b = nz/4.0*dkz*wavnumcut;
     
     int i=0;
     float dkxz=dkx+dkz;

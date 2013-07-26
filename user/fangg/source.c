@@ -28,7 +28,8 @@ typedef struct {
 
 void explsourcet(float **vtxx/*@out@*/,
 		 float *vwavlet, 
-		 int it, int vsx, int vsdepth, 
+		 int vit, float vdt,
+                 int vsx, int vsdepth, 
 		 int vnx, int vnz,
 		 spara *vps/*decay parameters*/)
 /*<explosive source for stress txx>*/ 
@@ -41,10 +42,10 @@ void explsourcet(float **vtxx/*@out@*/,
 	for (ix=0; ix<2*cent; ix++)
 	    for (iz=0; iz<2*cent; iz++) {
 		phi = exp( -1*vps->alpha*vps->alpha*((ix-cent)*(ix-cent)+(iz-cent)*(iz-cent)) );
-		vtxx[vsx-cent+ix][vsdepth-cent+iz] += vwavlet[it]*phi;
+		vtxx[vsx-cent+ix][vsdepth-cent+iz] += vwavlet[vit]*phi*vdt;
 	    }
     } else {
-	vtxx[vsx][vsdepth] += vwavlet[it];
+	vtxx[vsx][vsdepth] += vwavlet[vit]*vdt;
     } 
 }
 
