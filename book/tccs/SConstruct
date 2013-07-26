@@ -1,7 +1,7 @@
 from rsf.book import *
 
 Papers(copyr='The University of Texas at Austin',
-       group='Jackson School of Geosciences',
+       group='Texas Consortium for Computational Seismology',
        line='Selected papers',
        authors={'diffr':'Sergey Fomel, Evgeny Landa, and M.~Turhan Taner',
                 'hyper':'Sergey Fomel and Alexey Stovas',
@@ -19,6 +19,7 @@ Papers(copyr='The University of Texas at Austin',
                 'fpwd': 'Zhonghuan Chen, Sergey Fomel, and Wenkai Lu',
                 'crs': 'Sergey Fomel and Roman Kazinnik',
                 'lfd': 'Xiaolei Song, Sergey Fomel, and Lexing Ying',
+                'butterfly': 'Jingwei Hu, Sergey Fomel, Laurent Demanet, and Lexing Ying'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
