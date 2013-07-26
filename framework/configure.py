@@ -4,7 +4,7 @@
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version.
 #
-# This program is distributed in the hope that it will be useful,
+# This program is distributed in the hope that it will be useful,mpi
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -1055,7 +1055,7 @@ pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
               'rhel':'openmpi-devel'}
 
 def mpi(context):
-    context.Message("checking for MPI ... ")
+    context.Message("checking for MPICC ... ")
     path = os.environ['PATH']
     if plat['OS'] == 'linux':
         if plat['distro'] == 'fedora' or plat['distro'] == 'rhel':
@@ -1076,16 +1076,45 @@ def mpi(context):
         context.env.Append(ENV={'MPICH_CC':cc,'MPICH_CLINKER':cc})
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
+	if res:
+	        context.Result(res)
+        	context.env['MPICC'] = mpicc
+        else: # failed to compile
+                context.Result(context_failure)
+        	need_pkg('mpi', fatal=False)
+        	context.env['MPICC'] = None
     else: # mpicc not found
-        context.Result(context_failure)
-        res = None
-    if res:
-        context.Result(res)
-        context.env['MPICC'] = mpicc
-    else:
         context.Result(context_failure)
         need_pkg('mpi', fatal=False)
         context.env['MPICC'] = None
+
+    context.Message("checking for MPICXX ... ")
+    mpicxx = context.env.get('MPICXX',WhereIs('mpicxx', path))
+    if mpicxx:
+        context.Result(mpicxx)
+        context.Message("checking if %s works ... " % mpicxx)
+        # Try linking with mpicxx instead of cxx
+        text = '''
+        #include <mpi.h>
+        int main(int argc,char* argv[]) {
+        MPI_Init(&argc,&argv);
+        MPI_Finalize();
+        }\n'''
+        cxx = context.env.get('CXX')
+        context.env['CXX'] = mpicxx
+        res = context.TryLink(text,'.cc')
+        context.env['CXX'] = cxx
+	if res:
+	        context.Result(res)
+        	context.env['MPICXX'] = mpicxx
+        else: # failed to compile
+                context.Result(context_failure)
+        	need_pkg('mpi', fatal=False)
+        	context.env['MPICXX'] = None
+    else: # mpicxx not found
+        context.Result(context_failure)
+        need_pkg('mpi', fatal=False)
+        context.env['MPICXX'] = None
 
 def cuda(context):
     context.Message("checking for CUDA ... ")
@@ -2014,6 +2043,7 @@ def options(file):
     opts.Add('OPENGLFLAGS','Flags for linking OpenGL libraries')
     opts.Add('OPENGLPATH','Path to OpenGL headers')
     opts.Add('MPICC','MPI C compiler')
+    opts.Add('MPICXX','MPI C++ compiler')
     opts.Add('PETSCDIR',
     'Portable, Extensible Toolkit for Scientific computation - installation directory')
     opts.Add('PETSCPATH','PETSc - path to headers')
