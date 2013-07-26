@@ -6,22 +6,59 @@
 \maketitle
 \label{paper:mda}
 
-        The many applications of least squares
-        to the one-dimensional convolution operator
-        constitute the subject known as ``\bx{time-series analysis}.''
-        The {\it \bx{autoregression}} filter,
-        also known as the \bx{prediction-error filter} (\bx{PEF}),
-        gathers statistics for us,
-        not the autocorrelation or the spectrum directly
-        but it gathers them indirectly
-        as the inverse of the amplitude spectrum of its input.
-        The PEF plays the role of the so-called
-        ``inverse-covariance matrix'' in statistical estimation theory.
-        Given the PEF, we use it to find missing portions of signals.
+% INTRODUCTION to chapter MDA.
 
-%Here we examine applications of time-series analysis to reflection seismograms.
-%These applications further illuminate the theory of least squares
-%in the area of \bx{weighting function}s and stabilization.
+Occam's razor says we should try understand the world by the simplest explanation.
+So, how do we decompose a complicated thing into its essential parts?
+That's far too difficult a question, but the word ``covariance'' points the way.
+If things are found statistically connected (covary), the many might be explainable by a few.
+For example a one-dimensional waveform can excite a wave equation filling a 3-D space.
+The values in that space will have a lot of covariance.
+In this chapter we take multidimensional spaces full of numbers
+and answer the question,
+``what causal differential (difference) equation might have created these numbers?''
+Our answer here, an autoregressive filter, does the job imperfectly,
+but it is a big step away from complete ignorance.
+As the book progresses we find three kinds of uses:
+(1) filling in missing data and uncontrolled parts of models,
+(2) preparing residuals for data fitting,
+(3) providing ``prior'' models for preconditioning an estimation.
+
+\par
+Recall that residuals (and preconditioning variables) should be
+Independent, and Identically Distributed (IID).
+In practice the ``ID'' means all residuals should have the same variance,
+and the preceding ``I'' means likewise in Fourier space (whiteness).
+This is the ``I'' chapter.
+Conceptually we might jump in and out of Fourier space,
+but here we learn processes in physical space
+that whiten in Fourier space.
+In earlier chapters we transformed from a physical space
+to something more like an IID space when we said,
+``Topography is smooth, so let us estimate and view instead its derivative.''
+
+\par
+The branch of mathematics introduced here is young.
+Physicists seem to know nothing of it,
+perhaps because it begins with time not being a continuous variable.
+About 100 years ago people looked at market prices
+and wondered why they varied from day to day.
+To try to make money from the market fluctuations
+they schemed to try to predict prices.
+That is a good place to begin.
+The subject is known as ``\bx{time-series analysis}.''
+In this chapter we define the {\it \bx{autoregression}} filter,
+also known as the \bx{prediction-error filter} (\bx{PEF}).
+It gathers statistics for us.
+It gathers not the autocorrelation or the spectrum directly
+but it gathers them indirectly
+as the inverse of the amplitude spectrum of its input.
+Although time-series analysis is a one dimensional study,
+we naturally use the helix to broaden it to multidimensional space.
+The PEF leads us to the ``inverse-covariance matrix'' of statistical estimation theory.
+Theoreticians tell us we need this before we can properly find a solution.
+Here we see how to go after it.
+
 
 %\HIDE{
 \subsection{Time domain versus frequency domain}
@@ -47,7 +84,7 @@ Much of the literature on \bx{time-series analysis}
 applies to the limited case of uniform weighting functions.
 Such time series are said to be ``stationary.''
 This means that their statistical properties do not change in time.
-In real life, particularly in the analysis of echos,
+In real life, particularly in the analysis of echoes,
 signals are never stationary in time and space.
 A \bx{stationarity} assumption is a reasonable starting assumption,
 but we should know how to go beyond it
@@ -117,10 +154,10 @@ by $P(\omega )\T$ and add $\epsilon >0$ to the denominator.
 This gives
 \begin{equation}
 F(\omega )\eq
-- \ \frac{M(\omega ) P(\omega )\T}{P(\omega )P(\omega )\T + \epsilon}
+- \ \frac{M(\omega ) P\T(\omega )}{P(\omega )P(\omega )\T + \epsilon}
 \label{eqn:epsilon}
 \end{equation}
-where $ P(\omega )\T$ is the complex conjugate of $P(\omega )$.
+where $ P\T(\omega )$ is the complex conjugate of $P(\omega )$.
 Although the $\epsilon$ stabilization seems nice,
 it apparently produces a nonphysical model.
 For $\epsilon$ large or small, the time-domain response
@@ -139,7 +176,7 @@ to specify filters whose time duration is not unreasonably long,
 we can revise equation~(\ref{eqn:epsilon}) to
 \begin{equation}
 F(\omega )\eq
-- \ \frac{<M(\omega ) P(\omega )\T>}{<P(\omega )P(\omega )\T  >}
+- \ \frac{<M(\omega ) P\T(\omega )>}{<P(\omega )P\T(\omega )  >}
 \label{eqn:smoothit}
 \end{equation}
 where
@@ -223,7 +260,7 @@ each column being the ``primary''.
 \end{equation}
 
 %\par
-%To minimize $\bold r'\bold r$,
+%To minimize $\bold r\T\bold r$,
 %we could use the conjugate-direction subroutine \texttt{cgmeth()} \vpageref{lst:cgmeth},
 %but we would remove its call to
 %the matrix multiply subroutine
@@ -236,7 +273,7 @@ each column being the ``primary''.
 Given $y_t$ and $y_{t-1}$, you might like to predict $y_{t+1}$.
 Earliest application of the ideas in this chapter
 came in the predictions of markets.
-Prediction of a signal from its past is called ``\bx{autoregression}''
+Prediction of a signal from its past is called ``\bx{autoregression}'',
 because a signal is regressed on itself ``auto''.
 To find the scale factors you would optimize the fitting goal below,
 for the \bx{prediction filter} $(f_1,f_2)$:
@@ -421,7 +458,7 @@ should be IID (Independent, Identically Distributed)
 which in practical terms means in both Fourier space and physical
 space they should have a uniform variance.
 Further, not only should residuals have the IID property,
-but we should choose a preconditioning tranformation
+but we should choose a preconditioning transformation
 so that our unknowns have the same IID nature.
 It is easy enough to achieve flattening in physical space
 by means of weighting functions.
@@ -483,7 +520,7 @@ This is sketched in Figure \ref{fig:systems}.
   to observation, into computer.
 }
 Then we design a prediction-error filter $\bold A$ on $\bold y$,
-which yields a white-spectrumed output residual $\bold r$.
+which yields a white-spectrum residual $\bold r$.
 Because $\bold r$ and $\bold x$ theoretically have the same spectrum,
 the tantalizing prospect is that maybe $\bold r$ equals $\bold x$,
 meaning that the PEF $\bold A$ has {\it deconvolved}
@@ -664,6 +701,22 @@ namely $b_n$ tend to zero.
 This generally happens because as $n$ increases,
 $y_{t-n}$ becomes a weaker and weaker predictor of $y_t$.
 
+Here's a mathematical fact we soon need:
+For any vectors $\bold u$ and $\bold v$,
+if
+$\bold r\cdot\bold u=\bold 0$
+and
+$\bold r\cdot\bold v=\bold 0$,
+then
+$\bold r\cdot(\bold u + \bold v)=\bold 0$
+and
+$\bold r\cdot(6\bold u - 3\bold v)=\bold 0$
+and
+$\bold r\cdot(a_1\bold u + a_2\bold v)=\bold 0$
+for any
+$a_1$
+and
+$a_2$.
 \par
 The matrix $\bold Y_a$ contains
 all of the columns that are found in $\bold Y_b$
@@ -679,11 +732,11 @@ since $|b_n|<<1$.
 Because $\bold r_a$ is (effectively)
 orthogonal to all the components of $\bold r_b$,
 $\bold r_a$ is also orthogonal to $\bold r_b$ itself.
-(For any $\bold u$ and $\bold v$, if
-$\bold r\cdot \bold u=0$ and
-$\bold r\cdot \bold v=0$ then
-$\bold r\cdot (\bold u+ \bold v)=0$ and also
-$\bold r\cdot (a_1\bold u + a_2\bold v)=0$).
+%(For any $\bold u$ and $\bold v$, if
+%$\bold r\cdot \bold u=0$ and
+%$\bold r\cdot \bold v=0$ then
+%$\bold r\cdot (\bold u+ \bold v)=0$ and also
+%$\bold r\cdot (a_1\bold u + a_2\bold v)=0$).
 \par
 Here is a detail:
 In choosing the example of equation (\ref{eqn:tworegrs}),
@@ -996,11 +1049,53 @@ Does it mean the ``final solution'' is nonunique?
 Usually not, or not seriously so.
 Recall even in one dimension, the time reverse of a PEF
 has the same spectrum as the original PEF.
-When a PEF is used for regularizing a fitting problem,
+When a PEF is used for regularizing a fitting application,
 it is worth noticing that the quadratic form minimized
 is the PEF times its adjoint so the phase drops out.
 Likewise, a missing data restoration also amounts to minimizing
 a quadratic form so the phase again drops out.
+
+\section{Basic blind deconvolution}
+Here are the basic definitions of blind deconvolution:
+If a model $m_t$ (with FT $M$) is made of random numbers
+and convolved with a ``source waveform'' (having FT) $F^{-1}$
+it creates data $D$.  From data $D$ you find the model $M$
+by $M=FD$.   Trouble is, you typically do not know $F$ and need to estimate (guess) it
+hence the word ``blind.''
+\par
+Suppose we have many observations or many channels of $D$ so we label them $D_j$.
+We can define a model $M_j$ as
+\begin{eqnarray}
+M_j &=& \frac{D_j}{ \sqrt{\sum_j D^\ast D}}
+\end{eqnarray}
+so blind deconvolution removes the average spectrum.
+\par
+Sometimes we have only a single signal $D$ but it is quite long.
+Because the signal is long, the magnitude of its Fourier transform is rough,
+so we smooth it over frequency, and denote it thus:
+\begin{eqnarray}
+M &=& \frac{D}{ \sqrt{\ll D^\ast D\gg}}
+\end{eqnarray}
+Smoothing the spectrum makes the time function shorter.
+Indeed, the amount of smoothing may be chosen by the amount of shortness wanted.
+\par
+These preliminary models are the most primative forms of deconvolved data.
+They deal only with the amplitude spectrum.
+Most deconvolutions involve also the phase.
+The generally chosen phase is one with a causal filter.
+A casual filter $f_t$ (vanishes before $t=0$)
+with FT $F$ is chosen so that $M=FD$ is white.
+Finding this filter is a serious undertaking,
+normally done in a one-dimensional space.
+Here, taking advantage of the helix, we do it in space of any number of dimensions.
+
+\par
+For reasons explained later,
+this is equivalent to minimizing the energy output of a filter beginning with a one, $(1,f_1,f_2,f_3,\cdots)$.
+The inverse of this filter $1/F$ is often called ``the impulse response'', or ``the source waveform''.
+Whether it actually is a source waveform depends
+on the physical setup as well as some mathematical assumptions we will learn.
+
 
 \subsection{Examples of modeling and deconvolving with a 2-D PEF }
 \inputdir{morgan}
@@ -1097,7 +1192,7 @@ They can dodge around missing data, or we can use them
 to estimate missing data.
 We avoid periodic boundary assumptions inherent to FT.
 The PEF's are designed only internal to known data, not off edges
-so they are readily adaptible to nonstationarity.
+so they are readily adaptable to nonstationarity.
 Thinking of these textures as seismic time slices,
 the textures could easily be required to pass thru specific
 values at well locations.  
@@ -1132,7 +1227,7 @@ The big question is, ``Has the PEF improved the appearance of the data?''
 The data itself from the single pop,
 both before and after PE-filtering is shown in
 Figure~\ref{fig:decon0}.
-For reasons of esthetics of human perception
+For reasons of aesthetics of human perception
 I have chosen to display a mirror image of the PEF'ed data.
 To see a blink movie of superposition of
 before-and-after images you need the electronic book.
@@ -1772,7 +1867,7 @@ Let us name this method the ``minimum noise'' method
 of finding missing data.
 
 \par
-A practical problem with the minimum-noise method is evident
+A practical application with the minimum-noise method is evident
 in a large empty hole such as 
 in Figures \ref{fig:herr-hole-fillr}-
 \ref{fig:brick-hole-fillr}.
@@ -1944,34 +2039,36 @@ that are most predictable.
 The filled hole is devoid of the unpredictable noise
 that is a part of all real data.
 
-%Figure \ref{fig:channel-elita} is
-%an interesting seismic image showing ancient river channels now deeply buried.
-%Such river channels are often filled with sand,
-%hence are good petroleum prospects.
-%Prediction error methodology fails to simulate these channels.
-%We can give the reason that the channels are not statistically stationary.
-%The methodology also fails to extrapolate them very far from a known
-%region into a hidden region.
+\begin{comment}
+\par
+Figure \ref{fig:channel-elita} is
+an interesting seismic image showing ancient river channels now deeply buried.
+Such river channels are often filled with sand,
+hence are good petroleum prospects.
+Prediction error methodology fails to simulate these channels.
+We can give the reason that the channels are not statistically stationary.
+The methodology also fails to extrapolate them very far from a known
+region into a hidden region.
 
-%\plot{channel-elita}{width=6.0in,height=6.0in}{
-%	Upper left shows an interesting seismic image with
-%	ancient river channels now deeply buried.
-%	In the upper right a portion of the image is removed.
-%	Lower left attempts to fill the gap
-%	using a prediction-error filter
-%	continuing channels into the gap.
-%	Data are poorly continued.
-%	This image may be thought of as the mean of
-%	a random variable.
-%	Lower right fills the gap by the ``geostat'' technique
-%	adding noise of an appropriate variance and covariance while
-%	matching the boundary conditions.
-%	The synthetic data added there
-%	shows no interesting channels,
-%	though it might replicate some channel trends
-%	from the fitting region.
-%	The methodology cannot cope with the nonstationarity.}
-
+\plot{channel-elita}{width=6.0in,height=6.0in}{
+	Upper left shows an interesting seismic image with
+	ancient river channels now deeply buried.
+	In the upper right a portion of the image is removed.
+	Lower left attempts to fill the gap
+	using a prediction-error filter
+	continuing channels into the gap.
+	Data are poorly continued.
+	This image may be thought of as the mean of
+	a random variable.
+	Lower right fills the gap by the ``geostat'' technique
+	adding noise of an appropriate variance and covariance while
+	matching the boundary conditions.
+	The synthetic data added there
+	shows no interesting channels,
+	though it might replicate some channel trends
+	from the fitting region.
+	The methodology cannot cope with the nonstationarity.}
+\end{comment}
 
 %\newslide
 \subsection{Inversions with geostat}
@@ -2155,7 +2252,7 @@ Thus, we have acquired a few new regression equations.
 \par
 Some of my research codes include these symmetries,
 but I excluded them here.
-Nowhere did I see that the reversal symmetry made noticable difference
+Nowhere did I see that the reversal symmetry made noticeable difference
 in results,
 but in coding, it makes a noticeable clutter by
 expanding the residual to a two-component {\it residual array}.
@@ -2186,7 +2283,7 @@ wrap around the 2-axis.
 \par
 Suppose you acquire data on a hexagonal mesh as below
 \par\noindent
-%\scriptsize
+\scriptsize
 \begin{verbatim}
                 . . . . . . . . . . . . . . . .
                  . . . . . . . . . . . . . . . .
@@ -2201,14 +2298,14 @@ Suppose you acquire data on a hexagonal mesh as below
                 . . . . . . . . . . . . . . . .
                  . . . . . . . . . . . . . . . .
 \end{verbatim}
-%\normalsize
+\normalsize
 \par\noindent
 and some of the data values are missing.
 How can we apply the methods of this chapter?
 The solution is to append the given data by more missing data
 shown by the commas below.
 \par\noindent
-%\scriptsize
+\scriptsize
 \begin{verbatim}
                  . . . . . . . . . . . . . . . . , , , , , ,
                 . . . . . . . . . . . . . . . . , , , , , ,
@@ -2224,7 +2321,7 @@ shown by the commas below.
       , , , , , . . . . . . . . . . . . . . . . ,
      , , , , , , . . . . . . . . . . . . . . . . 
 \end{verbatim}
-%\normalsize
+\normalsize
 \par\noindent
 Now we have a familiar two-dimensional coordinate system
 in which we can find missing values,
@@ -2667,7 +2764,7 @@ because these are not scalars but operators.
 Then the solution may not converge to the minimum you want.
 Your solution will depend on where you start from.
 I no longer exhibit the nonlinear solver \texttt{missif}
-until I find a real data example where it produces noticibly better results
+until I find a real data example where it produces noticeably better results
 than multistage linear-least squares.
 
 
@@ -2805,7 +2902,6 @@ The data points in Figures
   % A low frequency component grows towards the right.
 }
 \par
-\boxit{
         Comparing Figures
         \ref{fig:im1-2+1} and
         \ref{fig:im1-1a} to
@@ -2814,6 +2910,9 @@ The data points in Figures
         the prediction-error filter
         while finding the model space,
         we have interpolated beyond \bx{aliasing} in data space.
+\par
+\boxit{
+	Sometimes PEFs enable us to interpolate beyond aliasing.
         }
 %\par
 %Now we switch to other analytic functions as a source of data,
