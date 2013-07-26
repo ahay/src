@@ -1,4 +1,4 @@
-/* Compare the difference of two rsf data sets with the same size. */
+/* Compare the difference of two RSF data sets with the same size. */
 /*
   Copyright (C) 2012 University of Texas at Austin
   
