@@ -24,19 +24,25 @@ Result('Vint',
      '''
      graph  title=Interval Velocity 
      ''')
+	
+
+Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
+
+Result('final_stack','sfgrey')
+
 
 Flow ('spray2','Vint','spray axis=2 n=188 d=1 o=1')
 
 Result('spray2',
      '''
-     graph  title=Interval Velocity interpolated
+     sfgrey color=j  title=Interval Velocity interpolated
      ''')
 
 Flow ('Vint3D','spray2','spray axis=3 n=345 d=1 o=1')
 
 Result('Vint3D',
      '''
-     graph  title=Interval Velocity interpolated
+     sfbyte | sfgrey3 color=j flat=n 
      ''')
 
 End()
