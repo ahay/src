@@ -1,0 +1,25 @@
+segyread tape=/home/karl/data/TeapotDome/Prestack/npr3_gathers.sgy \
+	remap=fldr,tracr byte=189l,193l \
+| segyclean \
+| sunmo \
+  tnmo=0.00,.479,.637,.792,.877,1.009,1.104,1.19458,1.615,3.010 \
+vnmo=9132.86,10553.29,10921.60,10791.97,11074.19,11649.54,11807.96,12325.03,14410.47,17216.64 \
+| sustack key=cdp \
+> stack.su
+
+<stack.su suximage perc=90
+<stack.su surange
+
+<stack.su sugethw key=fldr,tracr | more
+
+sfsegyread tape=stack.su tfile=tstack.rsf su=y suxdr=y >stack.rsf
+<stack.rsf sfwindow n2=1000 | sfgrey |sfpen 
+sfheaderattr <tstack.rsf 
+
+<stack.rsf sfintbin xk=tracr yk=fldr head=tstack.rsf >final_stack.rsf
+sfgrey <final_stack.rsf | sfpen
+ 
+sfbyte <final_stack.rsf >byte_final_stack.rsf
+sfgrey3 <byte_final_stack.rsf | sfpen &
+
+#xmin=1 xmax=188 
