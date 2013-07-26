@@ -17,14 +17,14 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-
+#include <omp.h>
 #include <rsf.h>
-#include "pmlm.h"
+#include "pmlm_OMP.h"
 #include "srcm.h"
 #include "sglfdc.h"
-#include "sglfdfbm2.h"
+#include "sglfdfbm2_OMP.h"
 /*^*/
-#ifndef _sglfdfbm2_h
+#ifndef _sglfdfbm2_OMP_h
 
 typedef struct GeoPar {
     int   nx;
@@ -72,6 +72,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     
     /* tmp variable */
     int wfit;
+    int nth;
 
     nx = geop->nx;
     nz = geop->nz;
@@ -93,9 +94,25 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     marg   = getmarg();
     
 
+# ifdef _OPENMP
+    if (verb)
+	sf_warning(">>>> Using %d threads <<<<<", omp_get_num_threads());
+#endif
+
     denx = sf_floatalloc2(nzb, nxb);
     denz = sf_floatalloc2(nzb, nxb);
-    
+
+#ifdef _OPENMP
+#pragma omp parallel  
+{
+ nth=omp_get_num_threads();
+}
+#endif
+ sf_warning(">>>> Using %d threads <<<<<", nth);
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for ( iz= 0; iz < nzb; iz++) {
 	    denx[ix][iz] = den[ix][iz];
@@ -103,13 +120,19 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	}
     }
     /*den[ix+1/2][iz]*/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for ( ix = 0; ix < nxb-1; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    denx[ix][iz] = (den[ix+1][iz] + den[ix][iz])*0.5;
 	}
     }
-    
     /*den[ix][iz+1/2]*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for ( ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb-1; iz++) {
 	    denz[ix][iz] = (den[ix][iz+1] + den[ix][iz])*0.5;
@@ -124,37 +147,57 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     vzn0  = sf_floatalloc2(nzb, nxb);
 
     init_pml(nz, nx, dt, marg, pmlp);
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    txxn1[ix][iz] = 0.0;
 	 }
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    txxn0[ix][iz] = 0.0;
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vxn1[ix][iz] = 0.0;  
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vxn0[ix][iz] = 0.0;
 	}
     } 
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vzn1[ix][iz] = 0.0;  
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vzn0[ix][iz] = 0.0;
 	}
-    }  
+    }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif  
     for (it = 0; it < nt; it++) {
 	for (ix = 0; ix < nx; ix++) {
 	    rcd[ix][it] = 0.0;
@@ -167,6 +210,9 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	if (verb) sf_warning("it=%d/%d;", it, nt-1);
 	
 	/*velocity*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++ ) {
 	    for (iz = marg+pmlout; iz < nz+pmlout+marg; iz++) {
 		vxn1[ix][iz] = vxn0[ix][iz] - dt/denx[ix][iz]*ldx(txxn0, ix, iz);
@@ -178,6 +224,9 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	pml_vxz(vxn1, vzn1, vxn0, vzn0, txxn0, denx, denz, ldx, ldz, freesurface);
 	
 	/*Stress*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
 	    for ( iz = marg+pmlout; iz < nz+marg+pmlout; iz++) { 
 		txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix-1, iz) + ldz(vzn1, ix, iz-1));
@@ -192,12 +241,18 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	}
 	
 	if ( it%snpint == 0 ) {
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	    for ( ix = 0; ix < nx; ix++) 
 		for ( iz = 0; iz<nz; iz++ )
 		    wavfld[wfit][ix][iz] = txxn0[ix+pmlout+marg][iz+pmlout+marg];
 	    wfit++;
 	}
-		 
+	
+#ifdef _OPENMP
+#pragma omp parallel for private(ix)
+#endif	 
 	for ( ix =0 ; ix < nx; ix++) {
 	    rcd[ix][it] = txxn0[ix+pmlout+marg][pmlout+marg+gp];
 	    //sf_warning("rcd=%f ix=%d it=%d", rcd[ix][it], ix, it);
@@ -260,7 +315,10 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 
     sill = sf_floatalloc2(nz, nx);
     ccr  = sf_floatalloc2(nz, nx);
-    
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif    
     for (ix = 0; ix < nxb; ix++) {
 	for ( iz= 0; iz < nzb; iz++) {
 	    denx[ix][iz] = den[ix][iz];
@@ -268,12 +326,20 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	}
     }
     /*den[ix+1/2][iz]*/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for ( ix = 0; ix < nxb-1; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    denx[ix][iz] = (den[ix+1][iz] + den[ix][iz])*0.5;
 	}
     }
     /*den[ix][iz+1/2]*/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for ( ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb-1; iz++) {
 	    denz[ix][iz] = (den[ix][iz+1] + den[ix][iz])*0.5;
@@ -288,43 +354,65 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
     vzn0  = sf_floatalloc2(nzb, nxb);
 
     init_pml(nz, nx, dt, marg, pmlp);
-    
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif    
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    txxn1[ix][iz] = 0.0;
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    txxn0[ix][iz] = 0.0;
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vxn1[ix][iz] = 0.0;  
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vxn0[ix][iz] = 0.0;
 	}
     } 
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vzn1[ix][iz] = 0.0;  
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vzn0[ix][iz] = 0.0;
 	}
     }
-
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nx; ix++) {
 	for (iz = 0; iz < nz; iz++) {
 	    sill[ix][iz] = 0.0;
 	}
     }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nx; ix++) {
 	for (iz = 0; iz < nz; iz++) {
 	    ccr[ix][iz] = 0.0;
@@ -338,6 +426,9 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	if  (verb) sf_warning("it=%d/%d;", it, nt-1);
 
 	/*Stress*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
 	    for ( iz = marg+pmlout; iz < nz+marg+pmlout; iz++) { 
 		txxn0[ix][iz] = txxn1[ix][iz] + dt*c11[ix][iz]*(ldx(vxn1, ix-1, iz) + ldz(vzn1, ix, iz-1));
@@ -345,12 +436,18 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	}
 	/*Stress PML */
 	pml_txxb(txxn0, vxn1, vzn1, c11, ldx, ldz, freesurface);
-	
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif	
 	for (ix=0; ix<nx; ix++)  {
 	    txxn0[ix+pmlout+marg][pmlout+marg+gp] = rcd[ix][it];
 	}
 	
 	/*velocity*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++ ) {
 	    for (iz = marg+pmlout; iz < nz+pmlout+marg; iz++) {
 		vxn0[ix][iz] = vxn1[ix][iz] + dt/denx[ix][iz]*ldx(txxn0, ix, iz);
@@ -368,16 +465,23 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	pml_tstep_exchb(it);
 	
 	if ( it%snpint == 0 ) {
+
 	    for ( ix = 0; ix < nx; ix++) 
 		sf_floatwrite(txxn0[ix+pmlout+marg]+pmlout+marg, nz, Ftmpbwf);
 	}
 
 	if (it%snpint == 0 ) {
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
 		    ccr[ix][iz] += wavfld[wfit][ix][iz]*txxn0[ix+pmlout+marg][iz+pmlout+marg];
 		}
 	    }
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
 		    sill[ix][iz] += wavfld[wfit][ix][iz]*wavfld[wfit][ix][iz];
@@ -387,7 +491,9 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	}
     } /*Main loop*/
 
-    
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif    
     for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
 	    img[ix][iz] += ccr[ix][iz];///(sill[ix][iz]+SF_EPS)

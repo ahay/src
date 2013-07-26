@@ -21,7 +21,7 @@
 #include <math.h>
 #include <time.h>
 
-#include "sglfdfbm2.h"
+#include "sglfdfbm2_OMP.h"
 
 
 void freertm()
@@ -78,9 +78,6 @@ int main(int argc, char* argv[])
     /*pml boundary*/
     int pmlout, pmld0, decaybegin;
     bool decay, freesurface;
-
-    
-
 
     tstart = clock();
     sf_init(argc, argv);
@@ -266,6 +263,7 @@ int main(int argc, char* argv[])
     sf_oaxa(Fimg, ax, 2);
 
     sglfdfor2(wavefld, record, verb, fden, fc11, geop, srcp, pmlp);
+    sf_warning("Wavefield nt=%d", wfnt);
     sglfdback2(img, wavefld, record, verb, bden, bc11, geop, srcp, pmlp, Ftmpbwf);
    
     
