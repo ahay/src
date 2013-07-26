@@ -10,19 +10,107 @@
 \label{paper:prc}
 \sx{precondition}
 
-%When problems have less than about $10^3$ unknowns,
-%``exact'' methods are generally satisfactory.
-%When there are more unknowns,
-%we use iterative methods.
-%Iterative methods are about as fast as exact methods,
-%but they allow us to hope that when we give up exhausted
-%that we are near the best that can be done.
-%With more experience,
-%I learned that we often remain far from the solution we seek.
-%Thus we seek generally applicable problem reformulations
-%that will converge more rapidly.
-%Luckily we find that the helix gives a huge speedup in many problems,
-%in those problems that are densely sampled in model space.
+
+\par
+Let us review the big picture.
+In Chapter \ref{paper:ajt} we developed adjoints and
+in Chapter \ref{paper:lsq} we developed inverse operators.
+Logically, correct solutions come only through inversion.
+Real life, however, seems nearly the opposite.
+This is puzzling but intriguing.
+\par
+Every time you fill your car with gasoline,
+it derives much more from the adjoint than from inversion.
+I refer to the fact that ``practical seismic data processing''
+relates much more to the use of adjoints than of inverses.
+It has been widely known for about the last 15 years
+that medical imaging and all basic image creation methods are like this.
+It might seem that an easy path to fame and profit would
+be to introduce the notion of inversion,
+but it is not that easy.
+Both cost and result quality enter the picture.
+\par
+First consider cost.
+For simplicity, consider a data space with $N$ values
+and a model (or image) space of the same size.
+The computational cost of applying a dense adjoint
+operator increases in direct proportion to the number
+of elements in the matrix, in this case $N^2$.
+To achieve the minimum discrepancy between theoretical data
+and observed data (inversion) theoretically requires $N$ iterations
+raising the cost to $N^3$.
+\par
+Consider an image of size $m\times m=N$.
+Continuing, for simplicity, to assume a dense matrix of relations between
+model and data,
+the cost for the adjoint is $m^4$ whereas the cost for inversion is $m^6$.
+We'll consider computational costs for the year 2000, but
+noticing that costs go as the sixth power of the mesh size,
+the overall situation will not change much in the foreseeable future.
+Suppose you give a stiff workout to a powerful machine;
+you take an hour to invert a $4096\times 4096$ matrix.
+The solution, a vector of $4096$ components could
+be laid into an image of size $64\times 64= 2^6\times 2^6 = 4096$.
+Here is what we are looking at for costs:
+\par
+\begin{center}
+\begin{tabular}{||r|r|r|r|r||}                                          \hline
+adjoint cost &$(m\times m )^2$ & $(512\times 512)^2$ & $(2^9 2^9)^2$ & $2^{36}$
+\\ \hline
+inverse cost &$(m\times m )^3$ & $  (64\times 64)^3$ & $(2^6 2^6)^3$ & $2^{36}$
+\\ \hline
+\end{tabular}
+\end{center}
+\par\noindent
+These numbers tell us that for applications with dense operators,
+the biggest images that we are likely to see coming from inversion methods
+are $64\times 64$ whereas those from adjoint methods are $512\times 512$.
+For comparison, the retina of your eye is comparable to your computer
+screen at $1000\times 1000$.
+We might summarize by saying that while adjoint methods are less than perfect,
+inverse methods are ``legally blind'' :-)
+\sideplot{512x512}{height=3.5in,width=3.5in}{
+	Jos greets Andrew, ``Welcome back Andrew''
+	from the Peace Corps.
+	At a resolution of $512\times 512$, this picture
+	is about the same as the resolution
+	as the paper it is printed on,
+	or the same as your viewing screen,
+	if you have scaled it to 50\%\ of screen size.}
+%\newslide
+
+\par\noindent
+http://sepwww.stanford.edu/sep/jon/family/jos/gifmovie.html holds a movie
+blinking between Figures \ref{fig:512x512} and \ref{fig:64x64}.
+\par
+This cost analysis is oversimplified in that most applications
+do not require dense operators.
+With sparse operators, the cost advantage of adjoints is even more
+pronounced since for adjoints,
+the cost savings of operator sparseness translate directly to
+real cost savings.
+The situation is less favorable and much more muddy for inversion.
+The reason that Chapter 2 covers iterative methods
+and neglects exact methods is that in practice
+iterative methods are not run to their theoretical completion
+but they run until we run out of patience.
+
+\par
+Cost is a big part of the story, but the story has many other parts.
+Inversion, while being the only logical path to the best answer,
+is a path littered with pitfalls.
+The first pitfall is that the data is rarely able to 
+determine a complete solution reliably.
+Generally there are aspects of the image that are not learnable
+from the data.
+
+\sideplot{64x64}{height=3.5in,width=3.5in}{
+	Jos greets Andrew, ``Welcome back Andrew'' again.
+	At a resolution of $64\times 64$
+	the pixels are clearly visible.
+	From far the pictures are the same.
+	From near, examine their glasses.}
+%\newslide
 
 
 When I first realized that practical imaging methods in widespread
@@ -49,7 +137,7 @@ Here we'll see how it speeds many applications.
 We'll also come to understand why the gradient is such a poor direction
 both for steepest descent and for conjugate gradients.
 An indication of our path is found in the contrast between
-and exact solution
+an exact solution
 $\bold m = (\bold A\T\bold A)^{-1}\bold A\T\bold d$ and the
 gradient
 $\Delta \bold m = \bold A\T\bold d$
@@ -80,7 +168,7 @@ and coefficients in $\bold p$ are unknown coefficients
 to select amounts of the favored shapes.
 The variables $\bold p$  are often called the ``preconditioned variables''.
 It is not necessary that $\bold S$ be an invertible matrix,
-but we'll see later that invertibility is helpful.
+but we'll see later that invert-ability is helpful.
 Take this trial solution and insert it into
 a typical fitting goal
 \begin{equation}
@@ -131,6 +219,36 @@ reduces the number of adjustable parameters,
 changes the solution,
 gets it quicker, but lower resolution.
 
+\subsection{Preconditioner with a starting guess}
+
+In many applications, for many reasons,
+we have a starting guess $\bold m_0$ of the solution.
+You might worry that
+you could not find the starting preconditioned variable 
+$\bold p_0= \bold S^{-1}\bold m_0$
+because you did not know the inverse of $\bold S$.
+The way to avoid this problem is to
+reformulate the problem
+in terms of a new variable $\tilde {\bold m}$
+where
+$ \bold m = \tilde {\bold m} + \bold m_0$.
+Then 
+$\bold 0\approx \bold F \bold m - \bold d$
+becomes
+$\bold 0\approx \bold F \tilde {\bold m} - (\bold d - \bold F \bold m_0)$
+or
+$\bold 0\approx \bold F \tilde {\bold m} - \tilde {\bold d}.$
+Thus we have accomplished the goal of taking
+a problem with a nonzero starting model
+and converting it a problem of the same type
+with a zero starting model.
+Thus we do not need the inverse of $\bold S$
+because the iteration starts from $\tilde {\bold m}=\bold 0$
+so $\bold {\tilde p_0} = \bold 0$.
+\par
+Unfortunately, as we will see later,
+this conclusion is only valid while there is no regularization.
+
 \subsection{ Monkeying with the gradient }
 An essential part of any model update is the gradient
 \begin{equation}
@@ -143,8 +261,8 @@ $\Delta \bold m = \bold S \Delta \bold p$.
 In terms of $\bold p$ the regression
 $\bold 0 \approx \bold r = \bold F \bold m - \bold d$
 becomes
-$\bold 0 \approx \bold r = \bold F \bold S \bold p - \bold d$
-with a gradient
+$\bold 0 \approx \bold r = \bold F \bold S \bold p - \bold d$.
+As always, the gradient is simply the adjoint operator upon the residual.
 $\Delta \bold p = \bold S\T \bold F\T \bold r$.
 Changing variables back to $\bold m$ gives
 \begin{equation}
@@ -171,40 +289,17 @@ really matters only when the problem is big so it converges slowly,
 or when the physics or statistical approach is non-linear (later chapter).
 The choice of $\bold S$ is a subjective matter.
 It's an area where prior information or your physical intuition is relevant.
-Calling both $\bold m$ and $\bold p$ model space,
+Since both $\bold m$ and $\bold p$ are in model space,
 obvious choices for $\bold S$ are weighting functions
 and filtering functions in model space.
 You would weight the model space smaller where your intuition
 tells you your ultimate model will be small or where it might not be
 learnable from the data.
+\par
+In nonlinear problems, monkeying with the gradient modifies the descent path
+in a way that honors prior information
+hence this modification may be less likely to fall into a local minimum.
 
-
-\subsection{Preconditioner with a starting guess}
-
-In many applications, for many reasons,
-we have a starting guess $\bold m_0$ of the solution.
-You might worry that
-you could not find the starting preconditioned variable 
-$\bold p_0= \bold S^{-1}\bold m_0$
-because you did not know the inverse of $\bold S$.
-The way to avoid this problem is to
-reformulate the problem
-in terms of a new variable $\tilde {\bold m}$
-where
-$ \bold m = \tilde {\bold m} + \bold m_0$.
-Then 
-$\bold 0\approx \bold F \bold m - \bold d$
-becomes
-$\bold 0\approx \bold F \tilde {\bold m} - (\bold d - \bold F \bold m_0)$
-or
-$\bold 0\approx \bold F \tilde {\bold m} - \tilde {\bold d}.$
-Thus we have accomplished the goal of taking
-a problem with a nonzero starting model
-and converting it a problem of the same type
-with a zero starting model.
-Thus we do not need the inverse of $\bold S$
-because the iteration starts from $\tilde {\bold m}=\bold 0$
-so $\bold p_0 = \bold 0$.
 
 
 
@@ -371,6 +466,14 @@ The fitting goals become
 which enables us to benefit from the ``second miracle''.
 After finding $\bold p$,
 we obtain the final model with $\bold m = \bold S \bold p$.
+\par
+Please notice that the solution $\bold m$ is likely to come out smooth.
+The solution for $\bold p$ will be more rough, because the
+derivative of $m_t$ with respect to $t$ is $p_t$.
+Because it is smooth, each $m_t$ is statistically correlated with its neighbors $m_{t+1}$ and $m_{t-1}$,
+but the $p_t$ are less correlated with their neighbors.
+That's a good thing, we soon see.
+
 
 %Because model shaping is generally a filtering operation,
 %and because preconditioning operators are best when
@@ -506,10 +609,10 @@ In the statistical literature is a concept that repeatedly arises,
 the idea that some statistical variables are IID, namely Independent, Identically Distributed.
 In practice we'll see many random looking variables,
 some much closer than others to IID.
-Theoretically, the ID part of IID means the random variables come from identical
-probability functions.
+Theoretically, the ID part of IID means the random variables come from Identical
+probability Density functions.
 In practice, the ID part mostly means the variables have the same variance.
-The ``I'' before the ID means that the variables are statistically independent of one another.
+The ``I'' before the ID means that the variables are statistically Independent of one another.
 In the subject area of this book, signals, images, and earth volumes,
 the ``I'' before the ID means that our residual spaces are white --
 have all frequencies present in roughly equal amounts.
@@ -567,7 +670,7 @@ But within a scale $\epsilon$, $\bold r_m=\bold p$.
 Thus the preconditioning variable is not simply something to speed computational convergence.
 It is a variable that should be IID.
 If it is not coming out that way, we should consider changing $\bold A$.
-Chapter \ref{paper:mda} addresses the task of chosing an $\bold A$
+Chapter \ref{paper:mda} addresses the task of choosing an $\bold A$
 so that $\bold r_m$ comes out IID.
 \par
 \boxit{We should choose a weighting function (and/or operator) $\bold W$
@@ -575,13 +678,14 @@ so data residuals are IID.
 We should also choose our regularization operator $\bold A$
 so the precondioning variable $\bold p$ comes out IID.}
 
+\subsection{Philosophical speculation}
 \par
 Finally, the $\epsilon$.  How should we choose this number?
-Let $\E(|r_d|)$ be read as the Expected average value of $|r_d|$.
+Let ${\rm E}(|r_d|)$ be read as the Expected average value of $|r_d|$.
 The concept that each component in the vector $\bold r = (\bold r_d,\bold r_m)\T$
 should have the same expected absolute value leads to the notion that
 the value of epsilon should be
-$\epsilon=\E(|r_d|)/\E(|p|)$.
+$\epsilon={\rm E}(|r_d|)/{\rm E}(|p|)$.
 (I vaguely remember trying this once and discovering that epsilon
 could not be bootstrapped.  It either diverged to infinity
 or converged to zero depending on its starting value.
@@ -600,7 +704,7 @@ If there are many worlds, and if we may speak of an average over worlds,
 then we can have an array of averages,
 the array being of dimension the number of components of $r_d$ by that of $r_m$
 each an average over the many "worlds".
-How can a practioner absorb this notion?
+How can a practitioner absorb this notion?
 Perhaps in some cases the model and data space have a natural alignment
 such that a product of the two spaces can be locally averaged.
 Post stack migration suggests the example
@@ -660,7 +764,7 @@ Likewise the modeling operator $\bold F$ is called \texttt{Fop}
 and the smoothing operator $\bold A^{-1}$ is called \texttt{Sop}.
 Details of the code are only slightly different from
 the regularized solver
-\texttt{solver_reg} \vpageref{lst:solver_reg}.
+\texttt{solver-reg} \vpageref{lst:solver-reg}.
 
 %REMEMBER TO PUT THE PROGRAM BACK IN HERE !
 %\begin{notforlecture}
@@ -787,7 +891,7 @@ notice that $\bold r_m=\bold p$.
 \begin{equation}
 \Delta \bold m_{\rm good} \eq
 	\bold A^{-1} (\bold A^{-1})\T \ \bold g
-%	{ \bold g \over \bold A \bold A\T}
+%	\frac{ \bold g}{\bold A \bold A\T}
 	+ \bold m
 \label{eqn:newdirection}
 \end{equation}
@@ -925,7 +1029,7 @@ I would write a new basic tool for optimization.
 Instead of scanning only the space of the gradient and previous step,
 it would scan also over the ``smart'' direction.  
 This should offer the benefit of preconditioning
-the regularization at early interations
+the regularization at early iterations
 while offering more assured fitting data at late iterations.
 The improved 
 module for \texttt{cgstep}
@@ -943,7 +1047,7 @@ The measurements are described elsewhere (BEI for example).
 They amount to measuring the integral of the velocity squared
 from the surface down to the reflector.
 It is known as the RMS (root-mean-square) velocity.
-Although good quality echos may arrive often,
+Although good quality echoes may arrive often,
 they rarely arrive continuously for all depths.
 Good information is interspersed unpredictably with poor information.
 Luckily we can
@@ -1045,14 +1149,12 @@ This has the same effect as stiffening the model shaping with time.
   Raw CMP gather (left),
   Semblance scan (middle),
   and semblance value used for weighting function (right).
-  (Clapp)
 }
 
 \plot{stiff}{width=6in,height=3in}{
   Observed RMS velocity
   and that predicted by a stiff model with
   $\epsilon=4$.
-  (Clapp)
 }
 
 \plot{flex}{width=6in,height=3in}{
@@ -1370,7 +1472,7 @@ Two require a roughening operator $\bold A$ while
 the third requires a smoothing operator which
 (for comparison purposes) we denote $\bold A^{-1}$.
 The three methods are generally equivalent
-though they differ in important details.
+though they differ in significant details.
 
 \par
 The original way in
@@ -1461,6 +1563,65 @@ $\bold\nabla\T\bold\nabla = \bold H\T\bold H $.
 %Later, in Chapter
 %\ref{mda/paper:mda}
 %we'll find a smarter roughening operator $\bold A$ that gives better results.
+
+\subsection{Faking the epsilon}
+
+I'll tell a common story that should horrify those interested in theory
+(under 23 years old), and delight those wanting to get real work done
+(over 23 years old).
+Suppose you have a problem where
+model space is an image, maybe $1000\times 1000$,
+while application of the operator $\bold F$ takes about an hour.
+A common example in petroleum prospecting is ``wave equation migration''.
+The older generation of workers thus did a migration
+(single application of an adjoint operator)
+and finished their task in an hour.
+You, however, have read this book or otherwise learned about inversion
+(iteratively modeling for an increasingly better fitting model).
+Twelve iterations (12 applications of both $\bold F\T$ and $\bold F$)
+requires 24 hours.
+Theoretically you should be doing a million iterations
+($10^6$, one for each point in model space),
+but you are hoping 12 will be enough. (Good luck!)
+\par
+Oops! You also need to choose a numerical value for $\epsilon$.
+Since we have no theory for that choice, perhaps we should scan over 7 possible values,
+or maybe 30.  Now the job takes a week or a month.
+That's really bad news because
+there typically are other more important and more difficult problems
+we also need to be working out
+(such as updating the seismic velocity model).
+Any trick, honest or sly, would be nice to know.
+I'll tell you a trick that is very widely used.
+\par
+Imagine we had plenty of computer time.
+For small $\epsilon$ we have a smaller residual of data fitting but
+a larger residual in the model styling goal.
+Conversely, for large $\epsilon$, we may fit the data poorly,
+but the model styling goal is well honored.
+Now please carefully examine the preconditioned steps in Figure \ref{fig:conv}.
+At early iterations we see the solution is piece-wise lines (good)
+but many data points are poorly fit (bad).
+This is like large $\epsilon$.
+After more iterations the solution fits the data increasingly well.
+This is like small $\epsilon$.
+Are you ready to guess what pragmatic people do when they are pressured to get results?
+
+\par
+Many (most?) practical studies are done ignoring (abandoning)
+the model styling regression (second fitting regression below):
+$$
+\begin{array}{lll}
+\label{eq:main}
+\bold 0 &\approx & \bold F \bold A^{-1} \bold p \ -\   \bold d \\
+\bold 0 &\approx &           \epsilon   \bold p 
+\end{array}
+$$
+Nice to be rid of $\epsilon$!
+The pragmatic person iterates the data fitting regression only,
+watches the solution as a function of iteration,
+and stops when tired,
+or (more hopefully) stops at the iteration that is subjectively most pleasing.
 
 
 \subsection{SEABEAM: Filling the empty bins with a laplacian}
@@ -1974,8 +2135,8 @@ $\bold m_1 \cdot \bold m_2$ or data space
 $\bold d_1 \cdot \bold d_2$.
 Instead, we must first transform them to a preferred coordinate system.
 Say
-$\tilde{\bold m}_1 = \bold M \bold m_1$ and
-$\tilde{\bold d}_1 = \bold D \bold d_1$, etc for other vectors.
+$\tilde{\bold m}_1 = \bold M {\bold m}_1$ and
+$\tilde{\bold d}_1 = \bold D {\bold d}_1$, etc for other vectors.
 We complain we do not know $\bold M$ and $\bold D$.
 They reply that we do not really need to know them
 but we do need to have the inverses (aack!) of
@@ -2013,7 +2174,7 @@ Fortunately, upcoming chapter \ref{paper:mda}
 suggests how,
 in image estimation problems,
 to obtain sensible estimates of the elusive operators $\bold M$ and $\bold D$.
-Paranthetically, modeling calculations in physics and engineering
+Parenthetically, modeling calculations in physics and engineering
 often use similar mathematics
 in which the role of $\bold M\T\bold M$ is not so mysterious.
 Kinetic energy is mass times velocity squared.
@@ -2063,7 +2224,7 @@ transpose operators are computed with insufficient precision.
 %Nearly everything I know about null spaces
 %I learned from Dave Nichols, Bill Symes, Bill Harlan, and Sergey Fomel.
 
-\unboldmath
+%\unboldmath
 
 
-\clearpage
+%\clearpage
