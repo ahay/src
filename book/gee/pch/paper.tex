@@ -166,17 +166,17 @@ You can have any weighting function you wish
 and I will provide you
 the patching reconstruction operator $\tilde{\bold I}_p$ in
 \begin{equation}
-\tilde {\bf d}
+\tilde {\bold d}
 \quad = \quad 
-[ \bold W_{\rm wall} \bold P' \bold W_{\rm wind} \bold P ] \bold d
+[ \bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold P ] \bold d
 \quad = \quad 
 \tilde{\bold I}_p \, \bold d
 \label{eqn:idemeqn}
 \end{equation}
 where $\bold d$ is your initial data,
-$\tilde{\bf d}$ is the reconstructed data,
+$\tilde{\bold d}$ is the reconstructed data,
 $\bold P$ is the patching operator,
-$\bold P'$ is adjoint patching (adding the patches).
+$\bold P\T$ is adjoint patching (adding the patches).
 $\bold W_{\rm wind}$ is your chosen weighting function in the window, and 
 $\bold W_{\rm wall}$ is the weighting function
 for the whole wall.
@@ -252,7 +252,7 @@ Module \texttt{patching} assists in reusing the patching technique. It
 takes a linear operator $\bold F$.
 as its argument and applies it in patches.
 Mathematically, this is
-$ [\bold W_{\rm wall} \bold P' \bold W_{\rm wind} \bold F \bold P ] \bold d$.
+$ [\bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold F \bold P ] \bold d$.
 It is assumed that the input and output sizes for the operator
 \texttt{oper} are equal.
 \moddex{patching}{generic patching}{51}{70}{user/gee}
@@ -290,9 +290,9 @@ The composite operator, filtering in patches,
 $\tilde{\bold F}$,
 is given by
 \begin{equation}
-\tilde {\bf d}
+\tilde {\bold d}
 \quad = \quad 
-[ \bold W_{\rm wall} \bold P' \bold W_{\rm wind} \bold F_p \bold P ]\  \bold d
+[ \bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold F_p \bold P ]\  \bold d
 \quad = \quad 
 \tilde{\bold F}
 \ \bold d
@@ -347,7 +347,7 @@ In applications where triangle weights are needed on the {\it inputs}
 without having interference with edges),
 we can get ``triangle tent'' weights
 from {\tt tentn()} if we set filter dimensions and lags to unity,
-as shown in Figure~\ref{fig:wind0wt}.
+as shown in Figure~\ref{fig:wind1wt}.
 \sideplot{wind1wt}{width=3.00in}{
   Window weights from {\tt tentn()}
   with
@@ -365,9 +365,9 @@ with shapes like Egyptian pyramids of Cheops, $2-|x-y|+|x+y|$.
 Instead,
 the equation $(1-|x|)(1-|y|)$
 which has the tent-like shape shown
-in Figure~\ref{fig:wind0wt}
-adds up to the constant flat top shown in Figure~\ref{fig:wall0wt}.
-(To add interest to Figure~\ref{fig:wall0wt},
+in Figure~\ref{fig:wind1wt}
+adds up to the constant flat top shown in Figure~\ref{fig:wall1wt}.
+(To add interest to Figure~\ref{fig:wall1wt},
 I separated the windows by a little more than the precise matching distance.)
 In practice we may chose window shapes and overlaps for
 reasons other than the constancy of the sum of weights,
@@ -479,7 +479,7 @@ if a triangular footprint of weights is designed to ignore its output.
 \begin{exer}
 \item
         Code the linear operator
-        $ \bold W_{\rm wall} \bold P' \bold W_{\rm wind} \bold P $
+        $ \bold W_{\rm wall} \bold P\T \bold W_{\rm wind} \bold P $
         including its adjoint.
 %       (Note: It is cheating to search around the CD-ROM for subroutine {\tt idempatch()}).
 \item
@@ -1033,7 +1033,7 @@ should be designed to level them out too.)
 None of this is new or exciting in one dimension,
 but I find it exciting in more dimensions.
 In seismology,
-quasisinusoidal signals and noises are quite rare,
+quasi-sinusoidal signals and noises are quite rare,
 whereas local plane waves are abundant.
 Just as
 a short one-dimensional filter can absorb a sinusoid of any frequency,
@@ -1050,10 +1050,10 @@ amounts to minimizing a quadratic form
 by setting to zero its derivative, say
 \begin{equation}
 0 \eq
-{\partial \ \over \partial \bold s'}
+\frac{\partial \ }{\partial \bold s\T}
 \left(
-   (\bold s'-\bold d')\bold N'\bold N(\bold s - \bold d )
-+ \epsilon^2 \bold s' \bold S'\bold S \bold s
+   (\bold s\T-\bold d\T)\bold N\T\bold N(\bold s - \bold d )
++ \epsilon^2 \bold s\T \bold S\T\bold S \bold s
 \right)
 \end{equation}
 which gives the answer
@@ -1061,27 +1061,28 @@ which gives the answer
                                                 \label{eqn:notchfilter}
 \bold s &=&
                 \left(
-                   \bold N' \bold N
-                     \over
-                   \bold N' \bold N \ + \ \epsilon^2 \bold S'\bold S 
+                   \frac{
+                   \bold N\T \bold N
+                     }{
+                   \bold N\T \bold N \ + \ \epsilon^2 \bold S\T\bold S} 
                 \right) \ \bold d
 \\
                                                 \label{eqn:narrowfilter}
 \bold n \eq \bold d - \bold s
 &=&
                 \left(
-                   \epsilon^2 \bold S'\bold S
-                     \over
-                   \bold N' \bold N \ + \ \epsilon^2 \bold S'\bold S 
+                   \frac{\epsilon^2 \bold S\T\bold S
+                     }{
+                   \bold N\T \bold N \ + \ \epsilon^2 \bold S\T\bold S} 
                 \right) \ \bold d
 \end{eqnarray}
 To make this really concrete,
 consider its meaning in one dimension,
 where signal is white
-$\bold S'\bold S=1$ and
+$\bold S\T\bold S=1$ and
 noise has the frequency $\omega_0$,
 which is killable with the multiplier
-$\bold N'\bold N=(\omega-\omega_0)^2$.
+$\bold N\T\bold N=(\omega-\omega_0)^2$.
 Now we recognize that equation (\ref{eqn:notchfilter})
 is a notch filter and equation (\ref{eqn:narrowfilter})
 is a narrow-band filter.
@@ -1264,23 +1265,19 @@ An idea of Simon Spitz can help here.
 \par
 Let us reexpress equation (\ref{eqn:sigma}) with prediction-error filters.
 \begin{equation}
-{1\over \bar A_d A_d} \eq
-{1\over \bar A_s A_s} \ + \ 
-{1\over \bar A_n A_n}
+\frac{1}{ \bar A_d A_d} \eq
+\frac{1}{ \bar A_s A_s} \ + \ 
+\frac{1}{ \bar A_n A_n}
 \eq
 {
-	  {\bar A_s A_s} \ +\  {\bar A_n A_n}
-	\over
-	( {\bar A_s A_s} )   ( {\bar A_n A_n})
+	  \frac{{\bar A_s A_s} \ +\  {\bar A_n A_n}}{( {\bar A_s A_s} )   ( {\bar A_n A_n})}
 }
 \end{equation}
 Inverting
 \begin{equation}
 { \bar A_d A_d} \eq
 {
-	( {\bar A_s A_s} ) \  ( {\bar A_n A_n})
-	\over
-	  {\bar A_s A_s} \ +\  {\bar A_n A_n}
+	\frac{( {\bar A_s A_s} ) \  ( {\bar A_n A_n})}{{\bar A_s A_s} \ +\  {\bar A_n A_n}}
 }
 \end{equation}
 The essential feature of a PEF is its zeros.
@@ -1339,9 +1336,9 @@ Professor Peter \bx{Shearer}\footnote{
         and Planetary Physics of the Scripps Oceanographic Institute.
         I also received his permission to redistribute it
         to friends and colleagues.
-        Should you have occasion to copy it please reference
-        \cite{Shearer.jgr.91.18147} \cite{Shearer.jgr.91.20535}
-        it properly.
+        Should you have occasion to copy it please reference him.
+%        \cite{Shearer.jgr.91.18147} \cite{Shearer.jgr.91.20535}
+%        it properly.
         Examples of earlier versions of these stacks
         are found in the references.
         Professor Shearer may be willing to supply newer and better stacks.
