@@ -28,7 +28,20 @@ Result('Vint',
 
 Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
 
-Result('final_stack','sfgrey')
+Result('final_stack',
+	'''
+	grey title=stack
+       	label1=Time     unit1=sec 
+       	label2=xline    unit2=count
+       ''')
+
+Result('final_stack_filter', 'final_stack',
+	'''
+	bandpass fhi=20 |
+	grey title=filter stack
+       	label1=Time    unit2=sec 
+       	label2=xline   unit1=count
+        ''')
 
 
 Flow ('spray2','Vint','spray axis=2 n=188 d=1 o=1')
@@ -115,20 +128,6 @@ Result('mig_z',
        label1=Distance unit1=km
        ''')
 
-Result('final_stack',
-	'''
-	grey title=stack
-       	label2=Depth    unit2=km 
-       	label1=Distance unit1=km
-       ''')
-
-Result('final_stack_filter', 'final_stack',
-	'''
-	bandpass fhi=20 |
-	grey title=stack
-       	label2=Depth    unit2=km 
-       	label1=Distance unit1=km
-        ''')
 
 Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=Vint3Dz.rsf')
 
