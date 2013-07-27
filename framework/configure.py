@@ -1846,8 +1846,8 @@ def matlab(context):
         sys.exit(unix_failure)
 
     context.Message("checking for mex ... ")
-    mex = WhereIs('mex')
-    if mex:
+    mex = os.path.join(os.path.dirname(matlab),'mex')
+    if os.path.isfile(mex):
         context.Result(mex)
         context.env['MEX'] = mex
         if plat['OS'] == 'darwin':

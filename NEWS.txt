@@ -34,6 +34,9 @@ In documentation:
 
 In APIs:
 
+* Look for mex in matlab's directory to avoid confusion with other
+  programs named mex
+
 In the Python package:
 
 In programs:
