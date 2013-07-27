@@ -1,4 +1,6 @@
-/* Heal data */
+/* Heal empty traces */
+/* Interpolation between two neighbours;
+   An empty trace should be horizonatal => transpose input before and after */
 /*
   Copyright (C) 2013 University of Texas at Austin
   
@@ -38,21 +40,26 @@ int main (int argc, char* argv[]) {
 
     float* trace = sf_floatalloc (n1);	
 
+	// the 1st trace have just one neighbour
     sf_floatread  (trace, n1, inFile);		
     sf_floatwrite (trace, n1, outFile);
 
-    for (i2 = 1; i2 < n2 - 1; ++i2) {
+	const int n2r = n2 - 1;
+	const int n1r = n1 - 1;
+	const float goodSample = 1e-6; // feel free to change
+    for (i2 = 1; i2 < n2r; ++i2) {
 	    sf_floatread (trace, n1, inFile);		
-		for (i1 = 1; i1 < n1 - 1; ++i1) {
-			if ( fabs(trace[i1]) > 1e-6)
+		for (i1 = 1; i1 < n1r; ++i1) {
+			if ( fabs(trace[i1]) > goodSample )
 				continue; // good sample
-			if ( fabs(trace[i1-1]) < 1e-6 || fabs(trace[i1+1]) < 1e-6) 
+			if ( fabs(trace[i1-1]) < goodSample || fabs(trace[i1+1]) < goodSample ) 
 				continue; // too big gap
 			trace[i1] = 0.5 * (trace[i1-1] + trace[i1+1]);
 		}
 	    sf_floatwrite (trace, n1, outFile);
 	}
 
+	// the last trace has just one neighbour
     sf_floatread  (trace, n1, inFile);		
     sf_floatwrite (trace, n1, outFile);
 
