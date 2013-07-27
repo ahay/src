@@ -1087,6 +1087,8 @@ def mpi(context):
         context.Result(context_failure)
         need_pkg('mpi', fatal=False)
         context.env['MPICC'] = None
+        context.env['MPICXX'] = None
+        return
 
     context.Message("checking for MPICXX ... ")
     mpicxx = context.env.get('MPICXX',WhereIs('mpicxx', path))
