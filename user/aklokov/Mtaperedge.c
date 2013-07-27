@@ -1,6 +1,5 @@
 /* Taper based on data parameters
-
-   Input - "inline/xline" plane
+Input - "inline/xline" plane
 */
 /*
   Copyright (C) 2012 University of Texas at Austin
@@ -22,119 +21,109 @@
 
 #include <rsf.h>
 
-// files
-sf_file dataFile;
-sf_file maskFile;
+int main (int argc, char* argv[]) {
 
-int   xNum;                 
-int   yNum;                 
-
-int length;
-
-int main (int argc, char* argv[]) 
-{
-    int surfSize, is, iy, ix, topInd, p, indBot, indLeft, indRight;
-    float *data, *mask, *w1, *w2;
+    int is, iy, ix, topInd, p, indBot, indLeft, indRight;
     float temp;
 
 // Initialize RSF 
-    sf_init (argc,argv);
+    sf_init (argc, argv);
 
 // INPUT FILES
-    dataFile = sf_input ("in");
+    sf_file dataFile = sf_input ("in");
     /* common-offset sections */
-    maskFile = sf_output ("out");
+    sf_file maskFile = sf_output ("out");
     /*  */
 
     // data params
+	int xNum, yNum;                 
+    if ( !sf_histint   (dataFile, "n1", &xNum) ) sf_error ("Need n1= in input");
+    if ( !sf_histint   (dataFile, "n2", &yNum) ) sf_error ("Need n2= in input");
+    
+	int length;
+	if ( !sf_getint ("len", &length) ) length = 11;
+    /* length of the taper function */
 
-    if ( !sf_histint   (dataFile, "n1", &xNum)   ) sf_error ("Need n1= in input");
-    if ( !sf_histint   (dataFile, "n2", &yNum)   ) sf_error ("Need n2= in input");
+    const int surfSize = xNum * yNum;
 
-    if ( !sf_getint ("len", &length) ) length = 11;
-    /* length of the taper function*/
+    float* data = sf_floatalloc (surfSize);
+    float* mask = sf_floatalloc (surfSize);
 
-    surfSize = xNum * yNum;
-
-    data = sf_floatalloc (surfSize);
-    mask = sf_floatalloc (surfSize);
-
-    w1 = sf_floatalloc (surfSize);
-    w2 = sf_floatalloc (surfSize);
+	float* w1 = sf_floatalloc (surfSize);
+	float* w2 = sf_floatalloc (surfSize);
     for (is = 0; is < surfSize; ++is) {
-	w1[is] = 1.f;
-	w2[is] = 1.f;
+		w1[is] = 1.f;
+		w2[is] = 1.f;
     }
 
     sf_floatread (data, surfSize, dataFile);
-
     for (is = 0; is < surfSize; ++is) {
-	mask[is] = data[is] ? 1.f : 0.f;
+		mask[is] = data[is] ? 1.f : 0.f;
     }
 
     // TOP - BOTTOM
-    for (iy = 0; iy < yNum; ++iy) {
-	// top
-	ix = 0;
-	while (!mask[iy*xNum + ix] && ix < xNum) ++ix;
-	if (ix != xNum) {
-	    topInd = ix;	
-	    for (p = 0; p < length && ix < xNum; ++p, ++ix) {
-		temp = SF_PI - SF_PI * (ix - topInd) * 1.f / length;
-		w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-	    }  		
-	}
-	// bottom
-	ix = xNum - 1;
-	while (!mask[iy*xNum + ix] && ix > -1) --ix;
-	if (ix > -1) {
-	    indBot = ix;	
-	
-	    for (p = 0; p < length && ix > -1; ++p, --ix) {
-		temp = SF_PI - SF_PI * (ix - indBot) * 1.f / length;
-		w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-	    }  		
-	}
+	for (iy = 0; iy < yNum; ++iy) {
+		// top
+		ix = 0;
+		while (!mask[iy*xNum + ix] && ix < xNum) ++ix;
+		if (ix != xNum) {
+			topInd = ix;	
+			for (p = 0; p < length && ix < xNum; ++p, ++ix) {
+				temp = SF_PI - SF_PI * (ix - topInd) * 1.f / length;
+				w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+	    	}  		
+		}	
+		// bottom
+		ix = xNum - 1;
+		while (!mask[iy*xNum + ix] && ix > -1) --ix;
+		if (ix > -1) {
+		    indBot = ix;	
+			for (p = 0; p < length && ix > -1; ++p, --ix) {
+				temp = SF_PI - SF_PI * (ix - indBot) * 1.f / length;
+				w1 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+			}  		
+		}
     }
 
     // LEFT - RIGHT
     for (ix = 0; ix < xNum; ++ix) {
-	// left
-	iy = 0;
-	while (!mask[iy*xNum + ix] && iy < yNum) ++iy;
-	if (iy != yNum) {
-	    indLeft = iy;	
-	    for (p = 0; p < length && iy < yNum; ++p, ++iy) {
-		temp = SF_PI - SF_PI * (iy - indLeft) * 1.f / length;
-		w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-	    }  		
-	}
-	// right
-	iy = yNum - 1;
-	while (!mask[iy*xNum + ix] && iy > -1) --iy;
-	if (iy > -1) {
-	    indRight = iy;	
-	
-	    for (p = 0; p < length && iy > -1; ++p, --iy) {
-		temp = SF_PI - SF_PI * (iy - indRight) * 1.f / length;
-		w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
-	    }  		
-	}
+		// left
+		iy = 0;
+		while (!mask[iy*xNum + ix] && iy < yNum) ++iy;
+		if (iy != yNum) {
+			indLeft = iy;	
+			for (p = 0; p < length && iy < yNum; ++p, ++iy) {
+				temp = SF_PI - SF_PI * (iy - indLeft) * 1.f / length;
+				w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+			}  		
+		}
+		// right
+		iy = yNum - 1;
+		while (!mask[iy*xNum + ix] && iy > -1) --iy;
+		if (iy > -1) {
+		    indRight = iy;	
+		    for (p = 0; p < length && iy > -1; ++p, --iy) {
+				temp = SF_PI - SF_PI * (iy - indRight) * 1.f / length;
+				w2 [iy*xNum + ix] = 0.5 + 0.5 * cos (temp);
+		    }  		
+		}
     }
 
+	// merge two weight functions
     for (is = 0; is < surfSize; ++is) {
-	mask[is] *= (w1[is] * w2[is]);
+		mask[is] *= (w1[is] * w2[is]);
     }
-    sf_floatwrite (mask, surfSize, maskFile);
 
-    free (data);
-    free (mask);
+	sf_floatwrite (mask, surfSize, maskFile);
 
-    free (w1);
-    free (w2);
+	free (data);
+	free (mask);
 
-    sf_fileclose (dataFile);
-    sf_fileclose (maskFile);
+	free (w1);
+	free (w2);
 
-    return 0;
+	sf_fileclose (dataFile);
+	sf_fileclose (maskFile);
+
+	return 0;
 }
