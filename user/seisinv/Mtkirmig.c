@@ -1,4 +1,8 @@
-/* 2-D Kirchhoff pre-stack time migration and demigration with antialiasing. */ 
+/* 2-D Kirchhoff pre-stack time migration/demigration. 
+The axes in the data are {time,cmp,offset}
+The axes in the offset are {1,cmp,offset}
+The axes in the image are {time,cdp,offset}
+*/ 
 
 /*
   Copyright (C) 2012 China University of Petrolum (East China)
@@ -23,67 +27,128 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, n123, i2, i3;
-    float o1, o2, o3, d1, d2, d3, dip;
-    bool adj, verb, half;
-    float *data, *modl, **vrms, **mask;
-    sf_file in, out, vel;
+    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize;
+    float t0, cmp0, cdp0, h0, dt, dcmp, dcdp, dh, apt, rho, aal;
+    bool adj, verb, half, amp;
+    float *data, *modl, *off, **vrms, **mask;
+    sf_file in, out, vel, offset;
 
     sf_init(argc,argv);
     in = sf_input("in");
     vel = sf_input("vel");
     out = sf_output("out");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
-
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
-    if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
-
-    if (!sf_histint(in,"n3",&n3)) sf_error("No n3= in input");
-    if (!sf_histfloat(in,"d3",&d3)) sf_error("No d3= in input");
-    if (!sf_histfloat(in,"o3",&o3)) sf_error("No o3= in input");
-
     if (!sf_getbool("adj",&adj)) adj=true;
     /* yes: migration, no: modeling */
+
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
-    if (!sf_getfloat("dip",&dip)) dip=45.;
-    /* the dip range of migration aperture */
-    if (!sf_getbool("half",&half)) half=false;
-    /* half offset flag */
 
-    n123 = n1*n2*n3;
-    vrms = sf_floatalloc2(n1,n2);
-    mask = sf_floatalloc2(n2,n3);
-    data = sf_floatalloc(n123);
-    modl = sf_floatalloc(n123);
+    if (!sf_getbool("half",&half)) half = true;
+    /* if y, the third axis is half-offset instead of full offset */
+
+    if (!sf_getbool("amp",&amp)) amp = true;
+    /* if y, use amplitue factor */
+
+    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
+
+    if (adj) {
+    if (!sf_histint(in,"n2",&ncmp)) sf_error("No n2= in input");
+    if (!sf_histfloat(in,"d2",&dcmp)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"o2",&cmp0)) sf_error("No o2= in input");
+
+    if (!sf_getint("ncdp",&ncdp)) sf_error("No ncdp in parameters");
+    if (!sf_getfloat("dcdp",&dcdp)) sf_error("No dcdp in parameters");
+    if (!sf_getfloat("cdp0",&cdp0)) sf_error("No cdp0= in parameters");
+
+    sf_putint(out,"n2",ncdp);
+    sf_putfloat(out,"d2",dcdp);
+    sf_putfloat(out,"o2",cdp0);
+
+    } else {
+
+    if (!sf_histint(in,"n2",&ncdp)) sf_error("No n2= in input");
+    if (!sf_histfloat(in,"d2",&dcdp)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"o2",&cdp0)) sf_error("No o2= in input");
+    
+    if (!sf_getint("ncmp",&ncmp)) sf_error("No ncmp in parameters");
+    if (!sf_getfloat("dcmp",&dcmp)) sf_error("No dcmp in parameters");
+    if (!sf_getfloat("cmp0",&cmp0)) sf_error("No cmp0= in parameters");
+
+    sf_putint(out,"n2",ncmp);
+    sf_putfloat(out,"d2",dcmp);
+    sf_putfloat(out,"o2",cmp0);
+
+    }
+
+    if (!sf_histint(in,"n3",&nh)) sf_error("No n3= in input");
+
+    if (NULL != sf_getstring("offset")) {
+        offset = sf_input("offset");
+        nh2 = sf_filesize(offset);
+
+        if (nh2 != nh*ncmp) sf_error("Wrong dimensions in offset, it should be %d",nh*ncmp);
+
+        off = sf_floatalloc(nh2);
+        sf_floatread (off,nh2,offset);
+        sf_fileclose(offset);
+    } else {
+        if (!sf_histfloat(in,"o3",&h0)) sf_error("No o3=");
+        if (!sf_histfloat(in,"d3",&dh)) sf_error("No d3=");
+
+        if (!half) dh *= 0.5;
+
+        off = sf_floatalloc(nh*ncmp);
+        for (int ix = 0; ix < ncmp; ix++) {
+            for (int ih = 0; ih < nh; ih++) {
+                off[ih*ncmp+ix] = h0 + ih*dh;
+            }
+        }
+        offset = NULL;
+    }
+
+    if (!sf_getfloat("antialias",&aal)) aal = 1.0;
+    /* antialiasing */
+
+    if (!sf_getfloat("apt",&apt)) apt=ncmp;
+    /* migration aperture */
+
+    if (!sf_getfloat("rho",&rho)) rho = 1.-1./nt;
+    /* Leaky integration constant */
+
+    nm = nt*ncdp*nh;
+    nd = nt*ncmp*nh;
+
+    vrms = sf_floatalloc2(nt,ncdp);
+    mask = sf_floatalloc2(ncmp,nh);
+    data = sf_floatalloc(nd);
+    modl = sf_floatalloc(nm);
+
     /* read velocity file */
-    sf_floatread(vrms[0],n1*n2,vel);
+    sf_floatread(vrms[0],nt*ncdp,vel);
 
-//    sf_triangle1_init(10,n1);
-
-    for (i3=0; i3 < n3; i3++) {
-        for (i2=0; i2 < n2; i2++) {
+    for (int i3=0; i3 < nh; i3++) {
+        for (int i2=0; i2 < ncmp; i2++) {
             mask[i3][i2]=1.;
         }
     }
 
-    tkirmig_init(n1,d1,o1,n2,d2,o2,n3,d3,o3,dip,vrms,mask,half,verb);
+    tkirmig_init(nt,dt,t0,ncmp,dcmp,cmp0,ncdp,dcdp,cdp0,nh,dh,h0,apt,aal,rho,vrms,off,mask,amp,verb);
 
-    sf_warning("n123=%d,n3=%d,n2=%d,n1=%d",n123,n3,n2,n1);
+    memsize = nd+nm+nt*ncdp+ncmp*nh;
+    if (verb) sf_warning("memory needs %f G (%f M)",4.*memsize/1024/1024/1024,4.*memsize/1024/1024);
 
     if (adj) {
-       sf_floatread(data,n123,in);
-       tkirmig_lop(true,false,n123,n123,modl,data);
-       sf_floatwrite(modl,n123,out);
+       sf_floatread(data,nd,in);
+       tkirmig_lop(true,false,nm,nd,modl,data);
+       sf_floatwrite(modl,nm,out);
        
     } else {
-      sf_floatread(modl,n123,in);
-      tkirmig_lop(false,false,n123,n123,modl,data);
-      sf_floatwrite(data,n123,out);
+      sf_floatread(modl,nm,in);
+      tkirmig_lop(false,false,nm,nd,modl,data);
+      sf_floatwrite(data,nd,out);
     }
 
     sf_close();

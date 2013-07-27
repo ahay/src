@@ -1,5 +1,11 @@
-/* 2-D least-squares Kirchhoff pre-stack time migration. */ 
-
+/* 2-D least-squares Kirchhoff pre-stack time migration with different regul..
+regularization (or preconditioning) operator: 
+reg=0: no regularization; 
+reg=1: regularization => first derivative along offset axis;
+reg=2: precondition => causual integration along offset axis;
+reg=3: precondition => triangle smoother along offset axis, 
+reg=4: precondition => local slope constraints along t-x plane and smoothing along offset axis 
+*/
 /*
   Copyright (C) 2012 China University of Petrolum (East China)
   
@@ -28,56 +34,99 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, n123, niter, i1, i2, i3, iter;
-    float o1, o2, o3, d1, d2, d3, dip, norm;
-    bool verb, half;
-    int  reg;
-    float ***data, ***modl, **vrms, **mask, *error=NULL;
+    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize, niter, reg;
+    float t0, cmp0, cdp0, h0, dt, dcmp, dcdp, dh, apt, rho, aal, norm;
+    bool verb, half, amp;
+    float ***data, ***modl, **vrms, **mask, *off, *error=NULL;
     char *errfile;
-    sf_file in, out, vel, err=NULL;
+    sf_file in, out, vel, offset, err=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     vel = sf_input("vel");
     out = sf_output("out");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
-
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
-    if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
-
-    if (!sf_histint(in,"n3",&n3)) sf_error("No n3= in input");
-    if (!sf_histfloat(in,"d3",&d3)) sf_error("No d3= in input");
-    if (!sf_histfloat(in,"o3",&o3)) sf_error("No o3= in input");
-
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
+
+    if (!sf_getbool("half",&half)) half = true;
+    /* if y, the third axis is half-offset instead of full offset */
+
+    if (!sf_getbool("amp",&amp)) amp = true;
+    /* if y, use amplitue factor */
+
+    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
+
+    if (!sf_histint(in,"n2",&ncmp)) sf_error("No n2= in input");
+    if (!sf_histfloat(in,"d2",&dcmp)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"o2",&cmp0)) sf_error("No o2= in input");
+
+    if (!sf_getint("ncdp",&ncdp)) sf_error("No ncdp in parameters");
+    if (!sf_getfloat("dcdp",&dcdp)) sf_error("No dcdp in parameters");
+    if (!sf_getfloat("cdp0",&cdp0)) sf_error("No cdp0= in parameters");
+
+    sf_putint(out,"n2",ncdp);
+    sf_putfloat(out,"d2",dcdp);
+    sf_putfloat(out,"o2",cdp0);
+
+    if (!sf_histint(in,"n3",&nh)) sf_error("No n3= in input");
+
+    if (NULL != sf_getstring("offset")) {
+        offset = sf_input("offset");
+        nh2 = sf_filesize(offset);
+
+        if (nh2 != nh*ncmp) sf_error("Wrong dimensions in offset, it should be %d",nh*ncmp);
+
+        off = sf_floatalloc(nh2);
+        sf_floatread (off,nh2,offset);
+        sf_fileclose(offset);
+    } else {
+        if (!sf_histfloat(in,"o3",&h0)) sf_error("No o3=");
+        if (!sf_histfloat(in,"d3",&dh)) sf_error("No d3=");
+
+        if (!half) dh *= 0.5;
+
+        off = sf_floatalloc(nh*ncmp);
+        for (int ix = 0; ix < ncmp; ix++) {
+            for (int ih = 0; ih < nh; ih++) {
+                off[ih*ncmp+ix] = h0 + ih*dh;
+            }
+        }
+        offset = NULL;
+    }
+
     if (!sf_getint("reg",&reg)) reg=0;
-    /* regularization type: 
-       reg=0,no regularization; 
-       reg=1,regularization,smooth along offset axis;
-       reg=2,precondition,smooth along offset axis; */
-    if (!sf_getfloat("dip",&dip)) dip=45.;
-    /* the dip range of migration aperture */
-    if (!sf_getbool("half",&half)) half=false;
-    /* half offset flag */
-    if (!sf_getint("niter",&niter)) niter=10;
+    /* regularization type */ 
+
+    if (!sf_getfloat("antialias",&aal)) aal = 1.0;
+    /* antialiasing */
+
+    if (!sf_getfloat("apt",&apt)) apt=ncmp;
+    /* migration aperture */
+
+    if (!sf_getfloat("rho",&rho)) rho = 1.-1./nt;
+    /* Leaky integration constant */
+
+    if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
 
 
-    vrms = sf_floatalloc2(n1,n2);
-    mask = sf_floatalloc2(n2,n3);
-    data = sf_floatalloc3(n1,n2,n3);
-    modl = sf_floatalloc3(n1,n2,n3);
-    n123 = n1*n2*n3;
+    nm = nt*ncdp*nh;
+    nd = nt*ncmp*nh;
+
+    vrms = sf_floatalloc2(nt,ncdp);
+    mask = sf_floatalloc2(ncmp,nh);
+    data = sf_floatalloc3(nt,ncmp,nh);
+    modl = sf_floatalloc3(nt,ncdp,nh);
+
     /* read velocity file */
-    sf_floatread(vrms[0],n1*n2,vel);
+    sf_floatread(vrms[0],nt*ncdp,vel);
     sf_fileclose(vel);
 
-//    sf_triangle1_init(10,n1);
+    memsize = nm+nd+nt*ncdp+ncmp*nh;
+    if (verb) sf_warning("memory needs: %f G (%f M)",4.*memsize/1024/1024/1024,4.*memsize/1024/1024);
 
     if (niter > 0) {
         errfile = sf_getstring("err");
@@ -94,20 +143,22 @@ int main(int argc, char* argv[])
         error = sf_floatalloc(niter);
     }
 
-    sf_floatread(data[0][0],n123,in);
+    sf_floatread(data[0][0],nd,in);
 
-    for (i3=0; i3 < n3; i3++) {
-        for (i2=0; i2 < n2; i2++) {
-            mask[i3][i2]=cblas_sdot(n1,data[i3][i2],1,data[i3][i2],1);
+    for (int i3=0; i3 < nh; i3++) {
+        for (int i2=0; i2 < ncmp; i2++) {
+            mask[i3][i2]=cblas_sdot(nt,data[i3][i2],1,data[i3][i2],1);
         }
     }
 
-    tkirmig_init(n1,d1,o1,n2,d2,o2,n3,d3,o3,dip,vrms,mask,half,verb);
+    tkirmig_init(nt,dt,t0,ncmp,dcmp,cmp0,ncdp,dcdp,cdp0,nh,dh,h0,apt,aal,rho,vrms,off,mask,amp,verb);
 
     sf_cdstep_init();
 
+    if (verb) sf_warning("Iteration begin...");
+
     if (reg == 0)
-       sf_solver(tkirmig_lop,sf_cdstep,n123,n123,modl[0][0],data[0][0],
+       sf_solver(tkirmig_lop,sf_cdstep,nm,nd,modl[0][0],data[0][0],
                  niter,"nmem",0,"nfreq",niter,"err",error,"end");
 
     else if (reg == 1) {
@@ -117,20 +168,20 @@ int main(int argc, char* argv[])
        aa=sf_floatalloc(filt);
        aa[0]=1.;
        aa[1]=-1.;
-       tcaih_init(filt,aa,n1,n2,n3);
-       sf_solver_reg(tkirmig_lop,sf_cdstep,tcaih_lop,n123+filt*n1*n2,n123,n123,
+       tcaih_init(filt,aa,nt,ncdp,nh);
+       sf_solver_reg(tkirmig_lop,sf_cdstep,tcaih_lop,nm+filt*nt*ncdp,nm,nd,
                     modl[0][0],data[0][0],niter,0.01,"nmem",0,"nfreq",niter,
                     "err",error,"end");
     }
     else if (reg == 2) {
-       sf_causinth_init(n1,n2,n3);
-       sf_solver_prec(tkirmig_lop,sf_cdstep,sf_causinth_lop,n123,n123,n123,
+       sf_causinth_init(nt,ncdp,nh);
+       sf_solver_prec(tkirmig_lop,sf_cdstep,sf_causinth_lop,nm,nm,nd,
                       modl[0][0],data[0][0],niter,0.01,"nmem",0,"nfreq",niter,
                       "err",error,"end");
     }
     else if (reg == 3) {
-       sf_triangleh_init(3,n1,n2,n3);
-       sf_solver_prec(tkirmig_lop,sf_cdstep,sf_triangleh_lop,n123,n123,n123,
+       sf_triangleh_init(3,nt,ncdp,nh);
+       sf_solver_prec(tkirmig_lop,sf_cdstep,sf_triangleh_lop,nm,nm,nd,
                       modl[0][0],data[0][0],niter,0.01,"nmem",0,"nfreq",niter,
                       "err",error,"end");
     }
@@ -146,31 +197,31 @@ int main(int argc, char* argv[])
 
        if (!sf_histint(fdip,"n3",&np)) np=1;
        sf_warning("np=%d",np);
-       pp = sf_floatalloc2(n1,n2);
+       pp = sf_floatalloc2(nt,ncdp);
 
        if (np > 1) {
-          qq = sf_floatalloc2(n1,n2);
+          qq = sf_floatalloc2(nt,ncdp);
        } else {
           qq = NULL;
        }
 
        if (NULL != qq) {
-          predicth2_init(n1,n2,n3,0.1,nw,pp,qq);
+          predicth2_init(nt,ncdp,nh,0.1,nw,pp,qq);
        } else {
-          predicth_init(n1,n2,n3,0.1,nw,1,false);
+          predicth_init(nt,ncdp,nh,0.1,nw,1,false);
           predict_set(pp);
        }
 
-       sf_floatread(pp[0],n1*n2,fdip);
+       sf_floatread(pp[0],nt*ncdp,fdip);
 
        if (NULL != qq) {
-          sf_floatread(qq[0],n1*n2,fdip);
-          sf_solver_prec(tkirmig_lop,sf_cdstep,predicth2_lop,n123,n123,n123,
+          sf_floatread(qq[0],nt*ncdp,fdip);
+          sf_solver_prec(tkirmig_lop,sf_cdstep,predicth2_lop,nm,nm,nd,
                       modl[0][0],data[0][0],niter,0.01,"nmem",0,"nfreq",niter,
                       "err",error,"end");
          predict2_close();
        } else {
-         sf_solver_prec(tkirmig_lop,sf_cdstep,predicth_lop,n123,n123,n123,
+         sf_solver_prec(tkirmig_lop,sf_cdstep,predicth_lop,nm,nm,nd,
                       modl[0][0],data[0][0],niter,0.01,"nmem",0,"nfreq",niter,
                       "err",error,"end");
          predict_close();
@@ -178,18 +229,18 @@ int main(int argc, char* argv[])
     }
 
     sf_cdstep_close();
-    sf_floatwrite(modl[0][0],n123,out);
+    sf_floatwrite(modl[0][0],nm,out);
 
     if (NULL != err) {
-       for (i3=0; i3 < n3; i3++) {
-           for (i2=0; i2 < n2; i2++) {
-               for (i1=0; i1 < n1; i1++) {
-                   norm += data[i3][i2][i1];
+       for (int i3=0; i3 < nh; i3++) {
+           for (int i2=0; i2 < ncmp; i2++) {
+               for (int i1=0; i1 < nt; i1++) {
+                   norm += data[i3][i2][i1]*data[i3][i2][i1];
                }
            }
         }
         
-        for (iter=0; iter < niter; iter++) error[iter] /=norm;
+        for (int iter=0; iter < niter; iter++) error[iter] /=norm;
         sf_floatwrite(error,niter,err);
     }
 

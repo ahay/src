@@ -30,11 +30,9 @@ if 'f90' in api and F90:
 targets.c = '''
 tkirmig 
 tkirinv
+csp2d
+kirchinvs
 '''
-
-#wexmig
-#wexwfl
-#wexmva
 
 # F90 mains
 targets.f90 = '''
