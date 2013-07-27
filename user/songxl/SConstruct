@@ -45,15 +45,16 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-#fftw = env.get('FFTW')
-#if fftw and not isinstance(fftw,bool):
-#        env.Append(LIBS=[fftw])
-
 fftw = env.get('FFTW')
-if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
+if fftw and not isinstance(fftw,bool):
         env.Append(LIBS=[fftw,'fftw3_threads','fftw3'])
+
+#fftw = env.get('FFTW')
+#if fftw:
+#    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+#    if not isinstance(fftw,bool):
+#        env.Append(LIBS=[fftw,'fftw3_threads','fftw3'])
+
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
