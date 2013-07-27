@@ -123,7 +123,6 @@ int main(int argc, char* argv[])
 #else
 		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]); //complex multiplies complex
 #endif
-//		sf_warning("realcwave=%g, imagcwave=%g", crealf(cwavem[ik]),cimagf(cwavem[ik]));
 	    }
 	    icfft2(wave[im],cwavem);
 	}
