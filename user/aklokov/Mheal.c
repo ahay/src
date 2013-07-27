@@ -1,6 +1,7 @@
-/* Heal empty traces */
-/* Interpolation between two neighbours;
-   An empty trace should be horizonatal => transpose input before and after */
+/* Heal empty traces ddd
+Interpolation between two neighbours;
+An empty trace should be horizontal => transpose input before and after 
+*/
 /*
   Copyright (C) 2013 University of Texas at Austin
   
