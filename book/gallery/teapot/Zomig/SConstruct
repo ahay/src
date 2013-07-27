@@ -15,7 +15,7 @@ Flow('Vrms_interp','vel',
 
 Result('Vrms_interp',
      '''
-     graph  title=Interpolated Velocity 
+     graph  title=Interpolated_Velocity 
      ''')
 
 Flow ('Vint','Vrms_interp','dix niter=100 rect1=15')
