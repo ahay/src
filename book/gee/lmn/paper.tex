@@ -102,9 +102,9 @@ that constitute solutions to Laplace's equation.
 \par
 I remind you of a basic fact:
 When we set up the fitting goal $\bold 0\approx \bold A \bold f$,
-the \bx{quadratic form} minimized is $\bold f'\bold A' \bold A \bold f$,
-which by differentiation with respect to $\bold f'$
-gives us (in a constraint-free region) $\bold A'\bold A\bold f = \bold 0$.
+the \bx{quadratic form} minimized is $\bold f\T\bold A\T \bold A \bold f$,
+which by differentiation with respect to $\bold f\T$
+gives us (in a constraint-free region) $\bold A\T\bold A\bold f = \bold 0$.
 So, minimizing the volume integral (actually the sum)
 of the squares of the components of the gradient
 implies that Laplace's equation is satisfied.
@@ -140,9 +140,9 @@ is
 $$
 \left[
 \begin{array}{c}
-        {\partial \over \partial x} \ +\  p_x \,{\partial \over \partial t} \\
+        \frac{\partial }{ \partial x} \ +\  p_x \,\frac{\partial }{ \partial t} \\
         \ \\
-        {\partial \over \partial y} \ +\  p_y \,{\partial \over \partial t} 
+        \frac{\partial }{ \partial y} \ +\  p_y \,\frac{\partial }{ \partial t} 
 \end{array}
 \right]
 $$
@@ -234,7 +234,7 @@ I call them \bx{platelets}.
 From the microview of this brick,
 the platelets come from the ``great random-point-generator in the sky,''
 which then somehow convolves the random points
-with a platelike impulse response.
+with a plate-like impulse response.
 If we could deconvolve these platelets back to their random source points,
 there would be nothing left inside the brick
 because the energy would have gone outside.
@@ -292,14 +292,14 @@ the fundamentals of wave interference.
 
 \par
 Theoretically, a scale-factor problem arises
-because {\it locally,} wavefields, not energies, add.
+because {\it locally}, wavefields, not energies, add.
 Nodes on standing waves are familiar from theory,
 but they could give you the wrong idea that the concept of node
 is one that applies only with sinusoids.
 Actually, destructive interference arises 
 anytime a polarity-reversed waveform bounces back and crosses itself.
 Figure~\ref{fig:super} shows two waves of opposite polarity crossing each other.
-\sideplot{super}{width=3in,height=3in}{
+\sideplot{super}{width=3in}{
   Superposition of plane waves of opposite polarity.
 }
 Observe that one seismogram has a zero-valued signal,
@@ -421,8 +421,8 @@ as ``prior information.''
 \par
 An example of a MOPLAN in two dimensions,
 $(\partial_x + p_x \partial_\tau)$,
-is explored in Chapter 4 of \bx{PVI}
-\cite{Claerbout.blackwell.92},
+is explored in Chapter 4 of \bx{PVI},
+%\cite{Claerbout.blackwell.92},
 where the main goal is to estimate the
 $(\tau ,x)$-variation of $p_x$.
 Another family of MOPLANs arise from multidimensional
@@ -432,7 +432,7 @@ in PVI, Chapter 8.
 
 \par
 Here I hypothesize that a MOPLAN may be a valuable weighting function
-for many estimation problems in seismology.
+for many estimation applications in seismology.
 Perhaps we can estimate statics, interval velocity, and missing data
 if we use the principle of minimizing the power out
 of a LOcal MOno PLane ANnihilator (LOMOPLAN) on a migrated section.
@@ -445,7 +445,7 @@ and that it might prove useful where traditional methods break.
 
 \par\noindent
 \boxit{For an image model of nonoverlapping curved planes,
-a suitable choice of weighting function for fitting problems
+a suitable choice of weighting function for fitting applications
 is the local filter that destroys the best fitting local plane.}
 
 \subsection{Mono-plane deconvolution}
@@ -675,7 +675,7 @@ and the $y$-output volume is likewise on the $y$-axis.
 \par
 Although
 I conceived of 2-D LOMOPLAN as the ``ultimate'' optimization criterion
-for inversion problems in reflection seismology of sedimentary sections,
+for inversion applications in reflection seismology of sedimentary sections,
 it turned out that it was more useful in data interpretation
 and in data-quality inspection.
 In this study, I sought to evaluate usefulness with
@@ -768,7 +768,7 @@ z(x,y,t) \quad = \quad e^{-(x^2+y^2)/ t^2}
 \end{equation}
 and backsolved for $t$
 \begin{equation}
-t(x,y,z) \quad = \quad \sqrt{x^2+y^2 \over -\ln z}
+t(x,y,z) \quad = \quad \sqrt{\frac{x^2+y^2 }{ -\ln z}}
 \end{equation}
 Then I used a random-number generator
 to make a blocky one-dimensional impedance function of $t$.
@@ -844,7 +844,7 @@ Things like missing data and velocities.
 Why use multiplanar lomoplan estimates if they will then be
 converted by this complicated process into a cube?
 Why not estimate the cube directly?  Maybe to impose
-the ``pancake" model instead of the noodle model of covariance.
+the ``pancake'' model instead of the noodle model of covariance.
 Maybe to reduce the number of coefficients to estimate.
 
 I haven't figured out yet how to convert this speculation
