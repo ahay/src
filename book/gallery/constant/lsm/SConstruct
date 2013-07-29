@@ -21,9 +21,8 @@ Result('inv','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
 Result('err','graph labelsz=10 titlesz=12 unit1= unit2= title="Misfit error"')
 
 # new codes test
-dir = '/home/yujin/RSFSRC/user/seisinv/'
 
-Flow('inv_sparse err_sparse','data vel',dir+'sfkirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 err=${TARGETS[1]} verb=1')
+Flow('inv_sparse err_sparse','data vel','kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 err=${TARGETS[1]} verb=1')
 
 Result('inv_sparse','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion with Sparsity Promotion" ')
 
@@ -37,7 +36,7 @@ Flow('imig','imp vel','kirchnew velocity=${SOURCES[1]} adj=1')
 
 Flow('iinv ierr','imp vel','kirchinv velocity=${SOURCES[1]} niter=5 ps=1 err=${TARGETS[1]}')
 
-Flow('iinv_sparse ierr_sparse','imp vel',dir+'sfkirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 verb=1 err=${TARGETS[1]}')
+Flow('iinv_sparse ierr_sparse','imp vel','kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 verb=1 err=${TARGETS[1]}')
 
 Result('imig','window max1=3 | grey title="Kirchhoff Migration Impulse Response" ')
 
