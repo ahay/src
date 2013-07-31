@@ -23,10 +23,10 @@
 int main(int argc, char* argv[])
 {
     int i, n, n1, ifperc, ifverb;
-    float *dat=NULL, *adat=NULL, t, thr, d;
-    char *type;
-    sf_complex *cdat=NULL;
-    sf_file in=NULL, out=NULL;
+    float *dat=NULL, *adat=NULL, *diff, t, thr, d;
+    char *type, *thre;
+    sf_complex *cdat=NULL, *cdiff;
+    sf_file in=NULL, out=NULL, other=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -46,6 +46,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("thr",&thr)) sf_error("Need thr=");
     /* thresholding level */ 
+
+    if (NULL != (thre=sf_getstring("other"))){other = sf_output("other");}
+    /* If output the difference between the thresholded part and the original one */
 
     if(ifperc==1)
     {
@@ -93,36 +96,49 @@ int main(int argc, char* argv[])
     if(ifverb==1) sf_warning("Threshold=%g",t);   	
 
     if (NULL != dat) {
+	if(thre !=NULL ) {diff=sf_floatalloc(n);}
 	for (i=0; i < n; i++) {
 	    d = dat[i];
 	    if (d < -t) {
-		dat[i] = d+t;
+		if(type[0]=='s') dat[i] = d+t; 
+		if(thre!=NULL) diff[i]=d-dat[i];
 	    } else if (d > t) {
-		dat[i] = d-t;
+		if(type[0]=='s') dat[i] = d-t;
+		if(thre!=NULL){ diff[i]=d-dat[i];}
 	    } else {
 		dat[i] = 0.;
+		if(thre!=NULL) diff[i]=d;
 	    }
 	}
+	if(thre != NULL) 
+		sf_floatwrite(diff,n,other); /* write the difference */		
 	sf_floatwrite(dat,n,out);
     } else {
+	if(thre !=NULL ){ cdiff=sf_complexalloc(n);}
 	for (i=0; i < n; i++) {
 	    d = cabsf(cdat[i]);
 	    if (d < -t) {
 #ifdef SF_HAS_COMPLEX_H
+		if(thre!=NULL)   cdiff[i] = cdat[i]-cdat[i]*(d+t)/d;
 		if(type[0]=='s') cdat[i] *= (d+t)/d;
 #else
+		if(thre!=NULL)   cdiff[i] = sf_csub(cdat[i],sf_crmul(cdat[i],(d+t)/d));
 		if(type[0]=='s') cdat[i] = sf_crmul(cdat[i],(d+t)/d);
 #endif
 	    } else if (d > t) {		
 #ifdef SF_HAS_COMPLEX_H
+		if(thre!=NULL)   cdiff[i] = cdat[i]-cdat[i]*(d-t)/d;
 		if(type[0]=='s') cdat[i] *= (d-t)/d;
 #else
+		if(thre!=NULL)   cdiff[i] = sf_csub(cdat[i],sf_crmul(cdat[i],(d-t)/d));
 		if(type[0]=='s') cdat[i] = sf_crmul(cdat[i],(d-t)/d);
 #endif
 	    } else {
+		if(thre!=NULL)   cdiff[i] = cdat[i];
 		cdat[i] = sf_cmplx(0.,0.);
 	    }
 	}
+	if(thre!=NULL) sf_complexwrite(cdiff,n,other);
 	sf_complexwrite(cdat,n,out);
     }
 
