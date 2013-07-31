@@ -139,6 +139,27 @@ def param(par):
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
     par['labelrot2']=' parallel2=n format1=%3.2f format2=%3.2f format3=%3.2f '
+
+
+# ------------------------------------------------------------
+def modpar(par):
+
+    if(not par.has_key('nbx')):      par['nbx']=0
+    if(not par.has_key('nby')):      par['nby']=0
+    if(not par.has_key('nbz')):      par['nbz']=0
+    if(not par.has_key('tx')):       par['tx']=0.0035
+    if(not par.has_key('ty')):       par['ty']=0.0035
+    if(not par.has_key('tz')):       par['tz']=0.0035
+
+    if(not par.has_key('nb')):       par['nb']=0
+    if(not par.has_key('nbell')):    par['nbell']=5
+    if(not par.has_key('snap')):     par['snap']='y'
+    if(not par.has_key('jsnap')):    par['jsnap']=100
+    if(not par.has_key('jdata')):    par['jdata']=1
+    if(not par.has_key('dabc')):     par['dabc']='y'
+    if(not par.has_key('ompchunk')): par['ompchunk']=1
+    if(not par.has_key('ompnth')):   par['ompnth']=0
+    if(not par.has_key('free')):     par['free']='n'
     
 # ------------------------------------------------------------
 # plotting functions

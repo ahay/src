@@ -46,10 +46,10 @@ def param():
 def modpar(par):
 
     par['kt']=100
-    par['nt']=12001
+    par['nt']=5001
     par['dt']=0.001
     par['nb']=150
-    par['jsnap']=1000
+    par['jsnap']=500
     par['jdata']=1
     par['wweight']=50
     par['wclip']=0.5
