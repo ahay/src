@@ -14,7 +14,7 @@ Flow('gazdag','fft','gazdag vel=1',split=[2,nx])
 
 Flow('pmig','gazdag','cosft sign2=-1')
 
-Result('pmig','window min2=0 max2=1.5 | grey title="Phase-Shift Zero-Offset Migration" ')
+constant.zo_image('pmig')
 
 # Impulse response
 
@@ -26,7 +26,6 @@ Flow('igazdag','ifft','gazdag vel=1 pad=4096',split=[2,'omp'])
 
 Flow('ipmig','igazdag','cosft sign2=-1')
 
-Result('ipmig','window max1=3 | grey title="Phase-Shift Impulse Response" ')
-
+constant.impulse_response('ipmig')
 
 End()

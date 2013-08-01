@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_getbool("inv",&inv)) inv = true;
+    if (!sf_getbool("inv",&inv)) inv = false;
     /* if y, modeling; if n, migration */
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
     /* stabilization parameter */

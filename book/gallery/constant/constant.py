@@ -1,5 +1,5 @@
 from rsf.proj import *
-import math
+import math, os
 
 z = (1,1.5,2)
 a = (20,0,0)
@@ -39,3 +39,16 @@ def get_zodata(data):
          freq=10 dt=0.004 nt=1500
          vel=1 verb=y | window | put label2=Distance unit2=km
          ''',split=[1,n1], reduce='add')
+
+methods = {
+    'gazdag': 'Phase-Shift Migration',
+    'lowrank': 'Two-Step Lowrank',
+    }
+method = methods[os.path.basename(os.getcwd())]
+
+def zo_image(image):
+    Result(image,'window min2=0 max2=1.5 | grey title="Zero-Offset %s" ' % method)
+
+def impulse_response(image):
+    Result(image,'window n1=751 | grey title="%s Impulse Response" ' % method)
+
