@@ -32,6 +32,8 @@ tkirmig
 tkirinv
 csp2d
 kirchinvs
+lsm_dsr2d
+lsdmo
 '''
 
 # F90 mains
