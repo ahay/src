@@ -25,6 +25,7 @@ To programs:
 
 * Added shift= parameter to sfkolmog
 * user/jhou: New contributor (Jie Hou)
+* Added eps= parameter to sflsfit
 
 ===Bug fixes===
 

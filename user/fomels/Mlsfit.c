@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     bool linear;
     char key[7];
     int n[SF_MAX_DIM], dim, dim1, n1, n2, i, i2, i1, ic, id, nc;
-    float *dat, **func, **wfunc, **mat, *rhs, *sol, *weight;
+    float *dat, **func, **wfunc, **mat, *rhs, *sol, *weight, eps;
     sf_file inp, fit, coef, out, wht;
 
     sf_init(argc,argv);
@@ -39,6 +39,9 @@ int main(int argc, char* argv[])
     dim = sf_filedims(inp,n);
     if (!sf_getint("dim",&dim1)) dim1=dim;
     /* number of dimensions */
+
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization parameter */
  
     n1 = n2 = 1;
     for (i=0; i < dim; i++) {
@@ -110,6 +113,13 @@ int main(int argc, char* argv[])
 		    mat[ic][id] += wfunc[ic][i1]*wfunc[id][i1];
 		}
 		mat[id][ic] = mat[ic][id];
+	    }
+	}
+
+	if (eps > 0.0f) { 
+            /* regularization: use A'A + eps*I */
+	    for (ic=0; ic < nc; ic++) {
+		mat[ic][ic] += eps;
 	    }
 	}
 
