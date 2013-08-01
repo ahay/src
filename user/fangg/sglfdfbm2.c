@@ -217,7 +217,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 }
 
 
-int sglfdback2(float **img, float ***wavfld, float **rcd, 
+int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd, 
                bool verb, float **den, float **c11, 
                geopar geop, srcpar srcp, pmlpar pmlp, sf_file Ftmpbwf)  
 /*< staggered grid lowrank FD backward propagation + imaging >*/
@@ -388,12 +388,17 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
     } /*Main loop*/
 
     
+    /*crosscorrelation*/
+    img1 = ccr; 
+        
+    /*crosscorrelation with source normalization*/
     for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
-	    img[ix][iz] += ccr[ix][iz];///(sill[ix][iz]+SF_EPS)
+	    img2[ix][iz] = ccr[ix][iz]/(sill[ix][iz]+SF_EPS);
 	}
     } 
     
+
 	
     if (verb) sf_warning(".");
     return 0;

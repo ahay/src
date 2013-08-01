@@ -1,4 +1,8 @@
-/* 2-D Staggered Grid Lowrank Finite-difference RTM */
+/* 2-D Staggered Grid Lowrank Finite-difference RTM 
+     img1 :  crosscorrelation (stdout)
+     img2 :  crosscorrelation with source normalization
+
+*/
 /*
   Copyright (C) 2008 University of Texas at Austin
   
@@ -20,6 +24,7 @@
 #include <rsf.h>
 #include <math.h>
 #include <time.h>
+#include <sys/time.h>
 
 #include "sglfdfbm2_OMP.h"
 
@@ -36,12 +41,14 @@ int main(int argc, char* argv[])
 
     /*flag*/
     bool verb;
+    bool wantwf;
+
     
     /*I/O*/
     sf_file Ffvel, Ffden, Fbvel, Fbden;
     sf_file Fsrc,/*wave field*/ Frcd/*record*/;
     sf_file Ftmpwf, Ftmpbwf;
-    sf_file Fimg;
+    sf_file Fimg1, Fimg2;
     sf_file FGx, FGz, Fsxx, Fsxz, Fszx, Fszz;
 
     sf_axis at, ax, az;
@@ -67,7 +74,7 @@ int main(int argc, char* argv[])
     float **fvel, **fden, **fc11;
     float **bvel, **bden, **bc11;
     float ***wavefld, **record;
-    float **img;
+    float **img1, **img2;
     int snpint;
 
     /*source*/
@@ -79,9 +86,13 @@ int main(int argc, char* argv[])
     int pmlout, pmld0, decaybegin;
     bool decay, freesurface;
 
+    /*memoray*/
+    float memneed;
+
     tstart = clock();
     sf_init(argc, argv);
     if (!sf_getbool("verb", &verb)) verb=false; /*verbosity*/
+    if (!sf_getbool("wantwf", &wantwf)) wantwf=false; /*output forward and backward wavefield*/
 
     /*Set I/O file*/
     Fsrc   = sf_input("in");   /*source wavelet*/
@@ -89,11 +100,15 @@ int main(int argc, char* argv[])
     Ffden  = sf_input("fden"); /*forward density*/
     Fbvel  = sf_input("bvel"); /*backward velocity*/
     Fbden  = sf_input("bden"); /*backward velocity*/
-    
-    Ftmpwf = sf_output("tmpwf");/*wavefield snap*/
+        
     Frcd   = sf_output("rec");   /*record*/
-    Fimg   = sf_output("out");   /*Imaging*/
-    Ftmpbwf = sf_output("tmpbwf");
+    Fimg1  = sf_output("out");   /*Imaging*/
+    Fimg2  = sf_output("img2");  /*Imaging*/
+
+    if (wantwf) {
+	Ftmpwf  = sf_output("tmpwf");/*wavefield snap*/
+	Ftmpbwf = sf_output("tmpbwf");
+    }
 
     FGx = sf_input("Gx"); 
     FGz = sf_input("Gz");
@@ -163,21 +178,35 @@ int main(int argc, char* argv[])
     geopar geop;
     geop = creategeo();
  
+    /*source loaction parameters*/
+    slx = -1.0; spx = -1;
+    slz = -1.0; spz = -1;
+    gdep = 0.0; gp = 0;
     
-    if (!sf_getfloat("slx", &slx)) sf_error("Need slx input");
+    if (!sf_getfloat("slx", &slx)) ; 
     /*source location x */
-    if (!sf_getfloat("slz", &slz)) sf_error("Need spz input");
+    if (!sf_getint("spx", &spx));
+    /*source location x (index)*/
+    if((slx<0 && spx <0) || (slx>=0 && spx >=0 ))  sf_error("Need src location");
+    if (slx >= 0 )    spx = (int)((slx-ox)/dx+0.5);
+    
+    if (!sf_getfloat("slz", &slz)) ;
     /* source location z */
-    if (!sf_getfloat("gdep", &gdep)) gdep=0.0;
+    if (!sf_getint("spz", &spz)) ;
+    /*source location z (index)*/
+    if((slz<0 && spz <0) || (slz>=0 && spz >=0 ))  sf_error("Need src location");
+    if (slz >= 0 )    spz = (int)((slz-ox)/dz+0.5);
+    
+    if (!sf_getfloat("gdep", &gdep)) ;
     /* recorder depth on grid*/
-    if (gdep <0.0) sf_error("gdep need to be >=0.0");
+    if (!sf_getint("gp", &gp)) ;
+    /* recorder depth on index*/
+    if ( gdep>=oz ) { gp = (int)((gdep-oz)/dz+0.5);}
+    if (gp < 0.0) sf_error("gdep need to be >=oz");
     /*source and receiver location*/
     if (!sf_getint("snapinter", &snpint)) snpint=10;
     /* snap interval */
-    spx = (int)((slx-ox)/dx+0.5);
-    spz = (int)((slz-oz)/dz+0.5);
-    gp  = (int)((gdep-oz)/dz+0.5);
-
+    
     geop->nx  = nx;
     geop->nz  = nz;
     geop->nxb = nxb;
@@ -203,7 +232,8 @@ int main(int argc, char* argv[])
     fc11 = sf_floatalloc2(nzb, nxb);
 
     /*image*/
-    img = sf_floatalloc2(nz, nx);
+    img1 = sf_floatalloc2(nz, nx);
+    img2 = sf_floatalloc2(nz, nx);
 
     
     sf_floatread(fvel[0], nxz, Ffvel);
@@ -245,37 +275,46 @@ int main(int argc, char* argv[])
     sf_oaxa(Frcd, at, 1);
     sf_oaxa(Frcd, ax, 2);
 
-    /*write temp wavefield */
-    sf_setn(at, wfnt);
-    sf_setd(at, wfdt);
-
-    sf_oaxa(Ftmpwf, az, 1);
-    sf_oaxa(Ftmpwf, ax, 2);
-    sf_oaxa(Ftmpwf, at, 3);
-
-    /*write temp wavefield */
-    sf_oaxa(Ftmpbwf, az, 1);
-    sf_oaxa(Ftmpbwf, ax, 2);
-    sf_oaxa(Ftmpbwf, at, 3);
+    if (wantwf) {
+	/*write temp wavefield */
+	sf_setn(at, wfnt);
+	sf_setd(at, wfdt);
+	
+	sf_oaxa(Ftmpwf, az, 1);
+	sf_oaxa(Ftmpwf, ax, 2);
+	sf_oaxa(Ftmpwf, at, 3);
+	
+	/*write temp wavefield */
+	sf_oaxa(Ftmpbwf, az, 1);
+	sf_oaxa(Ftmpbwf, ax, 2);
+	sf_oaxa(Ftmpbwf, at, 3);
+    }
 
     /*write image*/
-    sf_oaxa(Fimg, az, 1);
-    sf_oaxa(Fimg, ax, 2);
+    sf_oaxa(Fimg1, az, 1);
+    sf_oaxa(Fimg1, ax, 2);
+    sf_oaxa(Fimg2, az, 1);
+    sf_oaxa(Fimg2, ax, 2);
+
 
     sglfdfor2(wavefld, record, verb, fden, fc11, geop, srcp, pmlp);
-    sf_warning("Wavefield nt=%d", wfnt);
-    sglfdback2(img, wavefld, record, verb, bden, bc11, geop, srcp, pmlp, Ftmpbwf);
+    sglfdback2(img1, img2, wavefld, record, verb, wantwf, bden, bc11, geop, srcp, pmlp, Ftmpbwf);
    
     
     for (ix=0; ix<nx; ix++) 
 	sf_floatwrite(record[ix], nt, Frcd);
     
-    for (it=0; it<wfnt; it++)
-	for ( ix=0; ix<nx; ix++)
-	    sf_floatwrite(wavefld[it][ix], nz, Ftmpwf);
+    if (wantwf) {
+	for (it=0; it<wfnt; it++)
+	    for ( ix=0; ix<nx; ix++)
+		sf_floatwrite(wavefld[it][ix], nz, Ftmpwf);
+    }
 
     for (ix=0; ix<nx; ix++) 
-	sf_floatwrite(img[ix], nz, Fimg);
+	sf_floatwrite(img1[ix], nz, Fimg1);
+    for (ix=0; ix<nx; ix++) 
+	sf_floatwrite(img2[ix], nz, Fimg2);
+    
     
     
     freertm();

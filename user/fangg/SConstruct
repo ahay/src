@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2 mmssrc mmssrc1 mms1dexp sglfdrtm2
+expand  sglr2 sglr1 sglfd2  sglfd2_tfd sglfd2pml sglfd1pml sgfd1 weas1 weas2 mmssrc mmssrc1 mms1dexp sglfdrtm2 stackimg
 '''
 
 ccprogs = '''isolrsg1 isolrsg2  sglfdcx2_7 sglfdcz2_7 

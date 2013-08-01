@@ -94,18 +94,13 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     marg   = getmarg();
     
 
-# ifdef _OPENMP
-    if (verb)
-	sf_warning(">>>> Using %d threads <<<<<", omp_get_num_threads());
-#endif
-
     denx = sf_floatalloc2(nzb, nxb);
     denz = sf_floatalloc2(nzb, nxb);
 
 #ifdef _OPENMP
 #pragma omp parallel  
 {
- nth=omp_get_num_threads();
+    nth = omp_get_num_threads();
 }
 #endif
  sf_warning(">>>> Using %d threads <<<<<", nth);
@@ -207,7 +202,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     /*Main loop*/
     wfit = 0;
     for (it = 0; it < nt; it++) {
-	if (verb) sf_warning("it=%d/%d;", it, nt-1);
+	if (verb) sf_warning("Forward it=%d/%d;", it, nt-1);
 	
 	/*velocity*/
 #ifdef _OPENMP
@@ -265,15 +260,14 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	pml_tstep_exch(it);
 	
     } /*Main loop*/
-    sf_warning("wfit=%d",wfit);
     if (verb) sf_warning(".");
     return wfit;
     
 }
 
 
-int sglfdback2(float **img, float ***wavfld, float **rcd, 
-               bool verb, float **den, float **c11, 
+int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd, 
+               bool verb, bool wantwf, float **den, float **c11, 
                geopar geop, srcpar srcp, pmlpar pmlp, sf_file Ftmpbwf)  
 /*< staggered grid lowrank FD backward propagation + imaging >*/
 {
@@ -314,7 +308,7 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
     denz = sf_floatalloc2(nzb, nxb);
 
     sill = sf_floatalloc2(nz, nx);
-    ccr  = sf_floatalloc2(nz, nx);
+    ccr  = img1;
 
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
@@ -421,9 +415,9 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
         
     /*Main loop*/
     wfit = (int)(nt-1)/snpint;
-    sf_warning("back wfit=%d",wfit);
+    
     for (it = nt-1; it>=0; it--) {
-	if  (verb) sf_warning("it=%d/%d;", it, nt-1);
+	if  (verb) sf_warning("Backward it=%d/%d;", it, nt-1);
 
 	/*Stress*/
 #ifdef _OPENMP
@@ -464,7 +458,7 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	time_step_exch(vzn1, vzn0, it);
 	pml_tstep_exchb(it);
 	
-	if ( it%snpint == 0 ) {
+	if ( wantwf && it%snpint == 0 ) {
 
 	    for ( ix = 0; ix < nx; ix++) 
 		sf_floatwrite(txxn0[ix+pmlout+marg]+pmlout+marg, nz, Ftmpbwf);
@@ -490,18 +484,17 @@ int sglfdback2(float **img, float ***wavfld, float **rcd,
 	    wfit--;
 	}
     } /*Main loop*/
-
+    if (verb) sf_warning(".");
+    
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
 #endif    
     for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
-	    img[ix][iz] += ccr[ix][iz];///(sill[ix][iz]+SF_EPS)
+	    img2[ix][iz] = ccr[ix][iz]/(sill[ix][iz]+SF_EPS);//
 	}
     } 
     
-	
-    if (verb) sf_warning(".");
     return 0;
 
 }
