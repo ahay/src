@@ -4,14 +4,14 @@ try:
     import bldutil
     glob_build = True # scons command launched in RSFSRC
     srcroot = '../..' # cwd is RSFSRC/build/user/fbroggin
-    Import('env bindir pkgdir')
+    Import('env bindir libdir pkgdir')
 except:
     glob_build = False # scons command launched in the local directory
     srcroot = os.environ.get('RSFSRC', '../..')
     sys.path.append(os.path.join(srcroot,'framework'))
     import bldutil
     env = bldutil.Debug() # Debugging flags for compilers
-    bindir = pkgdir = None
+    bindir = libdir = pkgdir = None
 
 targets = bldutil.UserSconsTargets()
 
@@ -21,4 +21,8 @@ autofocusing
 awefd2d_fo
 '''
 
-targets.build_all(env, glob_build, srcroot, bindir, pkgdir)
+# paradd
+# anifd2d
+# awefd
+
+targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
