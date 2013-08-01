@@ -39,13 +39,15 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     crd = sf_input("coord");
 
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&n)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
     if (!sf_histfloat(in,"d1",&d))   sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&o))   sf_error("No o1= in input");
 
-    nd = sf_filesize(crd);
+    if (SF_FLOAT != sf_gettype(crd)) sf_error("Need float coord");
+    if (!sf_histint(crd,"n1",&nd))   sf_error("No n1= in coord");
     sf_fileflush(out,crd);
 
     intp = sf_getstring("interp");

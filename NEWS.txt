@@ -41,6 +41,7 @@ In the Python package:
 
 In programs:
 sfbyte: "clip" determination when the first plane is zero (aklokov)
+Fixed size definitions in sfinttest1
 
 In the build system:
 

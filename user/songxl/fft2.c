@@ -47,15 +47,13 @@ int fft2_init(bool cmplx1        /* if complex transform */,
 	      int *nx2, int *ny2 /* padded data size */)
 /*< initialize >*/
 {
-#ifndef SF_HAS_FFTW
+#ifdef SF_HAS_FFTW
 #ifdef _OPENMP
     fftw_init_threads();
     sf_warning("Using threaded FFTW3! \n");
 #endif
-
-    int i2;
-    
-    sf_warning("FFTW!\n");
+#else
+   int i2;
 #endif
 	
     cmplx = cmplx1;
