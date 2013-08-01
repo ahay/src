@@ -34,10 +34,10 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int strlen, status, argc, i, ndim, odim;
+    int strlen, status, argc, i, ndim, odim, Odim, len;
     const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
-    char *strtag=NULL, **argv, *filename=NULL;
+    char *strtag=NULL, **argv, *par=NULL, *filename=NULL;
     double *dr=NULL, *di=NULL;
     double *ddlt=NULL, *dorg=NULL;
     mxArray *pca;
@@ -109,9 +109,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (nrhs > 3) {
 	if (!mxIsDouble(prhs[3])) mexErrMsgTxt("Delta must be double.");
 	if (mxGetM(prhs[3]) != 1) mexErrMsgTxt("Deltas must be a row vector.");
-	odim = mxGetN(prhs[3]);
+	Odim = mxGetN(prhs[3]);
 	ddlt = mxGetPr(prhs[3]);
-	if (odim != ndim) mexErrMsgTxt("Deltas has wrong number of elements.");
+	if (Odim < ndim) mexErrMsgTxt("Deltas has wrong number of elements.");
     }
 
     /* Origins must be a double row vector. */
@@ -120,21 +120,21 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	if (mxGetM(prhs[4]) != 1) mexErrMsgTxt("Origins must be a row vector.");
 	odim = mxGetN(prhs[4]);
 	dorg = mxGetPr(prhs[4]);
-	if (odim != ndim) mexErrMsgTxt("Origins has wrong number of elements.");
+	if (odim != Odim) mexErrMsgTxt("Origins has wrong number of elements.");
     }
 
     /* Labels must be a cell array of strings. */
     if (nrhs > 5) {
 	if (!mxIsCell(prhs[5])) mexErrMsgTxt("Labels must be a cell array.");
 	odim = mxGetNumberOfElements(prhs[5]);
-	if (odim != ndim) mexErrMsgTxt("Labels has wrong number of elements.");
+	if (odim != Odim) mexErrMsgTxt("Labels has wrong number of elements.");
     }
 
     /* Units must be a cell array of strings. */
     if (nrhs > 6) {
 	if (!mxIsCell(prhs[6])) mexErrMsgTxt("Units must be a cell array.");
 	odim = mxGetNumberOfElements(prhs[6]);
-	if (odim != ndim) mexErrMsgTxt("Units has wrong number of elements.");
+	if (odim != Odim) mexErrMsgTxt("Units has wrong number of elements.");
     }
 
     sf_init(argc,argv);
@@ -142,10 +142,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_setformat(file,mxIsComplex(prhs[2])?"native_complex":"native_float");
 
     /* Write header */
-    for (i=0; i < ndim; i++) {
+    for (i=0; i < Odim; i++) {
 	/* sizes */
         sprintf(key,"n%d",i+1);
-        sf_putint(file,key,(int)dim[i]);
+        if (i<ndim) sf_putint(file,key,(int)dim[i]);
+        else sf_putint(file,key,1);
 	/* deltas */
         sprintf(key,"d%d",i+1);
         if (nrhs > 3) sf_putfloat(file,key,(float)ddlt[i]);
