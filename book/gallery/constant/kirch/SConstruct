@@ -6,15 +6,13 @@ import constant
 constant.get_zodata('data')
 Result('data','grey title="Zero Offset" ')
 
-Flow('vel','data','math output=1')
+Flow('vel','data','window n2=1 | math output=1')
 
 Flow('mig','data vel','kirchnew velocity=${SOURCES[1]} adj=1')
 
-Result('mig','window min2=0 max2=1.5 | grey title="Kirchhoff Migration" ')
+constant.zo_image('mig')
 
 Flow('inv err','data vel','kirchinv velocity=${SOURCES[1]} niter=10 ps=1 err=${TARGETS[1]}')
-
-Result('mig','window min2=0 max2=1.5 | grey title="Kirchhoff Migration" ')
 
 Result('inv','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
 
@@ -30,15 +28,15 @@ Result('err_sparse','graph labelsz=10 titlesz=12 unit1= unit2= title="Misfit err
 
 # Impulse response
 
-Flow('imp','data','spike k1=501 k2=175 | ricker1 frequency=10')
+constant.get_impulse('imp','data')
 
 Flow('imig','imp vel','kirchnew velocity=${SOURCES[1]} adj=1')
+
+constant.impulse_response('imig')
 
 Flow('iinv ierr','imp vel','kirchinv velocity=${SOURCES[1]} niter=5 ps=1 err=${TARGETS[1]}')
 
 Flow('iinv_sparse ierr_sparse','imp vel','kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 verb=1 err=${TARGETS[1]}')
-
-Result('imig','window max1=3 | grey title="Kirchhoff Migration Impulse Response" ')
 
 Result('iinv','window max1=3 | grey title="Kirchhoff Inversion Impulse Response"')
 

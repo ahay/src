@@ -33,7 +33,7 @@ void invert(sf_operator oper /* linear operator */,
 
     sf_cdstep_init();
     sf_solver(oper,sf_cdstep,nx,ny,x,y,niter,
-	      "nmem",0,"nfreq",miter,"err",error,"end");
+	      "nmem",0,"nfreq",miter,"err",error,"verb",true,"end");
     sf_cdstep_close();
 
     norm = 0.;

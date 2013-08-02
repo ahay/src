@@ -18,7 +18,7 @@ constant.zo_image('pmig')
 
 # Impulse response
 
-Flow('imp','data','spike k1=501 k2=175 | ricker1 frequency=10')
+constant.get_impulse('imp','data')
 
 Flow('ifft','imp','cosft sign2=1')
 
