@@ -1,4 +1,4 @@
-/* Convery acoustic impedance to reflectivity. */
+/* Convert acoustic impedance to reflectivity. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
