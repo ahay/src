@@ -1,4 +1,5 @@
 /* Finite-difference time-domain (FDTD) wave propagation modeling in lossless acoustic 2D media.
+
  This program fdelmodc can be used to model waves conforming the 2D wave equation in different media.
  This program computes a solution of the 2D acoustic wave equation
  defined through the first-order linearized systems of Newton's and Hooke's law.*/
