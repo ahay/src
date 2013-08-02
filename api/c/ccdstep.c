@@ -31,13 +31,13 @@
 
 static sf_clist steps;
 
-static void saxpy(int n, sf_double_complex a, 
-		  const sf_complex *x, 
-		  sf_complex *y);
+static void mysaxpy(int n, sf_double_complex a, 
+		    const sf_complex *x, 
+		    sf_complex *y);
 
-static sf_double_complex dsdot(int n, 
-			       const sf_complex *cx, 
-			       const sf_complex *cy);
+static sf_double_complex mydsdot(int n, 
+				 const sf_complex *cx, 
+				 const sf_complex *cy);
 
 void sf_ccdstep_init(void) 
 /*< initialize internal storage >*/
@@ -79,31 +79,31 @@ void sf_ccdstep(bool forget          /* restart flag */,
     for (i=0; i < n; i++) {
 	sf_clist_down (steps, &si, &beta);
 #ifdef SF_HAS_COMPLEX_H
-	alpha = - dsdot(ny, gg, si+nx) / beta;
+	alpha = - mydsdot(ny, gg, si+nx) / beta;
 #else
-	alpha = sf_dcrmul(dsdot(ny, gg, si+nx),-1./beta);
+	alpha = sf_dcrmul(mydsdot(ny, gg, si+nx),-1./beta);
 #endif
-	saxpy(nx+ny,alpha,si,s);
+	mysaxpy(nx+ny,alpha,si,s);
     }
     
-    beta = creal(dsdot(ny, s+nx, s+nx));
+    beta = creal(mydsdot(ny, s+nx, s+nx));
     if (beta < DBL_EPSILON) return;
 
     sf_clist_add (steps, s, beta);
     if (forget) sf_clist_chop (steps);
 #ifdef SF_HAS_COMPLEX_H
-    alpha = -  dsdot(ny, rr, ss) / beta;
+    alpha = -  mydsdot(ny, rr, ss) / beta;
 #else
-    alpha = sf_dcrmul(dsdot(ny, rr, ss),-1./beta);
+    alpha = sf_dcrmul(mydsdot(ny, rr, ss),-1./beta);
 #endif    
 
-    saxpy(nx,alpha,s,x);
-    saxpy(ny,alpha,ss,rr);
+    mysaxpy(nx,alpha,s,x);
+    mysaxpy(ny,alpha,ss,rr);
 }
 
-static void saxpy(int n, sf_double_complex a, 
-		  const sf_complex *x, 
-		  sf_complex *y)
+static void mysaxpy(int n, sf_double_complex a, 
+		    const sf_complex *x, 
+		    sf_complex *y)
 /* y += a*x */
 {
     int i;
@@ -120,9 +120,9 @@ static void saxpy(int n, sf_double_complex a,
     }
 }
 
-static sf_double_complex dsdot(int n, 
-			       const sf_complex *cx, 
-			       const sf_complex *cy)
+static sf_double_complex mydsdot(int n, 
+				 const sf_complex *cx, 
+				 const sf_complex *cy)
 /* Hermitian dot product */
 {
     sf_complex xi, yi;
