@@ -1,6 +1,7 @@
 Salah Al-Hadab <salah.alhadab@gmail.com>
 Tariq Alkhalifah <tariq.alkhalifah@kaust.edu.sa>
 Vladimir Bashkardin <bash@mail.utexas.edu>
+Filippo Broggini <filippo.broggini@gmail.com>
 Jules Browaeys <jules.browaeys@total.com>
 Cody Brown <cbrown@eos.ubc.ca>
 William Burnett <will.burnett@gmail.com>

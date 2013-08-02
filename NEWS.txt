@@ -24,8 +24,8 @@ To the Python package:
 To programs:
 
 * Added shift= parameter to sfkolmog
-* user/jhou: New contributor (Jie Hou)
 * Added eps= parameter to sflsfit
+* user/fbroggin: New contributor (Filippo Broggini)
 
 ===Bug fixes===
 
