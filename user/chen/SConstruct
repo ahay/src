@@ -12,7 +12,7 @@ epfbe epfbil epfws epfad
 frt pca fault fir fastpwd fbgabor apick orientation slopescan
 divn2d divnls curv2 horizon 
 coherence dipcoh fcoh1 fcoh2 horwrite
-psvp
+psvp curv
 '''
 
 pyprogs='''

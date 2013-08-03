@@ -22,21 +22,8 @@
 #include <rsf.h>
 #include "rfir.h"
 #include "dsp.h"
+#include "dim3axis.h"
 
-int dim3(sf_file in, int axis, int *n)
-{
-	int nn[SF_MAX_DIM], dim, i;
-
-	dim  = sf_filedims(in, nn);
-	if(dim < axis) return dim;
-
-	n[0] = 1; n[1] = nn[axis-1]; 
-	for(i=0; i<axis-1; i++) n[0] *=nn [i];
-
-	n[2] = sf_leftsize(in, axis);
-
-	return dim;	
-}
 
 
 int main(int argc,char*argv[])
@@ -58,7 +45,7 @@ int main(int argc,char*argv[])
 //	sf_warning("of=%d, nf=%d\n", of, nf);
 	if (!sf_getint("axis",&axis)) axis=1;
 	/* apply fir filter on which dimension */
-	dim = dim3(in, axis, n);
+	dim = dim3axis(in, axis, n);
 	if(dim < axis) sf_error("dim < axis");
 
 	if(axis == 1)
