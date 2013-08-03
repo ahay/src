@@ -1,4 +1,8 @@
-/* Time-to-depth conversion in V(z). */
+/* Time-to-depth conversion in V(z). 
+
+July 2013 program of the month:
+http://www.ahay.org/rsflog/index.php?/archives/345-Program-of-the-month-sftime2depth.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
