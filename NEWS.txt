@@ -13,6 +13,8 @@ To the reproducible documents collection:
 
 To SCons:
 
+* Experimental IPython notebook in book/rsf/rsf/test/test.ipynb
+
 To documentation:
 
 To APIs:

@@ -667,11 +667,12 @@ def OverUnder(*plots,**kw):
         return Vppen(plots,'xscale=%d vpstyle=n gridnum=1,%d' % (n,n))
 
 class Vplot(object):
-    def __init__(self,name,temp=False):
+    def __init__(self,name,temp=False,penopts=''):
         'Constructor'
         self.name = name
         self.temp = temp
         self.img = None
+        self.penopts = penopts+' '
     def __del__(self):
         'Destructor'
         if self.temp:
@@ -725,7 +726,7 @@ class Vplot(object):
                 format = name[-3:].lower()
             else:
                 format = 'vpl'
-        convert(self.name,name,format,pen,args,verb=False)
+        convert(self.name,name,format,pen,self.penopts+args,verb=False)
 
 class _Wrap(object):
      def __init__(self, wrapped):
