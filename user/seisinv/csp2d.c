@@ -70,25 +70,25 @@ void csp2d_lop(bool adj, bool add, int nm, int nd,
                 float *modl, float *data)
 /*< Apply >*/
 {
-    int ihe, im, id;
+    int ihe, im, id, it, ixs, ixm, ih;
     float t, t2, xs, xm, x, x2, h, h2, he, fx, gx;
     float w = 1.;
 
     sf_adjnull(adj,add,nm,nd,modl,data);
 
     /* Time loop should be parallel*/
-    for (int it = 1; it < nt; it++) {
+    for (it = 1; it < nt; it++) {
         if(verb) sf_warning("it/nt=%d/%d;",it+1,nt);
         t = t0 + it*dt;
 
         t2 = t*t;
 
         /* CSP position loop */
-        for (int ixs = 0; ixs < nxs; ixs++) {
+        for (ixs = 0; ixs < nxs; ixs++) {
             xs = xs0 + ixs*dxs;
 
             /* CMP position loop */
-            for (int ixm = 0; ixm < nxm; ixm++) {
+            for (ixm = 0; ixm < nxm; ixm++) {
                 xm = xm0 + ixm*dxm;
                 x = xm - xs;
                 x2 = x*x;
@@ -96,7 +96,7 @@ void csp2d_lop(bool adj, bool add, int nm, int nd,
                 if (t < 2.*x/v) continue;
 
                 /* offset loop */
-                for (int ih = 0; ih < nh; ih++) {
+                for (ih = 0; ih < nh; ih++) {
                     h = h0 + ih*dh;
                     h2 = h*h;
 
