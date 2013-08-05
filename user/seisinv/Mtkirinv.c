@@ -34,12 +34,14 @@ reg=4: precondition => local slope constraints along t-x plane and smoothing alo
 
 int main(int argc, char* argv[])
 {
-    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize, niter, reg;
+    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize, niter, reg, ix, ih, i3, i2, i1, iter, filt, nw, np;
     float t0, cmp0, cdp0, h0, dt, dcmp, dcdp, dh, apt, rho, aal, norm;
     bool verb, half, amp;
     float ***data, ***modl, **vrms, **mask, *off, *error=NULL;
+    float **pp, **qq, *aa;
     char *errfile;
     sf_file in, out, vel, offset, err=NULL;
+    sf_file fdip;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -89,8 +91,8 @@ int main(int argc, char* argv[])
         if (!half) dh *= 0.5;
 
         off = sf_floatalloc(nh*ncmp);
-        for (int ix = 0; ix < ncmp; ix++) {
-            for (int ih = 0; ih < nh; ih++) {
+        for (ix = 0; ix < ncmp; ix++) {
+            for (ih = 0; ih < nh; ih++) {
                 off[ih*ncmp+ix] = h0 + ih*dh;
             }
         }
@@ -145,8 +147,8 @@ int main(int argc, char* argv[])
 
     sf_floatread(data[0][0],nd,in);
 
-    for (int i3=0; i3 < nh; i3++) {
-        for (int i2=0; i2 < ncmp; i2++) {
+    for (i3=0; i3 < nh; i3++) {
+        for (i2=0; i2 < ncmp; i2++) {
             mask[i3][i2]=cblas_sdot(nt,data[i3][i2],1,data[i3][i2],1);
         }
     }
@@ -162,8 +164,6 @@ int main(int argc, char* argv[])
                  niter,"nmem",0,"nfreq",niter,"err",error,"end");
 
     else if (reg == 1) {
-       int filt; /* the filter length can be changed */
-       float *aa;
        filt=2;
        aa=sf_floatalloc(filt);
        aa[0]=1.;
@@ -187,9 +187,6 @@ int main(int argc, char* argv[])
     }
 
     else if (reg == 4) {
-       sf_file fdip;
-       int np,nw;
-       float **pp, **qq;
        sf_warning("pwd constraints along t-x plane and smoothing along offset axis");
        if (!sf_getstring("fdip")) sf_error("Need input dip file!");
        if (!sf_getint("nw",&nw)) nw=3;
@@ -232,15 +229,15 @@ int main(int argc, char* argv[])
     sf_floatwrite(modl[0][0],nm,out);
 
     if (NULL != err) {
-       for (int i3=0; i3 < nh; i3++) {
-           for (int i2=0; i2 < ncmp; i2++) {
-               for (int i1=0; i1 < nt; i1++) {
+       for (i3=0; i3 < nh; i3++) {
+           for (i2=0; i2 < ncmp; i2++) {
+               for (i1=0; i1 < nt; i1++) {
                    norm += data[i3][i2][i1]*data[i3][i2][i1];
                }
            }
         }
         
-        for (int iter=0; iter < niter; iter++) error[iter] /=norm;
+        for (iter=0; iter < niter; iter++) error[iter] /=norm;
         sf_floatwrite(error,niter,err);
     }
 
