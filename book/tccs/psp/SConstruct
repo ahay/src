@@ -1,0 +1,7 @@
+from rsf.tex import *
+
+End(use='[vlined,algosection,ruled]algorithm2e,amsfonts,amsmath,amssymb,tikz,paralist',
+    include='''
+\def\gmres{{GMRES}} 
+\def\gmresk{{\rm GMRES($k$)}} 
+    ''')

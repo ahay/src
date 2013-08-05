@@ -19,6 +19,8 @@ To APIs:
 
 To the Python package:
 
+* fftw (if present) is included in core libraries during compilation
+
 * Cygwin no longer provides libtirpc, removed it from configure 
 
 To programs:
