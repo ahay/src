@@ -31,15 +31,9 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-#env.Prepend(CPPPATH=['../../include'],
-#            LIBPATH=['../../lib'])
- 
-
-#fftw = env.get('FFTW')
-#if fftw:
-#    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-#    if not isinstance(fftw,bool):
-#        libs.insert(0,fftw)
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

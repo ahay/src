@@ -14,6 +14,8 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
+
+
 if 'f77' in env.get('API',[]):
     F77 = env.get('F77')
     F77base =  os.path.basename(F77)

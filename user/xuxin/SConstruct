@@ -46,8 +46,6 @@ elif root:
 
 fftw = env.get('FFTW')
 if fftw:
-    if not isinstance(fftw,bool):
-        env.Prepend(LIBS=[fftw])
     progs += ' zomiso zomvti'
 elif root:
     place += ' zomiso zomvti'

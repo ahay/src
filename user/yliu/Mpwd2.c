@@ -18,8 +18,7 @@
 */
 
 #include <rsf.h>
-
-#include "allp3.h"
+#include <rsfpwd.h>
 
 int main (int argc, char *argv[])
 {
@@ -77,7 +76,7 @@ int main (int argc, char *argv[])
 	    ap = allpass_init (nw,nj1,n1,n2,1,p);
 	    
 	    /* apply */
-	    allpass1(false, ap, u1, u2);
+	    allpass1(false, false, ap, u1, u2);
 	    
 	    /* write t-x destruction */
 	    sf_floatwrite(u2,n12,out);

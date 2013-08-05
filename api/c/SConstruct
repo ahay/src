@@ -43,9 +43,7 @@ env.Prepend(CPPDEFINES=['RSF_VERSION=\'\"%s\"\'' % version])
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-    if not isinstance(fftw,bool):
-        env.Append(LIBS=[fftw])
-
+    
 sobjs = []
 
 if dynlib:
@@ -66,10 +64,12 @@ for source in Split(src2):
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
+        
 slib = env.StaticLibrary('rsf',sobjs+sources)
 
 if dynlib:
-    dlib = env.SharedLibrary('rsf',dobjs+sources,SHLIBPREFIX='libd')
+    dlib = env.SharedLibrary('rsf',dobjs+sources,
+                             SHLIBPREFIX='libd')
 
 inc = env.Command('rsf.h',includes,Action(bldutil.__merge))
 
@@ -90,8 +90,9 @@ if root:
 # TESTING
 ##############################################################################
 for file in Split('''
-                  banded eno2 fft file getpar lsint2 quantile simtab
-                  triangle2 trianglen
+                  banded eno2 fft file getpar lsint2 quantile
+                  simtab triangle2 trianglen
                   '''):
     test = env.StaticObject('Test' + file + '.c')
-    prog = env.Program(file,[test,slib],PROGSUFFIX='.x',PROGPREFIX='Test')
+    prog = env.Program(file,[test,slib],
+                       PROGSUFFIX='.x',PROGPREFIX='Test')

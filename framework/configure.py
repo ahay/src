@@ -1229,12 +1229,13 @@ def fftw(context):
         if res:
             context.Result(res)
             context.env['FFTW'] = fftw
+            context.env['LIBS'] = LIBS
         else:
             context.Result(context_failure)
             context.env['FFTW'] = None
+            LIBS.pop()
             need_pkg('fftw', fatal=False)
-        LIBS.pop()
-
+ 
 pkg['petsc'] = {'ubuntu':'petsc-dev',
                 'fedora':'petsc-devel'}
 

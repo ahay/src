@@ -484,10 +484,6 @@ class UserSconsTargets:
         if glob_build:
             env = env.Clone()
 
-        fftw = env.get('FFTW')
-        if fftw and not isinstance(fftw,bool):
-            env.Prepend(LIBS=[fftw])
-
         # Needed for both C and F90 programs:
         bldroot = '../..' # aka RSFSRC/build
 
