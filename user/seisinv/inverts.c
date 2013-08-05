@@ -31,7 +31,7 @@ void inverts(sf_operator oper /* linear operator */,
             float eps        /* epsilon */)
 /*< Iterative least-squares optimization >*/
 {
-    int iter;
+    int iter, ix;
     float *w, *p;
 
     sf_cdstep_init();
@@ -39,13 +39,13 @@ void inverts(sf_operator oper /* linear operator */,
     w = sf_floatalloc(nx);
     p = sf_floatalloc(nx);
 
-    for (int ix=0; ix < nx; ++ix) w[ix] = 1.f;
+    for (ix=0; ix < nx; ++ix) w[ix] = 1.f;
 
     for (iter = 0; iter < niter; ++iter) {
         sf_solver_prec (oper, sf_cgstep, sf_copy_lop, nx, nx, ny, x, y, 
                         liter, eps, "err",error, "verb", verb, "mwt", w, "xp", p, "end");
 
-        for (int ix=0; ix < nx; ++ix) w[ix] = fabsf(p[ix]);
+        for (ix=0; ix < nx; ++ix) w[ix] = fabsf(p[ix]);
     }
     sf_cdstep_close();
 
