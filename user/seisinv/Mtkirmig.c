@@ -27,7 +27,7 @@ The axes in the image are {time,cdp,offset}
 
 int main(int argc, char* argv[])
 {
-    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize;
+    int nt, ncmp, ncdp, nh, nh2, nm, nd, memsize, ix, ih, i3, i2;
     float t0, cmp0, cdp0, h0, dt, dcmp, dcdp, dh, apt, rho, aal;
     bool adj, verb, half, amp;
     float *data, *modl, *off, **vrms, **mask;
@@ -101,8 +101,8 @@ int main(int argc, char* argv[])
         if (!half) dh *= 0.5;
 
         off = sf_floatalloc(nh*ncmp);
-        for (int ix = 0; ix < ncmp; ix++) {
-            for (int ih = 0; ih < nh; ih++) {
+        for (ix = 0; ix < ncmp; ix++) {
+            for (ih = 0; ih < nh; ih++) {
                 off[ih*ncmp+ix] = h0 + ih*dh;
             }
         }
@@ -129,8 +129,8 @@ int main(int argc, char* argv[])
     /* read velocity file */
     sf_floatread(vrms[0],nt*ncdp,vel);
 
-    for (int i3=0; i3 < nh; i3++) {
-        for (int i2=0; i2 < ncmp; i2++) {
+    for (i3=0; i3 < nh; i3++) {
+        for (i2=0; i2 < ncmp; i2++) {
             mask[i3][i2]=1.;
         }
     }

@@ -5,6 +5,7 @@ methods = {
     'gazdag': 'Phase-Shift Migration',
     'lowrank': 'Two-Step Lowrank',
     'kirch': 'Kirchhoff Time Migration',
+    'oway': 'One-Way Wave Equation',
     }
 method = methods[os.path.basename(os.getcwd())]
 

@@ -11,7 +11,6 @@ Flow('vel','data','spike') # velocity=1
 # Fourier transform and transpose
 
 fmax = 50 # maximum frequency
-nf = 301  # number of frequencies
 
 Flow('fft','data',
      'fft1 | window max1=%g | transp plane=12 | transp plane=23' % fmax)
@@ -25,15 +24,9 @@ Flow('mig','fft slowness',
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
      nrmax=1 slo=${SOURCES[1]} |
      window | transp
-     ''',split=[3,nf,[0]],reduce='add')
+     ''',split=[3,'omp',[0]],reduce='add')
 
-Result('mig',
-       '''
-       window  min2=0 max2=1.5 max1=3 |
-       grey title=Migration 
-       label2=Depth    unit2=km 
-       label1=Distance unit1=km
-       ''')
+constant.zo_image('mig')
 
 # Impulse response
 
@@ -49,7 +42,7 @@ Flow('imig','imp slowness',
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
      nrmax=1 slo=${SOURCES[1]} |
      window | transp
-     ''',split=[3,nf,[0]],reduce='add')
+     ''',split=[3,'omp',[0]],reduce='add')
 
 Result('imig','window max1=1.5 | grey title="Impulse Response" unit1=km unit2=km')
 
