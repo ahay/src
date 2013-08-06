@@ -111,7 +111,7 @@ main( int argc, char* argv[] )
 
         DistUniformGrid<double> velocity
 	    ( origNx, origNy, origNz, comm );
-        double* localVelocity = velocity.LocalBuffer();
+        double* localVelocity = velocity.Buffer();
         const int xLocalSize = velocity.XLocalSize();
         const int yLocalSize = velocity.YLocalSize();
         const int zLocalSize = velocity.ZLocalSize();
@@ -183,7 +183,7 @@ main( int argc, char* argv[] )
 
         DistUniformGrid<Complex<double> > B
         ( Nx, Ny, Nz, comm );
-        Complex<double>* localB = B.LocalBuffer();
+        Complex<double>* localB = B.Buffer();
         const double center[] = { 0.5, 0.5, 0.25 };
         double arg[3];
         for( int zLocal=0; zLocal<zLocalSize; ++zLocal )
@@ -261,16 +261,16 @@ main( int argc, char* argv[] )
             << std::endl;
         }
 
-        const int xMaxLocalSize = elem::MaxLocalLength( Nx, px );
-        const int yMaxLocalSize = elem::MaxLocalLength( Ny, py );
-        const int zMaxLocalSize = elem::MaxLocalLength( Nz, pz );
+        const int xMaxLocalSize = elem::MaxLength( Nx, px );
+        const int yMaxLocalSize = elem::MaxLength( Ny, py );
+        const int zMaxLocalSize = elem::MaxLength( Nz, pz );
         const int maxLocalSize = xMaxLocalSize*yMaxLocalSize*zMaxLocalSize;
         std::vector<Complex<double> > receiveData;
 
         if( commRank != 0 )
         {
             mpi::Gather
-            ( B.LocalBuffer(), maxLocalSize,
+            ( B.Buffer(), maxLocalSize,
               &receiveData[0], maxLocalSize, 0, comm );
         }
         else
@@ -286,7 +286,7 @@ main( int argc, char* argv[] )
 
             receiveData.resize( maxLocalSize*commSize );
             mpi::Gather
-            ( B.LocalBuffer(), maxLocalSize,
+            ( B.Buffer(), maxLocalSize,
               &receiveData[0], maxLocalSize, 0, comm );
 
             for( int proc=0; proc<commSize; ++proc )
@@ -295,9 +295,9 @@ main( int argc, char* argv[] )
                 const int xProc = proc % px;
                 const int yProc = (proc/px) % py;
                 const int zProc = proc/(px*py);
-                const int xSize = LocalLength( Nx, xProc, px );
-                const int ySize = LocalLength( Ny, yProc, py );
-                const int zSize = LocalLength( Nz, zProc, pz );
+                const int xSize = Length( Nx, xProc, px );
+                const int ySize = Length( Ny, yProc, py );
+                const int zSize = Length( Nz, zProc, pz );
                 for( int zLocal=0; zLocal<zSize; ++zLocal )
                 {
                     const int z = zProc + zLocal*pz;
