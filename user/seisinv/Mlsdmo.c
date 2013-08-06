@@ -1,6 +1,6 @@
 /* Kirchhoff least-squares DMO with antialiasing by reparameterization. */
 /*
-  Copyright (C) 2012 China University of Petroleum
+  Copyright (C) 2012 China University of Petroleum (East China)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

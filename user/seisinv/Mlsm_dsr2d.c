@@ -1,6 +1,6 @@
 /* 2-D prestack least-squares migration with split-step DSR. */
 /*
-  Copyright (C) 2012 China University of Petroleum
+  Copyright (C) 2012 China University of Petroleum (East China)
   Copyright (C) 2004 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
