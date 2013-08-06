@@ -28,9 +28,9 @@ int main(int argc, char* argv[])
     int i1, n1, iw, nt, nw, i2, n2, rect0, niter, n12, n1w;
     int m[SF_MAX_DIM], *rect;
     float t, d1, w, w0, dw, mean, alpha;
-    float *trace, *kbsc, *mkbsc=NULL,*sscc=NULL, *mm=NULL;
+    float *trace, *kbsc, *mkbsc, *sscc, *mm, *ww;
     sf_complex *outp, *cbsc;
-    sf_file in, out, mask, basis;
+    sf_file in, out, mask, weight, basis;
    
     sf_init(argc,argv);
     in = sf_input("in");
@@ -124,16 +124,24 @@ int main(int argc, char* argv[])
 	sscc = sf_floatalloc(n12);
 	nmultidivn_init(2*nw, 1, n1, m, rect, kbsc, 
 			(bool) (verb && (n2 < 500))); 
+    } else {
+	sscc = NULL;
     }
     
-    if (NULL != sf_getstring("mask")) {
+    if (NULL != sf_getstring("mask")) { /* data weight */
 	mask = sf_input("mask");
-	mm = sf_floatalloc(n1);
-	mkbsc = sf_floatalloc(n12);
+	mm = sf_floatalloc(n1);	
     } else {
 	mask = NULL;
 	mm = NULL;
-	mkbsc = NULL;
+    }
+
+    if (NULL != sf_getstring("weight")) { /* model weight */
+	weight = sf_input("weight");
+	ww = sf_floatalloc(n1w);
+    } else {
+	weight = NULL;
+	ww = NULL;
     }
 
     /* sin and cos basis */
@@ -164,19 +172,22 @@ int main(int argc, char* argv[])
     }
 
     
-    if (NULL != mm) {
-	for (iw=0; iw < n12; iw++) {
-	    mkbsc[iw] = kbsc[iw];
+    if (NULL != mm || NULL != ww) {
+	mkbsc = sf_floatalloc(n12);
+	for (i1=0; i1 < n12; i1++) {
+	    mkbsc[i1] = kbsc[i1];
 	}
-    }
+    } else {
+	mkbsc = NULL;
 
-    mean = 0.;
-    for (i1=0; i1 < n12; i1++) {
-	mean += kbsc[i1]*kbsc[i1];
-    }
-    mean = sqrtf (mean/(n12));
-    for (i1=0; i1 < n12; i1++) {
-	kbsc[i1] /= mean;
+	mean = 0.;
+	for (i1=0; i1 < n12; i1++) {
+	    mean += kbsc[i1]*kbsc[i1];
+	}
+	mean = sqrtf (mean/(n12));
+	for (i1=0; i1 < n12; i1++) {
+	    kbsc[i1] /= mean;
+	}
     }
     
     for (i2=0; i2 < n2; i2++) {
@@ -184,13 +195,30 @@ int main(int argc, char* argv[])
 
 	if (NULL != basis) sf_complexwrite(cbsc,n1w,basis);
 
-	if (NULL != mm) {
-	    sf_floatread(mm,n1,mask);
-	    for (iw=0; iw < 2*nw; iw++) {
-		for (i1=0; i1 < n1; i1++) {
-		    kbsc[iw*n1+i1] = mkbsc[iw*n1+i1]*mm[i1];
+	if (NULL != mm || NULL != ww) {
+	    for (i1=0; i1 < n12; i1++) {
+		kbsc[i1] = mkbsc[i1];
+	    }
+
+	    if (NULL != mm) {
+		sf_floatread(mm,n1,mask);
+		for (iw=0; iw < 2*nw; iw++) {
+		    for (i1=0; i1 < n1; i1++) {
+			kbsc[iw*n1+i1] *= mm[i1];
+		    }
 		}
 	    }
+
+	    if (NULL != ww) {
+		sf_floatread(ww,n1w,weight);
+		for (iw=0; iw < nw; iw++) {
+		    for (i1=0; i1 < n1; i1++) {
+			kbsc[iw*n1+i1]      *= ww[iw*n1+i1];
+			kbsc[(iw+nw)*n1+i1] *= ww[iw*n1+i1];
+		    }
+		}
+	    }
+
 	    mean = 0.;
 	    for (i1=0; i1 < n12; i1++) {
 		mean += kbsc[i1]*kbsc[i1];
@@ -219,6 +247,17 @@ int main(int argc, char* argv[])
 					      sscc[iw*n1+i1]);
 		}
 	    }
+
+	    if (NULL != ww) {
+		for (i1=0; i1 < n1w; i1++) {
+#ifdef SF_HAS_COMPLEX_H
+		    outp[i1] *= ww[i1];
+#else
+		    outp[i1] = sf_crmul(outp[i1],ww[i1]);
+#endif
+		}
+	    } 
+
 	    sf_complexwrite(outp,n1w,out);
 	} else {
 	    for (i1=0; i1 < n1; i1++) {

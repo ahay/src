@@ -11,7 +11,6 @@
 #include <sys/mman.h>
 #include <setjmp.h>
 
-
 #include <rsf.h>
 
 #define SWIG_FILE_WITH_INIT
@@ -314,22 +313,22 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 
 	switch (sf_gettype(file)) {
 	    case SF_FLOAT:
-		type = PyArray_FLOAT;
+		type = NPY_FLOAT;
 		break;
 	    case SF_INT:
-		type = PyArray_INT;
+		type = NPY_INT;
 		break;
 	    case SF_COMPLEX:
-		type = PyArray_CFLOAT;
+		type = NPY_CFLOAT;
 		break;
 	    case SF_CHAR:
-		type = PyArray_CHAR;
+		type = NPY_CHAR;
 		break;
 	    case SF_UCHAR:
-		type = PyArray_UBYTE;
+		type = NPY_UBYTE;
 		break;
 	    default:
-		type = PyArray_FLOAT;
+		type = NPY_FLOAT;
 		break;
 	}
 

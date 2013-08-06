@@ -30,7 +30,7 @@
 /*^*/
 
 static int np, nx, nr, nd;
-static float *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
+static float *r, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
@@ -54,7 +54,6 @@ void sf_conjgrad_init(int np1     /* preconditioned size */,
     hasp0 = hasp01;
 
     r = sf_floatalloc(nr);  
-    d = sf_floatalloc(nd); 
     sp = sf_floatalloc(np);
     gp = sf_floatalloc(np);
     sx = sf_floatalloc(nx);
@@ -67,7 +66,6 @@ void sf_conjgrad_close(void)
 /*< Free allocated space >*/
 {
     free (r);
-    free (d);
     free (sp);
     free (gp);
     free (sx);
@@ -86,9 +84,11 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 /*< Conjugate gradient solver with shaping >*/
 {
     double gn, gnp, alpha, beta, g0, dg, r0;
+    float *d;
     int i, iter;
     
     if (NULL != prec) {
+	d = sf_floatalloc(nd); 
 	for (i=0; i < nd; i++) {
 	    d[i] = - dat[i];
 	}
@@ -197,6 +197,9 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 
 	gnp = gn;
     }
+
+    if (NULL != prec) free (d);
+
 }
 
 /* 	$Id$	 */

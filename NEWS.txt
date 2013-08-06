@@ -19,6 +19,8 @@ To documentation:
 
 To APIs:
 
+* Updated numpy API for compatibility with the latest version of numpy
+
 To the Python package:
 
 * fftw (if present) is included in core libraries during compilation

@@ -209,7 +209,7 @@ int main(int argc, char* argv[])
 	    } /* v 2 */
 	} /* x */
     } /* y */
-    sf_warning(".");
+    if (verb) sf_warning(".");
 
     exit (0);
 }
