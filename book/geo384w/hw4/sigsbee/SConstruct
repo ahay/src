@@ -61,9 +61,9 @@ Result('dif','grey title="Separated Diffractions" ')
 Flow('fourier','dif','cosft sign2=1')
 Flow('velconf','fourier',
      '''
-     stolt vel=1.5 | spray axis=2 n=1 o=0 d=1 |
-     fourvc pad2=4096 nv=61 dv=0.02 v0=1.4 verb=y
-     ''',split=[2,424],reduce='cat axis=3')
+     stolt vel=1.5 | 
+     vczo pad2=4096 nv=61 dv=0.02 v0=1.4 verb=y
+     ''',split=[2,'omp'],reduce='cat axis=3')
 Flow('velcon','velconf',
      '''
      transp plane=23 memsize=1000 |

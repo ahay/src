@@ -16,10 +16,9 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include "fint1.h"
-#include <math.h>
 #include <rsf.h>
+
+#include "stretch4.h"
 
 #ifdef SF_HAS_FFTW
 #include <fftw3.h>
@@ -27,13 +26,13 @@
 
 int main(int argc, char* argv[])
 {
-    fint1 str, istr;
+    map4 str;
     bool verb;
-    int i1,i2, n1,n2,n3, nw, nx,nv, ix,iv, next;
+    int i1,i2, n1,n2,n3, nw, nx,nv, ix,iv;
     float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,dv, dx, t, x0;
-    float *trace=NULL, *strace=NULL;
-    sf_complex *ctrace=NULL, **cstack=NULL, shift;
-    sf_file in=NULL, out=NULL;
+    float *trace, *strace, *t2;
+    sf_complex *ctrace, **cstack, shift;
+    sf_file in, out;
 
 #ifdef SF_HAS_FFTW
     fftwf_plan forw, invs;
@@ -70,9 +69,8 @@ int main(int argc, char* argv[])
 #else
     forw = kiss_fftr_alloc(n3,0,NULL,NULL);
     invs = kiss_fftr_alloc(n3,1,NULL,NULL);
-    if (NULL == forw || NULL == invs) 
-	sf_error("KISS FFT allocation error");
 #endif
+    if (NULL == forw || NULL == invs) sf_error("FFT allocation error");
 
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;  
     o2 = o1*o1;
@@ -98,16 +96,24 @@ int main(int argc, char* argv[])
 
     sf_putstring(out,"label2","Velocity");
 
+    sf_shiftdim(in, out, 2);
+
     dx *= 2.*SF_PI;
     x0 *= 2.*SF_PI;
 
     trace = sf_floatalloc(n1);
+    t2 = sf_floatalloc(n2);
+
     cstack = sf_complexalloc2(nw,nv);
 
-    if (!sf_getint("extend",&next)) next=4;
-    /* trace extension */
-    str = fint1_init(next,n1,0);
-    istr = fint1_init(next,n2,0);
+    str = stretch4_init (n1, o1, d1, n2, eps);
+
+    for (i2=0; i2 < n2; i2++) {
+	t = o2+i2*d2;
+	t2[i2] = sqrtf(t);
+    }    
+
+    stretch4_define (str,t2);
 
     for (ix=0; ix < nx; ix++) {
 	x = x0+ix*dx; 
@@ -126,20 +132,7 @@ int main(int argc, char* argv[])
 	for (i1=0; i1 < n1; i1++) {
 	    trace[i1] /= n1;
 	}
-	fint1_set(str,trace);
-
-	for (i2=0; i2 < n2; i2++) {
-	    t = o2+i2*d2;
-	    t = sqrtf(t);
-	    t = (t-o1)/d1;
-	    i1 = t;
-	    if (i1 >= 0 && i1 < n1) {
-		strace[i2] = fint1_apply(str,i1,t-i1,false);
-	    } else {
-		strace[i2] = 0.;
-	    }
-	}
-	
+	stretch4_invert (str,strace,trace);
 	for (i2=n2; i2 < n3; i2++) {
 	    strace[i2] = 0.;
 	}
@@ -149,7 +142,6 @@ int main(int argc, char* argv[])
 #else
 	kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);
 #endif
-	ctrace[0]=sf_cmplx(0.,0.); /* dc */
 
 	for (iv=0; iv < nv; iv++) {
 	    v = v0 + (iv+1)*dv;
@@ -157,7 +149,7 @@ int main(int argc, char* argv[])
 
 	    for (i2=1; i2 < nw; i2++) {
 		w = i2*SF_PI/(d2*n3);
-		w = v2/w;
+		w = v2/w-o2*w;
 
 		shift = sf_cmplx(cosf(w),sinf(w));
 
@@ -181,26 +173,14 @@ int main(int argc, char* argv[])
 		ctrace[i2] = sf_cmul(cstack[iv][i2],shift);
 #endif
 	    }
+	    ctrace[0]=sf_cmplx(0.0f,0.0f); /* dc */
 
 #ifdef SF_HAS_FFTW
 	    fftwf_execute(invs);
 #else
 	    kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);
 #endif
-	    fint1_set(istr,strace);
-	    
-	    for (i1=0; i1 < n1; i1++) {
-		t = o1+i1*d1;
-		t = t*t;
-		t = (t-o2)/d2;
-		i2 = t;
-		if (i2 >= 0 && i2 < n2) {
-		    trace[i1] = fint1_apply(istr,i2,t-i2,false);
-		} else {
-		    trace[i1] = 0.;
-		}
-	    }
-
+	    stretch4_apply(str,strace,trace);
 	    sf_floatwrite (trace,n1,out);
 	} /* v 2 */
     } /* x */
