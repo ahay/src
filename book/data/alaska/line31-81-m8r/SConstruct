@@ -267,16 +267,32 @@ Flow('cmpsmute','cmps vbrutes',
 
 Plot('cmpsmute','grey title=CMPs gainpanel=all pclip=90',view=1)
 
+for cmpn in (250,251,368):
+    cmpi = 'cmp%d' % cmpn 
+    Flow(cmpi,'cmpsmute','window n3=1 f3=%d' % cmpn)
+    Plot(cmpi,'wiggle poly=y transp=y yreverse=y max1=3 title="CMP %d" ' % cmpn)
+    Plot(cmpi+'g',cmpi,'grey  title="CMP %d" ' % cmpn)
+    nmoi = 'nmo%d' % cmpn
+    Flow(nmoi,[cmpi,'vpick'],'nmo half=n velocity=${SOURCES[1]}')
+    Plot(nmoi,'grey  title="NMO %d" ' % cmpn)
+
 # make wiggle plot of two cdp gathers
-Flow('cmp250','cmpsmute','window n3=1 f3=250 max1=3')
-Flow('cmp251','cmpsmute','window n3=1 f3=251 max1=3')
-
-Plot('cmp250','wiggle poly=y transp=y yreverse=y title="CMP 250" ')
-Plot('cmp251','wiggle poly=y transp=y yreverse=y title="CMP 251" ')
-
 Result('cmp250','cmp250 cmp251','SideBySideAniso')
 
 # run velocity analysis at one location, near the center of the line.
+Flow('vscan','cmp368','vscan semblance=y half=n nv=101 v0=7000 dv=100')
+Plot('vscan','grey color=j allpos=y title="Velocity Scan" ')
 
+Flow('vpick','vscan','mutter inner=y t0=1 x0=7000 v0=1500 half=n | pick rect1=100')
+Plot('vpick','graph plotcol=7 plotfat=5 wantaxis=n wanttitle=n yreverse=y transp=y min2=7000 max2=17000 pad=n')
+Plot('vscanpick','vscan vpick','Overlay')
+
+Result('vscan','cmp368g vscanpick','SideBySideAniso')
+Result('nmo368','cmp368g nmo368','SideBySideAniso')
+
+# apply decon and moveout the cdp gathers using the brute velocity function.
+# decon (supef) is inside linear moveout/inverse linear moveout pair so I 
+# can make the decon design gate start time increase with offset and start
+# below the mute.
 
 End()

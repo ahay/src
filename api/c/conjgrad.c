@@ -84,7 +84,7 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 /*< Conjugate gradient solver with shaping >*/
 {
     double gn, gnp, alpha, beta, g0, dg, r0;
-    float *d;
+    float *d=NULL;
     int i, iter;
     
     if (NULL != prec) {
