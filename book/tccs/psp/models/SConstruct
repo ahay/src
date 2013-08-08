@@ -1,0 +1,117 @@
+from rsf.proj import *
+
+models = '''
+uniform lens guide decreasing increasing sideways decreasing5 increasing5 sideways5 wedge random separator cavity cavity-reverse cavity-bottom cavity-top
+'''
+
+models = Split(models)
+
+size = int(ARGUMENTS.get('size',100))
+half = size/2
+
+n = size-1
+d = 1.0/size
+
+omega = float(ARGUMENTS.get('omega',60))
+
+# 0. Uniform
+Flow(models[0],None,
+     '''
+     math 
+     n1=%d n2=%d n3=%d 
+     d1=%g d2=%g d3=%g 
+     label1=X label2=Y label3=Z 
+     unit1=km unit2=km unit3=km 
+     label=Velocity unit=km/s output=1
+     ''' % (n,n,n,d,d,d))
+
+# 1. Converging lense
+Flow(models[1],models[0],'math output="(1.0 - 0.4*exp(-32.*((x1-0.5)^2+(x2-0.5)^2+(x3-0.5)^2)))/ 0.8" ')
+
+# 2. Wave guide
+Flow(models[2],models[0],'math output="(1.0 - 0.4*exp(-32.*((x1-0.5)^2+(x2-0.5)^2)))/ 0.8" ')
+
+# 3. Two decreasing layers
+Flow('top',models[0],'window n3=%d' % half)
+Flow('bot',models[0],'window f3=%d | put o3=0 | math output=4' % half)
+Flow(models[3],'top bot','cat axis=3 ${SOURCES[1]}')
+
+# 4. Two increasing layers
+Flow(models[4],'bot top','cat axis=3 ${SOURCES[1]}')
+
+# 5. Two sideways layers
+Flow('left', models[0],'window n2=%d | math output=4' % (half-1))
+Flow('right',models[0],'window f2=%d' % (half-1))
+Flow(models[5],'left right','cat axis=2 ${SOURCES[1]}')
+
+# 6. Five decreasing layers
+Flow('dlay1',models[0],'window max3=%g'                             % (0.2-0.5*d))
+Flow('dlay2',models[0],'window min3=0.2 max3=%g | math output=1.75' % (0.4-0.5*d))
+Flow('dlay3',models[0],'window min3=0.4 max3=%g | math output=2.5'  % (0.6-0.5*d))
+Flow('dlay4',models[0],'window min3=0.6 max3=%g | math output=3.25' % (0.8-0.5*d))
+Flow('dlay5',models[0],'window min3=0.8         | math output=4')
+Flow(models[6],'dlay1 dlay2 dlay3 dlay4 dlay5','cat axis=3 ${SOURCES[1:5]}')
+
+# 7. Five increasing layers
+Flow('ilay1',models[0],'window max3=%g          | math output=4'    % (0.2-0.5*d))
+Flow('ilay2',models[0],'window min3=0.2 max3=%g | math output=3.25' % (0.4-0.5*d))
+Flow('ilay3',models[0],'window min3=0.4 max3=%g | math output=2.5'  % (0.6-0.5*d))
+Flow('ilay4',models[0],'window min3=0.6 max3=%g | math output=1.75' % (0.8-0.5*d))
+Flow('ilay5',models[0],'window min3=0.8')
+Flow(models[7],'ilay1 ilay2 ilay3 ilay4 ilay5','cat axis=3 ${SOURCES[1:5]}')
+
+# 8. Five sideways layers
+Flow('slay1',models[0],'window max1=%g          | math output=4'    % (0.2-0.5*d))
+Flow('slay2',models[0],'window min1=0.2 max1=%g | math output=3.25' % (0.4-0.5*d))
+Flow('slay3',models[0],'window min1=0.4 max1=%g | math output=2.5'  % (0.6-0.5*d))
+Flow('slay4',models[0],'window min1=0.6 max1=%g | math output=1.75' % (0.8-0.5*d))
+Flow('slay5',models[0],'window min1=0.8')
+Flow(models[8],'slay1 slay2 slay3 slay4 slay5','cat axis=1 ${SOURCES[1:5]}')
+
+# 9. Wedge
+Flow('mask',models[0],'math output="0.8-0.2*x2-x3" | mask min=0')
+Flow('wedge1','mask','dd type=float | math output="1.5*input+3*(1-input)" ')
+Flow('mask2','wedge1','math output="0.4+0.1*x2-x3" | mask min=0')
+Flow(models[9],'mask2 wedge1','dd type=float | math other=${SOURCES[1]} output="2*input+other*(1-input)" ')
+
+# 10. Uniform random over [1,3]
+Flow(models[10],models[0],'noise rep=y seed=92012 type=n mean=2 range=1')
+
+# 11. High-velocity separator
+Flow('separ',models[0],'cut max3=0.75 min2=0.25 max2=0.29')
+Flow(models[11],'separ','math output="1e10*(1-input) + input"')
+
+# 12. Cavity (might not converge!)
+Flow('cave',models[0],'cut min1=0.21 max1=0.79 min2=0.21 max2=0.79 min3=0.21 max3=0.79')
+Flow(models[12],'cave','math output="1+7*input"')
+
+# 13. Reverse-cavity
+Flow(models[13],'cave','math output="8-7*input"')
+
+# 14. Bottom half of cavity
+Flow('cavebot',models[12],'window f3=%d' % half)
+Flow(models[14],'top cavebot','cat axis=3 ${SOURCES[1]}')
+
+# 15. Top half of cavity
+Flow('cavetop',models[12],'window n3=%d' % half)
+Flow('bot1','bot','math output=1')
+Flow(models[15],'cavetop bot1','cat axis=3 ${SOURCES[1]}') 
+
+for model in models:
+    Result(model,
+           '''
+           byte gainpanel=all mean=y | 
+           grey3 frame1=%d frame2=%d frame3=%d color=j title=%s screenratio=1
+           ''' % (half,half,half,model.capitalize()))
+
+    solve = model+'-solve'
+    Flow(solve,model,
+         'mpipsp velocity=$SOURCE solution=$TARGET omega=%g' % omega,
+         stdin=0,stdout=-1,np=4)
+    Result(solve,
+           '''
+           real | byte gainpanel=all | 
+           grey3 frame1=%d frame2=%d frame3=%d title=%s screenratio=1
+           ''' % (half,half,half,model.capitalize()))
+
+End()

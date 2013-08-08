@@ -1,0 +1,55 @@
+\title{Madagascar project: reproducibility challenge}
+
+\author{Sergey Fomel}
+
+\begin{abstract}
+Challenge...
+\end{abstract}
+
+\lefthead{Fomel}
+\righthead{Reproducibility challenge}
+
+\address {
+sergey.fomel@beg.utexas.edu \\
+Jackson School of Geosciences \\
+The University of Texas at Austin \\ 
+University Station, Box X \\
+Austin, TX 78713-8924 \\
+USA}
+
+\maketitle
+
+\section{Introduction}
+\inputdir{rain}
+
+In 1997, the European Communities organized a Spatial Interpolation
+Comparison. Many different organizations participated with the results
+published in a special issue of the \emph{Journal of Geographic
+Information and Decision Analysis} \cite[]{dubois} and a separate
+report \cite[]{rain}.
+
+\sideplot{elev}{width=\textwidth}{Digital elevation map of Switzerland.}
+
+The comparison used a dataset from rainfall measurements in
+Switzerland on the 8th of May 1986, the day of the Chernobyl disaster.
+Figure~\ref{fig:elev} shows the data area: the Digital Elevation Model
+of Switzerland with superimposed country's borders.  A total of 467
+rainfall measurements were taken that day. A randomly selected subset
+of 100 measurements was used as the input data the 1997 Spatial
+Interpolation Comparison in order to interpolate other measurements
+using different techniques and to compare the results with the known
+data. Figure~\ref{fig:raindata} shows the spatial locations of the
+selected data samples and the full dataset.
+
+\plot{raindata}{width=\textwidth}{Left: locations of weather stations
+  used as input data in the spatial interpolation contest.  Right: all
+  weather stations locations.}
+
+\section{Reproducibility challenge}
+
+\subsection{Madagascar solution}
+
+\subsection{Additional materials}
+
+\bibliographystyle{seg}
+\bibliography{rain}

@@ -25,8 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv;
-    int it, nt, ih, nh, ix, nx, ib, nb, id, nd, *fold;
+    int it, nt, ih, nh, ix, nx, ib, nb, id, nd, *fold, CDPtype;
     float dt, dh, dx, t0, h0, x0, t, h, x, eps, db, b0, b, sinb, cosb, tanb;
     float ***slice, ***tstr, ***hstr, ***xstr, ***slice2, *sum, sample;
     sf_file in, out;
@@ -34,9 +33,6 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    
-    if (!sf_getbool("inv",&inv)) inv=true;
-    /* inversion flag */
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
@@ -45,9 +41,14 @@ int main(int argc, char* argv[])
 
     nd = nt*nh*nx;
 
+    CDPtype=1;
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"d3",&dx)) sf_error("No d3= in input");
+    CDPtype=0.5+dh/dx;
+    if (0 == CDPtype) CDPtype=1;
+    if (1 != CDPtype) sf_warning("CDPtype=%d",CDPtype);
+    sf_putint(out,"CDPtype",1);
 
     if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input");
@@ -95,27 +96,17 @@ int main(int argc, char* argv[])
 	for (ix=0; ix < nx; ix++) {
 	    x = x0+ix*dx;   
 	    for (ih=0; ih < nh; ih++) {
-		h = h0 + ih*dh;
+		h = h0 + ih*dh + (dh/CDPtype)*(ix%CDPtype);
 		for (it=0; it < nt; it++) {
 		    t = t0 + it*dt;
-		    if (inv) {
-			tstr[ix][ih][it] = t*cosb;
-			hstr[ix][ih][it] = h*cosb;
-			xstr[ix][ih][it] = x-h*sinb;
-		    } else {
-			tstr[ix][ih][it] = t/cosb;
-			hstr[ix][ih][it] = h/cosb;
-			xstr[ix][ih][it] = x+h*tanb;
-		    }
+		    tstr[ix][ih][it] = t*cosb;
+		    hstr[ix][ih][it] = h*cosb;
+		    xstr[ix][ih][it] = x-h*sinb;
 		}
 	    }
 	}
 
-	if (inv) {
-	    warp3(slice,tstr,hstr,xstr,slice2);
-        } else {	    
-	    fwarp3(slice,tstr,hstr,xstr,slice2); 
-        }
+	warp3(slice,tstr,hstr,xstr,slice2);
 
 	for (id=0; id < nd; id++) {
 	    sample = slice2[0][0][id];
