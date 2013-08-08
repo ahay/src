@@ -1,5 +1,6 @@
 /*This is to test vectrization of  for loop*/
 
+#include <omp.h>
 #include <assert.h>
 #include <time.h>
 #include <math.h>
@@ -13,15 +14,17 @@
 
 int main() 
 {
-  int nz = 352; //704
-  int ny = 704; //1408
-  int nx = 704; //1408
+  int nz = 352;
+  int ny = 704;
+  int nx = 704;
   
   float** inArray = new float*[nz];
   float** outArray = new float*[nz];
   
   float outArrayScale;
   
+  int nth;
+
   for (int iz=0; iz<nz; iz++) {
     inArray[iz] = new float[nx*ny+8];
     outArray[iz] = new float[nx*ny+8];
@@ -38,15 +41,30 @@ int main()
   
   printf("Allocated %.1f Gbytes \n\n", 1.0e-9*nx*ny*nz*(double)4*2);
   
+#ifdef _OPENMP
+#pragma omp parallel
+  {
+      nth = omp_get_num_threads();
+  }
+#endif
+  printf("Using %d threads", nth);
+      
+
+  int iterNum, ix, iy, iz, ixy;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(iterNum, iz, ixy) collapse(2
+#endif
   //warm up threads.
-  for (int iterNum=0; iterNum<3; iterNum++) {
-    for (int iz=0; iz<nz; iz++) {
-      for (int ixy=0; ixy<nx*ny; ixy++) {
+  for (iterNum=0; iterNum<3; iterNum++) {
+    for (iz=0; iz<nz; iz++) {
+      for (ixy=0; ixy<nx*ny; ixy++) {
 	outArray[iz][ixy] = sqrt(1.11f/inArray[iz][ixy]) ;
       }
     }
   }
-  
+
+
   // Make an array long enough to test COEFF arrays of length 65
   float coeffs[]=
     { -3.240983757744433369, 1.951616255829886848, -0.4530812397614908393, 0.1776361197426963301, -0.08345825062463696487,
@@ -64,21 +82,22 @@ int main()
     gettimeofday( &time1, NULL);
     
     int nIterations = 4;
-    for ( int iterNum=0; iterNum < nIterations; iterNum++ ) {
-      
-      for (int iy=0; iy<ny; iy++) {
-	int ixy= (iy*nx);
+    for (iterNum=0; iterNum < nIterations; iterNum++ ) {
+#ifdef _OPENMP
+#pragma omp parallel for private(iy, iz, ix, ic, ixy)       
+#endif
+      for (iy=0; iy<ny; iy++) {
+	 ixy= (iy*nx);
 	for ( int iz= NZ_COEFFS-1; iz< nz- NZ_COEFFS; iz++) {
-#pragma ivdep
 	  for ( int ix=0; ix< nx; ix++ ) {
-	    outArray[iz][ixy + ix]= inArray[iz][ixy+ ix]* coeffs[0];
-	    //outArrayScale = inArray[iz][ixy+ ix]* coeffs[0];
+	    //outArray[iz][ixy + ix]= inArray[iz][ixy+ ix]* coeffs[0];
+	    outArrayScale = inArray[iz][ixy+ ix]* coeffs[0];
 	    for ( int ic=1; ic< NZ_COEFFS; ic++ ) {
-	      outArray[iz][ixy + ix]+= coeffs[ic]* ( inArray[iz+ ic][ixy+ ix] + inArray[iz- ic][ixy+ ix]);
+	      //outArray[iz][ixy + ix]+= coeffs[ic]* ( inArray[iz+ ic][ixy+ ix] + inArray[iz- ic][ixy+ ix]);
 	      // Test for vectorization
-	      //outArrayScale+= coeffs[ic]* ( inArray[iz+ ic][ixy+ ix] + inArray[iz- ic][ixy+ ix]);
+	      outArrayScale+= coeffs[ic]* ( inArray[iz+ ic][ixy+ ix] + inArray[iz- ic][ixy+ ix]);
 	    }
-	    //outArray[iz][ixy + ix] = outArrayScale;
+	    outArray[iz][ixy + ix] = outArrayScale;
 	    
 	  } // ic
 	} //iz
@@ -115,19 +134,20 @@ int main()
 
     int nIterations= 12;
     for ( int iterNum=0; iterNum < nIterations; iterNum++ ) {
-
-      for ( int iz= 0; iz< nz; iz++) {
-	for ( int iy= 0; iy< ny; iy++ )  {
+#ifdef _OPENMP
+#paragma omp parallel for
+#endif
+      for (iz= 0; iz< nz; iz++) {
+	for (iy= 0; iy< ny; iy++ )  {
 	  float* in2= &inArray[iz][iy*nx+  0 ];
 	  float* out2= &outArray[iz][iy*nx+  0 ];
-	  // Since we are only operating on a single X vector at a time, memory access should be very fast.
-
-//# pragma ivdep
+	  // Since we are only operating on a single X vector at a time, memory access should be very fast.      
 	  for (int ix= NX_COEFFS; ix< nx- NX_COEFFS; ix++) {
-	    out2[ ix]= in2[ ix]* coeffs[0];
-# pragma ivdep
+	    float*  in3= &in2[ix];
+	    float*  out3= &out2[ix];
+	    out3[ ix]= in3[ ix]* coeffs[0];
 	    for ( int ic=1; ic< NX_COEFFS; ic++ ) {
-	      out2[ ix]+= coeffs[ic]* ( in2[ ix+ ic] + in2[ ix- ic] );
+	      out3[ ix]+= coeffs[ic]* ( in3[ ix+ ic] + in3[ ix- ic] );
 	    }
 	  } // ixBlock
 	} //iy
@@ -166,10 +186,12 @@ int main()
 
     int nIterations= 8;
     for ( int iterNum=0; iterNum < nIterations; iterNum++ ) {
+#ifdef _OPENMP
+#paragma omp parallel for
+#endif
       for ( int iz= 0; iz< nz; iz++ ) {
 	for ( int iy= NY_COEFFS-1; iy< ny- NY_COEFFS; iy++){
 	  int ixy= (iy*nx);
-#pragma ivdep
 	  for ( int ix=0; ix<nx; ix++ ) {
 	    outArray[iz][ixy + ix]= inArray[iz][ixy+ ix]* coeffs[0];
 	    for ( int ic=1; ic< NY_COEFFS; ic++ ) {
