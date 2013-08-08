@@ -335,14 +335,15 @@ int main(int argc, char* argv[])
 	}
 	
 	/* Tapering */
+	/* I NEED TO ADD AN ADDITIONAL INPUT FOR THE SIZE OF THE TAPER
+	 * NOW IS SET AT 151 SAMPLES FOR EACH SIDE OF THE TAPER */
 	pi = 4.0*atan(1.0);
 	/*fprintf(stderr,"pi: %f\n",pi);
 	fprintf(stderr,"ntr: %d\n",ntr);*/
 	
 	taper = (float *)calloc(ntr,sizeof(float));
 	memset(taper,0,ntr*sizeof(float));
-
-		
+	
 	for (ix=0; ix<151; ix++) {
 		taper[ix] = (float)(0.5*(1.0-cos(2.0*pi*(ix-0.0)/300)));
 		taper[ntr-ix-1] = taper[ix];
