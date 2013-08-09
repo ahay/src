@@ -44,8 +44,7 @@ shift  = 5		- shift in samples for the timewindow
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-#include "omputil.h"
-
+#include "fft1.h"
 
 void fft1 (float *, float *, sf_file, bool, bool, bool);
 
