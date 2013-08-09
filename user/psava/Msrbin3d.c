@@ -40,8 +40,8 @@ int main (int argc, char* argv[])
     float*trc;
 
     int *e1, *e2;
-    int j1,j2;
-    int k1,k2;
+    int j1=NULL,j2=NULL;
+    int k1=NULL,k2=NULL;
     off_t iseek,start;
 
     /*------------------------------------------------------------*/
@@ -78,24 +78,24 @@ int main (int argc, char* argv[])
 
     tmp=sf_intalloc2(sf_n(a1),sf_n(a2));
     for    (i2=0; i2<sf_n(a2); i2++) {
-	for(i1=0; i1<sf_n(a1); i1++) {
-	    tmp[i2][i1]=0;
-	}
+	    for(i1=0; i1<sf_n(a1); i1++) {
+		    tmp[i2][i1]=0;
+	    }
     }
     /* go through all keys... */
     key=sf_intalloc(4);
     for(ik=0; ik<sf_n(ak); ik++) {
-	sf_intread(key,4,Fkey);
-	tmp[ key[1] ][ key[0] ]=1;
+	    sf_intread(key,4,Fkey);
+	    tmp[ key[1] ][ key[0] ]=1;
     }
     sf_seek(Fkey,0,SEEK_SET); /* seek to start */
 
     /* ... and count the number of unique experiments ... */
     ne=0;
     for    (i2=0; i2<sf_n(a2); i2++) {
-	for(i1=0; i1<sf_n(a1); i1++) {
-	    ne+=tmp[i2][i1];
-	}
+	    for(i1=0; i1<sf_n(a1); i1++) {
+		    ne+=tmp[i2][i1];
+	    }
     }
     sf_warning("%d experiment(s)",ne);
 
@@ -104,13 +104,13 @@ int main (int argc, char* argv[])
     e2=sf_intalloc(ne);
     ie=0;
     for    (i2=0; i2<sf_n(a2); i2++) {
-	for(i1=0; i1<sf_n(a1); i1++) {
-	    if(tmp[i2][i1]==1) {
-		e1[ie]=i1;
-		e2[ie]=i2;
-		ie++;
+	    for(i1=0; i1<sf_n(a1); i1++) {
+		    if(tmp[i2][i1]==1) {
+			    e1[ie]=i1;
+			    e2[ie]=i2;
+			    ie++;
+		    }
 	    }
-	}
     }
     free(*tmp); free(tmp);
 
@@ -134,7 +134,7 @@ int main (int argc, char* argv[])
     if(! sf_getfloat("od2",&d2)) sf_error("need od2");
     b2 = sf_maxa(n2,o2,d2);
     k2 = o2/d2;
-    
+
     /* output header */
     sf_oaxa(Fbin,at,1);
     sf_oaxa(Fbin,b1,2);
@@ -145,14 +145,14 @@ int main (int argc, char* argv[])
 
     /* create zero output array */
     for(it=0;it<sf_n(at);it++) {
-	trc[it]=0;
+	    trc[it]=0;
     }
     for(ie=0;ie<ne;ie++) {
-	for    (i2=0;i2<sf_n(b2);i2++) {
-	    for(i1=0;i1<sf_n(b1);i1++) {
-		sf_floatwrite(trc,sf_n(at),Fbin);
+	    for    (i2=0;i2<sf_n(b2);i2++) {
+		    for(i1=0;i1<sf_n(b1);i1++) {
+			    sf_floatwrite(trc,sf_n(at),Fbin);
+		    }
 	    }
-	}
     }
     sf_seek(Fbin,0,SEEK_SET);
     start = sf_tell(Fbin);
@@ -161,23 +161,23 @@ int main (int argc, char* argv[])
     /* loop over traces */
     if(verb) fprintf(stderr,"\n");
     for(ik=0; ik<sf_n(ak); ik++) {
-	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b%d",ik);
+	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b%d",ik);
 
-	/* read keys for the trace */
-	sf_intread(key,4,Fkey);
+	    /* read keys for the trace */
+	    sf_intread(key,4,Fkey);
 
-	/* find experiment index */
-	for(ie=0;ie<ne;ie++) {
-	    if(key[0]==e1[ie] && key[1]==e2[ie]) {
-		j1=key[2];
-		j2=key[3];
-		break;
+	    /* find experiment index */
+	    for(ie=0;ie<ne;ie++) {
+		    if(key[0]==e1[ie] && key[1]==e2[ie]) {
+			    j1=key[2];
+			    j2=key[3];
+			    break;
+		    }
 	    }
-	}
 
-	/* seek in the output file */
-	iseek = ie*sf_n(b1)*sf_n(b2)+
-	    (j2-k2)*sf_n(b1)+
+	    /* seek in the output file */
+	    iseek = ie*sf_n(b1)*sf_n(b2)+
+		    (j2-k2)*sf_n(b1)+
 	    (j1-k1);
 	sf_seek(Fbin,start+iseek*sf_n(at)*sizeof(float),SEEK_SET);
 	    

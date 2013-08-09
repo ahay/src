@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     sf_complex ***bak = NULL;
 
     /* cube axes */
-    sf_axis at,ax,as,ae,aa;
+    sf_axis at,ax,as,ae;
     int     it,ix,is,ie,ne;
 
     int ompchunk, ompith=0, ompnth=1;
@@ -84,7 +84,6 @@ int main(int argc, char* argv[])
 	sf_raxa(ax);
 	sf_raxa(as);
     }
-    aa = sf_maxa(1,0,1);
 
     /* output axes */
     sf_oaxa(Fo,at,1);
