@@ -427,7 +427,7 @@ def parts(target=None,source=None,env=None):
     for iprt in range(nprt):
     
         prt = str(parts[iprt])
-        all.write('''\n========================\n\\part{%s}\n========================\n\n''' % prt)
+        all.write('''\\part{%s}\n\n''' % prt)
  
         for chp in chpts[iprt]:
             paper = str(chp)
