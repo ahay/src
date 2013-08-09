@@ -104,11 +104,15 @@ Result('real',
 
 
 # Extended split-step migration
+# to run in parallel:
+#  ~/RSFSRC/Zomig1 $ export RSF_THREADS=4
+#  ~/RSFSRC/Zomig1 $ pscons mig_t.view
+
 Flow('mig','fft slo',
      '''
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
      nrmax=1 slo=${SOURCES[1]}
-     ''',split=[4,87],reduce='add')
+     ''',split=[3,87],reduce='add')
 
 Result('mig',
        '''
@@ -137,11 +141,30 @@ Flow('mig_t','mig_z','depth2time dt=.002 nt=2049 velocity=Vint3Dz.rsf')
 
 Result('mig_t',
 	'''
-	window j3=20 |
-	put d2=1 d3=1 |	
+	window j3=20 n1=1501 |
+	put d2=20 d3=20 |	
 	grey title=migration_data_in_time
-       	label2=Time    unit2=s  
-       	label1=Trace unit1=num.
+       	label1=Time    unit1=s  
+       	label2=Trace unit2=num.
+       ''')
+
+Fetch('filt_mig.sgy','teapot',server='http://s3.amazonaws.com',top='')
+Flow('filt_mig','filt_mig.sgy',
+     '''
+     sfsegyread 
+         tfile=filt_mig_hdr 
+	 tape=${SOURCES[0]} 
+	 hfile=filt_mig.asc 
+	 bfile=filt_mig.bin
+     | sfput n2=188 o2=1 n3=345 o3=1
+     ''',stdin=0)
+	
+Result('filt_mig',
+	'''
+	window j3=20 |
+	grey title=commercial_mig
+       	label1=Time     unit1=sec 
+       	label2=xline    unit2=count
        ''')
 
 End()
