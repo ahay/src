@@ -1,0 +1,3 @@
+uses=['sfspike', 'sfwiggle', 'sffft1', 'sffft3', 'sfmath', 'sfreal', 'sfgrey', 'sfdipfilter']
+data=[]
+size=      74752
