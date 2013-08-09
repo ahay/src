@@ -121,11 +121,9 @@ int main()
 	  float* out2= &outArray[iz][iy*nx+  0 ];
 	  // Since we are only operating on a single X vector at a time, memory access should be very fast.      
 	  for (int ix= NX_COEFFS; ix< nx- NX_COEFFS; ix++) {
-	    float*  in3= &in2[ix];
-	    float*  out3= &out2[ix];
-	    out3[ ix]= in3[ ix]* coeffs[0];
+            out2[ ix]= in2[ ix]* coeffs[0];
 	    for ( int ic=1; ic< NX_COEFFS; ic++ ) {
-	      out3[ ix]+= coeffs[ic]* ( in3[ ix+ ic] + in3[ ix- ic] );
+	      out2[ ix]+= coeffs[ic]* ( in2[ ix+ ic] + in2[ ix- ic] );
 	    }
 	  } // ixBlock
 	} //iy
@@ -167,11 +165,16 @@ int main()
       for ( int iz= 0; iz< nz; iz++ ) {
 	for ( int iy= NY_COEFFS-1; iy< ny- NY_COEFFS; iy++){
 	  int ixy= (iy*nx);
+#pragma ivdep
 	  for ( int ix=0; ix<nx; ix++ ) {
 	    outArray[iz][ixy + ix]= inArray[iz][ixy+ ix]* coeffs[0];
-	    for ( int ic=1; ic< NY_COEFFS; ic++ ) {
-	      outArray[iz][ixy + ix]+= coeffs[ic]* ( inArray[iz][ixy+ ic*nx+ ix] + inArray[iz][ixy- ic*nx+ ix]);
-	    } // ic
+          }
+
+	  for ( int ic=1; ic< NY_COEFFS; ic++ ) {
+#pragma ivdep
+	   for ( int ix=0; ix<nx; ix++ ) {
+	     outArray[iz][ixy + ix]+= coeffs[ic]* ( inArray[iz][ixy+ ic*nx+ ix] + inArray[iz][ixy- ic*nx+ ix]);
+            }
 	  } // ix
 	} // iy
       }  // iz

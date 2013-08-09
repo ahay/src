@@ -14,7 +14,9 @@ if 'c++' in env.get('API',[]):
     CXX = env.get('CXX')
     if CXX.rfind('icpc') >= 0: # Intel compiler
         env.Program('flexSerial.cc',
-                    CXXFLAGS='-openmp -inline-forceinline')
+                    CXXFLAGS='-openmp -mavx -inline-forceinline -vec_report6')
+        env.Program('flex_OMP.cc',
+                    CXXFLAGS='-openmp -mavx -vec_report2 -inline-forceinline')
         env.Program('flexSerial1.cc',
                     CXXFLAGS='-O3 -xHost -vec_report2')
 
