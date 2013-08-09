@@ -126,7 +126,7 @@ void fwi_operator(bool adj, bool add, int nx, int nr, sf_complex *x, sf_complex 
 	    helm_solve(tempr,tempx);
 
 	    for (i0=0; i0 < nm; i0++) {
-		x[i0] += -omega*omega*conjf(tempx[i0])*conjf(ubac[is][i0]);
+		x[i0] -= omega*omega*conjf(tempx[i0]*ubac[is][i0]);
 	    }
 	}
 
