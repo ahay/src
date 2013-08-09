@@ -44,8 +44,7 @@ shift  = 5		- shift in samples for the timewindow
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-/*#include "omputil.h"*/
-#include "fft1.h"
+#include "omputil.h"
 
 
 void fft1 (float *, float *, sf_file, bool, bool, bool);
@@ -83,7 +82,7 @@ int main(int argc, char* argv[])
     int     nt,nf,ntr,mode,nshots,niter,len;
     int     i,it,ix,ishot,iter,i0;
 	int		twc, twa, shift, n[2], rect[2], s[2];
-    float   scale,eps,dt,df,dx,ot,of,a,b;
+    float   scale,eps,dt,df,dx,ot,of,a,b,c,d,e,f;
 
 	sf_triangle tr;
 
@@ -263,6 +262,7 @@ int main(int argc, char* argv[])
 	len = strlen(filename1)-7;
 	/* copy the filename without 000.rsf */
 	strncpy(filename2,filename1,len);
+	filename2[len] = '\0';
 	if (verb) fprintf(stderr,"filename2 is: %s and len is: %d\n",filename2,len);
 	/*if (NULL == filename1) {
 		fprintf(stderr,"Cannot read header file %s",filename1);
@@ -271,9 +271,10 @@ int main(int argc, char* argv[])
 	for (ishot=0; ishot<nshots; ishot++) {
 		
 	  	/* write xxx.rsf in the string filename3 */
-		sprintf(filename3,"%03d.rsf",ishot);
+		sprintf(filename3,"%03d.rsf\0",ishot);
 		for (i=0; i<7; i++)
 			filename2[len+i] = filename3[i];
+			filename2[len+7] = '\0';
 		if (verb) fprintf(stderr,"Loading %s in memory\n",filename2);
 	  	FRefl = sf_input(filename2);
     	sf_floatread(&Refl[ishot*2*nf*ntr],2*nf*ntr,FRefl);
@@ -335,15 +336,14 @@ int main(int argc, char* argv[])
 	}
 	
 	/* Tapering */
-	/* I NEED TO ADD AN ADDITIONAL INPUT FOR THE SIZE OF THE TAPER
-	 * NOW IS SET AT 151 SAMPLES FOR EACH SIDE OF THE TAPER */
 	pi = 4.0*atan(1.0);
 	/*fprintf(stderr,"pi: %f\n",pi);
 	fprintf(stderr,"ntr: %d\n",ntr);*/
 	
 	taper = (float *)calloc(ntr,sizeof(float));
 	memset(taper,0,ntr*sizeof(float));
-	
+
+		
 	for (ix=0; ix<151; ix++) {
 		taper[ix] = (float)(0.5*(1.0-cos(2.0*pi*(ix-0.0)/300)));
 		taper[ntr-ix-1] = taper[ix];
@@ -358,7 +358,6 @@ int main(int argc, char* argv[])
 	/*for (ix=0; ix<ntr; ix++) {
 		fprintf(stderr,"taper[%d]: %f\n",ix,taper[ix]);
 	}*/
-	/*Flow('wl',None, 'math n1=%(f2)d d1=1 o1=0 output="0.5*(1.0-cos(2.0*%(pi)g*(x1-1.0)/%(f2)d))" | window n1=101 ' % par);*/
 	
 	FRefl = sf_input("refl");
 
@@ -377,18 +376,13 @@ int main(int argc, char* argv[])
 		/*------------------------------------------------------------*/
 		if (verb) fprintf(stderr,"Beginning of loop over shot positions\n");
 		for (ishot=0; ishot<nshots; ishot++) {
-			
-			/* #ishot trace of the downgoing wavefield*/
-			memcpy(&Pplus_trace[0],&Pplus[ishot*2*nf],2*nf*sizeof(float));
-			memcpy(&Qplus_trace[0],&Qplus[ishot*2*nf],2*nf*sizeof(float));
-			
-			#ifdef _OPENMP
-			#pragma omp parallel for \
-				private(ix,it) \
-				shared(Refl,Pplus_trace,Pminus,Qplus_trace,Qminus)
-			#endif    	
+   	
 			/* Loop over receivers (traces) */
-			for (ix=0; ix<ntr; ix++) {
+			#ifdef _OPENMP
+			#pragma omp parallel for private(ix,it,a,b,c,d,e,f) \
+				shared(Pminus,Qminus,Pplus,Qplus,taper,Refl)
+			#endif 	
+		  	for (ix=0; ix<ntr; ix++) {
 				/* Loop over frequencies */
 				#pragma ivdep
 				for (it=0; it<2*nf; it=it+2) {
@@ -396,17 +390,16 @@ int main(int argc, char* argv[])
 					/*(x + yi)(u + vi) = (xu - yv) + (xv + yu)i*/
 					a = Refl[ix*2*nf+it+ishot*2*nf*ntr]*taper[ishot];
 					b = Refl[ix*2*nf+it+1+ishot*2*nf*ntr]*taper[ishot];
-					Pminus[ix*2*nf+it]   += a*Pplus_trace[it] - mode*b*Pplus_trace[it+1];
-					Pminus[ix*2*nf+it+1] += mode*a*Pplus_trace[it+1] + b*Pplus_trace[it];
+					c = Pplus[ishot*2*nf+it];
+					d = Pplus[ishot*2*nf+it+1];
+					e = Qplus[ishot*2*nf+it];
+					f = Qplus[ishot*2*nf+it+1];
+
+					Pminus[ix*2*nf+it]   += a*c - mode*b*d;
+					Pminus[ix*2*nf+it+1] += mode*a*d + b*c;
 					
-					Qminus[ix*2*nf+it]   += a*Qplus_trace[it] - mode*b*Qplus_trace[it+1];
-					Qminus[ix*2*nf+it+1] += mode*a*Qplus_trace[it+1] + b*Qplus_trace[it];
-					/*Pminus[ix*2*nf+it]   += Refl[ix*2*nf+it+ishot*2*nf*ntr]*Pplus_trace[it] - mode*Refl[ix*2*nf+it+1+ishot*2*nf*ntr]*Pplus_trace[it+1];
-					Pminus[ix*2*nf+it+1] += mode*Refl[ix*2*nf+it+ishot*2*nf*ntr]*Pplus_trace[it+1] + Refl[ix*2*nf+it+1+ishot*2*nf*ntr]*Pplus_trace[it];
-					
-					Qminus[ix*2*nf+it]   += Refl[ix*2*nf+it+ishot*2*nf*ntr]*Qplus_trace[it] - mode*Refl[ix*2*nf+it+1+ishot*2*nf*ntr]*Qplus_trace[it+1];
-					Qminus[ix*2*nf+it+1] += mode*Refl[ix*2*nf+it+ishot*2*nf*ntr]*Qplus_trace[it+1] + Refl[ix*2*nf+it+1+ishot*2*nf*ntr]*Qplus_trace[it];*/
-					/*if (verb) fprintf(stderr,"%d %d %d\n",ishot,ix,it);*/
+					Qminus[ix*2*nf+it]   += a*e - mode*b*f;
+					Qminus[ix*2*nf+it+1] += mode*a*f + b*e;
 				
 				} /* End of loop over frequencies */	
 			} /* End of loop over receivers (traces) */
@@ -424,7 +417,12 @@ int main(int argc, char* argv[])
 		fft1(Qminus,qminus,FRefl,1,0,0);
 		
 		if (verb) fprintf(stderr,"Build the next iteration of pplus and qplus\n");
+		#ifdef _OPENMP
+		#pragma omp parallel for private(ix,it) \
+			shared(pminus,qminus,pplus,qplus,pplus0,window)
+		#endif
 		for (ix=0; ix<ntr; ix++) {
+			#pragma ivdep
 			for (it=0; it<nt; it++) {
 				pplus[it+ix*nt] = pplus0[it+ix*nt] - scale*window[it+ix*nt]*pminus[it+ix*nt];
 				qplus[it+ix*nt] = pplus0[it+ix*nt] + scale*window[it+ix*nt]*qminus[it+ix*nt];
@@ -436,18 +434,23 @@ int main(int argc, char* argv[])
 
 		if (verb) fprintf(stderr,"%d %d\n",ix,it);
 
-		if(iter%5==0) fprintf(stderr,"Iteration %d\n",iter);
+		if(iter%10==0) fprintf(stderr,"Iteration %d\n",iter);
 
 	} /* End of loop over iterations */ 
 	
 	/* Build Gp and Gm */
 	if (verb) fprintf(stderr,"Build Gp and Gm\n");
+	#ifdef _OPENMP
+	#pragma omp parallel for private(ix,it) \
+		shared(Gp,Gm,G,pminus,qminus,pplustemp,qplustemp,pplus0)
+	#endif
 	for (ix=0; ix<ntr; ix++) {
+		#pragma ivdep
 		for (it=0; it<nt; it++) {
 			Gp[it+ix*nt] = 0.5*( pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] + qplustemp[it+ix*nt] - scale*qminus[it+ix*nt] );
 			Gm[it+ix*nt] = 0.5*( pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] - qplustemp[it+ix*nt] + scale*qminus[it+ix*nt] );
 			if (Gtot) {
-				G[it+ix*nt] =        pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] ;
+				G[it+ix*nt] = pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] ;
 			}
 			/*p[it+ix*nt] = 1.0*( pplus[it+ix*nt] + scale*pminus[it+ix*nt] );
 			q[it+ix*nt] = 1.0*( qplus[it+ix*nt] - scale*qminus[it+ix*nt] );*/
