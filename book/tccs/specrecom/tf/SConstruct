@@ -1,0 +1,107 @@
+from rsf.proj import *
+import math
+
+Fetch('pptrace.rsf','attr')
+
+Flow('pptrace1','pptrace.rsf','dd form=native | window max1=5')
+Plot('pptrace1',
+     '''
+     graph title="(a) Seismic Trace" plotfat=6 transp=y yreverse=y
+     font=2 titlesz=16 labelsz=12 titlefat=4 labelfat=2
+     label1=Time unit1=s label2=Amplitude unit2='' 
+     ''')
+Flow('tracespec','pptrace1','spectra')
+Plot('tracespec',
+     '''
+     graph title="Trace Spectrum" wanttitle=y
+     min1=0 max1=120 min2=0 max2=40
+     plotfat=6 plotcol=6 label1="Frequency" unit1="Hz" lable2="Amplitude"
+     titlesz=12 labelsz=10 titlefat=4 labelfat=2
+     ''')
+Flow('rick rickm ricka','tracespec','rickerfit n=7 ma1=${TARGETS[1]} ma2=${TARGETS[2]}')
+Plot('rick',
+     '''
+     graph title="Trace Spectrum" wanttitle=n
+     min1=0 max1=120 min2=0 max2=40
+     symbol=o symbolsz=6 plotcol=2 label1="Frequency" unit1="Hz" lable2="Amplitude"
+     titlesz=12 labelsz=10 titlefat=4 labelfat=2
+     ''')
+Result('fit','tracespec rick','Overlay')
+
+Flow('traceltft','pptrace1',' ltft')
+Plot('traceltft',
+     '''
+     math output="abs(input)" | real |
+     grey yreverse=y transp=y wanttitle=n color=j allpos=y grid=y title=""
+     ''')
+
+n = 50
+c = 0
+rks = []
+sps = []
+for i in range(n):
+    spec = 'spec%d' % i
+    rk = 'rk%d' % i
+    recomp = 'recomp%d' % i
+    freq = 'freq%d' % i
+    ampl = 'ampl%d' % i
+    c = c+25
+    d = (i+1)/10
+    Flow(spec, 'traceltft',
+         '''
+         math output="abs(input)" | real |
+         window n1=1 f1=%g n2=641 bartype=v |
+         window f3=%g
+         ''' % (c,i) )
+    Flow([rk, freq, ampl], spec, 'rickerfit n=4 ma1=${TARGETS[1]} ma2=${TARGETS[2]}')
+    Plot(spec,
+         '''
+         graph min1=0 max1=120 min2=0 max2=0.35 plotfat=6
+         title="" wanttitle=n label2=Amplitude unit2='' plotcol=7
+         titlesz=16 labelsz=12 titlefat=4 labelfat=2 font=2 
+         ''')
+    Plot(rk,
+         '''
+         graph symbol=o min1=0 max1=120 min2=0 max2=0.35 symbolsz=5
+         title="Spectrum of %g Second(s) Depth" plotcol=5
+         label2=Amplitude unit2=''
+         titlesz=16 labelsz=12 titlefat=4 labelfat=2 font=2
+         ''' % d)
+    Plot(recomp,[spec, rk],'Overlay')
+    rks.append(rk)
+    sps.append(spec)
+    
+Flow('ricker',rks,'cat ${SOURCES[0:49]} axis=2 | put o2=0 d2=0.1 label2=Time unit2=s')
+Flow('specs',sps,'cat ${SOURCES[0:49]} axis=2 | put o2=0 d2=0.1 label2=Time unit2=s')
+
+Plot('specs',
+     '''
+     window n1=450 |
+     transp |
+     grey title="(b) Time-Frequency Analysis" color=j grid=y
+     titlesz=16 labelsz=12 titlefat=4 labelfat=2 font=2 allpos=y wheretitle=top wherexlabel=bottom
+     ''')
+
+Plot('specs2','specs',
+     '''
+     window n1=450 |
+     transp |
+     grey title="(b) Time-Frequency Analysis" color=j grid=y
+     titlesz=16 labelsz=12 titlefat=4 labelfat=2 font=2 allpos=y wheretitle=top wherexlabel=bottom
+     ''')
+
+Plot('ricker',
+     '''
+     window n1=450 |
+     transp |
+     grey title="(c) Spectral Recomposition" color=j allpos=y grid=y
+     titlesz=16 labelsz=12 titlefat=4 labelfat=2 font=2 wheretitle=top wherexlabel=bottom
+     ''')
+
+Result('tf','pptrace1 specs2 ricker','SideBySideAniso')
+
+Plot('fix1','recomp0 recomp23','SideBySideAniso')
+Plot('fix2','recomp31 recomp49','SideBySideAniso')
+Result('tf2','fix1 fix2','OverUnderAniso')
+
+End()
