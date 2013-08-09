@@ -10,6 +10,8 @@ To the reproducible documents collection:
   transforms (Hu, Fomel, Demanet, and Ying)
 * tccs/opwd: Omnidirectional plane-wave destruction (Chen, Fomel, and
   Lu)
+* tccs/specrecom: Automated spectral recomposition with application in
+  stratigraphic interpretation (Cai, Fomel, and Zeng)
 
 To SCons:
 
