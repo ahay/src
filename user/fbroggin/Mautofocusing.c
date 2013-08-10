@@ -15,6 +15,7 @@ verb = y/[n]	- verbosity flag
 twin  = y/[n]	- returns the timewindow as one of the outputs (window=window.rsf)
 pandq  = y/[n]	- pandq=true: returns p and q, pandq=false returns Gp and Gm
 Gtot  = y/[n]	- Gtot=true returns G=Gp+Gm
+Htot  = y/[n]	- Htot=true returns H=Gp-Gm
 niter  = 1		- number of iterations
 nshots  = 1		- number of shots in the reflection response
 scale  = 1.0	- scale factor (often due to resampling)
@@ -51,14 +52,14 @@ void fft1 (float *, float *, sf_file, bool, bool, bool);
 int main(int argc, char* argv[])
 {
 
-	bool verb,conj,twin,pandq,Gtot;
+	bool verb,conj,twin,pandq,Gtot,Htot;
 	
     /* OMP parameters */
 	#ifdef _OPENMP
     int ompnth;
 	#endif 	
 	
-	float	*pplus0, *pplus, *pplusinv, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G;
+	float	*pplus0, *pplus, *pplusinv, *pplustemp, *Pplus, *Pplus_trace, *pminus, *Pminus, *Refl, *Gp, *Gm, *G, *H;
 	float	*qplus, *qplusinv, *qplustemp, *Qplus, *Qplus_trace, *qminus, *Qminus;
 	float	*window, *taper, pi;
 	int		*tw;
@@ -69,6 +70,7 @@ int main(int argc, char* argv[])
     sf_file FGp;
     sf_file FGm;
     sf_file FG;
+    sf_file FH;
     sf_file Ftwin;
     sf_file Fp;
     sf_file Fq;
@@ -105,6 +107,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("twin",&twin)) twin=false; /* returns the timewindow as one of the outputs */
     if(! sf_getbool("pandq",&pandq)) pandq=false; /* pandq=true: returns p and q */
     if(! sf_getbool("Gtot",&Gtot)) Gtot=false; /* Gtot=true: returns G=Gp+Gm */
+    if(! sf_getbool("Htot",&Htot)) Htot=false; /* Htot=true: returns H=Gp-Gm */
     if(! sf_getint("niter",&niter)) niter=1; /* number of iterations */
     if(! sf_getint("nshots",&nshots)) nshots=1; /* number of shots */
     if(! sf_getfloat("scale",&scale)) scale=1.0; /* scale factor */
@@ -146,6 +149,10 @@ int main(int argc, char* argv[])
 		FG  = sf_output("G");
 	}
 	
+	if (Htot) {
+		FH  = sf_output("H");
+	}
+	
 	if (pandq) {
 		Fp = sf_output("p");
 		Fq = sf_output("q");
@@ -180,6 +187,11 @@ int main(int argc, char* argv[])
 	if (Gtot) {
 		sf_oaxa(FG,at,1);
 		sf_oaxa(FG,ax,2);
+	}
+	
+	if (Htot) {
+		sf_oaxa(FH,at,1);
+		sf_oaxa(FH,ax,2);
 	}
 	
 	if (pandq) {
@@ -240,7 +252,11 @@ int main(int argc, char* argv[])
 	Gp = (float *)calloc(nt*ntr,sizeof(float));
 	Gm = (float *)calloc(nt*ntr,sizeof(float));
 	if (Gtot) {
-		G  = (float *)calloc(nt*ntr,sizeof(float));
+		G = (float *)calloc(nt*ntr,sizeof(float));
+	}
+	
+	if (Htot) {
+		H = (float *)calloc(nt*ntr,sizeof(float));
 	}
 	
 	/* Time-reversal flag */
@@ -412,8 +428,8 @@ int main(int argc, char* argv[])
 		memcpy(qplustemp,qplus,nt*ntr*sizeof(float));
 
 		/* Build the next iteration of Pplus and Qplus */
-		fft1(Pminus,pminus,FRefl,1,0,0);
-		fft1(Qminus,qminus,FRefl,1,0,0);
+		fft1(Pminus,pminus,FRefl,1,0,1);
+		fft1(Qminus,qminus,FRefl,1,0,1);
 		
 		if (verb) fprintf(stderr,"Build the next iteration of pplus and qplus\n");
 		#ifdef _OPENMP
@@ -441,7 +457,7 @@ int main(int argc, char* argv[])
 	if (verb) fprintf(stderr,"Build Gp and Gm\n");
 	#ifdef _OPENMP
 	#pragma omp parallel for private(ix,it) \
-		shared(Gp,Gm,G,pminus,qminus,pplustemp,qplustemp,pplus0)
+		shared(Gp,Gm,G,H,pminus,qminus,pplustemp,qplustemp,pplus0)
 	#endif
 	for (ix=0; ix<ntr; ix++) {
 		#pragma ivdep
@@ -449,7 +465,10 @@ int main(int argc, char* argv[])
 			Gp[it+ix*nt] = 0.5*( pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] + qplustemp[it+ix*nt] - scale*qminus[it+ix*nt] );
 			Gm[it+ix*nt] = 0.5*( pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] - qplustemp[it+ix*nt] + scale*qminus[it+ix*nt] );
 			if (Gtot) {
-				G[it+ix*nt] = pplustemp[it+ix*nt] + scale*pminus[it+ix*nt] ;
+				G[it+ix*nt] = pplustemp[it+ix*nt] + scale*pminus[it+ix*nt];
+			}
+			if (Htot) {
+				H[it+ix*nt] = qplustemp[it+ix*nt] - scale*qminus[it+ix*nt];
 			}
 			/*p[it+ix*nt] = 1.0*( pplus[it+ix*nt] + scale*pminus[it+ix*nt] );
 			q[it+ix*nt] = 1.0*( qplus[it+ix*nt] - scale*qminus[it+ix*nt] );*/
@@ -469,6 +488,12 @@ int main(int argc, char* argv[])
 		free(G);
 	}
 	
+	if (Htot) {
+		sf_floatwrite(H,nt*ntr,FH);
+		sf_fileclose(FH);
+		free(H);
+	}
+
 	if (pandq) {
 		sf_floatwrite(pplustemp,nt*ntr,Fp);
 		sf_floatwrite(pminus,nt*ntr,Fq);
