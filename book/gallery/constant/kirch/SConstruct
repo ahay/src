@@ -16,15 +16,31 @@ Flow('inv err','data vel','kirchinv velocity=${SOURCES[1]} niter=10 ps=1 err=${T
 
 Result('inv','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
 
-Result('err','graph labelsz=10 titlesz=12 unit1= unit2= title="Misfit error"')
+Result('err',
+       '''
+       graph labelsz=10 titlesz=12 unit1= unit2=
+       title="Misfit error"
+       ''')
 
 # new codes test
 
-Flow('inv_sparse err_sparse','data vel','kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 err=${TARGETS[1]} verb=1')
+Flow('inv_sparse err_sparse','data vel',
+     '''
+     kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1
+     err=${TARGETS[1]} verb=1
+     ''')
 
-Result('inv_sparse','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion with Sparsity Promotion" ')
+Result('inv_sparse',
+       '''
+       window min2=0 max2=1.5 |
+       grey title="Kirchhoff Inversion with Sparsity Promotion"
+       ''')
 
-Result('err_sparse','graph labelsz=10 titlesz=12 unit1= unit2= title="Misfit error KISP"')
+Result('err_sparse',
+       '''
+       graph labelsz=10 titlesz=12 unit1= unit2=
+       title="Misfit error KISP"
+       ''')
 
 # Impulse response
 
@@ -34,16 +50,39 @@ Flow('imig','imp vel','kirchnew velocity=${SOURCES[1]} adj=1')
 
 constant.impulse_response('imig')
 
-Flow('iinv ierr','imp vel','kirchinv velocity=${SOURCES[1]} niter=5 ps=1 err=${TARGETS[1]}')
+Flow('iinv ierr','imp vel',
+     '''
+     kirchinv velocity=${SOURCES[1]} niter=5 ps=1 err=${TARGETS[1]}
+     ''')
 
-Flow('iinv_sparse ierr_sparse','imp vel','kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 verb=1 err=${TARGETS[1]}')
+Flow('iinv_sparse ierr_sparse','imp vel',
+     '''
+     kirchinvs velocity=${SOURCES[1]} niter=2 liter=5 ps=1 verb=1
+     err=${TARGETS[1]}
+     ''')
 
-Result('iinv','window max1=3 | grey title="Kirchhoff Inversion Impulse Response"')
+Result('iinv',
+       '''
+       window max1=3 |
+       grey title="Kirchhoff Inversion Impulse Response"
+       ''')
 
-Result('ierr','graph labelsz=10 titlesz=12 unit1= unit2= title="Misfit error"')
+Result('ierr',
+       '''
+       graph labelsz=10 titlesz=12
+       unit1= unit2= title="Misfit error"
+       ''')
 
-Result('iinv_sparse','window max1=3 | grey title="Kirchhoff Inversion Impulse Response"')
+Result('iinv_sparse',
+       '''
+       window max1=3 |
+       grey title="Kirchhoff Inversion Impulse Response"
+       ''')
 
-Result('ierr_sparse','graph labelsz=10 titlesz=12 unit1= unit2= title="Misfit error"')
+Result('ierr_sparse',
+       '''
+       graph labelsz=10 titlesz=12 unit1= unit2=
+       title="Misfit error"
+       ''')
 
 End()

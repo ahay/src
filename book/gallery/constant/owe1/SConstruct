@@ -11,23 +11,30 @@ Result('data','grey title="Zero Offset" ')
 TPX('tpx','data',nt=1500,np=101,p0=-0.9,nw=241)
 
 Result('tpx',
-       'byte gainpanel=all | grey3 label3=Distance unit3=km frame1=750 frame2=60 frame3=200 title=TPX')
+       '''
+       byte gainpanel=all |
+       grey3 label3=Distance unit3=km
+       frame1=750 frame2=60 frame3=200 title=TPX
+       ''')
 
 Flow('xpt','tpx','transp plane=13 memsize=1000')
 
 Flow('one',None,'spike n1=351 d1=0.01 o1=0 n2=1500 d2=0.002 o2=0')
 Flow('zero','one','spike mag=0')
 
-Flow('xpz','xpt one zero','oway1 velocity=${SOURCES[1]} vgrad=${SOURCES[2]} lagrange=y')
+Flow('xpz','xpt one zero',
+     'oway1 velocity=${SOURCES[1]} vgrad=${SOURCES[2]} lagrange=y')
 
 Result('zxp','xpz',
        '''
-       byte gainpanel=all | transp memsize=1000 plane=23 | transp memsize=1000 plane=12 |
+       byte gainpanel=all |
+       transp memsize=1000 plane=23 |
+       transp memsize=1000 plane=12 |
        grey3 title=ZXP frame1=1000 frame2=150 frame3=50
        ''')
 
 Flow('zx','xpz','stack norm=n | transp')
 
-Result('zx','window min2=0 max2=1.5 | grey title="One-Way Oriented Wave Migration" ')
+constant.zo_image('zx')
 
 End()

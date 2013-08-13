@@ -429,7 +429,7 @@ if _swig_:
             _File.__init__(self,self.tag)
         def write(self,data):
             if self.type == 'float':
-                c_rsf.sf_floatwrite(numpy.reshape(data,(data.size,)),self.file)
+                c_rsf.sf_floatwrite(numpy.reshape(data.astype('f'),(data.size,)),self.file)
             elif self.type == 'complex':
                 c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),
                                       self.file)

@@ -300,16 +300,16 @@ the special \texttt{Fig} folder of the working directory. \\
 \end{tabular}
 \end{center}}
 
-These commands are defined in \texttt{\$RSFROOT/lib/rsfproj.py} where
+These commands are defined in \texttt{\$PYTHONPATH/rsf/proj.py} where
 \texttt{RSFROOT} is the environmental variable to the Madagascar
 installation directory. The source of this file is in
-\href{http://svn.sourceforge.net/viewvc/rsf/trunk/python/rsfproj.py?view=markup}{python/rsfproj.py}.
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/framework/rsf/proj.py}{framework/rsf/proj.py}.
 
 \subsection{Example 1}
 
 To follow the first example, select a working project directory and
 copy the following code
-to a file named \texttt{SConstruct}\footnote{The source of this file is also accessible at \href{http://svn.sourceforge.net/viewvc/rsf/trunk/book/rsf/scons/easystart/SConstruct?view=markup}{book/rsf/scons/easystart/SConstruct}.}.
+to a file named \texttt{SConstruct}\footnote{The source of this file is also accessible at \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/book/rsf/scons/easystart/SConstruct}{book/rsf/scons/easystart/SConstruct}.}.
 
 %
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
@@ -339,14 +339,9 @@ Note that
 Madagascar expects a \texttt{data} folder on top of the specified
 directory (i.e.  \texttt{imgs}). In the directory where you have your
 SConstruct, running \texttt{scons lena.img} on the command line will
-download the file \texttt{lena.img}.  The equivalent command lines are
-\footnote{use login: anonymous, password: anonymous}
+download the file \texttt{lena.img}.  The equivalent command line is
 \begin{verbatim}
-bash$ ftp egl.beg.utexas.edu
-ftp> bin
-ftp> cd data/imgs
-ftp> get lena.img
-ftp> bye
+bash$ wget http://www.ahay.org/data/imgs/lena.img
 \end{verbatim}
 \end{comment}
 %
@@ -628,10 +623,10 @@ You are done with computational experiments and want to communicate
 them in a paper. SCons helps us create high-quality papers, where
 computational results (figures) are integrated with papers written in
 \LaTeX\. 
-The corresponding SCons extension is defined in  \texttt{\$RSFROOT/lib/rsftex.py} where
+The corresponding SCons extension is defined in  \texttt{\$PYTHONPATH/rsf/tex.py} where
 \texttt{RSFROOT} is the environmental variable to the Madagascar
 installation directory. The source of this file is in
-\href{http://svn.sourceforge.net/viewvc/rsf/trunk/python/rsftex.py?view=markup}{python/rsftex.py}.
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/framework/rsf/tex.py}{framework/rsf/tex.py}.
 We summarize the basic methods and commands in Tables~\ref{tbl:texcom} and~\ref{tbl:tex}.
 
 \tabl{texcom}{Basic methods of an \texttt{rsf.tex} object.}{

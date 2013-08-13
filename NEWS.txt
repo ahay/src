@@ -22,6 +22,7 @@ To documentation:
 To APIs:
 
 * Updated numpy API for compatibility with the latest version of numpy
+* Cast to float when writing data in Python API
 
 To the Python package:
 

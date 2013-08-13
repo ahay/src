@@ -16,7 +16,7 @@ usage with examples.
 \section{Main programs}
 
 The source files for these programs can be found under
-\href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/}{system/main}
+\href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/}{system/main}
 in the Madagascar distribution.
 
 \noindent\doublebox{\parbox{\textwidth}{
@@ -46,7 +46,7 @@ In both cases, the size and shape of \texttt{data1.rsf} and
 message is printed out if the the axis sampling parameters (such as
 \texttt{o1} or \texttt{d1}) in these files are different.
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/add.c?view=markup}{system/main/add.c}}
+\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/add.c}{system/main/add.c}}
 
 The first input file is either in the list or in the standard input.
 \moddex{add}{add}{103}{111}{system/main}
@@ -88,7 +88,7 @@ deviation is the square root of the variance. Using \texttt{sfattr}
 is a quick way to see the distribution of data values and check it for
 anomalies.
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/attr.c?view=markup}{system/main/attr.c}}
+\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/attr.c}{system/main/attr.c}}
 
 Computations start by finding the input data (\texttt{in}) size
 (\texttt{nsiz}) and dimensions (\texttt{dim}).
@@ -153,7 +153,7 @@ bash$ sfcat one.rsf two.rsf > three.rsf
 sfcat: n2 mismatch: need 3
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cat.c?view=markup}{system/main/cat.c}}
+\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/cat.c}{system/main/cat.c}}
 
 The first input file is either in the list or in the standard input.
 \moddex{cat}{cat}{64}{69}{system/main}
@@ -208,7 +208,7 @@ cmplx.rsf:
         6 elements 48 bytes
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cmplx.c?view=markup}{system/main/cmplx.c}}
+\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/cmplx.c}{system/main/cmplx.c}}
 
 The program flow is simple. First, get the names of the input files.
 \moddex{cmplx}{cmplx}{41}{57}{system/main}
@@ -302,7 +302,7 @@ norm value = 5.73563
 In 10 iterations, the misfit decreased by an order of magnitude. The
 result can be improved by running the program for more iterations.
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/conjgrad.c?view=markup}{system/main/conjgrad.c}}
+\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/conjgrad.c}{system/main/conjgrad.c}}
 
 
 \noindent\doublebox{\parbox{\textwidth}{
@@ -331,7 +331,7 @@ two.rsf:
         6 elements 24 bytes
 \end{verbatim}
 
-\subsubsection{Implementation: \href{http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/system/main/cp.c?view=markup}{system/main/cp.c}}
+\subsubsection{Implementation: \href{http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/system/main/cp.c}{system/main/cp.c}}
 
 First, we look for the two first command-line arguments that don't
 have the ``='' character in them and consider them as the names of the
