@@ -10,7 +10,18 @@ except:
     srcroot = os.environ.get('RSFSRC', '../..')
     sys.path.append(os.path.join(srcroot,'framework'))
     import bldutil
-    env = bldutil.Debug() # Debugging flags for compilers
+    # Allow user to link against already-compiled rsflib instead of
+    # building a new one in api/c (an action for which he may lack
+    # write permissions or simply time):
+    debug = ARGUMENTS.get('debug', 'y')
+    if debug == 'y':
+        env = bldutil.Debug() # Debugging flags for compilers
+    else:
+        env = Environment()
+        import configure
+        opts = configure.options(os.path.join(srcroot,'config.py'))
+        opts.Update(env)
+        # print env.Dump()
     bindir = libdir = pkgdir = None
 
 targets = bldutil.UserSconsTargets()
