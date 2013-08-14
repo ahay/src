@@ -17,9 +17,15 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
 #include <omp.h>
+#endif
+
 #include <rsf.h>
+
 #include "pmlm_OMP.h"
+/*^*/
+
 #include "srcm.h"
 #include "sglfdc.h"
 #include "sglfdfbm2_OMP.h"
