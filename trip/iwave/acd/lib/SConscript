@@ -31,7 +31,7 @@ for dir in srclist:
     srcs=srcs+Glob(os.path.join('..',dir,'*.cpp'))
 
     # Solaris
-    if env['PLATFORM'] == 'sunos':
+    if env['PLATFORM'] == 'sunos' or env['PLATFORM'] == 'cygwin':
         for x in Glob(os.path.join('..',dir,'CFL_4_*.c')):
             if x in srcs:
                 srcs.remove(x)
