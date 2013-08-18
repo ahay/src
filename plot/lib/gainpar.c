@@ -41,14 +41,14 @@ void vp_gainpar (sf_file in, float **data,
 		 bool mean      /* set bias to mean */,
 		 float *bias, 
 		 int n3         /* number of panels */ ,
-		 int panel      /* gain type */)
+		 int panel      /* gain type */,
+		 int cpanel     /* current panel */)
 /*< Find clip and gpow parameters >*/
 {
     int nt, i3, nclip, nhalf;
     float *buf, *clipnp, *gpownp, **data2;
     double sum;
     off_t pos=0;
-    int cpanel; /* panel counter */
     /* const float zeroClip = 1e-12; // seems to be a good choise; feel free to change */
 
     nt = n1 / step;
@@ -65,16 +65,14 @@ void vp_gainpar (sf_file in, float **data,
 	      gpow, *bias, nt, buf);
 
 	if (*clip==0.0) {
-	    /* find first non-zero panel */
-	    if (NULL != in) pos = sf_tell (in);
-	    for (cpanel = panel+1; cpanel < n3; cpanel++) { 
+	    /* find next non-zero panel */
+	    for (cpanel++; cpanel < n3; cpanel++) { 
 		gain (in, data, n1, n2, step, pclip, phalf, clip, 
 		      gpow, *bias, nt, buf);
 		if (*clip > 0.0) break; 
 	    }	
-	    if (NULL != in) sf_seek (in, pos, SEEK_SET);
 	}
-    } else { /* gainpanel=each */
+    } else { /* gainpanel=all */
 	if (mean) {
 	    if (NULL != in) pos = sf_tell (in);
 	    data2 = data;

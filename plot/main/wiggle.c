@@ -164,7 +164,8 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	if (zdata <= 0.) {
 	    vp_gainpar (in,pdata,n1,n2,1,
-			pclip,pclip,&zdata,&gpow,false,&bias,n3,0);
+			pclip,pclip,&zdata,&gpow,false,&bias,
+			n3,0,n3);
 	    if (verb) sf_warning("clip=%g",zdata);
 	} else {	    
 	  sf_floatread(pdata[0],n1*n2,in);

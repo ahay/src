@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 			panel--;
 			break;
 		}
-		free (gainpanel);
+		free (gainpanel); 
 	    } 
 
 	    sf_unpipe(in,sf_filesize(in)*sizeof(float));
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
 	nomax = (bool) (!sf_getfloat("maxval",&barmax));
 	/* maximum value for scalebar (default is the data maximum) */
 	
-	barbuf[0] = (unsigned char*) sf_alloc(VP_BSIZE,sizeof(unsigned char));
+	barbuf[0] = sf_ucharalloc(VP_BSIZE);
 
 	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
 	/* if y, go from small to large on the bar scale */
@@ -253,14 +253,18 @@ int main(int argc, char* argv[])
 
     buf = sf_ucharalloc2(n1,n2);
 
+
     if (!charin) {
 	data = sf_floatalloc2(n1,n2);
 
 	if (GAIN_ALL==panel || panel >= 0) {
 	    pos = sf_tell(in);
-	    if (panel > 0) sf_seek(in,pos+panel*n1*n2*sizeof(float),SEEK_SET);
+	    if (panel > 0) sf_seek(in,
+				   pos+panel*n1*n2*sizeof(float),
+				   SEEK_SET);
 	    vp_gainpar (in,data,n1,n2,gainstep,
-			pclip,phalf,&clip,&gpow,mean,&pbias,n3,panel);
+			pclip,phalf,&clip,&gpow,mean,&pbias,
+			n3,panel,panel);
 	    if (verb) sf_warning("panel=%d bias=%g clip=%g gpow=%g",
 				 panel,pbias,clip,gpow);
 	    if (sfbyte) sf_putfloat(out,"clip",clip);
@@ -283,7 +287,8 @@ int main(int argc, char* argv[])
 		if (eclip) clip=0.;
 		if (egpow) gpow=0.;
 		vp_gainpar (in,data,n1,n2,gainstep,
-			    pclip,phalf,&clip,&gpow,mean,&pbias,n3,0);
+			    pclip,phalf,&clip,&gpow,
+			    mean,&pbias,n3,0,n3);
 		if (verb) sf_warning("bias=%g clip=%g gpow=%g",pbias,clip,gpow);
 	    } else {
 		sf_floatread(data[0],n1*n2,in);
