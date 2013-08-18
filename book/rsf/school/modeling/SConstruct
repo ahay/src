@@ -43,7 +43,9 @@ wfl=${TARGETS[1]}
 verb=y dabc=y snap=y jsnap=%(jsnap)d jdata=%(jdata)d free=y
 ''' %par)
 Plot('awavefield','grey gainpanel=a title="Acoustic wave propagation"',view=1)
+Result('awavefield','window n3=1 f3=40 | grey title="Acoustic wave propagation"')
 Result('arecfield','transp | grey gainpanel=a title="Acoustic receiver data"')
+
 # . . Elastic modelling
 Flow('elasticwavelet','wav','put n2=1 n3=1 | transp plane=13 | pad n2=2')
 # Explicit about c13 c33
@@ -64,11 +66,19 @@ wfl=${TARGETS[1]}
 dabc=y snap=y verb=y jsnap=%(jsnap)d jdata=%(jdata)d
 ssou=y nb=20 nbell=11
 ''' %par)
-Flow('ewfldZ','ewavefield','window n3=1 min2=%(minx)g max2=%(maxx)g max1=%(maxz)g min1=%(minz)g'%par)
-Plot('ewfldZ','grey min2=15 max2=25 max1=6 screenratio=0.6 screen=8 gainpanel=a pclip=99.5 title="Elastic wave propagation"')
-Flow('ewfldX','ewavefield','window n3=1 f3=1 min2=%(minx)g max2=%(maxx)g max1=%(maxz)g min1=%(minz)g'%par)
-Plot('ewfldX','grey min2=%(minx)g max2=%(maxx)g max1=6 screenratio=0.6 screen=8 gainpanel=a pclip=99.5 title="Elastic wave propagation"' %par)
+
+Flow('ewfldZ','ewavefield','window n3=1 f3=0 min2=%(minx)g max2=%(maxx)g max1=%(maxz)g min1=%(minz)g' % par)
+Flow('ewfldX','ewavefield','window n3=1 f3=1 min2=%(minx)g max2=%(maxx)g max1=%(maxz)g min1=%(minz)g' % par)
+
+Plot('ewfldZ','window n3=1 f3=40 | grey max1=6 pclip=99.5 title="Elastic wave propagation (Z component)"')
+Plot('ewfldX','window n3=1 f3=40 | grey max1=6 pclip=99.5 title="Elastic wave propagation (X component)"')
 Result('ewfld','ewfldZ ewfldX','SideBySideAniso')
-Result('erecfield','transp | grey gainpanel=a title="Elastic receiver data"')
+
+Flow('erfldZ','erecfield','window n2=1 f2=0')
+Flow('erfldX','erecfield','window n2=1 f2=1')
+
+Plot('erfldZ','grey transp=n title="Elastic receiver data (Z component)" ')
+Plot('erfldX','grey transp=n title="Elastic receiver data (X component)" ')
+Result('erfld','erfldZ erfldX','SideBySideAniso')
 
 End()
