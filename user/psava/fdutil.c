@@ -950,7 +950,7 @@ void abcone2d_apply(float**   uo,
 		uo      [ix][iz  ] 
 		    = um[ix][iz+1] 
 		    +(um[ix][iz  ]
-		      - uo[ix][iz+1]) * abc->bzl[ix];
+		    - uo[ix][iz+1]) * abc->bzl[ix];
 	    }
 
 	    /* bottom BC */

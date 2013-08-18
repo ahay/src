@@ -1,13 +1,11 @@
 from rsf.proj import *
+import sys
 
 try:
     import rsf.api as rsf
     import numpy
-    import scipy
-except Exception, e:
-    import sys
-    print \
-'''ERROR: NEED PYTHON API, NUMPY, SCIPY '''
+except:
+    print 'ERROR: NEED PYTHON API, NUMPY, SCIPY'
     sys.exit(1)
 
 Flow('diagonal',None,'spike n1=200 n2=200 p2=1 k1=1 l1=2 d1=1.0 d2=1.0')

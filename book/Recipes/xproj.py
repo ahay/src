@@ -15,6 +15,7 @@ def Tflow(target, source, command,
 	timer=WhereIs(time_nm)
 	if timer==None:
 		sys.stderr.write('Tflow need %s.'%time_nm)
+		sys.exit(1)
 		
 	if type(target) is types.ListType:
 		tfiles = target

@@ -26,6 +26,8 @@ size *= 1024
 def publicproj(project):
     '''Check if the project is publicly accessible'''
     global all, size
+    if project in ('slim/geo2008NewInsightsPareto/geop',):
+        return False
     os.chdir(project)
     # Skip if no .rsfproj
     if not os.path.isfile('.rsfproj'):
@@ -61,7 +63,7 @@ def progtest(target=None,source=None,env=None):
     return 0
 
 def www(target=None,source=None,env=None):
-    rsf.sftour.tour(map(str,source),'scons -Q book.tex www')
+    rsf.sftour.tour(map(str,source),'scons -Q www')
     return 0
 
 env = Environment()

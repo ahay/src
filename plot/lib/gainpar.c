@@ -29,7 +29,7 @@ static float get_bias (sf_file in, float **data, int n1, int n2, int step,
 
 static void gain (sf_file in, float **data, int n1, int n2,int step,
 		  float pclip,float phalf,
-		  float *clip, float *gpow, float bias, int nt, float* buf, int cpanel);
+		  float *clip, float *gpow, float bias, int nt, float* buf);
 
 void vp_gainpar (sf_file in, float **data, 
 		 int n1, int n2 /* panel size */,
@@ -49,52 +49,60 @@ void vp_gainpar (sf_file in, float **data,
     double sum;
     off_t pos=0;
     int cpanel; /* panel counter */
+    /* const float zeroClip = 1e-12; // seems to be a good choise; feel free to change */
 
     nt = n1 / step;
     buf = sf_floatalloc (nt*n2);
   
-	if (panel >= 0) { /* gain from a particular panel */
-		if (mean) {
-			if (NULL != in) pos = sf_tell (in);
-			*bias = get_bias (in, data, n1, n2, step, nt);
-			if (NULL != in) sf_seek (in, pos, SEEK_SET);
-		}
-		*clip = 0;
-		cpanel = 0;
-		const float zeroClip = 1e-12; // seems to be a good choise; feel free to change	
-		while (*clip < zeroClip && cpanel < n3) { /* analyze the 1st non-zero plane */
-			gain (in, data, n1, n2, step, pclip, phalf, clip, gpow, *bias, nt, buf, cpanel);
-			++cpanel;
-		}
+    if (panel >= 0) { /* gain from a particular panel */
+	if (mean) {
+	    if (NULL != in) pos = sf_tell (in);
+	    *bias = get_bias (in, data, n1, n2, step, nt);
+	    if (NULL != in) sf_seek (in, pos, SEEK_SET);
+	}
+
+	gain (in, data, n1, n2, step, pclip, phalf, clip, 
+	      gpow, *bias, nt, buf);
+
+	if (*clip==0.0) {
+	    /* find first non-zero panel */
+	    if (NULL != in) pos = sf_tell (in);
+	    for (cpanel = panel+1; cpanel < n3; cpanel++) { 
+		gain (in, data, n1, n2, step, pclip, phalf, clip, 
+		      gpow, *bias, nt, buf);
+		if (*clip > 0.0) break; 
+	    }	
+	    if (NULL != in) sf_seek (in, pos, SEEK_SET);
+	}
     } else { /* gainpanel=each */
-		if (mean) {
-			if (NULL != in) pos = sf_tell (in);
-			data2 = data;
-			sum = 0.0;
-			for (i3 = 0; i3 < n3; i3++) {
-				sum += get_bias (in, data2, n1, n2, step, nt);		
-				if (NULL == in) data2 += n1 * n2; /* next panel */
-			}
-			*bias = sum / n3;
-			if (NULL != in) sf_seek (in, pos, SEEK_SET);
-		}
+	if (mean) {
+	    if (NULL != in) pos = sf_tell (in);
+	    data2 = data;
+	    sum = 0.0;
+	    for (i3 = 0; i3 < n3; i3++) {
+		sum += get_bias (in, data2, n1, n2, step, nt);		
+		if (NULL == in) data2 += n1 * n2; /* next panel */
+	    }
+	    *bias = sum / n3;
+	    if (NULL != in) sf_seek (in, pos, SEEK_SET);
+	}
 	    
-		clipnp = sf_floatalloc (n3);
-		gpownp = sf_floatalloc (n3);
+	clipnp = sf_floatalloc (n3);
+	gpownp = sf_floatalloc (n3);
 
-		for (i3 = 0; i3 < n3; i3++) {
-			clipnp[i3] = 0.;
-			gpownp[i3] = 0.;
-			gain (in, data, n1, n2, step, pclip, phalf,
-					clipnp+i3, gpownp+i3, *bias, nt, buf, 0); // "0" - zero-panel is considered
-			if (NULL == in) data += n1 * n2; /* next panel */
-		}
+	for (i3 = 0; i3 < n3; i3++) {
+	    clipnp[i3] = 0.;
+	    gpownp[i3] = 0.;
+	    gain (in, data, n1, n2, step, pclip, phalf,
+		  clipnp+i3, gpownp+i3, *bias, nt, buf); 
+	    if (NULL == in) data += n1 * n2; /* next panel */
+	}
 
-		nclip = SF_MAX (SF_MIN (n3 * pclip / 100. + .5, n3 - 1), 0);
-		nhalf = SF_MAX (SF_MIN (n3 * phalf / 100. + .5, n3 - 1), 0);
+	nclip = SF_MAX (SF_MIN (n3 * pclip / 100. + .5, n3 - 1), 0);
+	nhalf = SF_MAX (SF_MIN (n3 * phalf / 100. + .5, n3 - 1), 0);
 
-		if (*clip == 0.) *clip = sf_quantile (nclip, n3, clipnp);
-		if (*gpow == 0.) *gpow = sf_quantile (nhalf, n3, gpownp);
+	if (*clip == 0.) *clip = sf_quantile (nclip, n3, clipnp);
+	if (*gpow == 0.) *gpow = sf_quantile (nhalf, n3, gpownp);
 
         free (clipnp);
         free (gpownp);
@@ -125,22 +133,22 @@ static float get_bias (sf_file in, float **data, int n1, int n2, int step,
  
 static void gain (sf_file in, float **data, int n1, int n2, int step,
 		  float pclip,float phalf, float *clipp, float *gpowp, 
-		  float bias, int nt, float *buf, int cpanel)
+		  float bias, int nt, float *buf)
 {
     int j, i2, it, ntest, n;
     float clip, gpow, half;
+    int panelsize = n1 * n2;
 
     n = n2*nt;
-    const int panelsize = n1 * n2;	
-
+	
     if (NULL != in) {
-		sf_floatread (data[0], panelsize, in);
+	sf_floatread (data[0], panelsize, in);
     }
-	for (j=i2=0; i2<n2; i2++) {
-		for (it=0; it<nt; it++, j++) {
-			buf[j] = fabsf(data[i2][it*step]- bias);
-		}
+    for (j=i2=0; i2<n2; i2++) {
+	for (it=0; it<nt; it++, j++) {
+	    buf[j] = fabsf(data[i2][it*step]- bias);
 	}
+    }
     
     /* determine gain factors */
     clip = *clipp;

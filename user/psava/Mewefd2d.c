@@ -490,6 +490,7 @@ int main(int argc, char* argv[])
 		    +           uax[ix][iz] * ro[ix][iz]; 
 	    }
 	}
+
 	/* circulate wavefield arrays */
 	utz=umz; utx=umx;
 	umz=uoz; umx=uox;
