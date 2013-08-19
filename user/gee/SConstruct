@@ -5,11 +5,11 @@ import bldutil
 progs = '''
 afac autocorr burstnoise cconv conflict conv convf cpef1 cube decon
 deburst despike despike2 despike3 factorn factorm frame frog hconv
-heat3 helicon hmiss hole hshape idempatch imospray invbin invbin1
+heat3 helicon hmiss hole hpef hshape idempatch imospray invbin invbin1
 invrec1 kolmog levint light lint1 lopef losignoi lpef make maskinv
-misif miss miss1 msmiss mspef nhelicon npef parcel pef pefdeburst
-pfactor2 proj tspline qdome randline sigmoid signoi splinebank
-splineplane synmarine syntop tentwt ungrad velcon3 wavemovie wilson
+misif miss miss1 msmiss mspef nhelicon npef parcel pefdeburst pfactor2
+proj tspline qdome randline sigmoid signoi splinebank splineplane
+synmarine syntop tentwt ungrad velcon3 wavemovie wilson
 '''
 
 try:  # distributed version

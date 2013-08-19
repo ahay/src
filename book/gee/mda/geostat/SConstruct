@@ -8,7 +8,7 @@ Plot('wood-hole','grey crowd=1')
 
 Flow('wood-known','wood','math output=1 | hole')
 Flow(['wood-pef','wood-lag'],['wood-hole','wood-known'],
-     'pef a=5,5 niter=60 maskin=${SOURCES[1]} lag=${TARGETS[1]}')
+     'hpef a=5,5 niter=60 maskin=${SOURCES[1]} lag=${TARGETS[1]}')
 Flow('wood-miss',['wood-hole','wood-pef','wood-known'],
      'miss niter=140 filt=${SOURCES[1]} mask=${SOURCES[2]} padin=20')
 Plot('wood-miss','grey crowd=1')
@@ -42,7 +42,7 @@ Flow('sea','seabin.hh','dd form=native')
 Plot('sea',sea())
 
 Flow(['sea-pef','sea-lag'],'sea',
-     'pef a=5,3 niter=50 lag=${TARGETS[1]}')
+     'hpef a=5,3 niter=50 lag=${TARGETS[1]}')
 Flow('sea-miss',['sea','sea-pef'],
      'miss niter=100 filt=${SOURCES[1]}')
 Plot('sea-miss',sea())

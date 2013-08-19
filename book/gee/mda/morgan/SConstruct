@@ -11,7 +11,7 @@ for txtr in textures[0:6]:
 Fetch('WGstack.H','book/iee')
 Flow('WGstack','WGstack.H','window f2=500 j2=2 n2=125 n1=250 j1=2')
 
-makepef = 'pef niter=40 a=10,10 maskin=$SOURCE lag=${TARGETS[1]}'
+makepef = 'hpef niter=40 a=10,10 maskin=$SOURCE lag=${TARGETS[1]}'
 
 for txtr in textures:
     Plot(txtr,g % 'Training Image')

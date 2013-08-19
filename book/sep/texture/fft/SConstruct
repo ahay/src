@@ -75,7 +75,7 @@ for case in ('rand2d','ridges','wood','herr',
     mis = 'mis-'+case
     Flow([pef,lag,mis+'i'],case,
          '''
-         pef niter=40 a=10,10 center=4,0
+         hpef niter=40 a=10,10 center=4,0
          lag=${TARGETS[1]} maskin=$SOURCE maskout=${TARGETS[2]}
          ''')
     Flow(mis,mis+'i','dd type=float')
@@ -138,7 +138,7 @@ label = ''
 for a in (4,10,20):
     pef = 'pef%d' % a
     lag = 'lag%d' % a
-    Flow([pef,lag],'rand1d','pef lag=${TARGETS[1]} a=%d' % a)
+    Flow([pef,lag],'rand1d','hpef lag=${TARGETS[1]} a=%d' % a)
     imp = 'imp%d' % a
     Flow(imp,pef,
          '''

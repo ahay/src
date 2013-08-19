@@ -1,4 +1,5 @@
 from rsf.proj import *
+from rsf.prog import RSFROOT
 
 tests = '''
 align alignh aspect_ratio clipping colors coltab Cyrillic erase greycol hatch 
@@ -51,7 +52,7 @@ for f in range(19):
      font = 'font%d' % f
      Result(font,program('Font'),'./$SOURCE %d | plas' % f,stdin=0)
 
-vppen = os.path.join(os.environ.get('RSFROOT'),'bin/vppen')
+vppen = os.path.join(RSFROOT,'bin/vppen')
 
 Result('vppen','./TEST_erase','plas | %s gridnum=4 frame=y' % vppen)
 

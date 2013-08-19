@@ -1,0 +1,10 @@
+from rsf.proj import *
+
+for part in 'abcdefgh':
+    gzip = 'ChevGOMLO.tar.gzip.parta' + part
+    Fetch(gzip,dir='seg_workshop_fwi_long_offset2013',
+          server='http://s3.amazonaws.com',top='open.source.geoscience/open_data')
+
+
+
+End()

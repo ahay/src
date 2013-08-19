@@ -3,7 +3,7 @@ from rsf.suproj import *
 def plot(title,windowtitle):
     return '''
     suxwigb title="%s" windowtitle="%s" 
-    label1="Samples" label2="Trace" f1=1 d1=1 f2=1 d2=1\
+    label1="Samples" label2="Trace" f1=1 d1=1 f2=1 d2=1
     wbox=420 hbox=400 xbox=0 ybox=50
     ''' % (title,windowtitle)
 

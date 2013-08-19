@@ -11,8 +11,8 @@ Flow('noiz','make',
 Flow('data','make noiz','add ${SOURCES[1]}')
 Plot('noiz','data',plot('signal+noise'))
 
-Flow('npef nlag','data','pef a=4,1 lag=${TARGETS[1]}')
-Flow('spef slag','data','pef a=7,3 lag=${TARGETS[1]}')
+Flow('npef nlag','data','hpef a=4,1 lag=${TARGETS[1]}')
+Flow('spef slag','data','hpef a=7,3 lag=${TARGETS[1]}')
 
 eps = (1,4,0.25)
 

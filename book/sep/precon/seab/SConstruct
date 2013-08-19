@@ -21,7 +21,7 @@ Plot('lap',grey('Filled with Laplacian'))
 
 Result('seabdat','bin lap','SideBySideAniso')
 
-Flow('pef lag','bin','pef maskin=$SOURCE a=5,3 niter=200 lag=${TARGETS[1]}')
+Flow('pef lag','bin','hpef maskin=$SOURCE a=5,3 niter=200 lag=${TARGETS[1]}')
 
 for prec in (0,1):
     pic = ('old','new')[prec]

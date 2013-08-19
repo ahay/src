@@ -1,4 +1,4 @@
-/* Multi-dimensional PEF (prediction error filter) estimation. */
+/* Multi-dimensional PEF (prediction error filter) estimation on a helix. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

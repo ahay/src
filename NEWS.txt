@@ -35,6 +35,7 @@ To programs:
 * Added shift= parameter to sfkolmog
 * Added eps= parameter to sflsfit
 * user/fbroggin: New contributor (Filippo Broggini)
+* sfpef renamed sfhpef
 
 ===Bug fixes===
 

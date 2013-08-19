@@ -120,7 +120,7 @@ Result('rand2','rand2 frand2','SideBySideAniso')
 # Estimate PEF
 Flow('pef lag','bin msk',
      '''
-     pef maskin=${SOURCES[1]} lag=${TARGETS[1]}
+     hpef maskin=${SOURCES[1]} lag=${TARGETS[1]}
      a=5,3 niter=50
      ''')
 
