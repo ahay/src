@@ -7,10 +7,12 @@ Fetch(segy,'hongliu',private)
 
 Flow('sgr tsgr sgr.asc sgr.bin',segy,
      'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+
 Flow('sgr3','sgr',
      '''
      intbin xk=iline yk=xline
      ''')
+
 Flow('trace','sgr3','window n2=1 n3=1 f2=150 f3=200')
 Plot('trace',
      '''
@@ -24,15 +26,45 @@ Plot('tracespec',
      min1=0 max1=120 min2=0 max2=15000 labelfat=2 font=2
      ''')
 
-nc1 = 7 # number of components
+nc1 = 1 # number of components
 Flow('rick tracema1 tracema2', 'tracespec', 'rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc1)
 Plot('rick',
      '''
      graph symbol=o labelsz=8 titlesz=12 symbolsz=8 plotfat=8
-     title="Spectrum and Its Estimation" label2="Amplitude" label1="" unit2= unit1=
+     title="Spectrum and Its Estimation with %g Components" label2="Amplitude" label1="" unit2= unit1=
      min1=0 max1=120 min2=0 max2=15000 font=2 titlefat=4 labelfat=2
-     ''')
-Result('check', 'rick tracespec', 'Overlay')  
+     ''' % nc1)
+Plot('check1', 'rick tracespec', 'Overlay')
+nc2 = 4
+Flow('rick2 tracema1 tracema2', 'tracespec', 'rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc2)
+Plot('rick2',
+     '''
+     graph symbol=o labelsz=8 titlesz=12 symbolsz=8 plotfat=8
+     title="Spectrum and Its Estimation with %g Components" label2="Amplitude" label1="" unit2= unit1=
+     min1=0 max1=120 min2=0 max2=15000 font=2 titlefat=4 labelfat=2
+     ''' % nc2)
+Plot('check2', 'rick2 tracespec', 'Overlay')
+nc3 = 7
+Flow('rick3 tracema1 tracema2', 'tracespec', 'rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc3)
+Plot('rick3',
+     '''
+     graph symbol=o labelsz=8 titlesz=12 symbolsz=8 plotfat=8
+     title="Spectrum and Its Estimation with %g Components" label2="Amplitude" label1="" unit2= unit1=
+     min1=0 max1=120 min2=0 max2=15000 font=2 titlefat=4 labelfat=2
+     ''' % nc3)
+Plot('check3', 'rick3 tracespec', 'Overlay')
+nc4 = 9
+Flow('rick4 tracema1 tracema2', 'tracespec', 'rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc4)
+Plot('rick4',
+     '''
+     graph symbol=o labelsz=8 titlesz=12 symbolsz=8 plotfat=8
+     title="Spectrum and Its Estimation with %g Components" label2="Amplitude" label1="" unit2= unit1=
+     min1=0 max1=120 min2=0 max2=15000 font=2 titlefat=4 labelfat=2
+     ''' % nc4)
+Plot('check4', 'rick4 tracespec', 'Overlay')  
+Plot('est1','check1 check2','SideBySideAniso')
+Plot('est2','check3 check4','SideBySideAniso')
+Result('estimation','est1 est2','OverUnderAniso')
 
 Result('sgr334','sgr3',
        '''
@@ -42,7 +74,7 @@ Result('sgr334','sgr3',
        byte gainpanel=all |
        grey3 frame1=182 frame2=150 frame3=52 flat=y point1=0.7 point2=0.7
        color=G font=2 titlefat=4 labelfat=2 titlesz=8 labelsz=6 pclip=100
-       title="Component Peak Frequency 34 Hz" wanttitle=y
+       title="Component Peak Frequency 34 Hz" wanttitle=n label2=Inline maxval=100 minval=-100 bar=y
        ''')
 
 Result('sgr330','sgr3',
@@ -54,7 +86,7 @@ Result('sgr330','sgr3',
        byte gainpanel=all |
        grey3 frame1=182 frame2=150 frame3=26 flat=y point1=0.7 point2=0.7
        color=G font=2 titlefat=4 labelfat=2 titlesz=8 labelsz=6 pclip=100
-       title="Component Peak Frequency 30 Hz" wanttitle=y
+       title="Component Peak Frequency 30 Hz" wanttitle=n label2=Inline maxval=100 minval=-100 bar=y
        ''')
 
 Result('sgr317','sgr3',
@@ -65,8 +97,8 @@ Result('sgr317','sgr3',
        put o1=1.800 d1=0.001928375
        o2=150 d2=2.82392 o3=1100 d3=1.25 |
        grey3 frame1=182 frame2=150 frame3=26 flat=y point1=0.7 point2=0.7
-       color=G font=2 titlefat=4 labelfat=2 titlesz=8 labelsz=6 pclip=100
-       title="Component Peak Frequency 17 Hz" wanttitle=y
+       color=G font=2 titlefat=4 labelfat=2 titlesz=8 labelsz=6 pclip=100 maxval=100 minval=-100 bar=y
+       title="Component Peak Frequency 17 Hz" wanttitle=n label2=Inline
        ''')
 
 Result('sgr321','sgr3',
@@ -78,16 +110,16 @@ Result('sgr321','sgr3',
        o2=150 d2=2.82392 o3=1100 d3=1.25 |
        grey3 frame1=182 frame2=150 frame3=26 flat=y point1=0.7 point2=0.7
        color=G font=2 titlefat=4 labelfat=2 titlesz=8 labelsz=6 pclip=100
-       title="Component Peak Frequency 21 Hz" wanttitle=y
+       title="Component Peak Frequency 21 Hz" wanttitle=n label2=Inline maxval=100 minval=-100 bar=y
        ''')
 
-nc2 = 6
+nc2 = 3
 
 Flow('sgrspec','sgr3','spectra all=y')
 Flow('sgrspecfit ma1 ma2','sgrspec','rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc2)
 Plot('sgrspec',
      '''
-     graph labelsz=10 titlesz=16 wanttitle=y plotcol=7 title="Seismic Data Spectrum and Its Estimation"
+     graph labelsz=10 titlesz=16 wanttitle=y plotcol=7 title="(b)"
      plotfat=8 label1="Frequency" unit1="Hz" label2="Amplitude" unit2=
      min1=0 max1=120 min2=0 max2=10000 labelfat=2 font=2
      ''')
@@ -95,8 +127,8 @@ Plot('sgrspecfit',
      '''
      graph labelsz=10 titlesz=16 wanttitle=y
      symbol=o labelsz=10 titlesz=16 symbolsz=6
-     plotfat=6 label1="Frequency" unit1="Hz" label2="Amplitude" unit2=
-     min1=0 max1=120 min2=0 max2=10000 labelfat=2 font=2 title=""
+     plotfat=8 label1="Frequency" unit1="Hz" label2="Amplitude" unit2=
+     min1=0 max1=120 min2=0 max2=10000 labelfat=2 font=2 title="(b)"
      ''')
 Plot('spec','sgrspec sgrspecfit','Overlay')
 
@@ -114,15 +146,15 @@ for c in range(nc2):
          math output="abs(input)" |
          window |
          window n1=480 |
-         graph title="Component Ricker Wavelet Spectrum" plotfat=6 label1="Frequency" label2=Amplitude unit2= font=2
+         graph title="(a)" plotfat=6 label1="Frequency" label2=Amplitude unit2= font=2
          labelsz=10 titlesz=16 labelfat=2 titlefat=4 wanttitle=y plotcol=7
-         min1=0 max1=120 min2=0 max2=25000
+         min1=0 max1=120 min2=0 max2=10000
          ''')
 
-Plot('spectrum','comp0 comp1 comp2 comp3 comp4 comp5','Overlay')
+Plot('spectrum','comp0 comp1 comp2','Overlay')
 
 # the component summation equals the estimation
-Flow('specsum','comp0 comp1 comp2 comp3 comp4 comp5','add ${SOURCES[1:%d]}' % nc2)
+Flow('specsum','comp0 comp1 comp2','add ${SOURCES[1:%d]}' % nc2)
 
 # value of specsum is the same as rick
 Plot('specsum',
@@ -131,6 +163,6 @@ Plot('specsum',
      label2=Amplitude unit2= min1=0 max1=120 min2=0 max2=10000
      ''')
 
-Result('recomp','spec spectrum','OverUnderAniso')
+Result('recomp','spectrum spec','OverUnderAniso')
 
 End()
