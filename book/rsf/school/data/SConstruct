@@ -20,8 +20,7 @@ Result('first','line',
        '''
        window n2=1000 |
        agc rect1=250 rect2=100 |
-       grey title="First 1000 traces"
-       font=2 labelsz=6 labelfat=4
+       grey title="First 1000 traces" labelsz=6 
        ''')
 
 ###################
@@ -48,7 +47,7 @@ for case in 'SR':
 Plot('s118','S',
      '''
      window n2=1 f2=118 | scale dscale=0.001 | dd type=complex |
-     graph symbol=O wanttitle=n plotcol=3 symbolsz=4 plotfat=10
+     graph symbol=O wanttitle=n plotcol=3 symbolsz=4 plotfat=5
      min1=684 max1=705 min2=3837 max2=3842
      ''')
 Result('SRO','R S s118','Overlay')
@@ -218,7 +217,7 @@ Flow('mutes','lines2',
 ###########################
 # Shot 198
 Flow('shot198','mutes','window n3=1 f3=198')
-Plot('shot198','grey title="Shot 198" labelfat=4 titlefat=4')
+Plot('shot198','grey title="Shot 198" ')
 
 # Spectra
 Flow('spec198','shot198','spectra2')
@@ -226,7 +225,6 @@ Plot('spec198',
      '''
      grey color=j yreverse=n title="Spectra 198" bias=0.08
      label1=Frequency unit1=Hz label2=Wavenumber unit2=1/km
-     labelfat=4 titlefat=4
      ''')
 Result('input198','shot198 spec198','SideBySideAniso')
 
@@ -236,22 +234,21 @@ Flow('bandp','spike','bandpass flo=3 fhi=125 nphi=8')
 Result('sbandp','bandp',
        '''
        spectra |
-       graph title="Transfer function"
-       labelsz=8 plotfat=10 grid=y
+       graph title="Transfer Function"
+       labelsz=8 plotfat=5 grid=y
        ''')
 
 # Subsampling all shots to 4ms
 Flow('subsample','mutes',
      'bandpass flo=3 fhi=125 nphi=8 | window j1=2')
 Flow('subshot198','subsample','window n3=1 f3=198')
-Plot('subshot198','grey title="Subsampled 198" labelfat=4 titlefat=4')
+Plot('subshot198','grey title="Subsampled 198" ')
 # Spectra
 Flow('subspec198','subshot198','spectra2')
 Plot('subspec198',
      '''
      grey color=j yreverse=n title="Spectra 198" bias=0.08
      label1=Frequency unit1=Hz label2=Wavenumber unit2=1/km
-     labelfat=4 titlefat=4
      ''')
 Result('output198','subshot198 subspec198','SideBySideAniso')
 
@@ -267,7 +264,7 @@ Result('ltft198',
        grey3 color=j frame1=120 frame2=7 frame3=71 label1=Time flat=y 
        unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
        screenht=10 screenratio=0.7 parallel2=n format2=%3.1f
-       point1=0.8 point2=0.3 wanttitle=n labelfat=4 font=2 titlefat=4
+       point1=0.8 point2=0.3 wanttitle=n 
        ''')
 # Thresholding
 Flow('thr198','ltft198',
@@ -283,16 +280,15 @@ Result('thr198',
        grey3 color=j  frame1=120 frame2=7 frame3=71 label1=Time flat=y 
        unit1=s label3=Offset label2="\F5 f \F-1" unit3=km
        screenht=10 screenratio=0.7 parallel2=n format2=%3.1f
-       point1=0.8 point2=0.3 wanttitle=n labelfat=4 font=2 titlefat=4
+       point1=0.8 point2=0.3 wanttitle=n 
        ''')
 # Denoise
 Flow('noise198','thr198','ltft inv=y | mutter t0=-0.5 v0=0.7')
-Plot('noise198',
-     'grey title="Ground-roll 198" unit2=km labelfat=4 titlefat=4')
+Plot('noise198','grey title="Ground-roll 198" unit2=km')
 
-Flow('signal198','subshot198 noise198','add scale=1,-1 ${SOURCES[1]}')
-Plot('signal198',
-     'grey title="Ground-roll removal" labelfat=4 titlefat=4')
+Flow('signal198','subshot198 noise198',
+     'add scale=1,-1 ${SOURCES[1]}')
+Plot('signal198','grey title="Ground-roll Removal" ')
 Result('sn198','signal198 noise198','SideBySideAniso')
 
 # Cheating here
@@ -332,7 +328,7 @@ Result('cmps',
        '''
        byte gainpanel=each |
        grey3 frame1=500 frame2=36 frame3=642 flat=n
-       title="CMP gathers" point1=0.7 label2=Offset label3=Midpoint
+       title="CMP Gathers" point1=0.7 label2=Offset label3=Midpoint
        ''')
 
 # Set up velocity scan parameters
@@ -352,7 +348,7 @@ Result('vel',
        '''
        grey title="NMO Velocity" label1="Time" label2="Lateral"
        color=j scalebar=y allpos=y bias=2.1 barlabel="Velocity"
-       barreverse=y o2num=1 d2num=1 n2tic=3 labelfat=4 font=2 titlefat=4
+       barreverse=y o2num=1 d2num=1 n2tic=3 
        ''')
 
 #################
@@ -372,13 +368,10 @@ Result('nmo',
        label2=Offset label3=Midpoint
        ''')
 
-# Brute stacking
+# NMO stacking
 Flow('bstack','nmo','stack')
 Result('bstack',
-       '''
-       agc rect1=50 |
-       grey title="Brute stacking" labelfat=4 font=2 titlefat=4
-       ''')
+       'shapeagc rect1=50 rect2=100 | grey title="NMO Stack" ')
 
 ################
 # Toy migration
@@ -391,8 +384,7 @@ Flow('pstm','tcmps vel',
      ''',split=[3,71,[0]],reduce='add')
 Result('pstm',
        '''
-       grey title="Prestack kirchhoff time migration"
-       labelfat=4 font=2 titlefat=4
+       grey title="Prestack Kirchhoff Time Migration"
        ''')
 
 End()
