@@ -1,6 +1,7 @@
 SConscript(dirs='iwave', name='SConstruct.noopt')
 SConscript(dirs='rvl', name='SConstruct.noopt')
-SConscript(dirs='iwave+', name='SConstruct')
+SConscript(dirs='iwave+', name='SConstruct.source')
+SConscript(dirs='iwave+', name='SConstruct.noopt')
 SConscript(dirs='iwave++', name='SConstruct.noopt')
 
 

@@ -5,6 +5,8 @@ import shutil
 thispath = os.getcwd()
 thisname = os.path.basename(thispath)
 
+SConscript(dirs='../iwave+', name='SConstruct')
+
 AddOption('--install',
 	  dest='install',
 	  type='string',
