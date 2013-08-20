@@ -41,19 +41,16 @@ int main(int argc, char *argv[])
 	tracein=sf_floatalloc(n1);
 	ref=sf_floatalloc(n1);
 
-	sf_warning("cao");	
-
     	if (!sf_getfloat("thr",&thr)) sf_error("Need thr=");
     	/* thresholding level */ 
-	sf_warning("cao1");	
+
 	for(i3=0;i3<n3;i3++)
 	{
 	   for(i2=0;i2<n2;i2++)
 		{
-		sf_warning("cao2");	
+
 		sf_floatread(tracein,n1,in);
 		sf_floatread(ref,n1,simi);
-	sf_warning("cao3");	
 		for(i1=0;i1<n1;i1++)
 			{
 				if(ref[i1] < thr)

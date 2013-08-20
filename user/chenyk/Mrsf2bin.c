@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     in = sf_input("in");
 
 /***************************************************/
-/*	Allocate memory				   */
+/*	Allocating memory			   */
 /***************************************************/
     n123 = sf_leftsize(in,0);
     u=sf_floatalloc(n123);

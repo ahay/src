@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
     sf_init(argc,argv);		
     out = sf_output("out");
 
-sf_warning("T2");
 /***************************************************/
 /*	Getting and putting dimensions 		   */
 /***************************************************/
@@ -49,7 +48,6 @@ sf_warning("T2");
     if(!sf_getfloat("o1",&o1)) o1=0;
     if(!sf_getfloat("o2",&o2)) o2=0;
 
-sf_warning("T1");
     sf_putint(out,"n1",n1);
     sf_putint(out,"n2",n2);
     sf_putfloat(out,"d1",d1);
@@ -61,7 +59,7 @@ sf_warning("T1");
 /*		Allocate memory 		   */
 /***************************************************/
     u=sf_floatalloc(n1*n2);
-sf_warning("T3");
+
 /***************************************************/
 /*		Reading binary file		   */
 /***************************************************/
@@ -79,7 +77,6 @@ sf_warning("T3");
 /***************************************************/
 /*	Writing rsf file		   */
 /***************************************************/
-sf_warning("T4");
     sf_floatwrite(u,n1*n2,out);
 
     exit(0);

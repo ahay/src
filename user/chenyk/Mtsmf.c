@@ -1,4 +1,4 @@
-/* Two-step median filtering. 
+/* Two-step space varying median filtering. 
 In default case, sftsmf is equal to sftvmf.
 */
 /*
@@ -32,9 +32,9 @@ int main (int argc, char* argv[])
     int nfw;    /*nfw is the reference filter-window length*/
     int tempnfw;  /*temporary variable*/
     int m;
-    float medianv; /*temporary median variable*/
-    bool boundary;
-    int l1,l2,l3,l4; /*time-varying window coefficients*/
+    float medianv,ael; /*temporary median variable*/
+    bool boundary,verb;
+    int l1,l2,l3,l4; /*space-varying window coefficients*/
     
     float *trace;
     float *tempt; /*temporary array*/
@@ -57,31 +57,35 @@ int main (int argc, char* argv[])
     /* if y, boundary is data, whereas zero*/
 
     if (!sf_getint("ns", &f1)) f1=0;
-    /* processing window starting point */
+    /* processing window starting point, corresponding to the temporal axis */
 
     if (!sf_getint("ne", &f2)) f2=n2-1;
-    /* processing window ending point */
+    /* processing window ending point, corresponding to the temporal axis, n2 means transposed first-axis dimension. */
 
     if (!sf_getint("N", &N))   N=(f2-f1+1)*n1;
     /* average energy level (AEL) computing number */
 
+    if (!sf_getfloat("ael",&ael)) ael=0.0;
+    /*	get the average energy level (AEL) empirically defined */
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /*	if print the computed average energy level (AEL) */
+	
     if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
     /* reference filter-window length (>l4, positive and odd integer)*/
     
     if (!sf_getint("l1",&l1)) l1=2;
-    /* time-varying window parameter "l1" (default=2)*/
+    /* space-varying window parameter "l1" (default=2)*/
     
     if (!sf_getint("l2",&l2)) l2=0;
-    /* time-varying window parameter "l2" (default=0)*/
+    /* space-varying window parameter "l2" (default=0)*/
     
     if (!sf_getint("l3",&l3)) l3=2;
-    /* time-varying window parameter "l3" (default=2)*/
+    /* space-varying window parameter "l3" (default=2)*/
     
     if (!sf_getint("l4",&l4)) l4=4;
-    /* time-varying window parameter "l4" (default=4)*/
-
-    
-    
+    /* space-varying window parameter "l4" (default=4)*/
+   
     if (l1<l2 || l4<l3) sf_error("Need l1>=l2 && l4>=l3"); 
     if ((l1%2)!=0) l1 = l1+1;
     if ((l2%2)!=0) l2 = l2+1;
@@ -112,7 +116,8 @@ int main (int argc, char* argv[])
 	
 	bound1(tempt,extendt,nfw,n1,n2,boundary);
 	
-	/************1D reference median filtering****************/
+	if(ael==0.0)
+	{/************1D reference median filtering****************/
 	
 	for(i=f1;i<f2+1;i++){
 	    for(j=0;j<n1;j++){
@@ -127,9 +132,13 @@ int main (int argc, char* argv[])
 	    for(j=0;j<n1;j++)
 	     medianv=medianv+fabs(medianarray[n1*i+j]);
 	    
-	medianv=medianv/(1.0*N);
+	medianv=medianv/(1.0*N);}
+	else
+	{medianv=ael;}
 	
-	/************1D time-varying median filter****************/
+	if(verb) sf_warning("The average energy level (AEL) is %g",medianv);
+	
+	/************1D space-varying median filter****************/
 	for(i=f1;i<f2+1;i++){
 	    for(kk=0;kk<n1;kk++){
 		temp2[kk]=trace[n1*i+kk];
