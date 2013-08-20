@@ -55,7 +55,7 @@ float default_relpert = 0.01;
 float default_radius = 250.0;
 
 /*********************** self documentation **********************/
-char *sdoc[] = {
+const char *sdoc[] = {
   "                                                                ",
   " STANDARDMODEL_elastic - build 3D velocity cube for SEAM standard models",
   "                                                                ",
@@ -687,7 +687,7 @@ int main(int argc, char **argv) {
   /* WWS */
   if (!(ps_ffcstring(*par,"hfile",&fname))) {
 
-    dname=malloc(strlen(DATAPATH)+strlen(fname)+2);
+    dname=(char *)malloc(sizeof(char)*(strlen(DATAPATH)+strlen(fname)+2));
     strcpy(dname,DATAPATH);
     strcat(dname,fname);
     strcat(dname,"@");

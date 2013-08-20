@@ -41,7 +41,7 @@ float default_relpert = 0.01;
 float default_radius = 250.0;
 
 /*********************** self documentation **********************/
-char *sdoc[] = {
+const char *sdoc[] = {
   "                                                                ",
   " STANDARDMODEL - build 3D velocity cube for SEAM standard models",
   "                                                                ",
@@ -658,7 +658,7 @@ int main(int argc, char **argv) {
       /* otherwise set to cwd */
       else strcpy(cwdpath,".");
     }
-    dname=malloc(strlen(cwdpath)+strlen(fname)+2);
+    dname=(char *)malloc(sizeof(char)*(strlen(cwdpath)+strlen(fname)+2));
     strcpy(dname,cwdpath);
     if (cwdpath[strlen(cwdpath)-1] != '/') strcat(dname,"/");
     strcat(dname,fname);
