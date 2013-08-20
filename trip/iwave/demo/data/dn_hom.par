@@ -1,7 +1,0 @@
-model=10 hfile=dn.rsf choose=1 d1=20 n1=91 d2=20 n2=331 d3=1 n3=1
-
-m1_numl=1
-
-m1_val1=2100
-
- datapath={TMPDATAPATH}
