@@ -10,12 +10,10 @@
 #include "locallinalg.hh"
 #include "ocdc.hh"
 #include "parserdecl.hh"
-extern "C" {
 #include "iwave_fopen.h"
 #include "grid.h"
 #include "gridio.h"
 #include "rarray.h"
-}
 
 namespace RVL {
 

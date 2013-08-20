@@ -2,9 +2,7 @@
 #define __GRIDPP_CREATE__
 
 #include "usempi.h"
-extern "C" {
 #include "iwave_fopen.h"
-}
 #include "except.hh"
 #include "std_cpp_includes.hh"
 

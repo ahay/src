@@ -6,7 +6,7 @@
 //#define LOOPFUN
 #undef LOOPFUN
 
-extern void dploop(int n0,
+extern "C" void dploop(int n0,
 	    ireal c1lam0,
 	    ireal c1lam1,
 	    ireal c2lam0,
@@ -30,7 +30,7 @@ extern void dploop(int n0,
 	    ireal * restrict ep0p,
 	    ireal * restrict ep0pp);
 
-extern void dv0loop(int n0,
+extern "C" void dv0loop(int n0,
 		    ireal c1lam0,
 		    ireal c2lam0,
 		    ireal * restrict _p0,
@@ -58,7 +58,7 @@ void dv1loop(int n0,
 	     ireal * restrict _rmv1,
 	     ireal * restrict _v1);
 
-extern void aploop(int n0,
+extern "C" void aploop(int n0,
 		   ireal c1lam0,
 		   ireal c1lam1,
 		   ireal c2lam0,
@@ -85,7 +85,7 @@ extern void aploop(int n0,
 		   ireal * restrict ep0p,
 		   ireal * restrict ep0pp);
 
-extern void av0loop(int n0,
+extern "C" void av0loop(int n0,
 		    ireal c1lam0,
 		    ireal c2lam0,
 		    ireal * restrict _p0m1,
@@ -99,7 +99,7 @@ extern void av0loop(int n0,
 		    ireal * restrict ev0p,
 		    ireal * restrict ev0pp);
 
-extern void av1loop(int n0,
+extern "C" void av1loop(int n0,
 		    ireal c1lam1,
 		    ireal c2lam1,
 		    ireal tmp_ev1p,
@@ -116,7 +116,7 @@ extern void av1loop(int n0,
 		    ireal * restrict _rmv1,
 		    ireal * restrict _v1);
 
-int duhasgfm24_2d_p(RDOM * dom, RDOM * rdom, void *pars) {
+int asgfm24_2d_p(RDOM * dom, RDOM * rdom, void *pars) {
 
   // scaled Courant numbers
   ireal c1lam0, c1lam1, c2lam0, c2lam1;
@@ -298,7 +298,7 @@ int duhasgfm24_2d_p(RDOM * dom, RDOM * rdom, void *pars) {
   return 0;
 }
 
-int duhasgfm24_2d_v(RDOM * dom, RDOM * rdom, void * pars) {
+int asgfm24_2d_v(RDOM * dom, RDOM * rdom, void * pars) {
 
   // scaled Courant numbers
   ireal c1lam0, c2lam0;
@@ -497,7 +497,7 @@ int duhasgfm24_2d_v(RDOM * dom, RDOM * rdom, void * pars) {
   return 0;
 }
 
-int duhasgam24_2d_p(RDOM * dom, RDOM * rdom, void *pars) {
+int asgam24_2d_p(RDOM * dom, RDOM * rdom, void *pars) {
 
   // scaled Courant numbers
   ireal c1lam0, c1lam1, c2lam0, c2lam1;
@@ -712,7 +712,7 @@ int duhasgam24_2d_p(RDOM * dom, RDOM * rdom, void *pars) {
   return 0;
 }
 
-int duhasgam24_2d_v(RDOM * dom, RDOM * rdom, void * pars) {
+int asgam24_2d_v(RDOM * dom, RDOM * rdom, void * pars) {
 
   // scaled Courant numbers
   ireal c1lam0, c2lam0;
@@ -951,18 +951,18 @@ int duhasgam24_2d_v(RDOM * dom, RDOM * rdom, void * pars) {
   return 0;
 }
     
-int duhasgfm24_2d(RDOM *dom, RDOM * rdom, int iv, void *pars) {
+int asgfm24_2d(RDOM *dom, RDOM * rdom, int iv, void *pars) {
 
-  if ( iv == 0 ) return duhasgfm24_2d_p(dom, rdom, pars);
-  if ( iv == 1 ) return duhasgfm24_2d_v(dom, rdom, pars);
+  if ( iv == 0 ) return asgfm24_2d_p(dom, rdom, pars);
+  if ( iv == 1 ) return asgfm24_2d_v(dom, rdom, pars);
 
   return 0;
 }
 
-int duhasgam24_2d(RDOM *dom, RDOM * rdom, int iv, void *pars) {
+int asgam24_2d(RDOM *dom, RDOM * rdom, int iv, void *pars) {
 
-  if ( iv == 0 ) return duhasgam24_2d_p(dom, rdom, pars);
-  if ( iv == 1 ) return duhasgam24_2d_v(dom, rdom, pars);
+  if ( iv == 0 ) return asgam24_2d_p(dom, rdom, pars);
+  if ( iv == 1 ) return asgam24_2d_v(dom, rdom, pars);
 
   return 0;
 }

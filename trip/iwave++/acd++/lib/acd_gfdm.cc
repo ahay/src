@@ -3,6 +3,7 @@
 // implemented in IWAVE::acd
 int acd_step(RDOM *, int, void*);
 
+extern "C" {
 void acd_2d_2_d(float **uc, float **ucd, float **up, float **upd, float **csq,
 		float **csqd, int *s, int *e, float c0, float *c1);
 
@@ -24,6 +25,7 @@ void acd_2d_8_d(float **uc, float **ucd, float **up, float **upd, float **csq,
 void acd_2d_8_b(float **uc, float **ucb, float **up, float **upb, float **csq,
 		float **csqb, int *s, int *e, float c0, float *c1, float *c2, 
 		float *c3, float *c4, int *lbc, int *rbc);
+}
 
 int acd_tsf(RDOM * d, int ia, void * fdpars) {
   return acd_step(d,ia,fdpars);

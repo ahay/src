@@ -1,8 +1,8 @@
 #include "asg_gfdm.h"
 
 int asg_step(RDOM *, int, void*);
-int duhasgfm24_2d(RDOM *, RDOM *, int, void*);
-int duhasgam24_2d(RDOM *, RDOM *, int, void*);
+int asgfm24_2d(RDOM *, RDOM *, int, void*);
+int asgam24_2d(RDOM *, RDOM *, int, void*);
 
 #define DUH
 
@@ -16,7 +16,7 @@ int asg_tsfm(RDOM * d, RDOM * rd, int ia, void * fdpars) {
 #ifndef DUH
     return asg_ftsm2d_24(d,rd,ia,fdpars);
 #else
-    return duhasgfm24_2d(d,rd,ia,fdpars);
+    return asgfm24_2d(d,rd,ia,fdpars);
 #endif
   }
   else {
@@ -30,7 +30,7 @@ int asg_tsam(RDOM * d, RDOM * rd, int ia, void * fdpars) {
 #ifndef DUH
     return asg_atsm2d_24(d,rd,ia,fdpars);
 #else
-    return duhasgam24_2d(d,rd,ia,fdpars);
+    return asgam24_2d(d,rd,ia,fdpars);
 #endif
   }
   else {

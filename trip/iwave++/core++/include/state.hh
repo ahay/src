@@ -18,9 +18,7 @@
 #include "sim.hh"
 #include "samp.hh"
 #include "seamx_headers.hh"
-extern "C" {
 #include "giwave.h"
-}
 
 /*--------------------------------------------------------------------------------*/
 namespace TSOpt {

@@ -2,9 +2,7 @@
 #define __RVL_IWAVE_PARSER
 
 #include "usempi.h"
-extern "C" {
 #include "parser.h"
-}
 #include "parserdecl.hh"
 
 namespace RVL {

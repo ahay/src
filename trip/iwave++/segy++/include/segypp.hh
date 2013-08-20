@@ -8,11 +8,8 @@
 #include "header.h"
 #include "segy.h"
 #include "parserdecl.hh"
-
-extern "C" {
 #include "iwave_fopen.h"
 #include "utils.h"
-}
 
 // uncomment for verbose output
 //#define FRUITCAKE

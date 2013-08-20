@@ -216,7 +216,6 @@ int giwave_synch(IWAVE * pstate,
   int it;       /* step index */
   int iv;       /* substep index */
   int ia;       /* array index */
-  int printact; /* verbosity level flag */
 
   int i;
   MPI_Status status;  
@@ -529,7 +528,7 @@ char * iwave_get_a_checkfilename(int iarr,
 
   /* generate checkfile names */
   if (getenv("DATAPATH")) {
-    filename = malloc((strlen(getenv("DATAPATH")) + 20) * sizeof(char));
+    filename = (char*)malloc((strlen(getenv("DATAPATH")) + 20) * sizeof(char));
     if ( filename == NULL ) {
       fprintf(stderr,"\n ERROR. In iwave_get_a_checkfilename, proc %d, fail to create file path. \n",rk);
       return filename;
@@ -537,7 +536,7 @@ char * iwave_get_a_checkfilename(int iarr,
     strcpy(filename,getenv("DATAPATH"));
   }
   else {
-    filename = malloc(MAXPATHLEN * sizeof(char));    
+    filename = (char*)malloc(MAXPATHLEN * sizeof(char));    
     if ( filename == NULL ) {
       fprintf(stderr,"\n ERROR. In iwave_get_a_checkfilename, proc %d, memory allocation for filename.\n",rk);
       return filename;

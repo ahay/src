@@ -6,9 +6,7 @@
 #include "usempi.h"
 #include "contentpackage.hh"
 #include "mpiserialfo.hh"
-extern "C" {
 #include "parser.h"
-}
 
 namespace RVL {
 

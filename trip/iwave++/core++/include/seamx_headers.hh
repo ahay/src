@@ -2,11 +2,6 @@
 #define __SEAMX_HEADERS
 
 #include "usempi.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include "utils.h"
 #include "cstd.h"
 #include "grid.h"
@@ -25,9 +20,14 @@ extern "C" {
 #include "rarray.h"
 #include "rdomain.h"
 #include "stencil.h"
-#include "par.h"	
 #include "giwave.h"
 #include "iwave_fopen.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "par.h"	
 
 #ifdef __cplusplus
 }
