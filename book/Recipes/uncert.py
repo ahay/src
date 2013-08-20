@@ -57,7 +57,7 @@ def uncert(data,        # data name
          'math vel=${SOURCES[1]} output="vel*x1*input*input" ')
     Result(dtdv,
            '''
-           grey title="Structural Sensitivity"
+           grey title="Structural Sensitivity in T"
            label1=Time unit1=s label2="Lateral Position" unit2=%s
            scalebar=y color=j allpos=y
            ''' % units)
@@ -72,7 +72,7 @@ def uncert(data,        # data name
          ''' % (rect1,rect2,dx/dv))
     Result(dxdv,
            '''
-           grey title="Structural Sensitivity"
+           grey title="Structural Sensitivity in X"
            label1=Time unit1=s label2="Lateral Position" unit2=%s
            scalebar=y color=j 
            ''' % units)

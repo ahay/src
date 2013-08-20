@@ -176,7 +176,7 @@ Result('stack','window min1=5.5 max1=8.0 | grey title="NMO Stack" ')
 # Velocity continuation
 Flow('first','stack',
      '''
-     put o2=0 d2=16.667 label2=Distance unit2=m |
+     put o2=0 d2=16.667 label2=Distance unit2=m o3=0 |
      cosft sign2=1 | pad beg1=1250 |
      stolt vel=1400 
      ''')
@@ -194,9 +194,7 @@ Result('first','mig0',
 
 Flow('velcon','first',
      '''
-     spray axis=2 n=1 o=0 d=1 |
-     put o4=0 |
-     fourvc nv=101 dv=10 v0=1400 verb=y |
+     vczo nv=101 dv=10 v0=1400 verb=y |
      window min1=5.5 max1=8.0 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
@@ -242,9 +240,7 @@ Flow('stoltd','diff',
 
 Flow('velcond','stoltd',
      '''
-     spray axis=2 n=1 o=0 d=1 |
-     put o4=0 |
-     fourvc nv=101 dv=10 v0=1400 verb=y pad2=3000 |
+     vczo nv=101 dv=10 v0=1400 verb=y pad2=3000 |
      window min1=5.5 max1=8 | 
      transp plane=23 memsize=1000 |
      cosft sign2=-1
