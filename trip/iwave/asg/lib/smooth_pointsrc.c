@@ -401,11 +401,11 @@ int spointsrc_init(SPOINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FI
 		at an external sample rate - read headers relevant for single dilat
 		point source.
     */
-    gethdval(&trsrc, "ns", &val);
+    mygethdval(&trsrc, "ns", &val);
     tr->n = vtoi(hdtype("ns"), val);
-    gethdval(&trsrc, "dt", &val);
+    mygethdval(&trsrc, "dt", &val);
     tr->dt = 0.001 * vtof(hdtype("dt"), val);
-    gethdval(&trsrc, "delrt", &val);
+    mygethdval(&trsrc, "delrt", &val);
     tmpt0 = vtof(hdtype("delrt"), val);		
 		
     tr->istart = (int)(floor(tmpt0 / m->tsind.dt));
@@ -516,11 +516,11 @@ int spointsrc_init(SPOINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FI
     if (tr->idbg == 1)  memcpy(trdbg.data, tr->w, tr->n * sizeof(ireal));
 		if (tr->idbg == 2)  memcpy(trdbg.data, tr->w1, tr->n * sizeof(ireal));
     val.u=1000.0*(tr->dt);
-    puthdval(&trdbg,"dt",&val);
+    myputhdval(&trdbg,"dt",&val);
     val.h=tr->n;
-    puthdval(&trdbg,"ns",&val);
+    myputhdval(&trdbg,"ns",&val);
     val.h=tr->dt * tr->istart;
-    puthdval(&trdbg,"delrt",&val);
+    myputhdval(&trdbg,"delrt",&val);
     
     if (!(tr->fpdbg=fopen("wavelet.debug","w"))) {
       fprintf(stream,"Error: init_point: failed to open test wavelet file\n");

@@ -973,7 +973,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
 	}
 	else if (!err && !strcmp(type,"double")) {
 	    memset(l,'\0',MAX_STR_LEN);
-	    err=sprintf(l,"%lg",*((double *)val));
+	    err=sprintf(l,"%g",*((double *)val));
 	    if (0==err || MAX_STR_LEN==err) {
 		err=E_PARSECONVERT;
 	    }
@@ -982,7 +982,7 @@ int ps_set(PARARRAY * par, int last, const char * type, const char * key, const 
 	else if (!err && !strcmp(type,"ireal")) {
 	    memset(l,'\0',MAX_STR_LEN);
 #if DT_REAL == DT_DOUBLE
-	    err=sprintf(l,"%lg",*((double *)val));
+	    err=sprintf(l,"%g",*((double *)val));
 #else
 	    err=sprintf(l,"%g",*((float *)val));
 #endif

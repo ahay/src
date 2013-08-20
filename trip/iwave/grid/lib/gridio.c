@@ -470,13 +470,13 @@ int rsfread_base(ireal * a,
     for (i=0;i<noffs;i++) {
       /* seek to read segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
-	fprintf(stream,"Error: rsfread from fseeko at file offset %jd\n",(intmax_t)(goffs[i]*sizeof(float)+cur_pos)); 
+	fprintf(stream,"Error: rsfread from fseeko at file offset %ld\n",(intmax_t)(goffs[i]*sizeof(float)+cur_pos)); 
 	err=E_FILE;
       }
       /* read in byte string */
       if (!err && (gl_na[0] != fread(fbuf,sizeof(float),gl_na[0],fp))) {
-	fprintf(stream,"Error: rsfread from fread for array offset %jd\n",(intmax_t)loffs[i]);
-	fprintf(stream,"-- failed to read %d words at file offset %jd\n",
+	fprintf(stream,"Error: rsfread from fread for array offset %ld\n",(intmax_t)loffs[i]);
+	fprintf(stream,"-- failed to read %d words at file offset %ld\n",
 		gl_na[0],(intmax_t)(goffs[i]*sizeof(float)+cur_pos)); 
 	err=E_FILE;
       }
@@ -508,12 +508,12 @@ int rsfread_base(ireal * a,
 
       /* seek to read segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
-	fprintf(stream,"Error: rsfread from fseeko at file offset %jd\n",(intmax_t)goffs[i]);
+	fprintf(stream,"Error: rsfread from fseeko at file offset %ld\n",(intmax_t)goffs[i]);
 	err=E_FILE;
       }
       /* read in byte array */
       if (!err && (recsize_b != fread(buf,sizeof(char),recsize_b,fp))) {
-	fprintf(stream,"Error: rsfread from fread at array offset %jd\n",(intmax_t)loffs[i]);
+	fprintf(stream,"Error: rsfread from fread at array offset %ld\n",(intmax_t)loffs[i]);
 	err=E_FILE;
       }
       
@@ -936,10 +936,10 @@ int rsfwrite_proto(ireal * a,
     for (i=0;i<noffs;i++) {
       /* seek to write segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
-	fprintf(stream,"Error: rsfwrite from fseeko at file offset %jd\n",(intmax_t)goffs[i]); 
+	fprintf(stream,"Error: rsfwrite from fseeko at file offset %ld\n",(intmax_t)goffs[i]); 
 	fprintf(stream,"possible cause: attempt to write off end of file\n");
 	fseeko(fp,0L,SEEK_END);
-	fprintf(stream,"file length = %jd:\n",(intmax_t)ftello(fp));
+	fprintf(stream,"file length = %ld:\n",(intmax_t)ftello(fp));
 	fprintf(stream,"note that new file can only be written in contiguous,\n");
 	fprintf(stream,"consecutive blocks\n");
 	err=E_FILE;
@@ -950,7 +950,7 @@ int rsfwrite_proto(ireal * a,
       }
       /* write out float buffer */
       if (!err && (na[0] != fwrite(fbuf,sizeof(float),na[0],fp))) {
-	fprintf(stream,"Error: rsfwrite from fwrite at array offset %jd\n",(intmax_t)loffs[i]);
+	fprintf(stream,"Error: rsfwrite from fwrite at array offset %ld\n",(intmax_t)loffs[i]);
 	fprintf(stream,"failed to write %d words\n",na[0]);
 	err=E_FILE;
       }
@@ -978,11 +978,11 @@ int rsfwrite_proto(ireal * a,
 
       /* seek to write segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos, SEEK_SET)) {
-	fprintf(stream,"Error: rsfwrite from fseeko at file offset %jd\n",(intmax_t)goffs[i]);
+	fprintf(stream,"Error: rsfwrite from fseeko at file offset %ld\n",(intmax_t)goffs[i]);
 	fprintf(stream,"possible cause: attempt to write off end of file\n");
 	j=0;
 	fseeko(fp,j,SEEK_END);
-	fprintf(stream,"file length = %jd:\n",(intmax_t)ftello(fp));
+	fprintf(stream,"file length = %ld:\n",(intmax_t)ftello(fp));
 	fprintf(stream,"note that new file can only be written in contiguous,\n");
 	fprintf(stream,"consecutive blocks\n");
 	err=E_FILE;
@@ -999,7 +999,7 @@ int rsfwrite_proto(ireal * a,
       }
       /* write out byte array */
       if (!err && (recsize_b != fwrite(buf,sizeof(char),recsize_b,fp))) {
-	fprintf(stream,"Error: rsfwrite from fwrite at array offset %jd\n",(intmax_t)loffs[i]);
+	fprintf(stream,"Error: rsfwrite from fwrite at array offset %ld\n",(intmax_t)loffs[i]);
 	err=E_FILE;
       }
       

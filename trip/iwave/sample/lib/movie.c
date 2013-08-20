@@ -104,7 +104,7 @@ int movie_init(MOVIE * mt,
   else
     mt->framestart = (int)(((tg->t0)/m->tsind.dt)+0.1);
   
-  mt->hname=usermalloc_(10);
+  mt->hname=(char *)usermalloc_(10*sizeof(char));
   strcpy(mt->hname,"./");
 
   /* compute next step */
@@ -162,12 +162,12 @@ int movie_init(MOVIE * mt,
     }
 
     for (j=0;j<(mt->mg).dim;j++) {
-      fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
+      fprintf(fp,"n%d=%lu d%d=%g o%d=%g\n",
 	      j+1,(mt->mg).axes[j].n,
 	      j+1,(mt->mg).axes[j].d,
 	      j+1,(mt->mg).axes[j].o);
     }
-    fprintf(fp,"n%d=%zu d%d=%g o%d=%g\n",
+    fprintf(fp,"n%d=%lu d%d=%g o%d=%g\n",
 	    (mt->mg).gdim,(mt->mg).axes[(mt->mg).gdim-1].n,
 	    (mt->mg).gdim,(mt->mg).axes[(mt->mg).gdim-1].d,
 	    (mt->mg).gdim,(mt->mg).axes[(mt->mg).gdim-1].o);

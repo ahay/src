@@ -495,11 +495,11 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
        at an external sample rate - read headers relevant for single dilat
        point source.
     */
-    gethdval(&trsrc, "ns", &val);
+    mygethdval(&trsrc, "ns", &val);
     tmpnt = vtoi(hdtype("ns"), val);
-    gethdval(&trsrc, "dt", &val);
+    mygethdval(&trsrc, "dt", &val);
     tmpdt = 0.001 * vtof(hdtype("dt"), val);
-    gethdval(&trsrc, "delrt", &val);
+    mygethdval(&trsrc, "delrt", &val);
     tmpt0 = vtof(hdtype("delrt"), val);		
         
     /* calculate istart, length of resamp wavelet,
@@ -626,11 +626,11 @@ int pointsrc_init(POINTSRC * tr, IMODEL * m, PARARRAY * par, tracegeom *tg, FILE
   if (tr->idbg) {
     memcpy(trdbg.data,tr->w,tr->n*sizeof(ireal));
     val.u=1000.0*((m->tsind).dt);
-    puthdval(&trdbg,"dt",&val);
+    myputhdval(&trdbg,"dt",&val);
     val.h=tr->n;
-    puthdval(&trdbg,"ns",&val);
+    myputhdval(&trdbg,"ns",&val);
     val.h=((m->tsind).dt)*tr->istart;
-    puthdval(&trdbg,"delrt",&val);
+    myputhdval(&trdbg,"delrt",&val);
     
     if (!(tr->fpdbg=iwave_const_fopen("wavelet.debug","w",NULL,stream))) {
       fprintf(stream,"Error: init_point: failed to open test wavelet file\n");

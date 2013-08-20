@@ -334,6 +334,5 @@ int getMachineEndianness();
   Array has [arrsize] elements, each [atomsize] bytes long.
 */
 void swapBytes(unsigned char *arr, int arrsize, int atomsize);
-/*----------------------------------------------------------------------------*/
 
 #endif

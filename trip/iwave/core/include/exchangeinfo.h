@@ -14,12 +14,6 @@ Igor Terentyev.
 #include "utils.h"
 #include "usempi.h"
 
-/*---------------*/
-#ifdef __cplusplus
-extern "C" {
-#endif
-/*---------------*/
-
 /*----------------------------------------------------------------------------*/
 /**
  * Data exchange information.
@@ -58,10 +52,6 @@ int ei_setnull(EXCHANGEINFO *einfo);
  */
 int ei_destroy(EXCHANGEINFO *einfo);
 /*----------------------------------------------------------------------------*/
-/*---------------*/
-#ifdef __cplusplus
-}
-#endif
-/*---------------*/
+
 #endif /*__EXCHANGEINFO_H_*/
 

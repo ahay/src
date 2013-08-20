@@ -83,7 +83,7 @@ extern void acd_3d_8(float ***,
 
 int acd_isarr(int i);
 int acd_numsubsteps();
-int acd_update();
+int acd_update(int, int);
 int acd_readschemeinfo(PARARRAY *, FILE *, IMODEL *);
 int acd_set_grid_type(FILE *, int, IPNT[RDOM_MAX_NARR]);
 int acd_build_sten_dep(FILE *, int, int[RDOM_MAX_NARR][RDOM_MAX_NARR]);

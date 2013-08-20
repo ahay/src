@@ -19,7 +19,7 @@ static const char* m_names[] = {"p0", "kappa", "v0","rho0","v1","rho1","v2","rho
 
 int asg_isarr(int i);
 int asg_numsubsteps();
-int asg_update();
+int asg_update(int, int);
 int asg_readschemeinfo(PARARRAY *, FILE *, IMODEL *);
 int asg_set_grid_type(FILE *, int, IPNT[RDOM_MAX_NARR]);
 int asg_build_sten_dep(FILE *, int, int[RDOM_MAX_NARR][RDOM_MAX_NARR]);

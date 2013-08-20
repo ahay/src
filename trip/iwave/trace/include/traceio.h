@@ -6,13 +6,20 @@
 
 #include "utils.h"
 #include "usempi.h"
-#include "su.h"
-#include "header.h"
-#include "segy.h"
 #include "cubic.h"
 /* added 05.03.10 */
 #ifdef IWAVE_USE_FMGR
 #include "iwave_fopen.h"
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "su.h"
+#include "header.h"
+#include "segy.h"
+#ifdef __cplusplus
+}
 #endif
 
 /* max number of traces permitted in record */
@@ -23,6 +30,9 @@
 #define SRC_TOL 0.001
 /* end-of-file flag - should be disinct from other error returns */
 #define W_EOF -10
+
+void mygethdval(segy * tr, const char * ch, Value * val);
+void myputhdval(segy * tr, const char * ch, Value * val);
 
 typedef struct s_offsegy {
   off_t m;

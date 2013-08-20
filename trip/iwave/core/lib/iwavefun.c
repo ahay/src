@@ -66,7 +66,7 @@ int initoutstream(FILE ** stream, int rk, int sz) {
     char *filename; /* workspace for output filename */
     char tmp[20];   /* ditto */
   
-    filename = usermalloc_(MAXPATHLEN * sizeof(char));    
+    filename = (char *)usermalloc_(MAXPATHLEN * sizeof(char));    
     if ( filename == NULL ) {
 	if ( rk == 0 )
 	    fprintf(stderr,"IWAVE %dD.\nERROR. Internal: memory allocation for cout filename. ABORT.\n", IWAVE_NDIM);

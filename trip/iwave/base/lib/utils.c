@@ -259,5 +259,6 @@ void swapBytes(unsigned char *arr, int arrsize, int atomsize)
 		arr += atomsize;
 	}
 }
+
 /*----------------------------------------------------------------------------*/
 

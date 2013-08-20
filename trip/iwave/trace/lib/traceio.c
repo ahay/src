@@ -2,6 +2,25 @@
 /*#define IWAVE_VERBOSE*/
 /* axis indices throughout: 0=z, 1=x, 2=y */
 
+/** helper function to avoid deprecated non-const conversion */
+void mygethdval(segy * tr, const char * ch, Value * val) {
+  char * h = (char *)usermalloc_((strlen(ch)+2)*sizeof(char));
+  if (h) {
+    strcpy(h,ch);
+  }
+  gethdval(tr,h,val);
+  userfree_(h);
+}
+
+void myputhdval(segy * tr, const char * ch, Value * val) {
+  char * h = (char *)usermalloc_((strlen(ch)+2)*sizeof(char));
+  if (h) {
+    strcpy(h,ch);
+  }
+  puthdval(tr,h,val);
+  userfree_(h);
+}
+
 /** helper function to determine whether an index tuple is within rarray */
 int ingrid(int ndim, IPNT n, IPNT gs, IPNT itr) {
   int ret=0;
@@ -342,23 +361,23 @@ int traceserver_init(FILE ** fpin, char * fin,
 #endif
 
       /* read scale information */
-      gethdval(&tr,"scalco",&val);
+      mygethdval(&tr,"scalco",&val);
       scalco = vtof(hdtype("scalco"),val);
-      gethdval(&tr,"scalel",&val);
+      mygethdval(&tr,"scalel",&val);
       scalel = vtof(hdtype("scalel"),val);
       
       /* read source position */
-      gethdval(&tr,"sx",&val);
+      mygethdval(&tr,"sx",&val);
       src[ir][1] = vtof(hdtype("sx"),val);
       if (scalco > 0) { src[ir][1] *=  scalco; }
       if (scalco < 0) { src[ir][1] /= -scalco; }
       
-      gethdval(&tr,"sy",&val);
+      mygethdval(&tr,"sy",&val);
       src[ir][2] = vtof(hdtype("sy"),val);
       if (scalco > 0) { src[ir][2] *=  scalco; }
       if (scalco < 0) { src[ir][2] /= -scalco; }
       
-      gethdval(&tr,"selev",&val);
+      mygethdval(&tr,"selev",&val);
       src[ir][0] = vtof(hdtype("selev"),val);
       if (scalel > 0) { src[ir][0] *=  scalel; }
       if (scalel < 0) { src[ir][0] /= -scalel; }
@@ -407,23 +426,23 @@ int traceserver_init(FILE ** fpin, char * fin,
 	/* extract source position */
 	 
 	/* read scale information */
-	gethdval(&tr,"scalco",&val);
+	mygethdval(&tr,"scalco",&val);
 	scalco = vtof(hdtype("scalco"),val);
-	gethdval(&tr,"scalel",&val);
+	mygethdval(&tr,"scalel",&val);
 	scalel = vtof(hdtype("scalel"),val);
 	
 	/* read source position */
-	gethdval(&tr,"sx",&val);
+	mygethdval(&tr,"sx",&val);
 	sx = vtof(hdtype("sx"),val);
 	if (scalco > 0) { sx *=  scalco; }
 	if (scalco < 0) { sx /= -scalco; }
 	
-	gethdval(&tr,"sy",&val);
+	mygethdval(&tr,"sy",&val);
 	sy = vtof(hdtype("sy"),val);
 	if (scalco > 0) { sy *=  scalco; }
 	if (scalco < 0) { sy /= -scalco; }
 	
-	gethdval(&tr,"selev",&val);
+	mygethdval(&tr,"selev",&val);
 	sz = vtof(hdtype("selev"),val);
 	if (scalel > 0) { sz *=  scalel; }
 	if (scalel < 0) { sz /= -scalel; }
@@ -1243,17 +1262,17 @@ int init_tracegeom(tracegeom * tg,
       tg->dt   = dt;
       
       /* take trace time data from first trace read */
-      gethdval(&(otr.tr),"ns",&val);
+      mygethdval(&(otr.tr),"ns",&val);
       tmpnt = vtoi(hdtype("ns"),val);
       
       /* TIME UNITS HARDWIRED TO MS */
-      gethdval(&(otr.tr),"dt",&val);
+      mygethdval(&(otr.tr),"dt",&val);
       tmpdt = (1.e-3)*vtof(hdtype("dt"),val);      
       
       /* save int value of header word = dt in musec, for use on output */
       tg->dtmus = vtoi(hdtype("dt"),val);
 
-      gethdval(&(otr.tr),"delrt",&val);
+      mygethdval(&(otr.tr),"delrt",&val);
       tmpt0   = vtof(hdtype("delrt"),val);
       
       /* time step and output time data.
@@ -1282,23 +1301,23 @@ int init_tracegeom(tracegeom * tg,
       tg->tmax = tg->t0 + (tg->nt-1)*(tg->dt);	  
       
       /* read scale information */
-      gethdval(&(otr.tr),"scalco",&val);
+      mygethdval(&(otr.tr),"scalco",&val);
       tg->scalco = vtof(hdtype("scalco"),val);
-      gethdval(&(otr.tr),"scalel",&val);
+      mygethdval(&(otr.tr),"scalel",&val);
       tg->scalel = vtof(hdtype("scalel"),val);
       
       /* read source position */
-      gethdval(&(otr.tr),"sx",&val);
+      mygethdval(&(otr.tr),"sx",&val);
       tmpsx = vtof(hdtype("sx"),val);
       if (tg->scalco > 0) { tmpsx *=  tg->scalco; }
       if (tg->scalco < 0) { tmpsx /= -tg->scalco; }
       
-      gethdval(&(otr.tr),"sy",&val);
+      mygethdval(&(otr.tr),"sy",&val);
       tmpsy = vtof(hdtype("sy"),val);
       if (tg->scalco > 0) { tmpsy *=  tg->scalco; }
       if (tg->scalco < 0) { tmpsy /= -tg->scalco; }
       
-      gethdval(&(otr.tr),"selev",&val);
+      mygethdval(&(otr.tr),"selev",&val);
       tmpsz = vtof(hdtype("selev"),val);
       if (tg->scalel > 0) { tmpsz *=  tg->scalel; }
       if (tg->scalel < 0) { tmpsz /= -tg->scalel; }
@@ -1357,17 +1376,17 @@ int init_tracegeom(tracegeom * tg,
     tmpx=0.0;
     tmpy=0.0;
     
-    gethdval(&(otr.tr),"gx",&val);
+    mygethdval(&(otr.tr),"gx",&val);
     tmpx = vtof(hdtype("gx"),val);
     if (tg->scalco > 0) { tmpx *=  tg->scalco;}
     if (tg->scalco < 0) { tmpx /= -tg->scalco;}
     
-    gethdval(&(otr.tr),"gy",&val);
+    mygethdval(&(otr.tr),"gy",&val);
     tmpy = vtof(hdtype("gy"),val);
     if (tg->scalco > 0) { tmpy *=  tg->scalco;}
     if (tg->scalco < 0) { tmpy /= -tg->scalco;}
     
-    gethdval(&(otr.tr),"gelev",&val);
+    mygethdval(&(otr.tr),"gelev",&val);
     tmpz = vtof(hdtype("gelev"),val);
     if (tg->scalel > 0) { tmpz *=  tg->scalel; }
     if (tg->scalel < 0) { tmpz /= -tg->scalel; }
@@ -1375,7 +1394,7 @@ int init_tracegeom(tracegeom * tg,
     
     /* For all subsequent traces read, check that traces 
        are all same length */
-    gethdval(&(otr.tr),"ns",&val);
+    mygethdval(&(otr.tr),"ns",&val);
     tmpnt=vtoi(hdtype("ns"),val);
     /* if usernt not overriding trace nt, make sure all traces agree
        otherwise who cares */
@@ -1432,13 +1451,13 @@ int init_tracegeom(tracegeom * tg,
     }
     
     if (init[itr]) {
-      gethdval(&(otr.tr),"tracl",&val);
+      mygethdval(&(otr.tr),"tracl",&val);
       tg->tracl[tg->ntraces]=vtoi(hdtype("tracl"),val);
-      gethdval(&(otr.tr),"tracr",&val);
+      mygethdval(&(otr.tr),"tracr",&val);
       tg->tracr[tg->ntraces]=vtoi(hdtype("tracr"),val);
-      gethdval(&(otr.tr),"fldr",&val);
+      mygethdval(&(otr.tr),"fldr",&val);
       tg->fldr[tg->ntraces]=vtoi(hdtype("fldr"),val);
-      gethdval(&(otr.tr),"tracf",&val);
+      mygethdval(&(otr.tr),"tracf",&val);
       tg->tracf[tg->ntraces]=vtoi(hdtype("tracf"),val);
       /* WWS 30.11.10 */
       tg->troff[tg->ntraces]=otr.m;
@@ -2218,61 +2237,61 @@ int assembletrace(tracegeom const * tg,
   memset(&(otr->tr),0,240);
 
   val.h=tg->scalco;
-  puthdval(&(otr->tr),"scalco",&val);
+  myputhdval(&(otr->tr),"scalco",&val);
   
   tmp =oxg + ((tg->ig)[nb][idx]+(tg->rg)[nb][idx])*dx;
   tmps=oxg +((tg->is)[idx]+(tg->rs)[idx])*dx;
   if (tg->scalco > 0) { tmp /=  tg->scalco; tmps /=  tg->scalco; }
   if (tg->scalco < 0) { tmp *= -tg->scalco; tmps *= -tg->scalco; }
   val.i=tmp;
-  puthdval(&(otr->tr),"gx",&val);
+  myputhdval(&(otr->tr),"gx",&val);
   val.i=tmps;
-  puthdval(&(otr->tr),"sx",&val);
+  myputhdval(&(otr->tr),"sx",&val);
   
   tmp =oyg + ((tg->ig)[nb][idy]+(tg->rg)[nb][idy])*dy;
   tmps=oyg + ((tg->is)[idy]+(tg->rs)[idy])*dy;
   if (tg->scalco > 0) { tmp /=  tg->scalco; tmps /=  tg->scalco; }
   if (tg->scalco < 0) { tmp *= -tg->scalco; tmps *= -tg->scalco; }
   val.i=tmp;
-  puthdval(&(otr->tr),"gy",&val);
+  myputhdval(&(otr->tr),"gy",&val);
   val.i=tmps;
-  puthdval(&(otr->tr),"sy",&val);
+  myputhdval(&(otr->tr),"sy",&val);
   
   val.h=tg->scalel;
-  puthdval(&(otr->tr),"scalel",&val);
+  myputhdval(&(otr->tr),"scalel",&val);
   
   tmp = -(ozg + ((tg->ig)[nb][idz] + (tg->rg)[nb][idz])*dz);
   tmps= -(ozg + ((tg->is)[idz]+(tg->rs)[idz])*dz);
   if (tg->scalel > 0) { tmp /=  tg->scalel; tmps /=  tg->scalel; }
   if (tg->scalel < 0) { tmp *= -tg->scalel; tmps *= -tg->scalel; }
   val.i=tmp;
-  puthdval(&(otr->tr),"gelev",&val);
+  myputhdval(&(otr->tr),"gelev",&val);
   val.i=tmps;
-  puthdval(&(otr->tr),"selev",&val);
+  myputhdval(&(otr->tr),"selev",&val);
   
   /*  val.u=1000.0*(tg->dtout);
    01.10.10 - have stored int value in musec, use it */
   val.u=tg->dtmus;
-  puthdval(&(otr->tr),"dt",&val);
+  myputhdval(&(otr->tr),"dt",&val);
   
   val.u=tg->ntout;
-  puthdval(&(otr->tr),"ns",&val);
+  myputhdval(&(otr->tr),"ns",&val);
   
   val.h=tg->t0out;
-  puthdval(&(otr->tr),"delrt",&val);
+  myputhdval(&(otr->tr),"delrt",&val);
   
   val.i=(tg->tracl)[nb];
-  puthdval(&(otr->tr),"tracl",&val);
+  myputhdval(&(otr->tr),"tracl",&val);
   
   val.i=(tg->tracr)[nb];
-  puthdval(&(otr->tr),"tracr",&val);
+  myputhdval(&(otr->tr),"tracr",&val);
   
 
   val.i=(tg->fldr)[nb];
-  puthdval(&(otr->tr),"fldr",&val);
+  myputhdval(&(otr->tr),"fldr",&val);
   
   val.i=(tg->tracf)[nb];
-  puthdval(&(otr->tr),"tracf",&val);
+  myputhdval(&(otr->tr),"tracf",&val);
   
   /* interpolate based on flag. Note that if internal and 
      output grids are same, interp is a no-op, so interpolating
