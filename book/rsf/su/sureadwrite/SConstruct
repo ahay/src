@@ -1,0 +1,18 @@
+from rsf.suproj import *
+
+Flow('data',None,'suplane')
+
+# Generate SEGY headers
+Flow('./header ./binary','data','segyhdrs',stdout=-1)
+
+# Convert SU to SEGY
+Flow('data.sgy','data ./header ./binary','segywrite tape=$TARGET verbose=1',stdout=-1)
+
+# Convert SEGY back to SU
+Flow('data2.su data2.bin data2.asc','data.sgy',
+     '''
+     segyread tape=$SOURCE bfile=${TARGETS[1]} hfile=${TARGETS[2]} verbose=1 | 
+     segyclean
+     ''',stdin=0)
+
+End()

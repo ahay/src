@@ -59,8 +59,8 @@ def uncert(data,        # data name
            '''
            grey title="Structural Sensitivity in T"
            label1=Time unit1=s label2="Lateral Position" unit2=%s
-           scalebar=y color=j allpos=y
-           ''' % units)
+           scalebar=y color=j allpos=y barlabel="dt/dv" barunit="s\^\s75 2\s100 \_/%s"
+           ''' % (units,units))
 
     dxdv = data+'-dxdv'
     Flow(dxdv,ref,
@@ -74,7 +74,7 @@ def uncert(data,        # data name
            '''
            grey title="Structural Sensitivity in X"
            label1=Time unit1=s label2="Lateral Position" unit2=%s
-           scalebar=y color=j 
+           scalebar=y color=j barlabel="dx/dv" barunit=s
            ''' % units)
 
     ddv = data+'-ddv'
