@@ -354,6 +354,9 @@ def c99(context):
 
 # MKL library
 def mkl(context):
+    CC = context.env.get('CC')
+    if string.rfind(CC,'icc') < 0:
+        return # only relevant for icc
     context.Message("checking for MKL ... ")
     text = '''
     #include <mkl.h>
@@ -2003,6 +2006,7 @@ def intel(context):
         license = os.environ.get(key)
         if license:
             context.env.Append(ENV={key:license})
+    
 
 def set_options(env,my_opts=None):
     'get options from config file'
