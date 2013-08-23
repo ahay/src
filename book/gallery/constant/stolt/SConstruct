@@ -14,11 +14,11 @@ Flow('stolt','fft','stolt vel=1',split=[2,'omp'])
 
 Flow('mig','stolt','cosft sign2=-1')
 
-Result('mig','window min2=0 max2=1.5 | grey title="Stolt Migration" ')
+constant.zo_image('mig')
 
 # Impulse response
 
-Flow('imp','data','spike k1=501 k2=175 | ricker1 frequency=10')
+constant.get_impulse('imp','data')
 
 Flow('ifft','imp','cosft sign2=1')
 
@@ -26,6 +26,6 @@ Flow('istolt','ifft','stolt vel=1',split=[2,'omp'])
 
 Flow('imig','istolt','cosft sign2=-1')
 
-Result('imig','window max1=3 | grey title="Stolt Impulse Response" ')
+constant.impulse_response('imig')
 
 End()

@@ -96,7 +96,7 @@ Flow('fft','vpend2','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1')
 Flow('right left','vpend2 vxend2 etaend2 theta0end2 fft',
      '''
      anisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
-     fft=${SOURCES[4]} left=${TARGETS[1]} npk=120
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=120 eps=1e-5
      ''' % dt)
 
 Flow('refl',None,'spike n1=913 d1=0.0125 n2=2048 d2=0.0125 o2=34.5125 k1=15 k2=1024 | smooth rect1=2 rect2=2 repeat=3 | window f1=13')

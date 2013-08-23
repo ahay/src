@@ -6,7 +6,7 @@ methods = {
     'lowrank': 'Two-Step Lowrank',
     'kirch': 'Kirchhoff Time Migration',
     'oway': 'One-Way Wave Equation',
-    'owe1': 'Oriented Wave Equation'
+    'stolt': 'Stolt Migration'
     }
 method = methods[os.path.basename(os.getcwd())]
 
