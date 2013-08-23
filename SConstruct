@@ -259,6 +259,7 @@ if os.path.isdir('su'):
 ##########################################################################
 
 if os.path.isdir('trip'):
+
     tripdirs = ('iwave','rvl','iwave++')
     for dir in map(lambda x: os.path.join('trip',x), tripdirs):
         try:
