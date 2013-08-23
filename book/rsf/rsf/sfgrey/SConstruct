@@ -22,7 +22,7 @@ colors = {
     'e': 'Blue-white-red',
     'g': 'Black-white-red',
     'H': 'Hot Reversed',
-    'iC': 'Greyscale Clipped'
+    'iC': 'Greyscale Clipped',
     }
 
 monas=[]
@@ -38,8 +38,8 @@ for col in colors.keys():
              transp=n wantaxis=n titlesz=24
              ''' % (col,colors[col],col))
         
-Plot('mona1',monas[:6],'OverUnderAniso')
-Plot('mona2',monas[6:],'OverUnderAniso')
+Plot('mona1',monas[0:6],'OverUnderAniso')
+Plot('mona2',monas[6:12],'OverUnderAniso')
 Result('mona','mona1 mona2','SideBySideAniso',vppen='txscale=1.5')
 
 for col in ('h','H'):
@@ -65,7 +65,8 @@ Result('monaclip','mona+i mona+iC','SideBySideIso',vppen='ysize=10 xsize=10')
 
 colors = {
     'cubeyf1': 'Perceptual Rainbow',
-    'linearlfb': 'LinearL Face Based'
+    'linearlfb': 'LinearL Face Based',
+    'x': 'Cube Helix'
 }
 
 for col in colors.keys():

@@ -1,7 +1,4 @@
-/* Post-stack 2-D oriented velocity continuation. 
-
-   Axes: (Omega,k,p) -> (Omega,v,k,p)
-*/
+/* Post-stack 2-D velocity continuation in the time-stretch frequency domain. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -24,8 +21,8 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int nx,nv,np,nw, ix,iv,ip,iw;
-    float v0,v2,v,dv, dx,dp,dw, x0,p0,w0, x,p,w;
+    int nw,nx,nv, iw,ix,iv;
+    float w,x,k, v0,v2,v,dv, dx,dw, x0,w0;
     sf_complex *ctrace, *ctrace2, shift;
     sf_file in, out;
 
@@ -33,13 +30,15 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
+    if (SF_COMPLEX != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
-    if (!sf_histint(in,"n3",&np)) sf_error("No n3= in input");
-
+    
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
+    
+    ctrace  = sf_complexalloc(nw);
+    ctrace2 = sf_complexalloc(nw);
 
     if (!sf_histfloat(in,"o1",&w0)) w0=0.;  
     if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
@@ -53,10 +52,7 @@ int main(int argc, char* argv[])
     /*( v0 starting velocity )*/
 
     if(!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
-    if(!sf_histfloat(in,"d3",&dp)) sf_error("No d3= in input");
-
     if(!sf_histfloat(in,"o2",&x0)) x0=0.;
-    if(!sf_histfloat(in,"o3",&p0)) sf_error("No o3= in input");
 
     sf_putfloat(out,"o2",v0+dv);
     sf_putfloat(out,"d2",dv);
@@ -72,39 +68,40 @@ int main(int argc, char* argv[])
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
 
-    ctrace  = sf_complexalloc(nw);
-    ctrace2 = sf_complexalloc(nw);
+    for (ix=0; ix < nx; ix++) {
+	x = x0+ix*dx; 
+	x *= x;
 
-    for (ip=0; ip < np; ip++) {
-	if (verb) sf_warning("slope %d of %d;", ip+1,np);
-	
-	p = p0+ip*dp;
-	for (ix=0; ix < nx; ix++) {
-	    x = x0+ix*dx; 
-	    
-	    sf_complexread(ctrace,nw,in);
- 
-	    for (iv=0; iv < nv; iv++) {
-		v = v0 + (iv+1)*dv;
-		v2 = ((v0*v0) - (v*v)); 
-		
-		for (iw=0; iw < nw; iw++) {
-		    w = w0+iw*dw;
-		    w = - 0.25f * 0.25f * v2 * p * (p * w + 2.0f * x);
-		    
+	if (verb) sf_warning("wavenumber %d of %d;", ix+1,nx);
+	k = x * 0.25 * 0.25;
+
+	sf_complexread(ctrace,nw,in);
+
+	for (iv=0; iv < nv; iv++) {
+	    v = v0 + (iv+1)*dv;
+	    v2 = k * ((v0*v0) - (v*v));
+
+	    for (iw=0; iw < nw; iw++) {
+		w = w0+iw*dw;
+
+		if (fabsf(w) > fabsf(0.1f*dw)) {
+		    w = v2/w;
+
 		    shift = sf_cmplx(cosf(w),sinf(w));
-		    
+
 #ifdef SF_HAS_COMPLEX_H
 		    ctrace2[iw] = ctrace[iw] * shift;
 #else
 		    ctrace2[iw] = sf_cmul(ctrace[iw],shift);
 #endif
-		} /* w */
+		} else {
+		    ctrace2[iw] = sf_cmplx(0.0f,0.0f);
+		}	
+	    } /* w */
 
-		sf_complexwrite(ctrace2,nw,out);
-	    } /* v */
- 	} /* x */
-    } /* p */
+	    sf_complexwrite (ctrace2,nw,out);
+	} /* v  */
+    } /* x */
     if (verb) sf_warning(".");
 
     exit (0);

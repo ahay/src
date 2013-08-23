@@ -1,6 +1,6 @@
 from rsf.proj import *
 
-def TPX(tpx,data,
+def FPX(tpx,data,
         nt,               # number of time samples
         np,               # number of slopes
         nw=0,             # number of frequencies
@@ -28,13 +28,28 @@ def TPX(tpx,data,
     Flow([xpf,basis],fx,
          '''
          transp |
-         cltft basis=${TARGETS[1]} dip=y p0=%g dp=%g np=%d rect=3 niter=1000 verb=n
-         ''' % (p0,dp,np),split=[1,nw],reduce='cat axis=3')
+         cltft basis=${TARGETS[1]} dip=y 
+         p0=%g dp=%g np=%d 
+         rect=3 niter=1000 verb=n
+         ''' % (p0,dp,np),split=[1,nw],
+         reduce='cat axis=3')
     
-    Flow(tpx,[xpf,basis],
+    Flow(fpx,[xpf,basis],
+         'mul ${SOURCES[1]} | transp plane=13',
+         split=[2,np])
+
+def TPX(tpx,data,
+        nt,               # number of time samples
+        np,               # number of slopes
+        nw=0,             # number of frequencies
+        p0=-1,            # first slope
+        dp=None,          # slope increment
+        ):
+
+    fpx = 'fpx-'+data
+    FPX(fpx,data,nt,np,nw,p0,dp)
+
+    Flow(tpx,fpx,
          '''
-         mul ${SOURCES[1]} |
-         transp plane=13   |
-         pad n1=%d |
-         fft1 inv=y
-         ''' % nw0,split=[2,np])
+         pad n1=%d | fft1 inv=y
+         ''' % nw0,split=[3,'omp'])

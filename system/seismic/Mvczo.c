@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int i1,i2, n1,n2,n3, nw, nx,nv, ix,iv;
     float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,dv, dx, t, x0, dw;
     float *trace, *strace, *t2;
-    sf_complex *ctrace, **cstack, shift;
+    sf_complex *ctrace, *ctrace2, shift;
     sf_file in, out;
 
 #ifdef SF_HAS_FFTW
@@ -59,12 +59,13 @@ int main(int argc, char* argv[])
     nw = n3/2+1;
 
     strace = sf_floatalloc(n3);
-    ctrace = sf_complexalloc(nw);
+    ctrace  = sf_complexalloc(nw);
+    ctrace2 = sf_complexalloc(nw);
 
 #ifdef SF_HAS_FFTW
     forw = fftwf_plan_dft_r2c_1d(n3, strace, (fftwf_complex *) ctrace,
 				 FFTW_ESTIMATE);
-    invs = fftwf_plan_dft_c2r_1d(n3, (fftwf_complex *) ctrace, strace,
+    invs = fftwf_plan_dft_c2r_1d(n3, (fftwf_complex *) ctrace2, strace,
 				 FFTW_ESTIMATE);
 #else
     forw = kiss_fftr_alloc(n3,0,NULL,NULL);
@@ -105,8 +106,6 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(n1);
     t2 = sf_floatalloc(n2);
 
-    cstack = sf_complexalloc2(nw,nv);
-
     str = stretch4_init (n1, o1, d1, n2, eps);
 
     for (i2=0; i2 < n2; i2++) {
@@ -122,12 +121,6 @@ int main(int argc, char* argv[])
 
 	if (verb) sf_warning("wavenumber %d of %d;", ix+1,nx);
 	k = x * 0.25 * 0.25;
-
-	for (iv=0; iv < nv; iv++) {
-	    for (i1=0; i1 < nw; i1++) {
-		cstack[iv][i1] = sf_cmplx(0.,0.);
-	    }
-	}
 
 	sf_floatread(trace,n1,in);
 	for (i1=0; i1 < n1; i1++) {
@@ -148,41 +141,29 @@ int main(int argc, char* argv[])
 	    v = v0 + (iv+1)*dv;
 	    v2 = k * ((v0*v0) - (v*v));
 
+	    ctrace2[0] = sf_cmplx(0.0f,0.0f); /* dc */
+
 	    for (i2=1; i2 < nw; i2++) {
 		w = i2*dw;
-		w = v2/w-o2*w;
+		w = v2/w;
 
 		shift = sf_cmplx(cosf(w),sinf(w));
 
 #ifdef SF_HAS_COMPLEX_H
-		cstack[iv][i2] += ctrace[i2] * shift;
+		ctrace2[i2] = ctrace[i2] * shift;
 #else
-		cstack[iv][i2] = sf_cadd(cstack[iv][i2],sf_cmul(ctrace[i2],shift));
+		ctrace2[i2] = sf_cmul(ctrace[i2],shift);
 #endif
 	    } /* w */
-	} /* v */
- 
-	for (iv=0; iv < nv; iv++) {
-	    for (i2=1; i2 < nw; i2++) {
-		w = i2*dw*o2;
-		shift = sf_cmplx(cosf(w),sinf(w));
-
-#ifdef SF_HAS_COMPLEX_H
-		ctrace[i2] = cstack[iv][i2] * shift;
-#else
-		ctrace[i2] = sf_cmul(cstack[iv][i2],shift);
-#endif
-	    }
-	    ctrace[0]=sf_cmplx(0.0f,0.0f); /* dc */
 
 #ifdef SF_HAS_FFTW
 	    fftwf_execute(invs);
 #else
-	    kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);
+	    kiss_fftri(invs,(const kiss_fft_cpx *) ctrace2, strace);
 #endif
 	    stretch4_apply(str,strace,trace);
 	    sf_floatwrite (trace,n1,out);
-	} /* v 2 */
+	} /* v  */
     } /* x */
     if (verb) sf_warning(".");
 

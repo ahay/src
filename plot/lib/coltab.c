@@ -37,9 +37,10 @@ void vp_name2coltab (   const char *colname,    /* color table name */
 /*< Create a color table. nocol is between 2 and 256. >*/
 {
     int   i, ic, c, clip, reverse;
-    float h, redsave, gray, hnocol;
+    float h, redsave, gray, hnocol, angle, amp, cosa, sina;
     char *rsfroot, filename[PATH_MAX];
     FILE *colfile;
+    const float start=0.5, rots=-1.5, hue=1.0;
 
     /* Determine clipping and reverse options from color code */
     if (strlen(colname) > 0) c = colname[0];
@@ -99,7 +100,18 @@ void vp_name2coltab (   const char *colname,    /* color table name */
 
 	switch (c)
 	{
-
+	    case 'x': /* cubehelix */
+		/* Green, D. A., 2011, A colour scheme for the display
+		 * of astronomical intensity images: Bulletin of the
+		 * Astronomical Society of India, v.39, 289-295. */
+		angle=2*SF_PI*(start/3.0f+1.0f+rots*gray);
+		cosa = cosf(angle);
+		sina = sinf(angle);
+		amp=hue*gray*(1.0f-gray)/2.0f;
+		red[ic]   = gray+amp*(-0.14861*cosa+1.78277*sina);
+		green[ic] = gray+amp*(-0.29227*cosa-0.90649*sina);
+		blue[ic]  = gray+amp*(+1.97294*cosa);
+		break;
 	    case 'a': /* rainbow - HSV */
 		hue2rgb (gray, &red[ic], &green[ic], &blue[ic]);
 		break;

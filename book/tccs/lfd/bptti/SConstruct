@@ -35,11 +35,11 @@ for par in pars:
                   ('','km/s')[par=='vp']))
 Flow('vx','vp epsilon',
      '''
-     math e=${SOURCES[1]} output="sqrt(input*input*(2.0*e+1.0))"
+     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
      ''')
 Flow('yita','epsilon delta',
      '''
-     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1.0+2.0*e)/(1.0+2.0*d)-1.0)/2.0"
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
      ''')
 for par in ('vx','yita'):
     Result(par,

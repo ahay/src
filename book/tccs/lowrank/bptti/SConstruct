@@ -42,11 +42,11 @@ for par in pars:
                   units[par]))
 Flow('vx','vp epsilon',
      '''
-     math e=${SOURCES[1]} output="sqrt(input*input/(2.0*e+1.0))"
+     math e=${SOURCES[1]} output="input*sqrt(1+2*e)"
      ''')
 Flow('eta','epsilon delta',
      '''
-     math e=${SOURCES[0]} d=${SOURCES[1]} output="((1.0+2.0*e)/(1.0+2.0*d)-1.0)/2.0"
+     math e=${SOURCES[0]} d=${SOURCES[1]} output="(e-d)/(1+2*d)"
      ''')
 for par in ('vx','eta'):
     Result(par,
@@ -96,7 +96,7 @@ Flow('fft','vpend2','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1')
 Flow('right left','vpend2 vxend2 etaend2 theta0end2 fft',
      '''
      anisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
-     fft=${SOURCES[4]} left=${TARGETS[1]} npk=50
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=120
      ''' % dt)
 
 Flow('refl',None,'spike n1=913 d1=0.0125 n2=2048 d2=0.0125 o2=34.5125 k1=15 k2=1024 | smooth rect1=2 rect2=2 repeat=3 | window f1=13')
