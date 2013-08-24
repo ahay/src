@@ -547,9 +547,8 @@ int mean_and_amplitude(double *x,COMPLEX_T *z,COMPLEX_T *m,double *a,int n,int n
 /*********************************************************/
 /* COMPUTES THE MEAN OF THE ENVELOPES OF THE CURRENT IMF */
 /*********************************************************/
-/*< compute the mean of the envelopes of the current imf >*/
 int mean(double *x,COMPLEX_T *z,COMPLEX_T *m,int n,int nbphases,extrema_t *ex,envelope_t *env) 
-
+/*< compute the mean of the envelopes of the current imf >*/
 {
   int i,k;
   #ifdef C99_OK

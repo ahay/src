@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     int xmin, xmax, ymin, ymax, i, ix, iy, **map;
     off_t pos;
     char *buf, *zero, *xk, *yk, *header;
-    sf_file in, out, head, mask;
+    sf_file in, out, head, mask, mapf;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -164,6 +164,17 @@ int main (int argc, char* argv[])
 	}
     }
     sf_warning(".");
+
+    header = sf_getstring("map");
+    /* output map file */
+    if (NULL != header) {
+	mapf = sf_output(header);
+	sf_putint(mapf,"n1",nx);
+	sf_putint(mapf,"n2",ny);
+	sf_settype(mapf,SF_INT);
+
+	sf_intwrite(map[0],nx*ny,mapf);
+    }
 
     header = sf_getstring("mask");
     /* output mask file */

@@ -26,7 +26,7 @@
 int main(int argc, char* argv[])
 {
     int it, nt, ih, nh, ix, nx, ib, nb, id, nd, *fold, CDPtype;
-    float dt, dh, dx, t0, h0, x0, t, h, x, eps, db, b0, b, sinb, cosb, tanb;
+    float dt, dh, dx, t0, h0, x0, t, h, x, eps, db, b0, b, sinb, cosb;
     float ***slice, ***tstr, ***hstr, ***xstr, ***slice2, *sum, sample;
     sf_file in, out;
     
@@ -91,7 +91,6 @@ int main(int argc, char* argv[])
 	b = b0+ib*db;
 	sinb = cosf(b);
 	cosb = sinf(b);
-	tanb = sinb/cosb;
 	
 	for (ix=0; ix < nx; ix++) {
 	    x = x0+ix*dx;   

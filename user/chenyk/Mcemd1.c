@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
     sf_putfloat(outp,"o2",0);  
 
     /* output  */
-    sf_complexwrite(imf,n*(nb_imfs+1),outp);
+    sf_complexwrite((sf_complex*) imf,n*(nb_imfs+1),outp);
   
     /* free allocated memory */
     if (allocated_x)

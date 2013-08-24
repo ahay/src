@@ -67,8 +67,8 @@ typedef struct {
 #define EMD_IO_H
 
 typedef struct {
-    double threshold;
-    double tolerance;
+    float threshold;
+    float tolerance;
 } stop_t;
 /*^*/
 

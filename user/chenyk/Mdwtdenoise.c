@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include "wavelet.h"
 
 int main(int argc, char *argv[])
 {
@@ -54,31 +53,31 @@ int main(int argc, char *argv[])
     data2 = sf_floatalloc(n1*n2);
     adata = sf_floatalloc(n1*n2);
 
-    wavelet_init(n1,inv,unit,type[0]);  /* unit=false inv=true ; the length of the first axis is n1 */
+    sf_wavelet_init(n1,inv,unit,type[0]);  /* unit=false inv=true ; the length of the first axis is n1 */
 
     for(i=0;i<n3;i++)  {
 	sf_floatread(data1,n1*n2,in);
 	for (j=0;j<n2;j++){
-	memcpy(pp,data1+j*n1,n1*sizeof(float));
-	wavelet_lop(0,false,n1,n1,pp,qq);	/*qq -> output*/
-	memcpy(data1+j*n1,qq,n1*sizeof(float));
+	    memcpy(pp,data1+j*n1,n1*sizeof(float));
+	    sf_wavelet_lop(0,false,n1,n1,pp,qq);	/*qq -> output*/
+	    memcpy(data1+j*n1,qq,n1*sizeof(float));
 	}
 
 	for(i=0;i<n2;i++)
-	   for(j=0;j<n1;j++)
+	    for(j=0;j<n1;j++)
 		data2[j*n2+i]=data1[i*n1+j];
 
-    	wavelet_init(n2,inv,unit,type[0]);  /* unit=false inv=true ; the length of the first axis is n2 */
+    	sf_wavelet_init(n2,inv,unit,type[0]);  /* unit=false inv=true ; the length of the first axis is n2 */
 
 	for (j=0;j<n1;j++){
-	memcpy(pp,data2+j*n2,n2*sizeof(float));
-	wavelet_lop(0,false,n2,n2,pp,qq);	/*qq -> output*/
-	memcpy(data2+j*n2,qq,n2*sizeof(float));
+	    memcpy(pp,data2+j*n2,n2*sizeof(float));
+	    sf_wavelet_lop(0,false,n2,n2,pp,qq);	/*qq -> output*/
+	    memcpy(data2+j*n2,qq,n2*sizeof(float));
 	}
 	/***********************************************************/
 	/* percentile thresholding */
 	for(i=0;i<n1*n2;i++)
-	adata[i]=fabs(data2[i]);	
+	    adata[i]=fabs(data2[i]);	
 	
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);
     	if (nthr < 0) nthr=0;
@@ -86,27 +85,27 @@ int main(int argc, char *argv[])
 	t=sf_quantile(nthr,n1*n2,adata);
 	
 	for(i=0;i<n1*n2;i++)
-		if(fabs(data2[i])<t) data2[i]=0;
+	    if(fabs(data2[i])<t) data2[i]=0;
 	/***********************************************************/
 	for (j=0;j<n1;j++){
-	memcpy(qq,data2+j*n2,n2*sizeof(float));
-	wavelet_lop(1,false,n2,n2,pp,qq);    /*pp -> output*/
-	memcpy(data2+j*n2,pp,n2*sizeof(float));
+	    memcpy(qq,data2+j*n2,n2*sizeof(float));
+	    sf_wavelet_lop(1,false,n2,n2,pp,qq);    /*pp -> output*/
+	    memcpy(data2+j*n2,pp,n2*sizeof(float));
 	}
 	for(i=0;i<n1;i++)
-	   for(j=0;j<n2;j++)
+	    for(j=0;j<n2;j++)
 		data1[j*n1+i]=data2[i*n2+j];
 	
-    	wavelet_init(n1,inv,unit,type[0]);  /* unit=false inv=true ; the length of the first axis is n1 */
+    	sf_wavelet_init(n1,inv,unit,type[0]);  /* unit=false inv=true ; the length of the first axis is n1 */
 
 	for (j=0;j<n2;j++){
-	memcpy(qq,data1+j*n1,n1*sizeof(float));
-	wavelet_lop(1,false,n1,n1,pp,qq);	/*pp -> output*/
-	memcpy(data1+j*n1,pp,n1*sizeof(float));
+	    memcpy(qq,data1+j*n1,n1*sizeof(float));
+	    sf_wavelet_lop(1,false,n1,n1,pp,qq);	/*pp -> output*/
+	    memcpy(data1+j*n1,pp,n1*sizeof(float));
 	}
 	sf_floatwrite(data1,n1*n2,out);
     }
-	wavelet_close();
+    sf_wavelet_close();
     exit(0);
 }
 

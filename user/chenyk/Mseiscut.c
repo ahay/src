@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 {
     int i, j, n1, n2, n3, n12; /*n1 is trace length, n2 is the number of traces, n3 is the number of 3th axis*/
     int order1, cut;
-    float *data1, *data2, *adata, **dd;
+    float *data1, *data2, /* *adata, */ **dd;
     sf_file in, out, dip, slet, sletcut;
     float eps;
     char *type;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 
     data1 = sf_floatalloc(n1*n2);	/*allocate memory*/
     data2 = sf_floatalloc(n1*n2);	/*allocate memory*/
-    adata = sf_floatalloc(n1*n2);	/*allocate memory*/
+    /*   adata = sf_floatalloc(n1*n2);	allocate memory*/
     dd=sf_floatalloc2(n1,n2);
 
     seislet_init(n1,n2,inv,unit,eps,order1,type[0]);  /* unit=false inv=true */
