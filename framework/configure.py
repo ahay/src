@@ -1107,6 +1107,7 @@ def mpi(context):
         }\n'''
         cxx = context.env.get('CXX')
         context.env['CXX'] = mpicxx
+        context.env.Append(ENV={'MPICH_CXX':mpicxx})
         res = context.TryLink(text,'.cc')
         context.env['CXX'] = cxx
 	if res:

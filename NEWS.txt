@@ -38,6 +38,7 @@ To programs:
 * user/fbroggin: New contributor (Filippo Broggini)
 * sfpef renamed sfhpef
 * Added color=x cubehelix color scheme in sfgrey and sfgrey3
+* Added inv= option to sfintbin
 
 ===Bug fixes===
 
