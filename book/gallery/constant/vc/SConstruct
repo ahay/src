@@ -17,11 +17,11 @@ Flow('vel','data','spike') # velocity=1
 
 Flow('mig','vc vel','cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)
 
-Result('mig','window min2=0 max2=1.5 | grey title="VC Zero-Offset Migration" ')
+constant.zo_image('mig')
 
 # Impulse response
 
-Flow('imp','data','spike k1=501 k2=175 | ricker1 frequency=10')
+constant.get_impulse('imp','data')
 
 Flow('ifft','imp','cosft sign2=1 | spray axis=2 n=1')
 
@@ -29,6 +29,6 @@ Flow('ivc','ifft','fourvc v0=0.0001 dv=0.01 nv=201 pad2=4096',split=[3,'omp'])
 
 Flow('imig','ivc vel','cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)
 
-Result('imig','window max1=3 | grey title="VC Impulse Response" ')
+constant.impulse_response('imig')
 
 End()
