@@ -108,6 +108,9 @@ int main (int argc, char* argv[])
 	if (!sf_histint (in,"o2",&xmin)) sf_error("No o2= in input");
 	if (!sf_histint (in,"o3",&ymin)) sf_error("No o3= in input");
 
+	xmax = xmin+nx-1;
+	ymax = ymin+ny-1;
+
 	sf_putint (out,"n2",nd);
 	sf_putint (out,"n3",1);
     } else {
@@ -186,8 +189,7 @@ int main (int argc, char* argv[])
 	    ix = x[id]-xmin;
 	    iy = y[id]-ymin;
 	    if (ix < 0 || ix >= nx || 
-		iy < 0 || iy >= ny || 
-		map[iy][ix] < 0) {
+		iy < 0 || iy >= ny) {
 		sf_charwrite (zero,nt,out);
 	    } else {
 		sf_seek(in,pos + (off_t) (ix+iy*nx)*nt,SEEK_SET);		
@@ -219,6 +221,7 @@ int main (int argc, char* argv[])
 	mapf = sf_output(header);
 	sf_putint(mapf,"n1",nx);
 	sf_putint(mapf,"n2",ny);
+	sf_putint(mapf,"n3",1);
 	sf_settype(mapf,SF_INT);
 
 	sf_intwrite(map[0],nxy,mapf);

@@ -89,8 +89,8 @@ int main(int argc, char* argv[])
 	sf_warning("angle %d of %d;",ib+1,nb);
 
 	b = b0+ib*db;
-	sinb = cosf(b);
-	cosb = sinf(b);
+	sinb = sinf(b);
+	cosb = cosf(b);
 	
 	for (ix=0; ix < nx; ix++) {
 	    x = x0+ix*dx;   

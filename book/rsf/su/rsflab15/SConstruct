@@ -19,9 +19,11 @@ Flow('head','sx tracf',
      ''')
 
 # Binning
-Flow('bin','seismic head',
+Flow('bin0','seismic head',
+     'intbin head=${SOURCES[1]} xkey=1 ykey=0')
+
+Flow('bin','bin0',
      '''
-     intbin head=${SOURCES[1]} xkey=1 ykey=0 |
      pow pow1=2 | put
      o2=-1618.5 d2=12.5 label2=Half-Offset unit2=m
      o3=3237    d3=25   label3=Shot        unit3=m

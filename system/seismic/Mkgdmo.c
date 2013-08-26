@@ -88,8 +88,8 @@ int main(int argc, char* argv[])
 	
 	for (ib=1; ib < nb; ib++) {
 	    b = ib*db;
-	    sinb = cosf(b);
-	    cosb = sinf(b);
+	    sinb = sinf(b);
+	    cosb = cosf(b);
 	    tanb = sinb/cosb;
 
 	    for (ih=0; ih < nh; ih++) {
