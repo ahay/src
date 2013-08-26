@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
     int ii, ix, iz, ix0, iz0, nin;
     int snx, snz, lnx, lnz;
-    int sox, soz, lox, loz, sdx, sdz, ldx, ldz; 
+    float sox, soz, lox, loz, sdx, sdz, ldx, ldz; 
     sf_file Fins, Fin, Fout;
     
     const char **filelist;
