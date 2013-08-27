@@ -11,7 +11,7 @@ Flow('data tdata data.bin data.asc','data2013.sgy',
 Flow('data-agc','data','shapeagc rect1=250')
 
 # Gain using t^2
-Flow('data-tm','data','pow pow1=2')
+Flow('data-tm','data','pow pow1=2 | scale axis=1 pclip=95')
 
 # Display first 6 shot records
 Flow('first6','tdata','window n1=1 f1=4 | mask max=6')
