@@ -35,9 +35,12 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
     curveDefiner_->curOffset_ = curOffset;
     curOffset_ = curOffset;
 
+	float*     pTaper    = stackTaper_;
+
     // compose gather
-    for (int id = 0; id < dipNum; ++id) {
-	const float curDip = dipStart + id * dipStep;
+    for (int id = 0; id < dipNum; ++id, ++pTaper) {
+		const float curDip = dipStart + id * dipStep;
+		const float w = *pTaper; // stacking weight
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif
@@ -51,6 +54,8 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
 	    int badRes = this->getSampleByBeam (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, sample);
 	    if (badRes)
 		sample = this->getSampleByRay  (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
+		sample *= w;
+
 
 	    const int gInd = it + id * tNum;
 	    curoffsetGather  [gInd] += sample;
@@ -221,7 +226,7 @@ void TimeMigrator2D::getStackTaper (const float edgeTaper) {
 	float* pTaper = stackTaper_;
 
     for (int idx = 0; idx < dipNum; ++idx, ++pTaper) {
-   	    const float curDip = dipStart + idx * dipStep;
+   	    const float curDip = fabs (dipStart + idx * dipStep);
 
 		float w = 1.f;		
 		if (curDip > edgeDip) {
