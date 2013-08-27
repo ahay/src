@@ -24,13 +24,15 @@ To scale by a constant factor, you can also use sfmath.
 
 #include <rsf.h>
 
+static float getscale(int ntest, int n1, float *abuf);
+
 int main (int argc, char* argv[])
 {
     off_t n1, n2, n[SF_MAX_DIM];
-    int axis, ndim, i, i2, nsize, nbuf, *ibuf;
+    int axis, ndim, i, i2, nsize, nbuf, ntest, *ibuf;
     sf_file in=NULL;
     sf_file out=NULL;
-    float* fbuf, f, dscale;
+    float *fbuf, *abuf, dscale, pclip;
     sf_complex* cbuf;
     sf_datatype type;
 
@@ -48,6 +50,8 @@ int main (int argc, char* argv[])
     /* Scale by maximum in the dimensions up to this axis. */
     if (!sf_getfloat("rscale",&dscale)) dscale=0.;
     /* Scale by this factor. */
+    if (!sf_getfloat("pclip",&pclip)) pclip=100.;
+    /* data clip percentile */
 
     ndim = sf_largefiledims (in, n);
 
@@ -59,6 +63,11 @@ int main (int argc, char* argv[])
 	else          n2 *= n[i];
     }
 
+    abuf = sf_floatalloc(n1);
+
+    ntest = n1*pclip/100. + .5;
+    if (ntest < 0)       ntest = 0;
+    else if (ntest > n1) ntest = n1;
 
     if (1 < n1 && 0. == dscale) {
 	switch (type) {
@@ -66,13 +75,11 @@ int main (int argc, char* argv[])
 		fbuf = sf_floatalloc(n1);
 
 		for (i2=0; i2 < n2; i2++) {
-		    dscale = 0.;
 		    sf_floatread (fbuf,n1,in);
 		    for (i=0; i < n1; i++) {
-			f = fabsf(fbuf[i]);
-			if (f > dscale) dscale=f;
+			abuf[i] = fabsf(fbuf[i]);
 		    }
-		    if (dscale > 0.) dscale=1./dscale;
+		    dscale = getscale(ntest,n1,abuf);		    
 		    for (i=0; i < n1; i++) {
 			fbuf[i] *= dscale;
 		    }
@@ -83,13 +90,11 @@ int main (int argc, char* argv[])
 		cbuf = sf_complexalloc(n1);
 
 		for (i2=0; i2 < n2; i2++) {
-		    dscale = 0.;
 		    sf_complexread (cbuf,n1,in);
 		    for (i=0; i < n1; i++) {
-			f = cabsf(cbuf[i]);
-			if (f > dscale) dscale=f;
+			abuf[i] = cabsf(cbuf[i]);
 		    }
-		    if (dscale > 0.) dscale=1./dscale;
+		    dscale = getscale(ntest,n1,abuf);
 		    for (i=0; i < n1; i++) {
 #ifdef SF_HAS_COMPLEX_H
 			cbuf[i] *= dscale;
@@ -152,4 +157,24 @@ int main (int argc, char* argv[])
 
 
     exit (0);
+}
+
+static float getscale(int ntest, int n1, float *abuf)
+{
+    int i;
+    float dscale, f;
+
+    if (ntest == n1) { /* 100% clip - take maximum */
+	dscale = 0.;
+	for (i=0; i < n1; i++) {
+	    f = abuf[i];
+	    if (f > dscale) dscale=f;
+	}
+    } else {
+	dscale = sf_quantile(ntest,n1,abuf);
+    }
+
+    if (dscale > 0.) dscale=1./dscale;
+
+    return dscale;
 }

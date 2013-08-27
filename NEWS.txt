@@ -40,6 +40,7 @@ To programs:
 * sfpef (Wiener predictive error filtering) borrowed from SU's supef
 * Added color=x cubehelix color scheme in sfgrey and sfgrey3
 * Added inv= option to sfintbin
+* Added pclip= option to sfscale
 
 ===Bug fixes===
 

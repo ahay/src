@@ -12,7 +12,7 @@ half = size/2
 n = size-1
 d = 1.0/size
 
-omega = float(ARGUMENTS.get('omega',60))
+omega = float(ARGUMENTS.get('omega',120))
 
 # 0. Uniform
 Flow(models[0],None,

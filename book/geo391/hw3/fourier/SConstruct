@@ -51,15 +51,9 @@ Result('fft','fft frame','Overlay')
 Flow('fcut','frame fft',
      '''
      mask max=%g | 
-     dd type=float
+     dd type=float | rtoc |
+     mul ${SOURCES[1]}
      ''' % cut)
-
-#Flow('fcut','frame fft',
-#     '''
-#     mask max=%g | 
-#     dd type=float | rtoc | 
-#     mul ${SOURCES[1]}
-#     ''' % cut)
 
 # Inverse FFT
 Flow('sig','fcut',
