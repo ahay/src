@@ -23,7 +23,7 @@ public:
 		void  initCurveDefiner (bool is3D);
 		void setDataLimits ();
 
-		virtual void getStackTaper () = 0;
+		virtual void getStackTaper (const float edgeTaper) = 0;
 
 
 		CurveDefinerBase* curveDefiner_;

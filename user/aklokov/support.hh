@@ -68,6 +68,8 @@ struct RunParamsTmigda {
 
 	int               hMigNum;
 	int               sembWindow;
+
+	float             edgeTaper;
 	
 };
 

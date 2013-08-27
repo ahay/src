@@ -330,7 +330,7 @@ float TimeMigrator3D::getSampleByRay (const float yCIG, const float xCIG, const 
 	return sample;
 }
 
-void TimeMigrator3D::getStackTaper () {
+void TimeMigrator3D::getStackTaper (const float edgeTaper) {
 
     const int   dipNum   = gp_->dipNum;
     const float dipStart = gp_->dipStart;
@@ -341,8 +341,7 @@ void TimeMigrator3D::getStackTaper () {
     const float sdipStep  = gp_->sdipStep;
 
 	const float dipMax = dipStep * dipNum / 2;
-	const float shadow = 5.f; // 5 degree
-	const float edgeDip = dipMax - shadow;
+	const float edgeDip = dipMax - edgeTaper;
 
 	const int taperSize = sdipNum * dipNum;
 	stackTaper_ = new float [taperSize];
@@ -361,7 +360,7 @@ void TimeMigrator3D::getStackTaper () {
 			float w = 1.f;		
 			if (dip > edgeDip) {
 				if (dip > dipMax) w = 0.f;
-				else w = 1.f - (dip - edgeDip) / shadow;
+				else w = 1.f - (dip - edgeDip) / edgeTaper;
 			}	
 			*pTaper = w;
 		}
@@ -369,4 +368,3 @@ void TimeMigrator3D::getStackTaper () {
 
 	return;
 }
-

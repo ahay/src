@@ -99,7 +99,7 @@ void TimeMigratorBase::initCurveDefiner (bool is3D) {
 	return;
 }
 
-void TimeMigratorBase::getStackTaper () {
+void TimeMigratorBase::getStackTaper (const float edgeTaper) {
 
 	return;
 }

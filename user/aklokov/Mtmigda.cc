@@ -292,6 +292,8 @@ int main (int argc, char* argv[]) {
     /* number of migrated offsets */
     if (!sf_getint  ("sembWindow",   &rp.sembWindow)) rp.sembWindow = 11;	
     /* vertical window for semblance calculation (in samples) */
+    if (!sf_getfloat  ("edgeTaper",   &rp.edgeTaper)) rp.edgeTaper = 5.f;	
+    /* edge taper for dip-angle gathers (in degree) */
 
     // IMAGE PARAMS
     if (!sf_getint ("itn", &ip.zNum))        ip.zNum = dp.zNum;	
@@ -421,7 +423,7 @@ int main (int argc, char* argv[]) {
 	migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
     migrator->setDataLimits ();
 
-	migrator->getStackTaper ();
+	migrator->getStackTaper (rp.edgeTaper);
 
     const int fullGatherNum = ip.yNum * ip.xNum;
 

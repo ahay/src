@@ -13,7 +13,7 @@ public:
 	void  processGather (Point2D& curGatherCoords, float curOffset,  const float* const velTrace, const bool isAzDip,
 								  float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
 
-	void getStackTaper ();
+	void getStackTaper (const float edgeTaper);
 
 private:
 
