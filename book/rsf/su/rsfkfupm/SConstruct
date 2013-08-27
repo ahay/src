@@ -48,8 +48,8 @@ Flow('data-tm-filt-ac','data-tm-filt',
 Result6('data-tm-filt-ac','Autocorrelation')
 
 # Spiking deconvolution
-Flow('pef lag','data-tm-filt','pef a=100,1 niter=100 lag=${TARGETS[1]}')
-Flow('data-tm-filt-dec','data-tm-filt pef','helicon filt=${SOURCES[1]}')
+Flow('data-tm-filt-dec','data-tm-filt',
+     'pef minlag=0.002 maxlag=0.2 pnoise=0.001 mincorr=0 maxcorr=3')
 Result6('data-tm-filt-dec','Deconvolution')
 
 End()
