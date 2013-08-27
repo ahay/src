@@ -6,7 +6,7 @@ import bldutil
 # SU LIBRARY
 #############################################################################
 src = '''
-intsinc8 inttable8 mksinc sinc toeplitz
+convolution intsinc8 inttable8 mksinc sinc toeplitz xcor
 '''
 
 try: # distribution version
@@ -25,9 +25,9 @@ env.Prepend(CPPPATH=['../../include'],
 
 dynlib = ('-static-intel' not in env.get('LINKFLAGS',''))
 
-##############################################################################
+############################################################################
 # INCLUDES
-##############################################################################
+############################################################################
 
 objects = []
 includes = []
@@ -45,9 +45,9 @@ for source in Split(src):
         env.Depends(obj,inc)
         dobjects.append(obj)
 
-##############################################################################
+############################################################################
 # MAIN LIBRARY
-##############################################################################
+############################################################################
 slib = env.StaticLibrary('su',objects)
 inc = env.Command('rsf_su.h',includes,Action(bldutil.__merge))
 env.Install('../../lib',slib)
@@ -65,3 +65,11 @@ if root:
         libs.append(dlib)
     env.Install(libdir,libs)
     env.Install(incdir,inc)
+
+############################################################################
+# TESTING
+############################################################################
+for file in Split('convolution'):
+    test = env.StaticObject('Test' + file + '.c')
+    prog = env.Program(file,[test,slib],
+                       PROGSUFFIX='.x',PROGPREFIX='Test')
