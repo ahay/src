@@ -13,6 +13,8 @@ public:
 	void  processGather (Point2D& curGatherCoords, float curOffset,  const float* const velTrace, const bool isAzDip,
 								  float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
 
+	void getStackTaper ();
+
 private:
 
 	float getSampleFromData (const float geoY, const float geoX, const float ti, const float p);

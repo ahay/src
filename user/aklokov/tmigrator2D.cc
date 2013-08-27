@@ -206,3 +206,31 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
 		
     return aaSample;
 }
+
+void TimeMigrator2D::getStackTaper () {
+
+    const int   dipNum   = gp_->dipNum;
+    const float dipStart = gp_->dipStart;
+    const float dipStep  = gp_->dipStep;
+
+	const float dipMax = dipStep * dipNum / 2;
+	const float shadow = 5.f; // 5 degree
+	const float edgeDip = dipMax - shadow;
+
+	const int taperSize = dipNum;
+	stackTaper_ = new float [taperSize];
+	float* pTaper = stackTaper_;
+
+    for (int idx = 0; idx < dipNum; ++idx, ++pTaper) {
+   	    const float curDip = dipStart + idx * dipStep;
+
+		float w = 1.f;		
+		if (curDip > edgeDip) {
+			if (curDip > dipMax) w = 0.f;
+			else w = 1.f - (curDip - edgeDip) / shadow;
+		}	
+		*pTaper = w;
+	}
+	
+	return;
+}

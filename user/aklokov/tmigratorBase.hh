@@ -23,6 +23,9 @@ public:
 		void  initCurveDefiner (bool is3D);
 		void setDataLimits ();
 
+		virtual void getStackTaper () = 0;
+
+
 		CurveDefinerBase* curveDefiner_;
 
 		float             curOffset_;
@@ -49,7 +52,8 @@ protected:
 		VolumeParams*    vp_;
 
 		float*           ptrToData_;
-	
+		float*           stackTaper_;	
+
 		bool             isAA_;
 		int              axis2label_;
 

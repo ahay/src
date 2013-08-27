@@ -13,6 +13,8 @@ public:
 	void  processGather (Point2D& curGatherCoords, float curOffset,  const float* const velTrace, const bool isAzDip,
 								  float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
 
+	void getStackTaper ();
+
 private:
 
 	int   getSampleByBeam        (const float yCIG, const float xCIG, const float curZeroTime, 

@@ -2,6 +2,7 @@
 #include "support.hh"
 #include <string.h>
 #include <algorithm>
+#include <math.h>
 #include "curveDefinerBase.hh"
 #include "curveDefinerDipOffset.hh"
 #ifdef _OPENMP
@@ -42,17 +43,20 @@ void TimeMigrator3D::processGather (Point2D& curGatherCoords, float curOffset, c
  //   const int gatherSize = tNum * dipNum * dipNum;
 
     float*     ptrGather = curoffsetGather;
+	float*     pTaper    = stackTaper_;
 
     // compose gather
     for (int idy = 0; idy < sdipNum; ++idy) {
         const float curSDip = sdipStart + idy * sdipStep;
-	    for (int idx = 0; idx < dipNum; ++idx) {
+	    for (int idx = 0; idx < dipNum; ++idx, ++pTaper) {
     	    const float curDip = dipStart + idx * dipStep;
 
 			float* ptrImage  = curoffsetImage;
 			float* ptrImageSq = curoffsetImageSq;
 
-			const float dummy = 0.f;
+			const float dummy = 0.f;	
+			const float w = *pTaper; // stacking weight
+
 #ifdef _OPENMP 
 #pragma omp parallel for
 #endif
@@ -67,6 +71,8 @@ void TimeMigrator3D::processGather (Point2D& curGatherCoords, float curOffset, c
 	    			sample = this->getSampleByRay (yCIG, xCIG, curTime, curSDip, curDip, migVel, isAzDip, dummy, dummy);
 	
 				const int gInd = it + (idy * dipNum + idx) * tNum;
+				sample *= w;
+
 				ptrGather[gInd] += sample;
 
 				ptrImage[it] += sample;
@@ -323,3 +329,44 @@ float TimeMigrator3D::getSampleByRay (const float yCIG, const float xCIG, const 
 
 	return sample;
 }
+
+void TimeMigrator3D::getStackTaper () {
+
+    const int   dipNum   = gp_->dipNum;
+    const float dipStart = gp_->dipStart;
+    const float dipStep  = gp_->dipStep;
+
+    const int   sdipNum   = gp_->sdipNum;
+    const float sdipStart = gp_->sdipStart;
+    const float sdipStep  = gp_->sdipStep;
+
+	const float dipMax = dipStep * dipNum / 2;
+	const float shadow = 5.f; // 5 degree
+	const float edgeDip = dipMax - shadow;
+
+	const int taperSize = sdipNum * dipNum;
+	stackTaper_ = new float [taperSize];
+
+	float* pTaper = stackTaper_;
+
+    for (int idy = 0; idy < sdipNum; ++idy) {
+        const float curSDip = sdipStart + idy * sdipStep;
+		const float sdip2 = curSDip * curSDip;
+	    for (int idx = 0; idx < dipNum; ++idx, ++pTaper) {
+    	    const float curDip = dipStart + idx * dipStep;
+			const float dip2 = curDip * curDip;
+
+			// stacking taper	
+			const float dip = sqrt (sdip2 + dip2);
+			float w = 1.f;		
+			if (dip > edgeDip) {
+				if (dip > dipMax) w = 0.f;
+				else w = 1.f - (dip - edgeDip) / shadow;
+			}	
+			*pTaper = w;
+		}
+	}
+
+	return;
+}
+

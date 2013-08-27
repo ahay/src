@@ -411,14 +411,17 @@ int main (int argc, char* argv[]) {
     // set migrator
     TimeMigratorBase* migrator;
     if (rp.is3D) {
-	migrator = new TimeMigrator3D ();
-	migrator->initCurveDefiner (true);
+		migrator = new TimeMigrator3D ();
+		migrator->initCurveDefiner (true);
     } else {
-	migrator = new TimeMigrator2D ();
-	migrator->initCurveDefiner (false);
+		migrator = new TimeMigrator2D ();
+		migrator->initCurveDefiner (false);
     }
-    migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
+    
+	migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
     migrator->setDataLimits ();
+
+	migrator->getStackTaper ();
 
     const int fullGatherNum = ip.yNum * ip.xNum;
 

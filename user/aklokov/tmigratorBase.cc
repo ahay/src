@@ -4,12 +4,12 @@
 #include "curveDefinerDipOffset3D.hh"
 #include "curveDefinerDipOffset.hh"
 
-
 TimeMigratorBase::TimeMigratorBase () {
 }
 
 TimeMigratorBase::~TimeMigratorBase () {
     delete curveDefiner_;
+	delete stackTaper_;
 }
 
 void TimeMigratorBase::processGather (Point2D& curGatherCoords, float curOffset, const float* const velTrace, const bool isAzDip,
@@ -96,5 +96,10 @@ void TimeMigratorBase::initCurveDefiner (bool is3D) {
 		curveDefiner_ = new CurveDefinerDipOffset3D ();
 	else
 		curveDefiner_ = new CurveDefinerDipOffset ();
+	return;
+}
+
+void TimeMigratorBase::getStackTaper () {
+
 	return;
 }
