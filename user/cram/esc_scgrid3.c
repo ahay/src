@@ -1400,7 +1400,9 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                requests for the same socket will be continous in memory
                and prevent message fragmentation later */
             for (i = 0; i < io*esc_scgrid->ns; i++) {
-                areqs_curr[i].id = esc_scgrid->sockets[areqs_curr[i].iab*2 + is_curr];
+                areqs_curr[i].id = esc_scgrid->remote
+                                   ? esc_scgrid->sockets[areqs_curr[i].iab*2 + is_curr]
+                                   : 0;
             }
             /* Sort the outgoing requests by angle index */
             qsort (areqs_curr, in_curr*esc_scgrid->ns, sizeof(sf_esc_scgrid3_areq),
