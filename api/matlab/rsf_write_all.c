@@ -141,7 +141,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     file = sf_output(filename);
     sf_setformat(file,mxIsComplex(prhs[2])?"native_complex":"native_float");
 
-    /* Write header */
+    /* Write header for at least ndim dimensions */
+    if (Odim < ndim) Odim = ndim;
     for (i=0; i < Odim; i++) {
 	/* sizes */
         sprintf(key,"n%d",i+1);
