@@ -355,6 +355,7 @@ int main (int argc, char* argv[]) {
                 lz = (ic + 1)*nc - 1;
                 if (lz >= nz)
                     lz = nz - 1;
+                sf_timer_start (timer);
 #ifdef _OPENMP
 #pragma omp parallel for                   \
                 schedule(dynamic,1)        \
@@ -366,10 +367,8 @@ int main (int argc, char* argv[]) {
                     for (ia = 0; ia < na; ia++) {
                         a = oa + ia*da;
                         for (ib = 0; ib < nb; ib++) {
-                            sf_timer_start (timer);
                             sf_esc_tracer3_compute (esc_tracers[iz - fz], z, x, y, ob + ib*db, a,
                                                     0.0, 0.0, esc_points[iz - fz], NULL, NULL);
-                            sf_timer_stop (timer);
                             /* Copy escape values to the output buffer */
                             for (i = 0; i < ESC3_NUM; i++)
                                 e[iz - fz][ia][ib][i] = sf_esc_point3_get_esc_var (esc_points[iz - fz], i);
@@ -383,6 +382,7 @@ int main (int argc, char* argv[]) {
                         } /* Loop over b */
                     } /* Loop over a */
                 } /* Loop over z */
+                sf_timer_stop (timer);
                 sf_floatwrite (e[0][0][0], (size_t)(lz - fz + 1)*(size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
                 if (tdata) {
