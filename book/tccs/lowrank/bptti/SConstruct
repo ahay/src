@@ -91,20 +91,11 @@ for par in ('vp','vx','eta','theta','theta0'):
                   ('','km/s')[par=='vp' or par=='vx'],
                   par.capitalize()))
 
-
-Flow('fft','vpend2','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1')
-Flow('right left','vpend2 vxend2 etaend2 theta0end2 fft',
-     '''
-     anisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
-     fft=${SOURCES[4]} left=${TARGETS[1]} npk=60 eps=0.0001
-     ''' % dt)
-
 Flow('refl',None,
      '''
      spike n1=920 d1=0.0125 o1=-0.25 n2=2048 d2=0.0125 o2=34.5125 k1=23 k2=1024 | 
      smooth rect1=2 rect2=2 repeat=3 | window f1=20
      ''')
-
 Flow('taper','refl',
      '''
      spike k1=450 k2=1024 | bandpass fhi=30 |
@@ -113,9 +104,14 @@ Flow('taper','refl',
 
 Result('taper','grey title="Wavenumber Taper" screenratio=1 allpos=y')
 
-Flow('tright','taper right','spray axis=1 n=12 | put n3=1 n2=3686400 | mul ${SOURCES[1]}')
+Flow('fft','vpend2','rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1')
+Flow('right left','vpend2 vxend2 etaend2 theta0end2 fft taper',
+     '''
+     anisolr2 seed=2010 dt=%g velx=${SOURCES[1]} eta=${SOURCES[2]} theta=${SOURCES[3]} 
+     fft=${SOURCES[4]} left=${TARGETS[1]} npk=60 eps=0.0001 ktaper=y ktap=${SOURCES[5]}
+     ''' % dt)
 
-Flow('wave','source refl left tright',
+Flow('wave','source refl left right',
      '''
      fftwave2 cmplx=y pad1=2 ref=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} verb=y snap=1 snaps=$TARGET
      ''',stdout=0)

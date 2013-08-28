@@ -24,9 +24,10 @@
 
 using namespace std;
 
-static std::valarray<float>  vx, vz, q, t;
+static std::valarray<float>  vx, vz, q, t, xtap, ktap;
 static std::valarray<double> kx, kz;
 static double dt;
+bool ktaper, xtaper;
 
 static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
@@ -44,8 +45,9 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	double s = sin(tt);
 	
 	for(int b=0; b<nc; b++) {
-	    double x0 = kx[cs[b]];
-	    double z0 = kz[cs[b]];
+	    int j = cs[b];
+	    double x0 = kx[j];
+	    double z0 = kz[j];
 	    // rotation of coordinates
 	    double x = x0*c+z0*s;
 	    double z = z0*c-x0*s;
@@ -55,7 +57,12 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    double r = x+z;
 	    r = r+sqrt(r*r-qq*x*z);
 	    r = sqrt(0.5*r);
-	    res(a,b) = 2*(cos(r*dt)-1); 
+	    r = 2*(cos(r*dt)-1);
+
+	    if (xtaper) r *= xtap[i];
+	    if (ktaper) r *= ktap[j];
+
+	    res(a,b) = r;
 	}
     }
     return 0;
@@ -130,6 +137,21 @@ int main(int argc, char** argv)
 	    kz[i] = 2*SF_PI*(kz0+iz*dkz);
 	    i++;
 	}
+    }
+
+    par.get("xtaper",xtaper,false); // if taper in x
+    par.get("ktaper",ktaper,false); // if taper in k
+
+    if (xtaper) {
+	iRSF fxtap("xtap");
+	xtap.resize(m);
+	fxtap >> xtap;
+    }
+
+    if (ktaper) {
+	iRSF fktap("ktap");
+	ktap.resize(n);
+	fktap >> ktap;
     }
 
     vector<int> lidx, ridx;
