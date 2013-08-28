@@ -36,7 +36,6 @@ Source info:
 Trace info:
 
       hdrfile = hdr_short.su
-     datafile = p0.su
     datafile1 = p0 		z pressure
     datafile2 = p1		x pressure
     datafile3 = v0		z velocity
