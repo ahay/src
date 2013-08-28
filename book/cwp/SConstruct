@@ -1,6 +1,7 @@
 from rsf.book import *
 
-report = (('2006',
+report = (('2001','aniso'),
+          ('2006',
            '''
            geo2006TimeShiftImagingCondition
            jse2006RWEImagingOverturningReflections
@@ -26,12 +27,10 @@ report = (('2006',
            '''
            geo2011WideAzimuthAngleDecomposition
            pept2011MicroearthquakeMonitoring
-           '''
-          ))
+           '''))
 
 Papers(papers=report,
        copyr='Colorado School of Mines',group='Center for Wave Phenomena',
-       
        authors={'seg2006ConvertedWavesTSIC': 'Paul Sava and Sergey Fomel',
                 'jse2006RWEImagingOverturningReflections':'Paul Sava',
                 'gpr2007RWEHighOrderKernels':'Paul Sava and Sergey Fomel',
@@ -41,7 +40,8 @@ Papers(papers=report,
                 'geo2008IsotropicAngleDomainElasticRTM': 'Jia Yan and Paul Sava',
                 'geo2009TTIModeSeparation': 'Jia Yan and Paul Sava',
                 'geo2009VTIModeSeparation': 'Jia Yan and Paul Sava',
-                'geo2011WideAzimuthAngleDecomposition': 'Paul Sava and Ioan Vlad'},
+                'geo2011WideAzimuthAngleDecomposition': 'Paul Sava and Ioan Vlad',
+                'aniso':'Sergey Fomel and Vladimir Grechka'},
        line='Example Report, June 2011',
        fig=('jse2006RWEImagingOverturningReflections/sigsbee',
             'compCC1-F15','width=\\textwidth'))

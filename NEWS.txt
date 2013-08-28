@@ -12,6 +12,7 @@ To the reproducible documents collection:
   Lu)
 * tccs/specrecom: Automated spectral recomposition with application in
   stratigraphic interpretation (Cai, Fomel, and Zeng)
+* Moved sep/aniso to cwp/aniso
 
 To SCons:
 
