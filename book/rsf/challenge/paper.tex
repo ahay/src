@@ -15,11 +15,15 @@ USA}
 
 \maketitle
 
-
 \begin{abstract}
 This paper presents a challenge for different implementations of
-reproducible research. The task is to capture the workflow described
-in this paper in a form that allows...
+reproducible research. The computational experiment refers to spatial
+interpolation of rainfall measurements, a task of the 1997 Spatial
+Interpolation Comparison. The reproducibility challenge is to capture
+the computational workflow described in this paper in a form that
+allows the reader to reproduce the experiment and to extend it by
+trying a different algorithm, a different data set, or a different
+choice of parameters.
 \end{abstract}
 
 \section{Introduction}
@@ -63,9 +67,11 @@ value of the correlation coefficient.
 \sideplot{pred}{width=\textwidth}{Correlation between
   interpolated and true data values.}
 
+Add precon?
+
 \section{Reproducibility challenge}
 
-The challenge of this exercise is to...
+How can the reader... The challenge of this exercise is to...
 
 \subsection{Madagascar solution}
 
@@ -75,7 +81,20 @@ To reproduce the paper using Madagascar, ...
 
 \subsection{Additional materials}
 
-In addition to the usual Madagascar files, I provide the following...
+In addition to the usual Madagascar files (\texttt{paper.tex} for the
+source of this paper and \texttt{SConstruct} for describing the
+workflow), I provide the following materials:
+\begin{itemize}
+\item Shell script \texttt{run.sh} for running the workflow (generated with \texttt{scons -n}).
+\item IPython notebook \texttt{run.ipynb} that captures the 
+      \texttt{SConstruct} file and the output of the experiment.
+\end{itemize}
+
+\appendix
+\section{SConstruct}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single,title=rain/SConstruct]{rain/SConstruct}
 
 \bibliographystyle{seg}
 \bibliography{rain}

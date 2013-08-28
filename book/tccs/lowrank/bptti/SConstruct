@@ -107,7 +107,7 @@ Flow('refl',None,
 
 Flow('taper','refl',
      '''
-     spike k1=450 k2=1024 | bandpass fhi=20 |
+     spike k1=450 k2=1024 | bandpass fhi=30 |
      rtoc | fft3 axis=1 pad=2 | fft3 axis=2 pad=1 | math output="abs(input)" | real
      ''')
 

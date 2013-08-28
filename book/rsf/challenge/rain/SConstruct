@@ -104,7 +104,8 @@ Plot('line',None,
      screenratio=1 min1=0 max1=500 min2=0 max2=500
      ''')
 
-Flow('pred','trian coord','extract head=${SOURCES[1]} xkey=0 ykey=1')
+Flow('pred','trian coord',
+     'extract head=${SOURCES[1]} xkey=0 ykey=1')
 Plot('pred','predict pred',
      '''
      cmplx ${SOURCES[1]} |
@@ -113,7 +114,8 @@ Plot('pred','predict pred',
      label1=Measured label2=Predicted
      ''')
 
-Flow('num','predict pred','mul ${SOURCES[1]} | stack axis=1 norm=n')
+Flow('num','predict pred',
+     'mul ${SOURCES[1]} | stack axis=1 norm=n')
 Flow('den','pred','add mode=p $SOURCE | stack axis=1 norm=n')
 Flow('cor.txt','num den norm',
      '''
@@ -122,7 +124,8 @@ Flow('cor.txt','num den norm',
      dd form=ascii --out=$TARGET
      format="label=correlation=%7.5g"
      ''',stdout=0)
-Plot('cor','cor.txt','box x0=5.5 y0=9 xt=0 par=$SOURCE',stdin=0)
+Plot('cor','cor.txt',
+     'box x0=5.5 y0=9 xt=0 par=$SOURCE',stdin=0)
     
 Result('pred','pred line cor','Overlay')
 
