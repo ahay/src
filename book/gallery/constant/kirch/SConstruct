@@ -14,6 +14,10 @@ Flow('inv err','data vel','kirchinv velocity=${SOURCES[1]} niter=10 ps=1 err=${T
 
 Result('inv','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
 
+Flow('inv2','data vel mig','conjgrad kirchnew velocity=${SOURCES[1]} niter=10 ps=1 mod=${SOURCES[2]}')
+
+Result('inv2','window min2=0 max2=1.5 | grey title="Kirchhoff Inversion" ')
+
 Result('err',
        '''
        graph labelsz=10 titlesz=12 unit1= unit2=
