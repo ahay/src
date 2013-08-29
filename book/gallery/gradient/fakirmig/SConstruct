@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.append('..')
-import gradient
+from rsf.gallery import gradient
 
 gradient.zero_offset('zodata')
 
@@ -9,18 +7,14 @@ Result('zodata','grey title="Zero-Offset" ')
 
 par = gradient.par
 
-Flow('veloc','zodata',
-     '''
-     window n1=1 | spray axis=1 n=501 o=0 d=0.01 label=Depth unit=km | 
-     math output="%(v0)g+%(gradx)g*x2+%(gradz)g*x1" |
-     put label=Velocity unit=km/s
-     ''' % par)
+gradient.get_velocity('vel')
+
+Flow('veloc','vel','window j2=20 min2=1.5')
 
 Result('veloc','grey color=j allpos=y bias=%(v0)g title="Velocity Model" scalebar=y barreverse=y' % par)
 
 # half-order derivative
-Flow('hzodata','zodata',
-     'halfint inv=y adj=y')
+Flow('hzodata','zodata','halfint inv=y adj=y')
 
 # traveltime table
 nshot = 8
@@ -58,23 +52,15 @@ Flow('lzodmig','hzodata time times',
 Result('lzodmig',
        'window min2=2.5 max2=7.5 | grey title="Zero Offset Image (linear)" label2=Distance label1=Depth unit1=km')
 
-
 # Impulse response
-Flow('impulse','zodata','spike k1=751 k2=176 | smooth rect1=2 rect2=2 repeat=2 | halfint inv=y adj=y')
+gradient.get_impulse('impulse','zodata')
 
-Flow('kimpres','impulse time tds',
+Flow('himpulse','impulse','halfint inv=y adj=y')
+
+Flow('kimpres','himpulse time tds',
      'kirmig0 table=${SOURCES[1]} deriv=${SOURCES[2]}')
 
-Plot('kimpres','grey title="Impulse Response" unit2=km')
-
-Plot('theory','veloc',
-     '''
-     scale dscale=0.5 | eikonal yshot=5 | 
-     contour nc=1 c0=1.5 wantaxis=n wanttitle=n plotcol=3 plotfat=3
-     ''')
-
-Result('kimpres','kimpres theory','Overlay')
-
+gradient.impulse_response('kimpres','veloc')
 
 # Least-squares migration
 Flow('lszodmig','hzodata time tds veloc',

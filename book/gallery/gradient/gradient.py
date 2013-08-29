@@ -1,5 +1,10 @@
 from rsf.proj import *
 
+methods = {
+    'fakirmig': 'First-Arrival Kirchhoff',
+    }
+method = methods[os.path.basename(os.getcwd())]
+
 par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
            v0=1.5,gradx=0.36,gradz=0.36,
            dim1 = 'd1=0.001 o1=0 n1=10001',
@@ -45,10 +50,11 @@ Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
 Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
 
 # velocity
-Flow('vel',None,'math %(dim1)s %(dim2)s output="%(v0)g+%(gradx)g*x1+%(gradz)g*x2" | transp' % par)
-Plot('vel','vel',igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"',par))
+def get_velocity(vel):
+    Flow(vel,None,'math %(dim1)s %(dim2)s output="%(v0)g+%(gradx)g*x1+%(gradz)g*x2" | transp' % par)
+    Plot(vel,igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"',par))
+    Plot(vel+'-model',[vel,'lays0','lays1'],'Overlay')
 
-Plot('model','vel lays0 lays1','Overlay')
 Flow('dips','lays','deriv | scale dscale=100')
 
 def zero_offset(data):
@@ -83,3 +89,15 @@ def cmps(data):
          type=v vel=%(v0)g gradx=%(gradx)g gradz=%(gradz)g |
          put d2=0.02 label2=Half-Offset unit2=km label3=Midpoint unit3=km
          ''' % par,split=[1,10001],reduce='add')
+
+def get_impulse(impulse,data):
+    Flow(impulse,data,'spike k1=751 k2=176 | smooth rect1=2 rect2=2 repeat=2')
+
+def impulse_response(image,vel):
+    Plot(image,'grey title="%s Impulse Response" unit2=km' % method)
+    Plot(image+'-theory',vel,
+         '''
+         scale dscale=0.5 | eikonal yshot=5 | 
+         contour nc=1 c0=1.5 wantaxis=n wanttitle=n plotcol=3 plotfat=3
+         ''')
+    Result(image,[image,image+'-theory'],'Overlay')
