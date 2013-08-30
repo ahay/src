@@ -1,7 +1,0 @@
-CC = 'mpiicc' 
-CCFLAGS = '-O3 -xSSE4.2 -check-uninit -falign-functions=16 -restrict -vec-report3 -opt-report 3 -opt-report-phase=hlo -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -DIWAVE_USE_MPI -DMPICH_IGNORE_CXX_SEEK'
-##CCFLAGS = '-O3 -check-uninit -check-uninit -std=c99 -falign-functions=16 -vec-report1 -ftz -fp-stack-check -DIWAVE_USE_MPI -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -parallel'
-#CCFLAGS = '-O3 -check-uninit -std=c99 -falign-functions=16 -vec-report1 -ftz -fp-stack-check -DIWAVE_USE_MPI -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -D_GNU_SOURCE -parallel'
-CFLAGS = '-std=c99'
-CXX = 'mpiicpc'
-LINKFLAGS = '-parallel'
