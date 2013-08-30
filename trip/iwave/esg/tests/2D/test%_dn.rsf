@@ -1,0 +1,6 @@
+n1=80 d1=1.000000e+01 o1=0.000000e+00
+n2=80 d2=1.000000e+01 o2=0.000000e+00
+n3=1 d3=1.000000e+01 o3=0.000000e+00
+data_type=density
+data_format=native_float
+in=./test%_dn.rsf@
