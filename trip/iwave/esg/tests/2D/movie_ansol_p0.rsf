@@ -1,7 +1,0 @@
-n1=80 d1=10 o1=0
-n2=80 d2=10 o2=0
-n3=143 d3=10 o3=0
-data_format=native_float
-scale=0
-dim=2
-in=movie_ansol_p0.rsf@
