@@ -1,9 +1,9 @@
 from rsf.proj import *
+from rsf.gallery import gradient
 
-sys.path.append('..')
-import gradient
+gradient.get_velocity('vel')
 
-Result('model','Overlay')
+Result('model','vel-model','Overlay')
 
 gradient.zero_offset('zoff')
 

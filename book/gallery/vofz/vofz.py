@@ -1,14 +1,12 @@
 from rsf.proj import *
 
-methods = {
-    'fakirmig': 'First-Arrival Kirchhoff',
-    }
+methods = {}
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():
     method = methods[thisdir]
 
 par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
-           v0=1.5,gradx=0.36,gradz=0.36,
+           v0=1.5,gradx=0,gradz=0.36,
            dim1 = 'd1=0.001 o1=0 n1=10001',
            dim2 = 'd2=0.01 o2=0 n2=501')
 
@@ -63,7 +61,7 @@ def zero_offset(data):
     Flow(data,'lays dips',
          '''
          kirmod twod=y freq=15 dip=${SOURCES[1]}
-         dt=0.002 nt=2001
+         dt=0.002 nt=3001
          s0=1.5 ds=0.02 ns=351
          h0=0   dh=0.02 nh=1
          type=v vel=%(v0)g gradx=%(gradx)g gradz=%(gradz)g |
@@ -74,7 +72,7 @@ def shots(data):
     Flow(data,'lays dips',
          '''
          kirmod twod=y freq=15 dip=${SOURCES[1]}
-         dt=0.002 nt=4501
+         dt=0.004 nt=1501
          s0=1.5 ds=0.02 ns=351
          h0=0   dh=0.04 nh=101
          type=v vel=%(v0)g gradx=%(gradx)g gradz=%(gradz)g |
@@ -85,7 +83,7 @@ def cmps(data):
     Flow(data,'lays dips',
          '''
          kirmod twod=y freq=15 dip=${SOURCES[1]}
-         dt=0.002 nt=4501 cmp=y
+         dt=0.004 nt=1501 cmp=y
          s0=1.5 ds=0.02 ns=351
          h0=0   dh=0.04 nh=101
          type=v vel=%(v0)g gradx=%(gradx)g gradz=%(gradz)g |

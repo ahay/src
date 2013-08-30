@@ -45,4 +45,6 @@ Flow('twoway','impulsed vel wavelet',
      vti=0 t=5.328 tilt=1 --readwrite=y
      ''',stdin=0,stdout=0)
 
+Flow('wtwoway','twoway','window max1=16000 max4=60000 min4=10000')
+
 End()
