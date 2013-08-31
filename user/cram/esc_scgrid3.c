@@ -773,16 +773,11 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     if (false == esc_scgrid->remote) {
 #ifdef _OPENMP
 #pragma omp parallel for    \
-        schedule(dynamic,1) \
         private(i)          \
         shared(n,areqs,avals,esc_scgrid)
 #endif
         for (i = 0; i < n; i++) {
             sf_esc_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[i]);
-#ifndef LINUX
-#pragma omp critical
-#endif
-            ATOMIC_ADD (&esc_scgrid->il, 1);
         }
         return;
     }
@@ -1427,7 +1422,6 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
             /* Interpolate points */
 #ifdef _OPENMP
 #pragma omp parallel for        \
-            schedule(dynamic,1) \
             private(i,ic)       \
             shared(io,in_curr,in_prev,nap,nbp,areqs_curr,areqs_prev,input_curr,input_prev,output_curr,output_prev,esc_scgrid)
 #endif
