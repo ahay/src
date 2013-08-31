@@ -1,6 +1,0 @@
-readinput
-ERROR: iwave::readinput from ps_creatargs, err = 8
-  called with args:
-  argc = 1
-  argv[0] = par=test7.par
-ABORT on error code 8
