@@ -1,0 +1,5 @@
+sbatch slurm_lpf05.job
+sbatch  slurm_lpf07.job 
+sbatch slurm_lpf09.job 
+sbatch slurm_lpf11.job
+
