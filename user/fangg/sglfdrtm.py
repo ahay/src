@@ -11,7 +11,7 @@ rtmpar = {
     'nt' :  7500,
     'dx' :  12.5,
     'dz' :  12.5,
-    'dt' :  0.002,
+    'dt' :  0.0016,
     'labelx': "Distance",
     'labelz': "Depth",
     'unitx' : "Km",
@@ -81,7 +81,7 @@ def splitmodel(Fout, Fin, par):
              label2=%(labelx)s unit2=%(unitz)s 
          '''%par)
     
-def sglfdrtm(Fimg1, Fimg2, Fsrc, Ffvel, Ffden, Fbvel, Fbden, par, surfix):
+def sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
     
     Gx = 'Gx%s'    %surfix
     Gz = 'Gz%s'    %surfix
@@ -94,72 +94,98 @@ def sglfdrtm(Fimg1, Fimg2, Fsrc, Ffvel, Ffden, Fbvel, Fbden, par, surfix):
     Ftmpwf =  'tmpwf%s'  %surfix
     Ftmpbwf = 'tmpbwf%s' %surfix
 
-    for m in [Ffden, Ffvel, Fbden, Fbvel]:
-        pml  = m+'_pml'
-        Flow(pml,m,
-             '''
-             expand left=%(bd)d right=%(bd)d 
+#  -------------------------------------------------------------------
+#    for m in [Fden, Fvel]:
+#        pml  = m+'_pml'
+#        Flow(pml,m,
+#             '''
+#             expand left=%(bd)d right=%(bd)d 
+#                    top=%(bd)d  bottom=%(bd)d
+#             '''%par)
+##  -------------------------------------------------------------------
+    Fdenpml = Fden+'_pml'
+    Fvelpml = Fvel+'_pml'
+    
+#  -------------------------------------------------------------------
+#    Flow([Gx,sxx,sxz],Fvelpml,
+#         '''
+#         sfsglfdcx2_7 dt=%(dt)g eps=0.00001 npk=50 
+#                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
+#                      wavnumcut=%(frqcut)g
+#         '''%par)
+#  -------------------------------------------------------------------
+#    Flow([Gz,szx,szz],Fvelpml,
+#         '''
+#         sfsglfdcz2_7 dt=%(dt)g eps=0.00001 npk=50 
+#                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
+#                      wavnumcut=%(frqcut)g
+#         '''%par)
+#  -------------------------------------------------------------------    
+    Flow([Fimg1, Fimg2, Frcd],[Fsrc,Fvelpml,Fdenpml,Gx,sxx,sxz,Gz,szx,szz],
+       '''sfsglfdrtm2 img2=${TARGETS[1]} rec=${TARGETS[2]} 
+          fvel=${SOURCES[1]} fden=${SOURCES[2]}
+          bvel=${SOURCES[1]} bden=${SOURCES[2]}
+          Gx=${SOURCES[3]} sxx=${SOURCES[4]} sxz=${SOURCES[5]}
+          Gz=${SOURCES[6]} szx=${SOURCES[7]} szz=${SOURCES[8]}
+          freesurface=n  verb=y decay=n 
+          spx=%(spx)g spz=%(spz)g pmlsize=%(pml)d snapinter=10 
+          srcdecay=y  gp=%(gp)g srctrunc=0.2 pmld0=200
+       '''%par)
+
+#  -------------------------------------------------------------------
+#  test for pscons
+def sglfdrtm_test(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
+    
+    Gx   = 'Gx%s'    %surfix
+    Gz   = 'Gz%s'    %surfix
+    sxx  = 'sxx%s'   %surfix 
+    sxz  = 'sxz%s'   %surfix
+    szx  = 'szx%s'   %surfix
+    szz  = 'szz%s'   %surfix
+    Frcd = 'record%s'%surfix 
+    
+    Ftmpwf  =  'tmpwf%s'  %surfix
+    Ftmpbwf =  'tmpbwf%s' %surfix
+
+    Fdenpml = Fden+'_pml'
+    Fvelpml = Fvel+'_pml'
+
+    Flow([Fimg1, Fimg2, Frcd, Fvelpml,Fdenpml,Gx,sxx,sxz,Gz,szx,szz],[Fsrc,Fvel,Fden],
+         '''
+         sfexpand   <${SOURCES[1]}
+                    left=%(bd)d right=%(bd)d 
                     top=%(bd)d  bottom=%(bd)d
-             '''%par)
-    Ffdenpml = Ffden+'_pml'
-    Ffvelpml = Ffvel+'_pml'
-    Fbdenpml = Fbden+'_pml'
-    Fbvelpml = Fbvel+'_pml'
-    
-    Flow([Gx,sxx,sxz],Ffvelpml,
-         '''
-         sfsglfdcx2_7 dt=%(dt)g eps=0.00001 npk=50 
-                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
-                      wavnumcut=%(frqcut)g
-         '''%par)
-    
-    Flow([Gz,szx,szz],Ffvelpml,
-         '''
-         sfsglfdcz2_7 dt=%(dt)g eps=0.00001 npk=50 
-                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
-                      wavnumcut=%(frqcut)g
-         '''%par)
-        
-    Flow([Fimg1, Fimg2, Frcd],[Fsrc,Ffvelpml,Ffdenpml,Fbvelpml,Fbdenpml,Gx,sxx,sxz,Gz,szx,szz],
-     '''
-     sfsglfdrtm2 img2=${TARGETS[1]} rec=${TARGETS[2]}
-                 fvel=${SOURCES[1]} fden=${SOURCES[2]}
-                 bvel=${SOURCES[3]} bden=${SOURCES[4]}
-                 Gx=${SOURCES[5]} sxx=${SOURCES[6]} sxz=${SOURCES[7]}
-                 Gz=${SOURCES[8]} szx=${SOURCES[9]} szz=${SOURCES[10]}
-                 freesurface=n  verb=y decay=n 
-                 spx=%(spx)g spz=%(spz)g pmlsize=%(pml)d snapinter=10 
-                 srcdecay=y  gp=%(gp)g srctrunc=0.2 pmld0=200
-     '''%par)
+                    >${TARGETS[3]}  &&
+         
+         sfexpand   <${SOURCES[2]}
+                    left=%(bd)d right=%(bd)d 
+                    top=%(bd)d  bottom=%(bd)d
+                    >${TARGETS[4]}  &&
+         
+         sfsglfdcx2_7  <${TARGETS[3]} 
+                       dt=%(dt)g eps=0.00001 npk=50 
+                       size=%(size)d sx=${TARGETS[6]} sz=${TARGETS[7]}
+                       wavnumcut=%(frqcut)g
+                       >${TARGETS[5]}  &&
 
+         sfsglfdcz2_7  <${TARGETS[3]}
+                       dt=%(dt)g eps=0.00001 npk=50 
+                       size=%(size)d sx=${TARGETS[9]} sz=${TARGETS[10]}
+                       wavnumcut=%(frqcut)g
+                       >${TARGETS[8]}  &&
 
-
-def sgrtm(Fimg1, Fimg2, Fsrc, Flvel, Flden, Par):
-    par = getpar(Par, 0)
-    
-    img1list = []
-    img2list = []
-    srclist = ''
-
-    for ii in range(0,par['shtnum']):
-        par = getpar(par, ii)
-        vel  = '%s-%d'  %(Flvel, ii)
-        den  = '%s-%d'  %(Flden, ii)
-        img1 = '%s-%d'  %(Fimg1, ii)
-        img2 = '%s-%d'  %(Fimg2, ii)
-        _sfix = str(ii)
-
-        splitmodel(vel, Flvel, par)
-        splitmodel(den, Flden, par)
-        sglfdrtm(img1, img2, Fsrc, vel, den, par, _sfix)
-        img1list = img1list + [img1]
-        img2list = img2list + [img2]
-    
-        srclist = srclist + ' ${SOURCES[%d]}' %(ii+1)
-    Flow(Fimg1, [Flvel]+img1list, 'sfstackimg %s' %srclist)
-    Flow(Fimg2, [Flvel]+img2list, 'sfstackimg %s' %srclist)
-
-
+         sfsglfdrtm2   <${SOURCES[0]}
+                       img2=${TARGETS[1]} rec=${TARGETS[2]} 
+                       fvel=${TARGETS[3]} fden=${TARGETS[4]}
+                       bvel=${TARGETS[3]} bden=${TARGETS[3]}
+                       Gx=${TARGETS[5]} sxx=${TARGETS[6]} sxz=${TARGETS[7]}
+                       Gz=${TARGETS[8]} szx=${TARGETS[9]} szz=${TARGETS[10]}
+                       freesurface=n  verb=y decay=n 
+                       spx=%(spx)g spz=%(spz)g pmlsize=%(pml)d snapinter=10 
+                       srcdecay=y  gp=%(gp)g srctrunc=0.2 pmld0=200
+                       >${TARGETS[0]}
+         
+         '''%par,stdin=0, stdout=0)
 
     
 
