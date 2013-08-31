@@ -95,31 +95,37 @@ def sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
     Ftmpbwf = 'tmpbwf%s' %surfix
 
 #  -------------------------------------------------------------------
-#    for m in [Fden, Fvel]:
-#        pml  = m+'_pml'
-#        Flow(pml,m,
-#             '''
-#             expand left=%(bd)d right=%(bd)d 
-#                    top=%(bd)d  bottom=%(bd)d
-#             '''%par)
-##  -------------------------------------------------------------------
+#  comment this part when use pscons 
+#  
+    for m in [Fden, Fvel]:
+        pml  = m+'_pml'
+        Flow(pml,m,
+             '''
+             expand left=%(bd)d right=%(bd)d 
+                    top=%(bd)d  bottom=%(bd)d
+             '''%par)
+#  -------------------------------------------------------------------
     Fdenpml = Fden+'_pml'
     Fvelpml = Fvel+'_pml'
     
 #  -------------------------------------------------------------------
-#    Flow([Gx,sxx,sxz],Fvelpml,
-#         '''
-#         sfsglfdcx2_7 dt=%(dt)g eps=0.00001 npk=50 
-#                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
-#                      wavnumcut=%(frqcut)g
-#         '''%par)
+#  comment this part when use pscons 
+#
+    Flow([Gx,sxx,sxz],Fvelpml,
+         '''
+         sfsglfdcx2_7 dt=%(dt)g eps=0.00001 npk=50 
+                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
+                      wavnumcut=%(frqcut)g
+         '''%par)
 #  -------------------------------------------------------------------
-#    Flow([Gz,szx,szz],Fvelpml,
-#         '''
-#         sfsglfdcz2_7 dt=%(dt)g eps=0.00001 npk=50 
-#                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
-#                      wavnumcut=%(frqcut)g
-#         '''%par)
+#  comment this part when use pscons 
+#
+    Flow([Gz,szx,szz],Fvelpml,
+         '''
+         sfsglfdcz2_7 dt=%(dt)g eps=0.00001 npk=50 
+                      size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
+                      wavnumcut=%(frqcut)g
+         '''%par)
 #  -------------------------------------------------------------------    
     Flow([Fimg1, Fimg2, Frcd],[Fsrc,Fvelpml,Fdenpml,Gx,sxx,sxz,Gz,szx,szz],
        '''sfsglfdrtm2 img2=${TARGETS[1]} rec=${TARGETS[2]} 
