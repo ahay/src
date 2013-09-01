@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
 	    if (!sf_getint("cgiter",&cgiter)) cgiter=10;
 	    /* number of conjugate-gradient iterations */
 	    
-	    if (!sf_getfloat("thres",&thres)) thres=0.;
+	    if (!sf_getfloat("thres",&thres)) thres=5.e-5;
 	    /* threshold (percentage) */
 	    
 	    if (!sf_getfloat("tol",&tol)) tol=1.e-3;

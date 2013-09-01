@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
 	    s[i] = 1./s[i]*1./s[i];
     }
 
-    if (!sf_getfloat("thres",&thres)) thres=0.;
+    if (!sf_getfloat("thres",&thres)) thres=5.e-5;
     /* threshold (percentage) */
 
     if (!sf_getfloat("tol",&tol)) tol=1.e-3;

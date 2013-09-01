@@ -77,7 +77,7 @@ void dsreiko_init(int *n_in   /* length */,
     offsets = (int *) sf_alloc (n[0]*n[1]*n[2],sizeof (int));
 
     thres = thres_in;
-    tol = tol_in;
+    tol = (double) tol_in;
     nloop = nloop_in;
     causal = causal_in;
 
@@ -357,8 +357,9 @@ int update(float value, float* time, int i, int f, float al)
 float qsolve(float* time, int i, int *f, float *al)
 /* find new traveltime at gridpoint i */
 {
-    int j, k, ix[3];
-    float a, b, res;
+    bool vad1, vad2, vad3, vad4;
+    int j, k, ix[3], ff1, ff2, ff3, ff4;
+    float a, b, res, res1, res2, res3, res4, al1, al2, al3, al4;
     double vr, vs;
     struct Upd xx[3], *xj[3];
 
@@ -404,22 +405,60 @@ float qsolve(float* time, int i, int *f, float *al)
 	if (updaten(&res,xj,vr,vs,f,al)) 
 	    return res;
 
-	if (xx[1].value <= xx[2].value) {
-	    *f = 6;
-	    if (updaten(&res,xj,vr,vs,f,al)) 
-		return res;
-	
-	    *f = 8;
-	    if (updaten(&res,xj,vr,vs,f,al)) 
-		return res;
-	} else {
-	    *f = 5;
-	    if (updaten(&res,xj,vr,vs,f,al)) 
-		return res;
+	ff1 = 6; al1 = *al; vad1=false;
+	if (updaten(&res1,xj,vr,vs,&ff1,&al1)) vad1=true;
+	ff2 = 5; al2 = *al; vad2=false;
+	if (updaten(&res2,xj,vr,vs,&ff2,&al2)) vad2=true;
+	ff3 = 4; al3 = *al; vad3=false;
+	if (updaten(&res3,xj,vr,vs,&ff3,&al3)) vad3=true;
 
-	    *f = 9;
-	    if (updaten(&res,xj,vr,vs,f,al)) 
-		return res;
+	if (vad1 && vad2) {
+	    if (res1 <= res2) {
+		if (res1 <= res3) {
+		    *f = ff1; *al = al1;
+		    return res1;
+		} else {
+		    *f = ff3; *al = al3;
+		    return res3;
+		}
+	    } else {
+		if (res2 <= res3) {
+		    *f = ff2; *al = al2;
+		    return res2;
+		} else {
+		    *f = ff3; *al = al3;
+		    return res3;
+		}
+	    }
+	}
+	if (vad1 && !vad2) {
+	    if (res1 <= res3) {
+		*f = ff1; *al = al1;
+		return res1;
+	    } else {
+		*f = ff3; *al = al3;
+		return res3;
+	    }
+	}
+	if (!vad1 && vad2) {
+	    if (res2 <= res3) {
+		*f = ff2; *al = al2;
+		return res2;
+	    } else {
+		*f = ff3; *al = al3;
+		return res3;
+	    }
+	}
+
+	ff4 = 1; al4 = *al; vad4=false;
+	if (updaten(&res4,xj,vr,vs,&ff4,&al4)) vad4=true;
+
+	if (res3 <= res4) {
+	    *f = ff3; *al = al3;
+	    return res3;
+	} else {
+	    *f = ff4; *al = al4;
+	    return res4;
 	}
 
 	return SF_HUGE;
@@ -565,7 +604,8 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	else
 	    min = xj[2]->value;
 
-	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,sqrt(vs/xj[2]->delta)+xj[2]->value);
+	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,
+		     sqrt(vs/xj[2]->delta)+xj[2]->value);
 
 	if (min > max) return false;
 
@@ -592,7 +632,8 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 	else
 	    min = xj[1]->value;
 
-	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,sqrt(vr/xj[1]->delta)+xj[1]->value);
+	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,
+		     sqrt(vr/xj[1]->delta)+xj[1]->value);
 
 	if (min > max) return false;
 
@@ -655,7 +696,9 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
 		min = xj[j]->value;
 	}       
 
-	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,SF_MIN(sqrt(vr/xj[1]->delta)+xj[1]->value,sqrt(vs/xj[2]->delta)+xj[2]->value));
+	max = SF_MIN((sqrt(vs)+sqrt(vr))/sqrt(xj[0]->delta)+xj[0]->value,
+		     SF_MIN(sqrt(vr/xj[1]->delta)+xj[1]->value,
+			    sqrt(vs/xj[2]->delta)+xj[2]->value));
 
 	if (min > max) return false;
 
