@@ -36,7 +36,7 @@ static float lower, upper;
 void iwinlcg_init(bool verb0,
 		  char *order, char *cost0,
 		  bool update0,
-		  int npml, float vpml,
+		  int npml,
 		  int n1, int n2,
 		  float d1, float d2,
 		  int nh, int ns, 
@@ -85,7 +85,7 @@ void iwinlcg_init(bool verb0,
     piph = sf_floatalloc(n1*n2*(2*nh+1));
 
     /* forward modeling */
-    iwimodl_init(order,npml,vpml,
+    iwimodl_init(order,npml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 source,data, sfile,rfile,
@@ -97,7 +97,7 @@ void iwinlcg_init(bool verb0,
 		pliter);
 
     /* tomography operator */
-    iwigrad_init(order,npml,vpml,
+    iwigrad_init(order,npml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 sfile,rfile,

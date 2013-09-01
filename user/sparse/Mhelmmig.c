@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     int npml, pad1, pad2, n1, n2; 
     int ih, nh, is, ns, iw, nw, i, j;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float d1, d2, **vel, vpml, ****image, ****timage, dw, ow;
+    float d1, d2, **vel, ****image, ****timage, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long *Ap, *Ai, *Map;
     double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
@@ -89,9 +89,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("nh",&nh)) nh=0;
     /* horizontal space-lag */
-
-    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* PML velocity */
 
     if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
@@ -258,7 +255,7 @@ int main(int argc, char* argv[])
 
 	if (!load) {
 	    /* assemble matrix */
-	    fdprep(omega, vpml,
+	    fdprep(omega,
 		   n1, n2, d1, d2, vel,
 		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);	    

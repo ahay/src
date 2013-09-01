@@ -27,7 +27,7 @@
 #include "fdprep.h"
 #include "iwioper0.h"
 
-static float vpml, d1, d2, ow, dw;
+static float d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
 static int n1, n2, nh, ns, nw, npml;
@@ -149,7 +149,7 @@ void iwiadd(double omega,
     }
 }
 
-void iwi_init(int npml0, float vpml0, 
+void iwi_init(int npml0, 
 	      int nn1, int nn2, 
 	      float dd1, float dd2,
 	      int nh0, int ns0, 
@@ -161,7 +161,6 @@ void iwi_init(int npml0, float vpml0,
 /*< initialize >*/
 {
     npml = npml0;
-    vpml = vpml0;
     
     n1 = nn1;
     n2 = nn2;

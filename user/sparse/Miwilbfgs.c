@@ -69,7 +69,7 @@ int main(int argc, char* argv[])
     int prect[3], pliter;
     int dorder, grect[2], gliter, mline;
     float plower, pupper, geps, gscale, epsilon;
-    float vpml, d1, d2, **vel, dw, ow;
+    float d1, d2, **vel, dw, ow;
     char *datapath;
     sf_file in, out, source, data;
     sf_file imask, weight, precon;
@@ -103,9 +103,6 @@ int main(int argc, char* argv[])
 #endif
 
     uts = (uts < 1)? mts: uts;
-
-    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* PML velocity */
 
     if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
@@ -236,7 +233,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize operators */
-    iwilbfgs_init(verb,order, npml,vpml,
+    iwilbfgs_init(verb,order, npml,
 		  n1,n2, d1,d2,
 		  nh,ns, ow,dw,nw,
 		  source,data, load,datapath, uts,

@@ -27,7 +27,7 @@
 #include "fdprep.h"
 #include "iwigrad.h"
 
-static float vpml, **vel, d1, d2, ow, dw;
+static float **vel, d1, d2, ow, dw;
 static float ***wght, **prec;
 static float **tempx, **tempr;
 static int n1, n2, nh, ns, nw, npml;
@@ -154,7 +154,7 @@ void iwiadd(double omega,
 }
 
 void iwigrad_init(char *order,
-		  int npml0, float vpml0, 
+		  int npml0,
 		  int nn1, int nn2, 
 		  float dd1, float dd2,
 		  int nh0, int ns0, 
@@ -167,7 +167,6 @@ void iwigrad_init(char *order,
     fdprep_order(order);
 
     npml = npml0;
-    vpml = vpml0;
     
     n1 = nn1;
     n2 = nn2;
@@ -302,7 +301,7 @@ void iwigrad_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 
 	if (!load) {
 	    /* assemble matrix */
-	    fdprep(omega, vpml,
+	    fdprep(omega,
 		   n1, n2, d1, d2, vel,
 		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);	    

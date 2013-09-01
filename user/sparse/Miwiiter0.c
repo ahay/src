@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     bool verb, shape;
     int n1, n2, cgiter, npml; 
     int nh, ns, nw, n[2], rect[2];
-    float vpml, d1, d2, dw, ow, tol;
+    float d1, d2, dw, ow, tol;
     float *di, *dm, ***wght, reg, **prec, **xmov, **rmov, *p=NULL;
     char *datapath;
     sf_file in, out, model, us, ur;
@@ -58,9 +58,6 @@ int main(int argc, char* argv[])
 #endif
 
     uts = (uts < 1)? mts: uts;
-
-    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* PML velocity */
 
     if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
@@ -154,7 +151,7 @@ int main(int argc, char* argv[])
     }    
 
     /* initialize operator */
-    iwi_init(npml,vpml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
+    iwi_init(npml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
 	     us,ur, datapath, uts, order);
 
     /* initialize regularization */

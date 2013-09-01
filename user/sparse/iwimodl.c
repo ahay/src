@@ -27,7 +27,7 @@
 #include "fdprep.h"
 #include "iwimodl.h"
 
-static float vpml, d1, d2, ow, dw, ****image;
+static float d1, d2, ow, dw, ****image;
 static int n1, n2, nh, ns, nw, npml;
 static sf_file source, data;
 static sf_fslice sfile, rfile;
@@ -44,7 +44,7 @@ static char *datapath, *insert, *append;
 static size_t srclen, inslen;
 
 void iwimodl_init(char *order,
-		  int npml0, float vpml0, 
+		  int npml0,
 		  int nn1, int nn2, 
 		  float dd1, float dd2,
 		  int nh0, int ns0, 
@@ -60,7 +60,6 @@ void iwimodl_init(char *order,
     fdprep_order(order);
 
     npml = npml0;
-    vpml = vpml0;
     
     n1 = nn1;
     n2 = nn2;
@@ -197,7 +196,7 @@ void iwimodl_modl(float **vel   /* current velocity */,
 	}
 
 	/* assemble matrix */
-	fdprep(omega, vpml,
+	fdprep(omega,
 	       n1, n2, d1, d2, vel,
 	       npml, pad1, pad2,
 	       Ti, Tj, Tx, Tz);	    

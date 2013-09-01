@@ -33,7 +33,6 @@
 #include "fdprep9.h"
 
 void fdprep9(const double omega,
-	     const float vpml,
 	     const int n1, const int n2,
 	     const float d1, const float d2,
 	     float **v,
@@ -46,15 +45,15 @@ void fdprep9(const double omega,
     int i, j, index;
     double eta1, eta2, c1, c2;
     double *g1, *g2, **pad;
-    double complex *s1, *s2, neib, cent;
+    double complex **s1, **s2, neib, cent;
     SuiteSparse_long count;
     
     /* prepare PML */
     eta1 = (double) npml*d1;
     eta2 = (double) npml*d2;
 
-    c1 = -3./(2.*eta1)*vpml*log(pow(10.,-log2(npml/10.)-3.));
-    c2 = -3./(2.*eta2)*vpml*log(pow(10.,-log2(npml/10.)-3.));
+    c1 = -3./(2.*eta1)*log(pow(10.,-log2(npml/10.)-3.));
+    c2 = -3./(2.*eta2)*log(pow(10.,-log2(npml/10.)-3.));
 
     g1 = (double*) sf_alloc(pad1,sizeof(double));
     for (i=0; i < pad1; i++) {
@@ -67,9 +66,10 @@ void fdprep9(const double omega,
 	}
     }
 
-    s1 = (double complex*) sf_alloc(pad1,sizeof(double complex));
-    for (i=0; i < pad1; i++) {
-	s1[i] = 1.-I*g1[i]/omega;
+    s1 = (double complex**) sf_alloc(pad2,sizeof(double complex));
+    s1[0] = (double complex**) sf_alloc(pad1*pad2,sizeof(double complex));
+    for (j=1; j < pad2; j++) {
+	s1[j] = s1[0]+j*pad1;
     }
 
     g2 = (double*) sf_alloc(pad2,sizeof(double));
@@ -83,9 +83,10 @@ void fdprep9(const double omega,
 	}
     }
 
-    s2 = (double complex*) sf_alloc(pad2,sizeof(double complex));
-    for (j=0; j < pad2; j++) {
-	s2[j] = 1.-I*g2[j]/omega;
+    s2 = (double complex**) sf_alloc(pad2,sizeof(double complex));
+    s2[0] = (double complex**) sf_alloc(pad1*pad2,sizeof(double complex));
+    for (j=1; j < pad2; j++) {
+	s2[j] = s2[0]+j*pad1;
     }
 
     /* extend model */
@@ -129,6 +130,14 @@ void fdprep9(const double omega,
 	}
     }
 
+    /* set-up PML */
+    for (j=0; j < pad2; j++) {
+	for (i=0; i < pad1; i++) {
+	    s1[j][i] = 1.-I*pad[j][i]*g1[i]/omega;
+	    s2[j][i] = 1.-I*pad[j][i]*g2[j]/omega;
+	}
+    }
+
     /* assemble matrix in triplet form */
     count = 0;
     for (j=1; j < pad2-1; j++) {
@@ -138,7 +147,7 @@ void fdprep9(const double omega,
 	    cent = 0.+I*0.;
 
 	    /* left left */
-	    neib = (-1./12)*(s2[j]/s1[i-1])/(d1*d1);
+	    neib = (-1./12)*(s2[j][i-1]/s1[j][i-1])/(d1*d1);
 	    cent += -neib;
 
 	    if (i > 2) {
@@ -151,7 +160,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* left */
-	    neib = (4./3)*(s2[j]/s1[i]+s2[j]/s1[i-1])/(2.*d1*d1);
+	    neib = (4./3)*(s2[j][i]/s1[j][i]+s2[j][i-1]/s1[j][i-1])/(2.*d1*d1);
 	    cent += -neib;
 
 	    if (i > 1) {
@@ -164,7 +173,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* right */
-	    neib = (4./3)*(s2[j]/s1[i]+s2[j]/s1[i+1])/(2.*d1*d1);
+	    neib = (4./3)*(s2[j][i]/s1[j][i]+s2[j][i+1]/s1[j][i+1])/(2.*d1*d1);
 	    cent += -neib;
 
 	    if (i < pad1-2) {
@@ -177,7 +186,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* right right */
-	    neib = (-1./12)*(s2[j]/s1[i+1])/(d1*d1);
+	    neib = (-1./12)*(s2[j][i+1]/s1[j][i+1])/(d1*d1);
 	    cent += -neib;
 
 	    if (i < pad1-3) {
@@ -190,7 +199,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* down down */
-	    neib = (-1./12)*(s1[i]/s2[j-1])/(d2*d2);
+	    neib = (-1./12)*(s1[j-1][i]/s2[j-1][i])/(d2*d2);
 	    cent += -neib;
 
 	    if (j > 2) {
@@ -203,7 +212,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* down */
-	    neib = (4./3)*(s1[i]/s2[j]+s1[i]/s2[j-1])/(2.*d2*d2);
+	    neib = (4./3)*(s1[j][i]/s2[j][i]+s1[j-1][i]/s2[j-1][i])/(2.*d2*d2);
 	    cent += -neib;
 
 	    if (j > 1) {
@@ -216,7 +225,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* up */
-	    neib = (4./3)*(s1[i]/s2[j]+s1[i]/s2[j+1])/(2.*d2*d2);
+	    neib = (4./3)*(s1[j][i]/s2[j][i]+s1[j+1][i]/s2[j+1][i])/(2.*d2*d2);
 	    cent += -neib;
 
 	    if (j < pad2-2) {
@@ -229,7 +238,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* up up */
-	    neib = (-1./12)*(s1[i]/s2[j+1])/(d2*d2);
+	    neib = (-1./12)*(s1[j+1][i]/s2[j+1][i])/(d2*d2);
 	    cent += -neib;
 
 	    if (j < pad2-3) {
@@ -242,7 +251,7 @@ void fdprep9(const double omega,
 	    }
 
 	    /* center */
-	    cent += pow(omega/pad[j][i],2.)*(s1[i]*s2[j]);
+	    cent += pow(omega/pad[j][i],2.)*(s1[j][i]*s2[j][i]);
 	    
 	    Ti[count] = index;
 	    Tj[count] = index;

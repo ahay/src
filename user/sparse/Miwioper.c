@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     bool adj, load;
     int n1, n2, npml; 
     int nh, ns, nw;
-    float vpml, d1, d2, **vel, dw, ow;
+    float d1, d2, **vel, dw, ow;
     float *di, *dm, ***wght, **prec;
     char *datapath;
     sf_file in, out, model, us, ur;
@@ -61,9 +61,6 @@ int main(int argc, char* argv[])
 #endif
 
     uts = (uts < 1)? mts: uts;
-
-    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* PML velocity */
 
     if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
@@ -144,7 +141,7 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n3",2*nh+1);    
     
     /* initialize */
-    iwi_init(npml,vpml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
+    iwi_init(npml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
 	     us,ur, load,datapath, uts, order);
 
     /* set velocity and weight */

@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     bool verb, save, load, hermite;
     int n1, n2, npml, pad1, pad2, is, ns, iw, nw;
     SuiteSparse_long n, nz, *Ti, *Tj;
-    float d1, d2, **v, vpml, ds, os, dw, ow;
+    float d1, d2, **v, ds, os, dw, ow;
     double omega, *Tx, *Tz;
     SuiteSparse_long *Ap, *Ai, *Map;
     double *Ax, *Az, **Xx, **Xz, **Bx, **Bz;
@@ -90,9 +90,6 @@ int main(int argc, char* argv[])
     if (!sf_getbool("hermite",&hermite)) hermite=false;
     /* Hermite operator */
     
-    if (!sf_getfloat("vpml",&vpml)) vpml=4.;
-    /* PML velocity */
-
     if (!sf_getint("npml",&npml)) npml=10;
     /* PML width */
 
@@ -207,7 +204,7 @@ int main(int argc, char* argv[])
 
 	if (!load) {
 	    /* assemble matrix */	    
-	    fdprep(omega, vpml,
+	    fdprep(omega,
 		   n1, n2, d1, d2, v,
 		   npml, pad1, pad2,
 		   Ti, Tj, Tx, Tz);
