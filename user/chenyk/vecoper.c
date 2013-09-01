@@ -21,7 +21,7 @@
 #include "vecoper.h"
 
 #ifndef EPS
-#define EPS 0.0000000000000000001
+#define EPS 0.00000000000000000000001
 #endif
 static int i;
 
@@ -35,10 +35,17 @@ float dotmultsum( float *xx, float *yy, int n)
 }
 
 void scale( float *xx, float *yy, int n, float s)
-/*< implement and scaled indentity operator >*/
+/*< implement a scaled indentity operator >*/
 {
 	for(i=0;i<n;i++)
 		yy[i]=s*xx[i];
+}
+
+void vecabs( float *xx, float *yy, int n)
+/*< Absolute value for vector >*/
+{
+	for(i=0;i<n;i++)
+		yy[i]=fabsf(xx[i]);
 }
 
 void scalesum(float *xx, float *yy, float *zz, int n, float sx, float sy)
@@ -48,10 +55,42 @@ void scalesum(float *xx, float *yy, float *zz, int n, float sx, float sy)
 		zz[i]=sx*xx[i]+sy*yy[i];
 }
 
+void scalesumreal(float *xx, float yy, float *zz, int n, float sx)
+/*< summation between one scaled vector and one scaler  >*/
+{
+	for(i=0;i<n;i++)
+		zz[i]=sx*xx[i]+yy;
+}
+
 void vecdiv(float *xx, float *yy, float *zz, int n)
 /*< division between two vector >*/
 {
 	for(i=0;i<n;i++)
 		zz[i]=xx[i]/(yy[i]+EPS);
 }
+
+void vecmul(float *xx, float *yy, float *zz, int n)
+/*< multiplication between two vector >*/
+{
+	for(i=0;i<n;i++)
+		zz[i]=xx[i]*yy[i];
+}
+
+float vecmax(float *xx, int n)
+/*< maximum value in a vector >*/
+{	
+	float t;
+	for(i=0;i<n;i++)
+		if(t<xx[i]) t=xx[i];
+	return t;
+}
+
+void consvec(float v, int n, float *x)
+/*< Create constant-value vector >*/
+{	
+	for(i=0;i<n;i++)
+		x[i]=v;
+}
+
+
 
