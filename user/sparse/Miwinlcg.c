@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     /* load LU */
     
     if (!sf_getbool("update",&update)) update=true;
-    /* y, nonlinear CG; n, steepest descent */
+    /* y, nonlinear CG; n, Gauss-Newton */
 
     if (!sf_getint("uts",&uts)) uts=0;
     /* number of OMP threads */
@@ -77,10 +77,10 @@ int main(int argc, char* argv[])
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
-    /* discretization scheme (default optimal 9-point) */
+    /* discretization scheme (default optimal 25-point) */
 
-    if (NULL == (cost = sf_getstring("cost"))) cost="c";
-    /* cost functional type (default classic DSO) */
+    if (NULL == (cost = sf_getstring("cost"))) cost="d";
+    /* cost functional type (default Weibull) */
 
     if (!sf_getint("prect1",&prect[0])) prect[0]=5;
     /* slope smoothing radius on axis 1 */
@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("grect2",&grect[1])) grect[1]=5;
     /* gradient smoothing radius on axis 2 */
 
-    if (!sf_getint("gliter",&gliter)) gliter=1;
+    if (!sf_getint("gliter",&gliter)) gliter=5;
     /* # of Gauss-Newton iterations */
 
     if (!sf_getfloat("geps",&geps)) geps=0.;
@@ -237,7 +237,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize operators */
-    iwinlcg_init(false,order,cost, npml,vpml,
+    iwinlcg_init(false,order,cost,update, npml,vpml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 source,data, load,datapath, uts,
@@ -253,6 +253,7 @@ int main(int argc, char* argv[])
     if (imag != NULL) iwinlcg_image(imag);
 
     iwinlcg_grad(x0, wght,prec,g0);
+    if (update) iwinlcg_smooth(g0);
 
     if (verb) sf_warning("Iteration 0, fx=%g.",fx0);
 
@@ -268,7 +269,8 @@ int main(int argc, char* argv[])
 
     for (iter=0; iter < miter; iter++) {
 	/* line-search */
-	iliter = 0; alpha = 1.;
+	iliter = 0; 
+	alpha = iwinlcg_scale(x0, s);
 	while (iliter < liter) {
 	    for (j=0; j < n2; j++) {
 		for (i=0; i < n1; i++) {
@@ -301,7 +303,8 @@ int main(int argc, char* argv[])
 	if (imag != NULL) iwinlcg_image(imag);
 
 	/* update model */
-	iwinlcg_grad(x1, wght,prec,g1);	
+	iwinlcg_grad(x1, wght,prec,g1);
+	if (update) iwinlcg_smooth(g1);
 
 	for (j=0; j < n2; j++) {
 	    for (i=0; i < n1; i++) {

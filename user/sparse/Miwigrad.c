@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize operators */
-    iwinlcg_init(false,order,cost, npml,vpml,
+    iwinlcg_init(false,order,cost,update, npml,vpml,
 		 n1,n2, d1,d2,
 		 nh,ns, ow,dw,nw,
 		 source,data, load,datapath, uts,
@@ -213,7 +213,9 @@ int main(int argc, char* argv[])
     
     /* compute gradient */
     fx0 = iwinlcg_eval(x0, mask,wght);
+
     iwinlcg_grad(x0, wght,prec,g0);
+    if (update) iwinlcg_smooth(g0);
 
     /* write output */
     sf_floatwrite(g0,n1*n2,out);

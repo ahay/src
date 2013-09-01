@@ -25,7 +25,7 @@
 
 #include "iwinlcg.h"
 
-static bool verb;
+static bool verb, update;
 static char *cost;
 static int nn[3], ss[2], dorder, grect[2], gliter;
 static float dd[3], **vel, plower, pupper, geps, gscale;
@@ -33,32 +33,9 @@ static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
 static float lower, upper;
 
-void scale(const float *x, float *g)
-/* re-scale gradient */
-{
-    int i1, i2;
-    float scale=0.;
-
-    for (i2=0; i2 < nn[1]; i2++) {
-	for (i1=0; i1 < nn[0]; i1++) {
-	    scale = (fabsf(g[i2*nn[0]+i1])/x[i2*nn[0]+i1])>scale? 
-		fabsf(g[i2*nn[0]+i1])/x[i2*nn[0]+i1]: scale;
-	}
-    }
-
-    if (scale <= gscale) return;
-
-    scale /= gscale;
-
-    for (i2=0; i2 < nn[1]; i2++) {
-	for (i1=0; i1 < nn[0]; i1++) {
-	    g[i2*nn[0]+i1] /= scale;
-	}
-    }
-}
-
 void iwinlcg_init(bool verb0,
 		  char *order, char *cost0,
+		  bool update0,
 		  int npml, float vpml,
 		  int n1, int n2,
 		  float d1, float d2,
@@ -78,6 +55,7 @@ void iwinlcg_init(bool verb0,
 {
     verb = verb0;
     cost = cost0;
+    update = update0;
 
     /* model */
     nn[0] = n1; nn[1] = n2; nn[2] = 2*nh+1;
@@ -243,7 +221,6 @@ void iwinlcg_grad(const float *x,
 {
     int i1, i2, i3, ii;
     float *p;
-    sf_triangle tr;
 
     for (i2=0; i2 < nn[1]; i2++) {
 	for (i1=0; i1 < nn[0]; i1++) {
@@ -287,30 +264,11 @@ void iwinlcg_grad(const float *x,
 	}
     }
 
-    if (gliter == 0) {
+    if (update) {
 	/* steepest descent */
-	iwigrad_oper(true,false, nn[0]*nn[1],nn[0]*nn[1]*nn[2], image,pimage);
-
-	/* smooth gradient */
-	tr = sf_triangle_init(grect[0],nn[0]);
-	for (i2=0; i2 < nn[1]; i2++) {
-	    i1 = sf_first_index(0,i2,2,nn,ss);
-	    
-	    sf_smooth (tr,i1,ss[0],false,false,image);
-	    sf_smooth2(tr,i1,ss[0],false,false,image);
-	}
-	sf_triangle_close(tr);
-	
-	tr = sf_triangle_init(grect[1],nn[1]);
-	for (i1=0; i1 < nn[0]; i1++) {
-	    i2 = sf_first_index(1,i1,2,nn,ss);
-	    
-	    sf_smooth (tr,i2,ss[1],false,false,image);
-	    sf_smooth2(tr,i2,ss[1],false,false,image);
-	}
-	sf_triangle_close(tr);
+	iwigrad_oper(true,false, nn[0]*nn[1],nn[0]*nn[1]*nn[2], image,pimage);	
     } else {
-	/* shaping regularization */
+	/* Gauss-Newton */
 	sf_trianglen_init(2,grect,nn);
 	sf_repeat_init(nn[0]*nn[1],1,sf_trianglen_lop);
 
@@ -319,7 +277,6 @@ void iwinlcg_grad(const float *x,
 			 geps,1.e-6,false,false);
 	p = sf_floatalloc(nn[0]*nn[1]);
 	
-	/* Gauss-Newton */
 	sf_conjgrad(NULL, iwigrad_oper,sf_repeat_lop, p,image,pimage,gliter);
 	
 	free(p); sf_conjgrad_close(); sf_trianglen_close();
@@ -331,9 +288,56 @@ void iwinlcg_grad(const float *x,
 	    g[i2*nn[0]+i1] = (-0.5*powf(x[i2*nn[0]+i1],3.)*image[i2*nn[0]+i1]);
 	}
     }
+}
 
-    /* re-scale */
-    scale(x,g);
+void iwinlcg_smooth(float *g)
+/*< smooth gradient >*/
+{
+    int i1, i2;
+    sf_triangle tr;
+    
+    tr = sf_triangle_init(grect[0],nn[0]);
+    for (i2=0; i2 < nn[1]; i2++) {
+	i1 = sf_first_index(0,i2,2,nn,ss);
+	
+	sf_smooth (tr,i1,ss[0],false,false,g);
+	sf_smooth2(tr,i1,ss[0],false,false,g);
+    }
+    sf_triangle_close(tr);
+    
+    tr = sf_triangle_init(grect[1],nn[1]);
+    for (i1=0; i1 < nn[0]; i1++) {
+	i2 = sf_first_index(1,i1,2,nn,ss);
+	
+	sf_smooth (tr,i2,ss[1],false,false,g);
+	sf_smooth2(tr,i2,ss[1],false,false,g);
+    }
+    sf_triangle_close(tr);
+}
+
+float iwinlcg_scale(const float *x, float *g)
+/*< scale gradient >*/
+{
+    int i1, i2;
+    float scale=0.;
+
+    /**/
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    scale = (fabsf(g[i2*nn[0]+i1])/x[i2*nn[0]+i1])>scale? 
+		fabsf(g[i2*nn[0]+i1])/x[i2*nn[0]+i1]: scale;
+	}
+    }
+    /**/
+    /*
+    scale = cblas_snrm2(nn[0]*nn[1],g,1)/cblas_snrm2(nn[0]*nn[1],x,1);
+    */
+
+    if (scale <= gscale) {
+	return 1.;
+    } else {
+	return gscale/scale;
+    }
 }
 
 void iwinlcg_image(sf_file fimage)
