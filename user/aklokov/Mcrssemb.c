@@ -210,6 +210,8 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
 			if (sembval > s2_) semb [it] = 1.0;
 			else if (sembval < s1_) semb [it] = 0.0;
 			else semb[it] = (sembval - s1_) / ds_;
+		} else {
+			semb[it] = sembval;
 		}
     }
 
