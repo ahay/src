@@ -25,8 +25,13 @@ bindir = os.path.join(topdir,'bin')
 try:
     suprogs = os.listdir(bindir)
 except:
-    print
-    sys.stderr.write("No SU installed.\n")
+    print    
+    sys.stderr.write("It looks like SU is not installed.\n")
+    sys.stderr.write("exception from suprogs=listdir(bindir) (bindir=%s)\n"%
+                     bindir)
+    sys.stderr.write("bindir is topdir(=%s) with /bin appended.\n"%topdir)
+    sys.stderr.write("bindir is os.environ.get('CWPROOT','').\n")
+    sys.stderr.write("Maybe CWPROOT not set in .bash_profile.\n\n")
     sys.exit(1)
 
 suplots = ['plot']
