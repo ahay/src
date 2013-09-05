@@ -344,7 +344,8 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
     int pit = -1, it = 0;
     float eps = 1e-2;
     float s, sp, sb, sa, sz, sx, sy, dd;
-    float dz, dx, dy, db, da, fz, fx, fy, fb, fa, ll = 0.0, sigma, r;
+    float dz, dx, dy, db, da, fz, fx, fy, fb, fa, ll = 0.0, sigma;
+    double r;
     float ezmin, ezmax, exmin, exmax, eymin, eymax;
     EscColor3 col = 0;
 
@@ -399,6 +400,17 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         sp = s;
         if (esc_tracer->parab) { /* Intersection with a parabolic trajectory */
             sigma = SF_HUGE;
+            if (esc_tracer->md != SF_HUGE) {
+                r = sqrt (dz*dz + dx*dx + dy*dy);
+                /* Check if the next step is going to be above the allowed limit */
+                if (ll + r > esc_tracer->md) {
+                    /* Adjust increments */
+                    r = (esc_tracer->md - ll)/r;
+                    dz *= r;
+                    dx *= r;
+                    dy *= r;
+                }
+            }
             while (SF_HUGE == sigma) {
                 sigma = sf_esc_tracer3_pintersect (esc_tracer, &z, &x, &y, &b, &a, &t, &dd,
                                                    dz, dx, dy, fz, fx, fy, s, sz, sx, sy);
@@ -408,13 +420,6 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
                     dz *= 0.5;
                     dx *= 0.5;
                     dy *= 0.5;
-                } else if (esc_tracer->md != SF_HUGE && 
-                           (ll + dd) > 1.05*esc_tracer->md) {
-                    /* Adjust cell sizes, if maximum allowed length is exceeded */
-                    r = 1.05*esc_tracer->md/(ll + dd);
-                    dz *= r;
-                    dx *= r;
-                    dy *= r;
                 }
             }
         } else /* Intersection with a straight trajectory */

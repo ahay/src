@@ -121,7 +121,7 @@ void sf_escrt3_traj (float z, float x, float y, float b,
 
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz;
-    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt;
+    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, md;
     float ****e;
     sf_file spdom, vspline = NULL, out, traj = NULL;
     sf_escrt3_traj_cbud *tdata = NULL; 
@@ -185,6 +185,8 @@ int main (int argc, char* argv[]) {
     db = SF_PI/(float)nb;
     ob = 0.5*db;
 
+    if (!sf_getfloat ("md", &md)) md = SF_HUGE;
+    /* Maximum distance for a ray to travel (default - up to model boundaries) */
 #ifdef _OPENMP
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for ray tracing */
@@ -336,11 +338,12 @@ int main (int argc, char* argv[]) {
             esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
                                                    NULL, 0.0, NULL);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
+        if (md != SF_HUGE)
+            sf_esc_tracer3_set_mdist (esc_tracers[ic], md);
         esc_points[ic] = sf_esc_point3_init ();
     }
 
     timer = sf_timer_init ();
-
     /* Ray tracing loop */
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
