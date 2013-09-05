@@ -181,9 +181,12 @@ anisotropic wave propagation effects. The program below (slightly
 modified from the original version by Paul Sava) implements wave
 modeling with equation
 \begin{equation}
-   \label{eq:isowave2}
    {\frac{\partial^2 P}{\partial t^2}} =
-   V^2(\mathbf{x})\,{\nabla^2 P} + {F(\mathbf{x},t)} = V^2(\mathbf{x})\,\left(\frac{\partial^2 P}{\partial x_1^2} +\frac{\partial^2 P}{\partial x_2^2}\right) +  {F(\mathbf{x},t)}\;,
+   {V^2(\mathbf{x})\,{\nabla^2 P} + {F(\mathbf{x},t)}} =
+   {V^2(\mathbf{x})\,\left(\frac{\partial^2 P}{\partial x_1^2}
+     +\frac{\partial^2 P}{\partial x_2^2}\right) +
+   {F(\mathbf{x},t)}}\;,
+   \label{eq:isowave2}
 \end{equation} 
 where $F(\mathbf{x},t)$ is the source term. The implementation uses
 finite-difference discretization (second-order in time and fourth-order in space). 
