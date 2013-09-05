@@ -220,13 +220,14 @@ float sf_esc_tracer3_sintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
 
 float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, float *y,
                                  float *b, float *a, float *t, float *dd, float dz, float dx, float dy,
-                                 float fz, float fx, float fy, float s, float sz, float sx, float sy)
+                                 float fz, float fx, float fy, float s, float sz, float sx, float sy,
+                                 float md)
 /*< Compute intersection of a parabolic trajectory from (z, x, y, b, a) with 
     the nearest wall defined by (dz, dx, dy), return pseudotime along the trajectory >*/
 {
     float A, B, C, D, s1, s2, sigma, az, ax, ay,
           pz, px, py, pz0, px0, py0, l, aold, ddz, ddx, ddy;
-
+    *dd = 0.0;
     /* Assume locally constant slowness and slowness gradients */
     /* Parabola - dz = -v_z*sigma + 0.5*a_z*sigma^2 */
 
@@ -241,37 +242,46 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     px0 = s*sinf (*b)*cosf (aold);
     py0 = s*sinf (*b)*sinf (aold);
 
-    if (*b <= SF_PI/4.0 || *b >= 3.0*SF_PI/4.0) {
-        /* Intersection with z */
-        A = 0.5*az;
-        B = pz0;
-        C = -dz;
-    } else if ((*a <= SF_PI/4.0 || *a >= 7.0*SF_PI/4.0) ||
-               (*a >= 3.0*SF_PI/4.0 && *a <= 5.0*SF_PI/4.0)) {
-        /* Intersection with x */
-        A = 0.5*ax;
-        B = px0;
-        C = -dx;
-    } else {
-        /* Intersection with y */
-        A = 0.5*ay;
-        B = py0;
-        C = -dy;
-    }
-    if (4.0*A*C > B*B)
-/*      sf_error ("Parabola miss");*/
-        return SF_HUGE;
-    /* Solve the parabolic equation */
-    D = sqrt (B*B - 4.0*A*C);
-    if (fabsf (A) > 1e-7 && (-B + D) > 1e-7 && (-B - D) > 1e-7) {
-        s1 = (-B + D)/(2.0*A);
-        s2 = (-B - D)/(2.0*A);
-        sigma = fabsf (s1) < fabsf (s2) ? s1 : s2;
-    } else
-        sigma = -C/B;
-    ddz = fz*sigma + 0.5*az*sigma*sigma;
-    ddx = fx*sigma + 0.5*ax*sigma*sigma;
-    ddy = fy*sigma + 0.5*ay*sigma*sigma;
+    do {
+        if (*dd > md) {
+            dz *= md/(*dd);
+            dx *= md/(*dd);
+            dy *= md/(*dd);
+        }
+        if (*b <= SF_PI/4.0 || *b >= 3.0*SF_PI/4.0) {
+            /* Intersection with z */
+            A = 0.5*az;
+            B = pz0;
+            C = -dz;
+        } else if ((*a <= SF_PI/4.0 || *a >= 7.0*SF_PI/4.0) ||
+                   (*a >= 3.0*SF_PI/4.0 && *a <= 5.0*SF_PI/4.0)) {
+            /* Intersection with x */
+            A = 0.5*ax;
+            B = px0;
+            C = -dx;
+        } else {
+            /* Intersection with y */
+            A = 0.5*ay;
+            B = py0;
+            C = -dy;
+        }
+        if (4.0*A*C > B*B)
+/*          sf_error ("Parabola miss");*/
+            return SF_HUGE;
+        /* Solve the parabolic equation */
+        D = sqrt (B*B - 4.0*A*C);
+        if (fabsf (A) > 1e-7 && (-B + D) > 1e-7 && (-B - D) > 1e-7) {
+            s1 = (-B + D)/(2.0*A);
+            s2 = (-B - D)/(2.0*A);
+            sigma = fabsf (s1) < fabsf (s2) ? s1 : s2;
+        } else
+            sigma = -C/B;
+        ddz = fz*sigma + 0.5*az*sigma*sigma;
+        ddx = fx*sigma + 0.5*ax*sigma*sigma;
+        ddy = fy*sigma + 0.5*ay*sigma*sigma;
+        *dd = sqrtf (ddz*ddz + ddx*ddx + ddy*ddy);
+    } while (*dd > md);
+
     *z += ddz;
     *x += ddx;
     *y += ddy;
@@ -290,7 +300,6 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     *b = acosf (-pz/l);
     *t += (pz0*pz0 + px0*px0 + py0*py0)*sigma + (pz0*az + px0*ax + py0*ay)*sigma*sigma +
           (az*az + ax*ax + ay*ay)*sigma*sigma*sigma/3.0;
-    *dd = sqrtf (ddz*ddz + ddx*ddx + ddy*ddy);
     return sigma;
 }
 
@@ -400,20 +409,11 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         sp = s;
         if (esc_tracer->parab) { /* Intersection with a parabolic trajectory */
             sigma = SF_HUGE;
-            if (esc_tracer->md != SF_HUGE) {
-                r = sqrt (dz*dz + dx*dx + dy*dy);
-                /* Check if the next step is going to be above the allowed limit */
-                if (ll + r > esc_tracer->md) {
-                    /* Adjust increments */
-                    r = (esc_tracer->md - ll)/r;
-                    dz *= r;
-                    dx *= r;
-                    dy *= r;
-                }
-            }
             while (SF_HUGE == sigma) {
                 sigma = sf_esc_tracer3_pintersect (esc_tracer, &z, &x, &y, &b, &a, &t, &dd,
-                                                   dz, dx, dy, fz, fx, fy, s, sz, sx, sy);
+                                                   dz, dx, dy, fz, fx, fy, s, sz, sx, sy,
+                                                   esc_tracer->md != SF_HUGE ?
+                                                   esc_tracer->md - ll : esc_tracer->md);
                 if (SF_HUGE == sigma) {
                     /* Adjust cell sizes, if the analytic solution failed;
                        this happens in case of overturning rays */
