@@ -30,6 +30,10 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#ifdef LINUX
+#include <net/if.h>
+#endif
+#include <arpa/inet.h>
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -260,8 +264,60 @@ static void sf_esc_scgrid3_init_tps (sf_esc_scgrid3 esc_scgrid) {
     esc_scgrid->ns = ns;
 }
 
+/* Convert local domain name into an ASCII string with IP address */
+#ifdef LINUX
+static char *ip_linux = NULL;
+
+static char* sf_escscd3_local_ip (int i) {
+    int s;
+    struct ifconf ifconf;
+    struct ifreq ifr[50];
+    struct sockaddr_in *s_in = NULL;
+    int ifs;
+
+    s = socket (AF_INET, SOCK_STREAM, 0);
+    if (s < 0)
+        sf_error ("socket() failed, errno=%d", errno);
+
+    ifconf.ifc_buf = (char*)ifr;
+    ifconf.ifc_len = sizeof(ifr);
+
+    if (ioctl(s, SIOCGIFCONF, &ifconf) == -1)
+        sf_error ("ioctl()[SIOCGIFCONF] failed, errno=%d", errno);
+    ifs = ifconf.ifc_len/sizeof(ifr[0]);
+
+    if (i >= ifs)
+        sf_error ("Can not choose interface %d, only %d available", i, ifs);
+
+    ip_linux = (char*)malloc(INET_ADDRSTRLEN);
+    s_in = (struct sockaddr_in*)&ifr[i].ifr_addr;
+
+    if (!inet_ntop (AF_INET, &s_in->sin_addr, ip_linux, INET_ADDRSTRLEN))
+        sf_error ("inet_ntop() failed, errno=%d", errno);
+
+    close (s);
+    return ip_linux;
+#else
+static char* sf_escscd3_local_ip () {
+    char hostname[1024];
+    struct hostent *he;
+    struct in_addr **addr_list;
+
+    if (gethostname (hostname, 1024) != 0 ||
+        (he = gethostbyname (hostname)) == NULL)
+        return NULL;
+
+    addr_list = (struct in_addr **)he->h_addr_list;
+    if (addr_list[0] != NULL)
+        return (inet_ntoa (*addr_list[0]));
+
+    return NULL;
+#endif
+}
+
 /* Try to conenct to a remote daemon, return socket id */
-static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sockaddr_in *serv_addr, int id) {
+static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sockaddr_in *serv_addr,
+                                          struct sockaddr_in *loc_addr, int id) {
     int is, on = 1;
     fd_set sset; 
     struct timeval timeout; 
@@ -271,6 +327,11 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     /* Create TCP socket */
     if ((is = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
         sf_warning ("socket() failed");
+        return -1;
+    }
+    if (bind (is, (struct sockaddr *)loc_addr, sizeof(*loc_addr)) < 0) {
+        sf_warning ("bind() failed");
+        close (is);
         return -1;
     }
     /* Allow socket descriptor to be reuseable */
@@ -338,7 +399,7 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
                         return -1;
                     }
                     if (valopt) {
-                        sf_warning ("Error in establishing connection to daemon %d", id);
+                        sf_warning ("Error in establishing connection to daemon %d (errno=%d)", id, errno);
                         close (is);
                         return -1;
                     }
@@ -360,13 +421,14 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
 }
 
 sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer,
-                                    int morder, float frac, bool mmaped, bool verb)
+                                    int morder, int inet, float frac, bool mmaped, bool verb)
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
     int ia, ib, i, j, k, jj, nab, iab0, iab1;
     int ic, no = 1, nd, is0, is1, ndab, ncv, nad;
-    struct sockaddr_in *serv_addr;
+    struct sockaddr_in *serv_addr, loc_addr;
+    char *ip;
     FILE *stream;
 
     sf_esc_scgrid3 esc_scgrid = (sf_esc_scgrid3)sf_alloc (1, sizeof (struct EscSCgrid3));
@@ -499,14 +561,26 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         sf_warning ("Choosing deamons %d-%d for remote access to escape solutions", jj, jj + ncv - 1);
         is0 = -1;
         is1 = -1;
+        /* Local address for binding connections to */
+#ifdef LINUX
+        if ((ip = sf_escscd3_local_ip (inet)))
+#else
+        if ((ip = sf_escscd3_local_ip ()))
+#endif
+        {
+            sf_warning ("Binding to %s", ip);
+            loc_addr.sin_family = AF_INET; /* Internet address family */
+            loc_addr.sin_addr.s_addr = inet_addr (ip);   /* Client IP address */
+        } else
+            sf_error ("Can not determine local IP address");
         /* Connect to the daemons in this coverage */
         for (j = 0; j < ncv; j++) {
             /* Next daemon, try to establish a connection */
-            is0 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj], j + jj);
+            is0 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj], &loc_addr, j + jj);
             if (is0 < 0) {
                 continue;
             }
-            is1 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj], j + jj);
+            is1 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj], &loc_addr, j + jj);
             if (is1 < 0) {
                 close (is0);
                 is0 = -1;

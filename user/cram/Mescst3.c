@@ -27,7 +27,7 @@
 
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, iz, ix, iy, ia, ib;
-    int icpu = 0, ncpu = 1, morder = 2, nc = 1;
+    int icpu = 0, ncpu = 1, morder = 2, nc = 1, inet = 0;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y;
     float ***e;
@@ -132,6 +132,10 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getint ("morder", &morder)) morder = 1;
     /* Order of interpolation accuracy in the angular domain (1-3) */
+#ifdef LINUX
+    if (!sf_getint ("inet", &inet)) inet = 1;
+    /* Network interface index */
+#endif
    
     /* Slowness components module [(an)isotropic] */
     esc_slow = sf_esc_slowness3_init (vspline, verb);
@@ -195,7 +199,7 @@ int main (int argc, char* argv[]) {
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
     esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,
-                                      (float)icpu/(float)ncpu, mmaped, verb);
+                                      (float)icpu/(float)ncpu, inet, mmaped, verb);
 
     if (scdaemon)
         sf_fileclose (scdaemon);
