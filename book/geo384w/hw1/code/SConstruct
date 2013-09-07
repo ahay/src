@@ -1,11 +1,19 @@
 from rsf.proj import *
+from rsf.prog import RSFROOT
 
 # Program compilation
 #####################
 
 proj = Project()
 
+# To do the coding assignment in Fortran,
+# comment the next line and uncomment the
+# lines below
 exe = proj.Program('wave.c')
+
+#exe = proj.Program('wave.f90',
+#                   F90PATH=os.path.join(RSFROOT,'include'),
+#                   LIBS=['rsff90']+proj.get('LIBS'))
 
 # Constant velocity test
 ########################

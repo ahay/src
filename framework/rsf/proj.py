@@ -244,6 +244,7 @@ class Project(Environment):
                               'Echo':Echo},
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
+                    F90PATH=[incdir],
                     LIBS=[libs],
                     PROGSUFFIX=exe)
         self.Prepend(LIBS=[self.get('DYNLIB','')+'rsf'])
