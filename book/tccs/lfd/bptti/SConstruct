@@ -264,11 +264,11 @@ Flow('wavan_lfdc','source vp0 G_25_lfdc s1_lfdc s2_lfdc',
      s1=${SOURCES[3]} s2=${SOURCES[4]}
      dt=%g nt=%d 
      '''%(dt,nt))
-Result('wavan_lfdc',
+Plot('wavan_lfdc',
        ''' 
        window j3=200 | grey poly=y label2="X" label1="Z" title="Lowrank FD"
        yreverse=y transp=y gainpanel=each pclip=100
-       ''' )
+       ''',view=1)
 
 Flow('ttisnapshot_lfd','wavan_lfdc','window n3=1 f3=1500')
 
@@ -302,11 +302,11 @@ Flow('wavan_lffdc','source1 vp0 G_25_lffdc parsc s1_lffdc s2_lffdc',
      s1=${SOURCES[4]} s2=${SOURCES[5]}
      dt=%g nt=%d factor=100.0 ax=2.0 az=2.0 err=0.000001
      '''%(dt,nt))
-Result('wavan_lffdc',
+Plot('wavan_lffdc',
        '''
        window j3=10 | grey poly=y label2="Distance" label1="Depth" title="Lowrank FFD"
        yreverse=y transp=y gainpanel=each pclip=100
-       ''' )
+       ''',view=1)
 
 #Flow('ttisnapshot_lffd','wavan_lffdc','window n3=1 f3=150')
 

@@ -33,12 +33,12 @@ Flow('wavapp7','source7 vel7_t G_7',
      ofd2_7 vel=${SOURCES[1]} G=${SOURCES[2]} isx=256 isz=256
      dt=%g nt=%d 
      '''%(dt,nt))
-Result('wavapp7',
+Plot('wavapp7',
      ''' 
      window j3=20 |
      grey poly=y label2="X" label1="Z" title="4th-order Lowrank FD"
      yreverse=y transp=y gainpanel=each pclip=99
-     ''')
+     ''',view=1)
 Flow('G_10_2','vel7_t',
      '''
      lfdc2_7 dt=0.002 eps=0.0001 npk=50 size=6
@@ -59,12 +59,12 @@ Flow('wavfd7',['source7','vel7'],
      fd2bs vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
      '''%(dt,nt) )
 
-Result('wavfd7',
+Plot('wavfd7',
      ''' 
      window j3=20 |
      grey poly=y label2="Z" label1="X" title="fd2"
      yreverse=y transp=n gainpanel=each pclip=99
-     ''')
+     ''',view=1)
 nt=720
 dt=0.0025
 Flow('source3',None,
@@ -78,12 +78,12 @@ Flow('wavfd10',['source3','vel7'],
      fd2_10 vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
      '''%(dt,nt) )
 
-Result('wavfd10',
+Plot('wavfd10',
      ''' 
      window j3=20 |
      grey poly=y label2="Z" label1="X" title="fd2"
      yreverse=y transp=n gainpanel=each pclip=99
-     ''')
+     ''',view=1)
 Flow('G_10','vel7_t',
      '''
      lfdc2_7 dt=0.0025 eps=0.0001 npk=50 size=6
@@ -93,12 +93,12 @@ Flow('wavapp10','source3 vel7_t G_10',
      ofd2_10 vel=${SOURCES[1]} G=${SOURCES[2]} isx=256 isz=256
      dt=%g nt=%d 
      '''%(dt,nt))
-Result('wavapp10',
+Plot('wavapp10',
      ''' 
      window j3=20 |
      grey poly=y label2="X" label1="Z" title="ofd2"
      yreverse=y transp=y gainpanel=each pclip=99
-     ''')
+     ''',view=1)
 Flow('fft','vel7','fft1 | fft3 axis=2 pad=1')
 Flow('right left','vel7 fft',
      'isolr2 seed=2010 dt=%g fft=${SOURCES[1]} left=${TARGETS[1]}' % dt)
@@ -150,12 +150,12 @@ Flow('wavfd107',['source7','vel7'],
      fd2_10 vel=${SOURCES[1]}  dt=%g nt=%d isx=256 isz=256 nb=0 c=0.01 
      '''%(dt,nt) )
 
-Result('wavfd107',
+Plot('wavfd107',
      ''' 
      window j3=20 |
      grey poly=y label2="Z" label1="X" title="fd2"
      yreverse=y transp=n gainpanel=each pclip=99
-     ''')
+     ''',view=1)
 Flow('wavfd107sn','wavfd107','window n3=1 f3=800')
 Result('wavfd107sn',
        '''

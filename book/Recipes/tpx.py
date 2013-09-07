@@ -5,6 +5,7 @@ def FPX(fpx,data,
         nw,               # number of frequencies
         p0=-1,            # first slope
         dp=None,          # slope increment
+        v0=0,             # velocity continuation
         ):
 
     if not dp:
@@ -12,7 +13,10 @@ def FPX(fpx,data,
 
     # TX -> FX
     fx = 'fx-'+data
-    Flow(fx,data,'fft1 | window n1=%d' % nw) 
+    if (v0 > 0):
+        Flow(fx,data,'fft1 | window n1=%d | vczo2 v0=0 nv=1 dv=%g | window' % (nw,v0))
+    else:
+        Flow(fx,data,'fft1 | window n1=%d' % nw)
 
     # FX -> XPF
     xpf = 'xpf-'+data

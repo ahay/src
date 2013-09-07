@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     bool verb;
     int nw,nx,nv, iw,ix,iv;
     float w,x,k, v0,v2,v,dv, dx,dw, x0,w0;
-    sf_complex *ctrace, *ctrace2, shift;
+    sf_complex *ctrace, shift;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
     /* verbosity flag */
     
     ctrace  = sf_complexalloc(nw);
-    ctrace2 = sf_complexalloc(nw);
 
     if (!sf_histfloat(in,"o1",&w0)) w0=0.;  
     if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
@@ -90,16 +89,16 @@ int main(int argc, char* argv[])
 		    shift = sf_cmplx(cosf(w),sinf(w));
 
 #ifdef SF_HAS_COMPLEX_H
-		    ctrace2[iw] = ctrace[iw] * shift;
+		    ctrace[iw] *= shift;
 #else
-		    ctrace2[iw] = sf_cmul(ctrace[iw],shift);
+		    ctrace[iw] = sf_cmul(ctrace[iw],shift);
 #endif
 		} else {
-		    ctrace2[iw] = sf_cmplx(0.0f,0.0f);
+		    ctrace[iw] = sf_cmplx(0.0f,0.0f);
 		}	
 	    } /* w */
 
-	    sf_complexwrite (ctrace2,nw,out);
+	    sf_complexwrite (ctrace,nw,out);
 	} /* v  */
     } /* x */
     if (verb) sf_warning(".");
