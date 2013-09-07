@@ -11,7 +11,10 @@ sgy = {}
 for par in pars:
     sgy[par] = os.path.join('ModelParams',par.capitalize() + '_Model.sgy')
 
-Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
+Flow(sgy.values(),tgz,
+     zcat + ' $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 
 units = {
 	'epsilon':'',

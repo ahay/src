@@ -30,12 +30,14 @@ put o1=%g d1=%g label1=Depth unit1=m
 	o2=%g d2=%g label2=Distance unit2=m
 ''' % (nz,nx,z0,dz,x0,dx)
 
+zcat = WhereIs('gzcat') or WhereIs('cat')
+
 for m in Split('vp delta epsilon'):
     sgy = 'timodel_%s.segy' % m
     sgyz = sgy + '.gz'
     Fetch(sgyz,dir='Hess_VTI',server='ftp://software.seg.org',
           top='pub/datasets/2D')
-    Flow(sgy,sgyz,'zcat $SOURCE',stdin=0)
+    Flow(sgy,sgyz,zcat + ' $SOURCE',stdin=0)
 
 Flow('vverC','timodel_vp.segy','''
 segyread tfile=/dev/null verb=y | scale rscale=.3048 |

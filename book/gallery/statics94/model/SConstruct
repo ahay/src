@@ -9,13 +9,15 @@ sgy = ('7m_shots_0201_0329.segy',
        '7m_shots_1681_1949.segy',
        '7o_5m_final_vtap.segy')
 
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
 shots =[]
 tshots = []
 for s in range(8):
     sgyz = sgy[s]+'.gz'
     Fetch(sgyz,dir='Statics_1994',
           server='ftp://software.seg.org',top='pub/datasets/2D')
-    Flow(sgy[s],sgyz,'zcat $SOURCE',stdin=0)
+    Flow(sgy[s],sgyz,zcat + ' $SOURCE',stdin=0)
 
     shot = 'shot%d' % s
     Flow([shot,'t'+shot,shot+'.asc'],sgy[s],'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]}')

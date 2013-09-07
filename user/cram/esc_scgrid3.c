@@ -30,6 +30,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <netdb.h>
 #ifdef LINUX
 #include <net/if.h>
 #endif

@@ -73,7 +73,8 @@ par['dxbeg']=12.5
 velsegy = 'vel_z6.25m_x12.5m_exact.segy'
 Fetch(velsegy+'.gz',dir='2004_BP_Vel_Benchmark',
       server='ftp://software.seg.org',top='pub/datasets/2D')
-Flow(velsegy,velsegy+'.gz','zcat $SOURCE',stdin=0)
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+Flow(velsegy,velsegy+'.gz',zcat + ' $SOURCE',stdin=0)
 
 # . . P-wave velocity model
 Flow('VP-BP',velsegy,
@@ -92,7 +93,8 @@ Flow('VS-BP','VP-BP','math output="input/sqrt(3.0)" ')
 densegy = 'density_z6.25m_x12.5m.segy'
 Fetch(densegy+'.gz',dir='2004_BP_Vel_Benchmark',
       server='ftp://software.seg.org',top='pub/datasets/2D')
-Flow(densegy,densegy+'.gz','zcat $SOURCE',stdin=0)
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+Flow(densegy,densegy+'.gz',zcat + ' $SOURCE',stdin=0)
 
 Flow('RO-BP',densegy,
     '''

@@ -47,6 +47,7 @@ Result('wave',
 
 # Download Hess VTI model
 #########################
+zcat = WhereIs('gzcat') or WhereIs('zcat')
 for case in ('vp','epsilon'):
     sgy = 'timodel_%s.segy' % case
     sgyz = sgy + '.gz'
@@ -54,7 +55,7 @@ for case in ('vp','epsilon'):
           server='ftp://software.seg.org',
           top='pub/datasets/2D')
     # Uncompress
-    Flow(sgy,sgyz,'zcat $SOURCE',stdin=0)
+    Flow(sgy,sgyz,zcat + ' $SOURCE',stdin=0)
     # Convert to RSF format
     Flow(case,sgy,
          '''

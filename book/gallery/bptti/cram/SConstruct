@@ -28,11 +28,14 @@ par = {
 tgz = 'ModelParams.tar.gz'
 #Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
 
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
 mdlparts = ['epsilon','delta','vp','theta']
 sgy = {}
 for part in mdlparts:
     sgy[part] = os.path.join('ModelParams',part.capitalize() + '_Model.sgy')
-Flow(sgy.values(),tgz,'zcat $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+Flow(sgy.values(),tgz,
+     zcat + ' $SOURCE | tar -xvf -',stdin=0,stdout=-1)
 for part in mdlparts:
     if part == 'vp':
         Flow([part,part+'.asc',part+'.bin'],sgy[part],'''

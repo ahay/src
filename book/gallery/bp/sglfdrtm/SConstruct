@@ -1,7 +1,8 @@
-import sys, copy, os
+import copy
 from rsf.proj import *
-sys.path.append('%s/user/fangg/' %os.getenv('RSFSRC'))
-from sglfdrtm import *
+from rsf.recipes.sglfdrtm import *
+
+zcat = WhereIs('gzcat') or WhereIs('zcat')
 
 Fetch('bpaitvel.hh','bpait')
 
@@ -9,7 +10,7 @@ Fetch('density_z6.25m_x12.5m.segy.gz',dir='2004_BP_Vel_Benchmark',
           server='ftp://software.seg.org',top='pub/datasets/2D')
 
 Flow('density_z6.25m_x12.5m.segy','density_z6.25m_x12.5m.segy.gz',
-          'zcat $SOURCE',stdin=0)
+          zcat + ' $SOURCE',stdin=0)
 
 Flow('bpvel','bpaitvel.hh', 
      '''
