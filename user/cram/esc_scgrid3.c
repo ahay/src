@@ -571,7 +571,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         {
             sf_warning ("Binding to %s", ip);
             loc_addr.sin_family = AF_INET; /* Internet address family */
-            loc_addr.sin_addr.s_addr = inet_addr (ip);   /* Client IP address */
+            loc_addr.sin_addr.s_addr = inet_addr (ip); /* Client IP address */
         } else
             sf_error ("Can not determine local IP address");
         /* Connect to the daemons in this coverage */
