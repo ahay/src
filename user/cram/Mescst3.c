@@ -199,7 +199,7 @@ int main (int argc, char* argv[]) {
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
     esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,
-                                      (float)icpu/(float)ncpu, inet, mmaped, verb);
+                                      inet, (float)icpu/(float)ncpu, mmaped, verb);
 
     if (scdaemon)
         sf_fileclose (scdaemon);
