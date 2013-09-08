@@ -1,23 +1,31 @@
 from rsf.proj import *
 
-methods = {}
+methods = {
+    'gazdag': 'Phase-Shift Migration',
+    }
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():
     method = methods[thisdir]
-
+else:
+    method = ''
+    
 par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
            v0=1.5,gradx=0,gradz=0.36,
            dim1 = 'd1=0.001 o1=0 n1=10001',
            dim2 = 'd2=0.01 o2=0 n2=501')
 
-def igrey(custom="",par={}):
+def igrey(custom='',title=''):
     return '''
-    grey labelrot=n pclip=100 title="" wantaxis=y
+    grey labelrot=n title="%s" wantaxis=y
     min2=%g max2=%g min1=%g max1=%g
     wantscalebar=n barreverse=y
     grid=y gridcol=7 screenratio=1
-    label1="z(km)" label2="x(km)" %s
-    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+    label1=z unit1=km label2=x unit2=km %s
+    ''' % (title,
+           par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+
+def zo_image(image):
+    Result(image,igrey('gridcol=5','Zero-Offset %s' % method))
 
 layers = (
     ((0,2),(3.5,2),(4.5,2.5),(5.,2.25),(5.5,2),(6.5,2.5),(10,2.5)),
@@ -52,7 +60,7 @@ Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
 # velocity
 def get_velocity(vel):
     Flow(vel,None,'math %(dim1)s %(dim2)s output="%(v0)g+%(gradx)g*x1+%(gradz)g*x2" | transp' % par)
-    Plot(vel,igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"',par))
+    Plot(vel,igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"'))
     Plot(vel+'-model',[vel,'lays0','lays1'],'Overlay')
 
 Flow('dips','lays','deriv | scale dscale=100')
@@ -91,13 +99,16 @@ def cmps(data):
          ''' % par,split=[1,10001],reduce='add')
 
 def get_impulse(impulse,data):
-    Flow(impulse,data,'spike k1=751 k2=176 | smooth rect1=2 rect2=2 repeat=2')
+    Flow(impulse,data,
+         'spike k1=1001 k2=176 | smooth rect1=2 rect2=2 repeat=2')
 
 def impulse_response(image,vel):
-    Plot(image,'grey title="%s Impulse Response" unit2=km' % method)
+    Plot(image,igrey('gridcol=7','%s Impulse Response' % method))
     Plot(image+'-theory',vel,
          '''
          scale dscale=0.5 | eikonal yshot=5 | 
-         contour nc=1 c0=1.5 wantaxis=n wanttitle=n plotcol=3 plotfat=3
-         ''')
+         contour nc=1 c0=2 screenratio=1
+         wantaxis=n wanttitle=n plotcol=3 plotfat=3
+         min2=%g max2=%g min1=%g max1=%g
+         ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax']))
     Result(image,[image,image+'-theory'],'Overlay')
