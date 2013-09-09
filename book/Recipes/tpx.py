@@ -14,7 +14,12 @@ def FPX(fpx,data,
     # TX -> FX
     fx = 'fx-'+data
     if (v0 > 0):
-        Flow(fx,data,'fft1 | window n1=%d | vczo2 v0=0 nv=1 dv=%g | window' % (nw,v0))
+        Flow(fx,data,
+             '''
+             fft1 | window n1=%d | fft3 axis=2 | 
+             vczo2 v0=0 nv=1 dv=%g | 
+             window | fft3 axis=2 inv=y
+             ''' % (nw,v0))
     else:
         Flow(fx,data,'fft1 | window n1=%d' % nw)
 
