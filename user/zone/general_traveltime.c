@@ -42,8 +42,8 @@ typedef float (*func1)(int, float);
 /* Function pointer for int and float -> float */
 /*^*/
 
-typedef float (*func2)(twod,twod);
-/* Function pointer for twod,twod -> float */
+typedef double (*func2)(twod,twod);
+/* Function pointer for twod,twod -> double */
 /*^*/
 
 typedef struct func3 {
@@ -199,99 +199,99 @@ void half_initialize(int i /* Indicator of layer*/,
 
 /* T_hat functions------------------------------------------------------------------------------------------------------*/
 
-float T_hat_k(func2 T_k)
+double T_hat_k(func2 T_k)
 /*<Traveltime>*/
 {
 	
-	float t_k;
+	double t_k;
 	
 	t_k = T_k(y_k,y_k1);
 	
 	return t_k;
 }
 
-float T_hat_k_k(func2 T_k_k,func2 T_k_zk)
+double T_hat_k_k(func2 T_k_k,func2 T_k_zk)
 /*<Derivative of T_hat with respect to x_k>*/
 {
 	
-	float t_k_k;
+	double t_k_k;
 	
 	t_k_k = T_k_k(y_k,y_k1)+T_k_zk(y_k,y_k1)*y_k.d1;
 	
 	return t_k_k;
 }
 
-float T_hat_k_k1(func2 T_k_k1,func2 T_k_zk1)
+double T_hat_k_k1(func2 T_k_k1,func2 T_k_zk1)
 /*<Derivative of T_hat with respect to x_k+1>*/
 {
 	
-	float t_k_k1;
+	double t_k_k1;
 	
 	t_k_k1 = T_k_k1(y_k,y_k1)+T_k_zk1(y_k,y_k1)*y_k1.d1;
 	
 	return t_k_k1;
 }
 
-float T_hat_1k_k(func2 T_k_k1,func2 T_k_zk1)
+double T_hat_1k_k(func2 T_k_k1,func2 T_k_zk1)
 /*<Derivative of T_hat_k-1th with respect to x_k>*/
 {
 	
-	float t_1k_k;
+	double t_1k_k;
 	
 	t_1k_k = T_k_k1(y_1k,y_k)+T_k_zk1(y_1k,y_k)*y_k.d1;
 	
 	return t_1k_k;
 }
 
-float T_hat_k_k_k(func2 T_k_k_k,func2 T_k_k_zk,func2 T_k_zk,func2 T_k_zk_zk)
+double T_hat_k_k_k(func2 T_k_k_k,func2 T_k_k_zk,func2 T_k_zk,func2 T_k_zk_zk)
 /*<Second derivative of T_hat with respect to x_k>*/
 {
 	
-	float t_k_k_k;
+	double t_k_k_k;
 	
 	t_k_k_k = T_k_k_k(y_k,y_k1)+2*T_k_k_zk(y_k,y_k1)*y_k.d1+T_k_zk_zk(y_k,y_k1)*pow(y_k.d1,2)+T_k_zk(y_k,y_k1)*y_k.d2;
 	
 	return t_k_k_k;
 }
 
-float T_hat_k_k1_k1(func2 T_k_k1_k1,func2 T_k_k1_zk1,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_k_k1_k1(func2 T_k_k1_k1,func2 T_k_k1_zk1,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat with respect to x_k+1>*/
 {
 	
-	float t_k_k1_k1;
+	double t_k_k1_k1;
 	
 	t_k_k1_k1 = T_k_k1_k1(y_k,y_k1)+2*T_k_k1_zk1(y_k,y_k1)*y_k1.d1+T_k_zk1_zk1(y_k,y_k1)*pow(y_k1.d1,2)+T_k_zk1(y_k,y_k1)*y_k1.d2;
 	
 	return t_k_k1_k1;
 }
 
-float T_hat_1k_k_k(func2 T_k_k1_k1,func2 T_k_k1_zk1,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_1k_k_k(func2 T_k_k1_k1,func2 T_k_k1_zk1,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat_k-1th with respect to x_k>*/
 {
 	
-	float t_1k_k_k;
+	double t_1k_k_k;
 	
 	t_1k_k_k = T_k_k1_k1(y_1k,y_k)+2*T_k_k1_zk1(y_1k,y_k)*y_k.d1+T_k_zk1_zk1(y_1k,y_k)*pow(y_k.d1,2)+T_k_zk1(y_1k,y_k)*y_k.d2;
 	
 	return t_1k_k_k;
 }
 
-float T_hat_k_k_k1(func2 T_k_k_k1,func2 T_k_k1_zk,func2 T_k_k_zk1, func2 T_k_zk_zk1)
+double T_hat_k_k_k1(func2 T_k_k_k1,func2 T_k_k1_zk,func2 T_k_k_zk1, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to x_k and x_k+1>*/
 {
 	
-	float t_k_k_k1;
+	double t_k_k_k1;
 	
 	t_k_k_k1 = T_k_k_k1(y_k,y_k1)+T_k_k_zk1(y_k,y_k1)*y_k1.d1+T_k_k1_zk(y_k,y_k1)*y_k.d1+T_k_zk_zk1(y_k,y_k1)*y_k1.d1*y_k.d1;
 	
 	return t_k_k_k1;
 }
 
-float T_hat_1k_1k_k(func2 T_k_k_k1,func2 T_k_k1_zk,func2 T_k_k_zk1, func2 T_k_zk_zk1)
+double T_hat_1k_1k_k(func2 T_k_k_k1,func2 T_k_k1_zk,func2 T_k_k_zk1, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to x_1k and x_k>*/
 {
 	
-	float t_1k_1k_k;
+	double t_1k_1k_k;
 	
 	t_1k_1k_k = T_k_k_k1(y_1k,y_k)+T_k_k_zk1(y_1k,y_k)*y_k.d1+T_k_k1_zk(y_1k,y_k)*y_1k.d1+T_k_zk_zk1(y_1k,y_k)*y_k.d1*y_1k.d1;
 	

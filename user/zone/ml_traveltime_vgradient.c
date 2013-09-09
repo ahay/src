@@ -41,9 +41,10 @@ typedef struct twod {
 #endif
 
 /* Traveltime functions for gradient velocity------------------------------------------------------------------------------*/
-float v(twod y_k, twod x_ref)
+
+double v(twod y_k, twod x_ref)
 {
-	float v;
+	double v;
 	
 	v = x_ref.v2 + y_k.gx2*(y_k.x-x_ref.x)+y_k.gz2*(y_k.z-x_ref.z);
 	y_k.v2 = v;
@@ -51,10 +52,10 @@ float v(twod y_k, twod x_ref)
 	return y_k.v2;
 } 
 
-float T1_k(twod y_k,twod y_k1)
+double T1_k(twod y_k,twod y_k1)
 /*<Traveltime>*/
 {
-	float t_k;
+	double t_k;
 	
 	t_k = (1/hypotf(y_k.gx2,y_k.gz2))*log((1+(pow(hypotf(y_k.gx2,y_k.gz2),2)*pow(hypotf(y_k1.x-y_k.x, y_k1.z-y_k.z),2))/(2*y_k.v2*y_k1.v1))+sqrt(pow(1+(pow(hypotf(y_k.gx2,y_k.gz2),2)*pow(hypotf(y_k1.x-y_k.x, y_k1.z-y_k.z),2))/(2*y_k.v2*y_k1.v1),2)-1));
 	
@@ -62,10 +63,10 @@ float T1_k(twod y_k,twod y_k1)
 	
 }
 
-float T1_k_k(twod y_k, twod y_k1)
+double T1_k_k(twod y_k, twod y_k1)
 /*<Derivative of T with respect to x_k>*/
 {
-	float t_k_k,g0;
+	double t_k_k,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -75,10 +76,10 @@ float T1_k_k(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k1(twod y_k, twod y_k1)
+double T1_k_k1(twod y_k, twod y_k1)
 /*<Derivative of T with respect to x_k1>*/
 {
-	float t_k_k1,g0;
+	double t_k_k1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -88,10 +89,10 @@ float T1_k_k1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k_k(twod y_k, twod y_k1)  
+double T1_k_k_k(twod y_k, twod y_k1)  
 /*<Second derivative of T with respect to x_k>*/
 {
-	float t_k_k_k,g0;
+	double t_k_k_k,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -101,10 +102,10 @@ float T1_k_k_k(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k1_k1(twod y_k, twod y_k1) 
+double T1_k_k1_k1(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k1>*/
 {
-	float t_k_k1_k1,g0;
+	double t_k_k1_k1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -114,10 +115,10 @@ float T1_k_k1_k1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k_k1(twod y_k, twod y_k1) 
+double T1_k_k_k1(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
-	float t_k_k_k1,g0;
+	double t_k_k_k1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -127,10 +128,10 @@ float T1_k_k_k1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_zk(twod y_k, twod y_k1) 
+double T1_k_zk(twod y_k, twod y_k1) 
 /*<Derivative of T with respect to z_k>*/
 {
-	float t_k_zk,g0;
+	double t_k_zk,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -140,10 +141,10 @@ float T1_k_zk(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_zk1(twod y_k, twod y_k1) 
+double T1_k_zk1(twod y_k, twod y_k1) 
 /*<Derivative of T with respect to z_k1>*/
 {
-	float t_k_zk1,g0;
+	double t_k_zk1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -153,10 +154,10 @@ float T1_k_zk1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_zk_zk(twod y_k, twod y_k1)  
+double T1_k_zk_zk(twod y_k, twod y_k1)  
 /*<Second Derivative of T with respect to z_k>*/
 {
-	float t_k_zk_zk,g0;
+	double t_k_zk_zk,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -166,10 +167,10 @@ float T1_k_zk_zk(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_zk1_zk1(twod y_k, twod y_k1)  
+double T1_k_zk1_zk1(twod y_k, twod y_k1)  
 /*<Second Derivative of T with respect to z_k1>*/
 {
-	float t_k_zk1_zk1,g0;
+	double t_k_zk1_zk1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -179,10 +180,10 @@ float T1_k_zk1_zk1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_zk_zk1(twod y_k, twod y_k1)  
+double T1_k_zk_zk1(twod y_k, twod y_k1)  
 /*<Second Derivative of T with respect to z_k and z_k1>*/
 {
-	float t_k_zk_zk1,g0;
+	double t_k_zk_zk1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -192,10 +193,10 @@ float T1_k_zk_zk1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k_zk(twod y_k, twod y_k1) 
+double T1_k_k_zk(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k and z_k>*/
 {
-	float t_k_k_zk,g0;
+	double t_k_k_zk,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -205,10 +206,10 @@ float T1_k_k_zk(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k1_zk1(twod y_k, twod y_k1) 
+double T1_k_k1_zk1(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k1 and z_k1>*/
 {
-	float t_k_k1_zk1,g0;
+	double t_k_k1_zk1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -218,10 +219,10 @@ float T1_k_k1_zk1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k_zk1(twod y_k, twod y_k1)  
+double T1_k_k_zk1(twod y_k, twod y_k1)  
 /*<Second derivative of T with respect to x_k and z_k1>*/
 {
-	float t_k_k_zk1,g0;
+	double t_k_k_zk1,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	
@@ -232,10 +233,10 @@ float T1_k_k_zk1(twod y_k, twod y_k1)
 	
 }
 
-float T1_k_k1_zk(twod y_k, twod y_k1)  
+double T1_k_k1_zk(twod y_k, twod y_k1)  
 /*<Second derivative of T with respect to x_k1 and z_k>*/
 {
-	float t_k_k1_zk,g0;
+	double t_k_k1_zk,g0;
 	
 	g0 = hypotf(y_k.gx2,y_k.gz2);
 	

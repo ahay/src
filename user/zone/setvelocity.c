@@ -15,7 +15,7 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-
+ 
 #include "ml_traveltime_vgradient.h"
 #include "ml_traveltime_vconstant.h"
 #include "general_traveltime.h"
@@ -25,7 +25,7 @@
 
 
 void setfunc(int vstatus, func3 *f) 
-/*<Set the functions(vgradient or vconstant)>*/
+/*<Set the functions(vgradient or vconstant) and (single- or double-precision)>*/
 
 {
 	
@@ -46,10 +46,8 @@ void setfunc(int vstatus, func3 *f)
 		f->T_k_k1_zk1 = T0_k_k1_zk1;
 		f->T_k_k_zk1 = T0_k_k_zk1;
 		f->T_k_k1_zk = T0_k_k1_zk;
-		
 	}
 	else {
-		
 		f->T_k = T1_k;
 		f->T_k_k = T1_k_k;
 		f->T_k_k1 = T1_k_k1;

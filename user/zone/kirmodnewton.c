@@ -86,7 +86,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	ck_inv = sf_floatalloc(n+2);
 	zk = sf_floatalloc(n+2);	
 	
-	/*Switch bmin and bmax if necessary*/
+	/* Switch bmin and bmax if necessary */
 	
 	if(bmin>bmax) {
 		float value;
