@@ -30,33 +30,33 @@ int main (int argc, char* argv[]) {
 // INPUT FILES
 
     sf_file piFile = sf_input ("in");
-	// check that the input is float 
+    // check that the input is float 
     if ( SF_FLOAT != sf_gettype (piFile) ) sf_error ("Need float input: partial-images file");
     /* partial-images file */
 
-	sf_file xEscFile;
+    sf_file xEscFile;
     if ( NULL != sf_getstring("escx") ) {
-		/* escape-positions file */
-		xEscFile  = sf_input ("escx");
-	}
+	/* escape-positions file */
+	xEscFile  = sf_input ("escx");
+    }
 
-	sf_file tEscFile;
+    sf_file tEscFile;
     if ( NULL != sf_getstring("esct") ) {
-		/* escape-time file */
-		tEscFile  = sf_input ("esct");
-	}
+	/* escape-time file */
+	tEscFile  = sf_input ("esct");
+    }
 
 // OUTPUT FILES
     sf_file resFile = sf_output ("out");
-	/* backfit-migrated images */
+    /* backfit-migrated images */
 
-	// INPUT PARAMETERS
+    // INPUT PARAMETERS
 
 // escape volumes dimensions
-	int zNum; float zStart; float zStep;
-	int pNum; float pStart; float pStep;
-	int xNum; float xStart; float xStep;
-	int rNum; float rStart; float rStep;
+    int zNum; float zStart; float zStep;
+    int pNum; float pStart; float pStep;
+    int xNum; float xStart; float xStep;
+    int rNum; float rStart; float rStep;
 
 // depth axis 
     if ( !sf_histint   (piFile, "n1", &zNum) )   sf_error ("Need n1= in input");
@@ -75,19 +75,19 @@ int main (int argc, char* argv[]) {
     if ( !sf_histfloat (xEscFile, "d2", &rStep) )    sf_error ("Need d2= in input");
     if ( !sf_histfloat (xEscFile, "o2", &rStart) )   sf_error ("Need o2= in input");
 
-	bool isAA;
-	float dx, dt, xlim, xapert;
-	int ppn; float ppo, ppd;
-	int izn, ixn; float izo, ixo, izd, ixd;
-	int pj;
-	int sNum; float sStart; float sStep;
+    bool isAA;
+    float dx, dt, xlim, xapert;
+    int ppn; float ppo, ppd;
+    int izn, ixn; float izo, ixo, izd, ixd;
+    int pj;
+    int sNum; float sStart; float sStep;
 
     if (!sf_getint ("ppn", &ppn)) ppn = pNum;
-	/* number of processed partial images */
+    /* number of processed partial images */
     if (!sf_getfloat ("ppo", &ppo)) ppo = pStart;
-	/* first processed partial image */
+    /* first processed partial image */
     if (!sf_getfloat ("ppd", &ppd)) ppd = pStep;
-	/* step in processed partial images */
+    /* step in processed partial images */
 
     // IMAGE PARAMS
     if (!sf_getint ("izn", &izn))        izn = zNum;	
@@ -104,114 +104,111 @@ int main (int argc, char* argv[]) {
     /* step in positions (in meters) */
 
     if (!sf_getint ("sn", &sNum)) sNum = 1;
-	/* number of scattering-angles */
+    /* number of scattering-angles */
     if (!sf_getfloat ("so", &sStart)) sStart = 0.f;
-	/* first scattering-angle */
+    /* first scattering-angle */
     if (!sf_getfloat ("sd", &sStep)) sStep = 1.f;
-	/* step in scattering-angles */
+    /* step in scattering-angles */
 
     if ( !sf_getbool ("isAA", &isAA) ) isAA = true;
     /* if y, apply anti-aliasing */
     if (!sf_getfloat ("dx", &dx)) dx = xStep;
-	/* x-range for point detection */
+    /* x-range for point detection */
     if (!sf_getfloat ("dt", &dt)) dt = 0.008f;
-	/* time-range for point detection */
+    /* time-range for point detection */
     if (!sf_getfloat ("xlim", &xlim)) xlim = 2 * xStep;
-	/* maximum distance between depth-line points */
+    /* maximum distance between depth-line points */
     if (!sf_getfloat ("xapert", &xapert)) xapert = xNum * xStep;
-	/* migration aperture size */
+    /* migration aperture size */
     if (!sf_getint ("pj", &pj)) pj = 1;
-	/* jump in points */
+    /* jump in points */
 
 
-	// OUTPUT PARAMETERS
-  	sf_putint (resFile, "n1", izn); 
-  	sf_putint (resFile, "n2", ixn); 
-  	sf_putint (resFile, "n3", ppn); 
-  	sf_putint (resFile, "n4", 1); 
+    // OUTPUT PARAMETERS
+    sf_putint (resFile, "n1", izn); 
+    sf_putint (resFile, "n2", ixn); 
+    sf_putint (resFile, "n3", ppn); 
+    sf_putint (resFile, "n4", 1); 
 
-  	sf_putfloat (resFile, "d1", izd); 
-  	sf_putfloat (resFile, "d2", ixd); 
-  	sf_putfloat (resFile, "d3", ppd); 
-  	sf_putfloat (resFile, "d4", 1); 
+    sf_putfloat (resFile, "d1", izd); 
+    sf_putfloat (resFile, "d2", ixd); 
+    sf_putfloat (resFile, "d3", ppd); 
+    sf_putfloat (resFile, "d4", 1); 
 
-	sf_putfloat (resFile, "o1", izo); 
-  	sf_putfloat (resFile, "o2", ixo); 
-  	sf_putfloat (resFile, "o3", ppo); 
-  	sf_putfloat (resFile, "o4", 1); 
+    sf_putfloat (resFile, "o1", izo); 
+    sf_putfloat (resFile, "o2", ixo); 
+    sf_putfloat (resFile, "o3", ppo); 
+    sf_putfloat (resFile, "o4", 1); 
 
-	// MEMORY ALLOCATION
+    // MEMORY ALLOCATION
 
-	const int piSize    = zNum * xNum;
-	const int volSize   = zNum * rNum * xNum;
-	const int piResSize = izn * ixn;
+    const int piSize    = zNum * xNum;
+    const int volSize   = zNum * rNum * xNum;
+    const int piResSize = izn * ixn;
 
-	float* tVol = sf_floatalloc (volSize);
-	float* xVol = sf_floatalloc (volSize);
+    float* tVol = sf_floatalloc (volSize);
+    float* xVol = sf_floatalloc (volSize);
 
-	float* piData  = sf_floatalloc (piSize);
-	float* piImage = sf_floatalloc (piResSize);
+    float* piData  = sf_floatalloc (piSize);
+    float* piImage = sf_floatalloc (piResSize);
 
-	// READ ESCAPE VOLUMES
+    // READ ESCAPE VOLUMES
 
-	sf_seek (xEscFile, 0, SEEK_SET);		
-	sf_floatread (xVol, volSize, xEscFile);
-	sf_fileclose (xEscFile);
+    sf_seek (xEscFile, 0, SEEK_SET);		
+    sf_floatread (xVol, volSize, xEscFile);
+    sf_fileclose (xEscFile);
 
-	sf_seek (tEscFile, 0, SEEK_SET);		
-	sf_floatread (tVol, volSize, tEscFile);
+    sf_seek (tEscFile, 0, SEEK_SET);		
+    sf_floatread (tVol, volSize, tEscFile);
     sf_fileclose (tEscFile);
 
-	// MAIN LOOP
+    // MAIN LOOP
 
-	DepthBackfitMigrator2D dbfmig;
-	dbfmig.init (zNum, zStart, zStep, 
-  	 	         pNum, pStart, pStep,
-			     xNum, xStart, xStep,
-			     rNum, rStart, rStep,
-				 sNum, sStart, sStep,
-				 izn, izo, izd,
-			     ixn, ixo, ixd,
-				 dx, dt, xlim, xapert, pj,
-				 xVol, tVol, isAA);
+    DepthBackfitMigrator2D dbfmig;
+    dbfmig.init (zNum, zStart, zStep, 
+		 pNum, pStart, pStep,
+		 xNum, xStart, xStep,
+		 rNum, rStart, rStep,
+		 sNum, sStart, sStep,
+		 izn, izo, izd,
+		 ixn, ixo, ixd,
+		 dx, dt, xlim, xapert, pj,
+		 xVol, tVol, isAA);
 
-	for (int ip = 0; ip < ppn; ++ip) {
-		clock_t begin=clock();
-		sf_warning ("pimage %d of %d;", ip + 1, ppn);		
-		const float curP = ppo + ip * ppd;			
+    for (int ip = 0; ip < ppn; ++ip) {
+	clock_t begin=clock();
+	const float curP = ppo + ip * ppd;			
 
-		memset ( piData,  0, piSize * sizeof (int) );
-		memset ( piImage, 0, piResSize * sizeof (int) );
+	memset ( piData,  0, piSize * sizeof (int) );
+	memset ( piImage, 0, piResSize * sizeof (int) );
 
-		// read partial image
-		const int pind = (curP - pStart) / pStep;
-		size_t startPos = pind * piSize * sizeof(float);
-	    sf_seek (piFile, startPos, SEEK_SET);
-	    sf_floatread (piData, piSize, piFile);
+	// read partial image
+	const int pind = (curP - pStart) / pStep;
+	size_t startPos = pind * piSize * sizeof(float);
+	sf_seek (piFile, startPos, SEEK_SET);
+	sf_floatread (piData, piSize, piFile);
 
-		// get image
-		dbfmig.processPartialImage (piData, curP, piImage);
+	// get image
+	dbfmig.processPartialImage (piData, curP, piImage);
 
-		// write result
-		startPos = ip * piResSize * sizeof(float);
-	 	sf_seek (resFile, startPos, SEEK_SET);
-	    sf_floatwrite (piImage, piResSize, resFile);
+	// write result
+	startPos = ip * piResSize * sizeof(float);
+	sf_seek (resFile, startPos, SEEK_SET);
+	sf_floatwrite (piImage, piResSize, resFile);
 
-		clock_t end=clock();
-		float time = (end - begin) / (11 * CLOCKS_PER_SEC);
-		sf_warning ("pimage %g s", time);
-	}
+	clock_t end=clock();
+	float time = (end - begin) / (11 * CLOCKS_PER_SEC);
+	sf_warning ("pimage %d of %d (%g s);", ip + 1, ppn, time);		}
+    sf_warning(".");
 
-	// FINISH
+    // FINISH
 
-	free (xVol);
-	free (tVol);
+    free (xVol);
+    free (tVol);
 	
-	free (piData);
-	free (piImage);
+    free (piData);
+    free (piImage);
 
-    sf_fileclose (resFile);
-	sf_fileclose (piFile);
 
-	return 0;
+    exit(0);
 }
