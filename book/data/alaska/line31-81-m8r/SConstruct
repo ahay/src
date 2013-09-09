@@ -295,4 +295,15 @@ Result('nmo368','cmp368g nmo368','SideBySideAniso')
 # can make the decon design gate start time increase with offset and start
 # below the mute.
 
+Flow('lmo','cmpsmute','window n1=1 | math output="0.001*(-200+0.0861*abs(x1))" ')
+Flow('decon','cmpsmute lmo',
+     '''
+     datstretch datum=${SOURCES[1]} |
+     pef maxlag=.2 pnoise=.01 mincorr=.25 maxcorr=5 |
+     datstretch datum=${SOURCES[1]} inv=y
+     ''')
+Flow('dec368','decon','window n3=1 f3=368')
+Plot('dec368','grey title=Deconvolution')
+Result('dec368','cmp368g dec368','SideBySideAniso')
+
 End()

@@ -60,7 +60,7 @@ for s in range(4):
          kirmod_newton newton=y nt=751 dt=0.004 freq=15
          ns=1 s0=%g ds=0.01 nh=60 dh=0.04 h0=-1.2 verb=y 
          vstatus=0 velocity=%s debug=n fwdxini=y
-         xref=0 zref=0 Xdip=${SOURCES[1]}
+         xref=0 zref=0 dip=${SOURCES[1]}
          ''' % (shots[s],vstr))
     Plot(shot,
          '''

@@ -258,8 +258,8 @@ Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
      | supef 
        maxlag=.2 
        pnoise=.01 
-       mincor=.25 
-       maxcor=5 
+       mincorr=.25 
+       maxcorr=5 
      | sustatic 
        hdrs=1 
        sign=-1 
@@ -273,7 +273,7 @@ Flow('velfiltcdpsnmo','velfiltcdpsmute vbrute.txt',
        tmute=.100,.280,.700 
        mode=0 
        key=offset
-       taper=50
+       ntaper=50
    ''')
 
 # make movie of cdp gathers after brute nmo
