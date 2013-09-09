@@ -81,7 +81,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	float  *xx, *xxnew, *F, *dk, *xxtem, *zk,*ck_inv, **ans;
 	float tt, tx_s, tx_r, ty, tz_s, tz_r, tn, at, an, v_1r, v_r, alpha, theta, dip;
 	int q=0; /* Counter for big loop*/
-	int b3; /* To check whether the ray is tracable*/
+	int b3=0; /* To check whether the ray is tracable*/
 	
 	/* Allocate space-------------------------------------------------------------------------------------*/
 	
@@ -225,9 +225,8 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		for (a=0; a<n; a++) {
 			b1=0;
 			b2=0;
-			b3=0;
 			xxtem[a+1] = xx[a+1]-dk[a+1];
-			while (xxtem[a+1]<bmin && b1<20) {/* Maximum times to multiply is 20*/
+			while (xxtem[a+1]<bmin-tol && b1<10) {/* Maximum times to multiply is 10*/
 				
 				dk[a+1]=0.5*dk[a+1]; /* Decrease the change by half*/
 				if (debug) {
@@ -236,7 +235,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 				xxtem[a+1] = xx[a+1]-dk[a+1]; /* Recompute xxtem to see if it is still exceed the boundary*/
 				b1++;
 			}
-			while(xxtem[a+1]>bmax && b2<20) {/* Maximum times to multiply is 20*/
+			while(xxtem[a+1]>bmax+tol && b2<10) {/* Maximum times to multiply is 10*/
 				
 				dk[a+1]=0.5*dk[a+1];
 				if (debug) {
@@ -245,12 +244,12 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 				xxtem[a+1] = xx[a+1]-dk[a+1];
 				b2++;
 			}
-			if (b1>=20) {
+			if (b1>=10) {
 				sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g \n", n+1,xx[0],xx[n+1]);
 				b3 = -1;
 				goto mark;
 			}
-			if (b2>=20) {
+			if (b2>=10) {
 				sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g \n", n+1,xx[0],xx[n+1]);
 				b3= -1;
 				goto mark;
@@ -282,7 +281,7 @@ mark: /* Mark point for goto*/
 	
 	if (b3!=0) { /* output the data to table in the case where the ray can't be traced*/
 		skip = true;
-		table->t = -1; 
+		table->t = -100; 
 		table->tx = 0;
 		table->ty = 0;
 		table->tn = 0;

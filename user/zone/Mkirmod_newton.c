@@ -1,15 +1,4 @@
-/*
- *  Mkirmod_newton.c
- *  
- *
- *  Created by Yanadet Sripanich on 2/19/13.
- * 
- *
- */
-/* Kirchhoff 2-D/2.5-D modeling with analytical Green's functions. 
- 
- October 2012 program of the month:
- http://ahay.org/rsflog/index.php?/archives/308-Program-of-the-month-sfkirmod.html
+/* Kirchhoff 2-D/2.5-D modeling with analytical Green's functions and bending ray tracing. 
  */
 /*
  Copyright (C) 2004 University of Texas at Austin
@@ -335,7 +324,7 @@ int main(int argc, char* argv[])
 		if (!sf_getint("niter",&niter)) niter=500;
 		/* (NT)The number of iterations*/
 		
-		if (!sf_getdouble("tol",&tolerance)) tolerance=0.000001;
+		if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 		/* (NT)Assign a default value for tolerance*/
 		
 		if (!sf_getint("order",&order)) order=3;/* (NT)Interpolation order*/

@@ -1,12 +1,5 @@
-/*
- *  Misaac3.c
- *  
- *
- *  Created by Yanadet Sripanich on 2/7/13.
- * 
- *
- */
-/* Reflection traveltime for Multi-layered 3D at any specified source and receiver location */
+/* 3D Bending ray tracing in Multi-layered media
+*/
 /*
  Copyright (C) 2009 University of Texas at Austin
  

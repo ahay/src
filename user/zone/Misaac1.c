@@ -1,4 +1,5 @@
-/* Reflection traveltime for Pre-stack */
+/* Pre-stack bending ray tracing in one-layered media
+*/
 /*
  Copyright (C) 2009 University of Texas at Austin
  

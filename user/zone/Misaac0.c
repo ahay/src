@@ -1,4 +1,5 @@
-/* Reflection traveltime for zero offset */
+/* Zero-offset bending ray tracing in one-layered media
+*/
 /*
  Copyright (C) 2009 University of Texas at Austin
  

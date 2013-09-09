@@ -1,13 +1,5 @@
-/*
- *  Misaac2.c
- *  
- *
- *  Created by Yanadet Sripanich on 11/11/12.
- * 
- *
- */
-
-/* Reflection traveltime for Multi-layered at any specified source and receiver location */
+/* 2D Bending ray tracing in multi-layered media
+*/
 /*
  Copyright (C) 2009 University of Texas at Austin
  
@@ -106,7 +98,7 @@ int main(int argc, char* argv[])
 	
 	
 	if (!sf_getint("number",&nr2)) sf_error("Please enter the number of reflections [nr2]");
-	/* Number of reflections*/
+	/* Number of intersecting points [nr2]*/
 	
 	/* Allocate space-------------------------------------------------------------------------------------*/
 	temp_rr = sf_floatalloc2(nr1,N); /* Input reflector values*/
@@ -167,14 +159,11 @@ int main(int argc, char* argv[])
 	if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
 	/* Assign z-reference point*/
 	
-	if (!sf_getfloat("min",&bmin)) {
-		bmin=xx[0];
-	}
+	if (!sf_getfloat("min",&bmin)) bmin=xx[0];
 	/* The minimum boundary if not entered, set to xs*/
 	
-	if (!sf_getfloat("max",&bmax)) {
-		bmax=xx[nr2+1];
-	}
+	
+	if (!sf_getfloat("max",&bmax)) bmax=xx[nr2+1];
 	/* The maximum boundary if not entered, set to xr*/
 	
 	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
