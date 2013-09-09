@@ -1,12 +1,4 @@
 /*
- *  ml_traveltime_vgradient_3D.c
- *  
- *
- *  Created by Yanadet Sripanich on 2/6/13.
- * 
- *
- */
-/*
  Copyright (C) 2009 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify

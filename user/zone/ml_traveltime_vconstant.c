@@ -1,12 +1,4 @@
 /*
- *  ml_traveltime_vconstant.c
- *  Test_struct
- *
- *  Created by Yanadet Sripanich on 11/10/12.
- * 
- *
- */
-/*
  Copyright (C) 2009 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify

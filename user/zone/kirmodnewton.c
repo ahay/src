@@ -1,12 +1,3 @@
-/*
- *  kirmodnewton.c
- *  
- *
- *  Created by Yanadet Sripanich on 2/15/13.
- * 
- *
- */
-
 /* Kirchhoff integral modeling using Newton's method*/
 /*
  Copyright (C) 2004 University of Texas at Austin

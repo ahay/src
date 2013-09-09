@@ -1,12 +1,4 @@
 /*
- *  mat_inverse.c
- *  3D tools
- *
- *  Created by Yanadet Sripanich on 2/8/13.
- *  
- *
- */
-/*
  Copyright (C) 2009 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify
@@ -23,6 +15,8 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+/*For use in kirmod_newton*/
 
 #include "mat_inverse.h"
 #include <stdio.h>

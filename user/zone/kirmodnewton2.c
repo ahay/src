@@ -1,12 +1,4 @@
 /*
- *  kirmodnewton2.c
- *  
- *
- *  Created by Yanadet Sripanich on 2/15/13.
- *  
- *
- */
-/*
  Copyright (C) 2004 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify

@@ -1,12 +1,4 @@
 /*
- *  vectorsub.c
- *  Multi-Layered
- *
- *  Created by Yanadet Sripanich on 8/3/12.
- *  
- *
- */
-/*
  Copyright (C) 2009 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify

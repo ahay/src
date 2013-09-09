@@ -1,12 +1,4 @@
 /*
- *  traveltime.c
- *  Program_1
- *
- *  Created by Yanadet Sripanich on 1/31/12.
- * 
- *
- */
-/*
  Copyright (C) 2009 University of Texas at Austin
  
  This program is free software; you can redistribute it and/or modify
