@@ -114,6 +114,70 @@ void adjclean(sf_complex **adjs,
     }
 }
 
+sf_complex iwiavrg(sf_complex **wave,
+		   int i, int j)
+/* mass term */
+{
+    sf_complex temp;
+
+    switch (order[0]) {
+	case '5':
+	    return wave[j][i];
+	    break;
+
+	case '9':
+	    return wave[j][i];
+	    break;
+
+	case 'j':
+	    temp = 0.6296*wave[j][i];
+	    if (i > 0               ) temp += 0.0942*wave[j][i-1];
+	    if (i < n1-1            ) temp += 0.0942*wave[j][i+1];
+	    if (            j > 0   ) temp += 0.0942*wave[j-1][i];
+	    if (            j < n2-1) temp += 0.0942*wave[j+1][i];
+	    if (i > 0    && j > 0   ) temp -= 0.0016*wave[j-1][i-1];
+	    if (i > 0    && j < n2-1) temp -= 0.0016*wave[j+1][i-1];
+	    if (i < n1-1 && j < n2-1) temp -= 0.0016*wave[j+1][i+1];
+	    if (i < n1-1 && j > 0   ) temp -= 0.0016*wave[j-1][i+1];
+	    return temp;
+	    break;
+
+	case 'c':
+	    temp = 0.363276*wave[j][i];
+	    if (i > 0               ) temp += 0.108598*wave[j][i-1];
+	    if (i < n1-1            ) temp += 0.108598*wave[j][i+1];
+	    if (            j > 0   ) temp += 0.108598*wave[j-1][i];
+	    if (            j < n2-1) temp += 0.108598*wave[j+1][i];
+	    if (i > 0    && j > 0   ) temp += 0.0424801*wave[j-1][i-1];
+	    if (i > 0    && j < n2-1) temp += 0.0424801*wave[j+1][i-1];
+	    if (i < n1-1 && j < n2-1) temp += 0.0424801*wave[j+1][i+1];
+	    if (i < n1-1 && j > 0   ) temp += 0.0424801*wave[j-1][i+1];
+	    if (i > 1               ) temp += 0.0041487*wave[j][i-2];
+	    if (i < n1-2            ) temp += 0.0041487*wave[j][i+2];
+	    if (            j > 1   ) temp += 0.0041487*wave[j-2][i];
+	    if (            j < n2-2) temp += 0.0041487*wave[j+2][i];
+	    if (i > 1    && j > 1   ) temp += 0.000206312*wave[j-2][i-2];
+	    if (i > 1    && j < n2-2) temp += 0.000206312*wave[j+2][i-2];
+	    if (i < n1-2 && j < n2-2) temp += 0.000206312*wave[j+2][i+2];
+	    if (i < n1-2 && j > 1   ) temp += 0.000206312*wave[j-2][i+2];
+	    if (i > 1    && j > 0   ) temp += 0.00187765*wave[j-1][i-2];
+	    if (i > 0    && j < n2-2) temp += 0.00187765*wave[j+2][i-1];
+	    if (i < n1-2 && j < n2-1) temp += 0.00187765*wave[j+1][i+2];
+	    if (i < n1-1 && j > 1   ) temp += 0.00187765*wave[j-2][i+1];
+	    if (i > 1    && j < n2-1) temp += 0.00188342*wave[j+1][i-2];
+	    if (i < n1-1 && j < n2-2) temp += 0.00188342*wave[j+2][i+1];
+	    if (i < n1-2 && j > 0   ) temp += 0.00188342*wave[j-1][i+2];
+	    if (i > 0    && j > 1   ) temp += 0.00188342*wave[j-2][i-1];
+	    return temp;
+	    break;
+
+	default:
+	    sf_error("Fail to load discretization scheme.");
+    }
+
+    return sf_cmplx(0.,0.);
+}
+
 void iwiadd(double omega,	     
 	    sf_complex **srce /* source */,
 	    sf_complex **recv /* receiver */,
@@ -129,8 +193,8 @@ void iwiadd(double omega,
 	    for (i=0; i < n1; i++) {    
 		dm[j*ss[1]+i] -= omega*omega
 		    *(prec==NULL? 1.: prec[j][i])*crealf(
-			conjf(srce[j][i])*adjs[j][i]+
-			recv[j][i]*conjf(adjr[j][i]));
+			conjf(iwiavrg(srce,i,j))*adjs[j][i]+
+			iwiavrg(recv,i,j)*conjf(adjr[j][i]));
 	    }
 	}
     } else {
@@ -140,8 +204,8 @@ void iwiadd(double omega,
 		    if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
 			di[(ih+nh)*ss[2]+j*ss[1]+i] -= omega*omega
 			    *(wght==NULL? 1.: wght[ih+nh][j][i])*crealf(
-				recv[j+ih][i]*conj(adjr[j-ih][i])+
-				conjf(srce[j-ih][i])*adjs[j+ih][i]);
+				recv[j+ih][i]*conj(iwiavrg(adjr,i,j-ih))+
+				conjf(srce[j-ih][i])*iwiavrg(adjs,i,j+ih));
 		    }
 		}
 	    }

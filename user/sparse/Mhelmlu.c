@@ -263,9 +263,9 @@ int main(int argc, char* argv[])
 	    fdpad(npml,pad1,pad2, f[is],Bx[its],Bz[its]);
 
 	    status = umfpack_zl_solve (hermite? UMFPACK_At: UMFPACK_A, 
-				     NULL, NULL, NULL, NULL, 
-				     Xx[its], Xz[its], Bx[its], Bz[its], 
-				     Numeric[its], Control, NULL);	    
+				       NULL, NULL, NULL, NULL, 
+				       Xx[its], Xz[its], Bx[its], Bz[its], 
+				       Numeric[its], Control, NULL);	    
 	    	    
 	    fdcut(npml,pad1,pad2, f[is],Xx[its],Xz[its]);
 	}
