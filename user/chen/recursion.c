@@ -49,6 +49,21 @@ void* recursion_init(int n1, int n2, op_func pop, int *para)
 	return p;
 }
 
+void recursion_push(void *h, float *d)
+/*< push data buf >*/
+{
+	struct tag_recursion *p;
+	int i1, i2;
+	float *pp;
+	p=(struct tag_recursion*)h;
+	
+	/* update */
+	pp = p->b[p->n2-1];
+	for(i2=p->n2-1; i2>0; i2--) p->b[i2] = p->b[i2-1];
+	p->b[0] = pp;
+	for(i1=0; i1<p->n1; i1++) p->b[0][i1] = d[i1];
+}
+
 void recursion_close(void*h)
 /*< release recursive operator >*/
 {
@@ -64,16 +79,8 @@ void recursion(void *h, float*d)
 /*< recursive operator >*/
 {
 	struct tag_recursion *p;
-	int i1, i2;
-	float *pp;
 	p=(struct tag_recursion*)h;
-	
-	/* update */
-	pp = p->b[p->n2-1];
-	for(i2=p->n2-1; i2>0; i2--) p->b[i2] = p->b[i2-1];
-	p->b[0] = pp;
-	for(i1=0; i1<p->n1; i1++) p->b[0][i1] = d[i1];
-
+	recursion_push(h, d);
 /*	p->upd(p->b, p->n2); */
 	p->op(d, p->b, p->n1, p->n2, p->par);
 }

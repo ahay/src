@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 	n12 = n[0]*n[1];
 	sf_warning("n1=%d n2=%d n3=%d\n", n[0], n[1], n[2]);
 
-	sf_unshiftdim2(in,out,axis);
+	sf_unshiftdim(in,out,axis);
 
     u1 = sf_floatalloc2(n[0], n[1]);
     u2 = sf_floatalloc(n[0]);
