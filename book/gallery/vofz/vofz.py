@@ -2,6 +2,8 @@ from rsf.proj import *
 
 methods = {
     'gazdag': 'Phase-Shift Migration',
+    'kirch': 'Kirchhoff Time Migration',
+    'lowrank': 'Two-Step Lowrank',
     }
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():
@@ -59,7 +61,7 @@ Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
 
 # velocity
 def get_velocity(vel):
-    Flow(vel,None,'math %(dim1)s %(dim2)s output="%(v0)g+%(gradx)g*x1+%(gradz)g*x2" | transp' % par)
+    Flow(vel,None,'math %(dim1)s %(dim2)s output="%(v0)g+%(gradx)g*x1+%(gradz)g*x2" | window j1=10 | transp' % par)
     Plot(vel,igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"'))
     Plot(vel+'-model',[vel,'lays0','lays1'],'Overlay')
 
