@@ -526,7 +526,7 @@ int main (int argc, char* argv[]) {
     }
 
     /* Set the listen back log */
-    if (listen (listen_sd, 128) < 0) {
+    if (listen (listen_sd, nthreads) < 0) {
         close (listen_sd);
         sf_error ("listen() failed [CPU %d], errno=%d", icpu, errno);
     }
@@ -541,18 +541,18 @@ int main (int argc, char* argv[]) {
     fflush (logf);
     sf_warning ("Log file is %s [CPU %d]", sbuffer, icpu);
 
-    /* Release the child before starting the server loop */
-    lockf (tmpfile, F_ULOCK, 1);
-    close (tmpfile);
-    free (str);
-    fclose (stderr);
-
     /* Buffer for job requests */
     old_qjobs = NULL;
     qjobs = sf_escscd3_alloc_work (nthreads, ma, mb);
     /* Position in the buffer for the next client */
     ijob = 0;
     clen = sizeof(client_addr);
+
+    /* Release the child before starting the server loop */
+    lockf (tmpfile, F_ULOCK, 1);
+    close (tmpfile);
+    free (str);
+    fclose (stderr);
 
     /* Wait for incoming connections */
     do {
@@ -596,6 +596,14 @@ int main (int argc, char* argv[]) {
         on = 1;
         if (ioctl (new_sd, FIONBIO, (char *)&on) < 0) {
             fprintf (logf, "ioctl() failed for a new socket\n");
+            fflush (logf);
+            close (new_sd);
+            break;
+        }
+        on = 1;
+        if (setsockopt (new_sd, SOL_SOCKET, SO_REUSEADDR,
+                        (char *)&on, sizeof(on)) < 0) {
+            fprintf (logf, "setsockopt() failed for a new socket\n");
             fflush (logf);
             close (new_sd);
             break;

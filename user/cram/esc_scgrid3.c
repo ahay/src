@@ -327,17 +327,17 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
 
     /* Create TCP socket */
     if ((is = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
-        sf_warning ("socket() failed");
-        return -1;
-    }
-    if (bind (is, (struct sockaddr *)loc_addr, sizeof(*loc_addr)) < 0) {
-        sf_warning ("bind() failed");
-        close (is);
+        sf_warning ("socket() failed, errno=%d", errno);
         return -1;
     }
     /* Allow socket descriptor to be reuseable */
     if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-        sf_warning ("setsockopt() failed");
+        sf_warning ("setsockopt() failed, errno=%d", errno);
+        close (is);
+        return -1;
+    }
+    if (bind (is, (struct sockaddr *)loc_addr, sizeof(*loc_addr)) < 0) {
+        sf_warning ("bind() failed, errno=%d", errno);
         close (is);
         return -1;
     }
@@ -345,7 +345,7 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     /* Disable TCP buffering of outgoing packets */
 #ifndef TCP_CORK
     if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
-        sf_warning ("setsockopt()[TCP_NODELAY] failed");
+        sf_warning ("setsockopt()[TCP_NODELAY] failed, errno=%d", errno);
         close (is);
         return 1;
     }
@@ -353,7 +353,7 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
 #ifdef SO_NOSIGPIPE
     on = 1;
     if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
-        sf_warning ("setsockopt()[SO_NOSIGPIPE] failed");
+        sf_warning ("setsockopt()[SO_NOSIGPIPE] failed, errno=%d", errno);
         close (is);
         return -1;
     }
@@ -361,19 +361,19 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     /* Set send and receive buffers */
     bsiz = sizeof(sf_esc_scgrid3_avals)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
     if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
-        sf_warning ("setsockopt()[SO_RCVBUF] failed");
+        sf_warning ("setsockopt()[SO_RCVBUF] failed, errno=%d", errno);
         close (is);
         return -1;
     }
     bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
     if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
-        sf_warning ("setsockopt()[SO_SNDBUF] failed");
+        sf_warning ("setsockopt()[SO_SNDBUF] failed, errno=%d", errno);
         close (is);
         return -1;
     }
     /* Set socket to be non-blocking */
     if (ioctl (is, FIONBIO, (char *)&on) < 0) {
-        sf_warning ("ioctl() failed");
+        sf_warning ("ioctl() failed, errno=%d", errno);
         close (is);
         return -1;
     }
@@ -389,13 +389,13 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
                 FD_SET(is, &sset); 
                 rc = select (is + 1, NULL, &sset, NULL, &timeout); 
                 if (rc < 0 && errno != EINTR) { 
-                    sf_warning ("connect() failed");
+                    sf_warning ("connect() failed, errno=%d", errno);
                     close (is);
                     return -1;
                 } else if (rc > 0) { 
                     lon = sizeof(int); 
                     if (getsockopt (is, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) { 
-                        sf_warning ("getsockopt() failed");
+                        sf_warning ("getsockopt() failed, errno=%d", errno);
                         close (is);
                         return -1;
                     }
@@ -798,8 +798,8 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
                        sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, MSG_NOSIGNAL);
             if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                sf_warning ("Can not send data for iab=[%d - %d], disconnecting",
-                            areqs[ii].iab, areqs[ie].iab - 1);
+                sf_warning ("Can not send data for iab=[%d - %d], errno=%d, disconnecting",
+                            areqs[ii].iab, areqs[ie].iab - 1, errno);
                 sf_esc_scgrid3_disconnect (esc_scgrid, is);
                 len = 0;
                 break;
@@ -867,7 +867,7 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
         if (0 == rc)
             break;
         if (rc < 0)
-            sf_error ("select() failed");
+            sf_error ("select() failed, errno=%d", errno);
         desc_ready = rc;
         for (is = 0; is <= mis && desc_ready > 0; is++) {
             /* Check to see if this descriptor is ready */
@@ -885,7 +885,7 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                     if (0 == rc)
                         sf_warning ("The server has closed connection for socket %d", is);
                     else
-                        sf_warning ("Can not receive data for socket %d, disconnecting", is);
+                        sf_warning ("Can not receive data for socket %d, errno=%d, disconnecting", is, errno);
                     sf_esc_scgrid3_disconnect (esc_scgrid, is);
                     FD_CLR(is, sset);
                     len = 0;
