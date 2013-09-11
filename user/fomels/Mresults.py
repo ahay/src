@@ -54,21 +54,43 @@ def showall():
             os.system ("scons %s.view" % fig)
         sys.exit()
 
+def flipit():
+    global results, pid, flip
+    figs = map(lambda x: 'Fig/%s.vpl' % x,
+               filter(lambda y: flip[y].get(),results))
+    if figs:
+            pid = os.fork()
+            if not pid:
+                command = "sfpen %s" % ' '.join(figs)
+                sys.stderr.write(command+'\n')
+                os.system (command)
+                sys.exit()
+
 quit = Button(frame,text="Quit",background="red",command=sys.exit)
 quit.pack(side=LEFT)
+
+fbut = Button(frame,text="Flip",background="green",command=flipit)
+fbut.pack(side=RIGHT)
 
 cycle = Button(frame,text="Cycle",background="yellow",command=showall)
 cycle.pack(side=RIGHT)
 
 results = commands.getoutput("scons -s results").split()
+results.pop() # remove scons junk
 
 def show(fig):
     def showfig():
         os.system("scons %s.view" % fig)
     return showfig
 
+frame = Frame(root)
+flip = {}
+row = 0
 for fig in results:
-    button = Button(root,text=fig,cursor='hand2',command=show(fig))
-    button.pack(fill=X)
+    Button(frame,text=fig,cursor='hand2',command=show(fig)).grid(row=row,column=0,sticky=W)
+    flip[fig] = IntVar()
+    Checkbutton(frame,variable=flip[fig]).grid(row=row,column=1)
+    row = row+1
+frame.pack(fill=X)
 
 root.mainloop()
