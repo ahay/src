@@ -4,6 +4,7 @@ methods = {
     'gazdag': 'Phase-Shift Migration',
     'kirch': 'Kirchhoff Time Migration',
     'lowrank': 'Two-Step Lowrank',
+    'oway': 'One-Way Wave Equation',
     }
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():
