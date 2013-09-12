@@ -40,8 +40,13 @@ signal(SIGINT,handler)
 
 root = Tk()
 
+cwd = os.getcwd()
+proj = os.path.join(os.path.basename(os.path.dirname(os.path.dirname(cwd))),
+                    os.path.basename(os.path.dirname(cwd)),
+                    os.path.basename(cwd))
+
 date = time.asctime()
-root.title(date[:19])
+root.title(proj)
 
 frame = Frame(root,relief=GROOVE,borderwidth=2)
 frame.pack(side=TOP,fill=X)
@@ -76,21 +81,24 @@ cycle = Button(frame,text="Cycle",background="yellow",command=showall)
 cycle.pack(side=RIGHT)
 
 results = commands.getoutput("scons -s results").split()
-results.pop() # remove scons junk
+c = results[-1:][0]
+if (c < 'A' or c > 'z'): 
+    results.pop() # remove scons junk
+length = max(map(len,results))
 
 def show(fig):
     def showfig():
         os.system("scons %s.view" % fig)
     return showfig
 
-frame = Frame(root)
 flip = {}
-row = 0
+r=0
+frame = Frame(root)
 for fig in results:
-    Button(frame,text=fig,cursor='hand2',command=show(fig)).grid(row=row,column=0,sticky=W)
     flip[fig] = IntVar()
-    Checkbutton(frame,variable=flip[fig]).grid(row=row,column=1)
-    row = row+1
-frame.pack(fill=X)
+    Checkbutton(frame,variable=flip[fig]).grid(row=r,column=0)
+    Button(frame,text=fig,cursor='hand2',command=show(fig),width=length).grid(row=r,column=1)
+    r += 1
+frame.pack()
 
 root.mainloop()
