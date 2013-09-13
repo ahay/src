@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-helmlu helmmig 
+helmlu helmmig helmrhs
 iwioper iwiiter iwioper0 iwiiter0 
 iwinlcg iwilbfgs 
 iwigrad
