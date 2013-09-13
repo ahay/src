@@ -34,6 +34,7 @@ copyright holder.
 
 #include "seamx_headers.hh"
 #include "cdt.hh"
+#include "tterm.hh"
 
 namespace TSOpt {
 
@@ -72,7 +73,37 @@ namespace TSOpt {
 
     ostream & write(ostream & str) const;
   };
+ 
+  class IWaveTimeTerm: public TimeTerm {
+  private:
 
+    bool fwd;
+    mutable IWaveTime t0;
+    IWaveTime const & t;
+    IWaveTimeTerm();
+    IWaveTimeTerm(IWaveTimeTerm const &);
+
+  public:
+
+    IWaveTimeTerm(IWaveTime const & _t,
+		  IWaveTime _t0,
+		  bool _fwd = true) 
+      : t(_t), t0(_t0), fwd(_fwd) {}
+    void setTargetTime(Time const & _t0) { t0 = _t0; }
+    Time const & getTargetTime() const { return t0; }
+    bool query() {
+      if (fwd) return ((t<t0) || (t==t0));
+      else return ((t>t0) || (t==t0));
+    }
+    ostream & write(ostream & str) const {
+      str<<"IWaveTimeTerm\n";
+      str<<"current time = \n";
+      t.write(str);
+      str<<"target time  = \n";
+      t0.write(str);
+      return str;
+    }
+  };
 }
 
 #endif

@@ -17,7 +17,9 @@ namespace TSOpt {
 
   template<typename T> 
   void TreeStep(std::vector<T *> & u, void (*F)(std::vector<T *>), bool verb=false) {
-    cerr<<"enter TreeStep\n";
+    // first update 2nd half given first half
+    F(u);
+
     for (size_t i=u.size(); i>0; i--) {
       cerr<<"  component "<<i-1<<endl;
       // extract index vector
@@ -145,6 +147,11 @@ namespace TSOpt {
       return str;
     }
   };
+
+    
+
+
+  /////////////////////// Test Structures ///////////////////////
 
   typedef struct s_TestState0Data {
     int nlvl;
