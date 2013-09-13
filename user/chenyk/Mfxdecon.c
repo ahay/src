@@ -28,7 +28,7 @@
 
 int main(int argc, char *argv[])
 {
-        int n1;			/* number of samples in input trace	 */
+    int n1;			/* number of samples in input trace	 */
 	int n1w;		/* number of samples in time window      */
 	int N1w;	       	/* number of time windows		*/
 	int n1ws;	       	/* number of samples in window (wo taper)*/

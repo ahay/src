@@ -32,11 +32,11 @@ inv=0 && adj=0 do forward
 
 int main (int argc, char *argv[])
 {
-	int i3,i;							/* index */
+	int i3,i;						/* index */
 	int n2,n3;						/* second and third axis size */
 	int inv,adj;						/* inverse and adjoint flags */
-	int verb;							/* if output verbosity */
-	int N_internal,N_external; 			/* internal and external iterations in PCG  */
+	int verb;						/* if output verbosity */
+	int N_internal,N_external; 				/* internal and external iterations in PCG  */
 	int nh,nt,nv;						/* number of points in t,h,v axises */
 	float *data=NULL;					/* t-x domain */
 	float *model=NULL;					/* tau-p domain */
@@ -44,7 +44,7 @@ int main (int argc, char *argv[])
 	float *v=NULL;						/* velocity vector */
 	float *h=NULL;						/* offset vector */
 	float t0,dt,h0,dh,v0,dv;				/* origin and increments for t,h,v axises. */
-	sf_file in,out;					/* standard input and output files */
+	sf_file in,out;						/* standard input and output files */
 	sf_file velocity,offset;				/* Input velocity and offset vector files*/
 
 /***************************************************/
