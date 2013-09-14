@@ -24,11 +24,14 @@
 #include <stdlib.h>
 #include <setjmp.h>
 
+#include "_bool.h"
 #include "error.h"
 
 jmp_buf *python_except=NULL;
 
-char* sf_getprog (void); /* provided by getpar */
+/* provided by getpar */
+char* sf_getprog (void); 
+bool sf_getbool (const char* key,/*@out@*/ bool* par);
 
 void sf_error( const char *format, ... )
 /*< Outputs an error message to stderr and terminates the program. 
@@ -74,6 +77,10 @@ the end of format adds system information for system errors. >*/
     va_list args;
     char *prog;
     int last;
+    bool dryrun;
+
+    if (!sf_getbool("--dryrun",&dryrun)) dryrun=false;
+    if (dryrun) return; /* silent if dryrun */
     
     (void) fflush(stdout);
     va_start(args,format);
