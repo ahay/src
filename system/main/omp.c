@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-    int axis, axis2, rank, nodes, node, ndim;
+    int axis, axis2, rank, nodes, node, ndim, jobs;
     off_t n[SF_MAX_DIM];
     char *iname=NULL, **cmdline;
     FILE *tmp;
@@ -35,15 +35,12 @@ int main(int argc, char* argv[])
 #pragma omp parallel
     {
 	nodes = omp_get_num_threads();
-	if (1 >= nodes) {
+	if (1 >= nodes) 
 	    nodes = omp_get_num_procs(); 
-	    omp_set_num_threads(nodes);
-	}
     }
 
     /* master node */
     sf_init(argc,argv);
-    sf_warning("Running %d threads",nodes);
 
     inp = sf_input("in");
     out = sf_output("out");
@@ -61,7 +58,13 @@ int main(int argc, char* argv[])
 
     inp2 = sf_input(iname);
 
-    cmdline = sf_split(inp2,axis,nodes+1,ndim,n,argc,argv);  
+    cmdline = sf_split(inp2,axis,nodes+1,&jobs,ndim,n,argc,argv);  
+    sf_warning("Running %d threads",jobs);
+
+#pragma omp parallel
+    {
+	omp_set_num_threads(jobs);
+    }
 
 #pragma omp parallel private(rank) shared(cmdline)
     {
@@ -77,11 +80,11 @@ int main(int argc, char* argv[])
     sf_rm(iname,true,false,false);
 
     if (axis2 > 0) {
-	for (node=0; node < nodes; node++) {
+	for (node=0; node < jobs; node++) {
 	    sf_join(out,node);
 	}
     } else {
-	sf_add(out,nodes);
+	sf_add(out,jobs);
     }
 
     exit(0);

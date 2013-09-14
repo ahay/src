@@ -54,6 +54,7 @@ static void sizes(sf_file file, int axis, int ndim,
 char** sf_split(sf_file inp          /* input file */, 
 		int axis             /* split axis */,
 		int nodes            /* number of CPUs */,
+		int *tasks           /* number of tasks */,
 		int ndim, off_t *n   /* [ndim] file dimensions */, 
 		int argc, char**argv /* command-line arguments */)
 /*< split the input file along the specified axis
@@ -87,6 +88,7 @@ char** sf_split(sf_file inp          /* input file */,
 	jobs = split;
     }
     bigjobs = split - jobs*(w-1);
+    *tasks = jobs;
     
     splitkey = (char**) sf_alloc(argc,sizeof(char*));
     splitargc = 0;

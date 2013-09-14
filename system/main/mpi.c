@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int rank, nodes, ndim, job, axis, axis2;
+    int rank, nodes, ndim, job, axis, axis2, jobs;
     off_t n[SF_MAX_DIM];
     char **commands, cmdline[SF_CMDLEN], *iname;
     sf_file inp=NULL, out=NULL;
@@ -49,10 +49,10 @@ int main(int argc, char* argv[])
 	if (!sf_getint("split",&axis)) axis=ndim;
 	/* axis to split */
 	
-	commands = sf_split(inp,axis,nodes,ndim,n,argc,argv);  
+	commands = sf_split(inp,axis,nodes,&jobs,ndim,n,argc,argv);  
 
-	for (job=1; job < nodes; job++) {
-	    strncpy(cmdline,commands[job-1],SF_CMDLEN);
+	for (job=0; job < jobs; job++) {
+	    strncpy(cmdline,commands[job],SF_CMDLEN);
 	    MPI_Send(cmdline, SF_CMDLEN, MPI_CHAR, job, 0, MPI_COMM_WORLD);
 	}
 
@@ -63,11 +63,11 @@ int main(int argc, char* argv[])
 
 	sf_out(out,axis2,iname);
 	
-	for (job=1; job < nodes; job++) {
+	for (job=0; job < jobs; job++) {
 	    MPI_Recv(&rank,1, MPI_INT, job, 1, MPI_COMM_WORLD,&stat);
-	    if (axis2 > 0) sf_join(out,job-1);
+	    if (axis2 > 0) sf_join(out,job);
 	}
-	if (0==axis2) sf_add(out,nodes-1);
+	if (0==axis2) sf_add(out,jobs);
 
 	sf_fileclose(inp);
     } else { /* slave nodes */

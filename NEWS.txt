@@ -29,7 +29,6 @@ To APIs:
 To the Python package:
 
 * fftw (if present) is included in core libraries during compilation
-
 * Cygwin no longer provides libtirpc, removed it from configure 
 
 To programs:
@@ -53,6 +52,7 @@ In APIs:
 
 * Look for mex in matlab's directory to avoid confusion with other
   programs named mex
+* Fixed parallel.c for the case of less jobs than nodes
 
 In the Python package:
 
