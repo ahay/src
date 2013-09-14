@@ -45,7 +45,7 @@ Result('edge2','mona2',
 Flow('patch','mona','patch w=200,200 p=3,3 | put n3=9 n4=1')
 
 Flow('patch2','patch','impl2 rect1=%d rect2=%d tau=1' % (rect,rect),
-     split=[3,'omp'])
+     split=[4,'omp'])
 
 Flow('pmona2','patch2','put n3=3 n4=3 | patch inv=y weight=y')
 

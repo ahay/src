@@ -69,8 +69,10 @@ int main(int argc, char* argv[])
 #pragma omp parallel private(rank) shared(cmdline)
     {
 	rank = omp_get_thread_num();
-	fprintf(stderr,"CPU %d: %s\n",rank,cmdline[rank]); 
-	sf_system(cmdline[rank]);
+	if (rank < jobs) {
+	    fprintf(stderr,"CPU %d: %s\n",rank,cmdline[rank]); 
+	    sf_system(cmdline[rank]);
+	}
     }
     
     if (!sf_getint("join",&axis2)) axis2=axis;
