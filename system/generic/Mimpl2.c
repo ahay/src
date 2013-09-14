@@ -78,6 +78,7 @@ int main(int argc, char* argv[])
     dat2 = lin? sf_floatalloc2(n1,n2): NULL;
 
     for (i3=0; i3 < n3; i3++) {
+	sf_warning("slice %d of %d;",i3,n3);
 	if (NULL != dst) sf_floatread(dist,n12,dst);
 
 	sf_floatread (dat[0],n12,in);
@@ -94,6 +95,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite (dat[0],n12,out);
 	}
     }
+    sf_warning(".");
 
     exit(0);
 }

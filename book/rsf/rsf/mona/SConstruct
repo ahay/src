@@ -40,4 +40,19 @@ Result('edge2','mona2',
        grey allpos=y title="Edge Detector" transp=n screenratio=1 wantaxis=n
        ''')
 
+# Patch to run in parallel
+
+Flow('patch','mona','patch w=200,200')
+
+Flow('patch2','patch','impl2 rect1=%d rect2=%d tau=1' % (rect,rect),
+     split=[4,'omp'])
+
+Flow('pmona2','patch2','patch inv=y weight=y')
+
+Result('pmona2',
+       '''
+       grey transp=n allpos=y title="Smoothed (with Patching)"
+       color=b screenratio=1 wantaxis=n
+       ''')
+
 End()
