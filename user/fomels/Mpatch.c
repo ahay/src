@@ -5,6 +5,9 @@ p is number of patches in different dimensions (defaults to 1,1,...)
 
 If inv=n, the number of output dimensions is twice the number of input dimensions.
 If inv=y, the number of output dimensions is half the number of input dimensions.
+
+September 2013 program of the month:
+http://ahay.org/rsflog/index.php?/archives/357-Program-of-the-month-sfpatch.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
