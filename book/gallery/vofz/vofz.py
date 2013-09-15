@@ -5,6 +5,8 @@ methods = {
     'kirch': 'Kirchhoff Time Migration',
     'lowrank': 'Two-Step Lowrank',
     'oway': 'One-Way Wave Equation',
+    'stolt': 'Stolt Migration',
+    'vc': 'Velocity Continuation'
     }
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():

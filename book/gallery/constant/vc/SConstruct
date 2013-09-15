@@ -7,13 +7,14 @@ Result('data','grey title="Zero Offset" ')
 nx = 351
 x0 = -1
 
-Flow('fft','data','cosft sign2=1 | spray axis=2 n=1')
+Flow('fft','data','cosft sign2=1')
 
-Flow('vc','fft','fourvc v0=0.0001 dv=0.01 nv=201',split=[3,'omp'])
+Flow('vc','fft','vczo v0=0.0001 dv=0.01 nv=201',split=[3,'omp'])
 
 Flow('vel','data','spike') # velocity=1
 
-Flow('mig','vc vel','cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)
+Flow('mig','vc vel',
+     'cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)
 
 constant.zo_image('mig')
 
@@ -21,11 +22,13 @@ constant.zo_image('mig')
 
 constant.get_impulse('imp','data')
 
-Flow('ifft','imp','cosft sign2=1 | spray axis=2 n=1')
+Flow('ifft','imp','cosft sign2=1')
 
-Flow('ivc','ifft','fourvc v0=0.0001 dv=0.01 nv=201 pad2=4096',split=[3,'omp'])
+Flow('ivc','ifft',
+     'vczo v0=0.0001 dv=0.01 nv=201 pad2=4096',split=[3,'omp'])
 
-Flow('imig','ivc vel','cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)
+Flow('imig','ivc vel',
+     'cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)
 
 constant.impulse_response('imig')
 
