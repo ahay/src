@@ -21,13 +21,13 @@ par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
 
 def igrey(custom='',title=''):
     return '''
-    grey labelrot=n title="%s" wantaxis=y
-    min2=%g max2=%g min1=%g max1=%g
-    wantscalebar=n barreverse=y
+    window min2=%g max2=%g min1=%g max1=%g |
+    grey labelrot=n title="%s" wantaxis=y    
+    scalebar=n barreverse=y
     grid=y gridcol=7 screenratio=1
     label1=z unit1=km label2=x unit2=km %s
-    ''' % (title,
-           par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],
+           title,custom)
 
 def zo_image(image):
     Result(image,igrey('gridcol=5','Zero-Offset %s' % method))

@@ -12,14 +12,18 @@ par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
            dim1 = 'd1=0.001 o1=0 n1=10001',
            dim2 = 'd2=0.01 o2=0 n2=501')
 
-def igrey(custom="",par={}):
+def igrey(custom='',title=''):
     return '''
-    grey labelrot=n pclip=100 title="" wantaxis=y
-    min2=%g max2=%g min1=%g max1=%g
-    wantscalebar=n barreverse=y
+    window min2=%g max2=%g min1=%g max1=%g |
+    grey labelrot=n pclip=100 title="%s" wantaxis=y
+    scalebar=n barreverse=y
     grid=y gridcol=7 screenratio=1
-    label1="z(km)" label2="x(km)" %s
-    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+    label1=z unit1=km label2=x unit2=km %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],
+           title,custom)
+
+def zo_image(image):
+    Result(image,igrey('gridcol=5','Zero-Offset %s' % method))
 
 layers = (
     ((0,2),(3.5,2),(4.5,2.5),(5.,2.25),(5.5,2),(6.5,2.5),(10,2.5)),
@@ -96,10 +100,12 @@ def get_impulse(impulse,data):
     Flow(impulse,data,'spike k1=751 k2=176 | smooth rect1=2 rect2=2 repeat=2')
 
 def impulse_response(image,vel):
-    Plot(image,'grey title="%s Impulse Response" unit2=km' % method)
+    Plot(image,igrey('gridcol=7','%s Impulse Response' % method))
     Plot(image+'-theory',vel,
          '''
          scale dscale=0.5 | eikonal yshot=5 | 
-         contour nc=1 c0=1.5 wantaxis=n wanttitle=n plotcol=3 plotfat=3
-         ''')
+         contour nc=1 c0=1.5 screenratio=1 dash=1
+         wantaxis=n wanttitle=n plotcol=3 plotfat=3
+         min2=%g max2=%g min1=%g max1=%g
+         ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax']))
     Result(image,[image,image+'-theory'],'Overlay')
