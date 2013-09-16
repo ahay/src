@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 ccprogs = 'isolr25'
-
+cprogs='refl'
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
@@ -28,7 +28,21 @@ if lapack:
     if not isinstance(lapack,bool):
         libsxx.extend(lapack)
     env.Prepend(LIBS=libsxx)
+libs = [dynpre+'rsf']+env.get('LIBS',[])
+cmains = Split(cprogs)
+for prog in cmains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    env.StaticObject('M'+prog+'.c')
+    prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
+    if root:
+        install = env.Install(bindir,prog)
 
+        if dynpre and env['PLATFORM'] == 'darwin':
+                env.AddPostAction(install,
+                'install_name_tool -change '
+                'build/api/c/libdrsf.dylib '
+                '%s/libdrsf.dylib %s' % (libdir,install[0]))
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
