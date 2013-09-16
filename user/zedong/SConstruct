@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 ccprogs = 'isolr25'
-cprogs='refl'
+cprogs='refl genheaderallreceiver'
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
