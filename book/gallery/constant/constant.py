@@ -9,7 +9,11 @@ methods = {
     'stolt': 'Stolt Migration',
     'vc': 'Velocity Continuation'
     }
-method = methods[os.path.basename(os.getcwd())]
+thisdir = os.path.basename(os.getcwd())
+if thisdir in methods.keys():
+    method = methods[thisdir]
+else:
+    method = ''
 
 z = (1,1.5,2)
 a = (20,0,0)

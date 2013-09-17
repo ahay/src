@@ -1,26 +1,22 @@
 from rsf.proj import *
-
-sys.path.append('..')
-import gradient
+from rsf.gallery import gradient
 
 gradient.zero_offset('zodata')
 
 Result('zodata','grey title="Zero-Offset" ')
 
-par = gradient.par
+gradient.get_velocity('vel')
 
-Flow('veloc','zodata',
-     '''
-     window n1=1 | spray axis=1 n=501 o=0 d=0.01 label=Depth unit=km | 
-     math output="%(v0)g+%(gradx)g*x2+%(gradz)g*x1" | 
-     put label=Velocity unit=km/s
-     ''' % par)
+Flow('veloc','vel','window j2=20 min2=1.5')
 
-Result('veloc','grey color=j allpos=y bias=%(v0)g title="Velocity Model" scalebar=y barreverse=y' % par)
+Result('veloc',
+       gradient.igrey('''
+       color=j allpos=y bias=1.5 scalebar=y
+       barlabel=Velocity barunit=km/s
+       ''','Velocity Model'))
 
 # FFD
-Flow('vel2','veloc',
-     'transp | scale dscale=0.5')
+Flow('vel2','veloc','transp | scale dscale=0.5')
 
 # Zero-offset migration
 Flow('zomig','zodata vel2',
@@ -31,7 +27,7 @@ Flow('zomig','zodata vel2',
      vel=${SOURCES[1]}
      ''')
 
-Result('zomig','window min1=2.5 max1=7.5 | grey title="Zero-Offset Migration" unit2=km transp=n')
+gradient.zo_image('zomig')
 
 # Impulse response
 #Flow('impulse','zodata','spike k1=751 k2=176 | smooth rect1=2 rect2=2 repeat=2')
