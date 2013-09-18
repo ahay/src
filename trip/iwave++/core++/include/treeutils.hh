@@ -15,125 +15,52 @@ namespace TSOpt {
   void print_xcode(deque<bool> xcode, ostream & str);
   void print_idx(vector<int> idx, ostream & str);
 
-  template<typename T> 
-  void TreeStep(std::vector<T *> & u, void (*F)(std::vector<T *>), bool verb=false) {
-    // first update 2nd half given first half
-    F(u);
-
-    for (size_t i=u.size(); i>0; i--) {
-      cerr<<"  component "<<i-1<<endl;
-      // extract index vector
-      deque<bool> xcode = d2b(i-1);
-      vector<int> idx;
-      idx.clear();
-      index_incr(xcode,idx);
-      // build an argument vector 
-      vector<T *> w(idx.size());
-      for (size_t j=0; j<idx.size(); j++) 
-	w.at(j) = u.at(idx.at(j));
-      // call timestep function interface
-      F(w);
-      if (verb) {
-	cerr<<"----------------------------------------------------------"<<endl;
-	cerr<<"TreeStep: updated field "<<idx[0];
-	if (idx.size()>1) {
-	  cerr<<" using fields ";
-	  for (size_t j=1;j<idx.size()-1;j++) cerr<<idx[j]<<", ";
-	  cerr<<idx[idx.size()-1];
-	}
-        cerr<<endl;
-	cerr<<"  field states:\n";
-	for (size_t j=0;j<idx.size();j++) {
-	  cerr<<"  *** "<<idx[j]<<":"<<endl;
-	  w[j]->write(cerr);
-        }
-	cerr<<"----------------------------------------------------------"<<endl;
-      }
-    }
-    cerr<<"exit TreeStep\n";
-  }
-
-  template<typename T>
-  class TreeState {
-  public:
-    virtual void setTime(Time const & t) = 0;
-    virtual Time & getTime() = 0;
-    virtual Time const & getTime() const = 0;
-    virtual std::vector<T *> & getStateArray() = 0;
-    virtual std::vector<T *> const & getStateArray() const = 0;
-  };
-
-  //template<typename R, typename T> 
-  template<typename T>
-  class TreeTimeStep: public TimeStep<TreeState<T> > {
-
-    typedef void (*TSF)(std::vector<T *>);
-
+  // array of IWaveStates with ref object of same
+  // type pointing to first half of array
+  class IWaveTreeState {
   private:
-    // R & mystate;
-    TreeState<T> & mystate;
-    TSF f;
-    TreeTimeStep();
-    //    TreeTimeStep(TreeTimeStep<R,T> const &);
-    TreeTimeStep(TreeTimeStep<T> const &);
-    bool verb;
-
-  public:
-    TreeTimeStep(TreeState<T> & _mystate, TSF _f, bool _verb=false): mystate(_mystate), f(_f), verb(_verb) {cerr<<"TreeTimeStep constructor\n";}
-    TreeState<T> & getState() { return mystate; }
-    TreeState<T> const & getState() const { return mystate; }
-    void run()  {
-      cerr<<"call TreeStep\n";
-      TreeStep(this->getState().getStateArray(),f,verb);
-      cerr<<"return TreeStep\n";
-      return;
-    }
-
-    Time & getNextTime() const { 
-      RVLException e;
-      e<<"ERROR - DONT CALL THIS\n";
-      throw e;
-    }
-    ostream & write(ostream & str) const {
-      return str;
-    }
-  };
-
-  // T = state type, D = instance data for T 
-  // n = order of derivative tree
-  template<typename T, typename D>
-  class IWaveTreeState: public TreeState<T> {
-  private:
-    bool fwd;
-    std::vector<T *> sa;
-    size_t get_time_index() const {
-      if (fwd) return 0;
-      return sa.size()-1;
-    }
+    bool own;
+    std::vector<IWaveState *> sa;
+    IWaveTreeState * ref;
     IWaveTreeState();
     IWaveTreeState(IWaveTreeState const &);
+    IWaveTreeState(std::vector<IWaveState *> sv)
+      : own(false), sa(iwave_max(sv.size()/2,0)) {
+      if (sv.size()>1) 
+	for (int i=0;i<sv.size()/2;i++) sa[i]=sv[i];
+      ref=NULL;
+    }
   public:
-    IWaveTreeState(D const & sdata, int n=0, bool _fwd=true): fwd(_fwd), sa(pow2(n)) {
-      cerr<<"IWaveTreeState Constructor:";
-      for (size_t i=0; i<sa.size(); i++) {
-	sa[i]=new T(sdata);
+    IWaveTreeState(PARARRAY & _pars, FILE * _stream,
+		   GFDM_INIT_FUN _minit, int n=0): own(true), sa(pow2(n)) {
+      try {
+	for (size_t i=0; i<sa.size(); i++) 
+	  sa[i]=new IWaveState(_pars,_stream,_minit);
+	// create reference state out of first half of
+	// array, without allocating any new memory,
+	// using private constructor
+	if (n>0) ref = new IWaveTreeState(sa);
+	else ref=NULL;
       }
     }
     ~IWaveTreeState() {
-      for (size_t i=0; i<sa.size(); i++) delete sa[i];
+      if (ref) delete ref;
+      if (own) 
+	for (size_t i=0; i<sa.size(); i++) delete sa[i];
     }
 
+    // use reference state (index 0) for all time references
     void setTime(Time const & t) {
-      try { sa[get_time_index()]->setTime(t);
+      try { sa[0]->setTime(t);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from IWaveTreeState::setTime\n";
 	throw e;
       }
     }
-    Time const & getTime() const { return sa[get_time_index()]->getTime(); }
-    Time & getTime() { return sa[get_time_index()]->getTime(); }
-    Time & getNextTime() const { sa[get_time_index()]->getTime(); }
+    Time const & getTime() const { return sa[0]->getTime(); }
+    Time & getTime() { return sa[0]->getTime(); }
+    Time & getNextTime() const { sa[0]->getTime(); }
 
     virtual std::vector<T *> & getStateArray() { return sa; }
     virtual std::vector<T *> const & getStateArray() const { return sa; }
@@ -142,21 +69,182 @@ namespace TSOpt {
       str<<"IWaveTreeState, length "<<sa.size()<<"\n";
       for (size_t i=0; i<sa.size(); i++) {
 	str<<"** component "<<i<<":\n";
-	sa[i].write(str);
+	sa[i]->write(str);
       }
       return str;
     }
   };
 
+  // revise GFDM defn to include typedef void (*f)(std::vector<IWaveState> *> GFDSTEP;
+
+  // Note: rename Mario's multi-sampler to trace2file - adjoint is file2trace
+  IWaveFwdSim: public Algorithm {
+
+  private:
+    int order;                                    // derivative order
+    IWaveTreeState iwstate;                       // wraps vector of IWaveStates
+    GFD_MODEL gfdm;                               // forward time step function
+    file2grid * rsf;                              // grid input
+    file2trace * m_s_src;                         // trace input - for source
+    trace2file * m_s_fwd;                         // trace output
+    PARARRAY & pars;
+    FILE * stream;
+
+  public:
+    IWaveFwdSim(int order, PARARRAY & _pars, FILE * _stream, GFD_INIT_FUN minit)
+      : iwstate(_pars,_stream,minit,order), pars(_pars), stream(_stream) {
+      minit(&gfdm);
+      rsf = new file2grid;
+      // need to think up constructor for this thing - combine possible shift
+      // to dual grid with rsfread.
+      // - use isdyn and specs->fd_set_grid_type to param file2grid
+      m_s_src = new file2trace;
+      if (file2trace_construct(m_s_src,&pars,hdrkey,stream)) {
+	// throw exception
+      }
+      m_s_fwd = new trace2file;
+      if (trace2file_construct(m_s_fwd,&pars,hdrkey,stream)) {
+	// throw exception
+      }
+      // probably should be a movie option
+    }
+
+    void run() {
+      try {
+
+	while (ms_s_fwd->xrec <= ms_s_fwd->last) {
+	  // zero everything
+	  iwstate.zero();
+	  // load sim data - used to be iwave_static_init
+	  file2grid_run(rsf,iwstate,ms_s_fwd->xrec,par,stream);
+	  // initialize sampler - always last component sampled
+	  std::vector<IWaveState *> states = iwstate.getStateArray();
+	  trace2file_init(ms_s_fwd,
+			  &(states[states.size()-1]->model),
+			  &(iwstate.getPARARRAY()),iwstate.getFILE());
+	  // initialize source - always first component sampled
+	  file2trace_init(ms_s_src,
+			  &(states[0]->model),
+			  &(iwstate.getPARARRAY()),iwstate.getFILE());
+	    
+	  // time loop - note that this requres storagee of the sampler
+	  // start and stop times in TIMESTEPINDEX form
+	  iwstate.setTime(ms_s_src.start);
+	  while (less_than(iwstate.getTime(),ms_s_fwd.stop)) {
+	    // time step
+	    tsf(states);
+	    // source input
+	    file2trace_run(ms_s_src,&(states[0]->model));
+	    // trace output
+	    trace2file_run(ms_s_fwd,&(states[states.size()-1]->model));
+	    // next time
+	    next_step(iwstate.getTime());
+	  } //end time loop 
+	  
+	  // write ouput - note that d, og inputs should be struct members
+	  // and initialized by the _init function
+	  trace2file_flush(ms_s_fwd,stream);
+	} // end sim loop
+	  
+	// clean everything up
+      }
+      catch (RVLException & e) {
+	....
+      }
+    }
+  };
+
+  IWaveAdjSim: public Algorithm {
+
+  private:
+    IWaveTreeState iwstate;                       // wraps vector of IWaveStates
+    GFD_MODEL gfdm;
+    grid2file * rsa;                              // grid output - adjoint of grid input
+    file2trace * m_s_adj;                         // trace input - adjoint to trace output
+    trace2file * m_s_fwd;                         // trace output
+    IWaveCPSim * cps;                             // reference field simulator
+
+  public:
+    IWaveAdjSim(PARARRAY & _pars, FILE * _stream, GFD_INIT_FUN minit, 
+		unsigned int nsteps, unsigned int nsnaps, unsigned int order)
+      : iwstate(_pars,_stream,minit,order),
+      pars(_pars), stream(_stream) {
+      if (order<1) {
+	RVLException e;
+	e<<"Error: IWaveAdjSim constructor\n";
+	e<<"  order < 1 not permitted\n";
+	throw e;
+      }
+      cps = new IWaveCPSim(_pars,_stream,minit,*(iwstate.ref),nteps,nsnaps);
+      minit(&gfdm);
+      rsa = new grid2file;
+      // need to think up constructor for this thing - combine possible shift
+      // to dual grid with rsfread.
+      // - use isdyn and specs->fd_set_grid_type to param file2grid
+      m_s_adj = new file2trace;
+      if (file2trace_construct(m_s_adj,&pars,hdrkey,stream)) {
+	// throw exception
+      }
+      // probably should be a movie option
+      // ref simulator
+      
+    }
+
+    void run() {
+      try {
+
+	while (ms_s_adj->xrec <= ms_s_adj->last) {
+	  // zero everything
+	  iwstate.zero();
+
+	  // initialize sampler - always last component sampled
+	  std::vector<IWaveState *> states = iwstate.getStateArray();
+	  file2trace_init(ms_s_adj,
+			  &(states[states.size()-1]->model),
+			  &(iwstate.getPARARRAY()),iwstate.getFILE());
+	    
+	  // time loop - note that this requres storagee of the sampler
+	  // start and stop times in TIMESTEPINDEX form
+	  iwstate.setTime(ms_s_adj.stop);
+	  TIMESTEPINDEX tsi;
+	  // cps gets initial time from source sampler, generated internally
+	  cps->setFinalTime(ms_s_adj.stop);
+	  while (less_than(ms_s_adj.start,iwstate.getTime())) {
+	    // external copy of time stamp
+	    tsi_copy(&tsi,&iwstate.getTime());
+	    // decrement external copy
+	    prev_step(tsi);
+	    // set reference time
+	    cps->setTargetTime(tsi);
+	    // run reference field to reference time
+	    cps->run();
+	    // trace input
+	    file2trace_run(ms_s_adj,&(states[states.size()-1]->model));
+	    // backward time step
+	    tsa(states);
+	    // accumulate adjoint
+	    grid2file_run(rsa,states);
+	  } //end time loop 
+	  
+	  // write ouput - note that d, og inputs should be struct members
+	  // and initialized by the _init function
+	  grid2file_flush(rsa,stream);
+	} // end sim loop
+	  
+	// clean everything up
+      }
+      catch (RVLException & e) {
+	....
+      }
+    }
+  };
     
-
-
   /////////////////////// Test Structures ///////////////////////
-
+  
   typedef struct s_TestState0Data {
     int nlvl;
   } TestState0Data;
-
+  
   class TestState0 {
   private:
     int nlvl;
