@@ -34,10 +34,10 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int strlen, status, argc, i, ndim, odim, Odim, len;
+    int strlen, status, argc, i, ndim, odim, Odim;
     const int *dim=NULL;
     size_t nbuf = BUFSIZ, nd, j;
-    char *strtag=NULL, **argv, *par=NULL, *filename=NULL;
+    char *strtag=NULL, **argv, *filename=NULL;
     double *dr=NULL, *di=NULL;
     double *ddlt=NULL, *dorg=NULL;
     mxArray *pca;
@@ -59,9 +59,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	printf("\t\tdata holds the data array\n");
 	printf("\tOptional output:\n");
 	printf("\t\tdelta holds row vector of d# float values for header\n");
+	printf("\t\t\tlength(delta) must be >= ndims(data)\n");
 	printf("\t\torigin holds row vector of o# float values for header\n");
 	printf("\t\tlabel holds cell array of label# string for from header\n");
 	printf("\t\tunit holds cell array of unit# string values for header\n");
+	printf("\t\t\tlength(origin|label|unit) must be = length(delta)\n");
 	printf("\tNote: the file is closed on exit from this function\n");
     	return;
     }
@@ -102,6 +104,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* get data dimensions */
     ndim=mxGetNumberOfDimensions(prhs[2]);
     dim=mxGetDimensions(prhs[2]);
+    /* set default # of output dimansions for metadata */
+    Odim = ndim;
     /* get data size */
     nd = mxGetNumberOfElements(prhs[2]);
 
@@ -111,7 +115,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	if (mxGetM(prhs[3]) != 1) mexErrMsgTxt("Deltas must be a row vector.");
 	Odim = mxGetN(prhs[3]);
 	ddlt = mxGetPr(prhs[3]);
-	if (Odim < ndim) mexErrMsgTxt("Deltas has wrong number of elements.");
+	if (Odim < ndim) mexErrMsgTxt("Deltas does not have enough elements.");
     }
 
     /* Origins must be a double row vector. */
@@ -142,7 +146,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_setformat(file,mxIsComplex(prhs[2])?"native_complex":"native_float");
 
     /* Write header for at least ndim dimensions */
-    if (Odim < ndim) Odim = ndim;
     for (i=0; i < Odim; i++) {
 	/* sizes */
         sprintf(key,"n%d",i+1);
