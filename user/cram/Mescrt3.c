@@ -120,7 +120,7 @@ void sf_escrt3_traj (float z, float x, float y, float b,
 }
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz;
+    int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz, itr = 0;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, md;
     float ****e;
     sf_file spdom, vspline = NULL, out, traj = NULL;
@@ -207,13 +207,13 @@ int main (int argc, char* argv[]) {
         if (!sf_getint ("nt", &nt)) nt = 1001;
         /* Number of time samples for each trajectory */
         if (!sf_getfloat ("dt", &dt)) dt = 0.001;
-        tdata = (sf_escrt3_traj_cbud*)sf_alloc (nc, sizeof(sf_escrt3_traj_cbud));
+        tdata = (sf_escrt3_traj_cbud*)sf_alloc (nc*na*nb, sizeof(sf_escrt3_traj_cbud));
         /* Time sampling */
-        for (ic = 0; ic < nc; ic++) {
-            tdata[ic].it = 0;
-            tdata[ic].nt = nt;
-            tdata[ic].dt = dt;
-            tdata[ic].pnts = sf_floatalloc2 (TRAJ3_COMPS - 1, nt);
+        for (itr = 0; itr < nc*na*nb; itr++) {
+            tdata[itr].it = 0;
+            tdata[itr].nt = nt;
+            tdata[itr].dt = dt;
+            tdata[itr].pnts = sf_floatalloc2 (TRAJ3_COMPS - 1, nt);
         }
     }
 
@@ -284,59 +284,54 @@ int main (int argc, char* argv[]) {
     if (traj) {
         if (spdom)
             sf_shiftdimn (spdom, traj, 1, 4);
-        sf_putint (out, "n1", ESC3_NUM);
-        sf_putfloat (out, "o1", 0.0);
-        sf_putfloat (out, "d1", 1.0);
-        sf_putstring (out, "label1", "Escape variable");
-        sf_putstring (out, "unit1", "");
+        sf_putint (traj, "n1", TRAJ3_COMPS - 1);
+        sf_putfloat (traj, "o1", 0.0);
+        sf_putfloat (traj, "d1", 1.0);
+        sf_putstring (traj, "label1", "Escape variable");
+        sf_putstring (traj, "unit1", "");
         sf_putint (traj, "n2", nt);
         sf_putfloat (traj, "o2", 0.0);
         sf_putfloat (traj, "d2", dt);
         sf_putstring (traj, "label2", "Time");
         sf_putstring (traj, "unit2", "s");
-        sf_putint (out, "n3", nb);
-        sf_putfloat (out, "d3", db*180.0/SF_PI);
-        sf_putfloat (out, "o3", ob*180.0/SF_PI);
-        sf_putstring (out, "label3", "Inclination");
-        sf_putstring (out, "unit3", "Degrees");
-        sf_putint (out, "n4", na);
-        sf_putfloat (out, "d4", da*180.0/SF_PI);
-        sf_putfloat (out, "o4", oa*180.0/SF_PI);
-        sf_putstring (out, "label4", "Azimuth");
-        sf_putstring (out, "unit4", "Degrees");
+        sf_putint (traj, "n3", nb);
+        sf_putfloat (traj, "d3", db*180.0/SF_PI);
+        sf_putfloat (traj, "o3", ob*180.0/SF_PI);
+        sf_putstring (traj, "label3", "Inclination");
+        sf_putstring (traj, "unit3", "Degrees");
+        sf_putint (traj, "n4", na);
+        sf_putfloat (traj, "d4", da*180.0/SF_PI);
+        sf_putfloat (traj, "o4", oa*180.0/SF_PI);
+        sf_putstring (traj, "label4", "Azimuth");
+        sf_putstring (traj, "unit4", "Degrees");
         
-        sf_putint (out, "n5", nz);
-        sf_putfloat (out, "o5", oz);
-        sf_putfloat (out, "d5", dz);
+        sf_putint (traj, "n5", nz);
+        sf_putfloat (traj, "o5", oz);
+        sf_putfloat (traj, "d5", dz);
         if (!spdom) {
-            sf_putstring (out, "label5", "Depth");
-            sf_putstring (out, "unit5", "");
+            sf_putstring (traj, "label5", "Depth");
+            sf_putstring (traj, "unit5", "");
         }
-        sf_putint (out, "n6", nx);
-        sf_putfloat (out, "o6", ox);
-        sf_putfloat (out, "d6", dx);
+        sf_putint (traj, "n6", nx);
+        sf_putfloat (traj, "o6", ox);
+        sf_putfloat (traj, "d6", dx);
         if (!spdom) {
-            sf_putstring (out, "label6", "X");
-            sf_putstring (out, "unit6", "");
+            sf_putstring (traj, "label6", "X");
+            sf_putstring (traj, "unit6", "");
         }
-        sf_putint (out, "n7", ny);
-        sf_putfloat (out, "o7", oy);
-        sf_putfloat (out, "d7", dy);
+        sf_putint (traj, "n7", ny);
+        sf_putfloat (traj, "o7", oy);
+        sf_putfloat (traj, "d7", dy);
         if (!spdom) {
-            sf_putstring (out, "label7", "Y");
-            sf_putstring (out, "unit7", "");
+            sf_putstring (traj, "label7", "Y");
+            sf_putstring (traj, "unit7", "");
         }
     }
 
     esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
     esc_points = (sf_esc_point3*)sf_alloc (nc, sizeof(sf_esc_point3));
     for (ic = 0; ic < nc; ic++) {
-        if (traj)
-            esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
-                                                   sf_escrt3_traj, dt, (void*)&tdata[ic]);
-        else
-            esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
-                                                   NULL, 0.0, NULL);
+        esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
         if (md != SF_HUGE)
             sf_esc_tracer3_set_mdist (esc_tracers[ic], md);
@@ -362,7 +357,7 @@ int main (int argc, char* argv[]) {
 #ifdef _OPENMP
 #pragma omp parallel for                   \
                 schedule(dynamic,1)        \
-                private(iz,ia,ib,a,z,it,i) \
+                private(iz,ia,ib,a,z,it,i,itr) \
                 shared(fz,lz,iy,ix,nb,na,nz,nx,ny,ob,oa,oz,ox,oy,db,da,dz,dx,dy,x,y,tdata,esc_tracers,esc_points,e,out,traj)
 #endif
                 for (iz = fz; iz <= lz; iz++) {
@@ -370,6 +365,11 @@ int main (int argc, char* argv[]) {
                     for (ia = 0; ia < na; ia++) {
                         a = oa + ia*da;
                         for (ib = 0; ib < nb; ib++) {
+                            if (traj) {
+                                itr = (iz - fz)*na*nb + ia*nb + ib;
+                                sf_esc_tracer3_set_trajcb (esc_tracers[iz - fz], sf_escrt3_traj, dt,
+                                                           (void*)&tdata[itr]);
+                            }
                             sf_esc_tracer3_compute (esc_tracers[iz - fz], z, x, y, ob + ib*db, a,
                                                     0.0, 0.0, esc_points[iz - fz], NULL, NULL);
                             /* Copy escape values to the output buffer */
@@ -377,9 +377,9 @@ int main (int argc, char* argv[]) {
                                 e[iz - fz][ia][ib][i] = sf_esc_point3_get_esc_var (esc_points[iz - fz], i);
                             if (traj) {
                                 /* Fill the rest of the trajectory with the last point */
-                                for (it = tdata[iz - fz].it + 1; it < tdata[iz - fz].nt; it++) {
+                                for (it = tdata[itr].it + 1; it < tdata[itr].nt; it++) {
                                     for (i = 0; i < TRAJ3_COMPS - 1; i++)
-                                        tdata[iz - fz].pnts[it][i] = tdata[iz - fz].pnts[tdata[iz - fz].it][i];
+                                        tdata[itr].pnts[it][i] = tdata[itr].pnts[tdata[itr].it][i];
                                 }
                             }
                         } /* Loop over b */
@@ -389,9 +389,10 @@ int main (int argc, char* argv[]) {
                 sf_floatwrite (e[0][0][0], (size_t)(lz - fz + 1)*(size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
                 if (tdata) {
-                    for (iz = fz; iz <= lz; iz++)
-                        sf_floatwrite (tdata[iz - fz].pnts[0], (size_t)tdata[iz - fz].nt*
-                                       (size_t)(TRAJ3_COMPS - 1), traj);
+                    for (itr = 0; itr < (lz - fz + 1)*na*nb; itr++) {
+                        sf_floatwrite (tdata[itr].pnts[0],
+                                       (size_t)tdata[itr].nt*(size_t)(TRAJ3_COMPS - 1), traj);
+                    }
                 }
             } /* Loop over z chunks */
         } /* Loop over x */
@@ -407,14 +408,16 @@ int main (int argc, char* argv[]) {
     for (ic = 0; ic < nc; ic++) {
         sf_esc_point3_close (esc_points[ic]);
         sf_esc_tracer3_close (esc_tracers[ic]);
-        if (traj) {
-            free (tdata[ic].pnts[0]);
-            free (tdata[ic].pnts);
-        }
     }
     free (esc_points);
     free (esc_tracers);
-    free (tdata);
+    if (traj) {
+        for (itr = 0; itr < nc*na*nb; itr++) {
+            free (tdata[itr].pnts[0]);
+            free (tdata[itr].pnts);
+        }
+        free (tdata);
+    }
     sf_esc_slowness3_close (esc_slow);
 
     free (e[0][0][0]);

@@ -195,7 +195,7 @@ int main (int argc, char* argv[]) {
                               (sf_esc_slowness3_ny (esc_slow) - 1)*
                               sf_esc_slowness3_dy (esc_slow));
 
-    esc_tracer = sf_esc_tracer3_init (esc_slow, NULL, 0.0, NULL);
+    esc_tracer = sf_esc_tracer3_init (esc_slow);
     sf_esc_tracer3_set_parab (esc_tracer, parab);
 
     esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,

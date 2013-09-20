@@ -64,8 +64,7 @@ void sf_esc_tracer3_reset_bounds (sf_esc_tracer3 esc_tracer)
     esc_tracer->ymax = esc_tracer->ygmax;
 }
 
-sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow,
-                                    sf_esc_tracer3_traj traj, float dt, void *ud)
+sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow)
 /*< Initialize object >*/
 {
     sf_esc_tracer3 esc_tracer = (sf_esc_tracer3)sf_alloc (1, sizeof (struct EscTracer3));
@@ -100,10 +99,9 @@ sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow,
 
     esc_tracer->esc_slow = esc_slow;
 
-    /* Callback to output points along a ray trajectory */
-    esc_tracer->traj = traj;
-    esc_tracer->dt = dt; /* Output points every dt time intervals */
-    esc_tracer->ud = ud;
+    esc_tracer->traj = NULL;
+    esc_tracer->dt = 0.001;
+    esc_tracer->ud = NULL;
 
     return esc_tracer;
 }
@@ -112,6 +110,16 @@ void sf_esc_tracer3_close (sf_esc_tracer3 esc_tracer)
 /*< Destroy object >*/
 {
     free (esc_tracer);
+}
+
+void sf_esc_tracer3_set_trajcb (sf_esc_tracer3 esc_tracer,
+                                sf_esc_tracer3_traj traj, float dt, void *ud)
+/*< Set trajectory callback  >*/
+{
+    /* Callback to output points along a ray trajectory */
+    esc_tracer->traj = traj;
+    esc_tracer->dt = dt; /* Output points every dt time intervals */
+    esc_tracer->ud = ud;
 }
 
 void sf_esc_tracer3_set_zmin (sf_esc_tracer3 esc_tracer, float zmin)

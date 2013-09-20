@@ -198,8 +198,7 @@ int main (int argc, char* argv[]) {
     esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
     esc_points = (sf_esc_point3*)sf_alloc (nc, sizeof(sf_esc_point3));
     for (ic = 0; ic < nc; ic++) {
-        esc_tracers[ic] = sf_esc_tracer3_init (esc_slow,
-                                               NULL, 0.0, NULL);
+        esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
         sf_esc_tracer3_set_mdist (esc_tracers[ic], md);
         esc_points[ic] = sf_esc_point3_init ();
