@@ -57,10 +57,13 @@ In APIs:
 In the Python package:
 
 In programs:
-sfbyte: "clip" determination when the first plane is zero (aklokov)
-Fixed size definitions in sfinttest1
+
+* sfbyte: "clip" determination when the first plane is zero (aklokov)
+* Fixed size definitions in sfinttest1
 
 In the build system:
+
+* Set -fopenmp for linking with gcc
 
 ===Changes in defaults and interfaces===
 

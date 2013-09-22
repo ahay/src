@@ -1508,10 +1508,7 @@ def omp(context):
         LIBS.append('gomp')
         CFLAGS = flags + ' -fopenmp'
         CXXFLAGS = ccflags  + ' -fopenmp'      
-        if plat['OS'] == 'darwin':
-            LINKFLAGS = lflags + ' -fopenmp'
-        else:
-            LINKFLAGS = lflags
+        LINKFLAGS = lflags + ' -fopenmp'
     elif icc:
         CFLAGS = flags + ' -openmp -D_OPENMP'
         CXXFLAGS = ccflags + ' -openmp -D_OPENMP'
