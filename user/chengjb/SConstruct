@@ -3,25 +3,64 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0
-tti2dpseudop tti2dpseudop1
-ort3dpseudop
-vti2delasticsep vti2delasticsepupdown
-tti2delasticsep
-tti3delastic
-ort3dhomodevK ort3dhomodevcK
-kine2dvti
-datasucjb2rsf2d datasucjb2rsf3d datasucjb2rsf3dnh
-twolayer2dti threecolumn2dti
+vti2desep vti2delrseparation
+vti2dpseudop vti2dpseudop1 vti2dpseudopfvs0 vti2dpseudohomops
+
+tti2desep tti2delrseparation
+tti2dpseudop tti2dpseudop1 tti2dpseudop2
+
+datasucjb2rsf2d
+
+twolayer2dti kine2dvti
+twolayer3dti
+
+vti3de vti3dehomo
+
+tti3de tti3dehomo
+
+ort3dhomodevcTemp
+
+datasucjb2rsf3d datasucjb2rsf3dnh su2rsf3dladcig
+homo3dtti
+
+wavefrontamp wavefrontamp360 wavefrontampTransmit wavefrontampReflect
 '''
 
+#ort3dpseudop
+#ort3dhomodevX ort3dhomodevcX
+#ort3dhomodevK ort3dhomodevcK
+
 ccprogs = '''
-vti2delasticlrsep vti2delasticlrsep2ps
-tti2delasticlrsep tti2delasticlrsep1p tti2delasticlrsep2p tti2delasticlrsep2ps
+vti2delrsep vti2delrsep2ps vti2delrseparators
 vti2dpseudoplrsep vti2dpseudoplrsep1
-tti3delasticlrsep
-tti2delasticlrdecomp tti2delasticlrdecomp1p tti2delasticlrdecomp2p
+
+vti2delrsepTrueAmp tti2delrsep2pTrueAmp
+
+vti2dpseudosvlrsep 
+
+vti2dpseudoplrseprtm
+
+tti2delrsep tti2delrsep1p tti2delrsep2p tti2delrsep2ps tti2delrseparators
+tti2dedivcurl
+
+tti2delrdecomp tti2delrdecomp1p tti2delrdecomp2p
+
+tti2dpseudoplrsep
+
+tti2dpseudosvlrsep
+
+vti3delrsep
+vti3delrsephomo
+vti3delrsephomoP
+vti3dedivcurl
+
+tti3delrsep
+tti3delrsephomo
+
+vti3delrdecompP
 '''
+#tti3delrdecomp
+
 #isoonewaypsdmlr
 
 pyprogs ='''
@@ -45,26 +84,21 @@ except: # local version
     env = bldutil.Debug()
     root = None
     SConscript('../lexing/SConstruct')  # include lexing's head and lib files
+#    SConscript('../../api/c++/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsf','lapack','vecmatop'])
 
 ##############################################################################
 # ADD FFTW3 LIB
 ##############################################################################
 fftw = env.get('FFTW')
 if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'],
+#                LIBS=[env.get('DYNLIB','')+'fftw3f'])
+                LIBS=[env.get('DYNLIB','')+fftw])
 
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-    if lapack:
-        lapackpp=[env.get('DYNLIB','')+'rsf++','vecmatop']
-        if not isinstance(lapack, bool):
-            env.Append(LIBS=lapack)
-else:
-    lapack = None
 
 ##############################################################################
 # Compiling C programs 
@@ -81,18 +115,16 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    so = env.StaticObject('M'+prog+'.c')
-    env.Depends(so,['_cjb.h','_cjbsegy.h'])
-    if prog in ('ort3dhomodevK',) and not lapack:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
-    else:
-        prog = env.Program (prog, map (lambda x: x + '.c',sources))
+    env.StaticObject('M'+prog+'.c')
+    prog = env.Program (prog, map (lambda x: x + '.c',sources))
     if root:
         env.Install (bindir, prog)
 
 ##############################################################################
 # Compiling C++ programs 
 ##############################################################################
+
+libcpp=[env.get('DYNLIB','')+'rsf++','rsf','lapack','vecmatop','fftw3f']
 
 #subs    = Split(subs)
 #if 'c++' in env.get('API',[]):
@@ -102,10 +134,8 @@ for prog in mains:
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog] 
-    if lapack:
-        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=lapackpp+env.get('LIBS'))
-    else:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=libcpp)
+
     if root:
         env.Install(bindir,prog)
 
@@ -115,9 +145,8 @@ for prog in ccmains:
 for prog in Split(tprogs):
         sources = ['T'+prog]
         bldutil.depends(env,sources,'T'+prog)
-        if fftw:
-            env.StaticObject('T'+prog+'.c')
-            prog = env.Program(prog,map(lambda x: x + '.o',sources),PROGPREFIX='T',PROGSUFFIX='.x')
+        env.StaticObject('T'+prog+'.c')
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),PROGPREFIX='T',PROGSUFFIX='.x')
 
 ######################################################################
 # SELF-DOCUMENTATION

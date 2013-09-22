@@ -31,10 +31,6 @@ using namespace std;
 /* prepared head files by myself */
 #include "_cjb.h"
 
-/*#include "_fd.h" 
- * when _fd.h has declared "m", we met compiling error at "m2=mid.m()";
- * "expected unqualified-id before numeric constant" 
-*/
 #ifndef M
 #define M 5   /* 10th-order finite-difference: accuracy is 2*M */
 #endif
@@ -95,13 +91,9 @@ int main(int argc, char* argv[])
    par.get("ns",ns);
    par.get("dt",dt);
 
-   int ireconstruct;   // flag for reconstruct the W matrix or not
-   par.get("ireconstruct",ireconstruct);
-
    sf_warning("ns=%d dt=%f",ns,dt);
    sf_warning("npk=%d ",npk);
    sf_warning("eps=%f",eps);
-   sf_warning("ireconstruct=%d ",ireconstruct);
    sf_warning("read velocity model parameters");
 
    /* setup I files */

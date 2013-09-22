@@ -20,9 +20,7 @@
 #include <rsf.h>
 #include "_cjb.h"
 
-#ifdef SF_HAS_FFTW
 #include <fftw3.h>
-#endif
 
 /*****************************************************************************************/
 void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, int *ijkz,
@@ -34,7 +32,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
 
        wp = sf_floatalloc(m*n2);
 
-       sf_warning("m2= %d n2=%d",m2,n2);
+       //sf_warning("m2= %d n2=%d",m2,n2);
 
        //for(i=0;i<m2*n2;i++)
        //    sf_warning("fmid[%d,%d] = %f",i/n2,i%n2,fmid[i]);
@@ -49,7 +47,7 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
 
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar
  
-       sf_warning("============= using SF_HAS_FFTW ====");
+       //sf_warning("============= using SF_HAS_FFTW ====");
 
        sf_complex *xx, *xin, *xout;
 
@@ -119,6 +117,80 @@ void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, in
          }//im2 loop
          x[im] = sum1;
        } 
+
+#else  // using FFTW in user's own computer
+       //sf_warning("============= using user installed FFTW ====");
+
+       fftw_complex *xx, *xin, *xout;
+
+       fftw_plan xp;
+       fftw_plan xpi;
+
+       xin=fftw_complexalloc(m);
+       xout=fftw_complexalloc(n);
+       xx=fftw_complexalloc(n);
+
+       xp=fftw_plan_dft_2d(nx,nz, (fftw_complex *) xin, (fftw_complex *) xout,
+			    FFTW_FORWARD,FFTW_ESTIMATE);
+       xpi=fftw_plan_dft_2d(nx,nz,(fftw_complex *) xin, (fftw_complex *) xout,
+			    FFTW_BACKWARD,FFTW_ESTIMATE);
+
+       /* FFT: from (x,z) to (kx, kz) domain */
+       for(i=0;i<m;i++)
+       {
+          xin[i][0]=x[i];
+          xin[i][1]=0.;
+       }
+
+       fftw_execute(xp);
+           
+       if(iflag!=1) for(i=0;i<n;i++) xout[i] *= sf_cmplx(0.0, 1.0);
+
+       for(i=0;i<n;i++) xx[i] = xout[i];
+
+       /* n2 IFFT from (kx, kz) to (x, z) domain*/
+       for(jn2=0;jn2<n2;jn2++)
+       {
+           int jn2n=jn2*n;
+           i=0;
+           for(ikx=0;ikx<nx;ikx++)
+           {
+              /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */ 
+              int ixnz=ijkx[ikx]*nz;
+              int ii=jn2n+ixnz;
+              for(ikz=0;ikz<nz;ikz++)
+              {
+                xin[i]=rdata[ii+ijkz[ikz]]*xx[i];          
+                i++;
+              }
+            }
+
+            /* (kx,kz) to (x, z) domain */
+            fftw_execute(xpi);
+
+            for(im=0;im<m;im++)
+                wp[jn2*m+im] = xout[im][0]/n;
+       }
+       fftw_destroy_plan(xp);
+       fftw_destroy_plan(xpi);
+       free(xx);
+       free(xin);
+       free(xout);
+
+       /* Matrix multiplication in space-domain */
+       for(im=0;im<m;im++)
+       {
+         sum1=0.0;
+         for(im2=0;im2<m2;im2++)
+         {
+           sum2=0.0;
+           for(jn2=0;jn2<n2;jn2++)
+              sum2 += fmid[im2*n2+jn2]*wp[jn2*m+im];
+           
+           sum1 += ldata[im*m2+im2]*sum2;
+         }//im2 loop
+         x[im] = sum1;
+       } 
 #endif
        free(wp);
 }
@@ -131,7 +203,7 @@ void sep(float *w, float *x, int *ijkx, int *ijkz, int nx,int nz,int m,int n, in
 
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar
  
-       sf_warning("============= using SF_HAS_FFTW ====");
+       //sf_warning("============= using SF_HAS_FFTW ====");
 
 // test FFT
 /*
@@ -203,6 +275,55 @@ void sep(float *w, float *x, int *ijkx, int *ijkz, int nx,int nz,int m,int n, in
        free(xin);
        free(xout);
 
+#else  // using FFTW in user's own computer
+       //sf_warning("============= using user installed FFTW ====");
+
+       fftw_complex *xin, *xout;
+
+       fftw_plan xp;
+       fftw_plan xpi;
+
+       xin=fftw_complexalloc(m);
+       xout=fftw_complexalloc(n);
+
+       xp=fftw_plan_dft_2d(nx,nz, (fftw_complex *) xin, (fftw_complex *) xout,
+			    FFTW_FORWARD,FFTW_ESTIMATE);
+       xpi=fftw_plan_dft_2d(nx,nz,(fftw_complex *) xin, (fftw_complex *) xout,
+			    FFTW_BACKWARD,FFTW_ESTIMATE);
+
+       /* (x,z) to (kx, kz) domain */
+       for(i=0;i<m;i++)
+       {
+          xin[i][0]=x[i];
+          xin[i][1]=0.;
+       }
+
+       fftw_execute(xp);
+           
+       /* Filtering in (kx, kz) domain */
+       i=0;
+       for(ikx=0;ikx<nx;ikx++)
+       {
+          /* Note: Spectrum of the operator is differently orderred as the spectrum after FFT */ 
+          int ixnz=ijkx[ikx]*nz;
+          for(ikz=0;ikz<nz;ikz++)
+          {
+             xin[i]=w[ixnz+ijkz[ikz]]*xout[i];          
+             i++;
+          }
+       }
+
+       /* IFFT from (kx,kz) to (x, z) domain */
+       fftw_execute(xpi);
+
+       for(im=0;im<m;im++)
+           x[im] = xout[im][0]/n;
+      
+       fftw_destroy_plan(xp);
+       fftw_destroy_plan(xpi);
+       free(xin);
+       free(xout);
+
 #endif
 }
 
@@ -261,11 +382,11 @@ void seplowrank3d(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, in
 
        nxz=nx*nz;
 
-       sf_warning("m2= %d n2=%d",m2,n2);
+       //sf_warning("m2= %d n2=%d",m2,n2);
 
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar
  
-       sf_warning("============= using SF_HAS_FFTW ====");
+       //sf_warning("============= using SF_HAS_FFTW ====");
 
        sf_complex *xx, *xin, *xout;
 

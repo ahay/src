@@ -17,12 +17,13 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <time.h>
+
+
 #include <rsf.h>
 
 /* prepared head files by myself */
-#include "_cjb.h"
 #include "_fd.h"
+#include "_cjb.h"
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"
@@ -163,9 +164,9 @@ int main(int argc, char* argv[])
         Fo1 = sf_output("out"); /* pseudo-pure P-wave x-component */
         Fo2 = sf_output("PseudoPurePz"); /* pseudo-pure P-wave z-component */
         Fo3 = sf_output("PseudoPureP"); /* scalar P-wave field using divergence operator */
-        puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
-        puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
-        puthead3(Fo3, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
+        puthead3(Fo1, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz, fx, 0.0);
+        puthead3(Fo2, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz, fx, 0.0);
+        puthead3(Fo3, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz, fx, 0.0);
 
         /*****************************************************************************
          *  Calculating polarization deviation operator for wave-mode separation
@@ -351,7 +352,7 @@ int main(int argc, char* argv[])
         /* setup I/O files */
         Fo8 = sf_output("PseudoPureSepP"); /* scalar P-wave field using polarization projection oprtator*/
 
-        puthead3(Fo8, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, 0.0);
+        puthead3(Fo8, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz, fx, 0.0);
       }
 
       sf_warning("==================================================");

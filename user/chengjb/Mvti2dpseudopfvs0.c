@@ -18,13 +18,13 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <time.h>
+
+
 #include <rsf.h>
 
 /* prepared head files by myself */
-#include "_cjb.h"
 #include "_fd.h"
-
+#include "_cjb.h"
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"
@@ -34,6 +34,7 @@
 #include "kykxkztaper.h"
 #include "kykxkz2yxz.h"
 #include "clipsmthspec.h"
+#include "smth2d.h"
 
 /* wave-mode separation operators */
 #include "devvtip.h"
@@ -170,13 +171,35 @@ int main(int argc, char* argv[])
         for(j=0;j<nz;j++)
         {
            float eta = epsi[i][j]-del[i][j];
-           if(eta<=0.0004)
-              vs0[i][j]=0.2*vp0[i][j];
+           if(eta<=0.0001)
+              vs0[i][j]=0.1*vp0[i][j];
            else
               vs0[i][j]=vp0[i][j]*sqrt(eta);
            //sf_warning("vp0=%f ep=%f de=%f vs0= %f",vp0[i][j],epsi[i][j],del[i][j],vs0[i][j]);
         }
         
+        smooth2d(vs0, nz, nx, 20.0, 20.0, 2.4);
+        /*<**************************************************************************
+        void smooth2d(float **v, int n1, int n2, float r1, float r2, float rw)
+        int n1;          number of points in x1 (fast) dimension
+        int n2;          number of points in x1 (fast) dimension 
+        float **v0;       array of input velocities 
+        float r1;        smoothing parameter for x1 direction
+        float r2;        smoothing parameter for x2 direction
+        float rw;        smoothing parameter for window
+        " Notes:                                                                ",
+        " Larger r1 and r2 result in a smoother data. Recommended ranges of r1  ", 
+        " and r2 are from 1 to 20.                                              ",
+        "                                                                       ",
+        " Smoothing can be implemented in a selected window. The range of 1st   ",
+        " dimension for window is from win[0] to win[1]; the range of 2nd       ",
+        " dimension is from win[2] to win[3].                                   ",
+        "                                                                       ",
+        " Smoothing the window function (i.e. blurring the edges of the window) ",
+        " may be done by setting a nonzero value for rw, otherwise the edges    ",
+        " of the window will be sharp.                                          ",
+        **************************************************************************>*/
+
         sf_floatwrite(vs0[0],nxz,Fo4);
 
         /*****************************************************************************

@@ -24,11 +24,7 @@
 
 
 #include <rsf.h>
-
-#ifdef _OPENMP
 #include <omp.h>
-#endif
-
 #include "_cjb.h"
 #include "_fd.h"
 #include "zero.h"

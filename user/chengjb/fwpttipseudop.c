@@ -34,10 +34,8 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                float** epsilon,float** delta, float **theta)
 /*< fwpttipseudop: forward-propagating in TTI media with pseudo-pure P-wave equation>*/
 {
-        int i,j,k, im,jm,km;
+        int   i,j,k;
         float **p_temp, **q_temp;
-        float px,pz,qx,qz,vp2,vs2,vpx2,vpn2,ep,de,the,coef;
-        float sinthe,costhe,cos2,sin2,sin2a,hxp,hxq,hzp,hzq,pxz,qxz;
 
         p_temp=sf_floatalloc2(nzpad,nxpad);
         q_temp=sf_floatalloc2(nzpad,nxpad);
@@ -46,6 +44,12 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
         zero2float(q_temp,nzpad,nxpad);
 
         /* z-dreivative in mixed derivative when tilt angle nonzero */
+
+#ifdef OPENMP
+#pragma omp parallel for private(i,j) \
+		        schedule(dynamic) \
+		        shared(p2,q2,p_temp,q_temp,dz)
+#endif
         for(i=mix;i<nx+mix;i++)
                 for(j=mix;j<nz+mix;j++)
                 {
@@ -53,12 +57,21 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                         q_temp[i][j]=(q2[i][j+1]-q2[i][j-1])/2.0/dz;
                 }
 
+#ifdef OPENMP
+#pragma omp parallel for private(i,j,k) \
+		        schedule(dynamic) \
+		        shared(p1,p2,p3,q1,q2,q3,p_temp,q_temp,coeff_x,coeff_z,\
+					   vp0,vs0,epsilon,delta,theta)
+#endif
         for(i=m;i<nx+m;i++)
         {
-            im=i-m;
+            int im=i-m;
             for(j=m;j<nz+m;j++)
             {
-                        jm=j-m;
+                        int jm=j-m;
+						float px,pz,qx,qz,vp2,vs2,vpx2,vpn2,ep,de,the,coef;
+						float sinthe,costhe,cos2,sin2,sin2a,hxp,hxq,hzp,hzq,pxz,qxz;
+
                         vp2=vp0[im][jm]*vp0[im][jm];
                         vs2=vs0[im][jm]*vs0[im][jm];
                         ep=1+2*epsilon[im][jm];
@@ -85,7 +98,7 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
 
                         for(k=-m;k<=m;k++)
                         {
-                                km=k+m;
+                                int km=k+m;
                                 px+=coeff_x[km]*p2[i+k][j];
                                 pz+=coeff_z[km]*p2[i][j+k];
                                 qx+=coeff_x[km]*q2[i+k][j];

@@ -20,9 +20,7 @@
 #include <rsf.h>
 #include "_cjb.h"
 
-#ifdef SF_HAS_FFTW
 #include <fftw3.h>
-#endif
 
 /*****************************************************************************************/
 void decomplowrank2dp(float *ldataxx,float *rdataxx,float *fmidxx,
@@ -474,7 +472,7 @@ void decomplowrank3dp(float *ldataxx,float *rdataxx,float *fmidxx,
                       float *ldataxz,float *rdataxz,float *fmidxz,
                       float *ldatayz,float *rdatayz,float *fmidyz,
                       float *px, float *py, float *pz, int *ijkx, int *ijky, int *ijkz,
-                      int nx, int ny, int nz, int m, int n, int MM,
+                      int nx, int ny, int nz, int m, int n,
                       int m2xx, int n2xx, int m2yy, int n2yy, int m2zz, int n2zz,
                       int m2xy, int n2xy, int m2xz, int n2xz, int m2yz, int n2yz)
 /*< decomplowrank3dp: P-wave vector decomposition based on low-rank decomposition >*/

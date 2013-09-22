@@ -18,12 +18,12 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <time.h>
+
 #include <rsf.h>
 
 /* prepared head files by myself */
-#include "_cjb.h"
 #include "_fd.h"
+#include "_cjb.h"
 
 /* head files aumatically produced from *.c */
 #include "ricker.h"

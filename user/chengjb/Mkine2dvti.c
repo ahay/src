@@ -152,12 +152,12 @@ int main(int argc, char* argv[])
            sf_floatwrite(&wfp[i][j], 1, Fo2);
            sf_floatwrite(&wfs[i][j], 1, Fo3);
         }
-
+/*
         FILE *fp;
         fp=fopen("WF","wb");
         fwrite(&wf[0][0], sizeof(float), nx*nz, fp);
         fclose(fp);
-
+*/
         free(*wfp);
         free(*wfs);
         free(*wf);
