@@ -495,8 +495,8 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         doa *= 0.75;
         /* Extrapolate dip only in the vicinity of a receiver */
         dw = cram_point->dh/cram_point->ds;
-        dda *= 0.25*dw;
-        ddz *= 0.25*dw;
+        dda *= dw;
+        ddz *= dw;
     } else {
         doa = 0.5*cram_point->db;
         doz = cram_point->da;

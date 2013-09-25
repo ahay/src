@@ -26,18 +26,18 @@
 #include "esc_scgrid3.h"
 
 int main (int argc, char* argv[]) {
-    int nz, nx, ny, nb, na, iz, ix, iy, ia, ib;
-    int icpu = 0, ncpu = 1, morder = 2, nc = 1, inet = 0;
+    int nz, nx, ny, nb, na, iz, ix, iy, ia, ib, fz, lz;
+    int icpu = 0, ncpu = 1, morder = 2, ic, nc = 1, mp = 1, ith = 0, inet = 0;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y;
-    float ***e;
+    float ****e;
     sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
             out;
 
     bool verb, parab, mmaped;
     sf_esc_slowness3 esc_slow;
-    sf_esc_tracer3 esc_tracer;
-    sf_esc_scgrid3 esc_scgrid;
+    sf_esc_tracer3 *esc_tracers;
+    sf_esc_scgrid3 *esc_scgrids;
     sf_timer timer;
 
     sf_init (argc, argv);
@@ -98,12 +98,14 @@ int main (int argc, char* argv[]) {
     ob = 0.5*db;
 
 #ifdef _OPENMP
+    if (!sf_getint ("mp", &mp)) mp = 1;
+    /* Bufferization factor for multicore processing (number of points in buffer = mp*nc) */
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for interpolation */
     omp_set_num_threads (nc);
-    omp_set_num_threads (nc);
     sf_warning ("Using %d threads, omp_get_max_threads()=%d",
                 nc, omp_get_max_threads ());
+    sf_warning ("Buffering %d points", nc*mp);
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
@@ -115,7 +117,7 @@ int main (int argc, char* argv[]) {
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* verbosity flag */
 
-    e = sf_floatalloc3 (ESC3_NUM, nb, na);
+    e = sf_floatalloc4 (ESC3_NUM, nb, na, nc*mp);
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
     /* Spline coefficients for velocity model */
@@ -195,14 +197,14 @@ int main (int argc, char* argv[]) {
                               (sf_esc_slowness3_ny (esc_slow) - 1)*
                               sf_esc_slowness3_dy (esc_slow));
 
-    esc_tracer = sf_esc_tracer3_init (esc_slow);
-    sf_esc_tracer3_set_parab (esc_tracer, parab);
-
-    esc_scgrid = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracer, morder,
-                                      inet, (float)icpu/(float)ncpu, mmaped, verb);
-
-    if (scdaemon)
-        sf_fileclose (scdaemon);
+    esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
+    esc_scgrids = (sf_esc_scgrid3*)sf_alloc (nc, sizeof(sf_esc_scgrid3));
+    for (ic = 0; ic < nc; ic++) {
+        esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
+        sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
+        esc_scgrids[ic] = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracers[ic], morder,
+                                               inet, (float)icpu/(float)ncpu, mmaped, 0 == ic);
+    }
 
     timer = sf_timer_init ();
 
@@ -213,28 +215,44 @@ int main (int argc, char* argv[]) {
             if (verb)
                 sf_warning ("Projecting from lateral location %d of %d at y=%g, x=%g;",
                             iy*nx + ix + 1, ny*nx, y, x);
-            for (iz = 0; iz < nz; iz++) {
-                z = oz + iz*dz;
-                if (sf_esc_tracer3_inside (esc_tracer, &z, &x, &y, false)) {
-                    sf_timer_start (timer);
-                    sf_esc_scgrid3_compute (esc_scgrid, z, x, y, oa, da, ob, db, na, nb, e[0][0]);
-                    sf_timer_stop (timer);
-                } else {
-                    for (ia = 0; ia < na; ia++) {
-                        for (ib = 0; ib < nb; ib++) {
-                            e[ia][ib][ESC3_Z] = z;
-                            e[ia][ib][ESC3_X] = x;
-                            e[ia][ib][ESC3_Y] = y;
-                            e[ia][ib][ESC3_T] = 0.0;
-#ifdef ESC_EQ_WITH_L
-                            e[ia][ib][ESC3_L] = 0.0;                            
+            /* Loop over chunks */
+            for (ic = 0; ic < (nz/(mp*nc) + ((nz % (nc*mp)) != 0)); ic++) {
+                fz = ic*nc*mp;
+                lz = (ic + 1)*nc*mp - 1;
+                if (lz >= nz)
+                    lz = nz - 1;
+                sf_timer_start (timer);
+#ifdef _OPENMP
+#pragma omp parallel for            \
+                schedule(dynamic,1) \
+                private(iz,ia,ib,ith,z) \
+                shared(fz,lz,iy,ix,nc,mp,nb,na,nz,nx,ny,ob,oa,oz,ox,oy,db,da,dz,dx,dy,x,y,esc_tracers,esc_scgrids,e,out)
 #endif
+                for (iz = fz; iz <= lz; iz++) {
+#ifdef _OPENMP
+                    ith = omp_get_thread_num ();
+#endif
+                    z = oz + iz*dz;
+                    if (sf_esc_tracer3_inside (esc_tracers[ith], &z, &x, &y, false)) {
+                        sf_esc_scgrid3_compute (esc_scgrids[ith], z, x, y, oa, da, ob, db, na, nb, e[iz - fz][0][0]);
+                    } else {
+                        for (ia = 0; ia < na; ia++) {
+                            for (ib = 0; ib < nb; ib++) {
+                                e[iz - fz][ia][ib][ESC3_Z] = z;
+                                e[iz - fz][ia][ib][ESC3_X] = x;
+                                e[iz - fz][ia][ib][ESC3_Y] = y;
+                                e[iz - fz][ia][ib][ESC3_T] = 0.0;
+#ifdef ESC_EQ_WITH_L
+                                e[iz - fz][ia][ib][ESC3_L] = 0.0;                            
+#endif
+                            }
                         }
                     }
-                }
-                sf_floatwrite (e[0][0], (size_t)nb*(size_t)na*(size_t)ESC3_NUM,
+                } /* Loop over z */
+                sf_timer_stop (timer);
+                sf_floatwrite (e[0][0][0], (size_t)(lz - fz + 1)*(size_t)nb*(size_t)na*(size_t)ESC3_NUM,
                                out);
-            } /* Loop over z */
+            } /* Loop over z chunks */
         } /* Loop over x */
     } /* Loop over y */
     if (verb) {
@@ -245,13 +263,23 @@ int main (int argc, char* argv[]) {
     }
     sf_timer_close (timer);
 
-    sf_esc_scgrid3_close (esc_scgrid, verb);
-    sf_esc_tracer3_close (esc_tracer);
+
+    for (ic = 0; ic < nc; ic++) {
+        sf_esc_tracer3_close (esc_tracers[ic]);
+        sf_esc_scgrid3_close (esc_scgrids[ic], verb);
+    }
+    free (esc_tracers);
+    free (esc_scgrids);
+
     sf_esc_slowness3_close (esc_slow);
 
+    free (e[0][0][0]);
     free (e[0][0]);
     free (e[0]);
     free (e);
+
+    if (scdaemon)
+        sf_fileclose (scdaemon);
 
     sf_fileclose (scgrid);
     sf_fileclose (vspline);

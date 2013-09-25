@@ -355,8 +355,8 @@ int main (int argc, char* argv[]) {
                     lz = nz - 1;
                 sf_timer_start (timer);
 #ifdef _OPENMP
-#pragma omp parallel for                   \
-                schedule(dynamic,1)        \
+#pragma omp parallel for                       \
+                schedule(static,1)             \
                 private(iz,ia,ib,a,z,it,i,itr) \
                 shared(fz,lz,iy,ix,nb,na,nz,nx,ny,ob,oa,oz,ox,oy,db,da,dz,dx,dy,x,y,tdata,esc_tracers,esc_points,e,out,traj)
 #endif
