@@ -36,6 +36,7 @@ int main (int argc, char* argv[]) {
 
     bool verb, parab, mmaped;
     sf_esc_slowness3 esc_slow;
+    sf_esc_scglstor3 esc_scgrid_lstor;
     sf_esc_tracer3 *esc_tracers;
     sf_esc_scgrid3 *esc_scgrids;
     sf_timer timer;
@@ -197,13 +198,15 @@ int main (int argc, char* argv[]) {
                               (sf_esc_slowness3_ny (esc_slow) - 1)*
                               sf_esc_slowness3_dy (esc_slow));
 
+    esc_scgrid_lstor = sf_esc_scglstor3_init (scgrid, mmaped, verb);
+
     esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
     esc_scgrids = (sf_esc_scgrid3*)sf_alloc (nc, sizeof(sf_esc_scgrid3));
     for (ic = 0; ic < nc; ic++) {
         esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
-        esc_scgrids[ic] = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracers[ic], morder,
-                                               inet, (float)icpu/(float)ncpu, mmaped, 0 == ic);
+        esc_scgrids[ic] = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracers[ic], esc_scgrid_lstor,
+                                               morder, inet, (float)icpu/(float)ncpu, verb && 0 == ic);
     }
 
     timer = sf_timer_init ();
@@ -271,6 +274,7 @@ int main (int argc, char* argv[]) {
     free (esc_tracers);
     free (esc_scgrids);
 
+    sf_esc_scglstor3_close (esc_scgrid_lstor);
     sf_esc_slowness3_close (esc_slow);
 
     free (e[0][0][0]);

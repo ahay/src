@@ -397,10 +397,14 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         dy = fy < 0.0 ? esc_tracer->dy : -esc_tracer->dy;
         da = fa < 0.0 ? esc_tracer->da : -esc_tracer->da;
         db = fb < 0.0 ? esc_tracer->db : -esc_tracer->db;
-        /* Use smaller spatial steps than thos in the velocity model */
-        dz *= 1.0/4.0;
-        dx *= 1.0/4.0;
-        dy *= 1.0/4.0;
+        /* Use smaller spatial steps than those in the velocity model;
+           analytical solution (either parabolic or straight line) tends
+           to be inaccurate with large steps; typical velocity volumes
+           have 20-50 meter sampling with velocity gradients changing
+           noticeably across one cell; this should probably be adaptive */
+        dz *= 0.1;
+        dx *= 0.1;
+        dy *= 0.1;
         /* Adjust if near boundaries */
         if ((z + dz) < esc_tracer->zmin)
             dz = esc_tracer->zmin - z;

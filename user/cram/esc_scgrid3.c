@@ -51,6 +51,10 @@
 #include "esc_tracer3.h"
 /*^*/
 
+typedef struct EscSCgridLStor3 *sf_esc_scglstor3;
+/* abstract data type */
+/*^*/
+
 typedef struct EscSCgrid3 *sf_esc_scgrid3;
 /* abstract data type */
 /*^*/
@@ -98,19 +102,13 @@ typedef int lu_int;
 #endif
 */
 
-/* Use compiler intrinsics for atomic adds on Linux,
-   all other platforms will use this slower version to avoid compilation problems */ 
-#ifdef LINUX
-#if defined(__ICC)
-#define ATOMIC_ADD(p,i) _InterlockedExchangeAdd (p, i)
-#elif defined(__GNUC__) && (__GNUC__ >= 4)
-#define ATOMIC_ADD(p,i) __sync_fetch_and_add (p, i)
-#else
-#define ATOMIC_ADD(p,i) { *(p) = *(p) + (i); }
-#endif
-#else
-#define ATOMIC_ADD(p,i) { *(p) = *(p) + (i); }
-#endif
+struct EscSCgridLStor3 {
+    size_t                  n, offs;
+    int                     na, nb;
+    multi_UBspline_3d_s    *scsplines;
+    unsigned char          *memmap;
+    bool                    mmaped;
+};
 
 struct EscSCgrid3 {
     size_t                  n, offs, is, ir, il;
@@ -130,11 +128,102 @@ struct EscSCgrid3 {
     /* Remote access data for distributed computations */
     bool                    remote, mmaped;
     int                    *sockets;
+    sf_esc_scglstor3        esc_scgrid_lstor;
     sf_esc_scgrid3_invals  *invals1, *invals2;
     sf_esc_scgrid3_areq    *areqs1, *areqs2;
     sf_esc_scgrid3_avals   *avals1, *avals2;
 };
 /* concrete data type */
+
+sf_esc_scglstor3 sf_esc_scglstor3_init (sf_file scgrid, bool mmaped, bool verb)
+/*< Initialize object >*/
+{
+    size_t nc, nnc = 0;
+    int ia, ib;
+    FILE *gstream = NULL, *dstream = NULL;
+
+    sf_esc_scglstor3 esc_scgrid_lstor = (sf_esc_scglstor3)sf_alloc (1, sizeof (struct EscSCgridLStor3));
+
+    if (sf_gettype (scgrid) != SF_UCHAR)
+        sf_error ("Wrong data type in supercell file");
+    gstream = sf_filestream (scgrid);
+
+    if (!sf_histlargeint (scgrid, "n1", (off_t*)&esc_scgrid_lstor->n)) sf_error ("No n1= in supercell file");
+
+    if (!sf_histint (scgrid, "Nb", &esc_scgrid_lstor->nb)) sf_error ("No Nb= in supercell file");
+    if (!sf_histint (scgrid, "Na", &esc_scgrid_lstor->na)) sf_error ("No Na= in supercell file");
+
+    esc_scgrid_lstor->mmaped = mmaped;
+
+    if (stdin == gstream && mmaped)
+        sf_error ("Can not mmap supercell file from stdin");
+    esc_scgrid_lstor->offs = ftello (gstream);
+
+    esc_scgrid_lstor->scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)esc_scgrid_lstor->na*(size_t)esc_scgrid_lstor->nb,
+                                                                  sizeof(multi_UBspline_3d_s));
+    if (false == mmaped) {
+        esc_scgrid_lstor->memmap = sf_ucharalloc ((size_t)esc_scgrid_lstor->offs +
+                                                  (size_t)esc_scgrid_lstor->n*
+                                                  (size_t)esc_scgrid_lstor->na*
+                                                  (size_t)esc_scgrid_lstor->nb);
+        sf_ucharread (esc_scgrid_lstor->memmap, (size_t)esc_scgrid_lstor->offs +
+                                                (size_t)esc_scgrid_lstor->n*
+                                                (size_t)esc_scgrid_lstor->na*
+                                                (size_t)esc_scgrid_lstor->nb, scgrid);
+    } else {
+        esc_scgrid_lstor->memmap = (unsigned char*)mmap (NULL, (size_t)esc_scgrid_lstor->offs +
+                                                               (size_t)esc_scgrid_lstor->n*
+                                                               (size_t)esc_scgrid_lstor->na*
+                                                               (size_t)esc_scgrid_lstor->nb,
+                                                         PROT_READ, MAP_SHARED,
+                                                         fileno (gstream), 0);
+    }
+
+    nc = esc_scgrid_lstor->offs;
+    for (ia = 0; ia < esc_scgrid_lstor->na; ia++) {
+        for (ib = 0; ib < esc_scgrid_lstor->nb; ib++) {
+            /* Copy spline structure to a separate place to
+               make it modifiable */
+            memcpy ((void*)&esc_scgrid_lstor->scsplines[ia*esc_scgrid_lstor->nb + ib],
+                    (void*)&esc_scgrid_lstor->memmap[nc], sizeof(multi_UBspline_3d_s));
+            nc += sizeof(multi_UBspline_3d_s);
+            /* Initialize pointer to coefficients with a correct
+               new address in the mmaped area */
+            esc_scgrid_lstor->scsplines[ia*esc_scgrid_lstor->nb + ib].coefs = (float*)&esc_scgrid_lstor->memmap[nc];
+            nc += esc_scgrid_lstor->scsplines[ia*esc_scgrid_lstor->nb + ib].nc;
+            nnc += esc_scgrid_lstor->scsplines[ia*esc_scgrid_lstor->nb + ib].nc;
+        }
+    }
+
+    if (verb) {
+        if (mmaped)
+            sf_warning ("%lu supercells mmaped (%g Mb of spline coefficients)",
+                       (size_t)esc_scgrid_lstor->na*(size_t)esc_scgrid_lstor->nb, nnc*1e-6);
+        else
+            sf_warning ("%lu supercells read, %g Mb of spline coefficients accumulated",
+                        (size_t)esc_scgrid_lstor->na*(size_t)esc_scgrid_lstor->nb, nnc*1e-6);
+    }
+
+    if (gstream)
+        fseeko (gstream, esc_scgrid_lstor->offs, SEEK_SET);
+    return esc_scgrid_lstor;
+}
+
+
+void sf_esc_scglstor3_close (sf_esc_scglstor3 esc_scgrid_lstor)
+/*< Destroy object >*/
+{
+    if (false == esc_scgrid_lstor->mmaped)
+        free (esc_scgrid_lstor->memmap);
+    else
+        munmap (esc_scgrid_lstor->memmap, (size_t)esc_scgrid_lstor->offs +
+                                          (size_t)esc_scgrid_lstor->n*
+                                          (size_t)esc_scgrid_lstor->na*
+                                          (size_t)esc_scgrid_lstor->nb);
+    free (esc_scgrid_lstor->scsplines);
+    free (esc_scgrid_lstor);
+}
+
 
 /* 8-point stencil, version one:
    b
@@ -417,23 +506,23 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     return is;
 }
 
-sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer,
-                                    int morder, int inet, float frac, bool mmaped, bool verb)
+sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
+                                    sf_esc_tracer3 esc_tracer, sf_esc_scglstor3 esc_scgrid_lstor,
+                                    int morder, int inet, float frac, bool verb)
 /*< Initialize object >*/
 {
-    size_t nc, nnc = 0;
+    size_t nc;
     off_t doffs;
     int ia, ib, i, j, k, jj, nab, iab0, iab1;
     int nd, is0, is1, ndab, ncv, nad;
     struct sockaddr_in *serv_addr, loc_addr;
     char *ip;
-    FILE *gstream = NULL, *dstream = NULL;
+    FILE *dstream = NULL;
 
     sf_esc_scgrid3 esc_scgrid = (sf_esc_scgrid3)sf_alloc (1, sizeof (struct EscSCgrid3));
 
     if (sf_gettype (scgrid) != SF_UCHAR)
         sf_error ("Wrong data type in supercell file");
-    gstream = sf_filestream (scgrid);
     if (scdaemon) {
         dstream = sf_filestream (scdaemon);
         doffs = ftello (dstream);
@@ -601,59 +690,6 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
             sf_warning ("Using local data for accessing escape solutions");
     }
 
-    if (esc_scgrid->remote)
-        mmaped = true; /* Always do memory mapping, if using remote access */
-    esc_scgrid->mmaped = mmaped;
-
-    if (stdin == gstream && mmaped)
-        sf_error ("Can not mmap supercell file from stdin");
-    esc_scgrid->offs = ftello (gstream);
-
-    esc_scgrid->scsplines = (multi_UBspline_3d_s*)sf_alloc ((size_t)esc_scgrid->na*(size_t)esc_scgrid->nb,
-                                                            sizeof(multi_UBspline_3d_s));
-    if (false == mmaped) {
-        esc_scgrid->memmap = sf_ucharalloc ((size_t)esc_scgrid->offs +
-                                            (size_t)esc_scgrid->n*
-                                            (size_t)esc_scgrid->na*
-                                            (size_t)esc_scgrid->nb);
-        sf_ucharread (esc_scgrid->memmap, (size_t)esc_scgrid->offs +
-                                          (size_t)esc_scgrid->n*
-                                          (size_t)esc_scgrid->na*
-                                          (size_t)esc_scgrid->nb, scgrid);
-    } else {
-        esc_scgrid->memmap = (unsigned char*)mmap (NULL, (size_t)esc_scgrid->offs +
-                                                         (size_t)esc_scgrid->n*
-                                                         (size_t)esc_scgrid->na*
-                                                         (size_t)esc_scgrid->nb,
-                                                   PROT_READ, MAP_SHARED,
-                                                   fileno (gstream), 0);
-    }
-
-    nc = esc_scgrid->offs;
-    for (ia = 0; ia < esc_scgrid->na; ia++) {
-        for (ib = 0; ib < esc_scgrid->nb; ib++) {
-            /* Copy spline structure to a separate place to
-               make it modifiable */
-            memcpy ((void*)&esc_scgrid->scsplines[ia*esc_scgrid->nb + ib],
-                    (void*)&esc_scgrid->memmap[nc], sizeof(multi_UBspline_3d_s));
-            nc += sizeof(multi_UBspline_3d_s);
-            /* Initialize pointer to coefficients with a correct
-               new address in the mmaped area */
-            esc_scgrid->scsplines[ia*esc_scgrid->nb + ib].coefs = (float*)&esc_scgrid->memmap[nc];
-            nc += esc_scgrid->scsplines[ia*esc_scgrid->nb + ib].nc;
-            nnc += esc_scgrid->scsplines[ia*esc_scgrid->nb + ib].nc;
-        }
-    }
-
-    if (verb) {
-        if (mmaped)
-            sf_warning ("%lu supercells mmaped (%g Mb of spline coefficients)",
-                       (size_t)esc_scgrid->na*(size_t)esc_scgrid->nb, nnc*1e-6);
-        else
-            sf_warning ("%lu supercells read, %g Mb of spline coefficients accumulated",
-                        (size_t)esc_scgrid->na*(size_t)esc_scgrid->nb, nnc*1e-6);
-    }
-
     esc_scgrid->invals1 = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb,
                                     sizeof(sf_esc_scgrid3_invals));
     esc_scgrid->invals2 = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb,
@@ -667,8 +703,8 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     esc_scgrid->avals2 = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb*(size_t)esc_scgrid->ns,
                                    sizeof(sf_esc_scgrid3_avals));
 
-    if (gstream)
-        fseeko (gstream, esc_scgrid->offs, SEEK_SET);
+    esc_scgrid->esc_scgrid_lstor = esc_scgrid_lstor;
+
     if (dstream)
         fseeko (dstream, doffs, SEEK_SET);
     return esc_scgrid;
@@ -722,23 +758,15 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     free (esc_scgrid->areqs1);
     free (esc_scgrid->avals1);
 
-    if (false == esc_scgrid->mmaped)
-        free (esc_scgrid->memmap);
-    else
-        munmap (esc_scgrid->memmap, (size_t)esc_scgrid->offs +
-                                    (size_t)esc_scgrid->n*
-                                    (size_t)esc_scgrid->na*
-                                    (size_t)esc_scgrid->nb);
-    free (esc_scgrid->scsplines);
     sf_esc_point3_close (esc_scgrid->esc_point);
 
     free (esc_scgrid);
 }
 
 /* Compute one value locally */
-static void sf_esc_scgrid3_get_lvalue (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3_areq *areq,
-                                       sf_esc_scgrid3_avals *aval) {
-    eval_multi_UBspline_3d_s (&esc_scgrid->scsplines[areq->iab],
+void sf_esc_scglstor3_get_value (sf_esc_scglstor3 esc_scgrid_lst,
+                                 sf_esc_scgrid3_areq *areq, sf_esc_scgrid3_avals *aval) {
+    eval_multi_UBspline_3d_s (&esc_scgrid_lst->scsplines[areq->iab],
                               areq->y, areq->x, areq->z, aval->vals);
     aval->ud1 = areq->ud1;
     aval->ud2 = areq->ud2;
@@ -844,8 +872,9 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     /* Extract values locally */
     if (false == esc_scgrid->remote) {
         for (i = 0; i < n; i++) {
-            sf_esc_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[i]);
+            sf_esc_scglstor3_get_value (esc_scgrid->esc_scgrid_lstor, &areqs[i], &avals[i]);
         }
+        esc_scgrid->il += n;
         return;
     }
 
@@ -919,7 +948,7 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
     /* Extract values locally */
     for (i = 0; i < n; i++) {
         if (areqs[i].id != 0) {
-            sf_esc_scgrid3_get_lvalue (esc_scgrid, &areqs[i], &avals[ii]);
+            sf_esc_scglstor3_get_value (esc_scgrid->esc_scgrid_lstor, &areqs[i], &avals[ii]);
             esc_scgrid->il++;
             ii++;
         }
@@ -1493,7 +1522,7 @@ void sf_esc_scgrid3_compute (sf_esc_scgrid3 esc_scgrid, float z, float x, float 
                 if (false == sf_esc_scgrid3_is_inside (esc_scgrid, esc_scgrid->esc_point,
                                                        input_prev[output_prev[i*esc_scgrid->ns].ud1].vals,
                                                        &input_prev[output_prev[i*esc_scgrid->ns].ud1].a,
-                                                       &input_prev[output_prev[i*esc_scgrid->ns].ud1].b, true)) {
+                                                       &input_prev[output_prev[i*esc_scgrid->ns].ud1].b, false)) {
                     /* Move completed points to the output array */
                     memcpy (&avals[input_prev[output_prev[i*esc_scgrid->ns].ud1].iab*ESC3_NUM],
                             input_prev[output_prev[i*esc_scgrid->ns].ud1].vals, sizeof(float)*ESC3_NUM);
