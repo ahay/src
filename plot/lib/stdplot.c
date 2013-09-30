@@ -29,7 +29,7 @@
 #include "vplot.h"
 #include "plot.h"
 
-static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3, tickscale;
+static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3, tickscale, tickscale1, tickscale2, tickscale3, tickscale4;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
 static float d1, d2, d3, frame1, frame2, frame3, l1min, l1max, l2min, l2max, l3min, l3max;
 static int framecol, gridcol, gridfat=1;
@@ -124,6 +124,14 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 
     if (!sf_getfloat ("tickscale",&tickscale)) tickscale=0.5;
     /* ticks scaling */
+    if (!sf_getfloat ("tickscale1",&tickscale1)) tickscale1=tickscale;
+    /* ticks scaling on first axis */
+    if (!sf_getfloat ("tickscale2",&tickscale2)) tickscale2=tickscale;
+    /* ticks scaling on second axis */    
+    if (!sf_getfloat ("tickscale3",&tickscale3)) tickscale3=tickscale;
+    /* ticks scaling on third axis */
+    if (!sf_getfloat ("tickscale4",&tickscale4)) tickscale4=tickscale;
+    /* ticks scaling on fourth axis */    
 
     /* get max and min */
     if (!sf_getfloat ("min1",&min1)) min1=umin1;
@@ -1313,10 +1321,10 @@ void vp_frame(void)
 	/* plot label */
 	if (label1->where == 't') { 
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
-	    vs = tickscale*labelsz;
+	    vs = tickscale1*labelsz;
 	} else {
 	    vp_tjust (TH_CENTER, TV_TOP);
-	    vs = -tickscale*labelsz;
+	    vs = -tickscale1*labelsz;
 	}
 
 	sy = label1->y;
@@ -1394,7 +1402,7 @@ void vp_frame(void)
 	    vp_tjust (TH_CENTER, TV_TOP);
 	}
 
-	vs = label2->where == 'l'? -tickscale*labelsz: tickscale*labelsz;
+	vs = label2->where == 'l'? -tickscale2*labelsz: tickscale2*labelsz;
 
 	sx = label2->x;
 	if (! axis2->parallel) 
@@ -1467,7 +1475,7 @@ void vp_frame(void)
 	/* plot label */
 
 	vp_tjust (TH_CENTER, TV_TOP);
-	vs = -tickscale*labelsz;
+	vs = -tickscale3*labelsz;
 
 	sx = label3->x;
 	sy = label3->y;
@@ -1574,7 +1582,7 @@ void vp_frame(void)
 	    vp_tjust (TH_CENTER, TV_TOP);
 	}
 
-	vs = label4->where == 'l'? -tickscale*labelsz: tickscale*labelsz;
+	vs = label4->where == 'l'? -tickscale4*labelsz: tickscale4*labelsz;
 
 	sx = label4->x;
 	if (! axis4->parallel) 
@@ -1824,16 +1832,16 @@ void vp_barframe(void)
 	    } else {
 		vp_tjust (TH_CENTER, TV_TOP);
 	    }
-	    vs = barlabel->where == 'l'? -tickscale*labelsz: tickscale*labelsz;
+	    vs = barlabel->where == 'l'? -tickscale1*labelsz: tickscale1*labelsz;
 	    if (! baraxis->parallel) 
 		barlabel->x += 2*(baraxis->maxstrlen-1)*vs;
 	} else {
 	    if (barlabel->where == 't') {
 		vp_tjust (TH_CENTER, TV_BOTTOM);
-		vs = tickscale*labelsz;
+		vs = tickscale2*labelsz;
 	    } else {
 		vp_tjust (TH_CENTER, TV_TOP);
-		vs = -tickscale*labelsz;
+		vs = -tickscale2*labelsz;
 	    }
 	    if (! baraxis->parallel) 
 		barlabel->y += 2*(baraxis->maxstrlen-1)*vs;
