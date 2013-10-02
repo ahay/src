@@ -321,6 +321,14 @@ class Project(Environment):
             self.nodes.extend([hosts[i-1]]*nh)
         self.ip = 0
 
+        os.system("/bin/rm -f hosts.txt")
+        hosts_fd=open('hosts.txt','w+')
+        hosts_fd.write("numnodes %4d\n"%len(self.nodes))
+        hosts_fd.write("host                                    state\n") 
+        for host in self.nodes:
+	    hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
+        hosts_fd.close()
+
         # self.nodes is a list of CPUs
         # self.jobs is the number of jobs
         # self.ip is the current CPU
@@ -477,10 +485,10 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             if self.raddenv:
-                command = string.join([WhereIs('ssh'),node,'\"',self.raddenv,
+                command = string.join([WhereIs('runonnode'),'\"',self.raddenv,
                                       '; cd ',self.cwd,';',command,'\"'])
             else:
-                command = string.join([WhereIs('ssh'),node,'\"cd ',
+                command = string.join([WhereIs('runonnode'),'\"cd ',
                                        self.cwd,';',command,'\"'])
                         
         targets = []
