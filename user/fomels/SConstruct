@@ -67,11 +67,7 @@ for prog in mains:
                 'build/api/c/libdrsf.dylib '
                 '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
+lapack = env.get('LAPACK')
 if lapack:
     libsxx = [dynpre+'rsf++','vecmatop']
     if not isinstance(lapack,bool):

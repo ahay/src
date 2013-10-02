@@ -88,7 +88,7 @@ except: # local version
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf','lapack','vecmatop'])
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
 ##############################################################################
 # ADD FFTW3 LIB
@@ -96,7 +96,6 @@ env.Prepend(CPPPATH=['../../include'],
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'],
-#                LIBS=[env.get('DYNLIB','')+'fftw3f'])
                 LIBS=[env.get('DYNLIB','')+fftw])
 
 
@@ -124,18 +123,23 @@ for prog in mains:
 # Compiling C++ programs 
 ##############################################################################
 
-libcpp=[env.get('DYNLIB','')+'rsf++','rsf','lapack','vecmatop','fftw3f']
-
-#subs    = Split(subs)
-#if 'c++' in env.get('API',[]):
-#        obj = map(lambda x:  env.StaticObject(x+'.cc'), subs)
-#        objs.append(obj)
+dynpre = env.get('DYNLIB','') 
+libs = [dynpre+'rsf']+env.get('LIBS',[])
+lapack = env.get('LAPACK')
+if lapack:
+    libsxx = [dynpre+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    libsxx.extend(libs)
 
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog] 
-    prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, LIBS=libcpp)
-
+    if lapack:
+        prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, 
+                           LIBS=libsxx)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
 

@@ -25,7 +25,10 @@
 */
 
 #include <rsf.h>
+
+#ifdef  _OPENMP
 #include <omp.h>
+#endif
 
 #include "_cjb.h"
 #include "_fd.h"
@@ -46,7 +49,7 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	zero2float(px_tmp,nzpad,nxpad);	
 	zero2float(qx_tmp,nzpad,nxpad);	
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,l) \
 	    schedule(dynamic) \
         shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,coeff_1dz,nxpad,nzpad,dx,dz)
@@ -62,7 +65,7 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 		}
 	}
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,l) \
 	    schedule(dynamic) \
 	    shared(p1,p2,p3,q1,q2,q3,\
@@ -158,7 +161,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 	zero3float(rx_tmp,nzpad,nxpad,nypad);	
 	zero3float(rz_tmp,nzpad,nxpad,nypad);	
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
         shared(p2,q2,r2, \
@@ -184,7 +187,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 					}
 				}
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
 	    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,\
@@ -353,9 +356,11 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 	zero3float(qy_tmp,nzpad,nxpad,nypad);	
 	zero3float(rz_tmp,nzpad,nxpad,nypad);	
 
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
         shared(p2,q2,r2,px_tmp,qy_tmp,rz_tmp,coeff_1dx,coeff_1dy,coeff_1dz,nxpad,nypad,nzpad,dx,dy,dz)
+#endif
 	for(k=0;k<nypad;k++)
 		for(i=0;i<nxpad;i++)
 			for(j=0;j<nzpad;j++)
@@ -368,13 +373,14 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 					if(j+l>=0&&j+l<nzpad)
 						rz_tmp[k][i][j]+=coeff_1dz[l+mix]*r2[k][i][j+l]/2.0/dz;
 				}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
 	    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,\
 		px_tmp,qy_tmp,rz_tmp,\
 		coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz,\
 	    vp0,vs0,epsilon,delta,gama,theta,phai)
+#endif
 	for(k=0;k<nypad;k++)
 	for(i=0;i<nxpad;i++)
 		for(j=0;j<nzpad;j++)
