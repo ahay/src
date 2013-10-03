@@ -81,23 +81,21 @@ int main (int argc, char* argv[]) {
 		}
 	}
 
-	// apply taper
+	// tapering
 	for (int iy = 0; iy < yNum; ++iy) {
 		for (int ix = 0; ix < xNum; ++ix) {
-
+			// read a gather
 		    sf_floatread (data_, dataSize, dataFile);
-	
+			// apply the taper			
 			pTaper = taper_;
 			float* pData  = data_;	
-		
 			for (int it = 0; it < taperSize; ++it, ++pTaper) {
 				const float w = *pTaper;
 				for (int iz = 0; iz < zNum; ++iz, ++pData)
 					*pData *= w;
 			}
-
+			// write the gather
 			sf_floatwrite (data_, dataSize, outFile);
-
 		}
 	}
 
