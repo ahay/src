@@ -56,11 +56,11 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
-    if (!sf_histint(dip,"n3",&np)) np=1;
+    np = sf_leftsize(dip,2);
 
     pp = sf_floatalloc2(n1,n2);
 
-    if (np > 1) {
+    if (np > n3) {
 	qq = sf_floatalloc2(n1,n2);
     } else {
 	qq = NULL;
