@@ -29,6 +29,7 @@ static std::valarray<float> vs;
 static std::valarray<double> ks;
 static float pi=SF_PI;
 static float dt, dx;
+static float taper;
 
 static float sinc(float x)
 {
@@ -40,11 +41,19 @@ int samplex(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
+    float tmp = 0.0;
     res.resize(nr,nc);  
     setvalue(res,0.0);
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
-	    res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*fabs(ks[cs[b]])*dt);
+	    tmp = sin(pi*vs[rs[a]]*(ks[cs[b]])*dt);
+	    if (tmp > 1-taper) {
+		tmp = 1-taper;
+	    }
+	    else if (tmp < -1+taper) {
+		tmp = -1+taper;
+	    }
+	    res(a,b) =2.0*tmp/vs[rs[a]]/dt;
 	}
     }
     return 0;
@@ -60,6 +69,9 @@ int main(int argc, char** argv)
     par.get("seed",seed,time(NULL)); // seed for random number generator
     srand48(seed);
 
+    par.get("taper", taper, 1.e-3); //taper for stability
+   
+
     float eps;
     par.get("eps",eps,1.e-4); // tolerance
 
@@ -71,6 +83,7 @@ int main(int argc, char** argv)
     iRSF velf;
     oRSF outm;  
     oRSF fsx("sx");//, Mexactfile("Mexact"),Mlrfile("Mlr"), Mappfile("Mapp"); 
+    oRSF Mexactfile("Mexact");
 
     float wavnumcut;
     par.get("wavnumcut",wavnumcut,1.0); // wavenumber cut percentile
@@ -119,7 +132,8 @@ int main(int argc, char** argv)
     */
 
     vector<int> ksc(COUNT), smallk(SMK);
-    
+    sf_warning("COUNT=%d",COUNT);
+    sf_warning("SMK=%d",SMK);
     int nk=0, mk=0; 
 
     // ks: -fn --- fn
@@ -160,13 +174,13 @@ int main(int argc, char** argv)
 	}
     }
     */
-    sf_warning("=======================");
-    sf_warning("LFD");
+    sf_warning("==========================");
+    sf_warning("Taper LFD");
     sf_warning("COUNT=%d",COUNT);
-    sf_warning("SMK=%d",SMK);
     sf_warning("nk=%d",nk);
     sf_warning("mk=%d",mk);
-    sf_warning("=======================");
+    sf_warning("taper=%f", taper);
+    sf_warning("==========================");
     /*Low rank decomposition*/   
 
     vector<int> cidx, ridx;
@@ -289,15 +303,14 @@ int main(int argc, char** argv)
     } 
     fsx << fs;
     
-    /*
     // Exact matre
     DblNumMat Mexact(nx,nx);
     iC( samplex(rs,cs,Mexact) );
        
-    float dk2=dk/2.0;
+    //float dk2=dk/2.0;
     Mexactfile.put("n1",nx);
     Mexactfile.put("n2",nx);
-    Mexactfile.put("d2",dk2);
+    Mexactfile.put("d2",dk);
     Mexactfile.put("o2",0);
     
     std::valarray<float> fMex(nx*nx);
@@ -307,6 +320,7 @@ int main(int argc, char** argv)
     } 
     Mexactfile << fMex;
     
+    /*
     //Lowrank
     
     Mlrfile.put("n1",nx);
