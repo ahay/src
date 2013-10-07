@@ -185,7 +185,7 @@ int main(int argc, char** argv)
     for(int k=0; k<n; k++) cs[k]=k;
     iC( samplex(ridx,cs,M2) );
    
-    /*FD coefficient*/
+    /* FD coefficient */
 
     /* d/dx */
     int len=0;
