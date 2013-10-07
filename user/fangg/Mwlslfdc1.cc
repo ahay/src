@@ -156,7 +156,6 @@ int main(int argc, char** argv)
 	}
     }
 
-
     vector<int> ksc(COUNT);
     
     int nk=0, mk=0;
@@ -167,7 +166,6 @@ int main(int argc, char** argv)
 	    ksc[nk] = ix;
 	    nk++;
 	}
-	
     }
    
     vector<int> cidx, ridx;
@@ -224,6 +222,7 @@ int main(int argc, char** argv)
     float w = 0.0, k0=0.0, kk=0.0;
     std::valarray<float> wfun(B._n);
     
+  
     for (int ik=0; ik<B._n; ik++) {
 	kk = twopi*ktmp._data[ik];
 	k0 = twopi*dfrq/vs[ik];
@@ -245,7 +244,7 @@ int main(int argc, char** argv)
 	    Bc._data[itmp] = w*Bc._data[itmp];
 	}
     }
-    
+
     DblNumMat IB(nx,LEN);    iC( ddpinv(B, 1e-16, IB) );
     DblNumMat IBc(COUNT,LEN);    iC( ddpinv(Bc, 1e-16, IBc) );
           
@@ -309,7 +308,6 @@ int main(int argc, char** argv)
     sf_warning("taper=%f", taper);
     sf_warning("k0=%f", k0);
     sf_warning("==========================");
-
     
     return 0;
 }
