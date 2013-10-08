@@ -35,6 +35,7 @@ Yujin Liu <seisinv@gmail.com>
 Xuxin Ma <xuxin.ma@kaust.edu.sa>
 Douglas McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
+Jorge Monsegny <jmonsegny@hotmail.com>
 Jack Poulson <jack.poulson@gmail.com>
 James Rickett <jrickett@slb.com>
 Sean Ross-Ross <srossross@gmail.com>

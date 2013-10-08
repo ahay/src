@@ -41,6 +41,7 @@ To programs:
 * Added color=x cubehelix color scheme in sfgrey and sfgrey3
 * Added inv= option to sfintbin
 * Added pclip= option to sfscale
+* user/jmonsegny: New contributor (Jorge Monsegny)
 
 ===Bug fixes===
 
