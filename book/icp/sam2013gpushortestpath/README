@@ -9,14 +9,8 @@ Pre-requisites for building the manuscript:
 
 2) An up-to-date LaTeX distribution has been installed.
 
-3) Our manuscript relies on the segabs.cls, seg.sty and seg.bst LaTeX 
-   class file which can be obtained from the SEGTeX package for 
-   geophysical publications (http://www.ahay.org/wiki/SEGTeX). (We 
-   provide this files). It also uses LaTeX pacakges algorithm.sty and
-   algorithmic.sty that you have to obtain from a LaTeX repository 
-   (http://www.ctan.org) if your current LaTeX distribution doesn't
-   come with them.
-
+3) Our manuscript relies on the SEGTeX package for geophysical
+   publications (http://www.ahay.org/wiki/SEGTeX).
 
 To build the extended abstract:
 
