@@ -13,6 +13,10 @@ To the reproducible documents collection:
 * tccs/specrecom: Automated spectral recomposition with application in
   stratigraphic interpretation (Cai, Fomel, and Zeng)
 * Moved sep/aniso to cwp/aniso
+* icp/sam2013gpushortestpath: Shortest path ray tracing on parallel
+  GPU devices (Monsegny and Agudelo)
+* tccs/nar: Seismic data decomposition into spectral components using
+  regularized nonstationary autoregression (Fomel)
 
 To SCons:
 

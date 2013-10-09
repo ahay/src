@@ -3,6 +3,9 @@
 In each layer, velocity is a linear function of position.
 
 Inspired by SU's unif2.
+
+October 2013 program of the month:
+http://ahay.org/rsflog/index.php?/archives/359-Program-of-the-month-sfunif2.html
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
