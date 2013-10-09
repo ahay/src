@@ -29,10 +29,17 @@ cumains = Split(cuprogs)
 for prog in cumains:
     if CTP and NVCC:
         cfile = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
+        cc = env.get('CC')
+        cflags = ['--x=cu','--x=cu -g']
+        ldflags = ''
+        if string.rfind(cc,'icc') >= 0:
+            cflags[0] = cflags[0] + ' -ccbin=%s' % cc
+            cflags[1] = cflags[1] + ' -ccbin=%s' % cc
+            ldflags = '-ccbin=%s' % cc
         prog = env.Program(cfile,
                            CC=NVCC,
-                           LINKFLAGS='',
-                           CFLAGS=('--x=cu','--x=cu')[root==None])
+                           LINKFLAGS=ldflags,
+                           CFLAGS=cflags[root==None])
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
