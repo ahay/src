@@ -1,6 +1,6 @@
 from rsf.tex import *
 
-Paper('segabs_graphrayt',lclass='segabs',use='algorithm,algorithmic')
+Paper('segabs_graphrayt',use='algorithm,algorithmic')
 
 End()
 
