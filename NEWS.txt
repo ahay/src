@@ -17,6 +17,8 @@ To the reproducible documents collection:
   GPU devices (Monsegny and Agudelo)
 * tccs/nar: Seismic data decomposition into spectral components using
   regularized nonstationary autoregression (Fomel)
+* tccs/aperture: Selecting an optimal aperture in Kirchhoff migration
+  using dip-angle images (Klokov and Fomel)
 
 To SCons:
 
