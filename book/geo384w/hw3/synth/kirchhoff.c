@@ -1,51 +1,7 @@
-/* 2-D Poststack Kirchhoff time migration. */
+/* 2-D Post-stack Kirchhoff time migration. */
 #include <rsf.h>
 
-static void doubint(int nt, float *trace)
-/* causal and anticausal integratio */
-{
-    int it;
-    float tt;
-
-    tt = trace[0];
-    for (it=1; it < nt; it++) {
-	tt += trace[it];
-	trace[it] = tt;
-    }
-    tt = trace[nt-1];
-    for (it=nt-2; it >=0; it--) {
-	tt += trace[it];
-	trace[it] = tt;
-    }
-}
-    
-static float pick(float ti, float deltat, 
-		  const float *trace,
-		  int nt, float dt, float t0)
-/* pick a traveltime sample from a trace */
-{
-    int it, itm, itp;
-    float ft, tm, tp, ftm, ftp, imp;
-
-    ft = (ti-t0)/dt; it = floorf(ft); ft -= it; 
-    if ( it < 0 || it >= nt-1) return 0.0;
- 
-    tm = ti-deltat-dt;
-    ftm = (tm-t0)/dt; itm = floorf(ftm); ftm -= itm; 
-    if (itm < 0) return 0.0;
-                 
-    tp = ti+deltat+dt;
-    ftp = (tp-t0)/dt; itp = floorf(ftp); ftp -= itp; 
-    if (itp >= nt-1) return 0.0;
-
-    imp = dt/(dt+tp-tm);
-    imp *= imp;
-		
-    return imp*(
-	2.*(1.-ft)*trace[it] + 2.*ft*trace[it+1] -
-	(1.-ftm)*trace[itm] - ftm*trace[itm+1]    - 
-	(1.-ftp)*trace[itp] - ftp*trace[itp+1]);    
-}
+#include "aal.h" /* antialising routines */
 
 int main(int argc, char* argv[])
 {
@@ -83,13 +39,16 @@ int main(int argc, char* argv[])
 	out[0][i] = 0.;
     }
 
+    /* loop over input traces */
     for (iy=0; iy < nx; iy++) { 
 	sf_floatread (trace,nt,inp);
-	doubint(nt,trace);
+	aal_doubint(nt,trace);
         
+	/* loop over output traces */
 	for (ix=0; ix < nx; ix++) { 
 	    x = (ix-iy)*dx;
 
+	    /* loop over output time */
 	    for (iz=0; iz < nz; iz++) {
 		z = z0 + iz*dz;  
 		vi = v[ix][iz];
@@ -101,7 +60,7 @@ int main(int argc, char* argv[])
 		tx = 4.0*fabsf(x)/(vi*vi*(ti+dt));
 
 		out[ix][iz] += 
-		    pick(ti,tx*dx*aal,trace,nt,dt,t0);
+		    aal_pick(ti,tx*dx*aal,trace,nt,dt,t0);
 	    } 
 	} 
     } 

@@ -1,13 +1,13 @@
-\author{Gustav Kirchhoff} 
+\author{Pierre de Fermat} 
 %%%%%%%%%%%%%%%%%%%%%%%%%
 \title{Homework 3}
 
 \begin{abstract}
   This homework has two parts. In the theoretical part, you will
-  perform several analytical derivations related to 
-  geometrical integration and reflections from elliptical reflections. In the
-  computational part, you will experiment with imaging a synthetic
-  dataset and a field dataset from the Gulf of Mexico.
+derive the geometrical amplitude of the acoustic displacement and
+reflection traveltimes from plane and circle reflectors. In the
+computational part, you will experiment with imaging a synthetic
+dataset and a field dataset from the Gulf of Mexico.
 \end{abstract}
 
 Completing the computational part of this homework assignment requires
@@ -22,52 +22,149 @@ You are welcome to do the assignment on your personal computer by
 installing the required environments. In this case, you can obtain all
 homework assignments from the \texttt{Madagascar} repository by running
 \begin{verbatim}
-svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w/hw3 
+svn co http://svn.code.sf.net/p/rsf/code/trunk/book/geo384w/hw3
 \end{verbatim}
 
 \section{Theoretical part}
+\inputdir{XFig}
 
 \begin{enumerate}
-\item Consider a 2-D common-midpoint gather $G(t,x)$, which
-  contains a geometrical event $A_0\,f\left(t-T(x)\right)$ with a
-  constant amplitude $A_0$ along a parabolic shape
+
+\item In class, we derived the following acoustic wave equation for
+  pressure $P(\mathbf{x},t)$:
 \begin{equation}
-\label{eq:hyper}
-T(x) = t_0+a\,x^2\;.
+{\frac{1}{V^2(\mathbf{x})}}\,{\frac{\partial^2 P}{\partial t^2}} =\nabla^2 P + 
+\rho(\mathbf{x})\,
+\nabla\left(\frac{1}{\rho(\mathbf{x})}\right) \cdot \nabla P\;.
+\label{eq:pwave}
 \end{equation}
-The gather gets transformed by the slant-stack (Radon transform) operator
+\begin{enumerate}
+\item Using the connection between the pressure and displacement, derive the
+acoustic wave equation for the displacement vector
+$\mathbf{u}(\mathbf{x},t)$:
 \begin{equation}
-\label{eq:radon}
-R(\tau,p) = \mathbf{D}_t^{1/2} \int G(\tau + p x, x) d x\;.
+  \label{eq:uwave}
+  \rho(\mathbf{x})\,\frac{\partial^2 \mathbf{u}}{\partial t^2} =
 \end{equation}
-where $ \mathbf{D}_t^{1/2}$ is a waveform-correcting half-order
-derivative operator.
 
-Using the theory of geometrical integration, show that $R(\tau,p)$
-will contain a geometrical event $A_1(p)\,f\left(\tau-T_1(p)\right)$.
-Determine $T_1(p)$ and $A_1(p)$.
+\item Consider a geometrical wave representation in the vicinity of a wavefront
+\begin{equation}
+  {\mathbf{u}(\mathbf{x},t)} = \mathbf{a}(\mathbf{x})\,f\left(t-T(\mathbf{x})\right)
+  \label{eq:gwave}
+\end{equation}
+and derive partial differential equations for the traveltime function
+$T(\mathbf{x})$ and the vector amplitude $\mathbf{a}(\mathbf{x})$.
 
-\newpage
+\item Assuming that the geometrical wave propagates in the direction
+  of the traveltime gradient
+\begin{equation}
+  {\mathbf{a}(\mathbf{x})} = A(\mathbf{x})\,V(\mathbf{x})\,\nabla T
+  \label{eq:vamp}
+\end{equation}
+show that the amplitude continuation along a ray is given by equation 
+\begin{equation}
+  \label{eq:avj}
+  \left|\mathbf{a}_1\right| = \left|\mathbf{a}_0\right|\,
+  \left(\frac{\rho_0\,V_0\,J_0}{\rho_1\,V_1\,J_1}\right)^{1/2}\;, 
+\end{equation}
+where $J_0$ and $J_1$ are the corresponding geometrical spreading factors.
 
-\item Consider source and receiver coordinates $s$ and $r$ on the
-  surface of a 2-D constant-velocity medium with velocity
-  $V$. 
+\end{enumerate}
 
-  \begin{enumerate}
-  \item Assuming that the reflection traveltime is $T$, show that the
-    reflection point $\{x,z\}$ must belong to an ellipse (\emph{migration
-      impulse response})
-    \begin{equation}
-      \label{eq:ellipse}
-      z(x) = \sqrt{R^2 - \alpha\,(x-m)^2}\;,
-    \end{equation}
-    where $R=V\,T_n/2$, $T_n=\sqrt{T^2-\frac{4\,h^2}{V^2}}$, $h=(r-s)/2$, and $m=(r+s)/2$.
-  \item Find $\alpha$.
-  \item Consider that the ellipse in equation~\ref{eq:ellipse} as a
-    reflection surface and apply Fermat's principle to find the reflection
-    traveltime $T_0(x_0)$ for observations with sources and receivers coincident at $x_0$.
+\item Consider a medium with a constant gradient of slowness squared
+  \begin{equation}
+    S^2(\mathbf{x}) = S_0^2 + 2\,\mathbf{g} \cdot (\mathbf{x}-\mathbf{x}_0)\;.
+  \end{equation}
+\begin{enumerate}
+\item In the 2-D case, the ray-family coordinate system can be
+  specified by $\mathbf{r}=\{\sigma,\theta\}$, where $\sigma$ goes
+  along the ray, and $\theta$ is the initial ray angle. A family of
+  rays starts from the source point $\mathbf{x}_0$ which each ray
+  traveling in the direction $\mathbf{p_0} =
+  \{S_0\,\cos{\theta},S_0\,\sin{\theta}\}$. Show that the coordinate
+  transformation matrix $\mathbf{P}=\partial \mathbf{p}/\partial
+  \mathbf{r}$ changes along the ray as
+  \begin{equation}
+    \label{eq:p}
+    \mathbf{P}(\sigma) = \left[\begin{array}{cc} 
+        g_1 & -S_0\,\sin{\theta} \\
+        g_2 & S_0\,\cos{\theta} \end{array}\right]\;,
+  \end{equation}
+  where $g_1$ and $g_2$ are the components of $\mathbf{g}$ and find
+  the corresponding transformation of the matrices
+  $\mathbf{X}=\partial \mathbf{x}/\partial \mathbf{r}$ and
+  $\mathbf{K}=\mathbf{P}\,\mathbf{X}^{-1}$.
+  \begin{eqnarray}
+    \label{eq:x}
+    \mathbf{X}(\sigma)  & = & \\ 
+    \mathbf{K}(\sigma)  & = & 
+    \label{eq:k}
+    \end{eqnarray}
+
+  \item Find the one-point geometrical spreading $J$ from a point
+    source in the 2-D case as a function of $S_0$, $\mathbf{g}$, the
+    source location $\mathbf{x}_0$, the initial ray
+    direction~$\theta$, and the ray coordinate $\sigma$.
+
+  \item Using analytical ray tracing solutions, find the two-point
+    geometrical spreading $J$ from a point source in the 2-D case as a
+    function of $S_0$, $\mathbf{g}$, the source location
+    $\mathbf{x}_0$ and the receiver location $\mathbf{x}_1$.
+
   \end{enumerate}
 
+\item Consider the source point $s$ and the receiver point $r$ at the
+  surface $z=0$ above a 2-D constant-velocity medium and a curved
+  reflector defined by the equation $z = z(x)$ with a twice
+  differentiable function $z(x)$ (Figure~\ref{fig:curve}).
+
+  \plot{curve}{width=0.7\textwidth}{Geometry of reflection in a
+    constant-velocity medium with a curved reflector.}
+
+  Note that the two-point ray trajectory can be parametrized by the
+  reflection point $y$ with the following expression for the
+  reflection traveltime (using the Pythagoras theorem):
+  \begin{equation}
+      T(s,r) = {\frac{\sqrt{(s-y)^2+z^2(y)}+\sqrt{(r-y)^2+z^2(y)}}{V}}\;.
+      \label{eq:dsr}
+  \end{equation}
+
+  \begin{enumerate}
+  \item Apply Fermat's principle to specify $F(y)$ in the equation
+    \begin{equation}
+	\label{eq:fermat}
+	    F(y) = 0
+      \end{equation}
+      required for finding the reflection point $y$.
+
+    \item Newton's method (successive linearization) solves nonlinear
+    equations like~(\ref{eq:fermat}) iteratively by starting with some
+    $y_0$ and repeating the iteration
+      \begin{equation}
+      \label{eq:newton}
+        y_{n+1} = y_n - \frac{F(y_n)}{F'(y_n)}
+      \end{equation}
+      for $n=0,1,2,\ldots$ 
+
+      Specify $F'(y)$ for the problem of finding the reflection point.
+
+    \item Consider the special case of a dipping-plane reflector 
+\begin{equation}
+\label{eq:plane}
+z(x) = x\,\tan{\alpha}\;,
+\end{equation}
+ where $\alpha$ is the dip angle. Show that, in
+    this case, equation~(\ref{eq:fermat}) reduces to a linear equation
+    for $y$. Find $y$ and substitute it into~(\ref{eq:dsr}) to define the 
+    reflection traveltime.
+
+\item (EXTRA CREDIT) Find the reflection traveltime for a circle reflector
+\begin{equation}
+\label{eq:circle}
+z(x) = \sqrt{R^2 - (x-x_0)^2}\;.
+\end{equation}
+
+\end{enumerate}
 \end{enumerate}
 
 \section{Computational part}
@@ -98,8 +195,9 @@ Figure~\ref{fig:vscan} shows a conventional velocity semblance
 scan. Figure~\ref{fig:vnmo} compares the RMS velocity with the NMO
 velocity picked from the scan. Figure~\ref{fig:dstack,zoff} compares a
 DMO stack and the zero-offset section from the data. Finally,
-Figure~\ref{fig:tmig,dmig2} shows the result of Kirchhoff time
-migration before and after conversion from time to depth.
+Figures~\ref{fig:tmig} and~\ref{fig:dmig2} show the result of
+Kirchhoff time migration before and after conversion from time to
+depth.
 
 \begin{enumerate}
 \item Change directory 
@@ -125,7 +223,7 @@ The change is up to you, as long as you can achieve an improvement. Possible opt
 \begin{itemize}
 \item Use a more accurate traveltime computation.
 \item Introduce an amplitude weight.
-\item Change from time to depth migration (you can assume a locally $V(z)$ medium and use results from previous homeworks.)
+\item Change from time to depth migration (you can assume a locally $V(z)$ medium and use results from Homework~2.)
 \item Change from poststack to prestack migration.
 \end{itemize}
 \item The processing flow in the \texttt{SConstruct} file involves some cheating: the exact 
@@ -141,12 +239,12 @@ as well, different data processing strategies are possible.
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 \lstinputlisting[frame=single]{synth/kirchhoff.c}
 
-\newpage
-
 \inputdir{gulf}
 \plot{gulf}{width=0.8\textwidth}{2-D field dataset from the Gulf of Mexico.}
 
-\item In the second part of the computational assignment, you will use the processing strategy developed for synthetic data, 
+\newpage
+
+\item In the second part of the computational assignment, you will use the processing strategy developed for synthetic data 
 to process a 2-D field dataset from the Gulf of Mexico, shown in Figure~\ref{fig:gulf}.
 
 \begin{enumerate}
@@ -159,7 +257,7 @@ cd hw3/gulf
 scons view
 \end{verbatim}
 to generate the figures and display them on your screen.
-\item Edit the \texttt{SConstruct} file to implement your processing strategy. 
+\item Edit the \texttt{SConstruct} file to implement your processing strategy and to generate a seismic image. 
 Make sure to select appropriate processing parameters.
 \end{enumerate}
 
@@ -168,12 +266,14 @@ Make sure to select appropriate processing parameters.
 
 \end{enumerate}
 
+\newpage
+
 \section{Completing the assignment}
 
 \begin{enumerate}
-\item Change directory to \verb#hw3#.
-\item Edit the file \texttt{paper.tex} in your favorite editor and change the
-  first line to have your name instead of Kirchhoff's.
+\item Change directory to \verb#hw2#.
+\item Edit the file \texttt{paper.tex} in your favorite editor 
+      and change the first line to have your name instead of Fermat's.
 \item Run
 \begin{verbatim}
 sftour scons lock
@@ -185,8 +285,8 @@ sftour scons -c
 \end{verbatim}
 to remove intermediate files.
 \item Run
- \begin{verbatim} 
- scons pdf
+\begin{verbatim} 
+  scons pdf
 \end{verbatim}
   to create the final document.
 \item Submit your result (file \texttt{paper.pdf}) on paper or by

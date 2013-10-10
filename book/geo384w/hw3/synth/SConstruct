@@ -22,7 +22,8 @@ for i in range(nlays):
           (' '.join(map(lambda x: ' '.join(map(str,x)),
                            layers[i])),len(layers[i])))
 
-dim1 = 'o1=0 d1=0.01 n1=1001'
+dim1 = 'o1=0 d1=0.001 n1=10001'
+
 Flow('lay1','inp0.asc',
      'dd form=native | spline %s fp=0,0' % dim1)
 Flow('lay2',None  ,
@@ -46,7 +47,7 @@ Plot('lays2','lays',graph + ' plotfat=2')
 
 Flow('vofz',None,
      '''
-     math output="1.5+0.25*x1"
+     math output="1.5+0.36*x1"
      d2=0.01 n2=1001 d1=0.01 n1=501
      label1=Depth unit1=km
      label2=Distance unit2=km
@@ -54,7 +55,7 @@ Flow('vofz',None,
      ''')
 Plot('vofz',
      '''
-     window min2=2.75 max2=7.25 |
+     window min2=2.5 max2=7.5 |
      grey color=j allpos=y bias=1.5
      title=Model screenratio=1
      ''')
@@ -63,28 +64,29 @@ Result('model','vofz lays0 lays1','Overlay')
 
 # Model data
 
-Flow('dips','lays','deriv | scale dscale=100')
+Flow('dips','lays','deriv scale=y')
 Flow('modl','lays dips',
      '''
      kirmod cmp=y dip=${SOURCES[1]} 
      nh=51  dh=0.1  h0=0
      ns=201 ds=0.05 s0=0
      freq=10 dt=0.004 nt=1501
-     vel=1.5 gradz=0.25 verb=y |
-     tpow tpow=1 |
-     put d2=0.05 label3=Midpoint unit3=km 
-     ''',split=[1,1001], reduce='add')
+     vel=1.5 gradz=0.36 verb=y |
+     pow pow1=1 |
+     put d2=0.05 
+     label1=Time        unit1=s
+     label2=Half-Offset unit2=km 
+     label3=Midpoint    unit3=km 
+     ''',split=[1,10001], reduce='add')
 
 # Add random noise
-Flow('data','modl','noise var=1e-6 seed=101811')
+Flow('data','modl','noise var=1e-6 seed=101013')
 
 Result('data',
        '''
        byte |
        transp plane=23 |
        grey3 flat=n frame1=750 frame2=100 frame3=10 
-       label1=Time unit1=s 
-       label3=Half-Offset unit3=km 
        title=Data point1=0.8 point2=0.8
        ''')
 
@@ -115,7 +117,7 @@ Result('vscan',
        ''')
 
 # Velocity picking
-Flow('vnmo','vscan','pick rect1=100 rect2=10 | window')
+Flow('vnmo','vscan','pick rect1=100 rect2=10')
 
 for vel in ('vrms','vnmo'):
     Plot(vel,
@@ -165,7 +167,9 @@ for stack in stacks.keys():
 # Kirchhoff Migration
 #####################
 
-prog = Program('kirchhoff.c',CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
+proj = Project()
+
+prog = proj.Program('kirchhoff',['kirchhoff.c','aal.c'])
 exe = str(prog[0])
 
 # Using vrms is CHEATING

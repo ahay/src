@@ -1,6 +1,9 @@
 from rsf.proj import *
 
+# Download data
 Fetch('beinew.HH','midpts')
+
+# Set dimensions
 Flow('gulf','beinew.HH',
      '''
      dd form=native |
@@ -10,6 +13,7 @@ Flow('gulf','beinew.HH',
      label3=Midpoint unit3=km
      ''')
 
+# Display
 Result('gulf',
        '''
        byte |
