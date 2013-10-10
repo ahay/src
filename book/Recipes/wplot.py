@@ -77,6 +77,21 @@ def igrey2d(custom,par):
            par['iratio'],par['iheight'],par['scalebar'],
            par['labelattr']+custom)
 
+# grey 2D frame of a cube
+def ifrm2d(index,custom,par):
+    return '''
+    window n3=1 f3=%d |
+    grey title=""
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
+    screenratio=%g screenht=%g wantscalebar=%s
+    %s
+    ''' % (index,
+           par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['iratio'],par['iheight'],par['scalebar'],
+           par['labelattr']+custom)
+
 # grey 2D data
 def dgrey2d(custom,par):
     return '''
@@ -131,6 +146,18 @@ def ewigl2d(custom,par):
            par['labelattr']+custom)
 
 # ------------------------------------------------------------
+def gainall(custom,par):
+    return '''
+    byte gainpanel=a pclip=100 %s
+    '''%custom
+
+def frame2d(frame,movie,index,custom,par):
+    Flow(movie+'_p',movie,gainall(custom,par))
+    Result(frame,movie+'_p',
+           'window n3=1 f3=%d |'%index
+           + igrey2d(custom,par))
+    
+# ------------------------------------------------------------
 # plot wavelet
 def waveplot(custom,par):
     return '''
@@ -166,7 +193,7 @@ def bbplot2d(custom,par):
 def ssplot2d(custom,par):
     return '''
     window n1=2 | dd type=complex |
-    ''' + cgraph2d('symbol=. plotcol=6 plotfat=5 %s'%custom,par)
+    ''' + cgraph2d('symbol=. plotcol=6 plotfat=15 %s'%custom,par)
 
 def rrplot2d(custom,par):
     return '''
@@ -178,10 +205,6 @@ def qqplot2d(custom,par):
     window n1=2 | dd type=complex |
     ''' + cgraph2d('symbol=. plotcol=1 plotfat=5 %s'%custom,par)
 
-# ------------------------------------------------------------
-def gainall(custom,par):
-    return '''
-    byte gainpanel=a pclip=100 %s
-    '''%custom
+
 
 
