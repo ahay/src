@@ -64,7 +64,7 @@ def get_velocity(vel):
     Plot(vel,igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"',par))
     Plot(vel+'-model',[vel,'lays0','lays1'],'Overlay')
 
-Flow('dips','lays','deriv | scale dscale=100')
+Flow('dips','lays','deriv scale=y')
 
 def zero_offset(data):
     Flow(data,'lays dips',
