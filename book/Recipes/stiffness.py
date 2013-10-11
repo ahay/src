@@ -209,7 +209,57 @@ def vti3d(cc,vp,vs,ro,epsilon,delta,gamma,par):
 # ------------------------------------------------------------
 # TTI stiffness tensor
 def tti2d(mm,vp,vs,ro,epsilon,delta,nu,par):
-   # Is this really 2D TTI?  Jia's code suggests that 6 stiffness coefs are 
+    
+    Flow(nu+'-rad',nu,'math output="3.1415*input/180."')
+    
+    vti2d(mm+'-cc',vp,vs,ro,epsilon,delta,par)
+    Flow(mm+'-cc11',mm+'-cc','window n3=1 f3=0')
+    Flow(mm+'-cc33',mm+'-cc','window n3=1 f3=1')
+    Flow(mm+'-cc55',mm+'-cc','window n3=1 f3=2')
+    Flow(mm+'-cc13',mm+'-cc','window n3=1 f3=3')
+    
+    Flow(mm+'11',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+         '''
+         math output="c11*cos(nu)^4+2*(c13+2*c55)*cos(nu)^2*sin(nu)^2+c33*sin(nu)^4"
+         c11=${SOURCES[0]}
+         c13=${SOURCES[1]}
+         c33=${SOURCES[2]}
+         c55=${SOURCES[3]}
+         nu=${SOURCES[4]}
+         ''')
+    Flow(mm+'33',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+         '''
+         math output="c33*cos(nu)^4+2*(c13+2*c55)*cos(nu)^2*sin(nu)^2+c11*sin(nu)^4"
+         c11=${SOURCES[0]}
+         c13=${SOURCES[1]}
+         c33=${SOURCES[2]}
+         c55=${SOURCES[3]}
+         nu=${SOURCES[4]}
+         ''')
+    Flow(mm+'55',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+         '''
+         math output="(c11-2*c13+c33+4*c55-(c11-2*c13+c33-4*c55)*cos(4*nu))/8"
+         c11=${SOURCES[0]}
+         c13=${SOURCES[1]}
+         c33=${SOURCES[2]}
+         c55=${SOURCES[3]}
+         nu=${SOURCES[4]}
+         ''')
+    Flow(mm+'13',[mm+'-cc11',mm+'-cc13',mm+'-cc33',mm+'-cc55',nu+'-rad'],
+         '''
+         math output="(c11+6*c13+c33-4*c55-(c11-2*c13+c33-4*c55)*cos(4*nu))/8"
+         c11=${SOURCES[0]}
+         c13=${SOURCES[1]}
+         c33=${SOURCES[2]}
+        c55=${SOURCES[3]}
+        nu=${SOURCES[4]}
+        ''')
+    
+    Flow(mm,[mm+'11',mm+'33',mm+'55',mm+'13'],
+         'cat axis=3 space=n ${SOURCES[1:4]}')
+    
+def tti2dobsolete(mm,vp,vs,ro,epsilon,delta,nu,par):
+    # Is this really 2D TTI?  Jia's code suggests that 6 stiffness coefs are 
     # required here...  Hence, this will be re-routed to her code, which is
     # compliant with the newer elastic wave equation requirements.
     useOLD = False

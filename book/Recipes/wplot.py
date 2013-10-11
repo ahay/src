@@ -1,5 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
+import pplot
 
 # default parameters
 def param(par):
@@ -92,6 +93,16 @@ def ifrm2d(index,custom,par):
            par['iratio'],par['iheight'],par['scalebar'],
            par['labelattr']+custom)
 
+def ifrmE2d(wfrm,wbyt,index,custom,par,xscale=0.5,yscale=0.5,shift=-11):
+    Plot(wfrm+'_V',wbyt,'window n3=1 f3=0 |'+ ifrm2d(index,'',par))
+    Plot(wfrm+'_H',wbyt,'window n3=1 f3=1 |'+ ifrm2d(index,'',par)) 
+    pplot.p1x2(wfrm,wfrm+'_V',wfrm+'_H',xscale,yscale,shift)
+
+def iovlE2d(out,inp,par,xscale=0.5,yscale=0.5,shift=-11):
+    Plot(out+'_V',inp,'Overlay')
+    Plot(out+'_H',inp,'Overlay')
+    pplot.p1x2(out,out+'_V',out+'_H',xscale,yscale,shift)
+
 # grey 2D data
 def dgrey2d(custom,par):
     return '''
@@ -170,6 +181,17 @@ def waveplot(custom,par):
     %s
     ''' % (par['lt'],par['ut'],
            par['labelattr']+custom)
+
+def waveplotE2d(wav,custom,par):
+
+     Plot(wav+'_V',wav,
+          'window n2=1 f2=0 | transp | window |'+
+          waveplot(custom,par))
+     Plot(wav+'_H',wav,
+          'window n2=1 f2=1 | transp | window |'+
+          waveplot(custom,par))
+
+     pplot.p1x2(wav,wav+'_V',wav+'_H',0.5,0.5,-11.5)
 
 # ------------------------------------------------------------
 def cgraph2d(custom,par):
