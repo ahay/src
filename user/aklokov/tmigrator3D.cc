@@ -330,7 +330,7 @@ float TimeMigrator3D::getSampleByRay (const float yCIG, const float xCIG, const 
 	return sample;
 }
 
-void TimeMigrator3D::getStackTaper (const float edgeTaper) {
+void TimeMigrator3D::getStackTaper (const float edgeTaper, const bool isDipAz) {
 
     const int   dipNum   = gp_->dipNum;
     const float dipStart = gp_->dipStart;
@@ -347,6 +347,12 @@ void TimeMigrator3D::getStackTaper (const float edgeTaper) {
 	stackTaper_ = new float [taperSize];
 
 	float* pTaper = stackTaper_;
+	
+	if (isDipAz) {
+	    for (int it = 0; it < taperSize; ++it, ++pTaper)
+			*pTaper = 1.f;
+		return;
+	}
 
     for (int idy = 0; idy < sdipNum; ++idy) {
         const float curSDip = sdipStart + idy * sdipStep;

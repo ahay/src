@@ -423,7 +423,7 @@ int main (int argc, char* argv[]) {
 	migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
     migrator->setDataLimits ();
 
-	migrator->getStackTaper (rp.edgeTaper);
+	migrator->getStackTaper (rp.edgeTaper, rp.isDipAz);
 
     const int fullGatherNum = ip.yNum * ip.xNum;
 

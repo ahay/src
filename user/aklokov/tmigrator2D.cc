@@ -212,7 +212,7 @@ float TimeMigrator2D::getSampleFromData (const float geoY, const float geoX1, co
     return aaSample;
 }
 
-void TimeMigrator2D::getStackTaper (const float edgeTaper) {
+void TimeMigrator2D::getStackTaper (const float edgeTaper, const bool dummy) {
 
     const int   dipNum   = gp_->dipNum;
     const float dipStart = gp_->dipStart;
