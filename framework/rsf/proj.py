@@ -337,11 +337,11 @@ class Project(Environment):
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key])
 
     def __Split(self,split,reduction,
-                sfiles,tfiles,flow,stdout,stdin,suffix,prefix,src_suffix):
+                sfiles,tfiles,flow,stdout,stdin,jobmult,suffix,prefix,src_suffix):
         '''Split jobs for pscons'''
         
         if self.jobs < split[1]:
-            jobs = self.jobs            
+            jobs = self.jobs*jobmult            
             w = int(1+float(split[1])/jobs) # length of one chunk
         else:
             jobs = split[1]
@@ -403,7 +403,7 @@ class Project(Environment):
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
-             split=[],np=1,reduce='cat',local=0,noderotate=1):
+             split=[],np=1,reduce='cat',jobmult=1,local=0,noderotate=1):
 
         if not flow:
             return None     
@@ -447,7 +447,7 @@ class Project(Environment):
                 # Split the flow into parallel flows
                 self.__Split(split,reduction,
                              sfiles,tfiles,flow,stdout,stdin,
-                             suffix,prefix,src_suffix)               
+                             jobmult,suffix,prefix,src_suffix)               
                 return
 
         sources = []

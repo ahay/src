@@ -57,7 +57,7 @@ print "start command on %s"%host
 
 os.system("date")
  
-os.system(task)
+retcode = os.system(task)
 
 # lock hosts.txt, mark the node notrunning, unlock hosts.txt
 fcntl.lockf(hosts_fd,fcntl.LOCK_EX)
@@ -73,4 +73,5 @@ fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
 
 hosts_fd.close()
 
+sys.exit(retcode)
 
