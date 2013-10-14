@@ -17,6 +17,8 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <unistd.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -25,15 +27,30 @@
 
 #include "esc_scgrid3.h"
 
+static char* sf_escst3_warnext (sf_file input) {
+    int icpu = 0, ncpu = 1, maxlen;
+    char *host = sf_gethost ();
+    char *ext = NULL;
+
+    if (input) {
+        if (!sf_histint (input, "icpu", &icpu)) icpu = 0;
+        if (!sf_histint (input, "ncpu", &ncpu)) ncpu = 1;
+    }
+    maxlen = strlen (host) + 30;
+    ext = (char*)malloc (maxlen*sizeof(char));
+    snprintf (ext, maxlen, "[%s:%d/%d]", host, icpu + 1, ncpu);
+    return ext;
+}
+
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, iz, ix, iy, ia, ib, fz, lz;
-    int icpu = 0, ncpu = 1, morder = 2, ic, nc = 1, mp = 1, ith = 0, inet = 0;
+    int icpu = 0, ncpu = 1, morder = 2, ic, nc = 1, mp = 1, ith = 0, inet = 0, tdel = 0;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
     float z, x, y;
     float ****e;
     sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
             out;
-
+    char *ext = NULL;
     bool verb, parab, mmaped;
     sf_esc_slowness3 esc_slow;
     sf_esc_scglstor3 esc_scgrid_lstor;
@@ -69,6 +86,7 @@ int main (int argc, char* argv[]) {
         if (!sf_histint (spdom, "ncpu", &ncpu)) ncpu = 1;
         /* Total number of CPUs */
     }
+    ext = sf_escst3_warnext (spdom);
     if (!sf_getint ("nz", &nz) && !spdom) sf_error ("Need nz=");
     /* Number of samples in z axis */
     if (!sf_getfloat ("oz", &oz) && !spdom) sf_error ("Need oz=");
@@ -104,9 +122,9 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for interpolation */
     omp_set_num_threads (nc);
-    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
-                nc, omp_get_max_threads ());
-    sf_warning ("Buffering %d points", nc*mp);
+    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
+                ext, nc, omp_get_max_threads ());
+    sf_warning ("%s Buffering %d points", ext, nc*mp);
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
@@ -139,6 +157,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("inet", &inet)) inet = 1;
     /* Network interface index */
 #endif
+    if (!sf_getint ("tdel", &tdel)) tdel = 0;
+    /* Optional delay time before connecting (seconds) */
    
     /* Slowness components module [(an)isotropic] */
     esc_slow = sf_esc_slowness3_init (vspline, verb);
@@ -202,6 +222,7 @@ int main (int argc, char* argv[]) {
 
     esc_tracers = (sf_esc_tracer3*)sf_alloc (nc, sizeof(sf_esc_tracer3));
     esc_scgrids = (sf_esc_scgrid3*)sf_alloc (nc, sizeof(sf_esc_scgrid3));
+    sleep (tdel);
     for (ic = 0; ic < nc; ic++) {
         esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
@@ -216,8 +237,8 @@ int main (int argc, char* argv[]) {
         for (ix = 0; ix < nx; ix++) {
             x = ox + ix*dx;
             if (verb)
-                sf_warning ("Projecting from lateral location %d of %d at y=%g, x=%g;",
-                            iy*nx + ix + 1, ny*nx, y, x);
+                sf_warning ("%s Projecting from lateral location %d of %d at y=%g, x=%g;",
+                            ext, iy*nx + ix + 1, ny*nx, y, x);
             /* Loop over chunks */
             for (ic = 0; ic < (nz/(mp*nc) + ((nz % (nc*mp)) != 0)); ic++) {
                 fz = ic*nc*mp;
@@ -260,8 +281,8 @@ int main (int argc, char* argv[]) {
     } /* Loop over y */
     if (verb) {
         sf_warning (".");
-        sf_warning ("Total kernel time: %g s, per depth point: %g s",
-                    sf_timer_get_total_time (timer)/1000.0,
+        sf_warning ("%s Total kernel time: %g s, per depth point: %g s",
+                    ext, sf_timer_get_total_time (timer)/1000.0,
                     (sf_timer_get_total_time (timer)/(float)((size_t)nx*(size_t)ny*(size_t)nz))/1000.0);
     }
     sf_timer_close (timer);
@@ -281,6 +302,7 @@ int main (int argc, char* argv[]) {
     free (e[0][0]);
     free (e[0]);
     free (e);
+    free (ext);
 
     if (scdaemon)
         sf_fileclose (scdaemon);

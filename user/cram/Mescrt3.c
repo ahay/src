@@ -119,13 +119,28 @@ void sf_escrt3_traj (float z, float x, float y, float b,
     }
 }
 
+static char* sf_escrt3_warnext (sf_file input) {
+    int icpu = 0, ncpu = 1, maxlen;
+    char *host = sf_gethost ();
+    char *ext = NULL;
+
+    if (input) {
+        if (!sf_histint (input, "icpu", &icpu)) icpu = 0;
+        if (!sf_histint (input, "ncpu", &ncpu)) ncpu = 1;
+    }
+    maxlen = strlen (host) + 30;
+    ext = (char*)malloc (maxlen*sizeof(char));
+    snprintf (ext, maxlen, "[%s:%d/%d]", host, icpu + 1, ncpu);
+    return ext;
+}
+
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz, itr = 0;
     float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, md;
     float ****e;
     sf_file spdom, vspline = NULL, out, traj = NULL;
     sf_escrt3_traj_cbud *tdata = NULL; 
-
+    char *ext = NULL;
     bool verb, parab;
     sf_esc_slowness3 esc_slow;
     sf_esc_tracer3 *esc_tracers;
@@ -156,6 +171,7 @@ int main (int argc, char* argv[]) {
         if (!sf_histfloat (spdom, "d3", &dy)) sf_error ("No d3= in input");
         if (!sf_histfloat (spdom, "o3", &oy)) sf_error ("No o3= in input");
     }
+    ext = sf_escrt3_warnext (spdom);
     if (!sf_getint ("nz", &nz) && !spdom) sf_error ("Need nz=");
     /* Number of samples in z axis */
     if (!sf_getfloat ("oz", &oz) && !spdom) sf_error ("Need oz=");
@@ -191,8 +207,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for ray tracing */
     omp_set_num_threads (nc);
-    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
-                nc, omp_get_max_threads ());
+    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
+                ext, nc, omp_get_max_threads ());
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
@@ -345,8 +361,8 @@ int main (int argc, char* argv[]) {
         for (ix = 0; ix < nx; ix++) {
             x = ox + ix*dx;
             if (verb)
-                sf_warning ("Shooting from lateral location %d of %d at y=%g, x=%g;",
-                            iy*nx + ix + 1, ny*nx, y, x);
+                sf_warning ("%s Shooting from lateral location %d of %d at y=%g, x=%g;",
+                            ext, iy*nx + ix + 1, ny*nx, y, x);
             /* Loop over chunks */
             for (ic = 0; ic < (nz/nc + ((nz % nc) != 0)); ic++) {
                 fz = ic*nc;
@@ -399,8 +415,8 @@ int main (int argc, char* argv[]) {
     } /* Loop over y */
     if (verb) {
         sf_warning (".");
-        sf_warning ("Total kernel time: %g s, per depth point: %g s",
-                    sf_timer_get_total_time (timer)/1000.0,
+        sf_warning ("%s Total kernel time: %g s, per depth point: %g s",
+                    ext, sf_timer_get_total_time (timer)/1000.0,
                     (sf_timer_get_total_time (timer)/(float)((size_t)nx*(size_t)ny*(size_t)nz))/1000.0);
     }
     sf_timer_close (timer);
@@ -424,6 +440,7 @@ int main (int argc, char* argv[]) {
     free (e[0][0]);
     free (e[0]);
     free (e);
+    free (ext);
 
     sf_fileclose (vspline);
     if (traj)

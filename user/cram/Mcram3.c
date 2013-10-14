@@ -27,6 +27,19 @@
 #include "cram_point3.h"
 #include "esc_point3.h"
 
+static char* sf_cram3_warnext (sf_file input) {
+    int icpu, ncpu, maxlen;
+    char *host = sf_gethost ();
+    char *ext = NULL;
+
+    if (!sf_histint (input, "icpu", &icpu)) icpu = 0;
+    if (!sf_histint (input, "ncpu", &ncpu)) ncpu = 1;
+    maxlen = strlen (host) + 30;
+    ext = (char*)malloc (maxlen*sizeof(char));
+    snprintf (ext, maxlen, "[%s:%d/%d]", host, icpu + 1, ncpu);
+    return ext;
+}
+
 int main (int argc, char* argv[]) {
     size_t i, j, is, ih, nh;
     float sx, sy, gx, gy;
@@ -41,7 +54,7 @@ int main (int argc, char* argv[]) {
     sf_file esct, data = NULL, survey = NULL, vz = NULL, ddaemon = NULL;
     sf_file imag = NULL, hits = NULL, oimag = NULL, dimag = NULL,
             osmap = NULL, dsmap = NULL, oimap = NULL, dimap = NULL;
-
+    char *ext = NULL;
     bool amp, mute, outaz, extrap, inorm;
     sf_cram_data2 cram_data;
     sf_cram_survey3 cram_survey;
@@ -80,6 +93,8 @@ int main (int argc, char* argv[]) {
     if (!sf_histfloat (esct, "Ymax", &ybmax)) sf_error ("No Ymax= in input");
     if (!sf_histfloat (esct, "Zmin", &zbmin)) sf_error ("No Zmin= in input");
     if (!sf_histfloat (esct, "Zmax", &zbmax)) sf_error ("No Zmax= in input");
+
+    ext = sf_cram3_warnext (esct);
 
     /* Surface depth */
     zd = zbmin + 0.25*dz;
@@ -168,8 +183,8 @@ int main (int argc, char* argv[]) {
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for computations */
     omp_set_num_threads (nc);
-    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
-                nc, omp_get_max_threads ());
+    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
+                ext, nc, omp_get_max_threads ());
 #endif
 
     /* Data object */
@@ -248,13 +263,13 @@ int main (int argc, char* argv[]) {
     }
 
     if (np > 1)
-        sf_warning ("Buffering escape tables for %d points", np);
+        sf_warning ("%s Buffering escape tables for %d points", ext, np);
     j = 0;
     for (iy = 0; iy < ny; iy++) { /* Loop over image y */
         y = y0 + iy*dy;
         for (ix = 0; ix < nx; ix++) { /* Loop over image x */
             x = x0 + ix*dx;
-            sf_warning ("Lateral %d of %d (x=%g, y=%g)", iy*nx + ix + 1, nx*ny, x, y);
+            sf_warning ("%s Lateral %d of %d (x=%g, y=%g)", ext, iy*nx + ix + 1, nx*ny, x, y);
             for (iz = 0; iz < nz; iz++) { /* Loop over image z */
                 z = z0 + iz*dz;
                 /* Escape variables for this (z, x, y) location */
@@ -276,7 +291,7 @@ int main (int argc, char* argv[]) {
                 if (np == j || (iy == (ny - 1) && ix == (nx - 1) && iz == (nz - 1))) {
                     /* Buffer is full or last set of escape tables is here - access data now */
                     if (np != 1)
-                        sf_warning ("Migrating data, z=%g, x=%g, y=%g", z, x, y);
+                        sf_warning ("%s Migrating data, z=%g, x=%g, y=%g", ext, z, x, y);
                     /* Loop over known sources */
                     is = sf_cram_survey3_get_first_source (cram_survey, &sx, &sy, &nh,
                                                            &gxmin, &gxmax, &gymin, &gymax);
@@ -355,6 +370,7 @@ int main (int argc, char* argv[]) {
         sf_fileclose (dimap);
 
     free (s);
+    free (ext);
 
     free (esc[0][0]);
     free (esc[0]);

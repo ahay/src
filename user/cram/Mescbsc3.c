@@ -28,6 +28,21 @@
 #include "esc_point3.h"
 #include "esc_tracer3.h"
 
+static char* sf_escbsc3_warnext (sf_file input) {
+    int icpu = 0, ncpu = 1, maxlen;
+    char *host = sf_gethost ();
+    char *ext = NULL;
+
+    if (input) {
+        if (!sf_histint (input, "icpu", &icpu)) icpu = 0;
+        if (!sf_histint (input, "ncpu", &ncpu)) ncpu = 1;
+    }
+    maxlen = strlen (host) + 30;
+    ext = (char*)malloc (maxlen*sizeof(char));
+    snprintf (ext, maxlen, "[%s:%d/%d]", host, icpu + 1, ncpu);
+    return ext;
+}
+
 int main (int argc, char* argv[]) {
     size_t ncoef = 0;
     int nz, nx, ny, nb, na, nab, iz, ix, iy, ib, ia;
@@ -39,7 +54,7 @@ int main (int argc, char* argv[]) {
     BCtype_s zBC, xBC, yBC;
     multi_UBspline_3d_s *zxyspline;
     sf_file adom, vspline = NULL, out;
-
+    char *ext = NULL;
     bool verb, parab;
     sf_esc_slowness3 esc_slow;
     sf_esc_tracer3 *esc_tracers;
@@ -102,12 +117,14 @@ int main (int argc, char* argv[]) {
     ob = 0.5*db;
     /* Beginning of inclination dimension */
 
+    ext = sf_escbsc3_warnext (adom);
+
 #ifdef _OPENMP
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for computations */
     omp_set_num_threads (nc);
-    sf_warning ("Using %d threads, omp_get_max_threads()=%d",
-                nc, omp_get_max_threads ());
+    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
+                ext, nc, omp_get_max_threads ());
 #endif
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
@@ -149,21 +166,21 @@ int main (int argc, char* argv[]) {
     sf_putfloat (out, "Ob", ob);
 
     if (verb) {
-        sf_warning ("Spatial domain dimensions: nz=%d, z=[%g, %g]", nz,
-                    oz, oz + (nz - 1)*dz);
-        sf_warning ("Spatial domain dimensions: nx=%d, x=[%g, %g]", nx,
-                    ox, ox + (nx - 1)*dx);
-        sf_warning ("Spatial domain dimensions: ny=%d, y=[%g, %g]", ny,
-                    oy, oy + (ny - 1)*dy);
+        sf_warning ("%s Spatial domain dimensions: nz=%d, z=[%g, %g]", nz,
+                    ext, oz, oz + (nz - 1)*dz);
+        sf_warning ("%s Spatial domain dimensions: nx=%d, x=[%g, %g]", nx,
+                    ext, ox, ox + (nx - 1)*dx);
+        sf_warning ("%s Spatial domain dimensions: ny=%d, y=[%g, %g]", ny,
+                    ext, oy, oy + (ny - 1)*dy);
         ia = ((int)(oab + 0.5)) / nb;
         ib = ((int)(oab + 0.5)) % nb;
-        sf_warning ("Angular domain starts at: a(%d)=%g, b(%d)=%g",
-                    ia, oa + ia*da, ib, ob + ib*db);
+        sf_warning ("%s Angular domain starts at: a(%d)=%g, b(%d)=%g",
+                    ext, ia, oa + ia*da, ib, ob + ib*db);
         ia = ((int)(oab + nab - 0.5)) / nb;
         ib = ((int)(oab + nab - 0.5)) % nb;
-        sf_warning ("Angular domain ends at: a(%d)=%g, b(%d)=%g (%d angles total)",
-                    ia, oa + ia*da, ib, ob + ib*db, nab);
-        sf_warning ("Angular domain sampling: da=%g, db=%g", da, db);
+        sf_warning ("%s Angular domain ends at: a(%d)=%g, b(%d)=%g (%d angles total)",
+                    ext, ia, oa + ia*da, ib, ob + ib*db, nab);
+        sf_warning ("%s Angular domain sampling: da=%g, db=%g", ext, da, db);
     }
 
     da *= SF_PI/180.0;
@@ -285,10 +302,10 @@ int main (int argc, char* argv[]) {
     } /* a*b */
     if (verb) {
         sf_warning (".");
-        sf_warning ("%lu blocks computed, %g Mb of spline coefficients produced",
-                    (size_t)nab, ncoef*1e-6);
-        sf_warning ("Total kernel time: %g s, per angle plane: %g s",
-                    sf_timer_get_total_time (timer)/1000.0,
+        sf_warning ("%s %lu blocks computed, %g Mb of spline coefficients produced",
+                    ext, (size_t)nab, ncoef*1e-6);
+        sf_warning ("%s Total kernel time: %g s, per angle plane: %g s",
+                    ext, sf_timer_get_total_time (timer)/1000.0,
                     (sf_timer_get_total_time (timer)/(float)nab)/1000.0);
     }
     sf_timer_close (timer);
@@ -313,6 +330,7 @@ int main (int argc, char* argv[]) {
     free (esc_points);
     free (esc_tracers);
     sf_esc_slowness3_close (esc_slow);
+    free (ext);
 
     sf_fileclose (vspline);
 
