@@ -366,7 +366,7 @@ class Project(Environment):
                     # avoid creation of a chunk file (provided that RSF_WSPLIT is set)
                     par_sfiles[j] = sfiles[j]
                     cflow = 'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d | ' % \
-                            (split[0],chunk,split[0],skip,i,jobs)
+                            (split[0],chunk,split[0],skip,i/jobmult,jobs/jobmult)
                     cflow = cflow + flow
                 else:
                     cflow = flow
@@ -380,7 +380,7 @@ class Project(Environment):
 
                     self.Flow(source,sfiles[j],
                               'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
-                              (split[0],chunk,split[0],skip,i,jobs),noderotate=nrotate)
+                              (split[0],chunk,split[0],skip,i/jobmult,jobs/jobmult),noderotate=nrotate)
 
             par_tfiles = []
             for j in range(len(tfiles)):
