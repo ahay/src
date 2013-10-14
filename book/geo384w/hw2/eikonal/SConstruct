@@ -60,7 +60,7 @@ Plot('vel',
 # Analytical traveltime
 ########################
 
-# !!! CHANGE type=s to case=v BELOW !!!
+# !!! CHANGE case=s to case=v BELOW !!!
 
 Flow('time',['vel',exe],
      '''
