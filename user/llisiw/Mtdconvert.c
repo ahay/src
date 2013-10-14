@@ -26,9 +26,9 @@ int main(int argc, char* argv[])
 {
     bool velocity, verb, shape;
     int dim, i, j, n[3], rect[3], it, nt, order, nt0, nx0;
-    int iter, niter, cgiter, *f0, *m0=NULL;
+    int iter, niter, iline, nline, cgiter, *f0, *m0=NULL;
     float d[3], o[3], dt0, dx0, ot0, ox0, eps, tol, *p=NULL, *p0=NULL, thres;
-    float *vd, *vdt, *vdx, *s, *t0, *x0, *ds, *rhs, *rhs0, *rhs1=NULL, error0, error;
+    float *vd, *vdt, *vdx, *s, *t0, *x0, *ds, *rhs, *rhs0, *rhs1=NULL, error0, error1, error, scale;
     char key[6];
     sf_file in, out, dix, t_0=NULL, x_0=NULL, f_0=NULL, grad=NULL, cost=NULL, mini=NULL, prec=NULL;
 
@@ -122,6 +122,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.1;
     /* regularization parameter */
+
+    if (!sf_getint("nline",&nline)) nline=0;
+    /* maximum number of line search (default turned-off) */
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -243,10 +246,10 @@ int main(int argc, char* argv[])
     }
 
     if (p0 == NULL) {
-	error0 = cblas_snrm2(nt,rhs,1);
+	error0 = error1 = cblas_snrm2(nt,rhs,1);
     } else {
 	for (it=0; it < nt; it++) rhs1[it] = p0[it]*rhs[it];
-	error0 = cblas_snrm2(nt,rhs1,1);
+	error0 = error1 = cblas_snrm2(nt,rhs1,1);
     }
 
     /* write optional outputs */    
@@ -255,7 +258,7 @@ int main(int argc, char* argv[])
     if (NULL!=f_0)  sf_intwrite(f0,nt,f_0);
     if (NULL!=cost) sf_floatwrite(rhs,nt,cost);
 
-    sf_warning("Start conversion:");
+    sf_warning("Start conversion, cost %g",1.);
 
     /* nonlinear loop */
     for (iter=0; iter < niter; iter++) {
@@ -304,7 +307,48 @@ int main(int argc, char* argv[])
 
 	error = cblas_snrm2(nt,rhs,1);
 
-	/* write optional outputs */    
+	/* line search */
+	if (nline > 0 && error >= error1) {
+
+	    scale = 0.5;
+	    for (iline=0; iline < nline; iline++) {
+
+		for (it=0; it < nt; it++) {
+		    s[it] = s[it]+(scale*ds[it])+0.25*(scale*ds[it])*(scale*ds[it])/s[it];
+		}
+		
+		fastmarch(t0,x0,f0,s);
+		t2d_caustic(x0,f0,n,d,thres);
+
+		t2d_set(t0,x0,f0,s,vd,vdt,vdx,m0,p0);
+		t2d_cost(rhs);
+
+		for (it=0; it < nt; it++) {
+		    if (f0[it] >= 0 || m0[it] >= 0)
+			rhs[it] = 0.;
+		    else
+			rhs[it] -= rhs0[it];
+		}
+		
+		if (p0 == NULL) {
+		    error = cblas_snrm2(nt,rhs,1);
+		} else {
+		    for (it=0; it < nt; it++) rhs1[it] = p0[it]*rhs[it];
+		    error = cblas_snrm2(nt,rhs1,1);
+		}
+		
+		error = cblas_snrm2(nt,rhs,1);
+		if (error < error1) {
+		    sf_warning("Exist line search %d of %d",iline+1,nline);
+		} else {
+		    scale *= 0.5;
+		}
+	    }
+	}
+
+	error1 = error;
+
+	/* write optional outputs */
 	if (NULL!=t_0)  sf_floatwrite(t0,nt,t_0);
 	if (NULL!=x_0)  sf_floatwrite(x0,nt,x_0);
 	if (NULL!=f_0)  sf_intwrite(f0,nt,f_0);
