@@ -192,6 +192,7 @@ def waveplotE2d(wav,custom,par):
           waveplot(custom,par))
 
      pplot.p1x2(wav,wav+'_V',wav+'_H',0.5,0.5,-11.5)
+     Result(wav,wav,'Overlay')
 
 # ------------------------------------------------------------
 def cgraph2d(custom,par):

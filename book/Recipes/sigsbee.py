@@ -5,12 +5,12 @@ import fdmod
 # ------------------------------------------------------------
 # model parameters
 def param():
-    par = {
-        'nx':3201,  'ox':10.000,'dx':0.025,  'lx':'x', 'ux':'km',
-        'ny':1,     'oy':0.000, 'dy':0.025,  'ly':'y', 'uy':'km',
-        'nz':1201,  'oz':0,     'dz':0.025,  'lz':'z', 'uz':'km',
-        'nt':1500,  'ot':0,     'dt':0.008,  'lt':'t', 'ut':'s'
-        }
+    par = dict(
+        nx=3201,  ox=10.000, dx=0.025,  lx='x', ux='km',
+        ny=1,     oy=0.000,  dy=0.025,  ly='y', uy='km',
+        nz=1201,  oz=0,      dz=:0.025, lz='z', uz='km',
+        nt=1500,  ot=0,      dt=0.008,  lt='t', ut='s'
+        )
     
     par['ft2km']=0.3048
     
@@ -119,7 +119,7 @@ def getmigvel(velo,par):
 # ------------------------------------------------------------
 def getstrvel(velo,par):
 
-    strvelfile = 'data/sigsbee/sigsbee2a_stratigraphy.sgy'
+    strvelfile = 'DATA/sigsbee/sigsbee2a_stratigraphy.sgy'
     #Fetch(velo,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
@@ -148,7 +148,7 @@ def getstrvel(velo,par):
 # ------------------------------------------------------------
 def getreflect(ref,par):
 
-    reflectfile = 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy'
+    reflectfile = 'DATA/sigsbee/sigsbee2a_reflection_coefficients.sgy'
     #Fetch(velo,'sigsbee')
 
     Flow([ref+'-raw',ref+'-t','./'+ref+'-h','./'+ref+'-b'],
@@ -208,7 +208,7 @@ def extend(vpad,velo,par):
 # ------------------------------------------------------------
 def getrefl(refl,par):
 
-    reffile = 'data/sigsbee/sigsbee2a_reflection_coefficients.sgy'
+    reffile = 'DATA/sigsbee/sigsbee2a_reflection_coefficients.sgy'
 
     Flow([refl+'-raw',refl+'-t','./'+refl+'-h','./'+refl+'-b'],
          reffile,

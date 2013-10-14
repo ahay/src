@@ -251,9 +251,9 @@ def tti2d(mm,vp,vs,ro,epsilon,delta,nu,par):
          c11=${SOURCES[0]}
          c13=${SOURCES[1]}
          c33=${SOURCES[2]}
-        c55=${SOURCES[3]}
-        nu=${SOURCES[4]}
-        ''')
+         c55=${SOURCES[3]}
+         nu=${SOURCES[4]}
+         ''')
     
     Flow(mm,[mm+'11',mm+'33',mm+'55',mm+'13'],
          'cat axis=3 space=n ${SOURCES[1:4]}')
@@ -467,7 +467,7 @@ def cplot2d(cc,i1,i2,par):
 
     Flow(cc+'-all',[cc+'-row1',cc+'-row2',cc+'-row3'],'cat axis=1 space=n ${SOURCES[1:3]}')
 
-    Result(cc,cc+'-all','grey pclip=100 title="" wantaxis=n screenratio=1 allpos=y color=j')
+    Result(cc,cc+'-all','grey pclip=100 title="" wantaxis=n screenratio=1 allpos=y')
 
 # ------------------------------------------------------------
 def cplot3d(cc,i1,i2,i3,par):
