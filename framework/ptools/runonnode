@@ -30,10 +30,10 @@ for node in range(numnodes):
         break
 
 if(idle_node==-1):
-    sys.stderr.write("looking for an idle node in hosts.txt, but all\n")
-    sys.stderr.write("but all are running. pscons should not do that.\n")
-    sys.stderr.write("is num threads in pscons consistant with RSF_CLUSTER?\n")
-    sys.stderr.write("numnodes=%d\n"%numnodes);
+    sys.stderr.write("runonnode: looking for an idle node in hosts.txt, but all\n")
+    sys.stderr.write("runonnode: but all are running. pscons should not do that.\n")
+    sys.stderr.write("runonnode: is num threads in pscons consistant with RSF_CLUSTER?\n")
+    sys.stderr.write("runonnode: numnodes=%d\n"%numnodes);
     sys.exit(1)
     
 host=string.split(hosts_txt[2+idle_node])[0]
@@ -52,7 +52,7 @@ command=string.join(sys.argv[1:])
 
 task="ssh "+host+' \"'+command+' \"'
 
-print "start command on %s"%host
+print "runonnode: start command on %s"%host
 #print "task=",task
 
 os.system("date")
@@ -73,5 +73,7 @@ fcntl.lockf(hosts_fd,fcntl.LOCK_UN)
 
 hosts_fd.close()
 
+if retcode != 0:
+    print "runonnode: exit code %d on %s" % (retcode,host)
 sys.exit(retcode)
 
