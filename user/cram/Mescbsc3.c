@@ -166,12 +166,12 @@ int main (int argc, char* argv[]) {
     sf_putfloat (out, "Ob", ob);
 
     if (verb) {
-        sf_warning ("%s Spatial domain dimensions: nz=%d, z=[%g, %g]", nz,
-                    ext, oz, oz + (nz - 1)*dz);
-        sf_warning ("%s Spatial domain dimensions: nx=%d, x=[%g, %g]", nx,
-                    ext, ox, ox + (nx - 1)*dx);
-        sf_warning ("%s Spatial domain dimensions: ny=%d, y=[%g, %g]", ny,
-                    ext, oy, oy + (ny - 1)*dy);
+        sf_warning ("%s Spatial domain dimensions: nz=%d, z=[%g, %g]",
+                    ext, nz, oz, oz + (nz - 1)*dz);
+        sf_warning ("%s Spatial domain dimensions: nx=%d, x=[%g, %g]",
+                    ext, nx, ox, ox + (nx - 1)*dx);
+        sf_warning ("%s Spatial domain dimensions: ny=%d, y=[%g, %g]",
+                    ext, ny, oy, oy + (ny - 1)*dy);
         ia = ((int)(oab + 0.5)) / nb;
         ib = ((int)(oab + 0.5)) % nb;
         sf_warning ("%s Angular domain starts at: a(%d)=%g, b(%d)=%g",
