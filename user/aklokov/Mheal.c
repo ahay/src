@@ -24,8 +24,8 @@ An empty trace should be horizontal => transpose input before and after
 
 int main (int argc, char* argv[]) {
 
-    int n1, n2;
-    int i1, i2;
+    int n1, n2, n3;
+    int i1, i2, i3;
 
 // Initialize RSF 
     sf_init (argc,argv);
@@ -38,31 +38,35 @@ int main (int argc, char* argv[]) {
     // data parameters
     if ( !sf_histint   (inFile, "n1", &n1) )  sf_error ("Need n1= in input");
     if ( !sf_histint   (inFile, "n2", &n2) )  sf_error ("Need n2= in input");
+    if ( !sf_histint   (inFile, "n3", &n3) )  sf_error ("Need n3= in input");
 
     float* trace = sf_floatalloc (n1);	
-
-	// the 1st trace have just one neighbour
-    sf_floatread  (trace, n1, inFile);		
-    sf_floatwrite (trace, n1, outFile);
 
 	const int n2r = n2 - 1;
 	const int n1r = n1 - 1;
 	const float goodSample = 1e-6; // feel free to change
-    for (i2 = 1; i2 < n2r; ++i2) {
-	    sf_floatread (trace, n1, inFile);		
-		for (i1 = 1; i1 < n1r; ++i1) {
-			if ( fabs(trace[i1]) > goodSample )
-				continue; // good sample
-			if ( fabs(trace[i1-1]) < goodSample || fabs(trace[i1+1]) < goodSample ) 
-				continue; // too big gap
-			trace[i1] = 0.5 * (trace[i1-1] + trace[i1+1]);
+
+    for (i3 = 0; i3 < n3; ++i3) {
+		// the 1st trace have just one neighbour
+	    sf_floatread  (trace, n1, inFile);		
+	    sf_floatwrite (trace, n1, outFile);
+
+	    for (i2 = 1; i2 < n2r; ++i2) {
+		    sf_floatread (trace, n1, inFile);		
+			for (i1 = 1; i1 < n1r; ++i1) {
+				if ( fabs(trace[i1]) > goodSample )
+					continue; // good sample
+				if ( fabs(trace[i1-1]) < goodSample || fabs(trace[i1+1]) < goodSample ) 
+					continue; // too big gap
+				trace[i1] = 0.5 * (trace[i1-1] + trace[i1+1]);
+			}
+		    sf_floatwrite (trace, n1, outFile);
 		}
+
+		// the last trace has just one neighbour
+	    sf_floatread  (trace, n1, inFile);		
 	    sf_floatwrite (trace, n1, outFile);
 	}
-
-	// the last trace has just one neighbour
-    sf_floatread  (trace, n1, inFile);		
-    sf_floatwrite (trace, n1, outFile);
 
     sf_fileclose (inFile);
     sf_fileclose (outFile);
