@@ -19,6 +19,8 @@ To the reproducible documents collection:
   regularized nonstationary autoregression (Fomel)
 * tccs/aperture: Selecting an optimal aperture in Kirchhoff migration
   using dip-angle images (Klokov and Fomel)
+* tccs/dsrtomo: First-break traveltime tomography with the
+  double-square-root eikonal equation (Li, Vladimirsky, and Fomel)
 
 To SCons:
 
