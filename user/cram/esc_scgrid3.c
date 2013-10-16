@@ -127,6 +127,7 @@ struct EscSCgrid3 {
     unsigned char          *memmap;
     sf_esc_point3          *esc_points;
     sf_esc_tracer3          esc_tracer;
+    char                   *ext;
     /* Thin plate spline data */
     float                 **L;
     lu_int                 *pvt, ns;
@@ -324,20 +325,21 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     struct timeval timeout; 
     int valopt, rc, bsiz; 
     socklen_t lon; 
+    char *ipaddr; 
 
     /* Create TCP socket */
     if ((is = socket (AF_INET, SOCK_STREAM, 0)) < 0) {
-        sf_warning ("socket() failed, errno=%d", errno);
+        sf_warning ("%s socket() failed, errno=%d", esc_scgrid->ext, errno);
         return -1;
     }
     /* Allow socket descriptor to be reuseable */
     if (setsockopt (is, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on)) < 0) {
-        sf_warning ("setsockopt() failed, errno=%d", errno);
+        sf_warning ("%s setsockopt() failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return -1;
     }
     if (bind (is, (struct sockaddr *)loc_addr, sizeof(*loc_addr)) < 0) {
-        sf_warning ("bind() failed, errno=%d", errno);
+        sf_warning ("%s bind() failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return -1;
     }
@@ -345,7 +347,7 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     /* Disable TCP buffering of outgoing packets */
 #ifndef TCP_CORK
     if (setsockopt (is, SOL_TCP, TCP_NODELAY, (char *)&on, sizeof(on)) < 0) {
-        sf_warning ("setsockopt()[TCP_NODELAY] failed, errno=%d", errno);
+        sf_warning ("%s setsockopt()[TCP_NODELAY] failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return 1;
     }
@@ -353,7 +355,7 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
 #ifdef SO_NOSIGPIPE
     on = 1;
     if (setsockopt (is, SOL_SOCKET, SO_NOSIGPIPE, &on, sizeof(on)) < 0) {
-        sf_warning ("setsockopt()[SO_NOSIGPIPE] failed, errno=%d", errno);
+        sf_warning ("%s setsockopt()[SO_NOSIGPIPE] failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return -1;
     }
@@ -361,19 +363,19 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     /* Set send and receive buffers */
     bsiz = sizeof(sf_esc_scgrid3_avals)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
     if (setsockopt (is, SOL_SOCKET, SO_RCVBUF, &bsiz, sizeof(int)) < 0) {
-        sf_warning ("setsockopt()[SO_RCVBUF] failed, errno=%d", errno);
+        sf_warning ("%s setsockopt()[SO_RCVBUF] failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return -1;
     }
     bsiz = sizeof(sf_esc_scgrid3_areq)*esc_scgrid->ma*esc_scgrid->mb*esc_scgrid->ns;
     if (setsockopt (is, SOL_SOCKET, SO_SNDBUF, &bsiz, sizeof(int)) < 0) {
-        sf_warning ("setsockopt()[SO_SNDBUF] failed, errno=%d", errno);
+        sf_warning ("%s setsockopt()[SO_SNDBUF] failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return -1;
     }
     /* Set socket to be non-blocking */
     if (ioctl (is, FIONBIO, (char *)&on) < 0) {
-        sf_warning ("ioctl() failed, errno=%d", errno);
+        sf_warning ("%s ioctl() failed, errno=%d", esc_scgrid->ext, errno);
         close (is);
         return -1;
     }
@@ -389,13 +391,13 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
                 FD_SET(is, &sset); 
                 rc = select (is + 1, NULL, &sset, NULL, &timeout); 
                 if (rc < 0 && errno != EINTR) { 
-                    sf_warning ("connect() failed, errno=%d", errno);
+                    sf_warning ("%s connect() failed, errno=%d", esc_scgrid->ext, errno);
                     close (is);
                     return -1;
                 } else if (rc > 0) { 
                     lon = sizeof(int); 
                     if (getsockopt (is, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) { 
-                        sf_warning ("getsockopt() failed, errno=%d", errno);
+                        sf_warning ("%s getsockopt() failed, errno=%d", esc_scgrid->ext, errno);
                         close (is);
                         return -1;
                     }
@@ -407,22 +409,25 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
                     /* Sucessful connect */
                     return is;
                 } else { 
-                    sf_warning ("Connection timeout");
+                    sf_warning ("%s Connection timeout", esc_scgrid->ext);
                     close (is);
                     return -1;
                 }
             } while (true);
         } else { 
-            sf_warning ("Connection error, errno=%d", errno);
+            sf_warning ("%s Connection error, errno=%d", esc_scgrid->ext, errno);
             close (is);
             return -1;
         }
     }
+    ipaddr = inet_ntoa (serv_addr->sin_addr);
+    sf_warning ("%s Connected to %s, socket %d", esc_scgrid->ext, ipaddr, is);
     return is;
 }
 
 sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tracer3 esc_tracer,
-                                    int morder, int inet, float frac, bool mmaped, bool verb)
+                                    int morder, int inet, float frac, bool mmaped,
+                                    char *ext, bool verb)
 /*< Initialize object >*/
 {
     size_t nc, nnc = 0;
@@ -487,6 +492,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     esc_scgrid->il = 0; /* Total number of locally processed points */
 
     esc_scgrid->morder = morder; /* Interpolation accuracy */
+    esc_scgrid->ext = ext;
 
     esc_scgrid->esc_tracer = esc_tracer;
     sf_esc_tracer3_set_mdist (esc_tracer, esc_scgrid->md);
@@ -559,7 +565,8 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         }
         /* Choose a particular coverage, if more than one is available */
         jj = ncv*(int)(frac*(float)(nad/ncv));
-        sf_warning ("Choosing deamons %d-%d for remote access to escape solutions", jj, jj + ncv - 1);
+        sf_warning ("%s Choosing daemons %d-%d for remote access to escape solutions",
+                    esc_scgrid->ext, jj, jj + ncv - 1);
         is0 = -1;
         is1 = -1;
         /* Local address for binding connections to */
@@ -569,11 +576,11 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
         if ((ip = sf_escscd3_local_ip ()))
 #endif
         {
-            sf_warning ("Binding to %s", ip);
+            sf_warning ("%s Binding to %s", esc_scgrid->ext, ip);
             loc_addr.sin_family = AF_INET; /* Internet address family */
             loc_addr.sin_addr.s_addr = inet_addr (ip); /* Client IP address */
         } else
-            sf_error ("Can not determine local IP address");
+            sf_error ("%s Can not determine local IP address", esc_scgrid->ext);
         /* Connect to the daemons in this coverage */
         for (j = 0; j < ncv; j++) {
             /* Next daemon, try to establish a connection */
@@ -597,9 +604,10 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
     }
     esc_scgrid->remote = (nc != 0);
     if (nc)
-        sf_warning ("Connected %d remote daemons for accessing escape solutions", nc);
+        sf_warning ("%s Connected %d remote daemons for accessing escape solutions",
+                    esc_scgrid->ext, nc);
     else
-        sf_warning ("Using local data for accessing escape solutions");
+        sf_warning ("%s Using local data for accessing escape solutions", esc_scgrid->ext);
 
     if (esc_scgrid->remote)
         mmaped = true; /* Always do memory mapping, if using remote access */
@@ -648,11 +656,11 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon, sf_esc_tra
 
     if (verb) {
         if (mmaped)
-            sf_warning ("%lu supercells mmaped (%g Mb of spline coefficients)",
-                       (size_t)esc_scgrid->na*(size_t)esc_scgrid->nb, nnc*1e-6);
+            sf_warning ("%s %lu supercells mmaped (%g Mb of spline coefficients)",
+                        esc_scgrid->ext, (size_t)esc_scgrid->na*(size_t)esc_scgrid->nb, nnc*1e-6);
         else
-            sf_warning ("%lu supercells read, %g Mb of spline coefficients accumulated",
-                        (size_t)esc_scgrid->na*(size_t)esc_scgrid->nb, nnc*1e-6);
+            sf_warning ("%s %lu supercells read, %g Mb of spline coefficients accumulated",
+                        esc_scgrid->ext, (size_t)esc_scgrid->na*(size_t)esc_scgrid->nb, nnc*1e-6);
     }
 
     esc_scgrid->invals1 = sf_alloc ((size_t)esc_scgrid->ma*(size_t)esc_scgrid->mb,
@@ -691,8 +699,8 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
 {
     int iab, nab = esc_scgrid->na*esc_scgrid->nb, ic, no = 1;
     if (verb)
-        sf_warning ("%g interpolation steps per point performed, %g%% processed locally",
-                    (float)(esc_scgrid->is*esc_scgrid->ns)/(float)esc_scgrid->ir,
+        sf_warning ("%s %g interpolation steps per point performed, %g%% processed locally",
+                    esc_scgrid->ext, (float)(esc_scgrid->is*esc_scgrid->ns)/(float)esc_scgrid->ir,
                     100.0*(float)esc_scgrid->il/(float)esc_scgrid->ir);
     /* Close all existing connections */
     if (esc_scgrid->sockets) {
@@ -798,8 +806,8 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
                        sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, MSG_NOSIGNAL);
             if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                sf_warning ("Can not send data for iab=[%d - %d], errno=%d, disconnecting",
-                            areqs[ii].iab, areqs[ie].iab - 1, errno);
+                sf_warning ("%s Can not send data for iab=[%d - %d], errno=%d, disconnecting",
+                            esc_scgrid->ext, areqs[ii].iab, areqs[ie].iab - 1, errno);
                 sf_esc_scgrid3_disconnect (esc_scgrid, is);
                 len = 0;
                 break;
@@ -883,9 +891,11 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                 if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                     /* Connection terminated */
                     if (0 == rc)
-                        sf_warning ("The server has closed connection for socket %d", is);
+                        sf_warning ("%s The server has closed connection for socket %d",
+                                    esc_scgrid->ext, is);
                     else
-                        sf_warning ("Can not receive data for socket %d, errno=%d, disconnecting", is, errno);
+                        sf_warning ("%s Can not receive data for socket %d, errno=%d, disconnecting", 
+                                    esc_scgrid->ext, is, errno);
                     sf_esc_scgrid3_disconnect (esc_scgrid, is);
                     FD_CLR(is, sset);
                     len = 0;
@@ -898,7 +908,7 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             }
             if (len > 0) {
                 if (len % sizeof(sf_esc_scgrid3_avals)) {
-                    sf_warning ("Partial receive from socket %d\n", i);
+                    sf_warning ("%s Partial receive from socket %d\n", esc_scgrid->ext, i);
                     len = 0;
                 } else {
                     len /= sizeof(sf_esc_scgrid3_avals);
@@ -909,11 +919,13 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                                 ns--;
                                 ii++;
                             } else {
-                                sf_warning ("Server replied that the angle is out of bounds");
+                                sf_warning ("%s Server replied that the angle is out of bounds",
+                                            esc_scgrid->ext);
                                 break;
                             }
                         } else {
-                            sf_warning ("Received garbage from socket %d", is);
+                            sf_warning ("%s Received garbage from socket %d",
+                                        esc_scgrid->ext, is);
                             break;
                         }
                     }
@@ -921,8 +933,14 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             }
         } /* Loop over ready sockets */
     } /* End of polling */
-    if (ns)
-        sf_warning ("Timeout, %d angles are left", ns);
+    if (ns) {
+        sf_warning ("%s Timeout, %d angles are left", esc_scgrid->ext, ns);
+        for (is = 0; is <= mis && desc_ready > 0; is++) {
+            /* Check to see if this descriptor is ready */
+            if (FD_ISSET (is, &wset))
+                sf_warning ("%s socket %s caused timeout", esc_scgrid->ext, is);
+        }
+    }
 
     /* Extract values locally */
     for (i = 0; i < n; i++) {
