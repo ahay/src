@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
     int nx,ny, nt, nsx,nsy, nhx,nhy, nc, nxyc, isx,isy, ihx,ihy, ix,iy, ic;
     int ns,nh, two, is, ih;
-    bool absoff;
+    bool absoff, verb;
     float ***rfl, ***rgd, ***crv, ***dipx, ***dipy, *trace;
     float slow, dx, x0, dy, y0, dt, t0, aper, x, y, dx1, dy1, dx2, dy2;
     float dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
@@ -53,6 +53,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(curv,"o2",&y0)) sf_error("No o2= in input");
     if (!sf_histint  (curv,"n3",&nc)) nc=1; /* number of reflectors */
     nxyc = nx*ny*nc;
+
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity */
     
     /*** Initialize trace ***/
     
@@ -277,7 +280,7 @@ int main(int argc, char* argv[])
     /*** Main loop ***/
     /* loop over sources */
     for (is=0; is < ns; is++) { 
-	if (0==is%(ns/10+1)) sf_warning("source %d of %d",is+1,ns);
+	if (verb && 0==is%(ns/10+1)) sf_warning("source %d of %d",is+1,ns);
 	
 	if (NULL == head) { /* regular */
 	    isy = is/nsx;
@@ -292,7 +295,7 @@ int main(int argc, char* argv[])
 
 	/* loop over offsets */
 	for (ih=0; ih < nh; ih++) { 
-            if (0==is%(ns/10+1)) sf_warning("source %d of %d, receiver %d of %d;",is+1,ns,ih+1,nh);
+            if (verb && 0==is%(ns/10+1)) sf_warning("source %d of %d, receiver %d of %d;",is+1,ns,ih+1,nh);
 	    if (NULL == head) { /* regular */		
 		ihy = ih/nhx;
 		ihx = ih - ihy*nhx;
@@ -361,7 +364,7 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(trace,nt,modl);
 	} /* ih */
 
-	sf_warning(".");
+	if (verb) sf_warning(".");
     } /* is */
 
 
