@@ -679,6 +679,7 @@ int main (int argc, char* argv[]) {
             fflush (logf);
         } else {
             fprintf (logf, "Reached maximum allowed number of threads, rejecting connection from %s\n", ip);
+            close (new_sd);
         }
         pthread_mutex_unlock (&smutex);
     } while (true);
