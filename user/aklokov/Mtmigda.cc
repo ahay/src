@@ -288,6 +288,8 @@ int main (int argc, char* argv[]) {
     /* if y, apply anti-aliasing */
     if (!sf_getbool ("isDipAz",    &rp.isDipAz))    rp.isDipAz = true;
     /* if y, apply dip/azimuth mode; if n, apply inline/crossline angle mode */
+    if (!sf_getbool ("useRay",    &rp.useRay))    rp.useRay = true;
+    /* if y, use a ray for sample extraction if a beam is not working */
     if (!sf_getint  ("hmign",   &rp.hMigNum)) rp.hMigNum = dp.hNum;	
     /* number of migrated offsets */
     if (!sf_getint  ("sembWindow",   &rp.sembWindow)) rp.sembWindow = 11;	
@@ -420,7 +422,7 @@ int main (int argc, char* argv[]) {
 		migrator->initCurveDefiner (false);
     }
     
-	migrator->setImagingParams (&dp, offsetSection, rp.isAA, axis2label, &vp, &ip, &gp);
+	migrator->setImagingParams (&dp, offsetSection, rp.isAA, rp.useRay, axis2label, &vp, &ip, &gp);
     migrator->setDataLimits ();
 
 	migrator->getStackTaper (rp.edgeTaper, rp.isDipAz);

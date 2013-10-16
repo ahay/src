@@ -61,6 +61,8 @@ struct RunParamsTmigda {
 
 	bool              isAA;   // 0 - no anti-aliasing filter
 							  // 1 - anti-aliasing filter after Lumley-Claerbout-Bevc (by default)
+
+	bool              useRay; // use ray if beam does not work		
 	
 	bool              isCMP;  // 0 - if traces have coordinates of a receiver 
 							  // 1 - if traces have coordinates of CMP

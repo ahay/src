@@ -52,8 +52,8 @@ void TimeMigrator2D::processGather (Point2D& curGatherCoords, float curOffset, c
 	    	
 	    float sample (0.f);
 	    int badRes = this->getSampleByBeam (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, sample);
-	    if (badRes)
-		sample = this->getSampleByRay  (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
+	    if (badRes && useRay_)
+			sample = this->getSampleByRay  (dummy, xCIG, curTime, curDip, curAz, migVel, isAzDip, dummy, dummy);
 		sample *= w;
 
 
