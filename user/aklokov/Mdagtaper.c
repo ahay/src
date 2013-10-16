@@ -1,5 +1,5 @@
 /* Edge tapering for dip-angle gathers
-*/
+ */
 /*
   Copyright (C) 2013 University of Texas at Austin
   
@@ -22,16 +22,21 @@
 
 int main (int argc, char* argv[]) {
 
-	int zNum, dipNum, sdipNum, xNum, yNum;
-	float dipStep, dipStart, sdipStep, sdipStart;
+    int zNum, dipNum, sdipNum, xNum, yNum;
+    float dipStep, dipStart, sdipStep, sdipStart;
+    int dataSize, taperSize, idy, idx, iy, ix, it, iz;
+    float *data_, *pData, *taper_, *pTaper;
+    float length, dipMax, edgeDip, curSDip, sdip2, curDip, dip2;
+    float dip, w;
+    sf_file dataFile, outFile;
 
 // Initialize RSF 
     sf_init (argc, argv);
 
 // INPUT FILES
-    sf_file dataFile = sf_input ("in");
+    dataFile = sf_input ("in");
     /* common-offset sections */
-    sf_file outFile = sf_output ("out");
+    outFile = sf_output ("out");
     /*  */
 
     // data params
@@ -48,62 +53,61 @@ int main (int argc, char* argv[]) {
     if ( !sf_histint   (dataFile, "n4", &xNum     ) )  sf_error ("Need n4= in input");
     if ( !sf_histint   (dataFile, "n5", &yNum     ) )  sf_error ("Need n5= in input");
     
-	float length;
-	if ( !sf_getfloat ("len", &length) ) length = 5.f;
+    if ( !sf_getfloat ("len", &length) ) length = 5.f;
     /* length of the taper function (in degree) */
 
-	// build taper function
-	const int dataSize = sdipNum * dipNum * zNum;
-	float* data_  = sf_floatalloc (dataSize);
+    // build taper function
+    dataSize = sdipNum * dipNum * zNum;
+    data_  = sf_floatalloc (dataSize);
 
-	const int taperSize = sdipNum * dipNum;
-	float* taper_ = sf_floatalloc (taperSize);
-	float* pTaper = taper_;
+    taperSize = sdipNum * dipNum;
+    taper_ = sf_floatalloc (taperSize);
+    pTaper = taper_;
 
-	const float dipMax = dipStep * dipNum / 2;
-	const float edgeDip = dipMax - length;
+    dipMax = dipStep * dipNum / 2;
+    edgeDip = dipMax - length;
 
-	for (int idy = 0; idy < sdipNum; ++idy) {
-        const float curSDip = sdipStart + idy * sdipStep;
-		const float sdip2 = curSDip * curSDip;
-	    for (int idx = 0; idx < dipNum; ++idx, ++pTaper) {
-    	    const float curDip = dipStart + idx * dipStep;
-			const float dip2 = curDip * curDip;
+    for (idy = 0; idy < sdipNum; ++idy) {
+        curSDip = sdipStart + idy * sdipStep;
+	sdip2 = curSDip * curSDip;
+	for (idx = 0; idx < dipNum; ++idx, ++pTaper) {
+    	    curDip = dipStart + idx * dipStep;
+	    dip2 = curDip * curDip;
 
-			// stacking taper	
-			const float dip = sqrt (sdip2 + dip2);
-			float w = 1.f;		
-			if (dip > edgeDip) {
-				if (dip > dipMax) w = 0.f;
-				else w = 1.f - (dip - edgeDip) / length;
-			}	
-			*pTaper = w;
-		}
+	    // stacking taper	
+	    dip = sqrt (sdip2 + dip2);
+	    w = 1.f;		
+	    if (dip > edgeDip) {
+		if (dip > dipMax) w = 0.f;
+		else w = 1.f - (dip - edgeDip) / length;
+	    }	
+	    *pTaper = w;
 	}
+    }
 
-	// tapering
-	for (int iy = 0; iy < yNum; ++iy) {
-		for (int ix = 0; ix < xNum; ++ix) {
-			// read a gather
-		    sf_floatread (data_, dataSize, dataFile);
-			// apply the taper			
-			pTaper = taper_;
-			float* pData  = data_;	
-			for (int it = 0; it < taperSize; ++it, ++pTaper) {
-				const float w = *pTaper;
-				for (int iz = 0; iz < zNum; ++iz, ++pData)
-					*pData *= w;
-			}
-			// write the gather
-			sf_floatwrite (data_, dataSize, outFile);
-		}
+    // tapering
+    for (iy = 0; iy < yNum; ++iy) {
+	for (ix = 0; ix < xNum; ++ix) {
+	    // read a gather
+	    sf_floatread (data_, dataSize, dataFile);
+	    // apply the taper			
+	    pTaper = taper_;
+	    pData  = data_;	
+	    for (it = 0; it < taperSize; ++it, ++pTaper) {
+		w = *pTaper;
+		for (iz = 0; iz < zNum; ++iz, ++pData)
+		    *pData *= w;
+	    }
+	    // write the gather
+	    sf_floatwrite (data_, dataSize, outFile);
 	}
+    }
 
-	free (data_);
-	free (taper_);
+    free (data_);
+    free (taper_);
 
-	sf_fileclose (dataFile);
-	sf_fileclose (outFile);
+    sf_fileclose (dataFile);
+    sf_fileclose (outFile);
 
-	return 0;
+    return 0;
 }
