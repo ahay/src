@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfput', 'sfgrey', 'sfrays2', 'sfgraph', 'sfeikonal', 'sfwindow', 'sfdsreiko', 'sfspline', 'sfdsreiko0']
+data=[]
+size=    2058056

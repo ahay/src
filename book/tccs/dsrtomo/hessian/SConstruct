@@ -1,0 +1,161 @@
+from rsf.proj import *
+
+# constant-velocity-gradient model
+n1 = 401
+n2 = 801
+d1 = 1./(n1-1)
+d2 = 2./(n2-1)
+
+#part1 = (n1*n2-1)/2
+#part2 = n1*n2
+
+Flow('modl',None,
+     '''
+     math n1=%d n2=%d d1=%g d2=%g output="1.+3.*x1" |
+     put label1=z unit1=km label2=x unit2=km
+     label=Velocity unit=km\/s
+     ''' % (n1,n2,d1,d2))
+
+Plot('modl',
+     '''
+     grey color=j scalebar=y allpos=y screenratio=0.455
+     title=Model labelsz=5 titlesz=7 barreverse=y
+     labelsz=10.5 titlesz=12.5 labelfat=5 titlefat=5
+     nc=100 plotfat=7
+     ''')
+
+# DSR forward
+Flow('dsr fdsr','modl','dsreiko flag=${TARGETS[1]}')
+
+# DSR gradient
+Flow('dsrg','dsr fdsr modl',
+     '''
+     math output=1. | cut n1=%d f1=1 | cut n2=%d | cut n3=%d f3=1 |
+     dsrtomo what=l adj=y reco=${SOURCES[0]} flag=${SOURCES[1]} grad=${SOURCES[2]}
+     ''' % (n1-1,n2-1,n2-1))
+
+Plot('dsrg',
+     '''
+     grey color=j scalebar=y allpos=y screenratio=0.455
+     title="DSR Gradient" barreverse=y barlabel=Slowness-squared barunit="s\^2\_/km\^2\_" 
+     label1=z label2=x minval=0. maxval=0.0002 clip=0.0002
+     labelsz=10.5 titlesz=12.5 labelfat=5 titlefat=5
+     ''')
+
+# DSR hessian
+#dsr = []
+#
+#for k2 in range(n2):
+#    for k1 in range(n1):
+#
+#        dsr0 = 'dsr_'+str(k1)+'_'+str(k2)
+#
+#        dsr.append(dsr0)
+#
+#        # spike
+#        Flow(dsr0,['modl','dsr','fdsr'],
+#             '''
+#             spike k1=%d k2=%d |
+#             dsrtomo what=l adj=n reco=${SOURCES[1]} flag=${SOURCES[2]} grad=${SOURCES[0]} |
+#             dsrtomo what=l adj=y reco=${SOURCES[1]} flag=${SOURCES[2]} grad=${SOURCES[0]} |
+#             put n1=%d n2=1
+#             ''' % (k1+1,k2+1,n1*n2))
+#
+#Flow('dsrh1',dsr,'rcat axis=2 ${SOURCES[1:%d]}' % part1)
+#Flow('dsrh2',dsr,'rcat axis=2 ${SOURCES[%d:%d]} | window n2=%d f2=1' % (part1,part2,part2-part1))
+#Flow('dsrh','dsrh1 dsrh2','cat axis=2 ${SOURCES[1]}')
+#
+#Result('dsrh',
+#       '''
+#       grey color=j scalebar=y allpos=y screenratio=0.87
+#       label1= unit1= label2= unit2= barlabel=Value barunit= title="DSR Hessian"
+#       labelsz=4 titlesz=6 maxval=0.02 minval=0 clip=0.02
+#       ''')
+
+# standard forward
+Flow('stemp2',None,
+     'math n1=1 d1=%g o1=0. output=x1 | transp' % d2)
+Flow('stemp1','stemp2','math output=0.')
+Flow('shots','stemp1 stemp2',
+     'cat axis=1 ${SOURCES[1]} ${SOURCES[0]}')
+
+Flow('std','modl shots','spray axis=3 n=1 d=%g | eikonal order=1 shotfile=${SOURCES[1]}' % d2)
+
+# standard gradient
+Flow('stdg','std',
+     '''
+     math output=1. | cut n1=%d f1=1 | cut n2=%d |
+     ftoper adj=y time=${SOURCES[0]} |
+     scale dscale=0.5
+     ''' % (n1-1,n2-1))
+
+Plot('stdg','stdg',
+     '''
+     grey color=j scalebar=y allpos=y screenratio=0.455
+     title="Standard Gradient" barreverse=y barlabel=Slowness-squared barunit="s\^2\_/km\^2\_"
+     label1=z label2=x minval=0. maxval=0.0002 clip=0.0002
+     labelsz=10.5 titlesz=12.5 labelfat=5 titlefat=5
+     ''')
+# reverse which=2 opt=i | add scale=0.5,0.5 ${SOURCES[0]} |
+
+# standard hessian
+#std = []
+#
+#for k2 in range(n2):
+#    for k1 in range(n1):
+#
+#        std0 = 'std_'+str(k1)+'_'+str(k2)
+#
+#        std.append(std0)
+#
+#        # spike
+#        Flow(std0,['modl','std'],
+#             '''
+#             spike k1=%d k2=%d | spray axis=3 n=1 d=%g | spray axis=4 n=1 d=%g |
+#             ftoper adj=n time=${SOURCES[1]} |
+#             ftoper adj=y time=${SOURCES[1]} |
+#             put n1=%d n2=1
+#             ''' % (k1+1,k2+1,d2,d2,n1*n2))
+#
+#Flow('stdh1',std,'rcat axis=2 ${SOURCES[1:%d]}' % part1)
+#Flow('stdh2',std,'rcat axis=2 ${SOURCES[%d:%d]} | window n2=%d f2=1' % (part1,part2,part2-part1))
+#Flow('stdh','stdh1 stdh2','cat axis=2 ${SOURCES[1]}')
+#
+#Result('stdh',
+#       '''
+#       scale dscale=0.26 |
+#       grey color=j scalebar=y allpos=y screenratio=0.87
+#       label1= unit1= label2= unit2= barlabel=Value barunit= title="Standard Hessian"
+#       labelsz=4 titlesz=6 maxval=0.02 minval=0 clip=0.02
+#       ''')
+
+# plot
+Plot('cmodl','std',
+     '''
+     contour allpos=y scalebar=y screenratio=0.455
+     nc=100 plotfat=8 plotcol=7
+     wanttitle=n wantaxis=n
+     ''')
+Plot('cmodl0','modl cmodl','Overlay')
+
+Plot('cdsr','dsr',
+     '''
+     window n3=1 n1=1 |
+     graph labelsz=10 titlesz=12 labelfat=5 titlefat=5
+     dash=1 title="Forward Modeling" max2=1.3 min2=-0.01 screenratio=0.5
+     plotcol=3 plotfat=7
+     ''')
+Plot('cstd','std',
+     '''
+     window n4=1 n1=1 |
+     graph labelsz=10 titlesz=12 labelfat=5 titlefat=5
+     dash=0 wanttitle=n wantaxis=n max2=1.3 min2=-0.01 screenratio=0.5
+     plotcol=6 plotfat=7
+     ''')
+
+Plot('curve','cdsr cstd','Overlay')
+
+Result('modl','modl curve','OverUnderIso')
+Result('grad','cmodl0 stdg dsrg','OverUnderIso')
+
+End()
