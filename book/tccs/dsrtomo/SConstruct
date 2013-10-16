@@ -1,18 +1,4 @@
 from rsf.tex import *
-import os
 
-Paper('progress',color='model zxrefine zrefine azxrefine azrefine azxthres zxalpha azxalpha graddsr1 graddsr2 regraddsr balpha rebalpha1 rebalpha2 thgraddsr back pred1 pred2 pred3 aback1 aback2 aback3')
-Paper('journal',lclass='geophysics',options='manuscript',
-      color='modl imp exp marmsmooth causal grad stdh dsrh data marm tomo',
-      hires='causal grad marm tomo')
-Paper('revise1',lclass='geophysics',options='manuscript',
-      color='modl imp exp marmsmooth causal grad stdh dsrh data marm tomo ntomo',
-      hires='causal grad marm tomo ntomo')
-Paper('reply1')
-Paper('final',lclass='geophysics',options='manuscript',
-      color='modl imp exp marmsmooth causal grad stdh dsrh data marm tomo ntomo',
-      hires='causal grad marm tomo ntomo')
-Paper('reply2')
-Paper('galley')
-
-End()
+End(color='modl imp exp marmsmooth causal grad stdh dsrh data marm tomo ntomo',
+    hires='causal grad marm tomo ntomo')
