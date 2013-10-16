@@ -346,12 +346,14 @@ class Project(Environment):
         else:
             jobs = split[1]
             w = 1
-                
+            jobmult = 1
+
         par_sfiles = copy.copy(sfiles)
         par_targets = {}
         for tfile in tfiles:
             par_targets[tfile] = []
 
+        prev_par_tfiles = []
         bigjobs = split[1] - jobs*(w-1)
         for i in range(jobs):
             if i < bigjobs:
@@ -386,12 +388,19 @@ class Project(Environment):
             for j in range(len(tfiles)):
                 tfile = tfiles[j]
                 par_tfile = tfile + '__' + str(i)
-                    
                 par_tfiles.append(par_tfile)
                 par_targets[tfile].append(par_tfile)
- 
+            # In case of job multiplication, make sure that
+            # we execute smaller chunks orderly: for jobmult=2
+            # 0, 2, 4, 6 ... will be executed first, and then
+            # 1, 3, 5, 7 ...
+            par_sfiles0 = copy.copy(par_sfiles);
+            if (i % jobmult) != 0:
+                par_sfiles0.append (prev_par_tfiles[0])
+            prev_par_tfiles = par_tfiles
+
             # operation on one chunk    
-            self.Flow(par_tfiles,par_sfiles,cflow,
+            self.Flow(par_tfiles,par_sfiles0,cflow,
                       stdout,stdin,1,
                       suffix,prefix,src_suffix)
 
