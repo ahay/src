@@ -65,7 +65,8 @@ Result('zo3',
        '''
        byte gainpanel=all |
        grey3 title="Zero Offset" 
-       frame1=300 frame2=81 frame3=81 flat=n
+       frame1=250 frame2=81 frame3=81 flat=n
+       screenratio=1 point1=0.65 point2=0.65
        ''')
 
 End()
