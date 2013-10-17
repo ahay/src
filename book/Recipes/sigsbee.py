@@ -27,10 +27,6 @@ def param():
     par['os']=10.95*par['ft2km']
     par['ds']=0.150*par['ft2km']
     # source index: o=39, d=6, n=500
-    
-    # receiver coordinates
-#    par['or']=10.95*par['ft2km']
-#    par['dr']=0.075*par['ft2km']
 
     par['nzdtm']=244 # number of redatuming steps through water
     par['nzpad']=143
@@ -78,15 +74,35 @@ def wempar(par):
 
     par['ntpad']=2000
 
+    par['nodes']=8
+
+# ------------------------------------------------------------
+def rtmpar(par):
+
+    par['frq']=10
+    par['kt']=100
+    par['nt']=12001
+    par['dt']=0.001
+    par['nb']=150
+    par['jsnap']=500
+    par['jdata']=1
+    par['wweight']=50
+    par['wclip']=0.5
+
+    par['jdata']=8
+    par['jsnap']=8
+
+    par['nodes']=8
+
 def migpar(par):
     wempar(par)
     
 # ------------------------------------------------------------
-def shotsWINDOW(par):
+def shotsFEW(par):
 
-    par['fS']=10
+    par['fS']=50
     par['jS']=10
-    par['nS']=32
+    par['nS']=16
     par['oS']=par['osall']+par['fS']*par['dsall']
     par['dS']=             par['jS']*par['dsall']
     
@@ -96,7 +112,7 @@ def shotsWINDOW(par):
     return sindex
 
 
-def shotsDENSE(par):
+def shotsWIN(par):
     par['fS']=10
     par['jS']=2
     par['nS']=128
@@ -112,7 +128,7 @@ def shotsDENSE(par):
 def shotsALL(par):
     par['fS']=0
     par['jS']=1
-    par['nS']=(par['nsall']-2*par['fS'])/par['jS']
+    par['nS']=par['nsall']
     par['oS']=par['osall']+par['fS']*par['dsall']
     par['dS']=             par['jS']*par['dsall']
     

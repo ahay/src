@@ -95,8 +95,8 @@ def wemWR(data,wfld,slow,causal,par):
 def fWRrtm(data,wfld,velo,dens,coor,custom,par):
     iwindow = ' ' + \
         '''
-        nqz=%(nqz)d oqz=%(oqz)g
-        nqx=%(nqx)d oqx=%(oqx)g
+        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
         jsnap=%(jdata)d jdata=%(jdata)d
         ''' % par + ' '
 
@@ -107,8 +107,8 @@ def fWRrtm(data,wfld,velo,dens,coor,custom,par):
 def bWRrtm(data,wfld,velo,dens,coor,custom,par):
     iwindow = ' ' + \
         '''
-        nqz=%(nqz)d oqz=%(oqz)g
-        nqx=%(nqx)d oqx=%(oqx)g
+        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
         jsnap=%(jdata)d jdata=%(jdata)d
         ''' % par + ' '
 
@@ -123,8 +123,8 @@ def bWRrtm(data,wfld,velo,dens,coor,custom,par):
 def fWRawe(data,wfld,velo,dens,coor,custom,par):
     iwindow = ' ' + \
         '''
-        nqz=%(nqz)d oqz=%(oqz)g
-        nqx=%(nqx)d oqx=%(oqx)g
+        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
         jsnap=%(jdata)d jdata=%(jdata)d
         ''' % par + ' '
 
@@ -135,8 +135,8 @@ def fWRawe(data,wfld,velo,dens,coor,custom,par):
 def bWRawe(data,wfld,velo,dens,coor,custom,par):
     iwindow = ' ' + \
         '''
-        nqz=%(nqz)d oqz=%(oqz)g
-        nqx=%(nqx)d oqx=%(oqx)g
+        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
         jsnap=%(jdata)d jdata=%(jdata)d
         ''' % par + ' '
 
@@ -149,8 +149,8 @@ def bWRawe(data,wfld,velo,dens,coor,custom,par):
 def fWRcda(data,wfld,velo,coor,custom,par):
     iwindow = ' ' + \
         '''
-        nqz=%(nqz)d oqz=%(oqz)g
-        nqx=%(nqx)d oqx=%(oqx)g
+        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
         jsnap=%(jdata)d jdata=%(jdata)d
         ''' % par + ' '
 
@@ -161,8 +161,8 @@ def fWRcda(data,wfld,velo,coor,custom,par):
 def bWRcda(data,wfld,velo,coor,custom,par):
     iwindow = ' ' + \
         '''
-        nqz=%(nqz)d oqz=%(oqz)g
-        nqx=%(nqx)d oqx=%(oqx)g
+        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
         jsnap=%(jdata)d jdata=%(jdata)d
         ''' % par + ' '
 
@@ -181,7 +181,7 @@ def cdrtm(imag,velo,
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH')
 
-    awewin = 'nqz=%(nqz)d oqz=%(oqz)g nqx=%(nqx)d oqx=%(oqx)g'%par
+    awewin = 'nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g'%par
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
     swfl=imag+'swfl'
