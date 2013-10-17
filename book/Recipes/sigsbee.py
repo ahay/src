@@ -29,8 +29,8 @@ def param():
     # source index: o=39, d=6, n=500
     
     # receiver coordinates
-    par['or']=10.95*par['ft2km']
-    par['dr']=0.075*par['ft2km']
+#    par['or']=10.95*par['ft2km']
+#    par['dr']=0.075*par['ft2km']
 
     par['nzdtm']=244 # number of redatuming steps through water
     par['nzpad']=143
@@ -40,6 +40,10 @@ def param():
     par['dsall']=0.04572
     par['osall']=3.33756
 
+    # all receiver parameters
+    par['nrall']=348
+    par['drall']=0.02286
+    
     return par
 
 # ------------------------------------------------------------
@@ -56,7 +60,7 @@ def modpar(par):
     par['wclip']=0.5
  
 # ------------------------------------------------------------   
-def migpar(par):
+def wempar(par):
 
     par['verb']='y'
     par['eps']=0.1
@@ -71,12 +75,60 @@ def migpar(par):
     par['ow']=par['fw']*par['dw']
     par['nw']=240
     par['eic']='itype=o'
+
+    par['ntpad']=2000
+
+def migpar(par):
+    wempar(par)
     
 # ------------------------------------------------------------
-def getdata(data,par):
+def shotsWINDOW(par):
 
-    datafile = 'sigsbee2a_nfs.sgy'
-    Fetch(datafile,'sigsbee')
+    par['fS']=10
+    par['jS']=10
+    par['nS']=32
+    par['oS']=par['osall']+par['fS']*par['dsall']
+    par['dS']=             par['jS']*par['dsall']
+    
+    sindex = range(par['fS'],
+                  par['fS']+par['nS']*par['jS'],
+                  par['jS'])
+    return sindex
+
+
+def shotsDENSE(par):
+    par['fS']=10
+    par['jS']=2
+    par['nS']=128
+    par['oS']=par['osall']+par['fS']*par['dsall']
+    par['dS']=             par['jS']*par['dsall']
+    
+    sindex = range(par['fS'],
+                  par['fS']+par['nS']*par['jS'],
+                  par['jS'])
+    return shots
+
+
+def shotsALL(par):
+    par['fS']=0
+    par['jS']=1
+    par['nS']=(par['nsall']-2*par['fS'])/par['jS']
+    par['oS']=par['osall']+par['fS']*par['dsall']
+    par['dS']=             par['jS']*par['dsall']
+    
+    sindex = range(par['fS'],
+                  par['fS']+par['nS']*par['jS'],
+                  par['jS'])
+    return shots
+
+# ------------------------------------------------------------
+def getdata(data,par,local=0):
+
+    if(local):
+        datafile = 'DATA/sigsbee/sigsbee2a_nfs.sgy'
+    else:
+        datafile = 'sigsbee2a_nfs.sgy'
+        Fetch(datafile,'sigsbee')
     
     Flow([data,data+'-t','./'+data+'-h','./'+data+'-b'],
          datafile,
@@ -89,10 +141,13 @@ def getdata(data,par):
          ''',stdin=0)
 
 # ------------------------------------------------------------
-def getmigvel(velo,par):
+def getmigvel(velo,par,local=0):
 
-    migvelfile = 'sigsbee2a_migvel.sgy'
-    Fetch(migvelfile,'sigsbee')
+    if(local):
+        migvelfile = 'DATA/sigsbee/sigsbee2a_migvel.sgy'
+    else:
+        migvelfile = 'sigsbee2a_migvel.sgy'
+        Fetch(migvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
          migvelfile,
@@ -118,10 +173,13 @@ def getmigvel(velo,par):
                 ))
 
 # ------------------------------------------------------------
-def getstrvel(velo,par):
+def getstrvel(velo,par,local=0):
 
-    strvelfile = 'DATA/sigsbee/sigsbee2a_stratigraphy.sgy'
-    #Fetch(velo,'sigsbee')
+    if(local):
+        strvelfile = 'DATA/sigsbee/sigsbee2a_stratigraphy.sgy'
+    else:
+        strvelfile = 'sigsbee2a_stratigraphy.sgy'
+        Fetch(strvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
          strvelfile,
@@ -147,10 +205,13 @@ def getstrvel(velo,par):
                 ))
 
 # ------------------------------------------------------------
-def getreflect(ref,par):
+def getreflect(ref,par,local=0):
 
-    reflectfile = 'DATA/sigsbee/sigsbee2a_reflection_coefficients.sgy'
-    #Fetch(velo,'sigsbee')
+    if(local):
+        reflectfile = 'DATA/sigsbee/sigsbee2a_reflection_coefficients.sgy'
+    else:
+        reflectfile = 'sigsbee2a_reflection_coefficients.sgy'
+        Fetch(reflectfile,'sigsbee')
 
     Flow([ref+'-raw',ref+'-t','./'+ref+'-h','./'+ref+'-b'],
          reflectfile,
@@ -319,15 +380,15 @@ def makemask(velo,smask,wmask,lmask,par):
 
     # salt mask
     Flow(  smask,velo,'mask min=4.499 | dd type=float')
-    Result(smask,fdmod.cgrey('allpos=y',par))
+#    Result(smask,fdmod.cgrey('allpos=y',par))
     
     # water mask
     Flow(  wmask,velo,'mask max=1.5 | dd type=float')
-    Result(wmask,fdmod.cgrey('allpos=y',par))
+#    Result(wmask,fdmod.cgrey('allpos=y',par))
 
     # sediment mask
     Flow(lmask,[smask,wmask],'add ${SOURCES[1]} | math output="1-input"')
-    Result(lmask,fdmod.cgrey('allpos=y',par))
+#    Result(lmask,fdmod.cgrey('allpos=y',par))
 
 # ------------------------------------------------------------
 # low velocity (in sediments only)

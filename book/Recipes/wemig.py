@@ -41,14 +41,19 @@ def wempar(par):
     if(not par.has_key('incore')):  par['incore']='y'
 
 # ------------------------------------------------------------
-def slowness(slow,velo,par):
+def slowness2d(slow,velo,par):
     Flow(slow,velo,
          '''
          math "output=1/input" |
+         transp plane=34 | 
          transp plane=12 | 	
-	 transp plane=23
+	 transp plane=23 |
+         put label2=y o2=0 d2=1
          ''')
 
+def slowness(slow,velo,par):
+    slowness2d(slow,velo,par)
+    
 # ------------------------------------------------------------
 # WEM
 # ------------------------------------------------------------
