@@ -166,11 +166,12 @@ int main(int argc, char* argv[])
     if(snap) {
 	if(!sf_getint  ("nqz",&nqz)) nqz=sf_n(az); /* Saved wfld window nz */
 	if(!sf_getint  ("nqx",&nqx)) nqx=sf_n(ax); /* Saved wfld window nx */
+
 	if(!sf_getfloat("oqz",&oqz)) oqz=sf_o(az); /* Saved wfld window oz */
 	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax); /* Saved wfld window ox */
 
-	dqz=sf_d(az);
-	dqx=sf_d(ax);
+	if(!sf_getfloat("dqz",&dqz)) dqz=sf_d(az); /* Saved wfld window dz */
+	if(!sf_getfloat("dqx",&dqx)) dqx=sf_d(ax); /* Saved wfld window dx */
 
 	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
 	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);

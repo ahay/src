@@ -366,7 +366,7 @@ void cut2d(float**  a,
 	   sf_axis cx)
 /*< cut a rectangular wavefield subset >*/
 {
-    int iz,ix,nx,nz;
+    int iz,ix, nx,nz, jx,jz;
     int fz,fx;
 
     fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz);
@@ -375,15 +375,18 @@ void cut2d(float**  a,
     nx = sf_n(cx);
     nz = sf_n(cz);
 
+    jz = floor(sf_d(cz)/fdm->dz);
+    jx = floor(sf_d(cx)/fdm->dx);
+
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic,fdm->ompchunk)		\
     private(ix,iz)				\
-    shared(a,b,nx,nz,fx,fz)
+    shared(a,b,nx,nz,fx,fz,jz,jx)
 #endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
-	    b[ix][iz] = a[fx+ix][fz+iz];
+	    b[ix][iz] = a[fx+ix*jx][fz+iz*jz];
 	}
     }
 }
@@ -397,7 +400,7 @@ void cut3d(float*** a,
 	   sf_axis cy)
 /*< cut a rectangular wavefield subset >*/
 {
-    int iz,ix,iy, nz,nx,ny;
+    int iz,ix,iy, nz,nx,ny, jz,jx,jy;
     int fz,fx,fy;
 
     fz = (floor)((sf_o(cz)-fdm->ozpad)/fdm->dz);
@@ -408,16 +411,20 @@ void cut3d(float*** a,
     nx = sf_n(cx);
     ny = sf_n(cy);
 
+    jz = floor(sf_d(cz)/fdm->dz);
+    jx = floor(sf_d(cx)/fdm->dx);
+    jy = floor(sf_d(cy)/fdm->dy);
+
 #ifdef _OPENMP
 #pragma omp parallel for			\
     schedule(dynamic,fdm->ompchunk)		\
     private(ix,iy,iz)				\
-    shared(a,b,nx,ny,nz,fx,fy,fz)
+    shared(a,b,nx,ny,nz,fx,fy,fz,jx,jy,jz)
 #endif
     for         (iy=0;iy<ny;iy++) {
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
-		b[iy][ix][iz] = a[fy+iy][fx+ix][fz+iz];
+		b[iy][ix][iz] = a[fy+iy*jy][fx+ix*jx][fz+iz*jz];
 	    }
 	}
     }

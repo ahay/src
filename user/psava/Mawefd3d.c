@@ -176,9 +176,9 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("oqx",&oqx)) oqx=sf_o(ax); /* Saved wfld window ox */
 	if(!sf_getfloat("oqy",&oqy)) oqy=sf_o(ay); /* Saved wfld window oy */
 
-	dqz=sf_d(az);
-	dqx=sf_d(ax);
-	dqy=sf_d(ay);
+	if(!sf_getfloat("dqz",&dqz)) dqz=sf_d(az); /* Saved wfld window dz */
+	if(!sf_getfloat("dqx",&dqx)) dqx=sf_d(ax); /* Saved wfld window dx */
+	if(!sf_getfloat("dqy",&dqy)) dqy=sf_d(ay); /* Saved wfld window dy */
 
 	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
 	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);
