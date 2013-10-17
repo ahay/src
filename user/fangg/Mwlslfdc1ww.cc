@@ -1,6 +1,9 @@
 /*  Weighted least square Lowrank FD coefficient on staggered grid (optimized)
+    add weighted to the big matrix
 
-   Copyright (C) 2010 University of Texas at Austin
+*/
+
+/* Copyright (C) 2010 University of Texas at Austin
   
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -36,15 +39,11 @@ static float dt, dx;
 static float taper;
 static float dfrq, a0; //dominant frequency
 
-/*static float sinc(float x)
-{
-    if (fabs(x)<=SF_EPS) return 1.0;
-    return sinf(x)/(x+SF_EPS);
-    }*/
-
 static float wghtfun(float k, float k0)
 {
-    return exp(-1*a0*(k-k0)*(k-k0))+exp(-1*a0*(k+k0)*(k+k0));
+    //return 0.5*(exp(-1*a0*(k-k0)*(k-k0))+exp(-1*a0*(k+k0)*(k+k0)));
+    //return exp(-1*a0*(fabs(k)-k0)*(fabs(k)-k0));
+    return 1.0;
 }
 
 int samplex(vector<int>& rs, vector<int>& cs, DblNumMat& res)
@@ -72,7 +71,6 @@ int samplex(vector<int>& rs, vector<int>& cs, DblNumMat& res)
     }
     return 0;
 }
-
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
@@ -127,6 +125,8 @@ int main(int argc, char** argv)
 
     oRSF Mexactfile("Mexact");
     oRSF Mwfun("wfun");
+    oRSF Mappfile("Mapp");
+    oRSF Mwtfull("wtfull");
 
     float wavnumcut;
     par.get("wavnumcut",wavnumcut,1.0); // wavenumber cut percentile
@@ -146,31 +146,24 @@ int main(int argc, char** argv)
     int m = nx;
     int n = nx;
 
-    int COUNT = 0;
-    float CUT = 0.5*nx*dk*wavnumcut;
-    
     for (int ix=0; ix < nx; ix++) {
         ks[ix] = -dk*nx/2.0+ix*dk; 
-	if (fabs(ks[ix]) < CUT) {
-	    COUNT++;
-	}
     }
 
-    vector<int> ksc(COUNT);
+
+    sf_warning("==========================");
+    sf_warning("Weighted LS LFD");
+    //sf_warning("LEN=%d", sx._m);
+    sf_warning("n=%d",n);
+    sf_warning("m=%d",m);
+    sf_warning("taper=%f", taper);
+    sf_warning("dfrq=%f", dfrq);
+    sf_warning("==========================");
     
-    int nk=0, mk=0;
-    // ks: -fn --- fn
-    for (int ix=0; ix < nx; ix++) {
-	ks[ix] = -dk*nx/2.0 + ix*dk;
-	if (fabs(ks[ix])<CUT) {
-	    ksc[nk] = ix;
-	    nk++;
-	}
-    }
-   
     vector<int> cidx, ridx;
     DblNumMat mid;
     iC( ddlowrank(m, n, samplex, (double)eps, npk, cidx, ridx, mid) );
+    //iC( ddlowrank(m, n, sample, (double)eps, npk, cidx, ridx, mid) );
     
     sf_warning("cidx.size = %d", cidx.size());
     sf_warning("ridx.size = %d", ridx.size());
@@ -179,11 +172,14 @@ int main(int argc, char** argv)
     vector<int> rs(m);
     for (int k=0; k<m; k++)  rs[k]=k;
     iC( samplex(rs, cidx, M1) );
+    //iC( sample(rs, cidx, M1) );
+    
     
     DblNumMat M2(ridx.size(), n);
     vector<int> cs(n);
     for (int k=0; k<n; k++) cs[k] = k;
     iC( samplex(ridx, cs, M2) );
+    //iC( sample(ridx, cs, M2) );
 
     /* FD coefficient*/
 
@@ -198,7 +194,7 @@ int main(int argc, char** argv)
     cerr<<"len  = " <<len <<endl;
     cerr<<"xtmp = "; for (int ix=0; ix<len; ix++) cerr<<xtmp[ix]<<", "; cerr<<endl;
 	
-    nk =0;
+    //nk =0;
     DblNumMat sx(len,1);
     for (int ix=0; ix<len; ix++) {
 	sx._data[ix] = xtmp[ix];
@@ -208,55 +204,60 @@ int main(int argc, char** argv)
     cerr<<endl;
 
     DblNumMat ktmp(1, nx); for(int k=0; k<nx; k++) ktmp._data[k]=ks[k];
-    DblNumMat ktmpc(1,COUNT); for(int k=0; k<COUNT; k++) ktmpc._data[k]=ks[ksc[k]];
     
     int LEN = sx._m;
     DblNumMat B(LEN,nx);
-    DblNumMat Bc(LEN,COUNT);
+
     iC(ddgemm(2*pi*dx,sx,ktmp,0.0,B));
-    iC(ddgemm(2*pi*dx,sx,ktmpc,0.0,Bc));
+
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
-    for(int k=0; k<Bc._m*Bc._n; k++) Bc._data[k]=sin(Bc._data[k]);
+
     
     int itmp;
     float w = 0.0, k0=0.0, kk=0.0;
-    std::valarray<float> wfun(B._n);
-    
-  
-    for (int ik=0; ik<B._n; ik++) {
-	kk = twopi*ktmp._data[ik];
-	k0 = twopi*dfrq/vs[ik];
-	w  = wghtfun(kk, k0);
-	sf_warning("kk=%f", kk);
-	wfun[ik] = w;
-	for (int il=0; il<B._m; il++) {
-	    itmp = ik*B._m+il;
-	    B._data[itmp] = w*B._data[itmp];
-	}
-    }
-	    
-    for (int ik=0; ik<Bc._n; ik++) {
-	kk = twopi*ktmpc._data[ik];
-	k0 = twopi*dfrq/vs[ik];
-	w  = wghtfun(kk, k0);
-	for (int il=0; il<Bc._m; il++) {
-	    itmp = ik*Bc._m+il;
-	    Bc._data[itmp] = w*Bc._data[itmp];
-	}
-    }
+    std::valarray<float> wfun(B._n*ridx.size());
 
-    DblNumMat IB(nx,LEN);    iC( ddpinv(B, 1e-16, IB) );
-    DblNumMat IBc(COUNT,LEN);    iC( ddpinv(Bc, 1e-16, IBc) );
-          
+    DblNumMat tmpB(LEN, nx);
+    DblNumMat tmpcoef(1, LEN);
+    DblNumMat clmM2(1, nx);
+    DblNumMat IB(nx,LEN);
     DblNumMat coef(ridx.size(),LEN);
-    DblNumMat M2c;
-    iC( samplex(ridx,ksc,M2c) );
-    iC(ddgemm(1.0,M2c,IBc,0.0,coef));
- 
+        
+    for (int ixm=0; ixm<(int)ridx.size(); ixm++) {
+        // weight(ix)*B
+	k0 = twopi*dfrq/vs[ridx[ixm]];
+	sf_warning("ixm=%d, ridx[ixm]=%d, vs=%f", ixm, ridx[ixm], vs[ridx[ixm]]);
+	for (int ik=0; ik<B._n; ik++) {
+	    kk = twopi*ktmp._data[ik];
+	    w  = wghtfun(kk, k0);
+	    wfun[ik+ixm*B._n] = w;
+	    for (int il=0; il<B._m; il++) {
+		itmp = ik*B._m+il;
+		tmpB._data[itmp] = w*B._data[itmp];
+		//tmpB._data[itmp] = B._data[itmp];
+	    }
+	}
+	setvalue(IB, 0.0);
+	iC( ddpinv(tmpB, 1e-16, IB) );
+	
+	// M2
+	for (int ik=0; ik<nx; ik++) {
+	    //clmM2._data[ik] = M2._data[ixm*nx+ik];
+	    clmM2(0,ik) = M2(ixm, ik);
+	}
+	setvalue(tmpcoef, 0.0);
+	iC( ddgemm(1.0,clmM2,IB,0.0,tmpcoef) );
+	
+	for (int il=0; il<LEN; il++) {
+	    //coef._data[ixm+il*(int)ridx.size()] = tmpcoef._data[il];
+	    coef(ixm, il) = tmpcoef(0, il);
+	}
+    }
+		
     DblNumMat G(nx,LEN), tmpG(mid._m,LEN);
     iC(ddgemm(1.0,mid,coef,0.0,tmpG));
     iC(ddgemm(1.0,M1,tmpG,0.0,G));
-        
+    
     std::valarray<float> fMlr(nx*LEN);
     double *ldat = G.data();
     for (int k=0; k < nx*LEN; k++) {
@@ -265,21 +266,22 @@ int main(int argc, char** argv)
     outm.put("n1",nx);
     outm.put("n2",LEN);
     outm << fMlr;
-
+    
     fsx.put("n1", LEN);
     fsx.put("n2", 1);
-
+    
     std::valarray<float> fs(LEN);
     ldat = sx.data();
     for (int k=0; k < LEN; k++) {
-         fs[k] = (ldat[k]+0.5);
+	fs[k] = (ldat[k]+0.5);
     } 
     fsx << fs;
-  
+    
     // Exact matre
     DblNumMat Mexact(nx,nx);
+    //iC( samplex(rs,cs,Mexact) );
     iC( sample(rs,cs,Mexact) );
-       
+    
     //float dk2=dk/2.0;
     Mexactfile.put("n1",nx);
     Mexactfile.put("n2",nx);
@@ -293,21 +295,45 @@ int main(int argc, char** argv)
     } 
     Mexactfile << fMex;
 
+    // approximation matrix
+    DblNumMat Mapp(nx, nx);
+    std::valarray<float> fwtfull(nx*nx);
+    iC( ddgemm(1.0,G,B,0.0,Mapp) );
+
+    Mappfile.put("n1",nx);
+    Mappfile.put("n2",nx);
+    Mappfile.put("d2",dk);
+    Mappfile.put("o2",0);
+
+    Mwtfull.put("n1",nx);
+    Mwtfull.put("n2",nx);
+    Mwtfull.put("d2",dk);
+    Mwtfull.put("o2",0);
+
+    for (int ik=0; ik<nx; ik++) {
+	kk = twopi*ktmp._data[ik];
+	for (int ix=0; ix<nx; ix++) {
+	    k0 = twopi*dfrq/vs[ix];
+	    w  = wghtfun(kk,k0);
+	    fwtfull[ik*nx+ix] = w;
+	    Mapp._data[ik*nx+ix] = w*Mapp._data[ik*nx+ix];
+	}
+    }
+    ldat = Mapp.data();
+    for (int k=0; k < nx*nx; k++) {
+        fMex[k] = ldat[k];
+    } 
+    Mappfile << fMex;
+    Mwtfull <<fwtfull;
+
     //wfun
     Mwfun.put("n1",B._n);
+    Mwfun.put("n2",(int)ridx.size());
     Mwfun.put("d1",dk);
+    Mwfun.put("d2",dx);
     float o1 = -1*dk*B._n/2.0;
     Mwfun.put("o1",o1);
     Mwfun << wfun ;
-
-    sf_warning("==========================");
-    sf_warning("Weighted LS LFD");
-    sf_warning("COUNT=%d", COUNT);
-    sf_warning("nk=%d",nk);
-    sf_warning("mk=%d",mk);
-    sf_warning("taper=%f", taper);
-    sf_warning("k0=%f", k0);
-    sf_warning("==========================");
     
     return 0;
 }

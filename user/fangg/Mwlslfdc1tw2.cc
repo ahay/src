@@ -64,7 +64,7 @@ float tpfun(float a, float b, float k, float k0)
 }	
 
 
-int sampletp(vector<int>& rs, vector<int>& cs, DblNumMat& res)
+/*int sampletp(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -83,7 +83,7 @@ int sampletp(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	}
     }
     return 0;
-}
+    }*/
 
 int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 {
@@ -135,10 +135,11 @@ int main(int argc, char** argv)
     oRSF outm;  
     oRSF fsx("sx");//, Mexactfile("Mexact"),Mlrfile("Mlr"), Mappfile("Mapp"); 
     
-    oRSF Mexactfile("Mexact");
+    oRSF Mwatpwfile("Mwatpw");
     oRSF Mwfun("wfun");
     oRSF Mappfile("Mapp");
     oRSF Mtpfile("tp");
+    oRSF Mwawfile("waw");
 
     int nx;
     velf.get("n1",nx);
@@ -172,7 +173,7 @@ int main(int argc, char** argv)
 
     vector<int> cidx, ridx;
     DblNumMat mid;
-    iC( ddlowrank(m, n, sampletp, (double)eps, npk, cidx, ridx, mid) );
+    iC( ddlowrank(m, n, sample, (double)eps, npk, cidx, ridx, mid) );
     
     sf_warning("cidx.size = %d", cidx.size());
     sf_warning("ridx.size = %d", ridx.size());
@@ -180,12 +181,12 @@ int main(int argc, char** argv)
     DblNumMat M1(m, cidx.size());
     vector<int> rs(m);
     for (int k=0; k<m; k++)  rs[k]=k;
-    iC( sampletp(rs, cidx, M1) );
+    iC( sample(rs, cidx, M1) );
 
     DblNumMat M2(ridx.size(), n);
     vector<int> cs(n);
     for (int k=0; k<n; k++) cs[k] = k;
-    iC( sampletp(ridx, cs, M2) );
+    iC( sample(ridx, cs, M2) );
     
     /* FD coefficient*/
 
@@ -219,31 +220,33 @@ int main(int argc, char** argv)
     for(int k=0; k<B._m*B._n; k++) B._data[k]=sin(B._data[k]);
     
     int itmp;
-    float w = 0.0, k0=0.0, kk=0.0;
+    float w=0.0, k0=0.0, kk=0.0;
+    float tp=0.0, tpk0=0.0, tpk=0.0;
     std::valarray<float> wfun(B._n*ridx.size());
     
     DblNumMat wtB(LEN, nx);
     DblNumMat tmpcoef(1, LEN);
-    DblNumMat wtM2(1, nx);
+    DblNumMat wtM2(1, nx), tpM2(ridx.size(), n);
     DblNumMat IB(nx,LEN);
     DblNumMat coef(ridx.size(),LEN);
 
     for (int ixm=0; ixm<(int)ridx.size(); ixm++) {
 	k0 = twopi*dfrq/vs[ridx[ixm]];
+	tpk0 = 0.5*pi/(vs[ridx[ixm]]*dt*0.5);
 	sf_warning("ixm=%d, ridx[ixm]=%d, vs=%f", ixm, ridx[ixm], vs[ridx[ixm]]);
 	for (int ik=0; ik<nx; ik++) {
 	    kk = twopi*ktmp._data[ik];
-	    
 	    if (weight == true ) {
 		w  = wghtfun(kk, k0);
 		/*weight*/
 	    } else {
 		w = 1.0;
 	    }
-
-	    wtM2(0,ik) = w*M2(ixm, ik);
+	    tpk = twopi*ks[ik];
+	    tp  = tpfun(tpa, tpb, tpk, tpk0); 
+	    wtM2(0,ik) = tp*w*M2(ixm, ik);
+	    tpM2(ixm,ik) = tp*M2(ixm, ik);
 	    /*weight*M2*/
-
 	    wfun[ik+ixm*B._n] = w;
 	    for (int il=0; il<B._m; il++) {
 		itmp = ik*B._m+il;
@@ -265,6 +268,41 @@ int main(int argc, char** argv)
     DblNumMat G(nx,LEN), tmpG(mid._m,LEN);
     iC(ddgemm(1.0,mid,coef,0.0,tmpG));
     iC(ddgemm(1.0,M1,tmpG,0.0,G));
+
+    // reconstruct propagation metrix
+    DblNumMat M1A(nx, mid._n);
+    iC( ddgemm(1.0, M1, mid, 0.0, M1A));
+    
+    // Exact matre
+    DblNumMat Mwatpw(m,n);
+    iC( ddgemm(1.0, M1A, tpM2, 0.0, Mwatpw));
+
+    Mwatpwfile.put("n1",nx);
+    Mwatpwfile.put("n2",nx);
+    Mwatpwfile.put("d2",dk);
+    Mwatpwfile.put("o2",0);
+
+    std::valarray<float> fMex(nx*nx);
+    double *tmpdat;
+    tmpdat = Mwatpw.data();
+    for (int k=0; k < nx*nx; k++) {
+        fMex[k] = tmpdat[k];
+    } 
+    Mwatpwfile << fMex;
+
+    DblNumMat Mwaw(m,n);
+    iC( ddgemm(1.0, M1A, M2, 0.0, Mwaw));
+    Mwawfile.put("n1",nx);
+    Mwawfile.put("n2",nx);
+    Mwawfile.put("d2",dk);
+    Mwawfile.put("o2",0);
+    
+    tmpdat = Mwaw.data();
+    for (int k=0; k < nx*nx; k++) {
+        fMex[k] = tmpdat[k];
+    } 
+    Mwawfile << fMex;
+
     
     std::valarray<float> fMlr(nx*LEN);
     double *ldat = G.data();
@@ -285,21 +323,6 @@ int main(int argc, char** argv)
     } 
     fsx << fs;
 
-    // Exact matre
-    DblNumMat Mexact(nx,nx);
-    iC( sampletp(rs,cs,Mexact) );
-
-    Mexactfile.put("n1",nx);
-    Mexactfile.put("n2",nx);
-    Mexactfile.put("d2",dk);
-    Mexactfile.put("o2",0);
-
-    std::valarray<float> fMex(nx*nx);
-    ldat = Mexact.data();
-    for (int k=0; k < nx*nx; k++) {
-        fMex[k] = ldat[k];
-    } 
-    Mexactfile << fMex;
     
     DblNumMat Mapp(nx, nx);
     std::valarray<float> fwtfull(nx*nx);
@@ -328,7 +351,6 @@ int main(int argc, char** argv)
 
     //taper function
     std::valarray<float> Mtp(nx*nx);
-    float tp;
     for (int ix=0; ix<nx; ix++) {
 	k0 = 0.5*pi/(vs[ix]*dt*0.5);
 	for (int ik=0; ik<nx; ik++) {

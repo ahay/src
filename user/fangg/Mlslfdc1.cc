@@ -226,7 +226,7 @@ int main(int argc, char** argv)
 	kk = twopi*ktmp._data[ik];
 	k0 = twopi*dfrq/vs[ik];
 	w  = wghtfun(kk, k0);
-	sf_warning("kk=%f", kk);
+	//sf_warning("kk=%f", kk);
 	wfun[ik] = w;
 	for (int il=0; il<B._m; il++) {
 	    itmp = ik*B._m+il;
