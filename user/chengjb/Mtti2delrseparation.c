@@ -110,14 +110,6 @@ int main(int argc, char* argv[])
 
     float t;	
 
-    mm=2*M+1;
-
-    coeff_2dx=sf_floatalloc(mm);
-    coeff_2dz=sf_floatalloc(mm);
-    coeff_1dx=sf_floatalloc(mm);
-    coeff_1dz=sf_floatalloc(mm);
-
-
     sf_init(argc,argv);
 
     t1=clock();
@@ -359,6 +351,13 @@ int main(int argc, char* argv[])
     f0=30.0;                  
     t0=0.04;                  
     A=1;                  
+
+    mm=2*M+1;
+
+    coeff_2dx=sf_floatalloc(mm);
+    coeff_2dz=sf_floatalloc(mm);
+    coeff_1dx=sf_floatalloc(mm);
+    coeff_1dz=sf_floatalloc(mm);
 
     nxpad=nx+2*M;
     nzpad=nz+2*M;
