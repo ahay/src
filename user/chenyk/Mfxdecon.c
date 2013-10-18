@@ -81,8 +81,8 @@ int main(int argc, char *argv[])
 	sf_init(argc,argv);
 	sf_file in, out;
 
-        in = sf_input("in");
-    	out = sf_output("out");
+    in = sf_input("in");
+    out = sf_output("out");
 	
 	if(!sf_histint(in, "n1", &n1))  sf_error("No n1 in input");  if (verb) sf_warning("n1 = %i",n1);
 	if(!sf_histfloat(in, "d1", &dt)) sf_error("No d1 in input"); if (verb) sf_warning("dt= %f",dt);

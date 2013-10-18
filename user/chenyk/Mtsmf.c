@@ -38,16 +38,18 @@ int main (int argc, char* argv[])
     
     float *trace;
     float *tempt; /*temporary array*/
+    float *length; /*output variable filter length map*/
     float *result; /*output array*/
     float *extendt;
     float *medianarray;   /*1D median filtered array*/
     float *temp1,*temp2,*temp3; /*temporary array*/
-    sf_file in, out;
+    sf_file in, out, lengthout;
     
     sf_init (argc, argv); 
     in = sf_input("in");
     out = sf_output("out");
-    
+	lengthout=sf_output("L");		
+
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
@@ -85,6 +87,15 @@ int main (int argc, char* argv[])
     
     if (!sf_getint("l4",&l4)) l4=4;
     /* space-varying window parameter "l4" (default=4)*/
+
+	if(NULL!=sf_getstring("L"))
+		{
+			length=sf_floatalloc(n1*n2);
+		for(i=0;i<n2;i++)
+			for(j=0;j<n1;j++)
+				length[i*n1+j]=0;
+		}
+
    
     if (l1<l2 || l4<l3) sf_error("Need l1>=l2 && l4>=l3"); 
     if ((l1%2)!=0) l1 = l1+1;
@@ -160,6 +171,7 @@ int main (int argc, char* argv[])
 			tempnfw=nfw-l3;
 		    }
 		}
+		if(NULL!=sf_getstring("L")) length[n1*i+j]	= tempnfw;		
 		temp3 = sf_floatalloc(tempnfw);
 		bound2(temp2,temp3,n1,tempnfw,j,boundary);
 		result[n1*i+j]=medianfilter(temp3,tempnfw);
@@ -167,6 +179,7 @@ int main (int argc, char* argv[])
 	    }
 	}
 	sf_floatwrite(result,n1*n2,out);
+	if(NULL!=sf_getstring("L"))  sf_floatwrite(length,n1*n2,lengthout);	
     }
 
     exit (0);
