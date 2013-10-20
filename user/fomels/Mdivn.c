@@ -18,11 +18,13 @@
 */
 #include <rsf.h>
 
+#include "divn.h"
+
 int main(int argc, char* argv[])
 {
     bool verb;
-    int i, id, dim, n[SF_MAX_DIM], nd, rect[SF_MAX_DIM], niter;
-    float *num, *den, *rat, norm;
+    int i, dim, n[SF_MAX_DIM], nd, rect[SF_MAX_DIM], niter;
+    float *num, *den, *rat, eps;
     char key[6];
     sf_file fnum, fden, frat;
 
@@ -53,23 +55,15 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity */
 
-    sf_divn_init(dim, nd, n, rect, niter, verb);
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
+    divn_init(dim, nd, n, rect, niter, eps, verb);
 
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);
 
-    norm = 0.;
-    for (id=0; id < nd; id++) {
-	norm += den[id]*den[id];
-    }
-    norm = sqrtf(nd/norm);
-
-    for (id=0; id < nd; id++) {
-	num[id] *= norm;
-	den[id] *= norm;
-    }
-
-    sf_divn (num, den, rat);
+    divn (num, den, rat);
 
     sf_floatwrite(rat,nd,frat);
 

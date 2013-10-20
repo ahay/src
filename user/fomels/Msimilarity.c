@@ -18,14 +18,15 @@
 */
 #include <rsf.h>	
 
+#include "divn.h"
+
 int main(int argc, char* argv[])
 {
     bool verb;
-    int dim, dim1, i, n1, i1, i2, n2, niter, n[SF_MAX_DIM]; 
+    int dim, dim1, i, n1, i2, n2, niter, n[SF_MAX_DIM]; 
     int rect[SF_MAX_DIM];
     char key[6];	
-    double norm;
-    float *one, *two, *rat1, *rat2;
+    float *one, *two, *rat1, *rat2, eps;
     sf_file in, other, out;
 
     sf_init(argc,argv);
@@ -61,7 +62,10 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=20;
     /* maximum number of iterations */
 
-    sf_divn_init(dim1, n1, n, rect, niter, verb);
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
+    divn_init(dim1, n1, n, rect, niter, eps, verb);
 	
     one  = sf_floatalloc(n1);
     two  = sf_floatalloc(n1);
@@ -76,28 +80,11 @@ int main(int argc, char* argv[])
 	sf_floatread(one,n1,in);
         sf_floatread(two,n1,other);
 	
-        /* first division */
-        norm = sqrt(n1/cblas_dsdot( n1, two, 1, two, 1));	
-
-        for (i1=0; i1 < n1; i1++) {
-		one[i1] *= norm;
-		two[i1] *= norm;
-	}
-	
-	sf_divn(one,two,rat1);
-
-        /* second division */
-	norm = sqrt(n1/cblas_dsdot( n1, one, 1, one, 1));	
-
-        for (i1=0; i1 < n1; i1++) {
-		one[i1] *= norm;
-		two[i1] *= norm;
-	}
-
-        sf_divn(two,one,rat2);
+	divn(one,two,rat1);
+        divn(two,one,rat2);
 
 	/* combination */
-	sf_divn_combine (rat1,rat2,rat1);
+	divn_combine (rat1,rat2,rat1);
         sf_floatwrite(rat1,n1,out);
     }
     if (!verb) sf_warning(".");

@@ -203,6 +203,7 @@ class Project(Environment):
         self.sfpen = os.path.join(self.bindir,'sfpen')
         self.pspen = os.path.join(self.bindir,'pspen')
         self.vppen = os.path.join(self.bindir,'vppen')
+        self.runonnode = os.path.join(self.bindir,'runonnode')
         
         self.figs = os.environ.get('RSFFIGS',os.path.join(root,'share','madagascar','figs'))
         
@@ -494,11 +495,11 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             if self.raddenv:
-                command = string.join([WhereIs('runonnode'),'\"',self.raddenv,
-                                      '; cd ',self.cwd,';',command,'\"'])
+                command = string.join([self.runonnode,'\"',self.raddenv,
+                                       '; cd ',self.cwd,';',command,'\"'])
             else:
-                command = string.join([WhereIs('runonnode'),'\"cd ',
-                                       self.cwd,';',command,'\"'])
+                command = string.join([self.runonnode,
+                                       '\"cd ',self.cwd,';',command,'\"'])
                         
         targets = []
         for file in tfiles:
