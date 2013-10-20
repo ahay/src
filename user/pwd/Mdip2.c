@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
 {
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[3], nr, ir; 
-    float p0, *u, *p, pmin, pmax;
+    float p0, *u, *p, pmin, pmax, eps;
     bool verb, **mm;
     sf_file in, out, mask, idip0;
 
@@ -72,8 +72,11 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("pmax",&pmax)) pmax = +FLT_MAX;
     /* maximum dip */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
     /* initialize dip estimation */
-    dip3_init(n[0], n[1], n[2], rect, liter, false);
+    dip3_init(n[0], n[1], n[2], rect, liter, eps, false);
 
     u = sf_floatalloc(n123);
     p = sf_floatalloc(n123);

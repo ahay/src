@@ -24,8 +24,9 @@
 int main (int argc, char *argv[])
 {
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
-    int n[SF_MAX_DIM], rect[3], rect2, n3, i3, i1, n1, i2, n2, jt, j2, it, nt, is; 
-    float p0, *u, *p, *u2, *p2, pmin, pmax;
+    int n[SF_MAX_DIM], rect[3], rect2;
+    int n3, i3, i1, n1, i2, n2, jt, j2, it, nt, is; 
+    float p0, *u, *p, *u2, *p2, pmin, pmax, eps;
     bool verb, **mm, *m2;
     sf_file in, out, mask, idip0;
 
@@ -87,6 +88,9 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("pmax",&pmax)) pmax = +FLT_MAX;
     /* maximum dip */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
     u  = sf_floatalloc(n123);
     p  = sf_floatalloc(n123);
     u2 = sf_floatalloc(n123);
@@ -146,7 +150,7 @@ int main (int argc, char *argv[])
 	    }
 
 	    /* estimate dip */
-	    dip3_init(n1, nt, 1, rect, liter, false);
+	    dip3_init(n1, nt, 1, rect, liter, eps, false);
 
 	    /* Either scale the order or scale nj1 */
 

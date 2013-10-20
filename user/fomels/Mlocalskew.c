@@ -22,8 +22,8 @@ int main(int argc, char* argv[])
 {
     bool inv, verb, cons;
     int i1, n1, ia, na, i2, n2, rect, niter, n;
-    float *trace, *sim1, *sim2, *square, *hilbt, *rotate, a0, da, a, c;
-    double norm;
+    float *trace, *sim1, *sim2, *square, *hilbt, *rotate;
+    float a0, da, a, c, eps;
     sf_file inp, sim;
 
     sf_init(argc,argv);
@@ -76,6 +76,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("const",&cons)) cons=false;
     /* if y, compute inverse varimax */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
     sf_hilbert_init(n1, n, c);
     sf_divn_init(1, n1, &n1, &rect, niter, verb);
 
@@ -100,20 +103,10 @@ int main(int argc, char* argv[])
 	    /**********************/
 
 	    /* first division */
-	    norm = sqrt(n1/cblas_dsdot( n1, square, 1, square, 1));	
-	    for (i1=0; i1 < n1; i1++) {
-		rotate[i1] *= norm;
-		square[i1] *= norm;
-	    }
-	    sf_divn(rotate,square,sim1);
+	    sf_divne(rotate,square,sim1,eps);
 
 	    /* second division */
-	    norm = sqrt(n1/cblas_dsdot( n1, rotate, 1, rotate, 1));	
-	    for (i1=0; i1 < n1; i1++) {
-		rotate[i1] *= norm;
-		square[i1] *= norm;
-	    }
-	    sf_divn(square,rotate,sim2);
+	    sf_divne(square,rotate,sim2,eps);
 
 	    /* combination */
 	    sf_divn_combine(sim1,sim2,sim1);

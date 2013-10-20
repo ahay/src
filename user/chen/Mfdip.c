@@ -22,8 +22,6 @@
 #include <rsf.h>
 #include <rsfpwd.h>
 
-#include "fdip.h"
-
 int main(int argc,char**argv)
 {
     int dim,n[SF_MAX_DIM], rect[3], n123, n4, nr, ir, j, liter;

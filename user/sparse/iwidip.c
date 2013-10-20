@@ -18,8 +18,8 @@
 */
 
 #include <rsf.h>
+#include <rsfpwd.h>
 
-#include "fdip.h"
 #include "iwidip.h"
 
 static int n[3], n123, prect[3];
@@ -52,7 +52,7 @@ void iwidip_fdip(float *image, float *dip)
     fdip_init(n[0],n[1],n[2], prect,pliter,false);
 
     /* fast dip estimation */
-    fdip(image, dip, 1);
+    fdip(image, dip, NULL, 1);
 
     fdip_close();
 }

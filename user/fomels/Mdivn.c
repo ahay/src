@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "divn.h"
-
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -58,12 +56,12 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.0f;
     /* regularization */
 
-    divn_init(dim, nd, n, rect, niter, eps, verb);
+    sf_divn_init(dim, nd, n, rect, niter, verb);
 
     sf_floatread(num,nd,fnum);
     sf_floatread(den,nd,fden);
 
-    divn (num, den, rat);
+    sf_divne (num, den, rat, eps);
 
     sf_floatwrite(rat,nd,frat);
 

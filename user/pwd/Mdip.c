@@ -31,7 +31,8 @@ int main (int argc, char *argv[])
 {
     int n123, niter, order, nj1,nj2, i,j, liter, dim;
     int n[SF_MAX_DIM], rect[3], n4, nr, ir; 
-    float p0, q0, *u, *p, *pi=NULL, *qi=NULL, pmin, pmax, qmin, qmax;
+    float p0, q0, *u, *p, *pi=NULL, *qi=NULL;
+    float pmin, pmax, qmin, qmax, eps;
     char key[4];
     bool verb, both, **mm;
     sf_file in, out, mask, idip0, xdip0;
@@ -111,8 +112,11 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("qmax",&qmax)) qmax = +FLT_MAX;
     /* maximum cross-line dip */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
     /* initialize dip estimation */
-    dip3_init(n[0], n[1], n[2], rect, liter, true);
+    dip3_init(n[0], n[1], n[2], rect, liter, eps, true);
 
     u = sf_floatalloc(n123);
     p = sf_floatalloc(n123);

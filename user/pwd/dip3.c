@@ -26,19 +26,21 @@
 #include "dip3.h"
 #include "allp3.h"
 
-static float *u1, *u2, *dp, *p0;
+static float *u1, *u2, *dp, *p0, eps;
 static int n, n1, n2, n3, nn[3];
 
-void dip3_init(int m1, int m2, int m3       /* dimensions */, 
-	       int* rect                    /* smoothing radius [3] */, 
-	       int niter                    /* number of iterations */,
-	       bool verb                    /* verbosity flag */)
+void dip3_init(int m1, int m2, int m3 /* dimensions */, 
+	       int* rect              /* smoothing radius [3] */, 
+	       int niter              /* number of iterations */,
+	       float eps1             /* regularization */,      
+	       bool verb              /* verbosity flag */)
 /*< initialize >*/
 {
     n1=m1;
     n2=m2;
     n3=m3;
     n = n1*n2*n3;
+    eps = eps1;
 
     u1 = sf_floatalloc(n);
     u2 = sf_floatalloc(n);
@@ -74,7 +76,7 @@ void dip3(bool left               /* left or right prediction */,
 /*< estimate local dip >*/
 {
     int i, iter, k;
-    float mean, usum, usum2, psum, ui, pi, lam;
+    float usum, usum2, pi, lam;
     allpass ap;
  
     ap = allpass_init (nw,nj,n1,n2,n3,p);
@@ -91,28 +93,12 @@ void dip3(bool left               /* left or right prediction */,
 	} else {
 	    allpass2 (left, true,  ap, u,u1);
 	}
-	
-	mean = 0.;
+
+	usum = 0.0;
 	for(i=0; i < n; i++) {
-	    ui = u1[i];
-	    mean += ui*ui;
-	}
-	if (mean == 0.) return;
-
-	mean = sqrtf (mean/n);
-
-	usum = 0.;
-	psum = 0.;
-
-	for(i=0; i < n; i++) {
-	    u1[i] /= mean;
-	    u2[i] /= mean;
-	    usum += u2[i]*u2[i];
-	    if (verb) psum += p[i];
 	    p0[i] = p[i];
+	    usum += u2[i]*u2[i];
 	}
-
-	if (verb) sf_warning("%d %g %g", iter+1, sqrtf(usum/n), psum/n);
 	
 	if (NULL != mask) {
 	    for(i=0; i < n; i++) {
@@ -123,7 +109,7 @@ void dip3(bool left               /* left or right prediction */,
 	    }
 	}
 
-	sf_divn (u2, u1, dp);
+	sf_divne (u2, u1, dp, eps);
 
 	lam = 1.;
 	for (k=0; k < 8; k++) {
@@ -143,7 +129,7 @@ void dip3(bool left               /* left or right prediction */,
 	    for(i=0; i < n; i++) {
 		usum2 += u2[i]*u2[i];
 	    }
-	    if (usum2 < usum*mean*mean) break;
+	    if (usum2 < usum) break;
 	    lam *= 0.5;
 	}
     } /* iter */

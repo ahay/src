@@ -21,13 +21,11 @@
 
 #include "fastpwd.h"
 
-
-
 int main(int argc, char* argv[])
 {
     bool verb;
     int n1, n2, n12, id, i3, n3, rect[2], niter, n[2];
-    float **wav, **dip, **num, **den, norm;
+    float **wav, **dip, **num, **den, eps;
     sf_file inp, out;
 
     sf_init(argc,argv);
@@ -53,6 +51,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
     wav = sf_floatalloc2(n1,n2);
     dip = sf_floatalloc2(n1,n2);
     num = sf_floatalloc2(n1,n2);
@@ -67,17 +68,7 @@ int main(int argc, char* argv[])
 	fastpwd(wav,num,den);
 
 	/* smooth division */
-	norm = 0.;
-	for (id=0; id < n12; id++) {
-	    norm += den[0][id]*den[0][id];
-	}
-	norm = sqrtf(n12/norm);
-
-	for (id=0; id < n12; id++) {
-	    num[0][id] *= norm;
-	    den[0][id] *= norm;
-	}
-	sf_divn (num[0], den[0], dip[0]);
+	sf_divne (num[0], den[0], dip[0], eps);
 
 	sf_floatwrite(dip[0],n12,out);
     }

@@ -22,6 +22,7 @@
 
 #include "divn.h"
 #include "alloc.h"
+#include "blas.h"
 #include "conjgrad.h"
 #include "trianglen.h"
 #include "weight.h"
@@ -59,6 +60,40 @@ void sf_divn (float* num, float* den,  float* rat)
     sf_weight_init(den);
     sf_conjgrad(NULL, sf_weight_lop,sf_trianglen_lop,p,rat,num,niter); 
 }
+
+void sf_divne (float* num, float* den,  float* rat, float eps)
+/*< smoothly divide rat=num/den with preconditioning >*/
+{
+    int i;
+    double norm;
+
+    if (eps > 0.0f) {
+	for (i=0; i < n; i++) {
+	    norm = 1.0/hypot(den[i],eps);
+
+	    num[i] *= norm;
+	    den[i] *= norm;
+	}
+    } 
+
+    norm = cblas_dsdot(n,den,1,den,1);
+    if (norm == 0.0) {
+	for (i=0; i < n; i++) {
+	    rat[i] = 0.0;
+	}
+	return;
+    }
+    norm = sqrt(n/norm);
+
+    for (i=0; i < n; i++) {
+	num[i] *= norm;
+	den[i] *= norm;
+    }   
+
+    sf_weight_init(den);
+    sf_conjgrad(NULL, sf_weight_lop,sf_trianglen_lop,p,rat,num,niter); 
+}
+
 
 void sf_divn_combine (const float* one, const float* two, float *prod)
 /*< compute product of two divisions >*/

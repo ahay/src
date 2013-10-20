@@ -16,7 +16,7 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../pwd/SConstruct')
 
 src = Glob('[a-z]*.c')
 src.remove(File('lbfgs.c'))
@@ -26,7 +26,8 @@ sparselibs = env.get('SPARSELIBS')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsfpwd',
+                  env.get('DYNLIB','')+'rsf'])
 
 # a bug in Apple's gcc
 if string.rfind(env.get('CC'),'gcc') >= 0 and env['PLATFORM'] == 'darwin':
