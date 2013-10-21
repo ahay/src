@@ -1,6 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import fdmod
+import fdmod,adcig
 
 # ------------------------------------------------------------
 # model parameters
@@ -96,15 +96,58 @@ def rtmpar(par):
 
 def migpar(par):
     wempar(par)
+
     
 # ------------------------------------------------------------
+def eicpar(par):
+    par['nhx']=50
+    par['nhz']=30
+    
+    par['nht']=60
+    par['dht']=0.01
+
+    adcig.sparam(5,
+                 2*par['nhx'],-par['nhx']*par['dx'], par['dx'],
+                 par['nz'],  par['oz'],            par['dz'],
+                 par['nht'],-par['nht']*par['dht'],par['dht'],
+                 par)
+    
+    adcig.eparam(5,
+                 2*par['nhx'],-par['nhx']*par['dx'], par['dx'],
+                 2*par['nhz'],-par['nhz']*par['dz'], par['dz'],
+                 par['nht'],-par['nht']*par['dht'],par['dht'],
+                 par)
+
+    par['na']=240
+    par['oa']=-60
+    par['da']=0.5
+    
+    par['ns']=500
+    par['os']=-2.5
+    par['ds']=0.01
+    
+# ------------------------------------------------------------
+def shotsTWO(par):
+
+    par['fS']=50
+    par['jS']=100
+    par['nS']=2
+#    par['oS']=par['osall']+par['fS']*par['dsall']
+#    par['dS']=             par['jS']*par['dsall']
+    
+    sindex = range(par['fS'],
+                   par['fS']+par['nS']*par['jS'],
+                   par['jS'])
+    return sindex
+
+
 def shotsFEW(par):
 
     par['fS']=50
     par['jS']=10
     par['nS']=16
-    par['oS']=par['osall']+par['fS']*par['dsall']
-    par['dS']=             par['jS']*par['dsall']
+#    par['oS']=par['osall']+par['fS']*par['dsall']
+#    par['dS']=             par['jS']*par['dsall']
     
     sindex = range(par['fS'],
                   par['fS']+par['nS']*par['jS'],
@@ -116,8 +159,8 @@ def shotsWIN(par):
     par['fS']=10
     par['jS']=2
     par['nS']=128
-    par['oS']=par['osall']+par['fS']*par['dsall']
-    par['dS']=             par['jS']*par['dsall']
+#    par['oS']=par['osall']+par['fS']*par['dsall']
+#    par['dS']=             par['jS']*par['dsall']
     
     sindex = range(par['fS'],
                   par['fS']+par['nS']*par['jS'],
@@ -129,8 +172,8 @@ def shotsALL(par):
     par['fS']=0
     par['jS']=1
     par['nS']=par['nsall']
-    par['oS']=par['osall']+par['fS']*par['dsall']
-    par['dS']=             par['jS']*par['dsall']
+#    par['oS']=par['osall']+par['fS']*par['dsall']
+#    par['dS']=             par['jS']*par['dsall']
     
     sindex = range(par['fS'],
                   par['fS']+par['nS']*par['jS'],

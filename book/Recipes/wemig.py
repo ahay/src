@@ -87,93 +87,143 @@ def wemWR(data,wfld,slow,causal,par):
     Flow(wfld,[data,slow],
          'wexwfl %s slo=${SOURCES[1]}' % param(par) + ' causal=%s '%causal) 
 
+def iwindow(par):
+    win = ' ' + \
+          '''
+          nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+          nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
+          jsnap=%(jdata)d jdata=%(jdata)d
+          ''' % par + ' '
+
+    return win
+    
 # ------------------------------------------------------------
 # RTM
 # ------------------------------------------------------------
 
 # WR: forward in time
 def fWRrtm(data,wfld,velo,dens,coor,custom,par):
-    iwindow = ' ' + \
-        '''
-        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
-        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
-        jsnap=%(jdata)d jdata=%(jdata)d
-        ''' % par + ' '
-
-    fdmod.anifd2d(wfld+'_out',wfld,
-                  data,velo,dens,coor,coor,iwindow+custom,par)
-
+    fdmod.anifd2d(wfld+'_',wfld,
+                  data,velo,dens,coor,coor,iwindow(par)+custom,par)
 # WR: backward in time
 def bWRrtm(data,wfld,velo,dens,coor,custom,par):
-    iwindow = ' ' + \
-        '''
-        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
-        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
-        jsnap=%(jdata)d jdata=%(jdata)d
-        ''' % par + ' '
-
-    Flow(data+'_rev',data,'reverse which=2 opt=i verb=y')
-    fdmod.anifd2d(wfld+'_out',wfld+'_rev',
-                  data+'_rev',velo,dens,coor,coor,iwindow+custom,par)
-    Flow(wfld,wfld+'_rev','reverse which=4 opt=i verb=y')
-
-
+    Flow(data+'_R',data,'reverse which=2 opt=i verb=y')
+    fdmod.anifd2d(wfld+'_',wfld+'_R',
+                  data+'_R',velo,dens,coor,coor,iwindow(par)+custom,par)
 
 # WR: forward in time
 def fWRawe(data,wfld,velo,dens,coor,custom,par):
-    iwindow = ' ' + \
-        '''
-        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
-        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
-        jsnap=%(jdata)d jdata=%(jdata)d
-        ''' % par + ' '
-
-    fdmod.awefd2d(wfld+'_out',wfld,
-                  data,velo,dens,coor,coor,iwindow+custom,par)
-
+    fdmod.awefd2d(wfld+'_',wfld,
+                  data,velo,dens,coor,coor,iwindow(par)+custom,par)
 # WR: backward in time
 def bWRawe(data,wfld,velo,dens,coor,custom,par):
-    iwindow = ' ' + \
-        '''
-        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
-        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
-        jsnap=%(jdata)d jdata=%(jdata)d
-        ''' % par + ' '
-
-    Flow(data+'_rev',data,'reverse which=2 opt=i verb=y')
-    fdmod.awefd2d(wfld+'_out',wfld+'_rev',
-                  data+'_rev',velo,dens,coor,coor,iwindow+custom,par)
-    Flow(wfld,wfld+'_rev','reverse which=4 opt=i verb=y')
+    Flow(data+'_R',data,'reverse which=2 opt=i verb=y')
+    fdmod.awefd2d(wfld+'_',wfld+'_R',
+                  data+'_R',velo,dens,coor,coor,iwindow(par)+custom,par)
 
 # WR: forward in time
 def fWRcda(data,wfld,velo,coor,custom,par):
-    iwindow = ' ' + \
-        '''
-        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
-        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
-        jsnap=%(jdata)d jdata=%(jdata)d
-        ''' % par + ' '
-
-    fdmod.cdafd(wfld+'_out',wfld,
-                  data,velo,coor,coor,iwindow+custom,par)
-
+    fdmod.cdafd(wfld+'_',wfld,
+                data,velo,coor,coor,iwindow(par)+custom,par)
 # WR: backward in time
 def bWRcda(data,wfld,velo,coor,custom,par):
-    iwindow = ' ' + \
-        '''
-        nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
-        nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g 
-        jsnap=%(jdata)d jdata=%(jdata)d
-        ''' % par + ' '
+    Flow(data+'_R',data,'reverse which=2 opt=i verb=y')
+    fdmod.cdafd(wfld+'_',wfld,
+                data+'_R',velo,coor,coor,iwindow(par)+custom,par)
 
-    Flow(data+'_rev',data,'reverse which=2 opt=i verb=y')
-    fdmod.cdafd(wfld+'_out',wfld+'_rev',
-                  data+'_rev',velo,coor,coor,iwindow+custom,par)
-    Flow(wfld,wfld+'_rev','reverse which=4 opt=i verb=y')
-
+def reverse(wfldO,wfldI,par):
+    Flow(wfldO,wfldI,'reverse which=4 opt=i verb=y')
+    
 # ------------------------------------------------------------
+# variable-density shot-record migration
+def rtmcic(imag,velo,dens,
+           sdat,scoo,
+           rdat,rcoo,
+           custom,par):
+
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
+
+    swfl=imag+'swfl'
+    rdrv=imag+'rdrv'
+    rwfl=imag+'rwfl'
+
+    Flow(imag,[sdat,scoo,rdat,rcoo,velo],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=y %s
+         vel=${SOURCES[4]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+' '+awepar,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=y %s
+         vel=${SOURCES[4]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
+         '''
+         %scic2d <%s isreversed=0 uu=%s axis=3 verb=y %s >${TARGETS[0]};
+         '''%(M8R,swfl,rwfl,custom) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+
 # constant-density shot-record migration
 def cdrtm(imag,velo,
+          sdat,scoo,
+          rdat,rcoo,
+          custom,par):
+
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
+
+    swfl=imag+'swfl'
+    rdrv=imag+'rdrv'
+    rwfl=imag+'rwfl'
+
+    Flow(imag,[sdat,scoo,rdat,rcoo,velo],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=y %s
+         vel=${SOURCES[4]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+' '+awepar,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=y %s
+         vel=${SOURCES[4]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
+         '''
+         %scic2d <%s isreversed=0 uu=%s axis=3 verb=y %s >${TARGETS[0]};
+         '''%(M8R,swfl,rwfl,custom) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+
+def cdrtmOBSOLETE(imag,velo,
           sdat,scoo,
           rdat,rcoo,
           custom,par):
@@ -226,24 +276,30 @@ def cdrtm(imag,velo,
 # ------------------------------------------------------------
 
 # CIC: cross-correlation
-def cic(imag,swfl,rwfl,custom,par):
-    par['ciccustom'] = custom
-
+def cic(imag,swfl,rwfl,custom,par,isreversed=0):
     Flow(imag,[swfl,rwfl],
          '''
-         xcor2d 
-         uu=${SOURCES[1]} axis=3 verb=y ompnth=%(ompnth)d 
-         %(ciccustom)s
-         ''' % par)
-
-def cic3d(imag,swfl,rwfl,par):
-    Flow(imag,[swfl,rwfl],
-         '''
-         cic uu=${SOURCES[1]} axis=3 verb=y ompnth=%(ompnth)d
-         ''' % par)
+         cic2d verb=y
+         ur=${SOURCES[1]} 
+         '''%par+ 'isreversed=%d'%isreversed + ' ' + custom )
+    
+#def cic3d(imag,swfl,rwfl,par):
+#    Flow(imag,[swfl,rwfl],
+#         '''
+#         cic uu=${SOURCES[1]} axis=3 verb=y ompnth=%(ompnth)d
+#         ''' % par)
 
 # EIC
-def eic(cip,swfl,rwfl,cc,custom,par):
+def eic(cip,swfl,rwfl,cc,custom,par,isreversed=0):    
+    Flow(cip,[swfl,rwfl,cc],
+         '''
+         eic2d verb=y
+         nhx=%(nhx)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
+         ur=${SOURCES[1]}
+         cc=${SOURCES[2]}
+         '''%par+ 'isreversed=%d'%isreversed + ' '+ custom )
+    
+def eicOBSOLETE(cip,swfl,rwfl,cc,custom,par):
     par['eiccustom'] = custom
     
     Flow(cip,[swfl,rwfl,cc],
@@ -255,17 +311,17 @@ def eic(cip,swfl,rwfl,cc,custom,par):
          %(eiccustom)s
          ''' %par)
 
-def eic3d(cip,swfl,rwfl,cc,custom,par):
-    par['eiccustom'] = custom
-   
-    Flow(cip,[swfl,rwfl,cc],
-         '''
-         eic verb=y
-         nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
-         ur=${SOURCES[1]}
-         cc=${SOURCES[2]}
-         %(eiccustom)s
-         ''' %par)
+#def eic3d(cip,swfl,rwfl,cc,custom,par):
+#    par['eiccustom'] = custom
+#   
+#    Flow(cip,[swfl,rwfl,cc],
+#         '''
+#         eic verb=y
+#         nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
+#         ur=${SOURCES[1]}
+#         cc=${SOURCES[2]}
+#         %(eiccustom)s
+#         ''' %par)
 
 
 # CIC: deconvolution
