@@ -228,6 +228,29 @@ def qqplot2d(custom,par):
     window n1=2 | dd type=complex |
     ''' + cgraph2d('symbol=. plotcol=1 plotfat=5 %s'%custom,par)
 
+# ------------------------------------------------------------
+# rays plot
+def rays2d(plot,hwt,fray,jray,custom,par):
+    Plot(plot,hwt,
+         'window squeeze=n f1=%d j1=%d | transp |'%(fray,jray)
+         + cgraph2d('plotcol=5 wantaxis=n'+custom,par))
 
+# wfts plot
+def wfts2d(plot,hwt,fwft,jwft,custom,par):
+    Plot(plot,hwt,
+         'window squeeze=n f2=%d j2=%d | transp |'%(fwft,jwft)
+         + cgraph2d('plotcol=2 wantaxis=n plotfat=2 symbol=.'+custom,par))
 
-
+# contour plot
+def ccont2d(custom,par):
+    return '''
+    contour labelrot=n wantaxis=n title=""
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
+    screenratio=%g screenht=%g wantscalebar=n
+    plotcol=2 plotfat=2
+    %s
+    ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['iratio'],par['iheight'],
+        par['labelattr']+' '+custom)

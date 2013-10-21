@@ -47,7 +47,7 @@ def modpar(par):
 
     par['frq']=10
     par['kt']=100
-    par['nt']=5001
+    par['nt']=12001
     par['dt']=0.001
     par['nb']=150
     par['jsnap']=500
@@ -97,7 +97,6 @@ def rtmpar(par):
 def migpar(par):
     wempar(par)
 
-    
 # ------------------------------------------------------------
 def eicpar(par):
     par['nhx']=50
@@ -125,7 +124,16 @@ def eicpar(par):
     par['ns']=500
     par['os']=-2.5
     par['ds']=0.01
+
     
+# ------------------------------------------------------------
+def hwtpar(par):
+    par['ng']=1801
+    par['dg']=0.2
+    par['og']=-180
+    par['lg']='g'
+    par['ug']='deg'
+
 # ------------------------------------------------------------
 def shotsTWO(par):
 
