@@ -18,16 +18,25 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/* 
+ * inputs: wavefields organized as z-x-t
+ * output:      image organized as z-x
+ */
+
 #include <rsf.h>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 int main(int argc, char* argv[])
 {
     bool verb,isreversed;
 
     sf_file Fs,Fr,Fi;    /* I/O files */
-    sf_axis a1,a2,a3,aa; /* cube axes */
-    int     i1,i2,i3;
-    int     n1,n2,n3;
+    sf_axis az,ax,at,aa; /* cube axes */
+    int     iz,ix,it;
+    int     nz,nx,nt;
 
     float **us=NULL,**ur=NULL,**ii=NULL;
 
@@ -37,94 +46,116 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);
     
+    /* OMP parameters */
+#ifdef _OPENMP
+    omp_init();
+#endif
+
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("isreversed",&isreversed)) isreversed=false; /* received wavefield */
 
     Fs = sf_input ("in" );
-    Fr = sf_input ("uu" );
+    Fr = sf_input ("ur" );
     Fi = sf_output("out");
 
     /*------------------------------------------------------------*/
     /* read axes */
-    a1=sf_iaxa(Fs,1); if(verb) sf_raxa(a1);
-    a2=sf_iaxa(Fs,2); if(verb) sf_raxa(a2);
-    a3=sf_iaxa(Fs,3); if(verb) sf_raxa(a3);
+    az=sf_iaxa(Fs,1); nz = sf_n(az);
+    ax=sf_iaxa(Fs,2); nx = sf_n(ax);
+    at=sf_iaxa(Fs,3); nt = sf_n(at);
 
     aa=sf_maxa(1,0,1); 
     sf_setlabel(aa,""); 
     sf_setunit (aa,""); 
 
-    n1 = sf_n(a1);
-    n2 = sf_n(a2);
-    n3 = sf_n(a3);
-    scale = 1./n3;
+    if(verb) {
+	sf_raxa(az);
+	sf_raxa(ax);
+	sf_raxa(at);
+    }
 
     /* write axes */
-    sf_oaxa(Fi,a1,1);
-    sf_oaxa(Fi,a2,2);
+    sf_oaxa(Fi,az,1);
+    sf_oaxa(Fi,ax,2);
     sf_oaxa(Fi,aa,3);
     
     /*------------------------------------------------------------*/
-    /* allocate arrays */
-    ii = sf_floatalloc2(n1,n2); 
-    us = sf_floatalloc2(n1,n2);
-    ur = sf_floatalloc2(n1,n2);
-    for    (i2=0; i2<n2; i2++) {
-	for(i1=0; i1<n1; i1++) {
-	    ii[i2][i1]=0.;
-	    us[i2][i1]=0.;
-	    ur[i2][i1]=0.;
+    /* allocate work arrays */
+    ii = sf_floatalloc2(nz,nx); 
+    us = sf_floatalloc2(nz,nx);
+    ur = sf_floatalloc2(nz,nx);
+    for    (ix=0; ix<nx; ix++) {
+	for(iz=0; iz<nz; iz++) {
+	    ii[ix][iz]=0.;
 	}
     }
 
     /*------------------------------------------------------------*/
-    if(isreversed){ /* receiver wavefield is reversed */
-	for (i3=0; i3<n3; i3++) {
-	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",i3);
+    if(isreversed) { /* receiver wavefield is reversed */
+
+	if(verb) fprintf(stderr,"nt\n");
+	for (it=0; it<nt; it++) {
+	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b%04d",it);
 	    
-	    sf_floatread  (us[0],n1*n2,Fs);
-	    sf_floatread  (ur[0],n1*n2,Fr);
+	    sf_floatread(us[0],nz*nx,Fs);
+	    sf_floatread(ur[0],nz*nx,Fr);
 	    
-	    for    (i2=0; i2<n2; i2++) {
-		for(i1=0; i1<n1; i1++) {
-		    ii[i2][i1] += us[i2][i1]*ur[i2][i1];
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)				\
+    private(ix,iz)							\
+    shared (ii,us,ur,nx,nz)
+#endif
+	    for    (ix=0; ix<nx; ix++) {
+		for(iz=0; iz<nz; iz++) {
+		    ii[ix][iz] += us[ix][iz]*ur[ix][iz];
 		}
 	    }
-	} 
+
+	} /* it */
 	if(verb) fprintf(stderr,"\n");
 	
     } else { /* receiver wavefield is NOT reversed */
-	for (i3=0; i3<n3; i3++) {
-	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",(n3-i3-1));
-	    
-	    sf_floatread  (us[0],n1*n2,Fs);
 
-	    sf_seek(Fr,(n3-i3-1)*n1*n2*sizeof(float),SEEK_SET);
-	    sf_floatread  (ur[0],n1*n2,Fr);
+	if(verb) fprintf(stderr,"nt\n");
+	for (it=0; it<nt; it++) {
+	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",(nt-it-1));
 	    
-	    for    (i2=0; i2<n2; i2++) {
-		for(i1=0; i1<n1; i1++) {
-		    ii[i2][i1] += us[i2][i1]*ur[i2][i1];
+	    sf_floatread(us[0],nz*nx,Fs);
+	    sf_seek(Fr,(nt-1-it)*nz*nx*sizeof(float),SEEK_SET);
+	    sf_floatread(ur[0],nz*nx,Fr);
+	    
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic)				\
+    private(ix,iz)							\
+    shared (ii,us,ur,nx,nz)
+#endif
+	    for    (ix=0; ix<nx; ix++) {
+		for(iz=0; iz<nz; iz++) {
+		    ii[ix][iz] += us[ix][iz]*ur[ix][iz];
 		}
 	    }
-	}
+
+	} /* it */
 	if(verb) fprintf(stderr,"\n");
 
-    }
+    } /* end "is reversed" */
+    /*------------------------------------------------------------*/
        
     /*------------------------------------------------------------*/
     /* scale image */
-    for    (i2=0; i2<n2; i2++) {
-	for(i1=0; i1<n1; i1++) {
-	    ii[i2][i1] *=scale;
+    scale = 1./nt;
+    for    (ix=0; ix<nx; ix++) {
+	for(iz=0; iz<nz; iz++) {
+	    ii[ix][iz] *=scale;
 	}
     }
 
     /*------------------------------------------------------------*/
     /* write image */
-    sf_floatwrite(ii[0],n2*n1,Fi);
+    sf_floatwrite(ii[0],nx*nz,Fi);
     
     /*------------------------------------------------------------*/
+    /* deallocate arrays */
     free(*ii); free(ii);
     free(*us); free(us);
     free(*ur); free(ur);
