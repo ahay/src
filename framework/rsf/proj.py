@@ -322,17 +322,19 @@ class Project(Environment):
             self.nodes.extend([hosts[i-1]]*nh)
         self.ip = 0
 
-        os.system("/bin/rm -f hosts.txt")
-        hosts_fd=open('hosts.txt','w+')
-        hosts_fd.write("numnodes %4d\n"%len(self.nodes))
-        hosts_fd.write("host                                    state\n") 
-        for host in self.nodes:
-	    hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
-        hosts_fd.close()
-
         # self.nodes is a list of CPUs
         # self.jobs is the number of jobs
         # self.ip is the current CPU
+
+        self.hosts = os.path.join(self.path,'hosts.txt')
+        if (os.path.isfile(self.hosts)):
+            os.unlink(self.hosts)
+        hosts_fd=open(self.hosts,'w')
+        hosts_fd.write("numnodes %4d\n"%len(self.nodes))
+        hosts_fd.write("host                                    state\n") 
+        for host in self.nodes:
+            hosts_fd.write(string.ljust(host,40)+string.ljust("notrunning",10)+"\n")
+        hosts_fd.close()
 
         for key in self['ENV'].keys():
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key])
@@ -495,10 +497,10 @@ class Project(Environment):
         if remote:
             command = re.sub('"','\\"',command)
             if self.raddenv:
-                command = string.join([self.runonnode,'\"',self.raddenv,
+                command = string.join([self.runonnode,self.hosts,'\"',self.raddenv,
                                        '; cd ',self.cwd,';',command,'\"'])
             else:
-                command = string.join([self.runonnode,
+                command = string.join([self.runonnode,self.hosts,
                                        '\"cd ',self.cwd,';',command,'\"'])
                         
         targets = []
