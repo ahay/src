@@ -985,7 +985,7 @@ def cdafd(odat,owfl,idat,velo,sou,rec,custom,par):
          sou=${SOURCES[2]}
          rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
-         '''%par+iwindow(par)+custom)
+         '''%par+custom)
 def cdafd1(odat,owfl,idat,velo,sou,rec,custom,par):
     cdafd(odat,owfl,idat,velo,sou,rec,custom+' expl=y ',par)
 
