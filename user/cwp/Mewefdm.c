@@ -12,7 +12,18 @@ as generic as possible.  Supports arbitrary types of anisotropy as well.
 The downside to the generality, is that the program is not as performant as dedicated solvers
 that are less flexible.  The program is parallelized using OpenMP, so be sure to use a compatible compiler to take
 advantage of the performance boost.
-
+=========== Rotated Staggered grid ==========================
+        Ux,Uz=====================Ux,Uz
+        ||            |             || 
+        ||                          ||
+        ||            |             ||
+        ||             tij          ||
+        ||- - - - - - |- - - - - - -|| 
+        ||             Cij          ||
+        ||            |             ||
+        ||                          ||
+        ||            |             ||
+        Ux,Uz=====================Ux,Uz
 ===========  OPTIONS  ======================================= 
 ani - The type of anisotropy for this simulation.  Valid options:
         For 2D:
@@ -247,6 +258,8 @@ If the simulation seems to slow down as it's running, its a pretty
 good indication that the simulation has become unstable and is overflowing
 with NaNs.
 
+
+Modified by Yuting Duan, Colorado School of Mines,2013-10-22. 
 
 */
 /*
