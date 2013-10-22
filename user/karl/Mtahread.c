@@ -42,6 +42,8 @@ int main(int argc, char* argv[])
   int* iheader=NULL;
   int i_trace;
   int tempint;
+  char* infile_filename=NULL;
+  char* headers_filename=NULL;
 
   sf_init (argc,argv);
 
@@ -57,17 +59,22 @@ int main(int argc, char* argv[])
   /*****************************************/
   /* initialize the input and output files */
   /*****************************************/
-  fprintf(stderr,"read in file name\n");
+  fprintf(stderr,"read name of input file name\n");
   
-  if(NULL!=sf_getstring("input")) infile = sf_input ("input");
-  else                            infile = sf_input ("in");
+  infile_filename=sf_getstring("input");
+  if(infile_filename==NULL) infile = sf_input ("in");
+  else infile = sf_input (infile_filename);
 
-  fprintf(stderr,"read out file name\n");
+  fprintf(stderr,"set up output file for tah - should be stdout\n");
   out = sf_output ("out");
 
   fprintf(stderr,"read name of input headers file\n");
-  if(!(inheaders = sf_input("headers")))sf_error("headers parameter not input");
-  
+  if(!(headers_filename=sf_getstring("headers"))) {
+    sf_error("headers parameter not input");
+  } else {
+    inheaders = sf_input(headers_filename);
+  }
+
   if (!sf_histint(infile,"n1",&n1_traces))
     sf_error("input file does not define n1");
   if (!sf_histint(inheaders,"n1",&n1_headers)) 

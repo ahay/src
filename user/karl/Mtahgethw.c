@@ -22,9 +22,49 @@
    04/26/2012 Karl Schleicher Original program
 */
 #include <string.h>
-
 #include <rsf.h>
 #include <rsfsegy.h>
+
+char** sf_getstringarray(char* key, int* numkeys){
+
+  char** list_of_keys;
+  char* par;
+  char* one_par;
+  char* copy_of_par;
+  int ikey;
+
+  par=sf_getstring(key);
+  if(par==NULL){
+    return NULL;
+  }
+
+  /* count number of keys */
+  *numkeys=0;
+  copy_of_par=sf_charalloc(strlen(par));
+  strcpy (copy_of_par, par);
+  one_par=strtok(copy_of_par,",");
+  while (one_par!=NULL){
+    (*numkeys)++;
+    one_par=strtok(NULL,",");
+  }
+  /* break the long string into an array  of strings */
+  list_of_keys=(char**)sf_alloc(*numkeys,sizeof(char*));
+  /* no need to reallocate, but including free(copy_of_par) clobberred part of
+    list_of_keys.  This spooked me on exactly how strtok works */
+  copy_of_par=sf_charalloc(strlen(par));
+  strcpy (copy_of_par, par);
+  list_of_keys[0]=strtok(copy_of_par,",");
+  for(ikey=1; ikey<*numkeys; ikey++){
+    list_of_keys[ikey]=strtok(NULL,",");
+  }
+  /*should:
+    free(copy_of_par);
+    free(par);
+    but it causes part of list_of_keys to be clobberred 
+    this is a very minor memory leak
+  */
+  return list_of_keys;
+}
 
 int main(int argc, char* argv[])
 {
@@ -44,9 +84,6 @@ int main(int argc, char* argv[])
   int tempint;
   char type_input_record[5];
   int input_record_length;
-  char* key;
-  char* copy_of_key;
-  char* one_key;
   int numkeys;
   int ikey;
   char** list_of_keys;
@@ -91,33 +128,14 @@ int main(int argc, char* argv[])
   fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
-  /* kls refactor this into a function:
-     sf_getstringarray("key",&list_of_keys,&numkeys); */
-  {
-    key=sf_getstring("key");
-    fprintf(stderr,"the whole key=%s\n",key);
-    
-    /* count number of keys */
-    numkeys=0;
-    copy_of_key=sf_charalloc(strlen(key));
-    strcpy (copy_of_key, key);
-    one_key=strtok(copy_of_key,",");
-    while (one_key!=NULL){
-      numkeys++;
-      one_key=strtok(NULL,",");
-    }
-    /* break the long string into an array  of strings */
-    list_of_keys=(char**)sf_alloc(numkeys,sizeof(char*));
-    copy_of_key=sf_charalloc(strlen(key));
-    strcpy (copy_of_key, key);
-    list_of_keys[0]=strtok(copy_of_key,",");
-    for(ikey=1; ikey<numkeys; ikey++){
-      list_of_keys[ikey]=strtok(NULL,",");
-    }
-    /* print the list of keys */
-    for(ikey=0; ikey<numkeys; ikey++){
-      fprintf(stderr,"list_of_keys[%d]=%s\n",ikey,list_of_keys[ikey]);
-    }
+  fprintf(stderr,"call list of keys\n");
+  list_of_keys=sf_getstringarray("key",&numkeys);
+  if(list_of_keys==NULL)
+    sf_error("The required parameter \"key\" was not found.");
+
+  /* print the list of keys */
+  for(ikey=0; ikey<numkeys; ikey++){
+    fprintf(stderr,"list_of_keys[%d]=%s\n",ikey,list_of_keys[ikey]);
   }
   
 /* maybe I should add some validation that n1== n1_traces+n1_headers+2
