@@ -160,6 +160,14 @@ def modpar(par):
     if(not par.has_key('ompchunk')): par['ompchunk']=1
     if(not par.has_key('ompnth')):   par['ompnth']=0
     if(not par.has_key('free')):     par['free']='n'
+
+    if(not par.has_key('nqz')):      par['nqz']=par['nz']
+    if(not par.has_key('oqz')):      par['oqz']=par['oz']
+    if(not par.has_key('dqz')):      par['dqz']=par['dz']
+
+    if(not par.has_key('nqx')):      par['nqx']=par['nx']
+    if(not par.has_key('oqx')):      par['oqx']=par['ox']
+    if(not par.has_key('dqx')):      par['dqx']=par['dx']
     
 # ------------------------------------------------------------
 # plotting functions
@@ -856,6 +864,15 @@ def qqbox3d(par):
     nqy=%(nqy)d oqy=%(oqy)g
     ''' % par
 
+def iwindow(par):
+    win = ' ' + \
+          '''
+          nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
+          nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
+          ''' % par + ' '
+
+    return win
+
 # ------------------------------------------------------------
 # rays plot
 def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,custom,par):
@@ -968,7 +985,7 @@ def cdafd(odat,owfl,idat,velo,sou,rec,custom,par):
          sou=${SOURCES[2]}
          rec=${SOURCES[3]}
          wfl=${TARGETS[1]}
-         '''%par+custom)
+         '''%par+iwindow(par)+custom)
 def cdafd1(odat,owfl,idat,velo,sou,rec,custom,par):
     cdafd(odat,owfl,idat,velo,sou,rec,custom+' expl=y ',par)
 
@@ -1291,27 +1308,7 @@ def iom(iom,imag,velo,vmean,par):
         '''%(M8R,itmp,vtmp),
         stdin=0,
         stdout=0)
-    
-        #    if(not par.has_key('iweight')): par['iweight']=10
-        #    if(not par.has_key('iclip')):   par['iclip']=1.0
-        #
-        #    chop = imag+'_chop'
-    #    Flow(chop,imag,
-    #         '''
-    #         window
-    #         min1=%(zmin)g max1=%(zmax)g
-    #         min2=%(xmin)g max2=%(xmax)g |
-    #         scale axis=123 |
-    #         clip clip=%(iclip)g
-    #         ''' % par)
-
-    #    Flow(iom,[velo,chop],
-    #         '''
-    #         add add=-%g |
-    #         scale axis=123 |
-    #         math w=${SOURCES[1]} output="input+%g*w"
-    #         ''' % (vmean,par['iweight']))
-
+ 
 # ------------------------------------------------------------
 # wavefield snapshot plots
 def wframe(frame,movie,index,custom,par):

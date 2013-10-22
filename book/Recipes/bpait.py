@@ -8,20 +8,23 @@ import fdmod
 # ------------------------------------------------------------
 # model parameters
 def param():
-    par = {
-    'nt':8001,  'ot':0,      'dt':0.00050, 'lt':'t', 'ut':'s',
-    'nx':5395,  'ox':2.4384, 'dx':0.01250, 'lx':'x', 'ux':'km',
-    'nz':1911,  'oz':0,      'dz':0.00625, 'lz':'z', 'uz':'km'
-    }
+    par = dict(
+    nt=8001,  ot=0,      dt=0.00050, lt='t', ut='s',
+    nx=5395,  ox=2.4384, dx=0.01250, lx='x', ux=:'km',
+    nz=1911,  oz=0,      dz=0.00625, lz='z', uz='km'
+    )
 
     return par
 
 # ------------------------------------------------------------
 def getmigvel(velo,par):
 
-    migvelfile = 'data/bpait/bpaitvel.hh'
-    #Fetch("bpaitvel.hh",'bpait')
-
+    if(local):
+        migvelfile = 'DATA/bpait/bpaitvel.hh'
+    else:
+        migvelfile = 'bpaitvel.hh'
+        Fetch(datafile,'bpait')
+        
     Flow(velo,migvelfile,
          '''
          dd form=native |
