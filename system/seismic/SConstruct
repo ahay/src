@@ -6,7 +6,7 @@ progs = '''
 aastack agmig ai2refl avo beamspray cascade c2r cell2 cell3 cgscan
 cmp2shot constfdmig2 cos2ang depth2time diffoc diffraction dimag dmo
 dsr dsr2 envelope fincon findmo finstack fkamo fkdmo fold fourvc
-fourvc0 fourvc2 freqint freqlet gazdag gdmo halfint headerattr
+fourvc0 fourvc2 fowler freqint freqlet gazdag gdmo halfint headerattr
 headermath hwt2d hwtex infill inmo inmo3 intbin intbin3 isin2ang
 itaupmo itaupmo2 itaupmo3 itxmo iwarp iwarp2 iwarp3 kgdmo kirchinv
 kirchnew kirmod kirmod3 linsincos migsteep3 modrefl modrefl2 modrefl3
