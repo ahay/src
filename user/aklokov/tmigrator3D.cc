@@ -67,7 +67,7 @@ void TimeMigrator3D::processGather (Point2D& curGatherCoords, float curOffset, c
 
 				float sample (0.f);
 	    		int badRes = this->getSampleByBeam (yCIG, xCIG, curTime, curSDip, curDip, migVel, isAzDip, sample);
-	    		if (badRes && useRay_)
+	    		if (badRes)
 	    			sample = this->getSampleByRay (yCIG, xCIG, curTime, curSDip, curDip, migVel, isAzDip, dummy, dummy);
 	
 				const int gInd = it + (idy * dipNum + idx) * tNum;

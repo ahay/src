@@ -15,8 +15,8 @@ public:
 		virtual void processGather  (Point2D& curGatherCoords, float curOffset, const float* const velTrace, const bool isAzDip,
   								     float* curoffsetGather, float* curoffsetImage, float* curoffsetImageSq);
 
-		void setImagingParams (VolumeParams* dp, float* ptrToData, bool isAA, bool useRay, int axis2label,
-							   VolumeParams* vp, VolumeParams* ip, GatherParams* gp) { dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA; useRay_ = useRay;
+		void setImagingParams (VolumeParams* dp, float* ptrToData, bool isAA, int axis2label,
+							   VolumeParams* vp, VolumeParams* ip, GatherParams* gp) { dp_ = dp; ptrToData_ = ptrToData; isAA_ = isAA;
 																					   axis2label_ = axis2label; vp_ = vp; ip_ = ip; gp_ = gp; }
 
 		float getMigVel (const float* const velTrace, const float curZ);
