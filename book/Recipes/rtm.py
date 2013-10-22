@@ -285,3 +285,63 @@ def eic(ieic,swfl,rwfl,cc,custom,par,isreversed=0):
          ur=${SOURCES[1]}
          cc=${SOURCES[2]}
          '''%par+ 'isreversed=%d'%isreversed + ' '+ custom )
+
+# ------------------------------------------------------------
+def zofmig(imag,data,rcoo,velo,dens,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    rdat = imag+'rdat'
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo,dens],
+         '''
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdat,DPT) +
+         '''
+         %sawefd2d < %s cden=n %s
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[2]}
+         den=${SOURCES[3]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdat,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s %s
+         '''%(M8R,rdat,rwfl),
+              stdin=0,
+              stdout=0)
+    
+# ------------------------------------------------------------
+def zofmigCD(imag,data,rcoo,velo,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    rdat = imag+'rdat'
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo],
+         '''
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         '''%(M8R,rdat,DPT) +
+         '''
+         %sawefd2d < %s cden=y %s
+         vel=${SOURCES[2]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdat,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s %s
+         '''%(M8R,rdat,rwfl),
+              stdin=0,
+              stdout=0)
+    
