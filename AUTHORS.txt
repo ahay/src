@@ -55,6 +55,7 @@ Robin Weiss <robin.weiss@uwa.edu.au>
 Zedong Wu <zedong.wu@kaust.edu.sa>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
+Yuting Duan <yduan@mines.edu>
 
 Vplot authors:
 

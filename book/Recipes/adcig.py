@@ -64,9 +64,8 @@ def ciggrey(custom,par):
     screenratio=1.5
     labelsz=6 labelfat=3 titlesz=12 titlefat=3
     %s
-    ''' % (
-        par['zmin'],par['zmax'],par['lz'],par['uz'],
-        par['labelattr']+' '+custom)
+    '''%(par['zmin'],par['zmax'],par['lz'],par['uz'],
+         par['labelattr']+' '+custom)
 
 def xgrey(custom,par):
     return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g xll=2 yll=1'%par+' '+custom,par)
@@ -81,26 +80,21 @@ def agrey(custom,par):
     return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+' '+custom,par)
 # ------------------------------------------------------------
 
-
 # ------------------------------------------------------------
 def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
+    dz_ = (nhz-1)*dhz
+    dx_ = (nhx-1)*dhx
+    dt_ =((nht-1)*dht)*v
 
-    dz = (nhz-1)*dhz
-    dx = (nhx-1)*dhx
-    dt =((nht-1)*dht)*v
-
-    par['eratio']=(dz+dt)/(dx+dt);
-    par['epoint1']=dz/(dz+dt);
-    par['epoint2']=dx/(dx+dt);
+    par['eratio']=(dz_+dt_)/(dx_+dt_);
+    par['epoint1']=dz_/(dz_+dt_);
+    par['epoint2']=dx_/(dx_+dt_);
     
-    if(par['eratio']>=1):
-        par['eheight']=10
-    else:
-        par['eheight']=12*par['eratio']
+    if(par['eratio']>=1): par['eheight']=10
+    else:                 par['eheight']=14*par['eratio']
 
 # ------------------------------------------------------------
 def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
-
     dx_ = (nhx-1)*dhx
     dy_ = (nhy-1)*dhy
     dt_ =((nht-1)*dht)*v
@@ -109,10 +103,8 @@ def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
     par['hpoint1']=dt_/(dt_+dy_);
     par['hpoint2']=dx_/(dx_+dy_);
     
-    if(par['hratio']>=1):
-        par['hheight']=10
-    else:
-        par['hheight']=14*par['hratio']
+    if(par['hratio']>=1): par['hheight']=10
+    else:                 par['hheight']=14*par['hratio']
 
 # ------------------------------------------------------------
 def xparam(nhx,ohx,dhx,nz,oz,dz,par):
@@ -123,12 +115,10 @@ def xparam(nhx,ohx,dhx,nz,oz,dz,par):
 def tparam(v,nht,oht,dht,nz,oz,dz,par):
     dz_ = (nz-1)*dz
     dt_ =((nht-1)*dht)*v
-
     par['tratio']=(dz_)/(dt_);
     
 # ------------------------------------------------------------
 def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
-
     dz_ = (nz -1)*dz
     dx_ = (nhx-1)*dhx
     dt_ =((nht-1)*dht)*v
@@ -137,14 +127,8 @@ def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
     par['spoint1']=dz_/(dz_+dt_);
     par['spoint2']=dx_/(dx_+dt_);
     
-    if(par['sratio']>=1):
-        par['sheight']=10
-    else:
-        par['sheight']=13*par['sratio']
-
-    print dz_,dx_,dt_
-    print nhx,dhx
-    print par['sratio']
+    if(par['sratio']>=1): par['sheight']=10
+    else:                 par['sheight']=14*par['sratio']
 
 # ------------------------------------------------------------
 # lz-lx-tau
