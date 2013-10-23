@@ -123,22 +123,22 @@ def eicpar(par):
     par['nht']=60
     par['dht']=par['dt']
 
-    adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx'],par['dx'],
-                 par['nz']   ,            par['oz'],par['dz'],
+    adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
+                 par['nz'],                 par['oz'],par['dz'],
                  par)
-    adcig.tparam((par['nhx']*par['dx'])/(par['nht']*par['dt']),
-                 2*par['nht']+1,-par['nht']*par['dt'],par['dt'],
+    adcig.tparam((par['nhx']*par['dx']*par['jximg'])/(par['nht']*par['dht']),
+                 2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
                  par['nz']   ,            par['oz'],par['dz'],
                  par)
     adcig.sparam(5,
-                 2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'], par['dx']*par['jximg'],
-                 par['nz'],  par['oz'],                par['dz'],
-                 2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
+                 2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
+                 par['nz'],       par['oz'],                       par['dz'],
+                 2*par['nht']+1,-par['nht']*par['dht'],            par['dht'],
                  par)    
     adcig.eparam(1,
-                 2*par['nhx'],-par['nhx']*par['dx'], par['dx'],
-                 2*par['nhz'],-par['nhz']*par['dz'], par['dz'],
-                 par['nht'],-par['nht']*par['dht'],par['dht'],
+                 2*par['nhx']+1,-par['nhx']*par['dx'], par['dx'],
+                 2*par['nhz']+1,-par['nhz']*par['dz'], par['dz'],
+                 2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
                  par)
 
     par['na']=240
