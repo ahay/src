@@ -45,7 +45,7 @@ static char* sf_escst3_warnext (sf_file input) {
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, iz, ix, iy, ia, ib, fz, lz;
     int icpu = 0, ncpu = 1, morder = 2, ic, nc = 1, mp = 1, ith = 0, inet = 0, tdel = 0;
-    float dz, oz, dx, ox, dy, oy, db, ob, da, oa;
+    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, aper;
     float z, x, y;
     float ****e;
     sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
@@ -126,6 +126,11 @@ int main (int argc, char* argv[]) {
                 ext, nc, omp_get_max_threads ());
     sf_warning ("%s Buffering %d points", ext, nc*mp);
 #endif
+
+    if (!sf_getfloat ("aper", &aper)) aper = SF_HUGE;
+    /* Maximum aperture in x and y directions from current point (default - up to grid boundaries) */
+    if (aper != SF_HUGE)
+        aper = fabsf (aper);
 
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
@@ -237,8 +242,22 @@ int main (int argc, char* argv[]) {
 
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
+        /* Set aperture */
+        if (aper != SF_HUGE) {
+            for (ic = 0; ic < nc; ic++) {
+                sf_esc_scgrid3_set_ymin (esc_scgrids[ic], y - aper);
+                sf_esc_scgrid3_set_ymax (esc_scgrids[ic], y + aper);
+            }
+        }
         for (ix = 0; ix < nx; ix++) {
             x = ox + ix*dx;
+            /* Set aperture */
+            if (aper != SF_HUGE) {
+                for (ic = 0; ic < nc; ic++) {
+                    sf_esc_scgrid3_set_xmin (esc_scgrids[ic], x - aper);
+                    sf_esc_scgrid3_set_xmax (esc_scgrids[ic], x + aper);
+                }
+            }
             if (verb)
                 sf_warning ("%s Projecting from lateral location %d of %d at y=%g, x=%g;",
                             ext, iy*nx + ix + 1, ny*nx, y, x);

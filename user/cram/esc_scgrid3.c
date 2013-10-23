@@ -116,6 +116,7 @@ struct EscSCgrid3 {
     int                     nz, nx, ny, na, nb;
     float                   oz, ox, oy, oa, ob;
     float                   dz, dx, dy, da, db;
+    float                   zgmin, zgmax, xgmin, xgmax, ygmin, ygmax;
     float                   zmin, zmax, xmin, xmax, ymin, ymax, md;
     multi_UBspline_3d_s    *scsplines;
     unsigned char          *memmap;
@@ -511,6 +512,17 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
     return is;
 }
 
+void sf_esc_scgrid3_reset_bounds (sf_esc_scgrid3 esc_scgrid)
+/*< Reset spatial bounds >*/
+{
+    esc_scgrid->zmin = esc_scgrid->zgmin;
+    esc_scgrid->zmax = esc_scgrid->zgmax;
+    esc_scgrid->xmin = esc_scgrid->xgmin;
+    esc_scgrid->xmax = esc_scgrid->xgmax;
+    esc_scgrid->ymin = esc_scgrid->ygmin;
+    esc_scgrid->ymax = esc_scgrid->ygmax;
+}
+
 sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
                                     sf_esc_tracer3 esc_tracer, sf_esc_scglstor3 esc_scgrid_lstor,
                                     int morder, int inet, float frac, char *ext, bool rfail, bool verb)
@@ -553,23 +565,25 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
 
     if (!sf_histfloat (scgrid, "Mdist", &esc_scgrid->md)) esc_scgrid->md = esc_scgrid->dz;
 
-    esc_scgrid->zmin = esc_scgrid->oz;
-    esc_scgrid->zmax = esc_scgrid->oz + (esc_scgrid->nz - 1)*esc_scgrid->dz;
-    esc_scgrid->xmin = esc_scgrid->ox;
-    esc_scgrid->xmax = esc_scgrid->ox + (esc_scgrid->nx - 1)*esc_scgrid->dx;
-    esc_scgrid->ymin = esc_scgrid->oy;
-    esc_scgrid->ymax = esc_scgrid->oy + (esc_scgrid->ny - 1)*esc_scgrid->dy;
+    esc_scgrid->zgmin = esc_scgrid->oz;
+    esc_scgrid->zgmax = esc_scgrid->oz + (esc_scgrid->nz - 1)*esc_scgrid->dz;
+    esc_scgrid->xgmin = esc_scgrid->ox;
+    esc_scgrid->xgmax = esc_scgrid->ox + (esc_scgrid->nx - 1)*esc_scgrid->dx;
+    esc_scgrid->ygmin = esc_scgrid->oy;
+    esc_scgrid->ygmax = esc_scgrid->oy + (esc_scgrid->ny - 1)*esc_scgrid->dy;
+
+    sf_esc_scgrid3_reset_bounds (esc_scgrid);
 
     esc_scgrid->rfail = rfail;
     esc_scgrid->ext = ext;
 
     if (verb) {
         sf_warning ("%s Spatial domain dimensions: nz=%d, z=[%g, %g]", ext,
-                    esc_scgrid->nz, esc_scgrid->zmin, esc_scgrid->zmax);
+                    esc_scgrid->nz, esc_scgrid->zgmin, esc_scgrid->zgmax);
         sf_warning ("%s Spatial domain dimensions: nx=%d, x=[%g, %g]", ext,
-                    esc_scgrid->nx, esc_scgrid->xmin, esc_scgrid->xmax);
+                    esc_scgrid->nx, esc_scgrid->xgmin, esc_scgrid->xgmax);
         sf_warning ("%s Spatial domain dimensions: ny=%d, y=[%g, %g]", ext,
-                    esc_scgrid->ny, esc_scgrid->ymin, esc_scgrid->ymax);
+                    esc_scgrid->ny, esc_scgrid->ygmin, esc_scgrid->ygmax);
         sf_warning ("%s Angular domain dimensions: nb=%d, b=[%g, %g]", ext, esc_scgrid->nb,
                     esc_scgrid->ob, esc_scgrid->ob + (esc_scgrid->nb - 1)*esc_scgrid->db);
         sf_warning ("%s Angular domain dimensions: na=%d, a=[%g, %g]", ext, esc_scgrid->na,
@@ -774,6 +788,60 @@ void sf_esc_scgrid3_close (sf_esc_scgrid3 esc_scgrid, bool verb)
     sf_esc_point3_close (esc_scgrid->esc_point);
 
     free (esc_scgrid);
+}
+
+void sf_esc_scgrid3_set_zmin (sf_esc_scgrid3 esc_scgrid, float zmin)
+/*< Set spatial bound >*/
+{
+    if (zmin > esc_scgrid->zgmin)
+        esc_scgrid->zmin = zmin;
+    else
+        esc_scgrid->zmin = esc_scgrid->zgmin;
+}
+
+void sf_esc_scgrid3_set_zmax (sf_esc_scgrid3 esc_scgrid, float zmax)
+/*< Set spatial bound >*/
+{
+    if (zmax < esc_scgrid->zgmax)
+        esc_scgrid->zmax = zmax;
+    else
+        esc_scgrid->zmax = esc_scgrid->zgmax;
+}
+
+void sf_esc_scgrid3_set_xmin (sf_esc_scgrid3 esc_scgrid, float xmin)
+/*< Set spatial bound >*/
+{
+    if (xmin > esc_scgrid->xgmin)
+        esc_scgrid->xmin = xmin;
+    else
+        esc_scgrid->xmin = esc_scgrid->xgmin;
+}
+
+void sf_esc_scgrid3_set_xmax (sf_esc_scgrid3 esc_scgrid, float xmax)
+/*< Set spatial bound >*/
+{
+    if (xmax < esc_scgrid->xgmax)
+        esc_scgrid->xmax = xmax;
+    else
+        esc_scgrid->xmax = esc_scgrid->xgmax;
+}
+
+void sf_esc_scgrid3_set_ymin (sf_esc_scgrid3 esc_scgrid, float ymin)
+/*< Set spatial bound >*/
+{
+    if (ymin > esc_scgrid->ygmin)
+        esc_scgrid->ymin = ymin;
+    else
+        esc_scgrid->ymin = esc_scgrid->ygmin;
+}
+
+void sf_esc_scgrid3_set_ymax (sf_esc_scgrid3 esc_scgrid, float ymax)
+/*< Set spatial bound >*/
+{
+    if (ymax < esc_scgrid->ygmax)
+        esc_scgrid->ymax = ymax;
+    else
+        esc_scgrid->ymax = esc_scgrid->ygmax;
 }
 
 /* Compute one value locally */

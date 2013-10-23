@@ -136,7 +136,7 @@ static char* sf_escrt3_warnext (sf_file input) {
 
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz, itr = 0;
-    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, md;
+    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, md, aper;
     float ****e;
     sf_file spdom, vspline = NULL, out, traj = NULL;
     sf_escrt3_traj_cbud *tdata = NULL; 
@@ -203,6 +203,14 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getfloat ("md", &md)) md = SF_HUGE;
     /* Maximum distance for a ray to travel (default - up to model boundaries) */
+    if (md != SF_HUGE)
+        md = fabsf (md);
+
+    if (!sf_getfloat ("aper", &aper)) aper = SF_HUGE;
+    /* Maximum aperture in x and y directions from current point (default - up to model boundaries) */
+    if (aper != SF_HUGE)
+        aper = fabsf (aper);
+
 #ifdef _OPENMP
     if (!sf_getint ("nc", &nc)) nc = 1;
     /* Number of threads to use for ray tracing */
@@ -358,8 +366,22 @@ int main (int argc, char* argv[]) {
     /* Ray tracing loop */
     for (iy = 0; iy < ny; iy++) {
         y = oy + iy*dy;
+        /* Set aperture */
+        if (aper != SF_HUGE) {
+            for (ic = 0; ic < nc; ic++) {
+                sf_esc_tracer3_set_ymin (esc_tracers[ic], y - aper);
+                sf_esc_tracer3_set_ymax (esc_tracers[ic], y + aper);
+            }
+        }
         for (ix = 0; ix < nx; ix++) {
             x = ox + ix*dx;
+            /* Set aperture */
+            if (aper != SF_HUGE) {
+                for (ic = 0; ic < nc; ic++) {
+                    sf_esc_tracer3_set_xmin (esc_tracers[ic], x - aper);
+                    sf_esc_tracer3_set_xmax (esc_tracers[ic], x + aper);
+                }
+            }
             if (verb)
                 sf_warning ("%s Shooting from lateral location %d of %d at y=%g, x=%g;",
                             ext, iy*nx + ix + 1, ny*nx, y, x);
