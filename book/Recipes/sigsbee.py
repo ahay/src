@@ -1,6 +1,6 @@
 try:    from rsf.cluster import *
 except: from rsf.proj    import *
-import fdmod,adcig
+import adcig
 
 # ------------------------------------------------------------
 # model parameters
@@ -123,12 +123,18 @@ def eicpar(par):
     par['nht']=60
     par['dht']=0.01
 
+    adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx'],par['dx'],
+                 par['nz']   ,            par['oz'],par['dz'],
+                 par)
+    adcig.tparam((par['nhx']*par['dx'])/(par['nht']*par['dt']),
+                 2*par['nht']+1,-par['nht']*par['dt'],par['dt'],
+                 par['nz']   ,            par['oz'],par['dz'],
+                 par)
     adcig.sparam(5,
                  2*par['nhx'],-par['nhx']*par['dx'], par['dx'],
                  par['nz'],  par['oz'],            par['dz'],
                  par['nht'],-par['nht']*par['dht'],par['dht'],
-                 par)
-    
+                 par)    
     adcig.eparam(5,
                  2*par['nhx'],-par['nhx']*par['dx'], par['dx'],
                  2*par['nhz'],-par['nhz']*par['dz'], par['dz'],
@@ -154,56 +160,31 @@ def hwtpar(par):
 
 # ------------------------------------------------------------
 def shotsTWO(par):
-
     par['fS']=50
     par['jS']=100
-    par['nS']=2
-#    par['oS']=par['osall']+par['fS']*par['dsall']
-#    par['dS']=             par['jS']*par['dsall']
-    
-    sindex = range(par['fS'],
-                   par['fS']+par['nS']*par['jS'],
-                   par['jS'])
+    par['nS']=2    
+    sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     return sindex
 
-
-def shotsFEW(par):
-
+def shotsWIN(par):
     par['fS']=50
     par['jS']=10
     par['nS']=16
-#    par['oS']=par['osall']+par['fS']*par['dsall']
-#    par['dS']=             par['jS']*par['dsall']
-    
-    sindex = range(par['fS'],
-                  par['fS']+par['nS']*par['jS'],
-                  par['jS'])
+    sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     return sindex
 
-
-def shotsWIN(par):
-    par['fS']=10
-    par['jS']=2
-    par['nS']=128
-#    par['oS']=par['osall']+par['fS']*par['dsall']
-#    par['dS']=             par['jS']*par['dsall']
-    
-    sindex = range(par['fS'],
-                  par['fS']+par['nS']*par['jS'],
-                  par['jS'])
+def shotsJMP(par):
+    par['fS']=0
+    par['jS']=5
+    par['nS']=100
+    sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     return shots
-
 
 def shotsALL(par):
     par['fS']=0
     par['jS']=1
     par['nS']=par['nsall']
-#    par['oS']=par['osall']+par['fS']*par['dsall']
-#    par['dS']=             par['jS']*par['dsall']
-    
-    sindex = range(par['fS'],
-                  par['fS']+par['nS']*par['jS'],
-                  par['jS'])
+    sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     return shots
 
 # ------------------------------------------------------------
@@ -449,31 +430,23 @@ def symmetrizecmps(symc,cmps,par):
 
 # ------------------------------------------------------------
 def remap(iout,iinp,imap):
-
     Flow(iinp+'-transp',iinp,'transp')
-    Flow(imap+'-transp',imap,'transp')
-    
+    Flow(imap+'-transp',imap,'transp')    
     Flow(iout+'-temp',[iinp+'-transp',imap+'-transp'],
          'remap1 pattern=${SOURCES[1]} | transp')
-
     Flow(iout,[iout+'-temp',imap],
          'remap1 pattern=${SOURCES[1]}')
     
-
 # ------------------------------------------------------------
 def makemask(velo,smask,wmask,lmask,par):
-
     # salt mask
     Flow(  smask,velo,'mask min=4.499 | dd type=float')
-#    Result(smask,fdmod.cgrey('allpos=y',par))
     
     # water mask
     Flow(  wmask,velo,'mask max=1.5 | dd type=float')
-#    Result(wmask,fdmod.cgrey('allpos=y',par))
 
     # sediment mask
     Flow(lmask,[smask,wmask],'add ${SOURCES[1]} | math output="1-input"')
-#    Result(lmask,fdmod.cgrey('allpos=y',par))
 
 # ------------------------------------------------------------
 # low velocity (in sediments only)
