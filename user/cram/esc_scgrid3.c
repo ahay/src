@@ -127,7 +127,7 @@ struct EscSCgrid3 {
     lu_int                 *pvt, ns;
     float                  *bs, *as;
     /* Remote access data for distributed computations */
-    bool                    remote, mmaped;
+    bool                    remote, mmaped, rfail;
     int                    *sockets;
     sf_esc_scglstor3        esc_scgrid_lstor;
     sf_esc_scgrid3_invals  *invals1, *invals2;
@@ -513,7 +513,7 @@ static int sf_esc_scgrid3_daemon_connect (sf_esc_scgrid3 esc_scgrid, struct sock
 
 sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
                                     sf_esc_tracer3 esc_tracer, sf_esc_scglstor3 esc_scgrid_lstor,
-                                    int morder, int inet, float frac, char *ext, bool verb)
+                                    int morder, int inet, float frac, char *ext, bool rfail, bool verb)
 /*< Initialize object >*/
 {
     size_t nc;
@@ -560,6 +560,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
     esc_scgrid->ymin = esc_scgrid->oy;
     esc_scgrid->ymax = esc_scgrid->oy + (esc_scgrid->ny - 1)*esc_scgrid->dy;
 
+    esc_scgrid->rfail = rfail;
     esc_scgrid->ext = ext;
 
     if (verb) {
@@ -652,7 +653,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
         /* Choose a particular coverage, if more than one is available */
         jj = ncv*(int)(frac*(float)(nad/ncv));
         if (verb)
-            sf_warning ("%s Choosing deamons %d-%d for remote access to escape solutions",
+            sf_warning ("%s Choosing daemons %d-%d for remote access to escape solutions",
                         ext, jj, jj + ncv - 1);
         is0 = -1;
         is1 = -1;
@@ -674,12 +675,16 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
             /* Next daemon, try to establish a connection */
             is0 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj], &loc_addr, j + jj);
             if (is0 < 0) {
+                if (esc_scgrid->rfail)
+                    sf_error ("%s Terminating due to inaccessibility of a daemon", ext);
                 continue;
             }
             is1 = sf_esc_scgrid3_daemon_connect (esc_scgrid, &serv_addr[j + jj], &loc_addr, j + jj);
             if (is1 < 0) {
                 close (is0);
                 is0 = -1;
+                if (esc_scgrid->rfail)
+                    sf_error ("%s Terminating due to inaccessibility of a daemon", ext);
                 continue;
             }
             for (i = j*ndab; i < (j + 1)*ndab; i++) {
@@ -831,8 +836,12 @@ static int sf_esc_scgrid3_send_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid3
             rc = send (is, (const void*)(((unsigned char*)&areqs[ii]) + len),
                        sizeof(sf_esc_scgrid3_areq)*(ie - ii) - len, MSG_NOSIGNAL);
             if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
-                sf_warning ("%s Can not send data for iab=[%d - %d], errno=%d, disconnecting",
-                            esc_scgrid->ext, areqs[ii].iab, areqs[ie].iab - 1, errno);
+                if (esc_scgrid->rfail)
+                    sf_error ("%s Can not send data for iab=[%d - %d], errno=%d, quitting",
+                              esc_scgrid->ext, areqs[ii].iab, areqs[ie].iab - 1, errno);
+                else
+                    sf_warning ("%s Can not send data for iab=[%d - %d], errno=%d, disconnecting",
+                                esc_scgrid->ext, areqs[ii].iab, areqs[ie].iab - 1, errno);
                 sf_esc_scgrid3_disconnect (esc_scgrid, is);
                 len = 0;
                 break;
@@ -911,12 +920,21 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                            sizeof(sf_esc_scgrid3_avals)*ns - len, 0);
                 if ((rc < 0 && errno != EAGAIN && errno != EWOULDBLOCK) || 0 == rc) {
                     /* Connection terminated */
-                    if (0 == rc)
-                        sf_warning ("%s The server has closed connection for socket %d",
-                                    esc_scgrid->ext, is);
-                    else
-                        sf_warning ("%s Can not receive data for socket %d, errno=%d, disconnecting",
-                                    esc_scgrid->ext, is, errno);
+                    if (0 == rc) {
+                        if (esc_scgrid->rfail)
+                            sf_error ("%s The server has closed connection for socket %d",
+                                      esc_scgrid->ext, is);
+                        else
+                            sf_warning ("%s The server has closed connection for socket %d",
+                                        esc_scgrid->ext, is);
+                    } else {
+                        if (esc_scgrid->rfail)
+                            sf_error ("%s Can not receive data for socket %d, errno=%d, quitting",
+                                      esc_scgrid->ext, is, errno);
+                        else
+                            sf_warning ("%s Can not receive data for socket %d, errno=%d, disconnecting",
+                                        esc_scgrid->ext, is, errno);
+                    }
                     sf_esc_scgrid3_disconnect (esc_scgrid, is);
                     FD_CLR(is, sset);
                     len = 0;
@@ -929,7 +947,10 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             }
             if (len > 0) {
                 if (len % sizeof(sf_esc_scgrid3_avals)) {
-                    sf_warning ("%s Partial receive from socket %d\n", esc_scgrid->ext, i);
+                    if (esc_scgrid->rfail)
+                        sf_error ("%s Partial receive from socket %d\n", esc_scgrid->ext, i);
+                    else
+                        sf_warning ("%s Partial receive from socket %d\n", esc_scgrid->ext, i);
                     len = 0;
                 } else {
                     len /= sizeof(sf_esc_scgrid3_avals);
@@ -940,12 +961,19 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
                                 ns--;
                                 ii++;
                             } else {
-                                sf_warning ("%s Server replied that the angle is out of bounds",
-                                            esc_scgrid->ext);
+                                if (esc_scgrid->rfail)
+                                    sf_error ("%s Server replied that the angle is out of bounds",
+                                              esc_scgrid->ext);
+                                else
+                                    sf_warning ("%s Server replied that the angle is out of bounds",
+                                                esc_scgrid->ext);
                                 break;
                             }
                         } else {
-                            sf_warning ("%s Received garbage from socket %d", esc_scgrid->ext, is);
+                            if (esc_scgrid->rfail)
+                                sf_error ("%s Received garbage from socket %d", esc_scgrid->ext, is);
+                            else
+                                sf_warning ("%s Received garbage from socket %d", esc_scgrid->ext, is);
                             break;
                         }
                     }
@@ -960,6 +988,8 @@ static void sf_esc_scgrid3_recv_values (sf_esc_scgrid3 esc_scgrid, sf_esc_scgrid
             if (FD_ISSET (is, &wset))
                 sf_warning ("%s socket %d caused timeout", esc_scgrid->ext, is);
         }
+        if (esc_scgrid->rfail)
+            sf_error ("%s Terminating due to a failure in communications with remote daemons", esc_scgrid->ext);
     }
 
     /* Extract values locally */

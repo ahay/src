@@ -371,7 +371,7 @@ class Project(Environment):
                     # avoid creation of a chunk file (provided that RSF_WSPLIT is set)
                     par_sfiles[j] = sfiles[j]
                     cflow = 'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d | ' % \
-                            (split[0],chunk,split[0],skip,i/jobmult,jobs/jobmult)
+                            (split[0],chunk,split[0],skip,i%self.jobs,self.jobs)
                     cflow = cflow + flow
                 else:
                     cflow = flow
@@ -385,22 +385,18 @@ class Project(Environment):
 
                     self.Flow(source,sfiles[j],
                               'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
-                              (split[0],chunk,split[0],skip,i/jobmult,jobs/jobmult),noderotate=nrotate)
+                              (split[0],chunk,split[0],skip,i%self.jobs,self.jobs),noderotate=nrotate)
 
             par_tfiles = []
             for j in range(len(tfiles)):
                 tfile = tfiles[j]
                 par_tfile = tfile + '__' + str(i)
                 par_tfiles.append(par_tfile)
+
                 par_targets[tfile].append(par_tfile)
-            # In case of job multiplication, make sure that
-            # we execute smaller chunks orderly: for jobmult=2
-            # 0, 2, 4, 6 ... will be executed first, and then
-            # 1, 3, 5, 7 ...
-            par_sfiles0 = copy.copy(par_sfiles);
-            if (i % jobmult) != 0:
-                par_sfiles0.append (prev_par_tfiles[0])
-            prev_par_tfiles = par_tfiles
+            par_sfiles0 = copy.copy(par_sfiles)
+            if i >= self.jobs:
+                par_sfiles0.append (tfile + '__' + str(i % self.jobs))
 
             # operation on one chunk    
             self.Flow(par_tfiles,par_sfiles0,cflow,

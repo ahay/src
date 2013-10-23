@@ -70,13 +70,13 @@ int main (int argc, char* argv[]) {
 
     if (mute) {
         if (!sf_getfloat ("oazmin", &oazmin)) oazmin = 180.0;
-        /* Maximum allowed opening angle at z min */
+        /* Maximum allowed scattering angle at z min */
         if (!sf_getfloat ("oazmax", &oazmax)) oazmax = 180.0;
-        /* Maximum allowed opening angle at z max */
+        /* Maximum allowed scattering angle at z max */
         if (!sf_getfloat ("dazmin", &dazmin)) dazmin = 180.0;
-        /* Maximum allowed opening dip angle (abs.value) at z min */
+        /* Maximum allowed dip angle (abs.value) at z min */
         if (!sf_getfloat ("dazmax", &dazmax)) dazmax = 180.0;
-        /* Maximum allowed opening dip angle (abs.value) at z max */
+        /* Maximum allowed dip angle (abs.value) at z max */
         if (oazmin < 0.0) oazmin = 0.0;
         if (oazmax < 0.0) oazmax = 0.0;
         if (dazmin < 0.0) dazmin = 0.0;
@@ -137,15 +137,15 @@ int main (int argc, char* argv[]) {
     sf_cram_gather2_set_sqsmb (cram_gather, sqsmb);
 
     oimag = sf_output ("out");
-    /* Opening angle gathers (angle, z, x) */
+    /* Scattering angle gathers (angle, z, x) */
     sf_cram_gather2_setup_oangle_output (cram_gather, esct, oimag, false);
     if (sf_getstring ("imap")) {
-        /* Opening gathers illumination (angle, z, x) */
+        /* Scattering gathers illumination (angle, z, x) */
         oimap = sf_output ("imap");
         sf_cram_gather2_setup_oangle_output (cram_gather, esct, oimap, true);
     }
     if (sf_getstring ("smap")) {
-        /* Opening gathers semblance (angle, z, x) */
+        /* Scattering gathers semblance (angle, z, x) */
         osmap = sf_output ("smap");
         sf_cram_gather2_setup_oangle_output (cram_gather, esct, osmap, false);
     }
@@ -167,7 +167,7 @@ int main (int argc, char* argv[]) {
     }
 
     if (sf_getstring ("full")) {
-        /* Full image (opening angle, dip angle, z, x) */
+        /* Full image (scattering angle, dip angle, z, x) */
         fimag = sf_output ("full");
         sf_cram_gather2_setup_full_output (cram_gather, fimag, false);
     }
@@ -181,7 +181,7 @@ int main (int argc, char* argv[]) {
             sf_floatread (esc[0], ESC2_NUM*na, esct);
             if (mute) {
                 zf = (nz != 1) ? iz/(float)(nz - 1) : 0.0;
-                /* Maximum opening angle this z */
+                /* Maximum scattering angle for this z */
                 oaz = oazmin + zf*(oazmax - oazmin);
                 /* Maximum dip angle for this z */
                 daz = dazmin + zf*(dazmax - dazmin);

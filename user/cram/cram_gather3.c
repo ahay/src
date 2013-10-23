@@ -58,7 +58,7 @@ sf_cram_gather3 sf_cram_gather3_init (int nb, int na, int nz,
     cram_gather->outaz = outaz; /* Whether to output azimuth dimension */
     cram_gather->inorm = inorm; /* Whether to normalize gathers */
 
-    /* Maximum number of opening angles in the output */
+    /* Maximum number of scattering angles in the output */
     cram_gather->noa = (int)(oamax/db + 0.5) + 1;
     if (cram_gather->noa > nb)
         cram_gather->noa = nb;
@@ -102,7 +102,7 @@ void sf_cram_gather3_image_output (sf_cram_gather3 cram_gather, sf_cram_point3 c
 
 void sf_cram_gather3_oangle_output (sf_cram_gather3 cram_gather, sf_cram_point3 cram_point,
                                     sf_file oafile, sf_file sqfile, sf_file ilfile)
-/*< Add one spatial point to the opening angle gather and write it to disk >*/
+/*< Add one spatial point to the scattering angle gather and write it to disk >*/
 {
     int ib, ia;
     float **oimage, **osqimg, **ohits;
@@ -244,7 +244,7 @@ void sf_cram_gather3_setup_image_output (sf_cram_gather3 cram_gather, sf_file in
 
 void sf_cram_gather3_setup_oangle_output (sf_cram_gather3 cram_gather, sf_file input,
                                           sf_file oafile)
-/*< Setup dimensions in a file for opening angle gathers >*/
+/*< Setup dimensions in a file for scattering angle gathers >*/
 {
     if (cram_gather->outaz)
         sf_unshiftdim (input, oafile, 0);
@@ -253,12 +253,12 @@ void sf_cram_gather3_setup_oangle_output (sf_cram_gather3 cram_gather, sf_file i
     sf_putint (oafile, "n1", cram_gather->noa);
     sf_putfloat (oafile, "d1", cram_gather->db);
     sf_putfloat (oafile, "o1", 0.0);
-    sf_putstring (oafile, "label1", "Opening angle");
+    sf_putstring (oafile, "label1", "Scattering angle");
     if (cram_gather->outaz) {
         sf_putint (oafile, "n2", cram_gather->na/2);
         sf_putfloat (oafile, "d2", 2.0*cram_gather->da);
         sf_putfloat (oafile, "o2", 0.0);
-        sf_putstring (oafile, "label2", "Opening angle azimuth");
+        sf_putstring (oafile, "label2", "Scattering angle azimuth");
     }
 }
 

@@ -38,7 +38,7 @@ typedef struct CRAMPoint3 *sf_cram_point3;
 
 struct CRAMPoint3 {
     int                     nb, na;
-    float                   oam; /* Maximum opening angle */
+    float                   oam; /* Maximum scattering angle */
     float                   dam; /* Maximum dip angle (abs.value of) */
     float                   img, hits;
     float                   b0, a0, db, da, ds, dh;
@@ -117,9 +117,9 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
     cram_point->erefl = sf_cram_data2_get_erefl (data);
 
     if (agath) {
-        cram_point->oimage = sf_floatalloc2 (2*nb, na/4); /* Regular image, opening angle */
-        cram_point->osqimg = sf_floatalloc2 (2*nb, na/4); /* RMS image, opening angle */
-        cram_point->ohits = sf_floatalloc2 (2*nb, na/4); /* Hit counts, opening angle */
+        cram_point->oimage = sf_floatalloc2 (2*nb, na/4); /* Regular image, scattering angle */
+        cram_point->osqimg = sf_floatalloc2 (2*nb, na/4); /* RMS image, scattering angle */
+        cram_point->ohits = sf_floatalloc2 (2*nb, na/4); /* Hit counts, scattering angle */
     } else {
         cram_point->oimage = NULL;
         cram_point->osqimg = NULL;
@@ -135,7 +135,7 @@ sf_cram_point3 sf_cram_point3_init (int nb, float b0, float db,
         cram_point->dhits = NULL;
     }
 
-    cram_point->agath = agath; /* Compute opening angle gather */
+    cram_point->agath = agath; /* Compute scattering angle gather */
     cram_point->dipgath = dipgath; /* Compute dip angle gather */
 
     sf_cram_point3_reset (cram_point);
@@ -181,7 +181,7 @@ void sf_cram_point3_set_mute (sf_cram_point3 cram_point, float oam, float dam)
 /*< Set mute limits in constant z plane >*/
 {
     cram_point->mute = true;
-    /* Maximum opening angle + tapering zone */
+    /* Maximum scattering angle + tapering zone */
     cram_point->oam = (oam + OAM_TP)*SF_PI/180.0;
     if (cram_point->oam > SF_PI)
         cram_point->oam = SF_PI;
@@ -193,7 +193,7 @@ void sf_cram_point3_set_mute (sf_cram_point3 cram_point, float oam, float dam)
     cram_point->atw = 0.5*((oam*SF_PI/180.0)/cram_point->oam + 
                            (dam*SF_PI/180.0)/cram_point->dam);
     /* Inidces of the maximum extent of the output samples
-       in the opening and dip angle domains */
+       in the scattering and dip angle domains */
     cram_point->mioz = (int)((oam*SF_PI/180.0)/cram_point->db + 0.5);
     if (cram_point->mioz > cram_point->nb)
         cram_point->mioz = cram_point->nb;
@@ -246,7 +246,7 @@ float** sf_cram_point3_get_dimage (sf_cram_point3 cram_point, float ***dsqimg, f
     return cram_point->dimage;
 }
 
-/* Compute opening angle, opening angle azimuth, dip angle, dip angle azimuth
+/* Compute scattering angle, scattering angle azimuth, dip angle, dip angle azimuth
    from source and receiver elevation/azimuth angles */
 static void sf_cram_point3_angles (float sb, float sa, float hb, float ha,
                                    float *oa, float *oz, float *da, float *dz) {
@@ -261,7 +261,7 @@ static void sf_cram_point3_angles (float sb, float sa, float hb, float ha,
     hv[1] = sinf (hb)*cosf (ha); /* x */
     hv[2] = sinf (hb)*sinf (ha); /* y */
 
-    /* Opening angle vector */
+    /* Scattering angle vector */
     ov[0] = -sv[0] + hv[0];
     ov[1] = -sv[1] + hv[1];
     ov[2] = -sv[2] + hv[2];
@@ -273,7 +273,7 @@ static void sf_cram_point3_angles (float sb, float sa, float hb, float ha,
 
     if (fabsf (sb - hb) > 1e-4 ||
         fabsf (sa - ha) > 1e-4) {
-        /* Opening angle - dot product between vectors */
+        /* Scattering angle - dot product between vectors */
         a = sv[0]*hv[0] + sv[1]*hv[1] + sv[2]*hv[2];
         if (a > 1.0)
             a = 1.0;
@@ -289,7 +289,7 @@ static void sf_cram_point3_angles (float sb, float sa, float hb, float ha,
         nv[0] = dv[2];  /* 1.0*dv[2] - 0.0*dv[1] */
         nv[1] = 0.0;    /* 0.0*dv[0] - 0.0*dv[2] */
         nv[2] = -dv[0]; /* 0.0*dv[1] - 1.0*dv[0] */
-        /* Opening angle azimuth - angle between the above two vectors in the
+        /* Scattering angle azimuth - angle between the above two vectors in the
            reflection plane - see Fomel and Sava (2005) */
         dll = sqrtf (pv[0]*pv[0] + pv[1]*pv[1] + pv[2]*pv[2])*
               sqrtf (nv[0]*nv[0] + nv[1]*nv[1] + nv[2]*nv[2]);
@@ -307,14 +307,14 @@ static void sf_cram_point3_angles (float sb, float sa, float hb, float ha,
         dll = dl*sqrtf (mv[0]*mv[0] + mv[1]*mv[1] + mv[2]*mv[2]);
         /* Check if it has the same direction with the dip */
         a = (dv[0]*mv[0] + dv[1]*mv[1] + dv[2]*mv[2])/dll;
-        if (a < 0.0) /* Otherwise, flip the opening azimuth */
+        if (a < 0.0) /* Otherwise, flip the scattering azimuth */
             *oz = SF_PI - *oz;
         else
             *oa *= -1.0;
     } else {
-        /* Opening angle */
+        /* Scattering angle */
         *oa = 0.0;
-        /* Opening angle azimuth */
+        /* Scattering angle azimuth */
         *oz = 0.0;
     }
 
@@ -352,7 +352,7 @@ static int sf_cram_point3_angle_idx (float a, float a0, float da, float *fa) {
     return ia;
 }
 
-/* Check if opening and dip angles are in mute zone */
+/* Check if scattering and dip angles are in mute zone */
 static bool sf_cram_point3_gangles_are_mute (sf_cram_point3 cram_point, float oa, float da) {
     /* Mute zone is comprised by an elliptic area in the
        scattering-dip anlge plane with oam and dam beign the
@@ -361,7 +361,7 @@ static bool sf_cram_point3_gangles_are_mute (sf_cram_point3 cram_point, float oa
             da*da/(cram_point->dam*cram_point->dam)) > 1.0;
 }
 
-/* Return taper value for the current combination of dip and opening angles;
+/* Return taper value for the current combination of dip and scattering angles;
    it varies from 1 to 0 as the point approaches edges of the mute zone */
 static float sf_cram_point3_gataper (sf_cram_point3 cram_point, float oa, float da) {
     float d = oa*oa/(cram_point->oam*cram_point->oam) +
@@ -456,7 +456,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
     if (cram_point->extrap && !zoffset) {
         /* Compute change in inclination and azimuth angles for the source and receiver branches
            using db/dx,db/dy and da/dx,da/dy with respect to a displacement away from the
-           source and receiver on the surface; then find dip and opening angle deviation,
+           source and receiver on the surface; then find dip and scattering angle deviation,
            which correspond to this displacement */
         for (isxy = 0; isxy < 2; isxy++) { /* d/dx, d/dy, source side */
             for (jsxy = 0; jsxy < 2; jsxy++) { /* +/- shift in x/y on the source side */
@@ -478,7 +478,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                              cram_point->da;
                         /* New system of subsurface angles for the surface displacment */
                         sf_cram_point3_angles (sb, sa, hb, ha, &oa, &oz, &da, &dz);
-                        /* Opening angle spread with respect to the initial values */
+                        /* Scattering angle spread with respect to the initial values */
                         sf_cram_point3_aaz_spread (oac, ozc, oa, oz, &doa, &doz);
                         /* Dip angle spread with respect to the initial values */
                         sf_cram_point3_aaz_spread (dac, dzc, da, dz, &dda, &ddz);
@@ -486,7 +486,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                 }
             }
         }
-        /* Average changes in dip and opening angles and their azimuths */
+        /* Average changes in dip and scattering angles and their azimuths */
         doa /= 16.0;
         doz /= 16.0;
         dda /= 16.0;
@@ -504,26 +504,26 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
         ddz = cram_point->da;
     }
 
-    /* Contribute sample to the opening angle gather */
+    /* Contribute sample to the scattering angle gather */
     if (cram_point->agath) {
-        /* Opening angle first index */
+        /* Scattering angle first index */
         ioaf = sf_cram_point3_angle_idx (oac - doa, -SF_PI, cram_point->db, NULL);
         if (ioaf < (cram_point->nb - cram_point->mioz))
             ioaf = cram_point->nb - cram_point->mioz;
-        /* Opening angle last index */
+        /* Scattering angle last index */
         ioal = sf_cram_point3_angle_idx (oac + doa, -SF_PI, cram_point->db, NULL);
         ioal += 1;
         if (ioal > (cram_point->nb + cram_point->mioz))
             ioal = cram_point->nb + cram_point->mioz;
         if (ioal >= 2*cram_point->nb)
             ioal = 2*cram_point->nb - 1;
-        /* Opening angle azimuth first index */
+        /* Scattering angle azimuth first index */
         iozf = sf_cram_point3_angle_idx (ozc - doz, 0.0, 2.0*cram_point->da, NULL);
-        /* Opening angle azimuth last index */
+        /* Scattering angle azimuth last index */
         iozl = sf_cram_point3_angle_idx (ozc + doz, 0.0, 2.0*cram_point->da, NULL);
         iozl += 1;
         dw = 1.0/*((ioal - ioaf + 1)*(iozl - iozf + 1))*/;
-        for (ioz = iozf; ioz <= iozl; ioz++) { /* Opening angle azimuths */
+        for (ioz = iozf; ioz <= iozl; ioz++) { /* Scattering angle azimuths */
             iz = ioz;
             if (iz < 0) {
                 while (iz < 0)
@@ -534,7 +534,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
                     iz -= cram_point->na/4;
                 flip = true;
             }
-            for (ioa = ioaf; ioa <= ioal; ioa++) { /* Opening angles */
+            for (ioa = ioaf; ioa <= ioal; ioa++) { /* Scattering angles */
                 tw = dw;
                 ia = ioa;
                 if (flip && ia != 0) {
@@ -605,7 +605,7 @@ static void sf_cram_point3_fill_abins (sf_cram_point3 cram_point, float smp,
 }
 
 /* Process all source and receiver branches according to the exit locations:
-   get data samples and fill dip and opening angle bins in the image */
+   get data samples and fill dip and scattering angle bins in the image */
 static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx, float gy,
                                              size_t i, int nes, int ner,
                                              float ss, float sr, float tw,
@@ -636,7 +636,7 @@ static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx
                 hb = cram_point->b0 + cram_point->rcv_exits[ier].ib*cram_point->db;
                 ha = cram_point->a0 + cram_point->rcv_exits[ier].ia*cram_point->da;
             }
-            /* Convert to dip and opening angles */
+            /* Convert to dip and scattering angles */
             sf_cram_point3_angles (sb, sa, hb, ha, &oa, &oz, &da, &dz);
             if (sf_cram_point3_gangles_are_mute (cram_point, oa, da)) {
                 ier++;
@@ -659,7 +659,7 @@ static void sf_cram_point3_process_branches (sf_cram_point3 cram_point, float gx
             }
             /* Taper associated with the edges of the mute zone */
             aw = sf_cram_point3_gataper (cram_point, oa, da);
-            /* Add sample to the opening and dip angle gathers */
+            /* Add sample to the scattering and dip angle gathers */
             sf_cram_point3_fill_abins (cram_point, aw*tw*smp, ss, sr, ies, ier,
                                        oa, oz, da, dz, zoffset);
             ier++;

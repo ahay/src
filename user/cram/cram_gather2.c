@@ -66,7 +66,7 @@ sf_cram_gather2 sf_cram_gather2_init (int na, int nz, float a0, float da,
     cram_gather->rillum = sf_intalloc2 (na/2, nz); /* Refl. illumination map */
     cram_gather->smb = sf_floatalloc (2*na); /* Semblance */
 
-    /* Maximum number of opening angles in the output */
+    /* Maximum number of scattering angles in the output */
     cram_gather->noa = (int)(oamax/da + 0.5) + 1;
     if (cram_gather->noa > na/2)
         cram_gather->noa = na/2;
@@ -131,13 +131,13 @@ void sf_cram_gather2_set_point (sf_cram_gather2 cram_gather, int iz,
             if (0 == h)
                 continue;
             smp = image[ja][ia];
-            /* Normalize for the fold in the openning angle direction */
+            /* Normalize for the fold in the scattering angle direction */
             smp /= (float)(cram_gather->na/2);
             /* Store directional gather information */
             cram_gather->dstack[iz][ja] += smp;
             cram_gather->denergy[iz][ja] += smp*smp;
             cram_gather->dillum[iz][ja]++;
-            /* There are 4 times as many dip angles as opening angles,
+            /* There are 4 times as many dip angles as scattering angles,
                so renormalize the sample accordingly */
             smp *= 4.0;
             /* Store reflection gather information */
@@ -150,7 +150,7 @@ void sf_cram_gather2_set_point (sf_cram_gather2 cram_gather, int iz,
 
 void sf_cram_gather2_full_output (sf_cram_gather2 cram_gather, sf_cram_point2 cram_point,
                                   sf_file ofile, sf_file ifile)
-/*< Compute opening angle gather from the full gather and write it to disk >*/
+/*< Compute scattering angle gather from the full gather and write it to disk >*/
 {
     float **image, **sqimg, amax;
     int **hits;
@@ -167,7 +167,7 @@ void sf_cram_gather2_full_output (sf_cram_gather2 cram_gather, sf_cram_point2 cr
 
 void sf_cram_gather2_oangle_output (sf_cram_gather2 cram_gather, sf_file oafile,
                                     sf_file smfile, sf_file ilfile)
-/*< Compute opening angle gather from the full gather and write it to disk >*/
+/*< Compute scattering angle gather from the full gather and write it to disk >*/
 {
     const int zwidth = 5, awidth = 3;
     int ia, iz, iz0, iz1, h, ia0, ia1;
@@ -291,7 +291,7 @@ void sf_cram_gather2_setup_full_output (sf_cram_gather2 cram_gather, sf_file ofi
     sf_putint (ofile, "n1", cram_gather->na/2);
     sf_putfloat (ofile, "d1", cram_gather->da);
     sf_putfloat (ofile, "o1", 0.0);
-    sf_putstring (ofile, "label1", "Opening angle");
+    sf_putstring (ofile, "label1", "Scattering angle");
     sf_putint (ofile, "n2", 2*cram_gather->na);
     sf_putfloat (ofile, "d2", 0.5*cram_gather->da);
     sf_putfloat (ofile, "o2", cram_gather->a0 - 0.5*cram_gather->da);
@@ -300,7 +300,7 @@ void sf_cram_gather2_setup_full_output (sf_cram_gather2 cram_gather, sf_file ofi
 
 void sf_cram_gather2_setup_oangle_output (sf_cram_gather2 cram_gather, sf_file input,
                                           sf_file oafile, bool imap)
-/*< Setup dimensions in a file for opening angle gathers >*/
+/*< Setup dimensions in a file for scattering angle gathers >*/
 {
     sf_unshiftdim (input, oafile, 0);
     if (imap)
@@ -308,7 +308,7 @@ void sf_cram_gather2_setup_oangle_output (sf_cram_gather2 cram_gather, sf_file i
     sf_putint (oafile, "n1", cram_gather->noa);
     sf_putfloat (oafile, "d1", cram_gather->da);
     sf_putfloat (oafile, "o1", 0.0);
-    sf_putstring (oafile, "label1", "Opening angle");
+    sf_putstring (oafile, "label1", "Scattering angle");
 }
 
 void sf_cram_gather2_setup_dangle_output (sf_cram_gather2 cram_gather, sf_file input,

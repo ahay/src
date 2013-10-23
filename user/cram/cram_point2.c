@@ -38,7 +38,7 @@ typedef struct CRAMPoint2 *sf_cram_point2;
 
 struct CRAMPoint2 {
     int                na;
-    int                oaz; /* Maximum opening angle */
+    int                oaz; /* Maximum scattering angle */
     int                daz; /* Maximum dip angle (abs.value of) */
     int                ts, th; /* Tapering for source and receiver */
     float              a0, da, dx;
@@ -106,7 +106,7 @@ void sf_cram_point2_set_mute (sf_cram_point2 cram_point, float oaz, float daz)
 /*< Set mute limits in constant z plane >*/
 {
     cram_point->mute = true;
-    /* Maximum opening angle */
+    /* Maximum scattering angle */
     cram_point->oaz = (int)(oaz/cram_point->da + 0.5);
     /* Maximum dip angle */
     cram_point->daz = 2*(int)(daz/cram_point->da + 0.5);
@@ -194,12 +194,12 @@ void sf_cram_point2_compute (sf_cram_point2 cram_point,
                         continue;
                     }
                     ida = (srays[ies].ia + rrays[ier].ia); /* Dip angle index */
-                    ioa = abs (srays[ies].ia - rrays[ier].ia); /* Opening angle index */
+                    ioa = abs (srays[ies].ia - rrays[ier].ia); /* Scattering angle index */
                     if (cram_point->na/2 == ioa) {
                         ier++;
                         continue; /* Skip transmission */
                     }
-                    if (ioa > cram_point->na/2) { /* Limit opening angle to 180 */
+                    if (ioa > cram_point->na/2) { /* Limit scattering angle to 180 */
                         ida += (ida < cram_point->na) /* Adjust dip */
                                 ? cram_point->na
                                 : -cram_point->na;

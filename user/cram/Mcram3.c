@@ -112,13 +112,13 @@ int main (int argc, char* argv[]) {
 
     if (mute) {
         if (!sf_getfloat ("oazmin", &oazmin)) oazmin = 180.0;
-        /* Maximum allowed opening angle at z min */
+        /* Maximum allowed scattering angle at z min */
         if (!sf_getfloat ("oazmax", &oazmax)) oazmax = 180.0;
-        /* Maximum allowed opening angle at z max */
+        /* Maximum allowed scattering angle at z max */
         if (!sf_getfloat ("dazmin", &dazmin)) dazmin = 180.0;
-        /* Maximum allowed opening dip angle at z min */
+        /* Maximum allowed dip angle at z min */
         if (!sf_getfloat ("dazmax", &dazmax)) dazmax = 180.0;
-        /* Maximum allowed opening dip angle at z max */
+        /* Maximum allowed dip angle at z max */
         if (oazmin < 0.0) oazmin = 0.0;
         if (oazmax < 0.0) oazmax = 0.0;
         if (dazmin < 0.0) dazmin = 0.0;
@@ -212,16 +212,16 @@ int main (int argc, char* argv[]) {
     }
 
     if (sf_getstring ("agath")) {
-        /* Opening angle gathers (angle, azimuth, z, x, y) */
+        /* Scattering angle gathers (angle, azimuth, z, x, y) */
         oimag = sf_output ("agath");
         sf_cram_gather3_setup_oangle_output (cram_gather, esct, oimag);
         if (sf_getstring ("imap")) {
-            /* Opening gathers illumination (angle, azimuth, z, x, y) */
+            /* SCattering gathers illumination (angle, azimuth, z, x, y) */
             oimap = sf_output ("imap");
             sf_cram_gather3_setup_oangle_output (cram_gather, esct, oimap);
         }
         if (sf_getstring ("smap")) {
-            /* Opening gathers energy (angle, azimuth, z, x, y) */
+            /* Scattering gathers energy (angle, azimuth, z, x, y) */
             osmap = sf_output ("smap");
             sf_cram_gather3_setup_oangle_output (cram_gather, esct, osmap);
         }
@@ -276,7 +276,7 @@ int main (int argc, char* argv[]) {
                 sf_floatread (esc[0][0], ESC3_NUM*na*nb, esct);
                 if (mute) {
                     zf = (z - zbmin)/(zbmax - zbmin);
-                    /* Maximum opening angle for this z */
+                    /* Maximum scattering angle for this z */
                     oaz = oazmax - zf*(oazmax - oazmin);
                     /* Maximum dip angle for this z */
                     daz = dazmax - zf*(dazmax - dazmin);
@@ -320,6 +320,8 @@ int main (int argc, char* argv[]) {
                                                               &gxmin, &gxmax, &gymin, &gymax);
                     } /* Loop over known sources */
                     /* Write image */
+                    if (iy == (ny - 1) && ix == (nx - 1) && iz == (nz - 1))
+                        np = j;
                     for (j = 0; j < np; j++) {
                         sf_cram_gather3_image_output (cram_gather, cram_points[j], imag, hits);
                         /* Add to the angle gathers */

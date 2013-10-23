@@ -51,7 +51,7 @@ int main (int argc, char* argv[]) {
     sf_file spdom, vspline = NULL, scgrid = NULL, scdaemon = NULL, 
             out;
     char *ext = NULL;
-    bool verb, parab, mmaped;
+    bool verb, parab, mmaped, rfail;
     sf_esc_slowness3 esc_slow;
     sf_esc_scglstor3 esc_scgrid_lstor;
     sf_esc_tracer3 *esc_tracers;
@@ -132,6 +132,9 @@ int main (int argc, char* argv[]) {
 
     if (!sf_getbool ("mmaped", &mmaped)) mmaped = true;
     /* n - do not use memory mapping for local data access */
+
+    if (!sf_getbool ("rfail", &rfail)) rfail = true;
+    /* n - do not quit if remote processing fails, try local processing */
 
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* verbosity flag */
@@ -227,7 +230,7 @@ int main (int argc, char* argv[]) {
         esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
         esc_scgrids[ic] = sf_esc_scgrid3_init (scgrid, scdaemon, esc_tracers[ic], esc_scgrid_lstor,
-                                               morder, inet, (float)icpu/(float)ncpu, ext, verb && 0 == ic);
+                                               morder, inet, (float)icpu/(float)ncpu, ext, rfail, verb && 0 == ic);
     }
 
     timer = sf_timer_init ();
