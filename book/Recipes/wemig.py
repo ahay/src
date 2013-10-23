@@ -152,7 +152,7 @@ def rtmcic(imag,velo,dens,
 
     Flow(imag,[sdat,scoo,rdat,rcoo,velo],
          '''
-         %sawefd2d < ${SOURCES[0]} cden=y %s
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
          vel=${SOURCES[4]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
@@ -160,10 +160,10 @@ def rtmcic(imag,velo,dens,
          >/dev/null;
          '''%(M8R,iwindow(par)+' '+awepar,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdrv,DPT) +
          '''
-         %sawefd2d < %s cden=y %s
+         %sawefd2d < %s cden=y %s verb=n
          vel=${SOURCES[4]}
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
@@ -171,7 +171,7 @@ def rtmcic(imag,velo,dens,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 uu=%s axis=3 verb=y %s >${TARGETS[0]};
+         %scic2d <%s isreversed=0 uu=%s axis=3 verb=n %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
          '''
          %srm %s %s %s
@@ -196,7 +196,7 @@ def cdrtm(imag,velo,
 
     Flow(imag,[sdat,scoo,rdat,rcoo,velo],
          '''
-         %sawefd2d < ${SOURCES[0]} cden=y %s
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
          vel=${SOURCES[4]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
@@ -204,10 +204,10 @@ def cdrtm(imag,velo,
          >/dev/null;
          '''%(M8R,iwindow(par)+' '+awepar,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdrv,DPT) +
          '''
-         %sawefd2d < %s cden=y %s
+         %sawefd2d < %s cden=y %s verb=n
          vel=${SOURCES[4]}
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
@@ -215,7 +215,7 @@ def cdrtm(imag,velo,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 uu=%s axis=3 verb=y %s >${TARGETS[0]};
+         %scic2d <%s isreversed=0 uu=%s axis=3 verb=n %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
          '''
          %srm %s %s %s
@@ -223,53 +223,53 @@ def cdrtm(imag,velo,
               stdin=0,
               stdout=0)
 
-def cdrtmOBSOLETE(imag,velo,
-          sdat,scoo,
-          rdat,rcoo,
-          custom,par):
-
-    M8R='$RSFROOT/bin/sf'
-    DPT=os.environ.get('TMPDATAPATH')
-
-    awewin = 'nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g'%par
-    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
-
-    swfl=imag+'swfl'
-    rdrv=imag+'rdrv'
-    rwrv=imag+'rwrv'
-    rwfl=imag+'rwfl'
-
-    Flow(imag,[sdat,scoo,rdat,rcoo,velo],
-         '''
-         %sawefd2d < ${SOURCES[0]} cden=y %s
-         vel=${SOURCES[4]}
-         sou=${SOURCES[1]}
-         rec=${SOURCES[1]}
-         wfl=%s datapath=%s/
-         >/dev/null;
-         '''%(M8R,awewin+' '+awepar,swfl,DPT) +
-         '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
-         '''%(M8R,rdrv,DPT) +
-         '''
-         %sawefd2d < %s cden=y %s
-         vel=${SOURCES[4]}
-         sou=${SOURCES[3]}
-         rec=${SOURCES[3]}
-         wfl=%s datapath=%s/
-         >/dev/null;
-         '''%(M8R,rdrv,awewin+' '+awepar,rwrv,DPT) +
-         '''
-         %sreverse < %s which=4 opt=i verb=y >%s datapath=%s/;
-         '''%(M8R,rwrv,rwfl,DPT) +
-         '''
-         %sxcor2d <%s uu=%s axis=3 verb=y %s >${TARGETS[0]};
-         '''%(M8R,swfl,rwfl,custom) +
-         '''
-         %srm %s %s %s %s
-         '''%(M8R,swfl,rdrv,rwrv,rwfl),
-              stdin=0,
-              stdout=0)
+#def cdrtmOBSOLETE(imag,velo,
+#          sdat,scoo,
+#          rdat,rcoo,
+#          custom,par):
+#
+#    M8R='$RSFROOT/bin/sf'
+#    DPT=os.environ.get('TMPDATAPATH')
+#
+#    awewin = 'nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g'%par
+#    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
+#
+#    swfl=imag+'swfl'
+#    rdrv=imag+'rdrv'
+#    rwrv=imag+'rwrv'
+#    rwfl=imag+'rwfl'
+#
+#    Flow(imag,[sdat,scoo,rdat,rcoo,velo],
+#         '''
+#         %sawefd2d < ${SOURCES[0]} cden=y %s
+#         vel=${SOURCES[4]}
+#         sou=${SOURCES[1]}
+#         rec=${SOURCES[1]}
+#         wfl=%s datapath=%s/
+#         >/dev/null;
+#         '''%(M8R,awewin+' '+awepar,swfl,DPT) +
+#         '''
+#         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+#         '''%(M8R,rdrv,DPT) +
+#         '''
+#         %sawefd2d < %s cden=y %s
+#         vel=${SOURCES[4]}
+#         sou=${SOURCES[3]}
+#         rec=${SOURCES[3]}
+#         wfl=%s datapath=%s/
+#         >/dev/null;
+#         '''%(M8R,rdrv,awewin+' '+awepar,rwrv,DPT) +
+#         '''
+#         %sreverse < %s which=4 opt=i verb=y >%s datapath=%s/;
+#         '''%(M8R,rwrv,rwfl,DPT) +
+#         '''
+#         %sxcor2d <%s uu=%s axis=3 verb=y %s >${TARGETS[0]};
+#         '''%(M8R,swfl,rwfl,custom) +
+#         '''
+#         %srm %s %s %s %s
+#         '''%(M8R,swfl,rdrv,rwrv,rwfl),
+#              stdin=0,
+#              stdout=0)
 
 # ------------------------------------------------------------
 # IC
@@ -310,19 +310,6 @@ def eicOBSOLETE(cip,swfl,rwfl,cc,custom,par):
          cc=${SOURCES[2]}
          %(eiccustom)s
          ''' %par)
-
-#def eic3d(cip,swfl,rwfl,cc,custom,par):
-#    par['eiccustom'] = custom
-#   
-#    Flow(cip,[swfl,rwfl,cc],
-#         '''
-#         eic verb=y
-#         nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
-#         ur=${SOURCES[1]}
-#         cc=${SOURCES[2]}
-#         %(eiccustom)s
-#         ''' %par)
-
 
 # CIC: deconvolution
 def dic(imag,swfl,rwfl,eps,custom,par):

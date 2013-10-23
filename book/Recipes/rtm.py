@@ -83,7 +83,7 @@ def cicmig(icic,
 
     Flow(icic,[sdat,scoo,rdat,rcoo,velo,dens],
          '''
-         %sawefd2d < ${SOURCES[0]} cden=n %s
+         %sawefd2d < ${SOURCES[0]} cden=n %s verb=n
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
          vel=${SOURCES[4]}
@@ -92,10 +92,10 @@ def cicmig(icic,
          >/dev/null;
          '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdrv,DPT) +
          '''
-         %sawefd2d < %s cden=n %s
+         %sawefd2d < %s cden=n %s verb=n
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
          vel=${SOURCES[4]}
@@ -104,7 +104,7 @@ def cicmig(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=y %s
+         %scic2d <%s isreversed=0 verb=n %s
          ur=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
@@ -131,7 +131,7 @@ def cicmigCD(icic,
 
     Flow(icic,[sdat,scoo,rdat,rcoo,velo],
          '''
-         %sawefd2d < ${SOURCES[0]} cden=y %s
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
          vel=${SOURCES[4]}
@@ -139,10 +139,10 @@ def cicmigCD(icic,
          >/dev/null;
          '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdrv,DPT) +
          '''
-         %sawefd2d < %s cden=y %s
+         %sawefd2d < %s cden=y %s verb=n
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
          vel=${SOURCES[4]}
@@ -150,7 +150,7 @@ def cicmigCD(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=y %s
+         %scic2d <%s isreversed=0 verb=n %s
          ur=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
@@ -178,7 +178,7 @@ def eicmig(icic,
 
     Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo,dens],
          '''
-         %sawefd2d < ${SOURCES[0]} cden=n %s
+         %sawefd2d < ${SOURCES[0]} cden=n %s verb=n
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
          vel=${SOURCES[5]}
@@ -187,10 +187,10 @@ def eicmig(icic,
          >/dev/null;
          '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdrv,DPT) +
          '''
-         %sawefd2d < %s cden=n %s
+         %sawefd2d < %s cden=n %s verb=n
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
          vel=${SOURCES[5]}
@@ -199,12 +199,12 @@ def eicmig(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=y %s
+         %scic2d <%s isreversed=0 verb=n %s
          ur=%s 
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
-         %seic2d <%s isreversed=0 verb=y %s
+         %seic2d <%s isreversed=0 verb=n %s
          ur=%s cc=${SOURCES[4]} 
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
@@ -232,7 +232,7 @@ def eicmigCD(icic,
 
     Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo],
          '''
-         %sawefd2d < ${SOURCES[0]} cden=y %s
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
          vel=${SOURCES[5]}
@@ -240,10 +240,10 @@ def eicmigCD(icic,
          >/dev/null;
          '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
          '''
-         %sreverse < ${SOURCES[2]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdrv,DPT) +
          '''
-         %sawefd2d < %s cden=y %s
+         %sawefd2d < %s cden=y %s verb=n
          sou=${SOURCES[3]}
          rec=${SOURCES[3]}
          vel=${SOURCES[5]}
@@ -251,12 +251,12 @@ def eicmigCD(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=y %s
+         %scic2d <%s isreversed=0 verb=n %s
          ur=%s 
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
-         %seic2d <%s isreversed=0 verb=y %s
+         %seic2d <%s isreversed=0 verb=n %s
          ur=%s cc=${SOURCES[4]} 
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
@@ -296,10 +296,10 @@ def zofmig(imag,data,rcoo,velo,dens,custom,par):
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
-         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdat,DPT) +
          '''
-         %sawefd2d < %s cden=n %s
+         %sawefd2d < %s cden=n %s verb=n
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
          vel=${SOURCES[2]}
@@ -326,10 +326,10 @@ def zofmigCD(imag,data,rcoo,velo,custom,par):
 
     Flow(imag,[data,rcoo,velo],
          '''
-         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdat,DPT) +
          '''
-         %sawefd2d < %s cden=y %s
+         %sawefd2d < %s cden=y %s verb=n
          vel=${SOURCES[2]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}

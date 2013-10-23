@@ -567,21 +567,7 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
          stdin=0,
          stdout=0
         )
-
     
-        #    Temp(cc+'_x',None,
-        #         'math n1=%d d1=%g o1=%g output="%g+%g*cos(%g*x1/180.)"'
-        #         %(sampling,360./sampling,0.,xcenter,radius,math.pi) )
-        #    Temp(cc+'_z',None,
-        #         'math n1=%d d1=%g o1=%g output="%g-%g*sin(%g*x1/180)"'
-        #         %(sampling,360./sampling,0.,zcenter,radius,math.pi) )
-        #    Flow(cc,[cc+'_x',cc+'_z'],
-        #         '''
-        #         cat axis=2 space=n
-        #         ${SOURCES[0]} ${SOURCES[1]} | transp |
-        #	 put label1="" unit1="" label2="" unit2=""
-        #         ''', stdin=0)
-
 # ------------------------------------------------------------
 def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
     Temp(cc+'_r',None,
@@ -641,22 +627,6 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
          '''%(M8R,cco,ccx,ccz),
               stdin=0,
               stdout=0)
-
-        #    Temp(cc+'_',None,
-        #         '''
-        #         math output=1
-        #         n1=%d d1=%g o1=%g
-        #         n2=%d d2=%g o2=%g
-        #         ''' % (nz,dz,oz,
-        #		nx,dx,ox) )
-        #    Temp(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
-        #    Temp(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
-        #    Flow(cc,[cc+'_x',cc+'_z'],
-        #         '''
-        #         cat axis=2 space=n
-        #         ${SOURCES[0]} ${SOURCES[1]} | transp |
-        #	 put label1="" unit1="" label2="" unit2=""
-        #         ''',stdin=0)
 
 def boxarray3d(cc,nz,oz,dz,nx,ox,dx,ny,oy,dy,par):
     Temp(cc+'_',None,
@@ -743,21 +713,6 @@ def makebox(box,zmin,zmax,xmin,xmax,par):
     Flow(box,[box+'_x',box+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
 
 # ------------------------------------------------------------
-#def oldmakeline(line,zmin,zmax,xmin,xmax,par):
-#    Temp(line+'_z',None,
-#         '''
-#         spike nsp=2 mag=%g,%g
-#         n1=2 o1=0 d1=1 k1=1,2 |
-#         transp
-#         '''%(zmin,zmax))
-#    Temp(line+'_x',None,
-#         '''
-#         spike nsp=2 mag=%g,%g
-#         n1=2 o1=0 d1=1 k1=1,2 |
-#         transp
-#         '''%(xmin,xmax))
-#    Flow(line,[line+'_x',line+'_z'],'cat axis=1 space=n ${SOURCES[1]}')
-
 def makeline(line,zmin,zmax,xmin,xmax,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
@@ -903,7 +858,6 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
-
 # ------------------------------------------------------------
 # acoustic modeling that only generates data 
 # ------------------------------------------------------------
@@ -944,6 +898,7 @@ def awefd_swfl(owfl,idat,velo,dens,sou,custom,par):
          wfl=${TARGETS[0]} '''%par+'''
          %s >%stmp ; $RSFROOT/bin/sfrm %stmp
          ''' %(par['fdcustom'],owfl,owfl),stdout=0)
+    
 # ------------------------------------------------------------
 # acoustic modeling that only generates receiver wavefield:
 # the input data is not reversed, all the 
@@ -1015,35 +970,35 @@ def lwefd1(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
 
 # ------------------------------------------------------------
 # anisotropic stiffness tensor
-def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
-    Flow(cc+'33',[vp,ro],
-         '''
-         math output="ro*vp*vp"
-         vp=${SOURCES[0]}
-         ro=${SOURCES[1]}
-         ''')    
-    Flow(cc+'44',[vs,ro],
-         '''
-         math output="ro*vs*vs"
-         vs=${SOURCES[0]}
-         ro=${SOURCES[1]}
-         ''')
-    Flow(cc+'11',[cc+'33',epsilon],
-         '''
-         math output="2*epsilon*c33+c33"
-         c33=${SOURCES[0]}
-         epsilon=${SOURCES[1]}
-         ''')
-    Flow(cc+'13',[cc+'33',cc+'44',delta],
-         '''
-         math output="sqrt(2*c33*(c33-c44)*delta+(c33-c44)*(c33-c44))-c44"
-         c33=${SOURCES[0]}
-         c44=${SOURCES[1]}
-         delta=${SOURCES[2]}
-         ''')
-    
-    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
-         'cat axis=3 space=n ${SOURCES[1:4]}')
+#def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
+#    Flow(cc+'33',[vp,ro],
+#         '''
+#         math output="ro*vp*vp"
+#         vp=${SOURCES[0]}
+#         ro=${SOURCES[1]}
+#         ''')    
+#    Flow(cc+'44',[vs,ro],
+#         '''
+#         math output="ro*vs*vs"
+#         vs=${SOURCES[0]}
+#         ro=${SOURCES[1]}
+#         ''')
+#    Flow(cc+'11',[cc+'33',epsilon],
+#         '''
+#         math output="2*epsilon*c33+c33"
+#         c33=${SOURCES[0]}
+#         epsilon=${SOURCES[1]}
+#         ''')
+#    Flow(cc+'13',[cc+'33',cc+'44',delta],
+#         '''
+#         math output="sqrt(2*c33*(c33-c44)*delta+(c33-c44)*(c33-c44))-c44"
+#         c33=${SOURCES[0]}
+#         c44=${SOURCES[1]}
+#         delta=${SOURCES[2]}
+#         ''')
+#    
+#    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
+#         'cat axis=3 space=n ${SOURCES[1:4]}')
 
 # ------------------------------------------------------------
 def animodel(v,vv,eta,delta,theta):
@@ -1123,22 +1078,6 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
 
-# ------------------------------------------------------------    
-# exploding-reflector reverse-time migration
-#def oldzom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
-#
-#    rwfl = imag+'_ur' # receiver wavefield
-#    rout = imag+'_dr' # receiver data (not the input rdat)
-#
-#    # receiver wavefield (z,x,t)
-#    tdat = imag+'_tds'
-#    twfl = imag+'_tur'
-#
-#    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-#    awefd(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % (par['nt']-1),par)
-#
-#    Flow(imag,twfl,'window n3=1 f3=1')
-
 # ------------------------------------------------------------
 # exploding-reflector reverse-time migration
 def zom(imag,data,velo,dens,rcoo,custom,par):
@@ -1152,10 +1091,10 @@ def zom(imag,data,velo,dens,rcoo,custom,par):
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
-         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdat,DPT) +
          '''
-         %sawefd2d < %s cden=n %s
+         %sawefd2d < %s cden=n %s verb=n
          vel=${SOURCES[2]}
          den=${SOURCES[3]}
          sou=${SOURCES[1]}
@@ -1183,10 +1122,10 @@ def cdzom(imag,data,velo,rcoo,custom,par):
 
     Flow(imag,[data,rcoo,velo],
          '''
-         %sreverse < ${SOURCES[0]} which=2 opt=i verb=y >%s datapath=%s/;
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=n >%s datapath=%s/;
          '''%(M8R,rdat,DPT) +
          '''
-         %sawefd2d < %s cden=y %s
+         %sawefd2d < %s cden=y %s verb=n
          vel=${SOURCES[2]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
@@ -1334,11 +1273,8 @@ def eframe(frame,movie,index,custom,axis,par,xscale=0.75,yscale=0.75,shift=-8.25
 #             'window n3=1 f3=%d n4=1 f4=%d |' % (i,index)
 #             + cgrey('',par))
 
-    if(axis==1):
-        pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
-    else:
-        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
-#    pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
+    if(axis==1): pplot.p2x1(frame,frame+'-1',frame+'-0',yscale,xscale,shift)
+    else:        pplot.p1x2(frame,frame+'-0',frame+'-1',yscale,xscale,shift)
 
 # ------------------------------------------------------------
 # elastic wavefield movie
@@ -1434,9 +1370,6 @@ def artm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
     Flow(imag,[swfl,rwfl],
          'xcor2d uu=${SOURCES[1]} axis=3 verb=y nbuf=%(nbuf)d ompnth=%(ompnth)d' % par)
 
-#    Flow(imag,[swfl,rwfl],
-#         'add ${SOURCES[1]} mode=p| transp plane=23 | stack')
-    
 # ------------------------------------------------------------
 # elastic RTM
 def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
