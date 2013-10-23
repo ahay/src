@@ -57,7 +57,7 @@ def modpar(par):
  
 # ------------------------------------------------------------   
 def wempar(par):
-
+    # expand model at the bottom
     par['nz']=par['nz']+par['nzpad']
 
     par['verb']='y'
@@ -78,9 +78,15 @@ def wempar(par):
 
     par['ntpad']=2000
 
+    # define image space
+    par['nximg']=1024
+    par['jximg']=3
+    par['fximg']=65
+
 # ------------------------------------------------------------
 def rtmpar(par):
 
+    # expand model at the bottom
     par['nz']=par['nz']+par['nzpad']
     
     par['frq']=10
@@ -92,6 +98,19 @@ def rtmpar(par):
     par['jsnap']=8
     par['nodes']=8
 
+    # define image space
+    par['nximg']=1024
+    par['jximg']=3
+    par['fximg']=65
+    
+    par['nqz']=par['nz']-par['nzdtm']
+    par['oqz']=par['oz']+par['nzdtm']*par['dz']
+    par['dqz']=par['dz']
+    
+    par['nqx']=par['nximg']
+    par['oqx']=par['ox']+par['fximg']*par['dx']
+    par['dqx']=par['dx']*par['jximg']
+    
 def migpar(par):
     wempar(par)
 
