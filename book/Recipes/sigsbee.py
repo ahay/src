@@ -85,7 +85,6 @@ def wempar(par):
 
 # ------------------------------------------------------------
 def rtmpar(par):
-
     # expand model at the bottom
     par['nz']=par['nz']+par['nzpad']
     
@@ -141,6 +140,7 @@ def eicpar(par):
                  2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
                  par)
 
+    # slant stack parameters
     par['na']=240
     par['oa']=-60
     par['da']=0.5

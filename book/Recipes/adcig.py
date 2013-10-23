@@ -143,8 +143,8 @@ def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
         par['sheight']=13*par['sratio']
 
     print dz_,dx_,dt_
-
     print nhx,dhx
+    print par['sratio']
 
 # ------------------------------------------------------------
 # lz-lx-tau
