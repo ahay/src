@@ -28,8 +28,8 @@ def param():
     par['ds']=0.150*par['ft2km']
     # source index: o=39, d=6, n=500
 
-    par['nzdtm']=244 # number of redatuming steps through water
-    par['nzpad']=143
+    par['nzdtm']=244 # redatuming samples through water
+    par['nzpad']=143 # padding samples at the bottom
 
     # all shots parameters
     par['nsall']=500
@@ -58,6 +58,8 @@ def modpar(par):
 # ------------------------------------------------------------   
 def wempar(par):
 
+    par['nz']=par['nz']+par['nzpad']
+
     par['verb']='y'
     par['eps']=0.1
     par['nrmax']=5
@@ -72,26 +74,22 @@ def wempar(par):
     par['nw']=240
     par['eic']='itype=o'
 
-    par['ntpad']=2000
-
     par['nodes']=8
+
+    par['ntpad']=2000
 
 # ------------------------------------------------------------
 def rtmpar(par):
 
+    par['nz']=par['nz']+par['nzpad']
+    
     par['frq']=10
     par['kt']=100
     par['nt']=12001
     par['dt']=0.001
     par['nb']=150
-    par['jsnap']=500
-    par['jdata']=1
-    par['wweight']=50
-    par['wclip']=0.5
-
     par['jdata']=8
     par['jsnap']=8
-
     par['nodes']=8
 
 def migpar(par):
@@ -100,6 +98,7 @@ def migpar(par):
 # ------------------------------------------------------------
 def eicpar(par):
     par['nhx']=50
+    par['nhy']=0
     par['nhz']=30
     
     par['nht']=60
