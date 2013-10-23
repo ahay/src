@@ -41,33 +41,16 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources),
-                       LIBS=libs)
-    if root:
-        env.Install(bindir,prog)
-
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
-if lapack:
-    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']
-    if not isinstance(lapack,bool):
-        libsxx.extend(lapack)
-    env.Prepend(LIBS=libsxx)
- 
-
-ccmains = Split(ccprogs)
-for prog in ccmains:
-    sources = ['M' + prog]
-    if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    if fftw:
+        env.StaticObject('M'+prog+'.c')
+        prog = env.Program(prog,map(lambda x: x + '.o',sources),
+                           LIBS=libs)
     else:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+        prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw-devel')
+
     if root:
         env.Install(bindir,prog)
+
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -76,8 +59,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) 
 
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
