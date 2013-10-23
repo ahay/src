@@ -20,6 +20,7 @@ targets.c = '''
 wexwfl weximg wexmig wexmva wexnmig wexzomva wexzoimg
 awesg
 cipcut
+ewefdm
 '''
 
 targets.c_mpi = \
