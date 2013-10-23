@@ -1130,7 +1130,7 @@ if (is2d){
     float ***c66=NULL;
   
     float ***vp,***vs;
-    float ***qp;
+    float ***qp=NULL;
 
     /*------------------------------------------------------------*/
     /* displacement: um = U @ t-1; uo = U @ t; up = U @ t+1 */
