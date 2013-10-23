@@ -130,7 +130,7 @@ def eicpar(par):
                  2*par['nht']+1,-par['nht']*par['dt'],par['dt'],
                  par['nz']   ,            par['oz'],par['dz'],
                  par)
-    adcig.sparam(10,
+    adcig.sparam(5,
                  2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'], par['dx']*par['jximg'],
                  par['nz'],  par['oz'],                par['dz'],
                  2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
