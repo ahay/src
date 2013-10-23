@@ -103,15 +103,16 @@ objs = []
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-else:
-    for source in Split('seplowrank decomplowrank spectramultipy sepdivcurl'):
-        src.remove(File(source+'.c'))
+
+# files with FFTW dependence
+fftws = map(lambda x: File(x+'.c'),Split('seplowrank decomplowrank spectramultipy sepdivcurl'))
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
-    objs.append(obj)
+    if fftw or not source in fftws:
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+        objs.append(obj)
 
 mains = Split(progs)
 for prog in mains:
