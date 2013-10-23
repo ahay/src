@@ -10,7 +10,7 @@ import fdmod
 def param():
     par = dict(
     nt=8001,  ot=0,      dt=0.00050, lt='t', ut='s',
-    nx=5395,  ox=2.4384, dx=0.01250, lx='x', ux=:'km',
+    nx=5395,  ox=2.4384, dx=0.01250, lx='x', ux='km',
     nz=1911,  oz=0,      dz=0.00625, lz='z', uz='km'
     )
 
