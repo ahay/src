@@ -85,21 +85,6 @@ def agrey(custom,par):
 # ------------------------------------------------------------
 def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
 
-#    hxmin=ohx
-#    hxmax=ohx+(nhx-1)*dhx
-#    hzmin=ohz
-#    hzmax=ohz+(nhz-1)*dhz
-#    hymin=v*(oht)
-#    hymax=v*(oht+(nht-1)*dht)
-#    dx=hxmax-hxmin
-#    dy=hymax-hymin
-#    dz=hzmax-hzmin
-#    yxeatio=dx/(dx+dy);
-#    yzratio=dz/(dz+dy);
-#    par['eratio3']=(dz+dy)/(dx+dy);
-#    par['epointz']=yzratio;
-#    par['epointx']=yxratio;
-
     dz = (nhz-1)*dhz
     dx = (nhx-1)*dhx
     dt =((nht-1)*dht)*v
@@ -113,18 +98,16 @@ def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
     else:
         par['eheight']=12*par['eratio']
 
-#    byte gainpanel=a pclip=100 %s |
-
 # ------------------------------------------------------------
 def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
 
-    dx = (nhx-1)*dhx
-    dy = (nhy-1)*dhy
-    dt =((nht-1)*dht)*v
+    dx_ = (nhx-1)*dhx
+    dy_ = (nhy-1)*dhy
+    dt_ =((nht-1)*dht)*v
 
-    par['hratio']=(dt+dy)/(dx+dy);
-    par['hpoint1']=dt/(dt+dy);
-    par['hpoint2']=dx/(dx+dy);
+    par['hratio']=(dt_+dy_)/(dx_+dy_);
+    par['hpoint1']=dt_/(dt_+dy_);
+    par['hpoint2']=dx_/(dx_+dy_);
     
     if(par['hratio']>=1):
         par['hheight']=10
@@ -133,41 +116,26 @@ def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
 
 # ------------------------------------------------------------
 def xparam(nhx,ohx,dhx,nz,oz,dz,par):
-    dz = (nz-1)*dz
-    dx = (nhx-1)*dhx
-    par['xratio']=(dz)/(dx);
+    dz_ = (nz-1)*dz
+    dx_ = (nhx-1)*dhx
+    par['xratio']=(dz_)/(dx_);
 
 def tparam(v,nht,oht,dht,nz,oz,dz,par):
-    dz = (nz-1)*dz
-    dt =((nht-1)*dht)*v
+    dz_ = (nz-1)*dz
+    dt_ =((nht-1)*dht)*v
 
-    par['tratio']=(dz)/(dt);
+    par['tratio']=(dz_)/(dt_);
     
 # ------------------------------------------------------------
 def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
 
-#    hxmin=ohx
-#    hxmax=ohx+(nhx-1)*dhx
-#    hzmin=oz
-#    hzmax=oz+(nz-1)*dz
-#    hymin=v*(oht)
-#    hymax=v*(oht+(nht-1)*dht)
-#    dx=hxmax-hxmin
-#    dy=hymax-hymin
-#    dz=hzmax-hzmin
-#    yxratio=dx/(dx+dy);
-#    yzratio=dz/(dz+dy);   
-#    par['spointz']=yzratio;
-#    par['spointx']=yxratio;
-#    par['sratio3']=1.0;
-
-    dz = (nz -1)*dz
-    dx = (nhx-1)*dhx
-    dt =((nht-1)*dht)*v
+    dz_ = (nz -1)*dz
+    dx_ = (nhx-1)*dhx
+    dt_ =((nht-1)*dht)*v
     
-    par['sratio']=(dz+dt)/(dx+dt);
-    par['spoint1']=dz/(dz+dt);
-    par['spoint2']=dx/(dx+dt);
+    par['sratio']=(dz_+dt_)/(dx_+dt_);
+    par['spoint1']=dz_/(dz_+dt_);
+    par['spoint2']=dx_/(dx_+dt_);
     
     if(par['sratio']>=1):
         par['sheight']=10
