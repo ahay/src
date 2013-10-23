@@ -171,7 +171,7 @@ def rtmcic(imag,velo,dens,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 uu=%s axis=3 verb=n %s >${TARGETS[0]};
+         %scic2d <%s isreversed=0 ur=%s axis=3 verb=n %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
          '''
          %srm %s %s %s
@@ -215,7 +215,7 @@ def cdrtm(imag,velo,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 uu=%s axis=3 verb=n %s >${TARGETS[0]};
+         %scic2d <%s isreversed=0 ur=%s axis=3 verb=n %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
          '''
          %srm %s %s %s
