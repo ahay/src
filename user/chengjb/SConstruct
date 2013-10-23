@@ -90,18 +90,23 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-##############################################################################
-# ADD FFTW3 LIB
-##############################################################################
-fftw = env.get('FFTW')
-if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
 
 ##############################################################################
 # Compiling C programs 
 ##############################################################################
 src = Glob('[a-z]*.c')
 objs = []
+
+##############################################################################
+# ADD FFTW3 LIB
+##############################################################################
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+else:
+    for source in Split('seplowrank decomplowrank spectramultipy sepdivcurl'):
+        src.remove(File(source+'.c'))
+
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
@@ -112,8 +117,11 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    env.StaticObject('M'+prog+'.c')
-    prog = env.Program (prog, map (lambda x: x + '.c',sources))
+    if fftw or not prog in ['tti2delrseparation','vti2delrseparation']:
+        env.StaticObject('M'+prog+'.c')
+        prog = env.Program (prog, map (lambda x: x + '.c',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw-devel')
     if root:
         env.Install (bindir, prog)
 
@@ -149,12 +157,13 @@ for prog in ccmains:
 ##############################################################################
 # Compiling C programs (Test)
 ##############################################################################
-for prog in Split(tprogs):
+if fftw:
+    for prog in Split(tprogs):
         sources = ['T'+prog]
-        bldutil.depends(env,sources,'T'+prog)
+        bldutil.depends(env,sources,'T'+prog)     
         env.StaticObject('T'+prog+'.c')
         prog = env.Program(prog,map(lambda x: x + '.o',sources),PROGPREFIX='T',PROGSUFFIX='.x')
-
+        
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
