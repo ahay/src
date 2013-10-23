@@ -120,7 +120,7 @@ def eicpar(par):
     par['nhz']=30
     
     par['nht']=60
-    par['dht']=par['dt']
+    par['dht']=0.008
 
     adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
                  par['nz'],                 par['oz'],par['dz'],
