@@ -6,6 +6,7 @@ progs = '''
 tahgethw
 tahread
 tahwrite
+tahnmo
 '''
 
 try:  # distributed version

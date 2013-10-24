@@ -1,5 +1,5 @@
 /* 
-   tahread: Trace And Header READ.
+   tahgethw: Trace And Header READ.
 
    tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:
@@ -20,51 +20,16 @@
    Program change history:
    date       Who             What
    04/26/2012 Karl Schleicher Original program
+   10/22/2012 Karl Schleicher Factor reused functions into tahsub.c
 */
 #include <string.h>
 #include <rsf.h>
 #include <rsfsegy.h>
 
-char** sf_getstringarray(char* key, int* numkeys){
+#include "tahsub.c"
 
-  char** list_of_keys;
-  char* par;
-  char* one_par;
-  char* copy_of_par;
-  int ikey;
-
-  par=sf_getstring(key);
-  if(par==NULL){
-    return NULL;
-  }
-
-  /* count number of keys */
-  *numkeys=0;
-  copy_of_par=sf_charalloc(strlen(par));
-  strcpy (copy_of_par, par);
-  one_par=strtok(copy_of_par,",");
-  while (one_par!=NULL){
-    (*numkeys)++;
-    one_par=strtok(NULL,",");
-  }
-  /* break the long string into an array  of strings */
-  list_of_keys=(char**)sf_alloc(*numkeys,sizeof(char*));
-  /* no need to reallocate, but including free(copy_of_par) clobberred part of
-    list_of_keys.  This spooked me on exactly how strtok works */
-  copy_of_par=sf_charalloc(strlen(par));
-  strcpy (copy_of_par, par);
-  list_of_keys[0]=strtok(copy_of_par,",");
-  for(ikey=1; ikey<*numkeys; ikey++){
-    list_of_keys[ikey]=strtok(NULL,",");
-  }
-  /*should:
-    free(copy_of_par);
-    free(par);
-    but it causes part of list_of_keys to be clobberred 
-    this is a very minor memory leak
-  */
-  return list_of_keys;
-}
+/* very sparingly make some global variables. */
+int verbose;
 
 int main(int argc, char* argv[])
 {
@@ -74,18 +39,13 @@ int main(int argc, char* argv[])
   int n1_headers;
 
   char* header_format=NULL;
-  int n_traces; 
   sf_datatype typehead;
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   float* intrace=NULL;
-  int* iheader=NULL;
-  int i_trace;
-  int tempint;
-  char type_input_record[5];
-  int input_record_length;
   int numkeys;
   int ikey;
+  int n_traces;
   char** list_of_keys;
   int *indx_of_keys;
   
@@ -104,10 +64,10 @@ int main(int argc, char* argv[])
   /* input and output data are stdin/stdout */
   /******************************************/
 
-  fprintf(stderr,"read in file name\n");  
+  if(verbose>0)fprintf(stderr,"read in file name\n");  
   in = sf_input ("in");
 
-  fprintf(stderr,"read out file name\n");
+  if(verbose>0)fprintf(stderr,"read out file name\n");
   out = sf_output ("out");
 
   if (!sf_histint(in,"n1_traces",&n1_traces))
@@ -115,27 +75,37 @@ int main(int argc, char* argv[])
   if (!sf_histint(in,"n1_headers",&n1_headers)) 
     sf_error("input data does not define n1_headers");
 
-  n_traces=sf_leftsize(in,1);
-
   header_format=sf_histstring(in,"header_format");
   if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
   else                                       typehead=SF_FLOAT;
 
-  fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
-  if (SF_INT == typehead) iheader = sf_intalloc(n1_headers);
-  else                    fheader = sf_floatalloc(n1_headers);
+  if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
+  fheader = sf_floatalloc(n1_headers);
  
-  fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
+  if(verbose>0)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
-  fprintf(stderr,"call list of keys\n");
-  list_of_keys=sf_getstringarray("key",&numkeys);
+  if(verbose>0)fprintf(stderr,"call list of keys\n");
+ 
+  list_of_keys=sf_getnstring("key",&numkeys);
   if(list_of_keys==NULL)
     sf_error("The required parameter \"key\" was not found.");
-
+  /* I wanted to use sf_getstrings, but it seems to want keys seperated
+     with :'s instenad of ,'s */
+  /*
+  numkeys=sf_getnumpars("key");
+  if(numkeys==0)
+    sf_error("The required parameter \"key\" was not found.");
+  fprintf(stderr,"alloc list_of_keys numkeys=%d\n",numkeys);
+  list_of_keys=(char**)sf_alloc(numkeys,sizeof(char*)); 
+  sf_getstrings("key",list_of_keys,numkeys);
+  */
   /* print the list of keys */
-  for(ikey=0; ikey<numkeys; ikey++){
-    fprintf(stderr,"list_of_keys[%d]=%s\n",ikey,list_of_keys[ikey]);
+  if(verbose>1){
+    fprintf(stderr,"numkeys=%d\n",numkeys);
+    for(ikey=0; ikey<numkeys; ikey++){
+      fprintf(stderr,"list_of_keys[%d]=%s\n",ikey,list_of_keys[ikey]);
+    }
   }
   
 /* maybe I should add some validation that n1== n1_traces+n1_headers+2
@@ -145,7 +115,18 @@ int main(int argc, char* argv[])
   /* put the history from the input file to the output */
   sf_fileflush(out,in);
 
-  /* the list header keys (including any extras) */
+  /* kls n_traces not used, but without this call I get a link error with 
+     the standard madagascar scons in $RSFSRC/user/karl.  The error is:
+     gcc -o sftahgethw -pthread Mtahgethw.o -L/home/karl/RSFSRC/lib \
+          -L/usr/lib64/atlas -lrsf -lrsfsegy -lm -lcblas -latlas -lgomp
+     /home/karl/RSFSRC/lib/librsfsegy.a(segy.o): In function `endian':
+     segy.c:(.text+0x235): undefined reference to `sf_endian'
+
+     Link works if you change the order of the libaries:
+     gcc -o sftahgethw -pthread Mtahgethw.o -L/home/karl/RSFSRC/lib 
+          -L/usr/lib64/atlas -lrsfsegy -lrsf  -lm -lcblas -latlas -lgomp  */
+  n_traces=sf_leftsize(in,1);
+  /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
   indx_of_keys=sf_intalloc(numkeys);
   for (ikey=0; ikey<numkeys; ikey++){
@@ -157,56 +138,28 @@ int main(int argc, char* argv[])
 
 
 
-  fprintf(stderr,"start trace loop\n");
-  for (i_trace=0; i_trace<n_traces; i_trace++){
-
-    if(i_trace<5)fprintf(stderr,"i_trace=%d, input_record_length=%d\n",
-			         i_trace   , input_record_length);
-    /* kls. Factor this into a function sf_get_trace */
-    sf_charread(type_input_record,4,in);
-    type_input_record[4]='\0';
-    if(verbose>1)fprintf(stderr,"type_input_record=%s\n",
-	                 type_input_record);
-    sf_intread(&input_record_length,1,in);
-    if(strcmp(type_input_record,"tah ")!=0){
-      /* not my kind of record.  Just write it back out */
-      sf_error("non tah record found. Better write this code segment\n");
-    } else {
-      /* process the tah. */
-      /* this program just prints selected header keys */
-
-      /**************************/
-      /* read trace and headers */
-      /**************************/
-      if(verbose>1)fprintf(stderr,"read header\n");
-      if(SF_INT == typehead) sf_intread  (iheader,n1_headers,in);
-      else                   sf_floatread(fheader,n1_headers,in);
-      if(verbose>1)fprintf(stderr,"read intrace\n");
-      sf_floatread(intrace,n1_traces,in);
-      
-      if(verbose>1)fprintf(stderr,"tah read.  process and write it.\n");
-
+  /***************************/
+  /* start trace loop        */
+  /***************************/
+  if(verbose>0)fprintf(stderr,"start trace loop\n");
+  while (0==sf_get_tah(intrace, fheader, n1_traces, n1_headers, in)){
+    if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
+    /* process the tah. */
+    /* this program prints selected header keys */
       for(ikey=0; ikey<numkeys; ikey++){
 	fprintf(stderr," %s=",list_of_keys[ikey]);
-	if(typehead == SF_INT)fprintf(stderr,"%d",iheader[indx_of_keys[ikey]]);
-	else                  fprintf(stderr,"%f",fheader[indx_of_keys[ikey]]);
-      }
+	if(typehead == SF_INT){
+	  /* just cast the header to int so the print works */
+	  fprintf(stderr,"%d",((int*)fheader)[indx_of_keys[ikey]]);
+	} else {
+	  fprintf(stderr,"%f",fheader[indx_of_keys[ikey]]);
+	}
+      } /* end of the for(ikey..) loop */
       fprintf(stderr,"\n");
-
       /***************************/
       /* write trace and headers */
       /***************************/
-      /* trace and header will be preceeded with words:
-	 1- type record: 4 charactors 'tah '.  This will support other
-	 type records like 'htah', hidden trace and header.
-	 2- the length of the length of the trace and header. */
-      sf_charwrite("tah ",4,out);
-      tempint=n1_traces+n1_headers;
-      sf_intwrite(&tempint, 1, out);
-      if(SF_INT == typehead) sf_intwrite  (iheader,n1_headers,out);
-      else                   sf_floatwrite(fheader,n1_headers,out);
-      sf_floatwrite(intrace,n1_traces,out);
-    }
+      sf_put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
 
   exit(0);

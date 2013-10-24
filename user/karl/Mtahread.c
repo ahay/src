@@ -27,9 +27,13 @@
 #include <rsf.h>
 #include <rsfsegy.h>
 
+#include "tahsub.c"
+
+/* very sparingly make some global variables. */
+int verbose;
+
 int main(int argc, char* argv[])
 {
-  int verbose;
   sf_file infile=NULL, out=NULL, inheaders=NULL;
   int n1_traces;
   int n1_headers;
@@ -37,11 +41,9 @@ int main(int argc, char* argv[])
   int n_traces, n_headers; 
   sf_datatype typehead;
   sf_datatype typein;
-  float* fheader=NULL;
+  float* header=NULL;
   float* intrace=NULL;
-  int* iheader=NULL;
   int i_trace;
-  int tempint;
   char* infile_filename=NULL;
   char* headers_filename=NULL;
 
@@ -59,16 +61,17 @@ int main(int argc, char* argv[])
   /*****************************************/
   /* initialize the input and output files */
   /*****************************************/
-  fprintf(stderr,"read name of input file name\n");
+  if(verbose>0)fprintf(stderr,"read name of input file name\n");
   
   infile_filename=sf_getstring("input");
   if(infile_filename==NULL) infile = sf_input ("in");
   else infile = sf_input (infile_filename);
 
-  fprintf(stderr,"set up output file for tah - should be stdout\n");
+  if(verbose>0)
+    fprintf(stderr,"set up output file for tah - should be stdout\n");
   out = sf_output ("out");
 
-  fprintf(stderr,"read name of input headers file\n");
+  if(verbose>0)fprintf(stderr,"read name of input headers file\n");
   if(!(headers_filename=sf_getstring("headers"))) {
     sf_error("headers parameter not input");
   } else {
@@ -82,7 +85,8 @@ int main(int argc, char* argv[])
 
   n_traces=sf_leftsize(infile,1);
   n_headers=sf_leftsize(inheaders,1);
-  fprintf(stderr,"n_traces=%d, n_headers=%d\n",n_traces,n_headers);
+  if(verbose>0)
+    fprintf(stderr,"n_traces=%d, n_headers=%d\n",n_traces,n_headers);
 
   if(n_traces!=n_headers){
     fprintf(stderr,"n_traces=%d, n_headers=%d\n",n_traces,n_headers);
@@ -98,15 +102,14 @@ int main(int argc, char* argv[])
     sf_error("input file must contain floats.");
   
   /* must be float or int */
-  fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
-  if (SF_INT == typehead) iheader = sf_intalloc(n1_headers);
-  else                    fheader = sf_floatalloc(n1_headers);
+  /*fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);*/
+  header = sf_floatalloc(n1_headers);
  
-  fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
+  /*fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);*/
 
   intrace= sf_floatalloc(n1_traces);
 
-  fprintf(stderr,"need to add 2 words.  Record type and record length\n");
+  /*fprintf(stderr,"need to add 2 words.  Record type and record length\n"); */
   sf_putint(out,"n1",n1_traces+n1_headers+2);
   sf_putint(out,"n1_traces",n1_traces);
 
@@ -120,19 +123,21 @@ int main(int argc, char* argv[])
   /* the list of any extra header keys */
   segy_init(n1_headers,inheaders);
   segy2hist(out,n1_headers);
-
+  {
+    int tempint;
+    tempint=segykey('ep');
+    fprintf(stderr,"tempint=%d\n",tempint);
+  }
   /* put the history from the input file to the output */
   sf_fileflush(out,infile);
 
-  fprintf(stderr,"start trace loop\n");
+  if(verbose>0)fprintf(stderr,"start trace loop n_traces=%d\n",n_traces);
   for (i_trace=0; i_trace<n_traces; i_trace++){
-    if(i_trace<5)fprintf(stderr,"i_trace=%d\n",i_trace);
-
+    if(verbose>0 && i_trace<5)fprintf(stderr,"i_trace=%d\n",i_trace);
     /**************************/
     /* read trace and headers */
     /**************************/
-    if(SF_INT == typehead) sf_intread  (iheader,n1_headers,inheaders);
-    else                   sf_floatread(fheader,n1_headers,inheaders);
+    sf_floatread(header,n1_headers,inheaders);
     sf_floatread(intrace,n1_traces,infile);
 
     /***************************/
@@ -142,12 +147,7 @@ int main(int argc, char* argv[])
        1- type record: 4 charactors 'tah '.  This will support other
           type records like 'htah', hidden trace and header.
        2- the length of the length of the trace and header. */
-    sf_charwrite("tah ",4,out);
-    tempint=n1_traces+n1_headers;
-    sf_intwrite(&tempint, 1, out);
-    if(SF_INT == typehead) sf_intwrite  (iheader,n1_headers,out);
-    else                   sf_floatwrite(fheader,n1_headers,out);
-    sf_floatwrite(intrace,n1_traces,out);
+    sf_put_tah(intrace, header, n1_traces, n1_headers, out);
   }
 
   exit(0);

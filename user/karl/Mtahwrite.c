@@ -20,109 +20,16 @@
    Program change history:
    date       Who             What
    04/26/2012 Karl Schleicher Original program
+   10/22/2012 Karl Schleicher Factor reused functions into tahsub.c
 */
 #include <string.h>
-
 #include <rsf.h>
 #include <rsfsegy.h>
 
+#include "tahsub.c"
+
 /* very sparingly make some global variables. */
 int verbose;
-
-void sf_tahwritemapped(float* trace, int* iheader, 
-		       int n1_traces, int n1_headers,
-		       sf_file output,sf_file outheaders,
-		       sf_datatype typehead,sf_axis* output_axa_array,
-		       int* indx_of_keys, int dim_output,
-		       off_t* n_output, off_t* n_outheaders){
-
-  int iaxis;
-  double header[SF_MAX_DIM];
-  off_t i_output[SF_MAX_DIM];
-  off_t file_offset;
-  bool trace_fits_in_output_file;
-
-  if(verbose>2)
-    for (iaxis=0; iaxis<SF_MAX_DIM; iaxis++){
-    fprintf(stderr,"axis=%d sf_n(output_axa_array[iaxis])=%d\n",
- 	    iaxis+1,sf_n(output_axa_array[iaxis]));
-  }
-
-  /* compute the i_output, the output trace index array.  Use the trace 
-     headers and axis definitions.  Axis definitions are label#, n#, o#, 
-     and d# */
-  /* make sure the trace fits in the output file.  A trace does not fit if
-     if falls outside the range defined by n#, o#, and d#.  A trace must fall
-     on the o#, d# locations (ie if you say o1=10 d1=10 n1=10, traces -500, 
-     10000, and 15 do not fit in the output file. */
-
-  trace_fits_in_output_file=true;
-
-  i_output[0]=0;
-  for (iaxis=1; iaxis<dim_output; iaxis++){
-    double doubleindex;
-    if(SF_INT == typehead) 
-      header[iaxis]=(double)(         iheader[indx_of_keys[iaxis]]);
-    else                   
-      header[iaxis]=(double)(((float*)iheader)[indx_of_keys[iaxis]]);
-    doubleindex=(header[iaxis]-sf_o(output_axa_array[iaxis]))/
-                sf_d(output_axa_array[iaxis]);
-    i_output[iaxis]=llround(doubleindex);
-    if(0.01<fabs(doubleindex-i_output[iaxis]) ||
-       i_output[iaxis]<0 ||
-       i_output[iaxis]>=sf_n(output_axa_array[iaxis]) ){
-	trace_fits_in_output_file=false;
-	fprintf(stderr,"trace rejected\n");
-	break;
-    }
-    if(verbose>2){
-      fprintf(stderr,"iaxis=%d n=%d o=%f d=%f header=%f \n",
-	      iaxis,
-	      sf_n(output_axa_array[iaxis]),
-	      sf_o(output_axa_array[iaxis]),
-	      sf_d(output_axa_array[iaxis]),
-	      header[iaxis]);
-    }
-  }
-  /* kls need to check doubleindex is about the same as i_output[iaxis]
-     this will allow you to write every third trace to an output file
-     by using a large increment.  This is good to write gathers every km 
-     for velocity analysis of qc.  
-     kls also need to check index is in the range 
-     [0,sf_n(output_axa_array[iaxis])
-  */
-    /* kls use:
-       int sf_large_cart2line(int dim       , 
-		 const int* n_output , 
-		 const int* ii ); */ 
-    /* kls why does this fail?
-      fprintf(stderr,"axis=%d output_axa_array[iaxis]->n=%d\n",
-	  iaxis+1,output_axa_array[iaxis]->n); */
-  if(trace_fits_in_output_file){
-    file_offset=sf_large_cart2line(dim_output,n_output,i_output)*sizeof(float);
-    if(verbose>2)fprintf(stderr,"file_offset=%lld\n",(long long) file_offset);
-    sf_seek(output,file_offset,SEEK_SET);
-    sf_floatwrite(trace,n1_traces,output);
-    
-    file_offset=sf_large_cart2line(dim_output,n_outheaders,i_output)*
-                sizeof(float);
-    sf_seek(outheaders,file_offset,SEEK_SET);
-    if(SF_INT == typehead) sf_intwrite  (        iheader,n1_headers,outheaders);
-    else                   sf_floatwrite((float*)iheader,n1_headers,outheaders);
-    if(verbose>2){
-      for(iaxis=2; iaxis<dim_output; iaxis++){
-	fprintf(stderr,"indx_of_keys[%d]=%d ",
-		iaxis,indx_of_keys[iaxis]);
-	if(typehead == SF_INT)fprintf(stderr,"%d\n",
-				              iheader[indx_of_keys[iaxis]]);
-	else                  fprintf(stderr,"%g\n",
-				      (float) iheader[indx_of_keys[iaxis]]);
-      }
-      fprintf(stderr,"\n");
-    }
-  }
-  
-}
 
 int main(int argc, char* argv[])
 {
@@ -131,16 +38,10 @@ int main(int argc, char* argv[])
   int n1_headers;
 
   char* header_format=NULL;
-  int n_traces; 
   sf_datatype typehead;
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   float* intrace=NULL;
-  int* iheader=NULL;
-  int i_trace;
-  int tempint;
-  char type_input_record[5];
-  int input_record_length;
   int dim;
   off_t n_in[SF_MAX_DIM];
   int iaxis;
@@ -183,16 +84,13 @@ int main(int argc, char* argv[])
   if (!sf_histint(in,"n1_headers",&n1_headers)) 
     sf_error("input data does not define n1_headers");
 
-  n_traces=sf_leftsize(in,1);
-
   header_format=sf_histstring(in,"header_format");
   if(strcmp (header_format,"native_int")==0) typehead=SF_INT;
   else                                       typehead=SF_FLOAT;
 
   fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
-  if (SF_INT == typehead) iheader = sf_intalloc(n1_headers);
-  else                    fheader = sf_floatalloc(n1_headers);
- 
+  fheader = sf_floatalloc(n1_headers);
+
   fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
@@ -357,92 +255,32 @@ int main(int argc, char* argv[])
     */
   }
 
-  for (i_trace=0; i_trace<n_traces; i_trace++){
-
-    if(verbose>0 && i_trace<5)
-      fprintf(stderr,"i_trace=%d\n", i_trace);
-    /* kls. Factor this into a function sf_get_trace */
-    sf_charread(type_input_record,4,in);
-    type_input_record[4]='\0';
-    if(verbose>1)fprintf(stderr,"type_input_record=%s\n",
-	                 type_input_record);
-    sf_intread(&input_record_length,1,in);
-    if(strcmp(type_input_record,"tah ")!=0){
-      /* not my kind of record.  Just write it back out */
-      sf_error("non tah record found. Better write this code segment\n");
-    } else {
-      /* process the tah. */
-
-      /**************************/
-      /* read trace and headers */
-      /**************************/
-      if(verbose>1)fprintf(stderr,"read header\n");
-      if(SF_INT == typehead) sf_intread  (iheader,n1_headers,in);
-      else                   sf_floatread(fheader,n1_headers,in);
-      if(verbose>1)fprintf(stderr,"read intrace\n");
-      sf_floatread(intrace,n1_traces,in);
-      
-      if(verbose>1)fprintf(stderr,"tah read.  process and write it.\n");
-
-      if(verbose>1){
-	for(iaxis=2; iaxis<dim_output; iaxis++){
-	  fprintf(stderr,"label[%d]=%s",
-	                 iaxis,label[iaxis]);
-	  if(typehead == SF_INT)fprintf(stderr,"%d",
-					iheader[indx_of_keys[iaxis]]);
-	  else                  fprintf(stderr,"%f",
-					fheader[indx_of_keys[iaxis]]);
-	}
-	fprintf(stderr,"\n");
+  /***************************/
+  /* start trace loop        */
+  /***************************/
+  fprintf(stderr,"start trace loop\n");
+  while (0==sf_get_tah(intrace, fheader, n1_traces, n1_headers, in)){
+    if(verbose>1){
+      for(iaxis=2; iaxis<dim_output; iaxis++){
+	fprintf(stderr,"label[%d]=%s",
+		iaxis,label[iaxis]);
+	if(typehead == SF_INT)fprintf(stderr,"%d",
+				      ((int*)fheader)[indx_of_keys[iaxis]]);
+	else                  fprintf(stderr,"%f",
+				      fheader[indx_of_keys[iaxis]]);
       }
-      /* sf_seek(sf_file file, off_t offset, int whence) follows fseek 
-	 convention.  sf_slice_put may help.  That code is:
-	 void sf_slice_put(sf_slice sl, int i3, float* data)
-         comment < put a slice at level i3 >
-	 {
-	 sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(float),SEEK_SET);
-	 sf_floatwrite(data,sl->n12,sl->file);
-	 }
-         another function:
-	 sf_slice sf_slice_init(sf_file file, int n1, int n2, int n3)
-	 comment < initialize a sliceable file object >
-	 {
-	 sf_slice sl;
-	 
-	 sl = (sf_slice) sf_alloc(1,sizeof(*sl));
-	 sl->file = file;
-	 sl->n12 = n1*n2;
-	 sl->n3 = n3;
-	 
-	 sf_unpipe(sl->file,n1*n2*n3*sizeof(float));
-	 sl->start = sf_tell(sl->file);
-	 
-	 return sl;
-	 }
-
-      */
-      sf_tahwritemapped(intrace, iheader, 
+      fprintf(stderr,"\n");
+    }
+    sf_tahwritemapped(intrace, fheader, 
 		        n1_traces, n1_headers,
 		        output, outheaders,
 		        typehead, output_axa_array,
 			indx_of_keys, dim_output,
 			n_output,n_outheaders);
-      /**********************************************/
-      /* write trace and headers to the output pipe */
-      /**********************************************/
-      /* kls factor this into a seperate function puttrace (like gettrace) */
-      /* trace and header will be preceeded with words:
-	 1- type record: 4 charactors 'tah '.  This will support other
-	 type records like 'htah', hidden trace and header.
-	 2- the length of the length of the trace and header. */
-      sf_charwrite("tah ",4,out);
-      tempint=n1_traces+n1_headers;
-      sf_intwrite(&tempint, 1, out);
-      if(SF_INT == typehead) sf_intwrite  (iheader,n1_headers,out);
-      else                   sf_floatwrite(fheader,n1_headers,out);
-      sf_floatwrite(intrace,n1_traces,out);
-    } /* end of  if(strcmp(type_input_record,"tah ")!=0){ .. } else the 
-	 clause that processes "tah " record */
+    /**********************************************/
+    /* write trace and headers to the output pipe */
+    /**********************************************/
+    sf_put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
 
   exit(0);
