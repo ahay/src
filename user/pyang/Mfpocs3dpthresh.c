@@ -29,7 +29,7 @@
 #endif
 
 
-fftwf_complex pthresholding(fftwf_complex x, float thr, float normp)
+sf_complex pthresholding(sf_complex x, float thr, float normp)
 {
     //return (x)*(cabsf(x)>thr?1.:0.);/* pocs hard thresholding*/
     //float a=1.0-thr*powf(cabsf(x)+(x==0.0),normp-2.0);
@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     fftwf_plan p1,p2;/* execute plan for FFT and IFFT */
     int i1,i2,i3, iter;
     float t0=1.0,t1,beta,thr;		
-    fftwf_complex *dprev,*dcurr,*dtmp;
+    sf_complex *dprev,*dcurr,*dtmp;
 
     dprev=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
     dcurr=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
