@@ -21,8 +21,8 @@ src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf',
-                  env.get('DYNLIB','')+'rsfsegy'])
+            LIBS=[env.get('DYNLIB','')+'rsfsegy',
+                  env.get('DYNLIB','')+'rsf'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')

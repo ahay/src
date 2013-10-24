@@ -115,17 +115,6 @@ int main(int argc, char* argv[])
   /* put the history from the input file to the output */
   sf_fileflush(out,in);
 
-  /* kls n_traces not used, but without this call I get a link error with 
-     the standard madagascar scons in $RSFSRC/user/karl.  The error is:
-     gcc -o sftahgethw -pthread Mtahgethw.o -L/home/karl/RSFSRC/lib \
-          -L/usr/lib64/atlas -lrsf -lrsfsegy -lm -lcblas -latlas -lgomp
-     /home/karl/RSFSRC/lib/librsfsegy.a(segy.o): In function `endian':
-     segy.c:(.text+0x235): undefined reference to `sf_endian'
-
-     Link works if you change the order of the libaries:
-     gcc -o sftahgethw -pthread Mtahgethw.o -L/home/karl/RSFSRC/lib 
-          -L/usr/lib64/atlas -lrsfsegy -lrsf  -lm -lcblas -latlas -lgomp  */
-  n_traces=sf_leftsize(in,1);
   /* segy_init gets the list header keys required by segykey function  */
   segy_init(n1_headers,in);
   indx_of_keys=sf_intalloc(numkeys);
