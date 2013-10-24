@@ -33,19 +33,25 @@ Flow('vrms','voft',
      '''
      add mode=p $SOURCE | causint | 
      math output="sqrt(input*%g/(x1+%g))" |
-     window j1=2 j2=2
+     window j2=2 j1=2
      ''' % (dt,dt))
 
 # Download zero-offset from the data server
 ###########################################
-Fetch('data0.rsf','sigsbee')
-Flow('data','data0','dd form=native')
+Fetch('sigexp.rsf','sigsbee')
+Flow('data','sigexp.rsf',
+     '''
+     dd form=native |
+     bandpass flo=2 fhi=60 |
+     window min2=3.05562 max2=9.5 j1=4 j2=2 n1=2501 |
+     costaper nw2=25 nw1=25
+     ''')
 
 Result('data',
-       'grey title="Zero-Offset Data" ')
+       'window min1=3 | grey title="Zero-Offset Data" ')
 
 # Slope estimation
-Flow('dip','data','dip rect1=100 rect2=10')
+Flow('dip','data','fdip rect1=100 rect2=10')
 Result('dip',
        '''
        grey color=j scalebar=y
@@ -55,7 +61,11 @@ Result('dip',
 
 # Plane-wave destruction
 Flow('dif','data dip','pwd dip=${SOURCES[1]}')
-Result('dif','grey title="Separated Diffractions" ')
+Result('dif',
+       '''
+       window min1=3 | 
+       grey title="Separated Diffractions" 
+       ''')
 
 # Velocity continuation
 Flow('fourier','dif','cosft sign2=1')
@@ -63,7 +73,7 @@ Flow('velconf','fourier',
      '''
      stolt vel=1.5 | 
      vczo pad2=4096 nv=61 dv=0.02 v0=1.4 verb=y
-     ''',split=[2,'omp'],reduce='cat axis=3')
+     ''',split=[2,424],reduce='cat axis=3')
 Flow('velcon','velconf',
      '''
      transp plane=23 memsize=1000 |
@@ -83,8 +93,8 @@ Result('dimage',
 
 # Angle-gather migration
 ########################
-prog = Program('anglemig.c',
-               CPPDEFINES='NO_BLAS',LIBS=['rsf','m'])
+proj = Project()
+prog = proj.Program('anglemig.c')
 
 Flow('anglemig','dif %s' % prog[0],
      './${SOURCES[1]} vel=2.5 na=90 a0=-45 da=1')

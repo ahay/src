@@ -25,8 +25,8 @@ static float get_sample (float **dat,
 
 int main (int argc, char* argv[]) 
 {
-    int iz, ix, nx, iy, ia, na, nt;
-    float dt, dy, vel, da, a0, dx, z, t, y, x, a;
+    int it, nt, ix, nx, ia, na;
+    float dt, vel, da, a0, dx, z, t, x, y, a;
     float **dat, *img;
     sf_file data, imag;
 
@@ -67,14 +67,16 @@ int main (int argc, char* argv[])
 
     img = sf_floatalloc (na);
  
- 
+    /* loop over image location */
     for (ix = 0; ix < nx; ix++) {
 	x = ix*dx;
         sf_warning ("CMP %d of %d;", ix, nx);
    
-	for (iz = 0; iz < nt; iz++) {
-	    z = iz*dt;
+	/* loop over image time */
+	for (it = 0; it < nt; it++) {
+	    z = it*dt;
 
+	    /* loop over angle */
             for (ia = 0; ia < na; ia++) { 
 		a = a0+ia*da;
 		
@@ -85,10 +87,10 @@ int main (int argc, char* argv[])
 
 		img[ia] = get_sample (dat,t,y,0.,0.,
 				      dt,dx,nt,nx);
-	    }
+	    } /* ia */
 
             sf_floatwrite (img, na, imag);
-        } /* iz */
+        } /* it */
     } /* ix */
  
     exit(0);
