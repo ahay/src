@@ -1,4 +1,4 @@
-/* Estimate right-hand side from wavefield. */
+/* Reconstruct right-hand side from wavefield. */
 /*
   Copyright (C) 2013 University of Texas at Austin
   
@@ -59,11 +59,11 @@ int main(int argc, char* argv[])
 	sf_error("Need model=");
     modl = sf_input("model");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1=.");
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2=.");
+    if (!sf_histint(modl,"n1",&n1)) sf_error("No n1=.");
+    if (!sf_histint(modl,"n2",&n2)) sf_error("No n2=.");
 
-    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1=.");
-    if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2=.");
+    if (!sf_histfloat(modl,"d1",&d1)) sf_error("No d1=.");
+    if (!sf_histfloat(modl,"d2",&d2)) sf_error("No d2=.");
 
     vel = sf_floatalloc2(n1,n2);
     sf_floatread(vel[0],n1*n2,modl);
