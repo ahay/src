@@ -358,6 +358,7 @@ class Project(Environment):
 
         prev_par_tfiles = []
         bigjobs = split[1] - jobs*(w-1)
+        cflow = flow
         for i in range(jobs):
             if i < bigjobs:
                 chunk=w
@@ -371,10 +372,8 @@ class Project(Environment):
                     # avoid creation of a chunk file (provided that RSF_WSPLIT is set)
                     par_sfiles[j] = sfiles[j]
                     cflow = 'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d | ' % \
-                            (split[0],chunk,split[0],skip,i%self.jobs,self.jobs)
-                    cflow = cflow + flow
+                            (split[0],chunk,split[0],skip,i%self.jobs,self.jobs) + flow
                 else:
-                    cflow = flow
                     source = sfiles[j] + '_' + str(i)
                     par_sfiles[j] = source
                     nrotate = True
