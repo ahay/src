@@ -74,6 +74,7 @@ In programs:
 In the build system:
 
 * Set -fopenmp for linking with gcc
+* Fixed directory locations in pens/fonts
 
 ===Changes in defaults and interfaces===
 
