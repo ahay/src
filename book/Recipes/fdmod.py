@@ -3,6 +3,12 @@ except: from rsf.proj    import *
 import pplot,math
 
 # ------------------------------------------------------------
+def obsolete(old,new):
+    print "------------------------------------------------------------------"
+    print "the function",old,"is OBSOLETE; use",new
+    print "------------------------------------------------------------------"
+
+# ------------------------------------------------------------
 def Temp(o,i,r):
     Flow(o,i,r+ ' datapath=%s '%os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH')))
 # ------------------------------------------------------------
@@ -1078,11 +1084,14 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
 
+
 # ------------------------------------------------------------
 # exploding-reflector reverse-time migration
 def zom(imag,data,velo,dens,rcoo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    obsolete("fdmod/zom","rtm/zofmig")
     
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
@@ -1114,6 +1123,8 @@ def zom(imag,data,velo,dens,rcoo,custom,par):
 def cdzom(imag,data,velo,rcoo,custom,par):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    obsolete('fdmod/cdzom','rtm/zofmigCD')
 
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
