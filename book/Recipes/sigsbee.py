@@ -149,7 +149,6 @@ def eicpar(par):
     par['os']=-2.5
     par['ds']=0.01
 
-    
 # ------------------------------------------------------------
 def hwtpar(par):
     par['ng']=1801
@@ -174,18 +173,18 @@ def shotsWIN(par):
     return sindex
 
 def shotsJMP(par):
-    par['fS']=0
+    par['fS']=10
     par['jS']=5
-    par['nS']=100
+    par['nS']=64
     sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
-    return shots
+    return sindex
 
 def shotsALL(par):
     par['fS']=0
     par['jS']=1
     par['nS']=par['nsall']
     sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
-    return shots
+    return sindex
 
 # ------------------------------------------------------------
 def getdata(data,par,local=0):
