@@ -21,8 +21,6 @@ def param():
     par['oz']=par['oz']*par['ft2km']
     par['dz']=par['dz']*par['ft2km']
 
-    par['nb']=250
-
     # source coordinates
     par['os']=10.95*par['ft2km']
     par['ds']=0.150*par['ft2km']
@@ -135,7 +133,7 @@ def eicpar(par):
                  2*par['nht']+1,-par['nht']*par['dht'],            par['dht'],
                  par)    
     adcig.eparam(1,
-                 2*par['nhx']+1,-par['nhx']*par['dx'], par['dx'],
+                 2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'], par['dx']*par['jximg'],
                  2*par['nhz']+1,-par['nhz']*par['dz'], par['dz'],
                  2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
                  par)
