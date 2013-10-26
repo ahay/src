@@ -25,7 +25,7 @@
 #include <rsf.h>
 #include <rsfsegy.h>
 
-#include "tahsub.c"
+#include "tahsub.h"
 
 /* very sparingly make some global variables. */
 int verbose;
@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
   int ikey;
   char** list_of_keys;
   int *indx_of_keys;
-  int n_traces;
 
   
   sf_init (argc,argv);
@@ -131,7 +130,7 @@ int main(int argc, char* argv[])
   /* start trace loop        */
   /***************************/
   if(verbose>0)fprintf(stderr,"start trace loop\n");
-  while (0==sf_get_tah(intrace, fheader, n1_traces, n1_headers, in)){
+  while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
     if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
     /* process the tah. */
     /* this program prints selected header keys */
@@ -148,7 +147,7 @@ int main(int argc, char* argv[])
       /***************************/
       /* write trace and headers */
       /***************************/
-      sf_put_tah(intrace, fheader, n1_traces, n1_headers, out);
+      put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
 
   exit(0);

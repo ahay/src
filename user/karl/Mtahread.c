@@ -27,7 +27,7 @@
 #include <rsf.h>
 #include <rsfsegy.h>
 
-#include "tahsub.c"
+#include "tahsub.h"
 
 /* very sparingly make some global variables. */
 int verbose;
@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
   segy2hist(out,n1_headers);
   {
     int tempint;
-    tempint=segykey('ep');
+    tempint=segykey("ep");
     fprintf(stderr,"tempint=%d\n",tempint);
   }
   /* put the history from the input file to the output */
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
        1- type record: 4 charactors 'tah '.  This will support other
           type records like 'htah', hidden trace and header.
        2- the length of the length of the trace and header. */
-    sf_put_tah(intrace, header, n1_traces, n1_headers, out);
+    put_tah(intrace, header, n1_traces, n1_headers, out);
   }
 
   exit(0);

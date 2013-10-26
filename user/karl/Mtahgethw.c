@@ -1,7 +1,6 @@
-/* 
-   tahgethw: Trace And Header READ.
+/* Trace And Header READ.
 
-   tah is the abbreviation of Trace And Header.  It identifies a group of
+tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:
    1- read trace and headers from separate rsf files and write them to 
       standard output
@@ -15,6 +14,23 @@
 
    Some programs in this suite are sf_tahread, sf_tahgethw, f_tahhdrmath, 
    and sf_tahwrite.
+ */
+/*
+  Copyright (C) 2013 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 /*
    Program change history:
@@ -26,10 +42,7 @@
 #include <rsf.h>
 #include <rsfsegy.h>
 
-#include "tahsub.c"
-
-/* very sparingly make some global variables. */
-int verbose;
+#include "tahsub.h"
 
 int main(int argc, char* argv[])
 {
@@ -45,7 +58,6 @@ int main(int argc, char* argv[])
   float* intrace=NULL;
   int numkeys;
   int ikey;
-  int n_traces;
   char** list_of_keys;
   int *indx_of_keys;
   
@@ -58,7 +70,7 @@ int main(int argc, char* argv[])
   /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
   /* fprintf(stderr,"read verbose switch.  getint reads command line.\n"); */
   if(!sf_getint("verbose",&verbose))verbose=1;
-  fprintf(stderr,"verbose=%d\n",verbose);
+  sf_warning("verbose=%d",verbose);
  
   /******************************************/
   /* input and output data are stdin/stdout */
@@ -131,7 +143,7 @@ int main(int argc, char* argv[])
   /* start trace loop        */
   /***************************/
   if(verbose>0)fprintf(stderr,"start trace loop\n");
-  while (0==sf_get_tah(intrace, fheader, n1_traces, n1_headers, in)){
+  while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
     if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
     /* process the tah. */
     /* this program prints selected header keys */
@@ -148,7 +160,7 @@ int main(int argc, char* argv[])
       /***************************/
       /* write trace and headers */
       /***************************/
-      sf_put_tah(intrace, fheader, n1_traces, n1_headers, out);
+      put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
 
   exit(0);

@@ -1,72 +1,43 @@
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "../../api/c/file.h"
-#include <rsf.h>
-#include <rpc/xdr.h>
-
-
-extern int verbose;
-
-
-/* why do I need to:
-  #include "../../api/c/file.h"
-  seems like using <> instead of "" should be able to find code.
+/* collection of functions shared by the Mtah programs */
+/*
+  Copyright (C) 2013 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-/* seems like include file.h should take care of these typedef and struct */
-#ifndef _sf_file_h
-
-#define SF_MAX_DIM 9
-/*^*/
-
-typedef struct sf_File *sf_file;
-/*^*/
-
-typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX, SF_SHORT, SF_DOUBLE} sf_datatype;
-typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
-/*^*/
-
-#endif
-
-struct sf_File {
-    FILE *stream, *head; 
-    char *dataname, *buf, *headname;
-    sf_simtab pars;
-    XDR xdr;
-    enum xdr_op op;
-    sf_datatype type;
-    sf_dataform form;
-    bool pipe, rw, dryrun;
-};
-
-
-
-
-
-
-
-
-/* collection of functions shared by the Mtah programs */
+#include <rsf.h>
 
 /* global variables. need a temp array for sf_get_tah to pass non tah
    records read from pipe.  This means sf_get_tah is not thread safe,
    but the intended use is to read stdin, so why whould you want to 
-   run multiple sf_get_tah on more then one thread? */
+   run multiple sf_get_tah on more then one thread? 
 char* sf_get_tah_bytebuffer=NULL;
 int sf_get_tah_bytebuffer_len=0;
+*/
 
+#include "tahsub.h"
 
-/**********************************************************************/
-int sf_getnumpars(const char* key){
+int getnumpars(const char* key)
+/*< get number of pars >*/
+{
   char* par;
   char* one_par;
   char* copy_of_par;
   int numpars=0;
   
-  fprintf(stderr,"in sf_getnumpars call sf_getstring key=%s\n",key);
+  sf_warning("in getnumpars call sf_getstring key=%s\n",key);
   par=sf_getstring(key);
   fprintf(stderr,"back from sf_getstring par=%s\n",par);
   /* this line may not do anything but make code easier to understand */
@@ -90,9 +61,10 @@ int sf_getnumpars(const char* key){
   
   return numpars;
 }
- 
-  
-char** sf_getnstring(char* key, int* numkeys){
+
+char** sf_getnstring(char* key, int* numkeys)
+/*< get strings >*/
+{
   /* perhaps this function should go with functions like sf_getint 
      and sf_getstring.  For now I'll keep here with the tah_io programs */
 
@@ -144,78 +116,63 @@ char** sf_getnstring(char* key, int* numkeys){
   return list_of_keys;
 }
 
-/**********************************************************************/
-int sf_put_tah(float* trace, float* header, 
-	       int n1_traces, int n1_headers, sf_file file){
+void put_tah(float* trace, float* header, 
+	     int n1_traces, int n1_headers, sf_file file)
+/*< put tah >*/
+{
   int input_record_length;
   
-  fwrite("tah ",sizeof(char),4,file->stream);
+  sf_charwrite("tah ",4,file);
 
   input_record_length=sizeof(float)*(n1_traces+n1_headers);
   /*  fprintf(stderr,"sf_put_tah write input_record_length=%d\n",
       input_record_length); */
 
-  fwrite(&input_record_length,sizeof(int),1,file->stream);
-
-
-  if(n1_traces != fwrite(trace,sizeof(float), n1_traces, file->stream))
-    return 1;
-
-  if(n1_headers != fwrite(header,sizeof(float), n1_headers, file->stream))
-    return 1;
-  
-  return 0;
+  sf_intwrite(&input_record_length,1,file);
+  sf_floatwrite(trace,n1_traces,file);
+  sf_floatwrite(header,n1_headers,file);
 }
 
-/**********************************************************************/
-int sf_get_tah(float* trace, float* header, 
-	       int n1_traces, int n1_headers, sf_file file){
-  char type_input_record[5];
+int get_tah(float* trace, float* header, 
+	    int n1_traces, int n1_headers, sf_file file)
+/*< get tah >*/
+{
   int input_record_length;
 
-  if(4!=fread(type_input_record,sizeof(char),4,file->stream))
-    return 1;
-  type_input_record[4]='\0';
-  /* fprintf(stderr,"sf_get_tah type_input_record=\"%s\"\n",
-     type_input_record); */
-  if(1!=fread(&input_record_length,sizeof(int),1,file->stream))
-    return 1;
-  /*   fprintf(stderr,"sf_put_tah write input_record_length=%d\n",
-       input_record_length); */
-  if(strcmp(type_input_record,"tah ")!=0){
-    /* not my kind of record.  Just write it back out */
-    /* this is where I need to add the sf_get_tah_buffer allocations kls */
-    sf_error("non tah record found. Better write this code segment\n");
-  }
+  if (!sf_try_charread("tah",file)) return 1;
+
+  sf_intread(&input_record_length,1,file);
   
   if(sizeof(float)*(n1_traces+n1_headers)!=input_record_length){
-    fprintf(stderr,"in sf_get_tah.  n1_traces, and n1_headers are\n");
-    fprintf(stderr,"inconsistent with input record length\n");
-    fprintf(stderr,"n1_traces=%d, n1_headers=%d, sizeof(float)=%d\n",
-	    n1_traces   , n1_headers   , (int)sizeof(float) );
-    fprintf(stderr,"input_record_length=%d\n",input_record_length);
-    sf_error("sizeof(float)*(n1_traces+n1_headers)!=input_record_length\n");
+      sf_warning("%s: n1_traces, and n1_headers are",__FILE__);
+      sf_warning("inconsistent with input record length");
+      sf_warning("n1_traces=%d, n1_headers=%d, sizeof(float)=%d",
+		  n1_traces   , n1_headers  ,(int)sizeof(float) );
+      sf_warning("input_record_length=%d",input_record_length);
+      sf_error("sizeof(float)*(n1_traces+n1_headers)!=input_record_length");
   }
   
   /*fprintf(stderr,"read n1_traces=%d floats from input file\n",n1_traces); */
-  if(n1_traces!=fread(trace,sizeof(float), n1_traces, file->stream))
-    return 1;
+
+  sf_floatread(trace,n1_traces,file);
 
   /*fprintf(stderr,"read n1_headers=%d floats from input file\n",n1_headers);*/
-  if(n1_headers!=fread(header,sizeof(float), n1_headers, file->stream))
-    return 1;
-  /*fprintf(stderr,"return from sf_get_tah\n"); */
+
+  sf_floatread(header,n1_headers,file);
+
   return 0;
 }
 
 
-
-void sf_tahwritemapped(float* trace, void* iheader, 
-		       int n1_traces, int n1_headers,
-		       sf_file output,sf_file outheaders,
-		       sf_datatype typehead,sf_axis* output_axa_array,
-		       int* indx_of_keys, int dim_output,
-		       off_t* n_output, off_t* n_outheaders){
+void tahwritemapped(int verbose, float* trace, void* iheader, 
+		    int n1_traces, int n1_headers,
+		    sf_file output,sf_file outheaders,
+		    sf_datatype typehead,
+		    sf_axis* output_axa_array,
+		    int* indx_of_keys, int dim_output,
+		    off_t* n_output, off_t* n_outheaders)
+/*< tah write mapped >*/
+{
 
   int iaxis;
   double header[SF_MAX_DIM];

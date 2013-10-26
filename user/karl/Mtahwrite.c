@@ -26,7 +26,7 @@
 #include <rsf.h>
 #include <rsfsegy.h>
 
-#include "tahsub.c"
+#include "tahsub.h"
 
 /* very sparingly make some global variables. */
 int verbose;
@@ -259,7 +259,7 @@ int main(int argc, char* argv[])
   /* start trace loop        */
   /***************************/
   fprintf(stderr,"start trace loop\n");
-  while (0==sf_get_tah(intrace, fheader, n1_traces, n1_headers, in)){
+  while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
     if(verbose>1){
       for(iaxis=2; iaxis<dim_output; iaxis++){
 	fprintf(stderr,"label[%d]=%s",
@@ -271,16 +271,16 @@ int main(int argc, char* argv[])
       }
       fprintf(stderr,"\n");
     }
-    sf_tahwritemapped(intrace, fheader, 
-		        n1_traces, n1_headers,
-		        output, outheaders,
-		        typehead, output_axa_array,
-			indx_of_keys, dim_output,
-			n_output,n_outheaders);
+    tahwritemapped(verbose,intrace, fheader, 
+		   n1_traces, n1_headers,
+		   output, outheaders,
+		   typehead, output_axa_array,
+		   indx_of_keys, dim_output,
+		   n_output,n_outheaders);
     /**********************************************/
     /* write trace and headers to the output pipe */
     /**********************************************/
-    sf_put_tah(intrace, fheader, n1_traces, n1_headers, out);
+    put_tah(intrace, fheader, n1_traces, n1_headers, out);
   }
 
   exit(0);
