@@ -1,9 +1,8 @@
 /* Original POCS implementation
-	Pengliang Yang
-	Email: ypl.2100@gmail.com
 */
 /*
-  Copyright (C) 2013 University of Texas at Austin
+  Copyright (C) 2013  Xi'an Jiaotong University, China
+	Author(s): Pengliang Yang
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
