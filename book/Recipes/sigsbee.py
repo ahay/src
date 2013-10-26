@@ -37,6 +37,8 @@ def param():
     # all receiver parameters
     par['nrall']=348
     par['drall']=0.02286
+
+    par['nodes']=8
     
     return par
 
@@ -72,8 +74,6 @@ def wempar(par):
     par['nw']=240
     par['eic']='itype=o'
 
-    par['nodes']=8
-
     par['ntpad']=2000
 
     # define image space
@@ -93,7 +93,6 @@ def rtmpar(par):
     par['nb']=150
     par['jdata']=8
     par['jsnap']=8
-    par['nodes']=8
 
     # define image space
     par['nximg']=1024
@@ -121,11 +120,11 @@ def eicpar(par):
     par['dht']=0.008
 
     adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
-                 par['nz'],                 par['oz'],par['dz'],
+                 par['nz']-par['nzdtm'],                 par['oz'],par['dz'],
                  par)
     adcig.tparam((par['nhx']*par['dx']*par['jximg'])/(par['nht']*par['dht']),
                  2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
-                 par['nz']   ,            par['oz'],par['dz'],
+                 par['nz']-par['nzdtm'],            par['oz'],par['dz'],
                  par)
     adcig.sparam(5,
                  2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
@@ -158,9 +157,11 @@ def hwtpar(par):
 # ------------------------------------------------------------
 def shotsTWO(par):
     par['fS']=50
-    par['jS']=100
-    par['nS']=2    
+    par['jS']=20
+    par['nS']=2
     sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
+    par['nodes']=min(par['nodes'],len(sindex))
+    print par['nodes']
     return sindex
 
 def shotsWIN(par):

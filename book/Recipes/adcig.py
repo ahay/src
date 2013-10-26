@@ -59,25 +59,24 @@ def tsk2ang(na,oa,da):
 def ciggrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
-    pclip=100 gainpanel=a
-    min1=%g max1=%g label1=%s unit1=%s
+    pclip=100 gainpanel=a  xll=2 yll=1
+    label1=%s unit1=%s
     screenratio=1.5
-    labelsz=6 labelfat=3 titlesz=12 titlefat=3
     %s
-    '''%(par['zmin'],par['zmax'],par['lz'],par['uz'],
+    '''%(par['lz'],par['uz'],
          par['labelattr']+' '+custom)
 
 def xgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g xll=2 yll=1'%par+' '+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_x\^" unit2=%(ux)s screenratio=%(xratio)g'%par+' '+custom,par)
 
 def zgrey(custom,par):
-    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s xll=2 yll=1'%par+' '+custom,par)
+    return ciggrey(' label2="\F10 l\F3 \_z\^" unit2=%(uz)s'%par+' '+custom,par)
 
 def tgrey(custom,par):
-    return ciggrey(' label2="\F10 t\F3" unit2=%(ut)s screenratio=%(tratio)g xll=2 yll=1'%par+' '+custom,par)
+    return ciggrey(' label2="\F10 t\F3" unit2=%(ut)s screenratio=%(tratio)g'%par+' '+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(aratio)g xll=2 yll=1 '%par+' '+custom,par)
+    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(xratio)g'%par+' '+custom,par)
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
@@ -90,7 +89,7 @@ def eparam(v,nhx,ohx,dhx,nhz,ohz,dhz,nht,oht,dht,par):
     par['epoint1']=dz_/(dz_+dt_);
     par['epoint2']=dx_/(dx_+dt_);
     
-    if(par['eratio']>=1): par['eheight']=10
+    if(par['eratio']>=1): par['eheight']=11
     else:                 par['eheight']=14*par['eratio']
 
 # ------------------------------------------------------------
@@ -103,7 +102,7 @@ def hparam(v,nhx,ohx,dhx,nhy,ohy,dhy,nht,oht,dht,par):
     par['hpoint1']=dt_/(dt_+dy_);
     par['hpoint2']=dx_/(dx_+dy_);
     
-    if(par['hratio']>=1): par['hheight']=10
+    if(par['hratio']>=1): par['hheight']=11
     else:                 par['hheight']=14*par['hratio']
 
 # ------------------------------------------------------------
@@ -127,7 +126,7 @@ def sparam(v,nhx,ohx,dhx,nz,oz,dz,nht,oht,dht,par):
     par['spoint1']=dz_/(dz_+dt_);
     par['spoint2']=dx_/(dx_+dt_);
     
-    if(par['sratio']>=1): par['sheight']=10
+    if(par['sratio']>=1): par['sheight']=11
     else:                 par['sheight']=14*par['sratio']
 
 # ------------------------------------------------------------
