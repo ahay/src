@@ -1125,7 +1125,7 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 int sf_try_charread(const char* test, sf_file file)
 /*< check if you can read test word >*/
 {
-    int size, got;
+    int size, got, cmp;
     char* arr;
 
     size = strlen(test);
@@ -1133,7 +1133,10 @@ int sf_try_charread(const char* test, sf_file file)
     got = fread(arr,sizeof(char),size+1,file->stream);
     if (got != size) return 1;
     arr[size] = '\0';
-    return strncmp(arr,test,size);
+    cmp = strncmp(arr,test,size);
+    free(arr);
+
+    return cmp;
 }
 
 void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
