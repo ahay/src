@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-kdmig2d makevel pef sinc
+kdmig2d makevel pef sinc traces
 '''
 
 try: # distributed version
