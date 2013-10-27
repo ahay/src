@@ -112,11 +112,11 @@ def migpar(par):
 
 # ------------------------------------------------------------
 def eicpar(par):
-    par['nhx']=50
+    par['nhx']=40
     par['nhy']=0
-    par['nhz']=30
+    par['nhz']=20
     
-    par['nht']=60
+    par['nht']=30
     par['dht']=0.008
 
     adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
