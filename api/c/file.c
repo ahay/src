@@ -145,14 +145,17 @@ sf_file sf_input (/*@null@*/ const char* tag)
     } else {
 	filename = sf_getstring (tag);
 	if (NULL == filename) {
+	    /* this option allows you to call function with 
+	       sf_input("mydir/myinput.rsf");  Karl  */
 	    len = strlen(tag)+1;
 	    filename = sf_charalloc(len);
+	    /* should change next line to strcpy or strncpy Karl */
 	    memcpy(filename,tag,len);
 	}
 		
 	file->stream = fopen(filename,"r");
 	if (NULL == file->stream) {
-	    sf_input_error(file,"Cannot read header file",filename);
+	    sf_input_error(file,"Cannot read input (header) file",filename);
 	    return NULL;
 	}
     }
@@ -189,7 +192,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	
     filename = sf_histstring(file,"in");
     if (NULL == filename) {
-	sf_input_error (file,"No in= in file",tag);
+    	sf_input_error (file,"No in= in file",tag);
 	return NULL;
     }
     len = strlen(filename)+1;
@@ -548,9 +551,13 @@ static char* getdatapath (void)
    2. check DATAPATH environmental variable
    3. check .datapath file in the current directory
    4. check .datapath in the home directory
-   5. use '.' (not a SEPlib behavior)
+   5. use '.' (not a SEPlib behavior) 
 
    13245 is more reasonable (Zhonghuan Chen)
+   seems like option 5 would result in:
+      if you move the header to another directory then you must also move 
+      the data to the same directory. Confusing consequence. 
+      (Karl Schleicher 5/28/2013) 
 */
 {
     char *path, *penv, *home, file[PATH_MAX];
@@ -574,8 +581,10 @@ static char* getdatapath (void)
 	if (readpathfile (file,path)) return path;
     }
 	
+    /* could next 4 line be simplified to:
+       return "./"; ?  or just return NULL;??     Karl Schleicher 5/28/2013 */
     path = sf_charalloc(3);
-    strncpy(path,"./",3);
+    strncpy(path,"./",3); 
 	
     return path;
 }
@@ -1121,22 +1130,10 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 	    break;
     }
 }
-
-int sf_try_charread(const char* test, sf_file file)
-/*< check if you can read test word >*/
+int sf_try_charread (/*@out@*/ char* arr, size_t size, sf_file file)
+/*< try to read size bytes.  return number bytes read >*/
 {
-    int size, got, cmp;
-    char* arr;
-
-    size = strlen(test);
-    arr = sf_charalloc(size+1);
-    got = fread(arr,sizeof(char),size+1,file->stream);
-    if (got != size) return 1;
-    arr[size] = '\0';
-    cmp = strncmp(arr,test,size);
-    free(arr);
-
-    return cmp;
+    return fread(arr,sizeof(char),size,file->stream);
 }
 
 void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
