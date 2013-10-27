@@ -296,11 +296,6 @@ class Project(Environment):
             self.timer = ''
 
         self.mpirun = self.get('MPIRUN',WhereIs('ibrun') or WhereIs('mpirun'))
-        wsplit = os.environ.get('RSF_WSPLIT', None)
-        if wsplit:
-            self.wsplit = True
-        else:
-            self.wsplit = False
         raddenv = os.environ.get('RSF_RADDENV', None)
         if raddenv:
             self.raddenv = raddenv
@@ -367,24 +362,26 @@ class Project(Environment):
                 chunk=w-1
                 skip=bigjobs*w+(i-bigjobs)*chunk
             for j in split[2]:
-                if 0 == j and True == self.wsplit and True == stdin:
-                    # For the first input (if stdin), use windowing to
-                    # avoid creation of a chunk file (provided that RSF_WSPLIT is set)
+                if 0 == j and stdin:
+                    # For the first input (if stdin), use windowing 
+                    # to avoid creation of a chunk file 
                     par_sfiles[j] = sfiles[j]
-                    cflow = 'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d | ' % \
-                            (split[0],chunk,split[0],skip,i%self.jobs,self.jobs) + flow
+                    cflow = '''
+                    window n%d=%d f%d=%d squeeze=n |
+                    put icpu=%d ncpu=%d |
+                    ''' % (split[0],chunk,split[0],skip,
+                           i%self.jobs,self.jobs) + flow
                 else:
                     source = sfiles[j] + '_' + str(i)
                     par_sfiles[j] = source
-                    nrotate = True
-                    # Prevent nodelist rotation in a special case - no input file
-                    # splitting and no stdin
-                    if True == self.wsplit and False == stdin:
-                        nrotate = False
 
                     self.Flow(source,sfiles[j],
-                              'window n%d=%d f%d=%d squeeze=n | put icpu=%d ncpu=%d' % 
-                              (split[0],chunk,split[0],skip,i%self.jobs,self.jobs),noderotate=nrotate)
+                              '''
+                              window n%d=%d f%d=%d squeeze=n |
+                              put icpu=%d ncpu=%d
+                              ''' % (split[0],chunk,split[0],skip,
+                                     i%self.jobs,self.jobs),
+                              noderotate=stdin)
 
             par_tfiles = []
             for j in range(len(tfiles)):
