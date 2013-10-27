@@ -131,7 +131,7 @@ def eicpar(par):
                  par['nz'],       par['oz'],                       par['dz'],
                  2*par['nht']+1,-par['nht']*par['dht'],            par['dht'],
                  par)    
-    adcig.eparam(1,
+    adcig.eparam(2,
                  2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'], par['dx']*par['jximg'],
                  2*par['nhz']+1,-par['nhz']*par['dz'], par['dz'],
                  2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
