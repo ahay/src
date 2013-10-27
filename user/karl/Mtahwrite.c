@@ -1,5 +1,5 @@
 /* 
-   tahwrite: Trace And Header READ.
+   tahwrite: Trace And Header WRITE.
 
    tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:

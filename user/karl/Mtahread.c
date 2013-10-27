@@ -29,7 +29,7 @@
 
 #include "tahsub.h"
 
-/* very sparingly make some global variables. */
+/* sparingly make some global variables. */
 int verbose;
 
 int main(int argc, char* argv[])

@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+#include "tahsub.h"
 
 /* global variables. need a temp array for sf_get_tah to pass non tah
    records read from pipe.  This means sf_get_tah is not thread safe,
@@ -26,8 +27,6 @@
 char* sf_get_tah_bytebuffer=NULL;
 int sf_get_tah_bytebuffer_len=0;
 */
-
-#include "tahsub.h"
 
 int getnumpars(const char* key)
 /*< get number of pars >*/
@@ -124,7 +123,7 @@ void put_tah(float* trace, float* header,
   
   sf_charwrite("tah ",4,file);
 
-  input_record_length=sizeof(float)*(n1_traces+n1_headers);
+  input_record_length=sizeof(int)*(n1_traces+n1_headers);
   /*  fprintf(stderr,"sf_put_tah write input_record_length=%d\n",
       input_record_length); */
 
@@ -138,10 +137,31 @@ int get_tah(float* trace, float* header,
 /*< get tah >*/
 {
   int input_record_length;
+  char type_input_record[5];
 
-  if (!sf_try_charread("tah",file)) return 1;
-
+  /* sergey suggests
+     if (!sf_try_charread("tah",file)) return 1;
+     but I cannot find function and I donot think it will do all that I need
+     For now I am changing back to my stub kls */
+  
+  if(4!=sf_try_charread2(type_input_record,4,file)){
+    /* must have encounterred eof. */
+    return 1;
+  }
+  type_input_record[4]='\0';
   sf_intread(&input_record_length,1,file);
+  /* fprintf(stderr,"sf_get_tah type_input_record=\"%s\"\n",
+     type_input_record); */
+  if(strcmp(type_input_record,"tah ")!=0){
+    /* not my kind of record.  Just write it back out */
+    /* Right now tah programs only have tah records.  Other type records 
+       used to be be helpful to me.  They allowed me to share the pipe.  
+       Program looked for the type records and they wanted and ignored the 
+       ones it was not interested in an may did not even know.  If I 
+       add other record types this is where I need to add the 
+       sf_get_tah_buffer allocations kls */
+    sf_error("non tah record found. Better write this code segment\n");
+  }     
   
   if(sizeof(float)*(n1_traces+n1_headers)!=input_record_length){
       sf_warning("%s: n1_traces, and n1_headers are",__FILE__);

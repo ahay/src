@@ -1,6 +1,6 @@
-/* Trace And Header READ.
+/* tahgethw: Trace And Header GET Header Word.
 
-tah is the abbreviation of Trace And Header.  It identifies a group of
+   tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:
    1- read trace and headers from separate rsf files and write them to 
       standard output

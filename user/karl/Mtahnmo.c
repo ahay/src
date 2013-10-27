@@ -1,5 +1,4 @@
-/* 
-   tahnmo: Trace And Header normal moveout.
+/* tahgethw: Trace And Header Normal MoveOut.
 
    tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:
@@ -15,20 +14,35 @@
 
    Some programs in this suite are sf_tahread, sf_tahgethw, f_tahhdrmath, 
    and sf_tahwrite.
+ */
+/*
+  Copyright (C) 2013 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 /*
    Program change history:
    date       Who             What
-   10/23/2012 Karl Schleicher Original program
+   04/26/2012 Karl Schleicher Original program
+   10/22/2012 Karl Schleicher Factor reused functions into tahsub.c
 */
 #include <string.h>
 #include <rsf.h>
 #include <rsfsegy.h>
 
 #include "tahsub.h"
-
-/* very sparingly make some global variables. */
-int verbose;
 
 int main(int argc, char* argv[])
 {
@@ -46,7 +60,6 @@ int main(int argc, char* argv[])
   int ikey;
   char** list_of_keys;
   int *indx_of_keys;
-
   
   sf_init (argc,argv);
 
@@ -57,7 +70,7 @@ int main(int argc, char* argv[])
   /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
   /* fprintf(stderr,"read verbose switch.  getint reads command line.\n"); */
   if(!sf_getint("verbose",&verbose))verbose=1;
-  fprintf(stderr,"verbose=%d\n",verbose);
+  sf_warning("verbose=%d",verbose);
  
   /******************************************/
   /* input and output data are stdin/stdout */
