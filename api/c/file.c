@@ -1130,7 +1130,25 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 	    break;
     }
 }
-int sf_try_charread (/*@out@*/ char* arr, size_t size, sf_file file)
+
+int sf_try_charread(const char* test, sf_file file)
+/*< check if you can read test word >*/
+{
+    int size, got, cmp;
+    char* arr;
+
+    size = strlen(test);
+    arr = sf_charalloc(size+1);
+    got = fread(arr,sizeof(char),size+1,file->stream);
+    if (got != size) return 1;
+    arr[size] = '\0';
+    cmp = strncmp(arr,test,size);
+    free(arr);
+
+    return cmp;
+}
+
+int sf_try_charread2 (/*@out@*/ char* arr, size_t size, sf_file file)
 /*< try to read size bytes.  return number bytes read >*/
 {
     return fread(arr,sizeof(char),size,file->stream);

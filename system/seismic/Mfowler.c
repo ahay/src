@@ -1,4 +1,7 @@
-/* 2-D velocity-domain imaging (Fowler DMO + Stolt migration) */
+/* 2-D velocity-domain imaging (Fowler DMO + Stolt migration).
+
+Input: 2-D cosft of constant-velocity stacks (v,w,k).
+*/
 /*
   Copyright (C) 2013 University of Texas at Austin
 
@@ -16,7 +19,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-/* Input: 2-D cosft of constant-velocity stacks (v,w,k) */ 
 
 #include <rsf.h>
 #include "warp2.h"
