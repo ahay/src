@@ -22,7 +22,7 @@
 static float *vrms, t0,dt,dx;
 static int nt,nx;
 
-void kirchslow_init(float *vrms_in            /* half velocity */, 
+void kirchfast_init(float *vrms_in            /* half velocity */, 
 		    float t0_in, float dt_in  /* time axis */,
 		    float dx_in               /* midpoint axis */, 
 		    int nt_in, int nx_in      /* time-midpoint dimensions */)

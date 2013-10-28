@@ -26,13 +26,13 @@
 #include "nhelix.h"
 /*^*/
 
-void find_pef(int nd     /* data size */, 
-	      float *dd  /* data */, 
-	      nfilter aa /* estimated filter */, 
-	      nfilter rr /* regularization filter */, 
-	      int niter  /* number of iterations */, 
-	      float eps  /* regularization parameter */, 
-	      int nh     /* filter size */) 
+void nfind_pef(int nd     /* data size */, 
+	       float *dd  /* data */, 
+	       nfilter aa /* estimated filter */, 
+	       nfilter rr /* regularization filter */, 
+	       int niter  /* number of iterations */, 
+	       float eps  /* regularization parameter */, 
+	       int nh     /* filter size */) 
 /*< estimate non-stationary PEF >*/
 {
     int ip, ih, na, np, nr;

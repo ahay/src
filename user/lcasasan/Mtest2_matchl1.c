@@ -18,9 +18,7 @@
 */
 
 #include <rsf.h>
-#include "tcaf1.h"
-#include "tcai1.h"
-
+#include <rsfgee.h>
 
 static int nb;
 static int n1;

@@ -51,6 +51,7 @@ To programs:
 * Added pclip= option to sfscale
 * user/jmonsegny: New contributor (Jorge Monsegny)
 * user/pyang: New contributor (Pengliang Yang)
+* creating rsfgee library in user/gee to avoid code duplication
 
 ===Bug fixes===
 

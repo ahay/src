@@ -76,12 +76,12 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
     if root:
         install = env.Install(bindir,prog)
-
+        
         if dynpre and env['PLATFORM'] == 'darwin':
-                env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c/libdrsf.dylib '
-                '%s/libdrsf.dylib %s' % (libdir,install[0]))
+            env.AddPostAction(install,
+                              'install_name_tool -change '
+                              'build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
 
 for prog in Split(
     '''

@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    find_pef (n123, dd, msaa, niter);
+    msfind_pef (n123, dd, msaa, niter);
 
     for (i=0; i < dim; i++) {
 	center[i] *= jump[0];

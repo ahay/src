@@ -18,10 +18,7 @@
 */
 
 #include <rsf.h>
-#include "tcaf1.h"
-#include "tcai1.h"
-
-
+#include <rsfgee.h>
 
 int main(int argc, char* argv[])
 {

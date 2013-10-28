@@ -23,13 +23,9 @@
 */
 
 #include <rsf.h>
+#include <rsfgee.h>
 
-
-#include "tent.h"
 #include "patching1bl.h"
-
-
-
 
 int main(int argc, char* argv[])
 {

@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
     free (pp);
 
     nf = aa->hlx[0]->nh;
-    find_mask(n123, kk, aa);
+    nfind_mask(n123, kk, aa);
 
     if(!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 	sf_floatread (bb->hlx[ip]->flt,nbf,reg);
     }
 
-    find_pef (n123, dd, aa, bb, niter, eps, nf);
+    nfind_pef (n123, dd, aa, bb, niter, eps, nf);
 
     for (ip=0; ip < np; ip++) {
 	sf_floatwrite (aa->hlx[ip]->flt,nf,flt);

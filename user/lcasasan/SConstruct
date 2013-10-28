@@ -34,13 +34,14 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../pwd/SConstruct')
+    SConscript('../gee/SConstruct')
 
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
+                  env.get('DYNLIB','')+'rsfgee',
                   env.get('DYNLIB','')+'rsf'])
 
 for source in src:

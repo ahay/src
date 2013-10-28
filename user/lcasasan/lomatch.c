@@ -18,14 +18,12 @@
 */
 
 #include <rsf.h>
+#include <rsfgee.h>
 
-#include "patch.h"
-#include "misinput.h"
 #include "match.h"
 #include "matchL1.h"
 
 #include "lomatch.h"
-
 
 void find_lomatch(int dim      /* number of dimensions */,
 		float *wall  /* whole dataset [master]*/,

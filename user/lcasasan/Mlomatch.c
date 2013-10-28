@@ -21,10 +21,8 @@
 #include <float.h>
 
 #include <rsf.h>
+#include <rsfgee.h>
 
-#include "createhelix.h"
-#include "printfilter.h"
-#include "bound.h"
 #include "lomatch.h"
 
 int main(int argc, char* argv[])

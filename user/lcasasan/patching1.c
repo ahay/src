@@ -20,10 +20,10 @@
 #include <rsf.h>
 /*^*/
 
+#include <rsfgee.h>
+
 #include "patching1.h"
-#include "patch.h"
 #include "patch1.h"
-#include "mkwallwt.h"
 #include "spitz.h"
 
 void patching1(float* modl /* input */, 

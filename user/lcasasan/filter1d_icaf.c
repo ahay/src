@@ -20,7 +20,7 @@
 */
 
 #include <rsf.h>
-#include "icaf1.h"
+#include <rsfgee.h>
 
 #include "filter1d_icaf.h"
 

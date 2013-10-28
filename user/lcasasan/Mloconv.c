@@ -23,9 +23,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <math.h>
 
 #include <rsf.h>
+#include <rsfgee.h>
 
-#include "tent.h"
-#include "patching.h"
 #include "loconvol_internal.h"
 #include "loconvol_transient.h"
 

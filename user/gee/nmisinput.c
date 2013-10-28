@@ -23,9 +23,9 @@
 #include "nhelix.h"
 /*^*/
 
-void find_mask(int nd           /* data size */, 
-	       const int *known /* mask for known data [nd] */, 
-	       nfilter aa       /* filter */) 
+void nfind_mask(int nd           /* data size */, 
+		const int *known /* mask for known data [nd] */, 
+		nfilter aa       /* filter */) 
 /*< find mask >*/
 {
     float *rr, *dfre;

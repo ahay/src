@@ -23,10 +23,10 @@
 #include "mshelix.h"
 /*^*/
 
-void find_pef(int nd      /* data size */, 
-	      float* dd   /* data */, 
-	      msfilter aa /* estimated filter */, 
-	      int niter   /* number of iterations */) 
+void msfind_pef(int nd      /* data size */, 
+		float* dd   /* data */, 
+		msfilter aa /* estimated filter */, 
+		int niter   /* number of iterations */) 
 /*< estimate PEF >*/
 {
     float *ee;
