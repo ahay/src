@@ -58,7 +58,6 @@ Result('autocorr','modeldata',
 # First, spike it up
 
 Flow('spiky','modeldata','supef maxlag=.04')
-
 Result('spiky',wigb('Spiking Decon: 4,40ms','Spike'))
 
 # Plot the autocorrelation after spike
@@ -69,6 +68,11 @@ Result('autospiky','spiky',
 
 # Second, go after the reverberations:  note reflector!
 
+Flow('reverb','spiky','supef minlag=.05 maxlag=.16')
+Result('reverb',wigb('PEF: 50,160ms (Note dipping reflector!)','PEF'))
 
+# Bandpass
+Flow('band','reverb','sufilter f=5,15,80,100')
+Result('band',wigb('Spike, PEF, BandPass','Final'))
 
 End()
