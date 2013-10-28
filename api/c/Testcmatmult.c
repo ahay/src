@@ -1,8 +1,10 @@
 #include <stdio.h>
 
-#include <rsf.h>
-
 #include "cmatmult.h"
+#include "alloc.h"
+#include "bigsolver.h"
+#include "ccgstep.h"
+#include "ccdstep.h"
 
 int main (void) {
     const int n = 4;
@@ -35,9 +37,9 @@ int main (void) {
     b[2] = sf_cmplx(45.,+9.);
     b[3] = sf_cmplx(44.,-32.);
 
-    cmatmult_init (a);
+    sf_cmatmult_init (a);
     
-    sf_csolver(cmatmult_lop, sf_ccgstep, n, n, x, b, 2*n, 
+    sf_csolver(sf_cmatmult_lop, sf_ccgstep, n, n, x, b, 2*n, 
 	      "verb", true, "end");
 
     fprintf(stderr,"inverse: (%f,%f) (%f,%f) (%f,%f) (%f,%f)\n", 
@@ -47,7 +49,7 @@ int main (void) {
 	    crealf(x[3]),cimagf(x[3]));
 
     sf_ccdstep_init();
-    sf_csolver(cmatmult_lop, sf_ccdstep, n, n, x, b, 2*n, 
+    sf_csolver(sf_cmatmult_lop, sf_ccdstep, n, n, x, b, 2*n, 
 	      "verb", true, "end");
 
     fprintf(stderr,"inverse: (%f,%f) (%f,%f) (%f,%f) (%f,%f)\n", 

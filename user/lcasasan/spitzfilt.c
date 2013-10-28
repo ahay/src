@@ -20,11 +20,10 @@
 
 
 #include<rsf.h>
+
 #include "filter.h"
 #include "fxPEF.h"
 #include "mulchanfil.h"
-#include "cmatmult.h"
-
 #include "spitzfilt.h"
 
 
@@ -184,7 +183,7 @@ void spitzfilt_apply(sf_complex* fftL, sf_complex* fft,sf_complex* out)
 		mchf[iN]=sf_cmplx(0.0,0.0);
 	}
 	// define regularization 
-	cmatmult_init(eye);
+	sf_cmatmult_init(eye);
 	eps=0.0001; /* dumping parameter */
 
 	//sf_warning("###LOP CG SOLVER for MCHF Ntot=%d",Ntot);
@@ -227,8 +226,8 @@ void spitzfilt_apply(sf_complex* fftL, sf_complex* fft,sf_complex* out)
 	//sf_warning("total number of interp traces %d",Nint);
     //for (i=0;i<Nint;i++) sf_warning("ind_unknown %d ind_known %d",ind_unknown[i],ind_known[i]);    
 	/*Applying MCHF on the know traces to compute the uknown traces */
-	cmatmult_init(MCHF);
-	cmatmult_lop (false, false, nh, Nint, fft, out_int );  
+	sf_cmatmult_init(MCHF);
+	sf_cmatmult_lop (false, false, nh, Nint, fft, out_int );  
 	/*for (i=0;i<Nint;i++)
 	for (ih=0;ih<nh;ih++) 
      	out_int[i]+=MCHF[i][ih]*fft[ih];	*/

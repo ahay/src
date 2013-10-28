@@ -21,8 +21,6 @@
 
 
 #include "mulchanfil.h"
-#include "cmatmult.h"
-
 #include "filtMCHF.h"
 
 static int nb; /* PEF order, number of filter taps*/
@@ -170,8 +168,8 @@ void MCHFfilt_apply(sf_complex *bb /*in*/,
 	//sf_warning("total number of interp traces %d",Nint);
     //for (i=0;i<Nint;i++) sf_warning("ind_unknown %d ind_known %d",ind_unknown[i],ind_known[i]);    
 	/*Applying MCHF on the know traces to compute the uknown traces */
-	cmatmult_init(MCHF);
-	cmatmult_lop (false, false, nh, Nint, fft, out_int );  
+	sf_cmatmult_init(MCHF);
+	sf_cmatmult_lop (false, false, nh, Nint, fft, out_int );  
 	/*for (i=0;i<Nint;i++)
 	for (ih=0;ih<nh;ih++) 
      	out_int[i]+=MCHF[i][ih]*fft[ih];	*/

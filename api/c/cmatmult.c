@@ -17,21 +17,23 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-/*^*/
-
 #include "cmatmult.h"  
+#include "adjnull.h"
+
+#include "_bool.h"
+#include "komplex.h"
+/*^*/
 
 static sf_complex **bb;
 
-void cmatmult_init(sf_complex **bb_in)
+void sf_cmatmult_init(sf_complex **bb_in)
 /*< initialize matrix >*/
 {
     bb = bb_in;
 }
 
-void cmatmult_lop (bool adj, bool add, int nx, int ny, 
-		   sf_complex *x, sf_complex *y)
+void sf_cmatmult_lop (bool adj, bool add, int nx, int ny, 
+		      sf_complex *x, sf_complex *y)
 /*< operator >*/
 {
     int ix, iy;

@@ -97,7 +97,7 @@ def __header(target=None,source=None,env=None):
     out.write('#ifndef _' + define + '\n')
     out.write('#define _' + define + '\n\n')
     toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
-                      '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
+                          '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
     kandr = re.compile(r'\s*\{?\s*$') # K&R style function defs end with {
     for extract in toheader.findall(text):
         if extract[1] == '^':

@@ -23,9 +23,8 @@ S.Spitz Geophysics 56, 785(1991) (Appendix B)
 
 
 #include <rsf.h>
-#include "cicaf1.h"
-#include "cmatmult.h"
 
+#include "cicaf1.h"
 #include "predictionP.h"
 
 static int *nq;
@@ -208,7 +207,7 @@ void Pprediction_apply(sf_complex **LPF)
 		for (i1=0;i1<max_nq;i1++)
 			lpf[i1][i2]=LPF[k[0]+i1][i2];*/
 
-	cmatmult_init(Qconj);
+	sf_cmatmult_init(Qconj);
 	for (i1=0;i1<k[0];i1++) {
 		
 		for (i2=0;i2<order;i2++) { /* matrix - matrix product */
@@ -219,8 +218,8 @@ void Pprediction_apply(sf_complex **LPF)
 				//computes temp_in vector
 			}
 
-			cmatmult_lop (false, false, max_nq,order, 
-		   	 	temp_in,temp_out);
+			sf_cmatmult_lop (false, false, max_nq,order, 
+					 temp_in,temp_out);
 			diag[i2] = temp_out[i2];					
 		} /* END matrix - matrix product */
 		
@@ -262,7 +261,7 @@ void Pprediction_apply(sf_complex **LPF)
 			//cprint(LPF[k[1]][i4]);
 			//cprint(lpf[1][i4]);
 	}
-	cmatmult_init(Q);
+	sf_cmatmult_init(Q);
 	//sf_warning("ny=%d,k[1]=%d,ny-k[1]-2=%d",ny,k[1],ny-k[1]-2);
 	
 	for (i1=0;i1<ny-k[1]-1;i1++) {
@@ -275,8 +274,8 @@ void Pprediction_apply(sf_complex **LPF)
 				//computes temp_in vector
 			}
 
-			cmatmult_lop (false, false, max_nq,order, 
-		   	 	temp_in,temp_out);
+			sf_cmatmult_lop (false, false, max_nq,order, 
+					 temp_in,temp_out);
 			diag[i2] = temp_out[i2];					
 		} /* END matrix - matrix product */
 		

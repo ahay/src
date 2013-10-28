@@ -71,7 +71,7 @@ for prog in mains:
                 other = string.replace(other,'.exe','')
             docalias[other] = 'sf'+prog
 
-for prog in Split('gaussshape2 cmatmult matmult2'):
+for prog in Split('gaussshape2 matmult2'):
     sources = ['Test' + prog,prog]
     if prog=='matmult2':
         sources.append('gmres')
