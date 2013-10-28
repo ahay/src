@@ -30,12 +30,45 @@ Flow('modeldata','traces.bin',
      suconv filter=1152,-384,-904,288,174,-34,-12 
      ''')
 
+def wigb(title,windowtitle):
+    return '''
+    suxwigb title="%s" windowtitle="%s" 
+    label1="Time (s)" label2="Trace" 
+    wbox=420 hbox=400 
+    ''' % (title,windowtitle)
+
 # Plot the model 
-Result('modeldata',
-       '''
-       suxwigb title="Data: 64ms reverbs" windowtitle="Data" 
-       label1="Time (sec)" label2="Trace" 
-       wbox=420 hbox=400 xbox=0 ybox=50
-       ''')
+Result('modeldata',wigb('Data: 64ms reverbs','Data'))
+
+tpow=1 # gain power before examining autocorrelations
+# tpow=2 might be better for field data
  
+# Plot the autocorrelation with gain
+Result('autocorr','modeldata',
+       '''
+       sugain tpow=%d | suacor ntout=61 | 
+       ''' % tpow + wigb('Autocorrelation','AutoCorr'))
+
+# The autocorrelation shows that:
+#       wavelet extends to about 30ms
+#	first repetition ends at about 160ms
+# this accords well with the actual 64ms reverberations and wavelet of 24ms
+
+######DECON EXAMPLES######
+# First, spike it up
+
+Flow('spiky','modeldata','supef maxlag=.04')
+
+Result('spiky',wigb('Spiking Decon: 4,40ms','Spike'))
+
+# Plot the autocorrelation after spike
+Result('autospiky','spiky',
+       '''
+       sugain tpow=%d | suacor ntout=61 | 
+       ''' % tpow + wigb('Autocor after Spike','AutoCorr/Spike'))
+
+# Second, go after the reverberations:  note reflector!
+
+
+
 End()
