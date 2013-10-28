@@ -76,7 +76,7 @@ def tgrey(custom,par):
     return ciggrey(' label2="\F10 t\F3" unit2=%(ut)s screenratio=%(tratio)g'%par+' '+custom,par)
 
 def agrey(custom,par):
-    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(xratio)g'%par+' '+custom,par)
+    return ciggrey(' label2="\F10 q\F3" unit2="\^o\_" screenratio=%(tratio)g'%par+' '+custom,par)
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------

@@ -122,7 +122,7 @@ def eicpar(par):
     adcig.xparam(2*par['nhx']+1,-par['nhx']*par['dx']*par['jximg'],par['dx']*par['jximg'],
                  par['nz']-par['nzdtm'],                 par['oz'],par['dz'],
                  par)
-    adcig.tparam((par['nhx']*par['dx']*par['jximg'])/(par['nht']*par['dht']),
+    adcig.tparam(7,
                  2*par['nht']+1,-par['nht']*par['dht'],par['dht'],
                  par['nz']-par['nzdtm'],            par['oz'],par['dz'],
                  par)
@@ -161,7 +161,6 @@ def shotsTWO(par):
     par['nS']=2
     sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     par['nodes']=min(par['nodes'],len(sindex))
-    print par['nodes']
     return sindex
 
 def shotsWIN(par):
