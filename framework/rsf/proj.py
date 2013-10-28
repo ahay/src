@@ -377,8 +377,7 @@ class Project(Environment):
 
                     self.Flow(source,sfiles[j],
                               '''
-                              window n%d=%d f%d=%d squeeze=n |
-                              put icpu=%d ncpu=%d
+                              window n%d=%d f%d=%d squeeze=n icpu=%d ncpu=%d
                               ''' % (split[0],chunk,split[0],skip,
                                      i%self.jobs,self.jobs),
                               noderotate=stdin)

@@ -1,4 +1,7 @@
-/* Window a portion of a dataset. */
+/* Window a portion of a dataset. 
+
+Other parameters from the command line are passed to the output (similar to sfput).
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -138,6 +141,8 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("squeeze",&squeeze)) squeeze=true;
     /* if y, squeeze dimensions equal to 1 to the end */
+
+    sf_expandpars(out);
 
     for (i=i0=0; i0 < dim; i0++) {
 	if (squeeze && 1==m[i0]) continue;

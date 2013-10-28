@@ -1,6 +1,8 @@
 /* Pad a dataset with zeros.
 
    n#out is equivalent to n#, both of them overwrite end#.
+
+   Other parameters from the command line are passed to the output (similar to sfput).
 */
 
 /*
@@ -42,6 +44,8 @@ int main (int argc, char* argv[])
     out = sf_output("out");
 
     dim = sf_largefiledims(in,n);
+
+    sf_expandpars(out);
     
     ntr=1;
     for (j=0; j < SF_MAX_DIM; j++) {

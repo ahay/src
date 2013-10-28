@@ -582,4 +582,17 @@ void sf_simtab_output (sf_simtab table, FILE* fp)
     }
 }
 
+void sf_simtab_expand (sf_simtab table, const sf_simtab expand) 
+/*< expand table from another table >*/
+{
+    int i;
+    struct entry *e;
+
+    for (i=0; i < expand->size; i++) {
+	for (e = expand->pars[i]; e != NULL; e = e->next) {
+	    sf_simtab_enter(table, e->key, e->val);
+	}
+    }
+}
+
 /* 	$Id$	 */

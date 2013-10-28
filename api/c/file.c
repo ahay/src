@@ -397,6 +397,12 @@ void sf_setpars (sf_file file)
     }
 }
 
+void sf_expandpars (sf_file file)
+/*< add parameters from the command line >*/
+{
+    sf_simtab_expand(file->pars,sf_getpars());
+}
+
 size_t sf_bufsiz(sf_file file)
 /*< return buffer size for efficient I/O >*/
 {

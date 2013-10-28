@@ -8,7 +8,7 @@ Flow('zvstr',vstr,'segyread read=data')
 
 Flow('vel','zvstr',
      '''
-     put d1=0.00762 o2=3.05562 d2=0.00762
+     put d1=0.00762 o2=3.048 d2=0.00762
      label1=Depth unit1=km label2=Distance unit2=km
      label=Velocity unit=km/s |
      scale dscale=0.0003048
@@ -33,19 +33,19 @@ Flow('vrms','voft',
      '''
      add mode=p $SOURCE | causint | 
      math output="sqrt(input*%g/(x1+%g))" |
-     window j2=2 j1=2
+     smooth rect2=10 | window j2=2
      ''' % (dt,dt))
 
 # Download zero-offset from the data server
 ###########################################
-Fetch('sigexp.rsf','sigsbee')
-Flow('data','sigexp.rsf',
+Fetch('sigexp_ns.rsf','sigsbee')
+Flow('data','sigexp_ns.rsf',
      '''
      dd form=native |
      bandpass flo=2 fhi=60 |
-     window min2=3.05562 max2=9.5 j1=4 j2=2 n1=2501 |
-     costaper nw2=25 nw1=25
-     ''')
+     window max2=9.5 j1=2 j2=2 n1=%d |
+     costaper nw1=50 nw2=50
+     ''' % nt)
 
 Result('data',
        'window min1=3 | grey title="Zero-Offset Data" ')
@@ -68,16 +68,17 @@ Result('dif',
        ''')
 
 # Velocity continuation
-Flow('fourier','dif','cosft sign2=1')
+Flow('fourier','dif','pad n2=1025 | cosft sign2=1')
 Flow('velconf','fourier',
      '''
-     stolt vel=1.5 | 
-     vczo pad2=4096 nv=61 dv=0.02 v0=1.4 verb=y
-     ''',split=[2,424],reduce='cat axis=3')
+     put o3=0 | stolt vel=1.4 | 
+     spray axis=2 n=1 o=0 d=1 | 
+     fourvc pad2=8192 nv=61 dv=0.02 v0=1.4 verb=y
+     ''',split=[2,1025],reduce='cat axis=3')
 Flow('velcon','velconf',
      '''
-     transp plane=23 memsize=1000 |
-     cosft sign2=-1  |
+     transp plane=23 memsize=1000 | 
+     cosft sign2=-1  | window n2=424 | 
      transp plane=23 memsize=1000
      ''')
 
@@ -97,7 +98,7 @@ proj = Project()
 prog = proj.Program('anglemig.c')
 
 Flow('anglemig','dif %s' % prog[0],
-     './${SOURCES[1]} vel=2.5 na=90 a0=-45 da=1')
+     './${SOURCES[1]} vel=2 na=90 a0=-45 da=1')
 
 Result('anglemig',
        '''

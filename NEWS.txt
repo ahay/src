@@ -52,6 +52,7 @@ To programs:
 * user/jmonsegny: New contributor (Jorge Monsegny)
 * user/pyang: New contributor (Pengliang Yang)
 * creating rsfgee library in user/gee to avoid code duplication
+* added sfput-like behavior in sfwindow and sfpad
 
 ===Bug fixes===
 
