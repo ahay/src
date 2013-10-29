@@ -367,8 +367,7 @@ class Project(Environment):
                     # to avoid creation of a chunk file 
                     par_sfiles[j] = sfiles[j]
                     cflow = '''
-                    window n%d=%d f%d=%d squeeze=n |
-                    put icpu=%d ncpu=%d |
+                    window n%d=%d f%d=%d squeeze=n icpu=%d ncpu=%d |
                     ''' % (split[0],chunk,split[0],skip,
                            i%self.jobs,self.jobs) + flow
                 else:
