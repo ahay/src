@@ -1,3 +1,3 @@
-uses=['sfsegyread', 'sfput', 'sfscale', 'sfgrey', 'sfwindow', 'sfdepth2time', 'sfadd', 'sfcausint', 'sfmath', 'sfsmooth', 'sfdd', 'sfbandpass', 'sfcostaper', 'sffdip', 'sfpwd', 'sfpad', 'sfcosft', 'sfstolt', 'sfspray', 'sffourvc', 'sfcat', 'sftransp', 'sfslice', 'sfbyte', 'sfgrey3']
-data=['data/sigsbee/sigsbee2a_stratigraphy.sgy', 'data/sigsbee/sigexp_ns.rsf']
-size= 4221227964
+uses=['sfsegyread', 'sfscale', 'sfput', 'sftransp', 'sfremap1', 'sfgrey', 'sfwindow', 'sfdepth2time', 'sfadd', 'sfcausint', 'sfmath', 'sfdd', 'sfbandpass', 'sfcostaper', 'sffdip', 'sfpwd', 'sfpad', 'sfcosft', 'sfstolt', 'sfspray', 'sffourvc', 'sfcat', 'sfslice', 'sfbyte', 'sfgrey3']
+data=['data/sigsbee/sigsbee2a_migration_velocity.sgy', 'data/sigsbee/sigexp_ns.rsf']
+size= 4216097292
