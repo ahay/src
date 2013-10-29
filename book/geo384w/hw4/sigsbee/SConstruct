@@ -2,17 +2,32 @@ from rsf.proj import *
 
 # Download velocity model from the data server
 ##############################################
-vstr = 'sigsbee2a_stratigraphy.sgy'
-Fetch(vstr,'sigsbee')
-Flow('zvstr',vstr,'segyread read=data')
+vmig = 'sigsbee2a_migration_velocity.sgy'
+Fetch(vmig,'sigsbee')
+Flow('zvmig',vmig,'segyread read=data')
 
-Flow('vel','zvstr',
+ft2km = 0.3048
+
+o2 = 10.025
+d2 = 0.0375
+
+so2 = 10
+sd2 = 0.025
+
+nx=3201
+dx=sd2*ft2km
+
+Flow('vel','zvmig',
      '''
-     put d1=0.00762 o2=3.048 d2=0.00762
-     label1=Depth unit1=km label2=Distance unit2=km
-     label=Velocity unit=km/s |
-     scale dscale=0.0003048
-     ''')
+     scale rscale=0.001 |
+     scale rscale=%g |
+     put label=Velocity unit=km/s
+     o1=0  d1=%g label1=Depth    unit1=km
+     o2=%g d2=%g label2=Distance unit2=km |
+     transp | remap1 n1=%d o1=%g d1=%g | transp
+     ''' % (ft2km,dz,o2*ft2km,d2*ft2km,
+            nx,so2*ft2km,dx))
+
 Result('vel',
        '''
        grey wanttitle=n color=j allpos=y 
@@ -33,7 +48,7 @@ Flow('vrms','voft',
      '''
      add mode=p $SOURCE | causint | 
      math output="sqrt(input*%g/(x1+%g))" |
-     smooth rect2=10 | window j2=2
+     window j2=2
      ''' % (dt,dt))
 
 # Download zero-offset from the data server
