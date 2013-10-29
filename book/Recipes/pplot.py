@@ -82,8 +82,8 @@ def p2x1(plot,p0,p1,ys,xs,yc):
     j0 = plot + '_' + p0
     j1 = plot + '_' + p1
 
-    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=-1'% (ys,xs,0*yc))
-    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=-1'% (ys,xs,1*yc))
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,0*yc))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,1*yc))
 
     Plot  (plot,[j0,j1],'Overlay')
 #    Result(plot,[j0,j1],'Overlay')
