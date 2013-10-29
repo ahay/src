@@ -15,7 +15,7 @@ so2 = 10
 sd2 = 0.025
 
 nz=1201
-dz=d1*ft2km
+dz=sd2*ft2km
 
 nx=3201
 dx=sd2*ft2km
