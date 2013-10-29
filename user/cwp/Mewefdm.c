@@ -1023,12 +1023,12 @@ if (is2d){
 
     	if (opot){
     	  if(snap && it%jsnap==0) {
-#ifdef _OPENMP
-#pragma omp parallel for			\
-    schedule(dynamic,fdm->ompchunk)		\
-    private(iz,ix)				\
-    shared(fdm,uoz,uox,qp,qs,idz,idx)
-#endif
+        #ifdef _OPENMP
+        #pragma omp parallel for			\
+            schedule(dynamic,fdm->ompchunk)		\
+            private(iz,ix)				\
+            shared(fdm,uoz,uox,qp,qs,idz,idx)
+        #endif
    
           for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
         		 for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
@@ -1037,7 +1037,7 @@ if (is2d){
                          + Dx( uox,ix,iz,idx );
           
               qs[ix][iz] = Dz( uox,ix,iz,idz ) 
-                        - Dx( uoz,ix,iz,idx );
+                         - Dx( uoz,ix,iz,idx );
             }
           }
     	  	cut2d(qp,uc,fdm,acz,acx);
