@@ -1,5 +1,4 @@
-/* 3D Bending ray tracing in Multi-layered media
-*/
+/* 3D Bending ray tracing in Multi-layered media*/
 /*
  Copyright (C) 2009 University of Texas at Austin
  
@@ -28,10 +27,8 @@
 #include "ml_traveltime_vconstant_3D.h"
 #include "ml_traveltime_vgradient_3D.h"
 #include "setvelocity_3D.h"
-#include "mat_mul.h"
-#include "matv_mul.h"
-#include "mat_inverse.h"
-#include "mat_transp.h"
+#include "2x2matrixops.h"
+
 
 /* Reflector function--------------------------------------------------------------------------------------------------*/
 
