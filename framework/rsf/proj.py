@@ -362,7 +362,9 @@ class Project(Environment):
                 chunk=w-1
                 skip=bigjobs*w+(i-bigjobs)*chunk
             for j in split[2]:
-                if 0 == j and stdin:
+                if 0 == j and stdin and \
+                        flow.rfind('$SOURCE') < 0 and \
+                        flow.rfind('${SOURCES[0]}') < 0:
                     # For the first input (if stdin), use windowing 
                     # to avoid creation of a chunk file 
                     par_sfiles[j] = sfiles[j]
