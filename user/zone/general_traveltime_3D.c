@@ -260,11 +260,11 @@ void half_initialize(int i /*Indicator of layer*/,
 
 /* T_hat functions------------------------------------------------------------------------------------------------------*/
 
-float T_hat_k(func2 T_k)
+double T_hat_k(func2 T_k)
 /*<Traveltime>*/
 {
 	
-	float t_k;
+	double t_k;
 	
 	t_k = T_k(y_k,y_k1);
 	
@@ -273,66 +273,66 @@ float T_hat_k(func2 T_k)
 
 /* First Derivative-----------------------------------------------------------------------------------------------------*/
 
-float T_hat_k_k_1(func2 T_k_k_1,func2 T_k_zk)
+double T_hat_k_k_1(func2 T_k_k_1,func2 T_k_zk)
 /*<Derivative of T_hat with respect to x_k>*/
 {
 	
-	float t_k_k_1;
+	double t_k_k_1;
 	
 	t_k_k_1 = T_k_k_1(y_k,y_k1)+T_k_zk(y_k,y_k1)*y_k.dx1;
 	
 	return t_k_k_1;
 }
 
-float T_hat_k_k_2(func2 T_k_k_2,func2 T_k_zk)
+double T_hat_k_k_2(func2 T_k_k_2,func2 T_k_zk)
 /*<Derivative of T_hat with respect to y_k>*/
 {
 	
-	float t_k_k_2;
+	double t_k_k_2;
 	
 	t_k_k_2 = T_k_k_2(y_k,y_k1)+T_k_zk(y_k,y_k1)*y_k.dy1;
 	
 	return t_k_k_2;
 }
 
-float T_hat_k_k1_1(func2 T_k_k1_1,func2 T_k_zk1)
+double T_hat_k_k1_1(func2 T_k_k1_1,func2 T_k_zk1)
 /*<Derivative of T_hat with respect to x_k+1>*/
 {
 	
-	float t_k_k1_1;
+	double t_k_k1_1;
 	
 	t_k_k1_1 = T_k_k1_1(y_k,y_k1)+T_k_zk1(y_k,y_k1)*y_k1.dx1;
 	
 	return t_k_k1_1;
 }
 
-float T_hat_k_k1_2(func2 T_k_k1_2,func2 T_k_zk1)
+double T_hat_k_k1_2(func2 T_k_k1_2,func2 T_k_zk1)
 /*<Derivative of T_hat with respect to y_k+1>*/
 {
 	
-	float t_k_k1_2;
+	double t_k_k1_2;
 	
 	t_k_k1_2 = T_k_k1_2(y_k,y_k1)+T_k_zk1(y_k,y_k1)*y_k1.dy1;
 	
 	return t_k_k1_2;
 }
 
-float T_hat_1k_k_1(func2 T_k_k1_1,func2 T_k_zk1)
+double T_hat_1k_k_1(func2 T_k_k1_1,func2 T_k_zk1)
 /*<Derivative of T_hat_k-1th with respect to x_k>*/
 {
 	
-	float t_1k_k_1;
+	double t_1k_k_1;
 	
 	t_1k_k_1 = T_k_k1_1(y_1k,y_k)+T_k_zk1(y_1k,y_k)*y_k.dx1;
 	
 	return t_1k_k_1;
 }
 
-float T_hat_1k_k_2(func2 T_k_k1_2,func2 T_k_zk1)
+double T_hat_1k_k_2(func2 T_k_k1_2,func2 T_k_zk1)
 /*<Derivative of T_hat_k-1th with respect to y_k>*/
 {
 	
-	float t_1k_k_2;
+	double t_1k_k_2;
 	
 	t_1k_k_2 = T_k_k1_2(y_1k,y_k)+T_k_zk1(y_1k,y_k)*y_k.dy1;
 	
@@ -343,33 +343,33 @@ float T_hat_1k_k_2(func2 T_k_k1_2,func2 T_k_zk1)
 
 /* k_k_k Family--------------------------------------*/
 
-float T_hat_k_k_k_1(func2 T_k_k_k_1,func2 T_k_k_zk_1,func2 T_k_zk,func2 T_k_zk_zk)
+double T_hat_k_k_k_1(func2 T_k_k_k_1,func2 T_k_k_zk_1,func2 T_k_zk,func2 T_k_zk_zk)
 /*<Second derivative of T_hat with respect to x_k>*/
 {
 	
-	float t_k_k_k_1;
+	double t_k_k_k_1;
 	
 	t_k_k_k_1 = T_k_k_k_1(y_k,y_k1)+2*T_k_k_zk_1(y_k,y_k1)*y_k.dx1+T_k_zk_zk(y_k,y_k1)*pow(y_k.dx1,2)+T_k_zk(y_k,y_k1)*y_k.dx2;
 	
 	return t_k_k_k_1;
 }
 
-float T_hat_k_k_k_2(func2 T_k_k_k_2,func2 T_k_k_zk_2,func2 T_k_zk,func2 T_k_zk_zk)
+double T_hat_k_k_k_2(func2 T_k_k_k_2,func2 T_k_k_zk_2,func2 T_k_zk,func2 T_k_zk_zk)
 /*<Second derivative of T_hat with respect to y_k>*/
 {
 	
-	float t_k_k_k_2;
+	double t_k_k_k_2;
 	
 	t_k_k_k_2 = T_k_k_k_2(y_k,y_k1)+2*T_k_k_zk_2(y_k,y_k1)*y_k.dy1+T_k_zk_zk(y_k,y_k1)*pow(y_k.dy1,2)+T_k_zk(y_k,y_k1)*y_k.dy2;
 	
 	return t_k_k_k_2;
 }
 
-float T_hat_k_k_k_12(func2 T_k_k_k_12,func2 T_k_k_zk_1,func2 T_k_k_zk_2,func2 T_k_zk,func2 T_k_zk_zk)
+double T_hat_k_k_k_12(func2 T_k_k_k_12,func2 T_k_k_zk_1,func2 T_k_k_zk_2,func2 T_k_zk,func2 T_k_zk_zk)
 /*<Second derivative of T_hat with respect to x_k and y_k>*/
 {
 	
-	float t_k_k_k_12;
+	double t_k_k_k_12;
 	
 	t_k_k_k_12 = T_k_k_k_12(y_k,y_k1)+T_k_k_zk_1(y_k,y_k1)*y_k.dy1+T_k_k_zk_2(y_k,y_k1)*y_k.dx1+T_k_zk_zk(y_k,y_k1)*y_k.dx1*y_k.dy1+T_k_zk(y_k,y_k1)*y_k.dxy2;
 	
@@ -378,33 +378,33 @@ float T_hat_k_k_k_12(func2 T_k_k_k_12,func2 T_k_k_zk_1,func2 T_k_k_zk_2,func2 T_
 
 /* k_k1_k1 Family--------------------------------------*/
 
-float T_hat_k_k1_k1_1(func2 T_k_k1_k1_1,func2 T_k_k1_zk1_1,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_k_k1_k1_1(func2 T_k_k1_k1_1,func2 T_k_k1_zk1_1,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat with respect to x_k+1>*/
 {
 	
-	float t_k_k1_k1_1;
+	double t_k_k1_k1_1;
 	
 	t_k_k1_k1_1 = T_k_k1_k1_1(y_k,y_k1)+2*T_k_k1_zk1_1(y_k,y_k1)*y_k1.dx1+T_k_zk1_zk1(y_k,y_k1)*pow(y_k1.dx1,2)+T_k_zk1(y_k,y_k1)*y_k1.dx2;
 	
 	return t_k_k1_k1_1;
 }
 
-float T_hat_k_k1_k1_2(func2 T_k_k1_k1_2,func2 T_k_k1_zk1_2,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_k_k1_k1_2(func2 T_k_k1_k1_2,func2 T_k_k1_zk1_2,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat with respect to y_k+1>*/
 {
 	
-	float t_k_k1_k1_2;
+	double t_k_k1_k1_2;
 	
 	t_k_k1_k1_2 = T_k_k1_k1_2(y_k,y_k1)+2*T_k_k1_zk1_2(y_k,y_k1)*y_k1.dy1+T_k_zk1_zk1(y_k,y_k1)*pow(y_k1.dy1,2)+T_k_zk1(y_k,y_k1)*y_k1.dy2;
 	
 	return t_k_k1_k1_2;
 }
 
-float T_hat_k_k1_k1_12(func2 T_k_k1_k1_12,func2 T_k_k1_zk1_1,func2 T_k_k1_zk1_2,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_k_k1_k1_12(func2 T_k_k1_k1_12,func2 T_k_k1_zk1_1,func2 T_k_k1_zk1_2,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat with respect to x_k+1 and y_k+1>*/
 {
 	
-	float t_k_k1_k1_12;
+	double t_k_k1_k1_12;
 	
 	t_k_k1_k1_12 = T_k_k1_k1_12(y_k,y_k1)+T_k_k1_zk1_1(y_k,y_k1)*y_k1.dy1+T_k_k1_zk1_2(y_k,y_k1)*y_k1.dx1+T_k_zk1_zk1(y_k,y_k1)*y_k1.dx1*y_k1.dy1+T_k_zk1(y_k,y_k1)*y_k1.dxy2;
 	
@@ -413,33 +413,33 @@ float T_hat_k_k1_k1_12(func2 T_k_k1_k1_12,func2 T_k_k1_zk1_1,func2 T_k_k1_zk1_2,
 
 /* 1k_k_k Family--------------------------------------*/
 
-float T_hat_1k_k_k_1(func2 T_k_k1_k1_1,func2 T_k_k1_zk1_1,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_1k_k_k_1(func2 T_k_k1_k1_1,func2 T_k_k1_zk1_1,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat_k-1th with respect to x_k>*/
 {
 	
-	float t_1k_k_k_1;
+	double t_1k_k_k_1;
 	
 	t_1k_k_k_1 = T_k_k1_k1_1(y_1k,y_k)+2*T_k_k1_zk1_1(y_1k,y_k)*y_k.dx1+T_k_zk1_zk1(y_1k,y_k)*pow(y_k.dx1,2)+T_k_zk1(y_1k,y_k)*y_k.dx2;
 	
 	return t_1k_k_k_1;
 }
 
-float T_hat_1k_k_k_2(func2 T_k_k1_k1_2,func2 T_k_k1_zk1_2,func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_1k_k_k_2(func2 T_k_k1_k1_2,func2 T_k_k1_zk1_2,func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat_k-1th with respect to y_k>*/
 {
 	
-	float t_1k_k_k_2;
+	double t_1k_k_k_2;
 	
 	t_1k_k_k_2 = T_k_k1_k1_2(y_1k,y_k)+2*T_k_k1_zk1_2(y_1k,y_k)*y_k.dy1+T_k_zk1_zk1(y_1k,y_k)*pow(y_k.dy1,2)+T_k_zk1(y_1k,y_k)*y_k.dy2;
 	
 	return t_1k_k_k_2;
 }
 
-float T_hat_1k_k_k_12(func2 T_k_k1_k1_12,func2 T_k_k1_zk1_1,func2 T_k_k1_zk1_2, func2 T_k_zk1,func2 T_k_zk1_zk1)
+double T_hat_1k_k_k_12(func2 T_k_k1_k1_12,func2 T_k_k1_zk1_1,func2 T_k_k1_zk1_2, func2 T_k_zk1,func2 T_k_zk1_zk1)
 /*<Second derivative of T_hat_k-1th with respect to x_k and y_k>*/
 {
 	
-	float t_1k_k_k_12;
+	double t_1k_k_k_12;
 	
 	t_1k_k_k_12 = T_k_k1_k1_12(y_1k,y_k)+T_k_k1_zk1_1(y_1k,y_k)*y_k.dy1+T_k_k1_zk1_2(y_1k,y_k)*y_k.dx1+T_k_zk1_zk1(y_1k,y_k)*y_k.dx1*y_k.dy1+T_k_zk1(y_1k,y_k)*y_k.dxy2;
 	
@@ -448,44 +448,44 @@ float T_hat_1k_k_k_12(func2 T_k_k1_k1_12,func2 T_k_k1_zk1_1,func2 T_k_k1_zk1_2, 
 
 /* k_k_k1 Family--------------------------------------*/
 
-float T_hat_k_k_k1_1(func2 T_k_k_k1_1,func2 T_k_k1_zk_1,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
+double T_hat_k_k_k1_1(func2 T_k_k_k1_1,func2 T_k_k1_zk_1,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to x_k and x_k+1>*/
 {
 	
-	float t_k_k_k1_1;
+	double t_k_k_k1_1;
 	
 	t_k_k_k1_1 = T_k_k_k1_1(y_k,y_k1)+T_k_k_zk1_1(y_k,y_k1)*y_k1.dx1+T_k_k1_zk_1(y_k,y_k1)*y_k.dx1+T_k_zk_zk1(y_k,y_k1)*y_k1.dx1*y_k.dx1;
 	
 	return t_k_k_k1_1;
 }
 
-float T_hat_k_k_k1_2(func2 T_k_k_k1_2,func2 T_k_k1_zk_2,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
+double T_hat_k_k_k1_2(func2 T_k_k_k1_2,func2 T_k_k1_zk_2,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to y_k and y_k+1>*/
 {
 	
-	float t_k_k_k1_2;
+	double t_k_k_k1_2;
 	
 	t_k_k_k1_2 = T_k_k_k1_2(y_k,y_k1)+T_k_k_zk1_2(y_k,y_k1)*y_k1.dy1+T_k_k1_zk_2(y_k,y_k1)*y_k.dy1+T_k_zk_zk1(y_k,y_k1)*y_k1.dy1*y_k.dy1;
 	
 	return t_k_k_k1_2;
 }
 
-float T_hat_k_k_k1_12(func2 T_k_k_k1_12,func2 T_k_k1_zk_2,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
+double T_hat_k_k_k1_12(func2 T_k_k_k1_12,func2 T_k_k1_zk_2,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to x_k and y_k+1>*/
 {
 	
-	float t_k_k_k1_12;
+	double t_k_k_k1_12;
 	
 	t_k_k_k1_12 = T_k_k_k1_12(y_k,y_k1)+T_k_k_zk1_1(y_k,y_k1)*y_k1.dy1+T_k_k1_zk_2(y_k,y_k1)*y_k.dx1+T_k_zk_zk1(y_k,y_k1)*y_k1.dy1*y_k.dx1;
 	
 	return t_k_k_k1_12;
 }
 
-float T_hat_k_k_k1_21(func2 T_k_k_k1_21,func2 T_k_k1_zk_1,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
+double T_hat_k_k_k1_21(func2 T_k_k_k1_21,func2 T_k_k1_zk_1,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to y_k and x_k+1>*/
 {
 	
-	float t_k_k_k1_21;
+	double t_k_k_k1_21;
 	
 	t_k_k_k1_21 = T_k_k_k1_21(y_k,y_k1)+T_k_k_zk1_2(y_k,y_k1)*y_k1.dx1+T_k_k1_zk_1(y_k,y_k1)*y_k.dy1+T_k_zk_zk1(y_k,y_k1)*y_k1.dx1*y_k.dy1;
 	
@@ -494,44 +494,44 @@ float T_hat_k_k_k1_21(func2 T_k_k_k1_21,func2 T_k_k1_zk_1,func2 T_k_k_zk1_2, fun
 
 /* 1k_1k_k Family--------------------------------------*/
 
-float T_hat_1k_1k_k_1(func2 T_k_k_k1_1,func2 T_k_k1_zk_1,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
+double T_hat_1k_1k_k_1(func2 T_k_k_k1_1,func2 T_k_k1_zk_1,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to x_1k and x_k>*/
 {
 	
-	float t_1k_1k_k_1;
+	double t_1k_1k_k_1;
 	
 	t_1k_1k_k_1 = T_k_k_k1_1(y_1k,y_k)+T_k_k_zk1_1(y_1k,y_k)*y_k.dx1+T_k_k1_zk_1(y_1k,y_k)*y_1k.dx1+T_k_zk_zk1(y_1k,y_k)*y_k.dx1*y_1k.dx1;
 	
 	return t_1k_1k_k_1;
 }
 
-float T_hat_1k_1k_k_2(func2 T_k_k_k1_2,func2 T_k_k1_zk_2,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
+double T_hat_1k_1k_k_2(func2 T_k_k_k1_2,func2 T_k_k1_zk_2,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to y_k and y_k+1>*/
 {
 	
-	float t_1k_1k_k_2;
+	double t_1k_1k_k_2;
 	
 	t_1k_1k_k_2 = T_k_k_k1_2(y_1k,y_k)+T_k_k_zk1_2(y_1k,y_k)*y_k.dy1+T_k_k1_zk_2(y_1k,y_k)*y_1k.dy1+T_k_zk_zk1(y_1k,y_k)*y_k.dy1*y_1k.dy1;
 	
 	return t_1k_1k_k_2;
 }
 
-float T_hat_1k_1k_k_12(func2 T_k_k_k1_12,func2 T_k_k1_zk_2,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
+double T_hat_1k_1k_k_12(func2 T_k_k_k1_12,func2 T_k_k1_zk_2,func2 T_k_k_zk1_1, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to x_k and y_k+1>*/
 {
 	
-	float t_1k_1k_k_12;
+	double t_1k_1k_k_12;
 	
 	t_1k_1k_k_12 = T_k_k_k1_12(y_1k,y_k)+T_k_k_zk1_1(y_1k,y_k)*y_k.dy1+T_k_k1_zk_2(y_1k,y_k)*y_1k.dx1+T_k_zk_zk1(y_1k,y_k)*y_k.dy1*y_1k.dx1;
 	
 	return t_1k_1k_k_12;
 }
 
-float T_hat_1k_1k_k_21(func2 T_k_k_k1_21,func2 T_k_k1_zk_1,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
+double T_hat_1k_1k_k_21(func2 T_k_k_k1_21,func2 T_k_k1_zk_1,func2 T_k_k_zk1_2, func2 T_k_zk_zk1)
 /*<Second derivative of T_hat with respect to y_k and x_k+1>*/
 {
 	
-	float t_1k_1k_k_21;
+	double t_1k_1k_k_21;
 	
 	t_1k_1k_k_21 = T_k_k_k1_21(y_1k,y_k)+T_k_k_zk1_2(y_1k,y_k)*y_k.dx1+T_k_k1_zk_1(y_1k,y_k)*y_1k.dy1+T_k_zk_zk1(y_1k,y_k)*y_k.dx1*y_1k.dy1;
 	

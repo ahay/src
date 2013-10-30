@@ -20,7 +20,7 @@
 #include <math.h>
 
 #include "kirmodnewton.h"
-#include "vectorsub.h"
+#include "vectorops.h"
 
 #include "kirmod.h"
 #include "general_traveltime.h"

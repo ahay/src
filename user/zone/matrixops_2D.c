@@ -1,3 +1,4 @@
+/*Linear operators for 2x2 matrix*/
 /*
  Copyright (C) 2009 University of Texas at Austin
  
@@ -18,8 +19,8 @@
 
 /*For use in kirmod_newton*/
 
-#include "2x2matrixops.h"
 #include <stdio.h>
+#include "matrixops_2D.h"
 
 void mat_transp(float **m/* Input 2x2 matrix*/,float **output)
 /*<Find a 2x2 matrix transpose>*/

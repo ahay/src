@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "vectorops"
+#include "vectorops.h"
 #include "general_traveltime_3D.h"
 #include "ml_traveltime_vconstant_3D.h"
 #include "ml_traveltime_vgradient_3D.h"

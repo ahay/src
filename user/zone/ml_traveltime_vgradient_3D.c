@@ -49,10 +49,10 @@ typedef struct threed {
 #endif
 
 /* Traveltime functions for gradient velocity------------------------------------------------------------------------------*/
-float T1_k(threed y_k,threed y_k1)
+double T1_k(threed y_k,threed y_k1)
 /*<Traveltime>*/
 {
-	float t_k,g0,q;
+	double t_k,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -66,10 +66,10 @@ float T1_k(threed y_k,threed y_k1)
 
 /* First Derivative (6)---------------------------------------------------------------------------------------*/
 
-float T1_k_k_1(threed y_k, threed y_k1) 
+double T1_k_k_1(threed y_k, threed y_k1) 
 /*<Derivative of T with respect to x_k>*/
 {
-	float t_k_k_1,g0,q;
+	double t_k_k_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -81,10 +81,10 @@ float T1_k_k_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_2(threed y_k, threed y_k1) 
+double T1_k_k_2(threed y_k, threed y_k1) 
 /*<Derivative of T with respect to y_k>*/
 {
-	float t_k_k_2,g0,q;
+	double t_k_k_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -96,10 +96,10 @@ float T1_k_k_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_1(threed y_k, threed y_k1) 
+double T1_k_k1_1(threed y_k, threed y_k1) 
 /*<Derivative of T with respect to x_k1>*/
 {
-	float t_k_k1_1,g0,q;
+	double t_k_k1_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -111,10 +111,10 @@ float T1_k_k1_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_2(threed y_k, threed y_k1) 
+double T1_k_k1_2(threed y_k, threed y_k1) 
 /*<Derivative of T with respect to y_k1>*/
 {
-	float t_k_k1_2,g0,q;
+	double t_k_k1_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -126,10 +126,10 @@ float T1_k_k1_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_zk(threed y_k, threed y_k1)  
+double T1_k_zk(threed y_k, threed y_k1)  
 /*<Derivative of T with respect to z_k>*/
 {
-	float t_k_zk,g0,q;
+	double t_k_zk,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -141,10 +141,10 @@ float T1_k_zk(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_zk1(threed y_k, threed y_k1) 
+double T1_k_zk1(threed y_k, threed y_k1) 
 /*<Derivative of T with respect to z_k1>*/
 {
-	float t_k_zk1,g0,q;
+	double t_k_zk1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -162,10 +162,10 @@ float T1_k_zk1(threed y_k, threed y_k1)
 
 /* k_k_k Family (6)-----------------------------------*/
 
-float T1_k_k_k_1(threed y_k, threed y_k1)
+double T1_k_k_k_1(threed y_k, threed y_k1)
 /*<Second derivative of T with respect to x_k>*/
 {
-	float t_k_k_k_1,g0,q;
+	double t_k_k_k_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -177,10 +177,10 @@ float T1_k_k_k_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_k_2(threed y_k, threed y_k1)
+double T1_k_k_k_2(threed y_k, threed y_k1)
 /*<Second derivative of T with respect to y_k>*/
 {
-	float t_k_k_k_2,g0,q;
+	double t_k_k_k_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -192,10 +192,10 @@ float T1_k_k_k_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_k_12(threed y_k, threed y_k1)
+double T1_k_k_k_12(threed y_k, threed y_k1)
 /*<Second derivative of T with respect to x_k and y_k>*/
 {
-	float t_k_k_k_12,g0,q;
+	double t_k_k_k_12,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -207,10 +207,10 @@ float T1_k_k_k_12(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_zk_1(threed y_k, threed y_k1)  
+double T1_k_k_zk_1(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k and z_k>*/
 {
-	float t_k_k_zk_1,g0,q;
+	double t_k_k_zk_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -222,10 +222,10 @@ float T1_k_k_zk_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_zk_2(threed y_k, threed y_k1)  
+double T1_k_k_zk_2(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to y_k and y_k>*/
 {
-	float t_k_k_zk_2,g0,q;
+	double t_k_k_zk_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -237,10 +237,10 @@ float T1_k_k_zk_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_zk_zk(threed y_k, threed y_k1)  
+double T1_k_zk_zk(threed y_k, threed y_k1)  
 /*<Second Derivative of T with respect to z_k>*/
 {
-	float t_k_zk_zk,g0,q;
+	double t_k_zk_zk,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -254,10 +254,10 @@ float T1_k_zk_zk(threed y_k, threed y_k1)
 
 /* k_k1_k1 Family & 1k_k_k Family (6)----------------------------------*/
 
-float T1_k_k1_k1_1(threed y_k, threed y_k1)  
+double T1_k_k1_k1_1(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k1>*/
 {
-	float t_k_k1_k1_1,g0,q;
+	double t_k_k1_k1_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -269,10 +269,10 @@ float T1_k_k1_k1_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_k1_2(threed y_k, threed y_k1)  
+double T1_k_k1_k1_2(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to y_k1>*/
 {
-	float t_k_k1_k1_2,g0,q;
+	double t_k_k1_k1_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -284,10 +284,10 @@ float T1_k_k1_k1_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_k1_12(threed y_k, threed y_k1)  
+double T1_k_k1_k1_12(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k1 and y_k1>*/
 {
-	float t_k_k1_k1_12,g0,q;
+	double t_k_k1_k1_12,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -299,10 +299,10 @@ float T1_k_k1_k1_12(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_zk1_1(threed y_k, threed y_k1) 
+double T1_k_k1_zk1_1(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to x_k1 and z_k1>*/
 {
-	float t_k_k1_zk1_1,g0,q;
+	double t_k_k1_zk1_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -314,10 +314,10 @@ float T1_k_k1_zk1_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_zk1_2(threed y_k, threed y_k1) 
+double T1_k_k1_zk1_2(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to y_k1 and z_k1>*/
 {
-	float t_k_k1_zk1_2,g0,q;
+	double t_k_k1_zk1_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -329,10 +329,10 @@ float T1_k_k1_zk1_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_zk1_zk1(threed y_k, threed y_k1)  
+double T1_k_zk1_zk1(threed y_k, threed y_k1)  
 /*<Second Derivative of T with respect to z_k1>*/
 {
-	float t_k_zk1_zk1,g0,q;
+	double t_k_zk1_zk1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -346,10 +346,10 @@ float T1_k_zk1_zk1(threed y_k, threed y_k1)
 
 /* k_k_k1 Family & 1k_1k_k Family (9)----------------------------------*/
 
-float T1_k_k_k1_1(threed y_k, threed y_k1) 
+double T1_k_k_k1_1(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
-	float t_k_k_k1_1,g0,q;
+	double t_k_k_k1_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -361,10 +361,10 @@ float T1_k_k_k1_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_k1_2(threed y_k, threed y_k1) 
+double T1_k_k_k1_2(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
-	float t_k_k_k1_2,g0,q;
+	double t_k_k_k1_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -376,10 +376,10 @@ float T1_k_k_k1_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_k1_12(threed y_k, threed y_k1) 
+double T1_k_k_k1_12(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
-	float t_k_k_k1_12,g0,q;
+	double t_k_k_k1_12,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -391,10 +391,10 @@ float T1_k_k_k1_12(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_k1_21(threed y_k, threed y_k1) 
+double T1_k_k_k1_21(threed y_k, threed y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
-	float t_k_k_k1_21,g0,q;
+	double t_k_k_k1_21,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -406,10 +406,10 @@ float T1_k_k_k1_21(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_zk_1(threed y_k, threed y_k1)  
+double T1_k_k1_zk_1(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k1 and z_k>*/
 {
-	float t_k_k1_zk_1,g0,q;
+	double t_k_k1_zk_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -421,10 +421,10 @@ float T1_k_k1_zk_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k1_zk_2(threed y_k, threed y_k1)  
+double T1_k_k1_zk_2(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k1 and z_k>*/
 {
-	float t_k_k1_zk_2,g0,q;
+	double t_k_k1_zk_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -436,10 +436,10 @@ float T1_k_k1_zk_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_zk1_1(threed y_k, threed y_k1)  
+double T1_k_k_zk1_1(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k and z_k1>*/
 {
-	float t_k_k_zk1_1,g0,q;
+	double t_k_k_zk1_1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -451,10 +451,10 @@ float T1_k_k_zk1_1(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_k_zk1_2(threed y_k, threed y_k1)  
+double T1_k_k_zk1_2(threed y_k, threed y_k1)  
 /*<Second derivative of T with respect to x_k and z_k1>*/
 {
-	float t_k_k_zk1_2,g0,q;
+	double t_k_k_zk1_2,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
@@ -466,10 +466,10 @@ float T1_k_k_zk1_2(threed y_k, threed y_k1)
 	
 }
 
-float T1_k_zk_zk1(threed y_k, threed y_k1)  
+double T1_k_zk_zk1(threed y_k, threed y_k1)  
 /*<Second Derivative of T with respect to z_k and z_k1>*/
 {
-	float t_k_zk_zk1,g0,q;
+	double t_k_zk_zk1,g0,q;
 	
 	q = pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2);
 	
