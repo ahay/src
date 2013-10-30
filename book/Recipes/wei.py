@@ -6,24 +6,15 @@ import fdmod
 def param(par):
     p  = ' '
     p = p + ' --readwrite=y'
-    if(par.has_key('verb')):
-        p = p + ' verb='  +     par['verb']
-    if(par.has_key('nrmax')):
-        p = p + ' nrmax=' + str(par['nrmax'])
-    if(par.has_key('dtmax')):
-        p = p + ' dtmax=' + str(par['dtmax'])
-    if(par.has_key('eps')):
-        p = p + ' eps='   + str(par['eps'])
-    if(par.has_key('tmx')):
-        p = p + ' tmx='   + str(par['tmx'])
-    if(par.has_key('tmy')):
-        p = p + ' tmy='   + str(par['tmy'])
-    if(par.has_key('pmx')):
-        p = p + ' pmx='   + str(par['pmx'])
-    if(par.has_key('pmy')):
-        p = p + ' pmy='   + str(par['pmy'])
-    if(par.has_key('misc')):
-        p = p + ' '       +     par['misc']
+    if(par.has_key('verb')):  p = p + ' verb='  +     par['verb']
+    if(par.has_key('nrmax')): p = p + ' nrmax=' + str(par['nrmax'])
+    if(par.has_key('dtmax')): p = p + ' dtmax=' + str(par['dtmax'])
+    if(par.has_key('eps')):   p = p + ' eps='   + str(par['eps'])
+    if(par.has_key('tmx')):   p = p + ' tmx='   + str(par['tmx'])
+    if(par.has_key('tmy')):   p = p + ' tmy='   + str(par['tmy'])
+    if(par.has_key('pmx')):   p = p + ' pmx='   + str(par['pmx'])
+    if(par.has_key('pmy')):   p = p + ' pmy='   + str(par['pmy'])
+    if(par.has_key('misc')):  p = p + ' '       +     par['misc']
     p = p + ' '
     return p
 
@@ -130,6 +121,18 @@ def hicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
          ''' % (param(par)+eicpar(par)+custom))
     
 # ------------------------------------------------------------
+# wavefields from arbitrary sources
+def genwfl(wfl,sou,coo,slo,down,causal,par):
+    Flow(wfl,[sou,slo,coo],
+         '''
+         weigwf verb=y
+         slo=${SOURCES[1]}
+         coo=${SOURCES[2]}
+         down=%s causal=%s 
+	 %s
+         ''' %(down,causal,param(par)))
+
+# ------------------------------------------------------------
 # 3D imaging condition
 #def cic3d(imag,swfl,rwfl,par):
 #    Flow(imag,[swfl,rwfl],
@@ -148,14 +151,3 @@ def hicmig(icic,ieic,sdat,rdat,slow,ccoo,custom,par):
 #         cc=${SOURCES[2]}
 #         %(eiccustom)s
 #         ''' %par)
-
-# ------------------------------------------------------------
-# wavefields from arbitrary sources
-def genwfl(wfl,sou,coo,slo,down,causal,par):
-    Flow(wfl,[sou,slo,coo],
-         '''
-         weigwf verb=y slo=${SOURCES[1]} coo=${SOURCES[2]}
-         down=%s causal=%s 
-	 %s
-         ''' %(down,causal,param(par)))
-
