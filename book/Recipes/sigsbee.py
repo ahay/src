@@ -194,14 +194,14 @@ def getdata(data,par,local=0):
         Fetch(datafile,'sigsbee')
     
     Flow([data,data+'-t','./'+data+'-h','./'+data+'-b'],
-         datafile,
+         None,
          '''
          segyread
-         tape=$SOURCE
+         tape=%s
          tfile=${TARGETS[1]}
          hfile=${TARGETS[2]}
          bfile=${TARGETS[3]}
-         ''',stdin=0)
+         '''%datafile,stdin=0)
 
 # ------------------------------------------------------------
 def getmigvel(velo,par,local=0):
@@ -213,14 +213,14 @@ def getmigvel(velo,par,local=0):
         Fetch(migvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
-         migvelfile,
+         None,
          '''
          segyread
-         tape=$SOURCE
+         tape=%s
          tfile=${TARGETS[1]}
          hfile=${TARGETS[2]}
          bfile=${TARGETS[3]}
-         ''',stdin=0)
+         '''%migvelfile,stdin=0)
     
     Flow(velo,
          velo+'-raw',
@@ -245,14 +245,14 @@ def getstrvel(velo,par,local=0):
         Fetch(strvelfile,'sigsbee')
 
     Flow([velo+'-raw',velo+'-t','./'+velo+'-h','./'+velo+'-b'],
-         strvelfile,
+         None,
          '''
          segyread
-         tape=$SOURCE
+         tape=%s
          tfile=${TARGETS[1]}
          hfile=${TARGETS[2]}
          bfile=${TARGETS[3]}
-         ''',stdin=0)
+         '''%strvelfile,stdin=0)
 
     Flow(velo,
          velo+'-raw',
@@ -277,14 +277,14 @@ def getreflect(ref,par,local=0):
         Fetch(reflectfile,'sigsbee')
 
     Flow([ref+'-raw',ref+'-t','./'+ref+'-h','./'+ref+'-b'],
-         reflectfile,
+         None,
          '''
          segyread
-         tape=$SOURCE
+         tape=%s
          tfile=${TARGETS[1]}
          hfile=${TARGETS[2]}
          bfile=${TARGETS[3]}
-         ''',stdin=0)
+         '''%reflectfile,stdin=0)
 
     Flow(ref,
          ref+'-raw',
