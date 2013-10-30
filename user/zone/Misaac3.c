@@ -21,13 +21,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "vectorsub_3D.h"
-#include "vectorsub.h" /*Now for each small element*/
+#include "vectorops"
 #include "general_traveltime_3D.h"
 #include "ml_traveltime_vconstant_3D.h"
 #include "ml_traveltime_vgradient_3D.h"
 #include "setvelocity_3D.h"
-#include "2x2matrixops.h"
+#include "matrixops_2D.h"
 
 
 /* Reflector function--------------------------------------------------------------------------------------------------*/

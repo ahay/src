@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "vectorsub.h"
+#include "vectorops.h"
 #include "general_traveltime.h"
 #include "ml_traveltime_vconstant.h"
 #include "ml_traveltime_vgradient.h"
