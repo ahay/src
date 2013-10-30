@@ -180,7 +180,7 @@ def shotsJMP(par):
 def shotsALL(par):
     par['fS']=0
     par['jS']=1
-    par['nS']=par['nsall']
+    par['nS']=480
     sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     return sindex
 
