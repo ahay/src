@@ -88,6 +88,15 @@ int main(int argc, char* argv[])
     sf_putint(traces,"n1",ns);
     sf_putint(traces,"n2",ntr);
 
+    sf_putfloat(traces,"o1",0);
+    sf_putfloat(traces,"d1",0.004);
+    sf_putfloat(traces,"o2",1);
+    sf_putfloat(traces,"d2",1);
+    
+    sf_putstring(traces,"label1","Time");
+    sf_putstring(traces,"unit1","s");
+    sf_putstring(traces,"label2","Trace");
+
     trace = sf_floatalloc(ns);
     
     for (j = 0; j < ntr; j++) {

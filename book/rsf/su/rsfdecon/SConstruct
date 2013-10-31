@@ -1,5 +1,4 @@
-from rsf.suproj import *
-from rsf.prog import RSFROOT
+from rsf.proj import *
 
 # We make some simple data: 8 traces with 2-way reverberations and
 # a weak tilting reflector hidden underneath the reverberations.  The
@@ -19,58 +18,55 @@ from rsf.prog import RSFROOT
 
 # First make the synthetic data for the deconvolution demo
 
-traces = os.path.join(RSFROOT,'bin','sftraces')
-
-Command('traces.bin',traces,'$SOURCE --out=$TARGET >/dev/null')
-Flow('modeldata','traces.bin',
+Flow('traces',None,'traces -')
+Flow('filter',None,
      '''
-     suaddhead ns=512 |
-     sushw key=dt a=4000 |
-     suaddnoise sn=200 |
-     suconv filter=1152,-384,-904,288,174,-34,-12 
+     spike n1=7 nsp=7 k1=1,2,3,4,5,6,7 mag=1152,-384,-904,288,174,-34,-12
+     ''')
+Flow('modeldata','traces filter',
+     '''
+     noise seed=2013 var=5.24413e-5 |
+     conv filt=${SOURCES[1]} 
      ''')
 
-def wigb(title,windowtitle):
+def wiggle(title):
     return '''
-    suxwigb title="%s" windowtitle="%s" 
-    label1="Time (s)" label2="Trace" 
-    wbox=420 hbox=400 
-    ''' % (title,windowtitle)
+    wiggle title="%s" transp=y yreverse=y poly=y
+    ''' % title
 
 # Plot the model 
-Result('modeldata',wigb('Data: 64ms reverbs','Data'))
+Result('modeldata',wiggle('Data'))
 
 tpow=1 # gain power before examining autocorrelations
 # tpow=2 might be better for field data
  
 # Plot the autocorrelation with gain
-autocorr = 'sugain tpow=%d | suacor ntout=61 | ' % tpow
+autocorr = '''
+pow pow1=%d | 
+fft1 | math output="input*conj(input)" | fft1 inv=y | 
+window n1=31 |
+''' % tpow
 
 Result('autocorr','modeldata',
-       autocorr + wigb('Autocorrelation','AutoCorr'))
-
-# The autocorrelation shows that:
-#       wavelet extends to about 30ms
-#	first repetition ends at about 160ms
-# this accords well with the actual 64ms reverberations and wavelet of 24ms
+       autocorr + wiggle('Autocorrelation'))
 
 ######DECON EXAMPLES######
 # First, spike it up
 
-Flow('spiky','modeldata','supef maxlag=.04')
-Result('spiky',wigb('Spiking Decon: 4,40ms','Spike'))
+Flow('spiky','modeldata','pef maxlag=.04')
+Result('spiky',wiggle('Spiking Decon'))
 
 # Plot the autocorrelation after spike
 Result('autospiky','spiky',
-       autocorr + wigb('Autocor after Spike','AutoCorr/Spike'))
+       autocorr + wiggle('Autocorelation after Spiking Decon'))
 
 # Second, go after the reverberations:  note reflector!
 
-Flow('reverb','spiky','supef minlag=.05 maxlag=.16')
-Result('reverb',wigb('PEF: 50,160ms (Note dipping reflector!)','PEF'))
+Flow('reverb','spiky','pef minlag=.05 maxlag=.16')
+Result('reverb',wiggle('PEF 50,160ms (Note dipping reflector!)'))
 
 # Bandpass
-Flow('band','reverb','sufilter f=5,15,80,100')
-Result('band',wigb('Spike, PEF, BandPass','Final'))
+Flow('band','reverb','trapez frequency=5,15,80,100')
+Result('band',wiggle('Spike, PEF, BandPass'))
 
 End()
