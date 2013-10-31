@@ -171,9 +171,9 @@ def shotsWIN(par):
     return sindex
 
 def shotsJMP(par):
-    par['fS']=10
-    par['jS']=5
-    par['nS']=64
+    par['fS']=0
+    par['jS']=4
+    par['nS']=120
     sindex = range(par['fS'],par['fS']+par['nS']*par['jS'],par['jS'])
     return sindex
 
