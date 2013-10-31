@@ -298,8 +298,10 @@ mark: /* Mark point for goto*/
 		
 	/* To export the old ans for fwdxini-------------------------------------------*/
 		
-	for (c4=0; c4<n; c4++) {
-	    oldans[c4][n-1] = xx[c4+1];
+	if (NULL != oldans) {
+	    for (c4=0; c4<n; c4++) {
+		oldans[c4][n-1] = xx[c4+1];
+	    }
 	}
 		
 	tt=0; /* Initialize traveltime tt*/

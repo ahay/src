@@ -315,7 +315,9 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	}
 	
 	if (fwdxini) {
-	oldans = sf_floatalloc2(nc-1,nc-1); /* To store old ans for the case of fwdxini*/
+	    oldans = sf_floatalloc2(nc-1,nc-1); /* To store old ans for the case of fwdxini*/
+	} else {
+	    oldans = NULL;
 	}
 	
     for (iy=0; iy < ny; iy++) {	/* source/midpoint and offset axes */
