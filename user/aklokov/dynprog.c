@@ -1,1 +1,0 @@
-../fomels/dynprog.c

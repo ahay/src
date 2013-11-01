@@ -6,13 +6,14 @@ progs = '''
 ditime2d ditime3d
 crssemb crssemb3d 
 diptaper dvscan2d
-pick2d gammapick2d pickvert
+pick2d gammapick2d 
 pdrscan2d pdr2d
 dagap sumamp
 taperedge heal
 revent rotvol dagtaper
 '''
 # todel
+# pickvert
 
 mpi_progs = ''
 
