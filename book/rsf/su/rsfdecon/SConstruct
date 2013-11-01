@@ -26,12 +26,12 @@ Flow('filter',None,
 Flow('modeldata','traces filter',
      '''
      noise seed=2013 var=5.24413e-5 |
-     conv filt=${SOURCES[1]} 
+     conv filt=${SOURCES[1]} trans=y
      ''')
 
 def wiggle(title):
     return '''
-    wiggle title="%s" transp=y yreverse=y poly=y
+    wiggle title="%s" transp=y yreverse=y poly=y pclip=99.9
     ''' % title
 
 # Plot the model 
