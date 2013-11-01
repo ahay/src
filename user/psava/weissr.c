@@ -99,7 +99,7 @@ weissr3d weissr_init(weicub3d cub,
 	ily    = INDEX( yy,cub->aly);
 	ssr->ly[iy] = BOUND(ily,sf_n(cub->aly));
     }
-   /* i-line index */
+    /* i-line index */
     for (ix=0; ix<sf_n(cub->amx); ix++) {
 	xx = sf_o(cub->amx) + ix*sf_d(cub->amx);
 	ilx    = INDEX( xx,cub->alx);
@@ -320,7 +320,7 @@ void weissr1(sf_complex          w,
         KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,slo->sm[iz+flg][jr]),
                                   sf_cmplx(ssr->kk[iy][ix],0.)));
               wk[iy][ix] = sf_cmul(pk[iy][ix],
-                                        cexpf(sf_crmul(sf_csub(co,cc),sf_d(cub->az))));
+				   cexpf(sf_crmul(sf_csub(co,cc),sf_d(cub->az))));
             );
 #endif
 
