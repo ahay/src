@@ -152,6 +152,8 @@ def genwfl(wfl,sou,coo,slo,down,causal,custom,par):
 #         %(eiccustom)s
 #         ''' %par)
 
+# ------------------------------------------------------------
+# FWI kernel (Z extrapolation)
 def fwikerZ(ker,dws,ss,dwr,rr,slo,pad,custom,par):
 
      padx=0.5*(pad-par['nx'])
@@ -184,6 +186,8 @@ def fwikerZ(ker,dws,ss,dwr,rr,slo,pad,custom,par):
           stack axis=4 | real | window | transp
           '''%(par['nx'],par['ox']),stdin=0)
 
+# ------------------------------------------------------------
+# FWI kernel (X extrapolation)
 def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
      Flow(ss+'_T',ss,'reverse which=1 opt=i')
      Flow(rr+'_T',rr,'reverse which=1 opt=i')
@@ -216,3 +220,5 @@ def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
           window squeeze=n n1=%d min1=%g |
           stack axis=4 | real | window
           '''%(par['nz'],par['oz']),stdin=0)
+
+

@@ -345,3 +345,15 @@ def zofmigCD(imag,data,rcoo,velo,custom,par):
               stdin=0,
               stdout=0)
     
+# ------------------------------------------------------------
+# FWI kernel
+def fwiker(ker,dts,ss,dtr,rr,vel,custom,par):
+    
+    fdmod.cdafd(ker+'_SD',ker+'_SW',dts,vel,ss,rr,custom+iwindow(par),par)
+
+    Flow(dtr+'_R',dtr,'reverse which=2 opt=i verb=y')
+    fdmod.cdafd(ker+'_RD',ker+'_RW',dtr+'_R',vel,rr,ss,custom+iwindow(par),par)
+    
+    cic(ker,ker+'_SW',ker+'_RW','',par,isreversed=0)
+
+
