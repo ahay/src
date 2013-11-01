@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "aastretch.h"
-
 int main(int argc, char* argv[])
 {
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
@@ -58,7 +56,7 @@ int main(int argc, char* argv[])
     ampl = sf_floatalloc(n1);
 
     /*** Initialize stretch ***/
-    aastretch_init (false, n1, 0., 1.0, n1);
+    sf_aastretch_init (false, n1, 0., 1.0, n1);
 
     f = fudge;
     f *= f*f/(nb*nb);
@@ -104,8 +102,8 @@ int main(int argc, char* argv[])
 		    }
 		} 
 		
-		aastretch_define (time,delt,NULL);
-		aastretch_lop (false,true,n1,n1,ampl,dense[id]);
+		sf_aastretch_define (time,delt,NULL);
+		sf_aastretch_lop (false,true,n1,n1,ampl,dense[id]);
 	    }
 	}
 	sf_floatwrite(dense[0],n1*nd,out);

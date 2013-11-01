@@ -17,15 +17,21 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-
 #include "aastretch.h"
+
+#include "_bool.h"
+/*^*/
+
+#include "alloc.h"
+#include "doubint.h"
+#include "error.h"
+#include "adjnull.h"
 
 static int nt, nd, nk, **x;
 static float t0,dt, **w, *a, *tmp, *tmp2;
 static bool *m;
 
-void aastretch_init (bool box /* if box instead of triangle */,
+void sf_aastretch_init (bool box /* if box instead of triangle */,
 		     int n1   /* trace length */, 
 		     float o1 /* trace origin */, 
 		     float d1 /* trace sampling */, 
@@ -48,7 +54,7 @@ void aastretch_init (bool box /* if box instead of triangle */,
     tmp2 = sf_floatalloc(n1);
 }
 
-void aastretch_define (const float *coord /* data coordinates [nd] */, 
+void sf_aastretch_define (const float *coord /* data coordinates [nd] */, 
 		       const float *delt  /* antialiasing length [nd] */, 
 		       const float *amp   /* amplitude [nd] */)
 /*< Set up interpolation >*/
@@ -86,7 +92,7 @@ void aastretch_define (const float *coord /* data coordinates [nd] */,
     }
 }
 
-void aastretch_lop (bool adj    /* adjoint flag */,
+void sf_aastretch_lop (bool adj    /* adjoint flag */,
 		    bool add    /* addition flag */,
 		    int n1, int n2, /* sizes */
 		    float *ord  /* data [nd] */, 
@@ -158,7 +164,7 @@ void aastretch_lop (bool adj    /* adjoint flag */,
     } 
 }
 
-void aastretch_close (void)
+void sf_aastretch_close (void)
 /*< free allocated storage >*/
 {
     free (x[0]);
@@ -171,4 +177,4 @@ void aastretch_close (void)
     free (tmp2);
 }
 
-/* 	$Id: aastretch.c 6381 2010-07-19 22:55:50Z sfomel $ */
+/* 	$Id: aastretch.c 7107 2011-04-10 02:04:14Z ivlad $ */

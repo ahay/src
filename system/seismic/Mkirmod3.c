@@ -24,7 +24,6 @@
 #include "kirmod.h"
 #include "kirmod3.h"
 #include "ricker.h"
-#include "aastretch.h"
 
 int main(int argc, char* argv[]) 
 {
@@ -266,7 +265,7 @@ int main(int argc, char* argv[])
 
 
     /*** Initialize stretch ***/
-    aastretch_init (false, nt, t0, dt, nxyc);
+    sf_aastretch_init (false, nt, t0, dt, nxyc);
 
     time = sf_floatalloc3(nx,ny,nc);
     ampl = sf_floatalloc3(nx,ny,nc);
@@ -355,8 +354,8 @@ int main(int argc, char* argv[])
 					      fabsf(ts->ty+tg->ty)*dy); 
 		}
 	    }}
-	    aastretch_define (time[0][0],delt[0][0],NULL);
-	    aastretch_lop (false,false,nxyc,nt,ampl[0][0],trace);
+	    sf_aastretch_define (time[0][0],delt[0][0],NULL);
+	    sf_aastretch_lop (false,false,nxyc,nt,ampl[0][0],trace);
 	    
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);

@@ -22,7 +22,6 @@ Requires the input to be in (time,offset,shot)
 
 #include <math.h>
 #include <rsf.h>
-#include "aastretch.h"
 
 int main(int argc, char* argv[])
 {
@@ -85,7 +84,7 @@ int main(int argc, char* argv[])
     cinp = sf_floatalloc2(nt,nh);
     cout = sf_floatalloc(nt);
 
-    aastretch_init (false, nt, t0, dt, nt);
+    sf_aastretch_init (false, nt, t0, dt, nt);
 
     for (is=0; is < ns; is++) {
 	sf_warning("shot %d of %d",is+1, ns);
@@ -114,8 +113,8 @@ int main(int argc, char* argv[])
 		    amp[it]=1.;
 		}  /* it */
 
-		aastretch_define (str, tx, amp);
-		aastretch_lop (true,true,nt,nt,cout,cinp[ih]);
+		sf_aastretch_define (str, tx, amp);
+		sf_aastretch_lop (true,true,nt,nt,cout,cinp[ih]);
 
 		if (off) sf_floatwrite (cout,nt,out);
 	    } /* h */

@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "aastretch.h"
-
 int main(int argc, char* argv[])
 {
     int nt, nx, nv, ix, it;
@@ -79,7 +77,7 @@ int main(int argc, char* argv[])
 
     sf_adjnull(adj,false,nt,nt*nx,stack,gather[0]);
 
-    aastretch_init (box, nt, o1, d1, nt);
+    sf_aastretch_init (box, nt, o1, d1, nt);
 
     for (ix=0; ix < nx; ix++) {
 	slow = (o2 + d2*ix)/vel;
@@ -96,8 +94,8 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	aastretch_define (coord, delt, NULL);
-	aastretch_lop (adj,true,nt,nt,stack,gather[ix]);
+	sf_aastretch_define (coord, delt, NULL);
+	sf_aastretch_lop (adj,true,nt,nt,stack,gather[ix]);
     }
 
     if (adj) {

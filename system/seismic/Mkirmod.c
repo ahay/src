@@ -28,7 +28,6 @@ http://ahay.org/rsflog/index.php?/archives/308-Program-of-the-month-sfkirmod.htm
 #include "kirmod.h"
 #include "kirmod2.h"
 #include "ricker.h"
-#include "aastretch.h"
 
 int main(int argc, char* argv[]) 
 {
@@ -342,7 +341,7 @@ int main(int argc, char* argv[])
     }
     
     /*** Initialize stretch ***/
-    aastretch_init (false, nt, t0, dt, nxc);
+    sf_aastretch_init (false, nt, t0, dt, nxc);
 
     time = sf_floatalloc2(nx,nc);
     ampl = sf_floatalloc2(nx,nc);
@@ -400,7 +399,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    aastretch_define (time[0],delt[0],NULL);
+	    sf_aastretch_define (time[0],delt[0],NULL);
 
 	    if (adj) {
 		sf_floatread(trace2,nt,modl);
@@ -408,7 +407,7 @@ int main(int argc, char* argv[])
 		/* convolve with Ricker wavelet */
 		sf_freqfilt_lop(true,false,nt,nt,trace,trace2);
 	    
-		aastretch_lop (true,false,nxc,nt,ampl[0],trace); 
+		sf_aastretch_lop (true,false,nxc,nt,ampl[0],trace); 
 
                 /* aastretch_lop (true,false,nxc,nt,ampl[0],trace2); */
 	    }
@@ -460,7 +459,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    if (!adj) {
-		aastretch_lop (false,false,nxc,nt,ampl[0],trace);
+		sf_aastretch_lop (false,false,nxc,nt,ampl[0],trace);
 
 		/* convolve with Ricker wavelet */
 		sf_freqfilt_lop(false,false,nt,nt,trace,trace2);

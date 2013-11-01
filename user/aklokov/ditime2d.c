@@ -17,7 +17,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include "aastretch.h"
 #include "stretch.h"
 
 // data parameters
@@ -66,7 +65,7 @@ void ditime2d_init (float dipo,  float dipd,  int dipn,  // dip angle axis
     isAA_   = isAA;
 
     if (isAA_) {
-	aastretch_init  (false, tn_, to_, td_, tn_);
+	sf_aastretch_init  (false, tn_, to_, td_, tn_);
 	sf_halfint_init (true, 2 * tn_, 1.f - 1.f / tn_);
     } else    
 	stretch_init  (tn_, to_, td_, tn_);
@@ -129,7 +128,7 @@ void ditime2d_close (void)
     free(tmp);
 
     if (isAA_) {
-	aastretch_close();
+	sf_aastretch_close();
 	sf_halfint_close();
     } else
 	stretch_close();
@@ -190,8 +189,8 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 		}	
 
 		if (isAA_) {
-		    aastretch_define (str, tx, amp);
-		    sf_chain (sf_halfint_lop, aastretch_lop,
+		    sf_aastretch_define (str, tx, amp);
+		    sf_chain (sf_halfint_lop, sf_aastretch_lop,
 			      adj, true, tn_, tn_, tn_, modl + ixi * tn_, data + id * tn_, tmp);
 		} else {
 		    stretch_define (str);
@@ -221,8 +220,8 @@ void ditime2d_lop (bool adj, bool add, int modelSize, int dataSize,
 		}
 		
 		if (isAA_) {
-		    aastretch_define (str, tx, amp);
-		    sf_chain (sf_halfint_lop, aastretch_lop,
+		    sf_aastretch_define (str, tx, amp);
+		    sf_chain (sf_halfint_lop, sf_aastretch_lop,
 			      adj, true, tn_, tn_, tn_, modl + (offset + id0) * tn_, data + id * tn_, tmp);
 		} else {
 		    stretch_define (str);

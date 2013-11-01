@@ -1,1 +1,0 @@
-../../system/seismic/aastretch.c

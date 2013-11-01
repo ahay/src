@@ -22,7 +22,6 @@ Requires the input to be in (time,cmp x,cmp y,offset)
 
 #include <math.h>
 #include <rsf.h>
-#include "aastretch.h"
 
 int main(int argc, char* argv[])
 {
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
 	tx[it] = 0.;
     }
 
-    aastretch_init (false, nt, t0, dt, nt);
+    sf_aastretch_init (false, nt, t0, dt, nt);
 
     if (inv && zero) sf_floatread (cinp[0][0],n123,in);
 
@@ -187,11 +186,11 @@ int main(int argc, char* argv[])
 		    } /* modeling - migration */ 
 		}  /* it */
 
-		aastretch_define (str, tx, amp);
+		sf_aastretch_define (str, tx, amp);
 		
 		for (iyin=iy1; iyin < iy2; iyin++) {
 		    for (ixin=ix1; ixin < ix2; ixin++) {
-			aastretch_lop (false,false,nt,nt,
+			sf_aastretch_lop (false,false,nt,nt,
 				       cinp[iyin][ixin], add);
 			for (it=0; it < nt; it++) {
 			    cout[iyin+iy][ixin+ix][it] += add[it];

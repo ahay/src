@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "ricker.h"
-#include "aastretch.h"
 
 int main(int argc, char *argv[])
 {
@@ -75,7 +74,7 @@ int main(int argc, char *argv[])
     delt = sf_floatalloc(nsp);
     ampl = sf_floatalloc(nsp);
 
-    aastretch_init (false, nt, t0, dt, nsp);
+    sf_aastretch_init (false, nt, t0, dt, nsp);
 
     for (iy=0; iy < ny; iy++) {
 	y1 = y0 + iy*dy;
@@ -116,8 +115,8 @@ int main(int argc, char *argv[])
 		}
 	    }
 
-	    aastretch_define (time,delt,NULL);
-	    aastretch_lop (false,false,nsp,nt,ampl,trace);
+	    sf_aastretch_define (time,delt,NULL);
+	    sf_aastretch_lop (false,false,nsp,nt,ampl,trace);
 	    
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);
