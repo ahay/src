@@ -2,8 +2,7 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs='''
-'''
+progs='rsf2handvel'
 
 pyprogs = 'handvel2rsf'
 
