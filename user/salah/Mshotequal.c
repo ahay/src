@@ -24,7 +24,8 @@ int main (int argc, char* argv[])
 {
     int n1,n2,i3,i2,n4,j,n12,fold,ndim, mdim;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], *mk;
-    float *d, *sht, *x, mean, std, sum, amp;
+    float *d, *sht, *x, mean, std, sum, amp=0.0;
+    bool verb;
     sf_file in, out, msk, scl;
 
     sf_init (argc,argv);
@@ -38,6 +39,9 @@ int main (int argc, char* argv[])
     n4 = sf_leftsize(in,2);
     n12=n1*n2;
 
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
     /* input file*/
     if (! (sf_getstring("mask") || 
                sf_histstring(in,"mask")))
@@ -46,8 +50,8 @@ int main (int argc, char* argv[])
     msk = sf_input("mask");
     if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
 
-    if (!sf_getfloat("amp",&amp)) amp=0.0;
-    /*maximum amplitude value to include*/
+    sf_getfloat("amp",&amp);
+    /*exclude amplitudes greater than amp*/
 
     ndim = sf_filedims(in,n);
     mdim = sf_filedims(msk,m);
@@ -86,8 +90,10 @@ int main (int argc, char* argv[])
         /* compute mean */
 	for (i2=0; i2 < n12; i2++) {
            if (sht[i2]!=0.0 && mk[i2]!=0 ) {
-		sum  +=sht[i2];
-                fold +=1;
+                if ( amp==0.0 || abs(sht[i2]) < abs(amp) ){        
+                    sum  +=sht[i2];
+                    fold +=1;
+                }
            }     
         }
         if (fold > 0) mean=sum/fold;
@@ -95,9 +101,10 @@ int main (int argc, char* argv[])
         /* compute standard deviation */
         for (i2=0; i2 < n12; i2++) {
            if (sht[i2]!=0.0 && mk[i2]!=0 ) {
-               if (!(amp && abs(sht[i2]) < abs(amp)))
-                    continue;
-               std += (sht[i2]-mean)*(sht[i2]-mean);
+               //if (!(amp && abs(sht[i2]) < abs(amp)))
+               //     continue;
+               if ( amp==0.0 || abs(sht[i2]) < abs(amp) )
+                  std += (sht[i2]-mean)*(sht[i2]-mean);
            }     
         }
         if (fold > 0) std =sqrtf(std/(fold-1));
@@ -110,6 +117,8 @@ int main (int argc, char* argv[])
                 d[i2+i3*n12]=sht[i2];
         x[0+i3*2]=mean;
         x[1+i3*2]=std;
+
+        if (verb) sf_warning("shot %8d-> mean:%8g std:%8g, fold:%8d\n;",i3+1,mean,std,fold);
     }
     sf_floatwrite (d,n4*n12,out);
     if (scl)
