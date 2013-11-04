@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "linearfit.h"
-#include "gaussel.h"
 
 void linearfit (int nd        /* data length */,
 		float *dat    /* input data */,
@@ -31,7 +30,7 @@ void linearfit (int nd        /* data length */,
     float *rhs, **mat;
 
     nc = 2;
-    gaussel_init(nc);
+    sf_gaussel_init(nc);
     rhs = sf_floatalloc(nc);
     mat = sf_floatalloc2(nc,nc);
 
@@ -56,7 +55,7 @@ void linearfit (int nd        /* data length */,
     }
     
     /* inversion */
-    gaussel_solve(mat,rhs,sol);
+    sf_gaussel_solve(mat,rhs,sol);
     
     /* compute Ac */
     for (i1=0; i1 < nd; i1++) {

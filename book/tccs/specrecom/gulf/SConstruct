@@ -53,7 +53,7 @@ Plot('rick3',
      min1=0 max1=120 min2=0 max2=15000 font=2 titlefat=4 labelfat=2
      ''' % nc3)
 Plot('check3', 'rick3 tracespec', 'Overlay')
-nc4 = 9
+nc4 = 8
 Flow('rick4 tracema1 tracema2', 'tracespec', 'rickerfit n=%d verb=y ma1=${TARGETS[1]} ma2=${TARGETS[2]}' % nc4)
 Plot('rick4',
      '''

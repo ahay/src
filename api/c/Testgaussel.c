@@ -17,8 +17,8 @@ int main(void)
     a[2] = a2;
     a[3] = a3;
 
-    gaussel_init(4);
-    gaussel_solve(a,b,x);
+    sf_gaussel_init(4);
+    sf_gaussel_solve(a,b,x);
 
     printf("%g %g %g %g\n",x[0],x[1],x[2],x[3]);
 

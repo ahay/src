@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "gaussel.h"
-
 int main(int argc, char* argv[])
 {
     bool linear;
@@ -82,7 +80,7 @@ int main(int argc, char* argv[])
 	wfunc = func;
     }
 
-    gaussel_init(nc);
+    sf_gaussel_init(nc);
     sol = sf_floatalloc(nc);
     rhs = sf_floatalloc(nc);
     mat = sf_floatalloc2(nc,nc);
@@ -132,7 +130,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* inversion */
-	gaussel_solve(mat,rhs,sol);
+	sf_gaussel_solve(mat,rhs,sol);
 
 	if (NULL != coef) sf_floatwrite(sol,nc,coef);
 

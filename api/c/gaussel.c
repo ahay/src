@@ -16,30 +16,34 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
 #include "gaussel.h"
+
+#include "_defs.h"
+#include "alloc.h"
+#include "error.h"
+#include "c99.h"
 
 static int n;
 static float **d;
 
-void gaussel_init (int size)
+void sf_gaussel_init (int size)
 /*< initialize >*/
 {
     n = size;
     d = sf_floatalloc2(n+1,n);
 }
 
-void gaussel_close (void)
+void sf_gaussel_close (void)
 /*< free allocated storage >*/
 {
     free(*d);
     free(d);
 }
 
-void gaussel_solve (float **a       /* matrix [size][size] */, 
-		    const float *b  /* rhs [size] */, 
-		    float *x        /* solution [size] */)
+void sf_gaussel_solve (float **a       /* matrix [size][size] */, 
+		       const float *b  /* rhs [size] */, 
+		       float *x        /* solution [size] */)
 /*< solve a*x = b >*/
 {
     float dmax, di;

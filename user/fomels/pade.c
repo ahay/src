@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "pade.h"
-#include "gaussel.h"
 
 static float *w1, **w;
 static int m;
@@ -30,7 +29,7 @@ void pade_init (int order)
     m = order;
     w = sf_floatalloc2(m,m);
     w1 = sf_floatalloc(m);
-    gaussel_init(m);
+    sf_gaussel_init(m);
 }    
 
 void pade_close (void)
@@ -39,7 +38,7 @@ void pade_close (void)
     free(*w);
     free(w);
     free(w1);
-    gaussel_close();
+    sf_gaussel_close();
 }
 
 void pade_zip (int n, const float *d, float *c)
@@ -116,7 +115,7 @@ void pade_apply (int n, const float *c /* [n] */, int na, float * a, float *b)
     }
 
     /* actually, a toeplitz matrix, but we are too lazy */
-    gaussel_solve (w,w1,b);
+    sf_gaussel_solve (w,w1,b);
 
     /* convolution */
     for (i=0; i < n; i++) {

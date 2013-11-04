@@ -17,11 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <float.h>
-#include <math.h>
 #include <rsf.h>
-#include <stdio.h>
-#include "gaussel.h"
 
 int main(int argc, char* argv[])
 {
@@ -121,7 +117,7 @@ int main(int argc, char* argv[])
     sf_fileflush(ma,in);
 
     data = sf_floatalloc(na);
-    eps = 10.*FLT_EPSILON;
+    eps = 10.*SF_EPS;
 //    eps *= eps;
 
     /* output gamma */
@@ -238,8 +234,8 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    gaussel_init(n);
-	    gaussel_solve(rs, rtd, a);
+	    sf_gaussel_init(n);
+	    sf_gaussel_solve(rs, rtd, a);
 
 //	    for (ib = 0; ib < na; ib++) {
 //		for (k = 0; k < n; k++) {
@@ -289,8 +285,8 @@ int main(int argc, char* argv[])
 		rkd[k] = rptd[k]-rka[k];
 	    }
 
-	    gaussel_init(n);
-	    gaussel_solve(rs, rkd, ap);
+	    sf_gaussel_init(n);
+	    sf_gaussel_solve(rs, rkd, ap);
 
 /*DM=inverse((X transpose X)) X transpose Y */
 /*aprarp is X; gamma is Y*/
@@ -342,8 +338,8 @@ int main(int argc, char* argv[])
 //		sf_warning("gt=%g",gt[k]);
 	    }
 
-	    gaussel_init(n);
-	    gaussel_solve(mt, gt, dm);
+	    sf_gaussel_init(n);
+	    sf_gaussel_solve(mt, gt, dm);
 
 	    d = 0;
 	    for (ib = 0; ib < na; ib++) {

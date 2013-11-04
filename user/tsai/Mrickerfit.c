@@ -1,6 +1,7 @@
 /* Model wavelet spectrum by fitting spectral components of ricker wavelet.
-n is the number of components. ma1 is amplitude, ma2 is peak frequency.
- */
+
+   n is the number of components. ma1 is amplitude, ma2 is peak frequency.
+*/
 
 /*
   Copyright (C) 2011 University of Texas at Austin
@@ -20,15 +21,11 @@ n is the number of components. ma1 is amplitude, ma2 is peak frequency.
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <float.h>
-#include <math.h>
 #include <rsf.h>
-#include <stdio.h>
-#include "gaussel.h"
 
 int main(int argc, char* argv[])
 {
-    int n2, na, ia, i, j, niter, k, iter, n, l, ib;
+    int n2, na, ia, i, niter, k, iter, n, l, ib;
     float eps, f, f0, f2, df;
     float *m0=NULL, *a, *m, *m2, *m3, *e, *ap; /*initial frequency*/
     float *data, *dataout, **rt, **r, **rs, **rp, **rpt; /*ricker spectrum, r transpose, spectrum related matrix, partial ricker spectrum*/
@@ -50,16 +47,16 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&df)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
     /*number of terms*/
-    if (sf_getint("n",&n) && !sf_getfloats("m",m0,n)) {
-	m0 = sf_floatalloc(n);
+    if (!sf_getint("n",&n)) sf_error("n is not specified.");
+    
+    m0 = sf_floatalloc(n);
+
+    if (!sf_getfloats("m",m0,n)) {
 	for (i=0; i<n; i++) {
 	    m0[i] = f0+0.3/n*(i+1)*(na-1)*df;
 	}
     } 
-    else
-    {
-	sf_error("n is not specified.");
-    }
+
     for (i=0; i<n; i++) {
 	sf_warning("i=%d m0=%g f0=%g", i, m0[i], f0);
     }
@@ -81,46 +78,42 @@ int main(int argc, char* argv[])
 
 
     data = sf_floatalloc(na);
-    eps = 10.*FLT_EPSILON;
+    eps = 10.*SF_EPS;
     eps *= eps;
 
+
+    m2 = sf_floatalloc(n);
+    m3 = sf_floatalloc(n);
+    e = sf_floatalloc(n);
+    a = sf_floatalloc(n);
+    r = sf_floatalloc2(n,na);
+    rp = sf_floatalloc2(n,na);
+    rt = sf_floatalloc2(na,n);
+    rpt = sf_floatalloc2(na,n);
+    rtd = sf_floatalloc(n);
+    rptd = sf_floatalloc(n);
+    rs = sf_floatalloc2(n,n);
+    rptr = sf_floatalloc2(n,n);
+    rtrp = sf_floatalloc2(n,n);
+    rk = sf_floatalloc2(n,n);
+    rka = sf_floatalloc(n);
+    rptd = sf_floatalloc(n);
+    rkd = sf_floatalloc(n);
+    raprpa = sf_floatalloc2(n,na);
+    rpa = sf_floatalloc2(n,na);
+    rap = sf_floatalloc2(n,na);
+    ap = sf_floatalloc(n);
+    gamma = sf_floatalloc(na);
+    ra = sf_floatalloc(na);
+    raprpat = sf_floatalloc2(na,n);
+    dm = sf_floatalloc(n);
+    est = sf_floatalloc(na);
+    mt = sf_floatalloc2(n,n);
+    m = sf_floatalloc(n);
+    sf_gaussel_init(n);
+
     for (i=0; i < n2; i++) {
-	sf_warning("slice %d of %d;",i+1,n2);
 	sf_floatread(data,na,in);
-
-	m = sf_floatalloc(n);
-
-	for (j = 0; j < n; j++) {
-	    m[j] = m0[j];
-	}
-
-	m2 = sf_floatalloc(n);
-	m3 = sf_floatalloc(n);
-	e = sf_floatalloc(n);
-	a = sf_floatalloc(n);
-	r = sf_floatalloc2(n,na);
-	rp = sf_floatalloc2(n,na);
-	rt = sf_floatalloc2(na,n);
-	rpt = sf_floatalloc2(na,n);
-	rtd = sf_floatalloc(n);
-	rptd = sf_floatalloc(n);
-	rs = sf_floatalloc2(n,n);
-	rptr = sf_floatalloc2(n,n);
-	rtrp = sf_floatalloc2(n,n);
-	rk = sf_floatalloc2(n,n);
-	rka = sf_floatalloc(n);
-	rptd = sf_floatalloc(n);
-	rkd = sf_floatalloc(n);
-	raprpa = sf_floatalloc2(n,na);
-	rpa = sf_floatalloc2(n,na);
-	rap = sf_floatalloc2(n,na);
-	ap = sf_floatalloc(n);
-	gamma = sf_floatalloc(na);
-	ra = sf_floatalloc(na);
-	raprpat = sf_floatalloc2(na,n);
-	dm = sf_floatalloc(n);
-	est = sf_floatalloc(na);
-	mt = sf_floatalloc2(n,n);
 
 	for (k=0;k<n;k++) {
 	    m[k] = m0[k];
@@ -135,7 +128,7 @@ int main(int argc, char* argv[])
 		for (ia = 0; ia < na; ia++) {
 		    f = f0 + ia*df;
 		    f2 = f*f;
-		    e[k] = exp(-f2/m2[k]);
+		    e[k] = expf(-f2/m2[k]);
 		    rt[k][ia] = e[k]*f2/m2[k];
 		    rpt[k][ia] = 2.*e[k]*f2*(f2-m2[k])/(m3[k]*m2[k]);
 		    rtd[k] += rt[k][ia]*data[ia];
@@ -178,17 +171,16 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    gaussel_init(n);
-	    gaussel_solve(rs, rtd, a);
+	    sf_gaussel_solve(rs, rtd, a);
 
 	    for (k = 0; k < n; k++) {
-		for (l = 1; l < n; l++) {
+		for (l = 0; l < n; l++) {
 		    rk[k][l] = rptr[k][l]+rtrp[k][l];
 		}
 	    }
 
 	    for (k = 0; k < n; k++) {
-		rka[k] = 0;
+		rka[k] = 0.0f;
 		for (l = 0; l < n; l++) {
 		    rka[k] += rk[k][l]*a[l];
 		}
@@ -205,17 +197,16 @@ int main(int argc, char* argv[])
 		rkd[k] = rptd[k]-rka[k];
 	    }
 
-	    gaussel_init(n);
-	    gaussel_solve(rs, rkd, ap);
+	    sf_gaussel_solve(rs, rkd, ap);
 
-/*aprarp is X; gamma is Y*/
+	    /*aprarp is X; gamma is Y*/
 
 	    for (ib = 0; ib < na; ib++) {
 		f = f0 + ib*df;
 		f2 = f*f;
 		ra[ib] = 0;
 		for (k = 0; k < n; k++) {
-		    ra[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
+		    ra[ib] += a[k]*expf(-f2/m2[k])*f2/m2[k];
 		}
 	    }    
 
@@ -247,7 +238,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-// least squares for delta m.	    
+	    /* least squares for delta m. */ 
 	    for (k = 0; k < n; k++) {
 		for (l = 0; l < n; l++) {
 		    mt[k][l] = 0;
@@ -264,8 +255,8 @@ int main(int argc, char* argv[])
 		    gt[k] += raprpat[k][ib]*gamma[ib];
 		}
 	    }
-	    gaussel_init(n);
-	    gaussel_solve(mt, gt, dm);
+
+	    sf_gaussel_solve(mt, gt, dm);
 
 	    r2 = 0;
 	    for (ib = 0; ib < na; ib++) {
@@ -273,7 +264,7 @@ int main(int argc, char* argv[])
 		f2 = f*f;
 		est[ib] = 0;
 		for (k = 0; k < n; k++) {
-		    est[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
+		    est[ib] += a[k]*expf(-f2/m2[k])*f2/m2[k];
 		}
 		r2 += (est[ib]-data[ib])*(est[ib]-data[ib]);
 	    }
@@ -292,7 +283,6 @@ int main(int argc, char* argv[])
 	}
       
 	sf_floatwrite(m2,n,ma1);
-
 	sf_floatwrite(a,n,ma2);
 
 	rss = 0;
@@ -302,7 +292,7 @@ int main(int argc, char* argv[])
 	    f2 = f*f;
 	    dataout[ib] = 0;
 	    for (k = 0; k < n; k++) {
-		dataout[ib] += a[k]*exp(-f2/m2[k])*f2/m2[k];
+		dataout[ib] += a[k]*expf(-f2/m2[k])*f2/m2[k];
 	    }
 	    rss += (data[ib]-dataout[ib])*(data[ib]-dataout[ib]);
 	}    
@@ -314,8 +304,6 @@ int main(int argc, char* argv[])
 
 	sf_floatwrite(dataout,na,out);
     }
-
-    sf_warning(".");
 
     exit (0);
 }
