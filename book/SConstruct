@@ -26,8 +26,9 @@ size *= 1024
 def publicproj(project):
     '''Check if the project is publicly accessible'''
     global all, size
-    if project in ('slim/geo2008NewInsightsPareto/geop',
-                   'rsf/bash/plot',
+    if project in ('rsf/bash/plot',
+                   'rsf/rsf/plplot',
+                   'slim/geo2008NewInsightsPareto/geop',
                    'tccs/opwd/wrap',
                    'tccs/avo/avo2'):
         return False
