@@ -308,7 +308,8 @@ class Project(Environment):
         self.environ = self.get('ENVIRON','')
 
         
-        self.jobs = GetOption('num_jobs') # getting information from 
+        self.jobs = GetOption('num_jobs') # getting information from scons -j
+        
         cluster = self.get('CLUSTER',os.environ.get('RSF_CLUSTER','localhost 1'))
         hosts = string.split(cluster)
         self.nodes = []
