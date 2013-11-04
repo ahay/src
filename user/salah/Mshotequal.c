@@ -18,13 +18,13 @@
 */
 
 #include <rsf.h>
+#include <math.h>
 
 int main (int argc, char* argv[])
 {
     int n1,n2,i3,i2,n4,j,n12,fold,ndim, mdim;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], *mk;
-    float *d, *sht, *x, mean, std, sum;
-    char *mask;
+    float *d, *sht, *x, mean, std, sum, amp;
     sf_file in, out, msk, scl;
 
     sf_init (argc,argv);
@@ -37,30 +37,32 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) sf_error("Need n2=");
     n4 = sf_leftsize(in,2);
     n12=n1*n2;
-   
-    mask = sf_getstring("mask");
-    /* mask file */
-    if (NULL == mask) { 
-	mask = sf_histstring(in,"mask");
-	if (NULL == mask) sf_error("Need mask=");
-    }
-    
-    msk = sf_input(mask);
+
+    /* input file*/
+    if (! (sf_getstring("mask") || 
+               sf_histstring(in,"mask")))
+         sf_error("Need mask=");
+
+    msk = sf_input("mask");
     if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
-    
+
+    if (!sf_getfloat("amp",&amp)) amp=0.0;
+    /*maximum amplitude value to include*/
+
     ndim = sf_filedims(in,n);
     mdim = sf_filedims(msk,m);
 
-    /*if (mdim != ndim) 
+    if (mdim != ndim) 
 	sf_error("Wrong dimensions: %d != %d",mdim,ndim);
-    */
+    
     for (j=0; j < ndim; j++) {
 	if (m[j] != n[j])
             sf_error("Size mismatch [n%d]: %d != %d",
 		     j+1,m[j],n[j]);
-    } 
+    }
+
+    /* output file*/
     if (NULL != sf_getstring("scaler")){
-        /* output scaler file*/
         scl = sf_output("scaler");
         sf_unshiftdim(in, scl, 2);
         sf_putint(scl,"n1",2);
@@ -68,7 +70,6 @@ int main (int argc, char* argv[])
 	scl = NULL;
     }
     
-       
     d   = sf_floatalloc(n12*n4);
     x   = sf_floatalloc(2*n4);
     sht = sf_floatalloc(n12);
@@ -94,6 +95,8 @@ int main (int argc, char* argv[])
         /* compute standard deviation */
         for (i2=0; i2 < n12; i2++) {
            if (sht[i2]!=0.0 && mk[i2]!=0 ) {
+               if (!(amp && abs(sht[i2]) < abs(amp)))
+                    continue;
                std += (sht[i2]-mean)*(sht[i2]-mean);
            }     
         }
