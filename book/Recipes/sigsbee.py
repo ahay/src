@@ -38,7 +38,11 @@ def param():
     par['nrall']=348
     par['drall']=0.02286
 
+    # number of nodes
     par['nodes']=8
+
+    # CIG position
+    par['xCIG']=9.15
     
     return par
 
