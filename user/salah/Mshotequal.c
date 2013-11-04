@@ -102,7 +102,7 @@ int main (int argc, char* argv[])
         /* scale time samples*/
         for (i2=0; i2 < n12; i2++) 
             if (mean!=0.0 && std!=0.0)
-                d[i2+i3*n12]=(mean-sht[i2])/std;
+                d[i2+i3*n12]=(sht[i2]-mean)/std;
             else
                 d[i2+i3*n12]=sht[i2];
         x[0+i3*2]=mean;
