@@ -21,15 +21,14 @@
 
 #include "lbfgs.h"
 
-#include "iwidip.h"
 #include "iwimodl.h"
 #include "iwigrad.h"
 
 #include "iwilbfgs.h"
 
 static bool verb, bound;
-static int nn[3], ss[2], dorder, grect[2], gliter;
-static float dd[3], **vel, plower, pupper, geps;
+static int nn[3], ss[2], grect[2];
+static float dd[3], **vel;
 static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
 static lbfgsfloatval_t gscale, lower, upper;
@@ -68,12 +67,8 @@ void iwilbfgs_init(bool verb0,
 		   sf_file source, sf_file data,
 		   bool load, char *datapath,
 		   int uts,
-		   int prect1, int prect2, int prect3,
-		   int pliter,
-		   float plower0, float pupper0, 
-		   int dorder0,
 		   int grect1, int grect2,
-		   int gliter0, float geps0, float gscale0,
+		   float gscale0,
 		   float lower0, float upper0)
 /*< initialization >*/
 {
@@ -85,11 +80,7 @@ void iwilbfgs_init(bool verb0,
     dd[0] = d1; dd[1] = d2; dd[2] = d2;
 
     /* control */
-    plower = plower0;
-    pupper = pupper0;
-    dorder = dorder0;
     grect[0] = grect1; grect[1] = grect2;
-    gliter = gliter0; geps = geps0;
     gscale = (lbfgsfloatval_t) gscale0;
     lower = (lbfgsfloatval_t) lower0;
     upper = (lbfgsfloatval_t) upper0;
@@ -113,11 +104,6 @@ void iwilbfgs_init(bool verb0,
 		 nh,ns, ow,dw,nw,
 		 source,data, sfile,rfile,
 		 load,datapath, uts);
-
-    /* dip estimator */
-    iwidip_init(n1,n2,nh, d1,d2,
-		prect1,prect2,prect3,
-		pliter);
 
     /* tomography operator */
     iwigrad_init(order,npml,
@@ -176,17 +162,10 @@ lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
 	}
     }
 
-    /* estimate slope */
-    iwidip_fdip(image, pimage);
-
     /* evaluate objective function */
     for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
-	/* thresholding */
-	if (fabsf(pimage[i]) >= plower && 
-	    fabsf(pimage[i]) <= pupper) {
-	    fx += (lbfgsfloatval_t) 
-		image[i]*wght[0][0][i]*image[i]*wght[0][0][i];
-	}
+	fx += (lbfgsfloatval_t) 
+	    image[i]*wght[0][0][i]*image[i]*wght[0][0][i];
     }
 
     return fx;
@@ -198,7 +177,6 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 /*< prepare image perturbation and compute gradient >*/
 {
     int i1, i2, i3, ii;
-    float *din, *dout, *p;
     sf_triangle tr;
 
     if (bound) {
@@ -214,47 +192,7 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     if (verb) sf_warning("Computing gradient...");
 
     /* set-up linear operator */
-    iwigrad_set(vel, wght,prec);
-
-    /* partial i partial z */
-    din  = sf_floatalloc(nn[0]);
-    dout = sf_floatalloc(nn[0]);
-
-    sf_deriv_init(nn[0], dorder, 0.);
-
-    for (i3=0; i3 < nn[2]; i3++) {
-	for (i2=0; i2 < nn[1]; i2++) {
-	    for (i1=0; i1 < nn[0]; i1++) {
-		din[i1] = image[i3*nn[0]*nn[1]+i2*nn[0]+i1];
-	    }
-	    sf_deriv(din,dout);
-	    for (i1=0; i1 < nn[0]; i1++) {
-		pipz[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1]/dd[0];
-	    }
-	}
-    }
-
-    sf_deriv_free(); free(din); free(dout);
-
-    /* partial i partial h */
-    din  = sf_floatalloc(nn[2]);
-    dout = sf_floatalloc(nn[2]);
-
-    sf_deriv_init(nn[2], dorder, 0.);
-
-    for (i2=0; i2 < nn[1]; i2++) {
-	for (i1=0; i1 < nn[0]; i1++) {
-	    for (i3=0; i3 < nn[2]; i3++) {
-		din[i3] = image[i3*nn[0]*nn[1]+i2*nn[0]+i1];
-	    }
-	    sf_deriv(din,dout);
-	    for (i3=0; i3 < nn[2]; i3++) {
-		piph[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i3]/dd[2];
-	    }
-	}
-    }
-
-    sf_deriv_free(); free(din); free(dout);
+    iwigrad_set(vel, wght,prec);    
 
     /* prepare image perturbation */
     for (i3=0; i3 < nn[2]; i3++) {
@@ -262,68 +200,32 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
 	    for (i1=0; i1 < nn[0]; i1++) {
 		ii = i3*nn[0]*nn[1]+i2*nn[0]+i1;
 
-		/* thresholding */
-		if (fabsf(pimage[ii]) < plower || 
-		    fabsf(pimage[ii]) > pupper) {
-		    pimage[ii] = 0.;
-		    continue;
-		}
-
-		/* non-stationary focusing */
-		if (i3 < (nn[2]-1)/2) {
-		    pimage[ii] = (pimage[ii]<0.? 1.: -1.)
-			*(pipz[ii]-pimage[ii]*piph[ii])
-			/sqrtf(1.+pimage[ii]*pimage[ii])
-			*wght[0][0][ii];
-		} else if (i3 == (nn[2]-1)/2) {
-		    pimage[ii] = 0.;
-		} else {
-		    pimage[ii] = (pimage[ii]>0.? 1.: -1.)
-			*(pipz[ii]-pimage[ii]*piph[ii])
-			/sqrtf(1.+pimage[ii]*pimage[ii])
-			*wght[0][0][ii];
-		}
+		pimage[ii] = image[ii]*wght[i3][i2][i1];
 	    }
 	}
     }
 
-    if (gliter == 0) {
-	/* steepest descent */
-	iwigrad_oper(true,false, nn[0]*nn[1],nn[0]*nn[1]*nn[2], image,pimage);
+    /* steepest descent */
+    iwigrad_oper(true,false, nn[0]*nn[1],nn[0]*nn[1]*nn[2], image,pimage);
 
-	/* smooth gradient */
-	tr = sf_triangle_init(grect[0],nn[0]);
-	for (i2=0; i2 < nn[1]; i2++) {
-	    i1 = sf_first_index(0,i2,2,nn,ss);
-
-	    sf_smooth (tr,i1,ss[0],false,false,image);
-	    sf_smooth2(tr,i1,ss[0],false,false,image);
-	}
-	sf_triangle_close(tr);
+    /* smooth gradient */
+    tr = sf_triangle_init(grect[0],nn[0]);
+    for (i2=0; i2 < nn[1]; i2++) {
+	i1 = sf_first_index(0,i2,2,nn,ss);
 	
-	tr = sf_triangle_init(grect[1],nn[1]);
-	for (i1=0; i1 < nn[0]; i1++) {
-	    i2 = sf_first_index(1,i1,2,nn,ss);
-	    
-	    sf_smooth (tr,i2,ss[1],false,false,image);
-	    sf_smooth2(tr,i2,ss[1],false,false,image);
-	}
-	sf_triangle_close(tr);
-    } else {
-	/* shaping regularization */
-	sf_trianglen_init(2,grect,nn);
-	sf_repeat_init(nn[0]*nn[1],1,sf_trianglen_lop);
-
-	sf_conjgrad_init(nn[0]*nn[1],nn[0]*nn[1],
-			 nn[0]*nn[1]*nn[2],nn[0]*nn[1]*nn[2],
-			 geps,1.e-6,false,false);
-	p = sf_floatalloc(nn[0]*nn[1]);
-	
-	/* Gauss-Newton */
-	sf_conjgrad(NULL, iwigrad_oper,sf_repeat_lop, p,image,pimage,gliter);
-	
-	free(p); sf_conjgrad_close(); sf_trianglen_close();
+	sf_smooth (tr,i1,ss[0],false,false,image);
+	sf_smooth2(tr,i1,ss[0],false,false,image);
     }
+    sf_triangle_close(tr);
+    
+    tr = sf_triangle_init(grect[1],nn[1]);
+    for (i1=0; i1 < nn[0]; i1++) {
+	i2 = sf_first_index(1,i1,2,nn,ss);
+	
+	sf_smooth (tr,i2,ss[1],false,false,image);
+	sf_smooth2(tr,i2,ss[1],false,false,image);
+    }
+    sf_triangle_close(tr);    
 
     /* convert to velocity */
     for (i2=0; i2 < nn[1]; i2++) {

@@ -66,9 +66,8 @@ int main(int argc, char* argv[])
 {
     bool verb, load;
     int n1, n2, npml, nh, ns, nw;
-    int prect[3], pliter;
-    int dorder, grect[2], gliter, mline;
-    float plower, pupper, geps, gscale, epsilon;
+    int grect[2], mline;
+    float gscale, epsilon;
     float d1, d2, **vel, dw, ow;
     char *datapath;
     sf_file in, out, source, data;
@@ -108,36 +107,12 @@ int main(int argc, char* argv[])
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
-    /* discretization scheme (default optimal 9-point) */
+    /* discretization scheme (default optimal 9-point) */    
 
-    if (!sf_getint("prect1",&prect[0])) prect[0]=5;
-    /* slope smoothing radius on axis 1 */
-    if (!sf_getint("prect2",&prect[1])) prect[1]=1;
-    /* slope smoothing radius on axis 2 */
-    if (!sf_getint("prect3",&prect[2])) prect[2]=5;
-    /* slope smoothing radius on axis 3 */
-
-    if (!sf_getint("pliter",&pliter)) pliter=20;
-    /* slope estimation # of linear iterations */
-
-    if (!sf_getfloat("plower",&plower)) plower=0.1;
-    /* slope thresholding lower limit */
-    if (!sf_getfloat("pupper",&pupper)) pupper=3.;
-    /* slope thresholding upper limit */
-
-    if (!sf_getint("dorder",&dorder)) dorder=6;
-    /* image derivative accuracy order */
-    
     if (!sf_getint("grect1",&grect[0])) grect[0]=5;
     /* gradient smoothing radius on axis 1 */
     if (!sf_getint("grect2",&grect[1])) grect[1]=5;
     /* gradient smoothing radius on axis 2 */
-
-    if (!sf_getint("gliter",&gliter)) gliter=1;
-    /* # of Gauss-Newton iterations */
-
-    if (!sf_getfloat("geps",&geps)) geps=0.;
-    /* regularization parameter for Gauss-Newton */
 
     if (!sf_getfloat("gscale",&gscale)) gscale=0.5;
     /* gradient re-scale */
@@ -202,12 +177,15 @@ int main(int argc, char* argv[])
     }
 
     /* read image weight */
+    wght = sf_floatalloc3(n1,n2,2*nh+1);    
+
     if (NULL == sf_getstring("weight")) {
 	weight = NULL;
-	wght = NULL;
+	for (i=0; i < n1*n2*(2*nh+1); i++) {
+	    wght[0][0][i] = 1.;
+	}
     } else {
 	weight = sf_input("weight");
-	wght = sf_floatalloc3(n1,n2,2*nh+1);
 	sf_floatread(wght[0][0],n1*n2*(2*nh+1),weight);
 	sf_fileclose(weight);
     }
@@ -237,11 +215,8 @@ int main(int argc, char* argv[])
 		  n1,n2, d1,d2,
 		  nh,ns, ow,dw,nw,
 		  source,data, load,datapath, uts,
-		  prect[0],prect[1],prect[2],
-		  pliter,plower,pupper,
-		  dorder,
 		  grect[0],grect[1],
-		  gliter,geps,gscale,
+		  gscale,
 		  lower,upper);
     
     /* initialize L-BFGS */

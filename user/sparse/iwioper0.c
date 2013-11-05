@@ -35,6 +35,7 @@ static void **Numeric;
 static double Control[UMFPACK_CONTROL];
 static double **Xx, **Xz, **Bx, **Bz;
 static sf_complex ****us, ****ur, ***as, ***ar;
+static bool mass;
 static int uts, ss[3];
 static char *datapath, **insert, **append;
 static size_t srclen, inslen;
@@ -193,8 +194,8 @@ void iwiadd(double omega,
 	    for (i=0; i < n1; i++) {    
 		dm[j*ss[1]+i] -= omega*omega
 		    *(prec==NULL? 1.: prec[j][i])*crealf(
-			conjf(iwiavrg(srce,i,j))*adjs[j][i]+
-			iwiavrg(recv,i,j)*conjf(adjr[j][i]));
+			conjf((mass? iwiavrg(srce,i,j): srce[j][i]))*adjs[j][i]+
+			(mass? iwiavrg(recv,i,j): recv[j][i])*conjf(adjr[j][i]));
 	    }
 	}
     } else {
@@ -204,8 +205,8 @@ void iwiadd(double omega,
 		    if (j-abs(ih) >= 0 && j+abs(ih) < n2) {
 			di[(ih+nh)*ss[2]+j*ss[1]+i] -= omega*omega
 			    *(wght==NULL? 1.: wght[ih+nh][j][i])*crealf(
-				recv[j+ih][i]*conj(iwiavrg(adjr,i,j-ih))+
-				conjf(srce[j-ih][i])*iwiavrg(adjs,i,j+ih));
+				recv[j+ih][i]*conj((mass? iwiavrg(adjr,i,j-ih): adjr[j-ih][i]))+
+				conjf(srce[j-ih][i])*(mass? iwiavrg(adjs,i,j+ih): adjs[j+ih][i]));
 		    }
 		}
 	    }
@@ -221,7 +222,7 @@ void iwi_init(int npml0,
 	      sf_file us0, sf_file ur0,
 	      char *datapath0,
 	      int uts0,
-	      char *order0)
+	      char *order0, bool mass0)
 /*< initialize >*/
 {
     npml = npml0;
@@ -240,6 +241,8 @@ void iwi_init(int npml0,
 
     order = order0;
     fdprep_order(order);
+
+    mass = mass0;
 
     ss[0] = 1; ss[1] = n1; ss[2] = n1*n2;
 

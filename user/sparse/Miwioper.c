@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj, load;
+    bool adj, load, mass;
     int n1, n2, npml; 
     int nh, ns, nw;
     float d1, d2, **vel, dw, ow;
@@ -67,6 +67,9 @@ int main(int argc, char* argv[])
 
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
+
+    if (!sf_getbool("mass",&mass)) mass=false;
+    /* if y, use discretization-based mass term */
 
     /* read model */
     if (NULL == sf_getstring("model"))
@@ -142,7 +145,7 @@ int main(int argc, char* argv[])
     
     /* initialize */
     iwi_init(npml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
-	     us,ur, load,datapath, uts, order);
+	     us,ur, load,datapath, uts, order,mass);
 
     /* set velocity and weight */
     iwi_set(vel,wght,prec);

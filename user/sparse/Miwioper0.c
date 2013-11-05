@@ -28,7 +28,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool adj;
+    bool adj, mass;
     int n1, n2, npml; 
     int nh, ns, nw;
     float d1, d2, dw, ow;
@@ -65,6 +65,9 @@ int main(int argc, char* argv[])
 
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
+
+    if (!sf_getbool("mass",&mass)) mass=false;
+    /* if y, use discretization-based mass term */
 
     /* read model */
     if (NULL == sf_getstring("model"))
@@ -134,7 +137,7 @@ int main(int argc, char* argv[])
     
     /* initialize */
     iwi_init(npml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
-	     us,ur, datapath, uts, order);
+	     us,ur, datapath, uts, order,mass);
 
     /* set weight and preconditioner */
     iwi_set(wght,prec);

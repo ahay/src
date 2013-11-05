@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, shape;
+    bool verb, mass, shape;
     int n1, n2, cgiter, npml; 
     int nh, ns, nw, n[2], rect[2];
     float d1, d2, dw, ow, tol;
@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
 
     if (NULL == (order = sf_getstring("order"))) order="j";
     /* discretization scheme (default optimal 9-point) */
+
+    if (!sf_getbool("mass",&mass)) mass=false;
+    /* if y, use discretization-based mass term */
 
     if (!sf_getint("cgiter",&cgiter)) cgiter=10;
     /* number of conjugate-gradient iterations */
@@ -152,7 +155,7 @@ int main(int argc, char* argv[])
 
     /* initialize operator */
     iwi_init(npml, n1,n2,d1,d2, nh,ns,ow,dw,nw,
-	     us,ur, datapath, uts, order);
+	     us,ur, datapath, uts, order,mass);
 
     /* initialize regularization */
     if (shape) {
