@@ -120,7 +120,7 @@ void opendev (int argc, char* argv[])
     dev.xmax = nx-1;
     dev.ymax = ny-1;
 
-    image = gdImageCreateTrueColor(nx,ny);
+    image = gdImageCreate(nx,ny);
 
     if (NULL == (color = sf_getstring("bgcolor"))) color="black";
     /* background color (black,white,light,dark) 
@@ -240,7 +240,7 @@ static void gd_write (void)
 		gdImageGifAnimAdd(image, pltout, 0, 0, 0, delay, 1, NULL);
 	    }
 	    oldimage = image;
-	    image = gdImageCreateTrueColor(nx,ny);
+	    image = gdImageCreate(nx,ny);
 	    gdImagePaletteCopy(image, oldimage);
 	    break;
 #endif
