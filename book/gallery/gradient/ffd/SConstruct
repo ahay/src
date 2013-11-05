@@ -19,35 +19,22 @@ Result('veloc',
 Flow('vel2','veloc','transp | scale dscale=0.5')
 
 # Zero-offset migration
-Flow('zomig','zodata vel2',
-     '''
-     reverse which=1 |
-     transp |
-     ffd0 nbt=50 nbb=49 nbl=50 nbr=49
-     vel=${SOURCES[1]}
-     ''')
+zomig = '''
+reverse which=1 |
+transp |
+ffd0 nbt=50 nbb=49 nbl=50 nbr=49 vel=${SOURCES[1]} |
+transp
+'''
+
+Flow('zomig','zodata vel2',zomig)
 
 gradient.zo_image('zomig')
 
 # Impulse response
-#Flow('impulse','zodata','spike k1=751 k2=176 | smooth rect1=2 rect2=2 repeat=2')
-Flow('impulse','zodata','spike k1=751 k2=176 | smooth rect1=6 rect2=6 repeat=3')
+gradient.get_impulse('impulse','zodata')
 
-Flow('impres','impulse vel2',
-     '''
-     reverse which=1 |
-     transp |
-     ffd0 nbt=50 nbb=49 nbl=50 nbr=49
-     vel=${SOURCES[1]}
-     ''')
+Flow('impres','impulse vel2',zomig)
 
-Plot('impres','grey title="Impulse Response" unit2=km transp=n')
+gradient.impulse_response('impres','veloc')
 
-Plot('theory','veloc',
-     '''
-     scale dscale=0.5 | eikonal yshot=5 | 
-     contour nc=1 c0=1.5 wantaxis=n wanttitle=n plotcol=3 plotfat=3
-     ''')
-
-Result('impres','impres theory','Overlay')
 End()

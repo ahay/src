@@ -83,19 +83,17 @@ int main(int argc, char* argv[])
 	    for (iw=0; iw < nw; iw++) {
 		w = w0+iw*dw;
 
-		if (fabsf(w) > fabsf(0.1f*dw)) {
-		    w = v2/w;
+		if (fabsf(w) < dw) w = SF_SIG(w)*dw;
 
-		    shift = sf_cmplx(cosf(w),sinf(w));
-
+		w = v2/w;
+		
+		shift = sf_cmplx(cosf(w),sinf(w));
+		
 #ifdef SF_HAS_COMPLEX_H
-		    ctrace[iw] *= shift;
+		ctrace[iw] *= shift;
 #else
-		    ctrace[iw] = sf_cmul(ctrace[iw],shift);
+		ctrace[iw] = sf_cmul(ctrace[iw],shift);
 #endif
-		} else {
-		    ctrace[iw] = sf_cmplx(0.0f,0.0f);
-		}	
 	    } /* w */
 
 	    sf_complexwrite (ctrace,nw,out);
