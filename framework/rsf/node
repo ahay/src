@@ -122,8 +122,6 @@ class Hosts(object):
         if not self.host:
             sys.stderr.write('Need to run start first\n')
             sys.exit(3)
-            
-        print 'runonnode: running command on %s' % self.host
         
         task="ssh "+self.host+' \"'+command+' \"'
 
@@ -157,6 +155,7 @@ if __name__ == "__main__":
     hosts.start()
     task = hosts.task(' '.join(sys.argv[2:]))
     os.system('date')
+    print task
     os.system(task)
     hosts.stop()
 
