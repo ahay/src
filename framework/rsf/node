@@ -1,16 +1,75 @@
 #!/usr/bin/env python
+
+# Copyright (C) 2013 University of Texas at Austin
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
 # next steps:
 # does lock block second task?
 # add change back to not running at end of task
 # write code in myproj to build hosts.txt
 # run test on stampede
 
-import fcntl, os, string, sys
+import fcntl, os, sys
+import rsf.path
+
+def ljust(string):
+    'left-justified record'
+    return string.ljust(40)
 
 class Hosts(object):
+    
     def __init__(self,hosts_file=None):
+        self._len = 40 # 
+        
         if not hosts_file:
-            hosts_file=os.environ.get('RSF_HOSTS','hosts.txt') # use RSFROOT default
+            # try environment first
+            hosts_file=os.environ.get('RSF_HOSTS')
+        if not hosts_file:
+            # let us create it
+            path = rsf.path.getpath(os.getcwd())
+            hosts_file = os.path.join(path,'hosts.txt')
+
+            try:
+                if (os.path.isfile(hosts_file)):
+                    os.unlink(hosts_file)
+                hosts_fd=open(self.hosts,'w')
+            except:
+                sys.stderr.write('Trouble opening hosts file "%s"\n' % hosts_file)
+                sys.exit(1)
+        
+            cluster = os.environ.get('RSF_CLUSTER')
+            if cluster:
+                sys.stderr.write('RSF_CLUSTER is deprecated.\n')
+            else:
+                cpu = rsf.path.cpus()
+                cluster = 'localhost %d' % cpu
+
+            hosts = cluster.split()
+            nodes = []
+            for i in range(1,len(hosts),2):
+                nh = int(hosts[i])
+                nodes.extend([hosts[i-1]]*nh)
+            
+            hosts_fd.write("numnodes %4d\n" % len(self.nodes))
+            hosts_fd.write(ljust('host')+'state\n') 
+            for host in self.nodes:
+                hosts_fd.write(ljust(host)+'notrunning\n')
+            hosts_fd.close()
+         
         try:
             self.hosts_fd=open(hosts_file,'r+')
         except:
@@ -33,11 +92,11 @@ class Hosts(object):
 
         # get notrunning node, mark it running
         hosts_txt=self.hosts_fd.readlines()
-        self.numnodes=int(string.split(hosts_txt[0])[1])
+        self.numnodes=int(hosts_txt[0].split()[1])
 
         idle_node=-1
         for node in range(self.numnodes):
-            if(string.split(hosts_txt[2+node])[1]=='notrunning'):
+            if(hosts_txt[2+node].split()[1]=='notrunning'):
                 idle_node=node
                 break
             
@@ -46,8 +105,8 @@ class Hosts(object):
                              'but all %d nodes are running.' % self.numnodes) 
             sys.exit(1)
     
-        self.host=string.split(hosts_txt[2+idle_node])[0]
-        hosts_txt[2+idle_node]=string.ljust(self.host,40)+string.ljust("running",10)+"\n"
+        self.host=hosts_txt[2+idle_node].split()[0]
+        hosts_txt[2+idle_node]=ljust(self.host)+'running\n'
 
         self.hosts_fd.seek(0)   
         for line in hosts_txt:
@@ -57,7 +116,7 @@ class Hosts(object):
         fcntl.lockf(self.hosts_fd,fcntl.LOCK_UN)
         #print "hosts_fd.txt unlocked"
 
-    def run(self,command):
+    def task(self,command):
         'runs command on the available host'
         
         if not self.host:
@@ -68,8 +127,7 @@ class Hosts(object):
         
         task="ssh "+self.host+' \"'+command+' \"'
 
-        os.system('date')
-        return os.system(task)
+        return task
 
     def stop(self):
         'lock hosts.txt, mark the node notrunning, unlock hosts.txt'
@@ -81,7 +139,7 @@ class Hosts(object):
         fcntl.lockf(self.hosts_fd,fcntl.LOCK_EX)
         self.hosts_fd.seek(0)   
         hosts_txt=self.hosts_fd.readlines()
-        hosts_txt[2+idle_node]=string.ljust(self.host,40)+string.ljust("notrunning",10)+"\n"
+        hosts_txt[2+idle_node]=ljust(self.host)+'notrunning\n'
 
         self.hosts_fd.seek(0)   
         for line in hosts_txt:
@@ -97,7 +155,9 @@ if __name__ == "__main__":
     hosts = Hosts(sys.argv[1])
 
     hosts.start()
-    retcode = hosts.run(' '.join(sys.argv[2:]))
+    task = hosts.task(' '.join(sys.argv[2:]))
+    os.system('date')
+    os.system(task)
     hosts.stop()
 
     sys.exit(retcode)
