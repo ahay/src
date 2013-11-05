@@ -347,12 +347,21 @@ def zofmigCD(imag,data,rcoo,velo,custom,par):
     
 # ------------------------------------------------------------
 # FWI kernel
-def fwiker(ker,dts,ss,dtr,rr,vel,custom,par):
+def fwikerCD(ker,dts,ss,dtr,rr,vel,custom,par):
     
     fdmod.cdafd(ker+'_SD',ker+'_SW',dts,vel,ss,rr,custom+iwindow(par),par)
 
     Flow(dtr+'_R',dtr,'reverse which=2 opt=i verb=y')
     fdmod.cdafd(ker+'_RD',ker+'_RW',dtr+'_R',vel,rr,ss,custom+iwindow(par),par)
+    
+    cic(ker,ker+'_SW',ker+'_RW','',par,isreversed=0)
+
+def fwiker(ker,dts,ss,dtr,rr,vel,den,custom,par):
+    
+    fdmod.awefd(ker+'_SD',ker+'_SW',dts,vel,den,ss,rr,custom+iwindow(par),par)
+
+    Flow(dtr+'_R',dtr,'reverse which=2 opt=i verb=y')
+    fdmod.awefd(ker+'_RD',ker+'_RW',dtr+'_R',vel,den,rr,ss,custom+iwindow(par),par)
     
     cic(ker,ker+'_SW',ker+'_RW','',par,isreversed=0)
 

@@ -157,26 +157,26 @@ def genwfl(wfl,sou,coo,slo,down,causal,custom,par):
 def fwikerZ(ker,dws,ss,dwr,rr,slo,pad,custom,par):
 
      padx=0.5*(pad-par['nx'])
-     Flow(slo+'_L',slo,
+     Flow(ker+'_sloL',slo,
           '''
           window n1=1 f1=0 |
           spray axis=1 n=%d o=0 d=1 |
-          transp plane=12 | transp plane=23 
+          transp plane=23 
           '''%(padx))
-     Flow(slo+'_R',slo,
+     Flow(ker+'_sloR',slo,
           '''
           window n1=1 f1=%d |
           spray axis=1 n=%d o=0 d=1 |
-          transp plane=12 | transp plane=23
+          transp plane=23
           '''%(par['nx']-1,padx))
-     Flow(slo+'_PX',[slo+'_L',slo,slo+'_R'],
+     Flow(ker+'_sloPX',[ker+'_sloL',slo,ker+'_sloR'],
           '''
           cat axis=1 space=n ${SOURCES[1]} ${SOURCES[2]} |
           put o1=%g d1=%g d3=%g
           '''%(-padx*par['dx'],par['dx'],par['dz']))
      
-     genwfl(ker+'_SW',dws,ss,slo+'_PX','y','y','',par)
-     genwfl(ker+'_RW',dwr,rr,slo+'_PX','y','n','',par)
+     genwfl(ker+'_SW',dws,ss,ker+'_sloPX','y','y','',par)
+     genwfl(ker+'_RW',dwr,rr,ker+'_sloPX','y','n','',par)
 
      Flow(ker,[ker+'_SW',ker+'_RW'],
           '''
@@ -193,25 +193,25 @@ def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
      Flow(rr+'_T',rr,'reverse which=1 opt=i')
 
      padz=0.5*(pad-par['nz'])
-     Flow(slo+'_B',slo,
+     Flow(ker+'_sloB',slo,
           '''
           window squeeze=n n3=1 f3=0 |
           spray axis=3 n=%d o=0 d=1
           '''%(padz))
-     Flow(slo+'_E',slo,
+     Flow(ker+'_sloE',slo,
           '''
           window squeeze=n n3=1 f3=%d |
           spray axis=3 n=%d o=0 d=1
           '''%(par['nz']-1,padz))
-     Flow(slo+'_PZ',[slo+'_B',slo,slo+'_E'],
+     Flow(ker+'_sloPZ',[ker+'_sloB',slo,ker+'_sloE'],
           '''
           cat axis=3 space=n ${SOURCES[1]} ${SOURCES[2]} |
           put o3=%g d3=%g |
           transp plane=13
           '''%(-padz*par['dz'],par['dz']))
 
-     genwfl(ker+'_SW',dws,ss+'_T',slo+'_PZ','y','y','',par)
-     genwfl(ker+'_RW',dwr,rr+'_T',slo+'_PZ','n','n','',par)
+     genwfl(ker+'_SW',dws,ss+'_T',ker+'_sloPZ','y','y','',par)
+     genwfl(ker+'_RW',dwr,rr+'_T',ker+'_sloPZ','n','n','',par)
 
      Flow(ker,[ker+'_SW',ker+'_RW'],
           '''
