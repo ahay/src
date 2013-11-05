@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include <math.h>
 
 int main (int argc, char* argv[])
 {
@@ -51,7 +50,7 @@ int main (int argc, char* argv[])
     if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
 
     sf_getfloat("amp",&amp);
-    /*exclude amplitudes greater than amp*/
+    /*Exclude amplitudes greater than amp && less than -amp*/
 
     ndim = sf_filedims(in,n);
     mdim = sf_filedims(msk,m);
@@ -90,7 +89,7 @@ int main (int argc, char* argv[])
         /* compute mean */
 	for (i2=0; i2 < n12; i2++) {
            if (sht[i2]!=0.0 && mk[i2]!=0 ) {
-                if ( amp==0.0 || abs(sht[i2]) < abs(amp) ){        
+                if ( amp==0.0 || fabsf(sht[i2]) < fabsf(amp) ){        
                     sum  +=sht[i2];
                     fold +=1;
                 }
@@ -101,9 +100,9 @@ int main (int argc, char* argv[])
         /* compute standard deviation */
         for (i2=0; i2 < n12; i2++) {
            if (sht[i2]!=0.0 && mk[i2]!=0 ) {
-               //if (!(amp && abs(sht[i2]) < abs(amp)))
+               //if (!(amp && fabsf(sht[i2]) < fabsf(amp)))
                //     continue;
-               if ( amp==0.0 || abs(sht[i2]) < abs(amp) )
+               if ( amp==0.0 || fabsf(sht[i2]) < fabsf(amp) )
                   std += (sht[i2]-mean)*(sht[i2]-mean);
            }     
         }
