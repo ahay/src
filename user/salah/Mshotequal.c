@@ -50,7 +50,7 @@ int main (int argc, char* argv[])
     if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
 
     sf_getfloat("amp",&amp);
-    /*Exclude amplitudes greater than amp && less than -amp*/
+    /*Exclude amplitudes greater than amp && less than -amp for statistics computations*/
 
     ndim = sf_filedims(in,n);
     mdim = sf_filedims(msk,m);
@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
         
         /* scale time samples*/
         for (i2=0; i2 < n12; i2++) 
-            if (mean!=0.0 && std!=0.0)
+            if (sht[i2]!=0.0 && mean!=0.0 && std!=0.0)
                 d[i2+i3*n12]=(sht[i2]-mean)/std;
             else
                 d[i2+i3*n12]=sht[i2];
