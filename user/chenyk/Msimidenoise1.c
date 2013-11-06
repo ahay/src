@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 				if(ref[i1] < s1)
 				tracein[i1] = 0;
 				else if(ref[i1]>=s1 && ref[i1]<=s2)
-				{tracein[i1]=(tracein[i1]-s1)/(s2-s1);}
+				{tracein[i1]=tracein[i1]*(ref[i1]-s1)/(s2-s1);}
 				else
 				{tracein[i1]=tracein[i1];}
 			}
