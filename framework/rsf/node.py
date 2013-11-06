@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Copyright (C) 2013 University of Texas at Austin
 #
 # This program is free software; you can redistribute it and/or modify
@@ -53,7 +51,7 @@ class Hosts(object):
         
             cluster = os.environ.get('RSF_CLUSTER')
             if cluster:
-                sys.stderr.write('RSF_CLUSTER is deprecated.\n')
+                sys.stderr.write('RSF_CLUSTER is getting deprecated.\n')
             else:
                 cpu = rsf.path.cpus()
                 cluster = 'localhost %d' % cpu
@@ -117,15 +115,25 @@ class Hosts(object):
         #print "hosts_fd.txt unlocked"
 
     def task(self,command):
-        'runs command on the available host'
+        'command to run on the available host'
         
         if not self.host:
             sys.stderr.write('Need to run start first\n')
             sys.exit(3)
-        
-        task="ssh "+self.host+' \"'+command+' \"'
+
+        if self.host=='localhost':
+            task=command
+        else:
+            task="ssh "+self.host+' \"'+command+' \"'
 
         return task
+
+    def action(self,target=None,source=None,env=None):
+        'SCons action'
+        command = env.get('command')
+        task = self.task(command)
+        print task
+        return os.system(task)
 
     def stop(self):
         'lock hosts.txt, mark the node notrunning, unlock hosts.txt'

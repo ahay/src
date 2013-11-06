@@ -15,7 +15,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types, copy, re, string, urllib, ftplib
-import rsf.conf, rsf.path, rsf.flow, rsf.prog
+import rsf.conf, rsf.path, rsf.flow, rsf.prog, rsf.node
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
