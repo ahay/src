@@ -21,7 +21,7 @@ def grey(title):
 for case in (50,500):
     twod = 'twod%d' % case
     Flow(twod,None,alias(case))
-    Plot(twod,grey(('Decimated','Ideal')[case/500]))
+    Plot(twod,grey(('Decimated','Ideal')[case//500]))
     pair = 'pair%d' % case
     Flow(pair,None,coord(case))
 
@@ -47,7 +47,7 @@ for size in (1,2,4,8):
              ''' % (size,case))
         Plot('grey_'+plc,plc,
              grey(title.get('%d_%s' % (size,case))) + ' clip=0.1')
-        max = (0.2,0.02,0.002)[size/3]
+        max = (0.2,0.02,0.002)[size//3]
         Plot('graf_'+plc,plc,
              '''
              window n2=1 f2=250 |
