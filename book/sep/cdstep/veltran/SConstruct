@@ -11,7 +11,7 @@ def iscan(miter,psun1,psun2):
     niter=10 s02=0.25 v0=1.250 dv=0.025 nv=60 anti=1
     ''' % (miter,psun1,psun2)
 
-scale = 6.382e-09 # 1/(cmp*cmp)
+scale = 7.988e-05 # 1/sqrt(cmp*cmp)
 
 for psun in (0,1):
     scan = 'cgscan%d' % psun
@@ -20,26 +20,26 @@ for psun in (0,1):
     Plot(err,
          '''
          window | scale dscale=%g |
-         graph min2=0 max2=0.4 labelsz=10 titlesz=12 title="%s"
-         ''' % (scale,('Unweighted versus Pseudounitary','')[psun]))
+         graph min2=0 max2=0.8 labelsz=10 titlesz=12 title="%s" dash=%d
+         ''' % (scale,('Unweighted versus Pseudounitary','')[psun],1-psun))
     
 Flow('cdscan cderr','cmp',iscan(10,2,0))
 Plot('cdscan','grey title="L2 inverse" ')
 Plot('cderr',
      '''
      window | scale dscale=%g |
-     graph min2=0 max2=0.4 labelsz=10 titlesz=12
-     title="Gradients versus Directions" 
+     graph min2=0 max2=0.8 labelsz=10 titlesz=12
+     title="Gradients versus Directions" dash=1
      ''' % scale)
 
 Plot('cgan1',None,
-     'box x0=3.013333 y0=6.910000 label="unweighted"    xt=1 yt=1')
+     'box x0=3.013333 y0=6.550000 label="unweighted"    xt=1 yt=1')
 Plot('cgan2',None,
-     'box x0=3.098333 y0=3.515000 label="pseudounitary" xt=1 yt=1')
+     'box x0=5.598333 y0=3.62000 label="pseudounitary" xt=-1 yt=-1')
 Plot('cdan1',None,
-     'box x0=2.686667 y0=4.108333 label="gradients"  xt=1 yt=1')
+     'box x0=2.686667 y0=5.658333 label="gradients"  xt=1 yt=1')
 Plot('cdan2',None,
-     'box x0=4.258333 y0=2.405000 label="directions" xt=1 yt=1')
+     'box x0=5.258333 y0=3.525000 label="directions" xt=-1 yt=-1')
 
 Plot('cgiter','cgerr0 cgerr1 cgan1 cgan2','Overlay')
 Plot('cditer','cgerr1 cderr  cdan1 cdan2','Overlay')
