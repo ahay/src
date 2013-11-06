@@ -2,7 +2,8 @@ from rsf.proj import *
 
 methods = {
     'fakirmig': 'First-Arrival Kirchhoff',
-    'ffd': 'Fourier Finite Differences'
+    'ffd': 'FFD',
+    'lowrank': 'Lowrank',
     }
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():

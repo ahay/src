@@ -16,7 +16,7 @@ Result('veloc',
        ''','Velocity Model'))
 
 # FFD
-Flow('vel2','veloc','transp | scale dscale=0.5')
+Flow('vel2','veloc','transp | scale dscale=0.5 | window n1=351')
 
 # Zero-offset migration
 zomig = '''
