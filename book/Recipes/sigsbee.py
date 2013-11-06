@@ -85,6 +85,29 @@ def wempar(par):
     par['jximg']=3
     par['fximg']=65
 
+def fwipar(par):
+    par['verb']='y'
+    par['eps']=0.1
+    par['nrmax']=5
+    par['dtmax']=0.00005
+    par['tmx']=16
+    
+    par['fw']=36
+    par['jw']=1
+    par['dw']=1/(par['nt']*par['dt'])
+    par['kw']=par['nt']/2+1
+    par['ow']=par['fw']*par['dw']
+    par['nw']=240
+    par['eic']='itype=o'
+
+    par['nqz']=par['nz']/2
+    par['oqz']=par['oz']
+    par['dqz']=par['dz']*2
+    
+    par['nqx']=par['nx']/2
+    par['oqx']=par['ox']
+    par['dqx']=par['dx']*2
+
 # ------------------------------------------------------------
 def rtmpar(par):
     # expand model at the bottom

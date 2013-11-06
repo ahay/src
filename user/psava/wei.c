@@ -696,7 +696,6 @@ void genwfl(weiop3d weop,
                 if(cub->verb) sf_warning ("DC WFL ... (ith=%2d) ... <iw=%3d of %3d>",
 					  ompith,iw+1,sf_n(cub->aw));
 
-
                 /* wavefield injection */
                 gensou_inject(weop->wfld[ompith],gensou,eico,0,iw);
 
@@ -903,7 +902,6 @@ void adjwfl(weiop3d weop,
             /*------------------------------------------------------------*/
             /* loop over z */
             for (iz=sf_n(cub->az)-1; iz>0; iz--) {
-/*                sf_warning("iz=%d,wfl=%f+%f",iz,crealf(weop->wfld[ompith][0][250]),cimagf(weop->wfld[ompith][0][250])); */
 #ifdef _OPENMP
 #pragma omp critical
 #endif
@@ -924,7 +922,6 @@ void adjwfl(weiop3d weop,
 		YXLOOP( weop->wfld[ompith][iy][ix] = sf_cadd(weop->wfld[ompith][iy][ix],sou[ompith][iz-1][iy][ix]); );
 #endif
             } /* z */
-	    /*          sf_warning("iz=%d,wfl=%f+%f",0,crealf(weop->wfld[ompith][0][250]),cimagf(weop->wfld[ompith][0][250])); */
 #ifdef _OPENMP
 #pragma omp critical
 #endif
