@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-pwshapeic pwic pwdecon smstack snrstack wcorr
+pwshapeic pwic pwdecon smstack snrstack wcorr shiftd2 shiftd1
 '''
 
 try:  # distributed version
