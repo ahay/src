@@ -33,6 +33,8 @@ copyright holder.
 #ifndef __RVL_OP
 #define __RVL_OP
 
+#define RVL_OPERATOR_NEW_ENABLED
+
 #include "space.hh"
 #include "linop_base.hh"
 //#include "functional.hh"
