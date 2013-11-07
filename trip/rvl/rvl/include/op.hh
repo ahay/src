@@ -751,7 +751,6 @@ namespace RVL {
 
     virtual ~OperatorEvaluation() {
       try { 
-	/*
 	if( deriv) {
 	  delete deriv;
 	  deriv = NULL;
@@ -761,7 +760,6 @@ namespace RVL {
 	  deriv2 = NULL;
 	}
 	if (f) delete f; 
-	*/
       }
       catch (RVLException & e) {
 	e<<"\ncalled from OperatorEvaluation::getDomain\n";
