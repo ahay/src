@@ -21,18 +21,27 @@
 #include <math.h>
 #include <rsf.h>
 
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+#endif
+
 int main(int argc, char* argv[])
 {
     fint1 str, istr;
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t, x0, y0;
-    float *trace=NULL, *strace=NULL;
-    sf_complex *ctrace=NULL, **cstack=NULL, shift;
-    char *time=NULL, *space=NULL, *unit=NULL;
+    float *trace, *strace;
+    sf_complex *ctrace, *ctrace2, **cstack, shift;
+    char *time, *space, *unit;
     size_t len;
+    sf_file in, out;
+
+#ifdef SF_HAS_FFTW
+    fftwf_plan forw, invs;
+#else
     kiss_fftr_cfg forw, invs;
-    sf_file in=NULL, out=NULL;
+#endif
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -52,10 +61,6 @@ int main(int argc, char* argv[])
     /* verbosity flag */
 
     nw = n3/2+1;
-    forw = kiss_fftr_alloc(n3,0,NULL,NULL);
-    invs = kiss_fftr_alloc(n3,1,NULL,NULL);
-    if (NULL == forw || NULL == invs) 
-	sf_error("KISS FFT allocation error");
 
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;  
     o2 = o1*o1;
@@ -104,7 +109,20 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(n1);
     strace = sf_floatalloc(n3);
     ctrace = sf_complexalloc(nw);
+    ctrace2 = sf_complexalloc(nw);
     cstack = sf_complexalloc2(nw,nv);
+
+#ifdef SF_HAS_FFTW
+    forw = fftwf_plan_dft_r2c_1d(n3, strace, (fftwf_complex *) ctrace,
+				 FFTW_ESTIMATE);
+    invs = fftwf_plan_dft_c2r_1d(n3, (fftwf_complex *) ctrace2, strace,
+				 FFTW_ESTIMATE);
+#else
+    forw = kiss_fftr_alloc(n3,0,NULL,NULL);
+    invs = kiss_fftr_alloc(n3,1,NULL,NULL);
+#endif
+    if (NULL == forw || NULL == invs) sf_error("FFT allocation error");
+
 
     if (!sf_getint("extend",&next)) next=4;
     /* trace extension */
@@ -154,8 +172,11 @@ int main(int argc, char* argv[])
 		    strace[i2] = 0.;
 		}
 
+#ifdef SF_HAS_FFTW
+		fftwf_execute(forw);
+#else
 		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);
-		ctrace[0]=sf_cmplx(0.,0.); /* dc */
+#endif
 
 		for (iv=0; iv < nv; iv++) {
 		    v = v0 + (iv+1)*dv;
@@ -178,19 +199,27 @@ int main(int argc, char* argv[])
 	    } /* h */
  
 	    for (iv=0; iv < nv; iv++) {
+
+		ctrace2[0] = sf_cmplx(0.0f,0.0f); /* dc */
+
 		for (i2=1; i2 < nw; i2++) {
 		    w = i2*SF_PI/(d2*n3);
 		    w *= o2;
 		    shift = sf_cmplx(cosf(w),sinf(w));
 
 #ifdef SF_HAS_COMPLEX_H
-		    ctrace[i2] = cstack[iv][i2] * shift;
+		    ctrace2[i2] = cstack[iv][i2] * shift;
 #else
-		    ctrace[i2] = sf_cmul(cstack[iv][i2],shift);
+		    ctrace2[i2] = sf_cmul(cstack[iv][i2],shift);
 #endif
 		}
 
-		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);
+#ifdef SF_HAS_FFTW
+		fftwf_execute(invs);
+#else
+		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace2, strace);
+#endif
+
 		fint1_set(istr,strace);
 
 		for (i1=0; i1 < n1; i1++) {

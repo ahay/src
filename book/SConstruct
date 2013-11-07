@@ -30,6 +30,8 @@ def publicproj(project):
                    'rsf/rsf/plplot',
                    'slim/geo2008NewInsightsPareto/geop',
                    'tccs/opwd/wrap',
+                   'tccs/diffr/gom',
+                   'tccs/diffr/chan3d',
                    'tccs/avo/avo2'):
         return False
     os.chdir(project)

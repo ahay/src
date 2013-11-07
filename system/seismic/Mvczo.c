@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     map4 str;
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,nv, ix,iv;
-    float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,dv, dx, t, x0, dw;
+    float d1,o1,d2,o2, eps, w,x, v0,v2,v,dv, dx, t, x0, dw;
     float *trace, *strace, *t2;
     sf_complex *ctrace, *ctrace2, shift;
     sf_file in, out;
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     d2 = o1+(n1-1)*d1;
     d2 = (d2*d2 - o2)/(n2-1);
-    dw = 2.*SF_PI/(d2*n3);
+    dw = 16*SF_PI/(d2*n3); /* 2pi * 8 */
 
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");
     /* velocity steps */
@@ -116,11 +116,11 @@ int main(int argc, char* argv[])
     stretch4_define (str,t2);
 
     for (ix=0; ix < nx; ix++) {
+	if (verb) sf_warning("wavenumber %d of %d;", ix+1,nx);
+
 	x = x0+ix*dx; 
 	x *= x;
-
-	if (verb) sf_warning("wavenumber %d of %d;", ix+1,nx);
-	k = x * 0.25 * 0.25;
+	x *= 0.5;
 
 	sf_floatread(trace,n1,in);
 	for (i1=0; i1 < n1; i1++) {
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 
 	for (iv=0; iv < nv; iv++) {
 	    v = v0 + (iv+1)*dv;
-	    v2 = k * ((v0*v0) - (v*v));
+	    v2 = x * ((v0*v0) - (v*v));
 
 	    ctrace2[0] = sf_cmplx(0.0f,0.0f); /* dc */
 
