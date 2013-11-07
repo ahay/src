@@ -758,8 +758,8 @@ namespace RVL {
 	  delete deriv2;
 	  deriv2 = NULL;
 	}
-	*/
 	if (f) delete f; 
+	*/
       }
       catch (RVLException & e) {
 	e<<"\ncalled from OperatorEvaluation::getDomain\n";
