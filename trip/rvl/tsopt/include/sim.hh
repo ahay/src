@@ -92,6 +92,7 @@ namespace TSOpt {
 
       with the semantics of a deep copy from the argument to the State
       on which the method is called.
+
   */
 
   template<typename State>
