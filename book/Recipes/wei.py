@@ -161,13 +161,13 @@ def fwikerZ(ker,dws,ss,dwr,rr,slo,pad,custom,par):
      Flow(ker+'_sloL',slo,
           '''
           window n1=1 f1=0 |
-          spray axis=2 n=%d o=0 d=1 |
+          spray axis=1 n=%d o=0 d=1 |
           transp plane=23 
           '''%(padL))
      Flow(ker+'_sloR',slo,
           '''
           window n1=1 f1=%d |
-          spray axis=2 n=%d o=0 d=1 |
+          spray axis=1 n=%d o=0 d=1 |
           transp plane=23
           '''%(par['nx']-1,padR))
      Flow(ker+'_sloPX',[ker+'_sloL',slo,ker+'_sloR'],
