@@ -263,11 +263,11 @@ int main(int argc, char* argv[])
 	
 	/* Set output 2D array reflection point--------------------------------------------------*/
 	xrefl = sf_output("out"); /* Output reflection points*/
-	if (!sf_getint("ns",&nt)) nt=nr2+2;
-	/* Dimension of output reflection points (the number of points)*/
+	if (!sf_getint("ns",&nt)) nt=3 ;
+	/* Dimension of output reflection points (x,y,z) */
 	
-	if (!sf_getint("ns2",&nt2)) nt2=3; 
-	/* Dimension of output reflection points (3 dim)*/
+	if (!sf_getint("ns2",&nt2)) nt2=nr3+2; 
+	/* Dimension of output reflection points (the number of points)*/
 	
 	if (!sf_getfloat("ds",&dt)) dt=1; 
 	/* Step increment*/
@@ -388,9 +388,9 @@ int main(int argc, char* argv[])
 				rd2[ir3][ir2][ir1] = zder(ir3,x,y,1);
 			}
 		}
-		d1eno[ir3] = sf_eno2_init(order,nr1,nr2);	/* Derivatives*/	
+		d1eno[ir3] = sf_eno2_init(order,nr1,nr2);	/* Derivatives*/
 		sf_eno2_set (d1eno[ir3],rd1[ir3]);
-		d2eno[ir3] = sf_eno2_init(order,nr1,nr2);	/* Derivatives*/	
+		d2eno[ir3] = sf_eno2_init(order,nr1,nr2);	/* Derivatives*/
 		sf_eno2_set (d2eno[ir3],rd2[ir3]);
 	}
 	
@@ -398,7 +398,7 @@ int main(int argc, char* argv[])
 	
 	func3 f;
 	
-	f.T_k = 0; /* Initialize structure f*/
+	f.T_k = 0; /* Initialize structure f to prevent warning*/
 	f.T_k_k_1 = 0;
 	f.T_k_k_2 = 0;
 	f.T_k_k1_1 = 0;
@@ -435,16 +435,19 @@ int main(int argc, char* argv[])
 		goto mark; /* If there is no reflection*/
 	}
 	
+	/* If no initial points specified*/
 	if (!sf_getfloats("xinitial",xinitial,nr3)) {
 		for (count=0; count<nr3; count++) {
-			xinitial[count] = xx[0][0]+(count+1)*(xx[nr3+1][0]-xx[0][0])/(nr3+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
+			xinitial[count] = xx[0][0]+(count+1)*(xx[nr3+1][0]-xx[0][0])/(nr3+1);
+			/* Divide the distance from s to r equally and set the initial points accordingly*/
 		}	
 	}
 	/* x-initial position*/
 	
 	if (!sf_getfloats("yinitial",yinitial,nr3)) {
 		for (count=0; count<nr3; count++) {
-			yinitial[count] = xx[0][1]+(count+1)*(xx[nr3+1][1]-xx[0][1])/(nr3+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
+			yinitial[count] = xx[0][1]+(count+1)*(xx[nr3+1][1]-xx[0][1])/(nr3+1);
+			/* Divide the distance from s to r equally and set the initial points accordingly*/
 		}	
 	}
 	/* y-initial position*/
@@ -484,7 +487,7 @@ int main(int argc, char* argv[])
 			
 			if (Ftem<2*nr3*tol && i2 == nr3-1) {
 				for (i3=0; i3<nr3; i3++) {
-					sf_warning("F(%d) is sufficeintly close to zero. x[%d] = %g and y[%d] = %g \n",i3+1,i3+1,xx[i3+1][0],i3+1,xx[i3+1][1]);
+					sf_warning("F(%d) is sufficiently close to zero. x[%d] = %g and y[%d] = %g \n",i3+1,i3+1,xx[i3+1][0],i3+1,xx[i3+1][1]);
 				}				
 				goto mark; /* Exit the loop to the part for writing the result*/
 			}	
@@ -709,8 +712,8 @@ mark: /* Mark point for goto*/
 				ans[c2][2] = z(c2,xx[c2][0],xx[c2][1]);
 			}
 			else {
-				ans[c2][0] = xx[c2][0];
-				ans[c2][1] = xx[c2][1];
+				ans[c2][0] = xx[c2][0]; /*x*/
+				ans[c2][1] = xx[c2][1]; /*y*/
 			}
 		}
 	}

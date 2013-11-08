@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
 	xrefl = sf_output("out"); /* Output reflection points*/
 	
 	if (!sf_getint("ns",&nt)) nt=2;
-	/* Dimension of output reflection points (2 dim)*/
+	/* Dimension of output reflection points (x,z)*/
 	
 	if (!sf_getint("ns2",&nt2)) nt2=nr2+2; 
 	/* Dimension of output reflection points (the number of points)*/
@@ -294,7 +294,7 @@ int main(int argc, char* argv[])
 				x = r0+ir1*dr; /* Distance */
 				rd[ir2][ir1] = zder(ir2,x);
 			}
-			deno[ir2] = sf_eno_init(order,nr1);	/* Derivatives*/	
+			deno[ir2] = sf_eno_init(order,nr1);	/* Derivatives*/
 			sf_eno_set (deno[ir2],rd[ir2]);
 		}
 	
@@ -351,12 +351,11 @@ int main(int argc, char* argv[])
 		Ftem = Ftem+fabsf(F[i4+1]);
 		if (Ftem<nr2*tol && i4 == nr2-1) {
 			for (j1=0; j1<nr2; j1++) {
-				sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
+				sf_warning("F(%d) is sufficiently close to zero. y[%d] = %g \n",j1+1,j1+1,xx[j1+1]);
 			}
 			goto mark; /* Exit the loop to the part for writing the result*/
 		}	
 	}
-	
 /* MAIN LOOP through the output for repeating yk=yk-dk-----------------------------------------------*/
 	
 	int i2,j2,i5; /* Counter*/

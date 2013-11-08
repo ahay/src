@@ -52,8 +52,8 @@ typedef float (*func4)(int, float, float, int);
 /* Function pointer for int, float and float (layer,x,y,m) -> float */
 /*^*/
 
-typedef float (*func2)(threed,threed);
-/* Function pointer for twod,twod -> float */
+typedef double (*func2)(threed,threed);
+/* Function pointer for twod,twod -> double */
 /*^*/
 
 typedef struct func3 { 
@@ -122,7 +122,7 @@ void initialize(int i /* Indicator of layer*/,
 	y_1k.dx2 = zder2_1(i-1,y_1k.x,y_1k.y,0);
 	y_1k.dy1 = zder(i-1,y_1k.x,y_1k.y,1); 
 	y_1k.dy2 = zder2_2(i-1,y_1k.x,y_1k.y,1);
-	y_1k.dxy2 = zder2_1(i-1,y_1k.x,y_1k.y,1); /*or zder2_2(i-1,y_1k.x,y_1k.y,0)*/
+	y_1k.dxy2 = zder2_1(i-1,y_1k.x,y_1k.y,1); /*or zder2_2(i-1,y_1k.x,y_1k.y,0) (Cross derivative)*/
 	
 	if (i!=1) {
 		y_1k.gx1 = gx[i-2];
