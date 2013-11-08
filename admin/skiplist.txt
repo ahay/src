@@ -10,6 +10,7 @@ skiplist =  [
                 'book/tccs/lowrank/fowler',                     # sfisolr2 not installed
 		'book/tccs/psp/models',                         # PSP not installed
 		'book/chen/test/xtime',                         # no results
+		'book/geo384w/hw5/lsmig',                       # needs fixing
                 'book/rsf/bash/mpi',
 								# Examples with movies
 		'book/trip/test/flat',
