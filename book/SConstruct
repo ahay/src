@@ -13,10 +13,28 @@ cwp
 data
 geo384w
 geo391
-jsg
+hansung
+icp
+milano
 rsf
 sep
 slim
+swag
+tccs
+trip
+tutorial
+uwa
+'''
+
+nonreproducible = '''
+geo391/hw2/sorting
+rsf/bash/plot
+rsf/rsf/plplot
+slim/geo2008NewInsightsPareto/geop
+tccs/diffr/chan3d
+tccs/diffr/gom
+tccs/avo/avo2
+tccs/opwd/wrap
 '''
 
 all =  ARGUMENTS.get('all', 'n')
@@ -26,13 +44,7 @@ size *= 1024
 def publicproj(project):
     '''Check if the project is publicly accessible'''
     global all, size
-    if project in ('rsf/bash/plot',
-                   'rsf/rsf/plplot',
-                   'slim/geo2008NewInsightsPareto/geop',
-                   'tccs/opwd/wrap',
-                   'tccs/diffr/gom',
-                   'tccs/diffr/chan3d',
-                   'tccs/avo/avo2'):
+    if project in Split(nonreproducible):
         return False
     os.chdir(project)
     # Skip if no .rsfproj
