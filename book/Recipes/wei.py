@@ -158,7 +158,6 @@ def fwikerZ(ker,dws,ss,dwr,rr,slo,pad,custom,par):
 
      padL=int(0.5*(pad-par['nx']))
      padR=pad-padL-par['nx']
-     print padL,padR
      Flow(ker+'_sloL',slo,
           '''
           window n1=1 f1=0 |
@@ -195,17 +194,18 @@ def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
      Flow(ss+'_T',ss,'reverse which=1 opt=i')
      Flow(rr+'_T',rr,'reverse which=1 opt=i')
 
-     padz=0.5*(pad-par['nz'])
+     padT=0.5*(pad-par['nz'])
+     padB=pad-padT-par['nz']
      Flow(ker+'_sloB',slo,
           '''
           window squeeze=n n3=1 f3=0 |
           spray axis=3 n=%d o=0 d=1
-          '''%(padz))
+          '''%(padT))
      Flow(ker+'_sloE',slo,
           '''
           window squeeze=n n3=1 f3=%d |
           spray axis=3 n=%d o=0 d=1
-          '''%(par['nz']-1,padz))
+          '''%(par['nz']-1,padB))
      Flow(ker+'_sloPZ',[ker+'_sloB',slo,ker+'_sloE'],
           '''
           cat axis=3 space=n ${SOURCES[1]} ${SOURCES[2]} |
