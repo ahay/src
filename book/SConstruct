@@ -47,6 +47,10 @@ def publicproj(project):
     '''Check if the project is publicly accessible'''
     global all, size
     if project in Split(nonreproducible):
+        print '%s: Non-reproducible' % project
+        return False
+    if not os.path.isdir(project):
+        print '%s: No such directory' % project
         return False
     os.chdir(project)
     # Skip if no .rsfproj
