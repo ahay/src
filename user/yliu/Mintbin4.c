@@ -32,7 +32,7 @@ int main (int argc, char* argv[])
     int i, ix, iy, is, ir, ****map;
     off_t pos;
     char *buf, *zero, *xk, *yk, *sk, *rk, *header;
-    sf_file in, out, head, mask;
+    sf_file in, out, head, fold;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -226,26 +226,40 @@ int main (int argc, char* argv[])
     }
     sf_warning(".");
 
-    header = sf_getstring("mask");
-    /* output mask file */
+    header = sf_getstring("fold");
+    /* output fold file */
     if (NULL != header) {
-	mask = sf_output(header);
-	sf_putint(mask,"n1",nx);
-	sf_putint(mask,"n2",ny);
-	sf_putint(mask,"n3",ns);
-	sf_putint(mask,"n4",nr);
-	sf_settype(mask,SF_INT);
+	fold = sf_output(header);
+	sf_putint(fold,"n1",nx);
+	sf_putint(fold,"n2",ny);
+	sf_putint(fold,"n3",ns);
+	sf_putint(fold,"n4",nr);
+	sf_settype(fold,SF_INT);
 
 	for (ir=0; ir < nr; ir++) {
 	    for (is=0; is < ns; is++) {
 		for (iy=0; iy < ny; iy++) {
 		    for (ix=0; ix < nx; ix++) {
-			map[ir][is][iy][ix] = (map[ir][is][iy][ix] >= 0);
+			map[ir][is][iy][ix] = 0;
 		    }
 		}
 	    }
 	}
-	sf_intwrite(map[0][0][0],nx*ny*ns*nr,mask);
+	
+	for (id = 0; id < nd; id++) {
+	    ix = x[id];
+	    iy = y[id];
+	    is = s[id];
+	    ir = r[id];
+	    if (ix >= xmin && ix <= xmax && 
+		iy >= ymin && iy <= ymax &&
+		is >= smin && is <= smax &&
+		ir >= rmin && ir <= rmax) {
+		map[(ir-rmin)/dr][(is-smin)/ds][(iy-ymin)/dy][(ix-xmin)/dx] ++;
+	    }
+	}
+
+	sf_intwrite(map[0][0][0],nx*ny*ns*nr,fold);
     }
 
     exit(0);
