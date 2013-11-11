@@ -112,7 +112,7 @@ Plot ('vLine',None,
 	  ''' % (cigpos,cigpos) )
 
 
-Flow ('dags', data, 'window min3=11 max3=19 | sftransp plane=12')
+Flow ('dags', 'data', 'window min3=11 max3=19 | sftransp plane=12')
 Flow ('sigs-image-init','dags','stack')
 Plot ('sigs-image-init', 'put label2=distance label1=depth | grey wanttitle=n min1=1.5 pclip=92 labelsz=11.')
 Plot ('image-init','sigs-image-init vLine','Overlay')

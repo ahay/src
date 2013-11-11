@@ -6,7 +6,8 @@
 \email{morgan@sep.stanford.edu}
 \author{Morgan Brown}
 
-\ABS{ Multiple reflections provide redundant, and sometimes additional, information
+\begin{abstract}
+Multiple reflections provide redundant, and sometimes additional, information
 	about the corresponding primary reflections.  I implement a least-squares inversion 
 	scheme to jointly image (by normal moveout) primaries and multiples, with the goal of 
 	enforcing consistency between the images and the input data.  Furthermore, to effect 
@@ -19,7 +20,7 @@
 	of migration as the imaging operators, to exploit cases where multiples actually
 	exhibit better angular coverage than primaries, and thus add new information to the
 	inversion.
-}
+\end{abstract}
 
 \section{introduction}
 Multiple reflections have long been treated as noise in the seismic imaging process.
@@ -193,6 +194,8 @@ data residual by solution of the normal equations is underdetermined.  Additiona
 terms, defined in later sections, force the problem to be overdetermined.
 
 \subsection{Consistency of the Data and the Crosstalk Problem}
+\inputdir{haskell}
+
 Figure \ref{fig:schem.hask} shows the result of applying the adjoint of equation 
 (\ref{eq:jointnmo0}) to a synthetic CMP gather which was constructed by an elastic modeling
 scheme.  Imagine for a moment that the CMP gather consists {\em only} of primaries and

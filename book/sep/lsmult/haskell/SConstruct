@@ -7,24 +7,47 @@ Flow('hask','hask_mult.HH',
 
 Plot('hask','grey title="Raw Data" clip=0.00004')
 
-Fetch('picks.hask.txt','haskell')
+vw=1.5    # water velocity
+nw=115
+tw=0.4568 # water depth
+dt=0.004
+
+Flow('mask','hask','window n2=1 | spike k1=%d | causint' % nw)
 
 Flow('picks.txt','picks.hask.txt',"awk '{print $2, $3}'") 
+
 Flow('picks','picks.txt',
      '''
      echo in=$SOURCE n1=2 n2=13 data_format=ascii_float |
      dd form=native 
      ''',stdin=0)
-Flow('vnmo','picks',
+
+Flow('vel0','picks mask',
      '''
-     spline o1=0.0 d1=0.004 n1=1024 |
+     transp |
+     linear o1=0.0 d1=0.004 n1=1024 rect=5 niter=100 verb=y |
+     math m=${SOURCES[1]} output="%g*(1-m)+m*input" |
      put label1=Time unit1=s 
-     ''')
-Result('vnmo','graph title="NMO Velocity" label2=Velocity unit2=km/s')
+     ''' % vw)
+Result('vel0','graph title="NMO Velocity" label2=Velocity unit2=km/s')
 
-Flow('nmo','hask vnmo','nmo velocity=${SOURCES[1]} half=n')
-Plot('nmo','grey title="NMO" clip=0.00004')
+Fetch('picks.hask.txt','haskell')
 
-Result('nmo','hask nmo','SideBySideAniso')
+for v in range(3):
+    nmo = 'nmo%d' % v
+    vel = 'vel%d' % v
+
+    if v > 0:
+        Flow(vel,'vel%d mask' % (v-1),
+             '''
+             pad beg1=%d | window n1=1024 | put o1=0 |
+             math output="input*input" | 
+             math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
+             ''' % (nw,vw,tw,vw*vw*tw,dt))
+
+    Flow(nmo,['hask',vel],'nmo velocity=${SOURCES[1]} half=n str=0')
+    Plot(nmo,'grey title="NMO for %s" clip=0.00004' % ('primaries','multiple %d' % v)[v>0])
+
+Result('nmo','hask nmo0 nmo1 nmo2','SideBySideAniso')
 
 End()
