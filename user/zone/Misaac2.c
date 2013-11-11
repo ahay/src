@@ -373,7 +373,7 @@ int main(int argc, char* argv[])
 			Ftem = Ftem+fabsf(F[i5+1]);
 			if (Ftem<nr2*tol && i5 == nr2-1) {
 				for (j2=0; j2<nr2; j2++) {
-					sf_warning("F(%d) is sufficeintly close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
+					sf_warning("F(%d) is sufficiently close to zero. y[%d] = %g \n",j2+1,j2+1,xx[j2+1]);
 				}
 				goto mark; /* Exit the loop to the part for writing the result*/
 			}
