@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     bool inv;
     int nt, nx, nv, it, ix, iv, nw, n3, i3, ntr, ntm, im;
     float *trace=NULL, *modl=NULL, *r=NULL;
-    float vmin, vmax, dv, dx, x0, t0, t, dt, tp;
+    float vmin, vmax, dv, dx, x0, t0, t, dt, tp, xp;
     char *unit=NULL, *space=NULL, *time=NULL;
     size_t len;
     sf_bands spl=NULL;
@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&t0)) sf_error("No o2= in input");
  
     if (!sf_getfloat("tp",&tp)) tp=t0;
+    if (!sf_getfloat("xp",&xp)) xp=0.;
 
     if (inv) {
 	if (!sf_histint(in,"n1",&nv)) sf_error("No n1= in input");
@@ -134,13 +135,13 @@ int main(int argc, char* argv[])
 	    if (t > tp) {
 		if (inv) {
 		    for (ix=0; ix < nx; ix++) {
-			r[ix] = (x0+ix*dx)/(t-tp);
+			r[ix] = (x0-xp+ix*dx)/(t-tp);
 		    }
 
 		    sf_int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx);
 		} else {
 		    for (iv=0; iv < nv; iv++) {
-			r[iv] = (vmin+iv*dv)*(t-tp);
+			r[iv] = xp+(vmin+iv*dv)*(t-tp);
 		    }
 
 		    sf_int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv);
