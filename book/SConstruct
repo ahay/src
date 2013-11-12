@@ -43,9 +43,14 @@ all =  ARGUMENTS.get('all', 'n')
 size = int(ARGUMENTS.get('size', 1024))
 size *= 1024
 
+tested_projects = []
+
 def publicproj(project):
     '''Check if the project is publicly accessible'''
-    global all, size
+    global all, size, tested_projects
+    if project in tested_projects:
+        return False
+    tested_projects.append(project)
     if project in Split(nonreproducible):
         print '%s: Non-reproducible' % project
         return False
