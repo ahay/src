@@ -1,0 +1,12 @@
+from rsf.book import *
+
+Papers(copyr='CUP',
+       group='China University of Petroleum',
+       papers=Split('''
+       rna2d
+       '''),
+       authors = {'rna2d':'Guochang Liu, Xiaohong Chen, Jing Du, and Kailong Wu'}
+       )
+       
+End()
+
