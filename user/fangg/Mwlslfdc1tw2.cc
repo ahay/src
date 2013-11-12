@@ -367,8 +367,6 @@ int main(int argc, char** argv)
     Mtpfile.put("o1",o1);
     Mtpfile << Mtp ;
 
-
-    
     return 0;
 }
 
