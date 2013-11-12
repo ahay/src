@@ -7,7 +7,7 @@ from seislet import seislet, diplet
 Flow('sigmoid',None,
      '''
      sigmoid d1=.004 n1=200 d2=.008 n2=256 |
-     smooth rect1=3 diff1=1 | smooth rect1=3 |
+     smooth rect1=3 diff1=1 adj=1 | smooth rect1=3 |
      put label2=Distance
      ''')
 

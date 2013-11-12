@@ -11,7 +11,7 @@ Flow('yc27','yc yc2','window n2=20 | pad n2=21 | cat axis=2 ${SOURCES[1]}')
 Flow('sigmoid',None,
      '''
      sigmoid d1=.004 n1=200 d2=.008 n2=200 |
-     smooth rect1=3 diff1=1 |
+     smooth rect1=3 diff1=1 adj=1 |
      smooth rect1=3
      ''')
 

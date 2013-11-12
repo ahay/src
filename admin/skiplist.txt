@@ -11,6 +11,8 @@ skiplist =  [
 		'book/tccs/psp/models',                         # PSP not installed
 		'book/chen/test/xtime',                         # no results
 		'book/geo384w/hw5/lsmig',                       # needs fixing
+		'book/uwa/geo2013ElasticModellingGPU/homog2d',  # requires CUDA
+		'book/uwa/geo2013ElasticModellingGPU/test3d',   # requires CUDA
                 'book/rsf/bash/mpi',
 								# Examples with movies
 		'book/trip/test/flat',
