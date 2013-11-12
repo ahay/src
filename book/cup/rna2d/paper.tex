@@ -1,0 +1,487 @@
+\published{Geophysics, 77, no. 2, V61-V69, (2012)}
+\title{Random noise attenuation using $f$-$x$ regularized nonstationary autoregression}
+
+\author{Guochang Liu\footnotemark[1], Xiaohong Chen\footnotemark[1], Jing Du\footnotemark[2], Kailong Wu\footnotemark[1]}
+
+\ms{GEO-2011-0117}
+
+\address{
+\footnotemark[1] China University of Petroleum (Beijing), \\
+National Engineering Laboratory for Offshore Oil Exploration, \\
+Beijing, China. E-mail: guochang.liu@yahoo.com; chenxh@cup.edu.cn; \\
+wuyanping220@163.com
+\footnotemark[2]China Petroleum \& Chemical Corporation, \\
+Shengli Geophysical Research Institute, China. \\
+E-mail: dujing_421@yahoo.com
+}
+
+\lefthead{Liu et al.}
+\righthead{Noise attenuation using $f$-$x$ RNA}
+
+\maketitle
+
+\begin{abstract}
+We propose a novel method for random noise attenuation in seismic 
+data by applying regularized nonstationary autoregression (RNA) in 
+frequency-space ($f$-$x$) domain. The method adaptively predicts the 
+signal with spatial changes in dip or amplitude using $f$-$x$ RNA. The 
+key idea is to overcome the assumption of linearity and stationarity 
+of the signal in conventional $f$-$x$ domain prediction technique. The 
+conventional $f$-$x$ domain prediction technique uses short temporal 
+and spatial analysis windows to cope with the nonstationary of the 
+seismic data. The proposed method does not require windowing 
+strategies in spatial direction. We implement the algorithm by 
+iterated scheme using conjugate gradient method. We constrain the 
+coefficients of nonstationary autoregression (NA) to be smooth 
+along space and frequency in $f$-$x$ domain. The shaping regularization 
+in least square inversion controls the smoothness of the coefficients 
+of $f$-$x$ RNA. There are two key parameters in the proposed method: 
+filter length and radius of shaping operator. Synthetic and field 
+data examples demonstrate that, compared with $f$-$x$ domain and 
+time-space ($t$-$x$) domain prediction methods, $f$-$x$ RNA can be more 
+effective in suppressing random noise and preserving the signals, 
+especially for complex geological structure. 
+
+\end{abstract}
+
+\section{Introduction}
+Random noise attenuation in seismic data can be implemented in the 
+frequency-space ($f$-$x$) and time-space ($t$-$x$) domain using prediction filters \cite[]{Abma1995}.
+Linear prediction filtering assumes that the 
+signal can be described by an autoregressive (AR) model. When the data are 
+contaminated by random noise, the signal is considered to be predicted by 
+the AR filter and the noise is the residual \cite[]{Bekara2009}. 
+A number of approaches in $f$-$x$ domain have been proposed and been used for 
+attenuating random noise. The $f$-$x$ prediction technique was introduced by 
+\cite{Canales1984} and further developed by \cite{Gulunay1986}. The $f$-$x$ domain 
+prediction technique is also referred as $f$-$x$ deconvolution by \cite{Gulunay1986}. 
+\cite{Sacchi2001} utilized the autoregressive-moving average (ARMA) 
+structure of the signal to estimate a prediction error filter (PEF) and 
+the noise sequence is estimated by self-deconvolving the PEF from the 
+filtered data. \cite{Hodgson2002} presented a novel method of noise
+ attenuation for 3D seismic data, which applies a smoothing filter 
+(e.g. 2D median filter) to each targeted frequency slice and allows 
+targeted filtering of selected parts of the frequency spectrum. The 
+conventional $f$-$x$ domain prediction uses windowing strategies to avoid 
+that the seismic events are not linear. The data are assumed to be 
+piecewise linear and stationary in an analysis temporal and spatial 
+window. To overcome the potentially low performance of $f$-$x$ deconvolution
+that arises with processing structural complex data, \cite{Bekara2009} 
+proposed a new filtering technique for random and 
+coherent noise attenuation in seismic data by applying empirical 
+mode decomposition (EMD) \cite[]{Huang1998} on constant-frequency
+slices in the $f$-$x$ domain and removing the first intrinsic mode 
+function. In addition, in the research field of seismic data 
+interpolation, \cite{Naghizadeh2009} proposed an adaptive
+$f$-$x$ prediction filter, which was used to interpolate waveforms 
+that have spatially variant dips. The $f$-$x$ domain prediction 
+technique can be implemented in the frequency slice and also
+in pyramid domain \cite[]{Sun1996}. The implemented in 
+pyramid domain makes the operators more efficient because one
+only needs to estimate one prediction filter from many different 
+frequencies \cite[]{Sun1996, Hung2004, Guitton2010}.
+
+The prediction process can be also achieved in $t$-$x$ domain 
+\cite[]{Claerbout1992}. \cite{Abma1995} discussed $f$-$x$ 
+and $t$-$x$ approaches to predict linear events and concluded 
+that $f$-$x$ prediction is equivalent to $t$-$x$ prediction with a 
+long time length. \cite{Crawley1999} proposed smooth 
+nonstationary PEFs with micropatches and radial smoothing
+in the application of seismic interpolation, which 
+typically produces better results than the rectangular
+patching approach. \cite{Izquierdo2006} proposed a 
+technique for structural noise reduction in ultrasonic 
+nondestructive examination using time-varying prediction 
+filter. \cite{Sacchi2009} proposed an algorithm 
+to compute time and space variant prediction filters for 
+noise attenuation, which is implemented by a recursive 
+scheme where the filter is continuously adapted to 
+predict the signal.
+
+\cite{Fomel2009} developed a general method of nonstationary 
+regression with shaping regularization \cite[]{Fomel2007}. 
+Shaping regularization has an advantage of a fast 
+iterative convergence. Regularized nonstationary 
+regression (RNA) has been used in multiple subtraction 
+\cite{Fomel2009}, time-frequency analysis \cite[]{Liu2009}, 
+and nonstationary polynomial fitting \cite[]{Liu2011}. 
+\cite{Liu2010} introduced an adaptive PEFs using 
+RNA in $t$-$x$ domain which has been used for trace interpolation. 
+
+In this paper, we investigate the $f$-$x$ domain prediction 
+technique and propose $f$-$x$ domain RNA to attenuate
+random noise in seismic data. Firstly, we review 
+the theory of $f$-$x$ stationary autoregression. Then, 
+we describe the $f$-$x$ RNA and extend to complex number 
+domain. Next we provide the methodology of random 
+noise attenuation using $f$-$x$ RNA. Finally, we use 
+synthetic and real data examples to evaluate and compare 
+the proposed method with other noise attenuation techniques,
+such as $f$-$x$ domain and $t$-$x$ domain prediction techniques.
+
+\section{Review of $f$-$x$ domain stationary autoregression}
+
+We first consider a seismic section $S(t,x)$ that consists of a single 
+linear event with the slope $p$ and constant amplitude. 
+The frequency domain representation of $S(t,x)$ is given by
+      \begin{equation}
+          S(f,x)=A(f){{e}^{j2\pi fxp}},
+        \label{eq:eq1}
+      \end{equation} 
+where $A(f)$is the wavelet spectrum, $f$is the temporal frequency, 
+and $x$is the spatial variable. We assume $x=n\Delta x$, where 
+$n=1,2,...,N$, $N$is the number of traces in the whole section. 
+The relationship between the n-th trace and (n-1)-th trace can be easily 
+shown as
+      \begin{equation}
+          {{S}_{n}}(f)={{a}_{1}}(f){{S}_{n-1}}(f),
+        \label{eq:eq2}
+      \end{equation} 
+where ${{a}_{1}}=\exp (j2\pi fp\Delta x)$. This recursion is a first-order 
+differential equation also known as an AR model of order 1 and represents a 
+single complex-valued harmonic \cite[]{Bekara2009}. If there are $M$ linear
+events in x-t domain, we can have a difference equation of order $M$ \cite[]{Sacchi2001}
+      \begin{equation}
+          {{S}_{n}}(f)=\sum\limits_{i=1}^{M}{{{a}_{i}}(f){{S}_{n-i}}(f)}.
+        \label{eq:eq3}
+      \end{equation} 
+The recursive filter $\left\{ {{a}_{i}}(f) \right\}$can be found for predicting a 
+noise-free superposition of complex harmonics. Considering seismic data with additive 
+random noise and non-causal prediction with order $2M$which includes both forward 
+and backward prediction equations \cite[]{Spitz1991, Naghizadeh2009}, we can obtain
+      \begin{equation}
+         {{\varepsilon }_{n}}(f)={{S}_{n}}(f)-\sum\limits_{i=1}^{M}{{{a}_{i}}{{S}_{n-i}}}(f)-\sum\limits_{i=-1}^{-M}{{{a}_{i}}{{S}_{n-i}}(f)},
+        \label{eq:eq4}
+      \end{equation} 
+where ${{\varepsilon }_{n}}(f)$is a complex noise sequence. \cite{Canales1984} argues 
+a causal estimate of signal $\sum\limits_{i=1}^{M}{{{a}_{i}}(f){{S}_{n-i}}(f)}$ 
+is the predictable part of data obtained by an AR model. This operation is usually 
+called $f$-$x$ deconvolution \cite[]{Gulunay1986}. Noise-free events that are linear in 
+the $t$-$x$ domain manifest as a superposition of harmonics in the $f$-$x$ domain and these 
+harmonics can be perfectly predicted using AR filter. If seismic events are not linear, 
+or the amplitudes of wavelet are varying from trace to trace, they no longer follow 
+Canales’s assumptions \cite[]{Canales1984}. One needs to perform $f$-$x$ deconvolution over a 
+short sliding window in time and space. This leaves the choice of window parameters 
+(window size and length of overlapping between adjacent windows). \cite{Bekara2009} 
+discuss some limitations of conventional $f$-$x$ deconvolution in detail.
+
+\section{$f$-$x$ domain regularized nonstationary autoregression}
+
+Nonstationary autoregression has been developed and used in signal processing 
+\cite[]{Bakrim1994, Aboutajdine1996, Izquierdo2006} and seismic data processing
+\cite[]{Sacchi2009}. \cite{Fomel2009} developed a general method of nonstationary 
+autoregression using shaping regularization technology and applied it to multiples
+ subtraction. In this paper, we extend the RNA method to $f$-$x$ domain for complex numbers 
+and apply it to seismic random noise attenuation. 
+
+Consider two adjacent seismic traces ${{S}_{n}}(f)$ and ${{S}_{n-1}}(f)$ in 
+$f$-$x$ domain of a seismic section that consists of a single nonlinear event with the 
+slope ${{p}_{n}}$ and varying amplitude ${{B}_{n}}(f)$. Similar to equation ~\ref{eq:eq1}, 
+we can write
+      \begin{equation}
+          [{{S}_{n}}(f)=\frac{{{B}_{n}}(f)}{{{B}_{n-1}}(f)}{{e}^{j2\pi f\Delta x{{p}_{n}}}}{{S}_{n-1}}(f)={{a}_{1}}(f){{S}_{n-1}}(f).
+        \label{eq:eq5}
+      \end{equation}
+ 
+From equation ~\ref{eq:eq5} we can find that the coefficients of AR is the function of space index 
+$n$ and frequency index $f$. Therefore, we can use nonstationary autoregression to 
+describe this problem. Equation 5 describes the relation between two traces. 
+If we consider multiple traces, the nonstationary autoregression can be defined as \cite[]{Fomel2009}
+      \begin{equation}
+         {{\varepsilon }_{n}}(f)={{S}_{n}}(f)-\sum\limits_{i=1}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)},
+        \label{eq:eq6}
+      \end{equation} 
+where $n$ and $f$are the coordinate of space and frequency, respectively. If considering the situation
+ of non-causal nonstationary autoregression, we can rewrite the Nonstationary autoregression models
+ (equation ~\ref{eq:eq6}) as
+      \begin{equation}
+          {{\varepsilon }_{n}}(f)={{S}_{n}}(f)-\sum\limits_{i=1}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}-\sum\limits_{i=-1}^{-M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}.
+        \label{eq:eq7}
+      \end{equation}
+Equation ~\ref{eq:eq7} indicates that one trace noise-free in $f$-$x$ domain can 
+be estimated by weighted stacking adjacent traces with the weights ${{a}_{n,i}}(f)$, 
+which is varying along the space and frequency. Note that the difference between equations ~\ref{eq:eq4} and ~\ref{eq:eq6}
+ is that the coefficients are varying with space coordinate $n$ in equation ~\ref{eq:eq7}. 
+To obtain the coefficients ${{a}_{n,i}}(f)$ from equation 7, we can transform equation ~\ref{eq:eq7} 
+to the following least square problem:
+      \begin{equation}
+          \min_{a_{n,k}(f)}||{{S}_{n}}(f)-\sum\limits_{i=1}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}-\sum\limits_{i=-1}^{-M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}||_{2}^{2},
+        \label{eq:eq8}
+      \end{equation} 
+where $\left\| {} \right\|_{2}^{2}$denotes the squared L-2 norm. Note that both the data 
+${{S}_{n}}(f)$ and the coefficients ${{a}_{n,i}}(f)$ are in complex numbers domain.
+
+The problem of the minimization in equation ~\ref{eq:eq7} is ill-posed because it 
+has more unknown variables than constraints. To obtain the spatial-varying coefficients
+in nonstationary autoregression, several methods can be employed \cite[]{Aboutajdine1996}. 
+Some of these are related to the expansion of the spatial-varying coefficients in terms of a
+given sets of orthogonal basis functions and estimation of the coefficients of the expansion 
+by the least-square method \cite[]{Izquierdo2006}. \cite{Naghizadeh2009} used exponentially 
+weighted recursive least square (EWRLS) to solve the adaptive problem and applied it to 
+seismic trace interpolation. \cite{Fomel2009} proposed regularized nonstationary autoregression 
+in which shaping regularization technology \cite[]{Fomel2007} is used to constrain the 
+smoothness of the coefficients of nonstationary autoregression. In this paper, we also adopt
+shaping regularization to solve the under-constrained problem equation ~\ref{eq:eq8}.
+ 
+With the addition of a regularization term, equation ~\ref{eq:eq8} can be written as
+      \begin{equation}
+          \min_{a_{n,i}{f}}||{{S}_{n}}(f)-\sum\limits_{i=-M,i\ne 0}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}||_{2}^{2}+R[{{a}_{n,i}}(f)],
+        \label{eq:eq9}
+      \end{equation} 
+where $R$ denotes the shaping regularization operator. \cite{Fomel2009} compared classic 
+Tikhonov’s regularization with shaping regularization in RNA problem. 
+Shaping regularization \cite{Fomel2007} provides a particularly convenient method of 
+enforcing smoothness in iterative optimization schemes. Shaping regularization has clear 
+advantages of a more intuitive selection of regularization parameters and a faster iterative 
+convergence \cite[]{Fomel2009}. In the shaping regularization, we assume the initial 
+value for the estimated model ${{a}_{n,i}}(f)$ is zero. If we choose a more appropriate 
+initial value, we can have a fast iterative convergence of the conjugate-gradient iteration
+in shaping regularization.
+
+Note that the RNA equation in this paper (equation ~\ref{eq:eq9}) is in complex 
+number domain while the RNA used in multiples subtraction \cite[]{Fomel2009}
+is in real number domain. Analogous to RNA in real number domain, 
+we force the complex coefficients ${{a}_{n,i}}(f)$ in equation ~\ref{eq:eq9} 
+to have a desired behavior, such as smoothness. In shaping regularization technology, 
+we need to choose a shaping operator $\mathbf{S}$ \cite[]{Fomel2007}.
+In this paper, we choose shaping operator $\mathbf{S}$ as Gaussian smoothing with adjustable radius $r$. 
+\cite{Fomel2007} indicated Gaussian smoothing can be implemented by repeated triangle smoothing operator. 
+Both the data ${{S}_{n}}(f)$ and the coefficients ${{a}_{n,i}}(f)$ are complex numbers, but the shaping 
+operator $\mathbf{S}$ is real. Therefore, shaping operator $\mathbf{S}$ is operated in real and imaginary 
+parts of the complex coefficients respectively and the L-2 norm in equation ~\ref{eq:eq9} is the norm of complex numbers. 
+When using the algorithm of conjugate-gradient iterative inversion with shaping regularization proposed by \cite{Fomel2007}
+ to solve the complex RNA, we only need to replace transpose of real number by conjugate transpose of complex number.
+
+Once we obtain the complex coefficients of RNA, we can achieve an estimation of signal
+      \begin{equation} 
+        {{\tilde{S}}_{n}}(f)=\sum\limits_{i=-M,i\ne 0}^{M}{{{a}_{n,i}}(f){{S}_{n-i}}(f)}.
+        \label{eq:eq10}
+      \end{equation} 
+When we use $f$-$x$ RNA to noise attenuation, we first select a time window in $t$-$x$ domain and 
+transform the data to $f$-$x$ domain. The usage of time window is to guarantee that the data 
+is approximately stationary in time. The $f$-$x$ NAR can deal with spatial nonstationary data 
+in $f$-$x$ domain. Then we use equation ~\ref{eq:eq9} with shaping regularization to compute the coefficients
+ ${{a}_{n,i}}(f)$ and use equation ~\ref{eq:eq10} to estimate the signal in $f$-$x$ domain. Finally, 
+we transform data back to the $t$-$x$ domain and repeat for the next time window.
+
+The computational cost of the proposed method is $O\left( {{N}_{d}}{{N}_{f}}{{N}_{iter}} \right)$, 
+where ${{N}_{d}}$ is data size, ${{N}_{f}}$is filter size, ${{N}_{iter}}$is the number of 
+conjugate-gradient iterations. If ${{N}_{iter}}$and ${{N}_{f}}$ are small, this is a 
+fast method. In practical implementation, we can choose the range of computed 
+frequency to reduce the computation cost. In addition, if we can simplify the 
+coefficients not to be frequency-dependent, we can apply RNA in frequency slice. 
+In that case the different-frequency slices can be processed in parallel. 
+And the computation cost and memory requirements can be further reduced.
+
+\inputdir{simple}
+ 
+\multiplot{6}{sin,nsin,tpefpatch,fxpatch,npre1,npre2}{width=0.3\columnwidth}{(a) Synthetic data. (b) Noisy data (SNR=1.53). 
+(c) Result of $f$-$x$ domain prediction (SNR=2.53). (d) Result of $t$-$x$ domain prediction (SNR=3.12). (e) Result of $f$-$x$ RNA 
+without constraint of smoothness along the frequency axis (SNR=4.87). (f) Result of $f$-$x$ RNA with ${{r}_{f}}=3$ (SNR=5.06). 
+We decimate the data for display purpose.
+}
+  
+
+\plot{npar2}{height=0.5\textheight}{The real part of coefficients at a given shift ${{a}_{n,i=1}}(f)$.}
+
+\multiplot{3}{fxdiff,mpapatch,ndiff2}{width=0.25\columnwidth}{Difference sections of $f$-$x$ domain prediction (a), 
+$t$-$x$ domain prediction (b), and $f$-$x$ RNA (c).
+}
+
+Consider a simple section (Figure ~\ref{fig:sin}), which includes one event, 501 traces. 
+The event is obtained by convolution with Ricker wavelet. Both the dip and amplitude 
+of the event are space-varying. The travel time is a sine function and the amplitude of 
+the Ricker wavelet is multiplied by$B(x)=0.2{{(x-2.5)}^{2}}+0.5$. This event is obviously 
+nonstationary in space. We add some random noise to it (Figure ~\ref{fig:nsin}). 
+The event is greatly contaminated by random noise, especially in the middle part, 
+because the signal of the middle part is poorer than the sideward and the noise levels 
+are the same in the whole section. We use three methods, $f$-$x$ domain prediction, $t$-$x$ 
+domain prediction, and $f$-$x$ domain RNA, to suppress random noise. The $f$-$x$ domain and $t$-$x$ 
+domain prediction methods we used in this paper are discussed by \cite[]{Abma1995}. 
+The $f$-$x$ domain prediction is implemented over a sliding window of 20 traces width with 50\% 
+overlap and the filter length is 4, $M=2$ in equation 4 and the $t$-$x$ domain prediction is 
+implemented over the same sliding window and the filter length in space and time are 4 and 5 
+respectively. The $f$-$x$ RNA is implemented with the parameters: the filter length is 4, $M=2$ 
+in equation ~\ref{eq:eq8}; the smoothing radiuses in space and frequency axes of shaping regularization are 
+respectively 20 and 3, ${{r}_{x}}=20$, ${{r}_{f}}=3$. Comparing the results of $f$-$x$ RNA (Figure ~\ref{fig:npre2}) 
+with other prediction methods (Figures ~\ref{fig:tpefpatch} and ~\ref{fig:fxpatch}, we find that the 
+$f$-$x$ RNA is more effective in random noise attenuation for this simple nonstationary data. From the 
+difference sections (Figure ~\ref{fig:npar2}), we find that all the three methods remove 
+some effective signals. However, the proposed method removes fewest signals than other two methods. 
+Note that the removed signals by $t$-$x$ and $f$-$x$ prediction methods are bigger in the sideward 
+part than middle part, because the filters are the same in a sliding time window while 
+the amplitude and slope of the event are different.
+ 
+In order to quantitatively evaluate the effect of denoising between different methods, 
+we use signal-to-noise ratio (SNR) to compare these three methods. The SNR is estimated by
+      \begin{equation} 
+          SNR=10{{\log }_{10}}(\frac{\sum\limits_{t,n}{{{[{{d}_{n}}(t)]}^{2}}}}{\sum\limits_{t,n}{{{[{{d}_{n}}(t)-{{r}_{n}}(t)]}^{2}}}}),
+        \label{eq:eq11}
+      \end{equation} 
+where ${{r}_{n}}(t)$ is the noisy section and ${{d}_{n}}(t)$is the noisy-free section or 
+the section after noise attenuation. In this simple example, the SNR of the input data without processing is 1.53. 
+After noise attenuation, the SNR of $f$-$x$ RNA is 5.06 dB, and the SNRs of $f$-$x$ domain and $t$-$x$ domain prediction are 
+respectively 2.53 dB and 3.12 dB. The $f$-$x$ RNA can improve SNR more greatly.
+
+To test the sensitivity to the constraint of smoothness along the frequency axis, we give the result of $f$-$x$ RNA without constraint of smoothness along the frequency axis in this simple example (Figure ~\ref{fig:npre1}). The result without constraint along frequency axis 
+(Figure ~\ref{fig:npre1}) is a little worse than that with constraint along frequency. 
+But both of them are better than the results of conventional $f$-$x$ domain and $t$-$x$ domain prediction. 
+Therefore, to reduce the computation cost, we can simplify the coefficients not to be frequency-dependent 
+when the input seismic data is huge. It is a tradeoff between computation cost and effect of noise attenuation.
+
+Because the dip and amplitude of the event are varying smoothly, $f$-$x$ RNA can predict the signal with smooth 
+coefficients ${{a}_{n,i}}(f)$. To specify the coefficients, we display the real parts of the complex 
+coefficients at a given shift ${{a}_{n,i=1}}(f)$ (Figure ~\ref{fig:npar2}). The reason of displaying real parts not 
+imaginary parts is that the signs of real parts of coefficients are the same for forward and 
+backward prediction. We find that the real parts of the complex coefficients are smooth. 
+The smoothing radius controls the smoothness of the coefficients. If we only use one adjacent 
+trace to predict the trace, the coefficients should have the expression
+      \begin{equation} 
+          {{a}_{n,i=1}}(f)=\frac{{{B}_{n}}(f)}{{{B}_{n-1}}(f)}{{e}^{j2\pi f\Delta x{{p}_{n}}}}.
+        \label{eq:eq12}
+      \end{equation} 
+From equation ~\ref{eq:eq12} we can note that if the dip and amplitude are smoothly varying, 
+the coefficients are smooth. Therefore, we use Gaussian shaping regularization to constrain 
+the coefficients when solving the least squares equation ~\ref{eq:eq9}.
+
+\section{Examples}
+
+We demonstrate the effectiveness of the proposed $f$-$x$ RNA on a synthetic shot gather and a field poststack dataset. 
+
+\subsection{Synthetic shot gather}
+
+\inputdir{shot}
+
+\multiplot{6}{para,npara,tpefpatch,fxpatch,npre,npar}{width=0.3\columnwidth}{(a) Synthetic shot gather. 
+(b) Noisy gather. (c) Result of $f$-$x$ domain prediction (SNR=0.98). (d) Result of $t$-$x$ domain prediction (SNR=1.25). 
+(e) Result of $f$-$x$ RNA (SNR=3.12). (f) The real part of coefficients at a given shift ${{a}_{n,i=1}}(f)$. 
+We decimate the data in (a)-(e) for display purpose.
+}
+
+\multiplot{3}{fxdiff,mpapatch,ndiff}{width=0.25\columnwidth}{Difference sections of $f$-$x$ domain prediction (a), 
+$t$-$x$ domain prediction (b), and $f$-$x$ RNA (c).
+}
+
+Figure ~\ref{fig:para} shows a synthetic shot gather with four hyperbolic events, 
+501 traces. Some random noise is added to this gather. We do not use windows in time 
+for this example. For $f$-$x$ RNA, the length of filter is $M=4$ and the smoothing radiuses in 
+space and frequency axes are respectively 20 and 3, ${{r}_{x}}=20$, ${{r}_{f}}=3$. The $f$-$x$ domain prediction 
+is implemented over a sliding window of 20 traces width with 50\% overlap and the filter length is 6, $M=3$ and 
+the $t$-$x$ domain prediction is implemented over the same sliding window and the filter length in space and 
+time are 6 and 5 respectively. The estimated nonstationary coefficients by the proposed $f$-$x$ RNA are shown 
+in Figure ~\ref{fig:npar}. Note that the middle coefficient is bigger than the sideward, which is because the dip of 
+the middle is smaller than the sideward. The results of three methods are shown in Figures ~\ref{fig:fxpatch}-~\ref{fig:npre}, 
+respectively. The $f$-$x$ RNA achieves a similar result to $f$-$x$ domain and $t$-$x$ domain prediction methods. 
+However, we use equation ~\ref{eq:eq11} to compute the SNRs of the results of three methods. The SNRs of three 
+methods are 0.98 dB, 1.25 dB, 1.67 dB, respectively. The $f$-$x$ RNA can improve SNR more greatly. The 
+$f$-$x$ RNA solves the nonstationary case by allowing the coefficients smoothly varying, while $f$-$x$ domain 
+or $t$-$x$ domain prediction method uses windowing strategies. From the difference sections (Figure ~\ref{fig:fxdiff}-~\ref{fig:ndiff}), we 
+find that $f$-$x$ domain and $t$-$x$ domain prediction methods damage more signals than $f$-$x$ RNA. If we use 
+windows in time for this example, we can obtain better results. This example shows that $f$-$x$ RNA can 
+be used for random noise attenuation in shot gather. 
+
+\subsection{Field poststack dataset}
+
+\inputdir{real}
+
+\multiplot{4}{data,fxm,tx,npre}{width=0.4\columnwidth}{ (a) A field marine data set. 
+(b) The result of $f$-$x$ domain prediction. (c) The result of $t$-$x$ domain prediction. 
+(d) The result of $f$-$x$ RNA.
+}
+
+\multiplot{3}{fxdiff,txdiff,nprediff}{width=0.5\columnwidth}{Difference sections of $f$-$x$ domain prediction (a), 
+$t$-$x$ domain prediction (b), and $f$-$x$ RNA (c).
+}
+
+\multiplot{4}{zdata,zfxm,ztx,znpre}{width=0.4\columnwidth}{Zoomed sections. (a) Original data. 
+(b) The result of $f$-$x$ domain prediction. (c) The result of $t$-$x$ domain prediction. 
+(d) The result of $f$-$x$ RNA.
+}
+
+\multiplot{4}{dataf,fxf,txf,npref}{width=0.4\columnwidth}{Comparison on spectra of one trace 
+at 6000 m in field marine data (Figure ~\ref{fig:data}-~\ref{fig:npre}). (a)-(d) are the amplitude spectra of 
+one trace at 6000 m in Figures ~\ref{fig:data}-~\ref{fig:npre}, respectively.
+}
+
+Figure ~\ref{fig:data} is a seismic image from marine data after time migration. 
+The preprocessing, such as bandpass filtering and migration, has removed some noise. 
+However, some noise still exists in this image (indicated by arrows). This dataset is 
+not structurally too complex and the noise seems random. Therefore, we can use $t$-$x$ 
+domain or $f$-$x$ domain prediction methods to attenuate the random noise. 
+Figures ~\ref{fig:fxm}-~\ref{fig:npre} show the results of random noise attenuation using 
+$f$-$x$ domain prediction, $t$-$x$ domain prediction and $f$-$x$ RNA, respectively. The length of 
+time window is 512 ms in all the three methods. For $f$-$x$ RNA, the filter length is $M=4$, 
+and the smoothing radiuses in space and frequency axes are respectively 20 and 3, 
+${{r}_{x}}=20$, ${{r}_{f}}=3$. The $f$-$x$ domain prediction is implemented over a 
+sliding window of 20 traces width with 50\% overlap and the filter length is $M=4$ 
+and the $t$-$x$ domain prediction is implemented over the same sliding window and the 
+filter length in space and time are 6 and 5 respectively. The $f$-$x$ domain and $t$-$x$ 
+domain prediction methods removes random noise well in the case that the events 
+are approximately linear. In the area of complex structure, however, both of the 
+$f$-$x$ domain and $t$-$x$ domain prediction methods can not obtain a good result. Compared 
+to $f$-$x$ domain and $t$-$x$ domain prediction methods, $f$-$x$ RNA removes more noise and 
+preserves signals (Figure ~\ref{fig:fxdiff}-~\ref{fig:nprediff}). 
+Note that $f$-$x$ domain and $t$-$x$ domain prediction methods remove some signals, 
+especially for complex structure (indicated by arrows in Figures ~\ref{fig:fxdiff} and ~\ref{fig:txdiff}). 
+We display the zoomed section in Figure ~\ref{fig:zdata}-~\ref{fig:znpre}. 
+The zoomed sections show the proposed method is more effective than other methods, 
+especially in the area of complex structure indicated by arrow. The $f$-$x$ RNA gives 
+a good result not only for linear events but also for curving events 
+(indicated by arrows in Figure ~\ref{fig:zdata}-~\ref{fig:znpre}). 
+From the comparison on the spectra of a trace randomly chosen as shown in 
+Figure ~\ref{fig:dataf}-~\ref{fig:npref}, we can see that $f$-$x$ domain and $t$-$x$ 
+domain prediction methods greatly attenuate frequency components in [10,30] Hz, 
+which includes effective signals. Thus, the difference sections of $f$-$x$ domain and 
+$t$-$x$ domain prediction methods (Figures ~\ref{fig:fxdiff} and ~\ref{fig:txdiff}) 
+include more signals than $f$-$x$ RNA (Figure ~\ref{fig:nprediff}). For high frequency random noise, 
+all the three methods can achieve a similar result (Figure ~\ref{fig:dataf}-~\ref{fig:npref}).
+
+\section{Conclusions}
+
+We have proposed a novel method for random noise attenuation using $f$-$x$ 
+domain regularized nonstationary autoregression. $f$-$x$ RNA uses shaping 
+regularization to constrain the complex nonstationary coefficients to 
+be smooth along space and frequency axes. Contrary to conventional 
+noise-reduction technology, $f$-$x$ domain and $t$-$x$ domain prediction, $f$-$x$ 
+RNA invokes no piecewise-stationary assumption. The parameters used in 
+$f$-$x$ RNA are intuitive because the parameters directly control the 
+smoothness of complex coefficients. The proposed method has two key 
+parameters: filter length and smoothing radius of shaping operator. 
+Filter length is related to the number of events and smoothing radius 
+is related to the smoothness of desired RNA complex coefficients. As 
+the smoothing radius increases, the result of RNA approaches the result 
+of stationary autoregression. This approach does not require breaking 
+the input data into local windows along space axis, although it is 
+conceptually analogous to sliding spatial windows with maximum overlap. 
+Both synthetic and field data examples confirm that the proposed approach 
+can be significantly more effective than other noise-reduction methods 
+in improving signal-to-noise ratio and preserving the signals. A 
+comparison with the recently published $t$-$x$ RNA method has not been 
+attempted, but remains of interest for further investigation. The 
+proposed method is easy to extend to the 3D case ($f$-$x$-$y$ domain). 
+One only needs to add a space dimension in the equation 9 when 
+applied in 3D case. Besides random noise attenuation, $f$-$x$ RNA may 
+have other applications in seismic data processing, such as seismic 
+trace interpolation.
+
+\section{Acknowledgments}
+
+We would like to thank Sergey Fomel, Jingye Li and Yang Liu for inspiring 
+discussions and help with the code in the Madagascar software package. 
+We also thank the associate editor, the reviewer Clement Kostov and one 
+anonymous reviewer for their constructive comments, which improved the
+ quality of the paper. This work is financially supported by Important 
+National Science and Technology Specific Projects of China 
+(grant 2011ZX05023-005-005).
+
+%\section{Note on reproducibility}
+
+%All computational experiments described in this paper can be
+%reproduced using the \emph{Madagascar} open-source software package
+%available at \url{http://rsf.sourceforge.net}.
+
+
+\bibliographystyle{seg}
+\bibliography{paper}
+
+
