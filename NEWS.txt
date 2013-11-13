@@ -23,6 +23,9 @@ To the reproducible documents collection:
   double-square-root eikonal equation (Li, Vladimirsky, and Fomel)
 * cup/rna2d: Random noise attenuation using f-x regularized
   nonstationary autoregression (Liu, Chen, Du, and Wu)
+* cup/rna3d: Noncausal f-x-y regularized nonstationary prediction
+  filtering for random noise attenuation on 3D seismic data (Liu and
+  Chen)
 
 To SCons:
 
