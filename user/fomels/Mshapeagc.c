@@ -26,8 +26,8 @@ int main (int argc, char* argv[])
     int n[SF_MAX_DIM], rect[SF_MAX_DIM];
     int n1, n2, i2, niter, dim, dim1, i1, i;
     char key[6];
-    float *data, *gain, *igain, *one, norm;
-    sf_file in, out;
+    float *data, *gain, *igain, *one, eps;
+    sf_file in, out, fgain;
 
     sf_init (argc, argv);
     in = sf_input ("in");
@@ -61,8 +61,18 @@ int main (int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
+    if (!sf_getfloat("eps",&eps)) eps=0.0f;
+    /* regularization */
+
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity */
+
+    if (NULL != sf_getstring("gain")) {
+	/* output gain file (optional) */
+	fgain = sf_output("gain");
+    } else {
+	fgain = NULL;
+    }
 
     sf_divn_init(dim1+1,n1,n,rect,niter,verb);
 
@@ -70,30 +80,20 @@ int main (int argc, char* argv[])
 	sf_floatread(data,n1,in);
 	for (i1=0; i1 < n1; i1++) {
 	    gain[i1] = fabsf(data[i1]);
+	    one[i1] = 1.0f;
 	}
 
-	norm = 0.;
+	sf_divne(one,gain,igain,eps);
+
 	for (i1=0; i1 < n1; i1++) {
-	    norm += gain[i1]*gain[i1];
+	    data[i1] *= igain[i1];
 	}
-	if (norm > 0.0) { 
-	    norm = sqrtf(n1/norm);
-	    
-	    for (i1=0; i1 < n1; i1++) {
-		one[i1] = norm;
-		gain[i1] *= norm;
-	    }
-	    
-	    sf_divn(one,gain,igain);
-
-	    for (i1=0; i1 < n1; i1++) {
-		data[i1] *= igain[i1];
-	    }
-	}
+	
+	if (NULL != fgain) 
+	    sf_floatwrite(igain,n1,fgain);
 
 	sf_floatwrite(data,n1,out);
     }
 
-
-    exit (0);
+    exit(0);
 }
