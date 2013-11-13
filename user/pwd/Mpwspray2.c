@@ -83,6 +83,9 @@ int main (int argc, char *argv[])
 
     for (i=0; i < n23; i++) { 
 	sf_floatread(p1[i],n1,dip);
+    }
+
+    for (i=0; i < n23; i++) { 
 	sf_floatread(p2[i],n1,dip);
     }
 
