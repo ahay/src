@@ -27,10 +27,11 @@
 int main(int argc, char* argv[])
 {
     bool inv;
-    map4 map;
+    map4 *map;
     int iw, nw, ih, nh, ik, nk, ib, nb, *fold;
-    float dw, dh, dk, w0, h0, k0, w, h, k, eps, db, b, sinb, cosb, tanb;
-    float *slice, *hstr, *slice2, *sum, amp, sample;
+    float dw, dh, dk, w0, h0, k0, w, h, k, eps, db, b, cosb;
+    sf_complex *slice, *slice2, *sum, sample, tshift; 
+    float *hstr, *dt, *dx;
     sf_file in, out;
     
     sf_init(argc,argv);
@@ -40,7 +41,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("inv",&inv)) inv=true;
     /* inversion flag */
 
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
     if (!sf_histint(in,"n1",&nh)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
     if (!sf_histint(in,"n3",&nk)) sf_error("No n3= in input");
@@ -62,18 +63,47 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
-    slice  = sf_floatalloc(nh);
+    slice  = sf_complexalloc(nh);
     hstr   = sf_floatalloc(nh);
-    slice2 = sf_floatalloc(nh);
+    slice2 = sf_complexalloc(nh);
 
-    sum  = sf_floatalloc(nh);
+    sum  = sf_complexalloc(nh);
     fold = sf_intalloc(nh);
 
-    if (!sf_getint("nb",&nb)) nb=86;   /* number of angles */
+    if (!sf_getint("nb",&nb)) nb=85;   /* number of angles */
     if (!sf_getfloat("db",&db)) db=1;   /* angle increment */
     db *= SF_PI/180;
 
-    map = stretch4_init (nh, h0, dh, nh, eps);
+    map = (map4*) sf_alloc(nb,sizeof(map4));
+    dt = sf_floatalloc(nb);
+    dx = sf_floatalloc(nb);
+
+    /* precompute things */
+    for (ib=0; ib < nb; ib++) {
+	b = (ib+1)*db;
+	cosb = cosf(b);
+
+	dt[ib] = logf(cosb);
+
+	for (ih=0; ih < nh; ih++) {
+	    h = h0 + ih*dh;
+
+	    if (inv) {
+		hstr[ih] = h*cosb;
+	    } else {
+		hstr[ih] = h/cosb;
+	    }
+	}
+
+	if (inv) {	
+	    dx[ib]=sinf(b);
+	} else {
+	    dx[ib]=tanf(b);
+	}
+
+	map[ib] = stretch4_init (nh, h0, dh, nh, eps);
+	stretch4_define (map[ib],hstr);
+    }	
 	
     for (ik=0; ik < nk; ik++) {
 	k = k0+ik*dk;   
@@ -82,63 +112,45 @@ int main(int argc, char* argv[])
 	for (iw=0; iw < nw; iw++) {
 	    w = w0+iw*dw;
 
-	    sf_floatread(slice,nh,in);
+	    sf_complexread(slice,nh,in);
 
 	    for (ih=0; ih < nh; ih++) {
 		sum[ih] = slice[ih];
 		fold[ih] = 1;
 	    }
 	
-	    for (ib=1; ib < nb; ib++) {
-		b = ib*db;
-		sinb = sinf(b);
-		cosb = cosf(b);
-		tanb = sinb/cosb;
+	    for (ib=0; ib < nb; ib++) {
+		b = w*dt[ib];
 
-		for (ih=0; ih < nh; ih++) {
-		    h = h0 + ih*dh;
-
-		    if (inv) {
-			hstr[ih] = h*cosb;
-		    } else {
-			hstr[ih] = h/cosb;
-		    }
-		}
-
-		stretch4_define (map,hstr);
-
+		tshift = sf_cmplx(cosf(b),-sinf(b));
+		
 		if (inv) {
-		    stretch4_apply  (map,slice,slice2);
+		    cstretch4_apply  (map[ib],slice,slice2);
 		} else {
-		    stretch4_invert (map,slice2,slice);
+		    cstretch4_invert (map[ib],slice2,slice);
 		}
 
 		for (ih=0; ih < nh; ih++) {
 		    h = h0 + ih*dh;
+		    
+		    sample = slice2[ih];
 
-		    if (inv) {	
-			amp = 2.0f*cosf(k*h*sinb-w*cosb);
-		    } else {
-			amp = 2.0f*cosf(k*h*tanb-w/cosb);
-		    }
-
-		    sample = slice2[ih]*amp;
-
-		    if (sample != 0.0f) {
-			sum[ih]  += sample;
+		    if (crealf(sample) != 0.0f || 
+			cimagf(sample) != 0.0f) {
+			sum[ih]  += sample*tshift*2.0f*cosf(k*h*dx[ib]);
 			fold[ih] += 2;
 		    }
-		}
+		} /* ih */
 	    } /* ib */
 	
 	    for (ih=0; ih < nh; ih++) {
 		if (fold[ih] > 1) sum[ih] /= fold[ih];
 	    }
-    
-	    sf_floatwrite(sum,nh,out);
+	    
+	    sf_complexwrite(sum,nh,out);
 	} /* iw */
     } /* ik */
     sf_warning(".");
-
+    
     exit(0);
 }

@@ -139,6 +139,40 @@ void stretch4_define (map4 str, const float* coord /* [nd] */)
     }
 }
 
+void cstretch4_apply (map4 str, 
+		      const sf_complex* ord /* [nd] */, 
+		      sf_complex* mod       /* [n1] */)
+/*< complex transform ordinates to model >*/
+{    
+    int id, it;
+    float *real, *imag, *ford;
+    
+    real = sf_floatalloc(str->nt);
+    imag = sf_floatalloc(str->nt);
+    ford = sf_floatalloc(str->nd);
+
+    for (id=0; id < str->nd; id++) {
+	ford[id] = crealf(ord[id]);
+    }
+
+    stretch4_apply (str,ford,real);
+
+    for (id=0; id < str->nd; id++) {
+	ford[id] = cimagf(ord[id]);
+    }
+
+    stretch4_apply (str,ford,imag);
+
+    for (it=0; it < str->nt; it++) {
+	mod[it] = sf_cmplx(real[it],imag[it]);
+    }
+
+    free(real);
+    free(imag);
+    free(ford);
+}
+
+
 void stretch4_apply (map4 str, 
 		     const float* ord /* [nd] */, 
 		     float* mod       /* [n1] */)
@@ -187,6 +221,39 @@ void stretch4_apply (map4 str,
     for (it = str->ie; it < nt; it++) {
 	mod[it] = 0.;
     }
+}
+
+void cstretch4_invert (map4 str, 
+		       sf_complex* ord       /* [nd] */, 
+		       const sf_complex* mod /* [n1] */)
+/*< convert model to ordinates by spline interpolation >*/
+{    
+    int id, it;
+    float *real, *imag, *fmod;
+    
+    real = sf_floatalloc(str->nd);
+    imag = sf_floatalloc(str->nd);
+    fmod = sf_floatalloc(str->nt);
+
+    for (it=0; it < str->nt; it++) {
+	fmod[it] = crealf(mod[it]);
+    }
+
+    stretch4_invert (str,real,fmod);
+
+    for (it=0; it < str->nt; it++) {
+	fmod[it] = cimagf(mod[it]);
+    }
+
+    stretch4_invert (str,imag,fmod);
+
+    for (id=0; id < str->nd; id++) {
+	ord[id] = sf_cmplx(real[id],imag[id]);
+    }
+
+    free(real);
+    free(imag);
+    free(fmod);
 }
 
 void stretch4_invert (map4 str, 
