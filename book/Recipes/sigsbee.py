@@ -86,19 +86,15 @@ def wempar(par):
     par['fximg']=65
 
 def fwipar(par):
-    par['verb']='y'
-    par['eps']=0.1
-    par['nrmax']=5
-    par['dtmax']=0.00005
-    par['tmx']=16
-    
-    par['fw']=36
-    par['jw']=1
-    par['dw']=1/(par['nt']*par['dt'])
-    par['kw']=par['nt']/2+1
-    par['ow']=par['fw']*par['dw']
-    par['nw']=240
-    par['eic']='itype=o'
+    par['frq']=10
+    par['kt']=100
+    par['nt']=12001
+    par['dt']=0.001
+    par['nb']=150
+    par['jsnap']=500
+    par['jdata']=1
+    par['wweight']=50
+    par['wclip']=0.5
 
     par['nqz']=par['nz']/2
     par['oqz']=par['oz']

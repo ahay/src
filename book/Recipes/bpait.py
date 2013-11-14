@@ -16,6 +16,25 @@ def param():
 
     return par
 
+def fwipar(par):
+    par['frq']=10
+    par['kt']=100
+    par['nt']=12001
+    par['dt']=0.001
+    par['nb']=150
+    par['jsnap']=500
+    par['jdata']=1
+    par['wweight']=50
+    par['wclip']=0.5
+
+    par['nqz']=par['nz']/2
+    par['oqz']=par['oz']
+    par['dqz']=par['dz']*2
+    
+    par['nqx']=par['nx']/2
+    par['oqx']=par['ox']
+    par['dqx']=par['dx']*2
+
 # ------------------------------------------------------------
 def getmigvel(velo,par):
 
