@@ -187,8 +187,8 @@ def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
           transp plane=23 
           '''%(pad,par['oz']-padT*par['dz'],par['dz']))
      
-     genwfl(ker+'_SW',dws,ss+'_T',ker+'_sloPZ','y','y','',par)
-     genwfl(ker+'_RW',dwr,rr+'_T',ker+'_sloPZ','n','n','',par)
+     genwfl(ker+'_SW',dws,ss+'_T',ker+'_padZ','y','y','',par)
+     genwfl(ker+'_RW',dwr,rr+'_T',ker+'_padZ','n','n','',par)
 
      Flow(ker,[ker+'_SW',ker+'_RW'],
           '''
