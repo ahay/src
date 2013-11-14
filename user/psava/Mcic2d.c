@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
     sf_axis az,ax,at,aa; /* cube axes */
     int     iz,ix,it;
     int     nz,nx,nt;
+    unsigned int iseek;
 
     float **us=NULL,**ur=NULL,**ii=NULL;
 
@@ -110,7 +111,7 @@ int main(int argc, char* argv[])
 		    ii[ix][iz] += us[ix][iz]*ur[ix][iz];
 		}
 	    }
-
+	    
 	} /* it */
 	if(verb) fprintf(stderr,"\n");
 	
@@ -121,7 +122,8 @@ int main(int argc, char* argv[])
 	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",(nt-it-1));
 	    
 	    sf_floatread(us[0],nz*nx,Fs);
-	    sf_seek(Fr,(nt-1-it)*nz*nx*sizeof(float),SEEK_SET);
+	    iseek = (nt-1-it)*nz*nx*sizeof(float);
+	    sf_seek(Fr,iseek,SEEK_SET);
 	    sf_floatread(ur[0],nz*nx,Fr);
 	    
 #ifdef _OPENMP
