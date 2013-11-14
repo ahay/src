@@ -156,37 +156,22 @@ def genwfl(wfl,sou,coo,slo,down,causal,custom,par):
 # FWI kernel (Z extrapolation)
 def fwikerZ(ker,dws,ss,dwr,rr,slo,pad,custom,par):
 
-     padL=int(0.5*(pad-par['nx']))
-     padR=pad-padL-par['nx']
-     Flow(ker+'_sloL',slo,
+     padL=min(par['nx'],int(0.5*(pad-par['nx'])))
+     Flow(ker+'_padX',slo,
           '''
-          window n1=1 f1=0 |
-          spray axis=1 n=%d o=0 d=1 |
-          transp plane=23 
-          '''%(padL))
-     Flow(ker+'_sloR',slo,
-          '''
-          window n1=1 f1=%d |
-          spray axis=1 n=%d o=0 d=1 |
-          transp plane=23
-          '''%(par['nx']-1,padR))
-     Flow(ker+'_sloPX',[ker+'_sloL',slo,ker+'_sloR'],
-          '''
-          cat axis=1 space=n ${SOURCES[1]} ${SOURCES[2]} |
-          put o1=%g d1=%g d3=%g |
-          window squeeze=n j1=4
-          '''%(-padL*par['dx'],par['dx'],par['dz']))
-     
-     genwfl(ker+'_SW',dws,ss,ker+'_sloPX','y','y','',par)
-     genwfl(ker+'_RW',dwr,rr,ker+'_sloPX','y','n','',par)
+          remap1 n1=%d o1=%g d1=%g
+          '''%(pad,par['ox']-padL*par['dx'],par['dx']))
+          
+     genwfl(ker+'_SW',dws,ss,ker+'_padX','y','y','',par)
+     genwfl(ker+'_RW',dwr,rr,ker+'_padX','y','n','',par)
 
      Flow(ker,[ker+'_SW',ker+'_RW'],
           '''
           math output="conj(us)*ur"
           us=${SOURCES[0]} ur=${SOURCES[1]} |
-          window squeeze=n min1=%g max1=%g |
-          stack axis=4 | real | window | transp
-          '''%(par['ox'],par['ox']+(par['nx']-1)*par['dx']),stdin=0)
+          window min1=%g n1=%g |
+          stack axis=3 | real | transp
+          '''%(par['ox'],par['nx']),stdin=0)
 
 # ------------------------------------------------------------
 # FWI kernel (X extrapolation)
@@ -194,26 +179,14 @@ def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
      Flow(ss+'_T',ss,'reverse which=1 opt=i')
      Flow(rr+'_T',rr,'reverse which=1 opt=i')
 
-     padT=0.5*(pad-par['nz'])
-     padB=pad-padT-par['nz']
-     Flow(ker+'_sloB',slo,
+     padT=min(par['nz'],int(0.5*(pad-par['nz'])))
+     Flow(ker+'_padZ',slo,
           '''
-          window squeeze=n n3=1 f3=0 |
-          spray axis=3 n=%d o=0 d=1
-          '''%(padT))
-     Flow(ker+'_sloE',slo,
-          '''
-          window squeeze=n n3=1 f3=%d |
-          spray axis=3 n=%d o=0 d=1
-          '''%(par['nz']-1,padB))
-     Flow(ker+'_sloPZ',[ker+'_sloB',slo,ker+'_sloE'],
-          '''
-          cat axis=3 space=n ${SOURCES[1]} ${SOURCES[2]} |
-          put o3=%g d3=%g |
-          transp plane=13 |
-          window squeeze=n j1=4
-          '''%(-padT*par['dz'],par['dz']))
-
+          window | transp | 
+          remap1 n1=%d o1=%g d1=%g |
+          transp plane=23 
+          '''%(pad,par['oz']-padT*par['dz'],par['dz']))
+     
      genwfl(ker+'_SW',dws,ss+'_T',ker+'_sloPZ','y','y','',par)
      genwfl(ker+'_RW',dwr,rr+'_T',ker+'_sloPZ','n','n','',par)
 
@@ -221,8 +194,8 @@ def fwikerX(ker,dws,ss,dwr,rr,slo,pad,custom,par):
           '''
           math output="conj(us)*ur"
           us=${SOURCES[0]} ur=${SOURCES[1]} |
-          window squeeze=n min1=%g max1=%g |
-          stack axis=4 | real | window
-          '''%(par['oz'],par['oz']+(par['nz']-1)*par['dz']),stdin=0)
+          window min1=%g n1=%g |
+          stack axis=3 | real 
+          '''%(par['oz'],par['nz']),stdin=0)
 
 

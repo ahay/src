@@ -347,15 +347,6 @@ def zofmigCD(imag,data,rcoo,velo,custom,par):
     
 # ------------------------------------------------------------
 # FWI kernel
-def fwikerCD(ker,dts,ss,dtr,rr,vel,custom,par):
-    
-    fdmod.cdafd(ker+'_SD',ker+'_SW',dts,vel,ss,rr,custom+iwindow(par),par)
-
-    Flow(dtr+'_R',dtr,'reverse which=2 opt=i verb=y')
-    fdmod.cdafd(ker+'_RD',ker+'_RW',dtr+'_R',vel,rr,ss,custom+iwindow(par),par)
-    
-    cic(ker,ker+'_SW',ker+'_RW','',par,isreversed=0)
-
 def fwiker(ker,dts,ss,dtr,rr,vel,den,custom,par):
     
     fdmod.awefd(ker+'_SD',ker+'_SW',dts,vel,den,ss,rr,custom+iwindow(par),par)
@@ -365,4 +356,105 @@ def fwiker(ker,dts,ss,dtr,rr,vel,den,custom,par):
     
     cic(ker,ker+'_SW',ker+'_RW','',par,isreversed=0)
 
+def fwikerCDold(ker,dts,ss,dtr,rr,vel,custom,par):
+    
+    fdmod.cdafd(ker+'_SD',ker+'_SW',dts,vel,ss,rr,custom+iwindow(par),par)
 
+    Flow(dtr+'_R',dtr,'reverse which=2 opt=i verb=y')
+    fdmod.cdafd(ker+'_RD',ker+'_RW',dtr+'_R',vel,rr,ss,custom+iwindow(par),par)
+    
+    cic(ker,ker+'_SW',ker+'_RW','',par,isreversed=0)
+    
+# ------------------------------------------------------------
+# FWI kernel (same as variable-density RTM w/ CIC)
+def fwiker(kern,
+           sdat,scoo,
+           rdat,rcoo,
+           velo,dens,
+           custom,par):
+    
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    swfl=kern+'swfl'
+    rdrv=kern+'rdrv'
+    rwfl=kern+'rwfl'
+
+    Flow(kern,[sdat,scoo,rdat,rcoo,velo,dens],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=n %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[4]}
+         den=${SOURCES[5]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=n %s verb=n
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         vel=${SOURCES[4]}
+         den=${SOURCES[5]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
+         '''
+         %scic2d <%s isreversed=0 verb=n %s
+         ur=%s
+         >${TARGETS[0]};
+         '''%(M8R,swfl,custom,rwfl) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+
+# ------------------------------------------------------------
+# FWI kernel (same as constant-density RTM w/ CIC)
+def fwikerCD(kern,
+             sdat,scoo,
+             rdat,rcoo,
+             velo,
+             custom,par):
+    
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    swfl=kern+'swfl'
+    rdrv=kern+'rdrv'
+    rwfl=kern+'rwfl'
+
+    Flow(kern,[sdat,scoo,rdat,rcoo,velo],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[4]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=y %s verb=n
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         vel=${SOURCES[4]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
+         '''
+         %scic2d <%s isreversed=0 verb=n %s
+         ur=%s
+         >${TARGETS[0]};
+         '''%(M8R,swfl,custom,rwfl) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
