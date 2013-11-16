@@ -8,7 +8,7 @@ fpocs3dpthresh pocs3dpthresh
 '''
 
 cuda_progs = '''
-testcuda 
+testcuda cudartm
 '''
 
 try:  # distributed version
@@ -24,9 +24,8 @@ env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-####################################################################
+
 # fftw settings
-####################################################################
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])

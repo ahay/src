@@ -1,8 +1,7 @@
 /* CUDA installation test
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University
-	Author(s): Pengliang Yang
+  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,20 +29,15 @@ extern "C" {
 #include <rsf.h>
 }
 
-static void sf_check_gpu_error (const char *msg) {
-    cudaError_t err = cudaGetLastError ();
-    if (cudaSuccess != err) 
-        sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err));
-}
-
 
 int main(int argc, char *argv[])
 {
 
-    cudaSetDevice (0);
-    sf_check_gpu_error ("Device initialization");
+    	cudaSetDevice (0);
+	cudaError_t err = cudaGetLastError();
+	if (cudaSuccess != err) printf("Cuda error: %s\n", cudaGetErrorString(err));
 
-	printf("success!\n");
+	printf("cuda installation succeed!\n");
 	
 	exit(0);
 }
