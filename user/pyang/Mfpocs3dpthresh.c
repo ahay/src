@@ -1,7 +1,7 @@
 /* Two-step POCS interpolation using a general Lp-norm optimization
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University, China
+  Copyright (C) 2013  Xi'an Jiaotong University
 	Author(s): Pengliang Yang
 
   This program is free software; you can redistribute it and/or modify
