@@ -4,6 +4,7 @@ methods = {
     'fakirmig': 'First-Arrival Kirchhoff',
     'ffd': 'FFD',
     'lowrank': 'Lowrank',
+    'oway': 'One-Way Wave Equation'
     }
 thisdir = os.path.basename(os.getcwd())
 if thisdir in methods.keys():
