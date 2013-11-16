@@ -1,4 +1,4 @@
-/* 2-D FFT-based zero-offset exploding reflector modeling/migration  */
+/* 2-D FFT-based zero-offset exploding reflector modeling/migration (outputs time volume, not just last image; can be used to generate movie) */
 /*
   Copyright (C) 2010 University of Texas at Austin
   

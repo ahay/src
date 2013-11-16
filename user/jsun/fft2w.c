@@ -1,4 +1,4 @@
-/* Complex 2-D FFT interface, complex to complex fft and ifft with threaded FFTW3 */
+/* 2-D FFT interface with threaded FFTW3 */
 /*
   Copyright (C) 2010 University of Texas at Austin
  
@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -24,22 +25,26 @@
 #include <fftw3.h>
 #endif
 
+static bool cmplx;
 static int n1, n2, nk;
 static float wt;
 
-static sf_complex **cc;
+static float **ff=NULL;
+static sf_complex **cc=NULL;
 
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
 #else
+static kiss_fftr_cfg cfg, icfg;
 static kiss_fft_cfg cfg1, icfg1, cfg2, icfg2;
 static kiss_fft_cpx **tmp, *ctrace2;
 static sf_complex *trace2;
 #endif
 
-int cfft2_init(int pad1           /* padding on the first axis */,
-	       int nx,   int ny   /* input data size */, 
-	       int *nx2, int *ny2 /* padded data size */)
+int fft2_init(bool cmplx1        /* if complex transform */,
+	      int pad1           /* padding on the first axis */,
+	      int nx,   int ny   /* input data size */, 
+	      int *nx2, int *ny2 /* padded data size */)
 /*< initialize >*/
 {
 #ifdef SF_HAS_FFTW
@@ -47,23 +52,37 @@ int cfft2_init(int pad1           /* padding on the first axis */,
     fftw_init_threads();
     sf_warning("Using threaded FFTW3! \n");
 #endif
+#else
+   int i2;
 #endif
-
+	
+    cmplx = cmplx1;
+	
+    if (cmplx) {
+	nk = n1 = kiss_fft_next_fast_size(nx*pad1);
+		
 #ifndef SF_HAS_FFTW
-    int i2;
+	cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
+	icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
 #endif
-
-    nk = n1 = kiss_fft_next_fast_size(nx*pad1);
-    
+    } else {
+	nk = kiss_fft_next_fast_size(pad1*(nx+1)/2)+1;
+	n1 = 2*(nk-1);
+		
 #ifndef SF_HAS_FFTW
-    cfg1  = kiss_fft_alloc(n1,0,NULL,NULL);
-    icfg1 = kiss_fft_alloc(n1,1,NULL,NULL);
+	cfg  = kiss_fftr_alloc(n1,0,NULL,NULL);
+	icfg = kiss_fftr_alloc(n1,1,NULL,NULL);
 #endif
-  
+    }
+		
     n2 = kiss_fft_next_fast_size(ny);
 
-    cc = sf_complexalloc2(n1,n2);
-    
+    if (cmplx) {
+	cc = sf_complexalloc2(n1,n2);
+    } else {
+	ff = sf_floatalloc2(n1,n2);
+    }
+	
 #ifndef SF_HAS_FFTW
     cfg2  = kiss_fft_alloc(n2,0,NULL,NULL);
     icfg2 = kiss_fft_alloc(n2,1,NULL,NULL);
@@ -86,8 +105,8 @@ int cfft2_init(int pad1           /* padding on the first axis */,
     return (nk*n2);
 }
 
-void cfft2(sf_complex *inp /* [n1*n2] */, 
-	   sf_complex *out /* [nk*n2] */)
+void fft2(float *inp      /* [n1*n2] */, 
+	  sf_complex *out /* [nk*n2] */)
 /*< 2-D FFT >*/
 {
     int i1, i2;
@@ -97,35 +116,40 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
     fftw_plan_with_nthreads(omp_get_max_threads());
 #endif
     if (NULL==cfg) {
-      cfg = fftwf_plan_dft_2d(n2,n1,
+	cfg = cmplx? 
+	    fftwf_plan_dft_2d(n2,n1,
 			      (fftwf_complex *) cc[0], 
 			      (fftwf_complex *) out,
-			      FFTW_FORWARD, FFTW_MEASURE);
-      if (NULL == cfg) sf_error("FFTW failure.");
+			      FFTW_FORWARD, FFTW_MEASURE):
+	    fftwf_plan_dft_r2c_2d(n2,n1,
+				  ff[0], (fftwf_complex *) out,
+				  FFTW_MEASURE);
+	if (NULL == cfg) sf_error("FFTW failure.");
     }
 #endif
 
     /* FFT centering */
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
-		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:-inp[i2*n1+i1];
-	  /*
-#ifdef SF_HAS_COMPLEX_H
-		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:(-1*inp[i2*n1+i1]);
-#else
-		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:sf_cneg(inp[i2*n1+i1]);
-#endif
-	  */
+	    if (cmplx) {
+		cc[i2][i1] = sf_cmplx(((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:-inp[i2*n1+i1],0.);
+	    } else {
+		ff[i2][i1] = (i2%2)? -inp[i2*n1+i1]:inp[i2*n1+i1];
+	    }
 	}
     }
-
+    
 #ifdef SF_HAS_FFTW
     fftwf_execute(cfg);
 #else	
     for (i2=0; i2 < n2; i2++) {
-	kiss_fft_stride(cfg1,(kiss_fft_cpx *) cc[i2],tmp[i2],1);
+	if (cmplx) {
+	    kiss_fft_stride(cfg1,(kiss_fft_cpx *) cc[i2],tmp[i2],1);
+	} else {
+	    kiss_fftr (cfg,ff[i2],tmp[i2]);
+	}
     }
-
+	
     for (i1=0; i1 < nk; i1++) {
 	kiss_fft_stride(cfg2,tmp[0]+i1,ctrace2,nk);
 	for (i2=0; i2<n2; i2++) {
@@ -135,20 +159,24 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 #endif
 }
 
-void icfft2_allocate(sf_complex *inp /* [nk*n2] */)
+void ifft2_allocate(sf_complex *inp /* [nk*n2] */)
 /*< allocate inverse transform >*/
 {
 #ifdef SF_HAS_FFTW
-    icfg = fftwf_plan_dft_2d(n2,n1,
-			     (fftwf_complex *) inp, 
-			     (fftwf_complex *) cc[0],
-			     FFTW_BACKWARD, FFTW_MEASURE);
+    icfg = cmplx? 
+	fftwf_plan_dft_2d(n2,n1,
+			  (fftwf_complex *) inp, 
+			  (fftwf_complex *) cc[0],
+			  FFTW_BACKWARD, FFTW_MEASURE):
+	fftwf_plan_dft_c2r_2d(n2,n1,
+			      (fftwf_complex *) inp, ff[0],
+			      FFTW_MEASURE);
     if (NULL == icfg) sf_error("FFTW failure.");
 #endif
 }
 
-void icfft2(sf_complex *out /* [n1*n2] */, 
-	    sf_complex *inp /* [nk*n2] */)
+void ifft2(float *out      /* [n1*n2] */, 
+	   sf_complex *inp /* [nk*n2] */)
 /*< 2-D inverse FFT >*/
 {
     int i1, i2;
@@ -164,23 +192,27 @@ void icfft2(sf_complex *out /* [n1*n2] */,
 	}
     }
     for (i2=0; i2 < n2; i2++) {
-	kiss_fft_stride(icfg1,tmp[i2],(kiss_fft_cpx *) cc[i2],1);
+	if (cmplx) {
+	    kiss_fft_stride(icfg1,tmp[i2],(kiss_fft_cpx *) cc[i2],1);
+	} else {
+	    kiss_fftri(icfg,tmp[i2],ff[i2]);
+	}
     }
 #endif
     
-    /* FFT centering and normalization*/
+    /* FFT centering and normalization */
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
-#ifdef SF_HAS_COMPLEX_H
-		out[i2*n1+i1] = (((i2%2==0)==(i1%2==0))? wt:-wt) * cc[i2][i1];
-#else
-		out[i2*n1+i1] = sf_crmul(cc[i2][i1],(((i2%2==0)==(i1%2==0))? wt:-wt));
-#endif
+	    if (cmplx) {
+		out[i2*n1+i1] = (((i2%2==0)==(i1%2==0))? wt:-wt) * crealf(cc[i2][i1]);
+	    } else {
+		out[i2*n1+i1] = (i2%2? -wt: wt)*ff[i2][i1];
+	    }
 	}
     }
 }
 
-void cfft2_finalize()
+void fft2_finalize()
 /*< clean up fftw >*/
 {
 #ifdef SF_HAS_FFTW
@@ -189,3 +221,4 @@ void cfft2_finalize()
 #endif
 #endif
 }
+
