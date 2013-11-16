@@ -8,7 +8,7 @@ fpocs3dpthresh pocs3dpthresh
 '''
 
 cuda_progs = '''
-testcuda cudartm
+testcuda 
 '''
 
 try:  # distributed version
