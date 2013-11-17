@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
     int     nz,nx,nt, nhx,  nhz, nht,nc;
     int           it, ihx,  ihz, iht,ic;
     int               nhx2,nhz2,nht2;
+    off_t iseek;
 
     float ***us=NULL,***ur=NULL,****ii=NULL; 
 
@@ -241,7 +242,8 @@ int main(int argc, char* argv[])
 	/* read wavefield @ [0...2nht-1]*/
 	for(iht=0;iht<2*nht;iht++) {
 	    sf_floatread(us[iht][0],nz*nx,Fs);
-	    sf_seek(Fr,(nt-1-iht)*nz*nx*sizeof(float),SEEK_SET);
+	    iseek = (nt-1-iht)*nz*nx*sizeof(float);
+	    sf_seek(Fr,iseek,SEEK_SET);
 	    sf_floatread(ur[iht][0],nz*nx,Fr);
 	}
 
@@ -251,7 +253,8 @@ int main(int argc, char* argv[])
 	   
 	    /* read wavefield @ [2nht]*/
 	    sf_floatread(us[ lht ][0],nz*nx,Fs);
-	    sf_seek(Fr,(nt-nht-1-it)*nz*nx*sizeof(float),SEEK_SET);
+	    iseek=(nt-nht-1-it)*nz*nx*sizeof(float);
+	    sf_seek(Fr,iseek,SEEK_SET);
 	    sf_floatread(ur[ lht ][0],nz*nx,Fr);
 	    
 #ifdef _OPENMP
