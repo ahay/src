@@ -55,10 +55,12 @@ def param(par):
         else:                   par['iheight']=14*par['iratio']
 
     if(not par.has_key('dratio')):
-        par['dratio']=par['iratio']
+#        par['dratio']=par['iratio']
+        par['dratio']=0.7
 
     if(not par.has_key('dheight')):
-       par['dheight']=par['iheight']
+#       par['dheight']=par['iheight']
+       par['dheight']=14*par['dratio']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 ' + ' '
