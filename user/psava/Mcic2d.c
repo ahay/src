@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     sf_axis az,ax,at,aa; /* cube axes */
     int     iz,ix,it;
     int     nz,nx,nt;
-    unsigned int iseek;
+    off_t iseek;
 
     float **us=NULL,**ur=NULL,**ii=NULL;
 
