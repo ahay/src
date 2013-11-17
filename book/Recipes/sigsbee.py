@@ -50,7 +50,7 @@ def param():
 def modpar(par):
 
     par['frq']=10
-    par['kt']=100
+    par['kt']=120
     par['nt']=12001
     par['dt']=0.001
     par['nb']=150
@@ -87,7 +87,7 @@ def wempar(par):
 
 def fwipar(par):
     par['frq']=10
-    par['kt']=100
+    par['kt']=120
     par['nt']=12001
     par['dt']=0.001
     par['nb']=150
@@ -110,7 +110,7 @@ def rtmpar(par):
     par['nz']=par['nz']+par['nzpad']
     
     par['frq']=10
-    par['kt']=100
+    par['kt']=120
     par['nt']=12001
     par['dt']=0.001
     par['nb']=150

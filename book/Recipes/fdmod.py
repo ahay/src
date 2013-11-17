@@ -149,7 +149,9 @@ def param(par):
 
 # ------------------------------------------------------------
 def modpar(par):
+    default(par)
 
+def default(par):
     if(not par.has_key('nbx')):      par['nbx']=0
     if(not par.has_key('nby')):      par['nby']=0
     if(not par.has_key('nbz')):      par['nbz']=0
