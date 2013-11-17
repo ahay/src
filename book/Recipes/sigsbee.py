@@ -164,7 +164,6 @@ def eicpar(par):
     par['na']=240
     par['oa']=-60
     par['da']=0.5
-    
     par['ns']=500
     par['os']=-2.5
     par['ds']=0.01

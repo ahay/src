@@ -438,6 +438,35 @@ def horizontal(cc,coord,par):
               stdout=0)
 
 # ------------------------------------------------------------
+def cable2d(cc,zrec,orec,nrec,drec,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+    
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+    
+    Flow(cc,None,
+         '''
+         %smath output=0 n1=%d o1=%g d1=%g >%s datapath=%s/;
+         '''%(M8R,nrec,orec,drec,cco,DPT) +
+         '''
+         %smath <%s output="%g" >%s datapath=%s/;
+         '''%(M8R,cco,zrec,ccz,DPT) +
+         '''
+         %smath <%s output="x1" >%s datapath=%s/;
+         '''%(M8R,cco,ccx,DPT) +
+         '''
+         %scat axis=2 space=n %s %s | transp | put label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''     
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
+
+
+# ------------------------------------------------------------
 def horizontal3d(cc,coord,par):
     Temp(cc+'_',None,
          'math n1=%(nx)d d1=%(dx)g o1=%(ox)g n2=%(ny)d d2=%(dy)g o2=%(oy)g output=0' % par)
