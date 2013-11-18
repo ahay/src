@@ -80,11 +80,6 @@ int main(int argc, char* argv[])
     sf_oaxa(Fi,ax,2);
     sf_oaxa(Fi,aa,3);
     
-    for (it=0; it<nt; it++) {
-	iseek=(off_t)it*nz*nx*sizeof(float);
-	sf_warning("%d %jd",it,iseek);
-    }
-
     /*------------------------------------------------------------*/
     /* allocate work arrays */
     ii = sf_floatalloc2(nz,nx); 

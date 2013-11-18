@@ -253,7 +253,7 @@ int main(int argc, char* argv[])
 	   
 	    /* read wavefield @ [2nht]*/
 	    sf_floatread(us[ lht ][0],nz*nx,Fs);
-	    iseek=(nt-nht-1-it)*nz*nx*sizeof(float);
+	    iseek=(off_t)(nt-nht-1-it)*nz*nx*sizeof(float);
 	    sf_seek(Fr,iseek,SEEK_SET);
 	    sf_floatread(ur[ lht ][0],nz*nx,Fr);
 	    
