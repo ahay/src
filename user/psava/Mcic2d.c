@@ -80,6 +80,11 @@ int main(int argc, char* argv[])
     sf_oaxa(Fi,ax,2);
     sf_oaxa(Fi,aa,3);
     
+    for (it=0; it<nt; it++) {
+	iseek=(off_t)it*nz*nx*sizeof(float);
+	sf_warning("%d %jd",it,iseek);
+    }
+
     /*------------------------------------------------------------*/
     /* allocate work arrays */
     ii = sf_floatalloc2(nz,nx); 
@@ -122,7 +127,7 @@ int main(int argc, char* argv[])
 	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",(nt-it-1));
 	    
 	    sf_floatread(us[0],nz*nx,Fs);
-	    iseek = (nt-1-it)*nz*nx*sizeof(float);
+	    iseek=(off_t)(nt-1-it)*nz*nx*sizeof(float);
 	    sf_seek(Fr,iseek,SEEK_SET);
 	    sf_floatread(ur[0],nz*nx,Fr);
 	    

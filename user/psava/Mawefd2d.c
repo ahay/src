@@ -173,8 +173,8 @@ int main(int argc, char* argv[])
 	if(!sf_getfloat("dqz",&dqz)) dqz=sf_d(az); /* Saved wfld window dz */
 	if(!sf_getfloat("dqx",&dqx)) dqx=sf_d(ax); /* Saved wfld window dx */
 
-	acz = sf_maxa(nqz,oqz,dqz); sf_raxa(acz);
-	acx = sf_maxa(nqx,oqx,dqx); sf_raxa(acx);
+	acz = sf_maxa(nqz,oqz,dqz); if(verb) sf_raxa(acz);
+	acx = sf_maxa(nqx,oqx,dqx); if(verb) sf_raxa(acx);
 	/* check if the imaging window fits in the wavefield domain */
 
 	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
