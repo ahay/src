@@ -1,5 +1,5 @@
 /* Duffing differential equation solved by 4th order Runge-Kutta method. 
-Duffing equation: c x'' + d x' - a x + b x^3 = gamma H(2 PI freq t) + alpha input(2 PI freq t)
+Duffing equation: x'' + d x' - a x + b x^3 = gamma H(2 PI freq t) + alpha input(2 PI freq t)
 */
 /*
   Copyright (C) 2013 Jilin University
@@ -44,7 +44,7 @@ static float stochasforce(int i, int n, int m, float deltat, float omega, bool r
 int main (int argc, char* argv[]) 
 {
     int nt, n2, i2, i1, p1, p2, m, n;
-    float dt, ot, x0, y0, c, d, a, b, gamma, alpha, freq, omega;
+    float dt, ot, x0, y0, d, a, b, gamma, alpha, freq, omega;
     float x1, y1, f1, x2, y2, f2, x3, y3, f3, x4, y4, f4;
     bool ricker;
     float *x, *y, *input;
@@ -68,8 +68,6 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("y0",&y0)) y0=0.;
     /* intial y coordinate */
 
-    if (!sf_getfloat("c",&c)) c=1.;
-    /* Duffing equation coefficients c */
     if (!sf_getfloat("d",&d)) d=1.;
     /* Duffing equation coefficients d */
     if (!sf_getfloat("a",&a)) a=1.;
@@ -111,7 +109,7 @@ int main (int argc, char* argv[])
     x[0] = x0;
     y[0] = y0;
 
-    result[0] = sf_cmplx(x[0],y[0]/c);
+    result[0] = sf_cmplx(x[0],y[0]);
 
     for(i2=0; i2 < n2; i2++) {
 	sf_floatread(input,nt,in);
@@ -139,7 +137,7 @@ int main (int argc, char* argv[])
 		+alpha*input[i1+1];
 	    x[i1+1] = x[i1]+dt/6.*(y1+2*y2+2*y3+y4);
 	    y[i1+1] = y[i1]+dt/6.*(f1+2*f2+2*f3+f4);
-	    result[i1+1] = sf_cmplx(x[i1+1],y[i1+1]/c);
+	    result[i1+1] = sf_cmplx(x[i1+1],y[i1+1]);
 	}
 	sf_complexwrite(result,nt,out);
 
