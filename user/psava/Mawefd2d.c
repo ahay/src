@@ -34,9 +34,9 @@
 #define CA +1.333333 /*    ca=+16./12.; */
 #define CB -0.083333 /*    cb=- 1./12.; */
 
-
-#define F1  +1.16303535	/*  +2/3   */	
-#define F2 	-0.05686715	/*  -1/12  */
+/* LS-optimized coefficients */
+#define F1  +1.16303535		
+#define F2 	-0.05686715	
 
 /* centered FD derivative stencils */
 #define FX(a,ix,iz,s) (F1*(a[ix  ][iz  ] - a[ix-1][iz  ]) + \
