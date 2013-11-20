@@ -32,7 +32,9 @@ oldfiles = Split('Header Writer Reader Par')
 files = Split('RSF RSFFile Input Output')
 gen = Split('SWIGTYPE_p_int SWIGTYPE_p_sf_complex SWIGTYPE_p_sf_File m8rConstants sf_dataform sf_datatype m8rJNI m8r')
 
-if 'icc' in env.get('CC'):
+CC = env.get('CC')
+
+if CC.rfind('icc') >= 0:
     CCFLAGS = env.get('CCFLAGS','')+' -D__int64=___int64'
 else:
     CCFLAGS = env.get('CCFLAGS','')

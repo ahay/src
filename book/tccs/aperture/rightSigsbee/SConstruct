@@ -7,7 +7,7 @@ par = {
     'smz':13, 'smx':9,                   # Smoothing radius for slowness
     'na':720,                            # Number of take-off angles
     'oazmin':80,'oazmax':50,             # Opening angle mute
-    'dazmin':100,'dazmax':40,            # Dip angle mute
+    'dazmin':100,'dazmax':80,            # Dip angle mute
     'ts':4,'th':6,                       # Tapering in traces (shot, receiver axes)
     'smax':1.0,'hmax':1.0,               # Escape tables filter
 # Screen params for the model
@@ -112,7 +112,7 @@ Plot ('vLine',None,
 	  ''' % (cigpos,cigpos) )
 
 
-Flow ('dags', 'data', 'window min3=11 max3=19 | sftransp plane=12')
+Flow ('dags', 'sigsbdcram', 'window min3=11 max3=19 | sftransp plane=12')
 Flow ('sigs-image-init','dags','stack')
 Plot ('sigs-image-init', 'put label2=distance label1=depth | grey wanttitle=n min1=1.5 pclip=92 labelsz=11.')
 Plot ('image-init','sigs-image-init vLine','Overlay')
