@@ -391,19 +391,19 @@ int main(int argc, char* argv[])
 			/* inject acceleration source */
 			if(expl) {
 				sf_floatread(ww, 1,Fwav);
-				lint3d_inject1(ua,ww[0],cs);
+				lint3d_inject1(up,ww[0],cs);
 			} else {
 				sf_floatread(ww,ns,Fwav);	
-				lint3d_bell(ua,ww,cs);
+				lint3d_bell(up,ww,cs);
 			}
 
 			/* extract data at receivers */
-			lint3d_extract(uo,dd,cr);
+			lint3d_extract(up,dd,cr);
 			if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
 
 			/* extract wavefield in the "box" */
 			if(snap && it%jsnap==0) {
-				cut3d(uo,uc,fdm,acz,acx,acy);
+				cut3d(up,uc,fdm,acz,acx,acy);
 				sf_floatwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
 			}
 
@@ -560,19 +560,19 @@ int main(int argc, char* argv[])
 			/* inject acceleration source */
 			if(expl) {
 				sf_floatread(ww, 1,Fwav);
-				lint3d_inject1(ua,ww[0],cs);
+				lint3d_inject1(up,ww[0],cs);
 			} else {
 				sf_floatread(ww,ns,Fwav);	
-				lint3d_bell(ua,ww,cs);
+				lint3d_bell(up,ww,cs);
 			}
 
 			/* extract data at receivers */
-			lint3d_extract(uo,dd,cr);
+			lint3d_extract(up,dd,cr);
 			if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
 
 			/* extract wavefield in the "box" */
 			if(snap && it%jsnap==0) {
-				cut3d(uo,uc,fdm,acz,acx,acy);
+				cut3d(up,uc,fdm,acz,acx,acy);
 				sf_floatwrite(uc[0][0],sf_n(acz)*sf_n(acx)*sf_n(acy),Fwfl);
 			}
 
