@@ -24,7 +24,7 @@
 #endif
 
 #include "fdutil.h"
-
+#include <time.h>
 /* check: dt<= 0.2 * min(dx,dz)/vmin */
 
 #define NOP 2 /* derivative operator half-size */
@@ -82,6 +82,7 @@ int main(int argc, char* argv[])
 
     float***tt=NULL;
     float***ro=NULL;           /* density */
+    float***iro=NULL;           /*  inverse density */
     float***uat=NULL;          /* auxiliary wavefield */
     float***vp=NULL;           /* velocity */
     float***vt=NULL;           /* temporary vp*vp * dt*dt */
@@ -92,7 +93,7 @@ int main(int argc, char* argv[])
     lint3d cs,cr;
 
     /* FD operator size */
-    float co,cax,cbx,cay,cby,caz,cbz;
+    float co,cax,cbx,cay,cby,caz,cbz,f1x,f1y,f1z,f2x,f2y,f2z;
 
     /* wavefield cut params */
     sf_axis   acz=NULL,acx=NULL,acy=NULL;
@@ -101,6 +102,9 @@ int main(int argc, char* argv[])
     float     dqz,dqx,dqy;
     float     ***uc=NULL;
 
+	/* for benchmarking */
+	clock_t start_t, end_t;
+	float total_t;
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -244,6 +248,14 @@ int main(int argc, char* argv[])
     caz= CA *  idz*idz;
     cbz= CB *  idz*idz;
 
+	f1x = F1*idx;
+	f1y = F1*idy;
+	f1z = F1*idz;
+
+	f2x = F2*idx;
+	f2y = F2*idy;
+	f2z = F2*idz;
+
     /*------------------------------------------------------------*/ 
     tt = sf_floatalloc3(nz,nx,ny); 
 
@@ -252,9 +264,18 @@ int main(int argc, char* argv[])
 
     if (!cden) {
 
-        /* input density */
-        ro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-        sf_floatread(tt[0][0],nz*nx*ny,Fden); expand3d(tt,ro ,fdm);
+		/* input density */
+		ro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+		iro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);        
+		sf_floatread(tt[0][0],nz*nx*ny,Fden); expand3d(tt,ro ,fdm);
+ 
+		for        (iy=1; iy<fdm->nypad; iy++) {
+			for    (ix=1; ix<fdm->nxpad; ix++) {
+				for(iz=1; iz<fdm->nzpad; iz++) {
+					iro[iy][ix][iz] = 6./(ro[iy][ix][iz] + ro[iy-1][ix][iz] + ro[iy][ix][iz] + ro[iy][ix-1][iz] + ro[iy][ix][iz] + ro[iy][ix][iz-1]);				
+				}
+			}
+		}
  
     }
 
@@ -265,6 +286,7 @@ int main(int argc, char* argv[])
 	for    (ix=0; ix<fdm->nxpad; ix++) {
 	    for(iz=0; iz<fdm->nzpad; iz++) {
 		vt[iy][ix][iz] = vp[iy][ix][iz] * vp[iy][ix][iz] * dt*dt;
+
 	    }
 	}
     }
@@ -317,6 +339,7 @@ int main(int argc, char* argv[])
 	/* forward constant density */
 	if (cden){
 		if(verb) fprintf(stderr,"\n");	
+	    start_t = clock();
 		for (it=0; it<nt; it++) {
 			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
 
@@ -400,20 +423,28 @@ int main(int argc, char* argv[])
 
 
     } /* end time loop */
+	end_t = clock();
     if(verb) fprintf(stderr,"\n");
+
+	if (verb){	
+		total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+		fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
+		fprintf(stderr,"Exiting of the program...\n");
+	}
 
 	} /* end constant density section */
 	/* forward variable density */
 	else{
 	    uat=sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-		if(verb) fprintf(stderr,"\n");	
+		if(verb) fprintf(stderr,"\n");
+		start_t=clock();
 		for (it=0; it<nt; it++) {
 			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
 
 			#ifdef _OPENMP
 			#pragma omp parallel			\
 		    private(ix,iy,iz)				\
-		    shared(fdm,ua,uo,co,cax,cay,caz,cbx,cby,cbz,idx,idy,idz)
+		    shared(fdm,ua,uo,idx,idy,idz)
 			#endif
 			{
 				// Z spatial derivatives		
@@ -425,15 +456,13 @@ int main(int argc, char* argv[])
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {						
 
 							// gather
-							uat[iy][ix][iz]  = FZ(uo,ix,iy,iz,idz);
+							uat[iy][ix][iz]  = iro[iy][ix][iz]*FZ(uo,ix,iy,iz,idz);
 
-							uat[iy][ix][iz] *= 2./(ro[iy][ix][iz] + ro[iy][ix][iz-1]);
-	
 							// scatter
-							ua[iy][ix][iz  ]  +=   F1*uat[iy][ix][iz]*idz;
-							ua[iy][ix][iz+1]  +=   F2*uat[iy][ix][iz]*idz;					
-							ua[iy][ix][iz-1]  -=   F1*uat[iy][ix][iz]*idz;
-							ua[iy][ix][iz-2]  -=   F2*uat[iy][ix][iz]*idz;
+							ua[iy][ix][iz  ]  +=   f1z*uat[iy][ix][iz];
+							ua[iy][ix][iz+1]  +=   f2z*uat[iy][ix][iz];					
+							ua[iy][ix][iz-1]  -=   f1z*uat[iy][ix][iz];
+							ua[iy][ix][iz-2]  -=   f2z*uat[iy][ix][iz];
 
 				
 						}
@@ -449,15 +478,13 @@ int main(int argc, char* argv[])
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {						
 
 							// gather
-							uat[iy][ix][iz]  = FX(uo,ix,iy,iz,idx);
-
-							uat[iy][ix][iz] *= 2./(ro[iy][ix][iz] + ro[iy][ix-1][iz]);
+							uat[iy][ix][iz]  = iro[iy][ix][iz]*FX(uo,ix,iy,iz,idx);
 	
 							// scatter
-							ua[iy][ix  ][iz]  +=   F1*uat[iy][ix][iz]*idx;
-							ua[iy][ix+1][iz]  +=   F2*uat[iy][ix][iz]*idx;					
-							ua[iy][ix-1][iz]  -=   F1*uat[iy][ix][iz]*idx;
-							ua[iy][ix-2][iz]  -=   F2*uat[iy][ix][iz]*idx;
+							ua[iy][ix  ][iz]  +=   f1x*uat[iy][ix][iz];
+							ua[iy][ix+1][iz]  +=   f2x*uat[iy][ix][iz];					
+							ua[iy][ix-1][iz]  -=   f1x*uat[iy][ix][iz];
+							ua[iy][ix-2][iz]  -=   f2x*uat[iy][ix][iz];
 
 				
 						}
@@ -465,23 +492,21 @@ int main(int argc, char* argv[])
 				}
 				
 				// Y spatial derivatives
-				for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {
-					#ifdef _OPENMP
-					#pragma omp for schedule(dynamic,fdm->ompchunk)
-					#endif
-					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+				#ifdef _OPENMP
+				#pragma omp for schedule(dynamic,fdm->ompchunk)
+				#endif
+				for     	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+					for 	(iy=NOP; iy<fdm->nypad-NOP; iy++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
-							uat[iy][ix][iz]  = FY(uo,ix,iy,iz,idx);
-
-							uat[iy][ix][iz] *= 2./(ro[iy][ix][iz] + ro[iy-1][ix][iz]);
+							uat[iy][ix][iz]  = iro[iy][ix][iz]*FY(uo,ix,iy,iz,idx);
 	
 							// scatter
-							ua[iy  ][ix][iz]  +=   F1*uat[iy][ix][iz]*idy;
-							ua[iy+1][ix][iz]  +=   F2*uat[iy][ix][iz]*idy;					
-							ua[iy-1][ix][iz]  -=   F1*uat[iy][ix][iz]*idy;
-							ua[iy-2][ix][iz]  -=   F2*uat[iy][ix][iz]*idy;
+							ua[iy  ][ix][iz]  +=   f1y*uat[iy][ix][iz];
+							ua[iy+1][ix][iz]  +=   f2y*uat[iy][ix][iz];					
+							ua[iy-1][ix][iz]  -=   f1y*uat[iy][ix][iz];
+							ua[iy-2][ix][iz]  -=   f2y*uat[iy][ix][iz];
 
 				
 						}
@@ -541,7 +566,14 @@ int main(int argc, char* argv[])
 
 			
 		} /* end time loop*/
+		end_t = clock();
 		if(verb) fprintf(stderr,"\n");
+
+		if (verb){	
+			total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+			fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
+			fprintf(stderr,"Exiting of the program...\n");
+		}
 
 	} /* end variable density section */
 
@@ -557,6 +589,7 @@ int main(int argc, char* argv[])
 
     if(!cden) {
         free(**ro); free(*ro); free(ro); 
+        free(**iro); free(*iro); free(iro); 
         free(**uat); free(*uat); free(uat);
     }
 
