@@ -424,20 +424,23 @@ int main(int argc, char* argv[])
 					for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {		
 					
 						// gather
-						uat[ix][iz]  = iro[ix][iz]*FZ(uo,ix,iz,idz);
+						uat[ix][iz]  = iro[ix][iz]*(f1z*(uo[ix  ][iz  ] - uo[ix  ][iz-1]) +
+													f2z*(uo[ix  ][iz+1] - uo[ix  ][iz-2]));
+
 					}
 				}
 				
 				#ifdef _OPENMP
 				#pragma omp for schedule(dynamic,fdm->ompchunk)
 				#endif
-				for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {						
-					// scatter
-					ua[ix][iz  ]  +=   f1z*uat[ix][iz];
-					ua[ix][iz+1]  +=   f2z*uat[ix][iz];					
-					ua[ix][iz-1]  -=   f1z*uat[ix][iz];
-					ua[ix][iz-2]  -=   f2z*uat[ix][iz];					
+				for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+
+						// scatter
+						ua[ix][iz  ]  +=   f1z*uat[ix][iz];
+						ua[ix][iz+1]  +=   f2z*uat[ix][iz];					
+						ua[ix][iz-1]  -=   f1z*uat[ix][iz];
+						ua[ix][iz-2]  -=   f2z*uat[ix][iz];					
 
 					}
 				}
@@ -448,7 +451,9 @@ int main(int argc, char* argv[])
 				for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 					// gather
-					uat[ix  ][iz]  = iro[ix][iz]*FX(uo,ix,iz,idx);
+					uat[ix][iz]  = iro[ix][iz]*(f1x*(uo[ix  ][iz  ] - uo[ix-1][iz  ]) +
+												f2x*(uo[ix+1][iz  ] - uo[ix-2][iz  ]));
+
 					}
 				}
 
@@ -462,7 +467,7 @@ int main(int argc, char* argv[])
 					ua[ix+1][iz]  +=   f2x*uat[ix][iz];
 					ua[ix-1][iz]  -=   f1x*uat[ix][iz];
 					ua[ix-2][iz]  -=   f2x*uat[ix][iz];
-					
+										
 					}
 				}
 

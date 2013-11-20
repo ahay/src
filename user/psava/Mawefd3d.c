@@ -453,11 +453,20 @@ int main(int argc, char* argv[])
 				#endif
 				for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {						
+						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
 							uat[iy][ix][iz]  = iro[iy][ix][iz]*FZ(uo,ix,iy,iz,idz);
 
+						}
+					}
+				}
+				#ifdef _OPENMP
+				#pragma omp for schedule(dynamic,fdm->ompchunk)
+				#endif
+				for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
+					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 							// scatter
 							ua[iy][ix][iz  ]  +=   f1z*uat[iy][ix][iz];
 							ua[iy][ix][iz+1]  +=   f2z*uat[iy][ix][iz];					
@@ -475,11 +484,20 @@ int main(int argc, char* argv[])
 				#endif
 				for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {						
+						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
 							uat[iy][ix][iz]  = iro[iy][ix][iz]*FX(uo,ix,iy,iz,idx);
-	
+						}
+					}
+				}
+
+				#ifdef _OPENMP
+				#pragma omp for schedule(dynamic,fdm->ompchunk)
+				#endif
+				for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
+					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
 							// scatter
 							ua[iy][ix  ][iz]  +=   f1x*uat[iy][ix][iz];
 							ua[iy][ix+1][iz]  +=   f2x*uat[iy][ix][iz];					
@@ -495,13 +513,21 @@ int main(int argc, char* argv[])
 				#ifdef _OPENMP
 				#pragma omp for schedule(dynamic,fdm->ompchunk)
 				#endif
-				for     	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for 	(iy=NOP; iy<fdm->nypad-NOP; iy++) {
+				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
+					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
 							uat[iy][ix][iz]  = iro[iy][ix][iz]*FY(uo,ix,iy,iz,idx);
-	
+						}
+					}
+				}
+				#ifdef _OPENMP
+				#pragma omp for schedule(dynamic,fdm->ompchunk)
+				#endif
+				for     	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+					for 	(iy=NOP; iy<fdm->nypad-NOP; iy++) {
+						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 							// scatter
 							ua[iy  ][ix][iz]  +=   f1y*uat[iy][ix][iz];
 							ua[iy+1][ix][iz]  +=   f2y*uat[iy][ix][iz];					
