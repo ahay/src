@@ -36,7 +36,7 @@
 
 /* LS-optimized coefficients */
 #define F1  +1.16303535		
-#define F2 	-0.05686715	
+#define F2  -0.05686715	
 
 /* FD derivative stencils */
 #define FX(a,ix,iz,s) (F1*(a[ix  ][iz  ] - a[ix-1][iz  ]) + \
@@ -99,10 +99,10 @@ int main(int argc, char* argv[])
     float     dqz,dqx;
     float     **uc=NULL;
 
+    /* for benchmarking */
+    clock_t start_t, end_t;
+    float total_t;
 
-	/* for benchmarking */
-	clock_t start_t, end_t;
-	float total_t;
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -208,11 +208,8 @@ int main(int argc, char* argv[])
     sf_setn(ax,fdm->nxpad); sf_seto(ax,fdm->oxpad); if(verb) sf_raxa(ax);
     /*------------------------------------------------------------*/
 
-    if(expl) {
-	ww = sf_floatalloc( 1);
-    } else {
-	ww = sf_floatalloc(ns);
-    }
+    if(expl) ww = sf_floatalloc( 1);
+    else     ww = sf_floatalloc(ns);
     dd = sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
@@ -225,7 +222,8 @@ int main(int argc, char* argv[])
 
     cs = lint2d_make(ns,ss,fdm);
     cr = lint2d_make(nr,rr,fdm);
-	fdbell_init(5);
+    fdbell_init(5);
+
     /*------------------------------------------------------------*/
     /* setup FD coefficients */
     idz = 1/dz;
@@ -237,11 +235,12 @@ int main(int argc, char* argv[])
     caz= CA *  idz*idz;
     cbz= CB *  idz*idz;
 
-	f1x = F1*idx;
-	f2x = F2*idx;
-	
-	f1z = F1*idz;
-	f2z = F2*idz;
+    f1x = F1*idx;
+    f2x = F2*idx;
+    
+    f1z = F1*idz;
+    f2z = F2*idz;
+
     /*------------------------------------------------------------*/ 
     tt = sf_floatalloc2(nz,nx); 
 
@@ -254,20 +253,20 @@ int main(int argc, char* argv[])
         ro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
         iro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);        
         sf_floatread(tt[0],nz*nx,Fden); expand(tt,ro ,fdm);
-
+	
         /* auxiliary vector */
         uat =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
-
-		/*inverse density, to avoid division in the extrapolation */
-		iro[0][0] = 1/ro[0][0];
-		for (ix=1; ix<fdm->nxpad; ix++){
-			for(iz=1; iz<fdm->nzpad; iz++){
-				iro[ix][iz] = 4./(	2*ro[ix  ][iz  ] + 
-									ro[ix-1][iz  ] + 
-									ro[ix  ][iz-1]);
-			}
-		}
-
+	
+	/*inverse density, to avoid division in the extrapolation */
+	iro[0][0] = 1/ro[0][0];
+	for    (ix=1; ix<fdm->nxpad; ix++){
+	    for(iz=1; iz<fdm->nzpad; iz++){
+		iro[ix][iz] = 4./( 2*ro[ix  ][iz  ] + 
+				     ro[ix-1][iz  ] + 
+				     ro[ix  ][iz-1]);
+	    }
+	}
+	
     }
 
     /* input velocity */
@@ -321,225 +320,227 @@ int main(int argc, char* argv[])
      *  MAIN LOOP
      */
     /*------------------------------------------------------------*/
-	/* forward constant density*/
-	if (cden){
-
-    if(verb) fprintf(stderr,"\n");
-    start_t = clock();
-    for (it=0; it<nt; it++) {
-		if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
-
-		#ifdef _OPENMP
-		#pragma omp parallel private(ix,iz)	shared(fdm,ua,uo,co,cax,caz,cbx,cbz,idx,idz)
-		#endif
-		{
-
-		#ifdef _OPENMP
-		#pragma omp for	schedule(dynamic,fdm->ompchunk)	
-		#endif
+    if (cden){
+	/* begin constant density */
+	
+	if(verb) fprintf(stderr,"\n");
+	start_t = clock();
+	for (it=0; it<nt; it++) {
+	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+	    
+#ifdef _OPENMP
+#pragma omp parallel private(ix,iz)	shared(fdm,ua,uo,co,cax,caz,cbx,cbz,idx,idz)
+#endif
+	    {	
+#ifdef _OPENMP
+#pragma omp for	schedule(dynamic,fdm->ompchunk)	
+#endif
 		for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-			for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-
-				/* 4th order Laplacian operator */
-				ua[ix][iz] = 
-					co * uo[ix  ][iz  ] + 
-					cax*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
-					cbx*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
-					caz*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
-					cbz*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);
-			}
+		    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+			
+			/* 4th order Laplacian operator */
+			ua[ix][iz] = 
+			    co * uo[ix  ][iz  ] + 
+			    cax*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+			    cbx*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+			    caz*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+			    cbz*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);
+		    }
 		}
-
+		
 		/* step forward in time */
-		#ifdef _OPENMP
-		#pragma omp for schedule(dynamic,fdm->ompchunk)
-		#endif
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic,fdm->ompchunk)
+#endif
 		for    (ix=0; ix<fdm->nxpad; ix++) {
-			for(iz=0; iz<fdm->nzpad; iz++) {
-				up[ix][iz] = 2*uo[ix][iz] 
-		    	-          um[ix][iz] 
-		    	+          ua[ix][iz] * vt[ix][iz];
+		    for(iz=0; iz<fdm->nzpad; iz++) {
+			up[ix][iz] = 2*uo[ix][iz] 
+			    -          um[ix][iz] 
+			    +          ua[ix][iz] * vt[ix][iz];
+		    }
+		}
+		
+	    } /* end parallel section */
+	    
+	    /* inject acceleration source */
+	    if(expl) {
+		sf_floatread(ww, 1,Fwav);
+		lint2d_bell1(up,ww[0],cs);
+	    } else {
+		sf_floatread(ww,ns,Fwav);	
+		lint2d_bell(up,ww,cs);
+	    }
+	    
+	    /* extract data at receivers */
+	    lint2d_extract(up,dd,cr);
+	    if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
+	    
+	    /* extract wavefield in the "box" */
+	    if(snap && it%jsnap==0) {
+		cut2d(up,uc,fdm,acz,acx);
+		sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
+	    }
+	    
+	    /* circulate wavefield arrays */
+	    ut=um;
+	    um=uo;
+	    uo=up;
+	    up=ut;
+	    
+	    if(dabc) {
+		/* one-way abc apply */
+		abcone2d_apply(uo,um,NOP,abc,fdm);
+		sponge2d_apply(um,spo,fdm);
+		sponge2d_apply(uo,spo,fdm);
+	    }
+	    
+	}	/* end time loop */
+	end_t = clock();
+	if(verb) fprintf(stderr,"\n");
+	
+	if (verb){	
+	    total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+	    fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
+	    fprintf(stderr,"Exiting of the program...\n");
+	}
+
+	/* end constant density section */
+
+    } else {
+
+	uat=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+	if(verb) fprintf(stderr,"\n");
+	start_t = clock();
+	    for (it=0; it<nt; it++) {
+		if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+		
+#ifdef _OPENMP
+#pragma omp parallel private(ix,iz)	
+#endif
+		{		
+		    // Z spatial derivatives    
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic,fdm->ompchunk)
+#endif
+		    for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+			for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {		
+			    
+			    // gather
+			    uat[ix][iz]  = iro[ix][iz]*(
+				f1z*(uo[ix  ][iz  ] - uo[ix  ][iz-1]) +
+				f2z*(uo[ix  ][iz+1] - uo[ix  ][iz-2]));
+			    
 			}
-		}
-
-		} /* end parallel section */
-
-		/* inject acceleration source */
+		    }
+		    
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic,fdm->ompchunk)
+#endif
+		    for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+			for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+			    
+			    // scatter
+			    ua[ix][iz  ]  =    
+				f1z*(uat[ix][iz  ] - 
+				     uat[ix][iz+1]) + 
+				f2z*(uat[ix][iz-1] -
+				     uat[ix][iz+2]);
+			    //ua[ix][iz+1]  +=   f2z*uat[ix][iz];			  			      //ua[ix][iz-1]  -=   f1z*uat[ix][iz];
+			    //ua[ix][iz-2]  -=   f2z*uat[ix][iz];				
+			}
+		    }
+	
+		    // X spatial derivatives	    
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic,fdm->ompchunk)
+#endif
+		    for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+			for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+			    // gather
+			    uat[ix][iz]  = iro[ix][iz]*(
+				f1x*(uo[ix  ][iz  ] - uo[ix-1][iz  ]) +
+				f2x*(uo[ix+1][iz  ] - uo[ix-2][iz  ]));
+			    
+			}
+		    }
+		    
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic,fdm->ompchunk)
+#endif
+		    for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+			for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+			    
+			    // scatter
+			    ua[ix  ][iz]  +=    
+				f1x*(uat[ix  ][iz] -
+				     uat[ix+1][iz]) +
+				f2x*(uat[ix-1][iz] -
+				     uat[ix+2][iz]);
+			    //ua[ix+1][iz]  +=   f2x*uat[ix][iz];
+			    //ua[ix-1][iz]  -=   f1x*uat[ix][iz];
+			    //ua[ix-2][iz]  -=   f2x*uat[ix][iz];
+			}
+		    }
+		    
+		    /* step forward in time */
+#ifdef _OPENMP
+#pragma omp for schedule(dynamic,fdm->ompchunk)
+#endif
+		    for    (ix=0; ix<fdm->nxpad; ix++) {
+			for(iz=0; iz<fdm->nzpad; iz++) {
+			    up[ix][iz] = 2*uo[ix][iz] 
+				-  um[ix][iz] 
+				-  ro[ix][iz]*vt[ix][iz]*ua[ix][iz];
+			    
+			    //ua[ix][iz] = 0;
+			}
+		    }	
+		}	/* end parallel section */
+			/* inject acceleration source */
 		if(expl) {
-			sf_floatread(ww, 1,Fwav);
-			lint2d_bell1(up,ww[0],cs);
+		    sf_floatread(ww, 1,Fwav);
+		    lint2d_bell1(up,ww[0],cs);
 		} else {
-			sf_floatread(ww,ns,Fwav);	
-			lint2d_bell(up,ww,cs);
+		    sf_floatread(ww,ns,Fwav);	
+		    lint2d_bell(up,ww,cs);
 		}
-
+		
 		/* extract data at receivers */
 		lint2d_extract(up,dd,cr);
 		if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
-
+		
 		/* extract wavefield in the "box" */
 		if(snap && it%jsnap==0) {
-			cut2d(up,uc,fdm,acz,acx);
-			sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
+		    cut2d(up,uc,fdm,acz,acx);
+		    sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
 		}
-
-
+				
 		/* circulate wavefield arrays */
 		ut=um;
 		um=uo;
 		uo=up;
 		up=ut;
-	
+		
 		if(dabc) {
-			/* one-way abc apply */
-			abcone2d_apply(uo,um,NOP,abc,fdm);
-			sponge2d_apply(um,spo,fdm);
-			sponge2d_apply(uo,spo,fdm);
+		    /* one-way abc apply */
+		    abcone2d_apply(uo,um,NOP,abc,fdm);
+		    sponge2d_apply(um,spo,fdm);
+		    sponge2d_apply(uo,spo,fdm);
 		}
-
-	}	/* end time loop */
-	end_t = clock();
-	if(verb) fprintf(stderr,"\n");
-
-	if (verb){	
+		
+	    }	/* end time loop*/
+	    end_t = clock();
+	    if(verb) fprintf(stderr,"\n");
+	    
+	    if (verb){	
 		total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
 		fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
 		fprintf(stderr,"Exiting of the program...\n");
-	}
-	} /* end constant density section */
-	/* forward variable density*/
-	else{
-	    uat=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
-	    if(verb) fprintf(stderr,"\n");
-	    start_t = clock();
-    	for (it=0; it<nt; it++) {
-			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
+	    }	
 
-			#ifdef _OPENMP
-			#pragma omp parallel private(ix,iz)	
-			#endif
-			{
-				// spatial derivatives		
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {		
-					
-						// gather
-						uat[ix][iz]  = iro[ix][iz]*(f1z*(uo[ix  ][iz  ] - uo[ix  ][iz-1]) +
-													f2z*(uo[ix  ][iz+1] - uo[ix  ][iz-2]));
-
-					}
-				}
-				
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-
-						// scatter
-						ua[ix][iz  ]  =    f1z*(uat[ix][iz  ] - 
-										   		uat[ix][iz+1]) + 
-										   f2z*(uat[ix][iz-1] -
-										   		uat[ix][iz+2]);
-						//ua[ix][iz+1]  +=   f2z*uat[ix][iz];					
-						//ua[ix][iz-1]  -=   f1z*uat[ix][iz];
-						//ua[ix][iz-2]  -=   f2z*uat[ix][iz];					
-
-					}
-				}
-
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-					// gather
-					uat[ix][iz]  = iro[ix][iz]*(f1x*(uo[ix  ][iz  ] - uo[ix-1][iz  ]) +
-												f2x*(uo[ix+1][iz  ] - uo[ix-2][iz  ]));
-
-					}
-				}
-
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-
-					// scatter
-					ua[ix  ][iz]  +=    f1x*(uat[ix  ][iz] -
-											 uat[ix+1][iz]) +
-										f2x*(uat[ix-1][iz] -
-											 uat[ix+2][iz]);
-					//ua[ix+1][iz]  +=   f2x*uat[ix][iz];
-					//ua[ix-1][iz]  -=   f1x*uat[ix][iz];
-					//ua[ix-2][iz]  -=   f2x*uat[ix][iz];
-										
-					}
-				}
-
-				/* step forward in time */
-				#ifdef _OPENMP
-				#pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
-				for    (ix=0; ix<fdm->nxpad; ix++) {
-				    for(iz=0; iz<fdm->nzpad; iz++) {
-						up[ix][iz] = 2*uo[ix][iz] 
-									-  um[ix][iz] 
-									-  ro[ix][iz]*vt[ix][iz]*ua[ix][iz];
-		    
-						//ua[ix][iz] = 0;
-					}
-				}	
-			}	/* end parallel section */
-			/* inject acceleration source */
-			if(expl) {
-				sf_floatread(ww, 1,Fwav);
-				lint2d_bell1(up,ww[0],cs);
-			} else {
-				sf_floatread(ww,ns,Fwav);	
-				lint2d_bell(up,ww,cs);
-			}
-
-			/* extract data at receivers */
-			lint2d_extract(up,dd,cr);
-			if(it%jdata==0) sf_floatwrite(dd,nr,Fdat);
-
-			/* extract wavefield in the "box" */
-			if(snap && it%jsnap==0) {
-				cut2d(up,uc,fdm,acz,acx);
-				sf_floatwrite(uc[0],sf_n(acz)*sf_n(acx),Fwfl);
-			}
-
-
-			/* circulate wavefield arrays */
-			ut=um;
-			um=uo;
-			uo=up;
-			up=ut;
-	
-			if(dabc) {
-				/* one-way abc apply */
-				abcone2d_apply(uo,um,NOP,abc,fdm);
-				sponge2d_apply(um,spo,fdm);
-				sponge2d_apply(uo,spo,fdm);
-			}
-
-		}	/* end time loop*/
-		end_t = clock();
-		if(verb) fprintf(stderr,"\n");
-
-		if (verb){	
-			total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
-			fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
-			fprintf(stderr,"Exiting of the program...\n");
-		}	
-	} /* end variable density section*/
-
-
+	    /* end variable density section*/
+    }
+        
     /*------------------------------------------------------------*/
     /* deallocate arrays */
     free(*um); free(um);
@@ -549,22 +550,22 @@ int main(int argc, char* argv[])
     if(snap) {
         free(*uc); free(uc);
     }
-
+    
     if(!cden) {
         free(*uat); free(uat);
         free(*ro); free(ro);
         free(*iro); free(iro);        
     }
-
+    
     free(*vt);  free(vt);
-
+    
     free(ww);
     free(ss);
     free(rr);
     free(dd);
-
-	/* ------------------------------------------------------------------------------------------ */	
-	/* CLOSE FILES AND EXIT */
+    
+    /*------------------------------------------------------------*/ 
+    /* CLOSE FILES AND EXIT */
     if (Fwav!=NULL) sf_fileclose(Fwav); 
 
     if (Fsou!=NULL) sf_fileclose(Fsou);
