@@ -364,7 +364,7 @@ int main(int argc, char* argv[])
 		/* inject acceleration source */
 		if(expl) {
 			sf_floatread(ww, 1,Fwav);
-			lint2d_inject1(up,ww[0],cs);
+			lint2d_bell1(up,ww[0],cs);
 		} else {
 			sf_floatread(ww,ns,Fwav);	
 			lint2d_bell(up,ww,cs);
@@ -437,10 +437,13 @@ int main(int argc, char* argv[])
 					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 						// scatter
-						ua[ix][iz  ]  +=   f1z*uat[ix][iz];
-						ua[ix][iz+1]  +=   f2z*uat[ix][iz];					
-						ua[ix][iz-1]  -=   f1z*uat[ix][iz];
-						ua[ix][iz-2]  -=   f2z*uat[ix][iz];					
+						ua[ix][iz  ]  =    f1z*uat[ix][iz  ] + 
+										   f2z*uat[ix][iz-1] - 
+										   f1z*uat[ix][iz+1] - 
+										   f2z*uat[ix][iz+2];
+						//ua[ix][iz+1]  +=   f2z*uat[ix][iz];					
+						//ua[ix][iz-1]  -=   f1z*uat[ix][iz];
+						//ua[ix][iz-2]  -=   f2z*uat[ix][iz];					
 
 					}
 				}
@@ -460,13 +463,17 @@ int main(int argc, char* argv[])
 				#ifdef _OPENMP
 				#pragma omp for schedule(dynamic,fdm->ompchunk)
 				#endif
-				for		(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-					for (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+				for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+
 					// scatter
-					ua[ix  ][iz]  +=   f1x*uat[ix][iz];
-					ua[ix+1][iz]  +=   f2x*uat[ix][iz];
-					ua[ix-1][iz]  -=   f1x*uat[ix][iz];
-					ua[ix-2][iz]  -=   f2x*uat[ix][iz];
+					ua[ix  ][iz]  +=    f1x*uat[ix  ][iz] +
+										f2x*uat[ix-1][iz] -
+										f1x*uat[ix+1][iz] -
+										f2x*uat[ix+2][iz];
+					//ua[ix+1][iz]  +=   f2x*uat[ix][iz];
+					//ua[ix-1][iz]  -=   f1x*uat[ix][iz];
+					//ua[ix-2][iz]  -=   f2x*uat[ix][iz];
 										
 					}
 				}
@@ -481,14 +488,14 @@ int main(int argc, char* argv[])
 									-  um[ix][iz] 
 									-  ro[ix][iz]*vt[ix][iz]*ua[ix][iz];
 		    
-						ua[ix][iz] = 0;
+						//ua[ix][iz] = 0;
 					}
 				}	
 			}	/* end parallel section */
 			/* inject acceleration source */
 			if(expl) {
 				sf_floatread(ww, 1,Fwav);
-				lint2d_inject1(up,ww[0],cs);
+				lint2d_bell1(up,ww[0],cs);
 			} else {
 				sf_floatread(ww,ns,Fwav);	
 				lint2d_bell(up,ww,cs);

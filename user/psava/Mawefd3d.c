@@ -391,7 +391,7 @@ int main(int argc, char* argv[])
 			/* inject acceleration source */
 			if(expl) {
 				sf_floatread(ww, 1,Fwav);
-				lint3d_inject1(up,ww[0],cs);
+				lint3d_bell1(up,ww[0],cs);
 			} else {
 				sf_floatread(ww,ns,Fwav);	
 				lint3d_bell(up,ww,cs);
@@ -456,7 +456,10 @@ int main(int argc, char* argv[])
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
-							uat[iy][ix][iz]  = iro[iy][ix][iz]*FZ(uo,ix,iy,iz,idz);
+							uat[iy][ix][iz]  = iro[iy][ix][iz]*(
+												f1z*(uo[iy  ][ix  ][iz  ] - uo[iy  ][ix  ][iz-1]) +
+												f2z*(uo[iy  ][ix  ][iz+1] - uo[iy  ][ix  ][iz-2])
+												);
 
 						}
 					}
@@ -468,10 +471,13 @@ int main(int argc, char* argv[])
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 							// scatter
-							ua[iy][ix][iz  ]  +=   f1z*uat[iy][ix][iz];
-							ua[iy][ix][iz+1]  +=   f2z*uat[iy][ix][iz];					
-							ua[iy][ix][iz-1]  -=   f1z*uat[iy][ix][iz];
-							ua[iy][ix][iz-2]  -=   f2z*uat[iy][ix][iz];
+							ua[iy][ix][iz  ]  =		f1z*uat[iy][ix][iz] +
+													f2z*uat[iy][ix][iz-1] -
+													f1z*uat[iy][ix][iz+1] - 
+													f2z*uat[iy][ix][iz+2];
+							//ua[iy][ix][iz+1]  +=   f2z*uat[iy][ix][iz];					
+							//ua[iy][ix][iz-1]  -=   f1z*uat[iy][ix][iz];
+							//ua[iy][ix][iz-2]  -=   f2z*uat[iy][ix][iz];
 
 				
 						}
@@ -487,7 +493,10 @@ int main(int argc, char* argv[])
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
-							uat[iy][ix][iz]  = iro[iy][ix][iz]*FX(uo,ix,iy,iz,idx);
+							uat[iy][ix][iz]  = iro[iy][ix][iz]*(
+												f1x*(uo[iy  ][ix  ][iz  ] - uo[iy  ][ix-1][iz  ]) +
+												f2x*(uo[iy  ][ix+1][iz  ] - uo[iy  ][ix-2][iz  ])
+												);
 						}
 					}
 				}
@@ -499,10 +508,13 @@ int main(int argc, char* argv[])
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
 							// scatter
-							ua[iy][ix  ][iz]  +=   f1x*uat[iy][ix][iz];
-							ua[iy][ix+1][iz]  +=   f2x*uat[iy][ix][iz];					
-							ua[iy][ix-1][iz]  -=   f1x*uat[iy][ix][iz];
-							ua[iy][ix-2][iz]  -=   f2x*uat[iy][ix][iz];
+							ua[iy][ix  ][iz]  +=    f1x*uat[iy][ix  ][iz] + 
+													f2x*uat[iy][ix-1][iz] - 
+													f1x*uat[iy][ix+1][iz] - 
+													f2x*uat[iy][ix+2][iz];
+							//ua[iy][ix+1][iz]  +=   f2x*uat[iy][ix][iz];					
+							//ua[iy][ix-1][iz]  -=   f1x*uat[iy][ix][iz];
+							//ua[iy][ix-2][iz]  -=   f2x*uat[iy][ix][iz];
 
 				
 						}
@@ -518,21 +530,27 @@ int main(int argc, char* argv[])
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 							// gather
-							uat[iy][ix][iz]  = iro[iy][ix][iz]*FY(uo,ix,iy,iz,idx);
+							uat[iy][ix][iz]  = iro[iy][ix][iz]*(
+												f1y*(uo[iy  ][ix  ][iz  ] - uo[iy-1][ix  ][iz  ]) +
+												f2y*(uo[iy+1][ix  ][iz  ] - uo[iy-2][ix  ][iz  ])
+												);
 						}
 					}
 				}
 				#ifdef _OPENMP
 				#pragma omp for schedule(dynamic,fdm->ompchunk)
 				#endif
-				for     	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-					for 	(iy=NOP; iy<fdm->nypad-NOP; iy++) {
+				for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
+					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 							// scatter
-							ua[iy  ][ix][iz]  +=   f1y*uat[iy][ix][iz];
-							ua[iy+1][ix][iz]  +=   f2y*uat[iy][ix][iz];					
-							ua[iy-1][ix][iz]  -=   f1y*uat[iy][ix][iz];
-							ua[iy-2][ix][iz]  -=   f2y*uat[iy][ix][iz];
+							ua[iy  ][ix][iz]  +=   	f1y*uat[iy  ][ix][iz] +
+													f2y*uat[iy-1][ix][iz] - 
+													f1y*uat[iy+1][ix][iz] - 
+													f2y*uat[iy+2][ix][iz];
+							//ua[iy+1][ix][iz]  +=   f2y*uat[iy][ix][iz];					
+							//ua[iy-1][ix][iz]  -=   f1y*uat[iy][ix][iz];
+							//ua[iy-2][ix][iz]  -=   f2y*uat[iy][ix][iz];
 
 				
 						}
@@ -550,7 +568,7 @@ int main(int argc, char* argv[])
 											-  um[iy][ix][iz] 
 											-  ro[iy][ix][iz]*vt[iy][ix][iz]*ua[iy][ix][iz];
 		    
-							ua[iy][ix][iz] = 0;
+							//ua[iy][ix][iz] = 0;
 						}
 					}
 				}
@@ -560,7 +578,7 @@ int main(int argc, char* argv[])
 			/* inject acceleration source */
 			if(expl) {
 				sf_floatread(ww, 1,Fwav);
-				lint3d_inject1(up,ww[0],cs);
+				lint3d_bell1(up,ww[0],cs);
 			} else {
 				sf_floatread(ww,ns,Fwav);	
 				lint3d_bell(up,ww,cs);
