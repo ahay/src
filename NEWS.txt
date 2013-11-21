@@ -34,6 +34,8 @@ To SCons:
 
 To documentation:
 
+* Added CITATION.txt file for the Madagascar paper in JORS.
+
 To APIs:
 
 * Updated numpy API for compatibility with the latest version of numpy
