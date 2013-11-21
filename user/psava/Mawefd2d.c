@@ -413,7 +413,7 @@ int main(int argc, char* argv[])
 			if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
 
 			#ifdef _OPENMP
-			#pragma omp parallel private(ix,iz)	shared(fdm,ua,uat,uo,co,idx,idz)
+			#pragma omp parallel private(ix,iz)	
 			#endif
 			{
 				// spatial derivatives		
@@ -437,10 +437,10 @@ int main(int argc, char* argv[])
 					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 						// scatter
-						ua[ix][iz  ]  =    f1z*uat[ix][iz  ] + 
-										   f2z*uat[ix][iz-1] - 
-										   f1z*uat[ix][iz+1] - 
-										   f2z*uat[ix][iz+2];
+						ua[ix][iz  ]  =    f1z*(uat[ix][iz  ] - 
+										   		uat[ix][iz+1]) + 
+										   f2z*(uat[ix][iz-1] -
+										   		uat[ix][iz+2]);
 						//ua[ix][iz+1]  +=   f2z*uat[ix][iz];					
 						//ua[ix][iz-1]  -=   f1z*uat[ix][iz];
 						//ua[ix][iz-2]  -=   f2z*uat[ix][iz];					
@@ -467,10 +467,10 @@ int main(int argc, char* argv[])
 					for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 
 					// scatter
-					ua[ix  ][iz]  +=    f1x*uat[ix  ][iz] +
-										f2x*uat[ix-1][iz] -
-										f1x*uat[ix+1][iz] -
-										f2x*uat[ix+2][iz];
+					ua[ix  ][iz]  +=    f1x*(uat[ix  ][iz] -
+											 uat[ix+1][iz]) +
+										f2x*(uat[ix-1][iz] -
+											 uat[ix+2][iz]);
 					//ua[ix+1][iz]  +=   f2x*uat[ix][iz];
 					//ua[ix-1][iz]  -=   f1x*uat[ix][iz];
 					//ua[ix-2][iz]  -=   f2x*uat[ix][iz];
