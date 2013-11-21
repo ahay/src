@@ -36,8 +36,8 @@ Flow('offs','off','spray n=111')
 ###################
 
 vscan = '''
-vscan 
-offset=${SOURCES[1]} v0=1.4 nv=61 dv=0.005 half=n semblance=y
+vscan offset=${SOURCES[1]} 
+v0=1.4 nv=61 dv=0.005 half=n semblance=y
 '''
 pick = 'pick rect1=20 rect2=3 vel0=1.5'
 
@@ -71,17 +71,22 @@ Flow('picks0','vscans',pick)
 
 # interpolate picks on the original grid
 Flow('picks','picks0',
-     'window | transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
+     'transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
 Result('picks',
        '''
-       grey color=j scalebar=y barreverse=y allpos=y bias=1.4
-       title="Stacking Velocity" unit1=s label2=Distance unit2=km
+       grey color=j scalebar=y barreverse=y 
+       allpos=y bias=1.4
+       title="Stacking Velocity" 
+       label1=Time unit1=s label2=Distance unit2=km
        ''')
 
 # Normal moveout and stack
 ##########################
 
-nmo = 'nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n'
+nmo = '''
+nmo offset=${SOURCES[1]} 
+velocity=${SOURCES[2]} half=n
+'''
 
 Flow('nmo','cmp off pick',nmo)
 Plot('nmo',
@@ -106,18 +111,24 @@ Result('stack',
 # Dix inversion
 Flow('semb','vscans picks0','slice pick=${SOURCES[1]}')
 Flow('vel0','picks0 semb',
-     'window | dix rect1=20 rect2=2 weight=${SOURCES[1]}')
+     'dix rect1=20 rect2=2 weight=${SOURCES[1]}')
 
 # interpolate on the original grid
-Flow('vel','vel0','transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
+Flow('vel','vel0',
+     'transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
 Result('vel',
        '''
-       grey color=j scalebar=y barreverse=y allpos=y bias=1.4
-       title="Interval Velocity" unit1=s label2=Distance unit2=km
+       grey color=j scalebar=y barreverse=y 
+       allpos=y bias=1.4
+       title="Interval Velocity" 
+       label1=Time unit1=s label2=Distance unit2=km
        ''')
 
 Flow('image','stack vel',
-     'time2depth velocity=${SOURCES[1]} intime=y dz=0.005 nz=1001')
+     '''
+     time2depth velocity=${SOURCES[1]} 
+     intime=y dz=0.005 nz=1001
+     ''')
 Result('image',
        '''
        window n2=1024 min1=3 | grey title=Image
