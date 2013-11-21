@@ -274,14 +274,10 @@ int main(int argc, char* argv[])
 		for        (iy=1; iy<fdm->nypad; iy++) {
 			for    (ix=1; ix<fdm->nxpad; ix++) {
 				for(iz=1; iz<fdm->nzpad; iz++) {
-					iro[iy][ix][iz] = 8./(	ro[iy  ][ix  ][iz  ] + 
+					iro[iy][ix][iz] = 6./(	3*ro[iy  ][ix  ][iz  ] + 
 											ro[iy  ][ix  ][iz-1] + 
 											ro[iy  ][ix-1][iz  ] + 
-											ro[iy-1][ix  ][iz  ] + 
-											ro[iy  ][ix-1][iz-1] + 
-											ro[iy-1][ix  ][iz-1] +
-											ro[iy-1][ix-1][iz  ] +
-											ro[iy-1][ix-1][iz-1]);
+											ro[iy-1][ix  ][iz  ] );
 				}
 			}
 		}
@@ -452,8 +448,7 @@ int main(int argc, char* argv[])
 
 			#ifdef _OPENMP
 			#pragma omp parallel			\
-		    private(ix,iy,iz)				\
-		    shared(fdm,ua,uo,idx,idy,idz)
+		    private(ix,iy,iz)
 			#endif
 			{
 				// Z spatial derivatives		
@@ -480,10 +475,10 @@ int main(int argc, char* argv[])
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 							// scatter
-							ua[iy][ix][iz  ]  =		f1z*uat[iy][ix][iz] +
-													f2z*uat[iy][ix][iz-1] -
-													f1z*uat[iy][ix][iz+1] - 
-													f2z*uat[iy][ix][iz+2];
+							ua[iy][ix][iz  ]  =		f1z*(uat[iy][ix][iz]    - 
+														 uat[iy][ix][iz+1]) +
+													f2z*(uat[iy][ix][iz-1]  - 
+														 uat[iy][ix][iz+2]);
 							//ua[iy][ix][iz+1]  +=   f2z*uat[iy][ix][iz];					
 							//ua[iy][ix][iz-1]  -=   f1z*uat[iy][ix][iz];
 							//ua[iy][ix][iz-2]  -=   f2z*uat[iy][ix][iz];
@@ -517,10 +512,10 @@ int main(int argc, char* argv[])
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
 							// scatter
-							ua[iy][ix  ][iz]  +=    f1x*uat[iy][ix  ][iz] + 
-													f2x*uat[iy][ix-1][iz] - 
-													f1x*uat[iy][ix+1][iz] - 
-													f2x*uat[iy][ix+2][iz];
+							ua[iy][ix  ][iz]  +=    f1x*(uat[iy][ix  ][iz]  -  
+														 uat[iy][ix+1][iz]) + 
+													f2x*(uat[iy][ix-1][iz] - 
+														 uat[iy][ix+2][iz]); 
 							//ua[iy][ix+1][iz]  +=   f2x*uat[iy][ix][iz];					
 							//ua[iy][ix-1][iz]  -=   f1x*uat[iy][ix][iz];
 							//ua[iy][ix-2][iz]  -=   f2x*uat[iy][ix][iz];
@@ -553,10 +548,10 @@ int main(int argc, char* argv[])
 					for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 						for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 							// scatter
-							ua[iy  ][ix][iz]  +=   	f1y*uat[iy  ][ix][iz] +
-													f2y*uat[iy-1][ix][iz] - 
-													f1y*uat[iy+1][ix][iz] - 
-													f2y*uat[iy+2][ix][iz];
+							ua[iy  ][ix][iz]  +=   	f1y*(uat[iy  ][ix][iz]  - 
+														 uat[iy+1][ix][iz]) +
+													f2y*(uat[iy-1][ix][iz]  - 
+														 uat[iy+2][ix][iz]); 
 							//ua[iy+1][ix][iz]  +=   f2y*uat[iy][ix][iz];					
 							//ua[iy-1][ix][iz]  -=   f1y*uat[iy][ix][iz];
 							//ua[iy-2][ix][iz]  -=   f2y*uat[iy][ix][iz];
