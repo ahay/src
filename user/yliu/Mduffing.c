@@ -1,5 +1,5 @@
 /* Duffing differential equation solved by 4th order Runge-Kutta method. 
-Duffing equation: x'' + d x' - a x + b x^3 = gamma H(2 PI freq t) + alpha input(2 PI freq t)
+Duffing equation: x'' + d x' - a x + b x^3 = gamma H(2 PI freq t) + alpha input(t)
 */
 /*
   Copyright (C) 2013 Jilin University
