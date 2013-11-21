@@ -259,9 +259,13 @@ int main(int argc, char* argv[])
         uat =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
 
 		/*inverse density, to avoid division in the extrapolation */
+		iro[0][0] = 1/ro[0][0];
 		for (ix=1; ix<fdm->nxpad; ix++){
 			for(iz=1; iz<fdm->nzpad; iz++){
-				iro[ix][iz] = 4/(ro[ix][iz] + ro[ix-1][iz] + ro[ix][iz-1] + ro[ix-1][iz-1]);
+				iro[ix][iz] = 4./(	ro[ix  ][iz  ] + 
+									ro[ix-1][iz  ] + 
+									ro[ix  ][iz-1] + 
+									ro[ix-1][iz-1]);
 			}
 		}
 

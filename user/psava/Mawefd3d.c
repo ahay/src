@@ -269,10 +269,19 @@ int main(int argc, char* argv[])
 		iro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);        
 		sf_floatread(tt[0][0],nz*nx*ny,Fden); expand3d(tt,ro ,fdm);
  
+		/*inverse density, to avoid division in the extrapolation */
+ 		iro[0][0][0] = 1/ro[0][0][0];
 		for        (iy=1; iy<fdm->nypad; iy++) {
 			for    (ix=1; ix<fdm->nxpad; ix++) {
 				for(iz=1; iz<fdm->nzpad; iz++) {
-					iro[iy][ix][iz] = 6./(ro[iy][ix][iz] + ro[iy-1][ix][iz] + ro[iy][ix][iz] + ro[iy][ix-1][iz] + ro[iy][ix][iz] + ro[iy][ix][iz-1]);				
+					iro[iy][ix][iz] = 8./(	ro[iy  ][ix  ][iz  ] + 
+											ro[iy  ][ix  ][iz-1] + 
+											ro[iy  ][ix-1][iz  ] + 
+											ro[iy-1][ix  ][iz  ] + 
+											ro[iy  ][ix-1][iz-1] + 
+											ro[iy-1][ix  ][iz-1] +
+											ro[iy-1][ix-1][iz  ] +
+											ro[iy-1][ix-1][iz-1]);
 				}
 			}
 		}
