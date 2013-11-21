@@ -8,9 +8,9 @@ pclipc2 dwtdenoise trisolver symposolver seiscut seisthr Testsolver
 Testsolver1 trapepass lagrange heatexplitest heatimplitest hyperdif
 zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 preerror threshold1
 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon suplane simidenoise1
-rmtrace
+rmtrace prekirch psmig
 '''
-ccprogs = ''
+ccprogs = 'diffcxx'
 
 mpiprogs='petsctest'
 
@@ -172,6 +172,7 @@ if root:
 	main = 'sf%s.py' % user
 	
 	docs += map(lambda prog: env.Doc(prog,'M' + prog),mains)  + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
 		map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
 	env.Depends(docs,'#/framework/rsf/doc.py')	
 	doc = env.RSF_Docmerge(main,docs)
