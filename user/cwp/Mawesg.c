@@ -7,7 +7,7 @@ Acoustic wave equation finite difference modeling in both 2D and 3D, using an ex
 predefined functions for using this program. ***
 
 This program solves a system of first-order PDE's for pressure and particle velocity using a staggered-grid approach.
-The model parameters are compressibility (1/K K: bulk modulus) and density.
+The model parameters are incompressibility (K: bulk modulus) and density.
 
 The program is parallelized using OpenMP, so be sure to use a compatible compiler to take
 advantage of the performance boost
@@ -15,7 +15,7 @@ advantage of the performance boost
 ============= STAGGERED-GRID   ========================
 
 		o -- x -- o -- x -- o -- x -- o
-        |    |    |    |    |    |    |
+		|    |    |    |    |    |    |
 		x -- x -- x -- x -- x -- x -- x
 		|    |    |    |    |    |    |
 		o -- x -- o -- x -- o -- x -- o
@@ -41,8 +41,7 @@ Fwav.rsf - An RSF file containing your VOLUME DENSITY INJECTION RATE AND DENSITY
 	       The code check the dimensions of the model and the dimensions of the wavelt file; for 2D modeling, the wavelet
 	       file may have n2=1 or n2=3, for 3D modeling, n2=1 or n2=4.  An error is returned if the dimensions don't match.
 		   
-Fcom.rsf - An N dimensional RSF file that contains the values for the compressibility (inverse of the bulk modulus K) at every point
-        in the computational domain.
+Fbulk.rsf - An N dimensional RSF file that contains the values for the incompressibility (bulk modulus K) at every point in the computational domain.
 		
 Fden.rsf - An N dimensional RSF file that contains the values for density at every point in the computational domain.
 
@@ -110,90 +109,139 @@ with NaNs.
 #endif
 
 #include "fdutil.h"
-
+#include <time.h>
 #include <math.h>
 
 /*------------------------------------------------------------*/
 /* stencils and stencil parameters*/
-#define NOP 4 /* derivative operator half-size */
-#define alfa 3e-1 /*PML sigmoid std dev*/
+#define NOP 3 /* derivative operator half-size */
+/* PML parameters*/
 #define mPML 100 /* max value of the PML*/
 /* Muir's derivative operator */
-#define C1 +0.598144  //  1225/ 1024      /2 
-#define C2 -0.039876  // -1225/(1024*  15)/2
-#define C3 +0.004785  //  1225/(1024* 125)/2 
-#define C4 -0.000348  // -1225/(1024*1715)/2 
+//#define C1 +0.598144  //  1225/ 1024      /2 
+//#define C2 -0.039876  // -1225/(1024*  15)/2
+//#define C3 +0.004785  //  1225/(1024* 125)/2 
+//#define C4 -0.000348  // -1225/(1024*1715)/2 
+/* Optimized 6-point 1st derivative stencil */
+#define C1 +1.1989919
+#define C2 -0.08024696
+#define C3 +0.00855954
 
 /***************/
 /* 2D STENCILS */
 /***************/
-/*  2D forward FD derivative stencils */
-#define Fz(a,ix,iz,s) (2*C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +     \
+// Muir's operators
+/* 1D forward FD derivative stencils */
+//#define Fz(a,ix,iz,s) (2*C4*(a[ix  ][iz+4] - a[ix  ][iz-3]) +     \
                        2*C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +     \
                        2*C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +     \
                        2*C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
-#define Fx(a,ix,iz,s) (2*C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +     \
+//#define Fx(a,ix,iz,s) (2*C4*(a[ix+4][iz  ] - a[ix-3][iz  ]) +     \
                        2*C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +     \
                        2*C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +     \
                        2*C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
 
-/* 2D backward FD derivative stencils */
-#define Bz(a,ix,iz,s) (2*C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +     \
+// Optimized LS
+/* 1D forward FD derivative stencils */
+#define Fz(a,ix,iz,s) (C3*(a[ix  ][iz+3] - a[ix  ][iz-2]) +     \
+                       C2*(a[ix  ][iz+2] - a[ix  ][iz-1]) +     \
+                       C1*(a[ix  ][iz+1] - a[ix  ][iz  ])  )*s
+#define Fx(a,ix,iz,s) (C3*(a[ix+3][iz  ] - a[ix-2][iz  ]) +     \
+                       C2*(a[ix+2][iz  ] - a[ix-1][iz  ]) +     \
+                       C1*(a[ix+1][iz  ] - a[ix  ][iz  ])  )*s
+                       
+// Muir's operators
+/* 1D backward FD derivative stencils */
+//#define Bz(a,ix,iz,s) (2*C4*(a[ix  ][iz+3] - a[ix  ][iz-4]) +     \
                        2*C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +     \
                        2*C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +     \
                        2*C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
-#define Bx(a,ix,iz,s) (2*C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +     \
+//#define Bx(a,ix,iz,s) (2*C4*(a[ix+3][iz  ] - a[ix-4][iz  ]) +     \
                        2*C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +     \
                        2*C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +     \
                        2*C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
 
+// Optimized LS
+/* 1D forward FD derivative stencils */
+#define Bz(a,ix,iz,s) (C3*(a[ix  ][iz+2] - a[ix  ][iz-3]) +     \
+                       C2*(a[ix  ][iz+1] - a[ix  ][iz-2]) +     \
+                       C1*(a[ix  ][iz  ] - a[ix  ][iz-1])  )*s
+#define Bx(a,ix,iz,s) (C3*(a[ix+2][iz  ] - a[ix-3][iz  ]) +     \
+                       C2*(a[ix+1][iz  ] - a[ix-2][iz  ]) +     \
+                       C1*(a[ix  ][iz  ] - a[ix-1][iz  ])  )*s
 /***************/
 /* 3D STENCILS */
 /***************/
-/*  3D forward FD derivative stencils */
-#define Fz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+4] - a[iy ][ix  ][iz-3]) +     \
+// Muir's operators
+/* 1D forward FD derivative stencils */
+//#define Fz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+4] - a[iy ][ix  ][iz-3]) +     \
                        2*C3*( a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-2]) +     \
                        2*C2*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-1]) +     \
                        2*C1*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz  ])  )*s
-#define Fx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+4][iz  ] - a[iy ][ix-3][iz  ]) +     \
+//#define Fx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+4][iz  ] - a[iy ][ix-3][iz  ]) +     \
                        2*C3*( a[iy][ix+3][iz  ] - a[iy ][ix-2][iz  ]) +     \
                        2*C2*( a[iy][ix+2][iz  ] - a[iy ][ix-1][iz  ]) +     \
                        2*C1*( a[iy][ix+1][iz  ] - a[iy ][ix  ][iz  ])  )*s
-#define Fy3(a,iy,ix,iz,s) (2*C4*(a[iy+4][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
+//#define Fy3(a,iy,ix,iz,s) (2*C4*(a[iy+4][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
                        2*C3*( a[iy+3][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
                        2*C2*( a[iy+2][ix][iz  ] - a[iy-1][ix ][iz  ]) +     \
                        2*C1*( a[iy+1][ix][iz  ] - a[iy  ][ix ][iz  ])  )*s
 
-/* 3D backward FD derivative stencils */
-#define Bz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-4]) +     \
+// Optimized LS
+/* 1D forward FD derivative stencils */
+#define Fz3(a,iy,ix,iz,s) (C3*( a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-2]) +     \
+                       C2*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-1]) +     \
+                       C1*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz  ])  )*s
+#define Fx3(a,iy,ix,iz,s) (C3*( a[iy][ix+3][iz  ] - a[iy ][ix-2][iz  ]) +     \
+                       C2*( a[iy][ix+2][iz  ] - a[iy ][ix-1][iz  ]) +     \
+                       C1*( a[iy][ix+1][iz  ] - a[iy ][ix  ][iz  ])  )*s
+#define Fy3(a,iy,ix,iz,s) (C3*( a[iy+3][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
+                       C2*( a[iy+2][ix][iz  ] - a[iy-1][ix ][iz  ]) +     \
+                       C1*( a[iy+1][ix][iz  ] - a[iy  ][ix ][iz  ])  )*s
+                       
+// Muir's operators
+/* 1D backward FD derivative stencils */
+//#define Bz3(a,iy,ix,iz,s) (2*C4*(a[iy][ix  ][iz+3] - a[iy ][ix  ][iz-4]) +     \
                        2*C3*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-3]) +     \
                        2*C2*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz-2]) +     \
                        2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix  ][iz-1])  )*s
-#define Bx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+3][iz  ] - a[iy ][ix-4][iz  ]) +     \
+//#define Bx3(a,iy,ix,iz,s) (2*C4*(a[iy][ix+3][iz  ] - a[iy ][ix-4][iz  ]) +     \
                        2*C3*( a[iy][ix+2][iz  ] - a[iy ][ix-3][iz  ]) +     \
                        2*C2*( a[iy][ix+1][iz  ] - a[iy ][ix-2][iz  ]) +     \
                        2*C1*( a[iy][ix  ][iz  ] - a[iy ][ix-1][iz  ])  )*s
-#define By3(a,iy,ix,iz,s) (2*C4*(a[iy+3][ix][iz  ] - a[iy-4][ix ][iz  ]) +     \
+//#define By3(a,iy,ix,iz,s) (2*C4*(a[iy+3][ix][iz  ] - a[iy-4][ix ][iz  ]) +     \
                        2*C3*( a[iy+2][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
                        2*C2*( a[iy+1][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
                        2*C1*( a[iy  ][ix][iz  ] - a[iy-1][ix ][iz  ])  )*s
+                       
+// LS optimized
+/* 1D backward FD derivative stencils */
+#define Bz3(a,iy,ix,iz,s) (C3*( a[iy][ix  ][iz+2] - a[iy ][ix  ][iz-3]) +     \
+                       C2*( a[iy][ix  ][iz+1] - a[iy ][ix  ][iz-2]) +     \
+                       C1*( a[iy][ix  ][iz  ] - a[iy ][ix  ][iz-1])  )*s
+#define Bx3(a,iy,ix,iz,s) (C3*( a[iy][ix+2][iz  ] - a[iy ][ix-3][iz  ]) +     \
+                       C2*( a[iy][ix+1][iz  ] - a[iy ][ix-2][iz  ]) +     \
+                       C1*( a[iy][ix  ][iz  ] - a[iy ][ix-1][iz  ])  )*s
+#define By3(a,iy,ix,iz,s) (C3*( a[iy+2][ix][iz  ] - a[iy-3][ix ][iz  ]) +     \
+                       C2*( a[iy+1][ix][iz  ] - a[iy-2][ix ][iz  ]) +     \
+                       C1*( a[iy  ][ix][iz  ] - a[iy-1][ix ][iz  ])  )*s
 /*------------------------------------------------------------*/
 
 int main(int argc, char* argv[])
 {
 
     /* Declare RSF params */
-    bool verb,fsrf,snap,abc,is2D,debug;
+    bool verb,fsrf,snap,abc,abcpml,is2D,debug;
     int  jsnap,ntsnap,jdata;
 
     /* I/O files */
-    sf_file Fwav=NULL; /* source term file */
-    sf_file Fsou=NULL;  /* sources   */
-    sf_file Frec=NULL;  /* receivers */
-    sf_file Fcom=NULL;    /* compressibility */
-    sf_file Fden=NULL;  /* density */
-    sf_file Fdat=NULL;  /* PRESSURE data */
-    sf_file Fwfl=NULL;  /* wavefield */
+    sf_file Fwav =NULL; /* source term file */
+    sf_file Fsou =NULL; /* sources   */
+    sf_file Frec =NULL; /* receivers */
+    sf_file Fbulk=NULL; /* incompressibility */
+    sf_file Fden =NULL; /* density */
+    sf_file Fdat =NULL; /* PRESSURE data */
+    sf_file Fwfl =NULL; /* wavefield */
 
 /*set all y variables to be either zero or null to avoid compiler warnings
 about being uninitialized */
@@ -211,9 +259,12 @@ about being uninitialized */
     float     dqz,dqx,dqy=0;
 	
     /* I/O arrays */
-    float   *ww=NULL;          /* source term array*/
-    float  *dd=NULL;           /* data      */	
+    float  *ww=NULL; /* source term array*/
+    float  *dd=NULL; /* data      */	
 
+	/* for benchmarking */
+	clock_t start_t, end_t;
+	float total_t;
 
     /*------------------------------------------------------------*/
 	/* init RSF */
@@ -244,33 +295,34 @@ about being uninitialized */
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
     if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
-    if(! sf_getbool("abc",&abc)) abc=false; /* "PML ABC" */
+    if(! sf_getbool("abc",&abc)) abc=false; /* ABC if the abcpml=n: spongeABC */
+    if(! sf_getbool("pml",&abcpml)) abcpml=false; /* "PML ABC" */
 	if(! sf_getbool("debug",&debug)) debug=false; /* debug */ 
     
     /*------------------------------------------------------------*/    
     /* I/O files*/
-    Fwav = sf_input ("in" ); /* wavelet   */
-    Fcom = sf_input ("com"); /* compressibiliy  */
-    Fden = sf_input ("den"); /* density   */	
-    Fsou = sf_input ("sou"); /* sources   */
-    Frec = sf_input ("rec"); /* receivers */
-    Fwfl = sf_output("wfl"); /* wavefield */
-    Fdat = sf_output("out"); /* data      */
+    Fwav  = sf_input  ("in" );  /* wavelet   */
+    Fbulk = sf_input  ("bulk"); /* incompressibiliy  */
+    Fden  = sf_input  ("den");  /* density   */	
+    Fsou  = sf_input  ("sou");  /* sources   */
+    Frec  = sf_input  ("rec");  /* receivers */
+    Fwfl  = sf_output ("wfl");  /* wavefield */
+    Fdat  = sf_output ("out");  /* data      */
 
 
 	/* Determine dimensionality, if 2D then axis 3 has n size of 1 */
-	sf_axis test = sf_iaxa(Fcom,3);
+	sf_axis test = sf_iaxa(Fbulk,3);
 	if(sf_n(test) == 1) is2D = true;
 	else is2D = false;
 
     /*------------------------------------------------------------*/
     /* axes */
     at = sf_iaxa(Fwav,3); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
-    af = sf_iaxa(Fwav,2); sf_setlabel(af,"component"); if(verb) sf_raxa(af); /* time */
+    af = sf_iaxa(Fwav,2); sf_setlabel(af,"component"); if(verb) sf_raxa(af); /*time */
     as = sf_iaxa(Fsou,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
     ar = sf_iaxa(Frec,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
-    az = sf_iaxa(Fcom,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
-    ax = sf_iaxa(Fcom,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
+    az = sf_iaxa(Fbulk,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
+    ax = sf_iaxa(Fbulk,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
 
     nt = sf_n(at); dt = sf_d(at);
     nf = sf_n(af); /* number of force terms*/
@@ -281,7 +333,7 @@ about being uninitialized */
 
 
     if(!is2D){ /*If 3D*/
-		ay=sf_iaxa(Fcom,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /*space*/
+		ay=sf_iaxa(Fbulk,3); sf_setlabel(ay,"y"); if(verb) sf_raxa(ay); /*space*/
 		ny=sf_n(ay); dy=sf_d(ay); idy=1/dy;
 	}
 
@@ -312,14 +364,15 @@ if (is2D){
     
     /* FDM structure */
     fdm2d    fdm;
-    pt2d   *ss=NULL;           /* sources   */
-    pt2d   *rr=NULL;           /* receivers */
+    pt2d   *ss=NULL;   /* sources   */
+    pt2d   *rr=NULL;   /* receivers */
     
 
-    float **tt=NULL;           /* temporary  */
-    float **com=NULL;           /* velocity in expanded domain */
-    float **ro=NULL;           /* density  in expanded domain */
-
+    float **tt  =NULL;	/* temporary  */
+    float **bulk=NULL;	/* velocity in expanded domain */
+	float **iro =NULL;	/* inverse of the density */
+	float **ro =NULL;	/* inverse of the density */	
+    float **vp  =NULL;	/* auxiliary wavespeed model  in expanded domain*/
 
     /*------------------------------------------------------------*/
     /* pressure: u = U @ t */
@@ -328,8 +381,18 @@ if (is2D){
     float **vx;
     float **vz;
 
-    /* PML structures */
-    PML2D pml=NULL;
+    /* pressure: u = U @ t-1 */
+    float **um; 
+    /* velocity: v = U @ t-1 */
+    float **vmx;
+    float **vmz;
+
+	/* PML structures */
+	PML2D pml=NULL;
+	/* Sponge structures*/
+	abcone2d abcp=NULL;
+	sponge   spo=NULL;
+
 
     /* linear interpolation weights/indices */
     lint2d cs,cr;
@@ -370,23 +433,23 @@ if (is2D){
 		dqz=sf_d(az);
 		dqx=sf_d(ax);
 
-	acz = sf_maxa(nqz,oqz,dqz);
-	acx = sf_maxa(nqx,oqx,dqx);
+		acz = sf_maxa(nqz,oqz,dqz);
+		acx = sf_maxa(nqx,oqx,dqx);
 
-	/* check if the imaging window fits in the wavefield domain */
+		/* check if the imaging window fits in the wavefield domain */
 
-	uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
+		uc=sf_floatalloc2(sf_n(acz),sf_n(acx));
 
-	ntsnap=0;
-	for(it=0; it<nt; it++) {
-	    if(it%jsnap==0) ntsnap++;
-	}
-	sf_setn(at,  ntsnap);
-	sf_setd(at,dt*jsnap);
+		ntsnap=0;
+		for(it=0; it<nt; it++) {
+		    if(it%jsnap==0) ntsnap++;
+		}
+		sf_setn(at,  ntsnap);
+		sf_setd(at,dt*jsnap);
 
-	sf_oaxa(Fwfl,acz,1);
-	sf_oaxa(Fwfl,acx,2);
-	sf_oaxa(Fwfl,at,3);
+		sf_oaxa(Fwfl,acz,1);
+		sf_oaxa(Fwfl,acx,2);
+		sf_oaxa(Fwfl,at, 3);
     }
 
 
@@ -410,27 +473,35 @@ if (is2D){
 
     cs = lint2d_make(ns,ss,fdm);
     cr = lint2d_make(nr,rr,fdm);
+	fdbell_init(5);
 
     /*------------------------------------------------------------*/ 
     /* input density */
-    tt=sf_floatalloc2(nz,   nx   ); 
-    ro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
-
+    tt =sf_floatalloc2(     nz,        nx   ); 
+    iro =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+    ro =sf_floatalloc2(fdm->nzpad,fdm->nxpad);	
+	
+	/* read density and expand */
     sf_floatread(tt[0],nz*nx,Fden); 
     expand(tt,ro,fdm);
 
-	/*inverse density, we don't like to divide */
-	for (ix=0; ix<fdm->nxpad; ix++){
-		for(iz=0; iz<fdm->nzpad; iz++){
-			ro[ix][iz] = 1/ro[ix][iz];
+	/*inverse density, to avoid division in the extrapolation */
+	iro[0][0] = 1/ro[0][0];
+	for (ix=1; ix<fdm->nxpad; ix++){
+		for(iz=1; iz<fdm->nzpad; iz++){
+			iro[ix][iz] = 4/( 2*ro[ix  ][iz] + 
+								ro[ix-1][iz] + 
+								ro[ix][iz-1]);
 		}
 	}
 
+	free(*ro);free(ro);
+
     /*------------------------------------------------------------*/
     /* input velocity */
-    com  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
-    sf_floatread(tt[0],nz*nx,Fcom);
-    expand(tt,com,fdm);
+    bulk  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
+    sf_floatread(tt[0],nz*nx,Fbulk);
+    expand(tt,bulk,fdm);
 
     free(*tt); free(tt);
 
@@ -440,23 +511,44 @@ if (is2D){
     vx=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
     vz=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
 
+	if (abc ){
+       um=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+       vmx=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+       vmz=sf_floatalloc2(fdm->nzpad,fdm->nxpad);
+	}
     
+    if (abc){
     /********************************/
     /*PML structures initialization */
     /********************************/
-    if (abc){
-        if (verb) fprintf(stderr,"initializing pml.. ");    
-        pml = pml2d_init(fdm);
+    	if (abcpml){
+	        if (verb) fprintf(stderr,"initializing pml.. ");    
+            pml = pml2d_init(fdm);
         
-        
-        for (ix=0;ix<nb;ix++){
-			//sigma[ix]=mPML*(1-exp(-alfa*(nb-1-ix)*(nb-1-ix)));
-			sigma[ix]=mPML*(nb-1-ix)/nb;
-			//sigma[ix]=mPML*alfa*(1-tanh(alfa*(nb-1 - (ix + nb/2)))*tanh(alfa*(nb-1 - (ix + nb/2))));
+            for (ix=0;ix<nb;ix++)
+               sigma[ix]=(mPML*(nb-1-ix)/nb);
+
+            if (verb) fprintf(stderr,"DONE\n");    	
+    	}	
+    /***************************************************/
+    /*One-way ABC and Sponge structures initialization */
+    /***************************************************/
+		else{
+            /* one-way abc setup   */
+    	    if (verb) fprintf(stderr,"setup one-way abc.. ");
+            vp = sf_floatalloc2(fdm->nzpad,fdm->nxpad);  
+            for    (ix=0; ix<fdm->nxpad; ix++) {
+                for(iz=0; iz<fdm->nzpad; iz++) {
+                   vp[ix][iz] = pow(bulk[ix][iz]*iro[ix][iz],.5);
+                }
+            }
+            abcp = abcone2d_make(NOP,dt,vp,fsrf,fdm);
+            free(*vp); free(vp);
+    	
+            if (verb) fprintf(stderr,"initializing sponge... ");    
+            /* sponge abc setup */
+            spo = sponge_make(fdm->nb);
 		}
-        
-        
-        if (verb) fprintf(stderr,"DONE\n");
     }
     
     #ifdef _OPENMP
@@ -471,6 +563,11 @@ if (is2D){
 	        u[ix][iz]=0;
 			vx[ix][iz]=0;
 			vz[ix][iz]=0;
+			if (abc){
+				um[ix][iz]=0;
+				vmx[ix][iz]=0;
+				vmz[ix][iz]=0;
+			}
 		}
 	}
 
@@ -481,19 +578,12 @@ if (is2D){
     /*------------------------------------------------------------*/
     if(verb) fprintf(stderr,"\n");
     /* TIME LOOPING */
+    /*
+    SEVERAL CASES TO REMOVE THE IF-STATEMENTS FROM THE EXTRAPOLATION LOOP
+    */
+    start_t = clock();
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
-
-    /* VELOCITY SOURCE INJECTION */
-    if (nf==3)
-    {
-       /* z component*/
-       sf_floatread(ww,ns,Fwav);
-       lint2d_inject(vz,ww,cs);
-       /* x component*/
-       sf_floatread(ww,ns,Fwav);
-       lint2d_inject(vx,ww,cs);       
-    }
 
     /**************************/
 	/* dv/dt = 1/ro * grad(u) */
@@ -502,59 +592,117 @@ if (is2D){
     #pragma omp parallel for \
        schedule(dynamic,fdm->ompchunk) \
        private(ix,iz) \
-       shared(fdm,vz,vx,u,ro,idx,idz)
+       shared(fdm,vz,vx,u,iro,idx,idz)
     #endif
 	for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-			vx[ix][iz] += (ro[ix][iz])*Bx(u,ix,iz,idx)*dt;
-			vz[ix][iz] += (ro[ix][iz])*Bz(u,ix,iz,idz)*dt;			
+	    	if (abc){
+				vmx[ix][iz] = vx[ix][iz];
+				vmz[ix][iz] = vz[ix][iz];
+	    	}
+			vx[ix][iz] += (iro[ix][iz])*Bx(u,ix,iz,idx)*dt;
+			vz[ix][iz] += (iro[ix][iz])*Bz(u,ix,iz,idz)*dt;			
 	    }
 	}	
-
+	
+    /* VELOCITY SOURCE INJECTION */
+    if (nf==3)
+    {
+       /* z component*/
+       sf_floatread(ww,ns,Fwav);
+       //lint2d_inject(vz,ww,cs);
+       lint2d_bell(vz,ww,cs);
+       /* x component*/
+       sf_floatread(ww,ns,Fwav);
+       //lint2d_inject(vx,ww,cs);
+       lint2d_bell(vx,ww,cs);
+    }
 
     if (debug) fprintf(stderr,"Just before computing the auxiliary contribution for velocity\n");
 
-    /******************************/
-    /* PML FOR THE VELOCITY FIELD */
-    /******************************/
     if (abc){
-       if (debug) fprintf(stderr,"pml to velocity.. ");
-       pml2d_velApply(vz,vx,dt,sigma,fdm);
-       if (debug) fprintf(stderr,"DONE\n");
+	    /******************************/
+		/* PML FOR THE VELOCITY FIELD */
+    	/******************************/
+		if (abcpml){
+       		if (debug) fprintf(stderr,"pml to velocity.. ");
+       		pml2d_velApply(vz,vx,dt,sigma,fdm);
+       		if (debug) fprintf(stderr,"DONE\n");
+		}
+		/******************************/
+    	/* SPONGE FOR THE VELOCITY FIELD */
+    	/******************************/
+    	else{
+    	
+	    	/* one-way ABC */
+	    	if (debug) fprintf(stderr,"apply one-way ABC to velocity.. ");
+		    abcone2d_apply(vz,vmz,NOP,abcp,fdm);
+	        abcone2d_apply(vx,vmx,NOP,abcp,fdm);
+    	
+	       /* sponge setup*/
+	       if (debug) fprintf(stderr,"apply sponge to velocity.. ");
+	       sponge2d_apply(vz,spo,fdm);
+	       sponge2d_apply(vx,spo,fdm);
+	       if (debug) fprintf(stderr,"DONE\n");
+	    }
+
     }
         
     if (debug) fprintf(stderr,"Just before computing the auxiliary contribution for pressure\n");
 
     /**************************/
-    /* du/dt = 1/com * div(v) */
+    /* du/dt = K * div(v) */
     /**************************/
 
-	/* SOURCE INJECTION */
-    sf_floatread(ww,ns,Fwav);
-    lint2d_inject(u,ww,cs);
     
     #ifdef _OPENMP
     #pragma omp parallel for \
        schedule(dynamic,fdm->ompchunk) \
        private(ix,iz) \
-       shared(fdm,u,vx,vz,com,idx,idz,dt)
+       shared(fdm,u,vx,vz,bulk,idx,idz,dt)
     #endif
 	for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-			u[ix][iz] += (com[ix][iz])*( Fx(vx,ix,iz,idx) + Fz(vz,ix,iz,idz) )*dt;
+	    	if (abc){
+		    	um[ix][iz] = u[ix][iz];
+		    }
+		    
+			u[ix][iz] += (bulk[ix][iz])*( Fx(vx,ix,iz,idx) + Fz(vz,ix,iz,idz) )*dt;
 		}
 	}
 
-    /*******************************/
-    /* PML FOR THE PRESSURE FIELD  */
-    /*******************************/
+	/* SOURCE INJECTION */
+    sf_floatread(ww,ns,Fwav);
+    //lint2d_inject(u,ww,cs);
+	lint2d_bell(u,ww,cs);
+
+	
     if (abc){
-    /************************************************************************/
-       if (debug) fprintf(stderr,"pml to pressure.. ");
-       pml2d_presApply(u,vx,vz,dt,pml,com,sigma,fdm);
-       if (debug) fprintf(stderr,"DONE\n");
-    /************************************************************************/
+		/*******************************/
+    	/* PML FOR THE PRESSURE FIELD  */
+    	/*******************************/
+		if (abcpml){
+       		if (debug) fprintf(stderr,"pml to pressure.. ");
+       		pml2d_presApply(u,vx,vz,dt,pml,bulk,sigma,fdm);
+       		if (debug) fprintf(stderr,"DONE\n");
+		}
+
+		/******************************/
+		/* SPONGE FOR THE PRESSURE FIELD */
+		/******************************/
+		else{   	
+	       /* one-way ABC */
+	       if (debug) fprintf(stderr,"apply one-way ABC to pressure.. ");
+		   abcone2d_apply(u,um,NOP,abcp,fdm);
+
+			if (debug) fprintf(stderr,"apply sponge to pressure.. ");
+			sponge2d_apply(u,spo,fdm);
+			if (debug) fprintf(stderr,"DONE\n");
+		}
     }
+    
+    
+    
 	/* BOUNDARY CONDITIONS*/
 	if (fsrf){
     
@@ -577,7 +725,15 @@ if (is2D){
 
 
     /*------------------------------------------------------------*/
-    }
+    } 
+	end_t = clock();
+	if(verb) fprintf(stderr,"\n");
+
+	if (verb){	
+		total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+		fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
+		fprintf(stderr,"Exiting of the program...\n");
+	}
     if (verb) fprintf(stderr,"Deallocating arrays.. ");
     /*------------------------------------------------------------*/
     /* deallocate arrays */
@@ -585,20 +741,49 @@ if (is2D){
     free( *vx);   free(vx);
     free( *vz);   free(vz);
 
-    if (abc) {pml2d_free(pml); free(pml); }
+
+
+    if (abc){
+		/*free memory PML */
+    	if (abcpml){
+			pml2d_free(pml); free(pml);     	
+    	}
+		/*free memory for the sponge and one-way ABC*/
+	    free(  *um);   free( um);
+    	free( *vmx);   free(vmx);
+    	free( *vmz);   free(vmz);
+
+    }
     
     if(snap) { free(*uc); free(uc); }
     
-    free(*ro); free(ro);
-    free(*com); free(com);
+    free(*iro); free(iro);
+    free(*bulk); free(bulk);
 
+	free(sigma);
 
     free(ww);
     free(ss);
     free(rr);
-    free(dd);    
-    if (verb) fprintf(stderr,"DONE\n");
-    
+    free(dd);
+
+    free(spo);
+	/* --------------------------------------------------------------- */	
+	/* CLOSE FILES AND EXIT */
+    if (Fwav!=NULL) sf_fileclose(Fwav); 
+
+    if (Fsou!=NULL) sf_fileclose(Fsou);
+    if (Frec!=NULL) sf_fileclose(Frec);
+
+    if (Fbulk!=NULL) sf_fileclose(Fbulk);
+    if (Fden!=NULL) sf_fileclose(Fden);
+
+    if (Fdat!=NULL) sf_fileclose(Fdat);
+
+    if (Fwfl!=NULL) sf_fileclose(Fwfl);
+
+    if (verb) fprintf(stderr,"DONE\n ");
+
     exit (0);
     /**************/
     /* end 2D code*/
@@ -616,17 +801,28 @@ else{
     
 
     float ***tt=NULL;           /* temporary array  */
-    float ***com=NULL;           /* velocity in expanded domain */
+    float ***bulk=NULL;           /* velocity in expanded domain */
     float ***ro=NULL;           /* density  in expanded domain */
+    float ***iro=NULL;           /* inverse density  in expanded domain */
 
+	float ***vp=NULL;			/* auxiliary velocity for ONE-WAY ABC*/
     /*------------------------------------------------------------*/
     /* pressure: u = U @ t */
     float ***u; 
     /* velocity: v = U @ t */
     float ***vx,***vy,***vz;
-    
+
+    /* pressure: u = U @ t-1 */
+    float ***um; 
+    /* velocity: v = U @ t-1 */
+    float ***vmx,***vmy,***vmz;    
+
 	/* PML */
     PML3D pml=NULL;
+
+    /* One-way ABC and Sponge */
+    abcone3d abcp=NULL;
+    sponge   spo=NULL;
 
     /* linear interpolation weights/indices */
     lint3d cs,cr;
@@ -718,43 +914,86 @@ else{
 
     /*------------------------------------------------------------*/ 
     /* input density */
-    tt = sf_floatalloc3(nz, nx, ny); 
+    tt  = sf_floatalloc3(     nz,        nx,        ny   ); 
+    iro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
     ro = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
-
+	/* read density */
     sf_floatread(tt[0][0],nz*nx*ny,Fden); 
     expand3d(tt,ro,fdm);
 
-	/*inverse density, we don't like to divide */
-	for (iy=0; iy<fdm->nypad; iy++){
-		for (ix=0; ix<fdm->nxpad; ix++){
-			for(iz=0; iz<fdm->nzpad; iz++){
-				ro[iy][ix][iz] = 1/ro[iy][ix][iz];
+	/*inverse density, to avoid division in the extrapolation */
+	iro[0][0][0]= 1/ro[0][0][0];
+	#ifdef _OPENMP
+	#pragma omp parallel for \
+		schedule(dynamic,fdm->ompchunk) \
+		private(iy,ix,iz)
+	#endif	
+	for (iy=1; iy<fdm->nypad; iy++){
+		for (ix=1; ix<fdm->nxpad; ix++){
+			for(iz=1; iz<fdm->nzpad; iz++){
+				iro[iy][ix][iz] = 6./(	3*ro[iy  ][ix  ][iz  ] +
+										ro[iy  ][ix  ][iz-1] +
+										ro[iy  ][ix-1][iz  ] +
+										ro[iy-1][ix  ][iz  ]);
 			}
 		}
 	}
+
+	free(**ro);free(*ro);free(ro);
+	
     /*------------------------------------------------------------*/
     /* input velocity */
-    com = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
-    sf_floatread(tt[0][0],nz*nx*ny,Fcom);
-    expand3d(tt,com,fdm);
+    bulk = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
+    sf_floatread(tt[0][0],nz*nx*ny,Fbulk);
+    expand3d(tt,bulk,fdm);
 
-    free(**tt); free(*tt); free(tt);    
+    free(**tt); free(*tt); free(tt);
 
+
+    if (abc){
     /********************************/
     /*PML structures initialization */
     /********************************/
-    if (abc){
-        if (verb) fprintf(stderr,"initializing pml.. ");    
-        pml = pml3d_init(fdm);
+        if (abcpml){
+            if (verb) fprintf(stderr,"initializing pml.. ");    
+            pml = pml3d_init(fdm);
 
-		/* compute the vector sigma once and for all */
-		/* I use ix but it doesn't matter, just a dummy index*/
+            /* compute the vector sigma once and for all */
+            /* I use ix but it doesn't matter, just a dummy index*/
 
-		for (ix=0;ix<nb;ix++){
-			sigma[ix]=mPML*(1-exp(-alfa*(nb-ix)*(nb-ix)));
-		}
+            for (ix=0;ix<nb;ix++){
+                sigma[ix]=mPML*(nb-1-ix)/nb;
+            }
+            if (verb) fprintf(stderr,"DONE\n");
+        }
 
-        if (verb) fprintf(stderr,"DONE\n");
+    /************************************/
+    /*Sponge structures initialization */
+    /***********************************/
+        else{
+            /* one-way abc setup   */
+            if (verb) fprintf(stderr,"initializing one-way ABC... ");    
+            vp = sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad); 
+			#ifdef _OPENMP
+			#pragma omp parallel for \
+			schedule(dynamic,fdm->ompchunk) \
+			private(iy,ix,iz)
+			#endif	
+            for        (iy=0; iy<fdm->nypad; iy++) {
+                for    (ix=0; ix<fdm->nxpad; ix++) {
+                    for(iz=0; iz<fdm->nzpad; iz++) {
+                        vp[iy][ix][iz] =
+                        1/sqrt(bulk[iy][ix][iz]*(iro[iy][ix][iz]) );
+                    }
+                }
+            }
+            abcp = abcone3d_make(NOP,dt,vp,fsrf,fdm);
+            free(**vp); free(*vp); free(vp);
+    	
+            if (verb) fprintf(stderr,"initializing sponge... ");    
+            /* sponge abc setup */
+            spo = sponge_make(fdm->nb);
+        }
     }
 
     /*------------------------------------------------------------*/
@@ -763,6 +1002,11 @@ else{
     vx =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
     vy =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
     vz =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+    
+    um =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+    vmx =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+    vmy =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
+    vmz =  sf_floatalloc3(fdm->nzpad,fdm->nxpad,fdm->nypad);
 
 	#ifdef _OPENMP
 	#pragma omp parallel for \
@@ -777,6 +1021,11 @@ else{
 				   vx[iy][ix][iz]=0;
 				   vy[iy][ix][iz]=0;
 				   vz[iy][ix][iz]=0;
+				   
+				   um[iy][ix][iz]=0;
+				   vmx[iy][ix][iz]=0;
+				   vmy[iy][ix][iz]=0;
+				   vmz[iy][ix][iz]=0;
 			}
 		}
 	} 
@@ -796,8 +1045,35 @@ else{
 
     if(verb) fprintf(stderr,"\n");
     /* TIME LOOPING */
+    start_t = clock();
     for (it=0; it<nt; it++) {
 	    if(verb) fprintf(stderr,"%d/%d  \r",it,nt);
+
+    /**************************/
+	/* dv/dt = 1/ro * grad(u) */
+	/**************************/
+	
+	/**************************/
+    #ifdef _OPENMP
+    #pragma omp parallel for \
+       schedule(dynamic,fdm->ompchunk) \
+       private(iy,ix,iz) \
+       shared(fdm,vz,vy,vx,u,iro,idy,idx,idz,dt)
+    #endif
+    /******************************/	
+	for    (iy=NOP; iy<fdm->nypad-NOP; iy++) {
+	  for  (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
+	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
+		
+           vmx[iy][ix][iz] = vx[iy][ix][iz];
+           vmy[iy][ix][iz] = vy[iy][ix][iz];
+           vmz[iy][ix][iz] = vz[iy][ix][iz];
+	    	
+	       vx[iy][ix][iz] +=  iro[iy][ix][iz]*Bx3(u,iy,ix,iz,idx)*dt;
+           vy[iy][ix][iz] +=  iro[iy][ix][iz]*By3(u,iy,ix,iz,idy)*dt;           
+           vz[iy][ix][iz] +=  iro[iy][ix][iz]*Bz3(u,iy,ix,iz,idz)*dt;	    }
+	  }
+    }
 
     /*****************************/
     /* VELOCITY SOURCE INJECTION */
@@ -815,57 +1091,50 @@ else{
        lint3d_inject(vy, ww, cs);
     }
 
-    /**************************/
-	/* dv/dt = 1/ro * grad(u) */
-	/**************************/
-	
-	/**************************/
-    #ifdef _OPENMP
-    #pragma omp parallel for \
-       schedule(dynamic,fdm->ompchunk) \
-       private(iy,ix,iz) \
-       shared(fdm,vz,vy,vx,u,ro,idy,idx,idz,dt)
-    #endif
-    /******************************/	
-	for    (iy=NOP; iy<fdm->nypad-NOP; iy++) {
-	  for  (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
-	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-		
-           vx[iy][ix][iz] +=  ro[iy][ix][iz]*Bx3(u,iy,ix,iz,idx)*dt;
-           vy[iy][ix][iz] +=  ro[iy][ix][iz]*By3(u,iy,ix,iz,idy)*dt;           
-           vz[iy][ix][iz] +=  ro[iy][ix][iz]*Bz3(u,iy,ix,iz,idz)*dt;
-	    }
-	  }
-    }
     
     /******************************/
     /* PML FOR THE VELOCITY FIELD */
     /******************************/
     if (abc){
+    
+    if (abcpml){
        if (debug) fprintf(stderr,"pml to velocity.. ");
        pml3d_velApply(vx, vy, vz, dt, sigma, fdm);
        if (debug) fprintf(stderr,"DONE\n");
+    }
+    /*******************************/
+    /* SPONGE FOR THE VELOCITY FIELD  */
+    /*******************************/
+    else{
+    	
+    	/* one-way ABC */
+    	if (debug) fprintf(stderr,"apply one-way ABC to velocity.. ");
+	    abcone3d_apply(vz,vmz,NOP,abcp,fdm);
+	    abcone3d_apply(vy,vmy,NOP,abcp,fdm);
+        abcone3d_apply(vx,vmx,NOP,abcp,fdm);
+    	
+       if (debug) fprintf(stderr,"sponge pressure.. ");
+       sponge3d_apply(vx,spo,fdm);
+       sponge3d_apply(vy,spo,fdm);
+       sponge3d_apply(vz,spo,fdm);
+       if (debug) fprintf(stderr,"DONE\n");
+    }
+
+
     }
     
     
 
     /**************************/
-    /* du/dt = 1/com * div(v) */
-    /**************************/    
-
-    /********************/
-	/* SOURCE INJECTION */
-    /********************/	
-    sf_floatread(ww,ns,Fwav);
-    lint3d_inject(u,ww,cs);    
-
+    /* du/dt = K * div(v) */
+    /**************************/
 
     /**************************/
     #ifdef _OPENMP
     #pragma omp parallel for \
        schedule(dynamic,fdm->ompchunk) \
        private(iy,ix,iz) \
-       shared(fdm,u,vx,vy,vz,com,idx,idy,idz,dt)
+       shared(fdm,u,vx,vy,vz,bulk,idx,idy,idz,dt)
     #endif
    /**************************/
    
@@ -873,7 +1142,9 @@ else{
 	  for  (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 	    for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 		
-			u[iy][ix][iz] += com[iy][ix][iz]*( Fx3(vx,iy,ix,iz,idx) + 
+	    	um[iy][ix][iz] = u[iy][ix][iz];
+		
+			u[iy][ix][iz] += bulk[iy][ix][iz]*( Fx3(vx,iy,ix,iz,idx) + 
 			                                     Fy3(vy,iy,ix,iz,idy) + 
 			                                     Fz3(vz,iy,ix,iz,idz) )*dt;
 			
@@ -881,15 +1152,37 @@ else{
 		}
     }
 
+    /********************/
+	/* SOURCE INJECTION */
+    /********************/	
+    sf_floatread(ww,ns,Fwav);
+    lint3d_inject(u,ww,cs); 
+
     /*******************************/
     /* PML FOR THE PRESSURE FIELD  */
     /*******************************/
     if (abc){
-    /************************************************************************/
+    if (abcpml){
+       /********************************************************************/
        if (debug) fprintf(stderr,"pml to pressure.. ");
-       pml3d_presApply(u,vx,vy,vz,dt,pml,com,sigma,fdm);
+       pml3d_presApply(u,vx,vy,vz,dt,pml,bulk,sigma,fdm);
        if (debug) fprintf(stderr,"DONE\n");
-    /************************************************************************/
+       /********************************************************************/
+    }
+    /*******************************/
+    /* SPONGE FOR THE PRESSURE FIELD  */
+    /*******************************/
+    else{
+    	
+    	/* one-way ABC */
+    	if (debug) fprintf(stderr,"apply one-way ABC to pressure.. ");
+	    abcone3d_apply(u,um,NOP,abcp,fdm);
+    	
+       if (debug) fprintf(stderr,"sponge pressure.. ");
+       sponge3d_apply(u,spo,fdm);
+       if (debug) fprintf(stderr,"DONE\n");
+    }
+
     }
     
     /****************************/
@@ -929,9 +1222,16 @@ else{
 
     /*------------------------------------------------------------*/ 
     /* end 3D main loop*/
-    }
+    } 
 
+	end_t = clock();
+	if(verb) fprintf(stderr,"\n");
 
+	if (verb){	
+		total_t = (float)(end_t - start_t) / CLOCKS_PER_SEC;
+		fprintf(stderr,"Total time taken by CPU: %g\n", total_t  );
+		fprintf(stderr,"Exiting of the program...\n");
+	}
     /*------------------------------------------------------------*/
     /* deallocate arrays */
     if (verb) fprintf(stderr,"Deallocating arrays.. ");
@@ -941,12 +1241,23 @@ else{
     free(  **vy);   free( *vy);   free(vy);
     free(  **vz);   free( *vz);   free(vz);
 
-    if (abc) {pml3d_free(pml); free(pml); }
+    free(   **um);   free(  *um);   free( um);
+    free(  **vmx);   free( *vmx);   free(vmx);
+    free(  **vmy);   free( *vmy);   free(vmy);
+    free(  **vmz);   free( *vmz);   free(vmz);
+
+    if (abc){
+    	/* free memory PML */
+    	if (abcpml){    
+    		pml3d_free(pml); free(pml);
+    	}
+    	/* free memory sponge and ONE-WAY ABC */
+    }
 
     if (snap) { free(**uc); free(*uc); free(uc); }
 
-    free( **ro);  free( *ro);  free( ro);
-    free(**com);  free(*com);  free(com);
+    free( **iro);  free( *iro);  free( iro);
+    free(**bulk);  free(*bulk);  free(bulk);
 
 	free(sigma);
 
@@ -955,8 +1266,24 @@ else{
     free(rr);
     free(dd);
 
+	free(spo);
+
+	/* --------------------------------------------------------------- */	
+	/* CLOSE FILES AND EXIT */
+    if (Fwav!=NULL) sf_fileclose(Fwav); 
+
+    if (Fsou!=NULL) sf_fileclose(Fsou);
+    if (Frec!=NULL) sf_fileclose(Frec);
+
+    if (Fbulk!=NULL) sf_fileclose(Fbulk);
+    if (Fden!=NULL) sf_fileclose(Fden);
+
+    if (Fdat!=NULL) sf_fileclose(Fdat);
+
+    if (Fwfl!=NULL) sf_fileclose(Fwfl);
+
     if (verb) fprintf(stderr,"DONE\n ");
-    
+
     exit(0);
     /**************/
     /* end 3D code*/
