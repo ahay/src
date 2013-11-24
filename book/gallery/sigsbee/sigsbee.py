@@ -45,6 +45,9 @@ def getzo(zodata):
 Flow('offset','tdata','window n1=1 f1=11 | dd type=float | math output=input/75 | dd type=int')
 Flow('head','tdata offset','window n1=1 f1=2 | cat axis=2 ${SOURCES[1]} | transp')
 
+def zoimage(image):
+    Result(image,'grey title="Zero-Offset %s" ' % method)
+
 def getshots(shots):
     Flow(shots,'data head',
          '''

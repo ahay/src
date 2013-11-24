@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.insert (0,'..')
-import sigsbee
+from rsf.gallery import sigsbee
 
 # fetch data
 sigsbee.getvel ('vel','migvel')
@@ -9,12 +7,17 @@ sigsbee.getshots ('shot')
 
 # add crossline and offset axes
 Flow ('sigs_data','shot',
-	  '''
-  	  transp plane=23 | 
-	  put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"
-	  n4=348 o4=0 d4=0.02286 label4="Offset" unit4="km"	
-  	  ''')
-Flow ('sigs_velModel','vel','smooth rect1=20 rect2=20 | put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"')
+      '''
+      transp plane=23 | 
+      put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"
+      n4=348 o4=0 d4=0.02286 label4="Offset" unit4="km"	
+      ''')
+# additional smoothing
+Flow ('sigs_velModel','vel',
+      '''
+      smooth rect1=20 rect2=20 |
+      put n3=1 d3=100 o3=0 label3="Crossline" unit3="km"
+      ''')
 
 # migration
 Flow ('sigs-image sigs_dag sigs_cig', 'sigs_data sigs_velModel',

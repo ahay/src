@@ -1,16 +1,7 @@
 from rsf.proj import *
+import rsf.gallery
 
-methods = {
-    'fakirmig': 'First-Arrival Kirchhoff',
-    'ffd': 'FFD',
-    'lowrank': 'Lowrank',
-    'oway': 'One-Way Wave Equation'
-    }
-thisdir = os.path.basename(os.getcwd())
-if thisdir in methods.keys():
-    method = methods[thisdir]
-else:
-    method = ''
+method = rsf.gallery.method()
 
 par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
            v0=1.5,gradx=0.36,gradz=0.36,

@@ -1,19 +1,8 @@
 from rsf.proj import *
+import rsf.gallery 
 
-methods = {
-    'gazdag': 'Phase-Shift Migration',
-    'kirch': 'Kirchhoff Time Migration',
-    'lowrank': 'Two-Step Lowrank',
-    'oway': 'One-Way Wave Equation',
-    'stolt': 'Stolt Migration',
-    'vc': 'Velocity Continuation'
-    }
-thisdir = os.path.basename(os.getcwd())
-if thisdir in methods.keys():
-    method = methods[thisdir]
-else:
-    method = ''
-    
+method = rsf.gallery.method()
+
 par = dict(xmin=2.5,xmax=7.5,zmin=0,zmax=5,
            v0=1.5,gradx=0,gradz=0.36,
            dim1 = 'd1=0.001 o1=0 n1=10001',

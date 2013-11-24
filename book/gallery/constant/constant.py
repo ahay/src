@@ -1,19 +1,8 @@
 from rsf.proj import *
-import math, os
+import rsf.gallery 
+import math
 
-methods = {
-    'gazdag': 'Phase-Shift Migration',
-    'lowrank': 'Two-Step Lowrank',
-    'kirch': 'Kirchhoff Time Migration',
-    'oway': 'One-Way Wave Equation',
-    'stolt': 'Stolt Migration',
-    'vc': 'Velocity Continuation'
-    }
-thisdir = os.path.basename(os.getcwd())
-if thisdir in methods.keys():
-    method = methods[thisdir]
-else:
-    method = ''
+method = rsf.gallery.method()
 
 z = (1,1.5,2)
 a = (20,0,0)
