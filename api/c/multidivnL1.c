@@ -20,7 +20,7 @@
 #include "helix.h"
 /*^*/
 
-#include "multidivn.h"
+#include "multidivnL1.h"
 #include "trianglen.h"
 #include "repeat.h"
 #include "weight2.h"
@@ -73,7 +73,7 @@ void sf_multidivnL1_init(int nw       /* number of components */,
     /* initialize with zero */
     for (i=0;i<n;i++) num_tmp[i]=nn[i]=rr[i]=0.0;
 
-    for (i=0;i<n2;i++) rat_tmp[i]=0.0;
+    for (i=0;i<n2;i++) rat_tmp[i]=p[i]=0.0;
 
 }
 
