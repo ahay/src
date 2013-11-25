@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     }
 
     den = sf_floatalloc(n12);
-    f = sf_floatalloc(n12);
+    f = sf_floatalloc(n12); 
     data = sf_floatalloc(nd);
 
     sf_multidivnL1_init(ns, mdim, nd, m, rect, den, aa, perc, verb);
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 	data[i] /= mean;
     }
     
-
+    for (i=0;i<n12;i++) f[i]=0.;
     sf_multidivnL1 (data,f,niter,liter); /*data = num*/
 
 
