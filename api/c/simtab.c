@@ -566,6 +566,7 @@ void sf_simtab_input (sf_simtab table, FILE* fp, FILE* out)
 	if (NULL != out) fputs(line,out);
 	sf_simtab_string(table,line);
     }
+    if (NULL != out) fflush(out);
 }
 
 void sf_simtab_output (sf_simtab table, FILE* fp) 

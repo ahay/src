@@ -72,6 +72,7 @@ In APIs:
 * Look for mex in matlab's directory to avoid confusion with other
   programs named mex
 * Fixed parallel.c for the case of less jobs than nodes
+* Added missing fflush in sf_simtab_input
 
 In the Python package:
 
