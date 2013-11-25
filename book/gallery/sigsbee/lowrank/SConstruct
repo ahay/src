@@ -1,14 +1,15 @@
 from rsf.proj import *
-
-sys.path.insert(0,'..')
-import sigsbee
+from rsf.gallery import sigsbee
 
 sigsbee.getvel('vel','migvel')
-Result('vel','grey color=j allpos=y bias=1.5 scalebar=y barreverse=y wanttitle=n')
+Result('vel',
+       '''
+       grey color=j allpos=y bias=1.5
+       scalebar=y barreverse=y wanttitle=n
+       ''')
 
 sigsbee.getzo('zodata')
 Result('zodata','grey title="Zero Offset" ')
-
 
 # Interpolate velocity to a coarser grid
 
@@ -19,7 +20,11 @@ Flow('vel2','vel xpat',
      remap1 pattern=${SOURCES[1]} | 
      math output=1/input 
      ''')
-Result('vel2','grey color=j allpos=y bias=1.5 scalebar=y barreverse=y title="Migration Velocity" transp=n')
+Result('vel2',
+       '''
+       grey color=j allpos=y bias=1.5 transp=n
+       scalebar=y barreverse=y title="Migration Velocity"
+       ''')
 
 # Lowrank decomposition
 Flow('fft','vel2','fft1 | fft3 axis=2 pad=1')
@@ -34,24 +39,21 @@ Flow('zomig','zodata left right',
      transp |
      fftexp0 mig=y
      left=${SOURCES[1]} right=${SOURCES[2]}
-     nz=1201 dz=0.00762
+     nz=1201 dz=0.00762 | put unit2=km
      ''')
 
-Result('zomig','grey title="Zero-Offset Migration" unit2=km')
+sigsbee.zoimage('zomig')
 
 # High-resolution exploding-reflector sigsbee
-Fetch('sigexp.rsf','sigsbee')
 
-Flow('exp','sigexp.rsf','dd form=native')
-
+sigsbee.gethrzo('exp')
 sigsbee.getvel('vels','strvel')
 
 Flow('ffts','vels','transp | fft1 | fft3 axis=2 pad=1')
-
 Flow('rights lefts','vels ffts',
      '''
      transp | scale dscale=0.5 |
-     isolr2 seed=2012 dt=0.001 fft=${SOURCES[1]} left=${TARGETS[1]} 
+     isolr2 seed=2012 dt=0.001 fft=${SOURCES[1]} left=${TARGETS[1]}
      ''')
 
 # High-resolution zero-offset migration
@@ -64,12 +66,10 @@ Flow('zomigs','exp lefts rights',
      nz=1201 dz=0.00762
      ''')
 
-Result('zomigs','grey title="Zero-Offset Migration" unit2=km')
+sigsbee.zoimage('zomigs')
 
 Flow('dip','exp','dip rect1=400 rect2=100 order=5')
-
 Result('dip','grey color=j scalebar=y title=Slope')
-
 Flow('pwd','exp dip','pwd dip=${SOURCES[1]} order=5')
 
 Result('exp','grey title="Zero-Offset Data" ')
@@ -82,10 +82,14 @@ Flow('zodif','pwd lefts rights',
      transp |
      fftexp0 mig=y
      left=${SOURCES[1]} right=${SOURCES[2]}
-     nz=1201 dz=0.00762
+     nz=1201 dz=0.00762 | put unit2=km
      ''')
 
-Result('zodif','grey title="Zero-Offset Migration (Diffractions)" unit2=km')
+Result('zodif',
+       '''
+       grey title="Zero-Offset Migration (Diffractions)"
+       ''')
 
+# Impulse response
 
 End()

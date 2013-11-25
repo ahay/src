@@ -1,4 +1,7 @@
 from rsf.proj import *
+import rsf.gallery
+
+method = rsf.gallery.method()
 
 ft2km = 0.3048
 
@@ -25,6 +28,8 @@ def getvel(vel,veltype):
 
 segy = 'sigsbee2a_nfs.sgy'
 Fetch(segy,'sigsbee')
+
+Fetch('sigexp.rsf','sigsbee')
     
 Flow('data tdata',segy,'segyread tfile=${TARGETS[1]}')
 
@@ -44,6 +49,9 @@ def getzo(zodata):
 
 Flow('offset','tdata','window n1=1 f1=11 | dd type=float | math output=input/75 | dd type=int')
 Flow('head','tdata offset','window n1=1 f1=2 | cat axis=2 ${SOURCES[1]} | transp')
+
+def gethrzo(zodata):
+    Flow(zodata,'sigexp.rsf','dd form=native')
 
 def zoimage(image):
     Result(image,'grey title="Zero-Offset %s" ' % method)
