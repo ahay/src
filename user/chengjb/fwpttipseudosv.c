@@ -46,19 +46,19 @@ void fwpttipseudosv(float dt2,float** p1,float** p2,float** p3,float** q1,float*
         zero2float(q_temp,nzpad,nxpad);
 
         /* z-dreivative in mixed derivative when tilt angle nonzero */
-        for(i=mix;i<nx+mix;i++)
-                for(j=mix;j<nz+mix;j++)
+        for(i=_mix;i<nx+_mix;i++)
+                for(j=_mix;j<nz+_mix;j++)
                 {
                         p_temp[i][j]=(p2[i][j+1]-p2[i][j-1])/2.0/dz;
                         q_temp[i][j]=(q2[i][j+1]-q2[i][j-1])/2.0/dz;
                 }
 
-        for(i=m;i<nx+m;i++)
+        for(i=_m;i<nx+_m;i++)
         {
-            im=i-m;
-            for(j=m;j<nz+m;j++)
+            im=i-_m;
+            for(j=_m;j<nz+_m;j++)
             {
-                        jm=j-m;
+                        jm=j-_m;
                         vp2=vp0[im][jm]*vp0[im][jm];
                         vs2=vs0[im][jm]*vs0[im][jm];
                         ep=1+2*epsilon[im][jm];
@@ -83,9 +83,9 @@ void fwpttipseudosv(float dt2,float** p1,float** p2,float** p3,float** q1,float*
                         
                         //sf_warning("vp2=%f vs2=%f ep=%f de=%f",vp2,vs2,ep,de);
 
-                        for(k=-m;k<=m;k++)
+                        for(k=-_m;k<=_m;k++)
                         {
-                                km=k+m;
+                                km=k+_m;
                                 px+=coeff_x[km]*p2[i+k][j];
                                 pz+=coeff_z[km]*p2[i][j+k];
                                 qx+=coeff_x[km]*q2[i+k][j];

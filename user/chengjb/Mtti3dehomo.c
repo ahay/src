@@ -91,10 +91,10 @@ int main(int  argc,char **argv)
     sf_warning("dx=%f dy=%f dz=%f ",dx,dy,dz);
 	sf_warning("vp0=%f vs0=%f epsi=%f delta=%f gama=%f theta=%f phai=%f",vp0, vs0, epsi, delta, gama, theta, phai);
 
-    int mm=2*m+1;
-    int mmix=2*mix+1;
+    int mm=2*_m+1;
+    int mmix=2*_mix+1;
  
-    sf_warning("m=%d mix=%d",m,mix);
+    sf_warning("m=%d mix=%d",_m,_mix);
 
     float *coeff_2dx,*coeff_2dy,*coeff_2dz,*coeff_1dx,*coeff_1dy,*coeff_1dz;
 

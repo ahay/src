@@ -46,23 +46,23 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	zero2float(px_tmp,nzpad,nxpad);	
 	zero2float(qx_tmp,nzpad,nxpad);	
 
-    for(i=m;i<nx+m;i++)
-	for(j=m;j<nz+m;j++)
+    for(i=_m;i<nx+_m;i++)
+	for(j=_m;j<nz+_m;j++)
 	{
-		for(l=-m;l<=m;l++)
+		for(l=-_m;l<=_m;l++)
 		{
-                        lm=l+m;
+                        lm=l+_m;
 			px_tmp[i][j]+=coeff_1dx[lm]*p2[i+l][j]/2.0/dx;
 			qx_tmp[i][j]+=coeff_1dx[lm]*q2[i+l][j]/2.0/dx;
 		}
 	}
 
-    for(i=m;i<nx+m;i++)
+    for(i=_m;i<nx+_m;i++)
     {
-       im=i-m;
-	   for(j=m;j<nz+m;j++)
+       im=i-_m;
+	   for(j=_m;j<nz+_m;j++)
 	   {
-               jm=j-m;
+               jm=j-_m;
 
                vp2=vp0[im][jm]*vp0[im][jm];
                vs2=vs0[im][jm]*vs0[im][jm];
@@ -79,9 +79,9 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
                 qz=0;
 		pxz=0;
 		qxz=0;
-		for(l=-m;l<=m;l++)
+		for(l=-_m;l<=_m;l++)
 		{
-                     lm=l+m;
+                     lm=l+_m;
                      px+=coeff_2dx[lm]*p2[i+l][j];
                      qx+=coeff_2dx[lm]*q2[i+l][j];
                      pz+=coeff_2dz[lm]*p2[i][j+l];
@@ -121,14 +121,14 @@ void fwpvtielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 	for(k=0;k<nypad;k++)
 		for(i=0;i<nxpad;i++)
 			for(j=0;j<nzpad;j++)
-				for(l=-mix;l<=mix;l++)
+				for(l=-_mix;l<=_mix;l++)
 				{
 					if(i+l>=0&&i+l<nxpad)
-						px_tmp[k][i][j]+=coeff_1dx[l+mix]*p2[k][i+l][j]/2.0/dx;
+						px_tmp[k][i][j]+=coeff_1dx[l+_mix]*p2[k][i+l][j]/2.0/dx;
 					if(k+l>=0&&k+l<nypad)
-						qy_tmp[k][i][j]+=coeff_1dy[l+mix]*q2[k+l][i][j]/2.0/dy;
+						qy_tmp[k][i][j]+=coeff_1dy[l+_mix]*q2[k+l][i][j]/2.0/dy;
 					if(j+l>=0&&j+l<nzpad)
-						rz_tmp[k][i][j]+=coeff_1dz[l+mix]*r2[k][i][j+l]/2.0/dz;
+						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 				}
 
 #ifdef OPENMP
@@ -167,25 +167,25 @@ void fwpvtielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 		  qyz=0;
 		  rxz=0;
 		  ryz=0;
-		  for(l=-mix;l<=mix;l++)
+		  for(l=-_mix;l<=_mix;l++)
 		  {
 			  int kl=k+l;
 			  if(kl>=0&&kl<nypad)
 			  {
-				  pxy+=coeff_1dy[l+mix]*px_tmp[kl][i][j]/2.0/dy;
-				  ryz+=coeff_1dz[l+mix]*rz_tmp[kl][i][j]/2.0/dy;
+				  pxy+=coeff_1dy[l+_mix]*px_tmp[kl][i][j]/2.0/dy;
+				  ryz+=coeff_1dz[l+_mix]*rz_tmp[kl][i][j]/2.0/dy;
 			  }
 			  int il=i+l;
 			  if(il>=0&&il<nxpad)
 			  {
-				  qxy+=coeff_1dy[l+mix]*qy_tmp[k][il][j]/2.0/dx;
-				  rxz+=coeff_1dz[l+mix]*rz_tmp[k][il][j]/2.0/dx;
+				  qxy+=coeff_1dy[l+_mix]*qy_tmp[k][il][j]/2.0/dx;
+				  rxz+=coeff_1dz[l+_mix]*rz_tmp[k][il][j]/2.0/dx;
 			  }
 			  int jl=j+l;
 			  if(j+l>=0&&j+l<nzpad)
 			  {
-				  pxz+=coeff_1dz[l+mix]*px_tmp[k][i][jl]/2.0/dz;
-				  qyz+=coeff_1dz[l+mix]*qy_tmp[k][i][jl]/2.0/dz;
+				  pxz+=coeff_1dz[l+_mix]*px_tmp[k][i][jl]/2.0/dz;
+				  qyz+=coeff_1dz[l+_mix]*qy_tmp[k][i][jl]/2.0/dz;
 			  }
 		  }
 
@@ -199,9 +199,9 @@ void fwpvtielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
           pz2=0;
           qz2=0;
           rz2=0;
-		  for(l=-m;l<=m;l++)
+		  for(l=-_m;l<=_m;l++)
 		  {
-			  int lm=l+m;
+			  int lm=l+_m;
 			  int kl=k+l;
 			  if(k+l>=0&&k+l<nypad)
 			  {
@@ -258,14 +258,14 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 	for(k=0;k<ny;k++)
 		for(i=0;i<nx;i++)
 			for(j=0;j<nz;j++)
-				for(l=-mix;l<=mix;l++)
+				for(l=-_mix;l<=_mix;l++)
 				{
 					if(i+l>=0&&i+l<nx)
-						px_tmp[k][i][j]+=coeff_1dx[l+mix]*p2[k][i+l][j]/2.0/dx;
+						px_tmp[k][i][j]+=coeff_1dx[l+_mix]*p2[k][i+l][j]/2.0/dx;
 					if(k+l>=0&&k+l<ny)
-						qy_tmp[k][i][j]+=coeff_1dy[l+mix]*q2[k+l][i][j]/2.0/dy;
+						qy_tmp[k][i][j]+=coeff_1dy[l+_mix]*q2[k+l][i][j]/2.0/dy;
 					if(j+l>=0&&j+l<nz)
-						rz_tmp[k][i][j]+=coeff_1dz[l+mix]*r2[k][i][j+l]/2.0/dz;
+						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 				}
 
 #ifdef OPENMP
@@ -304,25 +304,25 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 		  qyz=0;
 		  rxz=0;
 		  ryz=0;
-		  for(l=-mix;l<=mix;l++)
+		  for(l=-_mix;l<=_mix;l++)
 		  {
 			  int kl=k+l;
 			  if(kl>=0&&kl<ny)
 			  {
-				  pxy+=coeff_1dy[l+mix]*px_tmp[kl][i][j]/2.0/dy;
-				  ryz+=coeff_1dz[l+mix]*rz_tmp[kl][i][j]/2.0/dy;
+				  pxy+=coeff_1dy[l+_mix]*px_tmp[kl][i][j]/2.0/dy;
+				  ryz+=coeff_1dz[l+_mix]*rz_tmp[kl][i][j]/2.0/dy;
 			  }
 			  int il=i+l;
 			  if(il>=0&&il<nx)
 			  {
-				  qxy+=coeff_1dy[l+mix]*qy_tmp[k][il][j]/2.0/dx;
-				  rxz+=coeff_1dz[l+mix]*rz_tmp[k][il][j]/2.0/dx;
+				  qxy+=coeff_1dy[l+_mix]*qy_tmp[k][il][j]/2.0/dx;
+				  rxz+=coeff_1dz[l+_mix]*rz_tmp[k][il][j]/2.0/dx;
 			  }
 			  int jl=j+l;
 			  if(j+l>=0&&j+l<nz)
 			  {
-				  pxz+=coeff_1dz[l+mix]*px_tmp[k][i][jl]/2.0/dz;
-				  qyz+=coeff_1dz[l+mix]*qy_tmp[k][i][jl]/2.0/dz;
+				  pxz+=coeff_1dz[l+_mix]*px_tmp[k][i][jl]/2.0/dz;
+				  qyz+=coeff_1dz[l+_mix]*qy_tmp[k][i][jl]/2.0/dz;
 			  }
 		  }
 
@@ -336,9 +336,9 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
           pz2=0;
           qz2=0;
           rz2=0;
-		  for(l=-m;l<=m;l++)
+		  for(l=-_m;l<=_m;l++)
 		  {
-			  int lm=l+m;
+		      int lm=l+_m;
 			  int kl=k+l;
 			  if(k+l>=0&&k+l<ny)
 			  {

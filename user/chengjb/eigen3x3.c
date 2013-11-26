@@ -25,7 +25,9 @@
 #include "_cjb.h"
 
 // Constants
-#define M_SQRT3    1.73205080756887729352744634151   // sqrt(3)
+#ifndef M_SQRT3
+#define M_SQRT3    1.73205080756887729352744634151   /* sqrt(3) */
+#endif
 
 // Macros
 #define SQR(x)      ((x)*(x))                        // x^2 

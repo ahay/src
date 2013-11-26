@@ -44,12 +44,12 @@ void calc_coeff_1d(float* x)
 /*< mix-th order coefficients for 1st-order spatial derivatives >*/
 {
         int i;
-        for(i=-mix;i<=mix;i++)
+        for(i=-_mix;i<=_mix;i++)
         {
             if(i==0)
-                x[i+mix]=0;
+                x[i+_mix]=0;
             else
-                x[i+mix]=2*fac(mix)*fac(mix)*pow(-1,i+1)/(i*fac(i+mix)*fac(mix-i));
+                x[i+_mix]=2*fac(_mix)*fac(_mix)*pow(-1,i+1)/(i*fac(i+_mix)*fac(_mix-i));
         }
 
 }
@@ -57,7 +57,7 @@ void calc_coeff_1d(float* x)
 void coeff1d(float* x,float delta)
 /*< m-th order coefficients for 1st-order spatial derivatives >*/
 {
-        int mm=2*m+1;
+        int mm=2*_m+1;
         int i,j,k=0,s=0;
         float max,t,q,sum=0;
 
@@ -65,18 +65,18 @@ void coeff1d(float* x,float delta)
 
         for(i=0;i<mm;i++)
         {
-                A[i][m]=0;
+                A[i][_m]=0;
                 A[i][mm]=0;
         }
-        A[0][m]=1;
+        A[0][_m]=1;
         A[1][mm]=1;
 
         for(i=0;i<mm;i++)
-                for(j=-m;j<=m;j++)
+                for(j=-_m;j<=_m;j++)
                 {
                         if(j==0)
                                 continue;
-                        A[i][j+m]=pow(j*delta,i)/fac(i);
+                        A[i][j+_m]=pow(j*delta,i)/fac(i);
                 }
 
         while(k<mm)
@@ -115,7 +115,7 @@ void coeff1d(float* x,float delta)
 void coeff2d(float* x,float delta)    
 /*< m-th order coefficients for 2nd-order spatial derivatives, e.g. displacement-time equation >*/
 {
-        int mm=m+1;       
+        int mm=_m+1;       
         int i,j,k=0,s=0;
         float max,t,q,sum=0;
 
@@ -175,12 +175,12 @@ void coeff1dmix(float* x, float delta)
 {
         int i;
 
-        for(i=-m;i<=m;i++)
+        for(i=-_m;i<=_m;i++)
         {
                 if(i==0)
-                        x[i+m]=0;
+		    x[i+_m]=0;
                 else
-                       x[i+m]=2*fac(m)*fac(m)*pow(-1,i+1)/(i*fac(i+m)*fac(m-i));
+		    x[i+_m]=2*fac(_m)*fac(_m)*pow(-1,i+1)/(i*fac(i+_m)*fac(_m-i));
         }
 }
 

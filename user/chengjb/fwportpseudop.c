@@ -37,7 +37,7 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
                    int nx, int ny, int nz, int nxpad, int nypad, int nzpad, float dx, float dy, float dz)
 /*< fwportpseudop1: forward-propagating in ORT media with pseudo-pure P-wave equation>*/
 {
-    int   i,j,k,l,lmix,lm,il,jl,kl,ii,jj,kk;
+    int   i,j,k,l,l_mix,lm,il,jl,kl,ii,jj,kk;
     float px,py,pz,qx,qy,qz,rx,ry,rz;
     float hpx,hpy,hpz,hqx,hqy,hqz,hrx,hry,hrz;
     float hpxz,hpxy,hpyz,hqxz,hqxy,hqyz,hrxz,hrxy,hryz;
@@ -71,38 +71,38 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
     //sf_warning("r2dx=%f r2dy=%f r2dz=%f",r2dx,r2dy,r2dz);
 
     //prepare for mixed deri calculation
-    for(i=mix;i<ny+mix;i++)
-    for(j=mix;j<nx+mix;j++)
-    for(k=mix;k<nz+mix;k++)
+    for(i=_mix;i<ny+_mix;i++)
+    for(j=_mix;j<nx+_mix;j++)
+    for(k=_mix;k<nz+_mix;k++)
     {
-            for(l=-mix;l<=mix;l++)
+            for(l=-_mix;l<=_mix;l++)
             {
-                        lmix=l+mix;
+                        l_mix=l+_mix;
                         il=i+l;
                         jl=j+l;
-			px_tmp[i][j][k]+=coeff_1dx[lmix]*p2[il][j][k]*r2dx;
-			qx_tmp[i][j][k]+=coeff_1dx[lmix]*q2[il][j][k]*r2dx;
-			rx_tmp[i][j][k]+=coeff_1dx[lmix]*r2[il][j][k]*r2dx;
+			px_tmp[i][j][k]+=coeff_1dx[l_mix]*p2[il][j][k]*r2dx;
+			qx_tmp[i][j][k]+=coeff_1dx[l_mix]*q2[il][j][k]*r2dx;
+			rx_tmp[i][j][k]+=coeff_1dx[l_mix]*r2[il][j][k]*r2dx;
 
-			py_tmp[i][j][k]+=coeff_1dy[lmix]*p2[i][jl][k]*r2dy;
-			qy_tmp[i][j][k]+=coeff_1dy[lmix]*q2[i][jl][k]*r2dy;
-			ry_tmp[i][j][k]+=coeff_1dy[lmix]*r2[i][jl][k]*r2dy;
+			py_tmp[i][j][k]+=coeff_1dy[l_mix]*p2[i][jl][k]*r2dy;
+			qy_tmp[i][j][k]+=coeff_1dy[l_mix]*q2[i][jl][k]*r2dy;
+			ry_tmp[i][j][k]+=coeff_1dy[l_mix]*r2[i][jl][k]*r2dy;
             }
 	}
 
 	for(i=0;i<nypad;i++)
         {
-           ii=i-m;
+           ii=i-_m;
            if(ii<0)   ii=0;
            if(ii>=ny) ii=ny-1;
            for(j=0;j<nxpad;j++)
            {
-              jj=j-m;
+              jj=j-_m;
               if(jj<0)   jj=0;
               if(jj>=nx) jj=nx-1;
               for(k=0;k<nzpad;k++)
               {
-                kk=k-m;
+                kk=k-_m;
                 if(kk<0)   kk=0;
                 if(kk>=nz) kk=nz-1;
 		vp2=vp0[ii][jj][kk]*vp0[ii][jj][kk];
@@ -156,25 +156,25 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 		hpxy=0;hpxz=0;hpyz=0;
 		hqxy=0;hqxz=0;hqyz=0;
 		hrxy=0;hrxz=0;hryz=0;
-		for(l=-mix;l<=mix;l++)
+		for(l=-_mix;l<=_mix;l++)
                 {
-                   lmix=l+mix;
+                   l_mix=l+_mix;
                    jl=j+l;
                    kl=k+l;
 		   if(jl>=0&&jl<nypad)
 		   {
-                        hpxy+=coeff_1dy[lmix]*px_tmp[i][jl][k]*r2dy;
-                        hqxy+=coeff_1dy[lmix]*qx_tmp[i][jl][k]*r2dy;
-                        hrxy+=coeff_1dy[lmix]*rx_tmp[i][jl][k]*r2dy;
+                        hpxy+=coeff_1dy[l_mix]*px_tmp[i][jl][k]*r2dy;
+                        hqxy+=coeff_1dy[l_mix]*qx_tmp[i][jl][k]*r2dy;
+                        hrxy+=coeff_1dy[l_mix]*rx_tmp[i][jl][k]*r2dy;
 		   }
                    if(kl>=0&&kl<nzpad)
 		   {
-                        hpxz+=coeff_1dz[lmix]*px_tmp[i][j][kl]*r2dz;
-                        hqxz+=coeff_1dz[lmix]*qx_tmp[i][j][kl]*r2dz;
-                        hrxz+=coeff_1dz[lmix]*rx_tmp[i][j][kl]*r2dz;
-                        hpyz+=coeff_1dz[lmix]*py_tmp[i][j][kl]*r2dz;
-                        hqyz+=coeff_1dz[lmix]*qy_tmp[i][j][kl]*r2dz;
-                        hryz+=coeff_1dz[lmix]*ry_tmp[i][j][kl]*r2dz;
+                        hpxz+=coeff_1dz[l_mix]*px_tmp[i][j][kl]*r2dz;
+                        hqxz+=coeff_1dz[l_mix]*qx_tmp[i][j][kl]*r2dz;
+                        hrxz+=coeff_1dz[l_mix]*rx_tmp[i][j][kl]*r2dz;
+                        hpyz+=coeff_1dz[l_mix]*py_tmp[i][j][kl]*r2dz;
+                        hqyz+=coeff_1dz[l_mix]*qy_tmp[i][j][kl]*r2dz;
+                        hryz+=coeff_1dz[l_mix]*ry_tmp[i][j][kl]*r2dz;
                     }
                 }// l loop
 
@@ -182,9 +182,9 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 		hpx=0;hpy=0;hpz=0;
 		hqx=0;hqy=0;hqz=0;
 		hrx=0;hry=0;hrz=0;
-		for(l=-m;l<=m;l++)
+		for(l=-_m;l<=_m;l++)
 		{
-                        lm=l+m;
+                        lm=l+_m;
                         il=i+l;
                         jl=j+l;
                         kl=k+l;
@@ -295,25 +295,25 @@ void fwportpseudop(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
 	px=0;py=0;pz=0;
 	qx=0;qy=0;qz=0;
 	rx=0;ry=0;rz=0;
-	for(l=-m;l<=m;l++)
+	for(l=-_m;l<=_m;l++)
 	{
 		if(i+l>=0&&i+l<nxpad)
 		{
-			px+=coeff_2dx[l+m]*p2[j][i+l][k];
-			qx+=coeff_2dx[l+m]*q2[j][i+l][k];
-			rx+=coeff_2dx[l+m]*r2[j][i+l][k];
+			px+=coeff_2dx[l+_m]*p2[j][i+l][k];
+			qx+=coeff_2dx[l+_m]*q2[j][i+l][k];
+			rx+=coeff_2dx[l+_m]*r2[j][i+l][k];
 		}
 		if(j+l>=0&&j+l<nypad)
 		{
-			py+=coeff_2dy[l+m]*p2[j+l][i][k];
-			qy+=coeff_2dy[l+m]*q2[j+l][i][k];
-			ry+=coeff_2dy[l+m]*r2[j+l][i][k];
+			py+=coeff_2dy[l+_m]*p2[j+l][i][k];
+			qy+=coeff_2dy[l+_m]*q2[j+l][i][k];
+			ry+=coeff_2dy[l+_m]*r2[j+l][i][k];
 		}
                	if(k+l>=0&&k+l<nzpad)
 		{
-			pz+=coeff_2dz[l+m]*p2[j][i][k+l];
-			qz+=coeff_2dz[l+m]*q2[j][i][k+l];
-			rz+=coeff_2dz[l+m]*r2[j][i][k+l];
+			pz+=coeff_2dz[l+_m]*p2[j][i][k+l];
+			qz+=coeff_2dz[l+_m]*q2[j][i][k+l];
+			rz+=coeff_2dz[l+_m]*r2[j][i][k+l];
 		}
 	}
 	p3[j][i][k]=2*p2[j][i][k] - p1[j][i][k] + (float)(dt2*(vpx*px + vsz3*py + vsz1*pz + C12_66*qx + C13_55*rx));
@@ -371,12 +371,12 @@ void fwportpseudop2(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 		px=0;py=0;pz=0;
 		qx=0;qy=0;qz=0;
 		rx=0;ry=0;rz=0;
-		for(l=-m;l<=m;l++)
+		for(l=-_m;l<=_m;l++)
 		{
                         int il=i+l;
                         int jl=j+l;
                         int kl=k+l;
-                        int lm=l+m;
+                        int lm=l+_m;
 			if(il>=0&&il<nypad)
 			{
 				py+=coeff_2dy[lm]*p2[il][j][k];
@@ -397,9 +397,9 @@ void fwportpseudop2(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 			}
 		}
                 int im, jm, km;
-                im=i+m;
-                jm=j+m;
-                km=k+m;
+                im=i+_m;
+                jm=j+_m;
+                km=k+_m;
 		p3[im][jm][km]=2*p2[im][jm][km] - p1[im][jm][km] + dt2*(vpx*px + vsz3*py + vsz1*pz + C12_66*qx + C13_55*rx);
 		q3[im][jm][km]=2*q2[im][jm][km] - q1[im][jm][km] + dt2*(C12_66*py + vsz3*qx + vpy*qy + vsz2*qz + C23_44*ry);
 		r3[im][jm][km]=2*r2[im][jm][km] - r1[im][jm][km] + dt2*(C13_55*pz + C23_44*qz + vsz1*rx + vsz2*ry + vpz*rz);

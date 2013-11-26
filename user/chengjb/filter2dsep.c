@@ -37,12 +37,12 @@ void filter2dsep(float **p3, float **q3, float **p3c, float **q3c, float ****ex,
       	  for(k=-hnkx1; k<=hnkx1; k++)
           {  
              ik=i+k;
-             ikm=ik+m;
+             ikm=ik+_m;
 	     kk=k+hnkx1;
 	     for(l=-hnkz1; l<=hnkz1; l++)
 	     {
                 jl=j+l;
-                jlm=jl+m;
+                jlm=jl+_m;
 	      	ll=l+hnkz1;
 
         	if(ik>=0 && ik<nx && jl>=0 && jl<nz)
@@ -67,12 +67,12 @@ void filter2dsepglobal(float **p3, float **q3, float **p3c, float **q3c, float *
       	  for(k=-hnkx1; k<=hnkx1; k++)
           {  
              ik=i+k;
-             ikm=ik+m;
+             ikm=ik+_m;
 	     kk=k+hnkx1;
 	     for(l=-hnkz1; l<=hnkz1; l++)
 	     {
                 jl=j+l;
-                jlm=jl+m;
+                jlm=jl+_m;
 	      	ll=l+hnkz1;
 
         	if(ik>=0 && ik<nx && jl>=0 && jl<nz)

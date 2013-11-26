@@ -94,8 +94,8 @@ int main(int argc, char* argv[])
         /* wave modeling space */
 	nx=nvx;
 	nz=nvz;
-        nxpad=nx+2*m;
-        nzpad=nz+2*m;
+        nxpad=nx+2*_m;
+        nzpad=nz+2*_m;
 
         sf_warning("dx=%f dz=%f",dx,dz);
 
@@ -108,11 +108,11 @@ int main(int argc, char* argv[])
 	theta=sf_floatalloc2(nz,nx);	
 
         int nxz=nx*nz;
-        mm=2*m+1;
+        mm=2*_m+1;
 
         dt2=dt*dt;
-        isxm=isx+m;  /* source's x location */
-        iszm=isz+m;  /* source's z-location */
+        isxm=isx+_m;  /* source's x location */
+        iszm=isz+_m;  /* source's z-location */
 
         /* read velocity model */
         sf_floatread(vp0[0],nxz,Fvp0);
@@ -175,10 +175,10 @@ int main(int argc, char* argv[])
 		{
 		   for(i=0;i<nx;i++)
                    {
-                      im=i+m;
+                      im=i+_m;
 		      for(j=0;j<nz;j++)
 		      {
-                          jm=j+m;
+                          jm=j+_m;
 
 		          div=p3[im][jm]+q3[im][jm];
 
@@ -189,8 +189,8 @@ int main(int argc, char* argv[])
                 }/* (it+1)%ntstep==0 */
 
                 /**************************************/
- 	        for(i=0,ii=m;i<nx;i++,ii++)
-	        for(j=0,jj=m;j<nz;j++,jj++)
+ 	        for(i=0,ii=_m;i<nx;i++,ii++)
+	        for(j=0,jj=_m;j<nz;j++,jj++)
 		{
 				p1[ii][jj]=p2[ii][jj];	
 				p2[ii][jj]=p3[ii][jj];	

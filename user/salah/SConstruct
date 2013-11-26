@@ -20,8 +20,7 @@ src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'],
-            CCFLAGS='-pg ')
+            LIBS=[env.get('DYNLIB','')+'rsf'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -46,14 +45,6 @@ if root: # no compilation, just rename
     for prog in pymains:
         env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
 
-#env = Environment()
-#dict = env.Dictionary()
-#keys = dict.keys()
-#keys.sort()
-#print "###start of constructon variables##\n"
-#for key in keys:
-#    print "construction variable = '%s', value = '%s'" % (key, dict[key])
-#print "###end of construction variables##\n"
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################

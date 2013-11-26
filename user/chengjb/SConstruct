@@ -95,6 +95,7 @@ env.Prepend(CPPPATH=['../../include'],
 # Compiling C programs 
 ##############################################################################
 src = Glob('[a-z]*.c')
+underscore_inc = Glob('_[a-z]*.h')
 objs = []
 
 ##############################################################################
@@ -112,6 +113,7 @@ for source in src:
     if fftw or not source in fftws:
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
+        env.Depends(obj,underscore_inc)
         objs.append(obj)
 
 mains = Split(progs)

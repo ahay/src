@@ -54,12 +54,12 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	    schedule(dynamic) \
         shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,coeff_1dz,nxpad,nzpad,dx,dz)
 #endif
-    for(i=m;i<nx+m;i++)
-	for(j=m;j<nz+m;j++)
+    for(i=_m;i<nx+_m;i++)
+	for(j=_m;j<nz+_m;j++)
 	{
-		for(l=-mix;l<=mix;l++)
+		for(l=-_mix;l<=_mix;l++)
 		{
-            int lm=l+mix;
+            int lm=l+_mix;
 			px_tmp[i][j]+=coeff_1dx[lm]*p2[i+l][j]/2.0/dx;
 			qx_tmp[i][j]+=coeff_1dx[lm]*q2[i+l][j]/2.0/dx;
 		}
@@ -73,12 +73,12 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 		coeff_1dx,coeff_1dz,coeff_2dx,coeff_2dz,\
 	    vp0,vs0,epsilon,delta,theta)
 #endif
-        for(i=m;i<nx+m;i++)
+        for(i=_m;i<nx+_m;i++)
         {
-           int im=i-m;
-	   for(j=m;j<nz+m;j++)
+           int im=i-_m;
+	   for(j=_m;j<nz+_m;j++)
 	   {
-               int jm=j-m;
+               int jm=j-_m;
 
                float vp2,vs2,ep,de,vpx2,vpn2,coef, the;
                float sinthe,costhe,cos2,sin2,sin2a,cos_sin;
@@ -103,9 +103,9 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 
 		pxz=0;
 		qxz=0;
-                for(l=-mix;l<=mix;l++)
+                for(l=-_mix;l<=_mix;l++)
                 {
-                     int lm=l+mix;
+                     int lm=l+_mix;
                      pxz+=coeff_1dz[lm]*px_tmp[i][j+l]/2.0/dz;
                      qxz+=coeff_1dz[lm]*qx_tmp[i][j+l]/2.0/dz;
                 }
@@ -114,9 +114,9 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
                 hpz=0;
 		hqx=0;
                 hqz=0;
-		for(l=-m;l<=m;l++)
+		for(l=-_m;l<=_m;l++)
 		{
-                     int lm=l+m;
+                     int lm=l+_m;
                      hpx+=coeff_2dx[lm]*p2[i+l][j];
                      hqx+=coeff_2dx[lm]*q2[i+l][j];
                      hpz+=coeff_2dz[lm]*p2[i][j+l];
@@ -173,17 +173,17 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 	for(k=0;k<nypad;k++)
 		for(i=0;i<nxpad;i++)
 			for(j=0;j<nzpad;j++)
-				for(l=-mix;l<=mix;l++)
+				for(l=-_mix;l<=_mix;l++)
 				{
 					if(i+l>=0&&i+l<nxpad){
-						px_tmp[k][i][j]+=coeff_1dx[l+mix]*p2[k][i+l][j]/2.0/dx;
-						qx_tmp[k][i][j]+=coeff_1dx[l+mix]*q2[k][i+l][j]/2.0/dx;
-						rx_tmp[k][i][j]+=coeff_1dx[l+mix]*r2[k][i+l][j]/2.0/dx;
+						px_tmp[k][i][j]+=coeff_1dx[l+_mix]*p2[k][i+l][j]/2.0/dx;
+						qx_tmp[k][i][j]+=coeff_1dx[l+_mix]*q2[k][i+l][j]/2.0/dx;
+						rx_tmp[k][i][j]+=coeff_1dx[l+_mix]*r2[k][i+l][j]/2.0/dx;
 					}
 					if(j+l>=0&&j+l<nzpad){
-						pz_tmp[k][i][j]+=coeff_1dz[l+mix]*p2[k][i][j+l]/2.0/dz;
-						qz_tmp[k][i][j]+=coeff_1dz[l+mix]*q2[k][i][j+l]/2.0/dz;
-						rz_tmp[k][i][j]+=coeff_1dz[l+mix]*r2[k][i][j+l]/2.0/dz;
+						pz_tmp[k][i][j]+=coeff_1dz[l+_mix]*p2[k][i][j+l]/2.0/dz;
+						qz_tmp[k][i][j]+=coeff_1dz[l+_mix]*q2[k][i][j+l]/2.0/dz;
+						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 					}
 				}
 
@@ -247,24 +247,24 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 		  pyz=0;
 		  qyz=0;
 		  ryz=0;
-		  for(l=-mix;l<=mix;l++)
+		  for(l=-_mix;l<=_mix;l++)
 		  {
 			  if(k+l>=0&&k+l<nypad)
 			  {
-				  pxy+=coeff_1dy[l+mix]*px_tmp[k+l][i][j]/2.0/dy;
-				  pyz+=coeff_1dy[l+mix]*pz_tmp[k+l][i][j]/2.0/dy;
+				  pxy+=coeff_1dy[l+_mix]*px_tmp[k+l][i][j]/2.0/dy;
+				  pyz+=coeff_1dy[l+_mix]*pz_tmp[k+l][i][j]/2.0/dy;
 
-				  qxy+=coeff_1dy[l+mix]*qx_tmp[k+l][i][j]/2.0/dy;
-				  qyz+=coeff_1dy[l+mix]*qz_tmp[k+l][i][j]/2.0/dy;
+				  qxy+=coeff_1dy[l+_mix]*qx_tmp[k+l][i][j]/2.0/dy;
+				  qyz+=coeff_1dy[l+_mix]*qz_tmp[k+l][i][j]/2.0/dy;
 
-				  rxy+=coeff_1dy[l+mix]*rx_tmp[k+l][i][j]/2.0/dy;
-				  ryz+=coeff_1dy[l+mix]*rz_tmp[k+l][i][j]/2.0/dy;
+				  rxy+=coeff_1dy[l+_mix]*rx_tmp[k+l][i][j]/2.0/dy;
+				  ryz+=coeff_1dy[l+_mix]*rz_tmp[k+l][i][j]/2.0/dy;
 			  }
 			  if(j+l>=0&&j+l<nzpad)
 			  {
-				  pxz+=coeff_1dz[l+mix]*px_tmp[k][i][j+l]/2.0/dz;
-				  qxz+=coeff_1dz[l+mix]*qx_tmp[k][i][j+l]/2.0/dz;
-				  rxz+=coeff_1dz[l+mix]*rx_tmp[k][i][j+l]/2.0/dz;
+				  pxz+=coeff_1dz[l+_mix]*px_tmp[k][i][j+l]/2.0/dz;
+				  qxz+=coeff_1dz[l+_mix]*qx_tmp[k][i][j+l]/2.0/dz;
+				  rxz+=coeff_1dz[l+_mix]*rx_tmp[k][i][j+l]/2.0/dz;
 			  }
 		  }
           float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
@@ -278,25 +278,25 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
           hpz =0;
           hqz =0;
           hrz =0;
-		  for(l=-m;l<=m;l++)
+	  for(l=-_m;l<=_m;l++)
 		  {
 			  if(k+l>=0&&k+l<nypad)
 			  {
-				  hpy +=coeff_2dy[l+m]*p2[k+l][i][j];
-				  hqy +=coeff_2dy[l+m]*q2[k+l][i][j];
-				  hry +=coeff_2dy[l+m]*r2[k+l][i][j];
+				  hpy +=coeff_2dy[l+_m]*p2[k+l][i][j];
+				  hqy +=coeff_2dy[l+_m]*q2[k+l][i][j];
+				  hry +=coeff_2dy[l+_m]*r2[k+l][i][j];
 			  }
               if(i+l>=0&&i+l<nxpad)
  			  {
-                  hpx +=coeff_2dx[l+m]*p2[k][i+l][j];
-                  hqx +=coeff_2dx[l+m]*q2[k][i+l][j];
-                  hrx +=coeff_2dx[l+m]*r2[k][i+l][j];
+                  hpx +=coeff_2dx[l+_m]*p2[k][i+l][j];
+                  hqx +=coeff_2dx[l+_m]*q2[k][i+l][j];
+                  hrx +=coeff_2dx[l+_m]*r2[k][i+l][j];
               }
               if(j+l>=0&&j+l<nzpad)
 			  {
-                  hpz +=coeff_2dz[l+m]*p2[k][i][j+l];
-                  hqz +=coeff_2dz[l+m]*q2[k][i][j+l];
-                  hrz +=coeff_2dz[l+m]*r2[k][i][j+l];
+                  hpz +=coeff_2dz[l+_m]*p2[k][i][j+l];
+                  hqz +=coeff_2dz[l+_m]*q2[k][i][j+l];
+                  hrz +=coeff_2dz[l+_m]*r2[k][i][j+l];
               }
 		  }
 
@@ -364,14 +364,14 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 	for(k=0;k<nypad;k++)
 		for(i=0;i<nxpad;i++)
 			for(j=0;j<nzpad;j++)
-				for(l=-mix;l<=mix;l++)
+				for(l=-_mix;l<=_mix;l++)
 				{
 					if(i+l>=0&&i+l<nxpad)
-						px_tmp[k][i][j]+=coeff_1dx[l+mix]*p2[k][i+l][j]/2.0/dx;
+						px_tmp[k][i][j]+=coeff_1dx[l+_mix]*p2[k][i+l][j]/2.0/dx;
 					if(k+l>=0&&k+l<nypad)
-						qy_tmp[k][i][j]+=coeff_1dy[l+mix]*q2[k+l][i][j]/2.0/dy;
+						qy_tmp[k][i][j]+=coeff_1dy[l+_mix]*q2[k+l][i][j]/2.0/dy;
 					if(j+l>=0&&j+l<nzpad)
-						rz_tmp[k][i][j]+=coeff_1dz[l+mix]*r2[k][i][j+l]/2.0/dz;
+						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 				}
 #ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
@@ -425,22 +425,22 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 		  qyz=0;
 		  rxz=0;
 		  ryz=0;
-		  for(l=-mix;l<=mix;l++)
+		  for(l=-_mix;l<=_mix;l++)
 		  {
 			  if(k+l>=0&&k+l<nypad)
 			  {
-				  pxy+=coeff_1dy[l+mix]*px_tmp[k+l][i][j]/2.0/dy;
-				  ryz+=coeff_1dz[l+mix]*rz_tmp[k+l][i][j]/2.0/dy;
+				  pxy+=coeff_1dy[l+_mix]*px_tmp[k+l][i][j]/2.0/dy;
+				  ryz+=coeff_1dz[l+_mix]*rz_tmp[k+l][i][j]/2.0/dy;
 			  }
 			  if(i+l>=0&&i+l<nxpad)
 			  {
-				  qxy+=coeff_1dy[l+mix]*qy_tmp[k][i+l][j]/2.0/dx;
-				  rxz+=coeff_1dz[l+mix]*rz_tmp[k][i+l][j]/2.0/dx;
+				  qxy+=coeff_1dy[l+_mix]*qy_tmp[k][i+l][j]/2.0/dx;
+				  rxz+=coeff_1dz[l+_mix]*rz_tmp[k][i+l][j]/2.0/dx;
 			  }
 			  if(j+l>=0&&j+l<nzpad)
 			  {
-				  pxz+=coeff_1dz[l+mix]*px_tmp[k][i][j+l]/2.0/dz;
-				  qyz+=coeff_1dz[l+mix]*qy_tmp[k][i][j+l]/2.0/dz;
+				  pxz+=coeff_1dz[l+_mix]*px_tmp[k][i][j+l]/2.0/dz;
+				  qyz+=coeff_1dz[l+_mix]*qy_tmp[k][i][j+l]/2.0/dz;
 			  }
 		  }
 
@@ -454,25 +454,25 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
           hpz =0;
           hqz =0;
           hrz =0;
-		  for(l=-m;l<=m;l++)
+		  for(l=-_m;l<=_m;l++)
 		  {
 			  if(k+l>=0&&k+l<nypad)
 			  {
-				  hpy +=coeff_2dy[l+m]*p2[k+l][i][j];
-				  hqy +=coeff_2dy[l+m]*q2[k+l][i][j];
-				  hry +=coeff_2dy[l+m]*r2[k+l][i][j];
+				  hpy +=coeff_2dy[l+_m]*p2[k+l][i][j];
+				  hqy +=coeff_2dy[l+_m]*q2[k+l][i][j];
+				  hry +=coeff_2dy[l+_m]*r2[k+l][i][j];
 			  }
               if(i+l>=0&&i+l<nxpad)
  			  {
-                  hpx +=coeff_2dx[l+m]*p2[k][i+l][j];
-                  hqx +=coeff_2dx[l+m]*q2[k][i+l][j];
-                  hrx +=coeff_2dx[l+m]*r2[k][i+l][j];
+                  hpx +=coeff_2dx[l+_m]*p2[k][i+l][j];
+                  hqx +=coeff_2dx[l+_m]*q2[k][i+l][j];
+                  hrx +=coeff_2dx[l+_m]*r2[k][i+l][j];
               }
               if(j+l>=0&&j+l<nzpad)
 			  {
-                  hpz +=coeff_2dz[l+m]*p2[k][i][j+l];
-                  hqz +=coeff_2dz[l+m]*q2[k][i][j+l];
-                  hrz +=coeff_2dz[l+m]*r2[k][i][j+l];
+                  hpz +=coeff_2dz[l+_m]*p2[k][i][j+l];
+                  hqz +=coeff_2dz[l+_m]*q2[k][i][j+l];
+                  hrz +=coeff_2dz[l+_m]*r2[k][i][j+l];
               }
 		  }
 

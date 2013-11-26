@@ -50,8 +50,8 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
 		        schedule(dynamic) \
 		        shared(p2,q2,p_temp,q_temp,dz)
 #endif
-        for(i=mix;i<nx+mix;i++)
-                for(j=mix;j<nz+mix;j++)
+        for(i=_mix;i<nx+_mix;i++)
+                for(j=_mix;j<nz+_mix;j++)
                 {
                         p_temp[i][j]=(p2[i][j+1]-p2[i][j-1])/2.0/dz;
                         q_temp[i][j]=(q2[i][j+1]-q2[i][j-1])/2.0/dz;
@@ -63,12 +63,12 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
 		        shared(p1,p2,p3,q1,q2,q3,p_temp,q_temp,coeff_x,coeff_z,\
 					   vp0,vs0,epsilon,delta,theta)
 #endif
-        for(i=m;i<nx+m;i++)
+        for(i=_m;i<nx+_m;i++)
         {
-            int im=i-m;
-            for(j=m;j<nz+m;j++)
+            int im=i-_m;
+            for(j=_m;j<nz+_m;j++)
             {
-                        int jm=j-m;
+                        int jm=j-_m;
 						float px,pz,qx,qz,vp2,vs2,vpx2,vpn2,ep,de,the,coef;
 						float sinthe,costhe,cos2,sin2,sin2a,hxp,hxq,hzp,hzq,pxz,qxz;
 
@@ -96,9 +96,9 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                         
                         //sf_warning("vp2=%f vs2=%f ep=%f de=%f",vp2,vs2,ep,de);
 
-                        for(k=-m;k<=m;k++)
+                        for(k=-_m;k<=_m;k++)
                         {
-                                int km=k+m;
+                                int km=k+_m;
                                 px+=coeff_x[km]*p2[i+k][j];
                                 pz+=coeff_z[km]*p2[i][j+k];
                                 qx+=coeff_x[km]*q2[i+k][j];
