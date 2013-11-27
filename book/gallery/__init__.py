@@ -9,6 +9,7 @@ _methods = {
     'vc': 'Velocity Continuation',
     'fakirmig': 'First-Arrival Kirchhoff',
     'ffd': 'FFD',
+    'lrostep': 'One-Step Lowrank',
     }
 
 def method():

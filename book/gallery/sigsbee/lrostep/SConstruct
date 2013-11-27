@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.insert(0,'..')
-import sigsbee
+from rsf.gallery import sigsbee
 
 sigsbee.getvel('vel','migvel')
 Result('vel','grey color=j allpos=y bias=1.5 scalebar=y barreverse=y wanttitle=n')
@@ -37,17 +35,14 @@ Flow('czomig','czodata cleft cright',
      transp |
      wcfftexp2 mig=y timer=y
      left=${SOURCES[1]} right=${SOURCES[2]}
-     nz=1201 dz=0.00762
+     nz=1201 dz=0.00762 | real | put unit2=km 
      ''')
 
-#Result('czomig','window j3=15 | real | grey title="Zero-Offset Migration with One-step" unit2=km gainpanel=all ')
-Result('czomigsnap','czomig','window f3=-1 | real | grey title="Migrated Image with One-step" unit2=km gainpanel=all')
+sigsbee.zoimage('czomig')
 
 # High-resolution exploding-reflector sigsbee
-Fetch('sigexp.rsf','sigsbee')
 
-Flow('zodatah','sigexp.rsf','dd form=native')
-
+sigsbee.gethrzo('zodatah')
 sigsbee.getvel('velh','strvel')
 
 Flow('cffth','velh','transp | rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1')
@@ -68,10 +63,9 @@ Flow('zomigh','czodatah clefth crighth',
      transp |
      wcfftexp2 mig=y timer=y
      left=${SOURCES[1]} right=${SOURCES[2]}
-     nz=1201 dz=0.00762
+     nz=1201 dz=0.00762 | real | put unit2=km
      ''')
 
-#Result('zomigh','window j3=15 | real | grey title="High Res Zero-Offset Migration with One-step" unit2=km gainpanel=all ')
-Result('zomighsnap','zomigh','window f3=-1 | real | grey title="High Res Migration with One-step" unit2=km gainpanel=all')
+sigsbee.zoimage('zomigh')
 
 End()
