@@ -63,7 +63,7 @@ Flow('zomigs','exp lefts rights',
      transp |
      fftexp0 mig=y
      left=${SOURCES[1]} right=${SOURCES[2]}
-     nz=1201 dz=0.00762
+     nz=1201 dz=0.00762 | put unit2=km
      ''')
 
 sigsbee.zoimage('zomigs')
