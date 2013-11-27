@@ -14,6 +14,7 @@ skiplist =  [
 		'book/uwa/geo2013ElasticModellingGPU/test3d',   # requires CUDA
                 'book/rsf/bash/mpi',
 								# Examples with movies
+		'book/geo384w/hw6/hyper',						
 		'book/trip/test/flat',
                 'book/geo391/hw2/sorting',						
 		'book/rsf/rsf/fractal',
@@ -23,7 +24,6 @@ skiplist =  [
 		'book/trip/hpcss/test2',
 		'book/trip/hpcss/test1',	
 		'book/tccs/lpf/regr',
-		'book/geo384w/hw5/hyper2',
                 'book/geo384w/hw1/wave',
                 'book/cwp/geo2009VTIModeSeparation/separate2',
                 'book/cwp/geo2006TimeShiftImagingCondition/icomp',

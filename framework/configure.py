@@ -1375,10 +1375,13 @@ def psp(context):
 
     normallib = re.compile(r'-l(\S*)')
     pathlib = re.compile(r'(\S+)')
+    libpath = re.compile(r'-L(\S*)')
     psplibs = []
     pspextra = []
     for lib in testlibs:
-        if normallib.match(lib):
+        if libpath.match(lib):
+            continue
+        elif normallib.match(lib):
             psplibs += normallib.findall(lib)
         else:
             pspextra.append(lib)
