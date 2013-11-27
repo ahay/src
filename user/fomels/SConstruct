@@ -13,7 +13,7 @@ nsmooth nsmooth1 ocparcel octentwt odip2 ofilp ofsemb opwd2 patch
 phaserot pick pick3 plane regr rdiv reshape riesz rsin semblance shape
 shapeagc shearer shift1 similarity similarity2 simenv smoothderw
 smoothreg taupfit thin timecont timefreq tomo tree trace2 tristack
-tristack2 twofreq2 velcon velinv vidattr vofzperm warp1 warpadd
+tristack2 twofreq2 var2 velcon velinv vidattr vofzperm warp1 warpadd
 warpscan zero zmarch ztrace
 '''
 
