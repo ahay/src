@@ -22,12 +22,14 @@
 
 int main (int argc, char* argv[])
 {
-    bool opt, comp, phase;
+    bool opt, comp, phase, verb;
     double n1;
     float nw1, b, a, dw, pi;
     int nt, nw, i, j, N, m1, M, k, f;                    
     float *TDEx,*TDEy,*TDHx,*TDHy,*outp,*ExHyres,*EyHxres,*ExHypha,*EyHxpha;
-    float *bb,*pp,*qq,*dd;
+    float *bb, *pp, *qq, *dd;
+    sf_file in, out, Ey, Hx, Hy;
+
     kiss_fft_cpx *FDEx=NULL,*FDEy=NULL,*FDHx=NULL,*FDHy=NULL;
     kiss_fft_cpx *A=NULL,*B=NULL,*ExAs1=NULL,*HyBs1=NULL,*ExBs1=NULL;
     kiss_fft_cpx *HyAs1=NULL,*HxAs1=NULL,*HxBs1=NULL;
@@ -49,7 +51,6 @@ int main (int argc, char* argv[])
     kiss_fft_cpx *Zxy=NULL,*Zyx=NULL;
     kiss_fftr_cfg cfg;
     sf_init (argc, argv);
-    sf_file in, out,Ey,Hx,Hy;
     in= sf_input("in");
     Ey=sf_input("Ey");
     Hx=sf_input("Hx");
@@ -60,7 +61,10 @@ int main (int argc, char* argv[])
     if (!sf_getbool("comp",&comp)) comp=true;
     /* component selection */
 
-    if (!sf_getbool("phase",&phase)) phase=false;
+    if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
+
+   if (!sf_getbool("phase",&phase)) phase=false;
     /* if y, calculate apparent resistivity, otherwise calculate phase */
 
     if (!sf_histdouble(in,"n1",&n1)) sf_error("No n1= in input");
@@ -74,11 +78,12 @@ int main (int argc, char* argv[])
     sf_floatread(pp,n1,Ey);
     sf_floatread(qq,n1,Hx);
     sf_floatread(dd,n1,Hy);
-    M=48;
+    M=49;
     outp =sf_floatalloc(M);
     pi=3.14;
     f=1; 
     b=-3;
+
     for(k=0;k<M;k++) {
 	a=pow(10,b);
 	nw=(int)(128000./(a*1000));
@@ -87,13 +92,10 @@ int main (int argc, char* argv[])
 	if (nt%2) nt++;
 	nw1 = nt/2+1;
 	dw = 128./nt; 
-/*	sf_warning("a=%f,dw=%f\n",a,dw); */ 
 	m1=n1;
-	if(m1%nw) m1++;
-	N=m1/nw;
-/* 	f=1; */
-/* 	f=(int)((float)a/(float)dw); */
-/*  	sf_warning("nw=%d,nt=%d\n",nw,nt); */ 
+	if(m1%nw) N=m1/nw+1;
+	else N=m1/nw;
+	if(verb) sf_warning("slice %d of %d, freq=%f, stack=%d;",k+1,M,a,N);
 	FDEx= (kiss_fft_cpx*)sf_complexalloc(nt);
 	FDEy= (kiss_fft_cpx*)sf_complexalloc(nt);
 	FDHx= (kiss_fft_cpx*)sf_complexalloc(nt);
@@ -185,11 +187,7 @@ int main (int argc, char* argv[])
 	EyHxpha=sf_floatalloc(nt);
 	cfg = kiss_fftr_alloc(nt,0,NULL,NULL);
 	
-	
-	
 	for(j=0;j<N;j++) {
-	    /*  if (j%100000==0) sf_warning("slice %d of %d;",j+1,N); */
-	    
 	    for(i=0;i<nt;i++){
 		if((i<nw)&&((j*nw+i)<n1)) {
 		    TDEx[i]=bb[j*nw+i]*0.5*(1-cos(2*pi*i/nt));
@@ -205,7 +203,7 @@ int main (int argc, char* argv[])
 		if((i<nw)&&((j*nw+i)<n1)) {
 		    TDEy[i]=pp[j*nw+i]*0.5*(1-cos(2*pi*i/nt));
 		}
-		else {
+		else{
 		    TDEy[i]=0.;
 		} 
 	    }
@@ -216,9 +214,7 @@ int main (int argc, char* argv[])
 		if((i<nw)&&((j*nw+i)<n1)) {
 		    TDHx[i]=qq[j*nw+i]*0.5*(1-cos(2*pi*i/nt));
 		}
-		else {
-		    TDHx[i]=0.;
-		} 
+		else{TDHx[i]=0.;} 
 	    }
 	    kiss_fftr(cfg,TDHx,FDHx); 
 	    
@@ -227,190 +223,149 @@ int main (int argc, char* argv[])
 		if((i<nw)&&((j*nw+i)<n1)) {
 		    TDHy[i]=dd[j*nw+i]*0.5*(1-cos(2*pi*i/nt));
 		}
-		else {
+		else{
 		    TDHy[i]=0.;
 		} 
 	    }
 	    kiss_fftr(cfg,TDHy,FDHy); 
-	    /*  for(i=0;i<nt;i++){ */
-/* 	    if((i*dw<=a)&&((i+1)*dw>a)) {f=i;} */
-/* 	    } */
 	    A=FDEx;B=FDEy;
-	    ExAs1[f]=sf_cmul(FDEx[f],sf_conjf(A[f]));
-	    HyBs1[f]=sf_cmul(FDHy[f],sf_conjf(B[f]));
-	    ExBs1[f]=sf_cmul(FDEx[f],sf_conjf(B[f]));
-	    HyAs1[f]=sf_cmul(FDHy[f],sf_conjf(A[f]));
-	    HxAs1[f]=sf_cmul(FDHx[f],sf_conjf(A[f]));
-	    HxBs1[f]=sf_cmul(FDHx[f],sf_conjf(B[f]));
-	    EyAs1[f]=sf_cmul(FDEy[f],sf_conjf(A[f]));
-	    EyBs1[f]=sf_cmul(FDEy[f],sf_conjf(B[f]));
-	    
-	    
+	    ExAs1[f]=sf_cadd(ExAs1[f],sf_cmul(FDEx[f],sf_conjf(A[f])));
+	    HyBs1[f]=sf_cadd(HyBs1[f],sf_cmul(FDHy[f],sf_conjf(B[f])));
+	    ExBs1[f]=sf_cadd(ExBs1[f],sf_cmul(FDEx[f],sf_conjf(B[f])));
+	    HyAs1[f]=sf_cadd(HyAs1[f],sf_cmul(FDHy[f],sf_conjf(A[f])));
+	    HxAs1[f]=sf_cadd(HxAs1[f],sf_cmul(FDHx[f],sf_conjf(A[f])));
+	    HxBs1[f]=sf_cadd(HxBs1[f],sf_cmul(FDHx[f],sf_conjf(B[f])));
+	    EyAs1[f]=sf_cadd(EyAs1[f],sf_cmul(FDEy[f],sf_conjf(A[f])));
+	    EyBs1[f]=sf_cadd(EyBs1[f],sf_cmul(FDEy[f],sf_conjf(B[f])));
+	  
 	    A=FDEx;B=FDHx;
-	    ExAs2[f]=sf_cmul(FDEx[f],sf_conjf(A[f]));
-	    HyBs2[f]=sf_cmul(FDHy[f],sf_conjf(B[f]));
-	    ExBs2[f]=sf_cmul(FDEx[f],sf_conjf(B[f]));
-	    HyAs2[f]=sf_cmul(FDHy[f],sf_conjf(A[f]));
-	    HxAs2[f]=sf_cmul(FDHx[f],sf_conjf(A[f]));
-	    HxBs2[f]=sf_cmul(FDHx[f],sf_conjf(B[f]));
-	    EyAs2[f]=sf_cmul(FDEy[f],sf_conjf(A[f]));
-	    EyBs2[f]=sf_cmul(FDEy[f],sf_conjf(B[f]));
+	    ExAs2[f]= sf_cadd(ExAs2[f],sf_cmul(FDEx[f],sf_conjf(A[f])));
+	    HyBs2[f]= sf_cadd(HyBs2[f],sf_cmul(FDHy[f],sf_conjf(B[f])));
+	    ExBs2[f]= sf_cadd(ExBs2[f],sf_cmul(FDEx[f],sf_conjf(B[f])));
+	    HyAs2[f]= sf_cadd(HyAs2[f],sf_cmul(FDHy[f],sf_conjf(A[f])));
+	    HxAs2[f]= sf_cadd(HxAs2[f],sf_cmul(FDHx[f],sf_conjf(A[f])));
+	    HxBs2[f]= sf_cadd(HxBs2[f],sf_cmul(FDHx[f],sf_conjf(B[f])));
+	    EyAs2[f]= sf_cadd(EyAs2[f],sf_cmul(FDEy[f],sf_conjf(A[f])));
+	    EyBs2[f]= sf_cadd(EyBs2[f],sf_cmul(FDEy[f],sf_conjf(B[f])));
 	    
-	    
+	   
 	    A=FDEy;B=FDHy;
-	    ExAs3[f]=sf_cmul(FDEx[f],sf_conjf(A[f]));
-	    HyBs3[f]=sf_cmul(FDHy[f],sf_conjf(B[f]));
-	    ExBs3[f]=sf_cmul(FDEx[f],sf_conjf(B[f]));
-	    HyAs3[f]=sf_cmul(FDHy[f],sf_conjf(A[f]));
-	    HxAs3[f]=sf_cmul(FDHx[f],sf_conjf(A[f]));
-	    HxBs3[f]=sf_cmul(FDHx[f],sf_conjf(B[f]));
-	    EyAs3[f]=sf_cmul(FDEy[f],sf_conjf(A[f]));
-	    EyBs3[f]=sf_cmul(FDEy[f],sf_conjf(B[f]));
-	    
-	    
+	    ExAs3[f]= sf_cadd(ExAs3[f],sf_cmul(FDEx[f],sf_conjf(A[f])));
+	    HyBs3[f]= sf_cadd(HyBs3[f],sf_cmul(FDHy[f],sf_conjf(B[f])));
+	    ExBs3[f]= sf_cadd(ExBs3[f],sf_cmul(FDEx[f],sf_conjf(B[f])));
+	    HyAs3[f]= sf_cadd(HyAs3[f],sf_cmul(FDHy[f],sf_conjf(A[f])));
+	    HxAs3[f]= sf_cadd(HxAs3[f],sf_cmul(FDHx[f],sf_conjf(A[f])));
+	    HxBs3[f]= sf_cadd(HxBs3[f],sf_cmul(FDHx[f],sf_conjf(B[f])));
+	    EyAs3[f]= sf_cadd(EyAs3[f],sf_cmul(FDEy[f],sf_conjf(A[f])));
+	    EyBs3[f]= sf_cadd(EyBs3[f],sf_cmul(FDEy[f],sf_conjf(B[f])));
+	   
+	 
 	    A=FDHx;B=FDHy;
-	    ExAs4[f]=sf_cmul(FDEx[f],sf_conjf(A[f]));
-	    HyBs4[f]=sf_cmul(FDHy[f],sf_conjf(B[f]));
-	    ExBs4[f]=sf_cmul(FDEx[f],sf_conjf(B[f]));
-	    HyAs4[f]=sf_cmul(FDHy[f],sf_conjf(A[f]));
-	    HxAs4[f]=sf_cmul(FDHx[f],sf_conjf(A[f]));
-	    HxBs4[f]=sf_cmul(FDHx[f],sf_conjf(B[f]));
-	    EyAs4[f]=sf_cmul(FDEy[f],sf_conjf(A[f]));
-	    EyBs4[f]=sf_cmul(FDEy[f],sf_conjf(B[f]));
-	    
-	    
-	    ExA1[k]=sf_cadd(ExA1[k],ExAs1[f]);
-	    HyB1[k]=sf_cadd(HyB1[k],HyBs1[f]);
-	    ExB1[k]=sf_cadd(ExB1[k],ExBs1[f]);
-	    HyA1[k]=sf_cadd(HyA1[k],HyAs1[f]);
-	    HxA1[k]=sf_cadd(HxA1[k],HxAs1[f]);
-	    HxB1[k]=sf_cadd(HxB1[k],HxBs1[f]);
-	    EyA1[k]=sf_cadd(EyA1[k],EyAs1[f]);
-	    EyB1[k]=sf_cadd(EyB1[k],EyBs1[f]);
-	    
-	    ExA2[k]=sf_cadd(ExA2[k],ExAs2[f]);
-	    HyB2[k]=sf_cadd(HyB2[k],HyBs2[f]);
-	    ExB2[k]=sf_cadd(ExB2[k],ExBs2[f]);
-	    HyA2[k]=sf_cadd(HyA2[k],HyAs2[f]);
-	    HxA2[k]=sf_cadd(HxA2[k],HxAs2[f]);
-	    HxB2[k]=sf_cadd(HxB2[k],HxBs2[f]);
-	    EyA2[k]=sf_cadd(EyA2[k],EyAs2[f]);
-	    EyB2[k]=sf_cadd(EyB2[k],EyBs2[f]);
-	    
-	    
-	    ExA3[k]=sf_cadd(ExA3[k],ExAs3[f]);
-	    HyB3[k]=sf_cadd(HyB3[k],HyBs3[f]);
-	    ExB3[k]=sf_cadd(ExB3[k],ExBs3[f]);
-	    HyA3[k]=sf_cadd(HyA3[k],HyAs3[f]);
-	    HxA3[k]=sf_cadd(HxA3[k],HxAs3[f]);
-	    HxB3[k]=sf_cadd(HxB3[k],HxBs3[f]);
-	    EyA3[k]=sf_cadd(EyA3[k],EyAs3[f]);
-	    EyB3[k]=sf_cadd(EyB3[k],EyBs3[f]);
-	    
-	    
-	    ExA4[k]=sf_cadd(ExA4[k],ExAs4[f]);
-	    HyB4[k]=sf_cadd(HyB4[k],HyBs4[f]);
-	    ExB4[k]=sf_cadd(ExB4[k],ExBs4[f]);
-	    HyA4[k]=sf_cadd(HyA4[k],HyAs4[f]);
-	    HxA4[k]=sf_cadd(HxA4[k],HxAs4[f]);
-	    HxB4[k]=sf_cadd(HxB4[k],HxBs4[f]);
-	    EyA4[k]=sf_cadd(EyA4[k],EyAs4[f]);
-	    EyB4[k]=sf_cadd(EyB4[k],EyBs4[f]);
-	    
+	    ExAs4[f]= sf_cadd(ExAs4[f],sf_cmul(FDEx[f],sf_conjf(A[f])));
+	    HyBs4[f]= sf_cadd(HyBs4[f],sf_cmul(FDHy[f],sf_conjf(B[f])));
+	    ExBs4[f]= sf_cadd(ExBs4[f],sf_cmul(FDEx[f],sf_conjf(B[f])));
+	    HyAs4[f]= sf_cadd(HyAs4[f],sf_cmul(FDHy[f],sf_conjf(A[f])));
+	    HxAs4[f]= sf_cadd(HxAs4[f],sf_cmul(FDHx[f],sf_conjf(A[f])));
+	    HxBs4[f]= sf_cadd(HxBs4[f],sf_cmul(FDHx[f],sf_conjf(B[f])));
+	    EyAs4[f]= sf_cadd(EyAs4[f],sf_cmul(FDEy[f],sf_conjf(A[f])));
+	    EyBs4[f]= sf_cadd(EyBs4[f],sf_cmul(FDEy[f],sf_conjf(B[f]))); 
 	}
-	
-        ExA1[k]=sf_crmul(ExA1[k],1./N);
-        HyB1[k]=sf_crmul(HyB1[k],1./N);
-        ExB1[k]=sf_crmul(ExB1[k],1./N);
-	HyA1[k]=sf_crmul(HyA1[k],1./N);
-	HxA1[k]=sf_crmul(HxA1[k],1./N);
-	HxB1[k]=sf_crmul(HxB1[k],1./N);
-	EyA1[k]=sf_crmul(EyA1[k],1./N);
-	EyB1[k]=sf_crmul(EyB1[k],1./N);
-	ExA2[k]=sf_crmul(ExA2[k],1./N);
-	HyB2[k]=sf_crmul(HyB2[k],1./N);
-	ExB2[k]=sf_crmul(ExB2[k],1./N);
-	HyA2[k]=sf_crmul(HyA2[k],1./N);
-	HxA2[k]=sf_crmul(HxA2[k],1./N);
-	HxB2[k]=sf_crmul(HxB2[k],1./N);
-	EyA2[k]=sf_crmul(EyA2[k],1./N);
-	EyB2[k]=sf_crmul(EyB2[k],1./N);
-	ExA3[k]=sf_crmul(ExA3[k],1./N);
-	HyB3[k]=sf_crmul(HyB3[k],1./N);
-	ExB3[k]=sf_crmul(ExB3[k],1./N);
-	HyA3[k]=sf_crmul(HyA3[k],1./N);
-	HxA3[k]=sf_crmul(HxA3[k],1./N);
-	HxB3[k]=sf_crmul(HxB3[k],1./N);
-	EyA3[k]=sf_crmul(EyA3[k],1./N);
-	EyB3[k]=sf_crmul(EyB3[k],1./N);
-	ExA4[k]=sf_crmul(ExA4[k],1./N);
-	HyB4[k]=sf_crmul(HyB4[k],1./N);
-	ExB4[k]=sf_crmul(ExB4[k],1./N);
-	HyA4[k]=sf_crmul(HyA4[k],1./N);
-	HxA4[k]=sf_crmul(HxA4[k],1./N);
-	HxB4[k]=sf_crmul(HxB4[k],1./N);
-	EyA4[k]=sf_crmul(EyA4[k],1./N);
-	EyB4[k]=sf_crmul(EyB4[k],1./N);	  
+  
+        ExA1[f]=sf_crmul(ExAs1[f],1./N);
+        HyB1[f]=sf_crmul(HyBs1[f],1./N);
+        ExB1[f]=sf_crmul(ExBs1[f],1./N);
+	HyA1[f]=sf_crmul(HyAs1[f],1./N);
+	HxA1[f]=sf_crmul(HxAs1[f],1./N);
+	HxB1[f]=sf_crmul(HxBs1[f],1./N);
+	EyA1[f]=sf_crmul(EyAs1[f],1./N);
+	EyB1[f]=sf_crmul(EyBs1[f],1./N);
+	ExA2[f]=sf_crmul(ExAs2[f],1./N);
+	HyB2[f]=sf_crmul(HyBs2[f],1./N);
+	ExB2[f]=sf_crmul(ExBs2[f],1./N);
+	HyA2[f]=sf_crmul(HyAs2[f],1./N);
+	HxA2[f]=sf_crmul(HxAs2[f],1./N);
+	HxB2[f]=sf_crmul(HxBs2[f],1./N);
+	EyA2[f]=sf_crmul(EyAs2[f],1./N);
+	EyB2[f]=sf_crmul(EyBs2[f],1./N);
+	ExA3[f]=sf_crmul(ExAs3[f],1./N);
+	HyB3[f]=sf_crmul(HyBs3[f],1./N);
+	ExB3[f]=sf_crmul(ExBs3[f],1./N);
+	HyA3[f]=sf_crmul(HyAs3[f],1./N);
+	HxA3[f]=sf_crmul(HxAs3[f],1./N);
+	HxB3[f]=sf_crmul(HxBs3[f],1./N);
+	EyA3[f]=sf_crmul(EyAs3[f],1./N);
+	EyB3[f]=sf_crmul(EyBs3[f],1./N);
+	ExA4[f]=sf_crmul(ExAs4[f],1./N);
+	HyB4[f]=sf_crmul(HyBs4[f],1./N);
+	ExB4[f]=sf_crmul(ExBs4[f],1./N);
+	HyA4[f]=sf_crmul(HyAs4[f],1./N);
+	HxA4[f]=sf_crmul(HxAs4[f],1./N);
+	HxB4[f]=sf_crmul(HxBs4[f],1./N);
+	EyA4[f]=sf_crmul(EyAs4[f],1./N);
+	EyB4[f]=sf_crmul(EyBs4[f],1./N);	  
 
-	Zxys1[k]=sf_cdiv((sf_csub(sf_cmul(ExA1[k],HxB1[k]),
-				  sf_cmul(ExB1[k],HxA1[k]))),
-			 (sf_csub(sf_cmul(HyA1[k],HxB1[k]),
-				  sf_cmul(HyB1[k],HxA1[k]))));
-	Zyxs1[k]=sf_cdiv((sf_csub(sf_cmul(EyA1[k],HyB1[k]),
-				  sf_cmul(EyB1[k],HyA1[k]))),
-			 (sf_csub(sf_cmul(HxA1[k],HyB1[k]),
-				  sf_cmul(HxB1[k],HyA1[k]))));
-	Zxys2[k]=sf_cdiv((sf_csub(sf_cmul(ExA2[k],HxB2[k]),
-				  sf_cmul(ExB2[k],HxA2[k]))),
-			 (sf_csub(sf_cmul(HyA2[k],HxB2[k]),
-				  sf_cmul(HyB2[k],HxA2[k]))));
-	Zyxs2[k]=sf_cdiv((sf_csub(sf_cmul(EyA2[k],HyB2[k]),
-				  sf_cmul(EyB2[k],HyA2[k]))),
-			 (sf_csub(sf_cmul(HxA2[k],HyB2[k]),
-				  sf_cmul(HxB2[k],HyA2[k]))));
-	Zxys3[k]=sf_cdiv((sf_csub(sf_cmul(ExA3[k],HxB3[k]),
-				  sf_cmul(ExB3[k],HxA3[k]))),
-			 (sf_csub(sf_cmul(HyA3[k],HxB3[k]),
-				  sf_cmul(HyB3[k],HxA3[k]))));
-	Zyxs3[k]=sf_cdiv((sf_csub(sf_cmul(EyA3[k],HyB3[k]),
-				  sf_cmul(EyB3[k],HyA3[k]))),
-			 (sf_csub(sf_cmul(HxA3[k],HyB3[k]),
-				  sf_cmul(HxB3[k],HyA3[k]))));
-	Zxys4[k]=sf_cdiv((sf_csub(sf_cmul(ExA4[k],HxB4[k]),
-				  sf_cmul(ExB4[k],HxA4[k]))),
-			 (sf_csub(sf_cmul(HyA4[k],HxB4[k]),
-				  sf_cmul(HyB4[k],HxA4[k]))));
-	Zyxs4[k]=sf_cdiv((sf_csub(sf_cmul(EyA4[k],HyB4[k]),
-				  sf_cmul(EyB4[k],HyA4[k]))),
-			 (sf_csub(sf_cmul(HxA4[k],HyB4[k]),
-				  sf_cmul(HxB4[k],HyA4[k]))));
+	Zxys1[f]=sf_cdiv((sf_csub(sf_cmul(ExA1[f],HxB1[f]),
+				  sf_cmul(ExB1[f],HxA1[f]))),
+			 (sf_csub(sf_cmul(HyA1[f],HxB1[f]),
+				  sf_cmul(HyB1[f],HxA1[f]))));
+	Zyxs1[f]=sf_cdiv((sf_csub(sf_cmul(EyA1[f],HyB1[f]),
+				  sf_cmul(EyB1[f],HyA1[f]))),
+			 (sf_csub(sf_cmul(HxA1[f],HyB1[f]),
+				  sf_cmul(HxB1[f],HyA1[f]))));
+	Zxys2[f]=sf_cdiv((sf_csub(sf_cmul(ExA2[f],HxB2[f]),
+				  sf_cmul(ExB2[f],HxA2[f]))),
+			 (sf_csub(sf_cmul(HyA2[f],HxB2[f]),
+				  sf_cmul(HyB2[f],HxA2[f]))));
+	Zyxs2[f]=sf_cdiv((sf_csub(sf_cmul(EyA2[f],HyB2[f]),
+				  sf_cmul(EyB2[f],HyA2[f]))),
+			 (sf_csub(sf_cmul(HxA2[f],HyB2[f]),
+				  sf_cmul(HxB2[f],HyA2[f]))));
+	Zxys3[f]=sf_cdiv((sf_csub(sf_cmul(ExA3[f],HxB3[f]),
+				  sf_cmul(ExB3[f],HxA3[f]))),
+			 (sf_csub(sf_cmul(HyA3[f],HxB3[f]),
+				  sf_cmul(HyB3[f],HxA3[f]))));
+	Zyxs3[f]=sf_cdiv((sf_csub(sf_cmul(EyA3[f],HyB3[f]),
+				  sf_cmul(EyB3[f],HyA3[f]))),
+			 (sf_csub(sf_cmul(HxA3[f],HyB3[f]),
+				  sf_cmul(HxB3[f],HyA3[f]))));
+	Zxys4[f]=sf_cdiv((sf_csub(sf_cmul(ExA4[f],HxB4[f]),
+				  sf_cmul(ExB4[f],HxA4[f]))),
+			 (sf_csub(sf_cmul(HyA4[f],HxB4[f]),
+				  sf_cmul(HyB4[f],HxA4[f]))));
+	Zyxs4[f]=sf_cdiv((sf_csub(sf_cmul(EyA4[f],HyB4[f]),
+				  sf_cmul(EyB4[f],HyA4[f]))),
+			 (sf_csub(sf_cmul(HxA4[f],HyB4[f]),
+				  sf_cmul(HxB4[f],HyA4[f]))));
+
+ 
      
-	Zxy[k]=sf_crmul(sf_cadd(sf_cadd(Zxys1[k],Zxys2[k]),
-				sf_cadd(Zxys3[k],Zxys4[k])),0.25);
-	Zyx[k]=sf_crmul(sf_cadd(sf_cadd(Zyxs1[k],Zyxs2[k]),
-				sf_cadd(Zyxs3[k],Zyxs4[k])),0.25);
-	ExHyres[k]=0.2*sf_cabsf(Zxy[k])*sf_cabsf(Zxy[k])/a;
-	EyHxres[k]=0.2*sf_cabsf(Zyx[k])*sf_cabsf(Zyx[k])/a;
-	ExHypha[k]=sf_cargf(Zxy[k]);
-	EyHxpha[k]=sf_cargf(Zyx[k]);
-
-	if(phase) {
-	    if(comp) {
-		outp[k]= ExHypha[k];
-	    } else {
-		outp[k]= EyHxpha[k];
-	    }
-	    
-	} else {
-	    if(comp) {
-		outp[k]= ExHyres[k];
-	    } else {
-		outp[k]= EyHxres[k];
-	    }
-	}
-	b=b+0.1;
-    } 
-        
+       Zxy[f]=sf_crmul(sf_cadd(sf_cadd(Zxys1[f],Zxys2[f]),
+			       sf_cadd(Zxys3[f],Zxys4[f])),0.25);
+       Zyx[f]=sf_crmul(sf_cadd(sf_cadd(Zyxs1[f],Zyxs2[f]),
+			       sf_cadd(Zyxs3[f],Zyxs4[f])),0.25);
+       ExHyres[f]=0.2*sf_cabsf(Zxy[f])*sf_cabsf(Zxy[f])/a;
+       EyHxres[f]=0.2*sf_cabsf(Zyx[f])*sf_cabsf(Zyx[f])/a;
+       ExHypha[f]=sf_cargf(Zxy[f]);
+       EyHxpha[f]=sf_cargf(Zyx[f]);
+       
+       if(phase) {
+	   if(comp) {
+	       outp[k]= ExHypha[f];
+	   } else {
+	       outp[k]= EyHxpha[f];
+	   }
+	   
+       } else {
+	   if(comp) {
+	       outp[k]= ExHyres[f];
+	   } else {
+	       outp[k]= EyHxres[f];
+	   }
+       }
+       b=b+0.1;
+       
+    }
+      
     sf_floatwrite(outp,M,out);
         
     exit(0);
