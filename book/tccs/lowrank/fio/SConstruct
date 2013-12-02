@@ -168,57 +168,23 @@ Result('propo','grey title="Propagator Matrix" color=j scalebar=y label1=Wavenum
 
 targets = ','.join(map(lambda x: '\'${TARGETS[%d]}\'' % x, range(6)))
 
-Flow('prod left mid right','prop',
-     'lrmatrix seed=2010 left=${TARGETS[1]} mid=${TARGETS[2]} right=${TARGETS[3]}')
-Flow('prod2 left2 right2','prop',
-     'lrmatrix seed=2010 left=${TARGETS[1]} right=${TARGETS[2]} outputs=2')
-
-Flow('cprod cleft cmid cright','cprop',
-     'lrmatrix seed=2012 left=${TARGETS[1]} mid=${TARGETS[2]} right=${TARGETS[3]}')
-Flow('tprod tleft tmid tright','prop1',
-     'lrmatrix seed=2011 left=${TARGETS[1]} mid=${TARGETS[2]} right=${TARGETS[3]}')
-Flow('prodo lefto mido righto','propo',
-     'lrmatrix seed=2011 left=${TARGETS[1]} mid=${TARGETS[2]} right=${TARGETS[3]}')
-
-
+Flow('prod left2 right2','prop',
+     'lrmatrix seed=2010 left=${TARGETS[1]} right=${TARGETS[2]}')
 
 Result('prod','grey title="Lowrank Propagator Matrix" color=j bias=-1 scalebar=y label1=Wavenumber unit1=1/m label2=Distance unit2=m')
-Result('prodo','grey title="Lowrank Propagator Matrix" color=j scalebar=y label1=Wavenumber unit1=1/m label2=Distance unit2=m')
-
 Result('proderr','prod prop',
-       'add scale=1,-1 ${SOURCES[1]} | grey title="Lowrank Approximation Error" color=j scalebar=y label1=Wavenumber unit1=1/m label2=Distance unit2=m')
+       '''
+       add scale=1,-1 ${SOURCES[1]} |
+       grey title="Lowrank Approximation Error" color=j scalebar=y label1=Wavenumber unit1=1/m label2=Distance unit2=m
+       ''')
 
 # Exact matrix multiplication
 Flow('wave2','spike prop2','fftwave1 prop=${SOURCES[1]} nt=500 dt=%g' % dt)
 Result('wave2','window max2=3 | grey title="Wave" transp=n clip=0.5 label1=Distance unit1=m')
 
-Flow('waveo','spike propo2','fftwave1 sub=n prop=${SOURCES[1]} nt=500 dt=%g' % dt)
-Result('waveo','window max2=3 | grey title="Wave" transp=n clip=0.5 label1=Distance unit1=m')
-
-
-Flow('wave10','spike prop10','fftwave1 prop=${SOURCES[1]} nt=50 dt=%g' % (20*dt))
-Result('wave10','window max2=3 | grey title="Wave" transp=n label1=Distance unit1=m')
-
-
 # Propagating a spike
 Flow('wave0','spike0 prop2','fftwave1 prop=${SOURCES[1]} nt=500 dt=%g' % dt)
 Result('wave0','window max2=3 | grey title="Wave" transp=n clip=0.5 label1=Distance unit1=m')
-
-# FT in time
-Flow('helm','wave0','window n2=300 | transp | fft1')
-
-# Instantanous phase
-
-Flow('dreal','helm','real | deriv')
-Flow('dimag','helm','imag | deriv')
-
-Flow('iphase','dreal dimag helm',
-     '''
-     cmplx ${SOURCES[1]} | math f=${SOURCES[2]} output=input/f | imag |
-     window max1=50
-     ''')
-
-#Result('iphase','grey title="Instantaneous Phase" ')
 
 # Lowrank propagation
 Flow('awave2','spike left2 right2',
@@ -229,18 +195,10 @@ Result('awave2',
        grey title="Lowrank Wave" transp=n clip=0.5 label1=Distance unit1=m
        ''')
 
-Flow('awaveo','spike mido lefto righto','fftwave1 sub=n prop=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} nt=500 dt=%g' % dt)
-Result('awaveo','window max2=3 | grey title="Lowrank Wave" transp=n clip=0.5 label1=Distance unit1=m')
-
-Flow('cwave2','spike cmid cleft cright',
-     'pad end1=1 | cosftwave1 prop=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} nt=500 dt=%g | window n1=256' % dt)
-Result('cwave2','window max2=3 | grey title="Lowrank Wave (Cosine FT)" transp=n clip=0.5 label1=Distance unit1=m')
-
-Flow('awave10','spike tmid tleft tright','fftwave1 prop=${SOURCES[1]} left=${SOURCES[2]} right=${SOURCES[3]} nt=50 dt=%g' % (20*dt))
-Result('awave10','window max2=3 | grey title="Lowrank Wave" transp=n label1=Distance unit1=m')
-
-Result('waverr','awave2 wave2','add scale=1,-1 ${SOURCES[1]} | window max2=3 | grey title="Lowrank Wave Error (x 10)" transp=n clip=0.05 label1=Distance unit1=m')
-
-
+Result('waverr','awave2 wave2',
+       '''
+       add scale=1,-1 ${SOURCES[1]} | window max2=3 |
+       grey title="Lowrank Wave Error (x 10)" transp=n clip=0.05 label1=Distance unit1=m
+       ''')
 
 End()

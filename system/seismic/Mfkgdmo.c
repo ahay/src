@@ -1,6 +1,6 @@
 /* FK-domain Gardner's DMO for regularly sampled 2-D data 
 
-   The input/ouput is (offset,logstretch frequency, midpoint wavenumber).
+   The input/ouput is (offset,logstretch frequency, midpoint/shot wavenumber).
 */
 /*
   Copyright (C) 2013 University of Texas at Austin
@@ -26,12 +26,12 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv;
+    bool inv, shot;
     map4 *map;
     int iw, nw, ih, nh, ik, nk, ib, nb, *fold;
     float dw, dh, dk, w0, h0, k0, w, h, k, eps, db, b, cosb;
-    sf_complex *slice, *slice2, *sum, sample, tshift; 
-    float *hstr, *dt, *dx;
+    sf_complex *slice, *slice2, *sum, sample, tshift, xshift; 
+    float *hstr, *dt, *dx, *ds;
     sf_file in, out;
     
     sf_init(argc,argv);
@@ -40,6 +40,9 @@ int main(int argc, char* argv[])
     
     if (!sf_getbool("inv",&inv)) inv=true;
     /* inversion flag */
+
+    if (!sf_getbool("shot",&shot)) shot=false;
+    /* if shot gathers instead of midpoint gathers */
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
     if (!sf_histint(in,"n1",&nh)) sf_error("No n1= in input");
@@ -77,6 +80,7 @@ int main(int argc, char* argv[])
     map = (map4*) sf_alloc(nb,sizeof(map4));
     dt = sf_floatalloc(nb);
     dx = sf_floatalloc(nb);
+    ds = shot? sf_floatalloc(nb):NULL;
 
     /* precompute things */
     for (ib=0; ib < nb; ib++) {
@@ -95,10 +99,18 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if (inv) {	
+	if (inv) {
 	    dx[ib]=sinf(b);
 	} else {
 	    dx[ib]=tanf(b);
+	}
+
+	if (shot) {
+	    if (inv) {
+		ds[ib] = 1.0f-cosb;
+	    } else {
+		ds[ib] = 1.0f-1.0f/cosb;
+	    }
 	}
 
 	map[ib] = stretch4_init (nh, h0, dh, nh, eps);
@@ -123,7 +135,7 @@ int main(int argc, char* argv[])
 		b = w*dt[ib];
 
 		tshift = sf_cmplx(cosf(b),-sinf(b));
-		
+
 		if (inv) {
 		    cstretch4_apply  (map[ib],slice,slice2);
 		} else {
@@ -132,12 +144,19 @@ int main(int argc, char* argv[])
 
 		for (ih=0; ih < nh; ih++) {
 		    h = h0 + ih*dh;
+
+		    if (shot) {
+			b = k*h*ds[ib];
+			xshift = tshift*sf_cmplx(cosf(b),sinf(b));
+		    } else {
+			xshift = tshift;
+		    }
 		    
 		    sample = slice2[ih];
 
 		    if (crealf(sample) != 0.0f || 
 			cimagf(sample) != 0.0f) {
-			sum[ih]  += sample*tshift*2.0f*cosf(k*h*dx[ib]);
+			sum[ih]  += sample*xshift*2.0f*cosf(k*h*dx[ib]);
 			fold[ih] += 2;
 		    }
 		} /* ih */

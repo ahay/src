@@ -22,12 +22,12 @@
 
 int main(int argc, char* argv[]) 
 {
-    bool sub, step;
-    int nx, nx2, nk, nt, m1, m2, ix, ik, it, im, n2;
+    bool sub, step, nsps;
+    int nx, nx2, nk, nt, m2, ix, ik, it, im, n2;
     float dt, f, old;
-    float *curr, *prev, **lft, **rht, **mid, **wave;
+    float *curr, *prev, **lft, **rht, **wave;
     sf_complex **mat, *cwave, *cwavem;
-    sf_file inp, out, prop, left, right;
+    sf_file inp, out, prop, right;
 
     sf_init(argc,argv);
     inp = sf_input("in");
@@ -45,6 +45,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("step",&step)) step=true;
     /* if two-step propagation */
+
+    if (!sf_getbool("nsps",&nsps)) nsps=false;
+    /* if using NSPS */
 
     sf_putint(out,"n2",nt);
     sf_putfloat(out,"d2",dt);
@@ -65,46 +68,25 @@ int main(int argc, char* argv[])
 
 	right = sf_input("right");
 
-	if (NULL != sf_getstring("left")) {
-	    left = sf_input("left");
-	    
-	    if (!sf_histint(prop,"n1",&m1)) sf_error("No n1= in prop");
-	    if (!sf_histint(prop,"n2",&m2)) sf_error("No n2= in prop");
-	    
-	    if (!sf_histint(left,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
-	    if (!sf_histint(left,"n2",&n2) || n2 != m1) sf_error("Need n2=%d in left",m1);
-	    
-	    if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
-	    if (!sf_histint(right,"n2",&n2) || n2 != nx) sf_error("Need n2=%d in right",nx);
-	    
-	    mid = sf_floatalloc2(m1,m2);
-	    sf_floatread(mid[0],m1*m2,prop);
-	    sf_fileclose(prop);
-	} else {
-	    left = prop;
-	    mid  = NULL;
-
-	    if (!sf_histint(prop,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
-	    if (!sf_histint(prop,"n2",&m2)) sf_error("Need n2=%d in left",m1);
-	    m1 = m2;
-	}
+	if (!sf_histint(prop,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in left",nk);
+	if (!sf_histint(prop,"n2",&m2)) sf_error("Need n2=%d in left",m2);
 
 	if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
 	if (!sf_histint(right,"n2",&n2) || n2 != nx) sf_error("Need n2=%d in right",nx);
 
-	lft = sf_floatalloc2(nk,m1);
+	lft = sf_floatalloc2(nk,m2);
 	rht = sf_floatalloc2(m2,nx);
 
-	sf_floatread(lft[0],nk*m1,left);
+	sf_floatread(lft[0],nk*m2,prop);
 	sf_floatread(rht[0],nx*m2,right);
 	
-	sf_fileclose(left);
+	sf_fileclose(prop);
 	sf_fileclose(right);
 
 	mat = NULL;
 
 	cwavem = sf_complexalloc(nk);
-	wave = sf_floatalloc2(nx,m1);
+	wave = sf_floatalloc2(nx,m2);
 
 	ifft1_allocate(cwavem);
     } else {
@@ -112,7 +94,6 @@ int main(int argc, char* argv[])
 
 	lft = NULL;
 	rht = NULL;
-	mid = NULL;
 
 	mat = sf_complexalloc2(nk,nx);
 	sf_complexread(mat[0],nx*nk,prop);
@@ -135,15 +116,18 @@ int main(int argc, char* argv[])
 	fft1(curr,cwave);
 
 	if (NULL == mat) {
-	    for (im = 0; im < m1; im++) {
-		for (ik = 0; ik < nk; ik++) {
+	    if (nsps) {
+	    } else {
+		for (im = 0; im < m2; im++) {
+		    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-		    cwavem[ik] = cwave[ik]*lft[im][ik]/nx2;
+			cwavem[ik] = cwave[ik]*lft[im][ik]/nx2;
 #else
-		    cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]/nx2);
+			cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]/nx2);
 #endif
+		    }
+		    ifft1(wave[im],cwavem);
 		}
-		ifft1(wave[im],cwavem);
 	    }
 	}
 
@@ -158,15 +142,10 @@ int main(int argc, char* argv[])
 	    }
 
 	    if (NULL == mat) {
-		if (NULL == mid) {
+		if (nsps) {
+		} else {
 		    for (ik = 0; ik < m2; ik++) {
 			f += rht[ix][ik]*wave[ik][ix];
-		    }
-		} else {
-		    for (im = 0; im < m1; im++) {
-			for (ik = 0; ik < m2; ik++) {
-			    f += rht[ix][ik]*mid[ik][im]*wave[im][ix];
-			}
 		    }
 		}
 	    } else {

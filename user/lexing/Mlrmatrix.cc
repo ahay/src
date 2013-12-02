@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     par.get("npk",npk,20); // maximum rank
 
     int outputs;
-    par.get("outputs",outputs,3); // number of outputs (2 or 3)
+    par.get("outputs",outputs,2); // number of outputs (2 or 3)
 
     iRSF in;
     oRSF out;
