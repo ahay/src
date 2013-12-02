@@ -17,13 +17,17 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <rsf.h>
 #include <math.h>
 #include <limits.h>
 #include <time.h>
 
 #include "source.h"
-#include "pml.h"
+#include "pmlomp.h"
 
 static float ***Gx, ***Gz;
 static int *sxx, *sxz, *szx, *szz;
@@ -57,6 +61,8 @@ int main(int argc, char* argv[])
 {
     clock_t tstart,tend;
     double duration;
+    /*omp*/
+    int nth;
     
     /*flag*/
     bool verb;
@@ -259,7 +265,10 @@ int main(int argc, char* argv[])
  
     sf_floatread(vel[0], nxz, fvel);
     sf_floatread(den[0], nxz, fden);
- 
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif 
     for (ix = 0; ix < nxb; ix++) {
 	for ( iz= 0; iz < nzb; iz++) {
 	    c11[ix][iz] = den[ix][iz]*vel[ix][iz]*vel[ix][iz];
@@ -269,12 +278,19 @@ int main(int argc, char* argv[])
 	}
     }
     /*den[ix+1/2][iz]*/
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for ( ix = 0; ix < nxb-1; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    denx[ix][iz] = (den[ix+1][iz] + den[ix][iz])*0.5;
 	}
     }
-    
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     /*den[ix][iz+1/2]*/
     for ( ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb-1; iz++) {
@@ -292,37 +308,64 @@ int main(int argc, char* argv[])
     record = sf_floatalloc2(nt, nx);
 
     init_pml(nz, nx, dt, pmlout, marg, pmld0, decay, decaybegin, gamma);
-    
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    txxn1[ix][iz] = 0.0;
 	 }
     }
+    
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    txxn0[ix][iz] = 0.0;
 	}
     }
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vxn1[ix][iz] = 0.0;  
 	}
     }
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vxn0[ix][iz] = 0.0;
 	}
     } 
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vzn1[ix][iz] = 0.0;  
 	}
     }
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
     for (ix = 0; ix < nxb; ix++) {
 	for (iz = 0; iz < nzb; iz++) {
 	    vzn0[ix][iz] = 0.0;
 	}
-    }  
+    }
+
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif  
     for (it = 0; it < nt; it++) {
 	for (ix = 0; ix < nx; ix++) {
 	    record[ix][it] = 0.0;
@@ -334,9 +377,16 @@ int main(int argc, char* argv[])
     sp.srange=srcrange;
     sp.alpha=0.5;
     sp.decay=srcdecay?1:0;
+#ifdef _OPENMP
+#pragma omp parallel  
+{
+    nth = omp_get_num_threads();
+}
+#endif
 
     if (verb) {
 	sf_warning("============================");
+	sf_warning(">>>> Using %d threads <<<<<", nth);
 	sf_warning("nx=%d nz=%d nt=%d", nx, nz, nt);
 	sf_warning("dx=%f dz=%f dt=%f", dx, dz, dt);
 	sf_warning("lenx=%d lenz=%d marg=%d pmlout=%d", lenx, lenz, marg, pmlout);
@@ -355,6 +405,9 @@ int main(int argc, char* argv[])
 	if (verb) sf_warning("it=%d/%d;", it, nt-1);
 	    
 	/*velocity*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	for (ix = marg+pmlout; ix < nx+pmlout+marg; ix++ ) {
 	    for (iz = marg+pmlout; iz < nz+pmlout+marg; iz++) {
 		vxn1[ix][iz] = vxn0[ix][iz] - dt/denx[ix][iz]*ldx(txxn0, ix, iz);
@@ -366,6 +419,9 @@ int main(int argc, char* argv[])
 	pml_vxz(vxn1, vzn1, vxn0, vzn0, txxn0, denx, denz, ldx, ldz, freesurface);
 
 	/*Stress*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix, iz)
+#endif
 	for (ix = marg+pmlout; ix < nx+marg+pmlout; ix++) {
 	    for ( iz = marg+pmlout; iz < nz+marg+pmlout; iz++) { 
 		txxn1[ix][iz] = txxn0[ix][iz] - dt*c11[ix][iz]*(ldx(vxn1, ix-1, iz) + ldz(vzn1, ix, iz-1));
@@ -384,7 +440,9 @@ int main(int argc, char* argv[])
 		sf_floatwrite(txxn0[ix]+pmlout+marg, nz, fwf);
 	    }
 	}
-	
+#ifdef _OPENMP
+#pragma omp parallel for private(ix)
+#endif	
 	for ( ix =0 ; ix < nx; ix++) {
 	    record[ix][it] = txxn0[ix+pmlout+marg][pmlout+marg+gp];
 	}
