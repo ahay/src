@@ -23,7 +23,7 @@
 #endif
 
 static int n;
-
+static float wt;
 static float *ff=NULL;
 
 #ifdef SF_HAS_FFTW
@@ -43,6 +43,8 @@ int fft1_init(int n1  /* input data size */,
 
     *n2 = n;
     ff = sf_floatalloc(n);
+
+    wt = 1.0/n;
 
     return nk;
 }
@@ -106,7 +108,7 @@ void ifft1(float *out      /* [n] */,
 #endif
     
     for (i=0; i < n; i++) {
-	out[i] = ff[i];
+	out[i] = ff[i]*wt;
     }
 }
 

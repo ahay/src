@@ -23,7 +23,7 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nx2, nk, nt, m, ix, ik, it, im, n2;
-    float dt, f, fscale;
+    float dt, f;
     float *curr, **wave;
     sf_complex **lft, **rht, *cwave, *cwavem;
     sf_file inp, out, left, right;
@@ -83,8 +83,6 @@ int main(int argc, char* argv[])
 	curr[ix] = 0.;
     }
 
-    fscale = 1.0/nx2;
-
     /* propagation in time */
     for (it=0; it < nt; it++) {
 	/* FFT: curr -> cwave */
@@ -93,9 +91,9 @@ int main(int argc, char* argv[])
 	for (im = 0; im < m; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-		cwavem[ik] = cwave[ik]*rht[ik][im]*fscale;
+		cwavem[ik] = cwave[ik]*rht[ik][im];
 #else
-		cwavem[ik] = sf_crmul(sf_cmul(cwave[ik],rht[ik][im]),fscale);
+		cwavem[ik] = sf_cmul(cwave[ik],rht[ik][im]);
 #endif
 	    }
 	    /* Inverse FFT: cwavem -> wave[im] */

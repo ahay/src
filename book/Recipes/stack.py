@@ -190,8 +190,8 @@ def diffimg(name,
 #    Flow(dif,[pwds,vel],'window f4=1 | inmo velocity=${SOURCES[1]}')
 
     velcon = '''
-    pad n2=%d beg1=%d | cosft sign2=1 | 
-    stolt vel=%g nf=4 | 
+    pad n2=%d beg1=%d | cosft sign2=1 | put o3=0 | 
+    stolt vel=%g | 
     vczo nv=%d dv=%g v0=%g |
     transp plane=23 |
     cosft sign2=-1 | 

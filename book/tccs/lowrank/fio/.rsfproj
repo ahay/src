@@ -1,3 +1,3 @@
-uses=['sfspike', 'sfbandpass', 'sfricker1', 'sfmath', 'sffft1', 'sfadd', 'sfrcat', 'sfgrey', 'sfcosft', 'sfnoise', 'sfspray', 'sfwindow', 'sfscale', 'sfcat', 'sfcmatmult', 'sfreal', 'sfgraph', 'sfpad', 'sfrtoc', 'sfmul', 'sflrmatrix', 'sffftwave1', 'sftransp', 'sfderiv', 'sfimag', 'sfcmplx', 'sfcosftwave1']
+uses=['sfspike', 'sfbandpass', 'sfricker1', 'sfmath', 'sffft1', 'sfadd', 'sfcat', 'sfgrey', 'sfcosft', 'sfnoise', 'sfspray', 'sfwindow', 'sfscale', 'sfcmatmult', 'sfreal', 'sfgraph', 'sfpad', 'sfrtoc', 'sfmul', 'sflrmatrix', 'sffftwave1']
 data=[]
-size=   10101956
+size=    6074384

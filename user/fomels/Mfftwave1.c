@@ -113,17 +113,17 @@ int main(int argc, char* argv[])
 
      /* propagation in time */
     for (it=0; it < nt; it++) {
-	fft1(curr,cwave);
+	if (nsps) {
+	} else {
+	    fft1(curr,cwave);
 
-	if (NULL == mat) {
-	    if (nsps) {
-	    } else {
+	    if (NULL == mat) {
 		for (im = 0; im < m2; im++) {
 		    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-			cwavem[ik] = cwave[ik]*lft[im][ik]/nx2;
+			cwavem[ik] = cwave[ik]*lft[im][ik];
 #else
-			cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]/nx2);
+			cwavem[ik] = sf_crmul(cwave[ik],lft[im][ik]);
 #endif
 		    }
 		    ifft1(wave[im],cwavem);
@@ -141,20 +141,20 @@ int main(int argc, char* argv[])
 		prev[ix] = old;
 	    }
 
-	    if (NULL == mat) {
-		if (nsps) {
-		} else {
+	    if (nsps) {	
+	    } else {    
+		if (NULL == mat) {
 		    for (ik = 0; ik < m2; ik++) {
 			f += rht[ix][ik]*wave[ik][ix];
 		    }
-		}
-	    } else {
-		for (ik = 0; ik < nk; ik++) {
+		} else {
+		    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-		    f += crealf(mat[ix][ik] * cwave[ik]);
+			f += crealf(mat[ix][ik] * cwave[ik]);
 #else
-		    f += crealf(sf_cmul(mat[ix][ik],cwave[ik]));
+			f += crealf(sf_cmul(mat[ix][ik],cwave[ik]));
 #endif
+		    }
 		}
 	    }
 
