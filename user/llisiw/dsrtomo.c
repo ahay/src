@@ -22,7 +22,7 @@
 #include "upgraddsr.h"
 #include "dsrtomo.h"
 
-static int nt, *nn, *m;
+static int nt, *nn, *m, *pc;
 static upgrad upg;
 static float *temp;
 
@@ -49,12 +49,14 @@ void dsrtomo_set(float *t /* stencil time */,
 		 float *w /* stencil slowness-squared */,
 		 int *f   /* stencil flag */,
 		 int *m0  /* receiver mask */,
+		 int *pc0 /* model mask */,
 		 float *wght /* data weighting */)
 /*< set operator >*/
 {
     upgrad_set(upg,t,w,f,wght);
 
     m = m0;
+    pc = pc0;
 }
 
 void dsrtomo_close(void)
@@ -74,26 +76,44 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
     if (adj) {
 	/* given dt solve dw */
 	
+	/* data precon */
 	for (i=0; i < nn[1]*nn[2]; i++) {
 	    if (m != NULL && m[i] != 1)
-		r[i*nn[0]] = 0.;	    
+		r[i*nn[0]] = 0.;
 	    
 	    for (j=1; j < nn[0]; j++)
 		r[i*nn[0]+j] = 0.;
 	}
 	
+	/* linear operator */
 	upgrad_inverse(upg,temp,r,NULL);
 	upgrad_spread(upg,x,temp);
+
+	/* model precon */
+	if (pc != NULL) {
+	    for (i=0; i < nn[0]*nn[1]; i++) {
+		if (pc[i] != 1) x[i] = 0.;
+	    }
+	}
     } else {
 	/* given dw solve dt */
 	
+	/* model precon */
+	if (pc != NULL) {
+	    for (i=0; i < nn[0]*nn[1]; i++) {
+		if (pc[i] != 1) x[i] = 0.;
+	    }
+	}
+
+	/* linear operator */
 	upgrad_collect(upg,x,temp);
 	upgrad_solve(upg,temp,r,NULL);
 
+	/* data precon */
 	for (i=0; i < nn[1]*nn[2]; i++) {
 	    if (m != NULL && m[i] != 1)
-		r[i*nn[0]] = 0.;	    
-	    
+		r[i*nn[0]] = 0.;
+
 	    for (j=1; j < nn[0]; j++)
 		r[i*nn[0]+j] = 0.;
 	}

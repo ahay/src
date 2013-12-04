@@ -27,11 +27,11 @@ int main(int argc, char* argv[])
     bool velocity, causal, verb, adj, shape, weight;
     int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
     int iter, niter, cgiter, count;
-    int *f, *m, nloop;
+    int *f, *m, *pc, nloop;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL, *wght=NULL, pow;
     float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
     char key[6], *what;
-    sf_file in, out, reco, grad, flag, mask;
+    sf_file in, out, reco, grad, flag, mask, prec;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -100,20 +100,28 @@ int main(int argc, char* argv[])
 		sf_fileclose(flag);
 	    }
 
-	    /* read receiver file */
-	    m = sf_intalloc(nt/n[0]);
-	    
+	    /* read receiver mask */
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
-
-		for (k=0; k < n[1]*n[2]; k++)
-		    m[k] = 1;
+		m = NULL;
 	    } else {
 		mask = sf_input("mask");
+		m = sf_intalloc(nt/n[0]);
 		sf_intread(m,nt/n[0],mask);
 		sf_fileclose(mask);
 	    }
 	    
+	    /* read model mask */
+	    if (NULL == sf_getstring("prec")) {
+		prec = NULL;
+		pc = NULL;
+	    } else {
+		prec = sf_input("prec");
+		pc = sf_intalloc(n[0]*n[1]);
+		sf_intread(pc,n[0]*n[1],prec);
+		sf_fileclose(prec);
+	    }
+
 	    /* read input */
 	    if (adj) {
 		sf_floatread(dt,nt,in);
@@ -131,7 +139,7 @@ int main(int argc, char* argv[])
 	    dsrtomo_init(dimt,n,d);
 
 	    /* set operator */
-	    dsrtomo_set(t,w,f,m,wght);	    
+	    dsrtomo_set(t,w,f,m,pc,wght);	    
 
 	    /* linear operator */
 	    if (adj) {
@@ -198,15 +206,12 @@ int main(int argc, char* argv[])
 	    sf_fileclose(reco);
 	    
 	    /* read receiver file */	    
-	    m = sf_intalloc(nt/n[0]);
-	    
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
-
-		for (k=0; k < n[1]*n[2]; k++)
-		    m[k] = 1;
+		m = NULL;
 	    } else {
 		mask = sf_input("mask");
+		m = sf_intalloc(nt/n[0]);
 		sf_intread(m,nt/n[0],mask);
 		sf_fileclose(mask);
 	    }
@@ -320,7 +325,7 @@ int main(int argc, char* argv[])
 		    dw[iw] = 0.;
 		
 		/* set operator */
-		dsrtomo_set(t,w,f,m,wght);
+		dsrtomo_set(t,w,f,m,pc,wght);
 		
 		/* solve dw */		
 		if (shape) {
