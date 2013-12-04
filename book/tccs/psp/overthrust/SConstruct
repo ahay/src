@@ -3,8 +3,12 @@ from rsf.recipes.beg import server as private
 
 freq=1
 
-### solution for overthrust model
+## generate source files 
+Flow('OneShot.asc',None,'''echo '0.5 0.5 0.1' in=$TARGET data_format=ascii_float n1=3 n2=1''')
+Flow('OneShot.rsf','OneShot.asc','dd form=native')
 
+
+### solution for overthrust model
 Fetch(['overthrust.vites.h','overthrust.vites'],'overthrust',private)
 
 Flow('overthrust',['overthrust.vites.h','overthrust.vites'],
