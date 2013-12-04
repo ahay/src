@@ -18,21 +18,16 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include <complex.h>
-#include <fftw3.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
+#include "dlct.h"
 
 int main(int argc, char* argv[])
 {
-  bool inv, verb;
-  int N,L;
-  float C;
-  float *sig;
-  sf_complex **Sc,**hg;
+    bool inv, verb;
+    int L,N;
+    float C;
+    float *sig;
+    sf_complex *Sc;
     sf_file in, out;
 
     /* input and output variables */
@@ -42,61 +37,37 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false; /* if y, do inverse transform */
     if (!sf_getbool("verb",&verb)) verb = false;/* verbosity flag */
-    if (!sf_getfloat("C",&C)) C=0.01;/* C=2*Lambda/nL, unit slice */
-
+    if (!sf_getfloat("C",&C)) C=0.01;/* C=2*Lambda/L, unit slice */
+    if (!sf_histint(in,"n1",&N)) sf_error("No n1= in input"); /*length of signal */
+    /* N is assumed to be 2^k */ 	
+ 
     if(!inv){
       	/* then: in is signal itself, out will be DCLT coefficients. */
-     	if (!sf_histint(in,"n1",&N)) sf_error("No n1= in input");
       	if (!sf_getint("L",&L)) sf_error("No L");
-      	/* number of freq slices each freq*/
       	sf_putint(out,"n1",N);
       	sf_putint(out,"n2",L);
+	sf_settype(out,SF_COMPLEX);
     }else{
 	/*then: in is DLCT coefficients, out will be signal.*/
 	if (!sf_histint(in,"n1",&N)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&L)) sf_error("No n2= in input");
 	sf_putint(out,"n1",N);
+	sf_settype(out,SF_FLOAT);
     }
-
-
-    fftwf_plan p;
-    sig=sf_floatalloc(N);
-    Sc=sf_complexalloc2(L,N);
-    hg=sf_complexalloc2(L,N);
+	
+    sig = sf_floatalloc(N);
+    Sc = sf_complexalloc(N*L);
 
     if(!inv){
-      sf_floatread(sig,N,in);
-
-      for(int l=-L/2;l<L/2;l++){
-	for(int n=0;n<N;n++){
-	  hg[l+L/2][n]=sig[n]*expf(-I*2*SF_PI*C*l*n*n/N);
-	}
-      }
-      for(int l=-L/2;l<L/2;l++){
-	p = fftwf_plan_dft_1d(N, hg[l+L/2], Sc[l+L/2], FFTW_FORWARD, FFTW_ESTIMATE);
-	fftwf_execute(p); 
-      }
-
-	sf_complexwrite(Sc[0],L*N,out);
-    }else{
-	sf_complexread(Sc[0],L*N,in);
-
-      for(int l=-L/2;l<L/2;l++){
-	p = fftwf_plan_dft_1d(N, Sc[l+L/2], hg[l+L/2], FFTW_BACKWARD, FFTW_ESTIMATE);
-	fftwf_execute(p); 
-      }
-
-      for(int n=0;n<N;n++){
-	sig[n]=0.0;
-        for(int l=-L/2;l<L/2;l++){
-	    sig[n]+=crealf(hg[l+L/2][n]*expf(I*2*SF_PI*C*l*n*n/N));
-	}
-      }
-	
-	sf_floatwrite(sig,N,out);
+	forward_dlct(N,L, C, sig, Sc);
+	sf_complexwrite(Sc, L*N, out);
+    }else {
+	backward_dlct(N, L, C, sig, Sc);
+	sf_floatwrite(sig, N, out);
     }
 
-    fftwf_destroy_plan(p);
+    free(sig);
+    free(Sc);
 
-  return 0;
+    exit(0);
 }
