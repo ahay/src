@@ -61,6 +61,18 @@ main( int argc, char* argv[] )
         const float dy = wy/(Ny-1);
         const float dz = wz/(Nz-1);
 
+	    iRSF src("source");  // location of shots
+	    int ncomp,nsrc;
+	    src.get("n1",ncomp);
+	    src.get("n2",nsrc);
+
+	    float srcx[nsrc],srcy[nsrc],srcz[nsrc];
+	    for (int i=0; i<nsrc; i++ ){
+		    src >> srcx[i];
+		    src >> srcy[i];
+		    src >> srcz[i];
+	    }
+
         if( commRank == 0 )
         {
             std::cout << "origNx=" << origNx << "\n"
@@ -81,8 +93,9 @@ main( int argc, char* argv[] )
                       << std::endl;
         }
 
-        float omega;
-        par.get( "omega", omega ); // frequency in rad/sec
+        float omega, freq;
+        par.get( "freq", freq ); // frequency in HZ
+	    omega=freq*2*SF_PI;
 
         float sigma;
         par.get( "sigma", sigma, 1.5 ); // magnitude of PML stretching
@@ -102,9 +115,13 @@ main( int argc, char* argv[] )
         const int solveBlocksize = 64;
 
         // This uses 5 grid points of PML by default
+        //Discretization<double> disc
+        //( omega, Nx, Ny, Nz, wx, wy, wz, 
+        //  PML, PML, PML, PML, DIRICHLET, pmlSize, sigma );
+
         Discretization<double> disc
         ( omega, Nx, Ny, Nz, wx, wy, wz, 
-          PML, PML, PML, PML, DIRICHLET, pmlSize, sigma );
+          PML, PML, PML, PML, PML, pmlSize, sigma );
 
         DistHelmholtz<double> helmholtz
         ( disc, comm, damping, numPlanesPerPanel );
@@ -184,29 +201,33 @@ main( int argc, char* argv[] )
         DistUniformGrid<Complex<double> > B
         ( Nx, Ny, Nz, comm );
         Complex<double>* localB = B.Buffer();
-        const double center[] = { 0.5, 0.5, 0.25 };
         double arg[3];
         for( int zLocal=0; zLocal<zLocalSize; ++zLocal )
         {
             const int z = zShift + zLocal*pz;
             const double Z = z / (Nz+1.0);
-            arg[2] = (Z-center[2])*(Z-center[2]);
             for( int yLocal=0; yLocal<yLocalSize; ++yLocal )
             {
                 const int y = yShift + yLocal*py;
                 const double Y = y / (Ny+1.0);
-                arg[1] = (Y-center[1])*(Y-center[1]);
                 for( int xLocal=0; xLocal<xLocalSize; ++xLocal )
                 {
                     const int x = xShift + xLocal*px;
                     const double X = x / (Nx+1.0);
-                    arg[0] = (X-center[0])*(X-center[0]);
 
                     const int localIndex =
                         xLocal + yLocal*xLocalSize +
                         zLocal*xLocalSize*yLocalSize;
-                    localB[localIndex] =
-                        Nz*Exp(-Nx*Ny*(arg[0]+arg[1]+arg[2]));
+
+		            localB[localIndex]=0.0;
+		            for (int isrc=0;isrc<nsrc;isrc++ ) { 
+                    	arg[0] = (X-srcx[isrc])*(X-srcx[isrc]);
+                    	arg[1] = (Y-srcy[isrc])*(Y-srcy[isrc]);
+                    	arg[2] = (Z-srcz[isrc])*(Z-srcz[isrc]);
+
+                        localB[localIndex] = localB[localIndex]+
+                              Nz*Exp(-Nx*Ny*(arg[0]+arg[1]+arg[2]));
+		            }
                 }
             }
         }
@@ -309,8 +330,12 @@ main( int argc, char* argv[] )
                             const int x = xProc + xLocal*px;
                             const int pos = (x+y*Nx+z*Nx*Ny)*sizeof(sf_complex);
                             out.seek( pos, SEEK_SET );
+                            //const int procIndex = 
+                            //    xLocal + yLocal*xSize + zLocal*xLocalSize*ySize;
+
                             const int procIndex = 
-                                xLocal + yLocal*xSize + zLocal*xLocalSize*ySize;
+                                xLocal + yLocal*xSize + zLocal*xSize*ySize;
+
                             const float real = procSolution[procIndex].real;
                             const float imag = procSolution[procIndex].imag;
                             sf_complex value = sf_cmplx(real,imag);
