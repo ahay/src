@@ -1,0 +1,43 @@
+from rsf.proj import *
+from rsf.recipes.beg import server as private
+
+freq=1
+
+### solution for overthrust model
+
+Fetch(['overthrust.vites.h','overthrust.vites'],'overthrust',private)
+
+Flow('overthrust',['overthrust.vites.h','overthrust.vites'],
+     '''
+     (cat ${SOURCES[0]} ; echo data_format=xdr_float) |
+     dd form=native |
+     scale dscale=0.001 |
+     put label1=X label2=Y label3=Z unit1=km unit2=km unit3=km
+     label=Velocity unit=km/s d1=0.025 d2=0.025 d3=0.025
+     ''',stdin=0)
+
+
+Flow('overthrust_sample','overthrust','window j1=8 j2=8 j3=8')
+
+Result('overthrust_sample',
+       '''
+       byte gainpanel=all mean=y | transp plane=31 | transp plane=23 | 
+       grey3 flat=n frame1=5 frame2=50 frame3=50
+       title="SEG/EAGE Overthrust Model"
+       color=j point1=0.41 point2=0.81
+       screenratio=1
+       ''')
+
+Flow('solution-overthrust_sample','overthrust_sample OneShot','''mpipsp velocity=${SOURCES[0]} source=${SOURCES[1]}
+        freq=%g solution=$TARGET''' % freq)
+
+Result('solution-overthrust_sample',
+       '''
+       real | byte gainpanel=all mean=y | transp plane=31 | transp plane=23 | 
+       grey3 flat=n frame1=5 frame2=50 frame3=50
+       title="Solution SEG/EAGE Overthrust Model"
+       color=j point1=0.41 point2=0.81
+       screenratio=1
+       ''')
+
+End()
