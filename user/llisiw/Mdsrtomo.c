@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     bool velocity, causal, verb, adj, shape, weight;
-    int dimw, dimt, i, j, k, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
+    int dimw, dimt, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
     int iter, niter, cgiter, count;
     int *f, *m, *pc, nloop;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL, *wght=NULL, pow;
@@ -214,6 +214,17 @@ int main(int argc, char* argv[])
 		m = sf_intalloc(nt/n[0]);
 		sf_intread(m,nt/n[0],mask);
 		sf_fileclose(mask);
+	    }	    
+	    
+	    /* read model preconditioner */
+	    if (NULL == sf_getstring("prec")) {
+		prec = NULL;
+		pc = NULL;
+	    } else {
+		prec = sf_input("prec");
+		pc = sf_intalloc(n[0]*n[1]);
+		sf_intread(pc,n[0]*n[1],prec);
+		sf_fileclose(prec);
 	    }
 
 	    if (!sf_getbool("weight",&weight)) weight=false;
