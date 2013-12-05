@@ -742,7 +742,6 @@ void sf_fileflush (sf_file file, sf_file src)
     char line[BUFSIZ];
     /* if already flushed, do nothing */
     if (NULL == file->dataname) return;
-    fprintf(stderr,"in karls  file->dataname=%s\n", file->dataname);
 	
     if (NULL != src && NULL != src->head) {
 	rewind(src->head);
@@ -863,14 +862,11 @@ void sf_fileflush (sf_file file, sf_file src)
     sf_simtab_output(file->pars,file->stream);
     (void) fflush(file->stream);
 	
-    fprintf(stderr,"karl test dataname=%s\n",file->dataname);
     if (0==strcmp(file->dataname,"stdout")) { 
 	/* keep stream, write the header end code */
-        fprintf(stderr,"karl stdout keep stream write eol,eol,eot\n");
 	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c",
 		SF_EOL,SF_EOL,SF_EOT);
     } else {
-      fprintf(stderr,"karl not stdout.  reopen the file %s\n",file->dataname);
 	file->stream = freopen(file->dataname,file->rw? "w+b":"wb",file->stream);       
 	if (NULL == file->stream) 
 	    sf_error ("%s: Cannot write to data file %s:",
