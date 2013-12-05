@@ -268,7 +268,7 @@ sf_file sf_output (/*@null@*/ const char* tag)
     file->pipe = (bool) (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
-	
+ 
     dataname = sf_getstring("out");
     if (NULL == dataname)
 	dataname = sf_getstring("--out");
@@ -283,10 +283,22 @@ sf_file sf_output (/*@null@*/ const char* tag)
 	name = file->dataname+strlen(path);
 	free (path);
 	if (getfilename (file->stream,name)) {
-	    namelen = strlen(file->dataname);
-	    file->dataname[namelen]='@';
-	    file->dataname[namelen+1]='\0';
-	} else { /* invent a name */
+	  if(0==strcmp(name,"/dev/null")){
+	      file->dataname = sf_charalloc (7);
+	      memcpy(file->dataname,"stdout",7);
+	    } else {
+	      namelen = strlen(file->dataname);
+	      file->dataname[namelen]='@';
+	      file->dataname[namelen+1]='\0';
+	    }
+	} else { /* Invent a name */
+	  /* stdout is not a pipe, not /dev/null, not a file in this 
+	     directory. 
+	     One way to get here is to redirect io to a file not in this 
+	     directory.  For example >../myfile.rsf.  In this case getfilename
+	     cannot find the file from file->stream by looking in the current 
+	     directory.  The function mkstemp is used to create a unique name 
+	     to contain the binary data. */
 	    sprintf(name,"%sXXXXXX",sf_getprog());
 	    (void) close(mkstemp(file->dataname));
 	    /* (void) unlink(file->dataname); */
@@ -494,19 +506,28 @@ static bool getfilename (FILE* fp, char *filename)
     struct stat buf;
     struct dirent *dirp;
     bool success;
+    struct stat buf_fstat_dev_null;
+    FILE* fd_dev_null;
 	
     dir = opendir(".");
     if (NULL == dir) sf_error ("%s: cannot open current directory:",__FILE__);
     
     if(0 > fstat(fileno(fp),&buf)) sf_error ("%s: cannot run fstat:",__FILE__);
     success = false;
-    
-    while (NULL != (dirp = readdir(dir))) {
+
+    fd_dev_null=fopen("/dev/null","w");
+    fstat(fileno(fd_dev_null),&buf_fstat_dev_null);
+    if(buf_fstat_dev_null.st_dev==buf.st_dev){
+	strcpy(filename,"/dev/null");
+	success = true;
+    } else {
+      while (NULL != (dirp = readdir(dir))) {
 	if (dirp->d_ino == buf.st_ino) { /* non-portable */
-	    strcpy(filename,dirp->d_name);
-	    success = true;
-	    break;
+	  strcpy(filename,dirp->d_name);
+	  success = true;
+	  break;
 	}
+      }
     }
 	
     closedir(dir);
@@ -719,9 +740,9 @@ void sf_fileflush (sf_file file, sf_file src)
 {
     time_t tm;
     char line[BUFSIZ];
-	
     /* if already flushed, do nothing */
     if (NULL == file->dataname) return;
+    fprintf(stderr,"in karls  file->dataname=%s\n", file->dataname);
 	
     if (NULL != src && NULL != src->head) {
 	rewind(src->head);
@@ -842,11 +863,14 @@ void sf_fileflush (sf_file file, sf_file src)
     sf_simtab_output(file->pars,file->stream);
     (void) fflush(file->stream);
 	
+    fprintf(stderr,"karl test dataname=%s\n",file->dataname);
     if (0==strcmp(file->dataname,"stdout")) { 
 	/* keep stream, write the header end code */
+        fprintf(stderr,"karl stdout keep stream write eol,eol,eot\n");
 	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c",
 		SF_EOL,SF_EOL,SF_EOT);
     } else {
+      fprintf(stderr,"karl not stdout.  reopen the file %s\n",file->dataname);
 	file->stream = freopen(file->dataname,file->rw? "w+b":"wb",file->stream);       
 	if (NULL == file->stream) 
 	    sf_error ("%s: Cannot write to data file %s:",
