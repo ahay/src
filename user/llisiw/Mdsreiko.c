@@ -24,7 +24,8 @@
 int main(int argc, char* argv[])
 {
     bool velocity, causal;
-    int dim, i, n[SF_MAX_DIM], nm, nt;
+    int dim, i, n[SF_MAX_DIM], nm;
+    long nt;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
     int *f, nloop;
     float thres, *al, tol;
@@ -78,7 +79,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nloop",&nloop)) nloop=10;
     /* number of bisection root-search */
 
-    nt = nm*n[2];
+    nt = (long) nm*n[2];
 
     if (NULL != sf_getstring("flag")) {
 	flag = sf_output("flag");

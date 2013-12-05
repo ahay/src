@@ -30,27 +30,43 @@ typedef struct Upgrad *upgrad;
 #endif
 
 struct Upgrad {
-    int *order, **pos;
+    long *order;
+    int **pos;
     unsigned char **update;
     double **ww, **qq;
 };
 
-static int ndim, nt, ss[3];
+static int ndim, ss[3];
+static long nt;
 static const int *nn;
 static double dd[3];
-static const float *t0, *w0, *wght;
+static const float *t0, *w0;
 
 static int fermat(const void *a, const void *b)
 /* comparison for traveltime sorting from small to large */
 {
     float ta, tb;
 
-    ta = t0[*(int *)a];
-    tb = t0[*(int *)b];
+    ta = t0[*(long *)a];
+    tb = t0[*(long *)b];
 
     if (ta >  tb) return 1;
     if (ta == tb) return 0;
     return -1;
+}
+
+void line2cart(int dim       /* number of dimensions */, 
+	       const int* nn /* box size [dim] */, 
+	       long i        /* line coordinate */, 
+	       int* ii       /* cartesian coordinates [dim] */)
+/* convert line to Cartesian */
+{
+    int axis;
+ 
+    for (axis = 0; axis < dim; axis++) {
+	ii[axis] = i%nn[axis];
+	i /= nn[axis];
+    }
 }
 
 upgrad upgrad_init(int ndim_in      /* number of dimensions */,
@@ -60,6 +76,7 @@ upgrad upgrad_init(int ndim_in      /* number of dimensions */,
 {
     upgrad upg;
     int i;
+    long it;
 
     /* for 2D model only */
     if (ndim_in > 3) sf_error("%s: dim=%d > 3",__FILE__,ndim_in);
@@ -77,7 +94,7 @@ upgrad upgrad_init(int ndim_in      /* number of dimensions */,
     upg = (upgrad) sf_alloc(1,sizeof(*upg));
 
     /* traveltime sort */
-    upg->order = sf_intalloc(nt);
+    upg->order = (long *) sf_alloc(nt, sizeof(long));
     
     /* source-receiver location */
     upg->pos = sf_intalloc2(2,nt);
@@ -87,14 +104,14 @@ upgrad upgrad_init(int ndim_in      /* number of dimensions */,
 
     /* upwind stencil for traveltime */
     upg->ww = (double **) sf_alloc(nt, sizeof(double *));
-    for (i=0; i < nt; i++) {
-	upg->ww[i] = (double *) sf_alloc(ndim+1, sizeof(double));
+    for (it=0; it < nt; it++) {
+	upg->ww[it] = (double *) sf_alloc(ndim+1, sizeof(double));
     }
 
     /* upwind stencil for slowness-squared */
     upg->qq = (double **) sf_alloc(nt, sizeof(double *));
-    for (i=0; i < nt; i++) {
-	upg->qq[i] = (double *) sf_alloc(2, sizeof(double));
+    for (it=0; it < nt; it++) {
+	upg->qq[it] = (double *) sf_alloc(2, sizeof(double));
     }
     
     return upg;
@@ -103,29 +120,28 @@ upgrad upgrad_init(int ndim_in      /* number of dimensions */,
 void upgrad_set(upgrad upg      /* upwind stencil */,
 		const float *r0 /* reference time */,
 		const float *s0 /* reference slowness-squared */,
-		const int *f0   /* reference flag */,
-		const float *weight /* data weighting */)
+		const int *f0   /* reference flag */)
 /*< supply reference >*/
 {
     bool source;
-    int i, m, it, jt, ii[3], a, b;
+    int i, m, ii[3];
+    long it, jt, a, b;
     unsigned char *up;
     double t, t2, dt[3], ws, wr;
 
     t0 = r0;
     w0 = s0;
-    wght = weight;
 
     /* sort from small to large traveltime */
     for (it = 0; it < nt; it++) {
 	upg->order[it] = it;
     }
-    qsort(upg->order, nt, sizeof(int), fermat);
+    qsort(upg->order, nt, sizeof(long), fermat);
      
     for (it = 0; it < nt; it++) {
 	jt = upg->order[it];
 
-	sf_line2cart(ndim,nn,jt,ii);
+	line2cart(ndim,nn,jt,ii);
 
 	up = upg->update[it];
 	up[0] = up[1] = 0;
@@ -274,7 +290,8 @@ void upgrad_solve(upgrad upg,
 		  const float *x0  /* initial solution */)
 /*< inv(alpha) >*/
 {
-    int it, jt, i, m, j;
+    int i, m, k;
+    long it, jt, j;
     unsigned char *up;
     double num, den;
    
@@ -301,18 +318,12 @@ void upgrad_solve(upgrad upg,
     }
 
     /* copy */
-    for (j=1; j < nn[2]; j++) {
-	for (i=0; i < j; i++) {
-	    for (it=0; it < nn[0]; it++) {
-		x[j*ss[2]+i*ss[1]+it] = x[i*ss[2]+j*ss[1]+it];
+    for (k=1; k < nn[2]; k++) {
+	for (i=0; i < k; i++) {
+	    for (m=0; m < nn[0]; m++) {
+		x[(long) k*ss[2]+i*ss[1]+m] = x[(long) i*ss[2]+k*ss[1]+m];
 	    }
 	}
-    }
-
-    /* weighting */
-    if (wght != NULL) {
-	for (i=0; i < nn[1]*nn[2]; i++)
-	    x[i*nn[0]] *= wght[i];
     }
 }
 
@@ -322,7 +333,8 @@ void upgrad_inverse(upgrad upg,
 		    const float *x0 /* initial solution */)
 /*< adjoint inv(alpha) >*/
 {
-    int it, jt, i, m, j, ii[3];
+    int i, m, ii[3];
+    long it, jt, j;
     unsigned char *up;
     double den, w;
 
@@ -333,12 +345,10 @@ void upgrad_inverse(upgrad upg,
     for (it = nt-1; it >= 0; it--) {
 	jt = upg->order[it];
 
-	sf_line2cart(ndim,nn,jt,ii);
+	line2cart(ndim,nn,jt,ii);
 
-	/* weighting and paste */
-	rhs[jt] += (wght!=NULL)? wght[ii[2]*nn[1]+ii[1]]*x[jt]
-	    +wght[ii[1]*nn[1]+ii[2]]*x[ii[1]*ss[2]+ii[2]*ss[1]+ii[0]] 
-	    :x[jt]+x[ii[1]*ss[2]+ii[2]*ss[1]+ii[0]];
+	/* paste */
+	rhs[jt] += x[jt]+x[(long) ii[1]*ss[2]+ii[2]*ss[1]+ii[0]];
 
 	up = upg->update[it];
 	den = upg->ww[it][ndim];
@@ -364,7 +374,7 @@ void upgrad_collect(upgrad upg,
 		    float *x         /* solution */)
 /*< beta >*/
 {
-    int it;
+    long it;
 
     for (it = 0; it < nt; it++) {
 	x[it] = upg->qq[it][0]*rhs[upg->pos[it][0]]
@@ -377,7 +387,7 @@ void upgrad_spread(upgrad upg,
 		   const float *x /* solution */)
 /*< adjoint beta >*/
 {
-    int it;
+    long it;
 
     for (it = 0; it < nt; it++) {
 	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];

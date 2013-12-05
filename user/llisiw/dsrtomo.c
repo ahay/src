@@ -22,9 +22,10 @@
 #include "upgraddsr.h"
 #include "dsrtomo.h"
 
-static int nt, *nn, *m, *pc;
+static int *nn, *dp, *mp;
+static long nt;
 static upgrad upg;
-static float *temp;
+static float *temp, *pstk;
 
 void dsrtomo_init(int dim  /* model dimension */,
 		  int *n   /* model size */,
@@ -43,20 +44,20 @@ void dsrtomo_init(int dim  /* model dimension */,
     upg = upgrad_init(dim,n,d);
 
     temp = sf_floatalloc(nt);
+    pstk = sf_floatalloc(nt);
 }
 
 void dsrtomo_set(float *t /* stencil time */,
 		 float *w /* stencil slowness-squared */,
 		 int *f   /* stencil flag */,
-		 int *m0  /* receiver mask */,
-		 int *pc0 /* model mask */,
-		 float *wght /* data weighting */)
+		 int *dp0 /* receiver mask */,
+		 int *mp0 /* model mask */)
 /*< set operator >*/
 {
-    upgrad_set(upg,t,w,f,wght);
+    upgrad_set(upg,t,w,f);
 
-    m = m0;
-    pc = pc0;
+    dp = dp0;
+    mp = mp0;
 }
 
 void dsrtomo_close(void)
@@ -78,44 +79,45 @@ void dsrtomo_oper(bool adj, bool add, int nx, int nr, float *x, float *r)
 	
 	/* data precon */
 	for (i=0; i < nn[1]*nn[2]; i++) {
-	    if (m != NULL && m[i] != 1)
-		r[i*nn[0]] = 0.;
+	    if (dp != NULL && dp[i] != 1)
+		pstk[(long) i*nn[0]] = 0.;
+	    else
+		pstk[(long) i*nn[0]] = r[i];
 	    
 	    for (j=1; j < nn[0]; j++)
-		r[i*nn[0]+j] = 0.;
+		pstk[(long) i*nn[0]+j] = 0.;
 	}
 	
 	/* linear operator */
-	upgrad_inverse(upg,temp,r,NULL);
+	upgrad_inverse(upg,temp,pstk,NULL);
 	upgrad_spread(upg,x,temp);
 
 	/* model precon */
-	if (pc != NULL) {
+	if (mp != NULL) {
 	    for (i=0; i < nn[0]*nn[1]; i++) {
-		if (pc[i] != 1) x[i] = 0.;
+		if (mp[i] != 1) x[i] = 0.;
 	    }
 	}
     } else {
 	/* given dw solve dt */
 	
 	/* model precon */
-	if (pc != NULL) {
+	if (mp != NULL) {
 	    for (i=0; i < nn[0]*nn[1]; i++) {
-		if (pc[i] != 1) x[i] = 0.;
+		if (mp[i] != 1) x[i] = 0.;
 	    }
 	}
 
 	/* linear operator */
 	upgrad_collect(upg,x,temp);
-	upgrad_solve(upg,temp,r,NULL);
+	upgrad_solve(upg,temp,pstk,NULL);
 
 	/* data precon */
 	for (i=0; i < nn[1]*nn[2]; i++) {
-	    if (m != NULL && m[i] != 1)
-		r[i*nn[0]] = 0.;
-
-	    for (j=1; j < nn[0]; j++)
-		r[i*nn[0]+j] = 0.;
+	    if (dp != NULL && dp[i] != 1)
+		r[i] = 0.;
+	    else
+		r[i] = pstk[(long) i*nn[0]];
 	}
     }
 }

@@ -30,22 +30,23 @@ static int nloop;
 static bool causal;
 
 static float *o, *v, *d;
-static int *n, *in, s[3];
+static int *n, *in;
+static long s[3];
 static float **x, **xn, **x1;
 static int *offsets, *flag;
 static float *t, *alpha;
 
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
-void pqueue_update(int index);
+void pqueue_update(long index);
 int neighbors_default();
-int neighbours(float* time, int i);
-int update(float value, float* time, int i, int f, float al);
-float qsolve(float* time, int i, int *f, float *al);
+int neighbours(float* time, long i);
+int update(float value, float* time, long i, int f, float al);
+float qsolve(float* time, long i, int *f, float *al);
 bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al);
 double bisect(struct Upd *xj[],bool r, double vr, bool s, double vs, double min, double max);
 double eval(struct Upd *xj[], bool r, double vr, bool s, double vs, double p);
-void search(float *ttemp, float* time, int i, int *f, float *al);
+void search(float *ttemp, float* time, long i, int *f, float *al);
 
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
@@ -56,13 +57,13 @@ void dsreiko_init(int *n_in   /* length */,
 		  bool causal_in)
 /*< initialize >*/
 {
-    int maxband;
+    long maxband;
 
     n = n_in;
     o = o_in;
     d = d_in;
 
-    s[0] = 1; s[1] = n[0]; s[2] = n[0]*n[1];
+    s[0] = 1; s[1] = (long) n[0]; s[2] = (long) n[0]*n[1];
 
     /* maximum length of heap */
     maxband = 0;
@@ -91,7 +92,7 @@ void dsreiko_fastmarch(float *time /* time */,
 /*< fast-marching solver >*/
 {
     float *p;
-    int npoints, i;
+    long npoints, i;
 
     t = time;
     v = v_in;
@@ -129,7 +130,7 @@ void dsreiko_mirror(float *time /*time*/)
     for (k=1; k < n[1]; k++) {
 	for (j=0; j < k; j++) {
 	    for (i=0; i < n[0]; i++) {
-		time[k*s[2]+j*s[1]+i] = time[j*s[2]+k*s[1]+i];
+		time[(long) k*s[2]+j*s[1]+i] = time[(long) j*s[2]+k*s[1]+i];
 	    }
 	}
     }
@@ -145,13 +146,13 @@ void dsreiko_close()
 void pqueue_insert(float* v1)
 /* insert an element (smallest first) */
 {
-    int newOffset, tIndex;
+    long newOffset, tIndex;
     float **xi, **xq;
-    unsigned int q;
+    unsigned long q;
     
     xi = ++xn;
 
-    q = (unsigned int) (xn-x);
+    q = (unsigned long) (xn-x);
     for (q >>= 1; q > 0; q >>= 1) {
 	xq = x + q;
 	if (*v1 > **xq) break;
@@ -175,9 +176,9 @@ void pqueue_insert(float* v1)
 float* pqueue_extract(void)
 /* extract the smallest element */
 {
-    int newOffset, tIndex;
-    unsigned int c;
-    int nn;
+    long newOffset, tIndex;
+    unsigned long c;
+    long nn;
     float *vv, *formerlyLast;
     float **xi, **xc;
     
@@ -191,9 +192,9 @@ float* pqueue_extract(void)
 
     *(xi = x1) = formerlyLast = *(xn--);
     nn--;
-    for (c = 2; c <= (unsigned int) nn; c <<= 1) {
+    for (c = 2; c <= (unsigned long) nn; c <<= 1) {
 	xc = x + c;
-	if (c < (unsigned int) nn && **xc > **(xc+1)) {
+	if (c < (unsigned long) nn && **xc > **(xc+1)) {
 	    c++; xc++;
 	}
 	if (*formerlyLast <= **xc) break;
@@ -216,11 +217,11 @@ float* pqueue_extract(void)
     return vv;
 }
 
-void pqueue_update(int index)
+void pqueue_update(long index)
 /* restore the heap */
 {
-    int newOffset, tIndex;
-    unsigned int c;
+    long newOffset, tIndex;
+    unsigned long c;
     float **xc, **xi;
     
     c = offsets[index];
@@ -249,11 +250,11 @@ void pqueue_update(int index)
 int neighbors_default()
 /* initialize source */
 {
-    int i, j, k, nxy;
+    long i, j, k, nxy;
     double vr, vs, temp[2];
 
     /* total number of points */
-    nxy = n[0]*n[1]*n[2];
+    nxy = (long) n[0]*n[1]*n[2];
 
     /* set all points to be out */
     for (i=0; i < nxy; i++) {
@@ -302,10 +303,10 @@ int neighbors_default()
     return (nxy-n[0]*(n[1]*n[1]+3*n[1]-2)/2);
 }
 
-int neighbours(float* time, int i)
+int neighbours(float* time, long i)
 /* update neighbors of gridpoint i, return number of updated points */
 {
-    int j, k, ix, np;
+    long j, k, ix, np;
     float ttemp, altemp;
     int ftemp;
 
@@ -334,7 +335,7 @@ int neighbours(float* time, int i)
     return np;
 }
 
-int update(float value, float* time, int i, int f, float al)
+int update(float value, float* time, long i, int f, float al)
 /* update gridpoint i with new value and modify wave front */
 {
     /* only update when smaller than current value */
@@ -354,7 +355,7 @@ int update(float value, float* time, int i, int f, float al)
     return 0;
 }
 
-float qsolve(float* time, int i, int *f, float *al)
+float qsolve(float* time, long i, int *f, float *al)
 /* find new traveltime at gridpoint i */
 {
     bool vad1, vad2, vad3, vad4;
@@ -781,7 +782,7 @@ double eval(struct Upd *xj[],
     return val;
 }
 
-void search(float *ttemp, float* time, int i, int *f, float *al)
+void search(float *ttemp, float* time, long i, int *f, float *al)
 /* search for non-causal update */
 {
     int j, k, ix[3];

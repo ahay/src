@@ -24,14 +24,15 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, causal, verb, adj, shape, weight;
-    int dimw, dimt, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, nt;
+    bool velocity, causal, verb, adj, shape;
+    int dimw, dimt, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, ir, nr;
+    long nt;
     int iter, niter, cgiter, count;
-    int *f, *m, *pc, nloop;
-    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL, *wght=NULL, pow;
-    float eps, tol, thres, *al, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
+    int *ff, *dp, *mp, nloop;
+    float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL;
+    float eps, tol, thres, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
     char key[6], *what;
-    sf_file in, out, reco, grad, flag, mask, prec;
+    sf_file in, out, time, reco, grad, flag, mask, prec;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -45,114 +46,117 @@ int main(int argc, char* argv[])
 
 	    if (!sf_getbool("adj",&adj)) adj=false;
 	    /* adjoint flag (for what=linear) */
-
-	    /* read record file */
-	    if (NULL == sf_getstring("reco"))
-		sf_error("Need time reco=");
-	    reco = sf_input("reco");
-
-	    /* read velocity file */
+	    
+	    /* read velocity */
 	    if (NULL == sf_getstring("grad"))
 		sf_error("Need velocity grad=");
 	    grad = sf_input("grad");
 	    
 	    /* read dimension */
-	    dimt = sf_filedims(reco,n);
+	    dimw = sf_filedims(grad,n);
 
-	    nt = 1;
-	    for (i=0; i < dimt; i++) {
+	    if (dimw > 2) sf_error("Only works for 2D now.");
+
+	    nw = 1;
+	    for (i=0; i < dimw; i++) {
 		sprintf(key,"d%d",i+1);
-		if (!sf_histfloat(reco,key,d+i)) sf_error("No %s= in input.",key);
+		if (!sf_histfloat(grad,key,d+i)) sf_error("No %s= in input.",key);
 		sprintf(key,"o%d",i+1);
-		if (!sf_histfloat(reco,key,o+i)) o[i]=0.;
-		nt *= n[i];
+		if (!sf_histfloat(grad,key,o+i)) o[i]=0.;
+		nw *= n[i];
 	    }
 
-	    nw = nt/n[2];
+	    n[2] = n[1]; d[2] = d[1]; o[2] = o[1];
+	    dimt = 3; nr = n[1]*n[2]; nt = nw*n[2];
+
+	    /* read time */
+	    if (NULL == sf_getstring("time"))
+		sf_error("Need time time=");
+	    time = sf_input("time");
 
 	    /* allocate memory */
 	    t  = sf_floatalloc(nt);
-	    dt = sf_floatalloc(nt);
+	    dt = sf_floatalloc(nr);
 	    w  = sf_floatalloc(nw);
 	    dw = sf_floatalloc(nw);
 
-	    /* read record and velocity */
-	    sf_floatread(t,nt,reco);
+	    /* read time and velocity */
+	    sf_floatread(t,nt,time);
 	    sf_floatread(w,nw,grad);
 
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
-	    /* if y, the input is velocity; n, slowness squared */
+	    /* if y, the input is velocity; n, slowness-squared */
 	    
-	    /* convert to slowness squared */
+	    /* convert to slowness-squared */
 	    if (velocity) {
 		for (iw=0; iw < nw; iw++)
 		    w[iw] = 1./w[iw]*1./w[iw];
 	    }
 
-	    /* read flag file */
+	    /* read flag */
 	    if (NULL == sf_getstring("flag")) {
 		flag = NULL;
-		f = NULL;
+		ff = NULL;
 	    } else {
 		flag = sf_input("flag");
-		f = sf_intalloc(nt);
-		sf_intread(f,nt,flag);
+		ff = sf_intalloc(nt);
+		sf_intread(ff,nt,flag);
 		sf_fileclose(flag);
 	    }
 
 	    /* read receiver mask */
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
-		m = NULL;
+		dp = NULL;
 	    } else {
 		mask = sf_input("mask");
-		m = sf_intalloc(nt/n[0]);
-		sf_intread(m,nt/n[0],mask);
+		dp = sf_intalloc(nr);
+		sf_intread(dp,nr,mask);
 		sf_fileclose(mask);
 	    }
 	    
 	    /* read model mask */
 	    if (NULL == sf_getstring("prec")) {
 		prec = NULL;
-		pc = NULL;
+		mp = NULL;
 	    } else {
 		prec = sf_input("prec");
-		pc = sf_intalloc(n[0]*n[1]);
-		sf_intread(pc,n[0]*n[1],prec);
+		mp = sf_intalloc(nw);
+		sf_intread(mp,nw,prec);
 		sf_fileclose(prec);
 	    }
 
 	    /* read input */
 	    if (adj) {
-		sf_floatread(dt,nt,in);
+		sf_floatread(dt,nr,in);
 
-		sf_putint(out,"n3",1);
+		sf_putint(out,"n1",n[0]);
+		sf_putfloat(out,"d1",d[0]);
 	    } else {
 		sf_floatread(dw,nw,in);
 
-		sf_putint(out,"n3",n[2]);
-		sf_putfloat(out,"d3",d[2]);
-		sf_putfloat(out,"o3",o[2]);
+		sf_putint(out,"n1",n[1]);
+		sf_putfloat(out,"d1",d[1]);
 	    }
 	    
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);
 
 	    /* set operator */
-	    dsrtomo_set(t,w,f,m,pc,wght);	    
+	    dsrtomo_set(t,w,ff,dp,mp);
 
 	    /* linear operator */
 	    if (adj) {
-		dsrtomo_oper(true,false,nw,nt,dw,dt);
+		dsrtomo_oper(true,false,nw,nr,dw,dt);
 	    } else {
-		dsrtomo_oper(false,false,nw,nt,dw,dt);	    
+		dsrtomo_oper(false,false,nw,nr,dw,dt);	    
 	    }
 	    	    
 	    /* write output */
 	    if (adj) {
 		sf_floatwrite(dw,nw,out);
 	    } else {
-		sf_floatwrite(dt,nt,out);
+		sf_floatwrite(dt,nr,out);
 	    }
 
 	    break;
@@ -173,17 +177,17 @@ int main(int argc, char* argv[])
 	    
 	    if (dimw > 2) sf_error("Only works for 2D now.");
 	    
-	    n[2] = n[1]; d[2] = d[1]; o[2] = o[1]; 
-	    dimt = 3; nt = nw*n[2];
-	    
+	    n[2] = n[1]; d[2] = d[1]; o[2] = o[1];
+	    dimt = 3; nr = n[1]*n[2]; nt = nw*n[2];
+
 	    /* read initial velocity */
 	    w = sf_floatalloc(nw);
 	    sf_floatread(w,nw,in);
 	    
 	    if (!sf_getbool("velocity",&velocity)) velocity=true;
-	    /* if y, the input is velocity; n, slowness squared */
+	    /* if y, the input is velocity; n, slowness-squared */
 	    	    
-	    /* convert to slowness squared */
+	    /* convert to slowness-squared */
 	    if (velocity) {
 		for (iw=0; iw < nw; iw++)
 		    w[iw] = 1./w[iw]*1./w[iw];
@@ -196,45 +200,35 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("shape",&shape)) shape=false;
 	    /* shaping regularization (default no) */
 	    
-	    /* read record file */
+	    /* read record */
 	    if (NULL == sf_getstring("reco"))
 		sf_error("Need record reco=");
 	    reco = sf_input("reco");
 	    
-	    t0 = sf_floatalloc(nt);
-	    sf_floatread(t0,nt,reco);
+	    t0 = sf_floatalloc(nr);
+	    sf_floatread(t0,nr,reco);
 	    sf_fileclose(reco);
 	    
-	    /* read receiver file */	    
+	    /* read receiver mask */	    
 	    if (NULL == sf_getstring("mask")) {
 		mask = NULL;
-		m = NULL;
+		dp = NULL;
 	    } else {
 		mask = sf_input("mask");
-		m = sf_intalloc(nt/n[0]);
-		sf_intread(m,nt/n[0],mask);
+		dp = sf_intalloc(nr);
+		sf_intread(dp,nr,mask);
 		sf_fileclose(mask);
-	    }	    
+	    }
 	    
-	    /* read model preconditioner */
+	    /* read model mask */
 	    if (NULL == sf_getstring("prec")) {
 		prec = NULL;
-		pc = NULL;
+		mp = NULL;
 	    } else {
 		prec = sf_input("prec");
-		pc = sf_intalloc(n[0]*n[1]);
-		sf_intread(pc,n[0]*n[1],prec);
+		mp = sf_intalloc(nw);
+		sf_intread(mp,nw,prec);
 		sf_fileclose(prec);
-	    }
-
-	    if (!sf_getbool("weight",&weight)) weight=false;
-	    /* data weighting (default no) */
-
-	    if (weight) {
-		wght = sf_floatalloc(nt/n[0]);
-		
-		if (!sf_getfloat("pow",&pow)) pow=2.;
-		/* power raised for data weighting */
 	    }
 
 	    if (!sf_getbool("verb",&verb)) verb=false;
@@ -277,7 +271,7 @@ int main(int argc, char* argv[])
 		sf_trianglen_init(dimw,rect,n);
 		sf_repeat_init(nw,1,sf_trianglen_lop);
 		
-		sf_conjgrad_init(nw,nw,nt,nt,eps,1.e-6,verb,false);
+		sf_conjgrad_init(nw,nw,nr,nr,eps,1.e-6,verb,false);
 		p = sf_floatalloc(nw);
 	    } else {
 		/* initialize 2D gradient operator */
@@ -287,10 +281,9 @@ int main(int argc, char* argv[])
 	    /* allocate temporary array */
 	    t  = sf_floatalloc(nt);
 	    dw = sf_floatalloc(nw);
-	    dt = sf_floatalloc(nt);
+	    dt = sf_floatalloc(nr);
 	    w1 = sf_floatalloc(nw);
-	    f  = sf_intalloc(nt);
-	    al = sf_floatalloc(nt);
+	    ff = sf_intalloc(nt);
 
 	    if (!sf_getbool("causal",&causal)) causal=true;
 	    /* if y, neglect non-causal branches of DSR */
@@ -302,26 +295,19 @@ int main(int argc, char* argv[])
 	    dsrtomo_init(dimt,n,d);
 	    
 	    /* initial misfit */
-	    dsreiko_fastmarch(t,w,f,al);
+	    dsreiko_fastmarch(t,w,ff,NULL);
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
-	    for (i=0; i < n[1]*n[2]; i++) {
-		if (m == NULL || m[i] == 1) {
-		    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
+	    for (ir=0; ir < nr; ir++) {
+		if (dp == NULL || dp[ir] == 1) {
+		    dt[ir] = t0[ir]-t[ir*n[0]];
 		} else {
-		    dt[i*n[0]] = 0.;
+		    dt[ir] = 0.;
 		}
-
-		if (weight) {
-		    wght[i] = 1.;
-		}
-
-		for (j=1; j < n[0]; j++)
-		    dt[i*n[0]+j] = 0.;
 	    }
 
-	    rhsnorm0 = cblas_snrm2(nt,dt,1);
+	    rhsnorm0 = cblas_snrm2(nr,dt,1);
 	    rhsnorm = rhsnorm0;
 	    rhsnorm1 = rhsnorm;
 	    rate = rhsnorm1/rhsnorm0;
@@ -332,17 +318,16 @@ int main(int argc, char* argv[])
 	    for (iter=0; iter < niter; iter++) {
 		
 		/* clean-up */
-		for (iw=0; iw < nw; iw++)
-		    dw[iw] = 0.;
+		for (iw=0; iw < nw; iw++) dw[iw] = 0.;
 		
 		/* set operator */
-		dsrtomo_set(t,w,f,m,pc,wght);
+		dsrtomo_set(t,w,ff,dp,mp);
 		
-		/* solve dw */		
+		/* solve dw */
 		if (shape) {
 		    sf_conjgrad(NULL,dsrtomo_oper,sf_repeat_lop,p,dw,dt,cgiter);
 		} else {
-		    sf_solver_reg(dsrtomo_oper,sf_cgstep,sf_igrad2_lop,2*nw,nw,nt,dw,dt,cgiter,eps,"verb",verb,"end");
+		    sf_solver_reg(dsrtomo_oper,sf_cgstep,sf_igrad2_lop,2*nw,nw,nr,dw,dt,cgiter,eps,"verb",verb,"end");
 		    sf_cgstep_close();
 		}
 		
@@ -363,35 +348,26 @@ int main(int argc, char* argv[])
 		for (count=0; count < 5; count++) {
 		    
 		    /* update slowness */
-		    for (iw=0; iw < nw; iw++)
+		    for (iw=0; iw < nw; iw++) 
 			w1[iw] = (w[iw]+gama*dw[iw])*(w[iw]+gama*dw[iw])/w[iw];
 		    
 		    /* compute new misfit */
-		    dsreiko_fastmarch(t,w1,f,al);
+		    dsreiko_fastmarch(t,w1,ff,NULL);
 		    dsreiko_mirror(t);
 		    
-		    for (i=0; i < n[1]*n[2]; i++) {
-			if (m == NULL || m[i] == 1) {
-			    dt[i*n[0]] = t0[i*n[0]]-t[i*n[0]];
+		    for (ir=0; ir < nr; ir++) {
+			if (dp == NULL || dp[ir] == 1) {
+			    dt[ir] = t0[ir]-t[ir*n[0]];
 			} else {
-			    dt[i*n[0]] = 0.;
+			    dt[ir] = 0.;
 			}
-
-			if (weight) {
-			    wght[i] = 1./expf(fabsf(powf(iter+1.,pow)*dt[i*n[0]]));
-			    dt[i*n[0]] *= wght[i];
-			}
-
-			for (j=1; j < n[0]; j++)
-			    dt[i*n[0]+j] = 0.;
 		    }
 
-		    rhsnorm = cblas_snrm2(nt,dt,1);
+		    rhsnorm = cblas_snrm2(nr,dt,1);
 		    rate = rhsnorm/rhsnorm1;
 		    
 		    if (rate < 1.) {
-			for (iw=0; iw < nw; iw++)
-			    w[iw] = w1[iw];
+			for (iw=0; iw < nw; iw++) w[iw] = w1[iw];
 			
 			rhsnorm1 = rhsnorm;
 			rate = rhsnorm1/rhsnorm0;
