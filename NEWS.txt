@@ -65,6 +65,8 @@ To programs:
 
 In the reproducible documents collection:
 
+* Fixed reproducibility issues in tccs/diffr/gom
+
 In documentation:
 
 In APIs:
