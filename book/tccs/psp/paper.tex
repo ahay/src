@@ -1,24 +1,34 @@
-\title{A parallel sweeping preconditioner for\\ 
-       heterogeneous 3D Helmholtz equations\thanks{This work was partially 
-       supported by the sponsors of the Texas Consortium for Computational 
-       Seismology.}}
+\published{SIAM Journal on Scientific Computing, 35, C194-C212, (2013)}
 
-\author{Jack Poulson\thanks{ICES,
+\title{A parallel sweeping preconditioner for heterogeneous 3D Helmholtz equations}
+
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\address{
+\footnotemark[1] ICES,
         University of Texas at Austin, 1 University Station C0200, 
         Austin, TX, 78712 (jack.poulson@gmail.com). This author was also 
-        supported by a CAM fellowship.} \and 
-        Bj\"orn Engquist\thanks{Department of Mathematics and ICES,
+        supported by a CAM fellowship. \\
+\footnotemark[2] Department of Mathematics and ICES,
         University of Texas at Austin, 1 University Station C1200,
         Austin, TX, 78712 (engquist@ices.utexas.edu). This author was also 
-        supported by NSF grant DMS-1016577.} \and 
-        Siwei Li\thanks{Jackson School of Geosciences,
+        supported by NSF grant DMS-1016577. \\
+\footnotemark[3] Jackson School of Geosciences,
         University of Texas at Austin, 1 University Station C1160,
-        Austin, TX, 78712 (siwei.li@utexas.edu).} \and
-        Lexing Ying\thanks{Department of Mathematics and ICES, 
+        Austin, TX, 78712 (siwei.li@utexas.edu). \\
+\footnotemark[4] Department of Mathematics and ICES, 
         University of Texas at Austin, 1 University Station C1200,
         Austin, TX, 78712 (lexing@math.utexas.edu). This author was supported 
         by NSF CAREER grant DMS-0846501, NSF grant DMS-1016577, and 
-        funding from KAUST.}}
+        funding from KAUST.}             
+
+\author{Jack Poulson\footnotemark[1],
+        Bj\"orn Engquist \footnotemark[2],
+        Siwei Li \footnotemark[3],
+        and Lexing Ying \footnotemark[4]}
+
+\lefthead{Poulson et al.}
+\righthead{Parallel sweeping preconditioner}
 
 \maketitle
 
@@ -34,22 +44,22 @@ Several computational and memory improvements are introduced relative to
 using black-box sparse-direct solvers for the auxiliary problems, and 
 competitive runtimes and iteration counts are reported for high-frequency 
 problems distributed over thousands of cores.
-Two open-source packages are released along with this paper: {\em Parallel 
+Two open-source packages are released along with this paper: \emph{Parallel 
 Sweeping Preconditioner (PSP)} and the underlying distributed multifrontal 
-solver, {\em Clique}.
+solver, \emph{Clique}.
 \end{abstract}
 
-\begin{keywords} 
-Helmholtz, time-harmonic, sweeping, preconditioner, parallel
-\end{keywords}
+%\begin{keywords} 
+%Helmholtz, time-harmonic, sweeping, preconditioner, parallel
+%\end{keywords}
 
-\begin{AMS}
-15A15, 15A09, 15A23
-\end{AMS}
+%\begin{AMS}
+%15A15, 15A09, 15A23
+%\end{AMS}
 
-\pagestyle{myheadings}
-\thispagestyle{plain}
-\markboth{J. POULSON ET AL.}{PARALLEL SWEEPING PRECONDITIONER}
+%\pagestyle{myheadings}
+%\thispagestyle{plain}
+%\markboth{J. POULSON ET AL.}{PARALLEL SWEEPING PRECONDITIONER}
 
 \section{Introduction}
 \label{section:intro}
@@ -165,7 +175,10 @@ $j$'th $x_1x_2$ plane, and the overall linear system is complex symmetric
 ({\em not} Hermitian) due to the imaginary terms introduced by the 
 PML~\cite{EngquistYing-PML}. 
 
-\input{tikz/plane-with-single-pml}
+\inputdir{Tikz}
+\plot{plane-with-single-pml}{width=0.6\textwidth}{An $x_1 x_3$ cross section of a cube with PML on its $x_3=0$ face.
+The domain is shaded in a manner which loosely corresponds to its
+extension into the complex plane.}
 
 If we were to ignore the sparsity within each block, then the following 
 na\"ive factorization and solve algorithms would be appropriate for a 
@@ -241,7 +254,16 @@ Green's function which only takes into account the {\em local} velocity field,
 i.e., by moving the PML next to the $i$'th plane (see the right half of 
 Fig.~\ref{fig:auxiliary}). 
 
-\input{tikz/auxiliary}
+\plot{auxiliary}{width=\textwidth}{(Left) A depiction of the portion of the domain involved in the 
+computation of the Schur complement of an $x_1 x_2$ plane (marked with
+the dashed line) with respect to all of the planes to its left during
+execution of Alg.~\ref{alg:naive-fact}. (Middle) An equivalent
+auxiliary problem which generates the same Schur complement; the
+original domain is truncated just to the right of the marked plane and
+a homogeneous Dirichlet boundary condition is placed on the cut.
+(Right) A local auxiliary problem for generating an approximation to
+the relevant Schur complement; the radiation boundary condition of the
+exact auxiliary problem is moved next to the marked plane.}
 
 If we use $\gamma(\omega)$ to denote the number of grid points of PML as a 
 function of the frequency, $\omega$, then it is 
@@ -500,8 +522,14 @@ result in highly scalable
 factorizations~\cite{GuptaKarypisKumar-scalable,GuptaKoricGeorge-massive} and 
 moderately scalable triangular solutions~\cite{JoshiGuptaKarypisKumar-2d}. 
 
-\input{tikz/sep-tree}
-\input{tikz/subteam}
+\plot{sep-tree}{width=\textwidth}{A separator-based supernodal elimination tree (right) over a 
+  quasi-2D subdomain (left).}
+\plot{subteam}{width=\textwidth}{Overlay of the process ranks (in binary) of the owning subteams of each
+supernode from the elimination tree in Fig.\ \ref{fig:sep-tree} when the tree 
+is assigned to eight processes using a subtree-to-subteam mapping; a `*' is 
+used to denote both 0 and 1, so that `$00*$' represents processes 0 and 1, 
+`$01*$' represents processes 2 and 3, and `$***$' represents all eight 
+processes.}
 
 Roughly speaking, the analysis in \cite{JoshiGuptaKarypisKumar-2d} shows that, 
 if $p_F$ processes are used in the multifrontal factorization of our quasi-2D 
@@ -635,9 +663,9 @@ $(i,j)$ entry will be stored by the process in the $(i \bmod r,j \bmod c)$
 position in the process grid. 
 Using the notation from \cite{Poulson-elemental}, this distributed front would 
 be denoted as $F[M_C,M_R]$, while its top-left quadrant would be referred to 
-as $F_{TL}[M_C,M_R]$ (see Fig.~\ref{fig:mc_mr} for a depiction of an $[M_C,M_R]$ matrix distribution). 
+as $F_{TL}[M_C,M_R]$ (see Fig.~\ref{fig:mcmr} for a depiction of an $[M_C,M_R]$ matrix distribution). 
 
-\input{mc_mr}
+\input{mcmr}
 
 Loosely speaking, $F[X,Y]$ means that each column
 of $F$ is distributed using the scheme denoted by $X$, and each row
@@ -671,11 +699,11 @@ $s \in \{0,1,...,r-1\}$,
   \{ i \in \mathbb{N}_0 : i \bmod r = s \} = 
   \bigcup_{t=0}^{c-1} \{ i \in \mathbb{N}_0 : i \bmod q = s+tr \}.
 \end{equation}
-See the left side of Fig.~\ref{fig:partial_matrix} for an example of an 
+See the left side of Fig.~\ref{fig:partial-matrix} for an example of an 
 $[M_C,\star]$ distribution of a $7 \times 3$ matrix.
 
 \input{vector}
-\input{partial_matrix}
+\input{partial-matrix}
 
 Similarly, if $x_{\mathcal{S}}$ was distributed with a Row-major Vector 
 distribution ($V_R$), as shown on the right side of Fig.~\ref{fig:vector}, 
@@ -933,24 +961,26 @@ to reduce to less than $10^{-5}$.
 
 \input{convergence}
 
-\begin{figure}
-$
-\begin{array}{cc}
-\includegraphics[width=2.5in]{paraview/separator/threeShots07-trim.pdf} &
-\includegraphics[width=2.5in]{paraview/wedge/oneShot07-trim.pdf} \\
-\includegraphics[width=2.5in]{paraview/two-sideways-layers/threeShots07-trim.pdf} &
-\includegraphics[width=2.5in]{paraview/waveguide/oneShot055-trim.pdf}
-\end{array}
-$
-\caption{A single $x_2 x_3$ plane from each of the four analytical velocity 
+\inputdir{models}
+
+\plot{solution-models}{width=\textwidth}{A single $x_2 x_3$ plane from each of the four analytical velocity 
 models over a $500^3$ grid with the smallest wavelength resolved with ten grid 
-points.
-(Top-left) the three-shot solution for the barrier model near $x_1=0.7$, 
+points. (Top-left) the three-shot solution for the barrier model near $x_1=0.7$, 
 (bottom-left) the three-shot solution for the two-layer model near $x_1=0.7$, 
 (top-right) the single-shot solution for the wedge model near $x_1=0.7$, and
 (bottom-right) the single-shot solution for the waveguide model near 
 $x_1=0.55$.}
-\end{figure}
+
+%\begin{figure}
+%$
+%\begin{array}{cc}
+%\includegraphics[width=2.5in]{paraview/separator/threeShots07-trim.pdf} &
+%\includegraphics[width=2.5in]{paraview/wedge/oneShot07-trim.pdf} \\
+%\includegraphics[width=2.5in]{paraview/two-sideways-layers/threeShots07-trim.pdf} &
+%\includegraphics[width=2.5in]{paraview/waveguide/oneShot055-trim.pdf}
+%\end{array}
+%$
+%\end{figure}
 
 It was also observed that, at least for the waveguide problem, 
 the convergence rate would be significantly improved if 6 grid points of PML 
@@ -987,18 +1017,20 @@ are also reported in parentheses, as the technique is not widely
 implemented.\footnote{Other than Clique, the only other implementation appears 
 to be in DSCPACK~\cite{Raghavan-dscpack}.}
 
-\begin{figure}
-\centering
-\includegraphics[width=3.8in]{pdf/overthrust}
-\caption{Three cross-sections of the SEG/EAGE Overthrust velocity model, which 
-represents an artificial 
-$20\, \mathrm{km} \times 20\, \mathrm{km} \times 4.65\, \mathrm{km}$ domain, 
-containing an {\em overthrust} fault, using samples every $25\, \mathrm{m}$. 
-The result is an $801 \times 801 \times 187$ grid of wave speeds varying 
-discontinuously between $2.179\, \mathrm{km/sec}$ (blue) and 
+\inputdir{overthrust}
+\plot{overthrust}{width=3.8in}{Three cross-sections 
+of the SEG/EAGE Overthrust velocity model, which 
+represents an artificial $20\, \mathrm{km} \times
+20\, \mathrm{km} \times 4.65\, \mathrm{km}$ domain, containing an {\em
+overthrust} fault, using samples every $25\, \mathrm{m}$.  The result
+is an $801 \times 801 \times 187$ grid of wave speeds varying
+discontinuously between $2.179\, \mathrm{km/sec}$ (blue) and
 $6.000\, \mathrm{km/sec}$ (red).}
-\label{fig:overthrust}
-\end{figure}
+
+%\begin{figure}
+%\centering
+%\includegraphics[width=3.8in]{pdf/overthrust}
+%\end{figure}
 
 
 %In particular, our benchmark problem makes use of the SEG/EAGE Overthrust 
@@ -1057,7 +1089,7 @@ $6.000\, \mathrm{km/sec}$ (red).}
 %inversion are so far only modest, we will see that their effect becomes 
 %significantly more pronounced when using larger numbers of processes.
 
-%\input{tikz/overthrust-convergence}
+%\input{Tikz/overthrust-convergence}
 \input{overthrust-test}
 
 %The second test doubled the frequency to 10.24 Hz and made use of 
@@ -1099,23 +1131,27 @@ $6.000\, \mathrm{km/sec}$ (red).}
 %Fig.~\ref{fig:20-30-solution1-real}, both for this 20.47 Hz test and for 
 %the 30.56 Hz test, which will be discussed next.
 
-\begin{figure}
-\centering
-$
-\begin{array}{c}
-\includegraphics[width=5in,height=1.1673in]{paraview/overthrust/singleShot07-trim.pdf}\\
-\includegraphics[width=5in,height=1.1673in]{paraview/overthrust/singleShotXZ07-trim.pdf}\\
-\includegraphics[width=5in,height=5in]{paraview/overthrust/singleShotXY0045-trim.pdf}
-\end{array}
-$
-\caption{Three planes from an 8 Hz solution with the Overthrust model at its 
-native resolution, $801 \times 801 \times 187$, with a single localized shot 
+\plot{solution-overthrust}{width=5in}{Three planes from a %an 8 Hz 
+solution with the Overthrust model 
+%at its 
+%native resolution, $801 \times 801 \times 187$, 
+with a single localized shot 
 at the center of the $x_1 x_2$ plane at a depth of 456 m: 
 (top) a $x_2 x_3$ plane near $x_1=14$ km, 
 (middle) an $x_1 x_3$ plane near $x_2=14$ km,
 and (bottom) an $x_1 x_2$ plane near $x_3=0.9$ km.}
-\label{fig:overthrust-planes}
-\end{figure}
+
+%\begin{figure}
+%\centering
+%$
+%\begin{array}{c}
+%\includegraphics[width=5in,height=1.1673in]{paraview/overthrust/singleShot07-trim.pdf}\\
+%\includegraphics[width=5in,height=1.1673in]{paraview/overthrust/singleShotXZ07-trim.pdf}\\
+%\includegraphics[width=5in,height=5in]{paraview/overthrust/singleShotXY0045-trim.pdf}
+%\end{array}
+%$
+%\label{fig:overthrust-planes}
+%\end{figure}
 
 %Since the largest power of two number of cores available on Lonestar is 8192,
 %which is only a factor of four more processes than was used in the previous 
@@ -1204,7 +1240,7 @@ are at least five important directions for future work:
 %We also plan to investigate compression schemes for the frontal matrices of 
 %our quasi-2D auxiliary problems.
 
-\section*{Availability} The distributed dense linear algebra library, Elemental,
+\section{Availability} The distributed dense linear algebra library, Elemental,
 is available under the New BSD License at 
 \url{http://code.google.com/p/elemental}. The distributed multifrontal solver, 
 Clique, is available under the GPLv3 at 
@@ -1212,11 +1248,13 @@ Clique, is available under the GPLv3 at
 Preconditioner (PSP) code is available under the GPLv3 at
 \url{http://github.com/poulson/PSP}.
 
-\section*{Acknowledgments}
+\section{Acknowledgments}
 The authors acknowledge TACC for usage of their computing resources and 
 thank Bill Barth for suggesting the \verb!tacc_affinity! option and Tommy 
 Minyard for helping with several large runs. We also thank Anshul Gupta for 
 WSMP details and the referees for their insightful comments.
+
+\bibliographystyle{seg}
  
 \begin{thebibliography}{10} 
 

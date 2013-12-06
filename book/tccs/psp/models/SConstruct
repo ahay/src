@@ -6,8 +6,8 @@ models='''uniform barrier wedge twolayers waveguid'''
 
 models=Split(models)
 
-size=80
-freq=8
+size=160
+freq=16
 
 half=size/2 
 n=size-1
@@ -75,8 +75,11 @@ for model in models[1:5]:
 
     solve='solution-'+model
 
-    Flow(solve,[model, source],'''mpipsp velocity=${SOURCES[0]} source=${SOURCES[1]}
-        freq=%g solution=$TARGET''' % freq) 
+    Flow(solve,[model, source],
+         '''
+         mpipsp velocity=${SOURCES[0]} source=${SOURCES[1]}
+         freq=%g solution=$TARGET
+         ''' % freq) 
 
     Plot(solve,
            '''
@@ -86,6 +89,5 @@ for model in models[1:5]:
            ''' % slice)
 
 Result('solution-models','solution-barrier solution-wedge solution-twolayers solution-waveguid','TwoColumns')
-
 
 End()

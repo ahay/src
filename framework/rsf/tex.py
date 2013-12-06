@@ -1039,6 +1039,16 @@ class TeXPaper(Environment):
             resdir2 = os.path.join(self.docdir,'XFig')
             self.Install2(resdir2,figs)
             self.Alias('figinstall',resdir2)
+        # tikz figures:
+        figs =  glob.glob('%s/Tikz/*.tex' % topdir)
+        if figs: 
+            for fig in figs:
+                pdf = re.sub(r'([^/]+)\.tex$',
+                             os.path.join(resdir,'\g<1>.pdf'),fig)
+                crfigs.append(pdf)
+            resdir2 = os.path.join(self.docdir,'Tikz')
+            self.Install2(resdir2,figs)
+            self.Alias('figinstall',resdir2)
         # non-reproducible figures
         nrfigs = crfigs + glob.glob(
             os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 

@@ -45,6 +45,7 @@ To the Python package:
 
 * fftw (if present) is included in core libraries during compilation
 * Cygwin no longer provides libtirpc, removed it from configure 
+* Added support to tikz figures in reproducible documents
 
 To programs:
 
