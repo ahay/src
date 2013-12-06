@@ -12,16 +12,16 @@ Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],'npr3_gathers.sgy',
 Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
      ['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],
      '''
-     ../tah/sftahread \
+     sftahread \
         verbose=1 \
   	input=npr3_gathers.rsf \
     	headers=npr3_gathers_hdr.rsf \
-     | ../tah/sftahnmo \
+     | sftahnmo \
        verbose=1  \
        tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 \
        vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 \
-     | ../tah/sftahstack key=iline,xline verbose=1 \
-     | ../tah/sftahwrite \
+     | sftahstack key=iline,xline verbose=1 \
+     | sftahwrite \
         verbose=1                           \
         label2="xline" o2=1 n2=188 d2=1   \
         label3="iline" o3=1 n3=345 d3=1   \
