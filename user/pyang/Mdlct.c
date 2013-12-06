@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool inv, verb;
-    int L,N;
+    int L,N, n2;
     float C;
     float *sig;
     sf_complex *Sc;
@@ -43,14 +43,18 @@ int main(int argc, char* argv[])
  
     if(!inv){
       	/* then: in is signal itself, out will be DCLT coefficients. */
+	n2 = sf_leftsize(in,1);
       	if (!sf_getint("L",&L)) sf_error("No L");
+	sf_shiftdim(in, out, 1);
       	sf_putint(out,"n1",N);
       	sf_putint(out,"n2",L);
 	sf_settype(out,SF_COMPLEX);
     }else{
 	/*then: in is DLCT coefficients, out will be signal.*/
+	n2 = sf_leftsize(in,2);
 	if (!sf_histint(in,"n1",&N)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&L)) sf_error("No n2= in input");
+	sf_unshiftdim(in, out, 2);
 	sf_putint(out,"n1",N);
 	sf_settype(out,SF_FLOAT);
     }
@@ -58,13 +62,19 @@ int main(int argc, char* argv[])
     sig = sf_floatalloc(N);
     Sc = sf_complexalloc(N*L);
 
-    if(!inv){
-	forward_dlct(N,L, C, sig, Sc);
-	sf_complexwrite(Sc, L*N, out);
-    }else {
-	backward_dlct(N, L, C, sig, Sc);
-	sf_floatwrite(sig, N, out);
+    for (int i2=0; i2 < n2; i2++)  {
+	sf_warning("slice %d of %d;",i2+1,n2);
+	    if(!inv){
+		sf_floatread(sig,N,in);
+		forward_dlct(N, L, C, sig, Sc);
+		sf_complexwrite(Sc, L*N, out);
+	    }else {
+		sf_complexread(Sc,L*N,in);
+		backward_dlct(N, L, C, sig, Sc);
+		sf_floatwrite(sig, N, out);
+	    }
     }
+    sf_warning(".");
 
     free(sig);
     free(Sc);

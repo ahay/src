@@ -4,11 +4,10 @@ import bldutil
 
 # C main programs
 progs = '''
-fpocs3dpthresh pocs3dpthresh
+fpocs3dpthresh pocs3dpthresh dlct
 '''
 
 cuda_progs = '''
-testcuda 
 '''
 
 try:  # distributed version
