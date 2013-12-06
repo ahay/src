@@ -329,7 +329,9 @@ int main(int argc, char* argv[])
 	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	    
 #ifdef _OPENMP
-#pragma omp parallel private(ix,iz)	shared(fdm,ua,uo,co,cax,caz,cbx,cbz,idx,idz)
+#pragma omp parallel						\
+    private(ix,iz)						\
+    shared(fdm,ua,uo,co,cax,caz,cbx,cbz,idx,idz)
 #endif
 	    {	
 #ifdef _OPENMP
