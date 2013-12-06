@@ -1,0 +1,59 @@
+from rsf.proj import *
+import math
+
+#Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
+
+
+#Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
+
+Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],'npr3_gathers.sgy',
+     'sfsegyread tfile=${TARGETS[1]}')
+
+Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
+     ['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],
+     '''
+     ../tah/sftahread \
+        verbose=1 \
+  	input=npr3_gathers.rsf \
+    	headers=npr3_gathers_hdr.rsf \
+     | ../tah/sftahnmo \
+       verbose=1  \
+       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 \
+       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 \
+     | ../tah/sftahstack key=iline,xline verbose=1 \
+     | ../tah/sftahwrite \
+        verbose=1                           \
+        label2="xline" o2=1 n2=188 d2=1   \
+        label3="iline" o3=1 n3=345 d3=1   \
+        output=mappedstack.rsf \
+        outheaders=mappedstack_hdr.rsf 
+     ''',stdout=0)
+
+Result('mappedstack','grey')
+
+Flow('foldplot','npr3_gathers_hdr',
+     '''
+     dd type=float |
+     fold
+        verbose=1 
+	o1=0 n1=96  d1=200 label1=offset 
+	o2=1 n2=188 d2=1   label2=xline 
+	o3=1 n3=345 d3=1   label3=iline
+     ''')
+Result('foldplot','grey title=foldplot pclip=100')
+
+# shot coordinates
+Flow('sx','npr3_gathers_hdr','dd type=float | headermath output="sx"')
+Flow('sy','npr3_gathers_hdr','dd type=float | headermath output="sy"')
+Flow('sxsycoord',['sx','sy'],'cmplx ${SOURCES[1]}')
+Result('sxsycoord','graph symbol="+" title="Shot coordinates" plotcol=5')
+
+# Receiver coordinates
+Flow('gx','npr3_gathers_hdr','dd type=float | headermath output="gx"')
+Flow('gy','npr3_gathers_hdr','dd type=float | headermath output="gy"')
+Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
+Result('gxgycoord','graph symbol="+" title="Receiver coordinates" plotcol=5')
+
+
+
+End()
