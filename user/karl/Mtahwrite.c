@@ -19,8 +19,8 @@
 /*
    Program change history:
    date       Who             What
-   04/26/2012 Karl Schleicher Original program
-   10/22/2012 Karl Schleicher Factor reused functions into tahsub.c
+   04/26/2013 Karl Schleicher Original program
+   10/22/2013 Karl Schleicher Factor reused functions into tahsub.c
 */
 #include <string.h>
 #include <rsf.h>
@@ -166,12 +166,13 @@ int main(int argc, char* argv[])
 	fprintf(stderr,"label, n, i, and d read for iaxis%d\n",iaxis+1);
       }
     } else {
-	fprintf(stderr,"working on iaxis=%d. Program expects to read\n",iaxis+1);
-	fprintf(stderr,"label, n, i, and d for this axis from command line.\n");
-	if(!label_argparmread) sf_error("unable to read label%d\n",iaxis+1); 
-	if(!n_argparmread    ) sf_error("unable to read n%d    \n",iaxis+1); 
-	if(!o_argparmread    ) sf_error("unable to read o%d    \n",iaxis+1); 
-	if(!d_argparmread    ) sf_error("unable to read d$d    \n",iaxis+1); 
+      sf_warning("working on iaxis=%d. Program expects to read\n",iaxis+1);
+      sf_warning("label%d, n%d, i%d, and d%d from command line.\n",
+		 iaxis+1,iaxis+1,iaxis+1,iaxis+1);
+      if(!label_argparmread) sf_error("unable to read label%d\n",iaxis+1); 
+      if(!n_argparmread    ) sf_error("unable to read n%d    \n",iaxis+1); 
+      if(!o_argparmread    ) sf_error("unable to read o%d    \n",iaxis+1); 
+      if(!d_argparmread    ) sf_error("unable to read d$d    \n",iaxis+1); 
     }
   }
   

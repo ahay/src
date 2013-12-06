@@ -19,7 +19,7 @@
 /*
    Program change history:
    date       Who             What
-   04/26/2012 Karl Schleicher Original program
+   04/26/2013 Karl Schleicher Original program
 */
 
 #include <string.h>
@@ -133,7 +133,9 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"start trace loop n_traces=%d\n",n_traces);
   for (i_trace=0; i_trace<n_traces; i_trace++){
-    if(verbose>0 && i_trace<5)fprintf(stderr,"i_trace=%d\n",i_trace);
+    if(verbose>1 ||(verbose>0 && i_trace<5)){
+      fprintf(stderr,"i_trace=%d\n",i_trace);
+    }
     /**************************/
     /* read trace and headers */
     /**************************/

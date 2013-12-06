@@ -1,4 +1,4 @@
-/* tahgethw: Trace And Header GET Header Word.
+/* tahmakeskey: Trace And Header MAKE Secondary KEY.
 
    tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:
@@ -16,27 +16,9 @@
    and sf_tahwrite.
  */
 /*
-  Copyright (C) 2013 University of Texas at Austin
-  
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-/*
    Program change history:
    date       Who             What
-   04/26/2013 Karl Schleicher Original program
-   10/22/2013 Karl Schleicher Factor reused functions into tahsub.c
+   11/15/2012 Karl Schleicher Original program.  Derived from Mtahgethw.c
 */
 #include <string.h>
 #include <rsf.h>
@@ -60,7 +42,15 @@ int main(int argc, char* argv[])
   int ikey;
   char** list_of_keys;
   int *indx_of_keys;
-  
+  int indx_time;
+  bool pkeychanged;
+  float* stktrace=NULL;
+  float* stkheader=NULL;
+  float* time_variant_fold=NULL;
+  bool eof_get_tah;
+  int fold;
+  int itrace=0;
+
   /*****************************/
   /* initialize verbose switch */
   /*****************************/
@@ -100,6 +90,8 @@ int main(int argc, char* argv[])
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
   list_of_keys=sf_getnstring("key",&numkeys);
+  if(verbose>0)fprintf(stderr,"after sf_getnstring\n");
+
   if(list_of_keys==NULL)
     sf_error("The required parameter \"key\" was not found.");
   /* I wanted to use sf_getstrings, but it seems to want a colon seperated
@@ -146,33 +138,83 @@ int main(int argc, char* argv[])
        segmentation fault. */
     indx_of_keys[ikey]=segykey(list_of_keys[ikey]);
   }
-
-
+  stktrace          = sf_floatalloc(n1_traces);
+  stkheader         = sf_floatalloc(n1_headers);
+  time_variant_fold = sf_floatalloc(n1_traces);
 
   /***************************/
   /* start trace loop        */
   /***************************/
   if(verbose>0)fprintf(stderr,"start trace loop\n");
-  while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
-    if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
+ 
+  itrace=0;
+  eof_get_tah=get_tah(intrace, fheader, n1_traces, n1_headers, in);
+  fold=0;
+  while (!eof_get_tah){
+    if(verbose>1 && itrace<5)fprintf(stderr,"process the tah in sftahstack\n");
     /********************/
     /* process the tah. */
     /********************/
-    /* this program prints selected header keys */
-      for(ikey=0; ikey<numkeys; ikey++){
-	fprintf(stderr," %s=",list_of_keys[ikey]);
-	if(typehead == SF_INT){
-	  /* just cast the header to int so the print works */
-	  fprintf(stderr,"%d",((int*)fheader)[indx_of_keys[ikey]]);
-	} else {
-	  fprintf(stderr,"%f",fheader[indx_of_keys[ikey]]);
+    /* this program stacks sequential traces with matching pkey.  If one of the 
+       headers in pkey changes, the summed trace is divided by the time 
+       variant fold and output.
+    */
+    if(fold==0){
+      memcpy(stkheader,fheader,n1_headers*sizeof(int));
+      memcpy(stktrace ,intrace,n1_traces*sizeof(int));
+      for(indx_time=0; indx_time<n1_traces; indx_time++){
+	if(intrace[indx_time]!=0)time_variant_fold[indx_time]=1.0;
+	else time_variant_fold[indx_time]=0.0;
+      }
+    } else {
+      for(indx_time=0; indx_time<n1_traces; indx_time++){
+	if(intrace[indx_time]!=0){
+	  stktrace[indx_time]+=intrace[indx_time];
+	  time_variant_fold[indx_time]++;
 	}
-      } /* end of the for(ikey..) loop */
-      fprintf(stderr,"\n");
+      }
+    }
+    fold++;
+    eof_get_tah=get_tah(intrace, fheader, n1_traces, n1_headers, in);
+
+    /* did any of the header keys in indx_of_keys change? */
+    pkeychanged=false;
+    if(itrace>0){
+      for(ikey=0; ikey<numkeys; ikey++){
+	if(typehead == SF_INT){
+	  if(((int*)fheader  )[indx_of_keys[ikey]]!=
+	     ((int*)stkheader)[indx_of_keys[ikey]]){
+	    pkeychanged=true;
+	    break;
+	  }
+	} else {
+	  if(fheader[indx_of_keys[ikey]]!=stkheader[indx_of_keys[ikey]]){
+	    pkeychanged=true;
+	    break;
+	  }
+	}
+      }
+    }
+    /* if one of the headers changes, apply fold recovery, output trace, and 
+       set fold=0.  Fold=0 will initialize the stktrace to zero at top f loop*/
+    if(pkeychanged){
+      /***********************************/
+      /* divide by the time variant fold */
+      /***********************************/
+      if(verbose>1)fprintf(stderr,"pkeychanged.  divide by fold\n");
+      for(indx_time=0; indx_time<n1_traces; indx_time++){
+	if(time_variant_fold[indx_time]<1.0)time_variant_fold[indx_time]=1.0;
+	stktrace[indx_time]/=time_variant_fold[indx_time];
+      }   
+      /* kls set any headers? Maybe fold? offset? */
       /***************************/
       /* write trace and headers */
       /***************************/
-      put_tah(intrace, fheader, n1_traces, n1_headers, out);
+      if(verbose>1)fprintf(stderr,"put_tah\n");
+      put_tah(stktrace, stkheader, n1_traces, n1_headers, out);
+      fold=0;
+    }
+    itrace++;
   }
 
   exit(0);

@@ -1,4 +1,4 @@
-/* tahgethw: Trace And Header GET Header Word.
+/* tahmakeskey: Trace And Header MAKE Secondary KEY.
 
    tah is the abbreviation of Trace And Header.  It identifies a group of
    programs designed to:
@@ -16,27 +16,9 @@
    and sf_tahwrite.
  */
 /*
-  Copyright (C) 2013 University of Texas at Austin
-  
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
-/*
    Program change history:
    date       Who             What
-   04/26/2013 Karl Schleicher Original program
-   10/22/2013 Karl Schleicher Factor reused functions into tahsub.c
+   11/15/2012 Karl Schleicher Original program.  Derived from Mtahgethw.c
 */
 #include <string.h>
 #include <rsf.h>
@@ -56,11 +38,17 @@ int main(int argc, char* argv[])
   /* kls do I need to add this?  sf_datatype typein; */
   float* fheader=NULL;
   float* intrace=NULL;
+  float* fprevheader=NULL;
   int numkeys;
   int ikey;
   char** list_of_keys;
   int *indx_of_keys;
-  
+  char* skey;
+  int indx_of_skey;
+  int skeyvalue;
+  bool pkeychanged;
+  int itrace=0;
+
   /*****************************/
   /* initialize verbose switch */
   /*****************************/
@@ -93,13 +81,14 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"allocate headers.  n1_headers=%d\n",n1_headers);
   fheader = sf_floatalloc(n1_headers);
+  fprevheader = sf_floatalloc(n1_headers);
  
   if(verbose>0)fprintf(stderr,"allocate intrace.  n1_traces=%d\n",n1_traces);
   intrace= sf_floatalloc(n1_traces);
 
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
-  list_of_keys=sf_getnstring("key",&numkeys);
+  list_of_keys=sf_getnstring("pkey",&numkeys);
   if(list_of_keys==NULL)
     sf_error("The required parameter \"key\" was not found.");
   /* I wanted to use sf_getstrings, but it seems to want a colon seperated
@@ -118,6 +107,9 @@ int main(int argc, char* argv[])
     for(ikey=0; ikey<numkeys; ikey++){
       fprintf(stderr,"list_of_keys[%d]=%s\n",ikey,list_of_keys[ikey]);
     }
+  }
+  if(NULL==(skey=sf_getstring("skey"))){
+    sf_error("the required parameter \"skey\" was not found");
   }
   
   /* maybe I should add some validation that n1== n1_traces+n1_headers+2
@@ -146,33 +138,55 @@ int main(int argc, char* argv[])
        segmentation fault. */
     indx_of_keys[ikey]=segykey(list_of_keys[ikey]);
   }
-
-
+  indx_of_skey=segykey(skey);
 
   /***************************/
   /* start trace loop        */
   /***************************/
   if(verbose>0)fprintf(stderr,"start trace loop\n");
+  skeyvalue=0;
+ 
+  itrace=0;
   while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
     if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
     /********************/
     /* process the tah. */
     /********************/
-    /* this program prints selected header keys */
+    /* this program computes a secondary key.  If one of the headers in 
+       pkey changes, skey is set to 1.  Otherwise skey is the previous skey+1
+    */
+    pkeychanged=false;
+    if(itrace>0){
       for(ikey=0; ikey<numkeys; ikey++){
-	fprintf(stderr," %s=",list_of_keys[ikey]);
 	if(typehead == SF_INT){
-	  /* just cast the header to int so the print works */
-	  fprintf(stderr,"%d",((int*)fheader)[indx_of_keys[ikey]]);
+	  if(((int*)fheader    )[indx_of_keys[ikey]]!=
+	     ((int*)fprevheader)[indx_of_keys[ikey]]){
+	    pkeychanged=true;
+	    break;
+	  }
 	} else {
-	  fprintf(stderr,"%f",fheader[indx_of_keys[ikey]]);
+	  if(fheader[indx_of_keys[ikey]]!=fprevheader[indx_of_keys[ikey]]){
+	    pkeychanged=true;
+	    break;
+	  }
 	}
-      } /* end of the for(ikey..) loop */
-      fprintf(stderr,"\n");
-      /***************************/
-      /* write trace and headers */
-      /***************************/
-      put_tah(intrace, fheader, n1_traces, n1_headers, out);
+      }
+    }
+    if(pkeychanged) skeyvalue=1;
+    else skeyvalue++;
+    if(typehead == SF_INT) ((int*)fheader)[indx_of_skey]=skeyvalue;
+    else                          fheader [indx_of_skey]=skeyvalue;
+    
+    if(skeyvalue==1){
+      /* this is a new pkey, save the header so you know when it changes */
+      memcpy(fprevheader,fheader,n1_headers*sizeof(int));
+    }
+    
+    /***************************/
+    /* write trace and headers */
+    /***************************/
+    put_tah(intrace, fheader, n1_traces, n1_headers, out);
+    itrace++;
   }
 
   exit(0);

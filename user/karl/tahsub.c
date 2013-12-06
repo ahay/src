@@ -84,12 +84,11 @@ char** sf_getnstring(char* key, int* numkeys)
   char* one_par;
   char* copy_of_par;
   int ikey; 
-  
+    
   par=sf_getstring(key);
-
   /* count number of keys */
   *numkeys=0;
-  copy_of_par=sf_charalloc(strlen(par));
+  copy_of_par=sf_charalloc(strlen(par)+1);
   strcpy (copy_of_par, par);
   one_par=strtok(copy_of_par,",");
   while (one_par!=NULL){
@@ -100,7 +99,7 @@ char** sf_getnstring(char* key, int* numkeys)
   list_of_keys=(char**)sf_alloc(*numkeys,sizeof(char*)); 
   /* no need to reallocate, but including free(copy_of_par) clobberred part of
      list_of_keys. this spooked me on exactly how strtok works */ 
-  copy_of_par=sf_charalloc(strlen(par));
+  copy_of_par=sf_charalloc(strlen(par)+1);
   strcpy (copy_of_par, par);
   list_of_keys[0]=strtok(copy_of_par,",");
   for(ikey=1; ikey<*numkeys; ikey++){
@@ -199,6 +198,7 @@ void tahwritemapped(int verbose, float* trace, void* iheader,
   off_t i_output[SF_MAX_DIM];
   off_t file_offset;
   bool trace_fits_in_output_file;
+  static int number_traces_rejected=0;
 
   if(verbose>2)
     for (iaxis=0; iaxis<SF_MAX_DIM; iaxis++){
@@ -230,7 +230,13 @@ void tahwritemapped(int verbose, float* trace, void* iheader,
        i_output[iaxis]<0 ||
        i_output[iaxis]>=sf_n(output_axa_array[iaxis]) ){
 	trace_fits_in_output_file=false;
-	fprintf(stderr,"trace rejected\n");
+	number_traces_rejected++;
+	if(number_traces_rejected<10){
+	  fprintf(stderr,"trace rejection #%d\n",number_traces_rejected);
+	}
+	if(number_traces_rejected==10){
+	  fprintf(stderr,"another rejected trace.  reporting will stop.\n");
+	}
 	break;
     }
     if(verbose>2){
