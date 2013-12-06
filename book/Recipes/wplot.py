@@ -39,7 +39,7 @@ def param(par):
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
     # make room to plot acquisition
-    par['zmin']=-0.025*(par['zmax']-par['zmin'])
+    par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
 
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
@@ -120,6 +120,11 @@ def dgrey2d(custom,par):
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['dratio'],par['dheight'],par['scalebar'],
            par['labelattr']+custom)
+
+def dgreyE2d(data,dbyt,custom,par,xscale=0.5,yscale=0.5,shift=-11):
+    Plot(data+'_V',dbyt,'window n2=1 f2=0 | transp |'+ dgrey2d('',par))
+    Plot(data+'_H',dbyt,'window n2=1 f2=1 | transp |'+ dgrey2d('',par)) 
+    pplot.p1x2(data,data+'_V',data+'_H',xscale,yscale,shift)
 
 # wiggle 2D data
 def dwigl2d(custom,par):
