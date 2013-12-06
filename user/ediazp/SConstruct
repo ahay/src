@@ -28,6 +28,8 @@ picks2rsf
 targets.py = '''
 correlate
 nderiv
+npyCorr
+npyConv
 '''
 
 try:  # distributed version
