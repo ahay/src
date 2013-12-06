@@ -31,16 +31,16 @@ static bool causal;
 
 static float *o, *v, *d;
 static int *n, *in;
-static long s[3];
+static long s[3], *offsets;
 static float **x, **xn, **x1;
-static int *offsets, *flag;
+static int *flag;
 static float *t, *alpha;
 
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(long index);
-int neighbors_default();
-int neighbours(float* time, long i);
+long neighbors_default();
+long neighbours(float* time, long i);
 int update(float value, float* time, long i, int f, float al);
 float qsolve(float* time, long i, int *f, float *al);
 bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *al);
@@ -68,14 +68,14 @@ void dsreiko_init(int *n_in   /* length */,
     /* maximum length of heap */
     maxband = 0;
 
-    if (n[0] > 1) maxband += 2*n[1]*n[2];
-    if (n[1] > 1) maxband += 2*n[0]*n[2];
-    if (n[2] > 1) maxband += 2*n[0]*n[1];
+    if (n[0] > 1) maxband += (long) 2*n[1]*n[2];
+    if (n[1] > 1) maxband += (long) 2*n[0]*n[2];
+    if (n[2] > 1) maxband += (long) 2*n[0]*n[1];
 
     x = (float **) sf_alloc ((10*maxband+1),sizeof (float *));
-    in = sf_intalloc(n[0]*n[1]*n[2]);
+    in = sf_intalloc((long) n[0]*n[1]*n[2]);
 
-    offsets = (int *) sf_alloc (n[0]*n[1]*n[2],sizeof (int));
+    offsets = (long *) sf_alloc ((long) n[0]*n[1]*n[2],sizeof (long));
 
     thres = thres_in;
     tol = (double) tol_in;
@@ -247,7 +247,7 @@ void pqueue_update(long index)
     offsets[tIndex] = newOffset;
 }
 
-int neighbors_default()
+long neighbors_default()
 /* initialize source */
 {
     long i, j, k, nxy;
@@ -303,7 +303,7 @@ int neighbors_default()
     return (nxy-n[0]*(n[1]*n[1]+3*n[1]-2)/2);
 }
 
-int neighbours(float* time, long i)
+long neighbours(float* time, long i)
 /* update neighbors of gridpoint i, return number of updated points */
 {
     long j, k, ix, np;
@@ -344,7 +344,7 @@ int update(float value, float* time, long i, int f, float al)
 	if (flag != NULL) flag[i] = f;
 	if (alpha != NULL) alpha[i] = al;
 	if (in[i] == SF_OUT) { 
-	    in[i] = SF_FRONT;      
+	    in[i] = SF_FRONT;
 	    pqueue_insert(time+i);
 	    return 1;
 	} else {
@@ -359,7 +359,8 @@ float qsolve(float* time, long i, int *f, float *al)
 /* find new traveltime at gridpoint i */
 {
     bool vad1, vad2, vad3, vad4;
-    int j, k, ix[3], ff1, ff2, ff3, ff4;
+    int ff1, ff2, ff3, ff4;
+    long j, k, ix[3];
     float a, b, res, res1, res2, res3, res4, al1, al2, al3, al4;
     double vr, vs;
     struct Upd xx[3], *xj[3];
@@ -372,29 +373,29 @@ float qsolve(float* time, long i, int *f, float *al)
 
     for (j=0; j < 3; j++) {
 	if (ix[j] > 0) { 
-	    k = i-s[j];
-	    a = time[k];
+	  k = (long) i-s[j];
+	  a = time[k];
 	} else {
-	    a = SF_HUGE;
+	  a = SF_HUGE;
 	}
 	
 	if (ix[j] < n[j]-1) {
-	    k = i+s[j];
-	    b = time[k];
+	  k = (long) i+s[j];
+	  b = time[k];
 	} else {
-	    b = SF_HUGE;
+	  b = SF_HUGE;
 	}
 	
 	xj[j] = xx+j;
 	xj[j]->delta = 1./(d[j]*d[j]);
-
+	
 	if (a < b) {
 	    xj[j]->value = a;
 	    if (j==0) *al = -1.;
 	} else {
 	    xj[j]->value = b;
 	    if (j==0) *al = 1.;
-	}	
+	}
     }
 
     /* z-r-s */
@@ -554,7 +555,7 @@ bool updaten(float* res, struct Upd *xj[], double vr, double vs, int *f, float *
     double tt, temp[2];
     double kappa1, kappa2;
     double min, max;
-    int j;
+    long j;
     
     /* one-sided */
     if (*f == 1) {
@@ -785,7 +786,7 @@ double eval(struct Upd *xj[],
 void search(float *ttemp, float* time, long i, int *f, float *al)
 /* search for non-causal update */
 {
-    int j, k, ix[3];
+    long j, k, ix[3];
     float min, stemp, rtemp;
 
     for (j=0; j<3; j++) 

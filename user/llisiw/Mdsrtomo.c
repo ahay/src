@@ -278,6 +278,8 @@ int main(int argc, char* argv[])
 		sf_igrad2_init(n[0],n[1]);
 	    }
 
+	    sf_warning("!!!1");
+
 	    /* allocate temporary array */
 	    t  = sf_floatalloc(nt);
 	    dw = sf_floatalloc(nw);
@@ -288,14 +290,23 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("causal",&causal)) causal=true;
 	    /* if y, neglect non-causal branches of DSR */
 
+	    sf_warning("!!!2");
+
 	    /* initialize eikonal */
 	    dsreiko_init(n,o,d,thres,tol,nloop,causal);
 	    
+	    sf_warning("!!!3");
+
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);
 	    
+	    sf_warning("!!!4");
+
 	    /* initial misfit */
 	    dsreiko_fastmarch(t,w,ff,NULL);
+
+	    sf_warning("!!!5");
+
 	    dsreiko_mirror(t);
 	    
 	    /* calculate L2 data-misfit */
