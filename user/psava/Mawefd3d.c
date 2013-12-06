@@ -390,7 +390,7 @@ int main(int argc, char* argv[])
 		
 	    } /* end parallel section */
 	    
-	    /* inject acceleration source */
+	    /* inject displacement source */
 	    if(expl) {
 		sf_floatread(ww, 1,Fwav);
 		lint3d_bell1(up,ww[0],cs);
@@ -571,7 +571,7 @@ int main(int argc, char* argv[])
 		
 	    } /* end parallel section */
 	    
-	    /* inject acceleration source */
+	    /* inject displacement source */
 	    if(expl) {
 		sf_floatread(ww, 1,Fwav);
 		lint3d_bell1(up,ww[0],cs);
