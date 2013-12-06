@@ -168,19 +168,13 @@ int main (int argc, char* argv[])
 
     lint1_init(o2,d2,xcoord);
 
-//   lint1_lop(true,false,n2,nl,interp,zcoord);   
-   
     lint1_interp(nl, n2, zcoord, interp,extend);
 
-    for (i1=0;i1<n2 ; i1++){
-//       fprintf(stderr,"%13.5f%13.5f\n",d2*i1 +o2,interp[i1]);
-    }
 
     //allocate output model file
     mask=sf_floatalloc2(n1,n2);
 
     if(tmask){
-
         if (above){
 
             for (i2=0; i2<n2 ; i2++ ){
@@ -199,7 +193,6 @@ int main (int argc, char* argv[])
             }
             
         }else{
-
             for (i2=0; i2<n2 ; i2++ ){
                 x=o1;
                 for ( i1=0; i1<n1; i1++){
