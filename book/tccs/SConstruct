@@ -39,7 +39,6 @@ End(use='newalg,algorithmic,amsfonts,amsmath,amssymb,paralist,hyperref',
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\Z}{\mathbb{Z}}
-\renewcommand{\i}{\imath}
 \newcommand{\TODO}[1]{{\bf TODO: #1}}
 \newcommand{\p}{\partial}
 \newcommand{\Lapl}{\Delta}
