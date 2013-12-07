@@ -29,7 +29,9 @@ Papers(copyr='The University of Texas at Austin',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
-End(use=['algorithmic','amsfonts','amsmath','amssymb','paralist','hyperref','[vlined,algosection,ruled,norelsize]algorithm2e'],
+End(use=['newalg','algorithmic','amsfonts','amsmath','amssymb',
+         'paralist','hyperref',
+         '[vlined,algosection,ruled,norelsize]algorithm2e'],
     include=r'''
 \makeatletter
 \@addtoreset{section}{part}

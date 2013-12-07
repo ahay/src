@@ -185,7 +185,7 @@ na\"ive factorization and solve algorithms would be appropriate for a
 direct solver, where the application of $S_i^{-1}$ implicitly makes use of the 
 factorization of $S_i$.
 
-\begin{algorithm}
+\begin{algorithm2e}
 \DontPrintSemicolon
 $S_0 := A_{0,0}$\;
 Factor $S_0$\;
@@ -196,9 +196,9 @@ Factor $S_0$\;
 \caption{Na\"ive block tridiagonal $LDL^T$ factorization. 
 $O(n^7)=O(N^{7/3})$ work is required.}
 \label{alg:naive-fact}
-\end{algorithm}
+\end{algorithm2e}
 
-\begin{algorithm}
+\begin{algorithm2e}
 \DontPrintSemicolon
 %\tcp{Initialize $u := f$}
 %\For{$i=0,...,n-1$}{
@@ -218,7 +218,7 @@ $O(n^7)=O(N^{7/3})$ work is required.}
 }
 \caption{Na\"ive block $LDL^T$ solve. $O(n^5)=O(N^{5/3})$ work is required.}
 \label{alg:naive-solve}
-\end{algorithm}
+\end{algorithm2e}
 While the computational complexities of 
 Algs.~\ref{alg:naive-fact} and \ref{alg:naive-solve} are significantly higher 
 than multifrontal algorithms
@@ -304,7 +304,7 @@ Then, trivially,
 which implies a method for quickly computing $\tilde S_i^{-1} u_i$ given 
 a factorization of $H_i$:
 
-\begin{algorithm}
+\begin{algorithm2e}
 \DontPrintSemicolon
 Form $\hat u_i$ as the extension of $u_i$ by zero over the artificial PML\;
 Form $\hat v_i := H_i^{-1} \hat u_i$\;
@@ -312,7 +312,7 @@ Extract $\tilde S_i^{-1} u_i$ from the relevant entries of $\hat v_i$\;
 \caption{Application of $\tilde S_i^{-1}$ to $u_i$ given a multifrontal
 factorization of $H_i$. $O(\gamma^2 n^2 \log n)$ work is required.}
 \label{alg:apply-inverse}
-\end{algorithm}
+\end{algorithm2e}
 {\em From now on, we write $T_i$ to refer to the application of the 
 (approximate) inverse of the Schur complement for the $i$'th plane.} 
 %For the first plane, i.e., $i=0$, it is simply a multifrontal solve, but 
@@ -356,7 +356,7 @@ we have the following algorithm for setting up an approximate
 block $LDL^T$ factorization of the discrete artificially damped Helmholtz 
 operator:
 
-\begin{algorithm}
+\begin{algorithm2e}
 \DontPrintSemicolon
 $S_0 := J_{0,0}$\;
 Factor $S_0$\;
@@ -367,13 +367,13 @@ Factor $S_0$\;
 \caption{Setup phase of the sweeping preconditioner. 
 $O(\gamma^2 N^{4/3})$ work is required.}
 \label{alg:sweeping-setup}
-\end{algorithm}
+\end{algorithm2e}
 
 Once the preconditioner is set up, it can be applied using a straightforward
 modification of Alg.~\ref{alg:naive-solve} which avoids 
 redundant solves by combining the application of $L^{-1}$ and $D^{-1}$:
 
-\begin{algorithm}
+\begin{algorithm2e}
 \DontPrintSemicolon
 %\tcp{Initialize $u := f$}
 %\For{$i=0,...,m-1$}{
@@ -392,7 +392,7 @@ $u_{m-1} := T_{m-1} u_{m-1}$\;
 \caption{Application of the sweeping preconditioner. 
 $O(\gamma N \log N)$ work is required.}
 \label{alg:sweeping-apply}
-\end{algorithm}
+\end{algorithm2e}
 Given that the preconditioner can be set up with $O(\gamma^2 N^{4/3})$ work, 
 and applied with $O(\gamma N \log N)$ work, it provides a near-linear scheme
 for solving Helmholtz equations if only $O(1)$ iterations are required for 
@@ -777,7 +777,7 @@ but it is not crucial that the scheme be optimal, and so we simply distribute
 $A$ and $J$ in the same manner as vectors, i.e., with the $[\mathcal{G},\star]$ 
 distribution derived from the auxiliary problems' frontal distributions. 
 
-%\begin{algorithm}
+%\begin{algorithm2e}
 %\DontPrintSemicolon
 %$x := x_0$\;
 %$r := b - A x,\;\; \rho := \|r\|_2$\;
@@ -813,7 +813,7 @@ distribution derived from the auxiliary problems' frontal distributions.
 %as are the details for the online factorization of the upper Hessenberg 
 %matrix $H_j$.}
 %\label{alg:naive-gmresk}
-%\end{algorithm}
+%\end{algorithm2e}
 
 For performance reasons, it is beneficial to solve as many right-hand sides 
 simultaneously as possible: both the communication latency and the costs of 
