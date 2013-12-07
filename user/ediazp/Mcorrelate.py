@@ -1,81 +1,81 @@
 #!/usr/bin/env python
 '''
-This program is a wrapper for 
-numpy.correlate . It uses the 'full' mode
-correlation. 
-
-It implements corr(a,b) along the fast axis 
-
+Implements corr(a,b) along the fast axis 
 a [file] : is taken from stdin
-b [file] : is taken from  signal
-
-As for now, it requires both files to have the 
-same sampling interval
+b [file] : is taken from  "flt"
+Requires both files to have the same sampling interval
 '''
-
 
 import rsf.api as rsf
 import numpy as np
 import sys
 
+# ------------------------------------------------------------
 def normalize(a,b):
   a0 = np.sqrt((a**2).sum())
   b0 = np.sqrt((b**2).sum())
   s = 1./(a0*b0)
-
   return s
-
-
+# ------------------------------------------------------------
 
 par = rsf.Par()
 
+# File "a"
 Fa = rsf.Input()
-Fb = rsf.Input("signal")
-Fout = rsf.Output()
+na = Fa.int  ("n1")
+oa = Fa.float("o1")
+da = Fa.float("d1")
+a = np.zeros(na,'f')
 
-# pars from command line
-ntau = par.int("ntau",100) # number of tau lags 
-norm = par.bool("norm",False) # if True scale correlation by 1/(sqrt(corr(a,a)[0])*sqrt(corr(b,b)[0])) so the correlation goes from -1,1
-print norm
+# File "b"
+Fb = rsf.Input("flt")
+nb = Fb.int  ("n1")
+ob = Fb.float("o1")
+db = Fb.float("d1")
+b = np.zeros(nb,'f')
 
-
-
-# parameters from input file
-n1a = Fa.int("n1")    # number of samples from input
-n1b = Fb.int("n1")    # number of samples from input
-d1a = Fa.float("d1")  # dt
-d1b = Fb.float("d1")  # dt
-
-if not d1a == d1b:
-  print  >> sys.stderr, 'both files are required to have the same sampling interval'
+if not da == db:
+  print  >> sys.stderr, 'input files must have the same sampling interval'
   sys.exit(1)
+  
+# ------------------------------------------------------------
 
+# command line params
+norm = par.bool("norm",False) # normalize output
+nc = par.int("nc",100)    # number of correlation lags 
+if nc > na or nc > nb: nc = min(na-1,nb-1) 
 
-if ntau > n1a or ntau > n1b: ntau = min(n1a-1,n1b-1) 
+# ------------------------------------------------------------
+  
+# output file
+Fc = rsf.Output()
+Fc.put("n1", nc*2+1)
+Fc.put("o1",-nc*da)
+Fc.put('d1',    da)
 
-ntraces = Fa.size(1) # number of traces of input file
+# ------------------------------------------------------------
 
-a = np.zeros(n1a,'f')
-b = np.zeros(n1b,'f')
-center = (n1a+n1b-1)/2 -(n1a-n1b)*0.5 # center sample of the correlation
-l1 = center-ntau
-l2 = center+ntau+1
+# center sample of the correlation
+center = (na+nb-1)/2 - (na-nb)*0.5
+l1 = center-nc
+l2 = center+nc+1
 
-Fout.put("n1",ntau*2+1)
-Fout.put("o1",-ntau*d1a)
+# ------------------------------------------------------------
 
-for i2 in range(ntraces):
+n2 = Fa.size(1) # number of traces of input file
+for i2 in range(n2):
   Fa.read(a)
   Fb.read(b)
-  corr = np.correlate(a,b,mode='full')
-  out = corr[l1:l2]
+  c = np.correlate(a,b,mode='full')
+  
   if norm:
     s = normalize(a,b)
-    Fout.write(out*s)
+    Fc.write(c[l1:l2]*s)
   else:
-    Fout.write(out)
+    Fc.write(c[l1:l2])
 
+# ------------------------------------------------------------
 Fa.close()
 Fb.close()
-Fout.close()
+Fc.close()
 

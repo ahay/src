@@ -1,83 +1,83 @@
 #!/usr/bin/env python
 '''
-This program is a wrapper for 
-numpy.convolve . It uses the 'full' mode
-correlation. 
-
-It implements conv(a,b) along the fast axis 
-
+Implements conv(a,b) along the fast axis 
 a [file] : is taken from stdin
-b [file] : is taken from  filter
+b [file] : is taken from  "flt"
+Requires both files to have the same sampling interval
 
 mode [string]:
-  'full': returns an M+N-1 array, boundary effects 
-          are visible.
-
-  'same': returns a max(M,N) array, boundary effects
-          are visible.
-
-As for now, it requires both files to have the 
-same sampling interval
+ 'full': returns an M+N-1 array, boundary effects are visible.
+ 'same': returns a max(M,N) array, boundary effects are visible.
 '''
-
 
 import rsf.api as rsf
 import numpy as np
 import sys
 
+# ------------------------------------------------------------
+def normalize(a,b):
+  a0 = np.sqrt((a**2).sum())
+  b0 = np.sqrt((b**2).sum())
+  s = 1./(a0*b0)
+  return s
+# ------------------------------------------------------------
+
 par = rsf.Par()
 
+
+# File "a"
 Fa = rsf.Input()
-Fb = rsf.Input("filter")
-Fout = rsf.Output()
+na = Fa.int  ("n1")
+oa = Fa.float("o1")
+da = Fa.float("d1")
+a = np.zeros(na,'f')
 
-# pars from command line
-mode = par.string("mode","same")
-print mode
+# File "b"
+Fb = rsf.Input("flt")
+nb = Fb.int  ("n1")
+ob = Fb.float("o1")
+db = Fb.float("d1")
+b = np.zeros(nb,'f')
 
-
-
-
-# parameters from input file
-n1a = Fa.int("n1")    # number of samples from input
-n1b = Fb.int("n1")    # number of samples from input
-d1a = Fa.float("d1")  # dt
-d1b = Fb.float("d1")  # dt
-o1a = Fa.float("o1")  # dt
-o1b = Fb.float("o1") 
-
-length = {'full':n1a+n1b-1,
-          'same':max(n1a,n1b)}
-
-if not d1a == d1b:
-  print  >> sys.stderr, \
-           'both files are required to have the same sampling interval'
+if not da == db:
+  print  >> sys.stderr, 'input files must have the same sampling interval'
   sys.exit(1)
 
 
-ntraces = Fa.size(1) # number of traces of input file
+# ------------------------------------------------------------
 
-a = np.zeros(n1a,'f')
-b = np.zeros(n1b,'f')
+# command line params
+norm = par.bool("norm",False) # normalize output
+mode = par.string("mode","same")
 
+nc = {'full':na+nb-1,    'same':max(na,nb)}
+oc = {'full':min(oa,ob), 'same':oa}
 
-origin = {'full':min(o1a,o1b),
-          'same':o1a}
+# output file
+Fc = rsf.Output()
 try:
-  Fout.put("n1",length[mode])
-  Fout.put("o1",origin[mode])
+  Fc.put("n1",nc[mode])
+  Fc.put("o1",oc[mode])
 except:
   print >> sys.stderr, \
-      'mode %s'%mode+' is not recognized, valid modes are: "full" and "valid"'
+      'mode %s'%mode+' is not recognized, valid modes are: "full" and "same"'
   sys.exit(1)
 
-for i2 in range(ntraces):
+# ------------------------------------------------------------
+n2 = Fa.size(1) # number of traces of input file
+for i2 in range(n2):
   Fa.read(a)
   Fb.read(b)
-  conv = np.convolve(a,b,mode=mode)
-  Fout.write(conv)
+  c = np.convolve(a,b,mode=mode)
 
+  if norm:
+    s = normalize(a,b)
+    Fc.write(c*s)
+  else:
+    Fc.write(c)
+
+# ------------------------------------------------------------
 Fa.close()
 Fb.close()
-Fout.close()
+Fc.close()
 
