@@ -23,13 +23,12 @@ Papers(copyr='The University of Texas at Austin',
                 'butterfly': 'Jingwei Hu, Sergey Fomel, Laurent Demanet, and Lexing Ying',
                 'specrecom': 'Yihua Cai, Sergey Fomel, and Hongliu Zeng',
                 'psp': 
-                'Jack Poulson, Bj\"orn Engquist, Siwei Li, and Lexing Ying'
+                'Jack Poulson, Bj\"orn Engquist, Siwei Li, and Lexing Ying',
+                'uncert': 'Sergey Fomel and Evgeny Landa'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
-End(use=['newalg','algorithmic','amsfonts','amsmath',
-         'amssymb','tikz','paralist','hyperref',
-         '[vlined,algosection,ruled,norelsize]algorithm2e'],
+End(use='newalg algorithmic amsfonts amsmath amssymb paralist hyperref',
     include=r'''
 \makeatletter
 \@addtoreset{section}{part}

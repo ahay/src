@@ -17,8 +17,6 @@ To the reproducible documents collection:
   GPU devices (Monsegny and Agudelo)
 * tccs/nar: Seismic data decomposition into spectral components using
   regularized nonstationary autoregression (Fomel)
-* tccs/aperture: Selecting an optimal aperture in Kirchhoff migration
-  using dip-angle images (Klokov and Fomel)
 * tccs/dsrtomo: First-break traveltime tomography with the
   double-square-root eikonal equation (Li, Vladimirsky, and Fomel)
 * cup/rna2d: Random noise attenuation using f-x regularized
@@ -28,6 +26,8 @@ To the reproducible documents collection:
   Chen)
 * tccs/psp: A parallel sweeping preconditioner for heterogeneous 3D
   Helmholtz equations (Poulson, Engquist, Li, and Ying)
+* tccs/uncert: Structural uncertainty of time-migrated seismic images
+  (Fomel and Landa)
 
 To SCons:
 
