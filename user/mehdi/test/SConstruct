@@ -1,0 +1,8 @@
+from rsf.proj import *
+
+
+Flow ('mask', None, testmef)
+
+Result('mask',
+       'graph title= hh=1 wantaxis=n')
+End()
