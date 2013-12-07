@@ -24,11 +24,12 @@ Papers(copyr='The University of Texas at Austin',
                 'specrecom': 'Yihua Cai, Sergey Fomel, and Hongliu Zeng',
                 'psp': 
                 'Jack Poulson, Bj\"orn Engquist, Siwei Li, and Lexing Ying',
-                'uncert': 'Sergey Fomel and Evgeny Landa'
+                'uncert': 'Sergey Fomel and Evgeny Landa',
+                'dsrtomo': 'Siwei Li, Alexander Vladimirsky, and Sergey Fomel'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
-End(use='newalg algorithmic amsfonts amsmath amssymb paralist hyperref',
+End(use='newalg,algorithmic,amsfonts,amsmath,amssymb,paralist,hyperref',
     include=r'''
 \makeatletter
 \@addtoreset{section}{part}
