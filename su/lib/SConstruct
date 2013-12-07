@@ -6,7 +6,8 @@ import bldutil
 # SU LIBRARY
 #############################################################################
 src = '''
-convolution intsinc8 inttable8 mksinc sinc toeplitz xcor
+convolution intlin intsinc8 inttable8 mksinc sinc toeplitz xcor yxtoxy
+xindex 
 '''
 
 try: # distribution version

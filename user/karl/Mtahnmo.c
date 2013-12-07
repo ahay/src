@@ -39,16 +39,11 @@
 */
 #include <string.h>
 #include <rsf.h>
+#include <rsf_su.h>
 #include <rsfsegy.h>
 #include <math.h>
 
 #include "tahsub.h"
-#include "mksinc.h"
-#include "stoep.h"
-#include "intsinc8.h"
-#include "inttable8.h"
-#include "intlin.h"
-#include "yxtoxy.h"
 
 int main(int argc, char* argv[])
 {

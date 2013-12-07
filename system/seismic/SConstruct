@@ -34,7 +34,7 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../../su/lib/SConstruct')
 
 src = Glob('[a-z]*.c')
 
