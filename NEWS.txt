@@ -26,6 +26,8 @@ To the reproducible documents collection:
 * cup/rna3d: Noncausal f-x-y regularized nonstationary prediction
   filtering for random noise attenuation on 3D seismic data (Liu and
   Chen)
+* tccs/psp: A parallel sweeping preconditioner for heterogeneous 3D
+  Helmholtz equations (Poulson, Engquist, Li, and Ying)
 
 To SCons:
 

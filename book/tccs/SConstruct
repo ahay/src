@@ -22,14 +22,20 @@ Papers(copyr='The University of Texas at Austin',
                 'opwd': 'Zhonghuan Chen, Sergey Fomel, and Wenkai Lu',
                 'butterfly': 'Jingwei Hu, Sergey Fomel, Laurent Demanet, and Lexing Ying',
                 'specrecom': 'Yihua Cai, Sergey Fomel, and Hongliu Zeng',
+                'psp': 
+                'Jack Poulson, Bj\"orn Engquist, Siwei Li, and Lexing Ying'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
-End(use='amsmath,newalg,hyperref,algorithmic',
+End(use=['newalg','algorithmic','amsfonts','amsmath',
+         'amssymb','tikz','paralist','hyperref',
+         '[vlined,algosection,ruled,norelsize]algorithm2e'],
     include=r'''
 \makeatletter
 \@addtoreset{section}{part}
 \makeatother
+\newcommand{\gmres}{{GMRES}} 
+\newcommand{\gmresk}{{\rm GMRES($k$)}}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\C}{\mathbb{C}}
 \newcommand{\Z}{\mathbb{Z}}
