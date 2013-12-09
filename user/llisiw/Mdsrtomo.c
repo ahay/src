@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, causal, verb, adj, shape;
+    bool velocity, causal, limit, verb, adj, shape;
     int dimw, dimt, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, ir, nr;
     long nt;
     int iter, niter, cgiter, count;
@@ -197,6 +197,9 @@ int main(int argc, char* argv[])
 		dv = NULL;
 	    }
 	    
+	    if (!sf_getbool("limit",&limit)) limit=false;
+	    /* if y, limit computation within receiver coverage */
+
 	    if (!sf_getbool("shape",&shape)) shape=false;
 	    /* shaping regularization (default no) */
 	    
@@ -278,8 +281,6 @@ int main(int argc, char* argv[])
 		sf_igrad2_init(n[0],n[1]);
 	    }
 
-	    sf_warning("!!!1");
-
 	    /* allocate temporary array */
 	    t  = sf_floatalloc(nt);
 	    dw = sf_floatalloc(nw);
@@ -290,22 +291,16 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("causal",&causal)) causal=true;
 	    /* if y, neglect non-causal branches of DSR */
 
-	    sf_warning("!!!2");
-
 	    /* initialize eikonal */
-	    dsreiko_init(n,o,d,thres,tol,nloop,causal);
+	    dsreiko_init(n,o,d,
+			 thres,tol,nloop,
+			 causal,limit,dp);
 	    
-	    sf_warning("!!!3");
-
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);
 	    
-	    sf_warning("!!!4");
-
 	    /* initial misfit */
 	    dsreiko_fastmarch(t,w,ff,NULL);
-
-	    sf_warning("!!!5");
 
 	    dsreiko_mirror(t);
 	    

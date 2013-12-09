@@ -27,13 +27,13 @@ struct Upd {
 
 static double thres, tol, miu;
 static int nloop;
-static bool causal;
+static bool causal, limit;
 
 static float *o, *v, *d;
 static int *n, *in;
-static long s[3], *offsets;
+static long s[3], *offsets, nrec;
 static float **x, **xn, **x1;
-static int *flag;
+static int *flag, *dp;
 static float *t, *alpha;
 
 void pqueue_insert(float* v1);
@@ -48,16 +48,29 @@ double bisect(struct Upd *xj[],bool r, double vr, bool s, double vs, double min,
 double eval(struct Upd *xj[], bool r, double vr, bool s, double vs, double p);
 void search(float *ttemp, float* time, long i, int *f, float *al);
 
+void linetocart(int dim       /* number of dimensions */, 
+		const int* nn /* box size [dim] */, 
+		long i        /* line coordinate */, 
+		int* ii       /* cartesian coordinates [dim] */)
+/* convert line to Cartesian */
+{
+    int axis;
+ 
+    for (axis = 0; axis < dim; axis++) {
+	ii[axis] = i%nn[axis];
+	i /= nn[axis];
+    }
+}
+
 void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
 		  float *d_in /* increment */,
-		  float thres_in,
-		  float tol_in,
-		  int nloop_in,
-		  bool causal_in)
+		  float thres_in, float tol_in, int nloop_in,
+		  bool causal_in, bool limit_in, int *dp_in)
 /*< initialize >*/
 {
     long maxband;
+    int i;
 
     n = n_in;
     o = o_in;
@@ -81,8 +94,18 @@ void dsreiko_init(int *n_in   /* length */,
     tol = (double) tol_in;
     nloop = nloop_in;
     causal = causal_in;
+    limit = limit_in;
+    dp = dp_in;
 
     miu = d[0]/d[1];
+
+    if (limit && (dp != NULL)) {
+	nrec = 0;
+	
+	for (i=0; i < n[1]*n[2]; i++) {
+	    if (dp[i] == 1) nrec++;
+	}
+    }
 }
 
 void dsreiko_fastmarch(float *time /* time */,
@@ -93,6 +116,7 @@ void dsreiko_fastmarch(float *time /* time */,
 {
     float *p;
     long npoints, i;
+    int ii[3], ncheck=0;
 
     t = time;
     v = v_in;
@@ -119,6 +143,14 @@ void dsreiko_fastmarch(float *time /* time */,
 	i = p-t;
 
 	in[i] = SF_IN;
+
+	/* check receiver coverage */
+	if (limit && (dp != NULL)) {
+	    linetocart(3,n,i,ii);
+
+	    if (dp[ii[2]*n[1]+ii[1]] == 1) ncheck++;
+	    if (ncheck == nrec) break;
+	}
     }
 }
 

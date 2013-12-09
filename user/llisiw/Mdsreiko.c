@@ -23,14 +23,14 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, causal;
+    bool velocity, causal, limit;
     int dim, i, n[SF_MAX_DIM], nm;
     long nt;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t;
-    int *f, nloop;
+    int *f, nloop, *dp;
     float thres, *al, tol;
     char key[6];
-    sf_file in, out, flag, alpha;
+    sf_file in, out, mask, flag, alpha;
 
     sf_init(argc,argv);
     in  = sf_input("in");
@@ -70,6 +70,9 @@ int main(int argc, char* argv[])
 	    s[i] = 1./s[i]*1./s[i];
     }
 
+    if (!sf_getbool("limit",&limit)) limit=false;
+    /* if y, limit computation within receiver coverage */
+
     if (!sf_getfloat("thres",&thres)) thres=5.e-5;
     /* threshold (percentage) */
 
@@ -81,6 +84,18 @@ int main(int argc, char* argv[])
 
     nt = (long) nm*n[2];
 
+    /* read receiver mask */	    
+    if (NULL == sf_getstring("mask")) {
+	mask = NULL;
+	dp = NULL;
+    } else {
+	mask = sf_input("mask");
+	dp = sf_intalloc(n[1]*n[2]);
+	sf_intread(dp,n[1]*n[2],mask);
+	sf_fileclose(mask);
+    }
+
+    /* output DSR branch flag */
     if (NULL != sf_getstring("flag")) {
 	flag = sf_output("flag");
 	sf_settype(flag,SF_INT);
@@ -94,6 +109,7 @@ int main(int argc, char* argv[])
 	f = NULL;
     }
 
+    /* output DSR characteristic angle */
     if (NULL != sf_getstring("alpha")) {
 	alpha = sf_output("alpha");
 	sf_putint(alpha,"n3",n[2]);
@@ -113,7 +129,9 @@ int main(int argc, char* argv[])
     /* if y, neglect non-causal branches of DSR */
 
     /* initialize */
-    dsreiko_init(n,o,d,thres,tol,nloop,causal);
+    dsreiko_init(n,o,d,
+		 thres,tol,nloop,
+		 causal,limit,dp);
 
     /* compute */
     dsreiko_fastmarch(t,s,f,al);
