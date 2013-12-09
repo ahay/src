@@ -64,8 +64,8 @@ void line2cart(int dim       /* number of dimensions */,
     int axis;
  
     for (axis = 0; axis < dim; axis++) {
-	ii[axis] = i%nn[axis];
-	i /= nn[axis];
+      ii[axis] = i%((long) nn[axis]);
+      i /= (long) nn[axis];
     }
 }
 

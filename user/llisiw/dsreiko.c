@@ -57,8 +57,8 @@ void linetocart(int dim       /* number of dimensions */,
     int axis;
  
     for (axis = 0; axis < dim; axis++) {
-	ii[axis] = i%nn[axis];
-	i /= nn[axis];
+      ii[axis] = i%((long) nn[axis]);
+      i /= (long) nn[axis];
     }
 }
 
@@ -135,6 +135,8 @@ void dsreiko_fastmarch(float *time /* time */,
       if (dp[(j-1)*n[1]+j] == 1) ncheck++;	
     }
     
+    sf_warning("ncheck after init: %d",ncheck);
+
     /* initialize from zero-offset plane */
     for (npoints =  neighbors_default();
 	 npoints > 0;
