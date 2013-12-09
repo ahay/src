@@ -118,7 +118,7 @@ void dsreiko_fastmarch(float *time /* time */,
 {
     float *p;
     long npoints, i;
-    int ii[3], j, k, ncheck=0;
+    int ii[3], j, ncheck=0;
 
     t = time;
     v = v_in;
@@ -157,6 +157,8 @@ void dsreiko_fastmarch(float *time /* time */,
 	if (limit && (dp != NULL)) {
 	    linetocart(3,n,i,ii);
 
+	    if (ii[0] != 0) continue;
+
 	    if (dp[ii[2]*n[1]+ii[1]] == 1) ncheck++;
 	    if (dp[ii[1]*n[1]+ii[2]] == 1) ncheck++;
 	    if (ncheck == nrec) {
@@ -173,11 +175,11 @@ void dsreiko_mirror(float *time /*time*/)
     int i, j, k;
 
     for (k=1; k < n[1]; k++) {
-	for (j=0; j < k; j++) {
-	    for (i=0; i < n[0]; i++) {
-		time[(long) k*s[2]+j*s[1]+i] = time[(long) j*s[2]+k*s[1]+i];
-	    }
+      for (j=0; j < k; j++) {
+	for (i=0; i < n[0]; i++) {
+	  time[(long) k*s[2]+j*s[1]+i] = time[(long) j*s[2]+k*s[1]+i];
 	}
+      }
     }
 }
 

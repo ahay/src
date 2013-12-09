@@ -37,7 +37,7 @@ struct Upgrad {
 };
 
 static int ndim, ss[3];
-static long nt;
+static long nt, ntt;
 static const int *nn;
 static double dd[3];
 static const float *t0, *w0;
@@ -147,6 +147,11 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	up[0] = up[1] = 0;
 	t = t0[jt];
 	upg->ww[it][ndim] = 0.;
+
+	if (t == SF_HUGE) {
+	  ntt = it;
+	  break;
+	}
 
 	/* source-receiver position */
 	upg->pos[jt][0] = ii[2]*ss[1]+ii[0];
@@ -295,7 +300,7 @@ void upgrad_solve(upgrad upg,
     unsigned char *up;
     double num, den;
    
-    for (it = 0; it < nt; it++) {
+    for (it = 0; it < ntt; it++) {
 	jt = upg->order[it];
 
 	num = rhs[jt];
@@ -342,7 +347,7 @@ void upgrad_inverse(upgrad upg,
 	rhs[it] = 0.;
     }
    
-    for (it = nt-1; it >= 0; it--) {
+    for (it = ntt-1; it >= 0; it--) {
 	jt = upg->order[it];
 
 	line2cart(ndim,nn,jt,ii);
@@ -376,7 +381,7 @@ void upgrad_collect(upgrad upg,
 {
     long it;
 
-    for (it = 0; it < nt; it++) {
+    for (it = 0; it < ntt; it++) {
 	x[it] = upg->qq[it][0]*rhs[upg->pos[it][0]]
 	    +upg->qq[it][1]*rhs[upg->pos[it][1]];
     }
@@ -389,7 +394,7 @@ void upgrad_spread(upgrad upg,
 {
     long it;
 
-    for (it = 0; it < nt; it++) {
+    for (it = 0; it < ntt; it++) {
 	rhs[upg->pos[it][0]] += upg->qq[it][0]*x[it];
 	rhs[upg->pos[it][1]] += upg->qq[it][1]*x[it];
     }
