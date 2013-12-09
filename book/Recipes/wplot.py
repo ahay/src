@@ -63,7 +63,7 @@ def param(par):
        par['dheight']=14*par['dratio']
 
     if(not par.has_key('scalebar')): par['scalebar']='n'    
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 ' + ' '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 yll=1 ' + ' '
     
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
@@ -188,7 +188,7 @@ def waveplot(custom,par):
     plotfat=5 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
-    screenratio=0.5 screenht=7
+    screenratio=0.3 screenht=4.5
     %s
     ''' % (par['tmin'],par['tmax'],
            par['lt'],par['ut'],
