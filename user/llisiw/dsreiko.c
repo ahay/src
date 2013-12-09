@@ -105,8 +105,6 @@ void dsreiko_init(int *n_in   /* length */,
 	for (i=0; i < n[1]*n[2]; i++) {
 	    if (dp[i] == 1) nrec++;
 	}
-
-	sf_warning("Number of records: %d",nrec);
     }
 }
 
@@ -134,8 +132,6 @@ void dsreiko_fastmarch(float *time /* time */,
       if (dp[j*n[1]+j-1] == 1) ncheck++;
       if (dp[(j-1)*n[1]+j] == 1) ncheck++;	
     }
-    
-    sf_warning("ncheck after init: %d",ncheck);
 
     /* initialize from zero-offset plane */
     for (npoints =  neighbors_default();
@@ -163,10 +159,7 @@ void dsreiko_fastmarch(float *time /* time */,
 
 	    if (dp[ii[2]*n[1]+ii[1]] == 1) ncheck++;
 	    if (dp[ii[1]*n[1]+ii[2]] == 1) ncheck++;
-	    if (ncheck == nrec) {
-	      sf_warning("Computed records: %d",ncheck);
-	      break;
-	    }
+	    if (ncheck == nrec) break;
 	}
     }
 }
