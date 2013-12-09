@@ -142,8 +142,6 @@ int main(int argc, char* argv[])
     if (flag != NULL) sf_intwrite(f,nt,flag);
     if (alpha != NULL) sf_floatwrite(al,nt,alpha);
     
-    sf_warning("nt = %ld",nt);
-
     /* write output */
     sf_floatwrite(t,nt,out);
 
