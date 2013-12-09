@@ -272,6 +272,8 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	    upg->qq[jt][1] = 0.5/sqrt(wr-dt[1]*dt[1]*dd[1]);
 	}
     }
+
+    ntt = nt;
 }
 
 void upgrad_close(upgrad upg)
