@@ -19,9 +19,9 @@
 
 #include <rsf.h>
 
-#include "upgraddsr.h"
+#include "upgraddsr0.h"
 
-#ifndef _upgraddsr_h
+#ifndef _upgraddsr0_h
 
 typedef struct Upgrad *upgrad;
 /* abstract data type */
@@ -69,6 +69,12 @@ void line2cart(int dim       /* number of dimensions */,
     }
 }
 
+long* upgrad_order(upgrad upg)
+/*< upwind order >*/
+{
+    return (upg->order);
+}
+
 upgrad upgrad_init(int ndim_in      /* number of dimensions */,
 		   const int *nn_in /* [dim] data size */,
 		   const float *d   /* [dim] data sampling */)
@@ -84,10 +90,9 @@ upgrad upgrad_init(int ndim_in      /* number of dimensions */,
     ndim = ndim_in;
     nn = nn_in;
 
-    nt = 1;
+    nt = nn[1]*(nn[1]+1)/2;
     for (i=0; i < ndim; i++) {
 	ss[i] = nt;
-	nt *= nn[i];
 	dd[i] = 1./(d[i]*d[i]);
     }
 
@@ -132,12 +137,6 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
     t0 = r0;
     w0 = s0;
 
-    /* sort from small to large traveltime */
-    for (it = 0; it < nt; it++) {
-	upg->order[it] = it;
-    }
-    qsort(upg->order, nt, sizeof(long), fermat);
-     
     for (it = 0; it < nt; it++) {
 	jt = upg->order[it];
 
@@ -147,10 +146,12 @@ void upgrad_set(upgrad upg      /* upwind stencil */,
 	up[0] = up[1] = 0;
 	t = t0[jt];
 	upg->ww[it][ndim] = 0.;
+	upg->qq[jt][0] = 0.;
+	upg->qq[jt][1] = 0.;
 
 	if (t == SF_HUGE) {
-	  ntt = it;
-	  break;
+	    ntt = it;
+	    break;
 	}
 
 	/* source-receiver position */

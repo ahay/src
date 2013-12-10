@@ -19,7 +19,7 @@
 
 #include <rsf.h>
 
-#include "dsreiko.h"
+#include "dsreiko0.h"
 
 struct Upd {
     double value, delta;
@@ -34,12 +34,12 @@ static int *n, *in;
 static long s[3], *offsets, nrec;
 static float **x, **xn, **x1;
 static int *flag, *dp;
-static float *t, *alpha;
+static float *t;
 
 void pqueue_insert(float* v1);
 float* pqueue_extract(void);
 void pqueue_update(long index);
-long neighbors_default();
+long neighbors_default(long* order);
 long neighbours(float* time, long i);
 int update(float value, float* time, long i, int f, float al);
 float qsolve(float* time, long i, int *f, float *al);
@@ -111,17 +111,16 @@ void dsreiko_init(int *n_in   /* length */,
 void dsreiko_fastmarch(float *time /* time */,
 		       float *v_in /* slowness squared */,
 		       int *f_in   /* upwind flag */,
-		       float *alpha_in /* barycentric coordinate */)
+		       long *order /* upwind order */)
 /*< fast-marching solver >*/
 {
     float *p;
-    long npoints, i;
+    long npoints, i, count;
     int ii[3], j, ncheck=0;
 
     t = time;
     v = v_in;
     flag = f_in;
-    alpha = alpha_in;
 
     xn = x;
     x1 = x+1;
@@ -133,8 +132,10 @@ void dsreiko_fastmarch(float *time /* time */,
       if (dp[(j-1)*n[1]+j] == 1) ncheck++;	
     }
 
+    count = n[0]*n[1];
+
     /* initialize from zero-offset plane */
-    for (npoints =  neighbors_default();
+    for (npoints =  neighbors_default(order);
 	 npoints > 0;
 	 npoints -= neighbours(t,i)) {
 	/* Pick smallest value in the NarrowBand
@@ -150,6 +151,9 @@ void dsreiko_fastmarch(float *time /* time */,
 	i = p-t;
 
 	in[i] = SF_IN;
+
+	/* register order */
+	order[count++] = i;
 
 	/* check receiver coverage */
 	if (limit && (dp != NULL)) {
@@ -289,7 +293,7 @@ void pqueue_update(long index)
     offsets[tIndex] = newOffset;
 }
 
-long neighbors_default()
+long neighbors_default(long *order)
 /* initialize source */
 {
     long i, j, k, nxy;
@@ -312,8 +316,13 @@ long neighbors_default()
 		in[j*s[2]+k*s[1]+i] = SF_IN;
 		t[j*s[2]+k*s[1]+i] = 0.;
 		if (flag != NULL) flag[j*s[2]+k*s[1]+i] = 0;
-		if (alpha != NULL) alpha[j*s[2]+k*s[1]+i] = 0.;
 	    }
+	}
+    }
+
+    for (j=0; j < n[1]; j++) {
+	for (i=0; i < n[0]; i++) {
+	    order[j*n[0]+i] = j*s[2]+j*s[1]+i;
 	}
     }
 
@@ -331,11 +340,9 @@ long neighbors_default()
 	    if (temp[0] <= temp[1]) {
 		t[j*s[2]+(j+1)*s[1]+i] = temp[0];
 		if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 2;
-		if (alpha != NULL) alpha[j*s[2]+(j+1)*s[1]+i] = 0.;
 	    } else {
 		t[j*s[2]+(j+1)*s[1]+i] = temp[1];
 		if (flag != NULL) flag[j*s[2]+(j+1)*s[1]+i] = 3;
-		if (alpha != NULL) alpha[j*s[2]+(j+1)*s[1]+i] = 0.;
 	    }
 
 	    pqueue_insert(t+j*s[2]+(j+1)*s[1]+i);
@@ -384,8 +391,7 @@ int update(float value, float* time, long i, int f, float al)
     if (value < time[i]) {
 	time[i] = value;
 	if (flag != NULL) flag[i] = f;
-	if (alpha != NULL) alpha[i] = al;
-	if (in[i] == SF_OUT) { 
+	if (in[i] == SF_OUT) {
 	    in[i] = SF_FRONT;
 	    pqueue_insert(time+i);
 	    return 1;
