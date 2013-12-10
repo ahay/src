@@ -1,4 +1,0 @@
-from rsf.tex import *
-
-End(use='hyperref',hires='image3 image-clean image3s pimage-20-20 mask-20-20 pimage-20-20-clean')
-

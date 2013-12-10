@@ -1,3 +1,0 @@
-uses=['sfsegyread', 'sfput', 'sfscale', 'sfmath', 'sfsmooth', 'sfgrey', 'sfbspvel2', 'sfwindow', 'sfescrt2', 'sfcat', 'sfdd', 'sfheadermath', 'sftransp', 'sfintbin', 'sfmutter', 'sfpcrdata2', 'sfcram2', 'sfspike', 'sfgraph', 'sfstack', 'sfdip2', 'sfdagap', 'sfmul', 'sfnoise', 'sfcrssemb', 'sfmask']
-data=['data/sigsbee/sigsbee2b_migration_velocity.segy', 'data/sigsbee/sigsbee2b_nfs.segy']
-size= 83808068732
