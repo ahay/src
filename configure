@@ -128,6 +128,6 @@ else
 PYTHONPATH=$M8R_PY_PATH
 fi
 
-echo "SCONS = RFSROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile
+echo "SCONS = RSFROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile
 cat Makefile.in >> Makefile
 exit 0
