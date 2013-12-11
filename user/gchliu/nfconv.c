@@ -1,4 +1,4 @@
-/* Multi-dimension matrix multiplication operator */
+/* Nonstationary convolution opertor for complex numbers */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
