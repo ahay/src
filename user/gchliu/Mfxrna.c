@@ -26,15 +26,19 @@ int main(int argc, char* argv[])
     bool verb;
     int m[1], rect[1];
     int i1,iw,niter,nshift,n1,n2,n12,ns,i3,n3,i,ii1,is;
-    sf_complex *d1,**d,*sh, *f;
+    sf_complex *d1,**d,*sh, *f, *one;
     float mean,*mk;
     sf_file dat, flt, mask, pre, zshift, zdata;
 
     sf_init(argc,argv);
 
     dat = sf_input("in");
-    mask = sf_input("mask");
     flt = sf_output("out");
+
+    if (NULL != sf_getstring("mask")) {
+        mask = sf_input("mask");
+    }
+
     if (!sf_getint("rect",rect)) rect[0]=10;
 	/* smoothing radius (in space X) */
 
@@ -84,23 +88,30 @@ int main(int argc, char* argv[])
     nshift=n1*2*ns;
     
     sf_shiftdim(dat, flt, 2);
-    sf_putint(flt,"n2",2*ns);
+    sf_putint(flt,"n2",2*ns+1);
     sf_putfloat(flt,"d2",1);
     sf_putfloat(flt,"o2",-ns);
 
     d  = sf_complexalloc2(n1,n2);
     d1 = sf_complexalloc(n1);
+    one = sf_complexalloc(n1);
     sh = sf_complexalloc(nshift);
     mk = sf_floatalloc(n1);
     f  = sf_complexalloc(nshift);
     //f = sf_complexalloc(n12);
     //g = sf_complexalloc(nd);
     m[0]=n1;
+    
+    for (i1=0;i1<n1;i1++) one[i1]=sf_cmplx(-1,0);
 
     for (i3=0; i3<n3; i3++) { // y
 
-         sf_complexread(d[0],n12,dat);
-         sf_floatread(mk,n1,mask);
+        sf_complexread(d[0],n12,dat);
+        if (NULL != sf_getstring("mask")) {
+            sf_floatread(mk,n1,mask);
+        } else {
+            for (i1=0;i1<n1;i1++) mk[i1]=1.0;
+        }
 
          for (iw=0; iw<n2; iw++) { // w
 	      sf_warning("iw = %d of %d", iw, n2);
@@ -112,28 +123,28 @@ int main(int argc, char* argv[])
               }
               // shifts
               for (is=0;is<ns;is++) {//forward
-                   for (i1=0;i1<ns-is;i1++) {
-                        sh[is*n1+i1]=sf_cmplx(0,0);
-                   }
-                   for (i1=ns-is;i1<n1;i1++) {
-                        sh[is*n1+i1]=d1[i1-ns+is];
-                   }
-                   
-              }
-              for (is=0;is<ns;is++) { // backward
-                   for (i1=0;i1<n1-is-1;i1++) {
-                        sh[n1*ns+is*n1+i1]=d1[i1+is+1];
-                   }
-                   for (i1=n1-is-1;i1<n1;i1++) {
+                   for (i1=0;i1<is+1;i1++) {
                         sh[n1*ns+is*n1+i1]=sf_cmplx(0,0);
                    }
+                   for (i1=is+1;i1<n1;i1++) {
+                        sh[n1*ns+is*n1+i1]=d1[i1-is-1];
+                   }
                    
-              }                   
+              //}
+             // for (is=0;is<ns;is++) { // backward
+                   for (i1=0;i1<n1-ns+is-1;i1++) {
+                        sh[is*n1+i1]=d1[i1+ns-is];
+                   }
+                   for (i1=n1-ns+is-1;i1<n1;i1++) {
+                        sh[is*n1+i1]=sf_cmplx(0,0);
+                   }
+                   
+              }                  
               // shift end
               //Shifts end
               for (i1=0;i1<n1;i1++) { //Zero mask
                    if (mk[i1] == 0.) { 
-                       for (ii1=i1-ns;ii1<i1+ns;ii1++){
+                       for (ii1=i1-ns;ii1<i1+ns+1;ii1++){
                             if(ii1 >= 0 && ii1< n1){
                                  d1[ii1] = sf_cmplx(0,0);
                                  for (is=0; is < (2*ns); is++) {
@@ -152,6 +163,7 @@ int main(int argc, char* argv[])
               }
               
              cmultidivn_init(2*ns, 1, n1, m, rect, sh, false);    
+
              mean = 0.;
              for(i = 0; i < nshift; i++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -162,13 +174,16 @@ int main(int argc, char* argv[])
              }
              if (mean == 0.) {
                  for(i=0; i < nshift; i++) {
-                     f[i]=sf_cmplx(0,0); ///////////////////////////////////////////////all zeros
+                     f[i]=sf_cmplx(0,0); 
                  }
-	         sf_complexwrite(f,nshift,flt);  
+                 sf_complexwrite(f,n1*ns,flt);  
+	         sf_complexwrite(one,n1,flt);  
+	         sf_complexwrite(f+ns*n1,n1*ns,flt);  
 	         continue;
              }
-
+             sf_warning("iw=%d and mean=%g",iw, mean);
              mean = sqrtf (nshift/mean);
+
     
             for(i=0; i < nshift; i++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -184,8 +199,11 @@ int main(int argc, char* argv[])
 	        d1[i] = sf_crmul(d1[i],mean);
 #endif
             }
+
             cmultidivn (d1,f,niter);  
-            sf_complexwrite(f,nshift,flt);
+            sf_complexwrite(f,n1*ns,flt);  
+	    sf_complexwrite(one,n1,flt);  
+	    sf_complexwrite(f+ns*n1,n1*ns,flt);  
 
             if (pre) {
 	        for(i=0; i < nshift; i++) {

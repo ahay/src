@@ -38,23 +38,28 @@ void nfmis(int niter         /* number of iterations */,
 	  const bool *known /* mask for known data */,
 	  bool verb         /* verbosity flag */) 
 /*< interpolate >*/
-{
+{    
     int ix;
     sf_complex *zero;
     zero = sf_complexalloc(n1);
     for (ix=0; ix < n1; ix++) {
-	zero[ix]=0.;
+	zero[ix]=sf_cmplx(0,0);
     }
-    
+
     nfconv_init(filt, n1, na2);
-    
-   	     
+
+    //sf_warning("xxxx[0]=%f",crealf(xx[0]));
+    //sf_ccdstep_init();
 	sf_csolver (nfconv_lop, sf_ccgstep, n1, n1, xx, zero, 
-		       niter, "x0", xx, "known", known, "end");
-	sf_cgstep_close();
+		       niter, "x0", xx, "known", known, "verb",verb,"end");
 
 
     free(zero);
+	sf_ccgstep_close();
+
+
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////

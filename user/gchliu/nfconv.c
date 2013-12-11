@@ -1,4 +1,4 @@
-/* Nonstationary convolution opertor for complex numbers */
+/* Multi-dimension matrix multiplication operator */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -35,7 +35,7 @@ void nfconv_init (sf_complex* bb, int nn1, int naa2)
 void nfconv_lop (bool adj, bool add, 
 		  int nx, int ny, sf_complex *xx, sf_complex *yy) 
 /*< linear operator >*/
-{
+{    
     int itau, it,lag;
    
     lag=(na2+1)/2;
@@ -47,15 +47,15 @@ void nfconv_lop (bool adj, bool add,
 	    for (it = na2-lag; it <= n1-lag; it++) {
 		    if (adj) {
 #ifdef SF_HAS_COMPLEX_H
-			    xx[it-itau+lag-1] += yy[it]*filter[it+n1*itau];
+			    xx[it-itau+lag-1] += yy[it]*conjf(filter[it+n1*itau]);
 #else
-		        xx[it-itau+lag-1] += sf_cmul(yy[it],filter[it+n1*itau]);
+		        xx[it-itau+lag-1] = sfcadd(xx[it-itau+lag-1],sf_cmul(yy[it],conjf(filter[it+n1*itau])));
 #endif
 		    } else {
 #ifdef SF_HAS_COMPLEX_H
 		        yy[it] += xx[it-itau+lag-1]*filter[it+n1*itau];
 #else  
-		        yy[it] += sf_cmul(xx[it-itau+lag-1],filter[it+n1*itau]);
+		        yy[it] = sfcadd(yy[it],sf_cmul(xx[it-itau+lag-1],filter[it+n1*itau]));
 #endif
 		    } 
 	    }
