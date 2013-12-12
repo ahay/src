@@ -78,7 +78,7 @@ int main (int argc, char *argv[])
     switch(irun[0]) {
 
 	case 'e': /* EIC  hx-hy-hz */
-	case 'h': /* EIC: hx-hy-1  */
+	case 'h': /* HIC: hx-hy-1  */
 	    if(verb) sf_warning("EIC OUT");
 
 	    Fsou = sf_input ( "in");

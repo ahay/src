@@ -121,10 +121,10 @@ typedef struct weiopf *weiop3f;
 
 struct weiopf{
     sf_complex ***wfld; /*  generic wavefield (nx,ny,nth) */
-    /* CIC */
     sf_complex ***swfl; /*   source wavefield (nx,ny,nth) */
     sf_complex ***rwfl; /* receiver wavefield (nx,ny,nth) */
-    float      ****icic; /* image (nx,ny,nz) */
+    /* CIC */
+    float     ****icic; /* image (nx,ny,nz) */
     /* EIC */
     float    *****ieic; /*     image (nhx,nhy,nhz,nht,nc) */
     float     ****ihic; /*     image (nhx,nhy,    nht,nc) */
@@ -140,9 +140,10 @@ typedef struct weiop *weiop3d;
 
 struct weiop{
     sf_complex ***wfld; /*  generic wavefield (nx,ny,nth) */
-    /* CIC */
     sf_complex ***swfl; /*   source wavefield (nx,ny,nth) */
     sf_complex ***rwfl; /* receiver wavefield (nx,ny,nth) */
+    sf_complex ***ahic; /*     adjoint source (nx,ny,nth) */
+    /* CIC */
     float      ***icic; /* image (nx,ny,nz) */
     /* EIC */
     float    *****ieic; /*     image (nhx,nhy,nhz,nht,nc) */

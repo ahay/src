@@ -29,11 +29,14 @@
 #include "weiutl.h"
 /*^*/
 
+#include "weiajs.h"
+
 int main (int argc, char *argv[])
 {
     bool  verb;         /* verbosity */
     int ompnth=1;       /* number of threads */
     bool conj;          /* complex conjugate flag */
+    char *irun;         /* I run... */
 
     sf_file Faso=NULL;  /* output     wavefield wfl(x,y,z,w) */
     sf_file Fbwf=NULL;  /*  input     wavefield wfl(x,y,z,w) */
@@ -41,6 +44,7 @@ int main (int argc, char *argv[])
     sf_file Fcoo=NULL;  /*     coord file   C(nc) */
 
     weicub3d cub;       /* hypercube */
+    weiop3d weop;       /* WEI operator */
     weico3d eico;       /* eic coordinates */
 
     /*------------------------------------------------------------*/
@@ -52,6 +56,7 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool(  "verb",&verb  ))  verb = false; /* verbosity flag */
     if (!sf_getbool(  "conj",&conj   )) sf_error("Specify whether complex conjugate!"); /* flag */
+    if (NULL == (irun = sf_getstring("irun"))) irun = "e";
 
     if(verb) fprintf(stderr,"init cube...");
     cub = wei_cube(verb,ompnth);
@@ -64,12 +69,14 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     Feic = sf_input( "in");
-    if (SF_COMPLEX !=sf_gettype(Feic)) sf_error("Need complex input");
-
+  
     /*------------------------------------------------------------*/
     Fcoo = sf_input ("coo"); /* input coordinates for EIC */
     if (SF_FLOAT !=sf_gettype(Fcoo)) sf_error("Need float coordinates");
-    mvahic_inp(cub,Feic,Fcoo); /* input coordinates and EIC paramters */
+
+    /* load EIC dimensions from file */
+    mvahic_inp(cub,Feic,Fcoo); 
+
     eico = weicoo_init(cub,Fcoo);
 
     /*------------------------------------------------------------*/
@@ -77,8 +84,30 @@ int main (int argc, char *argv[])
     weiwfl_out(cub,Faso);
 
     /*------------------------------------------------------------*/
-    adjsou(cub,eico,Feic,Fbwf,Faso,conj);
+    switch(irun[0]) {
+
+	case 'h': /* HIC: hx-hy-1  */
+	    if(verb) sf_warning("HIC AJS");
+
+	    weop = weihicajs_init(cub);
+ 
+	    weihicajs(weop,cub,eico,Feic,Fbwf,Faso,conj);
+
+	    weihicajs_close(weop);
+	    
+	    break;
+
+	case 'e': /* EIC  hx-hy-hz */
+	default:
+	    if(verb) sf_warning("EIC AJS");
+
+	    adjsou(cub,eico,Feic,Fbwf,Faso,conj);
+
+	    break;
+    }
+	
     weicoo_close(eico);
+    
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
