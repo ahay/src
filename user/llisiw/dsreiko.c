@@ -126,11 +126,8 @@ void dsreiko_fastmarch(float *time /* time */,
     xn = x;
     x1 = x+1;
 
-    if (dp[0] == 1) ncheck++;
-    for (j=1; j < n[1]; j++) {
+    for (j=0; j < n[1]; j++) {
       if (dp[j*n[1]+j] == 1) ncheck++;
-      if (dp[j*n[1]+j-1] == 1) ncheck++;
-      if (dp[(j-1)*n[1]+j] == 1) ncheck++;	
     }
 
     /* initialize from zero-offset plane */

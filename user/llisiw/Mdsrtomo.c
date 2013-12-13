@@ -22,15 +22,27 @@
 #include "dsreiko.h"
 #include "dsrtomo.h"
 
+float gscale(const float *x, int n, float *g)
+{
+    int i;
+    float scale=0.;
+
+    for (i=0; i < n; i++) {
+	scale = (fabsf(g[i])/x[i])>scale? fabsf(g[i])/x[i]: scale;
+    }
+    
+    return scale;
+}
+
 int main(int argc, char* argv[])
 {
-    bool velocity, causal, limit, verb, adj, shape;
+    bool velocity, causal, limit, verb, adj, shape, scale;
     int dimw, dimt, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, ir, nr;
     long nt;
-    int iter, niter, cgiter, count;
+    int iter, niter, liter, cgiter, count;
     int *ff, *dp, *mp, nloop;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *dt, *dw, *dv, *t, *w, *t0, *w1, *p=NULL;
-    float eps, tol, thres, rhsnorm, rhsnorm0, rhsnorm1, rate, gama;
+    float eps, tol, thres, rhsnorm, rhsnorm0, rhsnorm1, rate, scale0, ratio, gama;
     char key[6], *what;
     sf_file in, out, time, reco, grad, flag, mask, prec;
 
@@ -203,6 +215,12 @@ int main(int argc, char* argv[])
 	    if (!sf_getbool("shape",&shape)) shape=false;
 	    /* shaping regularization (default no) */
 	    
+	    if (!sf_getbool("scale",&scale)) scale=false;
+	    /* if y, scale gradient before line-search */
+
+	    if (!sf_getfloat("scale0",&scale0)) scale0=0.5;
+	    /* gradient scale max ratio (if scale=y) */
+
 	    /* read record */
 	    if (NULL == sf_getstring("reco"))
 		sf_error("Need record reco=");
@@ -242,6 +260,9 @@ int main(int argc, char* argv[])
 	    
 	    if (!sf_getint("cgiter",&cgiter)) cgiter=10;
 	    /* number of conjugate-gradient iterations */
+
+	    if (!sf_getint("liter",&liter)) liter=5;
+	    /* number of line-search iterations */
 	    
 	    if (!sf_getfloat("thres",&thres)) thres=5.e-5;
 	    /* threshold (percentage) */
@@ -349,9 +370,21 @@ int main(int argc, char* argv[])
 		    }
 		}
 
+		/* scale gradient */
+		if (scale) {
+		    ratio = gscale(w,nw,dw);
+
+		    if (ratio <= scale0) {
+			gama = 0.5;
+		    } else {
+			gama = 0.5*scale0/ratio;
+		    }
+		} else {
+		    gama = 0.5;
+		}
+
 		/* line search */
-		gama = 0.5;
-		for (count=0; count < 5; count++) {
+		for (count=0; count < liter; count++) {
 		    
 		    /* update slowness */
 		    for (iw=0; iw < nw; iw++) 
