@@ -23,8 +23,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, na2,na12, niter, xniter, nf,i,it,f1;
-    sf_complex *xx, *aa, *ck;
+    int n1, na2,na12, niter, xniter, nf,i,f1,iy,ny;
+    sf_complex *xx, *aa;
     float *kk;
     bool *known,exact, verb;
     sf_file in, out, filt,mask=NULL;
@@ -35,7 +35,8 @@ int main(int argc, char* argv[])
     filt = sf_input("filt");
     
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    nf = sf_leftsize(in,1);
+    if (!sf_histint(in,"n2",&nf)) sf_error("No n2= in input");
+    ny = sf_leftsize(in,2);
 
 	if (!sf_histint(filt,"n2",&na2)) sf_error("No n2= in filtin");
 	na12=n1*na2;
@@ -61,47 +62,37 @@ int main(int argc, char* argv[])
    
     xx    = sf_complexalloc(n1);
     known = sf_boolalloc(n1);
-	aa    = sf_complexalloc(na12);
-	kk    = sf_floatalloc(n1);
-	ck    = sf_complexalloc(n1);
+    aa    = sf_complexalloc(na12);
+    kk    = sf_floatalloc(n1);
 
-    
-	for (f1=0;f1 < nf; f1++) { 
-	    sf_warning("Frequency slice %d of %d",f1+1,nf);
-	    sf_complexread(aa,na12,filt);
-	    sf_complexread(xx,n1,in);
 
-	    if (NULL != sf_getstring("mask")) {
-	        sf_floatread(kk,n1,mask);
-	    
-	        for (i=0; i < n1; i++) {
-		        known[i] = (bool) (cabsf(kk[i]) != 0.);
-	        }
-	    } else {
-	        for (i=0; i < n1*n2; i++) {
-		    known[i] = (bool) (cabsf(xx[i]) != 0.);
-	        }
-	    }
+    for (iy=0;iy<ny;iy++){ // y
+	           sf_warning("y slice %d of %d",iy+1,ny);
+         if (NULL != mask) {
+              sf_floatread(kk,n1,mask);
+              for (i=0; i < n1; i++) {
+      	          known[i] = (bool) (cabsf(kk[i]) != 0.);
+	          }
+         }
 	
-	    if (exact) {
-	        for (i=0; i < n1; i++) {
-		        if (known[i]) ck[i] = xx[i];
-	        }
-	    }
-        for (it=0; it < xniter; it++) { sf_warning("xniter slice %d of %d",it+1,xniter);
-	        nfmis(niter, n1, na2, aa, xx, known, verb);
+        
+         for (f1=0;f1 < nf; f1++) { // freq
+	           sf_warning("Frequency slice %d of %d",f1+1,nf);
+               sf_complexread(aa,na12,filt);
+               sf_complexread(xx,n1,in);
 
-	    	
-	        if (exact) {
-	            for (i=0; i < n1*n2; i++) {
-		        if (known[i]) xx[i] = ck[i];
-	            }
-	        }
-        }
-	    sf_complexwrite (xx,n1,out);
-	    
-	} /* freq end*/
-	
+               if (NULL == mask) { 
+
+	                for (i=0; i < n1; i++) {
+	                    known[i] = (bool) (cabsf(xx[i]) != 0.);
+	                }
+               }
+
+
+               nfmis(niter, n1, na2, aa, xx, known, verb);           
+               sf_complexwrite (xx,n1,out);
+	     } /* freq end*/
+    } /*y end*/
 	
 	
     exit(0);

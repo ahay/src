@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-pwshapeic pwic pwdecon smstack snrstack wcorr shiftd2 shiftd1 cshifts2 nfmiss fxrna cmatmult3 
+pwshapeic pwic pwdecon smstack snrstack wcorr shiftd2 shiftd1 cshifts2 nfmiss fxrna cmatmult3 rfxrna
 '''
 
 # rfxrna
