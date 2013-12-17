@@ -1171,6 +1171,7 @@ def cuda(context):
         text = '''
         #include <cuda.h>
         #include <cuda_runtime_api.h>
+        #include <cusparse_v2.h>
         int main(int argc,char* argv[]) {
         cudaSetDevice (0);
         }\n'''

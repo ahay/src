@@ -4,8 +4,10 @@ import bldutil
 
 # C main programs
 progs = '''
-fpocs3dpthresh pocs3dpthresh dlct Testfd2
+fpocs3dpthresh pocs3dpthresh dlct 
 '''
+
+#Testfd2
 
 cuda_progs = '''
 '''
