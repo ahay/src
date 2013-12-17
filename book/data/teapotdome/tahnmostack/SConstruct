@@ -1,10 +1,11 @@
 from rsf.proj import *
 import math
 
-#Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
+# get the stack created using seismic unix
+Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
 
 
-#Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
+Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
 Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],'npr3_gathers.sgy',
      'sfsegyread tfile=${TARGETS[1]}')
@@ -41,6 +42,12 @@ Flow('foldplot','npr3_gathers_hdr',
 	o3=1 n3=345 d3=1   label3=iline
      ''')
 Result('foldplot','grey title=foldplot pclip=100')
+Result('foldplot3d','foldplot',
+	'''
+	byte 
+	| grey3 title=foldplot pclip=100 
+	  frame1=24 frame2=94 frame3=172
+	''')
 
 # shot coordinates
 Flow('sx','npr3_gathers_hdr','dd type=float | headermath output="sx"')
