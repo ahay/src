@@ -3,7 +3,7 @@ import math
 
 # get the stack created using seismic unix
 Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
-
+Result('sustack','final_stack','grey title="su stack"')
 
 Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
@@ -30,7 +30,7 @@ Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
         outheaders=mappedstack_hdr.rsf 
      ''',stdout=0)
 
-Result('mappedstack','grey')
+Result('mappedstack','grey title="tah stack"')
 
 Flow('foldplot','npr3_gathers_hdr',
      '''
