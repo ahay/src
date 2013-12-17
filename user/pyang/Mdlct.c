@@ -1,7 +1,7 @@
 /* discrete linear chirp transfrom (DLCT)
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+  Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

@@ -1,7 +1,7 @@
 /* discrete linear chirp transfrom (DLCT)
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+  Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -72,7 +72,9 @@ void backward_dlct(int N 	/* length of the signal */,
 
     ifft=fftwf_plan_dft_1d(N,p, q,FFTW_BACKWARD,FFTW_MEASURE);
 
-    for(int n=0;n<N;n++)  d[n]=0.0;
+    for(int n=0;n<N;n++)  {
+	d[n]=0.0;
+    }
     for(int l=-L/2;l<L/2;l++){
 	for(int k=0;k<N;k++) 	p[k]=Sc[k+(l+L/2)*N];
 
