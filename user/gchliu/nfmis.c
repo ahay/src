@@ -1,4 +1,4 @@
-/* 1-D missing data interpolation with known filter */
+/* Missing data interpolation using fx RNA */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -36,6 +36,7 @@ void nfmis(int niter         /* number of iterations */,
       sf_complex *filt,
 	  sf_complex *xx         /* data/model */, 
 	  const bool *known /* mask for known data */,
+	  const char *type  /*forward, backward, both*/,
 	  bool verb         /* verbosity flag */) 
 /*< interpolate >*/
 {    
@@ -48,12 +49,17 @@ void nfmis(int niter         /* number of iterations */,
 
     nfconv_init(filt, n1, na2);
 
-    //sf_warning("xxxx[0]=%f",crealf(xx[0]));
-    //sf_ccdstep_init();
-	sf_csolver (nfconv_lop, sf_ccgstep, n1, n1, xx, zero, 
+    if (type[0]=='a')
+	sf_csolver (nfconva_lop, sf_ccgstep, n1, n1, xx, zero, 
 		       niter, "x0", xx, "known", known, "verb",verb,"end");
 
-
+    if (type[0]=='f') {        
+	sf_csolver (nfconvf_lop, sf_ccgstep, n1, n1, xx, zero, 
+		       niter, "x0", xx, "known", known, "verb",verb,"end");}
+   
+    if (type[0]=='b')
+	sf_csolver (nfconvb_lop, sf_ccgstep, n1, n1, xx, zero, 
+		       niter, "x0", xx, "known", known, "verb",verb,"end");
     free(zero);
 	sf_ccgstep_close();
 

@@ -23,9 +23,10 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, na2,na12, niter, xniter, nf,i,f1,iy,ny;
+    int n1, na2,na12, niter, nf,i,f1,iy,ny;
     sf_complex *xx, *aa;
     float *kk;
+    char *ty;
     bool *known,exact, verb;
     sf_file in, out, filt,mask=NULL;
 
@@ -33,7 +34,8 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
     filt = sf_input("filt");
-    
+    if (NULL == (ty = sf_getstring("ty"))) ty = "all";
+    /* Prediction type: all=backward+forward*/
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nf)) sf_error("No n2= in input");
     ny = sf_leftsize(in,2);
@@ -52,8 +54,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=n1;
     /* number of iterations */
     
-    if (!sf_getint("xniter",&xniter)) xniter=1;
-    /* number of iterations */
     
     if (NULL != sf_getstring("mask")) {
 	/* optional input mask file for known data */
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
                }
 
 
-               nfmis(niter, n1, na2, aa, xx, known, verb);           
+               nfmis(niter, n1, na2, aa, xx, known,ty, verb);             
                sf_complexwrite (xx,n1,out);
 	     } /* freq end*/
     } /*y end*/

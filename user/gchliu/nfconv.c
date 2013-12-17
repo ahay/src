@@ -1,4 +1,4 @@
-/* Multi-dimension matrix multiplication operator */
+/* Nonstationary convolution operator */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -32,9 +32,9 @@ void nfconv_init (sf_complex* bb, int nn1, int naa2)
     na2    = naa2;
 }
 
-void nfconv_lop (bool adj, bool add, 
+void nfconva_lop (bool adj, bool add, 
 		  int nx, int ny, sf_complex *xx, sf_complex *yy) 
-/*< linear operator >*/
+/*< linear operator nonstationary convolution >*/
 {    
     int itau, it,lag;
    
@@ -56,6 +56,66 @@ void nfconv_lop (bool adj, bool add,
 		        yy[it] += xx[it-itau+lag-1]*filter[it+n1*itau];
 #else  
 		        yy[it] = sfcadd(yy[it],sf_cmul(xx[it-itau+lag-1],filter[it+n1*itau]));
+#endif
+		    } 
+	    }
+	}
+}
+
+void nfconvf_lop (bool adj, bool add, 
+		  int nx, int ny, sf_complex *xx, sf_complex *yy) 
+/*< linear operator nonstationary convolution >*/
+{    
+    int itau, it,lag;
+    
+    lag=na2;
+    sf_cadjnull (adj, add, nx, ny, xx, yy);
+
+    /* nonstationary convolution*/
+	for (itau=0; itau < na2; itau++) {
+	    
+	    for (it = na2; it < n1; it++) {
+		    if (adj) {
+#ifdef SF_HAS_COMPLEX_H
+			    xx[it-na2+itau] += yy[it]*conjf(filter[it+n1*itau]);
+#else
+		        xx[it-na2+itau] = sfcadd(xx[it-na2+itau],sf_cmul(yy[it],conjf(filter[it+n1*itau])));
+#endif
+		    } else {
+#ifdef SF_HAS_COMPLEX_H
+		        yy[it] += xx[it-na2+itau]*filter[it+n1*itau];
+#else  
+		        yy[it] = sfcadd(yy[it],sf_cmul(xx[it-na2+itau],filter[it+n1*itau]));
+#endif
+		    } 
+	    }
+	}
+}
+
+void nfconvb_lop (bool adj, bool add, 
+		  int nx, int ny, sf_complex *xx, sf_complex *yy) 
+/*< linear operator nonstationary convolution >*/
+{    
+    int itau, it,lag;
+   
+    lag=na2;
+    sf_cadjnull (adj, add, nx, ny, xx, yy);
+
+    /* nonstationary convolution*/
+	for (itau=0; itau < na2; itau++) {
+	    
+	    for (it = 0; it < n1-itau; it++) {
+		    if (adj) {
+#ifdef SF_HAS_COMPLEX_H
+			    xx[it+itau] += yy[it]*conjf(filter[it+n1*itau]);
+#else
+		        xx[it+itau] = sfcadd(xx[it+itau],sf_cmul(yy[it],conjf(filter[it+n1*itau])));
+#endif
+		    } else {
+#ifdef SF_HAS_COMPLEX_H
+		        yy[it] += xx[it+itau]*filter[it+n1*itau];
+#else  
+		        yy[it] = sfcadd(yy[it],sf_cmul(xx[it+itau],filter[it+n1*itau]));
 #endif
 		    } 
 	    }

@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
     int m[1], rect[1];
     int i1,iw,niter,nshift,n1,n2,n12,ns,i3,n3,i,ii1,is;
     sf_complex *d1,**d,*sh, *f, *one;
+    char *ty;
     float mean,*mk;
     sf_file dat, flt, mask, pre, zshift, zdata;
 
@@ -50,6 +51,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
+
+    if (NULL == (ty = sf_getstring("ty"))) ty = "all";
+    /* Prediction type: all=backward+forward*/
+
     if (SF_COMPLEX != sf_gettype(dat)) sf_error("Need complex input");
 
 
@@ -62,20 +67,22 @@ int main(int argc, char* argv[])
 
     /*Shifts zeroed */
     if (NULL != sf_getstring("zshift")) {
-	zshift = sf_output("zshift");
+		zshift = sf_output("zshift");
         sf_shiftdim(dat, zshift, 2);
-        sf_putint(zshift,"n2",2*ns);
+		if (ty[0]=='a') sf_putint(zshift,"n2",2*ns);
+		else            sf_putint(zshift,"n2",ns);
         sf_putfloat(zshift,"d2",1);
-        sf_putfloat(zshift,"o2",-ns);
+        if (ty[0]=='b') sf_putfloat(zshift,"o2",1);
+		else            sf_putfloat(zshift,"o2",-ns);
     } else {
-	zshift = NULL;
+		zshift = NULL;
     }
 
     /*Data zeroed */
     if (NULL != sf_getstring("zdata")) {
-	zdata = sf_output("zdata");
+		zdata = sf_output("zdata");
     } else {
-	zdata = NULL;
+		zdata = NULL;
     }
     
     if (!sf_histint(dat,"n1",&n1)) sf_error("No n1= in input");
@@ -84,13 +91,15 @@ int main(int argc, char* argv[])
     n3 = sf_leftsize(dat,2);
 
 
-
-    nshift=n1*2*ns;
+	if (ty[0]=='a')  nshift=n1*2*ns;
+	else             nshift=n1*ns;
     
     sf_shiftdim(dat, flt, 2);
-    sf_putint(flt,"n2",2*ns+1);
+	if (ty[0]=='a') sf_putint(flt,"n2",2*ns+1);
+	else            sf_putint(flt,"n2",ns+1);
     sf_putfloat(flt,"d2",1);
-    sf_putfloat(flt,"o2",-ns);
+    if (ty[0]=='b') sf_putfloat(flt,"o2",0);
+    else            sf_putfloat(flt,"o2",-ns);
 
     d  = sf_complexalloc2(n1,n2);
     d1 = sf_complexalloc(n1);
@@ -117,33 +126,56 @@ int main(int argc, char* argv[])
 	      sf_warning("iw = %d of %d", iw, n2);
               for (i1=0;i1<n1;i1++){
                    d1[i1] = d[iw][i1];
-                   for (is=0; is < (2*ns); is++) {
+				   if (ty[0]=='a') 
+                   for (is=0; is < 2*ns; is++) 
                         sh[is*n1+i1]=sf_cmplx(0,0);
-                   }
+				   else 
+                   for (is=0; is < ns; is++) 
+                        sh[is*n1+i1]=sf_cmplx(0,0);				
+                   
               }
               // shifts
-              for (is=0;is<ns;is++) {//forward
-                   for (i1=0;i1<is+1;i1++) {
-                        sh[n1*ns+is*n1+i1]=sf_cmplx(0,0);
+              for (is=0;is<ns;is++) {
+				   
+				   if (ty[0]=='f') {//forward
+                   		for (i1=0;i1<ns-is;i1++) {
+                    	    sh[is*n1+i1]=sf_cmplx(0,0);
+                   		}
+                   		for (i1=ns-is;i1<n1;i1++) {
+                        	sh[is*n1+i1]=d1[i1-ns+is];
+                   		}
                    }
-                   for (i1=is+1;i1<n1;i1++) {
-                        sh[n1*ns+is*n1+i1]=d1[i1-is-1];
-                   }
-                   
-              //}
-             // for (is=0;is<ns;is++) { // backward
-                   for (i1=0;i1<n1-ns+is-1;i1++) {
-                        sh[is*n1+i1]=d1[i1+ns-is];
-                   }
-                   for (i1=n1-ns+is-1;i1<n1;i1++) {
-                        sh[is*n1+i1]=sf_cmplx(0,0);
-                   }
+				   if (ty[0]=='b') {// backward
+                   		
+                   		for (i1=0;i1<n1-is-2;i1++) {
+                        	sh[is*n1+i1]=d1[i1+is+1];
+                   		}
+                   		for (i1=n1-is-2;i1<n1;i1++) {
+                        	sh[is*n1+i1]=sf_cmplx(0,0);
+                   		}
+				  }
+				   if (ty[0]=='a') { // both
+ 						//forward
+				        for (i1=0;i1<is+1;i1++) {
+                    	    sh[n1*ns+is*n1+i1]=sf_cmplx(0,0);
+                   		}
+                   		for (i1=is+1;i1<n1;i1++) {
+                        	sh[n1*ns+is*n1+i1]=d1[i1-is-1];
+                   		}
+                        // backward
+                   		for (i1=0;i1<n1-ns+is-1;i1++) {
+                        	sh[is*n1+i1]=d1[i1+ns-is];
+                   		}
+                   		for (i1=n1-ns+is-1;i1<n1;i1++) {
+                        	sh[is*n1+i1]=sf_cmplx(0,0);
+                   		}
+				   }
                    
               }                  
-              // shift end
-              //Shifts end
+
               for (i1=0;i1<n1;i1++) { //Zero mask
-                   if (mk[i1] == 0.) { 
+                   if (mk[i1] == 0.) {
+					   if (ty[0]=='a') { 
                        for (ii1=i1-ns;ii1<i1+ns+1;ii1++){
                             if(ii1 >= 0 && ii1< n1){
                                  d1[ii1] = sf_cmplx(0,0);
@@ -152,18 +184,38 @@ int main(int argc, char* argv[])
                                  }
                             }
                        }
+                       } // all
+					   if (ty[0]=='f') { 
+                       for (ii1=i1;ii1<i1+ns+1;ii1++){
+                            if(ii1 >= 0 && ii1< n1){
+                                 d1[ii1] = sf_cmplx(0,0);
+                                 for (is=0; is < ns; is++) {
+                                      sh[is*n1+ii1]=sf_cmplx(0,0);
+                                 }
+                            }
+                       }
+                       } // forward
+					   if (ty[0]=='b') { 
+                       for (ii1=i1-ns;ii1<i1+1;ii1++){
+                            if(ii1 >= 0 && ii1< n1){
+                                 d1[ii1] = sf_cmplx(0,0);
+                                 for (is=0; is < ns; is++) {
+                                      sh[is*n1+ii1]=sf_cmplx(0,0);
+                                 }
+                            }
+                       }
+                       } // forward						
                    } 
                    
               }         
-              if (zshift) {
-                  sf_complexwrite(sh,nshift,zshift);
-              }
-              if (zdata) {
-                  sf_complexwrite(d1,n1,zdata);
-              }
+              if (zshift) sf_complexwrite(sh,nshift,zshift);
               
-             cmultidivn_init(2*ns, 1, n1, m, rect, sh, false);    
-
+              if (zdata)  sf_complexwrite(d1,n1,zdata);
+              
+             if (ty[0]=='a')
+             	cmultidivn_init(2*ns, 1, n1, m, rect, sh, false);  
+             else
+             	cmultidivn_init(ns, 1, n1, m, rect, sh, false);
              mean = 0.;
              for(i = 0; i < nshift; i++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -176,34 +228,53 @@ int main(int argc, char* argv[])
                  for(i=0; i < nshift; i++) {
                      f[i]=sf_cmplx(0,0); 
                  }
-                 sf_complexwrite(f,n1*ns,flt);  
-	         sf_complexwrite(one,n1,flt);  
-	         sf_complexwrite(f+ns*n1,n1*ns,flt);  
-	         continue;
+				if (ty[0]=='a') { 
+             		sf_complexwrite(f,n1*ns,flt);  
+	         		sf_complexwrite(one,n1,flt);  
+	         		sf_complexwrite(f+ns*n1,n1*ns,flt);
+				}
+				if (ty[0]=='f') {
+             		sf_complexwrite(f,n1*ns,flt);  
+	         		sf_complexwrite(one,n1,flt);  
+				}
+				if (ty[0]=='b') {  
+	         		sf_complexwrite(one,n1,flt);  
+	         		sf_complexwrite(f,n1*ns,flt);
+				}  
+	         	continue;
              }
-             sf_warning("iw=%d and mean=%g",iw, mean);
              mean = sqrtf (nshift/mean);
 
     
             for(i=0; i < nshift; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	       sh[i] *= mean;
+	       		sh[i] *= mean;
 #else
- 	       sh[i] = sf_crmul(sh[i],mean);
+ 	       		sh[i] = sf_crmul(sh[i],mean);
 #endif
             }
             for(i=0; i < n1; i++) {
 #ifdef SF_HAS_COMPLEX_H
-	        d1[i] *= mean;
-#else
-	        d1[i] = sf_crmul(d1[i],mean);
+	        	d1[i] *= mean;
+#else	
+	        	d1[i] = sf_crmul(d1[i],mean);
 #endif
             }
 
             cmultidivn (d1,f,niter);  
-            sf_complexwrite(f,n1*ns,flt);  
-	    sf_complexwrite(one,n1,flt);  
-	    sf_complexwrite(f+ns*n1,n1*ns,flt);  
+			if (ty[0]=='a') {
+             	sf_complexwrite(f,n1*ns,flt);  
+	         	sf_complexwrite(one,n1,flt);  
+	         	sf_complexwrite(f+ns*n1,n1*ns,flt);
+			}
+			if (ty[0]=='f') {
+            	sf_complexwrite(f,n1*ns,flt);  
+	         	sf_complexwrite(one,n1,flt);  
+			}
+			if (ty[0]=='b') {  
+	        	sf_complexwrite(one,n1,flt);  
+	         	sf_complexwrite(f,n1*ns,flt);
+			}   
 
             if (pre) {
 	        for(i=0; i < nshift; i++) {
