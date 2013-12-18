@@ -67,14 +67,28 @@ float compute_squaredsum(sf_complex *x, int n)
 void compute_xpay(sf_complex *y, sf_complex *x, float a, int n)
 /*< x plus a y: y(:)=x(:)+a*y(:) >*/
 {
-	for(int i=0;i<n;i++) y[i]=x[i]+a*y[i];
+	int i;
+#ifdef _OPENMP
+#pragma omp parallel for	\
+	schedule(dynamic) 	\
+	private(i)		\
+	shared(a)
+#endif
+	for(i=0;i<n;i++) y[i]=x[i]+a*y[i];
 }
 
 
 void compute_axpy(sf_complex *y, sf_complex *x, float a, int n)
 /*< a x plus y: y(:)=y(:)+a*x(:) >*/
 {
-	for(int i=0;i<n;i++) y[i]+=a*x[i];
+	int i;
+#ifdef _OPENMP
+#pragma omp parallel for	\
+	schedule(dynamic) 	\
+	private(i)		\
+	shared(a)
+#endif
+	for(i=0;i<n;i++) y[i]+=a*x[i];
 }
 
 int main(int argc, char* argv[])
@@ -90,7 +104,9 @@ int main(int argc, char* argv[])
     float *din=NULL, *mask=NULL;
 
     sf_init(argc,argv);	/* Madagascar initialization */
+#ifdef _OPENMP
     omp_init(); 	/* initialize OpenMP support */
+#endif
 
     /* setup I/O files */
     Fin=sf_input("in");	/* read the data to be interpolated */
