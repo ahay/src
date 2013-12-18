@@ -31,7 +31,7 @@ sf_complex pthresholding(sf_complex x, float thr, float normp)
 {
     //return (x)*(cabsf(x)>thr?1.:0.);/* pocs hard thresholding*/
     //float a=1.0-thr*powf(cabsf(x)+(x==0.0),normp-2.0);
-    float a=1.0-powf((cabsf(x)+(x==0.0))/thr,normp-2.0);
+    float a=1.0-powf((cabsf(x)+SF_EPS)/thr,normp-2.0);
     return (x)*(a>0.0?a:0.0);
 }
 

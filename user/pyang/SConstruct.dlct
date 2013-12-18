@@ -1,0 +1,63 @@
+from rsf.proj import *
+import math
+from rsf.recipes.beg import server as private
+
+nt=501
+dt = 0.008
+nf = 300
+ot=0
+df = 1/(nt*dt)
+wf = 2*math.pi
+
+
+###########################
+# Model 1 crossing chirps to prove the correctness
+# of decomposition and reconstruction
+###########################
+Flow('cchirps',None,
+     '''
+     spike n1=%d d1=1 o1=0 |
+     math output="cos(%g*(10+x1/7)*x1/%d)+cos(%g*(%d/2.8-x1/6.0)*x1/%d)" |
+     pad end1=11
+     ''' % (nt,2*math.pi,nt,2*math.pi,nt,nt))
+Plot('cchirps',
+       '''
+       window n1=%d |
+       graph title="orignal signal" labelfat=3 font=2 titlefat=3
+       crowd2=0.45 parallel2=n
+       wherexlabel=t wheretitle=b plotfat=3
+       '''% nt)
+
+
+Flow('dlct','cchirps','dlct L=100 C=0.001')
+
+Result('dlct',
+       ''' 
+	math output="abs(input)" | real| scale axis=2 |
+	grey wanttitle=y title="DLCT spectra" color=j \
+	screenratio=0.8 scalebar=y bartype=v
+       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y
+       ''')
+
+Flow('rec','dlct','dlct inv=y C=0.001')
+
+Plot('rec',
+       '''
+       window n1=%d |
+       graph title="DLCT reconstructed signal" labelfat=3 font=2 \
+	titlefat=3 crowd2=0.45 parallel2=n\
+       wherexlabel=t wheretitle=b plotfat=3
+       '''% nt)
+
+Result('cmp','cchirps rec','TwoRows')
+
+Flow('diff','cchirps rec','add ${SOURCES[1]} scale=-1,1')
+
+Result('diff',
+       '''
+       window n1=%d |
+       graph title="reconstruction error" labelfat=3 font=2 titlefat=3
+       crowd1=0.75 crowd2=0.45 parallel2=n
+       wherexlabel=t wheretitle=b plotfat=3
+       '''% nt)
+End()
