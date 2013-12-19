@@ -1,4 +1,5 @@
-/* Two-step POCS interpolation using a general Lp-norm optimization
+/* bandlimited minimum weighted-norm interpolation (MWNI) 
+ implemented with conjugate gradient least squares (CGLS) method
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -45,51 +46,16 @@ void lowpass_filter(sf_complex *tmp, int n1, int n2, int n3)
 /*< only low-wavenumber preserved >*/
 {
 	for(int i3=0;i3<n3;i3++){
-	    if (i3>SF_NINT(n3*0.2) && i3<SF_NINT(n3*0.8)){	
 		for(int i2=0;i2<n2;i2++){			
-	    	    if (i2>SF_NINT(n2*0.2) && i2<SF_NINT(n2*0.8)){	
+	    	    if( (i3>SF_NINT(n3*0.2) && i3<SF_NINT(n3*0.8)) ||
+			(i2>SF_NINT(n2*0.2) && i2<SF_NINT(n2*0.8)) ) {	
 			for(int i1=0; i1<n1; i1++) 
 				tmp[i1+n1*(i2+n2*i3)]=0.0;
 		    }	
 		}
-     	    }
 	}
 }
 
-float compute_squaredsum(sf_complex *x, int n)
-/*< sum |x_i|^2>*/
-{
-	float sum=0;
-	for(int i=0;i<n;i++) sum+=cabsf(x[i])*cabsf(x[i]);
-	return sum;
-}
-
-void compute_xpay(sf_complex *y, sf_complex *x, float a, int n)
-/*< x plus a y: y(:)=x(:)+a*y(:) >*/
-{
-	int i;
-#ifdef _OPENMP
-#pragma omp parallel for	\
-	schedule(dynamic) 	\
-	private(i)		\
-	shared(a)
-#endif
-	for(i=0;i<n;i++) y[i]=x[i]+a*y[i];
-}
-
-
-void compute_axpy(sf_complex *y, sf_complex *x, float a, int n)
-/*< a x plus y: y(:)=y(:)+a*x(:) >*/
-{
-	int i;
-#ifdef _OPENMP
-#pragma omp parallel for	\
-	schedule(dynamic) 	\
-	private(i)		\
-	shared(a)
-#endif
-	for(i=0;i<n;i++) y[i]+=a*x[i];
-}
 
 int main(int argc, char* argv[])
 {
@@ -97,11 +63,11 @@ int main(int argc, char* argv[])
     bool verb;
     int niter; 
     float tol;
-    sf_file Fin=NULL,Fout=NULL, Fmask=NULL;/* mask and I/O files*/ 
+    sf_file Fin, Fout, Fmask;/* mask and I/O files*/ 
 
     /* define temporary variables */
     int n1,n2,n3;
-    float *din=NULL, *mask=NULL;
+    float *din, *mask;
 
     sf_init(argc,argv);	/* Madagascar initialization */
 #ifdef _OPENMP
@@ -135,7 +101,7 @@ int main(int argc, char* argv[])
     /*=========================== conjugate gradient iterations ================= */
     float rho0, rho_old, rho_new, beta, alpha;
     fftwf_complex *m, *r, *sm, *sr, *gm, *gr;
-    fftwf_plan fft3,ifft3;/* execute plan for FFT and IFFT */
+    fftwf_plan fft3, ifft3;/* execute plan for FFT and IFFT */
 
     m=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
     r=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
@@ -156,35 +122,43 @@ int main(int argc, char* argv[])
 	gm[i]=0.0;
 	gr[i]=0.0;
     }
+
     // conjugate gradient loop
     for(int iter=0;iter<niter;iter++)
     {
 	apply_mask(mask, r, gm, n1, n2, n3); 		// gm=M.*r
-	fftwf_execute(fft3);				// gm=fft3(M.*r);
+	fftwf_execute(ifft3);				// gm=ifft3(M.*r);
+	for(int i=0;i<n1*n2*n3;i++) gm[i]/=sqrtf(n1*n2*n3);
 	lowpass_filter(gm, n1, n2, n3);			// gm=p.*fft3(M.*r);
-	fftwf_execute(ifft3);				// gm=ifft3(gm)*n1*n2;
-	apply_mask(mask, gm, gr, n1, n2, n3); 		// gr=M.*ifft3(gm)*n1*n2;
-	rho_new=compute_squaredsum(gm,n1*n2*n3);	// rho1=sum(abs(gm(:)).^2);
+	fftwf_execute(fft3);				// gm=fft3(gm);
+	for(int i=0;i<n1*n2*n3;i++) gm[i]/=sqrtf(n1*n2*n3);
+	apply_mask(mask, gm, gr, n1, n2, n3); 		// gr=M.*fft3(gm);
+	rho_new=cblas_scnrm2 (n1*n2*n3, gm, 1);		// rho_new=sum(abs(gm(:)).^2);
 
 	if (iter == 0) {
 	    beta=0.0;
 	    rho0=rho_new;
 	} else {
 	    beta=rho_new/rho_old;
-	    if(beta<tol || rho_new/rho0<tol) break;
-
-   	    compute_xpay(sm, gm, beta, n1*n2*n3);	// sm=gm+beta*sm;
-   	    compute_xpay(sr, gr, beta, n1*n2*n3);	// sr=gr+beta*sr;
-	    float sr2=compute_squaredsum(sr,n1*n2*n3);
-    	    alpha=-rho_new/sr2; 		 	//alpha=-rho1/sum(abs(sr(:)).^2);
-   	    compute_axpy(m, sm, alpha, n1*n2*n3);	// m=m+alpha*sm;
-   	    compute_axpy(r, sr, alpha, n1*n2*n3);	// r=r+alpha*sr;
+	    if(beta<tol ||rho_new/rho0<tol) break;
+	    for(int i=0;i<n1*n2*n3;i++){ 
+		sm[i]*=beta; sm[i]+=gm[i];		// sm=gm+beta*sm;
+		sr[i]*=beta; sr[i]+=gr[i];		// sr=gr+beta*sr;
+	    }		
+	    float sr2=cblas_scnrm2 (n1*n2*n3, sr, 1);	// sr2=sum(abs(sr(:)).^2);
+	    alpha=-rho_new/sr2; 			// alpha=-rho_new/sum(abs(sr(:)).^2);
+	    for(int i=0;i<n1*n2*n3;i++){ 
+		m[i]+=alpha*sm[i];			// m=m+alpha*sm;
+		r[i]+=alpha*sr[i];			// r=r+alpha*sr;
+	    }	
 	}
+	float res=cblas_scnrm2 (n1*n2*n3, r, 1);	// sr2=sum(abs(sr(:)).^2);
+	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, res);
 	rho_old=rho_new;
     }
     for(int i=0; i<n1*n2*n3; i++) gm[i]=m[i];    	// copy m(:) to g(:)
-    fftwf_execute(ifft3);			 	// gm=ifft3(m)*n1*n2;
-    for(int i=0; i<n1*n2*n3; i++) din[i]=crealf(gm[i]);	// drec=real(ifft2(m)*n1*n2);
+    fftwf_execute(fft3);			 	// gm=fft3(m);
+    for(int i=0; i<n1*n2*n3; i++) din[i]=crealf(gm[i])/sqrt(n1*n2*n3);	// drec=real(ifft2(m)*n1*n2);
 
     fftwf_free(m);
     fftwf_free(r);
@@ -194,9 +168,9 @@ int main(int argc, char* argv[])
     fftwf_free(sr);
     fftwf_destroy_plan(fft3);
     fftwf_destroy_plan(ifft3);
+    /* ============================================================================= */
 
-    /* write reconstructed seismic data to output */
-    sf_floatwrite(din,n1*n2*n3,Fout);
+    sf_floatwrite(din,n1*n2*n3,Fout); /* output reconstructed seismograms */
 
     sf_close();
     exit(0);
