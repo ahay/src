@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
  
     if(!sf_getbool("verb",&verb))    	verb=false;
     /* verbosity */
-    if (!sf_getint("niter",&niter)) 	niter=100;
+    if (!sf_getint("niter",&niter)) 	niter=50;
     /* total number of POCS iteration */
     if (!sf_getfloat("normp",&normp)) 	normp=0.35;
     /* norm=p, where 0<p<=1 */
@@ -104,9 +104,7 @@ int main(int argc, char* argv[])
 	t1=(1.0+sqrtf(1.0+4.0*t0*t0))/2.0;
 	beta=(t0-1.0)/t1;
 #ifdef _OPENMP
-#pragma omp parallel for	\
-	private(i1)		\
-	shared(dcurr,n1,n2,n3,thr)
+#pragma omp parallel for
 #endif
 	for(i1=0;i1<n1*n2*n3;i1++) {
 	    dtmp[i1]=dcurr[i1]+beta*(dcurr[i1]-dprev[i1]);
@@ -123,18 +121,14 @@ int main(int argc, char* argv[])
 
 	/* perform p-norm thresholding */
 #ifdef _OPENMP
-#pragma omp parallel for	\
-	private(i1)		\
-	shared(dcurr,n1,n2,n3,thr)
+#pragma omp parallel for	
 #endif
 	for(i1=0;i1<n1*n2*n3;i1++) dtmp[i1]=pthresholding(dtmp[i1],thr,normp);
 
 	fftwf_execute(p2);/* unnormalized IFFT */
 
 #ifdef _OPENMP
-#pragma omp parallel for	\
-	private(i1)		\
-	shared(dprev,n1,n2,n3)
+#pragma omp parallel for	
 #endif
 	/* scaling with factor 1.0/(n1*n2*n3) */	
 	for(i1=0; i1<n1*n2*n3;i1++) dcurr[i1]=dtmp[i1]/(n1*n2*n3);
@@ -142,13 +136,13 @@ int main(int argc, char* argv[])
 	/* update d_rec: d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 	for(i3=0;i3<n3;i3++)	
 	    for(i2=0;i2<n2;i2++){
-		if (mask[i2+i3*n2]!=0.0){			
+		if (mask[i2+i3*n2]){			
 		    for(i1=0; i1<n1; i1++)
 			dcurr[i1+n1*(i2+n2*i3)]=din[i1+n1*(i2+n2*i3)];
 		    }
 		}
 
-	if (verb!=false)    sf_warning("%d\t-th iter:",iter);
+	if (verb)    sf_warning("%d\t-th iter:",iter);
     }
 
     /* take the real part */
