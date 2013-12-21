@@ -19,7 +19,7 @@ Flow('spike',None,'spike n1=1000 n2=100 n3=10 nsp=1 k1=500')
 Flow('clip','spike clip.m',
      '''
      MATLABPATH=%(MATLAB)s LD_LIBRARY_PATH=%(LD_LIBRARY_)s
-     %(exe)s -nosplash -nojvm -nodesktop 
+     %(exe)s -nosplash -nodesktop 
      -r "clip('$SOURCE','$TARGET',0.5);quit"
      ''' % path,stdin=0,stdout=-1)
 Flow('test.attr','clip','attr')

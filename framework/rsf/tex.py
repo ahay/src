@@ -815,7 +815,7 @@ if epstopdf:
             matlabpath = string.join([matlabpath,'Matlab'],':')
         else:
             matlabpath = 'Matlab'
-        Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nojvm '
+        Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nodesktop '
                          '< $SOURCE >&2  > /dev/null && '
                          '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
                          (matlabpath,matlab,epstopdf),
