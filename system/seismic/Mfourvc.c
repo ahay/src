@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     fint1 str, istr;
     bool verb;
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
-    float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t, x0, y0;
+    float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t, x0, y0, dw;
     float *trace, *strace;
     sf_complex *ctrace, *ctrace2, **cstack, shift;
     char *time, *space, *unit;
@@ -106,6 +106,8 @@ int main(int argc, char* argv[])
     x0 *= 2.*SF_PI;
     y0 *= 2.*SF_PI;
 
+    dw = 16*SF_PI/(d2*n3); /* 2pi * 8 */
+
     trace = sf_floatalloc(n1);
     strace = sf_floatalloc(n3);
     ctrace = sf_complexalloc(nw);
@@ -138,7 +140,7 @@ int main(int argc, char* argv[])
 
 	    if (verb) sf_warning("wavenumber %d of %d and %d of %d;", 
 				 ix+1,nx, iy+1,ny);
-	    k = (x+y) * 0.25 * 0.25 * 0.5;
+	    k = (x+y) * 0.5;
 
 	    for (iv=0; iv < nv; iv++) {
 		for (i1=0; i1 < nw; i1++) {
@@ -148,7 +150,7 @@ int main(int argc, char* argv[])
 
 	    for (ih=0; ih < nh; ih++) {
 		h = h0 + ih*dh;
-		h = 4. * h * h;
+		h *= h * 0.5;
 
 		sf_floatread(trace,n1,in);
 		for (i1=0; i1 < n1; i1++) {
@@ -180,11 +182,11 @@ int main(int argc, char* argv[])
 
 		for (iv=0; iv < nv; iv++) {
 		    v = v0 + (iv+1)*dv;
-		    v1 = h * (1./(v*v) - 1./(v0*v0)) * 2.;
+		    v1 = h * (1./(v*v) - 1./(v0*v0));
 		    v2 = k * ((v0*v0) - (v*v));
 
 		    for (i2=1; i2 < nw; i2++) {
-			w = i2*SF_PI/(d2*n3);
+			w = i2*dw;
 			w = v2/w+(v1-o2)*w;
 			shift = sf_cmplx(cosf(w),sinf(w));
 
@@ -203,7 +205,7 @@ int main(int argc, char* argv[])
 		ctrace2[0] = sf_cmplx(0.0f,0.0f); /* dc */
 
 		for (i2=1; i2 < nw; i2++) {
-		    w = i2*SF_PI/(d2*n3);
+		    w = i2*dw;
 		    w *= o2;
 		    shift = sf_cmplx(cosf(w),sinf(w));
 

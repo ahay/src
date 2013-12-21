@@ -805,7 +805,7 @@ if sage:
 if epstopdf:
     if mathematica:
         Math = Builder(action = '%s -batchoutput '
-                       '< $SOURCE >& /dev/null > /dev/null && '
+                       '< $SOURCE >&2  > /dev/null && '
                        '%s --hires junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
                        (mathematica,epstopdf),
                        suffix='.pdf',src_suffix='.ma')
@@ -816,7 +816,7 @@ if epstopdf:
         else:
             matlabpath = 'Matlab'
         Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nojvm '
-                         '< $SOURCE >& /dev/null > /dev/null && '
+                         '< $SOURCE >&2  > /dev/null && '
                          '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
                          (matlabpath,matlab,epstopdf),
                          suffix='.pdf',src_suffix='.ml')

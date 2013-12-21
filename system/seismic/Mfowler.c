@@ -80,12 +80,12 @@ int main(int argc, char* argv[])
 		
 		if (s < 1.0f) {
 		    wm = w*sqrtf(1.0f-s*s);
-		    wstr[iv][iw] = wm;
-		    vstr[iv][iw] = vm;
+		    wstr[iw][iv] = wm;
 		} else {
-		    wstr[iv][iw] = w0-10*dw;
-		    vstr[iv][iw] = vm;
+		    wstr[iw][iv] = w0-10*dw;
 		}
+
+		vstr[iw][iv] = vm;
 	    }
 	}
 

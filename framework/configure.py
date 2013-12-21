@@ -731,6 +731,7 @@ def plplot(context):
     LIBS.pop()
 
 pkg['ffmpeg'] = {'fedora':'ffmpeg-devel',
+                 'rhel': 'ffmpeg-devel',
                  'suse':'ffmpeg-devel',
                  'ubuntu':'libavcodec-dev'}
 
