@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 		sf_complexwrite(Sc, L*N, out);
 	    }else {
 		sf_complexread(Sc,L*N,in);
-		backward_dlct(N, L, C, sig, Sc);
+		inverse_dlct(N, L, C, sig, Sc);
 		sf_floatwrite(sig, N, out);
 	    }
     }

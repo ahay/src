@@ -58,12 +58,12 @@ void forward_dlct(int N 	/* length of the signal */,
 }
 
 
-void backward_dlct(int N 	/* length of the signal */,
+void inverse_dlct(int N 	/* length of the signal */,
 		int L		/* length of freq-instaneous freq */, 
 		float C		/* step size for freq-inst freq */,
 		float *d	/* output [N] signal,float or complex */,
 		sf_complex *Sc	/* input[N*L] DLCT coefficients */ )
-/*< backward DLCT >*/
+/*< inverse DLCT >*/
 {  
     fftwf_complex *p,*q;
     fftwf_plan ifft;
