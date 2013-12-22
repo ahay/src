@@ -223,7 +223,7 @@ static float nice_number (float d)
     int i, ie;
     const float set[] = {1.0, 2.0, 5.0};
 
-    if (d == 0.0f) d=SF_EPS;
+    if (d == 0.0f) d=SF_EPS; /* avoid log(0) */
 
     ie = (int) floorf (log10f(d));
     nice = p = power (10.,ie);
