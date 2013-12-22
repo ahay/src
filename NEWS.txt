@@ -79,6 +79,7 @@ In APIs:
   programs named mex
 * Fixed parallel.c for the case of less jobs than nodes
 * Added missing fflush in sf_simtab_input
+* Avoid taking log(0) in vp_optimal_scale
 
 In the Python package:
 
