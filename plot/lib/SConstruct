@@ -65,10 +65,10 @@ if root:
 
     if dynlib and env['PLATFORM'] == 'darwin':                
         env.AddPostAction(install,
-                          'install_name_tool -change '
-                          'build/api/c/libdrsf.dylib '
+                          '%s -change build/api/c/libdrsf.dylib '
                           '%s/libdrsf.dylib %s/%s' % \
-                              (libdir,libdir,dlib[0]))
+                              (WhereIs('install_name_tool'),
+                               libdir,libdir,dlib[0]))
 
 api = env.get('API',[])
 

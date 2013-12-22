@@ -82,9 +82,8 @@ if env.get('SWIG') and env.get('NUMPY'):
             if env['PLATFORM'] == 'darwin':
                 for lib in ('rsf','rsfplot'):
                     env.AddPostAction(install,
-                                      'install_name_tool -change '
-                                      'build/%s/libd%s.dylib '
-                                      '%s/libd%s.dylib %s' % \
-                                          ({'rsf':'api/c',
-                                            'rsfplot':'plot/lib'}[lib],
-                                           lib,libdir,lib,install[0]))
+                    '%s -change build/%s/libd%s.dylib '
+                    '%s/libd%s.dylib %s' % \
+                    (WhereIs('install_name_tool'),
+                    {'rsf':'api/c','rsfplot':'plot/lib'}[lib],
+                        lib,libdir,lib,install[0]))

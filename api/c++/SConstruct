@@ -43,11 +43,10 @@ if 'c++' in env.get('API',[]):
 
             if dynpre and env['PLATFORM'] == 'darwin':                
                 env.AddPostAction(install,
-                          'install_name_tool -change '
-                          'build/api/c/libdrsf.dylib '
-                          '%s/libdrsf.dylib %s' % \
-                              (libdir,install[0]))
-        
+                '%s -change build/api/c/libdrsf.dylib '
+                '%s/libdrsf.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
+                             
     for file in ['getpar','file']:
         test = 'Test' + file + '.cc'
         env.Program(file,[test,lib],PROGSUFFIX='.x',PROGPREFIX='Test')

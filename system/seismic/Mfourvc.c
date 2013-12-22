@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
 
 		    for (i2=1; i2 < nw; i2++) {
 			w = i2*dw;
-			w = v2/w+(v1-o2)*w;
+			w = v2/w+(v1-0.125*o2)*w;
 			shift = sf_cmplx(cosf(w),sinf(w));
 
 #ifdef SF_HAS_COMPLEX_H
@@ -206,7 +206,7 @@ int main(int argc, char* argv[])
 
 		for (i2=1; i2 < nw; i2++) {
 		    w = i2*dw;
-		    w *= o2;
+		    w *= 0.125*o2;
 		    shift = sf_cmplx(cosf(w),sinf(w));
 
 #ifdef SF_HAS_COMPLEX_H

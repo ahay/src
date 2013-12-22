@@ -226,14 +226,14 @@ if root:
         install = env.Install(bindir,main[0])
 
         if not main in placs and libprefix and env['PLATFORM'] == 'darwin':
-             env.AddPostAction(install,
-             'install_name_tool -change '
-             'build/api/c/libdrsf.dylib '
-             '%s/libdrsf.dylib %s' % (libdir,install[0]))
-             env.AddPostAction(install,
-             'install_name_tool -change '
-             'build/plot/lib/libdrsfplot.dylib '
-             '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
+            env.AddPostAction(install,
+            '%s -change build/api/c/libdrsf.dylib '
+            '%s/libdrsf.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
+            env.AddPostAction(install,
+            '%s -change build/plot/lib/libdrsfplot.dylib '
+            '%s/libdrsfplot.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
 
     # define sfpen
         
@@ -249,15 +249,15 @@ if root:
     if main:
         install = env.InstallAs(os.path.join(bindir,'sfpen'),main[0])
         if not main in placs and libprefix and env['PLATFORM'] == 'darwin':
-             env.AddPostAction(install,
-             'install_name_tool -change '
-             'build/api/c/libdrsf.dylib '
-             '%s/libdrsf.dylib %s' % (libdir,install[0]))
-             env.AddPostAction(install,
-             'install_name_tool -change '
-             'build/plot/lib/libdrsfplot.dylib '
-             '%s/libdrsfplot.dylib %s' % (libdir,install[0]))
-
+            env.AddPostAction(install,
+                              '%s -change build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % \
+             (WhereIs('install_name_tool'),libdir,install[0]))
+            env.AddPostAction(install,
+            '%s -change build/plot/lib/libdrsfplot.dylib '
+            '%s/libdrsfplot.dylib %s' % \
+             (WhereIs('install_name_tool'),libdir,install[0]))
+            
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################

@@ -39,10 +39,10 @@ for prog in cmains:
         install = env.Install(bindir,prog)
 
         if dynpre and env['PLATFORM'] == 'darwin':
-                env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c/libdrsf.dylib '
-                '%s/libdrsf.dylib %s' % (libdir,install[0]))
+            env.AddPostAction(install,
+                              '%s -change build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % \
+                    (WhereIs('install_name_tool'),libdir,install[0]))
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
@@ -53,13 +53,13 @@ for prog in ccmains:
             
             if dynpre and env['PLATFORM'] == 'darwin':
                 env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c/libdrsf.dylib '
-                '%s/libdrsf.dylib %s' % (libdir,install[0]))
+                '%s -change build/api/c/libdrsf.dylib '
+                '%s/libdrsf.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
                 env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c++/libdrsf++.dylib '
-                '%s/libdrsf++.dylib %s' % (libdir,install[0]))
+                '%s -change build/api/c++/libdrsf++.dylib '
+                '%s/libdrsf++.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
         if root:

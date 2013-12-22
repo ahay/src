@@ -84,9 +84,9 @@ for prog in mains:
 
         if dynlib and env['PLATFORM'] == 'darwin':
              env.AddPostAction(install,
-             'install_name_tool -change '
-             'build/api/c/libdrsf.dylib '
-             '%s/libdrsf.dylib %s' % (libdir,install[0]))
+             '%s -change build/api/c/libdrsf.dylib '
+             '%s/libdrsf.dylib %s' % \
+             (WhereIs('install_name_tool'),libdir,install[0]))
 
         if prog in alias.keys():
             for al in Split(alias[prog]):

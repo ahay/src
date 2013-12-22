@@ -64,9 +64,9 @@ if dynlib:
 
         if dynpre and env['PLATFORM'] == 'darwin':
             env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/api/c/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
+                              '%s -change build/api/c/libdrsf.dylib '
+                              '%s/libdrsf.dylib %s' % \
+            (WhereIs('install_name_tool'),libdir,install[0]))
 
 mains = Split(progs)
 for prog in mains:
@@ -79,9 +79,9 @@ for prog in mains:
         
         if dynpre and env['PLATFORM'] == 'darwin':
             env.AddPostAction(install,
-                              'install_name_tool -change '
-                              'build/api/c/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % (libdir,install[0]))
+            '%s -change build/api/c/libdrsf.dylib '
+            '%s/libdrsf.dylib %s' % \
+                (WhereIs('install_name_tool'),libdir,install[0]))
 
 for prog in Split(
     '''
