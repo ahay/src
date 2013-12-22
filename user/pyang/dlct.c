@@ -32,7 +32,7 @@
 void forward_dlct(int N 	/* length of the signal */,
 		int L		/* length of freq-instaneous freq */, 
 		float C		/* step size for freq-inst freq */,
-		float *d	/* input [N] signal */,
+		float *d		/* input [N] signal float or complex */,
 		sf_complex *Sc	/* output[N*L] DLCT coefficients */ )
 /*< forward DLCT >*/
 {
@@ -46,7 +46,7 @@ void forward_dlct(int N 	/* length of the signal */,
 
     for(int l=-L/2;l<L/2;l++){
 	for(int n=0;n<N;n++){
-	  p[n]=d[n]*expf(-I*2*SF_PI*C*l*n*n/N);
+	  p[n]=d[n]*cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N));
 	}	
 	fftwf_execute(fft);
 
@@ -61,7 +61,7 @@ void forward_dlct(int N 	/* length of the signal */,
 void backward_dlct(int N 	/* length of the signal */,
 		int L		/* length of freq-instaneous freq */, 
 		float C		/* step size for freq-inst freq */,
-		float *d	/* output [N] signal */,
+		float *d	/* output [N] signal,float or complex */,
 		sf_complex *Sc	/* input[N*L] DLCT coefficients */ )
 /*< backward DLCT >*/
 {  
@@ -80,7 +80,7 @@ void backward_dlct(int N 	/* length of the signal */,
 
 	fftwf_execute(ifft);
 	for(int n=0;n<N;n++){		
-	  d[n]+=crealf(q[n]*expf(I*2.0*SF_PI*C*l*n*n/N)/(N*L));
+	  d[n]+=crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/(N*L));
 	}
     }
 

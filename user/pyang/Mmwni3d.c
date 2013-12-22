@@ -27,7 +27,6 @@
 #include <omp.h>
 #endif
 
-
 void apply_mask(float *mask, sf_complex *before, sf_complex *after, int n1, int n2, int n3)
 /*< apply the mask >*/
 {
@@ -42,13 +41,13 @@ void apply_mask(float *mask, sf_complex *before, sf_complex *after, int n1, int 
 	}
 }
 
-void lowpass_filter(sf_complex *tmp, int n1, int n2, int n3)
+void lowpass_filter(fftwf_complex *tmp, int n1, int n2, int n3)
 /*< only low-wavenumber preserved >*/
 {
 	for(int i3=0;i3<n3;i3++){
 		for(int i2=0;i2<n2;i2++){			
-	    	    if( (i3>SF_NINT(n3*0.2) && i3<SF_NINT(n3*0.8)) ||
-			(i2>SF_NINT(n2*0.2) && i2<SF_NINT(n2*0.8)) ) {	
+	    	    if( (i3>SF_NINT(n3*0.15) && i3<SF_NINT(n3*0.85)) ||
+			(i2>SF_NINT(n2*0.15) && i2<SF_NINT(n2*0.85)) ) {	
 			for(int i1=0; i1<n1; i1++) 
 				tmp[i1+n1*(i2+n2*i3)]=0.0;
 		    }	
@@ -100,15 +99,15 @@ int main(int argc, char* argv[])
 
     /*=========================== conjugate gradient iterations ================= */
     float g0, gnp, gn, beta, alpha;
-    fftwf_complex *m, *r, *sm, *sr, *gm, *gr;
+    fftwf_complex *gm;
+    sf_complex *m, *r, *gr, *s;
     fftwf_plan fft3, ifft3;/* execute plan for FFT and IFFT */
 
-    m=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    r=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
+    m=sf_complexalloc(n1*n2*n3);
+    r=sf_complexalloc(n1*n2*n3);
+    gr=sf_complexalloc(n1*n2*n3);
+    s=sf_complexalloc(n1*n2*n3);
     gm=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    gr=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    sm=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    sr=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
     fft3=fftwf_plan_dft_3d(n1,n2,n3,gm,gm,FFTW_FORWARD,FFTW_MEASURE);	
     ifft3=fftwf_plan_dft_3d(n1,n2,n3,gm,gm,FFTW_BACKWARD,FFTW_MEASURE);
 
@@ -117,11 +116,11 @@ int main(int argc, char* argv[])
     {
 	r[i]=-din[i];
 	m[i]=0.0;
-	sm[i]=0.0;
-	sr[i]=0.0;
 	gm[i]=0.0;
 	gr[i]=0.0;
+	s[i]=0.0;
     }
+    g0=gnp=gn=beta=alpha=0;
 
     // conjugate gradient loop
     for(int iter=0;iter<niter;iter++)
@@ -129,11 +128,8 @@ int main(int argc, char* argv[])
 	apply_mask(mask, r, gm, n1, n2, n3); 		// gm=M.*r
 	fftwf_execute(ifft3);				// gm=ifft3(M.*r);
 	for(int i=0;i<n1*n2*n3;i++) gm[i]/=sqrtf(n1*n2*n3);
-	lowpass_filter(gm, n1, n2, n3);			// gm=p.*fft3(M.*r);
-	fftwf_execute(fft3);				// gm=fft3(gm);
-	for(int i=0;i<n1*n2*n3;i++) gm[i]/=sqrtf(n1*n2*n3);
-	apply_mask(mask, gm, gr, n1, n2, n3); 		// gr=M.*fft3(gm);
-	gn=cblas_scnrm2 (n1*n2*n3, gm, 1);		// rho_new=sum(abs(gm(:)).^2);
+	lowpass_filter(gm, n1, n2, n3);		// gm=p.*fft3(M.*r);
+	gn=cblas_scnrm2(n1*n2*n3, gm, 1);		// gn=sum(abs(gm(:)).^2);
 
 	if (iter == 0) {
 	    beta=0.0;
@@ -142,29 +138,33 @@ int main(int argc, char* argv[])
 	    beta=gn/gnp;
 	    if(beta<tol ||gn/g0<tol) break;
 	}
-	    for(int i=0;i<n1*n2*n3;i++){ 
-		sm[i]*=beta; sm[i]+=gm[i];		// sm=gm+beta*sm;
-		sr[i]*=beta; sr[i]+=gr[i];		// sr=gr+beta*sr;
-	    }		
-	    alpha=cblas_scnrm2 (n1*n2*n3, sr, 1);	// sr2=sum(abs(sr(:)).^2);
-	    alpha=-gn/alpha; 				// alpha=-rho_new/sum(abs(sr(:)).^2);
-	    for(int i=0;i<n1*n2*n3;i++){ 
-		m[i]+=alpha*sm[i];			// m=m+alpha*sm;
-		r[i]+=alpha*sr[i];			// r=r+alpha*sr;
-	    }	
-	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, cblas_scnrm2 (n1*n2*n3, r, 1));
 	gnp=gn;
+
+	for(int i=0;i<n1*n2*n3;i++){
+	    s[i]=gm[i]+beta*s[i]; 			// s=gm+beta*s
+	    gm[i]=s[i];					// copy s(:) to gm(:)
+	}
+
+	fftwf_execute(fft3);				// gm=fft3(s);
+	for(int i=0;i<n1*n2*n3;i++) gm[i]/=sqrtf(n1*n2*n3);
+	apply_mask(mask, gm, gr, n1, n2, n3); 		// gr=M.*fft3(gm);
+
+    	alpha=-gn/cblas_scnrm2 (n1*n2*n3, gr, 1); 	// alpha=-gn/sum(abs(gr(:)).^2);
+	for(int i=0;i<n1*n2*n3;i++){ 
+	    m[i]+=alpha*s[i];				// m=m+alpha*s;
+	    r[i]+=alpha*gr[i];				// r=r+alpha*gr;
+	}	
+	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, cblas_scnrm2 (n1*n2*n3, r, 1));
     }
     for(int i=0; i<n1*n2*n3; i++) gm[i]=m[i];    	// copy m(:) to g(:)
     fftwf_execute(fft3);			 	// gm=fft3(m);
-    for(int i=0; i<n1*n2*n3; i++) din[i]=crealf(gm[i])/sqrt(n1*n2*n3);	// drec=real(ifft2(m)*n1*n2);
+    for(int i=0; i<n1*n2*n3; i++) din[i]=crealf(gm[i])/sqrtf(n1*n2*n3);	// drec=real(ifft2(m)*n1*n2);
 
-    fftwf_free(m);
-    fftwf_free(r);
+    free(m);
+    free(r);
+    free(gr);
+    free(s);
     fftwf_free(gm);
-    fftwf_free(gr);
-    fftwf_free(sm);
-    fftwf_free(sr);
     fftwf_destroy_plan(fft3);
     fftwf_destroy_plan(ifft3);
     /* ============================================================================= */

@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false; /* if y, do inverse transform */
     if (!sf_getbool("verb",&verb)) verb = false;/* verbosity flag */
-    if (!sf_getfloat("C",&C)) C=0.01;/* C=2*Lambda/L, unit slice */
+    if (!sf_getfloat("C",&C)) C=0.005;/* C=2*Lambda/L, unit slice */
     if (!sf_histint(in,"n1",&N)) sf_error("No n1= in input"); /*length of signal */
     /* N is assumed to be 2^k */ 	
  
