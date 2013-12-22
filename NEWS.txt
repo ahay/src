@@ -88,6 +88,7 @@ In programs:
 * sfbyte: "clip" determination when the first plane is zero 
 * Fixed size definitions in sfinttest1
 * Fixed off-by-one bug in sfrickerfit
+* Avoid cropping of images by vplot2eps
 
 In the build system:
 
