@@ -54,6 +54,7 @@ Ioan Vlad <i.vlad@yahoo.com>
 Pengliang Yang <ypl.2100@gmail.com>
 Robin Weiss <robin.weiss@uwa.edu.au>
 Zedong Wu <zedong.wu@kaust.edu.sa>
+Zhugiang Xue <zhiguangxue@gmail.com>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
 Hejun Zhu <hzhu@jsg.utexas.edu>
