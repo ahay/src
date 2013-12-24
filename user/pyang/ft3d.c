@@ -1,4 +1,4 @@
-/* 3D complex data fft interface */
+/* 3D fft operator */
 
 /*
   Copyright (C) 2013 Pengliang Yang, Xi'an Jiaotong University, UT Austin

@@ -321,8 +321,6 @@ int main(int argc, char* argv[])
 	}
 
 
-	/*< put lablels for the output: sf_putxxx >*/
-
 	float **v0, **Iss, **Isg, **Img, **seis;
 	float **vv, **d1z, **d1x, **d2z, **d2x;
 	float **su, **sux, **suz, **sax, **saz;
@@ -362,8 +360,6 @@ int main(int argc, char* argv[])
 	init_abc_coef(d1z, d1x, d2z, d2x, vv, fdm);
 	wavefield_init(su, suz, sux, saz, sax, fdm);
 	wavefield_init(gu, guz, gux, gaz, gax, fdm);
-
-
 
 	clock_t start_t, end_t;
 	FILE *fp;
