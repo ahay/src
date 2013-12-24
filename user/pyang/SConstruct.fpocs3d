@@ -43,7 +43,7 @@ Flow('mask','mask1','dd type=float')
 
 Flow('rec','zero3 mask',
      '''
-     fpocs3dpthresh mask=${SOURCES[1]} niter=100 verb=y normp=0.4
+     fpocs3d mask=${SOURCES[1]} niter=100 verb=y normp=0.4
      ''')
 
 Plot('rec',grey3('Reconstructed'))
