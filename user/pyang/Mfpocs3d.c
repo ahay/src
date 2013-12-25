@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for	
 #endif
-	/* scaling with factor 1.0/(n1*n2*n3) */	
+	/* adjointness needs scaling with factor 1.0/(n1*n2*n3) */	
 	for(i1=0; i1<n1*n2*n3;i1++) dcurr[i1]=dtmp[i1]/(n1*n2*n3);
 	
 	/* update d_rec: d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
