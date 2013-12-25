@@ -1,4 +1,6 @@
 /* discrete linear chirp transfrom (DLCT)
+Note: In my implementation:, to make the adjoint as same as the inverse,
+I normalized the forward transform of DLCT with a factor sqrt(N*L).
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -32,7 +34,7 @@
 void forward_dlct(int N 	/* length of the signal */,
 		int L		/* length of freq-instaneous freq */, 
 		float C		/* step size for freq-inst freq */,
-		float *d		/* input [N] signal float or complex */,
+		float *d	/* input [N] signal float or complex */,
 		sf_complex *Sc	/* output[N*L] DLCT coefficients */ )
 /*< forward DLCT >*/
 {
@@ -50,7 +52,7 @@ void forward_dlct(int N 	/* length of the signal */,
 	}	
 	fftwf_execute(fft);
 
-	for(int k=0;k<N;k++)	Sc[k+(l+L/2)*N]=q[k];
+	for(int k=0;k<N;k++)	Sc[k+(l+L/2)*N]=q[k]/sqrtf(N*L);
     }
     fftwf_destroy_plan(fft);
     fftwf_free(p);
@@ -80,7 +82,7 @@ void inverse_dlct(int N 	/* length of the signal */,
 
 	fftwf_execute(ifft);
 	for(int n=0;n<N;n++){		
-	  d[n]+=crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/(N*L));
+	  d[n]+=crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L));
 	}
     }
 
