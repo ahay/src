@@ -144,8 +144,9 @@ int main(int argc, char* argv[])
 		    }
 		}
 
-	if (verb)    sf_warning("%d\t-th iter:",iter);
+	if (verb)    sf_warning("%d\t-th iter;",iter);
     }
+    if (verb) sf_warning(".");
 
     /* take the real part */
     for(i1=0;i1<n1*n2*n3; i1++) dout[i1]=crealf(dcurr[i1]);
