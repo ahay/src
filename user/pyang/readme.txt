@@ -54,8 +54,9 @@ Main: 		Mlsrtm2d.c
 
 Note:  Be careful! It is under construction!
 
-
+==================================================================
 Miscellaneous:
+_segy.h: segy format definations
 triangle.c,ctriange.c: taking from others for future usage.
 ft3d.c(fftw required): 3D FFT is coded as a linear operator in 
 Madagascar linear operator standard.
