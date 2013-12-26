@@ -1,12 +1,12 @@
 #include <rsf.h>
-#include "fd3util.h"
+#include "fd3dutil.h"
 #include <stdio.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-#ifndef _fd3util_h
+#ifndef _fd3dutil_h
 
 typedef struct fdm3 *fdm3d;
 /*^*/
