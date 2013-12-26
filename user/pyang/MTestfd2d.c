@@ -175,27 +175,40 @@ void apply_sponge(float**p0, float **p1)
 }
 
 
+void fd2d_close()
+{
+	free(*vv); free(vv);
+	free(*p0); free(p0);
+	free(*p1); free(p1);
+	free(*p2); free(p2);
+	free(bndr);
+}
+
 int main(int argc, char* argv[])
 {
+	int jt, ft;
 	float **v0;
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
 
-	Fv = sf_input("in");
+	Fv = sf_input("in");/* veloctiy model */
 	Fw = sf_output("out");
 
-    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
-    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
-    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");
-    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");
-    	if (!sf_getint("nb",&nb)) nb=30; 
-    	if (!sf_getint("nt",&nt)) sf_error("nt required");
-    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");
-    	if (!sf_getfloat("fm",&fm)) fm=20.0;
+    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
+    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
+    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
+    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
+    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of sponge ABC */
+    	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
+    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
+    	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
 
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
+    	sf_putint(Fw,"n3",(nt-ft)/jt);
+    	sf_putfloat(Fw,"d3",jt*dt);
+    	sf_putfloat(Fw,"o3",ft*dt);
 
 	v0=sf_floatalloc2(nz,nx); 
 	sf_floatread(v0[0],nz*nx,Fv);
@@ -216,15 +229,13 @@ int main(int argc, char* argv[])
 		apply_sponge(p1,p2);
 		ptr=p0; p0=p1; p1=p2; p2=ptr;
 
-		if (it ==350) {
-		    sf_warning("%d;",it+1);
-		    window2d(v0,p0);
-		    sf_floatwrite(v0[0],nz*nx,Fw);
-		}
+		window2d(v0,p0);
+		sf_floatwrite(v0[0],nz*nx,Fw);
 	}
 
 	free(wlt);
 	free(*v0); free(v0);
+	fd2d_close();
     	exit(0);
 }
 
