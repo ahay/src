@@ -1,3 +1,6 @@
+/*A demo of 2D FD test
+*/
+
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
 
@@ -88,10 +91,9 @@ void fd2d_init(float **v0)
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
 	memset(p2[0],0,nzpad*nxpad*sizeof(float));
-	/*< initialize ABC coefficients >*/
 	for(int ib=0;ib<nb;ib++){
 		tmp=(nb-ib)/(sqrt(2.0)*4.0*nb);
-		bndr[ib]=expf(-tmp*tmp);      
+		bndr[ib]=expf(-tmp*tmp); //sponge ABC coefficients
 	}
 
 	for(ix=0;ix<nxpad;ix++){
@@ -184,16 +186,56 @@ void fd2d_close()
 	free(bndr);
 }
 
+void boundary_rw(bool read, float **p, float *bndr_rw)
+/* read and write [effective] boundaries*/
+{
+	int ix,iz;
+
+	if(read){/* read saved boundaries out */
+		//4*nx*sizeof(float): read top and bottom
+		for(ix=0; ix<nx; ix++){
+			for(iz=0; iz<2; iz++){
+				p[ix+nb][iz+nb-2]=bndr_rw[iz+4*ix];
+				p[ix+nb][iz+nb+nz]=bndr_rw[iz+2+4*ix];
+			}	
+		}
+		//4*nz*sizeof(float): read left and right 
+		for(ix=0; ix<2; ix++){
+			for(iz=0; iz<nz; iz++){
+				p[ix+nb-2][iz+nb]=bndr_rw[4*nx+iz+nz*ix];
+				p[ix+nb+nx][iz+nb]=bndr_rw[4*nx+iz+nz*(ix+2)];
+			}
+		}
+	}else{/* saving the effective boundaries */
+		//4*nx*sizeof(float): store top and bottom
+		for(ix=0; ix<nx; ix++){
+			for(iz=0; iz<2; iz++){
+				bndr_rw[iz+4*ix]=p[ix+nb][iz+nb-2];
+				bndr_rw[iz+2+4*ix]=p[ix+nb][iz+nb+nz];
+			}	
+		}
+		//4*nz*sizeof(float): store left and right 
+		for(ix=0; ix<2; ix++){
+			for(iz=0; iz<nz; iz++){
+				bndr_rw[4*nx+iz+nz*ix]=p[ix+nb-2][iz+nb];
+				bndr_rw[4*nx+iz+nz*(ix+2)]=p[ix+nb+nx][iz+nb];
+			}
+		}
+	}
+}
+
+
 int main(int argc, char* argv[])
 {
 	int jt, ft;
+	float *bndr_rw;
 	float **v0;
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
 
 	Fv = sf_input("in");/* veloctiy model */
-	Fw = sf_output("out");
+	Fw = sf_output("out");/* wavefield snaps */
 
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
@@ -203,6 +245,8 @@ int main(int argc, char* argv[])
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
     	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
     	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
+   	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
+    	if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
 
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
@@ -210,6 +254,8 @@ int main(int argc, char* argv[])
     	sf_putfloat(Fw,"d3",jt*dt);
     	sf_putfloat(Fw,"o3",ft*dt);
 
+	bndr_rw=(float*)malloc(4*(nx+nz)*sizeof(float));
+	memset(bndr_rw,0,4*(nx+nz)*sizeof(float));
 	v0=sf_floatalloc2(nz,nx); 
 	sf_floatread(v0[0],nz*nx,Fv);
 	fd2d_init(v0);
@@ -229,10 +275,24 @@ int main(int argc, char* argv[])
 		apply_sponge(p1,p2);
 		ptr=p0; p0=p1; p1=p2; p2=ptr;
 
+		boundary_rw(false, p0, bndr_rw);
 		window2d(v0,p0);
 		sf_floatwrite(v0[0],nz*nx,Fw);
 	}
-
+/*
+	// Test the exact reconstrution using effective boundary saving scheme
+	ptr=p0; p0=p1; p1=ptr;
+	for(int it=nt-1; it>-1; it++)
+	{
+		boundary_rw(false, p0, bndr_rw);
+		p0[sx][sz]-=wlt[it];
+		step_forward(p0, p1, p2);
+		apply_sponge(p1,p2);
+		ptr=p0; p0=p1; p1=p2; p2=ptr;
+	
+	}
+*/
+	free(bndr_rw);
 	free(wlt);
 	free(*v0); free(v0);
 	fd2d_close();
