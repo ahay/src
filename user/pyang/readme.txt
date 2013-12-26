@@ -26,13 +26,13 @@ and rename it as SConstruct, run 'scons view')
 Note: To make the adjoint of DLCT same as inverse, I normalized 
 	the forward and inverse DLCT with a factor. 
 
-3) 3D FD for forward modelling
+3) 2D and 3D FD for forward modelling
 
-Main:		MTestfd3d.c
+Main:		MTestfd2d.c, MTestfd3d.c
 Depends on: 	fd3dutil.c 
 (fd3dutil.c is modified from fdutil.c in Madagascar.)
 
-Test file:	SConstruct.Testfd3d
+Test file:	SConstruct.Testfd2d SConstruct.Testfd3d
 
 ===================================================================
 The following codes are under construction. Be careful!
