@@ -10,7 +10,7 @@ Flow('vel',None,
      	''')
 
 
-Flow('wav','vel','Testfd3')
+Flow('wav','vel','Testfd3d')
 
 
 Result('wav',
