@@ -52,6 +52,7 @@ Yanadet Sripanich <sripanichy@utexas.edu>
 Junzhe Sun <sunjzhe@gmail.com>
 Ioan Vlad <i.vlad@yahoo.com>
 Pengliang Yang <ypl.2100@gmail.com>
+Hui Wang <hui.wang@kaust.edu.sa>
 Robin Weiss <robin.weiss@uwa.edu.au>
 Zedong Wu <zedong.wu@kaust.edu.sa>
 Zhugiang Xue <zhiguangxue@gmail.com>

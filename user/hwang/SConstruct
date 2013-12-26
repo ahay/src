@@ -111,8 +111,6 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
            map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
-           map(lambda prog: env.Doc(prog,'_' + prog),['byte2jpg','jpg2byte']) + \
-           map(lambda prog: env.Doc(prog,'_' + prog),['byte2tif','tif2byte']) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
 

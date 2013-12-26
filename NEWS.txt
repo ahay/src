@@ -65,6 +65,7 @@ To programs:
 * creating rsfgee library in user/gee to avoid code duplication
 * added sfput-like behavior in sfwindow and sfpad
 * user/zhiguang: New contributor (Zhiguang Xue)
+* user/hwang: New contributor (Hui Wang)
 
 ===Bug fixes===
 
