@@ -20,7 +20,6 @@
 
 static sf_complex *p;
 
-#include "ctrianglen.h"
 #include "cweight2.h"
 #include "crepeat.h"
 
@@ -37,8 +36,8 @@ void cmultidivn_init(int nw            /* number of components */,
 
     n2 = n*nw;
     
-    ctrianglen_init(ndim, nbox, ndat);
-    crepeat_init(n,nw,ctrianglen_lop);
+    sf_ctrianglen_init(ndim, nbox, ndat);
+    crepeat_init(n,nw,sf_ctrianglen_lop);
 
     sf_cconjgrad_init(n2, n2, n, n, 1., 1.e-6, verb, false);
     p = sf_complexalloc (n2);
@@ -48,7 +47,7 @@ void cmultidivn_init(int nw            /* number of components */,
 void cmultidivn_close (void)
 /*< free allocated storage >*/
 {
-    ctrianglen_close();
+    sf_ctrianglen_close();
     sf_cconjgrad_close();
     cweight2_close();
     free (p);

@@ -16,19 +16,23 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
 #include "ctriangle.h"
+#include "alloc.h"
 
-#ifndef _ctriangle_h
+#include "_bool.h"
+#include "komplex.h"
+/*^*/
 
-typedef struct cTriangle *ctriangle;
+#ifndef _sf_ctriangle_h
+
+typedef struct sf_Ctriangle *sf_ctriangle;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct cTriangle {
+struct sf_Ctriangle {
     sf_complex *tmp;
     int np, nb, nx;
 };
@@ -38,13 +42,13 @@ static void fold (int o, int d, int nx, int nb, int np,
 static void doubint (int nx, sf_complex *x, bool der);
 static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_complex* tmp, bool box);
 
-ctriangle ctriangle_init (int nbox /* triangle length */, 
+sf_ctriangle sf_ctriangle_init (int nbox /* triangle length */, 
 			  int ndat /* data length */)
 /*< initialize >*/
 {
-    ctriangle tr;
+    sf_ctriangle tr;
 
-    tr = (ctriangle) sf_alloc(1,sizeof(*tr));
+    tr = (sf_ctriangle) sf_alloc(1,sizeof(*tr));
 
     tr->nx = ndat;
     tr->nb = nbox;
@@ -181,7 +185,7 @@ static void triple (int o, int d, int nx, int nb, const sf_complex* x, sf_comple
     }
 }
 
-void csmooth (ctriangle tr    /* smoothing object */, 
+void sf_csmooth (sf_ctriangle tr    /* smoothing object */, 
 	      int o, int d    /* trace sampling */, 
 	      bool der        /* if derivative */,
 	      bool box        /* if box filter */,
@@ -193,7 +197,7 @@ void csmooth (ctriangle tr    /* smoothing object */,
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 
-void  ctriangle_close(ctriangle tr)
+void  sf_ctriangle_close(sf_ctriangle tr)
 /*< free allocated storage >*/
 {
     free (tr->tmp);

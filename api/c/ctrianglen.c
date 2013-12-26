@@ -17,16 +17,23 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "ctrianglen.h"
+#include "ctriangle.h"
+#include "alloc.h"
+#include "file.h"
+#include "error.h"
+#include "adjnull.h"
+#include "decart.h"
+
+#include "_bool.h"
+#include "komplex.h"
 /*^*/
 
-#include "ctriangle.h"
-
 static int *n, s[SF_MAX_DIM], nd, dim;
-static ctriangle *tr;
+static sf_ctriangle *tr;
 static sf_complex *tmp;
 
-void ctrianglen_init (int ndim  /* number of dimensions */, 
+void sf_ctrianglen_init (int ndim  /* number of dimensions */, 
 			int *nbox /* triangle radius [ndim] */, 
 			int *ndat /* data dimensions [ndim] */)
 /*< initialize >*/
@@ -36,11 +43,11 @@ void ctrianglen_init (int ndim  /* number of dimensions */,
     dim = ndim;
     n = sf_intalloc(dim);
 
-    tr = (ctriangle*) sf_alloc(dim,sizeof(ctriangle));
+    tr = (sf_ctriangle*) sf_alloc(dim,sizeof(sf_ctriangle));
 
     nd = 1;
     for (i=0; i < dim; i++) {
-	tr[i] = (nbox[i] > 1)? ctriangle_init (nbox[i],ndat[i]): NULL;
+	tr[i] = (nbox[i] > 1)? sf_ctriangle_init (nbox[i],ndat[i]): NULL;
 	s[i] = nd;
 	n[i] = ndat[i];
 	nd *= ndat[i];
@@ -48,7 +55,7 @@ void ctrianglen_init (int ndim  /* number of dimensions */,
     tmp = sf_complexalloc (nd);
 }
 
-void ctrianglen_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex* y)
+void sf_ctrianglen_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_complex* y)
 /*< linear operator >*/
 {
     int i, j, i0;
@@ -74,7 +81,7 @@ void ctrianglen_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim,n,s);
-		csmooth (tr[i], i0, s[i], false, false, tmp);
+		sf_csmooth (tr[i], i0, s[i], false, false, tmp);
 	    }
 	}
     }
@@ -98,7 +105,7 @@ void ctrianglen_lop (bool adj, bool add, int nx, int ny, sf_complex* x, sf_compl
     }    
 }
 
-void ctrianglen_close(void)
+void sf_ctrianglen_close(void)
 /*< free allocated storage >*/
 {
     int i;
@@ -106,7 +113,7 @@ void ctrianglen_close(void)
     free (tmp);
 
     for (i=0; i < dim; i++) {
-	if (NULL != tr[i]) ctriangle_close (tr[i]);
+	if (NULL != tr[i]) sf_ctriangle_close (tr[i]);
     }
 
     free(tr);

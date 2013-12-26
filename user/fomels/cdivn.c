@@ -21,7 +21,6 @@
 
 #include "cdivn.h"
 #include "cweight.h"
-#include "ctrianglen.h"
 
 static int niter, n;
 static sf_complex *p;
@@ -37,7 +36,7 @@ void cdivn_init(int ndim   /* number of dimensions */,
     niter = niter1;
     n = nd;
 
-    ctrianglen_init(ndim, nbox, ndat);
+    sf_ctrianglen_init(ndim, nbox, ndat);
     sf_cconjgrad_init(nd, nd, nd, nd, 1., 1.e-6, verb, false);
     p = sf_complexalloc (nd);
 }
@@ -45,7 +44,7 @@ void cdivn_init(int ndim   /* number of dimensions */,
 void cdivn_close (void)
 /*< free allocated storage >*/
 {
-    ctrianglen_close();
+    sf_ctrianglen_close();
     sf_cconjgrad_close();
     free (p);
 }
@@ -54,7 +53,7 @@ void cdivn (sf_complex* num, sf_complex* den,  sf_complex* rat)
 /*< smoothly divide rat=num/den >*/
 {
     cweight_init(den);
-    sf_cconjgrad(NULL, cweight_lop,ctrianglen_lop,p,rat,num,niter); 
+    sf_cconjgrad(NULL, cweight_lop,sf_ctrianglen_lop,p,rat,num,niter); 
 }
 
 /* 	$Id: divn.c 5595 2010-03-21 16:54:14Z sfomel $	 */
