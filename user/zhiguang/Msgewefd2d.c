@@ -31,37 +31,30 @@
 #define TS (2.0/favg)
 #define NS ((int)(TS/dt)+1)
 
-#define NPD (5+nabs)
-#define RANGEX (nx+2*NPD)
-#define RANGEZ (nz+2*NPD)
-#define SX (sx_ini+NPD)
-#define SZ (sz_ini+NPD)
-
-#define DTX (dt/dx)
-#define DTZ (dt/dz)
-
 static double coef[5]={1.211243f, -0.08972168f, 0.01384277f, -0.00176566f, 0.0001186795f};
 static float *source;
 static float *absx, *absz;
+static int npd, rangex, rangez, sx, sz;
+static float dtx, dtz;
 
 // function declaration**************
 void get_source(int ns, float dt, float ts, float favg);
-void get_absorb_par(int nx, int nz, int rangex, int rangez, int nabs);
+void get_absorb_par(int nx, int nz, int nabs);
 void zero2d(int n1, int n2, float **array);
-void get_current_vel_rho(int is, int ds, int nx, int nz, int rangex, int rangez, int npd,
-     int nvx, float **vp0, float **vs0, float **rho0, float **vp, float **vs, float **rho);
-void pad_vel_rho(int nx, int nz, int rangex, int rangez, int npd, float **in, float **out);
-void update_vel(int it, int rangex, int rangez, int npd, int hsz, float dtx, float dtz, float **u, 
-     float **w, float **txx, float **tzz, float **txz, float **rho, float **datax, float **dataz);
-void update_stress(int rangex, int rangez, float dtx, float dtz, float **u, float **w, float **txx, 
-     float **tzz, float **txz, float **vp, float **vs);
-void ptsrc(int it, int npd, int nx, int nz, int sx, int sz, float **txx, float **tzz);
+void get_current_vel_rho(int is, int ds, int nx, int nz, int nvx, float **vp0, 
+              float **vs0, float **rho0, float **vp, float **vs, float **rho);
+void pad_vel_rho(int nx, int nz, float **in, float **out);
+void update_vel(int it, int hsz, float **u, float **w, float **txx, float **tzz, 
+                         float **txz, float **rho, float **datax, float **dataz);
+void update_stress(float **u, float **w, float **txx, float **tzz, float **txz, 
+                                                        float **vp, float **vs);
+void ptsrc(int it, int nx, int nz, float **txx, float **tzz);
 
 // main function************
 int main(int argc, char* argv[])
 {  
     int ishot, nshot, dshot;
-    int it, nt, nvx, nx, nz, nabs;
+    int it, ix, iz, nt, nvx, nx, nz, nabs;
     int sx_ini, sz_ini, hsz;
     float dt, tmax, dx, dz, favg;
     float **vp0, **vs0, **rho0;
@@ -77,9 +70,9 @@ int main(int argc, char* argv[])
 #endif
 
     dataxf= sf_output("datax");
-    /* horizontal component */
+    /* horizontal component of records */
     datazf= sf_output("dataz");
-    /* vertical component */
+    /* vertical component of records */
     vpf   = sf_input("vp");
     /* p-wave velocity file */
     vsf   = sf_input("vs");
@@ -95,7 +88,7 @@ int main(int argc, char* argv[])
     if(!sf_getint("nshot", &nshot)) nshot=1;
     /* number of shots */
     if(!sf_getint("dshot", &dshot)) dshot=1;
-    /* shot interval, multiple of receiver position */
+    /* shot interval, multiple of receiver intervals */
     if(!sf_getint("nx",    &nx))    nx=nvx;
     /* coverage area for each shot */
     if(!sf_getint("nabs",  &nabs))  nabs=50;
@@ -117,12 +110,24 @@ int main(int argc, char* argv[])
     /* peak frequency for Ricker wavelet (in Hz) */
     
     nt=(int)(tmax/dt)+1;
+    sf_warning("tmax=%f s, dt=%f s, nt=%d", tmax, dt, nt);
+    
+    npd=nabs+5;
+    rangex=nx+2*npd;
+    rangez=nz+2*npd;
+    sx=sx_ini+npd;
+    sz=sz_ini+npd;
+    
+    dtx=dt/dx;
+    dtz=dt/dz;
     
     sf_putint  (dataxf, "n1", nt);
     sf_putfloat(dataxf, "d1", dt);
     sf_putfloat(dataxf, "o1", 0.);
+    sf_putstring(dataxf,"unit1","s");
     sf_putint  (dataxf, "n2", nx);
     sf_putfloat(dataxf, "d2", dx);
+    sf_putstring(dataxf, "unit2", "m");
     sf_putfloat(dataxf, "o2", -dx*(sx_ini-1));
     sf_putint  (dataxf, "n3", nshot);
     sf_putint  (dataxf, "d3", 1);
@@ -131,9 +136,11 @@ int main(int argc, char* argv[])
     sf_putint  (datazf, "n1", nt);
     sf_putfloat(datazf, "d1", dt);
     sf_putfloat(datazf, "o1", 0.);
+    sf_putstring(datazf,"unit1","s");
     sf_putint  (datazf, "n2", nx);
     sf_putfloat(datazf, "d2", dx);
     sf_putfloat(datazf, "o2", -dx*(sx_ini-1));
+    sf_putstring(datazf,"unit2","m");
     sf_putint  (datazf, "n3", nshot);
     sf_putint  (datazf, "d3", 1);
     sf_putint  (datazf, "o3", 1);
@@ -146,15 +153,23 @@ int main(int argc, char* argv[])
     sf_floatread(vs0[0], nz*nvx, vsf);
     sf_floatread(rho0[0], nz*nvx, rhof);
     
-    vp=sf_floatalloc2(RANGEZ, RANGEX);
-    vs=sf_floatalloc2(RANGEZ, RANGEX);
-    rho=sf_floatalloc2(RANGEZ, RANGEX);
+    for(ix=0; ix<nvx; ix++){
+        for(iz=0; iz<nz; iz++){
+            vp0[ix][iz]=rho0[ix][iz]*vp0[ix][iz]*vp0[ix][iz];
+            vs0[ix][iz]=rho0[ix][iz]*vs0[ix][iz]*vs0[ix][iz];
+            rho0[ix][iz]=1.0/rho0[ix][iz];
+        }
+    }
     
-    u=sf_floatalloc2(RANGEZ, RANGEX);
-    w=sf_floatalloc2(RANGEZ, RANGEX);
-    txx=sf_floatalloc2(RANGEZ, RANGEX);
-    tzz=sf_floatalloc2(RANGEZ, RANGEX);
-    txz=sf_floatalloc2(RANGEZ, RANGEX);
+    vp=sf_floatalloc2(rangez, rangex);
+    vs=sf_floatalloc2(rangez, rangex);
+    rho=sf_floatalloc2(rangez, rangex);
+    
+    u=sf_floatalloc2(rangez, rangex);
+    w=sf_floatalloc2(rangez, rangex);
+    txx=sf_floatalloc2(rangez, rangex);
+    tzz=sf_floatalloc2(rangez, rangex);
+    txz=sf_floatalloc2(rangez, rangex);
     
     datax=sf_floatalloc2(nt, nx);
     dataz=sf_floatalloc2(nt, nx);
@@ -162,29 +177,29 @@ int main(int argc, char* argv[])
     source=sf_floatalloc(NS);
     get_source(NS, dt, TS, favg);
     
-    absx=sf_floatalloc(RANGEX);
-    absz=sf_floatalloc(RANGEZ);
-    get_absorb_par(nx, nz, RANGEX, RANGEZ, nabs);
+    absx=sf_floatalloc(rangex);
+    absz=sf_floatalloc(rangez);
+    get_absorb_par(nx, nz, nabs);
     
     for(ishot=1; ishot<=nshot; ishot++){
         sf_warning("---%dth shot of %d is beginning!---", ishot, nshot);
         
-        zero2d(RANGEZ, RANGEX, u);
-        zero2d(RANGEZ, RANGEX, w);
-        zero2d(RANGEZ, RANGEX, txx);
-        zero2d(RANGEZ, RANGEX, tzz);
-        zero2d(RANGEZ, RANGEX, txz);
+        zero2d(rangez, rangex, u);
+        zero2d(rangez, rangex, w);
+        zero2d(rangez, rangex, txx);
+        zero2d(rangez, rangex, tzz);
+        zero2d(rangez, rangex, txz);
         
         zero2d(nt, nx, datax);
         zero2d(nt, nx, dataz);
         
-        get_current_vel_rho(ishot, dshot, nx, nz, RANGEX, RANGEZ, NPD, nvx, vp0, vs0, rho0, vp, vs, rho);
+        get_current_vel_rho(ishot, dshot, nx, nz, nvx, vp0, vs0, rho0, vp, vs, rho);
         
         for(it=0; it<nt; it++){
-            sf_warning("@@@@:is=%d, it=%d;",ishot, it);
-            update_vel(it, RANGEX, RANGEZ, NPD, hsz, DTX, DTZ, u, w, txx, tzz, txz, rho, datax, dataz);
-            update_stress(RANGEX, RANGEZ, DTX, DTZ, u, w, txx, tzz, txz, vp, vs);
-            if(it<NS) ptsrc(it, NPD, nx, nz, SX, SZ, txx, tzz);
+            sf_warning("@@@@:is=%d, it=%d;",ishot, it+1);
+            update_vel(it, hsz, u, w, txx, tzz, txz, rho, datax, dataz);
+            update_stress(u, w, txx, tzz, txz, vp, vs);
+            if(it<NS) ptsrc(it, nx, nz, txx, tzz);
         }
         
         sf_floatwrite(datax[0], nt*nx, dataxf);
@@ -220,7 +235,7 @@ void get_source(int ns, float dt, float ts, float favg)
     return;
 }
 
-void get_absorb_par(int nx, int nz, int rangex, int rangez, int nabs)
+void get_absorb_par(int nx, int nz, int nabs)
 {
     int ix, iz;
     
@@ -251,8 +266,8 @@ void zero2d(int n1, int n2, float **array)
     return;
 }
 
-void get_current_vel_rho(int is, int ds, int nx, int nz, int rangex, int rangez, int npd,
-        int nvx, float **vp0, float **vs0, float **rho0, float **vp, float **vs, float **rho)
+void get_current_vel_rho(int is, int ds, int nx, int nz, int nvx, float **vp0, 
+               float **vs0, float **rho0, float **vp, float **vs, float **rho)
 {
     int ix, iz;
     int vstart, vend;    
@@ -276,9 +291,9 @@ void get_current_vel_rho(int is, int ds, int nx, int nz, int rangex, int rangez,
         }
     }
     
-    pad_vel_rho(nx, nz, rangex, rangez, npd, vptemp, vp);
-    pad_vel_rho(nx, nz, rangex, rangez, npd, vstemp, vs);
-    pad_vel_rho(nx, nz, rangex, rangez, npd, rhotemp, rho);
+    pad_vel_rho(nx, nz, vptemp, vp);
+    pad_vel_rho(nx, nz, vstemp, vs);
+    pad_vel_rho(nx, nz, rhotemp, rho);
     
     free(*vptemp); free(vptemp);
     free(*vstemp); free(vstemp);
@@ -286,7 +301,7 @@ void get_current_vel_rho(int is, int ds, int nx, int nz, int rangex, int rangez,
     return;
 }
 
-void pad_vel_rho(int nx, int nz, int rangex, int rangez, int npd, float **in, float **out)
+void pad_vel_rho(int nx, int nz, float **in, float **out)
 {
     int ix, iz;
     for(ix=npd; ix<nx+npd; ix++)
@@ -312,8 +327,8 @@ void pad_vel_rho(int nx, int nz, int rangex, int rangez, int npd, float **in, fl
     return;
 }
         
-void update_vel(int it, int rangex, int rangez, int npd, int hsz, float dtx, float dtz, float **u, 
-          float **w, float **txx, float **tzz, float **txz, float **rho, float **datax, float **dataz)
+void update_vel(int it, int hsz, float **u, float **w, float **txx, float **tzz, 
+                         float **txz, float **rho, float **datax, float **dataz)
 {
     int ix, jz, ic;
     float dtxx, dtzz, dtxz, dtzx;
@@ -346,8 +361,8 @@ void update_vel(int it, int rangex, int rangez, int npd, int hsz, float dtx, flo
     return;
 }
 
-void update_stress(int rangex, int rangez, float dtx, float dtz, float **u, float **w, float **txx, 
-          float **tzz, float **txz, float **vp, float **vs)
+void update_stress(float **u, float **w, float **txx, float **tzz, 
+                              float **txz, float **vp, float **vs)
 {
     int ix, jz, ic;
     float dux, duz, dwx, dwz;
@@ -376,7 +391,7 @@ void update_stress(int rangex, int rangez, float dtx, float dtz, float **u, floa
     return;
 }        
             
-void ptsrc(int it, int npd, int nx, int nz, int sx, int sz, float **txx, float **tzz)
+void ptsrc(int it, int nx, int nz, float **txx, float **tzz)
 {
     int ix, jz;
     int ifx, ilx, jfz, jlz;
@@ -391,8 +406,8 @@ void ptsrc(int it, int npd, int nx, int nz, int sx, int sz, float **txx, float *
 	for(jz=jfz; jz<=jlz; jz++){
 	    dex=ix-sx;
 	    dez=jz-sz;
-	    txx[ix][jz]+=100.0*source[it]*expf(-dex*dex-dez*dez);
-	    tzz[ix][jz]+=100.0*source[it]*expf(-dex*dex-dez*dez);
+	    txx[ix][jz]+=1000.0*source[it]*expf(-dex*dex-dez*dez);
+	    tzz[ix][jz]+=1000.0*source[it]*expf(-dex*dex-dez*dez);
 	}
     }
     return;
