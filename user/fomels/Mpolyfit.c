@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
     inp = sf_input("in");
-    coord = sf_input("coord"); /* coordinates */
     out = sf_output("out");
 
     if (!sf_getfloat("eps",&eps)) eps=0.0f;
@@ -45,6 +44,23 @@ int main(int argc, char* argv[])
 	sf_putint(coef,"n1",nc);
     } else {
 	coef = NULL;
+    }
+
+
+    dat = sf_floatalloc(n1);
+    crd = sf_floatalloc(n1);
+    func = sf_floatalloc2(n1,nc);
+
+    if (NULL != sf_getstring("coord")) {
+	/* coordinates */
+	coord = sf_input("coord");
+    } else {
+	coord = NULL;
+	if (!sf_histfloat(inp,"d1",&d)) d=1.0f;
+	if (!sf_histfloat(inp,"o1",&o)) o=0.0f;
+	for (i1=0; i1 < n1; i1++) {
+	    crd[i1] = o+i1*d;
+	}
     }
 
     if (NULL != sf_getstring("reg")) {
@@ -66,10 +82,6 @@ int main(int argc, char* argv[])
 	dreg = NULL;
     }
 
-    dat = sf_floatalloc(n1);
-    crd = sf_floatalloc(n1);
-    func = sf_floatalloc2(n1,nc);
-
     sf_gaussel_init(nc);
     sol = sf_floatalloc(nc);
     rhs = sf_floatalloc(nc);
@@ -77,12 +89,12 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,inp);
-	sf_floatread(crd,n1,coord);
+	if (NULL != coord) sf_floatread(crd,n1,coord);
 
 	for (i1=0; i1 < n1; i1++) {
 	    x = crd[i1];
 	    xp = 1.0f;
-	    for (ic=0; ic < 0; ic++) {
+	    for (ic=0; ic < nc; ic++) {
 		func[ic][i1] = xp;
 		xp *= x;
 	    }
