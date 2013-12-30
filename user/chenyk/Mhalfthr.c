@@ -26,8 +26,9 @@
 
 int main(int argc, char* argv[])
 {
-    int i, n;			/*index and length of the total array*/ 
+    int i, n, n1;		/*index and length of the total array and temporary integer*/ 
     int ifverb;			/* if print the threshold value */
+    int ifperc;			/* if use percentile thresholding */
     float *dat=NULL;		/* float array*/
     float *adat=NULL; 		/* float array (for absolute value )*/
     float *diff;		/* float array (for difference )*/
@@ -65,35 +66,64 @@ int main(int argc, char* argv[])
     if(!sf_getint("ifverb",&ifverb)) ifverb=0;
     /* 0, not print threshold value; 1, print threshold value. */
 
+    if(!sf_getint("ifperc",&ifperc)) ifperc=1;
+    /* 0, exact-value thresholding; 1, percentile thresholding. */
+
     if (!sf_getfloat("thr",&thr)) sf_error("Need thr=");
     /* thresholding level */ 
     
     if (NULL != (thre=sf_getstring("other"))){other = sf_output("other");}
     /* If output the difference between the thresholded part and the original one */
     
-    
 /***************************************************/
-/*   Deciding the data type and reading data	   */
+/*Deciding thresholding level, data type and reading data.*/
 /***************************************************/
-    if (SF_FLOAT == sf_gettype(in)) {		
-	dat = sf_floatalloc(n);
-	sf_floatread(dat,n,in);
-	for (i=0; i < n; i++) {
+    if(ifperc==1)
+    {
+    	n1 = 0.5+n*(1.-0.01*thr);
+    	if (n1 < 0) n1=0;
+    	if (n1 >= n) n1=n-1;
+
+    	if (SF_FLOAT == sf_gettype(in)) {
+		dat = sf_floatalloc(n);
+		sf_floatread(dat,n,in);
+		for (i=0; i < n; i++) {
 	    		adat[i] = fabsf(dat[i]);
 		}
-    } else if (SF_COMPLEX == sf_gettype(in)) {
+    	} else if (SF_COMPLEX == sf_gettype(in)) {
 		cdat = sf_complexalloc(n);
 		sf_complexread(cdat,n,in);
 		for (i=0; i < n; i++) {
 	    		adat[i] = cabsf(cdat[i]);
 		}
-    } else {
+    	} else {
 		sf_error("Need float or complex input");
+    	}
+    	t = sf_quantile(n1,n,adat); /* lambda = 3/2 * tau ^ 2/3 */
     }
-    t=thr; 			/* lambda = 3/2 * tau ^ 2/3 */
-    tau=2/3*powf(thr,3/2); 	/* tau = lambda/1.5 ^ 3/2 */
+    else 
+    {
+    	if (SF_FLOAT == sf_gettype(in)) {
+		dat = sf_floatalloc(n);
+		sf_floatread(dat,n,in);
+		for (i=0; i < n; i++) {
+	    		adat[i] = fabsf(dat[i]);
+		}
+    	} else if (SF_COMPLEX == sf_gettype(in)) {
+		cdat = sf_complexalloc(n);
+		sf_complexread(cdat,n,in);
+		for (i=0; i < n; i++) {
+	    		adat[i] = cabsf(cdat[i]);
+		}
+    	} else {
+		sf_error("Need float or complex input");
+    	}
+    	t=thr;			/* lambda = 3/2 * tau ^ 2/3 */
+    }
 
-    if(ifverb==1) sf_warning("Threshold=%g",t);   	
+    tau=powf(2.0/3*t,3/2); 	/* tau = (lambda/1.5) ^ 3/2 */
+
+    if(ifverb==1) sf_warning("Threshold=%g",t);   
 
 
 /***************************************************/
