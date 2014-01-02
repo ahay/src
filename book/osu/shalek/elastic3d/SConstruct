@@ -137,6 +137,14 @@ Result('Id-3d',
        ''' % par
        + fdmod.dgrey3d('pclip=99.9 flat=n color=j'+center+' frame1=%d' % (0.85*par['nt']) ,par))
     
+Plot('Iw-3d',
+     '''
+     byte gainpanel=all | 
+     grey4 label1=z unit1=km label2=x unit2=km label3=y unit3=km 
+     flat=n screenratio=1 color=j frame1=17 frame2=84 frame3=84
+     title="Wave Propagation"
+     ''',view=1)
+
 for i in range(3):
     tag = "%d"%i
     Plot('Iw-3d-'+tag,'Iw-3d',' window n5=1 f5=4 n4=1 f4=%d | byte gainpanel=all | '%i
