@@ -1,0 +1,3 @@
+uses=['sfmath', 'sfcat', 'sfunif3', 'sfbyte', 'sfgrey3', 'sftransp', 'sfput', 'sfwindow']
+data=[]
+size= 1068334388

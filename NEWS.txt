@@ -28,6 +28,7 @@ To the reproducible documents collection:
   Helmholtz equations (Poulson, Engquist, Li, and Ying)
 * tccs/uncert: Structural uncertainty of time-migrated seismic images
   (Fomel and Landa)
+* osu/shalek: modeling examples from Kyle Shalek and Jeff Daniels
 
 To SCons:
 
