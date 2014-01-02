@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	/* compute A'A matrix */
 	for (ic=0; ic < nc; ic++) {
 	    for (id=0; id <= ic; id++) {
-		mat[ic][id] = 0.;
+		mat[ic][id] = 0.0f;
 		for (i1=0; i1 < n1; i1++) {
 		    mat[ic][id] += func[ic][i1]*func[id][i1];
 		}
@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 
 	/* compute A'd */
 	for (ic=0; ic < nc; ic++) {
-	    rhs[ic] = 0.;
+	    rhs[ic] = 0.0f;
 	    for (i1=0; i1 < n1; i1++) {
 		rhs[ic] += func[ic][i1]*dat[i1];
 	    }
@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 
 	/* compute Ac */
 	for (i1=0; i1 < n1; i1++) {
-	    dat[i1] = 0.;
+	    dat[i1] = 0.0f;
 	    for (ic=0; ic < nc; ic++) {
 		dat[i1] += func[ic][i1]*sol[ic];
 	    }
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
 		x = o+i1*d;
 		xp = 1.0f;
 		for (ic=0; ic < nc; ic++) {
-		    dat[i1] += xp*sol[ic];
+		    dreg[i1] += xp*sol[ic];
 		    xp *= x;
 		}
 	    }
