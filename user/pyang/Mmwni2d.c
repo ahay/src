@@ -44,7 +44,7 @@ void lowpass_filter(fftwf_complex *tmp, int n1, int n2)
 /*< only low-wavenumber preserved >*/
 {
 	for(int i2=0;i2<n2;i2++){			
-		if(i2>SF_NINT(n2*0.15) && i2<SF_NINT(n2*0.85))  {	
+		if(i2>SF_NINT(n2*0.1) && i2<SF_NINT(n2*0.9))  {	
 			for(int i1=0; i1<n1; i1++) 
 				tmp[i1+n1*i2]=0.0;
 		}	
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
     }
 
     /*=========================== conjugate gradient iterations ================= */
-    float g0, gnp, gn, beta, alpha;
+    float g0, gnp, gn, beta, alpha, resp, res;
     fftwf_complex *gm;
     sf_complex *m, *r, *gr, *s;
     fftwf_plan fft2, ifft2;/* execute plan for FFT and IFFT */
@@ -116,6 +116,7 @@ int main(int argc, char* argv[])
 	s[i]=0.0;
     }
     g0=gnp=gn=beta=alpha=0;
+    resp=cblas_scnrm2(n1*n2, r, 1);	
 
     // conjugate gradient loop
     for(int iter=0;iter<niter;iter++)
@@ -129,6 +130,7 @@ int main(int argc, char* argv[])
 	if (iter == 0) {
 	    beta=0.0;
 	    g0=gn;
+		
 	} else {
 	    beta=gn/gnp;
 	    if(beta<tol ||gn/g0<tol) break;
@@ -145,11 +147,21 @@ int main(int argc, char* argv[])
 	apply_mask(mask, gm, gr, n1, n2); 		// gr=M.*fft3(gm);
 
     	alpha=-gn/cblas_scnrm2 (n1*n2, gr, 1); 		// alpha=-gn/sum(abs(gr(:)).^2);
-	for(int i=0;i<n1*n2;i++){ 
-	    m[i]+=alpha*s[i];				// m=m+alpha*s;
-	    r[i]+=alpha*gr[i];				// r=r+alpha*gr;
-	}	
-	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, cblas_scnrm2 (n1*n2, r, 1));
+	do{
+		for(int i=0;i<n1*n2;i++) gm[i]=r[i]+alpha*gr[i];// r=r+alpha*gr;
+		res=cblas_scnrm2 (n1*n2, gm, 1); 
+		if(res<resp){
+			for(int i=0;i<n1*n2;i++){ 
+			    m[i]+=alpha*s[i];			// m=m+alpha*s;
+			    r[i]=gm[i];				// r=r+alpha*gr;
+			}	
+			break;
+		}
+		else alpha*=0.5;
+	}while(1);
+
+	resp=res;
+	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, res);
     }
     for(int i=0; i<n1*n2; i++) gm[i]=m[i];    		// copy m(:) to g(:)
     fftwf_execute(fft2);			 	// gm=fft3(m);
