@@ -18,7 +18,8 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript(RSFSRC+'/system/seismic/SConstruct')
+
+SConscript(RSFSRC+'/system/seismic/SConstruct')
     
 src = Glob('[a-z]*.c')
 
