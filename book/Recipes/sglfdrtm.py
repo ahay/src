@@ -81,7 +81,7 @@ def splitmodel(Fout, Fin, par):
              label2=%(labelx)s unit2=%(unitz)s 
          '''%par)
     
-def sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
+def sglfdrtm(Fimg1, Fimg2, Fsrc, Ffvel, Ffden, Fbvel, Fbden, par, surfix):
     
     Gx = 'Gx%s'    %surfix
     Gz = 'Gz%s'    %surfix
@@ -97,7 +97,7 @@ def sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
 #  -------------------------------------------------------------------
 #  comment this part when use pscons 
 #  
-    for m in [Fden, Fvel]:
+    for m in [Ffden, Ffvel,Fbden, Fbvel]:
         pml  = m+'_pml'
         Flow(pml,m,
              '''
@@ -105,13 +105,15 @@ def sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
                     top=%(bd)d  bottom=%(bd)d
              '''%par)
 #  -------------------------------------------------------------------
-    Fdenpml = Fden+'_pml'
-    Fvelpml = Fvel+'_pml'
+    Ffdenpml = Ffden+'_pml'
+    Ffvelpml = Ffvel+'_pml'
+    Fbdenpml = Fbden+'_pml'
+    Fbvelpml = Fbvel+'_pml'
     
 #  -------------------------------------------------------------------
 #  comment this part when use pscons 
 #
-    Flow([Gx,sxx,sxz],Fvelpml,
+    Flow([Gx,sxx,sxz],Ffvelpml,
          '''
          sfsglfdcx2_7 dt=%(dt)g eps=0.00001 npk=50 
                       size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
@@ -120,22 +122,23 @@ def sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, surfix):
 #  -------------------------------------------------------------------
 #  comment this part when use pscons 
 #
-    Flow([Gz,szx,szz],Fvelpml,
+    Flow([Gz,szx,szz],Ffvelpml,
          '''
          sfsglfdcz2_7 dt=%(dt)g eps=0.00001 npk=50 
                       size=%(size)d sx=${TARGETS[1]} sz=${TARGETS[2]}
                       wavnumcut=%(frqcut)g
          '''%par)
 #  -------------------------------------------------------------------    
-    Flow([Fimg1, Fimg2, Frcd],[Fsrc,Fvelpml,Fdenpml,Gx,sxx,sxz,Gz,szx,szz],
+    Flow([Fimg1, Fimg2, Frcd],[Fsrc,Ffvelpml,Ffdenpml,Gx,sxx,sxz,Gz,szx,szz,Fbvelpml,Fbdenpml],
        '''sfsglfdrtm2 img2=${TARGETS[1]} rec=${TARGETS[2]} 
           fvel=${SOURCES[1]} fden=${SOURCES[2]}
-          bvel=${SOURCES[1]} bden=${SOURCES[2]}
+          bvel=${SOURCES[9]} bden=${SOURCES[10]}
           Gx=${SOURCES[3]} sxx=${SOURCES[4]} sxz=${SOURCES[5]}
           Gz=${SOURCES[6]} szx=${SOURCES[7]} szz=${SOURCES[8]}
           freesurface=n  verb=y decay=n 
           spx=%(spx)g spz=%(spz)g pmlsize=%(pml)d snapinter=10 
           srcdecay=y  gp=%(gp)g srctrunc=0.2 pmld0=200
+          wantrecord=n
        '''%par)
 
 #  -------------------------------------------------------------------
