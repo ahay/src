@@ -29,11 +29,11 @@ for eve in (1,2,3,4):
         'datstretch datum=${SOURCES[1]} ')
 
 Flow('para','para1 para2 para3 para4','add ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}')
-Plot('para','window j2=4 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Signal" ')
+Plot('para','window | grey label2=Distance unit2=km transp=y yreverse=y poly=y  title="Missing 65% traces"')
 
 
 #Flow('npara','para','noise var=1e-2')
-#Result('npara','npara','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Noisy Signal" ')
+#Result('npara','npara','window j2=5 | grey label2=Distance unit2=km transp=y yreverse=y poly=y  title="Noisy Signal" ')
 
 
 # Mask for random traces
@@ -46,21 +46,21 @@ Flow('mask-logic','para',
      ''')
 Flow('mask','mask-logic','dd type=float')
 Flow('dobs','para mask-logic','headercut mask=${SOURCES[1]}')
-Plot('dobs','window j2=4 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Missing 65% traces" ')
+Plot('dobs','window | grey label2=Distance unit2=km transp=y yreverse=y poly=y  title="Missing 65% traces"')
 
 Flow('drec','dobs mask',
      '''
      mwni2d mask=${SOURCES[1]} niter=100 verb=y
      ''')
 
-Plot('drec','window j2=4 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Reconstructed" ')
+Plot('drec','window | grey label2=Distance unit2=km transp=y yreverse=y poly=y  title="Reconstructed"')
 
 
 Flow('derr','para drec',
     '''
     add ${SOURCES[1]} scale=-1,1
     ''')
-Plot('derr','window j2=4 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Error panel" ')
+Plot('derr','window | grey label2=Distance unit2=km transp=y yreverse=y poly=y  title="Error panel"')
 
 
 
