@@ -1,5 +1,6 @@
 import os, sys, re, string
-sys.path.append('../../framework')
+RSFSRC=os.getenv('RSFSRC','../..')
+sys.path.append(RSFSRC+'/framework')
 import bldutil
 
 progs = ''' 
@@ -17,12 +18,12 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../system/seismic/SConstruct')
+    SConscript(RSFSRC+'/system/seismic/SConstruct')
     
 src = Glob('[a-z]*.c')
 
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'],
+env.Prepend(CPPPATH=[RSFSRC+'/include'],
+            LIBPATH=[RSFSRC+'/lib'],
             LIBS=[env.get('DYNLIB','')+'rsfsegy',
                   env.get('DYNLIB','')+'su',
                   env.get('DYNLIB','')+'rsf'])
