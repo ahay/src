@@ -112,7 +112,7 @@ for ii in range(0,par['shtnum']):
 
     # use remodeled data with sglfd 
     #sglfdrtm(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, _sfix)
-    sglfdrtm_test(Fimg1, Fimg2, Fsrc, Fvel, Fden, par, _sfix)
+    sglfdrtm_test(Fimg1, Fimg2, Fsrc, Fvel, Fden, Fvel, Fden, par, _sfix)
     img1list = img1list + [Fimg1]
     img2list = img2list + [Fimg2]
     
