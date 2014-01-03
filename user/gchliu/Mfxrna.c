@@ -224,7 +224,7 @@ int main(int argc, char* argv[])
 	         mean += crealf(sf_cmul(conjf(sh[i]),sh[i]));
 #endif
              }
-             if (mean == 0.) {
+             if (mean<1.e-12) {
                  for(i=0; i < nshift; i++) {
                      f[i]=sf_cmplx(0,0); 
                  }
