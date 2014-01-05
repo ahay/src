@@ -1,4 +1,4 @@
-//   Relative error of phase velocity of 16-th order 1D SG Lowrank FD and 1D FD coefficient 
+//  1D SG Lowrank FD coefficient  
 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
@@ -47,67 +47,8 @@ int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 	    res(a,b) = 2.0*pi*ks[cs[b]]*sinc(pi*vs[rs[a]]*fabs(ks[cs[b]])*dt);
 	}
     }
-    return 0;
+    return 0;nn
 }
-
-int fdx4(vector<int>& cs, DblNumMat& res)
-{
-    int nc = cs.size();
-    res.resize(nc,1);  
-    setvalue(res,0.0);
-    float c1 =  1.125/dx;
-    float c2 = -4.16666667e-002/dx;
-    float v, k;
-    for(int b=0; b<nc; b++) {
-	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
-	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0);
-	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
-    }
-    return 0;
-}
-
-int fdx6(vector<int>& cs, DblNumMat& res)
-{
-    int nc = cs.size();
-    res.resize(nc,1);  
-    setvalue(res,0.0);
-    float c1 =  1.17187500/dx;
-    float c2 = -6.51041667e-002/dx;
-    float c3 =  4.68750000e-003/dx;
-    float v, k;
-
-    for(int b=0; b<nc; b++) {
-	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
-	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0);
-	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
-    }
-
-    return 0;
-}
-
-int fdx8(vector<int>& cs, DblNumMat& res)
-{
-    int nc = cs.size();
-    res.resize(nc,1);  
-    setvalue(res,0.0);
-    float c1 = 1.19628906/dx;
-    float c2 =-7.97526042e-002/dx;
-    float c3 = 9.57031250e-003/dx;
-    float c4 =-6.97544643e-004/dx;
-    float v, k;
-
-    for(int b=0; b<nc; b++) {
-	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
-	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0);
-	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
-    }
-
-    return 0;
-}
-
 
 int fdx16(vector<int>& cs, DblNumMat& res)
 {
@@ -129,50 +70,11 @@ int fdx16(vector<int>& cs, DblNumMat& res)
 	k = ks[cs[b]]*2*pi; 
 	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0)+c5*sin(k*dx*9.0/2.0)+
 	    c6*sin(k*dx*11.0/2.0)+c7*sin(k*dx*13.0/2.0)+c8*sin(k*dx*15.0/2.0);
-	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v)-1;// exp(ikx)-exp(-ikx) = 2*sin(kx)
-    }
-
-    return 0;
-}
-
-/*int fdx32(vector<int>& cs, DblNumMat& res)
-{
-    int nc = cs.size();
-    res.resize(nc,1);  
-    setvalue(res,0.0);
-    float c1 = 1.2597508/dx;
-    float c2 = -0.1284399/dx;
-    float c3 = 0.0387632/dx;
-    float c4 = -0.014999/dx;
-    float c5 = 0.00610876/dx;
-    float c6 = -0.0023589/dx;
-    float c7 = 0.0007711/dx;
-    float c8 = -0.0001545/dx;
-    float c9 = /dx;
-    float c10 = /dx;
-    float c11 = /dx;
-    float c12 = /dx;
-    float c13 = /dx;
-    float c14 = /dx;
-    float c15 = /dx;
-    float c16 = /dx;
-    float v, k;
-
-    for(int b=0; b<nc; b++) {
-	v = vs[0];
-	k = ks[cs[b]]*2*pi; 
-	res(b,0) = c1*sin(k*dx/2.0)+c2*sin(k*dx*3.0/2.0)+c3*sin(k*dx*5.0/2.0)+c4*sin(k*dx*7.0/2.0)+c5*sin(k*dx*9.0/2.0)+
-	    c6*sin(k*dx*11.0/2.0)+c7*sin(k*dx*13.0/2.0)+c8*sin(k*dx*15.0/2.0)+c9*sin(k*dx*17.0/2.0)+c10*sin(k*dx*19.0/2.0)+
-            c11*sin(k*dx*21.0/2.0)+c12*sin(k*dx*23.0/2.0)+c13*sin(k*dx*25.0/2.0)+c14*sin(k*dx*27.0/2.0)+c15*sin(k*dx*29.0/2.0)+
-            c16*sin(k*dx*31.0/2.0);
 	res(b,0) = asin(dt*v*res(b,0))/(0.5*k*dt*v);// exp(ikx)-exp(-ikx) = 2*sin(kx)
     }
 
     return 0;
-    }*/
-
-
-
+}
 
 int main(int argc, char** argv)
 {   
@@ -240,7 +142,7 @@ int main(int argc, char** argv)
     /*Lowrank FD coefficients*/
     vector<int> cidx, ridx;
     DblNumMat mid;
-    iC( ddlowrank(m,n,sample,(double) eps,npk,cidx,ridx,mid) );
+    iC( ddlowrank(m,n,sample,(double)eps,npk,cidx,ridx,mid) );
     
     DblNumMat M1(m,cidx.size());
     vector<int> rs(m);
@@ -340,29 +242,18 @@ int main(int argc, char** argv)
     //ldat = Mlr.data();
     double tg; 
     fMlr[0] = 1.0; 
-    for (int k=0; k < N; k++) {
+    for (int k=1; k < N; k++) {
         tg = 0.0;
         for (int l=1; l <= len; l++) {
             tg += G(0,l-1)*sin((2*l-1)*dx*(ks[k])*pi);
         }
-        fMlr[k] = asin( dt*vs[0]*tg/2.0 )/((ks[k])*pi*dt*vs[0])-1.0; 
+        fMlr[k] = asin( dt*vs[0]*tg/2.0 )/((ks[k])*pi*dt*vs[0]); 
     }
     Mlrfile << fMlr;
 
     
     Mlr.resize(N,1);
-    if (SIZE == 4) {
-	iC( fdx4(cs,Mlr) );
-    }
-    else if (SIZE == 6) {
-	iC( fdx6(cs,Mlr) );
-    }
-    else if (SIZE == 8) {
-	iC( fdx8(cs,Mlr) );
-    }
-    else {
-	iC( fdx16(cs,Mlr) );
-    }
+    iC( fdx16(cs,Mlr) );
     ldat = Mlr.data();
     for (int k=0; k < N; k++) {
         fMlr[k] = ldat[k];

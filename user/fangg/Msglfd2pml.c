@@ -390,16 +390,16 @@ int main(int argc, char* argv[])
 	sf_warning("nx=%d nz=%d nt=%d", nx, nz, nt);
 	sf_warning("dx=%f dz=%f dt=%f", dx, dz, dt);
 	sf_warning("lenx=%d lenz=%d marg=%d pmlout=%d", lenx, lenz, marg, pmlout);
-	sf_warning("sp.decay=%d sp.srange=%d",sp.decay,sp.srange);
+	sf_warning("sp.decay=%d sp.srange=%d verb=%d",sp.decay,sp.srange,verb);
 	sf_warning("============================");
+    
+	for(ix=0; ix<lenx; ix++){
+	    sf_warning("[sxx,sxz]=[%d,%d] Gx=%f",sxx[ix], sxz[ix], Gx[ix][0][0]);
+	}
+	for(ix=0; ix<lenz;ix++){
+	    sf_warning("[szx,szz]=[%d,%d] Gz=%f",szx[ix], szz[ix], Gz[ix][0][0]);
+	} 
     }
-
-    for(ix=0; ix<lenx; ix++){
-	sf_warning("[sxx,sxz]=[%d,%d] Gx=%f",sxx[ix], sxz[ix], Gx[ix][0][0]);
-    }
-    for(ix=0; ix<lenz;ix++){
-	sf_warning("[szx,szz]=[%d,%d] Gz=%f",szx[ix], szz[ix], Gz[ix][0][0]);
-    } 
     
     for (it = 0; it < nt; it++) {
 	if (verb) sf_warning("it=%d/%d;", it, nt-1);

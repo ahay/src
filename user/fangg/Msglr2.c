@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
     float cx, cz;
     float kx, kz, dkx, dkz, kx0, kz0;
     float dx, dz, dt, d1, d2;
+    float ox, oz;
     
     sf_complex *cwavex, *cwavez, *cwavemx, *cwavemz;
     float **record;
@@ -101,23 +102,10 @@ int main(int argc, char* argv[])
     Fo = sf_output("out");
     Frec = sf_output("rec"); /*record*/
     
-    /*parameters of source*/
-    if (!sf_getfloat("slx", &slx)) sf_error("Need slx input");
-    /*source location in x */
-    if (!sf_getfloat("slz", &slz)) sf_error("Need slz input");
-    /* source location in z */
-    if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=false;
-    /*source decay*/
-    if (!sf_getint("srcrange", &srcrange)) srcrange=10;
-    /*source decay range*/
-    if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=100;
-    /*trunc source after srctrunc time (s)*/
-
-
     /* Read/Write axes */
     at = sf_iaxa(Fsrc,1); nt = sf_n(at); dt = sf_d(at);
-    ax = sf_iaxa(Fvel,2); nx = sf_n(ax); dx = sf_d(ax);
-    az = sf_iaxa(Fvel,1); nz = sf_n(az); dz = sf_d(az);
+    ax = sf_iaxa(Fvel,2); nx = sf_n(ax); dx = sf_d(ax); ox=sf_o(ax);
+    az = sf_iaxa(Fvel,1); nz = sf_n(az); dz = sf_d(az); oz=sf_o(az);
         
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
@@ -190,11 +178,38 @@ int main(int argc, char* argv[])
     /*depth of geophone (meter)*/
     if (gdep <0.0) sf_error("gdep need to be >=0.0");
     /*source and receiver location*/
-    spx = (int)(slx/dx+0.5);
-    spz = (int)(slz/dz+0.5);
-    gp  = (int)(gdep/dz+0.5);
+    slx = -1.0; spx = -1;
+    slz = -1.0; spz = -1;
+    gdep = -1.0; gp = 0;
+    
+    if (!sf_getfloat("slx", &slx)) ; 
+    /*source location x */
+    if (!sf_getint("spx", &spx));
+    /*source location x (index)*/
+    if((slx<0 && spx <0) || (slx>=0 && spx >=0 ))  sf_error("Need src location");
+    if (slx >= 0 )    spx = (int)((slx-ox)/dx+0.5);
+    
+    if (!sf_getfloat("slz", &slz)) ;
+    /* source location z */
+    if (!sf_getint("spz", &spz)) ;
+    /*source location z (index)*/
+    if((slz<0 && spz <0) || (slz>=0 && spz >=0 ))  sf_error("Need src location");
+    if (slz >= 0 )    spz = (int)((slz-ox)/dz+0.5);
+    
+    if (!sf_getfloat("gdep", &gdep)) ;
+    /* recorder depth on grid*/
+    if (!sf_getint("gp", &gp)) ;
+    /* recorder depth on index*/
+    if ( gdep>=oz) { gp = (int)((gdep-oz)/dz+0.5);}
+    if (gp < 0.0) sf_error("gdep need to be >=oz");
+    /*source and receiver location*/
 
-
+    if (!sf_getbool("srcdecay", &srcdecay)) srcdecay=false;
+    /*source decay*/
+    if (!sf_getint("srcrange", &srcrange)) srcrange=10;
+    /*source decay range*/
+    if (!sf_getfloat("srctrunc", &srctrunc)) srctrunc=100;
+    /*trunc source after srctrunc time (s)*/
 
     /* read wavelet & reflectivity */
     src = sf_floatalloc(nt);
