@@ -1,6 +1,6 @@
-/* t-x nonstationary regularized autoregression. */
+/* Causal t-x or t-x-y nonstationary regularized autoregression. */
 /*
-  Copyright (C) 2013 Jilin University
+  Copyright (C) 2014 Jilin University
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -59,6 +59,8 @@ int main(int argc, char* argv[])
 	n[1] = 1;
 	m[1] = 1;
     }
+
+    if (1==m[2]) a[2]=1;
 
     for (j=0; j < mdim; j++) {
 	n[j] = m[j];
