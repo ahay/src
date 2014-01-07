@@ -83,7 +83,6 @@ int main(int argc, char* argv[])
     /* CIP coordinates */
     ac = sf_iaxa(Fc,2); sf_setlabel(ac,"cc"); sf_setunit(ac,"");
     nc = sf_n(ac); 
-    sf_raxa(ac);
 
     if(! sf_getint("nhz",&nhz)) nhz=0; nhz2=2*nhz+1; /* z lags */
     if(! sf_getint("nhx",&nhx)) nhx=0; nhx2=2*nhx+1; /* x lags */
