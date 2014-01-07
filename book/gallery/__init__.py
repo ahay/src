@@ -7,6 +7,7 @@ _methods = {
     'oway': 'One-Way Wave Equation',
     'stolt': 'Stolt Migration',
     'vc': 'Velocity Continuation',
+    'fowler': 'Fowler',
     'fakirmig': 'First-Arrival Kirchhoff',
     'ffd': 'FFD',
     'lrostep': 'One-Step Lowrank',

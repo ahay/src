@@ -128,6 +128,7 @@ int main (int argc, char* argv[])
     /* trace extension */
 
     traces = sf_floatalloc2(nt,nh);
+    trace  = sf_floatalloc(nt);
     stack  = sf_floatalloc(nt);
     fold   = sf_intalloc(nt);
     dstack = (double*) sf_alloc(nt,sizeof(double));
@@ -142,7 +143,7 @@ int main (int argc, char* argv[])
 
 	for (iv=0; iv < nv; iv++) {
 	    v = v0+iv*dv;
-	    if (squared) v *=v;
+	    if (!squared) v *=v;
 
 	    for (it=0; it < nt; it++) {
 		dstack[it] = 0.0;
@@ -150,10 +151,12 @@ int main (int argc, char* argv[])
 	    }
 
 	    for (ih = 0; ih < nh; ih++) {
-		trace = traces[ih];
-
 		/* skip dead traces */
 		if (NULL != msk && 0==mask[ih]) continue;
+		
+		for (it=0; it < nt; it++) {
+		    trace[it] = traces[ih][it];
+		}
 	    
 		fint1_set(nmo,trace);
 
@@ -181,7 +184,7 @@ int main (int argc, char* argv[])
 		}
 	    }
 			
-	    sf_floatwrite (trace,nt,stk);
+	    sf_floatwrite (stack,nt,stk);
 	}
     }
     sf_warning(".");

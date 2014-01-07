@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
 {
     fint1 str, istr;
     int i1,i2, n1,n2,n3, ix,iv,ih, ib, ie, nb, nx,nv,nh, nw, next;
-    float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,v1,dv, dx, h0,dh,h, num, den, t;
+    float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,v1,dv, dx, h0,dh,h, num, den, t, dw;
     float *trace=NULL, *strace=NULL, ***stack=NULL, ***stack2=NULL, ***cont=NULL, **image=NULL;
     sf_complex *ctrace=NULL, *ctrace0=NULL, shift;
     char *time=NULL, *space=NULL, *unit=NULL;
@@ -88,7 +88,8 @@ int main(int argc, char* argv[])
 	free(space);
     }
 
-    dx = SF_PI/(kiss_fft_next_fast_size(nx-1)*dx);
+    dx = 2*SF_PI/(2*kiss_fft_next_fast_size(nx-1)*dx);
+    dw = 16*SF_PI/(d2*n3); /* 2pi * 8 */
 
     stack = sf_floatalloc3(n1,nx,nv);
     stack2 = sf_floatalloc3(n1,nx,nv);
@@ -115,7 +116,7 @@ int main(int argc, char* argv[])
 	sf_warning("offset %d of %d;",ih+1,nh);
 
 	h = h0 + ih*dh;
-	h *= h;
+	h *= h * 0.5;
 
 	sf_floatread(image[0],n1*nx,in);
 
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
 	    x = ix*dx; 
 	    x *= x;
 
-	    k = x * 0.25 * 0.25 * 0.5;
+	    k = x * 0.5;
 
 	    fint1_set(str,image[ix]);
 
@@ -152,14 +153,14 @@ int main(int argc, char* argv[])
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + (iv+1)* dv;
 
-		v1 = h * (1./(v*v) - 1./(v0*v0)) * 8.;
+		v1 = h * (1./(v*v) - 1./(v0*v0));
 		v2 = k * ((v0*v0) - (v*v));
 
 		ctrace[0]=sf_cmplx(0.,0.); /* dc */
 
 		for (i2=1; i2 < nw; i2++) {
-		    w = i2*SF_PI/(d2*n3);
-		    w = v2/w+(v1-o2)*w;
+		    w = i2*dw;
+		    w = v2/w+(v1-0.125*o2)*w;
 		    shift = sf_cmplx(cosf(w),sinf(w));
 
 #ifdef SF_HAS_COMPLEX_H
