@@ -1,0 +1,110 @@
+from rsf.proj import *
+
+# Download velocity model from the data server
+##############################################
+vstr = 'sigsbee2a_stratigraphy.sgy'
+Fetch(vstr,'sigsbee')
+Flow('zvstr',vstr,'segyread read=data')
+
+Flow('zvel','zvstr',
+     '''
+     put d1=0.025 o2=10.025 d2=0.025
+     label1=Depth unit1=kft label2=Lateral unit2=kft |
+     scale dscale=0.001
+     ''')
+
+Result('zvel',
+       '''
+       grey title=Velocity titlesz=7 color=j
+       screenratio=0.375 screenht=4 labelsz=5 scalebar=y
+       mean=y
+       ''')
+
+Flow('zvel0','zvel','math output="0.5*input"')
+
+padh=50
+padv=50
+n1=1201
+n2=3201
+o1=0
+o2=10.025 
+dx=0.025
+dz=0.025
+nt=5001
+dt=0.002
+
+Flow('left','zvel0','window n2=1 | spray n=%d' %padh)
+Flow('right','zvel0','window n2=1 f2=%d | spray n=%d'%(n2-1,padh))
+Flow('zvel1','left zvel0 right','cat axis=2 ${SOURCES[1:3]}')
+Flow('top','zvel1','window n1=1 | spray n=%d | transp'%padv)
+Flow('bottom','zvel1','window n1=1 f1=%d | spray n=%d | transp'%(n1-1,padv))
+Flow('zvelext','top zvel1 bottom',
+	'''
+	cat axis=1 ${SOURCES[1:3]} | put o1=%g o2=%g
+	'''%(o1-padv*dz,o2-padh*dx))
+
+Result('zvelext',
+       '''
+       grey title="Extended model" titlesz=7 color=j
+       labelsz=5 scalebar=y  mean=y
+       ''')
+
+
+# Compute approximate reflectivity
+##################################
+Flow('zrefext','zvel',
+     '''
+     depth2time velocity=$SOURCE nt=%d dt=%g |
+     ai2refl | ricker1 frequency=10 |
+     time2depth velocity=$SOURCE |
+     pad beg1=%d end1=%d beg2=%d end2=%d
+     '''%(nt,dt,padv,padv,padh,padh))
+
+Result('zrefext',
+       '''
+       grey title=Reflectivity titlesz=7 labelsz=5
+       ''')
+
+
+Flow('data','zrefext zvelext',
+     '''
+     rtm2d vel=${SOURCES[1]} n0=%d nt=%d dt=%g adj=n 
+     '''%(padv,nt,dt))
+
+Result('data',
+     '''
+     window n2=%d f2=%d | grey title="Zero-Offset Data" grid=y 
+     label1=Time unit1=s label2=Distance unit2=km
+     '''%(n2,padh))
+
+# ================= reverse-time migration ==================
+Flow('image-rtm','data zvelext',
+     '''
+     rtm2d vel=${SOURCES[1]} n0=%d adj=y
+     '''%(padv))
+
+Result('image-rtm',
+     '''window f1=%d f2=%d n1=%d n2=%d | 
+       grey title=Image titlesz=7 
+       screenratio=0.375 screenht=4 labelsz=5
+     '''%(padv,padh,n1,n2))
+
+
+
+# ============== least-squares migration ====================
+Flow('image-lsrtm','data zvelext',
+     '''
+     lsrtm2d vel=${SOURCES[1]}
+	n0=%d nt=%d dt=%g niter=3 verb=y
+     '''%(padv,nt,dt))
+
+Result('image-lsrtm',
+     '''
+     window min2=-1 max2=2 min1=0 max1=2 |
+     put label1=Depth unit1=km label2=Lateral unit2=km |
+     grey title="LSRTM Image"
+     ''')
+
+
+
+End()
