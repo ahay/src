@@ -143,8 +143,9 @@ int main(int argc, char* argv[])
 	}
 
 
-	if (verb)    sf_warning("iteration %d",iter);
+	if (verb)    sf_warning("iteration %d;",iter);
     }
+    sf_warning(".");
 
     /* take the real part */
     for(i1=0;i1<n1*n2; i1++) din[i1]=crealf(dcurr[i1]);
@@ -157,6 +158,5 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(din,n1*n2,Fout); /* output reconstructed seismograms */
 
-    sf_close();
     exit(0);
 }
