@@ -31,6 +31,12 @@ Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
      ''',stdout=0)
 
 Result('mappedstack','grey title="tah stack"')
+Result('mappedstack3d','mappedstack',
+	'''
+           window n1=1000
+           | byte 
+           | grey3 title="tah stack" frame1=500 frame2=120 frame3=140
+        ''')
 
 Flow('foldplot','npr3_gathers_hdr',
      '''
@@ -48,7 +54,11 @@ Result('foldplot3d','foldplot',
 	| grey3 title=foldplot pclip=100 
 	  frame1=24 frame2=94 frame3=172
 	''')
-
+Flow('foldmap','foldplot',
+     '''
+     transp plane=13
+     ''')
+Result('foldmap','grey title=foldplot pclip=100')
 # shot coordinates
 Flow('sx','npr3_gathers_hdr','dd type=float | headermath output="sx"')
 Flow('sy','npr3_gathers_hdr','dd type=float | headermath output="sy"')

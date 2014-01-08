@@ -1,20 +1,19 @@
-/* 
-   tahread: Trace And Header READ.
+/* Read Trace And Header from seperate files, combine, write to pipe
 
-   tah is the abbreviation of Trace And Header.  It identifies a group of
-   programs designed to:
-   1- read trace and headers from separate rsf files and write them to 
-      standard output
-   2- filter programs that read and write standard input/output and process 
-      the tah data
-   3- read tah data from standard input and write separate rsf files for the
-      trace and headers data
+tah is the abbreviation of Trace And Header.  Madagascar programs 
+that begin with sftah are a group of programs designed to:
+1- read trace and headers from separate rsf files and write them to 
+   standard output (ie sftahread)
+2- filter programs that read and write standard input/output and process 
+   the tah data (eg sftahnmo, sftahstack)
+3- read tah data from standard input and write separate rsf files for the
+   trace and headers data (ie sftahwrite)
 
-   These programs allow Seismic Unix (su) like processing in Madagascar.  
-   Some programs have su like names.
+These programs allow Seismic Unix (su) like processing in Madagascar.  
+Some programs have su like names.
 
-   Some programs in this suite are sf_tahread, sf_tahgethw, f_tahhdrmath, 
-   and sf_tahwrite.
+Some programs in this suite are sf_tahread, sf_tahgethw, f_tahhdrmath, 
+and sf_tahwrite.
 */
 /*
    Program change history:
