@@ -1,6 +1,6 @@
 /* 3D acoustic time-domain FD modeling
 4th order in space, 2nd order in time. 
-Sponge absorbing boundary conditions.
+Sponge absorbing boundary condition.
 */
 /*
   Copyright (C) 2013 Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -20,6 +20,7 @@ Sponge absorbing boundary conditions.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <rsf.h>
 #ifdef _OPENMP
 #include <omp.h>
@@ -112,7 +113,8 @@ int main(int argc, char* argv[])
 	for(ix=0; ix<fdm->nxpad; ix++) 
 	for(iz=0; iz<fdm->nzpad; iz++) 
 	{
-		vv[iy][ix][iz] = vv[iy][ix][iz] * vv[iy][ix][iz] * dt*dt;
+		float a= vv[iy][ix][iz] * dt;
+		vv[iy][ix][iz] = a*a;
     	}
 
 	fd3_init(fdm);

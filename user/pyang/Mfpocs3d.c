@@ -1,4 +1,4 @@
-/* Two-step POCS interpolation using a general Lp-norm optimization
+/* 3-D Two-step POCS interpolation using a general Lp-norm optimization
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -30,21 +30,15 @@
 #endif
 
 
-sf_complex pthresholding(sf_complex x, float thr, float normp)
-{
-    //return (x)*(cabsf(x)>thr?1.:0.);/* pocs hard thresholding*/
-    float a=1.0-powf((cabsf(x)+SF_EPS)/thr,normp-2.0);/* normp=1, soft thresholding*/
-    return (x)*(a>0.0?a:0.0);
-}
-
+#include "pthresh.h"
 
 
 int main(int argc, char* argv[])
 {
-    /* input and output variables */
     bool verb;
     int niter; 
-    float normp;
+    float p, tol;
+    char *mode;
     sf_file Fin=NULL,Fout=NULL, Fmask=NULL;/* mask and I/O files*/ 
 
     /* define temporary variables */
@@ -52,7 +46,9 @@ int main(int argc, char* argv[])
     float *din=NULL, *mask=NULL, *dout=NULL;
 
     sf_init(argc,argv);	/* Madagascar initialization */
+#ifdef _OPENMP
     omp_init(); 	/* initialize OpenMP support */
+#endif
 
     /* setup I/O files */
     Fin=sf_input("in");	/* read the data to be interpolated */
@@ -61,11 +57,18 @@ int main(int argc, char* argv[])
  
     if(!sf_getbool("verb",&verb))    	verb=false;
     /* verbosity */
-    if (!sf_getint("niter",&niter)) 	niter=50;
-    /* total number of POCS iteration */
-    if (!sf_getfloat("normp",&normp)) 	normp=0.35;
-    /* norm=p, where 0<p<=1 */
- 
+    if (!sf_getint("niter",&niter)) 	niter=100;
+    /* total number iterations */
+    if (!sf_getfloat("tol",&tol)) 	tol=1.0e-6;
+    /* iteration tolerance */
+    if ( !(mode=sf_getstring("mode")) ) mode = "exp";
+    /* thresholding mode: 'hard', 'soft','pthresh','exp';
+	'hard', hard thresholding;	'soft', soft thresholding; 
+	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
+    if (!sf_getfloat("p",&p)) 		p=0.35;
+    /* norm=p, where 0<p<=1 */;
+    if (strcmp(mode,"soft") == 0) 	p=1;
+    else if (strcmp(mode,"hard") == 0) 	p=0;
 
     /* Read the data size */
     if (!sf_histint(Fin,"n1",&n1)) sf_error("No n1= in input");
@@ -105,6 +108,7 @@ int main(int argc, char* argv[])
     {
 	t1=(1.0+sqrtf(1.0+4.0*t0*t0))/2.0;
 	beta=(t0-1.0)/t1;
+
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -116,7 +120,7 @@ int main(int argc, char* argv[])
 	fftwf_execute(p1);/* FFT */
 
 	/* find the thresholds */
-	float mmax=cabs(dtmp[0]);
+	float mmax=cabsf(dtmp[0]);
 	for(i1=1; i1<n1*n2*n3; i1++)
 	    mmax=(cabsf(dtmp[i1])>mmax)?cabsf(dtmp[i1]):mmax;
 	thr=0.99*powf(0.005,(iter-1.0)/(niter-1.0))*mmax;
@@ -125,14 +129,14 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for	
 #endif
-	for(i1=0;i1<n1*n2*n3;i1++) dtmp[i1]=pthresholding(dtmp[i1],thr,normp);
+	for(i1=0;i1<n1*n2*n3;i1++) dtmp[i1]=pthresholding(dtmp[i1],thr, p,mode);
 
 	fftwf_execute(p2);/* unnormalized IFFT */
 
+	/* adjointness needs scaling with factor 1.0/(n1*n2*n3) */	
 #ifdef _OPENMP
 #pragma omp parallel for	
 #endif
-	/* adjointness needs scaling with factor 1.0/(n1*n2*n3) */	
 	for(i1=0; i1<n1*n2*n3;i1++) dcurr[i1]=dtmp[i1]/(n1*n2*n3);
 	
 	/* update d_rec: d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
@@ -144,9 +148,8 @@ int main(int argc, char* argv[])
 		    }
 		}
 
-	if (verb)    sf_warning("%d\t-th iter;",iter);
+	if (verb)    sf_warning("iteration %d",iter);
     }
-    if (verb) sf_warning(".");
 
     /* take the real part */
     for(i1=0;i1<n1*n2*n3; i1++) dout[i1]=crealf(dcurr[i1]);

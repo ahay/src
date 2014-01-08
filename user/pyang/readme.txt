@@ -12,16 +12,17 @@ Under this directory, I implemented the algorithms:
 
 Main:		Mpocs3d.c, Mfpocs3d.c
 
-Test file: SConstruct.fpocs3d (put it in another directory 
-and rename it as SConstruct, run 'scons view')
+Test file: 	/book/pyang/test/fpocs3d/SConstruct
+		/book/pyang/test/fpocs2d/SConstruct
+
+Note: fpocs is a two-step version of POCS. 
 
 2) DLCT (discrete linear chirp transform), FFTW required
 
 Main:		Mdlct.c, 
 Depends on: 	dlct.c
 
-Test file: SConstruct.dlct (put it in another directory 
-and rename it as SConstruct, run 'scons view')
+Test file: 	/book/pyang/test/dlct/SConstruct
 
 Note: To make the adjoint of DLCT same as inverse, I normalized 
 	the forward and inverse DLCT with a factor. 
@@ -32,27 +33,35 @@ Main:		MTestfd2d.c, MTestfd3d.c
 Depends on: 	fd3dutil.c 
 (fd3dutil.c is modified from fdutil.c in Madagascar.)
 
-Test file:	SConstruct.Testfd2d SConstruct.Testfd3d
+Test file:	/book/pyang/test/Testfd3d/SConstruct
+		/book/pyang/test/Testfd2d/SConstruct
+
+4) RTM and LSRTM (2-D zero-offset least squares reverse time migration)
+
+Main: 		Mrtm2d.c Mlsrtm2d.c
+Depends on: 	rtm2d.c
+
+Test file:	/book/pyang/test/lsrtm2d/hyper/SConstruct
+		/book/pyang/test/lsrtm2d/sigsbee/SConstruct
+
+Note: rtm2d.c is coded following the linear operator standard in 
+	Madagascar:	oper(adj, add, nm, nd, mod, dat)
 
 ===================================================================
 The following codes are under construction. Be careful!
 ===================================================================
 
-4) MWNI (minimum weighted norm interpolation), FFTW requred
+5) MWNI (minimum weighted norm interpolation), FFTW requred
 
 Main:		Mmwni2d.c Mmwni3d.c
 
-Test file: SConstruct.mwni2d
+Test file: 	/book/pyang/test/mwni2d/SConstruct
 
 Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
-5) LSRTM (least squares reverse time migration), under construction
 
-Main: 		Mlsrtm2d.c
-
-Note:  Be careful! It is under construction!
 
 ==================================================================
 Miscellaneous:

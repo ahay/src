@@ -1,4 +1,4 @@
-/* bandlimited minimum weighted-norm interpolation (MWNI) 
+/* 2-D bandlimited minimum weighted-norm interpolation (MWNI) 
  implemented with conjugate gradient least squares (CGLS) method
 */
 /*

@@ -1,6 +1,6 @@
 /*A demo of 2D FD test
+ Sponage absorbing boundary condition
 */
-
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
 
@@ -93,7 +93,9 @@ void fd2d_init(float **v0)
 	memset(p2[0],0,nzpad*nxpad*sizeof(float));
 	for(int ib=0;ib<nb;ib++){
 		tmp=(nb-ib)/(sqrt(2.0)*4.0*nb);
-		bndr[ib]=expf(-tmp*tmp); //sponge ABC coefficients
+		bndr[ib]=expf(-tmp*tmp);
+		//tmp=expf(-tmp*tmp);
+		//bndr[ib]=powf(tmp,10.0);
 	}
 
 	for(ix=0;ix<nxpad;ix++){
@@ -178,50 +180,13 @@ void apply_sponge(float**p0, float **p1)
 
 
 void fd2d_close()
+/* free the allocated variables */
 {
 	free(*vv); free(vv);
 	free(*p0); free(p0);
 	free(*p1); free(p1);
 	free(*p2); free(p2);
 	free(bndr);
-}
-
-void boundary_rw(bool read, float **p, float *bndr_rw)
-/* read and write [effective] boundaries*/
-{
-	int ix,iz;
-
-	if(read){/* read saved boundaries out */
-		//4*nx*sizeof(float): read top and bottom
-		for(ix=0; ix<nx; ix++){
-			for(iz=0; iz<2; iz++){
-				p[ix+nb][iz+nb-2]=bndr_rw[iz+4*ix];
-				p[ix+nb][iz+nb+nz]=bndr_rw[iz+2+4*ix];
-			}	
-		}
-		//4*nz*sizeof(float): read left and right 
-		for(ix=0; ix<2; ix++){
-			for(iz=0; iz<nz; iz++){
-				p[ix+nb-2][iz+nb]=bndr_rw[4*nx+iz+nz*ix];
-				p[ix+nb+nx][iz+nb]=bndr_rw[4*nx+iz+nz*(ix+2)];
-			}
-		}
-	}else{/* saving the effective boundaries */
-		//4*nx*sizeof(float): store top and bottom
-		for(ix=0; ix<nx; ix++){
-			for(iz=0; iz<2; iz++){
-				bndr_rw[iz+4*ix]=p[ix+nb][iz+nb-2];
-				bndr_rw[iz+2+4*ix]=p[ix+nb][iz+nb+nz];
-			}	
-		}
-		//4*nz*sizeof(float): store left and right 
-		for(ix=0; ix<2; ix++){
-			for(iz=0; iz<nz; iz++){
-				bndr_rw[4*nx+iz+nz*ix]=p[ix+nb-2][iz+nb];
-				bndr_rw[4*nx+iz+nz*(ix+2)]=p[ix+nb+nx][iz+nb];
-			}
-		}
-	}
 }
 
 
@@ -275,23 +240,10 @@ int main(int argc, char* argv[])
 		apply_sponge(p1,p2);
 		ptr=p0; p0=p1; p1=p2; p2=ptr;
 
-		boundary_rw(false, p0, bndr_rw);
 		window2d(v0,p0);
 		sf_floatwrite(v0[0],nz*nx,Fw);
 	}
-/*
-	// Test the exact reconstrution using effective boundary saving scheme
-	ptr=p0; p0=p1; p1=ptr;
-	for(int it=nt-1; it>-1; it++)
-	{
-		boundary_rw(false, p0, bndr_rw);
-		p0[sx][sz]-=wlt[it];
-		step_forward(p0, p1, p2);
-		apply_sponge(p1,p2);
-		ptr=p0; p0=p1; p1=p2; p2=ptr;
-	
-	}
-*/
+
 	free(bndr_rw);
 	free(wlt);
 	free(*v0); free(v0);
