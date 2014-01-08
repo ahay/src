@@ -44,7 +44,7 @@ int main(int  argc,char **argv)
     int   isx,isy,isz,bd;
 
     int   i,j,k,im,jm,it;
-	int   nth, rank;
+    int   nth, rank;
     float t;
     float fx,fy,fz,dt2;
 
@@ -106,12 +106,12 @@ int main(int  argc,char **argv)
     /* read velocity model */
     for(i=bd;i<nypad-bd;i++)
         for(j=bd;j<nxpad-bd;j++){
-          sf_floatread(&vp0[i][j][bd],nz,Fvp0);
-          sf_floatread(&vs0[i][j][bd],nz,Fvs0);
-          sf_floatread(&epsi[i][j][bd],nz,Fep);
-          sf_floatread(&delta[i][j][bd],nz,Fde);
-          sf_floatread(&gama[i][j][bd],nz,Fga);
-       }
+	    sf_floatread(&vp0[i][j][bd],nz,Fvp0);
+	    sf_floatread(&vs0[i][j][bd],nz,Fvs0);
+	    sf_floatread(&epsi[i][j][bd],nz,Fep);
+	    sf_floatread(&delta[i][j][bd],nz,Fde);
+	    sf_floatread(&gama[i][j][bd],nz,Fga);
+	}
 
     vmodelboundary3d(vp0, nx, ny, nz, nxpad, nypad, nzpad, bd);
     vmodelboundary3d(vs0, nx, ny, nz, nxpad, nypad, nzpad, bd);
@@ -143,7 +143,7 @@ int main(int  argc,char **argv)
     coeff1dmix(coeff_1dy, dy);
     coeff1dmix(coeff_1dz, dz);
 
-	float*** p1=sf_floatalloc3(nzpad,nxpad,nypad);
+    float*** p1=sf_floatalloc3(nzpad,nxpad,nypad);
     float*** p2=sf_floatalloc3(nzpad,nxpad,nypad);
     float*** p3=sf_floatalloc3(nzpad,nxpad,nypad);
 
@@ -185,66 +185,66 @@ int main(int  argc,char **argv)
 
     dt2=dt*dt;
 
-	/*********the kernel calculation ************/
+    /*********the kernel calculation ************/
     float*** xtmp=sf_floatalloc3(nzpad,nxpad,nypad);
     float*** ytmp=sf_floatalloc3(nzpad,nxpad,nypad);
     float*** ztmp=sf_floatalloc3(nzpad,nxpad,nypad);
 
-	for(it=0;it<ns;it++)
+    for(it=0;it<ns;it++)
+    {
+	t=it*dt;
+
+	/* source Type 0: oriented 45 degree to vertical and 45 degree azimuth: Yan & Sava (2012) */
+	p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component
+	q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component
+	r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component
+
+	// 3D exploding force source (e.g., Wu's PhD)
+	// Displacement source equivalent to point-source in pseudo-pure-mode wavefield
+	/*
+	  for(k=-1;k<=1;k++)
+	  for(i=-1;i<=1;i++)
+	  for(j=-1;j<=1;j++)
+	  {
+	  // source Type 1
+	  if(fabs(i)+fabs(j)+fabs(k)==3)
+	  p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component
+	  q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component
+	  r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component
+	  }
+	  // source Type 2
+	  if(i+j+k==3||i+j+k==-3)
+	  {
+	  p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component
+	  q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component
+	  r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component
+	  }
+	  }
+	*/
+	fwpvtielastic3d(dt2,p1,p2,p3,q1,q2,q3,r1,r2,r3,xtmp,ytmp,ztmp,
+			coeff_2dx,coeff_2dy,coeff_2dz,
+			coeff_1dx,coeff_1dy,coeff_1dz,
+			dx,dy,dz,nxpad,nypad,nzpad,
+			vp0,vs0,epsi,delta,gama);
+
+	if(it==ns-1) // output snapshot
 	{
-	     t=it*dt;
-
-		 /* source Type 0: oriented 45 degree to vertical and 45 degree azimuth: Yan & Sava (2012) */
-         p2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // x-component
-         q2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // y-component
-         r2[isy][isx][isz]+=Ricker(t, f0, t0, A);  // z-component
-
-         // 3D exploding force source (e.g., Wu's PhD)
-		 // Displacement source equivalent to point-source in pseudo-pure-mode wavefield
-		 /*
-         for(k=-1;k<=1;k++)
-            for(i=-1;i<=1;i++)
-               for(j=-1;j<=1;j++)
-               {
-				// source Type 1
-                if(fabs(i)+fabs(j)+fabs(k)==3)
-                     p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component
-                     q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component
-                     r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component
-                }
-				// source Type 2
-                if(i+j+k==3||i+j+k==-3)
-                {
-                     p2[isy+k][isx+i][isz+j]+=i*Ricker(t, f0, t0, A);  // x-component
-                     q2[isy+k][isx+i][isz+j]+=k*Ricker(t, f0, t0, A);  // y-component
-                     r2[isy+k][isx+i][isz+j]+=j*Ricker(t, f0, t0, A);  // z-component
-                }
-               }
-		 */
-  	     fwpvtielastic3d(dt2,p1,p2,p3,q1,q2,q3,r1,r2,r3,xtmp,ytmp,ztmp,
-                         coeff_2dx,coeff_2dy,coeff_2dz,
-                         coeff_1dx,coeff_1dy,coeff_1dz,
-                         dx,dy,dz,nxpad,nypad,nzpad,
-	                     vp0,vs0,epsi,delta,gama);
-
-         if(it==ns-1) // output snapshot
-         {
-	     	for(i=0;i<ny;i++)
-                {
-                    im=i+bd;
-		            for(j=0;j<nx;j++)
-                    {
-                        jm=j+bd;
-                        sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
-                        sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
-                        sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
-                    }
-                }
-            }
-            for(i=0;i<nypad;i++)
+	    for(i=0;i<ny;i++)
+	    {
+		im=i+bd;
+		for(j=0;j<nx;j++)
+		{
+		    jm=j+bd;
+		    sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
+		    sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
+		    sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
+		}
+	    }
+	}
+	for(i=0;i<nypad;i++)
             for(j=0;j<nxpad;j++)
-            for(k=0;k<nzpad;k++)
-            {
+		for(k=0;k<nzpad;k++)
+		{
                     p1[i][j][k]=p2[i][j][k];
                     p2[i][j][k]=p3[i][j][k];
 
@@ -253,12 +253,12 @@ int main(int  argc,char **argv)
 
                     r1[i][j][k]=r2[i][j][k];
                     r2[i][j][k]=r3[i][j][k];
-           }
+		}
 
-           sf_warning("forward propagation...  it= %d   t=%f",it,t);
-     }
+	sf_warning("forward propagation...  it= %d   t=%f;",it,t);
+    }
 
-    printf("ok3\n");
+    sf_warning(".");
 
     t3=clock();
     timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
@@ -283,5 +283,5 @@ int main(int  argc,char **argv)
     free(**gama);
     free(**delta);
 		
-    return 0;
+    exit(0);
 }
