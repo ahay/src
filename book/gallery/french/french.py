@@ -37,3 +37,11 @@ def get_zodata(data):
          label3=West-East   unit3=m
          ''',split=[2,161],reduce='add')
 
+def time_mig(image):
+     Result(image,
+            '''
+            window max1=3 |
+            byte gainpanel=all |
+            grey3 title="%s" frame1=175 frame2=60 frame3=80
+            screenratio=1
+            ''' % method)
