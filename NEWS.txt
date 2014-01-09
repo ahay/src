@@ -98,6 +98,7 @@ In the build system:
 * Set -fopenmp for linking with gcc
 * Fixed directory locations in pens/fonts
 * Fixed typo in the configure script
+* Fixed the case of RSFSRC set to a different directory
 
 ===Changes in defaults and interfaces===
 

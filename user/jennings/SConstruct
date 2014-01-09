@@ -1,7 +1,17 @@
-import os, sys, re, string
-srcroot = os.environ.get('RSFSRC', '../..')
-sys.path.append(os.path.join(srcroot,'framework'))
-import bldutil
+import sys, os
+
+try:
+    import bldutil
+    srcroot = '../..' # cwd is RSFSRC/build/user/jennings
+    Import('env root bindir pkgdir')
+    env = env.Clone()
+except:
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    root = None
+    SConscript(os.path.join(srcroot,'api/c/SConstruct'))
 
 # C mains
 progs = '''
@@ -16,14 +26,6 @@ figlist booklist testlist
 # Python modules that do not need SWIG+numpy
 pylibs_meta = '''
 '''
-
-try:  # distributed version
-    Import('env root pkgdir bindir')
-    env = env.Clone()
-except: # local version
-    env = bldutil.Debug()
-    root = None
-    SConscript('../../api/c/SConstruct')
 
 src = Glob('[a-z]*.c')
 

@@ -1,4 +1,4 @@
-import os, sys, re, string
+import os, sys
 sys.path.append('../../framework')
 
 try:

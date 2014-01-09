@@ -6,10 +6,10 @@ try:  # distributed version
     Import('env root pkgdir bindir')
     env = env.Clone()
 except: # local version
-	env = bldutil.Debug()
-	srcroot = os.environ.get('RSFSRC', '../..')
-	root = None
-	SConscript('../../api/c/SConstruct')
+    env = bldutil.Debug()
+    srcroot = os.environ.get('RSFSRC', '../..')
+    root = None
+    SConscript('../../api/c/SConstruct')
 
 
 # YOU MAY HAVE TO EDIT THIS SECTION!!!

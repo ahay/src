@@ -1,7 +1,17 @@
-import os, sys, re, string
-RSFSRC=os.getenv('RSFSRC','../..')
-sys.path.append(RSFSRC+'/framework')
-import bldutil
+import sys, os
+
+try:
+    import bldutil
+    RSFSRC = '../..' # cwd is RSFSRC/build/user/jennings
+    Import('env root bindir pkgdir')
+    env = env.Clone()
+except:
+    RSFSRC = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(RSFSRC,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    root = None
+    SConscript(os.path.join(RSFSRC,'system/seismic/SConstruct'))
 
 progs = ''' 
 tahgethw
@@ -12,15 +22,6 @@ tahmakeskey
 tahstack
 '''
 
-try:  # distributed version
-    Import('env root pkgdir bindir')
-    env = env.Clone()
-except: # local version
-    env = bldutil.Debug()
-    root = None
-
-SConscript(RSFSRC+'/system/seismic/SConstruct')
-    
 src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
