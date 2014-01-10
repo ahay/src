@@ -1,26 +1,63 @@
-/* 
-   tahwrite: Trace And Header WRITE.
+/* Read Trace And Header (tah) from standard input, write to separate files
 
-   tah is the abbreviation of Trace And Header.  It identifies a group of
-   programs designed to:
-   1- read trace and headers from separate rsf files and write them to 
-      standard output
-   2- filter programs that read and write standard input/output and process 
-      the tah data
-   3- read tah data from standard input and write separate rsf files for the
-      trace and headers data
+tah is the abbreviation of Trace And Header.  Madagascar programs 
+that begin with sftah are a designed to:
+1- read trace and headers from separate rsf files and write them to 
+   standard output (ie sftahread)
+2- filter programs that read and write standard input/output and 
+   process the tah data (eg sftahnmo, sftahstack)
+3- read tah data from standard input and write separate rsf files for 
+   the trace and headers data (ie sftahwrite)
 
-   These programs allow Seismic Unix (su) like processing in Madagascar.  
-   Some programs have su like names.
+These programs allow Seismic Unix (su) like processing in Madagascar.  
+Some programs have su like names.
 
-   Some programs in this suite are sf_tahread, sf_tahgethw, f_tahhdrmath, 
-   and sf_tahwrite.
+Some programs in this suite are sftahread, sftahgethw, ftahhdrmath, 
+and sftahwrite.
+
+The sftahwrite program reads the trace and header data (tah) from 
+standard input (usually a pipe), separates the trace data from the
+header data.  The trace data is written to output and the header is
+written to outheaders.  The trace headers are used to select the 
+location in the file to write the data.  The iline and xline headers 
+are used in the following example to put stacked data in 
+(time, xline, iline) order so it can be viewed using sfgrey.
+
+EXAMPLE:
+
+sftahread \\
+   verbose=1 \\
+   input=npr3_gathers.rsf \\
+| sftahnmo \\
+   verbose=1  \\
+   tnmo=0,.373,.619,.826,.909,1.017,1.132,1.222,1.716,3.010 \\
+   vnmo=9086,10244,11085,10803,10969,11578,12252,12669,14590,17116 \\
+| sftahstack key=iline,xline verbose=1 \\
+| sftahwrite \\
+   verbose=1                           \\
+   label2="xline" o2=1 n2=188 d2=1   \\
+   label3="iline" o3=1 n3=345 d3=1   \\
+   output=mappedstack.rsf \\
+>/dev/null
+
+sfgrey <mappedstack.rsf | sfpen
+
+In this example the cmp sorted prestack data, npr3_gathers.rsf,  are 
+read by sftahread.  The headers are in the file npr3_gathers_hdr.rsf, 
+the headers parameter default.  The headers are merged with the trace 
+amplitudes and the tah data sent down the pipe for nmo and stack.  The 
+sftahwrite writes the trace data to mappedstack.rsf and the headers 
+are written to the file mappedstack_hdr.rsf.  The order of the data in
+the output file is defined by the iline and xline trace headers, so the 
+data order is (time,xline,iline).  Finally, the output volume is
+displayed using sfgrey.
 */
 /*
    Program change history:
    date       Who             What
    04/26/2013 Karl Schleicher Original program
    10/22/2013 Karl Schleicher Factor reused functions into tahsub.c
+   01/10/2014 Karl Schleicher Provide headers default, documentation 
 */
 #include <string.h>
 #include <rsf.h>
@@ -56,7 +93,9 @@ int main(int argc, char* argv[])
   float d_output[SF_MAX_DIM];
   sf_axis output_axa_array[SF_MAX_DIM];
   sf_file output=NULL, outheaders=NULL;
-
+  char* output_filename=NULL;
+  char* outheaders_filename=NULL;
+  
   sf_init (argc,argv);
 
    /*****************************/
@@ -66,6 +105,10 @@ int main(int argc, char* argv[])
   /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
   /* fprintf(stderr,"read verbose switch.  getint reads command line.\n"); */
   if(!sf_getint("verbose",&verbose))verbose=1;
+  /* \n
+     flag to control amount of print
+     0 terse, 1 informative, 2 chatty, 3 debug
+  */
   fprintf(stderr,"verbose=%d\n",verbose);
  
   /******************************************/
@@ -106,8 +149,39 @@ int main(int argc, char* argv[])
   /* set up the output and outheaders files for the traces and headers */
   /********************************************************************/
 
-  output=sf_output("output");
-  outheaders=sf_output("outheaders");
+  output_filename=sf_getstring("output");
+  /* \n
+     output trace filename. Required parameter with no default.
+  */
+  if(NULL==output_filename) sf_error("output is a required parameter");
+  output=sf_output(output_filename);
+
+  outheaders_filename=sf_getstring("outheaders");
+  /* \n
+     Output trace header file name.  Default is the input data
+     file name, with the final .rsf changed to _hdr.rsf. 
+  */  
+
+  if(outheaders_filename==NULL){
+    /* compute headers_filename from output_filename by replacing the final
+       .rsf with _hdr.rsf */
+    if(!(0==strcmp(output_filename+strlen(output_filename)-4,".rsf"))){
+	fprintf(stderr,"parameter output, the name of the output file,\n");
+	fprintf(stderr,"does not end with .rsf, so header filename cannot\n");
+	fprintf(stderr,"be computed by replacing the final .rsf with\n");
+	fprintf(stderr,"_hdr.rsf.\n");
+	sf_error("default for outheaders parameter cannot be computed.");
+    }
+    outheaders_filename=malloc(strlen(output_filename)+60);
+    strcpy(outheaders_filename,output_filename);
+    strcpy(outheaders_filename+strlen(output_filename)-4,"_hdr.rsf\0");
+    if(verbose>1)
+      fprintf(stderr,"parameter outheader defaulted.  Computed to be #%s#\n",
+			 outheaders_filename);
+  }
+  if(verbose>1)fprintf(stderr,"parameter outheader input or computed  #%s#\n",
+		       outheaders_filename);
+  outheaders=sf_output(outheaders_filename);
  
   /* get each of the axis information: 
      label2, n2, o2, d2,  
@@ -127,6 +201,11 @@ int main(int argc, char* argv[])
     sprintf(parameter,"label%d",iaxis+1);
     fprintf(stderr,"try to read %s\n",parameter);
     if ((label[iaxis]=sf_getstring(parameter))) {
+      /*(label#=(2,...)  name of each of the axes. 
+	   label1 is not changed from input. Each label must be a 
+	   header key like cdp, cdpt, or ep.  The trace header 
+	   values are used to define the output trace location in
+	   the output file. )*/
       fprintf(stderr,"got %s=%s\n",parameter,label[iaxis]);
       sf_putstring(output    ,parameter,label[iaxis]);
       sf_putstring(outheaders,parameter,label[iaxis]);
@@ -135,19 +214,22 @@ int main(int argc, char* argv[])
     sprintf(parameter,"n%d",iaxis+1);
     fprintf(stderr,"try to read %s\n",parameter);
     if (sf_getlargeint  (parameter,&n_output[iaxis])) {
-	fprintf(stderr,"got %s=%lld\n",parameter,(long long) n_output[iaxis]);
+      /*( n#=(2,...) number of locations in the #-th dimension )*/ 
+      fprintf(stderr,"got %s=%lld\n",parameter,(long long) n_output[iaxis]);
       sf_putint(output    ,parameter,n_output[iaxis]);
       sf_putint(outheaders,parameter,n_output[iaxis]);
       n_argparmread=true;
     }
     sprintf(parameter,"o%d",iaxis+1);
     if (sf_getfloat(parameter,&o_output[iaxis])) {
+      /*( o#=(2,...) origin of the #-th dimension )*/ 
       sf_putfloat(output    ,parameter,o_output[iaxis]);
       sf_putfloat(outheaders,parameter,o_output[iaxis]);
       o_argparmread=true;
     }
     sprintf(parameter,"d%d",iaxis+1);
     if (sf_getfloat(parameter,&d_output[iaxis])) {
+      /*( d#=(2,...) delta in the #-th dimension )*/ 
       sf_putfloat(output    ,parameter,d_output[iaxis]);
       sf_putfloat(outheaders,parameter,d_output[iaxis]);
       d_argparmread=true;
