@@ -22,7 +22,7 @@
 #include "rtm2d.h"
 
 static int nm, nd;
-static float *rr, *mm, *gm, *gr, *sm;
+static float *rr, *mm, *gm, *gr;
 static float tol;
 static bool verb;
 
@@ -35,9 +35,8 @@ void lsrtm2d_init(int nm_, int nd_, float tol_, bool verb_)
 	verb=verb_;
 	rr=(float*)malloc(nd*sizeof(float));
 	gr=(float*)malloc(nd*sizeof(float));
-	mm=(float*)malloc(nm*sizeof(float));
-	gm=(float*)malloc(nm*sizeof(float));
-	sm=(float*)malloc(nm*sizeof(float));
+	mm=(float*)malloc(nd*sizeof(float));
+	gm=(float*)malloc(nd*sizeof(float));
 }
 
 void lsrtm2d_close()
@@ -46,45 +45,35 @@ void lsrtm2d_close()
 	free(gr);
 	free(mm);
 	free(gm);
-	free(sm);
 }
+
+
 
 void lsrtm2d(float dz, float dx, float dt, int n0, int n1, 
 int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 /*< LSRTM with conjugate gradient method >*/
 {
-	float beta, alpha, g0, gn, gnp, res;
+	float res0, res;
+	bool forget;
 
-	for(int i=0; i<nd;i++) rr[i]=-dat[i];
-	memset(gr,0,nd*sizeof(float));
-	memset(mm,0,nm*sizeof(float));
-	memset(gm,0,nm*sizeof(float));
-	memset(sm,0,nm*sizeof(float));
+	for(int i=0; i<nd;i++) 	rr[i]=-dat[i];
+	memset(gr, 0, nd*sizeof(float));
+	memset(mm, 0, nm*sizeof(float));
+	memset(gm, 0, nm*sizeof(float));
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
 
+	res0=cblas_dsdot(nd, rr, 1, rr, 1);
 	for(int iter=0;iter<niter;iter++)
 	{
-		rtm2d_lop(true, false, nm, nd, gm, rr); 
-		gn=cblas_dsdot(nm,gm,1,gm,1);
-		if (iter==0){
-			beta=0.0;
-			g0=gn;
-		}else{
-			beta=gn/gnp;
-			if(beta<tol || gn/g0<tol) break;
-		}
-		gnp=gn;
-
-		for(int i=0; i<nm; i++)	sm[i]=gm[i]+beta*sm[i];
-		rtm2d_lop(false, false, nm, nd, sm, gr);
-
-		alpha=-gn/cblas_dsdot(nd,gr,1,gr,1);
-
-		for(int i=0; i<nm; i++) mm[i]+=alpha*sm[i];
-		for(int i=0; i<nd; i++) rr[i]+=alpha*gr[i];
-
+		rtm2d_lop(true,  false, nm, nd, gm, rr);// gm=Ft[rr]
+		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]
+		if (iter%10==0) forget=true;
+		else forget=false;
+		/* Claerbout's CG: (mm, rr)=cgstep(mm, rr, gm, gr); */	
+		sf_cgstep(forget, nm, nd, mm, gm, rr, gr); 	
 		res=cblas_dsdot(nd,rr,1,rr,1);
 		if (verb) sf_warning("iteration %d; res %g",iter+1, res);
+		if (res/res0<tol) break;
 	}
 	for(int i=0; i<nm; i++)	mod[i]=mm[i];
 
