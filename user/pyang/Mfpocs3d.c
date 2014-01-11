@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int niter; 
-    float p, tol;
+    float p, tol,pclip;
     char *mode;
     sf_file Fin=NULL,Fout=NULL, Fmask=NULL;/* mask and I/O files*/ 
 
@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
     /* total number iterations */
     if (!sf_getfloat("tol",&tol)) 	tol=1.0e-6;
     /* iteration tolerance */
+    if (!sf_getfloat("pclip",&pclip)) 	pclip=99.;
+    /* starting data clip percentile (default is 99)*/
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
 	'hard', hard thresholding;	'soft', soft thresholding; 
@@ -120,10 +122,22 @@ int main(int argc, char* argv[])
 	fftwf_execute(p1);/* FFT */
 
 	/* find the thresholds */
+/*
 	float mmax=cabsf(dtmp[0]);
 	for(i1=1; i1<n1*n2*n3; i1++)
 	    mmax=(cabsf(dtmp[i1])>mmax)?cabsf(dtmp[i1]):mmax;
 	thr=0.99*powf(0.005,(iter-1.0)/(niter-1.0))*mmax;
+*/
+	for(i1=1; i1<n1*n2; i1++){
+	    dout[i1]=cabsf(dtmp[i1]);
+	}
+
+   	int nthr = 0.5+n1*n2*(0.01*pclip);  /*round off*/
+    	if (nthr < 0) nthr=0;
+    	if (nthr >= n1*n2) nthr=n1*n2-1;
+	thr=sf_quantile(nthr,n1*n2,dout);
+	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
+
 
 	/* perform p-norm thresholding */
 #ifdef _OPENMP
@@ -148,7 +162,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 
-	if (verb)    sf_warning("iteration %d",iter);
+	if (verb)    sf_warning("iteration %d;",iter);
     }
 
     /* take the real part */

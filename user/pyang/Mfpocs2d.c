@@ -37,13 +37,13 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int niter; 
-    float p, tol;
+    float p, tol,pclip;
     char *mode;
     sf_file Fin, Fout, Fmask;/* mask and I/O files*/ 
 
     /* define temporary variables */
     int n1,n2;
-    float *din, *mask;
+    float *din, *dout, *mask;
 
     sf_init(argc,argv);	/* Madagascar initialization */
 #ifdef _OPENMP
@@ -61,6 +61,10 @@ int main(int argc, char* argv[])
     /* total number iterations */
     if (!sf_getfloat("tol",&tol)) 	tol=1.0e-6;
     /* iteration tolerance */
+    if (!sf_getfloat("pclip",&pclip)) 	pclip=99.;
+    /* starting data clip percentile (default is 99)*/
+    if (pclip <=0. || pclip > 100.)
+	sf_error("pclip=%g should be > 0 and <= 100",pclip);
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
 	'hard', hard thresholding;	'soft', soft thresholding; 
@@ -77,6 +81,7 @@ int main(int argc, char* argv[])
 
     /* allocate data and mask arrays */
     din=sf_floatalloc(n1*n2); sf_floatread(din,n1*n2,Fin);
+    dout=sf_floatalloc(n1*n2);
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2);
 	sf_floatread(mask,n2,Fmask);
@@ -114,11 +119,22 @@ int main(int argc, char* argv[])
 	fftwf_execute(p1);/* FFT */
 
 	/* find the threshold */
+/*
 	float mmax=cabsf(dtmp[0]);
 	for(i1=1; i1<n1*n2; i1++){
 	    mmax=(cabsf(dtmp[i1])>mmax)?cabsf(dtmp[i1]):mmax;
 	}
 	thr=0.99*powf(0.001,(iter-1.0)/(niter-1.0))*mmax;
+*/
+	for(i1=1; i1<n1*n2; i1++){
+	    dout[i1]=cabsf(dtmp[i1]);
+	}
+
+   	int nthr = 0.5+n1*n2*(0.01*pclip);  /*round off*/
+    	if (nthr < 0) nthr=0;
+    	if (nthr >= n1*n2) nthr=n1*n2-1;
+	thr=sf_quantile(nthr,n1*n2,dout);
+	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 
 	/* perform p-norm thresholding */
 #ifdef _OPENMP
@@ -148,7 +164,7 @@ int main(int argc, char* argv[])
     sf_warning(".");
 
     /* take the real part */
-    for(i1=0;i1<n1*n2; i1++) din[i1]=crealf(dcurr[i1]);
+    for(i1=0;i1<n1*n2; i1++) dout[i1]=crealf(dcurr[i1]);
 	
     fftwf_destroy_plan(p1);
     fftwf_destroy_plan(p2);
@@ -156,7 +172,7 @@ int main(int argc, char* argv[])
     fftwf_free(dcurr);
     fftwf_free(dtmp);
 
-    sf_floatwrite(din,n1*n2,Fout); /* output reconstructed seismograms */
+    sf_floatwrite(dout,n1*n2,Fout); /* output reconstructed seismograms */
 
     exit(0);
 }

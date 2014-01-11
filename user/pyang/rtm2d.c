@@ -20,9 +20,6 @@ Note: 	1) Migration should be the adjoint of modeling. If you pass the
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-  Reference: On analysis-based two-step interpolation methods for randomly 
-	sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
 */
 #include <rsf.h>
 
@@ -38,45 +35,36 @@ static float *bndr, *mod, *dat;
 static float **u0, **u1, **u2, **vv, **ptr=NULL;
 
 void step_forward(float **u0, float **u1, float **u2, float **vv)
-/*< one step of forward modeling >*/
-{ 
-    int i1, i2;
- 
+{
+	int i1, i2;
+			for (i2=0; i2<n2; i2++) 
+			for (i1=0; i1<n1; i1++) 
+			{
+
+				float u = c0*u1[i2][i1];
+				if(i1 >= 1) u += c11*u1[i2][i1-1];
+				if(i1 >= 2) u += c12*u1[i2][i1-2];
+				if(i1 < n1-1) u += c11*u1[i2][i1+1];
+				if(i1 < n1-2) u += c12*u1[i2][i1+2];
+				if(i2 >= 1) u += c21*u1[i2-1][i1];
+				if(i2 >= 2) u += c22*u1[i2-2][i1];
+				if(i2 < n2-1) u += c21*u1[i2+1][i1];
+				if(i2 < n2-2) u += c22*u1[i2+2][i1];
+				u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
+
 /*
-#ifdef _OPENMP
-#pragma omp parallel for	                  \
-    private(i2,i1)		                  \
-    shared(n2,n1,u0,u1,u2,vv,c11,c12,c21,c22,c0)
-#endif	  
-    	for (i2=2; i2 < n2-2; i2++) 
-	for (i1=2; i1 < n1-2; i1++) 
-	{
-		float u = c0*u1[i2][i1];
-		if(i1 >= 1) u += c11*u1[i2][i1-1];
-		if(i1 >= 2) u += c12*u1[i2][i1-2];
-		if(i1 < n1-1) u += c11*u1[i2][i1+1];
-		if(i1 < n1-2) u += c12*u1[i2][i1+2];
-		if(i2 >= 1) u += c21*u1[i2-1][i1];
-		if(i2 >= 2) u += c22*u1[i2-2][i1];
-		if(i2 < n2-1) u += c21*u1[i2+1][i1];
-		if(i2 < n2-2) u += c22*u1[i2+2][i1];
-		u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
-	}
+				float 	      u = vv[i2][i1  ]*c0 *u1[i2][i1  ];
+				if(i1 >= 1)   u+= vv[i2][i1-1]*c11*u1[i2][i1-1];
+				if(i1 >= 2)   u+= vv[i2][i1-2]*c11*u1[i2][i1-2];
+				if(i1 < n1-1) u+= vv[i2][i1+1]*c11*u1[i2][i1+1];
+				if(i1 < n1-2) u+= vv[i2][i1+2]*c11*u1[i2][i1+2];
+				if(i2 >= 1)   u+= vv[i2-1][i1]*c21*u1[i2-1][i1];
+				if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
+				if(i2 < n2-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
+				if(i2 < n2-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
+				u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+u;
 */
-	for (i2=0; i2<n2; i2++) 
-	for (i1=0; i1<n1; i1++) 
-	{
-		float u = c0*u1[i2][i1];
-		if(i1 >= 1) u += c11*u1[i2][i1-1];
-		if(i1 >= 2) u += c12*u1[i2][i1-2];
-		if(i1 < n1-1) u += c11*u1[i2][i1+1];
-		if(i1 < n1-2) u += c12*u1[i2][i1+2];
-		if(i2 >= 1) u += c21*u1[i2-1][i1];
-		if(i2 >= 2) u += c22*u1[i2-2][i1];
-		if(i2 < n2-1) u += c21*u1[i2+1][i1];
-		if(i2 < n2-2) u += c22*u1[i2+2][i1];
-		u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
-	}
+			}
 }
 
 void apply_sponge(float**p0, float **p1, float *bndr)
@@ -192,7 +180,7 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 			sf_warning("%d;",it);
 
 			apply_sponge(u0, u1, bndr); 
-			step_forward(u0, u1, u2, vv);
+			step_forward(u0,u1,u2,vv);
 			ptr=u0; u0=u1; u1=u2; u2=ptr;
 
 #ifdef _OPENMP
@@ -225,7 +213,7 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 #endif
 			for (i2=0; i2<n2; i2++) dat[i2*nt+it]=u1[i2][n0];
 	
-			step_forward(u0, u1, u2, vv);
+			step_forward(u0,u1,u2,vv);
 			apply_sponge(u1, u2, bndr);
 			ptr=u0; u0=u1; u1=u2; u2=ptr;
     		}

@@ -64,7 +64,7 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 
 	for(int iter=0;iter<niter;iter++)
 	{
-		rtm2d_lop(true, false, nm, nd, gm, rr);
+		rtm2d_lop(true, false, nm, nd, gm, rr); 
 		gn=cblas_dsdot(nm,gm,1,gm,1);
 		if (iter==0){
 			beta=0.0;
