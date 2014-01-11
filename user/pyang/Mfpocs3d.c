@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
     /* FPOCS iterations */
     for(iter=1; iter<=niter; iter++)
     {
-	t1=(1.0+sqrtf(1.0+4.0*t0*t0))/2.0;
+	t1=0.5*(1.0+sqrtf(1.0+4.0*t0*t0));
 	beta=(t0-1.0)/t1;
 
 #ifdef _OPENMP

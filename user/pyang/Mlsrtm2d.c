@@ -33,11 +33,11 @@ void lsrtm2d_init(int nm_, int nd_, float tol_, bool verb_)
 	nd=nd_;
 	tol=tol_;
 	verb=verb_;
-	rr=(float*)malloc(nd*sizeof(nd));
-	gr=(float*)malloc(nd*sizeof(nd));
-	mm=(float*)malloc(nd*sizeof(nm));
-	gm=(float*)malloc(nd*sizeof(nm));
-	sm=(float*)malloc(nd*sizeof(nm));
+	rr=(float*)malloc(nd*sizeof(float));
+	gr=(float*)malloc(nd*sizeof(float));
+	mm=(float*)malloc(nm*sizeof(float));
+	gm=(float*)malloc(nm*sizeof(float));
+	sm=(float*)malloc(nm*sizeof(float));
 }
 
 void lsrtm2d_close()
