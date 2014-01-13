@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-pickval sgewefd2d
+pickval sgewefd2d rtm2
 '''
 
 mpi_progs = ''
