@@ -23,19 +23,21 @@ The dottest has been past. */
 #include <rsf.h>
 
 static int nt, nx, sw;
-static float t0, dt, dx, *vrms;
+static float xs,ds,os,t0, x0, dt, dx, *vrms;
 
 void aa_kirch_init (float *vrms_in /* RMS velocity */, 
 		    float t0_in    /* time origin */, 
+		    float x0_in    /* receiver origin */, 
 		    float dt_in    /* time sampling */, 
-		    float dx_in    /* midpoint sampling */, 
+		    float dx_in    /* receiver sampling */, 
 		    int nt_in      /* time samples */, 
-		    int nx_in      /* midpoint samples */, 
+		    int nx_in      /* reciever samples */, 
 		    int sw_in      /* branch to compute */)
 /*< Initialize >*/
 {
     vrms = vrms_in;
     t0 = t0_in;
+    x0 = x0_in;
     dt = dt_in;
     dx = dx_in;
     nt = nt_in;
@@ -45,14 +47,16 @@ void aa_kirch_init (float *vrms_in /* RMS velocity */,
 
 void kirch_init (float *vrms_in /* RMS velocity */, 
 		    float t0_in    /* time origin */, 
+		    float x0_in    /* receiver origin */, 
 		    float dt_in    /* time sampling */, 
-		    float dx_in    /* midpoint sampling */, 
+		    float dx_in    /* reciever sampling */, 
 		    int nt_in      /* time samples */, 
-		    int nx_in      /* midpoint samples */)
+		    int nx_in      /* reciever samples */)
 /*< Initialize >*/
 {
     vrms = vrms_in;
     t0 = t0_in;
+    x0 = x0_in;
     dt = dt_in;
     dx = dx_in;
     nt = nt_in;
@@ -146,8 +150,8 @@ void kirch_lop (bool adj, bool add, int nm, int nd,
 		   float *modl, float *data)
 /*< Simplest-form Kirchhoff operator >*/
 {
-    int im, id1, id2, ix,iz,it,ib,i;
-    float t,z,b,f,g;
+    int im, id1, id2, ix,iz,it,ir,i;
+    float t,t1,t2,z,b1,b2,f,g;
 
     sf_adjnull(adj,add,nm,nd,modl,data);
 
@@ -155,20 +159,23 @@ void kirch_lop (bool adj, bool add, int nm, int nd,
     for (iz=0; iz < nt-1; iz++) {     
 		z = t0 + dt * iz;		/* vertical traveltime (t_0) */
 
-		for (ib=0; ib < nx; ib++) {	   /* Loop over input trace */
-	    	b = dx*ib*2./vrms[iz]; 
-	    	t = hypotf(z,b); 
-
-	    	f = (t-t0)/dt; 
-	    	it = f; f = f-it; 
-	    	i = it+1; g = 1.-f;
-	    	if(it >= nt) break;
-
+		for (ir=0; ir < nx; ir++) {	   /* Loop over receiver */
 
 			for (ix=0; ix <	nx; ix++) { /* Loop over output trace */
-		    im = ix*nt+iz;
-		    id1 = ix*nt+it;
-		    id2 = ix*nt+i;
+				b1=(ix-ir)*dx/vrms[iz];
+				b2=(x0+ix*dx-xs)/vrms[iz];
+
+	    		t1 = hypotf(0.5*z,b1); 
+				t2 = hypotf(0.5*z,b2);
+				t=t1+t2;
+	    		f = (t-t0)/dt; 
+	    		it = f; f = f-it; 
+	    		i = it+1; g = 1.-f;
+	    		if(it >= nt) break;
+
+		    	im = ix*nt+iz;
+		    	id1 = ix*nt+it;
+		    	id2 = ix*nt+i;
 
 		    	if( adj) {
 			    	modl[im] += data[id1]*g + data[id2]*f;
@@ -185,7 +192,7 @@ void kirch_lop (bool adj, bool add, int nm, int nd,
 
 int main(int argc, char* argv[])
 {
-    int n12, n1, n2, n3, i1, i3, sw;
+    int n12, n1, n2, ns, i1, is, sw;
     bool adj,aa;
     float **data, **modl, *vrms, o1,d1,o2,d2, v0;
     char *test;
@@ -197,7 +204,6 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(in,2);
     
     if (!sf_getbool("adj",&adj)) adj=true;
     /* yes: migration, no: modeling */
@@ -214,6 +220,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
     if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"d3",&ds)) sf_error("No d3= in input");
+    if (!sf_histfloat(in,"o3",&os)) sf_error("No o3= in input");
+    if (!sf_histint(in,"n3",&ns)) ns=1;
 
     vrms = sf_floatalloc(n1);
 
@@ -237,12 +246,14 @@ int main(int argc, char* argv[])
 	
 	if(aa)
 	{
-    	aa_kirch_init (vrms, o1, d1, d2, n1, n2, sw);
+    	aa_kirch_init (vrms, o1, o2, d1, d2, n1, n2, sw);
 	}else{
-    	kirch_init (vrms, o1, d1, d2, n1, n2);
+    	kirch_init (vrms, o1, o2, d1, d2, n1, n2);
 	}
 
-    for (i3=0; i3 < n3; i3++) {
+    for (is=0; is < ns; is++) {
+	xs=os+is*ds;
+
 	if (adj) {
 	    sf_floatread (data[0],n12,in);
 	} else {
