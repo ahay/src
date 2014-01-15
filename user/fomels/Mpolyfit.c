@@ -18,10 +18,13 @@
 */
 #include <rsf.h>
 
+#include "dgaussel.h"
+
 int main(int argc, char* argv[])
 {
     int n1, n2, i2, i1, ic, id, nc, n;
-    float *dat, *crd, **func, **mat, *rhs, *sol, *dreg, x, xp, eps, o, d;
+    double xp, **mat, *rhs, **func;
+    float *dat, *crd, *sol, *dreg, x, eps, o, d;
     sf_file inp, coord, coef, out, reg;
 
     sf_init(argc,argv);
@@ -49,7 +52,12 @@ int main(int argc, char* argv[])
 
     dat = sf_floatalloc(n1);
     crd = sf_floatalloc(n1);
-    func = sf_floatalloc2(n1,nc);
+
+    func = (double**) sf_alloc(nc,sizeof(double*));
+    func[0] = (double*) sf_alloc(n1*nc,sizeof(double));
+    for (ic=1; ic < nc; ic++) {
+	func[ic] = func[0]+ic*n1;
+    }
 
     if (NULL != sf_getstring("coord")) {
 	/* coordinates */
@@ -82,10 +90,15 @@ int main(int argc, char* argv[])
 	dreg = NULL;
     }
 
-    sf_gaussel_init(nc);
+    dgaussel_init(nc);
     sol = sf_floatalloc(nc);
-    rhs = sf_floatalloc(nc);
-    mat = sf_floatalloc2(nc,nc);
+    rhs = (double*) sf_alloc(nc*nc,sizeof(double));
+
+    mat = (double**) sf_alloc(nc,sizeof(double*));
+    mat[0] = (double*) sf_alloc(nc*nc,sizeof(double));
+    for (ic=1; ic < nc; ic++) {
+	mat[ic] = mat[0]+ic*nc;
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(dat,n1,inp);
@@ -93,7 +106,7 @@ int main(int argc, char* argv[])
 
 	for (i1=0; i1 < n1; i1++) {
 	    x = crd[i1];
-	    xp = 1.0f;
+	    xp = 1.0;
 	    for (ic=0; ic < nc; ic++) {
 		func[ic][i1] = xp;
 		xp *= x;
@@ -127,7 +140,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* inversion */
-	sf_gaussel_solve(mat,rhs,sol);
+	dgaussel_solve(mat,rhs,sol);
 
 	if (NULL != coef) sf_floatwrite(sol,nc,coef);
 
@@ -145,7 +158,7 @@ int main(int argc, char* argv[])
 	    for (i1=0; i1 < n; i1++) {
 		dreg[i1] = 0.;
 		x = o+i1*d;
-		xp = 1.0f;
+		xp = 1.0;
 		for (ic=0; ic < nc; ic++) {
 		    dreg[i1] += xp*sol[ic];
 		    xp *= x;
