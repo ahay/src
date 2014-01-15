@@ -85,7 +85,7 @@ char** sf_getnstring(char* key, int* numkeys)
   char* copy_of_par;
   int ikey; 
     
-  par=sf_getstring(key);
+  if(!(par=sf_getstring(key)))return NULL;
   /* count number of keys */
   *numkeys=0;
   copy_of_par=sf_charalloc(strlen(par)+1);

@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
  
   list_of_keys=sf_getnstring("pkey",&numkeys);
   if(list_of_keys==NULL)
-    sf_error("The required parameter \"key\" was not found.");
+    sf_error("The required parameter \"pkey\" was not found.");
   /* I wanted to use sf_getstrings, but it seems to want a colon seperated
      list of keys (eg key=offset:ep:fldr:cdp) and I wanted a comma seperated
      list of keys (eg key=offset:ep:fldr:cdp).
