@@ -57,7 +57,16 @@ file mappedstack_hdr.rsf.  The order of the data in the output file
 is defined by the iline and xline trace headers, so the  data order
 is (time,xline,iline).  Finally, the output volume is displayed using
 sfgrey.
+
+PARAMETERS
+   strings key= no default
+
+        list of header keys to monitor to determine when to break 
+	between gathers.  A gather is a sequence of traces with the 
+	same value for all the header keys.  Stack summs traces in 
+	the gather, divides by the fold, and outputs the stack trace.
 */
+
 /*
    Program change history:
    date       Who             What
@@ -99,11 +108,12 @@ int main(int argc, char* argv[])
   /*****************************/
   sf_init (argc,argv);
 
-  /* verbose flag controls ammount of print */
-  /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
-  /* fprintf(stderr,"read verbose switch.  getint reads command line.\n"); */
   if(!sf_getint("verbose",&verbose))verbose=1;
-  sf_warning("verbose=%d",verbose);
+    /* \n
+     flag to control amount of print
+     0 terse, 1 informative, 2 chatty, 3 debug
+  */
+sf_warning("verbose=%d",verbose);
  
   /******************************************/
   /* input and output data are stdin/stdout */
@@ -132,7 +142,13 @@ int main(int argc, char* argv[])
 
   if(verbose>0)fprintf(stderr,"call list of keys\n");
  
-  list_of_keys=sf_getnstring("key",&numkeys);
+  if(!(list_of_keys=sf_getnstring("key",&numkeys)))
+    fprintf(stderr,"key not input\n");
+  /*  List of header keys to monitor to determine when to break between 
+      gathers.  A gather is a sequence of traces with the same value for
+      all the header keys.  Stack summs traces in the gather, divides
+      by the fold, and outputs the stack trace. */
+
   if(verbose>0)fprintf(stderr,"after sf_getnstring\n");
 
   if(list_of_keys==NULL)
