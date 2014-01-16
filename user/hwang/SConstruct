@@ -2,10 +2,11 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = '''permwave2d
-'''
-
-ccprogs = 'permlr2ddti'
+# progs = '''permwave2d'''
+# ccprogs = 'permlr2ddti'
+progs = ''''''
+ccprogs = ''
+cudaprogs = 'awefd3dgpu'
 
 pyprogs = ''
 pymods = ''
@@ -89,6 +90,23 @@ for prog in ccmains:
         if root:
             env.Install(bindir,prog)
 
+NVCC = env.get('NVCC')
+cudamains = Split(cudaprogs)
+for prog in cudamains:
+    sources = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
+    if NVCC:
+        cc = env.get('CC')
+        cflags = '-gencode arch=compute_10,code=sm_20 --x=cu'
+        ldflags = '' 
+        if string.rfind(cc,'icc') >= 0: 
+            cflags = cflags + ' -ccbin=%s' % cc 
+            ldflags = '-ccbin=%s' % cc 
+        prog = env.Program(sources,CC=NVCC,CFLAGS=cflags,LINKFLAGS=ldflags,LIBS=libs)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,message='''
+                            Please ensure CUDA is installed correctly.
+                            Rerun Madagascar installation after it has been fixed.
+                            ''')
 
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
