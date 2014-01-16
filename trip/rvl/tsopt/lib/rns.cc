@@ -11,7 +11,7 @@ namespace TSOpt {
     return 0;
   }
 
-  int init_rn(rn & s, int _it, int _nu, int _nc) {
+  int init_rn(rn & s, int _it, size_t _nu, size_t _nc) {
     if (_nu<1 || _nc<1 || s.u || s.c) { 
       cout << "_nu = " << _nu << endl;
       cout << "_nc = " << _nc << endl;

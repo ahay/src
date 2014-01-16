@@ -15,7 +15,7 @@ int main(int argc, char ** argv) {
   bool verbose=false;
   
   // define Sim object, initialize control
-  ContentPackage<float,int> c;
+  ContentPackage<float,size_t> c;
   c.initialize(n);
   for (int i=0;i<n;i++) c.getData()[i]=0.5;
   Dyn1 stp(c, dt, verbose);

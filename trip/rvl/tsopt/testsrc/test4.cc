@@ -20,7 +20,7 @@ int main(int argc, char ** argv) {
   ft=nt;
 
   // define Sim object, initialize control
-  ContentPackage<float,int> c;
+  ContentPackage<float,size_t> c;
   c.initialize(n);
   for (int i=0;i<n;i++) c.getData()[i]=0.5;
   Dyn1 stp(c, dt, verbose);
@@ -36,7 +36,7 @@ int main(int argc, char ** argv) {
   StdSim<RnState> f(stp,tt,aa);
 
   // make a 1-jet
-  ContentPackage<float,int> dc;
+  ContentPackage<float,size_t> dc;
   dc.initialize(n);
   for (int i=0;i<n;i++) dc.getData()[i]=1.0;
   D_Dyn1 dstp(dc, r, dt, verbose);
@@ -47,7 +47,7 @@ int main(int argc, char ** argv) {
   initLin<RnState> bb(dstp);
 
   // stuff for adjoint step
-  ContentPackage<float,int> ac;
+  ContentPackage<float,size_t> ac;
   ac.initialize(n);
   for (int i=0;i<n;i++) ac.getData()[i]=0.5;
 
