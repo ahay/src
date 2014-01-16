@@ -81,9 +81,6 @@ int main(int argc, char* argv[])
   /*****************************/
   /* initialize verbose switch */
   /*****************************/
-  /* verbose flag controls amount of print */
-  /*( verbose=1 0 terse, 1 informative, 2 chatty, 3 debug ) */
-  /* fprintf(stderr,"read verbose switch.  getint reads command line.\n"); */
   if(!sf_getint("verbose",&verbose))verbose=1;
   /* \n
      flag to control amount of print
