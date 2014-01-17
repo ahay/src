@@ -250,4 +250,4 @@ int main(int argc,char *argv[])
     exit(0);
 }
 
-/* 	$Id: Mduffing2.c 11371 2013-11-21 03:03:21Z yang_liu $	 */
+/* 	$Id$	 */
