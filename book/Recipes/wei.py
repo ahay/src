@@ -129,7 +129,7 @@ def genwfl(wfl,sou,coo,slo,down,causal,custom,par):
          slo=${SOURCES[1]}
          coo=${SOURCES[2]}
          down=%s causal=%s 
-	 %s
+         %s
          ''' %(down,causal,param(par)+custom))
 
 # ------------------------------------------------------------

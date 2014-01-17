@@ -176,7 +176,6 @@ void adj_eic(weicub3d cub,
     } /* cc */
 }
 
-
 /*------------------------------------------------------------*/
 void weihicajs_close(weiop3d weop)
 /*< free HIC adjoint source storage >*/
@@ -302,7 +301,7 @@ void weihicajs_apply(weiop3d weop,
 #else
 			weop->ahic[ompith][pcy][pcx] = sf_cadd(weop->ahic[ompith][pcy][pcx],
 							       cAWGH(weop->wfld[ompith][mcy][mcx],
-								     weop->ihic[ic][iht][ihy][ihx],c1onjf(wt)));
+								     weop->ihic[ic][iht][ihy][ihx],conjf(wt)));
 #endif
 		    }
 		}

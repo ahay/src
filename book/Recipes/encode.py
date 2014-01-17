@@ -80,13 +80,37 @@ def freq2time(dfreq,dtime,par):
 
     Flow(dtime,dfreq,
          '''
-	 transp plane=23 | transp plane=12 |
-	 pad pad beg1=%(fw)d n1out=%(nt)d |
+         transp plane=23 | transp plane=12 |
+         pad beg1=%(fw)d n1out=%(nt)d |
          fft1 inv=y opt=n |
          put label1=t label2=x label3=y label4=e
          ''' % par)
 
 
+def t2f(dfreq,dtime,par):
+    # input  is t-x
+    # output is f-x
+
+    Flow(dfreq,dtime,
+         '''
+         fft1 inv=n opt=n |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         put label1=f unit1=Hz
+         ''' % par)
+
+def f2t(dtime,dfreq,par):
+    # input  is f-x
+    # output is t-x
+
+    Flow(dtime,dfreq,
+         '''
+         pad beg1=%(fw)d n1out=%(nt)d |
+         fft1 inv=y opt=n |
+         window j1=2 | pad n1out=%(nt)d |
+         put label1=t unit1=s
+         ''' % par)
+
+         
 # ------------------------------------------------------------
 def delay(dou,din,delay,par):
 
