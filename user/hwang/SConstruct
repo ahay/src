@@ -2,10 +2,8 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-# progs = '''permwave2d'''
-# ccprogs = 'permlr2ddti'
-progs = ''''''
-ccprogs = ''
+progs = '''permwave2d'''
+ccprogs = 'permlr2ddti'
 cudaprogs = 'awefd3dgpu'
 
 pyprogs = ''

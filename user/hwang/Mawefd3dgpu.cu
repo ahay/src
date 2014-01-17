@@ -507,6 +507,7 @@ compute_interpolator_weights(pt3d* v3d, grid3d* geo_v, weit3d* weit_v,
 __global__ void
 step_forward_kernel(float* d_u0, float* d_u1, int n1, int n2, int n3, bool cden)
 {
+/* Modified from P.Micikevicius, 3D Finite Difference Computation on GPUs using CUDA. 2009 */
 #define radius 4 /* half-width for halos */
   extern __shared__ float s_u[];
 
