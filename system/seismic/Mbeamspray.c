@@ -19,13 +19,15 @@
 
 #include <rsf.h>
 
+#include "aastretch2.h"
+
 int main(int argc, char* argv[])
 {
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
-    float **dense, *a, *p, *c, *time, *delt, *ampl, d2, f;
-    const float fudge=3.19201;
-    const char *type;
+    float **dense, *a, *p, *c, *time, *delt1, *delt2, *ampl, d2, f;
     sf_file in, out, dip, cur;
+    float f1=6.77917496069906;
+    float f2=1.75843756426359;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -52,18 +54,18 @@ int main(int argc, char* argv[])
     c = sf_floatalloc(n1);
 
     time = sf_floatalloc(n1);
-    delt = sf_floatalloc(n1);
     ampl = sf_floatalloc(n1);
+    delt1 = sf_floatalloc(n1);
+    delt2 = sf_floatalloc(n1);
 
     /*** Initialize stretch ***/
-    sf_aastretch_init (false, n1, 0., 1.0, n1);
+    aastretch2_init (n1, 0., 1.0, n1);
 
-    f = fudge;
-    f *= f*f/(nb*nb);
+    f = 0.25*(1+0.25*SF_PI*SF_PI);
+    f *= f/(nb*nb);
+    f1 *= f;
+    f2 *= f;
 
-    if (NULL == (type=sf_getstring("type"))) type="both";
-    /* beam type */
- 
     for (i3=0; i3 < n3; i3++) {
 	for (id=0; id < nd; id++) {
 	    for (i1=0; i1 < n1; i1++) {
@@ -75,7 +77,7 @@ int main(int argc, char* argv[])
 	    sf_floatread(p,n1,dip);
 	    sf_floatread(c,n1,cur);
 
-	    for (ib=-nb; ib <= nb; ib++) {
+	    for (ib=-2*nb; ib <= 2*nb; ib++) {
 		id=ic*nb+ib;
 		
 		if (id >= nd) break;
@@ -83,27 +85,13 @@ int main(int argc, char* argv[])
 		
 		for (i1=0; i1 < n1; i1++) {
 		    time[i1] = i1+(p[i1]+c[i1]*ib/2)*ib;
-
-		    switch (type[0]) {
-			case 't':
-			    delt[i1] = f*ib*ib+1.0; 
-			    ampl[i1] = a[i1];
-			    break;
-			case 'x':
-			    delt[i1] = 1.0;
-			    ampl[i1] = a[i1]*(1.-fabsf((float) ib/nb));
-			    break;
-			case 'b':
-			    delt[i1] = 0.5*f*ib*ib+1.0; 
-			    ampl[i1] = a[i1]*(1.-fabsf(ib/(sqrt(2)*nb)));
-			    break;
-			default:
-			    sf_error("Unknown type \"%s\"",type);
-		    }
-		} 
+		    delt1[i1] = f1*ib*ib+1.0;
+		    delt2[i1] = f2*ib*ib+1.0;
+		    ampl[i1] = 0.4;
+		}
 		
-		sf_aastretch_define (time,delt,NULL);
-		sf_aastretch_lop (false,true,n1,n1,ampl,dense[id]);
+		aastretch2_define (time,delt1,delt2,ampl);
+		aastretch2_lop (false,true,n1,n1,a,dense[id]);
 	    }
 	}
 	sf_floatwrite(dense[0],n1*nd,out);
