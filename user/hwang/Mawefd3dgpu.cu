@@ -404,7 +404,7 @@ expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd)
   int nypad=ny+2*nbd;
 
 #ifdef _OPENMP
-#pragma omp for \
+#pragma omp parallel for \
   schedule(dynamic,1) \
   private(ix,iy,iz)
 #endif
@@ -417,7 +417,7 @@ expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd)
   }
   
 #ifdef _OPENMP
-#pragma omp for \
+#pragma omp parallel for \
   schedule(dynamic,1) \
   private(ix,iy,iz)
 #endif
@@ -432,7 +432,7 @@ expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd)
   }
 
 #ifdef _OPENMP
-#pragma omp for \
+#pragma omp parallel for \
   schedule(dynamic,1) \
   private(ix,iy,iz)
 #endif
@@ -447,7 +447,7 @@ expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd)
   }
 
 #ifdef _OPENMP
-#pragma omp for \
+#pragma omp parallel for \
   schedule(dynamic,1) \
   private(ix,iy,iz)
 #endif
