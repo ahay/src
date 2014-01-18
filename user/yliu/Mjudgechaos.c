@@ -27,7 +27,7 @@
 int main(int argc,char *argv[])
 {
     int i,j,k,p,a,b,lx,ly,n1,n2,n3,fix,*w;
-    float *x,*y,o2,d2,delta,max1,max2,min1,min2,gx,*output,*outmask;
+    float *x,*y,o2,d2,delta,max1,max2,min1,min2,gx,*output,*outmask=NULL;
     bool verb,fixgrid,ma;
     char none[]= " ";
     sf_complex *input;
