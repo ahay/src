@@ -79,7 +79,7 @@ int main(int argc,char *argv[])
     n3 = sf_leftsize(cmp,2);
     
     if(!sf_getint("winsz",&winsz)) winsz=200;
-    /* for each trace,the width of window.unit:ms*/
+    /* for each trace,the width of window. Unit:samples*/
     if(!sf_getfloat("v0",&v0)) v0=1000;
     /* init Vel for velocity scan */
     if(!sf_getfloat("dv",&dv)) dv=20;
