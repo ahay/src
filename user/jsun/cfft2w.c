@@ -42,6 +42,7 @@ int cfft2_init(int pad1           /* padding on the first axis */,
 	       int *nx2, int *ny2 /* padded data size */)
 /*< initialize >*/
 {
+
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
     fftw_init_threads();
@@ -183,9 +184,23 @@ void icfft2(sf_complex *out /* [n1*n2] */,
 void cfft2_finalize()
 /*< clean up fftw >*/
 {
+/* make sure everything is back to its pristine state */
 #ifdef SF_HAS_FFTW
 #ifdef _OPENMP
     fftw_cleanup_threads();
 #endif
+    fftwf_destroy_plan(cfg);
+    fftwf_destroy_plan(icfg);
+    fftwf_cleanup();
+    cfg=NULL;
+    icfg=NULL;
+#else
+    free(cfg1); cfg1=NULL;
+    free(icfg1); icfg1=NULL;
+    free(cfg2); cfg2=NULL;
+    free(icfg2); icfg2=NULL;
 #endif
+
+    free(*cc);
+    free(cc);
 }

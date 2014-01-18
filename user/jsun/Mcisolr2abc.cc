@@ -26,6 +26,7 @@ static std::valarray<float> vs;
 static std::valarray<float> ksz,ksx;
 static float dt,ct,cb,cl,cr;
 static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
+static bool rev;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 {
@@ -41,6 +42,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	    int ix  = (int) rs[a]/nz;
 	    float hypk = hypot(ksz[ikz],ksx[ikx]);
 	    float phase = vs[rs[a]]*hypk*dt;
+	    if (rev) phase*=-1;
 	    float phf = 1.;
 	    if (iz < nbt)
 		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
@@ -83,6 +85,8 @@ int main(int argc, char** argv)
     par.get("cb",cb,0.0);
     par.get("cl",cl,0.0);
     par.get("cr",cr,0.0);
+
+    par.get("rev",rev,false);
 
     iRSF vel;
 

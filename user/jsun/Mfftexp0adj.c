@@ -1,4 +1,4 @@
-/* 2-D FFT-based zero-offset exploding reflector modeling/migration (outputs time volume; can be used to generate movies) */
+/* 2-D FFT-based zero-offset exploding reflector modeling/migration with adj flag for dot product test */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -27,33 +27,31 @@
 int main(int argc, char* argv[])
 {
     bool mig, cmplx;
-    int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, pad1, jt;
+    int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, pad1;
     int im, i, j, m2, it1, it2, its, ik, n2, nk;
     float dt, dx, dz, c, old, x0;
-    float *curr, *prev, **img, *dat, **lft, **rht, **wave, **mov;
+    float *curr, *prev, **img, *dat, **lft, **rht, **wave, **dd;
     sf_complex *cwave, *cwavem;
-    sf_file data, image, left, right, movie;
+    sf_file data, image, left, right;
 
     sf_init(argc,argv);
 
-    if (!sf_getbool("mig",&mig)) mig=false;
+    if (!sf_getbool("adj",&mig)) mig=false;
     /* if n, modeling; if y, migration */
 
     if (!sf_getbool("cmplx",&cmplx)) cmplx=false; /* use complex FFT */
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
-    movie = sf_output("movie"); /* time volume of wavefield */
-
     if (mig) { /* migration */
 	data = sf_input("in");
 	image = sf_output("out");
 
-	if (!sf_histint(data,"n1",&nx)) sf_error("No n1= in input");
-	if (!sf_histfloat(data,"d1",&dx)) sf_error("No d1= in input");
-	if (!sf_histfloat(data,"o1",&x0)) x0=0.; 
+	if (!sf_histint(data,"n2",&nx)) sf_error("No n1= in input");
+	if (!sf_histfloat(data,"d2",&dx)) sf_error("No d1= in input");
+	if (!sf_histfloat(data,"o2",&x0)) x0=0.; 
 
-	if (!sf_histint(data,"n2",&nt)) sf_error("No n2= in input");
-	if (!sf_histfloat(data,"d2",&dt)) sf_error("No d2= in input");
+	if (!sf_histint(data,"n1",&nt)) sf_error("No n2= in input");
+	if (!sf_histfloat(data,"d1",&dt)) sf_error("No d2= in input");
 
 	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
 	/* time samples (if migration) */
@@ -69,12 +67,6 @@ int main(int argc, char* argv[])
 	sf_putfloat(image,"d2",dx);
 	sf_putfloat(image,"o2",x0);
 	sf_putstring(image,"label2","Distance");
-
-	sf_putint(image,"n3",nt);
-	sf_putfloat(image,"d3",dt);
-	sf_putfloat(image,"o3",0.);
-	sf_putstring(image,"label3","Time");
-
     } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
@@ -91,27 +83,16 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
 	/* time sampling (if modeling) */
 
-	sf_putint(data,"n1",nx);
-	sf_putfloat(data,"d1",dx);
-	sf_putfloat(data,"o1",x0);
-	sf_putstring(data,"label1","Distance");
+	sf_putint(data,"n2",nx);
+	sf_putfloat(data,"d2",dx);
+	sf_putfloat(data,"o2",x0);
+	sf_putstring(data,"label2","Distance");
 
-	sf_putint(data,"n2",nt);
-	sf_putfloat(data,"d2",dt);
-	sf_putfloat(data,"o2",0.);
-	sf_putstring(data,"label2","Time");
-	sf_putstring(data,"unit2","s");
-    }
-
-    if (!sf_getint("jt",&jt)) jt=1;
-    /* time interval */
-    sf_putint(movie,"n3",1+(nt-1)/jt);
-    if (mig) {
-        sf_putfloat(movie,"d3",-jt*dt);
-        sf_putfloat(movie,"o3",(nt-1)*dt);
-    } else {
-        sf_putfloat(movie,"d3",jt*dt);
-        sf_putfloat(movie,"o3",0);
+	sf_putint(data,"n1",nt);
+	sf_putfloat(data,"d1",dt);
+	sf_putfloat(data,"o1",0.);
+	sf_putstring(data,"label1","Time");
+	sf_putstring(data,"unit1","s");
     }
 
     nk = fft2_init(cmplx,pad1,nx,nz,&nx2,&nz2);
@@ -120,9 +101,11 @@ int main(int argc, char* argv[])
     nzx2 = nz2*nx2;
 
     img = sf_floatalloc2(nz,nx);
-    mov = sf_floatalloc2(nz,nx);
     dat = sf_floatalloc(nx);
-
+    dd = sf_floatalloc2(nt,nx);
+    if (mig) {
+	sf_floatread(dd[0],nt*nx,data);
+    }
     /* propagator matrices */
     left = sf_input("left");
     right = sf_input("right");
@@ -184,7 +167,9 @@ int main(int argc, char* argv[])
 	sf_warning("it=%d;",it);
 
 	if (mig) { /* migration <- read data */
-	    sf_floatread(dat,nx,data);
+	    for (ix=0; ix < nx; ix++) {
+	    dat[ix]=dd[ix][it];
+	    }
 	} else {
 	    for (ix=0; ix < nx; ix++) {
 		dat[ix] = 0.;
@@ -195,7 +180,8 @@ int main(int argc, char* argv[])
 	    if (mig) {
 		curr[ix] += dat[ix];
 	    } else {
-		dat[ix] = curr[ix];
+//		dat[ix] = curr[ix];
+		dd[ix][it] = curr[ix];
 	    }
 	}
 
@@ -234,20 +220,10 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	if (!mig) { /* modeling -> write out data */
-	    sf_floatwrite(dat,nx,data);
-	}
-
-        if (0 == it%jt) {
-	    for (ix=0; ix < nx; ix++) {
-		for (iz=0; iz < nz; iz++) {
-		    mov[ix][iz] = curr[ix+iz*nx2];
-		}
-	    }
-            sf_floatwrite(mov[0],nzx,movie);
-	}
+//	if (!mig) { /* modeling -> write out data */
+//	    sf_floatwrite(dat,nx,data);
+//	}
     }
-
     sf_warning(".");
 
     if (mig) {
@@ -258,8 +234,9 @@ int main(int argc, char* argv[])
 	    }
 	}
 	sf_floatwrite(img[0],nzx,image);
+    } else {
+	sf_floatwrite(dd[0],nt*nx,data);
     }
-    
-    
+
     exit(0);
 }
