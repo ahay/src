@@ -5,6 +5,7 @@ import bldutil
 progs = '''permwave2d'''
 ccprogs = 'permlr2ddti'
 #cudaprogs = 'awefd3dgpu'
+cudaprogs = ''
 
 pyprogs = ''
 pymods = ''
