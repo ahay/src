@@ -3,7 +3,7 @@ function c=staggered_fdcoeff(NJ)
 % Example:
 %     format long
 %     NJ=10;
-%     c=FindCoeff(NJ)
+%     c=staggered_fdcoeff(NJ)
 % 
 % Note: This code is devoted alongside the manuscript of P.L. Yang et al, 
 % Using the effective boundary saving strategy in GPU-based RTM programming
