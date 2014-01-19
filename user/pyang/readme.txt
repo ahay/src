@@ -41,17 +41,34 @@ Test file:	/book/pyang/test/Testfd3d/SConstruct
 Main: 		Mrtm2d.c Mlsrtm2d.c
 Depends on: 	rtm2d.c
 
-Test file:	/book/pyang/test/lsrtm2d/hyper/SConstruct
-		/book/pyang/test/lsrtm2d/sigsbee/SConstruct
+Test file:	/book/pyang/test/rtm2d/hyper/SConstruct 
+		(succeed, both rtm and lsrtm!)
+		/book/pyang/test/rtm2d/sigsbee/SConstruct
+		(rtm succeed; lsrtm unsuccessful)
 
 Note: rtm2d.c is coded following the linear operator standard in 
 	Madagascar:	oper(adj, add, nm, nd, mod, dat)
+
+
+5) prestack RTM using GPU
+
+Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
+Depends on:	cuda_kernels.cu
+
+Test file: 	/book/pyang/test/Testeb/SConstruct
+
+Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite 
+	difference coefficients with order-NJ(NJ=2N);
+	(b) MTesteb.c is a file to test the validity of the proposed
+	effective boundary saving strategy! 
+	(c) Most of the detail explaination for GPU-based RTM can be
+	found in the codes.
 
 ===================================================================
 The following codes are under construction. Be careful!
 ===================================================================
 
-5) MWNI (minimum weighted norm interpolation), FFTW requred
+6) MWNI (minimum weighted norm interpolation), FFTW requred
 
 Main:		Mmwni2d.c Mmwni3d.c
 
@@ -61,6 +78,11 @@ Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
+7) 2-D forward modeling to generate shot records (prepared for FWI)
+
+Main: 		Mmodeling2d.c
+
+Test file: 	/book/pyang/test/modeling2d/SConstruct
 
 
 ==================================================================
