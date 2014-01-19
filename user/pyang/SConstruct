@@ -4,7 +4,7 @@ import bldutil
 
 # C main programs
 progs = '''
-pocs2d pocs3d 
+pocs3d 
 fpocs3d mwni2d 
 dlct 
 Testfd2d Testfd3d 
@@ -12,6 +12,7 @@ rtm2d lsrtm2d
 Testeb
 modeling2d
 '''
+# pocs2d 
 
 cuda_progs = '''
 '''
