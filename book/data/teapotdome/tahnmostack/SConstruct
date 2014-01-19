@@ -119,4 +119,58 @@ Result('gxgycoord','graph symbol="+" title="Receiver coordinates" plotcol=5')
 
 
 
+
+
+
+
+
+
+# from command line:
+# wget http://s3.amazonaws.com/teapot/npr3_field.sgy
+# ln -s /home/karl/data/TeapotDome/Prestack/npr3_field.sgy .
+#Fetch('npr3_field.sgy','teapot',server='http://s3.amazonaws.com',top='')
+
+Flow(['npr3_field.rsf','npr3_field_hdr.rsf'],'npr3_field.sgy',
+     'sfsegyread tfile=${TARGETS[1]}')
+# (sftahread input=npr3_field.rsf | sftahgethw key=ep,fldr,tracf,offset,sx,sy >/dev/null) |& more
+#sfheaderattr <npr3_field_hdr.rsf
+
+Flow(['mappedfield.rsf','mappedfield_hdr.rsf'],
+     ['npr3_field.rsf','npr3_field_hdr.rsf'],
+     '''
+     sftahread \
+        verbose=0 \
+  	input=npr3_field.rsf \
+     | sftahwrite \
+        verbose=1                           \
+	label2="tracf"  o2=1 n2=863  d2=1   \
+        label3="fldr" o3=14 n3=9 d3=100   \
+        output=mappedfield.rsf \
+     ''',stdout=0)
+#(sftahread input=mappedfield.rsf | sftahgethw key=iline,xline,cdpt,offset verbose=1 >/dev/null )|& more
+
+Result('mappedfield','grey title="tah field"')
+Result('zoommappedfield','mappedfield',
+	'sfwindow max1=2. | grey title="tah field"')
+
+Flow(['mappedfieldnmo.rsf','mappedfieldnmo_hdr.rsf'],
+     ['mappedfield.rsf','mappedfield_hdr.rsf'],
+     '''
+     sftahread \
+        verbose=0 \
+  	input=mappedfield.rsf \
+     | sftahnmo \
+       verbose=1  \
+       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 \
+       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 \
+     | sftahwrite \
+        verbose=1                           \
+	label2="tracf"  o2=1 n2=863  d2=1   \
+        label3="fldr" o3=14 n3=9 d3=100   \
+        output=mappedfieldnmo.rsf \
+     ''',stdout=0)
+Result('mappedfieldnmo','grey title="tah nmo field"')
+Result('zoommappedfieldnmo','mappedfieldnmo',
+	'sfwindow max1=2. | grey title="tah nmo field"')
+
 End()
