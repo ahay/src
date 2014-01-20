@@ -154,8 +154,10 @@ int main(int argc, char* argv[])
     sf_complexread(ltb[0],nzx*m2,leftb);
     sf_complexread(rtb[0],m2*nk,rightb);
 
-//    sf_fileclose(left);
-//    sf_fileclose(right);
+    sf_fileclose(left);
+    sf_fileclose(right);
+    sf_fileclose(leftb);
+    sf_fileclose(rightb);
 
     /* abc parameters */
     if (!sf_getint("top", &top)) top=40;
@@ -230,7 +232,10 @@ int main(int argc, char* argv[])
     wfdt = dt*snpint;
     record = sf_complexalloc2(nt, nx);
     wavefld = sf_floatalloc3(nz, nx, wfnt);
-    wavefld2= sf_floatalloc3(nz, nx, wfnt);
+    if (wantwf)
+	wavefld2= sf_floatalloc3(nz, nx, wfnt);
+    else
+	wavefld2=NULL;
 
     /*image*/
     img1 = sf_floatalloc2(nz, nx);

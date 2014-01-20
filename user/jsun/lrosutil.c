@@ -373,8 +373,7 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 	    }
 	}
 
-	/*cross-correlation imaging condition*/
-	if (it%snpint == 0 ) {
+        if ( wantwf && it%snpint == 0 ) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,j)
 #endif
@@ -384,7 +383,9 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 		    wavfld2[wfit][ix][iz] = crealf(curr[j]);
 		}
 	    }
-
+        }
+	/*cross-correlation imaging condition*/
+	if (it%snpint == 0 ) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,j)
 #endif
