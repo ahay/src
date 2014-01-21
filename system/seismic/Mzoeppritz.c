@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
 
     r = sf_floatalloc(na);
 
-    if (!sf_getint("icoef",&icoef)) icoef=1;
-    /* [1,2,3] particle displacement, displacement potential, or energy */
+    if (!sf_getint("icoef",&icoef)) icoef=4;
+    /* [1,2,3,4] particle displacement, displacement potential, energy, real part */
 
     if (!sf_getfloat("vp1",&vp1)) sf_error("Need vp1=");
     if (!sf_getfloat("vp2",&vp2)) sf_error("Need vp2=");

@@ -190,6 +190,9 @@ void zoeppritz (int icoef /* (1, 2, 3)
 				       conjf(sf_crmul(r[j],fp[j]))))*fe[j];
 #endif
 		break;
+	    case 4:
+		rc[j] = crealf(r[j]);
+		break;
 	    default:
 		sf_error("%s: wrong icoef",__FILE__);
 		break;
