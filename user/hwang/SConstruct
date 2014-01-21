@@ -1,135 +1,82 @@
-import os, sys, re, string
-sys.path.append('../../framework')
-import bldutil
+import os,sys
+sys.path.append(os.path.join(os.environ.get('RSFSRC'), 'user', 'hwang'))
+import mybldutil
 
-progs = '''permwave2d'''
-ccprogs = 'permlr2ddti'
-#cudaprogs = 'awefd3dgpu'
-cudaprogs = ''
-
-pyprogs = ''
-pymods = ''
-
-try:  # distributed version
-    Import('env root pkgdir bindir libdir incdir')
+try:
+    import bldutil
+    glob_build = True
+    srcroot = '../..'
+    Import('env bindir libdir pkgdir')
     env = env.Clone()
-except: # local version
-    env = bldutil.Debug()
-    root = None
+except:
+    # SConscript('../../api/c/SConstruct')
     SConscript('../lexing/SConstruct')
+    glob_build = False # scons command launched in the local directory
+    srcroot = os.environ.get('RSFSRC', '../..')
+    sys.path.append(os.path.join(srcroot,'framework'))
+    import bldutil
+    env = bldutil.Debug() # Debugging flags for compilers
+    bindir = libdir = pkgdir = None
 
-src = Glob('[a-z]*.c')
+#-------------------------------------------------------------------------
 
-dynpre = env.get('DYNLIB','') 
-#extralibs = ['fftw3f','satlas']
-#libs = [dynpre+'rsf']+env.get('LIBS',[])+extralibs
-libs = [dynpre+'rsf']+env.get('LIBS',[])
-dlibs = ['drsf']+env.get('LIBS',[])
+cprogs = '''permwave2d'''
+ccprogs = '''permlr2ddti'''
+cuprogs = '''awefd3dgpu'''
 
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../lib'])
-
-fftw = env.get('FFTW')
-if fftw:
-    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
-
-objects = []
-dobjects = []
-includes = []
-for source in src:
-    inc = env.RSF_Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
-        
-mains = Split(progs)
-for prog in mains:
-    sources = ['M' + prog]
-    bldutil.depends(env,sources,'M'+prog)
-    env.StaticObject('M'+prog+'.c')
-    prog = env.Program(prog,map(lambda x: x + '.o',sources),LIBS=libs)
-    if root:
-        install = env.Install(bindir,prog)
-
-        if dynpre and env['PLATFORM'] == 'darwin':
-                env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c/libdrsf.dylib '
-                '%s/libdrsf.dylib %s' % (libdir,install[0]))
-
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
+#--------------------------------------------------------------------------
+lapack = env.get('LAPACK')
+print lapack
 if lapack:
-    libsxx = [dynpre+'rsf++','vecmatop']
-    if not isinstance(lapack,bool):
-        libsxx.extend(lapack)
-    libsxx.extend(libs)
+    env.Append(LIBS=lapack)
+fftw = env.get('FFTW')
+if fftw:                                                                         
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])   
 
+# ------------------------ COMPILE C PROGRAMS ------------------------------
+cflags = env.get('CFLAGS')
+clinkflags = env.get('LINKFLAGS')
+cpppath = env.get('CPPPATH')
+clibpath = env.get('LIBPATH')
+clibs = env.get('LIBS')
+# -------
+ctargets = mybldutil.HuiSconsTargets(cfiles=cprogs)
+ctargets.build_c(env, glob_build, srcroot, bindir, libdir, pkgdir)
+
+# ------------------------ COMPILE CC PROGRAMS ------------------------------
+ccflags = env.get('CXXFLAGS')
+cclinkflags = env.get('LINKFLAGS')
+ccpppath = env.get('CPPPATH')
+cclibpath = env.get('LIBPATH')
+cclibs = env.get('LIBS')
+env_cc = env.Clone()
+# ------
 ccmains = Split(ccprogs)
-for prog in ccmains:
-    sources = ['M' + prog]
-    if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources),LIBS=libsxx)
-        if root:
-            install = env.Install(bindir,prog)
-            
-            if dynpre and env['PLATFORM'] == 'darwin':
-                env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c/libdrsf.dylib '
-                '%s/libdrsf.dylib %s' % (libdir,install[0]))
-                env.AddPostAction(install,
-                'install_name_tool -change '
-                'build/api/c++/libdrsf++.dylib '
-                '%s/libdrsf++.dylib %s' % (libdir,install[0]))
-    else:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
-        if root:
-            env.Install(bindir,prog)
+if 'permlr2ddti' in ccmains:
+    env_cc.Prepend(LIBS=['vecmatop'])
+#env_cc.Replace(CXXFLAGS=ccflags,LINKFLAGS=cclinkflags,LIBS=cclibs)
+#------
+cctargets = mybldutil.HuiSconsTargets(ccfiles=ccprogs)
+if lapack:
+    cctargets.has_lapack = True
+cctargets.build_cc(env_cc,glob_build,srcroot,bindir,libdir,pkgdir)
 
-NVCC = env.get('NVCC')
-cudamains = Split(cudaprogs)
-for prog in cudamains:
-    sources = env.Command(prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
-    if NVCC:
-        cc = env.get('CC')
-        cflags = '-gencode arch=compute_10,code=sm_20 --x=cu'
-        ldflags = '' 
-        if string.rfind(cc,'icc') >= 0: 
-            cflags = cflags + ' -ccbin=%s' % cc 
-            ldflags = '-ccbin=%s' % cc 
-        prog = env.Program(sources,CC=NVCC,CFLAGS=cflags,LINKFLAGS=ldflags,LIBS=libs)
-    else:
-        prog = env.RSF_Place('sf'+prog,None,message='''
-                            Please ensure CUDA is installed correctly.
-                            Rerun Madagascar installation after it has been fixed.
-                            ''')
+# ------------------------ COMPILE CUDA PROGRAMS ---------------------------
+cuflags = '-gencode arch=compute_10,code=sm_20 --x=cu'
+culinkflags = ''
+cupppath = ''
+culibpath = ''
+culibs = ''
+# -------
+env_cu = env.Clone()
+nvcc = env.get('NVCC')
 
-######################################################################
-# PYTHON METAPROGRAMS (python API not needed)
-######################################################################
+env_cu.Replace(CXX=nvcc,CXXFLAGS=cuflags,LINKFLAGS=culinkflags,LIBS=culibs)
+#------
+cutargets = mybldutil.HuiSconsTargets(cufiles=cuprogs)
+if nvcc:
+    cutargets.has_nvcc = True
+cutargets.build_cu(env_cu, glob_build, srcroot, bindir, libdir, pkgdir)
 
-if root: # no compilation, just rename
-    pymains = Split(pyprogs)
-    exe = env.get('PROGSUFFIX','')
-    for prog in pymains:
-        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
-    for mod in Split(pymods):
-        env.Install(pkgdir,mod+'.py')
-
-######################################################################
-# SELF-DOCUMENTATION
-######################################################################
-if root:
-    user = os.path.basename(os.getcwd())
-    main = 'sf%s.py' % user
-    
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) +  \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),ccmains) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
-    env.Depends(docs,'#/framework/rsf/doc.py')	
-
-    doc = env.RSF_Docmerge(main,docs)
-    env.Install(pkgdir,doc)
+#-------------------------- INSTALL DOCUMENTS --------------------------------
+mybldutil.HuiSconsTargets.install_docs(env,libdir,glob_build)
