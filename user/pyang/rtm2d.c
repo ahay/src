@@ -38,33 +38,38 @@ void step_forward(float **u0, float **u1, float **u2, float **vv)
 {
 	int i1, i2;
 /*
-			for (i2=0; i2<n2; i2++) 
-			for (i1=0; i1<n1; i1++) 
-			{
+// This part is designed for the adjointness, every points in the 
+// grid has been included, but slow running.
+	for (i2=0; i2<n2; i2++) 
+	for (i1=0; i1<n1; i1++) 
+	{
+		float u = c0*u1[i2][i1];
+		if(i1 >= 1) u += c11*u1[i2][i1-1];
+		if(i1 >= 2) u += c12*u1[i2][i1-2];
+		if(i1 < n1-1) u += c11*u1[i2][i1+1];
+		if(i1 < n1-2) u += c12*u1[i2][i1+2];
+		if(i2 >= 1) u += c21*u1[i2-1][i1];
+		if(i2 >= 2) u += c22*u1[i2-2][i1];
+		if(i2 < n2-1) u += c21*u1[i2+1][i1];
+		if(i2 < n2-2) u += c22*u1[i2+2][i1];
+		u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
 
-				float u = c0*u1[i2][i1];
-				if(i1 >= 1) u += c11*u1[i2][i1-1];
-				if(i1 >= 2) u += c12*u1[i2][i1-2];
-				if(i1 < n1-1) u += c11*u1[i2][i1+1];
-				if(i1 < n1-2) u += c12*u1[i2][i1+2];
-				if(i2 >= 1) u += c21*u1[i2-1][i1];
-				if(i2 >= 2) u += c22*u1[i2-2][i1];
-				if(i2 < n2-1) u += c21*u1[i2+1][i1];
-				if(i2 < n2-2) u += c22*u1[i2+2][i1];
-				u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
-
-				//float 	      u = vv[i2][i1  ]*c0 *u1[i2][i1  ];
-				//if(i1 >= 1)   u+= vv[i2][i1-1]*c11*u1[i2][i1-1];
-				//if(i1 >= 2)   u+= vv[i2][i1-2]*c12*u1[i2][i1-2];
-				//if(i1 < n1-1) u+= vv[i2][i1+1]*c11*u1[i2][i1+1];
-				//if(i1 < n1-2) u+= vv[i2][i1+2]*c12*u1[i2][i1+2];
-				//if(i2 >= 1)   u+= vv[i2-1][i1]*c21*u1[i2-1][i1];
-				//if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
-				//if(i2 < n2-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
-				//if(i2 < n2-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
-				//u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+u;
-			}
+		//float 	u = vv[i2][i1  ]*c0 *u1[i2][i1  ];
+		//if(i1 >= 1)   u+= vv[i2][i1-1]*c11*u1[i2][i1-1];
+		//if(i1 >= 2)   u+= vv[i2][i1-2]*c12*u1[i2][i1-2];
+		//if(i1 < n1-1) u+= vv[i2][i1+1]*c11*u1[i2][i1+1];
+		//if(i1 < n1-2) u+= vv[i2][i1+2]*c12*u1[i2][i1+2];
+		//if(i2 >= 1)   u+= vv[i2-1][i1]*c21*u1[i2-1][i1];
+		//if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
+		//if(i2 < n2-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
+		//if(i2 < n2-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
+		//u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+u;
+	}
 */
+
+// This part is devoted to efficiency reasons, if you do not use 
+// absorbing boundary, it is hard to be adjoint. If you use ABC, 
+// you can have approximate adjoint.
 #ifdef _OPENMP
 #pragma omp parallel for		\
     private(i2,i1)		    	\
