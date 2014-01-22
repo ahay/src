@@ -23,6 +23,7 @@ except:
 cprogs = '''permwave2d'''
 ccprogs = '''permlr2ddti'''
 cuprogs = '''awefd3dgpu'''
+cmpiprogs = '''transpmpi'''
 
 #--------------------------------------------------------------------------
 lapack = env.get('LAPACK')
@@ -77,6 +78,17 @@ cutargets = mybldutil.HuiSconsTargets(cufiles=cuprogs)
 if nvcc:
     cutargets.has_nvcc = True
 cutargets.build_cu(env_cu, glob_build, srcroot, bindir, libdir, pkgdir)
+
+# ------------------------ COMPILE C MPI PROGRAMS ---------------------------
+cmpiflags = env.get('CFLAGS')
+cmpilinkflags = env.get('LINKFLAGS')
+cmpipppath = env.get('CPPPATH')
+cmpilibpath = env.get('LIBPATH')
+cmpilibs = env.get('LIBS')
+env_c_mpi = env.Clone()
+# ------
+cmpitargets = mybldutil.HuiSconsTargets(cmpifiles=cmpiprogs)
+cmpitargets.build_c_mpi(env_c_mpi, glob_build, srcroot, bindir, libdir, pkgdir)
 
 #-------------------------- INSTALL DOCUMENTS --------------------------------
 mybldutil.HuiSconsTargets.install_docs(env,libdir,glob_build)

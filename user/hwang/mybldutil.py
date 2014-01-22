@@ -7,26 +7,26 @@ class HuiSconsTargets:
     docs = []
     has_lapack = False
     has_nvcc = False
-    def __init__(self, cfiles=None, ccfiles=None, cufiles=None):
+    def __init__(self, cfiles=None, ccfiles=None, cufiles=None, cmpifiles=None):
         self.c = cfiles
         self.cc = ccfiles
         self.cu = cufiles
+        self.c_mpi = cmpifiles
 
 # -----------------------------------------------------------------------------
     @classmethod
     def install_docs(cls,env,libdir,glob_build):
-        if glob_build and HuiSconsTargets.docs:
-            env.Depends(HuiSconsTargets.docs, '#/framework/rsf/doc.py')
+        if glob_build and cls.docs:
+            env.Depends(cls.docs, '#/framework/rsf/doc.py')
             user = os.path.basename(os.getcwd())
             main = 'sf%s.py' % user
-            doc = env.RSF_Docmerge(main,HuiSconsTargets.docs)
+            doc = env.RSF_Docmerge(main,cls.docs)
             env.Install(libdir,doc)
 
 # -----------------------------------------------------------------------------
 
     def build_c(self, env, glob_build, srcroot, bindir, libdir, pkgdir):
         bldroot = '../..'
-
         if not glob_build:
             bldroot = env.get('RSFROOT', os.environ.get('RSFROOT',sys.prefix))
             # SConscript(os.path.join(srcroot, 'api', 'c', 'SConstruct'))
@@ -56,6 +56,18 @@ class HuiSconsTargets:
             docs_cu = self.build_install_cu(env, self.cu, srcroot, bindir, libdir, glob_build)
         if glob_build:
             HuiSconsTargets.docs.append(docs_cu)
+
+# -----------------------------------------------------------------------------
+    def build_c_mpi(self, env, glob_build, srcroot, bindir, libdir, pkgdir):
+        bldroot = '../..'
+        if not glob_build:
+            bldroot = env.get('RSFROOT', os.environ.get('RSFROOT',sys.prefix))
+        if not self.c_mpi:
+            docs_c_mpi = None
+        else:
+            docs_c_mpi = build_install_c_mpi(env, self.c_mpi, srcroot, bindir, glob_build, bldroot)
+        if glob_build:
+            HuiSconsTargets.docs.append(docs_c_mpi)
 
 # -----------------------------------------------------------------------------
 
