@@ -228,6 +228,7 @@ int main(int argc, char* argv[])
 
     /* wavefield and record  */
     wfnt = (int)(nt-1)/snpint+1;
+    sf_warning("nt=%d; snpint=%d; wfnt=%d!!!\n",nt,snpint,wfnt);
     wfdt = dt*snpint;
     record = sf_complexalloc2(nt, nx);
     sf_warning("fine!!!");

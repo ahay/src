@@ -1,4 +1,4 @@
-/* Complex 2-D wave propagation (with kiss-fft)*/
+/* Complex 2-D wave propagation (NSPS)*/
 /*
   Copyright (C) 2009 University of Texas at Austin
   
@@ -17,8 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-
-#include "cfft2.h"
+#include "cfft2nsps.h"
 
 int main(int argc, char* argv[])
 {
@@ -108,6 +107,8 @@ int main(int argc, char* argv[])
     cwave  = sf_complexalloc(nk);
     wave   = sf_complexalloc2(nk,m2);
 
+    icfft2_allocate(cwave);
+
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
 	if(!complx) rcurr[iz]= 0.;
@@ -173,5 +174,6 @@ int main(int argc, char* argv[])
 	}
     }
     if(verb) sf_warning("."); 
+    cfft2_finalize();
     exit (0);
 }

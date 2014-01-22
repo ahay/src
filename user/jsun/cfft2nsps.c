@@ -1,4 +1,4 @@
-/* Complex 2-D FFT interface, complex to complex fft and ifft with threaded FFTW3 */
+/* Complex 2-D FFT interface, complex to complex fft and ifft with threaded FFTW3, designed for NSPS operator */
 /*
   Copyright (C) 2010 University of Texas at Austin
  
@@ -27,7 +27,7 @@
 static int n1, n2, nk;
 static float wt;
 
-static sf_complex **cc;
+static sf_complex **cc,**dd;
 
 #ifdef SF_HAS_FFTW
 static fftwf_plan cfg=NULL, icfg=NULL;
@@ -65,6 +65,7 @@ int cfft2_init(int pad1           /* padding on the first axis */,
     n2 = kiss_fft_next_fast_size(ny);
 
     cc = sf_complexalloc2(n1,n2);
+    dd = sf_complexalloc2(nk,n2);
     
 #ifndef SF_HAS_FFTW
     cfg2  = kiss_fft_alloc(n2,0,NULL,NULL);
@@ -98,7 +99,7 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
     if (NULL==cfg) {
       cfg = fftwf_plan_dft_2d(n2,n1,
 			      (fftwf_complex *) cc[0], 
-			      (fftwf_complex *) out,
+			      (fftwf_complex *) dd[0],
 			      FFTW_FORWARD, FFTW_MEASURE);
       if (NULL == cfg) sf_error("FFTW failure.");
     }
@@ -120,6 +121,11 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
 
 #ifdef SF_HAS_FFTW
     fftwf_execute(cfg);
+    for (i2=0; i2<n2; i2++) {
+	for (i1=0; i1<nk; i1++) {
+	    out[i2*nk+i1]=dd[i2][i1];
+	}
+    }
 #else	
     for (i2=0; i2 < n2; i2++) {
 	kiss_fft_stride(cfg1,(kiss_fft_cpx *) cc[i2],tmp[i2],1);
@@ -201,4 +207,6 @@ void cfft2_finalize()
 
     free(*cc);
     free(cc);
+    free(*dd);
+    free(dd);
 }
