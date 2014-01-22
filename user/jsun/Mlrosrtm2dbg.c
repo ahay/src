@@ -296,7 +296,7 @@ int main(int argc, char* argv[])
     if(wantrecord) {
 	sf_complexread(record[0], nx*nt, Frcd);
     }
-    lrosback2(img1, img2, wavefld, record, verb, wantwf, ltb, rtb, m2, geop, srcp, pad1, wavefld2);
+    //    lrosback2(img1, img2, wavefld, record, verb, wantwf, ltb, rtb, m2, geop, srcp, pad1, wavefld2);
     
     if (!wantrecord) {
 	for (ix=0; ix<nx; ix++) 
@@ -307,7 +307,7 @@ int main(int argc, char* argv[])
 	for (it=0; it<wfnt; it++)
 	    for ( ix=0; ix<nx; ix++) {
 		sf_floatwrite(wavefld[it][ix], nz, Ftmpwf);
-		sf_floatwrite(wavefld2[it][ix],nz, Ftmpbwf);
+		//		sf_floatwrite(wavefld2[it][ix],nz, Ftmpbwf);
 	    }
     }
 

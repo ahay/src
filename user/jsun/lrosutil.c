@@ -44,11 +44,15 @@ typedef struct Geopar {
     int   spz;
     int   gp;
     int   snpint;
-/*absorbing boundary*/
+    /*absorbing boundary*/
     int top;
     int bot;
     int lft;
     int rht;
+    /*source parameters*/
+    int nt;
+    float dt;
+    float trunc;
 } * geopar; /*geometry parameters*/
 /*^*/
 
@@ -100,14 +104,13 @@ void freesrc(srcpar srcp)
 
 void explsourcet(sf_complex *curr/*@out@*/,
 		 sf_complex *vwavlet, 
-		 int vit, float vdt,
-                 int vsx, int vsdepth, 
+		 int vit, int vsx, int vsz, 
 		 int nx2, int nz2,
 		 srcpar vps/*decay parameters*/)
 /*< explosive source >*/ 
 {
     float phi = 0.0;
-    int cent = vps->range/2;
+    int cent = (int)vps->range/2;
     int ix, iz;
 
     if (vps->decay ==1){
@@ -117,11 +120,58 @@ void explsourcet(sf_complex *curr/*@out@*/,
 	for (ix=0; ix<2*cent; ix++)
 	    for (iz=0; iz<2*cent; iz++) {
 		phi = exp( -1*vps->alpha*vps->alpha*((ix-cent)*(ix-cent)+(iz-cent)*(iz-cent)) );
-		curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)] += vwavlet[vit]*phi;
+#ifdef SF_HAS_COMPLEX_H
+		curr[(vsx-cent+ix)*nz2+(vsz-cent+iz)] += vwavlet[vit]*phi;
+#else
+		curr[(vsx-cent+ix)*nz2+(vsz-cent+iz)] += sf_crmul(vwavlet[vit],phi);
+#endif
 	    }
     } else {
-	curr[vsx*nz2+vsdepth] += vwavlet[vit];
+	curr[vsx*nz2+vsz] += vwavlet[vit];
     } 
+}
+
+void reflgen(int nzb, int nxb, int spz, int spx,
+             int rectz, int rectx, int nrep, /*smoothing parameters*/
+	     float *refl/*reflectivity map*/)
+/*< Generate reflectivity map with smoothing >*/
+{   
+    int iz, i, j, i0, irep;
+    int nzx=nzb*nxb;
+    sf_triangle tr;
+    int n[2],s[2],rect[2];
+    bool diff[2],box[2];
+
+    n[0]=nzb; n[1]=nxb;
+    s[0]=1;   s[1]=nzb;
+    rect[0]=rectz; rect[1]=rectx;
+    diff[0]=false; diff[1]=false;
+    box[0]=false; box[1]=false;
+    
+#ifdef _OPENMP
+#pragma omp parallel for private(iz)
+#endif
+    for (iz=0; iz < nzx; iz++) {
+      refl[iz]=0;
+    } 
+    j=spx*nzb+spz; /*point source position*/
+    refl[j]=1;
+    
+    /* 2-d triangle smoothing */
+#ifdef _OPENMP
+#pragma omp parallel for private(i,j,irep,tr,i0)
+#endif
+    for (i=0;i<2;i++) {
+      if (rect[i] <= 1) continue;
+      tr = sf_triangle_init (rect[i],n[i]);
+      for (j=0; j < nzx/n[i]; j++) {
+	i0 = sf_first_index (i,j,2,n,s);
+	for (irep=0; irep < nrep; irep++) {
+	  sf_smooth2 (tr,i0,s[i],diff[i],box[i],refl); // why adjoint?
+	}
+      }
+      sf_triangle_close(tr);
+    }
 }
 
 geopar creategeo(void)
@@ -135,7 +185,7 @@ geopar creategeo(void)
  
 int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 	     sf_complex **lt, sf_complex **rt, int m2,
-            geopar geop, srcpar srcp, int pad1)
+	     geopar geop, sf_complex *ww, float *rr, int pad1)
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -157,8 +207,8 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
     gp  = geop->gp;
     snpint = geop->snpint;
     
-    nt = srcp->nt;
-    dt = srcp->dt;
+    nt = geop->nt;
+    dt = geop->dt;
 
 #ifdef _OPENMP
 #pragma omp parallel  
@@ -216,7 +266,15 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 	    for (iz=0; iz < nzb; iz++) {
 		i = iz+ix*nzb;  /* original grid */
 		j = iz+ix*nz2; /* padded grid */
-		c = sf_cmplx(0.,0.); // source term originally, now adds later
+		if ((it*dt)<=geop->trunc) {
+#ifdef SF_HAS_COMPLEX_H
+		  c = ww[it] * rr[i]; // source term
+#else
+		  c = sf_crmul(ww[it], rr[i]); // source term
+#endif
+		} else {
+		  c = sf_cmplx(0.,0.);
+		}
 		for (im = 0; im < m2; im++) {
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];
@@ -225,9 +283,6 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 #endif
 		}
 		curr[j] = c;
-	    }
-	    if ((it*dt)<=srcp->trunc) {
-		explsourcet(curr, srcp->wavelet, it, dt, spx+geop->lft, spz+geop->top, nx2, nz2, srcp);
 	    }
 	}
 
@@ -261,7 +316,7 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 
 int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd, 
 	      bool verb, bool wantwf, sf_complex **lt, sf_complex **rt, int m2,
-               geopar geop, srcpar srcp, int pad1, float ***wavfld2)  
+               geopar geop, int pad1, float ***wavfld2)  
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -282,8 +337,8 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
     gp  = geop->gp;
     snpint = geop->snpint;
     
-    nt = srcp->nt;
-    dt = srcp->dt;
+    nt = geop->nt;
+    dt = geop->dt;
 
     sill = sf_floatalloc2(nz, nx);
     ccr  = img1;

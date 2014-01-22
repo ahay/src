@@ -117,7 +117,11 @@ void explsourcet(sf_complex *curr/*@out@*/,
 	for (ix=0; ix<2*cent; ix++)
 	    for (iz=0; iz<2*cent; iz++) {
 		phi = exp( -1*vps->alpha*vps->alpha*((ix-cent)*(ix-cent)+(iz-cent)*(iz-cent)) );
+#ifdef SF_HAS_COMPLEX_H
 		curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)] += vwavlet[vit]*phi;
+#else
+		curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)] += sf_crmul(vwavlet[vit],phi);
+#endif
 	    }
     } else {
 	curr[vsx*nz2+vsdepth] += vwavlet[vit];
@@ -227,7 +231,7 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 		curr[j] = c;
 	    }
 	    if ((it*dt)<=srcp->trunc) {
-		explsourcet(curr, srcp->wavelet, it, dt, spx+geop->lft, spz+geop->top, nx2, nz2, srcp);
+	      explsourcet(curr, srcp->wavelet, it, dt, spx+geop->lft, spz+geop->top, nx2, nz2, srcp); // dt redundant???
 	    }
 	}
 
