@@ -42,12 +42,14 @@ pclip=par.float("pclip",100) # clip percent
 
 # style
 plotfat=par.int("plotfat", 1) # plot line width
+markint=par.int("markint", 10) # mark symbol interval
 plotcol=par.string("plotcol", "0,1,2,3,4,5,6,7") 
 # plot color
 dash=par.string("dash", "0") 
 # dash styles \n 0	solid line \n 1	dash line \n 2	dotted line \n 3	dash dot
 symbol=par.string("symbol", None) # mark symbols
 legends=par.string("legend", None) # legends
+xpos=par.string("x", None) # xpos
 plotcol=plotcol.split(',')
 dash=dash.split(',')
 if legends != None:
@@ -57,9 +59,16 @@ if symbol != None:
 
 usetex=par.bool("usetex", False) # use tex symbol
 
-x1=arange(n1)*d1+o1
+
 x=zeros((n2,n1),'f')
 input.read(x)
+if xpos != None:
+	xfile = rsf.Input(xpos)
+	x1=zeros(n1,'f')
+	xfile.read(x1)
+else:
+	x1=arange(n1)*d1+o1
+
 
 xx=(x.max()-x.min())*(100-pclip)/100
 min2=x.min()+xx
@@ -93,7 +102,7 @@ for i2 in range (n2):
 		marker0='None'
 	plot(x1,x[i2,:],
 	lw=plotfat, ls=ls0,
-	marker=marker0, markevery=n1/10,
+	marker=marker0, markevery=n1/markint,
 	color=color0,
 	label=label0)
 
