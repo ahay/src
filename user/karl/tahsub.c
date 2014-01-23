@@ -27,34 +27,74 @@
 char* sf_get_tah_bytebuffer=NULL;
 int sf_get_tah_bytebuffer_len=0;
 */
+int counttokens(const char* delimittedtokens, const char* delimiters)
+/*< return number of delimiter seperated tokens in string>*/
+{
+  char* one_token;
+  char* copy_of_delimittedtokens;
+  int numtoken;
+
+  if(NULL==delimittedtokens)return 0;
+  /* allocate and copy delimittedtokens
+     strtok destroys the string as it splits it up */
+  copy_of_delimittedtokens=sf_charalloc(strlen(delimittedtokens)+1);
+  strcpy (copy_of_delimittedtokens, delimittedtokens);
+  fprintf(stderr,"copy_of_delimittedtokens=%s\n",copy_of_delimittedtokens);
+  
+  one_token=strtok(copy_of_delimittedtokens,delimiters);
+  while (one_token!=NULL){
+    fprintf(stderr,"before increment numtoken=%d\n",numtoken); 
+    numtoken++;
+    one_token=strtok(NULL,delimiters);
+  }
+  fprintf(stderr,"free(copy_of_delimittedtokens)\n");
+  /* did not save and of the pointers returned by strtok, so OK to free! */
+  free(copy_of_delimittedtokens);
+  fprintf(stderr,"return from counttokens\n");
+  return numtoken;
+}
+
+char** delimittedtokens2list(const char* delimittedtokens, 
+			     const char* delimiters, 
+			     int* numtoken)
+/*<return number of delimitter seperated tokens in string and list of tokens>*/
+{
+  int itoken;
+  char** list_of_tokens;
+  char* copy_of_delimittedtokens;
+  
+  /* count number of keys */
+  *numtoken=counttokens(delimittedtokens,delimiters);
+  if(0==*numtoken)return NULL;
+  /* break the long string into an array  of strings */
+  list_of_tokens=(char**)sf_alloc(*numtoken,sizeof(char*)); 
+  /* allocate and copy delimittedtokens
+     strtok destroys the string as it splits it up */
+  copy_of_delimittedtokens=sf_charalloc(strlen(delimittedtokens)+1);
+  strcpy (copy_of_delimittedtokens, delimittedtokens);
+
+  list_of_tokens[0]=strtok(copy_of_delimittedtokens,delimiters);
+  for(itoken=1; itoken<*numtoken; itoken++){
+    list_of_tokens[itoken]=strtok(NULL,delimiters);
+  }
+  /* 
+     I think list_of_tokens points into copy_of_delimittedtokens. 
+     Do not free!
+  */
+  return list_of_tokens;  
+}
 
 int getnumpars(const char* key)
 /*< get number of pars >*/
 {
   char* par;
-  char* one_par;
-  char* copy_of_par;
   int numpars=0;
   
   sf_warning("in getnumpars call sf_getstring key=%s\n",key);
-  par=sf_getstring(key);
-  fprintf(stderr,"back from sf_getstring par=%s\n",par);
-  /* this line may not do anything but make code easier to understand */
-  if(par==NULL) return 0; /* if key is not an input parameter return 0 */
+  if(NULL==(par=sf_getstring(key)))return 0;
    
-  copy_of_par=sf_charalloc(strlen(par));
-  strcpy (copy_of_par, par); /* copy par, strtok destroys it */
-  fprintf(stderr,"copy_of_par=%s\n",copy_of_par);
-  
-  one_par=strtok(copy_of_par,",");
-  while (one_par!=NULL){
-    fprintf(stderr,"before incrmeent numpar=%d\n",numpars); 
-    numpars++;
-    one_par=strtok(NULL,",");
-  }
-  /* kls this may clobber something */
-  fprintf(stderr,"free(copy_of_par)\n");
-  free(copy_of_par);
+  numpars=counttokens(par,",");
+
   fprintf(stderr,"free(par)\n");
   free(par);
   
@@ -79,39 +119,11 @@ char** sf_getnstring(char* key, int* numkeys)
        the array par can be allocated.  maybe a new function sf_getnumkeys 
   */
          
-  char** list_of_keys;
   char* par;
-  char* one_par;
-  char* copy_of_par;
-  int ikey; 
     
   if(!(par=sf_getstring(key)))return NULL;
-  /* count number of keys */
-  *numkeys=0;
-  copy_of_par=sf_charalloc(strlen(par)+1);
-  strcpy (copy_of_par, par);
-  one_par=strtok(copy_of_par,",");
-  while (one_par!=NULL){
-    (*numkeys)++;
-    one_par=strtok(NULL,",");
-  }
-  /* break the long string into an array  of strings */
-  list_of_keys=(char**)sf_alloc(*numkeys,sizeof(char*)); 
-  /* no need to reallocate, but including free(copy_of_par) clobberred part of
-     list_of_keys. this spooked me on exactly how strtok works */ 
-  copy_of_par=sf_charalloc(strlen(par)+1);
-  strcpy (copy_of_par, par);
-  list_of_keys[0]=strtok(copy_of_par,",");
-  for(ikey=1; ikey<*numkeys; ikey++){
-    list_of_keys[ikey]=strtok(NULL,",");
-  }
-  /*should:
-    free(copy_of_par);
-    free(par);
-    but it causes part of list_of_keys to be clobberred 
-    this is a very minor memory leak
-  */
-  return list_of_keys;
+
+  return delimittedtokens2list(par,",",numkeys);
 }
 
 void put_tah(float* trace, float* header, 
