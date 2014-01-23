@@ -12,7 +12,7 @@ Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],'npr3_gathers.sgy',
 
 Flow('gathersgethw.txt',
      'npr3_gathers_hdr.rsf',
-     'sfheaderattr',stdout=0)
+     'sfheaderattr >temp; cat temp; cat temp ')
 
 Fetch('npr3_field.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
