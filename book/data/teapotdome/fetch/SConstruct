@@ -1,0 +1,25 @@
+from rsf.proj import *
+import math
+
+# get the stack created using seismic unix
+Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
+Result('sustack','final_stack','grey title="su stack"')
+
+Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
+
+Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],'npr3_gathers.sgy',
+     'sfsegyread tfile=${TARGETS[1]}')
+
+Flow(['gathersgethw.txt',
+     ['npr3_gathers_hdr.rsf'],
+     'sfheaderattr',stdout=0)
+
+Fetch('npr3_field.sgy','teapot',server='http://s3.amazonaws.com',top='')
+
+Flow(['npr3_field.rsf','npr3_field_hdr.rsf'],'npr3_field.sgy',
+     'sfsegyread tfile=${TARGETS[1]}')
+Flow(['gathersgethw.txt',
+     ['npr3_field_hdr.rsf'],
+     'sfheaderattr',stdout=0)
+
+End()
