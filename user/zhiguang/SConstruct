@@ -1,16 +1,17 @@
+# Copied from songxl and delete lines for CPP support
+
 import os, sys, re, string, glob
 sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-pickval sgewefd2d rtm2
+pickval prertm2 rtm2 sgewefd2d
 '''
+# differenciate
 
-mpi_progs = ''
-
-ccprogs = ''
-
-subs = ''
+mpi_progs = '''
+prertm2d
+'''
 
 try:  # distributed version
     Import('env root pkgdir bindir')
@@ -18,16 +19,19 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c++/SConstruct')
+    SConscript('../lexing/SConstruct')
+
+src = Glob('[a-z]*.c')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-if 'c++' in env.get('API',[]):
-    env.Prepend(LIBS=[env.get('DYNLIB','')+'rsf++'])
-
-src = Glob('[a-z]*.c')
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=['fftw3_threads','fftw3'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -37,25 +41,35 @@ for source in src:
 mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
-    bldutil.depends (env, sources, 'M'+prog)
-    prog = env.Program (prog, map (lambda x: x + '.c',sources))
-    if root:
-        env.Install (bindir, prog)
-
-ccmains = Split(ccprogs)
-subs = Split(subs)
-
-if 'c++' in env.get('API',[]):
-    objs = map(lambda x:  env.StaticObject(x+'.cc'), subs)
-
-for prog in ccmains:
-    if 'c++' in env.get('API',[]):
-        prog = env.Program (prog, ['M'+prog+'.cc'] + objs)
-        env.Depends(prog,map (lambda x: x + '.hh', subs))
-    else:
-        prog = env.RSF_Place ('sf' + prog, None, var='API', package='c++')
+    bldutil.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
+
+mpicc = env.get('MPICC')
+
+mpi_mains = Split(mpi_progs)
+for prog in mpi_mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    if mpicc:
+    	prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+    else:
+	prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
+
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    env.Prepend(LIBS=libsxx)
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -63,8 +77,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c'),ccmains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
