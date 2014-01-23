@@ -10,16 +10,16 @@ Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
 Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf'],'npr3_gathers.sgy',
      'sfsegyread tfile=${TARGETS[1]}')
 
-Flow(['gathersgethw.txt',
-     ['npr3_gathers_hdr.rsf'],
+Flow('gathersgethw.txt',
+     'npr3_gathers_hdr.rsf',
      'sfheaderattr',stdout=0)
 
 Fetch('npr3_field.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
 Flow(['npr3_field.rsf','npr3_field_hdr.rsf'],'npr3_field.sgy',
      'sfsegyread tfile=${TARGETS[1]}')
-Flow(['gathersgethw.txt',
-     ['npr3_field_hdr.rsf'],
-     'sfheaderattr',stdout=0)
+Flow('fieldgethw.txt',
+     'npr3_field_hdr.rsf',
+     'sfheaderattr >temp; cat temp; cat temp ')
 
 End()
