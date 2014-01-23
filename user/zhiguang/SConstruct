@@ -5,12 +5,12 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-pickval prertm2 rtm2 sgewefd2d
+pickval rtm2 sgewefd2d
 '''
 # differenciate
 
 mpi_progs = '''
-prertm2d
+
 '''
 
 try:  # distributed version
