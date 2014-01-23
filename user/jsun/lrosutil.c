@@ -189,7 +189,7 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,dx,dz,spx,spz,gp,snpint,dt,nth,wfit;
+    int nxb,nzb,dx,dz,spx,spz,gp,snpint,dt,nth=1,wfit;
     int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
@@ -215,8 +215,8 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 {
     nth = omp_get_num_threads();
 }
-#endif
     sf_warning(">>>> Using %d threads <<<<<", nth);
+#endif
     
     /*Matrix dimensions*/
     nk = cfft2_init(pad1,nzb,nxb,&nz2,&nx2);

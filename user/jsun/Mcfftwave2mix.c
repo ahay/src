@@ -28,9 +28,10 @@ int main(int argc, char* argv[])
     sf_complex c;
 
     float  *rr;      /* I/O arrays*/
-    sf_complex *ww, *cwave;
+    sf_complex *ww, *cwave, *cwavem;
 
     sf_complex **wave,**wave2, *curr, *currm;
+    float *rcurr;
     
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
@@ -42,8 +43,6 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getbool("cmplx",&complx)) complx=true; /* outputs complex wavefield */
-//    if(!complx)
-    float *rcurr;
 
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -106,6 +105,7 @@ int main(int argc, char* argv[])
     if(!complx) rcurr  = sf_floatalloc(nzx2);
 
     cwave  = sf_complexalloc(nk);
+    cwavem  = sf_complexalloc(nk);
     wave   = sf_complexalloc2(nk,m2);
     wave2  = sf_complexalloc2(nzx2,m2);
 
@@ -134,17 +134,42 @@ int main(int argc, char* argv[])
 	    cfft2(currm,wave[im]);
 	}
 
+/* approach no.2 */
+	for (ik = 0; ik < nk; ik++) {
+	    c = sf_cmplx(0.,0.);
+	    for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		c += wave[im][ik]*rt[ik][im];
+#else
+		c += sf_cmul(wave[im][ik],rt[ik][im]); //complex multiplies complex
+#endif
+	    }
+	    cwave[ik] = c;
+	}
+
+	for (im = 0; im < m2; im++) {
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]*rt[ik][im];
+#else
+		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]); //complex multiplies complex
+#endif
+	    }
+	    icfft2(wave2[im],cwavem);
+	}
+
+/*
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
 		cwave[ik] = wave[im][ik]*rt[ik][im]*rt[ik][im];
 #else
-		cwave[ik] = sf_cmul(sf_cmul(wave[im][ik],rt[ik][im]),rt[ik][im]); //complex multiplies complex
+		cwave[ik] = sf_cmul(sf_cmul(wave[im][ik],rt[ik][im]),rt[ik][im]);
 #endif
 	    }
 	    icfft2(wave2[im],cwave);
 	}
-
+*/
 	for (ix = 0; ix < nx; ix++) {
 	    for (iz=0; iz < nz; iz++) {
 		i = iz+ix*nz;  /* original grid */
