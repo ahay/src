@@ -186,9 +186,6 @@ Flow(['mappedfieldsort.rsf','mappedfieldsort_hdr.rsf'],
 Result('mappedfieldsort','grey title="tah field sort"')
 Result('zoommappedfieldsort','mappedfieldsort',
 	'sfwindow max1=2. | grey title="tah field sort"')
-Result('zoommappedfieldsort','mappedfieldsort',
-	'sfwindow max1=2. | grey title="tah field sort"')
-
 
 Flow(['mappedfieldsortnmo.rsf','mappedfieldsortnmo_hdr.rsf'],
      ['mappedfieldsort.rsf','mappedfieldsort_hdr.rsf'],
