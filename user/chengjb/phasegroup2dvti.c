@@ -21,6 +21,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <rsf.h>
 
 #include "_cjb.h"
 
@@ -113,7 +114,7 @@ float apgroup2dvti(float vp0, float vs0, float eps, float del, float ap)
 
 	float apg=atan(C);
 	if(apg<0)
-		apg+=PI;
+		apg+=SF_PI;
 	
 	return apg;
 }
@@ -145,7 +146,7 @@ float asgroup2dvti(float vp0, float vs0, float eps, float del, float ap)
 
 	float asg=atan(C);
 	if(asg<0)
-		asg+=PI;
+		asg+=SF_PI;
 	
 	return asg;
 }
@@ -180,7 +181,7 @@ void vapgroup2dvti(float vp0, float vs0, float eps, float del, float ap, float *
 
 	*apg=atan(C);
 	if(*apg<0)
-		*apg+=PI;
+		*apg+=SF_PI;
 }
 
 void vasgroup2dvti(float vp0, float vs0, float eps, float del, float ap, float *vsg, float *asg)
@@ -213,5 +214,5 @@ void vasgroup2dvti(float vp0, float vs0, float eps, float del, float ap, float *
 
 	*asg=atan(C);
 	if(*asg<0)
-		*asg+=PI;
+		*asg+=SF_PI;
 }

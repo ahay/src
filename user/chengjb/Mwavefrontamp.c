@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 		}
 		for(i=0;i<na;i++){
 			float a=i*da;
-			a *= PI/180.0;
+			a *= SF_PI/180.0;
 			for(j=0;j<nb;j++){
 				float b=j*db;
 				float x=(nx-1)*dx*0.5-b*cos(a);

@@ -26,9 +26,6 @@ typedef char *          caddr_t;
 #ifndef NULL
 #define NULL	((void *)0)
 #endif
-#ifndef PI
-#define PI (3.141592653589793)
-#endif
 #ifndef SEEK_SET
 #define SEEK_SET (0)
 #endif

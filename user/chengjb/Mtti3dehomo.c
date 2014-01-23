@@ -83,8 +83,8 @@ int main(int  argc,char **argv)
     fx=0.0;
     fz=0.0;
 
-	theta *= PI/180.0;
-	phai *= PI/180.0;
+	theta *= SF_PI/180.0;
+	phai *= SF_PI/180.0;
 
     sf_warning("ns=%d dt=%f",ns,dt);
     sf_warning("nx=%d ny=%d nz=%d ",nx,ny,nz);

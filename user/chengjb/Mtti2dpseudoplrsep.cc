@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
    sf_init(argc,argv);
 
    timeval time1, time2, time3, time4, time5;
-   time_t timeused = 0;
+   long long timeused = 0;
 
    gettimeofday(&time1, 0);
 
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
    the>>th;
 
    for(int i=0;i<nxz;i++)
-      th[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
 
    /* Fourier spectra demension */
    int nkz,nkx,nk;
@@ -147,10 +147,10 @@ int main(int argc, char* argv[])
 
    sf_warning("dx=%f dz=%f fx=%f fz=%f",dx,dz,fx,fz);
 
-   dkx=2*PI/dx/nx;
-   dkz=2*PI/dz/nz; 
-   kx0=-PI/dx;
-   kz0=-PI/dz;
+   dkx=2*SF_PI/dx/nx;
+   dkz=2*SF_PI/dz/nz; 
+   kx0=-SF_PI/dx;
+   kz0=-SF_PI/dz;
 
    sinx.resize(nk);
    cosx.resize(nk);

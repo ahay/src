@@ -1,9 +1,10 @@
-/* 2-D two-components wavefield modeling using original elastic anisotropic displacement 
-  wave equation in VTI media.
+/* 2-D two-components wavefield modeling based on original elastic anisotropic displacement
+  wave equation and P-SV separation using low-rank symbol approximation in 2D TTI media.
 
-   Copyright (C) 2012 Tongji University, Shanghai, China 
-   Authors: Jiubing Cheng and Wei Kang
+   Authors: Jiubing Cheng (Tongji University) and Sergey Fomel (The University of Texas at Austin) 
      
+   Copyright (C) 2012 Tongji University, Shanghai, China 
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
@@ -44,25 +45,27 @@ using namespace std;
 /* head files aumatically produced from C programs */
 extern "C"{
 #include "zero.h"
-#include "ricker.h"
+#include "puthead.h"
 #include "kykxkztaper.h"
-#include "fdcoef.h"
 #include "eigen2x2.h"
-#include "fwpvtielastic.h"
 #include "seplowrank.h"
 }
 
 static std::valarray<float> vp, vs, ep, de;
 
-static std::valarray<double> sinx, cosx, rkk;
+static std::valarray<double> sinx, cosx;
 
 /* dual-domain wave-mode separation operator based on low-rank decomp. */
-int samplexp(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
-int samplezp(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
-int samplexs(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
-int samplezs(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
+static int samplexp(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
+static int samplezp(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
+static int samplexs(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
+static int samplezs(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
 
 static void map2d1d(float *d, DblNumMat mat, int m, int n);
+
+static void polxp2dtti(float **ap, int nx, int nz, int im);
+static void polzp2dtti(float **ap, int nx, int nz, int im);
+
 /*****************************************************************************************/
 int main(int argc, char* argv[])
 {
@@ -85,43 +88,92 @@ int main(int argc, char* argv[])
    par.get("npk",npk,20); // maximum rank
 
    int   ns;
-   float dt;
+   float dt=0.004, xrec1=1000.0, zrec1=1000.0, xrec2=2000.0, zrec2=2000.0;
 
-   par.get("ns",ns);
-   par.get("dt",dt);
+   int ireconstruct;   // flag for reconstruct the W matrix or not
+   par.get("ireconstruct",ireconstruct);
+   par.get("xrec1",xrec1);
+   par.get("zrec1",zrec1);
+   par.get("xrec2",xrec2);
+   par.get("zrec2",zrec2);
 
-   sf_warning("ns=%d dt=%f",ns,dt);
    sf_warning("npk=%d ",npk);
    sf_warning("eps=%f",eps);
+   sf_warning("ireconstruct=%d ",ireconstruct);
    sf_warning("read velocity model parameters");
 
    /* setup I files */
    iRSF vp0, vs0("vs0"), epsi("epsi"), del("del");
-
    /* Read/Write axes */
    int nxv, nzv;
+   float a1, a2;
+   float dxv, dzv;
+   float fxv, fzv;
    vp0.get("n1",nzv);
    vp0.get("n2",nxv);
+   vp0.get("o1",a1);
+   vp0.get("o2",a2);
+   fxv=a2*1000.0;
+   fzv=a1*1000.0;
+   vp0.get("d1",a1);
+   vp0.get("d2",a2);
+   dzv = a1*1000.0;
+   dxv = a2*1000.0;
 
-   float az, ax;
-   vp0.get("o1",az);
-   vp0.get("o2",ax);
-
+   /* Read/Write axes from Wavefields*/
+   sf_file Fx, Fz;
+   sf_axis az, ax;
+   int   nx, nz;
    float fx, fz;
-   fx=ax*1000.0;
-   fz=az*1000.0;
-
    float dx, dz;
-   vp0.get("d1",az);
-   vp0.get("d2",ax);
-   dz = az*1000.0;
-   dx = ax*1000.0;
+
+   Fx = sf_input("Elasticx");
+   Fz = sf_input("Elasticz");
+
+   az = sf_iaxa(Fx,1); nz = sf_n(az); dz = sf_d(az)*1000.0;
+   ax = sf_iaxa(Fx,2); nx = sf_n(ax); dx = sf_d(ax)*1000.0;
+   fx = sf_o(ax)*1000.0;
+   fz = sf_o(az)*1000.0;
+
+   if(nx!=nxv || nz!=nzv){
+     sf_warning("Dimension not match between model and data !");
+     sf_warning("nx=%d nz=%d ",nx,nz);
+     sf_warning("nxv=%d nzv=%d ",nxv,nzv);
+     exit(0);
+   }
+   if(fabs(fx-fxv)>0.1 || fabs(fz-fzv)>0.1){
+     sf_warning("Coorinate original point not match between model and data !");
+     sf_warning("fx=%d fz=%d ",fx,fz);
+     sf_warning("fxv=%d fzv=%d ",fxv,fzv);
+   }
+   if(fabs(dx-dxv)>0.1 || fabs(dz-dzv)>0.1){
+     sf_warning("Sampling step not match between model and data !");
+     sf_warning("dx=%d dz=%d ",dx,dz);
+     sf_warning("dxv=%d dzv=%d ",dxv,dzv);
+   }
+
+   sf_warning("fx=%f fz=%f dx=%f dz=%f",fx,fz,dx,dz);
+   sf_warning("nx=%d nz=%d ", nx,nz);
 
    /* wave modeling space */
-   int nx, nz, nxz;
-   nx=nxv;
-   nz=nzv;
+   int nxz;
    nxz=nx*nz;
+
+   /* location of operator check */
+   int ixrec=(int)((xrec1-fx)/dx);
+   int izrec=(int)((zrec1-fz)/dz);
+   int im1=ixrec*nz+izrec;
+   sf_warning("xrec1=%f ",xrec1);
+   sf_warning("zrec1=%f ",zrec1);
+   sf_warning("ixrec=%d ",ixrec);
+   sf_warning("izrec=%d ",izrec);
+   ixrec=(int)((xrec2-fx)/dx);
+   izrec=(int)((zrec2-fz)/dz);
+   int im2=ixrec*nz+izrec;
+   sf_warning("xrec2=%f ",xrec2);
+   sf_warning("zrec2=%f ",zrec2);
+   sf_warning("ixrec=%d ",ixrec);
+   sf_warning("izrec=%d ",izrec);
 
    vp.resize(nxz);
    vs.resize(nxz);
@@ -132,6 +184,11 @@ int main(int argc, char* argv[])
    vs0>>vs;
    epsi>>ep;
    del>>de;
+
+   sf_file Fp, Fsv, Fexp1, Fexp2, Fezp1, Fezp2, Fxp1, Fxp2, Fzp1, Fzp2;
+
+   Fp = sf_output("out");
+   Fsv= sf_output("ElasticSV");
 
    /* Fourier spectra demension */
    int nkz,nkx,nk;
@@ -149,7 +206,6 @@ int main(int argc, char* argv[])
 
    sinx.resize(nk);
    cosx.resize(nk);
-   rkk.resize(nk);
 
    double kx, kz, k2, rk;
    int    i=0, j=0, k=0, ix, iz;
@@ -169,15 +225,18 @@ int main(int argc, char* argv[])
 
             sinx[i] = kx/rk;
             cosx[i] = kz/rk;
-            rkk[i] = rk;
 
             i++;
        }
    }
 
+   t2=clock();
+   timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
+   sf_warning("CPU time for prereparing for low-rank decomp: %f(second)",timespent);
+
    /*****************************************************************************
-   *  Calculating polarization deviation operator for wave-mode separation
-   * ***************************************************************************/
+    *  Calculating polarization deviation operator for wave-mode separation
+    * ***************************************************************************/
    vector<int> md(nxz), nd(nk);
    for (k=0; k < nxz; k++)  md[k] = k;
    for (k=0; k < nk; k++)  nd[k] = k;
@@ -206,7 +265,78 @@ int main(int argc, char* argv[])
 
    iC ( samplexp(rid,nd,mat) );
    map2d1d(rdataxp, mat, n2xp, nk);
-   
+
+   /********* reconsturct W-matrix for checking **********/
+   float *w, *w1;
+   float **ap;
+
+   if(ireconstruct==1)
+   {
+   Fexp1= sf_output("Errpolxp1");
+   Fexp2= sf_output("Errpolxp2");
+   Fxp1= sf_output("Polxp1");
+   Fxp2= sf_output("Polxp2");
+   Fezp1= sf_output("Errpolzp1");
+   Fezp2= sf_output("Errpolzp2");
+   Fzp1= sf_output("Polzp1");
+   Fzp2= sf_output("Polzp2");
+
+   puthead2kx(Fexp1, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fexp2, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fxp1, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fxp2, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fezp1, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fezp2, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fzp1, nkz, nkx, dkz, dkx, kz0, kx0);
+   puthead2kx(Fzp2, nkz, nkx, dkz, dkx, kz0, kx0);
+
+      w = sf_floatalloc(nk);
+      w1 = sf_floatalloc(nk);
+
+      sf_warning("reconstruct x-component operators based on low-rank approx.");
+      reconstruct1(w, ldataxp, fmidxp, rdataxp, nxz, nk, m2xp, n2xp, im1);
+
+      /* error check between accurate and low-rank approx. */
+      ap=sf_floatalloc2(nz, nx);
+
+      //calculate P-wave's polarization operators directly for X-component
+      polxp2dtti(ap, nx, nz, im1);
+
+       float sum=0.0;
+       int k=0;
+       for(i=0;i<nx;i++)
+       for(j=0;j<nz;j++)
+       {
+           float err=w[k]-ap[i][j];
+           sum += err*err;
+           w1[k] = err;
+           k++;
+       }
+       sf_warning("X-comp.Low-rank error: im=%d L2-norm=%20.18f",im1, sum/nxz);
+
+       sf_floatwrite(w1, nk, Fexp1);
+       sf_floatwrite(w, nk, Fxp1);
+
+      reconstruct1(w, ldataxp, fmidxp, rdataxp, nxz, nk, m2xp, n2xp, im2);
+      polxp2dtti(ap, nx, nz, im2);
+
+       sum=0.0;
+       k=0;
+       for(i=0;i<nx;i++)
+       for(j=0;j<nz;j++)
+       {
+           float err=w[k]-ap[i][j];
+           sum += err*err;
+           w1[k] = err;
+           k++;
+       }
+       sf_warning("X-comp.Low-rank error: im=%d L2-norm=%20.18f",im2, sum/nxz);
+
+       sf_floatwrite(w1, nk, Fexp2);
+       sf_floatwrite(w, nk, Fxp2);
+
+   }//ireconstruct==1
+
    /********* low rank decomposition p-wave, z-component **********/
    iC( ddlowrank(nxz,nk,samplezp,eps,npk,lid,rid,mid) );
    m2zp=mid.m();
@@ -225,6 +355,53 @@ int main(int argc, char* argv[])
    iC ( samplezp(rid,nd,mat) );
    map2d1d(rdatazp, mat, n2zp, nk);
 
+   /********* reconsturct W-matrix for checking **********/
+
+   if(ireconstruct==1)
+   {
+      /* error check between accurate and low-rank approx. */
+      reconstruct1(w, ldatazp, fmidzp, rdatazp, nxz, nk, m2zp, n2zp, im1);
+      polzp2dtti(ap, nx, nz, im1);
+
+      float sum=0.0;
+      k=0;
+      for(i=0;i<nx;i++)
+      for(j=0;j<nz;j++)
+      {
+           float err=w[k]-ap[i][j];
+           sum += err*err;
+           w1[k] = err;
+           k++;
+      }
+      sf_warning("Z-comp.Low-rank error: im=%d L2-norm=%20.18f",im1, sum/nxz);
+      sf_floatwrite(w1, nk, Fezp1);
+      sf_floatwrite(w, nk, Fzp1);
+
+      reconstruct1(w, ldatazp, fmidzp, rdatazp, nxz, nk, m2zp, n2zp, im2);
+      polzp2dtti(ap, nx, nz, im2);
+
+      sum=0.0;
+      k=0;
+      for(i=0;i<nx;i++)
+      for(j=0;j<nz;j++)
+      {
+           float err=w[k]-ap[i][j];
+           sum += err*err;
+           w1[k] = err;
+           k++;
+      }
+      sf_warning("Z-comp.Low-rank error: im=%d L2-norm=%20.18f",im2, sum/nxz);
+      sf_floatwrite(w1, nk, Fezp2);
+      sf_floatwrite(w, nk, Fzp2);
+
+      free(*ap);
+      free(w);
+      free(w1);
+   }//ireconstruct==1
+
+   /*****************************************************************************
+   *  Calculating SV-wave polarization deviation operator for wave-mode separation
+   * ***************************************************************************/
    /********* low rank decomposition SV-wave, x-component **********/
    int   m2xs, n2xs, m2zs, n2zs;
    float *ldataxs, *fmidxs, *rdataxs;
@@ -246,7 +423,7 @@ int main(int argc, char* argv[])
 
    iC ( samplexs(rid,nd,mat) );
    map2d1d(rdataxs, mat, n2xs, nk);
-   
+
    /********* low rank decomposition SV-wave, z-component **********/
    iC( ddlowrank(nxz,nk,samplezs,eps,npk,lid,rid,mid) );
    m2zs=mid.m();
@@ -265,253 +442,53 @@ int main(int argc, char* argv[])
    iC ( samplezs(rid,nd,mat) );
    map2d1d(rdatazs, mat, n2zs, nk);
 
-   /****************End of Calculating Projection Deviation Operator****************/
-   t2=clock();
-   timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
+   t3=clock();
+   timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
    sf_warning("CPU time for low-rank decomp: %f(second)",timespent);
 
-   /****************begin to calculate wavefield****************/
-   /****************begin to calculate wavefield****************/
-   /*  wavelet parameter for source definition */
-   float A, f0, t0;
-   f0=30.0;                  
-   t0=0.04;                  
-   A=1;                  
-
-   int nxpad, nzpad;
-   nxpad=nx+2*M;
-   nzpad=nz+2*M;
-
-   sf_warning("fx=%f fz=%f dx=%f dz=%f",fx,fz,dx,dz);
-   sf_warning("nx=%d nz=%d nxpad=%d nzpad=%d", nx,nz,nxpad,nzpad);
-
-   int mm=2*M+1;
-
-   float dt2=dt*dt;
-
-   /* source definition */
-   int ixs, izs, ixms, izms;
-   ixs=nxv/2;
-   izs=nzv/2;
-   ixms=ixs+M;  /* source's x location */
-   izms=izs+M;  /* source's z-location */
-
-   /* setup I/O files */
-   oRSF Elasticx("out"),Elasticz("Elasticz");
-   oRSF ElasticSepP("ElasticSepP");
-   oRSF ElasticSepSV("ElasticSepSV");
-
-   Elasticx.put("n1",nkz);
-   Elasticx.put("n2",nkx);
-   Elasticx.put("d1",dz/1000);
-   Elasticx.put("d2",dx/1000);
-   Elasticx.put("o1",fz/1000);
-   Elasticx.put("o2",fx/1000);
-
-   Elasticz.put("n1",nkz);
-   Elasticz.put("n2",nkx);
-   Elasticz.put("d1",dz/1000);
-   Elasticz.put("d2",dx/1000);
-   Elasticz.put("o1",fz/1000);
-   Elasticz.put("o2",fx/1000);
-
-   ElasticSepP.put("n1",nkz);
-   ElasticSepP.put("n2",nkx);
-   ElasticSepP.put("d1",dz/1000);
-   ElasticSepP.put("d2",dx/1000);
-   ElasticSepP.put("o1",fz/1000);
-   ElasticSepP.put("o2",fx/1000);
-
-   ElasticSepSV.put("n1",nkz);
-   ElasticSepSV.put("n2",nkx);
-   ElasticSepSV.put("d1",dz/1000);
-   ElasticSepSV.put("d2",dx/1000);
-   ElasticSepSV.put("o1",fz/1000);
-   ElasticSepSV.put("o2",fx/1000);
-
-    float *coeff_2dx=sf_floatalloc(mm);
-    float *coeff_2dz=sf_floatalloc(mm);
-    float *coeff_1dx=sf_floatalloc(mm);
-    float *coeff_1dz=sf_floatalloc(mm);
-
-    coeff2d(coeff_2dx,dx);
-    coeff2d(coeff_2dz,dz);
-    coeff1dmix(coeff_1dx,dx);
-    coeff1dmix(coeff_1dz,dz);
-
-    float **p1=sf_floatalloc2(nzpad, nxpad);
-    float **p2=sf_floatalloc2(nzpad, nxpad);
-    float **p3=sf_floatalloc2(nzpad, nxpad);
-
-    float **q1=sf_floatalloc2(nzpad, nxpad);
-    float **q2=sf_floatalloc2(nzpad, nxpad);
-    float **q3=sf_floatalloc2(nzpad, nxpad);
-
-    zero2float(p1, nzpad, nxpad);
-    zero2float(p2, nzpad, nxpad);
-    zero2float(p3, nzpad, nxpad);
-
-    zero2float(q1, nzpad, nxpad);
-    zero2float(q2, nzpad, nxpad);
-    zero2float(q3, nzpad, nxpad);
-
-    sf_warning("==================================================");
-    sf_warning("==  Porpagation Using Elastic anisotropic Eq.   ==");
-    sf_warning("==================================================");
-
-    std::valarray<float> x(nxz);
-    std::valarray<float> y(nxz);
-    std::valarray<float> z(nxz);
-
-    float **vpp, **vss, **epp, **dee;
-
-    vpp=sf_floatalloc2(nz,nx);
-    vss=sf_floatalloc2(nz,nx);
-    epp=sf_floatalloc2(nz,nx);
-    dee=sf_floatalloc2(nz,nx);
-
-    k=0;
-    for(i=0;i<nx;i++)
-    for(j=0;j<nz;j++)
-    {
-       vpp[i][j]=vp[k];
-       vss[i][j]=vs[k];
-       epp[i][j]=ep[k];
-       dee[i][j]=de[k];
-       k++;
-    }
-
-    float *pp, *qq;
-    pp=sf_floatalloc(nxz);
-    qq=sf_floatalloc(nxz);
-
-    int ii, jj, im, jm;
+   /****************End of Calculating Projection Deviation Operator****************/
 
     int *ijkx = sf_intalloc(nkx);
     int *ijkz = sf_intalloc(nkz);
 
     ikxikz(ijkx, ijkz, nkx, nkz);
 
-    int iflag=0;
+   float *px, *pz;
+   float *pp, *p;
 
-    for(int it=0;it<ns;it++)
-    {
-	float t=it*dt;
+   px=sf_floatalloc(nxz);
+   pz=sf_floatalloc(nxz);
+   pp=sf_floatalloc(nxz);
+   p=sf_floatalloc(nxz);
 
-	if(it%50==0)
-		sf_warning("Elastic: it= %d",it);
+   /* setup I/O files */
+   sf_floatread(px, nxz, Fx);
+   sf_floatread(pz, nxz, Fz);
 
-        // 2D exploding force source (e.g., Wu's PhD
-        for(i=-1;i<=1;i++)
-        for(j=-1;j<=1;j++)
-        {
-             if(fabs(i)+fabs(j)==2)
-             {
-                  p2[ixms+i][izms+j]+=i*Ricker(t, f0, t0, A);
-                  q2[ixms+i][izms+j]+=j*Ricker(t, f0, t0, A);
-             }
-        }
-        // 2D equil-energy force source (e.g., Wu's PhD)
-        /*
-        for(i=-1;i<=1;i++)
-        for(j=-1;j<=1;j++)
-        {
-             if(fabs(i)+fabs(j)==2)
-             {
-                  if(i==-1&&j==1)  
-                    q2[ixms+i][izms+j]+=sqrt(2.0)*Ricker(t, f0, t0, A);
-                  if(i==-1&&j==-1) 
-                   p2[ixms+i][izms+j]+=-sqrt(2.0)*Ricker(t, f0, t0, A);
-                  if(i==1&&j==1)  
-                   p2[ixms+i][izms+j]+=sqrt(2.0)*Ricker(t, f0, t0, A);
-                  if(i==1&&j==-1) 
-                    q2[ixms+i][izms+j]+=-sqrt(2.0)*Ricker(t, f0, t0, A);
-             }
-        }
-        */
+   puthead2x(Fp, nz, nx, dz/1000, dx/1000, fz/1000, fx/1000);
+   puthead2x(Fsv, nz, nx, dz/1000, dx/1000, fz/1000, fx/1000);
 
-        /* fwpvtielastic: forward-propagating using original elastic equation of displacement in VTI media*/
-        fwpvtielastic(dt2, p1, p2, p3, q1, q2, q3, coeff_2dx, coeff_2dz, coeff_1dx, coeff_1dz,
-                      dx, dz, nx, nz, nxpad, nzpad, vpp, vss, epp, dee);
+   int iflag=0;
+   sf_warning("separate qP-wave based on lowrank decomp.");
+   /* separate qP wave  */
+   for(k=0;k<nxz;k++) pp[k] = px[k];
+   seplowrank2d(ldataxp,rdataxp,fmidxp,pp,ijkx,ijkz,nx,nz,nxz,nk,m2xp,n2xp,iflag);
+   for(i=0;i<nxz;i++) p[k] = pp[k];
+   for(k=0;k<nxz;k++) pp[k] = pz[k];
+   seplowrank2d(ldatazp,rdatazp,fmidzp,pp,ijkx,ijkz,nx,nz,nxz,nk,m2zp,n2zp,iflag);
+   for(i=0;i<nxz;i++) p[k] += pp[k];
+   sf_floatwrite(p, nxz, Fp);
 
-        /******* output wavefields: component and divergence *******/
-        if(it==ns-1)
-	{
-              k=0;
-	      for(i=0;i<nx;i++)
-              {
-                   im=i+M;
-		   for(j=0;j<nz;j++)
-		   {
-                       jm=j+M;
+   sf_warning("separate qSV-wave based on lowrank decomp.");
+   /* separate qSV wave  */
+   //seplowrank2d(ldataxs,rdataxs,fmidxs,px,ijkx,ijkz,nx,nz,nxz,nk,m2xs,n2xs,iflag);
+   //seplowrank2d(ldatazs,rdatazs,fmidzs,pz,ijkx,ijkz,nx,nz,nxz,nk,m2zs,n2zs,iflag);
+   for(i=0;i<nxz;i++) p[k] = px[k]+pz[k];
+   sf_floatwrite(p, nxz, Fsv);
 
-                       x[k] = pp[k] = p3[im][jm];
-                       y[k] = qq[k] = q3[im][jm];
-
-                       k++;      
-		    }
-              }// i loop
-              Elasticx<<x;
-              Elasticz<<y;
-
-              t3=clock();
-              timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
-              sf_warning("CPU time for wavefield modeling: %f(second)",timespent);
-
-              /* separate qP wave  */
-              sf_warning("========================================================"); 
-              sf_warning("separate qP-wave based on lowrank decomp."); 
-              seplowrank2d(ldataxp,rdataxp,fmidxp,pp,ijkx,ijkz,nx,nz,nxz,nk,m2xp,n2xp,iflag);
-              seplowrank2d(ldatazp,rdatazp,fmidzp,qq,ijkx,ijkz,nx,nz,nxz,nk,m2zp,n2zp,iflag);
-
-              for(i=0;i<nxz;i++)
-		  z[i]=pp[i]+qq[i];
-
-              ElasticSepP<<z;
-          
-              k=0;
-	      for(i=0;i<nx;i++)
-              {
-                   im=i+M;
-		   for(j=0;j<nz;j++)
-		   {
-                       jm=j+M;
-
-                       pp[k] = p3[im][jm];
-                       qq[k] = q3[im][jm];
-
-                       k++;      
-		    }
-              }// i loop
-
-              /* separate qSV wave  */
-              sf_warning("========================================================"); 
-              sf_warning("separate qSV-wave based on lowrank decomp."); 
-              seplowrank2d(ldataxs,rdataxs,fmidxs,pp,ijkx,ijkz,nx,nz,nxz,nk,m2xs,n2xs,iflag);
-              seplowrank2d(ldatazs,rdatazs,fmidzs,qq,ijkx,ijkz,nx,nz,nxz,nk,m2zs,n2zs,iflag);
-
-              for(i=0;i<nxz;i++)
-		  z[i]=pp[i]+qq[i];
-
-              ElasticSepSV<<z;
-          
-         }/* (it+1)%ntstep==0 */
-
-         /**************************************/
- 	 for(i=0,ii=M;i<nx;i++,ii++)
-	    for(j=0,jj=M;j<nz;j++,jj++)
-	    {
-		p1[ii][jj]=p2[ii][jj];	
-		p2[ii][jj]=p3[ii][jj];	
-
-		q1[ii][jj]=q2[ii][jj];	
-		q2[ii][jj]=q3[ii][jj];	
-	    }
-
-    }/* it loop */
-    t4=clock();
-    timespent=(float)(t4-t3)/CLOCKS_PER_SEC;
-    sf_warning("CPU time for wave-modes separation.: %f(second)",timespent);
+   t4=clock();
+   timespent=(float)(t4-t3)/CLOCKS_PER_SEC;
+   sf_warning("CPU time for wave-modes separation.: %f(second)",timespent);
 
     free(ldataxp);
     free(ldatazp);
@@ -519,7 +496,6 @@ int main(int argc, char* argv[])
     free(rdatazp);
     free(fmidxp);
     free(fmidzp);
-
     free(ldataxs);
     free(ldatazs);
     free(rdataxs);
@@ -527,36 +503,17 @@ int main(int argc, char* argv[])
     free(fmidxs);
     free(fmidzs);
 
+    free(px);
+    free(pz);
     free(pp);
-    free(qq);
-
-    free(*p1);
-    free(*p2);
-    free(*p3);
-    free(*q1);
-    free(*q2);
-    free(*q3);
-
-    free(*vpp);
-    free(*vss);
-    free(*epp);
-    free(*dee);
-
-    free(coeff_2dx);
-    free(coeff_2dz);
-    free(coeff_1dx);
-    free(coeff_1dz);
+    free(p);
 
     free(ijkx);
     free(ijkz);
 exit(0);
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
 /* P-wave dual-domain wave-mode separation operator based on low-rank decomp. */
-int samplexp(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
+static int samplexp(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -592,6 +549,7 @@ int samplexp(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             c11=ep2*c33;
             c13c44=sqrt((de2*c33-c44)*(c33-c44));
 
+            // rotatiing according to tilted symmetry axis
             a11= c11*s*s+c44*c*c;
             a12= c13c44*s*c;
             a22= c44*s*s+c33*c*c;
@@ -621,7 +579,7 @@ int samplexp(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 }
 
 /* P-wave dual-domain wave-mode separation operator based on low-rank decomp. */
-int samplezp(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
+static int samplezp(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -658,6 +616,7 @@ int samplezp(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
             c11=ep2*c33;
             c13c44=sqrt((de2*c33-c44)*(c33-c44));
 
+            // rotatiing according to tilted symmetry axis
             a11= c11*s*s+c44*c*c;
             a12= c13c44*s*c;
             a22= c44*s*s+c33*c*c;
@@ -687,7 +646,7 @@ int samplezp(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
 }
 
 /* SV-wave dual-domain wave-mode separation operator based on low-rank decomp. */
-int samplexs(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
+static int samplexs(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -723,6 +682,8 @@ int samplexs(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
             c11=ep2*c33;
             c13c44=sqrt((de2*c33-c44)*(c33-c44));
 
+            // rotatiing according to tilted symmetry axis
+
             a11= c11*s*s+c44*c*c;
             a12= c13c44*s*c;
             a22= c44*s*s+c33*c*c;
@@ -752,7 +713,7 @@ int samplexs(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 }
 
 /* SV-wave dual-domain wave-mode separation operator based on low-rank decomp. */
-int samplezs(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
+static int samplezs(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
 {
     int nr = rs.size();
     int nc = cs.size();
@@ -789,6 +750,7 @@ int samplezs(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
             c11=ep2*c33;
             c13c44=sqrt((de2*c33-c44)*(c33-c44));
 
+            // rotatiing according to tilted symmetry axis
             a11= c11*s*s+c44*c*c;
             a12= c13c44*s*c;
             a22= c44*s*s+c33*c*c;
@@ -815,6 +777,114 @@ int samplezs(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
     }// a loop
 
     return 0;
+}
+
+static void polxp2dtti(float **ap, int nx, int nz, int im)
+{
+        int    i, j, k;
+        double s, c;
+
+        double ve[2][2], va[2];  /*eigeinvector and eigeinvalues*/
+        double a[2][2];
+
+        double vp2 = vp[im]*vp[im];
+        double vs2 = vs[im]*vs[im];
+        double ep2 = 1.0+2*ep[im];
+        double de2 = 1.0+2*de[im];
+
+        double u1, u2, c11, c33, c44, c13c44, a11, a12, a22;
+
+        c33=vp2;
+        c44=vs2;
+        c11=ep2*c33;
+        c13c44=sqrt((de2*c33-c44)*(c33-c44));
+
+        for( i=0; i<nx ; i++ )
+           for( j=0; j<nz ; j++)
+                  ap[i][j]=0.0;
+
+        k=0;
+        for( i=0; i<nx ; i++ )
+           for( j=0; j<nz ; j++)
+           {
+                s=sinx[k];
+                c=cosx[k];
+                k++;
+
+                a11= c11*s*s + c44*c*c;
+                a12= c13c44*s*c;
+                a22= c44*s*s + c33*c*c;
+
+                a[0][0] = a11;
+                a[0][1] = a12;
+                a[1][0] = a12;
+                a[1][1] = a22;
+
+               dsolveSymmetric22(a, ve, va);
+
+               u1=ve[0][0];
+               u2=ve[0][1];
+               /* get the closest direction to k */
+               if(u1*s + u2*c <0) {
+                  u1 = -u1;
+               }
+	       ap[i][j]=(float)(u1);
+          } /* j loop */
+}
+
+static void polzp2dtti(float **ap, int nx, int nz, int im)
+{
+        int    i, j, k;
+        double s, c;
+
+        double ve[2][2], va[2];  /*eigeinvector and eigeinvalues*/
+        double a[2][2];
+
+        //double f=1.0-vs2/vp2;
+
+        double vp2 = vp[im]*vp[im];
+        double vs2 = vs[im]*vs[im];
+        double ep2 = 1.0+2*ep[im];
+        double de2 = 1.0+2*de[im];
+
+        double u1, u2, c11, c33, c44, c13c44, a11, a12, a22;
+
+        c33=vp2;
+        c44=vs2;
+        c11=ep2*c33;
+        c13c44=sqrt((de2*c33-c44)*(c33-c44));
+
+        for( i=0; i<nx ; i++ )
+           for( j=0; j<nz ; j++)
+                  ap[i][j]=0.0;
+
+        k=0;
+        for( i=0; i<nx ; i++ )
+           for( j=0; j<nz ; j++)
+           {
+                s=sinx[k];
+                c=cosx[k];
+                k++;
+
+                a11= c11*s*s + c44*c*c;
+                a12= c13c44*s*c;
+                a22= c44*s*s + c33*c*c;
+
+                a[0][0] = a11;
+                a[0][1] = a12;
+                a[1][0] = a12;
+                a[1][1] = a22;
+
+               dsolveSymmetric22(a, ve, va);
+
+               u1=ve[0][0];
+               u2=ve[0][1];
+               /* get the closest direction to k */
+               if(u1*s + u2*c <0) {
+                  u2 = -u2;
+               }
+	       ap[i][j]=(float)(u2);
+          } /* j loop */
 }
 
 static void map2d1d(float *d, DblNumMat mat, int m, int n)
@@ -829,3 +899,4 @@ static void map2d1d(float *d, DblNumMat mat, int m, int n)
    }
 
 }
+

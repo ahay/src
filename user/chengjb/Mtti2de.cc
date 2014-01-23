@@ -1,7 +1,8 @@
 /* 2-D two-components wavefield modeling based on original elastic anisotropic displacement
- * wave equation and P-SV separation using divergence and curl operations in 2D TTI media.
+ * wave equation in 2D TTI media.
  
-   Authors: Jiubing Cheng (Tongji University)
+   Authors: Jiubing Cheng (Tongji University) and Sergey Fomel (The University of Texas at Austin) 
+   Authors: Jiubing Cheng (Tongji University) and Sergey Fomel (The University of Texas at Austin) 
      
    Copyright (C) 2012 Tongji University, Shanghai, China 
 
@@ -19,13 +20,7 @@
    along with this program; if not, write to the Free Software
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <sys/time.h>
-
-#include <rsf.hh>
-#include <assert.h>
-
-using namespace std;
-
+#include <rsf.h>
 /* prepared head files by myself */
 #include "_cjb.h"
 
@@ -33,7 +28,6 @@ using namespace std;
  * when _fd.h has declared "m", we met compiling error at "m2=mid.m()";
  * "expected unqualified-id before numeric constant" 
 */
-   float  kx, kz, k2, rk, *sinx, *cosx;
 #ifndef M
 #define M 5   /* 10th-order finite-difference: accuracy is 2*M */
 #endif
@@ -42,18 +36,12 @@ using namespace std;
 #endif
 
 /* head files aumatically produced from C programs */
-extern "C"{
 #include "zero.h"
 #include "ricker.h"
-#include "kykxkztaper.h"
 #include "fdcoef.h"
 #include "fwpttielastic.h"
-#include "seplowrank.h"
-#include "sepdivcurl.h"
-}
 
 static std::valarray<float> vp, vs, ep, de, th;
-
 /*****************************************************************************************/
 int main(int argc, char* argv[])
 {
@@ -64,8 +52,17 @@ int main(int argc, char* argv[])
 
    gettimeofday(&time1, 0);
 
-
    iRSF par(0);
+   int seed;
+   par.get("seed",seed,time(NULL)); // seed for random number generator
+   srand48(seed);
+
+   float eps;
+   par.get("eps",eps,1.e-6); // tolerance
+       
+   int npk;
+   par.get("npk",npk,20); // maximum rank
+
    int   ns;
    float dt;
 
@@ -73,6 +70,8 @@ int main(int argc, char* argv[])
    par.get("dt",dt);
 
    sf_warning("ns=%d dt=%f",ns,dt);
+   sf_warning("npk=%d ",npk);
+   sf_warning("eps=%f",eps);
    sf_warning("read velocity model parameters");
 
    /* setup I files */
@@ -116,54 +115,11 @@ int main(int argc, char* argv[])
    the>>th;
 
    for(int i=0;i<nxz;i++)
-      th[i] *= SF_PI/180.0;
+      th[i] *= PI/180.0;
 
-   /* Fourier spectra demension */
-   int nkz,nkx,nk;
-   nkx=nx;
-   nkz=nz;
-   nk = nkx*nkz;
-
-   float dkz,dkx,kz0,kx0, s, c;
-
-   dkx=2*SF_PI/dx/nx;
-   dkz=2*SF_PI/dz/nz;
-
-   kx0=-SF_PI/dx;
-   kz0=-SF_PI/dz;
-
-   float  kx, kz, k2, rk, sx, cx, *sinx, *cosx;
-   int    i=0, j=0, k=0, ix, iz;
-   
-   s = sin(th[i]);
-   c = cos(th[i]);
-
-   sinx=sf_floatalloc(nxz);
-   cosx=sf_floatalloc(nxz);
-
-   for(ix=0; ix < nkx; ix++)
-   {
-       kx = kx0+ix*dkx;
-       if(kx==0.0) kx=0.0000000001*dkx;
-
-       for (iz=0; iz < nkz; iz++)
-       {
-            kz = kz0+iz*dkz;
-            if(kz==0.0) kz=0.0000000001*dkz;
-
-			// rotatiing according to tilted symmetry axis
-		    sx=kx*c+kz*s;
-		    cx=kz*c-kx*s;
-
-            k2 = sx*sx+cx*cx;
-            rk = sqrt(k2);
-
-            sinx[i] = sx/rk;
-            cosx[i] = cx/rk;
-
-            i++;
-       }
-   }
+   gettimeofday(&time2, 0);
+   timeused=time2.tv_sec - time1.tv_sec;
+   sf_warning("CPU time for prereparing for low-rank decomp: %d(second)",timeused);
 
    /****************begin to calculate wavefield****************/
    /****************begin to calculate wavefield****************/
@@ -198,9 +154,8 @@ int main(int argc, char* argv[])
 
    /* setup I/O files */
    oRSF Elasticx("out"),Elasticz("Elasticz");
-   oRSF ElasticDivx("ElasticDivx"),ElasticDivz("ElasticDivz");
-   oRSF ElasticDivP("ElasticDivP");
-   oRSF ElasticCurlSV("ElasticCurlSV");
+   oRSF ElasticSepP("ElasticSepP");
+   oRSF ElasticSepSV("ElasticSepSV");
 
    Elasticx.put("n1",nkz);
    Elasticx.put("n2",nkx);
@@ -216,33 +171,19 @@ int main(int argc, char* argv[])
    Elasticz.put("o1",fz/1000);
    Elasticz.put("o2",fx/1000);
 
-   ElasticDivx.put("n1",nkz);
-   ElasticDivx.put("n2",nkx);
-   ElasticDivx.put("d1",dz/1000);
-   ElasticDivx.put("d2",dx/1000);
-   ElasticDivx.put("o1",fz/1000);
-   ElasticDivx.put("o2",fx/1000);
+   ElasticSepP.put("n1",nkz);
+   ElasticSepP.put("n2",nkx);
+   ElasticSepP.put("d1",dz/1000);
+   ElasticSepP.put("d2",dx/1000);
+   ElasticSepP.put("o1",fz/1000);
+   ElasticSepP.put("o2",fx/1000);
 
-   ElasticDivz.put("n1",nkz);
-   ElasticDivz.put("n2",nkx);
-   ElasticDivz.put("d1",dz/1000);
-   ElasticDivz.put("d2",dx/1000);
-   ElasticDivz.put("o1",fz/1000);
-   ElasticDivz.put("o2",fx/1000);
-
-   ElasticDivP.put("n1",nkz);
-   ElasticDivP.put("n2",nkx);
-   ElasticDivP.put("d1",dz/1000);
-   ElasticDivP.put("d2",dx/1000);
-   ElasticDivP.put("o1",fz/1000);
-   ElasticDivP.put("o2",fx/1000);
-
-   ElasticCurlSV.put("n1",nkz);
-   ElasticCurlSV.put("n2",nkx);
-   ElasticCurlSV.put("d1",dz/1000);
-   ElasticCurlSV.put("d2",dx/1000);
-   ElasticCurlSV.put("o1",fz/1000);
-   ElasticCurlSV.put("o2",fx/1000);
+   ElasticSepSV.put("n1",nkz);
+   ElasticSepSV.put("n2",nkx);
+   ElasticSepSV.put("d1",dz/1000);
+   ElasticSepSV.put("d2",dx/1000);
+   ElasticSepSV.put("o1",fz/1000);
+   ElasticSepSV.put("o2",fx/1000);
 
     float *coeff_2dx=sf_floatalloc(mm);
     float *coeff_2dz=sf_floatalloc(mm);
@@ -311,10 +252,6 @@ int main(int argc, char* argv[])
 
     int iflag=0;
 
-   gettimeofday(&time2, 0);
-   timeused=time2.tv_sec - time1.tv_sec;
-   sf_warning("CPU time for prereparing for modeling: %d(second)",timeused);
-
     for(int it=0;it<ns;it++)
     {
 	float t=it*dt;
@@ -323,6 +260,7 @@ int main(int argc, char* argv[])
 		sf_warning("Elastic: it= %d",it);
 
         // 2D exploding force source (e.g., Wu's PhD)
+	    //good
 	    /*
         for(i=-1;i<=1;i++)
         for(j=-1;j<=1;j++)
@@ -351,8 +289,8 @@ int main(int argc, char* argv[])
         /******* output wavefields: component and divergence *******/
         if(it==ns-1)
 	{
-        gettimeofday(&time3, 0);
-        timeused=time3.tv_sec - time2.tv_sec;
+        gettimeofday(&time4, 0);
+        timeused=time4.tv_sec - time3.tv_sec;
         sf_warning("CPU time for wavefield modeling: %d(second)",timeused);
 
               k=0;
@@ -363,92 +301,14 @@ int main(int argc, char* argv[])
 		   {
                        jm=j+M;
 
-                       x[k] = pp[k] = p3[im][jm];
-                       y[k] = qq[k] = q3[im][jm];
+                       x[k] = p3[im][jm];
+                       y[k] = q3[im][jm];
 
                        k++;      
 		    }
               }// i loop
               Elasticx<<x;
               Elasticz<<y;
-
-
-              /* separate qP wave  */
-              sf_warning("separate qP-wave based on divergence"); 
-              sepdiv2d(sinx,pp,ijkx,ijkz,nx,nz,nxz,nk,iflag);
-              sepdiv2d(cosx,qq,ijkx,ijkz,nx,nz,nxz,nk,iflag);
-
-              for(i=0;i<nxz;i++)
-		          z[i]=pp[i];
-              ElasticDivx<<z;
-
-              for(i=0;i<nxz;i++)
-		          z[i]=qq[i];
-              ElasticDivz<<z;
-
-              for(i=0;i<nxz;i++)
-		          z[i]=pp[i]+qq[i];
-
-              ElasticDivP<<z;
-          
-              k=0;
-	      for(i=0;i<nx;i++)
-              {
-                   im=i+M;
-		   for(j=0;j<nz;j++)
-		   {
-                       jm=j+M;
-
-                       pp[k] = p3[im][jm];
-                       qq[k] = q3[im][jm];
-
-                       k++;      
-		    }
-              }// i loop
-
-              /* separate qSV wave  */
-              sf_warning("separate qSV-wave based on Curl"); 
-              sepdiv2d(cosx, pp,ijkx,ijkz,nx,nz,nxz,nk,iflag);
-              sepdiv2d(sinx, qq,ijkx,ijkz,nx,nz,nxz,nk,iflag);
-
-              for(i=0;i<nxz;i++)
-		        z[i]=pp[i]-qq[i];
-
-              ElasticCurlSV<<z;
-
-              for(i=0;i<nxz;i++)
-		          z[i]=pp[i]+qq[i];
-
-              ElasticDivP<<z;
-          
-              k=0;
-	      for(i=0;i<nx;i++)
-              {
-                   im=i+M;
-		   for(j=0;j<nz;j++)
-		   {
-                       jm=j+M;
-
-                       pp[k] = p3[im][jm];
-                       qq[k] = q3[im][jm];
-
-                       k++;      
-		    }
-              }// i loop
-
-              /* separate qSV wave  */
-              sf_warning("separate qSV-wave based on Curl"); 
-              sepdiv2d(cosx, pp,ijkx,ijkz,nx,nz,nxz,nk,iflag);
-              sepdiv2d(sinx, qq,ijkx,ijkz,nx,nz,nxz,nk,iflag);
-
-              for(i=0;i<nxz;i++)
-		        z[i]=pp[i]-qq[i];
-
-              ElasticCurlSV<<z;
-
-        gettimeofday(&time4, 0);
-        timeused=time4.tv_sec - time3.tv_sec;
-        sf_warning("CPU time for one-step qP/qSV separation: %d(second)",timeused);
 
          }/* (it+1)%ntstep==0 */
 
@@ -464,12 +324,6 @@ int main(int argc, char* argv[])
 	    }
 
     }/* it loop */
-
-    free(pp);
-    free(qq);
-
-    free(sinx);
-    free(cosx);
 
     free(*p1);
     free(*p2);

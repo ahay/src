@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 		    a2 = a[i1/ns];
 		    b2 = b[i1/ns];
 		    r2 = r[i1/ns];
-		    zoeppritz (1,a1,a2,b1,b2,r1,r2,true,p,rc,ang);
+		    zoeppritz (4,a1,a2,b1,b2,r1,r2,true,p,rc,ang);
 		} else {
 		    rc[0] = rc[1] = 0.;
 		}

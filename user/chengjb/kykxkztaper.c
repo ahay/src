@@ -23,9 +23,9 @@
    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
 
 #include "_cjb.h"
+#include <rsf.h>
 
 /* The tapering operators is borrowed from J. Yan */
 
@@ -67,7 +67,7 @@
 #define TAPERS(k) (k!=0 ? sin(  k)/k : 1)
 
 #define TAPERK(k1,k2) (k1*k1+k2*k2 != 0 ?                               \
-                       (sqrt(k1*k1+k2*k2)<PI  ? filter(k1) :0.)      \
+                       (sqrt(k1*k1+k2*k2)<SF_PI  ? filter(k1) :0.)      \
                        :1)
 
 /*Butterworth 3rd order low pass filter*/
@@ -236,7 +236,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
            ik=i+hnkx;
            kx[ik]=i*dkx;
            kx2[ik]=kx[ik]*kx[ik];
-           kkx[ik] = 2*PI*i/nkx;
+           kkx[ik] = 2*SF_PI*i/nkx;
            rkx=kkx[ik];
            if(tapertype[0]=='S')// Jia Yan's Sinc taper
            {
@@ -248,7 +248,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
               }
            }else if(tapertype[0]=='C'||tapertype[0]=='T')//Joe Dellinger's Cosine taper
            {
-              /* 0.5*(1.0+cos(PI*kx[ik]/kx_nyquist)) */
+              /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
               taperx[ik]=TAPER(rkx);
            }
         }
@@ -257,7 +257,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
            jk=j+hnkz;
            kz[jk]=j*dkz;
            kz2[jk]=kz[jk]*kz[jk];
-           kkz[jk] = 2*PI*j/nkz;
+           kkz[jk] = 2*SF_PI*j/nkz;
            rkz=kkz[jk];
            if(tapertype[0]=='S') // Jia Yan's Sinc taper
            {
@@ -270,7 +270,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
               }
            }else if(tapertype[0]=='C'||tapertype[0]=='T')//Joe Dellinger's Cosine taper
            {
-              /* 0.5*(1.0+cos(PI*kx[ik]/kx_nyquist)) */
+              /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
               taperz[jk]=TAPER(rkz);
            }
         }
@@ -367,9 +367,9 @@ void kykxkztaper(float *ky, float *kx,float *kz, float *kky, float *kkx,float *k
            ik=i+hnkx;
            kx[ik]=i*dkx;
            kx2[ik]=kx[ik]*kx[ik];
-           kkx[ik] = 2*PI*i/nkx;
+           kkx[ik] = 2*SF_PI*i/nkx;
            rkx=kkx[ik];
-           /* 0.5*(1.0+cos(PI*kx[ik]/kx_nyquist)) */
+           /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
            taperx[ik]=TAPER(rkx);
      }
      for( j=-hnkz; j<=hnkz ; j++)
@@ -377,9 +377,9 @@ void kykxkztaper(float *ky, float *kx,float *kz, float *kky, float *kkx,float *k
            jk=j+hnkz;
            kz[jk]=j*dkz;
            kz2[jk]=kz[jk]*kz[jk];
-           kkz[jk] = 2*PI*j/nkz;
+           kkz[jk] = 2*SF_PI*j/nkz;
            rkz=kkz[jk];
-           /* 0.5*(1.0+cos(PI*kx[ik]/kx_nyquist)) */
+           /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
            taperz[jk]=TAPER(rkz);
      }
      for( k=-hnky; k<=hnky ; k++)
@@ -387,9 +387,9 @@ void kykxkztaper(float *ky, float *kx,float *kz, float *kky, float *kkx,float *k
            kk=k+hnky;
            ky[kk]=k*dky;
            ky2[kk]=ky[kk]*ky[kk];
-           kky[kk] = 2*PI*k/nky;
+           kky[kk] = 2*SF_PI*k/nky;
            rky=kky[kk];
-           /* 0.5*(1.0+cos(PI*kx[ik]/kx_nyquist)) */
+           /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
            tapery[kk]=TAPER(rky);
      }
 

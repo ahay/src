@@ -25,7 +25,7 @@
 /*****************************************************************************************/
 void seplowrank2d(float *ldata,float *rdata,float *fmid, float *x, int *ijkx, int *ijkz,
                 int nx,int nz,int m,int n,int m2,int n2, int iflag)
-/*< seplowrank: separating wave-modes based on low-rank decomposition >*/
+/*< seplowrank2d: separating wave-modes based on low-rank decomposition >*/
 {
        int i, im, im2, jn2, ikx, ikz;
        float sum1, sum2, *wp;

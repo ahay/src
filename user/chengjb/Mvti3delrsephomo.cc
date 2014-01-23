@@ -140,13 +140,13 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,dky,kz0,kx0,ky0;
 
-   dkx=2*PI/dx/nx;
-   dky=2*PI/dy/ny;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dky=2*SF_PI/dy/ny;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   ky0=-PI/dy;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   ky0=-SF_PI/dy;
+   kz0=-SF_PI/dz;
 
    rkx.resize(nk);
    rky.resize(nk);

@@ -23,13 +23,13 @@
 #include <fftw3.h>
 
 /*****************************************************************************************/
-void decomplowrank2dp(float *ldataxx,float *rdataxx,float *fmidxx,
+void decomplowrank2d(float *ldataxx,float *rdataxx,float *fmidxx,
                       float *ldataxz,float *rdataxz,float *fmidxz,
                       float *ldatazz,float *rdatazz,float *fmidzz,
                       float *px, float *pz, int *ijkx, int *ijkz,
                       int nx, int nz, int m, int n, int MM,
                       int m2xx, int n2xx, int m2xz, int n2xz, int m2zz, int n2zz)
-/*< decomplowrank2dp: P-wave vector decomposition based on low-rank decomposition >*/
+/*< decomplowrank2d: vector decomposition based on low-rank decomposition >*/
 {
        int   i, im, im2, jn2, ikx, ikz;
        float sum1, sum2, *wp;

@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
         int   itmax=0;
         for(it=0;it<ns;it++)
         {
-          x=pow(PI*f0*(it*dt-t0),2);
+          x=pow(SF_PI*f0*(it*dt-t0),2);
           a=-exp(-x)*(1-2*x);
           if(fabs(a)>amax){
              amax=fabs(a);
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
 
 	for(i=0;i<360/da;i++)
 	{
-		ap = i*da*PI/180.0;
+		ap = i*da*SF_PI/180.0;
 		vpp = vpphase2dvti(vp0, vs0, eps, del, ap);
 		vsp = vsphase2dvti(vp0, vs0, eps, del, ap);
 
@@ -122,8 +122,8 @@ int main(int argc, char* argv[])
 		vasgroup2dvti(vp0, vs0, eps, del, ap, &vsg, &asg);
 
 		if(i>=180/da){
-		   apg+=PI;
-		   asg+=PI;
+		   apg+=SF_PI;
+		   asg+=SF_PI;
                 }
                 //sf_warning("vpp=%f vsp=%f vpg=%f vsg=%f apg=%f asg=%f",vpp,vsp,vpg,vsg,apg,asg);
 

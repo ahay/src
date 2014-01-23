@@ -84,7 +84,7 @@ class HuiSconsTargets:
         for prog in mains_cc:
             sources = ['M' + prog]
             if self.has_lapack:
-                print HuiSconsTargets.has_lapack
+#                print HuiSconsTargets.has_lapack
                 prog = env.Program(prog,map(lambda x: x + '.cc',sources))
             else:
                 prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')

@@ -93,7 +93,8 @@ int main(int argc, char* argv[])
    int iflagvti;       // 1: for VTI 
    par.get("iflagvti",iflagvti);
 
-   sf_warning("npk=%d ",npk);
+   sf_warning("npk=%d ",npk);  // Generally, npk < 100, if npk is too large, the code will be terminated with warning
+                               // "terminate called after throwing an instance of 'std::bad_alloc'"
    sf_warning("eps=%f",eps);
    sf_warning("iflagvti=%d ",iflagvti);
    sf_warning("read velocity model parameters");
@@ -182,8 +183,8 @@ int main(int argc, char* argv[])
    phi>>ph;
 
    for(int i=0;i<nxyz;i++){
-      th[i] *= PI/180.0;
-      ph[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
+      ph[i] *= SF_PI/180.0;
    } 
 
    /* Fourier spectra demension */
@@ -197,13 +198,13 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,dky,kz0,kx0,ky0;
 
-   dkx=2*PI/dx/nx;
-   dky=2*PI/dy/ny;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dky=2*SF_PI/dy/ny;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   ky0=-PI/dy;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   ky0=-SF_PI/dy;
+   kz0=-SF_PI/dz;
 
    rkx.resize(nk);
    rky.resize(nk);
@@ -240,7 +241,6 @@ int main(int argc, char* argv[])
 
    t2=clock();
    timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
-   sf_warning("CPU time for prereparing for low-rank decomp: %f(second)",timespent);
 
    /*****************************************************************************
    *  Calculating polarization deviation operator for wave-mode separation
@@ -443,6 +443,7 @@ int main(int argc, char* argv[])
       map2d1d(rdatazsh, mat, n2zsh, nk);
    }else{
       sf_warning("For 3D VTI Media, Z-comp. of SH's Polarization is always zero !!!!");
+	  exit(0);
    }
 
    /****************End of Calculating Projection Deviation Operator****************/
@@ -475,8 +476,8 @@ int main(int argc, char* argv[])
 
 	sf_file Fp, Fsv, Fsh;
     Fp = sf_output("out");
-	Fsv= sf_output("ElasticSepSV");
-	Fsh= sf_output("ElasticSepSH");
+	Fsv= sf_output("ElasticSV");
+	Fsh= sf_output("ElasticSH");
 
 	puthead3x(Fp, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
 	puthead3x(Fsv, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
@@ -505,7 +506,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(p, nxyz, Fp);
 
     // separate qSV wave  
-    iflag=1;
     sf_warning("separate qSV-wave based on lowrank decomp."); 
     for(k=0;k<nxyz;k++) p[k] = 0.0;
 
@@ -527,7 +527,6 @@ int main(int argc, char* argv[])
 	sf_floatwrite(p, nxyz, Fsv);
 
     // separate qSH wave  
-    iflag=0;
     sf_warning("separate qSH-wave based on lowrank decomp."); 
     for(k=0;k<nxyz;k++) p[k] = 0.0;
 
@@ -539,7 +538,10 @@ int main(int argc, char* argv[])
 
     for(k=0;k<nxyz;k++) p[k] += py[k];
 
-	// For 3D VTI media, Z-comp. of SH wave is zero
+	if(iflagvti==0){
+      seplowrank3d(ldatazsh,rdatazsh,fmidzsh,pz,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2zsh,n2zsh,iflag);
+      for(k=0;k<nxyz;k++) p[k] += pz[k];
+	}
 
 	sf_floatwrite(p, nxyz, Fsh);
 

@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
    the>>th;
 
    for(int i=0;i<nxz;i++)
-      th[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
 
    /* Fourier spectra demension */
    int nkz,nkx,nk;
@@ -163,11 +163,11 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,kz0,kx0;
 
-   dkx=2*PI/dx/nx;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   kz0=-SF_PI/dz;
 
    sinx.resize(nk);
    cosx.resize(nk);
@@ -682,11 +682,11 @@ int main(int argc, char* argv[])
 
               /* separate qP wave  */
               sf_warning("vector decomposition of P-wave based on lowrank decomp."); 
-              decomplowrank2dp(ldataxx, rdataxx, fmidxx, 
-                               ldataxz, rdataxz, fmidxz,                              
-                               ldatazz, rdatazz, fmidzz,
-                               px, pz, ijkx, ijkz,
-                               nx, nz, nxz, nk, M, m2xx, n2xx, m2xz, n2xz, m2zz, n2zz);
+              decomplowrank2d(ldataxx, rdataxx, fmidxx, 
+                              ldataxz, rdataxz, fmidxz,                              
+                              ldatazz, rdatazz, fmidzz,
+                              px, pz, ijkx, ijkz,
+                              nx, nz, nxz, nk, M, m2xx, n2xx, m2xz, n2xz, m2zz, n2zz);
 
               for(i=0;i<nxz;i++)
                  x[i] = px[i];

@@ -25,10 +25,7 @@
 */
 
 #include <rsf.h>
-
-#ifdef  _OPENMP
 #include <omp.h>
-#endif
 
 #include "_cjb.h"
 #include "_fd.h"
@@ -49,10 +46,10 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	zero2float(px_tmp,nzpad,nxpad);	
 	zero2float(qx_tmp,nzpad,nxpad);	
 
-#ifdef _OPENMP
+#ifdef OPENMP
 #pragma omp parallel for private(i,j,l) \
 	    schedule(dynamic) \
-        shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,coeff_1dz,nxpad,nzpad,dx,dz)
+        shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,dx)
 #endif
     for(i=_m;i<nx+_m;i++)
 	for(j=_m;j<nz+_m;j++)
@@ -65,13 +62,13 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 		}
 	}
 
-#ifdef _OPENMP
+#ifdef OPENMP
 #pragma omp parallel for private(i,j,l) \
 	    schedule(dynamic) \
 	    shared(p1,p2,p3,q1,q2,q3,\
 		px_tmp,qx_tmp,\
 		coeff_1dx,coeff_1dz,coeff_2dx,coeff_2dz,\
-	    vp0,vs0,epsilon,delta,theta)
+	    vp0,vs0,epsilon,delta,theta,dt2)
 #endif
         for(i=_m;i<nx+_m;i++)
         {
@@ -161,7 +158,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 	zero3float(rx_tmp,nzpad,nxpad,nypad);	
 	zero3float(rz_tmp,nzpad,nxpad,nypad);	
 
-#ifdef _OPENMP
+#ifdef OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
         shared(p2,q2,r2, \
@@ -187,7 +184,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 					}
 				}
 
-#ifdef _OPENMP
+#ifdef OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
 	    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,\
@@ -278,7 +275,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
           hpz =0;
           hqz =0;
           hrz =0;
-	  for(l=-_m;l<=_m;l++)
+		  for(l=-_m;l<=_m;l++)
 		  {
 			  if(k+l>=0&&k+l<nypad)
 			  {
@@ -345,8 +342,6 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 /*< fwpttielastic3dhomo: forward-propagating using original elastic equation of displacement in 3D homogeneous TTI media>*/
 {
     int   i,j,k,l;
-	float vp2,vs2,ep,de,ga,vpn2;
-    float sinthe,costhe,sinphi,cosphi;
     float r11, r12, r13, r21, r22, r23, r31, r32, r33;
 	float qxy1, rxz1, pxy1, ryz1, pxz1, qyz1;
     float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
@@ -356,11 +351,9 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 	zero3float(qy_tmp,nzpad,nxpad,nypad);	
 	zero3float(rz_tmp,nzpad,nxpad,nypad);	
 
-#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
         shared(p2,q2,r2,px_tmp,qy_tmp,rz_tmp,coeff_1dx,coeff_1dy,coeff_1dz,nxpad,nypad,nzpad,dx,dy,dz)
-#endif
 	for(k=0;k<nypad;k++)
 		for(i=0;i<nxpad;i++)
 			for(j=0;j<nzpad;j++)
@@ -373,23 +366,21 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 					if(j+l>=0&&j+l<nzpad)
 						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 				}
-#ifdef _OPENMP
+
 #pragma omp parallel for private(i,j,k,l) \
 	    schedule(dynamic) \
 	    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,\
 		px_tmp,qy_tmp,rz_tmp,\
 		coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz,\
 	    vp0,vs0,epsilon,delta,gama,theta,phai)
-#endif
 	for(k=0;k<nypad;k++)
 	for(i=0;i<nxpad;i++)
 		for(j=0;j<nzpad;j++)
 		{
-			float vp2,vs2,ep,de,ga,vpn2,the,phi;
+			float vp2,vs2,ep,de,ga,vpn2;
 			float sinthe,costhe,sinphi,cosphi;
 			float a11, a33, a44, a66, a11a66, a13a44;
 			float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
-			float pxy, pxz, qxy, qyz, rxz, ryz;
 			vp2=vp0*vp0;
             vs2=vs0*vs0;
             ep=1+2*epsilon;

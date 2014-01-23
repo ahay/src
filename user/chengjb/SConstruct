@@ -14,6 +14,9 @@ datasucjb2rsf2d
 twolayer2dti kine2dvti
 twolayer3dti
 
+vti2de
+tti2de
+
 vti3de vti3dehomo
 
 tti3de tti3dehomo
@@ -31,7 +34,9 @@ wavefrontamp wavefrontamp360 wavefrontampTransmit wavefrontampReflect
 #ort3dhomodevK ort3dhomodevcK
 
 ccprogs = '''
-vti2delrsep vti2delrsep2ps vti2delrseparators
+vti2delrsep 
+vti2delrsep2p 
+vti2delrsep2ps vti2delrseparators
 vti2dpseudoplrsep vti2dpseudoplrsep1
 
 vti2delrsepTrueAmp tti2delrsep2pTrueAmp
@@ -50,11 +55,19 @@ tti2dpseudoplrsep
 tti2dpseudosvlrsep
 
 vti3delrsep
+vti3delrsepP
+vti3delrsepSV
+vti3delrsepSH
+
 vti3delrsephomo
 vti3delrsephomoP
 vti3dedivcurl
 
 tti3delrsep
+tti3delrsepP
+tti3delrsepSV
+tti3delrsepSH
+
 tti3delrsephomo
 
 vti3delrdecompP

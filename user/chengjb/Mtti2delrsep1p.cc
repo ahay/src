@@ -153,7 +153,7 @@ int main(int argc, char* argv[])
    the>>th;
 
    for(int i=0;i<nxz;i++)
-      th[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
 
    /* Fourier spectra demension */
    int nkz,nkx,nk;
@@ -163,11 +163,11 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,kz0,kx0;
 
-   dkx=2*PI/dx/nx;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   kz0=-SF_PI/dz;
 
    sinx.resize(nk);
    cosx.resize(nk);

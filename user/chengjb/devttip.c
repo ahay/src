@@ -124,7 +124,7 @@ void devttip(float **apvx,float **apvz,
      }
 
      /* interpolating & smoothing for PI/4 */
-     if(fabs(fabs(the)-PI/4.0)<0.001)
+     if(fabs(fabs(the)-SF_PI/4.0)<0.001)
      {
          for( i=0; i<nkx; i++)
          for( j=0; j<nkz; j++)

@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
    sf_init(argc,argv);
 
    timeval time1, time2, time3, time4, time5;
-   time_t timeused = 0;
+   long long timeused = 0;
 
    gettimeofday(&time1, 0);
 
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
    the>>th;
 
    for(int i=0;i<nxz;i++)
-      th[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
 
    /* Fourier spectra demension */
    int nkz,nkx,nk;
@@ -150,11 +150,11 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,kz0,kx0;
 
-   dkx=2*PI/dx/nx;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   kz0=-SF_PI/dz;
 
    sinx.resize(nk);
    cosx.resize(nk);
@@ -183,10 +183,6 @@ int main(int argc, char* argv[])
             i++;
        }
    }
-
-   gettimeofday(&time2, 0);
-   timeused=time2.tv_sec - time1.tv_sec;
-   sf_warning("CPU time for prereparing for low-rank decomp: %d(second)",timeused);
 
    /*****************************************************************************
    *  Calculating P-wave polarization deviation operator for wave-mode separation
@@ -283,9 +279,9 @@ int main(int argc, char* argv[])
 
 
    /****************End of Calculating Projection Deviation Operator****************/
-   gettimeofday(&time3, 0);
-   timeused=time3.tv_sec - time2.tv_sec;
-   sf_warning("CPU time for prereparing for low-rank decomp: %d(second)",timeused);
+   gettimeofday(&time2, 0);
+   timeused=time2.tv_sec - time1.tv_sec;
+   sf_warning("CPU time for matrix low-rank decomp: %d(second)",timeused);
 
    /****************begin to calculate wavefield****************/
    /****************begin to calculate wavefield****************/
@@ -455,8 +451,8 @@ int main(int argc, char* argv[])
         /******* output wavefields: component and divergence *******/
         if(it==ns-1)
 	{
-        gettimeofday(&time4, 0);
-        timeused=time4.tv_sec - time3.tv_sec;
+        gettimeofday(&time3, 0);
+        timeused=time3.tv_sec - time2.tv_sec;
         sf_warning("CPU time for wavefield modeling: %d(second)",timeused);
 
               k=0;
@@ -511,8 +507,8 @@ int main(int argc, char* argv[])
 
               ElasticSepSV<<z;
           
-        gettimeofday(&time5, 0);
-        timeused=time5.tv_sec - time4.tv_sec;
+        gettimeofday(&time4, 0);
+        timeused=time4.tv_sec - time3.tv_sec;
         sf_warning("CPU time for one-step qP/qSV separation: %d(second)",timeused);
 
          }/* (it+1)%ntstep==0 */

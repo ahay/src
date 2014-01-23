@@ -37,7 +37,7 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
                    int nx, int ny, int nz, int nxpad, int nypad, int nzpad, float dx, float dy, float dz)
 /*< fwportpseudop1: forward-propagating in ORT media with pseudo-pure P-wave equation>*/
 {
-    int   i,j,k,l,l_mix,lm,il,jl,kl,ii,jj,kk;
+    int   i,j,k,l,lmix,lm,il,jl,kl,ii,jj,kk;
     float px,py,pz,qx,qy,qz,rx,ry,rz;
     float hpx,hpy,hpz,hqx,hqy,hqz,hrx,hry,hrz;
     float hpxz,hpxy,hpyz,hqxz,hqxy,hqyz,hrxz,hrxy,hryz;
@@ -77,16 +77,16 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
     {
             for(l=-_mix;l<=_mix;l++)
             {
-                        l_mix=l+_mix;
+                        lmix=l+_mix;
                         il=i+l;
                         jl=j+l;
-			px_tmp[i][j][k]+=coeff_1dx[l_mix]*p2[il][j][k]*r2dx;
-			qx_tmp[i][j][k]+=coeff_1dx[l_mix]*q2[il][j][k]*r2dx;
-			rx_tmp[i][j][k]+=coeff_1dx[l_mix]*r2[il][j][k]*r2dx;
+			px_tmp[i][j][k]+=coeff_1dx[lmix]*p2[il][j][k]*r2dx;
+			qx_tmp[i][j][k]+=coeff_1dx[lmix]*q2[il][j][k]*r2dx;
+			rx_tmp[i][j][k]+=coeff_1dx[lmix]*r2[il][j][k]*r2dx;
 
-			py_tmp[i][j][k]+=coeff_1dy[l_mix]*p2[i][jl][k]*r2dy;
-			qy_tmp[i][j][k]+=coeff_1dy[l_mix]*q2[i][jl][k]*r2dy;
-			ry_tmp[i][j][k]+=coeff_1dy[l_mix]*r2[i][jl][k]*r2dy;
+			py_tmp[i][j][k]+=coeff_1dy[lmix]*p2[i][jl][k]*r2dy;
+			qy_tmp[i][j][k]+=coeff_1dy[lmix]*q2[i][jl][k]*r2dy;
+			ry_tmp[i][j][k]+=coeff_1dy[lmix]*r2[i][jl][k]*r2dy;
             }
 	}
 
@@ -158,23 +158,23 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 		hrxy=0;hrxz=0;hryz=0;
 		for(l=-_mix;l<=_mix;l++)
                 {
-                   l_mix=l+_mix;
+                   lmix=l+_mix;
                    jl=j+l;
                    kl=k+l;
 		   if(jl>=0&&jl<nypad)
 		   {
-                        hpxy+=coeff_1dy[l_mix]*px_tmp[i][jl][k]*r2dy;
-                        hqxy+=coeff_1dy[l_mix]*qx_tmp[i][jl][k]*r2dy;
-                        hrxy+=coeff_1dy[l_mix]*rx_tmp[i][jl][k]*r2dy;
+                        hpxy+=coeff_1dy[lmix]*px_tmp[i][jl][k]*r2dy;
+                        hqxy+=coeff_1dy[lmix]*qx_tmp[i][jl][k]*r2dy;
+                        hrxy+=coeff_1dy[lmix]*rx_tmp[i][jl][k]*r2dy;
 		   }
                    if(kl>=0&&kl<nzpad)
 		   {
-                        hpxz+=coeff_1dz[l_mix]*px_tmp[i][j][kl]*r2dz;
-                        hqxz+=coeff_1dz[l_mix]*qx_tmp[i][j][kl]*r2dz;
-                        hrxz+=coeff_1dz[l_mix]*rx_tmp[i][j][kl]*r2dz;
-                        hpyz+=coeff_1dz[l_mix]*py_tmp[i][j][kl]*r2dz;
-                        hqyz+=coeff_1dz[l_mix]*qy_tmp[i][j][kl]*r2dz;
-                        hryz+=coeff_1dz[l_mix]*ry_tmp[i][j][kl]*r2dz;
+                        hpxz+=coeff_1dz[lmix]*px_tmp[i][j][kl]*r2dz;
+                        hqxz+=coeff_1dz[lmix]*qx_tmp[i][j][kl]*r2dz;
+                        hrxz+=coeff_1dz[lmix]*rx_tmp[i][j][kl]*r2dz;
+                        hpyz+=coeff_1dz[lmix]*py_tmp[i][j][kl]*r2dz;
+                        hqyz+=coeff_1dz[lmix]*qy_tmp[i][j][kl]*r2dz;
+                        hryz+=coeff_1dz[lmix]*ry_tmp[i][j][kl]*r2dz;
                     }
                 }// l loop
 

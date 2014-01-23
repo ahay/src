@@ -36,9 +36,7 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
                float **vp0,float **vs0, float **epsilon,float **delta)
 /*< fwpvtielastic: forward-propagating using original elastic equation of displacement in VTI media>*/
 {
-    int   i,j,l, lm, im, jm;
-    float px,pz,pxz, qxz,qx,qz;
-    float vp2,vs2,ep,de,vpx2,vpn2,coef;
+    int   i,j,l;
 		
 	float **px_tmp=sf_floatalloc2(nzpad,nxpad);
 	float **qx_tmp=sf_floatalloc2(nzpad,nxpad);
@@ -46,42 +44,55 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	zero2float(px_tmp,nzpad,nxpad);	
 	zero2float(qx_tmp,nzpad,nxpad);	
 
+#ifdef OPENMP
+#pragma omp parallel for private(i,j,l) \
+	schedule(dynamic) \
+	shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,dx)
+#endif
     for(i=_m;i<nx+_m;i++)
 	for(j=_m;j<nz+_m;j++)
 	{
 		for(l=-_m;l<=_m;l++)
 		{
-                        lm=l+_m;
+            int lm=l+_m;
 			px_tmp[i][j]+=coeff_1dx[lm]*p2[i+l][j]/2.0/dx;
 			qx_tmp[i][j]+=coeff_1dx[lm]*q2[i+l][j]/2.0/dx;
 		}
 	}
 
+#ifdef OPENMP
+#pragma omp parallel for private(i,j,l) \
+	schedule(dynamic) \
+   shared(p1,p2,p3,q1,q2,q3,px_tmp,qx_tmp,\
+          coeff_1dx,coeff_1dz, \
+		  coeff_2dx,coeff_2dz, \
+		  vp0, vs0, epsilon, delta, dt2)
+#endif
     for(i=_m;i<nx+_m;i++)
     {
-       im=i-_m;
+       int im=i-_m;
 	   for(j=_m;j<nz+_m;j++)
 	   {
-               jm=j-_m;
+               int jm=j-_m;
 
-               vp2=vp0[im][jm]*vp0[im][jm];
-               vs2=vs0[im][jm]*vs0[im][jm];
-               ep=1+2*epsilon[im][jm];
-               de=1+2*delta[im][jm];
+               float vp2=vp0[im][jm]*vp0[im][jm];
+               float vs2=vs0[im][jm]*vs0[im][jm];
+               float ep=1+2*epsilon[im][jm];
+               float de=1+2*delta[im][jm];
 
-	       vpx2=vp2*ep;
-	       vpn2=vp2*de;
-               coef=sqrt((vp2-vs2)*(vpn2-vs2));
+	       float vpx2=vp2*ep;
+	       float vpn2=vp2*de;
+               float coef=sqrt((vp2-vs2)*(vpn2-vs2));
 
-		px=0;
-                pz=0;
-		qx=0;
-                qz=0;
-		pxz=0;
-		qxz=0;
+		float px=0;
+                float pz=0;
+		float qx=0;
+                float qz=0;
+		float pxz=0;
+		float qxz=0;
 		for(l=-_m;l<=_m;l++)
 		{
-                     lm=l+_m;
+                     int lm=l+_m;
                      px+=coeff_2dx[lm]*p2[i+l][j];
                      qx+=coeff_2dx[lm]*q2[i+l][j];
                      pz+=coeff_2dz[lm]*p2[i][j+l];
@@ -338,7 +349,7 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
           rz2=0;
 		  for(l=-_m;l<=_m;l++)
 		  {
-		      int lm=l+_m;
+			  int lm=l+_m;
 			  int kl=k+l;
 			  if(k+l>=0&&k+l<ny)
 			  {

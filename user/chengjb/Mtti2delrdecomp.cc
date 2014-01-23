@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 {
    sf_init(argc,argv);
 
-   clock_t t1, t2, t3, t4, t5, t44;
+   clock_t t1, t2, t3, t4;
    float   timespent;
 
    t1=clock();
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
    the>>th;
 
    for(int i=0;i<nxz;i++)
-      th[i] *= PI/180.0;
+      th[i] *= SF_PI/180.0;
 
    /* Fourier spectra demension */
    int nkz,nkx,nk;
@@ -148,11 +148,11 @@ int main(int argc, char* argv[])
 
    float dkz,dkx,kz0,kx0;
 
-   dkx=2*PI/dx/nx;
-   dkz=2*PI/dz/nz;
+   dkx=2*SF_PI/dx/nx;
+   dkz=2*SF_PI/dz/nz;
 
-   kx0=-PI/dx;
-   kz0=-PI/dz;
+   kx0=-SF_PI/dx;
+   kz0=-SF_PI/dz;
 
    sinx.resize(nk);
    cosx.resize(nk);
@@ -181,10 +181,6 @@ int main(int argc, char* argv[])
             i++;
        }
    }
-
-   t2=clock();
-   timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
-   sf_warning("CPU time for prereparing for low-rank decomp: %f(second)",timespent);
 
    /*****************************************************************************
    *  Calculating vector decomposition operator for P-wave
@@ -317,9 +313,9 @@ int main(int argc, char* argv[])
    iC ( samplezzs(rid,nd,mat) );
    map2d1d(rdatazzs, mat, n2zzs, nk);
    /****************End of Calculating vector Decomposition Operator****************/
-   t3=clock();
-   timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
-   sf_warning("CPU time for low-rank decomp: %f(second)",timespent);
+   t2=clock();
+   timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
+   sf_warning("CPU time for operator matrix low-rank decomp: %f(second)",timespent);
 
    /****************begin to calculate wavefield****************/
    /****************begin to calculate wavefield****************/
@@ -451,10 +447,6 @@ int main(int argc, char* argv[])
        k++;
     }
 
-    t4=clock();
-    timespent=(float)(t4-t3)/CLOCKS_PER_SEC;
-    sf_warning("CPU time for preparing for wavefield modeling: %f(second)",timespent);
-
     std::valarray<float> x(nxz);
     float *px, *pz;
     px=sf_floatalloc(nxz);
@@ -514,13 +506,13 @@ int main(int argc, char* argv[])
               }
               Elasticz<<x;
 
-              t44=clock();
-              timespent=(float)(t44-t4)/CLOCKS_PER_SEC;
+              t3=clock();
+              timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
               sf_warning("CPU time for wavefield modeling: %f(second)",timespent);
 
               /* separate qP wave  */
               sf_warning("vector decomposition of P-wave based on lowrank decomp."); 
-              decomplowrank2dp(ldataxxp, rdataxxp, fmidxxp, 
+              decomplowrank2d(ldataxxp, rdataxxp, fmidxxp, 
                                ldataxzp, rdataxzp, fmidxzp,                              
                                ldatazzp, rdatazzp, fmidzzp,
                                px, pz, ijkx, ijkz,
@@ -546,11 +538,11 @@ int main(int argc, char* argv[])
               }
               /* separate qSV wave  */
               sf_warning("vector decomposition of SV-wave based on lowrank decomp."); 
-              decomplowrank2ds(ldataxxs, rdataxxs, fmidxxs, 
-                               ldataxzs, rdataxzs, fmidxzs,                              
-                               ldatazzs, rdatazzs, fmidzzs,
-                               px, pz, ijkx, ijkz,
-                               nx, nz, nxz, nk, M, m2xxs, n2xxs, m2xzs, n2xzs, m2zzs, n2zzs);
+              decomplowrank2d(ldataxxs, rdataxxs, fmidxxs, 
+                              ldataxzs, rdataxzs, fmidxzs,                              
+                              ldatazzs, rdatazzs, fmidzzs,
+                              px, pz, ijkx, ijkz,
+                              nx, nz, nxz, nk, M, m2xxs, n2xxs, m2xzs, n2xzs, m2zzs, n2zzs);
 
               for(i=0;i<nxz;i++)
                  x[i] = px[i];
@@ -560,8 +552,8 @@ int main(int argc, char* argv[])
                  x[i] = pz[i];
               ElasticSVz<<x;
 
-              t5=clock();
-              timespent=(float)(t5-t44)/CLOCKS_PER_SEC;
+              t4=clock();
+              timespent=(float)(t4-t3)/CLOCKS_PER_SEC;
               sf_warning("CPU time for vector decomposition: %f(second)",timespent);
 
          }/* (it+1)%ntstep==0 */

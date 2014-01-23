@@ -146,7 +146,7 @@ void divpoldevttip(float **adx,float **adz, float **apx,float **apz, float **apv
           apvz[hnkx][j]=(apvz[hnkx+1][j] + apvz[hnkx-1][j])/2.0;
      }
 
-       if(fabs(fabs(the)-PI/4.0)<0.001)
+       if(fabs(fabs(the)-SF_PI/4.0)<0.001)
        {
          for( i=0; i<nkx; i++)
          for( j=0; j<nkz; j++)

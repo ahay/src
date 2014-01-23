@@ -197,10 +197,10 @@ int main(int argc, char* argv[])
            sf_warning("hnkx=%d hnkz=%d nkx=%d nkz=%d", hnkx, hnkz, nkx, nkz);
            sf_warning("hnkx1=%d hnkz1=%d nkx1=%d nkz1=%d", hnkx1, hnkz1, nkx1, nkz1);
 
-           dkx=2*PI/dxf/nkx;
-           dkz=2*PI/dzf/nkz;
-	   kxmax=PI/dxf;
-	   kzmax=PI/dzf;
+           dkx=2*SF_PI/dxf/nkx;
+           dkz=2*SF_PI/dzf/nkz;
+	   kxmax=SF_PI/dxf;
+	   kzmax=SF_PI/dzf;
 
            kx=sf_floatalloc(nkx);
            kz=sf_floatalloc(nkx);
@@ -422,7 +422,7 @@ int main(int argc, char* argv[])
 		{
 		      for(i=0;i<nx;i++)
                       {
-			  im=i+_m;
+                           im=i+_m;
 			   for(j=0;j<nz;j++)
 			   {
                                jm=j+_m;

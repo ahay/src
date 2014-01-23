@@ -46,13 +46,6 @@ static std::valarray<float> vp, vs, ep, de, ga;
 static std::valarray<double> rkx, rky, rkz;
 
 /* for low-rank decomp. */
-static int samplexp3(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
-static int sampleyp3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
-static int samplezp3(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
-
-static int samplexsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
-static int sampleysh3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
-static int samplezsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resz);
 
 static int samplexsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resx);
 static int sampleysv3(vector<int>& rs, vector<int>& cs, DblNumMat& resy);
@@ -87,8 +80,6 @@ int main(int argc, char* argv[])
    float eps;
    par.get("eps",eps,1.e-6); // tolerance
        
-   // Generally, npk < 100, if npk is too large, the code will be terminated with warning
-   // "terminate called after throwing an instance of 'std::bad_alloc'"
    int npk;
    par.get("npk",npk,20); // maximum rank
 
@@ -241,69 +232,6 @@ int main(int argc, char* argv[])
    DblNumMat mid, mat;
 
    /*****************************************************************************
-                    low rank decomposition for P-wave's operators
-   * ***************************************************************************/
-   int   m2yp, n2yp, m2xp, n2xp, m2zp, n2zp;
-
-   /********* low rank decomposition p-wave, y-component **********/
-   iC( ddlowrank(nxyz,nk,sampleyp3,eps,npk,lid,rid,mid) );
-   m2yp=mid.m();
-   n2yp=mid.n();
-   sf_warning("lowrank-p-y:m2yp=%d n2yp=%d",m2yp, n2yp);
-
-   float *ldataxp, *fmidxp, *rdataxp;
-   float *ldatayp, *fmidyp, *rdatayp;
-   float *ldatazp, *fmidzp, *rdatazp;
-
-   fmidyp  = sf_floatalloc(m2yp*n2yp);
-   ldatayp = sf_floatalloc(nxyz*m2yp);
-   rdatayp = sf_floatalloc(n2yp*nk);
-
-   map2d1d(fmidyp, mid, m2yp, n2yp);
-
-   iC ( sampleyp3(md,lid,mat) );
-   map2d1d(ldatayp, mat, nxyz, m2yp);
-
-   iC ( sampleyp3(rid,nd,mat) );
-   map2d1d(rdatayp, mat, n2yp, nk);
-
-   /********* low rank decomposition p-wave, x-component **********/
-   iC( ddlowrank(nxyz,nk,samplexp3,eps,npk,lid,rid,mid) );
-   m2xp=mid.m();
-   n2xp=mid.n();
-   sf_warning("lowrank-p-x:m2xp=%d n2xp=%d",m2xp, n2xp);
-
-   fmidxp  = sf_floatalloc(m2xp*n2xp);
-   ldataxp = sf_floatalloc(nxyz*m2xp);
-   rdataxp = sf_floatalloc(n2xp*nk);
-
-   map2d1d(fmidxp, mid, m2xp, n2xp);
-
-   iC ( samplexp3(md,lid,mat) );
-   map2d1d(ldataxp, mat, nxyz, m2xp);
-
-   iC ( samplexp3(rid,nd,mat) );
-   map2d1d(rdataxp, mat, n2xp, nk);
-
-   /********* low rank decomposition p-wave, z-component **********/
-   iC( ddlowrank(nxyz,nk,samplezp3,eps,npk,lid,rid,mid) );
-   m2zp=mid.m();
-   n2zp=mid.n();
-   sf_warning("lowrank-p-z:m2zp=%d n2zp=%d",m2zp, n2zp);
-
-   fmidzp  = sf_floatalloc(m2zp*n2zp);
-   ldatazp = sf_floatalloc(nxyz*m2zp);
-   rdatazp = sf_floatalloc(n2zp*nk);
-
-   map2d1d(fmidzp, mid, m2zp, n2zp);
-
-   iC ( samplezp3(md,lid,mat) );
-   map2d1d(ldatazp, mat, nxyz, m2zp);
-
-   iC ( samplezp3(rid,nd,mat) );
-   map2d1d(rdatazp, mat, n2zp, nk);
-
-   /*****************************************************************************
                     low rank decomposition for SV-wave's operators
    * ***************************************************************************/
    int   m2ysv, n2ysv, m2xsv, n2xsv, m2zsv, n2zsv;
@@ -367,49 +295,6 @@ int main(int argc, char* argv[])
    iC ( samplezsv3(rid,nd,mat) );
    map2d1d(rdatazsv, mat, n2zsv, nk);
    
-   /*****************************************************************************
-                    low rank decomposition for SH-wave's operators
-   * ***************************************************************************/
-   int   m2ysh, n2ysh, m2xsh, n2xsh;
-   float *ldataxsh, *fmidxsh, *rdataxsh;
-   float *ldataysh, *fmidysh, *rdataysh;
-
-   /********* low rank decomposition SH-wave, y-component **********/
-   iC( ddlowrank(nxyz,nk,sampleysh3,eps,npk,lid,rid,mid) );
-   m2ysh=mid.m();
-   n2ysh=mid.n();
-   sf_warning("lowrank-sh-y:m2ysh=%d n2ysh=%d",m2ysh, n2ysh);
-
-   fmidysh  = sf_floatalloc(m2ysh*n2ysh);
-   ldataysh = sf_floatalloc(nxyz*m2ysh);
-   rdataysh = sf_floatalloc(n2ysh*nk);
-
-   map2d1d(fmidysh, mid, m2ysh, n2ysh);
-
-   iC ( sampleysh3(md,lid,mat) );
-   map2d1d(ldataysh, mat, nxyz, m2ysh);
-
-   iC ( sampleysh3(rid,nd,mat) );
-   map2d1d(rdataysh, mat, n2ysh, nk);
-
-   /********* low rank decomposition SH-wave, x-component **********/
-   iC( ddlowrank(nxyz,nk,samplexsh3,eps,npk,lid,rid,mid) );
-   m2xsh=mid.m();
-   n2xsh=mid.n();
-   sf_warning("lowrank-sh-x:m2xsh=%d n2xsh=%d",m2xsh, n2xsh);
-
-   fmidxsh  = sf_floatalloc(m2xsh*n2xsh);
-   ldataxsh = sf_floatalloc(nxyz*m2xsh);
-   rdataxsh = sf_floatalloc(n2xsh*nk);
-
-   map2d1d(fmidxsh, mid, m2xsh, n2xsh);
-
-   iC ( samplexsh3(md,lid,mat) );
-   map2d1d(ldataxsh, mat, nxyz, m2xsh);
-
-   iC ( samplexsh3(rid,nd,mat) );
-   map2d1d(rdataxsh, mat, n2xsh, nk);
-
    /****************End of Calculating Projection Deviation Operator****************/
    t3=clock();
    timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
@@ -423,95 +308,36 @@ int main(int argc, char* argv[])
 
    ikxikyikz(ijkx, ijky, ijkz, nkx, nky, nkz);
 
-    float *px, *py, *pz;
     float *pp, *p;
 
-    px=sf_floatalloc(nxyz);
-    py=sf_floatalloc(nxyz);
-    pz=sf_floatalloc(nxyz);
     pp=sf_floatalloc(nxyz);
     p=sf_floatalloc(nxyz);
 
     int iflag;
 
-	sf_floatread(px, nxyz, Fx);
-	sf_floatread(py, nxyz, Fy);
-	sf_floatread(pz, nxyz, Fz);
+	sf_file F;
+    F = sf_output("out");
+	puthead3x(F, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
 
-	sf_file Fp, Fsv, Fsh;
-    Fp = sf_output("out");
-	Fsv= sf_output("ElasticSV");
-	Fsh= sf_output("ElasticSH");
-
-	puthead3x(Fp, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
-	puthead3x(Fsv, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
-	puthead3x(Fsh, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
-
-    // separate qP wave  
-    iflag=0;
-    sf_warning("separate qP-wave based on lowrank decomp."); 
-    for(k=0;k<nxyz;k++) p[k] = 0.0;
-
-    for(k=0;k<nxyz;k++) pp[k] = px[k];
-    //seplowrank3d(ldataxp,rdataxp,fmidxp,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2xp,n2xp,iflag);
-    seplowrank3d(ldataxp,rdataxp,fmidxp,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2xp,n2xp,iflag);
-
-    for(k=0;k<nxyz;k++) p[k] += pp[k];
-
-    for(k=0;k<nxyz;k++) pp[k] = py[k];
-    seplowrank3d(ldatayp,rdatayp,fmidyp,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2yp,n2yp,iflag);
-
-    for(k=0;k<nxyz;k++) p[k] += pp[k];
-
-    for(k=0;k<nxyz;k++) pp[k] = pz[k];
-    seplowrank3d(ldatazp,rdatazp,fmidzp,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2zp,n2zp,iflag);
-
-    for(k=0;k<nxyz;k++) p[k] += pp[k];
-
-	sf_floatwrite(p, nxyz, Fp);
-
-    // separate qSV wave  
-    iflag=1;
     sf_warning("separate qSV-wave based on lowrank decomp."); 
+    // separate qSV wave  
+    iflag=1;   /*because Asv is a cross product of Ap and Ash, there has a i */
     for(k=0;k<nxyz;k++) p[k] = 0.0;
 
-    for(k=0;k<nxyz;k++) pp[k] = px[k];
+	sf_floatread(pp, nxyz, Fx);
     seplowrank3d(ldataxsv,rdataxsv,fmidxsv,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2xsv,n2xsv,iflag);
-
     for(k=0;k<nxyz;k++) p[k] += pp[k];
 
-    for(k=0;k<nxyz;k++) pp[k] = py[k];
+	sf_floatread(pp, nxyz, Fy);
     seplowrank3d(ldataysv,rdataysv,fmidysv,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2ysv,n2ysv,iflag);
-
     for(k=0;k<nxyz;k++) p[k] += pp[k];
 
-    for(k=0;k<nxyz;k++) pp[k] = pz[k];
+	sf_floatread(pp, nxyz, Fz);
     seplowrank3d(ldatazsv,rdatazsv,fmidzsv,pp,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2zsv,n2zsv,iflag);
-
     for(k=0;k<nxyz;k++) p[k] += pp[k];
 
-	sf_floatwrite(p, nxyz, Fsv);
+	sf_floatwrite(p, nxyz, F);
 
-    // separate qSH wave  
-    iflag=0;
-    sf_warning("separate qSH-wave based on lowrank decomp."); 
-    for(k=0;k<nxyz;k++) p[k] = 0.0;
-
-    seplowrank3d(ldataxsh,rdataxsh,fmidxsh,px,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2xsh,n2xsh,iflag);
-
-    for(k=0;k<nxyz;k++) p[k] += px[k];
-
-    seplowrank3d(ldataysh,rdataysh,fmidysh,py,ijkx,ijky,ijkz,nx,ny,nz,nxyz,nk,m2ysh,n2ysh,iflag);
-
-    for(k=0;k<nxyz;k++) p[k] += py[k];
-
-	// For 3D VTI media, Z-comp. of SH wave is zero
-
-	sf_floatwrite(p, nxyz, Fsh);
-
-    free(px);
-    free(py);
-    free(pz);
     free(pp);
     free(p);
 
@@ -519,15 +345,6 @@ int main(int argc, char* argv[])
     timespent=(float)(t4-t3)/CLOCKS_PER_SEC;
     sf_warning("CPU time for wave-modes separation.: %f(second)",timespent);
 
-    free(ldataxp);
-    free(ldatayp);
-    free(ldatazp);
-    free(rdataxp);
-    free(rdatayp);
-    free(rdatazp);
-    free(fmidxp);
-    free(fmidyp);
-    free(fmidzp);
     free(ldataxsv);
     free(ldataysv);
     free(ldatazsv);
@@ -537,328 +354,8 @@ int main(int argc, char* argv[])
     free(fmidxsv);
     free(fmidysv);
     free(fmidzsv);
-
-    free(ldataxsh);
-    free(ldataysh);
-    free(rdataxsh);
-    free(rdataysh);
-    free(fmidxsh);
-    free(fmidysh);
-
     sf_warning("-------sucessful ending --------");
     exit(0);
-}
-
-/* P-wave y-component dual-domain wave-mode separation operator based on low-rank decomp. */
-static int sampleyp3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    resy.resize(nr,nc);
-
-    setvalue(resy,0.0);
- 
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx = rkx[cs[b]];
-            double ky = rky[cs[b]];
-            double kz = rkz[cs[b]];
-            if(kx==0&&ky==0&&kz==0)
-            {
-               resy(a,b) = 0.0;
-               continue;
-            }
-
-            c33=vp2;
-            c44=vs2;
-            c11=ep2*c33;
-            c66=ga2*c44;
-            c13c44=sqrt((de2*c33-c44)*(c33-c44));
-            c11c66=c11-c66;
-
-            a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-            a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-            a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-            a12= c11c66*kx*ky;
-            a13= c13c44*kx*kz;
-            a23= c13c44*ky*kz;
-
-            Chr[0] = a11;
-            Chr[4] = a22;
-            Chr[8] = a33;
-            Chr[1] = Chr[3] = a12;
-            Chr[2] = Chr[6] = a13;
-            Chr[5] = Chr[7] = a23;
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            upx=Chr[6];
-            upy=Chr[7];
-            upz=Chr[8];
-
-            if(upx*kx + upy*ky+ upz*kz < 0.) {
-                upy=-Chr[7];
-            }
-
-            resy(a,b) = upy;
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
-
-/* P-wave x-component dual-domain wave-mode separation operator based on low-rank decomp. */
-static int samplexp3(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    resx.resize(nr,nc);
-
-    setvalue(resx,0.0);
-
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx = rkx[cs[b]];
-            double ky = rky[cs[b]];
-            double kz = rkz[cs[b]];
-            if(kx==0&&ky==0&&kz==0)
-            {
-               resx(a,b) = 0.0;
-               continue;
-            }
-
-            c33=vp2;
-            c44=vs2;
-            c11=ep2*c33;
-            c66=ga2*c44;
-            c13c44=sqrt((de2*c33-c44)*(c33-c44));
-            c11c66=c11-c66;
-
-            a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-            a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-            a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-            a12= c11c66*kx*ky;
-            a13= c13c44*kx*kz;
-            a23= c13c44*ky*kz;
-
-            Chr[0] = a11;
-            Chr[4] = a22;
-            Chr[8] = a33;
-            Chr[1] = Chr[3] = a12;
-            Chr[2] = Chr[6] = a13;
-            Chr[5] = Chr[7] = a23;
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            upx=Chr[6];
-            upy=Chr[7];
-            upz=Chr[8];
-
-            if(upx*kx + upy*ky+ upz*kz < 0.) {
-                upx=-Chr[6];
-            }
-
-            resx(a,b) = upx;
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
-
-/* P-wave z-component dual-domain wave-mode separation operator based on low-rank decomp. */
-static int samplezp3(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    resz.resize(nr,nc);
-
-    setvalue(resz,0.0);
-
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
-
-        for(int b=0; b<nc; b++)
-        {
-            double kx = rkx[cs[b]];
-            double ky = rky[cs[b]];
-            double kz = rkz[cs[b]];
-            if(kx==0&&ky==0&&kz==0)
-            {
-               resz(a,b) = 0.0;
-               continue;
-            }
-
-            c33=vp2;
-            c44=vs2;
-            c11=ep2*c33;
-            c66=ga2*c44;
-            c13c44=sqrt((de2*c33-c44)*(c33-c44));
-            c11c66=c11-c66;
-
-            a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-            a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-            a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-            a12= c11c66*kx*ky;
-            a13= c13c44*kx*kz;
-            a23= c13c44*ky*kz;
-
-            Chr[0] = a11;
-            Chr[4] = a22;
-            Chr[8] = a33;
-            Chr[1] = Chr[3] = a12;
-            Chr[2] = Chr[6] = a13;
-            Chr[5] = Chr[7] = a23;
-
-            // LAPACK's ssyev routine (slow but accurate) 
-            dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-            upx=Chr[6];
-            upy=Chr[7];
-            upz=Chr[8];
-
-            if(upx*kx + upy*ky+ upz*kz < 0.) {
-                upz=-Chr[8];
-            }
-
-            resz(a,b) = upz;
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
-
-/* SH-wave y-component dual-domain wave-mode separation operator based on low-rank decomp. */
-static int sampleysh3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    resy.resize(nr,nc);
-
-    setvalue(resy,0.0);
-
-    double usx, usy, usz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        for(int b=0; b<nc; b++)
-        {
-            double kx = rkx[cs[b]];
-            double ky = rky[cs[b]];
-            double kz = rkz[cs[b]];
-            if(kx==0&&ky==0&&kz==0)
-            {
-               resy(a,b) = 0.0;
-               continue;
-            }
-
-            /* define SH's polarization in VTI medium */
-            usx= -ky;
-            usy= kx;
-            //usz= 0.0;
- 
-            double rk=sqrt(usx*usx+usy*usy);
-			if(rk==0.0)
-                resy(a,b) = 0.0;
-			else{
-                usy /= rk;
-			    double ss=sqrt(1.0-kz*kz);
-                resy(a,b) = usy*ss;        /* scaling operator to tackle kiss singularity */
-			}
-              
-         }// b loop
-    }// a loop
-
-    return 0;
-}
-
-/* SH-wave x-component dual-domain wave-mode separation operator based on low-rank decomp. */
-static int samplexsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
-{
-    int nr = rs.size();
-    int nc = cs.size();
-
-    resx.resize(nr,nc);
-
-    setvalue(resx,0.0);
-
-    double usx, usy, usz;
-
-    for(int a=0; a<nr; a++) 
-    {
-        for(int b=0; b<nc; b++)
-        {
-            double kx = rkx[cs[b]];
-            double ky = rky[cs[b]];
-            double kz = rkz[cs[b]];
-            if(kx==0&&ky==0&&kz==0)
-            {
-               resx(a,b) = 0.0;
-               continue;
-            }
-
-            /* define SH's polarization in VTI medium */
-            usx= -ky;
-            usy= kx;
-            //usz= 0.0;
- 
-            double rk=sqrt(usx*usx+usy*usy);
-			if(rk==0.0)
-                resx(a,b) = 0.0;
-			else{
-                usx /= rk;
-			    double ss=sqrt(1.0-kz*kz);
-                resx(a,b) = usx*ss;        /* scaling operator to tackle kiss singularity */
-			}
-              
-         }// b loop
-    }// a loop
-
-    return 0;
 }
 
 /* SV-wave y-component dual-domain wave-mode separation operator based on low-rank decomp. */
@@ -1119,80 +616,6 @@ static int samplezsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
     }// a loop
 
     return 0;
-}
-
-/* P-wave y-component polarization operator */
-static void polyp3dtti(float ***ap, int nx, int ny, int nz, int im)
-{
-    int     i, j, k, l;
-
-    double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
-
-    double upx, upy, upz;
-
-    double vp2 = vp[im]*vp[im];
-    double vs2 = vs[im]*vs[im];
-    double ep2 = 1.0+2*ep[im];
-    double de2 = 1.0+2*de[im];
-    double ga2 = 1.0+2*ga[im];
-
-    for( l=0; l<ny ; l++)
-    for( i=0; i<nx ; i++)
-    for( j=0; j<nz ; j++)
-         ap[l][i][j]=0.0;
-
-    k=0;
-    for( l=0; l<ny ; l++)
-    for( i=0; i<nx ; i++)
-    for( j=0; j<nz ; j++)
-    {
-         double kx = rkx[k];
-         double ky = rky[k];
-         double kz = rkz[k];
-         if(kx==0&&ky==0&&kz==0)
-         {
-            ap[l][i][j]=0.0;
-            continue;
-         }
-         k++;
-
-         c33=vp2;
-         c44=vs2;
-         c11=ep2*c33;
-         c66=ga2*c44;
-         c13c44=sqrt((de2*c33-c44)*(c33-c44));
-         c11c66=c11-c66;
-
-         a11= c11*kx*kx + c66*ky*ky + c44*kz*kz;
-         a22= c66*kx*kx + c11*ky*ky + c44*kz*kz;
-         a33= c44*kx*kx + c44*ky*ky + c33*kz*kz;
-         a12= c11c66*kx*ky;
-         a13= c13c44*kx*kz;
-         a23= c13c44*ky*kz;
-
-         Chr[0] = a11;
-         Chr[4] = a22;
-         Chr[8] = a33;
-         Chr[1] = Chr[3] = a12;
-         Chr[2] = Chr[6] = a13;
-         Chr[5] = Chr[7] = a23;
-
-         // LAPACK's ssyev routine (slow but accurate) 
-         dsyev_(&jobz, &uplo, &M, Chr, &LDA, ww, work, &LWORK, &INFO);
-
-         upx=Chr[6];
-         upy=Chr[7];
-         upz=Chr[8];
-
-         if(upx*kx + upy*ky+ upz*kz < 0.) {
-             upx=-Chr[6];
-             upy=-Chr[7];
-             upz=-Chr[8];
-         }
-
-         ap[l][i][j] = (float)upy;
-      }
-
 }
 
 static void map2d1d(float *d, DblNumMat mat, int m, int n)

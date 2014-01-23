@@ -178,9 +178,9 @@ void coeff1dmix(float* x, float delta)
         for(i=-_m;i<=_m;i++)
         {
                 if(i==0)
-		    x[i+_m]=0;
+                        x[i+_m]=0;
                 else
-		    x[i+_m]=2*fac(_m)*fac(_m)*pow(-1,i+1)/(i*fac(i+_m)*fac(_m-i));
+                       x[i+_m]=2*fac(_m)*fac(_m)*pow(-1,i+1)/(i*fac(i+_m)*fac(_m-i));
         }
 }
 

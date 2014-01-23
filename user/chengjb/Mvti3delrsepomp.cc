@@ -20,6 +20,7 @@
 */
 #include <rsf.hh>
 #include <rsf.h>
+#include <omp.h>
 #include <assert.h>
 
 /* low rank decomposition  */
@@ -30,6 +31,7 @@ using namespace std;
 
 /* prepared head files by myself */
 #include "_cjb.h"
+#include "_lapack.h"
 
 /* head files aumatically produced from C programs */
 extern "C"{
@@ -87,8 +89,6 @@ int main(int argc, char* argv[])
    float eps;
    par.get("eps",eps,1.e-6); // tolerance
        
-   // Generally, npk < 100, if npk is too large, the code will be terminated with warning
-   // "terminate called after throwing an instance of 'std::bad_alloc'"
    int npk;
    par.get("npk",npk,20); // maximum rank
 
@@ -176,57 +176,60 @@ int main(int argc, char* argv[])
    gam>>ga;
 
    /* Fourier spectra demension */
-   int nkz,nkx,nky,nk;
+   int nkz,nkx,nky,nk,nxz;
    nkx=nx;
    nky=ny;
    nkz=nz;
+   nxz=nx*nz;
    nk = nky*nkx*nkz;
 
    sf_warning("nxyz=%d nk=%d",nxyz,nk);
 
    float dkz,dkx,dky,kz0,kx0,ky0;
 
-   dkx=2*SF_PI/dx/nx;
-   dky=2*SF_PI/dy/ny;
-   dkz=2*SF_PI/dz/nz;
+   dkx=2*PI/dx/nx;
+   dky=2*PI/dy/ny;
+   dkz=2*PI/dz/nz;
 
-   kx0=-SF_PI/dx;
-   ky0=-SF_PI/dy;
-   kz0=-SF_PI/dz;
+   kx0=-PI/dx;
+   ky0=-PI/dy;
+   kz0=-PI/dz;
 
    rkx.resize(nk);
    rky.resize(nk);
    rkz.resize(nk);
 
    double kx, ky, kz, k2, rk;
-   int    i=0, j=0, k=0, ix, iy, iz;
-   
+   int    i=0, j=0, k=0, ix, iy, iz,iyy,ixx;
+
+#ifdef OPENMP
+#pragma omp parallel for private(iy,ix,iz,iyy,ixx,i,ky,kx,kz,k2,rk) \
+        schedule(dynamic) \
+        shared(rky, rkx, rkz, nky, nkx, nkz, dky, dkx, dkz, kx0, ky0, kz0)
+#endif
    for(iy=0; iy < nky; iy++)
    {
+	 iyy=iy*nxz;
      ky = ky0+iy*dky;
      if(ky==0.0) ky=0.0000000001*dky;
-
      for(ix=0; ix < nkx; ix++)
      {
+	   ixx=iyy+ix*nz;
        kx = kx0+ix*dkx;
        if(kx==0.0) kx=0.0000000001*dkx;
-
-         for (iz=0; iz < nkz; iz++)
-         {
+       for (iz=0; iz < nkz; iz++)
+       {
             kz = kz0+iz*dkz;
             if(kz==0.0) kz=0.0000000001*dkz;
-
             k2 = ky*ky+kx*kx+kz*kz;
             rk = sqrt(k2);
-
+			i=ixx+iz;
             rky[i] = ky/rk;
             rkx[i] = kx/rk;
             rkz[i] = kz/rk;
-            i++;
-         }
-      }
+       }
+     }
    }
-
    t2=clock();
    timespent=(float)(t2-t1)/CLOCKS_PER_SEC;
 
@@ -244,64 +247,72 @@ int main(int argc, char* argv[])
                     low rank decomposition for P-wave's operators
    * ***************************************************************************/
    int   m2yp, n2yp, m2xp, n2xp, m2zp, n2zp;
+   int   np;
+   int   ntask1 = 8;
 
+#pragma omp parallel
+   np = omp_get_num_threads();
+   sf_warning("Total threads number: np=%d", np);
+
+//#pragma omp parallel for private(i,j,kk,k) \
+//#        schedule(dynamic) \
+//#        shared(d, mat, m, n)
    /********* low rank decomposition p-wave, y-component **********/
-   iC( ddlowrank(nxyz,nk,sampleyp3,eps,npk,lid,rid,mid) );
-   m2yp=mid.m();
-   n2yp=mid.n();
-   sf_warning("lowrank-p-y:m2yp=%d n2yp=%d",m2yp, n2yp);
-
    float *ldataxp, *fmidxp, *rdataxp;
    float *ldatayp, *fmidyp, *rdatayp;
    float *ldatazp, *fmidzp, *rdatazp;
 
-   fmidyp  = sf_floatalloc(m2yp*n2yp);
-   ldatayp = sf_floatalloc(nxyz*m2yp);
-   rdatayp = sf_floatalloc(n2yp*nk);
-
-   map2d1d(fmidyp, mid, m2yp, n2yp);
-
-   iC ( sampleyp3(md,lid,mat) );
-   map2d1d(ldatayp, mat, nxyz, m2yp);
-
-   iC ( sampleyp3(rid,nd,mat) );
-   map2d1d(rdatayp, mat, n2yp, nk);
+   int ip;
+   ip = omp_get_thread_num();
+   if(ip==0){ // 1st thread
+     sf_warning("ip= %d",ip);
+     iC( ddlowrank(nxyz,nk,sampleyp3,eps,npk,lid,rid,mid) );
+     m2yp=mid.m();
+     n2yp=mid.n();
+     sf_warning("1st thread: lowrank-p-y:m2yp=%d n2yp=%d",m2yp, n2yp);
+     fmidyp  = sf_floatalloc(m2yp*n2yp);
+     ldatayp = sf_floatalloc(nxyz*m2yp);
+     rdatayp = sf_floatalloc(n2yp*nk);
+     map2d1d(fmidyp, mid, m2yp, n2yp);
+     iC ( sampleyp3(md,lid,mat) );
+     map2d1d(ldatayp, mat, nxyz, m2yp);
+     iC ( sampleyp3(rid,nd,mat) );
+     map2d1d(rdatayp, mat, n2yp, nk);
+   }
 
    /********* low rank decomposition p-wave, x-component **********/
-   iC( ddlowrank(nxyz,nk,samplexp3,eps,npk,lid,rid,mid) );
-   m2xp=mid.m();
-   n2xp=mid.n();
-   sf_warning("lowrank-p-x:m2xp=%d n2xp=%d",m2xp, n2xp);
-
-   fmidxp  = sf_floatalloc(m2xp*n2xp);
-   ldataxp = sf_floatalloc(nxyz*m2xp);
-   rdataxp = sf_floatalloc(n2xp*nk);
-
-   map2d1d(fmidxp, mid, m2xp, n2xp);
-
-   iC ( samplexp3(md,lid,mat) );
-   map2d1d(ldataxp, mat, nxyz, m2xp);
-
-   iC ( samplexp3(rid,nd,mat) );
-   map2d1d(rdataxp, mat, n2xp, nk);
+   if(ip==1){ // 2nd thread
+     sf_warning("ip= %d",ip);
+     iC( ddlowrank(nxyz,nk,samplexp3,eps,npk,lid,rid,mid) );
+     m2xp=mid.m();
+     n2xp=mid.n();
+     sf_warning("lowrank-p-x:m2xp=%d n2xp=%d",m2xp, n2xp);
+     fmidxp  = sf_floatalloc(m2xp*n2xp);
+     ldataxp = sf_floatalloc(nxyz*m2xp);
+     rdataxp = sf_floatalloc(n2xp*nk);
+     map2d1d(fmidxp, mid, m2xp, n2xp);
+     iC ( samplexp3(md,lid,mat) );
+     map2d1d(ldataxp, mat, nxyz, m2xp);
+     iC ( samplexp3(rid,nd,mat) );
+     map2d1d(rdataxp, mat, n2xp, nk);
+   }
 
    /********* low rank decomposition p-wave, z-component **********/
-   iC( ddlowrank(nxyz,nk,samplezp3,eps,npk,lid,rid,mid) );
-   m2zp=mid.m();
-   n2zp=mid.n();
-   sf_warning("lowrank-p-z:m2zp=%d n2zp=%d",m2zp, n2zp);
-
-   fmidzp  = sf_floatalloc(m2zp*n2zp);
-   ldatazp = sf_floatalloc(nxyz*m2zp);
-   rdatazp = sf_floatalloc(n2zp*nk);
-
-   map2d1d(fmidzp, mid, m2zp, n2zp);
-
-   iC ( samplezp3(md,lid,mat) );
-   map2d1d(ldatazp, mat, nxyz, m2zp);
-
-   iC ( samplezp3(rid,nd,mat) );
-   map2d1d(rdatazp, mat, n2zp, nk);
+   if(ip==2){ // 3rd thread
+     sf_warning("ip= %d",ip);
+     iC( ddlowrank(nxyz,nk,samplezp3,eps,npk,lid,rid,mid) );
+     m2zp=mid.m();
+     n2zp=mid.n();
+     sf_warning("lowrank-p-z:m2zp=%d n2zp=%d",m2zp, n2zp);
+     fmidzp  = sf_floatalloc(m2zp*n2zp);
+     ldatazp = sf_floatalloc(nxyz*m2zp);
+     rdatazp = sf_floatalloc(n2zp*nk);
+     map2d1d(fmidzp, mid, m2zp, n2zp);
+     iC ( samplezp3(md,lid,mat) );
+     map2d1d(ldatazp, mat, nxyz, m2zp);
+     iC ( samplezp3(rid,nd,mat) );
+     map2d1d(rdatazp, mat, n2zp, nk);
+   }
 
    /*****************************************************************************
                     low rank decomposition for SV-wave's operators
@@ -316,54 +327,40 @@ int main(int argc, char* argv[])
    m2ysv=mid.m();
    n2ysv=mid.n();
    sf_warning("lowrank-sv-y:m2ysv=%d n2ysv=%d",m2ysv, n2ysv);
-
    fmidysv  = sf_floatalloc(m2ysv*n2ysv);
    ldataysv = sf_floatalloc(nxyz*m2ysv);
    rdataysv = sf_floatalloc(n2ysv*nk);
-
    map2d1d(fmidysv, mid, m2ysv, n2ysv);
-
    iC ( sampleysv3(md,lid,mat) );
    map2d1d(ldataysv, mat, nxyz, m2ysv);
-
    iC ( sampleysv3(rid,nd,mat) );
    map2d1d(rdataysv, mat, n2ysv, nk);
 
    /********* low rank decomposition SV-wave, x-component **********/
-
    iC( ddlowrank(nxyz,nk,samplexsv3,eps,npk,lid,rid,mid) );
    m2xsv=mid.m();
    n2xsv=mid.n();
    sf_warning("lowrank-sv-x:m2xsv=%d n2xsv=%d",m2xsv, n2xsv);
-
    fmidxsv  = sf_floatalloc(m2xsv*n2xsv);
    ldataxsv = sf_floatalloc(nxyz*m2xsv);
    rdataxsv = sf_floatalloc(n2xsv*nk);
-
    map2d1d(fmidxsv, mid, m2xsv, n2xsv);
-
    iC ( samplexsv3(md,lid,mat) );
    map2d1d(ldataxsv, mat, nxyz, m2xsv);
-
    iC ( samplexsv3(rid,nd,mat) );
    map2d1d(rdataxsv, mat, n2xsv, nk);
 
    /********* low rank decomposition SV-wave, z-component **********/
-
    iC( ddlowrank(nxyz,nk,samplezsv3,eps,npk,lid,rid,mid) );
    m2zsv=mid.m();
    n2zsv=mid.n();
    sf_warning("lowrank-sv-z:m2zsv=%d n2zsv=%d",m2zsv, n2zsv);
-
    fmidzsv  = sf_floatalloc(m2zsv*n2zsv);
    ldatazsv = sf_floatalloc(nxyz*m2zsv);
    rdatazsv = sf_floatalloc(n2zsv*nk);
-
    map2d1d(fmidzsv, mid, m2zsv, n2zsv);
-
    iC ( samplezsv3(md,lid,mat) );
    map2d1d(ldatazsv, mat, nxyz, m2zsv);
-
    iC ( samplezsv3(rid,nd,mat) );
    map2d1d(rdatazsv, mat, n2zsv, nk);
    
@@ -379,16 +376,12 @@ int main(int argc, char* argv[])
    m2ysh=mid.m();
    n2ysh=mid.n();
    sf_warning("lowrank-sh-y:m2ysh=%d n2ysh=%d",m2ysh, n2ysh);
-
    fmidysh  = sf_floatalloc(m2ysh*n2ysh);
    ldataysh = sf_floatalloc(nxyz*m2ysh);
    rdataysh = sf_floatalloc(n2ysh*nk);
-
    map2d1d(fmidysh, mid, m2ysh, n2ysh);
-
    iC ( sampleysh3(md,lid,mat) );
    map2d1d(ldataysh, mat, nxyz, m2ysh);
-
    iC ( sampleysh3(rid,nd,mat) );
    map2d1d(rdataysh, mat, n2ysh, nk);
 
@@ -397,16 +390,12 @@ int main(int argc, char* argv[])
    m2xsh=mid.m();
    n2xsh=mid.n();
    sf_warning("lowrank-sh-x:m2xsh=%d n2xsh=%d",m2xsh, n2xsh);
-
    fmidxsh  = sf_floatalloc(m2xsh*n2xsh);
    ldataxsh = sf_floatalloc(nxyz*m2xsh);
    rdataxsh = sf_floatalloc(n2xsh*nk);
-
    map2d1d(fmidxsh, mid, m2xsh, n2xsh);
-
    iC ( samplexsh3(md,lid,mat) );
    map2d1d(ldataxsh, mat, nxyz, m2xsh);
-
    iC ( samplexsh3(rid,nd,mat) );
    map2d1d(rdataxsh, mat, n2xsh, nk);
 
@@ -440,8 +429,8 @@ int main(int argc, char* argv[])
 
 	sf_file Fp, Fsv, Fsh;
     Fp = sf_output("out");
-	Fsv= sf_output("ElasticSV");
-	Fsh= sf_output("ElasticSH");
+	Fsv= sf_output("ElasticSepSV");
+	Fsh= sf_output("ElasticSepSH");
 
 	puthead3x(Fp, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
 	puthead3x(Fsv, nz, nx, ny, dz/1000, dx/1000, dy/1000, fz/1000, fx/1000, fy/1000);
@@ -560,23 +549,23 @@ static int sampleyp3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
     setvalue(resy,0.0);
  
     double c33, c44, c66, c11, c13c44, c11c66, a11, a12, a22, a33, a13, a23;
+    double upx, upy, upz, vp2, vs2, ep2, de2, ga2, kx, ky, kz;
+	int    i, a, b;
 
-    double upx, upy, upz;
-
-    for(int a=0; a<nr; a++) 
+    for(a=0; a<nr; a++) 
     {
-        int i=rs[a];
-        double vp2 = vp[i]*vp[i];
-        double vs2 = vs[i]*vs[i];
-        double ep2 = 1.0+2*ep[i];
-        double de2 = 1.0+2*de[i];
-        double ga2 = 1.0+2*ga[i];
+        i=rs[a];
+        vp2 = vp[i]*vp[i];
+        vs2 = vs[i]*vs[i];
+        ep2 = 1.0+2*ep[i];
+        de2 = 1.0+2*de[i];
+        ga2 = 1.0+2*ga[i];
 
-        for(int b=0; b<nc; b++)
+        for(b=0; b<nc; b++)
         {
-            double kx = rkx[cs[b]];
-            double ky = rky[cs[b]];
-            double kz = rkz[cs[b]];
+            kx = rkx[cs[b]];
+            ky = rky[cs[b]];
+            kz = rkz[cs[b]];
             if(kx==0&&ky==0&&kz==0)
             {
                resy(a,b) = 0.0;
@@ -1198,6 +1187,7 @@ static void polyp3dtti(float ***ap, int nx, int ny, int nz, int im)
 static void map2d1d(float *d, DblNumMat mat, int m, int n)
 {
    int i, j, k, kk;
+
    for(i=0; i < m; i++){
       kk = i*n;	  
       for (j=0; j < n; j++)
