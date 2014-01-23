@@ -32,7 +32,7 @@ int counttokens(const char* delimittedtokens, const char* delimiters)
 {
   char* one_token;
   char* copy_of_delimittedtokens;
-  int numtoken;
+  int numtoken=0;
 
   if(NULL==delimittedtokens)return 0;
   /* allocate and copy delimittedtokens
@@ -43,14 +43,14 @@ int counttokens(const char* delimittedtokens, const char* delimiters)
   
   one_token=strtok(copy_of_delimittedtokens,delimiters);
   while (one_token!=NULL){
-    fprintf(stderr,"before increment numtoken=%d\n",numtoken); 
+    if(false)fprintf(stderr,"before increment numtoken=%d\n",numtoken); 
     numtoken++;
     one_token=strtok(NULL,delimiters);
   }
-  fprintf(stderr,"free(copy_of_delimittedtokens)\n");
+  if(false)fprintf(stderr,"free(copy_of_delimittedtokens)\n");
   /* did not save and of the pointers returned by strtok, so OK to free! */
   free(copy_of_delimittedtokens);
-  fprintf(stderr,"return from counttokens\n");
+  if(false)fprintf(stderr,"return from counttokens numtoken=%d\n",numtoken);
   return numtoken;
 }
 
@@ -65,6 +65,7 @@ char** delimittedtokens2list(const char* delimittedtokens,
   
   /* count number of keys */
   *numtoken=counttokens(delimittedtokens,delimiters);
+  if(false)fprintf(stderr,"in delimittedtokens2list *numtoken=%d\n",*numtoken);
   if(0==*numtoken)return NULL;
   /* break the long string into an array  of strings */
   list_of_tokens=(char**)sf_alloc(*numtoken,sizeof(char*)); 
