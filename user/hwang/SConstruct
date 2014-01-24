@@ -28,7 +28,7 @@ cmpiprogs = '''transpmpi'''
 #--------------------------------------------------------------------------
 lapack = env.get('LAPACK')
 #print lapack
-if lapack:
+if lapack and not isinstance(lapack,bool):
     env.Append(LIBS=lapack)
 fftw = env.get('FFTW')
 if fftw:                                                                         
