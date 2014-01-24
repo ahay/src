@@ -1,5 +1,6 @@
 import os,sys
-sys.path.append(os.path.join(os.environ.get('RSFSRC'), 'user', 'hwang'))
+RSFSRC = os.environ.get('RSFSRC', '../..')
+sys.path.append(os.path.join(RSFSRC, 'user', 'hwang'))
 import mybldutil
 
 try:
