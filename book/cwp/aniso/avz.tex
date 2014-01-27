@@ -8,7 +8,7 @@ than those for the VTI model. We then extend the theory to vertically heterogene
 VTI media and perform a comparative analysis of various three-parameter 
 nonhyperbolic approximations.
 
-\inputdir{Math}
+\inputdir{Sage}
 
 \subsection{Vertically heterogeneous isotropic model} 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -152,12 +152,12 @@ V_g^2(\psi) = V_z^2\,\left[\,1 + 2\,\delta\,\sin^2{\psi} +
 2\,\eta\,(1 - \cos{\psi})^2\right]\;.
 \label{eqn:vgvz}
 \end{equation}
-Figure \ref{fig:nmofrz} illustrates the difference between the VTI
+Figure \ref{fig:nmofrz1,nmofrz2} illustrates the difference between the VTI
 model and the effective anisotropy implied by the Malovichko approximation. 
 The differences are noticeable in both the shapes of the effective wavefronts
-(Figure \ref{fig:nmofrz}a) and the moveouts (Figure \ref{fig:nmofrz}b).
+(Figure \ref{fig:nmofrz1}) and the moveouts (Figure \ref{fig:nmofrz2}).
 
-\plot{nmofrz}{width=6in,height=1.5in}{Comparison of the
+\multiplot{2}{nmofrz1,nmofrz2}{width=2.8in,height=1.4in}{Comparison of the
 wavefronts (a) and moveouts (b) in the VTI (solid) and vertically
 inhomogeneous isotropic media (dashed). The values of the effective 
 vertical, horizontal, and NMO velocities are the same
@@ -208,7 +208,7 @@ $S_2$, which range from $1$ to $2$, the expression (\ref{eqn:tsvmal}) is
 positive. This means that the anisotropic approximation
 (\ref{eqn:TIapprox}) overestimates traveltimes in the isotropic
 heterogeneous model even more than does the shifted hyperbola 
-(\ref{eqn:malovichko}) shown in Figure~\ref{fig:nmofrz}b. 
+(\ref{eqn:malovichko}) shown in Figure~\ref{fig:nmofrz2}. 
 Below, we examine which of the two approximations is more suitable when
 the model includes both vertical heterogeneity and anisotropy.
 
