@@ -363,13 +363,13 @@ def center3d(x,y,z,par):
 # plot wavelet
 def waveplot(custom,par):
     return '''
-    graph min2=-1 max2=+1 title=""
+    graph title="" min1=%g min2=-1 max2=+1
     plotfat=5 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
     parallel2=n screenratio=0.5 screenht=7
     %s
-    ''' % (par['lt'],par['ut'],
+    ''' % (par['ot'],par['lt'],par['ut'],
            par['labelattr']+' '+custom)
 
 def spectrum(custom,par):

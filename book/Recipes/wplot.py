@@ -39,7 +39,7 @@ def param(par):
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
     # make room to plot acquisition
-    par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
+    if(not par.has_key('zmin')):     par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
 
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
