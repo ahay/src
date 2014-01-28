@@ -36,7 +36,7 @@ float gscale(const float *x, int n, float *g)
 
 int main(int argc, char* argv[])
 {
-    bool velocity, causal, limit, verb, adj, shape, scale;
+    bool velocity, causal, verb, adj, shape, scale;
     int dimw, dimt, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], iw, nw, ir, nr;
     long nt;
     int iter, niter, liter, cgiter, count;
@@ -209,9 +209,6 @@ int main(int argc, char* argv[])
 		dv = NULL;
 	    }
 	    
-	    if (!sf_getbool("limit",&limit)) limit=false;
-	    /* if y, limit computation within receiver coverage */
-
 	    if (!sf_getbool("shape",&shape)) shape=false;
 	    /* shaping regularization (default no) */
 	    
@@ -315,7 +312,7 @@ int main(int argc, char* argv[])
 	    /* initialize eikonal */
 	    dsreiko_init(n,o,d,
 			 thres,tol,nloop,
-			 causal,limit,dp);
+			 causal,dp);
 	    
 	    /* initialize operator */
 	    dsrtomo_init(dimt,n,d);

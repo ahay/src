@@ -27,7 +27,7 @@ struct Upd {
 
 static double thres, tol, miu;
 static int nloop;
-static bool causal, limit;
+static bool causal;
 
 static float *o, *v, *d;
 static int *n, *in;
@@ -66,7 +66,7 @@ void dsreiko_init(int *n_in   /* length */,
 		  float *o_in /* origin */,
 		  float *d_in /* increment */,
 		  float thres_in, float tol_in, int nloop_in,
-		  bool causal_in, bool limit_in, int *dp_in)
+		  bool causal_in, int *dp_in)
 /*< initialize >*/
 {
     long maxband;
@@ -94,12 +94,11 @@ void dsreiko_init(int *n_in   /* length */,
     tol = (double) tol_in;
     nloop = nloop_in;
     causal = causal_in;
-    limit = limit_in;
     dp = dp_in;
 
     miu = d[0]/d[1];
 
-    if (limit && (dp != NULL)) {
+    if (dp != NULL) {
 	nrec = 0;
 	
 	for (i=0; i < n[1]*n[2]; i++) {
@@ -126,8 +125,10 @@ void dsreiko_fastmarch(float *time /* time */,
     xn = x;
     x1 = x+1;
 
-    for (j=0; j < n[1]; j++) {
-      if (dp[j*n[1]+j] == 1) ncheck++;
+    if (dp != NULL) {
+	for (j=0; j < n[1]; j++) {
+	    if (dp[j*n[1]+j] == 1) ncheck++;
+	}
     }
 
     /* initialize from zero-offset plane */
@@ -149,7 +150,7 @@ void dsreiko_fastmarch(float *time /* time */,
 	in[i] = SF_IN;
 
 	/* check receiver coverage */
-	if (limit && (dp != NULL)) {
+	if (dp != NULL) {
 	    linetocart(3,n,i,ii);
 
 	    if (ii[0] != 0) continue;
