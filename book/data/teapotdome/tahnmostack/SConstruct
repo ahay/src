@@ -173,7 +173,7 @@ Flow(['mappedfieldsort.rsf','mappedfieldsort_hdr.rsf'],
      '''
      sftahsort \
   	input=../fetch/npr3_field.rsf \
-	sort="iline,xline,offset" \
+	sort="iline:100,200,50  +xline:100,140,10 -offset" \
         verbose=1  \
      | sftahmakeskey pkey=iline,xline skey=cdpt verbose=1 \
      | sftahwrite \
