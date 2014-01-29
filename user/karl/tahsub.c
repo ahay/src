@@ -294,5 +294,4 @@ void tahwritemapped(int verbose, float* trace, void* iheader,
       fprintf(stderr,"\n");
     }
   }
-  
 }

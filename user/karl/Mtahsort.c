@@ -95,7 +95,13 @@ int main(int argc, char* argv[])
   char* infile_filename=NULL;
   char* headers_filename=NULL;
   sortkey** myarray_pointers_to_sortkey;
+  char* sort;
   char** sortheadernames;
+  char** sorttokens1;
+  double* signsortname;
+  double* sortmin;
+  double* sortmax;
+  double* sortinc;
   int numtracestosort;
   int size_myarray_pointers_to_sortkey;
   int i1_headers;
@@ -103,6 +109,7 @@ int main(int argc, char* argv[])
   int isortheader;
   int bytes_in_my_sortkey;
   bool allzero;
+  bool passrangetest;
   
   sf_init (argc,argv);
 
@@ -194,7 +201,8 @@ int main(int argc, char* argv[])
 
   intrace= sf_floatalloc(n1_traces);
 
-  if(verbose>1)fprintf(stderr,"need to add 2 words.  Record type and record length\n");
+  if(verbose>1)
+    fprintf(stderr,"need to add 2 words, record type and record length.\n");
   sf_putint(out,"n1",n1_traces+n1_headers+2);
   sf_putint(out,"n1_traces",n1_traces);
 
@@ -217,16 +225,96 @@ int main(int argc, char* argv[])
   if(verbose>1)fprintf(stderr,"fileflush out\n");
   sf_fileflush(out,infile);
 
-  /* kls need to get these from command line
-     sortheadernames={"iline","xline","offset"};
+  /* get the sort key */
+  sort=sf_getstring("sort");
+  /* /n
+     list of the sort keys.  Each key must be a trace header key name.
+     It may be preceeded with + (the default) for ascending or - for 
+     descending sort direction.  The key may be followed with :min,max 
+     or :min,max,inc.  These parameters allow you to select a subset of 
+     of the traces based on the header key.  The sort keys are blank
+     seperated you should enclose the sort string in \"\'s.  Examples are
+     sort=\"iline xline offset\" and sort=\"cdp:100,500,25 offset\"
   */
-  if(!(sortheadernames=sf_getnstring("sort",&numsortheadernames))){
-    sf_error("sort not input\n");
+  if(NULL==sort)sf_error("sort not input\n");
+  sorttokens1=delimittedtokens2list(sort," ",&numsortheadernames);
+  if(verbose>0){
+    for (isortheader=0; isortheader<numsortheadernames; isortheader++){
+      fprintf(stderr,"sorttokens1[%d]=%s\n",
+	              isortheader,sorttokens1[isortheader]);
+    }
+  }
+
+  sortheadernames=(char**)sf_alloc(numsortheadernames,sizeof(char*)); 
+  signsortname=   (double*)sf_alloc(numsortheadernames,sizeof(double));
+  sortmin     =   (double*)sf_alloc(numsortheadernames,sizeof(double));
+  sortmax     =   (double*)sf_alloc(numsortheadernames,sizeof(double));
+  sortinc     =   (double*)sf_alloc(numsortheadernames,sizeof(double));
+
+  for (isortheader=0; isortheader<numsortheadernames; isortheader++){
+    char** sorttokenparts;
+    int numsorttokenparts;
+    char** pointer_to_minmaxinc;
+    int num_minmaxinc;
+    /* look for +/- at the beginning of the token and use it to set
+       signsortname[isortheader].  This is used to sort ascending or
+       desceinding */
+    if('-'==sorttokens1[isortheader][0])signsortname[isortheader]=-1.0;
+    else                                signsortname[isortheader]=1.0;
+    if('+'==sorttokens1[isortheader][0] || '-'==sorttokens1[isortheader][0]){
+      /* first char is + or -.  Remove it by increment the pointer by 1. */
+      (sorttokens1[isortheader])++;
+    }
+    fprintf(stderr,"trimmed sorttokens1[%d]=%s\n",
+	        isortheader,sorttokens1[isortheader]);
+    /* the token now may be a header:min,max,inc (eg cdp:100,500,25).  look 
+       for a :.  If there is one, use it to split the header name from the 
+       min,max,inc */
+    sorttokenparts=delimittedtokens2list(sorttokens1[isortheader],":",
+					 &numsorttokenparts);
+    /* default min,max,inc.  Then look for input values */
+    sortmin[isortheader]=-1e307; /* Is range of doubles +- 1.7e308 ? */ 
+    sortmax[isortheader]= 1e307; /* Is range of doubles +- 1.7e308 ? */ 
+    sortinc[isortheader]=-1;     /* negative inc means not input */
+    if(numsorttokenparts>1){
+      /* there is a : in this sort key.  If there are more than one :
+	 there is a syntax error.  Report and exit */
+      if(numsorttokenparts>2){
+	sf_error("error reading sort key %s.  There is more than one :.\n",
+		 sorttokens1[isortheader]);
+      }
+      fprintf(stderr,"sorttokenpart[1]=%s\n",sorttokenparts[1]);
+      /* now dig the min,max,inc out kls */
+      pointer_to_minmaxinc=delimittedtokens2list(sorttokenparts[1],",",
+						 &num_minmaxinc);
+      if(num_minmaxinc !=2 && num_minmaxinc !=3){
+	sf_warning("parsing minmaxinc=%s.\n",sorttokenparts[1]);
+	sf_error("This should be 2 or 3 floats seperated by commas\n");
+      }
+      /* kls is this bullet proof? */
+      sortmin[isortheader]=strtod(pointer_to_minmaxinc[0],NULL);
+      sortmax[isortheader]=strtod(pointer_to_minmaxinc[1],NULL);
+      if(num_minmaxinc ==3)
+	sortinc[isortheader]=strtod(pointer_to_minmaxinc[2],NULL);
+    }	 
+    /* save sorttokenparts[0],  the portion of sorttokens1[isortheader] 
+       without initial +/- and without the stuff after : */
+    sortheadernames[isortheader]=sorttokenparts[0];
+    if(verbose>1)
+      fprintf(stderr,"copied sortheadernames[%d]=%s min=%e max=%e inc=%e\n",
+                      isortheader,sortheadernames[isortheader],
+                      sortmin[isortheader],sortmax[isortheader],
+	              sortinc[isortheader]);
+    /* need to hang onto sorttokenparts, sortheadernames[isortheader] 
+       points to a string in that structure. do not free.  Let little
+       bits of structure memory leak. */
   }
   if(verbose>0){
     for (isortheader=0; isortheader<numsortheadernames; isortheader++){
-      fprintf(stderr,"sortheadername[%d]=%s\n",
-	              isortheader,sortheadernames[isortheader]);
+      fprintf(stderr,"sortheadernames[%d]=%s min=%e max=%e inc=%e\n",
+	              isortheader,sortheadernames[isortheader],
+	              sortmin[isortheader],sortmax[isortheader],
+                      sortinc[isortheader]);
     }
   }
   indx_of_keys=sf_intalloc(numsortheadernames);
@@ -260,7 +348,31 @@ int main(int argc, char* argv[])
     if(allzero)continue; /* do not add header to list of keys */
     /* kls could add limit tests on headers here */
     /* test if trace passes the sort ranges */
-    /* for now just sort all the traces in increasing order */
+    passrangetest=true;
+    for(isortheader=0; isortheader<numsortheadernames; isortheader++){
+      double myvalue;
+      if(typehead==SF_FLOAT)
+	myvalue=header[indx_of_keys[isortheader]];
+      else
+	myvalue=((int*)header)[indx_of_keys[isortheader]];
+      /* add test for inc */
+      if(myvalue<sortmin[isortheader] || 
+	 myvalue>sortmax[isortheader]){
+	passrangetest=false;
+	break;
+      }
+      if(sortinc[isortheader]>0){
+	double delta=(myvalue-sortmin[isortheader])/sortinc[isortheader];
+	if(1e-5<fabs(delta-llround(delta))){
+	  passrangetest=false;
+	  break;
+	}
+      }
+    }
+    if(false==passrangetest) continue; /* do not add header to list of keys
+                                          header is outsed the sort ranges */
+			       
+    /* add this trace to the headers to sort */
     if(numtracestosort>=size_myarray_pointers_to_sortkey){
       /* reallocate the array */
       size_myarray_pointers_to_sortkey*=1.2;
@@ -276,6 +388,10 @@ int main(int argc, char* argv[])
       else
 	myarray_pointers_to_sortkey[numtracestosort]->keyvalue[isortheader]=
 	  ((int*)header)[indx_of_keys[isortheader]];
+      /* multiply header value by signsortkey to handle sort in decreasing 
+	 order */
+      myarray_pointers_to_sortkey[numtracestosort]->keyvalue[isortheader]*=
+	signsortname[isortheader];
     }
     myarray_pointers_to_sortkey[numtracestosort]->tracenumber=i_trace;
     myarray_pointers_to_sortkey[numtracestosort]->filenumber=0;
