@@ -92,4 +92,4 @@ cmpitargets = bldutil.HuiSconsTargets(cmpifiles=cmpiprogs)
 cmpitargets.build_c_mpi(env_c_mpi, glob_build, srcroot, bindir, libdir, pkgdir)
 
 #-------------------------- INSTALL DOCUMENTS --------------------------------
-bldutil.HuiSconsTargets.install_docs(env,libdir,glob_build)
+bldutil.HuiSconsTargets.install_docs(env,pkgdir,glob_build)

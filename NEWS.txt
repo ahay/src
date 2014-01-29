@@ -67,6 +67,7 @@ To programs:
 * added sfput-like behavior in sfwindow and sfpad
 * user/zhiguang: New contributor (Zhiguang Xue)
 * user/hwang: New contributor (Hui Wang)
+* user/ditthara: New contributor (Detchai Ittharat)
 
 ===Bug fixes===
 

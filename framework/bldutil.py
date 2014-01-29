@@ -537,13 +537,13 @@ class HuiSconsTargets:
 
 # -----------------------------------------------------------------------------
     @classmethod
-    def install_docs(cls,env,libdir,glob_build):
+    def install_docs(cls,env,pkgdir,glob_build):
         if glob_build and cls.docs:
             env.Depends(cls.docs, '#/framework/rsf/doc.py')
             user = os.path.basename(os.getcwd())
             main = 'sf%s.py' % user
             doc = env.RSF_Docmerge(main,cls.docs)
-            env.Install(libdir,doc)
+            env.Install(pkgdir,doc)
 
 # -----------------------------------------------------------------------------
 
