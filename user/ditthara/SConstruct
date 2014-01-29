@@ -17,7 +17,7 @@ targets = bldutil.UserSconsTargets()
 
 # C mains
 targets.c = '''
-emfdm2d 
+emfdm2d_p 
 '''
 
 
