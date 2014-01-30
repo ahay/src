@@ -70,11 +70,6 @@ int main(int argc, char* argv[])
 	sf_putfloat(image,"o2",x0);
 	sf_putstring(image,"label2","Distance");
 
-	sf_putint(image,"n3",nt);
-	sf_putfloat(image,"d3",dt);
-	sf_putfloat(image,"o3",0.);
-	sf_putstring(image,"label3","Time");
-
     } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
@@ -105,6 +100,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("jt",&jt)) jt=1;
     /* time interval */
+    sf_putint(movie,"n1",nz);
+    sf_putfloat(movie,"d1",dz);
+    sf_putint(movie,"n2",nx);
+    sf_putfloat(movie,"d2",dx);
     sf_putint(movie,"n3",1+(nt-1)/jt);
     if (mig) {
         sf_putfloat(movie,"d3",-jt*dt);
