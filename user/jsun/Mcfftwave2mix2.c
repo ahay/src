@@ -18,7 +18,7 @@
 */
 #include <rsf.h>
 
-#include "cfft2.h"
+#include "cfft2nsps.h"
 
 int main(int argc, char* argv[])
 {
@@ -26,7 +26,6 @@ int main(int argc, char* argv[])
     char *mode;
     int it,iz,im,ik,ix,i,j;     /* index variables */
     int nt,nz,nx, m2, nk, nzx, nz2, nx2, nzx2, n2, pad1;
-    int it1,nt1;
     float dt;
     sf_complex c;
 
@@ -66,19 +65,14 @@ int main(int argc, char* argv[])
     az = sf_iaxa(Fr,1); nz = sf_n(az); 
     ax = sf_iaxa(Fr,2); nx = sf_n(ax); 
 
-    if (mode[0]=='p') {sf_warning(">>>>> Using PSPI! <<<<< \n"); it1=0;nt1=nt;}
-    else if (mode[0]=='n') {sf_warning(">>>>> Using NSPS! <<<<< \n");it1=0;nt1=nt;}
-    else if (mode[0]=='m') {
-	sf_warning(">>>>> Using MIXED! <<<<< \n");
-	it1=1;nt1=(int)(nt/2+0.5);
-	sf_setd(at,dt*2.0);
-	sf_setn(at,nt1);
-    }
-    else { sf_warning(">>>>> Default mode: Using PSPI! <<<<< \n"); mode[0]='p'; it1=0;nt1=nt;}
-
     sf_oaxa(Fo,az,1); 
     sf_oaxa(Fo,ax,2); 
     sf_oaxa(Fo,at,3);
+
+    if (mode[0]=='p') {sf_warning(">>>>> Using PSPI! <<<<< \n");}
+    else if (mode[0]=='n') {sf_warning(">>>>> Using NSPS! <<<<< \n");}
+    else if (mode[0]=='m') {sf_warning(">>>>> Using MIXED! <<<<< \n");}
+    else { sf_warning(">>>>> Default mode: Using PSPI! <<<<< \n"); mode[0]='p';}
 
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
@@ -123,35 +117,35 @@ int main(int argc, char* argv[])
     wave   = sf_complexalloc2(nk,m2);
     wave2  = sf_complexalloc2(nzx2,m2);
 
+    if (mode[0]=='n') {
+	icfft2_allocate(cwave);
+    } else {
+	icfft2_allocate(cwavem);
+    }
+
     for (iz=0; iz < nzx2; iz++) {
 	curr[iz] = sf_cmplx(0.,0.);
 	if(!complx) rcurr[iz]= 0.;
     }
 
     /* MAIN LOOP */
-    for (it=0; it<nt1; it++) {
+    for (it=0; it<nt; it++) {
 	if(verb) sf_warning("it=%d;",it);
 
-	/* write wavefield to output */
-	for (ix = 0; ix < nx; ix++) {
-	    if (complx)
-		sf_complexwrite(curr+ix*nz2,nz,Fo);
-	    else
-		sf_floatwrite(rcurr+ix*nz2,nz,Fo);
-	}
-
 	if (mode[0]!='p') {
-	    /* source injection */
-	    for (ix = 0; ix < nx; ix++) {
-		for (iz=0; iz < nz; iz++) {
-		    i = iz+ix*nz;  /* original grid */
-		    j = iz+ix*nz2; /* padded grid */
+	    if (mode[0]=='n') {
+		/* source injection */
+		for (ix = 0; ix < nx; ix++) {
+		    for (iz=0; iz < nz; iz++) {
+			i = iz+ix*nz;  /* original grid */
+			j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
-		    curr[j] += ww[it] * rr[i]; // source term
+			curr[j] += ww[it] * rr[i]; // source term
 #else
-		    curr[j] += sf_crmul(ww[it], rr[i]); // source term
+			curr[j] += sf_crmul(ww[it], rr[i]); // source term
 #endif
-		    if (!complx && mode[0]=='n') rcurr[j] = crealf(curr[j]);
+			if (!complx && mode[0]=='n') rcurr[j] = crealf(curr[j]);
+		    }
 		}
 	    }
 
@@ -182,7 +176,7 @@ int main(int argc, char* argv[])
 		}
 		cwave[ik] = c;
 	    }
-	    if (mode[0]!='m') {
+	    if (mode[0]=='n') {
 		icfft2(curr,cwave);
 	    }
 	}
@@ -208,9 +202,9 @@ int main(int argc, char* argv[])
 		    i = iz+ix*nz;  /* original grid */
 		    j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
-		    c = ww[it+it1] * rr[i]; // source term
+		    c = ww[it] * rr[i]; // source term
 #else
-		    c = sf_crmul(ww[it+it1], rr[i]); // source term
+		    c = sf_crmul(ww[it], rr[i]); // source term
 #endif
 		    for (im = 0; im < m2; im++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -224,8 +218,16 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
+	/* write wavefield to output */
+	for (ix = 0; ix < nx; ix++) {
+	    if (complx)
+		sf_complexwrite(curr+ix*nz2,nz,Fo);
+	    else
+		sf_floatwrite(rcurr+ix*nz2,nz,Fo);
+	}
     }
     if(verb) sf_warning("."); 
+    cfft2_finalize();
     exit (0);
 }
 
