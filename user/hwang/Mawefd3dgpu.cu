@@ -59,8 +59,8 @@ __constant__ float cz1,cz2,cz3,cz4,cx1,cx2,cx3,cx4,cy1,cy2,cy3,cy4;
 texture<float,1> tex_v;
 texture<float,1> tex_d;
 
-void expand_domain(float*** vtmp, float*** v,
-                  int nz, int nx, int ny, int nbd);
+void cut_wave(float*** ucut, float*** uin, int nz, int nx, int ny, int nbd);
+void expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd);
 void compute_interpolator_weights(pt3d* v3d, grid3d* geo_v, weit3d* weit_v,
                                   int npt, int nbd, int nz, int nx, int ny,
                                   float dz, float dx, float dy,
@@ -120,6 +120,7 @@ main(int argc, char** argv)
   float*** den=NULL;
   float*** vel=NULL;  /* velocity */
   float*** u1=NULL;  /* wavefield array */
+  float*** ucut=NULL;
   float* u_dat=NULL; /* output data */
   pt3d* src3d=NULL;  /* source position */
   pt3d** rec3d=NULL;  /* receiver position */
@@ -173,9 +174,9 @@ main(int argc, char** argv)
 
   /* set up output header files */
   if (snap) {
-    sf_putint(file_wfl,"n1",nzpad);
-    sf_putint(file_wfl,"n2",nxpad);
-    sf_putint(file_wfl,"n3",nypad);
+    sf_putint(file_wfl,"n1",nz);
+    sf_putint(file_wfl,"n2",nx);
+    sf_putint(file_wfl,"n3",ny);
     sf_putint(file_wfl,"n4",nt/jsnap);
     sf_putint(file_wfl,"n5",ns);
     sf_putfloat(file_wfl,"d1",dz);
@@ -225,6 +226,7 @@ main(int argc, char** argv)
 
 
   /* Allocate memory */
+  ucut = sf_floatalloc3(nz,nx,ny);
   wav = sf_floatalloc(nt);
   if (!cden)  den = sf_floatalloc3(nzpad,nxpad,nypad);
   vel = sf_floatalloc3(nzpad,nxpad,nypad);
@@ -343,7 +345,7 @@ main(int argc, char** argv)
   make_abc3d_y_kernel<<<abc_y_grid,abc_y_block>>>(d_byl,d_byh,dy,nbd,nzpad,nxpad,nypad);
   gpu_errchk( cudaGetLastError() );
 
-  abc_z_grid.z = abc_x_grid.z = abc_y_grid.z = nbd;
+  /* abc_z_grid.z = abc_x_grid.z = abc_y_grid.z = nbd; */
 
   cudaMemset(d_dat,0,sizeof(float)*nr);
   /* ---------------------------------------------------------------------- */
@@ -381,13 +383,14 @@ main(int argc, char** argv)
       gpu_errchk( cudaGetLastError() );
 
       /* extract shot gather */
-      gpu_errchk( cudaMemcpyAsync(u_dat,d_dat,sizeof(float)*nr,cudaMemcpyDeviceToHost) );
+      gpu_errchk( cudaMemcpy(u_dat,d_dat,sizeof(float)*nr,cudaMemcpyDeviceToHost) );
       sf_floatwrite(u_dat,nr,file_dat);
 
       /* extract snapshot */
       if (snap && it%jsnap==0) {
-        sf_floatwrite(u1[0][0],nzpad*nxpad*nypad,file_wfl);
-        gpu_errchk( cudaMemcpyAsync(u1[0][0],d_u1,memsize,cudaMemcpyDeviceToHost) );
+        cut_wave(ucut,u1,nz,nx,ny,nbd);
+        sf_floatwrite(ucut[0][0],nz*nx*ny,file_wfl);
+        gpu_errchk( cudaMemcpy(u1[0][0],d_u1,memsize,cudaMemcpyDeviceToHost) );
       }
     } /* END TIME LOOP */
   } /* END SHOT LOOP */
@@ -395,6 +398,20 @@ main(int argc, char** argv)
   return 0;
 }
 
+void
+cut_wave(float*** ucut, float*** uin, int nz, int nx, int ny, int nbd)
+{
+  int ix,iy,iz;
+#ifdef _OPENMP
+  #pragma omp parallel for  \
+  schedule(dynamic,1) \
+  private(ix,iy,iz)
+#endif
+  for (iy=0;iy<ny;iy++)
+    for (ix=0;ix<nx;ix++)
+      for (iz=0;iz<nz;iz++)
+        ucut[iy][ix][iz] = uin[iy+nbd][ix+nbd][iz+nbd];
+}
 void
 expand_domain(float*** vtmp, float*** v, int nz, int nx, int ny, int nbd)
 {
@@ -671,7 +688,6 @@ make_abc3d_z_kernel(float* d_bzl, float* d_bzh, float dz,
 {
   int i1 = blockIdx.x*blockDim.x + threadIdx.x; /* x axis */
   int i2 = blockIdx.y*blockDim.y + threadIdx.y; /* y axis */
-  /* int iop = blockIdx.z; [> z axis: (0,nbd)<] */
 
   int bz_idx = i2*nxpad+i1;
   int v_idx = (i2*nxpad+i1)*nzpad+nbd;
@@ -729,14 +745,15 @@ apply_abc3d_z_kernel(float* d_u1, float* d_u0, float* bzl, float* bzh,
 {
   int i1 = blockIdx.x*blockDim.x + threadIdx.x; /* x axis */
   int i2 = blockIdx.y*blockDim.y + threadIdx.y; /* y axis */
-  int iop = blockIdx.z; /* z axis: (0,nbd)*/
-  int bz_idx = i2*nxpad+i1;
-  int iz = nbd - iop;
-  int idx = (i2*nxpad+i1)*nzpad+iz;
-  d_u1[idx] = d_u0[idx+1] + (d_u0[idx] - d_u1[idx+1])*bzl[bz_idx];
-  iz = nzpad-1-nbd+iop;
-  idx = (i2*nxpad+i1)*nzpad+iz;
-  d_u1[idx] = d_u0[idx-1] + (d_u0[idx] - d_u1[idx-1])*bzh[bz_idx];
+  for (int iop=0; iop<nbd; iop++) {
+    int bz_idx = i2*nxpad+i1;
+    int iz = nbd - iop;
+    int idx = (i2*nxpad+i1)*nzpad+iz;
+    d_u1[idx] = d_u0[idx+1] + (d_u0[idx] - d_u1[idx+1])*bzl[bz_idx];
+    iz = nzpad-1-nbd+iop;
+    idx = (i2*nxpad+i1)*nzpad+iz;
+    d_u1[idx] = d_u0[idx-1] + (d_u0[idx] - d_u1[idx-1])*bzh[bz_idx];
+  }
 }
 
 __global__ void
@@ -745,14 +762,15 @@ apply_abc3d_x_kernel(float* d_u1, float* d_u0, float* bxl, float* bxh,
 {
   int i1 = blockIdx.x*blockDim.x + threadIdx.x; /* z axis */
   int i2 = blockIdx.y*blockDim.y + threadIdx.y; /* y axis */
-  int iop = blockIdx.z; /* x axis: (0,nbd)*/
-  int bx_idx = i2*nzpad+i1;
-  int ix = nbd - iop;
-  int idx = (i2*nxpad+ix)*nzpad+i1;
-  d_u1[idx] = d_u0[idx+nzpad] + (d_u0[idx]- d_u1[idx+nzpad])*bxl[bx_idx];
-  ix = nxpad-1-nbd+iop;
-  idx = (i2*nxpad+ix)*nzpad+i1; 
-  d_u1[idx] = d_u0[idx-nzpad] + (d_u0[idx]- d_u1[idx-nzpad])*bxh[bx_idx];
+  for (int iop=0; iop<nbd; iop++) {
+    int bx_idx = i2*nzpad+i1;
+    int ix = nbd - iop;
+    int idx = (i2*nxpad+ix)*nzpad+i1;
+    d_u1[idx] = d_u0[idx+nzpad] + (d_u0[idx]- d_u1[idx+nzpad])*bxl[bx_idx];
+    ix = nxpad-1-nbd+iop;
+    idx = (i2*nxpad+ix)*nzpad+i1; 
+    d_u1[idx] = d_u0[idx-nzpad] + (d_u0[idx]- d_u1[idx-nzpad])*bxh[bx_idx];
+  }
 }
 
 __global__ void
@@ -761,13 +779,14 @@ apply_abc3d_y_kernel(float* d_u1, float* d_u0, float* byl, float* byh,
 {
   int i1 = blockIdx.x*blockDim.x + threadIdx.x; /* z axis */
   int i2 = blockIdx.y*blockDim.y + threadIdx.y; /* x axis */
-  int iop = blockIdx.z; /* y axis: (0,nbd)*/
-  int stride = nzpad*nxpad;
-  int by_idx = i2*nzpad+i1;
-  int iy = nbd - iop;
-  int idx = (iy*nxpad+i2)*nzpad+i1;
-  d_u1[idx] = d_u0[idx+stride] + (d_u0[idx] - d_u1[idx+stride])*byl[by_idx];
-  iy = nypad-1-nbd+iop;
-  idx = (iy*nxpad+i2)*nzpad+i1;
-  d_u1[idx] = d_u0[idx-stride] + (d_u0[idx] - d_u1[idx-stride])*byh[by_idx];
+  for (int iop=0; iop<nbd; iop++) {
+    int stride = nzpad*nxpad;
+    int by_idx = i2*nzpad+i1;
+    int iy = nbd - iop;
+    int idx = (iy*nxpad+i2)*nzpad+i1;
+    d_u1[idx] = d_u0[idx+stride] + (d_u0[idx] - d_u1[idx+stride])*byl[by_idx];
+    iy = nypad-1-nbd+iop;
+    idx = (iy*nxpad+i2)*nzpad+i1;
+    d_u1[idx] = d_u0[idx-stride] + (d_u0[idx] - d_u1[idx-stride])*byh[by_idx];
+  }
 }
