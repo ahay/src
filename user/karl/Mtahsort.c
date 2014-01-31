@@ -161,12 +161,13 @@ int main(int argc, char* argv[])
     headers_filename=malloc(strlen(infile_filename)+60);
     strcpy(headers_filename,infile_filename);
     strcpy(headers_filename+strlen(infile_filename)-4,"_hdr.rsf\0");
-    if(verbose>2)fprintf(stderr,"parameter header defaulted.  Computed to be #%s#\n",
+    if(verbose>2)
+      fprintf(stderr,"parameter header defaulted.  Computed to be #%s#\n",
 			 headers_filename);
   }
-  if(verbose>2)fprintf(stderr,"parameter header input or computed  #%s#\n",
+  if(verbose>2)
+    fprintf(stderr,"parameter header input or computed  #%s#\n",
 		       headers_filename);
-
 
   inheaders = sf_input(headers_filename);
 
@@ -333,9 +334,9 @@ int main(int argc, char* argv[])
     if(verbose>2 ||(verbose>0 && i_trace<5)){
       fprintf(stderr,"i_trace=%d\n",i_trace);
     }
-    /**************************/
-    /* read trace and headers */
-    /**************************/
+    /****************/
+    /* read headers */
+    /****************/
     sf_floatread(header,n1_headers,inheaders);
     /* if trace header is all zero, skip trace using break from loop */
     allzero=true;
@@ -346,7 +347,7 @@ int main(int argc, char* argv[])
       }
     }
     if(allzero)continue; /* do not add header to list of keys */
-    /* kls could add limit tests on headers here */
+
     /* test if trace passes the sort ranges */
     passrangetest=true;
     for(isortheader=0; isortheader<numsortheadernames; isortheader++){
@@ -370,7 +371,7 @@ int main(int argc, char* argv[])
       }
     }
     if(false==passrangetest) continue; /* do not add header to list of keys
-                                          header is outsed the sort ranges */
+                                          header is outsidd the sort ranges */
 			       
     /* add this trace to the headers to sort */
     if(numtracestosort>=size_myarray_pointers_to_sortkey){

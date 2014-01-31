@@ -21,6 +21,7 @@ tahnmo
 tahmakeskey
 tahstack
 tahsort
+tahscscale
 '''
 
 src = Glob('[a-z]*.c')
