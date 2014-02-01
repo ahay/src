@@ -18,7 +18,7 @@ from rsf.proj import *
 Flow(['scscale.rsf','scscale_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
-     ~/RSFSRC/user/karl/sftahscscale \
+     sftahscscale \
   	input=../fetch/npr3_field.rsf \
 	sxy=sxy.rsf       gxy=gxy.rsf \
 	sxyamp=sxyamp.rsf gxyamp=gxyamp.rsf \
@@ -65,4 +65,4 @@ Flow(['npr3_field_subset.rsf','npr3_field_subset_hdr.rsf'],
 Result('npr3_field_subset','npr3_field_subset.rsf',
 	'sfwindow max1=2. | grey title="field"')
 
-
+End()
