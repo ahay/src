@@ -215,7 +215,7 @@ int main(int argc, char** argv)
     int n = N;
 
     int count = 0;
-    float CUT = N/3.0*dk;
+    float CUT = N/4.0*dk;
     for (int k=0; k < N; k++) {
 	ks[k] = -dk*N/2.0+k*dk;
         if (fabs(ks[k]) < CUT) count++;
