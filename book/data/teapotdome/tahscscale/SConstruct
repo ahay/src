@@ -1,0 +1,68 @@
+from rsf.proj import *
+
+#(sftahread input=../fetch/npr3_field.rsf | sftahgethw key=tracl,tracr,fldr,tracf,ep,cdp,cdpt,sx,sy,gx,gy >/dev/null )|& more
+#(sftahread input=../fetch/npr3_gathers.rsf | sftahgethw key=tracl,tracr,fldr,tracf,ep,cdp,cdpt,sx,sy,gx,gy >/dev/null )|& more
+
+# sftahscscale directly read the input trace and header files.  It will 
+# reread the input file to:
+#   1- build the sloc and gloc table, a list of each shot x,y and each group x,y
+#   2- read the traces and compute the average trace amplitude
+#   3- write the sxyamp and gxyamp arrays,  sxyamp is the x,y,amp for each shot
+#   4- read each trace and header, read the sxyamp and the gxyamp, apply the 
+#      scale correction
+#   5- write the trace and header (tah)
+
+# to get all the traces change sftahwrite label2 to:
+#	label3="fldr"  o3=14 n3=850  d3=1   \
+
+Flow(['scscale.rsf','scscale_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     ~/RSFSRC/user/karl/sftahscscale \
+  	input=../fetch/npr3_field.rsf \
+	sxy=sxy.rsf       gxy=gxy.rsf \
+	sxyamp=sxyamp.rsf gxyamp=gxyamp.rsf \
+	verbose=2 \
+     | sftahwrite \
+        verbose=1 \
+        label2="tracr" o2=1 n2=723990 d2=1 \
+	output=scscale.rsf 
+     ''',stdout=0,stdin=0)
+
+Flow(['scscale_subset.rsf','scscale_subset_hdr.rsf'],
+     ['scscale.rsf','scscale_hdr.rsf'],
+     '''
+     sftahsort \
+        input=scscale.rsf \
+	sort="fldr:14,23 tracf:1,1063" \
+	verbose=1 \
+     | sftahwrite \
+        verbose=1                           \
+        label2="tracf" o2=1  n2=1062 d2=1    \
+	label3="fldr"  o3=14 n3=10  d3=1   \
+        output=scscale_subset.rsf 
+     ''',stdout=0,stdin=0)
+
+Result('scscale_subset','scscale_subset',
+	'sfwindow max1=2. | grey title="field with scscale"')
+
+
+Flow(['npr3_field_subset.rsf','npr3_field_subset_hdr.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahsort \
+        input=../fetch/npr3_field.rsf \
+	sort="fldr:14,23 tracf:1,1063" \
+	verbose=1 \
+     | sftahwrite \
+        verbose=1                           \
+        label2="tracf" o2=1  n2=1062 d2=1    \
+	label3="fldr"  o3=14 n3=10  d3=1   \
+        output=npr3_field_subset.rsf 
+     ''',stdout=0,stdin=0)
+
+
+Result('npr3_field_subset','npr3_field_subset.rsf',
+	'sfwindow max1=2. | grey title="field"')
+
+
