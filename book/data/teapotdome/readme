@@ -1,0 +1,33 @@
+
+Outline of directories in teapotdome:
+
+MAIN tah PROCESSING
++++++++++++++++++++
+$RSFSRC/book/data/teapotdome/fetch
+	scons in this directory will download data and run sfsegyread
+
+$RSFSRC/book/data/teapotdome/tahnmostack
+	apply nmo and stack of the preprocessed gathers downloaded in the 
+	../fetch directory.  This stack is dompared to the stack created 
+	using seismic unix, SU.  THis directory also displays some of the 
+	midpoint gathers from the processed gathers with and without nmo.
+	Fold plots, a shot location map, and a receiver location map are 
+	displayed.  The a few of the unprocessed shot records dowloaded 
+	in the fetch directory are displayed with and without nmo.  
+	sftahsort is used to sort a few unprocessed midpoint gathers for
+	comparison with the processed migpoint gathers.
+
+Perhaps the tahnmostack scsonstruct whould be divided.  The geometry qc
+	can be moved into a seperate directory.  Perhaps this directory
+	is was Vladimir already created.  May also move other portions,
+	like qc and preprocessint the npr3_field.rsf, into another direcory.
+
+$RSFSRC/book/data/teapotdome/tahscscale
+	apply surface consistant scaling to npr3_field.rsf
+
+$RSFSRC/book/data/teapotdome/nmostack
+	seismic unix scripts to apply nmo and stack the prestack processed
+	data.
+
+I need to index other work previous done by Vladimir.  Zomig can also be
+       indexed in this readme file
