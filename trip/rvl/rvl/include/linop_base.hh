@@ -1280,7 +1280,7 @@ namespace RVL {
   class LinearBilinearOp: public LinearOp<Scalar> {
 
   private:
-    BiLinearOp<Scalar> const & blop;
+    SymmetricBilinearOp<Scalar> const & blop;
     Vector<Scalar> const & x0;
 
 #ifndef RVL_OPERATOR_NEW_ENABLED
@@ -1321,7 +1321,7 @@ namespace RVL {
 
   public:
 
-    LinearBilinearOp(BilinearOp<Scalar> const & _blop,
+    LinearBilinearOp(SymmetricBilinearOp<Scalar> const & _blop,
 		     Vector<Scalar> const & _x0) 
       : blop(_blop), x0(_x0) {}
     
