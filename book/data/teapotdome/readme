@@ -6,16 +6,20 @@ MAIN tah PROCESSING
 $RSFSRC/book/data/teapotdome/fetch
 	scons in this directory will download data and run sfsegyread
 
+$RSFSRC/book/data/teapotdome/geom
+	basic fold plots and shot/group maps
+
 $RSFSRC/book/data/teapotdome/tahnmostack
 	apply nmo and stack of the preprocessed gathers downloaded in the 
 	../fetch directory.  This stack is dompared to the stack created 
-	using seismic unix, SU.  THis directory also displays some of the 
+	using seismic unix, SU.  This directory also displays some of the 
 	midpoint gathers from the processed gathers with and without nmo.
 	Fold plots, a shot location map, and a receiver location map are 
 	displayed.  The a few of the unprocessed shot records dowloaded 
 	in the fetch directory are displayed with and without nmo.  
 	sftahsort is used to sort a few unprocessed midpoint gathers for
-	comparison with the processed migpoint gathers.
+	comparison with the processed midpoint gathers.
+	foldplots, shot/group maps shold be removed.  Use the ones in geom.
 
 Perhaps the tahnmostack scsonstruct whould be divided.  The geometry qc
 	can be moved into a seperate directory.  Perhaps this directory
