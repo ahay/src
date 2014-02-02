@@ -67,6 +67,6 @@ Result('sxsycoord','graph symbol="+" title="Shot coordinates" plotcol=5')
 Flow('gx','tteapot','dd type=float | headermath output="gx"')
 Flow('gy','tteapot','dd type=float | headermath output="gy"')
 Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
-
+Result('gxgycoord','graph symbol="+" title="Group coordinates" plotcol=3')
 End()
 
