@@ -15,7 +15,7 @@ from rsf.proj import *
 # to get all the traces change sftahwrite label2 to:
 #	label3="fldr"  o3=14 n3=850  d3=1   \
 
-Flow(['scscale.rsf','scscale_hdr.rsf'],
+Flow(['scscale.rsf','scscale_hdr.rsf','sxy.rsf','gxy.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahscscale \
@@ -28,6 +28,11 @@ Flow(['scscale.rsf','scscale_hdr.rsf'],
         label2="tracr" o2=1 n2=723990 d2=1 \
 	output=scscale.rsf 
      ''',stdout=0,stdin=0)
+
+Result('sxy',
+	'graph symbol="+" title="Shot coordinates" plotcol=4')
+Result('gxy',
+	'graph symbol="+" title="Receiver coordinates" plotcol=5')
 
 Flow(['scscale_subset.rsf','scscale_subset_hdr.rsf'],
      ['scscale.rsf','scscale_hdr.rsf'],
@@ -62,7 +67,7 @@ Flow(['npr3_field_subset.rsf','npr3_field_subset_hdr.rsf'],
      ''',stdout=0,stdin=0)
 
 
-Result('npr3_field_subset','npr3_field_subset.rsf',
+Result('npr3_field_subset','npr3_field_subset',
 	'sfwindow max1=2. | grey title="field"')
 
 End()

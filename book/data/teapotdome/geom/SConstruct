@@ -1,25 +1,7 @@
 from rsf.proj import *
 import math
 
-Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
-     '''
-     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} tape=/home/yihua/research/geophysics/process_club/TeapotDome/Prestack/npr3_field.sgy
-     ''',stdin=0)
-
-#exe = Program('foldplot.c',CPPDEFINES='NO_BLAS')
-#exe1 = Program('dumphdr.c',CPPDEFINES='NO_BLAS')
-
-#Flow('hdrdump','tteapot %s' % exe1[0],
-#    '''
-#      dd type=float |
-#      ./${SOURCES[1]} 
-#          o1=0 n1=96  d1=200 label1=offset
-#          o2=1 n2=188 d2=1   label2=tracf
-#          o3=1 n3=345 d3=1   label3=ep
-#          verbose=3 
-#    ''')
-
-Flow('foldplot1','tteapot',
+Flow('foldplot','../fetch/npr3_field_hdr.rsf',
     '''
       dd type=float |
       fold
@@ -29,7 +11,7 @@ Flow('foldplot1','tteapot',
           o3=1 n3=345 d3=1   label3=iline        
     ''')
 
-Result('foldplot1','foldplot1',
+Result('foldplot','foldplot',
      '''
      grey  title=foldplot pclip=100 
      ''')
@@ -38,6 +20,7 @@ Result('foldplot3','foldplot',
      '''
      byte gainpanel=all |
      grey3  title=foldplot pclip=100 
+	    frame1=24 frame2=94 frame3=172
      ''')
 
 Flow('foldplot_off','foldplot',
@@ -46,27 +29,28 @@ Flow('foldplot_off','foldplot',
 Result('foldplot_off','grey title=foldplot pclip=100')
 
 # Xline/Inline numbers
-Flow('ix','tteapot','dd type=float | headermath output="xline"')
-Flow('il','tteapot','dd type=float | headermath output="iline"')
+Flow('ix','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="xline"')
+Flow('il','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="iline"')
 Flow('ixil',['ix','il'],'cmplx ${SOURCES[1]}')
-Result('ixil','graph symbol="+" title="Xline/Inline" plotcol=2')
+Result('ixil','graph symbol="+" title="Xline/Inline number" plotcol=2')
 
 # Xline/Inline coordinates
-Flow('ixc','tteapot','dd type=float | headermath output="cdpx"')
-Flow('ilc','tteapot','dd type=float | headermath output="cdpy"')
+Flow('ixc','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="cdpx"')
+Flow('ilc','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="cdpy"')
 Flow('ixilcoord',['ixc','ilc'],'cmplx ${SOURCES[1]}')
-Result('ixilcoord','graph symbol="+" title="Xline/Inline coordinates" plotcol=4')
+Result('ixilcoord','graph symbol="+" title="cdp (x,y)" plotcol=4')
 
 # Shot coordinates
-Flow('sx','tteapot','dd type=float | headermath output="sx"')
-Flow('sy','tteapot','dd type=float | headermath output="sy"')
+Flow('sx','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="sx"')
+Flow('sy','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="sy"')
 Flow('sxsycoord',['sx','sy'],'cmplx ${SOURCES[1]}')
-Result('sxsycoord','graph symbol="+" title="Shot coordinates" plotcol=5')
+Result('sxsycoord','graph symbol="+" title="Shot (x,y)" plotcol=5')
 
 # Receiver coordinates
-Flow('gx','tteapot','dd type=float | headermath output="gx"')
-Flow('gy','tteapot','dd type=float | headermath output="gy"')
+Flow('gx','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="gx"')
+Flow('gy','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="gy"')
 Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
-Result('gxgycoord','graph symbol="+" title="Group coordinates" plotcol=3')
+Result('gxgycoord','graph symbol="+" title="Group (x,y)" plotcol=3')
+
 End()
 

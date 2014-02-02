@@ -92,7 +92,7 @@ Result('foldplot3d','foldplot',
 	'''
 	byte 
 	| grey3 title=foldplot pclip=100 
-	  frame1=24 frame2=94 frame3=172
+	        frame1=24 frame2=94 frame3=172
 	''')
 Flow('foldmap','foldplot',
      '''
