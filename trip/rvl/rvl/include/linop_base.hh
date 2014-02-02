@@ -1274,6 +1274,73 @@ namespace RVL {
       }
     }
   };
+
+  /** LinearOp crreated by fixing the first argument in a bilinear op. */
+  template<class Scalar>
+  class LinearBilinearOp: public LinearOp<Scalar> {
+
+  private:
+    BiLinearOp<Scalar> const & blop;
+    Vector<Scalar> const & x0;
+
+#ifndef RVL_OPERATOR_NEW_ENABLED
+    void * operator new(size_t size) { 
+      void * ptr;
+      ptr = (void *) ::new unsigned char[size]; 
+      return ptr;
+    }
+#endif
+
+  protected:
+
+    void apply(Vector<Scalar> const & x1,
+	       Vector<Scalar> & y) const {
+      try {
+	blop.apply(x0,x1,y);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from LinearBilinearOp::apply\n";
+	throw e;
+      }
+    }
+
+    void applyAdj(Vector<Scalar> const & y,
+		  Vector<Scalar> & x1) const {
+      try {
+	blop.applyAdj(x0,y,x1);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from LinearBilinearOp::applyAdj\n";
+	throw e;
+      }
+    }
+
+    Operator<Scalar> * clone() const {
+      return new LinearBilinearOp<Scalar>(*this);
+    }
+
+  public:
+
+    LinearBilinearOp(BilinearOp<Scalar> const & _blop,
+		     Vector<Scalar> const & _x0) 
+      : blop(_blop), x0(_x0) {}
+    
+    LinearBilinearOp(LinearBilinearOp<Scalar> const & lbl) 
+      : blop(lbl.blop), x0(lbl.x0) {}
+
+    Space<Scalar> const & getDomain() const { return blop.getDomain(); }
+    Space<Scalar> const & getRange() const { return blop.getRange(); }
+
+    ostream & write(ostream & str) const {
+      str<<"Linear Operator wrapper around Bilinear Operator\n";
+      str<<"  by fixing first argument\n";
+      str<<"Bilinear Operator:\n";
+      blop.write(str);
+      str<<"First argument (vector):\n";
+      x0.write(str);
+      return str;
+    }
+  };
 }
 
 #endif
