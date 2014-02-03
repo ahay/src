@@ -514,7 +514,7 @@ namespace RVL {
     Vector<Scalar> & operator[](size_t i) {
       if (i>size-1) {
 	RVLException e; e<<"Error: Components::operator[]\n"; 
-	e<<"index out of range [0, "<<size-1<<"]\n";
+	e<<"index "<<i<<" out of range [0, "<<size-1<<"]\n";
 	throw e;
       }
       return *(comp[i]);

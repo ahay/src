@@ -1296,7 +1296,7 @@ namespace RVL {
     void apply(Vector<Scalar> const & x1,
 	       Vector<Scalar> & y) const {
       try {
-	blop.apply(x0,x1,y);
+	blop.applyOp(x0,x1,y);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from LinearBilinearOp::apply\n";
@@ -1307,7 +1307,7 @@ namespace RVL {
     void applyAdj(Vector<Scalar> const & y,
 		  Vector<Scalar> & x1) const {
       try {
-	blop.applyAdj(x0,y,x1);
+	blop.applyAdjOp(x0,y,x1);
       }
       catch (RVLException & e) {
 	e<<"\ncalled from LinearBilinearOp::applyAdj\n";
