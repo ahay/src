@@ -14,7 +14,7 @@ for niter in (1,5):
 for case in Split('puckin residual1 residual5'):
     Result(case,'dots gaineach=n')
 
-Flow('pred','puckin dip5','pwspray dip=${SOURCES[1]} order=12 ns=1 | window j2=2 | stack')
+Flow('pred','puckin dip5','pwspray dip=${SOURCES[1]} order=12 ns=1 reduce=predict')
 Flow('coh','pred puckin','similarity other=${SOURCES[1]} rect1=20 rect2=2 eps=1')
 Flow('ccoh','coh','rtoc')
 

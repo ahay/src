@@ -23,8 +23,9 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order;
-    float eps, ***u, **p, *trace;
+    char *reduce;
+    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order, fold;
+    float eps, ***u, **p, *trace, ui;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -48,10 +49,20 @@ int main (int argc, char *argv[])
     if (!sf_getint("order",&order)) order=1;
     /* accuracy order */
 
-    sf_putint(out,"n2",ns2);
-    sf_putfloat(out,"o2",-ns);
-    sf_putfloat(out,"d2",1.0);
-    sf_shiftdim(inp, out, 2);
+    if (NULL == (reduce = sf_getstring("reduce"))) reduce="none";
+    /* reduction method (none,stack,median,triangle,gaussian,predict) */
+
+    switch(reduce[0]) {
+	case 's': /* stack - mean value */
+	case 'p': /* predict */
+	    break;
+	case 'n': /* none */
+	default:
+	    sf_putint(out,"n2",ns2);
+	    sf_putfloat(out,"o2",-ns);
+	    sf_putfloat(out,"d2",1.0);
+	    sf_shiftdim(inp, out, 2);
+    }
 
     predict_init (n1, n2, eps*eps, order, 1, false);
 
@@ -102,7 +113,33 @@ int main (int argc, char *argv[])
 		}
 	    }	    
 	}
-	sf_floatwrite(u[0][0],n1*ns2*n2,out);
+	
+	switch(reduce[0]) {
+	    case 's': /* stack - mean value */
+	    case 'p': /* predict */
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			fold=0;
+			trace[i1]=0.0f;
+
+			for (is=0; is < ns2; is++) {
+			    if ('p'==reduce[0] && is==ns) continue;
+			    ui = u[i2][is][i1];
+			    if (ui != 0.0f) {
+				fold++;
+				trace[i1] += ui;
+			    }
+			}
+			
+			if (fold > 0) trace[i1] /= fold;
+		    }
+		    sf_floatwrite(trace,n1,out);
+		}		    
+		break;
+	    case 'n': /* none */
+	    default:
+		sf_floatwrite(u[0][0],n1*ns2*n2,out);
+	}
     }	    
 
     exit (0);

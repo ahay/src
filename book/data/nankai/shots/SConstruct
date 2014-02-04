@@ -226,7 +226,7 @@ Result('dip',
        grey color=j scalebar=y wanttitle=n barlabel=Slope barunit=samples
        ''')
 
-Flow('refl','mig0 dip','pwspray dip=${SOURCES[1]} ns=5 order=2 | stack')
+Flow('refl','mig0 dip','pwspray dip=${SOURCES[1]} ns=5 order=2 reduce=stack')
 Result('refl','window min1=5.5 max1=8 | grey title="Reflections" ')
 
 Flow('diff','mig0 refl','add scale=1,-1 ${SOURCES[1]}')
