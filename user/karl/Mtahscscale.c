@@ -173,7 +173,16 @@ int main(int argc, char* argv[])
   double this_gx;
   double this_gy;
 
+  char* sxyfile_name=NULL;
+  sf_file sxyfile=NULL;
+  off_t nin[SF_MAX_DIM];
+  int diminput;
+  int iaxis;
+  char parameter[13];
   int indx;
+
+  char* gxyfile_name=NULL;
+  sf_file gxyfile=NULL;
 
   int* trace_shotloc;
   int* trace_grouploc;
@@ -369,6 +378,63 @@ int main(int argc, char* argv[])
     }
   }
 
+  if(NULL!=(sxyfile_name=sf_getstring("sxy"))){
+    if(verbose>0){
+	fprintf(stderr,"sxy=%s input.  Write the source xy coords.\n",
+		sxyfile_name);
+    }
+    sxyfile=sf_output(sxyfile_name);
+    sf_putint(sxyfile,"n1",num_sxy);
+    sf_putfloat(sxyfile,"d1",1);
+    sf_putfloat(sxyfile,"o1",0);
+    sf_putstring(sxyfile,"label1","none");
+    sf_putstring(sxyfile,"unit1","none");
+    sf_settype(sxyfile,SF_COMPLEX);
+    /* get dimension of the input file.  Override n2=n"dim" on sxyfile */
+    diminput = sf_largefiledims(infile,nin);
+    for (iaxis=1; iaxis<diminput; iaxis++){
+      sprintf(parameter,"n%d",iaxis+1);
+      sf_putint(sxyfile,parameter,(off_t)1);
+      sf_putint(sxyfile,parameter,(off_t)1);
+    }
+    sf_fileflush(sxyfile,infile);
+    for(indx=0; indx<num_sxy; indx++){
+      float myfloat;
+      myfloat=(float)sx[indx];
+      sf_floatwrite(&myfloat,1,sxyfile);
+      myfloat=(float)sy[indx];
+      sf_floatwrite(&myfloat,1,sxyfile);
+    }
+  }
+  if(NULL!=(gxyfile_name=sf_getstring("gxy"))){
+    if(verbose>0){
+	fprintf(stderr,"gxy=%s input.  Write the source xy coords.\n",
+		gxyfile_name);
+    }
+    gxyfile=sf_output(gxyfile_name);
+    sf_putint(gxyfile,"n1",num_gxy);
+    sf_putfloat(gxyfile,"d1",1);
+    sf_putfloat(gxyfile,"o1",0);
+    sf_putstring(gxyfile,"label1","none");
+    sf_putstring(gxyfile,"unit1","none");
+    sf_settype(gxyfile,SF_COMPLEX);
+    /* get dimension of the input file.  Override n2=n"dim" on gxyfile */
+    diminput = sf_largefiledims(infile,nin);
+    for (iaxis=1; iaxis<diminput; iaxis++){
+      sprintf(parameter,"n%d",iaxis+1);
+      sf_putint(gxyfile,parameter,(off_t)1);
+      sf_putint(gxyfile,parameter,(off_t)1);
+    }
+    sf_fileflush(gxyfile,infile);
+    for(indx=0; indx<num_gxy; indx++){
+      float myfloat;
+      myfloat=(float)gx[indx];
+      sf_floatwrite(&myfloat,1,gxyfile);
+      myfloat=(float)gy[indx];
+      sf_floatwrite(&myfloat,1,gxyfile);
+    }
+  }
+  
   if(verbose>0)
     fprintf(stderr,"read traces, find s/g xy, trace amp, n_traces=%d\n",
 	    n_traces);
@@ -435,66 +501,70 @@ int main(int argc, char* argv[])
   /* compute surface consistent scalars using */
   /* trace_shotloc, trace_grouploc, trace_amp */
   /********************************************/
-  /* could free sx,sy,gx,gy arrays, but they are needed to compute
-     amp[xcmp][ycmp] */
+  /* codsfgsdfgsdgfuld free sx,sy,gx,gy arrays, but they are needed to compute
+     am{[xcmp][ycmp] */
   if(verbose>0)fprintf(stderr,"compute surface consistent scalars\n");
+
+
+  /* computation of shot_scale and group_scale could be linearized
+     by taking log of trace_amp, then use iterative cg type method kls */
+  /* compute shot_scale */
   shot_scale  =malloc(num_sxy*sizeof(float));
   shot_fold   =malloc(num_sxy*sizeof(float));
-  group_scale =malloc(num_gxy*sizeof(float));
-  group_fold  =malloc(num_gxy*sizeof(float));
- 
+  /* computation of shot_scale might fit nicely into function kls */ 
   for (indx=0; indx<num_sxy; indx++){
     shot_scale[indx]=0.0;
     shot_fold[indx]=0.0;
   }
-  for (indx=0; indx<num_gxy; indx++){
-    group_scale[indx]=0.0;
-    group_fold[indx]=0.0;
-  }
-    
   for (inum_trace=0; inum_trace<num_traces; inum_trace++){
     if(trace_amp[inum_trace]>0.0){
       shot_scale  [trace_shotloc [inum_trace]]+=trace_amp[inum_trace];
       shot_fold   [trace_shotloc [inum_trace]]++;
-      group_scale [trace_grouploc[inum_trace]]+=trace_amp[inum_trace];
-      group_fold  [trace_grouploc[inum_trace]]++;
     } 
   }
-  if(verbose>4){
-    for (indx=0; indx<num_sxy; indx++){
-      fprintf(stderr,"after summation loop shot_scale[%d]=%e shot_fold=%e\n",
-	      indx,shot_scale[indx],shot_fold[indx]);
-    }
-    for (indx=0; indx<num_gxy; indx++){
-      fprintf(stderr,"after summation loop group_scale[%d]=%e group_fold=%e\n",
-	      indx,group_scale[indx],group_fold[indx]);
-    }
-  }
-  
   for (indx=0; indx<num_sxy; indx++){
     if(shot_scale [indx]<1e-30)shot_scale[indx]=0.0;
     else                 shot_scale[indx]=shot_fold[indx]/shot_scale[indx];
+  }
+
+  /* apply the shot scale to trace_amp before computing group_scale */
+  for (inum_trace=0; inum_trace<num_traces; inum_trace++){
+    trace_amp[inum_trace]*=shot_scale[trace_shotloc [inum_trace]];
+  }
+  
+
+
+  /* compute group_scale */
+  group_scale =malloc(num_gxy*sizeof(float));
+  group_fold  =malloc(num_gxy*sizeof(float));
+  for (indx=0; indx<num_gxy; indx++){
+    group_scale[indx]=0.0;
+    group_fold[indx]=0.0;
+  }   
+  for (inum_trace=0; inum_trace<num_traces; inum_trace++){
+    if(trace_amp[inum_trace]>0.0){
+      group_scale [trace_grouploc[inum_trace]]+=trace_amp[inum_trace];
+      group_fold  [trace_grouploc[inum_trace]]++;
+    } 
   }
   for (indx=0; indx<num_gxy; indx++){
     if(group_scale[indx]<1e-30)group_scale[indx]=0.0;
     else                 group_scale[indx]=group_fold[indx]/group_scale[indx];
   }
+
+
+
+
   if(verbose>4){
     for (indx=0; indx<num_sxy; indx++){
       fprintf(stderr,"final shot_scale[%d]=%e shot_fold=%e\n",
 	      indx,shot_scale[indx],shot_fold[indx]);
     }
     for (indx=0; indx<num_gxy; indx++){
-      fprintf(stderr,"final loop group_scale[%d]=%e group_fold=%e\n",
+      fprintf(stderr,"final group_scale[%d]=%e group_fold=%e\n",
 	      indx,group_scale[indx],group_fold[indx]);
     }
   }
-   
-
-
-
-
-
   if(verbose>0) 
     fprintf(stderr,"read traces, apply surface consistant scale. n_traces=%d\n",
 	    n_traces);
