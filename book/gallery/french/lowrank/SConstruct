@@ -1,0 +1,49 @@
+from rsf.proj import *
+from rsf.gallery import french
+
+french.get_refl('model')
+
+Result('model',
+       '''
+       unif3 v00=1,2 n1=401 d1=10.265 |
+       byte allpos=y bias=1 |
+       grey3 color=j title="French model" label1=Depth unit1=m
+       frame1=175 frame2=60 frame3=80 flat=n 
+       ''')
+
+# Zero-offset
+
+french.get_zodata('data')
+
+Result('data',
+       '''
+       byte gainpanel=all |
+       grey3 title="Zero Offset" 
+       frame1=250 frame2=81 frame3=81 flat=n
+       screenratio=1 point1=0.65 point2=0.65
+       ''')
+
+Flow('vel','data','window n1=1 | math output=1 | spray axis=3 n=401 d=10.265')
+Flow('fft','vel','fft1 | fft3 axis=2 pad=1 | fft3 axis=3 pad=1')
+
+Flow('right left','vel fft',
+     'isolr3 seed=2014 dt=0.010265 fft=${SOURCES[1]} left=${TARGETS[1]}')
+
+Flow('mig','data left right',
+     '''
+     reverse which=1 |
+     transp plane=12 memsize=1000 | 
+     transp plane=23 memsize=1000 | 
+     fftexp3 mig=y
+     left=${SOURCES[1]} right=${SOURCES[2]}
+     nz=401 dz=10.265
+     ''')
+
+Result('mig',
+       '''
+       byte gainpanel=all |
+       grey3 title="XXX" label1=Depth unit1=m
+       frame1=175 frame2=60 frame3=80 flat=n 
+       ''')
+
+End()

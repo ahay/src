@@ -93,6 +93,7 @@ In programs:
 * Fixed size definitions in sfinttest1
 * Fixed off-by-one bug in sfrickerfit
 * Avoid cropping of images by vplot2eps
+* Read the whole cube for finding contours in sfcontour3
 
 In the build system:
 

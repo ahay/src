@@ -190,18 +190,21 @@ int main(int argc, char* argv[])
 
     if (!hasc) {
 	if (!hasdc || !hasc0) {
-	    sf_seek(in,(off_t) frame3*n1*n2*sizeof(float),SEEK_SET);
-	    sf_floatread(front[0],n1*n2,in);
+	    zmin=SF_HUGE;
+	    zmax=-SF_HUGE;
 
-	    zmin=front[0][0];
-	    zmax=front[0][0];
-	    for (i2=0; i2 < n2; i2++) {
-		for (i1=0; i1 < n1; i1++) {
-		    zi= front[i2][i1];
-		    if      (zi < zmin) zmin=zi;
-		    else if (zi > zmax) zmax=zi;
+	    for (i3=0; i3 < n3; i3++) {
+		sf_floatread(front[0],n1*n2,in);
+
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			zi= front[i2][i1];
+			if      (zi < zmin) zmin=zi;
+			else if (zi > zmax) zmax=zi;
+		    }
 		}
 	    }
+	    
 	    if (hasdc) {
 		for (c0 = floorf(zmin/dc) * dc - dc; c0 < zmin; c0 += dc) ;
 	    } else if (hasc0) {		
