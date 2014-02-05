@@ -78,51 +78,6 @@ Result('mappedgathernmo','grey title="tah nmo gather"')
 Result('zoommappedgathernmo','mappedgathernmo',
 	'sfwindow max1=2. | grey title="tah nmo gather"')
 
-Flow('foldplot','../fetch/npr3_gathers_hdr.rsf',
-     '''
-     dd type=float |
-     fold
-        verbose=1 
-	o1=0 n1=96  d1=200 label1=offset 
-	o2=1 n2=188 d2=1   label2=xline 
-	o3=1 n3=345 d3=1   label3=iline
-     ''')
-Result('foldplot','grey title=foldplot pclip=100')
-Result('foldplot3d','foldplot',
-	'''
-	byte 
-	| grey3 title=foldplot pclip=100 
-	        frame1=24 frame2=94 frame3=172
-	''')
-Flow('foldmap','foldplot',
-     '''
-     transp plane=13
-     ''')
-Result('foldmap','grey title=foldplot pclip=100')
-# shot coordinates
-Flow('sx','../fetch/npr3_gathers_hdr.rsf',
-	'dd type=float | headermath output="sx"')
-Flow('sy','../fetch/npr3_gathers_hdr.rsf',
-	'dd type=float | headermath output="sy"')
-Flow('sxsycoord',['sx','sy'],'cmplx ${SOURCES[1]}')
-Result('sxsycoord','graph symbol="+" title="Shot coordinates" plotcol=5')
-
-# Receiver coordinates
-Flow('gx','../fetch/npr3_gathers_hdr.rsf',
-	'dd type=float | headermath output="gx"')
-Flow('gy','../fetch/npr3_gathers_hdr.rsf',
-	'dd type=float | headermath output="gy"')
-Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
-Result('gxgycoord','graph symbol="+" title="Receiver coordinates" plotcol=5')
-
-
-
-
-
-
-
-
-
 # from command line:
 # wget http://s3.amazonaws.com/teapot/npr3_field.sgy
 # ln -s /home/karl/data/TeapotDome/Prestack/npr3_field.sgy .
