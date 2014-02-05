@@ -110,6 +110,6 @@ Plot('diff',
        wherexlabel=t wheretitle=b plotfat=3
        '''% nt)
 
-Result('cmp','cchirps rec diff','OverUnderAniso')
+Result('cmp','cchirps rec','OverUnderAniso')
 
 End()
