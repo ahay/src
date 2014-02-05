@@ -1,12 +1,7 @@
 from rsf.proj import *
 import math
 
-Flow(['teapot','tteapot','teapot.asc','teapot.bin'],None,
-     '''
-     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} tape=/home/karl/data/TeapotDome/Prestack/npr3_gathers.sgy
-     ''',stdin=0)
-
-Flow('foldplot','tteapot',
+Flow('foldplot','../fetch/npr3_gathers_hdr',
     '''
       dd type=float |
       fold 
