@@ -1,7 +1,5 @@
 from rsf.proj import *
-
-sys.path.insert(0,'..')
-import sigsbee
+from rsf.gallery import sigsbee
 
 sigsbee.getvel('vel','migvel')
 Result('vel','grey color=j allpos=y bias=1.5 scalebar=y barreverse=y wanttitle=n')
@@ -28,13 +26,7 @@ Flow('mig','fft slowness',
      window | transp
      ''',split=[3,nf,[0]],reduce='add')
 
-Result('mig',
-       '''
-       grey title=Migration 
-       label2=Depth    unit2=km 
-       label1=Distance unit1=km
-       ''')
-
+sigsbee.zoimage('mig')
 
 nw=600
 jw=1
@@ -47,7 +39,6 @@ dmx=0.04572
 omx=3.32994
 
 sigsbee.getshots('shot')
-
 
 Result('shot','byte | grey3 flat=n frame1=250 frame2=80 frame3=100 title=Shots')
 
@@ -65,6 +56,7 @@ Result('shot499','shot',
        label2=Offset unit2=km label3=Shot unit3=km title=
        screenratio=1.35 labelsz=3
        ''')
+
 # Receiver shot gather wavefield FFT
 Flow('rfft','shot',
      '''
@@ -91,27 +83,24 @@ Flow('stra','swav','transp plane=12 | transp plane=23',local=1)
 Flow('slow','vel',
      '''
      transp | window j1=1 | math output=1/input |
-      spray axis=2 n=1 d=1 o=0 |
-      window j3=1 squeeze=n
-      ''',local=1)
+     spray axis=2 n=1 d=1 o=0 |
+     window j3=1 squeeze=n
+     ''',local=1)
 
-#Flow('img cig','stra rtra slow',
-     #'''
-     #srmig3 nrmax=20 dtmax=5e-05 eps=0.01 --readwrite=y verb=y ompnth=1
-     #tmx=16 rwf=${SOURCES[1]} slo=${SOURCES[2]} cig=${TARGETS[1]}
-     #itype=o
-     #''',split=[4,500,[0,1]],reduce='add')
+Flow('img cig','stra rtra slow',
+     '''
+     srmig3 nrmax=20 dtmax=5e-05 eps=0.01 --readwrite=y verb=y ompnth=1
+     tmx=16 rwf=${SOURCES[1]} slo=${SOURCES[2]} cig=${TARGETS[1]}
+     itype=o
+     ''',split=[4,500,[0,1]],reduce='add')
 
-Flow('img2','img','window | transp | put label1=Depth unit1=km label2=Lateral unit2=km',local=1)
-Result('image','img2','grey title="PSPI wave equation image"',local=1)
+Flow('image','img','window | transp | put label1=Depth unit1=km label2=Lateral unit2=km',local=1)
+sigsbee.psimage('image')
 
-Result('agc','img2','agc rect1=600 rect2=400 | grey title="PSPI wave equation image"',local=1)
+Flow('agc','image','agc rect1=600 rect2=400',local=1)
+sigsbee.psimage('agc')
 
 # STORE BY PACKING DATA AND HEADER
-
-Flow('imgsigsbee','img','window --out=stdout',local=1)
-
-
-
+# Flow('imgsigsbee','image','window --out=stdout',local=1)
 
 End()

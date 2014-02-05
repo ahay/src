@@ -54,7 +54,7 @@ def gethrzo(zodata):
     Flow(zodata,'sigexp.rsf','dd form=native')
 
 def zoimage(image):
-    Result(image,'grey title="Zero-Offset %s" ' % method)
+    Result(image,'grey title="Zero-Offset %s" label1=Depth label2=Distance' % method)
 
 def getshots(shots):
     Flow(shots,'data head',
@@ -65,3 +65,6 @@ def getshots(shots):
          d3=%g o3=%g label3=Shot   unit3=km |
          mutter half=n tp=0.3 v0=1.5
          ''' % (dh,ds,s0))
+
+def psimage(image):
+    Result(image,'grey title="Prestack %s" label1=Depth label2=Distance' % method)
