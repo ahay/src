@@ -120,11 +120,13 @@ int main (int argc, char* argv[]) {
     ext = sf_escbsc3_warnext (adom);
 
 #ifdef _OPENMP
-    if (!sf_getint ("nc", &nc)) nc = 1;
-    /* Number of threads to use for computations */
-    omp_set_num_threads (nc);
-    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
-                ext, nc, omp_get_max_threads ());
+    if (!sf_getint ("nc", &nc)) nc = 0;
+    /* Number of threads to use for ray tracing (OMP_NUM_THREADS by default) */
+    if (nc)
+        omp_set_num_threads (nc); /* User override */
+    else
+        nc = omp_get_max_threads (); /* Current default */
+    sf_warning ("%s Using %d threads", ext, omp_get_max_threads ());
 #endif
 
     if (!sf_getstring ("vspl")) sf_error ("Need vspl=");

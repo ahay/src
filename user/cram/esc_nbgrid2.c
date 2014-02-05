@@ -394,7 +394,7 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
                                 esc_nbgrid->oz + iz*esc_nbgrid->dz,
                                 esc_nbgrid->ox + ix*esc_nbgrid->dx,
                                 esc_nbgrid->oa + ia*esc_nbgrid->da,
-                                0.0, 0.0, child);
+                                0.0, 0.0, child, NULL);
         if ((esc_nbgrid->mtraced && trmdist) || esc_nbgrid->atraced)
             sf_esc_point2_set_traced (child, true);
         if (esc_nbgrid->verb)

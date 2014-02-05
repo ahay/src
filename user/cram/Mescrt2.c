@@ -17,6 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <rsf.h>
 
 #include "esc_point2.h"
@@ -82,17 +86,33 @@ void sf_escrt2_traj (float z, float x, float a, int it, void *ud) {
     }
 }
 
-int main (int argc, char* argv[]) {
-    int nz, nx, na, ia, ix, iz, i, it;
-    float dz, oz, dx, ox, da, oa, z, x;
-    float **e;
-    sf_file spdom, vspline = NULL, out;
-    sf_escrt2_traj_cbud tdata; 
+static char* sf_escrt3_warnext (sf_file input) {
+    int icpu = 0, ncpu = 1, maxlen;
+    char *host = sf_gethost ();
+    char *ext = NULL;
 
+    if (input) {
+        if (!sf_histint (input, "icpu", &icpu)) icpu = 0;
+        if (!sf_histint (input, "ncpu", &ncpu)) ncpu = 1;
+    }
+    maxlen = strlen (host) + 30;
+    ext = (char*)malloc (maxlen*sizeof(char));
+    snprintf (ext, maxlen, "[%s:%d/%d]", host, icpu + 1, ncpu);
+    return ext;
+}
+
+int main (int argc, char* argv[]) {
+    int nz, nx, na, ia, ix, iz, i, it, nt, ic, nc = 1, fz, lz, itr = 0;
+    float dz, oz, dx, ox, da, oa, z, x, dt, df, md, aper;
+    float ***e;
+    sf_file spdom, vspline = NULL, out, traj = NULL;
+    sf_escrt2_traj_cbud *tdata = NULL; 
+    char *ext = NULL;
     bool verb, parab;
     sf_esc_slowness2 esc_slow;
-    sf_esc_tracer2 esc_tracer;
-    sf_esc_point2 esc_point;
+    sf_esc_tracer2 *esc_tracers;
+    sf_esc_point2 *esc_points;
+    sf_timer timer;
 
     sf_init (argc, argv);
 
@@ -106,8 +126,6 @@ int main (int argc, char* argv[]) {
     out = sf_output ("out");
     /* Escape values */
 
-    tdata.traj = NULL;
-
     /* Spatial dimensions */
     if (spdom) {
         if (!sf_histint (spdom, "n1", &nz)) sf_error ("No n1= in input");
@@ -117,6 +135,7 @@ int main (int argc, char* argv[]) {
         if (!sf_histfloat (spdom, "d2", &dx)) sf_error ("No d2= in input");
         if (!sf_histfloat (spdom, "o2", &ox)) sf_error ("No o2= in input");
     }
+    ext = sf_escrt3_warnext (spdom);
     if (!sf_getint ("nz", &nz) && !spdom) sf_error ("Need nz=");
     /* Number of samples in z axis */
     if (!sf_getfloat ("oz", &oz) && !spdom) sf_error ("Need oz=");
@@ -135,6 +154,29 @@ int main (int argc, char* argv[]) {
     da = 2.0*SF_PI/(float)na;
     oa = -SF_PI + 0.5*da;
 
+    if (!sf_getfloat ("df", &df)) df = 0.25;
+    /*< Maximum distance to travel per step (fraction of the cell size) >*/
+
+    if (!sf_getfloat ("md", &md)) md = SF_HUGE;
+    /* Maximum distance for a ray to travel (default - up to model boundaries) */
+    if (md != SF_HUGE)
+        md = fabsf (md);
+
+    if (!sf_getfloat ("aper", &aper)) aper = SF_HUGE;
+    /* Maximum aperture in x and y directions from current point (default - up to model boundaries) */
+    if (aper != SF_HUGE)
+        aper = fabsf (aper);
+
+#ifdef _OPENMP
+    if (!sf_getint ("nc", &nc)) nc = 0;
+    /* Number of threads to use for ray tracing (OMP_NUM_THREADS by default) */
+    if (nc)
+        omp_set_num_threads (nc); /* User override */
+    else
+        nc = omp_get_max_threads (); /* Current default */
+    sf_warning ("%s Using %d threads", ext, omp_get_max_threads ());
+#endif
+
     if (!sf_getbool ("parab", &parab)) parab = true;
     /* y - use parabolic approximation of trajectories, n - straight line */
 
@@ -143,16 +185,29 @@ int main (int argc, char* argv[]) {
 
     if (sf_getstring ("traj")) {
         /* Trajectory output */
-        tdata.traj = sf_output ("traj");
-        if (!sf_getint ("nt", &tdata.nt)) tdata.nt = 1001;
+        traj = sf_output ("traj");
+        if (!sf_getint ("nt", &nt)) nt = 1001;
         /* Number of time samples for each trajectory */
-        if (!sf_getfloat ("dt", &tdata.dt)) tdata.dt = 0.001;
+        if (!sf_getfloat ("dt", &dt)) dt = 0.001;
         /* Time sampling */
-        tdata.it = 0;
-        tdata.pnts = sf_floatalloc2 (TRAJ2_COMPS - 1, tdata.nt);
+        tdata = (sf_escrt2_traj_cbud*)sf_alloc (nc*na, sizeof(sf_escrt2_traj_cbud));
+        /* Time sampling */
+        for (itr = 0; itr < nc*na; itr++) {
+            tdata[itr].it = 0;
+            tdata[itr].nt = nt;
+            tdata[itr].dt = dt;
+            tdata[itr].pnts = sf_floatalloc2 (TRAJ2_COMPS - 1, nt);
+        }
     }
 
-    e = sf_floatalloc2 (ESC2_NUM, na);
+    e = sf_floatalloc3 (ESC2_NUM, na, nc);
+
+    if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
+    /* Spline coefficients for velocity model */
+    vspline = sf_input ("vspl");
+
+    /* Slowness components module [(an)isotropic] */
+    esc_slow = sf_esc_slowness2_init (vspline, verb);
 
     /* Make room for escape variables in output */
     if (spdom)
@@ -183,98 +238,140 @@ int main (int argc, char* argv[]) {
         sf_putstring (out, "unit4", "");
     }
 
-    if (tdata.traj) {
+    if (traj) {
         if (spdom)
-            sf_shiftdim2 (spdom, tdata.traj, 1);
-        sf_putint (tdata.traj, "n1", TRAJ2_COMPS - 1);
-        sf_putfloat (tdata.traj, "o1", 0.0);
-        sf_putfloat (tdata.traj, "d1", 1.0);
-        sf_putstring (tdata.traj, "label1", "Trajectory components");
-        sf_putstring (tdata.traj, "unit1", "");
-        sf_putint (tdata.traj, "n2", tdata.nt);
-        sf_putfloat (tdata.traj, "o2", 0.0);
-        sf_putfloat (tdata.traj, "d2", tdata.dt);
-        sf_putstring (tdata.traj, "label2", "Time");
-        sf_putstring (tdata.traj, "unit2", "s");
-        sf_putint (tdata.traj, "n3", na);
-        sf_putfloat (tdata.traj, "d3", da*180.0/SF_PI);
-        sf_putfloat (tdata.traj, "o3", oa*180.0/SF_PI);
-        sf_putstring (tdata.traj, "label3", "Angle");
-        sf_putstring (tdata.traj, "unit3", "Degrees");
-        sf_putint (tdata.traj, "n4", nz);
-        sf_putfloat (tdata.traj, "o4", oz);
-        sf_putfloat (tdata.traj, "d4", dz);
+            sf_shiftdim2 (spdom, traj, 1);
+        sf_putint (traj, "n1", TRAJ2_COMPS - 1);
+        sf_putfloat (traj, "o1", 0.0);
+        sf_putfloat (traj, "d1", 1.0);
+        sf_putstring (traj, "label1", "Trajectory components");
+        sf_putstring (traj, "unit1", "");
+        sf_putint (traj, "n2", nt);
+        sf_putfloat (traj, "o2", 0.0);
+        sf_putfloat (traj, "d2", dt);
+        sf_putstring (traj, "label2", "Time");
+        sf_putstring (traj, "unit2", "s");
+        sf_putint (traj, "n3", na);
+        sf_putfloat (traj, "d3", da*180.0/SF_PI);
+        sf_putfloat (traj, "o3", oa*180.0/SF_PI);
+        sf_putstring (traj, "label3", "Angle");
+        sf_putstring (traj, "unit3", "Degrees");
+        sf_putint (traj, "n4", nz);
+        sf_putfloat (traj, "o4", oz);
+        sf_putfloat (traj, "d4", dz);
         if (!spdom) {
             sf_putstring (out, "label4", "Depth");
             sf_putstring (out, "unit4", "");
         }
-        sf_putint (tdata.traj, "n5", nx);
-        sf_putfloat (tdata.traj, "o5", ox);
-        sf_putfloat (tdata.traj, "d5", dx);
+        sf_putint (traj, "n5", nx);
+        sf_putfloat (traj, "o5", ox);
+        sf_putfloat (traj, "d5", dx);
         if (!spdom) {
             sf_putstring (out, "label5", "Lateral");
             sf_putstring (out, "unit5", "");
         }
     }
 
-    if (!sf_getstring ("vspl")) sf_error ("Need vspl=");
-    /* Spline coefficients for velocity model */
-    vspline = sf_input ("vspl");
+    esc_tracers = (sf_esc_tracer2*)sf_alloc (nc, sizeof(sf_esc_tracer2));
+    esc_points = (sf_esc_point2*)sf_alloc (nc, sizeof(sf_esc_point2));
+    for (ic = 0; ic < nc; ic++) {
+        esc_tracers[ic] = sf_esc_tracer2_init (esc_slow);
+        sf_esc_tracer2_set_parab (esc_tracers[ic], parab);
+        if (md != SF_HUGE)
+            sf_esc_tracer2_set_mdist (esc_tracers[ic], md);
+        sf_esc_tracer2_set_df (esc_tracers[ic], df);
+        esc_points[ic] = sf_esc_point2_init ();
+    }
 
-    /* Slowness components module [(an)isotropic] */
-    esc_slow = sf_esc_slowness2_init (vspline, verb);
-
-    if (tdata.traj)
-        esc_tracer = sf_esc_tracer2_init (esc_slow,
-                                          sf_escrt2_traj, tdata.dt, (void*)&tdata);
-    else
-        esc_tracer = sf_esc_tracer2_init (esc_slow,
-                                          NULL, 0.0, NULL);
-    sf_esc_tracer2_set_parab (esc_tracer, parab);
-
-    esc_point = sf_esc_point2_init ();
-
+    timer = sf_timer_init ();
+    /* Ray tracing loop */
     for (ix = 0; ix < nx; ix++) {
         x = ox + ix*dx;
+        /* Set aperture */
+        if (aper != SF_HUGE) {
+            for (ic = 0; ic < nc; ic++) {
+                sf_esc_tracer2_set_xmin (esc_tracers[ic], x - aper);
+                sf_esc_tracer2_set_xmax (esc_tracers[ic], x + aper);
+            }
+        }
         if (verb)
-            sf_warning ("Shooting from lateral location %d of %d at %g;", ix + 1, nx, x);
-        for (iz = 0; iz < nz; iz++) {
-            z = oz + iz*dz;
-            for (ia = 0; ia < na; ia++) {
-                sf_esc_tracer2_compute (esc_tracer, z, x, oa + ia*da,
-                                        0.0, 0.0, esc_point);
-                /* Copy escape values to the output buffer */
-                for (i = 0; i < ESC2_NUM; i++)
-                    e[ia][i] = sf_esc_point2_get_esc_var (esc_point, i);
-                if (tdata.traj) {
-                    /* Fill the rest of the trajectory with the last point */
-                    for (it = tdata.it + 1; it < tdata.nt; it++) {
-                        for (i = 0; i < TRAJ2_COMPS - 1; i++)
-                            tdata.pnts[it][i] = tdata.pnts[tdata.it][i];
+            sf_warning ("%s Shooting from lateral location %d of %d at %g;",
+                        ext, ix + 1, nx, x);
+        /* Loop over chunks */
+        for (ic = 0; ic < (nz/nc + ((nz % nc) != 0)); ic++) {
+            fz = ic*nc;
+            lz = (ic + 1)*nc - 1;
+            if (lz >= nz)
+                lz = nz - 1;
+            sf_timer_start (timer);
+#ifdef _OPENMP
+#pragma omp parallel for                   \
+            schedule(static,1)             \
+            private(iz,ia,z,it,i,itr) \
+            shared(fz,lz,ix,na,nz,nx,oa,oz,ox,da,dz,dx,x,tdata,esc_tracers,esc_points,e,out,traj)
+#endif
+            for (iz = fz; iz <= lz; iz++) {
+                z = oz + iz*dz;
+                for (ia = 0; ia < na; ia++) {
+                    if (traj) {
+                        itr = (iz - fz)*na + ia;
+                        sf_esc_tracer2_set_trajcb (esc_tracers[iz - fz], sf_escrt2_traj, dt,
+                                                   (void*)&tdata[itr]);
                     }
-                    sf_floatwrite (tdata.pnts[0], (size_t)tdata.nt*
-                                                  (size_t)(TRAJ2_COMPS - 1), tdata.traj);
+                    sf_esc_tracer2_compute (esc_tracers[iz - fz], z, x, oa + ia*da,
+                                            0.0, 0.0, esc_points[iz - fz], NULL);
+                    /* Copy escape values to the output buffer */
+                    for (i = 0; i < ESC2_NUM; i++)
+                        e[iz - fz][ia][i] = sf_esc_point2_get_esc_var (esc_points[iz - fz], i);
+                    if (traj) {
+                        /* Fill the rest of the trajectory with the last point */
+                        for (it = tdata[itr].it + 1; it < tdata[itr].nt; it++) {
+                            for (i = 0; i < TRAJ2_COMPS - 1; i++)
+                                tdata[itr].pnts[it][i] = tdata[itr].pnts[tdata[itr].it][i];
+                        }
+                    }
+                } /* Loop over a */
+            } /* Loop over z */
+            sf_timer_stop (timer);
+            sf_floatwrite (e[0][0], (size_t)(lz - fz + 1)*(size_t)na*(size_t)ESC2_NUM, out);
+            if (tdata) {
+                for (itr = 0; itr < (lz - fz + 1)*na; itr++) {
+                    sf_floatwrite (tdata[itr].pnts[0],
+                                   (size_t)tdata[itr].nt*(size_t)(TRAJ2_COMPS - 1), traj);
                 }
-            } /* Loop over a */
-            sf_floatwrite (e[0], (size_t)na*(size_t)ESC2_NUM, out);
-        } /* Loop over z */
+            }
+        } /* Loop over z chunks */
     } /* Loop over x */
-    if (verb)
+    if (verb) {
         sf_warning (".");
+        sf_warning ("%s Total kernel time: %g s, per depth point: %g s",
+                    ext, sf_timer_get_total_time (timer)/1000.0,
+                    (sf_timer_get_total_time (timer)/(float)((size_t)nx*(size_t)nz))/1000.0);
+    }
+    sf_timer_close (timer);
 
-    sf_esc_point2_close (esc_point);
-    sf_esc_tracer2_close (esc_tracer);
+    for (ic = 0; ic < nc; ic++) {
+        sf_esc_point2_close (esc_points[ic]);
+        sf_esc_tracer2_close (esc_tracers[ic]);
+    }
+    free (esc_points);
+    free (esc_tracers);
+    if (traj) {
+        for (itr = 0; itr < nc*na; itr++) {
+            free (tdata[itr].pnts[0]);
+            free (tdata[itr].pnts);
+        }
+        free (tdata);
+    }
     sf_esc_slowness2_close (esc_slow);
 
-    if (tdata.traj) {
-        free (tdata.pnts[0]);
-        free (tdata.pnts);
-        sf_fileclose (tdata.traj);
-    }
+    free (e[0][0]);
     free (e[0]);
     free (e);
 
     sf_fileclose (vspline);
+    if (traj)
+        sf_fileclose (traj);
 
     return 0;
 }

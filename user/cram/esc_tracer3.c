@@ -39,7 +39,8 @@ typedef void (*sf_esc_tracer3_traj)(float z, float x, float y, float b,
 struct EscTracer3 {
     int                  nz, nx, ny, na, nb;
     float                oz, ox, oy, oa, ob;
-    float                dz, dx, dy, da, db, dt, md;
+    float                dz, dx, dy, da, db;
+    float                dt, df, md;
     float                zmin, zmax;
     float                xmin, xmax;
     float                ymin, ymax;
@@ -84,6 +85,13 @@ sf_esc_tracer3 sf_esc_tracer3_init (sf_esc_slowness3 esc_slow)
     esc_tracer->db = 0.25*SF_PI/180.0;
 
     esc_tracer->md = SF_HUGE; /* Maximum allowed distance along a ray */
+
+    /* Use smaller spatial steps than those in the velocity model;
+       analytical solution (either parabolic or straight line) tends
+       to be inaccurate with large steps; typical velocity volumes
+       have 20-50 meter sampling with velocity gradients changing
+       noticeably across one cell; this should probably be adaptive */
+    esc_tracer->df = 0.25;
 
     /* Global limits */
     esc_tracer->zgmin = esc_tracer->oz;
@@ -188,6 +196,12 @@ void sf_esc_tracer3_set_mdist (sf_esc_tracer3 esc_tracer, float md)
     esc_tracer->md = md;
 }
 
+void sf_esc_tracer3_set_df (sf_esc_tracer3 esc_tracer, float df)
+/*< Set maximum allowed distance to travel per step (fraction of the cell size) >*/
+{
+    esc_tracer->df = df;
+}
+
 float sf_esc_tracer3_sintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, float *y,
                                  float *b, float *a, float dz, float dx, float dy,
                                  float db, float da, float fz, float fx, float fy,
@@ -234,7 +248,7 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     the nearest wall defined by (dz, dx, dy), return pseudotime along the trajectory >*/
 {
     float A, B, C, D, s1, s2, sigma, az, ax, ay,
-          pz, px, py, pz0, px0, py0, l, aold, ddz, ddx, ddy;
+          pz, px, py, pz0, px0, py0, l, ddz, ddx, ddy;
     *dd = 0.0;
     /* Assume locally constant slowness and slowness gradients */
     /* Parabola - dz = -v_z*sigma + 0.5*a_z*sigma^2 */
@@ -245,10 +259,9 @@ float sf_esc_tracer3_pintersect (sf_esc_tracer3 esc_tracer, float *z, float *x, 
     az = s*sz;
     ax = s*sx;
     ay = s*sy;
-    aold = *a;
     pz0 = -s*cosf (*b);
-    px0 = s*sinf (*b)*cosf (aold);
-    py0 = s*sinf (*b)*sinf (aold);
+    px0 = s*sinf (*b)*cosf (*a);
+    py0 = s*sinf (*b)*sinf (*a);
 
     do {
         if (*dd > md) {
@@ -397,14 +410,9 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
         dy = fy < 0.0 ? esc_tracer->dy : -esc_tracer->dy;
         da = fa < 0.0 ? esc_tracer->da : -esc_tracer->da;
         db = fb < 0.0 ? esc_tracer->db : -esc_tracer->db;
-        /* Use smaller spatial steps than those in the velocity model;
-           analytical solution (either parabolic or straight line) tends
-           to be inaccurate with large steps; typical velocity volumes
-           have 20-50 meter sampling with velocity gradients changing
-           noticeably across one cell; this should probably be adaptive */
-        dz *= 0.1;
-        dx *= 0.1;
-        dy *= 0.1;
+        dz *= esc_tracer->df;
+        dx *= esc_tracer->df;
+        dy *= esc_tracer->df;
         /* Adjust if near boundaries */
         if ((z + dz) < esc_tracer->zmin)
             dz = esc_tracer->zmin - z;

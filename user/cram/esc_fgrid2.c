@@ -378,7 +378,7 @@ static void sf_esc_fgrid2_evaluate_point (sf_esc_fgrid2 esc_fgrid, int iz, int i
                                     esc_fgrid->oz + iz*esc_fgrid->dz,
                                     esc_fgrid->ox + ix*esc_fgrid->dx,
                                     esc_fgrid->oa + ia*esc_fgrid->da,
-                                    0.0, 0.0, point);
+                                    0.0, 0.0, point, NULL);
             if (esc_fgrid->verb)
                 sf_timer_stop (esc_fgrid->rtime);
             sf_esc_point2_become_parent (point);

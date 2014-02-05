@@ -101,7 +101,7 @@ int main (int argc, char* argv[]) {
     esc_slow = sf_esc_slowness2_init (vspline, verb);
 
     /* Ray tracer */
-    esc_tracer = sf_esc_tracer2_init (esc_slow, NULL, 0.0, NULL);
+    esc_tracer = sf_esc_tracer2_init (esc_slow);
 
     /* Narrow band grid */
     esc_grid = sf_esc_nbgrid2_init (nz, nx, na, oz, ox, dz, dx, atraced, mtraced,

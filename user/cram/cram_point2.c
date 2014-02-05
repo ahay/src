@@ -218,8 +218,9 @@ void sf_cram_point2_compute (sf_cram_point2 cram_point,
                     ht = 0;
                     smp =  sf_cram_data2_get_sample (cram_point->data, i,
                                                      srays[ies].t + rrays[ier].t,
-                                                     srays[ies].p > rrays[ier].p ?
-                                                     srays[ies].p : rrays[ier].p, cram_point->dx,
+                                                     fabsf (srays[ies].p) + fabsf (rrays[ier].p)
+                                                     /*srays[ies].p > rrays[ier].p ?
+                                                     srays[ies].p : rrays[ier].p*/, cram_point->dx,
                                                      srays[ies].kmah + rrays[ier].kmah, &ht);
                     if (0 == ht) { /* No hit */
                         ier++;

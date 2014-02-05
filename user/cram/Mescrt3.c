@@ -136,7 +136,7 @@ static char* sf_escrt3_warnext (sf_file input) {
 
 int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, ib, ia, iz, ix, iy, i, it, nt, ic, nc = 1, fz, lz, itr = 0;
-    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, md, aper;
+    float dz, oz, dx, ox, dy, oy, db, ob, da, oa, z, x, y, a, dt, df, md, aper;
     float ****e;
     sf_file spdom, vspline = NULL, out, traj = NULL;
     sf_escrt3_traj_cbud *tdata = NULL; 
@@ -201,6 +201,9 @@ int main (int argc, char* argv[]) {
     db = SF_PI/(float)nb;
     ob = 0.5*db;
 
+    if (!sf_getfloat ("df", &df)) df = 0.1;
+    /*< Maximum distance to travel per step (fraction of the cell size) >*/
+
     if (!sf_getfloat ("md", &md)) md = SF_HUGE;
     /* Maximum distance for a ray to travel (default - up to model boundaries) */
     if (md != SF_HUGE)
@@ -212,11 +215,13 @@ int main (int argc, char* argv[]) {
         aper = fabsf (aper);
 
 #ifdef _OPENMP
-    if (!sf_getint ("nc", &nc)) nc = 1;
-    /* Number of threads to use for ray tracing */
-    omp_set_num_threads (nc);
-    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
-                ext, nc, omp_get_max_threads ());
+    if (!sf_getint ("nc", &nc)) nc = 0;
+    /* Number of threads to use for ray tracing (OMP_NUM_THREADS by default) */
+    if (nc)
+        omp_set_num_threads (nc); /* User override */
+    else
+        nc = omp_get_max_threads (); /* Current default */
+    sf_warning ("%s Using %d threads", ext, omp_get_max_threads ());
 #endif
 
     if (!sf_getbool ("parab", &parab)) parab = true;
@@ -231,8 +236,8 @@ int main (int argc, char* argv[]) {
         if (!sf_getint ("nt", &nt)) nt = 1001;
         /* Number of time samples for each trajectory */
         if (!sf_getfloat ("dt", &dt)) dt = 0.001;
-        tdata = (sf_escrt3_traj_cbud*)sf_alloc (nc*na*nb, sizeof(sf_escrt3_traj_cbud));
         /* Time sampling */
+        tdata = (sf_escrt3_traj_cbud*)sf_alloc (nc*na*nb, sizeof(sf_escrt3_traj_cbud));
         for (itr = 0; itr < nc*na*nb; itr++) {
             tdata[itr].it = 0;
             tdata[itr].nt = nt;
@@ -359,6 +364,7 @@ int main (int argc, char* argv[]) {
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
         if (md != SF_HUGE)
             sf_esc_tracer3_set_mdist (esc_tracers[ic], md);
+        sf_esc_tracer3_set_df (esc_tracers[ic], df);
         esc_points[ic] = sf_esc_point3_init ();
     }
 

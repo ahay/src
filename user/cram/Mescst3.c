@@ -119,11 +119,13 @@ int main (int argc, char* argv[]) {
 #ifdef _OPENMP
     if (!sf_getint ("mp", &mp)) mp = 1;
     /* Bufferization factor for multicore processing (number of points in buffer = mp*nc) */
-    if (!sf_getint ("nc", &nc)) nc = 1;
-    /* Number of threads to use for interpolation */
-    omp_set_num_threads (nc);
-    sf_warning ("%s Using %d threads, omp_get_max_threads()=%d",
-                ext, nc, omp_get_max_threads ());
+    if (!sf_getint ("nc", &nc)) nc = 0;
+    /* Number of threads to use for ray tracing (OMP_NUM_THREADS by default) */
+    if (nc)
+        omp_set_num_threads (nc); /* User override */
+    else
+        nc = omp_get_max_threads (); /* Current default */
+    sf_warning ("%s Using %d threads", ext, omp_get_max_threads ());
     sf_warning ("%s Buffering %d points", ext, nc*mp);
 #endif
 
