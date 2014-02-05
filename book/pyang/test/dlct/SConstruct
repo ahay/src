@@ -65,25 +65,25 @@ Plot('dlct1',
        ''' 
 	window n1=256|	put o1=0 d1=%f label1=freq |
 	math output="abs(input)" | real| scale axis=2 |
-	grey wanttitle=y title="DLCT-1" color=j \
+	grey wanttitle=y title="DLCT-1" color=j 
 	screenwd=10 screenht=40 scalebar=y bartype=v wantaxis2=n
-       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y
+       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y pclip=100 allpos=y
        '''%df )
 Plot('dlct2',
        ''' 
 	window n1=256|	put o1=0 d1=%f label1=freq |
 	math output="abs(input)" | real| scale axis=2 |
-	grey wanttitle=y title="DLCT-2" color=j \
+	grey wanttitle=y title="DLCT-2" color=j 
 	screenwd=10 screenht=40 scalebar=y bartype=v wantaxis2=n
-       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y
+       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y pclip=100 allpos=y
        '''%df )
 Plot('dlct',
        ''' 
 	window n1=256|	put o1=0 d1=%f label1=freq |
 	math output="abs(input)" | real| scale axis=2 |
-	grey wanttitle=y title="DLCT" color=j \
+	grey wanttitle=y title="DLCT" color=j 
 	screenwd=10 screenht=40 scalebar=y bartype=v wantaxis2=n
-       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y
+       barwidth=0.2 crowd1=0.75  crowd2=0.45  grid=y pclip=100 allpos=y
        '''%df )
 
 Result('dlcts',['dlct1','dlct2','dlct'],'SideBySideIso')
