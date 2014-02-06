@@ -22,4 +22,17 @@ Flow('fieldheaderattr.txt',
      'npr3_field_hdr.rsf',
      'sfheaderattr >temp; cat temp; cat temp ')
 
+pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
+    WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
+if pdfread:
+    # download and view the survey notes:
+    Fetch('3dload_Teapot_Dome_3D.pdf','teapot',
+          server='http://s3.amazonaws.com',top='')
+    Result('3dload','3dload_Teapot_Dome_3D.pdf',
+           pdfread + ' $SOURCE',stdin=0)
+    Fetch('teapot_processing.pdf','teapot',
+          server='http://s3.amazonaws.com',top='')
+    Result('processing','teapot_processing.pdf',
+           pdfread + ' $SOURCE',stdin=0)
+    
 End()
