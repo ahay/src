@@ -142,7 +142,7 @@ sf_esc_scglstor3 sf_esc_scglstor3_init (sf_file scgrid, bool mmaped, char *ext, 
 {
     size_t nc, nnc = 0;
     int ia, ib;
-    FILE *gstream = NULL, *dstream = NULL;
+    FILE *gstream = NULL;
 
     sf_esc_scglstor3 esc_scgrid_lstor = (sf_esc_scglstor3)sf_alloc (1, sizeof (struct EscSCgridLStor3));
 
@@ -362,7 +362,6 @@ static char* sf_escscd3_local_ip (int i) {
     struct ifreq ifr[50];
     struct sockaddr_in *s_in = NULL;
     int ifs;
-    char *ipaddr;
     s = socket (AF_INET, SOCK_STREAM, 0);
     if (s < 0)
         sf_error ("socket() failed, errno=%d", errno);
@@ -530,7 +529,7 @@ sf_esc_scgrid3 sf_esc_scgrid3_init (sf_file scgrid, sf_file scdaemon,
 {
     size_t nc;
     off_t doffs;
-    int ia, ib, i, j, k, jj, nab, iab0, iab1;
+    int i, j, k, jj, nab, iab0, iab1;
     int nd, is0, is1, ndab, ncv, nad;
     struct sockaddr_in *serv_addr, loc_addr;
     char *ip;

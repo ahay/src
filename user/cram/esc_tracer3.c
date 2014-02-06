@@ -375,7 +375,6 @@ void sf_esc_tracer3_compute (sf_esc_tracer3 esc_tracer, float z, float x, float 
     float eps = 1e-2;
     float s, sp, sb, sa, sz, sx, sy, dd;
     float dz, dx, dy, db, da, fz, fx, fy, fb, fa, ll = 0.0, sigma;
-    double r;
     float ezmin, ezmax, exmin, exmax, eymin, eymax;
     EscColor3 col = 0;
 
