@@ -9,12 +9,15 @@ $RSFSRC/book/data/teapotdome/fetch
 $RSFSRC/book/data/teapotdome/geom
 	basic fold plots and shot/group maps
 
+$RSFSRC/book/data/teapotdome/vels
+ 	interpolate velocity (not used yet in later directories)
+
 $RSFSRC/book/data/teapotdome/tahnmostack
 	apply nmo and stack of the preprocessed gathers downloaded in the 
 	../fetch directory.  This stack is dompared to the stack created 
 	using seismic unix, SU.  This directory also displays some of the 
 	midpoint gathers from the processed gathers with and without nmo.
-	The a few of the unprocessed shot records dowloaded in the fetch 
+	A few of the unprocessed shot records dowloaded in the fetch 
 	directory are displayed with and without nmo.  sftahsort is used
 	to sort a few unprocessed midpoint gathers for comparison with 
 	the processed midpoint gathers. 

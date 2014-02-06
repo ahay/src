@@ -1,14 +1,10 @@
 from rsf.proj import *
 
-Flow(['tteapot','teapot.asc','teapot.bin'],None,
-     '''
-     segyread tfile=${TARGETS[0]} hfile=${TARGETS[1]} bfile=${TARGETS[2]} tape=npr3_field.sgy |
-     window n2=1
-     ''',stdin=0,stdout=0)
-
 # Xline/Inline coordinates
-Flow('ixc','tteapot','dd type=float | headermath output="xline"')
-Flow('ilc','tteapot','dd type=float | headermath output="iline"')
+Flow('ixc','../fetch/npr3_field_hdr.rsf',
+	'dd type=float | headermath output="xline"')
+Flow('ilc','../fetch/npr3_field_hdr.rsf',
+	'dd type=float | headermath output="iline"')
 Flow('ixil',['ixc','ilc'],'cmplx ${SOURCES[1]}')
 
 # Make survey mask out of existing CDP locations
@@ -38,5 +34,15 @@ Result('vel_time%d' % time,'vvol','''
        grey color=j scalebar=y allpos=y pclip=100 bias=%d
             title="Velocity at time %d" label1=xline unit1= label2=xline unit2=
        ''' % (time, time, minclip, maxclip, minclip, time))
+
+Result('vel3','vvol',
+     '''
+     clip2 lower=%d upper=%d |
+     byte minval=%d maxvel=%d mean=y |
+     grey3  color=j allpos=y pclip=100 minval=%d maxvel=%d 
+            title="stacking velocity" 
+	    frame1=900 frame2=94 frame3=172
+     '''% (minclip, maxclip, minclip, maxclip, minclip, maxclip))
+
 End()
 
