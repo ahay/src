@@ -42,7 +42,9 @@ typedef struct Geopar {
     float oz;
     int   spx;
     int   spz;
-    int   gp;
+    int   gpz;
+    int   gpx;
+    int   gpl;
     int   snpint;
     /*absorbing boundary*/
     int top;
@@ -158,9 +160,6 @@ void reflgen(int nzb, int nxb, int spz, int spx,
     refl[j]=1;
     
     /* 2-d triangle smoothing */
-#ifdef _OPENMP
-#pragma omp parallel for private(i,j,irep,tr,i0)
-#endif
     for (i=0;i<2;i++) {
       if (rect[i] <= 1) continue;
       tr = sf_triangle_init (rect[i],n[i]);
@@ -189,7 +188,7 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,dx,dz,spx,spz,gp,snpint,dt,nth=1,wfit;
+    int nxb,nzb,dx,dz,spx,spz,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
     int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
@@ -204,7 +203,9 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 
     spx = geop->spx;
     spz = geop->spz;
-    gp  = geop->gp;
+    gpz = geop->gpz;
+    gpx = geop->gpx;
+    gpl = geop->gpl;
     snpint = geop->snpint;
     
     nt = geop->nt;
@@ -289,8 +290,8 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,j)
 #endif	 
-	for ( ix =0 ; ix < nx; ix++) {
-	    j = (gp+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
+	for ( ix =0 ; ix < gpl; ix++) {
+	    j = (gpz+geop->top)+(ix+gpx+geop->lft)*nz2; /* padded grid */
 	    rcd[ix][it] = curr[j];
 	}
 	
@@ -320,7 +321,7 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,dx,dz,gp,snpint,dt,wfit;
+    int nxb,nzb,dx,dz,gpz,gpx,gpl,snpint,dt,wfit;
     int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
@@ -334,7 +335,9 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
     dx = geop->dx;
     dz = geop->dz;
     
-    gp  = geop->gp;
+    gpz = geop->gpz;
+    gpx = geop->gpx;
+    gpl = geop->gpl;
     snpint = geop->snpint;
     
     nt = geop->nt;
@@ -387,8 +390,8 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,j)
 #endif
-        for (ix=0; ix<nx; ix++)  {
-	    j = (gp+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
+        for (ix=0; ix<gpl; ix++)  {
+	    j = (gpz+geop->top)+(ix+gpx+geop->lft)*nz2; /* padded grid */
 	    curr[j]+=rcd[ix][it];
 	}
 
@@ -448,14 +451,8 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 		for (iz=0; iz<nz; iz++) {
 		    j = (iz+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
 		    ccr[ix][iz] += wavfld[wfit][ix][iz]*crealf(curr[j]);
-		}
-	    }
-#ifdef _OPENMP
-#pragma omp parallel for private(ix, iz)
-#endif
-	    for (ix=0; ix<nx; ix++) {
-		for (iz=0; iz<nz; iz++) {
-		    sill[ix][iz] += wavfld[wfit][ix][iz]*wavfld[wfit][ix][iz];
+		    sill[ix][iz]+= crealf(curr[j])*crealf(curr[j]);
+		    //		    sill[ix][iz] += wavfld[wfit][ix][iz]*wavfld[wfit][ix][iz];
 		}
 	    }
 	    wfit--;
