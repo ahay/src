@@ -20,7 +20,6 @@
 */
 #include <rsf.hh>
 #include <rsf.h>
-#include <omp.h>
 #include <assert.h>
 
 /* low rank decomposition  */
@@ -548,7 +547,7 @@ static int sampleyp3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
  
 	int a, b;
 
-//#ifdef OPENMP
+//#ifdef _OPENMP
 //#pragma omp parallel for private(a,b) \
 //#endif
 //	    schedule(dynamic) \
@@ -639,7 +638,7 @@ static int samplexp3(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 	int a, b;
 
 	/*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) 
 #endif
 //	    schedule(dynamic) \
@@ -730,7 +729,7 @@ static int samplezp3(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
 
 	int a, b;
 /*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) 
 #endif
 //	    schedule(dynamic) \
@@ -822,7 +821,7 @@ static int sampleysh3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
 
 	int a, b;
 /*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) \
 	    schedule(dynamic) \
 	    shared(nr,nc)
@@ -876,7 +875,7 @@ static int samplexsh3(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 	int a, b;
 
 	/*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) \
 	    schedule(dynamic) \
 	    shared(nr,nc)
@@ -928,7 +927,7 @@ static int sampleysv3(vector<int>& rs, vector<int>& cs, DblNumMat& resy)
 
 	int a, b;
 /*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) \
 	    schedule(dynamic) \
 	    shared(nr,nc)
@@ -1029,7 +1028,7 @@ static int samplexsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resx)
 	int a, b;
 
 	/*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) \
 	    schedule(dynamic) \
 	    shared(nr,nc)
@@ -1132,7 +1131,7 @@ static int samplezsv3(vector<int>& rs, vector<int>& cs, DblNumMat& resz)
 
 	int a, b;
 /*
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(a,b) \
 	    schedule(dynamic) \
 	    shared(nr,nc)

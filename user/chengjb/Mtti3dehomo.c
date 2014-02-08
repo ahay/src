@@ -20,7 +20,10 @@
 */
 
 #include <rsf.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 /* prepared head files by myself */
 #include "_fd.h"
@@ -155,12 +158,15 @@ int main(int  argc,char **argv)
 
     dt2=dt*dt;
 
+#ifdef _OPENMP
     #pragma omp parallel
 	{
 	  nth = omp_get_num_threads();
 	  rank = omp_get_thread_num();
 	  sf_warning("Using %d threads, this is %dth thread",nth, rank);
 	}
+#endif
+
     float***xtmp=sf_floatalloc3(nz,nx,ny);
     float***ytmp=sf_floatalloc3(nz,nx,ny);
     float***ztmp=sf_floatalloc3(nz,nx,ny);

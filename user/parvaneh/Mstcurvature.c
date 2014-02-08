@@ -89,17 +89,17 @@ int main (int argc, char *argv[])
 	
 	for (ix=1; ix<nx-1; ix++) {
 	    for (iy=1; iy<ny-1; iy++) {
-		xuu=idy*idy*fd1_2(slicex, iy, ix, 'uu');
-		yuu=idy*idy*fd1_2(slicey, iy, ix, 'uu');
-		zuu=idy*idy*fd1_2(slicez, iy, ix, 'uu');
+		xuu=idy*idy*fd1_2(slicex, iy, ix, 'U');
+		yuu=idy*idy*fd1_2(slicey, iy, ix, 'U');
+		zuu=idy*idy*fd1_2(slicez, iy, ix, 'U');
 
-		xvv=idx*idx*fd1_2(slicex, iy, ix, 'vv');
-		yvv=idx*idx*fd1_2(slicey, iy, ix, 'vv');
-		zvv=idx*idx*fd1_2(slicez, iy, ix, 'vv');
+		xvv=idx*idx*fd1_2(slicex, iy, ix, 'V');
+		yvv=idx*idx*fd1_2(slicey, iy, ix, 'V');
+		zvv=idx*idx*fd1_2(slicez, iy, ix, 'V');
 		
-		xuv=idy*idx*fd1_2(slicex, iy, ix, 'uv');
-		yuv=idy*idx*fd1_2(slicey, iy, ix, 'uv');
-		zuv=idy*idx*fd1_2(slicez, iy, ix, 'uv');		
+		xuv=idy*idx*fd1_2(slicex, iy, ix, 'W');
+		yuv=idy*idx*fd1_2(slicey, iy, ix, 'W');
+		zuv=idy*idx*fd1_2(slicez, iy, ix, 'W');		
 	
 		xu=idy*fd1_2(slicex, iy, ix, 'u');
 		yu=idy*fd1_2(slicey, iy, ix, 'u');

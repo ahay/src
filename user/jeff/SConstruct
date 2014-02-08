@@ -23,7 +23,7 @@ api = env.get('API',[])
 if 'f90' in api and F90:
 	F90base= os.path.basename(F90)
  	if F90base[:8]== 'gfortran' or F90base[:3]=='gfc':
-		env.Append(F90FLAGS=' -fopenmp -fbackslash ')
+		env.Append(F90FLAGS=' -fopenmp -fbackslash ',LINKFLAGS=['-fopenmp'])
         elif F90base == 'ifort':
     		env.Append(F90FLAGS=' -module -fbackslash -fopenmp ${SOURCE.dir}')
 

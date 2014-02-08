@@ -24,7 +24,6 @@
 
 
 #include <rsf.h>
-#include <omp.h>
 #include "_cjb.h"
 #include "_fd.h"
 #include "zero.h"

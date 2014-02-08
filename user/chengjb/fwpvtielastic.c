@@ -24,7 +24,9 @@
 
 
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include "_cjb.h"
 #include "_fd.h"
 
@@ -44,7 +46,7 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	zero2float(px_tmp,nzpad,nxpad);	
 	zero2float(qx_tmp,nzpad,nxpad);	
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,l) \
 	schedule(dynamic) \
 	shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,dx)
@@ -60,7 +62,7 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 		}
 	}
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,l) \
 	schedule(dynamic) \
    shared(p1,p2,p3,q1,q2,q3,px_tmp,qx_tmp,\
@@ -124,7 +126,7 @@ void fwpvtielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 	zero3float(qy_tmp,nzpad,nxpad,nypad);	
 	zero3float(rz_tmp,nzpad,nxpad,nypad);	
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(k,i,j,l) \
 	schedule(dynamic) \
 	shared(p2,q2,r2,px_tmp,qy_tmp,rz_tmp,coeff_1dx,coeff_1dy,coeff_1dz,nxpad,nypad,nzpad,dx,dy,dz)
@@ -142,7 +144,7 @@ void fwpvtielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 				}
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(k,i,j,l) \
 	schedule(dynamic) \
    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,px_tmp,qy_tmp,rz_tmp,\
@@ -261,7 +263,7 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 	zero3float(qy_tmp,nz,nx,ny);	
 	zero3float(rz_tmp,nz,nx,ny);	
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(k,i,j,l) \
 	schedule(dynamic) \
 	shared(p2,q2,r2,px_tmp,qy_tmp,rz_tmp,coeff_1dx,coeff_1dy,coeff_1dz,nx,ny,nz,dx,dy,dz)
@@ -279,7 +281,7 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 						rz_tmp[k][i][j]+=coeff_1dz[l+_mix]*r2[k][i][j+l]/2.0/dz;
 				}
 
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(k,i,j,l) \
 	schedule(dynamic) \
    shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,px_tmp,qy_tmp,rz_tmp,\

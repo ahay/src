@@ -18,7 +18,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include "_cjb.h"
 
 #include <fftw3.h>
@@ -72,7 +74,7 @@ void seplowrank3domp(float *ldata,float *rdata,float *fmid, float *p, int *ijkx,
        for(jn2=0;jn2<n2;jn2++)
        {
            jn2n=jn2*n;
-#ifdef OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for private(iky,ikx,ikz,iynxz,i,ii,iii,io1,io2) \
 	   schedule(dynamic) \
 	   shared(rdata, xx, xin, ijky, ijkx, ijkz, jn2n, ny, nx, nz, nxz)

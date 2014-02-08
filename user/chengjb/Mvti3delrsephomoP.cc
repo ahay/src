@@ -20,7 +20,6 @@
 */
 #include <rsf.hh>
 #include <rsf.h>
-#include <omp.h>
 #include <assert.h>
 
 /* low rank decomposition  */
