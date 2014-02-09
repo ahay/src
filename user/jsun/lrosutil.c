@@ -316,8 +316,9 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 
 
 int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd, 
-	      bool verb, bool wantwf, sf_complex **lt, sf_complex **rt, int m2,
-               geopar geop, int pad1, float ***wavfld2)  
+	      bool verb, bool wantwf, bool srcill, 
+              sf_complex **lt, sf_complex **rt, int m2,
+              geopar geop, int pad1, float ***wavfld2)  
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -344,7 +345,7 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
     dt = geop->dt;
 
     sill = sf_floatalloc2(nz, nx);
-    ccr  = img1;
+    ccr  = sf_floatalloc2(nz, nx);
 
     nk = cfft2_init(pad1,nzb,nxb,&nz2,&nx2);
     nzx = nzb*nxb;
@@ -369,15 +370,8 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 #endif
     for (ix = 0; ix < nx; ix++) {
 	for (iz = 0; iz < nz; iz++) {
+	    ccr[ix][iz]  = 0.0;
 	    sill[ix][iz] = 0.0;
-	}
-    }
-#ifdef _OPENMP
-#pragma omp parallel for private(ix, iz)
-#endif
-    for (ix = 0; ix < nx; ix++) {
-	for (iz = 0; iz < nz; iz++) {
-	    ccr[ix][iz] = 0.0;
 	}
     }
         
@@ -450,9 +444,11 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
 		    j = (iz+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
-		    ccr[ix][iz] += wavfld[wfit][ix][iz]*crealf(curr[j]);
-		    sill[ix][iz]+= crealf(curr[j])*crealf(curr[j]);
-		    //		    sill[ix][iz] += wavfld[wfit][ix][iz]*wavfld[wfit][ix][iz];
+		    ccr[ix][iz]  += wavfld[wfit][ix][iz]*crealf(curr[j]);
+		    if (srcill)
+		      sill[ix][iz] += wavfld[wfit][ix][iz]*wavfld[wfit][ix][iz];
+		    else
+		      sill[ix][iz] += crealf(curr[j])*crealf(curr[j]);
 		}
 	    }
 	    wfit--;
@@ -462,10 +458,11 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
     cfft2_finalize();
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
-#endif    
+#endif
     for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
-	    img2[ix][iz] = ccr[ix][iz]/(sill[ix][iz]+SF_EPS);//
+	  img1[ix][iz] = ccr[ix][iz];
+	  img2[ix][iz] = ccr[ix][iz]/(sill[ix][iz]+SF_EPS);
 	}
     } 
     
