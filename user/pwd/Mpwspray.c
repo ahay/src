@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     bool verb;
     char *reduce;
     int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order, fold;
-    float eps, ***u, **p, *trace, ui;
+    float eps, ***u, **p, *trace, *temp=NULL, ui;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -55,6 +55,9 @@ int main (int argc, char *argv[])
     switch(reduce[0]) {
 	case 's': /* stack - mean value */
 	case 'p': /* predict */
+	    break;
+	case 'm': /* median */
+	    temp = sf_floatalloc(ns2);
 	    break;
 	case 'n': /* none */
 	default:
@@ -136,6 +139,17 @@ int main (int argc, char *argv[])
 		    sf_floatwrite(trace,n1,out);
 		}		    
 		break;
+	    case 'm': /* median */
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			for (is=0; is < ns2; is++) {
+			    temp[is] = u[i2][is][i1];
+			}		
+			trace[i1] = sf_quantile(ns,ns2,temp);		   
+		    }
+		    sf_floatwrite(trace,n1,out);
+		}		    
+		break;
 	    case 'n': /* none */
 	    default:
 		sf_floatwrite(u[0][0],n1*ns2*n2,out);
@@ -145,4 +159,3 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mflat.c 1131 2005-04-20 18:19:10Z fomels $	 */
