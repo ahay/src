@@ -220,6 +220,32 @@ int main(int argc, char* argv[])
     pt2dread1(Fsou,ss,ns,2); /* read (x,z) coordinates */
     pt2dread1(Frec,rr,nr,2); /* read (x,z) coordinates */
 
+    /*------------------------------------------------------------*/
+    /* coordinate check: if point is outside the grid, an error is thrown */
+    float ox = sf_o(ax);
+    float mx = ox + (sf_n(ax)-1)*sf_d(ax);
+    float oz = sf_o(az);
+    float mz = oz + (sf_n(az)-1)*sf_d(az);
+
+    for (ix=0; ix<ns; ++ix){
+      if (ss[ix].x < ox || ss[ix].x > mx){
+        sf_error("fatal error: source coordinate x is outside the grid for point %d",ix);      
+      }
+      if (ss[ix].z < oz || ss[ix].z > mz){
+        sf_error("fatal error: source coordinate z is outside the grid for point %d",ix);      
+      }
+    }
+
+    for (ix=0; ix<nr; ++ix){
+      if (rr[ix].x < ox || rr[ix].x > mx){
+        sf_error("fatal error: coordinate x is outside the grid for point %d",ix);      
+      }
+      if (rr[ix].z < oz || rr[ix].z > mz){
+        sf_error("fatal error: receiver coordinate z is outside the grid for point %d",ix);      
+      }
+    }
+    /* End of coordinate consistency check */
+
     cs = lint2d_make(ns,ss,fdm);
     cr = lint2d_make(nr,rr,fdm);
     fdbell_init(5);
