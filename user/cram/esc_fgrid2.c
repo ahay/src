@@ -45,7 +45,7 @@ struct EscFGrid2 {
     float                zmax, xmax;
     float                d[ESC2_DIMS], mdist, thresh;
     unsigned long        nct, ndt, bct;
-    bool                 verb, cmix, tracebc;
+    bool                 verb, cmix, tracebc, atraced, mtraced;
     sf_timer             ttime, rtime;
     sf_esc_slowness2     esc_slow;
     sf_esc_tracer2       esc_tracer;
@@ -57,6 +57,7 @@ typedef enum { ESC2_FGRID_FORW = 0, ESC2_FGRID_BACK = 1 } sf_esc_fgrid2_dir;
 
 sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
                                   float oz, float ox, float dz, float dx,
+                                  bool atraced, bool mtraced,
                                   sf_esc_slowness2 esc_slow, sf_esc_tracer2 esc_tracer,
                                   sf_esc_fout2 esc_out)
 /*< Initialize object >*/
@@ -86,6 +87,8 @@ sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
     esc_fgrid->niter = 100;
     esc_fgrid->cmix = false;
     esc_fgrid->tracebc = true;
+    esc_fgrid->atraced = atraced;
+    esc_fgrid->mtraced = mtraced;
 
     esc_fgrid->nct = 0; /* Number of ray traced because of color mixing */
     esc_fgrid->ndt = 0; /* Number of ray traced because of maximum allowed exit distance spread */
@@ -275,10 +278,10 @@ static bool sf_esc_fgrid2_is_bc (sf_esc_fgrid2 esc_fgrid, int iz, int ix,
 
 /* Evaluate whether a point has to be computed (and how - ray tracing or F-D */
 static void sf_esc_fgrid2_evaluate_point (sf_esc_fgrid2 esc_fgrid, int iz, int ix, int ia,
-                                          float *cvt) {
+                                          double *cvt) {
     int i, j, k, l, m;
     float z, x, a, s, sa, sz, sx, fz, fx, fa;
-    bool trace = false, hasn[ESC2_DIMS] = { false, false, false };
+    bool trace = false, hasn[ESC2_DIMS] = { false, false, false }, trmdist = false;
     sf_esc_point2 neighbors[ESC2_DIMS][ESC2_MORDER] = { { NULL, NULL },
                                                         { NULL, NULL },
                                                         { NULL, NULL } };
@@ -361,6 +364,7 @@ static void sf_esc_fgrid2_evaluate_point (sf_esc_fgrid2 esc_fgrid, int iz, int i
                                     if (ESC2_TOP == col1 && fabs (x1 - x2) > esc_fgrid->mdist) {
                                         trace = true;
                                         esc_fgrid->ndt++;
+                                        trmdist = true;
                                         break;
                                     }
                                 }
@@ -382,6 +386,8 @@ static void sf_esc_fgrid2_evaluate_point (sf_esc_fgrid2 esc_fgrid, int iz, int i
             if (esc_fgrid->verb)
                 sf_timer_stop (esc_fgrid->rtime);
             sf_esc_point2_become_parent (point);
+            if ((esc_fgrid->mtraced && trmdist) || esc_fgrid->atraced)
+                sf_esc_point2_set_traced (point, true);
         } else if (sf_esc_point2_is_child (point)) { /* F-D */
             sf_esc_fgrid2_compute_point (esc_fgrid, iz, ix, ia, fz, fx, fa, s,
                                          point, neighbors);
@@ -394,7 +400,7 @@ static void sf_esc_fgrid2_evaluate_point (sf_esc_fgrid2 esc_fgrid, int iz, int i
 
 /* Compute one Gauss-Seidel iteration */
 static void sf_esc_fgrid2_compute_one_iter (sf_esc_fgrid2 esc_fgrid, sf_esc_fgrid2_dir dir,
-                                            float *cvt) {
+                                            double *cvt) {
     int iz, ix, ia, ix0, ix1, ixs;
     int iz0, iz1, izs, ia0, ia1, ias;
     float a, cs, sn;
@@ -432,7 +438,7 @@ void sf_esc_fgrid2_compute (sf_esc_fgrid2 esc_fgrid)
 {
     int i, iter;
     size_t np = (size_t)esc_fgrid->na*(size_t)esc_fgrid->nx*(size_t)esc_fgrid->nz;
-    float old_gcvt[ESC2_NUM], gcvt[ESC2_NUM];
+    double old_gcvt[ESC2_NUM], gcvt[ESC2_NUM];
     bool stop = true;
 
     if (esc_fgrid->verb)

@@ -35,6 +35,7 @@ struct EscFOutput2 {
     float            oz, ox, oa;
     float            dz, dx, da;
     unsigned char ***t;
+    bool             otraced;
     sf_file          out;
 };
 /* concrete data type */
@@ -42,7 +43,7 @@ struct EscFOutput2 {
 sf_esc_fout2 sf_esc_fout2_init (int nz, int nx, int na,
                                 float oz, float ox, float oa,
                                 float dz, float dx, float da,
-                                sf_file in, sf_file out)
+                                bool otraced, sf_file in, sf_file out)
 /*< Initialize object >*/
 {
     sf_esc_fout2 esc_fout = (sf_esc_fout2)sf_alloc (1, sizeof (struct EscFOutput2));
@@ -56,14 +57,16 @@ sf_esc_fout2 sf_esc_fout2_init (int nz, int nx, int na,
     esc_fout->dz = dz;
     esc_fout->dx = dx;
     esc_fout->da = da;
-   
+
     esc_fout->t = sf_ucharalloc3 (nz*sf_esc_point2_sizeof (), nx, na);
     memset (esc_fout->t[0][0], 0, (size_t)nz*(size_t)nx*(size_t)na*
                                   (size_t)sf_esc_point2_sizeof ());
 
     esc_fout->out = out;
 
-    sf_putint (out, "n1", ESC2_NUM);
+    esc_fout->otraced = otraced; /* flag: if true, output map of traced points */
+
+    sf_putint (out, "n1", otraced ? ESC2_NUM + 1 : ESC2_NUM);
     sf_putfloat (out, "o1", 0.0);
     sf_putfloat (out, "d1", 1.0);
     sf_putstring (out, "label1", "Escape variable");
@@ -94,6 +97,8 @@ sf_esc_fout2 sf_esc_fout2_init (int nz, int nx, int na,
         sf_putstring (out, "label4", "Lateral");
         sf_putstring (out, "unit4", "");
     }
+
+    sf_putstring (out, "otraced", otraced ? "y" : "n");
 
     return esc_fout;
 }
@@ -137,8 +142,13 @@ void sf_esc_fout2_write (sf_esc_fout2 esc_fout)
                 for (i = 0; i < ESC2_NUM; i++) {
                     buf[ia][i] = sf_esc_point2_get_esc_var ((sf_esc_point2)&esc_fout->t[ia][ix][iz*sz], i);
                 }
+                if (esc_fout->otraced)
+                    buf[ia][ESC2_NUM] = (float)sf_esc_point2_is_traced ((sf_esc_point2)&esc_fout->t[ia][ix][iz*sz]);
             }
-            sf_floatwrite (buf[0], (size_t)(esc_fout->na*ESC2_NUM),
+
+            sf_floatwrite (buf[0], esc_fout->otraced ? 
+                                   (size_t)(esc_fout->na*(ESC2_NUM + 1)) :
+                                   (size_t)(esc_fout->na*ESC2_NUM),
                            esc_fout->out);
         }
     }
