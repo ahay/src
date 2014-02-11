@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     int n1, nc, nd, n3, i3, nb, id, ic, i1, ib;
-    float **dense, *a, *p, *c, *time, *delt1, *delt2, *ampl, d2, f;
+    float **dense, *a, *p, *c, *time, *delt1, *delt2, *ampl, d2, f, eps;
     sf_file in, out, dip, cur;
     float f1=6.77917496069906;
     float f2=1.75843756426359;
@@ -43,6 +43,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("rect",&nb)) nb=3;
     /* smoothing radius */
+
+    if (!sf_getfloat("eps",&eps)) eps=1.0;
+    /* experimental */
 
     nd = (nc-1)*nb+1;
     sf_putint(out,"n2",nd);
@@ -63,6 +66,7 @@ int main(int argc, char* argv[])
 
     f = 0.25*(1+0.25*SF_PI*SF_PI);
     f *= f/(nb*nb);
+    f = 9/(8*SF_PI*eps)/(nb*nb);
     f1 *= f;
     f2 *= f;
 
