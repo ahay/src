@@ -28,6 +28,7 @@ Result('first','line',
 ###################
 lines = {'S':251,'R':782}
 color = {'S':4, 'R':2}
+vel0=1900 # m/s, replacement velocity
 for case in 'SR':
     # X-Y geometry
     Flow(case+'.asc','Line_001.%cPS' % case,
@@ -42,6 +43,15 @@ for case in 'SR':
          graph symbol=* title=%c plotcol=%d
          min1=684 max1=705 min2=3837 max2=3842
          ''' % (case,color[case]))
+
+    # Elevation
+    elev = case+'-elevation'
+    Flow(elev+'.asc','Line_001.%cPS' % case,'''awk 'NR > 20 {print $10}' ''')
+    Flow(elev,elev+'.asc',
+         '''
+         echo in=$SOURCE data_format=ascii_float n1=%d | dd form=native |
+         scale dscale=%g | put label=Time unit=s
+         ''' % (lines[case],1.0/vel0),stdin=0)
 
     # Static corrections
     stat = case+'-static'
@@ -70,6 +80,24 @@ Flow('rece',shots,'cat axis=3 ${SOURCES[1:%d]}' % len(shots))
 Flow('sour','S','spray axis=2 n=282 o=0 d=1')
 
 # Compute static corrections
+
+shots = []
+for shot in range(lines['S']):
+    line = 'elevation-line%d' % shot
+    Flow(line,'R-elevation','window f1=%d n1=282' % (2*shot))
+    shots.append(line)
+Flow('relev',shots,'cat axis=2 ${SOURCES[1:%d]}' % len(shots))
+Flow('elevation','S-elevation relev',
+     '''
+     spray axis=1 n=282 o=0 d=1 |
+     add ${SOURCES[1]} 
+     ''')
+Result('elevation',
+       '''
+       grey color=j scalebar=y title="Elevation Static Correction"
+       label2=Offset label1=Shot mean=y
+       ''')
+
 shots = []
 for shot in range(lines['S']):
     line = 'static-line%d' % shot
@@ -85,8 +113,10 @@ Result('static',
        '''
        scale dscale=-1 |
        grey color=j scalebar=y title="Static Correction"
-       label2=Offset label1=Shot bias=0.1
+       label2=Offset label1=Shot mean=y
        ''')
+
+# Plot stacking diagram
 
 Plot('rec','rece',
      '''
@@ -150,8 +180,9 @@ Result('shot118','shot118 boff118',
        wherexlabel=t wheretitle=b title="Shot 118"
        ''')
 
-# Apply static correction?
-Flow('lines2','lines static','datstretch datum=${SOURCES[1]}')
+# Apply static corrections
+Flow('static2','elevation static','add ${SOURCES[1]}')
+Flow('lines2','lines static2','datstretch datum=${SOURCES[1]}')
 
 ##################
 # Convert to CMPs

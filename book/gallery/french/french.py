@@ -34,7 +34,7 @@ def get_zodata(data):
          window |
          put label1=Time unit1=s
          label2=North-South unit2=m
-         label3=West-East   unit3=m
+         label3=West-East   unit3=m 
          ''',split=[2,161],reduce='add')
 
 def time_mig(image):
@@ -44,4 +44,13 @@ def time_mig(image):
             byte gainpanel=all |
             grey3 title="%s" frame1=175 frame2=60 frame3=80
             screenratio=1
+            ''' % method)
+
+def depth_mig(image):
+     Result(image,
+            '''
+            window max1=3000 |
+            byte gainpanel=all |
+            grey3 title="%s" frame1=175 frame2=60 frame3=80
+            screenratio=1 label1=Depth unit1=m unit3=m
             ''' % method)
