@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     sf_file Fimg;
 
     /*axis*/
-    sf_axis at, ax, az;
+    sf_axis at, ax, az, as;
 
     /*grid index variables*/
     int nx, nz, nt, wfnt;
@@ -229,11 +229,16 @@ int main(int argc, char* argv[])
     /* output RSF files */
     sf_setn(ax, gpl);
     sf_setn(az, nz);
+    as = sf_iaxa(Fvel, 2);
+    sf_setn(as,shtnum);
+    sf_setd(as,shtint*dx);
+    sf_seto(as,shtbgn*dx+ox);
 
     if (adj) { /* migration */
       if(!wantrecord) {
 	sf_oaxa(Frcd, at, 1);
 	sf_oaxa(Frcd, ax, 2);
+	sf_oaxa(Frcd, as, 3);
 	sf_settype(Frcd,SF_COMPLEX);	
       }
       sf_setn(ax, nx);
@@ -244,6 +249,7 @@ int main(int argc, char* argv[])
     } else { /* modeling */
       sf_oaxa(Frcd, at, 1);
       sf_oaxa(Frcd, ax, 2);
+      sf_oaxa(Frcd, as ,3);
       sf_settype(Frcd,SF_COMPLEX);
     }
 
@@ -324,7 +330,7 @@ int main(int argc, char* argv[])
 	    sf_complexwrite(wavefld2[it][ix],nz, Ftmpbwf);
 	  }
 
-    } /*shot interation*/
+    } /*shot iteration*/
     
     /*write record/image*/
     if (adj)
