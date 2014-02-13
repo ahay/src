@@ -24,8 +24,8 @@ int main (int argc, char *argv[])
 {
     bool verb;
     char *reduce;
-    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order, fold;
-    float eps, ***u, **p, *trace, *temp=NULL, ui, wt;
+    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order;
+    float eps, ***u, **p, *trace, *temp=NULL, ui, fold;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -61,10 +61,9 @@ int main (int argc, char *argv[])
 	    break;
 	case 't': /* triangle */
 	    temp = sf_floatalloc(ns2);
-	    wt = (2*ns+1.0f)/(ns+1.0f);
 	    for (is=0; is < ns2; is++) {
 		if ('t'==reduce[0]) {
-		    temp[is]=wt*(1.0f-SF_ABS(is-ns)/(ns+1.0f));
+		    temp[is]=ns+1-SF_ABS(is-ns);
 		}
 	    }
 	    break;
@@ -132,7 +131,7 @@ int main (int argc, char *argv[])
 	    case 't': /* triangle */
 		for (i2=0; i2 < n2; i2++) {
 		    for (i1=0; i1 < n1; i1++) {
-			fold=0;
+			fold=0.0f;
 			trace[i1]=0.0f;
 
 			for (is=0; is < ns2; is++) {
@@ -141,13 +140,15 @@ int main (int argc, char *argv[])
 			    if (ui != 0.0f) {
 				if ('t'==reduce[0]) {
 				    ui *= temp[is];
-				} 
-				fold++;
+				    fold += temp[is];
+				} else {
+				    fold += 1.0f;
+				}
+				trace[i1] += ui;
 			    }
-			    trace[i1] += ui;
 			}
 			
-			if (fold > 0) trace[i1] /= fold;
+			if (fold > 0.0f) trace[i1] /= fold;
 		    }
 		    sf_floatwrite(trace,n1,out);
 		}		    
