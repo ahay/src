@@ -27,8 +27,8 @@ http://ahay.org/rsflog/index.php?/archives/304-Program-of-the-month-sfiwarp.html
 int main(int argc, char* argv[])
 {
     map4 mo;
-    bool inv;
-    int nt, n1, i2, n2;
+    bool inv, each=true;
+    int nt, n1, i2, n2, nw;
     float o1, d1, t0, dt, eps;
     float *trace, *str, *trace2;
     sf_file in, out, warp;
@@ -68,7 +68,13 @@ int main(int argc, char* argv[])
     }
 
     n2 = sf_leftsize(in,1);
-
+    nw = sf_leftsize(warp,1);
+    if (1 == nw) {
+	each = false;
+    } else if (n2 != nw) {
+	sf_error("Need %d traces in warp, got %d",n2,nw);
+    } 
+    
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* stretch regularization */
 
@@ -79,8 +85,10 @@ int main(int argc, char* argv[])
     mo = stretch4_init (n1, o1, d1, nt, eps);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(str,nt,warp);
-	stretch4_define (mo,str);
+	if (each || 0==i2) {
+	    sf_floatread(str,nt,warp);
+	    stretch4_define (mo,str);
+	}
 
 	if (inv) {
 	    sf_floatread(trace,nt,in);

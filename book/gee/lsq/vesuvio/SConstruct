@@ -52,14 +52,14 @@ Flow('mount','z x',
      '''
      iwarp warp=${SOURCES[1]} n1=51 d1=1 o1=-25 eps=1
      ''')
-Plot('grey','mount','grey yreverse=n allpos=y crowd=1')
-Plot('cont','mount','contour yreverse=n crowd=1')
-Plot('wigl','mount','wiggle fastplot=20 transp=y zplot=1.5 crowd=1')
+Plot('grey','mount','grey yreverse=n allpos=y crowd=1  wanttitle=n')
+Plot('cont','mount','contour yreverse=n crowd=1  wanttitle=n')
+Plot('wigl','mount','wiggle fastplot=20 transp=y zplot=1.5 crowd=1  wanttitle=n')
 Plot('data','mount',
      '''
      rtoc | math output="exp(I*2*input)" |   
      math output="log(input)" | imag |
-     grey pclip=100 yreverse=n crowd=1
+     grey pclip=100 yreverse=n crowd=1 wanttitle=n
      ''')
 Result('synmod','grey cont wigl data','SideBySideAniso')
 
