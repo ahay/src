@@ -6,7 +6,7 @@ progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwa
 
 # fftexpmig2 
 
-ccprogs = 'tilr2 orthoESlr orthoES2lr orthoEPlr ortiltEPlr ortiltESlr ortiltES2lr cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc'
+ccprogs = 'tilr2 orthoESlr orthoES2lr orthoEPlr ortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc'
 
 pyprogs = 'fft'
 pymods = ''
