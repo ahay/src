@@ -1,0 +1,72 @@
+from rsf.proj import *
+
+# Download data
+
+horizon = 'Penobscot_HorB.txt'
+
+Fetch(horizon,'data',
+      server='https://raw.github.com',
+      top='seg/tutorials/master')
+
+# Convert from xyz triples to horizon
+
+Flow('xyz',horizon,
+     '''
+     echo n1=3 n2=254674 data_format=ascii_float in=$SOURCE |
+     dd form=native
+     ''')
+
+Flow('xy','xyz','window n1=2 | dd type=int')
+Flow('horizon','xyz xy',
+     '''
+     window f1=2 squeeze=n | 
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     window | put label=Time unit=ms label1=Inline label2=Crossline
+     ''')
+
+Result('horizon','grey color=j bias=750 scalebar=y title=Horizon yreverse=n transp=n')
+
+# Interpolate missing values
+
+Flow('filled','horizon','lapfill grad=y verb=y niter=500')
+
+Result('filled','grey color=j mean=y scalebar=y title=Horizon yreverse=n transp=n')
+
+# Display with the cube helix colormap and the correct aspect ratio
+
+Plot('cubeh','filled',
+     'grey color=x mean=y scalebar=y title=Horizon yreverse=n transp=n screenwd=11.9 screenht=9.62')
+
+Result('cubeh','Overlay')
+
+# Take a window
+
+Flow('window','horizon','window f1=200 n1=125 f2=200 n2=100')
+
+Result('window',
+       'grey color=x mean=y scalebar=y title=Horizon yreverse=n transp=n screenratio=0.8')
+
+Flow('wind.asc',None,
+     '''
+     echo 
+     200 200 
+     200 300
+     325 300
+     325 200
+     200 200
+     n1=2 n2=5 data_format=ascii_int in=$TARGET
+     ''')
+Plot('wind','wind.asc',
+     '''
+     dd type=complex form=native | window |
+     graph wanttitle=n wantaxis=n plotcol=7 plotfat=10 
+     min1=1 max1=595 min2=1 max2=463 scalebar=y screenwd=11.9 screenht=9.62
+     ''')
+
+Result('wind','cubeh wind','Overlay')
+
+# Add noise
+
+End()
+
+
