@@ -72,6 +72,7 @@ for rep in (1,3):
 
 trismooth = 'trismooth2 rect1=5 rect2=10 dip=${SOURCES[1]}'
 trismooth = 'pwdsmooth2 rect1=5 rect2=10 dip=${SOURCES[1]}'
+trismooth = 'smooth rect1=5 | pwspray reduce=triangle ns=10 dip=${SOURCES[1]}'
 
 preds=[]
 for adj in range(4):
@@ -122,9 +123,10 @@ Result('plane',
 
 Flow('plane2','spike3 one3 two3',
      '''
-     pwdsmooth2 rect1=3 rect2=20 dip=${SOURCES[1]} |
+     smooth rect1=3 |
+     pwspray reduce=triangle ns=20 dip=${SOURCES[1]} |
      transp plane=23 |
-     pwdsmooth2 rect1=3 rect2=10 dip=${SOURCES[2]} |
+     pwspray reduce=triangle ns=10 dip=${SOURCES[2]} |
      transp plane=23
      ''')
 

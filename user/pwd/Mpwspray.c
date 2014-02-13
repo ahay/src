@@ -25,7 +25,7 @@ int main (int argc, char *argv[])
     bool verb;
     char *reduce;
     int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order;
-    float eps, ***u, **p, *trace, *temp=NULL, ui, fold;
+    float eps, ***u, **p, *trace, *temp=NULL, ui, fold, a;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -60,10 +60,14 @@ int main (int argc, char *argv[])
 	    temp = sf_floatalloc(ns2);
 	    break;
 	case 't': /* triangle */
+	case 'g': /* gaussian */
 	    temp = sf_floatalloc(ns2);
+	    a = 3.0f/(ns*(ns+2));
 	    for (is=0; is < ns2; is++) {
 		if ('t'==reduce[0]) {
 		    temp[is]=ns+1-SF_ABS(is-ns);
+		} else if ('g'==reduce[0]) {
+		    temp[is]=expf(-a*(is-ns)*(is-ns));
 		}
 	    }
 	    break;
@@ -129,6 +133,7 @@ int main (int argc, char *argv[])
 	    case 's': /* stack - mean value */
 	    case 'p': /* predict */
 	    case 't': /* triangle */
+	    case 'g': /* gaussian */
 		for (i2=0; i2 < n2; i2++) {
 		    for (i1=0; i1 < n1; i1++) {
 			fold=0.0f;
@@ -138,7 +143,8 @@ int main (int argc, char *argv[])
 			    if ('p'==reduce[0] && is==ns) continue;
 			    ui = u[i2][is][i1];
 			    if (ui != 0.0f) {
-				if ('t'==reduce[0]) {
+				if ('t'==reduce[0] ||
+				    'g'==reduce[0]) {
 				    ui *= temp[is];
 				    fold += temp[is];
 				} else {

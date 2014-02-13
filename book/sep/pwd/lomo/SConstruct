@@ -45,8 +45,9 @@ for case in order.keys():
 
     Flow(txr,dip,
          '''
-         noise rep=y seed=2004 |
-         pwdsmooth2 dip=$SOURCE rect1=3 rect2=20 eps=0.01
+         noise rep=y seed=2004 | smooth rect1=3 |
+         pwspray reduce=gauss dip=$SOURCE ns=20 eps=0.01 |
+         smooth rect1=3
          ''')
     Plot(txr,'grey title=TEXTURE')
     
