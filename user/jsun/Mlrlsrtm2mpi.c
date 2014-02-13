@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     /*grid index variables*/
     int nx, nz, nt, wfnt;
     int nzx, nx2, nz2, n2, m2, pad1, nk;
-    int ix, it;
+    int ix, iz, it, is;
     int nxb, nzb;
     int snpint;
     float dt, dx, dz, wfdt;
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("sht0", &sht0)) sht0=shtbgn; /*actual shot origin on grid*/
     if (!sf_getint("shtend", &shtend)) sf_error("Need shot ending location on grid!");
     if (!sf_getint("shtint", &shtint)) sf_error("Need shot interval on grid!");
-    shtnum = int((shtend-shtbgn)/shtint) + 1;
+    shtnum = (int)((shtend-shtbgn)/shtint) + 1;
     if (!sf_getint("spz", &spz)) sf_error("Need source depth!");
     if (!sf_getint("spz", &spz)) sf_error("Need source depth!");
     if (!sf_getint("gpz", &gpz)) sf_error("Need receiver depth!");
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
     sf_complexread(ltb[0],nzx*m2,leftb);
     sf_complexread(rtb[0],m2*nk,rightb);
     if(!adj) sf_complexread(img[0],nx*nz,Fimg);
-    if(adj && wantrecord) sf_complexread(reccord[0], shtnum*gpl*nt, Frcd);
+    if(adj && wantrecord) sf_complexread(record[0][0], shtnum*gpl*nt, Frcd);
     /*close RSF files*/
     sf_fileclose(Fsrc);
     sf_fileclose(left);
@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
 #endif
 	for (ix=0; ix<gpl; ix++)
 	  for (it=0; it<nt; it++)
-	    tmprec[ix][it] = record[is][ix][it]
+	    tmprec[ix][it] = record[is][ix][it];
 
       lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1, wavefld2);
       
@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
 	sf_complexwrite(imgsum[ix], nz, Fimg);
     
     if (!wantrecord || !adj)
-      sf_complexwrite(record[0], shtnum*gpl*nt, Frcd);
+      sf_complexwrite(record[0][0], shtnum*gpl*nt, Frcd);
     
     
     tend = clock();

@@ -102,45 +102,6 @@ void reflgen(int nzb, int nxb, int spz, int spx,
     }
 }
 
-void expand(float **vexpmodel, float **vmodel, int vnx, int vnz/*orignal size*/, int vl, int vr, int vt, int vb)
-/*<expand model>*/
-{
-    int ix, iz;
-    
-    if (vnx<0 || vnz<0 || vl<0 || vr<0 || vt<0 || vb<0) {
-	sf_error("Cann't expand model!");	
-    }
-    
-    if ( vexpmodel==NULL || vmodel==NULL) {
-	sf_error("Need allocate memory first, expand model fault!");
-    }
-
-	
-    for (ix=vl; ix<vl+vnx; ix++) {
-	for (iz=vt; iz<vt+vnz; iz++) {
-	    vexpmodel[ix][iz] = vmodel[ix-vl][iz-vt];
-	}
-	for (iz=0; iz<vt; iz++) {
-	    vexpmodel[ix][iz] = vexpmodel[ix][vt];
-	}
-	for (iz=vt+vnz; iz<vt+vnz+vb; iz++) {
-	    vexpmodel[ix][iz] = vexpmodel[ix][vnz+vt-1];
-	}
-    }
-   
-    for (ix=0; ix<vl; ix++){
-	for (iz=0; iz<vt+vnz+vb; iz++) {
-	    vexpmodel[ix][iz] = vexpmodel[vl][iz];
-	}
-    }
-    
-    for (ix=vl+vnx; ix<vl+vnx+vr; ix++) {
-	for (iz=0; iz<vt+vnz+vb; iz++) {
-	    vexpmodel[ix][iz] = vexpmodel[vl+vnx-1][iz];
-	}
-    }
- }
- 
 int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 	     sf_complex **lt, sf_complex **rt, int m2,
 	     geopar geop, sf_complex *ww, float *rr, int pad1)
