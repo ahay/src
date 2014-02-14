@@ -738,14 +738,15 @@ int main(int argc, char* argv[])
     mpipar mpip;
 
     /*MPI*/
-    int rank=0, nodes=1;
+    int rank, nodes;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nodes);
-    if(rank==0) sf_warning("nodes=%d",nodes);
 
     sf_init(argc, argv);
+
+    if(rank==0) sf_warning("nodes=%d",nodes);
 
     if (!sf_getbool("verb", &verb)) verb=false; /*verbosity*/
     if (!sf_getbool("adj", &adj)) adj=true; /*migration*/
