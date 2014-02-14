@@ -133,7 +133,7 @@ void sf_esc_fout2_write (sf_esc_fout2 esc_fout)
     int sz, i, iz, ix, ia;
     float **buf;
 
-    buf = sf_floatalloc2 (ESC2_NUM, esc_fout->na);
+    buf = sf_floatalloc2 (esc_fout->otraced ? ESC2_NUM + 1 : ESC2_NUM, esc_fout->na);
     sz = sf_esc_point2_sizeof ();
 
     for (ix = 0; ix < esc_fout->nx; ix++) {
