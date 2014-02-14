@@ -20,7 +20,6 @@ def iwindow(par):
           nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
           nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
           ''' % par + ' '
-
     return win
 
 def eicpar(par):

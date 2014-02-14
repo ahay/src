@@ -57,6 +57,11 @@ int main(int argc, char* argv[])
 
     float scale;
 
+    /* gaussian taper */
+    bool gaus;
+    float gsx,gsz,gst; /* std dev */
+    float  gx, gz, gt;
+
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -67,7 +72,7 @@ int main(int argc, char* argv[])
 #endif
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
-    if(! sf_getbool("isreversed",&isreversed)) isreversed=false; /* received wavefield */
+    if(! sf_getbool("isreversed",&isreversed)) isreversed=false; /* reversed rec wfld? */
     
     Fs = sf_input ("in" ); /*   source wavefield */
     Fr = sf_input ("ur" ); /* receiver wavefield */
@@ -116,6 +121,13 @@ int main(int argc, char* argv[])
     sf_oaxa(Fi,aa,3);
 
     sf_oaxa(Fi,ac,4);
+
+    if(! sf_getbool("gaus",&gaus)) gaus=false; /* Gaussian taper flag */
+    if(gaus) {
+	if(! sf_getfloat("gsx",&gsx)) gsx=nhx*sf_d(ax); gsx=1./(2*gsx*gsx);
+	if(! sf_getfloat("gsz",&gsz)) gsz=nhz*sf_d(az); gsz=1./(2*gsz*gsz);
+	if(! sf_getfloat("gst",&gst)) gst=nht*sf_d(at); gst=1./(2*gst*gst);
+    }
 
     /*------------------------------------------------------------*/
     /* allocate work arrays */
@@ -293,8 +305,6 @@ int main(int argc, char* argv[])
 	} /* it */
 	if(verb) fprintf(stderr,"\n");
 
-
-	
     } /* end "is reversed" */
     /*------------------------------------------------------------*/
 
@@ -306,6 +316,20 @@ int main(int argc, char* argv[])
 	    for    (ihx=0; ihx<nhx2; ihx++) {
 		for(ihz=0; ihz<nhz2; ihz++) {
 		    ii[ic][iht][ihx][ihz] *= scale;
+		}
+	    }
+	}
+    }
+
+    /*------------------------------------------------------------*/
+    /* apply Gaussian taper */
+    if(gaus) {
+	for(ic=0; ic<nc; ic++) {
+	    for        (iht=0;iht<nht2;iht++) { gt=(iht-nht)*sf_d(at); gt*=gt;
+		for    (ihx=0;ihx<nhx2;ihx++) { gx=(ihx-nhx)*sf_d(ax); gx*=gx;
+		    for(ihz=0;ihz<nhz2;ihz++) { gz=(ihz-nhz)*sf_d(az); gz*=gz;
+			ii[ic][iht][ihx][ihz] *= exp(-gt*gst - gx*gsx - gz*gsz);
+		    }
 		}
 	    }
 	}

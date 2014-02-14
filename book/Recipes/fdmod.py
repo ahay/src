@@ -732,8 +732,6 @@ def rand_boxarray(rsrc,xmin,xmax,zmin,zmax,ns,seed=33121):
         %srm %s %s
         '''%(m8r,xrand,zrand),stdout=0)
 
-
-
 def makebox(box,zmin,zmax,xmin,xmax,par):
     Temp(box+'_z',None,
          '''
@@ -815,7 +813,7 @@ def box(cc,sx,ex,sz,ez,par):
     vline(cc+'v2',sz,ez,ex,par)
 
     Flow(cc,[cc+'h1',cc+'h2',cc+'v1',cc+'v2'],
-	'cat ${SOURCES[1:4]} space=n axis=2 | put label1="" unit1="" label2="" unit2=""')
+         'cat ${SOURCES[1:4]} space=n axis=2 | put label1="" unit1="" label2="" unit2=""')
 
 # ------------------------------------------------------------
 def bbplot(custom,par):
