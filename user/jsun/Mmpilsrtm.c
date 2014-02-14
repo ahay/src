@@ -708,7 +708,6 @@ int main(int argc, char* argv[])
 
     /*source/geophone location*/
     int   spx, spz;
-    float gdep;
     int   gpz,gpx,gpl; /*geophone depth/x-crd/length*/
 
     /*Model*/
@@ -777,16 +776,16 @@ int main(int argc, char* argv[])
     /*Set I/O file*/
     if (adj) { /* migration */
       if (wantrecord) {
-	Frcd = sf_input("in"); /*record from elsewhere*/
+	Frcd = sf_input("input"); /*record from elsewhere*/
 	Fsrc  = sf_input("src");   /*source wavelet*/      
       } else {
 	Frcd = sf_output("rec"); /*record produced by forward modeling*/
-	Fsrc = sf_input("in");   /*source wavelet*/
+	Fsrc = sf_input("input");   /*source wavelet*/
       }
-      Fimg  = sf_output("out");
+      Fimg  = sf_output("output");
     } else { /* modeling */
-      Fimg = sf_input("in");
-      Frcd = sf_output("out");
+      Fimg = sf_input("input");
+      Frcd = sf_output("output");
       Fsrc  = sf_input("src");   /*source wavelet*/      
     }
     left  = sf_input("left");
@@ -863,12 +862,11 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-      for (ix=0; ix<nx; ix++)
-	for (iz=0; iz<nz; it++)
-	  imgout[ix][iz] = sf_cmplx(0.,0.);  
+	for (ix=0; ix<nx; ix++)
+	  for (iz=0; iz<nz; iz++)
+	    imgout[ix][iz] = sf_cmplx(0.,0.);
       }
     }
-
     /*read from files*/
     sf_complexread(ww,nt,Fsrc);
     sf_complexread(lt[0],nzx*m2,left);
