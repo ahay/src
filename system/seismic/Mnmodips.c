@@ -49,11 +49,11 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
     /* step in velocity */
 
-    sf_shiftdim(cmp, dip, 2);
+    sf_shiftdim(cmp, dip, 3);
 
-    sf_putint(dip,"n2",nv);
-    sf_putfloat(dip,"o2",v0);
-    sf_putfloat(dip,"d2",dv);
+    sf_putint(dip,"n3",nv);
+    sf_putfloat(dip,"o3",v0);
+    sf_putfloat(dip,"d3",dv);
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
