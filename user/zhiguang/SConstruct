@@ -10,6 +10,7 @@ pickval sgewefd2d postrtm2d
 # differenciate
 
 mpi_progs = '''
+prertm2d
 '''
 
 try:  # distributed version
