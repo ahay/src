@@ -20,7 +20,7 @@
 */
 
 #include <rsf.h>
-//#include <mpi.h>
+#include <mpi.h>
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
@@ -740,9 +740,10 @@ int main(int argc, char* argv[])
     /*MPI*/
     int rank=0, nodes=1;
 
-    //    MPI_Init(&argc, &argv);
-    //    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    //    MPI_Comm_size(MPI_COMM_WORLD, &nodes);
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &nodes);
+    if(rank==0) sf_warning("nodes=%d",nodes);
 
     sf_init(argc, argv);
 
@@ -1026,16 +1027,16 @@ int main(int argc, char* argv[])
 	  }
     } /*shot iteration*/
 
-    //    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     /*write record/image*/
     if (adj) {
-      //      MPI_Reduce(imgsum[0], imgout[0], nx*nz, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
-      sf_complexwrite(imgsum[0], nx*nz, Fimg);
+      MPI_Reduce(imgsum[0], imgout[0], nx*nz, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
+      sf_complexwrite(imgout[0], nx*nz, Fimg);
     }
 
     if (!adj || !wantrecord) {
-      //      MPI_Reduce(record[0][0],recout[0][0],shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD);
-      sf_complexwrite(record[0][0], shtnum*gpl*nt, Frcd);
+      MPI_Reduce(record[0][0],recout[0][0],shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD);
+      sf_complexwrite(recout[0][0], shtnum*gpl*nt, Frcd);
     }
     
     /*free memory*/
@@ -1065,7 +1066,7 @@ int main(int argc, char* argv[])
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
     sf_warning(">> The CPU time of single shot migration is: %f seconds << ", duration);
 
-    //    MPI_Finalize();
+    MPI_Finalize();
     exit(0);
 }
 
