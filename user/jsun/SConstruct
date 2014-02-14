@@ -2,11 +2,11 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
-progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave2d cfftwave3 cfftexpmig2 cfftwave2dd fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 lrosrtm2 lroslsrtm2 lrlsrtm2mpi stack2d cstack2d fftexp0test'
-
-# fftexpmig2 
+progs = 'fftwave1dd cfftwave1dd cfftwave1in fftwave2p fftwave3p cfftwave2 cfftwave2d cfftwave3 cfftexpmig2 cfftwave2dd fftexp0test fd2d cfftexp2 cfftexp2test fdtacc wcfftexp2 wcfftexp2adj cfftwave2nsps cfftwave2mix2 lrosrtm2 lroslsrtm2 stack2d cstack2d fftexp0test'
 
 ccprogs = 'tilr2 ortholr3 cisolr2 cisolr2rev cisolr3 ctilr2 cisolr2grad cisolr2abc cisolr2abc1 cisolr1 canisolr2 canisolr2abc'
+
+mpi_progs = 'lrlsrtm2mpi'
 
 pyprogs = 'fft'
 pymods = ''
@@ -44,6 +44,19 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
+
+mpicc = env.get('MPICC')
+mpi_mains = Split(mpi_progs)
+for prog in mpi_mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    if mpicc:
+        prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
+
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')
