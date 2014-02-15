@@ -25,7 +25,8 @@ Papers(copyr='The University of Texas at Austin',
                 'psp': 
                 'Jack Poulson, Bj\"orn Engquist, Siwei Li, and Lexing Ying',
                 'uncert': 'Sergey Fomel and Evgeny Landa',
-                'dsrtomo': 'Siwei Li, Alexander Vladimirsky, and Sergey Fomel'
+                'dsrtomo': 'Siwei Li, Alexander Vladimirsky, and Sergey Fomel',
+                'phase': 'Sergey Fomel and Mirko van~der~Baan'
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 

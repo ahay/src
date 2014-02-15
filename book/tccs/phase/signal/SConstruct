@@ -1,0 +1,56 @@
+from rsf.proj import *
+
+Flow('spike1',None,'spike n1=201 k1=100 o1=-0.4 label1=')
+Flow('spike2',None,'spike n1=201 nsp=2 k1=95,105 label1=')
+Flow('spike3',None,'spike n1=201 nsp=2 k1=95,105 mag=1,-1 label1=')
+
+Flow('minphase','zero1','pad n1=1024 | kolmog | window n1=201 | fft1')
+
+for inp in ('1','2','3'):
+    inpt = 'spike'+inp
+    zero = 'zero'+inp
+    nine = 'nine'+inp
+    minm = 'minm'+inp
+
+    Flow(zero,inpt,'ricker1 frequency=10')
+    Flow(nine,zero,'envelope phase=90 hilb=y order=100')
+    Flow(minm,[inpt,'minphase'],'fft1 | add mode=p ${SOURCES[1]} | fft1 inv=y')
+
+    signal = 'signal'+inp
+    
+    Flow(signal,[inpt,zero,nine,minm],'cat axis=2 ${SOURCES[1:4]}')
+    Result(signal,'dots yreverse=y labels="reflectivity:0\^o\_ phase:90\^o\_ phase:min. phase" gaineach=y')
+
+Flow('sqr','zero1','add mode=p $SOURCE')
+Plot('kur','sqr','math output=0.00928536 | cat axis=2 $SOURCE | scale axis=1 |  graph dash=1,0 label2=Amplitude title="(a)" label1=Time unit1=s min2=-0.05 max2=1.05')
+
+Flow('isqr','nine1','add mode=p $SOURCE')
+Plot('ikur','isqr','math output=0.00616509 | cat axis=2 $SOURCE | scale axis=1 |  graph dash=1,0 label2=Amplitude title="(b)" label1=Time unit1=s min2=-0.05 max2=1.05')
+
+Flow('env','zero1','envelope order=100')
+
+Plot('env', 'env nine1','cat axis=2 ${SOURCES[1]} | scale axis=1 | graph dash=1,0 label2=Amplitude title="(b)" label1=Time unit1=s  plotcol=4,5 min2=-1.05 max2=1.05')
+Plot('ienv','env zero1','cat axis=2 ${SOURCES[1]} | scale axis=1 | graph dash=1,0 label2=Amplitude title="(a)" label1=Time unit1=s  plotcol=4,5 min2=-1.05 max2=1.05')
+
+Plot('env2', 'env nine1','cat axis=2 ${SOURCES[1]} | scale axis=1 | graph dash=1,0 label2=Amplitude title="(d)" label1=Time unit1=s  plotcol=4,5 min2=-1.05 max2=1.05')
+Plot('ienv2','env zero1','cat axis=2 ${SOURCES[1]} | scale axis=1 | graph dash=1,0 label2=Amplitude title="(c)" label1=Time unit1=s  plotcol=4,5 min2=-1.05 max2=1.05')
+
+Result('kur','kur ikur','SideBySideIso')
+Result('env','ienv env','SideBySideIso')
+
+Result('kurenv','kur ikur ienv2 env2','TwoRows')
+
+# Try signal squared instead of envelope
+
+Flow('zerosq','zero1','mul $SOURCE')
+Flow('ninesq','nine1','mul $SOURCE')
+
+Plot('sqr', 'ninesq nine1','cat axis=2 ${SOURCES[1]} | scale axis=1 | graph dash=1,0 label2=Amplitude title="(b)" label1=Time unit1=s  plotcol=4,5 min2=-1.05 max2=1.05')
+Plot('isqr','zerosq zero1','cat axis=2 ${SOURCES[1]} | scale axis=1 | graph dash=1,0 label2=Amplitude title="(a)" label1=Time unit1=s  plotcol=4,5 min2=-1.05 max2=1.05')
+
+Result('sqr','isqr sqr','SideBySideIso')
+
+Result('kursqr','kur ikur isqr sqr','TwoRows')
+
+
+End()
