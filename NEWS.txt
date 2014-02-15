@@ -29,6 +29,8 @@ To the reproducible documents collection:
 * tccs/uncert: Structural uncertainty of time-migrated seismic images
   (Fomel and Landa)
 * osu/shalek: modeling examples from Kyle Shalek and Jeff Daniels
+* tccs/phase: Local skewness attribute as a seismic phase detector
+  (Fomel and van der Baan)
 
 To SCons:
 
