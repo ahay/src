@@ -144,12 +144,12 @@ around the zero wavenumber yields
 \end{equation}
 The error of approximation (\ref{eqn:heattayl}) as a function of $k$
 for two different values of $a$ is shown in the left plot of Figure
-\ref{fig:error}.
+\ref{fig:exerror,imerror}.
 
-\inputdir{Math}
+\inputdir{Sage}
 
-\plot{error}{width=6in}{Errors of second-order explicit and implicit
-  approximations for the heat extrapolation.}
+\multiplot{2}{exerror,imerror}{width=2.8in}{Errors of second-order
+  explicit (a) and implicit (b) approximations for the heat extrapolation.}
 \par
 An \emph{implicit} approach also approximates the ideal filter
 (\ref{eqn:heatf}), but with a rational approximation of the form
@@ -174,7 +174,7 @@ approximation is
 This approximation corresponds to the famous Crank-Nicolson implicit
 method \cite[]{cn}. The error of approximation (\ref{eqn:heatcrank}) as
 a function of $k$ for different values of $a$ is shown in the right
-plot of Figure \ref{fig:error}. Not only is it significantly smaller
+plot of Figure \ref{fig:exerror,imerror}. Not only is it significantly smaller
 than the error of the same-order explicit approximation, but it also
 has a negative sign. It means that the high-frequency numerical noise
 gets suppressed rather than amplified. In practice, this property
