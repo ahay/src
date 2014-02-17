@@ -7,7 +7,17 @@ M = matrix([
 [0, 0, 0, 0, c55, 0],
 [0, 0, 0, 0, 0, c66]])
 
+n1,n2,n3=var('n1,n2,n3') # components of the normal vector
 nv=vector([n1,n2,n3]).column()
+
+A = matrix([
+[n1, 0, 0, 0, n3, n2],
+[0, n2, 0, n3, 0, n1],
+[0, 0, n3, n2, n1, 0]])
+V=M.substitute(c12=c11-2*c66,c22=c11,c23=c13,c44=c55)
+C=A*V*A.transpose()
+e3=map(lambda x: x.full_simplify(), C.eigenvalues())
+
 vsphase=sqrt(e3[2])
 vpphase=sqrt(e3[1])
 
@@ -49,6 +59,8 @@ ELs(n1)=(1/c11)*sn12(n1)+(1/c33)*(1-sn12(n1))
 MDs(n1)=(ELs(n1)+(Q-1)*(1/c11)*(1/c33)*sn12(n1)*(1-sn12(n1))/ELs(n1))^-1
 
 MDptrue(n1)=MDs(n1)
+
+qz=((2*c13 + c33)*c55 + c13^2)/(c11*c33 - c11*c55)
 QZ = 1/qz
 
 MDgpx=(arcsin(sqrt(pn12true(sin(x*pi/180))))*180/pi).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Group angle
