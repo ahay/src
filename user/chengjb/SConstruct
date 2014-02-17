@@ -169,9 +169,11 @@ for prog in ccmains:
     tti2delrsep tti2delrsep1p tti2delrsep2p tti2delrsep2pTrueAmp
     tti2delrsep2ps tti2dpseudoplrsep tti2dpseudosvlrsep tti3delrsep
     tti3delrsephomo vti2delrsep vti2delrsep2ps vti2delrsepTrueAmp
+    tti3delrsepP tti3delrsepSH tti3delrsepSV
     vti2dpseudoplrsep vti2dpseudoplrsep1 vti2dpseudoplrseprtm
     vti2dpseudosvlrsep vti3dedivcurl vti3delrdecompP vti3delrsep
     vti3delrsephomo vti3delrsephomo vti3delrsephomoP
+    vti2delrsep2p vti3delrsepP vti3delrsepSV vti3delrsepSH
     '''))
     if cancompile:
         prog = env.Program(prog, map(lambda x: x + '.cc',sources)+objs, 
