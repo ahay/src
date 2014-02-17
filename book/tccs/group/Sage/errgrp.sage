@@ -36,6 +36,7 @@ vgptrue(n1)=vgs(n1)
 vgstrue(n1)=vgp(n1)
 
 sn12(n1)=(vsgroup[0]^2/vgs).full_simplify()
+pn12(n1)=(vpgroup[0]^2/vgp).full_simplify()
 
 pn12true(n1) = sn12(n1)
 
