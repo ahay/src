@@ -22,9 +22,18 @@ $RSFSRC/book/data/teapotdome/tahnmostack
 	to sort a few unprocessed midpoint gathers for comparison with 
 	the processed midpoint gathers. 
 
-Perhaps the tahnmostack SConstruct whould be divided.  May move other 
+        Perhaps the tahnmostack SConstruct whould be divided.  May move other 
 	portions, like qc and preprocessint the npr3_field.rsf, into 
 	another direcory.
+
+$RSFSRC/book/data/teapotdome/tahsubset
+	This directory extracts a subset of the data to test prestack 
+	interpolation - the data is iline,xline,offset.  (sx,sy) and (gx,gy)
+	are in the trace headers and can be used to compute offsetx, offsety.
+	The 3D loading information can be read using:
+	cd $RSFSRC/book/data/teapotdome/fetch
+	scons 3dload.rsf
+
 
 $RSFSRC/book/data/teapotdome/tahscscale
 	apply surface consistant scaling to npr3_field.rsf

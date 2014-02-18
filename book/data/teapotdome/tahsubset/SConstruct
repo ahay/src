@@ -1,0 +1,23 @@
+from rsf.proj import *
+import math
+
+Flow(['gather_subset.rsf','gather_subset_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort \
+  	input=${SOURCES[0]} \
+	sort="iline:169,181  xline:104,116 offset:0,11000" \
+        verbose=1  \
+     | sftahmakeskey pkey=iline,xline skey=cdpt verbose=1 \
+     | sftahwrite \
+        verbose=1                           \
+	label2="cdpt"  o2=1 n2=34  d2=1   \
+        label3="xline" o3=104 n3=13 d3=1   \
+        label4="iline" o4=169 n4=13  d4=1   \
+        output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+Result('gather_subset','grey title="gather_subset"')
+Result('zoomgather_subset','gather_subset',
+	'sfwindow max1=2. | grey title="gather_subset_zoom"')
+
+End()

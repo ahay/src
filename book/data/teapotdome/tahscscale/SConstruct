@@ -15,13 +15,15 @@ from rsf.proj import *
 # to get all the traces change sftahwrite label2 to:
 #	label3="fldr"  o3=14 n3=850  d3=1   \
 
-Flow(['scscale.rsf','scscale_hdr.rsf','sxy.rsf','gxy.rsf'],
+Flow(['scscale.rsf','scscale_hdr.rsf','sxy.rsf','gxy.rsf',
+	'sxyamp.rsf','gxyamp.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
      sftahscscale \
   	input=../fetch/npr3_field.rsf \
 	sxy=sxy.rsf       gxy=gxy.rsf \
 	sxyamp=sxyamp.rsf gxyamp=gxyamp.rsf \
+	starttime=1.5 \
 	verbose=2 \
      | sftahwrite \
         verbose=1 \
@@ -33,6 +35,14 @@ Result('sxy',
 	'graph symbol="+" title="Shot coordinates" plotcol=4')
 Result('gxy',
 	'graph symbol="+" title="Receiver coordinates" plotcol=5')
+Flow('sx','sxyamp','window n1=1 f1=0')
+Flow('sy','sxyamp','window n1=1 f1=1')
+Flow('sxsycoord',['sx','sy'],'cmplx ${SOURCES[1]}')
+Result('sxsycoord','graph symbol="+" title="Shot (x,y)" plotcol=5')
+Flow('gx','gxyamp','window n1=1 f1=0')
+Flow('gy','gxyamp','window n1=1 f1=1')
+Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
+Result('gxgycoord','graph symbol="+" title="group (x,y)" plotcol=5')
 
 Flow(['scscale_subset.rsf','scscale_subset_hdr.rsf'],
      ['scscale.rsf','scscale_hdr.rsf'],

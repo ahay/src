@@ -1,7 +1,7 @@
 from rsf.proj import *
 import math
 
-Flow('foldplot','../fetch/npr3_gathers_hdr',
+Flow('foldplot','../fetch/npr3_gathers_hdr.rsf',
     '''
       dd type=float |
       fold 
