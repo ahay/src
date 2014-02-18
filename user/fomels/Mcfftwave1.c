@@ -95,7 +95,6 @@ int main(int argc, char* argv[])
 #else
 		cwavem[ik] = sf_cmul(cwave[ik],rht[ik][im]);
 #endif
-		//sf_warning("realcwave=%g, imagcwave=%g", crealf(cwavem[ik]),cimagf(cwavem[ik]));
 	    }
 	    /* Inverse FFT: cwavem -> wave[im] */
 	    ifft1(wave[im],cwavem);
@@ -107,7 +106,6 @@ int main(int argc, char* argv[])
 		f += crealf(lft[im][ix])*wave[im][ix];
 	    }
 	    curr[ix] = f;
-	    sf_warning("f= %g", f);
 	} 
 
 	sf_floatwrite(curr,nx,out);
