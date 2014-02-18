@@ -52,6 +52,7 @@ WEAKgpz=100*abs(sqrt((TH(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).substitute(c
 WEAKgplot = parametric_plot([WEAKgpx,WEAKgpz],(x,0,90),linestyle=':')
 
 # Muir-Dellinger
+Q,N1=var('Q,N1')
 
 ELp(n1)=(1/c11)*pn12(n1)+(1/c33)*(1-pn12(n1))
 MDp(n1)=(ELp(n1)+(Q-1)*(1/c11)*(1/c33)*pn12(n1)*(1-pn12(n1))/ELp(n1))^-1
