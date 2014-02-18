@@ -22,9 +22,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb, adj;
+    bool verb;
     int ix, iz;
-    int nx, nz, nt, n0, nxz, nxt, padx, padz, n2, padnx, padnz;
+    int nx, nz, nt, n0, nxz, nxt, padx, padz, n2, padnx, padnz, niter;
     float dx, dz, dt, dt2;
     
 	int *head;
@@ -45,7 +45,6 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(vel, "d1", &dz)) sf_error("No d1= in velocity");
     if(!sf_histfloat(vel, "d2", &dx)) sf_error("No d2= in velocity");
     
-    if(adj){
     if(!sf_histint(in, "n1", &nt)) sf_error("No n1= in data");
     if(!sf_histfloat(in, "d1", &dt)) sf_error("No d1= in data");
     if(!sf_histint(in, "n2", &n2) || n2!=nx) sf_error("Need n2=%d in data", nx);
@@ -58,19 +57,9 @@ int main(int argc, char* argv[])
     sf_putstring(out, "unit1", "km");
     sf_putstring(out, "label2", "Lateral");
     sf_putstring(out, "unit2", "km");
-    }else{
-        if(!sf_getint("nt", &nt)) sf_error("Need nt=");
-        if(!sf_getfloat("dt", &dt)) sf_error("Need dt=");
-        
-        sf_putint(out, "n1", nt);
-        sf_putfloat(out, "d1", dt);
-        sf_putfloat(out, "o1", 0.0);
-        sf_putstring(out, "label1", "Time");
-        sf_putstring(out, "unit1", "s");
-        sf_putstring(out, "label2", "Lateral");
-        sf_putstring(out, "unit2", "km");
-    }
     
+    if(!sf_getbool("verb", &verb)) verb=true;
+    if(!sf_getint("niter", &niter)) niter=5;
     if(!sf_getint("padx", &padx)) padx=nz/2;
     if(!sf_getint("padz", &padz)) padz=nz/2;
     if(!sf_getint("n0", &n0)) n0=0;
@@ -92,10 +81,7 @@ int main(int argc, char* argv[])
     /* read velocity, mask and data */
     sf_floatread(vv[0], nxz, vel);
     sf_intread(head, nx, mask);
-    if(adj)
     sf_floatread(dd, nxt, in);
-    else
-        sf_floatread(mm, nxz, in);
     
     /* pad boundary */
     dt2=dt*dt;
@@ -118,12 +104,12 @@ int main(int argc, char* argv[])
     postrtm_init(nx, nz, nt, n0, padx, padz, padnx,
                     padnz, dx, dz, head, padvv);
     
-    postrtm_lop(adj, false, nxz, nxt, mm, dd);
+    sf_cdstep_init();
+    sf_solver(postrtm_lop, sf_cdstep, nxz, nxt, mm, dd, niter, "nmem", 0,
+              "nfreq", niter, "verb", verb);
+    sf_cdstep_close();
     
-    if(adj)
-        sf_floatwrite(mm, nxz, out);
-    else
-        sf_floatwrite(dd, nxt, out);
+    sf_floatwrite(mm, nxz, out);
     
     exit(0);
 }

@@ -18,6 +18,9 @@
  */
 
 #include <rsf.h>
+/*^*/
+
+#include "postrtm.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -30,6 +33,7 @@ static int *head;
 
 void postrtm_init(int nx1, int nz1, int nt1, int n01, int padx1, int padz1, int padnx1,
                      int padnz1, float dx, float dz, int *head1, float **padvv1)
+/*< initialization >*/
 {
 #ifdef _OPENMP
 	omp_init();
@@ -102,6 +106,7 @@ shared(padnx, padnz, u0, u1, u2, padvv, c0, c11, c12, c21, c22)
 }
 
 void postrtm_lop(bool adj, bool add, int nm, int nd, float *mm, float *dd)
+/*< linear operator >*/
 {
     int it, ix, iz;
     float **u0, **u1, **u2, **tmp;
