@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
   double this_gx;
   double this_gy;
 
-  char* sxyfile_name=NULL;
+  char*   sxyfile_name=NULL;
   sf_file sxyfile=NULL;
   off_t nin[SF_MAX_DIM];
   int diminput;
@@ -184,8 +184,19 @@ int main(int argc, char* argv[])
   char* gxyfile_name=NULL;
   sf_file gxyfile=NULL;
 
+  char*   sxyampfile_name=NULL;
+  sf_file sxyampfile=NULL;
+  char*   gxyampfile_name=NULL;
+  sf_file gxyampfile=NULL;
+
   int* trace_shotloc;
   int* trace_grouploc;
+  float starttime;
+  float endtime;
+  float o1;
+  float d1;
+  int istarttime;
+  int iendtime;
   float* trace_amp;
   int num_traces;
   int num_samples;
@@ -195,7 +206,8 @@ int main(int argc, char* argv[])
   float* shot_fold;
   float* group_scale;
   float* group_fold;
-
+  float global_average_trace_amp;
+  float num_nonzero_traces;
     
 
   sf_init (argc,argv);
@@ -262,7 +274,7 @@ int main(int argc, char* argv[])
     sf_error("input file does not define n1");
   if (!sf_histint(inheaders,"n1",&n1_headers)) 
     sf_error("input headers file does not define n1");
-
+  
   n_traces=sf_leftsize(infile,1);
   n_headers=sf_leftsize(inheaders,1);
   if(verbose>0)
@@ -406,6 +418,7 @@ int main(int argc, char* argv[])
       sf_floatwrite(&myfloat,1,sxyfile);
     }
   }
+
   if(NULL!=(gxyfile_name=sf_getstring("gxy"))){
     if(verbose>0){
 	fprintf(stderr,"gxy=%s input.  Write the source xy coords.\n",
@@ -444,6 +457,27 @@ int main(int argc, char* argv[])
   trace_shotloc=malloc(n_traces*sizeof(int));
   trace_grouploc=malloc(n_traces*sizeof(int));
   trace_amp=malloc(n_traces*sizeof(float));
+
+  if (!sf_histfloat(infile,"o1",&o1))
+    sf_error("input file does not define o1");
+  if (!sf_histfloat(infile,"d1",&d1))
+    sf_error("input file does not define d1");
+
+  if(!sf_getfloat("starttime",&starttime))starttime=o1;
+  /* start time to compute average trace ampltide */
+  if(!sf_getfloat("endtime",&endtime))endtime=(n1_traces-1)*d1+o1;
+  istarttime=(int)((starttime-o1)/d1+.5);
+  iendtime  =(int)((endtime-o1)/d1+.5);
+  if(istarttime<0)
+    sf_error("user input starttime less that o1 of input file\n");
+  if(istarttime>=n1_traces)
+    sf_error("user input starttime greater that endtime of input file\n");
+  if(iendtime  >=n1_traces)
+    sf_error("user input endtime greater that endtime of input file\n");
+  if(istarttime>iendtime)
+    sf_error("user input starttime > endtime\n");
+
+  /* end time to compute average trace amplitude */
 
   for (i_trace=0; i_trace<n_traces; i_trace++){
     if(verbose>2 ||(verbose>0 && i_trace<5)){
@@ -486,12 +520,11 @@ int main(int argc, char* argv[])
     /* compute average amplitude of trace */
     trace_amp[num_traces]=0.0;
     num_samples=0;
-    for(i1_traces=0; i1_traces<n1_traces; i1_traces++){
+    for(i1_traces=istarttime; i1_traces<=iendtime; i1_traces++){
       trace_amp[num_traces]+=fabs(intrace[i1_traces]);
       num_samples++;
     }
-    if(1)trace_amp[num_traces]/=(float)num_samples;
-    else trace_amp[num_traces]=1.0; /* kls */
+    trace_amp[num_traces]/=(float)num_samples;
     /* if(trace_amp[num_traces]>0.0)continue; skip zero traces */
 
     num_traces++;
@@ -501,10 +534,20 @@ int main(int argc, char* argv[])
   /* compute surface consistent scalars using */
   /* trace_shotloc, trace_grouploc, trace_amp */
   /********************************************/
-  /* codsfgsdfgsdgfuld free sx,sy,gx,gy arrays, but they are needed to compute
-     am{[xcmp][ycmp] */
+  /* could free sx,sy,gx,gy arrays, but they are needed to compute
+     amp[xcmp][ycmp] */
   if(verbose>0)fprintf(stderr,"compute surface consistent scalars\n");
 
+  /* compute the global average trace amplitude */
+  global_average_trace_amp=0.0;
+  num_nonzero_traces=0;
+  for (inum_trace=0; inum_trace<num_traces; inum_trace++){
+    if(trace_amp[inum_trace]>0.0){
+      global_average_trace_amp+=trace_amp[inum_trace];
+      num_nonzero_traces++;
+    } 
+  }
+  global_average_trace_amp/=num_nonzero_traces;
 
   /* computation of shot_scale and group_scale could be linearized
      by taking log of trace_amp, then use iterative cg type method kls */
@@ -524,7 +567,8 @@ int main(int argc, char* argv[])
   }
   for (indx=0; indx<num_sxy; indx++){
     if(shot_scale [indx]<1e-30)shot_scale[indx]=0.0;
-    else                 shot_scale[indx]=shot_fold[indx]/shot_scale[indx];
+    else                 shot_scale[indx]=global_average_trace_amp*
+			                  shot_fold[indx]/shot_scale[indx];
   }
 
   /* apply the shot scale to trace_amp before computing group_scale */
@@ -549,7 +593,8 @@ int main(int argc, char* argv[])
   }
   for (indx=0; indx<num_gxy; indx++){
     if(group_scale[indx]<1e-30)group_scale[indx]=0.0;
-    else                 group_scale[indx]=group_fold[indx]/group_scale[indx];
+    else                 group_scale[indx]=global_average_trace_amp*
+			                   group_fold[indx]/group_scale[indx];
   }
 
 
@@ -565,6 +610,84 @@ int main(int argc, char* argv[])
 	      indx,group_scale[indx],group_fold[indx]);
     }
   }
+
+  if(verbose>0)
+    fprintf(stderr,"check to see if sxyamp and/or gxyamp are to be output\n");
+
+  if(NULL!=(sxyampfile_name=sf_getstring("sxyamp"))){
+    if(verbose>0){
+	fprintf(stderr,"sxyamp=%s input.  Write the source x,y,amp.\n",
+		sxyampfile_name);
+    }
+    sxyampfile=sf_output(sxyampfile_name);
+    sf_putint(sxyampfile,"n1",3);
+    sf_putfloat(sxyampfile,"d1",1);
+    sf_putfloat(sxyampfile,"o1",0);
+    sf_putstring(sxyampfile,"label1","none");
+    sf_putstring(sxyampfile,"unit1","none");
+
+    sf_putint(sxyampfile,"n2",num_sxy);
+    sf_putfloat(sxyampfile,"d2",1);
+    sf_putfloat(sxyampfile,"o2",0);
+    sf_putstring(sxyampfile,"label2","none");
+    sf_putstring(sxyampfile,"unit2","none");
+    sf_settype(sxyampfile,SF_FLOAT);
+    /* get dimension of the input file.  Override n2=n"dim" on sxyfile */
+    diminput = sf_largefiledims(infile,nin);
+    for (iaxis=2; iaxis<diminput; iaxis++){
+      sprintf(parameter,"n%d",iaxis+1);
+      sf_putint(sxyampfile,parameter,(off_t)1);
+      sf_putint(sxyampfile,parameter,(off_t)1);
+    }
+    sf_fileflush(sxyampfile,infile);
+    for(indx=0; indx<num_sxy; indx++){
+      float myfloat;
+      myfloat=(float)sx[indx];
+      sf_floatwrite(&myfloat,1,sxyampfile);
+      myfloat=(float)sy[indx];
+      sf_floatwrite(&myfloat,1,sxyampfile);
+      myfloat=1.0/shot_scale[indx];
+      sf_floatwrite(&myfloat,1,sxyampfile);
+    }
+  }
+
+  if(NULL!=(gxyampfile_name=sf_getstring("gxyamp"))){
+    if(verbose>0){
+	fprintf(stderr,"gxyamp=%s input.  Write the group x,y,amp.\n",
+		gxyampfile_name);
+    }
+    gxyampfile=sf_output(gxyampfile_name);
+    sf_putint(gxyampfile,"n1",3);
+    sf_putfloat(gxyampfile,"d1",1);
+    sf_putfloat(gxyampfile,"o1",0);
+    sf_putstring(gxyampfile,"label1","none");
+    sf_putstring(gxyampfile,"unit1","none");
+
+    sf_putint(gxyampfile,"n2",num_gxy);
+    sf_putfloat(gxyampfile,"d2",1);
+    sf_putfloat(gxyampfile,"o2",0);
+    sf_putstring(gxyampfile,"label2","none");
+    sf_putstring(gxyampfile,"unit2","none");
+    sf_settype(gxyampfile,SF_FLOAT);
+    /* get dimension of the input file.  Override n2=n"dim" on sxyfile */
+    diminput = sf_largefiledims(infile,nin);
+    for (iaxis=2; iaxis<diminput; iaxis++){
+      sprintf(parameter,"n%d",iaxis+1);
+      sf_putint(gxyampfile,parameter,(off_t)1);
+      sf_putint(gxyampfile,parameter,(off_t)1);
+    }
+    sf_fileflush(gxyampfile,infile);
+    for(indx=0; indx<num_gxy; indx++){
+      float myfloat;
+      myfloat=(float)gx[indx];
+      sf_floatwrite(&myfloat,1,gxyampfile);
+      myfloat=(float)gy[indx];
+      sf_floatwrite(&myfloat,1,gxyampfile);
+      myfloat=1.0/group_scale[indx];
+      sf_floatwrite(&myfloat,1,gxyampfile);
+    }
+  }
+
   if(verbose>0) 
     fprintf(stderr,"read traces, apply surface consistant scale. n_traces=%d\n",
 	    n_traces);
