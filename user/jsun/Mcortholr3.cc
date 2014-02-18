@@ -120,15 +120,12 @@ int main(int argc, char** argv)
 
     par.get("dt",dt); // time step
 
-    par.get("mode",mode,0);
+    par.get("mode",mode,0); // '0' means quasi-P (default),'1' means quasi-S, '2' means quasi-S2
     if (mode==0) sf_warning(">>>>> Using quasi-P mode! <<<<<");
     else if (mode==1) sf_warning(">>>>> Using quasi-S mode! <<<<<");
     else if (mode==2) sf_warning(">>>>> Using quasi-S2 mode! <<<<<");
     else sf_warning(">>>>> Invalid mode parameter, using default (P)! <<<<<");
-    /* '0' means quasi-P (default),
-       '1' means quasi-S,
-       '2' means quasi-S2
-    */
+
 
     bool tilt;
     par.get("tilt",tilt,false);

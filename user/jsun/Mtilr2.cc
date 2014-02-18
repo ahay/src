@@ -69,7 +69,6 @@ int main(int argc, char** argv)
 
     iRSF par(0);
 
-//    int type;
     par.get("type",type,1); // wave mode (1=p wave, 2=Sv wave)
 
     int seed;
