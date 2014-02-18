@@ -1,0 +1,85 @@
+from rsf.proj import *
+
+xmax = 6.0
+zmax = 2.0
+
+layers = ((0.30,0.50,0.20,0.30),
+          (0.70,0.66,0.66,0.66),
+          (0.70,0.74,0.74,0.74),
+          (1.30,1.30,1.60,1.20))
+
+coords = ((0,2,4,6),
+          (3,3.5,4,6),
+          (3,3.5,4,6),
+          (0,2,4,6))
+
+velocities = (1.508,
+              1.581,
+              1.826,
+              1.581,
+              2.500)
+
+def arr2str(array,sep=' '):
+    return sep.join(map(str,array))
+
+vstr = arr2str(velocities,',')
+
+n1 = len(layers[0])
+n2 = len(layers)
+
+Flow('layers.asc',None,
+     '''
+     echo %s %s
+     n1=%d n2=%d n3=2 
+     data_format=ascii_float in=$TARGET     
+     ''' % (
+         ' '.join(map(arr2str,coords)),
+         ' '.join(map(arr2str,layers)),
+         n1,n2))
+Flow('layers','layers.asc','dd form=native')
+
+d = 0.0101 # non-round for reproducibility
+
+Flow('refs','layers',
+     '''
+     transp plane=23 | transp plane=12 |
+     spline o1=0 d1=%g n1=%d | window |
+     add add=-0.7 | cut n2=2 f2=1 n1=298 | add add=0.7
+     ''' % (d,int(1.5+xmax/d)))
+Flow('dips','refs','deriv scale=y')
+
+Flow('mod2','refs',
+     '''
+     unif2 d1=%g n1=%d v00=%s 
+     ''' % (d,int(1.5+zmax/d),vstr))
+
+Result('mod2',
+       '''
+       grey color=j title="Model 1" 
+       screenratio=%g screenht=4
+       mean=y titlesz=8 labelsz=6
+       label1="Depth (km)"
+       label2="Distance (km)"
+       ''' % (zmax/xmax))
+
+shots = (2.0,2.6,3.3,3.95)
+plots = []
+for s in range(4):
+    shot = 'shot%d' % s
+    Flow(shot,'refs dips',
+         '''
+         kirmod_newton nt=751 dt=0.004 freq=15
+         ns=1 s0=%g ds=0.01 nh=60 dh=0.04 h0=-1.2 verb=y 
+         vstatus=0 velocity=%s debug=n fwdxini=y
+         xref=0 zref=0 dip=${SOURCES[1]}
+         ''' % (shots[s],vstr))
+    Plot(shot,
+         '''
+         wiggle transp=y yreverse=y poly=y
+         title="Shot at %g km"
+         ''' % shots[s])
+    plots.append(shot)
+
+Result('shots',plots,'SideBySideAniso')
+
+End()

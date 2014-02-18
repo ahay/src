@@ -37,11 +37,11 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
 	    if (mode == 0) { /*viscoacoustic*/
-		float gamma = atan(1./qs[rs[a]])/SF_PI;
-		float eta = -pow(c0,2.*gamma)*pow(w0,-2.*gamma)*cos(SF_PI*gamma);
-		float tao = -pow(c0,2.*gamma)*pow(w0,-2.*gamma)*sin(SF_PI*gamma);
-		float p1  = tao*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+1.);
-		float p2  = -pow(p1,2) - 4*eta*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+2.);
+		float gamma = atanf(1./qs[rs[a]])/SF_PI;
+		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
+		float tao = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
+		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
+		float p2  = -powf(p1,2) - 4*eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.);
 		float phr,phi;
 		if (p2 >= 0) {
 		    phr = p1*dt/2.;
@@ -53,10 +53,10 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		res(a,b) = cpx(exp(phr)*cos(phi),exp(phr)*sin(phi));
 	    }
 	    else if (mode == 1) { /*loss dominated*/
-		float gamma = atan(1./qs[rs[a]])/SF_PI;
-		float tao = -pow(c0,2.*gamma)*pow(w0,-2.*gamma)*sin(SF_PI*gamma);
-		float p1  = tao*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+1.);
-		float p2  = -pow(p1,2) + 4*pow(vs[rs[a]],2)*pow(ks[cs[b]],2);
+		float gamma = atanf(1./qs[rs[a]])/SF_PI;
+		float tao = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
+		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
+		float p2  = -powf(p1,2) + 4*powf(vs[rs[a]],2)*powf(ks[cs[b]],2);
 		float phr,phi;
 		if (p2 >= 0) {
 		    phr = p1*dt/2.;
@@ -68,9 +68,9 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		res(a,b) = cpx(exp(phr)*cos(phi),exp(phr)*sin(phi));
 	    }
 	    else if (mode == 2) { /*dispersion-dominated*/
-		float gamma = atan(1./qs[rs[a]])/SF_PI;
-		float eta = -pow(c0,2.*gamma)*pow(w0,-2.*gamma)*cos(SF_PI*gamma);
-		float phase = sqrt(-eta*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+2.))*dt;
+		float gamma = atanf(1./qs[rs[a]])/SF_PI;
+		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
+		float phase = sqrt(-eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.))*dt;
 		if (rev) phase*=-1;
 		res(a,b) = cpx(cos(phase),sin(phase));
 	    }
