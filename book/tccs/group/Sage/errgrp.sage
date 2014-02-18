@@ -78,9 +78,7 @@ SHptrue(n1)=SHs(n1)
 
 SHgpx=(arcsin(sqrt(pn12true(sin(x*pi/180))))*180/pi).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Group angle
 SHgpz=100*abs(sqrt((SHptrue(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).subs(S=1/(2*(1+QZ)),Q=QZ).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Relative error
-SHgpzmix=100*abs(sqrt((SHptrue(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).subs(S=1/(2*(1+1/qmix)),Q=1/qmix).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51)
 SHgplot = parametric_plot([SHgpx,SHgpz],(x,0,90))
-SHgplotmix = parametric_plot([SHgpx,SHgpzmix],(x,0,90),color='red')
 
 p = WEAKgplot+MDgplot+SHgplot
 p.save(filename='junk_sage.pdf',axes_labels=['phase angle (degrees)','relative error (%)'],aspect_ratio=25,frame=True,axes=False)
