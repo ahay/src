@@ -124,8 +124,9 @@ int main(int argc, char** argv)
     else if (mode==1) sf_warning(">>>>> Using quasi-S mode! <<<<<");
     else if (mode==2) sf_warning(">>>>> Using quasi-S2 mode! <<<<<");
     else sf_warning(">>>>> Invalid mode parameter, using default (P)! <<<<<");
-    /* '0' means quasi-P (default),                                                                                                      '1' means quasi-S,                                                                                               
-       '2' means quasi-S2                                                                                                         
+    /* '0' means quasi-P (default),
+       '1' means quasi-S,
+       '2' means quasi-S2
     */
 
     bool tilt;
