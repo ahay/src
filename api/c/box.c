@@ -17,10 +17,13 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "box.h"
+
+#include "_bool.h"
 /*^*/
 
-#include "box.h"
+#include "alloc.h"
+#include "adjnull.h"
 
 static  int np, nb, nx;
 static float *tmp;
@@ -31,9 +34,9 @@ static void duble (int o, int d, int nx, int nb,
 		    float* x, const float* tmp);
 static void duble2 (int o, int d, int nx, int nb, const float* x, float* tmp);
 
-void box_init (int nbox /* box length */, 
-	       int ndat /* data length */, 
-	       bool lin /* true for linear operator */)
+void sf_box_init (int nbox /* box length */, 
+		  int ndat /* data length */, 
+		  bool lin /* true for linear operator */)
 /*< initialize >*/
 {
     nx = ndat;
@@ -43,7 +46,7 @@ void box_init (int nbox /* box length */,
     if (lin) tmp = sf_floatalloc(np);
 }
 
-void box_close (void)
+void sf_box_close (void)
 /*< free allocated storage >*/
 {
     free (tmp);
@@ -110,27 +113,27 @@ static void duble2 (int o, int d, int nx, int nb, const float* x, float* tmp)
     }
 }
 
-void boxsmooth (int o    /* start */, 
-		int d    /* increment */, 
-		float *x /* output */, 
-		float *y /* input */)
+void sf_boxsmooth (int o    /* start */, 
+		   int d    /* increment */, 
+		   float *x /* output */, 
+		   float *y /* input */)
 /*< adjoint smoothing >*/
 {
     causint (np,y);
     duble (o,d,nx,nb,x,y);
 }
 
-void boxsmooth2 (int o    /* start */, 
-		 int d    /* increment */, 
-		 float *x /* input */, 
-		 float *y /* output */)
+void sf_boxsmooth2 (int o    /* start */, 
+		    int d    /* increment */, 
+		    float *x /* input */, 
+		    float *y /* output */)
 /*< smoothing >*/
 {
     duble2 (o,d,nx,nb,x,y);
     causint2 (np,y);
 }
 
-void box_lop(bool adj, bool add, int nx, int ny, float* x, float* y) 
+void sf_box_lop(bool adj, bool add, int nx, int ny, float* x, float* y) 
 /*< smoothing as linear operator >*/
 {
     int i;
@@ -138,12 +141,12 @@ void box_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     sf_adjnull(adj,add,nx,ny,x,y);
 
     if (adj) {
-	boxsmooth(0,1,tmp,y);
+	sf_boxsmooth(0,1,tmp,y);
 	for (i=0; i < nx; i++) {
 	    x[i] += tmp[i];
 	}
     } else {
-	boxsmooth2(0,1,x,tmp);
+	sf_boxsmooth2(0,1,x,tmp);
 	for (i=0; i < ny; i++) {
 	    y[i] += tmp[i];
 	}

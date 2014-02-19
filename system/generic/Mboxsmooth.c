@@ -19,8 +19,6 @@
 
 #include <rsf.h>
 
-#include "box.h"
-
 int main (int argc, char* argv[]) 
 {
     int dim, dim1, i, j, k, rect[SF_MAX_DIM], s[SF_MAX_DIM], n[SF_MAX_DIM];
@@ -69,11 +67,11 @@ int main (int argc, char* argv[])
 
 	for (i=0; i <= dim1; i++) {
 	    if (rect[i] <= 1) continue;
-	    box_init (rect[i],n[i],false);
+	    sf_box_init (rect[i],n[i],false);
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    boxsmooth2 (i0,s[i],data,data2);
+		    sf_boxsmooth2 (i0,s[i],data,data2);
 		    for (k=0; k < n[i]; k++) {
 			data[i0+k*s[i]] = data2[k];
 		    }

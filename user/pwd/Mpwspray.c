@@ -24,8 +24,9 @@ int main (int argc, char *argv[])
 {
     bool verb;
     char *reduce;
-    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order;
-    float eps, ***u, **p, *trace, *temp=NULL, ui, fold, a;
+    int n1,n2,n3, i1,i2,i3, is, ns, ns2, ip, order, rect;
+    float ***u, **p, *trace, *temp=NULL, *temp2=NULL;
+    float eps, ui, fold, a;
     sf_file inp, out, dip;
 
     sf_init(argc,argv);
@@ -50,7 +51,7 @@ int main (int argc, char *argv[])
     /* accuracy order */
 
     if (NULL == (reduce = sf_getstring("reduce"))) reduce="none";
-    /* reduction method (none,stack,median,triangle,gaussian,predict) */
+    /* reduction method (none,stack,median,triangle,gaussian,predict,coherence) */
 
     switch(reduce[0]) {
 	case 's': /* stack - mean value */
@@ -58,6 +59,14 @@ int main (int argc, char *argv[])
 	    break;
 	case 'm': /* median */
 	    temp = sf_floatalloc(ns2);
+	    break;
+	case 'c': /* coherence */
+	    if (!sf_getint("rect",&rect)) rect=2;
+	    /* radius for predictive coherence (reduce=coherence) */
+
+	    temp = sf_floatalloc(ns2);
+	    temp2 = sf_floatalloc(ns2+rect);
+	    sf_box_init (rect,ns2,false);
 	    break;
 	case 't': /* triangle */
 	case 'g': /* gaussian */
@@ -169,6 +178,23 @@ int main (int argc, char *argv[])
 		    }
 		    sf_floatwrite(trace,n1,out);
 		}		    
+		break;
+	    case 'c': /* coherence */
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			for (is=0; is < ns2; is++) {
+			    ui = u[i2][is][i1]-u[i2][ns][i1];
+			    temp[is] = ui*ui; 
+			}
+			sf_boxsmooth2 (0,1,temp,temp2);
+			ui = SF_HUGE;
+			for (is=rect; is < ns2+rect; is++) {
+			    if (ui > temp2[is]) ui=temp2[is];
+			}
+			trace[i1] = ui;
+		    }
+		    sf_floatwrite(trace,n1,out);
+		}
 		break;
 	    case 'n': /* none */
 	    default:
