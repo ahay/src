@@ -23,9 +23,9 @@ double gen_adjsrc
             int y=round(yRecv[irec][isrc]*S.YSize());
             int z=round(zRecv[irec][isrc]*S.ZSize());
 
-	    Complex<double> obs = O.Get(x,y,z);
-	    Complex<double> syn = S.Get(x,y,z);
-	    A.Set( irec, isrc, obs-syn );
+	        Complex<double> obs = O.Get(x,y,z);
+	        Complex<double> syn = S.Get(x,y,z);
+	        A.Set( irec, isrc, obs-syn );
 
             l2MisfitSquared += Abs(adj.Get(irec,isrc));
         }
@@ -111,14 +111,15 @@ void calc_gradient_sd
     for (int k=0;k<nz;k++ )
         for (int j=0;j<ny;j++) 
             for (int i=0;i<nx;i++)
-		KDir.Set( i, j, k, -KCur.Get(i,j,k) );
+		        KDir.Set( i, j, k, -KCur.Get(i,j,k) );
 }
 
 void calc_gradient_cg
 ( const DistUniformGrid<double>& KCur, 
   const DistUniformGrid<double>& KPrev, 
   const DistUniformGrid<double>& DirPrev,
-        DistUniformGrid<dobule>& DirCur )
+        DistUniformGrid<dobule>& DirCur,
+        mpi::Comm comm)
 {
     const int nx = KCur.XSize();
     const int ny = KCur.YSize();
@@ -129,7 +130,6 @@ void calc_gradient_cg
 
     // TODO: Local summation followed by MPI_Allreduce summation
     // (STEP 2)
-    /*
     for (int k=0;k<nz;k++) { 
         for (int j=0;j<ny;j++ ) {
             for (int i=0;i<nx;i++ ) { 
@@ -139,30 +139,28 @@ void calc_gradient_cg
             }
         }
     }
-    */
 
-    double beta=beta_top/beta_bot;
-    if (beta < 0.0) { 
-        beta=0.0;
+    double betalocal=beta_top/beta_bot;
+    double betaglob;
+
+    mpi::AllReduce(&betalocal, &betaglob,1, MPI_SUM,comm ); 
+
+    if (betaglob < 0.0) { 
+        betaglob=0.0;
     }
 
     // TODO: Local subtraction
     // (STEP 3)
-    /*
-    for (int k=0;k<nz;k++ ) { 
-        for (int j=0;j<ny;j++ ) { 
-            for (int i=0;i<nx;i++ ) { 
-                curdir[i][j][k]=-curker[i][j][k]+beta*predir[i][j][k];
-            }
-        }
-    }
-    */
+    for (int k=0;k<nz;k++ ) 
+        for (int j=0;j<ny;j++ ) 
+            for (int i=0;i<nx;i++ )
+                DirCur.Set(i,j,k, -KCru.Get(i,j,k)+betaglob*DirPrev.Get(i,j,k)); 
 }
 
 void update_model
 ( const DistUniformGrid<double>& MOld, 
   const DistUniformGrid<double>& Grad,
-        DistUniformGrid<double>& MNew, double alpha )
+        DistUniformGrid<double>& MNew, double alpha, mpi::Comm comm )
 {
     int nx = MOld.XSize();
     int ny = MOld.YSize();
@@ -172,30 +170,28 @@ void update_model
     //       infinity norm calculation followed by a call to 
     //       MPI_Allreduce with MPI_MAX
     // (STEP 4)
-    double grdmax=0.0;
-    /*
+    double grdmaxlocal=0.0;
     for (int k=0;k<nz;k++ ) { 
         for (int j=0;j<ny;j++ ) {
             for (int i=0;i<nx;i++ ) { 
-                if (fabs(grd[i][j][k]) > grdmax ) { 
-                   grdmax=fabs(grd[i][j][k]);
+                if (fabs(grd[i][j][k]) > grdmaxlocal ) { 
+                   grdmaxlocal=fabs(grd[i][j][k]);
                 }
             }
         }
     }
-    */
+
+    double grdmaxglob;
+    mpi::AllReduce(&grdmaxlocal, &grdmaxglob, 1, MPI_MAX, comm);
+
+    double ratio=alpha/grdmaxglob;
     
     // TODO: Perform a local update
     // (STEP 5)
-    /*
-    for (int k=0;k<nz;k++ ) { 
-        for (int j=0;j<ny;j++ ) { 
-            for (int i=0;i<nx;i++ ) { 
-                model_new[i][j][k]=model_old[i][j][k]+alpha*grd[i][j][k]/grdmax;
-            }
-        }
-    }
-    */
+    for (int k=0;k<nz;k++ ) 
+        for (int j=0;j<ny;j++ ) 
+            for (int i=0;i<nx;i++ )
+                MNew.Set(i,j,k, MOld.Get(i,j,k) + ratio * Grad.Get(i,j,k)); 
 }
 
 void gen_acquisition
@@ -224,9 +220,9 @@ void gen_acquisition
         for ( int k=0; k<nzr; k++ ) { 
             for (int j=0; j<nyr; j++) {
                 for (int i=0; i<nxr; i++) {
-		    xRecv.Set( irec, isrc, oxr+i*dxr );
-		    yRecv.Set( irec, isrc, oyr+j*dyr );
-		    zRecv.Set( irec, isrc, ozr+k*dzr );
+		            xRecv.Set( irec, isrc, oxr+i*dxr );
+		            yRecv.Set( irec, isrc, oyr+j*dyr );
+		            zRecv.Set( irec, isrc, ozr+k*dzr );
                 }
             }
         }
