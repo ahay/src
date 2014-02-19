@@ -43,10 +43,10 @@ struct EscNBGrid2 {
     int                  nz, nx, na, jz, jx, morder;
     float                oz, ox, oa;
     float                dz, dx, da;
-    float                xmax, zmax;
+    float                gzmin, gxmin, gzmax, gxmax;
     float                d[ESC2_DIMS], mdist;
     size_t               nct, ndt, fdt, nlt, nbt, pgt, bct;
-    bool                 verb, cmix, atraced, mtraced;
+    bool                 verb, cmix, atraced, mtraced, tracebc;
     sf_timer             ttime, rtime;
     sf_esc_nband2        nband;
     sf_esc_nbchild2_iter nbciter;
@@ -66,6 +66,29 @@ float sf_esc_nbgrid2_get_da (int na)
 /*< Returns sampling of the angular axis >*/
 {
     return 2.0*SF_PI/(float)na;
+}
+
+void sf_esc_nbgrid2_set_tracebc (sf_esc_nbgrid2 esc_nbgrid, bool tracebc)
+/*< Set trace boundary points flag >*/
+{
+    esc_nbgrid->tracebc = tracebc;
+    if (!tracebc) {
+        esc_nbgrid->gzmin = esc_nbgrid->oz;
+        esc_nbgrid->gzmax = esc_nbgrid->oz + (esc_nbgrid->nz - 1)*esc_nbgrid->dz;
+        esc_nbgrid->gxmin = esc_nbgrid->ox;
+        esc_nbgrid->gxmax = esc_nbgrid->ox + (esc_nbgrid->nx - 1)*esc_nbgrid->dx;
+    } else {
+        esc_nbgrid->gzmin = sf_esc_slowness2_oz (esc_nbgrid->esc_slow);
+        esc_nbgrid->gzmax = esc_nbgrid->gzmin +
+                          (sf_esc_slowness2_nz (esc_nbgrid->esc_slow) - 1)*sf_esc_slowness2_dz (esc_nbgrid->esc_slow);
+        esc_nbgrid->gxmin = sf_esc_slowness2_ox (esc_nbgrid->esc_slow);
+        esc_nbgrid->gxmax = esc_nbgrid->gxmin +
+                          (sf_esc_slowness2_nx (esc_nbgrid->esc_slow) - 1)*sf_esc_slowness2_dx (esc_nbgrid->esc_slow);
+    }
+    sf_esc_tracer2_set_zmin (esc_nbgrid->esc_tracer, esc_nbgrid->gzmin);
+    sf_esc_tracer2_set_zmax (esc_nbgrid->esc_tracer, esc_nbgrid->gzmax);
+    sf_esc_tracer2_set_xmin (esc_nbgrid->esc_tracer, esc_nbgrid->gxmin);
+    sf_esc_tracer2_set_xmax (esc_nbgrid->esc_tracer, esc_nbgrid->gxmax);
 }
 
 sf_esc_nbgrid2 sf_esc_nbgrid2_init (int nz, int nx, int na,
@@ -95,20 +118,17 @@ sf_esc_nbgrid2 sf_esc_nbgrid2_init (int nz, int nx, int na,
     esc_nbgrid->ox = ox;
     esc_nbgrid->oa = sf_esc_nbgrid2_get_oa (na);
 
-    esc_nbgrid->zmax = oz + (nz - 1)*dz;
-    esc_nbgrid->xmax = ox + (nx - 1)*dx;
-
     esc_nbgrid->mdist = SF_HUGE;
     esc_nbgrid->morder = ESC2_MORDER;
     esc_nbgrid->cmix = true;
 
-    esc_nbgrid->nct = 0; /* Number of ray traced because of color mixing */
-    esc_nbgrid->ndt = 0; /* Number of ray traced because of maximum allowed exit distance spread */
-    esc_nbgrid->fdt = 0; /* Number of ray traced because of F-D overshooting */
-    esc_nbgrid->nlt = 0; /* Number of ray traced because of deadlocks */
-    esc_nbgrid->pgt = 0; /* Number of ray traced because of phase/group velocity deviation */
-    esc_nbgrid->nbt = 0; /* Number of ray traced for the narrow band edges */
-    esc_nbgrid->bct = 0; /* Number of ray traced for the boundary conditions */
+    esc_nbgrid->nct = 0; /* Number of rays traced because of color mixing */
+    esc_nbgrid->ndt = 0; /* Number of rays traced because of maximum allowed exit distance spread */
+    esc_nbgrid->fdt = 0; /* Number of rays traced because of F-D overshooting */
+    esc_nbgrid->nlt = 0; /* Number of rays traced because of deadlocks */
+    esc_nbgrid->pgt = 0; /* Number of rays traced because of phase/group velocity deviation */
+    esc_nbgrid->nbt = 0; /* Number of rays traced for the narrow band edges */
+    esc_nbgrid->bct = 0; /* Number of rays traced for the boundary conditions */
 
     esc_nbgrid->verb = false;
 
@@ -124,6 +144,8 @@ sf_esc_nbgrid2 sf_esc_nbgrid2_init (int nz, int nx, int na,
 
     esc_nbgrid->nband = sf_esc_nband2_init (nz, nx, na);
     esc_nbgrid->nbciter = sf_esc_nbchild2_iter_init (esc_nbgrid->nband);
+
+    sf_esc_nbgrid2_set_tracebc (esc_nbgrid, true);
 
     return esc_nbgrid;
 }
@@ -380,8 +402,8 @@ static bool sf_esc_nbgrid2_evaluate_child (sf_esc_nbgrid2 esc_nbgrid, int iz, in
         /* Check for F-D overshooting */
         z =  sf_esc_point2_get_esc_var (child, ESC2_Z);
         x =  sf_esc_point2_get_esc_var (child, ESC2_X);
-        if (z < esc_nbgrid->oz || z > esc_nbgrid->zmax ||
-            x < esc_nbgrid->ox || x > esc_nbgrid->xmax) {
+        if (z < esc_nbgrid->gzmin || z > esc_nbgrid->gzmax ||
+            x < esc_nbgrid->gxmin || x > esc_nbgrid->gxmax) {
             esc_nbgrid->fdt++;
             trace = true;
         }

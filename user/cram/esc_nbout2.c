@@ -71,7 +71,7 @@ sf_esc_nbout2 sf_esc_nbout2_init (int nz, int nx, int na,
         sf_putint (out, "n3", nx);
         sf_putfloat (out, "o3", ox);
         sf_putint (out, "n4", nz);
-        sf_putfloat (out, "o4", ox);
+        sf_putfloat (out, "o4", oz);
     } else {
         sf_putint (out, "n3", nx);
         sf_putfloat (out, "d3", dx);

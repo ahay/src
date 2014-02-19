@@ -26,7 +26,7 @@ int main (int argc, char* argv[]) {
     float dz, oz, dx, ox, mdist;
     sf_file spdom, vspline = NULL, out;
 
-    bool verb, cmix, atraced, mtraced;
+    bool verb, cmix, atraced, mtraced, tracebc;
     sf_esc_slowness2 esc_slow;
     sf_esc_tracer2 esc_tracer;
     sf_esc_nbout2 esc_out;
@@ -84,6 +84,9 @@ int main (int argc, char* argv[]) {
     if (!sf_getbool ("cmix", &cmix)) cmix = true;
     /* true - check for color mixing */
 
+    if (!sf_getbool ("tracebc", &tracebc)) tracebc = true;
+    /* n - do not trace B.C. points */
+
     if (!sf_getbool ("verb", &verb)) verb = false;
     /* verbosity flag */
 
@@ -108,6 +111,7 @@ int main (int argc, char* argv[]) {
                                     esc_slow, esc_tracer, esc_out);
     sf_esc_nbgrid2_set_verb (esc_grid, verb);
     sf_esc_nbgrid2_set_cmix (esc_grid, cmix);
+    sf_esc_nbgrid2_set_tracebc (esc_grid, tracebc);
     sf_esc_nbgrid2_set_mdist (esc_grid, mdist);
     sf_esc_nbgrid2_set_morder (esc_grid, morder);
 

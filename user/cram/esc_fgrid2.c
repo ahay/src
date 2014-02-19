@@ -42,7 +42,7 @@ struct EscFGrid2 {
     int                  nz, nx, na, morder, niter;
     float                oz, ox, oa;
     float                dz, dx, da;
-    float                zmax, xmax;
+    float                gzmin, gxmin, gzmax, gxmax;
     float                d[ESC2_DIMS], mdist, thresh;
     unsigned long        nct, ndt, bct;
     bool                 verb, cmix, tracebc, atraced, mtraced;
@@ -54,6 +54,29 @@ struct EscFGrid2 {
 /* concrete data type */
 
 typedef enum { ESC2_FGRID_FORW = 0, ESC2_FGRID_BACK = 1 } sf_esc_fgrid2_dir;
+
+void sf_esc_fgrid2_set_tracebc (sf_esc_fgrid2 esc_fgrid, bool tracebc)
+/*< Set trace boundary points flag >*/
+{
+    esc_fgrid->tracebc = tracebc;
+    if (!tracebc) {
+        esc_fgrid->gzmin = esc_fgrid->oz;
+        esc_fgrid->gzmax = esc_fgrid->oz + (esc_fgrid->nz - 1)*esc_fgrid->dz;
+        esc_fgrid->gxmin = esc_fgrid->ox;
+        esc_fgrid->gxmax = esc_fgrid->ox + (esc_fgrid->nx - 1)*esc_fgrid->dx;
+    } else {
+        esc_fgrid->gzmin = sf_esc_slowness2_oz (esc_fgrid->esc_slow);
+        esc_fgrid->gzmax = esc_fgrid->gzmin +
+                          (sf_esc_slowness2_nz (esc_fgrid->esc_slow) - 1)*sf_esc_slowness2_dz (esc_fgrid->esc_slow);
+        esc_fgrid->gxmin = sf_esc_slowness2_ox (esc_fgrid->esc_slow);
+        esc_fgrid->gxmax = esc_fgrid->gxmin +
+                          (sf_esc_slowness2_nx (esc_fgrid->esc_slow) - 1)*sf_esc_slowness2_dx (esc_fgrid->esc_slow);
+    }
+    sf_esc_tracer2_set_zmin (esc_fgrid->esc_tracer, esc_fgrid->gzmin);
+    sf_esc_tracer2_set_zmax (esc_fgrid->esc_tracer, esc_fgrid->gzmax);
+    sf_esc_tracer2_set_xmin (esc_fgrid->esc_tracer, esc_fgrid->gxmin);
+    sf_esc_tracer2_set_xmax (esc_fgrid->esc_tracer, esc_fgrid->gxmax);
+}
 
 sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
                                   float oz, float ox, float dz, float dx,
@@ -75,9 +98,6 @@ sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
     esc_fgrid->da = sf_esc_nbgrid2_get_da (na);
     esc_fgrid->d[ESC2_AXIS_A] = esc_fgrid->da;
 
-    esc_fgrid->zmax = oz + (nz - 1)*dz;
-    esc_fgrid->xmax = ox + (nx - 1)*dx;
-
     esc_fgrid->oz = oz;
     esc_fgrid->ox = ox;
     esc_fgrid->oa = sf_esc_nbgrid2_get_oa (na);
@@ -86,7 +106,6 @@ sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
     esc_fgrid->morder = ESC2_MORDER;
     esc_fgrid->niter = 100;
     esc_fgrid->cmix = false;
-    esc_fgrid->tracebc = true;
     esc_fgrid->atraced = atraced;
     esc_fgrid->mtraced = mtraced;
 
@@ -102,6 +121,8 @@ sf_esc_fgrid2 sf_esc_fgrid2_init (int nz, int nx, int na,
     esc_fgrid->esc_slow = esc_slow;
     esc_fgrid->esc_tracer = esc_tracer;
     esc_fgrid->esc_out = esc_out;
+
+    sf_esc_fgrid2_set_tracebc (esc_fgrid, true);
 
     return esc_fgrid;
 }
@@ -154,21 +175,6 @@ void sf_esc_fgrid2_set_cmix (sf_esc_fgrid2 esc_fgrid, bool cmix)
     esc_fgrid->cmix = cmix;
 }
 
-void sf_esc_fgrid2_set_tracebc (sf_esc_fgrid2 esc_fgrid, bool tracebc)
-/*< Set trace boundary points flag >*/
-{
-    esc_fgrid->tracebc = tracebc;
-    if (!tracebc) {
-        sf_esc_tracer2_set_zmin (esc_fgrid->esc_tracer, esc_fgrid->oz);
-        sf_esc_tracer2_set_zmax (esc_fgrid->esc_tracer, esc_fgrid->oz +
-                                 (esc_fgrid->nz - 1)*esc_fgrid->dz);
-        sf_esc_tracer2_set_xmin (esc_fgrid->esc_tracer, esc_fgrid->ox);
-        sf_esc_tracer2_set_xmax (esc_fgrid->esc_tracer, esc_fgrid->ox +
-                                 (esc_fgrid->nx - 1)*esc_fgrid->dx);
-    }
-
-}
-
 /* Do simple Gauss-Seidel update for one point and one type of variable */
 static float sf_esc_fgrid2_gs_update (sf_esc_fgrid2 esc_fgrid,
                                       float *n, float *e,
@@ -200,7 +206,7 @@ static void sf_esc_fgrid2_compute_point (sf_esc_fgrid2 esc_fgrid, int iz, int ix
     /* Coefficients of the escape equations */
     e[ESC2_AXIS_Z] = fz;
     e[ESC2_AXIS_X] = fx;
-    e[ESC2_AXIS_A] = fa; 
+    e[ESC2_AXIS_A] = fa;
 
     for (j = 0; j < ESC2_DIMS; j++) {
         e[j] = (neighbors[j][0] != NULL) ? fabsf (e[j]/esc_fgrid->d[j])
@@ -231,15 +237,15 @@ static void sf_esc_fgrid2_compute_point (sf_esc_fgrid2 esc_fgrid, int iz, int ix
         val = sf_esc_fgrid2_gs_update (esc_fgrid, n, e, f, rhs);
         /* Check limits */
         if (ESC2_Z == k) {
-            if (val < esc_fgrid->oz)
-                val = esc_fgrid->oz;
-            if (val > esc_fgrid->zmax)
-                val = esc_fgrid->zmax;
+            if (val < esc_fgrid->gzmin)
+                val = esc_fgrid->gzmin;
+            if (val > esc_fgrid->gzmax)
+                val = esc_fgrid->gzmax;
         } else if (ESC2_X == k) {
-            if (val < esc_fgrid->ox)
-                val = esc_fgrid->ox;
-            if (val > esc_fgrid->xmax)
-                val = esc_fgrid->xmax;
+            if (val < esc_fgrid->gxmin)
+                val = esc_fgrid->gxmin;
+            if (val > esc_fgrid->gxmax)
+                val = esc_fgrid->gxmax;
         }
         sf_esc_point2_set_esc_var (point, k, val);
     }
@@ -439,24 +445,27 @@ void sf_esc_fgrid2_compute (sf_esc_fgrid2 esc_fgrid)
     int i, iter;
     size_t np = (size_t)esc_fgrid->na*(size_t)esc_fgrid->nx*(size_t)esc_fgrid->nz;
     double old_gcvt[ESC2_NUM], gcvt[ESC2_NUM];
-    bool stop = true;
+    bool stop = true, cmix = esc_fgrid->cmix;
+    float mdist = esc_fgrid->mdist;
 
     if (esc_fgrid->verb)
         sf_timer_start (esc_fgrid->ttime);
 
+    /* Gauss-Seidel iterations until convergence or
+       maximum number of iterations */
+    esc_fgrid->mdist = SF_HUGE;
+    esc_fgrid->cmix = false;
     for (i = 0; i < ESC2_NUM; i++) {
         old_gcvt[i] = SF_HUGE;
         gcvt[i] = 0.0;
     }
-
-    /* Gauss-Seidel iterations until convergence or
-       maximum number of iterations */
+    /* Iterate without injected tracing first to obtain a starting solution */
     for (iter = 0; iter < esc_fgrid->niter; iter++) {
         sf_esc_fgrid2_compute_one_iter (esc_fgrid, ESC2_FGRID_FORW, gcvt);
         sf_esc_fgrid2_compute_one_iter (esc_fgrid, ESC2_FGRID_BACK, gcvt);
         for (i = 0; i < ESC2_NUM; i++) {
             gcvt[i] *= 0.5; /* Average between two angle iterations */
-            gcvt[i] /= (float)np;
+            gcvt[i] /= (double)np;
             old_gcvt[i] -= gcvt[i];
             if (esc_fgrid->verb)
                 sf_warning ("Iteration %d: L1(%s)=%g, change=%g", iter + 1,
@@ -469,6 +478,34 @@ void sf_esc_fgrid2_compute (sf_esc_fgrid2 esc_fgrid)
         if (stop)
             break;
         stop = true;
+    }
+    if (cmix || mdist != SF_HUGE) {
+        /* Iterate with injected tracing first to obtain final solution */
+        for (i = 0; i < ESC2_NUM; i++) {
+            old_gcvt[i] = SF_HUGE;
+            gcvt[i] = 0.0;
+        }
+        esc_fgrid->cmix = cmix;
+        esc_fgrid->mdist = mdist;
+        for (iter = 0; iter < esc_fgrid->niter; iter++) {
+            sf_esc_fgrid2_compute_one_iter (esc_fgrid, ESC2_FGRID_FORW, gcvt);
+            sf_esc_fgrid2_compute_one_iter (esc_fgrid, ESC2_FGRID_BACK, gcvt);
+            for (i = 0; i < ESC2_NUM; i++) {
+                gcvt[i] *= 0.5; /* Average between two angle iterations */
+                gcvt[i] /= (double)np;
+                old_gcvt[i] -= gcvt[i];
+                if (esc_fgrid->verb)
+                    sf_warning ("Iteration %d: L1(%s)=%g, change=%g", iter + 1,
+                                sf_esc_point2_str[i], gcvt[i], old_gcvt[i]);
+                if (fabsf (old_gcvt[i]) > esc_fgrid->thresh)
+                    stop = false;
+                old_gcvt[i] = gcvt[i];
+                gcvt[i] = 0.0;
+            }
+            if (stop)
+                break;
+            stop = true;
+        }
     }
 
     if (esc_fgrid->verb) {
