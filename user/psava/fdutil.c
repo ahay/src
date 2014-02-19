@@ -312,6 +312,35 @@ void expand(float** a,
     }
 }
 
+
+void wpad2d(float **out, 
+	    float **inp, 
+	    fdm2d   fdm)
+/*< pad wavefield >*/
+{
+    int iz,ix;
+    for     (ix=0;ix<fdm->nx;ix++) {
+	for (iz=0;iz<fdm->nz;iz++) {
+	    out[fdm->nb+ix][fdm->nb+iz] = inp[ix][iz];
+	}
+    }
+}
+
+void wwin2d(float **out, 
+	    float **inp, 
+	    fdm2d   fdm)
+/*< win wavefield >*/
+{
+    int iz,ix;
+    for     (ix=0;ix<fdm->nx;ix++) {
+	for (iz=0;iz<fdm->nz;iz++) {
+	    out[ix][iz] = inp[fdm->nb+ix][fdm->nb+iz];
+	}
+    }
+}
+
+
+
 /*------------------------------------------------------------*/
 void expand3d(float ***a, 
 	      float ***b, 
