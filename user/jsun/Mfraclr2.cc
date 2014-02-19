@@ -37,11 +37,11 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
 	    if (mode == 0) { /*viscoacoustic*/
-		float gamma = atan(1./qs[rs[a]])/SF_PI;
-		float eta = -pow(c0,2.*gamma)*pow(w0,-2.*gamma)*cos(SF_PI*gamma);
-		float tao = -pow(c0,2.*gamma-1.)*pow(w0,-2.*gamma)*sin(SF_PI*gamma);
-		float p1  = tao*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+1.);
-		float p2  = -pow(p1,2) - 4*eta*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+2.);
+		float gamma = atanf(1./qs[rs[a]])/SF_PI;
+		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
+		float tao = -powf(c0,2.*gamma-1.)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
+		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
+		float p2  = -powf(p1,2) - 4*eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.);
 		if (p2 < 0) sf_warning("square root is imaginary!!!");
 		sf_complex phr = sf_cmplx(p1*dt/2.,0);
 		sf_complex phi = sf_cmplx(0,0);
@@ -61,19 +61,27 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		res(a,b) = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 1) { /*loss dominated*/
-		float gamma = atan(1./qs[rs[a]])/SF_PI;
-		float tao = -pow(c0,2.*gamma-1.)*pow(w0,-2.*gamma)*sin(SF_PI*gamma);
-		float p1  = tao*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+1.);
-		float p2  = -pow(p1,2) + 4*pow(vs[rs[a]],2)*pow(ks[cs[b]],2);
-		float phr,phi;
-		if (p2 >= 0) {
-		    phr = p1*dt/2.;
-		    phi = (sign==0)? sqrt(p2)*dt/2. : (-1.*sqrt(p2)*dt/2.);
-		} else {
-		    sf_error("square root imaginary!!!");
-		}
-		if (rev) {phr*=-1.; phi*=-1.;}
-		res(a,b) = cpx(exp(phr)*cos(phi),exp(phr)*sin(phi));
+		float gamma = atanf(1./qs[rs[a]])/SF_PI;
+		float tao = -powf(c0,2.*gamma-1.)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
+		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
+		float p2  = -powf(p1,2) + 4*powf(vs[rs[a]],2)*powf(ks[cs[b]],2);
+		if (p2 < 0) sf_warning("square root is imaginary!!!");
+		sf_complex phr = sf_cmplx(p1*dt/2.,0);
+		sf_complex phi = sf_cmplx(0,0);
+		sf_complex phase = sf_cmplx(0,0);
+#ifdef SF_HAS_COMPLEX_H
+		phi = (sign==0)? sf_cmplx(0,1)*csqrtf(sf_cmplx(p2,0))*dt/2. : sf_complex(0,1)*(-1*csqrtf(sf_complex(p2,0))*dt/2.);
+		phase = phr + phi;
+		if (rev) phase*=-1;
+#else
+		if (sign==0)
+		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),dt/2.));
+		else
+		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),-1*dt/2.));
+		phase = sf_cadd(phr,phi);
+		if (rev) phase=sf_crmul(phase,-1);
+#endif
+		res(a,b) = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 2) { /*dispersion-dominated*/
 		float gamma = atan(1./qs[rs[a]])/SF_PI;
