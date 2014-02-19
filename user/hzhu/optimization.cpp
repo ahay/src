@@ -143,7 +143,7 @@ void calc_gradient_cg
     double betalocal=beta_top/beta_bot;
     double betaglob;
 
-    mpi::AllReduce(&betalocal, &betaglob,1, MPI_SUM,comm ); 
+    mpi::AllReduce(&betalocal, &betaglob,1, mpi::SUM ,comm ); 
 
     if (betaglob < 0.0) { 
         betaglob=0.0;
@@ -182,7 +182,7 @@ void update_model
     }
 
     double grdmaxglob;
-    mpi::AllReduce(&grdmaxlocal, &grdmaxglob, 1, MPI_MAX, comm);
+    mpi::AllReduce(&grdmaxlocal, &grdmaxglob, 1, mpi::MAX, comm);
 
     double ratio=alpha/grdmaxglob;
     
