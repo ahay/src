@@ -17,7 +17,7 @@ velocities = (1.508,
               1.581,
               1.826,
               1.581,
-              2.500)
+              2.236)
 
 def arr2str(array,sep=' '):
     return sep.join(map(str,array))
