@@ -45,12 +45,14 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		float phr,phi;
 		if (p2 >= 0) {
 		    phr = p1*dt/2.;
-		    phi = (sign==0)? sqrt(p2)*dt/2. : (-1.*sqrt(p2)*dt/2.);
+		    phi = (sign==0)? sqrtf(p2)*dt/2. : (-1.*sqrtf(p2)*dt/2.);
 		} else {
 		    sf_error("square root imaginary!!!");
+                    sf_warning("v=%g,k=%g,c0=%g,w0=%g,gamma=%g",vs[rs[a]],ks[cs[b]],c0,w0,gamma);
+                    sf_warning("eta=%g,tao=%g,p1=%g,p2=%g,sin=%g,cos=%g",eta,tao,p1,p2,sinf(SF_PI*gamma),cosf(SF_PI*gamma));
 		}
 		if (rev) {phr*=-1.; phi*=-1.;}
-		res(a,b) = cpx(exp(phr)*cos(phi),exp(phr)*sin(phi));
+		res(a,b) = cpx(exp(phr)*cosf(phi),exp(phr)*sinf(phi));
 	    }
 	    else if (mode == 1) { /*loss dominated*/
 		float gamma = atanf(1./qs[rs[a]])/SF_PI;
@@ -60,24 +62,24 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		float phr,phi;
 		if (p2 >= 0) {
 		    phr = p1*dt/2.;
-		    phi = (sign==0)? sqrt(p2)*dt/2. : (-1.*sqrt(p2)*dt/2.);
+		    phi = (sign==0)? sqrtf(p2)*dt/2. : (-1.*sqrtf(p2)*dt/2.);
 		} else {
 		    sf_error("square root imaginary!!!");
 		}
 		if (rev) {phr*=-1.; phi*=-1.;}
-		res(a,b) = cpx(exp(phr)*cos(phi),exp(phr)*sin(phi));
+		res(a,b) = cpx(exp(phr)*cosf(phi),exp(phr)*sinf(phi));
 	    }
 	    else if (mode == 2) { /*dispersion-dominated*/
 		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
-		float phase = sqrt(-eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.))*dt;
+		float phase = sqrtf(-eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.))*dt;
 		if (rev) phase*=-1;
-		res(a,b) = cpx(cos(phase),sin(phase));
+		res(a,b) = cpx(cosf(phase),sinf(phase));
 	    }
 	    else { /*acoustic*/
 		float phase = vs[rs[a]]*ks[cs[b]]*dt; 
 		if (rev) phase*=-1;
-		res(a,b) = cpx(cos(phase),sin(phase)); 
+		res(a,b) = cpx(cosf(phase),sinf(phase)); 
 	    }
 	}
     }

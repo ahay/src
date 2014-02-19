@@ -84,16 +84,16 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		res(a,b) = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 2) { /*dispersion-dominated*/
-		float gamma = atan(1./qs[rs[a]])/SF_PI;
-		float eta = -pow(c0,2.*gamma)*pow(w0,-2.*gamma)*cos(SF_PI*gamma);
-		float phase = sqrt(-eta*pow(vs[rs[a]],2)*pow(ks[cs[b]],2.*gamma+2.))*dt;
+		float gamma = atanf(1./qs[rs[a]])/SF_PI;
+		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
+		float phase = sqrtf(-eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.))*dt;
 		if (rev) phase*=-1;
-		res(a,b) = cpx(cos(phase),sin(phase));
+		res(a,b) = cpx(cosf(phase),sinf(phase));
 	    }
 	    else { /*acoustic*/
 		float phase = vs[rs[a]]*ks[cs[b]]*dt; 
 		if (rev) phase*=-1;
-		res(a,b) = cpx(cos(phase),sin(phase)); 
+		res(a,b) = cpx(cosf(phase),sinf(phase)); 
 	    }
 	}
     }
