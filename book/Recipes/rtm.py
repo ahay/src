@@ -23,12 +23,7 @@ def iwindow(par):
     return win
 
 def eicpar(par):
-    eic = ' ' + \
-          '''
-          nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d
-          nht=%(nht)d dht=%(dht)g
-          ''' % par + ' '
-
+    eic = ' ' + 'nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d'%par + ' '
     return eic
     
 # ------------------------------------------------------------
