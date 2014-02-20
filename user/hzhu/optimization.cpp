@@ -108,11 +108,40 @@ void calc_gradient_sd
     
     // TODO: Perform local updates (no communication should be required)
     // (STEP 1)
-    for (int k=0;k<nz;k++ )
-        for (int j=0;j<ny;j++) 
-            for (int i=0;i<nx;i++)
-		        KDir.Set( i, j, k, -KCur.Get(i,j,k) );
+    
+    double* localKCur=KCur.Buffer();
+    double* localKDir=KDir.Buffer();
+
+    const int xLocalSize=KCur.XLocalSize();
+    const int yLocalSize=KCur.YLocalSize();
+    const int zLocalSize=KCur.ZLocalSize();
+    const int xShift=KCur.XShift();
+    const int yShift=KCur.YShift();
+    const int zShift=KCur.ZShift();
+    const int px=KCur.XStride();
+    const int py=KCur.YStride();
+    const int pz=KCur.ZStride();
+
+    for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
+    {
+        const int z=zShift+zLocal*pz;
+        for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
+        {
+            const int y=yShift+yLocal*py;
+            for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
+            {
+                const int x=xShift+xLocal*px; 
+                const int localIndex=xLocal+
+                            yLocal*xLocalSize+
+                            zlocal*xLocalSize*yLocalSize;
+                localKDir[localIndex]=-localKCur[localIndex];
+            }
+        }
+    }
 }
+    
+    
+    
 
 void calc_gradient_cg
 ( const DistUniformGrid<double>& KCur, 
@@ -130,15 +159,42 @@ void calc_gradient_cg
 
     // TODO: Local summation followed by MPI_Allreduce summation
     // (STEP 2)
-    for (int k=0;k<nz;k++) { 
-        for (int j=0;j<ny;j++ ) {
-            for (int i=0;i<nx;i++ ) { 
-                double diff=curker[i][j][k]-precur[i][j][k];
-                beta_top=beta_top+curker[i][j][k]*diff;
-                beta_bot=beta_bot+preker[i][j][k]*preker[i][j][k];
+    
+    double* localKCur=KCur.Buffer();
+    double* localKPrev=KPrev.Buffer();
+    double* localDirCur=DirCur.Buffer();
+    double* localDirPrev=DirPrev.Buffer();
+
+    const int xLocalSize=KCur.XLocalSize();
+    const int yLocalSize=KCur.YLocalSize();
+    const int zLocalSize=KCur.ZLocalSize();
+    const int xShift=KCur.XShift();
+    const int yShift=KCur.YShift();
+    const int zShift=KCur.ZShift();
+    const int px=KCur.XStride();
+    const int py=KCur.YStride();
+    const int pz=KCur.ZStride();
+
+    for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
+    {
+        const int z=zShift+zLocal*pz;
+        for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
+        {
+            const int y=yShift+yLocal*py;
+            for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
+            {
+                const int x=xShift+xLocal*px; 
+                const int localIndex=xLocal+
+                            yLocal*xLocalSize+
+                            zlocal*xLocalSize*yLocalSize;
+
+                double diff=localKCur[localIndex]-localKPrev[localIndex];
+                beta_top=beta_top+localKCur[localIndex]*diff;
+                beta_bot=beta_bot+localKPrev[localIndex]*localKPrev[localIndex];
             }
         }
     }
+    
 
     double betalocal=beta_top/beta_bot;
     double betaglob;
@@ -151,10 +207,22 @@ void calc_gradient_cg
 
     // TODO: Local subtraction
     // (STEP 3)
-    for (int k=0;k<nz;k++ ) 
-        for (int j=0;j<ny;j++ ) 
-            for (int i=0;i<nx;i++ )
-                DirCur.Set(i,j,k, -KCru.Get(i,j,k)+betaglob*DirPrev.Get(i,j,k)); 
+    for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
+    {
+        const int z=zShift+zLocal*pz;
+        for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
+        {
+            const int y=yShift+yLocal*py;
+            for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
+            {
+                const int x=xShift+xLocal*px; 
+                const int localIndex=xLocal+
+                            yLocal*xLocalSize+
+                            zlocal*xLocalSize*yLocalSize;
+                localDirCur[localIndex]=-localKCur[localIndex]+betaglob*localDirPrev[localIndex];
+            }
+        }
+    }
 }
 
 void update_model
@@ -171,15 +239,40 @@ void update_model
     //       MPI_Allreduce with MPI_MAX
     // (STEP 4)
     double grdmaxlocal=0.0;
-    for (int k=0;k<nz;k++ ) { 
-        for (int j=0;j<ny;j++ ) {
-            for (int i=0;i<nx;i++ ) { 
-                if (fabs(grd[i][j][k]) > grdmaxlocal ) { 
-                   grdmaxlocal=fabs(grd[i][j][k]);
+
+    double* localGrad=Grad.Buffer();
+    double* localMOld=MOld.Buffer();
+    double* localMNew=MNew.Buffer();
+
+    const int xLocalSize=Grad.XLocalSize();
+    const int yLocalSize=Grad.YLocalSize();
+    const int zLocalSize=Grad.ZLocalSize();
+    const int xShift=Grad.XShift();
+    const int yShift=Grad.YShift();
+    const int zShift=Grad.ZShift();
+    const int px=Grad.XStride();
+    const int py=Grad.YStride();
+    const int pz=Grad.ZStride();
+
+    for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
+    {
+        const int z=zShift+zLocal*pz;
+        for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
+        {
+            const int y=yShift+yLocal*py;
+            for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
+            {
+                const int x=xShift+xLocal*px; 
+                const int localIndex=xLocal+
+                            yLocal*xLocalSize+
+                            zlocal*xLocalSize*yLocalSize;
+                if (fabs(localGrad[localIndex]) > gradmaxlocal) {
+                    gradmaxlocal=fabs(localGrad[localIndex]);
                 }
             }
         }
     }
+    
 
     double grdmaxglob;
     mpi::AllReduce(&grdmaxlocal, &grdmaxglob, 1, mpi::MAX, comm);
@@ -188,11 +281,28 @@ void update_model
     
     // TODO: Perform a local update
     // (STEP 5)
-    for (int k=0;k<nz;k++ ) 
-        for (int j=0;j<ny;j++ ) 
-            for (int i=0;i<nx;i++ )
-                MNew.Set(i,j,k, MOld.Get(i,j,k) + ratio * Grad.Get(i,j,k)); 
-}
+    
+    for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
+    {
+        const int z=zShift+zLocal*pz;
+        for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
+        {
+            const int y=yShift+yLocal*py;
+            for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
+            {
+                const int x=xShift+xLocal*px; 
+                const int localIndex=xLocal+
+                            yLocal*xLocalSize+
+                            zlocal*xLocalSize*yLocalSize;
+                
+                localMNew[localIndex]=localMOld[localIndex]+ratio*localGrad[localIndex]; 
+            }
+        }
+    }
+    
+}    
+    
+    
 
 void gen_acquisition
 (double srcx, double srcy, double srcz, 
