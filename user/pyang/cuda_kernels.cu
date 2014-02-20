@@ -1356,7 +1356,7 @@ __global__ void cuda_imaging(float *Isg, float *Iss, float *I1, float *I2, int n
     	if(i1>=npml && i1<nnz-npml && i2>=npml && i2<nnx-npml) 
 	{
 		I1[id]+=Isg[id];		// correlation imaging condition
-		I2[id]+=Isg[id]/(Iss[id]+0.00001);  // image normalization with illumination
+		I2[id]+=Isg[id]/(Iss[id]+EPS);  // image normalization with illumination
 	}
 	__syncthreads();
 
