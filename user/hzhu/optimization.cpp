@@ -115,22 +115,13 @@ void calc_gradient_sd
     const int xLocalSize=KCur.XLocalSize();
     const int yLocalSize=KCur.YLocalSize();
     const int zLocalSize=KCur.ZLocalSize();
-    const int xShift=KCur.XShift();
-    const int yShift=KCur.YShift();
-    const int zShift=KCur.ZShift();
-    const int px=KCur.XStride();
-    const int py=KCur.YStride();
-    const int pz=KCur.ZStride();
 
     for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
     {
-        const int z=zShift+zLocal*pz;
         for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
         {
-            const int y=yShift+yLocal*py;
             for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
             {
-                const int x=xShift+xLocal*px; 
                 const int localIndex=xLocal+
                             yLocal*xLocalSize+
                             zlocal*xLocalSize*yLocalSize;
@@ -168,22 +159,13 @@ void calc_gradient_cg
     const int xLocalSize=KCur.XLocalSize();
     const int yLocalSize=KCur.YLocalSize();
     const int zLocalSize=KCur.ZLocalSize();
-    const int xShift=KCur.XShift();
-    const int yShift=KCur.YShift();
-    const int zShift=KCur.ZShift();
-    const int px=KCur.XStride();
-    const int py=KCur.YStride();
-    const int pz=KCur.ZStride();
 
     for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
     {
-        const int z=zShift+zLocal*pz;
         for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
         {
-            const int y=yShift+yLocal*py;
             for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
             {
-                const int x=xShift+xLocal*px; 
                 const int localIndex=xLocal+
                             yLocal*xLocalSize+
                             zlocal*xLocalSize*yLocalSize;
@@ -209,13 +191,10 @@ void calc_gradient_cg
     // (STEP 3)
     for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
     {
-        const int z=zShift+zLocal*pz;
         for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
         {
-            const int y=yShift+yLocal*py;
             for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
             {
-                const int x=xShift+xLocal*px; 
                 const int localIndex=xLocal+
                             yLocal*xLocalSize+
                             zlocal*xLocalSize*yLocalSize;
@@ -247,22 +226,13 @@ void update_model
     const int xLocalSize=Grad.XLocalSize();
     const int yLocalSize=Grad.YLocalSize();
     const int zLocalSize=Grad.ZLocalSize();
-    const int xShift=Grad.XShift();
-    const int yShift=Grad.YShift();
-    const int zShift=Grad.ZShift();
-    const int px=Grad.XStride();
-    const int py=Grad.YStride();
-    const int pz=Grad.ZStride();
 
     for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
     {
-        const int z=zShift+zLocal*pz;
         for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
         {
-            const int y=yShift+yLocal*py;
             for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
             {
-                const int x=xShift+xLocal*px; 
                 const int localIndex=xLocal+
                             yLocal*xLocalSize+
                             zlocal*xLocalSize*yLocalSize;
@@ -284,13 +254,10 @@ void update_model
     
     for ( int zLocal=0; zLoca<zLocalSize; ++zLocal) 
     {
-        const int z=zShift+zLocal*pz;
         for ( int yLocal=0; yLocal<yLocalSize; ++yLocal) 
         {
-            const int y=yShift+yLocal*py;
             for (int xLocal=0; xLocal<xLocalSize; ++xLocal) 
             {
-                const int x=xShift+xLocal*px; 
                 const int localIndex=xLocal+
                             yLocal*xLocalSize+
                             zlocal*xLocalSize*yLocalSize;
