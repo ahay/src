@@ -139,48 +139,39 @@ void step_forward(float **p0, float **p1, float**p2)
 			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
 		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
 	}
+
+
+
 }
 
-void apply_sponge(float**p0, float **p1)
+void apply_sponge(float**p0)
 /* apply absorbing boundary condition */
 {
-	int ix,iz;
+	int ix,iz,ib,ibx,ibz;
+	float w;
 
 #ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz)		    \
-    shared(bndr,p0,p1)
+#pragma omp parallel for			\
+    schedule(dynamic,1)				\
+    private(ib,iz,ix,ibz,ibx,w)			\
+    shared(p0,bndr,nzpad,nxpad,nb)
 #endif
-	for(ix=0; ix<nxpad; ix++)
-	{
-		for(iz=0;iz<nb;iz++){	// top ABC			
-			p0[ix][iz]=bndr[iz]*p0[ix][iz];
-			p1[ix][iz]=bndr[iz]*p1[ix][iz];
-		}
-		for(iz=nz+nb;iz<nzpad;iz++){// bottom ABC			
-			p0[ix][iz]=bndr[nzpad-iz-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[nzpad-iz-1]*p1[ix][iz];
-		}
+    for(ib=0; ib<nb; ib++) {
+	w = bndr[ib];
+
+	ibz = nzpad-ib-1;
+	for(ix=0; ix<nxpad; ix++) {
+	    p0[ix][ib ] *= w; /*    top sponge */
+	    p0[ix][ibz] *= w; /* bottom sponge */
 	}
 
-#ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz)		    \
-    shared(bndr,p0,p1)
-#endif
-	for(iz=0; iz<nzpad; iz++)
-	{
-		for(ix=0;ix<nb;ix++){	// left ABC			
-			p0[ix][iz]=bndr[ix]*p0[ix][iz];
-			p1[ix][iz]=bndr[ix]*p1[ix][iz];
-		}	
-		for(ix=nx+nb;ix<nxpad;ix++){// right ABC			
-			p0[ix][iz]=bndr[nxpad-ix-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[nxpad-ix-1]*p1[ix][iz];
-		}	
+	ibx = nxpad-ib-1;
+	for(iz=0; iz<nzpad; iz++) {
+	    p0[ib ][iz] *= w; /*   left sponge */
+	    p0[ibx][iz] *= w; /*  right sponge */
 	}
+    }
 }
-
 
 void fd2d_close()
 /* free the allocated variables */
@@ -298,14 +289,6 @@ void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
 		int sx=sxbeg+is*jsx;
 		sxz[is]=sz+nz*sx;
 	}
-/*
-	for(int ig=0; ig<ng; ig++)
-	{
-		int gz=gzbeg+ig*jgz;
-		int gx=gxbeg+ig*jgx;
-		gxz[ig]=gz+nz*gx;
-	}
-*/
 }
 
 int main(int argc, char* argv[])
@@ -324,10 +307,10 @@ int main(int argc, char* argv[])
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
     	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of sponge ABC */
+    	if (!sf_getint("nb",&nb)) nb=20; /* thickness of sponge ABC */
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
     	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
-    	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
+    	if (!sf_getfloat("fm",&fm)) fm=15.0; /*dominant freq of Ricker wavelet */
 	if (!sf_getint("ns",&ns)) ns=1;	/* number of shots */
 	if (!sf_getint("ng",&ng)) ng=nx;/* number of receivers */
 	if (ng>nx) sf_error("make sure ng<=nx!");
@@ -375,7 +358,8 @@ int main(int argc, char* argv[])
 		{
 			add_source(&sxz[is], p1, 1, &wlt[it], true);
 			step_forward(p0, p1, p2);
-			apply_sponge(p1, p2);
+			apply_sponge(p1);
+			apply_sponge(p2);
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
 
 			record_seis(&dcal[it*ng], gxz, p0, ng);

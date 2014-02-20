@@ -22,13 +22,174 @@ Sponge absorbing boundary condition.
 */
 
 #include <rsf.h>
+#include <time.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-#include "fd3dutil.h"
-#include <time.h>
+bool frsf, verb;
+int nz, nx, ny, nb, nzpad, nxpad, nypad, nt, ns;
+float dz, dx, dy, fm, dt,c0, c11, c12, c21, c22, c31, c32;
 
+
+void expand3d(float ***a, float ***b)
+/*< expand domain a to b >*/
+{
+    int iz,ix,i3;
+
+    for         (i3=0;i3<ny;i3++) {
+	for     (ix=0;ix<nx;ix++) {
+	    for (iz=0;iz<nz;iz++) {
+		b[nb+i3][nb+ix][nb+iz] = a[i3][ix][iz];
+	    }
+	}
+    }
+
+    for         (i3=0; i3<nypad; i3++) {
+	for     (ix=0; ix<nxpad; ix++) {
+	    for (iz=0; iz<nb;    iz++) {
+		b[i3][ix][  iz      ] = b[i3][ix][      nb  ];
+		b[i3][ix][nzpad-iz-1] = b[i3][ix][nzpad-nb-1];
+	    }
+	}
+    }
+
+
+    for         (i3=0; i3<nypad; i3++) {
+	for     (ix=0; ix<nb;    ix++) {
+	    for (iz=0; iz<nzpad; iz++) {
+		b[i3][      ix  ][iz] = b[i3][ nb  	][iz];
+		b[i3][nxpad-ix-1][iz] = b[i3][nxpad-nb-1][iz];
+	    }
+	}
+    }
+
+    for         (i3=0; i3<nb;    i3++) {
+	for     (ix=0; ix<nxpad; ix++) {
+	    for (iz=0; iz<nzpad; iz++) {
+		b[      i3  ][ix][iz] = b[      nb  ][ix][iz];
+		b[nypad-i3-1][ix][iz] = b[nypad-nb-1][ix][iz];
+	    }
+	}
+    }
+}
+
+void window3d(float ***a, float ***b)
+/*< window b domain to a >*/
+{
+    for         (int i3=0;i3<ny;i3++) {
+	for     (int ix=0;ix<nx;ix++) {
+	    for (int iz=0;iz<nz;iz++) {
+		a[i3][ix][iz]=b[nb+i3][nb+ix][nb+iz];
+	    }
+	}
+    }
+}
+
+
+void add_source(float ***u1, float *wlt, int **Szxy, int ns, bool add)
+/*< add source >*/
+{
+	for (int is=0; is<ns; is++)
+	{
+		int sz=Szxy[is][0]+nb;
+		int sx=Szxy[is][1]+nb;
+		int sy=Szxy[is][2]+nb;
+
+		if (add) u1[sy][sx][sz] += wlt[is];
+		else 	u1[sy][sx][sz] -= wlt[is];
+	}
+}
+
+
+void step_forward(float ***u0, float ***u1, float ***vv)
+/*< step forward >*/
+{
+	int iz, ix, iy;
+	float ua;
+#ifdef _OPENMP
+#pragma omp parallel for default(none) private(iz,ix,iy,ua) 	\
+	shared(nzpad,nxpad,nypad,c0,c11,c12,c21,c22,c31,c32,u0,u1,vv)	
+#endif
+	for(iy=2; iy<nypad-2; iy++) 
+	for(ix=2; ix<nxpad-2; ix++)
+	for(iz=2; iz<nzpad-2; iz++) 
+	{			    
+		/* 4th order Laplacian operator */
+		ua=c0 * u1[iy  ][ix  ][iz  ] + 
+			c11*(u1[iy  ][ix  ][iz-1] + u1[iy  ][ix  ][iz+1]) +
+			c12*(u1[iy  ][ix  ][iz-2] + u1[iy  ][ix  ][iz+2]) +
+			c21*(u1[iy  ][ix-1][iz  ] + u1[iy  ][ix+1][iz  ]) +
+			c22*(u1[iy  ][ix-2][iz  ] + u1[iy  ][ix+2][iz  ]) +
+			c31*(u1[iy-1][ix  ][iz  ] + u1[iy+1][ix  ][iz  ]) +
+			c32*(u1[iy-2][ix  ][iz  ] + u1[iy+2][ix  ][iz  ]) ;
+		u0[iy][ix][iz] = 2*u1[iy][ix][iz]-u0[iy][ix][iz]+ua * vv[iy][ix][iz];
+	}
+}
+
+void sponge3d_apply(float  ***uu, float *spo)
+/*< apply boundary sponge >*/
+{
+    int iz,ix,iy,ib,ibz,ibx,iby;
+    float w;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)		\
+    private(ib,iz,ix,iy,ibz,ibx,iby,w)		\
+    shared(spo,uu,nb,nzpad,nxpad,nypad)
+#endif
+    for(ib=0; ib<nb; ib++) {
+	w = spo[ib];
+
+	ibz = nzpad-ib-1;
+	for    (iy=0; iy<nypad; iy++) {
+	    for(ix=0; ix<nxpad; ix++) {
+		uu[iy][ix][ib ] *= w; /* z min */
+		uu[iy][ix][ibz] *= w; /* z max */
+	    }
+	}
+
+	ibx = nxpad-ib-1;
+	for    (iy=0; iy<nypad; iy++) {
+	    for(iz=0; iz<nzpad; iz++) {
+		uu[iy][ib ][iz] *= w; /* x min */
+		uu[iy][ibx][iz] *= w; /* x max */
+	    }
+	}
+	
+	iby = nypad-ib-1;
+	for    (ix=0; ix<nxpad; ix++) {
+	    for(iz=0; iz<nzpad; iz++) {
+		uu[ib ][ix][iz] *= w; /* y min */
+		uu[iby][ix][iz] *= w; /* y max */
+	    }
+	}
+
+    }
+}
+
+
+void free_surface(float ***u0, float ***u1)
+/*< handle free surface at the top >*/
+{
+	int iz,ix,iy;
+	if(frsf) /* free surface */
+	{ 	 
+#ifdef _OPENMP
+#pragma omp parallel for collapse(3) default(none) 	\
+    private(iz,ix,iy)					\
+    shared(u0,u1,nb,nxpad,nypad)
+#endif   	
+		for(iy=0; iy<nypad; iy++) 
+		for(ix=0; ix<nxpad; ix++)
+		for(iz=0; iz<nb; iz++) 
+		{
+			u0[iy][ix][iz]=0;
+			u1[iy][ix][iz]=0;
+		}
+	}
+}
 
 int main(int argc, char* argv[])
 {
@@ -42,96 +203,89 @@ int main(int argc, char* argv[])
 	Fv = sf_input("in");
 	Fw = sf_output("out");
 
-    	fdm3d fdm;
-    	fdm = (fdm3d) sf_alloc(1,sizeof(*fdm));
+    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
+    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
+    	if (!sf_histint(Fv,"n3",&ny)) sf_error("No n3= in input");
+    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");
+    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");
+    	if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
+    	if(!sf_getbool("verb",&verb)) verb=false;/* verbosity */
+    	if(!sf_getbool("frsf",&frsf)) frsf=false;/* free surface or not */
+   	if (!sf_getint("nt",&nt))  nt=300;
+   	if (!sf_getint("ns",&ns))  ns=1;
+   	if (!sf_getint("nb",&nb))  nb=30;
+   	if (!sf_getfloat("dt",&dt))  dt=0.001;
+   	if (!sf_getfloat("fm",&fm))  fm=20;
 
-    	if (!sf_histint(Fv,"n1",&fdm->nz)) sf_error("No n1= in input");
-    	if (!sf_histint(Fv,"n2",&fdm->nx)) sf_error("No n2= in input");
-    	if (!sf_histint(Fv,"n3",&fdm->ny)) sf_error("No n3= in input");
-    	if (!sf_histfloat(Fv,"d1",&fdm->dz)) sf_error("No d1= in input");
-    	if (!sf_histfloat(Fv,"d2",&fdm->dx)) sf_error("No d2= in input");
-    	if (!sf_histfloat(Fv,"d3",&fdm->dy)) sf_error("No d3= in input");
-	sf_putint(Fw,"n1",fdm->nz);
-	sf_putint(Fw,"n2",fdm->nx);
-	sf_putint(Fw,"n3",fdm->ny);
+	sf_putint(Fw,"n1",nz);
+	sf_putint(Fw,"n2",nx);
+	sf_putint(Fw,"n3",ny);
 
-
-	int nt=300;
-	float dt=0.001;
-	float fm=20;
-	int ns=1;
-
-    	fdm->free=false;
-    	fdm->verb=false;
-
-    	fdm->nb=30;
-    	fdm->oz=0.0;
-    	fdm->ox=0.0;
-    	fdm->oy=0.0;
-
-    	fdm->nzpad=fdm->nz+2*fdm->nb;
-    	fdm->nxpad=fdm->nx+2*fdm->nb;
-    	fdm->nypad=fdm->ny+2*fdm->nb;
-	
-    	fdm->ozpad=fdm->oz-fdm->nb*fdm->dz;
-    	fdm->oxpad=fdm->ox-fdm->nb*fdm->dx;
-    	fdm->oypad=fdm->oy-fdm->nb*fdm->dy;
-
-    	fdm->ompchunk=1;
-
+	nzpad=nz+2*nb;
+	nxpad=nx+2*nb;
+	nypad=ny+2*nb;
+	float t = 1.0/(dz*dz);
+	c11 = 4.0*t/3.0;
+	c12=  -t/12.0;
+	t = 1.0/(dx*dx);
+	c21 = 4.0*t/3.0;
+	c22=  -t/12.0;
+	t = 1.0/(dy*dy);
+	c31 = 4.0*t/3.0;
+	c32=  -t/12.0;
+	c0  = -2.0 * (c11 + c12 + c21 + c22 +c31 + c32);
 
 	float *wlt=(float*)malloc(nt*sizeof(float));
+	float *spo=(float*)malloc(nb*sizeof(float));
+	int **Szxy=sf_intalloc2(3,ns);// source position
+	float ***v0,***vv, ***u0, ***u1,***ptr=NULL;
+    	v0=sf_floatalloc3(nz,nx,ny);
+	vv=sf_floatalloc3(nzpad, nxpad, nypad);
+	u0=sf_floatalloc3(nzpad, nxpad, nypad);
+	u1=sf_floatalloc3(nzpad, nxpad, nypad);
 	for(int it=0;it<nt;it++){
 		float a=SF_PI*fm*(it*dt-1.0/fm);a*=a;
 		wlt[it]=(1.0-2.0*a)*expf(-a);
 	}
-
-	sponge spo = sponge_make(fdm->nb);
-
-
-	int **Szxy=sf_intalloc2(3,ns);// source position
+    	float sb = 4.0*nb;               
+    	for(int ib=0; ib<nb; ib++) {
+		float fb = (nb-ib)/(sqrt(2.0)*sb);
+		spo[ib] = exp(-fb*fb);
+    	}
 	for(int is=0; is<ns; is++)
 	{
 		Szxy[is][0]=0;//iz, boundary excluded
 		Szxy[is][1]=25;//ix, boundary excluded
 		Szxy[is][2]=25;//iy, boundary excluded
 	}
-
-	float ***v0,***vv, ***u0, ***u1,***ptr=NULL;
-    	v0=sf_floatalloc3(fdm->nz,fdm->nx,fdm->ny);
-	vv=sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-	u0=sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-	u1=sf_floatalloc3(fdm->nzpad, fdm->nxpad, fdm->nypad);
-	sf_floatread(v0[0][0],fdm->nz*fdm->nx*fdm->ny,Fv);
-
-	expand3d(v0, vv, fdm);
-	memset(u0[0][0],0,fdm->nzpad*fdm->nxpad*fdm->nypad*sizeof(float));
-	memset(u1[0][0],0,fdm->nzpad*fdm->nxpad*fdm->nypad*sizeof(float));
+	sf_floatread(v0[0][0],nz*nx*ny,Fv);
+	expand3d(v0, vv);
+	memset(u0[0][0],0,nzpad*nxpad*nypad*sizeof(float));
+	memset(u1[0][0],0,nzpad*nxpad*nypad*sizeof(float));
 
     	/* precompute vv^2 * dt^2 */
-    	for(iy=0; iy<fdm->nypad; iy++) 
-	for(ix=0; ix<fdm->nxpad; ix++) 
-	for(iz=0; iz<fdm->nzpad; iz++) 
+    	for(iy=0; iy<nypad; iy++) 
+	for(ix=0; ix<nxpad; ix++) 
+	for(iz=0; iz<nzpad; iz++) 
 	{
-		float a= vv[iy][ix][iz] * dt;
+		float a= vv[iy][ix][iz]*dt;
 		vv[iy][ix][iz] = a*a;
     	}
 
-	fd3_init(fdm);
 	for(int it=0; it<nt;it++)
 	{
-		add_source(u1, &wlt[it], Szxy, 1, fdm, true);
-		step_forward(u0, u1, vv, fdm);
+		add_source(u1, &wlt[it], Szxy, 1, true);
+		step_forward(u0, u1, vv);
 		ptr=u0;u0=u1;u1=ptr;
 
-		sponge3d_apply(u0,spo,fdm);
-		sponge3d_apply(u1,spo,fdm);
-		free_surface(u0, u1, fdm);
+		sponge3d_apply(u0,spo);
+		sponge3d_apply(u1,spo);
+		free_surface(u0, u1);
 
 		if (it==120)
 		{
-			window3d(v0,u0,fdm);
-			sf_floatwrite(v0[0][0],fdm->nz*fdm->nx*fdm->ny,Fw);	
+			window3d(v0,u0);
+			sf_floatwrite(v0[0][0],nz*nx*ny,Fw);	
 		}
 	}
 

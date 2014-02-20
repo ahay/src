@@ -24,12 +24,11 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
 #include <complex.h>
 #include <fftw3.h>
 
-#include "dlct.h"
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
+#include "dlct.h"
 
 void forward_dlct(int N 	/* length of the signal */,
 		int L		/* length of freq-instaneous freq */, 
@@ -38,6 +37,7 @@ void forward_dlct(int N 	/* length of the signal */,
 		sf_complex *Sc	/* output[N*L] DLCT coefficients */ )
 /*< forward DLCT >*/
 {
+    int n,k,l;
     fftwf_complex *p,*q;
     fftwf_plan fft;
 
@@ -46,13 +46,24 @@ void forward_dlct(int N 	/* length of the signal */,
 
     fft=fftwf_plan_dft_1d(N,p, q,FFTW_FORWARD,FFTW_MEASURE);
 
-    for(int l=-L/2;l<L/2;l++){
-	for(int n=0;n<N;n++){
+    for(l=-L/2;l<L/2;l++){
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none) private(n) shared(p,d,C,N,l)
+#endif	
+	for(n=0;n<N;n++){
+#ifdef SF_HAS_COMPLEX_H
 	  p[n]=d[n]*cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N));
+#else
+	  p[n]=sf_crmul(d[n],cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N)));
+#endif
 	}	
 	fftwf_execute(fft);
 
-	for(int k=0;k<N;k++)	Sc[k+(l+L/2)*N]=q[k]/sqrtf(N*L);
+#ifdef _OPENMP
+#pragma omp parallel for default(none) private(k) shared(Sc,l,L,N,q)
+#endif	
+	for(k=0;k<N;k++)	Sc[k+(l+L/2)*N]=q[k]/sqrtf(N*L);
     }
     fftwf_destroy_plan(fft);
     fftwf_free(p);
@@ -67,6 +78,7 @@ void inverse_dlct(int N 	/* length of the signal */,
 		sf_complex *Sc	/* input[N*L] DLCT coefficients */ )
 /*< inverse DLCT >*/
 {  
+    int l,k,n;
     fftwf_complex *p,*q;
     fftwf_plan ifft;
     p=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*N);
@@ -74,15 +86,25 @@ void inverse_dlct(int N 	/* length of the signal */,
 
     ifft=fftwf_plan_dft_1d(N,p, q,FFTW_BACKWARD,FFTW_MEASURE);
 
-    for(int n=0;n<N;n++)  {
-	d[n]=0.0;
-    }
-    for(int l=-L/2;l<L/2;l++){
-	for(int k=0;k<N;k++) 	p[k]=Sc[k+(l+L/2)*N];
+    memset(d,0,N*sizeof(float));
+    for(l=-L/2;l<L/2;l++){
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none) private(k) shared(p,Sc,N,L,l)
+#endif	
+	for(k=0;k<N;k++) 	p[k]=Sc[k+(l+L/2)*N];
 
 	fftwf_execute(ifft);
-	for(int n=0;n<N;n++){		
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none) private(n) shared(d,q,C,l,N,L)
+#endif	
+	for(n=0;n<N;n++){	
+#ifdef SF_HAS_COMPLEX_H	
 	  d[n]+=crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L));
+#else
+	  d[n]=sf_cadd(d[n],crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L)));
+#endif
 	}
     }
 

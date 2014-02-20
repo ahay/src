@@ -92,10 +92,8 @@ void fd2d_init(float **v0)
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
 	memset(p2[0],0,nzpad*nxpad*sizeof(float));
 	for(int ib=0;ib<nb;ib++){
-		tmp=(nb-ib)/(sqrt(2.0)*4.0*nb);
+		tmp=0.015*(nb-ib);
 		bndr[ib]=expf(-tmp*tmp);
-		//tmp=expf(-tmp*tmp);
-		//bndr[ib]=powf(tmp,10.0);
 	}
 
 	for(ix=0;ix<nxpad;ix++){

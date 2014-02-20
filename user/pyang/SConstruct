@@ -4,17 +4,16 @@ import bldutil
 
 # C main programs
 progs = '''
-fpocs2d pocs3d 
-fpocs3d mwni2d 
+pocs3d fpocs2d fpocs3d mwni2d 
 dlct 
 Testfd2d Testfd3d 
 rtm2d lsrtm2d
 Testeb
-modeling2d
+modeling2d forw2d
 '''
-# pocs2d 
 
 cuda_progs = '''
+gpurtm
 '''
 
 try:  # distributed version
@@ -23,12 +22,13 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    SConscript('../../api/c/SConstruct')
+    SConscript('../pwd/SConstruct')
 
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
-            LIBS=[env.get('DYNLIB','')+'rsf'])
+            LIBS=[env.get('DYNLIB','')+'rsfpwd',
+                  env.get('DYNLIB','')+'rsf'])
 
 
 # fftw settings

@@ -78,7 +78,7 @@ Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
-7) 2-D forward modeling to generate shot records (prepared for FWI)
+7) 2-D forward modeling to generate shot records
 
 Main: 		Mmodeling2d.c
 
@@ -87,8 +87,6 @@ Test file: 	/book/pyang/test/modeling2d/SConstruct
 
 ==================================================================
 Miscellaneous:
-_segy.h: segy format definations
-triangle.c,ctriange.c: taking from others for future usage.
 ft3d.c(fftw required): 3D FFT is coded as a linear operator in 
 Madagascar linear operator standard.
 	oper(adj, add, nm, nd, mod, dat);

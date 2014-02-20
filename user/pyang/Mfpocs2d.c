@@ -29,9 +29,7 @@
 #include <omp.h>
 #endif
 
-
 #include "pthresh.h"
-
 
 int main(int argc, char* argv[])
 {
@@ -108,6 +106,7 @@ int main(int argc, char* argv[])
     {
 	t1=(1.0+sqrtf(1.0+4.0*t0*t0))/2.0;
 	beta=(t0-1.0)/t1;
+
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -126,9 +125,10 @@ int main(int argc, char* argv[])
 	}
 	thr=0.99*powf(0.001,(iter-1.0)/(niter-1.0))*mmax;
 */
-	for(i1=1; i1<n1*n2; i1++){
-	    dout[i1]=cabsf(dtmp[i1]);
-	}
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	for(i1=1; i1<n1*n2; i1++)    dout[i1]=cabsf(dtmp[i1]);
 
    	int nthr = 0.5+n1*n2*(0.01*pclip);  /*round off*/
     	if (nthr < 0) nthr=0;
@@ -137,24 +137,20 @@ int main(int argc, char* argv[])
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 
 	/* perform p-norm thresholding */
-#ifdef _OPENMP
-#pragma omp parallel for	
-#endif
-	for(i1=0;i1<n1*n2;i1++) dtmp[i1]=pthresholding(dtmp[i1],thr, p,mode);
+	pthresholding(dtmp,n1*n2, thr, p,mode);
 
 	fftwf_execute(p2);/* unnormalized IFFT */
 
-#ifdef _OPENMP
-#pragma omp parallel for	
-#endif
 	/* adjointness needs scaling with factor 1.0/(n1*n2) */	
+#ifdef _OPENMP
+#pragma omp parallel for 
+#endif
 	for(i1=0; i1<n1*n2;i1++) dcurr[i1]=dtmp[i1]/(n1*n2);
 	
 	/* update d_rec: d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 	for(i2=0;i2<n2;i2++){
 		if (mask[i2]){			
-		    for(i1=0; i1<n1; i1++)
-			dcurr[i1+n1*i2]=din[i1+n1*i2];
+		    for(i1=0; i1<n1; i1++) dcurr[i1+n1*i2]=din[i1+n1*i2];
 		}
 	}
 

@@ -95,7 +95,7 @@ void fd2d_init(float **v0)
 
 	expand2d(vv, v0);
 	for(int ib=0;ib<nb;ib++){
-		tmp=0.015*(nb-ib);
+		tmp=3.0*(nb-ib)/nb;
 		bndr[ib]=expf(-tmp*tmp);
 	}
 
@@ -117,6 +117,7 @@ void fd2d_init(float **v0)
 }
 
 void wavefield_init(float **p0, float**p1, float **p2)
+/*< initialize the wavefield  variables >*/
 {
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
@@ -124,14 +125,15 @@ void wavefield_init(float **p0, float**p1, float **p2)
 }
 
 void step_forward(float **p0, float **p1, float**p2)
+/*< one step of forward modeling >*/
 {
 	int ix,iz;
 	float tmp;
 
 #ifdef _OPENMP
-#pragma omp parallel for	\
-    private(ix,iz,tmp)		\
-    shared(p2,p1,p0,c0,c11,c12,c21,c22)  
+#pragma omp parallel for collapse(2) default(none)	\
+    	private(ix,iz,tmp)				\
+    	shared(vv,p2,p1,p0,nxpad,nzpad,c0,c11,c12,c21,c22)  
 #endif	
 	for (ix=2; ix < nxpad-2; ix++) 
 	for (iz=2; iz < nzpad-2; iz++) 
@@ -145,49 +147,33 @@ void step_forward(float **p0, float **p1, float**p2)
 	}
 }
 
-void apply_sponge(float**p0, float **p1)
+void apply_sponge(float **p0)
 /* apply absorbing boundary condition */
 {
-	int ix,iz;
+	int ix,iz,ib,ibx,ibz;
+	float w;
 
-#ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz)		    \
-    shared(bndr,p0,p1)
-#endif
-	for(ix=0; ix<nxpad; ix++)
-	{
-		for(iz=0;iz<nb;iz++){	// top ABC			
-			p0[ix][iz]=bndr[iz]*p0[ix][iz];
-			p1[ix][iz]=bndr[iz]*p1[ix][iz];
-		}
-		for(iz=nz+nb;iz<nzpad;iz++){// bottom ABC			
-			p0[ix][iz]=bndr[nzpad-iz-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[nzpad-iz-1]*p1[ix][iz];
-		}
+    for(ib=0; ib<nb; ib++) {
+	w = bndr[ib];
+
+	ibz = nzpad-ib-1;
+	for(ix=0; ix<nxpad; ix++) {
+	    p0[ix][ib ] *= w; /*    top sponge */
+	    p0[ix][ibz] *= w; /* bottom sponge */
 	}
 
-#ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz)		    \
-    shared(bndr,p0,p1)
-#endif
-	for(iz=0; iz<nzpad; iz++)
-	{
-		for(ix=0;ix<nb;ix++){	// left ABC			
-			p0[ix][iz]=bndr[ix]*p0[ix][iz];
-			p1[ix][iz]=bndr[ix]*p1[ix][iz];
-		}	
-		for(ix=nx+nb;ix<nxpad;ix++){// right ABC			
-			p0[ix][iz]=bndr[nxpad-ix-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[nxpad-ix-1]*p1[ix][iz];
-		}	
+	ibx = nxpad-ib-1;
+	for(iz=0; iz<nzpad; iz++) {
+	    p0[ib ][iz] *= w; /*   left sponge */
+	    p0[ibx][iz] *= w; /*  right sponge */
 	}
+    }
 }
 
 
+
 void fd2d_close()
-/* free the allocated variables */
+/*< free the allocated variables >*/
 {
 	free(*vv); free(vv);
 	free(*p0); free(p0);
@@ -251,6 +237,7 @@ if read=true, read the boundary out; else save/write the boundary*/
 }
 
 void add_source(int *sxz, float **p, int ns, float *source, bool add)
+/*< add source or subtract source >*/
 {
 	if(add){
 		for(int is=0;is<ns; is++){
@@ -283,7 +270,7 @@ int main(int argc, char* argv[])
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
     	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of sponge ABC */
+    	if (!sf_getint("nb",&nb)) nb=20; /* thickness of sponge ABC */
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
     	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
     	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
@@ -319,7 +306,8 @@ int main(int argc, char* argv[])
 	{
 		add_source(sxz, p1, 1, &wlt[it], true);
 		step_forward(p0, p1, p2);
-		apply_sponge(p1,p2);
+		apply_sponge(p1);
+		apply_sponge(p2);
 		ptr=p0; p0=p1; p1=p2; p2=ptr;
 
 		boundary_rw(p0, &spo[it*4*(nx+nz)], false);

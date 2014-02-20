@@ -29,9 +29,8 @@
 int main(int argc, char* argv[])
 {
     /* input and output variables */
-    bool verb, cmplx;
-    int pad1, niter; 
-    float normp;
+    bool verb;
+    int niter; 
     sf_file Fin=NULL,Fout=NULL, Fmask=NULL;/* mask and I/O files*/ 
 
     /* define temporary variables */

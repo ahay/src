@@ -34,97 +34,82 @@ static float c0, c11, c21, c12, c22;
 static float *bndr, *mod, *dat;
 static float **u0, **u1, **u2, **vv, **ptr=NULL;
 
-void step_forward(float **u0, float **u1, float **u2, float **vv)
+void step_forward(float **u0, float **u1, float **u2, float **vv, bool adj)
 {
 	int i1, i2;
-/*
-// This part is designed for the adjointness, every points in the 
-// grid has been included, but slow running.
-	for (i2=0; i2<n2; i2++) 
-	for (i1=0; i1<n1; i1++) 
-	{
-		float u = c0*u1[i2][i1];
-		if(i1 >= 1) u += c11*u1[i2][i1-1];
-		if(i1 >= 2) u += c12*u1[i2][i1-2];
-		if(i1 < n1-1) u += c11*u1[i2][i1+1];
-		if(i1 < n1-2) u += c12*u1[i2][i1+2];
-		if(i2 >= 1) u += c21*u1[i2-1][i1];
-		if(i2 >= 2) u += c22*u1[i2-2][i1];
-		if(i2 < n2-1) u += c21*u1[i2+1][i1];
-		if(i2 < n2-2) u += c22*u1[i2+2][i1];
-		u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
+	float u;
 
-		//float 	u = vv[i2][i1  ]*c0 *u1[i2][i1  ];
-		//if(i1 >= 1)   u+= vv[i2][i1-1]*c11*u1[i2][i1-1];
-		//if(i1 >= 2)   u+= vv[i2][i1-2]*c12*u1[i2][i1-2];
-		//if(i1 < n1-1) u+= vv[i2][i1+1]*c11*u1[i2][i1+1];
-		//if(i1 < n1-2) u+= vv[i2][i1+2]*c12*u1[i2][i1+2];
-		//if(i2 >= 1)   u+= vv[i2-1][i1]*c21*u1[i2-1][i1];
-		//if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
-		//if(i2 < n2-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
-		//if(i2 < n2-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
-		//u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+u;
-	}
-*/
-
-// This part is devoted to efficiency reasons, if you do not use 
-// absorbing boundary, it is hard to be adjoint. If you use ABC, 
-// you can have approximate adjoint.
+	if(adj){
 #ifdef _OPENMP
-#pragma omp parallel for		\
-    private(i2,i1)		    	\
-    shared(n1,n2,u1,u0,u2,c0,c11,c12,c21,c22)
+#pragma omp parallel for collapse(2) default(none)	\
+    private(i2,i1,u)		    			\
+    shared(n1,n2,u1,vv,u0,u2,c0,c11,c12,c21,c22)
 #endif
-	for(i2=2; i2<n2-2; i2++)
-	for(i1=2; i1<n1-2; i1++)
-	{
-		u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*(	c0*u1[i2][i1]
-				+c11*(u1[i2][i1-1]+u1[i2][i1+1])
-				+c12*(u1[i2][i1-2]+u1[i2][i1+2])
-				+c21*(u1[i2-1][i1]+u1[i2+1][i1])
-				+c22*(u1[i2-2][i1]+u1[i2+2][i1]));
+		for (i2=0; i2<n2; i2++) 
+		for (i1=0; i1<n1; i1++) 
+		{
+			u 		= vv[i2][i1  ]*c0 *u1[i2][i1  ];
+			if(i1 >= 1)   u+= vv[i2][i1-1]*c11*u1[i2][i1-1];
+			if(i1 >= 2)   u+= vv[i2][i1-2]*c12*u1[i2][i1-2];
+			if(i1 < n1-1) u+= vv[i2][i1+1]*c11*u1[i2][i1+1];
+			if(i1 < n1-2) u+= vv[i2][i1+2]*c12*u1[i2][i1+2];
+			if(i2 >= 1)   u+= vv[i2-1][i1]*c21*u1[i2-1][i1];
+			if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
+			if(i2 < n2-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
+			if(i2 < n2-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
+			u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+u;
+		}
+	}else{
+#ifdef _OPENMP
+#pragma omp parallel for collapse(2) default(none)	\
+    private(i2,i1,u)		    			\
+    shared(n1,n2,u1,vv,u0,u2,c0,c11,c12,c21,c22)
+#endif
+		for (i2=0; i2<n2; i2++) 
+		for (i1=0; i1<n1; i1++) 
+		{
+			u 		= c0*u1[i2][i1];
+			if(i1 >= 1)   u+= c11*u1[i2][i1-1];
+			if(i1 >= 2)   u+= c12*u1[i2][i1-2];
+			if(i1 < n1-1) u+= c11*u1[i2][i1+1];
+			if(i1 < n1-2) u+= c12*u1[i2][i1+2];
+			if(i2 >= 1)   u+= c21*u1[i2-1][i1];
+			if(i2 >= 2)   u+= c22*u1[i2-2][i1];
+			if(i2 < n2-1) u+= c21*u1[i2+1][i1];
+			if(i2 < n2-2) u+= c22*u1[i2+2][i1];
+			u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
+		}
 	}
 }
 
-void apply_sponge(float**p0, float **p1, float *bndr)
-/* apply sponge absorbing boundary condition */
+void apply_sponge(float**p0, float *bndr)
+/* apply absorbing boundary condition */
 {
-	int ix,iz;
+	int ix,iz,ib,ibx,ibz;
+	float w;
 
 #ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz)		    \
-    shared(bndr,p0,p1)
+#pragma omp parallel for			\
+    private(ib,iz,ix,ibz,ibx,w)			\
+    shared(p0,bndr,n1,n2,nb)
 #endif
-	for(ix=0; ix<n2; ix++)
-	{
-		for(iz=0;iz<nb;iz++){	// top ABC			
-			p0[ix][iz]=bndr[iz]*p0[ix][iz];
-			p1[ix][iz]=bndr[iz]*p1[ix][iz];
-		}
-		for(iz=n1-nb;iz<n1;iz++){// bottom ABC			
-			p0[ix][iz]=bndr[n1-iz-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[n1-iz-1]*p1[ix][iz];
-		}
+    for(ib=0; ib<nb; ib++) {
+	w = bndr[ib];
+
+	ibz = n1-ib-1;
+	for(ix=0; ix<n2; ix++) {
+	    p0[ix][ib ] *= w; /*    top sponge */
+	    p0[ix][ibz] *= w; /* bottom sponge */
 	}
 
-#ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz)		    \
-    shared(bndr,p0,p1)
-#endif
-	for(iz=0; iz<n1; iz++)
-	{
-		for(ix=0;ix<nb;ix++){	// left ABC			
-			p0[ix][iz]=bndr[ix]*p0[ix][iz];
-			p1[ix][iz]=bndr[ix]*p1[ix][iz];
-		}	
-		for(ix=n2-nb;ix<n2;ix++){// right ABC			
-			p0[ix][iz]=bndr[n2-ix-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[n2-ix-1]*p1[ix][iz];
-		}	
+	ibx = n2-ib-1;
+	for(iz=0; iz<n1; iz++) {
+	    p0[ib ][iz] *= w; /*   left sponge */
+	    p0[ibx][iz] *= w; /*  right sponge */
 	}
+    }
 }
+
 
 void rtm2d_init(float dz_, float dx_, float dt_, int n0_, int n1_, 
 int n2_, int nb_, int nt_, float **vv_, float *mod_, float *dat_)
@@ -159,10 +144,8 @@ int n2_, int nb_, int nt_, float **vv_, float *mod_, float *dat_)
     	u2=sf_floatalloc2(n1,n2);
 	/* initialized sponge ABC coefficients */
 	for(int ib=0;ib<nb;ib++){
-		t=(nb-ib)/(sqrt(2.0)*4.0);
+		t=0.015*(nb-ib);
 		bndr[ib]=expf(-t*t);
-		//t=expf(-t*t);
-		//bndr[ib]=powf(t,10.0);
 	}
 	vv=vv_;
 	mod=mod_;
@@ -198,8 +181,9 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	    	for (it=nt-1; it >-1; it--) {
 			sf_warning("%d;",it);
 
-			apply_sponge(u0, u1, bndr); 
-			step_forward(u0,u1,u2,vv);
+			apply_sponge(u0, bndr); 
+			apply_sponge(u1, bndr); 
+			step_forward(u0,u1,u2,vv,true);
 			ptr=u0; u0=u1; u1=u2; u2=ptr;
 
 #ifdef _OPENMP
@@ -213,13 +197,13 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 		for(i2=0; i2<n2; i2++)
 		for(i1=0; i1<n1; i1++)
 		{
-			mod[i1+n1*i2]=u1[i2][i1];
+			mod[i1+n1*i2]+=u1[i2][i1];
 		}
     	}else{ // modeling
 		for(i2=0; i2<n2; i2++)
 		for(i1=0; i1<n1; i1++)
 		{
-			u1[i2][i1]=mod[i1+n1*i2];
+			u1[i2][i1]+=mod[i1+n1*i2];
 		}
     		for (it=0; it <nt; it++) {
 			sf_warning("%d;",it);
@@ -230,10 +214,11 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     private(i2)		    	\
     shared(it,u1,dat,n0)
 #endif
-			for (i2=0; i2<n2; i2++) dat[i2*nt+it]=u1[i2][n0];
+			for (i2=0; i2<n2; i2++) dat[i2*nt+it]+=u1[i2][n0];
 	
-			step_forward(u0,u1,u2,vv);
-			apply_sponge(u1, u2, bndr);
+			step_forward(u0,u1,u2,vv,false);
+			apply_sponge(u1, bndr);
+			apply_sponge(u2, bndr);
 			ptr=u0; u0=u1; u1=u2; u2=ptr;
     		}
     	}

@@ -54,8 +54,6 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 /*< LSRTM with conjugate gradient method >*/
 {
 	float res0, res;
-	bool forget;
-
 	for(int i=0; i<nd;i++) 	rr[i]=-dat[i];
 	memset(gr, 0, nd*sizeof(float));
 	memset(mm, 0, nm*sizeof(float));
@@ -66,12 +64,11 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 	for(int iter=0;iter<niter;iter++)
 	{
 		rtm2d_lop(true,  false, nm, nd, gm, rr);// gm=Ft[rr]
-		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]
-		if (iter%10==0) forget=true;
-		else forget=false;
+		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]		
+	    	bool forget = (bool) (0 == (iter+1)%10); // restart every 10 iterations
 		/* Claerbout's CG: (mm, rr)=cgstep(mm, rr, gm, gr); */	
 		sf_cgstep(forget, nm, nd, mm, gm, rr, gr); 	
-		res=cblas_dsdot(nd,rr,1,rr,1);
+		res=cblas_dsdot(nd, rr, 1, rr, 1);
 		if (verb) sf_warning("iteration %d; res %g",iter+1, res);
 		if (res/res0<tol) break;
 	}
@@ -116,7 +113,7 @@ int main(int argc, char* argv[])
 	/* verbosity */
     	if (!sf_getint("niter",&niter)) niter=10;
 	/* totol number of least-squares iteration*/
-    	if (!sf_getfloat("tol",&tol)) tol=1.e-6;
+    	if (!sf_getfloat("tol",&tol)) tol=1.e-12;
 	/* tolerance of inversion */
    
 	if (!sf_histint(data,"n1",&nt)) sf_error("n1");

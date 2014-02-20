@@ -140,10 +140,7 @@ int main(int argc, char* argv[])
 
 
 	/* perform p-norm thresholding */
-#ifdef _OPENMP
-#pragma omp parallel for	
-#endif
-	for(i1=0;i1<n1*n2*n3;i1++) dtmp[i1]=pthresholding(dtmp[i1],thr, p,mode);
+	pthresholding(dtmp, n1*n2*n3,thr, p,mode);
 
 	fftwf_execute(p2);/* unnormalized IFFT */
 
