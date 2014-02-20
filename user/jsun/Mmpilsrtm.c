@@ -431,7 +431,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 
 int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex **rcd, bool adj,
 	      bool verb, bool wantwf, sf_complex **lt, sf_complex **rt, int m2,
-              geopar geop, int pad1, sf_complex ***wavfld2)  
+              geopar geop, int pad1)
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -540,17 +540,6 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 	  }
 	}
 
-        if ( wantwf && it%snpint == 0 ) {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,j)
-#endif
-	  for ( ix = 0; ix < nx; ix++) {
-	    for ( iz = 0; iz<nz; iz++ ) { 
-	      j = (iz+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
-	      wavfld2[wfit][ix][iz] = curr[j];
-	    }
-	  }
-        }
 	/*cross-correlation imaging condition*/
 	if (it%snpint == 0 ) {
 #ifdef _OPENMP
@@ -601,17 +590,6 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
       wfit=0;
       for (it=0; it<nt; it++) {
 	if (verb) sf_warning("Forward receiver it=%d/%d;", it, nt-1);
-        if ( wantwf && it%snpint == 0 ) {
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,j)
-#endif
-	  for ( ix = 0; ix < nx; ix++) {
-	    for ( iz = 0; iz<nz; iz++ ) { 
-	      j = (iz+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
-	      wavfld2[wfit][ix][iz] = curr[j];
-	    }
-	  }
-        }
 	/*adjoint of cross-correlation imaging condition*/
 	if (it%snpint == 0 ) {
 #ifdef _OPENMP
@@ -692,7 +670,7 @@ int main(int argc, char* argv[])
     sf_file Fvel;
     sf_file left, right, leftb, rightb;
     sf_file Fsrc, Frcd/*source and record*/;
-    sf_file Ftmpwf, Ftmpbwf;
+    sf_file Ftmpwf;
     sf_file Fimg;
 
     /*axis*/
@@ -716,8 +694,8 @@ int main(int argc, char* argv[])
     sf_complex **ltb, **rtb;
 
     /*Data*/
-    sf_complex ***wavefld, ***wavefld2;
-    sf_complex ***record, ***recout, **tmprec, **img, **imgsum, **imgout;
+    sf_complex ***wavefld;
+    sf_complex ***record, **tmprec, **img, **imgsum;
     float **sill;
 
     /*source*/
@@ -739,7 +717,7 @@ int main(int argc, char* argv[])
 
     /*MPI*/
     int rank, nodes;
-    float complex *sendbuf, *recvbuf;
+    sf_complex *sendbuf, *recvbuf;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -797,7 +775,6 @@ int main(int argc, char* argv[])
     Fvel  = sf_input("vel");  /*velocity - just for model dimension*/
     if (wantwf) {
 	Ftmpwf  = sf_output("tmpwf");/*wavefield snap*/
-	Ftmpbwf = sf_output("tmpbwf");
     }
 
     /*--- Axes parameters ---*/
@@ -844,19 +821,7 @@ int main(int argc, char* argv[])
     record = sf_complexalloc3(nt, gpl, shtnum);
     wavefld = sf_complexalloc3(nz, nx, wfnt);
     sill = sf_floatalloc2(nz, nx);
-    if (wantwf && rank==0) wavefld2 = sf_complexalloc3(nz, nx, wfnt);
-    else wavefld2 = NULL;
     img = sf_complexalloc2(nz, nx);
-    if ((!adj||!wantrecord) && rank==0) {
-      recout = sf_complexalloc3(nt, gpl, shtnum);
-#ifdef _OPENMP
-#pragma omp parallel for private(is,ix,it)
-#endif
-      for (is=0; is<shtnum; is++)
-	for (ix=0; ix<gpl; ix++)
-	  for (it=0; it<nt; it++)
-	    recout[is][ix][it] = sf_cmplx(0.,0.);
-    } else recout = NULL;
     if (adj) {
       imgsum = sf_complexalloc2(nz, nx);
 #ifdef _OPENMP
@@ -865,15 +830,6 @@ int main(int argc, char* argv[])
 	for (ix=0; ix<nx; ix++)
 	  for (iz=0; iz<nz; iz++)
 	    imgsum[ix][iz] = sf_cmplx(0.,0.);
-      if (rank==0) {
-	imgout = sf_complexalloc2(nz, nx);
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz)
-#endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    imgout[ix][iz] = sf_cmplx(0.,0.);
-      } else imgout = NULL;
     }
     /*read from files*/
     sf_complexread(ww,nt,Fsrc);
@@ -893,7 +849,6 @@ int main(int argc, char* argv[])
 	  for (it=0; it<nt; it++)
 	    record[is][ix][it] = sf_cmplx(0.,0.);
     }
-
 
     /*close RSF files*/
     sf_fileclose(Fsrc);
@@ -966,12 +921,6 @@ int main(int argc, char* argv[])
 	sf_oaxa(Ftmpwf, ax, 2);
 	sf_oaxa(Ftmpwf, at, 3);
 	sf_settype(Ftmpwf,SF_COMPLEX);
-	
-	/*write temp wavefield */
-	sf_oaxa(Ftmpbwf, az, 1);
-	sf_oaxa(Ftmpbwf, ax, 2);
-	sf_oaxa(Ftmpbwf, at, 3);
-	sf_settype(Ftmpbwf,SF_COMPLEX);
       }
     }
     
@@ -1010,7 +959,7 @@ int main(int argc, char* argv[])
 	  for (it=0; it<nt; it++)
 	    tmprec[ix][it] = record[is][ix][it];
 
-      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1, wavefld2);
+      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1);
 
     if (adj)
 #ifdef _OPENMP
@@ -1029,22 +978,18 @@ int main(int argc, char* argv[])
 	  record[is][ix][it] = tmprec[ix][it];
     
       if (wantwf && is==0)
-	for (it=0; it<wfnt; it++)
-	  for ( ix=0; ix<nx; ix++) {
-	    sf_complexwrite(wavefld[it][ix], nz, Ftmpwf);
-	    sf_complexwrite(wavefld2[it][ix],nz, Ftmpbwf);
-	  }
+	sf_complexwrite(wavefld[0][0], wfnt*nx*nz, Ftmpwf);
     } /*shot iteration*/
 
     MPI_Barrier(MPI_COMM_WORLD);
     /*write record/image*/
     if (adj) {
       if (rank==0) {
-	sendbuf = (float complex *) MPI_IN_PLACE;
-	recvbuf = (float complex *) imgsum[0];
+	sendbuf = (sf_complex *) MPI_IN_PLACE;
+	recvbuf = imgsum[0];
       } else {
-	sendbuf = (float complex *) imgsum[0];
-	recvbuf = NULL;
+	sendbuf = imgsum[0];
+      	recvbuf = NULL;
       }
       MPI_Reduce(sendbuf, recvbuf, nx*nz, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
       if (rank==0)
@@ -1053,10 +998,10 @@ int main(int argc, char* argv[])
 
     if (!adj || !wantrecord) {
       if (rank==0) {
-	sendbuf = (float complex *) MPI_IN_PLACE;
-	recvbuf = (float complex *) record[0][0];
+	sendbuf = (sf_complex *) MPI_IN_PLACE;
+	recvbuf = record[0][0];
       } else {
-	sendbuf = (float complex *) record[0][0];
+	sendbuf = record[0][0];
 	recvbuf = NULL;
       }
       MPI_Reduce(sendbuf, recvbuf, shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
@@ -1076,15 +1021,8 @@ int main(int argc, char* argv[])
     free(**wavefld); free(*wavefld); free(wavefld);
     free(*sill); free(sill);
     free(*img); free(img);
-    if (wantwf && rank==0) 
-      {free(**wavefld2); free(*wavefld2); free(wavefld2);}
-    if ((!adj||!wantrecord) && rank==0)
-      {free(**recout); free(*recout); free(recout);}
     if (adj) {
       free(*imgsum); free(imgsum);
-      if (rank==0) {
-	free(*imgout); free(imgout);
-      }
     }
 
     tend = clock();
