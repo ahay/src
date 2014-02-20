@@ -19,6 +19,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <complex.h>
 #include <rsf.h>
 #include <mpi.h>
 #include <math.h>
@@ -738,6 +739,7 @@ int main(int argc, char* argv[])
 
     /*MPI*/
     int rank, nodes;
+    float complex *sendbuf, *recvbuf;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -843,7 +845,7 @@ int main(int argc, char* argv[])
     wavefld = sf_complexalloc3(nz, nx, wfnt);
     sill = sf_floatalloc2(nz, nx);
     if (wantwf && rank==0) wavefld2 = sf_complexalloc3(nz, nx, wfnt);
-    else wavefld2=NULL;
+    else wavefld2 = NULL;
     img = sf_complexalloc2(nz, nx);
     if ((!adj||!wantrecord) && rank==0) {
       recout = sf_complexalloc3(nt, gpl, shtnum);
@@ -854,9 +856,15 @@ int main(int argc, char* argv[])
 	for (ix=0; ix<gpl; ix++)
 	  for (it=0; it<nt; it++)
 	    recout[is][ix][it] = sf_cmplx(0.,0.);
-    }
+    } else recout = NULL;
     if (adj) {
       imgsum = sf_complexalloc2(nz, nx);
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+	for (ix=0; ix<nx; ix++)
+	  for (iz=0; iz<nz; iz++)
+	    imgsum[ix][iz] = sf_cmplx(0.,0.);
       if (rank==0) {
 	imgout = sf_complexalloc2(nz, nx);
 #ifdef _OPENMP
@@ -865,7 +873,7 @@ int main(int argc, char* argv[])
 	for (ix=0; ix<nx; ix++)
 	  for (iz=0; iz<nz; iz++)
 	    imgout[ix][iz] = sf_cmplx(0.,0.);
-      }
+      } else imgout = NULL;
     }
     /*read from files*/
     sf_complexread(ww,nt,Fsrc);
@@ -1003,7 +1011,7 @@ int main(int argc, char* argv[])
 	    tmprec[ix][it] = record[is][ix][it];
 
       lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1, wavefld2);
-      
+
     if (adj)
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
@@ -1031,15 +1039,31 @@ int main(int argc, char* argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     /*write record/image*/
     if (adj) {
-      MPI_Reduce(imgsum[0], imgout[0], nx*nz, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
-      sf_complexwrite(imgout[0], nx*nz, Fimg);
+      if (rank==0) {
+	sendbuf = (float complex *) MPI_IN_PLACE;
+	recvbuf = (float complex *) imgsum[0];
+      } else {
+	sendbuf = (float complex *) imgsum[0];
+	recvbuf = NULL;
+      }
+      MPI_Reduce(sendbuf, recvbuf, nx*nz, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
+      if (rank==0)
+	sf_complexwrite(imgsum[0], nx*nz, Fimg);
     }
 
     if (!adj || !wantrecord) {
-      MPI_Reduce(record[0][0],recout[0][0],shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD);
-      sf_complexwrite(recout[0][0], shtnum*gpl*nt, Frcd);
+      if (rank==0) {
+	sendbuf = (float complex *) MPI_IN_PLACE;
+	recvbuf = (float complex *) record[0][0];
+      } else {
+	sendbuf = (float complex *) record[0][0];
+	recvbuf = NULL;
+      }
+      MPI_Reduce(sendbuf, recvbuf, shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
+      if (rank==0)
+	sf_complexwrite(record[0][0], shtnum*gpl*nt, Frcd);
     }
-    
+
     /*free memory*/
     free(ww); free(rr);
     free(*lt); free(lt);
