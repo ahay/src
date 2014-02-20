@@ -1,4 +1,7 @@
-/* 4-D data binning. */
+/* 4-D data binning. 
+
+   if xkey < 0, the first axis indexes traces in a gather like cdpt.
+*/
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -27,7 +30,7 @@
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nt, nx, ny, nz, n2, xkey, ykey, zkey, *hdr, *x, *y, *z;
-    int xmin, xmax, ymin, ymax, zmin, zmax, i, ix, iy, iz, ***map;
+    int xmin, xmax, ymin, ymax, zmin, zmax, i, j, k, ix, iy, iz, jp=0, kp=0, ***map;
     off_t pos;
     char *buf, *zero, *xk, *yk, *zk, *header;
     sf_file in, out, head, mask;
@@ -66,18 +69,18 @@ int main (int argc, char* argv[])
 	/* y key name */
 	ykey = segykey(yk);
     }  else if (!sf_getint("ykey",&ykey)) {
-	/* y key number (if no yk), default is tracf */
-	ykey = segykey("tracf");
+	/* y key number (if no yk), default is iline */
+	ykey = segykey("xline");
     }
     if (NULL != (zk = sf_getstring("zk"))) {
 	/* z key name */
 	zkey = segykey(zk);
     }  else if (!sf_getint("zkey",&zkey)) {
-	/* z key number (if no zk), default is tracf */
-	zkey = segykey("tracf");
+	/* z key number (if no zk), default is xline */
+	zkey = segykey("iline");
     }
     
-    if (xkey < 0 || xkey >= nk) 
+    if (xkey >= nk) 
 	sf_error("xkey=%d is out of the range [0,%d]",xkey,nk-1);
     if (ykey < 0 || ykey >= nk) 
 	sf_error("ykey=%d is out of the range [0,%d]",ykey,nk-1);
@@ -91,20 +94,30 @@ int main (int argc, char* argv[])
 
     zmin = ymin = xmin = +INT_MAX;
     zmax = ymax = xmax = -INT_MAX;
-    for (id=0; id<nd; id++) {	
+    for (i=id=0; id<nd; id++) {	
 	sf_intread (hdr,nk,head);
-	i = hdr[xkey]; 
-	if (i < xmin) xmin=i;
-	if (i > xmax) xmax=i;
-	x[id] = i;
-	i = hdr[ykey]; 
-	if (i < ymin) ymin=i;
-	if (i > ymax) ymax=i;
-	y[id] = i;
-	i = hdr[zkey]; 
-	if (i < zmin) zmin=i;
-	if (i > zmax) zmax=i;
-	z[id] = i;
+	j = hdr[ykey]; 
+	if (j < ymin) ymin=j;
+	if (j > ymax) ymax=j;
+	y[id] = j;
+	k = hdr[zkey]; 
+	if (k < zmin) zmin=k;
+	if (k > zmax) zmax=k;
+	z[id] = k;
+	if (xkey < 0) { /* index traces in a gather */
+	    if (i > 0 && (j != jp || k != kp)) i=0;
+	    if (i < xmin) xmin=i;
+	    if (i > xmax) xmax=i;
+	    x[id] = i;
+	    i++;
+	    jp = j;
+	    kp = k;
+	} else {
+	    i = hdr[xkey]; 
+	    if (i < xmin) xmin=i;
+	    if (i > xmax) xmax=i;
+	    x[id] = i;
+	}
     }
 
     sf_fileclose (head);
