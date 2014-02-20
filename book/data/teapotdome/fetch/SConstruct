@@ -1,9 +1,21 @@
 from rsf.proj import *
-import math
+import os, rsf.path
+
+# a common scons database for all teapot
+path = rsf.path.getpath('teapotdome')
+project.SConsignFile(os.path.join(path,'.sconsign'))
 
 # get the stack created using seismic unix
 Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
-Result('sustack','final_stack','grey title="su stack"')
+Plot('sustack','final_stack','grey title="SU stack"',view=1)
+
+Result('sustack','final_stack',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=500 frame2=100 frame3=150 
+       title="SU stack" point2=0.35272
+       label2=Inline label3=Crossline
+       ''')
 
 Fetch('npr3_gathers.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
@@ -20,7 +32,7 @@ Flow(['npr3_gathers.rsf','npr3_gathers_hdr.rsf',
 
 Flow('gathersheaderattr.txt',
      'npr3_gathers_hdr.rsf',
-     'sfheaderattr >temp; cat temp; cat temp ')
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
 Fetch('npr3_field.sgy','teapot',server='http://s3.amazonaws.com',top='')
 
@@ -34,7 +46,7 @@ Flow(['npr3_field.rsf','npr3_field_hdr.rsf',
 
 Flow('fieldheaderattr.txt',
      'npr3_field_hdr.rsf',
-     'sfheaderattr >temp; cat temp; cat temp ')
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
 pdfread = WhereIs('acroread') or WhereIs('kpdf') or WhereIs('evince') or \
     WhereIs('xpdf') or WhereIs('gv') or WhereIs('open')
@@ -43,10 +55,10 @@ if pdfread:
     Fetch('3dload_Teapot_Dome_3D.pdf','teapot',
           server='http://s3.amazonaws.com',top='')
     Flow('3dload','3dload_Teapot_Dome_3D.pdf',
-           pdfread + ' $SOURCE',stdin=0, stdout=0)
+           pdfread + ' $SOURCE',stdin=0, stdout=-1)
     Fetch('teapot_processing.pdf','teapot',
           server='http://s3.amazonaws.com',top='')
     Flow('processing','teapot_processing.pdf',
-           pdfread + ' $SOURCE',stdin=0,stdout=0)
+           pdfread + ' $SOURCE',stdin=0,stdout=-1)
     
 End()

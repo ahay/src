@@ -1,0 +1,3 @@
+uses=['sfgrey', 'sfbyte', 'sfgrey3', 'sfsegyread', 'sfheaderattr']
+data=['teapot/final_stack.rsf', 'teapot/npr3_gathers.sgy', 'teapot/npr3_field.sgy', 'teapot/3dload_Teapot_Dome_3D.pdf', 'teapot/teapot_processing.pdf']
+size= 12926318480

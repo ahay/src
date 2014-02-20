@@ -1,5 +1,11 @@
 from rsf.proj import *
-import math
+import os, rsf.path
+
+# a common scons database for all teapot
+path = rsf.path.getpath('teapotdome')
+SConsignFile(os.path.join(path,'.sconsign'))
+
+SConscript('../fetch/SConstruct')
 
 Flow('foldplot','../fetch/npr3_field_hdr.rsf',
     '''
@@ -11,10 +17,10 @@ Flow('foldplot','../fetch/npr3_field_hdr.rsf',
           o3=1 n3=345 d3=1   label3=iline        
     ''')
 
-Result('foldplot','foldplot',
+Plot('foldplot','foldplot',
      '''
      grey  title=foldplot pclip=100 
-     ''')
+     ''',view=1)
 
 Result('foldplot3','foldplot',
      '''
@@ -26,7 +32,7 @@ Result('foldplot3','foldplot',
 Flow('foldplot_off','foldplot',
      'transp plane=13')
 
-Result('foldplot_off','grey title=foldplot pclip=100')
+Plot('foldplot_off','grey title=foldplot pclip=100',view=1)
 
 # Xline/Inline numbers
 Flow('ix','../fetch/npr3_field_hdr.rsf','dd type=float | headermath output="xline"')

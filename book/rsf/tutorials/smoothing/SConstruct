@@ -30,12 +30,13 @@ Result('horizon','grey color=j bias=750 scalebar=y title=Horizon yreverse=n tran
 
 Flow('filled','horizon','lapfill grad=y verb=y niter=500')
 
-Result('filled','grey color=j mean=y scalebar=y title=Horizon yreverse=n transp=n')
-
 # Display with the cube helix colormap and the correct aspect ratio
 
 Plot('cubeh','filled',
-     'grey color=x mean=y scalebar=y title=Horizon yreverse=n transp=n screenwd=11.9 screenht=9.62')
+     '''
+     grey color=x bias=950 clip=133 scalebar=y title=Horizon 
+     yreverse=n transp=n screenwd=11.9 screenht=9.62
+     ''')
 
 Result('cubeh','Overlay')
 
@@ -44,7 +45,7 @@ Result('cubeh','Overlay')
 Flow('window','horizon','window f1=200 n1=125 f2=200 n2=100')
 
 Result('window',
-       'grey color=x mean=y scalebar=y title=Horizon yreverse=n transp=n screenratio=0.8')
+       'grey color=x bias=950 clip=133 scalebar=y title=Horizon yreverse=n transp=n screenratio=0.8')
 
 Flow('wind.asc',None,
      '''
@@ -66,6 +67,35 @@ Plot('wind','wind.asc',
 Result('wind','cubeh wind','Overlay')
 
 # Add noise
+Flow('noisy','filled','noise type=n seed=2014 range=15')
+
+# Regular smoothing
+Flow('smoothed','noisy','smooth rect1=4 rect2=4')
+
+# Anisotropic diffusion
+Flow('diffused','noisy','impl2 rect1=10 rect2=10 tau=1')
+
+# Median filter
+
+# Bilateral filter
+
+for case in Split('filled noisy smoothed diffused'):
+    Result(case,
+           '''
+           grey color=j bias=950 clip=133 scalebar=y 
+           title="%s Horizon" yreverse=n transp=n
+           minval=800 maxval=1100
+           ''' % case.capitalize())
+    if case != 'filled':
+        Result(case+'-slice',['filled',case],
+               '''
+               cat axis=3 ${SOURCES[1]} |
+               window n1=1 f1=300 n2=450 |
+               graph plotfat=7,1 wanttitle=n 
+               yreverse=y label2=Time unit2=ms
+               ''')
+
+# Shaded relief
 
 End()
 
