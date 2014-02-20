@@ -20,7 +20,6 @@
 */
 
 #include <rsf.h>
-#include <mpi.h>
 #include <math.h>
 #include <time.h>
 #include <sys/time.h>
@@ -467,7 +466,7 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
     cwavem = sf_complexalloc(nk);
     wave = sf_complexalloc2(nzx2,m2);
 
-    if (!adj) {
+    if (adj) {
 	currm  = sf_complexalloc(nzx2);
 	icfft2_allocate(cwave);
     } else {
@@ -505,39 +504,38 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 	  curr[j]+=rcd[ix][it]; /* data injection */
 	}
 	/*matrix multiplication*/
-	cfft2(curr,cwave);
 	for (im = 0; im < m2; im++) {
 #ifdef _OPENMP
-#pragma omp parallel for private(ik)
+#pragma omp parallel for private(ix,iz,i,j) shared(currm,lt,curr)
 #endif
-	  for (ik = 0; ik < nk; ik++) {
+	  for (ix = 0; ix < nxb; ix++) {
+	    for (iz=0; iz < nzb; iz++) {
+	      i = iz+ix*nzb;  /* original grid */
+	      j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
-	    cwavem[ik] = cwave[ik]*rt[ik][im];
+	      currm[j] = lt[im][i]*curr[j];
 #else
-	    cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]);
-#endif
-	  }
-	  icfft2(wave[im],cwavem);
-	}
-	
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,i,j,im,c) shared(curr,lt,wave)
-#endif
-	for (ix = 0; ix < nxb; ix++) {
-	  for (iz=0; iz < nzb; iz++) {
-	    i = iz+ix*nzb;  /* original grid */
-	    j = iz+ix*nz2; /* padded grid */
-	    c = sf_cmplx(0.,0.); // initialize
-	    for (im = 0; im < m2; im++) {
-#ifdef SF_HAS_COMPLEX_H
-	      c += lt[im][i]*wave[im][j];
-#else
-	      c += sf_cmul(lt[im][i], wave[im][j]);
+	      currm[j] = sf_cmul(lt[im][i], curr[j]);
 #endif
 	    }
-	    curr[j] = c;
 	  }
+	  cfft2(currm,wave[im]);
 	}
+#ifdef _OPENMP
+#pragma omp parallel for private(ik,im,c) shared(wave,rt,cwave)
+#endif	    
+	for (ik = 0; ik < nk; ik++) {
+	  c = sf_cmplx(0.,0.);
+	  for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+	    c += wave[im][ik]*rt[ik][im];
+#else
+	    c += sf_cmul(wave[im][ik],rt[ik][im]); //complex multiplies complex
+#endif
+	  }
+	  cwave[ik] = c;
+	}
+	icfft2(curr,cwave);
 
         if ( wantwf && it%snpint == 0 ) {
 #ifdef _OPENMP
@@ -629,38 +627,39 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 	  wfit++;
 	}
 	/*matrix multiplication*/
+	cfft2(curr,cwave);
 	for (im = 0; im < m2; im++) {
 #ifdef _OPENMP
-#pragma omp parallel for private(ix,iz,i,j) shared(currm,lt,curr)
+#pragma omp parallel for private(ik)
 #endif
-	  for (ix = 0; ix < nxb; ix++) {
-	    for (iz=0; iz < nzb; iz++) {
-	      i = iz+ix*nzb;  /* original grid */
-	      j = iz+ix*nz2; /* padded grid */
+	  for (ik = 0; ik < nk; ik++) {
 #ifdef SF_HAS_COMPLEX_H
-	      currm[j] = conjf(lt[im][i])*curr[j];
+	    cwavem[ik] = cwave[ik]*conjf(rt[ik][im]);
 #else
-	      currm[j] = sf_cmul(conjf(lt[im][i]), curr[j]);
+	    cwavem[ik] = sf_cmul(cwave[ik],conjf(rt[ik][im]));
+#endif
+	  }
+	  icfft2(wave[im],cwavem);
+	}
+	
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz,i,j,im,c) shared(curr,lt,wave)
+#endif
+	for (ix = 0; ix < nxb; ix++) {
+	  for (iz=0; iz < nzb; iz++) {
+	    i = iz+ix*nzb;  /* original grid */
+	    j = iz+ix*nz2; /* padded grid */
+	    c = sf_cmplx(0.,0.); // initialize
+	    for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+	      c += conjf(lt[im][i])*wave[im][j];
+#else
+	      c += sf_cmul(conjf(lt[im][i]), wave[im][j]);
 #endif
 	    }
+	    curr[j] = c;
 	  }
-	  cfft2(currm,wave[im]);
 	}
-#ifdef _OPENMP
-#pragma omp parallel for private(ik,im,c) shared(wave,rt,cwave)
-#endif	    
-	for (ik = 0; ik < nk; ik++) {
-	  c = sf_cmplx(0.,0.);
-	  for (im = 0; im < m2; im++) {
-#ifdef SF_HAS_COMPLEX_H
-	    c += wave[im][ik]*conjf(rt[ik][im]);
-#else
-	    c += sf_cmul(wave[im][ik],conjf(rt[ik][im])); //complex multiplies complex
-#endif
-	  }
-	  cwave[ik] = c;
-	}
-	icfft2(curr,cwave);
 
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,j)
@@ -716,7 +715,7 @@ int main(int argc, char* argv[])
 
     /*Data*/
     sf_complex ***wavefld, ***wavefld2;
-    sf_complex ***record, ***recout, **tmprec, **img, **imgsum, **imgout;
+    sf_complex ***record, **tmprec, **img, **imgsum;
     float **sill;
 
     /*source*/
@@ -736,16 +735,7 @@ int main(int argc, char* argv[])
     geopar geop;
     mpipar mpip;
 
-    /*MPI*/
-    int rank, nodes;
-
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &nodes);
-
     sf_init(argc, argv);
-
-    if(rank==0) sf_warning("nodes=%d",nodes);
 
     if (!sf_getbool("verb", &verb)) verb=false; /*verbosity*/
     if (!sf_getbool("adj", &adj)) adj=true; /*migration*/
@@ -776,16 +766,16 @@ int main(int argc, char* argv[])
     /*Set I/O file*/
     if (adj) { /* migration */
       if (wantrecord) {
-	Frcd = sf_input("input"); /*record from elsewhere*/
+	Frcd = sf_input("in"); /*record from elsewhere*/
 	Fsrc  = sf_input("src");   /*source wavelet*/      
       } else {
 	Frcd = sf_output("rec"); /*record produced by forward modeling*/
-	Fsrc = sf_input("input");   /*source wavelet*/
+	Fsrc = sf_input("in");   /*source wavelet*/
       }
-      Fimg  = sf_output("output");
+      Fimg  = sf_output("out");
     } else { /* modeling */
-      Fimg = sf_input("input");
-      Frcd = sf_output("output");
+      Fimg = sf_input("in");
+      Frcd = sf_output("out");
       Fsrc  = sf_input("src");   /*source wavelet*/      
     }
     left  = sf_input("left");
@@ -842,30 +832,11 @@ int main(int argc, char* argv[])
     record = sf_complexalloc3(nt, gpl, shtnum);
     wavefld = sf_complexalloc3(nz, nx, wfnt);
     sill = sf_floatalloc2(nz, nx);
-    if (wantwf && rank==0) wavefld2 = sf_complexalloc3(nz, nx, wfnt);
+    if (wantwf) wavefld2 = sf_complexalloc3(nz, nx, wfnt);
     else wavefld2=NULL;
     img = sf_complexalloc2(nz, nx);
-    if ((!adj||!wantrecord) && rank==0) {
-      recout = sf_complexalloc3(nt, gpl, shtnum);
-#ifdef _OPENMP
-#pragma omp parallel for private(is,ix,it)
-#endif
-      for (is=0; is<shtnum; is++)
-	for (ix=0; ix<gpl; ix++)
-	  for (it=0; it<nt; it++)
-	    recout[is][ix][it] = sf_cmplx(0.,0.);
-    }
     if (adj) {
       imgsum = sf_complexalloc2(nz, nx);
-      if (rank==0) {
-	imgout = sf_complexalloc2(nz, nx);
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz)
-#endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    imgout[ix][iz] = sf_cmplx(0.,0.);
-      }
     }
     /*read from files*/
     sf_complexread(ww,nt,Fsrc);
@@ -886,7 +857,6 @@ int main(int argc, char* argv[])
 	    record[is][ix][it] = sf_cmplx(0.,0.);
     }
 
-
     /*close RSF files*/
     sf_fileclose(Fsrc);
     sf_fileclose(left);
@@ -894,9 +864,6 @@ int main(int argc, char* argv[])
     sf_fileclose(leftb);
     sf_fileclose(rightb);
 
-    /*load constant geopar elements*/
-    mpip->cpuid=rank;
-    mpip->numprocs=nodes;
     /*load constant geopar elements*/
     geop->nx  = nx;
     geop->nz  = nz;
@@ -921,55 +888,53 @@ int main(int argc, char* argv[])
 
     /* output RSF files */
 
-    if (rank==0) {
-      sf_setn(ax, gpl);
-      sf_setn(az, nz);
-      as = sf_iaxa(Fvel, 2);
-      sf_setn(as,shtnum);
-      sf_setd(as,shtint*dx);
-      sf_seto(as,shtbgn*dx+ox);
-      
-      if (adj) { /* migration */
-	if(!wantrecord) {
-	  sf_oaxa(Frcd, at, 1);
-	  sf_oaxa(Frcd, ax, 2);
-	  sf_oaxa(Frcd, as, 3);
-	  sf_settype(Frcd,SF_COMPLEX);	
-	}
-	sf_setn(ax, nx);
-	/*write image*/
-	sf_oaxa(Fimg, az, 1);
-	sf_oaxa(Fimg, ax, 2);
-	sf_settype(Fimg,SF_COMPLEX);
-      } else { /* modeling */
+    sf_setn(ax, gpl);
+    sf_setn(az, nz);
+    as = sf_iaxa(Fvel, 2);
+    sf_setn(as,shtnum);
+    sf_setd(as,shtint*dx);
+    sf_seto(as,shtbgn*dx+ox);
+    
+    if (adj) { /* migration */
+      if(!wantrecord) {
 	sf_oaxa(Frcd, at, 1);
 	sf_oaxa(Frcd, ax, 2);
-	sf_oaxa(Frcd, as ,3);
-	sf_settype(Frcd,SF_COMPLEX);
+	sf_oaxa(Frcd, as, 3);
+	sf_settype(Frcd,SF_COMPLEX);	
       }
+      sf_setn(ax, nx);
+      /*write image*/
+      sf_oaxa(Fimg, az, 1);
+      sf_oaxa(Fimg, ax, 2);
+      sf_settype(Fimg,SF_COMPLEX);
+    } else { /* modeling */
+      sf_oaxa(Frcd, at, 1);
+      sf_oaxa(Frcd, ax, 2);
+      sf_oaxa(Frcd, as ,3);
+      sf_settype(Frcd,SF_COMPLEX);
+    }
+    
+    if (wantwf) {
+      sf_setn(ax, nx);
+      /*write temp wavefield */
+      sf_setn(at, wfnt);
+      sf_setd(at, wfdt);
       
-      if (wantwf) {
-	sf_setn(ax, nx);
-	/*write temp wavefield */
-	sf_setn(at, wfnt);
-	sf_setd(at, wfdt);
-	
-	sf_oaxa(Ftmpwf, az, 1);
-	sf_oaxa(Ftmpwf, ax, 2);
-	sf_oaxa(Ftmpwf, at, 3);
-	sf_settype(Ftmpwf,SF_COMPLEX);
-	
-	/*write temp wavefield */
-	sf_oaxa(Ftmpbwf, az, 1);
-	sf_oaxa(Ftmpbwf, ax, 2);
-	sf_oaxa(Ftmpbwf, at, 3);
-	sf_settype(Ftmpbwf,SF_COMPLEX);
-      }
+      sf_oaxa(Ftmpwf, az, 1);
+      sf_oaxa(Ftmpwf, ax, 2);
+      sf_oaxa(Ftmpwf, at, 3);
+      sf_settype(Ftmpwf,SF_COMPLEX);
+      
+      /*write temp wavefield */
+      sf_oaxa(Ftmpbwf, az, 1);
+      sf_oaxa(Ftmpbwf, ax, 2);
+      sf_oaxa(Ftmpbwf, at, 3);
+      sf_settype(Ftmpbwf,SF_COMPLEX);
     }
     
     tstart = clock();
 
-    for (is=rank; is<shtnum; is+=nodes){
+    for (is=0; is<shtnum; is++){
       spx = shtbgn + shtint*is;
       gpx = spx - (int)(gpl/2);
       geop->spx = spx;
@@ -1028,16 +993,12 @@ int main(int argc, char* argv[])
 	  }
     } /*shot iteration*/
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    /*write record/image*/
     if (adj) {
-      MPI_Reduce(imgsum[0], imgout[0], nx*nz, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD);
-      sf_complexwrite(imgout[0], nx*nz, Fimg);
+      sf_complexwrite(imgsum[0], nx*nz, Fimg);
     }
 
     if (!adj || !wantrecord) {
-      MPI_Reduce(record[0][0],recout[0][0],shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0,MPI_COMM_WORLD);
-      sf_complexwrite(recout[0][0], shtnum*gpl*nt, Frcd);
+      sf_complexwrite(record[0][0], shtnum*gpl*nt, Frcd);
     }
     
     /*free memory*/
@@ -1052,22 +1013,16 @@ int main(int argc, char* argv[])
     free(**wavefld); free(*wavefld); free(wavefld);
     free(*sill); free(sill);
     free(*img); free(img);
-    if (wantwf && rank==0) 
+    if (wantwf) 
       {free(**wavefld2); free(*wavefld2); free(wavefld2);}
-    if ((!adj||!wantrecord) && rank==0)
-      {free(**recout); free(*recout); free(recout);}
     if (adj) {
       free(*imgsum); free(imgsum);
-      if (rank==0) {
-	free(*imgout); free(imgout);
-      }
     }
 
     tend = clock();
     duration=(double)(tend-tstart)/CLOCKS_PER_SEC;
     sf_warning(">> The CPU time of single shot migration is: %f seconds << ", duration);
 
-    MPI_Finalize();
     exit(0);
 }
 
