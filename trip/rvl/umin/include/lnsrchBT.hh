@@ -200,11 +200,12 @@ namespace RVLUmin {
 
 	//	cout<<"fruit = "<<fruit<<" step = "<<step<<endl;
 
-	// check that step is not too small
-        if (step*dxnorm<minstep) {
+	// check that step is not too small rel length of direction vector
+        if (step<minstep*dxnorm) {
 	  if (DispFlag) {
 	    str<<"BacktrackingLineSearchAlg::run:\n";
-	    str<<"  proposed step is too small - line search aborted\n";
+	    str<<"  proposed step is too small rel search vector length\n";
+	    str<<"  line search aborted\n";
 	    str.flush();
 	  }
 	  ans=true;
@@ -237,7 +238,7 @@ namespace RVLUmin {
 	  if (fx.getValue() > fval && bt<2) {
 	    Scalar tmpstep = -(gfdx*step*step)/(fx.getValue()-fval-step*gfdx);
 	    str<<"  trial quadr. bt step = "<<tmpstep<<"\n";
-	    if (tmpstep*dxnorm < minstep) {
+	    if (tmpstep < minstep*dxnorm) {
 	      step = step * gamma1;
 	      if (DispFlag) {
 		str<<"  quadratic bt step    = "<<tmpstep<<" too small, replace with\n";

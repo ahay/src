@@ -150,7 +150,7 @@ namespace RVLUmin {
     int maxsamp;       // max function evaluations
     bool disp;         // display flag 
     Scalar sl1;        // length of first step
-    Scalar minsteptol; // minimum permitted step length
+    Scalar minsteptol; // minimum permitted step length (fraction of prev step)
     Scalar eta1;       // First GA scale: min acceptable decrease
     Scalar eta2;       // Second GA scale: good decrease
     Scalar gamma1;     // First BT factor: shrink step if decrease not acceptable
@@ -207,6 +207,7 @@ namespace RVLUmin {
 	    Scalar _gamma1,
 	    Scalar _gamma2,
 	    Scalar _maxfrac,
+	    Scalar _minsteptol,
 	    int _maxits,
 	    Scalar _agradtol,
 	    Scalar _rgradtol,
@@ -220,6 +221,7 @@ namespace RVLUmin {
 	gamma1(_gamma1),
 	gamma2(_gamma2),
 	maxfrac(_maxfrac),
+	minsteptol(_minsteptol),
 	maxits(_maxits),
 	agradtol(_agradtol),
 	rgradtol(_rgradtol),

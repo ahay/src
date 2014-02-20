@@ -139,7 +139,7 @@ namespace RVLUmin {
       return dx; }
     FunctionalEvaluation<Scalar> & getFunctionalEvaluation() const { 
       return fx; }
-    bool checkMinStep() const { return lsalg.checkMinStep(); }
+    //    bool checkMinStep() const { return lsalg.checkMinStep(); }
     Scalar getMinStep() const { return lsalg.getMinStep(); }
   };
 
@@ -276,6 +276,7 @@ namespace RVLUmin {
 	absolutely if the current iterate happens to be the zero
 	vector. In either case returns true if stepsize is greater
         than this measure, else false. */
+    /*
     bool checkMinStep() const {
       try {
 	Scalar foo = this->getStep();
@@ -286,7 +287,7 @@ namespace RVLUmin {
 	throw e;
       }
     }
-
+    */
     Scalar getMinStep() const { return minsteptol; }
 
   };
