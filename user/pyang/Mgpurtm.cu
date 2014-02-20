@@ -90,7 +90,7 @@ extern "C" {
 #define false   (0)
 #endif
 #ifndef EPS
-#define EPS	1.0e-15f
+#define EPS	FLT_EPSILON
 #endif
 #ifndef PI
 #define PI 	3.141592653589793f
@@ -127,7 +127,7 @@ float	*ptr=NULL;
 void matrix_transpose(float *matrix, int nx, int nz)
 {
 	float *tmp=(float*)malloc(nx*nz*sizeof(float));
-	if (tmp==NULL) {sf_warning("out of memory!"); exit(1);}
+	if (tmp==NULL) {printf("out of memory!\n"); exit(1);}
 	for(int iz=0; iz<nz; iz++){
 		for(int ix=0; ix<nx; ix++){
 			tmp[iz+nz*ix]=matrix[ix+nx*iz];
@@ -188,8 +188,8 @@ void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float d
 	}
 	float tmp=dt*maxvel*sqrtf(1.0/(dx*dx)+1.0/(dz*dz));
 
-	if (tmp>=C) sf_warning("Stability condition not satisfied!");
-	if (fm>=minvel/(5*MAX(dx,dz))) sf_warning("Non-dispersion relation not satisfied!");
+	if (tmp>=C) printf("Stability condition not satisfied!\n");
+	if (fm>=minvel/(5*MAX(dx,dz))) printf("Non-dispersion relation not satisfied!\n");
 }
 
 
@@ -230,7 +230,7 @@ void device_alloc()
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to allocate required memory!: %s", cudaGetErrorString(err));
+	printf("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
 }
 
 
@@ -270,7 +270,7 @@ void device_free()
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err)
-	sf_warning("Cuda error: Failed to free the allocated memory!: %s", cudaGetErrorString(err));
+	printf("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
 }
 
 void wavefield_init(float *d_p0, float *d_p1, float *d_p2, float *d_vx, float *d_vz, float *d_convpx, float *d_convpz, float *d_convvx, float *d_convvz)
@@ -288,7 +288,7 @@ void wavefield_init(float *d_p0, float *d_p1, float *d_p2, float *d_vx, float *d
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize the wavefield variables!: %s", cudaGetErrorString(err));
+	printf("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
 }
 
 void step_forward(float *vel, float *d_p0, float *d_p1, float *d_p2, float *d_vx, float *d_vz, float *d_convvx, float *d_convvz, float *d_convpx, float *d_convpz, float *d_bx1, float *d_bz1, float *d_bx2, float *d_bz2)
