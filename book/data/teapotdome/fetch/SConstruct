@@ -1,9 +1,4 @@
 from rsf.proj import *
-import os, rsf.path
-
-# a common scons database for all teapot
-path = rsf.path.getpath('teapotdome')
-project.SConsignFile(os.path.join(path,'.sconsign'))
 
 # get the stack created using seismic unix
 Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')

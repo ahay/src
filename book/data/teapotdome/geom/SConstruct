@@ -1,11 +1,6 @@
 from rsf.proj import *
-import os, rsf.path
 
-# a common scons database for all teapot
-path = rsf.path.getpath('teapotdome')
-SConsignFile(os.path.join(path,'.sconsign'))
-
-SConscript('../fetch/SConstruct')
+# SConscript('../fetch/SConstruct')
 
 Flow('foldplot','../fetch/npr3_field_hdr.rsf',
     '''
