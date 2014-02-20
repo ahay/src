@@ -19,7 +19,7 @@ targets = bldutil.UserSconsTargets()
 targets.c = '''
 emfdm2d_p
 emfdm3d 
-cic3d
+cic3d_ditthara
 '''
 
 
