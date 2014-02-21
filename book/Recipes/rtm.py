@@ -16,7 +16,7 @@ def awepar(par):
     
 def iwindow(par):
     win = ' ' + \
-          '''
+          '''s
           nqz=%(nqz)d oqz=%(oqz)g dqz=%(dqz)g 
           nqx=%(nqx)d oqx=%(oqx)g dqx=%(dqx)g
           ''' % par + ' '
