@@ -1,12 +1,31 @@
 #include <iostream>
 #include "rsf.hh" 
 
+void extract_solution
+(const DistUniformGrid<Complex<double>>& solution,
+ const Matrix<double>& xRecv,
+ const Matrix<double>& yRecv,
+ const Matrix<double>& zRecv,
+       Matrix<Complex<double>>& syn)
+{
+    syn.Resize(nrec,nsrc);
+
+    for (int isrc=0;isrc<nsrc;isrc++ ) { 
+        for (int irec=0;irec<nrec;irec++ ) { 
+            int x=round(xRecv[irec][isrc]*solution.XSize());
+            int y=round(yRecv[irec][isrc]*solution.YSize());
+            int z=round(zRecv[irec][isrc]*solution.ZSize());
+        
+            Complex<double> localsyn=solution.Get(x,y,z,isrc);
+            syn.Set(irec, isrc, localsyn);
+        }
+    }
+
+}
+
 double gen_adjsrc
-( const DistUniformGrid<Complex<double>>& S, 
-  const DistUniformGrid<Complex<double>>& O, 
-  const Matrix<double>& xRecv,
-  const Matrix<double>& yRecv,
-  const Matrix<double>& zRecv 
+( const Matrix<Complex<double>>& S, 
+  const Matrix<Complex<double>>& O, 
         Matrix<Complex<double>>& A )
 {
     // TODO: Compute local misfits and then sum the result with an
@@ -14,24 +33,35 @@ double gen_adjsrc
     // NOTE: This routine should already work but may not be as fast
     //       as possible.
     double l2MisfitSquared=0.0; 
-    const int nsrc = xRecv.Height();
-    const int nrec = xRecv.Width();
+    const int nsrc = S.Height();
+    const int nrec = S.Width();
+
     A.Resize( nsrc, nrec );
     for (int isrc=0;isrc<nsrc;isrc++ ) { 
         for (int irec=0;irec<nrec;irec++ ) { 
-            int x=round(xRecv[irec][isrc]*S.XSize());
-            int y=round(yRecv[irec][isrc]*S.YSize());
-            int z=round(zRecv[irec][isrc]*S.ZSize());
 
-	        Complex<double> obs = O.Get(x,y,z);
-	        Complex<double> syn = S.Get(x,y,z);
+	        Complex<double> obs = O.Get(irec,isrc);
+	        Complex<double> syn = S.Get(irec,isrc);
 	        A.Set( irec, isrc, obs-syn );
 
-            l2MisfitSquared += Abs(adj.Get(irec,isrc));
+            l2MisfitSquared += Abs(A.Get(irec,isrc));
         }
     }
     return l2MisfitSquared;
 }
+
+void calculate_kernel
+( const DistUniformGrid<Complex<double>>& solution,
+        DistUniformGrid<Complex<double>>& kernel)
+{
+    
+
+
+
+
+
+}
+
 
 void smooth_kernel
 ( const DistUniformGrid<double>& K,
