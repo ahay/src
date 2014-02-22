@@ -21,12 +21,15 @@ IST=iterative shrinkage-thresholding
 
 #include <rsf.h>
 #include <rsfpwd.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "pthresh.h"
 
 int main(int argc, char *argv[])
 {
-    int niter, n1, n2, nthr; 
+    int niter, n1, n2, nthr, i1,i2; 
     int order;
     float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
     sf_file Fin, Fout, Fmask, Fdip;
@@ -34,7 +37,10 @@ int main(int argc, char *argv[])
     char *type, *mode;
     bool unit=false, inv=true, verb;
 
-    sf_init(argc,argv);
+    sf_init(argc,argv);	/* Madagascar initialization */
+#ifdef _OPENMP
+    omp_init(); 	/* initialize OpenMP support */
+#endif
 
     Fin = sf_input("in");
     Fmask=sf_input("mask");  
@@ -87,26 +93,33 @@ int main(int argc, char *argv[])
 
     /* drec = A T{ At(dobs+(1-M)*drec) } */
     for(int iter=1; iter<=niter; iter++)  {
-	for(int i2=0;i2<n2;i2++)
-	{	    		
-	    for(int i1=0; i1<n1; i1++) 
-	    {	
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,mask,drec,dobs)		
+#endif
+	for(i2=0; i2<n2; i2++)    		
+	for(i1=0; i1<n1; i1++) 
+	{	
 		if (mask[i1+i2*n1]) drec[i1+n1*i2]=dobs[i1+n1*i2];
 		//else  drec[i1+n1*i2]+=dobs[i1+n1*i2];
-	    }
 	}
 
-	// seislet adjoint: At(drec)
+	// adjoint: At(drec)
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec);
 
 	// perform thresholding; T{ At(drec) }
-	for(int i2=0;i2<n2;i2++)
-	{	    		
-	    for(int i1=0; i1<n1; i1++) 
-	    {	
-		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,pscale,dtmp,tmp)		
+#endif
+	for(i2=0; i2<n2; i2++)    		
+	for(i1=0; i1<n1; i1++) 
+	{	
+		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
-	    }
 	}	
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
@@ -115,7 +128,7 @@ int main(int argc, char *argv[])
 	// thr*=powf(0.01,(iter-1.0)/(niter-1.0));	
 	pthresholding2(dtmp, n1*n2, thr, p, mode);
 
-	// forward seislet: A T{ At(drec) } 
+	// forward: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec);
 
 	if (verb)    sf_warning("iteration %d;",iter);

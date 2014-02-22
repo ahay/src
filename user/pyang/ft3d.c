@@ -1,4 +1,6 @@
-/* 3D fft operator */
+/* 3D fft operator 
+Note: The adjoint is made as the same as inverse by normalization!
+*/
 
 /*
   Copyright (C) 2013 Pengliang Yang, Xi'an Jiaotong University, UT Austin

@@ -26,7 +26,7 @@ POCS=projection onto convex sets
 
 int main(int argc, char *argv[])
 {
-    int niter, n1, n2, nthr; 
+    int niter, n1, n2, nthr, i1, i2; 
     int order;
     float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
     sf_file Fin, Fout, Fmask, Fdip;
@@ -90,13 +90,16 @@ int main(int argc, char *argv[])
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec);
 
 	// perform thresholding; T{ At(drec) }
-	for(int i2=0;i2<n2;i2++)
-	{	    		
-	    for(int i1=0; i1<n1; i1++) 
-	    {	
-		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,pscale,dtmp,tmp)		
+#endif
+	for(i2=0; i2<n2; i2++)		
+	for(i1=0; i1<n1; i1++) 
+	{	  
+		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
-	    }
 	}	
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
@@ -109,12 +112,15 @@ int main(int argc, char *argv[])
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec);
 
 	/* reinsertion: drec = dobs+(1-M)*A T{ At(drec) } */
-	for(int i2=0;i2<n2;i2++)
-	{	    		
-	    for(int i1=0; i1<n1; i1++) 
-	    {	
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,mask,drec,dobs)		
+#endif
+	for(i2=0; i2<n2; i2++) 		
+	for(i1=0; i1<n1; i1++) 
+	{
 		if (mask[i1+i2*n1]) drec[i1+n1*i2]=dobs[i1+n1*i2];
-	    }
 	}
 
 	if (verb)    sf_warning("iteration %d;",iter);

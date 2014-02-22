@@ -23,12 +23,15 @@ Theoreticaly speaking, seislet frame should be better.
 
 #include <rsf.h>
 #include <rsfpwd.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 #include "pthresh.h"
 
 int main(int argc, char *argv[])
 {
-    int niter, n1, n2, nthr; 
+    int niter, n1, n2, nthr, i1,i2; 
     int order;
     float *dobs, *drec1, *drec2, *dtmp, *tmp, *mask;
     float **dip1, **dip2;
@@ -37,7 +40,10 @@ int main(int argc, char *argv[])
     char *type, *mode;
     bool unit=false, inv=true, verb;
 
-    sf_init(argc,argv);
+    sf_init(argc,argv);	/* Madagascar initialization */
+#ifdef _OPENMP
+    omp_init(); 	/* initialize OpenMP support */
+#endif
 
     Fin = sf_input("in");
     Fmask=sf_input("mask");  
@@ -72,15 +78,9 @@ int main(int argc, char *argv[])
     /* norm=p, where 0<p<=1 */;
     if (strcmp(mode,"soft") == 0) 	p=1;
     else if (strcmp(mode,"hard") == 0) 	p=0;
-    if (NULL != sf_getstring("mask")){
-	mask=sf_floatalloc(n1*n2);
-	sf_floatread(mask,n1*n2,Fmask);
-    }else{
-	mask=sf_floatalloc(n1*n2);
-	for(int i=0; i<n1*n2; i++) mask[i]=1.;
-    }
 
     dobs = sf_floatalloc(n1*n2);
+    mask=sf_floatalloc(n1*n2);
     drec1 = sf_floatalloc(n1*n2);
     drec2 = sf_floatalloc(n1*n2);
     dip1=sf_floatalloc2(n1,n2);
@@ -93,13 +93,24 @@ int main(int argc, char *argv[])
     sf_floatread(dip2[0],n1*n2,Fdip2);
     memset(drec1, 0, n1*n2*sizeof(float));
     memset(drec2, 0, n1*n2*sizeof(float));
+    if (NULL != sf_getstring("mask")){
+	sf_floatread(mask,n1*n2,Fmask);
+    }else{//no mask, just for separation
+	for(int i=0; i<n1*n2; i++) mask[i]=1.;
+    }
 
     seislet_init(n1,n2,inv,unit,eps,order,type[0]);  /* unit=false inv=true */
 
     for(int iter=1; iter<=niter; iter++)  {
     	seislet_set(dip1);// optimizing component 1 with thresholding 
-	for(int i2=0;i2<n2;i2++)
-	for(int i1=0; i1<n1; i1++) 
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,drec1,drec2,dobs,mask)
+#endif
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++) 
 	{	
 		float m=(mask[i1+i2*n1])?1:0; 
 		drec1[i1+n1*i2]+=dobs[i1+n1*i2]-m*(drec1[i1+n1*i2]+drec2[i1+n1*i2]);
@@ -108,10 +119,15 @@ int main(int argc, char *argv[])
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec1);
 
 	// perform thresholding; T{ At(drec) }
-	for(int i2=0;i2<n2;i2++)
-	for(int i1=0; i1<n1; i1++) 
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,dtmp,tmp,pscale)
+#endif
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++) 
 	{	
-		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
@@ -125,9 +141,14 @@ int main(int argc, char *argv[])
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec1);
 
 
-    	seislet_set(dip2);// optimizing component 2 with thresholding g 
-	for(int i2=0;i2<n2;i2++)
-	for(int i1=0; i1<n1; i1++) 
+    	seislet_set(dip2);// optimizing component 2 with thresholding
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,drec1,drec2,dobs,mask)
+#endif
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++) 
 	{	
 		float m=(mask[i1+i2*n1])?1:0; 
 		drec2[i1+n1*i2]+=dobs[i1+n1*i2]-m*(drec1[i1+n1*i2]+drec2[i1+n1*i2]);
@@ -136,10 +157,15 @@ int main(int argc, char *argv[])
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec2);
 
 	// perform thresholding; T{ At(drec) }
-	for(int i2=0;i2<n2;i2++)
-	for(int i1=0; i1<n1; i1++) 
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2)	\
+	private(i1,i2)					\
+	shared(n1,n2,dtmp,tmp,pscale)
+#endif
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++) 
 	{	
-		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
@@ -152,7 +178,7 @@ int main(int argc, char *argv[])
 	// forward seislet: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec2);
 
-	if (verb)    sf_warning("iteration %d;",iter+1);
+	if (verb)    sf_warning("iteration %d;",iter);
     }
 
     sf_floatwrite(drec1,n1*n2,Fout1);
