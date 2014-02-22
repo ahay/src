@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	sf_floatread(data,n1,in);
 	
 	for (i1=0; i1 < n1; i1++) {
-	    shift = SF_MAX (0, SF_MIN (n1-wide, i1-wide/2 - 1));
+	    shift = SF_MAX (0, SF_MIN (n1-wide, i1-wide/2));
 	    for (i=0; i < wide; i++) {
 		win[i] = data[shift+i];
 	    }

@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    int wide1,wide2, shift1, shift2, i, j, i1, n1, i2, n2, i3, n3;
+    int wide1,wide2,wide, shift1, shift2, i, j, i1, n1, i2, n2, i3, n3;
     float **data, **signal, **win;
     sf_file in, out;
 
@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("wide1",&wide1)) wide1=5;
     if (!sf_getint("wide2",&wide2)) wide2=5;
     /* sliding window width */
+    wide = wide1*wide2;
 
     win = sf_floatalloc2(wide1,wide2);
 
@@ -46,15 +47,15 @@ int main(int argc, char* argv[])
 	sf_floatread(data[0],n1*n2,in);
 	
 	for (i2=0; i2 < n2; i2++) {
-	    shift2 = SF_MAX (0, SF_MIN (n2-wide2, i2-wide2/2 - 1));
+	    shift2 = SF_MAX (0, SF_MIN (n2-wide2, i2-wide2/2));
 	    for (i1=0; i1 < n1; i1++) {
-		shift1 = SF_MAX (0, SF_MIN (n1-wide1, i1-wide1/2 - 1));
+		shift1 = SF_MAX (0, SF_MIN (n1-wide1, i1-wide1/2));
 		for (i=0; i < wide2; i++) {
 		    for (j=0; j < wide1; j++) {
 			win[i][j] = data[shift2+i][shift1+j];
 		    }
 		}
-		signal[i2][i1] = sf_quantile(wide1*wide2/2,wide1*wide2,win[0]);
+		signal[i2][i1] = sf_quantile(wide/2,wide,win[0]);
 	    }
 	}
 	
