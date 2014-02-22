@@ -11,6 +11,7 @@ _methods = {
     'fakirmig': 'First-Arrival Kirchhoff',
     'ffd': 'FFD',
     'lrostep': 'One-Step Lowrank',
+    'cram': 'Angle-Domain Kirchhoff'
     }
 
 def method():

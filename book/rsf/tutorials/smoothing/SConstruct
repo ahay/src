@@ -76,10 +76,11 @@ Flow('smoothed','noisy','smooth rect1=4 rect2=4')
 Flow('diffused','noisy','impl2 rect1=10 rect2=10 tau=1')
 
 # Median filter
+Flow('median','noisy','despike2 wide1=5 wide2=5')
 
 # Bilateral filter
 
-for case in Split('filled noisy smoothed diffused'):
+for case in Split('filled noisy smoothed diffused median'):
     Result(case,
            '''
            grey color=j bias=950 clip=133 scalebar=y 

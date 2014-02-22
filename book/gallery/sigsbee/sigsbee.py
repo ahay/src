@@ -31,24 +31,24 @@ Fetch(segy,'sigsbee')
 
 Fetch('sigexp.rsf','sigsbee')
     
-Flow('data tdata',segy,'segyread tfile=${TARGETS[1]}')
+Flow('sigdata tsigdata',segy,'segyread tfile=${TARGETS[1]}')
 
-Flow('zomask','tdata','window n1=1 f1=11 | mask max=0')
+Flow('zomask','tsigdata','window n1=1 f1=11 | mask max=0')
 
 s0 = 10.925*ft2km
 ds = 0.15*ft2km
 dh = 0.075*ft2km
 
 def getzo(zodata):
-    Flow(zodata,'data zomask',
+    Flow(zodata,'sigdata zomask',
          '''
          headerwindow mask=${SOURCES[1]} | cut max1=1 |
          reverse which=2 | costaper nw2=10 |
          put o2=%g d2=%g label2=Distance unit2=km
          ''' % (s0,ds))
 
-Flow('offset','tdata','window n1=1 f1=11 | dd type=float | math output=input/75 | dd type=int')
-Flow('head','tdata offset','window n1=1 f1=2 | cat axis=2 ${SOURCES[1]} | transp')
+Flow('offset','tsigdata','window n1=1 f1=11 | dd type=float | math output=input/75 | dd type=int')
+Flow('head','tsigdata offset','window n1=1 f1=2 | cat axis=2 ${SOURCES[1]} | transp')
 
 def gethrzo(zodata):
     Flow(zodata,'sigexp.rsf','dd form=native')
@@ -57,7 +57,7 @@ def zoimage(image):
     Result(image,'grey title="Zero-Offset %s" label1=Depth label2=Distance' % method)
 
 def getshots(shots):
-    Flow(shots,'data head',
+    Flow(shots,'sigdata head',
          '''
          intbin head=${SOURCES[1]} xkey=1 ykey=0 |
          put label1=Time unit1=s

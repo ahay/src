@@ -1,4 +1,5 @@
 from rsf.proj import *
+from rsf.gallery import sigsbee
 
 par = {
     'nz':1201, 'dz':0.00762, 'oz':0.0,   # Depth
@@ -25,23 +26,10 @@ par = {
 # Prepare model
 ###############
 
-vel = 'sigsbee2b_migration_velocity.segy'
-velmd5 = 'sigsbee2b_migration_velocity.md5'
-#Fetch(vel,'sigsbee')
-Flow(['sigsbee','tvel'],[vel,velmd5],'''
-     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
-     md5sum --status -c ${SOURCES[1]}
-     ''',stdin=0,stdout=0)
-Flow('vel','sigsbee','''
-     put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Velocity unit=km/s
-         o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
-     scale rscale=.0003048 |
-     math output="1.0/input" |
-     smooth rect1=%(smz)d rect2=%(smx)d |
-     math output="1.0/input"
-     ''' % par)
+sigsbee.getvel('vel','migvel')
 
-Result('sigsbvel','vel','''
+Result('sigsbvel','vel',
+       '''
        grey title= wantitle=n allpos=y color=j
             pclip=100 scalebar=y bartype=h
             barlabel="V" barunit="km/s"
@@ -55,7 +43,8 @@ Flow('vspl','vel','bspvel2 verb=y')
 # Escape tables with ray tracing in reduced phase space
 ###############
 
-Flow('sigsbnesc',['vel','vspl'],'''
+Flow('sigsbnesc','vel vspl',
+     '''
      escrt2 verb=y na=%(na)d vspl=${SOURCES[1]}
      ''' % par, split=[2,par['nx'],[0]], reduce='cat axis=4')
 
@@ -65,7 +54,7 @@ Flow('sigsbnesc',['vel','vspl'],'''
 # Prestack data
 data = 'sigsbee2b_nfs.segy'
 datamd5 = 'sigsbee2b_nfs.md5'
-#Fetch(data ,'sigsbee')
+Fetch(data ,'sigsbee')
 Flow(['zdata','tzdata'],[data,datamd5],'''
      segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
      md5sum --status -c ${SOURCES[1]}
