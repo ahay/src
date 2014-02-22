@@ -23,7 +23,6 @@
 #include <rsf.h>
 #include <math.h>
 #include <complex.h>
-#include <fftw3.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -31,19 +30,18 @@
 
 
 #include "pthresh.h"
+#include "ft3d.h"
 
 
 int main(int argc, char* argv[])
 {
     bool verb;
-    int niter; 
-    float p, tol, pclip;
+    int niter,n1,n2,n3,i1,i2,i3, iter;
+    float p, tol, pclip,t0=1.0, t1, beta, thr;
     char *mode;
-    sf_file Fin=NULL,Fout=NULL, Fmask=NULL;/* mask and I/O files*/ 
-
-    /* define temporary variables */
-    int n1,n2,n3;
-    float *din=NULL, *mask=NULL, *dout=NULL;
+    float *din, *mask, *dout;	
+    sf_complex *dprev,*dcurr,*dtmp;
+    sf_file Fin,Fout, Fmask;
 
     sf_init(argc,argv);	/* Madagascar initialization */
 #ifdef _OPENMP
@@ -78,102 +76,82 @@ int main(int argc, char* argv[])
     if (!sf_histint(Fin,"n3",&n3)) sf_error("No n3= in input");
 
     /* allocate data and mask arrays */
-    din=sf_floatalloc(n1*n2*n3); sf_floatread(din,n1*n2*n3,Fin);
+    din=sf_floatalloc(n1*n2*n3); 
     dout=sf_floatalloc(n1*n2*n3);
+    sf_floatread(din,n1*n2*n3,Fin);
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2*n3);
 	sf_floatread(mask,n2*n3,Fmask);
     }
 
-
-    /********************* 3-D POCS interpolation *********************/
-    fftwf_plan p1,p2;/* execute plan for FFT and IFFT */
-    int i1,i2,i3, iter;
-    float t0=1.0,t1,beta,thr;		
-    sf_complex *dprev,*dcurr,*dtmp;
-
-    dprev=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    dcurr=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    dtmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    p1=fftwf_plan_dft_3d(n1,n2,n3,dtmp,dtmp,FFTW_FORWARD,FFTW_MEASURE);	
-    p2=fftwf_plan_dft_3d(n1,n2,n3,dtmp,dtmp,FFTW_BACKWARD,FFTW_MEASURE);
-
-
+    dprev=sf_complexalloc(n1*n2*n3);
+    dcurr=sf_complexalloc(n1*n2*n3);
+    dtmp=sf_complexalloc(n1*n2*n3);
     for(i1=0; i1<n1*n2*n3; i1++) {
-	dprev[i1]=din[i1];
-	dcurr[i1]=din[i1];
-	dtmp[i1]=0.0;
+	dprev[i1]=sf_cmplx(din[i1],0.0);
+	dcurr[i1]=sf_cmplx(din[i1],0.0);
+	dtmp[i1]=sf_cmplx(0.0,0);
     }
+    ft3d_init(n1, n2, n3);
 
     /* FPOCS iterations */
     for(iter=1; iter<=niter; iter++)
     {
 	t1=0.5*(1.0+sqrtf(1.0+4.0*t0*t0));
 	beta=(t0-1.0)/t1;
+	t0=t1;
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel for default(none)		\
+	private(i1)				\
+	shared(dtmp,dcurr,beta,dprev,n1,n2,n3)
 #endif
 	for(i1=0;i1<n1*n2*n3;i1++) {
 	    dtmp[i1]=dcurr[i1]+beta*(dcurr[i1]-dprev[i1]);
 	    dprev[i1]=dcurr[i1];
 	}	
 
-	fftwf_execute(p1);/* FFT */
 
-	/* find the thresholds */
-/*
-	float mmax=cabsf(dtmp[0]);
-	for(i1=1; i1<n1*n2*n3; i1++)
-	    mmax=(cabsf(dtmp[i1])>mmax)?cabsf(dtmp[i1]):mmax;
-	thr=0.99*powf(0.005,(iter-1.0)/(niter-1.0))*mmax;
-*/
-	for(i1=1; i1<n1*n2*n3; i1++){
-	    dout[i1]=cabsf(dtmp[i1]);
+	ft3d_lop(true, false, n1*n2*n3, n1*n2*n3, dcurr, dtmp);
+
+	// perform hard thresholding
+	for(i3=0; i3<n3; i3++)
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	{
+	    	dout[i1+n1*i2+n1*n2*i3]=cabsf(dcurr[i1+n1*i2+n1*n2*i3]);
 	}
 
-   	int nthr = 0.5+n1*n2*n3*(0.01*pclip);  /*round off*/
+   	int nthr = 0.5+n1*n2*n3*(1.-0.01*pclip); 
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2*n3) nthr=n1*n2*n3-1;
 	thr=sf_quantile(nthr,n1*n2*n3,dout);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
+	pthresholding(dcurr, n1*n2*n3,thr, p,mode);
 
-
-	/* perform p-norm thresholding */
-	pthresholding(dtmp, n1*n2*n3,thr, p,mode);
-
-	fftwf_execute(p2);/* unnormalized IFFT */
-
-	/* adjointness needs scaling with factor 1.0/(n1*n2*n3) */	
-#ifdef _OPENMP
-#pragma omp parallel for	
-#endif
-	for(i1=0; i1<n1*n2*n3;i1++) dcurr[i1]=dtmp[i1]/(n1*n2*n3);
+	ft3d_lop(false, false, n1*n2*n3, n1*n2*n3, dcurr, dtmp);
 	
-	/* update d_rec: d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
-	for(i3=0;i3<n3;i3++)	
-	    for(i2=0;i2<n2;i2++){
-		if (mask[i2+i3*n2]){			
-		    for(i1=0; i1<n1; i1++)
-			dcurr[i1+n1*(i2+n2*i3)]=din[i1+n1*(i2+n2*i3)];
-		    }
-		}
+	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
+#ifdef _OPENMP
+#pragma omp parallel for collapse(3) default(none)	\
+	private(i1,i2,i3)				\
+	shared(mask,din,dcurr,dtmp,n1,n2,n3)
+#endif
+	for(i3=0; i3<n3; i3++)	
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	{ 
+		float m=(mask[i2+i3*n2])?1:0;
+		dcurr[i1+n1*(i2+n2*i3)]=sf_cmplx(din[i1+n1*(i2+n2*i3)],0)
+			+(1.-m)*dtmp[i1+n1*(i2+n2*i3)];
+	}
 
 	if (verb)    sf_warning("iteration %d;",iter);
     }
-
-    /* take the real part */
     for(i1=0;i1<n1*n2*n3; i1++) dout[i1]=crealf(dcurr[i1]);
-	
-    fftwf_destroy_plan(p1);
-    fftwf_destroy_plan(p2);
-    fftwf_free(dprev);
-    fftwf_free(dcurr);
-    fftwf_free(dtmp);
-
-    /* write reconstructed seismic data to output */
     sf_floatwrite(dout,n1*n2*n3,Fout);
 
+    ft3d_close();
     sf_close();
     exit(0);
 }

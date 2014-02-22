@@ -28,7 +28,7 @@ static int n1, n2, n3;
 fftwf_plan fft3, ifft3;/* execute plan for FFT and IFFT */
 sf_complex *tmp;
 
-void maskft3d_init(int n1_, int n2_, int n3_)
+void ft3d_init(int n1_, int n2_, int n3_)
 /*< initialize >*/
 {
     	n1=n1_;
@@ -39,7 +39,7 @@ void maskft3d_init(int n1_, int n2_, int n3_)
    	ifft3=fftwf_plan_dft_3d(n1,n2,n3,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
 }
 
-void maskft3d_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_complex *yy)
+void ft3d_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_complex *yy)
 /*< linear operator >*/
 {
     int i;
@@ -52,14 +52,14 @@ void maskft3d_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_comple
   
     if (adj){
  	fftwf_execute(fft3);	
-    	for(i=0;i<n1*n2*n3;i++) xx[i]+=tmp[i];
+    	for(i=0;i<n1*n2*n3;i++) xx[i]+=tmp[i]/sqrtf(n1*n2*n3);
     }else{
 	fftwf_execute(ifft3);
-    	for(i=0;i<n1*n2*n3;i++) yy[i]+=tmp[i];
+    	for(i=0;i<n1*n2*n3;i++) yy[i]+=tmp[i]/sqrtf(n1*n2*n3);
     }
 }
 
-void maskft3d_close(void)
+void ft3d_close(void)
 /*< free allocated variables>*/
 {
     fftwf_free(tmp);

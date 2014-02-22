@@ -75,6 +75,9 @@ int main(int argc, char *argv[])
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n1*n2);
 	sf_floatread(mask,n1*n2,Fmask);
+    }else{
+	mask=sf_floatalloc(n1*n2);
+	for(int i=0; i<n1*n2; i++) mask[i]=1.;
     }
 
     dobs = sf_floatalloc(n1*n2);
