@@ -115,11 +115,13 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("verb",&verb)) verb=false; /* Verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* Wavefield snapshots flag */
-    if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
     if(! sf_getbool("expl",&expl)) expl=false; /* Multiple sources, one wvlt */
     if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
     if(! sf_getbool("cden",&cden)) cden=false; /* Constant density */
     if(! sf_getbool("adj", &adj))   adj=false; /* adjoint flag */
+
+    if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
+    if(! sf_getbool("fsrf",&fsrf)) fsrf=false; /* Free surface flag */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
