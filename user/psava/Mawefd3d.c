@@ -1,6 +1,6 @@
 /* 3D acoustic time-domain FD modeling
-
-4th order in space, 2nd order in time. Absorbing boundary conditions. */
+4th order in space, 2nd order in time. Absorbing boundary conditions. 
+*/
 /*
   Copyright (C) 2008 Colorado School of Mines
   
@@ -47,7 +47,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,fsrf,snap,expl,dabc,cden; 
+    bool verb,fsrf,snap,expl,dabc,cden,adj; 
     int  jsnap,ntsnap,jdata;
 
     /* I/O files */
@@ -121,6 +121,7 @@ int main(int argc, char* argv[])
     if(! sf_getbool("expl",&expl)) expl=false; /* Multiple sources, one wvlt */
     if(! sf_getbool("dabc",&dabc)) dabc=false; /* Absorbing BC */
     if(! sf_getbool("cden",&cden)) cden=false; /* Constant density */
+    if(! sf_getbool("adj", &adj))   adj=false; /* adjoint flag */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -392,9 +393,11 @@ int main(int argc, char* argv[])
 	    
 	    /* inject displacement source */
 	    if(expl) {
+		if(adj) sf_seek(Fwav,(off_t)(nt-1-it)*1 *sizeof(float),SEEK_SET);
 		sf_floatread(ww, 1,Fwav);
 		lint3d_bell1(up,ww[0],cs);
 	    } else {
+		if(adj) sf_seek(Fwav,(off_t)(nt-1-it)*ns*sizeof(float),SEEK_SET);
 		sf_floatread(ww,ns,Fwav);	
 		lint3d_bell(up,ww,cs);
 	    }
@@ -476,9 +479,6 @@ int main(int argc, char* argv[])
 				     uat[iy][ix][iz+1]) +
 				f2z*(uat[iy][ix][iz-1]  - 
 				     uat[iy][ix][iz+2]);
-			    //ua[iy][ix][iz+1]  +=   f2z*uat[iy][ix][iz];		
-			    //ua[iy][ix][iz-1]  -=   f1z*uat[iy][ix][iz];
-			    //ua[iy][ix][iz-2]  -=   f2z*uat[iy][ix][iz];
 			}
 		    }
 		}
@@ -512,9 +512,6 @@ int main(int argc, char* argv[])
 				     uat[iy][ix+1][iz]) + 
 				f2x*(uat[iy][ix-1][iz] - 
 				     uat[iy][ix+2][iz]); 
-			    //ua[iy][ix+1][iz]  +=   f2x*uat[iy][ix][iz];		 
-			    //ua[iy][ix-1][iz]  -=   f1x*uat[iy][ix][iz];
-			    //ua[iy][ix-2][iz]  -=   f2x*uat[iy][ix][iz];
 			}
 		    }
 		}
@@ -547,8 +544,6 @@ int main(int argc, char* argv[])
 				     uat[iy+1][ix][iz]) +
 				f2y*(uat[iy-1][ix][iz]  - 
 				     uat[iy+2][ix][iz]); 
-			    //ua[iy+1][ix][iz]  +=   f2y*uat[iy][ix][iz];		 			     //ua[iy-1][ix][iz]  -=   f1y*uat[iy][ix][iz];
-			    //ua[iy-2][ix][iz]  -=   f2y*uat[iy][ix][iz];
 			}
 		    }
 		}
@@ -563,8 +558,6 @@ int main(int argc, char* argv[])
 			    up[iy][ix][iz] = 2*uo[iy][ix][iz] 
 				-  um[iy][ix][iz] 
 				-  ro[iy][ix][iz]*vt[iy][ix][iz]*ua[iy][ix][iz];
-			    
-			    //ua[iy][ix][iz] = 0;
 			}
 		    }
 		}
@@ -573,9 +566,11 @@ int main(int argc, char* argv[])
 	    
 	    /* inject displacement source */
 	    if(expl) {
+		if(adj) sf_seek(Fwav,(off_t)(nt-1-it)*1 *sizeof(float),SEEK_SET);
 		sf_floatread(ww, 1,Fwav);
 		lint3d_bell1(up,ww[0],cs);
 	    } else {
+		if(adj) sf_seek(Fwav,(off_t)(nt-1-it)*ns*sizeof(float),SEEK_SET);
 		sf_floatread(ww,ns,Fwav);	
 		lint3d_bell(up,ww,cs);
 	    }
@@ -643,16 +638,11 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* CLOSE FILES AND EXIT */
     if (Fwav!=NULL) sf_fileclose(Fwav); 
-    
     if (Fsou!=NULL) sf_fileclose(Fsou);
     if (Frec!=NULL) sf_fileclose(Frec);
-    
     if (Fvel!=NULL) sf_fileclose(Fvel);
-    
     if (Fden!=NULL) sf_fileclose(Fden);
-    
     if (Fdat!=NULL) sf_fileclose(Fdat);
-    
     if (Fwfl!=NULL) sf_fileclose(Fwfl);
     
     exit (0);

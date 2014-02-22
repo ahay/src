@@ -15,6 +15,8 @@ def Temp(o,i,r):
 
 # default parameters
 def param(par):
+    if(not par.has_key('verb')):     par['verb']='n'
+    
     if(not par.has_key('ot')):       par['ot']=0.
     if(not par.has_key('nt')):       par['nt']=1
     if(not par.has_key('dt')):       par['dt']=1.
@@ -60,6 +62,7 @@ def param(par):
     if(not par.has_key('ty')):       par['ty']=0.0035
     if(not par.has_key('tz')):       par['tz']=0.0035
 
+    if(not par.has_key('verb')):     par['verb']='n'
     if(not par.has_key('nb')):       par['nb']=0
     if(not par.has_key('nbell')):    par['nbell']=5
     if(not par.has_key('snap')):     par['snap']='y'
@@ -69,6 +72,7 @@ def param(par):
     if(not par.has_key('ompchunk')): par['ompchunk']=1
     if(not par.has_key('ompnth')):   par['ompnth']=0
     if(not par.has_key('free')):     par['free']='n'
+    if(not par.has_key('fsrf')):     par['fsrf']='n'
    
     if(not par.has_key('ratio')):
         if(dx==0.0):
