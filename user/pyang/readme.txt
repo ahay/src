@@ -11,6 +11,7 @@ Under this directory, I implemented the algorithms:
 1) POCS (projection onto convex sets), FFTW required
 
 Main:		Mpocs3d.c, Mfpocs3d.c
+Depends on:	ft3d.c
 
 Test file: 	/book/pyang/test/fpocs3d/SConstruct
 		/book/pyang/test/fpocs2d/SConstruct
@@ -64,11 +65,15 @@ Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite
 	(c) Most of the detail explaination for GPU-based RTM can be
 	found in the codes.
 
+6) Seislet-based POCS, IST and MCA algorithm (for 2D validation)
+
+Main:	Mpocsseislet.c, Mistseislet.c, Mmcaseislet
+
 ===================================================================
 The following codes are under construction. Be careful!
 ===================================================================
 
-6) MWNI (minimum weighted norm interpolation), FFTW requred
+7) MWNI (minimum weighted norm interpolation), FFTW requred
 
 Main:		Mmwni2d.c Mmwni3d.c
 
@@ -78,7 +83,7 @@ Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
-7) 2-D forward modeling to generate shot records
+8) 2-D forward modeling to generate shot records
 
 Main: 		Mmodeling2d.c
 

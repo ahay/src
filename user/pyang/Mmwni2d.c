@@ -86,7 +86,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(Fin,"n2",&n2)) sf_error("No n2= in input");
 
     /* allocate data and mask arrays */
-    din=sf_floatalloc(n1*n2); sf_floatread(din,n1*n2,Fin);
+    din=sf_floatalloc(n1*n2); 
+    sf_floatread(din,n1*n2,Fin);
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2);
 	sf_floatread(mask,n2,Fmask);
