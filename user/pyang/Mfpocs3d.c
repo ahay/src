@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 {
     bool verb;
     int niter; 
-    float p, tol,pclip;
+    float p, tol, pclip;
     char *mode;
     sf_file Fin=NULL,Fout=NULL, Fmask=NULL;/* mask and I/O files*/ 
 
@@ -128,14 +128,14 @@ int main(int argc, char* argv[])
 	    mmax=(cabsf(dtmp[i1])>mmax)?cabsf(dtmp[i1]):mmax;
 	thr=0.99*powf(0.005,(iter-1.0)/(niter-1.0))*mmax;
 */
-	for(i1=1; i1<n1*n2; i1++){
+	for(i1=1; i1<n1*n2*n3; i1++){
 	    dout[i1]=cabsf(dtmp[i1]);
 	}
 
-   	int nthr = 0.5+n1*n2*(0.01*pclip);  /*round off*/
+   	int nthr = 0.5+n1*n2*n3*(0.01*pclip);  /*round off*/
     	if (nthr < 0) nthr=0;
-    	if (nthr >= n1*n2) nthr=n1*n2-1;
-	thr=sf_quantile(nthr,n1*n2,dout);
+    	if (nthr >= n1*n2*n3) nthr=n1*n2*n3-1;
+	thr=sf_quantile(nthr,n1*n2*n3,dout);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 
 
