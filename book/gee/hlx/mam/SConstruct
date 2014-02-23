@@ -1,5 +1,5 @@
 from rsf.proj import *
-from helderiv import Helderiv
+from rsf.recipes.helderiv import Helderiv
 
 for case in [1,5]:
     Fetch('jbreast%d.asci' % case,'mammogram')
