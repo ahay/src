@@ -2,8 +2,6 @@
 #include "gridpp.hh"
 #include "gridops.hh"
 #include "create_hfile.hh"
-#include "create_hfile2.hh"
-#include "create_hfile3.hh"
 #include "gtest/gtest.h"
 #include "adjtest.hh"
 #include "functions.hh"
@@ -225,7 +223,7 @@ namespace {
 
   TEST_F(GridTest, GridSpace_Assign_copy) {
     string bgname="test10.rsf";
-    create_hfile2(bgname,0);
+    create_hfile(bgname,0);
     GridSpace rng(bgname,"fungus");
     Vector<float> bg(rng);
     AssignFilename bgaf("test10.rsf");
@@ -242,10 +240,10 @@ namespace {
   TEST_F(GridTest, GridSpace_GridWindowOp_ZeroTaper) {
 
     string bgname="test10.rsf";
-    create_hfile2(bgname,0);
+    create_hfile(bgname,0);
 
     string wname="test11.rsf";
-    create_hfile3(wname,0);
+    create_hfile(wname,0);
 
     GridSpace rng(bgname,"fungus");
     GridSpace dom(wname,"fungus");
@@ -287,10 +285,10 @@ namespace {
   TEST_F(GridTest, GridSpace_GridWindowOp_2Pt3PtTaper) {
     try {
       string bgname="test12.rsf";
-      create_hfile2(bgname,0);
+      create_hfile(bgname,0);
       
     string wname="test13.rsf";
-    create_hfile3(wname,0);
+    create_hfile(wname,0);
 
     GridSpace rng(bgname,"fungus");
     GridSpace dom(wname,"fungus");
@@ -338,10 +336,10 @@ namespace {
   TEST_F(GridTest, GridSpace_GridWindowOp_Adjtest) {
     try {
       string bgname="test12.rsf";
-      create_hfile2(bgname,0);
+      create_hfile(bgname,0);
       
       string wname="test13.rsf";
-      create_hfile3(wname,0);
+      create_hfile(wname,0);
 
       GridSpace rng(bgname,"fungus");
       GridSpace dom(wname,"fungus");

@@ -1,23 +1,24 @@
 #include "asg_gfdm.h"
 
 int asg_step(RDOM *, int, void*);
+int asg_step_new(RDOM *, int, void*);
 int asgfm24_2d(RDOM *, RDOM *, int, void*);
 int asgam24_2d(RDOM *, RDOM *, int, void*);
 
-#define DUH
+//#define NEWCODE
 
 int asg_tsf(RDOM * d, int ia, void * fdpars) {
+#ifdef NEWCODE
+  return asg_step_new(d,ia,fdpars);
+#else
   return asg_step(d,ia,fdpars);
+#endif
 }
 
 int asg_tsfm(RDOM * d, RDOM * rd, int ia, void * fdpars) {
   SGN_TS_PARS * pars = (SGN_TS_PARS*)(fdpars);
   if (pars->k == 2 && pars->ndim == 2) {
-#ifndef DUH
-    return asg_ftsm2d_24(d,rd,ia,fdpars);
-#else
     return asgfm24_2d(d,rd,ia,fdpars);
-#endif
   }
   else {
     return E_NOTIMESTEP;
@@ -27,11 +28,7 @@ int asg_tsfm(RDOM * d, RDOM * rd, int ia, void * fdpars) {
 int asg_tsam(RDOM * d, RDOM * rd, int ia, void * fdpars) {
   SGN_TS_PARS * pars = (SGN_TS_PARS*)(fdpars);
   if (pars->k == 2 && pars->ndim == 2) {
-#ifndef DUH
-    return asg_atsm2d_24(d,rd,ia,fdpars);
-#else
     return asgam24_2d(d,rd,ia,fdpars);
-#endif
   }
   else {
     return E_NOTIMESTEP;
