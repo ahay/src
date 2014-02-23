@@ -736,7 +736,7 @@ namespace RVL {
     void apply(Vector<Scalar> const & x,
 	       Scalar & val) const {
       try {
-	export_apply(work,x,val);
+	this->export_apply(work,x,val);
       }
       catch (RVLException e) {
 	e<<"\ncalled from RegLeastSquaresFcnlGN::apply\n";
@@ -746,7 +746,7 @@ namespace RVL {
     void applyGradient(Vector<Scalar> const & x,
 		       Vector<Scalar> & g) const {
       try {
-	export_applyGradient(work,x,g);
+	this->export_applyGradient(work,x,g);
       }
       catch (RVLException e) {
 	e<<"\ncalled from RegLeastSquaresFcnlGN::applyGradient\n";
@@ -757,7 +757,7 @@ namespace RVL {
 		      Vector<Scalar> const & dx,
 		      Vector<Scalar> & dy) const {
       try {
-	export_applyHessian(work,x,dx,dy);
+	this->export_applyHessian(work,x,dx,dy);
       }
       catch (RVLException e) {
 	e<<"\ncalled from RegLeastSquaresFcnlGN::applyHessian\n";
@@ -880,10 +880,10 @@ namespace RVL {
     
     FunctionalBd(Functional<Scalar> const & _f,
 		 RVL::Oracle<Vector<Scalar> > const & _b) 
-      : f(NULL), b(_b) { testRealOnly<Scalar>(); export_clone(_f,&f); }
+      : f(NULL), b(_b) { testRealOnly<Scalar>(); this->export_clone(_f,&f); }
 
     FunctionalBd(FunctionalBd<Scalar> const & a)
-      :	f(NULL), b(a.b) { testRealOnly<Scalar>(); export_clone(*(a.f),&f); }
+      :	f(NULL), b(a.b) { testRealOnly<Scalar>(); this->export_clone(*(a.f),&f); }
 
     ~FunctionalBd() { if (f) delete f; }
 
