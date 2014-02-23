@@ -297,4 +297,10 @@ def getBatchAttributes(batch):
             'post' : post
            }
     return bsys
-        
+
+def getThreads(dict):
+    nthread=1
+    if ('ppn' in dict.keys()) nthread = nthread * int(dict['ppn'])
+    if ('nodes' in dict.keys()) nthread = nthread * int(dict['nodes])
+    return str(nthread)
+                                                       
