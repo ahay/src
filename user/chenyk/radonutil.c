@@ -40,7 +40,7 @@ void hradon_init(int Nt, int Nh, int Nv, float Dt, float *V, float *H)
 	h=H;
 }
 
-void hradon(bool adj, bool add, int nx, int ny, float *x, float *y)
+void hradon1(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< hyperbolic radon operator >*/
 {   
 	int itau,ih,iv,it;
@@ -63,10 +63,46 @@ void hradon(bool adj, bool add, int nx, int ny, float *x, float *y)
 					else
 					y[ih*nt+it]+=x[iv*nt+itau]; 
 				}	
-			}				
+			}			
+
 }
 
-void rhadon_pcg(sf_operator oper, 
+
+void hradon(bool adj, bool add, int nx, int ny, float *x, float *y)
+/*< hyperbolic radon operator >*/
+{   
+	int itau,ih,iv,it;
+	float tau,h_v,t;
+	
+	nv=nx/nt;  nh=ny/nt;
+	sf_adjnull(adj,add,nx,ny,x,y);
+
+	
+	for(int i=0;i<nx;i++)
+		x[i]=x[i]+0.0001;
+			
+	for(int i=0;i<ny;i++)
+		y[i]=y[i]+0.0001;
+
+	for(itau=0;itau<nt;itau++)
+		for(ih=0;ih<nh;ih++)
+			for (iv=0;iv<nv;iv++)
+			{
+				tau=itau*dt;
+				h_v=h[ih]/v[iv];
+				t=sqrtf(tau*tau+h_v*h_v);
+				it=floorf(t/dt)+1;
+				if(it<=nt)
+				{
+					if (adj)
+					x[iv*nt+itau]+=y[ih*nt+it];
+					else
+					y[ih*nt+it]+=x[iv*nt+itau]; 
+				}	
+			}		
+}
+
+void hradon_pcg(sf_operator oper, 
 			float *d, 
 			float *x, 
 			int itmax_internal,

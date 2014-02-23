@@ -1,8 +1,8 @@
 /* Time domain high-resolution hyperbolic Radon transform. 
-m(tau,p) = \sum_{ih=1}^{nh} d(tau, \sqrt{tau^2+h[ih]^2/p^2)}
-inv=1 do inverse
-adj=1 do adjoint
-inv=0 && adj=0 do forward
+m(tau,p) = \sum_{ih=1}^{nh} d(tau=\sqrt{tau^2+h[ih]^2/p^2),h}
+inv=true do inverse
+adj=true do adjoint
+inv=false && adj=false do forward
 */
 /*
   Copyright (C) 2013 University of Texas at Austin
@@ -34,7 +34,8 @@ int main (int argc, char *argv[])
 {
 	int i3,i;						/* index */
 	int n2,n3;						/* second and third axis size */
-	int inv,adj;						/* inverse and adjoint flags */
+	bool inv,adj;						/* inverse and adjoint flags */
+	bool solver;						/* if use Madagascar bigsolver */
 	int verb;						/* if output verbosity */
 	int N_internal,N_external; 				/* internal and external iterations in PCG  */
 	int nh,nt,nv;						/* number of points in t,h,v axises */
@@ -45,7 +46,7 @@ int main (int argc, char *argv[])
 	float *h=NULL;						/* offset vector */
 	float t0,dt,h0,dh,v0,dv;				/* origin and increments for t,h,v axises. */
 	sf_file in,out;						/* standard input and output files */
-	sf_file velocity,offset;				/* Input velocity and offset vector files*/
+	sf_file vel,offset;				/* Input velocity and offset vector files*/
 
 /***************************************************/
 /*	Initialization				   */
@@ -63,24 +64,27 @@ int main (int argc, char *argv[])
 	if(!sf_histint(in,"n2",&n2)) sf_error("No n2 in input");
 	if(!sf_histint(in,"n3",&n3)) n3=1;
 			
-	if(!sf_getint("inv",&inv)) inv=1;
+	if(!sf_getbool("inv",&inv)) inv=true;
 	/* if implement the inverse transform */
 	
-	if(!sf_getint("adj",&adj)) adj=0;
+	if(!sf_getbool("adj",&adj)) adj=false;
 	/* if implement the adjoint transform instead of the inverse transform */
+
+	if(!sf_getbool("solver",&solver)) solver=false;
+	/* if use Madagascar bigsolver, default is not */
 
 /***************************************************/
 /* Setting parameters for inv and for respectively */
 /***************************************************/	
-	if(inv==1 || adj==1 )
+	if(inv || adj ) /*inverse or adjoint*/
 	{
 		nh=n2;	
-		if(NULL!=sf_getstring("velocity"))
+		if(NULL!=sf_getstring("vel"))
 		{
-			velocity=sf_input("velocity");
-			if(!sf_histint(velocity,"n1",&nv)) sf_error("No n1 in velocity file");
+			vel=sf_input("vel");
+			if(!sf_histint(vel,"n1",&nv)) sf_error("No n1 in velocity file");
 			v=sf_floatalloc(nv);
-			sf_floatread(v,nv,velocity);	
+			sf_floatread(v,nv,vel);	
 		}
 		else
 		{
@@ -122,7 +126,7 @@ int main (int argc, char *argv[])
 		model=sf_floatalloc(nt*nv);	
 		data=sf_floatalloc(nt*nh);		
 	}
-	else
+	else /*forward*/
 	{	
 		nv=n2;
 		if(NULL!=sf_getstring("offset"))
@@ -144,22 +148,13 @@ int main (int argc, char *argv[])
 			sf_putfloat(out,"o2",h0);
 		}	
 		
-		if(NULL!=sf_getstring("velocity"))
-		{
-			velocity=sf_input("velocity");
-			if(!sf_histint(velocity,"n1",&nv)) sf_error("No n1 in velocity file");
-			v=sf_floatalloc(nv);
-			sf_floatread(v,nv,velocity);	
-		}
-		else
-		{
 			if(!sf_histfloat(in,"d2",&dv)) sf_error("No d2 in Input");
 			if(!sf_histfloat(in,"o2",&v0)) sf_error("No o2 in Input");		
 
 			v=sf_floatalloc(nv);
 			for(i=0;i<nv;i++)
 				v[i]=v0+i*dv;			
-		}	
+
 		
 		sf_putint(out,"n2",nh);
 		model=sf_floatalloc(nt*nv);
@@ -176,12 +171,34 @@ int main (int argc, char *argv[])
 /***************************************************/	
 	for(i3=0;i3<n3;i3++)
 	{
-		if(inv==1) 	/* do high resolution inverse hyperbolic radon (m ~= F^{-1} d) */
+		if(inv) 	/* do high resolution inverse hyperbolic radon (m ~= F^{-1} d) */
 		{
 			sf_floatread(data,nt*nh,in);
-			rhadon_pcg(hradon, data, model, N_internal,N_external, verb, misfit);
+			if(!solver) /* use my own solver */
+			{
+			hradon_pcg(hradon, data, model, N_internal,N_external, verb, misfit);
+			}else{ /* use Madagascar big solver */
+			int ix,iter;
+    			float *w, *p, eps=0.01;
+			float *error; error=sf_floatalloc(N_internal);
+	
+    			sf_cdstep_init();
+
+    			w = sf_floatalloc(nt*nv);
+    			p = sf_floatalloc(nt*nv);
+
+    			for (ix=0; ix < nt*nv; ix++) {w[ix] = 1.f;model[ix]=0.0;p[ix]=0.0;}
+
+    			for (iter = 0; iter < N_external; iter++) {
+        			sf_solver_prec (hradon, sf_cgstep, sf_copy_lop, nt*nv, nt*nv, nt*nh, model, data, 
+                        N_internal, eps, "err",error , "verb", verb, "mwt", w, "xp", p, "end");
+        			for (ix=0; ix < nt*nv; ix++) w[ix] = fabsf(p[ix]);
+    			}
+    			sf_cdstep_close();
+			}
+
 		}
-		else if (adj==0) /* do forward hyperbolic radon transform (d=Fm) */
+		else if (!adj) /*  do forward hyperbolic radon transform (d=Fm) */
 			{
 			sf_floatread(model,nt*nv,in);	
 			hradon(false,false,nt*nv,nt*nh,model,data);	
@@ -192,8 +209,9 @@ int main (int argc, char *argv[])
 			hradon(true,false,nt*nv,nt*nh,model,data);	
 			}	
 	 	
-		if(inv==1 || adj==1) sf_floatwrite(model,nt*nv,out);
-		else 	sf_floatwrite(data,nt*nh,out);
+		if(inv || adj)
+		{ sf_floatwrite(model,nt*nv,out);} //model must not be zero
+		else 	{sf_floatwrite(data,nt*nh,out);}
 	}
 	exit(0);
 }
