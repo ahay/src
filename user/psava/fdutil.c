@@ -312,7 +312,7 @@ void expand(float** a,
     }
 }
 
-
+/*------------------------------------------------------------*/
 void wpad2d(float **out, 
 	    float **inp, 
 	    fdm2d   fdm)
@@ -322,6 +322,21 @@ void wpad2d(float **out,
     for     (ix=0;ix<fdm->nx;ix++) {
 	for (iz=0;iz<fdm->nz;iz++) {
 	    out[fdm->nb+ix][fdm->nb+iz] = inp[ix][iz];
+	}
+    }
+}
+
+void wpad3d(float ***out, 
+	    float ***inp, 
+	    fdm3d    fdm)
+/*< pad wavefield >*/
+{
+    int iz,ix,iy;
+    for         (iy=0;iy<fdm->ny;iy++) {
+	for     (ix=0;ix<fdm->nx;ix++) {
+	    for (iz=0;iz<fdm->nz;iz++) {
+		out[fdm->nb+iy][fdm->nb+ix][fdm->nb+iz] = inp[iy][ix][iz];
+	    }
 	}
     }
 }
@@ -339,6 +354,20 @@ void wwin2d(float **out,
     }
 }
 
+void wwin3d(float ***out, 
+	    float ***inp, 
+	    fdm3d    fdm)
+/*< win wavefield >*/
+{
+    int iz,ix,iy;
+    for         (iy=0;iy<fdm->ny;iy++) {
+	for     (ix=0;ix<fdm->nx;ix++) {
+	    for (iz=0;iz<fdm->nz;iz++) {
+		out[iy][ix][iz] = inp[fdm->nb+iy][fdm->nb+ix][fdm->nb+iz];
+	    }
+	}
+    }
+}
 
 
 /*------------------------------------------------------------*/

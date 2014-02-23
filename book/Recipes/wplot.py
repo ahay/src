@@ -2,7 +2,7 @@ try:    from rsf.cluster import *
 except: from rsf.proj    import *
 import pplot
 
-# default parameters
+# reset default parameters
 def param(par):
     
     if(not par.has_key('ot')):       par['ot']=0.
@@ -45,23 +45,45 @@ def param(par):
     dy=par['ymax']-par['ymin'];
     dz=par['zmax']-par['zmin'];
     dt=par['tmax']-par['tmin'];
-   
-    if(not par.has_key('iratio')):
-        if(dx==0.0): par['iratio']=1.0
-        else:        par['iratio']=1.0*(dz)/(dx)
+    
+    if(not par.has_key('iratio2d')):
+        if(dx==0.0): par['iratio2d']=1.0
+        else:        par['iratio2d']=1.0*(dz)/(dx)
+    if(not par.has_key('iheight2d')):
+        if(par['iratio2d']>=0.8): par['iheight2d']=10
+        else:                     par['iheight2d']=14*par['iratio2d']
+            
+    if(not par.has_key('dratio2d')):
+#        par['dratio2d']=par['iratio2d']
+        par['dratio2d']=0.7
 
-    if(not par.has_key('iheight')):
-        if(par['iratio']>=0.8): par['iheight']=10
-        else:                   par['iheight']=14*par['iratio']
+    if(not par.has_key('dheight2d')):
+#       par['dheight2d']=par['iheight2d']
+       par['dheight2d']=14*par['dratio2d']
 
-    if(not par.has_key('dratio')):
-#        par['dratio']=par['iratio']
-        par['dratio']=0.7
 
-    if(not par.has_key('dheight')):
-#       par['dheight']=par['iheight']
-       par['dheight']=14*par['dratio']
+    if((dx+dy)   == 0.0)  : yxratio=1.0
+    else                  : yxratio=1.0*dx/(dx+dy)
+    if((dz+dy)   == 0.0)  : yzratio=1.0
+    else                  : yzratio=1.0*dz/(dz+dy)
+    if((2*dt+dy) == 0.0)  : ytratio=1.0
+    else                  : ytratio=2*dt/(2*dt+dy);
+    
+    par['pointt']=ytratio;
+    par['pointz']=yzratio;
+    par['pointx']=yxratio;
 
+    if((dx+dy) == 0.0):
+        par['iratio3d']=1
+    else:
+        par['iratio3d']=(dz+dy)/(dx+dy)
+    
+    if(par['iratio3d']>1):
+        par['iheight3d']=10
+    else:
+        par['iheight3d']=14*par['iratio3d']
+        
+       
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 yll=1 ' + ' '
     
@@ -80,7 +102,7 @@ def igrey2d(custom,par):
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['iratio'],par['iheight'],par['scalebar'],
+           par['iratio2d'],par['iheight2d'],par['scalebar'],
            par['labelattr']+custom)
 
 # grey 2D frame of a cube
@@ -95,8 +117,35 @@ def ifrm2d(index,custom,par):
     ''' % (index,
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['iratio'],par['iheight'],par['scalebar'],
+           par['iratio2d'],par['iheight2d'],par['scalebar'],
            par['labelattr']+custom)
+
+def igrey3d(custom,par):
+    return '''
+    grey3 title="" framelabel=n parallel2=n
+    label1=%s unit1=%s
+    label2=%s unit2=%s
+    label3=%s unit3=%s
+    frame1=%d frame2=%d frame3=%d
+    flat=y screenratio=%g screenht=%g point1=%g point2=%g
+    xll=1.5 yll=1.5
+    %s
+    ''' % (
+           par['lz'],par['uz'],
+           par['lx'],par['ux'],
+           par['ly'],par['uy'],
+           par['nz']/2,par['nx']/2,par['ny']/2,
+           par['iratio3d'],par['iheight3d'],par['pointz'],par['pointx'],
+           par['labelattr']+' '+custom)
+
+def imovie3d(movie,nfrm,custom,par):
+    Flow(movie+'byt',movie,gainall(custom,par))
+    for ifrm in range(nfrm):
+        ftag="-f%03d"%ifrm
+        Plot(movie+ftag,movie+'byt',
+             'window n4=1 f4=%d |'%ifrm + igrey3d(custom,par))
+    Result(movie,[movie+'-f%03d'%ifrm for ifrm in range(nfrm)],'Movie')
+
 
 def ifrmE2d(wfrm,wbyt,index,custom,par,xscale=0.5,yscale=0.5,shift=-11):
     Plot(wfrm+'_V',wbyt,'window n3=1 f3=0 |'+ ifrm2d(index,'',par))
@@ -118,7 +167,7 @@ def dgrey2d(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['dratio'],par['dheight'],par['scalebar'],
+           par['dratio2d'],par['dheight2d'],par['scalebar'],
            par['labelattr']+custom)
 
 def dgreyE2d(data,dbyt,custom,par,xscale=0.5,yscale=0.5,shift=-11):
@@ -137,7 +186,7 @@ def dwigl2d(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['dratio'],par['dheight'],par['scalebar'],
+           par['dratio2d'],par['dheight2d'],par['scalebar'],
            par['labelattr']+custom)
 
 def egrey2d(custom,par):
@@ -149,7 +198,7 @@ def egrey2d(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
-           par['dratio'],par['dheight'],par['scalebar'],
+           par['dratio2d'],par['dheight2d'],par['scalebar'],
            par['labelattr']+custom)
 
 def ewigl2d(custom,par):
@@ -163,7 +212,7 @@ def ewigl2d(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
-           par['dratio'],par['dheight'],par['scalebar'],
+           par['dratio2d'],par['dheight2d'],par['scalebar'],
            par['labelattr']+custom)
 
 # ------------------------------------------------------------
@@ -217,7 +266,7 @@ def cgraph2d(custom,par):
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['iratio'],par['iheight'],par['scalebar'],
+           par['iratio2d'],par['iheight2d'],par['scalebar'],
            par['labelattr']+custom)
 
 def bbplot2d(custom,par):
@@ -264,7 +313,7 @@ def ccont2d(custom,par):
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['iratio'],par['iheight'],
+           par['iratio2d'],par['iheight2d'],
         par['labelattr']+' '+custom)
 
 

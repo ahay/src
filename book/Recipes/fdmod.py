@@ -600,7 +600,7 @@ def circle(cc,xcenter,zcenter,radius,sampling,par):
          '''
          %scat axis=2 space=n %s %s |
          transp |
-	 put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
+         put label1="" unit1="" label2="" unit2="" >${TARGETS[0]};
          '''%(M8R,ccx,ccz) +
          '''
          %srm %s %s
@@ -628,7 +628,7 @@ def ellipse(cc,xcenter,zcenter,semiA,semiB,sampling,par):
          '''
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp |
-	 put label1="" unit1="" label2="" unit2=""
+         put label1="" unit1="" label2="" unit2=""
          ''', stdin=0)
     
 def dipping(cc,intercept,slope,par):
