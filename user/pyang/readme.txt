@@ -92,9 +92,6 @@ Test file: 	/book/pyang/test/modeling2d/SConstruct
 
 ==================================================================
 Miscellaneous:
-ft3d.c(fftw required): 3D FFT is coded as a linear operator in 
-Madagascar linear operator standard.
-	oper(adj, add, nm, nd, mod, dat);
-maskft3d.c: a mask applied on 3d fft to constrain the bandlimitedness.
+maskft3d.c: a mask applied on 3d fft
 
 

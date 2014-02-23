@@ -57,7 +57,7 @@ void maskft3d_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_comple
 	for(int i2=0;i2<n2;i2++)
 	{
 		if (mask[i2+i3*n2]){			
-		    for(int i1=0; i1<n1; i1++) xx[i1]+=tmp[i1];
+		    for(int i1=0; i1<n1; i1++) xx[i1]+=tmp[i1]/sqrtf(n1*n2*n3);
 		}
 	}
     }else{
@@ -67,7 +67,7 @@ void maskft3d_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_comple
 	for(int i2=0;i2<n2;i2++)
 	{
 		if (mask[i2+i3*n2]){			
-		    for(int i1=0; i1<n1; i1++) yy[i1]+=tmp[i1];
+		    for(int i1=0; i1<n1; i1++) yy[i1]+=tmp[i1]/sqrtf(n1*n2*n3);
 		}
 	}
     }

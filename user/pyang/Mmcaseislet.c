@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
     /* accuracy order for seislet transform*/
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
-    if (!sf_getfloat("pscale",&pscale)) pscale=25;
-    /* percentile of small scale to be preserved (default is 25)*/
+    if (!sf_getfloat("pscale",&pscale)) pscale=100;
+    /* percentile of small scale to be preserved (default is 100)*/
 
     if(!sf_getbool("verb",&verb))    	verb=false;
     /* verbosity */
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
 	{	
-		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
 	{	
-		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
