@@ -3,6 +3,7 @@ Note:  We plan to use analysis based FISTA algorithm. For the time
 being, we simply use ISTA combined with seislet transform. 
 Theoreticaly speaking, seislet frame should be better. 	
 */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -31,14 +32,13 @@ Theoreticaly speaking, seislet frame should be better.
 
 int main(int argc, char *argv[])
 {
-    int niter, n1, n2, nthr, i1,i2; 
-    int order;
+    bool verb, smth1, smth2;
+    int niter, n1, n2, nthr, order, i1, i2, rect[2], ndat[2];
+    float pscale, p, pclip, thr, eps;
     float *dobs, *drec1, *drec2, *dtmp, *tmp, *mask;
     float **dip1, **dip2;
-    sf_file Fin, Fout1, Fout2, Fmask, Fdip1, Fdip2;
-    float pscale, p, pclip, thr, eps;
     char *type, *mode;
-    bool unit=false, inv=true, verb;
+    sf_file Fin, Fout1, Fout2, Fmask, Fdip1, Fdip2;
 
     sf_init(argc,argv);	/* Madagascar initialization */
 #ifdef _OPENMP
@@ -65,7 +65,15 @@ int main(int argc, char *argv[])
     /* percentile of small scale to be preserved (default is 100)*/
 
     if(!sf_getbool("verb",&verb))    	verb=false;
-    /* verbosity */
+    /* verbosity or not */
+    if(!sf_getbool("smth1",&smth1))    	smth1=false;
+    /* component 1 smoothing or not */
+    if(!sf_getbool("smth2",&smth2))    	smth2=false;
+    /* component 2 smoothing or not */
+    if(!sf_getint("rect1",&rect[0])) 	rect[0]=1;
+    /* 1st axis smoothing radius */
+    if(!sf_getint("rect2",&rect[1])) 	rect[1]=1;
+    /* 2nd axis smoothing radius */
     if (!sf_getint("niter",&niter)) 	niter=30;
     /* total number iterations */
     if (!sf_getfloat("pclip",&pclip)) 	pclip=99;
@@ -99,10 +107,15 @@ int main(int argc, char *argv[])
 	for(int i=0; i<n1*n2; i++) mask[i]=1.;
     }
 
-    seislet_init(n1,n2,inv,unit,eps,order,type[0]);  /* unit=false inv=true */
+    seislet_init(n1,n2,true,false,eps,order,type[0]);// unit=false, inv=true
+    if (smth1 || smth2) {//combining shaping with triangle smoothing
+	ndat[0]=n1; ndat[1]=n2;
+	sf_trianglen_init(2,rect,ndat);
+    }
 
     for(int iter=1; iter<=niter; iter++)  {
-    	seislet_set(dip1);// optimizing component 1 with thresholding 
+	// ========== optimizing component 1 with thresholding =======
+    	seislet_set(dip1);
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
@@ -136,12 +149,16 @@ int main(int argc, char *argv[])
 	thr=sf_quantile(nthr,n1*n2,tmp);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	// exponentially decrease thr
 	pthresholding2(dtmp, n1*n2, thr, p, mode);
+	if(smth1){// do smoothing for component 1
+		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec1);
+		sf_trianglen_lop(false,false,n1*n2,n1*n2,tmp,drec1);	
+	}
 
 	// forward seislet: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec1);
 
-
-    	seislet_set(dip2);// optimizing component 2 with thresholding
+	// ============ optimizing component 2 with thresholding =====
+    	seislet_set(dip2);
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
 	private(i1,i2)					\
@@ -174,6 +191,10 @@ int main(int argc, char *argv[])
 	thr=sf_quantile(nthr,n1*n2,tmp);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	// exponentially decrease thr
 	pthresholding2(dtmp, n1*n2, thr, p, mode);
+	if(smth2){// do smoothing for component 2
+		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec2);
+		sf_trianglen_lop(false,false,n1*n2,n1*n2,tmp,drec2);	
+	}
 
 	// forward seislet: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec2);
@@ -183,6 +204,8 @@ int main(int argc, char *argv[])
 
     sf_floatwrite(drec1,n1*n2,Fout1);
     sf_floatwrite(drec2,n1*n2,Fout2);
+
+    sf_trianglen_close();
     exit(0);
 }
 

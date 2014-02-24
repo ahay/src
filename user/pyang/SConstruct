@@ -5,12 +5,12 @@ import bldutil
 # C main programs
 progs = '''
 pocs3d fpocs2d fpocs3d mwni2d 
+pocsseislet istseislet mcaseislet
 dlct 
 Testfd2d Testfd3d 
 rtm2d lsrtm2d
 Testeb
 modeling2d forw2d
-pocsseislet istseislet mcaseislet
 '''
 
 cuda_progs = '''
