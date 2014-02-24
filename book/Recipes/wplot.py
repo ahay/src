@@ -350,15 +350,16 @@ def wom2d(wom,wfld,velo,vmean,nfrm,weight,par):
     
 # ------------------------------------------------------------
 # static movie = tightly packed, side-by-side frames
-def istagger2d(cube,custom,par,nfrm=1,scale=1,ratio=1):
+def istagger2d(cube,custom,par,nfrm=2,scale=1,ratio=1):
     ymax=10;       oy=-ymax; dy=ymax*(1./scale-1)/(nfrm-1)
     xmax=10*ratio; ox=0;     dx=xmax*(1./scale-1)/(nfrm-1)
-
+    
     Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
     for ifrm in range(nfrm):
         tag="%04d"%ifrm
+
         Plot(cube+tag,cube+'byt',
-             'window n3=1 f3=%d |'%ifrm + igrey2d('title=%d %s'%(ifrm,custom),par))
+             'window n3=1 f3=%d |'%ifrm + igrey2d('titlesz=8 title=%d %s'%(ifrm,custom),par))
         Plot(cube+tag+'_',
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f xcenter=%f ycenter=%f'
              %(scale,scale,ox-ifrm*dx,oy+ifrm*dy))        
