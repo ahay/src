@@ -81,9 +81,8 @@ def param(par):
     if(par['iratio3d']>1):
         par['iheight3d']=10
     else:
-        par['iheight3d']=14*par['iratio3d']
-        
-       
+        par['iheight3d']=10*par['iratio3d']
+
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 yll=1 ' + ' '
     
@@ -138,8 +137,7 @@ def igrey3d(custom,par):
            par['iratio3d'],par['iheight3d'],par['pointz'],par['pointx'],
            par['labelattr']+' '+custom)
 
-def imovie3d(movie,nfrm,custom,par):
-    Flow(movie+'byt',movie,gainall(custom,par))
+def imovie3d(movie,byte,nfrm,custom,par):
     for ifrm in range(nfrm):
         ftag="-f%03d"%ifrm
         Plot(movie+ftag,movie+'byt',
@@ -348,3 +346,20 @@ def wom2d(wom,wfld,velo,vmean,nfrm,weight,par):
         '''%(M8R,wtmp,vtmp),
         stdin=0,
         stdout=0)
+
+    
+# ------------------------------------------------------------
+# static movie = tightly packed, side-by-side frames
+def istagger2d(cube,custom,par,nfrm=1,scale=1,ratio=1):
+    ymax=10;       oy=-ymax; dy=ymax*(1./scale-1)/(nfrm-1)
+    xmax=10*ratio; ox=0;     dx=xmax*(1./scale-1)/(nfrm-1)
+
+    Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
+    for ifrm in range(nfrm):
+        tag="%04d"%ifrm
+        Plot(cube+tag,cube+'byt',
+             'window n3=1 f3=%d |'%ifrm + igrey2d('title=%d %s'%(ifrm,custom),par))
+        Plot(cube+tag+'_',
+             cube+tag,'Overlay',vppen='yscale=%f xscale=%f xcenter=%f ycenter=%f'
+             %(scale,scale,ox-ifrm*dx,oy+ifrm*dy))        
+    Result(cube,[cube+"%04d_"%ifrm for ifrm in range(nfrm)],'Overlay')
