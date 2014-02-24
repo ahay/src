@@ -5,7 +5,7 @@ Theoreticaly speaking, seislet frame should be better.
 */
 
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2014 Xi'an Jiaotong University, UT Austin (Pengliang Yang)
    
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -88,19 +88,19 @@ int main(int argc, char *argv[])
     else if (strcmp(mode,"hard") == 0) 	p=0;
 
     dobs = sf_floatalloc(n1*n2);
-    mask=sf_floatalloc(n1*n2);
+    mask= sf_floatalloc(n1*n2);
     drec1 = sf_floatalloc(n1*n2);
     drec2 = sf_floatalloc(n1*n2);
-    dip1=sf_floatalloc2(n1,n2);
-    dip2=sf_floatalloc2(n1,n2);
+    dip1= sf_floatalloc2(n1,n2);
+    dip2= sf_floatalloc2(n1,n2);
     dtmp = sf_floatalloc(n1*n2);	
     tmp = sf_floatalloc(n1*n2);
 
     sf_floatread(dobs,n1*n2,Fin);
     sf_floatread(dip1[0],n1*n2,Fdip1);
     sf_floatread(dip2[0],n1*n2,Fdip2);
-    memset(drec1, 0, n1*n2*sizeof(float));
-    memset(drec2, 0, n1*n2*sizeof(float));
+    memset(drec1, 0, n1*n2*sizeof(float));//memset(drec2, 0, sizeof(*drec1));
+    memset(drec2, 0, n1*n2*sizeof(float));//memset(drec2, 0, sizeof(*drec2));
     if (NULL != sf_getstring("mask")){
 	sf_floatread(mask,n1*n2,Fmask);
     }else{//no mask, just for separation
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	// exponentially decrease thr
-	pthresholding2(dtmp, n1*n2, thr, p, mode);
+	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 	if(smth1){// do smoothing for component 1
 		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec1);
 		sf_trianglen_lop(false,false,n1*n2,n1*n2,tmp,drec1);	
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	// exponentially decrease thr
-	pthresholding2(dtmp, n1*n2, thr, p, mode);
+	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 	if(smth2){// do smoothing for component 2
 		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec2);
 		sf_trianglen_lop(false,false,n1*n2,n1*n2,tmp,drec2);	

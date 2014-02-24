@@ -69,11 +69,18 @@ Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite
 
 Main:	Mpocsseislet.c, Mistseislet.c, Mmcaseislet
 
+
+7) 2-D forward modeling to generate shot records
+
+Main: 		Mmodeling2d.c
+
+Test file: 	/book/pyang/test/modeling2d/SConstruct
+
 ===================================================================
 The following codes are under construction. Be careful!
 ===================================================================
 
-7) MWNI (minimum weighted norm interpolation), FFTW requred
+8) MWNI (minimum weighted norm interpolation), FFTW requred
 
 Main:		Mmwni2d.c Mmwni3d.c
 
@@ -83,11 +90,6 @@ Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
-8) 2-D forward modeling to generate shot records
-
-Main: 		Mmodeling2d.c
-
-Test file: 	/book/pyang/test/modeling2d/SConstruct
 
 
 ==================================================================

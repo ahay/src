@@ -22,7 +22,7 @@
 
 #include "pthresh.h"
 
-void pthresholding(sf_complex *x, int n, float thr, float p, char* mode)
+void sf_cpthresh(sf_complex *x, int n, float thr, float p, char* mode)
 /*< p-norm thresholding operator for complex numbers >*/
 {
     float a;
@@ -46,7 +46,7 @@ void pthresholding(sf_complex *x, int n, float thr, float p, char* mode)
 	}
 }
 
-void pthresholding2(float *x, int n, float thr, float p, char* mode)
+void sf_pthresh(float *x, int n, float thr, float p, char* mode)
 /*< p-norm thresholding operator for real numbers >*/
 {
     float a;

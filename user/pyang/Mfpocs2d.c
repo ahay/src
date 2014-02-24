@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 
 	/* perform p-norm thresholding */
-	pthresholding(dtmp,n1*n2, thr, p,mode);
+	sf_cpthresh(dtmp,n1*n2, thr, p,mode);
 
 
 	fftwf_execute(p2);/* unnormalized IFFT */

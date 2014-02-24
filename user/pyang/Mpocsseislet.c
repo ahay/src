@@ -2,7 +2,7 @@
 POCS=projection onto convex sets
 */
 /*
-  Copyright (C) 2013 University of Texas at Austin
+  Copyright (C) 2014 Xi'an Jiaotong University, UT Austin (Pengliang Yang)
    
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,13 +26,12 @@ POCS=projection onto convex sets
 
 int main(int argc, char *argv[])
 {
-    int niter, n1, n2, nthr, i1, i2; 
-    int order;
-    float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
-    sf_file Fin, Fout, Fmask, Fdip;
+    bool verb;
+    int niter, n1, n2, nthr, i1, i2,order;
     float pscale, p, pclip, thr, eps;
+    float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
     char *type, *mode;
-    bool unit=false, inv=true, verb;
+    sf_file Fin, Fout, Fmask, Fdip;
 
     sf_init(argc,argv);
 
@@ -82,7 +81,7 @@ int main(int argc, char *argv[])
     sf_floatread(dip[0],n1*n2,Fdip);
     memcpy(drec,dobs, n1*n2*sizeof(float));
 
-    seislet_init(n1,n2,inv,unit,eps,order,type[0]);  /* unit=false inv=true */
+    seislet_init(n1,n2,true,false,eps,order,type[0]);  /* unit=false inv=true */
     seislet_set(dip);
 
     for(int iter=1; iter<=niter; iter++)  {
@@ -106,7 +105,7 @@ int main(int argc, char *argv[])
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
 	// thr*=powf(0.01,(iter-1.0)/(niter-1.0));	
-	pthresholding2(dtmp, n1*n2, thr, p, mode);
+	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 
 	// forward seislet: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec);
