@@ -1,4 +1,4 @@
-/* Generalized p-norm thresholding operator for complex numbers
+/* Generalized p-norm thresholding operator for complex/float numbers
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)

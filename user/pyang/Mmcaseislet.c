@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 {
     bool verb, smth1, smth2;
     int niter, n1, n2, nthr, order, i1, i2, rect[2], ndat[2];
-    float pscale, p, pclip, thr, eps;
+    float pscale, p, pclip, thr, eps, m;
     float *dobs, *drec1, *drec2, *dtmp, *tmp, *mask;
     float **dip1, **dip2;
     char *type, *mode;
@@ -45,12 +45,12 @@ int main(int argc, char *argv[])
     omp_init(); 	/* initialize OpenMP support */
 #endif
 
-    Fin = sf_input("in");
-    Fmask=sf_input("mask");  
+    Fin = sf_input("in");/* original data */
+    Fmask=sf_input("mask");  /* mask for missing values */
     Fout1 = sf_output("out");/* component 1 */
     Fout2 = sf_output("comp2");/* component 2 */
-    Fdip1=sf_input("dip1");
-    Fdip2=sf_input("dip2");
+    Fdip1=sf_input("dip1");/* dip of component 1 */
+    Fdip2=sf_input("dip2");/*dip of component 2 */
 
     if (!sf_histint(Fin,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(Fin,"n2",&n2)) sf_error("No n2= in input");
@@ -105,9 +105,10 @@ int main(int argc, char *argv[])
 	sf_floatread(mask,n1*n2,Fmask);
     }else{//no mask, just for separation
 	for(int i=0; i<n1*n2; i++) mask[i]=1.;
-    }
+    }	
 
-    seislet_init(n1,n2,true,false,eps,order,type[0]);// unit=false, inv=true
+
+    seislet_init(n1,n2,true,false,eps,order,type[0]);//unit=false, inv=true
     if (smth1 || smth2) {//combining shaping with triangle smoothing
 	ndat[0]=n1; ndat[1]=n2;
 	sf_trianglen_init(2,rect,ndat);
@@ -119,14 +120,15 @@ int main(int argc, char *argv[])
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
-	private(i1,i2)					\
+	private(i1,i2,m)				\
 	shared(n1,n2,drec1,drec2,dobs,mask)
 #endif
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
 	{	
-		float m=(mask[i1+i2*n1])?1:0; 
-		drec1[i1+n1*i2]+=dobs[i1+n1*i2]-m*(drec1[i1+n1*i2]+drec2[i1+n1*i2]);
+		m=(mask[i1+i2*n1])?1:0; 
+		drec1[i1+n1*i2]=drec1[i1+n1*i2]+dobs[i1+n1*i2]
+			-m*(drec1[i1+n1*i2]+drec2[i1+n1*i2]);
 	}
 	// seislet adjoint: At(drec)
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec1);
@@ -139,15 +141,15 @@ int main(int argc, char *argv[])
 #endif
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
-	{	
-		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+	{	// set large scale to 0
+		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	// exponentially decrease thr
+	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	//exponentially decrease thr
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 	if(smth1){// do smoothing for component 1
 		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec1);
@@ -161,14 +163,15 @@ int main(int argc, char *argv[])
     	seislet_set(dip2);
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
-	private(i1,i2)					\
+	private(i1,i2,m)				\
 	shared(n1,n2,drec1,drec2,dobs,mask)
 #endif
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
 	{	
-		float m=(mask[i1+i2*n1])?1:0; 
-		drec2[i1+n1*i2]+=dobs[i1+n1*i2]-m*(drec1[i1+n1*i2]+drec2[i1+n1*i2]);
+		m=(mask[i1+i2*n1])?1:0; 
+		drec2[i1+n1*i2]=drec2[i1+n1*i2]+dobs[i1+n1*i2]
+			-m*(drec1[i1+n1*i2]+drec2[i1+n1*i2]);
 	}
 	// seislet adjoint: At(drec)
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec2);
@@ -181,15 +184,15 @@ int main(int argc, char *argv[])
 #endif
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
-	{	
-		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+	{	// set large scale to 0
+		if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	// exponentially decrease thr
+	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	//exponentially decrease thr
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 	if(smth2){// do smoothing for component 2
 		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec2);

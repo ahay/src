@@ -1,5 +1,5 @@
 /* 2-D forward modeling to generate shot records 
-Note: 	Here, the sponge absorbing boundary condition is applied!
+Note: 	Here, the Enquist absorbing boundary condition is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)

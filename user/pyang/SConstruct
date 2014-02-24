@@ -5,7 +5,7 @@ import bldutil
 # C main programs
 progs = '''
 pocs3d fpocs2d fpocs3d mwni2d 
-pocsseislet istseislet mcaseislet
+pocsseislet istseislet mcaseislet matflip
 dlct 
 Testfd2d Testfd3d 
 rtm2d lsrtm2d
