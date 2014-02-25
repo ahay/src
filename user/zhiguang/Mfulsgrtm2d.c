@@ -6,7 +6,7 @@
 #endif
 
 static bool verb, snap;
-static int nz, nx, nt, nr, is, ns;
+static int nz, nx, nt, nr, is, ns, nw;
 static int jt, padx, padz, padnx, padnz;
 static int dr, ds, r0, s0, rz, sz, sx;
 static float c0, c11, c12, c21, c22;
@@ -56,7 +56,7 @@ void laplacian(bool adj, float **u0, float **u1, float **u2)
 
 void prertm2_oper(bool adj, float **dd, float **mm)
 {
-    int ix, iz, it, ir, rx;
+    int ix, iz, it, ir, rx, nnt;
     float **u0, **u1, **u2, **temp, **sou2, ***wave;
     
     if(adj)
@@ -64,11 +64,13 @@ void prertm2_oper(bool adj, float **dd, float **mm)
     else
         memset(dd[0], 0, nt*nr*sizeof(float));
     
+    nnt=1+(nt-1)/nw;
+    
     u0=sf_floatalloc2(padnz, padnx);
     u1=sf_floatalloc2(padnz, padnx);
     u2=sf_floatalloc2(padnz, padnx);
     sou2=sf_floatalloc2(nz, nx);
-    wave=sf_floatalloc3(nz, nx, nt);
+    wave=sf_floatalloc3(nz, nx, nnt);
     
     if(adj){/* migration */
         
@@ -78,10 +80,10 @@ void prertm2_oper(bool adj, float **dd, float **mm)
         memset(u1[0], 0, padnz*padnx*sizeof(float));
         memset(u2[0], 0, padnz*padnx*sizeof(float));
         memset(sou2[0], 0, nz*nx*sizeof(float));
-        memset(wave[0][0], 0, nz*nx*nt*sizeof(float));
+        memset(wave[0][0], 0, nz*nx*nnt*sizeof(float));
         
         for(it=0; it<nt; it++){
-            //sf_warning("RTM_Source: it=%d;",it);
+            sf_warning("RTM_Source: it=%d;",it);
             laplacian(true, u0, u1, u2);
                 
             temp=u0;
@@ -90,11 +92,14 @@ void prertm2_oper(bool adj, float **dd, float **mm)
             u2=temp;
                 
             u1[sx][sz]+=ww[it];
+            
+            if(it%nw==0){
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
                     sou2[ix][iz]+=u1[ix+padx][iz+padz]*u1[ix+padx][iz+padz];
-                    wave[it][ix][iz]=u1[ix+padx][iz+padz];
+                    wave[it/nw][ix][iz]=u1[ix+padx][iz+padz];
                 }
+            }
             }
             if(snap && it%jt==0)
                 sf_floatwrite(u1[0], padnx*padnz, snapshot);
@@ -105,7 +110,7 @@ void prertm2_oper(bool adj, float **dd, float **mm)
         memset(u2[0], 0, padnz*padnx*sizeof(float));
         
         for(it=nt-1; it>=0; it--){
-            //sf_warning("RTM_Receiver: it=%d;",it);
+            sf_warning("RTM_Receiver: it=%d;",it);
             laplacian(false, u0, u1, u2);
                 
             temp=u0;
@@ -117,10 +122,12 @@ void prertm2_oper(bool adj, float **dd, float **mm)
                 rx=ir*dr+r0;
                 u1[rx][rz]+=dd[ir][it];
             }
+            if(it%nw==0){
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
-                    mm[ix][iz]+=wave[it][ix][iz]*u1[ix+padx][iz+padz];
+                    mm[ix][iz]+=wave[it/nw][ix][iz]*u1[ix+padx][iz+padz];
                 }
+            }
             }
         }// end of it
         
@@ -137,10 +144,10 @@ void prertm2_oper(bool adj, float **dd, float **mm)
         memset(u1[0], 0, padnz*padnx*sizeof(float));
         memset(u2[0], 0, padnz*padnx*sizeof(float));
         memset(sou2[0], 0, nz*nx*sizeof(float));
-        memset(wave[0][0], 0, nz*nx*nt*sizeof(float));
+        memset(wave[0][0], 0, nz*nx*nnt*sizeof(float));
         
         for(it=0; it<nt; it++){
-            //sf_warning("Modeling_Source: it=%d;",it);
+            sf_warning("Modeling_Source: it=%d;",it);
             laplacian(true, u0, u1, u2);
                 
             temp=u0;
@@ -149,11 +156,14 @@ void prertm2_oper(bool adj, float **dd, float **mm)
             u2=temp;
                 
             u1[sx][sz]+=ww[it];
+            
+            if(it%nw==0){
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
                     sou2[ix][iz]+=u1[ix+padx][iz+padz]*u1[ix+padx][iz+padz];
-                    wave[it][ix][iz]=u1[ix+padx][iz+padz];
+                    wave[it/nw][ix][iz]=u1[ix+padx][iz+padz];
                 }
+            }
             }
             if(snap && it%jt==0)
                 sf_floatwrite(u1[0], padnx*padnz, snapshot);
@@ -169,18 +179,20 @@ void prertm2_oper(bool adj, float **dd, float **mm)
                 mm[ix][iz]=mm[ix][iz]/(sou2[ix][iz]+FLT_EPSILON);
         
         for(it=0; it<nt; it++){
-            //sf_warning("Modeling_Receiver: it=%d;",it);
+            sf_warning("Modeling_Receiver: it=%d;",it);
             laplacian(true, u0, u1, u2);
                 
             temp=u0;
             u0=u1;
             u1=u2;
             u2=temp;
-                
+            
+            if(it%nw==0){
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
-                    u1[ix+padx][iz+padz]+=wave[it][ix][iz]*mm[ix][iz];
+                    u1[ix+padx][iz+padz]+=wave[it/nw][ix][iz]*mm[ix][iz];
                 }
+            }
             }
             for(ir=0; ir<nr; ir++){
                 rx=ir*dr+r0;
@@ -263,11 +275,13 @@ int main(int argc, char* argv[])
     if(!sf_getint("ds", &ds)) sf_error("Need ds=");
     if(!sf_getint("s0", &s0)) s0=0;
     
+    if(!sf_getint("nw", &nw)) nw=1;
+    
     if(!sf_getint("rz", &rz)) rz=0;
     if(!sf_getint("sz", &sz)) sz=0;
     if(!sf_getint("jt", &jt)) jt=100;
-    if(!sf_getint("padz", &padz)) padz=nz/2;
-    if(!sf_getint("padx", &padx)) padx=nz/2;
+    if(!sf_getint("padz", &padz)) padz=nz;
+    if(!sf_getint("padx", &padx)) padx=nz;
     
     padnx=nx+2*padx;
     padnz=nz+2*padz;
