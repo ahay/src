@@ -1,0 +1,632 @@
+\title{Structure of IWAVE}
+\author{William. W. Symes \thanks{The Rice Inversion Project,
+Department of Computational and Applied Mathematics, Rice University,
+Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
+
+\maketitle
+\parskip 12pt
+
+
+\begin{abstract}
+  The IWAVE control structure facilitates construction of wave
+  simulators with flexible specification of input and output. This
+  document describes synthesis of seismograms and wavefield movies
+  from initial data and from sources (right-hand sides), multishot
+  simulation, parallelism over shots and over spatial domain
+  decomposition, and linearized (``Born'') and linearized adjoint
+  (reverse time migration) modeling. The choice of physical model and
+  simulation method - constant density acoustics with Dirichlet
+  boundary conditions and $(2,2k)$ finite difference schemes - is the
+  simplest possible, but the framework accommodates any regularly
+  gridded discretization of arbitrary wave physics in the same way.
+\end{abstract}
+
+\section{Introduction}
+IWAVE combines minimal physics- and scheme-specific code packages with
+a large common base of memory allocation, SIMD communication, i/o, and
+job control code to produce complete wave modeling applications. This
+paper explains what code must be written to implement a wave modeling
+application in IWAVE, and how IWAVE makes various modeling options
+available.
+
+\section{Structures and Interfaces}
+Three components and their relations define a time-stepping simulator:
+\begin{itemize}
+\item a collection of (discrete) dynamic and static (coefficient0 fields;
+\item a time step or update function, also several other essential functions;
+\item a list of i/o procedures to populate the fields at initial and
+  intermediate times, and to extract results at final and intermediate
+  times.
+\end{itemize}
+Definitions and interfaces for these three components form the core of
+IWAVE. All are static data members of an {\tt IWaveInfo} class;
+definining them completely defines the application. Declarations
+appear in {\tt iwave/core/include/iwaveinfo.hh}, which should be
+consulted for function signatures etc. Applications must supply
+definitions, each unique (as is requlred for static global data), as
+described in the final paragraphs of this section.
+
+\subsection{Fields}
+The top level data structure characterizing an application implemented
+in IWAVE is a list of field keywords and other attributes. Each field
+gets a keyword, acting as an mnemonic index for internal and external
+reference. Fields are dynamic or static, and may be primal or dual in
+each coordinate axis: ``dual'' here refers to the grid, so dual fields
+represent values assigned to edges, faces, or volumes, rather than
+grid vertices (nodes). IWAVE encodes these boolean attributes as 0's
+or 1's. FInally, a bit of information about the scheme intrudes: each
+dynamic field is updated in one of the (sub)steps of a (possibly)
+multistep method, and for that substep, and that substep only, needs
+ghost cell data exchanged.
+
+The {\tt FIELD} struct containing this information is organized in the
+order 
+\begin{itemize}
+\item (string) keyword;
+\item (int) input flag;
+\item (int) substep number;
+\item (int array) duality flag for each axis.
+\end{itemize}
+Thus an $(z,x)$ stress component field for a staggered grid elastic
+finite difference method (dynamic, edge-centered in $z$ and $x$ axes,
+updated in second substep) \cite{moczoetal:06} could be represented by
+\begin{verbatim}
+{``szx'', 1, 1, {1, 1, 0}}
+\end{verbatim}
+(here coordinate order is $(z,x,y)$).. Note that the only arbitrary
+choice here is the keyword string - the choice for each field must be
+consistent throughout the code.
+
+By convention, the first field listed in the application {\tt FIELD}
+array is the source of the primal simulation grid. Since this
+information will need to enter the compuation via i/o, this first
+field should be static (i.e. a coefficient), which will exist in the
+simulation environment prior to execution of the application.
+
+The {\tt FIELD} array is the defining feature of an IWAVE
+application. It is declared as the {\tt iwave\_fields} static data
+member of the {\tt IWaveInfo} class. Being static, it must be
+initialized once, and only once, somewhere in global namespace. That
+is, the application author must supply a definition
+\begin{verbatim}
+iwave_fields = { ... };
+\end{verbatim}
+somewhere - the preferred location for this definition is in the
+source (definition) file containing the other required definition to
+be reviewed below.
+
+A few internal details, for reference: IWAVE stores all fields as {\em
+  rarrays} (or {\tt RARR}s). {\tt RARR} is an intelligent array type
+that defines gridpoints by reference to global coordinates in ${\bf
+  Z}^d$ for $d$-dimensional simulations, provides both one- and
+multi-dimensional access to array data, and includes many utiliities
+for data manipulation. The time step function implementing the dynamic
+field updates will be written in terms of {\tt RARR} utilities and
+data members. The {\tt RARRs} corresponding to the application's
+fields together form an {\rm rdomain} ({\tt RDOM}), which is simply an
+array of {\tt RARR}, indexed in the order that they appear in the {\tt
+  iwave\_fields} array.
+
+Derivatives (and adjoint derivatives) of the simulation map involve
+multiple copies of the basic application fields: the $k$th derivative
+requires $2^k$ sets of fields in its definition. The {\tt IWaveTree}
+data structure of order $k$ is a vector of $2^k$ {\tt RDOM}s suitable
+for defining the $k$th derivative; the first $2^{k-1}$ {\tt RDOM}s
+comprise the reference {\tt IWaveTree}, the second form the
+perturbation. 
+
+\subsection{Functions}
+The implementation of an IWAVE application depends on a half-dozen
+functions, which the application author must supply. The most obvious
+of these is the time step, or dynamic field update, function, and it
+is described here. The Appendix briefly describes the other five.
+
+The time step interface accommodates (in principle) the update
+functions for all orders of derivative, and adjoint (reverse mode) as
+well as forward time stepping. Its signature is encapsulated in a {\tt
+  typedef}:
+\begin{verbatim}
+typedef void (*FD_TIMESTEP)(std::vector<RDOM *> dom, 
+                            bool fwd, 
+                            int iv, 
+                            void* fdpars);
+\end{verbatim}
+The first argument is the {\tt RDOM} array extracted from an {\tt
+  IWaveTree}. The order of derivative to be computed is the base 2 log
+of {\tt dom.size()}. The implementation should take the form of a case
+list, one major case for each order of derivative implemented. Each
+case (except the simulation itself, or order 0) should be divided into
+two subcases, one each for forward and adjoint modes, switched by the
+second {\tt bool} argument {\tt fwd}. Each subcase is further divided
+into sub-sub-cases according to the {\em substep index} {\tt iv}. This
+third refinement permits implementation of multistep methods in this
+framework. To take a prominent example, staggered grid methods for
+elastodynamics, in their basic form, use leapfrog time stepping, which
+are two-step methods: velocity fields are updated from stress fields
+in the first substep, stress fields from velocity fields in the
+second. This subdivision of time steps in this fashion allows for the
+simplest coding and reduces the amount of data in ghost cell exchange
+for domain decomposition, an advantage for low-latency systems. The
+final {\tt void *} pointer is the usual dodge for faking private class
+data members in ``object oriented C'': the opaque object passed by
+address should be of a type defined for the given application and
+encapsulating all information needed to compute the time step, such as
+Courant numbers, auxiliary damping arrays for absorbing layers, and so
+on. One of the other five functions initializes this object.
+
+\section{I/O}
+The {\tt FIELD} array member of the {\tt IWaveInfo} class defines the
+physical fields of a modeling application. The function data members
+describe the initialization and updating of the arrays representing
+these fields. It remains to describe how external data is read to and
+written from these arrays.
+
+The basic principle of IWAVE i/o is that {\em the data structure
+  determines the manner in which it is read/written}. Absent
+self-describing i/o procedures, this principle implies that the
+relevant part of the code implements a case list. Persistent data is
+presumed to exist in disk files, or in any case be identified by
+single strings. Accordingly the case switch is the {\em suffix}. At
+this writing, two file data structures are realized: SEGY minus reel
+header, or Seismic Unix (SU) format, suffix {\tt su}, and Regularly
+Sampled Function format, suffix {\tt rsf}. [Other file or network data
+structures may be added to IWAVE later.]
+
+Since the details of i/o are implicit in the choice of data structure,
+it remains only to connect external data units with the data arrays
+with which they communicate. Since the data arrays are indexed by
+keyword, and since several external data objects may communicate with
+the same data array, it follows that a keyword must be introduced for
+each external data object. Accordingly, the final data member of the
+{\tt IWaveInfo} class is the {\tt IOKEY} array {\tt
+  iwave\_iokeys}. {\tt IOKEY} is a typedef for a struct consisting of
+\begin{itemize}
+\item an external data item keyword
+\item a field keyword
+\item a flag to indicate input (1) or output (0)
+\item an activity flag, which is key to defining the RVL Operator
+  interface (see discussion below) - active arrays (1) define
+  components of the operator domain (input) or range (output), whereas
+  non-active arrays (0) represent auxiliary inputs/outputs.
+\end{itemize}
+For example, an input to the pressure Cauchy data for
+pressure-velocity acoustics, regarded as auxiliary data, might be
+represented by the {\tt IOKEY}
+\begin{verbatim}
+{"init_p", "p", 1, 0}
+\end{verbatim}
+whereas the output of the same array data, regarded as defining part
+of the range of the simulation operator, might correspond to
+\begin{verbatim}
+{"movie_p","p", 0, 1}
+\end{verbatim}
+Note that any sampling in space and/or time may be represented in this
+way, and is determined at the time of interaction with the external
+data unit. Some details of file structure controlling IWAVE i/o are
+discussed in Appendix B.
+
+The indirection afforded by the external data unit keyword allows the
+compiled code to be used for many different simulations. Parameter
+pairs {\tt keyword = filename } passed from a driver serve to connect
+specific disk files or other data repositories to external data
+keywords, hence to read/write operations.
+
+The IOKEYS array defines i/o info for the basic simulation. Keywords
+for perturbation fields, used in derivatives and adjoints., are generated
+automatically. For example, if the keyword for density is {\tt rho},
+then the keyword for the first perturbation density (input to the
+first derivative) is {\tt rho\_d1}, The adjoint output density
+is {\tt rho\_b1}. The choices of suffix correspond approximately to
+those generated by the {\em Tapenade} automatic differentiation
+package. These keywords would be used in as parameter keys in pairs
+passed to driver routines, for example, {\tt rho\_d1 = my\_density\_pert.rsf}.
+
+\subsection{IWaveInfo}
+Definition of an IWAVE application amounts to initialization, in
+global namespace of the static public data members of the {\tt
+  IWaveInfo} class:
+\begin{verbatim}
+  static FIELD iwave_fields[]; 
+  static IOKEY iwave_iokeys[];
+  static FD_MODELINIT minit;
+  static FD_MODELDEST mdest;
+  static FD_TIMESTEP timestep;
+  static FD_TIMEGRID timegrid;
+  static FD_STENCIL createstencil;
+  static FD_CHECK check;
+\end{verbatim}
+These initializations must occur precisely once for each application. The recommended
+procedure is to assign all members except {\tt iwave\_iokeys} in
+a {\em model definition}  header file, which includes both the declarations of the
+static data types (via {\tt \#include ``iwinfo.hh''}) and of the
+function data members (via {\tt \#include} of the main model header
+file).  The {\tt iwave\_iokeys} array, on the other hand, should be
+assigned at the top of each command file, after {\tt \#include} of the
+model definition file. 
+
+This organization allows the same modeling code to be used for a variety of
+input/output choices. I have identified two main use cases:
+\begin{itemize}
+\item standalone command: a standalone driver such as {\tt acd} (next
+  section)  should have keys provided for all of the inputs and outputs
+  contemplated. I/O keys for which key=value pairs don't appear
+  amongst the parameters passed to the application are simply
+  ignored. So this command can be used for all possibilities covered
+  by the chosen I/O keys without any alteration. See the next section
+  for illustration.
+\item RVL Operator interface: the constructor builds its domain and
+  range spaces using the supplied I/O keys - this is the reason for
+  the ``active'' flag.  I/O keys flagged as active define components
+  of domain and range (product) spaces, with geomtry metadata taken
+  from the files which the keys point to via the parameter list. Data
+  sources corresponding to these keys must be present in the
+  environment and correspond to parameter values.
+\end{itemize}
+
+A negative consequence of IWAVE's reliance on static global
+definitions is that only one IWAVE modeling application can be active
+in a given process. This disadvantage is offset by two considerations:
+(1) in the use cases for which IWAVE was designed, only one modeling
+application per process is required; (2) the creation of a new IWAVE
+application is as simple as one can imagine, requiring only the
+definition of a couple of arrays and half-a-dozen functions with
+specified signatures, and their assignment to static data of {\tt
+  IWaveInfo}. If in the future interesting use cases arise in which
+truly distinct modeling packages must be combined in the same process,
+then simple modificiations of the IWAVE overall structure will answer,
+with slightly increased burden on the programmer.
+
+\section{Example}
+A simple example illustrating the IWAVE framework is
+the constant-density acoustic wave equation, connecting the acoustic
+potential field $u({\bf x},t)$ and a right-hand side $f({\bf x},t)$
+representing a source of mechanical energy, defined in a spatial
+domain $\Omega$ over a suitable time interval,
+\[
+\frac{\partial^2 u}{\partial t^2} - c^2 \nabla^2 u = f,
+\]
+\[
+u(\bx,0) = u_0(\bx),\,\,\frac{\partial u}{\partial t}(\bx,0) =
+v(\bx)\,\, \bx \in \Omega,
+\]
+\[
+u(\bx,t) = 0, \,\bx \in \partial \Omega.
+\]
+The modeling method for the examples to be discussed is the centered
+difference method
+\[
+u^{n+1} = 2 u^{n} - u^{n-1} + \Delta t^2 c^2 Lu^n + \Delta t^2 f^n
+\]
+in which $L$ is an approximation to the Laplacian, and $u^n$
+represents the array of acoustic potential samples for time $n\Delta t$. The choice of $L$
+used below is a sum of centered coordinate second difference
+operators of order $2k$, $k=1, 2, 4,...$ resulting in a scheme of
+formal order $2$ in time and $2k$ in space. Lax-Wendroff extension to
+higher order time approximation fits this pattern also.
+
+Since each array element in $u^{n-1}$ appears exactly once in a loop
+through the array, it is possible to store only the two arrays for
+time indices $n-1$ and $n$, represented by {\tt RARR}s {\tt up} and
+{\tt uc} respectively, and store $c^2$ in the {\tt RARR} {\tt csq}.
+The the three-level scheme above becomes
+\begin{verbatim}
+up = 2 * uc - up + dt2 * csq .* L uc + dt2 * f^n
+[swap up, uc]
+\end{verbatim}
+With the type of discrete finite difference Laplacian described above,
+the grids for {\tt uc}, {\tt up}, and {\tt csq} are all primal, and
+commensurable. Since {\tt csq} must exist along with all of its
+metadata (its grid information, basically) in the scope of the
+simulation, it is natural to read the primal grid geometry from it.
+Thus an appropriate {\tt iwave\_fields} array for acoustic constant
+density modeling is
+\begin{verbatim}
+FIELD IWaveInfo::iwave_fields[]
+= {
+  {"csq",    0,    0,  {0, 0, 0}},
+  {"uc",     1,    0,  {0, 0, 0}},
+  {"up",     1,    0,  {0, 0, 0}},
+  {"",       0,    0,  {0, 0, 0}}
+};
+\end{verbatim}
+The last line functions the same way as the traling {\tt NUL} for C
+strings, that is, to signal the end of the structure.
+
+The time step function is built from a simple numerical kernel (or set
+of kernels, for various orders) by means of Tapenade
+\cite{TapenadeRef13}, which automatically  produces code for
+derivatives and adjoints. For example, the signature of an
+implementation of the $(2, 2k)$ scheme for 3D is
+\begin{verbatim}
+acd_3d_[2k](float *** uc3, 
+            float *** up3, 
+            float *** csq3, 
+            int * s, 
+            int * e,
+            ...,
+            int * lbc,
+            int * rbc);
+\end{verbatim}
+in which {\tt uc3} is the 3-dimensional array view of the array {\tt
+  uc}, and so on; {\tt s} and {\tt e} are the vectors of start and end
+indices for the loop over gridpoints; and {\tt ...} stands in for a
+list of difference formula coefficients, the the number and value of
+which depend on the order ($2k$). The integer arrays {\tt lbc} and
+{\tt rbc} flag whether the left and right boundaries of the
+computational domain, delimited by {\tt s} and {\tt e}, are external
+(physical) boundaries or internal boundaries. In the former case,
+phsical boundary conditions must be applied; these are also part of
+the code.
+
+Tapenade produces similar code for the first derivative of
+this stencil (with respect to the {\tt uc}, {\tt up}, and {\tt csq}
+arguments, with signature
+\begin{verbatim}
+void acd_3d_[2k]_d(float *** uc, 
+                   float *** ucd, 
+                   float *** up, 
+                   float *** upd, 
+                   float *** csq,
+                   float *** csqd, 
+                   int * s, 
+                   int * e, 
+                   ...,
+                   int *lbc,
+                   int *rbc);
+\end{verbatim}
+in which {\tt ucd}, {\tt upd}, and {\tt csqd} are the perturbations of
+the arrays without the {\tt d}'s. 
+
+These kernels can be folded into an obvious case list, switched by the
+inputs to the timestep interface described above.
+
+Several other functions are required, describing 
+\begin{itemize}
+\item the computation of
+the time step (depending on the spatial grid geometry and bound
+information about the coefficients passed as parameters to the
+appcliation, {\em not} on the specific fields used in a particular
+simulation;
+\item initialization of internal parameters, such as CFL-number
+  dependent coefficients, damping arrays for PML, and so on.
+\item ...
+\end{itemize}
+These are described in an appendix.
+
+Finally, one reasonable choice for the standalone command option is
+this set of I/O keys:
+\begin{verbatim}
+IOKEY IWaveInfo::iwave_iokeys[]
+= {
+  {"csq",    0, true,  true },
+  {"data",   1, false, true },
+  {"source", 1, true,  false},
+  {"movie",  1, false, false},
+  {"init",   1, true,  false},
+  {"",       0, false, false}
+};
+\end{verbatim}
+Clearly the velocity (or rather velocity-squared) must be made
+available. Two outputs from {\tt uc} are identified, {\tt ``data''}
+and {\tt ``movie''}: while nothing about the specs demands this usage,
+the first is intended for trace output, the second for time slices,
+as the keywords choices are intended to suggest. Since the precise
+mechanism of I/O is inherent in the data unit (file structure, for
+instance) rather than the directed by the code, in fact these mnemonic
+suggestions could be ignored, and {\tt ``data''} used to store a
+movie, for example. However it is an intended use case that movies
+might be generated at a byproduct of trace generation, so two output
+slots are provided. Similarly, two input keywords 
+suggest a right-hand side input (time dependent force divergence
+traces) ({\tt ``source''}) and a Cauchy datum ({\tt ``init''}.
+
+[Note: this setup envisions loading a field into {\tt uc}, that is,
+the discretized $u(\bx,0)$, and initializing {\tt up} to zero. That is
+choice does not represent a second-order (in time) accurate
+discretization of any Cauchy data. Instead, it is required that
+discrete fields be given storing $u(\bx,0)$ and $\partial u/\partial
+t(\bx,0)$, from which $u(\bx,\Delta t)$ can be computed via the wave
+equation. IWAVE presumes that such manipulation of data should be done
+externally, as a preprocess (another example is the conversion of a
+velocity to a velocity squared, which IWAVE simply presumes has been
+done.]
+
+The examples to follow all use the simple layered velocity
+(-squared) model depicted in Figure \ref{fig:csq_4layer}.
+
+\noindent \paragraph{Movie from Initial Data.} Figure \ref{fig:gauss}
+displays a Gaussian initial field, input as the initial potential
+field $u$. After propagating 5.12 s and interacting with both the
+reflecting (Dirichlet) boundaries and the interfaces in the model, the
+potential field becomes that depicted in Figure
+\ref{fig:frameinit}. 
+
+Parameters passed to the command {\tt acd.x} included 
+\begin{verbatim}
+           csq = ../csq_4layer.rsf
+          init = ../init.rsf
+         movie = ../movieinit.rsf
+\end{verbatim}
+Keywords {\tt ``data''} and {\tt ``source''} were ignored. Many other
+paramters were required; a brief description of these is included in
+the self-doc of the command {\tt acd.x}.
+
+\noindent \paragraph{Movie from Point Source.} 
+The pulse in Figure \ref{fig:wavelet} the derivative of a 5 Hz
+Gaussian; it is embedded in a space-time field via the {\tt
+  iwave/trace/main/towed\_array.x} utility, and used as the RHS in the
+wave equation. The resulting field (starting from homogeneous Cauchy
+data) at 5.12 s is depicted in Figure \ref{fig:framesrc}.
+
+In this case, the parameters passed to {\tt acd.x} (in addition to the
+other required numerical parameters) are 
+\begin{verbatim}
+           csq = ../csq_4layer.rsf
+        source = ../wavelet12000.su
+         movie = ../movieinit.rsf
+\end{verbatim}
+The point source data are presented as SEGY traces, rather than as an
+RSF data file; the latter would in principle also be possible, but at
+the time of this writing RSF trace I/O is not enabled.
+
+\noindent \paragraph{Trace Data from Point Source}
+The same point source as in the previous example produces sthe traces
+at 6 m depth depicted in Figure \ref{fig:shot12000}. The sampling is
+also pure point, that is, does not filter the potential field in any
+way. So this trace data could be interpreted as the 2D pressure
+traces of a point source with 5 Hz Gaussian pulse, for example.
+In this case, the required parameters are
+\begin{verbatim}
+           csq = ../csq_4layer.rsf
+        source = ../wavelet12000.su
+          data = ../shot12000.su
+\end{verbatim}
+As noted before, there is nothing sacred about the string {\tt data} -
+any keyword identified in the I/O key struct as output from {\tt uc}
+would do just as well. This key is provided for mnemonic convenience.
+Note that the file data structure ({\tt shot12000.su}) entirely
+determines the  {\em way} in which the data is written - sampling,
+source and receiver geometry are all taken from this file.
+
+\noindent \paragraph{Born Approximation}
+The linearization of the acoustic field with respect to the wave
+velocity is the solution $\delta u$ of
+\begin{eqnarray}
+\frac{\partial^2 u}{\partial t^2} - c^2 \nabla^2 u & = & f,\\
+\frac{\partial^2 \delta u}{\partial t^2} - c^2 \nabla^2 \delta u & = &
+\frac{2\delta c}{c^3}\frac{\partial^2 u}{\partial t^2},
+\end{eqnarray}
+\[
+u(\bx,0) = u_0(\bx),\,\,\frac{\partial u}{\partial t}(\bx,0) =
+v_0(\bx)\,\, \bx \in \Omega,
+\]
+\[
+\delta u(\bx,0) = 0,\,\,\frac{\partial \delta u}{\partial t}(\bx,0) =
+0\,\, \bx \in \Omega,
+\]
+\[
+u(\bx,t) = \delta u(\bx,t) = 0, \,\bx \in \partial \Omega.
+\]
+As explained above, the IWAVE framework provides approximations for
+computing the linearization (widely called the ``Born approximation'',
+even though this is strictly a misnomer), along with its adjoint and
+higher derivatives. 
+
+The parameter key {\tt deriv} flags the computation, or not, of
+derivatives. The value assigned is the order of derivative, with
+default 0. Each input perturbation (representing quantities such as
+$\delta c$ in the linearized system of PDEs, above) is assigned a key
+equal to the key for the unperturbed quantity with $\_d1$ appended
+(for the first derivative - higher derivatives require multiple input
+perturbations, keys for which have $\_d2$,
+$\_d3$,... appended). Output keys remain the same as for the reference
+computation. 
+
+For the acoustic constant density application, Born approximation
+requires reference and perturbation square velocity fields. Figures
+\ref{fig:dcsq_4layer} and \ref{fig:csq_4layersm} show perturbation and
+reference square velocity fields, respectively, that will generate
+Born data roughly corresponding to the preceding example. The required
+parameters are
+\begin{verbatim}
+         deriv = 1
+           csq = ../csq_4layer.rsf
+        csq_d1 = ../dcsq_4layer.rsf
+        source = ../wavelet12000.su
+          data = ../born12000.su
+\end{verbatim}
+The linearized response (Born modeling) corresponding to
+\ref{fig:shot12000} appears as \ref{fig:born12000}.
+
+\noindent \paragraph{Reverse Time Migration}
+One version of Reverse Time Migration (RTM) is simply the adjoint of
+Born modeling. IWAVE provides adjoint computations for every
+derivative mapping (first, second,...) using the {\em optimal
+  checkpointing} method of reverse time propagation
+(REFERENCES Griewank, Plessix, WWS). Other approaches to time reversal can be more efficient in
+special cases, especially when the interior dynamics are conservative
+(acoustics, elasticity) (REFERENCES Dussaud et al, Clapp). However
+none are more effective in general, in particular when energy
+attenuation is significant part of wave dynamics, as is the case for
+all realistic models of seismic wave motion. 
+
+Figure \ref{fig:mcsq_4layer} displays the migration of the single
+Born ``shot'' gather (really, OBS receiver gather) located at $x_s = 12000$ m from
+the left edge of the model. No effort has been made to remove the
+low-frequency noise caused by the sea bottom reflection.
+
+The parameters required for this job are
+\begin{verbatim}
+         deriv = 1
+       adjoint = 1
+        nsnaps = 20
+           csq = ../csq_4layer.rsf
+        csq_b1 = ../mcsq_4layer.rsf
+        source = ../wavelet12000.su
+          data = ../born12000.su
+\end{verbatim}
+\inputdir{../../../trip/newiwave/demo/oneshot}
+
+The {\tt adjoint} key flags the adjoint computation. The checkpointing
+algorithm requires allocation of workspace for checkpoints (copies of
+wavefield Cauchy data, consisting of all dynamic arrays).  The number
+of checkpoints allocated is the value for key {\tt nsnaps}. The
+appropriate number of checkpoints depends on the number of time
+steps. Reasonable numbers to achieve a cost ratio of adjoint to
+forward computations of around 5 are
+\begin{itemize}
+\item up to 1000 time steps: 5 checkpoints
+\item up to 5000 time steps: 10 checkpoints
+\item up to 10000 time steps: 20 checkpoints
+\item up to 20000 time steps: 30 checkpoints
+\end{itemize}
+
+\noindent \paragraph{Multiple shots - simulation of a survey}
+The dataflow design of IWAVE makes survey simulation.
+
+\plot{csq_4layer}{width=15cm}{Four layer deep-water cartoon - quantity
+  plotted is velocity squared.}
+\plot{gauss}{width=15cm}{Gaussian initial datum}
+\plot{frameinit}{width=15cm}{Acoustic potential field at
+  5.12 s, resulting from Gaussian initial data}
+\plot{wavelet}{width=15cm}{Derivative of 5 Hz Gaussian}
+\plot{framesrc}{width=15cm}{Acoustic potential field at
+  5.12 s, resulting from Gaussian derivative point source pulse
+  located at x=12 km, z = 1.875 km.}
+\plot{shot12000}{width=15cm}{Response of seafloor pressure sensor at
+  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, source is isotropic point
+  radiator, source pulse is Gaussian
+  derivative with peak frequency 5 Hz,}
+\plot{dcsq_4layer}{width=15cm}{Velocity-squared perturbation -
+  localized oscillations at layer boundaries}
+\plot{csq_4layersm}{width=15cm}{Smooth velocity-squared obtained from
+  velocity of Figure \ref{csq_4layer} by filtering with a cubic spline window.}
+\plot{born12000}{width=15cm}{Linearized response (``Born modeling'') of seafloor pressure
+  sensor, due to perturbation (Figure \ref{fig:dcsq_4layer}) about
+  smooth background (Figure \ref{fig:csq_4layersm}); other parameters
+  as in Figure \ref{fig:shot12000}.}
+\plot{mcsq_4layer}{width=15cm}{Reverse-time migration of Born data
+  from Figure \ref{fig:born12000}.}
+
+\inputdir{../../../trip/newiwave/demo/multishot}
+\plot{line8-12km}{width=15cm}{Response of 13 seafloor pressure sensors
+  space 400 m apart at
+  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, sources
+  are isotropic point
+  radiators, source pulse is Gaussian
+  derivative with peak frequency 5 Hz. Velocity-squared model depicted
+in Figure \ref{fig:csq_4layer}.}
+\plot{born8-12km}{width=15cm}{Linearized response of 13 seafloor pressure sensors
+  space 400 m apart at
+  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, sources
+  are isotropic point
+  radiators, source pulse is Gaussian
+  derivative with peak frequency 5 Hz, Background or reference model
+  as in Figure \ref{fig:csq_4layersm}, perturbation as in
+  Figure \ref{fig:dcsq_4layer}.}
+
+\plot{mcsq_4layer}{width=15cm}{Reverse-time migration of Born data
+  from Figure \ref{fig:born8-12km}. Reflectors are correctly
+  positioned and clearly visible, along with migration artifacts
+  characteristic of raw OBS migration.}
+

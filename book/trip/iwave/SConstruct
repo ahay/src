@@ -1,7 +1,7 @@
 from rsf.tex import *
 
-Paper('using_iwave1', 
-      color='vp1 dn1 trace wtrace trace8k wtrace8k',
+#Paper('using_iwave1', 
+Paper('iwave_structure',color='vp1 dn1 trace wtrace trace8k wtrace8k',
       use='hyperref',
       include='''
               \\newcommand{\\du}{\\delta u}

@@ -114,12 +114,12 @@ acoustodynamics, consisting of two coupled first-order partial
 differential equations:
 \begin{eqnarray}
 \label{awe}
-\rho \frac{\partial \bv}{\partial t} &=& - \nabla p \\
-\frac{1}{\kappa}\frac{\partial p}{\partial t} &=& -\nabla \cdot \bv + g
+\rho \frac{\partial {\bf v}}{\partial t} &=& - \nabla p \\
+\frac{1}{\kappa}\frac{\partial p}{\partial t} &=& -\nabla \cdot {\bf v} + g
 \end{eqnarray}
-In these equations, $p(\bx,t)$ is the pressure (excess, relative to an
-ambient equilibrium pressure), $\bv(\bx,t)$ is the particle velocity,
-$\rho(\bx)$ and $\kappa(\bx)$ are the density and particle velocity
+In these equations, $p({\bf x},t)$ is the pressure (excess, relative to an
+ambient equilibrium pressure), ${\bf v}({\bf x},t)$ is the particle velocity,
+$\rho({\bf x})$ and $\kappa({\bf x})$ are the density and particle velocity
 respectively. Bold-faced symbols denote vectors; the above formulation
 applies in 1, 2, or 3D.
 
@@ -127,9 +127,9 @@ The inhomogeneous term $g$ represents externally supplied energy (a
 ``source''), via a defect in the acoustic constitutive relation. A
 typical example is the {\em isotropic point source}
 \[
-g(\bx,t) = w(t) \delta(\bx-\bx_s)
+g({\bf x},t) = w(t) \delta({\bf x}-{\bf x}_s)
 \]
-at source location $\bx_s$.
+at source location ${\bf x}_s$.
 
 \cite{Vir:84} introduced finite difference methods based on this
 formulation of acoustodynamics to the active source seismic
@@ -197,7 +197,7 @@ also \cite[]{FehlerKeliher:2011} for an account of consequences for quality cont
 large-scale simulation.
 
 \section{Creating the examples - running IWAVE applications}
-IWAVE builds with SConstruct (\url{http://www.scons.org}), either as an
+IWAVE builds with SConstruct ({\tt http://www.scons.org}), either as an
 independent package or as part of Madagascar \cite[]{Madagascar}. For
 download and install instructions, see Appendix B and sources cited
 there.
@@ -295,7 +295,7 @@ of the binary data file, with key {\tt in}. The header file is small
 and easily created by hand with an editor, if necessary. Many archival
 data formats make the grid sample values available as a flat binary
 file - this is true for instance of the gridded models output by GOCAD
-(\url{http://www.gocad.org}), for which the {\tt vo} files contain virtually
+({\tt http://www.gocad.org}), for which the {\tt vo} files contain virtually
 the same information as (so may easily be translated to) RSF header
 files in ascii form, and the {\tt vodat} files are flat binary files
 which may be used unaltered as RSF binary files.
