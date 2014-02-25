@@ -5,7 +5,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-sgewefd2d postrtm2d postrtminv
+sgewefd2d postrtm2d postrtminv fulsgrtm2d
 '''
 # differenciate
 
