@@ -83,6 +83,16 @@ def param(par):
     else:
         par['iheight3d']=10*par['iratio3d']
 
+    if((dx+dy) == 0.0):
+        par['dratio3d']=1
+    else:
+        par['dratio3d']=(dt+dy)/(dx+dy)
+        
+    if(par['dratio3d']>1):
+        par['dheight3d']=10
+    else:
+        par['dheight3d']=11*par['dratio3d']
+        
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 yll=1 ' + ' '
     
@@ -129,13 +139,12 @@ def igrey3d(custom,par):
     flat=y screenratio=%g screenht=%g point1=%g point2=%g
     xll=1.5 yll=1.5
     %s
-    ''' % (
-           par['lz'],par['uz'],
-           par['lx'],par['ux'],
-           par['ly'],par['uy'],
-           par['nz']/2,par['nx']/2,par['ny']/2,
-           par['iratio3d'],par['iheight3d'],par['pointz'],par['pointx'],
-           par['labelattr']+' '+custom)
+    '''%(par['lz'],par['uz'],
+         par['lx'],par['ux'],
+         par['ly'],par['uy'],
+         par['nz']/2,par['nx']/2,par['ny']/2,
+         par['iratio3d'],par['iheight3d'],par['pointz'],par['pointx'],
+         par['labelattr']+' '+custom)
 
 def imovie3d(movie,byte,nfrm,custom,par):
     for ifrm in range(nfrm):
@@ -167,6 +176,23 @@ def dgrey2d(custom,par):
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['dratio2d'],par['dheight2d'],par['scalebar'],
            par['labelattr']+custom)
+
+def dgrey3d(custom,par):
+    return '''
+    grey3 title="" framelabel=n parallel2=n
+    label1=%s unit1=%s
+    label2=%s unit2=%s
+    label3=%s unit3=%s
+    frame1=%d frame2=%d frame3=%d
+    flat=y screenratio=%g screenht=%g point1=%g point2=%g
+    xll=1.5 yll=1.5
+    %s
+    '''%(par['lt'],par['ut'],
+         par['lx'],par['ux'],
+         par['ly'],par['uy'],
+         par['nt']/2,par['nx']/2,par['ny']/2,
+         par['dratio3d'],par['dheight3d'],par['pointt'],par['pointx'],
+         par['labelattr']+' '+custom)
 
 def dgreyE2d(data,dbyt,custom,par,xscale=0.5,yscale=0.5,shift=-11):
     Plot(data+'_V',dbyt,'window n2=1 f2=0 | transp |'+ dgrey2d('',par))
