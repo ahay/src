@@ -30,8 +30,6 @@ typedef struct Geopar {
     /*geometry parameters*/
     int   nx;
     int   nz;
-    int   nx2;
-    int   nz2;
     float dx;
     float dz;
     float ox;
@@ -69,8 +67,6 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 
     nx  = geop->nx;
     nz  = geop->nz;
-    nx2 = geop->nx2;
-    nz2 = geop->nz2;
     dx  = geop->dx;
     dz  = geop->dz;
     ox  = geop->ox;
@@ -78,10 +74,12 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
     nt  = geop->nt;
     dt  = geop->dt;
     snap= geop->snap;
-    nk  = geop->nk;
     nzx2= geop->nzx2;
     m2  = geop->m2;
     wfnt= geop->wfnt;
+
+    nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
+    if (nk!=geop->nk) sf_error("nk discrepancy!");
 
     curr = sf_complexalloc(nzx2);
     cwave  = sf_complexalloc(nk);
@@ -377,7 +375,7 @@ int main(int argc, char* argv[])
     sf_complexread(rt[0],m2*nk,right);
     if (adj) sf_complexread(dat[0],ntx,data);
     else sf_complexread(img[0],nzx,image);
-    
+
     /*close RSF files*/
     sf_fileclose(left);
     sf_fileclose(right);
@@ -395,8 +393,6 @@ int main(int argc, char* argv[])
     /*load constant geopar elements*/
     geop->nx  = nx;
     geop->nz  = nz;
-    geop->nx2 = nx2;
-    geop->nz2 = nz2;
     geop->dx  = dx;
     geop->dz  = dz;
     geop->ox  = ox;
