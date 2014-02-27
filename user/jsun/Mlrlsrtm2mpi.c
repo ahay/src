@@ -1,4 +1,4 @@
-/* 2-D Low-rank One-step Least Pre-stack Reverse-Time-Migration in the complex domain (both img and data are complex valued)
+/* 2-D Low-rank One-step Least Pre-stack Reverse-Time-Migration in the complex domain (both img and data are complex valued) without MPI
      img :  crosscorrelation with source normalization (stdout)
 */
 /*
