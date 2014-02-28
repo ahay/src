@@ -17,6 +17,7 @@
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 #include <rsf.h>
+#include <mpi.h>
 
 /* #ifdef _OPENMP
 #include <omp.h>
@@ -29,7 +30,7 @@ static int dr_v, ds_v, r0_v, s0_v, zr_v, zs_v;
 static float c0, c11, c12, c21, c22;
 static double idx2, idz2;
 static float **padvv, *ww;
-static sf_file snapshot;
+static sf_file in, out, snapshot;
 static int cpuid, numprocs;
 
 void laplacian(bool adj, float **u0, float **u1, float **u2)
@@ -239,7 +240,7 @@ void prertm2_oper(bool adj, float **mm)
         }// end of shot
         MPI_Barrier(MPI_COMM_WORLD);
         
-        if(cpuid=0){
+        if(cpuid==0){
             for(is=0; is<ns; is++){
                 fseeko(swap, is*nr*nt*sizeof(float), 0);
                 fread(dd[0], sizeof(float)*nt, nr, swap);
@@ -247,7 +248,6 @@ void prertm2_oper(bool adj, float **mm)
             }
             fclose(swap);
             remove("temswap.bin");
-            }
         }
     MPI_Barrier(MPI_COMM_WORLD);
     }// end of if
@@ -263,9 +263,9 @@ int main(int argc, char* argv[])
     float dt2;
  
     float ***dd, **mm, **vv;
-    sf_file in, out, vel, wavelet;
+    sf_file vel, wavelet;
     
-    MPI_Init(&argc, &agrv);
+    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &cpuid);
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     

@@ -33,7 +33,7 @@ static int *head;
 
 void postrtm_init(int nx1, int nz1, int nt1, int n01, int padx1, int padz1, int padnx1,
                      int padnz1, float dx, float dz, int *head1, float **padvv1)
-/*< initialization >*/
+/*< initialize >*/
 {
 #ifdef _OPENMP
 	omp_init();
@@ -62,6 +62,14 @@ void postrtm_init(int nx1, int nz1, int nt1, int n01, int padx1, int padz1, int 
     c21=4.0*idx2/3.0;
     c22=-idx2/12.0;
     c0=-2.0*(c11+c12+c21+c22);
+}
+
+void postrtm_close()
+/*< free allocated storage >*/
+{
+    free(head);
+    free(*padvv);
+    free(padvv);
 }
 
 void laplacian(bool adj, float **u0, float **u1, float **u2)

@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     int nx, nz, nt, n0, nxz, nxt, padx, padz, n2, padnx, padnz, niter;
     float dx, dz, dt, dt2;
     
-	int *head;
+    int *head;
     float *mm, *dd;
     float **vv, **padvv;
     
@@ -104,10 +104,7 @@ int main(int argc, char* argv[])
     postrtm_init(nx, nz, nt, n0, padx, padz, padnx,
                     padnz, dx, dz, head, padvv);
     
-    sf_cdstep_init();
-    sf_solver(postrtm_lop, sf_cdstep, nxz, nxt, mm, dd, niter, "nmem", 0,
-              "nfreq", niter, "verb", verb);
-    sf_cdstep_close();
+    sf_solver(postrtm_lop, sf_cgstep, nxz, nxt, mm, dd, niter, "verb", verb, "end");
     
     sf_floatwrite(mm, nxz, out);
     
