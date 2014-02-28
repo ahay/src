@@ -114,10 +114,10 @@ void prertm2_oper(bool adj, float ***dd, float **mm)
                 for(ir=0; ir<nr; ir++){
                     rx=ir*dr_v+r0_v;
                     dd[is][ir][it]=u1[rx][zr_v];
+                }
                     
                 if(snap && is==ns/2 && it%jt==0)
                     sf_floatwrite(u1[0], padnx*padnz, snapshot);
-                }
             }//end of it
         }// end of is
         return ;
