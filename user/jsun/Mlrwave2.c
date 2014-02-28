@@ -1,4 +1,4 @@
-/* 2-D FFT-based zero-offset exploding reflector modeling/migration  */
+/* 2-D FFT-based wave propagation and its adjoint */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -33,16 +33,12 @@ typedef struct Geopar {
     float dx;
     float dz;
     float ox;
-    int   gpz;
     /*time parameters*/
     int nt;
     float dt;
     int snap;
     int wfnt;
-    /*miscellaneous*/
-    int pad1;
-    bool verb;
-    /*propagation matrix*/
+    /*prop matrix*/
     int nzx2;
     int nk;
     int m2;
@@ -59,30 +55,26 @@ typedef struct Geopar {
     int n;  //right: n2*n
 } * geopar; /*geometry parameters*/
 
-int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_complex **rt, geopar geop, sf_complex ***wvfld)
+int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_complex **rt, sf_complex *ww, geopar geop, int pad1, bool verb, int snap, sf_complex ***wvfld)
 /*< zero-offset exploding reflector modeling/migration >*/
 {
-    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2, gpz, wfnt, wfit, snap;
-    int im, i, j, m2, ik, nk, pad1;
+    int it, nt, ix, nx, nx2, iz, nz, nz2, nzx2,  wfnt, wfit;
+    int im, i, j, m2, ik, nk;
     float dt, dx, dz, ox;
     sf_complex *curr, **wave, *cwave, *cwavem, c;
     sf_complex *currm;
-    bool verb;
 
     nx  = geop->nx;
     nz  = geop->nz;
     dx  = geop->dx;
     dz  = geop->dz;
     ox  = geop->ox;
-    gpz = geop->gpz;
     nt  = geop->nt;
     dt  = geop->dt;
     snap= geop->snap;
     nzx2= geop->nzx2;
     m2  = geop->m2;
     wfnt= geop->wfnt;
-    pad1= geop->pad1;
-    verb= geop->verb;
 
     nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
     if (nk!=geop->nk) sf_error("nk discrepancy!");
@@ -105,7 +97,15 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 	curr[iz] = sf_cmplx(0.,0.);
     }
 
-    if (adj) { /* migration <- read data */
+    if (adj) { /* migration <- read wavefield */
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+	for (ix=0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		curr[iz+ix*nz2]=dat[ix][iz];
+	    }
+	}
 	wfit = (int)(nt-1)/snap; // wfnt-1
 	/* time stepping */
 	for (it=nt-1; it > -1; it--) {
@@ -146,14 +146,6 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 
 	    icfft2(curr,cwave);
 
-#ifdef _OPENMP
-#pragma omp parallel for private(ix)
-#endif
-	    /* data injection */
-	    for (ix=0; ix < nx; ix++) {
-		curr[gpz+ix*nz2] += dat[ix][it];
-	    }
-
 	    if (snap > 0 && it%snap == 0) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,j)
@@ -177,26 +169,12 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 	    }
 	}
     } else { /* modeling -> write data */
-	/*exploding reflector*/
-#ifdef _OPENMP
-#pragma omp parallel for private(ix,iz)
-#endif
-	for (ix=0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		curr[iz+ix*nz2]=img[ix][iz];
-	    }
-	}
+	/*point source*/
 	wfit = 0;
 	/* time stepping */
 	for (it=0; it < nt; it++) {
 	    if (verb) sf_warning("it=%d;",it);
-#ifdef _OPENMP
-#pragma omp parallel for private(ix)
-#endif
-	    /* record data */
-	    for (ix=0; ix < nx; ix++) {
-		dat[ix][it] = curr[gpz+ix*nz2];
-	    }
+
 	    /* matrix multiplication */
 	    cfft2(curr,cwave);
 	    
@@ -220,8 +198,12 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 		for (iz=0; iz < nz; iz++) {
 		    i = iz+ix*nz;  /* original grid */
 		    j = iz+ix*nz2; /* padded grid */
-		    
-		    c = sf_cmplx(0.,0.); /* initialize */
+
+#ifdef SF_HAS_COMPLEX_H
+		c = ww[it] * crealf(img[ix][iz]); // source term
+#else
+		c = sf_crmul(ww[it], crealf(img[ix][iz])); // source term
+#endif
 		    
 		    for (im = 0; im < m2; im++) {
 #ifdef SF_HAS_COMPLEX_H
@@ -233,6 +215,15 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 		    curr[j] = c;
 		}
 	    }
+	    /* record wavefield*/
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,iz)
+#endif
+	for (ix=0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		dat[ix][iz] = curr[iz+ix*nz2];
+	    }
+	}
 	    if (snap > 0 && it%snap == 0) {
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz,j)
@@ -248,19 +239,19 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 	}
     }
     if (verb) sf_warning(".");
-
     cfft2_finalize();
+
     return 0;
 }
 
 int main(int argc, char* argv[])
 {
     bool adj,timer,verb;
-    int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, gpz, wfnt;
+    int nt, nx, nz, nx2, nz2, nzx, nzx2, ntx, pad1, snap, wfnt;
     int m2, n2, nk, nth=1;
     float dt, dx, dz, ox;
-    sf_complex **img, **dat, **lt, **rt, ***wvfld;
-    sf_file data, image, left, right, snaps;
+    sf_complex **img, **dat, **lt, **rt, ***wvfld, *ww;
+    sf_file data, image, left, right, snaps, src;
     double time=0.,t0=0.,t1=0.;
     geopar geop;
 
@@ -274,31 +265,27 @@ int main(int argc, char* argv[])
     /* interval for snapshots */
     if (!sf_getint("pad1",&pad1)) pad1=1;
     /* padding factor on the first axis */
-    if(!sf_getint("gpz",&gpz)) gpz=0;
-    /* geophone surface */
 
     if (adj) { /* migration */
 	data = sf_input("in");
 	image = sf_output("out");
 	sf_settype(image,SF_COMPLEX);
 
-	if (!sf_histint(data,"n1",&nt)) sf_error("No n1= in input");
-	if (!sf_histfloat(data,"d1",&dt)) sf_error("No d1= in input");
-
+	if (!sf_histint(data,"n1",&nz)) sf_error("No n1= in input");
+	if (!sf_histfloat(data,"d1",&dz)) sf_error("No d1= in input");
 	if (!sf_histint(data,"n2",&nx)) sf_error("No n2= in input");
 	if (!sf_histfloat(data,"d2",&dx)) sf_error("No d2= in input");
 	if (!sf_histfloat(data,"o2",&ox)) ox=0.; 
 
-	if (!sf_getint("nz",&nz)) sf_error("Need nz=");
-	/* depth samples */
-	if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
-	/* depth sampling */
+	if (!sf_getint("nt",&nt)) sf_error("Need nt=");
+	/* time samples */
+	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
+	/* time sampling */
 
 	sf_putint(image,"n1",nz);
 	sf_putfloat(image,"d1",dz);
 	sf_putfloat(image,"o1",0.);
 	sf_putstring(image,"label1","Depth");
-
 	sf_putint(image,"n2",nx);
 	sf_putfloat(image,"d2",dx);
 	sf_putfloat(image,"o2",ox);
@@ -306,11 +293,11 @@ int main(int argc, char* argv[])
     } else { /* modeling */
 	image = sf_input("in");
 	data = sf_output("out");
+	src = sf_input("src");
 	sf_settype(data,SF_COMPLEX);
 
 	if (!sf_histint(image,"n1",&nz)) sf_error("No n1= in input");
 	if (!sf_histfloat(image,"d1",&dz)) sf_error("No d1= in input");
-
 	if (!sf_histint(image,"n2",&nx))  sf_error("No n2= in input");
 	if (!sf_histfloat(image,"d2",&dx)) sf_error("No d2= in input");
 	if (!sf_histfloat(image,"o2",&ox)) ox=0.; 	
@@ -319,13 +306,12 @@ int main(int argc, char* argv[])
 	/* time samples */
 	if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
 	/* time sampling */
+	if (!sf_histint(src,"n1",&n2) || n2 != nt) sf_error("nt doesn't match!");
 
-	sf_putint(data,"n1",nt);
-	sf_putfloat(data,"d1",dt);
+	sf_putint(data,"n1",nz);
+	sf_putfloat(data,"d1",dz);
 	sf_putfloat(data,"o1",0.);
-	sf_putstring(data,"label1","Time");
-	sf_putstring(data,"unit1","s");
-
+	sf_putstring(image,"label1","Depth");
 	sf_putint(data,"n2",nx);
 	sf_putfloat(data,"d2",dx);
 	sf_putfloat(data,"o2",ox);
@@ -373,14 +359,17 @@ int main(int argc, char* argv[])
     lt = sf_complexalloc2(nzx,m2);
     rt = sf_complexalloc2(m2,nk);
     img = sf_complexalloc2(nz,nx);
-    dat = sf_complexalloc2(nt,nx);
+    dat = sf_complexalloc2(nz,nx);
     if (snap > 0) wvfld = sf_complexalloc3(nz,nx,wfnt);
     else wvfld = NULL;
     geop = (geopar) sf_alloc(1, sizeof(*geop));
-
+    if (!adj) {
+	ww=sf_complexalloc(nt);
+	sf_complexread(ww,nt,src);
+    } else ww=NULL;
     sf_complexread(lt[0],nzx*m2,left);
     sf_complexread(rt[0],m2*nk,right);
-    if (adj) sf_complexread(dat[0],ntx,data);
+    if (adj) sf_complexread(dat[0],nzx,data);
     else sf_complexread(img[0],nzx,image);
 
     /*close RSF files*/
@@ -403,7 +392,6 @@ int main(int argc, char* argv[])
     geop->dx  = dx;
     geop->dz  = dz;
     geop->ox  = ox;
-    geop->gpz = gpz;
     geop->nt  = nt;
     geop->dt  = dt;
     geop->snap= snap;
@@ -411,10 +399,8 @@ int main(int argc, char* argv[])
     geop->nk  = nk;
     geop->m2  = m2;
     geop->wfnt= wfnt;
-    geop->pad1= pad1;
-    geop->verb= verb;
 
-    lrexp(img, dat, adj, lt, rt, geop, wvfld);
+    lrexp(img, dat, adj, lt, rt, ww, geop, pad1, verb, snap, wvfld);
 
     if (timer)
       {

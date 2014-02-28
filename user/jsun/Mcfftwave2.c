@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     sf_complex *ww, *cwave, *cwavem;
 
     sf_complex **wave, *curr;
+    float *rcurr;
     
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
@@ -42,8 +43,6 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getbool("cmplx",&complx)) complx=true; /* outputs complex wavefield */
-//    if(!complx)
-    float *rcurr;
 
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -90,8 +89,8 @@ int main(int argc, char* argv[])
     sf_complexread(lt[0],nzx*m2,left);
     sf_complexread(rt[0],m2*nk,right);
 
-//    sf_fileclose(left);
-//    sf_fileclose(right);
+    sf_fileclose(left);
+    sf_fileclose(right);
 
     /* read wavelet & reflectivity */
     ww=sf_complexalloc(nt);  
@@ -102,6 +101,7 @@ int main(int argc, char* argv[])
 
     curr   = sf_complexalloc(nzx2);
     if(!complx) rcurr  = sf_floatalloc(nzx2);
+    else rcurr=NULL;
 
     cwave  = sf_complexalloc(nk);
     cwavem = sf_complexalloc(nk);
