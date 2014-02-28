@@ -7,7 +7,7 @@ radon2 radon3 radon32 apradon2 radon34 diradon2 diiradon2 adiradon2 diradon32 di
 '''
 
 subs = '''
-vecmatop1 bfio bfio_eval2 bfio_eval3 bfio_apeval2 bfio_eval34
+bfio bfio_eval2 bfio_eval3 bfio_apeval2 bfio_eval34
 '''
 
 #added by XZ

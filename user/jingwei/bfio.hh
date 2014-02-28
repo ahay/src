@@ -3,14 +3,13 @@
 
 #include <rsf.hh>
 
-#include "comobject1.hh"
-#include "numtns1.hh"
-#include "offtns1.hh"
-#include "vec2t1.hh"
-#include "vec3t1.hh"
+#include "comobject.hh"
+#include "numtns.hh"
+#include "offtns.hh"
+#include "vec2t.hh"
+#include "vec3t.hh"
 
-//#include <vecmatop.hh>
-#include "vecmatop1.hh"
+#include "vecmatop.hh"
 
 using std::vector;
 using std::pair;

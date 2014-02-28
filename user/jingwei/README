@@ -9,14 +9,6 @@
 Header Files
 *********************************************************
 
-commoninc1.hh
-comobject1.hh    
-vec2t1.hh     vec3t1.hh
-numvec1.hh    nummat1.hh    numtns1.hh
-offvec1.hh    offmat1.hh    offtns1.hh
-serialize1.hh
-vecmatop1.hh    
-
 bfio.hh     
 
 
@@ -106,8 +98,6 @@ Msthres.cc    soft thresholding function
 ********************************************************
 Auxiliary Files
 ********************************************************
-
-vecmatop1.cc
 
 bfio.bin   
 
