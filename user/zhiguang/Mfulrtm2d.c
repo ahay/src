@@ -22,7 +22,7 @@
 #include <omp.h>
 #endif
 
-static bool verb, snap;
+static bool verb, snap, record;
 static int nz, nx, nt, nr, ns, nw;
 static int jt, padx, padz, padnx, padnz;
 static int dr_v, ds_v, r0_v, s0_v, zr_v, zs_v;
@@ -90,6 +90,38 @@ void prertm2_oper(bool adj, float ***dd, float **mm)
     sou2=sf_floatalloc2(nz, nx);
     perm=sf_floatalloc2(nz, nx);
     wave=sf_floatalloc3(nz, nx, nnt);
+    
+    if(!adj && record){
+        for(is=0; is<ns; is++){
+            if(verb) sf_warning("ishot @@@ nshot: %d %d", is+1,ns);
+            sx=is*ds_v+s0_v;
+            
+            memset(u0[0], 0, padnz*padnx*sizeof(float));
+            memset(u1[0], 0, padnz*padnx*sizeof(float));
+            memset(u2[0], 0, padnz*padnx*sizeof(float));
+            
+            for(it=0; it<nt; it++){
+                sf_warning("Modeling: it=%d;", it);
+                laplacian(true, u0, u1, u2);
+                
+                temp=u0;
+                u0=u1;
+                u1=u2;
+                u2=temp;
+                
+                u1[sx][zs_v]+=ww[it];
+                
+                for(ir=0; ir<nr; ir++){
+                    rx=ir*dr_v+r0_v;
+                    dd[is][ir][it]=u1[rx][zr_v];
+                    
+                if(snap && is==ns/2 && it%jt==0)
+                    sf_floatwrite(u1[0], padnx*padnz, snapshot);
+                }
+            }//end of it
+        }// end of is
+        return ;
+    }// end of record
     
     if(adj){/* migration */
         
@@ -246,6 +278,7 @@ int main(int argc, char* argv[])
     if(!sf_getbool("adj", &adj)) adj=true;
     if(!sf_getbool("verb", &verb)) verb=true;
     if(!sf_getbool("snap", &snap)) snap=false;
+    if(!sf_getbool("record", &record)) record=false;
     
     in=sf_input("in");
     out=sf_output("out");
