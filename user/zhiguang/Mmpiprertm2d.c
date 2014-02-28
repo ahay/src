@@ -106,7 +106,7 @@ void prertm2_oper(bool adj, float **mm)
     float **dd;
     FILE *swap;
     
-    swap=fopen("temswap.bin","wb");
+    swap=fopen("temswap.bin","wb+");
     
     if(adj) memset(mm[0], 0, nz*nvx*sizeof(float));
     

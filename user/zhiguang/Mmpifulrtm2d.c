@@ -80,7 +80,7 @@ void prertm2_oper(bool adj, float **mm)
     float **u0, **u1, **u2, **temp, **sou2, **perm, ***wave, **localsum, **dd;
     FILE *swap;
     
-    swap=fopen("temswap.bin","wb");
+    swap=fopen("temswap.bin","wb+");
     if(adj) memset(mm[0], 0, nz*nx*sizeof(float));
     nnt=1+(nt-1)/nw;
     
@@ -235,14 +235,14 @@ void prertm2_oper(bool adj, float **mm)
                 }
             } //end of it
             
-            fseeko(swap, is*nr*nt*sizeof(float), 0);
+            fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
             fwrite(dd[0], sizeof(float)*nt, nr, swap);
         }// end of shot
         MPI_Barrier(MPI_COMM_WORLD);
         
         if(cpuid==0){
             for(is=0; is<ns; is++){
-                fseeko(swap, is*nr*nt*sizeof(float), 0);
+                fseeko(swap, is*nr*nt*sizeof(float), SEEK_SET);
                 fread(dd[0], sizeof(float)*nt, nr, swap);
                 sf_floatwrite(dd[0], nr*nt, out);
             }
