@@ -54,8 +54,8 @@ def param(par):
         else:                     par['iheight2d']=14*par['iratio2d']
             
     if(not par.has_key('dratio2d')):
-#        par['dratio2d']=par['iratio2d']
-        par['dratio2d']=0.7
+        par['dratio2d']=par['iratio2d']
+        #        par['dratio2d']=0.7
 
     if(not par.has_key('dheight2d')):
 #       par['dheight2d']=par['iheight2d']
@@ -73,25 +73,17 @@ def param(par):
     par['pointz']=yzratio;
     par['pointx']=yxratio;
 
-    if((dx+dy) == 0.0):
-        par['iratio3d']=1
-    else:
-        par['iratio3d']=(dz+dy)/(dx+dy)
-    
-    if(par['iratio3d']>1):
-        par['iheight3d']=10
-    else:
-        par['iheight3d']=10*par['iratio3d']
+    if((dx+dy) == 0.0): par['iratio3d']=1
+    else:               par['iratio3d']=(dz+dy)/(dx+dy)
 
-    if((dx+dy) == 0.0):
-        par['dratio3d']=1
-    else:
-        par['dratio3d']=(dt+dy)/(dx+dy)
+    if(par['iratio3d']>1): par['iheight3d']=14
+    else:                  par['iheight3d']=14*par['iratio3d']
+
+    if((dx+dy) == 0.0): par['dratio3d']=1
+    else:               par['dratio3d']=(dt+dy)/(dx+dy)
         
-    if(par['dratio3d']>1):
-        par['dheight3d']=10
-    else:
-        par['dheight3d']=11*par['dratio3d']
+    if(par['dratio3d']>1): par['dheight3d']=14
+    else:                  par['dheight3d']=14*par['dratio3d']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
     if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 yll=1 ' + ' '
@@ -390,3 +382,18 @@ def istagger2d(cube,custom,par,nfrm=2,scale=1,ratio=1,ymax=10,xmax=14):
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f xcenter=%f ycenter=%f'
              %(scale,scale,ox-ifrm*dx,oy+ifrm*dy))        
     Result(cube,[cube+"%04d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
+def inine(cube,custom,par,scale=0.3,ymax=10,xmax=13):
+    nfrm=9
+
+    Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
+    for ifrm in range(nfrm):
+        tag="%d"%ifrm
+        
+        Plot(cube+tag,cube+'byt',
+             'window n3=1 f3=%d |'%ifrm 
+             + igrey2d('crowd=0.85 wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
+        Plot(cube+tag+'_',
+             cube+tag,'Overlay',vppen='yscale=%f xscale=%f xcenter=%f ycenter=%f'
+             %(scale,scale,-(ifrm%3)*xmax,int(-2+ifrm/3)*ymax))        
+    Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
