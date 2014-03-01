@@ -33,6 +33,10 @@ $RSFSRC/book/data/teapotdome/tahsubset
 	The 3D loading information can be read using:
 	cd $RSFSRC/book/data/teapotdome/fetch
 	scons 3dload.rsf
+	
+	The subset of the data extractes is about 400m inline, 400m xline and 
+	all offsets.  This is approximately patch size Sacchi recommended if
+	you write your own offset and time windows.
 
 
 $RSFSRC/book/data/teapotdome/tahscscale

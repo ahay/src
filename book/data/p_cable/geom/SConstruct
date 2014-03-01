@@ -1,0 +1,60 @@
+from rsf.proj import *
+import math
+
+Flow('foldplot','../segy/DeconShots3_hdr.rsf',
+    '''
+      dd type=float |
+      fold
+          verbose=1
+          o1=60 n1=10  d1=5 label1=offset
+          o2=1001 n2=1943 d2=1   label2=xline
+          o3=5100 n3=296  d3=1   label3=iline        
+    ''')
+#	  o2=5100 n2=300  d2=1 label2=iline
+#	  o3=2801 n3=144  d3=1 label3=xline
+#    ''')
+# plot xline 1001-2943 
+#      iline after 5100?  before 5400  
+#	  o2=990 n2=20  d2=1 label2=xline
+#	  o3=5300 n3=100  d3=1 label3=iline
+#    ''')
+ 
+#          o2=0 n2=2943 d2=1   label2=xline
+#          o3=0 n3=5395  d3=1   label3=iline        
+#    ''')
+
+Result('foldplot','foldplot',
+     '''
+     grey  title=foldplot pclip=100 
+     ''')
+
+
+Flow('zoomfoldplot','../segy/DeconShots3_hdr.rsf',
+    '''
+      dd type=float |
+      fold
+          verbose=1
+          o1=60 n1=50  d1=1 label1=offset
+          o2=2001 n2=100 d2=1   label2=xline
+          o3=5211 n3=1  d3=1   label3=iline        
+    ''')
+
+Result('zoomfoldplot','zoomfoldplot',
+     '''
+     grey  title=foldplot pclip=100 
+     ''')
+
+Result('foldplot3','foldplot',
+     '''
+     byte gainpanel=all |
+     grey3  title=foldplot pclip=100 
+            frame1=4 frame2=94 frame3=172
+     ''')
+
+Flow('foldplot_off','foldplot',
+     'transp plane=13')
+
+Result('foldplot_off','grey title=foldplot pclip=100')
+
+
+End()
