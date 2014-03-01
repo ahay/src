@@ -399,6 +399,6 @@ def inine(cube,custom,par,scale=0.3,ymax=10,ratio=1):
              'window n3=1 f3=%d |'%ifrm 
              + igrey2d('crowd=0.85 wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
-             cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f '
+             cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-1+int(-2+ifrm/3)*dy,-1-(ifrm%3)*dx))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
