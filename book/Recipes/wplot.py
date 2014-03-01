@@ -383,9 +383,14 @@ def istagger2d(cube,custom,par,nfrm=2,scale=1,ratio=1,ymax=10,xmax=14):
              %(scale,scale,ox-ifrm*dx,oy+ifrm*dy))        
     Result(cube,[cube+"%04d_"%ifrm for ifrm in range(nfrm)],'Overlay')
 
-def inine(cube,custom,par,scale=0.3,ymax=10,xmax=13):
+# ------------------------------------------------------------
+# plot 3x3 matrix of plots
+def inine(cube,custom,par,scale=0.3,ymax=10,ratio=1):
     nfrm=9
 
+    dy=ymax;
+    dx=ymax/ratio
+        
     Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
     for ifrm in range(nfrm):
         tag="%d"%ifrm
@@ -394,6 +399,6 @@ def inine(cube,custom,par,scale=0.3,ymax=10,xmax=13):
              'window n3=1 f3=%d |'%ifrm 
              + igrey2d('crowd=0.85 wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
-             cube+tag,'Overlay',vppen='yscale=%f xscale=%f xcenter=%f ycenter=%f'
-             %(scale,scale,-(ifrm%3)*xmax,int(-2+ifrm/3)*ymax))        
+             cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f '
+             %(scale,scale,-1+int(-2+ifrm/3)*dy,-1-(ifrm%3)*dx))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
