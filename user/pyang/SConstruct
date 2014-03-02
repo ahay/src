@@ -6,13 +6,18 @@ import bldutil
 progs = '''
 pocs3d fpocs2d fpocs3d mwni2d 
 pocsseislet istseislet mcaseislet matflip
-dlct 
 Testfd2d Testfd3d 
 rtm2d lsrtm2d
 Testeb
 modeling2d forw2d
+dlct dlct2
 '''
 
+# C++ main programs
+ccprogs = '''
+'''
+
+# CUDA main programs
 cuda_progs = '''
 gpurtm
 '''
@@ -56,6 +61,32 @@ for prog in mains:
         prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw')
     if root:
         env.Install(bindir,prog)
+
+
+
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
+
+if lapack:
+    libsxx = [env.get('DYNLIB','')+'rsf++','vecmatop']
+    if not isinstance(lapack,bool):
+        libsxx.extend(lapack)
+    env.Prepend(LIBS=libsxx)
+
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
+
+
+
 
 # compiling CUDA programs
 CTP = env.get('CUDA_TOOLKIT_PATH')

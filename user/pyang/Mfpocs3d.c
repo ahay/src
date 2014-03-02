@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     ft3d_init(n1, n2, n3);
 
     /* FPOCS iterations */
-    for(iter=1; iter<=niter; iter++)
+    for(iter=0; iter<niter; iter++)
     {
 	t1=0.5*(1.0+sqrtf(1.0+4.0*t0*t0));
 	beta=(t0-1.0)/t1;
@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2*n3) nthr=n1*n2*n3-1;
 	thr=sf_quantile(nthr,n1*n2*n3,dout);
-	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 	sf_cpthresh(dcurr, n1*n2*n3,thr, p,mode);
 
 	ft3d_lop(false, false, n1*n2*n3, n1*n2*n3, dcurr, dtmp);
@@ -146,7 +145,7 @@ int main(int argc, char* argv[])
 			+(1.-m)*dtmp[i1+n1*(i2+n2*i3)];
 	}
 
-	if (verb)    sf_warning("iteration %d;",iter);
+	if (verb)    sf_warning("iteration %d;",iter+1);
     }
     for(i1=0;i1<n1*n2*n3; i1++) dout[i1]=crealf(dcurr[i1]);
     sf_floatwrite(dout,n1*n2*n3,Fout);

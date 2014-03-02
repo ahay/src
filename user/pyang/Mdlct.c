@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
       	sf_putint(out,"n2",L);
 	sf_settype(out,SF_COMPLEX);
     }else{
-	/*then: in is DLCT coefficients, out will be signal.*/
+	/* then: in is DLCT coefficients, out will be signal.*/
 	n2 = sf_leftsize(in,2);
 	if (!sf_histint(in,"n1",&N)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&L)) sf_error("No n2= in input");
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     Sc = sf_complexalloc(N*L);
 
     for (int i2=0; i2 < n2; i2++)  {
-	sf_warning("slice %d of %d;",i2+1,n2);
+	if (verb) sf_warning("trace %d of %d;",i2+1,n2);
 	    if(!inv){
 		sf_floatread(sig,N,in);
 		forward_dlct(N, L, C, sig, Sc);
@@ -77,7 +77,6 @@ int main(int argc, char* argv[])
 		sf_floatwrite(sig, N, out);
 	    }
     }
-    sf_warning(".");
 
     free(sig);
     free(Sc);

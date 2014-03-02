@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     }
 
     /* FPOCS iterations */
-    for(iter=1; iter<=niter; iter++)
+    for(iter=0; iter<niter; iter++)
     {
 	t1=(1.0+sqrtf(1.0+4.0*t0*t0))/2.0;
 	beta=(t0-1.0)/t1;
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 
 	fftwf_execute(p1);/* FFT */
 
-	/* find the threshold */
+	/* perform p-norm thresholding */
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -128,11 +128,7 @@ int main(int argc, char* argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,dout);
-	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
-
-	/* perform p-norm thresholding */
 	sf_cpthresh(dtmp,n1*n2, thr, p,mode);
-
 
 	fftwf_execute(p2);/* unnormalized IFFT */
 
@@ -149,10 +145,8 @@ int main(int argc, char* argv[])
 		}
 	}
 
-
-	if (verb)    sf_warning("iteration %d;",iter);
+	if (verb)    sf_warning("iteration %d;",iter+1);
     }
-    sf_warning(".");
 
     /* take the real part */
     for(i1=0;i1<n1*n2; i1++) dout[i1]=crealf(dcurr[i1]);

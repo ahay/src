@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     seislet_set(dip);
 
     /* drec = A T{ At(dobs+(1-M)*drec) } */
-    for(int iter=1; iter<=niter; iter++)  {
+    for(int iter=0; iter<niter; iter++)  {
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
@@ -127,13 +127,13 @@ int main(int argc, char *argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	// thr*=powf(0.01,(iter-1.0)/(niter-1.0));	
+	//thr*=(niter-iter)/niter;
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 
 	// forward: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec);
 
-	if (verb)    sf_warning("iteration %d;",iter);
+	if (verb)    sf_warning("iteration %d;",iter+1);
     }
 
     sf_floatwrite(drec,n1*n2,Fout);

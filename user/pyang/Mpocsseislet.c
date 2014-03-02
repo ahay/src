@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     seislet_init(n1,n2,true,false,eps,order,type[0]);  /* unit=false inv=true */
     seislet_set(dip);
 
-    for(int iter=1; iter<=niter; iter++)  {
+    for(int iter=0; iter<niter; iter++)  {
 	// seislet adjoint: At(drec)
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec);
 
@@ -107,7 +107,6 @@ int main(int argc, char *argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	// thr*=powf(0.01,(iter-1.0)/(niter-1.0));	
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 
 	// forward seislet: A T{ At(drec) } 
@@ -125,7 +124,7 @@ int main(int argc, char *argv[])
 		if (mask[i1+i2*n1]) drec[i1+n1*i2]=dobs[i1+n1*i2];
 	}
 
-	if (verb)    sf_warning("iteration %d;",iter);
+	if (verb)    sf_warning("iteration %d;",iter+1);
     }
 
     sf_floatwrite(drec,n1*n2,Fout);

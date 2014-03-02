@@ -1,7 +1,7 @@
 /* Morphological component analysis using 2-D Seislet transform 
 Note:  We plan to use analysis based FISTA algorithm. For the time 
 being, we simply use ISTA combined with seislet transform. 
-Theoreticaly speaking, seislet frame should be better. 	
+Theoreticaly speaking, redundant frame should be better. 	
 */
 
 /*
@@ -20,6 +20,21 @@ Theoreticaly speaking, seislet frame should be better.
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+References: 
+	1) Elad, Michael, et al. "Simultaneous cartoon and texture image 
+	inpainting using morphological component analysis (MCA)." Applied 
+	and Computational Harmonic Analysis 19.3 (2005): 340-358.
+	2) Starck, Jean-Luc, Michael Elad, and David Donoho. "Redundant 
+	multiscale transforms and their application for morphological 
+	component separation." Advances in Imaging and Electron Physics
+	132.82 (2004): 287-348.
+
+To know why MCA algorithm work like this, it will be much easier if you see 
+' Yang, Pengliang, Jinghuai Gao, and Wenchao Chen. "L1/2-constrained 
+morphological component analysis." 2013 IEEE China Summit & International 
+Conference on. Signal and Information Processing (ChinaSIP), 2013. '. The
+only difference lies in the thresholding function and the transform used. 
 */
 
 #include <rsf.h>
@@ -46,7 +61,6 @@ int main(int argc, char *argv[])
 #endif
 
     Fin = sf_input("in");/* original data */
-    Fmask=sf_input("mask");  /* mask for missing values */
     Fout1 = sf_output("out");/* component 1 */
     Fout2 = sf_output("comp2");/* component 2 */
     Fdip1=sf_input("dip1");/* dip of component 1 */
@@ -102,6 +116,7 @@ int main(int argc, char *argv[])
     memset(drec1, 0, n1*n2*sizeof(float));//memset(drec2, 0, sizeof(*drec1));
     memset(drec2, 0, n1*n2*sizeof(float));//memset(drec2, 0, sizeof(*drec2));
     if (NULL != sf_getstring("mask")){
+    	Fmask=sf_input("mask");  /* mask for missing values */
 	sf_floatread(mask,n1*n2,Fmask);
     }else{//no mask, just for separation
 	for(int i=0; i<n1*n2; i++) mask[i]=1.;
@@ -114,7 +129,7 @@ int main(int argc, char *argv[])
 	sf_trianglen_init(2,rect,ndat);
     }
 
-    for(int iter=1; iter<=niter; iter++)  {
+    for(int iter=0; iter<niter; iter++)  {
 	// ========== optimizing component 1 with thresholding =======
     	seislet_set(dip1);
 
@@ -149,7 +164,7 @@ int main(int argc, char *argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	//exponentially decrease thr
+	//thr*=(niter-iter)/niter;
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 	if(smth1){// do smoothing for component 1
 		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec1);
@@ -192,7 +207,7 @@ int main(int argc, char *argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	thr*=powf(0.01,(iter-1.0)/(niter-1.0));	//exponentially decrease thr
+	//thr*=(niter-iter)/niter;
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 	if(smth2){// do smoothing for component 2
 		sf_trianglen_lop(true,true,n1*n2,n1*n2,tmp,drec2);
@@ -202,7 +217,7 @@ int main(int argc, char *argv[])
 	// forward seislet: A T{ At(drec) } 
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec2);
 
-	if (verb)    sf_warning("iteration %d;",iter);
+	if (verb)    sf_warning("iteration %d;",iter+1);
     }
 
     sf_floatwrite(drec1,n1*n2,Fout1);
