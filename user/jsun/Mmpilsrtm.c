@@ -417,10 +417,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 		for ( iz = 0; iz<nz; iz++ ) { 
 		    j = (iz+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
 		    wavfld[wfit][ix][iz] = curr[j];
-		    if (illum)
-		      sill[ix][iz] += pow(hypotf(crealf(curr[j]),cimagf(curr[j])),2);
-		    else sill[ix][iz]=1.;
-		    //sill[ix][iz] += pow(hypotf(crealf(wavfld[wfit][ix][iz]),cimagf(wavfld[wfit][ix][iz])),2);
+		    if (illum) sill[ix][iz] += pow(hypotf(crealf(curr[j]),cimagf(curr[j])),2);
 		}
 	    }
 	    wfit++;
@@ -433,7 +430,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 
 int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex **rcd, bool adj,
 	      bool verb, bool wantwf, sf_complex **lt, sf_complex **rt, int m2,
-              geopar geop, int pad1)
+              geopar geop, int pad1, bool illum)
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -566,11 +563,13 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 #endif    
       for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
+	  if (illum) {
 #ifdef SF_HAS_COMPLEX_H
-	  img[ix][iz] = ccr[ix][iz]/(sill[ix][iz]+SF_EPS);
+	    img[ix][iz] = ccr[ix][iz]/(sill[ix][iz]+SF_EPS);
 #else
-	  img[ix][iz] = sf_crmul(ccr[ix][iz],1./(sill[ix][iz]+SF_EPS));
+	    img[ix][iz] = sf_crmul(ccr[ix][iz],1./(sill[ix][iz]+SF_EPS));
 #endif
+	  } else img[ix][iz] = ccr[ix][iz];
 	}
       } 
     } else { /* modeling */
@@ -580,11 +579,13 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 #endif    
       for (ix=0; ix<nx; ix++) {
 	for (iz=0; iz<nz; iz++) {
+	  if (illum) {
 #ifdef SF_HAS_COMPLEX_H
-	  ccr[ix][iz] = img[ix][iz]/(sill[ix][iz]+SF_EPS);
+	    ccr[ix][iz] = img[ix][iz]/(sill[ix][iz]+SF_EPS);
 #else
-	  ccr[ix][iz] = sf_crmul(img[ix][iz],1./(sill[ix][iz]+SF_EPS));
+	    ccr[ix][iz] = sf_crmul(img[ix][iz],1./(sill[ix][iz]+SF_EPS));
 #endif
+	  } else ccr[ix][iz] = img[ix][iz];
 	}
       } 
       /* step forward in time */
@@ -824,7 +825,8 @@ int main(int argc, char* argv[])
     tmprec = sf_complexalloc2(nt, gpl);
     record = sf_complexalloc3(nt, gpl, shtnum);
     wavefld = sf_complexalloc3(nz, nx, wfnt);
-    sill = sf_floatalloc2(nz, nx);
+    if (illum) sill = sf_floatalloc2(nz, nx);
+    else sill = NULL;
     img = sf_complexalloc2(nz, nx);
     if (adj) {
       imgsum = sf_complexalloc2(nz, nx);
@@ -965,7 +967,7 @@ int main(int argc, char* argv[])
 	  for (it=0; it<nt; it++)
 	    tmprec[ix][it] = record[is][ix][it];
 
-      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1);
+      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1, illum);
 
     if (adj)
 #ifdef _OPENMP
@@ -1025,7 +1027,9 @@ int main(int argc, char* argv[])
     free(*tmprec); free(tmprec);
     free(**record); free(*record); free(record);
     free(**wavefld); free(*wavefld); free(wavefld);
-    free(*sill); free(sill);
+    if (illum) {
+      free(*sill); free(sill);
+    }
     free(*img); free(img);
     if (adj) {
       free(*imgsum); free(imgsum);
