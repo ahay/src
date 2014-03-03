@@ -48,7 +48,7 @@ int main (int argc, char* argv[]) {
     int nz, nx, ny, nb, na, nab, iz, ix, iy, ib, ia;
     int iab, i, fy, ly, ic, nc = 1;
     float dz, oz, dx, ox, dy, oy, da, oa, db, ob, oab;
-    float z, x, y, a, b, vf[3], md;
+    float z, x, y, a, b, vf[3], md, df;
     float ****e, **vt, **q, *ae, *be;
     Ugrid z_grid, x_grid, y_grid;
     BCtype_s zBC, xBC, yBC;
@@ -118,6 +118,9 @@ int main (int argc, char* argv[]) {
     /* Beginning of inclination dimension */
 
     ext = sf_escbsc3_warnext (adom);
+
+    if (!sf_getfloat ("df", &df)) df = 0.1;
+    /*< Maximum distance to travel per step (fraction of the cell size) >*/
 
 #ifdef _OPENMP
     if (!sf_getint ("nc", &nc)) nc = 0;
@@ -220,6 +223,7 @@ int main (int argc, char* argv[]) {
         esc_tracers[ic] = sf_esc_tracer3_init (esc_slow);
         sf_esc_tracer3_set_parab (esc_tracers[ic], parab);
         sf_esc_tracer3_set_mdist (esc_tracers[ic], md);
+        sf_esc_tracer3_set_df (esc_tracers[ic], df);
         esc_points[ic] = sf_esc_point3_init ();
     }
 
