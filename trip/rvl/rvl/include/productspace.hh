@@ -221,6 +221,13 @@ namespace RVL {
 	s[i]=(sp.s)[i];
       }
     }
+
+    /** constructor for single space - allows one to regard a single space
+	as a (trivial) product space */
+    StdProductSpace(Space<Scalar> const & s1): s() {
+      s.push_back(&s1);
+    }
+
     /** constructor for pairs of spaces. */
     StdProductSpace(Space<Scalar> const & s1,
 		    Space<Scalar> const & s2): s() {

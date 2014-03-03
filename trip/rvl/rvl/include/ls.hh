@@ -893,6 +893,8 @@ namespace RVL {
       return f->getMaxStep(x,dx);
     }
 
+    Functional<Scalar> const & getFunctional() const { return *f; }
+
     ostream & write(ostream & str) const {
       str<<"FunctionalBd: functional returning infty at infeasible points\n";
       str<<"data member Functional:\n";

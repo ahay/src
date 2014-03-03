@@ -32,6 +32,7 @@ namespace RVLUmin {
     Operator<Scalar> const & op;        // operator  
     LinearOp<Scalar> const & preop;     // preconditioner
     Vector<Scalar> const & d;           // data 
+    bool refine;                        // refine as in Kern & Symes 1994
     mutable  Vector<Scalar> dx;         // intermediate data
     mutable bool applied;
     ostream & str;
@@ -41,33 +42,34 @@ namespace RVLUmin {
     void apply(const Vector<Scalar> & x, 
 	       Scalar & val) const {
       try {
- /*         if (applied) {
-              RVLException e;
-              e<<"Error: LinFitLS::apply(x,val)\n";
-              e<<"already applied, may not alter\n";
-              throw e;
-          }
-  */
+	/*         if (applied) {
+		   RVLException e;
+		   e<<"Error: LinFitLS::apply(x,val)\n";
+		   e<<"already applied, may not alter\n";
+		   throw e;
+		   }
+	*/
 	atype rnorm;
 	atype nrnorm;
-    // access Operator through OperatorEvaluation
+	// access Operator through OperatorEvaluation
 	OperatorEvaluation<Scalar> opeval(op,x);
-    // Get Derivative of Operator
+	// Get Derivative of Operator
 	LinearOp<Scalar> const & lop = opeval.getDeriv();
-    // Composition of lop and preop
+	// Composition of lop and preop
 	OpComp<Scalar> gop(preop,lop);
-          
+	
 	Vector<Scalar> x0(gop.getDomain());
 	x0.zero();
 	dx.zero();
-    // build least square solver , solve for dx
+	// build least square solver , solve for dx
 	OperatorEvaluation<Scalar> gopeval(gop,x0);
-	Algorithm * solver = LSPolicy::build(dx,gopeval.getDeriv(),d,rnorm,nrnorm,str);
-    solver->run();
-    // get the value of objective function
-    val = 0.5*rnorm*rnorm;
-
-    applied = true;
+	Algorithm * solver 
+	  = LSPolicy::build(dx,gopeval.getDeriv(),d,rnorm,nrnorm,str);
+	solver->run();
+	// get the value of objective function
+	val = 0.5*rnorm*rnorm;
+	
+	applied = true;
 	delete solver;
       }
       catch (RVLException & e) {
@@ -79,46 +81,48 @@ namespace RVLUmin {
     void applyGradient(const Vector<Scalar> & x, 
 		       Vector<Scalar> & g) const {
         try{
-        if(!applied){
+	  if(!applied){
             Scalar val;
             this->apply(x,val);
-        }
-        OperatorEvaluation<Scalar> opeval(op,x);
-        LinearOp<Scalar> const & lop = opeval.getDeriv();
-        SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
-            
-        Vector<Scalar> dltd(lop.getRange());
-        Vector<Scalar> dltx(preop.getRange());
-        // compute dltx and dltd = DF * dltx - d
-        preop.applyOp(dx,dltx);
-        lop.applyOp(dltx,dltd);
-        dltd.linComb(-1.0,d);
-        // naive computation of gradient
-        sblop.applyAdjOp(dltx,dltd,g);
-            
-        // compute and add correction term to gradient
-        atype rnorm;
-        atype nrnorm;
-        OpComp<Scalar> gop(preop,lop);
-        Vector<Scalar> x0(gop.getDomain());
-        x0.zero();
-        dx.zero();
-        OperatorEvaluation<Scalar> gopeval(gop,x0);
-        // solve DF * dx = dltd in LS sense 
-        Algorithm * solver = LSPolicy::build(dx,gopeval.getDeriv(),dltd,rnorm,nrnorm,str);
-        solver->run();
-            
-        Vector<Scalar> tmp(g.getSpace());
-        Vector<Scalar> dx2(preop.getRange());
-        preop.applyOp(dx,dx2);
-        // compute and add correction term tmp to gradient g
-        sblop.applyAdjOp(dx2,d,tmp);
-        g.linComb(1.0, tmp);
-            
-        delete solver;
+	  }
+	  OperatorEvaluation<Scalar> opeval(op,x);
+	  LinearOp<Scalar> const & lop = opeval.getDeriv();
+	  SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
+	  
+	  Vector<Scalar> dltd(lop.getRange());
+	  Vector<Scalar> dltx(preop.getRange());
+	  // compute dltx and dltd = DF * dltx - d
+	  preop.applyOp(dx,dltx);
+	  lop.applyOp(dltx,dltd);
+	  dltd.linComb(-1.0,d);
+	  // naive computation of gradient
+	  sblop.applyAdjOp(dltx,dltd,g);
+	  
+	  // compute and add correction term to gradient
+	  if (refine) {
+	    atype rnorm;
+	    atype nrnorm;
+	    OpComp<Scalar> gop(preop,lop);
+	    Vector<Scalar> x0(gop.getDomain());	 
+	    Vector<Scalar> dx1(gop.getDomain());
+	    x0.zero();
+	    dx1.zero();
+	    OperatorEvaluation<Scalar> gopeval(gop,x0);
+	    // solve DF * dx = dltd in LS sense 
+	    Algorithm * solver = LSPolicy::build(dx1,gopeval.getDeriv(),dltd,rnorm,nrnorm,str);
+	    solver->run();
+	    delete solver;
+	  
+	    Vector<Scalar> tmp(g.getSpace());
+	    Vector<Scalar> dx2(preop.getRange());
+	    preop.applyOp(dx1,dx2);
+	    // compute and add correction term tmp to gradient g
+	    sblop.applyAdjOp(dx2,d,tmp);
+	    g.linComb(1.0, tmp);
+	  }
         }
         catch (RVLException & e) {
-            e<<"\ncalled from LinFitLS::applyGradient\n";
+	  e<<"\ncalled from LinFitLS::applyGradient\n";
             throw e;
         }
         
@@ -143,25 +147,30 @@ namespace RVLUmin {
 	     LinearOp<Scalar> const & _preop,
 	     Vector<Scalar> const & _d,
 	     LSPolicyData const & s,
-	     ostream & _str)
-	: LSPolicy(), op(_op), preop(_preop), d(_d), dx(preop.getDomain()), applied(false), str(_str) {
-          try{
-      dx.zero();
-      LSPolicy::assign(s);
-      if (s.verbose) {
-	str<<"\n";
-	str<<"==============================================\n";
-	str<<"LinFitLS constructor - ls policy data = \n";
-	s.write(str);
-      }}
-          catch (RVLException & e) {
-              e<<"\ncalled from LinFitLS::Constructor\n";
-              throw e;
-          }
+	     bool _refine=false,
+	     ostream & _str=cerr)
+	: LSPolicy(), op(_op), preop(_preop), d(_d), 
+	  dx(preop.getDomain()), applied(false), 
+	  refine(_refine), str(_str) {
+      try{
+	dx.zero();
+	LSPolicy::assign(s);
+	if (s.verbose) {
+	  str<<"\n";
+	  str<<"==============================================\n";
+	  str<<"LinFitLS constructor - ls policy data = \n";
+	  s.write(str);
+	}
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from LinFitLS::Constructor\n";
+	throw e;
+      }
     }
 
     LinFitLS(LinFitLS<Scalar,LSPolicy,LSPolicyData> const & f) 
-	: LSPolicy(f), op(f.op), preop(f.preop), d(f.d), dx(f.dx), str(f.str) {}
+	: LSPolicy(f), op(f.op), preop(f.preop), d(f.d), 
+	  dx(f.dx), str(f.str), refine(f.refine) {}
 
     const Space<Scalar> & getDomain() const { return op.getDomain(); }
 
@@ -175,6 +184,8 @@ namespace RVLUmin {
 	throw e;
       }
     }
+
+    Vector<Scalar> const & getLSSoln() const { return dx; }
 
     ostream & write(ostream & str) const {
       str<<"LinFitLS: \n";

@@ -669,6 +669,11 @@ namespace RVL {
       }
     }
     
+    /** provided to enable extraction of subclass attributes via a cast, 
+	from the current internal copy of the underlying Functional. 
+    */
+    Functional<Scalar> const & getFunctional() const { return *f; }
+
     ostream & write(ostream & str) const {
       str<<"Functional Evaluation:"<<endl;
       str<<"  functional"<<endl;
@@ -1896,6 +1901,28 @@ namespace RVL {
 	e<<"\ncalled from FcnlOpComp::getMaxStep\n";
 	throw e;
       }
+    }
+
+    /** provides access to any available attributes of latest operator 
+	evaluation */
+    OperatorEvaluation<Scalar> const & getOpEval() const { 
+      if (opeval) return *opeval;
+      RVLException e;
+      e<<"Error: FcnlOpComp::getOpEval\n";
+      e<<"  apparently not yet evaluated so operator evaluation component\n";
+      e<<"  not available\n";
+      throw e;
+    }
+
+    /** provides access to any available attributes of latest operator 
+	evaluation */
+    FunctionalEvaluation<Scalar> const & getFcnlEval() const { 
+      if (fneval) return *fneval;
+      RVLException e;
+      e<<"Error: FcnlOpComp::getFcnlEval\n";
+      e<<"  apparently not yet evaluated so functional evaluation component\n";
+      e<<"  not available\n";
+      throw e;
     }
 
     ostream & write(ostream & str) const {

@@ -277,6 +277,13 @@ namespace RVLUmin {
 
     ~LBFGSBT() {}
 
+    /** supplied to provide access to any intermediate data that a subclass
+	of Functional may make available. Can extract const reference to current
+	Functional, as constructed by FunctionalEvaluation, via the getFcnl() method.
+	A cast will be required to extract any further subclass attributes.
+    */
+    FunctionalEvaluation<Scalar> const & getFunctionalEvaluation() const { return fx; }
+    
   };
 
 }
