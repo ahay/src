@@ -67,26 +67,6 @@ def slowness(slow,velo,par):
          ''')
 
 # ------------------------------------------------------------
-# 3D imaging condition
-def cic3d(imag,swfl,rwfl,par):
-    Flow(imag,[swfl,rwfl],
-         '''
-         cic uu=${SOURCES[1]} axis=3 verb=y ompnth=%(ompnth)d
-         ''' % par)
-    
-def eic3d(cip,swfl,rwfl,cc,custom,par):
-    par['eiccustom'] = custom
-   
-    Flow(cip,[swfl,rwfl,cc],
-         '''
-         eic verb=y
-         nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
-         ur=${SOURCES[1]}
-         cc=${SOURCES[2]}
-         %(eiccustom)s
-         ''' %par)
-
-# ------------------------------------------------------------
 # WEXIMG
 # ------------------------------------------------------------
 

@@ -18,7 +18,8 @@ targets = bldutil.UserSconsTargets()
 # C mains
 targets.c = '''
 off2abs off2abs3
-icor xcor2d tcor ucor cic2d eic2d
+icor xcor2d tcor ucor 
+cicold2d eicold2d
 laps2d laps3d
 ic sic sic3d lstk
 wigner wdf

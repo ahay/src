@@ -108,17 +108,17 @@ def param(par):
     par['pointt']=ytratio;
     par['pointz']=yzratio;
     par['pointx']=yxratio;
-
+    
     if((dx+dy) == 0.0):
         par['ratio3d']=1
     else:
         par['ratio3d']=(dz+dy)/(dx+dy)
-    
+        
     if(par['ratio3d']>1):
         par['height3d']=10
     else:
         par['height3d']=14*par['ratio3d']
-
+        
     if((dx+dy) == 0.0):
         par['tratio3d']=1
     else:
@@ -983,6 +983,19 @@ def cdafd(odat,owfl,idat,velo,sou,rec,custom,par):
 def cdafd1(odat,owfl,idat,velo,sou,rec,custom,par):
     cdafd(odat,owfl,idat,velo,sou,rec,custom+' expl=y ',par)
 
+def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):    
+    Flow([odat,owfl],[idat,velo,sou,rec],
+         '''
+         awefd3d cden=y
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         dabc=%(dabc)s nb=%(nb)d
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]}
+         rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         '''%par+custom)
+    
 # ------------------------------------------------------------
 # Born modeling
 def lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):

@@ -98,7 +98,7 @@ def cicmig(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=n %s
+         %scicold2d <%s isreversed=0 verb=n %s
          ur=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
@@ -144,7 +144,7 @@ def cicmigCD(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=n %s
+         %scicold2d <%s isreversed=0 verb=n %s
          ur=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
@@ -193,12 +193,12 @@ def eicmig(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=n %s
+         %scicold2d <%s isreversed=0 verb=n %s
          ur=%s 
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
-         %seic2d <%s isreversed=0 verb=n %s
+         %seicold2d <%s isreversed=0 verb=n %s
          ur=%s cc=${SOURCES[4]} 
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
@@ -245,12 +245,12 @@ def eicmigCD(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=n %s
+         %scicold2d <%s isreversed=0 verb=n %s
          ur=%s 
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
-         %seic2d <%s isreversed=0 verb=n %s
+         %seicold2d <%s isreversed=0 verb=n %s
          ur=%s cc=${SOURCES[4]} 
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
@@ -266,7 +266,7 @@ def eicmigCD(icic,
 def cic(icic,swfl,rwfl,custom,par,isreversed=0):
     Flow(icic,[swfl,rwfl],
          '''
-         cic2d verb=y
+         cicold2d verb=y
          ur=${SOURCES[1]} 
          '''%par+ 'isreversed=%d'%isreversed + ' ' + custom )
 
@@ -274,7 +274,7 @@ def cic(icic,swfl,rwfl,custom,par,isreversed=0):
 def eic(ieic,swfl,rwfl,cc,custom,par,isreversed=0):    
     Flow(ieic,[swfl,rwfl,cc],
          '''
-         eic2d verb=y
+         eicold2d verb=y
          nhx=%(nhx)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
          ur=${SOURCES[1]}
          cc=${SOURCES[2]}
@@ -397,7 +397,7 @@ def fwiker(kern,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=n %s
+         %scicold2d <%s isreversed=0 verb=n %s
          ur=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
@@ -443,7 +443,7 @@ def fwikerCD(kern,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 verb=n %s
+         %scicold2d <%s isreversed=0 verb=n %s
          ur=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +

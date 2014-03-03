@@ -171,7 +171,7 @@ def rtmcic(imag,velo,dens,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 ur=%s axis=3 verb=n %s >${TARGETS[0]};
+         %scicold2d <%s isreversed=0 ur=%s axis=3 verb=n %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
          '''
          %srm %s %s %s
@@ -215,7 +215,7 @@ def cdrtm(imag,velo,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+' '+awepar,rwfl,DPT) +
          '''
-         %scic2d <%s isreversed=0 ur=%s axis=3 verb=n %s >${TARGETS[0]};
+         %scicold2d <%s isreversed=0 ur=%s axis=3 verb=n %s >${TARGETS[0]};
          '''%(M8R,swfl,rwfl,custom) +
          '''
          %srm %s %s %s
@@ -279,38 +279,20 @@ def cdrtm(imag,velo,
 def cic(imag,swfl,rwfl,custom,par,isreversed=0):
     Flow(imag,[swfl,rwfl],
          '''
-         cic2d verb=y
+         cicold2d verb=y
          ur=${SOURCES[1]} 
          '''%par+ 'isreversed=%d'%isreversed + ' ' + custom )
     
-#def cic3d(imag,swfl,rwfl,par):
-#    Flow(imag,[swfl,rwfl],
-#         '''
-#         cic uu=${SOURCES[1]} axis=3 verb=y ompnth=%(ompnth)d
-#         ''' % par)
-
 # EIC
 def eic(cip,swfl,rwfl,cc,custom,par,isreversed=0):    
     Flow(cip,[swfl,rwfl,cc],
          '''
-         eic2d verb=y
+         eicold2d verb=y
          nhx=%(nhx)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
          ur=${SOURCES[1]}
          cc=${SOURCES[2]}
          '''%par+ 'isreversed=%d'%isreversed + ' '+ custom )
     
-def eicOBSOLETE(cip,swfl,rwfl,cc,custom,par):
-    par['eiccustom'] = custom
-    
-    Flow(cip,[swfl,rwfl,cc],
-         '''
-         laps2d verb=y
-         nhx=%(nhx)d nhz=%(nhz)d nht=%(nht)d dht=%(dht)g
-         ur=${SOURCES[1]}
-         cc=${SOURCES[2]}
-         %(eiccustom)s
-         ''' %par)
-
 # CIC: deconvolution
 def dic(imag,swfl,rwfl,eps,custom,par):
     par['diccustom'] = custom
