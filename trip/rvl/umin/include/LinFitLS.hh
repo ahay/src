@@ -33,7 +33,8 @@ namespace RVLUmin {
     LinearOp<Scalar> const & preop;     // preconditioner
     Vector<Scalar> const & d;           // data 
     bool refine;                        // refine as in Kern & Symes 1994
-    mutable  Vector<Scalar> dx;         // intermediate data
+    mutable  Vector<Scalar> dx;         // preimage of linear solution
+    mutable  Vector<Scalar> dltx;       // linear solution
     mutable bool applied;
     ostream & str;
     
@@ -68,7 +69,8 @@ namespace RVLUmin {
 	solver->run();
 	// get the value of objective function
 	val = 0.5*rnorm*rnorm;
-	
+	preop.applyOp(dx,dltx);
+      
 	applied = true;
 	delete solver;
       }
@@ -88,11 +90,8 @@ namespace RVLUmin {
 	  OperatorEvaluation<Scalar> opeval(op,x);
 	  LinearOp<Scalar> const & lop = opeval.getDeriv();
 	  SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
-	  
 	  Vector<Scalar> dltd(lop.getRange());
-	  Vector<Scalar> dltx(preop.getRange());
 	  // compute dltx and dltd = DF * dltx - d
-	  preop.applyOp(dx,dltx);
 	  lop.applyOp(dltx,dltd);
 	  dltd.linComb(-1.0,d);
 	  // naive computation of gradient
@@ -150,8 +149,8 @@ namespace RVLUmin {
 	     bool _refine=false,
 	     ostream & _str=cerr)
 	: LSPolicy(), op(_op), preop(_preop), d(_d), 
-	  dx(preop.getDomain()), applied(false), 
-	  refine(_refine), str(_str) {
+	  dx(preop.getDomain()), dltx(preop.getRange()),
+	  applied(false), refine(_refine), str(_str) {
       try{
 	dx.zero();
 	LSPolicy::assign(s);
@@ -170,7 +169,7 @@ namespace RVLUmin {
 
     LinFitLS(LinFitLS<Scalar,LSPolicy,LSPolicyData> const & f) 
 	: LSPolicy(f), op(f.op), preop(f.preop), d(f.d), 
-	  dx(f.dx), str(f.str), refine(f.refine) {}
+	  dx(f.dx), dltx(f.dltx), str(f.str), refine(f.refine) {}
 
     const Space<Scalar> & getDomain() const { return op.getDomain(); }
 
@@ -185,7 +184,7 @@ namespace RVLUmin {
       }
     }
 
-    Vector<Scalar> const & getLSSoln() const { return dx; }
+    Vector<Scalar> const & getLSSoln() const { return dltx; }
 
     ostream & write(ostream & str) const {
       str<<"LinFitLS: \n";
