@@ -1197,7 +1197,39 @@ def cdzom(imag,data,velo,rcoo,custom,par):
          '''%(M8R,rdat,rwfl),
               stdin=0,
               stdout=0)
+    
+def cdzom3d(imag,data,velo,rcoo,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
+    obsolete('fdmod/cdzom','rtm/zofmigCD')
+
+    awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
+
+    rdat = imag+'rdat'
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo],
+         '''
+         %sreverse < ${SOURCES[0]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdat,DPT) +
+         '''
+         %sawefd3d < %s cden=y %s verb=n
+         vel=${SOURCES[2]}
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s %s
+         '''%(M8R,rdat,rwfl),
+              stdin=0,
+              stdout=0)
+    
 # ------------------------------------------------------------
 # wavefield-over-model plot
 def wom(wom,wfld,velo,vmean,par):
