@@ -441,6 +441,36 @@ def horizontal(cc,coord,par):
               stdin=0,
               stdout=0)
 
+
+def horizontalupercent(cc,coord,par):
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+    
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+    
+    Flow(cc,None,
+         '''  
+         math output=0 n1=%d o1=%g d1=%g >%s datapath=%s/ &&
+         '''%(par['nx'],par['ox'],par['dx'],cco,DPT) +
+         '''  
+         math <%s output="%g" >%s datapath=%s/ &&
+         '''%(cco,coord,ccz,DPT) +
+         '''  
+         math <%s output="x1" >%s datapath=%s/ &&
+         '''%(cco,ccx,DPT) +
+         '''  
+         cat axis=2 space=n %s %s | transp | put label1="" unit1="" label2="" unit2="">${TARGETS[0]} &&
+         '''%(ccx,ccz) +
+         '''  
+         rm %s %s %s
+         '''%(cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
+
+
+
+
 # ------------------------------------------------------------
 def cable2d(cc,zrec,orec,nrec,drec,par):
     M8R='$RSFROOT/bin/sf'
