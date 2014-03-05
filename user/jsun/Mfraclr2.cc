@@ -23,7 +23,9 @@
 using namespace std;
 
 static std::valarray<float> vs,qs;
-static std::valarray<float> ks;
+static std::valarray<float> ksz,ksx;
+static float ct,cb,cl,cr;
+static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
 static float dt,c0,w0;
 static bool rev;
 static int mode,sign;
@@ -36,12 +38,18 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     setvalue(res,cpx(0.0f,0.0f));
     for(int a=0; a<nr; a++) {
 	for(int b=0; b<nc; b++) {
+	    int ikz = cs[b] % nkzs;
+	    int ikx = (int) cs[b]/nkzs;
+	    int iz  = rs[a] % nz;
+	    int ix  = (int) rs[a]/nz;
+	    float hypk = hypot(ksz[ikz],ksx[ikx]);
+	    cpx phf;
 	    if (mode == 0) { /*viscoacoustic*/
 		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
 		float tao = -powf(c0,2.*gamma-1.)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
-		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
-		float p2  = -powf(p1,2) - 4*eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.);
+		float p1  = tao*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+1.);
+		float p2  = -powf(p1,2) - 4*eta*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+2.);
 		if (p2 < 0) sf_warning("square root is imaginary!!!");
 		sf_complex phr = sf_cmplx(p1*dt/2.,0);
 		sf_complex phi = sf_cmplx(0,0);
@@ -58,13 +66,13 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		phase = sf_cadd(phr,phi);
 		if (rev) phase=sf_crmul(phase,-1);
 #endif
-		res(a,b) = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
+		phf = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 1) { /*loss dominated*/
 		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float tao = -powf(c0,2.*gamma-1.)*powf(w0,-2.*gamma)*sinf(SF_PI*gamma);
-		float p1  = tao*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+1.);
-		float p2  = -powf(p1,2) + 4*powf(vs[rs[a]],2)*powf(ks[cs[b]],2);
+		float p1  = tao*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+1.);
+		float p2  = -powf(p1,2) + 4*powf(vs[rs[a]],2)*powf(hypk,2);
 		if (p2 < 0) sf_warning("square root is imaginary!!!");
 		sf_complex phr = sf_cmplx(p1*dt/2.,0);
 		sf_complex phi = sf_cmplx(0,0);
@@ -81,20 +89,31 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		phase = sf_cadd(phr,phi);
 		if (rev) phase=sf_crmul(phase,-1);
 #endif
-		res(a,b) = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
+		phf = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
 	    else if (mode == 2) { /*dispersion-dominated*/
 		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
-		float phase = sqrtf(-eta*powf(vs[rs[a]],2)*powf(ks[cs[b]],2.*gamma+2.))*dt;
+		float phase = sqrtf(-eta*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+2.))*dt;
 		if (rev) phase*=-1;
-		res(a,b) = cpx(cosf(phase),sinf(phase));
+		phf = cpx(cosf(phase),sinf(phase));
 	    }
 	    else { /*acoustic*/
-		float phase = vs[rs[a]]*ks[cs[b]]*dt; 
+		float phase = vs[rs[a]]*hypk*dt; 
 		if (rev) phase*=-1;
-		res(a,b) = cpx(cosf(phase),sinf(phase)); 
+		phf = cpx(cosf(phase),sinf(phase)); 
 	    }
+	    /* absorbing boundary */
+	    if (iz < nbt)
+		phf *= exp(-powf(ct*(nbt-iz)*abs(ksz[ikz]/hypk),2));
+	    else if (iz > nz-1-nbb)
+		phf *= exp(-powf(cb*(iz-nz+1+nbb)*abs(ksz[ikz]/hypk),2));
+	    if (ix < nbl)
+		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
+	    else if (ix > nx-1-nbr)
+		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
+
+	    res(a,b) = phf;
 	}
     }
     return 0;
@@ -124,10 +143,18 @@ int main(int argc, char** argv)
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic
     par.get("sign",sign,0); // sign of solution: 0 is positive, 1 is negative
     
+    par.get("nbt",nbt,0);
+    par.get("nbb",nbb,0);
+    par.get("nbl",nbl,0);
+    par.get("nbr",nbr,0);
+
+    par.get("ct",ct,0.0);
+    par.get("cb",cb,0.0);
+    par.get("cl",cl,0.0);
+    par.get("cr",cr,0.0);
 
     iRSF vel, q("q");
 
-    int nz,nx;
     vel.get("n1",nz);
     vel.get("n2",nx);
     int m = nx*nz;
@@ -143,6 +170,7 @@ int main(int argc, char** argv)
     int nkz,nkx;
     fft.get("n1",nkz);
     fft.get("n2",nkx);
+    nkzs = nkz;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -152,19 +180,18 @@ int main(int argc, char** argv)
     fft.get("o1",kz0);
     fft.get("o2",kx0);
 
-    float kx, kz;
-
     int n = nkx*nkz;
-    std::valarray<float> k(n);
-    for (int ix=0; ix < nkx; ix++) {
-	kx = kx0+ix*dkx;
-	for (int iz=0; iz < nkz; iz++) {
-	    kz = kz0+iz*dkz;
-	    k[iz+ix*nkz] = 2*SF_PI*hypot(kx,kz);
-	}
-    }
-    ks.resize(n);
-    ks = k;
+
+    std::valarray<float> kz(nkz),kx(nkx);
+    for (int iz=0; iz < nkz; iz++)
+	kz[iz] = 2*SF_PI*(kz0+iz*dkz);
+    for (int ix=0; ix < nkx; ix++)
+	kx[ix] = 2*SF_PI*(kx0+ix*dkx);
+
+    ksz.resize(nkz);
+    ksz = kz;
+    ksx.resize(nkx);
+    ksx = kx;
 
     vector<int> lidx, ridx;
     CpxNumMat mid;
