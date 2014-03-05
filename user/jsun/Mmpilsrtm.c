@@ -683,7 +683,7 @@ int main(int argc, char* argv[])
 
     /*grid index variables*/
     int nx, nz, nt, wfnt;
-    int nzx, nx2, nz2, n2, m2, pad1, nk;
+    int nzx, nx2, nz2, n2, m2, m2b, pad1, nk;
     int ix, iz, it, is;
     int nxb, nzb;
     int snpint;
@@ -805,6 +805,11 @@ int main(int argc, char* argv[])
     if (!sf_histint(right,"n1",&n2) || n2 != m2) sf_error("Need n1=%d in right",m2);
     if (!sf_histint(right,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
 
+    if (!sf_histint(leftb,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in left",nzx);
+    if (!sf_histint(leftb,"n2",&m2b))  sf_error("Need n2= in left");
+    if (!sf_histint(rightb,"n1",&n2) || n2 != m2b) sf_error("Need n1=%d in right",m2b);
+    if (!sf_histint(rightb,"n2",&n2) || n2 != nk) sf_error("Need n2=%d in right",nk);
+
     /*check record data*/
     if (adj && wantrecord){
 	sf_histint(Frcd,"n1", &tmpint);
@@ -820,8 +825,8 @@ int main(int argc, char* argv[])
     rr=sf_floatalloc(nzx);
     lt = sf_complexalloc2(nzx,m2);
     rt = sf_complexalloc2(m2,nk);
-    ltb = sf_complexalloc2(nzx,m2);
-    rtb = sf_complexalloc2(m2,nk);
+    ltb = sf_complexalloc2(nzx,m2b);
+    rtb = sf_complexalloc2(m2b,nk);
     geop = (geopar) sf_alloc(1, sizeof(*geop));
     mpip = (mpipar) sf_alloc(1, sizeof(*mpip));
     tmprec = sf_complexalloc2(nt, gpl);
@@ -843,8 +848,8 @@ int main(int argc, char* argv[])
     sf_complexread(ww,nt,Fsrc);
     sf_complexread(lt[0],nzx*m2,left);
     sf_complexread(rt[0],m2*nk,right);
-    sf_complexread(ltb[0],nzx*m2,leftb);
-    sf_complexread(rtb[0],m2*nk,rightb);
+    sf_complexread(ltb[0],nzx*m2b,leftb);
+    sf_complexread(rtb[0],m2b*nk,rightb);
     if(!adj) sf_complexread(img[0],nx*nz,Fimg);
     if(adj && wantrecord) {
       sf_complexread(record[0][0], shtnum*gpl*nt, Frcd);
@@ -974,7 +979,7 @@ int main(int argc, char* argv[])
 	  for (it=0; it<nt; it++)
 	    tmprec[ix][it] = record[is][ix][it];
 
-      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2, geop, pad1, illum);
+      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, pad1, illum);
 
     if (adj)
 #ifdef _OPENMP
