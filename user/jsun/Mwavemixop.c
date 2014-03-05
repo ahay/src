@@ -144,23 +144,144 @@ int prop(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, int nz, in
 	}
 	/* outout wavefield */
 	if(snap>0) {
-	  if(it%snap==0 && wfit<=(int)(nt-1)/snap) {
-	    for (ix=0; ix<nx; ix++)
-	      for (iz=0; iz<nz; iz++)
-		wvfld[wfit][ix][iz] = curr[iz+ix*nz2];
-	    wfit++;
-	  }
+	    if(it%snap==0 && wfit<=(int)(nt-1)/snap) {
+		for (ix=0; ix<nx; ix++)
+		    for (iz=0; iz<nz; iz++)
+			wvfld[wfit][ix][iz] = curr[iz+ix*nz2];
+		wfit++;
+	    }
 	}
     } /* time stepping */
     if(verb) sf_warning("."); 
     /* output final result*/
     for (ix=0; ix<nx; ix++)
-      for (iz=0; iz<nz; iz++)
-	cc[ix][iz] = curr[iz+ix*nz2];
-
+	for (iz=0; iz<nz; iz++)
+	    cc[ix][iz] = curr[iz+ix*nz2];
+    
     cfft2_finalize();
     return 0;
 }
+
+int prop1(sf_complex **ini, sf_complex **lt, sf_complex **rt, int nz, int nx, int nt, int m2, int nkzx, int pad1, int snap, sf_complex **cc, sf_complex ***wvfld, int offset)
+{
+    bool verb=true;
+    /* index variables */
+    int it,iz,ix,im,ik,i,j,wfit;
+    int nz2,nx2,nk,nzx2;
+    sf_complex c;
+    /* wavefield */
+    sf_complex **wave,**wave2, *curr, *currm, *cwave, *cwavem;
+
+    nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
+    nzx2 = nz2*nx2;
+
+    if (nk!=nkzx) sf_error("nk discrepancy!");
+
+    curr   = sf_complexalloc(nzx2);
+    currm  = sf_complexalloc(nzx2);
+    
+    cwave  = sf_complexalloc(nk);
+    cwavem = sf_complexalloc(nk);
+    wave   = sf_complexalloc2(nk,m2);
+    wave2  = sf_complexalloc2(nzx2,m2);
+
+    icfft2_allocate(cwavem);
+
+    /* initialization */
+    for (ix = 0; ix < nx2; ix++) {
+	for (iz=0; iz < nz2; iz++) {
+	    j = iz+ix*nz2;
+	    if (ix<nx && iz<nz)
+		curr[j] = ini[ix][iz];
+	    else 
+		curr[j] = sf_cmplx(0.,0.);
+	}
+    }
+
+    wfit = offset;
+
+    /* MAIN LOOP */
+    for (it=0; it<nt; it++) {
+	if(verb) sf_warning("it=%d;",it);
+	
+	/* matrix multiplication */
+	for (im = 0; im < m2; im++) {
+	    for (ix = 0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    i = iz+ix*nz;  /* original grid */
+		    j = iz+ix*nz2; /* padded grid */
+#ifdef SF_HAS_COMPLEX_H
+		    currm[j] = conjf(lt[im][i])*curr[j];
+#else
+		    currm[j] = sf_cmul(conjf(lt[im][i]), curr[j]);
+#endif
+		}
+	    }
+	    cfft2(currm,wave[im]);
+	}
+	
+	for (ik = 0; ik < nk; ik++) {
+	    c = sf_cmplx(0.,0.);
+	    for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		c += wave[im][ik]*conjf(rt[ik][im]);
+#else
+		c += sf_cmul(wave[im][ik],conjf(rt[ik][im]));
+#endif
+	    }
+	    cwave[ik] = c;
+	}
+	
+	/* saving a pair of FFTs */
+	// icfft2(curr,cwave);
+	//  cfft2(curr,cwave);
+
+	for (im = 0; im < m2; im++) {
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]*rt[ik][im];
+#else
+		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]);
+#endif
+	    }
+	    icfft2(wave2[im],cwavem);
+	}
+	
+	for (ix = 0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		i = iz+ix*nz;  /* original grid */
+		j = iz+ix*nz2; /* padded grid */
+		c = sf_cmplx(0.,0.);
+		for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		    c += lt[im][i]*wave2[im][j];
+#else
+		    c += sf_cmul(lt[im][i], wave2[im][j]);
+#endif
+		}
+		curr[j] = c;
+	    }
+	}
+	/* outout wavefield */
+	if(snap>0) {
+	    if(it%snap==0 && wfit-offset<=(int)(nt-1)/snap) {
+		for (ix=0; ix<nx; ix++)
+		    for (iz=0; iz<nz; iz++)
+			wvfld[wfit][ix][iz] = curr[iz+ix*nz2];
+		wfit++;
+	    }
+	}
+    } /* time stepping */
+    if(verb) sf_warning("."); 
+    /* output final result*/
+    for (ix=0; ix<nx; ix++)
+	for (iz=0; iz<nz; iz++)
+	    cc[ix][iz] = curr[iz+ix*nz2];
+    
+    cfft2_finalize();
+    return 0;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -259,12 +380,21 @@ int main(int argc, char* argv[])
     else wvfld = NULL;
 
     /* wave propagation*/
-    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
+//    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
+
+    int nt1 = nt/2;
+    prop(rr, ww, lt, rt, nz, nx, nt1, m2, nk, mode, 1, snap, cc, wvfld);
+    int offset = (int)(nt1-1)/snap + 1;
+    sf_warning("offset=%d",offset);
+    int nt2 = nt-nt1;
+    sf_complex **dd;
+    dd=sf_complexalloc2(nz,nx);
+    prop1(cc, lt, rt, nz, nx, nt2, m2, nk, 1, snap, dd, wvfld, offset);
 
     /* output result */
     sf_complexwrite(cc[0], nzx, Fo);
     if (snap>0)
-      sf_complexwrite(wvfld[0][0], nzx*nt, Fs);
+      sf_complexwrite(wvfld[0][0], nzx*wfnt, Fs);
     exit (0);
 }
 
