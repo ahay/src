@@ -57,14 +57,12 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 #ifdef SF_HAS_COMPLEX_H
 		phi = (sign==0)? sf_cmplx(0,1)*csqrtf(sf_cmplx(p2,0))*dt/2. : sf_complex(0,1)*(-1*csqrtf(sf_complex(p2,0))*dt/2.);
 		phase = phr + phi;
-		if (rev) phase*=-1;
 #else
 		if (sign==0)
 		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),dt/2.));
 		else
 		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),-1*dt/2.));
 		phase = sf_cadd(phr,phi);
-		if (rev) phase=sf_crmul(phase,-1);
 #endif
 		phf = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
@@ -80,14 +78,12 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 #ifdef SF_HAS_COMPLEX_H
 		phi = (sign==0)? sf_cmplx(0,1)*csqrtf(sf_cmplx(p2,0))*dt/2. : sf_complex(0,1)*(-1*csqrtf(sf_complex(p2,0))*dt/2.);
 		phase = phr + phi;
-		if (rev) phase*=-1;
 #else
 		if (sign==0)
 		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),dt/2.));
 		else
 		    phi = sf_cmul(sf_cmplx(0,1),sf_crmul(csqrtf(sf_cmplx(p2,0)),-1*dt/2.));
 		phase = sf_cadd(phr,phi);
-		if (rev) phase=sf_crmul(phase,-1);
 #endif
 		phf = cpx(crealf(cexpf(phase)),cimagf(cexpf(phase)));
 	    }
@@ -95,12 +91,10 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		float gamma = atanf(1./qs[rs[a]])/SF_PI;
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
 		float phase = sqrtf(-eta*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+2.))*dt;
-		if (rev) phase*=-1;
 		phf = cpx(cosf(phase),sinf(phase));
 	    }
 	    else { /*acoustic*/
 		float phase = vs[rs[a]]*hypk*dt; 
-		if (rev) phase*=-1;
 		phf = cpx(cosf(phase),sinf(phase)); 
 	    }
 	    /* absorbing boundary */
@@ -112,8 +106,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		phf *= exp(-powf(cl*(nbl-ix)*abs(ksx[ikx]/hypk),2));
 	    else if (ix > nx-1-nbr)
 		phf *= exp(-powf(cr*(ix-nx+1+nbr)*abs(ksx[ikx]/hypk),2));
-
-	    res(a,b) = phf;
+	    res(a,b) = (rev) ? conj(phf) : phf;
 	}
     }
     return 0;
