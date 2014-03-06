@@ -208,6 +208,12 @@ int main (int argc, char* argv[])
 	sf_putint(mask,"n1",nx);
 	sf_putint(mask,"n2",ny);
 	sf_putint(mask,"n3",nz);
+	sf_putint (mask,"o1",xmin);
+	sf_putint (mask,"o2",ymin);
+	sf_putint (mask,"o3",zmin);
+	sf_putint (mask,"d1",1);
+	sf_putint (mask,"d2",1);
+	sf_putint (mask,"d3",1);
 	sf_settype(mask,SF_INT);
 
 	for (iz=0; iz < nz; iz++) {
