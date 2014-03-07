@@ -51,33 +51,21 @@ Flow('sigsbnesc','vel vspl',
 # Angle migration
 ###############
 
-# Prestack data
-data = 'sigsbee2b_nfs.segy'
-datamd5 = 'sigsbee2b_nfs.md5'
-Fetch(data ,'sigsbee')
-Flow(['zdata','tzdata'],[data,datamd5],'''
-     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]} > ${TARGETS[0]} &&
-     md5sum --status -c ${SOURCES[1]}
-     ''',stdin=0,stdout=0)
-# Create sraw(t,o,s): o=full offset, s=shot position, t=time
-Flow('ss','tzdata','dd type=float | headermath output="10925+fldr*150" | window')
-Flow('oo','tzdata','dd type=float | headermath output="offset"         | window')
-Flow('si','ss','math output=input/150')
-Flow('oi','oo','math output=input/75')
-Flow('os',['oi','si'],'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=int')
-Flow('data',['zdata','os'],'''
-     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
-     put label1=Time unit1=s
-         d2=.02286 o3=0 label2=Offset unit2=km
-         d3=.04572 o3=3.330 label3=Shot unit3=km |
+sigsbee.getshots('shots')
+
+Result('shots','byte | grey3 flat=n frame1=250 frame2=80 frame3=100 title=Shots')
+
+Flow('data','shots',
+     '''
      window min1=2.0 |
      mutter t0=0.5 v0=1.5 half=n |
      pcrdata2 absoff=n KMAH=y filter=y verb=y
      ''')
 
 # Migration
-Flow(['sigsbocram','sigsbdcram','sigsboill','sigsbdill','sigsbosmb'],
-     ['sigsbnesc','data','vel'],'''
+Flow('sigsbocram sigsbdcram sigsboill sigsbdill sigsbosmb',
+     'sigsbnesc data vel',
+     '''
      cram2 data=${SOURCES[1]} vz=${SOURCES[2]}
            mute=y oazmin=%(oazmin)g oazmax=%(oazmax)g
                   dazmin=%(dazmin)g dazmax=%(dazmax)g

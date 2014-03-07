@@ -1,4 +1,5 @@
-/* 2D prestack GPU-based RTM using effective boundary saving
+/* 2D prestack GPU-based RTM using effective boundary saving.
+
 Some basic descriptions of this code are in order.
 1) Coordinate configuration of seismic data:
 

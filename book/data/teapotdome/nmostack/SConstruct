@@ -66,4 +66,22 @@ Result('stack',
        | grey3 title=Stack frame1=500 frame2=120 frame3=140
         ''')
 
+# Velocity analysis at one CMP
+Flow('gather1','gathers','window n3=1 n4=1 f3=120 f4=140')
+Flow('offset1','offset', 'window n3=1 n4=1 f3=120 f4=140')
+Flow('mask1','mask3',    'window n3=1 n4=1 f3=120 f4=140')
+
+Result('gather1','gather1 offset1',
+       '''
+       wiggle xpos=${SOURCES[1]} transp=y poly=y yreverse=y title="CMP Gather" 
+       label2=Offset unit2=ft
+       ''')
+
+Flow('vscan1','gather1 offset1 mask1',
+     'vscan offset=${SOURCES[1]} mask=${SOURCES[2]} v0=9000 nv=101 dv=100 semblance=y half=n nb=10')
+
+Result('vscan1','grey color=j allpos=y title="Semblance Scan" unit2=ft/s')
+
+# Try a supergather???
+
 End()

@@ -1,6 +1,6 @@
 /* Pad and interleave traces.
 
-Each initial trace is followed by I<jump> zero traces, the same for planes.
+Each initial trace is followed by "jump" zero traces, the same for planes.
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
