@@ -387,11 +387,11 @@ namespace RVL {
     WatchedVecRef<Scalar> wx;
     mutable Functional<Scalar> * f;
 
-    Scalar val;
+    mutable Scalar val;
     mutable bool applied;
-    Vector<Scalar> grad;
+    mutable Vector<Scalar> grad;
     mutable bool gapplied;
-    NormRetType gnorm;
+    mutable NormRetType gnorm;
     mutable bool gnormapplied;
 
     Components<Scalar> cg;
@@ -588,12 +588,13 @@ namespace RVL {
     }
 
     /** const reference to evaluation point */
-    Vector<Scalar> & getPoint() const { return wx.get(); }
+    Vector<Scalar> & getPoint() { return wx.get(); }
+    Vector<Scalar> const & getPoint() const { return wx.get(); }
 
     /** extract value of functional at evaluation point. Checks to see
 	if latter has been updated; if so, updates internal copy of
 	value. */
-    Scalar getValue() {
+    Scalar getValue() const {
       try {
 	if (wx.update()) {
 	  reset();
@@ -615,7 +616,7 @@ namespace RVL {
 	the gradient. This method should be called to ensure proper
 	recalculation of the gradient when the point changes.
     */
-    const Vector<Scalar> & getGradient() {
+    Vector<Scalar> const & getGradient() const {
       try {
 	if (wx.update()) {
 	  reset();
@@ -638,7 +639,7 @@ namespace RVL {
 	This method (or the getGradient() method) should be called to ensure 
 	proper recalculation of the gradient when the point changes.
     */
-    Scalar getGradientNorm() {
+    Scalar getGradientNorm() const {
       try {
 	if (wx.update()) {
 	  reset();
@@ -661,7 +662,7 @@ namespace RVL {
 	It is safe to store a reference to the Hessian for the lifetime of
 	the evaluation.
     */
-    const LinearOp<Scalar> & getHessian() {
+    LinearOp<Scalar> const & getHessian() const {
       try { return hess; }
       catch (RVLException & e) {
 	e<<"\ncalled from FunctionalEvaluation::getHessian\n";

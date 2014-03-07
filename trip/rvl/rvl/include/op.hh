@@ -490,7 +490,7 @@ namespace RVL {
     WatchedVecRef<Scalar> wx;
     mutable Operator<Scalar> * f;
 
-    Vector<Scalar> val;
+    mutable Vector<Scalar> val;
     mutable bool applied;
     DerivEvaluation<Scalar> * deriv;
     Deriv2Evaluation<Scalar> * deriv2;
@@ -770,15 +770,16 @@ namespace RVL {
     /** access to domain, implemented by delegation to Operator reference
 	data member
     */
-    const Space<Scalar> & getDomain() const { return fref.getDomain(); }
+    Space<Scalar> const & getDomain() const { return fref.getDomain(); }
 
     /** access to range, implemented by delegation to Operator reference
 	data member
     */
-    const Space<Scalar> & getRange() const { return fref.getRange(); }
+    Space<Scalar> const & getRange() const { return fref.getRange(); }
 
     /** reference to evaluation point - can be assigned to */
-    Vector<Scalar> & getPoint() const { return wx.get(); }
+    Vector<Scalar> & getPoint() { return wx.get(); }
+    Vector<Scalar> const & getPoint() const { return wx.get(); }
 
     /** reference to evaluated operator copy - cannot be assigned.
 	Supplied to enable access to special attributes of child
@@ -792,7 +793,7 @@ namespace RVL {
 
     /** const reference to value (internal datum). 
     */
-    Vector<Scalar> const & getValue() {
+    Vector<Scalar> const & getValue() const {
       try {
 	if (wx.update()) reset();	
 	if (!applied) {
@@ -808,10 +809,10 @@ namespace RVL {
     }
 
     /** const reference to derivative (internal datum) */
-    LinearOp<Scalar> const & getDeriv() { return *deriv; }
+    LinearOp<Scalar> const & getDeriv() const { return *deriv; }
 
     /** const reference to 2nd derivative (internal datum) */
-    SymmetricBilinearOp<Scalar> const & getDeriv2() { return *deriv2; }
+    SymmetricBilinearOp<Scalar> const & getDeriv2() const { return *deriv2; }
 
     ostream & write(ostream & str) const{
       str<<"Operator Evaluation:"<<"\n";

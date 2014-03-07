@@ -896,7 +896,8 @@ namespace RVL {
       : x(w.x), ver(w.x.getVersion()) {}
     virtual ~WatchedVecRef() {}
 
-    Vector<Scalar> & get() const { return x; }
+    Vector<Scalar> & get() { return x; }
+    Vector<Scalar> const & get() const { return x; }
 
     bool update() const {
       try {

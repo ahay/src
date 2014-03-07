@@ -159,6 +159,12 @@ namespace RVL {
 	    yp.getSize() != this->getSize()) {
 	  RVLException e; e<<"Error: ProductSpace::linComb\n";
 	  e<<"input data containers not of same size as space\n";
+	  e<<"**** FIRST INPUT PDC:\n";
+	  x.write(e);
+	  e<<"**** SECOND INPUT PDC:\n";
+	  y.write(e);
+	  e<<"**** SPACE:\n";
+	  Space<Scalar>::write(e);
 	  throw e;
 	}
 	for (size_t i=0;i<this->getSize();i++) {

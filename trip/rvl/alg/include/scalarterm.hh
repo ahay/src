@@ -59,15 +59,8 @@ public:
       returns true when count == maxcount
       
               false when count < maxcount
-
-      Throws an error if maxcount <= 0
   */
-  CountTerminator( int maxcount ) : mc(maxcount), count(0), i(1) {
-    if( maxcount <= 0 ) {
-      RVL::RVLException e; e << "Error in CountTerminator constructor: parameters cause infinite loop; maxcount = "<<maxcount<<"\n";
-      throw e;
-    }
-  }
+  CountTerminator( int maxcount ) : mc(maxcount), count(0), i(1) {}
 
   /** Initializes count to init.
       When query is called, increments count by inc and then tests to see if maxcount 
@@ -81,7 +74,7 @@ public:
   */
   CountTerminator( int init, int maxcount, int inc ) 
     : mc(maxcount), count(init), i(inc) {
-    if( (maxcount - init)/inc <= 0 ) {
+    if ( inc <= 0 ) {
       RVL::RVLException e; e << "Error in CountTerminator constructor: parameters cause infinite loop";
       throw e;
     }
