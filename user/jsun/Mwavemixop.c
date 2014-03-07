@@ -380,8 +380,9 @@ int main(int argc, char* argv[])
     else wvfld = NULL;
 
     /* wave propagation*/
-//    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
+    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
 
+    /*
     int nt1 = nt/2;
     prop(rr, ww, lt, rt, nz, nx, nt1, m2, nk, mode, 1, snap, cc, wvfld);
     int offset = (int)(nt1-1)/snap + 1;
@@ -390,6 +391,7 @@ int main(int argc, char* argv[])
     sf_complex **dd;
     dd=sf_complexalloc2(nz,nx);
     prop1(cc, lt, rt, nz, nx, nt2, m2, nk, 1, snap, dd, wvfld, offset);
+    */
 
     /* output result */
     sf_complexwrite(cc[0], nzx, Fo);
