@@ -522,7 +522,7 @@ int main(int argc, char* argv[])
     int nt2 = nt-nt1;
     sf_complex **dd;
     dd=sf_complexalloc2(nz,nx);
-    prop1(cc, lt, rt, nz, nx, nt2, m2, nk, 1, snap, dd, wvfld, offset);
+    prop2(cc, lt, rt, nz, nx, nt2, m2, nk, 1, snap, dd, wvfld, offset);
 
     /* output result */
     sf_complexwrite(cc[0], nzx, Fo);
