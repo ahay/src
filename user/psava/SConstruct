@@ -40,6 +40,13 @@ ttifd2d ttifd3d
 srbin3d
 '''
 
+# Python targets
+targets.py = '''
+corop
+pwave3d
+ocor3d
+'''
+
 # paradd
 # anifd2d
 # awefd
