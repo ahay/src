@@ -2,16 +2,22 @@ import os, sys, string
 sys.path.append('../../framework')
 import bldutil
 
+# C++ programs
 progs = '''
-radon2 radon3 radon32 apradon2 radon34 diradon2 diiradon2 adiradon2 diradon32 diradon3 diradon34 sum sum3 sthres 
+radon2 radon3 radon32 apradon2 radon34 diradon2 diiradon2 adiradon2 diradon32 diradon3 diradon34 sum sum3 sthres
 '''
 
+# C++ programs calling subC programs
+sprogs = '''
+adjtest adjtest1 rankonetest samptest pseudo1 pseudo2
+'''
+
+# subC++ programs
 subs = '''
-bfio bfio_eval2 bfio_eval3 bfio_apeval2 bfio_eval34
+bfio bfio_eval2 bfio_eval3 bfio_apeval2 bfio_eval34 rankoneapprox
 '''
 
-#added by XZ
-
+# C programs
 cprogs = '''
 nmo3_ort inmo3_ort
 '''
@@ -22,23 +28,20 @@ try:  # distributed version
 except: # local version
     env = bldutil.Debug()
     root = None
-    #    SConscript('../../api/c++/SConstruct')
     SConscript('../lexing/SConstruct')
 
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
-##added by XZ
 ccinc = Glob('[a-z]*.h*')
 
 src = Glob('[a-z]*.c')
-
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
-
+    
 
 if 'c++' in env.get('API',[]):
     lapack = env.get('LAPACK')
@@ -57,18 +60,28 @@ if lapack:
     env.Install('../../lib',lib)
     env.Install('../../include',ccinc)
 
-
 mains = Split(progs)
 for prog in mains:
-    sources = ['M' + prog]
     if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources)+[lib])
+        prog = env.Program(prog,['M'+prog+'.cc']+obj+[lib])
         env.Depends(prog,ccinc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
         env.Install(incdir,'bfio.bin')
+
+smains = Split(sprogs)
+for sprog in smains:
+    if lapack:
+        sprog = env.Program(sprog,['M'+sprog+'.cc']+env.Object("prop1.c")+env.Object("prop2.c")+env.Object("prop1P.c")+env.Object("prop1Pa.c")+env.Object("prop2N.c")+env.Object("prop2Na.c")+env.Object("cfft2nsps.c")+[lib])
+        env.Depends(sprog,ccinc)
+    else:
+        sprog = env.RSF_Place('sf'+sprog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,sprog)
+        env.Install(incdir,'bfio.bin')
+
 
 cmains = Split(cprogs)
 for prog in cmains:
@@ -85,10 +98,9 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-#   docs = map(lambda prog: env.Doc(prog,'M%s.cc' % prog,lang='c++'),
-#              Split(progs))
     docs = map(lambda prog: env.Doc(prog,'M' + prog),cmains) + \
-           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c++'),mains)
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c++'),mains) + \
+           map(lambda prog: env.Doc(prog,'M%s.cc' % prog, lang='c++'),smains)
     env.Depends(docs,'#/framework/rsf/doc.py')
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
