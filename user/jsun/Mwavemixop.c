@@ -163,7 +163,7 @@ int prop(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, int nz, in
     return 0;
 }
 
-int xjj1(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex *alpha, sf_complex *beta, int nz, int nx, int nt, int m2, int nkzx, int pad1, int snap, sf_complex **cc, sf_complex ***wvfld)
+int xjj1(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex *alpha, sf_complex *beta, int nz, int nx, int nt, int m2, int nkzx, int pad1, int snap, sf_complex **cc, sf_complex ***wvfld, bool correct)
 /*^*/
 {
     bool verb=true;
@@ -258,27 +258,29 @@ int xjj1(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex
 	    }
 	}
 
-	for (ix = 0; ix < nx; ix++) {
-	    for (iz=0; iz < nz; iz++) {
-		i = iz+ix*nz;  /* original grid */
-		j = iz+ix*nz2; /* padded grid */
+	if (correct) {
+	    for (ix = 0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    i = iz+ix*nz;  /* original grid */
+		    j = iz+ix*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
-		currm[j] = curr[j]/alpha[i];
+		    currm[j] = curr[j]/alpha[i];
 #else
-		currm[j] = sf_cdiv(curr[j],alpha[i]);
+		    currm[j] = sf_cdiv(curr[j],alpha[i]);
+#endif
+		}
+	    }
+	    cfft2(currm,cwave);
+	    
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]/beta[ik];
+#else
+		cwavem[ik] = sf_cdiv(cwave[ik],beta[ik]);
 #endif
 	    }
+	    icfft2(curr,cwavem);
 	}
-	cfft2(currm,cwave);
-
-	for (ik = 0; ik < nk; ik++) {
-#ifdef SF_HAS_COMPLEX_H
-	    cwavem[ik] = cwave[ik]/beta[ik];
-#else
-	    cwavem[ik] = sf_cdiv(cwave[ik],beta[ik]);
-#endif
-	}
-	icfft2(curr,cwavem);
 	
 	/* outout wavefield */
 	if(snap>0) {
@@ -555,8 +557,8 @@ int prop2(sf_complex **ini, sf_complex **lt, sf_complex **rt, int nz, int nx, in
 
 int main(int argc, char* argv[])
 {
-    bool verb;
-    char *mode;
+    bool verb,correct;
+//    char *mode;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
     int snap,wfnt;
     float dt,wfdt;
@@ -572,10 +574,11 @@ int main(int argc, char* argv[])
     sf_file left, right;
 
     sf_init(argc,argv);
-    if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
-    if (!sf_getint("snap",&snap)) snap=0;     /* interval for snapshots */
 
-    mode=sf_getstring("mode"); /* default mode is pspi */
+    if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
+    if(!sf_getint("snap",&snap)) snap=0;     /* interval for snapshots */
+    if(!sf_getbool("correct",&correct)) correct=false;   /* interval for snapshots */
+//    mode=sf_getstring("mode"); /* default mode is pspi */
 
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -607,10 +610,12 @@ int main(int argc, char* argv[])
       sf_oaxa(Fs,at,3);
     } else Fs=NULL;
 
+    /*
     if (mode[0]=='p') {sf_warning(">>>>> Using PSPI! <<<<< \n");}
     else if (mode[0]=='n') {sf_warning(">>>>> Using NSPS! <<<<< \n");}
     else if (mode[0]=='m') {sf_warning(">>>>> Using MIXED! <<<<< \n");}
     else { mode[0]='m'; sf_warning(">>>>> Default mode: Using MIX! <<<<< \n"); }
+    */
 
     if (!sf_getint("pad1",&pad1)) pad1=1; /* padding factor on the first axis */
 
@@ -638,20 +643,25 @@ int main(int argc, char* argv[])
     sf_fileclose(left);
     sf_fileclose(right);
 
-    Fa = sf_input("alpha");
-    Fb = sf_input("beta");
-
-    if (!sf_histint(Fa,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in alpha",nzx);
-    if (!sf_histint(Fb,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in beta",nk);
-
-    alpha = sf_complexalloc(nzx);
-    beta = sf_complexalloc(nk);
-
-    sf_complexread(alpha,nzx,Fa);
-    sf_complexread(beta,nk,Fb);
-
-    sf_fileclose(Fa);
-    sf_fileclose(Fb);
+    if (correct) {
+	Fa = sf_input("alpha");
+	Fb = sf_input("beta");
+	
+	if (!sf_histint(Fa,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in alpha",nzx);
+	if (!sf_histint(Fb,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in beta",nk);
+	
+	alpha = sf_complexalloc(nzx);
+	beta = sf_complexalloc(nk);
+	
+	sf_complexread(alpha,nzx,Fa);
+	sf_complexread(beta,nk,Fb);
+	
+	sf_fileclose(Fa);
+	sf_fileclose(Fb);
+    } else {
+	Fa = NULL; Fb = NULL;
+	alpha = NULL; beta = NULL;
+    }
 
     /* read wavelet & reflectivity */
     ww=sf_complexalloc(nt);  
@@ -665,7 +675,7 @@ int main(int argc, char* argv[])
     else wvfld = NULL;
 
     /* wave propagation*/
-    xjj1(rr, ww, lt, rt, alpha, beta, nz, nx, nt, m2, nk, pad1, snap, cc, wvfld);
+    xjj1(rr, ww, lt, rt, alpha, beta, nz, nx, nt, m2, nk, pad1, snap, cc, wvfld, correct);
     //    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
     /*
     int nt1 = nt/2;
