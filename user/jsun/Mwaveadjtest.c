@@ -138,11 +138,11 @@ int prop1(bool adj, sf_complex **ini, sf_complex **lt, sf_complex **rt, int nz, 
 
 int main(int argc, char* argv[])
 {
-    bool verb,adj;
+    bool verb,adj,single;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
     float dt;
 
-    sf_complex **ini, **cc;
+    sf_complex **ini, **cc, **dd;
     
     sf_file Fi,Fo;    /* I/O files */
     sf_axis az,ax;    /* cube axes */
@@ -153,6 +153,7 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getbool("adj",&adj)) adj=false; /* true: NSPS; default: PSPI */
+    if(!sf_getbool("single",&single)) single=true; /* true: NSPS; default: PSPI */
     if(!sf_getint("nt",&nt)) sf_error("Need nt!"); /* verbosity */
     if(!sf_getfloat("dt",&dt)) sf_error("Need dt!"); /* verbosity */
 
@@ -197,14 +198,19 @@ int main(int argc, char* argv[])
 
     ini=sf_complexalloc2(nz,nx);
     cc=sf_complexalloc2(nz,nx);
+    dd=sf_complexalloc2(nz,nx);
 
     sf_complexread(ini[0],nzx,Fi);
     sf_fileclose(Fi);
 
     /* wave propagation*/
 
-    prop1(adj,ini, lt, rt, nz, nx, nt, m2, nk, 1, cc);
-
+    if (single) {
+	prop1(adj,ini, lt, rt, nz, nx, nt, m2, nk, 1, cc);
+    } else {
+	prop1(false, ini, lt, rt, nz, nx, nt, m2, nk, 1, dd);
+	prop1(true, dd, lt, rt, nz, nx, nt, m2, nk, 1, cc);
+    }
     /* output result */
     sf_complexwrite(cc[0], nzx, Fo);
 
