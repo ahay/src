@@ -266,7 +266,7 @@ int xjj1(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex
 		currm[j] = curr[j]/alpha[i];
 #else
 		currm[j] = sf_cdiv(curr[j],alpha[i]);
-#end
+#endif
 	    }
 	}
 	cfft2(currm,cwave);
@@ -568,7 +568,7 @@ int main(int argc, char* argv[])
     sf_file Fw,Fr,Fo,Fs,Fa,Fb;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */
 
-    sf_complex **lt, **rt, *af, *bt;
+    sf_complex **lt, **rt, *alpha, *beta;
     sf_file left, right;
 
     sf_init(argc,argv);
@@ -638,20 +638,20 @@ int main(int argc, char* argv[])
     sf_fileclose(left);
     sf_fileclose(right);
 
-    alpha = sf_input("alpha");
-    beta = sf_input("beta");
+    Fa = sf_input("alpha");
+    Fb = sf_input("beta");
 
-    if (!sf_histint(alpha,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in alpha",nzx);
-    if (!sf_histint(beta,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in beta",nk);
+    if (!sf_histint(Fa,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in alpha",nzx);
+    if (!sf_histint(Fb,"n1",&n2) || n2 != nk) sf_error("Need n1=%d in beta",nk);
 
-    af = sf_complexalloc(nzx);
-    bt = sf_complexalloc(nk);
+    alpha = sf_complexalloc(nzx);
+    beta = sf_complexalloc(nk);
 
-    sf_complexread(af,nzx,alpha);
-    sf_complexread(bt,nk,beta);
+    sf_complexread(alpha,nzx,Fa);
+    sf_complexread(beta,nk,Fb);
 
-    sf_fileclose(alpha);
-    sf_fileclose(beta);
+    sf_fileclose(Fa);
+    sf_fileclose(Fb);
 
     /* read wavelet & reflectivity */
     ww=sf_complexalloc(nt);  
@@ -665,7 +665,7 @@ int main(int argc, char* argv[])
     else wvfld = NULL;
 
     /* wave propagation*/
-    int xjj1(rr, ww, lt, rt, af, bt, nz, nx, nt, m2, nkzx, pad1, snap, cc, wvfld);
+    xjj1(rr, ww, lt, rt, alpha, beta, nz, nx, nt, m2, nk, pad1, snap, cc, wvfld);
     //    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
     /*
     int nt1 = nt/2;
