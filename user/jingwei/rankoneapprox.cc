@@ -140,8 +140,10 @@ int rankoneapprox(const CpxNumMat& M1, const CpxNumMat& M2, CpxNumVec& alpha, Cp
     n = VT.n();
     alpha.resize(m);
     beta.resize(n); 
-    for(int i=0; i<m; i++)  alpha(i) = U(i,0);
-    for(int i=0; i<n; i++)  beta(i) = SM(0)*VT(0,i);
+    //for(int i=0; i<m; i++)  alpha(i) = U(i,0);
+    //for(int i=0; i<n; i++)  beta(i) = SM(0)*VT(0,i);
+    for(int i=0; i<m; i++)  alpha(i) = U(i,0)*sqrt(SM(0));
+    for(int i=0; i<n; i++)  beta(i) = sqrt(SM(0))*VT(0,i);
     cerr<<"Singular Values are "<<SM<<" "<<endl;
 
     }
