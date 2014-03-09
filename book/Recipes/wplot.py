@@ -407,7 +407,8 @@ def inine(cube,custom,par,scale=0.3,ymax=10,ratio=1):
 # plot 1x5 vector of plots (assumes 9 frame in input)
 def ifive(cube,custom,par,scale=0.2,xmax=12):
     nfrm=5
-
+    jfrm=2
+    
     dx=xmax
 
     Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
@@ -415,7 +416,7 @@ def ifive(cube,custom,par,scale=0.2,xmax=12):
         tag="%d"%ifrm
         
         Plot(cube+tag,cube+'byt',
-             'window n3=1 f3=%d |'%(ifrm*2)
+             'window n3=1 f3=%d |'%(ifrm*jfrm)
              + igrey2d('crowd=1.0 wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
