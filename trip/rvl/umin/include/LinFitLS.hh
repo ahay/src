@@ -50,37 +50,35 @@ namespace RVLUmin {
 		   throw e;
 		   }
 	*/
-	cerr<<"1\n";
 	atype rnorm;
 	atype nrnorm;
 	// access Operator through OperatorEvaluation
 	OperatorEvaluation<Scalar> opeval(op,x);
-	cerr<<"2\n";
+
 	// Get Derivative of Operator
 	LinearOp<Scalar> const & lop = opeval.getDeriv();
-	cerr<<"3\n";
+
 	// Composition of lop and preop
 	OpComp<Scalar> gop(preop,lop);
-	cerr<<"4\n";	
+
 	Vector<Scalar> x0(gop.getDomain());
-	cerr<<"5\n";
+
 	x0.zero();
-	cerr<<"6\n";
+
 	dx.zero();
-	cerr<<"7\n";
+
 	// build least square solver , solve for dx
 	OperatorEvaluation<Scalar> gopeval(gop,x0);
-	cerr<<"8\n";
+
 	Algorithm * solver 
 	  = LSPolicy::build(dx,gopeval.getDeriv(),d,rnorm,nrnorm,str);
-	cerr<<"->solver::run\n";
+
 	solver->run();
-	cerr<<"<-solver::run\n";
+
 	// get the value of objective function
 	val = 0.5*rnorm*rnorm;
-	cerr<<"9\n";
+
 	preop.applyOp(dx,dltx);
-	cerr<<"10\n";
       
 	applied = true;
 	delete solver;

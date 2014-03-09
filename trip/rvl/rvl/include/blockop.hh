@@ -108,7 +108,7 @@ namespace RVL {
 	Components<Scalar> dyc(dy);
 	applyComponentAdjDeriv(0,x,dyc[0],dx);
 	if (dyc.getSize()>0) {
-	  Vector<Scalar> tmp(dx);
+	  Vector<Scalar> tmp(this->getDomain(),true);
 	  for (int i=1; i<(int)dyc.getSize(); i++) {
 	    applyComponentAdjDeriv(i,x,dyc[i],tmp);
 	    dx.linComb(1.0,tmp);
