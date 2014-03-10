@@ -259,15 +259,19 @@ int xjj1(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex
 	}
 
 	if (correct) {
-	    for (ix = 0; ix < nx; ix++) {
-		for (iz=0; iz < nz; iz++) {
-		    i = iz+ix*nz;  /* original grid */
-		    j = iz+ix*nz2; /* padded grid */
+	    for (ix = 0; ix < nx2; ix++) {
+		for (iz=0; iz < nz2; iz++) {
+			i = iz+ix*nz;  /* original grid */
+			j = iz+ix*nz2; /* padded grid */
+		    if (ix<nx && iz<nz) {
 #ifdef SF_HAS_COMPLEX_H
-		    currm[j] = curr[j]/alpha[i];
+			currm[j] = curr[j]/alpha[i];
 #else
-		    currm[j] = sf_cdiv(curr[j],alpha[i]);
+			currm[j] = sf_cdiv(curr[j],alpha[i]);
 #endif
+		    } else {
+			currm[j] = sf_cmplx(0.,0.);
+		    }
 		}
 	    }
 	    cfft2(currm,cwave);
@@ -280,6 +284,171 @@ int xjj1(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex
 #endif
 	    }
 	    icfft2(curr,cwavem);
+
+	    for (ix = nx; ix < nx2; ix++) {
+		for (iz=nz; iz < nz2; iz++) {
+		    j = iz+ix*nz2; /* padded grid */	
+		    curr[j] = sf_cmplx(0.,0.);
+		}
+	    }
+	}
+	
+	/* outout wavefield */
+	if(snap>0) {
+	    if(it%snap==0 && wfit<=(int)(nt-1)/snap) {
+		for (ix=0; ix<nx; ix++)
+		    for (iz=0; iz<nz; iz++)
+			wvfld[wfit][ix][iz] = curr[iz+ix*nz2];
+		wfit++;
+	    }
+	}
+    } /* time stepping */
+    if(verb) sf_warning("."); 
+    /* output final result*/
+    for (ix=0; ix<nx; ix++)
+	for (iz=0; iz<nz; iz++)
+	    cc[ix][iz] = curr[iz+ix*nz2];
+    
+    cfft2_finalize();
+    return 0;
+}
+
+int xjj2(float *rr, sf_complex *ww, sf_complex **lt, sf_complex **rt, sf_complex *alpha, sf_complex *beta, int nz, int nx, int nt, int m2, int nkzx, int pad1, int snap, sf_complex **cc, sf_complex ***wvfld, bool correct)
+/*^*/
+{
+    bool verb=true;
+    /* index variables */
+    int it,iz,ix,im,ik,i,j,wfit;
+    int nz2,nx2,nk,nzx2;
+    sf_complex c;
+    /* wavefield */
+    sf_complex **wave,**wave2, *curr, *currm, *cwave, *cwavem;
+
+    nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
+    nzx2 = nz2*nx2;
+
+    if (nk!=nkzx) sf_error("nk discrepancy!");
+
+    curr   = sf_complexalloc(nzx2);
+    currm  = sf_complexalloc(nzx2);
+    
+    cwave  = sf_complexalloc(nk);
+    cwavem = sf_complexalloc(nk);
+    wave   = sf_complexalloc2(nk,m2);
+    wave2  = sf_complexalloc2(nzx2,m2);
+
+    icfft2_allocate(cwavem);
+
+    /* initialization */
+    for (iz=0; iz < nzx2; iz++) {
+	curr[iz] = sf_cmplx(0.,0.);
+    }
+    wfit = 0;
+
+    /* MAIN LOOP */
+    for (it=0; it<nt; it++) {
+	if(verb) sf_warning("it=%d;",it);
+
+	/*PSPI*/
+
+	cfft2(curr,cwave);
+
+	for (im = 0; im < m2; im++) {
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]*rt[ik][im];
+#else
+		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]); //complex multiplies complex
+#endif
+	    }
+	    icfft2(wave2[im],cwavem);
+	}
+	
+	for (ix = 0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		i = iz+ix*nz;  /* original grid */
+		j = iz+ix*nz2; /* padded grid */
+#ifdef SF_HAS_COMPLEX_H
+		c = ww[it] * rr[i]; // source term
+#else
+		c = sf_crmul(ww[it], rr[i]); // source term
+#endif
+		for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		    c += lt[im][i]*wave2[im][j];
+#else
+		    c += sf_cmul(lt[im][i], wave2[im][j]);
+#endif
+		}
+		curr[j] = c;
+	    }
+	}
+
+	/* NSPS */
+
+	/* matrix multiplication */
+	for (im = 0; im < m2; im++) {
+	    for (ix = 0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    i = iz+ix*nz;  /* original grid */
+		    j = iz+ix*nz2; /* padded grid */
+#ifdef SF_HAS_COMPLEX_H
+		    currm[j] = lt[im][i]*curr[j];
+#else
+		    currm[j] = sf_cmul(lt[im][i], curr[j]);
+#endif
+		}
+	    }
+	    cfft2(currm,wave[im]);
+	}
+	
+	for (ik = 0; ik < nk; ik++) {
+	    c = sf_cmplx(0.,0.);
+	    for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		c += wave[im][ik]*rt[ik][im];
+#else
+		c += sf_cmul(wave[im][ik],rt[ik][im]);
+#endif
+	    }
+	    cwavem[ik] = c;
+	}
+
+	icfft2(curr,cwavem);
+
+	if (correct) {
+	    for (ix = 0; ix < nx2; ix++) {
+		for (iz=0; iz < nz2; iz++) {
+			i = iz+ix*nz;  /* original grid */
+			j = iz+ix*nz2; /* padded grid */
+		    if (ix<nx && iz<nz) {
+#ifdef SF_HAS_COMPLEX_H
+			currm[j] = curr[j]/alpha[i];
+#else
+			currm[j] = sf_cdiv(curr[j],alpha[i]);
+#endif
+		    } else {
+			currm[j] = sf_cmplx(0.,0.);
+		    }
+		}
+	    }
+	    cfft2(currm,cwave);
+	    
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]/beta[ik];
+#else
+		cwavem[ik] = sf_cdiv(cwave[ik],beta[ik]);
+#endif
+	    }
+	    icfft2(curr,cwavem);
+
+	    for (ix = nx; ix < nx2; ix++) {
+		for (iz=nz; iz < nz2; iz++) {
+		    j = iz+ix*nz2; /* padded grid */	
+		    curr[j] = sf_cmplx(0.,0.);
+		}
+	    }
 	}
 	
 	/* outout wavefield */
@@ -558,6 +727,7 @@ int prop2(sf_complex **ini, sf_complex **lt, sf_complex **rt, int nz, int nx, in
 int main(int argc, char* argv[])
 {
     bool verb,correct;
+    int type;
 //    char *mode;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
     int snap,wfnt;
@@ -577,7 +747,9 @@ int main(int argc, char* argv[])
 
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getint("snap",&snap)) snap=0;     /* interval for snapshots */
-    if(!sf_getbool("correct",&correct)) correct=false;   /* interval for snapshots */
+    if(!sf_getbool("correct",&correct)) correct=false; /*jingwei's correction*/
+    else if(!sf_getint("type",&type)) type=1; /* type of correction */
+
 //    mode=sf_getstring("mode"); /* default mode is pspi */
 
     /* setup I/O files */
@@ -675,8 +847,13 @@ int main(int argc, char* argv[])
     else wvfld = NULL;
 
     /* wave propagation*/
-    xjj1(rr, ww, lt, rt, alpha, beta, nz, nx, nt, m2, nk, pad1, snap, cc, wvfld, correct);
+    if (type==1)
+	xjj1(rr, ww, lt, rt, alpha, beta, nz, nx, nt, m2, nk, pad1, snap, cc, wvfld, correct);
+    else
+	xjj2(rr, ww, lt, rt, alpha, beta, nz, nx, nt, m2, nk, pad1, snap, cc, wvfld, correct);
+
     //    prop(rr, ww, lt, rt, nz, nx, nt, m2, nk, mode, 1, snap, cc, wvfld);
+
     /*
     int nt1 = nt/2;
     prop(rr, ww, lt, rt, nz, nx, nt1, m2, nk, mode, 1, snap, cc, wvfld);
