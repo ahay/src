@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfwindow', 'sfunif2', 'sfput', 'sfsmooth', 'sfgrey', 'sfgraph', 'sfpad', 'sfdepth2time', 'sfai2refl', 'sfricker1', 'sftime2depth', 'sfrtm2d', 'sflsrtm2d']
-data=[]
-size=   20730832

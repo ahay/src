@@ -88,7 +88,7 @@ Result('image-rtm',
 Flow('image-lsrtm','data modelext',
      '''
      lsrtm2d vel=${SOURCES[1]}
-	n0=%d nt=%d dt=%g niter=8 verb=y
+	n0=%d nt=%d dt=%g niter=3 verb=y
      '''%(padv,nt,dt))
 
 Result('image-lsrtm',
