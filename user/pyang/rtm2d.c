@@ -152,7 +152,7 @@ int nx_, int nb_, int nt_, float **v0, float *mod_, float *dat_)
     	vv=sf_floatalloc2(nzpad,nxpad);
 	/* initialized sponge ABC coefficients */
 	for(ib=0;ib<nb;ib++){
-		t=0.01*(nb-1-ib);
+		t=0.015*(nb-1-ib);
 		bndr[ib]=expf(-t*t);
 	}
 	mod=mod_;
