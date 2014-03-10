@@ -156,14 +156,17 @@ int main(int argc, char* argv[])
 
 
 /*
-// method 3: IRLS with bigsolver reweighting for L0 sparsity-promotion
+// method 3: IRLS with bigsolver reweighting for L0/L1 sparsity-promotion
     	float *w=sf_floatalloc((n1+2*nb)*(n2+2*nb));
     	for (int i=0; i<(n1+2*nb)*(n2+2*nb); i++) w[i]=1.0f;
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
     	for (int iter = 0; iter < niter; iter++) {
-   		sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, 1, "x0", mod, "mwt", w,"verb", false, "end");
+   		sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, 1, "x0", mod, "mwt", w, "end");
+
     		for (int i=0; i<(n1+2*nb)*(n2+2*nb); i++) w[i]=fabsf(mod[i]);//L0-constraint for the model
-		//for (int i=0; i<n1*n2; i++) w[i]=sqrtf(fabsf(mod[i]));//L1-constraint for the model
+		//for (int i=0; i<(n1+2*nb)*(n2+2*nb); i++) w[i]=sqrtf(fabsf(mod[i]));//L1-constraint for the model
+
+		if(verb) sf_warning("iteration %d;",iter+1);
     	}
 	rtm2d_close();
 	free(w);
