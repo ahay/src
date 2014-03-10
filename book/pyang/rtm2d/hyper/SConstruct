@@ -1,11 +1,18 @@
 from rsf.proj import *
 
+n1=401
+n2=1201
+nt=3001
+dt=0.002
+n0=0
+nb=50
+
 # Make a reflector model 
 Flow('refl',None,
      '''
      math n1=10001 o1=-4 d1=0.001 output="sqrt(1+x1*x1)" 
      ''')
-Flow('model','refl',
+Flow('zvel','refl',
      '''
      window min1=-3 max1=3 j1=5  |
      unif2 n1=401 d1=0.005 v00=1,2 |
@@ -13,92 +20,53 @@ Flow('model','refl',
      smooth rect1=3
      ''')
 
-Plot('model',
+Result('zvel','zvel',
      '''
-     grey allpos=y bias=1 title=Model 
-     ''')
+     grey title="Model" wantitle=y allpos=y color=j
+     pclip=100 scalebar=y bartype=v barlabel="V" barunit="km/s"
+     ''' )
 
-padv=50
-padh=50
-nt=1501
-dt=0.004
-n1=401
-n2=1201
-
-
-Flow('modelext','model','pad beg1=%d end1=%d beg2=%d end2=%d| math output=0.5'%(padv,padv,padh,padh))
+Flow('zvel0','zvel','math output="0.5*input"')
 
 
 # Compute approximate reflectivity
-##################################
-Flow('zref','model',
+Flow('zref','zvel',
      '''
      depth2time velocity=$SOURCE nt=%d dt=%g |
-     ai2refl | ricker1 frequency=10 |
-     time2depth velocity=$SOURCE 
-     '''%(nt, dt))
+     ai2refl | ricker1 frequency=15 |
+     time2depth velocity=$SOURCE | 
+     pad beg1=%d end1=%d beg2=%d end2=%d
+     '''%(nt,dt,nb,nb,nb,nb))
+Result('zref','grey title=Reflectivity titlesz=7 labelsz=5')
 
-Plot('zref',
-       '''
-     	window min1=0 max1=2 |
-       grey title=Reflectivity titlesz=7 labelsz=5
-       ''')
 
-Flow('left','zref','window n2=1 | spray n=%d' %padh)
-Flow('right','zref','window n2=1 f2=%d | spray n=%d'%(n2-1,padh))
-Flow('zrefext','left zref right','cat axis=2 ${SOURCES[1:3]}| pad beg1=%d end1=%d'%(padv,padv))
-Result('zrefext','grey title="Extended reflectivity"')
+Flow('data','zref zvel0','rtm2d vel=${SOURCES[1]} nb=%d n0=%d nt=%d dt=%g adj=n'%(nb,n0,nt,dt))
+Result('data','grey title="Zero-Offset Data" grid=y label1=Time unit1=s label2=Distance unit2=km')
 
-Flow('data','zrefext modelext',
-     '''
-     rtm2d vel=${SOURCES[1]} 
-	n0=%d nt=%d dt=%g adj=n
-     '''%(padv,nt,dt))
-
-Result('data',
-     '''
-     window min2=-2 max2=2 min1=1 max1=4 |
-     grey title="Zero-Offset Data" grid=y 
-     label1=Time unit1=s label2=Distance unit2=km
-     ''')
-
-# For dot-product test, input the following line in the command line:
-# sfdottest sfrtm2d mod=zrefext.rsf dat=data.rsf vel=modelext.rsf n0=50 nt=1501 dt=0.004
-
+#sfdottest sfrtm2d mod=zref.rsf dat=data.rsf vel=zvel0.rsf nb=20 n0=2 nt=2300 dt=0.001
 
 # ================= reverse-time migration ==================
-Flow('image-rtm','data modelext',
-     '''
-     rtm2d vel=${SOURCES[1]}
-	n0=%d nt=%d dt=%g adj=y 
-     '''%(padv,nt,dt))
+Flow('image-rtm','data zvel0','rtm2d vel=${SOURCES[1]} n0=%d nb=%d adj=y'%(n0,nb))
+Result('image-rtm','window n1=%d f1=%d n2=%d f2=%d| grey title=RTM titlesz=7'%(n1,nb,n2,nb))
 
-Result('image-rtm',
-     '''
-     window min1=0 max1=2 |
-     put label1=Depth unit1=km label2=Lateral unit2=km |
-     grey title="RTM Image" 
-     ''')
-
-# sfdottest sfrtm2d mod=image-rtm.rsf dat=data.rsf vel=modelext.rsf n0=50 nt=1501 dt=0.004
-# sfconjgrad sfrtm2d mod=zrefext.rsf < data.rsf vel=modelext.rsf n0=50 nt=1501 dt=0.004 niter=8 > invs.rsf
+# sfdottest sfrtm2d mod=image-rtm.rsf dat=data.rsf vel=zvel0.rsf nb=20 n0=2 nt=2300 dt=0.001
 
 
+# sfconjgrad sfrtm2d mod=image-rtm.rsf < data.rsf vel=zvel0.rsf nb=20 n0=2 nt=2300 dt=0.001 niter=5 > invs.rsf
 # ============== least-squares migration ====================
-Flow('image-lsrtm','data modelext',
-     '''
-     lsrtm2d vel=${SOURCES[1]}
-	n0=%d nt=%d dt=%g niter=3 verb=y
-     '''%(padv,nt,dt))
+Flow('image-lsrtm','data zvel0','lsrtm2d vel=${SOURCES[1]} n0=%d nb=%d nt=%d dt=%g niter=5 verb=y'%(n0,nb,nt,dt))
+
+#Flow('image-lsrtm','data zvel0 image-rtm',
+#	'''
+#	sfconjgrad sfrtm2d split=2 nb=20 n0=2 nt=2300 dt=0.001 vel=${SOURCES[1]} mod=${SOURCES[2]} niter=5
+#	''')
 
 Result('image-lsrtm',
-     '''
-     window min1=0 max1=2 |
-     put label1=Depth unit1=km label2=Lateral unit2=km |
-     grey title="LSRTM Image"
-     ''')
-
-#Result('comparison','zref image-rtm image-lsrtm','SideBySideAniso')
+	'''
+	window n1=%d f1=%d n2=%d f2=%d | 
+	put label1=Depth unit1=km label2=Lateral unit2=km |
+	grey title="LSRTM"
+	'''%(n1,nb,n2,nb))
 
 
 
