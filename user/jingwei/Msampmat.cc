@@ -1,4 +1,4 @@
-//   Test sample function
+//   Sample the whole matrix 
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -114,7 +114,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
             //--------construct cin in a different way----------------
             // inverse fft on cfin to get cin1
 	    nk = cfft2_init(1,nz,nx,&nz2,&nx2);
-	    if(nk!=nkzx) cerr<<"nk discrepancy in samptest1"<<endl;
+	    if(nk!=nkzx) cerr<<"nk discrepancy "<<endl;
             icfft2_allocate(cfin);
 	    icfft2(cin1,cfin);
 	    cfft2_finalize();
@@ -136,7 +136,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
        
             // pad cout to get cout1
             nk = cfft2_init(1,nz,nx,&nz2,&nx2);
-	    if(nk!=nkzx) cerr<<"nk discrepancy in samptest2"<<endl;
+	    if(nk!=nkzx) cerr<<"nk discrepancy "<<endl;
             for (int ix = 0; ix < nx2; ix++) {
 		for (int iz = 0; iz < nz2; iz++) {
 		    int i = iz+ix*nz;
@@ -168,10 +168,6 @@ int main(int argc, char** argv)
     sf_init(argc,argv); // Initialize RSF
 
     iRSF par(0); // Get parameters
-
-    int zx0, kzx0;
-    par.get("zx0",zx0);
-    par.get("kzx0",kzx0);
 
     par.get("nz",nz); 
     par.get("dz",dz); 
@@ -218,17 +214,34 @@ int main(int argc, char** argv)
     kzs = kz;
     kxs = kx;
 
-    // Get value of the symbol at (zx0, kzx0)
-    vector<int> rs(1), cs(1);
-    rs[0] = zx0;
-    cs[0] = kzx0;
+    // Get the whole symbol matrix
+    vector<int> rs(nzx), cs(nkzx);
+    for(int i=0; i<nzx; i++) rs[i] = i;
+    for(int i=0; i<nkzx; i++) cs[i] = i;
+    CpxNumMat res1(nzx,nkzx), res2(nzx,nkzx);
 
-    CpxNumMat res(1,1);   
-    iC( sample(rs, cs, res, 1) ); 
-    cerr<<"from sample column: "<<res<<endl;
+    // sample column
+    iC( sample(rs, cs, res1, 1) ); 
+    // sample row
+    iC( sample(rs, cs, res2, 0) ); 
 
-    iC( sample(rs, cs, res, 0) ); 
-    cerr<<"from sample row: "<<res<<endl;
+    std::valarray<sf_complex> cres1(nzx*nkzx), cres2(nzx*nkzx);
+    for (int i=0; i<nzx; i++)
+	for (int j=0; j<nkzx; j++) {
+	    cres1[i+j*nzx] = sf_cmplx(real(res1(i,j)),imag(res1(i,j)));
+	    cres2[i+j*nzx] = sf_cmplx(real(res2(i,j)),imag(res2(i,j)));
+	}
+
+    oRSF column, row("row");
+    column.type(SF_COMPLEX);
+    column.put("n1",nzx);
+    column.put("n2",nkzx);
+    column << cres1;  
+
+    row.type(SF_COMPLEX);
+    row.put("n1",nzx);
+    row.put("n2",nkzx);
+    row << cres2;
 
     exit(0);
 }
