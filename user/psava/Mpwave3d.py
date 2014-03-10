@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
-generate a plane in t-z-x space
-cz z + cx x - vel t = 0
+generate a plane in t-x-y-z space
+cx x + cy y + cz z - vel t = 0
 (the plane goes through the origin)
 '''
 import rsf.api as rsf

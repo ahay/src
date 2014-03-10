@@ -3,7 +3,9 @@
 Oriented correlation
 wfl [file] : is taken from stdin
 opr [file] : is taken from  "opr"
-Requires both files to have the same dimensions
+requires both files to have the same dimensions
+correlation is computed at coordinates (ocox,ocoy,ocoz)
+the (half) lags are: ntlag, nxlag, nylag, nzlag
 '''
 import rsf.api as rsf
 import numpy as np
