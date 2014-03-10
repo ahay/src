@@ -37,21 +37,20 @@ Depends on: 	fd3dutil.c
 Test file:	/book/pyang/test/Testfd3d/SConstruct
 		/book/pyang/test/Testfd2d/SConstruct
 
-4) RTM and LSRTM (2-D zero-offset least squares reverse time migration)
+4) RTM and LSRTM (2-D zero-offset least squares RTM)
 
 Main: 		Mrtm2d.c Mlsrtm2d.c
 Depends on: 	rtm2d.c
 
-Test file:	/book/pyang/test/rtm2d/hyper/SConstruct 
-		(succeed, both rtm and lsrtm!)
-		/book/pyang/test/rtm2d/sigsbee/SConstruct
-		(rtm succeed; lsrtm unsuccessful)
+Test file:	/book/pyang/rtm2d/hyper/SConstruct
+		/book/pyang/rtm2d/marmousi/SConstruct
+		/book/pyang/rtm2d/sigsbee/SConstruct
 
 Note: rtm2d.c is coded following the linear operator standard in 
 	Madagascar:	oper(adj, add, nm, nd, mod, dat)
 
 
-5) prestack RTM using GPU
+5) Prestack RTM using GPU
 
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
 Depends on:	cuda_kernels.cu

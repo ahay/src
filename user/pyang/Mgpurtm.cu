@@ -237,7 +237,7 @@ void device_alloc()
 
 
 void device_free()
-/*< free the variables oon device >*/
+/*< free the variables on device >*/
 {
 	cudaFree(d_bell);
     	cudaFree(d_Sxz);

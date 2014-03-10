@@ -12,12 +12,15 @@ Ts = 1/1000;        % Sampling time: Ts = 1/Fs
 t =[0:Ls-1]*Ts;
 s = [sin(400*pi*t(1:256))   sin(800*pi*t(257:512))...
     sin(200*pi*t(513:768))    sin(600*pi*t(769:1024))];  % s[n]
+
+% s = sin(400*pi*t.^2)+sin(400*pi*fliplr(t.^2));
+
 figure(1),clf
 subplot(221)
 plot(s),axis tight
 title('Original Signal')
 
-L = 128;            % length of the frame basic function
+L =128;            % length of the frame basic function
 [u,dM] = mydivider(Ls+L);% dM:step length in time field
 M = (Ls+L)/dM-1;
 Lo = Ls+L-dM;         

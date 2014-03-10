@@ -80,8 +80,8 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 int main(int argc, char* argv[])
 {   
 	bool verb;
-    	int niter, n1, n2, nb, nt,n0, nx;
-    	float tol, dt,dx,dz, o1,o2;
+    	int niter, n1, n2, nb, nt, n0, nx;
+    	float tol, dt, dx, dz, o1, o2;
     	float *mod, *dat, **vv;      
 
     	sf_file data, imag, modl;/* I/O files */
@@ -105,9 +105,9 @@ int main(int argc, char* argv[])
 	/* o1 */
     	if (!sf_histfloat(modl,"o2",&o2)) sf_error("o2");
 	/* o2 */
-    	if (!sf_getint("nb",&nb)) nb=50;
+    	if (!sf_getint("nb",&nb)) nb=20;
 	/* number (thickness) of ABC boundary grid on each side */
-    	if (!sf_getint("n0",&n0)) n0=nb;
+    	if (!sf_getint("n0",&n0)) n0=0;
 	/* shot depth in the grid */
     	if (!sf_getbool("verb",&verb)) verb=false;
 	/* verbosity */
@@ -122,31 +122,56 @@ int main(int argc, char* argv[])
 	/* time sampling interval: dt */
 	if (!sf_histint(data,"n2",&nx) || nx != n2) 
 	sf_error("Need n2=%d in data",n2);
-	sf_putint(imag,"n1",n1);
-	sf_putint(imag,"n2",n2);
+	sf_putint(imag,"n1",n1+2*nb);
+	sf_putint(imag,"n2",n2+2*nb);
 	sf_putfloat(imag,"d1",dz);
 	sf_putfloat(imag,"d2",dx);
-	sf_putfloat(imag,"o1",o1);
-	sf_putfloat(imag,"o2",o2);
+	sf_putfloat(imag,"o1",o1-nb*dz);
+	sf_putfloat(imag,"o2",o2-nb*dx);
 	sf_putstring(imag,"label1","Depth");
 	sf_putstring(imag,"label2","Distance");
 
 	/* In rtm, vv is the velocity model [modl], which is input parameter; 
 	   mod is the image/reflectivity [imag]; dat is seismogram [data]! */
     	vv = sf_floatalloc2(n1,n2);
-    	mod = sf_floatalloc(n1*n2);
+    	mod = sf_floatalloc((n1+2*nb)*(n2+2*nb));
     	dat = sf_floatalloc(nt*n2);
 
     	sf_floatread(vv[0],n1*n2,modl);
+	memset(mod,0,(n1+2*nb)*(n2+2*nb)*sizeof(float));
 	sf_floatread(dat,nt*n2,data);
-
+/*
+// method 1: use my own CG solver, no reweighting
 	lsrtm2d_init(n1*n2, nt*n2, tol, verb);
 	lsrtm2d(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat, niter);
 	lsrtm2d_close();
+*/
 
-    	sf_floatwrite(mod,n1*n2,imag);  /* output image */
 
-	free(*vv); 	free(vv);
+// method 2: use bigsolver, no reweighting (=method 1)
+	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
+   	sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, niter, "verb", verb, "end");
+	rtm2d_close();
+
+
+
+/*
+// method 3: IRLS with bigsolver reweighting for L0 sparsity-promotion
+    	float *w=sf_floatalloc((n1+2*nb)*(n2+2*nb));
+    	for (int i=0; i<(n1+2*nb)*(n2+2*nb); i++) w[i]=1.0f;
+	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
+    	for (int iter = 0; iter < niter; iter++) {
+   		sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, 1, "x0", mod, "mwt", w,"verb", false, "end");
+    		for (int i=0; i<(n1+2*nb)*(n2+2*nb); i++) w[i]=fabsf(mod[i]);//L0-constraint for the model
+		//for (int i=0; i<n1*n2; i++) w[i]=sqrtf(fabsf(mod[i]));//L1-constraint for the model
+    	}
+	rtm2d_close();
+	free(w);
+*/
+
+    	sf_floatwrite(mod, (n1+2*nb)*(n2+2*nb), imag);  /* output image */
+
+	free(*vv); free(vv);
 	free(mod);
 	free(dat); 
 

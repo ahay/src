@@ -126,6 +126,7 @@ int main(int argc, char* argv[])
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2*n3) nthr=n1*n2*n3-1;
 	thr=sf_quantile(nthr,n1*n2*n3,dout);
+	thr*=powf(0.01, iter/(niter-1));
 	sf_cpthresh(dcurr, n1*n2*n3,thr, p,mode);
 
 	ft3d_lop(false, false, n1*n2*n3, n1*n2*n3, dcurr, dtmp);

@@ -363,27 +363,12 @@ int main(int argc, char* argv[])
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
 
 			record_seis(&dcal[it*ng], gxz, p0, ng);
-
-			//boundary_rw(p0, &spo[it*4*(nx+nz)], false);
 		}
 		matrix_transpose(dcal, ng, nt);
 		memcpy(&dobs[is*ng*nt], dcal, ng*nt*sizeof(float));
 	}
 	sf_floatwrite(dobs, ns*ng*nt, Fs);
 
-/*
-	ptr=p0; p0=p1; p1=ptr;
-	for(int it=nt-1; it>-1; it--)
-	{
-		boundary_rw(p1, &spo[it*4*(nx+nz)], true);
-		step_forward(p0, p1, p2);
-		ptr=p0; p0=p1; p1=p2; p2=ptr;
-
-		add_source(sxz, p1, 1, &wlt[it], false);
-		window2d(v0,p1);
-		sf_floatwrite(v0[0],nz*nx,Fw);
-	}
-*/
 	free(sxz);
 	free(gxz);
 	free(spo);
