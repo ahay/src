@@ -204,6 +204,17 @@ class File(object):
                 raise RuntimeError, 'no match'
             return val
         return wantattr
+    def real(self):
+        'Take real part'
+        re = Filter('real')
+        return re[self]
+    def cmplx(self,im):
+        c = Filter('cmplx')
+        return c[self,im]
+    def imag(self):
+        'Take imaginary part'
+        im = Filter('imag')
+        return im[self]
     def __add__(self,other):
         'Overload addition'
         add = Filter('add')
@@ -248,7 +259,8 @@ class File(object):
         else:
             val = os.popen('%s < %s' % 
                            (Filter('disfil')(number=False),self)).read()
-            return map(float,val.split())
+            # will not work properly with complex arrays
+            return map(lambda x: float(x.rstrip(',')),val.split())
     def __array_wrap__(self,array,context=None):
         return Input(array)
     def __getitem__(self,i):
@@ -424,8 +436,14 @@ if _swig_:
                 self.temp = False
             self.file = c_rsf.sf_output(self.tag)
             if src: # clone source file
-                c_rsf.sf_settype(self.file,_File.type.index(src.type))
-                c_rsf.sf_fileflush(self.file,src.file)
+                if hasattr(src,'file'):
+                   srcfile = src.file
+                   srctype = src.type
+                else:
+                   srcfile = c_rsf.sf_input(self.tag)
+                   srctype = c_rsf.sf_gettype(srcfile)
+                c_rsf.sf_settype(self.file,_File.type.index(srctype))
+                c_rsf.sf_fileflush(self.file,srcfile)
             _File.__init__(self,self.tag)
         def write(self,data):
             if self.type == 'float':
