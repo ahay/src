@@ -99,14 +99,14 @@ def cdafd3d(odat,owfl,idat,velo,sou,rec,custom,par):
 def aweop2d(wfl,sou,vel,custom,par):
     Flow(wfl,[sou,vel],
          '''
-         ../CODE/AWEop2d.x
+         aweop2d
          vel=${SOURCES[1]}
          '''+ ' ' + awepar(par) + ' ' + custom)
 
 def aweop3d(wfl,sou,vel,custom,par):
     Flow(wfl,[sou,vel],
          '''
-         ../CODE/AWEop3d.x
+         aweop3d
          vel=${SOURCES[1]}
          '''+ ' ' + awepar(par) + ' ' + custom)
          
@@ -115,13 +115,13 @@ def aweop3d(wfl,sou,vel,custom,par):
 def cic2dF(img,wfl,opr,custom,par):
     Flow(img,[wfl,opr],
          '''
-         ../CODE/CICop2d.x adj=n wflcausal=y oprcausal=n 
+         cicop2d adj=n wflcausal=y oprcausal=n 
          opr=${SOURCES[1]} 
          ''' + ' ' + custom)
 def cic3dF(img,wfl,opr,custom,par):
     Flow(img,[wfl,opr],
          '''
-         ../CODE/CICop3d.x adj=n wflcausal=y oprcausal=n 
+         cicop3d adj=n wflcausal=y oprcausal=n 
          opr=${SOURCES[1]} 
          ''' + ' ' + custom)
 
@@ -129,13 +129,13 @@ def cic3dF(img,wfl,opr,custom,par):
 def cic2dA(wfl,img,opr,custom,par):
     Flow(wfl,[img,opr],
          '''
-         ../CODE/CICop2d.x adj=y wflcausal=n oprcausal=n 
+         cicop2d adj=y wflcausal=n oprcausal=n 
          opr=${SOURCES[1]} 
          ''' + ' ' + custom)
 def cic3dA(wfl,img,opr,custom,par):
     Flow(wfl,[img,opr],
          '''
-         ../CODE/CICop3d.x adj=y wflcausal=n oprcausal=n 
+         cicop3d adj=y wflcausal=n oprcausal=n 
          opr=${SOURCES[1]} 
          ''' + ' ' + custom)
          
@@ -144,13 +144,13 @@ def cic3dA(wfl,img,opr,custom,par):
 def eic2dF(img,wfl,opr,cip,custom,par):    
     Flow(img,[wfl,opr,cip],
          '''
-         ../CODE/EICop2d.x adj=n wflcausal=y oprcausal=n 
+         eicop2d adj=n wflcausal=y oprcausal=n 
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + eicpar(par) + ' ' + custom )
 def eic3dF(img,wfl,opr,cip,custom,par):    
     Flow(img,[wfl,opr,cip],
          '''
-         ../CODE/EICop3d.x adj=n wflcausal=y oprcausal=n 
+         eicop3d adj=n wflcausal=y oprcausal=n 
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + eicpar(par) + ' ' + custom )
          
@@ -158,13 +158,13 @@ def eic3dF(img,wfl,opr,cip,custom,par):
 def eic2dA(wfl,img,opr,cip,custom,par):    
     Flow(wfl,[img,opr,cip],
          '''
-         ../CODE/EICop2d.x adj=y wflcausal=n oprcausal=n 
+         eicop2d adj=y wflcausal=n oprcausal=n 
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + ' ' + custom )
 def eic3dA(wfl,img,opr,cip,custom,par):    
     Flow(wfl,[img,opr,cip],
          '''
-         ../CODE/EICop3d.x adj=y wflcausal=n oprcausal=n 
+         eicop3d adj=y wflcausal=n oprcausal=n 
          opr=${SOURCES[1]} cip=${SOURCES[2]}
          ''' + ' ' + custom )
          
@@ -172,9 +172,7 @@ def eic3dA(wfl,img,opr,cip,custom,par):
 # EIC 'source' kernel
 def kerS2d(ker,uS,uR,res,cip,vel,custom,par):
     eic2dA(ker+'_gS',res,uR,cip,'gaus=y wflcausal=y oprcausal=n'+' '+custom,par)
-    #    Result(ker+'_gS','window j3=%(jsnap)d |'%par + wplot.igrey2d('',par))
     aweop2d(ker+'_aS',ker+'_gS',vel,'adj=y'+' '+custom,par)
-    #    Result(ker+'_aS','window j3=%(jsnap)d |'%par + wplot.igrey2d('',par))
     cic2dF(ker,uS,ker+'_aS','wflcausal=y oprcausal=y'+' '+custom,par)
 
 def kerS3d(ker,uS,uR,res,cip,vel,custom,par):
@@ -186,11 +184,8 @@ def kerS3d(ker,uS,uR,res,cip,vel,custom,par):
 # EIC 'receiver' kernel
 def kerR2d(ker,uS,uR,res,cip,vel,custom,par):
     Flow(  res+'_',res,'reverse which=7 opt=i')
-    #    Result(res+'_','byte gainpanel=a pclip=100 |' + adcig.egrey('',par))
     eic2dA(ker+'_gR',res+'_',uS,cip,'gaus=y wflcausal=y oprcausal=y'+' '+custom,par)
-    #    Result(ker+'_gR','window j3=%(jsnap)d |'%par + wplot.igrey2d('',par))
     aweop2d(ker+'_aR',ker+'_gR',vel,'adj=n'+' '+custom,par)
-    #    Result(ker+'_aR','window j3=%(jsnap)d |'%par + wplot.igrey2d('',par))
     cic2dF(ker,uR,ker+'_aR','wflcausal=y oprcausal=n'+' '+custom,par)
 
 def kerR3d(ker,uS,uR,res,cip,vel,custom,par):
@@ -210,3 +205,5 @@ def kerT3d(ker,uS,uR,res,cip,vel,custom,par):
     kerS3d(ker+'_S',uS,uR,res,cip,vel,custom,par)
     kerR3d(ker+'_R',uS,uR,res,cip,vel,custom,par)
     Flow(ker,[ker+'_S',ker+'_R'],'add ${SOURCES[1]}')
+
+    
