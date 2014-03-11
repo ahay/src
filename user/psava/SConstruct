@@ -41,6 +41,7 @@ srbin3d
 cicop2d cicop3d
 eicop2d eicop3d
 aweop2d aweop3d
+accumulate
 '''
 
 # Python targets
@@ -49,9 +50,5 @@ corop
 pwave3d
 ocor3d
 '''
-
-# paradd
-# anifd2d
-# awefd
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)
