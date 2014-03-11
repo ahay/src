@@ -1,4 +1,4 @@
-//   Sample the whole matrix 
+//   Sample the whole matrix prop1, prop2, prop3, prop4
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -21,13 +21,15 @@
 extern "C" {
 #include "prop1.h"
 #include "prop2.h"
+#include "prop3.h"
+#include "prop4.h"
 #include "cfft2nsps.h"
 }
 
 using namespace std;
 using std::cerr;
 
-static int nz, nx, nzx, nkz, nkx, nkzx, m2;
+static int nz, nx, nzx, nkz, nkx, nkzx, m2, flag;
 static float dz, dx, z0, x0, dkz, dkx, kz0, kx0;
 
 static sf_complex *cleft, *cright;
@@ -62,10 +64,18 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 		    cin[j*nz+i] = sf_cmplx(cos(phs),sin(phs));
 		}
 	    
-	    // apply cout = PP*cin
-	    prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2);
-            // apply cout = NN*cin
-            //prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2);
+	    // apply cout = prop(cin)
+	    if (flag==1) {
+		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else if (flag==2) {
+		prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else if (flag==3) {
+		prop3( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else if (flag==4) {
+		prop4( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else {
+		cerr<<"Need to provide flag#"<<endl;
+	    }
 
 	    for(int a=0; a<nr; a++) {
                 int izx = rs[a];
@@ -102,6 +112,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
             //---------------------------------------------------------
 	    */
 	    
+
             // construct cfin = exp(-2*pi*i*x0*k) for all k
             float phs;
 	    for(int i=0; i<nkz; i++)
@@ -129,10 +140,18 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 	    //---------------------------------------------------------
 	    
 
-	    // apply cout = PP*cin
-	    prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2);
-            // apply cout = NN*cin
-            //prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2);
+	    // apply cout = prop(cin)
+	    if (flag==1) {
+		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else if (flag==2) {
+		prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else if (flag==3) {
+		prop3( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else if (flag==4) {
+		prop4( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+	    } else {
+		cerr<<"Need to provide flag#"<<endl;
+	    }
        
             // pad cout to get cout1
             nk = cfft2_init(1,nz,nx,&nz2,&nx2);
@@ -168,6 +187,7 @@ int main(int argc, char** argv)
     sf_init(argc,argv); // Initialize RSF
 
     iRSF par(0); // Get parameters
+    par.get("flag",flag);
 
     par.get("nz",nz); 
     par.get("dz",dz); 

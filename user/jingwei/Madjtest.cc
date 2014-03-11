@@ -1,4 +1,4 @@
-//   Ajoint test of prop1 and prop2
+//   Ajoint test of prop1, prop2, prop3, prop4
 //   Copyright (C) 2010 University of Texas at Austin
 //  
 //   This program is free software; you can redistribute it and/or modify
@@ -21,13 +21,15 @@
 extern "C" {
 #include "prop1.h"
 #include "prop2.h"
+#include "prop3.h"
+#include "prop4.h"
 #include "cfft2nsps.h"
 }
 
 using namespace std;
 using std::cerr;
 
-static int nz, nx, nzx, nkz, nkx, nkzx, m2;
+static int nz, nx, nzx, nkz, nkx, nkzx, m2, flag;
 static float dz, dx, z0, x0, dkz, dkx, kz0, kx0;
 
 //------------------------------------------------------------
@@ -35,6 +37,9 @@ static float dz, dx, z0, x0, dkz, dkx, kz0, kx0;
 int main(int argc, char** argv)
 {   
     sf_init(argc,argv); // Initialize RSF
+ 
+    iRSF par(0); // Get parameters
+    par.get("flag",flag);
 
     iRSF fft, model("model"), data("data"), left("left"), right("right"); // Get input
     fft.get("n1",nkz);
@@ -61,15 +66,13 @@ int main(int argc, char** argv)
     left >> lt;
     right >> rt;
 
-    sf_complex *cleft, *cright, *cmod, *cdat, *cpmod1, *cpdat1, *cpmod2, *cpdat2;
+    sf_complex *cleft, *cright, *cmod, *cdat, *cpmod, *cpdat;
     cleft = sf_complexalloc(nzx*m2);    
     cright = sf_complexalloc(m2*nkzx);
     cmod = sf_complexalloc(nzx);
     cdat = sf_complexalloc(nzx);   
-    cpmod1 = sf_complexalloc(nzx);   
-    cpdat1 = sf_complexalloc(nzx);  
-    cpmod2 = sf_complexalloc(nzx);   
-    cpdat2 = sf_complexalloc(nzx);    
+    cpmod = sf_complexalloc(nzx);   
+    cpdat = sf_complexalloc(nzx);  
     
     for (int i=0; i<nzx*m2; i++) cleft[i] = lt[i];
     for (int i=0; i<m2*nkzx; i++) cright[i] = rt[i];
@@ -77,36 +80,33 @@ int main(int argc, char** argv)
     for (int i=0; i<nzx; i++) cdat[i] = dat[i];
 
 
-    // Check inner product <cpmod1,cdat>?=<mod,cpdat1>
-    prop1( cmod, cpmod1, cleft, cright, nz, nx, nkzx, m2);  
-    prop1( cdat, cpdat1, cleft, cright, nz, nx, nkzx, m2);  
-      
-    double aar1=0., aai1=0., bbr1=0., bbi1=0.;
-    for (int i=0; i<nzx; i++) {
-        aar1 += crealf(sf_cmul(cpmod1[i],conjf(cdat[i])));
-        aai1 += cimagf(sf_cmul(cpmod1[i],conjf(cdat[i])));
-        bbr1 += crealf(sf_cmul(cmod[i],conjf(cpdat1[i])));
-	bbi1 += cimagf(sf_cmul(cmod[i],conjf(cpdat1[i])));
+    // Check inner product <cpmod,cdat>?=<cmod,cpdat>
+    if (flag==1) {
+	prop1( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
+	prop1( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+    } else if (flag==2) {
+	prop2( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
+	prop2( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+    } else if (flag==3) {
+	prop3( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
+	prop3( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+    } else if (flag==4) {
+	prop4( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
+	prop4( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+    } else {
+	cerr<<"Need to provide flag#"<<endl;
     }
 
-    cerr<<"aa1= "<<aar1<<" "<<aai1<<endl;
-    cerr<<"bb1= "<<bbr1<<" "<<bbi1<<endl;
-    
-    // Check inner product <cpmod2,cdat>?=<mod,cpdat2>
-    prop2( cmod, cpmod2, cleft, cright, nz, nx, nkzx, m2);  
-    prop2( cdat, cpdat2, cleft, cright, nz, nx, nkzx, m2);  
-      
-    double aar2=0., aai2=0., bbr2=0., bbi2=0.;
+    double aar=0., aai=0., bbr=0., bbi=0.;
     for (int i=0; i<nzx; i++) {
-        aar2 += crealf(sf_cmul(cpmod2[i],conjf(cdat[i])));
-        aai2 += cimagf(sf_cmul(cpmod2[i],conjf(cdat[i])));
-        bbr2 += crealf(sf_cmul(cmod[i],conjf(cpdat2[i])));
-	bbi2 += cimagf(sf_cmul(cmod[i],conjf(cpdat2[i])));
+        aar += crealf(sf_cmul(cpmod[i],conjf(cdat[i])));
+        aai += cimagf(sf_cmul(cpmod[i],conjf(cdat[i])));
+        bbr += crealf(sf_cmul(cmod[i],conjf(cpdat[i])));
+	bbi += cimagf(sf_cmul(cmod[i],conjf(cpdat[i])));
     }
 
-    cerr<<"aa2= "<<aar2<<" "<<aai2<<endl;
-    cerr<<"bb2= "<<bbr2<<" "<<bbi2<<endl;
-    
+    cerr<<"aa= "<<aar<<" "<<aai<<endl;
+    cerr<<"bb= "<<bbr<<" "<<bbi<<endl;
 
     exit(0);
 }
