@@ -248,7 +248,7 @@ class File(object):
         prod = self.__mul__(other).reshape()
         stack = Filter('stack')(norm=False,axis=1)[prod]
         return stack[0]
-    def dot2(self)
+    def dot2(self):
         'Dot product with itself'
         abs2 = Filter('math')(output="abs(input)")[self]
         return abs2.dot(abs2)
