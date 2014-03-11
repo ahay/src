@@ -1486,6 +1486,8 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     if (NULL == path) path = getdatapath();
     *dataname = sf_charalloc (NAME_MAX+1);
     snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
+
+    free(path);
     
     stemp = mkstemp(*dataname);
     if (stemp < 0) sf_error ("%s: cannot create %s:",__FILE__,*dataname);

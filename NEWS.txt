@@ -86,6 +86,7 @@ In APIs:
 * Fixed parallel.c for the case of less jobs than nodes
 * Added missing fflush in sf_simtab_input
 * Avoid taking log(0) in vp_optimal_scale
+* Fixed memory leak after gettmpdatapath in file.c
 
 In the Python package:
 
