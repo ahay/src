@@ -1,0 +1,183 @@
+from rsf.proj import *
+import math
+
+par = {
+    'nz':1201, 'dz':0.00762, 'oz':0.0,   # Depth
+    'nx':2133, 'dx':0.01143, 'ox':3.055, # Lateral
+    'smz':13, 'smx':9,                   # Smoothing radius for slowness
+    'na':720,                            # Number of take-off angles
+    'oazmin':80,'oazmax':50,             # Opening angle mute
+    'dazmin':100,'dazmax':100,           # Dip angle mute
+    'ts':4,'th':6,                       # Tapering in traces (shot, receiver axes)
+    'smax':1.0,'hmax':1.0,               # Escape tables filter
+# Screen params for the model
+    'scrpar':'''screenratio=0.375 screenht=5
+                yll=2.0 xll=1.5 crowd=0.8 labelsz=6
+                o2num=1.0 d2num=2.0 n2tic=5
+                o1num=4.0 d1num=2.0 n1tic=12
+                barmove=y tickscale=0.3
+                barwidth=0.2 label2= unit2=''',
+# Screen params for CIGs
+    'scrpar2':'''yreverse=y wanttitle=n wherexlabel=top
+                 transp=y poly=y plotcol=7 gridcol=8
+                 screenht=10 screenratio=1.25
+                 unit2="\F16 \^g\_\F-1 "'''}
+
+# Prepare model
+###############
+
+vel = 'sigsbee2b_migration_velocity.segy'
+
+Fetch(vel,'sigsbee')
+
+Flow(['sigsbee','tvel'],vel,'''
+     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]}
+     ''')
+Flow('vel','sigsbee','''
+     put o1=%(oz)g d1=%(dz)g label1=Depth unit1=km label=Velocity unit=km/s
+         o2=%(ox)g d2=%(dx)g label2=Lateral unit2=km |
+     scale rscale=.0003048 |
+     math output="1.0/input" |
+     smooth rect1=%(smz)d rect2=%(smx)d |
+     math output="1.0/input"
+     ''' % par)
+
+Flow('vspl','vel','bspvel2 verb=y')
+
+# Escape tables with ray tracing in reduced phase space
+###############
+
+Flow('sigsbnesc',['vel','vspl'],'''
+     escrt2 verb=y na=%(na)d vspl=${SOURCES[1]}
+     ''' % par, split=[2,par['nx'],[0]], reduce='cat axis=4')
+
+# Angle migration
+###############
+
+# Prestack data
+data = 'sigsbee2b_nfs.segy'
+
+Fetch(data ,'sigsbee')
+Flow(['zdata','tzdata'], data,'''
+     segyread tape=${SOURCES[0]} tfile=${TARGETS[1]}
+     ''')
+# Create sraw(t,o,s): o=full offset, s=shot position, t=time
+Flow('ss','tzdata','dd type=float | headermath output="10925+fldr*150" | window')
+Flow('oo','tzdata','dd type=float | headermath output="offset"         | window')
+Flow('si','ss','math output=input/150')
+Flow('oi','oo','math output=input/75')
+Flow('os',['oi','si'],'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=int')
+Flow('data',['zdata','os'],'''
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 |
+     put label1=Time unit1=s
+         d2=.02286 o3=0 label2=Offset unit2=km
+         d3=.04572 o3=3.330 label3=Shot unit3=km |
+     window min1=2.0 |
+     mutter t0=0.5 v0=1.5 half=n |
+     pcrdata2 absoff=n KMAH=y filter=y verb=y
+     ''')
+
+# Migration
+Flow(['sigsbocram','sigsbdcram','sigsboill','sigsbdill','sigsbosmb'],
+     ['sigsbnesc','data','vel'],'''
+     cram2 data=${SOURCES[1]} vz=${SOURCES[2]}
+           mute=y oazmin=%(oazmin)g oazmax=%(oazmax)g
+                  dazmin=%(dazmin)g dazmax=%(dazmax)g
+           ts=%(ts)d th=%(th)d smax=%(smax)g hmax=%(hmax)g
+           dipagath=${TARGETS[1]}
+           imap=${TARGETS[2]} dipimap=${TARGETS[3]}
+           smap=${TARGETS[4]}
+     ''' % par, split=[4,par['nx'],[0]], reduce='cat axis=3')
+
+# Plotting
+###############
+
+# Stack
+Flow('sigsbdcrstk','sigsbdcram','stack axis=1')
+#Flow('sigsbdcrstk',['sigsbdill','sigsbdcram'],'''
+#     dd type=float |
+#     math d=${SOURCES[1]} output="d/(input+1)" |
+#     stack axis=1
+#     ''')
+
+####################################################################################################
+
+cigpos=16.775
+diplim=80
+
+Plot ('vLine',None,
+      '''
+	  spike n1=4 nsp=4 k1=1,2,3,4 mag=1.5,%g,9,%g | dd type=complex |
+	  graph transp=y yreverse=y min2=11 max2=19 min1=1.5 max1=9 wanttitle=n wantaxis=n plotfat=6 pad=n dash=2 plotcol=0
+	  ''' % (cigpos,cigpos) )
+
+
+Flow ('dags', 'sigsbdcram', 'window min3=11 max3=19 | sftransp plane=12')
+Flow ('sigs-image-init','dags','stack')
+Plot ('sigs-image-init', 'put label2=distance label1=depth | grey wanttitle=n min1=1.5 pclip=92 labelsz=11.')
+Plot ('image-init','sigs-image-init vLine','Overlay')
+Plot ('dag-init','dags',
+	  '''
+	  window min3=%g n3=1 min2=-%g max2=%g | put label1=depth label2='"dip angle"' unit2=deg |
+	  grey wanttitle=n screenratio=1.5 min1=1.5 pclip=97 labelsz=11. d1num=40 o1num=-%g n1tic=5
+	  ''' % (cigpos, diplim, diplim, diplim) )
+Result ('init','image-init dag-init','SideBySideAniso')
+
+# apex protector
+
+dz = 7.62
+dx = 11.43
+
+Flow ('dip','sigs-image-init','dip2 order=5 rect1=5 rect2=5')
+Flow ('dips','dip','math output="-180/%g*%g/%g*atan(input)"' % (math.pi, dz, dx))
+#Result ('dips','grey color=j wanttitle=n')
+
+Flow ('ap','dags dips','put d1=7.62 unit1=km o3=10998.8 d3=11.43 unit3=m | dagap dips=${SOURCES[1]} ddep=y greyarea=10')
+Flow ('dags-ap','dags ap','mul ${SOURCES[1]}')
+Flow ('sigs-image-ap','dags-ap','stack')
+Plot ('sigs-image-ap', 'put label2=distance label1=depth | grey wanttitle=n min1=1.5 labelsz=11. pclip=92')
+
+Plot ('image-ap','sigs-image-ap vLine','Overlay')
+
+Plot ('dag-ap','dags-ap',
+	  '''
+	  window min3=%g n3=1 min2=-%g max2=%g | put label1=depth label2='"dip angle"' unit2=deg | 
+	  grey wanttitle=n screenratio=1.5 min1=1.5 labelsz=11. pclip=97 d1num=40 o1num=-%g n1tic=5
+	  ''' % (cigpos, diplim, diplim, diplim) )
+Result ('ap','image-ap dag-ap','SideBySideAniso')
+
+# slope-consistency
+
+Flow ('dagsn','dags','noise range=1e-6')
+Flow ('dags2', 'dags', 'math output=input*input')
+
+xapp=5
+Flow ('semb', 'dags dags2', 'crssemb dataSq=${SOURCES[1]} xapp=%g dipapp=25' % xapp)
+Flow ('weight','semb','mask min=0.05 max=1.0 | dd type=float | smooth rect1=5 rect2=30')
+# test
+#Flow ('w1','dags dags2', 'crssemb dataSq=${SOURCES[1]} xapp=%g dipapp=25 s1=0.05 s2=0.25 | smooth rect1=3 rect2=3' % xapp)
+Flow ('w1','dags dags2', 'crssemb dataSq=${SOURCES[1]} xapp=%g s1=0.05 s2=0.25 | smooth rect1=3 rect2=3' % xapp)
+Flow ('dags-sca', 'dags w1','math x=${SOURCES[0]} y=${SOURCES[1]} output=x*y')
+#
+
+Flow ('pimage0','dags','window min2=0 n2=1')
+Flow ('semb0','semb','window min2=0 n2=1')
+
+Plot ('sigs-image-sca', 'dags-sca', 'stack | put label2=distance label1=depth | grey wanttitle=n min1=1.5 pclip=94 labelsz=11.')
+Plot ('image-sca','sigs-image-sca vLine','Overlay')
+
+Plot ('dag-sca','dags-sca',
+	  '''
+	  window min3=%g n3=1 min2=-%g max2=%g | put label1=depth label2='"dip angle"' unit2=deg |
+	  grey wanttitle=n screenratio=1.5 min1=1.5 pclip=97 labelsz=11. d1num=40 o1num=-%g n1tic=5
+	  ''' % (cigpos, diplim, diplim, diplim) )
+
+Plot ('dag-weight','weight',
+	  '''
+	  window min3=%g n3=1 min2=-%g max2=%g | put label1=depth label2='"dip angle"' unit2=deg |
+	  grey wanttitle=n screenratio=1.5 min1=1.5 pclip=97 labelsz=11. d1num=40 o1num=-%g n1tic=5
+	  ''' % (cigpos, diplim, diplim, diplim) )
+
+Result ('sca','image-sca dag-sca','SideBySideAniso')
+
+End()
