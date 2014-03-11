@@ -244,9 +244,14 @@ class File(object):
         return neg[self]
     def dot(self,other):
         'Dot product'
+        # incorrect for complex numbers
         prod = self.__mul__(other).reshape()
         stack = Filter('stack')(norm=False,axis=1)[prod]
         return stack[0]
+    def dot2(self)
+        'Dot product with itself'
+        abs2 = Filter('math')(output="abs(input)")[self]
+        return abs2.dot(abs2)
     def __array__(self,context=None):
         'numpy array'
         if _swig_:
@@ -257,9 +262,10 @@ class File(object):
                 self.narray = c_rsf.rsf_array(self.file)
             return self.narray
         else:
+            # gets only the real part of complex arrays
             val = os.popen('%s < %s' % 
                            (Filter('disfil')(number=False),self)).read()
-            # will not work properly with complex arrays
+
             return map(lambda x: float(x.rstrip(',')),val.split())
     def __array_wrap__(self,array,context=None):
         return Input(array)
