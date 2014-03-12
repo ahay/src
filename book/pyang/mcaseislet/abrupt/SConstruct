@@ -4,6 +4,8 @@ nx=500
 nt=1000
 dt=0.001
 
+Fetch('abrupt1000x500.bin','pwd')
+
 Flow('data','abrupt1000x500.bin',
 	'''
      	echo in=$SOURCE n1=%d n2=%d data_format=native_float |
