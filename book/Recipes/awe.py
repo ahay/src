@@ -36,6 +36,14 @@ def eicpar(par):
           '''%par + ' '
     return eic
 
+def iwindow(par):
+    win = ' ' + \
+          '''
+          nqz=%(nz)d oqz=%(oz)g dqz=%(dz)g 
+          nqx=%(nx)d oqx=%(ox)g dqx=%(dx)g
+          ''' % par + ' '
+    return win
+
 # ------------------------------------------------------------
 # wavelet
 def wavelet(wav,frq,custom,par):    
@@ -206,4 +214,203 @@ def kerT3d(ker,uS,uR,res,cip,vel,custom,par):
     kerR3d(ker+'_R',uS,uR,res,cip,vel,custom,par)
     Flow(ker,[ker+'_S',ker+'_R'],'add ${SOURCES[1]}')
 
+# ------------------------------------------------------------
+# variable-density RTM w/ CIC
+def cicmig(icic,
+           sdat,scoo,
+           rdat,rcoo,
+           velo,dens,
+           custom,par):
     
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    swfl=icic+'swfl'
+    rdrv=icic+'rdrv'
+    rwfl=icic+'rwfl'
+
+    Flow(icic,[sdat,scoo,rdat,rcoo,velo,dens],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=n %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[4]}
+         den=${SOURCES[5]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=n %s verb=n
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         vel=${SOURCES[4]}
+         den=${SOURCES[5]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
+         '''
+         %scicold2d <%s isreversed=0 verb=n %s
+         ur=%s
+         >${TARGETS[0]};
+         '''%(M8R,swfl,custom,rwfl) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+
+# ------------------------------------------------------------
+# constant-density RTM w/ CIC
+def cicmigCD(icic,
+             sdat,scoo,
+             rdat,rcoo,
+             velo,
+             custom,par):
+    
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    swfl=icic+'swfl'
+    rdrv=icic+'rdrv'
+    rwfl=icic+'rwfl'
+
+    Flow(icic,[sdat,scoo,rdat,rcoo,velo],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[4]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=y %s verb=n
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         vel=${SOURCES[4]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
+         '''
+         %scicold2d <%s isreversed=0 verb=n %s
+         ur=%s
+         >${TARGETS[0]};
+         '''%(M8R,swfl,custom,rwfl) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+    
+# ------------------------------------------------------------
+# veriable-density RTM w/ CIC and EIC
+def eicmig(icic,
+           ieic,icoo,
+           sdat,scoo,
+           rdat,rcoo,
+           velo,dens,
+           custom,par):
+    
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    swfl=ieic+'swfl'
+    rdrv=ieic+'rdrv'
+    rwfl=ieic+'rwfl'
+
+    Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo,dens],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=n %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[5]}
+         den=${SOURCES[6]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=n %s verb=n
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         vel=${SOURCES[5]}
+         den=${SOURCES[6]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
+         '''
+         %scicold2d <%s isreversed=0 verb=n %s
+         ur=%s 
+         >${TARGETS[0]};
+         '''%(M8R,swfl,custom,rwfl) +
+         '''
+         %seicold2d <%s isreversed=0 verb=n %s
+         ur=%s cc=${SOURCES[4]} 
+         >${TARGETS[1]};
+         '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+
+# ------------------------------------------------------------
+# constant-density RTM w/ CIC and EIC
+def eicmigCD(icic,
+             ieic,icoo,
+             sdat,scoo,
+             rdat,rcoo,
+             velo,
+             custom,par):
+    
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH')
+
+    swfl=ieic+'swfl'
+    rdrv=ieic+'rdrv'
+    rwfl=ieic+'rwfl'
+
+    Flow([icic,ieic],[sdat,scoo,rdat,rcoo,icoo,velo],
+         '''
+         %sawefd2d < ${SOURCES[0]} cden=y %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[5]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,iwindow(par)+awepar(par)+custom,swfl,DPT) +
+         '''
+         %sreverse < ${SOURCES[2]} which=2 opt=i verb=n >%s datapath=%s/;
+         '''%(M8R,rdrv,DPT) +
+         '''
+         %sawefd2d < %s cden=y %s verb=n
+         sou=${SOURCES[3]}
+         rec=${SOURCES[3]}
+         vel=${SOURCES[5]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
+         '''
+         %scicold2d <%s isreversed=0 verb=n %s
+         ur=%s 
+         >${TARGETS[0]};
+         '''%(M8R,swfl,custom,rwfl) +
+         '''
+         %seicold2d <%s isreversed=0 verb=n %s
+         ur=%s cc=${SOURCES[4]} 
+         >${TARGETS[1]};
+         '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
+         '''
+         %srm %s %s %s
+         '''%(M8R,swfl,rdrv,rwfl),
+              stdin=0,
+              stdout=0)
+

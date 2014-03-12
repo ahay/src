@@ -468,9 +468,6 @@ def horizontalupercent(cc,coord,par):
               stdin=0,
               stdout=0)
 
-
-
-
 # ------------------------------------------------------------
 def cable2d(cc,zrec,orec,nrec,drec,par):
     M8R='$RSFROOT/bin/sf'
