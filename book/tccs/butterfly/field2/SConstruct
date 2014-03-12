@@ -1,7 +1,10 @@
 from rsf.proj import *
 from rsf.prog import RSFROOT
+from rsf.recipes.beg import server
 
 # Download real data
+Fetch('samiss.rsf','butterfly',server)
+
 Result('samiss','grey label1=Time unit1=s label2=Offset unit2=km title=" " ')
 Flow('datacpx','samiss','rtoc')
 
