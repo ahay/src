@@ -129,7 +129,7 @@ def read_rsfproj(root,files):
         if 'size' in l: data_size = l['size']
         else:           error = 1
 
-    return (error,rsfproj_exist,uses_list,data_type,data_size)
+    return (error,rsfproj_exist,uses_list,data_size,data_type)
 
 def calc_filter(options,props):
     'Calculate command filter'
@@ -314,7 +314,7 @@ def main(argv=sys.argv):
             
                                                 # read rsfproj file
             tuple = read_rsfproj(root,files)
-            (error,rsfproj_exist,uses_list,data_type,data_size) = tuple
+            (error,rsfproj_exist,uses_list,data_size,data_type) = tuple
             if error==1:
                 rsfproj_error = rsfproj_error+1
                 string = "   *********  .rsfproj error   *********  %s\n"
