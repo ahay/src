@@ -119,7 +119,8 @@ int main(int argc, char *argv[])
 
     seislet_init(n1, n2, true, false, eps, order, type[0]);//unit=false, inv=true
     seislet_set(dip);
-    for(iter=0; iter<niter; iter++){
+    for(iter=0; iter<niter; iter++)
+    {
 	memset(res, 0, n1*n2*sizeof(float));
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
