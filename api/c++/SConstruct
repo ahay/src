@@ -2,7 +2,7 @@ import sys, os
 sys.path.append('../../framework')
 import bldutil
 
-sources = Split('rsf cub vai')
+sources = Split('rsf cub')
 
 try: # distribution version
     Import('env root libdir incdir')

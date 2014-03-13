@@ -9,7 +9,6 @@ public:
     int operator() (int,int);
     
 private:
-    int *n;
-    int nd;
+    int n[2];
 };
 

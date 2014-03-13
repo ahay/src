@@ -3,7 +3,9 @@
 #include <iostream>
 #include <rsf.hh>
 #include <cub.hh>
-#include <vai.hh>
+
+#include "vai.hh"
+
 using namespace std;
 
 int main(int argc, char* argv[])
