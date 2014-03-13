@@ -5,13 +5,15 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-sgewefd2d postrtm2d postrtminv fulsgrtm2d fulrtm2d
+fulrtm2d fulsgrtm2d identity postrtm2d postrtminv postrtmshape prertmshape sgewefd2d
 '''
 # differenciate
 
 mpi_progs = '''
 mpiprertm2d mpifulrtm2d
 '''
+
+pyprogs = 'lrrtm'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
@@ -71,13 +73,24 @@ if lapack:
     env.Prepend(LIBS=libsxx)
 
 ######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+if root: # no compilation, just rename
+    pymains = Split(pyprogs)
+    exe = env.get('PROGSUFFIX','')
+    for prog in pymains:
+        env.InstallAs(os.path.join(bindir,'sf'+prog+exe),'M'+prog+'.py')
+
+######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)

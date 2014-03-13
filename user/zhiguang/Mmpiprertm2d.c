@@ -1,4 +1,4 @@
-/* 2-D prestack reverse-time migration and its adjoint */
+/* 2-D prestack reverse-time migration and its adjoint with MPI*/
 /*
   Copyright (C) 2014 University of Texas at Austin
   

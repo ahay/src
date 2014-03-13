@@ -23,12 +23,12 @@
 #endif
 
 static bool verb, snap, record;
-static int nz, nx, nt, nr, ns, nw;
+static int nz, nx, nt, nr, ns, nw, nsource, dsource, ndelay;
 static int jt, padx, padz, padnx, padnz;
 static int dr_v, ds_v, r0_v, s0_v, zr_v, zs_v;
 static float c0, c11, c12, c21, c22;
 static double idx2, idz2;
-static float **padvv, *ww;
+static float **padvv, *ww, tdelay;
 static sf_file snapshot;
 
 void laplacian(bool adj, float **u0, float **u1, float **u2)
@@ -145,7 +145,10 @@ void prertm2_oper(bool adj, float ***dd, float **mm)
                 u1=u2;
                 u2=temp;
                 
-                u1[sx][zs_v]+=ww[it];
+                for(ix=0; ix<nsource; ix++){
+                if(it>=ix*ndelay)
+                u1[sx+ix*dsource][zs_v]+=ww[it-ix*ndelay];
+                }
                 
                 if(it%nw==0){
                 for(ix=0; ix<nx; ix++){
@@ -211,7 +214,10 @@ void prertm2_oper(bool adj, float ***dd, float **mm)
                 u1=u2;
                 u2=temp;
                 
-                u1[sx][zs_v]+=ww[it];
+                for(ix=0; ix<nsource; ix++){
+                if(it>=ix*ndelay)
+                u1[sx+ix*dsource][zs_v]+=ww[it-ix*ndelay];
+                }
                 
                 if(it%nw==0){
                 for(ix=0; ix<nx; ix++){
@@ -349,6 +355,9 @@ int main(int argc, char* argv[])
     if(!sf_getint("padz", &padz)) padz=nz;
     if(!sf_getint("padx", &padx)) padx=nz;
     if(!sf_getint("nw", &nw)) nw=1;
+    if(!sf_getint("nsource", &nsource)) nsource=1;
+    if(!sf_getint("dsource", &dsource)) dsource=0;
+    if(!sf_getfloat("tdelay", &tdelay)) tdelay=0;
     
     padnx=nx+2*padx;
     padnz=nz+2*padz;
@@ -387,18 +396,18 @@ int main(int argc, char* argv[])
         snapshot=sf_output("snapshot");
         
         sf_putint(snapshot, "n1", padnz);
-        sf_putint(snapshot, "d1", 1);
-        sf_putint(snapshot, "o1", -padz);
+        sf_putfloat(snapshot, "d1", dz);
+        sf_putfloat(snapshot, "o1", padz0);
         sf_putint(snapshot, "n2", padnx);
-        sf_putint(snapshot, "d2", 1);
-        sf_putint(snapshot, "o2", -padx);
+        sf_putfloat(snapshot, "d2", dx);
+        sf_putfloat(snapshot, "o2", padx0);
         sf_putint(snapshot, "n3", 1+(nt-1)/jt);
         sf_putfloat(snapshot, "d3", jt*dt);
         sf_putfloat(snapshot, "o3", t0);
         sf_putstring(snapshot, "label1", "Depth");
-        sf_putstring(snapshot, "unit1", "");
+        sf_putstring(snapshot, "unit1", "km");
         sf_putstring(snapshot, "label2", "Lateral");
-        sf_putstring(snapshot, "unit2", "m");
+        sf_putstring(snapshot, "unit2", "km");
         sf_putstring(snapshot, "label3", "Time");
         sf_putstring(snapshot, "unit3", "s");
     }
@@ -410,11 +419,13 @@ int main(int argc, char* argv[])
     ds_v=(ds/dx)+0.5;
     s0_v=(s0-padx0)/dx+0.5;
     zs_v=(zs-padz0)/dz+0.5;
+    ndelay=tdelay/dt;
     
     sf_warning("nx=%d padnx=%d nz=%d padnz=%d nt=%d nr=%d ns=%d", nx, padnx, nz, padnz, nt, nr, ns);
     sf_warning("dx=%.3f dz=%.3f dt=%.3f dr=%.3f ds=%.3f", dx, dz, dt, dr, ds);
     sf_warning("x0=%.3f z0=%.3f t0=%.3f r0=%.3f s0=%.3f", x0, z0, t0, r0, s0);
     sf_warning("dr_v=%d r0_v=%d zr_v=%d ds_v=%d s0_v=%d zs_v=%d", dr_v, r0_v, zr_v, ds_v, s0_v, zs_v);
+    sf_warning("nsource=%d dsource=%d tdelay=%.3f ndelay=%d", nsource, dsource, tdelay, ndelay);
     
     idz2=1./(dz*dz);
     idx2=1./(dx*dx);
