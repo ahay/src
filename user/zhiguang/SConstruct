@@ -5,12 +5,13 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fulrtm2d fulsgrtm2d identity postrtm2d postrtminv postrtmshape prertmshape sgewefd2d
+fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
+postrtmshape prertmshape sgewefd2d
 '''
 # differenciate
 
 mpi_progs = '''
-mpiprertm2d mpifulrtm2d
+mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
 pyprogs = 'lrrtm'
