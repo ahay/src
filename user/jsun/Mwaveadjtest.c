@@ -20,6 +20,120 @@
 
 #include "cfft2nsps.h"
 
+int propjw(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt, int nz, int nx, int nkzx, int m2)
+/*< First nsps(-) then pspi(+) >*/
+{
+    int iz, ix, im, ik, i, j;
+    int nz2, nx2, nk, nzx, nzx2;
+    int pad1 = 1;
+    sf_complex **wave, **wave2, *curr, *currm, *cwave, *cwavem, c;
+
+    nk = cfft2_init(pad1,nz,nx,&nz2,&nx2);
+    if (nk!=nkzx) sf_error("nk discrepancy!");
+    
+    nzx = nz*nx;
+    nzx2 = nz2*nx2;
+
+    curr   = sf_complexalloc(nzx2);
+    currm  = sf_complexalloc(nzx2);
+    
+    cwave  = sf_complexalloc(nk);
+    cwavem = sf_complexalloc(nk);
+    
+    wave   = sf_complexalloc2(nk,m2);
+    wave2  = sf_complexalloc2(nzx2,m2);
+
+    icfft2_allocate(cwavem);
+
+    /* initialization */
+    for (ix = 0; ix < nx2; ix++) {
+	for (iz=0; iz < nz2; iz++) {
+            i = iz+ix*nz;
+	    j = iz+ix*nz2;
+	    if (ix<nx && iz<nz)
+		curr[j] = input[i];
+	    else 
+		curr[j] = sf_cmplx(0.,0.);
+	}
+    }
+        
+        /* nsps(-) */
+         
+	/* matrix multiplication */
+	for (im = 0; im < m2; im++) {
+	    for (ix = 0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    i = iz+ix*nz;  /* original grid */
+		    j = iz+ix*nz2; /* padded grid */
+#ifdef SF_HAS_COMPLEX_H
+		    currm[j] = conjf(lt[im*nzx+i])*curr[j];
+#else
+		    currm[j] = sf_cmul(conjf(lt[im*nzx+i]), curr[j]);
+#endif
+		}
+	    }
+	    cfft2(currm,wave[im]);
+	}
+	
+	for (ik = 0; ik < nk; ik++) {
+	    c = sf_cmplx(0.,0.);
+	    for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		c += wave[im][ik]*conjf(rt[ik*m2+im]);
+#else
+		c += sf_cmul(wave[im][ik],conjf(rt[ik*m2+im]));
+#endif
+	    }
+	    cwave[ik] = c;
+	}
+	
+	/* saving a pair of FFTs */
+	// icfft2(curr,cwave);
+
+        /* pspi(+) */
+
+	//  cfft2(curr,cwave);
+
+	for (im = 0; im < m2; im++) {
+	    for (ik = 0; ik < nk; ik++) {
+#ifdef SF_HAS_COMPLEX_H
+		cwavem[ik] = cwave[ik]*rt[ik*m2+im];
+#else
+		cwavem[ik] = sf_cmul(cwave[ik],rt[ik*m2+im]);
+#endif
+	    }
+	    icfft2(wave2[im],cwavem);
+	}
+	
+	for (ix = 0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		i = iz+ix*nz;  /* original grid */
+		j = iz+ix*nz2; /* padded grid */
+		c = sf_cmplx(0.,0.);
+		for (im = 0; im < m2; im++) {
+#ifdef SF_HAS_COMPLEX_H
+		    c += lt[im*nzx+i]*wave2[im][j];
+#else
+		    c += sf_cmul(lt[im*nzx+i], wave2[im][j]);
+#endif
+		}
+		curr[j] = c;
+	    }
+	}
+
+    /* output final result*/
+    for (ix = 0; ix < nx; ix++) {
+	for (iz=0; iz < nz; iz++) {
+            i = iz+ix*nz;
+	    j = iz+ix*nz2;
+	    output[i] = curr[j];
+	}
+    }
+    
+    cfft2_finalize();
+    return 0;
+}
+
 int prop1(bool adj, sf_complex **ini, sf_complex **lt, sf_complex **rt, int nz, int nx, int nt, int m2, int nkzx, int pad1, sf_complex **cc)
 {
     bool verb=true;
@@ -138,8 +252,9 @@ int prop1(bool adj, sf_complex **ini, sf_complex **lt, sf_complex **rt, int nz, 
 
 int main(int argc, char* argv[])
 {
-    bool verb,adj,single;
+    bool verb,adj,single,jw;
     int nt,nz,nx,m2,nk,nzx,nz2,nx2,n2,pad1;
+    int ix,iz,ik;
     float dt;
 
     sf_complex **ini, **cc, **dd;
@@ -154,6 +269,7 @@ int main(int argc, char* argv[])
     if(!sf_getbool("verb",&verb)) verb=false; /* verbosity */
     if(!sf_getbool("adj",&adj)) adj=false; /* true: NSPS; default: PSPI */
     if(!sf_getbool("single",&single)) single=true; /* true: NSPS; default: PSPI */
+    if(!sf_getbool("jw",&jw)) jw=false; /* true: NSPS; default: PSPI */
     if(!sf_getint("nt",&nt)) sf_error("Need nt!"); /* verbosity */
     if(!sf_getfloat("dt",&dt)) sf_error("Need dt!"); /* verbosity */
 
@@ -208,8 +324,35 @@ int main(int argc, char* argv[])
     if (single) {
 	prop1(adj,ini, lt, rt, nz, nx, nt, m2, nk, 1, cc);
     } else {
-	prop1(false, ini, lt, rt, nz, nx, nt, m2, nk, 1, dd);
-	prop1(true, dd, lt, rt, nz, nx, nt, m2, nk, 1, cc);
+	if (jw) {
+	    sf_warning("Using jingwei's code!");
+	    sf_complex *inp,*opt,*lft,*rht;
+	    lft = sf_complexalloc(nzx*m2);
+	    rht = sf_complexalloc(m2*nk);
+	    inp = sf_complexalloc(nz*nx);
+	    opt = sf_complexalloc(nz*nx);
+	    for (ix=0; ix<nx; ix++)
+		for (iz=0; iz<nz; iz++)
+		    inp[iz+ix*nz] = ini[ix][iz];
+
+	    for (ik=0; ik<m2; ik++)
+		for (iz=0; iz<nzx; iz++)
+		    lft[iz+ik*nzx] = lt[ik][iz];
+
+	    for (ik=0; ik<nk; ik++)
+		for (iz=0; iz<m2; iz++)
+		    rht[iz+ik*m2] = rt[ik][iz];
+
+	    propjw(inp, opt, lft, rht, nz, nx, nk, m2);
+
+	    for (ix=0; ix<nx; ix++)
+		for (iz=0; iz<nz; iz++)
+		    cc[ix][iz] = opt[iz+ix*nz];
+
+	} else {
+	    prop1(false, ini, lt, rt, nz, nx, nt, m2, nk, 1, dd);
+	    prop1(true, dd, lt, rt, nz, nx, nt, m2, nk, 1, cc);
+	}
     }
     /* output result */
     sf_complexwrite(cc[0], nzx, Fo);
