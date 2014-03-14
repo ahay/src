@@ -30,7 +30,7 @@ using namespace std;
 using std::cerr;
 
 static int nz, nx, nzx, nkz, nkx, nkzx, m2, flag;
-static float dz, dx, z0, x0, dkz, dkx, kz0, kx0;
+static float dz, dx, z0, x0, dkz, dkx, kz0, kx0, reg;
 
 //------------------------------------------------------------
 
@@ -40,6 +40,7 @@ int main(int argc, char** argv)
  
     iRSF par(0); // Get parameters
     par.get("flag",flag);
+    par.get("reg",reg);
 
     iRSF fft, model("model"), data("data"), left("left"), right("right"); // Get input
     fft.get("n1",nkz);
@@ -82,17 +83,17 @@ int main(int argc, char** argv)
 
     // Check inner product <cpmod,cdat>?=<cmod,cpdat>
     if (flag==1) {
-	prop1( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
-	prop1( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+	prop1( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop1( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2, reg);  
     } else if (flag==2) {
-	prop2( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
-	prop2( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+	prop2( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop2( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2, reg);  
     } else if (flag==3) {
-	prop3( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
-	prop3( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+	prop3( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop3( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2, reg);  
     } else if (flag==4) {
-	prop4( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2);  
-	prop4( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2);  
+	prop4( cmod, cpmod, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop4( cdat, cpdat, cleft, cright, nz, nx, nkzx, m2, reg);  
     } else {
 	cerr<<"Need to provide flag#"<<endl;
     }

@@ -21,7 +21,7 @@
 
 /*******************************************************/
 
-int prop3(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt, int nz, int nx, int nkzx, int m2)
+int prop3(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt, int nz, int nx, int nkzx, int m2, float reg)
 /*< First pspi(+) then nsps(-) >*/
 {
     int iz, ix, im, ik, i, j;
@@ -127,6 +127,18 @@ int prop3(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt,
             i = iz+ix*nz;
 	    j = iz+ix*nz2;
 	    output[i] = curr[j];
+	}
+    }
+
+    /* add regularization */
+    for (ix = 0; ix < nx; ix++) {
+	for (iz=0; iz < nz; iz++) {
+            i = iz+ix*nz;
+#ifdef SF_HAS_COMPLEX_H
+	    output[i] += input[i]*reg; 
+#else
+	    output[i] += sf_crmul(input[i],reg);
+#endif
 	}
     }
     

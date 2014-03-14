@@ -30,7 +30,7 @@ using namespace std;
 using std::cerr;
 
 static int nz, nx, nzx, nkz, nkx, nkzx, m2, flag;
-static float dz, dx, z0, x0, dkz, dkx, kz0, kx0;
+static float dz, dx, z0, x0, dkz, dkx, kz0, kx0, reg;
 
 static sf_complex *cleft, *cright;
 static std::valarray<float> zs, xs, kzs, kxs;   
@@ -66,13 +66,13 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 	    
 	    // apply cout = prop(cin)
 	    if (flag==1) {
-		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else if (flag==2) {
-		prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else if (flag==3) {
-		prop3( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop3( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else if (flag==4) {
-		prop4( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop4( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else {
 		cerr<<"Need to provide flag#"<<endl;
 	    }
@@ -142,13 +142,13 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 
 	    // apply cout = prop(cin)
 	    if (flag==1) {
-		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else if (flag==2) {
-		prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop2( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else if (flag==3) {
-		prop3( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop3( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else if (flag==4) {
-		prop4( cin, cout, cleft, cright, nz, nx, nkzx, m2);  
+		prop4( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
 	    } else {
 		cerr<<"Need to provide flag#"<<endl;
 	    }
@@ -188,6 +188,7 @@ int main(int argc, char** argv)
 
     iRSF par(0); // Get parameters
     par.get("flag",flag);
+    par.get("reg",reg);
 
     par.get("nz",nz); 
     par.get("dz",dz); 
