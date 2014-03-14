@@ -1,4 +1,4 @@
-/* 2-D FFT-based wave propagation and its adjoint */
+/* 2-D FFT-based (point src) wave propagation and its adjoint */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
     /* padding factor on the first axis */
 
     if (adj) { /* migration */
-	data = sf_input("in");
+	data = sf_input("in"); / data here is just a refl file
 	image = sf_output("out");
 	sf_settype(image,SF_COMPLEX);
 
@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
 	sf_putint(data,"n1",nz);
 	sf_putfloat(data,"d1",dz);
 	sf_putfloat(data,"o1",0.);
-	sf_putstring(image,"label1","Depth");
+	sf_putstring(data,"label1","Depth");
 	sf_putint(data,"n2",nx);
 	sf_putfloat(data,"d2",dx);
 	sf_putfloat(data,"o2",ox);

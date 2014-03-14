@@ -1,4 +1,4 @@
-/* 2-D FFT-based zero-offset exploding reflector modeling/migration  */
+/* 2-D FFT-based zero-offset exploding reflector modeling/migration linear operator */
 /*
   Copyright (C) 2010 University of Texas at Austin
   
