@@ -14,6 +14,14 @@ skiplist =  [
 		'book/uwa/geo2013ElasticModellingGPU/test3d',   # requires CUDA
                 'book/rsf/bash/mpi',
 								# Examples with movies
+		'book/pyang/test/testfd2d',	
+		'book/pyang/test/testeb',
+                'book/osu/shalek/elastic2d',
+                'book/osu/shalek/elastic3d',
+		'book/osu/shalek/mod2d',
+                'book/data/teapotdome/geom',
+                'book/data/teapotdome/tahnmostack',
+		'book/data/teapotdome/tahsubset',
 		'book/geo384w/hw6/hyper',						
 		'book/trip/test/flat',
                 'book/geo391/hw2/sorting',						

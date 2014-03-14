@@ -693,8 +693,15 @@ static void make_baraxis (float min, float max)
 				     &(baraxis->num0), 
 				     &(baraxis->dnum),
 				     &(baraxis->maxstrlen));
-    bar0 = (baraxis->num0-0.5*(min+max))/(max-min+SF_EPS);
-    dbar = (baraxis->dnum)/(max-min+SF_EPS);
+
+    if (fabsf(max-min) < SF_EPS) {
+        baraxis->ntic = 1;
+        bar0 = 0.0;
+        dbar = SF_EPS;
+    } else {
+        bar0 = (baraxis->num0-0.5*(min+max))/(max-min);
+        dbar = (baraxis->dnum)/(max-min);
+    }
 
     if (vertbar) {
 	bar0 = orig2 + inch2*bar0;

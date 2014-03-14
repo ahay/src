@@ -129,14 +129,14 @@ def read_rsfproj(root,files):
         if 'size' in l: data_size = l['size']
         else:           error = 1
 
-    return (error,rsfproj_exist,uses_list,data_size,data_type)
+    return (error,rsfproj_exist,uses_list,data_type,data_size)
 
 def calc_filter(options,props):
     'Calculate command filter'
 
     filter = True
     (skiplist,rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local) = options
-    (root,rsfproj_exist,uses_list,data_size,data_type) = props
+    (root,rsfproj_exist,uses_list,data_type,data_size) = props
 
     # skiplist filter
     if root in skiplist: filter = False
@@ -281,7 +281,7 @@ def main(argv=sys.argv):
 ################    search directory tree
 
     if (list == 'all') or (list == 'filter'):
-        sys.stdout.write('command   rsfproj     size    data        directory\n')
+        sys.stdout.write('command   rsfproj     data    size        directory\n')
         sys.stdout.flush()
 
     total_list      = 0
@@ -314,7 +314,7 @@ def main(argv=sys.argv):
             
                                                 # read rsfproj file
             tuple = read_rsfproj(root,files)
-            (error,rsfproj_exist,uses_list,data_size,data_type) = tuple
+            (error,rsfproj_exist,uses_list,data_type,data_size) = tuple
             if error==1:
                 rsfproj_error = rsfproj_error+1
                 string = "   *********  .rsfproj error   *********  %s\n"
@@ -327,7 +327,7 @@ def main(argv=sys.argv):
 
                                                 # calculate directory filter
             options = (skiplist,rsfproj,uses,size,fetch_none,fetch_public,fetch_private,fetch_local)
-            props   = (root,rsfproj_exist,uses_list,data_size,data_type)
+            props   = (root,rsfproj_exist,uses_list,data_type,data_size)
             filter  = calc_filter(options,props)
             if filter==True:
             
@@ -353,7 +353,7 @@ def main(argv=sys.argv):
                 if data_type == 'local'   : data_local   = data_local+1
 
                 tuple = (filter_command,rsfproj_exist,
-                         size_string(data_size),data_type,root)
+                         data_type,size_string(data_size),root)
                 sys.stdout.write('%s       %-3s     %10s  %-7s     %s\n' % tuple)
                 sys.stdout.flush()
 

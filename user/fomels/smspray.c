@@ -19,22 +19,24 @@
 #include <rsf.h>
 
 #include "spray.h"
+#include "smspray.h"
 
 static int ns2, nu;
-static float *u, *w;
+static float **u, *w, *w1;
 
 void smspray_init(int n1    /* data size */, 
 		  int ns    /* spray radius */,
 		  char type /* weight type */)
 /*< initialize >*/
 {
-    int is;
-    float a;
+    int is, i1;
+    float a, *t;
 
     ns2 = spray_init(ns);
     nu = ns2*n1;
-    u = sf_floatalloc(nu);
+    u = sf_floatalloc2(ns2,n1);
     w = sf_floatalloc(ns2);
+    w1 = sf_floatalloc(n1);
     a = 3.0f/(ns*(ns+2));
 
     for (is=0; is < ns2; is++) {
@@ -47,6 +49,25 @@ void smspray_init(int n1    /* data size */,
 		break;
 	}
     }
+
+    /* Normalization */
+    t = sf_floatalloc(n1);
+
+    for (i1=0; i1 < n1; i1++) {
+	w1[i1]=1.0f;
+    }
+
+    smspray_lop(false,false,n1,n1,w1,t);
+
+    for (i1=0; i1 < n1; i1++) {
+	if (0.0f != t[i1]) {
+	    w1[i1]=1.0/t[i1];
+	} else {
+	    w1[i1]=0.0f;
+	}
+    }
+
+    free(t);    
 }
 
 void smspray_close(void)
@@ -54,12 +75,14 @@ void smspray_close(void)
 {
     free(u);
     free(w);
+    free(w1);
 }
 
 void smspray_lop(bool adj, bool add, int n1, int n2, float* trace, float *smooth)
 /*< linear operator >*/
 {
     int i1, is;
+    float ws;
 
     if (n1 != n2) sf_error("%s: wrong size %d != %d",__FILE__,n1,n2);
 
@@ -67,18 +90,20 @@ void smspray_lop(bool adj, bool add, int n1, int n2, float* trace, float *smooth
 
     if (adj) {
 	for (i1=0; i1 < n1; i1++) {
+	    ws=w1[i1]; 
 	    for (is=0; is < ns2; is++) {
-		u[i1*ns2+is] = smooth[i1]*w[is];
+		u[i1][is] = smooth[i1]*w[is]*ws;
 	    }
 	}
 
-	spray_lop(true, add,    n1, nu, trace, u);
+	spray_lop(true, add,    n1, nu, trace, u[0]);
     } else {
-	spray_lop(false, false, n1, nu, trace, u);
+	spray_lop(false, false, n1, nu, trace, u[0]);
 
 	for (i1=0; i1 < n1; i1++) {
+	    ws=w1[i1]; 
 	    for (is=0; is < ns2; is++) {
-		smooth[i1] += u[i1*ns2+is]*w[is];
+		smooth[i1] += u[i1][is]*w[is]*ws;
 	    }
 	}
     }
