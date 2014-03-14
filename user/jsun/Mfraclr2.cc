@@ -27,7 +27,7 @@ static std::valarray<float> ksz,ksx;
 static float ct,cb,cl,cr;
 static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
 static float dt,c0,w0;
-static bool rev,cmp;
+static bool rev,compen;
 static int mode,sign;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
@@ -51,7 +51,8 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		float p1  = tao*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+1.);
 		float p2  = -powf(p1,2) - 4*eta*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+2.);
 		if (p2 < 0) sf_warning("square root is imaginary!!!");
-		sf_complex phr = sf_cmplx(p1*dt/2.,0);
+		sf_complex phr = (compen) ? sf_cmplx(-p1*dt/2.,0) : sf_cmplx(p1*dt/2.,0);
+//		sf_complex phr = sf_cmplx(p1*dt/2.,0);
 		sf_complex phi = sf_cmplx(0,0);
 		sf_complex phase = sf_cmplx(0,0);
 #ifdef SF_HAS_COMPLEX_H
@@ -72,7 +73,8 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		float p1  = tao*powf(vs[rs[a]],2)*powf(hypk,2.*gamma+1.);
 		float p2  = -powf(p1,2) + 4*powf(vs[rs[a]],2)*powf(hypk,2);
 		if (p2 < 0) sf_warning("square root is imaginary!!!");
-		sf_complex phr = sf_cmplx(p1*dt/2.,0);
+		sf_complex phr = (compen) ? sf_cmplx(-p1*dt/2.,0) : sf_cmplx(p1*dt/2.,0);
+//		sf_complex phr = sf_cmplx(p1*dt/2.,0);
 		sf_complex phi = sf_cmplx(0,0);
 		sf_complex phase = sf_cmplx(0,0);
 #ifdef SF_HAS_COMPLEX_H
@@ -134,7 +136,7 @@ int main(int argc, char** argv)
     
     par.get("rev",rev,false); // reverse propagation
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic
-    par.get("cmp",cmp,false); // compensate attenuation
+    par.get("compen",compen,false); // compensate attenuation, only works if mode=0 (viscoacoustic)
     par.get("sign",sign,0); // sign of solution: 0 is positive, 1 is negative
     
     par.get("nbt",nbt,0);

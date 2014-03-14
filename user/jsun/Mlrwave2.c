@@ -267,7 +267,7 @@ int main(int argc, char* argv[])
     /* padding factor on the first axis */
 
     if (adj) { /* migration */
-	data = sf_input("in"); / data here is just a refl file
+	data = sf_input("in"); // data here is just a refl file
 	image = sf_output("out");
 	sf_settype(image,SF_COMPLEX);
 
