@@ -567,6 +567,7 @@ static char* gettmpdatapath (void)
 	if (readpathfile (file,path)) return path;
     }
 	
+    free(path);
     return NULL;
 }
 
