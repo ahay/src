@@ -106,13 +106,13 @@ int main(int argc, char** argv)
 
     oRSF alpha, beta("beta"), appM("appM");
     alpha.type(SF_COMPLEX);
-    alpha.put("n1",nz);
-    alpha.put("n2",nx);
+    alpha.put("n1",m);
+    alpha.put("n2",1);
     alpha << adata;  
 
     beta.type(SF_COMPLEX);
-    beta.put("n1",nkz);
-    beta.put("n2",nkx);
+    beta.put("n1",n);
+    beta.put("n2",1);
     beta << bdata;
     
     appM.type(SF_COMPLEX);
