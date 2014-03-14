@@ -25,7 +25,7 @@ using namespace std;
 static std::valarray<float> vs,qs;
 static std::valarray<float> ksz,ksx;
 static float ct,cb,cl,cr;
-static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
+static int nkzs,nkxs,nz,nx,nbt,nbb,nbl,nbr;
 static float dt,c0,w0;
 static bool rev,compen;
 static int mode,sign;
@@ -114,6 +114,25 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
     return 0;
 }
 
+int tukey(float a, float cutoff, vector<float>& tuk)
+{
+    float k = hypot(ksz[nkzs-1],ksx[nkxs-1]);
+    if (cutoff > k) sf_error("cutoff frequency larger than maximum frequency %f!",k);
+    for (int ikx=0; ikx<nkxs; ikx++) {
+	for (int ikz=0; ikz<nkzs; ikz++) {
+	    k = hypot(ksz[ikz],ksx[ikx]);
+	    int ik = ikz+ikx*nkzs;
+	    if (k > cutoff)
+		tuk[ik] = 0.;
+	    else if (k >= cutoff*(1.-0.5*a))
+		tuk[ik] = 0.5*(1.+cos(SF_PI*(2.*k/(a*cutoff)-2./a+1.)));
+	    else
+		tuk[ik] = 1.;
+	}
+    }
+    return 0;
+}
+
 int main(int argc, char** argv)
 {   
     sf_init(argc,argv); // Initialize RSF
@@ -136,7 +155,14 @@ int main(int argc, char** argv)
     
     par.get("rev",rev,false); // reverse propagation
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic
-    par.get("compen",compen,false); // compensate attenuation, only works if mode=0 (viscoacoustic)
+    float aa,cut;
+    par.get("compen",compen,false); // compensate attenuation, only works if mode=0,1 (viscoacoustic)
+    if (mode==0 || mode==1)
+	if (compen) {
+	    par.get("taper",aa,0.5); // taper ratio for tukey window
+	    par.get("cutoff",cut,250.); // cutoff frequency
+	    sf_warning("Compensating for attenuation!");
+	}
     par.get("sign",sign,0); // sign of solution: 0 is positive, 1 is negative
     
     par.get("nbt",nbt,0);
@@ -167,6 +193,7 @@ int main(int argc, char** argv)
     fft.get("n1",nkz);
     fft.get("n2",nkx);
     nkzs = nkz;
+    nkxs = nkx;
 
     float dkz,dkx;
     fft.get("d1",dkz);
@@ -226,9 +253,21 @@ int main(int argc, char** argv)
 
     cpx *rdat = rmat.data();
     std::valarray<sf_complex> rdata(n2*n);    
-    for (int k=0; k < n2*n; k++) {
-	rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
+    if (!compen || mode==2 || mode==3) {
+	for (int k=0; k < n2*n; k++) {
+	    rdata[k] = sf_cmplx(real(rdat[k]),imag(rdat[k]));
+	} 
+    } else {
+	vector<float> lpass(n);
+	tukey(aa, cut, lpass);
+	for (int k1=0; k1 < n; k1++) {
+	    for (int k2=0; k2 < n2; k2++) {
+		int k = k2 + k1*n2;
+		rdata[k] = sf_cmplx(real(rdat[k])*lpass[k1],imag(rdat[k])*lpass[k1]);
+	    }
+	}
     }
+
     oRSF right;
     right.type(SF_COMPLEX);
     right.put("n1",n2);
