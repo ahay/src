@@ -27,7 +27,7 @@ static std::valarray<float> ksz,ksx;
 static float ct,cb,cl,cr;
 static int nkzs,nz,nx,nbt,nbb,nbl,nbr;
 static float dt,c0,w0;
-static bool rev;
+static bool rev,cmp;
 static int mode,sign;
 
 int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
@@ -134,6 +134,7 @@ int main(int argc, char** argv)
     
     par.get("rev",rev,false); // reverse propagation
     par.get("mode",mode,0); // mode of propagation: 0 is viscoacoustic (default); 1 is loss-dominated; 2 is dispersion dominated; 3 is acoustic
+    par.get("cmp",cmp,false); // compensate attenuation
     par.get("sign",sign,0); // sign of solution: 0 is positive, 1 is negative
     
     par.get("nbt",nbt,0);
