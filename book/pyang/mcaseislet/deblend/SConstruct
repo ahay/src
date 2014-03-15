@@ -5,7 +5,7 @@ Fetch('pyang.rsf','pwd')
 Flow('shot1','pyang','dd form=native | pad n2=512')
 Flow('shot2','shot1','matflip mode=lr')
 Flow('data','shot1 shot2','add scale=1,1 ${SOURCES[1]}')
-Result('data','grey title=blended')
+Result('blended','data','grey title=blended')
 
 
 def grey(title):
@@ -16,46 +16,45 @@ Flow('pq','data',
 	'''
 	twodip2 order=2 verb=y gauss=n niter=10 eps=5
 	''')
-Flow('dip1','pq','window n3=1')
-Flow('dip2','pq','window f3=1')
 
-Plot('dip1','%s pclip=100 scalebar=y color=j' % grey('First Dip'))
-Plot('dip2','%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
-Result('dips','dip1 dip2','SideBySideIso')
+Plot('dip1','pq','window n3=1 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
+Plot('dip2','pq','window f3=1 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
 
 
 # Seislet-based MCA deblending 1:
-Flow('rec1 rec2','data dip1 dip2',
+Flow('rec','data pq',
      	'''
-     	mcaseislet dip1=${SOURCES[1]} dip2=${SOURCES[2]}
-    	comp2=${TARGETS[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     	mcaseislet dips=${SOURCES[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
      	''')
-# ... smth1=y smth2=y rect1=2 rect2=4
 
-#==========================================================================
-Flow('ddip1', 'rec1','mutter half=y v0=340 t0=-0.45 hyper=y x0=0 |dip rect1=5 rect2=10 order=2')
-Flow('ddip2', 'rec2','mutter half=y v0=340 t0=-0.45 hyper=y x0=512 |dip rect1=5 rect2=10 order=2')
+Flow('rec1','rec','window n3=1 | window n3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=0')
+Flow('rec2','rec','window f3=1 | window f3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=512')
+Plot('rec1','window n2=512 | grey title=rec1')
+Plot('rec2','window n2=512 | grey title=rec2')
+Result('deblended1','dip1 dip2 rec1 rec2','TwoColumns')
+
+#================== reestimate the dips ======================
+Flow('ddip1', 'rec1','dip rect1=5 rect2=10 order=2')
+Flow('ddip2', 'rec2','dip rect1=5 rect2=10 order=2')
 Plot('ddip1','%s pclip=100 scalebar=y color=j' % grey('First Dip'))
 Plot('ddip2','%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
-Result('ddips','ddip1 ddip2','SideBySideIso')
+
+
+Flow('ddips','ddip1 ddip2','cat axis=3 ${SOURCES[1]}')
 
 # Seislet-based MCA deblending 2:
-Flow('rrec1 rrec2','data ddip1 ddip2',
+Flow('rrec','data ddips',
      	'''
-     	mcaseislet dip1=${SOURCES[1]} dip2=${SOURCES[2]}
-    	comp2=${TARGETS[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     	mcaseislet dips=${SOURCES[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
      	''')
 
 #=========================================================================
-Flow('rrec','rrec1 rrec2','add scale=1,1 ${SOURCES[1]}')
+Flow('rrec1','rrec','window n3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=0')
+Flow('rrec2','rrec','window f3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=512')
 Plot('rrec1','window n2=512 | grey title=rec1')
 Plot('rrec2','window n2=512 | grey title=rec2')
-Plot('rrec','window n2=512 | grey title=rec1+rec2')
 
-Result('rrec','rrec1 rrec2','TwoColumns')
-
-
-Result('deblended','ddip1 ddip2 rrec1 rrec2','TwoColumns')
+Result('deblended2','ddip1 ddip2 rrec1 rrec2','TwoColumns')
 
 #SideBySideAniso
 End()

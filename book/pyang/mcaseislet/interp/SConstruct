@@ -32,43 +32,20 @@ Plot('dip2','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'
 Result('dips','dip1 dip2','SideBySideIso')
 
 # Seislet-based MCA inpainting 1st:
-Flow('rec1 rec2','sean2 dip1 dip2 mask',
+Flow('rec0','sean2 ppq mask',
      '''
-     mcaseislet dip1=${SOURCES[1]} dip2=${SOURCES[2]} mask=${SOURCES[3]}
-     comp2=${TARGETS[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]}
+     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
      ''')
-# ... smth1=y smth2=y rect1=2 rect2=4
-
-#===============================================================================
-#Flow('ddip1', 'rec1','dip rect1=5 rect2=5 order=2')
-#Flow('ddip2', 'rec2','dip rect1=5 rect2=5 order=2')
-#Plot('ddip1','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
-#Plot('ddip2','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
-#Result('ddips','ddip1 ddip2','SideBySideIso')
-
-
+Flow('rec1','rec0','window n3=1')
+Flow('rec2','rec0','window f3=1')
 Flow('rec','rec1 rec2','add scale=1,1 ${SOURCES[1]}')
-Flow('pq','rec','window n2=180 | pad n2=256 | twodip2 order=2 eps=5 verb=y gauss=n niter=10')
-Flow('ddip1','pq','window n3=1')
-Flow('ddip2','pq','window f3=1')
-Plot('ddip1','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
-Plot('ddip2','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
-Result('ddips','ddip1 ddip2','SideBySideIso')
 
-# Seislet-based MCA inpainting 2nd:
-Flow('rrec1 rrec2','sean2 ddip1 ddip2 mask',
-     	'''
-     	mcaseislet dip1=${SOURCES[1]} dip2=${SOURCES[2]} mask=${SOURCES[3]}
-    	comp2=${TARGETS[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
-     	''')
+Plot('rec1','window n2=180 | grey title=rec1')
+Plot('rec2','window n2=180 | grey title=rec2')
+Plot('rec','window n2=180 | grey title=interpolated')
 
-#==============================================================================
-Flow('rrec','rrec1 rrec2','add scale=1,1 ${SOURCES[1]}')
-Plot('rrec1','window n2=180 | grey title=rec1')
-Plot('rrec2','window n2=180 | grey title=rec2')
-Plot('rrec','window n2=180 | grey title=rec1+rec2')
-
-Result('rec','sean sean2 rrec1 rrec2 rrec','SideBySideAniso')
+Result('interp','sean sean2 rec1 rec2 rec','SideBySideAniso')
 
 #
 End()

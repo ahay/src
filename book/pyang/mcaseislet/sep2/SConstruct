@@ -1,0 +1,167 @@
+from rsf.proj import *
+
+# This example is borrowed from Yang Liu and Sergey Fomel on Velocity-dependent
+# seislet for primaries and multiples separation. The main purpose is to validate
+# the correctness of seislet-based MCA. VD-seislet frame using Bregman iteration 
+# does a better job in this example. 
+
+def gplot(title):
+    return '''grey title="%s" transp=y poly=y yreverse=y crowd=0.89
+	label2="offset(km)" label1=time unit1=s ''' % title
+
+Fetch('hask_mult.HH','haskell')
+
+Flow('hask','hask_mult.HH',
+     '''
+     dd form=native | 
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+Plot('hask','mutter half=n v0=1.54 | '+gplot('data'))
+Result('hask',
+       '''
+       mutter half=n v0=1.58 |
+       grey title="Synthtic data" clip=0.00004 screenratio=1.45 screenht=10
+       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+       ''')
+
+Fetch('picks.hask.txt','haskell')
+
+Flow('picks.txt','picks.hask.txt',"awk '{print $2, $3}'") 
+Flow('picks','picks.txt',
+     '''
+     echo in=$SOURCE n1=2 n2=13 data_format=ascii_float |
+     dd form=native 
+     ''',stdin=0)
+
+vw=1.5    # water velocity
+nw=115
+tw=0.4568 # water depth
+dt=0.004
+
+Flow('mask','hask','window n2=1 | spike k1=%d | causint' % nw)
+
+Flow('vnmo','picks mask',
+     '''
+     transp |
+     linear o1=0.0 d1=0.004 n1=1024 rect=5 niter=100 verb=y |
+     math m=${SOURCES[1]} output="%g*(1-m)+m*input" |
+     put label1=Time unit1=s 
+     ''' % vw)
+Result('vnmo','graph title="NMO Velocity" label2=Velocity unit2=km/s')
+
+Flow('nmo','hask vnmo','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmo','grey title="NMO" clip=0.00004')
+
+
+Flow('vscan','hask',
+     '''
+     mutter half=n v0=1.5 |
+     vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+     ''')
+
+Plot('vscan',
+     '''
+     grey color=I allpos=y title="Velocity spectra"
+     screenratio=1.45 screenht=10 
+     font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+     ''')
+
+plotvel ='graph wanttitle=n wantaxis=n plotcol=7 plotfat=5 transp=y \
+          yreverse=y pad=n min2=1.4 max2=3.2 screenratio=1.45 \
+          screenht=10'
+
+Plot('vnmo',plotvel)
+
+# Predict multiple velocities
+
+pegleg = '''
+pad beg1=%d | window n1=1024 | put o1=0 |
+math output="input*input" | 
+math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
+''' % (nw,vw,tw,vw*vw*tw,dt)
+
+Flow('mult','vnmo mask',pegleg)
+Flow('mult2','mult mask',pegleg)
+Flow('mult3','mult2 mask',pegleg)
+Flow('mult4','mult3 mask',pegleg)
+
+Flow('mask1','hask','window n2=1 | spike k1=%d | causint' % (2*nw))
+Flow('mult22','vnmo mask1',
+     '''
+     pad beg1=%d | window n1=1024 | put o1=0 |
+     math output="input*input" | 
+     math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
+     ''' % (2*nw,vw,2*tw,vw*vw*tw*2,dt) )
+Plot('mult22',plotvel)
+     
+Result('vscan','vscan vnmo mult mult2 mult3','Overlay')
+
+# Apply vd-seislet transform frame
+
+dips = []
+for v in Split('vnmo mult mult2 mult3'):
+     Plot(v,plotvel)
+
+     # t as a function of t0 and x
+     t = 't-'+v
+     Flow(t,v,
+          '''
+          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
+          math output="sqrt(x1*x1+x2*x2/(input*input))"
+          ''')
+
+     # dip as a function of t0 and x
+     p0 = 'p0-'+v
+     Flow(p0,[v,t],
+          '''
+          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
+          math t=${SOURCES[1]} output="%g*x2/(t*input*input+1e-6)"
+          ''' % (0.05/0.004))
+
+     # dip as a function of t
+     p = 'p-'+v
+     Flow(p,[p0,t],'iwarp warp=${SOURCES[1]} eps=0.1')
+     dips.append(p)
+
+nc = len(dips)
+
+Flow('dips',dips,'cat axis=3 ${SOURCES[1:%d]}' % nc)
+Flow('mydips12','dips', 'window n3=2')
+Flow('mydips23','dips', 'window n3=2 f3=1')
+Flow('mydips34','dips', 'window n3=2 f3=2')
+
+# Seislet-based MCA primary/multiple separation
+Flow('rec12','hask mydips12',
+     	'''
+	pad n2=64 | mcaseislet dips=${SOURCES[1]}
+	verb=y order=1 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     	''')
+Flow('rec1','rec12','window n3=1 | mutter half=n v0=1.54')
+Plot('rec1','window n2=60| '+gplot('primaries'))
+
+
+Flow('rec234','hask rec1','pad n2=64| add scale=1,-1 ${SOURCES[1]} | mutter half=n v0=1.5')
+Flow('rec23','rec234 mydips23',
+     	'''
+	mcaseislet dips=${SOURCES[1]}
+	verb=y order=1 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     	''')
+Flow('rec2','rec23','window n3=1 | mutter half=n t0=0.1 v0=1.5')
+Plot('rec2','window n2=60| '+gplot('multiples of order 1'))
+
+
+Flow('rec34','rec234 rec2','add scale=1,-1 ${SOURCES[1]} | mutter half=n v0=1.54')
+Flow('res34','rec34 mydips34',
+     	'''
+	mcaseislet dips=${SOURCES[1]} 
+	verb=y order=1 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     	''')
+Flow('rec3','res34','window n3=1 | mutter half=n t0=0.2 v0=1.6')
+Flow('rec4','res34','window f3=1 | mutter half=n t0=0.3 v0=1.7')
+Plot('rec3','window n2=60| '+gplot('multiples of order 2'))
+Plot('rec4','window n2=60| '+gplot('multiples of order 3'))
+
+Result('primmult','hask rec1 rec2 rec3 rec4','SideBySideAniso')
+
+
+End()
