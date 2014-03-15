@@ -1,4 +1,4 @@
-/* Smoothing by spraying */
+/* Structure-oriented smoothing */
 /*
   Copyright (C) 2014 University of Texas at Austin
   
@@ -18,48 +18,44 @@
 */
 #include <rsf.h>
 
-#include "spray.h"
-#include "smspray.h"
+#include "pwspray.h"
+#include "pwsmooth.h"
 
 static int ns2, nu;
 static float **u, *w, *w1;
 
-void smspray_init(int n1    /* data size */, 
-		  int ns    /* spray radius */,
-		  char type /* weight type */)
+void pwsmooth_init(int ns      /* spray radius */,
+		   int n1      /* trace length */,
+		   int n2      /* number of traces */,
+		   int order   /* PWD order */,
+		   float eps   /* regularization */,
+		   float **dip /* local slope */)
 /*< initialize >*/
 {
-    int is, i1;
-    float a, *t;
+    int is, i1, n12;
+    float *t;
 
-    ns2 = spray_init(ns);
-    nu = ns2*n1;
-    u = sf_floatalloc2(ns2,n1);
+    ns2 = pwspray_init(ns,n1,n2,order,eps,dip);
+    n12 = n1*n2;
+    nu = ns2*n12;
+    u = sf_floatalloc2(ns2,n12);
     w = sf_floatalloc(ns2);
-    w1 = sf_floatalloc(n1);
-    a = 3.0f/(ns*(ns+2));
+    w1 = sf_floatalloc(n12);
 
     for (is=0; is < ns2; is++) {
-	switch(type) {
-	    case 't':
-		w[is]=ns+1-SF_ABS(is-ns);
-		break;
-	    case 'g':
-		w[is]=expf(-a*(is-ns)*(is-ns));
-		break;
-	}
+	w[is]=ns+1-SF_ABS(is-ns);
     }
 
     /* Normalization */
-    t = sf_floatalloc(n1);
+    t = sf_floatalloc(n12);
 
-    for (i1=0; i1 < n1; i1++) {
+    for (i1=0; i1 < n12; i1++) {
 	w1[i1]=1.0f;
     }
 
-    smspray_lop(false,false,n1,n1,w1,t);
+    pwsmooth_lop(false,false,n12,n12,w1,t);
 
-    for (i1=0; i1 < n1; i1++) {
+    for (i1=0; i1 < n12; i1++) {
 	if (0.0f != t[i1]) {
 	    w1[i1]=1.0/t[i1];
 	} else {
@@ -70,7 +66,7 @@ void smspray_init(int n1    /* data size */,
     free(t);    
 }
 
-void smspray_close(void)
+void pwsmooth_close(void)
 /*< free allocated storage >*/
 {
     free(*u);
@@ -79,7 +75,8 @@ void smspray_close(void)
     free(w1);
 }
 
-void smspray_lop(bool adj, bool add, int n1, int n2, float* trace, float *smooth)
+void pwsmooth_lop(bool adj, bool add, 
+		  int n1, int n2, float* trace, float *smooth)
 /*< linear operator >*/
 {
     int i1, is;
@@ -97,9 +94,9 @@ void smspray_lop(bool adj, bool add, int n1, int n2, float* trace, float *smooth
 	    }
 	}
 
-	spray_lop(true, add,    n1, nu, trace, u[0]);
+	pwspray_lop(true, add,    n1, nu, trace, u[0]);
     } else {
-	spray_lop(false, false, n1, nu, trace, u[0]);
+	pwspray_lop(false, false, n1, nu, trace, u[0]);
 
 	for (i1=0; i1 < n1; i1++) {
 	    ws=w1[i1]; 
