@@ -64,10 +64,23 @@ void pwspray_lop(bool adj, bool add, int n, int nu, float* u1, float *u)
     for (i=0; i < n2; i++) { 	
 	if (adj) {
 	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] = u[(i*ns2+ns)*n1+i1];
+		trace[i1] = 0.0f;
 	    }
+
+	    /* predict forward */
+	    for (is=ns-1; is >= 0; is--) {
+		ip = i+is+1;
+		if (ip >= n2) continue;
+		j = ip*ns2+ns+is+1;
+		for (i1=0; i1 < n1; i1++) {
+		    trace[i1] += u[j*n1+i1];
+		}
+		predict_step(true,true,trace,p[ip-1]);
+	    }
+
 	    for (i1=0; i1 < n1; i1++) {
 		u1[i*n1+i1] += trace[i1];
+		trace[i1] = 0.0f;
 	    }
 
 	    /* predict backward */
@@ -78,15 +91,19 @@ void pwspray_lop(bool adj, bool add, int n, int nu, float* u1, float *u)
 		for (i1=0; i1 < n1; i1++) {
 		    trace[i1] += u[j*n1+i1];
 		}
-		predict_step(false,false,trace,p[ip]);
+		predict_step(true,false,trace,p[ip]);
 	    }
 	    
-
+	    for (i1=0; i1 < n1; i1++) {
+		u1[i*n1+i1] += trace[i1];
+		trace[i1] = u[(i*ns2+ns)*n1+i1];
+		u1[i*n1+i1] += trace[i1];
+	    }
+	    
 	} else {
+
 	    for (i1=0; i1 < n1; i1++) {
 		trace[i1] = u1[i*n1+i1];
-	    }
-	    for (i1=0; i1 < n1; i1++) {
 		u[(i*ns2+ns)*n1+i1] += trace[i1];
 	    }
 
@@ -96,6 +113,21 @@ void pwspray_lop(bool adj, bool add, int n, int nu, float* u1, float *u)
 		if (ip < 0) break;
 		j = ip*ns2+ns-is-1;
 		predict_step(false,false,trace,p[ip]);
+		for (i1=0; i1 < n1; i1++) {
+		    u[j*n1+i1] += trace[i1];
+		}
+	    }
+
+	    for (i1=0; i1 < n1; i1++) {
+		trace[i1] = u1[i*n1+i1];
+	    }
+	    
+	    /* predict backward */
+	    for (is=0; is < ns; is++) {
+		ip = i+is+1;
+		if (ip >= n2) break;
+		j = ip*ns2+ns+is+1;
+		predict_step(false,true,trace,p[ip-1]);
 		for (i1=0; i1 < n1; i1++) {
 		    u[j*n1+i1] += trace[i1];
 		}
