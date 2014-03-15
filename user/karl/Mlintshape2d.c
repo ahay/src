@@ -1,4 +1,64 @@
-#include <string.h>
+/* find grid that will Linearly INTerpolate the input.  Use SHAPEing in 2D.
+
+Input data is Z, elevation, or amplitude at irregular (x,y) locations.  These 
+are just (x,y,z) triplets.  The input file is RSF.  Input file n1 is 3, for 
+the (x,y,z) values.  Input file n2 is the number of (x,y,z) points.
+
+The output data is a regularly sampled 2D grid (ie 2D rsf).  
+
+sflintshape2d computes a 2D grid that can be bilinearly interpolated to
+fit the input data points.  A conjugate gradient algorithm is used.  The 
+equation solved is:
+    bilinear_interpolate * 2d_grid ~ irregular_input
+
+Where ~ means "approximately equals".
+
+There may be more than one 2d_grid that will fit the data, so I use 
+preconditioning (aka shaping regularization).  Change variables using;
+
+   2d_grid = Smooth * 2d_grid'   
+
+and you obtain:
+
+   bilinear_interpolate * Smooth * 2d_grid' ~ irregular_input
+
+After solving this equation the desired answer is 2d_grid = Smooth * 2d_grid'.
+
+For a smoothing filter I use a 2D box car filter convolved with a 2D boxcar 
+filter that is 1/1.5 times smaller.  The smaller filter is intended to reduce
+the first sidelobe of the larger filter.
+
+I solve the problem with a very long filter, then repeat with a filter 
+1/1.5 times smaller.  I repeat with smaller and smaller filters until the
+filter is only a single point (ie no filtering at all.)
+
+This algorithm is a direct implementation of the ideas in Geophysical Image 
+Estimation by Example" by Jon Claerbout.  I adopted the left and right 
+preconditioning for congugate gradient psuedo code described in "Merits 
+and challenges for accurate velocity model building by 3D gridded tomography"
+by Guo et al. 
+
+EXAMPLE:
+
+< sxyamp.rsf \\
+   sflintshape2d  \\
+        verbose=1 \\
+        xmin=788150000 xmax=809380000 nx=194 dx=110000 \\
+        ymin=939180000 ymax=977020000 ny=345 dy=110000 \\
+> s_lintshape.rsf
+
+< s_lintshape.rsf sfclip2 lower=0.34461 upper=2.46485 \\
+| sfmath output="input-1.4" \\
+| sfgrey title="s_lintshape2d shot scalar" color=j \\
+| sfpen
+
+This example grids the shot consistant amplitude (sxyamp.rsf) estimated on the 
+teapot dome 3D land survey.  The 2d grid s_lintshape.rsf is clipped, biased, 
+and plotted (sfgrey | sfpen)
+
+*/
+
+
 #include <rsf.h>
 #include <math.h>
 
@@ -243,6 +303,13 @@ void cgsolve(float* z, int npnt,
      float** s;
      float* deltar;
      
+     /*
+       This function solves the inverse bilinear interpolation with 
+       preconditioning using congugate gradient psuedo code described in 
+       "Merits and challenges for accurate velocity model building by 3D 
+       gridded tomography by Guo et al. 
+     */
+
      r=(float*)malloc(npnt*sizeof(float));
      delta_x=(float**)sf_floatalloc2(nx,ny);
      aatemp=(float**)sf_floatalloc2(nx,ny);
