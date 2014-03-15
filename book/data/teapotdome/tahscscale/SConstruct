@@ -1,79 +1,97 @@
 from rsf.proj import *
 
-# Sconscript('../fetch/SConstruct')
-
 #(sftahread input=../fetch/npr3_field.rsf | sftahgethw key=tracl,tracr,fldr,tracf,ep,cdp,cdpt,sx,sy,gx,gy >/dev/null )|& more
 #(sftahread input=../fetch/npr3_gathers.rsf | sftahgethw key=tracl,tracr,fldr,tracf,ep,cdp,cdpt,sx,sy,gx,gy >/dev/null )|& more
 
-# sftahscscale directly read the input trace and header files.  It will 
-# reread the input file to:
-#   1- build the sloc and gloc table, a list of each shot x,y and each group x,y
-#   2- read the traces and compute the average trace amplitude
-#   3- write the sxyamp and gxyamp arrays,  sxyamp is the x,y,amp for each shot
-#   4- read each trace and header, read the sxyamp and the gxyamp, apply the 
-#      scale correction
-#   5- write the trace and header (tah)
+# sftahscscale directly reads the input trace and header files.  It will 
+# read the input file multiple times to:
+#   1- build the input headers to build sloc and gloc table, a list of each 
+#      shot x,y and each group x,y
+#   2- read the traces and compute the average absolute amplitute (avg_abs_amp)
+#      of each trace.
+#   3- compute the amp for each source and each group.  Shot_amp
+#      is the average of the avg_abs_amp of all the traces each the shot.  
+#      Scale the avg_avs_amp of each trace by the global_avg_amp/shot_amp
+#      Then compute the grp_amp the same way.
+#   4- write the sxyamp and gxyamp arrays,  sxyamp is the x,y,amp for each shot
+#   5- read each input trace and header, apply sxyamp and gxyamp scale factors.
+#      These scale factors do not remove the global average amplitude. 
+#      apply the scale correction
+#   6- write the trace and header (tah) to the output pipe.
 
 # to get all the traces change sftahwrite label2 to:
 #	label3="fldr"  o3=14 n3=850  d3=1   
 
-Flow('scscale scscale_hdr sxy gxy sxyamp gxyamp',
+# compute surface consistant amplitude for start time 0.
+# Put _st0 in the  file names.
+Flow(['sxy_st0.rsf'   ,'gxy_st0.rsf',
+      'sxyamp_st0.rsf','gxyamp_st0.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
-     sftahscscale 
-  	input=$SOURCE 
+     sftahscscale \
+  	input=$SOURCE \
+	sxy=${TARGETS[0]} gxy=${TARGETS[1]}        \
+	sxyamp=${TARGETS[2]} gxyamp=${TARGETS[3]} \
+	starttime=1.5 \
+	verbose=2 
+     ''',stdout=0,stdin=0)
+
+# compute surface consistant amplitude for start time 1500 ms. 
+# Put _st1500 in the file names.
+Flow(['scscale.rsf','scscale_hdr.rsf',
+      'sxy.rsf'          ,'gxy.rsf',
+      'sxyamp_st1500.rsf','gxyamp_st1500.rsf'],
+     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+     '''
+     sftahscscale \
+  	input=$SOURCE \
 	sxy=${TARGETS[2]}    gxy=${TARGETS[3]} 
 	sxyamp=${TARGETS[4]} gxyamp=${TARGETS[5]} 
-	starttime=1.5 
-	verbose=2 
-     | sftahwrite 
-        verbose=1 
-        label2="tracr" o2=1 n2=723990 d2=1 
-	output=$TARGET 
+	starttime=1.5 \
+	verbose=2 \
+     | sftahwrite \
+        verbose=1 \
+        label2="tracf" o2=1  n2=1062 d2=1    \
+	label3="fldr"  o3=14 n3=850  d3=1   \
+	output=$TARGET
      ''',stdout=0,stdin=0)
 
 Result('sxy',
-       'scale dscale=1e-6 | graph symbol="+" title="Shot coordinates" plotcol=4 label1=x label2=y unit1= unit2=')
+	'graph symbol="+" title="Shot coordinates" plotcol=4')
 Result('gxy',
-	'scale dscale=1e-6 | graph symbol="+" title="Receiver coordinates" plotcol=5 label1=x label2=y unit1= unit2=')
-Flow('sx','sxyamp','window n1=1 f1=0')
-Flow('sy','sxyamp','window n1=1 f1=1')
-Flow('sxsycoord',['sx','sy'],'cmplx ${SOURCES[1]}')
-Result('sxsycoord','scale dscale=1e-6 | graph symbol="+" title="Shot (x,y)" plotcol=5 label1=x label2=y unit1= unit2=')
-Flow('gx','gxyamp','window n1=1 f1=0')
-Flow('gy','gxyamp','window n1=1 f1=1')
-Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
-Result('gxgycoord','scale dscale=1e-6 | graph symbol="+" title="group (x,y)" plotcol=5 label1=x label2=y unit1= unit2=')
+	'graph symbol="+" title="Receiver coordinates" plotcol=5')
 
 Flow(['scscale_subset.rsf','scscale_subset_hdr.rsf'],
      ['scscale.rsf','scscale_hdr.rsf'],
      '''
-     sftahsort 
-        input=$SOURCE 
-	sort="fldr:14,23 tracf:1,1063" 
-	verbose=1 
-     | sftahwrite 
-        verbose=1                           
-        label2="tracf" o2=1  n2=1062 d2=1    
-	label3="fldr"  o3=14 n3=10  d3=1   
-        output=$TARGET 
+     sftahsort \
+        input=$SOURCE \
+	sort="fldr:14,23 tracf:1,1063" \
+	verbose=1 \
+     | sftahwrite \
+        verbose=1                           \
+        label2="tracf" o2=1  n2=1062 d2=1    \
+	label3="fldr"  o3=14 n3=10  d3=1   \
+        output=$TARGET \
      ''',stdout=0,stdin=0)
 
 Plot('scscale_subset','scscale_subset',
-     'sfwindow max1=2. | grey title="field with scscale"',view=1)
+	'sfwindow max1=2. | grey title="field with scscale"',view=1)
 
+# sftahsort is really just used to extract a subset.  sftahwrite defines the
+# order of the traces in the output file.
 Flow(['npr3_field_subset.rsf','npr3_field_subset_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
-     sftahsort 
-        input=../fetch/npr3_field.rsf 
-	sort="fldr:14,23 tracf:1,1063" 
-	verbose=1 
-     | sftahwrite 
-        verbose=1                           
-        label2="tracf" o2=1  n2=1062 d2=1    
-	label3="fldr"  o3=14 n3=10  d3=1   
-        output=npr3_field_subset.rsf 
+     sftahsort \
+        input=$SOURCE \
+	sort="fldr:14,23 tracf:1,1063" \
+	verbose=1 \
+     | sftahwrite \
+        verbose=1                           \
+        label2="tracf" o2=1  n2=1062 d2=1    \
+	label3="fldr"  o3=14 n3=10  d3=1   \
+        output=$TARGET \
      ''',stdout=0,stdin=0)
 
 
