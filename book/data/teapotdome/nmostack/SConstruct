@@ -2,27 +2,6 @@ from rsf.proj import *
 
 # SConscript('../fetch/SConstruct')
 
-Flow('foldplot','../fetch/npr3_gathers_hdr.rsf',
-    '''
-      dd type=float |
-      fold 
-          verbose=1
-          o1=0 n1=96  d1=200 label1=offset
-          o2=1 n2=188 d2=1   label2=xline
-          o3=1 n3=345 d3=1   label3=iline          
-    ''')
-
-Plot('foldplot',
-     '''
-     grey title=foldplot gainpanel=all pclip=100 
-     ''',view=1)
-
-Result('foldplot',
-       '''
-       byte gainpanel=all allpos=y |
-       grey3 title=foldplot frame1=50 frame2=100 frame3=100
-       ''')
-
 Flow('gathers mask','../fetch/npr3_gathers.rsf ../fetch/npr3_gathers_hdr.rsf',
      'intbin3 head=${SOURCES[1]} xkey=-1 mask=${TARGETS[1]}')
 
@@ -65,6 +44,10 @@ Result('stack',
        | byte gainpanel=all 
        | grey3 title=Stack frame1=500 frame2=120 frame3=140
         ''')
+Result('stack141','stack',
+       '''
+       window n1=1000 n2=1 f2=141 | grey title='stack line 141'
+       ''')
 
 # Velocity analysis at one CMP
 Flow('gather1','gathers','window n3=1 n4=1 f3=120 f4=140')

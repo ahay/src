@@ -29,7 +29,10 @@ Result('mappedstack3d','mappedstack',
        | byte gainpanel=all 
        | grey3 title="tah stack" frame1=500 frame2=120 frame3=140
         ''')
-
+Result('mappedstack141','mappedstack',
+       '''
+       window n1=1000 n2=1 f2=141 | grey title='tahstack line 141'
+       ''')
 
 # make the mapped gather in the middle data.
 # sftahmakeskey hangs if you say key= instead of pkey=
