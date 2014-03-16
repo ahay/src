@@ -131,14 +131,16 @@ Flow('vel1',None,
      smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_vel) + 
                    ' o1=' + str(o1) + ' e1=' + str(e1) + ' d1=' + str(d1) +
                    ' o2=' + str(o2) + ' e2=' + str(e2) + ' d2=' + str(d2) +
-                   ' hfile=' + vel_file )
+                   ' hfile=' + vel_file,
+     stdin=0, stdout=0)
 # 'sfput id1=0 id2=1 dim=2 gdim=2' )
 
 Flow('den1',None,
      smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_den) +
                    ' o1=' + str(o1) + ' e1=' + str(e1) + ' d1=' + str(d1) +
                    ' o2=' + str(o2) + ' e2=' + str(e2) + ' d2=' + str(d2) +
-                   ' hfile=' + den_file )
+                   ' hfile=' + den_file,
+     stdin=0, stdout=0)
 # 'sfput id1=0 id2=1 dim=2 gdim=2' )
 
 # trace-src output file
@@ -146,7 +148,8 @@ t=Flow(['output.su'],['source.su', 'hdr.su', 'vel1.rsf', 'den1.rsf'],
 	asg  + ' order=2 cfl=0.75 cmin=1.0 cmax=4.5 dmin=0.5 dmax=3.0 fpeak=0.010 ' + 
 	'srctype=array source=./source.su sampord=1 hdrfile=./hdr.su datafile=./output.su ' +
         'velocity=./vel1.rsf density=./den1.rsf ' +
-        'dump_lda=1 dump_ldc=1 dump_term=1',
+        'dump_lda=1 dump_ldc=1 dump_term=1' +
+        'nl1=.5 nr1=.5 nl2=.5 nr2=.5',
 	stdin=0, stdout=0)
          
 Result('output','output.su', 'suread endian=0 read=data < $SOURCE | put label1=Time label2=Distance d2=' + str(gx_dx) + ' o2=' + str(gx_o) + ' unit1=s unit2=km title="Ta-da!" label=Pressure unit=GPa |sfgrey')
