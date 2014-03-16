@@ -117,7 +117,14 @@ int main (int argc, char* argv[])
  
 	sf_floatwrite(trace,n1,out);
     }
-
+    free(trace);
+    sf_fileclose(in);
+    sf_fileclose(out);
+    free(out);
+    in = NULL;
+    out = NULL;
+    sf_close();
+    sf_parclose();
 
     exit (0);
 }

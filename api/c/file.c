@@ -255,7 +255,10 @@ sf_file sf_output (/*@null@*/ const char* tag)
 		
 	file->stream = fopen(headname,"w");
 	if (NULL == file->stream) 
+        {
+            free(file);
 	    sf_error ("%s: Cannot write to header file %s:",__FILE__,headname);
+        }
     }
 	
     file->buf = NULL;
@@ -267,7 +270,10 @@ sf_file sf_output (/*@null@*/ const char* tag)
 	
     file->pipe = (bool) (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
+    {
+        free(file);
 	sf_error ("%s: pipe problem:",__FILE__);
+    }
  
     dataname = sf_getstring("out");
     if (NULL == dataname)
@@ -529,6 +535,7 @@ static bool getfilename (FILE* fp, char *filename)
 	}
       }
     }
+    fclose(fd_dev_null);
 	
     closedir(dir);
 	

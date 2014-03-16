@@ -34,10 +34,10 @@
 #include "alloc.h"
 
 static sf_simtab pars;
-static char *prog = NULL;
-static char *user = NULL;
-static char *host = NULL;
-static char *cdir = NULL;
+static char prog[NAME_MAX];
+static char* user;
+static char host[HOST_NAME_MAX];
+static char cdir[PATH_MAX];
 
 bool sf_stdin(void)
 /*< returns true if there is an input in stdin >*/
@@ -70,7 +70,6 @@ void sf_init(int argc,char *argv[])
     tprog = strrchr(argv[0],'/');
     tprog = (NULL == tprog)? argv[0]:tprog+1;
     prog_len = strlen(tprog) + 1;
-    prog = sf_charalloc(prog_len);
     strncpy(prog,tprog,prog_len);
     
     /* no pars and input from terminal */
@@ -102,12 +101,10 @@ void sf_init(int argc,char *argv[])
     if (0 > uname (&uhost)) sf_error("%s: Cannot get hostname:",__FILE__);
 
     len = strlen(uhost.nodename)+1;
-    host = sf_charalloc(len);
     memcpy(host,uhost.nodename,len);
 
     /* set cdir */
     if (NULL == getcwd(cwd,PATH_MAX)) {
-	cdir = sf_charalloc(1);
 	cdir[0] = '\0';
     } else {
 	slash = 0;
@@ -116,7 +113,6 @@ void sf_init(int argc,char *argv[])
 	    if (3 == slash) break;
 	}
 	len = strlen(pwd);
-	cdir = sf_charalloc(len);
 	memcpy(cdir,pwd+1,len);
     }
 
