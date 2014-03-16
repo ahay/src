@@ -6,8 +6,9 @@ progs = '''
 beamform dealias dealias2 dijkstra dip dip2 diplet dips dixshape
 explanesignoi expsignoi mdip ofpwd ofpwd2 planemis2 planemis3
 planereg2 planereg3 planesignoi pmshape2 predict pwcoh pwd pwdix
-pwdsigk pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2 pwpaint3 pwspray
-seisigk seislet shapesigk timeshift trismooth2 twodip2
+pwdsigk pwsmooth pwpaint pwpaint2 pwspray2 pwspray3 pwdsmooth2
+pwpaint3 pwspray seisigk seislet shapesigk timeshift trismooth2
+twodip2
 '''
 
 try:  # distributed version

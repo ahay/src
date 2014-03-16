@@ -22,6 +22,7 @@
 
 #include <sys/utsname.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <limits.h>
@@ -33,10 +34,18 @@
 #include "error.h"
 #include "alloc.h"
 
+#ifndef MAXHOSTNAMELEN
+#ifdef HOST_NAME_MAX
+#define MAXHOSTNAMELEN HOST_NAME_MAX
+#else
+#define MAXHOSTNAMELEN 256
+#endif
+#endif
+
 static sf_simtab pars;
 static char prog[NAME_MAX];
 static char* user;
-static char host[HOST_NAME_MAX];
+static char host[MAXHOSTNAMELEN];
 static char cdir[PATH_MAX];
 
 bool sf_stdin(void)
