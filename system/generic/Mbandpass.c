@@ -123,6 +123,8 @@ int main (int argc, char* argv[])
 
     free(trace);
     sf_fileclose(out);
+    free(out);
+
     exit (0);
 }
 
