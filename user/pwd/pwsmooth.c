@@ -21,12 +21,12 @@
 #include "pwspray.h"
 #include "pwsmooth.h"
 
-static int ns2, nu;
-static float **u, *w, *w1;
+static int n1, n2, ns2;
+static float ***u, *w, **w1;
 
 void pwsmooth_init(int ns      /* spray radius */,
-		   int n1      /* trace length */,
-		   int n2      /* number of traces */,
+		   int m1      /* trace length */,
+		   int m2      /* number of traces */,
 		   int order   /* PWD order */,
 		   float eps   /* regularization */,
 		   float **dip /* local slope */)
@@ -35,12 +35,15 @@ void pwsmooth_init(int ns      /* spray radius */,
     int is, i1, n12;
     float *t;
 
-    ns2 = pwspray_init(ns,n1,n2,order,eps,dip);
+    n1 = m1;
+    n2 = m2;
     n12 = n1*n2;
-    nu = ns2*n12;
-    u = sf_floatalloc2(ns2,n12);
+
+    ns2 = pwspray_init(ns,n1,n2,order,eps,dip);
+
+    u = sf_floatalloc3(n1,ns2,n2);
     w = sf_floatalloc(ns2);
-    w1 = sf_floatalloc(n12);
+    w1 = sf_floatalloc2(n1,n2);
 
     for (is=0; is < ns2; is++) {
 	w[is]=ns+1-SF_ABS(is-ns);
@@ -50,16 +53,16 @@ void pwsmooth_init(int ns      /* spray radius */,
     t = sf_floatalloc(n12);
 
     for (i1=0; i1 < n12; i1++) {
-	w1[i1]=1.0f;
+	w1[0][i1]=1.0f;
     }
 
-    pwsmooth_lop(false,false,n12,n12,w1,t);
+    pwsmooth_lop(false,false,n12,n12,w1[0],t);
 
     for (i1=0; i1 < n12; i1++) {
 	if (0.0f != t[i1]) {
-	    w1[i1]=1.0/t[i1];
+	    w1[0][i1]=1.0/t[i1];
 	} else {
-	    w1[i1]=0.0f;
+	    w1[0][i1]=0.0f;
 	}
     }
 
@@ -69,39 +72,46 @@ void pwsmooth_init(int ns      /* spray radius */,
 void pwsmooth_close(void)
 /*< free allocated storage >*/
 {
+    free(**u);
     free(*u);
     free(u);
     free(w);
+    free(*w1);
     free(w1);
 }
 
 void pwsmooth_lop(bool adj, bool add, 
-		  int n1, int n2, float* trace, float *smooth)
+		  int nin, int nout, float* trace, float *smooth)
 /*< linear operator >*/
 {
-    int i1, is;
+    int i1, i2, is;
     float ws;
 
-    if (n1 != n2) sf_error("%s: wrong size %d != %d",__FILE__,n1,n2);
-
-    sf_adjnull(adj,add,n1,n2,trace,smooth);
+    if (nin != nout || nin != n1*n2) 
+	sf_error("%s: wrong size %d != %d",__FILE__,n1,n2);
+    
+    sf_adjnull(adj,add,nin,nout,trace,smooth);
 
     if (adj) {
-	for (i1=0; i1 < n1; i1++) {
-	    ws=w1[i1]; 
-	    for (is=0; is < ns2; is++) {
-		u[i1][is] = smooth[i1]*w[is]*ws;
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		ws=w1[i2][i1]; 
+		for (is=0; is < ns2; is++) {
+		    u[i2][is][i1] = smooth[i2*n1+i1]*w[is]*ws;
+		}
 	    }
 	}
 
-	pwspray_lop(true, add,    n1, nu, trace, u[0]);
+	pwspray_lop(true,  true,  nin, nin*ns2, trace, u[0][0]);
     } else {
-	pwspray_lop(false, false, n1, nu, trace, u[0]);
+	pwspray_lop(false, false, nin, nin*ns2, trace, u[0][0]);
 
-	for (i1=0; i1 < n1; i1++) {
-	    ws=w1[i1]; 
-	    for (is=0; is < ns2; is++) {
-		smooth[i1] += u[i1][is]*w[is]*ws;
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		ws=w1[i2][i1]; 
+		for (is=0; is < ns2; is++) {
+		    smooth[i2*n1+i1] += u[i2][is][i1]*w[is]*ws;
+		}
 	    }
 	}
     }

@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     float d1, flo, fhi, *trace;
     const float eps=0.0001;
     butter blo=NULL, bhi=NULL;
-    sf_file in=NULL, out=NULL;
+    sf_file in, out;
 
     sf_init (argc, argv); 
     in = sf_input("in");
@@ -117,15 +117,11 @@ int main (int argc, char* argv[])
  
 	sf_floatwrite(trace,n1,out);
     }
-    free(trace);
-    sf_fileclose(in);
-    sf_fileclose(out);
-    free(out);
-    in = NULL;
-    out = NULL;
-    sf_close();
-    sf_parclose();
 
+    if (NULL != blo) butter_close(blo);
+    if (NULL != bhi) butter_close(bhi);
+
+    free(trace);
     exit (0);
 }
 

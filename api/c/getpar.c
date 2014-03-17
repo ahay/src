@@ -31,6 +31,7 @@
 #include "simtab.h"
 /*^*/
 
+#include "getpar.h"
 #include "error.h"
 #include "alloc.h"
 
@@ -138,6 +139,7 @@ void sf_init(int argc,char *argv[])
     }
 
     atexit(sf_close);
+    atexit(sf_parclose);
 }
 
 void sf_parenv(const char *string) 
