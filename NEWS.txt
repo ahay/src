@@ -87,6 +87,7 @@ In APIs:
 * Added missing fflush in sf_simtab_input
 * Avoid taking log(0) in vp_optimal_scale
 * Fixed memory leak in gettmpdatapath in file.c
+* Fixed small memory leaks in getpar.c
 
 In the Python package:
 

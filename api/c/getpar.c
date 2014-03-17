@@ -43,9 +43,11 @@
 #endif
 #endif
 
+#define USERNAME_MAX 33
+
 static sf_simtab pars;
 static char prog[NAME_MAX];
-static char* user;
+static char user[USERNAME_MAX];
 static char host[MAXHOSTNAMELEN];
 static char cdir[PATH_MAX];
 
@@ -96,14 +98,12 @@ void sf_init(int argc,char *argv[])
     }
 	
     /* set user */
-    user = getlogin();
-    if (NULL == user) {
+    if (0 != getlogin_r(user,USERNAME_MAX)) {
 	pass = getpwuid(geteuid());
 	if (NULL == pass) {
-	    user = sf_charalloc(1);
 	    user[0] = '\0';
 	} else {
-	    user = pass->pw_name;
+	    strncpy(user,pass->pw_name,USERNAME_MAX);
 	}
     }
 

@@ -122,6 +122,7 @@ int main (int argc, char* argv[])
     if (NULL != bhi) butter_close(bhi);
 
     free(trace);
+    sf_fileclose(out);
     exit (0);
 }
 
