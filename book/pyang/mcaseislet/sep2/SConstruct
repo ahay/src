@@ -1,167 +1,142 @@
 from rsf.proj import *
 
-# This example is borrowed from Yang Liu and Sergey Fomel on Velocity-dependent
-# seislet for primaries and multiples separation. The main purpose is to validate
-# the correctness of seislet-based MCA. VD-seislet frame using Bregman iteration 
-# does a better job in this example. 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
 
-def gplot(title):
-    return '''grey title="%s" transp=y poly=y yreverse=y crowd=0.89
-	label2="offset(km)" label1=time unit1=s ''' % title
+#Fetch('cmp.HH','acig',private)
+Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
-Fetch('hask_mult.HH','haskell')
 
-Flow('hask','hask_mult.HH',
+def grey(title,other=''):
+    return '''
+    grey title="%s" labelsz=10 titlesz=12
+    label1="Time (s)" label2="Offset (km)" %s
+    ''' % (title,other)
+
+Plot('cmp',grey('(a) Data','clip=228'))
+
+# Playing with amplitude gains
+##############################
+Flow('env','cmp','envelope | scale axis=2')
+Flow('amp','env',
      '''
-     dd form=native | 
-     put label1=Time unit1=s label2=Offset unit2=km
-     ''')
-Plot('hask','mutter half=n v0=1.54 | '+gplot('data'))
-Result('hask',
-       '''
-       mutter half=n v0=1.58 |
-       grey title="Synthtic data" clip=0.00004 screenratio=1.45 screenht=10
-       font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
-       ''')
-
-Fetch('picks.hask.txt','haskell')
-
-Flow('picks.txt','picks.hask.txt',"awk '{print $2, $3}'") 
-Flow('picks','picks.txt',
-     '''
-     echo in=$SOURCE n1=2 n2=13 data_format=ascii_float |
-     dd form=native 
-     ''',stdin=0)
-
-vw=1.5    # water velocity
-nw=115
-tw=0.4568 # water depth
-dt=0.004
-
-Flow('mask','hask','window n2=1 | spike k1=%d | causint' % nw)
-
-Flow('vnmo','picks mask',
-     '''
-     transp |
-     linear o1=0.0 d1=0.004 n1=1024 rect=5 niter=100 verb=y |
-     math m=${SOURCES[1]} output="%g*(1-m)+m*input" |
-     put label1=Time unit1=s 
-     ''' % vw)
-Result('vnmo','graph title="NMO Velocity" label2=Velocity unit2=km/s')
-
-Flow('nmo','hask vnmo','nmo velocity=${SOURCES[1]} half=n')
-Plot('nmo','grey title="NMO" clip=0.00004')
-
-
-Flow('vscan','hask',
-     '''
-     mutter half=n v0=1.5 |
-     vscan half=n semblance=y v0=1.4 nv=181 dv=0.01
+     math output="atan(input)" |
+     math output="input-sin(input)" |
+     add mode=d $SOURCE
      ''')
 
-Plot('vscan',
+Flow('acmp','cmp amp','add mode=p ${SOURCES[1]}')
+Flow('ncmp','cmp',
      '''
-     grey color=I allpos=y title="Velocity spectra"
-     screenratio=1.45 screenht=10 
-     font=2 labelsz=6 labelfat=4 titlesz=8 titlefat=4
+     scale axis=2 |
+     math output="atan(input)" |
+     math output="input-sin(input)"
      ''')
 
-plotvel ='graph wanttitle=n wantaxis=n plotcol=7 plotfat=5 transp=y \
-          yreverse=y pad=n min2=1.4 max2=3.2 screenratio=1.45 \
-          screenht=10'
-
-Plot('vnmo',plotvel)
-
-# Predict multiple velocities
-
-pegleg = '''
-pad beg1=%d | window n1=1024 | put o1=0 |
-math output="input*input" | 
-math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
-''' % (nw,vw,tw,vw*vw*tw,dt)
-
-Flow('mult','vnmo mask',pegleg)
-Flow('mult2','mult mask',pegleg)
-Flow('mult3','mult2 mask',pegleg)
-Flow('mult4','mult3 mask',pegleg)
-
-Flow('mask1','hask','window n2=1 | spike k1=%d | causint' % (2*nw))
-Flow('mult22','vnmo mask1',
+# Interpolate near offsets
+Flow('cmp0','cmp','window max2=1 | pad beg2=5')
+Flow('cmp1','cmp0','reverse which=2 opt=n | cat axis=2 $SOURCE')
+Flow('mask0','cmp','math output=1 | window max2=1 | pad beg2=5')
+Flow('mask1','mask0','reverse which=2 opt=n | cat axis=2 $SOURCE')
+Flow('dip1','cmp1','math output="x2*%g/(x1+0.001)" ' % (0.05/(0.004*1.5*1.5)))
+Flow('dip2','cmp1 dip1 mask1',
+     'twodip2 eps=100 lam=10 dip1=${SOURCES[1]} mask=${SOURCES[2]} q0=0')
+Flow('mis','cmp1 dip2 mask1',
      '''
-     pad beg1=%d | window n1=1024 | put o1=0 |
-     math output="input*input" | 
-     math m=${SOURCES[1]} output="(1-m)*%g+m*sqrt((input*(x1-%g)+%g)/(x1+%g))" 
-     ''' % (2*nw,vw,2*tw,vw*vw*tw*2,dt) )
-Plot('mult22',plotvel)
-     
-Result('vscan','vscan vnmo mult mult2 mult3','Overlay')
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y prec=0 niter=10000
+     ''')
+Flow('mis2','mis cmp','window min2=0 n2=6 | cat axis=2 ${SOURCES[1]}')
+Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
 
-# Apply vd-seislet transform frame
+Plot('mis2','grey title="Near Offsets Interpolated" ')
 
-dips = []
-for v in Split('vnmo mult mult2 mult3'):
-     Plot(v,plotvel)
+# Predict multiples
+###################
+Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
+Flow('mult','ccmp',
+     'add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000')
+Plot('mult','window f2=6 | ' + grey('(b) SRME-predicted Multiples'))
 
-     # t as a function of t0 and x
-     t = 't-'+v
-     Flow(t,v,
-          '''
-          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
-          math output="sqrt(x1*x1+x2*x2/(input*input))"
-          ''')
+# Mask the important part
+#########################
+Flow('mask','mult',
+     'math output=1 | mutter hyper=y t0=0.7 v0=2 half=n | smooth rect1=5 rect2=5')
+Flow('cmp2','mask mis2','add mode=p ${SOURCES[1]}')
+Flow('mult2','mask mult','add mode=p ${SOURCES[1]}')
 
-     # dip as a function of t0 and x
-     p0 = 'p0-'+v
-     Flow(p0,[v,t],
-          '''
-          spray axis=2 n=64 d=0.05 o=0.25 label=Offset unit=km |
-          math t=${SOURCES[1]} output="%g*x2/(t*input*input+1e-6)"
-          ''' % (0.05/0.004))
+# Estimate dips
+###############
+Flow('mdip','mult2','dip rect1=20 rect2=10 liter=40 pmin=0')
+Flow('vdip','cmp2',
+     'math output="%g*x2/(x1+0.004)" ' % (0.05/(2.5*2.5*0.004)))
+Flow('mask2','mdip','mask max=5 | dd type=float | smooth rect1=5 rect2=5')
 
-     # dip as a function of t
-     p = 'p-'+v
-     Flow(p,[p0,t],'iwarp warp=${SOURCES[1]} eps=0.1')
-     dips.append(p)
+Flow('mdip2','cmp2 mdip mask2 vdip',
+     '''
+     twodip2 eps=15 lam=5 dip2=${SOURCES[1]} dip1=${SOURCES[3]} mask=${SOURCES[2]} verb=y 
+     ''')
 
-nc = len(dips)
+Flow('mdip0','mdip2','window n3=1 f2=6')
+Flow('mdip1','mdip2','window f3=1 f2=6')
 
-Flow('dips',dips,'cat axis=3 ${SOURCES[1:%d]}' % nc)
-Flow('mydips12','dips', 'window n3=2')
-Flow('mydips23','dips', 'window n3=2 f3=1')
-Flow('mydips34','dips', 'window n3=2 f3=2')
+Plot('mdip0',
+     grey('(c) Signal Slope',
+          'color=j scalebar=y allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
+Plot('mdip1',
+     grey('(d) Noise Slope',
+          'color=j scalebar=y allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
 
-# Seislet-based MCA primary/multiple separation
-Flow('rec12','hask mydips12',
-     	'''
-	pad n2=64 | mcaseislet dips=${SOURCES[1]}
-	verb=y order=1 type=b eps=0.01 niter=10 pclip=3 pscale=50 
-     	''')
-Flow('rec1','rec12','window n3=1 | mutter half=n v0=1.54')
-Plot('rec1','window n2=60| '+gplot('primaries'))
+Result('cmp','cmp mult mdip0 mdip1','SideBySideAniso')
 
+Flow('pvel0','cmp mdip0','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
+Flow('pvel1','cmp mdip1','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
+Flow('pvel','pvel0 pvel1','stack | envelope')
 
-Flow('rec234','hask rec1','pad n2=64| add scale=1,-1 ${SOURCES[1]} | mutter half=n v0=1.5')
-Flow('rec23','rec234 mydips23',
-     	'''
-	mcaseislet dips=${SOURCES[1]}
-	verb=y order=1 type=b eps=0.01 niter=10 pclip=3 pscale=50 
-     	''')
-Flow('rec2','rec23','window n3=1 | mutter half=n t0=0.1 v0=1.5')
-Plot('rec2','window n2=60| '+gplot('multiples of order 1'))
+# Separate signal/noise
+#######################
+Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=10000 eps=0.01')
+
+Flow('nois','comp mask','window f3=1 | add mode=p ${SOURCES[1]}')
+Plot('nois','window f2=6 | ' + grey('(b) Estimated Noise','clip=228'))
+
+Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
+Plot('sign','window f2=6 | ' + grey('(a) Estimated Signal','clip=228'))
 
 
-Flow('rec34','rec234 rec2','add scale=1,-1 ${SOURCES[1]} | mutter half=n v0=1.54')
-Flow('res34','rec34 mydips34',
-     	'''
-	mcaseislet dips=${SOURCES[1]} 
-	verb=y order=1 type=b eps=0.01 niter=10 pclip=3 pscale=50 
-     	''')
-Flow('rec3','res34','window n3=1 | mutter half=n t0=0.2 v0=1.6')
-Flow('rec4','res34','window f3=1 | mutter half=n t0=0.3 v0=1.7')
-Plot('rec3','window n2=60| '+gplot('multiples of order 2'))
-Plot('rec4','window n2=60| '+gplot('multiples of order 3'))
+#################### Velocity scans before and after###################
+for dat in ('cmp','sign'):
+    Flow('v'+dat,dat,'vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+    Plot('v'+dat,grey('(%s) Velocity Scan (%s)' % (('c','Data'),('d','Estimated Signal'))[dat=='sign'],
+                      'label2="Velocity (km/s)" color=j allpos=y'))
+Result('super','sign nois vcmp vsign','SideBySideAniso')
 
-Result('primmult','hask rec1 rec2 rec3 rec4','SideBySideAniso')
 
+Flow('cmp2s','cmp2','window n2=64')
+Flow('mdip2s','mdip2','window n2=64')
+Flow('masks','mask','window n2=64')
+
+# original seisigk separation
+Flow('comps','cmp2s mdip2s','seisigk dips=${SOURCES[1]} verb=y niter=1000')
+
+Flow('noiss','comps masks','window f3=1 | add mode=p ${SOURCES[1]}')
+Plot('noiss','window f2=6 | ' + grey('(b) Estimated Noise','clip=228'))
+Flow('signs','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Plot('signs','window f2=6 | ' + grey('(a) Estimated Signal','clip=228'))
+Flow('vsigns','signs','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Plot('vsigns',grey('velocity scan','color=j allpos=y'))
+Result('supers','signs noiss vcmp vsigns','SideBySideAniso')
+
+# Seislet-based MCA separation: obtain same separation effect with only 10 iterations, more efficient!
+
+Flow('compsmca','cmp2s mdip2s','mcaseislet dips=${SOURCES[1]} verb=y order=1 type=l eps=0.01 niter=10 pclip=15 pscale=23 ')
+Flow('noissmca','compsmca masks','window f3=1 | add mode=p ${SOURCES[1]}')
+Plot('noissmca','window f2=6 | ' + grey('(b) MCA Estimated Noise','clip=228'))
+Flow('signsmca','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Plot('signsmca','window f2=6 | ' + grey('(a) MCA Estimated Signal','clip=228'))
+Flow('vsignsmca','signsmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+Plot('vsignsmca',grey('velocity scan','color=j allpos=y'))
+Result('supersmca','signsmca noissmca vcmp vsignsmca','SideBySideAniso')
 
 End()
