@@ -9,9 +9,15 @@ Testsolver1 trapepass lagrange heatexplitest heatimplitest hyperdif
 zerotrace hilbert cdivdir cabs cemd1 cemd2 snr2 preerror threshold1
 tsmf fxdecon simidenoise bin2rsf rsf2bin halfthr hradon suplane simidenoise1
 rmtrace prekirch psmig pocssemb simivscan afd2d prekirchsr simpostkirch
-presr
+presr nlm1 nlm2
 '''
-ccprogs = 'diffcxx'
+ccprogs = 'diffcxx '# fshradon
+
+subs = '''
+
+'''#bfio bfio_eval2  fhradon
+##added by XZ
+ccinc = Glob('[a-z]*.h*')
 
 mpiprogs='petsctest'
 
@@ -62,6 +68,18 @@ if lapack:
         libsxx.extend(lapack)
     libsxx.extend(libs)
 
+    env.Prepend(LIBS=['vecmatop',
+                      env.get('DYNLIB','')+'rsf++'])
+    if not isinstance(lapack,bool):
+        env.Append(LIBS=lapack)
+
+    ccfiles = map(lambda x: x+'.cc',Split(subs))
+
+    libsbfio = env.StaticLibrary('bfio',ccfiles,CCFLAGS='') # Install local library (libbfio.a)
+    env.Install('../../lib',libsxx)
+    env.Install('../../lib',libsbfio)
+    env.Install('../../include',ccinc)
+
 ######################################################################
 #USING PETSC (One should specify the absolute dir in petsccpp and petsclib.)
 ######################################################################
@@ -95,7 +113,7 @@ ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
     if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources),LIBS=libsxx)
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources)+[libsbfio],LIBS=[libsxx])
         if root:
             install = env.Install(bindir,prog)
             
@@ -112,6 +130,9 @@ for prog in ccmains:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
         if root:
             env.Install(bindir,prog)
+
+
+
 
 ######################################################################
 # Compiling mpi programs ("MPILIB MPICPP" is user defined.)
