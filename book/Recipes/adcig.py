@@ -59,9 +59,9 @@ def tsk2ang(na,oa,da):
 def ciggrey(custom,par):
     return '''
     grey parallel2=n labelrot=n wantaxis=y title=""
-    pclip=100 gainpanel=a  xll=2 yll=1
+    pclip=100 gainpanel=a xll=2 yll=1
     label1=%s unit1=%s
-    screenratio=1.5
+    screenratio=1.5 screenht=10
     %s
     '''%(par['lz'],par['uz'],
          par['labelattr']+' '+custom)

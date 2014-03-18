@@ -49,6 +49,7 @@ targets.py = '''
 corop
 pwave3d
 ocor3d
+findmax
 '''
 
 targets.build_all(env, glob_build, srcroot, bindir, libdir, pkgdir)

@@ -32,7 +32,7 @@ def eicpar(par):
     eic = ' ' + \
           '''
           nhx=%(nhx)d nhy=%(nhy)d nhz=%(nhz)d nht=%(nht)d
-          gaus=%(gaus)s
+          gaus=%(gaus)s verb=%(verb)s
           '''%par + ' '
     return eic
 
@@ -252,8 +252,8 @@ def cicmig(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scicold2d <%s isreversed=0 verb=n %s
-         ur=%s
+         %scicop2d <%s adj=n wflcausal=y oprcausal=n %s
+         opr=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
@@ -298,8 +298,8 @@ def cicmigCD(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scicold2d <%s isreversed=0 verb=n %s
-         ur=%s
+         %scicop2d <%s adj=n wflcausal=y oprcausal=n %s
+         opr=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
@@ -347,13 +347,13 @@ def eicmig(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scicold2d <%s isreversed=0 verb=n %s
-         ur=%s 
+         %scicop2d <%s adj=n wflcausal=y oprcausal=n %s
+         opr=%s
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
-         %seicold2d <%s isreversed=0 verb=n %s
-         ur=%s cc=${SOURCES[4]} 
+         %seicop2d <%s adj=n wflcausal=y oprcausal=n %s
+         opr=%s cip=${SOURCES[4]} 
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
          '''
@@ -399,13 +399,13 @@ def eicmigCD(icic,
          >/dev/null;
          '''%(M8R,rdrv,iwindow(par)+awepar(par)+custom,rwfl,DPT) +
          '''
-         %scicold2d <%s isreversed=0 verb=n %s
-         ur=%s 
+         %scicop2d <%s adj=n wflcausal=y oprcausal=n %s
+         opr=%s 
          >${TARGETS[0]};
          '''%(M8R,swfl,custom,rwfl) +
          '''
-         %seicold2d <%s isreversed=0 verb=n %s
-         ur=%s cc=${SOURCES[4]} 
+         %seicop2d <%s adj=n wflcausal=y oprcausal=n %s
+         opr=%s cip=${SOURCES[4]} 
          >${TARGETS[1]};
          '''%(M8R,swfl,eicpar(par)+custom,rwfl) +
          '''
@@ -414,3 +414,22 @@ def eicmigCD(icic,
               stdin=0,
               stdout=0)
 
+# ------------------------------------------------------------
+def dPAD2d(wfld,trac,ix,iz,par):
+    Flow(wfld,trac,
+        '''
+        transp plane=23 |
+        pad beg1=%d n1out=%d beg2=%d n2out=%d |
+        put o1=%g d1=%g o2=%g d2=%g
+        '''%(iz,par['nz'],ix,par['nx'],
+             par['oz'],par['dz'],
+             par['ox'],par['dx']))
+
+def dWIN2d(trac,wfld,ix,iz,par):
+    Flow(trac,wfld,
+         '''
+         window n1=1 f1=%d n2=1 f2=%d |
+         transp
+         '''%(iz,ix))
+
+         

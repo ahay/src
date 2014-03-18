@@ -352,3 +352,31 @@ def vertical2d(cc,xcoord,custom,par):
          '''%(M8R,cco,ccx,ccz),
               stdin=0,
               stdout=0)
+
+# ------------------------------------------------------------
+def boxarray2d(cc,nz,oz,dz,nx,ox,dx,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    cco=cc+'o'
+    ccz=cc+'z'
+    ccx=cc+'x'
+
+    Flow(cc,None,
+         '''
+         %smath output=1 n1=%d o1=%g d1=%g n2=%d o2=%g d2=%g >%s datapath=%s/;
+         '''%(M8R,nz,oz,dz,nx,ox,dx,cco,DPT) +
+         '''
+         %smath <%s output="x1" | put n1=%d n2=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx,ccz,DPT) +
+         '''
+         %smath <%s output="x2" | put n1=%d n2=1 >%s datapath=%s/;
+         '''%(M8R,cco,nz*nx,ccx,DPT) +
+         '''
+         %scat axis=2 space=n %s %s | transp >${TARGETS[0]};
+         '''%(M8R,ccx,ccz) +
+         '''     
+         %srm %s %s %s
+         '''%(M8R,cco,ccx,ccz),
+              stdin=0,
+              stdout=0)
