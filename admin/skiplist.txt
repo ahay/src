@@ -16,6 +16,7 @@ skiplist =  [
 								# Examples with movies
 		'book/pyang/test/testfd2d',	
 		'book/pyang/test/testeb',
+		'book/pyang/test/modeling2d',
                 'book/osu/shalek/elastic2d',
                 'book/osu/shalek/elastic3d',
 		'book/osu/shalek/mod2d',

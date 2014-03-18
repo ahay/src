@@ -28,17 +28,16 @@ Flow('shots','vel',
 	''')
 
 
-#Result('shots',
-#	'''
-#       byte allpos=n gainpanel=all |
-#       grey3 flat=n frame1=300 frame2=100 frame3=5 
-#       label1=Time unit1=s 
-#       label2="Receiver no." label3="Shot no."
-#       title="Shot records" point1=0.8 point2=0.8
-#	''')
+Result('shots',
+	'''
+       byte allpos=n gainpanel=all |
+       grey3 flat=n frame1=300 frame2=100 frame3=5 
+       label1=Time unit1=s 
+       label2="Receiver no." label3="Shot no."
+       title="Shot records" point1=0.8 point2=0.8
+	''')
 
-Result('shots','grey')
-
+Plot('shots','grey title=Shots',view=1)
 
 
 End()

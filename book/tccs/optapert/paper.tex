@@ -166,7 +166,7 @@ with the constant-dip partial image, as it is for diffractions. The derivation i
 as well.
 
 To verify the assertions presented, we ran the following experiment. We put two reflectors and one scattering point in the constant-velocity field
-(Figure~\ref{fig:theo_model}). One reflector is flat, and the second has a dip of 15~degrees. We assume that reflectivity is generated
+(Figure~\ref{fig:theo-model}). One reflector is flat, and the second has a dip of 15~degrees. We assume that reflectivity is generated
 by density variations. The modeled zero-offset section is presented in Figure~\ref{fig:data0}. We migrated the data using Kirchhoff common-angle
 migration with the correct velocity. Figure~\ref{fig:zo-res-init} displays the image and a dip-angle gather extracted from 
 the position where the scattering point is located. The diffraction event appears flat in the dip-angle gather, as expected, \old{and}\new{while} the reflection
@@ -175,7 +175,7 @@ Note that reflection boundaries and an effective part of the diffraction event a
 respectively (the slope is indicated by dashed lines).
 
 To represent a realistic situation, we placed the same reflectors and scattering point within a smoothed velocity field from the Marmousi model.
-Both reflection and diffraction events have complicated shapes in the data domain (Figure~\ref{fig:dm_zo}). Figure~\ref{fig:res-init}
+Both reflection and diffraction events have complicated shapes in the data domain (Figure~\ref{fig:dm-zo}). Figure~\ref{fig:res-init}
 displays the image and the dip-angle gather after migration with the correct velocity. \new{The traveltimes for Kirchhoff angle-domain migration
 were computed by Huygens wavefront-tracing (\citealp{sava01}), which allowed us to handle multiple arrivals.} The diffraction event is flat, as it was in the
 constant-velocity example, but the shape of the reflection events appears much more complicated. The gather is contaminated by strong
@@ -190,13 +190,13 @@ dips. Integration of constructive events only corresponds to migration having an
 aperture.
 
 \inputdir{theo}
-\plot{theo_model}{width=0.8\columnwidth}{Theoretical model with two plane reflectors and one diffractor.}
+\plot{theo-model}{width=0.8\columnwidth}{Theoretical model with two plane reflectors and one diffractor.}
 \plot{data0}{width=0.8\columnwidth}{Zero-offset section corresponding to the constant-velocity model.}
 \plot{zo-res-init}{width=0.8\columnwidth}{Depth-migrated image and common-image-gather in dip-angle domain corresponding to distance of 7~km.}
 \multiplot{2}{zodpis0,zodpis15}{width=0.7\columnwidth}{(a) Zero-degree partial image and (b) fifteen-degree partial image for the constant-velocity model.}
 
 \inputdir{depthMig}
-\plot{dm_zo}{width=0.8\columnwidth}{Zero-offset section corresponding to the Marmousi-velocity model.}
+\plot{dm-zo}{width=0.8\columnwidth}{Zero-offset section corresponding to the Marmousi-velocity model.}
 \plot{res-init}{width=0.8\columnwidth}{Depth-migrated image and common-image-gather in dip-angle domain corresponding to distance of 7~km.}
 \multiplot{2}{dpis0,dpis15}{width=0.7\columnwidth}{(a) Zero-degree partial image and (b) fifteen-degree partial image for the Marmousi-velocity model.}
 

@@ -35,7 +35,7 @@ for ref in range(2):
          wanttitle=n wantaxis=n pad=n
          ''')
 
-Result ('theo_model','diff refl0 refl1','Overlay')
+Result ('theo-model','diff refl0 refl1','Overlay')
 
 Flow ('reflmodel', 'refl0 refl1', 'cat axis=2 ${SOURCES[1]}')
 Flow ('diffmodel', None,'math n1=1 o1=%g d1=0.001 output=%g' % (x0, z0) )

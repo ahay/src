@@ -90,7 +90,7 @@ Plot ('modelDiff',None,
 		  graph transp=y yreverse=y wanttitle=n wantaxis=n plotfat=20 pad=n plotcol=0 scalebar=y min2=4 max2=8 min1=0 max1=3
 		  ''')
 
-Result ('dm_zo','expMod0',
+Result ('dm-zo','expMod0',
 	   '''
 	   put label1=time unit1=s label2=distance unit2=km |
 	   grey wanttitle=n title="Zero-Offset Exploding Reflector Modeling" min2=4 max2=8 min1=1

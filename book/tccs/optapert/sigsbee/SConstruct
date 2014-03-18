@@ -1,6 +1,6 @@
 from rsf.proj import *
 import math
-import sigsbee
+from rsf.gallery import sigsbee
 
 cigpos=6.15
 
