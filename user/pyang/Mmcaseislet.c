@@ -117,6 +117,9 @@ int main(int argc, char *argv[])
 	mask[i1+i2*n1]=1;
     }	
 
+
+
+
     seislet_init(n1, n2, true, false, eps, order, type[0]);//unit=false, inv=true
     seislet_set(dip);
     for(iter=0; iter<niter; iter++)
@@ -127,9 +130,9 @@ int main(int argc, char *argv[])
 	{	
 		//sum of nc components-->res
 		for(ic=0; ic<nc; ic++) res[i1+n1*i2]+=drec[i1+n1*i2+n1*n2*ic];
-		m=(mask[i1+i2*n1])?1:0; 
+		m=(mask[i1+i2*n1])?1.:0; 
 		res[i1+n1*i2]=dobs[i1+n1*i2]-m*res[i1+n1*i2];
-	}	
+	}
 
 	for(ic=0; ic<nc; ic++)
 	{
@@ -151,11 +154,11 @@ int main(int argc, char *argv[])
 			if (i2>0.01*pscale*n2) coeffs[i1+i2*n1]=0;// set large scale to 0
 			tmp[i1+n1*i2]=fabsf(coeffs[i1+n1*i2]);
 		}
-	   	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
-	    	if (nthr < 0) nthr=0;
-	    	if (nthr >= n1*n2) nthr=n1*n2-1;
+		nthr = 0.5+n1*n2*(1.-0.01*pclip);  
+		if (nthr < 0) nthr=0;
+		if (nthr >= n1*n2) nthr=n1*n2-1;
 		thr=sf_quantile(nthr, n1*n2, tmp);
-		//thr*=(niter-iter)/niter;
+		thr*=(niter-iter)/niter;
 		sf_pthresh(coeffs, n1*n2, thr, p, mode);
 
 		// forward seislet: A T{ At(drec^{ic}) } 
@@ -166,6 +169,15 @@ int main(int argc, char *argv[])
     }
 
     sf_floatwrite(drec, n1*n2*nc, Fout);
+
+    free(dobs);
+    free(res);
+    free(drec);
+    free(dips);
+    free(*dip); free(dip);
+    free(coeffs);
+    free(tmp);
+    free(mask);
 
     exit(0);
 }
