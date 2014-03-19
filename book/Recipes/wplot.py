@@ -417,8 +417,28 @@ def ifive(cube,custom,par,scale=0.2,xmax=12):
         
         Plot(cube+tag,cube+'byt',
              'window n3=1 f3=%d |'%(ifrm*jfrm)
-             + igrey2d('crowd=1.0 wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
+             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-2,-2-(ifrm%5)*dx))        
+    Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
+
+
+# ------------------------------------------------------------
+# plot 5x1 vector of plots (assumes 9 frame in input)
+def cfive(cube,byte,custom,par,scale=0.2,ymax=9):
+    nfrm=5
+    jfrm=2
+    
+    dy=ymax
+
+    for ifrm in range(nfrm):
+        tag="%d"%ifrm
+        
+        Plot(cube+tag,byte,
+             'window n3=1 f3=%d |'%(ifrm*jfrm)
+             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
+        Plot(cube+tag+'_',
+             cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
+             %(scale,scale,-2-4*dy+(ifrm%5)*dy,-2))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
