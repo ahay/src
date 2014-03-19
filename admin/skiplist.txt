@@ -12,6 +12,7 @@ skiplist =  [
 		'book/chen/test/xtime',                         # no results
 		'book/uwa/geo2013ElasticModellingGPU/homog2d',  # requires CUDA
 		'book/uwa/geo2013ElasticModellingGPU/test3d',   # requires CUDA
+		'book/icp/sam2013gpushortestpath/test',         # requires CUDA
                 'book/rsf/bash/mpi',
 								# Examples with movies
 		'book/pyang/test/testfd2d',	

@@ -195,6 +195,7 @@ for i in range(3):
     pot.cliptogetherX( 'dX-notaper'+tag, 'dzX-notaper'+tag+'-tmp','dxX-notaper'+tag+'-tmp','"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
     pot.cliptogetherX( 'dX-notaper-rot'+tag,'dzX-notaper-rot'+tag,      'dxX-notaper-rot'+tag,      '"\F5 L\_z"','"\F5 L\_x"',1,xformat,par)
 
-
+    Result('dX-notaper'+tag,'Overlay')
+    Result('dX-notaper-rot'+tag,'Overlay')
 
 End()

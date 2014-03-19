@@ -1,3 +1,3 @@
-uses=['sfmath', 'sfcat', 'sftransp', 'sfwindow', 'sfdd', 'sfgraph', 'sfspike', 'sfput', 'sfadd', 'sfgrey', 'sfpad', 'sfricker1', 'sfscale', 'sfewefd2dtti', 'sfbyte', 'sfederiv2d', 'sfconvolve2']
+uses=['sfwindow', 'sfdd', 'sfgraph', 'sfspike', 'sfput', 'sfadd', 'sfgrey', 'sfmath', 'sfcat', 'sftransp', 'sfbyte', 'sfederiv2d', 'sfconvolve2', 'sfscale']
 data=[]
-size=  311977718
+size=  332130722

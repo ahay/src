@@ -57,7 +57,7 @@ for sample in samples:
 
         time = 'tim%d-%d' % (order,sample)
         Flow(time,[vel,siz],
-             ''
+             '''
              (/usr/bin/time -f "%%S %%U" %s < ${SOURCES[0]} order=%d zshot=%g yshot=%g br1=0.1 br2=0.1 > /dev/null ) >& time.out &&
              (tail -1 time.out; echo in=time0.rsf n1=2 data_format=ascii_float) > time0.rsf &&
              dd form=native < time0.rsf | stack axis=1 norm=n > time1.rsf &&

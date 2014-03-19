@@ -33,7 +33,7 @@ Result('sin','sin','window j2=5 | wiggle label2=Distance unit2=km transp=y yreve
 Flow('ft','sin','fft1 ')
 
 Flow('nft','nsin','fft1 ')
-Flow('nsin','sin','noise var=1.9e-3')
+Flow('nsin','sin','noise seed=2014 var=1.9e-3')
 Result('nsin','nsin','window j2=5 | wiggle label2=Distance unit2=km transp=y yreverse=y poly=y  title="Noisy Signal" ')
 
 Flow('mask','sin','math output="abs(input)" | mask min=0.00001 | dd type=float')
