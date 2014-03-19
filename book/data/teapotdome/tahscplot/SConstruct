@@ -197,4 +197,7 @@ Result('g_compare','g_bin_amp g_lapfill_amp g_trishape g_lintshape',
        'TwoRows')
 Result('sg_compare','s_trishape g_trishape s_lintshape g_lintshape',
        'TwoRows')
+Result('sg_plot','s_bin_amp s_lintshape g_bin_amp g_lintshape',
+	'TwoRows')
+
 End()

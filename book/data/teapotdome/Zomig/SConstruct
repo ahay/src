@@ -26,15 +26,13 @@ Result('Vint',
      ''')
 	
 
-Fetch('final_stack.rsf','teapot',server='http://s3.amazonaws.com',top='')
-
-Result('final_stack',
-	'''
-	window j3=20 |
-	grey title=stack
-       	label1=Time     unit1=sec 
-       	label2=xline    unit2=count
-       ''')
+#Result('final_stack','../fetch/final_stack.rsf',
+#	'''
+#	window j3=20 |
+#	grey title=stack
+#      	label1=Time     unit1=sec 
+#       	label2=xline    unit2=count
+#       ''')
 
 Result('final_stack_filter', 'final_stack',
 	'''
@@ -107,7 +105,7 @@ Result('real',
 Flow('mig','fft slo',
      '''
      zomig3 ompnth=1 mode=m --readwrite=y verb=y
-     nrmax=1 slo=${SOURCES[1]}
+            nrmax=1 slo=${SOURCES[1]} pmx=30 pmy=30
      ''',split=[4,87],reduce='add')
 
 Result('mig',
