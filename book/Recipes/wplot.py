@@ -437,7 +437,7 @@ def cfive(cube,byte,custom,par,scale=0.2,ymax=9):
         
         Plot(cube+tag,byte,
              'window n3=1 f3=%d |'%(ifrm*jfrm)
-             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
+             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(4/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-2-4*dy+(ifrm%5)*dy,-2))        
