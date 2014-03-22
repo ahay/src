@@ -47,7 +47,7 @@ only difference lies in the thresholding function and the transform used.
 
 int main(int argc, char *argv[])
 {
-    bool verb;
+    bool verb, decr;
     int niter, n1, n2, nc, nthr, order, iter, i1, i2, ic;
     float pscale, p, pclip, thr, eps, m;
     float *dobs, *drec, *mask, *dips, *coeffs, *res, *tmp;
@@ -74,6 +74,8 @@ int main(int argc, char *argv[])
     /* percentile of small scale to be preserved (default is 100)*/
     if(!sf_getbool("verb",&verb))    	verb=false;
     /* verbosity or not */
+    if(!sf_getbool("decr",&decr))    	decr=true;
+    /* decrease threshold in iterations or not */
     if (!sf_getint("niter",&niter)) 	niter=10;
     /* total number iterations */
     if (!sf_getfloat("pclip",&pclip)) 	pclip=99;
@@ -158,7 +160,7 @@ int main(int argc, char *argv[])
 		if (nthr < 0) nthr=0;
 		if (nthr >= n1*n2) nthr=n1*n2-1;
 		thr=sf_quantile(nthr, n1*n2, tmp);
-		thr*=(niter-iter)/niter;
+		if(decr) thr*=(niter-iter)/niter;
 		sf_pthresh(coeffs, n1*n2, thr, p, mode);
 
 		// forward seislet: A T{ At(drec^{ic}) } 
