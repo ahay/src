@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "sin.h"
-#include "sinsl.h"
 #include "freqlet.h"
 
 int main(int argc, char* argv[])
@@ -74,9 +73,10 @@ int main(int argc, char* argv[])
 	    freqlet_init(n1, true, true, type[0]);
 	    break;
 	case 's':
-	    coper = sinsl_lop;
+	    coper = sin_smooth;
 
 	    if (!sf_getint("rect",&rect)) rect=1;
+	    /* smoothing radius (for oper=s) */
 	    break;
 	default:
 	    sf_error("Unknown operator \"%s\"",oper);
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 		freqlet_setz(z0[i2]);
 		break;
 	    case 's':
-		sinsl_init(n1,rect,z0[i2]);
+		sinsmooth_init(z0[i2],n1,rect);
 		break;
 	}
 

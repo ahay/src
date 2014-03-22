@@ -1,6 +1,7 @@
 from rsf.proj import *
 
 Flow('spike',None,'spike n1=40 n2=40 n3=40 k1=20 k2=20 k3=20')
+Flow('dip2','spike','math output=0.5 | transp plane=23')
 
 for np in (-1,1):
     p = np*0.7
@@ -25,7 +26,33 @@ for np in (-1,1):
              flat=n point1=0.586 point2=0.586 title="Px=%g Py=0.5"
              ''' % p)
 
+    dip = 'dip%d' % np
+    Flow(dip,'spike','math output=%g' % p)
+    shape = 'shape%d' % np
+
+    Flow(shape,['spike',dip,'dip2'],
+         '''
+         smooth rect1=2 |
+         pwsmooth ns=15 dip=${SOURCES[1]} |
+         transp plane=23 |
+         pwsmooth ns=15 dip=${SOURCES[2]} |
+         transp plane=23 |
+         smooth rect1=2
+         ''')
+    Plot(shape,
+         '''
+         byte gainpanel=all | grey3 frame1=20 frame2=20 frame3=20
+         flat=n point1=0.586 point2=0.586 title="Px=%g Py=0.5"
+         ''' % p)
+
 Result('eplane','plane1-0 plane-1-0','SideBySideIso')
 Result('tplane','plane1-1 plane-1-1','SideBySideIso')
+Result('shape','shape1 shape-1','SideBySideIso')
+
+Plot('shape1',
+     '''
+     byte gainpanel=all | grey3 frame1=20 frame2=20 frame3=20
+     flat=n point1=0.586 point2=0.586 title="Px=0.7 Py=0.5"
+     ''')
 
 End()

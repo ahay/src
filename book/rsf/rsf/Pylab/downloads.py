@@ -94,6 +94,7 @@ down = '''
 26463
 26791
 27093
+27427
 '''
 
 down = map(int,down.split())
