@@ -16,7 +16,7 @@ Flow('pq','make','twodip2 verb=y gauss=n')
 Flow('rec','make pq',
      	'''
      	mcaseislet dips=${SOURCES[1]} 
-	verb=y order=1 type=b eps=0.01 niter=20 pclip=5 pscale=100 
+	verb=y order=1 type=b eps=0.01 niter=15 pclip=15 decr=n 
      	''')
 
 Flow('rec1','rec','window n3=1')
