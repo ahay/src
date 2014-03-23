@@ -53,6 +53,10 @@ namespace RVLUmin {
   using namespace RVL;
   using namespace RVLAlg;    
 
+  // forward declaration
+  template<typename Scalar>
+  class CGNEAlg;
+
   /** Single step of conjugate gradient iteration for the normal
       equations.
       
@@ -79,6 +83,8 @@ namespace RVLUmin {
   template<typename Scalar>
   class CGNEStep : public Algorithm {
 
+    friend class CGNEAlg<Scalar>;
+
     typedef typename ScalarFieldTraits<Scalar>::AbsType atype;
 
   public:
@@ -88,15 +94,14 @@ namespace RVLUmin {
 	     Vector<Scalar> const & _b,
 	     atype & _rnorm, 
 	     atype & _nrnorm)
-      : A(_A), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), r(A.getRange()), s(A.getDomain()),
+      : A(_A), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), r(A.getRange()), g(A.getDomain()),
 	q(A.getRange()), p(A.getDomain()) { 
       // NOTE: initial x assumed to be zero vector
       r.copy(b);
       rnorm=r.norm();
-      s.zero();
-      A.applyAdjOp(r,s);
-      p.copy(s);
-      nrnorm=s.norm();
+      A.applyAdjOp(r,g);
+      p.copy(g);
+      nrnorm=g.norm();
       gamma = nrnorm*nrnorm;
     }
       
@@ -124,10 +129,10 @@ namespace RVLUmin {
 	r.linComb(-alpha,q);
 	//	cerr<<"CGSTEP::run 3\n";
 
-	A.applyAdjOp(r,s);
+	A.applyAdjOp(r,g);
 	//	cerr<<"CGSTEP::run 4\n";
 
-	atype newgamma = s.normsq();
+	atype newgamma = g.normsq();
 	atype absbeta;
 	if (ProtectedDivision<atype>(newgamma,gamma,absbeta)) {
 	  RVLException e;
@@ -137,7 +142,7 @@ namespace RVLUmin {
 	//	cerr<<"CGSTEP::run 5\n";
 
 	Scalar beta = absbeta;
-	p.linComb(ScalarFieldTraits<Scalar>::One(),s,beta);
+	p.linComb(ScalarFieldTraits<Scalar>::One(),g,beta);
 	gamma=newgamma;
 	rnorm=r.norm();
 	nrnorm=sqrt(gamma);
@@ -153,7 +158,7 @@ namespace RVLUmin {
 
     ~CGNEStep() {}
 
-  private:
+  protected:
 
     // references to external objects
     LinearOp<Scalar> const & A;
@@ -162,12 +167,146 @@ namespace RVLUmin {
     atype & rnorm;
     atype & nrnorm;
 
+  private:
+
     // need four work vectors and one scalar as persistent object data
-    Vector<Scalar> r;
-    Vector<Scalar> s;
-    Vector<Scalar> q;
-    Vector<Scalar> p;
-    atype gamma;
+    Vector<Scalar> r;    // residual
+    Vector<Scalar> g;    // gradient
+    Vector<Scalar> q;    // image of search direction
+    Vector<Scalar> p;    // search direction
+    atype gamma;         // ||g||^2
+  };
+  
+  /** Preconditioned conjugate gradient iteration for the normal
+      equations.
+      
+      On construction, internal workspace allocated and initialized.
+      Each step updates internal state of CGNEStep object. Since
+      solution vector, residual norm, and normal residual norm are
+      stored as mutable references to external objects, these external
+      objects are updated as well.
+
+      IMPORTANT NOTE: this version of the algorithm assumes that the
+      solution vector reference (internal data member x) refers to a
+      zero vector on initialization. To accommodate nontrivial initial
+      guess, <i>modify the right-hand-side vector</i> (argument _b)
+      externally.
+
+      Solution vector (x), iteration count, residual norm, and
+      gradient norm are all references to external objects, which may
+      be monitored by appropriate terminators to build a LoopAlg out
+      of this Algorithm.
+
+      See CGNEAlg for description of a fully functional algorithm
+      class, combining this step with a Terminator to make a LoopAlg.
+  */
+  template<typename Scalar>
+  class PCGNEStep : public Algorithm {
+
+    friend class CGNEAlg<Scalar>;
+
+    typedef typename ScalarFieldTraits<Scalar>::AbsType atype;
+
+  public:
+
+    PCGNEStep(LinearOp<Scalar> const & _A,
+	      LinearOp<Scalar> const & _M,
+	      Vector<Scalar> & _x,
+	      Vector<Scalar> const & _b,
+	      atype & _rnorm, 
+	      atype & _nrnorm)
+      : A(_A), M(_M), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), 
+	r(A.getRange()), ng(A.getDomain()), g(A.getDomain()),
+	q(A.getRange()), p(A.getDomain()) { 
+      // sanity tests - cannot sensibly test M for SPD, but 
+      // at least get domain right
+      if ((M.getDomain() != A.getDomain()) ||
+	  (M.getRange()  != A.getDomain())) {
+	RVLException e;
+	e<<"Error PCGNEStep constructor\n";
+	e<<"  preconditioning operator does not have domain, range\n";
+	e<<"  same as domain of system operator\n";
+	e<<"  preconditioning operator:\n";
+	M.write(e);
+	e<<"  system operator:\n";
+	A.write(e);
+	throw e;
+      }
+      // NOTE: initial x assumed to be zero vector
+      r.copy(b);
+      rnorm=r.norm();
+      A.applyAdjOp(r,ng);
+      M.applyOp(ng,g);
+      p.copy(g);
+      gamma = abs(g.inner(ng));
+      nrnorm=sqrt(gamma);
+    }
+      
+    /**
+       Run a single step of the conjugate gradients for the normal equations
+    */
+    void run() {
+      try {
+	A.applyOp(p,q);
+	atype qtq = q.normsq();
+	atype absalpha;
+	if (ProtectedDivision<atype>(gamma,qtq,absalpha)) {
+	  RVLException e;
+	  e<<"Error: PCGNEStep::run() from ProtectedDivision: alpha\n";
+	  throw e;
+	}
+	// can use q for workspace since it is not needed again until
+	// reinitialized
+
+	Scalar alpha=absalpha;
+	x.linComb(alpha,p);
+	r.linComb(-alpha,q);
+
+	A.applyAdjOp(r,ng);
+	M.applyOp(ng,g);
+
+	atype newgamma = abs(g.inner(ng));
+	atype absbeta;
+	if (ProtectedDivision<atype>(newgamma,gamma,absbeta)) {
+	  RVLException e;
+	  e<<"Error: PCGNEStep::run() from ProtectedDivision: beta\n";
+	  throw e;
+	}
+
+	Scalar beta = absbeta;
+	p.linComb(ScalarFieldTraits<Scalar>::One(),g,beta);
+	gamma=newgamma;
+	rnorm=r.norm();
+	nrnorm=sqrt(gamma);
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from PCGNEStep::run()\n";
+	throw e;
+      }
+     
+    }
+
+    ~PCGNEStep() {}
+
+  protected:
+
+    // references to external objects
+    LinearOp<Scalar> const & A;
+    LinearOp<Scalar> const & M;
+    Vector<Scalar> & x;
+    Vector<Scalar> const & b;
+    atype & rnorm;
+    atype & nrnorm;
+
+  private:
+
+    // need four work vectors and one scalar as persistent object data
+    Vector<Scalar> r;    // residual
+    Vector<Scalar> ng;   // normal residual
+    Vector<Scalar> g;    // gradient = preconditioned normal residual
+    Vector<Scalar> q;    // image of search direction
+    Vector<Scalar> p;    // search direction
+    atype gamma;         // gradient norm, inner product defined by inverse of M
   };
   
   /** Conjugate gradient algorithm - efficient implementation for
@@ -241,16 +380,16 @@ namespace RVLUmin {
 
   public:
 
-    /** Constructor
+    /** Constructor - basic algorithm
 
-	@param _x - mutable reference to solution vector (external),
+	@param x - mutable reference to solution vector (external),
 	initialized to zero vector on construction, estimated solution
 	on return from CGNEAlg::run().
 
-	@param _inA - const reference to LinearOp (external) defining
+	@param A - const reference to LinearOp (external) defining
 	problem
 
-	@param _rhs - const reference to RHS or target vector
+	@param rhs - const reference to RHS or target vector
 	(external)
 
 	@param _rnorm - mutable reference to residual norm scalar
@@ -280,9 +419,9 @@ namespace RVLUmin {
 	@param _str - output stream
 
      */
-    CGNEAlg(RVL::Vector<Scalar> & _x, 
-	    LinearOp<Scalar> const & _inA, 
-	    Vector<Scalar> const & _rhs, 
+    CGNEAlg(RVL::Vector<Scalar> & x, 
+	    RVL::LinearOp<Scalar> const & A, 
+	    RVL::Vector<Scalar> const & rhs, 
 	    atype & _rnorm,
 	    atype & _nrnorm,
 	    atype _rtol = 100.0*numeric_limits<atype>::epsilon(),
@@ -290,10 +429,7 @@ namespace RVLUmin {
 	    int _maxcount = 10,
 	    atype _maxstep = numeric_limits<atype>::max(),
 	    ostream & _str = cout)
-    : inA(_inA), 
-      x(_x), 
-      rhs(_rhs), 
-      rnorm(_rnorm), 
+    : rnorm(_rnorm), 
       nrnorm(_nrnorm), 
       rtol(_rtol), 
       nrtol(_nrtol), 
@@ -301,54 +437,173 @@ namespace RVLUmin {
       maxcount(_maxcount), 
       count(0), 
       proj(false), 
-      str(_str), 
-      step(inA,x,rhs,rnorm,nrnorm) 
-    { x.zero(); }
+      str(_str)
+    {
+      try {
+	step = new CGNEStep<Scalar>(A,x,rhs,rnorm,nrnorm);
+	x.zero(); 
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from CGNEAlg constructor (not preconditioned)\n";
+	throw e;
+      }
+    }
 
-    ~CGNEAlg() {}
+    /** Constructor - preconditioned algorithm
+
+	@param x - mutable reference to solution vector (external),
+	initialized to zero vector on construction, estimated solution
+	on return from CGNEAlg::run().
+
+	@param A - const reference to LinearOp (external) defining
+	problem
+
+	@param M - const reference to LinearOp (external) preconditioner 
+	= inverse of operator defining inner product in domain space. Only this
+	operator is necessary, not the inner product operator itself. M is 
+	assumed to be SPD, else no guarantees about the behaviour of this algorithm
+
+	@param rhs - const reference to RHS or target vector
+	(external)
+
+	@param _rnorm - mutable reference to residual norm scalar
+	(external), initialized to norm of RHS on construction, norm
+	of estimated residual at solution on return from
+	CGNEAlg::run()
+
+	@param _nrnorm - mutable reference to normal residual (least
+	squares gradient) norm scalar (external), initialized to morm
+	of image of RHS under adjoint of problem LinearOp on
+	construction, norm of estimated normal residual at solution on
+	return from CGNEAlg::run()
+
+	@param _rtol - stopping threshold for residual norm, default
+	value = 100.0*macheps
+
+	@param _nrtol - stopping threshold for normal residual norm,
+	default value = 100.0*macheps
+
+	@param _maxcount - max number of iterations permitted, default
+	value = 10
+
+	@param _maxstep - max permitted step length (trust radius),
+	default value = max absval scalar (which makes the trust
+	region feature inactive)
+
+	@param _str - output stream
+
+     */
+    CGNEAlg(RVL::Vector<Scalar> & x, 
+	    LinearOp<Scalar> const & A, 
+	    LinearOp<Scalar> const & M, 
+	    Vector<Scalar> const & rhs, 
+	    atype & _rnorm,
+	    atype & _nrnorm,
+	    atype _rtol = 100.0*numeric_limits<atype>::epsilon(),
+	    atype _nrtol = 100.0*numeric_limits<atype>::epsilon(),
+	    int _maxcount = 10,
+	    atype _maxstep = numeric_limits<atype>::max(),
+	    ostream & _str = cout)
+    : rnorm(_rnorm), 
+      nrnorm(_nrnorm), 
+      rtol(_rtol), 
+      nrtol(_nrtol), 
+      maxstep(_maxstep), 
+      maxcount(_maxcount), 
+      count(0), 
+      proj(false), 
+      str(_str)
+    { 
+      try {
+	step = new PCGNEStep<Scalar>(A,M,x,rhs,rnorm,nrnorm);
+	x.zero(); 
+      }
+      catch (RVLException & e) {
+	e<<"\ncalled from CGNEAlg constructor (preconditioned)\n";
+	throw e;
+      }
+    }
+
+    ~CGNEAlg() {
+      delete step;
+    }
 
     bool query() { return proj; }
 
     void run() { 
-      // terminator for CGNE iteration
-      vector<string> names(2);
-      vector<atype *> nums(2);
-      vector<atype> tols(2);
-      names[0]="Residual Norm"; nums[0]=&rnorm; tols[0]=rtol;
-      names[1]="Gradient Norm"; nums[1]=&nrnorm; tols[1]=nrtol;
-      str<<"========================== BEGIN CGNE =========================\n";
-      VectorCountingThresholdIterationTable<atype> stop1(maxcount,names,nums,tols,str);
-      stop1.init();
-      // terminator for Trust Region test and projection
-      //      BallProjTerminator<Scalar> stop2(x,maxstep,str);
-      BallProjTerminator<Scalar> stop2(x,maxstep,str);
-      // terminate if either
-      OrTerminator stop(stop1,stop2);
-      // loop
-      LoopAlg doit(step,stop);
-      doit.run();
-      // must recompute residual if scaling occured 
-      proj = stop2.query();
-      if (proj) {
-	Vector<Scalar> temp(inA.getRange());
-	inA.applyOp(x,temp);
-	temp.linComb(-1.0,rhs);
-	rnorm=temp.norm();
-	Vector<Scalar> temp1(inA.getDomain());
-	inA.applyAdjOp(temp,temp1);
-	nrnorm=temp1.norm();
+      try {
+	// access to internals
+	CGNEStep<Scalar>  * cg  = dynamic_cast<CGNEStep<Scalar> *>(step);
+	PCGNEStep<Scalar> * pcg = dynamic_cast<PCGNEStep<Scalar> *>(step);
+	if ((!cg && !pcg) || (cg && pcg)) {
+	  RVLException e;
+	  e<<"Error: CGNEAlg::run\n";
+	  e<<"  unable to determine whether step data member\n";
+	  e<<"  is preconditioned or not. PANIC!\n";
+	  throw e;
+	}
+	
+	// terminator for CGNE iteration
+	vector<string> names(2);
+	vector<atype *> nums(2);
+	vector<atype> tols(2);
+	names[0]="Residual Norm"; nums[0]=&rnorm; tols[0]=rtol;
+	names[1]="Gradient Norm"; nums[1]=&nrnorm; tols[1]=nrtol;
+	if (pcg) str<<"========================== BEGIN PCGNE =========================\n";
+	else 	str<<"========================== BEGIN CGNE =========================\n";
+	VectorCountingThresholdIterationTable<atype> stop1(maxcount,names,nums,tols,str);
+	stop1.init();
+	// terminator for Trust Region test and projection
+	//      BallProjTerminator<Scalar> stop2(x,maxstep,str);
+
+	Terminator * stop2 = NULL;
+	if (cg)  stop2 = new BallProjTerminator<Scalar>( cg->x,maxstep,str);  
+	if (pcg) stop2 = new BallProjTerminator<Scalar>(pcg->x,maxstep,str); 
+	// terminate if either
+	OrTerminator stop(stop1,*stop2);
+	// loop
+	LoopAlg doit(*step,stop);
+	doit.run();
+	// must recompute residual if scaling occured 
+	proj = stop2->query();
+	if (proj) {
+	  if (cg) {
+	    Vector<Scalar> temp((cg->A).getRange());
+	    (cg->A).applyOp((cg->x),temp);
+	    temp.linComb(-1.0,(cg->b));
+	    rnorm=temp.norm();
+	    Vector<Scalar> temp1((cg->A).getDomain());
+	    (cg->A).applyAdjOp(temp,temp1);
+	    nrnorm=temp1.norm();
+	  }
+	  if (pcg) {
+	    Vector<Scalar> temp((pcg->A).getRange());
+	    (pcg->A).applyOp((pcg->x),temp);
+	    temp.linComb(-1.0,(pcg->b));
+	    rnorm=temp.norm();
+	    Vector<Scalar> temp1((pcg->A).getDomain());
+	    Vector<Scalar> temp2((pcg->A).getDomain());
+	    (pcg->A).applyAdjOp(temp,temp1);
+	    (pcg->M).applyOp(temp1,temp2);
+	    atype tmpgamma = abs(temp1.inner(temp2));
+	    nrnorm=sqrt(tmpgamma);
+	  }
+	}
+
+	count = stop1.getCount();
+	if (pcg) str<<"=========================== END PCGNE ==========================\n";
+	else str<<"=========================== END CGNE ==========================\n";
       }
-      count = stop1.getCount();
-      str<<"=========================== END CGNE ==========================\n";
+      catch (RVLException & e) {
+	e<<"\ncalled from CGNEAlg::run\n";
+	throw e;
+      }
     }
 
     int getCount() const { return count; }
 
   private:
 
-    LinearOp<Scalar> const & inA;  // operator
-    Vector<Scalar> & x;            // state - solution vector
-    Vector<Scalar> const & rhs;    // reference to rhs
     atype & rnorm;                 // residual norm
     atype & nrnorm;                // gradient norm
     atype rtol;                    // tolerance residual norm
@@ -358,7 +613,7 @@ namespace RVLUmin {
     int count;                     // actual iteration count
     mutable bool proj;             // whether step is projected onto TR boundary
     ostream & str;                 // stream for report output
-    CGNEStep<Scalar> step;         // single step of CGNE
+    Algorithm * step;              // CGNE or PCGNE step
 
     // disable default, copy constructors
     CGNEAlg();
