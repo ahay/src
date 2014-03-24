@@ -31,6 +31,8 @@ To the reproducible documents collection:
 * osu/shalek: modeling examples from Kyle Shalek and Jeff Daniels
 * tccs/phase: Local skewness attribute as a seismic phase detector
   (Fomel and van der Baan)
+* tccs/optapert: Selecting an optimal aperture in Kirchhoff migration
+  using dip-angle images (Klokov and Fomel)
 
 To SCons:
 
