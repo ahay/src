@@ -5,4 +5,4 @@ p1=plot(abs(ph(o)),(o,0,10))+plot(abs(ap(o)),(o,0,10),linestyle='--',color='gree
 myarg(x)=arctan(imag(x)/real(x))/pi
 p2=plot(myarg(ph(o)),(o,0.001,10),ymin=-0.5,ymax=-0.2)+plot(myarg(ap(o)),(o,0.001,10),linestyle='--',color='green',ymin=-0.5,ymax=-0.2)+text(r'$\arg(F)/\pi$',(5,-0.22),fontsize=16,color='black')
 p=graphics_array([p1,p2])
-p.save(axes_labels=['$\omega$',''],fontsize=16,figsize=[10,5],filename='junk_sage.pdf')
+p.save(axes_labels=['$\omega$',''],fontsize=16,figsize=[12,6],filename='junk_sage.pdf')
