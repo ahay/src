@@ -60,6 +60,6 @@ for i1 in range(n1):
 		dat[i1,i2]=exp(-a*r)*cos(p)
 
 output.write(dat)
-output.close()
+#output.close()
 
 
