@@ -30,7 +30,7 @@
 #ifndef _kirmodnewton2_h
 
 typedef struct Velocity2 {
-	float *v, *gx, *gz, *xref, *zref;
+	float *v, *gx, *gz, *xref, *zref, *thick, *sumthick;
 } velocity2;
 /*^*/
 
@@ -98,7 +98,7 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 					   int N1 /* Number of elements in each reflector */,
 					   int n /* Number of reflections */,
 					   int order /* Order of eno interpolation */,
-					   int N2 /* Number of reflectors */,
+					   int N2 /* Number of reflectors including surface*/,
 					   int vstatus1 /* Type of model (vconstant(0) or vgradient(1))*/,
 					   float *xref_inp /* x-coordinate reference points */,
 					   float *zref_inp /* z-coorditnate reference points */,
@@ -119,6 +119,8 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 	v.gz = sf_floatalloc(n+2); /* Velocity gradient in z-direction used in calculation generated according to where the ray travels*/
 	v.xref = sf_floatalloc(n+2); /* Reference point x-coordinate used in calculation generated according to where the ray travels*/
 	v.zref = sf_floatalloc(n+2); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
+	v.thick = sf_floatalloc(n+1); /*Avg thickness of each layer for xintial*/
+	v.sumthick = sf_floatalloc(n+1); /*Avg thickness of each layer for xintial*/
 	
 	r0 = r01;
 	dr = dr1;
@@ -197,6 +199,18 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 			rr[d2][d1] = temp_rr[d5][d1];
 			rd[d2][d1] = temp_rd[d5][d1];
 			}	
+		}
+	}
+	
+	int ithick;
+	
+	for(ithick = 0; ithick < n+1; ithick++){ /*To calculate the average thickness of each layer measured from both ends for xinitial*/
+		v.thick[ithick] = ((rr[ithick+1][0] - rr[ithick][0]) + (rr[ithick+1][N1-1] - rr[ithick][N1-1]))/2;
+		if (ithick==0){
+			v.sumthick[ithick] = v.thick[ithick];
+		}
+		else {
+			v.sumthick[ithick] = v.sumthick[ithick-1] + v.thick[ithick] ;
 		}
 	}
 	
@@ -304,10 +318,10 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 {
 	
 	int ix, iy, ic, in, iu, iv, num;
-    float x2, x1, xp=0.;
+	float x2, x1, xp=0.;
 	float *updown, *xinitial, **oldans;
 	bool skip;
-    ktable **ta=NULL;
+	ktable **ta=NULL;
 	
 	if (fwdxini && nc==1) {
 		sf_warning("Cannot fwdxini in the case of 1 reflector (nc=1). Please enter fwdxini=n");
@@ -344,19 +358,20 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 						if (num!=0) {
 							xinitial = sf_floatalloc(num);
 							
-							for (iv=0; iv<num; iv++) { /* How many reflection axis*/
+							for (iv=0; iv<num; iv++) { /* How many reflection*/
 								if (fwdxini) {
 										
 									if (ix==0 || skip) { /* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
-										oldans[iv][num-1] = x1+(iv+1)*(x2-x1)/(num+1);
+										/*oldans[iv][num-1] = x1+(x2-x1)*(iv+1)/(num+1);*/
+										oldans[iv][num-1] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
 									}
 									
 									xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
 								
 								}
 								else {
-									xinitial[iv] = x1+(iv+1)*(x2-x1)/(num+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
-									
+									/*xinitial[iv] = x1+(x2-x1)*(iv+1)/(num+1);*/
+									xinitial[iv] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
 								}
 							}
 						}

@@ -114,11 +114,12 @@ static float zder2_2(int k,float x, float y, int m /* m=0 for x-direction and m=
 /* Main program--------------------------------------------------------------------------------------------------------*/
 int main(int argc, char* argv[])
 {
-	int nr1, nr2, nr3, N, ir1, ir2, ir3, nt, nt2, order, niter, vstatus, count, debug, q=0/* Counter for the bog loop*/;
+	int nr1, nr2, nr3, N, ir1, ir2, ir3, nt, nt2,nt3, order, niter, vstatus, count, q=0/* Counter for the bog loop*/;
 	float x, y, dt, t0, bmin, bmax, xbmin, xbmax, ybmin, ybmax, tt;
 	float ***rr, ***temp_rr, ***rd1, ***rd2, **ans, **xx, **xxnew, *xinitial, *yinitial, *updown, *v_inp, *gx_inp, *gy_inp, *gz_inp, *xref_inp, *yref_inp, *zref_inp ,*v, *gx, *gy, *gz, *xref, *yref, *zref, **F, **dk, **xxtem, **zk,***ck_inv; 
 	float **t1_temp,**t2_temp,**t3_temp,**t4_temp,*t5_temp,*t6_temp,**t7_temp,*t8_temp,*t9_temp;
 	double tol;
+	bool debug;
 	sf_file refl, xrefl;
 	
 	sf_init(argc,argv); /* Initialize - always call first */
@@ -255,8 +256,8 @@ int main(int argc, char* argv[])
 	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
 	/* Velocity status (0 for constant v and other int for gradient v)*/
 	
-	if (!sf_getint("debug",&debug)) sf_error("Please enter the debug (0 for for not printing values at each step and other int for printing)");
-	/* Velocity status (0 for constant v and other int for gradient v)*/
+	if (!sf_getbool("debug",&debug)) debug=false ;
+	/* Debug flag*/
 	
 	if (!sf_getdouble("tol",&tol)) tol=0.000001/v_inp[0];
 	/* Assign a default value for tolerance*/
@@ -275,10 +276,14 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("s0",&t0)) t0=0;
 	/* Staring position*/
 	
+	nt3=1; /*Force the 3rd dim to be 1*/
+	
 	sf_putint(xrefl,"n1",nt);
 	sf_putint(xrefl,"n2",nt2);
+	sf_putint(xrefl,"n3",nt3);
 	
 	sf_putfloat(xrefl,"d1",dt);
+	sf_putfloat(xrefl,"d2",dt);
 	sf_putfloat(xrefl,"o1",t0);
 		
 	/* Read input------------------------------------------------------------------------------*/
@@ -499,31 +504,32 @@ int main(int argc, char* argv[])
 	int w = niter; /* Number of loops for yk=yk-dk*/
 	
 	for (q=0; q<w; q++) {
-		Ftem=0; /* Reset Ftem to zero*/
-		for (i4=0; i4<nr3; i4++) { /* Recalculate F for new y*/
-			initialize(i4+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
-			for (j4=0; j4<2; j4++) {
-				if (j4==0) {
-					F[i4+1][j4] = T_hat_1k_k_1(f.T_k_k1_1,f.T_k_zk1) + T_hat_k_k_1(f.T_k_k_1,f.T_k_zk);
+		if (q!=0){
+			Ftem=0; /* Reset Ftem to zero*/
+			for (i4=0; i4<nr3; i4++) { /* Recalculate F for new y*/
+				initialize(i4+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
+				for (j4=0; j4<2; j4++) {
+					if (j4==0) {
+						F[i4+1][j4] = T_hat_1k_k_1(f.T_k_k1_1,f.T_k_zk1) + T_hat_k_k_1(f.T_k_k_1,f.T_k_zk);
+					}
+					if (j4==1) {
+						F[i4+1][j4] = T_hat_1k_k_2(f.T_k_k1_2,f.T_k_zk1) + T_hat_k_k_2(f.T_k_k_2,f.T_k_zk);
+					}
 				}
-				if (j4==1) {
-					F[i4+1][j4] = T_hat_1k_k_2(f.T_k_k1_2,f.T_k_zk1) + T_hat_k_k_2(f.T_k_k_2,f.T_k_zk);
+			}
+			
+			for (i5=0; i5<nr3; i5++) { /* Check the tolerance*/
+				for (j5=0; j5<2; j5++) {
+					Ftem = Ftem+fabsf(F[i5+1][j5]);
+					if (Ftem<2*nr3*tol && i5 == nr3-1) {
+						for (i6=0; i6<nr3; i6++) {
+							sf_warning("F(%d) is sufficeintly close to zero. x[%d] = %g and y[%d] = %g \n",i6+1,i6+1,xx[i6+1][0],i6+1,xx[i6+1][1]);
+						}				
+						goto mark; /* Exit the loop to the part for writing the result*/
+					}	
 				}
 			}
 		}
-		
-		for (i5=0; i5<nr3; i5++) { /* Check the tolerance*/
-			for (j5=0; j5<2; j5++) {
-				Ftem = Ftem+fabsf(F[i5+1][j5]);
-				if (Ftem<2*nr3*tol && i5 == nr3-1) {
-					for (i6=0; i6<nr3; i6++) {
-						sf_warning("F(%d) is sufficeintly close to zero. x[%d] = %g and y[%d] = %g \n",i6+1,i6+1,xx[i6+1][0],i6+1,xx[i6+1][1]);
-					}				
-					goto mark; /* Exit the loop to the part for writing the result*/
-				}	
-			}
-		}
-		
 /* Step 2: Forward recursion-------------------------------------------------------------------------*/
 
 		int l,l1,l2; /* Counter*/
@@ -569,7 +575,7 @@ int main(int argc, char* argv[])
 					if (l1==1) { /*First row*/
 						ck_inv[l+1][l1][0]= T_hat_1k_k_k_12(f.T_k_k1_k1_12,f.T_k_k1_zk1_1,f.T_k_k1_zk1_2,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k_12(f.T_k_k_k_12,f.T_k_k_zk_1,f.T_k_k_zk_2,f.T_k_zk,f.T_k_zk_zk) - t4_temp[l1][0];
 						ck_inv[l+1][l1][1]= T_hat_1k_k_k_2(f.T_k_k1_k1_2,f.T_k_k1_zk1_2,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k_2(f.T_k_k_k_2,f.T_k_k_zk_2,f.T_k_zk,f.T_k_zk_zk)- t4_temp[l1][1];
-						zk[l+1][l1] = T_hat_1k_k_2(f.T_k_k1_2,f.T_k_zk1) +T_hat_k_k_2(f.T_k_k_2,f.T_k_zk)  - t6_temp[l1];
+						zk[l+1][l1] = T_hat_1k_k_2(f.T_k_k1_2,f.T_k_zk1) +T_hat_k_k_2(f.T_k_k_2,f.T_k_zk) - t6_temp[l1];
 						mat_inverse(ck_inv[l+1]);
 					}
 				}
@@ -627,7 +633,7 @@ int main(int argc, char* argv[])
 				while (xxtem[a+1][a1]<bmin && a2<20) {/* Maximum times to multiply is 20*/
 					
 					dk[a+1][a1]=0.5*dk[a+1][a1];
-					if (debug!=0) {
+					if (debug) {
 						if (a1==0) {
 							sf_warning("The new x[%d] value exceeds the minimum boundary. dk[%d] is reduced to %g\n",a+1,a+1,dk[a+1][a1]);
 						}
@@ -641,7 +647,7 @@ int main(int argc, char* argv[])
 				while(xxtem[a+1][a1]>bmax && a3<20) {/* Maximum times to multiply is 20*/
 					
 					dk[a+1][a1]=0.5*dk[a+1][a1];
-					if (debug!=0) {
+					if (debug) {
 						if (a1==0) {
 							sf_warning("The new x[%d] value exceeds the maximum boundary. dk[%d] is reduced to %g\n",a+1,a+1,dk[a+1][a1]);
 						}
@@ -655,20 +661,20 @@ int main(int argc, char* argv[])
 				
 				if (a2>=20) {
 					if (a1==0) {
-						sf_warning("The position x[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
+						sf_warning("The position x[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of initial\n", a+1);
 					}
 					if (a1==1) {
-						sf_warning("The position y[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
+						sf_warning("The position y[%d] still exceed the minimum boundary after being halved for 20 times. Please reenter a more appropriate set of initial\n", a+1);
 					}
 					
 					exit(0);
 				}
 				if (a3>=20) {
 					if (a1==0) {
-						sf_warning("The position x[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
+						sf_warning("The position x[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of initial\n", a+1);
 					}
 					if (a1==1) {
-						sf_warning("The position y[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of xinitial\n", a+1);
+						sf_warning("The position y[%d] still exceed the maximum boundary after being halved for 20 times. Please reenter a more appropriate set of initial\n", a+1);
 					}
 					
 					exit(0);
@@ -682,7 +688,7 @@ int main(int argc, char* argv[])
 		int t,t1;/*counter*/
 		for (t=0; t<nr3+2;t++) {
 			for (t1=0; t1<2; t1++) {
-				if (debug!=0) {
+				if (debug) {
 					if (t1==0) {
 						sf_warning("The original value of x[%d] is %g, d[%d] is %g and the new value of x[%d] is %g\n",t,xx[t][t1],t,dk[t][t1],t,xxnew[t][t1]);
 					}

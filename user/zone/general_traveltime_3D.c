@@ -233,7 +233,7 @@ void half_initialize(int i /*Indicator of layer*/,
 	y_k.gz1 = 0;
 	y_k.v1 = 0;
 	y_k.gx2 = gx[i];
-	y_k.gy2 = gy[i];
+		y_k.gy2 = gy[i];
 	y_k.gz2 = gz[i];
 	y_k.v2 = v[i]+y_k.gx2*(y_k.x-xref[i])+y_k.gy2*(y_k.y-yref[i])+y_k.gz2*(y_k.z-zref[i]);
 	

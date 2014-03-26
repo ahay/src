@@ -193,7 +193,8 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 			
 	    if (isnan(1/ck_inv[l+1]) != 0 || isinf(1/ck_inv[l+1]) != 0) {
 		sf_warning("ck_inv doesn't exist. The solutions do not converge.\n");
-		exit(0);
+		b3 = -1;
+		goto mark;
 	    }
 	}	
 		
@@ -254,7 +255,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	    if (debug) {
 		sf_warning("The original value of y[%d] is %g, d[%d] is %g and the new value of y[%d] is %g\n",t,*(xx+t),t,*(dk+t),t,*(xxnew+t));
 		if (t==n+1) {
-		    sf_warning("Iteration:%d\n\n",q+1);
+		    sf_warning("Iteration:%d\n",q+1);
 		}					
 	    }
 	    *(xx+t) = *(xxnew+t); /* Update xx values*/
