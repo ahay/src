@@ -80,23 +80,29 @@ for prog in mains:
 # Compiling c++ programs
 ######################################################################
 
+
 ccmains = Split(ccprogs)
 for prog in ccmains:
     sources = ['M' + prog]
-    prog = env.Program(prog,map(lambda x: x + '.cc',sources),
-                       LIBS=[dynpre+'rsf++']+libs)
-    if root:
-        install = env.Install(bindir,prog)
+    if 'c++' in env.get('API',[]):
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources),
+                           LIBS=[dynpre+'rsf++']+libs)
+        if root:
+            install = env.Install(bindir,prog)
             
-        if dynpre and env['PLATFORM'] == 'darwin':
-            env.AddPostAction(install,
-                              '%s -change build/api/c/libdrsf.dylib '
-                              '%s/libdrsf.dylib %s' % \
+            if dynpre and env['PLATFORM'] == 'darwin':
+                env.AddPostAction(install,
+                                  '%s -change build/api/c/libdrsf.dylib '
+                                  '%s/libdrsf.dylib %s' % \
                                   (WhereIs('install_name_tool'),libdir,install[0]))
-            env.AddPostAction(install,
-                              '%s -change build/api/c++/libdrsf++.dylib '
-                              '%s/libdrsf++.dylib %s' % \
+                env.AddPostAction(install,
+                                  '%s -change build/api/c++/libdrsf++.dylib '
+                                  '%s/libdrsf++.dylib %s' % \
                                   (WhereIs('install_name_tool'),libdir,install[0]))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,package='c++')
+        if root:
+            env.Install(bindir,prog)
 
 ######################################################################
 # Compiling mpi programs ("MPILIB MPICPP" is user defined.)
