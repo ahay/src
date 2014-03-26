@@ -45,17 +45,17 @@ dx=5.0                  # axis step x
 tcent=0.0               # source center t
 nts=101.0               # axis length t (for source build)
 fpeak=10.0              # peak/central frequency
-nz = 1+int(lz/dz)       # grid length z
-nx = 1+int(lx/dx)       # grid length x
-gx_o  = 0               # starting x coor of receivers
-gx_e  = 500             # ending x coor of receivers
-gx_dx = 20              # distance between receivers  
-gelev = -40             # receiver depth
+nz=1+int(lz/dz)       # grid length z
+nx=1+int(lx/dx)       # grid length x
+gx_o=0               # starting x coor of receivers
+gx_e=500             # ending x coor of receivers
+gx_dx=20              # distance between receivers  
+gelev=-40             # receiver depth
 # number of traces
-ntr   = int((gx_e-gx_o)/gx_dx)+1
-T = .6                  # final time in seconds
-dt = 0.002              # axis step t
-nt = int(T/dt)+1        # axis length t 
+ntr=int((gx_e-gx_o)/gx_dx)+1
+T=.6                  # final time in seconds
+dt=0.002              # axis step t
+nt=int(T/dt)+1        # axis length t 
 
 Flow('hdr.su', None,
      sunull + ' nt=' + str(nt) + ' ntr=' + str(ntr) + ' dt=' + str(dt) + ' | ' +
