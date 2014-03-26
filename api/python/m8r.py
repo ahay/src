@@ -37,8 +37,6 @@ if _swig_:
             for type in ('int','float','bool'):
                 setattr(self,type,self.__get(type))
                 setattr(self,type+'s',self.__gets(type))
-        def close(self):
-            c_rsf.sf_parclose()
         def __get(self,type):
             func = getattr(c_rsf,'sf_get'+type)
             def _get(key,default=None):

@@ -155,6 +155,7 @@ void sf_parclose (void)
 /*< close parameter table and free space >*/
 {
     sf_simtab_close (pars);
+    pars=NULL;
 }
 
 void sf_parout (FILE *file)

@@ -131,6 +131,8 @@ void sf_simtab_close(sf_simtab table)
     int i;
     struct entry *e, *next;
 
+    if (NULL==table) return;
+
     for (i=0; i < table->size; i++) {
 	for (e = table->pars[i]; e != NULL; e = next) {	    
 	    free (e->key);
