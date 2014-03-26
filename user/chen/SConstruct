@@ -16,7 +16,7 @@ psvp curv acurv
 '''
 
 pyprogs='''
-circle prefilt pygraph subplot shuffle asc2rsf
+prefilt pygraph subplot shuffle asc2rsf
 sos fpca
 '''
 pymods='''
