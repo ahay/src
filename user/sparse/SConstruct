@@ -21,6 +21,8 @@ except: # local version
 src = Glob('[a-z]*.c')
 src.remove(File('lbfgs.c'))
 
+hdr = Glob('_*.h')
+
 sparsepath = env.get('SPARSEPATH')
 sparselibs = env.get('SPARSELIBS')
 
@@ -50,6 +52,7 @@ for prog in mains:
 
     if sparsepath and sparselibs:
         prog = env.Program(prog,map(lambda x: x + '.c',sources))
+        env.Depends(prog,hdr)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='SPARSELIBS',
                              package='suitesparse')
