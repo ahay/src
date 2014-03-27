@@ -100,17 +100,17 @@ Flow('source.su',['source_base.su', 'hdr.su'],
 
 
 # build model
-choose_vel = 0
-choose_den = 2
-model = 3 #sinusodial depth vel. model
-o1 = 0    #depth
-e1 = 500
-d1 = 5
-o2 = 0    #horizontal
-e2 = 500
-d2 = 5
-vel_file = 'vel4.rsf'
-den_file = 'den4.rsf'
+choose_vel=0
+choose_den=2
+model=3 #sinusodial depth vel. model
+o1=0    #depth
+e1=500
+d1=5
+o2=0    #horizontal
+e2=500
+d2=5
+vel_file='vel4.rsf'
+den_file='den4.rsf'
 
 
 #build_vel =  smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_vel)

@@ -45,17 +45,17 @@ dx=5.0                  # axis step x
 tcent=0.0               # source center t
 nts=101.0               # axis length t (for source build)
 fpeak=10.0              # peak/central frequency
-nz = 1+int(lz/dz)       # grid length z
-nx = 1+int(lx/dx)       # grid length x
-gx_o  = 0               # starting x coor of receivers
-gx_e  = 500             # ending x coor of receivers
-gx_dx = 20              # distance between receivers  
-gelev = -40             # receiver depth
+nz=1+int(lz/dz)       # grid length z
+nx=1+int(lx/dx)       # grid length x
+gx_o=0               # starting x coor of receivers
+gx_e=500             # ending x coor of receivers
+gx_dx=20              # distance between receivers  
+gelev=-40             # receiver depth
 # number of traces
-ntr   = int((gx_e-gx_o)/gx_dx)+1
-T = .6                  # final time in seconds
-dt = 0.002              # axis step t
-nt = int(T/dt)+1        # axis length t 
+ntr=int((gx_e-gx_o)/gx_dx)+1
+T=.6                  # final time in seconds
+dt=0.002              # axis step t
+nt=int(T/dt)+1        # axis length t 
 
 Flow('hdr.su', None,
      sunull + ' nt=' + str(nt) + ' ntr=' + str(ntr) + ' dt=' + str(dt) + ' | ' +
@@ -100,19 +100,19 @@ Flow('source.su',['source_base.su', 'hdr.su'],
 
 
 # build model
-choose_vel = 0
-choose_den = 2
-model = 2 #negative gaussian lense vel. model
-relsigmax1 = .1
-relsigmax2 = .1
-o1 = 0    #depth
-e1 = 500
-d1 = 5
-o2 = 0    #horizontal
-e2 = 500
-d2 = 5
-vel_file = 'vel3.rsf'
-den_file = 'den3.rsf'
+choose_vel=0
+choose_den=2
+model=2 #negative gaussian lense vel. model
+relsigmax1=.1
+relsigmax2=.1
+o1=0    #depth
+e1=500
+d1=5
+o2=0    #horizontal
+e2=500
+d2=5
+vel_file='vel3.rsf'
+den_file='den3.rsf'
 
 
 #build_vel =  smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_vel)
