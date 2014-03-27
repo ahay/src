@@ -132,13 +132,14 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 	int p2; /*Temp value*/
 	float p4=0; /*Temp value*/
 	
-	for (p1=0; p1<n-1; p1++) {
+	/* Allow skipping of layer if the thickness is zero*/
+	/*for (p1=0; p1<n-1; p1++) {
 		p2 = updown[p1]-updown[p1+1];
 		if (p2>1) {
 			sf_warning("The layer number array indicates skipping of layers. Please reenter the array.\n");
 			exit(0);
 		}
-	}
+	}*/
 	
 	/* Check whether the gradient and vstatus match-------------------------------------------------------*/
 	
@@ -317,9 +318,9 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 /*<Compute traveltime map>*/
 {
 	
-	int ix, iy, ic, in, iu, iv, num;
+	int ix, iy, ic, iu, iv, num;
 	float x2, x1, xp=0.;
-	float *updown, *xinitial, **oldans;
+	float *xinitial, **oldans;
 	bool skip;
 	ktable **ta=NULL;
 	
@@ -347,42 +348,35 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 				for (ic=0; ic < nc; ic++) { 
 					ta[ix][ic] = (ktable) sf_alloc(1,sizeof(ta[ix][ic][0]));
 					
-					for (in=0; in<=ic; in++) { /* Addition loop from kirmod2.c for generating extra parameters*/
-						num = in;
-						updown = sf_floatalloc(num+1);
+					/* Additional loop from kirmod2.c for generating extra parameters*/
+					num = ic;
+					if (num!=0) {
+						xinitial = sf_floatalloc(num);
 						
-						for (iu=0; iu<num+1; iu++) { /* To generate the updown array (Need to fix if other elementary waves are of interest)*/
-							updown[iu] = iu+1;
-						}
-						
-						if (num!=0) {
-							xinitial = sf_floatalloc(num);
-							
-							for (iv=0; iv<num; iv++) { /* How many reflection*/
-								if (fwdxini) {
-										
-									if (ix==0 || skip) { /* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
-										/*oldans[iv][num-1] = x1+(x2-x1)*(iv+1)/(num+1);*/
-										oldans[iv][num-1] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
-									}
+						for (iv=0; iv<num; iv++) { /* How many reflection*/
+							if (fwdxini) {
 									
-									xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
+								if (ix==0 || skip) { /* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
+									/*oldans[iv][num-1] = x1+(x2-x1)*(iv+1)/(num+1);*/
+									oldans[iv][num-1] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
+								}
 								
-								}
-								else {
-									/*xinitial[iv] = x1+(x2-x1)*(iv+1)/(num+1);*/
-									xinitial[iv] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
-								}
+								xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
+							
+							}
+							else {
+								/*xinitial[iv] = x1+(x2-x1)*(iv+1)/(num+1);*/
+								xinitial[iv] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
 							}
 						}
-						else {
-							xinitial = sf_floatalloc(1);
-							xinitial[0] = 0; /* The case where there is NO reflection (to avoid warning)*/
-						}
-
 					}
+					else {
+						xinitial = sf_floatalloc(1);
+						xinitial[0] = 0; /* The case where there is NO reflection (to avoid warning)*/
+					}
+
 					
-					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, updown, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, oldans, skip, ta[ix][ic]);
+					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, oldans, skip, ta[ix][ic]);
 				
 				} 
 			} 

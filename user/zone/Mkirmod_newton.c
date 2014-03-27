@@ -323,7 +323,7 @@ int main(int argc, char* argv[])
 	if (!sf_getint("niter",&niter)) niter=500;
 	/* The number of iterations*/
 		
-	if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
+if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	/* Assign a default value for tolerance*/
 		
 	if (!sf_getint("order",&order)) order=3;/* Interpolation order*/

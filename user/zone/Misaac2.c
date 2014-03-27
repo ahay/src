@@ -339,7 +339,7 @@ int main(int argc, char* argv[])
 	float Ftem=0;
 	
 	for (i3=0; i3<nr2; i3++) {
-		xx[i3+1] = xinitial[i3]; /* Create an array of points of intersection from soure to receiver*/
+		xx[i3+1] = xinitial[i3]; /* Create an array of points of intersection from source to receiver*/
 	}
 	
 	for (i=0; i<nr2; i++) {
@@ -367,6 +367,12 @@ int main(int argc, char* argv[])
 		for (i2=0; i2<nr2; i2++) { /* Recalculate F for new y (Repeat Step 1)*/
 			initialize(i2+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
 			F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
+			
+			/*Zero thickness layer case*/
+			if (fabsf(z(i2+1,xx[i2+1])-z(i2+2,xx[i2+2]))<0.00001 || fabsf(z(i2,xx[i2])-z(i2+1,xx[i2+1]))<0.00001){ 
+			/*Cheap trick to get it to exit. Not respect Snell's law. Traveltime derivative is 0/0*/
+				F[i2+1] = 0.0;
+			}
 		}
 		
 		for (i5=0; i5<nr2; i5++) { /* Check the tolerance*/
@@ -412,9 +418,12 @@ int main(int argc, char* argv[])
 			}
 		}
 	
-		/*Apply boundary---------------------------------------------------------------------------*/
+		/*Apply boundary & check zero thickness---------------------------------------------------------------------------*/
 		
-		int t,a,b1,b2; /* Counter*/
+		xxtem[0] = xx[0]; /*Fixed source*/
+		xxtem[nr2+1] = xx[nr2+1]; /*Fixed receiver*/
+		int t,a,b1,b2,b3; /* Counter*/
+		float dktemp;
 		for (a=0; a<nr2; a++) {
 			b1=0;
 			b2=0;
@@ -447,6 +456,45 @@ int main(int argc, char* argv[])
 			}
 		}
 		
+		/*Zero thickness---we modify the dk from newton to converge to the same point*/
+		for(b3=0; b3<nr2+1; b3++) {
+			if (fabsf(z(b3,xxtem[b3])-z(b3+1,xxtem[b3+1]))<0.00001){
+				if(fabsf(dk[b3])>fabsf(dk[b3+1])) dktemp = dk[b3+1];
+				if(fabsf(dk[b3])<fabsf(dk[b3+1])) dktemp = dk[b3];
+				
+				if (xx[b3]<xx[b3+1]){
+					if(b3==0){ /*First layer = zero thickness*/
+						dk[b3+1] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+						dk[b3] = dktemp;
+					}
+					else if(b3==nr2) { /*Last layer = zero thickness*/
+						dk[b3+1] = dktemp;
+						dk[b3] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					}
+					else { /*Any other layer*/
+						dk[b3+1] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+						dk[b3] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					}
+				}
+				else {
+					if(b3==0){ /*First layer = zero thickness*/
+						dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+						dk[b3] = dktemp;
+					}
+					else if(b3==nr2) { /*Last layer = zero thickness*/
+						dk[b3+1] = dktemp;
+						dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					}
+					else { /*Any other layer*/
+						dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+						dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					}
+					dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				}
+			}
+		}
+		
 /* Step 4: Update xx------------------------------------------------------------------------------*/
 		
 		vector_sub(nr2+2,xx,nr2+2,dk,xxnew,0); /* Update xx (Newton)*/
@@ -454,7 +502,7 @@ int main(int argc, char* argv[])
 			if (debug) {
 				sf_warning("The original value of y[%d] is %g, d[%d] is %g and the new value of y[%d] is %g\n",t,*(xx+t),t,*(dk+t),t,*(xxnew+t));
 				if (t==nr2+1) {
-					sf_warning("Iteration:%d\n\n",q+1);
+					sf_warning("Iteration:%d\n",q+1);
 				}					
 			}
 			*(xx+t) = *(xxnew+t); /* Update xx values*/
@@ -464,7 +512,7 @@ int main(int argc, char* argv[])
 /* END OF MAIN LOOP--------------------------------------------------------------------------------*/	
 	
 	/* Write result in 2D & Compute traveltime-----------------------------------------------------*/
-	int c1,c2;
+	int c1,c2,c3;
 	int c; /* Counter*/
 	
 mark: /* Mark point for goto*/
@@ -479,14 +527,18 @@ mark: /* Mark point for goto*/
 			}
 		}
 	}
-	
+	if (q == niter){
+		for (c3=0; c3<nr2; c3++) {
+			sf_warning("F(%d) is sufficiently close to zero. y[%d] = %g \n",c3+1,c3+1,xx[c3+1]);
+		}
+	}
 	tt=0; /* Initialize traveltime tt*/
 	
 	for (c=0; c<nr2+1; c++) {
 		half_initialize(c,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
 		tt = tt + T_hat_k(f.T_k);
 		if (c==nr2) {
-			sf_warning("Traveltime is %g and the total number of iterations is %d",tt,q);
+			sf_warning("Traveltime is %g and the total number of iterations is %d\n",tt,q);
 		}
 	}
 	

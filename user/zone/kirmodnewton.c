@@ -54,7 +54,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 			int niter /* Number of iteration for Newton */,
 			double tol /* Tolerance level for Newton */,
 			int n /* Number of reflection */,
-			float *updown /* Direction of the ray */,
 			float *xinitial /* Initial guess of points of intersection */,
 			float *xref /* x-coordinate reference points */,
 			float *zref /* z-coorditnate reference points */,
@@ -85,7 +84,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     xxtem = sf_floatalloc(n+2); /* Pre-calculated xx to check the boundary condition*/
     ck_inv = sf_floatalloc(n+2);
     zk = sf_floatalloc(n+2);	
-	
+
     /* Switch bmin and bmax if necessary */
 	
     if(bmin>bmax) {
@@ -116,10 +115,10 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     f.T_k_k1_zk = 0;
 	
     setfunc(vstatus,&f); /* Set value of structure f*/
-	
+
     /* Step 1: Calculate F(y) to see if it is sufficiently close to zero----------------------------------*/
 	
-    int i,j1,i3,i4; /* Counter*/
+    int i,j1,i3,i4,i6; /* Counter*/
     float Ftem=0;
 	
     xx[0] = xs;
@@ -129,12 +128,18 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	for (i3=0; i3<n; i3++) {
 	    xx[i3+1] = xinitial[i3]; /* Create an array of points of intersection from soure to receiver*/
 	}
+	/* To deal with zero-thickness layer (NEED VERIFICATION)*/
+	/*for(i6=0; i6<n; i6++){
+		if(z(i6+2,xx[i6+2])-z(i6+1,xx[i6+1])<0.0001){
+			xx[i6+1] = xx[i6+2];
+		}
+	}*/
     }
     else {
 	b3 = 0;
 	goto mark;
     }
-
+    
     for (i=0; i<n; i++) {
 	initialize(i+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_1k, y_k and y_k1*/
 	F[i+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
@@ -163,6 +168,12 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	for (i2=0; i2<n; i2++) { /* Recalculate F for new y (Repeat Step 1)*/
 	    initialize(i2+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
 	    F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
+	    
+	    /*Zero thickness layer case*/
+	    if (fabsf(z(i2+1,xx[i2+1])-z(i2+2,xx[i2+2]))<0.00001 || fabsf(z(i2,xx[i2])-z(i2+1,xx[i2+1]))<0.00001){ 
+		/*Cheap trick to get it to exit. Not respect Snell's law. Traveltime derivative is 0/0*/
+		F[i2+1] = 0.00;
+	    }
 	}
 		
 	for (i5=0; i5<n; i5++) { /* Check the tolerance*/
@@ -212,13 +223,16 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	}
 		
 	/*Apply boundary---------------------------------------------------------------------------*/
-		
-	int t,a,b1,b2; /* Counter*/
+	
+	xxtem[0] = xx[0]; /*Fixed source*/
+	xxtem[n+1] = xx[n+1]; /*Fixed receiver*/
+	float dktemp;
+	int t,a,b1,b2,b3; /* Counter*/
 	for (a=0; a<n; a++) {
 	    b1=0;
 	    b2=0;
 	    xxtem[a+1] = xx[a+1]-dk[a+1];
-	    while (xxtem[a+1]<bmin-tol && b1<10) {/* Maximum times to multiply is 10*/
+	    while (xxtem[a+1]<bmin-tol && b1<20) {/* Maximum times to multiply is 20*/
 				
 		dk[a+1]=0.5*dk[a+1]; /* Decrease the change by half*/
 		if (debug) {
@@ -227,7 +241,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		xxtem[a+1] = xx[a+1]-dk[a+1]; /* Recompute xxtem to see if it is still exceed the boundary*/
 		b1++;
 	    }
-	    while(xxtem[a+1]>bmax+tol && b2<10) {/* Maximum times to multiply is 10*/
+	    while(xxtem[a+1]>bmax+tol && b2<20) {/* Maximum times to multiply is 20*/
 				
 		dk[a+1]=0.5*dk[a+1];
 		if (debug) {
@@ -236,17 +250,55 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		xxtem[a+1] = xx[a+1]-dk[a+1];
 		b2++;
 	    }
-	    if (b1>=10) {
+	    if (b1>=20) {
 		sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g \n", n+1,xx[0],xx[n+1]);
 		b3 = -1;
 		goto mark;
 	    }
-	    if (b2>=10) {
+	    if (b2>=20) {
 		sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g \n", n+1,xx[0],xx[n+1]);
 		b3= -1;
 		goto mark;
 	    }
 	}
+	
+	/*Zero thickness---we modify the dk from newton to converge to the same point*/
+	for(b3=0; b3<n+1; b3++) {
+		if (fabsf(z(b3,xxtem[b3])-z(b3+1,xxtem[b3+1]))<0.00001){
+			if(fabsf(dk[b3])>fabsf(dk[b3+1])) dktemp = dk[b3+1];
+			if(fabsf(dk[b3])<fabsf(dk[b3+1])) dktemp = dk[b3];
+			
+			if (xx[b3]<xx[b3+1]){
+				if(b3==0){ /*First layer = zero thickness*/
+					dk[b3+1] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b3] = dktemp;
+				}
+				else if(b3==n) { /*Last layer = zero thickness*/
+					dk[b3+1] = dktemp;
+					dk[b3] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				}
+				else { /*Any other layer*/
+					dk[b3+1] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b3] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				}
+			}
+			else {
+				if(b3==0){ /*First layer = zero thickness*/
+					dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b3] = dktemp;
+				}
+				else if(b3==n) { /*Last layer = zero thickness*/
+					dk[b3+1] = dktemp;
+					dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				}
+				else { /*Any other layer*/
+					dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				}
+			}
+		}
+	}
+	
 		
 	/* Step 4: Update xx------------------------------------------------------------------------------*/
 		
@@ -266,7 +318,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	
     /* Write Compute traveltime-----------------------------------------------------*/
     float ck_in, ck_in_temp;
-    int c1,c2,c3,c4;
+    int c1,c2,c3,c4,c5;
     int c; /* Counter*/
 	
 mark: /* Mark point for goto*/
@@ -296,7 +348,13 @@ mark: /* Mark point for goto*/
 		}
 	    }
 	}
-		
+	
+	if (q == niter){
+		for (c5=0; c5<n; c5++) {
+			if (debug) sf_warning("F(%d) is sufficiently close to zero. y[%d] = %g %d\n",c5+1,c5+1,xx[c5+1]);
+		}
+	}
+	
 	/* To export the old ans for fwdxini-------------------------------------------*/
 		
 	if (NULL != oldans) {

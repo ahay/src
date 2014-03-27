@@ -48,6 +48,8 @@ typedef struct threed {
 
 #endif
 
+static float eps = 0.0001; /*small constant to avoid division by zero*/
+
 /*Traveltime functions for constant velocity---------------------------------------------------------------------------*/
 double T0_k(threed y_k,threed y_k1)
 /*<Traveltime>*/
@@ -67,7 +69,7 @@ double T0_k_k_1(threed y_k, threed y_k1)
 {
 	double t_k_k_1;
 	
-	t_k_k_1 = (y_k.x-y_k1.x)/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_k_1 = (y_k.x-y_k1.x)/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_k_1;
 	
@@ -78,7 +80,7 @@ double T0_k_k_2(threed y_k, threed y_k1)
 {
 	double t_k_k_2;
 	
-	t_k_k_2 = (y_k.y-y_k1.y)/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_k_2 = (y_k.y-y_k1.y)/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_k_2;
 	
@@ -89,7 +91,7 @@ double T0_k_k1_1(threed y_k, threed y_k1)
 {
 	double t_k_k1_1;
 	
-	t_k_k1_1 = (y_k1.x-y_k.x)/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_k1_1 = (y_k1.x-y_k.x)/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_k1_1;
 	
@@ -100,7 +102,7 @@ double T0_k_k1_2(threed y_k, threed y_k1)
 {
 	double t_k_k1_2;
 	
-	t_k_k1_2 = (y_k1.y-y_k.y)/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_k1_2 = (y_k1.y-y_k.y)/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_k1_2;
 	
@@ -112,7 +114,7 @@ double T0_k_zk(threed y_k, threed y_k1)
 	double t_k_zk;
 	
 	
-	t_k_zk = (y_k.z-y_k1.z)/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_zk = (y_k.z-y_k1.z)/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_zk;
 	
@@ -124,7 +126,7 @@ double T0_k_zk1(threed y_k, threed y_k1)
 	double t_k_zk1;
 	
 	
-	t_k_zk1 = (y_k1.z-y_k.z)/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_zk1 = (y_k1.z-y_k.z)/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_zk1;
 	
@@ -141,7 +143,7 @@ double T0_k_k_k_1(threed y_k, threed y_k1)
 {
 	double t_k_k_k_1;
 	
-	t_k_k_k_1 = 1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.x-y_k1.x,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_k_k_1 = 1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.x-y_k1.x,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_k_k_1;
 	
@@ -152,7 +154,7 @@ double T0_k_k_k_2(threed y_k, threed y_k1)
 {
 	double t_k_k_k_2;
 	
-	t_k_k_k_2 = 1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.y-y_k1.y,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_k_k_2 = 1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.y-y_k1.y,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_k_k_2;
 	
@@ -163,7 +165,7 @@ double T0_k_k_k_12(threed y_k, threed y_k1)
 {
 	double t_k_k_k_12;
 	
-	t_k_k_k_12 = ((y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_k_k_12 = ((y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_k_k_12;
 	
@@ -174,7 +176,7 @@ double T0_k_k_zk_1(threed y_k, threed y_k1)
 {
 	double t_k_k_zk_1;
 	
-	t_k_k_zk_1 =  ((y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k_zk_1 =  ((y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k_zk_1;
 	
@@ -185,7 +187,7 @@ double T0_k_k_zk_2(threed y_k, threed y_k1)
 {
 	double t_k_k_zk_2;
 	
-	t_k_k_zk_2 =  ((y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k_zk_2 =  ((y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k_zk_2;
 	
@@ -196,7 +198,7 @@ double T0_k_zk_zk(threed y_k, threed y_k1)
 {
 	double t_k_zk_zk;
 	
-	t_k_zk_zk = 1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.z-y_k1.z,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_zk_zk = 1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.z-y_k1.z,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_zk_zk;
 	
@@ -209,7 +211,7 @@ double T0_k_k1_k1_1(threed y_k, threed y_k1)
 {
 	double t_k_k1_k1_1;
 	
-	t_k_k1_k1_1 = 1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.x-y_k1.x,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_k1_k1_1 = 1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.x-y_k1.x,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_k1_k1_1;
 	
@@ -220,7 +222,7 @@ double T0_k_k1_k1_2(threed y_k, threed y_k1)
 {
 	double t_k_k1_k1_2;
 	
-	t_k_k1_k1_2 = 1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.y-y_k1.y,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_k1_k1_2 = 1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.y-y_k1.y,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_k1_k1_2;
 	
@@ -231,7 +233,7 @@ double T0_k_k1_k1_12(threed y_k, threed y_k1)
 {
 	double t_k_k1_k1_12;
 	
-	t_k_k1_k1_12 = ((y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_k1_k1_12 = ((y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_k1_k1_12;
 	
@@ -242,7 +244,7 @@ double T0_k_k1_zk1_1(threed y_k, threed y_k1)
 {
 	double t_k_k1_zk1_1;
 	
-	t_k_k1_zk1_1 = ((y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k1_zk1_1 = ((y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k1_zk1_1;
 	
@@ -253,7 +255,7 @@ double T0_k_k1_zk1_2(threed y_k, threed y_k1)
 {
 	double t_k_k1_zk1_2;
 	
-	t_k_k1_zk1_2 = ((y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k1_zk1_2 = ((y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k1_zk1_2;
 	
@@ -264,7 +266,7 @@ double T0_k_zk1_zk1(threed y_k, threed y_k1)
 {
 	double t_k_zk1_zk1;
 	
-	t_k_zk1_zk1 = 1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.z-y_k1.z,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
+	t_k_zk1_zk1 = 1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.z-y_k1.z,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));
 	
 	return t_k_zk1_zk1;
 	
@@ -277,7 +279,7 @@ double T0_k_k_k1_1(threed y_k, threed y_k1)
 {
 	double t_k_k_k1_1;
 	
-	t_k_k_k1_1 = (-1)*(1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.x-y_k1.x,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5)));
+	t_k_k_k1_1 = (-1)*(1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.x-y_k1.x,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5)));
 	
 	return t_k_k_k1_1;
 	
@@ -288,7 +290,7 @@ double T0_k_k_k1_2(threed y_k, threed y_k1)
 {
 	double t_k_k_k1_2;
 	
-	t_k_k_k1_2 = (-1)*(1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.y-y_k1.y,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5)));
+	t_k_k_k1_2 = (-1)*(1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5)) - (pow(y_k.y-y_k1.y,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5)));
 	
 	return t_k_k_k1_2;
 	
@@ -299,7 +301,7 @@ double T0_k_k_k1_12(threed y_k, threed y_k1)
 {
 	double t_k_k_k1_12;
 	
-	t_k_k_k1_12 = ((y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k_k1_12 = ((y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k_k1_12;
 	
@@ -310,7 +312,7 @@ double T0_k_k_k1_21(threed y_k, threed y_k1)
 {
 	double t_k_k_k1_21;
 	
-	t_k_k_k1_21 = ((y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k_k1_21 = ((y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k_k1_21;
 	
@@ -321,7 +323,7 @@ double T0_k_k1_zk_1(threed y_k, threed y_k1)
 {
 	double t_k_k1_zk_1;
 	
-	t_k_k1_zk_1 = ((y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k1_zk_1 = ((y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k1_zk_1;
 	
@@ -332,7 +334,7 @@ double T0_k_k1_zk_2(threed y_k, threed y_k1)
 {
 	double t_k_k1_zk_2;
 	
-	t_k_k1_zk_2 = ((y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k1_zk_2 = ((y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k1_zk_2;
 	
@@ -343,7 +345,7 @@ double T0_k_k_zk1_1(threed y_k, threed y_k1)
 {
 	double t_k_k_zk1_1;
 	
-	t_k_k_zk1_1 = ((y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k_zk1_1 = ((y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k_zk1_1;
 	
@@ -354,7 +356,7 @@ double T0_k_k_zk1_2(threed y_k, threed y_k1)
 {
 	double t_k_k_zk1_2;
 	
-	t_k_k_zk1_2 = ((y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
+	t_k_k_zk1_2 = ((y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5));	
 	
 	return t_k_k_zk1_2;
 	
@@ -365,7 +367,7 @@ double T0_k_zk_zk1(threed y_k, threed y_k1)
 {
 	double t_k_zk_zk1;
 	
-	t_k_zk_zk1 = (pow(y_k.z-y_k1.z,2))/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5)) -  1/(y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
+	t_k_zk_zk1 = (pow(y_k.z-y_k1.z,2))/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),1.5)) -  1/(eps+y_k.v2*pow(pow(y_k.x-y_k1.x,2) + pow(y_k.y-y_k1.y,2) + pow(y_k.z-y_k1.z,2),0.5));
 	
 	return t_k_zk_zk1;
 	

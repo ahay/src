@@ -48,6 +48,8 @@ typedef struct threed {
 
 #endif
 
+static float eps = 0.0001; /*small constant to avoid division by zero*/
+
 /* Traveltime functions for gradient velocity------------------------------------------------------------------------------*/
 double T1_k(threed y_k,threed y_k1)
 /*<Traveltime>*/
@@ -75,7 +77,7 @@ double T1_k_k_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_1 = (sqrt(2)*g0*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
+	t_k_k_1 = (sqrt(2)*g0*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
 	
 	return t_k_k_1;
 	
@@ -90,7 +92,7 @@ double T1_k_k_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_2 = (sqrt(2)*g0*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
+	t_k_k_2 = (sqrt(2)*g0*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
 	
 	return t_k_k_2;
 	
@@ -105,7 +107,7 @@ double T1_k_k1_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_1 = (sqrt(2)*g0*(y_k1.x-y_k.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
+	t_k_k1_1 = (sqrt(2)*g0*(y_k1.x-y_k.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
 	
 	return t_k_k1_1;
 	
@@ -120,7 +122,7 @@ double T1_k_k1_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_2 = (sqrt(2)*g0*(y_k1.y-y_k.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
+	t_k_k1_2 = (sqrt(2)*g0*(y_k1.y-y_k.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
 	
 	return t_k_k1_2;
 	
@@ -135,7 +137,7 @@ double T1_k_zk(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_zk = (sqrt(2)*g0*(y_k.z-y_k1.z))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
+	t_k_zk = (sqrt(2)*g0*(y_k.z-y_k1.z))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
 	
 	return t_k_zk;
 	
@@ -150,7 +152,7 @@ double T1_k_zk1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_zk1 =  (sqrt(2)*g0*(y_k1.z-y_k.z))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
+	t_k_zk1 =  (sqrt(2)*g0*(y_k1.z-y_k.z))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));
 	
 	return t_k_zk1;
 	
@@ -171,7 +173,7 @@ double T1_k_k_k_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k_1 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_k_k_1 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_k_k_1;
 	
@@ -186,7 +188,7 @@ double T1_k_k_k_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k_2 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_k_k_2 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_k_k_2;
 	
@@ -201,7 +203,7 @@ double T1_k_k_k_12(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k_12 = (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_k_12 = (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_k_12;
 	
@@ -216,7 +218,7 @@ double T1_k_k_zk_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_zk_1 =  (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_zk_1 =  (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_zk_1;
 	
@@ -231,7 +233,7 @@ double T1_k_k_zk_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_zk_2 =  (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_zk_2 =  (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_zk_2;
 	
@@ -246,7 +248,7 @@ double T1_k_zk_zk(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_zk_zk = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_zk_zk = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_zk_zk;
 	
@@ -263,7 +265,7 @@ double T1_k_k1_k1_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_k1_1 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_k1_k1_1 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_k1_k1_1;
 	
@@ -278,7 +280,7 @@ double T1_k_k1_k1_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_k1_2 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_k1_k1_2 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_k1_k1_2;
 	
@@ -293,7 +295,7 @@ double T1_k_k1_k1_12(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_k1_12 = (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k1_k1_12 = (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.y-y_k.y)*(y_k.x-y_k1.x))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k1_k1_12;
 	
@@ -308,7 +310,7 @@ double T1_k_k1_zk1_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_zk1_1 = (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k1_zk1_1 = (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.x-y_k1.x))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k1_zk1_1;
 	
@@ -323,7 +325,7 @@ double T1_k_k1_zk1_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_zk1_2 = (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k1_zk1_2 = (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k1.z-y_k.z)*(y_k.y-y_k1.y))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k1_zk1_2;
 	
@@ -338,7 +340,7 @@ double T1_k_zk1_zk1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_zk1_zk1 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_zk1_zk1 = ((-1)*sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) - (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_zk1_zk1;
 	
@@ -355,7 +357,7 @@ double T1_k_k_k1_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k1_1 = (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) - (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) + (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_k_k1_1 = (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) - (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) + (sqrt(2)*pow(g0,3)*pow(y_k.x-y_k1.x,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_k_k1_1;
 	
@@ -370,7 +372,7 @@ double T1_k_k_k1_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k1_2 = (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) - (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) + (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_k_k1_2 = (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) - (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) + (sqrt(2)*pow(g0,3)*pow(y_k.y-y_k1.y,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_k_k1_2;
 	
@@ -385,7 +387,7 @@ double T1_k_k_k1_12(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k1_12 = (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_k1_12 = (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_k1_12;
 	
@@ -400,7 +402,7 @@ double T1_k_k_k1_21(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_k1_21 = (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_k1_21 = (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.x-y_k1.x)*(y_k.y-y_k1.y))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_k1_21;
 	
@@ -415,7 +417,7 @@ double T1_k_k1_zk_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_zk_1 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k1_zk_1 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k1_zk_1;
 	
@@ -430,7 +432,7 @@ double T1_k_k1_zk_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k1_zk_2 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k1_zk_2 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k1_zk_2;
 	
@@ -445,7 +447,7 @@ double T1_k_k_zk1_1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_zk1_1 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_zk1_1 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.x-y_k1.x))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_zk1_1;
 	
@@ -460,7 +462,7 @@ double T1_k_k_zk1_2(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_k_zk1_2 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
+	t_k_k_zk1_2 = (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) + (sqrt(2)*pow(g0,3)*(y_k.z-y_k1.z)*(y_k.y-y_k1.y))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));		
 	
 	return t_k_k_zk1_2;
 	
@@ -475,7 +477,7 @@ double T1_k_zk_zk1(threed y_k, threed y_k1)
 	
 	g0 = pow(pow(y_k.gx2,2)+pow(y_k.gy2,2)+pow(y_k.gz2,2),0.5);
 	
-	t_k_zk_zk1 = (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) - (sqrt(2)*g0)/(sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) + (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
+	t_k_zk_zk1 = (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*pow(pow(g0,2)*q/(y_k.v2*y_k1.v1),3/2)) - (sqrt(2)*g0)/(eps+sqrt(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2)*y_k.v2*y_k1.v1*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1))) + (sqrt(2)*pow(g0,3)*pow(y_k.z-y_k1.z,2))/(eps+2*pow(pow(g0,2)*q/(2*y_k.v2*y_k1.v1)+2,3/2)*pow(y_k.v2,2)*pow(y_k1.v1,2)*sqrt(pow(g0,2)*q/(y_k.v2*y_k1.v1)));	
 	
 	return t_k_zk_zk1;
 	
