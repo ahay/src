@@ -108,6 +108,7 @@ In the build system:
 * Fixed directory locations in pens/fonts
 * Fixed typo in the configure script
 * Fixed the case of RSFSRC set to a different directory
+* Fixed oglpen compilation on Cygwin
 
 ===Changes in defaults and interfaces===
 

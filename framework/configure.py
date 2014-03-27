@@ -904,8 +904,8 @@ def opengl(context):
         ogl = []
         oglflags = ' -framework AGL -framework OpenGL -framework GLUT'
         context.env['LINKFLAGS'] = LINKFLAGS + oglflags
-    elif plat['OS'] == 'cygwin':
-        ogl = context.env.get('OPENGL',['opengl32','glu32','glut32'])
+    elif plat['OS'] == 'cygwin' and os.path.isfile('/usr/lib/libglut32.dll.a'):
+        ogl = context.env.get('OPENGL',['GL32','GLU32','glut32'])
         oglpath = '/usr/include/opengl'
         context.env['CPPPATH'] = CPPPATH + [oglpath]
     else:
