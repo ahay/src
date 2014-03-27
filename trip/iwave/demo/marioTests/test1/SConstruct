@@ -35,22 +35,47 @@ towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 asg             = os.path.join(IWAVE,'asg/main/asg.x')
 smoothmodel     = os.path.join(IWAVE,'demo/main/smoothmodel.x')
 
+#############################################################################
+#############################################################################
+
+# half order of FD method
+horder=2
+# assumed min vel in medium (should be consitent with smoothmodel.cc)
+CMIN=3000.0  # in m/s
+CMAX=3000.0
+
 # geometry parameters
+fpeak=10.0              # peak/central frequency in Hz
+nts=101.0               # axis length t (for source build)
 xcent=250.0             # source center x
 zcent=-250.0            # source center z
-lz=100.0                # source diam z
-lx=100.0                # source diam x
-dz=5.0                  # axis step z
-dx=5.0                  # axis step x
 tcent=0.0               # source center t
-nts=101.0               # axis length t (for source build)
-fpeak=10.0              # peak/central frequency
-nz=1+int(lz/dz)       # grid length z
-nx=1+int(lx/dx)       # grid length x
+lz=50.0                # source diam z
+lx=50.0                # source diam x
 gx_o=0               # starting x coor of receivers
 gx_e=500             # ending x coor of receivers
 gx_dx=20              # distance between receivers  
 gelev=-40             # receiver depth
+
+# computing dz and dx given peak frequency
+# formula: wavelength = vel/fpeak
+#          dx = meters/gridcell
+#             = cycles/gridcell * meters/cycle
+#             = 1/gpc * wavelength  
+wavelength=CMIN/fpeak
+GPC=30 # set GPC=30 for truth and GPC=10 as initial value
+gpc=2/horder*GPC
+dfac=1
+
+d1=wavelength/gpc # axis step depth for model
+d2=wavelength/gpc # axis step horz. for model
+
+dz=d1*dfac # axis step z for source build
+dx=d2*dfac # axis step x for source build
+
+nz=1+int(lz/dz)   # grid length z
+nx=1+int(lx/dx)   # grid length x
+
 # number of traces
 ntr=int((gx_e-gx_o)/gx_dx)+1
 T=.6                  # final time in seconds
@@ -105,10 +130,11 @@ choose_den=2
 model=0 #homogeneous model
 o1=0    #depth
 e1=500
-d1=5
+n1=int((e1-o1)/d1)+1
 o2=0    #horizontal
 e2=500
-d2=5
+n2=int((e2-o2)/d2)+1
+
 vel_file='vel1.rsf'
 den_file='den1.rsf'
 
@@ -129,28 +155,28 @@ den_file='den1.rsf'
 
 Flow('vel1',None,
      smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_vel) + 
-                   ' o1=' + str(o1) + ' e1=' + str(e1) + ' d1=' + str(d1) +
-                   ' o2=' + str(o2) + ' e2=' + str(e2) + ' d2=' + str(d2) +
+                   ' o1=' + str(o1) + ' n1=' + str(n1) + ' d1=' + str(d1) +
+                   ' o2=' + str(o2) + ' n2=' + str(n2) + ' d2=' + str(d2) +
                    ' hfile=' + vel_file,
      stdin=0, stdout=0)
 # 'sfput id1=0 id2=1 dim=2 gdim=2' )
 
 Flow('den1',None,
      smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_den) +
-                   ' o1=' + str(o1) + ' e1=' + str(e1) + ' d1=' + str(d1) +
-                   ' o2=' + str(o2) + ' e2=' + str(e2) + ' d2=' + str(d2) +
+                   ' o1=' + str(o1) + ' n1=' + str(n1) + ' d1=' + str(d1) +
+                   ' o2=' + str(o2) + ' n2=' + str(n2) + ' d2=' + str(d2) +
                    ' hfile=' + den_file,
      stdin=0, stdout=0)
 # 'sfput id1=0 id2=1 dim=2 gdim=2' )
 
-order = 2;
+
 # trace-src output file
 t=Flow(['output.su'],['source.su', 'hdr.su', 'vel1.rsf', 'den1.rsf'],
-	asg  + ' order=' + str(order) + ' cfl=0.75 cmin=1.0 cmax=4.5 dmin=0.5 dmax=3.0 fpeak=' + str(fpeak) + 
+	asg  + ' order=' + str(horder) + ' cfl=0.5 cmin=1.0 cmax=4.5 dmin=0.5 dmax=3.0 fpeak=' + str(fpeak) + 
 	' srctype=array source=./source.su sampord=1 hdrfile=./hdr.su datafile=./output.su' +
         ' velocity=./vel1.rsf density=./den1.rsf' +
         ' dump_lda=1 dump_ldc=1 dump_term=1' +
-        ' nl1=.5 nr1=.5 nl2=.5 nr2=.5',
+        ' nl1=1 nr1=1 nl2=1 nr2=1 moviestep=10.0',
 	stdin=0, stdout=0)
          
 Result('output','output.su', 'suread endian=0 read=data < $SOURCE | put label1=Time label2=Distance d2=' + str(gx_dx) + ' o2=' + str(gx_o) + ' unit1=s unit2=km title="Ta-da!" label=Pressure unit=GPa |sfgrey')

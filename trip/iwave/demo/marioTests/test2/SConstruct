@@ -35,22 +35,44 @@ towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 asg             = os.path.join(IWAVE,'asg/main/asg.x')
 smoothmodel     = os.path.join(IWAVE,'demo/main/smoothmodel.x')
 
+# half order of FD method
+horder=2
+# assumed min vel in medium (should be consitent with smoothmodel.cc)
+CMIN=2000.0  # in m/s
+CMAX=4000.0
+
 # geometry parameters
+fpeak=10.0              # peak/central frequency in Hz
+nts=101.0               # axis length t (for source build)
 xcent=250.0             # source center x
 zcent=-250.0            # source center z
+tcent=0.0               # source center t
 lz=100.0                # source diam z
 lx=100.0                # source diam x
-dz=5.0                  # axis step z
-dx=5.0                  # axis step x
-tcent=0.0               # source center t
-nts=101.0               # axis length t (for source build)
-fpeak=10.0              # peak/central frequency
-nz=1+int(lz/dz)       # grid length z
-nx=1+int(lx/dx)       # grid length x
 gx_o=0               # starting x coor of receivers
 gx_e=500             # ending x coor of receivers
 gx_dx=20              # distance between receivers  
 gelev=-40             # receiver depth
+
+# computing dz and dx given peak frequency
+# formula: wavelength = vel/fpeak
+#          dx = meters/gridcell
+#             = cycles/gridcell * meters/cycle
+#             = 1/gpc * wavelength  
+wavelength=CMIN/fpeak
+GPC=10
+gpc=2/horder*GPC
+dfac=0.5
+
+d1=wavelength/gpc # axis step depth for model
+d2=wavelength/gpc # axis step horz. for model
+
+dz=d1*dfac # axis step z for source build
+dx=d2*dfac # axis step x for source build
+
+nz=1+int(lz/dz)   # grid length z
+nx=1+int(lx/dx)   # grid length x
+
 # number of traces
 ntr=int((gx_e-gx_o)/gx_dx)+1
 T=.6                  # final time in seconds
@@ -105,10 +127,11 @@ choose_den=2
 model=1 #linear depth vel. profile model
 o1=0    #depth
 e1=500
-d1=5
+n1=int((e1-o1)/d1)+1
 o2=0    #horizontal
 e2=500
-d2=5
+n2=int((e2-o2)/d2)+1
+
 vel_file='vel2.rsf'
 den_file='den2.rsf'
 
@@ -129,16 +152,16 @@ den_file='den2.rsf'
 
 Flow('vel2',None,
      smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_vel) + 
-                   ' o1=' + str(o1) + ' e1=' + str(e1) + ' d1=' + str(d1) +
-                   ' o2=' + str(o2) + ' e2=' + str(e2) + ' d2=' + str(d2) +
+                   ' o1=' + str(o1) + ' n1=' + str(n1) + ' d1=' + str(d1) +
+                   ' o2=' + str(o2) + ' n2=' + str(n2) + ' d2=' + str(d2) +
                    ' hfile=' + vel_file,
      stdin=0, stdout=0)
 # 'sfput id1=0 id2=1 dim=2 gdim=2' )
 
 Flow('den2',None,
      smoothmodel + ' model= ' + str(model) + ' choose=' + str(choose_den) +
-                   ' o1=' + str(o1) + ' e1=' + str(e1) + ' d1=' + str(d1) +
-                   ' o2=' + str(o2) + ' e2=' + str(e2) + ' d2=' + str(d2) +
+                   ' o1=' + str(o1) + ' n1=' + str(n1) + ' d1=' + str(d1) +
+                   ' o2=' + str(o2) + ' n2=' + str(n2) + ' d2=' + str(d2) +
                    ' hfile=' + den_file,
      stdin=0, stdout=0)
 # 'sfput id1=0 id2=1 dim=2 gdim=2' )
