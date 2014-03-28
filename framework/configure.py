@@ -593,7 +593,7 @@ def ppm(context):
     context.env['CPPPATH'] = oldpath
 
 pkg['libtiff'] = {'suse':'libtiff-devel', 
-                  'ubuntu': 'libtiff4-dev',
+                  'ubuntu': 'libtiff5-dev',
                   'fedora':'libtiff-devel',
                   'rhel':'libtiff-devel'}
 
