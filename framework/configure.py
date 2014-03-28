@@ -627,7 +627,7 @@ def tiff(context):
 
 pkg['libgd'] = {'suse':'gd-devel',
                 'rhel':'gd-devel',
-                'ubuntu':'libgd2-xpm-dev'}
+                'ubuntu':'libgd-dev'}
 
 def gd(context):
     context.Message("checking for GD (PNG) ... ")
@@ -853,7 +853,7 @@ def cairo(context):
     LIBS.pop()
 
 pkg['jpeg'] = {'fedora':'libjpeg-devel',
-               'ubuntu':'libjpeg62-dev'}
+               'ubuntu':'libjpeg-dev'}
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
@@ -1056,6 +1056,7 @@ def lapack(context):
                 LIBS.pop()
 
 pkg['mpi'] = {'fedora':'openmpi + openmpi-devel + openmpi-libs',
+              'ubuntu':'libopenmpi-dev',
               'rhel':'openmpi-devel'}
 
 def mpi(context):
