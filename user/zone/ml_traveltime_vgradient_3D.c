@@ -43,6 +43,18 @@ typedef struct threed {
 	float gy2;/* y-direction velocity gradient from below*/
 	float gz1;/* z-direction velocity gradient from above*/
 	float gz2;/* z-direction velocity gradient from below*/
+	float c111;/* c11 from above*/
+	float c112;/* c11 from below*/
+	float c331;/* c33 from above*/
+	float c332;/* c33 from below*/
+	float Q11; /* Q1 (horizontal anelliptic parameter) from above*/
+	float Q12; /* Q1 (horizontal anelliptic parameter) from below*/
+	float Q31; /* Q3 (vertical anelliptic parameter) from above*/
+	float Q32; /* Q3 (vertical anelliptic parameter) from below*/
+	float S11; /* S1 from above*/
+	float S12; /* S1 from below*/
+	float S31; /* S3 from above*/
+	float S32; /* S3 from below*/
 } threed;
 /* Structure pointer */
 

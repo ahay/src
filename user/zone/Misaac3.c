@@ -25,6 +25,7 @@
 #include "general_traveltime_3D.h"
 #include "ml_traveltime_vconstant_3D.h"
 #include "ml_traveltime_vgradient_3D.h"
+#include "ml_traveltime_vti_3D.h"
 #include "setvelocity_3D.h"
 #include "matrixops_2D.h"
 
@@ -116,11 +117,11 @@ int main(int argc, char* argv[])
 {
 	int nr1, nr2, nr3, N, ir1, ir2, ir3, nt, nt2,nt3, order, niter, vstatus, count, q=0/* Counter for the bog loop*/;
 	float x, y, dt, t0, bmin, bmax, xbmin, xbmax, ybmin, ybmax, tt;
-	float ***rr, ***temp_rr, ***rd1, ***rd2, **ans, **xx, **xxnew, *xinitial, *yinitial, *updown, *v_inp, *gx_inp, *gy_inp, *gz_inp, *xref_inp, *yref_inp, *zref_inp ,*v, *gx, *gy, *gz, *xref, *yref, *zref, **F, **dk, **xxtem, **zk,***ck_inv; 
+	float ***rr, ***temp_rr, ***rd1, ***rd2, **ans, **xx, **xxnew, *xinitial, *yinitial, *updown, *v_inp, *gx_inp, *gy_inp, *gz_inp, *xref_inp, *yref_inp, *zref_inp ,*v, *gx, *gy, *gz, *xref, *yref, *zref, **F, **dk, **xxtem, **zk,***ck_inv, **aniso, **aniso_inp; 
 	float **t1_temp,**t2_temp,**t3_temp,**t4_temp,*t5_temp,*t6_temp,**t7_temp,*t8_temp,*t9_temp;
 	double tol;
 	bool debug;
-	sf_file refl, xrefl;
+	sf_file refl, xrefl, vti;
 	
 	sf_init(argc,argv); /* Initialize - always call first */
 	
@@ -148,6 +149,8 @@ int main(int argc, char* argv[])
 	rd1 = sf_floatalloc3(nr1,nr2,nr3+2); /* Reflector slope for x-direction*/
 	rd2 = sf_floatalloc3(nr1,nr2,nr3+2); /* Reflector slope for y-direction*/
 	ans = sf_floatalloc2(3,nr3+2); /* Answer reflection point for 2 axes (x,y,z)*/
+	aniso_inp = sf_floatalloc2(4,N-1); /* VTI parameters of the model*/
+	aniso = sf_floatalloc2(4,nr3+2); /* VTI parameters of the model*/
 	
 	xx = sf_floatalloc2(2,nr3+2); /* Reflection position at all interfaces*/
 	xxnew = sf_floatalloc2(2,nr3+2);
@@ -206,29 +209,35 @@ int main(int argc, char* argv[])
 	if (!sf_getfloats("layer",updown,nr3+1)) sf_error("Please enter the layer number array [nr3+1]");
 	/* Layer sequence*/
 	
-	if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
-	/* Assign velocity km/s*/
+	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v,1 for gradient v, and 2 for VTI)");
+	/* Velocity status (0 for constant v, 1 for gradient v, and 2 for VTI)*/
 	
-	if (!sf_getfloats("xgradient",gx_inp,N-1)) sf_error("Please enter the x-gradient array [N-1]");
-	/* Assign x-gradient*/
-	
-	if (!sf_getfloats("ygradient",gy_inp,N-1)) sf_error("Please enter the y-gradient array [N-1]");
-	/* Assign y-gradient*/
-	
-	if (!sf_getfloats("zgradient",gz_inp,N-1)) sf_error("Please enter the z-gradient array [N-1]");
-	/* Assign z-gradient */
+	if (vstatus != 2){ /*Don't need all of these if  consider vti case*/
+		if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
+		/* Assign velocity km/s*/
+		
+		if (!sf_getfloats("xgradient",gx_inp,N-1)) sf_error("Please enter the x-gradient array [N-1]");
+		/* Assign x-gradient*/
+		
+		if (!sf_getfloats("ygradient",gy_inp,N-1)) sf_error("Please enter the y-gradient array [N-1]");
+		/* Assign y-gradient*/
+		
+		if (!sf_getfloats("zgradient",gz_inp,N-1)) sf_error("Please enter the z-gradient array [N-1]");
+		/* Assign z-gradient */
+		
+		
+		if (!sf_getfloats("xref",xref_inp,N-1)) sf_error("Please enter the x-reference points array [N-1]");
+		/* Assign x-reference point*/
+		
+		if (!sf_getfloats("yref",yref_inp,N-1)) sf_error("Please enter the y-reference points array [N-1]");
+		/* Assign y-reference point*/
+		
+		if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
+		/* Assign z-reference point*/
+	}
 	
 	if (!sf_getint("order",&order)) order=3;
 	/* Interpolation order*/
-	
-	if (!sf_getfloats("xref",xref_inp,N-1)) sf_error("Please enter the x-reference points array [N-1]");
-	/* Assign x-reference point*/
-	
-	if (!sf_getfloats("yref",yref_inp,N-1)) sf_error("Please enter the y-reference points array [N-1]");
-	/* Assign y-reference point*/
-	
-	if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
-	/* Assign z-reference point*/
 	
 	if (!sf_getfloat("xmin",&xbmin)) {
 		xbmin=xx[0][0];
@@ -252,9 +261,6 @@ int main(int argc, char* argv[])
 	
 	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
 	/* The number of iterations*/
-	
-	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
-	/* Velocity status (0 for constant v and other int for gradient v)*/
 	
 	if (!sf_getbool("debug",&debug)) debug=false ;
 	/* Debug flag*/
@@ -289,8 +295,13 @@ int main(int argc, char* argv[])
 	/* Read input------------------------------------------------------------------------------*/
 	sf_floatread(temp_rr[0][0],nr1*nr2*N,refl);
 	
+	if (vstatus == 2){
+		vti = sf_input("aniso"); /* anisotropy*/
+		sf_floatread(aniso_inp[0],4*(N-1),vti);
+	}
+	
 	/* Check the array, consecutive two inputs must not differ by more than 1------------------*/
-	int d1,d2,d3,d4,d5,p1,p3; /* Counter*/
+	int d1,d2,d3,d4,d5,d6,p1,p3; /* Counter*/
 	int p2; /* Temp value*/
 	float p4=0; /* Temp value*/
 	
@@ -303,19 +314,20 @@ int main(int argc, char* argv[])
 	}
 	
 	/* Check whether the gradient and vstatus match--------------------------------------------*/
-	for (p3=0; p3<N-1; p3++) {
-		p4 = p4 + gx_inp[p3]+gy_inp[p3]+gz_inp[p3];
-		
-		if (p3==N-2 && p4/(3*N-2)!=0 && vstatus==0) {
-			sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
-			exit(0);
-		}
-		if (p3==N-2 && p4/(3*N-2)==0 && vstatus!=0) {
-			sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
-			exit(0);
+	if (vstatus ==0 || vstatus ==1){ /*Skip this loop for vti*/
+		for (p3=0; p3<N-1; p3++) {
+			p4 = p4 + gx_inp[p3]+gy_inp[p3]+gz_inp[p3];
+			
+			if (p3==N-2 && p4/(3*N-2)!=0 && vstatus==0) {
+				sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
+				exit(0);
+			}
+			if (p3==N-2 && p4/(3*N-2)==0 && vstatus!=0) {
+				sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
+				exit(0);
+			}
 		}
 	}
-	
 	/* Generate input according to the reflection sequence-------------------------------------*/
 	for (d3=0; d3<nr3+2; d3++) {
 		/* Set velocity, gradient, and reference points arrays---------------------------------*/
@@ -327,6 +339,9 @@ int main(int argc, char* argv[])
 			xref[d3] = xref_inp[0];
 			yref[d3] = yref_inp[0];
 			zref[d3] = zref_inp[0];
+			for(d6=0; d6<4; d6++){
+				aniso[d3][d6] = aniso_inp[0][d6];
+			}
 		}
 		else {
 			d4 = updown[d3-1]; /* Need d3, d4, and d5 because array argument needs to be an interger*/
@@ -340,6 +355,9 @@ int main(int argc, char* argv[])
 				xref[d3] = xref_inp[d4];
 				yref[d3] = yref_inp[d4];
 				zref[d3] = zref_inp[d4];
+				for(d6=0; d6<4; d6++){
+					aniso[d3][d6] = aniso_inp[d4][d6];
+				}
 			}	
 			
 			if(d5-d4<0){
@@ -350,6 +368,9 @@ int main(int argc, char* argv[])
 				xref[d3] = xref_inp[d5];
 				yref[d3] = yref_inp[d5];
 				zref[d3] = zref_inp[d5];
+				for(d6=0; d6<4; d6++){
+					aniso[d3][d6] = aniso_inp[d5][d6];
+				}
 			}
 		}
 		
@@ -441,21 +462,45 @@ int main(int argc, char* argv[])
 	}
 	
 	/* If no initial points specified*/
-	if (!sf_getfloats("xinitial",xinitial,nr3)) {
+	/*if (!sf_getfloats("xinitial",xinitial,nr3)) {
 		for (count=0; count<nr3; count++) {
-			xinitial[count] = xx[0][0]+(count+1)*(xx[nr3+1][0]-xx[0][0])/(nr3+1);
+			xinitial[count] = xx[0][0]+(count+1)*(xx[nr3+1][0]-xx[0][0])/(nr3+1);*/
 			/* Divide the distance from s to r equally and set the initial points accordingly*/
-		}	
-	}
+	/*	}	
+	}*/
 	/* x-initial position*/
 	
-	if (!sf_getfloats("yinitial",yinitial,nr3)) {
+	/*if (!sf_getfloats("yinitial",yinitial,nr3)) {
 		for (count=0; count<nr3; count++) {
-			yinitial[count] = xx[0][1]+(count+1)*(xx[nr3+1][1]-xx[0][1])/(nr3+1);
+			yinitial[count] = xx[0][1]+(count+1)*(xx[nr3+1][1]-xx[0][1])/(nr3+1);*/
 			/* Divide the distance from s to r equally and set the initial points accordingly*/
-		}	
-	}
+	/*	}	
+	}*/
 	/* y-initial position*/
+	
+	int ithick;
+	float *thick, *sumthick; 
+	
+	if (!sf_getfloats("xinitial",xinitial,nr3)) {
+		thick = sf_floatalloc(nr3+1); /*Avg thickness of each layer for xintial*/
+		sumthick = sf_floatalloc(nr3+1); /*Avg thickness of each layer for xintial*/
+		for(ithick = 0; ithick < nr3+1; ithick++){ /*To calculate the average thickness of each layer measured from both ends for xinitial*/
+			thick[ithick] = ((rr[ithick+1][0][0] - rr[ithick][0][0]) + (rr[ithick+1][nr2-1][nr1-1] - rr[ithick][nr2-1][nr1-1]))/2;
+			if (ithick==0){
+				sumthick[ithick] = fabsf(thick[ithick]);
+			}
+			else {
+				sumthick[ithick] = sumthick[ithick-1] + fabs(thick[ithick]) ;
+			}
+		}
+		for (count=0; count<nr3; count++) {
+			xinitial[count] = xx[0][0]+(xx[nr3+1][0]-xx[0][0])*sumthick[count]/(sumthick[nr3]);
+			yinitial[count] = xx[0][1]+(xx[nr3+1][1]-xx[0][1])*sumthick[count]/(sumthick[nr3]);
+		}
+	}
+	
+	
+	
 	
 	
 /* Step 1: Calculate F(y) to see if it is sufficiently close to zero-------------------------------*/
@@ -474,7 +519,7 @@ int main(int argc, char* argv[])
 	}
 	
 	for (i1=0; i1<nr3; i1++) {
-		initialize(i1+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2); /*Initialize y_k and y_k1*/
+		initialize(i1+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,aniso,z,zder,zder2_1,zder2_2); /*Initialize y_k and y_k1*/
 		for (j1=0; j1<2; j1++) {
 			if (j1==0) {
 				F[i1+1][j1] = T_hat_1k_k_1(f.T_k_k1_1,f.T_k_zk1) + T_hat_k_k_1(f.T_k_k_1,f.T_k_zk);
@@ -507,7 +552,7 @@ int main(int argc, char* argv[])
 		if (q!=0){
 			Ftem=0; /* Reset Ftem to zero*/
 			for (i4=0; i4<nr3; i4++) { /* Recalculate F for new y*/
-				initialize(i4+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
+				initialize(i4+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,aniso,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
 				for (j4=0; j4<2; j4++) {
 					if (j4==0) {
 						F[i4+1][j4] = T_hat_1k_k_1(f.T_k_k1_1,f.T_k_zk1) + T_hat_k_k_1(f.T_k_k_1,f.T_k_zk);
@@ -534,7 +579,7 @@ int main(int argc, char* argv[])
 
 		int l,l1,l2; /* Counter*/
 		for (l=0; l<nr3; l++) {
-			initialize(l+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
+			initialize(l+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,aniso,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
 			for (l1=0; l1<2; l1++) {
 				if (l==0) {
 					if (l1==0) { /* First column of the 1st element T0,11 + T1,11*/
@@ -591,7 +636,7 @@ int main(int argc, char* argv[])
 
 		int m,m1; /* Counter*/
 		for (m=nr3-1; m>=0; m--) { 
-			initialize(m+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
+			initialize(m+1,nr3,xx,v,xref,yref,zref,gx,gy,gz,aniso,z,zder,zder2_1,zder2_2); /* Initialize y_k and y_k1*/
 			if (m==nr3-1) {
 				matv_mul(ck_inv[m+1],zk[m+1],dk[m+1]);
 			}
@@ -614,7 +659,7 @@ int main(int argc, char* argv[])
 		
 		/*Apply boundary---------------------------------------------------------------------------*/
 		
-		int a,a1,a2,a3; /* Counter*/
+		int a,a1,a2,a3,b3,b4; /* Counter*/
 		for (a=0; a<nr3; a++) {
 			a2=0;
 			a3=0;
@@ -682,6 +727,54 @@ int main(int argc, char* argv[])
 			}
 		}
 		
+		xxtem[0][0] = xx[0][0]; /*Fixed source*/
+		xxtem[0][1] = xx[0][1]; /*Fixed source*/
+		xxtem[nr3+1][0] = xx[nr3+1][0]; /*Fixed receiver*/
+		xxtem[nr3+1][1] = xx[nr3+1][1]; /*Fixed receiver*/
+		float *dktemp;
+		dktemp = sf_floatalloc(2);
+		/*Zero thickness---we modify the dk from newton to converge to the same point*/
+		for(b3=0; b3<nr3+1; b3++) {
+			for (b4=0; b4<2; b4++) {
+				if (fabsf(z(b3,xxtem[b3][0],xxtem[b3][1])-z(b3+1,xxtem[b3+1][0],xxtem[b3+1][1]))<0.00001){
+					if(fabsf(dk[b3][b4])>fabsf(dk[b3+1][b4])) dktemp[b4] = dk[b3+1][b4];
+					if(fabsf(dk[b3][b4])<fabsf(dk[b3+1][b4])) dktemp[b4] = dk[b3][b4];
+					
+					if (xx[b3][b4]<xx[b3+1][b4]){
+						if(b3==0){ /*First layer = zero thickness*/
+							dk[b3+1][b4] = fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+							dk[b3][b4] = dktemp[b4];
+						}
+						else if(b3==nr3) { /*Last layer = zero thickness*/
+							dk[b3+1][b4] = dktemp[b4];
+							dk[b3][b4] = (-1)*fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+						}
+						else { /*Any other layer*/
+							dk[b3+1][b4] = fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+							dk[b3][b4] = (-1)*fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+						}
+					}
+					else {
+						if(b3==0){ /*First layer = zero thickness*/
+							dk[b3+1][b4] = (-1)*fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+							dk[b3][b4] = dktemp[b4];
+						}
+						else if(b3==nr3) { /*Last layer = zero thickness*/
+							dk[b3+1][b4] = dktemp[b4];
+							dk[b3][b4] = fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+						}
+						else { /*Any other layer*/
+							dk[b3][b4] = fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+							dk[b3+1][b4] = (-1)*fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+						}
+						dk[b3][b4] = fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+						dk[b3+1][b4] = (-1)*fabsf(xx[b3][b4]-xx[b3+1][b4])/2 +dktemp[b4];
+					}
+				}
+			}
+		}
+		
+		
 /* Step 4: Update xx------------------------------------------------------------------------------*/
 		
 		vector_sub3d(nr3+2,xx,nr3+2,dk,xxnew,0);
@@ -708,7 +801,7 @@ int main(int argc, char* argv[])
 /* END OF MAIN LOOP--------------------------------------------------------------------------------*/
 	
 	/* Write result in 2D & Compute traveltime-----------------------------------------------------*/
-	int c,c1,c2; /* Counter*/
+	int c,c1,c2,c3; /* Counter*/
 	
 mark: /* Mark point for goto*/
 	
@@ -724,10 +817,16 @@ mark: /* Mark point for goto*/
 		}
 	}
 	
+	if (q == niter){
+		for (c3=0; c3<nr3; c3++) {
+			sf_warning("F(%d) is sufficeintly close to zero. x[%d] = %g and y[%d] = %g \n",c3+1,c3+1,xx[c3+1][0],c3+1,xx[c3+1][1]);
+		}
+	}
+	
 	tt=0; /* Initialize traveltime tt*/
 	
 	for (c=0; c<nr3+1; c++) {
-		half_initialize(c,nr3,xx,v,xref,yref,zref,gx,gy,gz,z,zder,zder2_1,zder2_2);
+		half_initialize(c,nr3,xx,v,xref,yref,zref,gx,gy,gz,aniso,z,zder,zder2_1,zder2_2);
 		tt = tt + T_hat_k(f.T_k);
 		if (c==nr3) {
 			sf_warning("Traveltime is %g and the total number of iterations is %d",tt,q);

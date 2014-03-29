@@ -18,6 +18,7 @@
  
 #include "ml_traveltime_vgradient.h"
 #include "ml_traveltime_vconstant.h"
+#include "ml_traveltime_vti.h"
 #include "general_traveltime.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,7 +48,7 @@ void setfunc(int vstatus, func3 *f)
 		f->T_k_k_zk1 = T0_k_k_zk1;
 		f->T_k_k1_zk = T0_k_k1_zk;
 	}
-	else {
+	else if (vstatus == 1) {
 		f->T_k = T1_k;
 		f->T_k_k = T1_k_k;
 		f->T_k_k1 = T1_k_k1;
@@ -64,5 +65,21 @@ void setfunc(int vstatus, func3 *f)
 		f->T_k_k_zk1 = T1_k_k_zk1;
 		f->T_k_k1_zk = T1_k_k1_zk;
 	}	
-	
+	else  {
+		f->T_k = T2_k;
+		f->T_k_k = T2_k_k;
+		f->T_k_k1 = T2_k_k1;
+		f->T_k_k_k = T2_k_k_k;
+		f->T_k_k1_k1 = T2_k_k1_k1;
+		f->T_k_k_k1 = T2_k_k_k1;
+		f->T_k_zk = T2_k_zk;
+		f->T_k_zk1 = T2_k_zk1;
+		f->T_k_zk_zk = T2_k_zk_zk;
+		f->T_k_zk1_zk1 = T2_k_zk1_zk1;
+		f->T_k_zk_zk1 = T2_k_zk_zk1;
+		f->T_k_k_zk = T2_k_k_zk;
+		f->T_k_k1_zk1 = T2_k_k1_zk1;
+		f->T_k_k_zk1 = T2_k_k_zk1;
+		f->T_k_k1_zk = T2_k_k1_zk;
+	}	
 }

@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     surface inc, ref;
     velocity vel, vel2;
     ktable ts, tg, **tss, **tgs;
-    sf_file data, refl, curv, modl, picks = NULL, slopes = NULL;
+    sf_file data, refl, curv, modl, vti, picks = NULL, slopes = NULL;
 	
     sf_init(argc,argv);
 	
@@ -258,8 +258,8 @@ int main(int argc, char* argv[])
 	}
     }
 	
-    if (newton) { 
-		
+    if (newton) {
+	
 	if (!sf_getbool("debug",&debug)) debug=false;
 	/* debug flag */
 		
@@ -293,33 +293,42 @@ int main(int argc, char* argv[])
 	vn.zref = sf_floatalloc(nc);
 	vn.gx = sf_floatalloc(nc);
 	vn.gz = sf_floatalloc(nc);
-		
-	if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
-	/* Assign velocity km/s*/
-		
-	if (!sf_getfloats("xgradient",vn.gx,nc)) {
-	    for (count=0; count<nc; count++) {
-		vn.gx[count] = 0;
-	    }
+	vn.aniso = sf_floatalloc2(4,nc);
+	
+	
+	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v,1 for gradient v, and 2 for VTI)");
+	/* Velocity status (0 for constant v,1 for gradient v, and 2 for vti)*/
+	
+	if (vstatus != 2) {
+		if (!sf_getfloats("velocity",vn.v,nc)) sf_error("Please enter the velocity array [nc]");
+		/* Assign velocity km/s*/
+			
+		if (!sf_getfloats("xgradient",vn.gx,nc)) {
+		    for (count=0; count<nc; count++) {
+			vn.gx[count] = 0;
+		    }
+		}
+		/* Assign x-gradient*/
+			
+		if (!sf_getfloats("zgradient",vn.gz,nc)) { 
+		    for (count=0; count<nc; count++) {
+			vn.gz[count] = 0;
+		    }
+		}
+		/* Assign z-gradient */
+			
+		if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
+		/* Assign x-reference point*/
+			
+		if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
+		/* Assign z-reference point*/
+			
 	}
-	/* Assign x-gradient*/
-		
-	if (!sf_getfloats("zgradient",vn.gz,nc)) { 
-	    for (count=0; count<nc; count++) {
-		vn.gz[count] = 0;
-	    }
+	else {
+		vti = sf_input("aniso"); /* anisotropy*/
+		sf_floatread(vn.aniso[0],4*(nc-1),vti);
 	}
-	/* Assign z-gradient */
-		
-	if (!sf_getfloats("xref",vn.xref,nc))  sf_error("Please enter the x-reference points array [nc]");
-	/* Assign x-reference point*/
-		
-	if (!sf_getfloats("zref",vn.zref,nc)) sf_error("Please enter the z-reference points array [nc]");
-	/* Assign z-reference point*/
-		
-	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
-	/* Velocity status (0 for constant v and other int for gradient v)*/
-		
+	
 	if (!sf_getint("niter",&niter)) niter=500;
 	/* The number of iterations*/
 		
@@ -447,7 +456,7 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	
     if (newton) {
 	/* Initialize parameters for newton*/
-	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz);
+	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz,vn.aniso);
 		
 	/*** Compute traveltime table ***/
 	kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);

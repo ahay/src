@@ -30,7 +30,7 @@
 #ifndef _kirmodnewton2_h
 
 typedef struct Velocity2 {
-	float *v, *gx, *gz, *xref, *zref, *thick, *sumthick;
+	float *v, *gx, *gz, *xref, *zref, *thick, *sumthick, **aniso;
 } velocity2;
 /*^*/
 
@@ -104,7 +104,8 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 					   float *zref_inp /* z-coorditnate reference points */,
 					   float *v_inp /* Velocities at reference points */,
 					   float *gx_inp /* x-gradient at the reference points */,
-					   float *gz_inp /* z-gradeint at the reference points */)
+					   float *gz_inp /* z-gradeint at the reference points */,
+					   float **aniso_input /* anisotropy parameters*/)
 /*<Initialize reflectors for kirmodnewton>*/
 
 {
@@ -121,6 +122,7 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 	v.zref = sf_floatalloc(n+2); /* Reference point z-coordinate used in calculation generated according to where the ray travels*/
 	v.thick = sf_floatalloc(n+1); /*Avg thickness of each layer for xintial*/
 	v.sumthick = sf_floatalloc(n+1); /*Avg thickness of each layer for xintial*/
+	v.aniso = sf_floatalloc2(4,n+2); /* Anisotropy parameters*/
 	
 	r0 = r01;
 	dr = dr1;
@@ -128,8 +130,8 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 
 	/* Check the array, consecutive two inputs must not differ by more than 1-----------------------------*/
 	
-	int d1,d2,d3,d4,d5,p1,p3; /*counter*/
-	int p2; /*Temp value*/
+	int d1,d2,d3,d4,d5,d6,p3; /*counter*/
+	/*int p1,p2; Temp value*/
 	float p4=0; /*Temp value*/
 	
 	/* Allow skipping of layer if the thickness is zero*/
@@ -166,6 +168,9 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 			v.gz[d2] = gz_inp[0];
 			v.xref[d2] = xref_inp[0];
 			v.zref[d2] = zref_inp[0];
+			for(d6=0; d6<4; d6++){
+				v.aniso[d2][d6] = aniso_input[0][d6];
+			}
 		}
 		else {
 			d3 = updown[d2-1]; /* Need d3, d4, and d5 because array argument needs to be an interger*/
@@ -177,6 +182,9 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 				v.gz[d2] = gz_inp[d3];
 				v.xref[d2] = xref_inp[d3];
 				v.zref[d2] = zref_inp[d3];
+				for(d6=0; d6<4; d6++){
+					v.aniso[d2][d6] = aniso_input[d3][d6];
+				}
 			}	
 			if(d4-d3<0){
 				v.v[d2] = v_inp[d4];
@@ -184,6 +192,9 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 				v.gz[d2] = gz_inp[d4];
 				v.xref[d2] = xref_inp[d4];
 				v.zref[d2] = zref_inp[d4];
+				for(d6=0; d6<4; d6++){
+					v.aniso[d2][d6] = aniso_input[d4][d6];
+				}
 			}
 		}
 		
@@ -318,7 +329,7 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 /*<Compute traveltime map>*/
 {
 	
-	int ix, iy, ic, iu, iv, num;
+	int ix, iy, ic, iv, num;
 	float x2, x1, xp=0.;
 	float *xinitial, **oldans;
 	bool skip;
@@ -376,7 +387,7 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 					}
 
 					
-					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,z, zder, zder2, oldans, skip, ta[ix][ic]);
+					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,v.aniso,z, zder, zder2, oldans, skip, ta[ix][ic]);
 				
 				} 
 			} 

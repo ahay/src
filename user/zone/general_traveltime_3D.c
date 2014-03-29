@@ -40,6 +40,18 @@ typedef struct threed {
 	float gy2;/* y-direction velocity gradient from below*/
 	float gz1;/* z-direction velocity gradient from above*/
 	float gz2;/* z-direction velocity gradient from below*/
+	float c111;/* c11 from above*/
+	float c112;/* c11 from below*/
+	float c331;/* c33 from above*/
+	float c332;/* c33 from below*/
+	float Q11; /* Q1 (horizontal anelliptic parameter) from above*/
+	float Q12; /* Q1 (horizontal anelliptic parameter) from below*/
+	float Q31; /* Q3 (vertical anelliptic parameter) from above*/
+	float Q32; /* Q3 (vertical anelliptic parameter) from below*/
+	float S11; /* S1 from above*/
+	float S12; /* S1 from below*/
+	float S31; /* S3 from above*/
+	float S32; /* S3 from below*/
 } threed;
 /* Structure pointer */
 /*^*/
@@ -107,6 +119,7 @@ void initialize(int i /* Indicator of layer*/,
 				float *gx /* x-gradient*/,
 				float *gy /* y-gradient*/,
 				float *gz /* z-gradient*/,
+				float **aniso /*anisotropic parameters*/,
 				func1 z /* z(x,y)*/,
 				func4 zder /* z'(x,y)*/,
 				func4 zder2_1 /* d2z/dx2 and d2z/dxdy*/,
@@ -129,10 +142,25 @@ void initialize(int i /* Indicator of layer*/,
 		y_1k.gy1 = gy[i-2];
 		y_1k.gz1 = gz[i-2];
 		y_1k.v1 = v[i-2]+y_1k.gx1*(y_1k.x-xref[i-2])+y_1k.gy1*(y_1k.y-yref[i-2])+y_1k.gz1*(y_1k.z-zref[i-2]);
+		/*Note that we don't need to compute v explicitly in the vti case (v is defined in terms of c11, c33, Q1, Q3)*/
+		y_1k.c111 = aniso[i-2][0];
+		y_1k.c331 = aniso[i-2][1];
+		y_1k.Q11 = aniso[i-2][2];
+		y_1k.Q31 = aniso[i-2][3];
+		y_1k.S11 = (y_1k.c111*(y_1k.c111-y_1k.c331)*pow((y_1k.Q11-1),2)*(y_1k.Q31-1))/(2*(y_1k.c331*y_1k.c331*(y_1k.Q31-1)*(y_1k.Q11-y_1k.Q31)+y_1k.c111*y_1k.c111*(y_1k.Q11-1)*(y_1k.Q11*y_1k.Q11*(y_1k.Q11-1)-y_1k.Q31+1) +y_1k.c111*y_1k.c331*(1-y_1k.Q31*(y_1k.Q11*pow((y_1k.Q11-1),2) -y_1k.Q31 +2)) ));
+		y_1k.S31 = (y_1k.c331*(y_1k.c331-y_1k.c111)*pow((y_1k.Q31-1),2)*(y_1k.Q11-1))/(2*(y_1k.c111*y_1k.c111*(y_1k.Q11-1)*(y_1k.Q31-y_1k.Q11)+y_1k.c331*y_1k.c331*(y_1k.Q31-1)*(y_1k.Q31*y_1k.Q31*(y_1k.Q31-1)-y_1k.Q11+1) +y_1k.c331*y_1k.c111*(1-y_1k.Q11*(y_1k.Q31*pow((y_1k.Q31-1),2) -y_1k.Q11 +2)) ));
+
 		y_1k.gx2 = gx[i-1];
 		y_1k.gy2 = gy[i-1];
 		y_1k.gz2 = gz[i-1];
 		y_1k.v2 = v[i-1]+y_1k.gx2*(y_1k.x-xref[i-1])+y_1k.gy2*(y_1k.y-yref[i-1])+y_1k.gz2*(y_1k.z-zref[i-1]);
+		y_1k.c112 = aniso[i-1][0];
+		y_1k.c332 = aniso[i-1][1];
+		y_1k.Q12 = aniso[i-1][2];
+		y_1k.Q32 = aniso[i-1][3];
+		y_1k.S12 = (y_1k.c112*(y_1k.c112-y_1k.c332)*pow((y_1k.Q12-1),2)*(y_1k.Q32-1))/(2*(y_1k.c332*y_1k.c332*(y_1k.Q32-1)*(y_1k.Q12-y_1k.Q32)+y_1k.c112*y_1k.c112*(y_1k.Q12-1)*(y_1k.Q12*y_1k.Q12*(y_1k.Q12-1)-y_1k.Q32+1) +y_1k.c112*y_1k.c332*(1-y_1k.Q32*(y_1k.Q12*pow((y_1k.Q12-1),2) -y_1k.Q32 +2)) ));
+		y_1k.S32 = (y_1k.c332*(y_1k.c332-y_1k.c112)*pow((y_1k.Q32-1),2)*(y_1k.Q12-1))/(2*(y_1k.c112*y_1k.c112*(y_1k.Q12-1)*(y_1k.Q32-y_1k.Q12)+y_1k.c332*y_1k.c332*(y_1k.Q32-1)*(y_1k.Q32*y_1k.Q32*(y_1k.Q32-1)-y_1k.Q12+1) +y_1k.c332*y_1k.c112*(1-y_1k.Q12*(y_1k.Q32*pow((y_1k.Q32-1),2) -y_1k.Q12 +2)) ));
+
 		
 	} else if (i==1) { /* For the air above at the first reflection*/
 		
@@ -143,6 +171,12 @@ void initialize(int i /* Indicator of layer*/,
 		y_1k.gx2 = gx[i-1];
 		y_1k.gy2 = gy[i-1];
 		y_1k.gz2 = gz[i-1];
+		y_1k.c112 = aniso[i-1][0];
+		y_1k.c332 = aniso[i-1][1];
+		y_1k.Q12 = aniso[i-1][2];
+		y_1k.Q32 = aniso[i-1][3];
+		y_1k.S12 = (y_1k.c112*(y_1k.c112-y_1k.c332)*pow((y_1k.Q12-1),2)*(y_1k.Q32-1))/(2*(y_1k.c332*y_1k.c332*(y_1k.Q32-1)*(y_1k.Q12-y_1k.Q32)+y_1k.c112*y_1k.c112*(y_1k.Q12-1)*(y_1k.Q12*y_1k.Q12*(y_1k.Q12-1)-y_1k.Q32+1) +y_1k.c112*y_1k.c332*(1-y_1k.Q32*(y_1k.Q12*pow((y_1k.Q12-1),2) -y_1k.Q32 +2)) ));
+		y_1k.S32 = (y_1k.c332*(y_1k.c332-y_1k.c112)*pow((y_1k.Q32-1),2)*(y_1k.Q12-1))/(2*(y_1k.c112*y_1k.c112*(y_1k.Q12-1)*(y_1k.Q32-y_1k.Q12)+y_1k.c332*y_1k.c332*(y_1k.Q32-1)*(y_1k.Q32*y_1k.Q32*(y_1k.Q32-1)-y_1k.Q12+1) +y_1k.c332*y_1k.c112*(1-y_1k.Q12*(y_1k.Q32*pow((y_1k.Q32-1),2) -y_1k.Q12 +2)) ));
 		y_1k.v2 = v[i-1]+y_1k.gx2*(y_1k.x-xref[i-1])+y_1k.gy2*(y_1k.y-yref[i-1])+y_1k.gz2*(y_1k.z-zref[i-1]);
 	}
 	
@@ -161,10 +195,35 @@ void initialize(int i /* Indicator of layer*/,
 	y_k.gy1 = gy[i-1];
 	y_k.gz1 = gz[i-1];
 	y_k.v1 = v[i-1]+y_k.gx1*(y_k.x-xref[i-1])+y_k.gy1*(y_k.y-yref[i-1])+y_k.gz1*(y_k.z-zref[i-1]); /*Of the layer from above*/
+	y_k.c111 = aniso[i-1][0];
+	y_k.c331 = aniso[i-1][1];
+	y_k.Q11 = aniso[i-1][2];
+	y_k.Q31 = aniso[i-1][3];
+	y_k.S11 = (y_k.c111*(y_k.c111-y_k.c331)*pow((y_k.Q11-1),2)*(y_k.Q31-1))/(2*(y_k.c331*y_k.c331*(y_k.Q31-1)*(y_k.Q11-y_k.Q31)+y_k.c111*y_k.c111*(y_k.Q11-1)*(y_k.Q11*y_k.Q11*(y_k.Q11-1)-y_k.Q31+1) +y_k.c111*y_k.c331*(1-y_k.Q31*(y_k.Q11*pow((y_k.Q11-1),2) -y_k.Q31 +2)) ));
+	y_k.S31 = (y_k.c331*(y_k.c331-y_k.c111)*pow((y_k.Q31-1),2)*(y_k.Q11-1))/(2*(y_k.c111*y_k.c111*(y_k.Q11-1)*(y_k.Q31-y_k.Q11)+y_k.c331*y_k.c331*(y_k.Q31-1)*(y_k.Q31*y_k.Q31*(y_k.Q31-1)-y_k.Q11+1) +y_k.c331*y_k.c111*(1-y_k.Q11*(y_k.Q31*pow((y_k.Q31-1),2) -y_k.Q11 +2)) ));
+
 	y_k.gx2 = gx[i];
 	y_k.gy2 = gy[i];
 	y_k.gz2 = gz[i];
 	y_k.v2 = v[i]+y_k.gx2*(y_k.x-xref[i])+y_k.gy2*(y_k.y-yref[i])+y_k.gz2*(y_k.z-zref[i]); /*Of the layer from below*/
+	y_k.c112 = aniso[i][0];
+	y_k.c332 = aniso[i][1];
+	y_k.Q12 = aniso[i][2];
+	y_k.Q32 = aniso[i][3];
+	y_k.S12 = (y_k.c112*(y_k.c112-y_k.c332)*pow((y_k.Q12-1),2)*(y_k.Q32-1))/(2*(y_k.c332*y_k.c332*(y_k.Q32-1)*(y_k.Q12-y_k.Q32)+y_k.c112*y_k.c112*(y_k.Q12-1)*(y_k.Q12*y_k.Q12*(y_k.Q12-1)-y_k.Q32+1) +y_k.c112*y_k.c332*(1-y_k.Q32*(y_k.Q12*pow((y_k.Q12-1),2) -y_k.Q32 +2)) ));
+	y_k.S32 = (y_k.c332*(y_k.c332-y_k.c112)*pow((y_k.Q32-1),2)*(y_k.Q12-1))/(2*(y_k.c112*y_k.c112*(y_k.Q12-1)*(y_k.Q32-y_k.Q12)+y_k.c332*y_k.c332*(y_k.Q32-1)*(y_k.Q32*y_k.Q32*(y_k.Q32-1)-y_k.Q12+1) +y_k.c332*y_k.c112*(1-y_k.Q12*(y_k.Q32*pow((y_k.Q32-1),2) -y_k.Q12 +2)) ));
+
+	/*Prevent negative value of S*/
+	if (y_k.S11<0 || y_k.S31<0) {
+		sf_warning("S becomes negative for layer %d. Please change the anisotropy parameters",i);
+		exit(0);
+	}
+	
+	if (y_k.S12<0 || y_k.S32<0) {
+		sf_warning("S becomes negative for layer %d. Please change the anisotropy parameters",i+1);
+		exit(0);
+	}
+
 	
 	/* y_k1 (y_k+1 th)----------------------------------------------------------------------------*/
 
@@ -183,17 +242,38 @@ void initialize(int i /* Indicator of layer*/,
 		y_k1.gy1 = gy[i];
 		y_k1.gz1 = gz[i];
 		y_k1.v1 = v[i]+y_k1.gx1*(y_k1.x-xref[i])+y_k1.gy1*(y_k1.y-yref[i])+y_k1.gz1*(y_k1.z-zref[i]);
+		y_k1.c111 = aniso[i][0];
+		y_k1.c331 = aniso[i][1];
+		y_k1.Q11 = aniso[i][2];
+		y_k1.Q31 = aniso[i][3];
+		y_k1.S11 = (y_k1.c111*(y_k1.c111-y_k1.c331)*pow((y_k1.Q11-1),2)*(y_k1.Q31-1))/(2*(y_k1.c331*y_k1.c331*(y_k1.Q31-1)*(y_k1.Q11-y_k1.Q31)+y_k1.c111*y_k1.c111*(y_k1.Q11-1)*(y_k1.Q11*y_k1.Q11*(y_k1.Q11-1)-y_k1.Q31+1) +y_k1.c111*y_k1.c331*(1-y_k1.Q31*(y_k1.Q11*pow((y_k1.Q11-1),2) -y_k1.Q31 +2)) ));
+		y_k1.S31 = (y_k1.c331*(y_k1.c331-y_k1.c111)*pow((y_k1.Q31-1),2)*(y_k1.Q11-1))/(2*(y_k1.c111*y_k1.c111*(y_k1.Q11-1)*(y_k1.Q31-y_k1.Q11)+y_k1.c331*y_k1.c331*(y_k1.Q31-1)*(y_k1.Q31*y_k1.Q31*(y_k1.Q31-1)-y_k1.Q11+1) +y_k1.c331*y_k1.c111*(1-y_k1.Q11*(y_k1.Q31*pow((y_k1.Q31-1),2) -y_k1.Q11 +2)) ));
+
 		y_k1.gx2 = gx[i+1];
 		y_k1.gy2 = gy[i+1];
 		y_k1.gz2 = gz[i+1];
 		y_k1.v2 = v[i+1]+y_k1.gx2*(y_k1.x-xref[i+1])+y_k1.gy2*(y_k1.y-yref[i+1])+y_k1.gz2*(y_k1.z-zref[i+1]);
+		y_k1.c112 = aniso[i+1][0];
+		y_k1.c332 = aniso[i+1][1];
+		y_k1.Q12 = aniso[i+1][2];
+		y_k1.Q32 = aniso[i+1][3];
+		y_k1.S12 = (y_k1.c112*(y_k1.c112-y_k1.c332)*pow((y_k1.Q12-1),2)*(y_k1.Q32-1))/(2*(y_k1.c332*y_k1.c332*(y_k1.Q32-1)*(y_k1.Q12-y_k1.Q32)+y_k1.c112*y_k1.c112*(y_k1.Q12-1)*(y_k1.Q12*y_k1.Q12*(y_k1.Q12-1)-y_k1.Q32+1) +y_k1.c112*y_k1.c332*(1-y_k1.Q32*(y_k1.Q12*pow((y_k1.Q12-1),2) -y_k1.Q32 +2)) ));
+		y_k1.S32 = (y_k1.c332*(y_k1.c332-y_k1.c112)*pow((y_k1.Q32-1),2)*(y_k1.Q12-1))/(2*(y_k1.c112*y_k1.c112*(y_k1.Q12-1)*(y_k1.Q32-y_k1.Q12)+y_k1.c332*y_k1.c332*(y_k1.Q32-1)*(y_k1.Q32*y_k1.Q32*(y_k1.Q32-1)-y_k1.Q12+1) +y_k1.c332*y_k1.c112*(1-y_k1.Q12*(y_k1.Q32*pow((y_k1.Q32-1),2) -y_k1.Q12 +2)) ));
+
 		
 	} else if (i==nr3) { /* For the air above at the last reflection*/
 		
 		y_k1.gx1 = gx[i];
 		y_k1.gy1 = gy[i];
 		y_k1.gz1 = gz[i];
-		y_k1.v1 = v[i]+y_k1.gx1*(y_k1.x-xref[i])+y_k1.gy1*(y_k1.y-yref[i])+y_k1.gz1*(y_k1.z-zref[i]);	
+		y_k1.v1 = v[i]+y_k1.gx1*(y_k1.x-xref[i])+y_k1.gy1*(y_k1.y-yref[i])+y_k1.gz1*(y_k1.z-zref[i]);
+		y_k1.c111 = aniso[i][0];
+		y_k1.c331 = aniso[i][1];
+		y_k1.Q11 = aniso[i][2];
+		y_k1.Q31 = aniso[i][3];
+		y_k1.S11 = (y_k1.c111*(y_k1.c111-y_k1.c331)*pow((y_k1.Q11-1),2)*(y_k1.Q31-1))/(2*(y_k1.c331*y_k1.c331*(y_k1.Q31-1)*(y_k1.Q11-y_k1.Q31)+y_k1.c111*y_k1.c111*(y_k1.Q11-1)*(y_k1.Q11*y_k1.Q11*(y_k1.Q11-1)-y_k1.Q31+1) +y_k1.c111*y_k1.c331*(1-y_k1.Q31*(y_k1.Q11*pow((y_k1.Q11-1),2) -y_k1.Q31 +2)) ));
+		y_k1.S31 = (y_k1.c331*(y_k1.c331-y_k1.c111)*pow((y_k1.Q31-1),2)*(y_k1.Q11-1))/(2*(y_k1.c111*y_k1.c111*(y_k1.Q11-1)*(y_k1.Q31-y_k1.Q11)+y_k1.c331*y_k1.c331*(y_k1.Q31-1)*(y_k1.Q31*y_k1.Q31*(y_k1.Q31-1)-y_k1.Q11+1) +y_k1.c331*y_k1.c111*(1-y_k1.Q11*(y_k1.Q31*pow((y_k1.Q31-1),2) -y_k1.Q11 +2)) ));
+
 		y_k1.gx2 = 0;
 		y_k1.gz2 = 0;
 		y_k1.v2 = 0;
@@ -212,6 +292,7 @@ void half_initialize(int i /*Indicator of layer*/,
 					 float *gx /*x-gradient*/,
 					 float *gy /*y-gradient*/,
 					 float *gz /*z-gradient*/,
+					 float **aniso /* anisotropic parameter*/,
 					 func1 z /*z(x,y)*/,
 					 func4 zder /*z'(x,y)*/,
 					 func4 zder2_1 /*d2z/dx2 and d2z/dxdy*/,
@@ -233,9 +314,16 @@ void half_initialize(int i /*Indicator of layer*/,
 	y_k.gz1 = 0;
 	y_k.v1 = 0;
 	y_k.gx2 = gx[i];
-		y_k.gy2 = gy[i];
+	y_k.gy2 = gy[i];
 	y_k.gz2 = gz[i];
 	y_k.v2 = v[i]+y_k.gx2*(y_k.x-xref[i])+y_k.gy2*(y_k.y-yref[i])+y_k.gz2*(y_k.z-zref[i]);
+	y_k.c112 = aniso[i][0];
+	y_k.c332 = aniso[i][1];
+	y_k.Q12 = aniso[i][2];
+	y_k.Q32 = aniso[i][3];
+	y_k.S12 = (y_k.c112*(y_k.c112-y_k.c332)*pow((y_k.Q12-1),2)*(y_k.Q32-1))/(2*(y_k.c332*y_k.c332*(y_k.Q32-1)*(y_k.Q12-y_k.Q32)+y_k.c112*y_k.c112*(y_k.Q12-1)*(y_k.Q12*y_k.Q12*(y_k.Q12-1)-y_k.Q32+1) +y_k.c112*y_k.c332*(1-y_k.Q32*(y_k.Q12*pow((y_k.Q12-1),2) -y_k.Q32 +2)) ));
+	y_k.S32 = (y_k.c332*(y_k.c332-y_k.c112)*pow((y_k.Q32-1),2)*(y_k.Q12-1))/(2*(y_k.c112*y_k.c112*(y_k.Q12-1)*(y_k.Q32-y_k.Q12)+y_k.c332*y_k.c332*(y_k.Q32-1)*(y_k.Q32*y_k.Q32*(y_k.Q32-1)-y_k.Q12+1) +y_k.c332*y_k.c112*(1-y_k.Q12*(y_k.Q32*pow((y_k.Q32-1),2) -y_k.Q12 +2)) ));
+
 	
 	/* y_k1 (y_k+1 th)-----------------------------------------------------------------------------*/
 	
@@ -251,6 +339,13 @@ void half_initialize(int i /*Indicator of layer*/,
 	y_k1.gy1 = gy[i];
 	y_k1.gz1 = gz[i];
 	y_k1.v1 = v[i]+y_k1.gx1*(y_k1.x-xref[i])+y_k1.gy1*(y_k1.y-yref[i])+y_k1.gz1*(y_k1.z-zref[i]);
+	y_k1.c111 = aniso[i][0];
+	y_k1.c331 = aniso[i][1];
+	y_k1.Q11 = aniso[i][2];
+	y_k1.Q31 = aniso[i][3];
+	y_k1.S11 = (y_k1.c111*(y_k1.c111-y_k1.c331)*pow((y_k1.Q11-1),2)*(y_k1.Q31-1))/(2*(y_k1.c331*y_k1.c331*(y_k1.Q31-1)*(y_k1.Q11-y_k1.Q31)+y_k1.c111*y_k1.c111*(y_k1.Q11-1)*(y_k1.Q11*y_k1.Q11*(y_k1.Q11-1)-y_k1.Q31+1) +y_k1.c111*y_k1.c331*(1-y_k1.Q31*(y_k1.Q11*pow((y_k1.Q11-1),2) -y_k1.Q31 +2)) ));
+	y_k1.S31 = (y_k1.c331*(y_k1.c331-y_k1.c111)*pow((y_k1.Q31-1),2)*(y_k1.Q11-1))/(2*(y_k1.c111*y_k1.c111*(y_k1.Q11-1)*(y_k1.Q31-y_k1.Q11)+y_k1.c331*y_k1.c331*(y_k1.Q31-1)*(y_k1.Q31*y_k1.Q31*(y_k1.Q31-1)-y_k1.Q11+1) +y_k1.c331*y_k1.c111*(1-y_k1.Q11*(y_k1.Q31*pow((y_k1.Q31-1),2) -y_k1.Q11 +2)) ));
+
 	y_k1.gx2 = 0;
 	y_k1.gy2 = 0;
 	y_k1.gz2 = 0;

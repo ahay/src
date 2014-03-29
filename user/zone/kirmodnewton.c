@@ -60,6 +60,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 			float *v /* Velocities at reference points */,
 			float *gx /* x-gradient at the reference points */,
 			float *gz /* z-gradeint at the reference points */,
+			float **aniso /*anisotropy parameters*/, 
 			func1 z /* z(k,x) */,
 			func1 zder /* z'(k,x) */,
 			func1 zder2 /* z''(k,x) */,
@@ -118,7 +119,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 
     /* Step 1: Calculate F(y) to see if it is sufficiently close to zero----------------------------------*/
 	
-    int i,j1,i3,i4,i6; /* Counter*/
+    int i,j1,i3,i4; /* Counter*/
     float Ftem=0;
 	
     xx[0] = xs;
@@ -128,12 +129,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	for (i3=0; i3<n; i3++) {
 	    xx[i3+1] = xinitial[i3]; /* Create an array of points of intersection from soure to receiver*/
 	}
-	/* To deal with zero-thickness layer (NEED VERIFICATION)*/
-	/*for(i6=0; i6<n; i6++){
-		if(z(i6+2,xx[i6+2])-z(i6+1,xx[i6+1])<0.0001){
-			xx[i6+1] = xx[i6+2];
-		}
-	}*/
     }
     else {
 	b3 = 0;
@@ -141,7 +136,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     }
     
     for (i=0; i<n; i++) {
-	initialize(i+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_1k, y_k and y_k1*/
+	initialize(i+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2); /*Initialize y_1k, y_k and y_k1*/
 	F[i+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
     }	
 	
@@ -166,7 +161,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	Ftem=0; /* Reset Ftem to zero*/
 		
 	for (i2=0; i2<n; i2++) { /* Recalculate F for new y (Repeat Step 1)*/
-	    initialize(i2+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+	    initialize(i2+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 	    F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 	    
 	    /*Zero thickness layer case*/
@@ -192,7 +187,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		
 	int l; /* Counter*/
 	for (l=0; l<n; l++) {
-	    initialize(l+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+	    initialize(l+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 	    if (l==0) {
 		ck_inv[1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
 		zk[1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) +T_hat_k_k(f.T_k_k,f.T_k_zk);
@@ -213,7 +208,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		
 	int m; /* Counter*/
 	for (m=n-1; m>=0; m--) { 
-	    initialize(m+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+	    initialize(m+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 	    if (m==n-1) {
 		dk[m+1] = ck_inv[m+1]*zk[m+1];
 	    }
@@ -367,7 +362,7 @@ mark: /* Mark point for goto*/
 	at=1; /* Initializa at*/
 		
 	for (c=0; c<n+1; c++) {
-	    half_initialize(c,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+	    half_initialize(c,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 	    tt = tt + T_hat_k(f.T_k);
 			
 	    if (c==0) {
@@ -394,7 +389,7 @@ mark: /* Mark point for goto*/
 	}
 		
 	for (c3=0; c3<n; c3++) {
-	    initialize(c3+1,n,xx,v,xref,zref,gx,gz,z,zder,zder2);
+	    initialize(c3+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 			
 	    if (c3==0) {
 		ck_in= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));

@@ -26,6 +26,7 @@
 #include "general_traveltime.h"
 #include "ml_traveltime_vconstant.h"
 #include "ml_traveltime_vgradient.h"
+#include "ml_traveltime_vti.h"
 #include "setvelocity.h"
 
 /* Reflector function----------------------------------------------------------------------------------*/
@@ -78,10 +79,10 @@ int main(int argc, char* argv[])
 {
 	int nr1,nr2, N, ir1,ir2, nt, nt2, order, niter, vstatus, count, q=0/* Counter for the bog loop*/;
 	float x, dt, t0, bmin, bmax, tt;
-	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *xxtem, *zk,*ck_inv; 
+	float **rr, **temp_rr, **rd, **ans, *xx, *xxnew, *xinitial, *updown, *v_inp, *gx_inp, *gz_inp, *xref_inp,*zref_inp ,*v, *gx, *gz, *xref, *zref, *F, *dk, *xxtem, *zk,*ck_inv, **aniso, **aniso_inp; 
 	double tol;
 	bool  debug;
-	sf_file refl, xrefl;
+	sf_file refl, xrefl, vti;
 	
 	sf_init(argc,argv); /* initialize - always call first */
 	
@@ -105,6 +106,8 @@ int main(int argc, char* argv[])
 	rr = sf_floatalloc2(nr1,nr2+2); /* Reflector values according to updown*/
 	rd = sf_floatalloc2(nr1,nr2+2); /* Slope values according to updown*/
 	ans = sf_floatalloc2(2,nr2+2); /* Final answer x- and z- coordinates*/
+	aniso_inp = sf_floatalloc2(4,N-1); /* VTI parameters of the model*/
+	aniso = sf_floatalloc2(4,nr2+2); /* VTI parameters of the model*/
 	
 	xx = sf_floatalloc(nr2+2); /* Positions of intersection points to be iteratively perturbed*/
 	xxnew = sf_floatalloc(nr2+2); /* Temporary array for xx*/
@@ -144,20 +147,25 @@ int main(int argc, char* argv[])
 	if (!sf_getfloats("layer",updown,nr2+1)) sf_error("Please enter the layer number array [nr2+1]");
 	/* Layer sequence*/
 	
-	if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
-	/* Assign velocity km/s*/
+	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v,1 for gradient v, and 2 for VTI)");
+	/* Velocity status (0 for constant v, 1 for gradient v, and 2 for VTI)*/
 	
-	if (!sf_getfloats("xgradient",gx_inp,N-1)) sf_error("Please enter the x-gradient array [N-1]");
-	/* Assign x-gradient*/
-	
-	if (!sf_getfloats("zgradient",gz_inp,N-1)) sf_error("Please enter the z-gradient array [N-1]");
-	/* Assign z-gradient */
-	
-	if (!sf_getfloats("xref",xref_inp,N-1)) sf_error("Please enter the x-reference points array [N-1]");
-	/* Assign x-reference point*/
-	
-	if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
-	/* Assign z-reference point*/
+	if (vstatus != 2){ /*Don't need all of these if  consider vti case*/
+		if (!sf_getfloats("velocity",v_inp,N-1)) sf_error("Please enter the velocity array [N-1]");
+		/* Assign velocity km/s*/
+		
+		if (!sf_getfloats("xgradient",gx_inp,N-1)) sf_error("Please enter the x-gradient array [N-1]");
+		/* Assign x-gradient*/
+		
+		if (!sf_getfloats("zgradient",gz_inp,N-1)) sf_error("Please enter the z-gradient array [N-1]");
+		/* Assign z-gradient */
+		
+		if (!sf_getfloats("xref",xref_inp,N-1)) sf_error("Please enter the x-reference points array [N-1]");
+		/* Assign x-reference point*/
+		
+		if (!sf_getfloats("zref",zref_inp,N-1)) sf_error("Please enter the z-reference points array [N-1]");
+		/* Assign z-reference point*/
+	}
 	
 	if (!sf_getfloat("min",&bmin)) bmin=xx[0];
 	/* The minimum boundary if not entered, set to xs*/
@@ -169,11 +177,8 @@ int main(int argc, char* argv[])
 	if (!sf_getint("niter",&niter)) sf_error("Please enter the number of iterations");
 	/* The number of iterations*/
 	
-	if (!sf_getint("vstatus",&vstatus)) sf_error("Please enter the status of velocity (0 for constant v and other int for gradient v)");
-	/* Velocity status (0 for constant v and other int for gradient v)*/
-	
 	if (!sf_getbool("debug",&debug)) debug=false;
-	/* Velocity status (0 for constant v and other int for gradient v)*/
+	/* Debug flag*/
 	
 	if (!sf_getdouble("tol",&tol)) tol=0.000001/v_inp[0];
 	/* Assign a default value for tolerance*/
@@ -205,9 +210,13 @@ int main(int argc, char* argv[])
 	/* Read input-----------------------------------------------------------------------------------------*/	
 	sf_floatread(temp_rr[0],nr1*N,refl);
 	
+	if (vstatus == 2){
+		vti = sf_input("aniso"); /* anisotropy*/
+		sf_floatread(aniso_inp[0],4*(N-1),vti);
+	}
 	/* Check the array, consecutive two inputs must not differ by more than 1-----------------------------*/
 	
-	int d1,d2,d3,d4,d5,p1,p3; /*counter*/
+	int d1,d2,d3,d4,d5,d6,p1,p3; /*counter*/
 	int p2; /*Temp value*/
 	float p4=0; /*Temp value*/
 	
@@ -220,20 +229,20 @@ int main(int argc, char* argv[])
 	}
 	
 	/* Check whether the gradient and vstatus match-------------------------------------------------------*/
-	
-	for (p3=0; p3<N-1; p3++) {
-		p4 = p4 + gx_inp[p3]+gz_inp[p3];
-		
-		if (p3==N-2 && p4/(2*N-2)!=0 && vstatus==0) {
-			sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
-			exit(0);
-		}
-		if (p3==N-2 && p4/(2*N-2)==0 && vstatus!=0) {
-			sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
-			exit(0);
+	if (vstatus ==0 || vstatus ==1){ /*Skip this loop for vti*/
+		for (p3=0; p3<N-1; p3++) {
+			p4 = p4 + gx_inp[p3]+gz_inp[p3];
+			
+			if (p3==N-2 && p4/(2*N-2)!=0 && vstatus==0) {
+				sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
+				exit(0);
+			}
+			if (p3==N-2 && p4/(2*N-2)==0 && vstatus!=0) {
+				sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
+				exit(0);
+			}
 		}
 	}
-	
 	
 	/* Generate input according to the reflection sequence-----------------------------------------------*/
 	for (d2=0; d2<nr2+2; d2++) {
@@ -245,6 +254,9 @@ int main(int argc, char* argv[])
 				gz[d2] = gz_inp[0];
 				xref[d2] = xref_inp[0];
 				zref[d2] = zref_inp[0];
+				for(d6=0; d6<4; d6++){
+					aniso[d2][d6] = aniso_inp[0][d6];
+				}
 			}
 			else {
 				d3 = updown[d2-1]; /* Need d3, d4, and d5 because array argument needs to be an interger*/
@@ -256,6 +268,9 @@ int main(int argc, char* argv[])
 					gz[d2] = gz_inp[d3];
 					xref[d2] = xref_inp[d3];
 					zref[d2] = zref_inp[d3];
+					for(d6=0; d6<4; d6++){
+						aniso[d2][d6] = aniso_inp[d3][d6];
+					}
 				}	
 				if(d4-d3<0){
 					v[d2] = v_inp[d4];
@@ -263,6 +278,9 @@ int main(int argc, char* argv[])
 					gz[d2] = gz_inp[d4];
 					xref[d2] = xref_inp[d4];
 					zref[d2] = zref_inp[d4];
+					for(d6=0; d6<4; d6++){
+						aniso[d2][d6] = aniso_inp[d4][d6];
+					}
 				}
 			}
 		
@@ -325,10 +343,27 @@ int main(int argc, char* argv[])
 		goto mark; /* If there is no reflection*/
 	}
 	
+	int ithick;
+	float *thick, *sumthick; 
+	
 	if (!sf_getfloats("xinitial",xinitial,nr2)) {
+		thick = sf_floatalloc(nr2+1); /*Avg thickness of each layer for xintial*/
+		sumthick = sf_floatalloc(nr2+1); /*Avg thickness of each layer for xintial*/
+		for(ithick = 0; ithick < nr2+1; ithick++){ /*To calculate the average thickness of each layer measured from both ends for xinitial*/
+			thick[ithick] = ((rr[ithick+1][0] - rr[ithick][0]) + (rr[ithick+1][nr1-1] - rr[ithick][nr1-1]))/2;
+			if (ithick==0){
+				sumthick[ithick] = fabsf(thick[ithick]);
+			}
+			else {
+				sumthick[ithick] = sumthick[ithick-1] + fabs(thick[ithick]) ;
+			}
+		}
 		for (count=0; count<nr2; count++) {
-			xinitial[count] = xx[0]+(count+1)*(xx[nr2+1]-xx[0])/(nr2+1); /* Divide the distance from s to r equally and set the initial points accordingly*/
-		}	
+			xinitial[count] = xx[0]+(xx[nr2+1]-xx[0])*sumthick[count]/(sumthick[nr2]);			
+		}
+		/*for (count=0; count<nr2; count++) {
+			xinitial[count] = xx[0]+(count+1)*(xx[nr2+1]-xx[0])/(nr2+1); Divide the distance from s to r equally and set the initial points accordingly
+		} */	
 	}
 	/* Initial position*/
 	
@@ -343,7 +378,7 @@ int main(int argc, char* argv[])
 	}
 	
 	for (i=0; i<nr2; i++) {
-		initialize(i+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2); /*Initialize y_1k, y_k and y_k1*/
+		initialize(i+1,nr2,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2); /*Initialize y_1k, y_k and y_k1*/
 		F[i+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 	}	
 	
@@ -365,7 +400,7 @@ int main(int argc, char* argv[])
 		Ftem=0; /* Reset Ftem to zero*/
 		
 		for (i2=0; i2<nr2; i2++) { /* Recalculate F for new y (Repeat Step 1)*/
-			initialize(i2+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			initialize(i2+1,nr2,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 			F[i2+1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) + T_hat_k_k(f.T_k_k,f.T_k_zk);
 			
 			/*Zero thickness layer case*/
@@ -389,7 +424,7 @@ int main(int argc, char* argv[])
 		
 		int l; /* Counter*/
 		for (l=0; l<nr2; l++) {
-			initialize(l+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			initialize(l+1,nr2,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 			if (l==0) {
 				ck_inv[1]= 1/(T_hat_1k_k_k(f.T_k_k1_k1,f.T_k_k1_zk1,f.T_k_zk1,f.T_k_zk1_zk1) + T_hat_k_k_k(f.T_k_k_k,f.T_k_k_zk,f.T_k_zk,f.T_k_zk_zk));
 				zk[1] = T_hat_1k_k(f.T_k_k1,f.T_k_zk1) +T_hat_k_k(f.T_k_k,f.T_k_zk);
@@ -409,7 +444,7 @@ int main(int argc, char* argv[])
 		
 		int m; /* Counter*/
 		for (m=nr2-1; m>=0; m--) { 
-			initialize(m+1,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
+			initialize(m+1,nr2,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 			if (m==nr2-1) {
 				dk[m+1] = ck_inv[m+1]*zk[m+1];
 			}
@@ -535,7 +570,7 @@ mark: /* Mark point for goto*/
 	tt=0; /* Initialize traveltime tt*/
 	
 	for (c=0; c<nr2+1; c++) {
-		half_initialize(c,nr2,xx,v,xref,zref,gx,gz,z,zder,zder2);
+		half_initialize(c,nr2,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 		tt = tt + T_hat_k(f.T_k);
 		if (c==nr2) {
 			sf_warning("Traveltime is %g and the total number of iterations is %d\n",tt,q);
