@@ -708,7 +708,7 @@ int main(int argc, char* argv[])
     float *rr;
     int rectz,rectx,repeat; /*smoothing parameters*/
     float trunc;
-    int sht0,shtbgn,shtend,shtnum,shtnum0,shtint,shtcur;
+    int sht0,shtbgn,shtend,shtnum,shtint;
 
     /*abc boundary*/
     int top,bot,lft,rht;
@@ -744,7 +744,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("shtend", &shtend)) sf_error("Need shot ending location on grid!");
     if (!sf_getint("shtint", &shtint)) sf_error("Need shot interval on grid!");
     shtnum = (int)((shtend-shtbgn)/shtint) + 1;
-    shtnum0 = shtnum;
     if (!sf_getint("spz", &spz)) sf_error("Need source depth!");
     if (!sf_getint("gpz", &gpz)) sf_error("Need receiver depth!");
     if (roll) if (!sf_getint("gpl", &gpl)) sf_error("Need receiver length");
@@ -818,7 +817,7 @@ int main(int argc, char* argv[])
 	sf_histint(Frcd,"n2", &tmpint);
 	if (tmpint != gpl ) sf_error("Error parameter n2 in record!");
 	sf_histint(Frcd,"n3", &tmpint);
-	if (tmpint != shtnum0 ) sf_error("Error parameter n3 in record!");
+	if (tmpint != shtnum ) sf_error("Error parameter n3 in record!");
     }
 
     /*allocate memory*/
@@ -831,13 +830,7 @@ int main(int argc, char* argv[])
     geop = (geopar) sf_alloc(1, sizeof(*geop));
     mpip = (mpipar) sf_alloc(1, sizeof(*mpip));
     tmprec = sf_complexalloc2(nt, gpl);
-    if (shtnum%nodes!=0) {
-      shtnum += nodes-shtnum%nodes;
-      if (verb) sf_warning("Total shot number is not divisible by total number of nodes! shunum padded to %d.", shtnum);
-    }
-    if (rank==0) {
-      record = sf_complexalloc3(nt, gpl, shtnum);
-    } else record = NULL;
+    record = sf_complexalloc3(nt, gpl, shtnum);
     wavefld = sf_complexalloc3(nz, nx, wfnt);
     if (illum) sill = sf_floatalloc2(nz, nx);
     else sill = NULL;
@@ -858,29 +851,18 @@ int main(int argc, char* argv[])
     sf_complexread(ltb[0],nzx*m2b,leftb);
     sf_complexread(rtb[0],m2b*nk,rightb);
     if(!adj) sf_complexread(img[0],nx*nz,Fimg);
-    if (rank==0) {
-      if(adj && wantrecord) {
-	sf_complexread(record[0][0], shtnum0*gpl*nt, Frcd);
-	if (shtnum0%nodes!=0) {
+    if(adj && wantrecord) {
+      sf_complexread(record[0][0], shtnum*gpl*nt, Frcd);
+    } else {
 #ifdef _OPENMP
 #pragma omp parallel for private(is,ix,it)
 #endif
-	  for (is=shtnum0; is<shtnum; is++)
-	    for (ix=0; ix<gpl; ix++)
-	      for (it=0; it<nt; it++)
-		record[is][ix][it] = sf_cmplx(0.,0.);
-	}
-      } else {
-#ifdef _OPENMP
-#pragma omp parallel for private(is,ix,it)
-#endif
-	for (is=0; is<shtnum; is++)
-	  for (ix=0; ix<gpl; ix++)
-	    for (it=0; it<nt; it++)
-	      record[is][ix][it] = sf_cmplx(0.,0.);
-      }
+      for (is=0; is<shtnum; is++)
+	for (ix=0; ix<gpl; ix++)
+	  for (it=0; it<nt; it++)
+	    record[is][ix][it] = sf_cmplx(0.,0.);
     }
-    
+
     /*close RSF files*/
     sf_fileclose(Fsrc);
     sf_fileclose(left);
@@ -919,7 +901,7 @@ int main(int argc, char* argv[])
       sf_setn(ax, gpl);
       sf_setn(az, nz);
       as = sf_iaxa(Fvel, 2);
-      sf_setn(as,shtnum0);
+      sf_setn(as,shtnum);
       sf_setd(as,shtint*dx);
       sf_seto(as,shtbgn*dx+ox);
       
@@ -957,71 +939,65 @@ int main(int argc, char* argv[])
     
     tstart = clock();
 
-    for (is=0; is*nodes<shtnum; is++){
-
-      shtcur = is*nodes+rank; // current shot index
-
-      if (shtcur<shtnum0) {
-	spx = shtbgn + shtint*(shtcur);
-	if (roll)
+    for (is=rank; is<shtnum; is+=nodes){
+      spx = shtbgn + shtint*is;
+      if (roll)
 	  gpx = spx - (int)(gpl/2);
-	else
+      else
 	  gpx = 0;
-	geop->spx = spx;
-	geop->gpx = gpx;
-	
-	if (verb) {
-	  sf_warning("============================");
-	  sf_warning("processing shot #%d", shtcur);
-	  sf_warning("nx=%d nz=%d nt=%d", geop->nx, geop->nz, geop->nt);
-	  sf_warning("nxb=%d nzb=%d ", geop->nxb, geop->nzb);
-	  sf_warning("dx=%f dz=%f dt=%f", geop->dx, geop->dz, geop->dt);
-	  sf_warning("top=%d bot=%d lft=%d rht=%d", geop->top, geop->bot, geop->lft, geop->rht);
-	  sf_warning("rectz=%d rectx=%d repeat=%d srctrunc=%f",rectz,rectx,repeat,geop->trunc);
-	  sf_warning("spz=%d spx=%d gpz=%d gpx=%d gpl=%d", spz, spx, gpz, gpx, gpl);
-	  sf_warning("snpint=%d wfdt=%f wfnt=%d ", snpint, wfdt, wfnt);
-	  sf_warning("sht0=%d shtbgn=%d shtend=%d shtnum0=%d shtnum=%d", sht0, shtbgn, shtend, shtnum0, shtnum);
-	  if (roll) sf_warning("Rolling survey!");
-	  else sf_warning("Global survey (gpl=nx)!");
-	  if (illum) sf_warning("Using source illumination!");
-	  else sf_warning("No source illumination!");
-	  sf_warning("============================");
-	}
-	
-	/*generate reflectivity map*/
-	reflgen(nzb, nxb, spz+top, spx+lft, rectz, rectx, repeat, rr);
-	
-	lrosfor2(wavefld, sill, tmprec, verb, lt, rt, m2, geop, ww, rr, pad1, illum);
-      }
-
-      if(adj && wantrecord) {
-	if (rank==0) sendbuf = record[is*nodes][0];
-	else sendbuf = NULL;
-	recvbuf = tmprec[0];
-	MPI_Scatter(sendbuf, gpl*nt, MPI_COMPLEX, recvbuf, gpl*nt, MPI_COMPLEX, 0, MPI_COMM_WORLD); // tmprec[ix][it] = record[is][ix][it];
+      geop->spx = spx;
+      geop->gpx = gpx;
+      
+      if (verb) {
+	sf_warning("============================");
+	sf_warning("processing shot #%d", is);
+	sf_warning("nx=%d nz=%d nt=%d", geop->nx, geop->nz, geop->nt);
+	sf_warning("nxb=%d nzb=%d ", geop->nxb, geop->nzb);
+	sf_warning("dx=%f dz=%f dt=%f", geop->dx, geop->dz, geop->dt);
+	sf_warning("top=%d bot=%d lft=%d rht=%d", geop->top, geop->bot, geop->lft, geop->rht);
+	sf_warning("rectz=%d rectx=%d repeat=%d srctrunc=%f",rectz,rectx,repeat,geop->trunc);
+	sf_warning("spz=%d spx=%d gpz=%d gpx=%d gpl=%d", spz, spx, gpz, gpx, gpl);
+	sf_warning("snpint=%d wfdt=%f wfnt=%d ", snpint, wfdt, wfnt);
+	sf_warning("sht0=%d shtbgn=%d shtend=%d shtnum=%d", sht0, shtbgn, shtend, shtnum);
+	if (roll) sf_warning("Rolling survey!");
+	else sf_warning("Global survey (gpl=nx)!");
+	if (illum) sf_warning("Using source illumination!");
+	else sf_warning("No source illumination!");
+	sf_warning("============================");
       }
       
-      if (shtcur<shtnum0) {
-	lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, pad1, illum);
-      }
+      /*generate reflectivity map*/
+      reflgen(nzb, nxb, spz+top, spx+lft, rectz, rectx, repeat, rr);
 
-      if (adj)
+      lrosfor2(wavefld, sill, tmprec, verb, lt, rt, m2, geop, ww, rr, pad1, illum);
+
+      if(adj && wantrecord)
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,it)
+#endif
+	for (ix=0; ix<gpl; ix++)
+	  for (it=0; it<nt; it++)
+	    tmprec[ix][it] = record[is][ix][it];
+
+      lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, pad1, illum);
+
+    if (adj)
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    imgsum[ix][iz] += img[ix][iz];
-      
-      if (!adj || !wantrecord) {
-	//	MPI_Barrier(MPI_COMM_WORLD);
-	if (rank==0) recvbuf = record[is*nodes][0];
-	else recvbuf = NULL;
-	sendbuf = tmprec[0];
-	MPI_Gather(sendbuf, gpl*nt, MPI_COMPLEX, recvbuf, gpl*nt, MPI_COMPLEX, 0, MPI_COMM_WORLD); // record[is][ix][it] = tmprec[ix][it];
-      }
-
-      if (wantwf && shtcur==0)
+      for (ix=0; ix<nx; ix++)
+	for (iz=0; iz<nz; iz++)
+	  imgsum[ix][iz] += img[ix][iz];
+    
+    if (!adj || !wantrecord)
+#ifdef _OPENMP
+#pragma omp parallel for private(ix,it)
+#endif
+      for (ix=0; ix<gpl; ix++)
+	for (it=0; it<nt; it++)
+	  record[is][ix][it] = tmprec[ix][it];
+    
+      if (wantwf && is==0)
 	sf_complexwrite(wavefld[0][0], wfnt*nx*nz, Ftmpwf);
     } /*shot iteration*/
 
@@ -1041,8 +1017,16 @@ int main(int argc, char* argv[])
     }
 
     if (!adj || !wantrecord) {
+      if (rank==0) {
+	sendbuf = (sf_complex *) MPI_IN_PLACE;
+	recvbuf = record[0][0];
+      } else {
+	sendbuf = record[0][0];
+	recvbuf = NULL;
+      }
+      MPI_Reduce(sendbuf, recvbuf, shtnum*gpl*nt, MPI_COMPLEX, MPI_SUM, 0, MPI_COMM_WORLD); 
       if (rank==0)
-	sf_complexwrite(record[0][0], shtnum0*gpl*nt, Frcd);
+	sf_complexwrite(record[0][0], shtnum*gpl*nt, Frcd);
     }
 
     /*free memory*/
@@ -1053,7 +1037,7 @@ int main(int argc, char* argv[])
     free(*rtb);free(rtb);
     free(geop);free(mpip);
     free(*tmprec); free(tmprec);
-    if (rank==0) {free(**record); free(*record); free(record);}
+    free(**record); free(*record); free(record);
     free(**wavefld); free(*wavefld); free(wavefld);
     if (illum) {
       free(*sill); free(sill);
