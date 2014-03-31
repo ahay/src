@@ -312,7 +312,7 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     /* END OF MAIN LOOP--------------------------------------------------------------------------------*/	
 	
     /* Write Compute traveltime-----------------------------------------------------*/
-    float ck_in, ck_in_temp;
+    float ck_in, ck_in_temp,S1,S3;
     int c1,c2,c3,c4,c5;
     int c; /* Counter*/
 	
@@ -373,9 +373,23 @@ mark: /* Mark point for goto*/
 			
 			
 	    if (c==n) {
-				
-		v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
-		v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
+		
+		if(vstatus != 2){
+			v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
+			v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
+		}
+		else { /*anisotropy case*/
+			S1 = (aniso[c][0]*(aniso[c][0]-aniso[c][1])*pow((aniso[c][2]-1),2)*(aniso[c][3]-1))/(2*(aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][2]-aniso[c][3])+aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][2]*aniso[c][2]*(aniso[c][2]-1)-aniso[c][3]+1) +aniso[c][0]*aniso[c][1]*(1-aniso[c][3]*(aniso[c][2]*pow((aniso[c][2]-1),2) -aniso[c][3] +2)) ));
+			S3 = (aniso[c][1]*(aniso[c][1]-aniso[c][0])*pow((aniso[c][3]-1),2)*(aniso[c][2]-1))/(2*(aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][3]-aniso[c][2])+aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][3]*aniso[c][3]*(aniso[c][3]-1)-aniso[c][2]+1) +aniso[c][1]*aniso[c][0]*(1-aniso[c][2]*(aniso[c][3]*pow((aniso[c][3]-1),2) -aniso[c][2] +2)) ));
+			v_r = 	1/sqrt(((pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1])*(1 - 
+          			(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)) + 
+     				((S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*sqrt(pow(pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1],2)/
+           			pow(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2),2) + 
+          			(2*pow(-xx[c] + xx[c+1],2)*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)*(-1 + (aniso[c][2]*pow(-xx[c] + xx[c+1],2) + aniso[c][3]*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/
+           			(aniso[c][0]*aniso[c][1]*(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)))))/
+      				(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)));
+			v_1r = v_r;
+		}
 		tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
 		ty = 0; /* For 3D or 2.5D & at the reflector*/
 		tz_r = T_hat_k(f.T_k_zk1); /* z-direction  need to return T_k_zk >> use T_hat_k which return the function itself & at the reflector*/

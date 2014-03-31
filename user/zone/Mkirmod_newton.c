@@ -326,7 +326,7 @@ int main(int argc, char* argv[])
 	}
 	else {
 		vti = sf_input("aniso"); /* anisotropy*/
-		sf_floatread(vn.aniso[0],4*(nc-1),vti);
+		sf_floatread(vn.aniso[0],4*(nc),vti);
 	}
 	
 	if (!sf_getint("niter",&niter)) niter=500;
@@ -456,7 +456,7 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	
     if (newton) {
 	/* Initialize parameters for newton*/
-	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz,vn.aniso);
+	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz, vn.aniso);
 		
 	/*** Compute traveltime table ***/
 	kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);
