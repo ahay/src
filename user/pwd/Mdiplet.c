@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     int n1, n2, i3, n3, n12, ip, np, n12p, ncycle, niter, order;
     bool inv, verb, decomp, twhole;
     char *type;
-    float *pp, *qq, ***dd, eps, perc, scale;
-    sf_file in, out, dip;
+    float *pp, *qq, ***dd, ***mm, eps, perc, scale;
+    sf_file in, out, dip, mask;
 
     sf_init(argc,argv);
 
@@ -74,6 +74,14 @@ int main(int argc, char *argv[])
     if (!sf_getfloat("perc",&perc)) perc=50.0;
     /* percentage for sharpening */
 
+    if (NULL != sf_getstring("mask")) { /* (optional) data mask file */
+	mask = sf_input("mask");
+	mm = sf_floatalloc3(n1,n2,np);
+    } else {
+	mask = NULL;
+	mm = NULL;
+    }
+
     if (inv) {
 	n3 = sf_leftsize(in,3);
 	if (!decomp) sf_unshiftdim(in, out, 3);
@@ -89,10 +97,11 @@ int main(int argc, char *argv[])
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type (haar,linear,biorthogonal), default is linear */
     
-    diplet_init(n1,n2,decomp? 1: np, dd,true,eps,order,type[0]);
+    diplet_init(n1,n2,decomp? 1: np, dd,mm,true,eps,order,type[0]);
  
     for (i3=0; i3 < n3; i3++) {
-	sf_floatread(dd[0][0],n12p,dip);	
+	sf_floatread(dd[0][0],n12p,dip);
+	if (NULL != mask) sf_floatread(mm[0][0],n12p,mask);
 	
 	if (inv) {
 	    sf_floatread(qq,n12p,in);
