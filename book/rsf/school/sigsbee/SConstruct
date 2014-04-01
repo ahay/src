@@ -127,7 +127,7 @@ fdmod.awefd1('tmpA',  # data file (all receivers)
              'dens',  # density
              'ss',    # source coordinates
              'rA',    # receiver coordinates
-             'free=n cden=y',# optional flags
+             'fsrf=n cden=y',# optional flags
              par)
 
 # ------------------------------------------------------------
@@ -191,7 +191,7 @@ for j in ('H','V','A'):
               'vsmo',   # velocity
               'dens',   # density
               'r'+j,    # receiver coordinates
-              'free=n', # optional flags
+              'fsrf=n cden=y', # optional flags
               par)
     
     # plot image
