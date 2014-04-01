@@ -1,4 +1,4 @@
-        integer offset, xpix, ypix, bit, blast
+        integer offset, xpix, ypix, blast
 	real    xll, yll, xur, yur, ppi
 	character *1 array(25,25)
 	integer  ii, jj
@@ -6,7 +6,6 @@
 	offset = 0
 	xpix = 25
 	ypix = 25
-	bit = 0
 	xll = 0.
 	yll = 0.
 	xur = 10.
@@ -33,7 +32,8 @@
 	array(12, ii) = char(2)
 400	continue
 
-	call vp_raster (array, bit, offset, xpix, ypix, xll, yll, xur, yur, 1)
+	call vp_raster (array, .false., offset, xpix, ypix, 
+     c       xll, yll, xur, yur, 1)
 
         stop
 	end
