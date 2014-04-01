@@ -127,7 +127,7 @@ fdmod.awefd1('tmpA',  # data file (all receivers)
              'dens',  # density
              'ss',    # source coordinates
              'rA',    # receiver coordinates
-             'free=n',# optional flags
+             'free=n cden=y',# optional flags
              par)
 
 # ------------------------------------------------------------
@@ -137,12 +137,12 @@ for i in range(par['nfrm']):
     # plot wavefield frames
     fdmod.wframe('wfld'+tag,
                  'wfld',i,'pclip=99',par)
-    Plot(    'wovl'+tag,['wfld'+tag,'ss','rH','rV'],
-             'Overlay')
-    Result(  'wfld'+tag,['wfld'+tag,'ss','rH','rV'],
-             'Overlay')
+    Plot(  'wovl'+tag,['wfld'+tag,'ss','rH','rV'],
+           'Overlay')
+    Result('wfld'+tag,['wfld'+tag,'ss','rH','rV'],
+           'Overlay')
 Result('wfld',
-       map(lambda x:'wovl-%02d'%x,range(par['nfrm'])),
+       ['wovl-%02d'%i for i in range(par['nfrm'])],
        'Movie')
     
 # ------------------------------------------------------------
