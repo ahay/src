@@ -45,7 +45,8 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	    float hypk = hypot(ksz[ikz],ksx[ikx]);
 	    float gamma = atanf(1./qs[rs[a]])/SF_PI;
 	    float c0 = vs[rs[a]];
-	    float c = absf(c0*cosf(SF_PI*gamma/2.));
+	    float c = c0*cosf(SF_PI*gamma/2.);
+	    if (c<=0) sf_error("c negative!");
 	    cpx phf;
 	    if (mode == 0) { /*viscoacoustic*/
 		float eta = -powf(c0,2.*gamma)*powf(w0,-2.*gamma)*cosf(SF_PI*gamma);
