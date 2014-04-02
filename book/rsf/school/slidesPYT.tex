@@ -1,7 +1,8 @@
 \input{pcsmacros}
+\input{pcscolset}
 \pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
 
-\title[]{\mg \\ reproducibility with scons}
+\title[]{\mg \\ reproducible experiments}
 \author[]{Paul Sava}
 \institute{
   Center for Wave Phenomena \\
@@ -13,27 +14,18 @@
 \large
 
 % ------------------------------------------------------------
-\lstset{
-  language=Python,
-  backgroundcolor=\color{LightGray},
-  frame=single,
-  basicstyle=\small,        
-  showspaces=false,
-  showstringspaces=false,
-  % 
-  morekeywords=[2]{Flow,Plot,Result,Fetch,rsf,proj},
-  keywordstyle=[2]{\color{blue}\bf},
-  morekeywords=[3]{fdmod,param,cgrey,egrey,boxarray,horizontal,vertical,ssplot,rrplot,wavelet,waveplot,awefd1,wframe,dgrey,dwigl,egrey,ewigl,zom},
-  keywordstyle=[3]{\color{red}\bf}
+\def\mydemo#1#2{
+  \begin{block}{}
+    \lstinputlisting[firstline=#1,lastline=#2]
+    {pyDemo/SConstruct}
+  \end{block}
 }
-
 \def\mycode#1#2{
   \begin{block}{}
     \lstinputlisting[firstline=#1,lastline=#2]
     {gauss/SConstruct}
   \end{block}
 }
-
 % ------------------------------------------------------------
 \mode<beamer> { \cwpcover }
 
@@ -45,58 +37,137 @@
 
 
 % ------------------------------------------------------------
-\begin{frame} 
-  \big{scons}
+\begin{frame} \frametitle{scons}
+  \begin{itemize}
+  \item build system (\alert{s}oftware \alert{cons}truction)
+  \item written in \alert{python}
+  \item configuration files are Python scripts
+  \item provides dependency analysis
+  \item allows parallel builds
+  \item works cross-platform
+  \end{itemize}
 \end{frame}
 \cwpnote{}
 
-
-% ------------------------------------------------------------
-% ------------------------------------------------------------
-% ------------------------------------------------------------
-% ------------------------------------------------------------
-
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{Flow}
-
-  \big{\texttt{Flow(output,input,command)}}
-
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{Plot}
-
-  \big{\texttt{Plot(vplfile,rsffile,command)}}
-
-\cen{output in local directory}
+\begin{frame} \frametitle{python}
+  \begin{itemize}
+  \item dynamic programming language
+  \item clear, readable syntax
+  \item provides full modularity
+  \item integrates with other languages
+  \item free and open-source
+  \end{itemize}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame} \frametitle{Result}
+\begin{frame} \frametitle{python primer}
 
-  \big{\texttt{Result(vplfile,rsffile,command)}}
+\begin{itemize}
+   \item strings
+   \item lists
+   \item tuples
+   \item dictionaries
+   \item loops
+   \item conditionals
+   \item functions 
+   \item modules
+\end{itemize}
 
-\cen{output in \texttt{Fig} directory}
 \end{frame}
 \cwpnote{}
 
 % ------------------------------------------------------------
-\begin{frame}
+\begin{frame} \frametitle{python primer: strings}
+  \mydemo{4}{14}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: lists}
+  \mydemo{19}{25}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: tuples}
+  \mydemo{29}{32}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: dictionaries}
+  \mydemo{37}{43}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: loops}
+  \mydemo{48}{58}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: conditionals}
+  \mydemo{64}{73}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: functions}
+  \mydemo{78}{84}
+\end{frame}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{python primer: modules}
+  \mydemo{87}{88}
+  \mydemo{92}{94}
+\end{frame}
+
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Fetch(rsfFile,dirName)}}
+  \cen{download files from a server}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Flow(outFile,inFile,command)}}
+  \cen{make output from input using the command}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Plot(vplFile,rsfFile,command)}}
+  \cen{make plot in local directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg functions}
+  \big{\texttt{Result(vplFile,rsfFile,command)}}
+  \cen{make plot in \texttt{Fig} directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{\mg commands}
 
   \big{\texttt{scons}}
   \vfill
   \big{\texttt{scons blah.view}}
-  \vfill
   \big{\texttt{scons view}}
   \vfill
   \big{\texttt{scons blah.lock}}
-  \vfill
   \big{\texttt{scons lock}}
   \vfill
   \big{\texttt{scons -c}}
+  \vfill
+  \big{\texttt{scons -n}}
 
 \end{frame}
 \cwpnote{}
