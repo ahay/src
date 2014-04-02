@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     bool inv, shot;
     map4 *map;
     int iw, nw, ih, nh, ik, nk, ib, nb, *fold;
-    float dw, dh, dk, w0, h0, k0, w, h, k, eps, db, b, cosb;
+    float dw, dh, dk, w0, h0, k0, w, h, k, eps, db, b, sinb, cosb, xi;
     sf_complex *slice, *slice2, *sum, sample, tshift, xshift; 
     float *hstr, *dt, *dx, *ds;
     sf_file in, out;
@@ -77,6 +77,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("db",&db)) db=1;   /* angle increment */
     db *= SF_PI/180;
 
+    if (!sf_getfloat("xi",&xi)) xi=1;   /* continuation paremeter */
+
     map = (map4*) sf_alloc(nb,sizeof(map4));
     dt = sf_floatalloc(nb);
     dx = sf_floatalloc(nb);
@@ -85,7 +87,8 @@ int main(int argc, char* argv[])
     /* precompute things */
     for (ib=0; ib < nb; ib++) {
 	b = (ib+1)*db;
-	cosb = cosf(b);
+	sinb = sinf(b);
+	cosb = sqrtf(1.0f-xi*sinb*sinb);
 
 	dt[ib] = logf(cosb);
 
@@ -100,9 +103,9 @@ int main(int argc, char* argv[])
 	}
 
 	if (inv) {
-	    dx[ib]=sinf(b);
+	    dx[ib]=xi*sinb;
 	} else {
-	    dx[ib]=tanf(b);
+	    dx[ib]=xi*sinb/cosb;
 	}
 
 	if (shot) {
