@@ -845,8 +845,7 @@ s2.rsf:
   \frametitle{create a velocity model}
   
   \mex{
-    $<$ gg.rsf {\bf sfscale} rscale=-1. $|$ 
-    {\bf sfadd} add=3 $>$ vel.rsf
+    $<$ gg.rsf {\bf sfmath} output="3-input" $>$ vel.rsf
   }
   
   \vfill
