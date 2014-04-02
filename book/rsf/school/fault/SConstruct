@@ -1,0 +1,75 @@
+from rsf.proj import *
+# an example of three-dimensional data
+name = 'fault'
+Fetch('midpts.hh','midpts')
+Flow(name,'midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+# plot prestack data with flat 3d plot
+Result(name,
+    '''
+    transp plane=23|
+    byte |
+    grey3 frame1=333 frame2=75 frame3=1 
+    title="Prestack Data"
+    ''')
+# plot prestack data with cubic 3d plot
+Result(name+'-cube',name,
+    '''
+    transp plane=23|
+    byte |
+    grey3 frame1=333 frame2=75 frame3=1 
+    title="Prestack Data" flat=n
+    point1=.6 point2=.7
+    ''')
+# velocity semblance scan for flattening gathers
+scn = name+'-scn'
+Flow(scn,name,
+    '''
+    mutter v0=1.4|
+    vscan semblance=y v0=1.4 nv=51 dv=0.025
+    ''')
+# determine semblance scalebar
+Flow(scn+'-bar',scn,'bar gainpanel=a allpos=y')
+Result(scn,[scn,scn+'-bar'],
+   '''
+   byte gainpanel=a  allpos=y| 
+   grey3 frame1=500 frame2=25 frame3=0
+   title="Semblance Scan" color=j flat=n
+   movie=3 dframe=15
+   point1=.6 point2=.7
+   scalebar=${SOURCES[1]} barlabel=Semblance
+   ''')
+
+# pick velocity corresponding to maximum semblance
+vel = name+'-vel'
+rect1=40
+rect2=15
+Flow(vel,scn,
+    '''
+    mutter x0=1.5 v0=.67 half=n|
+    sfpick rect1=%i rect2=%i
+    window
+    '''%(rect1,rect2))
+Result(vel,'grey color=j scalebar=y title="NMO Velocity" barunits="m/s" mean=y')
+
+
+# nmo correction on data
+nmo = name+'-nmo'
+Flow(nmo,[name,vel],
+    '''
+    mutter v0=1.4 |
+    nmo velocity=${SOURCES[1]}
+    ''')
+Result(nmo,
+    '''
+    transp plane=23|
+    byte gainpanel=a|
+    grey3 frame1=333 frame2=75 frame3=1 
+    title="NMO Data" flat=n
+    point1=.6 point2=.7
+    ''')
+# stack nmo data
+stk = name+'-stk'
+Flow(stk,nmo,'stack axis=2')
+Result(stk,'grey title="NMO Stack"')
+End()
