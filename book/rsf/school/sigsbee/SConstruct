@@ -7,7 +7,7 @@ f2m=0.3048     # convert ft to m
 par = dict(
     nx=1601,ox=25.*f2m,dx=0.025*f2m,lx='x',ux='km',
     nz=801, oz=4.5*f2m,dz=0.025*f2m,lz='z',uz='km',
-    nt=5001,ot=0.0,    dt=0.001,    lt='t',ut='s',
+    nt=5001,ot=0.0,    dt=0.0009,   lt='t',ut='s',
     jsnap=200, # snapshot jump
     kt=100,    # wavelet delay (samples) 
     nb=100     # boundary (grid points)
@@ -127,7 +127,7 @@ fdmod.awefd1('tmpA',  # data file (all receivers)
              'dens',  # density
              'ss',    # source coordinates
              'rA',    # receiver coordinates
-             'fsrf=n cden=y',# optional flags
+             'fsrf=n',# optional flags
              par)
 
 # ------------------------------------------------------------
@@ -191,7 +191,7 @@ for j in ('H','V','A'):
               'vsmo',   # velocity
               'dens',   # density
               'r'+j,    # receiver coordinates
-              'fsrf=n cden=y', # optional flags
+              'fsrf=n', # optional flags
               par)
     
     # plot image
