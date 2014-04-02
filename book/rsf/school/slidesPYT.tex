@@ -1,0 +1,238 @@
+\input{pcsmacros}
+\pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
+
+\title[]{\mg \\ reproducibility with scons}
+\author[]{Paul Sava}
+\institute{
+  Center for Wave Phenomena \\
+  Colorado School of Mines \\
+  psava@mines.edu
+}
+\date{}
+\logo{}
+\large
+
+% ------------------------------------------------------------
+\lstset{
+  language=Python,
+  backgroundcolor=\color{LightGray},
+  frame=single,
+  basicstyle=\small,        
+  showspaces=false,
+  showstringspaces=false,
+  % 
+  morekeywords=[2]{Flow,Plot,Result,Fetch,rsf,proj},
+  keywordstyle=[2]{\color{blue}\bf},
+  morekeywords=[3]{fdmod,param,cgrey,egrey,boxarray,horizontal,vertical,ssplot,rrplot,wavelet,waveplot,awefd1,wframe,dgrey,dwigl,egrey,ewigl,zom},
+  keywordstyle=[3]{\color{red}\bf}
+}
+
+\def\mycode#1#2{
+  \begin{block}{}
+    \lstinputlisting[firstline=#1,lastline=#2]
+    {gauss/SConstruct}
+  \end{block}
+}
+
+% ------------------------------------------------------------
+\mode<beamer> { \cwpcover }
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+\begin{frame} 
+  \big{scons}
+\end{frame}
+\cwpnote{}
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{Flow}
+
+  \big{\texttt{Flow(output,input,command)}}
+
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{Plot}
+
+  \big{\texttt{Plot(vplfile,rsffile,command)}}
+
+\cen{output in local directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame} \frametitle{Result}
+
+  \big{\texttt{Result(vplfile,rsffile,command)}}
+
+\cen{output in \texttt{Fig} directory}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\texttt{scons}}
+  \vfill
+  \big{\texttt{scons blah.view}}
+  \vfill
+  \big{\texttt{scons view}}
+  \vfill
+  \big{\texttt{scons blah.lock}}
+  \vfill
+  \big{\texttt{scons lock}}
+  \vfill
+  \big{\texttt{scons -c}}
+
+\end{frame}
+\cwpnote{}
+
+
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+% ------------------------------------------------------------
+\begin{frame} \frametitle{example}
+  \big{\texttt{cd \$RSF/book/rsf/school/gauss}}
+  \vfill
+  \big{\texttt{\$EDITOR SConstruct}}
+\end{frame}
+\cwpnote{}
+
+\inputdir{gauss}
+
+% ------------------------------------------------------------
+
+\begin{frame} \frametitle{import module}
+ \mycode{1}{1}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{setup parameter dictionary}
+ \mycode{3}{11}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{expand parameter dictionary}
+ \mycode{12}{16}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% Gaussian
+
+\begin{frame} \frametitle{make Gaussian function}
+ \mycode{44}{51}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot 2D Gaussian function}
+ \mycode{54}{59}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{gg}{width=0.69\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot 1D Gaussian function}
+ \mycode{62}{68}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{gg0}{width=0.90\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% velocity 
+
+\begin{frame} \frametitle{make velocity}
+ \mycode{73}{74}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot velocity}
+ \mycode{77}{81}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% FME
+
+\begin{frame} \frametitle{make traveltimes}
+ \mycode{86}{87}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot traveltimes}
+ \mycode{90}{91}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{traveltime plot function}
+ \mycode{32}{39}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{fme}{width=0.69\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+% HWT
+
+\begin{frame} \frametitle{make rays/wavefronts}
+ \mycode{96}{101}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{plot rays/wavefronts}
+ \mycode{104}{110}
+\end{frame}
+\cwpnote{}
+
+\begin{frame} \frametitle{rays/wavefronts plot function}
+ \mycode{21}{29}
+\end{frame}
+\cwpnote{}
+
+\begin{frame}
+  \plot{hwt}{width=0.69\textwidth}{}
+\end{frame}
+\cwpnote{}
+
+% ------------------------------------------------------------
+\begin{frame}
+
+  \big{\url{http://www.ahay.org}}
+  
+  \vfill
+
+  \big{\texttt{\$RSF/book/rsf/school}}
+
+  \vfill
+  
+  \begin{center}
+    \pgfuseimage{logo}
+  \end{center}
+  
+\end{frame}
+\cwpnote{}

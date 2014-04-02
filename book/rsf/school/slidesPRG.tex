@@ -1,7 +1,7 @@
 \input{pcsmacros}
 \pgfdeclareimage[height=1.0in]{logo}{Fig/Madagascar}
 
-\title[]{basic \mg usage}
+\title[]{\mg \\ command line usage}
 \author[]{Paul Sava}
 \institute{
   Center for Wave Phenomena \\
@@ -812,7 +812,7 @@ s2.rsf:
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{gg}{width=0.75\textwidth}{}
+  \plot{gg}{width=0.69\textwidth}{}
 \end{frame}
 \cwpnote{}
 
@@ -861,7 +861,7 @@ s2.rsf:
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{vel}{width=0.75\textwidth}{}
+  \plot{vel}{width=0.69\textwidth}{}
 \end{frame}
 \cwpnote{}
 
@@ -885,7 +885,7 @@ s2.rsf:
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{fme}{width=0.75\textwidth}{}
+  \plot{fme}{width=0.69\textwidth}{}
 \end{frame}
 \cwpnote{}
 
@@ -912,70 +912,9 @@ s2.rsf:
 
 % ------------------------------------------------------------
 \begin{frame}
-  \plot{hwt}{width=0.75\textwidth}{}
+  \plot{hwt}{width=0.69\textwidth}{}
 \end{frame}
 \cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame}
-  \big{reproducible example using \texttt{scons}}
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame}
-
-  \big{\texttt{cd gauss}}
-  \vfill
-  \big{\texttt{vi SConstruct}}
-  
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{Flow}
-
-  \big{\texttt{Flow(output,input,command)}}
-
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{Plot}
-
-  \big{\texttt{Plot(vplfile,rsffile,command)}}
-
-\cen{output in local directory}
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame} \frametitle{Result}
-
-  \big{\texttt{Result(vplfile,rsffile,command)}}
-
-\cen{output in \texttt{Fig} directory}
-\end{frame}
-\cwpnote{}
-
-% ------------------------------------------------------------
-\begin{frame}
-
-  \big{\texttt{scons}}
-  \vfill
-  \big{\texttt{scons blah.view}}
-  \vfill
-  \big{\texttt{scons view}}
-  \vfill
-  \big{\texttt{scons blah.lock}}
-  \vfill
-  \big{\texttt{scons lock}}
-  \vfill
-  \big{\texttt{scons -c}}
-
-\end{frame}
-\cwpnote{}
-
 
 % ------------------------------------------------------------
 \begin{frame}

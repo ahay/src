@@ -12,6 +12,11 @@ Paper('slidesDOC',
       lclass='cwpslides',
       use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
       color='ALL')
+Paper('slidesPYT',
+      lclass='cwpslides',
+      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+      color='ALL')
+
 for segabs in glob.glob('segabs*.tex'):
     name = os.path.splitext(segabs)[0]
     Paper(name,
