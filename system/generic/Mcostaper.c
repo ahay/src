@@ -1,4 +1,8 @@
-/* Cosine taper around the borders (N-D). */
+/* Cosine taper around the borders (N-D). 
+
+April 2014 program of the month:
+http://ahay.org/rsflog/index.php?/archives/381-Program-of-the-month-sfcostaper.html 
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 
