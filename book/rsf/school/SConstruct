@@ -1,21 +1,36 @@
 from rsf.tex import *
 
-Paper('slidesPRG',
-      lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
-      color='ALL')
-Paper('slidesWSI',
-      lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
-      color='ALL')
-Paper('slidesDOC',
-      lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
-      color='ALL')
-Paper('slidesPYT',
-      lclass='cwpslides',
-      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
-      color='ALL')
+# Paul's slides
+for slides in glob.glob('slides???.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+          color='ALL')
+    
+    #Paper('slidesPRG',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+    #Paper('slidesWSI',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+    #Paper('slidesDOC',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+    #Paper('slidesPYT',
+    #      lclass='cwpslides',
+    #      use='multicol,color,overpic,listings,amsmath,amssymb,amsbsy,framed',
+    #      color='ALL')
+
+for eageabs in glob.glob('eageabs*.tex'):
+    name = os.path.splitext(eageabs)[0]
+    Paper(name,
+          lclass='eageabs',
+          options='11pt',
+          use='times,natbib,color,amssymb,amsmath,amsbsy,graphicx,fancyhdr')
 
 for segabs in glob.glob('segabs*.tex'):
     name = os.path.splitext(segabs)[0]
