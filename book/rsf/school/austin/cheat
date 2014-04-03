@@ -1,0 +1,42 @@
+from rsf.proj import *
+
+# Download data
+Fetch('austin-w.HH','bay')
+
+# convert to rsf format, and declare what dimensions are
+rect1 = 5
+rect2 = 20
+Flow('austin','austin-w.HH',
+    '''
+    dd form=native |
+    put d1=0.01 unit1=km d2=0.01 unit2=km |
+    smooth rect1=%i rect2=%i
+    '''%(rect1,rect2))
+
+# display file
+Result('austin',
+    '''
+    grey title="Digital Elevation Map"
+    scalebar=y barlabel=Elevation barunit=m
+    allpos=y color=j
+    ''')
+Plot('austin',
+    '''
+    grey title="Digital Elevation Map"
+    allpos=y
+    ''')
+
+# minimum contour
+c0 = 50 
+# contour interval
+dc = 40
+# number of contours
+nc = 10
+Plot('contour','austin',
+    '''
+    contour allpos=y  wanttitle=n
+    c0=%g dc=%g nc=%i
+    '''%(c0,dc,nc))
+
+Result('austin-contour','austin contour','Overlay')
+End()

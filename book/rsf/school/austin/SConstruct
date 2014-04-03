@@ -1,7 +1,5 @@
 from rsf.proj import *
 
-# this provides an overview of several different methods for plotting data
-
 # Download data
 Fetch('austin-w.HH','bay')
 
@@ -10,76 +8,5 @@ Flow('austin','austin-w.HH','dd form=native | put d1=0.01 unit1=km d2=0.01 unit2
 
 # display file
 Result('austin','grey title="Digital Elevation Map"')
-# add a scalebar, change the center of the color pallet to the mean of the data
-Result('austin1','austin',
-    '''
-    grey mean=y title="Digital Elevation Map"
-    scalebar=y barlabel=Elevation barunit=m
-    ''')
-
-# plot in color
-Result('austin2','austin',
-    '''
-    grey mean=y title="Digital Elevation Map"
-    scalebar=y barlabel=Elevation barunit=m
-    color=j
-    ''')
-# reverse the colorbar
-Result('austin3','austin',
-    '''
-    grey mean=y title="Digital Elevation Map" pclip=100
-    scalebar=y barlabel=Elevation barunit=m
-    color=j
-    polarity=y
-    ''')
-# change the data clipping to percentile
-Result('austin4','austin',
-    '''
-    grey mean=y title="Digital Elevation Map" pclip=100
-    scalebar=y barlabel=Elevation barunit=m
-    color=j
-    polarity=y
-    pclip=100
-    ''')
-# or clip the data by a value
-Result('austin5','austin',
-    '''
-    grey mean=y title="Digital Elevation Map" pclip=100
-    scalebar=y barlabel=Elevation barunit=m
-    color=j
-    polarity=y
-    clip=150
-    ''')
-
-
-# take a South-North cross section
-Flow('n-s-cross','austin','window n2=1 f2=600')
-# plot the cross section as a line
-Result('n-s-cross','graph title="Cross Section"')
-# reverse to provide a North-South cross section
-Result('s-n-cross','n-s-cross','reverse |graph title="Cross Section"')
-
-# create a contour map of austin
-# first contour
-c0 = 50
-# number of contours
-nc = 10
-# contour interval
-dc = 40
-Plot('contour','austin','contour c0=%g nc=%i dc=%g wanttitle=n '%(c0,nc,dc))
-# generate a plot of elevation
-Plot('austin','grey title="Contoured Elevation Map" allpos=y')
-
-Result('austin-contour','austin contour','Overlay')
-
-# make a histogram of the data
-Flow('hist','austin',
-     '''
-     histogram n1=256 o1=75 d1=1 |
-     dd type=float|
-     scale axis=1
-     ''')
-
-Result('hist','graph title=histogram label1=Elevation unit1=m label2="Normalized Occurance" unit2=')
 
 End()
