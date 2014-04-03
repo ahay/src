@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfput', 'sftransp', 'sfbyte', 'sfgrey3', 'sfmutter', 'sfvscan', 'sfbar', 'sfpick', 'sfgrey', 'sfnmo', 'sfstack']
+data=['data/midpts/midpts.hh']
+size=  101066000
