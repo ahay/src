@@ -2,24 +2,52 @@ from rsf.proj import *
 
 #SConscript('../fetch/SConstruct')
 
-Flow(['gather_subset.rsf','gather_subset_hdr.rsf'],
+Flow(['gather_subset.rsf','gather_subset_hdr.rsf','onetrace.rsf','onetrace_hdr.rsf'],
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
      sftahsort 
   	input=$SOURCE 
 	sort="iline:169,181  xline:104,116 offset:0,11000" 
         verbose=1  
-     | sftahmakeskey pkey=iline,xline skey=cdpt verbose=1 
+     | sftahmakeskey pkey=iline,xline skey=cdpt verbose=1      
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
+       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 
      | sftahwrite 
         verbose=1                           
 	label2="cdpt"  o2=1 n2=34  d2=1   
         label3="xline" o3=104 n3=13 d3=1   
         label4="iline" o4=169 n4=13  d4=1   
         output=$TARGET
+     | sftahwrite 
+        verbose=1                           
+	label2="cdpt"  o2=1 n2=34  d2=1   
+        label3="xline" o3=104 n3=1 d3=1   
+        label4="iline" o4=169 n4=1  d4=1   
+        output=${TARGETS[2]}
      ''',stdout=0,stdin=0)
 Plot('gather_subset','grey title="gather_subset"',view=1)
 Plot('zoomgather_subset','gather_subset',
      'sfwindow max1=2. | grey title="gather_subset_zoom"',view=1)
+
+Result('gather_subset',
+       '''
+       put n4=1 o3=1 n3=169 
+       | bandpass fhi=30
+       | window max1=2. 
+       | byte 
+       | grey3 frame1=400 frame2=0 frame3=83
+       title=Gathers label2=Trace label3=CDP
+       ''')
+
+Flow('onetrace_offset','onetrace_hdr','dd type=float | headermath output=offset')
+Result('wiggle','onetrace.rsf onetrace_offset.rsf',
+       '''
+       window max1=1.5 
+       | bandpass fhi=30 
+       | wiggle xpos=${SOURCES[1]} poly=y transp=y yreverse=y
+       ''')
 
 # Doing it without tah
 Flow('iline','../fetch/npr3_gathers_hdr.rsf',
@@ -43,8 +71,11 @@ Plot('zoomgather','gather',
 
 Result('gather',
        '''
-       put n4=1 o3=1 n3=169 | 
-       byte | grey3 frame1=1000 frame2=7 frame3=7 
+       put n4=1 o3=1 n3=169 
+       | bandpass fhi=30
+       | window max1=2. 
+       | byte 
+       | grey3 frame1=470 frame2=0 frame3=83
        title=Gathers label2=Trace label3=CDP
        ''')
 
