@@ -36,12 +36,12 @@ Flow('zoomfoldplot','../segy/DeconShots3_hdr.rsf',
           verbose=1
           o1=60 n1=50  d1=1 label1=offset
           o2=2001 n2=100 d2=1   label2=xline
-          o3=5211 n3=1  d3=1   label3=iline        
+          o3=5301 n3=1  d3=1   label3=iline        
     ''')
 
 Result('zoomfoldplot','zoomfoldplot',
      '''
-     grey  title=foldplot pclip=100 
+     grey  title=foldplot pclip=95 
      ''')
 
 Result('foldplot3','foldplot',
