@@ -56,6 +56,9 @@ $RSFSRC/book/data/teapotdome/nmostack
 $RSFSRC/book/data/teapotdome/cmp_stack_tahstack
 	make plots to compare sfnmo/sfstack to sftahnmo/sftahstack
 
+$RSFSRC/book/data/teapotdome/Zomig
+	extended splitstep migration.  Display zomig and contractor kirchhoff
 
-I need to index other work previous done by Vladimir.  Zomig can also be
-       indexed in this readme file
+
+I need to index other work previous done by Vladimir.  
+
