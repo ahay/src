@@ -385,8 +385,8 @@ void init_vplot (int argc, char* argv[])
     sf_getfloats ("blue",  bluemap, 4);
 
     sf_getint ("dither",  &dither);
-    sf_getfloat ("greyc",  &greyc);
-    sf_getfloat ("pixc",  &pixc);
+    sf_getfloat ("greyc",  &greyc); /* "grey correction" modifies the grey scale used to display a raster to simulate the nonlinearity of displays, see "man vplotraster" */
+    sf_getfloat ("pixc",  &pixc);   /* "pixel  correction" controls  alteration of the grey scale, see "man vplotraster". */
 
     sf_getint ("txfont",  &dev.txfont);
     sf_getint ("txprec",  &dev.txprec);
