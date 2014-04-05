@@ -40,6 +40,7 @@ To SCons:
 
 * Experimental IPython notebook in book/rsf/rsf/test/test.ipynb
 * MKL check in configure only relevant for icc
+* Upgraded to scons-2.3.1
 
 To documentation:
 
