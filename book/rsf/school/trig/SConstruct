@@ -9,11 +9,11 @@ Flow('sine',None,
     label1=x unit1="radians"
     ''')
 # plot sine 
-Plot('sine','graph ')
+Plot('sine','graph title="sin(x)"')
 # take the derivative of the sine wave
   # modify below
 Flow('dsine','sine','deriv ')
-Plot('dsine','graph title="dsine(x)/dx"')
+Plot('dsine','graph title="d sin(x)/dx"')
 # plot the sine wave with its derivative
 Result('sine_dsine','sine dsine','SideBySideAniso')
 # generate a cosine curve
@@ -30,7 +30,7 @@ Flow('cos2','dsine cosine',
     ''')
 # plot the cosine squared function
   # modify below
-Result('cos2','graph label1="cos\^2\_(x)" ')
+Result('cos2','graph label1="cos\^2\_(x)" wanttitle=n')
 
 # integrate cosine squared, scale by dx
   # modify below
