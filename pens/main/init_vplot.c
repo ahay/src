@@ -384,7 +384,12 @@ void init_vplot (int argc, char* argv[])
     sf_getfloats ("green",  greenmap, 4);
     sf_getfloats ("blue",  bluemap, 4);
 
-    sf_getint ("dither",  &dither);
+    sf_getint ("dither",  &dither); /* dithering to improve raster display, see "man vplotraster"
+                    0    No dither,
+                    1    Random Dither
+                    2    Ordered Dither
+                    3    Minimized Average Error Method
+                    4    Digital Halftoning */
     sf_getfloat ("greyc",  &greyc); /* "grey correction" modifies the grey scale used to display a raster to simulate the nonlinearity of displays, see "man vplotraster" */
     sf_getfloat ("pixc",  &pixc);   /* "pixel  correction" controls  alteration of the grey scale, see "man vplotraster". */
 
