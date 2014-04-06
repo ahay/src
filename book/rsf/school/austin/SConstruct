@@ -3,7 +3,7 @@ from rsf.proj import *
 # Download data
 Fetch('austin-w.HH','bay')
 
-# convert to rsf format, and declare what dimensions are
+# convert to rsf format, and declare what dimensions
 Flow('austin','austin-w.HH','dd form=native | put d1=0.01 unit1=km d2=0.01 unit2=km')
 
 # display file
