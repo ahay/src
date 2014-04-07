@@ -1,5 +1,5 @@
 order = 2
-cfl   = 0.5
+cfl   = 0.500000
 cmin  = 1.500000
 cmax  = 4.500000
 dmin  = 0.5
