@@ -48,11 +48,11 @@ const char *sdoc[] = {
     " useful for comparing analytic solutions to finite difference   ",
     " variable-density acoustic simulators.                          ",
     "                                                                ",
-    " Units: m, kg, ms                                               ",
-    " densities: kg/m^3.                                             ",
-    " velocities: m/ms = km/s.                                       ",
-    " bulk moduli: MPa                                               ",
-    " buoyancies: m^3/kg                                             ",
+    " Units:		                                             ",
+    " 	densities    [g/cm^3]                                        ",
+    "   velocities   [m/ms] = [km/s]                                 ",
+    " 	bulk moduli  [GPa] = [g/cm^3][m/ms]^2                        ",
+    "   buoyancies   [cm^3/g]                                        ",
     "                                                                ",
     " The output format is native binary floats.                     ",
     "                                                                ",
@@ -112,72 +112,6 @@ const char *sdoc[] = {
     "                                                                ",
     NULL};
 
-/*
- ####################################################################
- # draft implementation version 1
- # based on SEAM Numerical Verification Procedure Proposal by J. Blanch
- ####################################################################
- # credits: J.E. Anderson  2007
- 
- # This builds as an SU getpar module with make similar to that
- # for modules in:  $CWPSRC/src/par/main
- 
- # compile and link:
- cmtc standardmodel
- 
- ####################################################################
- # Below are some SU style commands that might be useful for testing
- # this code and looking at example output.
- ####################################################################
- # Set choice for model in range of 1 to 7
- MODEL=5
- 
- ####################################################################
- # example run to create density grid for model on 5 x 5 x 5 m grid
- ####################################################################
- ./standardmodel model=${MODEL} choose=1 d1=5. d2=5. d3=5. >model_density.bin
- 
- ####################################################################
- # display just first panel of density grid for model
- # (others are same for models 1-7)
- ####################################################################
- ximage n1=361 n2=1321 legend=1 wclip=1.0 bclip=3.0 cmap=hue \
- o1=0 d1=5 label1="depth (meters)" n1tic=5 \
- o2=0 d2=5 label2="x (meters)" n2tic=5 \
- wbox=1321 hbox=361 \
- title="model ${MODEL} density" <model_density.bin &
- 
- ####################################################################
- # example run to create vp grid for model 1 on 5 x 5 x 5 m grid
- ####################################################################
- ./standardmodel model=${MODEL} choose=2 d1=5. d2=5. d3=5. >model_vp.bin
- 
- ####################################################################
- # display just first panel of vp grid for model
- # (others are same for models 1-7)
- ####################################################################
- ximage n1=361 n2=1321 legend=1 wclip=1500.0 bclip=4000.0 cmap=hue \
- o1=0 d1=5 label1="depth (meters)" n1tic=5 \
- o2=0 d2=5 label2="x (meters)" n2tic=5 \
- wbox=1321 hbox=361 \
- title="model ${MODEL} vp" <model_vp.bin &
- 
- ####################################################################
- # example run to create dome model on 5 x 5 x 5 m grid
- ####################################################################
- ./standardmodel model=8 choose=2 d1=5. d2=5. d3=5. >model_vp.bin
- 
- ####################################################################
- # display dome model with SU xmovie tool
- ####################################################################
- xmovie n1=361 n2=1321 n3=1321 \
- o1=0 d1=5 label1="depth (meters)" nTic1=5 \
- o2=0 d2=5 label2="x (meters)" nTic2=5 \
- wclip=1400. bclip=4000.0 width=1321 height=361 \
- fframe=0 dframe=5 title="y=%g meters" <model_vp.bin &
- 
- 
- */
 
 //----------------------------------------------------------------------------//
 // model 0: Homogeneous model
@@ -186,7 +120,7 @@ static inline float homogeneous(int choose)
     //float vel = (vp_max+vp_min)/2;
     float vel = (vp_max+vp_min)/2;
     
-    if (choose==1) return vel*vel*rho;
+    if (choose==1) return vel*vel*rho; 
     if (choose==2) return rho;
     if (choose==3) return 1./rho;
     
