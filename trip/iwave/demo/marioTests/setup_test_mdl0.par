@@ -1,0 +1,52 @@
+horder = 2
+CMIN   = 2.0  [m/ms]
+CMAX   = 4.0  [m/ms]
+fpeak  = 10   [Hz]
+GPC    = 30   [gridcells/cycle]
+
+xcent  = 400.0 
+zcent  =-400.0
+tcent  = 0.0
+lx     = 50.0
+lz     = 50.0
+nts    = 101.0
+src_dt = 0.002
+
+gx_o   = 0.0
+gx_e   = 800.0
+gx_dx  = 20.0
+gelev  =-200.0
+hdr_T  = 0.6
+hdr_dt = 0.002
+
+choose1 = 0
+choose2 = 2
+model   = 0
+o1      = 0.0
+e1      = 800.0
+o2      = 0.0
+e2      = 800.0
+
+nl1 = 1.0
+nr1 = 1.0
+nl2 = 1.0
+nr2 = 1.0
+
+mdl_hfile1 = mdl0_vel.rsf
+mdl_pfile1 = mdl0_vel.par
+mdl_path1  = ./mdl0_vel/
+
+mdl_hfile2 = mdl0_den.rsf
+mdl_pfile2 = mdl0_den.par
+mdl_path2  = ./mdl0_den/
+
+src_file  = mdl0_src.su
+src_sc    = mdl0_src.sc
+src_path  = ./
+
+hdr_file  = mdl0_hdr.su
+hdr_sc    = mdl0_hdr.sc
+hdr_path  = ./
+
+data_file = zzz_mdl0.su
+test_par  = mdl0_test.par

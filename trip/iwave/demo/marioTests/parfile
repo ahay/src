@@ -1,0 +1,28 @@
+order = 2
+cfl   = 0.5
+cmin  = 1.500000
+cmax  = 4.500000
+dmin  = 0.5
+dmax  = 5.0
+fpeak = 0.010000
+
+nl1   = 0.000000
+nr1   = 0.000000
+nl2   = 0.000000
+nr2   = 0.000000
+
+srctype = array
+sampord = 1
+source  = ./src_mdl0.su
+
+hdrfile  = ./hdr_mdl0.su
+datafile = out_mdl0.su
+
+velocity = ./vel_mdl0/vel_mdl0.rsf
+density = ./den_mdl0/den_mdl0.rsf
+
+dump_lda  =1
+dump_ldc  =1
+dump_term =1
+
+data_file = out_mdl0.su
