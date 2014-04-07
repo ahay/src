@@ -1,42 +1,42 @@
 from rsf.proj import *
 
+# this exercise illustrates fetching data,
+# calling simple functions, and various 2d plots. 
+
 # Download data
 Fetch('austin-w.HH','bay')
 
-# convert to rsf format, and declare what dimensions are
-rect1 = 5
-rect2 = 20
+# convert to rsf format, and declare what dimensions
 Flow('austin','austin-w.HH',
-    '''
-    dd form=native |
-    put d1=0.01 unit1=km d2=0.01 unit2=km |
-    smooth rect1=%i rect2=%i
-    '''%(rect1,rect2))
+   '''
+   dd form=native | 
+   put d1=0.01 unit1=km d2=0.01 unit2=km|
+   window min1=2.5 max1=6.5 min2=0 max2=3.5
+   ''')
 
-# display file
-Result('austin',
-    '''
-    grey title="Digital Elevation Map"
-    scalebar=y barlabel=Elevation barunit=m
-    allpos=y color=j
-    ''')
-Plot('austin',
-    '''
-    grey title="Digital Elevation Map"
-    allpos=y
-    ''')
+# plotting function, play around with parameters!
+plotting = '''
+grey title="Digital Elevation Map" mean=y color=i
+scalebar=n barlabel=Elevation barunit=m
+'''
 
-# minimum contour
-c0 = 50 
-# contour interval
-dc = 40
-# number of contours
-nc = 10
-Plot('contour','austin',
-    '''
-    contour allpos=y  wanttitle=n
-    c0=%g dc=%g nc=%i
-    '''%(c0,dc,nc))
+# display digital elevation map
+Result('austin',plotting)
 
-Result('austin-contour','austin contour','Overlay')
+# apply smoothing and display map
+# uncomment and change values below!!!
+Flow('austin-s','austin','smooth rect1=30 rect2=30')
+Result('austin-s',plotting)
+
+# for loop creating contour map
+# add 'austin-s' to the loop list!!!
+for dem in ('austin','austin-s'):
+    # plot the map as a .vpl
+    Plot(dem,plotting)
+    # generate contour file
+    contour = dem+'-cont'
+    Plot(contour,dem,'contour nc=6 dc=30 c0=160 wanttitle=n')
+    #overlay the contours on the map, display
+    Result(contour,[dem,contour],'Overlay')
+
 End()
