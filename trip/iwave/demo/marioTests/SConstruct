@@ -84,8 +84,8 @@ jobs = {
 
 scripts = {
 'tmpdata' : [],
+'mdl0_hdr': [],
 'mdl0_src': [],
-'mdl0_hrd': [],
 'Fig'     : []
 }
 

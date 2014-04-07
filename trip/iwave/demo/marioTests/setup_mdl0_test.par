@@ -11,6 +11,8 @@ lx     = 50.0
 lz     = 50.0
 nts    = 101.0
 src_dt = 0.002
+dx     = 5.0
+dz     = 5.0
 
 gx_o   = 0.0
 gx_e   = 800.0
@@ -34,19 +36,17 @@ nr2 = 1.0
 
 mdl_hfile1 = mdl0_vel.rsf
 mdl_pfile1 = mdl0_vel.par
-mdl_path1  = ./mdl0_vel/
+mdl_path1  = mdl0_vel/
 
 mdl_hfile2 = mdl0_den.rsf
 mdl_pfile2 = mdl0_den.par
-mdl_path2  = ./mdl0_den/
+mdl_path2  = mdl0_den/
 
 src_file  = mdl0_src.su
 src_sc    = mdl0_src.sc
-src_path  = ./
 
 hdr_file  = mdl0_hdr.su
 hdr_sc    = mdl0_hdr.sc
-hdr_path  = ./
 
-data_file = zzz_mdl0.su
+data_file = mdl0_output.su
 test_par  = mdl0_test.par
