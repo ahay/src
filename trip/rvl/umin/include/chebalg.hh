@@ -410,6 +410,7 @@ necessary number of iterations.
 	  k = k + 1;
 	}
 	kmax = k-1;
+    str << "NOTE: computed number of iterations needed:  " << kmax << "\n";
 	// NOTE: compute Chebyshev coefficients
 	atype ckm = one;
 	atype ck = one / beta;

@@ -148,9 +148,9 @@ namespace RVL {
 			     const Vector<Scalar> & dx0,
 			     const Vector<Scalar> & dx1,
 			     Vector<Scalar> & dy) const {
-      RVLException e;
-      e<<"Error: Operator::applyDeriv2 not implemented\n";
-      throw e;
+//      RVLException e;
+//      e<<"Error: Operator::applyDeriv2 not implemented\n";
+//      throw e;
     }
 
     /** \f$dx_1 = D^2F(x)^*(dx_0,dy)\f$, defined so that
@@ -164,9 +164,9 @@ namespace RVL {
 				const Vector<Scalar> & dx0,
 				const Vector<Scalar> & dy,
 				Vector<Scalar> & dx1) const {
-      RVLException e;
-      e<<"Error: Operator::applyAdjDeriv2 not implemented\n";
-      throw e;
+//      RVLException e;
+//      e<<"Error: Operator::applyAdjDeriv2 not implemented\n";
+//      throw e;
     }
 
     /** The export-apply methods make the protected apply methods 
