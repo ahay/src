@@ -136,9 +136,10 @@ Flow('source_base.su', None,
      sushw      + ' key=gx    a=' + str(-lx/2) + ' b=' + str(dx) + ' c=0 j=' + str(nz) +' | ' +
      suconv     + ' sufile=rick.su | ' +
      sutxtaper  + ' taper=3 key=gelev min=0 max=0 dx=' + str(lz/2) + ' | ' + 
-     sutxtaper  + ' taper=3 key=gx min=0 max=0 dx=' + str(lx/2) + ' | ' +
-     suhtmath   + ' key=tracl', 
+     sutxtaper  + ' taper=3 key=gx min=0 max=0 dx=' + str(lx/2),
      stdin=0)
+#     suhtmath   + ' key=tracl', 
+#     stdin=0)
 
 #Flow('source.su',None,
 #      suwaveform + ' type=ricker1 fpeak=' + str(fpeak) + ' dt=' + str(dt) + ' nt=101',
@@ -167,7 +168,7 @@ Flow('source.su',['source_base.su', 'hdr.su'],
 # trace-src output file: NOTE, fpeak must be in [kHz]
 t=Flow(['output.su'],['source.su', 'hdr.su', 'vel1.rsf', 'den1.rsf'],
 	asg  + ' order=' + str(horder) + ' cfl=0.5 cmin=1.0 cmax=4.5 dmin=0.5 dmax=3.0 fpeak=' + str(fpeak/1000.0) + 
-o	' srctype=array source=./source.su sampord=1 hdrfile=./hdr.su datafile=./output.su' +
+	' srctype=array source=./source.su sampord=1 hdrfile=./hdr.su datafile=./output.su' +
         ' velocity=./vel1.rsf density=./den1.rsf' +
         ' dump_lda=1 dump_ldc=1 dump_term=1' +
         ' nl1=.5 nr1=.5 nl2=.5 nr2=.5',
