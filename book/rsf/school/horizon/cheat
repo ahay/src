@@ -14,12 +14,11 @@ Flow('data','horizon.asc',
      '''
      echo in=$SOURCE data_format=ascii_float n1=3 n2=57036 | 
      dd form=native | window n1=1 f1=-1 | add add=-65 | 
-     put |
+     put n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
+     n1=196 o1=33.139 d1=0.01 label1=x unit1=km |
      costaper nw1=25 nw2=25 
      ''')
-# data dimensions
-#     n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
-#     n1=196 o1=33.139 d1=0.01 label1=x unit1=km    
+        
      
 # Display
 def plot(title):
@@ -32,7 +31,8 @@ Result('data',plot('Horizon'))
 # Cut holes in data (add another!)
 cut = '''
 cut n1=20 n2=20 f1=125 f2=150 | 
-cut n1=20 n2=20 f1=150 f2=50 
+cut n1=20 n2=20 f1=150 f2=50  |
+cut n1=20 n2=20 f1=75  f2=175
 '''
 
 Flow('hole','data',cut)
@@ -44,11 +44,11 @@ Result('hole','Overlay')
 # Fourier transform
 forw = 'rtoc | fft3 axis=1 pad=1 | fft3 axis=2 pad=1'
 # what is the inverse of the fourier transform?
-back = ''
+back = 'fft3 axis=2 inv=y | fft3 axis=1 inv=y | real'
 
 # test the reverse transform
-#Flow('test','data',forw+' | '+back)
-#Result('test',plot('Test'))
+Flow('test','data',forw+' | '+back)
+Result('test',plot('Test'))
 
 for data in ('data','hole'):
     fft = 'fft-'+data
@@ -64,7 +64,7 @@ for data in ('data','hole'):
 # Change mask to fit data!
 Flow('fft-mask','fft-hole',
      '''
-     real | math output="x1*x1+x2*x2" | mask min=250 |
+     real | math output="x1*x1+x2*x2" | mask min=50 |
      dd type=float | math output=1-input | 
      smooth rect1=5 rect2=5 repeat=3 | rtoc
      ''')
@@ -75,7 +75,7 @@ Result('fft-mask',
        ''')
 
 # POCS iterations
-niter=0 # Change number of iterations!
+niter=100 # Change number of iterations!
 
 data = 'hole'
 plots = ['hole']
