@@ -14,12 +14,11 @@ Flow('data','horizon.asc',
      '''
      echo in=$SOURCE data_format=ascii_float n1=3 n2=57036 | 
      dd form=native | window n1=1 f1=-1 | add add=-65 | 
-     put |
+     put 
+     n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
+     n1=196 o1=33.139 d1=0.01 label1=x unit1=km |
      costaper nw1=25 nw2=25 
      ''')
-# data dimensions
-#     n2=291 o2=35.031 d2=0.01 label2=y unit2=km 
-#     n1=196 o1=33.139 d1=0.01 label1=x unit1=km    
      
 # Display
 def plot(title):
