@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: ISO-8859-1 -*-
 #
 # Original idea and some code from Maxime Biais. Significant contributions by
 # Marc Poulhiès. Additions and changes by Mike Meylan, Malte, Anthony Miller and
@@ -36,7 +35,7 @@ insert = ""
 lang = "text"
 code = ""
 coderef = ""
-repos = "http://rsf.svn.sourceforge.net/viewvc/rsf/trunk/"
+repos = "http://sourceforge.net/p/rsf/code/HEAD/tree/trunk/"
 
 def dummy(s):
     pass
@@ -165,7 +164,7 @@ def lstset(s):
 
 def putcode():
     global lang, code
-    return "<%s>\n%s</%s>\n" % (lang,code,lang)
+    return "<syntaxhighlight lang=\"%s\">\n%s</syntaxhighlight>\n" % (lang,code)
 
 def getcode(s):
     global code
