@@ -15,20 +15,18 @@
  along with this program; if not, write to the Free Software
  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 #include <stdlib.h>
 #include <float.h>
 #include <rsf.h>
-#include "kirmodnewton2.h"
+#include "kirmodnewtonmpi2.h"
 
-#include "kirmodnewton.h"
+#include "kirmod2.h"
+#include "kirmodnewtonmpi.h"
 /*^*/
 
-#ifndef _kirmodnewton2_h
+#ifndef _kirmodnewtonmpi2_h
 
-typedef struct Surface *surface;
-/* abstract data type */
-/*^*/
 
 typedef struct Velocity2 {
 	float *v, *gx, *gz, *xref, *zref, *thick, *sumthick, **aniso;

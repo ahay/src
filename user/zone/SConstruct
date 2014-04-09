@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-isaac0 isaac1 isaac2 isaac3 kirmod_newton kirmodnewtonmpi
+isaac0 isaac1 isaac2 isaac3 kirmod_newton kirmodnewtonmpi 
 '''
 
 try:  # distributed version
