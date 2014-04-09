@@ -71,17 +71,17 @@ void hradon1(bool adj, bool add, int nx, int ny, float *x, float *y)
 void hradon(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< hyperbolic radon operator >*/
 {   
-	int itau,ih,iv,it;
+  int itau,ih,iv,it,i;
 	float tau,h_v,t;
 	
 	nv=nx/nt;  nh=ny/nt;
 	sf_adjnull(adj,add,nx,ny,x,y);
 
 	
-	for(int i=0;i<nx;i++)
+	for(i=0;i<nx;i++)
 		x[i]=x[i]+0.0001;
 			
-	for(int i=0;i<ny;i++)
+	for(i=0;i<ny;i++)
 		y[i]=y[i]+0.0001;
 
 	for(itau=0;itau<nt;itau++)

@@ -23,7 +23,9 @@
 #endif
 #include "_cjb.h"
 
+#ifdef SF_HAS_FFTW
 #include <fftw3.h>
+#endif
 
 /*****************************************************************************************/
 void seplowrank3domp(float *ldata,float *rdata,float *fmid, float *p, int *ijkx, int *ijky, int *ijkz,
