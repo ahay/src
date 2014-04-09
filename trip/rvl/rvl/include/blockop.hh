@@ -121,6 +121,61 @@ namespace RVL {
       }
     }
 
+      /** \f$dy_i = D^2F_i(x)[dx0, dx1]\f$, where \f$dx0, dx1 \in X\f$, \f$dy_i \in Y_i\f$ */
+      virtual void applyComponentDeriv2(int i,
+                                       const Vector<Scalar> & x,
+                                       const Vector<Scalar> & dx0,
+                                       const Vector<Scalar> & dx1,
+                                       Vector<Scalar> & dyi) const = 0;
+      
+      /** applyDeriv2() is implemented in terms of
+       applyComponentDeriv(). Default implementation supplied, which
+       may be overridden.
+       */
+      virtual void applyDeriv2(const Vector<Scalar> & x,
+                              const Vector<Scalar> & dx0,
+                              const Vector<Scalar> & dx1,
+                              Vector<Scalar> & dy) const {
+          try {
+              Components<Scalar> dyc(dy);
+              for (int i=0;i<(int)dyc.getSize();i++)
+                  applyComponentDeriv2(i,x,dx0,dx1,dyc[i]);
+          }
+          catch (RVLException & e) {
+              e<<"\ncalled from BlockOperator::applyDeriv2\n";
+              throw e;
+          }
+      }
+      /** \f$dx = \sum_i D^2F_i(x)^*[dx,dy_i]\f$, where \f$dy_i \in Y_i\f$ */
+      virtual void applyComponentAdjDeriv2(int i,
+                                          const Vector<Scalar> & x,
+                                          const Vector<Scalar> & dx0,
+                                          const Vector<Scalar> & dyi,
+                                          Vector<Scalar> & dx1) const = 0;
+      
+      /** applyAdjDeriv() is implemented in terms of
+       applyComponentAdjDeriv(). Default implementation supplied, which
+       may be overridden. */
+      virtual void applyAdjDeriv2(const Vector<Scalar> & x,
+                                  const Vector<Scalar> & dx0,
+                                  const Vector<Scalar> & dy,
+                                  Vector<Scalar> & dx1) const {
+          try {
+              Components<Scalar> dyc(dy);
+              applyComponentAdjDeriv2(0,x,dx0,dyc[0],dx1);
+              if (dyc.getSize()>0) {
+                  Vector<Scalar> tmp(this->getDomain(),true);
+                  for (int i=1; i<(int)dyc.getSize(); i++) {
+                      applyComponentAdjDeriv2(i,x,dx0,dyc[i],tmp);
+                      dx1.linComb(1.0,tmp);
+                  }
+              }
+          }
+          catch (RVLException & e) {
+              e<<"\ncalled from BlockOperator::applyAdjDeriv2\n";
+              throw e;
+          }
+      }
     /** Primary clone method returns object of this type;
 	parent clone method delegates. */
     virtual BlockOperator<Scalar> * cloneBlockOp() const = 0;
@@ -184,7 +239,7 @@ namespace RVL {
 	else if (i==1) this->export_applyDeriv(op2,x,dx,dyi);
 	else {
 	  RVLException e;
-	  e<<"Error: TensorOp::applyPartialDeriv\n";
+	  e<<"Error: TensorOp::applyComponentDeriv\n";
 	  e<<"index "<<i<<" out of range [0,1]\n";
 	  throw e;
 	}
@@ -214,7 +269,49 @@ namespace RVL {
 	throw e;
       }
     }
-    
+  
+    void applyComponentDeriv2(int i,
+                            const Vector<Scalar> & x,
+                            const Vector<Scalar> & dx0,
+                            const Vector<Scalar> & dx1,
+                            Vector<Scalar> & dyi) const {
+        try {
+            if (i==0) this->export_applyDeriv2(op1,x,dx0,dx1,dyi);
+            else if (i==1) this->export_applyDeriv2(op2,x,dx0,dx1,dyi);
+            else {
+                RVLException e;
+                e<<"Error: TensorOp::applyComponentDeriv2\n";
+                e<<"index "<<i<<" out of range [0,1]\n";
+                throw e;
+            }
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from TensorOp::applyComponentDeriv2\n";
+            throw e;
+        }
+    }
+      
+    void applyComponentAdjDeriv2(int i,
+                                const Vector<Scalar> & x,
+                                const Vector<Scalar> & dx0,
+                                const Vector<Scalar> & dyi,
+                                Vector<Scalar> & dx1) const{
+        try {
+            if (i==0) this->export_applyAdjDeriv2(op1,x,dx0,dyi,dx1);
+            else if (i==1) this->export_applyAdjDeriv2(op2,x,dx0,dyi,dx1);
+            else {
+                RVLException e;
+                e<<"Error: TensorOp::applyComponentAdjDeriv2\n";
+                e<<"index "<<i<<" out of range [0,1]\n";
+                throw e;
+            }
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from TensorOp::applyComponentAdjDeriv2\n";
+            throw e;
+        }
+    }
+      
     TensorOp<Scalar> * cloneTensorOp() const { return new TensorOp(*this); }
     BlockOperator<Scalar> * cloneBlockOp() const { return cloneTensorOp(); }
 
