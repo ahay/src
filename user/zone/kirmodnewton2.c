@@ -21,14 +21,12 @@
 #include <rsf.h>
 #include "kirmodnewton2.h"
 
+#include "kirmod2.h"
 #include "kirmodnewton.h"
 /*^*/
 
 #ifndef _kirmodnewton2_h
 
-typedef struct Surface *surface;
-/* abstract data type */
-/*^*/
 
 typedef struct Velocity2 {
 	float *v, *gx, *gz, *xref, *zref, *thick, *sumthick, **aniso;

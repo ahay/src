@@ -34,7 +34,6 @@ mdplot=plot(100*abs(sqrt(md(sin(x*pi/180))/vptrue(sin(x*pi/180)))-1).substitute(
 s=var('s')
 sh(n1)=(1-s)*el(n1)+s*sqrt(el(n1)^2+2*(q-1)*c11*c33*n1^2*(1-n1^2)/s)
 shplot=plot(100*abs(sqrt(sh(sin(x*pi/180))/vptrue(sin(x*pi/180)))-1).substitute(q=qz).substitute(s=0.5).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51),x,0,90)
-show(shplot)
 
 #weak anisotropy approximation
 epsilon,delta=var('epsilon,delta')
