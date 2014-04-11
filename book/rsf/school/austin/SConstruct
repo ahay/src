@@ -6,6 +6,10 @@ from rsf.proj import *
 # Download data
 Fetch('austin-w.HH','bay')
 
+# People without internet, turn off fetch, and instead link data
+#datapath = '../DATA/bay/austin-w.HH'
+# Flow('austin-w.HH',datapath,'cp')
+
 # convert to rsf format, and declare what dimensions
 Flow('austin','austin-w.HH',
    '''
