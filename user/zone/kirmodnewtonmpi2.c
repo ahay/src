@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <rsf.h>
+#include <mpi.h>
 #include "kirmodnewtonmpi2.h"
 
 #include "kirmod2.h"
@@ -26,7 +27,6 @@
 /*^*/
 
 #ifndef _kirmodnewtonmpi2_h
-
 
 typedef struct Velocity2 {
 	float *v, *gx, *gz, *xref, *zref, *thick, *sumthick, **aniso;
@@ -45,6 +45,9 @@ struct Surface {
 static int ny, nc, nx, **map, vstatus;
 static float x0, dx, r0, dr;
 static velocity2 v;
+
+/*For MPI*/
+static int mod, numdiv;
 
 /* Reflector function----------------------------------------------------------------------------------*/
 
@@ -324,7 +327,9 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 				   bool debug /* Debug Newton */,
 				   bool fwdxini /* Use the result of the previous iteration for the next one*/,
 				   int niter /* Number of iteration for Newton */,
-				   double tolerance /* Tolerance level for Newton */)
+				   double tolerance /* Tolerance level for Newton */,
+				   int size /*MPI numprocs*/,
+				   int rank /*MPI proc rank*/)
 /*<Compute traveltime map>*/
 {
 	
@@ -345,37 +350,36 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	    oldans = NULL;
 	}
 	
-    for (iy=0; iy < ny; iy++) {	/* source/midpoint and offset axes */
-		x1 = y[iy].x; /* x1 is on the surface */
+	/* Divide the work according to the number of processors with the last processor getting the leftover*/
+	numdiv = (int)(ny/size);
+	mod = ny % size;
+	if (rank == size-1) numdiv += mod;
+	
+    for (iy=0; iy < numdiv; iy++) {	/* source/midpoint and offset axes */
+		x1 = y[iy+rank*size].x; /* x1 is on the surface */
 		if (0==iy || x1 != xp) { /* new point */
 			ta = (ktable**) sf_alloc(nx,sizeof(ktable*));
 			
 			for (ix=0; ix < nx; ix++) { /* reflector axis */
 				ta[ix] = (ktable*) sf_alloc(nc,sizeof(ktable));
-				
 				x2 = x0 + ix*dx; /* x2 is on the reflector */
 				
 				for (ic=0; ic < nc; ic++) { 
 					ta[ix][ic] = (ktable) sf_alloc(1,sizeof(ta[ix][ic][0]));
 					
-					/* Additional loop from kirmod2.c for generating extra parameters*/
+					/* Additional loop for generating extra parameters*/
 					num = ic;
 					if (num!=0) {
 						xinitial = sf_floatalloc(num);
 						
 						for (iv=0; iv<num; iv++) { /* How many reflection*/
 							if (fwdxini) {
-									
 								if (ix==0 || skip) { /* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
-									/*oldans[iv][num-1] = x1+(x2-x1)*(iv+1)/(num+1);*/
 									oldans[iv][num-1] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
 								}
-								
 								xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
-							
 							}
 							else {
-								/*xinitial[iv] = x1+(x2-x1)*(iv+1)/(num+1);*/
 								xinitial[iv] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
 							}
 						}
@@ -384,14 +388,11 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 						xinitial = sf_floatalloc(1);
 						xinitial[0] = 0; /* The case where there is NO reflection (to avoid warning)*/
 					}
-
-					
 					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,v.aniso,z, zder, zder2, oldans, skip, ta[ix][ic]);
-				
 				} 
 			} 
 		} 
-		y[iy].ta = ta;
+		y[iy+rank*size].ta = ta;
 		xp = x1;
     }
 

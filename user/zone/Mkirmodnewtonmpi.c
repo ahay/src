@@ -20,6 +20,7 @@
 #include <float.h>
 #include <math.h>
 #include <rsf.h>
+#include <mpi.h>
 
 #include "kirmod.h"
 #include "kirmod2.h"
@@ -30,6 +31,15 @@
 
 int main(int argc, char* argv[]) 
 {
+    /*For MPI-----------------*/
+    MPI_Init(NULL,NULL);
+    int size, rank;
+    
+    MPI_Comm commworld;
+    commworld = MPI_COMM_WORLD;
+    MPI_Comm_rank(commworld,&rank);
+    MPI_Comm_size(commworld,&size);
+
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
     double tolerance;
@@ -411,9 +421,9 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
     if (newton) {
 	/* Initialize parameters for newton*/
 	kirmodnewton_init(rr, rd, updown, x0, dx, nx, nc-1, order, nc+1, vstatus, vn.xref, vn.zref, vn.v, vn.gx, vn.gz, vn.aniso);
-		
+	
 	/*** Compute traveltime table ***/
-	kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance);
+	kirmodnewton2_table(inc, debug /* Debug Newton */, fwdxini,  niter, tolerance, size, rank);
     }
     else {
 	/*** Compute traveltime table ***/
@@ -422,7 +432,11 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	if (ref != inc) kirmod2_table (ref, vel2, type2[0], twod, crv, dip);
     }
 
-	
+if(rank == 0){ /* Execute serially using the master only*/
+
+/* Gather the traveltime data from all the processors*/
+ 
+
     if (lin) {
 	if (adj) {
 	    for (ic=0; ic < nc; ic++) {
@@ -537,7 +551,10 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	
     if (lin && adj) sf_floatwrite(rfl[0],nxc,data);
 	
-	
+}
+    /*For MPI*/
+    MPI_Finalize();
+    
     exit(0);
 }
 
