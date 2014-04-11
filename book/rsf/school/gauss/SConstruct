@@ -2,7 +2,7 @@ from rsf.proj import *
 
 par = dict(
     nx=200,  ox=-10, dx=0.1,  lx='x', ux='km',
-    nz=200,  oz=-10, dz=0.1,  lz='x', uz='km', 
+    nz=200,  oz=-10, dz=0.1,  lz='z', uz='km', 
     nt=1000, ot=0,   dt=0.01, # traveltime
     ng=1801, og=-90, dg=0.1,  # angle
     sig=1.5,                  # stdev
@@ -46,7 +46,7 @@ Flow('gg',None,
      math output="exp(-(x1^2+x2^2)/(2*%(sig)g^2))"
      n1=%(nz)d d1=%(dz)g o1=%(oz)g
      n2=%(nx)d d2=%(dx)g o2=%(ox)g |
-     put label1=%(lz)s unit1=%(lz)s 
+     put label1=%(lz)s unit1=%(uz)s 
          label2=%(lx)s unit2=%(ux)s
      '''%par)
 
@@ -87,7 +87,7 @@ Flow(  'fme','vel',
        'eikonal zshot=%(zsou)g yshot=%(xsou)g'%par)
 
 # plot eikonal traveltimes
-Plot(  'fme',fmeplot('',par))
+Plot(  'fme',fmeplot('plotcol=1',par))
 Result('fme',['vel','fme'],'Overlay')
 
 # ------------------------------------------------------------
