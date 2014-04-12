@@ -311,7 +311,7 @@ int main(int argc, char **argv) {
   if (ntr==EMPTY) ntr = (int)((gx_e-gx_o)/gx_dx)+1;
   else gx_dx = (gx_e-gx_o)/((float)ntr);
 
-  if (hdr_nt==EMPTY) hdr_nt = (int)(hdr_T/hdr_dt)+1;
+  if (hdr_nt==EMPTY) hdr_nt = (int)(hdr_T/hdr_dt)+2;
   else hdr_dt = hdr_T/((float)hdr_nt);
 
   float d1=mdl_dz, d2=mdl_dx;
@@ -429,23 +429,23 @@ int main(int argc, char **argv) {
   //striping bin and hdr from su file 
   fprintf(fp,"cmd4 = "
 	     "sustrip + "
-	     "' head=temp.h <%s >temp.bin'\n\n",
+	     "' head=temp.h ftn=0 <%s >temp.bin'\n\n",
 	  src_file);
 
   //applying weights
   fprintf(fp,"cmd5 = "
    	     "weightsource + "
-	     "' %s temp.bin temp.bin'\n\n",
+	     "' %s temp.bin new_temp.bin'\n\n",
 	  par_file);
 
   //The number of time stps in the source file is initially nts,
   //but then gets altered after convolving with a ricker wavelet.
-  int final_nts = (int)(2.0/(fpeak*src_dt)) + nts;
+  int final_nts = (int)(2.0/(fpeak*src_dt)) +1 + nts;
 
   //pasting back bin 
   fprintf(fp,"cmd6 = "
 	     "supaste + "
-	     "' <temp.bin >%s ns=%d head=temp.h'\n\n",
+	     "' <new_temp.bin >%s ns=%d head=temp.h'\n\n",
 	  src_file,final_nts);
 
   //executing commands
@@ -460,6 +460,7 @@ int main(int argc, char **argv) {
   fprintf(fp,"os.system('rm ricker.su; "
 	                "rm source_base.su; "
                         "rm temp.bin; "
+                        "rm new_temp.bin; "
 	                "rm temp.h')\n");
   fclose(fp);
 

@@ -377,46 +377,54 @@ int main(int argc, char **argv)
   int choose = 1;
   
   for(int i=0; i<nxnz; i++)
-    bulkmod_val[i] = get_zvalue( zcoor[i],xcoor[i],model,choose,omv );
+    bulkmod_val[i] = get_zvalue( zcoor[i],xcoor[i],
+				 model,choose,omv );
+  
+  //Allocating room for data
+  int final_nts = (int)(2.0/(fpeak*src_dt)) + nts + 1;
+  fprintf(stderr,"Final nts = %d\n",final_nts);
+  fprintf(stderr,"nxnz      = %d\n",nxnz);  
+
+  float *buff = (float*)calloc(nxnz*final_nts,sizeof(float)); 
+  if(buff==NULL){
+    fprintf(stderr,"Error, from weightsource: "
+		   "could not allocate memory for buffer.\n");
+  }  
 
   // read in traces from binary ----------------------//
+  fprintf(stderr,"WEIGHTSOURCE: reading from %s.\n",src_bin);  
   fp = fopen(src_bin,"rb");
   if(fp==NULL) {
     fprintf(stderr,"Error, from weightsource: "
 		    "could not open file %s\n",src_bin);
     exit(1);
   }
-
-  //Allocating room for data
-  float *buff = (float*)calloc(nxnz*nts,sizeof(float)); 
-  if(buff==NULL){
-    fprintf(stderr,"Error, from weightsource: "
-		   "could not allocate memory for buffer.\n");
-  }  
-
-  int final_nts = (int)(2.0/(fpeak*src_dt)) + nts;
-  //reading in
+    
   err = fread(buff,sizeof(float),nxnz*final_nts,fp); 
   if (err!=nxnz*final_nts){
     fprintf(stderr,"Error, from weightsource: "
 	           "reading in binary data.\n");
     exit(1);
   }
+  fprintf(stderr,"After reading in binary.\n");
+
   fclose(fp);
 
   // weight traces -----------------------------------//
   for(int i=0; i<nxnz; i++){
-    for(int it=0; it<final_nts; it++){
-      buff[it+i*final_nts] *= bulkmod_val[i];
-    }
+    for(int it=0; it<final_nts; it++)
+      buff[it+i*final_nts] *= bulkmod_val[i]*src_dx*src_dz;
   }
   
   // write out traces --------------------------------//
+  fprintf(stderr,"WEIGHTSOURCE: writing to %s.\n",out_bin);
   fp = fopen(out_bin,"wb");
   fwrite(buff,sizeof(float),nxnz*final_nts,fp);
   fclose(fp);
 
-  free(omv);
+  fprintf(stderr,"After writing out binary.\n");
+
+  if (model>=2) free(omv);
   free(xcoor);
   free(zcoor);
   free(bulkmod_val);
