@@ -1,0 +1,23 @@
+\begin{abstract}
+Wave propagation in an anisotropic medium is inherently described by elastic wave equations, with P- and S-wave modes
+intrinsically coupled. We present an approach to simulate propagation of separated wave modes for
+ forward modeling,
+ migration, waveform inversion and other applications in general anisotropic media.
+The proposed approach consists of two cascaded computational steps. First, we simulate equivalent
+ elastic anisotropic wavefields with a minimal second-order coupled system 
+(that we call here a pseudo-pure-mode wave equation),
+which describes propagation of all wave modes with a partial wave mode separation. Such a system for qP-wave
+ is derived from the inverse Fourier transform of the Christoffel equation after a
+ similarity transformation, which aims to project the original vector displacement wavefields onto isotropic
+ references of the polarization directions of qP-waves. It accurately describes the kinematics
+ of all wave modes and enhances qP-waves when the pseudo-pure-mode wavefield components are summed.
+ The second step is a filtering to further project the pseudo-pure-mode wavefields onto the polarization directions
+ of qP-waves so that residual qS-wave energy is removed and scalar qP-wave fields are accurately separated
+ at each time step during wavefield extrapolation.
+As demonstrated in the numerical examples, pseudo-pure-mode wave equation plus
+correction of projection deviation provides a robust and flexible
+tool for simulating propagation of separated wave modes in
+transversely isotropic and orthorhombic media.
+The synthetic example of Hess VTI model shows that
+the pseudo-pure-mode qP-wave equation can be used in prestack reverse-time migration (RTM) applications.
+\end{abstract}
