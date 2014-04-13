@@ -10,15 +10,10 @@ Prerequisites
 
    2. Python interpreter. Python is an interpretable programming
    language. It is used in Madagascar installation scripts and project
-   management scripts. Python comes pre-installed on some platforms.
-   
-Madagascar currently attempts to support Python versions 2.2 through
-2.7. Versions before 2.2 are probably not common, but if you experience
-problems and you have an earlier version you should probably upgrade.
-   
-SCons is also required, but it is included with Madagascar and the
-configure scripts will attempt to install it for you if you don't have
-it already.
+   management scripts. Python comes pre-installed on some
+   platforms. The preferred Python version is 2.7 but older versions
+   are also supported. If you experience problems and you have an
+   earlier version, you should probably upgrade.
 
 For more information see:
 http://ahay.org/wiki/Main_Page
@@ -30,17 +25,18 @@ Software construction
 
    1. Configuration.
 
-      Change to the top RSF source directory and run
+      Change to the top Madagascar source directory and run
 
       ./configure --prefix=/directory/where/you/want/madagascar/installed
 
-      You can examine the config.py file that this command generates. Additional
-      options are available. You can obtain a full list of customizable 
-      variables by running "scons -h". For example, to install C++ and 
-      Fortran-90 API bindings in addition to the basic package, run
+      You can examine the config.py file that this command
+      generates. Additional options are available. You can obtain a
+      full list of customizable variables by running "scons -h". For
+      example, to install Fortran-90 API bindings in addition to the
+      basic package, run
 
       ./configure --prefix=/directory/where/you/want/madagascar/installed \
-      API=c++,fortran-90 
+      API=fortran-90 
 
    2. Building and installing the package.
 

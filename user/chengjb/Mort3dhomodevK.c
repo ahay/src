@@ -27,7 +27,7 @@
 
 /* prepared head files by myself */
 #include "_cjb.h"
-#include "_lapack.h"
+/* #include "_lapack.h" */
 
 /* head files aumatically produced from C programs */
 #include "zero.h"
@@ -88,13 +88,13 @@ int main(int  argc,char **argv)
     sf_warning("dy=%f ",dy);
     sf_warning("dz=%f ",dz);
 
-    dkx=2*PI/dx/nx;
-    dkz=2*PI/dz/nz;
-    dky=2*PI/dy/ny;
+    dkx=2*SF_PI/dx/nx;
+    dkz=2*SF_PI/dz/nz;
+    dky=2*SF_PI/dy/ny;
 
-    fkx=-PI/dx;
-    fky=-PI/dy;
-    fkz=-PI/dz;
+    fkx=-SF_PI/dx;
+    fky=-SF_PI/dy;
+    fkz=-SF_PI/dz;
 
     sf_warning("vp0=%f ",vp0);
     sf_warning("vs0=%f ",vs0);
@@ -110,9 +110,9 @@ int main(int  argc,char **argv)
     sf_warning("the=%f ",the);
     sf_warning("phi=%f ",phi);
 
-    alpha *= PI/180.0;
-    the *= PI/180.0;
-    phi *= PI/180.0;
+    alpha *= SF_PI/180.0;
+    the *= SF_PI/180.0;
+    phi *= SF_PI/180.0;
     
     char    jobz='V';  /* for SVD */
     char    uplo='U';  /* for SVD */
@@ -172,17 +172,17 @@ int main(int  argc,char **argv)
     for( j=-hny; j<=hny; j++){
           jhny=j+hny;
 	  ky=j*dky;
-          rky=2*PI*j/ny;
+          rky=2*SF_PI*j/ny;
          //sf_warning("j=%d jhny=%d ky=%f ",j,jhny,ky);
 	  for( i=-hnx; i<=hnx; i++ ){
                 ihnx=i+hnx;
 		kx=i*dkx;
-                rkx=2*PI*i/nx;
+                rkx=2*SF_PI*i/nx;
 		for( k=-hnz; k<=hnz; k++)
 		{
                         khnz=k+hnz;
 			kz=k*dkz;
-                        rkz=2*PI*k/nz;
+                        rkz=2*SF_PI*k/nz;
 
                         taper[jhny][ihnx][khnz]=pow((TAPER(rky)*TAPER(rkx)*TAPER(rkz)), 1.0/100.0);
 
