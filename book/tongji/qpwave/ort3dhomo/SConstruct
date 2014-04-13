@@ -1,0 +1,176 @@
+from rsf.proj import *
+
+par = dict(
+   fn1="stability.test.p",
+   fn2="stability.test.q",
+   fn3="stability.test.r",
+   hny=250,
+   hnx=250,
+   hnz=250,
+   nx=501,
+   ny=501,
+   nz=501,
+   dx=6.0, 
+   dy=6.0, 
+   dz=6.0, 
+   dyy=0.006,
+   dxx=0.006,
+   dzz=0.006,
+   fx=.0, 
+   fy=.0, 
+   fz=.0,
+
+   ns=1001,
+   dt=0.0005,
+
+   vp0=3000.0,
+   vs0=1500.0,
+   de1=0.1,
+   de2=-0.0422,
+   de3=0.125,
+   ep1=0.2,
+   ep2=0.067,
+   ga1=0.1,
+   ga2=0.047,
+   alpha=0.0,
+   the=0.0,
+   phi=0.0,
+
+   itaper=0,
+   isep=1,
+)
+
+#########################################################################
+#  modeling 3D pseudo-pure P-wave wavefield
+#########################################################################
+#name1='''
+#PseudoPurePx PseudoPurePy PseudoPurePz
+#'''
+
+#Flow('PseudoPurePx',None,
+#         '''
+#         datasucjb2rsf3dnh fn=%s 
+#         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
+#         ''' % (par['fn1'],par['nx'],par['ny'],par['nz'],
+#                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
+#    )
+#Flow('PseudoPurePy',None,
+#         '''
+#         datasucjb2rsf3dnh fn=%s 
+#         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
+#         ''' % (par['fn2'],par['nx'],par['ny'],par['nz'],
+#                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
+#    )
+#Flow('PseudoPurePz',None,
+#         '''
+#         datasucjb2rsf3dnh fn=%s 
+#         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
+#         ''' % (par['fn3'],par['nx'],par['ny'],par['nz'],
+#                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
+#    )
+
+#for qq in Split(name1):
+#        Result(qq,
+#        '''
+#        byte gainpanel=all |
+#        grey3 polarity=n scalebar=n frame1=151 frame2=251 frame3=251 wanttitle=n flat=y screenratio=1
+#        ''')
+
+#########################################################################
+#   calculate deviation correction operators in k-domain
+#########################################################################
+name2='''
+apvx apvy apvz taperK
+'''
+
+Flow(['apvx',  'apvy',   'apvz',  'taperK'], None,
+       '''
+         ort3dhomodevK
+         apvy=${TARGETS[1]}
+         apvz=${TARGETS[2]}
+         taper=${TARGETS[3]}
+         itaper=%d
+         hnx=%d
+         hny=%d
+         hnz=%d
+         dx=%g
+         dy=%g
+         dz=%g
+         vp0=%g
+         vs0=%g
+         de1=%g
+         de2=%g
+         de3=%g
+         ep1=%g
+         ep2=%g
+         ga1=%g
+         ga2=%g
+         alpha=%g
+         the=%g
+         phi=%g
+         ''' % (par['itaper'],
+                par['hnx'],par['hny'],par['hnz'],par['dx'],par['dy'],par['dz'],
+                par['vp0'],par['vs0'],par['de1'],par['de2'],par['de3'],
+                par['ep1'],par['ep2'],
+                par['ga1'],par['ga2'],
+                par['alpha'],par['the'],par['phi'])
+    )
+
+for pp in Split(name2):
+        Result(pp,
+        '''
+        byte |
+        grey3 color=j polarity=n scalebar=n frame1=101 frame2=151 frame3=151 screenratio=1 wanttitle=n flat=n
+        ''')
+
+#########################################################################
+#   deviation correction for wave-mode seapration
+#########################################################################
+name3='''
+PseudoPureP
+'''
+
+name4='''
+PseudoPureSepP
+'''
+
+Flow(['PseudoPureP','PseudoPureSepP'],
+     ['apvx', 'apvy', 'apvz',
+      'PseudoPurePx', 'PseudoPurePy', 'PseudoPurePz'],
+       '''
+         ort3dhomodevcK
+         apvy=${SOURCES[1]}
+         apvz=${SOURCES[2]}
+         PseudoPurePx=${SOURCES[3]}
+         PseudoPurePy=${SOURCES[4]}
+         PseudoPurePz=${SOURCES[5]}
+         PseudoPureSepP=${TARGETS[1]}
+       '''
+    )
+
+#########################################################################
+#Flow(['PseudoPureP','PseudoPureSepP'],
+#     ['PseudoPurePx', 'PseudoPurePy', 'PseudoPurePz'],
+#       '''
+#         ort3dhomodevcTemp
+#         PseudoPurePy=${SOURCES[1]}
+#         PseudoPurePz=${SOURCES[2]}
+#         PseudoPureSepP=${TARGETS[1]}
+#       '''
+#    )
+
+for qq in Split(name3):
+        Result(qq,
+        '''
+        byte gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=151 frame2=251 frame3=251 wanttitle=n flat=y screenratio=1
+        ''')
+
+for qq in Split(name4):
+        Result(qq,
+        '''
+        byte gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=151 frame2=251 frame3=251 wanttitle=n flat=y screenratio=1
+        ''')
+
+End()
