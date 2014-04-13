@@ -1690,7 +1690,7 @@ def cxx(context):
             if CXX[-3:]=='g++':
                 oldflag = context.env.get('CXXFLAGS')
                 for flag in ['-Wall -pedantic']:
-                    context.Message("checking if g++ accepts '%s' ... " % flag)
+                    context.Message("checking if %s accepts '%s' ... " % (CXX,flag))
                     context.env['CXXFLAGS'] = oldflag + ' ' + flag
                     res = context.TryCompile(text,'.cc')
                     context.Result(res)
