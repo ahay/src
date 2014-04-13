@@ -21,7 +21,7 @@ vti3de vti3dehomo
 
 tti3de tti3dehomo
 
-ort3dhomodevK ort3dhomodevcTemp
+ort3dhomodevK ort3dhomodevcK ort3dhomodevcTemp
 
 datasucjb2rsf3d datasucjb2rsf3dnh su2rsf3dladcig
 homo3dtti
@@ -31,7 +31,7 @@ wavefrontamp wavefrontamp360 wavefrontampTransmit wavefrontampReflect
 
 #ort3dpseudop
 #ort3dhomodevX ort3dhomodevcX
-#ort3dhomodevK ort3dhomodevcK
+#ort3dhomodevK 
 
 ccprogs = '''
 vti2delrsep 
