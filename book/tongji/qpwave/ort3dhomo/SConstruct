@@ -47,27 +47,27 @@ par = dict(
 #PseudoPurePx PseudoPurePy PseudoPurePz
 #'''
 
-#Flow('PseudoPurePx',None,
-#         '''
-#         datasucjb2rsf3dnh fn=%s 
-#         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
-#         ''' % (par['fn1'],par['nx'],par['ny'],par['nz'],
-#                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
-#    )
-#Flow('PseudoPurePy',None,
-#         '''
-#         datasucjb2rsf3dnh fn=%s 
-#         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
-#         ''' % (par['fn2'],par['nx'],par['ny'],par['nz'],
-#                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
-#    )
-#Flow('PseudoPurePz',None,
-#         '''
-#         datasucjb2rsf3dnh fn=%s 
-#         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
-#         ''' % (par['fn3'],par['nx'],par['ny'],par['nz'],
-#                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
-#    )
+Flow('PseudoPurePx',None,
+         '''
+         datasucjb2rsf3dnh fn=%s 
+         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
+         ''' % (par['fn1'],par['nx'],par['ny'],par['nz'],
+                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
+    )
+Flow('PseudoPurePy',None,
+         '''
+         datasucjb2rsf3dnh fn=%s 
+         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
+         ''' % (par['fn2'],par['nx'],par['ny'],par['nz'],
+                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
+    )
+Flow('PseudoPurePz',None,
+         '''
+         datasucjb2rsf3dnh fn=%s 
+         nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
+         ''' % (par['fn3'],par['nx'],par['ny'],par['nz'],
+                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz'])
+    )
 
 #for qq in Split(name1):
 #        Result(qq,
