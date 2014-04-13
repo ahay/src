@@ -2,6 +2,9 @@
 #include <parser.h>
 #include <math.h>
 
+int xargc;
+char** xargv;
+
 /* define number of model types */
 #define NMODEL 4
 
@@ -182,12 +185,14 @@ int main(int argc, char **argv)
   float     mdl_dx;      //spatial discretization for generating model
   float     mdl_dz;       
   
-
   if (argc!=4)
   {
     fprintf(stderr,"Proper use:\nweightsource file.par in.bin out.bin\n");
     exit(1);
   }
+
+  xargc = argc;
+  xargv = argv;
 
   par_file = argv[1];
   src_bin  = argv[2];
