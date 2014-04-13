@@ -18,7 +18,7 @@ par = dict(
 # Horizontal grid: 3617
 # Vertical and horizontal spacing are both 20ft.
 
-import bptti2007 
+from rsf.recipes import bptti2007 
 
 bptti2007.get_model('Vp Vs Epsilon Delta Theta Vx Eta')
 
