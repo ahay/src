@@ -60,14 +60,16 @@ Flow('PseudoPurePy',par['fn2'],
          datasucjb2rsf3dnh fn=$SOURCE
          nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
          ''' % (par['nx'],par['ny'],par['nz'],
-                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz']),
+                par['dxx'],par['dyy'],par['dzz'],
+		par['fx'],par['fy'],par['fz']),
 	stdin=0)
 Flow('PseudoPurePz',par['fn3'],
          '''
          datasucjb2rsf3dnh fn=$SOURCE
          nx=%d ny=%d nz=%d dx=%g dy=%g dz=%g fx=%g fy=%g fz=%g
-         ''' % (par['fn3'],par['nx'],par['ny'],par['nz'],
-                par['dxx'],par['dyy'],par['dzz'],par['fx'],par['fy'],par['fz']),
+         ''' % (par['nx'],par['ny'],par['nz'],
+                par['dxx'],par['dyy'],par['dzz'],
+		par['fx'],par['fy'],par['fz']),
 	stdin=0)
 
 #for qq in Split(name1):
