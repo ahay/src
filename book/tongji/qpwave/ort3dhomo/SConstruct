@@ -136,11 +136,12 @@ PseudoPureSepP
 
 Flow(['PseudoPureP','PseudoPureSepP'],
      ['apvx', 'apvy', 'apvz',
-      'PseudoPurePx', 'PseudoPurePy', 'PseudoPurePz'],
+      'PseudoPurePx', 'PseudoPurePy', 'PseudoPurePz','taperK'],
        '''
          ort3dhomodevcK
          apvy=${SOURCES[1]}
          apvz=${SOURCES[2]}
+	 taper=${SOURCES[6]}
          PseudoPurePx=${SOURCES[3]}
          PseudoPurePy=${SOURCES[4]}
          PseudoPurePz=${SOURCES[5]}
