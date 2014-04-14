@@ -3,10 +3,10 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton
+isaac0 isaac1 isaac2 isaac3 kirmod_newton 
 '''
 
-# kirmodnewtonmpi 
+# mpikirmodnewton
 
 try:  # distributed version
     Import('env root pkgdir bindir')

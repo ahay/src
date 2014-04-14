@@ -1,21 +1,36 @@
 from rsf.proj import *
 
 # =============================================================
-# download BP 2007 TTI  models from 'ftp://software.seg.org'
 dx = 6.25/1000
 dz = 6.25/1000
 ifinite = 0
 
+# Download from http://www.freeusp.org/2007_BP_Ani_Vel_Benchmark/
+tgz = 'ModelParams.tar.gz'
+
+Fetch(tgz,'BP',top=os.environ.get('DATAPATH'),server='local')
+
+pars = Split('Epsilon Delta Vp Theta')
+
+sgy = {}
+for par in pars:
+    sgy[par] = os.path.join('ModelParams',par + '_Model.sgy')
+
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+
+Flow(sgy.values(),tgz,
+     zcat + ' $SOURCE | tar -xvf -',stdin=0,stdout=-1)
+
 for m in ['Vp','Delta','Epsilon','Theta']:
-    sgy = '/data/cjb/bptti2007/%s_Model.sgy' % m
+    
     if m=='Vp':
-        Flow(m+'_Model',sgy,
+        Flow(m+'_Model',sgy[m],
              '''
              segyread read=data | 
              put d1=%g d2=%g unit1=km label1=Depth unit2=km label2=Distance label=Velocity unit=km/s
              ''' % (dx,dz))
     else:
-        Flow(m+'_Model',sgy,
+        Flow(m+'_Model',sgy[m],
              '''
              segyread read=data | 
              put d1=%g d2=%g unit1=km label1=Depth unit2=km label2=Distance
