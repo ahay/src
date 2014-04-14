@@ -3,7 +3,7 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-isaac0 isaac1 isaac2 isaac3 kirmod_newton 
+isaac0 isaac1 isaac2 isaac3 kirmod_newton mpikirmodnewton
 '''
 
 # kirmodnewtonmpi 
@@ -18,16 +18,15 @@ except: # local version
 
 src = Glob('[a-z]*.c')
 
-#src.remove('einspline.c')
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsf'])
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
+    if not source in Glob('mpi*.c'):
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
 
 mpicc = env.get('MPICC')
 

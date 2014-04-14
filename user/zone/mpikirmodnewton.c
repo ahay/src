@@ -19,16 +19,16 @@
 #include <rsf.h>
 #include <math.h>
 
-#include "kirmodnewton.h"
-#include "vectorops.h"
+#include "mpikirmodnewton.h"
+#include "mpivectorops.h"
 
-#include "kirmod.h"
-#include "general_traveltime.h"
+#include "mpikirmod.h"
+#include "mpigeneral_traveltime.h"
 /*^*/
 
-#include "setvelocity.h"
+#include "mpisetvelocity.h"
 
-#ifndef _kirmodnewton_h
+#ifndef _mpikirmodnewton_h
 
 typedef struct KTable {
     float t  /* traveltime */;
@@ -219,10 +219,20 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		
 	/*Apply boundary---------------------------------------------------------------------------*/
 	
+	
+/*	sf_warning("xs %f xr %f n+1=%d xx0 %f xx1 %f xx2 %f xx3 %f xx4 %f dk0 %f \n",xs,xr,n+1,xx[0],xx[1],xx[2],xx[3],xx[4],dk[0]);*/
+/*	if(xx[0]<bmin-tol || xx[0]>bmax+tol ||xx[n+1]<bmin-tol || xx[n+1]>bmax+tol) {*/
+/*		sf_warning("FINAL xs %f xr %f n+1=%d xx0 %f xx1 %f xx2 %f xx3 %f xx4 %f\n",xs,xr,n+1,xx[0],xx[1],xx[2],xx[3],xx[4]);*/
+/*		exit(0);*/
+/*	}*/
+	
 	xxtem[0] = xx[0]; /*Fixed source*/
 	xxtem[n+1] = xx[n+1]; /*Fixed receiver*/
+	dk[0] = 0.0; /*To prevent trash data*/
+	dk[n+1] = 0.0;
+	
 	float dktemp;
-	int t,a,b1,b2,b3; /* Counter*/
+	int t,a,b1,b2,b3,b4; /* Counter*/
 	for (a=0; a<n; a++) {
 	    b1=0;
 	    b2=0;
@@ -258,37 +268,37 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	}
 	
 	/*Zero thickness---we modify the dk from newton to converge to the same point*/
-	for(b3=0; b3<n+1; b3++) {
-		if (fabsf(z(b3,xxtem[b3])-z(b3+1,xxtem[b3+1]))<0.00001){
-			if(fabsf(dk[b3])>fabsf(dk[b3+1])) dktemp = dk[b3+1];
-			if(fabsf(dk[b3])<fabsf(dk[b3+1])) dktemp = dk[b3];
+	for(b4=0; b4<n+1; b4++) {
+		if (fabsf(z(b4,xxtem[b4])-z(b4+1,xxtem[b4+1]))<0.00001){
+			if(fabsf(dk[b4])>fabsf(dk[b4+1])) dktemp = dk[b4+1];
+			if(fabsf(dk[b4])<fabsf(dk[b4+1])) dktemp = dk[b4];
 			
-			if (xx[b3]<xx[b3+1]){
-				if(b3==0){ /*First layer = zero thickness*/
-					dk[b3+1] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
-					dk[b3] = dktemp;
+			if (xx[b4]<xx[b4+1]){
+				if(b4==0){ /*First layer = zero thickness*/
+					dk[b4+1] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+					dk[b4] = dktemp;
 				}
-				else if(b3==n) { /*Last layer = zero thickness*/
-					dk[b3+1] = dktemp;
-					dk[b3] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				else if(b4==n) { /*Last layer = zero thickness*/
+					dk[b4+1] = dktemp;
+					dk[b4] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
 				}
 				else { /*Any other layer*/
-					dk[b3+1] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
-					dk[b3] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b4+1] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+					dk[b4] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
 				}
 			}
 			else {
-				if(b3==0){ /*First layer = zero thickness*/
-					dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
-					dk[b3] = dktemp;
+				if(b4==0){ /*First layer = zero thickness*/
+					dk[b4+1] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+					dk[b4] = dktemp;
 				}
-				else if(b3==n) { /*Last layer = zero thickness*/
-					dk[b3+1] = dktemp;
-					dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+				else if(b4==n) { /*Last layer = zero thickness*/
+					dk[b4+1] = dktemp;
+					dk[b4] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
 				}
 				else { /*Any other layer*/
-					dk[b3] = fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
-					dk[b3+1] = (-1)*fabsf(xx[b3]-xx[b3+1])/2 +dktemp;
+					dk[b4] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+					dk[b4+1] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
 				}
 			}
 		}
