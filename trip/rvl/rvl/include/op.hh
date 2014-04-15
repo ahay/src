@@ -1977,7 +1977,7 @@ namespace RVL {
   
 	if (opvec.size()<1) {
 	  RVLException e;
-	  e<<"Error: OpComp::apply\n";
+	  e<<"Error: OpComp::applyDeriv\n";
 	  e<<"object not initialized\n";
 	  throw e;
 	}
@@ -2055,7 +2055,7 @@ namespace RVL {
 	// cerr<<"OpComp::applyAdjDeriv 0\n";
 	if (opvec.size()<1) {
 	  RVLException e;
-	  e<<"Error: OpComp::apply\n";
+	  e<<"Error: OpComp::applyAdjDeriv\n";
 	  e<<"object not initialized\n";
 	  throw e;
 	}
@@ -2083,6 +2083,7 @@ namespace RVL {
 	    //	    cerr<<"lastlin after  = "<<lastlin<<endl;
 	  }
 	  // cerr<<"OpComp::applyAdjDeriv lastlin="<<lastlin<<"\n";
+        
 
 	  for (int i=0;i<lastlin;i++) {
 	    //	    cerr<<"OpComp::applyAdjDeriv forward loop step="<<i<<"\n";
@@ -2135,6 +2136,108 @@ namespace RVL {
       }
     }
 
+      /** implements the chain rule to apply the second order derivative */
+      void applyDeriv2(const Vector<Scalar> & x,
+                       const Vector<Scalar> & dx0,
+                       const Vector<Scalar> & dx1,
+                       Vector<Scalar> & dy) const {
+          try {
+              
+              if (opvec.size()<1) {
+                  RVLException e;
+                  e<<"Error: OpComp::applyDeriv2\n";
+                  e<<"object not initialized\n";
+                  throw e;
+              }
+              // set flag to indicate finish of initialization
+              applied = true;
+              
+              // allocate intermediate vectors via evaluation
+              // special case: one op only, no tmp vector allocation needed
+              if (opvec.size()==1)
+                  this->export_applyDeriv2(*(opvec[0]),x,dx0,dx1,dy);
+              else if(opvec.size()==2){
+                  std::vector<OperatorEvaluation<Scalar> *> opeval(opvec.size(), NULL);
+                  opeval[0] = new OperatorEvaluation<Scalar>(*(opvec[0]),x);
+                  opeval[1] = new OperatorEvaluation<Scalar>(*(opvec[1]),opeval[0]->getValue());
+                  Vector<Scalar> tmp(opvec[1]->getRange());
+                  Vector<Scalar> dgx0(opvec[1]->getDomain());
+                  Vector<Scalar> dgx1(opvec[1]->getDomain());
+                  Vector<Scalar> d2gx(opvec[1]->getDomain());
+
+                  opeval[0]->getDeriv().applyOp(dx0,dgx0);
+                  opeval[0]->getDeriv().applyOp(dx1,dgx1);
+                  opeval[0]->getDeriv2().applyOp(dx0,dx1,d2gx);
+                  opeval[1]->getDeriv2().applyOp(dx0,dx1,tmp);
+                  opeval[1]->getDeriv().applyOp(d2gx,dy);
+                  dy.linComb(1.0, tmp);
+                  for (int i=opvec.size()-1;i>-1;i--) if (opeval[i]) delete opeval[i];
+                  
+              }
+              // all other cases handled uniformly
+              else {
+                  RVLException e;
+                  e<<"Error: OpComp::applyDeriv2\n";
+                  e<<"deriv2 for more than two operators has not been implemented\n";
+                  throw e;
+                  
+              }
+          }
+          catch (RVLException & e) {
+              e<<"\ncalled from OpComp::applyDeriv2\n";
+              throw e;
+          }
+      }
+
+      void applyAdjDeriv2(const Vector<Scalar> & x,
+                          const Vector<Scalar> & dx0,
+                          const Vector<Scalar> & dy,
+                          Vector<Scalar> & dx1) const {
+          try {
+              // cerr<<"OpComp::applyAdjDeriv 0\n";
+              if (opvec.size()<1) {
+                  RVLException e;
+                  e<<"Error: OpComp::applyAdjDeriv2\n";
+                  e<<"object not initialized\n";
+                  throw e;
+              }
+              // set flag to indicate finish of initialization
+              applied = true;
+              if (opvec.size()==1)
+                  this->export_applyAdjDeriv2(*(opvec[0]),x,dx0,dy,dx1);
+              else if(opvec.size()==2){
+                  std::vector<OperatorEvaluation<Scalar> *> opeval(opvec.size(), NULL);
+                  opeval[0] = new OperatorEvaluation<Scalar>(*(opvec[0]),x);
+                  opeval[1] = new OperatorEvaluation<Scalar>(*(opvec[1]),opeval[0]->getValue());
+                  Vector<Scalar> tmp(opvec[0]->getDomain());
+                  Vector<Scalar> tmp0(opvec[1]->getDomain());
+                  Vector<Scalar> dftdy(opvec[1]->getDomain());
+                  Vector<Scalar> dgx0(opvec[1]->getDomain());
+                  
+                  opeval[0]->getDeriv().applyOp(dx0,dgx0);
+                  opeval[1]->getDeriv2().applyAdjOp(dgx0,dy,tmp0);
+                  opeval[0]->getDeriv().applyAdjOp(tmp0,tmp);
+                  
+                  opeval[1]->getDeriv().applyAdjOp(dy,dftdy);
+                  opeval[0]->getDeriv2().applyAdjOp(dx0,dftdy,dx1);
+                  dx1.linComb(1.0, tmp);
+                  for (int i=opvec.size()-1;i>-1;i--) if (opeval[i]) delete opeval[i];
+                  
+              }
+              // all other cases handled uniformly
+              else {
+                  RVLException e;
+                  e<<"Error: OpComp::applyAdjDeriv2\n";
+                  e<<"deriv2 for more than two operators has not been implemented\n";
+                  throw e;
+              }
+          }
+          catch (RVLException & e) {
+              e<<"\ncalled from OpComp::applyAdjDeriv2\n";
+              throw e;
+          }
+      }
+      
     /** virtual copy constructor: make a complete new copy including
 	internal workspace. Usually implemented with operator new and
 	copy constructor of concrete child class.
