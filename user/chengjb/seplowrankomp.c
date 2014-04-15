@@ -32,10 +32,6 @@ void seplowrank3domp(float *ldata,float *rdata,float *fmid, float *p, int *ijkx,
                       int nx, int ny, int nz, int m, int n, int m2, int n2, int iflag)
 /*< seplowrank3domp: 3D wave-mode separation based on low-rank decomposition using OpenMP >*/
 {
-       int i, im, im2;
-       float sum1, sum2, *wp;
-
-       wp = sf_floatalloc(m*n2);
 
        //sf_warning("m2= %d n2=%d",m2,n2);
 
@@ -48,6 +44,12 @@ void seplowrank3domp(float *ldata,float *rdata,float *fmid, float *p, int *ijkx,
        fftwf_plan xp;
        fftwf_plan xpi;
 
+#endif
+       float *wp;
+
+        wp = sf_floatalloc(m*n2);
+
+#ifdef SF_HAS_FFT
        xin=sf_complexalloc(m);
        xout=sf_complexalloc(n);
        xx=sf_complexalloc(n);

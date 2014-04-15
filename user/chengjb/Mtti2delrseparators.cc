@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
    rkk.resize(nk);
 
    double kx, kz, k2, rk;
-   int    i=0, j=0, k=0, ix, iz;
+   int    i=0, k=0, ix, iz;
    
    for(ix=0; ix < nkx; ix++)
    {

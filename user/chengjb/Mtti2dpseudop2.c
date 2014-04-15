@@ -38,7 +38,7 @@
 /*****************************************************************************************/
 int main(int argc, char* argv[])
 {
-	int	ix, iz, jx, jz,ixx, izz, i,j,im, jm,nx,nz,nxpad,nzpad,it,ii,jj;
+	int	i,j,im, jm,nx,nz,nxpad,nzpad,it,ii,jj;
 
         float   A, f0, t, t0, dx, dz, dt, dt2, div;
         int     mm, nvx, nvz, ns;
@@ -46,14 +46,9 @@ int main(int argc, char* argv[])
         float   *coeff_1dx, *coeff_1dz, *coeff_2dx, *coeff_2dz; /* finite-difference coefficient */
 
         float **vp0, **vs0, **epsi, **del, **theta;         /* velocity model */
-        float **p1, **p2, **p3, **q1, **q2, **q3, **p3c, **q3c, **sum;  /* wavefield array */
+        float **p1, **p2, **p3, **q1, **q2, **q3;  /* wavefield array */
 
-        clock_t t1, t2, t3, t4, t5;
-        float   timespent, fx,fz; 
-        char    *tapertype;
-
-        int     isep=1;
-        int     ihomo=1;
+        float   fx,fz; 
 
         sf_init(argc,argv);
 

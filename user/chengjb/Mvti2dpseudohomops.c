@@ -76,7 +76,6 @@ int main(int argc, char* argv[])
 	double vp2, vs2, ep2, de2;
 
         int     isep=1;
-        int     ihomo=1;
 
         sf_init(argc,argv);
 

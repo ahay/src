@@ -113,7 +113,7 @@ void slvsec3(double d[3], double z[3], double w[3],
 // results.
 // ---------------------------------------------------------------------------->*/
 {
-  int i, j, k, nIter;
+  int i, j, nIter;
   double a[4];            // Bounds of the intervals bracketing the roots
   double delta;           // Shift of the d_i which ensures better accuracy
   double dd[3];           // Shifted coefficients dd_i = d_i - delta
@@ -303,7 +303,7 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
 // A. The access is read-only.
 // --------------------------------------------------------------------------->*/
 {
-  int i, j, k;
+  int i, j;
   const int n = 3;
   double u[n], q[n];
   double omega, f;
@@ -847,7 +847,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
 //   dsytrd3()
 // ---------------------------------------------------------------------------->*/
 {
-  int i, j, k, l;
+  int i, k, l;
   const int n = 3;
   double e[3];                   // The third element is used only as temporary workspace
   double g, r, p, f, b, s, c, t; // Intermediate storage
