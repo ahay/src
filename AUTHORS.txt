@@ -60,7 +60,7 @@ Zhugiang Xue <zhiguangxue@gmail.com>
 Jia Yan <jyan@mines.edu>
 Lexing Ying <lexing@math.utexas.edu>
 Hejun Zhu <hzhu@jsg.utexas.edu>
-
+Layamrudhaa Renganathan Venkatesan <layamrudhaarv@utexas.edu>
 
 Vplot authors:
 
