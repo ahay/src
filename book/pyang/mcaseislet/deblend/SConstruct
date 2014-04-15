@@ -14,7 +14,7 @@ def grey(title):
 #========================================================================
 Flow('pq','data',
 	'''
-	twodip2 order=2 verb=y gauss=n niter=10 eps=5
+	twodip2 order=2 verb=y gauss=n niter=10 eps=5 lam=20
 	''')
 
 Plot('dip1','pq','window n3=1 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
@@ -33,29 +33,5 @@ Plot('rec1','window n2=512 | grey title=rec1')
 Plot('rec2','window n2=512 | grey title=rec2')
 Result('deblended1','dip1 dip2 rec1 rec2','TwoColumns')
 
-#================== reestimate the dips ======================
-Flow('ddip1', 'rec1','dip rect1=5 rect2=10 order=2')
-Flow('ddip2', 'rec2','dip rect1=5 rect2=10 order=2')
-Plot('ddip1','%s pclip=100 scalebar=y color=j' % grey('First Dip'))
-Plot('ddip2','%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
-
-
-Flow('ddips','ddip1 ddip2','cat axis=3 ${SOURCES[1]}')
-
-# Seislet-based MCA deblending 2:
-Flow('rrec','data ddips',
-     	'''
-     	mcaseislet dips=${SOURCES[1]} verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
-     	''')
-
-#=========================================================================
-Flow('rrec1','rrec','window n3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=0')
-Flow('rrec2','rrec','window f3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=512')
-Plot('rrec1','window n2=512 | grey title=rec1')
-Plot('rrec2','window n2=512 | grey title=rec2')
-
-Result('deblended2','ddip1 ddip2 rrec1 rrec2','TwoColumns')
-
-#SideBySideAniso
 End()
 
