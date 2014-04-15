@@ -284,7 +284,7 @@ AppData app_data;
 #define XtCPause "Pause"
 #define XtNvisDepth "visDepth"
 #define XtCVisDepth "VisDepth"
-
+char g[10000];
 static XtResource resources[] = {
     {
 	XtNstretchy,
@@ -1334,7 +1334,7 @@ void actionCoord(Widget w,XEvent *event,String *params,Cardinal *numparams)
 /*< this action procedure prints the event location to the file "interact" >*/
 {
     int x,y;
-
+	strcpy(interact,g+9);
     if( interact[0] == '\0' ) return;
 
     if (first_time == YES){
@@ -2272,8 +2272,8 @@ void opendev (int argc, char* argv[])
     dev.attributes = xtattributes;
 
     dev.reader = xt_dovplot;
-    dev.interact = xtinteract;
-
+//    dev.interact = xtinteract;
+	strcpy(g,argv[2]);
     dev.plot = xtplot;
 
     /*
