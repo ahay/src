@@ -120,8 +120,6 @@ int main(int argc, char *argv[])
     }	
 
 
-
-
     seislet_init(n1, n2, true, false, eps, order, type[0]);//unit=false, inv=true
     seislet_set(dip);
     for(iter=0; iter<niter; iter++)

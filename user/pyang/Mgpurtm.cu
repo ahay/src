@@ -229,7 +229,6 @@ void device_alloc()
 	cudaHostAlloc(&h_boundary, nt_h*2*(NJ-1)*(nx+nz)*sizeof(float), cudaHostAllocMapped);	
 	cudaMalloc(&d_boundary, (nt-nt_h)*2*(NJ-1)*(nx+nz)*sizeof(float));
 
-
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
 	printf("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
@@ -433,14 +432,10 @@ int main(int argc, char* argv[])
 	dimblr2=dim3(nnz/Block_Size1,(NJ+15)/16); dimglr2=dim3(Block_Size1, 16);
 	dimbtb2=dim3(16, Block_Size2);		dimgtb2=dim3((NJ+15)/16, nnx/Block_Size2);
 	
-    	v0=(float*)malloc(nx1*nz1*sizeof(float));
-	if (v0==NULL) 	{ sf_warning("out of memory!"); exit(1);}
-    	seis=(float*)malloc(ng*nt*sizeof(float));
-	if (seis==NULL) { sf_warning("out of memory!"); exit(1);}
-    	vel=(float*)malloc(N*sizeof(float));
-	if (vel==NULL) 	{ sf_warning("out of memory!"); exit(1);}
-    	p=(float*)malloc(N*sizeof(float));
-	if (p==NULL) 	{ sf_warning("out of memory!"); exit(1);}
+	if (!(v0=(float*)malloc(nx1*nz1*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}    	
+	if (!(seis=(float*)malloc(ng*nt*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}    	
+	if (!(vel=(float*)malloc(N*sizeof(float)))) 	 { sf_warning("out of memory!"); exit(1);}    	
+	if (!(p=(float*)malloc(N*sizeof(float)))) 	 { sf_warning("out of memory!"); exit(1);}
     	memset(v0, 0, nz1*nx1*sizeof(float));
     	memset(seis, 0, ng*nt*sizeof(float));
     	memset(vel, 0, N*sizeof(float));
