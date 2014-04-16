@@ -10,8 +10,8 @@ Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 def grey(title,other=''):
     return '''
-    grey title="%s" labelsz=10 titlesz=12 scalebar=y
-    label1="Time (s)" label2="Offset (km)" %s
+    grey title="%s" labelsz=12 titlesz=16 labelfat=10 titlefat=10 
+    scalebar=y  label1="Time (s)" label2="Offset (km)" %s
     ''' % (title,other)
 
 Plot('cmp',grey('(a) Data','clip=228'))
