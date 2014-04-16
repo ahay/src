@@ -1,15 +1,16 @@
 from rsf.proj import *
-import math
+
+#SConscript('../segy/SConstruct')
 
 Flow('foldplot','../segy/DeconShots3_hdr.rsf',
-    '''
+     '''
       dd type=float |
       fold
           verbose=1
           o1=60 n1=10  d1=5 label1=offset
           o2=1001 n2=1943 d2=1   label2=xline
           o3=5100 n3=296  d3=1   label3=iline        
-    ''')
+     ''')
 #	  o2=5100 n2=300  d2=1 label2=iline
 #	  o3=2801 n3=144  d3=1 label3=xline
 #    ''')

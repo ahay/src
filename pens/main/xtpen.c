@@ -284,7 +284,7 @@ AppData app_data;
 #define XtCPause "Pause"
 #define XtNvisDepth "visDepth"
 #define XtCVisDepth "VisDepth"
-char g[10000];
+
 static XtResource resources[] = {
     {
 	XtNstretchy,
@@ -1060,7 +1060,7 @@ void xt_restore_colormap(xtFrame *frame)
 /* variable that control the existance of buttons and labels */
 static int wantButtons = 0;
 static int  first_time = YES;
-extern char     interact[];
+extern char *interact;
 static int wantLabels = 0;
 
 /* The buttons that go into the control panel */
@@ -1334,7 +1334,7 @@ void actionCoord(Widget w,XEvent *event,String *params,Cardinal *numparams)
 /*< this action procedure prints the event location to the file "interact" >*/
 {
     int x,y;
-	strcpy(interact,g+9);
+
     if( interact[0] == '\0' ) return;
 
     if (first_time == YES){
@@ -2273,8 +2273,9 @@ void opendev (int argc, char* argv[])
 
     dev.reader = xt_dovplot;
 //    dev.interact = xtinteract;
-	strcpy(g,argv[2]);
     dev.plot = xtplot;
+
+    if (NULL == (interact = sf_getstring("interact"))) interact="";
 
     /*
      * save the command line arguments

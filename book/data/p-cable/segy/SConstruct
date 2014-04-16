@@ -1,19 +1,15 @@
 from rsf.proj import *
-
-# before running I used :
-## mkdir /Volumes/data/rsfdata
-## mkdir /Volumes/data/rsfdata/data
-# mkdir /Volumes/data/rsfdata/data/p_cable
-# rm -ri $DATAPATH/data/p_cable 
-# ln -s  /Volumes/data/rsfdata/data/p_cable $DATAPATH/data/p_cable
+from rsf.recipes.beg import server
 
 isegy=4297
-mysegy="/Volumes/data/p_cable/DeconShots3.sgy"
+mysegy="DeconShots3.sgy"
 myrsf="DeconShots3"
 targets=[ myrsf+".rsf" , myrsf+"_hdr.rsf" , myrsf+"thdr" , myrsf+".bhdr"]
 print "mysegy=",mysegy
 print "myrsf=",myrsf
 print "targets=",targets
+
+Fetch(mysegy,'tip',server)
 
 Flow(targets,
      mysegy,

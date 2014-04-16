@@ -26,15 +26,14 @@ SConscript('../fetch/SConstruct')
 
 # compute surface consistant amplitude for start time 0.
 # Put _st0 in the  file names.
-Flow(['sxy_st0.rsf'   ,'gxy_st0.rsf',
-      'sxyamp_st0.rsf','gxyamp_st0.rsf'],
-     ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
+Flow('sxy_st0 gxy_st0 sxyamp_st0 gxyamp_st0',
+     '../fetch/npr3_field.rsf ../fetch/npr3_field_hdr.rsf',
      '''
-     sftahscscale \
-  	input=$SOURCE \
-	sxy=${TARGETS[0]} gxy=${TARGETS[1]}        \
-	sxyamp=${TARGETS[2]} gxyamp=${TARGETS[3]} \
-	starttime=1.5 \
+     sftahscscale 
+  	input=$SOURCE 
+	sxy=${TARGETS[0]} gxy=${TARGETS[1]}        
+	sxyamp=${TARGETS[2]} gxyamp=${TARGETS[3]} 
+	starttime=1.5 
 	verbose=2 
      ''',stdout=0,stdin=0)
 
@@ -45,36 +44,46 @@ Flow(['scscale.rsf','scscale_hdr.rsf',
       'sxyamp_st1500.rsf','gxyamp_st1500.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
-     sftahscscale \
-  	input=$SOURCE \
+     sftahscscale 
+  	input=$SOURCE 
 	sxy=${TARGETS[2]}    gxy=${TARGETS[3]} 
 	sxyamp=${TARGETS[4]} gxyamp=${TARGETS[5]} 
-	starttime=1.5 \
-	verbose=2 \
-     | sftahwrite \
-        verbose=1 \
-        label2="tracf" o2=1  n2=1062 d2=1    \
-	label3="fldr"  o3=14 n3=850  d3=1   \
+	starttime=1.5 
+	verbose=2 
+     | sftahwrite 
+        verbose=1 
+        label2="tracf" o2=1  n2=1062 d2=1    
+	label3="fldr"  o3=14 n3=850  d3=1   
 	output=$TARGET
      ''',stdout=0,stdin=0)
 
 Result('sxy',
-	'graph symbol="+" title="Shot coordinates" plotcol=4')
+	'scale dscale=1e-6 | graph symbol="+" title="Shot coordinates" plotcol=4 label1=x label2=y unit1= unit2=')
 Result('gxy',
-	'graph symbol="+" title="Receiver coordinates" plotcol=5')
+	'scale dscale=1e-6 | graph symbol="+" title="Receiver coordinates" plotcol=5 label1=x label2=y unit1= unit2=')
+
+Flow('sx','sxyamp_st0','window n1=1 f1=0')
+Flow('sy','sxyamp_st0','window n1=1 f1=1')
+Flow('sxsycoord',['sx','sy'],'cmplx ${SOURCES[1]}')
+Result('sxsycoord','scale dscale=1e-6 | graph symbol="+" title="Shot (x,y)" plotcol=5 label1=x label2=y unit1= unit2=')
+Flow('gx','gxyamp_st0','window n1=1 f1=0')
+Flow('gy','gxyamp_st0','window n1=1 f1=1')
+Flow('gxgycoord',['gx','gy'],'cmplx ${SOURCES[1]}')
+Result('gxgycoord','scale dscale=1e-6 | graph symbol="+" title="group (x,y)" plotcol=5 label1=x label2=y unit1= unit2=')
+
 
 Flow(['scscale_subset.rsf','scscale_subset_hdr.rsf'],
      ['scscale.rsf','scscale_hdr.rsf'],
      '''
-     sftahsort \
-        input=$SOURCE \
-	sort="fldr:14,23 tracf:1,1063" \
-	verbose=1 \
-     | sftahwrite \
-        verbose=1                           \
-        label2="tracf" o2=1  n2=1062 d2=1    \
-	label3="fldr"  o3=14 n3=10  d3=1   \
-        output=$TARGET \
+     sftahsort 
+        input=$SOURCE 
+	sort="fldr:14,23 tracf:1,1063" 
+	verbose=1 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1  n2=1062 d2=1    
+	label3="fldr"  o3=14 n3=10  d3=1   
+        output=$TARGET 
      ''',stdout=0,stdin=0)
 
 Plot('scscale_subset','scscale_subset',
@@ -85,15 +94,15 @@ Plot('scscale_subset','scscale_subset',
 Flow(['npr3_field_subset.rsf','npr3_field_subset_hdr.rsf'],
      ['../fetch/npr3_field.rsf','../fetch/npr3_field_hdr.rsf'],
      '''
-     sftahsort \
-        input=$SOURCE \
-	sort="fldr:14,23 tracf:1,1063" \
-	verbose=1 \
-     | sftahwrite \
-        verbose=1                           \
-        label2="tracf" o2=1  n2=1062 d2=1    \
-	label3="fldr"  o3=14 n3=10  d3=1   \
-        output=$TARGET \
+     sftahsort 
+        input=$SOURCE 
+	sort="fldr:14,23 tracf:1,1063" 
+	verbose=1 
+     | sftahwrite 
+        verbose=1                           
+        label2="tracf" o2=1  n2=1062 d2=1    
+	label3="fldr"  o3=14 n3=10  d3=1   
+        output=$TARGET 
      ''',stdout=0,stdin=0)
 
 

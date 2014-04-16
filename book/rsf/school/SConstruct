@@ -39,22 +39,22 @@ for segabs in glob.glob('segabs*.tex'):
           options='notimes',
           use='natbib,graphicx,color,listings,amsmath,amssymb,amsbsy')
 
-Paper('slides_hpc',
-      lclass='cwpslides',
-      use='pythonlisting,alltt,multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,xcolor',
-    include=r'''
-    \def \largelabel#1#2#3{
-\put(#1,#2){\Large \textbf{#3}}
-}
-\def\sep{ \vfill \hrule \vfill}
-\def\itab{ \hspace{0.5in}}
-\def\black#1{\textcolor{black}{#1}}
-\def\gray#1{\textcolor{gray}{#1}}
-\def\white#1{\textcolor{white}{#1}}
-
-\def\klabellarge#1#2#3{ \black{ \largelabel{#1}{#2}{#3} }}
-'''
-)
+#Paper('slides_hpc',
+#      lclass='cwpslides',
+#      use='pythonlisting,alltt,multicol,color,overpic,listings,amsmath,amssymb,amsbsy,comment,xcolor',
+#    include=r'''
+#    \def \largelabel#1#2#3{
+#\put(#1,#2){\Large \textbf{#3}}
+#}
+#\def\sep{ \vfill \hrule \vfill}
+#\def\itab{ \hspace{0.5in}}
+#\def\black#1{\textcolor{black}{#1}}
+#\def\gray#1{\textcolor{gray}{#1}}
+#\def\white#1{\textcolor{white}{#1}}
+#
+#\def\klabellarge#1#2#3{ \black{ \largelabel{#1}{#2}{#3} }}
+#'''
+#)
 
 for article in glob.glob('article*.tex'):
     name = os.path.splitext(article)[0]

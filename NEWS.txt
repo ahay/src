@@ -104,6 +104,7 @@ In programs:
 * Avoid cropping of images by vplot2eps
 * Read the whole cube for finding contours in sfcontour3
 * Fixed shift by one in sfdespike
+* Fixed interact= bug in xtpen
 
 In the build system:
 
