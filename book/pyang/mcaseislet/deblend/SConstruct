@@ -1,24 +1,24 @@
 from rsf.proj import *
 
+
+def grey(title):
+    return 'grey title="%s" label2="Trace no." label1="Time (s)" ' % title
+     
 # synthesize a blended shot
 Fetch('pyang.rsf','pwd')
 Flow('shot1','pyang','dd form=native | pad n2=512')
 Flow('shot2','shot1','matflip mode=lr')
 Flow('data','shot1 shot2','add scale=1,1 ${SOURCES[1]}')
-Result('blended','data','grey title=blended')
+Result('blended','data',grey('Blended'))
 
 
-def grey(title):
-    return 'grey title="%s" label2=Channel label1="Time (s)" ' % title
-     
-#========================================================================
 Flow('pq','data',
 	'''
-	twodip2 order=2 verb=y gauss=n niter=10 eps=5 lam=20
+	twodip2 order=2 verb=y gauss=n niter=10 eps=5 lam=15
 	''')
 
-Plot('dip1','pq','window n3=1 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
-Plot('dip2','pq','window f3=1 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Plot('dip1','pq','window n3=1 |%s pclip=100 scalebar=y color=j' % grey('(a) First Dip'))
+Plot('dip2','pq','window f3=1 |%s pclip=100 scalebar=y color=j' % grey('(b) Second Dip'))
 
 
 # Seislet-based MCA deblending 1:
@@ -29,8 +29,8 @@ Flow('rec','data pq',
 
 Flow('rec1','rec','window n3=1 | window n3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=0')
 Flow('rec2','rec','window f3=1 | window f3=1|mutter half=y v0=340 t0=-0.45 hyper=y x0=512')
-Plot('rec1','window n2=512 | grey title=rec1')
-Plot('rec2','window n2=512 | grey title=rec2')
+Plot('rec1','window n2=512 |%s pclip=100 ' % grey('(c) Rec1'))
+Plot('rec2','window n2=512 |%s pclip=100 ' % grey('(d) Rec2'))
 Result('deblended1','dip1 dip2 rec1 rec2','TwoColumns')
 
 End()
