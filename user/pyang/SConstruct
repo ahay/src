@@ -11,6 +11,7 @@ rtm2d lsrtm2d
 Testeb
 modeling2d forw2d
 dlct dlct2
+cohn
 '''
 
 # C++ main programs
