@@ -66,9 +66,10 @@ float coh3(float **cxy, int J)
     	}
 	memset(d,0,J*sizeof(float));
 	memset(tmp[0],0, J*J*sizeof(float));
-	svdcmp(cxy, J, J, d, tmp);
 
+	svdcmp(cxy, J, J, d, tmp);
 	for(i=0; i<J; i++) s+=d[i]*d[i];
+
 	return (d[0]*d[0]/s);
 }
 
@@ -82,17 +83,17 @@ int main(int argc, char *argv[])
 	float (*cohn)(float **, int);
 
     	sf_init(argc, argv);
-    	in=sf_input("in");	//3D seismic data volume
-   	out=sf_output("out");	//3D coherence volume
+    	in=sf_input("in");	/* 3D seismic data volume */
+   	out=sf_output("out");	/* 3D coherence volume */
 
     	if (!sf_histint(in,"n1",&n1)) 	sf_error("No n1= in input");
     	if (!sf_histint(in,"n2",&n2)) 	sf_error("No n2= in input");
-    	if (!sf_histint(in,"n3",&n3)) 	n3=1;	// default: n3=1 if 2D
+    	if (!sf_histint(in,"n3",&n3)) 	n3=1;	/* default: n3=1 if 2D */
 
-    	if (!sf_getint("ntw",&ntw)) 	ntw=5; //radius of the window in t
-    	if (!sf_getint("nxw",&nxw)) 	nxw=5; //radius of the window in x
-    	if (!sf_getint("nyw",&nyw)) 	nyw=5; //radius of the window in y
-	if(!(mode=sf_getstring("mode"))) mode = "c3"; // coherence type: c1,c2,c3
+    	if (!sf_getint("ntw",&ntw)) 	ntw=5; /* radius of the window in t */
+    	if (!sf_getint("nxw",&nxw)) 	nxw=5; /* radius of the window in x */
+    	if (!sf_getint("nyw",&nyw)) 	nyw=5; /* radius of the window in y */
+	if(!(mode=sf_getstring("mode"))) mode = "c3"; /* coherence type: c1,c2,c3 */
 	switch(mode[1])
 	{
 		case '2': cohn=coh2; break;
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
 				s+=u1[i3+j3][i2+j2][i1+j1]*u1[i3+k3][i2+k2][i1+j1];
 			}
 			cxy[py][px]=s;
-		}
+		}// construct the covariance matrix
 
 		u2[i3][i2][i1]=cohn(cxy, J);
 	}

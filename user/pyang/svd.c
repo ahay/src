@@ -18,11 +18,10 @@ static int iminarg1,iminarg2;
 static double sqrarg;
 #define SQR(a) ((sqrarg = (a)) == 0.0 ? 0.0 : sqrarg * sqrarg)
 
-int svdcmp(double **a, int nRows, int nCols, double *w, double **v);
 
-// prints an arbitrary size matrix to the standard output
-void printMatrix(double **a, int rows, int cols);
-void printMatrix(double **a, int rows, int cols) {
+void printMatrix(double **a, int rows, int cols) 
+/* prints an arbitrary size matrix to the standard output */
+{
   int i,j;
 
   for(i=0;i<rows;i++) {
@@ -34,9 +33,9 @@ void printMatrix(double **a, int rows, int cols) {
   printf("\n");
 }
 
-// prints an arbitrary size vector to the standard output
-void printVector(double *v, int size);
-void printVector(double *v, int size) {
+void printVector(double *v, int size) 
+/* prints an arbitrary size vector to the standard output */
+{
   int i;
 
   for(i=0;i<size;i++) {
@@ -45,9 +44,9 @@ void printVector(double *v, int size) {
   printf("\n\n");
 }
 
-// calculates sqrt( a^2 + b^2 ) with decent precision
-double pythag(double a, double b);
-double pythag(double a, double b) {
+double pythag(double a, double b) 
+/* calculates sqrt( a^2 + b^2 ) with decent precision */
+{
   double absa,absb;
 
   absa = fabs(a);
@@ -59,6 +58,8 @@ double pythag(double a, double b) {
     return(absb == 0.0 ? 0.0 : absb * sqrt(1.0 + SQR(absa / absb)));
 }
 
+
+int svdcmp(double **a, int nRows, int nCols, double *w, double **v) 
 /*
   Modified from Numerical Recipes in C
   Given a matrix a[nRows][nCols], svdcmp() computes its singular value 
@@ -66,7 +67,7 @@ double pythag(double a, double b) {
   returns.  The diagonal matrix W is output as a vector w[nCols].
   V (not V transpose) is output as the matrix V[nCols][nCols].
 */
-int svdcmp(double **a, int nRows, int nCols, double *w, double **v) {
+{
   int flag,i,its,j,jj,k,l,nm;
   double anorm,c,f,g,h,s,scale,x,y,z,*rv1;
 
