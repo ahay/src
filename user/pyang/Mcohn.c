@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     	sf_file in, out;
     	int n1, n2, n3, ntw, nxw, nyw;
     	int i1, i2, i3, j1, j2, j3, k2, k3, px, py, J;
-	float ***u1, ***u2, **cxy;
+	float ***u1, ***u2, **cxy, s;
 	char *mode;
 	float (*cohn)(float **, int);
 
