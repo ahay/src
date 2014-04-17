@@ -2,7 +2,7 @@ from rsf.proj import *
 
 
 def grey(title):
-    return 'grey title="%s" label2="Trace no." label1="Time (s)" ' % title
+    return 'grey title="%s" label2="Trace no." label1="Time" ' % title
      
 # synthesize a blended shot
 Fetch('pyang.rsf','pwd')
