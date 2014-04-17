@@ -18,7 +18,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Reference: Marfurt, Kurt J., et al. "Coherency calculations in the presence 
+  Reference: Marfurt, Kurt J., et al. "Coherency calculations in the presence 
 	of structural dip." Geophysics 64.1 (1999): 104-111.
 
 */
@@ -29,7 +29,6 @@ Reference: Marfurt, Kurt J., et al. "Coherency calculations in the presence
 #endif
 
 #include "svd.h"
-
 
 float coh1(float **cxy, int J)
 {
@@ -53,7 +52,7 @@ float coh2(float **cxy, int J)
 
 
 
-static float* d, ** tmp; /* residual step */
+static float* d, ** tmp; 
 static bool Allocated = false; /* if d and tmp are allocated */
 float coh3(float **cxy, int J)
 {
@@ -112,15 +111,14 @@ int main(int argc, char *argv[])
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{
-		memset(cxy[0], 0, J*J*sizeof(float));
 		for(j3=-nyw; j3<=nyw; j3++)
 		for(j2=-nxw; j2<=nxw; j2++)
 		for(k3=-nyw; k3<=nyw; k3++)
 		for(k2=-nxw; k2<=nxw; k2++)
 		{
-
 			px=j2+nxw+J*(j3+nyw);
 			py=k2+nxw+J*(k3+nyw);
+			s=0;
 			for(j1=-ntw; j1<=ntw; j1++)
 			{
 				if ( 	(i1+j1>=0 && i1+j1<n1) &&
@@ -128,14 +126,14 @@ int main(int argc, char *argv[])
 					(i3+j3>=0 && i3+j3<n3) &&
 					(i2+k2>=0 && i2+k2<n2) &&
 					(i3+k3>=0 && i3+k3<n3) 	)
-				cxy[py][px]+=u1[i3+j3][i2+j2][i1+j1]*u1[i3+k3][i2+k2][i1+j1];
+				s+=u1[i3+j3][i2+j2][i1+j1]*u1[i3+k3][i2+k2][i1+j1];
 			}
+			cxy[py][px]=s;
 		}
 
 		u2[i3][i2][i1]=cohn(cxy, J);
 	}
 	sf_floatwrite(u2[0][0], n1*n2*n3, out);
-
 
 	free(**u1); free(*u1); free(u1);
 	free(**u2); free(*u2); free(u2);
