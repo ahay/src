@@ -2168,7 +2168,7 @@ namespace RVL {
                   opeval[0]->getDeriv().applyOp(dx0,dgx0);
                   opeval[0]->getDeriv().applyOp(dx1,dgx1);
                   opeval[0]->getDeriv2().applyOp(dx0,dx1,d2gx);
-                  opeval[1]->getDeriv2().applyOp(dx0,dx1,tmp);
+                  opeval[1]->getDeriv2().applyOp(dgx0,dgx1,tmp);
                   opeval[1]->getDeriv().applyOp(d2gx,dy);
                   dy.linComb(1.0, tmp);
                   for (int i=opvec.size()-1;i>-1;i--) if (opeval[i]) delete opeval[i];
