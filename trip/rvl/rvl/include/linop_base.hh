@@ -159,6 +159,18 @@ namespace RVL {
     void applyAdjDeriv(const Vector<Scalar> & x, 
 		       const Vector<Scalar> & dy,
 		       Vector<Scalar> & dx) const { this->applyAdj(dy,dx); }
+     
+    /** implemented deriv2 method - deriv2 of a linear operator is zero */
+    void applyDeriv(const Vector<Scalar> & x,
+                    const Vector<Scalar> & dx0,
+                    const Vector<Scalar> & dx1,
+                    Vector<Scalar> & dy) const { dy.zero(); }
+      
+    /** similar to applyDeriv */
+    void applyAdjDeriv(const Vector<Scalar> & x,
+                       const Vector<Scalar> & dx0,
+                       const Vector<Scalar> & dy,
+                       Vector<Scalar> & dx1) const { dx1.zero(); }
 
 
   public:
