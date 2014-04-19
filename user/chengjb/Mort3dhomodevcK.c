@@ -49,26 +49,16 @@ int main(int  argc,char **argv)
     sf_file Fi1, Fi2, Fi3;
     sf_file Fo1, Fo2;
 
-    int     itaper;           /* tapering or not for spectrum of oprtator*/
-    char    *tapertype;
-
     clock_t t1, t2;
     float   timespent;
 
     t1=clock();
 
     /* time samping paramter */
-    if (!sf_getint("itaper",&itaper)) itaper=1;
-    if (NULL== (tapertype=sf_getstring("tapertype"))) tapertype="T"; /* taper type*/
-
-    sf_warning("itaper=%d",itaper);
-    sf_warning("tapertype=%s",tapertype);
-
     /* setup I/O files */
     Fix = sf_input("in");
     Fiy = sf_input("apvy");
     Fiz = sf_input("apvz");
-    Fit = sf_input("taper");
 
     Fi1 = sf_input("PseudoPurePx"); /* pseudo-pure P-wave x-component */
     Fi2 = sf_input("PseudoPurePy"); /* pseudo-pure P-wave y-component */
@@ -148,7 +138,6 @@ int main(int  argc,char **argv)
     float*** apvx=sf_floatalloc3(nz,nx,ny);
     float*** apvy=sf_floatalloc3(nz,nx,ny);
     float*** apvz=sf_floatalloc3(nz,nx,ny);
-    float*** taper=sf_floatalloc3(nz,nx,ny);
 
     for(iy=0;iy<ny;iy++)
     for(ix=0;ix<nx;ix++)
@@ -156,14 +145,6 @@ int main(int  argc,char **argv)
       sf_floatread(apvx[iy][ix],nz,Fix);
       sf_floatread(apvy[iy][ix],nz,Fiy);
       sf_floatread(apvz[iy][ix],nz,Fiz);
-      sf_floatread(taper[iy][ix],nz,Fit);
-      if(itaper==1)
-        for(iz=0;iz<nz;iz++)
-        {
-           apvx[iy][ix][iz] *= taper[iy][ix][iz];
-           apvy[iy][ix][iz] *= taper[iy][ix][iz];
-           apvz[iy][ix][iz] *= taper[iy][ix][iz];
-        }
     }
     spec3dmultiply(px, apvx, nx, ny, nz, ijkx, ijky, ijkz, iflag);
     spec3dmultiply(py, apvy, nx, ny, nz, ijkx, ijky, ijkz, iflag);
@@ -200,7 +181,6 @@ int main(int  argc,char **argv)
     free(**apvx);
     free(**apvy);
     free(**apvz);
-    free(**taper);
     free(**px);
     free(**py);
     free(**pz);

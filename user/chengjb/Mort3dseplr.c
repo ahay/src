@@ -33,7 +33,6 @@
 
 /* prepared head files by myself */
 #include "_cjb.h"
-#include "_lapack.h"
 
 /* head files aumatically produced from *.c */
 #include "puthead.h"

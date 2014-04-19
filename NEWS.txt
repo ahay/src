@@ -33,8 +33,11 @@ To the reproducible documents collection:
   (Fomel and van der Baan)
 * tccs/optapert: Selecting an optimal aperture in Kirchhoff migration
   using dip-angle images (Klokov and Fomel)
-* Replaced mosst of Mathematica figures by Sage figures to improve
+* Replaced most of Mathematica figures by Sage figures to improve
   reproducibility
+* tongji/qpwave: Simulating propagation of separated wave modes in
+  general anisotropic media, Part I: qP-wave propagators (Cheng and
+  Kang)
 
 To SCons:
 

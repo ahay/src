@@ -6,12 +6,12 @@ progs = '''
 aastack agmig ai2refl avo beamspray cascade c2r cell2 cell3 cgscan
 cmp2shot constfdmig2 cos2ang depth2time diffoc diffraction dimag dmo
 dsr dsr2 envelope fincon findmo finstack fkamo fkdmo fkgdmo fold
-fourvc fourvc0 fourvc2 fowler fowler1 freqint freqlet gazdag gdmo
-halfint headerattr headermath hwt2d hwtex infill inmo inmo3 intbin
-intbin3 isin2ang itaupmo itaupmo2 itaupmo3 itxmo iwarp iwarp2 iwarp3
-kirchinv kirchnew kirmod kirmod3 linsincos logwarp migsteep3 modrefl
-modrefl2 modrefl3 moveout nmo nmo3 nmodips nmov nmow nmow_adj ovc
-ovczo oway1 pmig pnmo pnmo3d pp2psang pp2psang2 pp2pstsic
+fourvc fourvc0 fourvc2 fowler fowler1 fowler2 freqint freqlet gazdag
+gdmo halfint headerattr headermath hwt2d hwtex infill inmo inmo3
+intbin intbin3 isin2ang itaupmo itaupmo2 itaupmo3 itxmo iwarp iwarp2
+iwarp3 kirchinv kirchnew kirmod kirmod3 linsincos logwarp migsteep3
+modrefl modrefl2 modrefl3 moveout nmo nmo3 nmodips nmov nmow nmow_adj
+ovc ovczo oway1 pmig pnmo pnmo3d pp2psang pp2psang2 pp2pstsic
 preconstkirch prestolt ptaupmo3 ptaupmo ptaupmoVTI pveltran map2coh
 pveltranVTI pveltran3 pyramid radial radial2 radon randrefl rays2
 rays2a rays3 refer ricker ricker1 ricker2 rweab rwesrmig rwezomig

@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 /* prepared head files by myself */
-#include "_lapack.h"
 #include "_fd.h"
 #include "_cjb.h"
 

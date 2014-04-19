@@ -24,6 +24,7 @@
 
 
 #include <rsf.h>
+#include <omp.h>
 #include "_cjb.h"
 #include "_fd.h"
 #include "zero.h"
@@ -320,6 +321,92 @@ void fwportpseudop(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
 	r3[j][i][k]=2*r2[j][i][k] - r1[j][i][k] + (float)(dt2*(C13_55*pz + C23_44*qz + vsz1*rx + vsz2*ry + vpz*rz));
     }
 }
+
+/******************************for the hti media****************************/
+void fwportpseudophomo(float dt,float***p1,float***p2,float***p3, 
+		float***q1,float***q2,float***q3, 
+		float***r1,float***r2,float***r3, 
+		float*coeff_2dx,float*coeff_2dy,float*coeff_2dz,float*coeff_1dx,float*coeff_1dy,float*coeff_1dz,
+		float vp0, float vs0,float epsi1,float del1, float gama1,float epsi2,float del2, 
+		float gama2,float del3, int nx, int ny, int nz, float dx, float dy, float dz)
+/*< fwportpseudophomo: forward-propagating in ORT media with pseudo-pure P-wave equation>*/
+{
+
+	int i,j,k,l, m=_m;
+#pragma omp parallel for private(i,j,k,l) \
+	schedule(dynamic) \
+	shared(p1,p2,p3, \
+	q1,q2,q3, \
+	r1,r2,r3,\
+	coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz, \
+	vp0,vs0,epsi1,del1,gama1,epsi2,del2,gama2,del3)
+
+	for(i=0;i<nx;i++)
+        for(j=0;j<ny;j++)
+            for(k=0;k<nz;k++)
+            {
+				float px,py,pz,qx,qy,qz,rx,ry,rz;
+				float fx,fy,fz,dfx,dfy,dfz,vp2,vs2,dt2;
+				float vpx,vpy,vpz,vsz1,vsz2,vsz3,vpn1,vpn2,vpn3;
+				float ep_1,de_1,gam_1,ep_2,de_2,gam_2,de_3;
+				float C23_44,C12_66,C13_55;
+				dt2=dt*dt;
+				vp2=vp0*vp0;
+				vs2=vs0*vs0;
+				float tmp;
+				tmp=(epsi1-del1);
+				ep_1=1+2*epsi1;
+				de_1=1+2*del1;
+				gam_1=1+2*gama1;
+				ep_2=1+2*epsi2;
+				de_2=1+2*del2;
+				de_3=1+2*del3;
+				gam_2=1+2*gama2;
+
+				vpz=vp2;
+				vpx=vp2*ep_2;
+				vpy=vp2*ep_1;
+				vpn1=vp2*de_1;
+				vpn2=vp2*de_2;
+				vpn3=vpx*de_3;//vpx*del_3
+				vsz1=vs2;
+				vsz2=vs2*gam_1/gam_2;
+				vsz3=vs2*gam_1;
+				C23_44=sqrt(vpz-vsz2)*sqrt(vpn1-vsz2);
+				C12_66=sqrt(vpx-vsz3)*sqrt(vpn3-vsz3);
+				C13_55=sqrt(vpz-vsz1)*sqrt(vpn2-vsz1);
+				//deri calculation
+				px=0;py=0;pz=0;
+				qx=0;qy=0;qz=0;
+				rx=0;ry=0;rz=0;
+				for(l=-m;l<=m;l++)
+				{
+					if(i+l>=0&&i+l<nx)
+					{
+						px+=coeff_2dx[l+m]*p2[i+l][j][k];
+						qx+=coeff_2dx[l+m]*q2[i+l][j][k];
+						rx+=coeff_2dx[l+m]*r2[i+l][j][k];
+					}
+					if(j+l>=0&&j+l<ny)
+					{
+
+						py+=coeff_2dy[l+m]*p2[i][j+l][k];
+						qy+=coeff_2dy[l+m]*q2[i][j+l][k];
+						ry+=coeff_2dy[l+m]*r2[i][j+l][k];
+					}
+                    if(k+l>=0&&k+l<nz)
+					{
+						pz+=coeff_2dz[l+m]*p2[i][j][k+l];
+						qz+=coeff_2dz[l+m]*q2[i][j][k+l];
+						rz+=coeff_2dz[l+m]*r2[i][j][k+l];
+					}
+				}
+				p3[i][j][k]=2*p2[i][j][k] - p1[i][j][k] + dt2*(vpx*px + vsz3*py + vsz1*pz + C12_66*qx + C13_55*rx);
+				q3[i][j][k]=2*q2[i][j][k] - q1[i][j][k] + dt2*(C12_66*py + vsz3*qx + vpy*qy + vsz2*qz + C23_44*ry);
+				r3[i][j][k]=2*r2[i][j][k] - r1[i][j][k] + dt2*(C13_55*pz + C23_44*qz + vsz1*rx + vsz2*ry + vpz*rz);
+			}
+}
+
 void fwportpseudop2(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,float*** q2,float*** q3, float***r1,float***r2,float***r3,
 		    float*coeff_2dx,float*coeff_2dy,float*coeff_2dz,float*coeff_1dx,float*coeff_1dy,float*coeff_1dz,
 		    float***vp0,float ***vs0,float***epsi_1,float***del_1, float ***gama_1,float***epsi_2,float***del_2, 

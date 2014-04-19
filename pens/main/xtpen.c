@@ -2272,7 +2272,7 @@ void opendev (int argc, char* argv[])
     dev.attributes = xtattributes;
 
     dev.reader = xt_dovplot;
-//    dev.interact = xtinteract;
+    dev.interact = xtinteract;
     dev.plot = xtplot;
 
     if (NULL == (interact = sf_getstring("interact"))) interact="";

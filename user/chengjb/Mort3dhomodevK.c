@@ -66,9 +66,9 @@ int main(int  argc,char **argv)
     if (!sf_getfloat("the",&the)) the=0.;
     if (!sf_getfloat("phi",&phi)) phi=0.;
 
-    if (!sf_getint("hnx",&hnx)) hnx=25;
-    if (!sf_getint("hny",&hny)) hny=25;
-    if (!sf_getint("hnz",&hnz)) hnz=25;
+    if (!sf_getint("hnx",&hnx)) hnx=250;
+    if (!sf_getint("hny",&hny)) hny=250;
+    if (!sf_getint("hnz",&hnz)) hnz=250;
 
     if (!sf_getfloat("dx",&dx)) dx=10.;
     if (!sf_getfloat("dy",&dy)) dy=10.;
