@@ -1,5 +1,5 @@
-/*A demo of 2D FD test
- Sponage absorbing boundary condition
+/*A 2D demo of elliptically-anisotropic wave propagation (4th order)
+  Note: It is adapted according to Seregy Fomel's lecture on Seismic imaging.
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
@@ -26,9 +26,9 @@
 #endif
 
 static int nb, nz, nx, nt, nzpad, nxpad;
-static float dz, dx, dt, fm, c0, c11, c12, c21, c22;
+static float dz, dx, dt, fm, c10, c20, c11, c12, c21, c22;
 static float *bndr, *wlt;
-static float **vv, **p0, **p1, **p2, **ptr=NULL;
+static float **vz, **vx, **p0, **p1, **p2, **ptr=NULL;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -71,23 +71,24 @@ void window2d(float **a, float **b)
 void step_forward(float **p0, float **p1, float**p2)
 {
 	int ix,iz;
-	float tmp;
+	float tmp1, tmp2;
 
 #ifdef _OPENMP
 #pragma omp parallel for	    \
     schedule(dynamic,1)		    \
-    private(ix,iz,tmp)		    \
+    private(ix,iz,tmp1,tmp2)	    \
     shared(p1)
 #endif	
 	for (ix=2; ix < nxpad-2; ix++) 
 	for (iz=2; iz < nzpad-2; iz++) 
 	{
-		tmp =	c0*p1[ix][iz]+
-			c11*(p1[ix][iz-1]+p1[ix][iz+1])+
+		tmp1 =	c11*(p1[ix][iz-1]+p1[ix][iz+1])+
 			c12*(p1[ix][iz-2]+p1[ix][iz+2])+
-			c21*(p1[ix-1][iz]+p1[ix+1][iz])+
-			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
+			c10*p1[ix][iz];
+		tmp2 =	c21*(p1[ix-1][iz]+p1[ix+1][iz])+
+			c22*(p1[ix-2][iz]+p1[ix+2][iz])+
+			c20*p1[ix][iz];
+		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vz[ix][iz]*tmp1+vx[ix][iz]*tmp2;
 	}
 }
 
@@ -137,21 +138,22 @@ int main(int argc, char* argv[])
 {
 	int jt, ft, it, ib, ix, iz, sx, sz;
 	float tmp;
-	float **v0;
-	sf_file Fv, Fw;
+	float **vz0, **vx0;
+	sf_file Fvz, Fvx, Fw;
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
     	omp_init();
 #endif
 
-	Fv = sf_input("in");/* veloctiy model */
+	Fvz = sf_input("in");/* veloctiy-z */
+	Fvx = sf_input("vx");/* veloctiy-x */
 	Fw = sf_output("out");/* wavefield snaps */
 
-    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
-    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
-    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
-    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
+    	if (!sf_histint(Fvz,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
+    	if (!sf_histint(Fvz,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
+    	if (!sf_histfloat(Fvz,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
+    	if (!sf_histfloat(Fvz,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
     	if (!sf_getint("nb",&nb)) nb=30; /* thickness of sponge ABC */
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
     	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
@@ -177,12 +179,15 @@ int main(int argc, char* argv[])
 	tmp = 1.0/(dx*dx);
 	c21 = 4.0*tmp/3.0;
 	c22= -tmp/12.0;
-	c0=-2.0*(c11+c12+c21 + c22);
+	c10=-2.0*(c11+c12);
+	c20=-2.0*(c21+c22);
 
 	wlt=sf_floatalloc(nt);
 	bndr=sf_floatalloc(nb);
-	v0=sf_floatalloc2(nz,nx); 	
-	vv=sf_floatalloc2(nzpad, nxpad);
+	vz0=sf_floatalloc2(nz,nx); 	
+	vx0=sf_floatalloc2(nz,nx); 
+	vz=sf_floatalloc2(nzpad, nxpad);
+	vx=sf_floatalloc2(nzpad, nxpad);
 	p0=sf_floatalloc2(nzpad, nxpad);
 	p1=sf_floatalloc2(nzpad, nxpad);
 	p2=sf_floatalloc2(nzpad, nxpad);
@@ -195,12 +200,15 @@ int main(int argc, char* argv[])
 		tmp=0.015*(nb-ib);
 		bndr[ib]=expf(-tmp*tmp);
 	}
-	sf_floatread(v0[0],nz*nx,Fv);
-	expand2d(vv, v0);
+	sf_floatread(vz0[0],nz*nx,Fvz);
+	sf_floatread(vx0[0],nz*nx,Fvx);
+	expand2d(vz, vz0);
+	expand2d(vx, vx0);
 	for(ix=0;ix<nxpad;ix++){
 	    for(iz=0;iz<nzpad;iz++){
-		tmp=vv[ix][iz]*dt;
-		vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
+		// vv=vv^2*dt^2
+		tmp=vz[ix][iz]*dt; vz[ix][iz]=tmp*tmp;
+		tmp=vx[ix][iz]*dt; vx[ix][iz]=tmp*tmp;
 	    }
 	}
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
@@ -214,18 +222,20 @@ int main(int argc, char* argv[])
 		apply_sponge(p1,p2);
 		ptr=p0; p0=p1; p1=p2; p2=ptr;
 
-		window2d(v0,p0);
-		sf_floatwrite(v0[0],nz*nx,Fw);
+		window2d(vx0,p0);
+		sf_floatwrite(vx0[0],nz*nx,Fw);
 	}
 
-
 	free(wlt);
-	free(*v0); free(v0);
-	free(*vv); free(vv);
+	free(*vz0); free(vz0);
+	free(*vx0); free(vx0);
+	free(*vz); free(vz);
+	free(*vx); free(vx);
 	free(*p0); free(p0);
 	free(*p1); free(p1);
 	free(*p2); free(p2);
 	free(bndr);
+
     	exit(0);
 }
 
