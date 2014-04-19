@@ -30,7 +30,10 @@
 */
 
 #include <rsf.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 /* prepared head files by myself */
 #include "_fd.h"
