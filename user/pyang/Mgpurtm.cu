@@ -367,8 +367,8 @@ void step_backward(float *d_vel, float *d_p0, float *d_p1, float *d_p2, float *d
 
 int main(int argc, char* argv[])
 {
-	float phost;
-	int tdmute;
+	int tdmute, is, kt, distx, distz;
+	float phost, mstimer;
     	sf_file vmodl, imag1, imag2; /* I/O files */
 
     	/* initialize Madagascar */
@@ -451,7 +451,7 @@ int main(int argc, char* argv[])
 	sf_warning("Cuda error: Failed to initialize device: %s", cudaGetErrorString(err));
 	device_alloc(); 
 
-	float mstimer = 0;// timer unit: millionseconds
+	mstimer = 0;// timer unit: millionseconds
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);
@@ -462,8 +462,8 @@ int main(int argc, char* argv[])
 	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
 	cuda_set_sg<<<(ns+255)/256, 256>>>(d_Sxz, sxbeg, szbeg, jsx, jsz, ns, npml, nnz);
 
-	int distx=sxbeg-gxbeg;
-	int distz=szbeg-gzbeg;
+	distx=sxbeg-gxbeg;
+	distz=szbeg-gzbeg;
 	if (csdgather)	{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
@@ -483,7 +483,7 @@ int main(int argc, char* argv[])
 	cuda_init_abcz<<<dimgtb1, dimbtb1>>>(d_vel, d_bz1, d_bz2, dx, dz, dt, npml, nnz, nnx);
 	cuda_init_abcx<<<dimglr1, dimblr1>>>(d_vel, d_bx1, d_bx2, dx, dz, dt, npml, nnz, nnx);
 
-    	for(int is=0; is<ns; is++)
+    	for(is=0; is<ns; is++)
 	{
 		cudaEventRecord(start);
 
@@ -497,7 +497,7 @@ int main(int argc, char* argv[])
 			gxbeg=sxbeg+is*jsx-distx;
 			cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
 		}
-		for(int kt=0; kt<nt; kt++)
+		for(kt=0; kt<nt; kt++)
 		{
 			cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, true);
 			//cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, true);
@@ -515,7 +515,7 @@ int main(int argc, char* argv[])
 
 		ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 		wavefield_init(d_gp0, d_gp1, d_gp2, d_gvx, d_gvz, d_convpx, d_convpz, d_convvx, d_convvz);
-		for(int kt=nt-1; kt>-1; kt--)
+		for(kt=nt-1; kt>-1; kt--)
 		{
 			// read saved boundary
 			if(kt<nt_h) cudaHostGetDevicePointer(&ptr, &h_boundary[kt*2*(NJ-1)*(nx+nz)], 0);
