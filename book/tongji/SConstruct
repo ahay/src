@@ -5,5 +5,5 @@ Papers(copyr='Tongji University',
        authors = {'qpwave':'Jiubing Cheng and Wei Kang'}
        )
        
-End()
+End(use='amsmath,amsfonts')
 
