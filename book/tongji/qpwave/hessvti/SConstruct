@@ -14,7 +14,9 @@ par = dict(
 #    tapertype="Cosine",
     tapertype="TTI",
 #    tapertype="None",
-    nstep=2
+    nstep=2,
+    nxv=1400, ox=xv0, lx='x',  ux='km',
+    nzv=1320, oz=zv0, lz='z',  uz='km',
     )
 # =============================================================
 # download Hess VTI models from 'ftp://software.seg.org'
@@ -27,6 +29,19 @@ from rsf.gallery import hessvti
 #hessvti.get_smallmodel('vp vs epsilon delta')
 hessvti.get_model('vp vs epsilon delta')
 
+ft2km = 0.0003048
+dx = 20*ft2km
+dz = 20*ft2km
+
+for mod in Split('vp vs epsilon delta'):
+	Flow(mod+'1',mod,
+	     '''
+             put d1=%g d2=%g unit1=km label1=Depth unit2=km label2=Distance unit=m/s |
+             window n1=%d min1=%g n2=%d min2=%g 
+             ''' % (dx, dz,
+		    par['nzv'],par['oz'],
+		    par['nxv'],par['ox']))
+
 Flow('vs_hess','vp_hess',
      '''
      math output="input*0.5"
@@ -34,22 +49,22 @@ Flow('vs_hess','vp_hess',
 
 # =============================================================
 # produce vp0 & vs0 model by scaling vp model 
-Flow('vp0','vp',
+Flow('vp0','vp1',
      '''
      math output="input*1000" | smooth rect1=5 rect2=5
      ''')
 
-Flow('vs0','vs',
+Flow('vs0','vs1',
      '''
      math output="input*1000" | smooth rect1=5 rect2=5
-     ''')
+     ''') 
 
-Flow('epsi','epsilon',
+Flow('epsi','epsilon1',
      '''
      smooth rect1=3 rect2=3
      ''')
 
-Flow('del','delta',
+Flow('del','delta1',
      '''
      smooth rect1=3 rect2=3
      ''')
@@ -57,22 +72,22 @@ Flow('del','delta',
 # =============================================================
 
 # produce vp0 & vs0 model by scaling vp model 
-Flow('hessvp0','vp',
+Flow('hessvp0','vp1',
      '''
      math output="input*1000" 
      ''')
 
-Flow('hessvs0','vs',
+Flow('hessvs0','vs1',
      '''
      math output="input*1000" 
      ''')
 
-Flow('hessepsilon','epsilon',
+Flow('hessepsilon','epsilon1',
      '''
      math output="input" 
      ''')
 
-Flow('hessdelta','delta',
+Flow('hessdelta','delta1',
      '''
      math output="input" 
      ''')
@@ -85,7 +100,7 @@ name00='''
 hessepsilon hessdelta
 '''
 
-Result('vp0','vp0',
+Result('vp0',
 	'''
 	grey color=g scalebar=y screenht=4 screenwd=10 barreverse=y wanttitle=n}
 	''')
