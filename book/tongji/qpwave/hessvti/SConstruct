@@ -2,6 +2,10 @@ from rsf.proj import *
 
 #==============================================================
 # job running parameters
+
+xv0=12.192
+zv0=0
+
 par = dict(
     ns=1376,
     dt=0.0008,
