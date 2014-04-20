@@ -190,9 +190,6 @@ int main(int argc, char **argv)
     exit(1);
   }
 
-  xargc = argc;
-  xargv = argv;
-
   par_file = argv[1];
   src_bin  = argv[2];
   out_bin  = argv[3];
@@ -213,6 +210,9 @@ int main(int argc, char **argv)
   fprintf(stderr,"After extracting pars\n");
   #endif
   
+  xargc=argc; xargv=argv;
+  requestdoc(0);
+
   //Parsing ------------------------------------------//
   //find horder
   if ((ps_ffint(*par,"horder",&horder))) 
