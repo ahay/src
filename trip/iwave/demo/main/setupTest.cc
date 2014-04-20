@@ -41,6 +41,9 @@ int main(int argc, char **argv) {
   float     o1,o2;
   float     e1,e2;
   int       n1,n2;      
+  float     cx1,cx2;
+  float     relsigmax1,relsigmax2;
+  float     cycles;
 
   float     CFL;         //CFL condition for FD code
   float     dt;          //time step for simulation
@@ -112,7 +115,7 @@ int main(int argc, char **argv) {
   }
   //find GPC or mdl_dx,mdl_dz
   if ((ps_fffloat(*par,"GPC",&GPC))) {
-    if ((ps_fffloat(*par,"mdl_dx",&mdl_dx))&&
+    if ((ps_fffloat(*par,"mdl_dx",&mdl_dx))||
 	(ps_fffloat(*par,"mdl_dz",&mdl_dz))) {
       fprintf(stderr,"Error: could not find either GPC or mdl_dx,mdl_dz.\n");
       exit(1);
@@ -122,19 +125,18 @@ int main(int argc, char **argv) {
     mdl_dx = (float)EMPTY;
     mdl_dz = (float)EMPTY;
   }
-  //find CFL
+  //find CFL and dt
   if ((ps_fffloat(*par,"CFL",&CFL))) {
-    fprintf(stderr,"Error: could not find CFL.\n");
-     exit(1);
-  }   
-  //find dt if given
-  if ((ps_fffloat(*par,"dt",&dt)))
-    dt = (float)EMPTY; 
+    if ((ps_fffloat(*par,"dt",&dt))){
+      fprintf(stderr,"Error: could not find CFL or dt.\n");
+      exit(1);
+    } else CFL=(float)EMPTY;
+  } else dt=(float)EMPTY;
 
   //find nts and src_dt
   if ((ps_ffint(*par,"nts",&nts))) {
-    fprintf(stderr,"Error: could not find nts.\n");
-    exit(1);
+    nts = EMPTY;
+    fprintf(stderr,"Warning: could not find nts. Using other value.\n");
   }
   if ((ps_fffloat(*par,"src_dt",&src_dt))) {
     fprintf(stderr,"Error: could not find src_dt.\n");
@@ -164,11 +166,11 @@ int main(int argc, char **argv) {
   }
   //find src_dx, src_dz
   if ((ps_fffloat(*par,"src_dx",&src_dx))) {
-    fprintf(stderr,"Error: could not find src_dx.\n");
+    fprintf(stderr,"Error: src_dx not found!\n");
     exit(1);
   }
   if ((ps_fffloat(*par,"src_dz",&src_dz))) {
-    fprintf(stderr,"Error: could not find src_dz.\n");
+    fprintf(stderr,"Error: src_dz not found!\n");
     exit(1);
   }
   //find gx_o, gx_e, gx_dx
@@ -238,6 +240,18 @@ int main(int argc, char **argv) {
     } else n2 = EMPTY;
   } else e2 = (float)EMPTY;
 
+  //find auxiliary model parameters
+  if ((ps_fffloat(*par,"cx1",&cx1)))
+    cx1 = (float)EMPTY;
+  if ((ps_fffloat(*par,"cx2",&cx2)))
+    cx2 = (float)EMPTY;
+  if ((ps_fffloat(*par,"relsigmax1",&relsigmax1)))
+    relsigmax1 = (float)EMPTY;
+  if ((ps_fffloat(*par,"relsigmax2",&relsigmax2)))
+    relsigmax2 = (float)EMPTY;
+  if ((ps_fffloat(*par,"cycles",&cycles)))
+    cycles = (float)EMPTY;
+
   ps_fffloat(*par,"nl1",&nl1);
   ps_fffloat(*par,"nr1",&nr1);
   ps_fffloat(*par,"nl2",&nl2);
@@ -304,6 +318,7 @@ int main(int argc, char **argv) {
 
   if (mdl_dx==EMPTY) mdl_dx = wavelength/GPC*(horder/2.0);
   if (mdl_dz==EMPTY) mdl_dz = wavelength/GPC*(horder/2.0);
+  fprintf(stderr,"mdl_dx = %g, mdl_dz = %g\n",mdl_dx,mdl_dz);
 
   nx = 1+(int)(lx/src_dx);
   nz = 1+(int)(lz/src_dz);
@@ -314,11 +329,20 @@ int main(int argc, char **argv) {
   if (hdr_nt==EMPTY) hdr_nt = (int)(hdr_T/hdr_dt)+2;
   else hdr_dt = hdr_T/((float)hdr_nt);
 
-  float d1=mdl_dz, d2=mdl_dx;
+  float d1=mdl_dz;
+  float d2=mdl_dx;
   if (n1==EMPTY) n1 = (int)((e1-o1)/d1)+1;
   else e1 = o1 + (float)(n1)*d1;
   if (n2==EMPTY) n2 = (int)((e2-o2)/d2)+1;
   else e2 = o2 + (float)(n2)*d2;
+
+  if (n1<0) n1*=-1;
+  if (n2<0) n2*=-1;
+
+  if (nts==EMPTY){
+    nts=(int)(2.0/(fpeak*src_dt))+1; 
+    fprintf(stderr,"Warning: nts set to %d.\n",nts);
+  }
 
   //Writing out mdl par files ------------------------//
   fprintf(stderr,"Writing out mdl1 par files:\n"
@@ -333,6 +357,12 @@ int main(int argc, char **argv) {
   fprintf(fp,"o1=%f n1=%d d1=%f ",o1,n1,d1);
   fprintf(fp,"o2=%f n2=%d d2=%f ",o2,n2,d2);
   fprintf(fp,"hfile=%s ",mdl_hfile1);
+  if (cx1!=EMPTY) fprintf(fp,"cx1=%f ",cx1);
+  if (cx2!=EMPTY) fprintf(fp,"cx2=%f ",cx2);
+  if (relsigmax1!=EMPTY) fprintf(fp,"relsigmax1=%f ",relsigmax1);
+  if (relsigmax2!=EMPTY) fprintf(fp,"relsigmax2=%f ",relsigmax2);
+  if (cycles!=EMPTY) fprintf(fp,"cycles=%f ",cycles);
+
   fclose(fp);
 
   fprintf(stderr,"Writing out mdl2 par files:\n"
@@ -347,6 +377,11 @@ int main(int argc, char **argv) {
   fprintf(fp,"o1=%f n1=%d d1=%f ",o1,n1,d1);
   fprintf(fp,"o2=%f n2=%d d2=%f ",o2,n2,d2);
   fprintf(fp,"hfile=%s ",mdl_hfile2);
+  if (cx1!=EMPTY) fprintf(fp,"cx1=%f ",cx1);
+  if (cx2!=EMPTY) fprintf(fp,"cx2=%f ",cx2);
+  if (relsigmax1!=EMPTY) fprintf(fp,"relsigmax1=%f ",relsigmax1);
+  if (relsigmax2!=EMPTY) fprintf(fp,"relsigmax2=%f ",relsigmax2);
+  if (cycles!=EMPTY) fprintf(fp,"cycles=%f ",cycles);
   fclose(fp);
 
   //Writing out script for hdr file ------------------//

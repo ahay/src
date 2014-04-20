@@ -2,8 +2,7 @@
 #include <parser.h>
 #include <math.h>
 
-int xargc;
-char** xargv;
+#define DEBUG
 
 /* define number of model types */
 #define NMODEL 4
@@ -175,7 +174,7 @@ int main(int argc, char **argv)
   float     o1,o2;
   float     e1,e2;
   int       n1,n2;      
-  float    *omv;
+  float    *modelpars;
   float     cx1,cx2;
   float     relsigmax1,relsigmax2;
   float     cycles;
@@ -197,7 +196,11 @@ int main(int argc, char **argv)
   par_file = argv[1];
   src_bin  = argv[2];
   out_bin  = argv[3];
-  
+
+  #ifdef DEBUG
+  fprintf(stderr,"After extracting in/out file names from command line\n");
+  #endif
+
   //Extract parameters -------------------------------//
   par = ps_new();
   if (ps_createfile(par,par_file))
@@ -206,6 +209,10 @@ int main(int argc, char **argv)
     exit(1);
   }
 
+  #ifdef DEBUG
+  fprintf(stderr,"After extracting pars\n");
+  #endif
+  
   //Parsing ------------------------------------------//
   //find horder
   if ((ps_ffint(*par,"horder",&horder))) 
@@ -245,8 +252,8 @@ int main(int argc, char **argv)
   }
   //find nts and src_dt
   if ((ps_ffint(*par,"nts",&nts))) {
-    fprintf(stderr,"Error: could not find nts.\n");
-    exit(1);
+    nts = EMPTY;
+    fprintf(stderr,"Warning: could not find nts. Using other value.\n");
   }
   if ((ps_fffloat(*par,"src_dt",&src_dt))) {
     fprintf(stderr,"Error: could not find src_dt.\n");
@@ -276,12 +283,11 @@ int main(int argc, char **argv)
   }
   //find src_dx, src_dz
   if ((ps_fffloat(*par,"src_dx",&src_dx))) {
-    fprintf(stderr,"Error: could not find src_dx.\n");
+    fprintf(stderr,"Error: src_dx not found!.\n");
     exit(1);
   }
   if ((ps_fffloat(*par,"src_dz",&src_dz))) {
-    fprintf(stderr,"Error: could not find src_dz.\n");
-    exit(1);
+    fprintf(stderr,"Error: src_dz not found!\n");
   }
   //find model 
   if ((ps_ffint(*par,"model",&model))) {
@@ -311,6 +317,22 @@ int main(int argc, char **argv)
     } else n2 = EMPTY;
   } else e2 = (float)EMPTY;
 
+  //find auxiliary model parameters
+  if ((ps_fffloat(*par,"cx1",&cx1)))
+    cx1 = (float)EMPTY;
+  if ((ps_fffloat(*par,"cx2",&cx2)))
+    cx2 = (float)EMPTY;
+  if ((ps_fffloat(*par,"relsigmax1",&relsigmax1)))
+    relsigmax1 = (float)EMPTY;
+  if ((ps_fffloat(*par,"relsigmax2",&relsigmax2)))
+    relsigmax2 = (float)EMPTY;
+  if ((ps_fffloat(*par,"cycles",&cycles)))
+    cycles = (float)EMPTY;
+
+  #ifdef DEBUG
+  fprintf(stderr,"After finding parameters\n");
+  #endif
+
   //Computing some values ----------------------------//
   
   nx = 1+(int)(lx/src_dx);
@@ -320,71 +342,116 @@ int main(int argc, char **argv)
   wavelength = CMIN/(fpeak/1000.0);
   if (mdl_dx==EMPTY) mdl_dx = wavelength/GPC*(horder/2.0);
   if (mdl_dz==EMPTY) mdl_dz = wavelength/GPC*(horder/2.0);
-  float d1=mdl_dz, d2=mdl_dx;
+  //NOTE: d1<0 since it refers to depth
+  float d1=-mdl_dz, d2=mdl_dx;
   
   //compute e1,e2 or n1,n2
+  //NOTE: converting e1 into a negative quantity
+  if (e1!=EMPTY && e1>0) e1*=-1;
+
   if (n1==EMPTY) n1 = (int)((e1-o1)/d1)+1;
   else e1 = o1 + (n1-1)*d1;
   if (n2==EMPTY) n2 = (int)((e2-o2)/d2)+1;
   else e2 = o2 + (n2-1)*d2;  
 
-  //other model variables
+  if (n1<0) n1*=-1;
+  if (n2<0) n2*=-1;
+
+  if (nts==EMPTY){
+    nts=(int)(2.0/(fpeak*src_dt))+1; 
+    fprintf(stderr,"Warning: nts set to %d.\n",nts);
+  }
+
+  // Other model variables -----------------------//
+  //for model 1 
+  if (model==1) {
+    modelpars = (float*)emalloc(2*sizeof(float));
+    modelpars[0] = o1;
+    modelpars[1] = e1;
+  }
+
+  //for model 2
   if (model==2) {
-    omv = (float*)emalloc(4*sizeof(float));
-    
-    if(ps_fffloat(*par,"cx1",omv  )) {
-	omv[0]=(e1-o1)*.5; 
-	fprintf(stdout,"WARNING: "
-	               "cx1 is set to the default value!\n"); 
-    } else omv[0] = cx1;
-    
-    if(ps_fffloat(*par,"cx2",omv+1)) {
-	omv[1]=(e2-o2)*.5; 
-	fprintf(stdout,"WARNING: "
-	               "cx2 is set to the default value!\n"); 
-    } else omv[1] = cx2;
+    modelpars = (float*)emalloc(8*sizeof(float));
+    modelpars[0] = o1;
+    modelpars[1] = e1;
+    modelpars[2] = o2;
+    modelpars[3] = e2;
 
-    if(ps_fffloat(*par,"relsigmax1",omv+2)) {
-	omv[2]=relsigmax1_def; 
+    if(ps_fffloat(*par,"cx1",modelpars+4)) {
+	modelpars[4]=(e1-o1)*.5; 
 	fprintf(stdout,"WARNING: "
-	               "relsigmax1 is set to the default value!\n"); 
-    } else omv[2] = relsigmax1;
+		"cx1 is set to the default value: %f\n",modelpars[4]); 
+    } else modelpars[4] = cx1;
+    
+    if(ps_fffloat(*par,"cx2",modelpars+5)) {
+	modelpars[5]=(e2-o2)*.5; 
+	fprintf(stdout,"WARNING: "
+		"cx2 is set to the default value: %f\n",modelpars[5]); 
+    } else modelpars[5] = cx2;
 
-    if(ps_fffloat(*par,"relsigmax2",omv+3)) {
-	omv[3]=relsigmax2_def; 
+    if(ps_fffloat(*par,"relsigmax1",modelpars+6)) {
+        modelpars[6]=relsigmax1_def; 
 	fprintf(stdout,"WARNING: "
-	               "relsigmax2 is set to the default value!\n"); 
-    } else omv[3] = relsigmax2;
+		"relsigmax1 is set to the default value: %f\n",modelpars[6]); 
+    } else modelpars[6] = relsigmax1;
+
+    fprintf(stdout,"relsigmax1 = %f\n",relsigmax1);
+
+    if(ps_fffloat(*par,"relsigmax2",modelpars+7)) {
+	modelpars[7]=relsigmax2_def; 
+	fprintf(stdout,"WARNING: "
+		"relsigmax2 is set to the default value: %f\n\n",modelpars[7]); 
+    } else modelpars[7] = relsigmax2;
+
+    fprintf(stdout,"relsigmax2 = %f\n",relsigmax2);
   }
+
+  //for model 3
   if (model==3) {
-    omv = (float*) emalloc(1*sizeof(float));
-    if(ps_fffloat(*par,"cycles",omv)) {
-	omv[0]=cycles_def; 
+    modelpars = (float*) emalloc(3*sizeof(float));
+    modelpars[0] = o1;
+    modelpars[1] = e1;
+    if(ps_fffloat(*par,"cycles",modelpars+2)) {
+	modelpars[2]=cycles_def; 
 	fprintf(stdout,"WARNING: "
-	               "cycles is set to the default value!\n"); 
-    } else omv[0] = cycles;
+		"cycles is set to the default value: %f\n",modelpars[2]); 
+    } else modelpars[2] = cycles;
   }
+  
+  #ifdef DEBUG
+  fprintf(stderr,"After computing some parameters.\n");
+  #endif
 
   // computing x,z coor of traces --------------------//
   //Assumption: x-coordinate is the fast moving coordinate.
   size_t nxnz = nx*nz;
   float *xcoor = (float*)calloc(nxnz,sizeof(float));
   float *zcoor = (float*)calloc(nxnz,sizeof(float));
-  
-  for(int iz; iz<nz; iz++){
-    for(int ix; ix<nx; ix++){
+
+  for(int iz=0; iz<nz; iz++){
+    for(int ix=0; ix<nx; ix++){
       xcoor[iz*nx+ix] = xcent-lx/2.0 + ix*src_dx;
       zcoor[iz*nx+ix] = zcent-lz/2.0 + iz*src_dz;
     }
   }
+
+  #ifdef DEBUG
+  fprintf(stderr,"After computing x,z coor\n");
+  #endif
+
   // computing bulkmod at trace coor -----------------//
   float *bulkmod_val = (float*)calloc(nxnz,sizeof(float));
   int choose = 1;
   
   for(int i=0; i<nxnz; i++)
     bulkmod_val[i] = get_zvalue( zcoor[i],xcoor[i],
-				 model,choose,omv );
-  
+				 model,choose,modelpars );
+
+  #ifdef DEBUG
+  fprintf(stderr,"After computing bulkmod\n");
+  #endif
+
   //Allocating room for data
   int final_nts = (int)(2.0/(fpeak*src_dt)) + nts + 1;
   fprintf(stderr,"Final nts = %d\n",final_nts);
@@ -395,6 +462,10 @@ int main(int argc, char **argv)
     fprintf(stderr,"Error, from weightsource: "
 		   "could not allocate memory for buffer.\n");
   }  
+
+  #ifdef DEBUG
+  fprintf(stderr,"After allocating mem for buff\n");
+  #endif
 
   // read in traces from binary ----------------------//
   fprintf(stderr,"WEIGHTSOURCE: reading from %s.\n",src_bin);  
@@ -417,10 +488,13 @@ int main(int argc, char **argv)
 
   // weight traces -----------------------------------//
   for(int i=0; i<nxnz; i++){
-    for(int it=0; it<final_nts; it++)
+    for(int it=0; it<final_nts; it++){
       buff[it+i*final_nts] *= bulkmod_val[i]*src_dx*src_dz;
+    }
+    //fprintf(stderr,"xcoor[%d]=%f, zcoor[%d]=%f\n",i,xcoor[i],i,zcoor[i]);
+    //fprintf(stderr,">>>> bulkmod_val[%d]=%f\n",i,bulkmod_val[i]);
   }
-  
+
   // write out traces --------------------------------//
   fprintf(stderr,"WEIGHTSOURCE: writing to %s.\n",out_bin);
   fp = fopen(out_bin,"wb");
@@ -429,7 +503,7 @@ int main(int argc, char **argv)
 
   fprintf(stderr,"After writing out binary.\n");
 
-  if (model>=2) free(omv);
+  if (model>=1) free(modelpars);
   free(xcoor);
   free(zcoor);
   free(bulkmod_val);

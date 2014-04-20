@@ -1,5 +1,5 @@
 ########################################################################
-####################### TRIP DEMO SCONSTRUCT ###########################
+####################### Trip DEMO SCONSTRUCT ###########################
 ########################################################################
 
 ###### JOB DICTIONARY: PYTHON DICTIONARY OF JOB NAME AND CORRESPONDING 
@@ -75,18 +75,36 @@ asg         = IWAVE + 'asg/main/asg.x'
 
 #building .par files for SConscript
 os.system(setupTest + ' par=setup_mdl0_test.par')
+os.system(setupTest + ' par=setup_mdl1_test.par')
+os.system(setupTest + ' par=setup_mdl2_test.par')
+os.system(setupTest + ' par=setup_mdl3_test.par')
 
 jobs = {
 'mdl0_den'  : [smoothmodel,['tmpdata'],'', '', '',''],
 'mdl0_vel'  : [smoothmodel,['tmpdata'],'', '', '',''],
 'mdl0_test' : [asg,['mdl0_den','mdl0_vel','mdl0_hdr','mdl0_src'],'','','',''],
+'mdl1_den'  : [smoothmodel,['tmpdata'],'', '', '',''],
+'mdl1_vel'  : [smoothmodel,['tmpdata'],'', '', '',''],
+'mdl1_test' : [asg,['mdl1_den','mdl1_vel','mdl1_hdr','mdl1_src'],'','','',''],
+'mdl2_den'  : [smoothmodel,['tmpdata'],'', '', '',''],
+'mdl2_vel'  : [smoothmodel,['tmpdata'],'', '', '',''],
+'mdl2_test' : [asg,['mdl2_den','mdl2_vel','mdl2_hdr','mdl2_src'],'','','',''],
+'mdl3_den'  : [smoothmodel,['tmpdata'],'', '', '',''],
+'mdl3_vel'  : [smoothmodel,['tmpdata'],'', '', '',''],
+'mdl3_test' : [asg,['mdl3_den','mdl3_vel','mdl3_hdr','mdl3_src'],'','','','']
 }
 
 scripts = {
 'tmpdata' : [],
+'Fig'     : [],
 'mdl0_hdr': [],
 'mdl0_src': [],
-'Fig'     : []
+'mdl1_hdr': [],
+'mdl1_src': [],
+'mdl2_hdr': [],
+'mdl2_src': [],
+'mdl3_hdr': [],
+'mdl3_src': []
 }
 
 ########################################################################

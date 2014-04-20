@@ -3,23 +3,26 @@ CMIN=2.0  [m/ms]
 CMAX=4.0  [m/ms]
 fpeak=10  [Hz]
 GPC=10    [gridcells/cycle]
+//dt=0.01 [ms]
+CFL=0.5
+//mdl_dx=20.0
+//mdl_dz=20.0
 
 xcent=400.0 
 zcent=-400.0
 tcent=0.0
 lx=50.0
 lz=50.0
-nts=101.0
-src_dt=0.002
-src_dx=5.0
-src_dz=5.0
+src_dt=0.0005 [s]
+src_dx=0.5
+src_dz=0.5
 
 gx_o=0
 gx_e=800
 gx_dx=20
-gelev=-200.0
-hdr_T=0.5
-hdr_dt=0.004
+gelev=-100
+hdr_T=0.5    [s]
+hdr_dt=0.001 [s]
 
 choose1=0
 choose2=2
@@ -28,8 +31,6 @@ o1=0.0
 e1=800.0
 o2=0.0
 e2=800.0
-
-CFL = 0.5
 
 nl1=1.0
 nr1=1.0
