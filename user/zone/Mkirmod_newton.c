@@ -611,6 +611,8 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	tstop = clock();
 	timespend = (double)(tstop-tstart)/CLOCKS_PER_SEC;
 	
+	sf_warning("Total time %g",timespend);
+	
     exit(0);
 }
 
