@@ -20,6 +20,7 @@
 #include <float.h>
 #include <math.h>
 #include <rsf.h>
+#include <time.h>
 
 #include "kirmod.h"
 #include "kirmod2.h"
@@ -30,6 +31,11 @@
 
 int main(int argc, char* argv[]) 
 {
+    /*Timing*/
+    clock_t tstart, tstop;
+    double timespend;
+    tstart = clock();
+
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
     double tolerance;
@@ -602,6 +608,8 @@ if (!sf_getdouble("tol",&tolerance)) tolerance=0.00001;
 	
     if (lin && adj) sf_floatwrite(rfl[0],nxc,data);
 	
+	tstop = clock();
+	timespend = (double)(tstop-tstart)/CLOCKS_PER_SEC;
 	
     exit(0);
 }
