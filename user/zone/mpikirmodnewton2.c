@@ -21,7 +21,6 @@
 #include <rsf.h>
 #include "mpikirmodnewton2.h"
 #include <mpi.h>
-#include <omp.h>
 
 #include "mpikirmod2.h"
 #include "mpikirmodnewton.h"
@@ -326,7 +325,7 @@ surface kirmodnewton2_init(int ns,  float s0,  float ds  /* source/midpoint axis
 
 void kirmodnewton2_table(surface y /* Surface structure*/,
 				   bool debug /* Debug Newton */,
-				   bool fwdxini /* Use the result of the previous iteration for the next one*/,
+				   bool fwdxini /* Use the result of the previous iteration*/,
 				   int niter /* Number of iteration for Newton */,
 				   double tolerance /* Tolerance level for Newton */,
 				   int size /*MPI numprocs*/,
@@ -346,7 +345,8 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	}
 	
 	if (fwdxini) {
-	    oldans = sf_floatalloc2(nc-1,nc-1); /* To store old ans for the case of fwdxini*/
+	/* To store old ans for the case of fwdxini*/
+	    oldans = sf_floatalloc2(nc-1,nc-1);
 	} else {
 	    oldans = NULL;
 	}
@@ -355,7 +355,8 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	numdiv = (int)(ny/size);
 	mod = ny % size;
 	if (rank == size-1) numdiv += mod;
-	if (rank == 0) numdiv = ny; /*Trick the master into doing allocation but not computation*/
+	/*Trick the master into doing allocation but not computation*/
+	if (rank == 0) numdiv = ny; 
 	
 
 	/*For MPI pack*/
@@ -369,121 +370,122 @@ void kirmodnewton2_table(surface y /* Surface structure*/,
 	int numbyte = sizeof(float);
 	buffer = sf_floatalloc(buflen);
 	
-	/*Pack the number of points (as float because we have an array of floats. Will cast to int once recv)*/
+	/*Pack the number of points (as float because we have an array of floats*/
 	/*Note that 4 is the number of bytes for float*/
 	if (rank != 0)  MPI_Pack(&numdiv,1,MPI_INT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD); 
 	
-    for (iy=0; iy < numdiv; iy++) {	/* source/midpoint and offset axes */
-	if (rank == size-1) index = (int)(iy+rank*(numdiv-mod));
-	else index = (int)(iy+rank*(numdiv));
-	x1 = y[index].x; /* x1 is on the surface */
-	if (rank != 0) MPI_Pack(&index,1,MPI_INT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-	if (0==iy || x1 != xp) { /* new point */
-		ta = (ktable**) sf_alloc(nx,sizeof(ktable*));
-		
-		for (ix=0; ix < nx; ix++) { /* reflector axis */
-			ta[ix] = (ktable*) sf_alloc(nc,sizeof(ktable));
-			x2 = x0 + ix*dx; /* x2 is on the reflector */
-/*			if (ix<10 && rank ==1) sf_warning("rank %d index %d x1 %f x2 %f\n",rank,index,x1,x2);*/
-			for (ic=0; ic < nc; ic++) { 
-				ta[ix][ic] = (ktable) sf_alloc(1,sizeof(ta[ix][ic][0]));
-				if (iy < (int)(ny/size) || rank == size-1) { /*To screen for master allocation*/
-					/* Additional loop from kirmod2.c for generating extra parameters*/
-					num = ic;
-					if (num!=0) {
-						xinitial = sf_floatalloc(num);
-						
-						for (iv=0; iv<num; iv++) { /* How many reflection*/
-							if (fwdxini) {
-									
-								if (ix==0 || skip) { /* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
-									oldans[iv][num-1] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
+	for (iy=0; iy < numdiv; iy++) {	/* source/midpoint and offset axes */
+		if (rank == size-1) index = (int)(iy+rank*(numdiv-mod));
+		else index = (int)(iy+rank*(numdiv));
+		x1 = y[index].x; /* x1 is on the surface */
+		if (rank != 0) MPI_Pack(&index,1,MPI_INT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+		if (0==iy || x1 != xp) { /* new point */
+			ta = (ktable**) sf_alloc(nx,sizeof(ktable*));
+			
+			for (ix=0; ix < nx; ix++) { /* reflector axis */
+				ta[ix] = (ktable*) sf_alloc(nc,sizeof(ktable));
+				x2 = x0 + ix*dx; /* x2 is on the reflector */
+				for (ic=0; ic < nc; ic++) { 
+					ta[ix][ic] = (ktable) sf_alloc(1,sizeof(ta[ix][ic][0]));
+					/*To screen for master allocation*/
+					if (iy < (int)(ny/size) || rank == size-1) { 
+						num = ic;
+						if (num!=0) {
+							xinitial = sf_floatalloc(num);
+							
+							for (iv=0; iv<num; iv++) { /* How many reflection*/
+								if (fwdxini) {
+									/* Initialize this old result array for the very first calculation or the previous ray can't be traced*/
+									if (ix==0 || skip) { 
+										oldans[iv][num-1] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
+									}
+									xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
 								}
-								xinitial[iv] = oldans[iv][num-1]; /* 2nd axis is initial points axis*/
-							}
-							else {
-								xinitial[iv] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
+								else {
+									xinitial[iv] = x1+(x2-x1)*v.sumthick[iv]/(v.sumthick[num]);
+								}
 							}
 						}
+						else {
+							/* The case where there is NO reflection (to avoid warning)*/
+							xinitial = sf_floatalloc(1);
+							xinitial[0] = 0;
+						}
+
+						kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,v.aniso,z, zder, zder2, oldans, skip, ta[ix][ic]);
 					}
-					else {
-						xinitial = sf_floatalloc(1);
-						xinitial[0] = 0; /* The case where there is NO reflection (to avoid warning)*/
-					}					/* Additional loop for generating extra parameters*/
-/*					if (ix<10 && rank ==1) sf_warning("rank %d xinti %f %f %f %f %f\n",rank,xinitial[0],xinitial[1],xinitial[2],xinitial[3],xinitial[4]);*/
-					kirmodnewton_table(vstatus, debug, x1, x2, x1, x2, niter, tolerance, num, xinitial, v.xref, v.zref,v.v, v.gx, v.gz,v.aniso,z, zder, zder2, oldans, skip, ta[ix][ic]);
-				}
-				else {/*Trash data for master when allocate memory*/
-					ta[ix][ic]->t = y[iy-1].ta[ix][ic]->t; 
-					ta[ix][ic]->a = y[iy-1].ta[ix][ic]->a;
-					ta[ix][ic]->tx = y[iy-1].ta[ix][ic]->tx;
-					ta[ix][ic]->ty = y[iy-1].ta[ix][ic]->ty;
-					ta[ix][ic]->tn = y[iy-1].ta[ix][ic]->tn;
-					ta[ix][ic]->an = y[iy-1].ta[ix][ic]->an;
-					ta[ix][ic]->ar = y[iy-1].ta[ix][ic]->ar; 
-				}
-				
-				/*MPI_Pack data to send over to the rank 0 processor*/
-				if (rank != 0) {
-					MPI_Pack(&(ta[ix][ic]->t),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-					MPI_Pack(&(ta[ix][ic]->a),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-					MPI_Pack(&(ta[ix][ic]->tx),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-					MPI_Pack(&(ta[ix][ic]->ty),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-					MPI_Pack(&(ta[ix][ic]->tn),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-					MPI_Pack(&(ta[ix][ic]->an),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-					MPI_Pack(&(ta[ix][ic]->ar),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
-				}
+					else {/*Trash data for master when allocate memory*/
+						ta[ix][ic]->t = y[iy-1].ta[ix][ic]->t; 
+						ta[ix][ic]->a = y[iy-1].ta[ix][ic]->a;
+						ta[ix][ic]->tx = y[iy-1].ta[ix][ic]->tx;
+						ta[ix][ic]->ty = y[iy-1].ta[ix][ic]->ty;
+						ta[ix][ic]->tn = y[iy-1].ta[ix][ic]->tn;
+						ta[ix][ic]->an = y[iy-1].ta[ix][ic]->an;
+						ta[ix][ic]->ar = y[iy-1].ta[ix][ic]->ar; 
+					}
+					
+					/*MPI_Pack data to send over to the rank 0 processor*/
+					if (rank != 0) {
+						MPI_Pack(&(ta[ix][ic]->t),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+						MPI_Pack(&(ta[ix][ic]->a),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+						MPI_Pack(&(ta[ix][ic]->tx),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+						MPI_Pack(&(ta[ix][ic]->ty),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+						MPI_Pack(&(ta[ix][ic]->tn),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+						MPI_Pack(&(ta[ix][ic]->an),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+						MPI_Pack(&(ta[ix][ic]->ar),1,MPI_FLOAT,buffer,buflen*numbyte,&position,MPI_COMM_WORLD);
+					}
+				} 
 			} 
 		} 
-	} 
-	y[index].ta = ta;
-	xp = x1;
-    }
+		y[index].ta = ta;
+		xp = x1;
+	}
     
-    /*Send packed data to master*/
-    if (rank != 0) {
-    	MPI_Send(buffer,position,MPI_PACKED,0,0,MPI_COMM_WORLD);
-    }
-    else if (rank == 0) {
-    	int iup, iup2;
-	for (iup=1;iup<size;iup++){
-		/*Reset position for a new file from another worker*/
-		position=0; 
-		/*receive from one rank at a time*/
-		MPI_Recv(buffer,buflen*numbyte,MPI_PACKED,iup,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE); 
-		MPI_Unpack(buffer,buflen*numbyte,&position,&numdiv,1,MPI_INT,MPI_COMM_WORLD);
+	/*Send packed data to master*/
+	if (rank != 0) {
+		MPI_Send(buffer,position,MPI_PACKED,0,0,MPI_COMM_WORLD);
+		}
+	else if (rank == 0) {
+		int iup, iup2;
+		for (iup=1;iup<size;iup++){
+			/*Reset position for a new file from another worker*/
+			position=0; 
+			/*receive from one rank at a time*/
+			MPI_Recv(buffer,buflen*numbyte,MPI_PACKED,iup,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE); 
+			MPI_Unpack(buffer,buflen*numbyte,&position,&numdiv,1,MPI_INT,MPI_COMM_WORLD);
 
-		for (iup2=0;iup2 < numdiv;iup2++){
-			MPI_Unpack(buffer,buflen*numbyte,&position,&index,1,MPI_INT,MPI_COMM_WORLD);
-			if (y[index-1].x != y[index].x || position == 8){ /* new point condition as in the function or if the location falls exactly at the edge of work division*/
-				for (ix=0; ix < nx; ix++){
-					for (ic=0; ic < nc; ic++) { 
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->t,1,MPI_FLOAT,MPI_COMM_WORLD);
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->a,1,MPI_FLOAT,MPI_COMM_WORLD);
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->tx,1,MPI_FLOAT,MPI_COMM_WORLD);
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->ty,1,MPI_FLOAT,MPI_COMM_WORLD);
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->tn,1,MPI_FLOAT,MPI_COMM_WORLD);
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->an,1,MPI_FLOAT,MPI_COMM_WORLD);
-						MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->ar,1,MPI_FLOAT,MPI_COMM_WORLD);
+			for (iup2=0;iup2 < numdiv;iup2++){
+				MPI_Unpack(buffer,buflen*numbyte,&position,&index,1,MPI_INT,MPI_COMM_WORLD);
+				if (y[index-1].x != y[index].x || position == 8){ 
+				/* new point condition as in the function or if the location falls exactly at the edge of work division*/
+					for (ix=0; ix < nx; ix++){
+						for (ic=0; ic < nc; ic++) { 
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->t,1,MPI_FLOAT,MPI_COMM_WORLD);
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->a,1,MPI_FLOAT,MPI_COMM_WORLD);
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->tx,1,MPI_FLOAT,MPI_COMM_WORLD);
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->ty,1,MPI_FLOAT,MPI_COMM_WORLD);
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->tn,1,MPI_FLOAT,MPI_COMM_WORLD);
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->an,1,MPI_FLOAT,MPI_COMM_WORLD);
+							MPI_Unpack(buffer,buflen*numbyte,&position,&y[index].ta[ix][ic]->ar,1,MPI_FLOAT,MPI_COMM_WORLD);
+						}
 					}
 				}
-			}
-			else { /*same point set to the same as the one before*/
-				for (ix=0; ix < nx; ix++){
-					for (ic=0; ic < nc; ic++) { 
-						y[index].ta[ix][ic]->t = y[index-1].ta[ix][ic]->t;
-						y[index].ta[ix][ic]->a = y[index-1].ta[ix][ic]->a;
-						y[index].ta[ix][ic]->tx = y[index-1].ta[ix][ic]->tx;
-						y[index].ta[ix][ic]->ty = y[index-1].ta[ix][ic]->ty;
-						y[index].ta[ix][ic]->tn = y[index-1].ta[ix][ic]->tn;
-						y[index].ta[ix][ic]->an = y[index-1].ta[ix][ic]->an;
-						y[index].ta[ix][ic]->ar = y[index-1].ta[ix][ic]->ar;
+				else { /*same point set to the same as the one before*/
+					for (ix=0; ix < nx; ix++){
+						for (ic=0; ic < nc; ic++) { 
+							y[index].ta[ix][ic]->t = y[index-1].ta[ix][ic]->t;
+							y[index].ta[ix][ic]->a = y[index-1].ta[ix][ic]->a;
+							y[index].ta[ix][ic]->tx = y[index-1].ta[ix][ic]->tx;
+							y[index].ta[ix][ic]->ty = y[index-1].ta[ix][ic]->ty;
+							y[index].ta[ix][ic]->tn = y[index-1].ta[ix][ic]->tn;
+							y[index].ta[ix][ic]->an = y[index-1].ta[ix][ic]->an;
+							y[index].ta[ix][ic]->ar = y[index-1].ta[ix][ic]->ar;
+						}
 					}
 				}
 			}
 		}
 	}
-    }
 }
 
 

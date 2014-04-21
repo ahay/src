@@ -16,7 +16,8 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+#include <stdio.h>
+#include <stdlib.h>
 #include <float.h>
 #include <math.h>
 #include <rsf.h>
@@ -35,9 +36,15 @@ int main(int argc, char* argv[])
     /*For MPI-----------------*/
     MPI_Init(&argc,&argv);
     int size, rank;
+    int tstart,tstop;
 
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
     MPI_Comm_size(MPI_COMM_WORLD,&size);
+
+    /*Timing for the whole algorithm*/
+    if(rank == 0) {  
+	tstart = MPI_Wtime();    
+    }
 
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
@@ -453,46 +460,47 @@ if(rank == 0){ /* Execute serially using the master only*/
     }
     
     /*** Main loop ***/
-    
-    /*Set OMP parameters*/
-/*    omp_set_num_threads(4);*/
-    
+
     for (is=0; is < ns; is++) {
 	if (verb) sf_warning("%s %d of %d;",cmp?"cmp":"shot",is+1,ns);
 	for (ih=0; ih < nh; ih++) {
-			
-	    for (ic=0; ic < nc; ic++) {
+
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for default(none) collapse(2) \*/
+/*	private(ix,ic,ts,tg) shared(nc,nx,newton,inc,ref,ih,is,time,delt,tss,tgs,dx,nh,cmp)*/
+/*#endif*/
+	for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
-		    if (cmp) {
+		if (cmp) {
 						
 			if (newton) {
-			    ts = kirmodnewton2_map(inc,is,2*ih,  ix,ic);
-			    tg = kirmodnewton2_map(ref,is,2*ih+1,ix,ic);
+				ts = kirmodnewton2_map(inc,is,2*ih,  ix,ic);
+				tg = kirmodnewton2_map(ref,is,2*ih+1,ix,ic);
 			}
 			else {
-			    ts = kirmod2_map(inc,is,2*ih,  ix,ic);
-			    tg = kirmod2_map(ref,is,2*ih+1,ix,ic);
+				ts = kirmod2_map(inc,is,2*ih,  ix,ic);
+				tg = kirmod2_map(ref,is,2*ih+1,ix,ic);
 			}
 						
-		    } else {
+		} else {
 						
 			if (newton) {
-			    ts = kirmodnewton2_map(inc,is,nh,ix,ic);
-			    tg = kirmodnewton2_map(ref,is,ih,ix,ic);
+				ts = kirmodnewton2_map(inc,is,nh,ix,ic);
+				tg = kirmodnewton2_map(ref,is,ih,ix,ic);
 			}
 			else {
-			    ts = kirmod2_map(inc,is,nh,ix,ic);
-			    tg = kirmod2_map(ref,is,ih,ix,ic);
+				ts = kirmod2_map(inc,is,nh,ix,ic);
+				tg = kirmod2_map(ref,is,ih,ix,ic);
 			}
-		    }
-					
-		    time[ic][ix] = ts->t + tg->t;
-		    delt[ic][ix] = fabsf(ts->tx+tg->tx)*dx;
-					
-		    tss[ic][ix] = ts;
-		    tgs[ic][ix] = tg;
 		}
-	    }
+					
+		time[ic][ix] = ts->t + tg->t;
+		delt[ic][ix] = fabsf(ts->tx+tg->tx)*dx;
+					
+		tss[ic][ix] = ts;
+		tgs[ic][ix] = tg;
+		}
+	}
 			
 	    sf_aastretch_define (time[0],delt[0],NULL);
 			
@@ -503,36 +511,38 @@ if(rank == 0){ /* Execute serially using the master only*/
 		sf_freqfilt_lop(true,false,nt,nt,trace,trace2);
 				
 		sf_aastretch_lop (true,false,nxc,nt,ampl[0],trace); 
-				
-                /* aastretch_lop (true,false,nxc,nt,ampl[0],trace2); */
 	    }
-			
-	    for (ic=0; ic < nc; ic++) {
+
+/*#ifdef _OPENMP*/
+/*#pragma omp parallel for default(none) collapse(2) \*/
+/*	private(ix,ic,ts,tg,obl,amp,theta,ava) shared(nc,nx,lin,adj,rfl,ampl,dx,ref,inc,tss,tgs,rgd)*/
+/*#endif	*/
+	for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
-		    ts = tss[ic][ix];
-		    tg = tgs[ic][ix];
+			ts = tss[ic][ix];
+			tg = tgs[ic][ix];
 					
-		    obl = 0.5*(ts->tn + tg->tn);
-		    amp = ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON;
+			obl = 0.5*(ts->tn + tg->tn);
+			amp = ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON;
 					
-		    if (lin) {
+		if (lin) {
 			if (adj) {
-			    rfl[ic][ix] += ampl[ic][ix]*obl*dx/amp;
+				rfl[ic][ix] += ampl[ic][ix]*obl*dx/amp;
 			} else {
-			    ampl[ic][ix] = rfl[ic][ix]*obl*dx/amp;
+				ampl[ic][ix] = rfl[ic][ix]*obl*dx/amp;
 			}
-		    } else {
+		} else {
 			theta = 0.5*(SF_SIG(tg->tx)*tg->an - 
 				     SF_SIG(ts->tx)*ts->an);
 			theta = sinf(theta);
 						
 			ava = rfl[ic][ix]+rgd[ic][ix]*theta*theta;
 			if (ref != inc) ava *= theta;
-						
+			
 			ampl[ic][ix] = ava*obl*dx/amp;
-		    }
+			}
 		}
-	    }
+	}
 			
 	    if (!adj) {
 		sf_aastretch_lop (false,false,nxc,nt,ampl[0],trace);
@@ -541,8 +551,6 @@ if(rank == 0){ /* Execute serially using the master only*/
 		sf_freqfilt_lop(false,false,nt,nt,trace,trace2);
 				
 		sf_floatwrite(trace2,nt,modl); 
-				
-                /* sf_floatwrite(trace,nt,modl); */
 	    }
 	}
     }
@@ -551,10 +559,12 @@ if(rank == 0){ /* Execute serially using the master only*/
     if (lin && adj) sf_floatwrite(rfl[0],nxc,data);
 
     /*For MPI*/
+    tstop = MPI_Wtime();
+    sf_warning("Total time %d \n",tstop-tstart);
     MPI_Finalize();
 }
 else if (rank != 0)  MPI_Finalize();
     
-    exit(0);
+    return 0;
 }
 
