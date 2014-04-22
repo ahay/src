@@ -36,12 +36,12 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 int main(int argc, char* argv[])
 {
 	bool adj, inv, verb, par;
-	int it, ip, ix, np, nt, nfft, nx;
+	int it, ip, ix, np, nt, nfft, nw, nx;
 	float dp, p0, dt, t0, dx, ox, x0;
-	float *p, *xx, **dd, **mm;
-	fftwf_complex *tmp;
+	float *p, *xx, **dd, **mm, *tmpr;
+	fftwf_complex *tmpc;
 	fftwf_plan fft1, ifft1;
-	sf_complex tmpc, **cdd, **cmm;
+	sf_complex sumc, **cdd, **cmm;
 	sf_file in, out;
 
     	sf_init(argc,argv);
@@ -63,6 +63,7 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(in,"o1",&t0)) t0=0.;
 	/* origin of time axis */
 	nfft=2*kiss_fft_next_fast_size(nt);
+	nw=nfft/2+1;
 
     	if (adj) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -96,11 +97,12 @@ int main(int argc, char* argv[])
 	xx=sf_floatalloc(nx);
 	dd=sf_floatalloc2(nt, nx);
 	mm=sf_floatalloc2(nt, np);
-	cdd=sf_complexalloc2(nfft, nx);
-	cmm=sf_complexalloc2(nfft, np);
-    	tmp=(fftwf_complex*)fftwf_malloc(nfft*sizeof(fftwf_complex));
-    	fft1=fftwf_plan_dft_1d(nfft,tmp,tmp,FFTW_FORWARD,FFTW_MEASURE);	
-   	ifft1=fftwf_plan_dft_1d(nfft,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
+	cdd=sf_complexalloc2(nw, nx);
+	cmm=sf_complexalloc2(nw, np);
+	tmpr=(float*)fftwf_malloc(nfft*sizeof(float));
+    	tmpc=(fftwf_complex*)fftwf_malloc(nw*sizeof(fftwf_complex));
+    	fft1=fftwf_plan_dft_r2c_1d(nfft,tmpr,tmpc,FFTW_MEASURE);	
+   	ifft1=fftwf_plan_dft_c2r_1d(nfft,tmpc,tmpr,FFTW_MEASURE);
 
 	for(ip=0; ip<np; ip++) p[ip]=p0+ip*dp;	
 	if (adj) {// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
@@ -121,8 +123,6 @@ int main(int argc, char* argv[])
 	    	sf_putfloat(out,"d2",dx);
 	}
 	for(ix=0; ix<nx; ix++) xx[ix] = ox + ix*dx;
-	memset(cdd[0],0,nfft*nx*sizeof(sf_complex));
-	memset(cmm[0],0,nfft*np*sizeof(sf_complex));
 
     	if (!sf_getbool("parab",&par)) par=false;
 	/* if y, parabolic Radon transform */
@@ -136,62 +136,52 @@ int main(int argc, char* argv[])
 	}
 
 	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
-		for(ix=0; ix<nx; ix++)
-		for(it=0; it<nt; it++)
-			cdd[ix][it]=sf_cmplx(dd[ix][it],0);
-
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
-			for(it=0; it<nfft; it++) tmp[it] = cdd[ix][it];
+			memset(tmpr, 0, nfft*sizeof(float));
+			memcpy(tmpr, dd[ix], nt*sizeof(float));
 		 	fftwf_execute(fft1);// FFT: dd-->cdd
-			for(it=0; it<nfft; it++) cdd[ix][it]=tmp[it];
+			memcpy(cdd[ix], tmpc, nw*sizeof(sf_complex));
 		}
 
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{
-			for(it=0; it<=(nfft-1)/2; it++) 
+			for(it=0; it<nw; it++) 
 			{
-				tmpc=sf_cmplx(0,0);
+				sumc=sf_cmplx(0,0);
 				for(ix=0; ix<nx; ix++) 
-					tmpc+=cexpf(sf_cmplx(0,2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cdd[ix][it];
-				cmm[ip][it]=tmpc;
+					sumc+=cexpf(sf_cmplx(0,2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cdd[ix][it];
+				cmm[ip][it]=sumc;
 			}
-			for(it=(nfft+1)/2; it<nfft; it++)//X(N-k)=X^*(k)
-				cmm[ip][it]=conjf(cmm[ip][nfft-it]);
 
-			for(it=0; it<nfft; it++) tmp[it] = cmm[ip][it];
+			memcpy(tmpc, cmm[ip], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1); // IFFT: cmm-->mm
-			for(it=0; it<nt; it++) mm[ip][it]=crealf(tmp[it]);
+			memcpy(mm[ip], tmpr, nt*sizeof(float));
 		}
 
 		sf_floatwrite(mm[0], nt*np, out);
 	}else{// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
-		for(ip=0; ip<np; ip++)
-		for(it=0; it<nt; it++)
-			cmm[ip][it]=sf_cmplx(mm[ip][it],0);
-
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{
-			for(it=0; it<nfft; it++) tmp[it]=cmm[ip][it];
+			memset(tmpr, 0, nfft*sizeof(float));
+			memcpy(tmpr, mm[ip], nt*sizeof(float));
 		 	fftwf_execute(fft1);// FFT: mm-->cmm
-			for(it=0; it<nfft; it++) cmm[ip][it]=tmp[it];
+			memcpy(cmm[ip], tmpc, nw*sizeof(float));
 		}
 
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
-			for(it=0; it<=(nfft-1)/2; it++) 
+			for(it=0; it<nw; it++) 
 			{
-				tmpc=sf_cmplx(0,0);
+				sumc=sf_cmplx(0,0);
 				for(ip=0; ip<np; ip++)
-					tmpc+=cexpf(sf_cmplx(0,-2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cmm[ip][it];
-				cdd[ix][it]=tmpc;
+					sumc+=cexpf(sf_cmplx(0,-2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cmm[ip][it];
+				cdd[ix][it]=sumc;
 			}
-			for(it=(nfft+1)/2; it<nfft; it++)//X(N-k)=X^*(k)
-				cdd[ix][it]=conjf(cdd[ix][nfft-it]);
 
-			for(it=0; it<nfft; it++) tmp[it]=cdd[ix][it];
+			memcpy(tmpc, cdd[ix], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1);// IFFT: cmm-->mm
-			for(it=0; it<nt; it++) dd[ix][it]=crealf(tmp[it]);
+			memcpy(dd[ix], tmpr, nt*sizeof(float));
 		}
 
 		sf_floatwrite(dd[0], nt*nx, out);
@@ -203,7 +193,8 @@ int main(int argc, char* argv[])
 	free(*mm); free(mm);
 	free(*cdd); free(cdd);
 	free(*cmm); free(cmm);
-	fftwf_free(tmp);
+	fftwf_free(tmpr);
+	fftwf_free(tmpc);
 	fftwf_destroy_plan(fft1);
     	fftwf_destroy_plan(ifft1);
 
