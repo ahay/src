@@ -19,6 +19,9 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Reference: Kostov C., 1990. "Toeplitz structure in Slant-Stack
+	inversion": SEG Extended Abstracts, 1647-1650.
 */
 
 #include <rsf.h>
@@ -61,7 +64,7 @@ int main(int argc, char* argv[])
 	/* origin of time axis */
 	nfft=2*kiss_fft_next_fast_size(nt);
 
-    	if (adj) { 
+    	if (adj) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 		/* number of offset if the input in the data domain */
 
@@ -76,7 +79,7 @@ int main(int argc, char* argv[])
 		sf_putint(  out,"n2",np);
 		sf_putfloat(out,"d2",dp);
 		sf_putfloat(out,"o2",p0);
-    	} else { /* modeling */
+    	} else { // d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
 		if (!sf_histint  (in,"n2",&np)) sf_error("No n2= in input");
 		/* number of ray parameter if input in radon domain */
 		if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
@@ -100,14 +103,14 @@ int main(int argc, char* argv[])
    	ifft1=fftwf_plan_dft_1d(nfft,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
 
 	for(ip=0; ip<np; ip++) p[ip]=p0+ip*dp;	
-	if (adj) {
+	if (adj) {// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		sf_floatread(dd[0], nt*nx, in);
 
 	    	if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
 		/* data origin in x */
 	    	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
 		/* sampling interval in x */
-	} else {
+	} else {// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
 		sf_floatread(mm[0], nt*np, in);
 	    	if (!sf_getfloat("ox",&ox)) sf_error("Need ox=");
 		/* x origin */
@@ -136,7 +139,7 @@ int main(int argc, char* argv[])
 		else if (x0!=1.) xx[ix] /= x0;
 	}
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*xi,xi)
+	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		for(ix=0; ix<nx; ix++)
 		for(it=0; it<nt; it++)
 			cdd[ix][it]=sf_cmplx(dd[ix][it],0);
@@ -166,7 +169,7 @@ int main(int argc, char* argv[])
 		}
 
 		sf_floatwrite(mm[0], nt*np, out);
-	}else{// d(t,h)=sum_{i=0}^{np} m(tau=t-p*h,p)
+	}else{// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
 		for(ip=0; ip<np; ip++)
 		for(it=0; it<nt; it++)
 			cmm[ip][it]=sf_cmplx(mm[ip][it],0);
