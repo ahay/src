@@ -121,12 +121,8 @@ int main(int argc, char* argv[])
 	    	sf_putfloat(out,"d2",dx);
 	}
 	for(ix=0; ix<nx; ix++) xx[ix] = ox + ix*dx;
-	for(ix=0; ix<nx; ix++)
-	for(it=0; it<nfft; it++)
-		cdd[ix][it]=sf_cmplx(0,0);
-	for(ip=0; ip<np; ip++)
-	for(it=0; it<nfft; it++)
-		cmm[ip][it]=sf_cmplx(0,0);
+	memset(cdd[0],0,nfft*nx*sizeof(sf_complex));
+	memset(cmm[0],0,nfft*np*sizeof(sf_complex));
 
     	if (!sf_getbool("parab",&par)) par=false;
 	/* if y, parabolic Radon transform */
@@ -157,7 +153,7 @@ int main(int argc, char* argv[])
 			{
 				tmpc=sf_cmplx(0,0);
 				for(ix=0; ix<nx; ix++) 
-					tmpc+=cexpf(sf_cmplx(0,2.*SF_PI*it*p[ip]*xx[ix]/nx))*cdd[ix][it];
+					tmpc+=cexpf(sf_cmplx(0,2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cdd[ix][it];
 				cmm[ip][it]=tmpc;
 			}
 			for(it=(nfft+1)/2; it<nfft; it++)//X(N-k)=X^*(k)
@@ -187,7 +183,7 @@ int main(int argc, char* argv[])
 			{
 				tmpc=sf_cmplx(0,0);
 				for(ip=0; ip<np; ip++)
-					tmpc+=cexpf(sf_cmplx(0,-2.*SF_PI*it*p[ip]*xx[ix]/nx))*cmm[ip][it];
+					tmpc+=cexpf(sf_cmplx(0,-2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cmm[ip][it];
 				cdd[ix][it]=tmpc;
 			}
 			for(it=(nfft+1)/2; it<nfft; it++)//X(N-k)=X^*(k)
