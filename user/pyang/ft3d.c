@@ -28,7 +28,7 @@ Note: The adjoint is made as the same as inverse by normalization!
 
 static int n1, n2, n3;
 fftwf_plan fft3, ifft3;/* execute plan for FFT and IFFT */
-sf_complex *tmp;
+fftwf_complex *tmp;
 
 void ft3d_init(int n1_, int n2_, int n3_)
 /*< initialize >*/
