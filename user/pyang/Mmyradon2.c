@@ -56,13 +56,13 @@ void matrix_transpose(sf_complex *matrix, int nx, int nz)
 
 int main(int argc, char* argv[])
 {
-	bool adj, inv, verb, par;
-	int it, ip, ix, np, nt, nfft, nw, nx;
-	float dp, p0, dt, t0, dx, ox, x0, w;
+	bool adj, inv, par;
+	int iw, ip, ix, np, nt, nfft, nw, nx, niter;
+	float dp, p0, dt, t0, dx, ox, x0, w, eps;
 	float *p, *xx, **dd, **mm, *tmpr;
+	sf_complex *cdd, *cmm;
 	fftwf_complex *tmpc;
 	fftwf_plan fft1, ifft1;
-	sf_complex sumc, *cdd, *cmm;
 	sf_file in, out;
 
     	sf_init(argc,argv);
@@ -73,8 +73,6 @@ int main(int argc, char* argv[])
 	/* if y, perform adjoint operation */
     	if (!sf_getbool("inv",&inv)) inv=adj; 
 	/* if y, perform inverse operation */
-    	if (!sf_getbool ("verb",&verb)) verb=false;
-	/* verbosity flag */
 
     	/* read input file parameters */
     	if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
@@ -86,7 +84,7 @@ int main(int argc, char* argv[])
 	nfft=2*kiss_fft_next_fast_size(nt);
 	nw=nfft/2+1;
 
-    	if (adj) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+    	if (adj||inv) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 		/* number of offset if the input in the data domain */
 
@@ -97,6 +95,12 @@ int main(int argc, char* argv[])
 		/* p sampling (if adj=y) */
 		if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
 		/* p origin (if adj=y) */
+		if(inv){
+			if (!sf_getint("niter",&niter)) niter=100;
+			/* number of iterations */
+			if (!sf_getfloat("eps",&eps)) eps=0.01;
+			/* regularization parameter */
+		}
 
 		sf_putint(  out,"n2",np);
 		sf_putfloat(out,"d2",dp);
@@ -156,7 +160,7 @@ int main(int argc, char* argv[])
 		else if (x0!=1.) xx[ix] /= x0;
 	}
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
@@ -178,15 +182,19 @@ int main(int argc, char* argv[])
 
 
 	myradon2_init(np, nx, p, xx);
-	for(it=0; it<nw; it++) 
+	for(iw=0; iw<nw; iw++) 
 	{
-		w=2.*SF_PI*it/(nfft*dt);
+		w=2.*SF_PI*iw/(nfft*dt);
 		myradon2_set(w);
-		myradon2_lop(adj, false, np, nx, &cmm[it*np], &cdd[it*nx]);
+		myradon2_lop(adj, false, np, nx, &cmm[iw*np], &cdd[iw*nx]);
+		if(inv){
+			sf_csolver_reg(myradon2_lop, sf_ccgstep, sf_ccopy_lop,
+			np, np, nx, &cmm[iw*np], &cdd[iw*nx], niter,eps,"x0",&cmm[iw*np],"end");
+		}
 	}
 
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		matrix_transpose(cmm, np, nw);
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{			
