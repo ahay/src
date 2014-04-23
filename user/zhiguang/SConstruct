@@ -11,7 +11,7 @@ postrtmshape prertmshape sgewefd2d
 # differenciate
 
 mpi_progs = '''
-mpifulrtm2d mpilrrtm mpiprertm2d
+mpilsrtm mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
 pyprogs = 'lrrtm'
