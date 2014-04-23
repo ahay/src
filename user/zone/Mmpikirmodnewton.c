@@ -465,10 +465,10 @@ if(rank == 0){ /* Execute serially using the master only*/
 	if (verb) sf_warning("%s %d of %d;",cmp?"cmp":"shot",is+1,ns);
 	for (ih=0; ih < nh; ih++) {
 
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for default(none) collapse(2) \*/
-/*	private(ix,ic,ts,tg) shared(nc,nx,newton,inc,ref,ih,is,time,delt,tss,tgs,dx,nh,cmp)*/
-/*#endif*/
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2) \
+	private(ix,ic,ts,tg) shared(nc,nx,newton,inc,ref,ih,is,time,delt,tss,tgs,dx,nh,cmp)
+#endif
 	for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
 		if (cmp) {
@@ -513,10 +513,10 @@ if(rank == 0){ /* Execute serially using the master only*/
 		sf_aastretch_lop (true,false,nxc,nt,ampl[0],trace); 
 	    }
 
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for default(none) collapse(2) \*/
-/*	private(ix,ic,ts,tg,obl,amp,theta,ava) shared(nc,nx,lin,adj,rfl,ampl,dx,ref,inc,tss,tgs,rgd)*/
-/*#endif	*/
+#ifdef _OPENMP
+#pragma omp parallel for default(none) collapse(2) \
+	private(ix,ic,ts,tg,obl,amp,theta,ava) shared(nc,nx,lin,adj,rfl,ampl,dx,ref,inc,tss,tgs,rgd)
+#endif	
 	for (ic=0; ic < nc; ic++) {
 		for (ix=0; ix < nx; ix++) {
 			ts = tss[ic][ix];

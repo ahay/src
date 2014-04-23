@@ -219,13 +219,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		
 	/*Apply boundary---------------------------------------------------------------------------*/
 	
-	
-/*	sf_warning("xs %f xr %f n+1=%d xx0 %f xx1 %f xx2 %f xx3 %f xx4 %f dk0 %f \n",xs,xr,n+1,xx[0],xx[1],xx[2],xx[3],xx[4],dk[0]);*/
-/*	if(xx[0]<bmin-tol || xx[0]>bmax+tol ||xx[n+1]<bmin-tol || xx[n+1]>bmax+tol) {*/
-/*		sf_warning("FINAL xs %f xr %f n+1=%d xx0 %f xx1 %f xx2 %f xx3 %f xx4 %f\n",xs,xr,n+1,xx[0],xx[1],xx[2],xx[3],xx[4]);*/
-/*		exit(0);*/
-/*	}*/
-	
 	xxtem[0] = xx[0]; /*Fixed source*/
 	xxtem[n+1] = xx[n+1]; /*Fixed receiver*/
 	dk[0] = 0.0; /*To prevent trash data*/
