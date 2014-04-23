@@ -28,6 +28,7 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 */
 
 #include <rsf.h>
+#include <time.h>
 #include <complex.h>
 
 #ifdef _OPENMP
@@ -40,7 +41,7 @@ static int np, nx;
 static float w, *p, *xx;
 
 void myradon2_init(int np_, int nx_, float *p_, float *xx_)
-/* initialization */
+/*< initialization >*/
 {
 	np=np_;
 	nx=nx_;
@@ -49,26 +50,27 @@ void myradon2_init(int np_, int nx_, float *p_, float *xx_)
 }
 
 void myradon2_set(float w_)
-/* set up frequency w*/
+/*< set up frequency w >*/
 {
 	w=w_;
 }
 
 void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex *dd)
-/* radon linear operator */
+/*< radon linear operator >*/
 {
 	int ix, ip;
 	sf_complex sumc;
     	if (nm != np || nd != nx) sf_error("%s: mismatched data sizes",__FILE__);
 	
-	//sf_cadjnull(adj, add, nm, nd, mm, dd);
+	sf_cadjnull(adj, add, nm, nd, mm, dd);
+
 
 	if(adj){// mm(p,w)=sum_{ix=0}^{nx} dd(xx[ix],w)*exp(i*w*p*xx[ix])
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{
 			sumc=sf_cmplx(0,0);
 			for(ix=0; ix<nx; ix++) 
-				sumc+=cexpf(sf_cmplx(0,w*p[ip]*xx[ix]))*dd[ix];
+				sumc+=cexpf(I*w*p[ip]*xx[ix])*dd[ix];
 			mm[ip]=sumc;
 		}
 	}else{// dd(xx,w)=sum_{ip=0}^{np} mm(p[ip],w)*exp(-i*w*p[ip]*xx)
@@ -76,8 +78,10 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 		{
 			sumc=sf_cmplx(0,0);
 			for(ip=0; ip<np; ip++)
-				sumc+=cexpf(sf_cmplx(0,-w*p[ip]*xx[ix]))*mm[ip];
+				sumc+=cexpf(-I*w*p[ip]*xx[ix])*mm[ip];
 			dd[ix]=sumc;
 		}
 	}
 }
+
+

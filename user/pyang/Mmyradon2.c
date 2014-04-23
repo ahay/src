@@ -40,6 +40,7 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 #include "myradon2.h"
 
 
+
 void matrix_transpose(sf_complex *matrix, int nx, int nz)
 {
 	int ix, iz;
@@ -53,7 +54,6 @@ void matrix_transpose(sf_complex *matrix, int nx, int nz)
 	free(tmp);
 }
 
-
 int main(int argc, char* argv[])
 {
 	bool adj, inv, verb, par;
@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	float *p, *xx, **dd, **mm, *tmpr;
 	fftwf_complex *tmpc;
 	fftwf_plan fft1, ifft1;
-	sf_complex sumc, *tmpmm, *tmpdd, *cdd, *cmm;
+	sf_complex sumc, *cdd, *cmm;
 	sf_file in, out;
 
     	sf_init(argc,argv);
@@ -120,8 +120,6 @@ int main(int argc, char* argv[])
 	mm=sf_floatalloc2(nt, np);
 	cdd=(sf_complex*)malloc(nw*nx*sizeof(sf_complex));
 	cmm=(sf_complex*)malloc(nw*np*sizeof(sf_complex));
-	tmpdd=sf_complexalloc(nx);
-	tmpmm=sf_complexalloc(np);
 	tmpr=(float*)fftwf_malloc(nfft*sizeof(float));
     	tmpc=(fftwf_complex*)fftwf_malloc(nw*sizeof(fftwf_complex));
     	fft1=fftwf_plan_dft_r2c_1d(nfft,tmpr,tmpc,FFTW_MEASURE);	
@@ -157,10 +155,7 @@ int main(int argc, char* argv[])
 		if (par) xx[ix] *= xx[ix]/(x0*x0);
 		else if (x0!=1.) xx[ix] /= x0;
 	}
-	memset(tmpmm, 0, np*sizeof(sf_complex));
-	memset(tmpdd, 0, nx*sizeof(sf_complex));
 
-	myradon2_init(np, nx, p, xx);
 	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
@@ -181,33 +176,14 @@ int main(int argc, char* argv[])
 		matrix_transpose(cmm, nw, np);
 	}
 
+
+	myradon2_init(np, nx, p, xx);
 	for(it=0; it<nw; it++) 
 	{
 		w=2.*SF_PI*it/(nfft*dt);
 		myradon2_set(w);
-		if(adj){
-			sf_complex *ptr1=&cdd[it*nx];
-			sf_complex *ptr2=&cmm[it*np];
-			//myradon2_lop(adj, false, np, nx, ptr2, ptr1);
-
-			for(ip=0; ip<np; ip++) // loop over slopes
-			{
-				sumc=sf_cmplx(0,0);
-				for(ix=0; ix<nx; ix++) 
-					sumc+=cexpf(sf_cmplx(0,w*p[ip]*xx[ix]))*ptr1[ix];
-				ptr2[ip]=sumc;
-			}
-		}else{
-			for(ix=0; ix<nx; ix++) 
-			{
-				sumc=sf_cmplx(0,0);
-				for(ip=0; ip<np; ip++)
-					sumc+=cexpf(sf_cmplx(0,-w*p[ip]*xx[ix]))*tmpmm[np*it+ip];
-				cdd[nx*it+ix]=sumc;
-			}
-		}
+		myradon2_lop(adj, false, np, nx, &cmm[it*np], &cdd[it*nx]);
 	}
-
 
 
 	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
