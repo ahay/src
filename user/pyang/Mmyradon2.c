@@ -20,8 +20,12 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-  Reference: Kostov C., 1990. "Toeplitz structure in Slant-Stack
-	inversion": SEG Extended Abstracts, 1647-1650.
+  References: 
+	1) Kostov C., 1990. "Toeplitz structure in Slant-Stack inversion":
+	 SEG Extended Abstracts, 1647-1650.
+	2) Sacchi, Mauricio D., and Milton Porsani. "Fast high resolution 
+	parabolic Radon transform." Society of Exploration Geophysicists 
+	69th Annual International Meeting, SPRO P. Vol. 1. No. 1. 1999.
 */
 
 #include <rsf.h>
@@ -33,15 +37,32 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 #include <omp.h>
 #endif
 
+#include "myradon2.h"
+
+
+void matrix_transpose(sf_complex *matrix, int nx, int nz)
+{
+	int ix, iz;
+	sf_complex *tmp=(sf_complex*)malloc(nx*nz*sizeof(sf_complex));
+	if (tmp==NULL) {printf("out of memory!\n"); exit(1);}
+	for(iz=0; iz<nz; iz++)
+	for(ix=0; ix<nx; ix++)
+		tmp[iz+nz*ix]=matrix[ix+nx*iz];
+
+	memcpy(matrix, tmp, nx*nz*sizeof(sf_complex));
+	free(tmp);
+}
+
+
 int main(int argc, char* argv[])
 {
 	bool adj, inv, verb, par;
 	int it, ip, ix, np, nt, nfft, nw, nx;
-	float dp, p0, dt, t0, dx, ox, x0;
+	float dp, p0, dt, t0, dx, ox, x0, w;
 	float *p, *xx, **dd, **mm, *tmpr;
 	fftwf_complex *tmpc;
 	fftwf_plan fft1, ifft1;
-	sf_complex sumc, **cdd, **cmm;
+	sf_complex sumc, *tmpmm, *tmpdd, *cdd, *cmm;
 	sf_file in, out;
 
     	sf_init(argc,argv);
@@ -97,8 +118,10 @@ int main(int argc, char* argv[])
 	xx=sf_floatalloc(nx);
 	dd=sf_floatalloc2(nt, nx);
 	mm=sf_floatalloc2(nt, np);
-	cdd=sf_complexalloc2(nw, nx);
-	cmm=sf_complexalloc2(nw, np);
+	cdd=(sf_complex*)malloc(nw*nx*sizeof(sf_complex));
+	cmm=(sf_complex*)malloc(nw*np*sizeof(sf_complex));
+	tmpdd=sf_complexalloc(nx);
+	tmpmm=sf_complexalloc(np);
 	tmpr=(float*)fftwf_malloc(nfft*sizeof(float));
     	tmpc=(fftwf_complex*)fftwf_malloc(nw*sizeof(fftwf_complex));
     	fft1=fftwf_plan_dft_r2c_1d(nfft,tmpr,tmpc,FFTW_MEASURE);	
@@ -134,52 +157,74 @@ int main(int argc, char* argv[])
 		if (par) xx[ix] *= xx[ix]/(x0*x0);
 		else if (x0!=1.) xx[ix] /= x0;
 	}
+	memset(tmpmm, 0, np*sizeof(sf_complex));
+	memset(tmpdd, 0, nx*sizeof(sf_complex));
 
+	myradon2_init(np, nx, p, xx);
 	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
 			memcpy(tmpr, dd[ix], nt*sizeof(float));
 		 	fftwf_execute(fft1);// FFT: dd-->cdd
-			memcpy(cdd[ix], tmpc, nw*sizeof(sf_complex));
+			memcpy(&cdd[ix*nw], tmpc, nw*sizeof(sf_complex));
 		}
-
+		matrix_transpose(cdd, nw, nx);
+	}else{	// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{
-			for(it=0; it<nw; it++) 
+			memset(tmpr, 0, nfft*sizeof(float));
+			memcpy(tmpr, mm[ip], nt*sizeof(float));
+		 	fftwf_execute(fft1);// FFT: mm-->cmm
+			memcpy(&cmm[ip*nw], tmpc, nw*sizeof(float));
+		}
+		matrix_transpose(cmm, nw, np);
+	}
+
+	for(it=0; it<nw; it++) 
+	{
+		w=2.*SF_PI*it/(nfft*dt);
+		myradon2_set(w);
+		if(adj){
+			sf_complex *ptr1=&cdd[it*nx];
+			sf_complex *ptr2=&cmm[it*np];
+			//myradon2_lop(adj, false, np, nx, ptr2, ptr1);
+
+			for(ip=0; ip<np; ip++) // loop over slopes
 			{
 				sumc=sf_cmplx(0,0);
 				for(ix=0; ix<nx; ix++) 
-					sumc+=cexpf(sf_cmplx(0,2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cdd[ix][it];
-				cmm[ip][it]=sumc;
+					sumc+=cexpf(sf_cmplx(0,w*p[ip]*xx[ix]))*ptr1[ix];
+				ptr2[ip]=sumc;
 			}
+		}else{
+			for(ix=0; ix<nx; ix++) 
+			{
+				sumc=sf_cmplx(0,0);
+				for(ip=0; ip<np; ip++)
+					sumc+=cexpf(sf_cmplx(0,-w*p[ip]*xx[ix]))*tmpmm[np*it+ip];
+				cdd[nx*it+ix]=sumc;
+			}
+		}
+	}
 
-			memcpy(tmpc, cmm[ip], nw*sizeof(sf_complex));
+
+
+	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+		matrix_transpose(cmm, np, nw);
+		for(ip=0; ip<np; ip++) // loop over slopes
+		{			
+			memcpy(tmpc, &cmm[ip*nw], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1); // IFFT: cmm-->mm
 			memcpy(mm[ip], tmpr, nt*sizeof(float));
 		}
 
 		sf_floatwrite(mm[0], nt*np, out);
 	}else{// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
-		for(ip=0; ip<np; ip++) // loop over slopes
-		{
-			memset(tmpr, 0, nfft*sizeof(float));
-			memcpy(tmpr, mm[ip], nt*sizeof(float));
-		 	fftwf_execute(fft1);// FFT: mm-->cmm
-			memcpy(cmm[ip], tmpc, nw*sizeof(float));
-		}
-
+		matrix_transpose(cdd, nx, nw);
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
-			for(it=0; it<nw; it++) 
-			{
-				sumc=sf_cmplx(0,0);
-				for(ip=0; ip<np; ip++)
-					sumc+=cexpf(sf_cmplx(0,-2.*SF_PI*it*p[ip]*xx[ix]/(nfft*dt)))*cmm[ip][it];
-				cdd[ix][it]=sumc;
-			}
-
-			memcpy(tmpc, cdd[ix], nw*sizeof(sf_complex));
+			memcpy(tmpc, &cdd[ix*nw], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1);// IFFT: cmm-->mm
 			memcpy(dd[ix], tmpr, nt*sizeof(float));
 		}
@@ -187,12 +232,13 @@ int main(int argc, char* argv[])
 		sf_floatwrite(dd[0], nt*nx, out);
 	}
 
+
 	free(p);
 	free(xx);
 	free(*dd); free(dd);
 	free(*mm); free(mm);
-	free(*cdd); free(cdd);
-	free(*cmm); free(cmm);
+	free(cdd); 
+	free(cmm); 
 	fftwf_free(tmpr);
 	fftwf_free(tmpc);
 	fftwf_destroy_plan(fft1);

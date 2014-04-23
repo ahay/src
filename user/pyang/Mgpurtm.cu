@@ -126,19 +126,6 @@ float 	*d_Iss, *d_Isg, *d_I1,*d_I2;		// I1: image without normalization; I2: nor
 float 	*h_boundary, *d_boundary;		// boundary on host and device
 float	*ptr=NULL;
 
-void matrix_transpose(float *matrix, int nx, int nz)
-{
-	float *tmp=(float*)malloc(nx*nz*sizeof(float));
-	if (tmp==NULL) {printf("out of memory!\n"); exit(1);}
-	for(int iz=0; iz<nz; iz++){
-		for(int ix=0; ix<nx; ix++){
-			tmp[iz+nz*ix]=matrix[ix+nx*iz];
-		}
-	}
-	memcpy(matrix, tmp, nx*nz*sizeof(float));
-	free(tmp);
-}
-
 
 
 void expand(float *b, float *a, int npml, int nnz, int nnx, int nz1, int nx1)
