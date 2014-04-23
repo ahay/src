@@ -38,6 +38,8 @@ To the reproducible documents collection:
 * tongji/qpwave: Simulating propagation of separated wave modes in
   general anisotropic media, Part I: qP-wave propagators (Cheng and
   Kang)
+* xtju/gpurtm: RTM using effective boundary saving: A staggered grid
+  GPU implementation (Yang, Wang, and Gao)
 
 To SCons:
 
