@@ -1,0 +1,33 @@
+from rsf.proj import*
+import math
+
+def Graph(title, other): 
+    return '''
+	    graph title=%s labelsz=10 titlesz=12 tickscale=0.2 %s
+	   '''%(title,other)
+	
+a=2*math.pi
+
+Flow('sig',None,'spike n1=1001 o1=0 d1=.1 | math output="sin(%d*0.1*x1)+sin(%d*0.2*x1)+sin(%d*0.4*x1)"'%(a,a,a))
+
+Result('sig','graph title="sig"')
+
+Flow('imf','sig','emd')
+for i in range(4):
+	if i!=3:
+	    Flow('imf%d'%(i+1),'imf','window n2=1 f2=%d'%(i))
+	else:
+	    Flow('imf%d'%(i+1),'imf','window n2=2 f2=%d | stack axis=2 norm=2'%(i))
+
+
+Plot('sig',Graph('"(a) Signal"', 'wantaxis1=n'))
+Plot('imf1',Graph('"(b) IMF1"','wantaxis1=n'))
+Plot('imf2',Graph('"(c) IMF2"','wantaxis1=n'))
+Plot('imf3',Graph('"(d) IMF3"','wantaxis1=n'))
+Plot('imf4',Graph('"(e) Res"','wantaxis1=y'))
+
+
+Result('sigimf','sig imf1 imf2 imf3 imf4','OverUnderAniso')
+
+
+End()

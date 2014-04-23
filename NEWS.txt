@@ -39,7 +39,9 @@ To the reproducible documents collection:
   general anisotropic media, Part I: qP-wave propagators (Cheng and
   Kang)
 * xtju/gpurtm: RTM using effective boundary saving: A staggered grid
-  GPU implementation (Yang, Wang, and Gao)
+  GPU implementation (Yang, Gao, and Wang)
+* tccs/emdpf: Random noise attenuation by f-x empirical mode
+  decomposition predictive filtering (Chen and Ma)
 
 To SCons:
 
