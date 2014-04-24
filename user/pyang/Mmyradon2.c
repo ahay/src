@@ -39,8 +39,6 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 
 #include "myradon2.h"
 
-
-
 void matrix_transpose(sf_complex *matrix, int nx, int nz)
 {
 	int ix, iz;
@@ -57,6 +55,7 @@ void matrix_transpose(sf_complex *matrix, int nx, int nz)
 int main(int argc, char* argv[])
 {
 	bool adj, inv, par;
+    	char *invmode;
 	int iw, ip, ix, np, nt, nfft, nw, nx, niter;
 	float dp, p0, dt, t0, dx, ox, x0, w, eps;
 	float *p, *xx, **dd, **mm, *tmpr;
@@ -96,8 +95,11 @@ int main(int argc, char* argv[])
 		if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
 		/* p origin (if adj=y) */
 		if(inv){
-			if (!sf_getint("niter",&niter)) niter=100;
-			/* number of iterations */
+			
+    			if ( !(invmode=sf_getstring("invmode")) ) invmode="toeplitz";
+			/* inverse method: 'ls' if least-squares; 'toeplitz' if use FFT */			
+			if ((invmode[0]=='l') && !sf_getint("niter",&niter)) niter=100;
+			/* number of CGLS iterations */
 			if (!sf_getfloat("eps",&eps)) eps=0.01;
 			/* regularization parameter */
 		}
@@ -181,15 +183,18 @@ int main(int argc, char* argv[])
 	}
 
 
-	myradon2_init(np, nx, p, xx);
+	myradon2_init(np, nx, dp, p, xx);
 	for(iw=0; iw<nw; iw++) 
 	{
 		w=2.*SF_PI*iw/(nfft*dt);
 		myradon2_set(w);
 		myradon2_lop(adj, false, np, nx, &cmm[iw*np], &cdd[iw*nx]);
 		if(inv){
-			sf_csolver_reg(myradon2_lop, sf_ccgstep, sf_ccopy_lop,
-			np, np, nx, &cmm[iw*np], &cdd[iw*nx], niter,eps,"x0",&cmm[iw*np],"end");
+			if (invmode[0]=='t') 
+				myradon2_inv(&cmm[iw*np], &cmm[iw*np], eps);
+			else
+				sf_csolver_reg(myradon2_lop, sf_ccgstep, sf_ccopy_lop, np, 
+				np, nx, &cmm[iw*np], &cdd[iw*nx], niter,eps,"end");
 		}
 	}
 

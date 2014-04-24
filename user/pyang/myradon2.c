@@ -1,5 +1,6 @@
 /* Linear/parabolic radon operator in frequency domain
-Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
+Note: I borrowed a lot from /system/seismic/radon+Mradon.c. 
+The distinction:
 	I am using FFTW because I am inexperienced in invoking kiss_fft. 
 */
 /*
@@ -36,15 +37,17 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 #endif
 
 #include "myradon2.h"
+#include "ctoeplitz_reg.h"
 
 static int np, nx;
-static float w, *p, *xx;
+static float w, dp, *p, *xx;
 
-void myradon2_init(int np_, int nx_, float *p_, float *xx_)
+void myradon2_init(int np_, int nx_, float dp_, float *p_, float *xx_)
 /*< initialization >*/
 {
 	np=np_;
 	nx=nx_;
+	dp=dp_;
 	p=p_;
 	xx=xx_;
 }
@@ -60,10 +63,10 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 {
 	int ix, ip;
 	sf_complex sumc;
+
     	if (nm != np || nd != nx) sf_error("%s: mismatched data sizes",__FILE__);
 	
 	sf_cadjnull(adj, add, nm, nd, mm, dd);
-
 
 	if(adj){// mm(p,w)=sum_{ix=0}^{nx} dd(xx[ix],w)*exp(i*w*p*xx[ix])
 		for(ip=0; ip<np; ip++) // loop over slopes
@@ -84,4 +87,24 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 	}
 }
 
-
+void myradon2_inv(sf_complex *mm, sf_complex *mm_adj, float eps)
+/*< fast Toeplitz matrix inversion for radon transform 
+mm: model to be inverted
+mm_adj: adjoint of radon
+eps: regularization parameter
+>*/
+{
+	int ip, ix;
+	sf_complex *c, sumc;
+	c=(sf_complex *)malloc(np*sizeof(sf_complex));
+	
+	for(ip=0; ip<np; ip++) 
+	{
+		sumc=sf_cmplx(0,0);
+		for(ix=0; ix<nx; ix++)
+			sumc+=cexpf(I*w*ip*dp*xx[ix]);
+		c[ip]=sumc;
+	}
+	
+	ctoeplitz_inv(np, eps, c, mm, mm_adj);
+}
