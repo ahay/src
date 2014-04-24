@@ -40,10 +40,12 @@ int main(int argc, char **argv) {
   int       model;
   float     o1,o2;
   float     e1,e2;
-  int       n1,n2;      
+  int       n1,n2;
+  float     top,bot;
   float     cx1,cx2;
-  float     relsigmax1,relsigmax2;
+  float     sigmax1,sigmax2;
   float     cycles;
+  float     rho;
 
   float     CFL;         //CFL condition for FD code
   float     dt;          //time step for simulation
@@ -245,12 +247,18 @@ int main(int argc, char **argv) {
     cx1 = (float)EMPTY;
   if ((ps_fffloat(*par,"cx2",&cx2)))
     cx2 = (float)EMPTY;
-  if ((ps_fffloat(*par,"relsigmax1",&relsigmax1)))
-    relsigmax1 = (float)EMPTY;
-  if ((ps_fffloat(*par,"relsigmax2",&relsigmax2)))
-    relsigmax2 = (float)EMPTY;
+  if ((ps_fffloat(*par,"sigmax1",&sigmax1)))
+    sigmax1 = (float)EMPTY;
+  if ((ps_fffloat(*par,"sigmax2",&sigmax2)))
+    sigmax2 = (float)EMPTY;
   if ((ps_fffloat(*par,"cycles",&cycles)))
     cycles = (float)EMPTY;
+  if ((ps_fffloat(*par,"mdl_top",&top)))
+    top = (float)EMPTY;
+  if ((ps_fffloat(*par,"mdl_bot",&bot)))
+    bot = (float)EMPTY;
+  if ((ps_fffloat(*par,"mdl_rho",&rho)))
+    rho = (float)EMPTY;
 
   ps_fffloat(*par,"nl1",&nl1);
   ps_fffloat(*par,"nr1",&nr1);
@@ -331,9 +339,9 @@ int main(int argc, char **argv) {
 
   float d1=mdl_dz;
   float d2=mdl_dx;
-  if (n1==EMPTY) n1 = (int)((e1-o1)/d1)+1;
+  if (n1==EMPTY) n1 = (int)((e1-o1)/d1);
   else e1 = o1 + (float)(n1)*d1;
-  if (n2==EMPTY) n2 = (int)((e2-o2)/d2)+1;
+  if (n2==EMPTY) n2 = (int)((e2-o2)/d2);
   else e2 = o2 + (float)(n2)*d2;
 
   if (n1<0) n1*=-1;
@@ -359,9 +367,12 @@ int main(int argc, char **argv) {
   fprintf(fp,"hfile=%s ",mdl_hfile1);
   if (cx1!=EMPTY) fprintf(fp,"cx1=%f ",cx1);
   if (cx2!=EMPTY) fprintf(fp,"cx2=%f ",cx2);
-  if (relsigmax1!=EMPTY) fprintf(fp,"relsigmax1=%f ",relsigmax1);
-  if (relsigmax2!=EMPTY) fprintf(fp,"relsigmax2=%f ",relsigmax2);
+  if (sigmax1!=EMPTY) fprintf(fp,"sigmax1=%f ",sigmax1);
+  if (sigmax2!=EMPTY) fprintf(fp,"sigmax2=%f ",sigmax2);
   if (cycles!=EMPTY) fprintf(fp,"cycles=%f ",cycles);
+  if (top!=EMPTY) fprintf(fp,"mdl_top=%f ",top);
+  if (bot!=EMPTY) fprintf(fp,"mdl_bot=%f ",bot);
+  if (rho!=EMPTY) fprintf(fp,"mdl_rho=%f ",rho);
 
   fclose(fp);
 
@@ -379,9 +390,13 @@ int main(int argc, char **argv) {
   fprintf(fp,"hfile=%s ",mdl_hfile2);
   if (cx1!=EMPTY) fprintf(fp,"cx1=%f ",cx1);
   if (cx2!=EMPTY) fprintf(fp,"cx2=%f ",cx2);
-  if (relsigmax1!=EMPTY) fprintf(fp,"relsigmax1=%f ",relsigmax1);
-  if (relsigmax2!=EMPTY) fprintf(fp,"relsigmax2=%f ",relsigmax2);
+  if (sigmax1!=EMPTY) fprintf(fp,"sigmax1=%f ",sigmax1);
+  if (sigmax2!=EMPTY) fprintf(fp,"sigmax2=%f ",sigmax2);
   if (cycles!=EMPTY) fprintf(fp,"cycles=%f ",cycles);
+  if (top!=EMPTY) fprintf(fp,"mdl_top=%f ",top);
+  if (bot!=EMPTY) fprintf(fp,"mdl_bot=%f ",bot);
+  if (rho!=EMPTY) fprintf(fp,"mdl_rho=%f ",rho);
+
   fclose(fp);
 
   //Writing out script for hdr file ------------------//
@@ -442,10 +457,10 @@ int main(int argc, char **argv) {
 	  nts,src_dt,nz*nx,lz*lx);
   fprintf(fp,"+ sushw +" 
 	     "' key=gelev a=%lf c=%lf b=0 j=%d | '",
-	  -lz/2.0,src_dz,nz);
+	  -lz/2.0,src_dz,nx);
   fprintf(fp,"+ sushw +"
 	     "' key=gx a=%lf b=%lf c=0 j=%d | '",
-	  -lx/2.0,src_dx,nz);
+	  -lx/2.0,src_dx,nx);
   fprintf(fp,"+ suconv +"
 	     "' sufile=ricker.su | '");
   fprintf(fp,"+ sutxtaper +"

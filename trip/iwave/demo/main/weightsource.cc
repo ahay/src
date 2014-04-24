@@ -7,9 +7,9 @@
 /* define number of model types */
 #define NMODEL 4
 
-#define vp_max 4
-#define vp_min 2
-#define rho    2.3
+#define cmax_def 4
+#define cmin_def 2
+#define rho_def  2.3
 
 #define o1_def 0
 #define o2_def 0
@@ -20,9 +20,6 @@
 #define n1_def 101
 #define n2_def 101
 #define n3_def 1
-
-#define relsigmax1_def .2
-#define relsigmax2_def .2
 
 #define cycles_def 2
 
@@ -53,12 +50,12 @@ const char *sdoc[] = {
     "             out.bin = binary output file                       ",
     NULL};
 
-//--------------------------------------------------------------------------//
+
+//----------------------------------------------------------------------------//
 // model 0: Homogeneous model
-static inline float homogeneous(int choose)
+static inline float homogeneous(int choose, float CMIN, float CMAX, float rho)
 {
-    //float vel = (vp_max+vp_min)/2;
-    float vel = (vp_max+vp_min)/2;
+    float vel = (CMAX+CMIN)/2;
     
     if (choose==1) return vel*vel*rho; 
     if (choose==2) return rho;
@@ -66,14 +63,16 @@ static inline float homogeneous(int choose)
     
     return vel;
 }
-//--------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
 // model 1: linear depth velocity model with constant density
-static inline float lineardepth(float x1, int choose, float * modelpars)
+static inline float lineardepth(float x1, int choose, 
+				float CMIN, float CMAX, 
+				float rho, float * modelpars)
 {
-    float o1 = modelpars[0];
-    float e1 = modelpars[1];
+    float top = modelpars[0];
+    float bot = modelpars[1];
     
-    float vel = (e1-x1)/(e1-o1)*vp_min + (x1-o1)/(e1-o1)*vp_max;
+    float vel = (bot-x1)/(bot-top)*CMIN + (x1-top)/(bot-top)*CMAX;
     
     if (choose==1) return vel*vel*rho;
     if (choose==2) return rho;
@@ -81,27 +80,20 @@ static inline float lineardepth(float x1, int choose, float * modelpars)
         
     return vel;
 }
-//--------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
 // model 2: negative gaussian lense in velocity, with constant density
-static inline float gaussianlense2D(float x1, float x2, 
-				    int choose, float * modelpars)
+static inline float gaussianlense2D(float x1, float x2, int choose, 
+				    float CMIN, float CMAX, float rho, float * modelpars)
 {
-    float o1 = modelpars[0];
-    float e1 = modelpars[1];
-    float o2 = modelpars[2];
-    float e2 = modelpars[3];
-    float cx1 = modelpars[4];
-    float cx2 = modelpars[5];
-    float relsigmax1 = modelpars[6];
-    float relsigmax2 = modelpars[7];
-    
-    float sigmax1 = relsigmax1*(e1-o1);
-    float sigmax2 = relsigmax2*(e2-o2);
+    float cx1 = modelpars[0];
+    float cx2 = modelpars[1];
+    float sigmax1 = modelpars[2];
+    float sigmax2 = modelpars[3];
     
     float gaussx1 = exp( -(x1-cx1)*(x1-cx1)/(2.*sigmax1*sigmax1) );
     float gaussx2 = exp( -(x2-cx2)*(x2-cx2)/(2.*sigmax2*sigmax2) );
     
-    float vel = vp_max - (vp_max-vp_min)*gaussx1*gaussx2;
+    float vel = CMAX - (CMAX-CMIN)*gaussx1*gaussx2;
     
     if (choose==1) return vel*vel*rho;
     if (choose==2) return rho;
@@ -109,17 +101,18 @@ static inline float gaussianlense2D(float x1, float x2,
     
     return vel;
 }
-//--------------------------------------------------------------------------//
+//----------------------------------------------------------------------------//
 // model 3: Sinusodial-depth velocity with constant density
-static inline float Sindepth(float x1, int choose, float * modelpars)
+static inline float Sindepth(float x1, int choose, 
+			     float CMIN, float CMAX, 
+			     float rho, float * modelpars)
 {
-   float o1 = modelpars[0];
-    float e1 = modelpars[1];
+    float top = modelpars[0];
+    float bot = modelpars[1];
     float cycles = modelpars[2];
     
     float wnum = cycles*2*PI;
-    float vel = (vp_max-vp_min)*.5*sin(wnum*(x1-e1)/(e1-o1)) 
-              + (vp_max+vp_min)*.5;
+    float vel = (CMAX-CMIN)*.5*sin(wnum*(x1-bot)/(bot-top)) + (CMAX+CMIN)*.5;
     
     if (choose==1) return vel*vel*rho;
     if (choose==2) return rho;
@@ -128,21 +121,27 @@ static inline float Sindepth(float x1, int choose, float * modelpars)
     return vel;
 }
 
-//--------------------------------------------------------------------------//
-float get_zvalue(float x1, float x2,
-                 int model, int choose, float * modelpars)
+
+
+
+/******************************************************************************/
+float get_zvalue(float x1, float x2, 
+                 int model, int choose, 
+		 float CMIN, float CMAX, float rho,
+		 float * modelpars)
 {
-   float v;
+    float v;
 	
-    switch (model) {
-        case 0: v = homogeneous(choose);                     break;
-        case 1: v = lineardepth(x1,choose,modelpars);        break;
-        case 2: v = gaussianlense2D(x1,x2,choose,modelpars); break;
-        case 3: v = Sindepth(x1,choose,modelpars);           break;
-        default: v = homogeneous(choose);
+    switch (model){
+    case 0: v = homogeneous(choose,CMIN,CMAX,rho); break;
+    case 1: v = lineardepth(x1,choose,CMIN,CMAX,rho,modelpars); break;
+    case 2: v = gaussianlense2D(x1,x2,choose,CMIN,CMAX,rho,modelpars); break;
+    case 3: v = Sindepth(x1,choose,CMIN,CMAX,rho,modelpars); break;
+    default: v = homogeneous(choose,CMIN,CMAX,rho);
     }
     return v;
 }
+
 
 ////////////////////////////////////////////////////////
 // MAIN ////////////////////////////////////////////////
@@ -175,9 +174,11 @@ int main(int argc, char **argv)
   float     e1,e2;
   int       n1,n2;      
   float    *modelpars;
+  float     top,bot;
   float     cx1,cx2;
-  float     relsigmax1,relsigmax2;
+  float     sigmax1,sigmax2;
   float     cycles;
+  float     rho;
   
   float     GPC;         //Gridcells per cycle
   float     wavelength;  //min. wavelength    [m/cycle]
@@ -322,12 +323,18 @@ int main(int argc, char **argv)
     cx1 = (float)EMPTY;
   if ((ps_fffloat(*par,"cx2",&cx2)))
     cx2 = (float)EMPTY;
-  if ((ps_fffloat(*par,"relsigmax1",&relsigmax1)))
-    relsigmax1 = (float)EMPTY;
-  if ((ps_fffloat(*par,"relsigmax2",&relsigmax2)))
-    relsigmax2 = (float)EMPTY;
+  if ((ps_fffloat(*par,"sigmax1",&sigmax1)))
+    sigmax1 = (float)EMPTY;
+  if ((ps_fffloat(*par,"sigmax2",&sigmax2)))
+    sigmax2 = (float)EMPTY;
   if ((ps_fffloat(*par,"cycles",&cycles)))
     cycles = (float)EMPTY;
+  if ((ps_fffloat(*par,"mdl_top",&top)))
+    top = (float)EMPTY;
+  if ((ps_fffloat(*par,"mdl_bot",&bot)))
+    bot = (float)EMPTY;
+  if ((ps_fffloat(*par,"mdl_rho",&rho)))
+    rho = (float)EMPTY;
 
   #ifdef DEBUG
   fprintf(stderr,"After finding parameters\n");
@@ -349,10 +356,10 @@ int main(int argc, char **argv)
   //NOTE: converting e1 into a negative quantity
   if (e1!=EMPTY && e1>0) e1*=-1;
 
-  if (n1==EMPTY) n1 = (int)((e1-o1)/d1)+1;
-  else e1 = o1 + (n1-1)*d1;
-  if (n2==EMPTY) n2 = (int)((e2-o2)/d2)+1;
-  else e2 = o2 + (n2-1)*d2;  
+  if (n1==EMPTY) n1 = (int)((e1-o1)/d1);
+  else e1 = o1 + (float)(n1)*d1;
+  if (n2==EMPTY) n2 = (int)((e2-o2)/d2);
+  else e2 = o2 + (float)(n2)*d2;  
 
   if (n1<0) n1*=-1;
   if (n2<0) n2*=-1;
@@ -363,61 +370,43 @@ int main(int argc, char **argv)
   }
 
   // Other model variables -----------------------//
-  //for model 1 
-  if (model==1) {
-    modelpars = (float*)emalloc(2*sizeof(float));
-    modelpars[0] = o1;
-    modelpars[1] = e1;
-  }
+    if(ps_fffloat(*par,"CMAX",&CMAX)) {CMAX=cmax_def; fprintf(stdout,"WARNING: cmax is set to default value!\n");}
+    if(ps_fffloat(*par,"CMIN",&CMIN)) {CMIN=cmin_def; fprintf(stdout,"WARNING: CMIN is set to default value!\n");}
+    if(ps_fffloat(*par,"mdl_rho",&rho)) {rho=rho_def; fprintf(stdout,"WARNING: rho is set to default value!\n");}
 
-  //for model 2
-  if (model==2) {
-    modelpars = (float*)emalloc(8*sizeof(float));
-    modelpars[0] = o1;
-    modelpars[1] = e1;
-    modelpars[2] = o2;
-    modelpars[3] = e2;
-
-    if(ps_fffloat(*par,"cx1",modelpars+4)) {
-	modelpars[4]=(e1-o1)*.5; 
-	fprintf(stdout,"WARNING: "
-		"cx1 is set to the default value: %f\n",modelpars[4]); 
-    } else modelpars[4] = cx1;
-    
-    if(ps_fffloat(*par,"cx2",modelpars+5)) {
-	modelpars[5]=(e2-o2)*.5; 
-	fprintf(stdout,"WARNING: "
-		"cx2 is set to the default value: %f\n",modelpars[5]); 
-    } else modelpars[5] = cx2;
-
-    if(ps_fffloat(*par,"relsigmax1",modelpars+6)) {
-        modelpars[6]=relsigmax1_def; 
-	fprintf(stdout,"WARNING: "
-		"relsigmax1 is set to the default value: %f\n",modelpars[6]); 
-    } else modelpars[6] = relsigmax1;
-
-    fprintf(stdout,"relsigmax1 = %f\n",relsigmax1);
-
-    if(ps_fffloat(*par,"relsigmax2",modelpars+7)) {
-	modelpars[7]=relsigmax2_def; 
-	fprintf(stdout,"WARNING: "
-		"relsigmax2 is set to the default value: %f\n\n",modelpars[7]); 
-    } else modelpars[7] = relsigmax2;
-
-    fprintf(stdout,"relsigmax2 = %f\n",relsigmax2);
-  }
-
-  //for model 3
-  if (model==3) {
-    modelpars = (float*) emalloc(3*sizeof(float));
-    modelpars[0] = o1;
-    modelpars[1] = e1;
-    if(ps_fffloat(*par,"cycles",modelpars+2)) {
-	modelpars[2]=cycles_def; 
-	fprintf(stdout,"WARNING: "
-		"cycles is set to the default value: %f\n",modelpars[2]); 
-    } else modelpars[2] = cycles;
-  }
+    if (model==1) {
+      modelpars = (float*)emalloc(2*sizeof(float));
+      if(ps_fffloat(*par,"top",modelpars  )) {modelpars[0]=o1; fprintf(stdout,"WARNING: top is set to o1!\n");}
+      if(ps_fffloat(*par,"bot",modelpars+1)) {modelpars[1]=e1; fprintf(stdout,"WARNING: bot is set to e1!\n");}
+    }
+    if (model==2) {
+        modelpars = (float*)emalloc(4*sizeof(float));
+        if(ps_fffloat(*par,"cx1",modelpars  )) {
+	  modelpars[0]=(e1-o1)*.5; 
+	  fprintf(stdout, "WARNING: cx1 is set to the default value!\n"); 
+	}
+        if(ps_fffloat(*par,"cx2",modelpars+1)) {
+	  modelpars[1]=(e2-o2)*.5; 
+	  fprintf(stdout, "WARNING: cx2 is set to the default value!\n"); 
+	}
+        if(ps_fffloat(*par,"sigmax1",modelpars+2)) {
+	  modelpars[2]=(e1-o1)*.1; 
+	  fprintf(stdout, "WARNING: sigmax1 is set to the default value!\n"); 
+	}
+        if(ps_fffloat(*par,"sigmax2",modelpars+3)) {
+	  modelpars[3]=(e2-o2)*.1; 
+	  fprintf(stdout, "WARNING: sigmax2 is set to the default value!\n"); 
+	}
+    }
+    if (model==3) {
+        modelpars = (float*) emalloc(3*sizeof(float));
+	if(ps_fffloat(*par,"top",modelpars  )) {modelpars[0]=o1; fprintf(stdout,"WARNING: top is set to o1!\n");}
+	if(ps_fffloat(*par,"bot",modelpars+1)) {modelpars[1]=e1; fprintf(stdout,"WARNING: bot is set to e1!\n");}
+        if(ps_fffloat(*par,"cycles",modelpars+2)) {
+	  modelpars[2]=cycles_def; 
+	  fprintf(stdout, "WARNING: cycles is set to the default value!\n"); 
+	}
+    }
   
   #ifdef DEBUG
   fprintf(stderr,"After computing some parameters.\n");
@@ -446,7 +435,7 @@ int main(int argc, char **argv)
   
   for(int i=0; i<nxnz; i++)
     bulkmod_val[i] = get_zvalue( zcoor[i],xcoor[i],
-				 model,choose,modelpars );
+				 model,choose,CMIN,CMAX,rho,modelpars );
 
   #ifdef DEBUG
   fprintf(stderr,"After computing bulkmod\n");
@@ -490,6 +479,7 @@ int main(int argc, char **argv)
   for(int i=0; i<nxnz; i++){
     for(int it=0; it<final_nts; it++){
       buff[it+i*final_nts] *= bulkmod_val[i]*src_dx*src_dz;
+      //buff[it*nxnz+i] *= bulkmod_val[i]*src_dx*src_dz;
     }
     //fprintf(stderr,"xcoor[%d]=%f, zcoor[%d]=%f\n",i,xcoor[i],i,zcoor[i]);
     //fprintf(stderr,">>>> bulkmod_val[%d]=%f\n",i,bulkmod_val[i]);

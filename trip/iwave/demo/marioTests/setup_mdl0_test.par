@@ -2,35 +2,36 @@ horder=2
 CMIN=2.0  [m/ms]
 CMAX=4.0  [m/ms]
 fpeak=10  [Hz]
-GPC=10    [gridcells/cycle]
+GPC=50    [gridcells/cycle]
 //dt=0.01 [ms]
-CFL=0.5
+CFL=0.7071
+//CFL=0.606
 //mdl_dx=20.0
 //mdl_dz=20.0
 
-xcent=400.0 
+xcent=200.0 
 zcent=-400.0
 tcent=0.0
 lx=50.0
 lz=50.0
 src_dt=0.0005 [s]
-src_dx=0.5
-src_dz=0.5
+src_dx=1.0
+src_dz=1.0
 
 gx_o=0
-gx_e=800
+gx_e=400
 gx_dx=20
 gelev=-100
-hdr_T=0.5    [s]
+hdr_T=0.4    [s]
 hdr_dt=0.001 [s]
 
 choose1=0
 choose2=2
 model=0
 o1=0.0
-e1=800.0
+e1=500.0
 o2=0.0
-e2=800.0
+e2=400.0
 
 nl1=1.0
 nr1=1.0

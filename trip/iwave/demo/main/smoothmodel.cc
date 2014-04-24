@@ -1,12 +1,6 @@
-/* build 3D velocity cube for SEAM standard model
- 
- * Original by John E. Anderson, after Matlab implementation by
- * Joakim Blanch.
- * RSF output by William W. Symes, Jan 08.
- * switch to SEAM getpar functions WWS Jan 08
- * units fixed to m, ms, and kg -  WWS Jan 08
- * get_zvalue_1d(), writemodel_1d() by Dong Sun, March 09
- * camembert() by Dong Sun, Sep 10
+/* Author: Mario Bencomo
+ * Purpose: Build 2D smooth models.
+ * Modeled after standardmodel.cc
  */
 
 #include <par.h>
@@ -16,9 +10,9 @@
 /* define number of model types */
 #define NMODEL 4
 
-#define vp_max 4
-#define vp_min 2
-#define rho    2.3
+#define cmax_def 4
+#define cmin_def 2
+#define rho_def  2.3
 
 #define o1_def 0
 #define o2_def 0
@@ -30,9 +24,6 @@
 #define n2_def 101
 #define n3_def 1
 
-#define relsigmax1_def .2
-#define relsigmax2_def .2
-
 #define cycles_def 2
 
 #ifndef PI
@@ -42,22 +33,19 @@
 /*********************** self documentation **********************/
 const char *sdoc[] = {
     "                                                                ",
-    " STANDARDMODEL - build 3D velocity cube for SEAM standard models",
+    " SMOOTHMODEL - build 2D smooth models",
     "                                                                ",
-    " This module builds some standard velocity and density cubes    ",
-    " useful for comparing analytic solutions to finite difference   ",
-    " variable-density acoustic simulators.                          ",
-    "                                                                ",
+    " This module builds some standard 2D models.                    ",
     " Units:		                                             ",
     " 	densities    [g/cm^3]                                        ",
     "   velocities   [m/ms] = [km/s]                                 ",
-    " 	bulk moduli  [GPa] = [g/cm^3][m/ms]^2                        ",
+    " 	bulk moduli  [GPa]  = [g/cm^3][m/ms]^2                       ",
     "   buoyancies   [cm^3/g]                                        ",
     "                                                                ",
     " The output format is native binary floats.                     ",
     "                                                                ",
-    " Example run:   standardmodel model=4 choose=2 > vp.bin         ",
-    "          or:   standardmodel model=4 choose=2 hfile=vp.rsf     ",
+    " Example run:   smoothmodel model=4 choose=2 > vp.bin           ",
+    "          or:   smoothmodel model=4 choose=2 hfile=vp.rsf       ",
     "                                                                ",
     " Optional parameters:                                           ",
     "   model=1                    = choice of standard model        ",
@@ -115,10 +103,9 @@ const char *sdoc[] = {
 
 //----------------------------------------------------------------------------//
 // model 0: Homogeneous model
-static inline float homogeneous(int choose)
+static inline float homogeneous(int choose, float cmin, float cmax, float rho)
 {
-    //float vel = (vp_max+vp_min)/2;
-    float vel = (vp_max+vp_min)/2;
+    float vel = (cmax+cmin)/2;
     
     if (choose==1) return vel*vel*rho; 
     if (choose==2) return rho;
@@ -128,12 +115,14 @@ static inline float homogeneous(int choose)
 }
 //----------------------------------------------------------------------------//
 // model 1: linear depth velocity model with constant density
-static inline float lineardepth(float x1, int choose, float * modelpars)
+static inline float lineardepth(float x1, int choose, 
+				float cmin, float cmax, 
+				float rho, float * modelpars)
 {
-    float o1 = modelpars[0];
-    float e1 = modelpars[1];
+    float top = modelpars[0];
+    float bot = modelpars[1];
     
-    float vel = (e1-x1)/(e1-o1)*vp_min + (x1-o1)/(e1-o1)*vp_max;
+    float vel = (bot-x1)/(bot-top)*cmin + (x1-top)/(bot-top)*cmax;
     
     if (choose==1) return vel*vel*rho;
     if (choose==2) return rho;
@@ -143,24 +132,18 @@ static inline float lineardepth(float x1, int choose, float * modelpars)
 }
 //----------------------------------------------------------------------------//
 // model 2: negative gaussian lense in velocity, with constant density
-static inline float gaussianlense2D(float x1, float x2, int choose, float * modelpars)
+static inline float gaussianlense2D(float x1, float x2, int choose, 
+				    float cmin, float cmax, float rho, float * modelpars)
 {
-    float o1 = modelpars[0];
-    float e1 = modelpars[1];
-    float o2 = modelpars[2];
-    float e2 = modelpars[3];
-    float cx1 = modelpars[4];
-    float cx2 = modelpars[5];
-    float relsigmax1 = modelpars[6];
-    float relsigmax2 = modelpars[7];
-    
-    float sigmax1 = relsigmax1*(e1-o1);
-    float sigmax2 = relsigmax2*(e2-o2);
+    float cx1 = modelpars[0];
+    float cx2 = modelpars[1];
+    float sigmax1 = modelpars[2];
+    float sigmax2 = modelpars[3];
     
     float gaussx1 = exp( -(x1-cx1)*(x1-cx1)/(2.*sigmax1*sigmax1) );
     float gaussx2 = exp( -(x2-cx2)*(x2-cx2)/(2.*sigmax2*sigmax2) );
     
-    float vel = vp_max - (vp_max-vp_min)*gaussx1*gaussx2;
+    float vel = cmax - (cmax-cmin)*gaussx1*gaussx2;
     
     if (choose==1) return vel*vel*rho;
     if (choose==2) return rho;
@@ -170,14 +153,16 @@ static inline float gaussianlense2D(float x1, float x2, int choose, float * mode
 }
 //----------------------------------------------------------------------------//
 // model 3: Sinusodial-depth velocity with constant density
-static inline float Sindepth(float x1, int choose, float * modelpars)
+static inline float Sindepth(float x1, int choose, 
+			     float cmin, float cmax, 
+			     float rho, float * modelpars)
 {
-    float o1 = modelpars[0];
-    float e1 = modelpars[1];
+    float top = modelpars[0];
+    float bot = modelpars[1];
     float cycles = modelpars[2];
     
     float wnum = cycles*2*PI;
-    float vel = (vp_max-vp_min)*.5*sin(wnum*(x1-e1)/(e1-o1)) + (vp_max+vp_min)*.5;
+    float vel = (cmax-cmin)*.5*sin(wnum*(x1-bot)/(bot-top)) + (cmax+cmin)*.5;
     
     if (choose==1) return vel*vel*rho;
     if (choose==2) return rho;
@@ -191,16 +176,18 @@ static inline float Sindepth(float x1, int choose, float * modelpars)
 
 /******************************************************************************/
 float get_zvalue(float x1, float x2, float x3,
-                 int model, int choose, float * modelpars)
+                 int model, int choose, 
+		 float cmin, float cmax, float rho,
+		 float * modelpars)
 {
     float v;
 	
     switch (model){
-        case 0: v = homogeneous(choose);                     break;
-        case 1: v = lineardepth(x1,choose,modelpars);        break;
-        case 2: v = gaussianlense2D(x1,x2,choose,modelpars); break;
-        case 3: v = Sindepth(x1,choose,modelpars);           break;
-        default: v = homogeneous(choose);
+    case 0: v = homogeneous(choose,cmin,cmax,rho); break;
+    case 1: v = lineardepth(x1,choose,cmin,cmax,rho,modelpars); break;
+    case 2: v = gaussianlense2D(x1,x2,choose,cmin,cmax,rho,modelpars); break;
+    case 3: v = Sindepth(x1,choose,cmin,cmax,rho,modelpars); break;
+    default: v = homogeneous(choose,cmin,cmax,rho);
     }
     return v;
 }
@@ -223,38 +210,17 @@ int writemodel(
                float d1,       /* depth increment                              */
                float d2,       /* x increment                                  */
                float d3,       /* y increment                                  */
-               FILE * fp,      /* output stream                                */
+               float cmin,     /* min velocity                                 */
+	       float cmax,     /* max velocity                                 */
+	       float rho,
+	       FILE * fp,      /* output stream                                */
                float * omv     /* other model values                           */
 )
 {
     int j1, j2, j3;
     float x1, x2, x3;
     float *v   = NULL;
-    float * modelpars = NULL;
-    
-    if (model==1) {
-        modelpars = (float*)emalloc(2*sizeof(float));
-        modelpars[0] = o1;
-        modelpars[1] = e1;
-    }
-    if (model==2) {
-        modelpars = (float*)emalloc(8*sizeof(float));
-        modelpars[0] = o1;
-        modelpars[1] = e1;
-        modelpars[2] = o2;
-        modelpars[3] = e2;
-        modelpars[4] = omv[0]; //x1 center of gauss
-        modelpars[5] = omv[1]; //x2 center of gauss
-        modelpars[6] = omv[2]; //relative sigmax1
-        modelpars[7] = omv[3]; //relative sigmax2
-    }
-    if (model==3) {
-        modelpars = (float*)emalloc(3*sizeof(float));
-        modelpars[0] = o1;
-        modelpars[1] = e1;
-        modelpars[2] = omv[0];
-    }
-    
+           
     v   = (float *)emalloc(n1*sizeof(float));
     
     for(j3 = 0; j3 < n3; j3++){
@@ -264,7 +230,7 @@ int writemodel(
             for(j1 = 0; j1 < n1; j1++){
                 x1 = o1 + j1 * d1;
 
-                v[j1] = get_zvalue(x1, x2, x3, model, choose, modelpars);
+                v[j1] = get_zvalue(x1, x2, x3, model, choose, cmin, cmax, rho, omv);
             }
             if (fwrite(v, sizeof(float), n1, fp) != n1){
                 fprintf(stderr, "write error\n");
@@ -274,7 +240,6 @@ int writemodel(
         }
     }
     free(v);
-    free(modelpars);
     return 0;
 }
 
@@ -284,7 +249,8 @@ int main(int argc, char **argv) {
     float o1,o2,o3,d1,d2,d3,e1,e2,e3;
     int n1,n2,n3,model,choose;
     float * omv; //other model values
-    
+    float cmin, cmax, rho;
+
     /* WWS */
     char * fname;
     char * dname;
@@ -332,13 +298,13 @@ int main(int argc, char **argv) {
     /*   if(ps_getparint("choose",&choose)) { */
     if (!(ps_ffint(*par,"choose",&choose))) {
         if (choose<0 || choose > 3) {
-            fprintf(stderr,"Error: standardmodel.x\n");
+            fprintf(stderr,"Error: smoothmodel.x\n");
             fprintf(stderr,"choose index must be 0 (veloxity),  1 (bulkmod), or 2 (density), or 3 (buoyancy) \n");
             exit(1);
         }
     }
     else {
-        fprintf(stdout,"Warning: standardmodel.x\n");
+        fprintf(stdout,"Warning: smoothmodel.x\n");
         fprintf(stdout,"no choose index given, so using choose=1 (density)\n");
         choose=1;
     }
@@ -352,34 +318,57 @@ int main(int argc, char **argv) {
     if(ps_fffloat(*par,"d3",&d3)) {d3=d3_def; fprintf(stdout, "WARNING: d3 is set to the default value!\n"); }
     
     
-    if(ps_ffint(*par,"n1",&n1)) {n1 = n1_def; fprintf(stdout, "WARNING: n1 is set to the default value!\n"); }
-    if(ps_ffint(*par,"n2",&n2)) {n2 = n2_def; fprintf(stdout, "WARNING: n2 is set to the default value!\n"); }
-    if(ps_ffint(*par,"n3",&n3)) {n3 = n3_def; fprintf(stdout, "WARNING: n3 is set to the default value!\n"); }
+    if(ps_ffint(*par,"n1",&n1)) {n1=n1_def; fprintf(stdout, "WARNING: n1 is set to the default value!\n"); }
+    if(ps_ffint(*par,"n2",&n2)) {n2=n2_def; fprintf(stdout, "WARNING: n2 is set to the default value!\n"); }
+    if(ps_ffint(*par,"n3",&n3)) {n3=n3_def; fprintf(stdout, "WARNING: n3 is set to the default value!\n"); }
     
-    e1 = o1 + d1 * (n1 - 1);
-    e2 = o2 + d2 * (n2 - 1);
-    e3 = o3 + d3 * (n3 - 1);
+    e1 = o1 + d1 * n1;
+    e2 = o2 + d2 * n2;
+    e3 = o3 + d3 * n3;
     
+    if(ps_fffloat(*par,"CMAX",&cmax)) {cmax=cmax_def; fprintf(stdout,"WARNING: cmax is set to default value!\n");}
+    if(ps_fffloat(*par,"CMIN",&cmin)) {cmin=cmin_def; fprintf(stdout,"WARNING: cmin is set to default value!\n");}
+    if(ps_fffloat(*par,"mdl_rho",&rho)) {rho=rho_def; fprintf(stdout,"WARNING: rho is set to default value!\n");}
+
+    if (model==1) {
+      omv = (float*)emalloc(2*sizeof(float));
+      if(ps_fffloat(*par,"top",omv  )) {omv[0]=o1; fprintf(stdout,"WARNING: top is set to o1!\n");}
+      if(ps_fffloat(*par,"bot",omv+1)) {omv[1]=e1; fprintf(stdout,"WARNING: bot is set to e1!\n");}
+    }
     if (model==2) {
         omv = (float*)emalloc(4*sizeof(float));
-        if(ps_fffloat(*par,"cx1",omv  )) {omv[0]=(e1-o1)*.5; fprintf(stdout, "WARNING: cx1 is set to the default value!\n"); }
-        if(ps_fffloat(*par,"cx2",omv+1)) {omv[1]=(e2-o2)*.5; fprintf(stdout, "WARNING: cx2 is set to the default value!\n"); }
-        if(ps_fffloat(*par,"relsigmax1",omv+2)) {omv[2]=relsigmax1_def; fprintf(stdout, "WARNING: relsigmax1 is set to the default value!\n"); }
-        if(ps_fffloat(*par,"relsigmax2",omv+3)) {omv[3]=relsigmax2_def; fprintf(stdout, "WARNING: relsigmax2 is set to the default value!\n"); }
+        if(ps_fffloat(*par,"cx1",omv  )) {
+	  omv[0]=(e1-o1)*.5; 
+	  fprintf(stdout, "WARNING: cx1 is set to the default value!\n"); 
+	}
+        if(ps_fffloat(*par,"cx2",omv+1)) {
+	  omv[1]=(e2-o2)*.5; 
+	  fprintf(stdout, "WARNING: cx2 is set to the default value!\n"); 
+	}
+        if(ps_fffloat(*par,"sigmax1",omv+2)) {
+	  omv[2]=(e1-o1)*.1; 
+	  fprintf(stdout, "WARNING: sigmax1 is set to the default value!\n"); 
+	}
+        if(ps_fffloat(*par,"sigmax2",omv+3)) {
+	  omv[3]=(e2-o2)*.1; 
+	  fprintf(stdout, "WARNING: sigmax2 is set to the default value!\n"); 
+	}
     }
     if (model==3) {
-        omv = (float*) emalloc(1*sizeof(float));
-        if(ps_fffloat(*par,"cycles",omv)) {omv[0]=cycles_def; fprintf(stdout, "WARNING: cycles is set to the default value!\n"); }
+        omv = (float*) emalloc(3*sizeof(float));
+	if(ps_fffloat(*par,"top",omv  )) {omv[0]=o1; fprintf(stdout,"WARNING: top is set to o1!\n");}
+	if(ps_fffloat(*par,"bot",omv+1)) {omv[1]=e1; fprintf(stdout,"WARNING: bot is set to e1!\n");}
+        if(ps_fffloat(*par,"cycles",omv+2)) {
+	  omv[2]=cycles_def; 
+	  fprintf(stdout, "WARNING: cycles is set to the default value!\n"); 
+	}
     }
-    
-    
     
     fprintf(stdout," o1=%f e1=%f d1=%f n1=%d\n",o1,e1,d1,n1);
     fprintf(stdout," o2=%f e2=%f d2=%f n2=%d\n",o2,e2,d2,n2);
     fprintf(stdout," o3=%f e3=%f d3=%f n3=%d\n",o3,e3,d3,n3);
   
     /* WWS */
-    /*   if (ps_getparstring("hfile",&fname) { */
     if (!(ps_ffcstring(*par,"hfile",&fname))) {
         
         /* DATAPATH deprecated - WWS 08.01.12*/
@@ -444,16 +433,9 @@ int main(int argc, char **argv) {
     
     ps_delete(&par);
     
-    /* end WWS */
-    
-    /* original: 
-     writemodel(choose,model,n1,n2,n3,o1,o2,o3,d1,d2,d3);
-     */
-    /* WWS */
-    writemodel(choose,model,n1,n2,n3,o1,o2,o3,e1,e2,e3,d1,d2,d3,fp,omv);
-    /* end WWS */
-    
-    if (model==2) free(omv);
+    writemodel(choose,model,n1,n2,n3,o1,o2,o3,e1,e2,e3,d1,d2,d3,cmin,cmax,rho,fp,omv);
+        
+    if (model>0) free(omv);
 
 
     exit(0);
