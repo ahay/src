@@ -62,13 +62,17 @@ gate = {
     }
 
 Flow('rad0','dat_spike',
-	'myradon2 parab=y adj=y inv=n spk=n perc=95 ns=2 verb=y p0=-0.2 np=60 dp=0.02')
+	'myradon2 parab=y adj=y inv=y spk=n perc=95 ns=2 verb=y p0=-0.2 np=60 dp=0.02')
 Flow('frw0','rad0',
         'myradon2 parab=y adj=n nx=60 ox=0 dx=0.025')
 Flow('mul0','rad0',
         'window n2=14 | pad n2=60 | myradon2 parab=y adj=n nx=60 ox=0 dx=0.025')
+Flow('rad1','dat_spike',
+	'radon parab=y adj=y inv=y spk=n perc=95 ns=2 verb=y p0=-0.2 np=60 dp=0.02')
 
-Result('rad0',gmod + ' pclip=100')
+Plot('rad0',gmod + ' pclip=100')
+Plot('rad1',gmod + ' pclip=100')
+Result('rad','rad0 rad1','SideBySideAniso')
 Result('frw0',gdat)
 Result('mul0',gdat + ' title=primaries')
 
