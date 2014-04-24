@@ -26,6 +26,8 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 	2) Sacchi, Mauricio D., and Milton Porsani. "Fast high resolution 
 	parabolic Radon transform." Society of Exploration Geophysicists 
 	69th Annual International Meeting, SPRO P. Vol. 1. No. 1. 1999.
+	3) Vogel, Curtis R. Computational methods for inverse problems. 
+	Vol. 23. Siam, 2002.	[Chapter 5.2.]
 */
 
 #include <rsf.h>

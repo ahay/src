@@ -1,7 +1,9 @@
 /* Linear/parabolic radon operator in frequency domain
-Note: I borrowed a lot from /system/seismic/radon+Mradon.c. 
-The distinction:
-	I am using FFTW because I am inexperienced in invoking kiss_fft. 
+Note: I borrowed a lot from /system/seismic/radon.c+Mradon.c. 
+    The distinction:
+    1) I am using FFTW because I am inexperienced in invoking kiss_fft. 
+    2) I am using FFT-based Toeplitz inversion, while radon.c uses Levinson 
+	recursion.
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -26,6 +28,8 @@ The distinction:
 	2) Sacchi, Mauricio D., and Milton Porsani. "Fast high resolution 
 	parabolic Radon transform." Society of Exploration Geophysicists 
 	69th Annual International Meeting, SPRO P. Vol. 1. No. 1. 1999.
+	3) Vogel, Curtis R. Computational methods for inverse problems. 
+	Vol. 23. Siam, 2002.	[Chapter 5.2.]
 */
 
 #include <rsf.h>
