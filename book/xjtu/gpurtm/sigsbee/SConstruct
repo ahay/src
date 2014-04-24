@@ -13,7 +13,7 @@ Flow('vel','zvstr',
      scale dscale=0.001 
      ''')
 
-Result('vel',
+Result('sigsbee','vel',
        '''
        grey title=Velocity titlesz=7 color=j
        screenratio=0.375 screenht=4 labelsz=5 scalebar=y
