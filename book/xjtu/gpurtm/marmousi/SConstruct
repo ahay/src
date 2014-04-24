@@ -8,7 +8,7 @@ Flow('vel','marmvel.hh',
      	 n2=2301 o2=0 d2=0.004 label2=Lateral unit2=km
      ''')
 
-Result('vel','vel',
+Result('marmousi','vel',
      '''
      grey title="Marmousi model" wantitle=y allpos=y color=j
      pclip=100 scalebar=y bartype=v barlabel="V" barunit="m/s"
