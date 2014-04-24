@@ -265,8 +265,8 @@ int main(int argc, char* argv[])
   dim = sf_largefiledims(in,n_in);
   for (iaxis=dim_output; iaxis<dim; iaxis++){
     sprintf(parameter,"n%d",iaxis+1);
-    sf_putint(output,parameter,n_output[iaxis]);
-    sf_putint(outheaders,parameter,n_output[iaxis]);
+    sf_putint(output,parameter,1);
+    sf_putint(outheaders,parameter,1);
   }
   /* for a test zero n_output and dim_output and see it you can read the 
      history file */
