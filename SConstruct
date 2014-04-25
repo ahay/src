@@ -262,15 +262,24 @@ if os.path.isdir('su'):
 if os.path.isdir('trip'):
 
     tripdirs = ('iwave','rvl','iwave++')
-    for subdir in trip:
-        build = os.path.join('build',subdir)
-        if configure.version[0] > 1:
-            VariantDir(build,subdir)
-        else:
-            BuildDir(build,subdir)
-        trip_exports = 'env root libdir bindir incdir pkgdir'
-        SConscript(dirs=build,exports=trip_exports)
-        Default(build)
+    for dir in map(lambda x: os.path.join('trip',x), tripdirs):
+        try:
+            subpathfile = os.path.join(dir,'hsubpath')
+            f = open(subpathfile,'r')
+            sublist = (f.read().strip('\n')).split(':')
+            f.close()
+        except:
+            sublist = []
+        for sub in sublist:
+            subdir = os.path.join(dir,sub)
+            build = os.path.join('build',subdir)
+            if configure.version[0] > 1:
+                VariantDir(build,subdir)
+            else:
+                BuildDir(build,subdir)
+            trip_exports = 'env root libdir bindir incdir pkgdir'
+            SConscript(dirs=build,exports=trip_exports)
+            Default(build)
 
 ##########################################################################
 # INSTALLATION
