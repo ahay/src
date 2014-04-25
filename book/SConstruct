@@ -37,6 +37,7 @@ tccs/diffr/chan3d
 tccs/diffr/gom
 tccs/avo/avo2
 tccs/opwd/wrap
+tccs/emdpf/fxdecon
 '''
 
 all =  ARGUMENTS.get('all', 'n')
