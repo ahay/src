@@ -62,7 +62,7 @@ Result('gg',
 Result('gg0','gg',
        '''
        window n1=1 min1=0 |
-       graph title="1D Gaussian"
+       graph title="1D Gaussian" label2="" unit2=""
        plotfat=10 screenratio=0.5 screenht=7
        %(labelattr)s
        '''%par)
@@ -87,7 +87,7 @@ Flow(  'fme','vel',
        'eikonal zshot=%(zsou)g yshot=%(xsou)g'%par)
 
 # plot eikonal traveltimes
-Plot(  'fme',fmeplot('plotcol=1',par))
+Plot(  'fme',fmeplot('',par))
 Result('fme',['vel','fme'],'Overlay')
 
 # ------------------------------------------------------------

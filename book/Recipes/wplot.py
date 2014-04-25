@@ -39,7 +39,6 @@ def param(par):
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
     if par['nt']>1:
-        print "A"
         par['df']=0.5/(par['ot']+(par['nt']-1)*par['dt'])
     else: 
         par['df']=1.
