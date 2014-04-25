@@ -20,8 +20,9 @@
 #include <rsf.h>
 #include "_cjb.h"
 
+#ifdef SF_HAS_FFTW 
 #include <fftw3.h>
-/* head files aumatically produced from *.c */
+#endif
 
 void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz, 
                     int *ijkx, int *ijky, int *ijkz, int iflag) 
