@@ -38,7 +38,7 @@ void ctoeplitz_inv(int n, float mu, sf_complex *c, sf_complex *mm, sf_complex *d
 C*mm=dd, C=circulant(c): mm=C^{-1}dd 
 	C=F^* diag(c) F 
 	==> C=F^* diag(1./c ) F 
-	==> mm=F^* diag(1./(c +mu)) F dd
+	==> mm=F^* diag(conj(c)./(c*conj(c) +mu)) F dd
 Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
  >*/
 {
@@ -59,7 +59,7 @@ Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
 	memcpy(c, tmp, n*sizeof(sf_complex));
 
 	// dot product: diag(1./(c +mu)) F dd
-	for(i=0; i<n; i++) dd[i]*=c[i]/(c[i]*conjf(c[i])+mu);
+	for(i=0; i<n; i++) dd[i]*=conjf(c[i])/(c[i]*conjf(c[i])+mu);
 
 	// IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)
 	memcpy(tmp, dd, n*sizeof(sf_complex));
