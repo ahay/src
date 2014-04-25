@@ -59,7 +59,7 @@ Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
 	memcpy(c, tmp, n*sizeof(sf_complex));
 
 	// dot product: diag(1./(c +mu)) F dd
-	for(i=0; i<n; i++) dd[i]/=(c[i]+mu);
+	for(i=0; i<n; i++) dd[i]*=c[i]/(c[i]*conjf(c[i])+mu);
 
 	// IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)
 	memcpy(tmp, dd, n*sizeof(sf_complex));
