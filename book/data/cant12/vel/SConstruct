@@ -2,11 +2,12 @@ from rsf.proj import *
 
 # using CMPs after demultiple
 data='../lpf/cmp.rsf'
-infile='handvels.txt'
+#infile='handvels.txt'
+infile='hvel.txt'
 # data has tpow squared already applied
 
 # handvel2rsf needs to be sfhandvel2rsf
-Flow('velt',infile,'sfhandvel2rsf o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 ')
+Flow('velt',infile,'sfhandvel2rsf o1=0 d1=.001 n1=3000 | put o2=5391.88 d2=625')
 # plot velocity
 Result('velt',
     '''
