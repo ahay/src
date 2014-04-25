@@ -38,7 +38,7 @@ Note: rtm2d.c is coded following the linear operator standard in
 	Madagascar:	oper(adj, add, nm, nd, mod, dat)
 
 
-5) Prestack RTM using GPU
+5) Prestack RTM using GPU with staggered grid
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
 Depends on:	cuda_kernels.cu
 Test file: 	/book/xjtu/test/Testeb/SConstruct
@@ -69,6 +69,7 @@ Test file:	/book/xjtu/test/testelastic2d/SConstruct
 9) Radon transforms
 
 Main: 		Mmyradon1.c Mmyradon2.c
+Depends on:	ctoeplitz_reg.c, myradon2.c
 Test file: 	/book/xjtu/test/myradon2/SConstruct
 
 
@@ -86,8 +87,10 @@ Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
-==================================================================
+===================================================================
 Miscellaneous:
 maskft3d.c: a mask applied on 3d fft
+ft1d.c:	1d fft linear operator, normalized to make sure that the 
+	adjoint same as inverse!
 
 
