@@ -27,9 +27,55 @@ Flow(['gather_subset.rsf','gather_subset_hdr.rsf','onetrace.rsf','onetrace_hdr.r
         label4="iline" o4=169 n4=1  d4=1   
         output=${TARGETS[2]}
      ''',stdout=0,stdin=0)
+
+# I used these header prints to get the range of shots and traces to resort 
+# the data back to shot record and look for better coherency
+# header ranges are fldr:384,573  tracf:1,940
+#sftahsort sort="fldr:1,99999 tracf" input=gather_subset.rsf | sftahgethw key=fldr,tracf >/dev/null 
+#sftahsort sort="tracf fldr:1,99999" input=gather_subset.rsf | sftahgethw key=fldr,tracf,gx,gy >/dev/null 
+Flow(['shot_subset.rsf'  ,'shot_subset_hdr.rsf',
+      'group_subset.rsf' ,'group_subset_hdr.rsf'],
+     ['gather_subset.rsf','gather_subset_hdr.rsf'],
+     '''
+     sftahsort input=${SOURCES[0]} sort="fldr:1,999999 tracf" verbose=1
+     |  sftahwrite 
+        verbose=1                           
+	label3="fldr"  o3=384 n3=190  d3=1   
+        label2="tracf" o2=1   n2=940  d2=1   
+        output=${TARGETS[0]}
+     |  sftahwrite 
+        verbose=1                           
+	label2="fldr"  o2=384 n2=190  d3=1   
+        label3="tracf" o3=1   n3=940  d2=1   
+        output=${TARGETS[2]}
+     ''',stdout=0,stdin=0)
+
 Plot('gather_subset','grey title="gather_subset"',view=1)
 Plot('zoomgather_subset','gather_subset',
      'sfwindow max1=2. | grey title="gather_subset_zoom"',view=1)
+
+Plot('shot_subset','grey title="shot_subset"',view=1)
+Plot('zoomshot_subset','shot_subset',
+     'sfwindow max1=2. | grey title="shot_subset_zoom"',view=1)
+
+Plot('group_subset','grey title="group_subset"',view=1)
+Plot('zoomgroup_subset','group_subset',
+     'sfwindow max1=2. | grey title="shot_subset_zoom"',view=1)
+Result('shot_subset',
+	'''
+	sfwindow max1=2. n2=300 min3=437 max3=437 
+      	| sfgrey title="shot_subset",
+	''')
+Result('zoomshot_subset','shot_subset',
+      '''
+      sfwindow max1=2. n2=300 min3=437 max3=437 
+      | sfgrey title="shot_subset_zoom"
+      ''')
+Result('zoomgroup_subset','group_subset',
+      '''
+      sfwindow max1=2. min3=558 max3=558 
+      | sfgrey title="group_subset_zoom"
+      ''')
 
 Result('gather_subset',
        '''
@@ -41,7 +87,9 @@ Result('gather_subset',
        title=Gathers label2=Trace label3=CDP
        ''')
 
-Flow('onetrace_offset','onetrace_hdr','dd type=float | headermath output=offset')
+Flow('onetrace_offset','onetrace_hdr',
+     'dd type=float | headermath output=offset')
+
 Result('wiggle','onetrace.rsf onetrace_offset.rsf',
        '''
        window max1=1.5 
