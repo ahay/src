@@ -38,6 +38,18 @@ def param(par):
     if(not par.has_key('zmin')):     par['zmin']=par['oz']
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
+    if par['nt']>1:
+        print "A"
+        par['df']=0.5/(par['ot']+(par['nt']-1)*par['dt'])
+    else: 
+        par['df']=1.
+    par['of']=0
+    par['nf']=par['nt']
+    if(not par.has_key('lf')):       par['lf']='f'
+    if(not par.has_key('uf')):       par['uf']='Hz'
+    if(not par.has_key('fmin')):     par['fmin']=par['of']
+    if(not par.has_key('fmax')):     par['fmax']=par['of'] + (par['nf']-1) * par['df']
+    
     # make room to plot acquisition
     if(not par.has_key('zmin')):     par['zmin']=min(par['zmin'],-0.025*(par['zmax']-par['zmin']))
 
@@ -259,6 +271,22 @@ def waveplot(custom,par):
            par['lt'],par['ut'],
         par['labelattr']+custom)
 
+# plot spectrum
+def specplot(custom,par):
+    return '''
+    scale axis=123 |
+    graph title=""
+    min1=%g max1=%g
+    min2=0 max2=+1 
+    plotfat=5 plotcol=5
+    label1=%s unit1=%s
+    label2="" unit2=""
+    screenratio=0.3 screenht=4.5
+    %s
+    ''' % (par['fmin'],par['fmax'],
+           par['lf'],par['uf'],
+        par['labelattr']+custom)
+
 def waveplotE2d(wav,custom,par):
 
      Plot(wav+'_V',wav,
@@ -332,7 +360,6 @@ def ccont2d(custom,par):
            par['iratio2d'],par['iheight2d'],
         par['labelattr']+' '+custom)
 
-
 # ------------------------------------------------------------
 # ------------------------------------------------------------
 # wavefield-over-model plot
@@ -347,24 +374,51 @@ def wom2d(wom,wfld,velo,vmean,nfrm,weight,par):
         '''
         %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
         '''%(M8R,wtmp,DPT) 
-	+
+        +
         '''
         %sadd < ${SOURCES[0]} add=-%g |
         scale axis=123 |
         spray axis=3 n=%d o=%g d=%g
         >%s datapath=%s/;
         '''%(M8R,vmean,nfrm,0,1,vtmp,DPT) 
-	+
+        +
         '''
         %sadd scale=1,%g <%s %s >${TARGETS[0]};
         '''%(M8R,weight,vtmp,wtmp) 
-	+
+        +
         '''
         %srm %s %s
         '''%(M8R,wtmp,vtmp),
         stdin=0,
         stdout=0)
 
+
+def ovl2d(wom,wfld,velo,vmean,nfrm,weight,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
+
+    wtmp = wfld + 'tmp'
+    vtmp = wfld + 'vel'
+
+    Flow(wom,[velo,wfld],
+        '''
+        %sscale < ${SOURCES[1]} axis=123 >%s datapath=%s/;
+        '''%(M8R,wtmp,DPT) 
+        +
+        '''
+        %sadd < ${SOURCES[0]} add=-%g |
+        scale axis=123 >%s datapath=%s/;
+        '''%(M8R,vmean,vtmp,DPT) 
+        +
+        '''
+        %sadd scale=1,%g <%s %s >${TARGETS[0]};
+        '''%(M8R,weight,vtmp,wtmp) 
+        +
+        '''
+        %srm %s %s
+        '''%(M8R,wtmp,vtmp),
+        stdin=0,
+        stdout=0)
     
 # ------------------------------------------------------------
 # static movie = tightly packed, side-by-side frames

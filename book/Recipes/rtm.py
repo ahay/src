@@ -300,7 +300,7 @@ def zofmig(imag,data,rcoo,velo,dens,custom,par):
          den=${SOURCES[3]}
          wfl=%s datapath=%s/
          >/dev/null;
-         '''%(M8R,rdat,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''%(M8R,rdat,awepar(par)+iwindow(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
          '''
          %swindow < %s n3=1 f3=1 >${TARGETS[0]};
          '''%(M8R,rwfl) +
@@ -329,7 +329,7 @@ def zofmigCD(imag,data,rcoo,velo,custom,par):
          rec=${SOURCES[1]}
          wfl=%s datapath=%s/
          >/dev/null;
-         '''%(M8R,rdat,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''%(M8R,rdat,awepar(par)+iwindow(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
          '''
          %swindow < %s n3=1 f3=1 >${TARGETS[0]};
          '''%(M8R,rwfl) +

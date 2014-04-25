@@ -413,7 +413,33 @@ def eicmigCD(icic,
          '''%(M8R,swfl,rdrv,rwfl),
               stdin=0,
               stdout=0)
+# ------------------------------------------------------------
+# exploding-reflector reverse-time migration
+def zortm(imag,data,rcoo,velo,dens,custom,par):
+    M8R='$RSFROOT/bin/sf'
+    DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
 
+    rwfl = imag+'wwfl'
+
+    Flow(imag,[data,rcoo,velo,dens],
+         '''
+         %sawefd2d < ${SOURCES[0]} adj=y cden=n %s verb=n
+         sou=${SOURCES[1]}
+         rec=${SOURCES[1]}
+         vel=${SOURCES[2]}
+         den=${SOURCES[3]}
+         wfl=%s datapath=%s/
+         >/dev/null;
+         '''%(M8R,awepar(par)+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''
+         %swindow < %s n3=1 f3=1 >${TARGETS[0]};
+         '''%(M8R,rwfl) +
+         '''
+         %srm %s
+         '''%(M8R,rwfl),
+              stdin=0,
+              stdout=0)
+    
 # ------------------------------------------------------------
 def dPAD2d(wfld,trac,ix,iz,par):
     Flow(wfld,trac,
