@@ -1,4 +1,5 @@
 Author: Pengliang Yang, Xi'an Jiatong Universtiy
+Email: 	ypl.2100@gmail.com
 
 =================================================================
 Preamble: This readme files is devoted to explain my programs. 
@@ -11,28 +12,28 @@ Under this directory, I implemented the algorithms:
 1) POCS (projection onto convex sets), FFTW required
 Main:		Mpocs3d.c, Mfpocs3d.c
 Depends on:	ft3d.c
-Test file: 	/book/pyang/test/fpocs3d/SConstruct
-		/book/pyang/test/fpocs2d/SConstruct
+Test file: 	/book/xjtu/test/fpocs3d/SConstruct
+		/book/xjtu/test/fpocs2d/SConstruct
 Note: fpocs is a two-step version of POCS. 
 
 2) DLCT (discrete linear chirp transform), FFTW required
-Main:		Mdlct.c, 
+Main:		Mdlct.c, Mdlct2.c
 Depends on: 	dlct.c
-Test file: 	/book/pyang/test/dlct/SConstruct
+Test file: 	/book/xjtu/test/dlct/SConstruct
 Note: To make the adjoint of DLCT same as inverse, I normalized 
 	the forward and inverse DLCT with a factor. 
 
 3) 2D and 3D FD for forward modelling
 Main:		MTestfd2d.c, MTestfd3d.c
-Test file:	/book/pyang/test/Testfd3d/SConstruct
-		/book/pyang/test/Testfd2d/SConstruct
+Test file:	/book/xjtu/test/Testfd3d/SConstruct
+		/book/xjtu/test/Testfd2d/SConstruct
 
 4) RTM and LSRTM (2-D zero-offset least squares RTM)
 Main: 		Mrtm2d.c Mlsrtm2d.c
 Depends on: 	rtm2d.c
-Test file:	/book/pyang/rtm2d/hyper/SConstruct
-		/book/pyang/rtm2d/marmousi/SConstruct
-		/book/pyang/rtm2d/sigsbee/SConstruct
+Test file:	/book/xjtu/rtm2d/hyper/SConstruct
+		/book/xjtu/rtm2d/marmousi/SConstruct
+		/book/xjtu/rtm2d/sigsbee/SConstruct
 Note: rtm2d.c is coded following the linear operator standard in 
 	Madagascar:	oper(adj, add, nm, nd, mod, dat)
 
@@ -40,7 +41,7 @@ Note: rtm2d.c is coded following the linear operator standard in
 5) Prestack RTM using GPU
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
 Depends on:	cuda_kernels.cu
-Test file: 	/book/pyang/test/Testeb/SConstruct
+Test file: 	/book/xjtu/test/Testeb/SConstruct
 Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite 
 	difference coefficients with order-NJ(NJ=2N);
 	(b) MTesteb.c is a file to test the validity of the proposed
@@ -50,32 +51,37 @@ Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite
 
 6) Seislet-based POCS, IST and MCA algorithm (for 2D validation)
 Main:		Mpocsseislet.c, Mistseislet.c, Mmcaseislet
-Test file:	/book/pyang/mcaseislet/deblend/SConstruct
-		/book/pyang/mcaseislet/interp/SConstruct
-		/book/pyang/mcaseislet/sep1/SConstruct
-		/book/pyang/mcaseislet/sep2/SConstruct
+Test file:	/book/xjtu/mcaseislet/deblend/SConstruct
+		/book/xjtu/mcaseislet/interp/SConstruct
+		/book/xjtu/mcaseislet/sep1/SConstruct
+		/book/xjtu/mcaseislet/sep2/SConstruct
 
 7) 2-D forward modeling to generate shot records
 Main: 		Mmodeling2d.c
-Test file: 	/book/pyang/test/modeling2d/SConstruct
+Test file: 	/book/xjtu/test/modeling2d/SConstruct
 
 
 8) Elastic and anisotropic modeling
 Main: 		MTestelastic2d.c, MTestaniso.c
-Test file:	/book/pyang/test/testelastic2d/SConstruct
-		/book/pyang/test/testaniso/SConstruct
+Test file:	/book/xjtu/test/testelastic2d/SConstruct
+		/book/xjtu/test/testaniso/SConstruct
+
+9) Radon transforms
+
+Main: 		Mmyradon1.c Mmyradon2.c
+Test file: 	/book/xjtu/test/myradon2/SConstruct
 
 
 ===================================================================
 The following codes are under construction. Be careful!
 ===================================================================
-9) 3D coherence calculation
+10) 3D coherence calculation
 Main: 		Mcohn.c
 Depends on: 	svd.c
 
-10) MWNI (minimum weighted norm interpolation), FFTW requred
+11) MWNI (minimum weighted norm interpolation), FFTW requred
 Main:		Mmwni2d.c Mmwni3d.c
-Test file: 	/book/pyang/test/mwni2d/SConstruct
+Test file: 	/book/xjtu/test/mwni2d/SConstruct
 Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!

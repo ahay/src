@@ -91,6 +91,10 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 	}
 }
 
+
+static bool allocated=false;
+static sf_complex *c;
+
 void myradon2_inv(sf_complex *mm, sf_complex *mm_adj, float eps)
 /*< fast Toeplitz matrix inversion for radon transform 
 mm: model to be inverted
@@ -99,8 +103,11 @@ eps: regularization parameter
 >*/
 {
 	int ip, ix;
-	sf_complex *c, sumc;
-	c=(sf_complex *)malloc(np*sizeof(sf_complex));
+	sf_complex sumc;
+	if (!allocated){
+		c=(sf_complex *)malloc(np*sizeof(sf_complex));
+		allocated=true;
+	}
 	
 	for(ip=0; ip<np; ip++) 
 	{
