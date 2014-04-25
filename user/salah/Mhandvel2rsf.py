@@ -1,21 +1,16 @@
 #!/usr/bin/env python
-'''Converts 2D velocity files from handvel.txt to handvel.rsf
+'''Converts 2D/3D velocity files from handvel.txt to handvel.rsf
 
-- sfhandvel2rsf < handvels.txt o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 > handvel.rsf
+- sfhandvel2rsf < handvels.txt o1=0 d1=.001 n1=3000 > handvel.rsf
 
 - The program converts time samples from ms to s
 
--The rsf output file will have traces equal to the number
-of CMP locations in handvel.txt. You need to interploate
-between traces for a denser grid e.g. using sfremap1
+- The rsf output file will have traces equal to the number
+  of CMP locations in handvel.txt. You need to interploate
+  between traces for a denser grid e.g. using sfremap1
 
--CMP locations in handvel.txt are not used in the program.
-o2 tells the program where to put the first trace and d2
-tells the program of the locations of the remaining traces.
+- This program uses sfspline for interpolation. 
 
--This program uses sfinvbin1 default parameters. The program
-could possibly be enhanced to work with additional sfinvbin1
-parameters.
 '''
 
 ##   Copyright (C) 2007 University of Texas at Austin
@@ -33,7 +28,7 @@ parameters.
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, string , tempfile, subprocess
+import sys, os, string , tempfile, subprocess, collections, multiprocessing
 import rsf.path, rsf.prog
 import re
 try: 
@@ -48,15 +43,13 @@ usage= '''
 Name
         %s
 DESCRIPTION 
-        Converts 2D velocity files from handvel.txt to handvel.rsf
+        Converts 2D/3D velocity files from handvel.txt to handvel.rsf
 SYNOPSIS
-        %s < handvels.txt o1=0 d1=.001 n1=3000 o2=5391.88 d2=625 > handvel.rsf
+        %s < handvels.txt o1=0 d1=.001 n1=3000 > handvel.rsf
 PARAMETERS
         float   o1= origin of the first axis
         float   d1= sampling in the first axis
         int     n1= size of the first axis
-        float   o2= origin of the second axis
-        float   d2= sampling in the second axis
              
 COMMENTS:
         -The program converts time samples from ms to s
@@ -65,13 +58,12 @@ COMMENTS:
          of CMP locations in handvel.txt. You need to interploate
          between traces for a denser grid e.g. using sfremap1
 
-        -CMP locations in handvel.txt are not used in the program.
-         o2 tells the program where to put the first trace and d2
-         tells the program of the locations of the remaining traces.
-
-        -This program uses sfinvbin1 default parameters. The program
+        -This program uses sfspline default parameters. The program
          could possibly be enhanced to work with additional sfinvbin1
          parameters.
+         
+        -Input file is not QCed, thus, check your input file
+        
 SOURCE
         %s
                   
@@ -83,87 +75,71 @@ sfrm     = os.path.join(bindir,'sfrm')
 sfinvbin1  = os.path.join(bindir,'sfinvbin1')
 sfdd       = os.path.join(bindir,'sfdd')
 sfput      = os.path.join(bindir,'sfput')
+sfspline = os.path.join(bindir,'sfspline')
 datapath = rsf.path.datapath().rstrip('/')
+sftransp = os.path.join(bindir,'sftransp')
 
-vs=[]
-def myfunction(l,its):
-    global sfcat, sfrm, sfinvbin1, sfdd, sfput, datapath
-    tcmd='echo '
+
+def myfunction(l,vs,its,nx,x0,dx):
+    global sfcat, sfrm, sfinvbin1, sfdd, sfput, datapath,sfspline
     vcmd='echo '
-    
+
     # open temp files 
-    td,tpath = tempfile.mkstemp(suffix=".rsf",dir=datapath,text=True)
     vd,vpath = tempfile.mkstemp(suffix=".rsf",dir=datapath,text=True)
-    tb,tpathb = tempfile.mkstemp(suffix=".rsf",dir=datapath)
-    vb,vpathb = tempfile.mkstemp(suffix=".rsf",dir=datapath)
     tvd,tvpath = tempfile.mkstemp(suffix=".rsf",dir=datapath)
     
     # let me put vel for time o1
-    if its[0] != o1:
+    if float(its[0]) != o1:
         t=o1
         v=its[1]
         # insert v then t
         its.insert(0,v)
         its.insert(0,t)
 
-    # create cmds for time and velocity files
+    # create cmds for velocity file
     for i in range(0,len(its),2):
         # time samples are converted to seconds
-        tcmd=tcmd+ str(float(its[i])/1000.0)+" "
-        vcmd=vcmd+ str(float(its[i+1]))+" "
+        vcmd=vcmd+ str(float(its[i])/1000.0)+" "+str(float(its[i+1]))+" "
         
-    tcmd= tcmd + '''n1=%d data_format=ascii_float in=%s\
-                 '''%((len(its)/2),tpath)
-    #print tcmd 
-    vcmd= vcmd + '''n1=%d data_format=ascii_float in=%s\
+    vcmd= vcmd + '''n1=2 n2=%d data_format=ascii_float in=%s\
                  '''%((len(its)/2),vpath)
     #print vcmd
-    nx=n1
-    dx=d1
-    x0=o1
+    #nx=n1
+    #dx=d1
+    #x0=o1
+    
     #time velocity command
-    tvcmd=''' %s head=%s nx=%d dx=%f x0=%f pef=y  \
-          '''%(sfinvbin1,tpathb,nx,dx,x0)
-    #print tvpath
-    #print vpathb
-    #print tpathb    
+    tvcmd='''%s form=native | %s n1=%d o1=%f d1=%f fp=0,0\
+          '''%(sfdd,sfspline,nx,x0,dx)
+    
     # execute cmds
-    subprocess.call(tcmd,stdout=td,shell=True)
     subprocess.call(vcmd,stdout=vd,shell=True)
-    os.lseek(td,0,0)
     os.lseek(vd,0,0)
-    subprocess.call('%s form=native'%(sfdd),stdin=td,stdout=tb,shell=True)
-    subprocess.call('%s form=native'%(sfdd),stdin=vd,stdout=vb,shell=True)
-    os.lseek(tb,0,0)
-    os.lseek(vb,0,0)
+    
     #print tvcmd  
-    subprocess.call(tvcmd,stdin=vb,stdout=tvd,shell=True)
+    subprocess.call(tvcmd,stdin=vd,stdout=tvd,shell=True)
 
     # maintain a list of interpolated traces
-    vs.append(tvpath)
-
+    
+    #print vs
     # close files
-    for k in [td,vd,tb,vb,tvd]:
+    for k in [vd,tvd]:
        os.close(k)
      
-    # remove files  
-    for k in [tpathb,vpathb]:
-       try:
-           subprocess.call(sfrm + ' ' + k,shell=True)
-       except:
-           pass
-    for k in [tpath,vpath]:
+    for k in [vpath]:
        os.remove(k)
-    
+    vs.append(tvpath)
     return
+
 if __name__ == "__main__":
+    mgr = multiprocessing.Manager()
+    vs = mgr.list()
     par=salah.Par()
     n1=par.int("n1")   # size of the first axis
     o1=par.float("o1") # origin of the first axis
     d1=par.float("d1") # sampling in the first axis
-    o2=par.float("o2") # origin of the second axis
-    d2=par.float("d2") # sampling in the second axis
-    if not (n1 or o1 or d1 or o2 or d2):
+    #
+    if not (n1 or o1 or d1):
        #sys.stderr.write(usage)
        rsf.prog.selfdoc()
        sys.exit(2)
@@ -171,30 +147,64 @@ if __name__ == "__main__":
        #sys.stderr.write(usage)
        rsf.prog.selfdoc() 
        sys.exit(2)
-    items=[]
+    inline=collections.OrderedDict()
+    loc=collections.OrderedDict()
+    i=None
+    x=None
     for line in sys.stdin:
         line=line.strip()
         if re.match(r"^\*", line):
            continue 
         if re.match(r"^\HANDVEL|^\VFUNC", line):
-           # get the second element in the line
-           loc=line.split()[1]
-           # if not the first handvel of vfunc
-           if items:
-              myfunction(loc,items)
-              #print "sss"
-              #print items
-              #sys.exit(0)
-              items=[]
+           if 3 != len(line.split()):
+           	 sys.stderr.write("wrong input file format\n")
+           	 sys.stderr.write("%s\n"%(line))
+                 sys.exit(2)
+           # get inline and xline
+           i=line.split()[1]
+           x=line.split()[2]
+           if i in inline.keys():
+           	inline[i].append(x)
+           else:
+           	inline[i]=[x]
+	   if (i,x) in loc.keys():
+		 sys.stderr.write("duplicate location %s,%s\n"%(i,x))
+                 sys.exit(2)
+           else:
+		 loc[i,x]=[]
         else:
-           #sys.stderr.write(line.split())
-           #print items
-           items = items + line.split()
- 
-    myfunction(loc,items)
+           loc[i,x]= loc[i,x] + line.split()
     
+    #for y in inline.keys():
+    	#for x,v in inline[y].items():
+            #print y
+            #print inline[y]
+            
+     # compute o2, d2, n2, o3, d3, and n3
+    n2=len(inline.keys())
+    d2=1. if n2==1 else float(inline.keys()[1])-float(inline.keys()[0])
+    o2=inline.keys()[0]
+    
+    n3=len(inline[o2])
+    d3=1. if n3==1 else float(inline[o2][1])-float(inline[o2][0])
+    o3=inline[o2][0]
+    lock=multiprocessing.Lock()
+    #print "o2="+str(o2)+" d2="+str(d2)+" n2="+str(n2)+" o3="+str(o3)+" d3="+str(d3)+" n3="+str(n3)
+    jobs=[]
+    for y in loc.keys():
+        #myfunction(loc[y],n1,o1,d1)
+        p = multiprocessing.Process(target=myfunction, args=(lock,vs,loc[y],n1,o1,d1))
+        jobs.append(p)
+        p.start()
+    #print len(jobs)
+    for job in jobs:
+	job.join()
     # concatinate traces in the second axis
-    cmd='%s axis=2 %s | %s d2=%f o2=%f '%(sfcat,' '.join(vs),sfput,d2,o2,)
+    cmd='''
+        %s axis=2 %s | %s  n3=%d o3=%f d3=%f n2=%d o2=%f d2=%f label1=time label2=xline label3=inline| %s plane=23
+        '''%(sfcat,' '.join(vs),sfput,n2,float(o2),d2,n3,float(o3),d3,sftransp)
+    
+    #cmd='%s axis=2 %s'%(sfcat,' '.join(vs))
     #print cmd
     subprocess.call(cmd,stdout=sys.stdout,shell=True)
 
