@@ -107,7 +107,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
         else:
             command = "< $SOURCE " + command
     if workdir:
-        command = '/bin/rm -rf %s && /bin/mkdir %s && cd %s &&' % (work,work,work) + command
+        command = '/bin/rm -rf %s && /bin/mkdir %s && cd %s && ' % (workdir,workdir,workdir) + command
     command = timer + command
         
     return command

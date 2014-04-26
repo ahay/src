@@ -64,6 +64,7 @@ To the Python package:
 * Cygwin no longer provides libtirpc, removed it from configure 
 * Added support to tikz figures in reproducible documents
 * Replaced -nojvm with -nodesktop for Matlab-generated figures
+* Added workdir= paremeter to Flow
 
 To programs:
 
