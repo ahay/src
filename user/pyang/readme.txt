@@ -87,10 +87,6 @@ Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
-===================================================================
-Miscellaneous:
-maskft3d.c: a mask applied on 3d fft
-ft1d.c:	1d fft linear operator, normalized to make sure that the 
-	adjoint same as inverse!
+
 
 
