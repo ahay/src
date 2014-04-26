@@ -1114,7 +1114,7 @@ static void quit_proc(
 void actionQuit(Widget w, XEvent *ev, String *p, Cardinal *np)
 /*< quit >*/
 {
-    if( interact[0] != '\0' ) {
+    if(NULL != interact && interact[0] != '\0' ) {
 	if (first_time == YES){
 	    outfp = fopen (interact, "w");
 	    if (outfp == NULL) { 
@@ -1335,7 +1335,7 @@ void actionCoord(Widget w,XEvent *event,String *params,Cardinal *numparams)
 {
     int x,y;
 
-    if( interact[0] == '\0' ) return;
+    if(NULL == interact || interact[0] == '\0' ) return;
 
     if (first_time == YES){
         outfp = fopen (interact, "w");

@@ -230,7 +230,7 @@ float           vdevscale;	/* Vplot units to device units for y */
 float           txscale;/* global text scale */
 float           mkscale;/* global marker scale */
 float           dashscale;	/* global dashed line scale */
-char            *interact;	/* Where to store coordinate
+char            *interact=NULL;	/* Where to store coordinate
 						 * file */
 float           greyc = 1.;	/* Nonlinear correction */
 float           pixc = 1.;	/* Pixel overlap correction */
