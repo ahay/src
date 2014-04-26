@@ -72,13 +72,12 @@ def param(par):
 #       par['dheight2d']=par['iheight2d']
        par['dheight2d']=14*par['dratio2d']
 
-
     if((dx+dy)   == 0.0)  : yxratio=1.0
     else                  : yxratio=1.0*dx/(dx+dy)
     if((dz+dy)   == 0.0)  : yzratio=1.0
     else                  : yzratio=1.0*dz/(dz+dy)
-    if((2*dt+dy) == 0.0)  : ytratio=1.0
-    else                  : ytratio=2*dt/(2*dt+dy);
+    if((dt+dy) == 0.0)    : ytratio=1.0
+    else                  : ytratio=dt/(dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
@@ -87,13 +86,13 @@ def param(par):
     if((dx+dy) == 0.0): par['iratio3d']=1
     else:               par['iratio3d']=(dz+dy)/(dx+dy)
 
-    if(par['iratio3d']>1): par['iheight3d']=14
+    if(par['iratio3d']>1): par['iheight3d']=12
     else:                  par['iheight3d']=14*par['iratio3d']
 
     if((dx+dy) == 0.0): par['dratio3d']=1
     else:               par['dratio3d']=(dt+dy)/(dx+dy)
         
-    if(par['dratio3d']>1): par['dheight3d']=14
+    if(par['dratio3d']>1): par['dheight3d']=12
     else:                  par['dheight3d']=14*par['dratio3d']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    

@@ -159,7 +159,7 @@ def horizontal2d(cc,zcoord,custom,par,jx=1):
               stdout=0)
 
 # ------------------------------------------------------------
-def horizontal3d(cc,zcoord,custom,par,jx=1,jy=1):
+def horizontal3d(cc,zcoord,custom,par,jx=1,jy=1,fx=0,fy=0):
     M8R='$RSFROOT/bin/sf'
     DPT=os.environ.get('TMPDATAPATH',os.environ.get('DATAPATH'))
     
@@ -168,17 +168,17 @@ def horizontal3d(cc,zcoord,custom,par,jx=1,jy=1):
     ccy=cc+'y'
     ccx=cc+'x'
 
-    nx=(par['nx']-1)/jx+1
-    ny=(par['ny']-1)/jy+1
+    nx=(par['nx']-fx-1)/jx+1
+    ny=(par['ny']-fy-1)/jy+1
     
     Flow(cc,None,
          '''
          %smath output=0 n1=%d o1=%g d1=%g n2=%d o2=%g d2=%g |
-         window j1=%d n1=%d j2=%d n2=%d >%s datapath=%s/;
+         window f1=%d j1=%d n1=%d f2=%d j2=%d n2=%d >%s datapath=%s/;
          '''%(M8R,
               par['nx'],par['ox'],par['dx'],
               par['ny'],par['oy'],par['dy'],
-              jx,nx,jy,ny,cco,DPT) +
+              fx,jx,nx,fy,jy,ny,cco,DPT) +
          '''
          %smath <%s output="%g" | put n2=1 n1=%d >%s datapath=%s/;
          '''%(M8R,cco,zcoord,nx*ny,ccz,DPT) +
