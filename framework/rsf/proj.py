@@ -502,9 +502,16 @@ class Project(Environment):
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
-            
-        flow = self.Command(targets,sources,command)
 
+        if workdir:
+            command = re.sub(r'\$(SOURCE|TARGET)',r'${\1.abspath}',command)
+            command = re.sub(r'\$\{(SOURCES|TARGETS)(\[[^\]]+\])\}',r'${\1\2.abspath}',command)
+
+        flow = self.Command(targets,sources,command)
+            
+        if workdir:
+             Clean(flow,workdir)
+ 
         if suffix == sfsuffix:
             binaries = map(lambda x, self=self: self.path + x + '@',
                            filter(lambda x, suffix=suffix:
@@ -513,9 +520,6 @@ class Project(Environment):
                 Clean(flow,binaries)
 
         self.Default(flow)
-        if workdir:
-            Clean(flow,workdir)
-            
         return flow
         
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
