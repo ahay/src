@@ -27,10 +27,10 @@ sugain          = os.path.join(CWPROOT,'bin/sugain')
 suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 supsimage       = os.path.join(CWPROOT,'bin/supsimage')
 IWAVE           = os.getenv('NEWIWAVE')
-stdmdl          = os.path.join(IWAVE,'demo/main/standardmodel.x')
-towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
+stdmdl          = 'standardmodel' # os.path.join(IWAVE,'demo/main/standardmodel.x')
+towed_array     = 'towed_array'   # os.path.join(IWAVE,'trace/main/towed_array.x')
 #acd             = os.path.join(IWAVE,'acd/main/acd.x')
-acd             = os.path.join(IWAVE,'newacd/main/acd.x')
+acd             = 'acd' # os.path.join(IWAVE,'newacd/main/acd.x')
 
 ######### fetch list - non-reproducible data fetched from web archive.
 # the format for this dictionary is 
