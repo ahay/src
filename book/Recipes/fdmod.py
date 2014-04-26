@@ -1602,8 +1602,8 @@ def ewefd3d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
 def gauss1x(gaus,xcen,xsig,par):
     Flow(gaus,None,
          '''
-         math output="exp(-((x1-%g)*(x1-%g))/(2*%g))"
-         ''' % (xcen,xcen,xsig*xsig) +
+         math output="exp( -(x1-%g)^2/(2*%g) )"
+         ''' % (xcen,xsig*xsig) +
          '''
          n1=%(nx)d d1=%(dx)g o1=%(ox)g |
          scale axis=123
@@ -1611,17 +1611,18 @@ def gauss1x(gaus,xcen,xsig,par):
 def gauss1z(gaus,zcen,zsig,par):
     Flow(gaus,None,
          '''
-         math output="exp(-((x1-%g)*(x1-%g))/(2*%g))"
-         ''' % (zcen,zcen,zsig*zsig) +
+         math output="exp( -(x1-%g)^2/(2*%g) )"
+         ''' % (zcen,zsig*zsig) +
          '''
          n1=%(nz)d d1=%(dz)g o1=%(oz)g |
          scale axis=123
          ''' % par)
+         
 def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
     Flow(gaus,None,
          '''
-         math output="exp(-((x1-%g)*(x1-%g))/(2*%g)-((x2-%g)*(x2-%g))/(2*%g))"
-	 ''' % (zcen,zcen,zsig*zsig,xcen,xcen,xsig*xsig) +
+         math output="exp( -(x1-(%g))^2/(2*%g) -(x2-(%g))^2/(2*%g) )"
+         ''' % (zcen,zsig*zsig,xcen,xsig*xsig) +
          '''
          n1=%(nz)d d1=%(dz)g o1=%(oz)g
          n2=%(nx)d d2=%(dx)g o2=%(ox)g |
@@ -1631,12 +1632,12 @@ def gauss2d(gaus,xcen,zcen,xsig,zsig,par):
 def gauss3d(gaus,xcen,ycen,zcen,xsig,ysig,zsig,par):
     Flow(gaus,None,
          '''
-         math output="exp(-((x1-%g)*(x1-%g))/(2*%g)-((x2-%g)*(x2-%g))/(2*%g)-((x3-%g)*(x3-%g))/(2*%g))"
-         ''' % (zcen,zcen,zsig*zsig,xcen,xcen,xsig*xsig,ycen,ycen,ysig*ysig) +
+         math output="exp( -(x1-(%g))^2/(2*%g) -(x2-(%g))^2/(2*%g) -(x3-(%g))^2/(2*%g) )"
+         ''' % (zcen,zsig*zsig,xcen,xsig*xsig,ycen,ysig*ysig) +
          '''
          n1=%(nz)d d1=%(dz)g o1=%(oz)g
          n2=%(nx)d d2=%(dx)g o2=%(ox)g 
-	 n3=%(ny)d d3=%(dy)g o3=%(oy)g |
+         n3=%(ny)d d3=%(dy)g o3=%(oy)g |
          scale axis=123
          ''' % par)
 
