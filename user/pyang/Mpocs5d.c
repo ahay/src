@@ -26,7 +26,6 @@
 
 #include "fftn.h"
 
-
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -123,11 +122,11 @@ int main(int argc, char* argv[])
 	{ 
 		m=(mask[i2+i3*n2+i4*n2*n3+i5*n2*n3*n4])?1:0;
 		index=i1+n1*i2+n1*n2*i3+n1*n2*n3*i4+n1*n2*n3*n4*i5;
-		drec[index]=dobs[index]
-			+(1.-m)*drec[index];
+		drec[index]=dobs[index]	+(1.-m)*drec[index];
 	}
 	if (verb)    sf_warning("iteration %d;",iter);
     }
+
     for(i1=0; i1<num; i1++) dout[i1]=creal(drec[i1]);
     sf_floatwrite(dout, num, Fout);
 

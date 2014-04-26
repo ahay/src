@@ -30,7 +30,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1,n2,n3, num, i1,i2,i3, nthr, niter, iter;
+    int n1,n2,n3, num, i1,i2,i3,index, nthr, niter, iter;
     int n[3];
     float thr, pclip, m;		
     float *din, *mask, *dout;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
 #ifdef _OPENMP
 #pragma omp parallel for collapse(3) default(none)	\
-	private(i1,i2,i3,m)				\
+	private(i1,i2,i3,index,m)				\
 	shared(mask,drec,dobs,n1,n2,n3)
 #endif
 	for(i3=0; i3<n3; i3++)	
@@ -118,11 +118,12 @@ int main(int argc, char* argv[])
 	for(i1=0; i1<n1; i1++)
 	{ 
 		m=(mask[i2+i3*n2])?1:0;
-		drec[i1+n1*(i2+n2*i3)]=dobs[i1+n1*(i2+n2*i3)]
-			+(1.-m)*drec[i1+n1*(i2+n2*i3)];
+		index=i1+n1*i2+n1*n2*i3;
+		drec[index]=dobs[index]	+(1.-m)*drec[index];
 	}
 	if (verb)    sf_warning("iteration %d;",iter);
     }
+
     for(i1=0; i1<num; i1++) dout[i1]=creal(drec[i1]);
     sf_floatwrite(dout, num, Fout);
 

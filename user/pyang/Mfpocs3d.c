@@ -35,7 +35,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1,n2,n3,i1,i2,i3, num, nthr, niter, iter;
+    int n1,n2,n3,i1,i2,i3,index, num, nthr, niter, iter;
     int n[3];
     float p, tol, pclip, t0, t1, beta, thr,m;
     char *mode;
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 #ifdef _OPENMP
 #pragma omp parallel for collapse(3) default(none)	\
-	private(i1,i2,i3,m)				\
+	private(i1,i2,i3,index,m)				\
 	shared(mask,din,dcurr,dtmp,n1,n2,n3)
 #endif
 	for(i3=0; i3<n3; i3++)	
@@ -145,12 +145,13 @@ int main(int argc, char* argv[])
 	for(i1=0; i1<n1; i1++)
 	{ 
 		m=(mask[i2+i3*n2])?1:0;
-		dcurr[i1+n1*(i2+n2*i3)]=sf_cmplx(din[i1+n1*(i2+n2*i3)],0)
-			+(1.-m)*dtmp[i1+n1*(i2+n2*i3)];
+		index=i1+n1*i2+n1*n2*i3;
+		dcurr[index]=din[index]	+(1.-m)*dtmp[index];
 	}
 
 	if (verb)    sf_warning("iteration %d;",iter+1);
     }
+
     for(i1=0; i1<num; i1++) dout[i1]=crealf(dcurr[i1]);
     sf_floatwrite(dout,num,Fout);
 
