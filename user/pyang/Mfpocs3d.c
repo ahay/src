@@ -28,7 +28,6 @@
 #include <omp.h>
 #endif
 
-
 #include "pthresh.h"
 #include "fftn.h"
 
@@ -119,6 +118,11 @@ int main(int argc, char* argv[])
 	fftn_lop(true, false, num, num, dcurr, dtmp);
 
 	// perform hard thresholding
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(i1)			\
+	shared(dout,dcurr,num)
+#endif
 	for(i1=0; i1<num; i1++)	dout[i1]=cabsf(dcurr[i1]);
 
    	nthr = 0.5+num*(1.-0.01*pclip); 
