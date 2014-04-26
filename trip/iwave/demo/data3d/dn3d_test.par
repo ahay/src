@@ -1,3 +1,0 @@
-model=8 hfile=dn3d_test.rsf choose=1 d1=100 d2=100 d3=100 n1=5 n2=11 n3=11 
- datapath={TMPDATAPATH}
-

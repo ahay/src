@@ -1,2 +1,0 @@
-model=8 hfile=dn2d_20m.rsf choose=1 d1=20 d2=20 d3=1.0 n1=91 n2=391 n3=1 f3=3300
- datapath={TMPDATAPATH}

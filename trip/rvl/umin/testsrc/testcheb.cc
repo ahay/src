@@ -33,7 +33,7 @@ copyright holder.
 
 #include "rnmat.hh"
 #include "adjtest.hh"
-#include "Chebalg.hh"
+#include "chebalg.hh"
 
 using namespace RVL;
 using namespace RVLAlg;

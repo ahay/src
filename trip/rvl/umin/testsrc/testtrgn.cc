@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
     par.putValue("CGNE_ResTol",0.0);          // CGNE residual tolerance
     par.putValue("CGNE_GradTol",0.001);       // CGNE normal residual tolerance
     par.putValue("CGNE_MaxItn",10);           // CGNE CG step limit
-    par.putValue("CGNE_Verbose",false);        // CGNE verbosity
+    par.putValue("CGNE_Verbose",true);        // CGNE verbosity
     
     cout<<endl;
     cout<<"/*************************************************"<<endl;
