@@ -2,7 +2,7 @@
 ###################### COMMON DEFINITIONS - DO NOT ALTER ####################
 #############################################################################
 from rsf.proj import *
-from iwave import getFlowSignature
+from rsf.recipes.iwave import getFlowSignature
 WORKPATH        = os.getenv('DATAPATH')
 # todo: WORKPATH should be checked
 #Decider('timestamp-match')

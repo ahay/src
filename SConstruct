@@ -122,16 +122,14 @@ for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
 
-for subdir in ('Recipes','gallery'):
-    dir = os.path.join('book',subdir)
-    if os.path.isdir(dir):
-        build = os.path.join('build',dir)
-        if configure.version[0] > 1:
-            VariantDir(build,dir)
-        else:
-            BuildDir(build,dir)
-        SConscript(dirs=build,name='SConscript',exports='env pkgdir')
-        Default(build)
+for dir in filter(os.path.isdir,['book/Recipes','book/gallery','trip/admin']):
+    build = os.path.join('build',dir)
+    if configure.version[0] > 1:
+        VariantDir(build,dir)
+    else:
+        BuildDir(build,dir)
+    SConscript(dirs=build,name='SConscript',exports='env pkgdir')
+    Default(build)
     
 ##########################################################################
 # API BUILD
