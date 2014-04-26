@@ -408,7 +408,8 @@ class Project(Environment):
 
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
-             split=[],np=1,reduce='cat',jobmult=1,local=0,noderotate=1):
+             split=[],np=1,reduce='cat',jobmult=1,local=0,noderotate=1,
+             workdir=None):
 
         if not flow:
             return None     
@@ -484,7 +485,7 @@ class Project(Environment):
             
         command = rsf.flow.Flow(sources,flow,self.bindir,rsfflow,
                                 self.checkpar,self.coms,prefix,self.progsuffix,
-                                remote,stdout,stdin,self.timer,mpirun)
+                                remote,stdout,stdin,self.timer,mpirun,workdir)
 
         # May need to do it remotely
         if remote:
@@ -512,6 +513,8 @@ class Project(Environment):
                 Clean(flow,binaries)
 
         self.Default(flow)
+        if workdir:
+            Clean(flow,workdir)
             
         return flow
         

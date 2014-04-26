@@ -20,7 +20,7 @@ import rsf.prog
 
 def Flow(sources,flow,bindir,rsfflow=1,
          checkpar=False,coms=[],prefix='sf',progsuffix='',
-         remote='', stdout=1,stdin=1,timer='',mpirun=None):
+         remote='', stdout=1,stdin=1,timer='',mpirun=None,workdir=None):
     'Output a command line'
     lines = string.split(str(flow),'&&')
     steps = []
@@ -106,6 +106,8 @@ def Flow(sources,flow,bindir,rsfflow=1,
             command = command + " input=$SOURCE"
         else:
             command = "< $SOURCE " + command
+    if workdir:
+        command = '/bin/rm -rf %s && /bin/mkdir %s && cd %s &&' % (work,work,work) + command
     command = timer + command
         
     return command
