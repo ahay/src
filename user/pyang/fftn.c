@@ -1,4 +1,4 @@
-/* 3D fft operator 
+/* n-d fft operator 
 Note: The adjoint is made as the same as inverse by normalization!
 */
 
@@ -24,48 +24,48 @@ Note: The adjoint is made as the same as inverse by normalization!
 #include <complex.h>
 #include <fftw3.h>
 
-#include "ft3d.h"
+#include "fftn.h"
 
-static int n1, n2, n3;
-fftwf_plan fft3, ifft3;/* execute plan for FFT and IFFT */
+static int num;
+fftwf_plan fftn, ifftn;/* execute plan for FFT and IFFT */
 fftwf_complex *tmp;
 
-void ft3d_init(int n1_, int n2_, int n3_)
+void fftn_init(int rank, int *n)
 /*< initialize >*/
 {
-    	n1=n1_;
-    	n2=n2_;
-	n3=n3_;
-    	tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n1*n2*n3);
-    	fft3=fftwf_plan_dft_3d(n1,n2,n3,tmp,tmp,FFTW_FORWARD,FFTW_MEASURE);	
-   	ifft3=fftwf_plan_dft_3d(n1,n2,n3,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
+	int i;
+	num=1;
+	for(i=0; i<rank; i++) num*=n[i];
+    	tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*num);
+    	fftn=fftwf_plan_dft(rank, n, tmp, tmp, FFTW_FORWARD, FFTW_MEASURE);	
+   	ifftn=fftwf_plan_dft(rank, n, tmp, tmp, FFTW_BACKWARD, FFTW_MEASURE);
 }
 
-void ft3d_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_complex *yy)
+void fftn_lop (bool adj, bool add, int nx, int ny, sf_complex *xx, sf_complex *yy)
 /*< linear operator >*/
 {
     int i;
 
-    if (n1*n2*n3!=nx) sf_error("%s: size mismatch: %d != %d",__FILE__,n1*n2*n3,nx);
-    if (n1*n2*n3!=ny) sf_error("%s: size mismatch: %d != %d",__FILE__,n1*n2*n3,ny);
+    if (num!=nx) sf_error("%s: size mismatch: %d != %d",__FILE__, num, nx);
+    if (num!=ny) sf_error("%s: size mismatch: %d != %d",__FILE__, num, ny);
 
     sf_cadjnull (adj, add, nx, ny, xx, yy);
-    for(i=0;i<n1*n2*n3;i++) tmp[i] = adj? yy[i]: xx[i];
+    for(i=0; i<num; i++) tmp[i] = adj? yy[i]: xx[i];
   
     if (adj){
- 	fftwf_execute(fft3);	
-    	for(i=0;i<n1*n2*n3;i++) xx[i]+=tmp[i]/sqrtf(n1*n2*n3);
+ 	fftwf_execute(fftn);	
+    	for(i=0; i<num; i++) xx[i]+=tmp[i]/sqrtf(num);
     }else{
-	fftwf_execute(ifft3);
-    	for(i=0;i<n1*n2*n3;i++) yy[i]+=tmp[i]/sqrtf(n1*n2*n3);
+	fftwf_execute(ifftn);
+    	for(i=0; i<num; i++) yy[i]+=tmp[i]/sqrtf(num);
     }
 }
 
-void ft3d_close(void)
+void fftn_close(void)
 /*< free allocated variables>*/
 {
     fftwf_free(tmp);
-    fftwf_destroy_plan(fft3);
-    fftwf_destroy_plan(ifft3);
+    fftwf_destroy_plan(fftn);
+    fftwf_destroy_plan(ifftn);
 }
 

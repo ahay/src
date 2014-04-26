@@ -20,7 +20,7 @@ static double sqrarg;
 
 
 void printMatrix(double **a, int rows, int cols) 
-/* prints an arbitrary size matrix to the standard output */
+/*< prints an arbitrary size matrix to the standard output >*/
 {
   int i,j;
 
@@ -34,7 +34,7 @@ void printMatrix(double **a, int rows, int cols)
 }
 
 void printVector(double *v, int size) 
-/* prints an arbitrary size vector to the standard output */
+/*< prints an arbitrary size vector to the standard output >*/
 {
   int i;
 
@@ -45,7 +45,7 @@ void printVector(double *v, int size)
 }
 
 double pythag(double a, double b) 
-/* calculates sqrt( a^2 + b^2 ) with decent precision */
+/*< calculates sqrt( a^2 + b^2 ) with decent precision >*/
 {
   double absa,absb;
 
@@ -60,13 +60,13 @@ double pythag(double a, double b)
 
 
 int svdcmp(double **a, int nRows, int nCols, double *w, double **v) 
-/*
+/*<
   Modified from Numerical Recipes in C
   Given a matrix a[nRows][nCols], svdcmp() computes its singular value 
   decomposition, A = U * W * Vt.  A is replaced by U when svdcmp 
   returns.  The diagonal matrix W is output as a vector w[nCols].
   V (not V transpose) is output as the matrix V[nCols][nCols].
-*/
+>*/
 {
   int flag,i,its,j,jj,k,l,nm;
   double anorm,c,f,g,h,s,scale,x,y,z,*rv1;

@@ -30,14 +30,15 @@
 
 
 #include "pthresh.h"
-#include "ft3d.h"
+#include "fftn.h"
 
 
 int main(int argc, char* argv[])
 {
     bool verb;
-    int niter,n1,n2,n3,i1,i2,i3, iter;
-    float p, tol, pclip,t0=1.0, t1, beta, thr;
+    int n1,n2,n3,i1,i2,i3, num, nthr, niter, iter;
+    int n[3];
+    float p, tol, pclip, t0, t1, beta, thr,m;
     char *mode;
     float *din, *mask, *dout;	
     sf_complex *dprev,*dcurr,*dtmp;
@@ -75,26 +76,30 @@ int main(int argc, char* argv[])
     if (!sf_histint(Fin,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(Fin,"n3",&n3)) sf_error("No n3= in input");
 
+    num=n1*n2*n3;
+    n[0]=n1; n[1]=n2; n[2]=n3;
+
     /* allocate data and mask arrays */
-    din=sf_floatalloc(n1*n2*n3); 
-    dout=sf_floatalloc(n1*n2*n3);
-    sf_floatread(din,n1*n2*n3,Fin);
+    din=sf_floatalloc(num); 
+    dout=sf_floatalloc(num);
+    sf_floatread(din,num,Fin);
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2*n3);
 	sf_floatread(mask,n2*n3,Fmask);
     }
 
-    dprev=sf_complexalloc(n1*n2*n3);
-    dcurr=sf_complexalloc(n1*n2*n3);
-    dtmp=sf_complexalloc(n1*n2*n3);
+    dprev=sf_complexalloc(num);
+    dcurr=sf_complexalloc(num);
+    dtmp=sf_complexalloc(num);
     for(i1=0; i1<n1*n2*n3; i1++) {
 	dprev[i1]=sf_cmplx(din[i1],0.0);
 	dcurr[i1]=sf_cmplx(din[i1],0.0);
 	dtmp[i1]=sf_cmplx(0.0,0);
     }
-    ft3d_init(n1, n2, n3);
+    fftn_init(3, n);
 
     /* FPOCS iterations */
+    t0=1.;
     for(iter=0; iter<niter; iter++)
     {
 	t1=0.5*(1.0+sqrtf(1.0+4.0*t0*t0));
@@ -104,54 +109,48 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for default(none)		\
 	private(i1)				\
-	shared(dtmp,dcurr,beta,dprev,n1,n2,n3)
+	shared(dtmp,dcurr,beta,dprev,num)
 #endif
-	for(i1=0;i1<n1*n2*n3;i1++) {
+	for(i1=0;i1<num;i1++) {
 	    dtmp[i1]=dcurr[i1]+beta*(dcurr[i1]-dprev[i1]);
 	    dprev[i1]=dcurr[i1];
 	}	
 
-
-	ft3d_lop(true, false, n1*n2*n3, n1*n2*n3, dcurr, dtmp);
+	fftn_lop(true, false, num, num, dcurr, dtmp);
 
 	// perform hard thresholding
-	for(i3=0; i3<n3; i3++)
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
-	{
-	    	dout[i1+n1*i2+n1*n2*i3]=cabsf(dcurr[i1+n1*i2+n1*n2*i3]);
-	}
+	for(i1=0; i1<num; i1++)	dout[i1]=cabsf(dcurr[i1]);
 
-   	int nthr = 0.5+n1*n2*n3*(1.-0.01*pclip); 
+   	nthr = 0.5+num*(1.-0.01*pclip); 
     	if (nthr < 0) nthr=0;
-    	if (nthr >= n1*n2*n3) nthr=n1*n2*n3-1;
-	thr=sf_quantile(nthr,n1*n2*n3,dout);
+    	if (nthr >= num) nthr=num-1;
+	thr=sf_quantile(nthr,num,dout);
 	thr*=powf(0.01, iter/(niter-1));
-	sf_cpthresh(dcurr, n1*n2*n3,thr, p,mode);
+	sf_cpthresh(dcurr, num,thr, p,mode);
 
-	ft3d_lop(false, false, n1*n2*n3, n1*n2*n3, dcurr, dtmp);
+	fftn_lop(false, false, num, num, dcurr, dtmp);
 	
 	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 #ifdef _OPENMP
 #pragma omp parallel for collapse(3) default(none)	\
-	private(i1,i2,i3)				\
+	private(i1,i2,i3,m)				\
 	shared(mask,din,dcurr,dtmp,n1,n2,n3)
 #endif
 	for(i3=0; i3<n3; i3++)	
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{ 
-		float m=(mask[i2+i3*n2])?1:0;
+		m=(mask[i2+i3*n2])?1:0;
 		dcurr[i1+n1*(i2+n2*i3)]=sf_cmplx(din[i1+n1*(i2+n2*i3)],0)
 			+(1.-m)*dtmp[i1+n1*(i2+n2*i3)];
 	}
 
 	if (verb)    sf_warning("iteration %d;",iter+1);
     }
-    for(i1=0;i1<n1*n2*n3; i1++) dout[i1]=crealf(dcurr[i1]);
-    sf_floatwrite(dout,n1*n2*n3,Fout);
+    for(i1=0; i1<num; i1++) dout[i1]=crealf(dcurr[i1]);
+    sf_floatwrite(dout,num,Fout);
 
-    ft3d_close();
+    fftn_close();
     sf_close();
     exit(0);
 }

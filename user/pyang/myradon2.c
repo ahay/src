@@ -95,10 +95,10 @@ void myradon2_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, sf_complex
 static bool allocated=false;
 static sf_complex *c;
 
-void myradon2_inv(sf_complex *mm, sf_complex *mm_adj, float eps)
+void myradon2_inv(sf_complex *mm, sf_complex *adj_dd, float eps)
 /*< fast Toeplitz matrix inversion for radon transform 
 mm: model to be inverted
-mm_adj: adjoint of radon
+adj_dd: adjoint radon of data
 eps: regularization parameter
 >*/
 {
@@ -117,5 +117,5 @@ eps: regularization parameter
 		c[ip]=sumc;
 	}
 	
-	ctoeplitz_inv(np, eps, c, mm, mm_adj);
+	ctoeplitz_inv(np, eps, c, mm, adj_dd);
 }
