@@ -1,0 +1,6 @@
+GRIDPP Unit Test 14
+create GridSpace, construct Vector in space
+assign const value via FO eval
+attempt to assign to perm old file=testdata.rsf
+should throw exception, as file is already open
+ *** exception thrown - exit

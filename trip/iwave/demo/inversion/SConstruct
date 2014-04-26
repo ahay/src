@@ -1,0 +1,354 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from batch import getFlowSignature
+import os
+IWAVE           = os.getenv('NEWIWAVE')
+thispath        = os.getcwd()
+# both IWAVE and WORKPATH should be checked
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+
+######################## LOCAL DEFINITIONS ##################################
+
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
+acd             = os.path.join(IWAVE,'acd/main/acd.x')
+acdcgne         = os.path.join(IWAVE,'acd/main/acdcgne.x')
+acdlbfgs        = os.path.join(IWAVE,'acd/main/acdlbfgs.x')
+acdiva          = os.path.join(IWAVE,'acd/main/acdiva.x')
+acdadjtest      = os.path.join(IWAVE,'acd/main/acdadjtest.x')
+
+fetches = {
+    'line_fix.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+Flow('vel24','velocity.HH','dd form=native | window j1=6 j2=6')
+Flow('csq24base','vel24','add mode=p < vel24.rsf vel24.rsf |put data_type=csq')
+Flow('rext','csq24base','window f2=383 n2=1 | spray axis=2 d=24 n=60')
+Flow('csq24',['csq24base', 'rext'],'cat axis=2 d=24 csq24base.rsf rext.rsf',stdin=0)  
+Flow('csq24hom','','makevel n1=126 d1=24 n2=444 d2=24 o1=0 o2=0 v000=2.25 | put data_type=csq data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m^2/ms^2 esize=4',stdin=0) 
+Flow('csq24sm','csq24','smooth rect1=10 rect2=10 repeat=2')
+Flow('csq24sm2','csq24','smooth rect1=5 rect2=5 repeat=2')
+Flow('dcsq24', ['csq24', 'csq24sm2'],'add mode=a scale=1,-1 < csq24.rsf csq24sm2.rsf |window min1=180| sfpad beg1=8') 
+Flow('csqext.rsf','csq24sm.rsf', 'sfcat csq24sm.rsf csq24sm.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
+Flow('dcsqext.rsf','dcsq24.rsf', 'sfcat dcsq24.rsf dcsq24.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
+
+Flow('line100m.su','line_fix.su', suwind + ' key=sx j=100')
+Flow('hdr6km.su', 'line100m.su', suwind + ' key=sx min=6000 max=6000 tmax=2')
+Flow('hdr2shot.su', 'line100m.su', suwind + ' key=sx min=6000 max=7000 j=1000 tmax=2')
+
+# create base wavelet (just time series, without source position
+# information) via suwaveform
+Flow('wavelet_base.su','',
+     suwaveform + ' type=ricker1 fpeak=10 ns=51 | ' + 
+     sushw + ' key=delrt  a=-100 > ${TARGETS[0]} ',
+     stdin=0)
+
+# add source coordinates from hdrfile to source AND receiver 
+# coordinates from wavelet to create "dressed" wavelet for array
+# source option in iwave. Note that iwave reads a source GATHER by
+# detecting new source coordinates (sx, sy, selev) but assigns source
+# trace GRID POSITIONS in the array by receiver coordinates (gx, gy, 
+# gelev). The towed array app sets these coordinates up so that each 
+# shot may have an array of sources, with the source traces in the 
+# same position relative to the data source coordinates - hence 
+# "towed_array".
+
+# use naming convention: time series stored in wavelet_base, 
+# headers for experiment foo stored in hdrfoo.su, wavelet in
+# waveletfoo.su
+
+for foo in ['line100m', 'hdr6km', 'hdr2shot']:
+    Flow('wavelet_' + foo + '.su', ['wavelet_base.su', foo + '.su'],
+         towed_array + 
+         '''
+         data=${SOURCES[1]} 
+         src=${SOURCES[0]} 
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+
+# simulation - one shot
+t=Flow(['shot6km.work', 'shot6km.su'],['wavelet_hdr6km.su','csq24.rsf'],
+        '''
+        /bin/cp hdr6km.su shot6km.su;
+        /bin/rm -rf shot6km.work; 
+        /bin/mkdir shot6km.work; 
+        cd shot6km.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24.rsf source=../wavelet_hdr6km.su 
+        data=../shot6km.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'shot6km.work')
+
+# Born simulation - one shot
+t=Flow(['born6km.work', 'born6km.su'],['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf'],
+        '''
+        /bin/cp hdr6km.su born6km.su;
+        /bin/rm -rf born6km.work; 
+        /bin/mkdir born6km.work; 
+        cd born6km.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24sm.rsf csq_d1=../dcsq24.rsf source=../wavelet_hdr6km.su 
+        data=../born6km.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'born6km.work')
+
+# Born simulation - two shots
+t=Flow(['born2shot.work', 'born2shot.su'],['wavelet_hdr2shot.su','csq24sm.rsf','dcsq24.rsf'],
+        '''
+        /bin/cp hdr2shot.su born2shot.su;
+        /bin/rm -rf born2shot.work; 
+        /bin/mkdir born2shot.work; 
+        cd born2shot.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24sm.rsf csq_d1=../dcsq24.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'born2shot.work')
+
+# Born inversion - one shot
+t=Flow(['icsq6km.work', 'icsq6km.rsf'],['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
+        '''
+        sfadd < csq24.rsf > icsq6km.rsf scale=0.0;
+        /bin/rm -rf icsq6km.work; 
+        /bin/mkdir icsq6km.work; 
+        cd icsq6km.work;
+        '''
+        +  acdcgne  + ' ' +  
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24.rsf rcsq=../csq24sm.rsf icsq=../icsq6km.rsf source=../wavelet_hdr6km.su 
+        data=../born6km.su outfile=cgne.out ResidualTol = 0.01 GradientTol = 0.01
+        MaxIter = 20 dataest = est.su datares = res.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'icsq6km.work')
+
+# Born inversion - one shot
+t=Flow(['icsq6km100it.work', 'icsq6km100it.rsf'],['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
+        '''
+        sfadd < csq24.rsf > icsq6km100it.rsf scale=0.0;
+        /bin/rm -rf icsq6km100it.work; 
+        /bin/mkdir icsq6km100it.work; 
+        cd icsq6km100it.work;
+        '''
+        +  acdcgne  + ' ' +  
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24.rsf rcsq=../csq24sm.rsf icsq=../icsq6km100it.rsf source=../wavelet_hdr6km.su 
+        data=../born6km.su outfile=cgne.out ResidualTol=0.01 GradientTol=0.01
+        MaxIter=100 dataest=est.su datares=res.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'icsq6km100it.work')
+
+Flow(['born6.0km.su','born7.0km.su','wavelet_6.0km.su','wavelet_7.0km.su'],['born2shot.su','wavelet_hdr2shot.su'], suwind + ' key=sx min=6000 max=6000 < born2shot.su > born6.0km.su; ' +
+     suwind + ' key=sx min=6000 max=6000 < wavelet_hdr2shot.su > wavelet_6.0km.su; ' +
+     suwind + ' key=sx min=7000 max=7000 < born2shot.su > born7.0km.su; ' + 
+     suwind + ' key=sx min=7000 max=7000 < wavelet_hdr2shot.su > wavelet_7.0km.su',
+     stdin=0,stdout=-1)
+
+asfadd = os.path.join(os.getenv('RSFROOT'),'bin/sfadd')
+asfcp = os.path.join(os.getenv('RSFROOT'),'bin/sfcp')
+
+# rtm - two shot
+t=Flow(['rtm2shot.work', 'rtm2shot.rsf','rtm6.0km.rsf','rtm7.0.rtf'],['born2shot.su', 'wavelet_hdr2shot.su', 'born6.0km.su','wavelet_6.0km.su','born7.0km.su','wavelet_7.0km.su','csqext.rsf'], asfadd + '  < csqext.rsf > rtm2shot.rsf scale=0.0; ' + asfadd + '  < csq24.rsf > rtm6.0km.rsf scale=0.0;	' + asfadd + '  < csq24.rsf > rtm7.0km.rsf scale=0.0; /bin/rm -rf rtm2shot.work; /bin/mkdir rtm2shot.work; cd rtm2shot.work;'
+	+  acd + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf csq_b1=../rtm6.0km.rsf source=../wavelet_6.0km.su 
+        data=../born6.0km.su;
+	'''
+	+  acd + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20
+	csq=../csq24sm.rsf csq_b1=../rtm7.0km.rsf source=../wavelet_7.0km.su 
+        data=../born7.0km.su;
+	'''
+	+  acd + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf csq_b1=../rtm2shot.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su;
+	''',
+	stdin=0,stdout=0)
+Clean(t,'rtm2shot.work')
+
+# adjtest - two shot
+t=Flow(['at2shot.work'],['born2shot.su', 'wavelet_hdr2shot.su', 'born6.0km.su','wavelet_6.0km.su','born7.0km.su','wavelet_7.0km.su','csqext.rsf'], '/bin/rm -rf at2shot.work; /bin/mkdir at2shot.work; cd at2shot.work;'
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf source=../wavelet_6.0km.su 
+        data=../born6.0km.su;
+	'''
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20
+	csq=../csq24sm.rsf source=../wavelet_7.0km.su 
+        data=../born7.0km.su;
+	'''
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csqext.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su;
+	'''
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su;
+	''',
+	stdin=0,stdout=0)
+Clean(t,'at2shot.work')
+
+# adjtest - two shot
+t=Flow(['fat2shot.work',  'frtm6.0km.rsf', 'fborn6.0km.su', 'frtm7.0km.rsf', 'fborn7.0km.su', 'frtm2shot.rsf', 'fborn2shot.su', 'frtm2shot_stk.rsf', 'fborn2shot_stk.su', ],['born2shot.su', 'wavelet_hdr2shot.su', 'born6.0km.su','wavelet_6.0km.su','born7.0km.su','wavelet_7.0km.su','csqext.rsf', 'dcsqext.rsf'], '/bin/cp born6.0km.su fborn6.0km.su; /bin/cp born7.0km.su fborn7.0km.su; /bin/cp born2shot.su fborn2shot.su; /bin/cp born2shot.su fborn2shot_stk.su; ' + asfadd + ' < csq24.rsf > frtm6.0km.rsf scale=0.0; ' + asfadd + ' < csq24.rsf > frtm7.0km.rsf scale=0.0; ' + asfadd + ' < csqext.rsf > frtm2shot.rsf scale=0.0; ' + asfadd + ' < csq24.rsf > frtm2shot_stk.rsf scale=0.0; /bin/rm -rf fat2shot.work; /bin/mkdir fat2shot.work; cd fat2shot.work;'
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf source=../wavelet_6.0km.su 
+        data=../born6.0km.su csq_d1_in=../dcsq24.rsf csq_d1_out=../frtm6.0km.rsf
+	data_in=../fborn6.0km.su;
+	'''
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20
+	csq=../csq24sm.rsf source=../wavelet_7.0km.su 
+        data=../born7.0km.su csq_d1_in=../dcsq24.rsf csq_d1_out=../frtm7.0km.rsf
+	data_in=../fborn7.0km.su;
+	'''
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csqext.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su csq_d1_in=../dcsqext.rsf csq_d1_out=../frtm2shot.rsf
+	data_in=../fborn2shot.su;
+	'''
+	+  acdadjtest + ' ' + 
+	'''
+	deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su csq_d1_in=../dcsq24.rsf csq_d1_out=../frtm2shot_stk.rsf
+	data_in=../fborn2shot_stk.su;
+	''',
+	stdin=0,stdout=0)
+Clean(t,'fat2shot.work')
+
+# Born inversion - two shot
+t=Flow(['icsq2shot.work', 'icsq2shot.rsf'],['born2shot.su', 'wavelet_hdr2shot.su', 'csqext.rsf'], asfadd + '  < csqext.rsf > icsq2shot.rsf scale=0.0;  /bin/rm -rf icsq2shot.work; /bin/mkdir icsq2shot.work; cd icsq2shot.work;'
+        +  acdcgne  + ' ' +  
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csqext.rsf rcsq=../csqext.rsf icsq=../icsq2shot.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su outfile=cgne.out ResidualTol = 0.01 GradientTol = 0.01
+        MaxIter = 20 dataest = est.su datares = res.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'icsq2shot.work')
+
+
+# evaluate LinFit - twoshot
+t=Flow(['ds2shot.work', 'ds2shot.rsf'],['born2shot.su', 'wavelet_hdr2shot.su', 'csq24sm.rsf'],
+        '''
+        sfspike n1=126 d1=24 o1=0 n2=444 d2=24 o2=0 n3=2 d3=1 o3=0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3 | sfscale dscale=0.0 > ds2shot.rsf;
+        /bin/rm -rf ds2shot.work; 
+        /bin/mkdir ds2shot.work; 
+        cd ds2shot.work;
+        '''
+        +  acdiva  + ' ' +  
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24.rsf csqext=../ds2shot.rsf init_velsq=../csq24sm.rsf 
+	final_velsq=../estcsq.rsf reflectivity=../ds2shot.rsf source=../wavelet_hdr2shot.su 
+        data=../born2shot.su outfile=cgne.out ResidualTol = 0.01 GradientTol = 0.01
+        MaxIter = 20 MaxLBFGSIter=0 dataest = est.su datares = res.su DSWeight=0.1
+	''',
+	stdin=0,stdout=0)
+Clean(t,'ds2shot.work')
+
+# Nonlinear inversion - one shot
+t=Flow(['ncsq6km.work', 'ncsq6km.rsf'],['shot6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
+        '''
+        sfcp csq24sm.rsf ncsq6km.rsf
+        /bin/rm -rf ncsq6km.work; 
+        /bin/mkdir ncsq6km.work; 
+        cd ncsq6km.work;
+        '''
+        +  acdlbfgs  + ' ' +  
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24sm.rsf icsq=../ncsq6km.rsf source=../wavelet_hdr6km.su 
+        data=../shot6km.su VerboseReport=../lbfgs_report MaxLBFGSIter=50
+	''',
+	stdin=0,stdout=0)
+Clean(t,'ncsq6km.work')
+
+# resimulation - one shot
+t=Flow(['reshot6km.work', 'reshot6km.su'],['wavelet_hdr6km.su','ncsq6km.rsf'],
+        '''
+        /bin/cp hdr6km.su reshot6km.su;
+        /bin/rm -rf reshot6km.work; 
+        /bin/mkdir reshot6km.work; 
+        cd reshot6km.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../ncsq6km.rsf source=../wavelet_hdr6km.su 
+        data=../reshot6km.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'reshot6km.work')
+
+# background simulation - one shot
+t=Flow(['bgshot6km.work', 'bgshot6km.su'],['wavelet_hdr6km.su','csq24sm.rsf'],
+        '''
+        /bin/cp hdr6km.su bgshot6km.su;
+        /bin/rm -rf bgshot6km.work; 
+        /bin/mkdir bgshot6km.work; 
+        cd bgshot6km.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24sm.rsf source=../wavelet_hdr6km.su 
+        data=../bgshot6km.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'bgshot6km.work')
+
+End()
