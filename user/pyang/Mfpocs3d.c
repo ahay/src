@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     dprev=sf_complexalloc(num);
     dcurr=sf_complexalloc(num);
     dtmp=sf_complexalloc(num);
-    for(i1=0; i1<n1*n2*n3; i1++) {
+    for(i1=0; i1<num; i1++) {
 	dprev[i1]=sf_cmplx(din[i1],0.0);
 	dcurr[i1]=sf_cmplx(din[i1],0.0);
 	dtmp[i1]=sf_cmplx(0.0,0);

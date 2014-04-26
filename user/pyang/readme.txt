@@ -10,7 +10,7 @@ Be careful when you try to use them!
 Under this directory, I implemented the algorithms:
 
 1) POCS (projection onto convex sets), FFTW required
-Main:		Mpocs3d.c, Mfpocs3d.c
+Main:		Mpocs3d.c, Mfpocs3d.c, Mpocs5d.c
 Depends on:	fftn.c
 Test file: 	/book/xjtu/test/fpocs3d/SConstruct
 		/book/xjtu/test/fpocs2d/SConstruct

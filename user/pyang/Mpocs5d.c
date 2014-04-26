@@ -1,7 +1,7 @@
-/* POCS for 3D missing data interpolation
+/* POCS for 5D seismic data interpolation
 */
 /*
-  Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
+  Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,8 +30,8 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int n1,n2,n3, num, i1,i2,i3, nthr, niter, iter;
-    int n[3];
+    int n1,n2,n3,n4,n5, num, i1,i2,i3,i4,i5, index, nthr, niter, iter;
+    int n[5];
     float thr, pclip, m;		
     float *din, *mask, *dout;
     sf_complex *dobs,*drec,*dtmp;
@@ -56,9 +56,12 @@ int main(int argc, char* argv[])
     if (!sf_histint(Fin,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(Fin,"n2",&n2)) sf_error("No n2= in input");
     if (!sf_histint(Fin,"n3",&n3)) sf_error("No n3= in input");
+    if (!sf_histint(Fin,"n4",&n4)) sf_error("No n4= in input");
+    if (!sf_histint(Fin,"n5",&n5)) sf_error("No n5= in input");
 
-    num=n1*n2*n3;
-    n[0]=n1; n[1]=n2; n[2]=n3;
+
+    num=n1*n2*n3*n4*n5;//total number of elements 
+    n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4; n[4]=n5;
 
     /* allocate data and mask arrays */
     din=sf_floatalloc(num); 
@@ -69,15 +72,15 @@ int main(int argc, char* argv[])
 
     sf_floatread(din,num,Fin);
     if (NULL != sf_getstring("mask")){
-	mask=sf_floatalloc(n2*n3);
-	sf_floatread(mask,n2*n3,Fmask);
+	mask=sf_floatalloc(n2*n3*n4*n5);
+	sf_floatread(mask,n2*n3*n4*n5,Fmask);
     }
     for(i1=0; i1<num; i1++) 
     {
 	dobs[i1]=sf_cmplx(din[i1],0);
 	drec[i1]=dobs[i1];
     }
-    fftn_init(3, n);
+    fftn_init(5, n);
 
     for(iter=1; iter<=niter; iter++)
     {
@@ -107,19 +110,21 @@ int main(int argc, char* argv[])
 	fftn_lop(false, false, num, num, dtmp, drec);
 	
 	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
-
 #ifdef _OPENMP
-#pragma omp parallel for collapse(3) default(none)	\
-	private(i1,i2,i3,m)				\
-	shared(mask,drec,dobs,n1,n2,n3)
+#pragma omp parallel for collapse(5) default(none)	\
+	private(i1,i2,i3,i4,i5,index,m)			\
+	shared(mask,drec,dobs,n1,n2,n3,n4,n5)
 #endif
+	for(i5=0; i5<n5; i5++)	
+	for(i4=0; i4<n4; i4++)
 	for(i3=0; i3<n3; i3++)	
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{ 
-		m=(mask[i2+i3*n2])?1:0;
-		drec[i1+n1*(i2+n2*i3)]=dobs[i1+n1*(i2+n2*i3)]
-			+(1.-m)*drec[i1+n1*(i2+n2*i3)];
+		m=(mask[i2+i3*n2+i4*n2*n3+i5*n2*n3*n4])?1:0;
+		index=i1+n1*i2+n1*n2*i3+n1*n2*n3*i4+n1*n2*n3*n4*i5;
+		drec[index]=dobs[index]
+			+(1.-m)*drec[index];
 	}
 	if (verb)    sf_warning("iteration %d;",iter);
     }
