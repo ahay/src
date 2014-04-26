@@ -2,7 +2,7 @@
 
 using RVL::parse;
 
-#define IWAVE_VERBOSE
+//#define IWAVE_VERBOSE
 
 /*--- time step functions ---------------------------------------------------*/
 
