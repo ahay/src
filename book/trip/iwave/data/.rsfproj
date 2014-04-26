@@ -1,3 +1,0 @@
-uses=['sfstandardmodel', 'sfdd', 'sfwindow', 'sfput', 'sfgrey', 'sfspike', 'sfmath', 'sfsegyheader', 'sfsuwrite', 'sfasg', 'sfsuread', 'sfcat', 'sfgraph']
-data=[]
-size=   40355288
