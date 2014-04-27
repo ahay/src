@@ -3,33 +3,23 @@ from rsf.book import *
 Papers(copyr='Rice University',
        group='The Rice Inversion Project',
        papers=Split('''
-       iwave
+       struct
        '''),
-       authors = {'iwave':'William Symes'},
+       authors = {'struct':'William Symes'},
        line='Selected papers',
-       fig=('iwave/data','wtrace','width=\\textwidth'))
+       fig=('struct/project','framesrc','width=\\textwidth'))
        
 End(use='hyperref',
+    use='amsmath,setspace,wasysym',
     include=r'''
-\newcommand{\du}{\delta u}
-\newcommand{\dm}{\delta m}
-\newcommand{\lu}{\lambda u}
-\newcommand{\lm}{\lambda m}
-\newcommand{\muu}{\mu u}
-\newcommand{\bF}{{\bf F}}
-\newcommand{\bS}{{\bf S}}
-\newcommand{\bH}{{\bf H}}
-\newcommand{\bM}{{\bf M}}
-\newcommand{\bR}{{\bf R}}
-\newcommand{\bu}{{\bf u}}
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\mb}{\mathbf}
+\newcommand{\om}{\bar{m}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\cJ}{\mathcal{J}}
 \newcommand{\bx}{{\bf x}}
-\newcommand{\bv}{{\bf v}}
-\newcommand{\be}{{\bf e}}
-\newcommand{\bp}{{\bf p}}
-\newcommand{\cS}{{\cal S}}
-
-\newcommand{\peq}{\,+\hspace{-0.15cm}=}
-\newcommand{\pp}{\,+\hspace{-0.1cm}+}
-\newcommand{\mm}{\,-\hspace{-0.1cm}-}
+\everymath{\displaystyle}
 ''')
 
