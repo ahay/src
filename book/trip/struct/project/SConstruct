@@ -2,10 +2,6 @@
 ###################### COMMON DEFINITIONS - DO NOT ALTER ####################
 #############################################################################
 from rsf.proj import *
-from rsf.recipes.iwave import getFlowSignature
-WORKPATH        = os.getenv('DATAPATH')
-# todo: WORKPATH should be checked
-#Decider('timestamp-match')
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
 #############################################################################
@@ -69,8 +65,9 @@ Flow('hdr8-12km.su', None,
 
 # sfadd writes output to stdout, so it must be left active - 
 # however there is not pipe input to this command, so stdin=0
-Flow('csq_4layer','vel_4layer.HH',
-     'dd form=native | sfadd mode=p ${SOURCES[0]} ${SOURCES[0]} | sfput data_type=csq ')
+Flow('vel_4layer.rsf', 'vel_4layer.HH', 'dd form=native');
+Flow('csq_4layer','vel_4layer.rsf',
+     'add mode=p ${SOURCES[0]} | put data_type=csq ')
 
 # smooth csq_4layer to make migration velocity model
 Flow('csq_4layersm','csq_4layer','smooth rect1=50 rect2=50 repeat=4')
@@ -187,11 +184,11 @@ Result('dcsq_4layer', 'dcsq_4layer', 'put label1=Depth unit1=m label2=Distance u
 
 Result('gauss', 'init', 'put label1=Depth unit1=m label2=Distance unit2=m label=Pressure unit=GPa | grey color=c mean=y clip=100 title="Gaussian Data t=0.0 s" scalebar=y barreverse=y')
 
-Result('frameinit', 'movieinit', 'window f3=21 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label=Pressure unit=GPa | grey color=c mean=y clip=300 title="Gaussian data t=3.2 s" scalebar=y barreverse=y')
+Result('frameinit', 'movieinit', 'window f3=32 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label=Pressure unit=GPa | grey color=c mean=y clip=300 title="Gaussian data t=5.12 s" scalebar=y barreverse=y')
 
 Result('wavelet','wavelet_base.su', 'suread endian=0 read=data | put label1=Time label2=Pressure unit1=s unit2=GPa title="Gaussian deriv fmax=5 Hz" unit=GPa |sfgraph')
 
-Result('framesrc', 'moviesrc', 'window f3=21 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label=Pressure unit=GPa | grey color=c mean=y clip=1.e+8 title="Point source 5 Hz t=3.2 s" scalebar=y barreverse=y')
+Result('framesrc', 'moviesrc', 'window f3=32 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label=Pressure unit=GPa | grey color=c mean=y clip=1.e+8 title="Point source 5 Hz t=5.12 s" scalebar=y barreverse=y')
 
 Result('shot12000','shot12000.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=5 unit1=s unit2=km title="Node at 12 km" label=Pressure unit=GPa |sfgrey scalebar=y barreverse=y')
 
