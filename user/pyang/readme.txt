@@ -2,8 +2,8 @@ Author: Pengliang Yang, Xi'an Jiatong Universtiy
 Email: 	ypl.2100@gmail.com
 
 =================================================================
-Preamble: This readme files is devoted to explain my programs. 
-Some of them has been tested, and the rest are under construction.
+Preamble: This readme files is committed to explain my programs. 
+Some of them have been tested. The rest are under construction.
 Be careful when you try to use them!
 =================================================================
 
@@ -64,12 +64,14 @@ For more information, check the paper:
  boundary saving: A staggered grid GPU implementation." Computers & 
  Geosciences (2014).
 
+
 6) Seislet-based POCS, IST and MCA algorithm (for 2D validation)
 Main:		Mpocsseislet.c, Mistseislet.c, Mmcaseislet
 Test file:	/book/xjtu/mcaseislet/deblend/SConstruct
 		/book/xjtu/mcaseislet/interp/SConstruct
 		/book/xjtu/mcaseislet/sep1/SConstruct
 		/book/xjtu/mcaseislet/sep2/SConstruct
+		/book/xjtu/istpocs_seislet/SConstruct
 
 7) 2-D forward modeling to generate shot records
 Main: 		Mmodeling2d.c
@@ -82,7 +84,6 @@ Test file:	/book/xjtu/test/testelastic2d/SConstruct
 		/book/xjtu/test/testaniso/SConstruct
 
 9) Radon transforms
-
 Main: 		Mmyradon1.c Mmyradon2.c
 Depends on:	ctoeplitz_reg.c, myradon2.c
 Test file: 	/book/xjtu/test/myradon2/SConstruct
