@@ -10,11 +10,15 @@ Be careful when you try to use them!
 Under this directory, I implemented the algorithms:
 
 1) POCS (projection onto convex sets), FFTW required
-Main:		Mpocs3d.c, Mfpocs3d.c, Mpocs5d.c
+Main:		Mpocs3d.c, Mfpocs3d.c, Mpocs5d.c, Mpocs3d2.c
 Depends on:	fftn.c
 Test file: 	/book/xjtu/test/fpocs3d/SConstruct
 		/book/xjtu/test/fpocs2d/SConstruct
-Note: fpocs is a two-step version of POCS. 
+Note: fpocs is a two-step version of POCS. You are able to test 
+    sfpocs3d, sffpocs3d, sfpocs3d2 by changing the name of the
+    program in /book/xjtu/test/fpocs3d/SConstruct. POCS implemented
+    in frequency domain (see sfpocs3d2) data gives much faster speed. 
+    It saves the storage and computational cost of FFT.
 
 2) DLCT (discrete linear chirp transform), FFTW required
 Main:		Mdlct.c, Mdlct2.c
