@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfadd', 'sfput', 'sfsmooth', 'sftowed_array', 'sfmakevel', 'sfacd', 'sfscale', 'sfgrey', 'sfwindow', 'sfsuread', 'sfgraph']
+data=['data/obs/vel_4layer.HH']
+size=   97178772

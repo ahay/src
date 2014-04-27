@@ -148,7 +148,7 @@ Flow('born12000.su','wavelet12000.su csq_4layersm dcsq_4layer hdr12000.su',
      ''',stdin=0,stdout=-1,workdir='born12000.work')
 
 # rtm
-Flow('migr12000','born12000.su csq_4layersm dcsq_4layer wavelet12000',
+Flow('migr12000','born12000.su csq_4layersm dcsq_4layer wavelet12000.su',
      '''
      scale < ${SOURCES[2]} > $TARGET dscale=0.0 &&
      acd deriv=1 adjoint=1 nsnaps=10 order=2 cfl=0.5 cmin=1.0 cmax=5.0 
