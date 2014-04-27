@@ -40,6 +40,7 @@ void lsrtm2d_init(int nm_, int nd_, float tol_, bool verb_)
 }
 
 void lsrtm2d_close()
+/*< free the allocated variables >*/
 {
 	free(rr);
 	free(gr);
