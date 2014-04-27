@@ -1,4 +1,5 @@
 /* POCS for 3D missing data interpolation: frequency domain inversion
+NB: using advanced features of FFTW3.
 */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -55,7 +56,7 @@ int main(int argc, char* argv[])
     	bool verb;
     	int n1, n2, n3, num, nthr, n[3], i1, i2, i3, index, nw, niter, iter;
     	float thr, pclip, m;		
-    	float *tdat, *mask;
+    	float  *thresh, *tdat, *mask;
 	fftwf_complex *wdat, *wdat1;
 	fftwf_plan fft1, ifft1, fft23, ifft23;
     	sf_file Fin, Fout, Fmask;/* mask and I/O files*/ 
@@ -79,13 +80,14 @@ int main(int argc, char* argv[])
     	if (!sf_histint(Fin,"n1",&n1)) sf_error("No n1= in input");
     	if (!sf_histint(Fin,"n2",&n2)) sf_error("No n2= in input");
     	if (!sf_histint(Fin,"n3",&n3)) sf_error("No n3= in input");
-	num=n1*n2*n3;
 	n[0]=n1;
 	n[1]=n2;
 	n[2]=n3;	
 	nw=n1/2+1;
+	num=nw*n2*n3;//total number of elements in frequency domain
 
     	/* allocate data and mask arrays */
+	thresh=(float*)malloc(nw*n2*n3*sizeof(float));
     	tdat=(float*)fftwf_malloc(n1*n2*n3*sizeof(float)); // data in time domain
     	wdat=(fftwf_complex*)fftwf_malloc(nw*n2*n3*sizeof(fftwf_complex));// data in frequency domain
     	wdat1=(fftwf_complex*)fftwf_malloc(nw*n2*n3*sizeof(fftwf_complex));// data in frequency domain
@@ -104,24 +106,31 @@ int main(int argc, char* argv[])
 
 	// transform the data from time domain to frequency domain: tdat-->wdat 
 	fftwf_execute(fft1);
-	memcpy(wdat1, wdat, nw*n2*n3*sizeof(fftwf_complex));
+	for(i1=0; i1<num; i1++) wdat[i1]/=sqrtf(n1);
+	memset(wdat1,0,num*sizeof(fftwf_complex));
 
     	for(iter=1; iter<=niter; iter++)
     	{
 		fftwf_execute(fft23);
+	#ifdef _OPENMP
+	#pragma omp parallel for default(none)	\
+		private(i1)			\
+		shared(wdat1,num,n2,n3)
+	#endif
+		for(i1=0; i1<num; i1++) wdat1[i1]/=sqrtf(n2*n3);
 
 		// perform hard thresholding
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i1)			\
-		shared(tdat,wdat1,num)
+		shared(thresh,wdat1,num)
 	#endif
-		for(i1=0; i1<num; i1++)	tdat[i1]=cabsf(wdat1[i1]);
+		for(i1=0; i1<num; i1++)	thresh[i1]=cabsf(wdat1[i1]);
 
 	   	nthr = 0.5+num*(1.-0.01*pclip); 
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
-		thr=sf_quantile(nthr,num,tdat);
+		thr=sf_quantile(nthr,num,thresh);
 		thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 
 	#ifdef _OPENMP
@@ -132,32 +141,41 @@ int main(int argc, char* argv[])
 		for(i1=0; i1<num; i1++) wdat1[i1]*=(cabsf(wdat1[i1])>thr?1.:0.);
 
 		fftwf_execute(ifft23);
-		
+	#ifdef _OPENMP
+	#pragma omp parallel for default(none)	\
+		private(i1)			\
+		shared(wdat1,num,n2,n3)
+	#endif
+		for(i1=0; i1<num; i1++) wdat1[i1]/=sqrtf(n2*n3);		
 
-		/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
+		// d_rec = d_obs+(1-M)*A T{ At(d_rec) } 
 	#ifdef _OPENMP
 	#pragma omp parallel for collapse(3) default(none)	\
 		private(i1,i2,i3,index,m)			\
-		shared(mask,wdat,wdat1,n1,n2,n3)
+		shared(mask,wdat,wdat1,nw,n2,n3)
 	#endif
 		for(i3=0; i3<n3; i3++)	
 		for(i2=0; i2<n2; i2++)
-		for(i1=0; i1<n1; i1++)
+		for(i1=0; i1<nw; i1++)
 		{ 
 			m=(mask[i2+i3*n2])?1:0;
-			index=i1+n1*i2+n1*n2*i3;
+			index=i1+nw*i2+nw*n2*i3;
 			wdat1[index]=wdat[index]+(1.-m)*wdat1[index];
 		}
+
 		if (verb)    sf_warning("iteration %d;",iter);
     	}
 
 	// transform the data from frequency domain to time domain: wdat-->tdat
-	memcpy(wdat, wdat1, nw*n2*n3*sizeof(fftwf_complex));
+	memcpy(wdat, wdat1, num*sizeof(fftwf_complex));
 	fftwf_execute(ifft1);
+	for(i1=0; i1<n1*n2*n3; i1++) tdat[i1]/=sqrtf(n1);
     	sf_floatwrite(tdat, n1*n2*n3, Fout);
 
+	free(thresh);
 	fftwf_free(tdat);
-	fftwf_free(wdat);	
+	fftwf_free(wdat);
+	fftwf_free(wdat1);		
 
 
     	exit(0);
