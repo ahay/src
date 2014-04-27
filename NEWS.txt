@@ -42,6 +42,8 @@ To the reproducible documents collection:
   GPU implementation (Yang, Gao, and Wang)
 * tccs/emdpf: Random noise attenuation by f-x empirical mode
   decomposition predictive filtering (Chen and Ma)
+* Changes trip/iwave to trip/struct: IWAVE structure and basic use
+  cases (Symes)
 
 To SCons:
 
