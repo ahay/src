@@ -40,11 +40,15 @@ Result('zero3',grey3('Missing 50% traces'))
 Flow('mask','mask1','dd type=float')
 
 
-# use sffpocs3d/sfpocs3d here!
+# use sffpocs3d/sfpocs3d/sfpocs3d2 here!
+# frequency domain inversion is much faster, computation saving!
 Flow('rec','zero3 mask',
      '''
      fpocs3d mask=${SOURCES[1]} niter=100 verb=y normp=0.4 pclip=3
      ''')
+
+#pocs3d mask=${SOURCES[1]} niter=100 verb=y normp=0.4 pclip=3
+#pocs3d2 mask=${SOURCES[1]} niter=100 verb=y normp=0.4 pclip=3
 
 Plot('rec',grey3('Reconstructed'))
 Result('rec',grey3('Reconstructed'))
