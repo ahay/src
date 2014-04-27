@@ -1,4 +1,4 @@
-/* POCS for 3D missing data interpolation: frequency domain inversion
+/* POCS for 3D missing data interpolation for frequency domain data
 NB: using advanced features of FFTW3.
 */
 /*

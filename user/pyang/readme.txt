@@ -19,6 +19,11 @@ Note: fpocs is a two-step version of POCS. You are able to test
     program in /book/xjtu/test/fpocs3d/SConstruct. POCS implemented
     in frequency domain (see sfpocs3d2) data gives much faster speed. 
     It saves the storage and computational cost of FFT.
+For more information on FPOCS, check the paper:
+ Yang Pengliang, Gao Jinghuai, Chen Wenchao, "On analysis-based 
+ two-step interpolation methods for randomly sampled seismic data"
+ Computers & Geosciences 51 449-461 2013
+
 
 2) DLCT (discrete linear chirp transform), FFTW required
 Main:		Mdlct.c, Mdlct2.c
@@ -45,13 +50,19 @@ Note: rtm2d.c is coded following the linear operator standard in
 5) Prestack RTM using GPU with staggered grid
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
 Depends on:	cuda_kernels.cu
-Test file: 	/book/xjtu/test/Testeb/SConstruct
+Test file: 	/book/xjtu/gpurtm/marmousi/SConstruct
+		/book/xjtu/gpurtm/sigsbee/SConstruct
+		/book/xjtu/test/Testeb/SConstruct
 Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite 
 	difference coefficients with order-NJ(NJ=2N);
 	(b) MTesteb.c is a file to test the validity of the proposed
 	effective boundary saving strategy! 
 	(c) Most of the detail explaination for GPU-based RTM can be
 	found in the codes.
+For more information, check the paper:
+ Yang, Pengliang, Jinghuai Gao, and Baoli Wang. "RTM using effective 
+ boundary saving: A staggered grid GPU implementation." Computers & 
+ Geosciences (2014).
 
 6) Seislet-based POCS, IST and MCA algorithm (for 2D validation)
 Main:		Mpocsseislet.c, Mistseislet.c, Mmcaseislet
@@ -75,6 +86,7 @@ Test file:	/book/xjtu/test/testelastic2d/SConstruct
 Main: 		Mmyradon1.c Mmyradon2.c
 Depends on:	ctoeplitz_reg.c, myradon2.c
 Test file: 	/book/xjtu/test/myradon2/SConstruct
+NB: 	Myradon1.c is not tested yet!
 
 
 ===================================================================
