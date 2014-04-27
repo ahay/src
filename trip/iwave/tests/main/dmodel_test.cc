@@ -88,7 +88,7 @@ namespace {
     std::ostringstream s;
     IOTaskWriter(tr,s);
     for (int i=0;i<tr.size();i++) delete tr[i];
-    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_d2 rarrindex=0 input=1\nindex=2 keyword=data rarrindex=1 input=0\n";
+    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_d2 rarrindex=0 input=1\nindex=3 keyword=data rarrindex=1 input=0\n";
     EXPECT_EQ(t,s.str());
 #ifdef GTEST_VERBOSE
     details<<"======================================================\n";
@@ -103,7 +103,7 @@ namespace {
     std::ostringstream s;
     IOTaskWriter(tr,s);
     for (int i=0;i<tr.size();i++) delete tr[i];
-    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_d2 rarrindex=0 input=1\nindex=3 keyword=csq_d3 rarrindex=0 input=1\nindex=3 keyword=data rarrindex=1 input=0\n";
+    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_d2 rarrindex=0 input=1\nindex=4 keyword=csq_d3 rarrindex=0 input=1\nindex=7 keyword=data rarrindex=1 input=0\n";
     EXPECT_EQ(t,s.str());
 #ifdef GTEST_VERBOSE
     details<<"======================================================\n";
@@ -157,7 +157,7 @@ namespace {
     std::ostringstream s;
     IOTaskWriter(tr,s);
     for (int i=0;i<tr.size();i++) delete tr[i];
-    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_b2 rarrindex=0 input=0\nindex=2 keyword=data rarrindex=1 input=1\n";
+    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_b2 rarrindex=0 input=0\nindex=3 keyword=data rarrindex=1 input=1\n";
     EXPECT_EQ(t,s.str());
 #ifdef GTEST_VERBOSE
     details<<"======================================================\n";
@@ -172,7 +172,7 @@ namespace {
     std::ostringstream s;
     IOTaskWriter(tr,s);
     for (int i=0;i<tr.size();i++) delete tr[i];
-    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_d2 rarrindex=0 input=1\nindex=3 keyword=csq_b3 rarrindex=0 input=0\nindex=3 keyword=data rarrindex=1 input=1\n";
+    std::string t = "index=0 keyword=csq rarrindex=0 input=1\nindex=0 keyword=source rarrindex=1 input=1\nindex=0 keyword=movie rarrindex=1 input=0\nindex=0 keyword=init rarrindex=1 input=1\nindex=1 keyword=csq_d1 rarrindex=0 input=1\nindex=2 keyword=csq_d2 rarrindex=0 input=1\nindex=4 keyword=csq_b3 rarrindex=0 input=0\nindex=7 keyword=data rarrindex=1 input=1\n";
     EXPECT_EQ(t,s.str());
 #ifdef GTEST_VERBOSE
     details<<"======================================================\n";

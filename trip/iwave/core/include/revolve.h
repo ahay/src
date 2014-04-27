@@ -91,7 +91,7 @@ class Schedule
 	
 	/** This function does not do anything but must be derived
 	*/
-	virtual ACTION::action revolve(ostream & str) {};  
+	virtual ACTION::action revolve(ostream & str) = 0;  
 	/** The necessary number of forward steps without recording is calculated by the function 
                       NUMFORW(STEPS,SNAPS)                          
 	STEPS denotes the total number of time steps, i.e. FINE-CAPO     
@@ -100,15 +100,15 @@ class Schedule
 	
 	int numforw(int steps, int snaps, ostream & str);
 	/** This function is virtual.*/
-	virtual int get_capo(){};	
+	virtual int get_capo()=0;	
 	/** This function is virtual.*/
-	virtual int get_fine(){};	
+	virtual int get_fine()=0;	
 	/** This function is virtual.*/
-	virtual int get_check() {};	
+	virtual int get_check()=0;	
 	/** This function is virtual.*/
-	virtual void set_fine(int f){};  
+	virtual void set_fine(int f)=0;  
 	/** This function is virtual.*/
-	virtual void set_capo(int c) {}; 
+	virtual void set_capo(int c)=0; 
 	/** This function is virtual.*/
 	int get_snaps() { return snaps; }
 	/** This function returns the pointer of a Checkpoint class.
@@ -149,11 +149,16 @@ class Online : public Schedule
 	/** This is the Copy Constructor*/
 	Online(Online &o);
 
-	virtual ACTION::action revolve(ostream & str) {};
+	ACTION::action revolve(ostream & str) { return ACTION::error;}
+	// already inherited from schedule
+	//virtual ACTION::action revolve(ostream & str)=0;
 	/** This function returns the index of the last stored checkpoint.*/
 	int get_check() { return check; }
 	int get_capo()  { return capo; }
-	virtual int get_fine() {};
+	// already virtual in parent class
+	//	virtual int get_fine()=0;
+	int get_fine() { return -1; }
+	void set_fine(int) {}
 	/** This function returns the variable output.*/
 	bool get_output()      { return output; }
 	void set_capo(int c) { capo=c; }
@@ -194,6 +199,7 @@ class Online_r2 : public Online
 	int get_capo()  { return capo; }
 	int get_fine()  { return -1; }
 	bool get_output()      { return output; }
+	void set_fine(int) {}
 
 	~Online_r2();
 
@@ -228,6 +234,8 @@ class Online_r3 : public Online
 	int get_capo()  { return capo; }
 	/** This function returns -1 because the end is not still reached.*/
 	int get_fine()  { return -1; }
+
+	void set_fine(int) {}
 
 	/** This function returns the index of the checkpoint that can be replaced (Replacement condition). The argument number means that all checkpoints that fulfill the Replacement condition before number cannot be used.*/ 
 	int choose_cp(int number);
@@ -305,11 +313,11 @@ class Arevolve : public Online
 };
 
 /**
-\class Moin
-This class creates a checkpoint schedule that minimizes the repetition rate for a checkpoint distribution. This class is called after 
-the almost optimal Online Checkpointing approach has exceeded its maximum number of time steps hence beta(c,3).
-\brief class for Online Checkpointing Schedules 
-*/
+\class Moin This class creates a checkpoint schedule that minimizes the
+repetition rate for a checkpoint distribution. This class is called
+after the almost optimal Online Checkpointing approach has exceeded
+its maximum number of time steps hence beta(c,3).  \brief class for
+Online Checkpointing Schedulesx */
 class Moin : public Online
 {
 	public:
@@ -324,6 +332,8 @@ class Moin : public Online
 	void adjust_cp(int index);
 	/** This function returns advance or takeshot during the forward integration. */
 	enum ACTION::action revolve(ostream & str);
+	int get_fine()  { return -1; }
+	void set_fine(int) {}
 
 	~Moin() { }
 	

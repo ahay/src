@@ -503,14 +503,14 @@ int rsfread_base(ireal * a,
 
     /* allocate read buffer */
     fbuf=(float *)usermalloc_(recsize_b);
-    for (i=0;i<noffs;i++) {
+    for (i=0;i<(int)noffs;i++) {
       /* seek to read segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
 	fprintf(stream,"Error: rsfread from fseeko at file offset %ld\n",(intmax_t)(goffs[i]*sizeof(float)+cur_pos)); 
 	err=E_FILE;
       }
       /* read in byte string */
-      if (!err && (gl_na[0] != fread(fbuf,sizeof(float),gl_na[0],fp))) {
+      if (!err && (gl_na[0] != (int)fread(fbuf,sizeof(float),gl_na[0],fp))) {
 	fprintf(stream,"Error: rsfread from fread for array offset %ld\n",(intmax_t)loffs[i]);
 	fprintf(stream,"-- failed to read %d words at file offset %ld\n",
 		gl_na[0],(intmax_t)(goffs[i]*sizeof(float)+cur_pos)); 
@@ -1047,7 +1047,7 @@ int rsfwrite_proto(ireal * a,
     /* allocate float buffer */
     fbuf=(float *)usermalloc_(recsize_b);
 
-    for (i=0;i<noffs;i++) {
+    for (i=0;i<(int)noffs;i++) {
       /* seek to write segment */
       if (!err && fseeko(fp,goffs[i]*sizeof(float) + cur_pos,SEEK_SET)) {
 	fprintf(stream,"Error: rsfwrite from fseeko at file offset %ld\n",(intmax_t)goffs[i]); 
@@ -1067,7 +1067,7 @@ int rsfwrite_proto(ireal * a,
 #endif
       }
       /* write out float buffer */
-      if (!err && (na[0] != fwrite(fbuf,sizeof(float),na[0],fp))) {
+      if (!err && (na[0] != (int)fwrite(fbuf,sizeof(float),na[0],fp))) {
 	fprintf(stream,"Error: rsfwrite from fwrite at array offset %ld\n",(intmax_t)loffs[i]);
 	fprintf(stream,"failed to write %d words\n",na[0]);
 	err=E_FILE;

@@ -121,11 +121,6 @@ int fd_setcompdom(FILE * stream, IPNT cdims, IPNT crank,
 		  /*		  int m_size, */
 		  IPNT gtype[RDOM_MAX_NARR],
 		  IWaveInfo const & ic) {
-		  /*,
-		    eliminated in favor of standard fd_isarr 11.13
-		  int (*isarr)(int)) {
-    /*		  int (*isarr)(int), */
-    /*		  int (*getindices)(int)) { */
     /**
      * virtual start and end: physical + artificial,  
      * assume physical start at IPNT_0
@@ -320,7 +315,7 @@ int fd_modelcrea(IPNT cdims, IPNT crank, PARARRAY * par, FILE * stream, IMODEL *
 	IASN(dge[idim], IPNT_0);
     }
 
-    if (err=fd_setcompdom(stream, cdims, crank, model, dgs, dge, gtype, ic) ) {
+    if ((err=fd_setcompdom(stream, cdims, crank, model, dgs, dge, gtype, ic)) ) {
 	fprintf(stream,"ERROR: fd_modelcrea from fd_setcompdom, err=%d\n",err);
 	fflush(stream);
 	return err;

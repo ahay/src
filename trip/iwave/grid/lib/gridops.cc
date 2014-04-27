@@ -1604,7 +1604,7 @@ void GridAdjExtendFO::operator()(LocalDataContainer<ireal> & y,
   }
 
   GridExtendOp::GridExtendOp(GridExtendOp const & op)
-    : n_ext(op.n_ext), ext(op.ext), fac(op.fac), dom(op.dom), rng(op.rng) {}
+    : dom(op.dom), rng(op.rng), n_ext(op.n_ext), ext(op.ext), fac(op.fac) {}
 
   void GridExtendOp::apply(Vector<ireal> const & x,
 			   Vector<ireal> & y) const {

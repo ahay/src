@@ -6,7 +6,7 @@
 
 #define DT_TOL 0.001
 
-char * sdoc[] = { 
+const char * sdoc[] = { 
   "Usage: towed_array.x data= src= towed_src=",
   "",
   "Purpose: create towed streamer source traces, by transferring source",

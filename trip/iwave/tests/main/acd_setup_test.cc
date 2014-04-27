@@ -1801,8 +1801,11 @@ namespace {
       
       bool dryrun=true;
       ofstream drystr("dryrun_sim_fwd_ord0");
-      IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps,dryrun,drystr);
+      cerr<<"1\n";
+      IWaveSim * sim = new IWaveSim(order,fwd,*par,stream,ic,printact,snaps,dryrun,drystr,cerr);
+      cerr<<"2\n";
       sim->run();
+      cerr<<"3\n";
       drystr.close();
       delete sim;
       ps_delete(&par);

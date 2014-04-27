@@ -258,11 +258,11 @@ namespace TSOpt {
     
   private:
     
+    Space<ireal> const & dom;
+    Space<ireal> const & rng;
     std::vector<int> n_ext;
     std::vector<bool> ext;
     std::vector<ireal> fac;
-    Space<ireal> const & dom;
-    Space<ireal> const & rng;
 
     GridExtendOp();
 

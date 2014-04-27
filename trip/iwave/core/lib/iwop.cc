@@ -76,7 +76,7 @@ namespace TSOpt {
   IWaveSpace::IWaveSpace(IWaveSpace const & sp)
     : _s(sp._s.size()), _keys(sp._keys) {
     try {
-      for (int i=0;i<sp._s.size(); i++) {
+      for (size_t i=0;i<sp._s.size(); i++) {
 	// case list, again - icky poo
 #ifdef IWAVE_USE_MPI
 	MPIGridSpace const * gsp = NULL;
@@ -96,10 +96,10 @@ namespace TSOpt {
 #else
 	GridSpace const * gsp = NULL;
 	SEGYSpace const * tsp = NULL;
-	if (gsp=dynamic_cast<GridSpace const *>((sp._s)[i])) {
+	if ((gsp=dynamic_cast<GridSpace const *>((sp._s)[i]))) {
 	  _s[i]=new GridSpace(*gsp);
 	}
-	else if (tsp=dynamic_cast<SEGYSpace const *>((sp._s)[i])) {
+	else if ((tsp=dynamic_cast<SEGYSpace const *>((sp._s)[i]))) {
 	  _s[i]=new SEGYSpace(*tsp);	    
 	}
 	else {
@@ -118,7 +118,7 @@ namespace TSOpt {
   }
     
   IWaveSpace::~IWaveSpace() {
-    for (int i=0;i<_s.size();i++) {
+    for (size_t i=0;i<_s.size();i++) {
       delete _s[i];
     }
   }
@@ -139,7 +139,6 @@ namespace TSOpt {
   Space<ireal> const & IWaveSpace::operator[](size_t i) const { return *(_s[i]); }
   std::vector<std::string> IWaveSpace::getKeys() const { return _keys; }
 
-
   void IWaveOp::param_set(RVL::Vector<ireal> const & x, 
 			  PARARRAY & pars, 
 			  IWaveSpace const & sp,
@@ -152,11 +151,11 @@ namespace TSOpt {
 	e<<"Error: IWaveOp::param_set\n";
 	e<<"  vector, key list have different numbers of components\n";
 	e<<"  key list:\n";
-	for (int i=0;i<sp.getKeys().size();i++) e<<"    keys[i]="<<sp.getKeys()[i]<<"\n";
+	for (size_t i=0;i<sp.getKeys().size();i++) e<<"    keys[i]="<<sp.getKeys()[i]<<"\n";
 	if (suf.size()>0) e<<"  suffix = "<<suf<<"\n";
 	throw e;
       }
-      for (int i=0;i<sp.getKeys().size();i++) {
+      for (size_t i=0;i<sp.getKeys().size();i++) {
 	AssignParams ap(pars,sp.getKeys()[i]+suf,stream);
 	cx[i].eval(ap);
       }

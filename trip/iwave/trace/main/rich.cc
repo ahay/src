@@ -6,7 +6,7 @@
 
 #define TOL 0.001
 
-char * sdoc[] = { 
+const char * sdoc[] = { 
   "Usage: richext.x in1= in2= out= par1= par2= order=[1]",
   "",
   "Synopsis: assumes that SU trace data files in1 and in2 represent",
@@ -148,22 +148,28 @@ int main(int argc, char ** argv) {
 
   while (fgettr(fp1,&tr1) && fgettr(fp2,&tr2)) {
 
+    char * str = (char *) malloc(128*sizeof(char));
+
     /* check that time sampling is compatible */
-    gethdval(&tr1,"ns",&val);
-    nt = vtoi(hdtype("ns"),val);
-    gethdval(&tr2,"ns",&val);
-    if (nt != vtoi(hdtype("ns"),val)) {
+    strcpy(str,"ns");
+    gethdval(&tr1,str,&val);
+    nt = vtoi(hdtype(str),val);
+    gethdval(&tr2,str,&val);
+    if (nt != vtoi(hdtype(str),val)) {
       printf("Error: mismatch in number of time samples\n");
       exit(1);
     }
     
-    gethdval(&tr1,"dt",&val);
-    dt = 0.001*vtof(hdtype("dt"),val);
-    gethdval(&tr2,"dt",&val);
-    if (fabs(dt - 0.001*vtof(hdtype("dt"),val))> TOL*dt) {
+    strcpy(str,"dt");
+    gethdval(&tr1,str,&val);
+    dt = 0.001*vtof(hdtype(str),val);
+    gethdval(&tr2,str,&val);
+    if (fabs(dt - 0.001*vtof(hdtype(str),val))> TOL*dt) {
       printf("Error: mismatch in time sample rate\n");
       exit(1);
     }
+
+    free(str);
 
     /* whack in2 header into output trace */
     memcpy(&tr,&tr2,HDRBYTES*sizeof(char));

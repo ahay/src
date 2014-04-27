@@ -91,7 +91,7 @@ namespace TSOpt {
       memset(tmpbuf,0,get_datasize_grid(protog)*sizeof(ireal));
       for (int ip=0; ip<get_panelnum_grid(protog); ip++) {
 	if (get_datasize_grid(protog) != 
-	    fwrite(tmpbuf,sizeof(ireal),get_datasize_grid(protog),fp)) {
+	    (int)fwrite(tmpbuf,sizeof(ireal),get_datasize_grid(protog),fp)) {
 	  RVLException e;
 	  e<<"Error: GridDC::open_p\n";
 	  e<<"  failed to write panel "<<ip<<" of "<<get_datasize_grid(protog)<<" zeroes to data file\n";

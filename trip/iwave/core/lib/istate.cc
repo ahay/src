@@ -246,7 +246,7 @@ namespace TSOpt {
   }
 
   IWaveSampler::IWaveSampler(IWAVE * state, string key, PARARRAY & pars, FILE * stream)
-    : axes(0), tg(NULL), dump_term(0), prev_panelindex(-1) {
+    : axes(0), prev_panelindex(-1), tg(NULL), dump_term(0) {
     
     samplekey=key;
     pname="";
@@ -266,7 +266,7 @@ namespace TSOpt {
       // file is used in iwave_fopen on rk=0.
       int cprotolen=0;
       if (retrieveGlobalRank()==0) {
-	if (rname = iwave_getproto(pname.c_str())) gname = rname;
+	if ((rname = iwave_getproto(pname.c_str()))) gname = rname;
 	else gname = pname;
 	// C string length 
 	cprotolen = gname.size()+1;
@@ -419,7 +419,7 @@ namespace TSOpt {
       destroy_tracegeom(tg);
       delete tg;
     }
-    for (int i=0;i<axes.size(); i++) {
+    for (int i=0;i<(int)axes.size(); i++) {
       delete axes[i];
     }
   }
@@ -438,13 +438,13 @@ namespace TSOpt {
 
   bool IWaveSampler::has_Axis(int id) const {
     bool has = false;
-    for (int i=0; i<axes.size(); i++) 
+    for (int i=0; i<(int)axes.size(); i++) 
       has = has || (axes[i]->id == id);
     return has;
   }
 
   axis const * IWaveSampler::getTimeAxis(int dim) const {
-    for (int i=0; i<axes.size();i++) {
+    for (int i=0; i<(int)axes.size();i++) {
       if (axes[i]->id == dim) return axes[i];
     }
     return NULL;
@@ -452,7 +452,7 @@ namespace TSOpt {
 
   ireal IWaveSampler::getCellVol() const {
     ireal cv = REAL_ONE;
-    for (int i=0; i<axes.size();i++) 
+    for (int i=0; i<(int)axes.size();i++) 
       cv *= axes[i]->d;
     return cv;
   }
@@ -460,7 +460,7 @@ namespace TSOpt {
   ireal IWaveSampler::getRecipCellVol() const {
     ireal cv = REAL_ONE;
     ireal rcv = REAL_ONE;
-    for (int i=0; i<axes.size();i++) 
+    for (int i=0; i<(int)axes.size();i++) 
       cv *= axes[i]->d;
     if (ProtectedDivision<ireal>(REAL_ONE,cv,rcv)) {
       RVLException e;
@@ -588,7 +588,7 @@ namespace TSOpt {
 	  float t = g.axes[g.dim].d*(step[g.dim]-istart[g.dim]) + g.axes[g.dim].o;
 	  if (dryrun) drystr<<"  sampler on rarr "<<ridx<<" iwave "<<iwdx<<" time = "<<t<<"\n";
 	  // warn if sampling will be forced to duplicate
-	  if ((istop[g.dim]-istart[g.dim]+1 < a->n) && (step[g.dim]==istart[g.dim])) {
+	  if ((istop[g.dim]-istart[g.dim]+1 < (int)(a->n)) && (step[g.dim]==istart[g.dim])) {
 	    cerr<<"NOTE: IWaveSampler::sample\n";
 	    cerr<<"  number of time steps = "<<istop[g.dim]-istart[g.dim]+1;
 	    cerr<<" less than requested number of time samples = "<<a->n<<"\n";
@@ -933,7 +933,7 @@ namespace TSOpt {
     : own(false), sa(iwave_max(sv.size()/2,0)),
       rd(iwave_max(sv.size()/2,0)), ic(_ic) {
     if (sv.size()>1) {
-      for (int i=0;i<sv.size()/2;i++) {
+      for (size_t i=0;i<sv.size()/2;i++) {
 	sa[i]=sv[i];
 	rd[i]=&((sv[i]->model).ld_c);
       }
@@ -954,14 +954,14 @@ namespace TSOpt {
       for (size_t i=0; i<sa.size(); i++) {
 	sa[i]=new IWAVE;
 	int err=0;
-	if (err=iwave_construct(sa[i],&(_pars),_stream,ic)) {
+	if ((err=iwave_construct(sa[i],&(_pars),_stream,ic))) {
 	  RVLException e;
 	  e<<"Error: IWaveTree main constructor, IWAVE["<<i<<"]\n";
 	  e<<"  returning error "<<err<<" from iwave_construct\n";
 	  throw e;
 	}
 	// clean it up
-	if (err=rd_a_zero(&((sa[i]->model).ld_a))) {
+	if ((err=rd_a_zero(&((sa[i]->model).ld_a)))) {
 	  RVLException e;
 	  e<<"Error: IWaveTree main constructor, IWAVE["<<i<<"]\n";
 	  e<<"  returning error "<<err<<" from rd_a_zero\n";
@@ -1001,9 +1001,9 @@ namespace TSOpt {
 		     bool _dryrun,
 		     ostream & _drystr,
 		     ostream & _announce)
-    : stream(_stream), ic(_ic), order(_order), fwd(_fwd), 
-      printact(_printact), snaps(_snaps),
-      narr(0), cps(NULL), 
+    : ic(_ic), fwd(_fwd), stream(_stream),  
+      printact(_printact), order(_order), snaps(_snaps),
+      cps(NULL), narr(0), 
       dryrun(_dryrun), drystr(_drystr), 
       announce(_announce) {
     try {
@@ -1096,7 +1096,7 @@ namespace TSOpt {
 	narr = snaps*pow2(order-1)*ndyn;
 	RARR * cpstmp = new RARR[narr];
 	RARR ** cpstmp2 = new RP[snaps*pow2(order-1)];
-	for (int i=0;i<snaps*pow2(order-1);i++) cpstmp2[i]=&(cpstmp[i*ndyn]);
+	for (size_t i=0;i<snaps*pow2(order-1);i++) cpstmp2[i]=&(cpstmp[i*ndyn]);
 	cps = new RPP[snaps];
 	for (int i=0;i<snaps;i++) cps[i]=&(cpstmp2[i*pow2(order-1)]);
 	int l=0;
@@ -1108,7 +1108,7 @@ namespace TSOpt {
 	    ra_a_gse(&((w->getRefStateArray())[0]->model.ld_a._s[k]),gs,ge);
 	    int ndim = (w->getRefStateArray())[0]->model.ld_a._s[k].ndim;
 	    for (int i=0;i<snaps;i++) {
-	      for (int j=0;j<pow2(order-1);j++) {
+	      for (size_t j=0;j<pow2(order-1);j++) {
 		// ra_create cps[i][j][l] -- check l
 		if (l<0 || l>ndyn-1) {
 		  RVLException e;
@@ -1131,7 +1131,7 @@ namespace TSOpt {
       // step 3: construct list of samplers, axes
       // note sampler exposed to first IWAVE - grid, time step info
       s.clear();
-      for (int i=0; i<t.size(); i++) {
+      for (size_t i=0; i<t.size(); i++) {
 	IWaveSampler * tmp = NULL;
 #ifdef IWAVE_VERBOSE
 	cerr<<"construct sampler "<<i<<" on keyword "<<t[i]->keyword<<"\n";
@@ -1235,7 +1235,7 @@ namespace TSOpt {
   
   IWaveSim::~IWaveSim() {
     //    cerr<<"destructor\n";
-    for (int i=0; i<t.size(); i++) {
+    for (size_t i=0; i<t.size(); i++) {
       //cerr<<"destroy sampler "<<i<<endl;
       if (s.at(i)) {
 	//	cerr<<"destroy sampler "<<i<<endl;
@@ -1244,14 +1244,14 @@ namespace TSOpt {
     }
     //    cerr<<"destroy state\n";
     if (w) delete w;
-    for (int i=0; i<t.size(); i++) {
+    for (size_t i=0; i<t.size(); i++) {
       //      cerr<<"destroy iotask "<<i<<endl;
       if (t.at(i)) delete t.at(i); 
     }
     if (cps) {
       //      cerr<<"destroy checkpoints\n";
       for (int i=0;i<snaps;i++) {
-	for (int j=0;j<pow2(order-1);j++) {
+	for (size_t j=0;j<pow2(order-1);j++) {
 	  for (int k=0;k<ndyn;k++) {
 	    ra_destroy(&(cps[i][j][k]));
 	  }
@@ -1294,6 +1294,8 @@ namespace TSOpt {
 	}
 	panelindex++;
       }
+
+      cerr<<"here\n";
 
       // pull out fdpars for use in time step - same in every
       // step, and for every RDOM, so do it once here and get 
@@ -1362,7 +1364,7 @@ namespace TSOpt {
 	    drystr<<"\nIWaveSim::run - FORWARD DRY RUN\n\n";
 	  }
 
-	  for (int i=0;i<w->getStateArray().size();i++) {
+	  for (size_t i=0;i<w->getStateArray().size();i++) {
 	    iwave_dynamic_init(w->getStateArray()[i],start[g.dim],ic);
 	  }
 
@@ -1378,7 +1380,7 @@ namespace TSOpt {
 	      cerr<<"it="<<it<<" t="<<ot+it*dt<<endl;
 	      }
 	    */
-	    for (int i=0; i<t.size(); i++) {
+	    for (size_t i=0; i<t.size(); i++) {
 	      if (s[i]) {
 		//		cerr<<"rk="<<retrieveGlobalRank()<<" sampler["<<i<<"]\n";
 		s[i]->sample(g,step,fwd,
@@ -1388,6 +1390,9 @@ namespace TSOpt {
 	      }
 	    }
 	    
+	    // first time through, call check
+	    if (it==start[g.dim]) ic.get_check()(w->getRDOMArray()[0],fdm,stream);
+
 	    if (dryrun) {
 	      drystr<<"\nIWaveSim::run fwd step "<<it<<" -> "<<it+1<<"\n";
 	    }
@@ -1398,9 +1403,9 @@ namespace TSOpt {
 		//		cerr<<"synch\n";
 		// in fwd loop, synch ALL dynamic arrays
 		
-		for (int k=0; k<w->getStateArray().size(); k++) {
-		  if (w->getStateArray()[k]->printact > 5) 
-		    fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
+		for (size_t k=0; k<w->getStateArray().size(); k++) {
+		  //		  if (w->getStateArray()[k]->printact > 5) 
+		  //		    fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
 		  synch(w->getStateArray()[k],fwd,it,iv,ic,stream);
 		}
 	      }
@@ -1409,7 +1414,7 @@ namespace TSOpt {
 	  
 	  if (dryrun) drystr<<"\n";
 	  step[g.dim]=stop[g.dim];
-	  for (int i=0; i<t.size(); i++) {
+	  for (size_t i=0; i<t.size(); i++) {
 	    if (s[i]) {
 	      s[i]->sample(g,step,fwd,t[i]->input,
 			   w->getStateArray()[t[i]->iwaveindex],
@@ -1421,7 +1426,7 @@ namespace TSOpt {
 	}
 	else if (stop[g.dim]-start[g.dim]==1) {
 	  
-	  for (int i=0;i<w->getStateArray().size();i++) {
+	  for (size_t i=0;i<w->getStateArray().size();i++) {
 	    iwave_dynamic_init(w->getStateArray()[i],start[g.dim],ic);
 	  }
 
@@ -1439,20 +1444,23 @@ namespace TSOpt {
 	  // load reference data
 	  step[g.dim]=it;
 	  bool reffwd = true;
-	  for (int i=0; i<t.size(); i++) {
+	  for (size_t i=0; i<t.size(); i++) {
 	    // sample data for reference
-	    if (t[i]->iwaveindex < pow2(order-1) && s[i]) {
+	    if (t[i]->iwaveindex < (int)pow2(order-1) && s[i]) {
 	      s[i]->sample(g,step,reffwd,t[i]->input,
 			   w->getStateArray()[t[i]->iwaveindex],
 			   t[i]->rarrindex,t[i]->iwaveindex,stream,
 			   dryrun,drystr);
 	    }
 	  }
+	  // check
+          ic.get_check()(w->getRDOMArray()[0],fdm,stream);
+
 	  // load adjoint data 
 	  step[g.dim]=at;
-	  for (int i=0; i<t.size(); i++) {
+	  for (size_t i=0; i<t.size(); i++) {
 	    // pert sample
-	    if (t[i]->iwaveindex >= pow2(order-1) && s[i]) { 
+	    if (t[i]->iwaveindex >= (int)pow2(order-1) && s[i]) { 
 	      s[i]->sample(g,step,fwd,t[i]->input,
 			   w->getStateArray()[t[i]->iwaveindex],
 			   t[i]->rarrindex,t[i]->iwaveindex,stream,
@@ -1463,9 +1471,9 @@ namespace TSOpt {
 	    // backwards step - only need to synch top-order pert arrays
 	    for (int iv=fd_numsubsteps(ic)-1; iv>-1; iv--) {
 	      ic.get_timestep()(w->getRDOMArray(),fwd,iv,fdm);
-	      for (int k=pow2(order-1); k<pow2(order); k++) {
-		if (w->getStateArray()[k]->printact > 5) 
-		  fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
+	      for (size_t k=pow2(order-1); k<pow2(order); k++) {
+		//		if (w->getStateArray()[k]->printact > 5) 
+		//		  fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
 		synch(w->getStateArray()[k],fwd,at,iv,ic,stream);
 	      }
 	    }	
@@ -1479,9 +1487,9 @@ namespace TSOpt {
 	  }
 	  step[g.dim]=at;
 
-	  for (int i=0; i<t.size(); i++) {
+	  for (size_t i=0; i<t.size(); i++) {
 	    // pert sample
-	    if (t[i]->iwaveindex >= pow2(order-1) && s[i]) { 
+	    if (t[i]->iwaveindex >= (int)pow2(order-1) && s[i]) { 
 	      s[i]->sample(g,step,fwd,t[i]->input,
 			   w->getStateArray()[t[i]->iwaveindex],
 			   t[i]->rarrindex,t[i]->iwaveindex,stream,
@@ -1499,7 +1507,7 @@ namespace TSOpt {
 	  Revolve r(stop[g.dim]-start[g.dim],snaps,ostr);
 
 	  for (int i=0;i<snaps;i++) {
-	    for (int j=0;j<pow2(order-1);j++) {
+	    for (int j=0;j<(int)pow2(order-1);j++) {
 	      for (int l=0;l<ndyn;l++) {
 		if (int err=ra_a_zero(&(cps[i][j][l]))) {
 		  RVLException e;
@@ -1520,19 +1528,22 @@ namespace TSOpt {
 #endif
 	  step[g.dim]=it;
 
-	  for (int i=0;i<w->getStateArray().size();i++) {
+	  for (size_t i=0;i<w->getStateArray().size();i++) {
 	    iwave_dynamic_init(w->getStateArray()[i],start[g.dim],ic);
 	  }
 	  
-	  for (int i=0; i<t.size(); i++) {
+	  for (size_t i=0; i<t.size(); i++) {
 	    // sample data for reference
-	    if (t[i]->iwaveindex < pow2(order-1) && s[i]) {
+	    if (t[i]->iwaveindex < (int)pow2(order-1) && s[i]) {
 	      s[i]->sample(g,step,reffwd,t[i]->input,
 			   w->getStateArray()[t[i]->iwaveindex],
 			   t[i]->rarrindex,t[i]->iwaveindex,stream,
 			   dryrun,drystr);
 	    }
 	  }
+
+	  // check if it=start
+	  if (it==start[g.dim]) ic.get_check()(w->getRDOMArray()[0],fdm,stream);
 
 	  ACTION::action whatodo;
 
@@ -1545,7 +1556,7 @@ namespace TSOpt {
 
 	    if (whatodo == ACTION::takeshot) {
 	      int cp = r.getcheck();
-	      for (int j=0;j<pow2(order-1);j++) {
+	      for (int j=0;j<(int)pow2(order-1);j++) {
 		int l = 0;
 		for (int k=0;k<RDOM_MAX_NARR;k++) {
 		  if (fd_isdyn(k,ic)) {		  
@@ -1576,9 +1587,9 @@ namespace TSOpt {
 		if (!dryrun) {
 		  for (int iv=0;iv<fd_numsubsteps(ic);iv++) {
 		    ic.get_timestep()(w->getRefRDOMArray(),reffwd,iv,fdm);
-		    for (int k=0; k<pow2(order-1); k++) {
-		      if (w->getStateArray()[k]->printact > 5) 
-			fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
+		    for (size_t k=0; k<pow2(order-1); k++) {
+		      //		      if (w->getStateArray()[k]->printact > 5) 
+		      //			fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
 		      synch(w->getRefStateArray()[k],reffwd,it,iv,ic,stream);
 		    }
 		  }
@@ -1597,9 +1608,9 @@ namespace TSOpt {
 		  drystr<<"->"<<it<<endl;
 		}
 		step[g.dim]=it;
-		for (int i=0; i<t.size(); i++) {
+		for (size_t i=0; i<t.size(); i++) {
 		  // sample data for reference
-		  if (t[i]->iwaveindex < pow2(order-1) && s[i]) {
+		  if (t[i]->iwaveindex < (int)pow2(order-1) && s[i]) {
 		    s[i]->sample(g,step,reffwd,t[i]->input,
 				 w->getStateArray()[t[i]->iwaveindex],
 				 t[i]->rarrindex,t[i]->iwaveindex,stream,
@@ -1618,15 +1629,15 @@ namespace TSOpt {
 		drystr<<"  REVERSE TIME LOOP\n\n";
 	      }	      
 	      step[g.dim]=at;
-	      for (int i=0; i<t.size(); i++) {
+	      for (size_t i=0; i<t.size(); i++) {
 		// need to clean output arrays at outset of reverse time loop
-		if (t[i]->iwaveindex >= pow2(order-1)) {
+		if (t[i]->iwaveindex >= (int)pow2(order-1)) {
 		  // iwave_dynamic_init(w->getStateArray()[t[i]->iwaveindex],at,ic);
 		  //		  if (!(t[i]->input) )
 		  //		    ra_a_zero(&(w->getStateArray()[t[i]->iwaveindex]->model.ld_a._s[t[i]->rarrindex]));
 		}
 		// pert sample 
-		if (t[i]->iwaveindex >= pow2(order-1) && s[i]) { 
+		if (t[i]->iwaveindex >= (int)pow2(order-1) && s[i]) { 
 		  s[i]->sample(g,step,fwd,t[i]->input,
 			       w->getStateArray()[t[i]->iwaveindex],
 			       t[i]->rarrindex,t[i]->iwaveindex,stream,
@@ -1636,9 +1647,9 @@ namespace TSOpt {
 	      if (!dryrun) {
 		for (int iv=fd_numsubsteps(ic)-1; iv>-1; iv--) {
 		  ic.get_timestep()(w->getRDOMArray(),fwd,iv,fdm);
-		  for (int k=pow2(order-1); k<pow2(order); k++) {
-		    if (w->getStateArray()[k]->printact > 5) 
-		      fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
+		  for (size_t k=pow2(order-1); k<pow2(order); k++) {
+		    //		    if (w->getStateArray()[k]->printact > 5) 
+		    //		      fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
 		    synch(w->getStateArray()[k],fwd,at,iv,ic,stream);
 		  }
 		}	
@@ -1667,9 +1678,9 @@ namespace TSOpt {
 	      cerr<<"backwards step"<<at<<"before sample iwdx=1 ridx=1 ucb="<<
 		(w->getRDOMArray()[order]->_s)[1]._s0[48]<<"\n";
 #endif
-	      for (int i=0; i<t.size(); i++) {
+	      for (size_t i=0; i<t.size(); i++) {
 		// pert sample
-		if (t[i]->iwaveindex >= pow2(order-1) && s[i]) { 
+		if (t[i]->iwaveindex >= (int)pow2(order-1) && s[i]) { 
 		  s[i]->sample(g,step,fwd,t[i]->input,
 			       w->getStateArray()[t[i]->iwaveindex],
 			       t[i]->rarrindex,t[i]->iwaveindex,stream,
@@ -1683,9 +1694,9 @@ namespace TSOpt {
 	      if (!dryrun) {
 		for (int iv=fd_numsubsteps(ic)-1; iv>-1; iv--) {
 		  ic.get_timestep()(w->getRDOMArray(),fwd,iv,fdm);
-		  for (int k=pow2(order-1); k<pow2(order); k++) {
-		    if (w->getStateArray()[k]->printact > 5) 
-		      fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
+		  for (size_t k=pow2(order-1); k<pow2(order); k++) {
+		    //		    if (w->getStateArray()[k]->printact > 5) 
+		    //		      fprintf(stream,"\n*** SYNCH: iwdx = %d\n\n",k);
 		    synch(w->getStateArray()[k],fwd,at,iv,ic,stream);
 		  }
 		}	
@@ -1709,7 +1720,7 @@ namespace TSOpt {
 	    if (whatodo == ACTION::restore) {
 	      int cp = r.getcheck();
 	      it = cplist.at(cp);
-	      for (int j=0;j<pow2(order-1);j++) {
+	      for (int j=0;j<(int)pow2(order-1);j++) {
 		int l = 0;
 		for (int k=0;k<RDOM_MAX_NARR;k++) {
 		  if (fd_isdyn(k,ic)) {		  
@@ -1745,9 +1756,9 @@ namespace TSOpt {
 	  // final sample
 	  if (dryrun) drystr<<"\n";
 	  step[g.dim]=at;
-	  for (int i=0; i<t.size(); i++) {
+	  for (size_t i=0; i<t.size(); i++) {
 	    // pert sample
-	    if (t[i]->iwaveindex >= pow2(order-1) && s[i]) { 
+	    if (t[i]->iwaveindex >= (int)pow2(order-1) && s[i]) { 
 	      s[i]->sample(g,step,fwd,t[i]->input,
 			   w->getStateArray()[t[i]->iwaveindex],
 			   t[i]->rarrindex,t[i]->iwaveindex,stream,
@@ -1807,7 +1818,7 @@ namespace TSOpt {
     str<<"  derivative order = "<<order<<"\n";
     str<<"  number of dynamic arrays in each RDOM = "<<ndyn<<"\n";
     int nio = 0;
-    for (int i=0;i<t.size();i++) {
+    for (size_t i=0;i<t.size();i++) {
       if (s[i]) nio++;
     }
     str<<"  number of i/o tasks = "<<nio<<"\n";

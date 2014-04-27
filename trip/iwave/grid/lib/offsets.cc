@@ -35,8 +35,10 @@ int get_array_offsets(off_t ** offs,
     fprintf(stderr,"i=%d gs[i]=%d gn[i]=%d ls[i]=%d ln[i]=%d\n",i,gs[i],gn[i],ls[i],ln[i]);
 #endif
 
+  size_t dim_t=dim;
+
   /* bail if loc is empty */
-  for (i=0; i<dim; i++)
+  for (i=0; i<dim_t; i++)
     err = err || (ls[i]<gs[i]) || (ls[i]+ln[i]>gs[i]+gn[i]);
   if (err) {
 #ifdef DEBUG_OFFSETS
@@ -58,7 +60,7 @@ int get_array_offsets(off_t ** offs,
 
   /* work out number of offsets */
   *noffs=1;
-  for (i=1; i<dim ;i++) *noffs *= ln[i];
+  for (i=1; i<dim_t ;i++) *noffs *= ln[i];
 
   /* it's convenient to accommodate the degenerate case noffs=0,
      caused by one of the ln's=0. Just return offs=NULL. */
@@ -76,7 +78,7 @@ int get_array_offsets(off_t ** offs,
        consists of (1,n0,n0*n1,...).*/
     ploc[0]=1;
     pglob[0]=1;
-    for (i=1;i<dim-1;i++) {
+    for (i=1;i<dim_t-1;i++) {
       ploc[i]=ploc[i-1]*ln[i];
       pglob[i]=pglob[i-1]*gn[i-1];
     }
@@ -104,7 +106,7 @@ int get_array_offsets(off_t ** offs,
       }
       idx[0]=k; /* should = 0 , since ploc[0]=1 ex def */
       (*offs)[j]=0;
-      for (i=0;i<dim;i++) {
+      for (i=0;i<dim_t;i++) {
 	b=(idx[i]+ls[i]-gs[i]);
 	(*offs)[j]+=pglob[i]*b;
 	/*	(*offs)[j]+=(idx[i]+ls[i]-gs[i])*pglob[i];*/

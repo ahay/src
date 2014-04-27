@@ -79,7 +79,7 @@ namespace TSOpt {
 	    }
 	    if (order==0 && !(ic.get_iwave_iokeys()[i].input) && ic.get_iwave_iokeys()[i].active) {
 	      TASK_RELN * p = new TASK_RELN;
-	      p->iwaveindex = n;
+	      p->iwaveindex = 0;
 	      p->keyword = ic.get_iwave_iokeys()[i].keyword;
 	      p->rarrindex = ic.get_iwave_iokeys()[i].rarrindex;
 	      p->input = ic.get_iwave_iokeys()[i].input;
@@ -92,7 +92,7 @@ namespace TSOpt {
 	  for (int i=0;i<ic.get_num_iokeys();i++) {
 	    if (ic.get_iwave_iokeys()[i].input && ic.get_iwave_iokeys()[i].active) {
 	      TASK_RELN * p = new TASK_RELN;
-	      p->iwaveindex = n;
+	      p->iwaveindex = pow2(n-1);
 	      std::ostringstream t;
 	      t<<n;
 	      p->keyword = ic.get_iwave_iokeys()[i].keyword + "_d"+t.str();
@@ -107,7 +107,7 @@ namespace TSOpt {
 	  for (int i=0;i<ic.get_num_iokeys();i++) {
 	    if (ic.get_iwave_iokeys()[i].input && ic.get_iwave_iokeys()[i].active) {
 	      TASK_RELN * p = new TASK_RELN;
-	      p->iwaveindex = n;
+	      p->iwaveindex = pow2(n-1);
 	      std::stringstream t;
 	      t<<n;
 	      p->keyword = ic.get_iwave_iokeys()[i].keyword + "_d"+t.str();
@@ -156,7 +156,7 @@ namespace TSOpt {
 	  for (int i=0;i<ic.get_num_iokeys();i++) {
 	    if (ic.get_iwave_iokeys()[i].input && ic.get_iwave_iokeys()[i].active) {
 	      TASK_RELN * p = new TASK_RELN;
-	      p->iwaveindex = n;
+	      p->iwaveindex = pow2(n-1);
 	      std::ostringstream t;
 	      t<<n;
 	      p->keyword = ic.get_iwave_iokeys()[i].keyword + "_d"+t.str();
@@ -173,7 +173,7 @@ namespace TSOpt {
 	  for (int i=0;i<ic.get_num_iokeys();i++) {
 	    if (ic.get_iwave_iokeys()[i].input && ic.get_iwave_iokeys()[i].active) {
 	      TASK_RELN * p = new TASK_RELN;
-	      p->iwaveindex = n;
+	      p->iwaveindex = pow2(n-1);
 	      std::ostringstream t;
 	      t<<n;
 	      p->keyword = ic.get_iwave_iokeys()[i].keyword + "_b"+t.str();
@@ -196,7 +196,7 @@ namespace TSOpt {
   }
 
   void IOTaskWriter(std::vector<TASK_RELN *> const & tr, ostream & str) {
-    for (int i=0;i<tr.size();i++) {
+    for (size_t i=0;i<tr.size();i++) {
       str<<"index="<<tr[i]->iwaveindex<<" keyword="<<tr[i]->keyword<<" rarrindex="<<tr[i]->rarrindex<<" input=" << tr[i]->input<<"\n";
     }
   }

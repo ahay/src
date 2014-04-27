@@ -293,6 +293,7 @@ bool init_step(grid g, IPNT step, bool fwd) {
   if (!fwd) {
     step[g.dim]+= g.axes[g.dim].n-1;
   }
+  return true;
 }
 
 bool next_step(grid g, IPNT step) {

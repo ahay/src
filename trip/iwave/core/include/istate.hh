@@ -97,8 +97,8 @@ namespace TSOpt {
 
     // related to checkpoint alg
     int printact;
-    int snaps;
     int order;
+    int snaps;
     int ndyn;
     RARR *** cps;
     int narr;
