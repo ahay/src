@@ -80,8 +80,8 @@ Flow(['PseudoPurePx',  'PseudoPurePy', 'PseudoPurePz'],None,
 for qq in Split(name1):
        Result(qq,
         '''
-		byte |
-        grey3 color=j polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y
+	byte pclip=98 gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y
         ''')
 
 #########################################################################
@@ -127,8 +127,8 @@ Flow(['apvx',  'apvy',   'apvz',  'taperK'], None,
 for pp in Split(name2):
         Result(pp,
         '''
-        byte |
-        grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y pclip=99
+        byte bias=1 gainpanel=all |
+        grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y pclip=99 color=j
         ''')
 
 #########################################################################
@@ -155,7 +155,7 @@ Flow(['PseudoPureP','PseudoPureSepP'],
 for qq in Split(name3):
        Result(qq,
         '''
-		byte |
+	byte pclip=98 gainpanel=all |
         grey3 polarity=n scalebar=n frame1=251 frame2=251 frame3=251 screenratio=1 wanttitle=n flat=y
         ''')
 End()
