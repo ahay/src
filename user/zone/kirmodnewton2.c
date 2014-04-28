@@ -143,20 +143,20 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 	}*/
 	
 	/* Check whether the gradient and vstatus match-------------------------------------------------------*/
-	
-	for (p3=0; p3<N2-1; p3++) {
-		p4 = p4 + gx_inp[p3]+gz_inp[p3];
+	if (vstatus != 2) {
+		for (p3=0; p3<N2-1; p3++) {
+			p4 = p4 + gx_inp[p3]+gz_inp[p3];
 		
-		if (p3==N2-2 && p4/(2*N2-2)!=0 && vstatus==0) {
-			sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
-			exit(0);
-		}
-		if (p3==N2-2 && p4/(2*N2-2)==0 && vstatus!=0) {
-			sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
-			exit(0);
+			if (p3==N2-2 && p4/(2*N2-2)!=0 && vstatus==0) {
+				sf_warning("The gradients are not zero. Please reenter nonzero vstatus.\n");
+				exit(0);
+			}
+			if (p3==N2-2 && p4/(2*N2-2)==0 && vstatus!=0) {
+				sf_warning("The gradients are zero. Please enter vstatus=0 for constant velocity model.\n");
+				exit(0);
+			}
 		}
 	}
-	
 	/* Generate input according to the reflection sequence-----------------------------------------------*/
 	for (d2=0; d2<n+2; d2++) {
 		
