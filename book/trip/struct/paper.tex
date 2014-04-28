@@ -539,11 +539,11 @@ described in the self-doc, which the reader should consult in
 conjunction with this discussion.
 
 All of these examples use the simple layered velocity
-(-squared) model depicted in Figure \ref{fig:csq_4layer}. 
+(-squared) model depicted in Figure \ref{fig:csq-4layer}. 
 This data derives from a corresponding velocity model, fetched from
 and squared to create a velocity-squared field.
 
-\plot{csq_4layer}{width=15cm}{Four layer deep-water cartoon - quantity
+\plot{csq-4layer}{width=15cm}{Four layer deep-water cartoon - quantity
   plotted is velocity squared.}
 
 \noindent \paragraph{Movie from Initial Data.} 
@@ -558,7 +558,7 @@ field to restore 2nd order convergence.
 
 \plot{gauss}{width=15cm}{Gaussian initial datum}
 
-The data depicted in Figures \ref{fig:csq_4layer} and \ref{fig:gauss}
+The data depicted in Figures \ref{fig:csq-4layer} and \ref{fig:gauss}
 is input to the simulation, so clearly must exist prior to
 simulation. However the output must also exist: IWAVE I/O, both reads
 and writes, is driven by the target data structure. Therefore the
@@ -705,7 +705,7 @@ computation.
 
 For the acoustic constant density application, Born approximation
 requires reference and perturbation square velocity fields. Figures
-\ref{fig:dcsq_4layer} and \ref{fig:csq_4layersm} show perturbation and
+\ref{fig:dcsq-4layer} and \ref{fig:csq-4layersm} show perturbation and
 reference square velocity fields, respectively, that will generate
 Born data roughly corresponding to the preceding example. The required
 parameters are
@@ -719,13 +719,13 @@ parameters are
 The linearized response (Born modeling) corresponding to Figure 
 \ref{fig:shot12000} appears as Figure \ref{fig:born12000}.
 
-\plot{dcsq_4layer}{width=15cm}{Velocity-squared perturbation -
+\plot{dcsq-4layer}{width=15cm}{Velocity-squared perturbation -
   localized oscillations at layer boundaries}
-\plot{csq_4layersm}{width=15cm}{Smooth velocity-squared obtained from
-  velocity of Figure \ref{csq_4layer} by filtering with a cubic spline window.}
+\plot{csq-4layersm}{width=15cm}{Smooth velocity-squared obtained from
+  velocity of Figure \ref{fig:csq-4layer} by filtering with a cubic spline window.}
 \plot{born12000}{width=15cm}{Linearized response (``Born modeling'') of seafloor pressure
-  sensor, due to perturbation (Figure \ref{fig:dcsq_4layer}) about
-  smooth background (Figure \ref{fig:csq_4layersm}); other parameters
+  sensor, due to perturbation (Figure \ref{fig:dcsq-4layer}) about
+  smooth background (Figure \ref{fig:csq-4layersm}); other parameters
   as in Figure \ref{fig:shot12000}.}
 
 \noindent \paragraph{Reverse Time Migration}
@@ -894,7 +894,7 @@ less than 4 minutes walltime.
 \noindent \paragraph{Simulation}
 Recall that output files for IWAVE applications must exist prior to
 execution. Therefore, to simulate 12 shots at intervals of 400 m over
-the model depicted in Figure \ref{fig:csq_4layer}, the first step is
+the model depicted in Figure \ref{fig:csq-4layer}, the first step is
 to create a suitable SEGY data set to hold the output. Therefore the {\tt
   SConstruct} script creates the output file of zero SEGY traces ({\tt
   line8-12km.su}), subsequently filled with samples by IWAVE, all as
@@ -913,7 +913,7 @@ Figure \ref{fig:line8-12km}.
   are isotropic point
   radiators, source pulse is Gaussian
   derivative with peak frequency 5 Hz. Velocity-squared model depicted
-in Figure \ref{fig:csq_4layer}.}
+in Figure \ref{fig:csq-4layer}.}
 
 Perusal of the {\tt project/SConstruct} script shows that in the
 invocation of {\tt acd.x}, only the filenames have changed. The
@@ -924,8 +924,8 @@ explicitly passed to the simulation command.
 
 \noindent \paragraph{Linearized Simulation}
 Linearized simulation (Born modeling) works the same way. The data
-predicted from the perturbation in Figure \ref{fig:dcsq_4layer} of the smooth
-background velocity (squared) in Figure \ref{fig:csq_4layer}, same
+predicted from the perturbation in Figure \ref{fig:dcsq-4layer} of the smooth
+background velocity (squared) in Figure \ref{fig:csq-4layer}, same
 source-receiver geometry as in the preceding example, is displayed in
 Figure \ref{fig:born8-12km}.
 
@@ -935,8 +935,8 @@ Figure \ref{fig:born8-12km}.
   are isotropic point
   radiators, source pulse is Gaussian
   derivative with peak frequency 5 Hz, Background or reference model
-  as in Figure \ref{fig:csq_4layersm}, perturbation as in
-  Figure \ref{fig:dcsq_4layer}.}
+  as in Figure \ref{fig:csq-4layersm}, perturbation as in
+  Figure \ref{fig:dcsq-4layer}.}
 
 \noindent \paragraph{Adjoint Linearized Simulation}
 Adjoint linearized simulation (reverse time migration) of the 12 shot

@@ -191,11 +191,11 @@ Flow('migr8-12km','born8-12km.su csq_4layersm dcsq_4layer wavelet8-12km.su',
      csq=${SOURCES[1]} csq_b1=$TARGET source=${SOURCES[3]} sampord=1 data=${SOURCES[0]}
      ''',stdin=0,stdout=-1,workdir='migr8-12km.work')
 
-Result('csq_4layer', 'csq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Atlantis Cartoon" scalebar=y barreverse=y')
+Result('csq-4layer', 'csq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Atlantis Cartoon" scalebar=y barreverse=y')
 
-Result('csq_4layersm', 'csq_4layersm', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="MigVel - Atlantis Cartoon" scalebar=y barreverse=y')
+Result('csq-4layersm', 'csq_4layersm', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="MigVel - Atlantis Cartoon" scalebar=y barreverse=y')
 
-Result('dcsq_4layer', 'dcsq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Delta V\_p\^\^2\_ - Atlantis Cartoon" scalebar=y barreverse=y')
+Result('dcsq-4layer', 'dcsq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Delta V\_p\^\^2\_ - Atlantis Cartoon" scalebar=y barreverse=y')
 
 Result('gauss', 'init', 'put label1=Depth unit1=m label2=Distance unit2=m label="Pressure" unit="GPa" | grey color=c mean=y clip=100 title="Gaussian Data t=0.0 s" scalebar=y barreverse=y')
 

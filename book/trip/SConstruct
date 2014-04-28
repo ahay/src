@@ -9,8 +9,7 @@ Papers(copyr='Rice University',
        line='Selected papers',
        fig=('struct/project','framesrc','width=\\textwidth'))
        
-End(use='hyperref',
-    use='amsmath,setspace,wasysym',
+End(use='hyperref,amsmath,setspace,wasysym',
     include=r'''
 \newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
 \newcommand{\rr}[1]{\mbox{\rm #1}}
