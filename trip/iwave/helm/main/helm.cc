@@ -2,8 +2,11 @@
 
 #include <par.h>
 #include <gridio.h>
+#include <stdio.h>
 #include <parser.h>
 #include <f2c.h>
+#include <iostream>
+using namespace std;
 
 /* helmholtz power function */
 extern "C" void helm_(integer *,   /* n1 */
@@ -93,8 +96,8 @@ int main(int argc, char ** argv) {
 
     FILE * fp;
   
-    PARARRAY par;
-    PARARRAY gpar;
+    PARARRAY *par=ps_new();
+    PARARRAY *gpar=ps_new();
 
     float * indata = NULL;
     float * outdata = NULL;
@@ -106,29 +109,29 @@ int main(int argc, char ** argv) {
     xargv = argv;
     requestdoc(1);
 
-    if (ps_createargs(&par, argc-1, argv+1)) {
+    if (ps_createargs(par, argc-1, argv+1)) {
 	fprintf(stderr,"Error: HELM - failed to parse input \n");
 	exit(1);
     }
 
-    if (ps_ffcstring(par,"in",&in)) {
+    if (ps_ffcstring(*par,"in",&in)) {
 	printf("Error: HELM failed to parse in = [input RSF file]. ABORT.\n");
 	exit(1);
     }
 
-    if (ps_ffcstring(par,"out",&out)) {
+    if (ps_ffcstring(*par,"out",&out)) {
 	printf("Error: HELM failed to parse out = [output RSF file]. ABORT.\n");
 	exit(1);
     }
 
-    ps_ffcstring(par,"ref",&ref);
+    ps_ffcstring(*par,"ref",&ref);
 
-    if (ps_createfile(&gpar,in)) {
+    if (ps_createfile(gpar,in)) {
 	fprintf(stderr,"Error: HELM failed to parse file %s\n",in);
 	exit(1);
     }
 
-    if (par_grid(&g, gpar, stderr)) {
+    if (par_grid(&g, *gpar, stderr)) {
 	fprintf(stderr,"Error: read from par_grid, file = %s\n",in);
 	exit(1);
     }
@@ -145,10 +148,10 @@ int main(int argc, char ** argv) {
     w_arr[1]=REAL_ONE;
     power = REAL_ZERO;
     datum = REAL_ZERO;
-    ps_fffloat(par,"scale1",&(w_arr[0]));
-    ps_fffloat(par,"scale2",&(w_arr[1]));
-    ps_fffloat(par,"power",&power);
-    ps_fffloat(par,"datum",&datum);
+    ps_fffloat(*par,"scale1",&(w_arr[0]));
+    ps_fffloat(*par,"scale2",&(w_arr[1]));
+    ps_fffloat(*par,"power",&power);
+    ps_fffloat(*par,"datum",&datum);
 
     /* initialize grid quantities */
     get_n(n_arr,g);
@@ -157,12 +160,12 @@ int main(int argc, char ** argv) {
     get_o(o_arr,g);
     get_ord(ord_arr,g);
     data_format=NULL;
-    ps_ffcstring(gpar,"data_format",&data_format);
+    ps_ffcstring(*gpar,"data_format",&data_format);
     if (!data_format) {
 	data_format=(char *)malloc(100*sizeof(char));
 	strcpy(data_format,"native_float");
     }
-    ps_ffint(gpar,"scale",&scale);
+    ps_ffint(*gpar,"scale",&scale);
 
     /* allocate data arrays */
     if (!(indata = (float *)malloc(get_datasize_grid(g)*sizeof(float)))) {
@@ -215,7 +218,7 @@ int main(int argc, char ** argv) {
     }
 
     /* read input */
-    if (rsfread(indata,gs_arr,n_arr,in,0,stderr,0)) {
+    if (rsfread(indata,gs_arr,n_arr,in,1.0,stderr,0)) {
 	fprintf(stderr,"Error: HELM - failed to read %d floats from %s\n",get_datasize_grid(g),in);
 	exit(1);    
     }
@@ -243,14 +246,15 @@ int main(int argc, char ** argv) {
 	  work,
 	  &lenwork,
 	  &ier);
-
+    fprintf(stderr, "\n indata [100] = %f\n", indata[100]);
+    fprintf(stderr, "\n outdata [100] = %f\n", outdata[100]);
     if (ier != 0) {
 	fprintf(stderr,"Error: HELM returned error from Helmholtz function = %ld\n",ier);
 	exit(1);
     }
 
     /* write out result */
-    if (rsfwrite(outdata,gs_arr,n_arr,out,0,stderr,0)) {
+    if (rsfwrite(outdata,gs_arr,n_arr,out,1.0,stderr,0)) {
 	fprintf(stderr,"Error: HELM failed to write data on %s\n",out);
 	exit(1);
     }
