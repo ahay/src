@@ -3,9 +3,12 @@ import os
 imports = ' cpplist liblist libname libdirlist'
 
 try:  # madagascar version
-    Import('env root pkgdir bindir' + imports)
+    Import('env root pkgdir bindir libdir' + imports)
+#    print libdir
+#    print libdirlist
     env = env.Clone()
-    env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist)
+    env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist+[libdir])
+    cxx =  'c++' in env.get('API',[])
 except:  # autonomous version
     Import('vars' + imports)
     root = None
@@ -21,20 +24,24 @@ except:  # autonomous version
                       CPPPATH = cpplist, 
                       LIBS = liblist, 
                       LIBPATH = libdirlist)
+    cxx = env.get('CXX')
     
 # this version assumes that all source files in this directory
 # define main programs
 
 # find sources
-srcs=Glob('*.c') + Glob('*.cc') + Glob('*.cpp')
+csrcs=Glob('*.c')
+ccsrcs=Glob('*.cc') + Glob('*.cpp')
 
 # if any found, build main
-progs = []
-if len(srcs) > 0:
-    for prog in srcs:
+cprogs = []
+ccprogs = []
+
+if len(csrcs) > 0:
+    for prog in csrcs:
         if root:
             prout = os.path.splitext(str(prog))[0]
-            progs.append(prout)
+            cprogs.append(prout)
         else:
             prout = os.path.splitext(str(prog))[0] + '.x'
         exe = env.Program(prout,prog)
@@ -43,12 +50,33 @@ if len(srcs) > 0:
         if root:
             env.Install(bindir,exe)
 
+if len(ccsrcs) > 0:
+
+    for prog in ccsrcs:
+        if root:
+            prout = os.path.splitext(str(prog))[0]
+            ccprogs.append(prout)
+        else:
+            prout = os.path.splitext(str(prog))[0] + '.x'
+
+        if cxx:
+            exe = env.Program(prout,prog)
+        elif root:
+            exe = env.RSF_Place('sf'+prout,None,var='C++')
+
+        # Madagascar installation
+        if root:
+            env.Install(bindir,exe)
+
 # Madagascar self-docs
 if root:
     main = 'sf%s.py' % libname
+    main = main.replace('++','pp')
     
-    docs = map(lambda prog: env.Doc(prog,prog),progs)
-    env.Depends(docs,'#/framework/rsf/doc.py')
+    cdocs = map(lambda prog: env.Doc(prog, '%s.c' % prog, lang='c'), cprogs)
+    ccdocs = map(lambda prog: env.Doc(prog, '%s.cc' % prog, lang='c++'), ccprogs)
+    env.Depends(cdocs,'#/framework/rsf/doc.py')
+    env.Depends(ccdocs,'#/framework/rsf/doc.py')
 
-    doc = env.RSF_Docmerge(main,docs)
+    doc = env.RSF_Docmerge(main,cdocs + ccdocs)
     env.Install(pkgdir,doc)
