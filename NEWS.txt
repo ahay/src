@@ -115,6 +115,7 @@ In programs:
 * Read the whole cube for finding contours in sfcontour3
 * Fixed shift by one in sfdespike
 * Fixed interact= bug in xtpen
+* Fixed the case of negative o1 in sfsegyheader
 
 In the build system:
 

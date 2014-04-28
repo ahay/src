@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 		} else if (0==strcmp(key,"delrt") && o1 != 0) {
 		    keys[i] = NULL;
 		    for (i2=0; i2 < nbuf; i2++) {
-			buf[i2][i] = (int) (o1*1000. + 0.5);
+			buf[i2][i] = (o1>0)? (int) (o1*1000. + 0.5): (int) (o1*1000. - 0.5);
 		    }
 		}
 	    }
