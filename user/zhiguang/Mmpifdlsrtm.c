@@ -95,7 +95,7 @@ void prertm2_oper(bool adj, int is, float **localdd, float **localmm)
     if(adj){/* migration */
         
         for(it=0; it<nt; it++){
-            sf_warning("is=%d; RTM_Source: it=%d;", is, it);
+            if(verb) sf_warning("is=%d; RTM_Source: it=%d;", is+1, it);
             laplacian(true, u0, u1, u2);
                 
             temp=u0;
@@ -121,7 +121,7 @@ void prertm2_oper(bool adj, int is, float **localdd, float **localmm)
         memset(u2[0], 0, padnz*padnx*sizeof(float));
             
         for(it=nt-1; it>=0; it--){
-            sf_warning("is=%d; RTM_Receiver: it=%d;", is, it);
+            if(verb) sf_warning("is=%d; RTM_Receiver: it=%d;", is+1, it);
             laplacian(false, u0, u1, u2);
                 
             temp=u0;
@@ -141,7 +141,7 @@ void prertm2_oper(bool adj, int is, float **localdd, float **localmm)
             }
         }//end of it
         
-        /* normalization
+        /* normalization 
         for(ix=0; ix<nx; ix++){
             for(iz=0; iz<nz; iz++){
                 localmm[ix][iz]/=(sou2[ix][iz]+FLT_EPSILON);
@@ -151,7 +151,7 @@ void prertm2_oper(bool adj, int is, float **localdd, float **localmm)
     }else{/* modeling */
             
         for(it=0; it<nt; it++){
-            sf_warning("is=%d; Modeling_Source: it=%d;",is, it);
+            if(verb) sf_warning("is=%d; Modeling_Source: it=%d;",is+1, it);
             laplacian(true, u0, u1, u2);
                 
             temp=u0;
@@ -176,7 +176,7 @@ void prertm2_oper(bool adj, int is, float **localdd, float **localmm)
         memset(u1[0], 0, padnz*padnx*sizeof(float));
         memset(u2[0], 0, padnz*padnx*sizeof(float));
         
-        /* normalization
+        /* normalization 
         for(ix=0; ix<nx; ix++){
             for(iz=0; iz<nz; iz++){
                 localmm[ix][iz]/=(sou2[ix][iz]+FLT_EPSILON);
@@ -184,7 +184,7 @@ void prertm2_oper(bool adj, int is, float **localdd, float **localmm)
          } */
             
         for(it=0; it<nt; it++){
-            sf_warning("is=%d; Modeling_Receiver: it=%d;",is, it);
+            if(verb) sf_warning("is=%d; Modeling_Receiver: it=%d;",is+1, it);
             laplacian(true, u0, u1, u2);
                 
             temp=u0;
@@ -216,6 +216,7 @@ int main(int argc, char* argv[])
     float zr, zs, padx0, padz0;
     float dt2;
     float *sendbuf, *recvbuf;
+    double tstart, tend, duration, *sendbuf2;
  
     float ***dd, **localdd, **mm, **localmm, **vv;
     sf_file in, out, vel, wavelet;
@@ -225,11 +226,12 @@ int main(int argc, char* argv[])
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
     
     sf_init(argc, argv);
+    tstart=MPI_Wtime();
     
     if(cpuid==0) sf_warning("numprocs=%d", numprocs);
     
     if(!sf_getbool("adj", &adj)) adj=true;
-    if(!sf_getbool("verb", &verb)) verb=true;
+    if(!sf_getbool("verb", &verb)) verb=false;
     if(!sf_getbool("snap", &snap)) snap=false;
     
     in=sf_input("input");
@@ -390,7 +392,7 @@ int main(int argc, char* argv[])
     c0=-2*(c11+c12+c21+c22);
     
     if(adj){/* migration */
-        memset(mm[0], 0., nz*nx);
+        memset(mm[0], 0., nz*nx*sizeof(float));
         
         if(cpuid==0){
             sf_floatread(dd[0][0], nt*nr*ns, in);
@@ -402,6 +404,10 @@ int main(int argc, char* argv[])
         
         for(iturn=0; iturn*numprocs<nspand; iturn++){
             is=iturn*numprocs+cpuid;
+            
+            sf_warning("********* Reverse Time Migration Process ***********\n");
+            sf_warning("Processor ID: %d      Current shot number: %d\n", cpuid, is+1);
+            sf_warning("****************************************************\n");
             
             if(cpuid==0){
                 sendbuf=dd[iturn*numprocs][0];
@@ -429,6 +435,7 @@ int main(int argc, char* argv[])
         }
         MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         if(cpuid==0) sf_floatwrite(mm[0], nz*nx, out);
+        
     }else{ /* modeling */
         if(cpuid==0) sf_floatread(mm[0], nz*nx, in);
         
@@ -436,6 +443,10 @@ int main(int argc, char* argv[])
         
         for(iturn=0; iturn*numprocs<nspand; iturn++){
             is=iturn*numprocs+cpuid;
+            
+            sf_warning("**** Forward Time Modeling Process ******\n");
+            sf_warning("Processor ID: %d  Current shot number: %d\n", cpuid, is+1);
+            sf_warning("*****************************************\n");
             
             memset(localdd[0], 0., nr*nt*sizeof(float));
             if(is<ns) prertm2_oper(adj, is, localdd, mm);
@@ -465,6 +476,14 @@ int main(int argc, char* argv[])
     free(*mm); free(mm);
     free(*localdd); free(localdd);
     free(*localmm); free(localmm);
+    
+    tend=MPI_Wtime();
+    duration=tend-tstart;
+    if(cpuid==0) sendbuf2=MPI_IN_PLACE;
+    else sendbuf2=&duration;
+    MPI_Reduce(sendbuf2, &duration, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    if(cpuid==0) sf_warning("The running time: %e\n", duration);
+    
     MPI_Finalize();
     
     exit(0);

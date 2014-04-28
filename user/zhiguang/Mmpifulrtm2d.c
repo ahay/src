@@ -19,9 +19,9 @@
 #include <rsf.h>
 #include <mpi.h>
 
-/* #ifdef _OPENMP
+#ifdef _OPENMP
 #include <omp.h>
-#endif */
+#endif
 
 static bool verb, snap;
 static int nz, nx, nt, nr, ns, nw, nsource, dsource, ndelay;
@@ -38,11 +38,11 @@ void laplacian(bool adj, float **u0, float **u1, float **u2)
     int ix, iz;
     
     if(adj){
-/* #ifdef _OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for  \
     private(ix, iz)       \
     shared(padnx, padnz, u0, u1, u2, padvv, c0, c11, c12, c21, c22)
-#endif */
+#endif
         for(ix=2; ix<padnx-2; ix++){
             for(iz=2; iz<padnz-2; iz++){
                 u2[ix][iz]=
@@ -55,11 +55,11 @@ void laplacian(bool adj, float **u0, float **u1, float **u2)
             }
         }
     }else{
-/* #ifdef _OPENMP
+#ifdef _OPENMP
 #pragma omp parallel for  \
     private(ix, iz)       \
     shared(padnx, padnz, u0, u1, u2, padvv, c0, c11, c12, c21, c22)
-#endif */
+#endif
         for(ix=2; ix<padnx-2; ix++){
             for(iz=2; iz<padnz-2; iz++){
                 u2[ix][iz]=
