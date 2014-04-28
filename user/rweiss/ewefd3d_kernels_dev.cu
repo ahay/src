@@ -354,6 +354,8 @@ __global__ void dispToStrain(int nxpad, int nylocal, int nzpad, float *d_uox, fl
 		uox_p.w = d_uox[(nxNz * (y+4)) + offset];
 		uoy_p.w = d_uoy[(nxNz * (y+4)) + offset];
 		uoz_p.w = d_uoz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
@@ -783,6 +785,8 @@ __global__ void stressToAccel(int nxpad, int nzpad, int nylocal, float idx, floa
 		txy_p.w = d_txy[(nxNz * (y+4)) + offset];
 		tyy_p.w = d_tyy[(nxNz * (y+4)) + offset];
 		tyz_p.w = d_tyz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
