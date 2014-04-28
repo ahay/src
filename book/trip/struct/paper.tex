@@ -541,6 +541,9 @@ All of these examples use the simple layered velocity
 This data derives from a corresponding velocity model, fetched from
 and squared to create a velocity-squared field.
 
+\plot{csq_4layer}{width=15cm}{Four layer deep-water cartoon - quantity
+  plotted is velocity squared.}
+
 \noindent \paragraph{Movie from Initial Data.} 
 Figure \ref{fig:gauss}
 displays a Gaussian initial field, input as the initial potential
@@ -550,6 +553,8 @@ to the solution of any particular Cauchy problem with full convergence
 order (2), but produces a reasonable-looking movie. Another (minor)
 application would produce a correction to be added to the {\tt up}
 field to restore 2nd order convergence.
+
+\plot{gauss}{width=15cm}{Gaussian initial datum}
 
 The data depicted in Figures \ref{fig:csq_4layer} and \ref{fig:gauss}
 is input to the simulation, so clearly must exist prior to
@@ -590,6 +595,9 @@ reflecting (Dirichlet) boundaries and the interfaces in the model, the
 potential field becomes that depicted in Figure
 \ref{fig:frameinit}. 
 
+\plot{frameinit}{width=15cm}{Acoustic potential field at
+  5.12 s, resulting from Gaussian initial data}
+
 Parameters passed to the command {\tt acd.x} included 
 \begin{verbatim}
            csq = ../csq_4layer.rsf
@@ -617,6 +625,8 @@ Gaussian; it is embedded in a space-time field via the {\tt
   iwave/trace/main/towed\_array.x} utility, and used as the RHS in the
 wave equation. The resulting field (starting from homogeneous Cauchy
 data) at 5.12 s is depicted in Figure \ref{fig:framesrc}.
+
+\plot{wavelet}{width=15cm}{Derivative of 5 Hz Gaussian}
 
 In this case, the parameters passed to {\tt acd.x} (in addition to the
 other required numerical parameters) are 
@@ -965,12 +975,9 @@ his generous and crucial help in the integration of IWAVE into Madagascar.
 
 %\inputdir{../../../trip/newiwave/demo/oneshot}
 \inputdir{project}
-\plot{csq_4layer}{width=15cm}{Four layer deep-water cartoon - quantity
-  plotted is velocity squared.}
-\plot{gauss}{width=15cm}{Gaussian initial datum}
-\plot{frameinit}{width=15cm}{Acoustic potential field at
-  5.12 s, resulting from Gaussian initial data}
-\plot{wavelet}{width=15cm}{Derivative of 5 Hz Gaussian}
+
+
+
 \plot{framesrc}{width=15cm}{Acoustic potential field at
   5.12 s, resulting from Gaussian derivative point source pulse
   located at x=12 km, z = 1.875 km.}

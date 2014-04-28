@@ -201,19 +201,19 @@ Result('gauss', 'init', 'put label1=Depth unit1=m label2=Distance unit2=m label=
 
 Result('frameinit', 'movieinit', 'window f3=32 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label="Pressure" unit="GPa" | grey color=c mean=y clip=300 title="Gaussian data t=5.12 s" scalebar=y barreverse=y')
 
-Result('wavelet','wavelet_base.su', 'suread endian=0 read=data | put label1=Time label2=Pressure unit1=s unit2=GPa title="Gaussian deriv fmax=5 Hz"" unit="GPa |sfgraph')
+Result('wavelet','wavelet_base.su', 'suread endian=0 read=data | put label1=Time label2=Pressure unit1=s unit2=GPa title="Gaussian deriv fmax=5 Hz" unit="GPa" |sfgraph')
 
 Result('framesrc', 'moviesrc', 'window f3=32 n3=1 |put label1=Depth unit1=m label2=Distance unit2=m label="Pressure" unit="GPa" | grey color=c mean=y clip=1.e+8 title="Point source 5 Hz t=5.12 s" scalebar=y barreverse=y')
 
-Result('shot12000','shot12000.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=5 unit1=s unit2=km title="Node at 12 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('shot12000','shot12000.su', 'suread endian=0 read=data | put labeldcsq_4layer.1=Time label2=Distance d2=0.025 o2=5 unit1=s unit2=km title="Node at 12 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('born12000','born12000.su', 'suread endian=0 read=data | put label1=Time label2=Trace unit1=s title="Born x_s=12000 m"" unit="GPa" | grey')
+Result('born12000','born12000.su', 'suread endian=0 read=data | put label1=Time label2=Trace unit1=s title="Born x_s=12000 m" unit="GPa" | grey')
 
 Result('migr12000', 'migr12000', 'put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="RTM of Born Shot x_s = 12000" clip=1.e+12')
 
 Result('line8-12km','line8-12km.su', 'suread endian=0 read=data | put label1=Time label2=Node d2=0.4km o2=8 unit1=s unit2=km title="Nodes @0.4km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('born8-12km','born8-12km.su', 'suread endian=0  read=data | put label1=Time label2=Trace unit1=s title="Born x_s=8-12km"" unit="GPa" | grey')
+Result('born8-12km','born8-12km.su', 'suread endian=0  read=data | put label1=Time label2=Trace unit1=s title="Born x_s=8-12km" unit="GPa" | grey')
 
 Result('migr8-12km', 'migr8-12km', 'put label1=Depth unit1=m label2 = Distance unit2=m label="V\_p\^\^2\_" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="RTM of Born Shot x_s = 8-12km" clip=1e+12')
 
