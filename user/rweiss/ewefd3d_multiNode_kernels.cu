@@ -475,6 +475,8 @@ __global__ void dispToStrainOutside(int high, int nxpad, int nylocal, int nzpad,
 		uox_p.w = d_uox[(nxNz * (y+4)) + offset];
 		uoy_p.w = d_uoy[(nxNz * (y+4)) + offset];
 		uoz_p.w = d_uoz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
@@ -658,6 +660,8 @@ __global__ void dispToStrainInside(int nxpad, int nylocal, int nzpad, float *d_u
 		uox_p.w = d_uox[(nxNz * (y+4)) + offset];
 		uoy_p.w = d_uoy[(nxNz * (y+4)) + offset];
 		uoz_p.w = d_uoz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
@@ -1349,6 +1353,8 @@ __global__ void stressToAccelOutside(int high, int nxpad, int nzpad, int nylocal
 		txy_p.w = d_txy[(nxNz * (y+4)) + offset];
 		tyy_p.w = d_tyy[(nxNz * (y+4)) + offset];
 		tyz_p.w = d_tyz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
@@ -1546,6 +1552,8 @@ __global__ void stressToAccelInside(int nxpad, int nzpad, int nylocal, float idx
 		txy_p.w = d_txy[(nxNz * (y+4)) + offset];
 		tyy_p.w = d_tyy[(nxNz * (y+4)) + offset];
 		tyz_p.w = d_tyz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
@@ -1819,6 +1827,8 @@ __global__ void stressToAccel(int first, int last, int nxpad, int nzpad, int nyl
 		txy_p.w = d_txy[(nxNz * (y+4)) + offset];
 		tyy_p.w = d_tyy[(nxNz * (y+4)) + offset];
 		tyz_p.w = d_tyz[(nxNz * (y+4)) + offset];
+		
+		__syncthreads();
 	
 	}
 	
