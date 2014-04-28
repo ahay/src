@@ -20,6 +20,8 @@ Houston TX 77251-1892 USA, email {\tt symes@caam.rice.edu}.}}
   gridded stencil-based discretization of arbitrary wave physics in the same way.
 \end{abstract}
 
+\inputdir{project}
+
 \section{Introduction}
 IWAVE combines minimal physics- and scheme-specific code with
 a common base of memory allocation, SPMD communication and other forms
@@ -628,6 +630,10 @@ data) at 5.12 s is depicted in Figure \ref{fig:framesrc}.
 
 \plot{wavelet}{width=15cm}{Derivative of 5 Hz Gaussian}
 
+\plot{framesrc}{width=15cm}{Acoustic potential field at
+  5.12 s, resulting from Gaussian derivative point source pulse
+  located at x=12 km, z = 1.875 km.}
+
 In this case, the parameters passed to {\tt acd.x} (in addition to the
 other required numerical parameters) are 
 \begin{verbatim}
@@ -657,6 +663,11 @@ would do just as well. This key is provided for mnemonic convenience.
 Note that the file data structure ({\tt shot12000.su}) entirely
 determines the  {\em way} in which the data is written - sampling,
 source and receiver geometry are all taken from this file.
+
+\plot{shot12000}{width=15cm}{Response of seafloor pressure sensor at
+  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, source is isotropic point
+  radiator, source pulse is Gaussian
+  derivative with peak frequency 5 Hz,}
 
 \noindent \paragraph{Born Approximation}
 The linearization of the acoustic field with respect to the wave
@@ -708,6 +719,15 @@ parameters are
 The linearized response (Born modeling) corresponding to Figure 
 \ref{fig:shot12000} appears as Figure \ref{fig:born12000}.
 
+\plot{dcsq_4layer}{width=15cm}{Velocity-squared perturbation -
+  localized oscillations at layer boundaries}
+\plot{csq_4layersm}{width=15cm}{Smooth velocity-squared obtained from
+  velocity of Figure \ref{csq_4layer} by filtering with a cubic spline window.}
+\plot{born12000}{width=15cm}{Linearized response (``Born modeling'') of seafloor pressure
+  sensor, due to perturbation (Figure \ref{fig:dcsq_4layer}) about
+  smooth background (Figure \ref{fig:csq_4layersm}); other parameters
+  as in Figure \ref{fig:shot12000}.}
+
 \noindent \paragraph{Reverse Time Migration}
 One version of Reverse Time Migration (RTM) is simply the adjoint of
 Born modeling. IWAVE provides adjoint computations for every
@@ -724,6 +744,9 @@ Figure \ref{fig:migr12000} displays the migration of the single
 Born ``shot'' gather (really, OBS receiver gather) located at $x_s = 12000$ m from
 the left edge of the model. No effort has been made to remove the
 low-frequency noise caused by the sea bottom reflection.
+
+\plot{migr12000}{width=15cm}{Reverse-time migration of Born data
+  from Figure \ref{fig:born12000}.}
 
 The parameters required for this job are
 \begin{verbatim}
@@ -884,6 +907,14 @@ translations of a source array to correct shot positions. Other
 parameters are as in the single-shot case. The result is displayed in
 Figure \ref{fig:line8-12km}.
 
+\plot{line8-12km}{width=15cm}{Response of 13 seafloor pressure sensors
+  spaced 400 m apart at
+  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, sources
+  are isotropic point
+  radiators, source pulse is Gaussian
+  derivative with peak frequency 5 Hz. Velocity-squared model depicted
+in Figure \ref{fig:csq_4layer}.}
+
 Perusal of the {\tt project/SConstruct} script shows that in the
 invocation of {\tt acd.x}, only the filenames have changed. The
 dataflow design of IWAVE, in which data objects determine the way in
@@ -898,10 +929,25 @@ background velocity (squared) in Figure \ref{fig:csq_4layer}, same
 source-receiver geometry as in the preceding example, is displayed in
 Figure \ref{fig:born8-12km}.
 
+\plot{born8-12km}{width=15cm}{Linearized response of 13 seafloor pressure sensors
+  space 400 m apart at
+  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, sources
+  are isotropic point
+  radiators, source pulse is Gaussian
+  derivative with peak frequency 5 Hz, Background or reference model
+  as in Figure \ref{fig:csq_4layersm}, perturbation as in
+  Figure \ref{fig:dcsq_4layer}.}
+
 \noindent \paragraph{Adjoint Linearized Simulation}
 Adjoint linearized simulation (reverse time migration) of the 12 shot
 linearized data (Figure \ref{fig:born8-12km}) produces the image
 displayed in Figure \ref{fig:migr8-12km}. 
+
+\plot{migr8-12km}{width=15cm}{Reverse-time migration of Born data
+  from Figure \ref{fig:born8-12km}. Reflectors are correctly
+  positioned and clearly visible, along with migration artifacts
+  characteristic of raw OBS migration, for example a free-surface
+  multiple image slightly above 5000 m depth.}
 
 \section{Conclusion}
 This paper has described the overall structure of the IWAVE framework,
@@ -972,59 +1018,4 @@ his generous and crucial help in the integration of IWAVE into Madagascar.
 
 \bibliographystyle{seg}
 \bibliography{masterref}
-
-%\inputdir{../../../trip/newiwave/demo/oneshot}
-\inputdir{project}
-
-
-
-\plot{framesrc}{width=15cm}{Acoustic potential field at
-  5.12 s, resulting from Gaussian derivative point source pulse
-  located at x=12 km, z = 1.875 km.}
-\plot{shot12000}{width=15cm}{Response of seafloor pressure sensor at
-  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, source is isotropic point
-  radiator, source pulse is Gaussian
-  derivative with peak frequency 5 Hz,}
-\plot{dcsq_4layer}{width=15cm}{Velocity-squared perturbation -
-  localized oscillations at layer boundaries}
-\plot{csq_4layersm}{width=15cm}{Smooth velocity-squared obtained from
-  velocity of Figure \ref{csq_4layer} by filtering with a cubic spline window.}
-\plot{born12000}{width=15cm}{Linearized response (``Born modeling'') of seafloor pressure
-  sensor, due to perturbation (Figure \ref{fig:dcsq_4layer}) about
-  smooth background (Figure \ref{fig:csq_4layersm}); other parameters
-  as in Figure \ref{fig:shot12000}.}
-\plot{migr12000}{width=15cm}{Reverse-time migration of Born data
-  from Figure \ref{fig:born12000}.}
-%\plot{line8-12km}{width=15cm}{Response of 12 seafloor pressure sensors at
- % 1.875 km depth, positioned 400 m apart starting at 8 km from left
-%  edge of model, to 400 shots spaced 25 m apart at 6 m depth, source is isotropic point
- % derivative with peak frequency 5 Hz,}
-%\plot{born8-12km}{width=15cm}{Linearized response (``Born modeling'') of seafloor pressure
-%  sensors 400 shots, geometry as described in Figure
-%  \ref{fig:line8-12km}, due to velocity-squared perturbation (Figure \ref{fig:dcsq_4layer}) about
-%  smooth background (Figure \ref{fig:csq_4layersm}); other parameters
-%  as in Figure \ref{fig:line8-12km}.}
-%\plot{migr8-12km}{width=15cm}{Reverse-time migration of Born data
-%  from Figure \ref{fig:born8-12km}.}
-\plot{line8-12km}{width=15cm}{Response of 13 seafloor pressure sensors
-  spaced 400 m apart at
-  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, sources
-  are isotropic point
-  radiators, source pulse is Gaussian
-  derivative with peak frequency 5 Hz. Velocity-squared model depicted
-in Figure \ref{fig:csq_4layer}.}
-\plot{born8-12km}{width=15cm}{Linearized response of 13 seafloor pressure sensors
-  space 400 m apart at
-  1.875 km depth, to 400 shots spaced 25 m apart at 6 m depth, sources
-  are isotropic point
-  radiators, source pulse is Gaussian
-  derivative with peak frequency 5 Hz, Background or reference model
-  as in Figure \ref{fig:csq_4layersm}, perturbation as in
-  Figure \ref{fig:dcsq_4layer}.}
-\plot{migr8-12km}{width=15cm}{Reverse-time migration of Born data
-  from Figure \ref{fig:born8-12km}. Reflectors are correctly
-  positioned and clearly visible, along with migration artifacts
-  characteristic of raw OBS migration, for example a free-surface
-  multiple image slightly above 5000 m depth.}
-
 
