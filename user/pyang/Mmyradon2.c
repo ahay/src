@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 			memset(tmpr, 0, nfft*sizeof(float));
 			memcpy(tmpr, mm[ip], nt*sizeof(float));
 		 	fftwf_execute(fft1);// FFT: mm-->cmm
-			memcpy(&cmm[ip*nw], tmpc, nw*sizeof(float));
+			memcpy(&cmm[ip*nw], tmpc, nw*sizeof(float));			
 		}
 		matrix_transpose(cmm, nw, np);
 	}
@@ -207,7 +207,8 @@ int main(int argc, char* argv[])
 		{			
 			memcpy(tmpc, &cmm[ip*nw], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1); // IFFT: cmm-->mm
-			memcpy(mm[ip], tmpr, nt*sizeof(float));
+			//memcpy(mm[ip], tmpr, nt*sizeof(float));
+			for(iw=0; iw<nt; iw++) mm[ip][iw]=tmpr[iw]/nfft;
 		}
 
 		sf_floatwrite(mm[0], nt*np, out);
@@ -217,7 +218,8 @@ int main(int argc, char* argv[])
 		{
 			memcpy(tmpc, &cdd[ix*nw], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1);// IFFT: cmm-->mm
-			memcpy(dd[ix], tmpr, nt*sizeof(float));
+			//memcpy(dd[ix], tmpr, nt*sizeof(float));
+			for(iw=0; iw<nt; iw++) dd[ix][iw]=tmpr[iw]/nfft;
 		}
 
 		sf_floatwrite(dd[0], nt*nx, out);
