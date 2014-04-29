@@ -27,6 +27,25 @@ Flow(['gather_subset.rsf','gather_subset_hdr.rsf','onetrace.rsf','onetrace_hdr.r
         label4="iline" o4=169 n4=1  d4=1   
         output=${TARGETS[2]}
      ''',stdout=0,stdin=0)
+Flow(['alltraces.rsf','alltraces_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahsort 
+  	input=$SOURCE 
+	sort="iline:169,181  xline:104,116 offset:0,11000" 
+        verbose=1  
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
+       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 
+     | sftahmakeskey 
+        pkey=dt
+	skey=tracr
+     | sftahwrite 
+        verbose=1                           
+	label2="tracr"  o2=1 n2=5047  d2=1   
+        output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
 
 # I used these header prints to get the range of shots and traces to resort 
 # the data back to shot record and look for better coherency
