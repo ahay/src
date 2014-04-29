@@ -105,8 +105,8 @@ __global__ void cuda_init_abcx(float *vel, float *bx1, float *bx2, float dx, flo
 }
 
 
+// initialize the PML coefficients along z-axis
 __global__ void cuda_init_abcz(float *vel, float *bz1, float *bz2, float dx, float dz, float dt, int npml, int nnz, int nnx)
-/*< initialize the PML absorbing boundary condition coefficients along z-axis >*/ 
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -145,7 +145,6 @@ __global__ void cuda_init_abcz(float *vel, float *bz1, float *bz2, float dx, flo
 
 
 __global__ void cuda_init_bell(float *bell)
-/*< initialize Gaussian bell function>*/
 {
 	int i1=threadIdx.x;
 	int i2=threadIdx.y;
@@ -154,14 +153,14 @@ __global__ void cuda_init_bell(float *bell)
 	bell[id]=expf(-((i1-nbell)*(i1-nbell)+(i2-nbell)*(i2-nbell))/s);
 }
 
+// inject Gaussian bell smoothed wavelet
+// lauch configuration: <<<dim3(ns,1), dim3(2*nbell+1,2*nbell+1)>>>
+// add==true, add (inject) the wavelet; add==false, subtract the wavelet
 __global__ void cuda_add_bellwlt(float *p, float *bell, float *wlt, int *Sxz, int ns, int npml, int nnz, int nnx, bool add)
-/*< inject Gaussian bell smoothed wavelet
-lauch configuration: <<<dim3(1,1,1), dim3(2*nbell+1,2*nbell+1,ns)>>>
-add==true, add (inject) the wavelet; add==false, subtract the wavelet >*/
 {
 	int i1=threadIdx.x;
 	int i2=threadIdx.y;
-	int is=threadIdx.z;
+	int is=blockIdx.x;// source wavelet index
 	
     	if (is<ns)
 	{
@@ -253,7 +252,7 @@ __global__ void cuda_PML_vx_2(float *p,  float *convpx, float *bx, float *vx, fl
 	vx[id]+=convpx[ik];
 }
 
-__global__ void cuda_forward_p_2(float *vel, float *p0, float *p1, float *p2, float *vx, float *vz, float dt, float _dx, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_forward_up_2(float *up, float *vx, float *vz, float _dx, float _dz, int npml, int nnz, int nnx)
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
@@ -277,15 +276,12 @@ __global__ void cuda_forward_p_2(float *vel, float *p0, float *p1, float *p2, fl
 
 	float diff1=(s_v1[threadIdx.x+1][threadIdx.y]-s_v1[threadIdx.x][threadIdx.y]);
 	float diff2=(s_v2[threadIdx.x][threadIdx.y+1]-s_v2[threadIdx.x][threadIdx.y]);
-	float c=dt*vel[id];	c=c*c;
-	p2[id]=2*p1[id]-p0[id]+c*(_dz*diff1+_dx*diff2);
-
-	//if (frsf && i1<npml)	p2[id]=0.0;
+	up[id]=_dz*diff1+_dx*diff2;
 }
 
 
 
-__global__ void cuda_PML_pz_2(float *vel, float *p2, float *convvz, float *bz, float *vz, float dt, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upz_2(float *up,  float *convvz, float *bz, float *vz, float _dz, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -310,11 +306,10 @@ __global__ void cuda_PML_pz_2(float *vel, float *p2, float *convvz, float *bz, f
 
 	float diff1=(s_v1[threadIdx.x+1][threadIdx.y]-s_v1[threadIdx.x][threadIdx.y]);
 	convvz[ik]=bz[ik]*convvz[ik]+(bz[ik]-1.0f)*_dz*diff1;
-	float c=dt*vel[id];	c=c*c;
-	p2[id]+=c*convvz[ik];
+	up[id]+=convvz[ik];
 }
 
-__global__ void cuda_PML_px_2(float *vel, float *p2, float *convvx, float *bx, float *vx, float dt, float _dx, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upx_2(float *up,  float *convvx, float *bx, float *vx, float _dx, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -339,8 +334,7 @@ __global__ void cuda_PML_px_2(float *vel, float *p2, float *convvx, float *bx, f
 
 	float diff2=(s_v2[threadIdx.x][threadIdx.y+1]-s_v2[threadIdx.x][threadIdx.y]);
 	convvx[ik]=bx[ik]*convvx[ik]+(bx[ik]-1.0f)*_dx*diff2;
-	float c=dt*vel[id];	c=c*c;
-	p2[id]+=c*convvx[ik];
+	up[id]+=convvx[ik];
 }
 
 
@@ -451,9 +445,7 @@ __global__ void cuda_PML_vx_4(float *p,  float *convpx, float *bx, float *vx, fl
 	vx[id]+=convpx[ik];
 }
 
-
-
-__global__ void cuda_forward_p_4(float *vel, float *p0, float *p1, float *p2, float *vx, float *vz, float dt, float _dx, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_forward_up_4(float *up, float *vx, float *vz, float _dx, float _dz, int npml, int nnz, int nnx)
 {
 	int i1=blockIdx.x*blockDim.x+threadIdx.x;
 	int i2=blockIdx.y*blockDim.y+threadIdx.y;
@@ -490,13 +482,10 @@ __global__ void cuda_forward_p_4(float *vel, float *p0, float *p1, float *p2, fl
 			 -0.041666666666667f*(s_vx[threadIdx.x][threadIdx.y+3]-s_vx[threadIdx.x][threadIdx.y]);
 	float diff1=1.125f*(s_vz[threadIdx.x+2][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])+
 			 -0.041666666666667f*(s_vz[threadIdx.x+3][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
-	float c=dt*vel[id];c=c*c;
-	p2[id]=2*p1[id]-p0[id]+c*(_dz*diff1+_dx*diff2);
-
-	//if (frsf && i1<npml)	p0[id]=0.0;
+	up[id]=_dz*diff1+_dx*diff2;
 }
 
-__global__ void cuda_PML_pz_4(float *vel, float *p2,  float *convvz, float *bz, float *vz, float dt, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upz_4(float *up,  float *convvz, float *bz, float *vz, float _dz, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -527,10 +516,9 @@ __global__ void cuda_PML_pz_4(float *vel, float *p2,  float *convvz, float *bz, 
 	float diff1=1.125f*(s_vz[threadIdx.x+2][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])+
 			-0.041666666666667f*(s_vz[threadIdx.x+3][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
 	convvz[ik]=bz[ik]*convvz[ik]+(bz[ik]-1.0f)*_dz*diff1;
-	float c=dt*vel[id];c=c*c;
-	p2[id]+=c*convvz[ik];
+	up[id]+=convvz[ik];
 }
-__global__ void cuda_PML_px_4(float *vel, float *p2, float *convvx, float *bx, float *vx, float dt, float _dx, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upx_4(float *up, float *convvx, float *bx, float *vx, float _dx, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -561,8 +549,7 @@ __global__ void cuda_PML_px_4(float *vel, float *p2, float *convvx, float *bx, f
 	float diff2=1.125f*(s_vx[threadIdx.x][threadIdx.y+2]-s_vx[threadIdx.x][threadIdx.y+1])
 			-0.041666666666667f*(s_vx[threadIdx.x][threadIdx.y+3]-s_vx[threadIdx.x][threadIdx.y]);
 	convvx[ik]=bx[ik]*convvx[ik]+(bx[ik]-1.0f)*_dx*diff2;
-	float c=dt*vel[id];c=c*c;
-	p2[id]+=c*convvx[ik];
+	up[id]+=convvx[ik];
 }
 
 
@@ -675,7 +662,7 @@ __global__ void cuda_PML_vx_6(float *p,  float *convpx, float *bx, float *vx, fl
 	convpx[ik]=bx[ik]*convpx[ik]+(bx[ik]-1.0f)*_dx*diff2;	
 	vx[id]+=convpx[ik];
 }
-__global__ void cuda_forward_p_6(float *vel, float *p0, float *p1, float *p2, float *vx, float *vz, float dt, float _dx, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_forward_up_6(float *up, float *vx, float *vz, float _dx, float _dz, int npml, int nnz, int nnx)
 {
 	int i1=blockIdx.x*blockDim.x+threadIdx.x;
 	int i2=blockIdx.y*blockDim.y+threadIdx.y;
@@ -715,12 +702,10 @@ __global__ void cuda_forward_p_6(float *vel, float *p0, float *p1, float *p2, fl
 	float diff1=1.171875f*(s_vz[threadIdx.x+3][threadIdx.y]-s_vz[threadIdx.x+2][threadIdx.y])+
 			-0.065104166666667f*(s_vz[threadIdx.x+4][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])+
 			0.0046875f*(s_vz[threadIdx.x+5][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
-	float c=dt*vel[id];c=c*c;
-	p2[id]=2*p1[id]-p0[id]+c*(_dz*diff1+_dx*diff2);
-	//if (frsf && i1<npml) p2[id]=0.0;
+	up[id]=(_dz*diff1+_dx*diff2);
 }
 
-__global__ void cuda_PML_pz_6(float *vel, float *p2, float *convvz, float *bz, float *vz, float dt, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upz_6(float *up,  float *convvz, float *bz, float *vz, float _dz, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -752,10 +737,9 @@ __global__ void cuda_PML_pz_6(float *vel, float *p2, float *convvz, float *bz, f
 			-0.065104166666667f*(s_vz[threadIdx.x+4][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])
 			+0.0046875f*(s_vz[threadIdx.x+5][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
 	convvz[ik]=bz[ik]*convvz[ik]+(bz[ik]-1.0f)*_dz*diff1;
-	float c=dt*vel[id];c=c*c;
-	p2[id]+=c*convvz[ik];
+	up[id]+=convvz[ik];
 }
-__global__ void cuda_PML_px_6(float *vel, float *p2, float *convvx, float *bx, float *vx, float dt, float _dx, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upx_6(float *up, float *convvx, float *bx, float *vx, float _dx, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -787,8 +771,7 @@ __global__ void cuda_PML_px_6(float *vel, float *p2, float *convvx, float *bx, f
 			-0.065104166666667f*(s_vx[threadIdx.x][threadIdx.y+4]-s_vx[threadIdx.x][threadIdx.y+1])
 			+0.0046875f*(s_vx[threadIdx.x][threadIdx.y+5]-s_vx[threadIdx.x][threadIdx.y]);
 	convvx[ik]=bx[ik]*convvx[ik]+(bx[ik]-1.0f)*_dx*diff2;
-	float c=dt*vel[id];c=c*c;
-	p2[id]+=c*convvx[ik];
+	up[id]+=convvx[ik];
 }
 
 
@@ -908,7 +891,7 @@ __global__ void cuda_PML_vx_8(float *p, float *convpx, float *bx, float *vx, flo
 	vx[id]+=convpx[ik];
 }
 
-__global__ void cuda_forward_p_8(float *vel, float *p0, float *p1, float *p2, float *vx, float *vz, float dt, float _dx, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_forward_up_8(float *up, float *vx, float *vz, float _dx, float _dz, int npml, int nnz, int nnx)
 {
 	int i1=blockIdx.x*blockDim.x+threadIdx.x;
 	int i2=blockIdx.y*blockDim.y+threadIdx.y;
@@ -950,11 +933,9 @@ __global__ void cuda_forward_p_8(float *vel, float *p0, float *p1, float *p2, fl
 			-0.0797526041667f*(s_vz[threadIdx.x+5][threadIdx.y]-s_vz[threadIdx.x+2][threadIdx.y])+
 			0.0095703125000f*(s_vz[threadIdx.x+6][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])+
 			-0.0006975446429f*(s_vz[threadIdx.x+7][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
-	float c=dt*vel[id];c=c*c;
-	p2[id]=2*p1[id]-p0[id]+c*(_dz*diff1+_dx*diff2);
-	//if (frsf && i1<npml) p2[id]=0.0;
+	up[id]=_dz*diff1+_dx*diff2;
 }
-__global__ void cuda_PML_pz_8(float *vel, float *p2, float *convvz, float *bz, float *vz, float dt, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upz_8(float *up, float *convvz, float *bz, float *vz, float _dz, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -987,10 +968,9 @@ __global__ void cuda_PML_pz_8(float *vel, float *p2, float *convvz, float *bz, f
 			+0.0095703125000f*(s_vz[threadIdx.x+6][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])
 			-0.0006975446429f*(s_vz[threadIdx.x+7][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
 	convvz[ik]=bz[ik]*convvz[ik]+(bz[ik]-1.0f)*_dz*diff1;
-	float c=dt*vel[id];c=c*c;
-	p2[id]+=c*convvz[ik];
+	up[id]+=convvz[ik];
 }
-__global__ void cuda_PML_px_8(float *vel, float *p2, float *convvx, float *bx, float *vx, float dt, float _dx, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upx_8(float *up, float *convvx, float *bx, float *vx, float _dx, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -1023,8 +1003,7 @@ __global__ void cuda_PML_px_8(float *vel, float *p2, float *convvx, float *bx, f
 			+0.0095703125000f*(s_vx[threadIdx.x][threadIdx.y+6]-s_vx[threadIdx.x][threadIdx.y+1])
 			-0.0006975446429f*(s_vx[threadIdx.x][threadIdx.y+7]-s_vx[threadIdx.x][threadIdx.y]);
 	convvx[ik]=bx[ik]*convvx[ik]+(bx[ik]-1.0f)*_dx*diff2;
-	float c=dt*vel[id];c=c*c;
-	p2[id]+=c*convvx[ik];
+	up[id]+=convvx[ik];
 }
 
 
@@ -1145,7 +1124,7 @@ __global__ void cuda_PML_vx_10(float *p, float *convpx, float *bx, float *vx, fl
 	vx[id]+=convpx[ik];
 }
 
-__global__ void cuda_forward_p_10(float *vel, float *p0, float *p1, float *p2, float *vx, float *vz, float dt, float _dx, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_forward_up_10(float *up, float *vx, float *vz, float _dx, float _dz, int npml, int nnz, int nnx)
 {
 	int i1=blockIdx.x*blockDim.x+threadIdx.x;
 	int i2=blockIdx.y*blockDim.y+threadIdx.y;
@@ -1188,11 +1167,9 @@ __global__ void cuda_forward_p_10(float *vel, float *p0, float *p1, float *p2, f
 			+0.013842773437500f*(s_vx[threadIdx.x][threadIdx.y+7]-s_vx[threadIdx.x][threadIdx.y+2])
 			-0.001765659877232f*(s_vx[threadIdx.x][threadIdx.y+8]-s_vx[threadIdx.x][threadIdx.y+1])
 			+0.000118679470486f*(s_vx[threadIdx.x][threadIdx.y+9]-s_vx[threadIdx.x][threadIdx.y]);
-	float c=dt*vel[id]; c=c*c;
-	p2[id]=2*p1[id]-p0[id]+c*(_dz*diff1+_dx*diff2);
-	//if (frsf && i1<npml) p2[id]=0.0;
+	up[id]=(_dz*diff1+_dx*diff2);
 }
-__global__ void cuda_PML_pz_10(float *vel, float *p2, float *convvz, float *bz, float *vz, float dt, float _dz, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upz_10(float *up, float *convvz, float *bz, float *vz, float _dz, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -1227,10 +1204,9 @@ __global__ void cuda_PML_pz_10(float *vel, float *p2, float *convvz, float *bz, 
 			-0.001765659877232f*(s_vz[threadIdx.x+8][threadIdx.y]-s_vz[threadIdx.x+1][threadIdx.y])
 			+0.000118679470486f*(s_vz[threadIdx.x+9][threadIdx.y]-s_vz[threadIdx.x][threadIdx.y]);
 	convvz[ik]=bz[ik]*convvz[ik]+(bz[ik]-1.0f)*_dz*diff1;
-	float c=dt*vel[id]; c=c*c;
-	p2[id]+=c*convvz[ik];
+	up[id]+=convvz[ik];
 }
-__global__ void cuda_PML_px_10(float *vel, float *p2, float *convvx, float *bx, float *vx, float dt, float _dx, int npml, int nnz, int nnx)
+__global__ void cuda_PML_upx_10(float *up, float *convvx, float *bx, float *vx, float _dx, int npml, int nnz, int nnx)
 {
 	// bz1: top and bottom PML ABC coefficients, decay p (px,pz) along z direction
 	// bz2: top and bottom PML ABC coefficients, decay v (vx,vz) along z direction
@@ -1264,71 +1240,81 @@ __global__ void cuda_PML_px_10(float *vel, float *p2, float *convvx, float *bx, 
 			 -0.001765659877232f*(s_vx[threadIdx.x][threadIdx.y+8]-s_vx[threadIdx.x][threadIdx.y+1])+
 			0.000118679470486f*(s_vx[threadIdx.x][threadIdx.y+9]-s_vx[threadIdx.x][threadIdx.y]);
 	convvx[ik]=bx[ik]*convvx[ik]+(bx[ik]-1.0f)*_dx*diff2;
-	float c=dt*vel[id]; c=c*c;
-	p2[id]+=c*convvx[ik];
+	up[id]+=convvx[ik];
+}
+
+// update wavefield p
+__global__ void cuda_step_forward(float *vel, float *up, float *p0, float *p1, float dt, int npml, int nnz, int nnx)
+{
+	int i1=blockIdx.x*blockDim.x+threadIdx.x;
+	int i2=blockIdx.y*blockDim.y+threadIdx.y;
+	int id=i1+i2*nnz;
+	float c=dt*vel[id];c=c*c;
+	p0[id]=2*p1[id]-p0[id]+c*up[id];
 }
 
 
-__global__ void cuda_rw_innertb(float *innertb, float *p, int npml, int nnz, int nnx, int NJ, bool read)
-/*< read and write the inner computation zone boundary coefficients from and into RAM along z direction
- read==flase, write/save boundary; read==true, read the boundary >*/
+//====================================== read and write/save the boundary ==================================
+// read and write the inner computation zone boundary coefficients from and into RAM along z direction
+// read==flase, write/save boundary; read==true, read the boundary
+__global__ void cuda_rw_boundarytb(float *boundarytb, float *p, int npml, int nnz, int nnx, int NJ, bool read)
 {
-	int nx=nnx-2*npml;
+	//int nx=nnx-2*npml;
 	int nz=nnz-2*npml;
   	int i1=threadIdx.x+blockDim.x*blockIdx.x;
 	int i2=threadIdx.y+blockDim.y*blockIdx.y;
 	int id=i1+2*(NJ-1)*i2;
-	int i1p=i1+npml;
-	int i2p=i2+npml;
+	int i1p=i1+npml-(NJ-1);
+	int i2p=i2;
 	int idp=i1p+nnz*i2p;
 
-	if (i1<NJ-1 && i2<nx)
+	if (i1<NJ-1 && i2<nnx)
 	{
 		if(read)
 		{
-			p[idp]=innertb[id];
-			p[idp+(nz-NJ+1)]=innertb[id+(NJ-1)];
+			p[idp]=boundarytb[id];	
+			p[idp+nz+NJ-1]=boundarytb[id+NJ-1];
 		}
 		else	
 		{
-			innertb[id]=p[idp];	
-			innertb[id+(NJ-1)]=p[idp+(nz-NJ+1)];
+			boundarytb[id]=p[idp];	
+			boundarytb[id+NJ-1]=p[idp+nz+NJ-1];
 		}
 	}
 }
 
-__global__ void cuda_rw_innerlr(float *innerlr, float *p, int npml, int nnz, int nnx, int NJ, bool read)
-/*< read and write the inner computation zone boundary coefficients from and into RAM along x direction
- read==flase, write and save boundary; read==true, read the boundary >*/
+// read and write the inner computation zone boundary coefficients from and into RAM along x direction
+// read==flase, write and save boundary; read==true, read the boundary
+__global__ void cuda_rw_boundarylr(float *boundarylr, float *p, int npml, int nnz, int nnx, int NJ, bool read)
 {
 	int nx=nnx-2*npml;
-	int nz=nnz-2*npml;
+	//int nz=nnz-2*npml;
 	int i1=threadIdx.x+blockDim.x*blockIdx.x;
 	int i2=threadIdx.y+blockDim.y*blockIdx.y;
-	int id=i1+nz*i2;
-	int i1p=i1+npml;
-	int i2p=i2+npml;
+	int id=i1+nnz*i2;
+	int i1p=i1;
+	int i2p=i2+npml-(NJ-1);
 	int idp=i1p+nnz*i2p;
 
-	if (i1<nz && i2<NJ-1)
+	if (i1<nnz && i2<NJ-1)
 	{
 		if (read)
 		{
-			p[idp]=innerlr[id];
-			p[idp+nnz*(nx-NJ+1)]=innerlr[id+nz*(NJ-1)];
+			p[idp]=boundarylr[id];
+			p[idp+nnz*(nx+NJ-1)]=boundarylr[id+nnz*(NJ-1)];
 		}
 		else
 		{
-			innerlr[id]=p[idp];
-			innerlr[id+nz*(NJ-1)]=p[idp+nnz*(nx-NJ+1)];
+			boundarylr[id]=p[idp];
+			boundarylr[id+nnz*(NJ-1)]=p[idp+nnz*(nx+NJ-1)];
 		}
 	}
 }
 
 
 
+//========================================== imaging condition ====================================================
 __global__ void cuda_cross_correlate(float *Isg, float *Iss, float *sp,	float *gp, int npml, int nnz, int nnx)
-/*< perform cross-correlation >*/
 {
 	int i1=threadIdx.x+blockDim.x*blockIdx.x;
 	int i2=threadIdx.y+blockDim.y*blockIdx.y;
@@ -1345,7 +1331,6 @@ __global__ void cuda_cross_correlate(float *Isg, float *Iss, float *sp,	float *g
 
 
 __global__ void cuda_imaging(float *Isg, float *Iss, float *I1, float *I2, int npml, int nnz, int nnx)
-/*< imaging condition with and without illumination compensation >*/
 {
 	int nz=nnz-2*npml;
 	int nx=nnx-2*npml;
@@ -1356,7 +1341,7 @@ __global__ void cuda_imaging(float *Isg, float *Iss, float *I1, float *I2, int n
     	if(i1>=npml && i1<nnz-npml && i2>=npml && i2<nnx-npml) 
 	{
 		I1[id]+=Isg[id];		// correlation imaging condition
-		I2[id]+=Isg[id]/(Iss[id]+EPS);  // image normalization with illumination
+		I2[id]+=Isg[id]/(Iss[id]+EPS);// normalized image
 	}
 	__syncthreads();
 

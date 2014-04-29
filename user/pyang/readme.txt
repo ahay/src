@@ -43,9 +43,6 @@ Depends on: 	rtm2d.c
 Test file:	/book/xjtu/rtm2d/hyper/SConstruct
 		/book/xjtu/rtm2d/marmousi/SConstruct
 		/book/xjtu/rtm2d/sigsbee/SConstruct
-Note: rtm2d.c is coded following the linear operator standard in 
-	Madagascar:	oper(adj, add, nm, nd, mod, dat)
-
 
 5) Prestack RTM using GPU with staggered grid
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
