@@ -58,27 +58,6 @@ I(\textbf{x})=\sum_{s=1}^{ns}\frac{\int_{0}^{t_{\max}}\mathrm{d}t\sum_{g=1}^{ng}
 
 There are some possible ways to do RTM computation. The simplest one may be just storing the forward modeled wavefields on the disk, and reading them for imaging condition in the backward propagation steps. This approach requires frequent disk I/O and has been replaced by wavefield reconstruction method. The so-called wavefield reconstruction method is a way to recover the wavefield via backward reconstructing or forward remodeling, using the saved wavefield snaps and boundaries. It is of special value for GPU computing because saving the data in device variables eliminates data transfer between CPU and GPU. By saving the last two wavefield snaps and the boundaries, one can reconstruct the wavefield of every time step, in time-reversal order. The checkpointing technique becomes very useful to further reduce the storage \citep{symes2007reverse,dussaud2008computational}. Of course, it is also possible to avert the issue of boundary saving by applying the random boundary condition, which may bring some noises in the migrated image \citep{clapp2009reverse,clapp2010selecting,liu2013wavefield,liu20133d}.
 
-\section{Overview of RTM and its computation}
-
-In the case of constant density, the acoustic wave equation is written as
-\begin{equation}\label{eq:scalar_wav}
-\frac{1}{v^2(\textbf{x})}\frac{\partial^2 p(\textbf{x},t;\textbf{x}_s)}{\partial t^2}=\nabla^2 p(\textbf{x},t;\textbf{x}_s)+f(t)\delta(\textbf{x}-\textbf{x}_s),
-\end{equation}
-where $p(\textbf{x},t;\textbf{x}_s)$ is the wavefield excited by the source at the position $\textbf{x}=\textbf{x}_s$,  $v(\textbf{x})$ stands for the velocity in the media, $\nabla^2=\nabla\cdot\nabla=\partial_{xx}+\partial_{zz}$, $f(t)$ denotes the source signature. For the convenience, we eliminate the source term hereafter and use the notation $\partial_u=\frac{\partial}{\partial u}$ and $\partial_{uu}=\frac{\partial}{\partial u^2}$, $u=x,z$. The forward marching step can be specified after discretization as
-\begin{equation}\label{eq:forward}
-p^{k+1}=2p^{k}-p^{k-1}+v^2\Delta t^2 \nabla^2 p^{k}.
-\end{equation}
-Based on the wave equation, the principle of RTM imaging can be interpreted as the cross-correlation of two wavefields at the same time level, one computed by forward time recursion, the other computed by backward time stepping \citep{symes2007reverse}.
- Mathematically, the cross-correlation imaging condition can be expressed as
-\begin{equation}
-I(\textbf{x})=\sum_{s=1}^{ns}\int_{0}^{t_{\max}}\mathrm{d}t \sum_{g=1}^{ng} p_s(\textbf{x},t;\textbf{x}_s)p_g(\textbf{x},t;\textbf{x}_g),
-\end{equation}
-where $I(\textbf{x})$ is the migrated image at point ${\bf x}$; and $p_s(\cdot)$ and $p_g(\cdot)$ are the source wavefield and receiver (or geophone) wavefield. The normalized cross-correlation imaging condition is designed by incorporating illumination compensation:
-\begin{equation}
-I(\textbf{x})=\sum_{s=1}^{ns}\frac{\int_{0}^{t_{\max}}\mathrm{d}t\sum_{g=1}^{ng} p_s(\textbf{x},t;\textbf{x}_s)p_g(\textbf{x},t;\textbf{x}_g)}{\int_{0}^{t_{\max}}\mathrm{d}t p_s(\textbf{x},t;\textbf{x}_s)p_s(\textbf{x},t;\textbf{x}_s)}.
-\end{equation}
-
-There are some possible ways to do RTM computation. The simplest one may be just storing the forward modeled wavefields on the disk, and reading them for imaging condition in the backward propagation steps. This approach requires frequent disk I/O and has been replaced by wavefield reconstruction method. The so-called wavefield reconstruction method is a way to recover the wavefield via backward reconstructing or forward remodeling, using the saved wavefield snaps and boundaries. It is of special value for GPU computing because saving the data in device variables eliminates data transfer between CPU and GPU. By saving the last two wavefield snaps and the boundaries, one can reconstruct the wavefield of every time step, in time-reversal order. The checkpointing technique becomes very useful to further reduce the storage \citep{symes2007reverse,dussaud2008computational}. Of course, it is also possible to avert the issue of boundary saving by applying the random boundary condition, which may bring some noises in the migrated image \citep{clapp2009reverse,clapp2010selecting,liu2013wavefield,liu20133d}.
 
 \section{Effective boundary saving}
 
@@ -286,7 +265,7 @@ The second example is GPU-based RTM for Marmousi model (Figure 7) using our effe
 
 \plot{marmousi}{width=0.6\textwidth}{The Marmousi velocity model.}
 
-\plot{images}{width=\textwidth}{RTM result of Marmousi model using effective boundary saving scheme (staggered grid finite difference). (a) Result of cross-correlation imaging condition. (b) Result of normalized cross-correlation imaging condition.}
+\multiplot{2}{imag1,imag2}{width=0.45\textwidth}{RTM result of Marmousi model using effective boundary saving scheme (staggered grid finite difference). (a) Result of cross-correlation imaging condition. (b) Result of normalized cross-correlation imaging condition.}
 
 \subsection{Sigsbee model}
 \inputdir{sigsbee}
