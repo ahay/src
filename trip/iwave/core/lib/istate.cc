@@ -1295,8 +1295,6 @@ namespace TSOpt {
 	panelindex++;
       }
 
-      cerr<<"here\n";
-
       // pull out fdpars for use in time step - same in every
       // step, and for every RDOM, so do it once here and get 
       // from root RDOM

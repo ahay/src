@@ -78,19 +78,30 @@ int main(int argc, char ** argv) {
     Vector<ireal> m(op.getDomain());
     Vector<ireal> dm(op.getDomain());
     Vector<ireal> dd(op.getRange());
+    Vector<ireal> mdd(op.getRange());
 
     AssignFilename mfn(valparse<std::string>(*pars,"rcsq"));
-    Components<ireal> cm(m);
-    cm[0].eval(mfn);
+    //Components<ireal> cm(m);
+    //cm[0].eval(mfn);
+    m.eval(mfn);
 
     AssignFilename dmfn(valparse<std::string>(*pars,"icsq"));
-    Components<ireal> cdm(dm);
-    cdm[0].eval(dmfn);
+    //    Components<ireal> cdm(dm);
+    //    cdm[0].eval(dmfn);
+    dm.eval(dmfn);
     dm.zero();
 
     AssignFilename ddfn(valparse<std::string>(*pars,"data"));
-    Components<ireal> cdd(dd);
-    cdd[0].eval(ddfn);
+    //    Components<ireal> cdd(dd);
+    //    cdd[0].eval(ddfn);
+    dd.eval(ddfn);
+
+    std::string mddnm = valparse<std::string>(*pars,"datamut","");
+    if (mddnm.size()>0) {
+      AssignFilename mddfn(mddnm);
+      mdd.eval(mddfn);
+    }
+    muteop.applyOp(dd,mdd);
 
     float rtol=valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon());
     float nrtol=valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon());
@@ -116,8 +127,8 @@ int main(int argc, char ** argv) {
     float rnorm;
     float nrnorm;
     OperatorEvaluation<ireal> opeval(op,m);
-    AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
-    CGNEAlg<float> alg(dm,opeval.getDeriv(),dd,
+    //    AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
+    CGNEAlg<float> alg(dm,opeval.getDeriv(),mdd,
 		       rnorm, nrnorm, rtol, nrtol, maxcount, maxstep, res);
     float nrnorm0=nrnorm;
     float rnorm0=rnorm;
@@ -141,12 +152,12 @@ int main(int argc, char ** argv) {
       est.eval(estfn);
       opeval.getDeriv().applyOp(dm,est);
       if (datares.size()>0) {
-	Vector<float> res(op.getRange());
+	Vector<float> dres(op.getRange());
 	AssignFilename resfn(datares);
-	res.eval(resfn);
-	res.copy(dd);
-	res.linComb(-1.0f,est);
-      }
+	dres.eval(resfn);
+	dres.copy(mdd);
+	dres.linComb(-1.0f,est);
+      } 
     }
 
     if (retrieveRank() == 0) {

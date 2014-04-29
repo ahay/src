@@ -592,6 +592,7 @@ void acd_check(RDOM * dom, void * specs, FILE * stream) {
       RVLException e;
       e<<"Error: input csq at index "<<i<<" = "<<(dom->_s[0]._s0)[i]<<"\n";
       e<<"  out of bounds ["<<acdpars->cmin<<", "<<acdpars->cmax<<"]\n";
+      e<<"  min csq = "<<vmin<<" max csq = "<<vmax<<"\n";
       throw e;
     }
   }
