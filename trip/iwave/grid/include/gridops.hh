@@ -100,6 +100,14 @@ namespace TSOpt {
     void applyAdjDeriv(Vector<ireal> const & x,
 		       Vector<ireal> const & dy,
 		       Vector<ireal> & dx) const;
+    void applyDeriv2(const Vector<ireal> & x,
+                    const Vector<ireal> & dx0,
+                    const Vector<ireal> & dx1,
+                    Vector<ireal> & dy) const { dy.zero(); }
+    void applyAdjDeriv2(const Vector<ireal> & x,
+                       const Vector<ireal> & dx0,
+                       const Vector<ireal> & dy,
+                       Vector<ireal> & dx1) const { dx1.zero(); }
 
     Operator<ireal> * clone() const { return new GridWindowOp(*this); }
     
