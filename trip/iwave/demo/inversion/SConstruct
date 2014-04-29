@@ -4,7 +4,6 @@
 from rsf.proj import *
 from batch import getFlowSignature
 import os
-IWAVE           = os.getenv('NEWIWAVE')
 thispath        = os.getcwd()
 # both IWAVE and WORKPATH should be checked
 #############################################################################
@@ -27,12 +26,13 @@ sugain          = os.path.join(CWPROOT,'bin/sugain')
 suwind          = os.path.join(CWPROOT,'bin/suwind')
 suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 supsimage       = os.path.join(CWPROOT,'bin/supsimage')
-towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
-acd             = os.path.join(IWAVE,'acd/main/acd.x')
-acdcgne         = os.path.join(IWAVE,'acd/main/acdcgne.x')
-acdlbfgs        = os.path.join(IWAVE,'acd/main/acdlbfgs.x')
-acdiva          = os.path.join(IWAVE,'acd/main/acdiva.x')
-acdadjtest      = os.path.join(IWAVE,'acd/main/acdadjtest.x')
+RSFSRC          = os.getenv('RSFSRC')
+towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
+acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
+acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcgne.x')
+acdlbfgs        = os.path.join(RSFSRC,'trip/iwave/acd/main/acdlbfgs.x')
+acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
+acdadjtest      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdadjtest.x')
 
 fetches = {
     'line_fix.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
@@ -99,7 +99,7 @@ t=Flow(['shot6km.work', 'shot6km.su'],['wavelet_hdr6km.su','csq24.rsf'],
 	'''
 	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
 	csq=../csq24.rsf source=../wavelet_hdr6km.su 
-        data=../shot6km.su
+        data=../shot6km.su 
 	''',
 	stdin=0,stdout=0)
 Clean(t,'shot6km.work')
@@ -149,12 +149,38 @@ t=Flow(['icsq6km.work', 'icsq6km.rsf'],['born6km.su', 'wavelet_hdr6km.su', 'csq2
         +  acdcgne  + ' ' +  
 	'''
 	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
-	csq=../csq24.rsf rcsq=../csq24sm.rsf icsq=../icsq6km.rsf source=../wavelet_hdr6km.su 
-        data=../born6km.su outfile=cgne.out ResidualTol = 0.01 GradientTol = 0.01
+	csq=../csq24.rsf rcsq=../csq24sm.rsf 
+	icsq=../icsq6km.rsf source=../wavelet_hdr6km.su 
+        data=../born6km.su outfile=cgne.out 
+	ResidualTol = 0.01 GradientTol = 0.01
         MaxIter = 20 dataest = est.su datares = res.su
+	datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
+
 	''',
 	stdin=0,stdout=0)
 Clean(t,'icsq6km.work')
+
+# Born inversion - one shot, homog bg
+t=Flow(['icsq6kmhom.work', 'icsq6kmhom.rsf'],['born6km.su', 'wavelet_hdr6km.su', 'csq24hom.rsf'],
+        '''
+        sfadd < csq24.rsf > icsq6kmhom.rsf scale=0.0;
+        /bin/rm -rf icsq6kmhom.work; 
+        /bin/mkdir icsq6kmhom.work; 
+        cd icsq6kmhom.work;
+        '''
+        +  acdcgne  + ' ' +  
+	'''
+	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+	csq=../csq24.rsf rcsq=../csq24hom.rsf 
+	icsq=../icsq6kmhom.rsf source=../wavelet_hdr6km.su 
+        data=../born6km.su outfile=cgne.out 
+	ResidualTol = 0.01 GradientTol = 0.01
+        MaxIter = 20 dataest = est.su datares = res.su
+	datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
+
+	''',
+	stdin=0,stdout=0)
+Clean(t,'icsq6kmhom.work')
 
 # Born inversion - one shot
 t=Flow(['icsq6km100it.work', 'icsq6km100it.rsf'],['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
