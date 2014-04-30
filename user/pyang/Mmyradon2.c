@@ -1,4 +1,4 @@
-/* Linear/parabolic radon transform frequency domain implementation and its adjoint
+/* Linear/parabolic radon transform frequency domain implementation 
 Also referred to as high-resolution radon transform
 Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 	I am using FFTW because I am inexperienced in invoking kiss_fft. 
@@ -207,7 +207,6 @@ int main(int argc, char* argv[])
 		{			
 			memcpy(tmpc, &cmm[ip*nw], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1); // IFFT: cmm-->mm
-			//memcpy(mm[ip], tmpr, nt*sizeof(float));
 			for(iw=0; iw<nt; iw++) mm[ip][iw]=tmpr[iw]/nfft;
 		}
 
@@ -218,7 +217,6 @@ int main(int argc, char* argv[])
 		{
 			memcpy(tmpc, &cdd[ix*nw], nw*sizeof(sf_complex));
 		 	fftwf_execute(ifft1);// IFFT: cmm-->mm
-			//memcpy(dd[ix], tmpr, nt*sizeof(float));
 			for(iw=0; iw<nt; iw++) dd[ix][iw]=tmpr[iw]/nfft;
 		}
 
