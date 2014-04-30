@@ -8,7 +8,7 @@ Flow('vp',None,
      	''')
 Flow('vs','vp', 
 	'''
-	math output="0.577*input" n1=200 n2=200 d1=5 d2=5
+	math output="0.707*input" n1=200 n2=200 d1=5 d2=5
      	label1=x1 unit1=m label2=x2 unit2=m 
 	''')
 Flow('rho',None, 
@@ -19,10 +19,9 @@ Flow('rho',None,
 
 Flow('wavz wavx','vp vs rho',
 	'''
-	Testelastic2d nb=30 nt=500 dt=0.001 vs=${SOURCES[1]} 
+	Testelastic2d nb=20 nt=500 kt=450 dt=0.001 vs=${SOURCES[1]} 
 	rho=${SOURCES[2]} wavx=${TARGETS[1]} 
 	''')
-
 
 Plot('wavx',
      '''

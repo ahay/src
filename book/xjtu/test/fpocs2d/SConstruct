@@ -28,7 +28,7 @@ for eve in (1,2,3,4):
     Flow(para,[spike, tpara],
         'datstretch datum=${SOURCES[1]} ')
 
-Flow('para','para1 para2 para3 para4','add ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}')
+Flow('para','para1 para2 para3 para4','add ${SOURCES[1:4]} ')
 Plot('para','grey label2=Distance unit2=km transp=y yreverse=y scalebar=y  title="Missing 65% traces"')
 
 

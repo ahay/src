@@ -70,8 +70,8 @@ Flow('mul0','rad0',
 Flow('rad1','dat_spike',
 	'radon parab=y adj=y inv=y spk=n perc=95 ns=2 verb=y p0=-0.2 np=60 dp=0.02')
 
-Plot('rad0',gmod + ' pclip=100')
-Plot('rad1',gmod + ' pclip=100')
+Plot('rad0',gmod + ' pclip=100 scalebar=y')
+Plot('rad1',gmod + ' pclip=100 scalebar=y')
 Result('rad','rad0 rad1','SideBySideAniso')
 Result('frw0',gdat)
 Result('mul0',gdat + ' title=primaries')
