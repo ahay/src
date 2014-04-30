@@ -1,0 +1,27 @@
+from rsf.tex import *
+
+End(
+#options='short',
+
+#lclass='segabs',
+
+use='amsmath,setspace,wasysym,graphicx,float,subfigure',
+
+include=r'''
+\newcommand{\rs}[1]{\mathstrut\mbox{\scriptsize\rm \#1}}
+\newcommand{\rr}[1]{\mbox{\rm #1}}
+\newcommand{\mb}{\mathbf}
+\newcommand{\om}{\bar{m}}
+\newcommand{\oM}{\bar{M}}
+\newcommand{\oF}{\bar{F}}
+\newcommand{\cJ}{\mathcal{J}}
+\newcommand{\bx}{{\bf x}}
+\everymath{\displaystyle}
+''',
+color='ALL'
+)
+
+
+
+
+

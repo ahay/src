@@ -1,0 +1,3 @@
+uses=['sfdd', 'sfwindow', 'sfadd', 'sfput', 'sfspray', 'sfcat', 'sfmakevel', 'sfsmooth', 'sfpad', 'sfgrey', 'sfsuread', 'sfgraph']
+data=['data/marmousi/line_fix.su', 'data/marmousi/velocity.HH']
+size=    2207520
