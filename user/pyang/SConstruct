@@ -6,9 +6,9 @@ import bldutil
 progs = '''
 pocs3d pocs5d fpocs2d fpocs3d mwni2d pocs3d2
 pocsseislet istseislet mcaseislet matflip
-Testfd2d Testfd3d Testeb Testelastic2d Testaniso
+Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
+modeling2d forw2d 
 rtm2d lsrtm2d
-modeling2d forw2d
 dlct dlct2 myradon1 myradon2 istradon
 cohn
 '''

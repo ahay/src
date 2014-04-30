@@ -75,7 +75,6 @@ void step_forward(float **p0, float **p1, float**p2)
 
 #ifdef _OPENMP
 #pragma omp parallel for	    \
-    schedule(dynamic,1)		    \
     private(ix,iz,tmp)		    \
     shared(p1)
 #endif	
