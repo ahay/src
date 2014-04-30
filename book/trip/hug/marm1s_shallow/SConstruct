@@ -31,8 +31,10 @@ acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
 acdadjtest      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdadjtest.x')
 
 fetches = {
-    'line_fix.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
-    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'line100m.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'hdr6km.su'   : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
 }
 for file in fetches.keys():
     Fetch(file,fetches[file][0],server=fetches[file][1])   
@@ -48,17 +50,6 @@ Flow('csq24sm2','csq24','smooth rect1=5 rect2=5 repeat=2')
 Flow('dcsq24', ['csq24', 'csq24sm2'],'add mode=a scale=1,-1 < csq24.rsf csq24sm2.rsf |window min1=180| sfpad beg1=8') 
 Flow('csqext.rsf','csq24sm.rsf', 'sfcat csq24sm.rsf csq24sm.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
 Flow('dcsqext.rsf','dcsq24.rsf', 'sfcat dcsq24.rsf dcsq24.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
-
-Flow('line100m.su','line_fix.su', suwind + ' key=sx j=100')
-Flow('hdr6km.su', 'line100m.su', suwind + ' key=sx min=6000 max=6000 tmax=2')
-Flow('hdr2shot.su', 'line100m.su', suwind + ' key=sx min=6000 max=7000 j=1000 tmax=2')
-
-# create base wavelet (just time series, without source position
-# information) via suwaveform
-Flow('wavelet_base.su','',
-     suwaveform + ' type=ricker1 fpeak=6 ns=101 | ' + 
-     sushw + ' key=delrt  a=-200 > ${TARGETS[0]} ',
-     stdin=0)
 
 # add source coordinates from hdrfile to source AND receiver 
 # coordinates from wavelet to create "dressed" wavelet for array
