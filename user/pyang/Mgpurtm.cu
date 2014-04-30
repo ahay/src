@@ -103,7 +103,7 @@ const int npml=32;		// thickness of PML boundary
 const int nbell=1;		// radius of Gaussian bell 
 //const bool frsf=fasle;	// free surface on top boundary or not
 
-#include "cuda_kernels.cu"
+#include "cuda_rtm_kernels.cu"
 
 static bool 	csdgather; 	// common shot gather (CSD) or not 
 static int 	nz1,nx1, nz, nx, nnz, nnx, N, NJ, ns, ng, nt, nt_h;

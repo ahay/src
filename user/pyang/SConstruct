@@ -9,7 +9,7 @@ pocsseislet istseislet mcaseislet matflip
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso
 rtm2d lsrtm2d
 modeling2d forw2d
-dlct dlct2 myradon1 myradon2
+dlct dlct2 myradon1 myradon2 istradon
 cohn
 '''
 
@@ -19,7 +19,7 @@ ccprogs = '''
 
 # CUDA main programs
 cuda_progs = '''
-gpurtm
+gpurtm gpufwi
 '''
 
 try:  # distributed version
