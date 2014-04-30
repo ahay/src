@@ -16,6 +16,7 @@ Joseph Dellinger <geojoe@freeusp.org>
 Esteban Diaz <ediazpan@mines.edu>
 Yuting Duan <yduan@mines.edu>
 Gang Fang <fanggang723@gmail.com>
+Mehdi Far <mehdi.far@beg.utexas.edu>
 Sergey Fomel <sergey.fomel@gmail.com>
 Jeff Godwin <godwin.jeffrey@gmail.com> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
@@ -38,6 +39,7 @@ Xuxin Ma <xuxin.ma@kaust.edu.sa>
 Douglas McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Jorge Monsegny <jmonsegny@hotmail.com>
+Francesco Perrone <perfrancesco@gmail.com>
 Jack Poulson <jack.poulson@gmail.com>
 James Rickett <jrickett@slb.com>
 Sean Ross-Ross <srossross@gmail.com>
@@ -56,7 +58,7 @@ Ioan Vlad <i.vlad@yahoo.com>
 Hui Wang <hui.wang@kaust.edu.sa>
 Robin Weiss <robin.weiss@uwa.edu.au>
 Zedong Wu <zedong.wu@kaust.edu.sa>
-Zhugiang Xue <zhiguangxue@gmail.com>
+Zhiguang Xue <zhiguangxue@gmail.com>
 Jia Yan <jyan@mines.edu>
 Pengliang Yang <ypl.2100@gmail.com>
 Lexing Ying <lexing@math.utexas.edu>
