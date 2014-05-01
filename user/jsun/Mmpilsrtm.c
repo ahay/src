@@ -298,7 +298,7 @@ void reflgen(int nzb, int nxb, int spz, int spx,
 
 int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 	     sf_complex **lt, sf_complex **rt, int m2,
-	     geopar geop, sf_complex *ww, float *rr, int pad1, bool illum)
+	     geopar geop, mpipar mpip, sf_complex *ww, float *rr, int pad1, bool illum)
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -430,7 +430,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 
 int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex **rcd, bool adj,
 	      bool verb, bool wantwf, sf_complex **lt, sf_complex **rt, int m2,
-              geopar geop, int pad1, bool illum)
+              geopar geop, mpipar mpip, int pad1, bool illum)
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
@@ -654,6 +654,7 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
       } /*Main loop*/
     }
     cfft2_finalize();
+    if (verb) sf_warning("... rank=%d ...",mpip->cpuid);
     return 0;
 }
 
@@ -991,7 +992,7 @@ int main(int argc, char* argv[])
 	/*generate reflectivity map*/
 	reflgen(nzb, nxb, spz+top, spx+lft, rectz, rectx, repeat, rr);
 	
-	lrosfor2(wavefld, sill, tmprec, verb, lt, rt, m2, geop, ww, rr, pad1, illum);
+	lrosfor2(wavefld, sill, tmprec, verb, lt, rt, m2, geop, mpip, ww, rr, pad1, illum);
       }
 
       if(adj && wantrecord) {
@@ -1002,7 +1003,7 @@ int main(int argc, char* argv[])
       }
       
       if (shtcur<shtnum0) {
-	lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, pad1, illum);
+	lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, mpip, pad1, illum);
       }
 
       if (adj)
