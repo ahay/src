@@ -128,8 +128,8 @@ int main(int argc, char ** argv) {
       Vector<ireal> m(dom);
       Vector<ireal> m_end(dom);
       Vector<ireal> dm(dom);
-        
       Vector<ireal> dd(op.getRange());
+      Vector<ireal> mdd(op.getRange());
 
       // read in start point and end point
       AssignFilename mfn(valparse<std::string>(*pars,"csq"));
@@ -143,16 +143,17 @@ int main(int argc, char ** argv) {
       Components<ireal> cdm(dm);
       dm.copy(m_end);
       dm.linComb(-1.0f,m);
-      
-      
-//      AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
-//      Components<ireal> cdm(dm);
-//      cdm[0].eval(dmfn);
-//      dm.zero();
     
       AssignFilename ddfn(valparse<std::string>(*pars,"data"));
       Components<ireal> cdd(dd);
       cdd[0].eval(ddfn);
+
+      std::string mddnm = valparse<std::string>(*pars,"datamut","");
+      if (mddnm.size()>0) {
+        AssignFilename mddfn(mddnm);
+        mdd.eval(mddfn);
+      }
+      muteop.applyOp(dd,mdd);
 
       ChebPolicyData<float> pd(valparse<float>(*pars,"gamma",0.04f),
                                valparse<float>(*pars,"epsilon",0.1),
@@ -185,7 +186,7 @@ int main(int argc, char ** argv) {
       // create RHS of block system
       Vector<float> td(top.getRange());
       Components<float> ctd(td);
-      ctd[0].copy(dd);
+      ctd[0].copy(mdd);
       ctd[1].zero();
 
       // choice of preop is placeholder
@@ -228,14 +229,14 @@ int main(int argc, char ** argv) {
 	std::string outfile = valparse<std::string>(*pars,"outfile","");
 	if (outfile.size()>0) {
 	  ofstream outf(outfile.c_str());
-      outf<<strgrad.str();
-      outf<<"\n ================================================= \n";
+          outf<<strgrad.str();
+          outf<<"\n ================================================= \n";
 	  outf<<res.str();
 	  outf.close();
 	}
 	else {
-      cout<<strgrad.str();
-      cout<<"\n ================================================= \n";
+          cout<<strgrad.str();
+          cout<<"\n ================================================= \n";
 	  cout<<res.str();
 	}
       }

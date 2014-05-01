@@ -129,9 +129,9 @@ int main(int argc, char ** argv) {
       // vel-squared model!
       Vector<ireal> m0(dom);
       Vector<ireal> m(dom);
-
       Vector<ireal> dm(op.getDomain());
       Vector<ireal> dd(op.getRange());
+      Vector<ireal> mdd(op.getRange());
 
       AssignFilename mf0n(valparse<std::string>(*pars,"init_velsq"));
       Components<ireal> cm0(m0);
@@ -150,6 +150,13 @@ int main(int argc, char ** argv) {
       AssignFilename ddfn(valparse<std::string>(*pars,"data"));
       Components<ireal> cdd(dd);
       cdd[0].eval(ddfn);
+
+      std::string mddnm = valparse<std::string>(*pars,"datamut","");
+      if (mddnm.size()>0) {
+        AssignFilename mddfn(mddnm);
+        mdd.eval(mddfn);
+      }
+      muteop.applyOp(dd,mdd);
 
       ChebPolicyData<float> pd(valparse<float>(*pars,"gamma",0.04f),
                                valparse<float>(*pars,"epsilon",0.1),
@@ -181,7 +188,7 @@ int main(int argc, char ** argv) {
       // create RHS of block system
       Vector<float> td(top.getRange());
       Components<float> ctd(td);
-      ctd[0].copy(dd);
+      ctd[0].copy(mdd);
       ctd[1].zero();
 
       // choice of preop is placeholder
@@ -266,12 +273,11 @@ int main(int argc, char ** argv) {
             OperatorEvaluation<float> opeval(op,y);
             opeval.getDeriv().applyOp(dm,est);
             if (datares.size()>0) {
-                OperatorEvaluation<float> mopeval(muteop,dd);
                 Vector<float> res(op.getRange());
                 AssignFilename resfn(datares);
                 res.eval(resfn);
                 res.copy(est);
-                res.linComb(-1.0f,mopeval.getValue());
+                res.linComb(-1.0f,mdd);
                 if (normalres.size()>0){
                     OperatorEvaluation<float> topeval(top,y);
                     Vector<float> nres(op.getDomain());
