@@ -10,15 +10,17 @@ Be careful when you try to use them!
 Under this directory, I implemented the algorithms:
 
 1) POCS (projection onto convex sets), FFTW required
-Main:		Mpocs3d.c, Mfpocs3d.c, Mpocs5d.c, Mpocs3d2.c
+Main:		Mpocs3d.c, Mfpocs2d.c, Mfpocs3d.c, Mpocs.c,
 Depends on:	fftn.c
 Test file: 	/book/xjtu/test/fpocs3d/SConstruct
 		/book/xjtu/test/fpocs2d/SConstruct
 Note: fpocs is a two-step version of POCS. You are able to test 
-    sfpocs3d, sffpocs3d, sfpocs3d2 by changing the name of the
-    program in /book/xjtu/test/fpocs3d/SConstruct. POCS implemented
-    in frequency domain (see sfpocs3d2) data gives much faster speed. 
-    It saves the storage and computational cost of FFT.
+    sfpocs3d and sffpocs3d by changing the name of the
+    program in /book/xjtu/test/fpocs3d/SConstruct. 
+
+    POCS implemented in frequency domain (see sfpocs) data gives 
+    much faster speed. It saves the storage and computational cost 
+    of FFT. sfpocs can handle any dimensional data interpolation.
 For more information on FPOCS, check the paper:
  Yang Pengliang, Gao Jinghuai, Chen Wenchao, "On analysis-based 
  two-step interpolation methods for randomly sampled seismic data"
