@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {nth = omp_get_num_threads();
-    if(rank==0)  sf_warning("using %d threads",nth);
+	if(rank==0)  sf_warning("using %d threads",nth);
     }
 #endif
 /*
@@ -146,11 +146,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("jm",&jm)) jm=20;
     if (!sf_getint("nr",&nr)) sf_error("Need nr input");/*streamer total length*/
     if(!topo){
-             if (!sf_getint("isz",&isz)) sf_error("Need isz input");
-             if (!sf_getint("irz",&irz)) irz=isz;
-    } 
-    else {
-         irze =  sf_intalloc(nr);
+	if (!sf_getint("isz",&isz)) sf_error("Need isz input");
+	if (!sf_getint("irz",&irz)) irz=isz;
+	irze = NULL;
+    } else {
+	irze =  sf_intalloc(nr);
     }
     if (!sf_getfloat("err",&err)) err = 0.00001;
     if (!sf_getfloat("alpha",&alpha)) alpha=-0.7;
@@ -176,9 +176,9 @@ int main(int argc, char* argv[])
     /* if(!sf_histint(geo,"n1",&shot_num)) sf_error("No n1=!"); */
     if(!sf_histint(geo,"n1",&n1)) sf_error("No n1=!");
     if(topo){
-            if(!(n1==5)) sf_error("n1 in geo should be 5");
+	if(!(n1==5)) sf_error("n1 in geo should be 5");
     } else {
-           if(!(n1==4)) sf_error("n1 in geo should be 4");
+	if(!(n1==4)) sf_error("n1 in geo should be 4");
     }
     if(!sf_histint(geo,"n2",&shot_num)) sf_error("No n2=!");
     if(rank==0) sf_warning("%d shots!",shot_num);
@@ -194,9 +194,9 @@ int main(int argc, char* argv[])
     tl = newl*nzorg;
 
 /*
-    nxb = nx + nbl + nbr;
-    nzb = nz + nbt + nbb;
-    tl = nx*nz;
+  nxb = nx + nbl + nbr;
+  nzb = nz + nbt + nbb;
+  tl = nx*nz;
 */
 
     nkx = opt? kiss_fft_next_fast_size(nxb): nxb;
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel
     {nth = omp_get_num_threads();
-    if(rank==0)  sf_warning("using %d threads",nth);
+	if(rank==0)  sf_warning("using %d threads",nth);
     }
 #endif
     uk = (kiss_fft_cpx **) sf_complexalloc2(nkx,nkz);
@@ -278,9 +278,11 @@ int main(int argc, char* argv[])
         sf_intread(&nl,1,geo);
         sf_intread(&rb,1,geo);
         if(topo) {
-                 sf_intread(&isz,1,geo);
-                 ename = sf_charalloc(20);
-        }
+	    sf_intread(&isz,1,geo);
+	    ename = sf_charalloc(20);
+        } else {
+	    ename = NULL;
+	}
         sf_seek(geo,(nodes-1)*esize*n1,SEEK_CUR);
         mm = sf_charalloc(15);
         sname = sf_charalloc(20);
@@ -299,17 +301,17 @@ int main(int argc, char* argv[])
         sname[9] = '_';
         sname[10] = '\0';
 /*
-       sname[0] = '/';
-        sname[1] = 'd';
-        sname[2] = 'a';
-        sname[3] = 't';
-        sname[4] = 'a';
-        sname[5] = '1';
-        sname[6] = '/';
-        sname[7] = 's';
-        sname[8] = 'p';
-        sname[9] = '_';
-        sname[10] = '\0';
+  sname[0] = '/';
+  sname[1] = 'd';
+  sname[2] = 'a';
+  sname[3] = 't';
+  sname[4] = 'a';
+  sname[5] = '1';
+  sname[6] = '/';
+  sname[7] = 's';
+  sname[8] = 'p';
+  sname[9] = '_';
+  sname[10] = '\0';
 */
 
         sname = strcat(sname,mm);
@@ -348,21 +350,23 @@ int main(int argc, char* argv[])
         oname[10] = '\0';
         oname = strcat(oname,mm);
         if(topo) {
-                 ename[0] = 'E';
-                 ename[1] = 'L';
-                 ename[2] = 'E';
-                 ename[3] = 'V';
-                 ename[4] = '/';
-                 ename[5] = 'e';
-                 ename[6] = 'l';
-                 ename[7] = 'e';
-                 ename[8] = 'v';
-                 ename[9] = '_';
-                 ename[10] = '\0';
-                 ename = strcat(ename,mm);
-                 rele = sf_input(ename);
-                 free(ename);
-        }
+	    ename[0] = 'E';
+	    ename[1] = 'L';
+	    ename[2] = 'E';
+	    ename[3] = 'V';
+	    ename[4] = '/';
+	    ename[5] = 'e';
+	    ename[6] = 'l';
+	    ename[7] = 'e';
+	    ename[8] = 'v';
+	    ename[9] = '_';
+	    ename[10] = '\0';
+	    ename = strcat(ename,mm);
+	    rele = sf_input(ename);
+	    free(ename);
+        } else {
+	    rele = NULL;
+	}
         free(mm);
         sf_warning("%s",oname);
         input = sf_input(iname);
@@ -392,9 +396,9 @@ int main(int argc, char* argv[])
             }
         }
         for (iz=0; iz<nbb; iz++){
-             for (ix=0; ix<nxb; ix++){
-                 v[nzorg+nbt+iz][ix] = v[nzorg+nbt-1][ix];
-             }
+	    for (ix=0; ix<nxb; ix++){
+		v[nzorg+nbt+iz][ix] = v[nzorg+nbt-1][ix];
+	    }
         }
         v0 =0.0;
         for (iz=0; iz < nzb; iz++) {
@@ -409,7 +413,7 @@ int main(int argc, char* argv[])
         for (iz=0; iz < nzb; iz++){
             for (ix=0; ix < nxb; ix++) {
                 v2 = v[iz][ix]*v[iz][ix];
-                 w = v2/v02;
+		w = v2/v02;
                 g1 = dt2*(v2-v02)/(12.0*dx2);
                 g2 = dt2*(v2-v02)/(12.0*dz2);
                 aa[iz][ix][1] = w*g1;
@@ -591,9 +595,9 @@ int main(int argc, char* argv[])
         sf_floatread(rvr[0],nr*(nt-sht),input);
         sf_fileclose(input);
         if(topo) {
-                 if(SF_INT != sf_gettype(rele)) sf_error("Need int!");
-                 sf_intread(irze,nr,rele);
-                 sf_fileclose(rele);
+	    if(SF_INT != sf_gettype(rele)) sf_error("Need int!");
+	    sf_intread(irze,nr,rele);
+	    sf_fileclose(rele);
         }
         /* for (it=nt-1; it >-1; it--) { */
         for (it=nt-1-sht; it >tskip; it--) {

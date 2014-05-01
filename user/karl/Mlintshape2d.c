@@ -298,7 +298,7 @@ void cgsolve(float* z, int npnt,
      float* r;
      int ipnt, iter;
      int ix, iy;
-     double beta, alpha, gamma, deltax_dot_z1,deltar_dot_z2;
+     double beta, alpha, gamma=0.0, deltax_dot_z1,deltar_dot_z2;
      float* z2; /* no need to allocate since no left conditioner */
      float** s;
      float* deltar;

@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     bool inv, verb;
     int i1, n1, iw, nt, nw, i2, n2, rect0, niter, n12, n1w;
     int m[SF_MAX_DIM], *rect;
-    float t, d1, w, w0, dw, mean, alpha;
+    float t, d1, w, w0, dw, mean=0.0f, alpha;
     float *trace, *kbsc, *mkbsc, *sscc, *mm, *ww;
     sf_complex *outp, *cbsc;
     sf_file in, out, mask, weight, basis;

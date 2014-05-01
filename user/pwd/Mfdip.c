@@ -20,7 +20,9 @@
 
 
 #include <rsf.h>
-#include <rsfpwd.h>
+
+#include "fdip.h"
+#include "mask6.h"
 
 int main(int argc,char**argv)
 {

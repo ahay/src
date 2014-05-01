@@ -6,7 +6,7 @@ progs = '''
 comp resample addevent mflt signal
 psss psefd mdfd4 wavmod
 pwdfreq lphcoef fbfreq lphfreq
-fdip ldip odip dipflt fbank1 fbank2 fbdip fbpwd
+ldip odip dipflt fbank1 fbank2 fbdip fbpwd
 ss ssblend sscrg
 epfbe epfbil epfws epfad  
 frt pca fault fir fastpwd fbgabor apick orientation slopescan

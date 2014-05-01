@@ -164,7 +164,7 @@ int BFIO::eval34(int N, const CpxNumTns& f, const FltNumVec& w, const FltNumVec&
   int EL = _EL;
   int TL = int(round(log(float(N))/log(2)));
   int SL = TL-EL;
-  int ML;
+  int ML = 0;
   if ( (SL+EL)%2 == 0 ) {
     ML = (SL+EL)/2;
   } else {

@@ -79,7 +79,7 @@ void vecmul(float *xx, float *yy, float *zz, int n)
 float vecmax(float *xx, int n)
 /*< maximum value in a vector >*/
 {	
-	float t;
+	float t=-SF_HUGE;
 	for(i=0;i<n;i++)
 		if(t<xx[i]) t=xx[i];
 	return t;
