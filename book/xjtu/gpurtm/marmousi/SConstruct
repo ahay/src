@@ -24,8 +24,8 @@ Flow('imag1 imag2','vel',
 	vmute=1.52
 	''')
 
-Result('imag1','grey allpos=n title="correlation"')
-Result('imag2','grey allpos=n title="normalized_correlation" ')
+Result('mimag1','grey allpos=n title="correlation"')
+Result('mimag2','grey allpos=n title="normalized_correlation" ')
 
 End()
 
