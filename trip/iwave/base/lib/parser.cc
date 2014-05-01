@@ -1091,7 +1091,6 @@ int ps_createargs(PARARRAY *par, int argc, char **argv) {
 #ifdef VERBOSE 
     ps_printall(*par,stderr);
 #endif
-    ps_printall(*par,stderr);
 
     kv_delete(&kv);
  
