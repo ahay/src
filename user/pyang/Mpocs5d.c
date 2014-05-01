@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
 
 		// d_rec = d_obs+(1-M)*A T{ At(d_rec) } 
 	#ifdef _OPENMP
-	#pragma omp parallel for collapse(3) default(none)	\
+	#pragma omp parallel for collapse(5) default(none)	\
 		private(i1,i2,i3,i4,i5,index,m)			\
 		shared(mask,wdat,wdat1,nw,n2,n3,n4,n5)
 	#endif
