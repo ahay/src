@@ -19,7 +19,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -28,7 +27,7 @@
 static int nb, nz, nx, nt, nzpad, nxpad;
 static float dz, dx, dt, fm, c0, c11, c12, c21, c22;
 static float *bndr, *wlt;
-static float **vv, **p0, **p1, **p2, **ptr=NULL;
+static float **vv, **p0, **p1, **ptr=NULL;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -68,30 +67,8 @@ void window2d(float **a, float **b)
     }
 }
 
-void step_forward(float **p0, float **p1, float**p2)
-{
-	int ix,iz;
-	float tmp;
-
-#ifdef _OPENMP
-#pragma omp parallel for	    \
-    private(ix,iz,tmp)		    \
-    shared(p1)
-#endif	
-	for (ix=2; ix < nxpad-2; ix++) 
-	for (iz=2; iz < nzpad-2; iz++) 
-	{
-		tmp =	c0*p1[ix][iz]+
-			c11*(p1[ix][iz-1]+p1[ix][iz+1])+
-			c12*(p1[ix][iz-2]+p1[ix][iz+2])+
-			c21*(p1[ix-1][iz]+p1[ix+1][iz])+
-			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
-	}
-}
-
 void apply_sponge(float**p0, float **p1)
-/* apply absorbing boundary condition */
+/*< apply absorbing boundary condition >*/
 {
 	int ix,iz;
 
@@ -130,6 +107,29 @@ void apply_sponge(float**p0, float **p1)
 	}
 }
 
+
+void step_forward(float **p0, float **p1)
+/*< forward modeling step >*/
+{
+	int ix,iz;
+	float tmp;
+
+#ifdef _OPENMP
+#pragma omp parallel for	    \
+    private(ix,iz,tmp)		    \
+    shared(p0,p1,vv,c0,c11,c12,c21,c22,nzpad,nxpad)
+#endif	
+	for (ix=2; ix < nxpad-2; ix++) 
+	for (iz=2; iz < nzpad-2; iz++) 
+	{
+		tmp =	c0*p1[ix][iz]+
+			c11*(p1[ix][iz-1]+p1[ix][iz+1])+
+			c12*(p1[ix][iz-2]+p1[ix][iz+2])+
+			c21*(p1[ix-1][iz]+p1[ix+1][iz])+
+			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
+		p0[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
+	}
+}
 
 
 int main(int argc, char* argv[])
@@ -176,15 +176,14 @@ int main(int argc, char* argv[])
 	tmp = 1.0/(dx*dx);
 	c21 = 4.0*tmp/3.0;
 	c22= -tmp/12.0;
-	c0=-2.0*(c11+c12+c21 + c22);
+	c0=-2.0*(c11+c12+c21+c22);
 
 	wlt=sf_floatalloc(nt);
 	bndr=sf_floatalloc(nb);
-	v0=sf_floatalloc2(nz,nx); 	
+	v0=sf_floatalloc2(nz, nx); 	
 	vv=sf_floatalloc2(nzpad, nxpad);
 	p0=sf_floatalloc2(nzpad, nxpad);
 	p1=sf_floatalloc2(nzpad, nxpad);
-	p2=sf_floatalloc2(nzpad, nxpad);
 
 	for(it=0;it<nt;it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
@@ -204,17 +203,16 @@ int main(int argc, char* argv[])
 	}
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
-	memset(p2[0],0,nzpad*nxpad*sizeof(float));
 
 	for(it=0; it<nt; it++)
 	{
 		p1[sx][sz]+=wlt[it];
-		step_forward(p0, p1, p2);
-		apply_sponge(p1,p2);
-		ptr=p0; p0=p1; p1=p2; p2=ptr;
+		step_forward(p0, p1);
+		apply_sponge(p0, p1);
+		ptr=p0; p0=p1; p1=ptr;
 
-		window2d(v0,p0);
-		sf_floatwrite(v0[0],nz*nx,Fw);
+		window2d(v0, p0);
+		sf_floatwrite(v0[0], nz*nx, Fw);
 	}
 
 
@@ -223,7 +221,6 @@ int main(int argc, char* argv[])
 	free(*vv); free(vv);
 	free(*p0); free(p0);
 	free(*p1); free(p1);
-	free(*p2); free(p2);
 	free(bndr);
     	exit(0);
 }

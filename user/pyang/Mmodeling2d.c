@@ -20,7 +20,6 @@ Note: 	Here, the sponge absorbing boundary condition is applied!
 */
 
 #include <rsf.h>
-#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -71,9 +70,9 @@ void window2d(float **a, float **b)
 
 
 void fd2d_init(float **v0)
-/* allocate and initialize variables */
+/*< allocate and initialize variables >*/
 {
-	int iz, ix;
+	int iz, ix, ib;
 	float tmp;
 
 #ifdef _OPENMP
@@ -89,7 +88,7 @@ void fd2d_init(float **v0)
 	bndr=sf_floatalloc(nb);
 
 	expand2d(vv, v0);
-	for(int ib=0;ib<nb;ib++){
+	for(ib=0;ib<nb;ib++){
 		tmp=0.015*(nb-ib);
 		bndr[ib]=expf(-tmp*tmp);
 	}
@@ -113,6 +112,7 @@ void fd2d_init(float **v0)
 
 
 void wavefield_init(float **p0, float**p1, float **p2)
+/*< initialize wavefield >*/
 {
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
@@ -120,6 +120,7 @@ void wavefield_init(float **p0, float**p1, float **p2)
 }
 
 void step_forward(float **p0, float **p1, float**p2)
+/*< forward modeling step >*/
 {
 	int ix,iz;
 	float tmp;
@@ -139,13 +140,10 @@ void step_forward(float **p0, float **p1, float**p2)
 			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
 		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
 	}
-
-
-
 }
 
 void apply_sponge(float**p0)
-/* apply absorbing boundary condition */
+/*< apply absorbing boundary condition >*/
 {
 	int ix,iz,ib,ibx,ibz;
 	float w;
@@ -174,7 +172,7 @@ void apply_sponge(float**p0)
 }
 
 void fd2d_close()
-/* free the allocated variables */
+/*< free the allocated variables >*/
 {
 	free(*vv); free(vv);
 	free(*p0); free(p0);
@@ -184,8 +182,8 @@ void fd2d_close()
 }
 
 void boundary_rw(float **p, float *spo, bool read)
-/* read/write using effective boundary saving strategy: 
-if read=true, read the boundary out; else save/write the boundary*/
+/*< read/write using effective boundary saving strategy: 
+if read=true, read the boundary out; else save/write the boundary >*/
 {
 	int ix,iz;
 	if (read){
@@ -238,41 +236,45 @@ if read=true, read the boundary out; else save/write the boundary*/
 }
 
 void add_source(int *sxz, float **p, int ns, float *source, bool add)
+/*< add source term >*/
 {
+	int is, sx, sz;
 	if(add){
-		for(int is=0;is<ns; is++){
-			int sx=sxz[is]/nz+nb;
-			int sz=sxz[is]%nz+nb;
+		for(is=0;is<ns; is++){
+			sx=sxz[is]/nz+nb;
+			sz=sxz[is]%nz+nb;
 			p[sx][sz]+=source[is];
 		}
 	}else{
-		for(int is=0;is<ns; is++){
-			int sx=sxz[is]/nz+nb;
-			int sz=sxz[is]%nz+nb;
+		for(is=0;is<ns; is++){
+			sx=sxz[is]/nz+nb;
+			sz=sxz[is]%nz+nb;
 			p[sx][sz]-=source[is];
 		}
 	}
 }
 
 void record_seis(float *seis_it, int *gxz, float **p, int ng)
-/* record seismogram at time it into a vector length of ng */
+/*< record seismogram at time it into a vector length of ng >*/
 {
-	for(int ig=0;ig<ng; ig++)
+	int ig, gx, gz;
+	for(ig=0;ig<ng; ig++)
 	{
-		int gx=gxz[ig]/nz+nb;
-		int gz=gxz[ig]%nz+nb;
+		gx=gxz[ig]/nz+nb;
+		gz=gxz[ig]%nz+nb;
 		seis_it[ig]=p[gx][gz];
 	}
 }
 
 
 void matrix_transpose(float *matrix, int n1, int n2)
-/* transpose a matrix n1xn2 into n2xn1 */
+/*< transpose a matrix n1xn2 into n2xn1 >*/
 {
+	int i1, i2;
 	float *tmp=(float*)malloc(n1*n2*sizeof(float));
 	if (tmp==NULL) {printf("out of memory!"); exit(1);}
-	for(int i2=0; i2<n2; i2++)
-	for(int i1=0; i1<n1; i1++)
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
 	{
 		tmp[i2+n2*i1]=matrix[i1+n1*i2];
 	}
@@ -281,19 +283,20 @@ void matrix_transpose(float *matrix, int n1, int n2)
 }
 
 void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
-/* shot/geophone position initialize */
+/*< shot/geophone position initialize >*/
 {
-	for(int is=0; is<ns; is++)
+	int is, sz, sx;
+	for(is=0; is<ns; is++)
 	{
-		int sz=szbeg+is*jsz;
-		int sx=sxbeg+is*jsx;
+		sz=szbeg+is*jsz;
+		sx=sxbeg+is*jsx;
 		sxz[is]=sz+nz*sx;
 	}
 }
 
 int main(int argc, char* argv[])
 {
-	int ns, ng, jsx, jsz, jgx, jgz, sxbeg, szbeg, gxbeg, gzbeg;
+	int is, it, ns, ng, jsx, jsz, jgx, jgz, sxbeg, szbeg, gxbeg, gzbeg;
 	float *spo, *dobs, *dcal;
 	float **v0;
 	sf_file Fv, Fs;
@@ -351,10 +354,10 @@ int main(int argc, char* argv[])
 	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 
-	for(int is=0; is<ns; is++)
+	for(is=0; is<ns; is++)
 	{
 		wavefield_init(p0, p1, p2);
-		for(int it=0; it<nt; it++)
+		for(it=0; it<nt; it++)
 		{
 			add_source(&sxz[is], p1, 1, &wlt[it], true);
 			step_forward(p0, p1, p2);

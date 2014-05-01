@@ -19,7 +19,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -69,6 +68,7 @@ void window2d(float **a, float **b)
 }
 
 void step_forward(float **p0, float **p1, float**p2)
+/*< forward modeling step >*/
 {
 	int ix,iz;
 	float tmp1, tmp2;
@@ -93,7 +93,7 @@ void step_forward(float **p0, float **p1, float**p2)
 }
 
 void apply_sponge(float**p0, float **p1)
-/* apply absorbing boundary condition */
+/*< apply absorbing boundary condition >*/
 {
 	int ix,iz;
 

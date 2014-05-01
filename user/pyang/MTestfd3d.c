@@ -22,7 +22,6 @@ Sponge absorbing boundary condition.
 */
 
 #include <rsf.h>
-#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -78,9 +77,10 @@ void expand3d(float ***a, float ***b)
 void window3d(float ***a, float ***b)
 /*< window b domain to a >*/
 {
-    for         (int i3=0;i3<ny;i3++) {
-	for     (int ix=0;ix<nx;ix++) {
-	    for (int iz=0;iz<nz;iz++) {
+    int i3, ix, iz;
+    for         (i3=0;i3<ny;i3++) {
+	for     (ix=0;ix<nx;ix++) {
+	    for (iz=0;iz<nz;iz++) {
 		a[i3][ix][iz]=b[nb+i3][nb+ix][nb+iz];
 	    }
 	}
@@ -91,11 +91,12 @@ void window3d(float ***a, float ***b)
 void add_source(float ***u1, float *wlt, int **Szxy, int ns, bool add)
 /*< add source >*/
 {
-	for (int is=0; is<ns; is++)
+	int is, sz, sx, sy;
+	for (is=0; is<ns; is++)
 	{
-		int sz=Szxy[is][0]+nb;
-		int sx=Szxy[is][1]+nb;
-		int sy=Szxy[is][2]+nb;
+		sz=Szxy[is][0]+nb;
+		sx=Szxy[is][1]+nb;
+		sy=Szxy[is][2]+nb;
 
 		if (add) u1[sy][sx][sz] += wlt[is];
 		else 	u1[sy][sx][sz] -= wlt[is];
@@ -193,7 +194,11 @@ void free_surface(float ***u0, float ***u1)
 
 int main(int argc, char* argv[])
 {
-	int iz, ix, iy;
+	int iz, ix, iy, is, it, ib;
+	float t;
+	float *wlt, *bndr;
+	int **Szxy;
+	float ***v0,***vv, ***u0, ***u1,***ptr;
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
@@ -224,7 +229,7 @@ int main(int argc, char* argv[])
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
 	nypad=ny+2*nb;
-	float t = 1.0/(dz*dz);
+	t = 1.0/(dz*dz);
 	c11 = 4.0*t/3.0;
 	c12=  -t/12.0;
 	t = 1.0/(dx*dx);
@@ -235,24 +240,23 @@ int main(int argc, char* argv[])
 	c32=  -t/12.0;
 	c0  = -2.0 * (c11 + c12 + c21 + c22 +c31 + c32);
 
-	float *wlt=(float*)malloc(nt*sizeof(float));
-	float *spo=(float*)malloc(nb*sizeof(float));
-	int **Szxy=sf_intalloc2(3,ns);// source position
-	float ***v0,***vv, ***u0, ***u1,***ptr=NULL;
+	wlt=sf_floatalloc(nt);
+	bndr=sf_floatalloc(nb);
+	Szxy=sf_intalloc2(3,ns);// source position
+
     	v0=sf_floatalloc3(nz,nx,ny);
 	vv=sf_floatalloc3(nzpad, nxpad, nypad);
 	u0=sf_floatalloc3(nzpad, nxpad, nypad);
 	u1=sf_floatalloc3(nzpad, nxpad, nypad);
-	for(int it=0;it<nt;it++){
-		float a=SF_PI*fm*(it*dt-1.0/fm);a*=a;
-		wlt[it]=(1.0-2.0*a)*expf(-a);
+	for(it=0;it<nt;it++){
+		t=SF_PI*fm*(it*dt-1.0/fm);t=t*t;
+		wlt[it]=(1.0-2.0*t)*expf(-t);
 	}
-    	float sb = 4.0*nb;               
-    	for(int ib=0; ib<nb; ib++) {
-		float fb = (nb-ib)/(sqrt(2.0)*sb);
-		spo[ib] = exp(-fb*fb);
-    	}
-	for(int is=0; is<ns; is++)
+	for(ib=0;ib<nb;ib++){
+		t=0.015*(nb-ib);
+		bndr[ib]=expf(-t*t);
+	}
+	for(is=0; is<ns; is++)
 	{
 		Szxy[is][0]=0;//iz, boundary excluded
 		Szxy[is][1]=25;//ix, boundary excluded
@@ -268,18 +272,18 @@ int main(int argc, char* argv[])
 	for(ix=0; ix<nxpad; ix++) 
 	for(iz=0; iz<nzpad; iz++) 
 	{
-		float a= vv[iy][ix][iz]*dt;
-		vv[iy][ix][iz] = a*a;
+		t= vv[iy][ix][iz]*dt;
+		vv[iy][ix][iz] = t*t;
     	}
 
-	for(int it=0; it<nt;it++)
+	for(it=0; it<nt;it++)
 	{
 		add_source(u1, &wlt[it], Szxy, 1, true);
 		step_forward(u0, u1, vv);
 		ptr=u0;u0=u1;u1=ptr;
 
-		sponge3d_apply(u0,spo);
-		sponge3d_apply(u1,spo);
+		sponge3d_apply(u0,bndr);
+		sponge3d_apply(u1,bndr);
 		free_surface(u0, u1);
 
 		if (it==120)
@@ -291,7 +295,7 @@ int main(int argc, char* argv[])
 
     
 	free(wlt);
-	free(spo);
+	free(bndr);
 	free(*Szxy);free(Szxy);
 	free(**v0);free(*v0);free(v0);
 	free(**vv);free(*vv);free(vv);

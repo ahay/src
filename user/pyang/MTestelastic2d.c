@@ -18,7 +18,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
-#include <time.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -69,6 +68,7 @@ void window2d(float **a, float **b)
 
 
 void forward_uvx_uvz(float **uvx, float **uvz, float **txx, float **tzz, float **txz)
+/*< forward step: update uvx, uvz >*/
 {
 	int i1, i2;
 	float diff1, diff2, diff3, diff4;
@@ -104,6 +104,7 @@ void forward_uvx_uvz(float **uvx, float **uvz, float **txx, float **tzz, float *
 
 
 void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, float **txz)
+/*< forward step: update txx, tzz, txz >*/
 {
 	int i1, i2;
 	float diff1, diff2, diff3, diff4;
@@ -140,7 +141,7 @@ void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, flo
 
 
 void apply_sponge(float **u)
-/* apply absorbing boundary condition */
+/*< apply absorbing boundary condition >*/
 {
 	int ix,iz;
 
