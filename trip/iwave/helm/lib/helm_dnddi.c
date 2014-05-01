@@ -23,6 +23,7 @@
 	float *st, float *sx, float *p, float *d__, float *x, float *y, float *work, 
 	integer *lenwork, integer *ier)
 {
+    printf("\n === inside helm_ function \n");
 
     /* System generated locals */
     integer i__1, i__2;

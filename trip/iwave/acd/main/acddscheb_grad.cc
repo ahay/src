@@ -132,6 +132,7 @@ int main(int argc, char ** argv) {
       Vector<ireal> dm(dom);
         
       Vector<ireal> dd(op.getRange());
+      Vector<ireal> mdd(op.getRange());
 
       // read in start point and end point
       AssignFilename mfn(valparse<std::string>(*pars,"csq_beg"));
@@ -154,6 +155,14 @@ int main(int argc, char ** argv) {
       AssignFilename ddfn(valparse<std::string>(*pars,"data"));
       Components<ireal> cdd(dd);
       cdd[0].eval(ddfn);
+
+      std::string mddnm = valparse<std::string>(*pars, "datamut","");
+      if (mddnm.size()>0) {
+         AssignFilename mddfn(mddnm);
+         mdd.eval(mddfn);
+      }
+      muteop.applyOp(dd,mdd);
+
 
       ChebPolicyData<float> pd(valparse<float>(*pars,"gamma",0.04f),
                                  valparse<float>(*pars,"epsilon",0.1),
@@ -186,7 +195,7 @@ int main(int argc, char ** argv) {
       // create RHS of block system
       Vector<float> td(top.getRange());
       Components<float> ctd(td);
-      ctd[0].copy(dd);
+      ctd[0].copy(mdd);
       ctd[1].zero();
 
       // choice of preop is placeholder
@@ -194,23 +203,6 @@ int main(int argc, char ** argv) {
 
       LinFitLS<float, ChebPolicy<float>, ChebPolicyData<float> > f(top,preop,td,pd,valparse<bool>(*pars,"refine",false),res);
       GridExtendOp g(dom,op.getDomain());
-/*      FunctionalEvaluation<float> * fneval;
-      OperatorEvaluation<float> * gopeval;
-      Vector<float> mmm(g.getDomain());
-      RVL::RVLRandomize<float> rnd(getpid(),0.5f,1.0f); 
-      mmm.eval(rnd);
-      cerr << "\n mmm.norm() = " << mmm.norm() << endl;
-      gopeval = new OperatorEvaluation<float>(g,mmm);
-      cerr << "\n gopeval->getValue().norm() = " << (gopeval->getValue()).norm() << endl;
-      fneval  = new FunctionalEvaluation<float>(f,gopeval->getValue());
-      Vector<float> const & gtmp = fneval->getGradient();
-      cerr << "\n gtmp.norm() = " << gtmp.norm() << endl;  
-Vector<ireal> grad(dom);
-            AssignFilename gradfn(valparse<std::string>(*pars,"grad"));
-            Components<ireal> cgrad(grad);
-            cgrad[0].eval(gradfn);
-grad.copy(gtmp);
-*/
       FcnlOpComp<float> gf(f,g);
 
       // lower, upper bds for csq
@@ -279,12 +271,11 @@ grad.copy(gtmp);
                 est.eval(estfn);
                 opeval.getDeriv().applyOp(dltm,est);
                 if (datares.size()>0) {
-                    OperatorEvaluation<float> mopeval(muteop,dd);
                     Vector<float> res(op.getRange());
                     AssignFilename resfn(datares);
                     res.eval(resfn);
                     res.copy(est);
-                    res.linComb(-1.0f,mopeval.getValue());
+                    res.linComb(-1.0f,mdd);
                     if (normalres.size()>0){
                         OperatorEvaluation<float> topeval(top,gopeval.getValue());
                         Vector<float> nres(op.getDomain());

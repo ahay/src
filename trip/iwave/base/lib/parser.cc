@@ -396,6 +396,7 @@ int pslink_back(PSLINK ** par) {
 
 int pslink_read(PSLINK ** par, char ** str) {
     int stop = 0;
+
     if (!(*par)) {
 #ifdef VERBOSE 
 	fprintf(stderr,"Error: pslink_read - null pointer\n");
@@ -1023,7 +1024,7 @@ int ps_createargs(PARARRAY *par, int argc, char **argv) {
     char *save;              /* reserve start of buffer */
     char *tmp;               /* another reserve pointer */
     KEYVAL * kv;             /* workspace for decoding kv pairs */
-  
+    
     /* bail if no args */
     if ( argc <= 0 ) return 0;
   
@@ -1070,7 +1071,7 @@ int ps_createargs(PARARRAY *par, int argc, char **argv) {
 	    strcat(buffer," ");
 	}
     }
-#ifdef VERBOSE 
+#ifdef VERBOSE
     fprintf(stderr,"ps_createargs: arg buffer =\n");
     fprintf(stderr,"%s\n",buffer);
 #endif
@@ -1090,6 +1091,7 @@ int ps_createargs(PARARRAY *par, int argc, char **argv) {
 #ifdef VERBOSE 
     ps_printall(*par,stderr);
 #endif
+    ps_printall(*par,stderr);
 
     kv_delete(&kv);
  

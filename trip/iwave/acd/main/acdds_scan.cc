@@ -130,9 +130,9 @@ int main(int argc, char ** argv) {
       // vel-squared model!
       Vector<ireal> m_beg(dom);
       Vector<ireal> m_end(dom);
-
       Vector<ireal> dm(op.getDomain());
       Vector<ireal> dd(op.getRange());
+      Vector<ireal> mdd(op.getRange());
 
       // read in start point and end point
       AssignFilename mfn_beg(valparse<std::string>(*pars,"csq_beg"));
@@ -157,6 +157,13 @@ int main(int argc, char ** argv) {
       AssignFilename ddfn(valparse<std::string>(*pars,"data"));
       Components<ireal> cdd(dd);
       cdd[0].eval(ddfn);
+
+      std::string mddnm = valparse<std::string>(*pars,"datamut","");
+      if (mddnm.size()>0) {
+        AssignFilename mddfn(mddnm);
+        mdd.eval(mddfn);
+      }
+      muteop.applyOp(dd,mdd);
 
       CGNEPolicyData<float> pd(
             valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
@@ -190,7 +197,7 @@ int main(int argc, char ** argv) {
       // create RHS of block system
       Vector<float> td(top.getRange());
       Components<float> ctd(td);
-      ctd[0].copy(dd);
+      ctd[0].copy(mdd);
       ctd[1].zero();
 
       // choice of preop is placeholder
@@ -233,15 +240,15 @@ int main(int argc, char ** argv) {
 	std::string outfile = valparse<std::string>(*pars,"outfile","");
 	if (outfile.size()>0) {
 	  ofstream outf(outfile.c_str());
-      outf<<"\n === h ========= functional value ================ \n";
-      outf<<strscan.str();
-      outf<<"\n ================================================= \n";
-      outf<<res.str();
-      outf.close();
+          outf<<"\n === h ========= functional value ================ \n";
+          outf<<strscan.str();
+          outf<<"\n ================================================= \n";
+          outf<<res.str();
+          outf.close();
 	}
 	else {
-      cout<<strscan.str();
-      cout<<"\n ================================================= \n";
+          cout<<strscan.str();
+          cout<<"\n ================================================= \n";
 	  cout<<res.str();
 	}
       }

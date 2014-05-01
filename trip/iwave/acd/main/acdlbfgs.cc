@@ -103,6 +103,7 @@ int main(int argc, char ** argv) {
     Vector<ireal> m(op.getDomain());
     Vector<ireal> dm(op.getDomain());
     Vector<ireal> dd(op.getRange());
+    Vector<ireal> mdd(op.getRange());
 
     AssignFilename mfn(valparse<std::string>(*pars,"csq"));
     Components<ireal> cm(m);
@@ -117,11 +118,18 @@ int main(int argc, char ** argv) {
     Components<ireal> cdd(dd);
     cdd[0].eval(ddfn);
 
+    std::string mddnm = valparse<std::string>(*pars,"datamut","");
+    if (mddnm.size()>0) {
+      AssignFilename mddfn(mddnm);
+      mdd.eval(mddfn);
+    }
+    muteop.applyOp(dd,mdd);
+
     /* output stream */
     std::stringstream res;
     res<<scientific;
     
-    StdLeastSquaresFcnlGN<float> fls(op,dd);
+    StdLeastSquaresFcnlGN<float> fls(op,mdd);
 
     // lower, upper bds for csq
     Vector<float> lb(op.getDomain());

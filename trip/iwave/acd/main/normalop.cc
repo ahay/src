@@ -7,12 +7,10 @@
 #include "functions.hh"
 #include "op.hh"
 #include "blockop.hh"
-#include "cgnealg.hh"
+#include "chebalg.hh"
 #include "LBFGSBT.hh"
 #include "LinFitLS.hh"
-#include "acdds_grad_selfdoc.hh"
 #include <par.h>
-#include "gradtest.hh"
 #include "segyops.hh"
 
 //#define GTEST_VERBOSE
@@ -25,6 +23,7 @@ IOKEY IWaveInfo::iwave_iokeys[]
 };
 
 using RVL::parse;
+using RVL::valparse;
 using RVL::RVLException;
 using RVL::Vector;
 using RVL::Components;
@@ -39,12 +38,6 @@ using RVL::AssignParams;
 using RVL::RVLRandomize;
 using RVL::ScaleOpFwd;
 using RVL::TensorOp;
-using RVL::GradientTest;
-using RVLUmin::CGNEPolicy;
-using RVLUmin::CGNEPolicyData;
-using RVLUmin::LBFGSBT;
-using RVLUmin::LinFitLS;
-using RVLUmin::CGNEAlg;
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
 using TSOpt::IWaveSampler;
@@ -95,11 +88,6 @@ int main(int argc, char ** argv) {
     FILE * stream = NULL;
     IWaveEnvironment(argc, argv, 0, &pars, &stream);
 
-    if (retrieveGlobalRank()==0 && argc<2) {
-      pagedoc();
-      exit(0);
-    }
-
 #ifdef IWAVE_USE_MPI
     if (retrieveGroupID() == MPI_UNDEFINED) {
       fprintf(stream,"NOTE: finalize MPI, cleanup, exit\n");
@@ -107,7 +95,6 @@ int main(int argc, char ** argv) {
     }
     else {
 #endif
-
       // the Op
       IWaveOp iwop(*pars,stream);
         
@@ -129,53 +116,31 @@ int main(int argc, char ** argv) {
 
       // vel-squared model!
       Vector<ireal> m(dom);
-      Vector<ireal> m_end(dom);
       Vector<ireal> dm(dom);
+      Vector<ireal> bm(dom);  
       Vector<ireal> dd(op.getRange());
-      Vector<ireal> mdd(op.getRange());
 
       // read in start point and end point
       AssignFilename mfn(valparse<std::string>(*pars,"csq"));
       Components<ireal> cm(m);
       cm[0].eval(mfn);
 
-      AssignFilename mfn_end(valparse<std::string>(*pars,"csq_end"));
-      Components<ireal> cm_end(m_end);
-      cm_end[0].eval(mfn_end);
-        
+      AssignFilename dmfn(valparse<std::string>(*pars,"csq_d1"));
       Components<ireal> cdm(dm);
-      dm.copy(m_end);
-      dm.linComb(-1.0f,m);
-      
-      
-//      AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
-//      Components<ireal> cdm(dm);
-//      cdm[0].eval(dmfn);
-//      dm.zero();
+      cdm[0].eval(dmfn);
+ 
+      AssignFilename bmfn(valparse<std::string>(*pars,"csq_b1"));
+      Components<ireal> cbm(bm);
+      cbm[0].eval(bmfn);
     
       AssignFilename ddfn(valparse<std::string>(*pars,"data"));
       Components<ireal> cdd(dd);
       cdd[0].eval(ddfn);
 
-      std::string mddnm = valparse<std::string>(*pars,"datamut","");
-      if (mddnm.size()>0) {
-        AssignFilename mddfn(mddnm);
-        mdd.eval(mddfn);
-      }
-      muteop.applyOp(dd,mdd);
-
-
-      CGNEPolicyData<float> pd(
-            valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
-            valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon()),
-            valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
-            valparse<int>(*pars,"MaxIter",10),true);
-    
       /* output stream */
       std::stringstream res,strgrad;
       res<<scientific;
-      //strgrad<<scientific;
-    
+
       // choice of GridDerivOp for semblance op is placeholder - extended axis is dim-th, with id=dim+1
       // note default weight of zero!!!
       // Note added 10.03.14: getGrid is not usably implemented for MPIGridSpace at this time, so 
@@ -187,7 +152,7 @@ int main(int argc, char ** argv) {
 #ifdef IWAVE_USE_MPI
       if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
 	RVLException e;
-	e<<"Error: acdiva, rank="<<retrieveGlobalRank()<<"\n";
+	e<<"Error: acddscheb_grad, rank="<<retrieveGlobalRank()<<"\n";
 	e<<"  failed to bcast dsdir\n";
 	throw e;
       }
@@ -197,52 +162,24 @@ int main(int argc, char ** argv) {
       // create RHS of block system
       Vector<float> td(top.getRange());
       Components<float> ctd(td);
-      ctd[0].copy(mdd);
+      ctd[0].copy(dd);
       ctd[1].zero();
 
-      // choice of preop is placeholder
-      ScaleOpFwd<float> preop(top.getDomain(),1.0f);
+      //GridExtendOp g(dom,op.getDomain());
+      //OpComp<float> nop(g,top);
 
-      LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,preop,td,pd,false,res);
-      GridExtendOp g(dom,op.getDomain());
-      FcnlOpComp<float> gf(f,g);
-
-      // lower, upper bds for csq
-      Vector<float> lb(gf.getDomain());
-      Vector<float> ub(gf.getDomain());
-      float lbcsq=valparse<float>(*pars,"cmin");
-      lbcsq=lbcsq*lbcsq;
-      RVLAssignConst<float> asl(lbcsq);
-      lb.eval(asl);
-      float ubcsq=valparse<float>(*pars,"cmax");
-      ubcsq=ubcsq*ubcsq;
-      RVLAssignConst<float> asu(ubcsq);
-      ub.eval(asu);
-      RVLMin<float> mn;
-#ifdef IWAVE_USE_MPI
-      MPISerialFunctionObjectRedn<float,float> mpimn(mn);
-      ULBoundsTest<float> ultest(lb,ub,mpimn);
-#else
-      ULBoundsTest<float> ultest(lb,ub,mn);
-#endif
-
-      FunctionalBd<float> fbd(gf,ultest);
-
-      // read in scan test parameters
-      int  nhval=valparse<int>(*pars,"Nhval",11);
-      float hmin=valparse<float>(*pars,"HMin",0.1f);
-      float hmax=valparse<float>(*pars,"HMax",1.0f);
-        
-      /* scan */
-      GradientTest(fbd,m,dm,strgrad,nhval,hmin,hmax);
+      OperatorEvaluation<float> nopeval(top,m);
+      nopeval.getDeriv().applyOp(dm,td);
+      nopeval.getDeriv().applyAdjOp(td,bm);
+      dd.copy(ctd[0]);
 
       if (retrieveRank() == 0) {
 	std::string outfile = valparse<std::string>(*pars,"outfile","");
 	if (outfile.size()>0) {
 	  ofstream outf(outfile.c_str());
-      outf<<strgrad.str();
-      outf<<"\n ================================================= \n";
-      outf<<res.str();
+          outf<<strgrad.str();
+          outf<<"\n ================================================= \n";
+          outf<<res.str();
 	  outf.close();
 	}
 	else {
