@@ -1,3 +1,0 @@
-uses=['sfmath', 'sfcat', 'sfgrey', 'sfmodeling2d']
-data=[]
-size=   14720000

@@ -8,25 +8,34 @@ Flow('vel',None,
      	''')
 
 
-Flow('wav','vel','Testeb nb=30 nt=500 dt=0.001 ns=1 ng=200')
+Flow('wavf wavb','vel','sfTesteb back=${TARGETS[1]} nb=30 nt=500 dt=0.001 ns=1 ng=200')
 
 
-Plot('wav',
-     '''
-     window f1=0 f2=0 n1=200 n2=200 | 
-     grey gainpanel=all title=Wave scalebar=y color=j 
-     ''',view=1)
+Plot('wavf','grey gainpanel=all title=Forward scalebar=y color=j',view=1)
+Plot('wavb','grey gainpanel=all title=Backward scalebar=y color=j',view=1)
 
-time=0.35
-# Wavefield snapshot
-Result('snap','wav',
-     '''
-     window f1=0 f2=0 n1=200 n2=200 n3=1 min3=%g |
-     grey title="Wave Snapshot at %g s"
-     label1=Depth unit1=km label2=Lateral unit2=km 
-     scalebar=y color=j 
-     ''' % (time,time))
+Plot('snap1f','wavf',
+	'''
+	window n3=1 min3=0.2 |grey title="Forward:t=0.2s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+Plot('snap2f','wavf',
+	'''
+	window n3=1 min3=0.35 |grey title="Forward:t=0.35s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
 
+Plot('snap1b','wavf',
+	'''
+	window n3=1 min3=0.2 |grey title="Backward:t=0.2s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+Plot('snap2b','wavf',
+	'''
+	window n3=1 min3=0.35 |grey title="Backward:t=0.35s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenratio=1 color=j
+	''')
+Result('fb','snap1f snap2f snap2b snap1b','TwoColumns')
 
 
 End()

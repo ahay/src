@@ -1,35 +1,44 @@
 from rsf.proj import *
 
 
-Flow('v1',None,
-     	'''
-     	math output=2000 n1=200 n2=200 d1=5 d2=5
-     	label1=x1 unit1=m label2=x2 unit2=m 
-     	''')
-Flow('v2','v1', 
-	'''
-	math output="0.7*input" n1=200 n2=200 d1=5 d2=5
-     	label1=x1 unit1=m label2=x2 unit2=m 
-	''')
+# Download Hess VTI model
+#########################
+zcat = WhereIs('gzcat') or WhereIs('zcat')
+for case in ('vp','epsilon'):
+    sgy = 'timodel_%s.segy' % case
+    sgyz = sgy + '.gz'
+    Fetch(sgyz,dir='Hess_VTI',
+          server='ftp://software.seg.org',
+          top='pub/datasets/2D')
+    # Uncompress
+    Flow(sgy,sgyz,zcat + ' $SOURCE',stdin=0)
+    # Convert to RSF format
+    Flow(case,sgy,
+         '''
+         segyread read=data | 
+         window j1=2 j2=2 | put d1=40 d2=40 
+         unit1=ft label1=Depth unit2=ft label2=Distance 
+         ''')
 
-Flow('wav','v1 v2','Testaniso vx=${SOURCES[1]} nb=30 nt=1000 dt=0.001')
+# Horizontal velocity
+Flow('vx','vp epsilon',
+     'math e=${SOURCES[1]} output="input*sqrt(1+2*e)"')
 
+for case in ('vp','vx'):
+    Result(case,
+           '''
+           grey color=j pclip=100 allpos=y bias=5000 
+           scalebar=y barreverse=y wanttitle=n 
+           barlabel=Velocity barunit=ft/s 
+           screenht=5 screenwd=12 labelsz=6
+           ''')
 
-Plot('wav',
-     '''
-     window f1=0 f2=0 n1=200 n2=200 | 
-     grey gainpanel=all title=Wave scalebar=y color=j 
-     ''',view=1)
-
-time=0.35
-# Wavefield snapshot
+Flow('wav','vp vx','sfTestaniso vx=${SOURCES[1]} nb=30 fm=10 nt=1000 dt=0.001 verb=y')
 Result('snap','wav',
-     '''
-     window f1=0 f2=0 n1=200 n2=200 n3=1 min3=%g |
-     grey title="Wave Snapshot at %g s"
-     label1=Depth unit1=km label2=Lateral unit2=km 
-     scalebar=y color=j 
-     ''' % (time,time))
+	'''
+	window n3=1 min3=0.9 |grey title="Hess VTI:t=0.9s" label1=Depth unit1=km 
+	label2=Lateral unit2=km screenht=5 screenwd=10 labelsz=6
+	''')
 
 
 
