@@ -25,7 +25,7 @@ Flow('wavz wavx','vp vs rho',
 
 Plot('wavx',
      '''
-     grey title="component-x" screenratio=1
+     grey title="Component-x" screenratio=1
      label1=Depth unit1=km label2=Lateral unit2=km color=i 
      ''')
 Plot('wavz',
@@ -33,6 +33,6 @@ Plot('wavz',
      grey title="Component-z" screenratio=1
      label1=Depth unit1=km label2=Lateral unit2=km color=i 
      ''')
-Result('wavxz','wavx wavz', 'SideBySideIso')
+Result('elasticxz','wavx wavz', 'SideBySideIso')
 
 End()
