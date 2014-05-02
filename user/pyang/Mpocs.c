@@ -105,7 +105,6 @@ int main(int argc, char* argv[])
 		sf_floatread(mask,n2,Fmask);
     	}
 
-
 	// transform the data from time domain to frequency domain: tdat-->wdat 
 	fftwf_execute(fft1);
 	for(i=0; i<num; i++) wdat[i]/=sqrtf(n1);

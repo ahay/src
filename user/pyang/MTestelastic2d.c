@@ -33,6 +33,11 @@ void expand2d(float** b, float** a)
 {
     int iz,ix;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    b[nb+ix][nb+iz] = a[ix][iz];
@@ -59,6 +64,12 @@ void window2d(float **a, float **b)
 /*< window 'b' to 'a': source(b)-->destination(a) >*/
 {
     int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    a[ix][iz]=b[nb+ix][nb+iz] ;
@@ -178,7 +189,8 @@ void apply_sponge(float **u)
 
 int main(int argc, char* argv[])
 {
-	int jt, ft, it, ib, sx, sz, ix, iz;
+	bool verb;
+	int jt, ft, kt, it, ib, sx, sz, ix, iz;
 	float a, *wlt;
 	float **vp0, **vs0, **rho0;
 	sf_file Fvp, Fvs, Frho, Fwavx, Fwavz;
@@ -194,12 +206,15 @@ int main(int argc, char* argv[])
 	Fwavz = sf_output("out");/* z-component of wavefield */
 	Fwavx = sf_output("wavx");/* x-component of wavefield */
 
+    	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity */
     	if (!sf_histint(Fvp,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
     	if (!sf_histint(Fvp,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fvp,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
     	if (!sf_histfloat(Fvp,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
     	if (!sf_getint("nb",&nb)) nb=30; /* thickness of PML boundary */
     	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
+    	if (!sf_getint("kt",&kt)) sf_error("kt required");/* record wavefield at time kt */
+	if (kt>nt) sf_error("make sure kt<=nt");
     	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
     	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
    	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
@@ -261,8 +276,8 @@ int main(int argc, char* argv[])
 
 	for(it=0; it<nt; it++)
 	{
-		txx[sx][sz]+=1000*wlt[it];
-		tzz[sx][sz]+=1000*wlt[it];
+		txx[sx][sz]+=wlt[it];
+		tzz[sx][sz]+=wlt[it];
 
 		forward_uvx_uvz(uvx, uvz, txx, tzz, txz);
 		forward_txx_tzz_txz(uvx, uvz, txx, tzz, txz);
@@ -273,13 +288,14 @@ int main(int argc, char* argv[])
 		apply_sponge(txx);
 		apply_sponge(txz);
 
-		if (it==250)
+		if (it==kt)
 		{
 			window2d(vp0, uvx);
 			sf_floatwrite(vp0[0], nz*nx, Fwavx);
 			window2d(vs0, uvz);
 			sf_floatwrite(vs0[0], nz*nx, Fwavz);
 		}
+		if (verb) sf_warning("%d of %d;", it, nt);
 	}
 
 	free(wlt);

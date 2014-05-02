@@ -34,6 +34,11 @@ void expand2d(float** b, float** a)
 {
     int iz,ix;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    b[nb+ix][nb+iz] = a[ix][iz];
@@ -60,6 +65,12 @@ void window2d(float **a, float **b)
 /*< window 'b' to 'a': source(b)-->destination(a) >*/
 {
     int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    a[ix][iz]=b[nb+ix][nb+iz] ;
@@ -206,13 +217,16 @@ int main(int argc, char* argv[])
 
 	for(it=0; it<nt; it++)
 	{
+		if(it>=ft)
+		{
+			window2d(v0, p0);
+			sf_floatwrite(v0[0], nz*nx, Fw);
+		}
+
 		p1[sx][sz]+=wlt[it];
 		step_forward(p0, p1);
 		apply_sponge(p0, p1);
 		ptr=p0; p0=p1; p1=ptr;
-
-		window2d(v0, p0);
-		sf_floatwrite(v0[0], nz*nx, Fw);
 	}
 
 

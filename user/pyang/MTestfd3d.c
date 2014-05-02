@@ -37,6 +37,11 @@ void expand3d(float ***a, float ***b)
 {
     int iz,ix,i3;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz,i3)		\
+	shared(b,a,nb,nz,nx,ny)
+#endif
     for         (i3=0;i3<ny;i3++) {
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
@@ -78,6 +83,12 @@ void window3d(float ***a, float ***b)
 /*< window b domain to a >*/
 {
     int i3, ix, iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz,i3)		\
+	shared(b,a,nb,nz,nx,ny)
+#endif
     for         (i3=0;i3<ny;i3++) {
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
@@ -194,7 +205,7 @@ void free_surface(float ***u0, float ***u1)
 
 int main(int argc, char* argv[])
 {
-	int iz, ix, iy, is, it, ib;
+	int iz, ix, iy, is, it, ib, kt;
 	float t;
 	float *wlt, *bndr;
 	int **Szxy;
@@ -208,6 +219,7 @@ int main(int argc, char* argv[])
 	Fv = sf_input("in");
 	Fw = sf_output("out");
 
+    	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity */
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
     	if (!sf_histint(Fv,"n3",&ny)) sf_error("No n3= in input");
@@ -216,10 +228,12 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
     	if(!sf_getbool("verb",&verb)) verb=false;/* verbosity */
     	if(!sf_getbool("frsf",&frsf)) frsf=false;/* free surface or not */
-   	if (!sf_getint("nt",&nt))  nt=300;
+   	if (!sf_getint("nt",&nt))  sf_error("nt required");
+    	if (!sf_getint("kt",&kt)) sf_error("kt required");/* record wavefield at time kt */
+	if (kt>nt) sf_error("make sure kt<=nt");
    	if (!sf_getint("ns",&ns))  ns=1;
    	if (!sf_getint("nb",&nb))  nb=30;
-   	if (!sf_getfloat("dt",&dt))  dt=0.001;
+   	if (!sf_getfloat("dt",&dt))  sf_error("dt required");
    	if (!sf_getfloat("fm",&fm))  fm=20;
 
 	sf_putint(Fw,"n1",nz);
@@ -258,9 +272,9 @@ int main(int argc, char* argv[])
 	}
 	for(is=0; is<ns; is++)
 	{
-		Szxy[is][0]=0;//iz, boundary excluded
-		Szxy[is][1]=25;//ix, boundary excluded
-		Szxy[is][2]=25;//iy, boundary excluded
+		Szxy[is][0]=nz/2;//iz, boundary excluded
+		Szxy[is][1]=nx/2;//ix, boundary excluded
+		Szxy[is][2]=ny/2;//iy, boundary excluded
 	}
 	sf_floatread(v0[0][0],nz*nx*ny,Fv);
 	expand3d(v0, vv);
@@ -276,7 +290,7 @@ int main(int argc, char* argv[])
 		vv[iy][ix][iz] = t*t;
     	}
 
-	for(it=0; it<nt;it++)
+	for(it=0; it<nt; it++)
 	{
 		add_source(u1, &wlt[it], Szxy, 1, true);
 		step_forward(u0, u1, vv);
@@ -286,11 +300,12 @@ int main(int argc, char* argv[])
 		sponge3d_apply(u1,bndr);
 		free_surface(u0, u1);
 
-		if (it==120)
+		if (it==kt)
 		{
 			window3d(v0,u0);
 			sf_floatwrite(v0[0][0],nz*nx*ny,Fw);	
 		}
+		if (verb) sf_warning("%d of %d;", it, nt);
 	}
 
     

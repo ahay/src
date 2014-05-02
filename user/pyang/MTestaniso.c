@@ -27,13 +27,18 @@
 static int nb, nz, nx, nt, nzpad, nxpad;
 static float dz, dx, dt, fm, c10, c20, c11, c12, c21, c22;
 static float *bndr, *wlt;
-static float **vz, **vx, **p0, **p1, **p2, **ptr=NULL;
+static float **vz, **vx, **p0, **p1, **ptr=NULL;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
 {
     int iz,ix;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    b[nb+ix][nb+iz] = a[ix][iz];
@@ -60,6 +65,12 @@ void window2d(float **a, float **b)
 /*< window 'b' to 'a': source(b)-->destination(a) >*/
 {
     int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    a[ix][iz]=b[nb+ix][nb+iz] ;
@@ -67,7 +78,7 @@ void window2d(float **a, float **b)
     }
 }
 
-void step_forward(float **p0, float **p1, float**p2)
+void step_forward(float **p0, float **p1)
 /*< forward modeling step >*/
 {
 	int ix,iz;
@@ -75,9 +86,8 @@ void step_forward(float **p0, float **p1, float**p2)
 
 #ifdef _OPENMP
 #pragma omp parallel for	    \
-    schedule(dynamic,1)		    \
     private(ix,iz,tmp1,tmp2)	    \
-    shared(p1)
+    shared(p1,p0,vz,vx,nzpad,nxpad)
 #endif	
 	for (ix=2; ix < nxpad-2; ix++) 
 	for (iz=2; iz < nzpad-2; iz++) 
@@ -88,7 +98,7 @@ void step_forward(float **p0, float **p1, float**p2)
 		tmp2 =	c21*(p1[ix-1][iz]+p1[ix+1][iz])+
 			c22*(p1[ix-2][iz]+p1[ix+2][iz])+
 			c20*p1[ix][iz];
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vz[ix][iz]*tmp1+vx[ix][iz]*tmp2;
+		p0[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vz[ix][iz]*tmp1+vx[ix][iz]*tmp2;
 	}
 }
 
@@ -136,6 +146,7 @@ void apply_sponge(float**p0, float **p1)
 
 int main(int argc, char* argv[])
 {
+	bool verb;
 	int jt, ft, it, ib, ix, iz, sx, sz;
 	float tmp;
 	float **vz0, **vx0;
@@ -150,6 +161,7 @@ int main(int argc, char* argv[])
 	Fvx = sf_input("vx");/* veloctiy-x */
 	Fw = sf_output("out");/* wavefield snaps */
 
+   	if(!sf_getbool("verb",&verb))  verb=false;    /* verbosity */
     	if (!sf_histint(Fvz,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
     	if (!sf_histint(Fvz,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fvz,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
@@ -190,7 +202,6 @@ int main(int argc, char* argv[])
 	vx=sf_floatalloc2(nzpad, nxpad);
 	p0=sf_floatalloc2(nzpad, nxpad);
 	p1=sf_floatalloc2(nzpad, nxpad);
-	p2=sf_floatalloc2(nzpad, nxpad);
 
 	for(it=0;it<nt;it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
@@ -213,17 +224,21 @@ int main(int argc, char* argv[])
 	}
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
-	memset(p2[0],0,nzpad*nxpad*sizeof(float));
 
 	for(it=0; it<nt; it++)
 	{
-		p1[sx][sz]+=wlt[it];
-		step_forward(p0, p1, p2);
-		apply_sponge(p1,p2);
-		ptr=p0; p0=p1; p1=p2; p2=ptr;
+		if(it>=ft)
+		{
+			window2d(vx0,p0);
+			sf_floatwrite(vx0[0],nz*nx,Fw);
+		}
 
-		window2d(vx0,p0);
-		sf_floatwrite(vx0[0],nz*nx,Fw);
+		p1[sx][sz]+=wlt[it];
+		step_forward(p0, p1);
+		apply_sponge(p0,p1);
+		ptr=p0; p0=p1; p1=ptr;
+
+		if (verb) sf_warning("it=%d;",it);
 	}
 
 	free(wlt);
@@ -233,7 +248,6 @@ int main(int argc, char* argv[])
 	free(*vx); free(vx);
 	free(*p0); free(p0);
 	free(*p1); free(p1);
-	free(*p2); free(p2);
 	free(bndr);
 
     	exit(0);

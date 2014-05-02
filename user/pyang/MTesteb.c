@@ -20,8 +20,16 @@ Note: In this demo, 2N=4 (N=2).
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-Note: This code is devoted alongside the manuscript of P.L. Yang et al, 
-Using the effective boundary saving strategy in GPU-based RTM programming
+Note: This code is committed to the paper: 
+ Yang, Pengliang, Jinghuai Gao, and Baoli Wang. "RTM using effective 
+ boundary saving: A staggered grid GPU implementation." Computers & 
+ Geosciences (2014). 
+
+ The concept of effective boundary saving does not depends on C or GPU 
+ implementation. However, it is of special value for GPU implemenation, 
+ because it eliminates the CPU-GPU data transfer for boundary saving. 
+ Keep in mind computation is much faster on GPU while frequent data transfer 
+ slows it down greatly.
 */
 
 #include <rsf.h>
@@ -34,13 +42,18 @@ Using the effective boundary saving strategy in GPU-based RTM programming
 static int nb, nz, nx, nt, nzpad, nxpad;
 static float dz, dx, dt, fm, c0, c11, c12, c21, c22;
 static float *bndr;
-static float **vv, **p0, **p1, **p2, **ptr=NULL;
+static float **vv, **p0, **p1, **ptr=NULL;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
 {
     int iz,ix;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    b[nb+ix][nb+iz] = a[ix][iz];
@@ -67,6 +80,12 @@ void window2d(float **a, float **b)
 /*< window 'b' to 'a': source(b)-->destination(a) >*/
 {
     int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    a[ix][iz]=b[nb+ix][nb+iz] ;
@@ -74,57 +93,14 @@ void window2d(float **a, float **b)
     }
 }
 
-
-void fd2d_init(float **v0)
-/* allocate and initialize variables */
-{
-	int iz, ix;
-	float tmp;
-
-#ifdef _OPENMP
-    	omp_init();
-#endif
-	nzpad=nz+2*nb;
-	nxpad=nx+2*nb;
-	
-	vv=sf_floatalloc2(nzpad, nxpad);
-	p0=sf_floatalloc2(nzpad, nxpad);
-	p1=sf_floatalloc2(nzpad, nxpad);
-	p2=sf_floatalloc2(nzpad, nxpad);
-	bndr=sf_floatalloc(nb);
-
-	expand2d(vv, v0);
-	for(int ib=0;ib<nb;ib++){
-		tmp=3.0*(nb-ib)/nb;
-		bndr[ib]=expf(-tmp*tmp);
-	}
-
-	for(ix=0;ix<nxpad;ix++){
-	    for(iz=0;iz<nzpad;iz++){
-		tmp=vv[ix][iz]*dt;
-		vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
-	    }
-	}
-
-	/*< initialize 4-th order fd coefficients >*/
-	tmp = 1.0/(dz*dz);
-	c11 = 4.0*tmp/3.0;
-	c12= -tmp/12.0;
-	tmp = 1.0/(dx*dx);
-	c21 = 4.0*tmp/3.0;
-	c22= -tmp/12.0;
-	c0=-2.0*(c11+c12+c21 + c22);
-}
-
-void wavefield_init(float **p0, float**p1, float **p2)
+void wavefield_init(float **p0, float**p1)
 /*< initialize the wavefield  variables >*/
 {
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));
 	memset(p1[0],0,nzpad*nxpad*sizeof(float));
-	memset(p2[0],0,nzpad*nxpad*sizeof(float));
 }
 
-void step_forward(float **p0, float **p1, float**p2)
+void step_forward(float **p0, float **p1)
 /*< one step of forward modeling >*/
 {
 	int ix,iz;
@@ -133,7 +109,7 @@ void step_forward(float **p0, float **p1, float**p2)
 #ifdef _OPENMP
 #pragma omp parallel for collapse(2) default(none)	\
     	private(ix,iz,tmp)				\
-    	shared(vv,p2,p1,p0,nxpad,nzpad,c0,c11,c12,c21,c22)  
+    	shared(vv,p1,p0,nxpad,nzpad,c0,c11,c12,c21,c22)  
 #endif	
 	for (ix=2; ix < nxpad-2; ix++) 
 	for (iz=2; iz < nzpad-2; iz++) 
@@ -143,7 +119,7 @@ void step_forward(float **p0, float **p1, float**p2)
 			c12*(p1[ix][iz-2]+p1[ix][iz+2])+
 			c21*(p1[ix-1][iz]+p1[ix+1][iz])+
 			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
+		p0[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+vv[ix][iz]*tmp;
 	}
 }
 
@@ -171,16 +147,6 @@ void apply_sponge(float **p0)
 }
 
 
-
-void fd2d_close()
-/*< free the allocated variables >*/
-{
-	free(*vv); free(vv);
-	free(*p0); free(p0);
-	free(*p1); free(p1);
-	free(*p2); free(p2);
-	free(bndr);
-}
 
 void boundary_rw(float **p, float *spo, bool read)
 /* read/write using effective boundary saving strategy: 
@@ -256,15 +222,20 @@ void add_source(int *sxz, float **p, int ns, float *source, bool add)
 
 int main(int argc, char* argv[])
 {
-	int jt, ft, ns, ng;
+	int it, jt, ft, ns, ng, iz, ix, ib;
+	float tmp;
 	float *spo;
 	float **v0;
-	sf_file Fv, Fw;
+	sf_file Fv, Fw1, Fw2;
 
     	sf_init(argc,argv);
+#ifdef _OPENMP
+    	omp_init();
+#endif
 
 	Fv = sf_input("in");/* veloctiy model */
-	Fw = sf_output("out");/* wavefield snaps */
+	Fw1 = sf_output("out");/* forward wavefield snaps */
+	Fw2 = sf_output("back");/* backward wavefield snaps */
 
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
@@ -279,17 +250,51 @@ int main(int argc, char* argv[])
 	if (!sf_getint("ns",&ns)) ns=1;	/* number of shots */
 	if (!sf_getint("ng",&ng)) ng=nx;/* number of receivers */
 
-	sf_putint(Fw,"n1",nz);
-	sf_putint(Fw,"n2",nx);
-    	sf_putint(Fw,"n3",(nt-ft)/jt);
-    	sf_putfloat(Fw,"d3",jt*dt);
-    	sf_putfloat(Fw,"o3",ft*dt);
+	sf_putint(Fw1,"n1",nz);
+	sf_putint(Fw1,"n2",nx);
+    	sf_putint(Fw1,"n3",(nt-ft)/jt);
+    	sf_putfloat(Fw1,"d3",jt*dt);
+    	sf_putfloat(Fw1,"o3",ft*dt);
+	sf_putint(Fw2,"n1",nz);
+	sf_putint(Fw2,"n2",nx);
+    	sf_putint(Fw2,"n3",(nt-ft)/jt);
+    	sf_putfloat(Fw2,"d3",-jt*dt);
+    	sf_putfloat(Fw2,"o3",nt*dt);
 
+	/*< initialize 4-th order fd coefficients >*/
+	tmp = 1.0/(dz*dz);
+	c11 = 4.0*tmp/3.0;
+	c12= -tmp/12.0;
+	tmp = 1.0/(dx*dx);
+	c21 = 4.0*tmp/3.0;
+	c22= -tmp/12.0;
+	c0=-2.0*(c11+c12+c21+c22);
+
+	nzpad=nz+2*nb;
+	nxpad=nx+2*nb;
+	
 	spo=(float*)malloc(nt*4*(nx+nz)*sizeof(float));
 	memset(spo,0,nt*4*(nx+nz)*sizeof(float));
 	v0=sf_floatalloc2(nz,nx); 
 	sf_floatread(v0[0],nz*nx,Fv);
-	fd2d_init(v0);
+
+	vv=sf_floatalloc2(nzpad, nxpad);
+	p0=sf_floatalloc2(nzpad, nxpad);
+	p1=sf_floatalloc2(nzpad, nxpad);
+	bndr=sf_floatalloc(nb);
+
+	expand2d(vv, v0);
+	for(ib=0;ib<nb;ib++){
+		tmp=0.015*(nb-ib);
+		bndr[ib]=expf(-tmp*tmp);
+	}
+
+	for(ix=0;ix<nxpad;ix++){
+	    for(iz=0;iz<nzpad;iz++){
+		tmp=vv[ix][iz]*dt;
+		vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
+	    }
+	}
 
 	float *wlt=(float*)malloc(nt*sizeof(float));
 	for(int it=0;it<nt;it++){
@@ -301,28 +306,37 @@ int main(int argc, char* argv[])
 	sxz=(int*)malloc(ns*sizeof(int));
 	gxz=(int*)malloc(ng*sizeof(int));
 	sxz[0]=nz/2+nz*(nx/2);
-	wavefield_init(p0, p1, p2);
-	for(int it=0; it<nt; it++)
+	wavefield_init(p0, p1);
+	for(it=0; it<nt; it++)
 	{
+		if(it>=ft)
+		{
+			window2d(v0, p0);
+			sf_floatwrite(v0[0],nz*nx,Fw1);
+		}
+
 		add_source(sxz, p1, 1, &wlt[it], true);
-		step_forward(p0, p1, p2);
+		step_forward(p0, p1);
+		apply_sponge(p0);
 		apply_sponge(p1);
-		apply_sponge(p2);
-		ptr=p0; p0=p1; p1=p2; p2=ptr;
+		ptr=p0; p0=p1; p1=ptr;
 
 		boundary_rw(p0, &spo[it*4*(nx+nz)], false);
 	}
 
 	ptr=p0; p0=p1; p1=ptr;
-	for(int it=nt-1; it>-1; it--)
+	for(it=nt-1; it>-1; it--)
 	{
 		boundary_rw(p1, &spo[it*4*(nx+nz)], true);
-		step_forward(p0, p1, p2);
-		ptr=p0; p0=p1; p1=p2; p2=ptr;
+		step_forward(p0, p1);
+		ptr=p0; p0=p1; p1=ptr;
 
 		add_source(sxz, p1, 1, &wlt[it], false);
-		window2d(v0,p1);
-		sf_floatwrite(v0[0],nz*nx,Fw);
+		if(it>=ft)
+		{
+			window2d(v0, p0);
+			sf_floatwrite(v0[0],nz*nx,Fw2);
+		}
 	}
 
 
@@ -331,7 +345,10 @@ int main(int argc, char* argv[])
 	free(spo);
 	free(wlt);
 	free(*v0); free(v0);
-	fd2d_close();
+	free(*vv); free(vv);
+	free(*p0); free(p0);
+	free(*p1); free(p1);
+	free(bndr);
 
     	exit(0);
 }

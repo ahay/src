@@ -32,6 +32,11 @@ void expand2d(float** b, float** a)
 {
     int iz,ix;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    b[nb+ix][nb+iz] = a[ix][iz];
@@ -58,14 +63,18 @@ void window2d(float **a, float **b)
 /*< window 'b' to 'a': source(b)-->destination(a) >*/
 {
     int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
     for     (ix=0;ix<nx;ix++) {
 	for (iz=0;iz<nz;iz++) {
 	    a[ix][iz]=b[nb+ix][nb+iz] ;
 	}
     }
 }
-
-
 
 void  pmlcoeff_init(float *d1z, float *d2x, float vmax)
 /*< initialize PML abosorbing coefficients >*/
@@ -214,13 +223,14 @@ int main(int argc, char* argv[])
 
 	for(it=0; it<nt; it++)
 	{
+		if(it>=ft)
+		{
+			window2d(v0,p);
+			sf_floatwrite(v0[0],nz*nx,Fw);
+		}
 		p[sx][sz]+=wlt[it];
 		step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
-
-		window2d(v0,p);
-		sf_floatwrite(v0[0],nz*nx,Fw);
 	}
-
 
 	free(wlt);
 	free(*v0); free(v0);
