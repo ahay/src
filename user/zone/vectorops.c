@@ -1,89 +1,101 @@
-/* Generate shifts for 2-D regularized autoregression in complex domain. From (x,y,f) to (x,y,s,f) */
+/*Linear operators for vectors*/
 /*
-  Copyright (C) 2012 University of Texas at Austin
-  
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
-  
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ Copyright (C) 2009 University of Texas at Austin
+ 
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2 of the License, or
+ (at your option) any later version.
+ 
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with this program; if not, write to the Free Software
+ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include "vectorops.h"
+#include <stdio.h>
+#include <math.h>
 #include <rsf.h>
 
-int main(int argc, char* argv[])
+
+void vector_sub(int count1, float *inp /*y_old*/,
+		int count2, float *inp_d /*d(changes)*/,
+		float *outp, int count3 /*starting form which element*/)
+/*<Run Newton's method for finding a good set of intersection points y>*/
+
 {
-    int n1, n2, nsx, nsy, n12, isx,isy;
-    off_t i1, i2, i3, n3;
-    sf_complex **trace, **trace1;
-    sf_file in, shifts;
+	int n; /*number of interfaces*/	
+	int i/*,j*/; /*counter*/
+	
+	if (count1 != count2) sf_error("%s: The size of the two vectors don't match",__FILE__);
+	
+       
+	n = count1;
+	for(i=count3;i<n;i++){
+		*(outp+i) = *(inp+i) - *(inp_d+i); /*adding step*/
+	}
+	
+	
+	/*for (j=0; j<n; j++) { printf("%3.3g ", *(outp+j));} To print output if prefer*/
+	
+}
 
-    sf_init(argc,argv);
-    in = sf_input("in");
-    shifts = sf_output("out");
+void vector_sub3d(int count1, float **inp /*y_old*/,
+		  int count2, float **inp_d /*d(changes)*/,
+		  float **outp, int count3 /*starting form which element*/)
+/*<Subtract vectors of the form x[N][2]>*/
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(in,2);
+{
+	int n; /*number of interfaces*/	
+	int i,j; /*counter*/
+	
+	if (count1 != count2) sf_error("%s: The size of the two vectors don't match",__FILE__);
 
-    
-    if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-    if (!sf_getint("ns1",&nsx)) sf_error("Need ns1=");
-    /* number of shifts in first dim */
+	n = count1;
+	for(i=count3;i<n;i++){
+		for (j=0; j<2; j++) {
+			outp[i][j] = inp[i][j] - inp_d[i][j]; /*adding step*/
+			
+			/*if (j==1) {*/ /*To print output if preferred*/
+				/*printf("%4.1f\n",inp[i][j][0]);*/
+			/*}*/
+			/*else {*/
+			/*	printf("%4.1f",inp[i][j][0]);*/
+			/*}*/
+			
+		}
+		
+	}
+		
+}
 
-    if (!sf_getint("ns2",&nsy)) sf_error("Need ns2=");
-    /* number of shifts in second dim */
+void vector_sub3d_v(int count1, float *inp /*y_old*/,
+		    int count2, float *inp_d /*d(changes)*/,
+		    float *outp, int count3 /*starting form which element*/)
+/*<Subtract vectors of the form x[2]>*/
 
-    if (nsx >= n1) sf_error("nsx=%d is too large",nsx);
-    if (nsy >= n2) sf_error("nsy=%d is too large",nsy);
+{
+	int n; 
+	int i; /*counter*/
+	
+	if (count1 != count2) sf_error("%s: The size of the two vectors don't match",__FILE__);
 
-    sf_putint(shifts,"n3",(2*nsx+1)*(2*nsy+1)-1);
-    sf_shiftdim(in, shifts, 3);
-
-    sf_fileflush(shifts,in);
-    sf_setform(in,SF_NATIVE);
-    sf_setform(shifts,SF_NATIVE);
-    
-
-    n12 = n1*n2;
-
-    trace  = sf_complexalloc2(n1,n2);
-    trace1 = sf_complexalloc2(n1,n2);
-
-/*(x,y,f)----(x,y,s,f)*/
-
-    for (i3=0; i3 < n3; i3++) { 
-        sf_complexread(trace[0],n12,in);
-        for (isy = -nsy; isy < nsy+1; isy++) { 
-        for (isx = -nsx; isx < nsx+1; isx++) { 
-        if (!(isx==0 && isy==0)) { 
-                   for (i2=0; i2 < n2; i2++) { 
-                   for (i1=0; i1 < n1; i1++) { 
-                         trace1[i2][i1] = sf_cmplx(0,0);
-                   } 
-                   } 
-
-                   for (i2=0; i2 < n2; i2++) { 
-                   for (i1=0; i1 < n1; i1++) { 
-                   if (i2-isy < n2 && i1-isx < n1 && i2-isy >= 0 && i1-isx >= 0) {
-                         trace1[i2][i1] = trace[i2-isy][i1-isx];
-                   } 
-                   } 
-                   } 
-	          sf_complexwrite(trace1[0],n12,shifts);    
-        }         
-        } 
-        } 
-         
-        
-    } 
-    
-    exit(0);
+	n = count1;
+	for(i=count3;i<n;i++){
+			outp[i] = inp[i] - inp_d[i]; /*adding step*/
+			
+			/*if (j==1) {*/ /*To print output if preferred*/
+			/*printf("%4.1f\n",inp[i][j][0]);*/
+			/*}*/
+			/*else {*/
+			/*	printf("%4.1f",inp[i][j][0]);*/
+			/*}*/
+		
+	}
+	
 }

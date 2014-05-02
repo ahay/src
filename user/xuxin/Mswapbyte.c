@@ -57,9 +57,14 @@ void swap4_int(int *p)
 
 void swap4_float(float *p)
 {
-	unsigned int n = *(unsigned int *)p;
-	swap4(&n);
-	*p = *(float *)&n;
+    union {
+	float f;
+	unsigned int n;
+    } x;
+
+    x.f = *p;
+    swap4(&(x.n));
+    *p = x.f;
 }
 
 void count()

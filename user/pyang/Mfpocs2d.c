@@ -83,6 +83,8 @@ int main(int argc, char* argv[])
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2);
 	sf_floatread(mask,n2,Fmask);
+    } else {
+	mask=NULL;
     }
  
     /********************* 2-D POCS interpolation *********************/

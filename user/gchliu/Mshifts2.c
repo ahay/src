@@ -20,7 +20,7 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, is, nsx, nsy, n12, isx,isy;
+    int n1, n2, nsx, nsy, n12, isx,isy;
     off_t i1, i2, i3, n3;
     sf_complex **trace, **trace1;
     sf_file in, shifts;
