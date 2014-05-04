@@ -3,7 +3,7 @@ NB: SPML boundary condition combined with 4-th order finite difference,
 effective boundary saving strategy used!
 */
 /*
-  Copyright (C) 2012  Xi'an Jiaotong University (Pengliang Yang)
+  Copyright (C) 2014  Xi'an Jiaotong University (Pengliang Yang)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -165,6 +165,7 @@ void add_source(int *sxz, float **p, int ns, float *source, bool add)
 
 
 void step_forward(float **p, float **pz, float **px, float **vz, float **vx, float **vv, float *d1z, float *d2x)
+/*< forward modeling step >*/
 {
 	int i1, i2;
 	float tmp, diff1, diff2;
@@ -174,8 +175,8 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 	private(i1,i2,diff1,diff2)			\
 	shared(nzpad, nxpad, p, vz, vx, dt, _dz, _dx, d1z, d2x)
 #endif
-	for(i2=3; i2<nxpad-4; i2++)
-	for(i1=3; i1<nzpad-4; i1++)
+	for(i2=1; i2<nxpad-2; i2++)
+	for(i1=1; i1<nzpad-2; i1++)
 	{
 		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
 		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
@@ -188,13 +189,10 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 	private(i1,i2,diff1, diff2, tmp)		\
 	shared(nzpad, nxpad, vv, p, pz, px, vz, vx, dt, _dz, _dx, d1z, d2x)
 #endif
-	for(i2=4; i2<nxpad-3; i2++)
-	for(i1=4; i1<nzpad-3; i1++)
+	for(i2=2; i2<nxpad-1; i2++)
+	for(i1=2; i1<nzpad-1; i1++)
 	{
 		tmp=vv[i2][i1]; tmp=tmp*tmp;
-		diff2=vx[i2][i1]-vx[i2-1][i1];
-		diff1=vz[i2][i1]-vz[i2][i1-1];
-
 		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
 		diff2=1.125*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667*(vx[i2+1][i1]-vx[i2-2][i1]);
 		pz[i2][i1]=((1.-0.5*dt*d1z[i1])*pz[i2][i1]+dt*tmp*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
@@ -204,6 +202,42 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 }
 
 
+void step_backward(float **p, float **pz, float **px, float **vz, float **vx, float **vv)
+/*< backward reconstruction >*/
+{
+	int i1, i2;
+	float tmp, diff1, diff2;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)			\
+	private(i1,i2,diff1, diff2, tmp)		\
+	shared(nzpad, nxpad, vv, p, pz, px, vz, vx, dt, _dz, _dx)
+#endif
+	for(i2=2; i2<nxpad-1; i2++)
+	for(i1=2; i1<nzpad-1; i1++)
+	{
+		tmp=vv[i2][i1]; tmp=tmp*tmp;
+		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
+		diff2=1.125*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667*(vx[i2+1][i1]-vx[i2-2][i1]);
+		pz[i2][i1]-=dt*tmp*_dz*diff1;
+		px[i2][i1]-=dt*tmp*_dx*diff2;
+		p[i2][i1]=px[i2][i1]+pz[i2][i1];
+	}
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)			\
+	private(i1,i2,diff1,diff2)			\
+	shared(nzpad, nxpad, p, vz, vx, dt, _dz, _dx)
+#endif
+	for(i2=1; i2<nxpad-2; i2++)
+	for(i1=1; i1<nzpad-2; i1++)
+	{
+		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
+		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
+		vz[i2][i1]-=dt*_dz*diff1;
+		vx[i2][i1]-=dt*_dx*diff2;
+	}
+}
 void record_seis(float *seis_it, int *gxz, float **p, int ng)
 /*< record seismogram at time it into a vector length of ng >*/
 {
@@ -278,18 +312,23 @@ void normalize_image(float *imag1, float *imag2, float **num, float **den)
 	}
 }
 
-void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, 
-	int it, int ntd, float vmute, int ng)
+void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx,int it, int tdmute)
 /*< muting the direct arrivals >*/
 {
 	int id, kt;
 	float a,b,t0;
 
-	for(id=0;id<ng;id++){
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(id,a,b,t0,kt)		\
+	shared(seis_kt,vmute,ng,it,dt,dx,dz,tdmute,gzbeg, szbeg,gxbeg,sxc,jgx)
+#endif
+	for(id=0;id<ng;id++)
+	{
 		a=dx*abs(gxbeg+id*jgx-sxc);
 		b=dz*(gzbeg-szbeg);
 		t0=sqrtf(a*a+b*b)/vmute;
-		kt=t0/dt+ntd;// ntd is manually added to obtain the best muting effect.
+		kt=t0/dt+tdmute;// ntd is manually added to obtain the best muting effect.
     		if (it<kt) seis_kt[id]=0.;
 	}
 }
@@ -368,7 +407,7 @@ int main(int argc, char* argv[])
 	d2x=sf_floatalloc(nxpad);
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
-	dcal=sf_floatalloc2(nt,ng);
+	dcal=sf_floatalloc2(ng,nt);
 
 	for(it=0;it<nt;it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
@@ -404,15 +443,19 @@ int main(int argc, char* argv[])
 
 	for(is=0; is<ns; is++)
 	{
+		wavefield_init(p, pz, px, vz, vx);
+		if (csdgather)	{
+			gxbeg=sxbeg+is*jsx-distx;
+			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+		}
 		for(it=0; it<nt; it++)
 		{
 			add_source(&sxz[is], p, 1, &wlt[it], true);
 			step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
 
 		
-			//record_seis(&dcal[it*ng], gxz, sp0, ng);
-			//muting(&dcal[it*ng], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute, vmute, dt, dz, dx, ng);
-			//boundary_rw(sp0, &spo[it*4*(nx+nz)], false);
+			record_seis(dcal[it], gxz, p, ng);
+			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
 		}
 	}
 
