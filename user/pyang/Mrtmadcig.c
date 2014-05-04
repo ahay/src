@@ -258,7 +258,7 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 
 
 void matrix_transpose(float **mat, int n1, int n2)
-/*< transpose a matrix n1xn2 into n2xn1 >*/
+/*< transpose a matrix n1(row) x n2(column) into n2xn1 >*/
 {
 	int i1, i2;
 	float **tmp;
@@ -294,7 +294,7 @@ void cross_correlation(float **sp, float **gp, float **num, float **den)
 	}
 }
 
-void normalize_image(float *imag1, float *imag2, float **num, float **den)
+void normalize_image(float **imag1, float **imag2, float **num, float **den)
 /*< do image normalization >*/
 {
 	int ix,iz;
@@ -307,12 +307,12 @@ void normalize_image(float *imag1, float *imag2, float **num, float **den)
 	for(ix=0; ix<nx; ix++)
 	for(iz=0; iz<nz; iz++)
 	{
-		imag1[iz+nz*ix]+=num[ix][iz];
-		imag2[iz+nz*ix]+=num[ix][iz]/den[ix][iz];
+		imag1[ix][iz]+=num[ix][iz];
+		imag2[ix][iz]+=num[ix][iz]/den[ix][iz];
 	}
 }
 
-void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx,int it, int tdmute)
+void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, int it, int tdmute)
 /*< muting the direct arrivals >*/
 {
 	int id, kt;
@@ -321,7 +321,7 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx,in
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
 	private(id,a,b,t0,kt)		\
-	shared(seis_kt,vmute,ng,it,dt,dx,dz,tdmute,gzbeg, szbeg,gxbeg,sxc,jgx)
+	shared(seis_kt,vmute,ng,it,dt,dx,dz,tdmute,gzbeg,szbeg,gxbeg,sxc,jgx)
 #endif
 	for(id=0;id<ng;id++)
 	{
@@ -333,15 +333,51 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx,in
 	}
 }
 
+void bndr_rw(bool read, float **p, float *bndr)
+/*< saving the effective boundaries on each inner side >*/
+{
+	int i2, i1;
+	
+	if(read){
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<3; i1++)
+		{
+			p[i2+nb][i1+nb]=bndr[i1+6*i2];
+			p[i2+nb][i1+nz+nb-3]=bndr[(i1+3)+6*i2];
+		}
+		
+		for(i2=0; i2<3; i2++)
+		for(i1=0; i1<nz; i1++)
+		{
+			p[i2+nb][i1+nb]=bndr[6*nx+i1+nz*i2];
+			p[i2+nb+nx-3][i1+nb]=bndr[6*nx+i1+nz*(i2+3)];
+		}
+	}else{
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<3; i1++)
+		{
+			bndr[i1+6*i2]=p[i2+nb][i1+nb];
+			bndr[(i1+3)+6*i2]=p[i2+nb][i1+nz+nb-3];
+		}
+		
+		for(i2=0; i2<3; i2++)
+		for(i1=0; i1<nz; i1++)
+		{
+			bndr[6*nx+i1+nz*i2]=p[i2+nb][i1+nb];
+			bndr[6*nx+i1+nz*(i2+3)]=p[i2+nb+nx-3][i1+nb];
+		}
+	}
+}
 
 
 int main(int argc, char* argv[])
 {
-	int it, is, i1, i2, tdmute, jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+	int it, is,i1,i2, tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, vmax;
-	float *wlt, *d2x, *d1z;
-	float **v0, **vv, **p, **pz, **px, **vz, **vx, **dcal;
+	float *wlt, *d2x, *d1z, *bndr;
+	float **v0, **vv, **dcal;
+	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
     	sf_file vmodl, imag1, imag2; /* I/O files */
 
     	sf_init(argc,argv);
@@ -395,31 +431,44 @@ int main(int argc, char* argv[])
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
 
+	/* allocate variables */
 	wlt=sf_floatalloc(nt);
 	v0=sf_floatalloc2(nz,nx); 	
 	vv=sf_floatalloc2(nzpad, nxpad);
-	p =sf_floatalloc2(nzpad, nxpad);
-	pz=sf_floatalloc2(nzpad, nxpad);
-	px=sf_floatalloc2(nzpad, nxpad);
-	vz=sf_floatalloc2(nzpad, nxpad);
-	vx=sf_floatalloc2(nzpad, nxpad);
+	sp =sf_floatalloc2(nzpad, nxpad);
+	spz=sf_floatalloc2(nzpad, nxpad);
+	spx=sf_floatalloc2(nzpad, nxpad);
+	svz=sf_floatalloc2(nzpad, nxpad);
+	svx=sf_floatalloc2(nzpad, nxpad);
+	gp =sf_floatalloc2(nzpad, nxpad);
+	gpz=sf_floatalloc2(nzpad, nxpad);
+	gpx=sf_floatalloc2(nzpad, nxpad);
+	gvz=sf_floatalloc2(nzpad, nxpad);
+	gvx=sf_floatalloc2(nzpad, nxpad);
 	d1z=sf_floatalloc(nzpad);
 	d2x=sf_floatalloc(nxpad);
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
 	dcal=sf_floatalloc2(ng,nt);
+	bndr=sf_floatalloc(nt*6*(nx+nz));
 
+	/* initialize variables */
 	for(it=0;it<nt;it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
 		wlt[it]=(1.0-2.0*tmp)*expf(-tmp);
 	}
 	sf_floatread(v0[0],nz*nx,vmodl);
 	expand2d(vv, v0);
-	memset(p [0],0,nzpad*nxpad*sizeof(float));
-	memset(px[0],0,nzpad*nxpad*sizeof(float));
-	memset(pz[0],0,nzpad*nxpad*sizeof(float));
-	memset(vx[0],0,nzpad*nxpad*sizeof(float));
-	memset(vz[0],0,nzpad*nxpad*sizeof(float));
+	memset(sp [0],0,nzpad*nxpad*sizeof(float));
+	memset(spx[0],0,nzpad*nxpad*sizeof(float));
+	memset(spz[0],0,nzpad*nxpad*sizeof(float));
+	memset(svx[0],0,nzpad*nxpad*sizeof(float));
+	memset(svz[0],0,nzpad*nxpad*sizeof(float));
+	memset(gp [0],0,nzpad*nxpad*sizeof(float));
+	memset(gpx[0],0,nzpad*nxpad*sizeof(float));
+	memset(gpz[0],0,nzpad*nxpad*sizeof(float));
+	memset(gvx[0],0,nzpad*nxpad*sizeof(float));
+	memset(gvz[0],0,nzpad*nxpad*sizeof(float));
 	vmax=v0[0][0];
 	for(i2=0; i2<nx; i2++)
 	for(i1=0; i1<nz; i1++)
@@ -440,37 +489,64 @@ int main(int argc, char* argv[])
 		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+	memset(bndr, 0, 6*(nx+nz)*sizeof(float));
 
 	for(is=0; is<ns; is++)
 	{
-		wavefield_init(p, pz, px, vz, vx);
+		wavefield_init(sp, spz, spx, svz, svx);
 		if (csdgather)	{
 			gxbeg=sxbeg+is*jsx-distx;
 			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 		}
 		for(it=0; it<nt; it++)
 		{
-			add_source(&sxz[is], p, 1, &wlt[it], true);
-			step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
+			bndr_rw(false, sp, &bndr[it*6*(nz+nx)]);
+			add_source(&sxz[is], sp, 1, &wlt[it], true);
+			step_forward(sp, spz, spx, svz, svx, vv, d1z, d2x);
 
+			if(it==200)
+			{
+				window2d(v0,sp);
+				sf_floatwrite(v0[0],nz*nx,imag1);
+			}
 		
-			record_seis(dcal[it], gxz, p, ng);
-			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
+			//record_seis(dcal[it], gxz, sp, ng);
+			//muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
+		}
+
+		wavefield_init(gp, gpz, gpx, gvz, gvx);
+		for(it=nt-1; it>-1; it--)
+		{
+			step_backward(sp, spz, spx, svz, svx, vv);
+			add_source(&sxz[is], sp, 1, &wlt[it], false);
+			bndr_rw(true, sp, &bndr[it*6*(nz+nx)]);
+
+			if(it==200)
+			{
+				window2d(v0,sp);
+				sf_floatwrite(v0[0],nz*nx,imag2);
+			}
 		}
 	}
 
 	free(wlt);
 	free(*v0); free(v0);
 	free(*vv); free(vv);
-	free(*p); free(p);
-	free(*px); free(px);
-	free(*pz); free(pz);
-	free(*vx); free(vx);
-	free(*vz); free(vz);
+	free(*sp); free(sp);
+	free(*spx); free(spx);
+	free(*spz); free(spz);
+	free(*svx); free(svx);
+	free(*svz); free(svz);
+	free(*gp); free(gp);
+	free(*gpx); free(gpx);
+	free(*gpz); free(gpz);
+	free(*gvx); free(gvx);
+	free(*gvz); free(gvz);
 	free(d1z);
 	free(d2x);
 	free(sxz);
 	free(gxz);
+	free(bndr);
 
     	exit(0);
 }
