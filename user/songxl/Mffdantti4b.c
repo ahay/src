@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, nbt, nbb, nbl, nbr, nxb, nzb, isx, isz;
     float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, pi=SF_PI, o1, o2, kx0, kz0;
     float **nxt,  **old,  **cur, **ukr, **dercur, **derold, *wav;
-    float **vx, vx2, vx4, vx0, vx02, vx04, **vz, vz2, vz4, vz0, vz02, vz04, **yi, yi0, **se, se0;
+    float **vx, vx2, vx0, vx02, **vz, vz2, vz0, vz02, **yi, yi0, **se, se0;
     float ***aa, dx2, dz2, dx4, dz4, ct, cb, cl, cr; //top, bottom, left, right 
     float w1, w10, w2, w20, w3, w30, h1, h10, h2, h20, h3, h30;
     float cosg, cosg0, cosg2, cosg02, sing, sing0, sing2, sing02;
@@ -172,8 +172,6 @@ int main(int argc, char* argv[])
     
     vx02=vx0*vx0; 
     vz02=vz0*vz0; 
-    vx04=vx02*vx02; 
-    vz04=vz02*vz02; 
 
     /*input & extend anistropic model*/
     yi = sf_floatalloc2(nxb,nzb);
@@ -261,10 +259,8 @@ int main(int argc, char* argv[])
     for (iz=0; iz < nzb; iz++){
          for (ix=0; ix < nxb; ix++) {
          vx2 = vx[iz][ix]*vx[iz][ix];
-         vx4 = vx2*vx2;
          vz2 = vz[iz][ix]*vz[iz][ix];
-         vz4 = vz2*vz2;
-         cosg = cosf(se[iz][ix]);
+	 cosg = cosf(se[iz][ix]);
          sing = sinf(se[iz][ix]);
          cosg2 = cosg*cosg;
          sing2 = sing*sing;

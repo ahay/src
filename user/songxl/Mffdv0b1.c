@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     int nx, nt, nk, ik, ix, it, nft, nb, nxb, abc;
     float dt, dx, dk, k, a, b;
     float *old, *new, *cur, *sig, *v, *newtmp, 
-    v0,vc, **aa, pi=SF_PI, tmpk, 
+    v0,vc, pi=SF_PI, tmpk, 
     *w, *dercur, *derold;
     sf_file in, out, vel;
     bool opt,try;    /* optimal padding */
@@ -71,7 +71,6 @@ int main(int argc, char* argv[])
     dercur = sf_floatalloc(nxb);
     derold = sf_floatalloc(nxb);
     v = sf_floatalloc(nxb);
-    aa = sf_floatalloc2(2,nxb);
     uk = sf_complexalloc(nk);
     uktmp = sf_complexalloc(nk);
 

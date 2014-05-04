@@ -394,14 +394,14 @@ necessary number of iterations.
     { x.zero();
       // NOTE: estimating the necessary number of iterations
       atype one = ScalarFieldTraits<atype>::One();
-      atype beta;
-      atype epsest;
+      atype beta=0;
+      atype epsest=0;
       ProtectedDivision<atype>(sqrt(alpha)*epsilon,one+sqrt(alpha),epsest);
       atype epsk;
       epsk= epsest + one;
       atype tmp = one;
       ProtectedDivision<atype>(one - gamma,one + gamma,beta);
-      atype q;
+      atype q=0;
       ProtectedDivision<atype>(beta,one + sqrt(one-beta*beta),q);
       int k = 1;
       while (epsk > epsest && k<=kmax) {
@@ -414,7 +414,7 @@ necessary number of iterations.
 	// NOTE: compute Chebyshev coefficients
 	atype ckm = one;
 	atype ck = one / beta;
-	atype ckp;
+	atype ckp=0;
 	coeff.reserve(kmax+1);   // allocate memory for coeff
 	coeff[0] = ScalarFieldTraits<atype>::Zero();
 	coeff[1] = one;

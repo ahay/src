@@ -358,8 +358,8 @@ void fwportpseudophomo(float dt,float***p1,float***p2,float***p3,
 		dt2=dt*dt;
 		vp2=vp0*vp0;
 		vs2=vs0*vs0;
-		float tmp;
-		tmp=(epsi1-del1);
+/*		float tmp;
+		tmp=(epsi1-del1); */
 		ep_1=1+2*epsi1;
 		de_1=1+2*del1;
 		gam_1=1+2*gama1;

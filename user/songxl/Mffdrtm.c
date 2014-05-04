@@ -77,7 +77,7 @@ float dehf(float k /*current frequency*/,
 int main(int argc, char* argv[]) 
 {
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, nbt, nbb, nbl, nbr, nxb, nzb, isx, isz, irz, ir;
-    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt,  pi=SF_PI, o1, o2, kx0, kz0, knx, knz;
+    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt,  pi=SF_PI, o1, o2, kx0, kz0;
     float **new,  **old,  **cur, **ukr, **dercur, **derold, *wav, **rvr, **snap, **image;
     float **v, v0, v02, v2;
     float ***aa, dx2, dz2, w, g1, g2, ct, cb, cl, cr; /* top, bottom, left, right */
@@ -88,9 +88,9 @@ int main(int argc, char* argv[])
     FILE *out;
     bool opt;    /* optimal padding */
     float **fcos;
-    int nth=1, ith=0, esize, shot_num, n1, n2;
+    int nth=1, ith=0, esize, shot_num, n1;
     int i, rank, nodes;
-    int nr, jr, r0, nl, fsize, tl, jm, rb;
+    int nr, jr, r0, nl, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
     float ax, az, factor;
     int sht, tskip;
@@ -160,8 +160,6 @@ int main(int argc, char* argv[])
     if(!(n1==4)) sf_error("n1 in geo should be 4");
     if(!sf_histint(geo,"n2",&shot_num)) sf_error("No n2=!");
     if(rank==0) sf_warning("%d shots!",shot_num);
-    n2 = sf_leftsize(geo,1);
-
 
     nxb = nx + nbl + nbr;
     nzb = nz + nbt + nbb;
@@ -175,9 +173,6 @@ int main(int argc, char* argv[])
     kx0 = -0.5/dx*2.0*pi;
     dkz = 1./(nkz*dz)*2.0*pi;
     kz0 = -0.5/dz*2.0*pi;
-    knx = 0.5/dx*2.0*pi;
-    knz = 0.5/dz*2.0*pi;
-
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -204,7 +199,6 @@ int main(int argc, char* argv[])
 
     wav    =  sf_floatalloc(nt);
     rvr    =  sf_floatalloc2(nt-sht,nr);
-    fsize = sizeof(float);
     sf_floatread(wav,nt,source);
 
     snap   =  sf_floatalloc2(nx,nz);
@@ -537,7 +531,8 @@ int main(int argc, char* argv[])
             }
             if(!(it%jm)) {
 		fseek(out,sizeof(float)*tl*(it/jm),SEEK_SET);
-		fread(snap[0],sizeof(float),tl,out);
+		if (tl != fread(snap[0],sizeof(float),tl,out))
+		    sf_error("trouble reading:");
 		for (iz=0; iz < nz; iz++) {
 		    for(ix=0; ix < nx; ix++) {
 			image[iz][ix] += snap[iz][ix]*cur[iz+nbt][ix+nbl];
@@ -903,11 +898,11 @@ float dehf(float k /*current frequency*/,
 	   float factor /*propotion*/)
 /*< high frequency depressing>*/
 {
-    float kmax, kmax2;
+    float kmax;
     float depress;
     /* float pi=SF_PI; */
     kmax =  (kn*factor);
-    kmax2 = (kmax+kn)/2.0;
+    /* kmax2 = (kmax+kn)/2.0; */
     if (fabs(k) < kmax) {
 	depress = 1.0;
     }

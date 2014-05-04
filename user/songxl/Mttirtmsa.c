@@ -71,9 +71,9 @@ void source_smooth(float **source /*source matrix*/,
 int main(int argc, char* argv[]) 
 {
     int nxorg, nt, nkx, nkz, ix, it, ikx, ikz, nzorg, iz, nbt, nbb, nbl, nbr, nxb, nzb, isx, isz, irz, ir;
-    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, tmp, pi=SF_PI, o1, o2, kx0, kz0, knx, knz;
+    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt, tmp, pi=SF_PI, o1, o2, kx0, kz0;
     float **new,  **old,  **cur, **ukr, **dercur, **derold, *wav, **rvr, **snap, **image;
-    float **vx, vx2, vx4, vx0, vx02, vx04, **vz, vz2, vz4, vz0, vz02, vz04, **yi, yi0, **se, se0;
+    float **vx, vx2, vx0, vx02, **vz, vz2, vz0, vz02, **yi, yi0, **se, se0;
     float ***aa, dx2, dz2, dx4, dz4, ct, cb, cl, cr; /* top, bottom, left, right */
     float w1, w10, w2, w20, w3, w30, h1, h10, h2, h20, h3, h30;
     float cosg, cosg0, cosg2, cosg02, sing, sing0, sing2, sing02;
@@ -84,9 +84,9 @@ int main(int argc, char* argv[])
     FILE *out;
     bool opt,de;    /* optimal padding */
     float **fcos;
-    int nth=1, ith=0, esize, shot_num, n1, n2;
+    int nth=1, ith=0, esize, shot_num, n1;
     int i, rank, nodes;
-    int nr, jr, r0, nl, fsize, tl, jm, rb;
+    int nr, jr, r0, nl, tl, jm, rb;
     char *oname, *mm, *iname, *sname;
     kiss_fft_cfg *cfgx, *cfgxi, *cfgz, *cfgzi;
     int lefts, rights, newl, tskip, sht;
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
     if(!(n1==4)) sf_error("n1 in geo should be 4");
     if(!sf_histint(geo,"n2",&shot_num)) sf_error("No n2=!");
     if(rank==0) sf_warning("%d shots!",shot_num);
-    n2 = sf_leftsize(geo,1);
+    /* n2 = sf_leftsize(geo,1); */
 
     if (!sf_getint("left",&lefts)) lefts=nr*3/2*jr; /*left*/
     if (!sf_getint("right",&rights)) rights=nr/2*jr; /*right*/
@@ -165,9 +165,6 @@ int main(int argc, char* argv[])
     kx0 = -0.5/dx*2.0*pi;
     dkz = 1./(nkz*dz)*2.0*pi;
     kz0 = -0.5/dz*2.0*pi;
-    knx = 0.5/dx*2.0*pi;
-    knz = 0.5/dz*2.0*pi;
-
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -194,7 +191,6 @@ int main(int argc, char* argv[])
 
     wav    =  sf_floatalloc(nt);
     rvr    =  sf_floatalloc2(nt-sht,nr);
-    fsize = sizeof(float);
     sf_floatread(wav,nt,source);
 
     snap   =  sf_floatalloc2(newl,nzorg);
@@ -367,8 +363,6 @@ int main(int argc, char* argv[])
         }
         vx02=vx0*vx0; 
         vz02=vz0*vz0; 
-        vx04=vx02*vx02; 
-        vz04=vz02*vz02; 
 
         cosg0 = cosf(se0);
         cosg02 = cosg0*cosg0;
@@ -390,9 +384,7 @@ int main(int argc, char* argv[])
         for (iz=0; iz < nzb; iz++){
             for (ix=0; ix < nxb; ix++) {
                 vx2 = vx[iz][ix]*vx[iz][ix];
-                vx4 = vx2*vx2;
                 vz2 = vz[iz][ix]*vz[iz][ix];
-                vz4 = vz2*vz2;
                 cosg = cosf(se[iz][ix]);
                 sing = sinf(se[iz][ix]);
                 cosg2 = cosg*cosg;
@@ -602,7 +594,8 @@ int main(int argc, char* argv[])
             }
             if(!(it%jm)) {
 		fseek(out,sizeof(float)*tl*(it/jm),SEEK_SET);
-		fread(snap[0],sizeof(float),tl,out);
+		if (tl != fread(snap[0],sizeof(float),tl,out))
+		    sf_error("fread error:");
 		for (iz=0; iz < nzorg; iz++) {
 		    for(ix=0; ix < newl; ix++) {
 			image[iz][ix] += snap[iz][ix]*cur[iz+nbt][ix+nbl];

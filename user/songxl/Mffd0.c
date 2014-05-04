@@ -60,8 +60,8 @@ float dehf(float k /*current frequency*/,
 int main(int argc, char* argv[]) 
 {
     int nx, nt, nkx, nkz, ix, it, ikx, ikz, nz, iz, nbt, nbb, nbl, nbr, nxb, nzb,ir;
-    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt,  pi=SF_PI, o1, o2, kx0, kz0, knx, knz;
-    float **new,  **old,  **cur, **ukr, **dercur, **derold, **rvr, **snap, **image;
+    float dt, dx, dkx, kx, dz, dkz, kz, tmpdt,  pi=SF_PI, o1, o2, kx0, kz0;
+    float **new,  **old,  **cur, **ukr, **dercur, **derold, **rvr, **image;
     float **v, v0, v02, v2;
     float ***aa, dx2, dz2, w, g1, g2, ct, cb, cl, cr; /* top, bottom, left, right */
     float tmpvk, err, dt2;
@@ -135,9 +135,6 @@ int main(int argc, char* argv[])
     kx0 = -0.5/dx*2.0*pi;
     dkz = 1./(nkz*dz)*2.0*pi;
     kz0 = -0.5/dz*2.0*pi;
-    knx = 0.5/dx*2.0*pi;
-    knz = 0.5/dz*2.0*pi;
-
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -165,8 +162,6 @@ int main(int argc, char* argv[])
     rvr    =  sf_floatalloc2(nr,nt);
     sf_floatread(rvr[0],nt*nr,source);
 
-
-    snap   =  sf_floatalloc2(nx,nz);
     image  =  sf_floatalloc2(nx,nz);
     old    =  sf_floatalloc2(nxb,nzb);
     cur    =  sf_floatalloc2(nxb,nzb);
@@ -539,11 +534,11 @@ float dehf(float k /*current frequency*/,
 	   float factor /*propotion*/)
 /*< high frequency depressing>*/
 {
-    float kmax, kmax2;
+    float kmax;
     float depress;
     /* float pi=SF_PI; */
     kmax =  (kn*factor);
-    kmax2 = (kmax+kn)/2.0;
+    /* kmax2 = (kmax+kn)/2.0; */
     if (fabs(k) < kmax) {
 	depress = 1.0;
     }

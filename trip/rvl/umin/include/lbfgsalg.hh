@@ -225,7 +225,7 @@ namespace RVLUmin{
 	  reset();
 	}
 
-	Scalar tmp;
+	Scalar tmp=0;
 	if (ProtectedDivision<Scalar>
 	    (1.0,rho[CurNum]*(Y[CurNum].normsq()),tmp)) {
 	  RVLException e;

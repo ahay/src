@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
     /*grid index variables*/
     int nx, nz, nt, wfnt;
-    int nzx, nx2, nz2, nzx2, n2, m2, pad1, nk;
+    int nzx, nx2, nz2, n2, m2, pad1, nk;
     int ix, it;
     int nxb, nzb;
     float dt, dx, dz, wfdt;
@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     sf_complex **ltb, **rtb;
 
     /*Data*/
-    float ***wavefld,***wavefld2;
+    float ***wavefld;
     sf_complex **record;
     float **img1, **img2;
     int snpint;
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
     nk = nz2*nx2;
 
     nzx = nzb*nxb;
-    nzx2 = nz2*nx2;
+    /* nzx2 = nz2*nx2; */
 
     if (!sf_histint(left,"n1",&n2) || n2 != nzx) sf_error("Need n1=%d in left",nzx);
     if (!sf_histint(left,"n2",&m2))  sf_error("Need n2= in left");
@@ -237,10 +237,12 @@ int main(int argc, char* argv[])
 
     sf_warning("fine!!!");
 
+/*
     if (wantwf)
 	wavefld2= sf_floatalloc3(nz, nx, wfnt);
     else
 	wavefld2=NULL;
+*/
 
     /*image*/
     img1 = sf_floatalloc2(nz, nx);

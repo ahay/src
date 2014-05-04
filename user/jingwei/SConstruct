@@ -63,7 +63,7 @@ if lapack:
 mains = Split(progs)
 for prog in mains:
     if lapack:
-        prog = env.Program(prog,['M'+prog+'.cc']+obj+[lib])
+        prog = env.Program(prog,['M'+prog+'.cc']+[lib])
         env.Depends(prog,ccinc)
     else:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
@@ -80,7 +80,9 @@ for sprog in smains:
         sprog = env.RSF_Place('sf'+sprog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,sprog)
-        env.Install(incdir,'bfio.bin')
+
+if root:
+    env.Install(incdir,'bfio.bin')
 
 
 cmains = Split(cprogs)
