@@ -191,14 +191,13 @@ def horizontal3d(cc,zcoord,custom,par,jx=1,jy=1,fx=0,fy=0):
          '''
          %scat axis=2 space=n %s %s %s | 
          transp | 
-         put o1=0 d1=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
+         put o1=0 d1=1 o2=0 d2=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
          '''%(M8R,ccx,ccy,ccz) +
          '''     
          %srm %s %s %s %s
          '''%(M8R,cco,ccx,ccy,ccz),
               stdin=0,
               stdout=0)
-
     
 # constant x
 def YZsheet3d(cc,xcoord,custom,par,jy=1,jz=1):

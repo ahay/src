@@ -62,22 +62,21 @@ def param(par):
         else:        par['iratio2d']=1.0*(dz)/(dx)
     if(not par.has_key('iheight2d')):
         if(par['iratio2d']>=0.8): par['iheight2d']=10
-        else:                     par['iheight2d']=14*par['iratio2d']
+        else:                     par['iheight2d']=12*par['iratio2d']
             
     if(not par.has_key('dratio2d')):
         par['dratio2d']=par['iratio2d']
-        #        par['dratio2d']=0.7
 
     if(not par.has_key('dheight2d')):
 #       par['dheight2d']=par['iheight2d']
-       par['dheight2d']=14*par['dratio2d']
+       par['dheight2d']=12*par['dratio2d']
 
-    if((dx+dy)   == 0.0)  : yxratio=1.0
-    else                  : yxratio=1.0*dx/(dx+dy)
-    if((dz+dy)   == 0.0)  : yzratio=1.0
-    else                  : yzratio=1.0*dz/(dz+dy)
-    if((dt+dy) == 0.0)    : ytratio=1.0
-    else                  : ytratio=dt/(dt+dy);
+    if((dx+dy) == 0.0)  : yxratio=1.0
+    else                : yxratio=1.0*dx/(dx+dy)
+    if((dz+dy) == 0.0)  : yzratio=1.0
+    else                : yzratio=1.0*dz/(dz+dy)
+    if((dt+dy) == 0.0)  : ytratio=1.0
+    else                : ytratio=dt/(dt+dy);
     
     par['pointt']=ytratio;
     par['pointz']=yzratio;
@@ -87,16 +86,16 @@ def param(par):
     else:               par['iratio3d']=(dz+dy)/(dx+dy)
 
     if(par['iratio3d']>1): par['iheight3d']=12
-    else:                  par['iheight3d']=14*par['iratio3d']
+    else:                  par['iheight3d']=12*par['iratio3d']
 
     if((dx+dy) == 0.0): par['dratio3d']=1
     else:               par['dratio3d']=(dt+dy)/(dx+dy)
         
     if(par['dratio3d']>1): par['dheight3d']=12
-    else:                  par['dheight3d']=14*par['dratio3d']
+    else:                  par['dheight3d']=12*par['dratio3d']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=6 labelfat=3 titlesz=12 titlefat=3 xll=2 yll=1 ' + ' '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=8 labelfat=5 titlesz=12 titlefat=3 xll=2.0 yll=1.5 ' + ' '
     
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
@@ -114,7 +113,7 @@ def igrey2d(custom,par):
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['iratio2d'],par['iheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 # grey 2D frame of a cube
 def ifrm2d(index,custom,par):
@@ -129,7 +128,7 @@ def ifrm2d(index,custom,par):
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['iratio2d'],par['iheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def igrey3d(custom,par):
     return '''
@@ -155,7 +154,6 @@ def imovie3d(movie,byte,nfrm,custom,par):
              'window n4=1 f4=%d |'%ifrm + igrey3d(custom,par))
     Result(movie,[movie+'-f%03d'%ifrm for ifrm in range(nfrm)],'Movie')
 
-
 def ifrmE2d(wfrm,wbyt,index,custom,par,xscale=0.5,yscale=0.5,shift=-11):
     Plot(wfrm+'_V',wbyt,'window n3=1 f3=0 |'+ ifrm2d(index,'',par))
     Plot(wfrm+'_H',wbyt,'window n3=1 f3=1 |'+ ifrm2d(index,'',par)) 
@@ -177,10 +175,9 @@ def dgrey2d(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['dratio2d'],par['dheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def dgrey3d_init(vel,par):
-
     dx=par['xmax']-par['xmin'];
     dy=par['ymax']-par['ymin'];
     dt=par['tmax']-par['tmin'];
@@ -192,11 +189,9 @@ def dgrey3d_init(vel,par):
     else              : par['pointt']=dz/(dz+dy);
     if((dx+dy) == 0.0): par['dratio3d']=1
     else:               par['dratio3d']=(dz+dy)/(dx+dy)
-        
     if(par['dratio3d']>1): par['dheight3d']=12
     else:                  par['dheight3d']=12*par['dratio3d']
 
-        
 def dgrey3d(custom,par):
     return '''
     grey3 title="" framelabel=n parallel2=n
@@ -231,7 +226,7 @@ def dwigl2d(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['dratio2d'],par['dheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def egrey2d(custom,par):
     return '''
@@ -243,7 +238,7 @@ def egrey2d(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['dratio2d'],par['dheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def ewigl2d(custom,par):
     return '''
@@ -257,7 +252,7 @@ def ewigl2d(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['dratio2d'],par['dheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 # ------------------------------------------------------------
 def gainall(custom,par):
@@ -278,14 +273,14 @@ def waveplot(custom,par):
     graph title=""
     min1=%g max1=%g
     min2=-1 max2=+1 
-    plotfat=5 plotcol=5
+    plotfat=8 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
-    screenratio=0.3 screenht=4.5
+    screenratio=0.3 screenht=3
     %s
     ''' % (par['tmin'],par['tmax'],
            par['lt'],par['ut'],
-        par['labelattr']+custom)
+        par['labelattr']+' '+custom)
 
 # plot spectrum
 def specplot(custom,par):
@@ -301,7 +296,7 @@ def specplot(custom,par):
     %s
     ''' % (par['fmin'],par['fmax'],
            par['lf'],par['uf'],
-        par['labelattr']+custom)
+        par['labelattr']+' '+custom)
 
 def waveplotE2d(wav,custom,par):
 
@@ -327,7 +322,7 @@ def cgraph2d(custom,par):
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['iratio2d'],par['iheight2d'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def bbplot2d(custom,par):
     return '''
@@ -354,13 +349,13 @@ def qqplot2d(custom,par):
 def rays2d(plot,hwt,fray,jray,custom,par):
     Plot(plot,hwt,
          'window squeeze=n f1=%d j1=%d | transp |'%(fray,jray)
-         + cgraph2d('plotcol=5 wantaxis=n'+custom,par))
+         + cgraph2d('plotcol=5 wantaxis=n'+' '+custom,par))
 
 # wfts plot
 def wfts2d(plot,hwt,fwft,jwft,custom,par):
     Plot(plot,hwt,
          'window squeeze=n f2=%d j2=%d | transp |'%(fwft,jwft)
-         + cgraph2d('plotcol=2 wantaxis=n plotfat=2 symbol=.'+custom,par))
+         + cgraph2d('plotcol=2 wantaxis=n plotfat=2 symbol=.'+' '+custom,par))
 
 # contour plot
 def ccont2d(custom,par):
@@ -455,19 +450,18 @@ def istagger2d(cube,custom,par,nfrm=2,scale=1,ratio=1,ymax=10,xmax=14):
 
 # ------------------------------------------------------------
 # plot 3x3 matrix of plots
-def inine(cube,custom,par,scale=0.3,ymax=10,ratio=1):
+def inine(cube,byte,custom,par,scale=0.3,ymax=10,ratio=1):
     nfrm=9
 
     dy=ymax;
     dx=ymax/ratio
         
-    Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
     for ifrm in range(nfrm):
         tag="%d"%ifrm
         
-        Plot(cube+tag,cube+'byt',
+        Plot(cube+tag,byte,
              'window n3=1 f3=%d |'%ifrm 
-             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
+             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(4/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-1+int(-2+ifrm/3)*dy,-1-(ifrm%3)*dx))        
@@ -475,24 +469,23 @@ def inine(cube,custom,par,scale=0.3,ymax=10,ratio=1):
 
 # ------------------------------------------------------------
 # plot 1x5 vector of plots (assumes 9 frame in input)
-def ifive(cube,custom,par,scale=0.2,xmax=12):
+def ifive(cube,byte,custom,par,scale=0.2,xmax=12):
     nfrm=5
     jfrm=2
     
     dx=xmax
 
-    Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
+    #    Flow(cube+'byt',cube,'byte gainpanel=a pclip=100 %s'%custom)    
     for ifrm in range(nfrm):
         tag="%d"%ifrm
         
-        Plot(cube+tag,cube+'byt',
+        Plot(cube+tag,byte,
              'window n3=1 f3=%d |'%(ifrm*jfrm)
-             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(5/scale,ifrm,custom),par))
+             + igrey2d('wantaxis=n titlesz=%d title=%d %s'%(4/scale,ifrm,custom),par))
         Plot(cube+tag+'_',
              cube+tag,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'
              %(scale,scale,-1,-1-(ifrm%5)*dx))        
     Result(cube,[cube+"%d_"%ifrm for ifrm in range(nfrm)],'Overlay')
-
 
 # ------------------------------------------------------------
 # plot 5x1 vector of plots (assumes 9 frame in input)
