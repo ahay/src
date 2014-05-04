@@ -2,6 +2,8 @@
     Tapenade 3.7 (r4786) - 21 Feb 2013 15:53
 */
 #include "cstd.h"
+extern void pushcontrol1b(int cc);
+extern void popcontrol1b(int *cc);
 
 /*
   Differentiation of acd_2d_8_d in reverse (adjoint) mode:

@@ -1243,14 +1243,14 @@ ACTION::action Revolve::revolve(int* check,int* capo,int* fine,int snaps,int* in
 	whatodo=f->revolve(str);
 	if(online && whatodo==ACTION::terminate && r==2)
 	{
-		delete f;
+	    //	delete f;
 		f = new Online_r3(snaps,checkpoint);
 		whatodo=f->revolve(str);
 		r++;
 	}
 	if(online && whatodo==ACTION::terminate && r==3)
 	{
-		delete f;
+	    //	delete f;
 		f = new Moin(snaps,checkpoint);
 		whatodo=f->revolve(str);
 		r++;
@@ -1269,14 +1269,14 @@ ACTION::action Revolve::revolve()
 	whatodo=f->revolve(str);
 	if(online && whatodo==ACTION::terminate && r==2)
 	{
-		delete f;
+	    //	delete f;
 		f = new Online_r3(snaps,checkpoint);
 		whatodo=f->revolve(str);
 		r++;
 	}
 	if(online && whatodo==ACTION::terminate && r==3)
 	{
-		delete f;
+	    //	delete f;
 		f = new Moin(snaps,checkpoint);
 		whatodo=f->revolve(str);
 		r++;
@@ -1300,9 +1300,9 @@ void Revolve::turn(int final)
 		fine=final;
 		capo=final-1;
 		Online *g = new Online((Online &) *f);
-		delete f;
+		//	delete f;
 		f=new Offline(snaps,checkpoint,g,final,str);
-		delete g;
+		//	delete g;
 		//f=new Offline(snaps,checkpoint,(Online*)f,final);
 		f->set_fine(final);
 		f->set_capo(final-1);

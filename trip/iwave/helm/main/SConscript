@@ -7,7 +7,7 @@ try:  # madagascar version
 #    print libdir
 #    print libdirlist
     env = env.Clone()
-    env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist+[libdir])
+    env.Append(CPPPATH=cpplist,LIBS=liblist,LIBPATH=libdirlist)
     cxx =  'c++' in env.get('API',[])
 except:  # autonomous version
     Import('vars' + imports)

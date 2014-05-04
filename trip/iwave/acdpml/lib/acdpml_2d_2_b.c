@@ -3,6 +3,9 @@
 */
 #include "cstd.h"
 
+extern void pushinteger4(int x);
+extern void popinteger4(int *x);
+
 /*
   Differentiation of acdpml_2d_2 in reverse (adjoint) mode:
    gradient     of useful results: **uc **phi0 **up **phi1

@@ -1,4 +1,4 @@
-static char adSid[]="$Id: adStack.c 4534 2012-08-27 09:40:31Z vmp $";
+/* static char adSid[]="$Id: adStack.c 4534 2012-08-27 09:40:31Z vmp $"; */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -605,8 +605,8 @@ void printtopplacenum_(int *n) {
 void printstackmax_() {
     DoubleChainedBlock *stack = curStack ;
     int nbBlocks = (stack?-2:0) ;
-    int remainder = 0;
-    long int totalsz ;
+    /*   int remainder = 0;
+	 long int totalsz ; */
     while(stack) {
 	stack = stack->prev ;
 	nbBlocks++ ;
