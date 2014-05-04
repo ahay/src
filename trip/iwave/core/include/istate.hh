@@ -26,7 +26,7 @@ namespace TSOpt {
     string samplekey;
     string suffix;
     string pname;
-    FILE * stream;
+    // FILE * stream; 
     std::vector<axis *> axes; 
     axis const * getTimeAxis(int dim) const;
     bool has_Axis(int i) const;

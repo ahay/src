@@ -307,7 +307,7 @@ class Arevolve : public Online
 	private:
 
 	int checkmax;
-	int fine,oldfine,newcapo,oldcheck,oldcapo;
+	int fine,oldfine,newcapo,oldcapo;
 	ostream & str;
 
 };
@@ -390,7 +390,7 @@ class Offline : public Schedule
 
 	int check, steps, oldsnaps, oldfine, capo, fine, turn,ind	;
 	vector <int> num_ch;
-	bool online,output;
+	bool online;
 	ostream & str;
 };
 
@@ -453,7 +453,7 @@ class Revolve
 	int get_r(int steps,int snaps, ostream & str);
 	int get_r(ostream & str);
 	
-	~Revolve() { delete f, delete checkpoint; }
+	~Revolve() { delete checkpoint; }
 
 	private:
 

@@ -42,6 +42,9 @@ int main(int argc, char* argv[])
 	aa = sf_floatalloc(na);
 	sf_floatread(aa,na,filt);
     }  else {
+	filt = NULL;
+	na = 2;
+
 	aa = sf_floatalloc(2);
 	aa[0] = 1.;
 	aa[1] = -1.;

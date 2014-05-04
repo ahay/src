@@ -317,11 +317,10 @@ namespace RVLUmin{
 	     Scalar InvHessianScale = 1.0,
 	     int MaxUpdates = 5,
 	     ostream & _str=cout)
-      :  UMinDir<Scalar>(),
-	 ans(false),
+      :  UMinDir<Scalar>(),	
 	 H(dom, 
 	   InvHessianScale, 
-	   MaxUpdates), str(_str) {}
+	   MaxUpdates),  ans(false), str(_str) {}
   
     LBFGSDir(LBFGSDir<Scalar> const & x) 
       : UMinDir<Scalar>(x), H(x.H) {}

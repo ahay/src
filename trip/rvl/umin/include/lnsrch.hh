@@ -110,14 +110,15 @@ namespace RVLUmin {
     LineSearchAlgBase(LineSearchAlg<Scalar> const & _lsalg,
 		      FunctionalEvaluation<Scalar> & _fx,
 		      Vector<Scalar> const & _dx)
-      : lsalg(_lsalg),
-	fx(_fx), 
-	dx(_dx),
+	: 
 	f0(_fx.getValue()),
 	x0(_fx.getPoint()),
-	g0(_fx.getGradient()) {} //cerr<<"from LineSearchAlgBase constructor\n";}
+	g0(_fx.getGradient()),
+	lsalg(_lsalg),
+	fx(_fx), 
+	dx(_dx) {} //cerr<<"from LineSearchAlgBase constructor\n";}
     LineSearchAlgBase(const LineSearchAlgBase<Scalar> & ls)
-      : lsalg(ls.lsalg), fx(ls.fx), dx(ls.dx), f0(ls.f0), x0(ls.x0), g0(ls.g0) {}
+	: f0(ls.f0), x0(ls.x0), g0(ls.g0), lsalg(ls.lsalg), fx(ls.fx), dx(ls.dx) {}
     virtual ~LineSearchAlgBase() {}
 
     virtual ostream & write(ostream & str) const {

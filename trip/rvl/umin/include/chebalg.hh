@@ -95,7 +95,7 @@ namespace RVLUmin {
          atype _epsilon = 0.001,  // error reduction
          atype _alpha = 1.1,      // 'fudge factor'
          ostream & _str = cout)
-      : A(_A), x(_x), b(_b), r(A.getDomain()), dx(A.getDomain()), ndx(A.getDomain()), tmp_vector(A.getRange()), rnorm(_rnorm), nrnorm(_nrnorm), coeff(_coeff), gamma(_gamma), epsilon(_epsilon),alpha(_alpha),kc(_kc), nrt(_nrt), str(_str), x_init(_x),dx_init(A.getDomain()),r_init(A.getDomain()),ndx_init(A.getDomain()){
+      : A(_A), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), coeff(_coeff), gamma(_gamma), epsilon(_epsilon), alpha(_alpha), kc(_kc), nrt(_nrt), str(_str), dx(A.getDomain()), r(A.getDomain()), ndx(A.getDomain()), tmp_vector(A.getRange()), x_init(_x),dx_init(A.getDomain()),r_init(A.getDomain()),ndx_init(A.getDomain()){
         
       atype one = ScalarFieldTraits<atype>::One();
       atype tmp = one;
@@ -388,7 +388,7 @@ necessary number of iterations.
 	    atype _alpha = 1.1,      // 'fudge factor'
 	    int _maxcount = 10,      // upper bound of iterations
 	    ostream & _str = cout)  
-      : inA(_inA), x(_x), rhs(_rhs), rnorm(_rnorm), nrnorm(_nrnorm), gamma(_gamma),epsilon(_epsilon),alpha(_alpha),maxcount(_maxcount), kmax(_maxcount), ktot(0), kc(0), str(_str), step(inA,x,rhs,rnorm,nrnorm,coeff,kc,nrt,gamma,epsilon,alpha,str)
+      : inA(_inA), x(_x), rhs(_rhs), rnorm(_rnorm), nrnorm(_nrnorm), gamma(_gamma),epsilon(_epsilon),alpha(_alpha),maxcount(_maxcount), kmax(_maxcount), kc(0), ktot(0), str(_str), step(inA,x,rhs,rnorm,nrnorm,coeff,kc,nrt,gamma,epsilon,alpha,str)
 	// NOTE: reference to coeff has been passed to ChebStep object step, however
 	// coeff has not been initialized.
     { x.zero();
@@ -528,7 +528,7 @@ necessary number of iterations.
 		   atype _alpha = 1.001,
 		   int _maxcount = 0,
            bool _verbose = false)
-      : gamma(_gamma), epsilon(_epsilon), alpha(_alpha),maxcount(_maxcount), verbose(_verbose) {}
+      : maxcount(_maxcount), gamma(_gamma), epsilon(_epsilon), alpha(_alpha),verbose(_verbose) {}
     
     ChebPolicyData(ChebPolicyData<Scalar> const & a)
       : maxcount(a.maxcount), gamma(a.gamma), epsilon(a.epsilon), alpha(a.alpha), verbose(a.verbose) {}

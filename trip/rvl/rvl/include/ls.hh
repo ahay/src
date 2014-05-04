@@ -188,7 +188,7 @@ namespace RVL {
 	throw e;
       }
     }
-    ResidualOperator(ResidualOperator<Scalar> const & a): G(a.G), d(a.d) {}
+      ResidualOperator(ResidualOperator<Scalar> const & a): d(a.d), G(a.G) {}
     ~ResidualOperator() {}
 
     /** access to domain, range */
@@ -660,8 +660,8 @@ namespace RVL {
     /** Usual constructor */
     StdLeastSquaresFcnlGN(Operator<Scalar> const & oper, 
 			  Vector<Scalar> const & d)
-      : res(oper,d),
-	sql(oper.getRange()), 
+      : sql(oper.getRange()), 
+	res(oper,d),
         work(sql,res) {
       testRealOnly<Scalar>(); 
     }
@@ -922,7 +922,7 @@ namespace RVL {
     ULBoundsTest(Vector<Scalar> const & _lb,
 		 Vector<Scalar> const & _ub,
 		 FunctionObjectScalarRedn<Scalar> & _minfo)
-      : lb(_lb), ub(_ub), minfo(_minfo) {
+      : ub(_ub), lb(_lb), minfo(_minfo) {
       testRealOnly<Scalar>(); 
       if (lb.getSpace() != ub.getSpace()) {
 	RVLException e;

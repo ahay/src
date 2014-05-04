@@ -21,8 +21,6 @@ void acd_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **csq,
     int e0=e[0];
     float lap;
     float tempb;
-    float tmpb;
-    float tmp0b;
     /* boundary conditions - note that uc[-1][i]=0 etc. */
     if (rbc[0])
         for (i1 = e[1]; i1 > s[1]-1; --i1) {

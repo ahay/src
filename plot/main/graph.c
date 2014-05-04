@@ -212,8 +212,8 @@ int main(int argc, char* argv[])
 		xi = x[i2][i1];
 		yi = y[i2][i1];
 
-		if (finite(xi) && 
-		    finite(yi)) {
+		if (isfinite(xi) && 
+		    isfinite(yi)) {
 		    if (NULL != symbol) {
 			vp_umove(xi,yi);
 			vp_where (&xc, &yc);
@@ -270,7 +270,7 @@ static void getminmax(const float* f, float* min, float* max)
     fmax=-FLT_MAX;
     for (i=0; i < n; i++) {
 	fi = f[i];
-	if (finite(fi)) {
+	if (isfinite(fi)) {
 	    t[m] = fi;
 	    m++;
 	    if (fmin > fi) fmin=fi;

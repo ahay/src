@@ -6,11 +6,11 @@
 /*
   Input file parameter names.
 */
-static const char PNAMES_OMPNT[] = "omp_nt";       /* number of OpenMP threads */
-static const char PNAMES_NT[] = "nt";              /* number of timesteps */
-static const char PNAMES_MODEL[] = "model";        /* model */
-static const char PNAMES_SRC[] = "srctype";        /* source terminator */
-static const char PNAMES_DUMPPI[] = "dump_pi";     /* dump parallel info */
+/* static const char PNAMES_OMPNT[] = "omp_nt";       // number of OpenMP threads */
+/* static const char PNAMES_NT[] = "nt";              // number of timesteps */
+/* static const char PNAMES_MODEL[] = "model";        // model */
+/* static const char PNAMES_SRC[] = "srctype";        // source terminator */
+/* static const char PNAMES_DUMPPI[] = "dump_pi";     // dump parallel info */
 static const char PNAMES_DUMPLDA[] = "dump_lda";   /* dump allocated domain */
 static const char PNAMES_DUMPLDC[] = "dump_ldc";   /* dump computational domain */
 static const char PNAMES_DUMPLDR[] = "dump_ldr";   /* dump receive domains */

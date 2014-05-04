@@ -228,7 +228,7 @@ public:
 				  atype _rtol = ScalarFieldTraits<atype>::One(),
 				  ostream & _out = cout,
 				  bool _doit = true) 
-    : fx(_fx), atol(_atol), rtol(_rtol), doit(_doit), out(_out), CountTerminator(maxcount), init(true), ingfx(ScalarFieldTraits<atype>::One()), ngfx0(ScalarFieldTraits<atype>::Zero()) {
+      : CountTerminator(maxcount), atol(_atol), rtol(_rtol), init(true), ngfx0(ScalarFieldTraits<atype>::Zero()), ingfx(ScalarFieldTraits<atype>::One()), doit(_doit),  fx(_fx), out(_out) {
     if (doit) {
       out << setw(10) << "Iteration " << "|" 
 	  << setw(13) <<"f(x)   " << "|" 

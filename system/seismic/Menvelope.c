@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 {
     bool hlb;
     int n1,n2, i1,i2, n;
-    float *data, *hilb, c, a;
+    float *data, *hilb, c, a=90;
     sf_file in, out;
 
     sf_init (argc,argv);

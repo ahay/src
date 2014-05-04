@@ -117,29 +117,30 @@ namespace RVLUmin {
      ostream & _str
      )
       : LineSearchAlgBase<Scalar>(lsalg,fx,dx),
-	step(_step),
-	gamma1(_gamma1),
-	gamma2(_gamma2),
+	gamma1(_gamma1),	
 	eta1(_eta1),
 	eta2(_eta2),
 	DispFlag(_DispFlag),
 	fudge(_fudge),
+	gamma2(_gamma2),
 	maxsteps(_maxsteps),
-	str(_str),
-	ans(false) {}
+	step(_step),
+	ans(false),
+	str(_str) {}
 
     BacktrackingLineSearchAlgBase
     (const BacktrackingLineSearchAlgBase<Scalar> & ls)
       : LineSearchAlgBase<Scalar>(ls),
-	step(ls.step),
         gamma1(ls.gamma1),
-        gamma2(ls.gamma2),
         eta1(ls.eta1),
         eta2(ls.eta2),
+	DispFlag(ls.DispFlag),
 	fudge(ls.fudge),
+	gamma2(ls.gamma2),
 	maxsteps(ls.maxsteps),
-        DispFlag(ls.DispFlag),
-	str(ls.str), ans(ls.ans) {}
+	step(ls.step),
+	ans(ls.ans),
+	str(ls.str) {}
 
     virtual ~BacktrackingLineSearchAlgBase() {}
     
@@ -461,12 +462,12 @@ namespace RVLUmin {
 			      Scalar _fudge=0.9,
 			      ostream & _str = cout)
       : LineSearchAlg<Scalar>(firststep,minsteptol),
-	DispFlag(_DispFlag),
 	eta1(_eta1),
 	eta2(_eta2),
 	gamma1(_gamma1),
 	gamma2(_gamma2),
 	fudge(_fudge),
+	DispFlag(_DispFlag),
 	maxsteps(_maxsteps),
         str(_str) {}
 

@@ -81,8 +81,8 @@ void plD_init_plvpl (PLStream *pls)
     vp_style (VP_STANDARD);
     vp_orig (0, 0);
 
-    pls->xlength = VP_STANDARD_HEIGHT/(float)VP_SCREEN_RATIO;
-    pls->ylength = VP_STANDARD_HEIGHT;
+    pls->xlength = (PLINT) (VP_STANDARD_HEIGHT/(float)VP_SCREEN_RATIO);
+    pls->ylength = (PLINT) VP_STANDARD_HEIGHT;
     pls->xdpi = RPERIN;
     pls->ydpi = RPERIN;
     plP_setpxl ((PLFLT)RPERIN/25.4, (PLFLT)RPERIN/25.4);

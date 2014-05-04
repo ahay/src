@@ -157,9 +157,9 @@ namespace RVLUmin {
 	     LSPolicyData const & s,
 	     bool _refine=false,
 	     ostream & _str=cerr)
-	: LSPolicy(), op(_op), preop(_preop), d(_d), 
-	  dx(preop.getDomain()), dltx(preop.getRange()),
-	  applied(false), refine(_refine), str(_str) {
+	: LSPolicy(), op(_op), preop(_preop), d(_d), 	  
+	  refine(_refine), dx(preop.getDomain()), dltx(preop.getRange()), 
+	  applied(false), str(_str) {
       try{
 	dx.zero();
 	LSPolicy::assign(s);
@@ -177,8 +177,8 @@ namespace RVLUmin {
     }
 
     LinFitLS(LinFitLS<Scalar,LSPolicy,LSPolicyData> const & f) 
-	: LSPolicy(f), op(f.op), preop(f.preop), d(f.d), 
-	  dx(f.dx), dltx(f.dltx), str(f.str), applied(f.applied), refine(f.refine) {}
+	: LSPolicy(f), op(f.op), preop(f.preop), d(f.d), refine(f.refine),
+	  dx(f.dx), dltx(f.dltx), applied(f.applied), str(f.str) {}
 
     const Space<Scalar> & getDomain() const { return op.getDomain(); }
 

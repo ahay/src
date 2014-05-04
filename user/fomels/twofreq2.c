@@ -29,7 +29,6 @@
 
 static float *u1, *u2, *dp;
 static int n1, n2, n;
-static const int niter=100;
 
 void twofreq2_init(int nx, int ny     /* data size */, 
 		   int fx, int fy /* smoothing radius */)

@@ -304,7 +304,7 @@ void dsytrd3(double A[3][3], double Q[3][3], double d[3], double e[2])
 // --------------------------------------------------------------------------->*/
 {
   int i, j;
-  const int n = 3;
+#define n 3
   double u[n], q[n];
   double omega, f;
   double K, h, g;
@@ -656,7 +656,7 @@ int dsyevd3(double A[3][3], double Q[3][3], double w[3])
 // ---------------------------------------------------------------------------->*/
 {
   int i, j, k;
-  const int n = 3;
+#define n 3
   double R[3][3];                // Householder transformation matrix
   double P[3][3];                // Unitary transformation matrix which diagonalizes D + w w^T
   double e[2];                   // Off-diagonal elements after Householder transformation
@@ -848,7 +848,7 @@ int dsyevq3(double A[3][3], double Q[3][3], double w[3])
 // ---------------------------------------------------------------------------->*/
 {
   int i, k, l;
-  const int n = 3;
+#define n 3
   double e[3];                   // The third element is used only as temporary workspace
   double g, r, p, f, b, s, c, t; // Intermediate storage
   int nIter;
