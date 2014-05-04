@@ -211,10 +211,10 @@ void step_backward(float **p, float **pz, float **px, float **vz, float **vx, fl
 #ifdef _OPENMP
 #pragma omp parallel for default(none)			\
 	private(i1,i2,diff1, diff2, tmp)		\
-	shared(nzpad, nxpad, vv, p, pz, px, vz, vx, dt, _dz, _dx)
+	shared(nz, nx, nb, vv, p, pz, px, vz, vx, dt, _dz, _dx)
 #endif
-	for(i2=2; i2<nxpad-1; i2++)
-	for(i1=2; i1<nzpad-1; i1++)
+	for(i2=nb+1; i2<nx+nb-1; i2++)
+	for(i1=nb+1; i1<nz+nb-1; i1++)
 	{
 		tmp=vv[i2][i1]; tmp=tmp*tmp;
 		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
@@ -227,10 +227,10 @@ void step_backward(float **p, float **pz, float **px, float **vz, float **vx, fl
 #ifdef _OPENMP
 #pragma omp parallel for default(none)			\
 	private(i1,i2,diff1,diff2)			\
-	shared(nzpad, nxpad, p, vz, vx, dt, _dz, _dx)
+	shared(nz, nx, nb, p, vz, vx, dt, _dz, _dx)
 #endif
-	for(i2=1; i2<nxpad-2; i2++)
-	for(i1=1; i1<nzpad-2; i1++)
+	for(i2=nb; i2<nx+nb-2; i2++)
+	for(i1=nb; i1<nz+nb-2; i1++)
 	{
 		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
 		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
