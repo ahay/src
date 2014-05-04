@@ -43,6 +43,7 @@ Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
  >*/
 {
     	int i;
+	float a;
 
     	tmp=(fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex)*n);
     	fft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_FORWARD,FFTW_MEASURE);	
@@ -58,8 +59,13 @@ Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
 	fftwf_execute(fft1);
 	memcpy(c, tmp, n*sizeof(sf_complex));
 
-	// dot product: diag(1./(c +mu)) F dd
-	for(i=0; i<n; i++) dd[i]*=conjf(c[i])/(c[i]*conjf(c[i])+mu);
+	// multiplication in Fourier domain: diag(conj(c)./(c*conj(c) +mu)) F dd
+	for(i=0; i<n; i++)
+	{
+		a=c[i]*conjf(c[i]);
+		//dd[i]=(a==0.)?0.:(dd[i]*conjf(c[i])/a);
+		dd[i]*=conjf(c[i])/(a+mu);
+	}
 
 	// IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)
 	memcpy(tmp, dd, n*sizeof(sf_complex));

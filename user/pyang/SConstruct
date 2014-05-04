@@ -7,10 +7,10 @@ progs = '''
 pocs3d fpocs2d fpocs3d mwni2d pocs
 pocsseislet istseislet mcaseislet matflip
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
-modeling2d 
-rtm2d lsrtm2d
+modeling2d rtm2d lsrtm2d rtmadcig
 dlct dlct2 myradon1 myradon2 
 cohn
+gensyn5d
 '''
 
 # C++ main programs

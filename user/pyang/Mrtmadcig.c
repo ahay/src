@@ -1,5 +1,6 @@
-/* 2D acoustic FD using Split PML (SPML) absorbing boundary condition
-NB: Staggered grid finite difference used!
+/* RTM and angle gather (ADCIG) extraction using poynting vector
+NB: SPML boundary condition combined with 4-th order finite difference,
+effective boundary saving strategy used!
 */
 /*
   Copyright (C) 2012  Xi'an Jiaotong University (Pengliang Yang)
@@ -115,14 +116,8 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 	for(i2=3; i2<nxpad-4; i2++)
 	for(i1=3; i1<nzpad-4; i1++)
 	{
-		diff1=	 1.196289062500000*(p[i2][i1+1]-p[i2][i1])
-			-0.079752604166667*(p[i2][i1+2]-p[i2][i1-1])
-			+0.009570312500000*(p[i2][i1+3]-p[i2][i1-2])
-			-0.000697544642857*(p[i2][i1+4]-p[i2][i1-3]);
-		diff2=	 1.196289062500000*(p[i2+1][i1]-p[i2][i1])
-			-0.079752604166667*(p[i2+2][i1]-p[i2-1][i1])
-			+0.009570312500000*(p[i2+3][i1]-p[i2-2][i1])
-			-0.000697544642857*(p[i2+4][i1]-p[i2-3][i1]);
+		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
+		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667f*(p[i2+2][i1]-p[i2-1][i1]);
 		vz[i2][i1]=((1.-0.5*dt*d1z[i1])*vz[i2][i1]+dt*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
 		vx[i2][i1]=((1.-0.5*dt*d2x[i2])*vx[i2][i1]+dt*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
 	}
@@ -136,14 +131,11 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 	for(i1=4; i1<nzpad-3; i1++)
 	{
 		tmp=vv[i2][i1]; tmp=tmp*tmp;
-		diff1=	 1.196289062500000*(vz[i2][i1]-vz[i2][i1-1])
-			-0.079752604166667*(vz[i2][i1+1]-vz[i2][i1-2])
-			+0.009570312500000*(vz[i2][i1+2]-vz[i2][i1-3])
-			-0.000697544642857*(vz[i2][i1+3]-vz[i2][i1-4]);
-		diff2=	 1.196289062500000*(vx[i2][i1]-vx[i2-1][i1])
-			-0.079752604166667*(vx[i2+1][i1]-vx[i2-2][i1])
-			+0.009570312500000*(vx[i2+2][i1]-vx[i2-3][i1])
-			-0.000697544642857*(vx[i2+3][i1]-vx[i2-4][i1]);
+		diff2=vx[i2][i1]-vx[i2-1][i1];
+		diff1=vz[i2][i1]-vz[i2][i1-1];
+
+		diff1=1.125f*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667f*(vz[i2][i1+1]-vz[i2][i1-2]);
+		diff2=1.125f*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667f*(vx[i2+1][i1]-vx[i2-2][i1]);
 		pz[i2][i1]=((1.-0.5*dt*d1z[i1])*pz[i2][i1]+dt*tmp*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
 		px[i2][i1]=((1.-0.5*dt*d2x[i2])*px[i2][i1]+dt*tmp*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
 		p[i2][i1]=px[i2][i1]+pz[i2][i1];
