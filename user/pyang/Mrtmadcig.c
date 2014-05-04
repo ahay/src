@@ -32,8 +32,9 @@ effective boundary saving strategy used!
 #include <omp.h>
 #endif
 
-static int nb, nz, nx, nzpad, nxpad, nt;
-static float dz, dx, _dz, _dx, dt, fm;
+static bool 	csdgather; 	// common shot gather (CSD) or not 
+static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng;
+static float 	fm, dt, dz, dx, _dz, _dx, vmute;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -106,6 +107,29 @@ void  pmlcoeff_init(float *d1z, float *d2x, float vmax)
 	    	else if(iz>=nzpad-nb && iz<nzpad) z=(iz-(nzpad-nb-1))*dz; 
 	    	d1z[iz] = d0*z*z;  
 	}
+}
+
+void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
+/*< shot/geophone position initialize
+sxz/gxz; szbeg/gzbeg; sxbeg/gxbeg; jsz/jgz; jsx/jgx; ns/ng; >*/
+{
+	int is, sz, sx;
+
+	for(is=0; is<ns; is++)
+	{
+		sz=szbeg+is*jsz;
+		sx=sxbeg+is*jsx;
+		sxz[is]=sz+nz*sx;
+	}
+}
+
+void wavefield_init(float **p, float **pz, float **px, float **vx, float **vz)
+{
+	memset(p[0],0,nzpad*nxpad*sizeof(float));
+	memset(pz[0],0,nzpad*nxpad*sizeof(float));
+	memset(px[0],0,nzpad*nxpad*sizeof(float));
+	memset(vz[0],0,nzpad*nxpad*sizeof(float));
+	memset(vx[0],0,nzpad*nxpad*sizeof(float));
 }
 
 
@@ -199,37 +223,27 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 }
 
 
-void matrix_transpose(float *matrix, int n1, int n2)
+void matrix_transpose(float **mat, int n1, int n2)
 /*< transpose a matrix n1xn2 into n2xn1 >*/
 {
 	int i1, i2;
-	float *tmp;
-	if (!(tmp=(float*)malloc(n1*n2*sizeof(float)))) {printf("out of memory!"); exit(1);}
+	float **tmp;
+	tmp=sf_floatalloc2(n2, n1);
+
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{
-		tmp[i2+n2*i1]=matrix[i1+n1*i2];
+		tmp[i1][i2]=mat[i2][i1];
 	}
-	memcpy(matrix, tmp, n1*n2*sizeof(float));
-	free(tmp);
+	memcpy(mat[0], tmp[0], n1*n2*sizeof(float));
+
+	free(*tmp);free(tmp);
 }
 
 
-void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
-/*< shot/geophone position initialize
-sxz/gxz; szbeg/gzbeg; sxbeg/gxbeg; jsz/jgz; jsx/jgx; ns/ng; >*/
-{
-	int is, sz, sx;
-
-	for(is=0; is<ns; is++)
-	{
-		sz=szbeg+is*jsz;
-		sx=sxbeg+is*jsx;
-		sxz[is]=sz+nz*sx;
-	}
-}
 
 void cross_correlation(float **sp, float **gp, float **num, float **den)
+/*< compute cross-correlation >*/
 {
 	int ix,iz;
 
@@ -247,6 +261,7 @@ void cross_correlation(float **sp, float **gp, float **num, float **den)
 }
 
 void normalize_image(float *imag1, float *imag2, float **num, float **den)
+/*< do image normalization >*/
 {
 	int ix,iz;
 
@@ -283,43 +298,63 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx,
 
 int main(int argc, char* argv[])
 {
-	int jt, ft, it, i2, i1, sx, sz;
+	int it, is, i1, i2, tdmute, jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+	int *sxz, *gxz;
 	float tmp, vmax;
 	float *wlt, *d2x, *d1z;
-	float **v0, **vv, **p, **pz, **px, **vz, **vx;
-	sf_file Fv, Fw;
+	float **v0, **vv, **p, **pz, **px, **vz, **vx, **dcal;
+    	sf_file vmodl, imag1, imag2; /* I/O files */
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
     	omp_init();
 #endif
 
-	Fv = sf_input("in");/* veloctiy model */
-	Fw = sf_output("out");/* wavefield snaps */
+    	/*< set up I/O files >*/
+    	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
+    	imag1 = sf_output("out");  /* output image with correlation imaging condition */ 
+    	imag2 = sf_output("imag2");  /* output image with normalized correlation imaging condition */ 
 
-    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
-    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
-    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
-    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of PML ABC */
-    	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
-    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
-    	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
-   	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
-    	if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
+    	/* get parameters for RTM */
+    	if (!sf_histint(vmodl,"n1",&nz)) sf_error("no n1");
+    	if (!sf_histint(vmodl,"n2",&nx)) sf_error("no n2");
+    	if (!sf_histfloat(vmodl,"d1",&dz)) sf_error("no d1");
+   	if (!sf_histfloat(vmodl,"d2",&dx)) sf_error("no d2");
 
-	sf_putint(Fw,"n1",nz);
-	sf_putint(Fw,"n2",nx);
-    	sf_putint(Fw,"n3",(nt-ft)/jt);
-    	sf_putfloat(Fw,"d3",jt*dt);
-    	sf_putfloat(Fw,"o3",ft*dt);
+    	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	/* time interval */
+
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */
+    	if (!sf_getint("nb",&nb))   nb=20; /* thickness of split PML */
+	
+    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");/* z-begining index of receivers, starting from 0 */
+
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
+	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
+	if (!sf_getint("tdmute",&tdmute))   tdmute=200;/* number of deleyed time samples to mute */
+
+    	sf_putint(imag1,"n1",nz);
+    	sf_putint(imag1,"n2",nx);
+    	sf_putfloat(imag1,"d1",dz);
+    	sf_putfloat(imag1,"d2",dx);
+    	sf_putint(imag2,"n1",nz);
+    	sf_putint(imag2,"n2",nx);
+    	sf_putfloat(imag2,"d1",dz);
+    	sf_putfloat(imag2,"d2",dx);
 
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	sx=nxpad/2;
-	sz=nzpad/2;
 
 	wlt=sf_floatalloc(nt);
 	v0=sf_floatalloc2(nz,nx); 	
@@ -331,12 +366,15 @@ int main(int argc, char* argv[])
 	vx=sf_floatalloc2(nzpad, nxpad);
 	d1z=sf_floatalloc(nzpad);
 	d2x=sf_floatalloc(nxpad);
+	sxz=sf_intalloc(ns);
+	gxz=sf_intalloc(ng);
+	dcal=sf_floatalloc2(nt,ng);
 
 	for(it=0;it<nt;it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
 		wlt[it]=(1.0-2.0*tmp)*expf(-tmp);
 	}
-	sf_floatread(v0[0],nz*nx,Fv);
+	sf_floatread(v0[0],nz*nx,vmodl);
 	expand2d(vv, v0);
 	memset(p [0],0,nzpad*nxpad*sizeof(float));
 	memset(px[0],0,nzpad*nxpad*sizeof(float));
@@ -348,16 +386,34 @@ int main(int argc, char* argv[])
 	for(i1=0; i1<nz; i1++)
 		vmax=SF_MAX(v0[i2][i1],vmax);
 	pmlcoeff_init(d1z, d2x, vmax);
+	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
+	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
+	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
+	distx=sxbeg-gxbeg;
+	distz=szbeg-gzbeg;
+	if (csdgather)	{
+		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
+		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
+	}
+	else{
+		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
+	}
+	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 
-	for(it=0; it<nt; it++)
+	for(is=0; is<ns; is++)
 	{
-		if(it>=ft)
+		for(it=0; it<nt; it++)
 		{
-			window2d(v0,p);
-			sf_floatwrite(v0[0],nz*nx,Fw);
+			add_source(&sxz[is], p, 1, &wlt[it], true);
+			step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
+
+		
+			//record_seis(&dcal[it*ng], gxz, sp0, ng);
+			//muting(&dcal[it*ng], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute, vmute, dt, dz, dx, ng);
+			//boundary_rw(sp0, &spo[it*4*(nx+nz)], false);
 		}
-		p[sx][sz]+=wlt[it];
-		step_forward(p, pz, px, vz, vx, vv, d1z, d2x);
 	}
 
 	free(wlt);
@@ -370,6 +426,8 @@ int main(int argc, char* argv[])
 	free(*vz); free(vz);
 	free(d1z);
 	free(d2x);
+	free(sxz);
+	free(gxz);
 
     	exit(0);
 }
