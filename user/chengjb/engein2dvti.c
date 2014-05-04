@@ -37,13 +37,13 @@ void engein2dvti1(double ve[2][2], double va[2], double sinx, double cosx, doubl
 /*< engein2dvti1: Calculate eigeinvalues and eigeinvectors for 2D VTI media
                   using analytic solution based on Dellinger's expression >*/
 {
-        double sin2, cos2, cos2a, sin4;
+        double sin2, cos2;
         double d33, d11, psi2, psi, d33d11, d33d11_2, sin2cos2, sin2cos2_4, tmpa,tmpb,u1,u2,u1u2;
 
         sin2=sinx*sinx;
         cos2=1.0-sin2;
-        cos2a=1.0-2*sin2;
-        sin4=sin2*sin2;
+/*        cos2a=1.0-2*sin2; */
+/*        sin4=sin2*sin2;   */
         sin2cos2=sin2*cos2;
         sin2cos2_4=4*sin2cos2;
 

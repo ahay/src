@@ -54,7 +54,8 @@ int main(int argc, char* argv[])
         }
 
         tr = calloc(sizeof(cjbsegy),1);
-        fread(tr,sizeof(cjbsegy),1,Fi);
+        if (1 != fread(tr,sizeof(cjbsegy),1,Fi)) 
+	    sf_error("fread error:");
 
         int   nz=(int)tr->ns;
         float fz=tr->f1;
@@ -89,9 +90,11 @@ int main(int argc, char* argv[])
         rewind(Fi);
         for(i=0;;i++)
         {
-          fread(tr,sizeof(cjbsegy),1,Fi);
+	    if (1 != fread(tr,sizeof(cjbsegy),1,Fi))
+		sf_error("fread error:");
           if(feof(Fi))break;
-          fread(data,sizeof(float),nz,Fi);
+          if (nz != fread(data,sizeof(float),nz,Fi))
+	      sf_error("fread error:");
 
           sf_floatwrite(data, nz, Fo);
         }

@@ -45,7 +45,7 @@ int main(int  argc,char **argv)
 {
     sf_init(argc,argv);
 
-    sf_file Fix, Fiy, Fiz, Fit;
+    sf_file Fix, Fiy, Fiz;
     sf_file Fi1, Fi2, Fi3;
     sf_file Fo1, Fo2;
 
@@ -67,7 +67,7 @@ int main(int  argc,char **argv)
     Fo2 = sf_output("PseudoPureSepP");    /* separated scalar P-wave */
 
     int     nx, ny, nz, nkx, nky, nkz;
-    float   fx, fy, fz, dx, dy, dz, dkx, dky, dkz;
+    float   dx, dy, dz;
 
     /* Read/Write axes */
     sf_axis az, ax, ay;
@@ -75,9 +75,11 @@ int main(int  argc,char **argv)
     az = sf_iaxa(Fi1,1); nz = sf_n(az); dz = sf_d(az)*1000.0;
     ax = sf_iaxa(Fi1,2); nx = sf_n(ax); dx = sf_d(ax)*1000.0;
     ay = sf_iaxa(Fi1,3); ny = sf_n(ay); dy = sf_d(ay)*1000.0;
+/*
     fy=sf_o(ay)*1000.0;
     fx=sf_o(ax)*1000.0;
     fz=sf_o(az)*1000.0;
+*/
 
     sf_warning("nx=%d ny=%d nz=%d dx=%f dy=%f dz=%f",nx,ny,nz,dx,dy,dz);
 
@@ -108,9 +110,9 @@ int main(int  argc,char **argv)
 
     /* Read axes */
     sf_axis akz, akx, aky;
-    akz = sf_iaxa(Fix,1); nkz = sf_n(akz); dkz = sf_d(akz);
-    akx = sf_iaxa(Fix,2); nkx = sf_n(akx); dkx = sf_d(akx);
-    aky = sf_iaxa(Fix,3); nky = sf_n(aky); dky = sf_d(aky);
+    akz = sf_iaxa(Fix,1); nkz = sf_n(akz); /* dkz = sf_d(akz); */
+    akx = sf_iaxa(Fix,2); nkx = sf_n(akx); /* dkx = sf_d(akx); */
+    aky = sf_iaxa(Fix,3); nky = sf_n(aky); /* dky = sf_d(aky); */
 
     if(nx!=nkx){
        sf_warning("nx= %d nkx=%d",nx,nkx);

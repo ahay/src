@@ -274,7 +274,7 @@ int main (int argc, char* argv[]) {
 
     if (0 != system (buffer)) {
         snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --uninstall-script %s", scm_filename);
-        system (buffer);
+        if (0 != system (buffer)) sf_warning("failed gimptool:");
         unlink (tga_filename);
         unlink (scm_filename);
         sf_error ("GIMP returned an error upon execution of the command: check if the command is specified correctly");
@@ -284,14 +284,15 @@ int main (int argc, char* argv[]) {
     gimp_file = fopen (tga_filename, "r+");
     if (NULL == gimp_file) {
         snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --uninstall-script %s", scm_filename);
-        system (buffer);
+        if (0 != system (buffer)) sf_warning("failed gimptool:");
         unlink (tga_filename);
         unlink (scm_filename);
         sf_error ("%s: cannot open %s:", __FILE__, tga_filename);
     }
 
     /* Read the header */
-    fread (&header, sizeof (TGA_HEADER), 1, gimp_file);
+    if (1 != fread (&header, sizeof (TGA_HEADER), 1, gimp_file))
+	sf_error("fread error:");
 
     /* Dimensions might have changed */
     n2 = header.width;
@@ -303,7 +304,8 @@ int main (int argc, char* argv[]) {
 
     /* Read the data line by line */
     for (i = 0; i < n1; i++) {
-        fread (row, n2 * sizeof (unsigned char), 1, gimp_file);
+        if (n2 != fread (row, sizeof (unsigned char), n2, gimp_file))
+	    sf_error("fread error:");
         for (j = 0; j < n2; j++)
             buf[j][n1 - i - 1] = row[j];
     }
@@ -316,7 +318,7 @@ int main (int argc, char* argv[]) {
 
     /* Uninstall the script */
     snprintf (buffer, BUFFER_SIZE, "gimptool-2.0 --quiet --uninstall-script %s", scm_filename);
-    system (buffer);
+    if (0 != system (buffer)) sf_warning("error running \"%s\"",buffer);
     unlink (tga_filename);
     unlink (scm_filename);
 

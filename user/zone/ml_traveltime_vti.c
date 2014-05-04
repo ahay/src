@@ -494,9 +494,9 @@ double T2_k_k1_k1(twod y_k, twod y_k1)
 double T2_k_k_k1(twod y_k, twod y_k1) 
 /*<Second derivative of T with respect to x_k and x_k1>*/
 {
-	double t_k_k_k1,g0;
+    double t_k_k_k1;
 	
-	g0 = hypotf(y_k.gx2,y_k.gz2);
+/*	g0 = hypotf(y_k.gx2,y_k.gz2); */
 	
 	t_k_k_k1 = -(((pow(-y_k.x + y_k1.x,2)/y_k.c112 + pow(-y_k.z + y_k1.z,2)/y_k.c332)*((-2*y_k.S12*(-y_k.x + y_k1.x))/(pow(-y_k.x + y_k1.x,2) + pow(-y_k.z + y_k1.z,2)) + 
             (2*(-y_k.x + y_k1.x)*(y_k.S12*pow(-y_k.x + y_k1.x,2) + y_k.S32*pow(-y_k.z + y_k1.z,2)))/pow(pow(-y_k.x + y_k1.x,2) + pow(-y_k.z + y_k1.z,2),2)) + 

@@ -530,7 +530,8 @@ void iwave_fclose(FILE * fp) {
     if (fp==fpr->fp) break;
   }
   if (fpr!=((struct filestat *)NULL)) {
-    fpr->inuse=iwave_max(0,(fpr->inuse)--);;
+      (fpr->inuse)--;
+      fpr->inuse=iwave_max(0,fpr->inuse);
     /*
     fprintf(stderr,"closing fp=%x name=%s mode=%s istmp=%d inuse=%d\n",
       fp,fpr->nm,fpr->md,fpr->istmp,fpr->inuse);

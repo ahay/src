@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
         float   A, t, f0, t0, dx, dz, dxf, dzf, dt, dt2, div;
         int     mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
-        int     hnkx1, hnkz1, nkx1, nkz1;
+        int     hnkx1=1, hnkz1=1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
 
         int     itaper;           /* tapering or not for spectrum of oprtator*/
@@ -58,13 +58,13 @@ int main(int argc, char* argv[])
 
         float   **apvx, **apvz, **apvxx, **apvzz;    /* projection deviation operator of P-wave for a location */
 
-        float   ****ex, ****ez;                      /* operator for whole model for P-wave*/
-        float   **exx, **ezz;                        /* operator for constant model for P-wave*/
+        float   ****ex=NULL, ****ez=NULL;                      /* operator for whole model for P-wave*/
+        float   **exx=NULL, **ezz=NULL;                        /* operator for constant model for P-wave*/
 
         float   **vp0, **vs0, **epsi, **del;         /* velocity model */
-        float   **p1, **p2, **p3, **q1, **q2, **q3, **p3c, **q3c, **sum;  /* wavefield array */
+        float   **p1, **p2, **p3, **q1, **q2, **q3, **p3c=NULL, **q3c=NULL, **sum=NULL;  /* wavefield array */
 
-        clock_t t1, t2, t3, t4, t5;
+        clock_t t2, t3, t4=0, t5;
         float   timespent; 
         float   fx, fz;
         char    *tapertype;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 
         sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8;
        
-        t1=clock();
+        /* t1=clock(); */
  
         /*  wavelet parameter for source definition */
         f0=30.0;                  
@@ -348,7 +348,9 @@ int main(int argc, char* argv[])
              Fo8 = sf_output("PseudoPureSepP"); /* scalar P-wave field using polarization projection oprtator*/
 
              puthead3(Fo8, nz, nx, 1, dz/1000.0, dx/1000.0, dt, fz/1000.0, fx/1000.0, dt*(ns-1));
-        }
+        } else {
+	    Fo8 = NULL;
+	}
 
         sf_warning("==================================================");
         sf_warning("==  Porpagation Using Pseudo-Pure P-Wave Eq.    ==");

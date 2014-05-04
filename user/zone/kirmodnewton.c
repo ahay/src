@@ -74,6 +74,9 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     int q=0; /* Counter for big loop*/
     int b3=0; /* To check whether the ray is tracable*/
 	
+    float dktemp;
+    int t,a,b1,b2,b4; /* Counter*/
+
     /* Allocate space-------------------------------------------------------------------------------------*/
 	
     xx = sf_floatalloc(n+2); /* Positions of intersection points to be iteratively perturbed*/
@@ -224,8 +227,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	dk[0] = 0.0; /*To prevent trash data*/
 	dk[n+1] = 0.0;
 	
-	float dktemp;
-	int t,a,b1,b2,b3,b4; /* Counter*/
 	for (a=0; a<n; a++) {
 	    b1=0;
 	    b2=0;
@@ -262,39 +263,39 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	
 	/*Zero thickness---we modify the dk from newton to converge to the same point*/
 	for(b4=0; b4<n+1; b4++) {
-		if (fabsf(z(b4,xxtem[b4])-z(b4+1,xxtem[b4+1]))<0.00001){
-			if(fabsf(dk[b4])>fabsf(dk[b4+1])) dktemp = dk[b4+1];
-			if(fabsf(dk[b4])<fabsf(dk[b4+1])) dktemp = dk[b4];
+	    if (fabsf(z(b4,xxtem[b4])-z(b4+1,xxtem[b4+1]))<0.00001){
+		if(fabsf(dk[b4])>fabsf(dk[b4+1])) dktemp = dk[b4+1];
+		if(fabsf(dk[b4])<fabsf(dk[b4+1])) dktemp = dk[b4];
 			
-			if (xx[b4]<xx[b4+1]){
-				if(b4==0){ /*First layer = zero thickness*/
-					dk[b4+1] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-					dk[b4] = dktemp;
-				}
-				else if(b4==n) { /*Last layer = zero thickness*/
-					dk[b4+1] = dktemp;
-					dk[b4] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-				}
-				else { /*Any other layer*/
-					dk[b4+1] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-					dk[b4] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-				}
-			}
-			else {
-				if(b4==0){ /*First layer = zero thickness*/
-					dk[b4+1] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-					dk[b4] = dktemp;
-				}
-				else if(b4==n) { /*Last layer = zero thickness*/
-					dk[b4+1] = dktemp;
-					dk[b4] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-				}
-				else { /*Any other layer*/
-					dk[b4] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-					dk[b4+1] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
-				}
-			}
+		if (xx[b4]<xx[b4+1]){
+		    if(b4==0){ /*First layer = zero thickness*/
+			dk[b4+1] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+			dk[b4] = dktemp;
+		    }
+		    else if(b4==n) { /*Last layer = zero thickness*/
+			dk[b4+1] = dktemp;
+			dk[b4] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+		    }
+		    else { /*Any other layer*/
+			dk[b4+1] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+			dk[b4] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+		    }
 		}
+		else {
+		    if(b4==0){ /*First layer = zero thickness*/
+			dk[b4+1] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+			dk[b4] = dktemp;
+		    }
+		    else if(b4==n) { /*Last layer = zero thickness*/
+			dk[b4+1] = dktemp;
+			dk[b4] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+		    }
+		    else { /*Any other layer*/
+			dk[b4] = fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+			dk[b4+1] = (-1)*fabsf(xx[b4]-xx[b4+1])/2 +dktemp;
+		    }
+		}
+	    }
 	}
 	
 		
@@ -348,9 +349,9 @@ mark: /* Mark point for goto*/
 	}
 	
 	if (q == niter){
-		for (c5=0; c5<n; c5++) {
-			if (debug) sf_warning("F(%d) is sufficiently close to zero. y[%d] = %g %d\n",c5+1,c5+1,xx[c5+1]);
-		}
+	    for (c5=0; c5<n; c5++) {
+		if (debug) sf_warning("F(%d) is sufficiently close to zero. y[%d] = %g %d\n",c5+1,c5+1,xx[c5+1]);
+	    }
 	}
 	
 	/* To export the old ans for fwdxini-------------------------------------------*/
@@ -378,20 +379,20 @@ mark: /* Mark point for goto*/
 	    if (c==n) {
 		
 		if(vstatus != 2){
-			v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
-			v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
+		    v_r = v[c]+gx[c]*(xx[c+1]-xref[c])+gz[c]*(z(c+1,xx[c+1])-zref[n]);
+		    v_1r = v[c]+gx[c]*(xx[c]-xref[c])+gz[c]*(z(c,xx[c])-zref[n]);
 		}
 		else { /*anisotropy case*/
-			S1 = (aniso[c][0]*(aniso[c][0]-aniso[c][1])*pow((aniso[c][2]-1),2)*(aniso[c][3]-1))/(2*(aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][2]-aniso[c][3])+aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][2]*aniso[c][2]*(aniso[c][2]-1)-aniso[c][3]+1) +aniso[c][0]*aniso[c][1]*(1-aniso[c][3]*(aniso[c][2]*pow((aniso[c][2]-1),2) -aniso[c][3] +2)) ));
-			S3 = (aniso[c][1]*(aniso[c][1]-aniso[c][0])*pow((aniso[c][3]-1),2)*(aniso[c][2]-1))/(2*(aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][3]-aniso[c][2])+aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][3]*aniso[c][3]*(aniso[c][3]-1)-aniso[c][2]+1) +aniso[c][1]*aniso[c][0]*(1-aniso[c][2]*(aniso[c][3]*pow((aniso[c][3]-1),2) -aniso[c][2] +2)) ));
-			v_r = 	1/sqrt(((pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1])*(1 - 
-          			(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)) + 
-     				((S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*sqrt(pow(pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1],2)/
-           			pow(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2),2) + 
-          			(2*pow(-xx[c] + xx[c+1],2)*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)*(-1 + (aniso[c][2]*pow(-xx[c] + xx[c+1],2) + aniso[c][3]*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/
-           			(aniso[c][0]*aniso[c][1]*(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)))))/
-      				(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)));
-			v_1r = v_r;
+		    S1 = (aniso[c][0]*(aniso[c][0]-aniso[c][1])*pow((aniso[c][2]-1),2)*(aniso[c][3]-1))/(2*(aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][2]-aniso[c][3])+aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][2]*aniso[c][2]*(aniso[c][2]-1)-aniso[c][3]+1) +aniso[c][0]*aniso[c][1]*(1-aniso[c][3]*(aniso[c][2]*pow((aniso[c][2]-1),2) -aniso[c][3] +2)) ));
+		    S3 = (aniso[c][1]*(aniso[c][1]-aniso[c][0])*pow((aniso[c][3]-1),2)*(aniso[c][2]-1))/(2*(aniso[c][0]*aniso[c][0]*(aniso[c][2]-1)*(aniso[c][3]-aniso[c][2])+aniso[c][1]*aniso[c][1]*(aniso[c][3]-1)*(aniso[c][3]*aniso[c][3]*(aniso[c][3]-1)-aniso[c][2]+1) +aniso[c][1]*aniso[c][0]*(1-aniso[c][2]*(aniso[c][3]*pow((aniso[c][3]-1),2) -aniso[c][2] +2)) ));
+		    v_r = 	1/sqrt(((pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1])*(1 - 
+																 (S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)) + 
+				       ((S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*sqrt(pow(pow(-xx[c] + xx[c+1],2)/aniso[c][0] + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)/aniso[c][1],2)/
+														   pow(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2),2) + 
+														   (2*pow(-xx[c] + xx[c+1],2)*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)*(-1 + (aniso[c][2]*pow(-xx[c] + xx[c+1],2) + aniso[c][3]*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))/(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))))/
+														   (aniso[c][0]*aniso[c][1]*(pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2))*(S1*pow(-xx[c] + xx[c+1],2) + S3*pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)))))/
+				       (pow(-xx[c] + xx[c+1],2) + pow(-z(c,xx[c]) + z(c+1,xx[c+1]),2)));
+		    v_1r = v_r;
 		}
 		tx_r = T_hat_k_k1(f.T_k_k1,f.T_k_zk1); /* x-direction at the reflector*/
 		ty = 0; /* For 3D or 2.5D & at the reflector*/

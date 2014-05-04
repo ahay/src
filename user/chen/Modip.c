@@ -26,7 +26,7 @@
 int main(int argc, char*argv[])
 {
 	sf_file in, out;
-	int m, n, nf, n1, n2, n3, rect[2], niter, liter;
+	int m, n, n1, n2, n3, rect[2], niter, liter;
 	int i3;
 	bool verb, slope;
 	float **wav, **dip, radius, eta, dip0;
@@ -50,7 +50,7 @@ int main(int argc, char*argv[])
 	if ((interp=sf_getstring("interp"))==NULL) interp="maxflat";
 	/* interpolation method: maxflat lagrange bspline */
 
-	nf = m+n+1;
+	/* nf = m+n+1; */
 
 	if (!sf_getint("rect1",&rect[0])) rect[0]=0;
 	/* dip smoothness on 1st axis */

@@ -45,6 +45,8 @@ void polvtipsvupdown(float **apx,float **apz, float **apxs,float **apzs,
         double r1, r2, rw;
         double ve[2][2], va[2];
 
+	int nkx;
+
         //for( i=-hnkx; i<=hnkx ; i++ )
         //for( i=0; i<=hnkx ; i++ )
         for( i=-hnkx; i<=0 ; i++ )
@@ -106,9 +108,8 @@ void polvtipsvupdown(float **apx,float **apz, float **apxs,float **apzs,
           } /* j loop */
       } /*i loop */
 
-     int nkx, nkz;
      nkx=2*hnkx+1;
-     nkz=2*hnkz+1;
+     /* nkz=2*hnkz+1; */
      /* interpolating */
 
      for( i=0; i<nkx; i++ )

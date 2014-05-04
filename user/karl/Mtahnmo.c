@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
     for(indx_time=0; indx_time<n1_traces; indx_time++){
       float tx, t0;
       t0=indx_time*d1+o1;
-      tx=sqrt(t0*t0+offset*offset*local_sloth[indx_time]);
+      tx=sqrt(t0*t0+offset2*local_sloth[indx_time]);
       r_index_tx_of_it0[indx_time]=(tx-o1)/d1;
       if(itrace==0 && verbose>4){
 	fprintf(stderr,"indx_time=%d, tx=%f, sloth=%g, offset=%f, t0=%f\n",

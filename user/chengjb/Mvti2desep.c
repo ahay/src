@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
         float   A, f0, t, t0, dx, dz, dxf, dzf, dt, dkx, dkz, dt2;
         int     mm, nvx, nvz, ns;
         int     hnkx, hnkz, nkx, nkz, nxz, nkxz;
-        int     hnkx1, hnkz1, nkx1, nkz1;
+        int     hnkx1=1, hnkz1=1, nkx1, nkz1;
         int     isx, isz, isxm, iszm; /*source location */
 
         int     itaper; /* tapering or not for spectrum of oprtator*/
@@ -61,17 +61,17 @@ int main(int argc, char* argv[])
         float **apx, **apz, **apxx, **apzz;        /* polarization operator of P-wave for a location */
         float **apxs, **apzs, **apxxs, **apzzs;    /* polarization operator of SV-wave for a location */
 
-        float ****ex, ****ez;                      /* operator for whole model for P-wave*/
-        float ****exs, ****ezs;                    /* operator for whole model for SV-wave*/
-        float **exx, **ezz;                        /* operator for constant model for P-wave*/
-        float **exxs, **ezzs;                      /* operator for constant model for SV-wave*/
+        float ****ex=NULL, ****ez=NULL;                      /* operator for whole model for P-wave*/
+        float ****exs=NULL, ****ezs=NULL;                    /* operator for whole model for SV-wave*/
+        float **exx=NULL, **ezz=NULL;                        /* operator for constant model for P-wave*/
+        float **exxs=NULL, **ezzs=NULL;                      /* operator for constant model for SV-wave*/
 
         float **vp0, **vs0, **epsi, **del;         /* velocity model */
-        float **p1, **p2, **p3, **q1, **q2, **q3, **p3c, **q3c, **sum;  /* wavefield array */
+        float **p1, **p2, **p3, **q1, **q2, **q3, **p3c=NULL, **q3c=NULL, **sum=NULL;  /* wavefield array */
 
         float *kx, *kz, *kkx, *kkz, *kx2, *kz2, **taper;
 
-        clock_t t1, t2, t3, t4, t5;
+        clock_t t2, t3, t4, t5=0;
         float   timespent; 
         float   fx, fz;
 
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 
         sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8, Fo9, Fo10, Fo11, Fo12;
        
-        t1=clock();
+        /* t1=clock(); */
  
         /*  wavelet parameter for source definition */
         f0=30.0;                  
@@ -401,7 +401,10 @@ int main(int argc, char* argv[])
 	   p3c=sf_floatalloc2(nz,nx);
 	   q3c=sf_floatalloc2(nz,nx);
            sum=sf_floatalloc2(nz,nx);
-        }
+        } else {
+	    Fo11 = NULL;
+	    Fo12 = NULL;
+	}
 
 	for(it=0;it<ns;it++)
 	{

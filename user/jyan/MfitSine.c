@@ -21,14 +21,12 @@
 
 #include <math.h>
 
-#define PI 3.14159265
 int main(int argc, char* argv[])
 {
     
     
     bool verb;
     int  nx,nz,nc,iz,ix;
-    float dx,dz,ox,oz;
     float nu1,nu2,nu3;
 
     
@@ -44,8 +42,8 @@ int main(int argc, char* argv[])
     if(! sf_getbool("verb",&verb)) verb=false;
 
     if(! sf_getfloat("nu1",&nu1)) nu1=0;
-    if(! sf_getfloat("nu2",&nu2)) nu2=PI/2; 
-    if(! sf_getfloat("nu3",&nu3)) nu3=-PI/2; 
+    if(! sf_getfloat("nu2",&nu2)) nu2=SF_PI/2; 
+    if(! sf_getfloat("nu3",&nu3)) nu3=-SF_PI/2; 
 
     sf_warning("nu1=%f nu2=%f n3=%f",nu1,nu2,nu3);
 
@@ -58,8 +56,8 @@ int main(int argc, char* argv[])
     ax = sf_iaxa(Fin,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax);
     ac = sf_maxa(nc,0,1);
 	
-    nz = sf_n(az); dz = sf_d(az); oz = sf_o(az);
-    nx = sf_n(ax); dx = sf_d(ax); ox = sf_o(ax);
+    nz = sf_n(az); /* dz = sf_d(az); oz = sf_o(az); */
+    nx = sf_n(ax); /* dx = sf_d(ax); ox = sf_o(ax); */
 
     nu = sf_floatalloc2(nz,nx); 
     sf_floatread(nu[0],nz*nx,Fin);
@@ -85,8 +83,8 @@ int main(int argc, char* argv[])
     nuref[2]=nu3;
     int ic;
     for(ic=0; ic<nc; ic++) { 
-	b[ic]=sin(2*nuref[ic]*PI/180); /*delta*/
-	a[ic]=cos(2*nuref[ic]*PI/180); /*epsilon*/
+	b[ic]=sin(2*nuref[ic]*SF_PI/180); /*delta*/
+	a[ic]=cos(2*nuref[ic]*SF_PI/180); /*epsilon*/
 	sf_warning("x=%f y=%f",a[ic],b[ic]);
     }
     float x,y,lambda0,lambda1,lambda2,twoA;
@@ -113,8 +111,8 @@ int main(int argc, char* argv[])
     if(twoA!=0){    
 	for    (ix=0; ix<nx; ix++) {
 	    for(iz=0; iz<nz; iz++) {
-		x=cos(2*nu[ix][iz]*PI/180);
-		y=sin(2*nu[ix][iz]*PI/180);
+		x=cos(2*nu[ix][iz]*SF_PI/180);
+		y=sin(2*nu[ix][iz]*SF_PI/180);
 /*		sf_warning("x,y=%f %f",x,y);*/
 		lambda0=lm00 + lm01*x + lm02*y;
 		lambda1=lm10 + lm11*x + lm12*y;

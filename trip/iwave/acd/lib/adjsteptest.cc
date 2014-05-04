@@ -194,12 +194,12 @@ void adjrelation2(std::vector<RDOM *> iwf,
 void adjsteptest(std::vector<RDOM *> &iwf, std::vector<RDOM *> &iwa, IWaveInfo const &ic,
 		  void (*tsf)(std::vector<RDOM *> , bool, int, void *fdpars), int iv,  
                   void *fdpars, PARARRAY * pars, FILE * stream){
-    int err;
+    // int err;
     int n=iwf.size();
     // decleare and construct working space
     std::vector<IWAVE> iwtmp(n);
     for (int i=0; i<n; i++) {
-        err = iwave_construct(&iwtmp[i],pars,stream,ic);
+        iwave_construct(&iwtmp[i],pars,stream,ic);
     }
     if(n == 2){
         // initialize iwa[1], D_CSQ to zero for adjoint operator

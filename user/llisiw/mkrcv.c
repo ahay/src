@@ -147,7 +147,7 @@ void fastmarch_plane(float *time   /* time */,
 {
     int its;
     float *p;
-    int npoints, i, temp;
+    int npoints, i;
  
 #ifdef _OPENMP
     its = omp_get_thread_num();
@@ -180,7 +180,7 @@ void fastmarch_plane(float *time   /* time */,
 	/* update wave front */
 	in[its][i] = SF_IN;
 
-	temp = neighbours(time,i);
+	neighbours(time,i);
     }
 }
 

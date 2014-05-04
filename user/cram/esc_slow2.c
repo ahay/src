@@ -195,7 +195,7 @@ static void sf_esc_slowness2_compute_components (sf_esc_slowness2 esc_slow, floa
                                                  float etz, float etx, float tiz, float tix,
                                                  float *s, float *sa, float *sz, float *sx)
 {
-    float cs, sn, sn2, sqcs, sqsn, prodsq, m2cs, v2;
+    float cs, sn2, sqcs, sqsn, prodsq, m2cs, v2;
     float A, B, C, AB, dAdz, dAdx, dAda, dBdz, dBdx, dBda,
           dCdz, dCdx, dCda, dDdz, dDdx, dDda;
 
@@ -225,7 +225,7 @@ static void sf_esc_slowness2_compute_components (sf_esc_slowness2 esc_slow, floa
         /* Find derivatives of A, B, C; restore V^2 with its derivatives, and then
            find values for the phase slowness S and its derivatives */
         cs = cosf (a - ti);
-        sn = sinf (a - ti);
+        /* sn = sinf (a - ti); */
         sn2 = sinf (2.0*(a - ti));
         sqcs = cs*cs; /* D */
         sqsn = 1.0 - sqcs;

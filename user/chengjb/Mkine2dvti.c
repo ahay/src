@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
         float  dx, dz, time, da; 
         float  vp0, vs0, eps, del, the;
         float  f0, t0;
+	int   i,j,d_x,d_z;
+	float vpg, apg, vsg, asg, ap, d;
 
         sf_init(argc,argv);
 
@@ -85,9 +87,6 @@ int main(int argc, char* argv[])
 	zero2float(wfs,nz,nx);
 	zero2float(wf,nz,nx);
 
-	int   i,j,d_x,d_z;
-	float vpp, vpg, apg, vsp, vsg, asg, ap, d;
-
         for(i=0;i<nx;i++)
         for(j=0;j<nz;j++){
           wf[i][j] = 0.0;
@@ -115,8 +114,8 @@ int main(int argc, char* argv[])
 	for(i=0;i<360/da;i++)
 	{
 		ap = i*da*SF_PI/180.0;
-		vpp = vpphase2dvti(vp0, vs0, eps, del, ap);
-		vsp = vsphase2dvti(vp0, vs0, eps, del, ap);
+		vpphase2dvti(vp0, vs0, eps, del, ap);
+		vsphase2dvti(vp0, vs0, eps, del, ap);
 
 		vapgroup2dvti(vp0, vs0, eps, del, ap, &vpg, &apg);
 		vasgroup2dvti(vp0, vs0, eps, del, ap, &vsg, &asg);

@@ -398,7 +398,7 @@ int update(float value, float* time, long i, int f, float al)
 float qsolve(float* time, long i, int *f, float *al)
 /* find new traveltime at gridpoint i */
 {
-    bool vad1, vad2, vad3, vad4;
+    bool vad1, vad2;
     int ff1, ff2, ff3, ff4;
     long j, k, ix[3];
     float a, b, res, res1, res2, res3, res4, al1, al2, al3, al4;
@@ -451,8 +451,8 @@ float qsolve(float* time, long i, int *f, float *al)
 	if (updaten(&res1,xj,vr,vs,&ff1,&al1)) vad1=true;
 	ff2 = 5; al2 = *al; vad2=false;
 	if (updaten(&res2,xj,vr,vs,&ff2,&al2)) vad2=true;
-	ff3 = 4; al3 = *al; vad3=false;
-	if (updaten(&res3,xj,vr,vs,&ff3,&al3)) vad3=true;
+	ff3 = 4; al3 = *al; /* vad3=false; */
+	updaten(&res3,xj,vr,vs,&ff3,&al3); /* vad3=true; */
 
 	if (vad1 && vad2) {
 	    if (res1 <= res2) {
@@ -492,8 +492,8 @@ float qsolve(float* time, long i, int *f, float *al)
 	    }
 	}
 
-	ff4 = 1; al4 = *al; vad4=false;
-	if (updaten(&res4,xj,vr,vs,&ff4,&al4)) vad4=true;
+	ff4 = 1; al4 = *al; /* vad4=false; */
+	updaten(&res4,xj,vr,vs,&ff4,&al4); /* vad4=true; */
 
 	if (res3 <= res4) {
 	    *f = ff3; *al = al3;

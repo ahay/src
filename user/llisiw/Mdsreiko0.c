@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool velocity, singular;
+    bool velocity;
     int dim, i, ss[3], n[SF_MAX_DIM], nm, nt, j, k;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], *s, *t, upd[2], temp[2];
     char key[6];
@@ -90,12 +90,12 @@ int main(int argc, char* argv[])
     for (k=n[0]-1; k > 0; k--) {
 	for (j=1; j < n[1]; j++) {
 	    for (i=0; i < n[1]-j; i++) {
-		singular = true;
+		/* singular = true; */
 
 		upd[0] = SF_MAX(0.,(t[i*ss[2]+(i+j)*ss[1]+k]-t[i*ss[2]+(i+j-1)*ss[1]+k])/d[1]);
 		if (s[(i+j)*ss[1]+k]-powf(upd[0],2.) >= 0.) {
 		    temp[0] = sqrtf(s[(i+j)*ss[1]+k]-powf(upd[0],2.));
-		    singular = false;
+		    /* singular = false; */
 		} else {
 		    temp[0] = sqrtf(s[(i+j)*ss[1]+k]);
 		}
@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 		upd[1] = SF_MAX(0.,(t[i*ss[2]+(i+j)*ss[1]+k]-t[(i+1)*ss[2]+(i+j)*ss[1]+k])/d[2]);
 		if (s[i*ss[1]+k]-powf(upd[1],2.) >= 0.) {
 		    temp[1] = sqrtf(s[i*ss[1]+k]-powf(upd[1],2.));
-		    singular = false;
+		    /* singular = false; */
 		} else {
 		    temp[1] = sqrtf(s[i*ss[1]+k]);
 		}

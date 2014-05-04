@@ -673,7 +673,7 @@ void acdpml_check(RDOM * dom, void * specs, FILE * stream) {
   ra_a_datasize(&(dom->_s[0]),&n);
 
   // max & min
-  for (int i=0;i<n;i++) {
+  for (int i=0;i<(int)n;i++) {
     vmax=iwave_max((dom->_s[0]._s0)[i],vmax);
     vmin=iwave_min((dom->_s[0]._s0)[i],vmin);
     if (vmax<0.0f || sqrt(vmax)>acdpmlpars->cmax ||

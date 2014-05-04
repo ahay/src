@@ -117,11 +117,15 @@ static int  initialized   = 0;          /* test for stream initialization */
   if (x == 0)                                
     while (!ok) {
       printf("\nEnter a positive integer seed (9 digits or less) >> ");
-      scanf("%ld", &x);
-      ok = (0 < x) && (x < MODULUS);
-      if (!ok)
-        printf("\nInput out of range ... try again\n");
+      if (0 > scanf("%ld", &x)) {
+	  printf("\nInput out of range ... try again\n");
+      } else {
+	  ok = (0 < x) && (x < MODULUS);
+	  if (!ok)
+	      printf("\nInput out of range ... try again\n");
+      }
     }
+
   seed[stream] = x;
 }
 
@@ -158,13 +162,12 @@ static int  initialized   = 0;          /* test for stream initialization */
 {
   long   i;
   long   x;
-  double u; 
   char   ok = 0;  
 
   SelectStream(0);                  /* select the default stream */
   PutSeed(1);                       /* and set the state to 1    */
   for(i = 0; i < 10000; i++)
-    u = Random();
+    Random();
   GetSeed(&x);                      /* get the new state value   */
   ok = (x == CHECK);                /* and check for correctness */
 

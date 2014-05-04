@@ -27,7 +27,7 @@
 int main(int argc, char*argv[])
 {
 	int i1, i2;
-	float **in, **d1, **d2, **u1, ****fb;
+	float **in, **d1, **d2, **u1;
 	sf_complex **p1;
 	opwd_init(1, 1, "maxflat", 1.0);
 
@@ -42,7 +42,7 @@ int main(int argc, char*argv[])
 	p1 = sf_complexalloc2(n1, n2);
 	d1 = sf_floatalloc2(n1, n2);
 	d2 = sf_floatalloc2(n1, n2);
-	fb = sf_floatalloc4(3, 3, n1, n2);
+/*	fb = sf_floatalloc4(3, 3, n1, n2); */
 
 //  0.1   0.2   0.3
 //  1.1   1.2   1.3

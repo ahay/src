@@ -262,7 +262,7 @@ void reflgen(int nzb, int nxb, int spz, int spx,
 /*< Generate reflectivity map with smoothing >*/
 {   
     int iz, i, j, i0, irep;
-    int nzx=nzb*nxb;
+    int nzx=nzb*nxb; 
     sf_triangle tr;
     int n[2],s[2],rect[2];
     bool diff[2],box[2];
@@ -298,12 +298,12 @@ void reflgen(int nzb, int nxb, int spz, int spx,
 
 int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 	     sf_complex **lt, sf_complex **rt, int m2,
-	     geopar geop, mpipar mpip, sf_complex *ww, float *rr, int pad1, bool illum)
+	     geopar geop, sf_complex *ww, float *rr, int pad1, bool illum)
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,dx,dz,spx,spz,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
-    int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
+    int nxb,nzb,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
+    int nt,nz,nx, nk, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
     sf_complex **wave, *curr;
@@ -312,11 +312,11 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
     nz = geop->nz;
     nxb = geop->nxb;
     nzb = geop->nzb;
-    dx = geop->dx;
-    dz = geop->dz;
+/*    dx = geop->dx;
+      dz = geop->dz; */
 
-    spx = geop->spx;
-    spz = geop->spz;
+/*    spx = geop->spx;
+      spz = geop->spz; */
     gpz  = geop->gpz;
     gpx  = geop->gpx;
     gpl  = geop->gpl;
@@ -335,7 +335,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
     
     /*Matrix dimensions*/
     nk = cfft2_init(pad1,nzb,nxb,&nz2,&nx2);
-    nzx = nzb*nxb;
+/*    nzx = nzb*nxb; */
     nzx2 = nz2*nx2;
 
     curr   = sf_complexalloc(nzx2);
@@ -430,12 +430,12 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 
 int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex **rcd, bool adj,
 	      bool verb, bool wantwf, sf_complex **lt, sf_complex **rt, int m2,
-              geopar geop, mpipar mpip, int pad1, bool illum)
+              geopar geop, int pad1, bool illum)
 /*< low-rank one-step backward propagation + imaging >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,dx,dz,gpz,gpx,gpl,snpint,dt,wfit;
-    int nt,nz,nx, nk, nzx, nz2, nx2, nzx2;
+    int nxb,nzb,gpz,gpx,gpl,snpint,wfit;
+    int nt,nz,nx, nk, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem, *currm;
     sf_complex **wave, *curr;
@@ -445,8 +445,8 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
     nz = geop->nz;
     nxb = geop->nxb;
     nzb = geop->nzb;
-    dx = geop->dx;
-    dz = geop->dz;
+/*     dx = geop->dx;
+       dz = geop->dz; */
     
     gpz  = geop->gpz;
     gpx  = geop->gpx;
@@ -454,12 +454,12 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
     snpint = geop->snpint;
     
     nt = geop->nt;
-    dt = geop->dt;
+    /* dt = geop->dt; */
 
     ccr = sf_complexalloc2(nz, nx);
 
     nk = cfft2_init(pad1,nzb,nxb,&nz2,&nx2);
-    nzx = nzb*nxb;
+    /* nzx = nzb*nxb; */
     nzx2 = nz2*nx2;
 
     curr = sf_complexalloc(nzx2);
@@ -654,7 +654,6 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
       } /*Main loop*/
     }
     cfft2_finalize();
-    if (verb) sf_warning("... rank=%d ...",mpip->cpuid);
     return 0;
 }
 
@@ -783,6 +782,8 @@ int main(int argc, char* argv[])
     Fvel  = sf_input("vel");  /*velocity - just for model dimension*/
     if (wantwf) {
 	Ftmpwf  = sf_output("tmpwf");/*wavefield snap*/
+    } else {
+	Ftmpwf  = NULL;
     }
 
     /*--- Axes parameters ---*/
@@ -992,7 +993,7 @@ int main(int argc, char* argv[])
 	/*generate reflectivity map*/
 	reflgen(nzb, nxb, spz+top, spx+lft, rectz, rectx, repeat, rr);
 	
-	lrosfor2(wavefld, sill, tmprec, verb, lt, rt, m2, geop, mpip, ww, rr, pad1, illum);
+	lrosfor2(wavefld, sill, tmprec, verb, lt, rt, m2, geop, ww, rr, pad1, illum);
       }
 
       if(adj && wantrecord) {
@@ -1003,7 +1004,7 @@ int main(int argc, char* argv[])
       }
       
       if (shtcur<shtnum0) {
-	lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, mpip, pad1, illum);
+	lrosback2(img, wavefld, sill, tmprec, adj, verb, wantwf, ltb, rtb, m2b, geop, pad1, illum);
       }
 
       if (adj)

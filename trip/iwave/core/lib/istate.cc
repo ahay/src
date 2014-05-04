@@ -251,12 +251,14 @@ namespace TSOpt {
     samplekey=key;
     pname="";
     if (parse(pars,key,pname)) {
+      string gname = "";
+
+#ifdef IWAVE_USE_MPI
       // extract proto name - use preferentially to actual file name,
       // particularly to handle temp filenames, which do not have suffixes.
       // note that only geometrical info will be extracted here, which can
       // as well be found from the proto files
       const char * rname = NULL;
-      string gname = "";
 
       // because current implementation of out-of-core classes does all 
       // file handling on rk 0, must extract prototype file name there.
@@ -271,7 +273,7 @@ namespace TSOpt {
 	// C string length 
 	cprotolen = gname.size()+1;
       }
-#ifdef IWAVE_USE_MPI
+
       MPI_Bcast(&cprotolen,1,MPI_INT,0,retrieveGlobalComm());
       char * cproto = new char[cprotolen];
       if (retrieveGlobalRank()==0) strcpy(cproto,gname.c_str());
@@ -1294,6 +1296,8 @@ namespace TSOpt {
 	}
 	panelindex++;
       }
+
+      cerr<<"here\n";
 
       // pull out fdpars for use in time step - same in every
       // step, and for every RDOM, so do it once here and get 
