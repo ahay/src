@@ -18,6 +18,13 @@ effective boundary saving strategy used!
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Reference: 
+	[1] Yoon, Kwangjin, and Kurt J. Marfurt. "Reverse-time migration 
+	using the Poynting vector." Exploration Geophysics 37.1 (2006): 
+	102-107.
+  	[2] Costa, J. C., et al. "Obliquity-correction imaging condition 
+	for reverse time migration." Geophysics 74.3 (2009): S57-S66.
 */
 #include <rsf.h>
 
@@ -102,6 +109,36 @@ void  pmlcoeff_init(float *d1z, float *d2x, float vmax)
 }
 
 
+void add_source(int *sxz, float **p, int ns, float *source, bool add)
+/*< add seismic sources in grid >*/
+{
+	int is, sx, sz;
+
+	if(add){// add sources
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(is,sx,sz)		\
+	shared(p,source,sxz,nb,ns,nz)
+#endif
+		for(is=0;is<ns; is++){
+			sx=sxz[is]/nz+nb;
+			sz=sxz[is]%nz+nb;
+			p[sx][sz]+=source[is];
+		}
+	}else{ // subtract sources
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(is,sx,sz)		\
+	shared(p,source,sxz,nb,ns,nz)
+#endif
+		for(is=0;is<ns; is++){
+			sx=sxz[is]/nz+nb;
+			sz=sxz[is]%nz+nb;
+			p[sx][sz]-=source[is];
+		}
+	}
+}
+
 
 void step_forward(float **p, float **pz, float **px, float **vz, float **vx, float **vv, float *d1z, float *d2x)
 {
@@ -117,7 +154,7 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 	for(i1=3; i1<nzpad-4; i1++)
 	{
 		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
-		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667f*(p[i2+2][i1]-p[i2-1][i1]);
+		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
 		vz[i2][i1]=((1.-0.5*dt*d1z[i1])*vz[i2][i1]+dt*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
 		vx[i2][i1]=((1.-0.5*dt*d2x[i2])*vx[i2][i1]+dt*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
 	}
@@ -134,13 +171,115 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 		diff2=vx[i2][i1]-vx[i2-1][i1];
 		diff1=vz[i2][i1]-vz[i2][i1-1];
 
-		diff1=1.125f*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667f*(vz[i2][i1+1]-vz[i2][i1-2]);
-		diff2=1.125f*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667f*(vx[i2+1][i1]-vx[i2-2][i1]);
+		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
+		diff2=1.125*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667*(vx[i2+1][i1]-vx[i2-2][i1]);
 		pz[i2][i1]=((1.-0.5*dt*d1z[i1])*pz[i2][i1]+dt*tmp*_dz*diff1)/(1.+0.5*dt*d1z[i1]);
 		px[i2][i1]=((1.-0.5*dt*d2x[i2])*px[i2][i1]+dt*tmp*_dx*diff2)/(1.+0.5*dt*d2x[i2]);
 		p[i2][i1]=px[i2][i1]+pz[i2][i1];
 	}
 }
+
+
+void record_seis(float *seis_it, int *gxz, float **p, int ng)
+/*< record seismogram at time it into a vector length of ng >*/
+{
+	int ig, gx, gz;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ig,gx,gz)		\
+	shared(seis_it,p,gxz,nb,ng,nz)
+#endif
+	for(ig=0;ig<ng; ig++)
+	{
+		gx=gxz[ig]/nz+nb;
+		gz=gxz[ig]%nz+nb;
+		seis_it[ig]=p[gx][gz];
+	}
+}
+
+
+void matrix_transpose(float *matrix, int n1, int n2)
+/*< transpose a matrix n1xn2 into n2xn1 >*/
+{
+	int i1, i2;
+	float *tmp;
+	if (!(tmp=(float*)malloc(n1*n2*sizeof(float)))) {printf("out of memory!"); exit(1);}
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	{
+		tmp[i2+n2*i1]=matrix[i1+n1*i2];
+	}
+	memcpy(matrix, tmp, n1*n2*sizeof(float));
+	free(tmp);
+}
+
+
+void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
+/*< shot/geophone position initialize
+sxz/gxz; szbeg/gzbeg; sxbeg/gxbeg; jsz/jgz; jsx/jgx; ns/ng; >*/
+{
+	int is, sz, sx;
+
+	for(is=0; is<ns; is++)
+	{
+		sz=szbeg+is*jsz;
+		sx=sxbeg+is*jsx;
+		sxz[is]=sz+nz*sx;
+	}
+}
+
+void cross_correlation(float **sp, float **gp, float **num, float **den)
+{
+	int ix,iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+    private(ix,iz)			\
+    shared(num,den,sp,gp,nx,nz,nb)  
+#endif 
+	for(ix=0; ix<nx; ix++)
+	for(iz=0; iz<nz; iz++)
+	{
+		num[ix][iz]+=sp[ix+nb][iz+nb]*gp[ix+nb][iz+nb];
+		den[ix][iz]+=sp[ix+nb][iz+nb]*sp[ix+nb][iz+nb];
+	}
+}
+
+void normalize_image(float *imag1, float *imag2, float **num, float **den)
+{
+	int ix,iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+    private(ix,iz)			\
+    shared(imag1,imag2,num, den, nx,nz)  
+#endif 
+	for(ix=0; ix<nx; ix++)
+	for(iz=0; iz<nz; iz++)
+	{
+		imag1[iz+nz*ix]+=num[ix][iz];
+		imag2[iz+nz*ix]+=num[ix][iz]/den[ix][iz];
+	}
+}
+
+void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, 
+	int it, int ntd, float vmute, int ng)
+/*< muting the direct arrivals >*/
+{
+	int id, kt;
+	float a,b,t0;
+
+	for(id=0;id<ng;id++){
+		a=dx*abs(gxbeg+id*jgx-sxc);
+		b=dz*(gzbeg-szbeg);
+		t0=sqrtf(a*a+b*b)/vmute;
+		kt=t0/dt+ntd;// ntd is manually added to obtain the best muting effect.
+    		if (it<kt) seis_kt[id]=0.;
+	}
+}
+
+
 
 int main(int argc, char* argv[])
 {
