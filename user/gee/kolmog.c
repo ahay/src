@@ -105,7 +105,11 @@ void kolmog2(float *trace)
 
     if (0 != shift) {
 	for (i1=0; i1 < nw; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 	    fft[i1] *= cexpf(sf_cmplx(0.0,2*SF_PI*i1*shift/nfft));
+#else
+	    fft[i1] = sf_cmul(fft[i1],cexpf(sf_cmplx(0.0,2*SF_PI*i1*shift/nfft)));
+#endif
 	}
     }
 

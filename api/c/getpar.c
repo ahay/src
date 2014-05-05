@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <unistd.h>
+#include <dirent.h>
 #include <pwd.h>
 #include <limits.h>
 
@@ -46,7 +47,7 @@
 #define USERNAME_MAX 33
 
 static sf_simtab pars;
-static char prog[NAME_MAX];
+static char prog[MAXNAMLEN];
 static char user[USERNAME_MAX];
 static char host[MAXHOSTNAMELEN];
 static char cdir[PATH_MAX];
@@ -75,6 +76,7 @@ void sf_init(int argc,char *argv[])
     size_t len, prog_len;
     char *rsf, sfdoc[PATH_MAX], cwd[PATH_MAX], *pwd, *tprog;
     extern void sf_close(void);
+    extern int getlogin_r(char *buf, size_t bufsize); 
 
     pars = sf_simtab_init (argc);
 
