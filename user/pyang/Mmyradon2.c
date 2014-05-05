@@ -64,15 +64,15 @@ int main(int argc, char* argv[])
 	sf_complex *cdd, *cmm;
 	fftwf_complex *tmpc;
 	fftwf_plan fft1, ifft1;
-	sf_file in, out;
+	sf_file in, out, offset;
 
     	sf_init(argc,argv);
-	in = sf_input("in");	/* veloctiy model */
-	out =sf_output("out");	/* shot records */
+	in = sf_input("in");	/* input data or radon  */
+	out =sf_output("out");	/* output radon or data */
 
     	if (!sf_getbool("adj",&adj)) adj=true;
 	/* if y, perform adjoint operation */
-    	if (!sf_getbool("inv",&inv)) inv=adj; 
+    	if (!sf_getbool("inv",&inv)) inv=false; 
 	/* if y, perform inverse operation */
 
     	/* read input file parameters */
@@ -82,10 +82,13 @@ int main(int argc, char* argv[])
 	/* interval of time axis */
     	if (!sf_histfloat(in,"o1",&t0)) t0=0.;
 	/* origin of time axis */
-	nfft=2*kiss_fft_next_fast_size(nt);
-	nw=nfft/2+1;
 
-    	if (adj||inv) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+    	if (NULL != sf_getstring("offset")) {
+		offset = sf_input("offset");
+		if (nx!=sf_filesize(offset)) sf_error("Wrong dimensions in offset");
+    	} else offset = NULL;
+
+    	if (adj) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 		/* number of offset if the input in the data domain */
 
@@ -96,8 +99,7 @@ int main(int argc, char* argv[])
 		/* p sampling (if adj=y) */
 		if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
 		/* p origin (if adj=y) */
-		if(inv){
-			
+		if(inv){			
     			if ( !(invmode=sf_getstring("invmode")) ) invmode="toeplitz";
 			/* inverse method: 'ls' if least-squares; 'toeplitz' if use FFT */			
 			if ((invmode[0]=='l') && !sf_getint("niter",&niter)) niter=100;
@@ -122,6 +124,8 @@ int main(int argc, char* argv[])
 		sf_putint(out,"n2",nx);
     	}
 
+	nfft=2*kiss_fft_next_fast_size(nt);
+	nw=nfft/2+1;
 	p=sf_floatalloc(np);
 	xx=sf_floatalloc(nx);
 	dd=sf_floatalloc2(nt, nx);
@@ -151,7 +155,12 @@ int main(int argc, char* argv[])
 	    	sf_putfloat(out,"o2",ox);
 	    	sf_putfloat(out,"d2",dx);
 	}
-	for(ix=0; ix<nx; ix++) xx[ix] = ox + ix*dx;
+    	if (NULL != offset) {
+		sf_floatread(xx,nx,offset);
+		sf_fileclose(offset);
+    	} else {
+		for(ix=0; ix<nx; ix++) xx[ix]=ox+ix*dx;
+	}
 
     	if (!sf_getbool("parab",&par)) par=false;
 	/* if y, parabolic Radon transform */
@@ -164,7 +173,7 @@ int main(int argc, char* argv[])
 		else if (x0!=1.) xx[ix] /= x0;
 	}
 
-	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
@@ -191,7 +200,7 @@ int main(int argc, char* argv[])
 		w=2.*SF_PI*iw/(nfft*dt);
 		myradon2_set(w);
 		myradon2_lop(adj, false, np, nx, &cmm[iw*np], &cdd[iw*nx]);
-		if(inv){
+		if(adj&&inv){
 			if (invmode[0]=='t') 
 				myradon2_inv(&cmm[iw*np], &cmm[iw*np], eps);
 			else
@@ -201,7 +210,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		matrix_transpose(cmm, np, nw);
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{			

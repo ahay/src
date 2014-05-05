@@ -202,6 +202,79 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 }
 
 
+void step_backward(float **p, float **pz, float **px, float **vz, float **vx, float **vv)
+/*< backward reconstruction step >*/
+{
+	int i1, i2;
+	float tmp, diff1, diff2;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)			\
+	private(i1,i2,diff1, diff2, tmp)		\
+	shared(nz, nx, nb, vv, p, pz, px, vz, vx, dt, _dz, _dx)
+#endif
+	for(i2=nb+2; i2<nx+nb-1; i2++)
+	for(i1=nb+2; i1<nz+nb-1; i1++)
+	{
+		tmp=vv[i2][i1]; tmp=tmp*tmp;
+		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
+		diff2=1.125*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667*(vx[i2+1][i1]-vx[i2-2][i1]);
+		pz[i2][i1]-=dt*tmp*_dz*diff1;
+		px[i2][i1]-=dt*tmp*_dx*diff2;
+		p[i2][i1]=px[i2][i1]+pz[i2][i1];
+	}
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)			\
+	private(i1,i2,diff1,diff2)			\
+	shared(nz, nx, nb, p, vz, vx, dt, _dz, _dx)
+#endif
+	for(i2=nb+1; i2<nx+nb-2; i2++)
+	for(i1=nb+1; i1<nz+nb-2; i1++)
+	{
+		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
+		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
+		vz[i2][i1]-=dt*_dz*diff1;
+		vx[i2][i1]-=dt*_dx*diff2;
+	}
+}
+
+void bndr_rw(bool read, float **vz, float **vx, float *bndr)
+/*< read boundaries into vx and vz or write vx and vz for saving >*/
+{
+	int i1, i2;
+	if(read){
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<4; i1++)
+		{	
+			vz[i2+nb][i1+nb]=bndr[i1+8*i2];
+			vz[i2+nb][i1+nz+nb-4]=bndr[i1+4+8*i2];
+		}
+
+		for(i2=0; i2<4; i2++)
+		for(i1=0; i1<nz; i1++)
+		{
+			vx[i2+nb][i1+nb]=bndr[8*nx+i1+nz*i2];
+			vx[i2+nx+nb-4][i1+nb]=bndr[8*nx+i1+nz*(i2+4)];
+		}
+	}else{	
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<4; i1++)
+		{	
+			bndr[i1+8*i2]=vz[i2+nb][i1+nb];
+			bndr[i1+4+8*i2]=vz[i2+nb][i1+nz+nb-4];
+		}
+
+		for(i2=0; i2<4; i2++)
+		for(i1=0; i1<nz; i1++)
+		{
+			bndr[8*nx+i1+nz*i2]=vx[i2+nb][i1+nb];
+			bndr[8*nx+i1+nz*(i2+4)]=vx[i2+nx+nb-4][i1+nb];
+		}
+	}
+}
+
+
 void record_seis(float *seis_it, int *gxz, float **p, int ng)
 /*< record seismogram at time it into a vector length of ng >*/
 {
@@ -262,22 +335,40 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, i
 
 
 
-
-void cross_correlation(float **spc, float **gp, float **num, float **den)
-/*< compute cross-correlation: spc: center zone of sp, nz X nx >*/
+void extract_adcig(float **sp, float **gp, float **num, float **den)
+/*< compute cross-correlation >*/
 {
 	int ix,iz;
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
     private(ix,iz)			\
-    shared(num,den,spc,gp,nx,nz,nb)  
+    shared(num,den,sp,gp,nx,nz,nb)  
 #endif 
 	for(ix=0; ix<nx; ix++)
 	for(iz=0; iz<nz; iz++)
 	{
-		num[ix][iz]+=spc[ix][iz]*gp[ix+nb][iz+nb];
-		den[ix][iz]+=spc[ix][iz]*spc[ix][iz];
+		num[ix][iz]+=sp[ix+nb][iz+nb]*gp[ix+nb][iz+nb];
+		den[ix][iz]+=sp[ix+nb][iz+nb]*sp[ix+nb][iz+nb];
+	}
+}
+
+
+void cross_correlation(float **sp, float **gp, float **num, float **den)
+/*< compute cross-correlation >*/
+{
+	int ix,iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+    private(ix,iz)			\
+    shared(num,den,sp,gp,nx,nz,nb)  
+#endif 
+	for(ix=0; ix<nx; ix++)
+	for(iz=0; iz<nz; iz++)
+	{
+		num[ix][iz]+=sp[ix+nb][iz+nb]*gp[ix+nb][iz+nb];
+		den[ix][iz]+=sp[ix+nb][iz+nb]*sp[ix+nb][iz+nb];
 	}
 }
 
@@ -287,10 +378,9 @@ int main(int argc, char* argv[])
 	int it, is,i1,i2, tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, vmax;
-	float *wlt, *d2x, *d1z;
+	float *wlt, *d2x, *d1z, *bndr;
 	float **v0, **vv, **dcal, **tmpw, **den, **num, **img;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
-	FILE *fp1;
     	sf_file vmodl, image, adcig; /* I/O files */
 
     	sf_init(argc,argv);
@@ -364,6 +454,7 @@ int main(int argc, char* argv[])
 	num=sf_floatalloc2(nz,nx); 	
 	den=sf_floatalloc2(nz,nx); 	
 	img=sf_floatalloc2(nz,nx); 	
+	bndr=(float*)malloc(nt*8*(nx+nz)*sizeof(float));
 
 	/* initialize variables */
 	for(it=0;it<nt;it++){
@@ -410,36 +501,30 @@ int main(int argc, char* argv[])
 			gxbeg=sxbeg+is*jsx-distx;
 			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 		}
-		fp1=fopen("wavsnap","wb");
 		for(it=0; it<nt; it++)
 		{
 			add_source(&sxz[is], sp, 1, &wlt[it], true);
 			step_forward(sp, spz, spx, svz, svx, vv, d1z, d2x);
+			bndr_rw(false, svz, svx, &bndr[it*8*(nx+nz)]);
 		
 			record_seis(dcal[it], gxz, sp, ng);
 			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
-
-			window2d(tmpw,sp);
-			fwrite(tmpw[0],sizeof(float),nz*nx,fp1);
 		}
-		fclose(fp1);
 
-		fp1=fopen("wavsnap","rb");
 		wavefield_init(gp, gpz, gpx, gvz, gvx);
 		memset(num[0],0,nz*nx*sizeof(float));
 		memset(den[0],0,nz*nx*sizeof(float));
 		for(it=nt-1; it>-1; it--)
-		{			
+		{
+			bndr_rw(true, svz, svx, &bndr[it*8*(nx+nz)]);	
+			step_backward(sp, spz, spx, svz, svx, vv);
+			add_source(&sxz[is], sp, 1, &wlt[it], false);
+	
 			add_source(gxz, gp, ng, dcal[it], true);
 			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);
-
-			fseek(fp1,it*nz*nx*sizeof(float),SEEK_SET);
-        		fread(tmpw[0], sizeof(float), nz*nx, fp1);		
 	
-			cross_correlation(tmpw, gp, num, den);
+			cross_correlation(sp, gp, num, den);
 		}
-		fclose(fp1);
-		remove("wavsnap");
 		
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nz; i1++)
@@ -468,6 +553,7 @@ int main(int argc, char* argv[])
 	free(*num); free(num);
 	free(*den); free(den);
 	free(*img); free(img);
+	free(bndr);
 
     	exit(0);
 }

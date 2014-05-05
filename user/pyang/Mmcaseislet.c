@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 		if (nthr < 0) nthr=0;
 		if (nthr >= n1*n2) nthr=n1*n2-1;
 		thr=sf_quantile(nthr, n1*n2, tmp);
-		if(decr) thr*=(niter-iter)/niter;
+		if(decr) thr*=(float)(niter-iter)/niter;
 		sf_pthresh(coeffs, n1*n2, thr, p, mode);
 
 		// forward seislet: A T{ At(drec^{ic}) } 
