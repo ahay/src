@@ -21,7 +21,8 @@ Note: The adjoint is made as the same as inverse by normalization!
 */
 
 #include <rsf.h>
-#include <complex.h>
+
+#ifdef SF_HAS_FFTW
 #include <fftw3.h>
 
 #include "fftn.h"
@@ -69,3 +70,4 @@ void fftn_close(void)
     fftwf_destroy_plan(ifftn);
 }
 
+#endif

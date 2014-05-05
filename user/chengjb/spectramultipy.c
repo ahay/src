@@ -28,81 +28,81 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
                     int *ijkx, int *ijky, int *ijkz, int iflag) 
 /*< spec3dmultiply: multiply in 3D k-domain (kx, ky, kz) >*/
 {
-     int ix, iy, iz, ixf, iyf, izf, i;
-
 #ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+    int ix, iy, iz, ixf, iyf, izf, i;
 
-       sf_warning("============= using SF_HAS_FFTW ====");
 
-       sf_complex *xin, *xout;
+    sf_warning("============= using SF_HAS_FFTW ====");
 
-       fftwf_plan xf;
-       fftwf_plan yr;
+    sf_complex *xin, *xout;
 
-       int m = nx*ny*nz;
+    fftwf_plan xf;
+    fftwf_plan yr;
 
-       xin=sf_complexalloc(m);
-       xout=sf_complexalloc(m);
+    int m = nx*ny*nz;
 
-       xf=fftwf_plan_dft_3d(ny,nx,nz, (fftwf_complex *) xin, (fftwf_complex *) xout,
-                            FFTW_FORWARD,FFTW_ESTIMATE);
+    xin=sf_complexalloc(m);
+    xout=sf_complexalloc(m);
 
-       yr=fftwf_plan_dft_3d(ny,nx,nz, (fftwf_complex *) xin, (fftwf_complex *) xout,
-                            FFTW_BACKWARD,FFTW_ESTIMATE);
+    xf=fftwf_plan_dft_3d(ny,nx,nz, (fftwf_complex *) xin, (fftwf_complex *) xout,
+			 FFTW_FORWARD,FFTW_ESTIMATE);
 
-       /* FFT: from (x,y,z) to (kx, ky, kz) domain */
-       i=0;
-       for(iy=0;iy<ny;iy++)
-       for(ix=0;ix<nx;ix++)
-       for(iz=0;iz<nz;iz++){
-            xin[i]=sf_cmplx(d[iy][ix][iz], 0.0);
-            i++;
-       }
+    yr=fftwf_plan_dft_3d(ny,nx,nz, (fftwf_complex *) xin, (fftwf_complex *) xout,
+			 FFTW_BACKWARD,FFTW_ESTIMATE);
 
-       fftwf_execute(xf);
+    /* FFT: from (x,y,z) to (kx, ky, kz) domain */
+    i=0;
+    for(iy=0;iy<ny;iy++)
+	for(ix=0;ix<nx;ix++)
+	    for(iz=0;iz<nz;iz++){
+		xin[i]=sf_cmplx(d[iy][ix][iz], 0.0);
+		i++;
+	    }
 
-       int ii, jj, kk;
+    fftwf_execute(xf);
 
-       i=0;
-       for(iy=0;iy<ny;iy++){
-          iyf=ijky[iy];
-          ii = iy*nx*nz;
-          for(ix=0;ix<nx;ix++){
+    int ii, jj, kk;
+
+    i=0;
+    for(iy=0;iy<ny;iy++){
+	iyf=ijky[iy];
+	ii = iy*nx*nz;
+	for(ix=0;ix<nx;ix++){
             ixf=ijkx[ix];
             jj = ix*nz;
             for(iz=0;iz<nz;iz++){
-              izf=ijkz[iz];
-              kk = ii + jj + iz;
-              //if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
-                 if(iflag==1)
-                  xin[kk] = xout[kk]*sf_cmplx(f[iyf][ixf][izf], 0.0);    
-                 else
-                  xin[kk] = xout[kk]*sf_cmplx(0.0, f[iyf][ixf][izf]);    
-              //}else
-              //   xin[kk] = xout[kk];    
+		izf=ijkz[iz];
+		kk = ii + jj + iz;
+		//if(iy!=ny/2&&ix!=nx/2&&iz!=nz/2){
+		if(iflag==1)
+		    xin[kk] = xout[kk]*sf_cmplx(f[iyf][ixf][izf], 0.0);    
+		else
+		    xin[kk] = xout[kk]*sf_cmplx(0.0, f[iyf][ixf][izf]);    
+		//}else
+		//   xin[kk] = xout[kk];    
 /*
-                  xin[i] = xout[i];    
-                  i++;
+  xin[i] = xout[i];    
+  i++;
 */
             }// iz loop
-          }// ix loop
-       }//iy loop
+	}// ix loop
+    }//iy loop
 
-       fftwf_execute(yr);
+    fftwf_execute(yr);
 
-       i=0;
-       for(iy=0;iy<ny;iy++)
-       for(ix=0;ix<nx;ix++)
-       for(iz=0;iz<nz;iz++){
-            d[iy][ix][iz] = creal(xout[i])/m;
-            i++;
-       }
+    i=0;
+    for(iy=0;iy<ny;iy++)
+	for(ix=0;ix<nx;ix++)
+	    for(iz=0;iz<nz;iz++){
+		d[iy][ix][iz] = creal(xout[i])/m;
+		i++;
+	    }
 
-       fftwf_destroy_plan(xf);
-       fftwf_destroy_plan(yr);
+    fftwf_destroy_plan(xf);
+    fftwf_destroy_plan(yr);
 
-       free(xin);
-       free(xout);
+    free(xin);
+    free(xout);
 
 #endif
 }

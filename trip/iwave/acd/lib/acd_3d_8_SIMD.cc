@@ -92,7 +92,7 @@ void acd_3d_8(float *** uc,
                 //ic := coefficient index
                 for(int ic=0; ic < 4; ic++){
                     __m128 in_simd=_mm_add_ps(_mm_loadu_ps(&uc[i2][i1-ic-1][i0]), _mm_loadu_ps(&uc[i2][i1+ic+1][i0]));
-                    __m128 coeff_simd=_mm_mul_ps(coeff_simd, _mm_set1_ps(Ycoeff[ic]));
+                    __m128 coeff_simd=_mm_mul_ps(csq_simd, _mm_set1_ps(Ycoeff[ic]));
                     out_simd=_mm_add_ps(out_simd, _mm_mul_ps(in_simd, coeff_simd));
                 }
                 

@@ -1268,9 +1268,9 @@ int init_tracegeom(tracegeom * tg,
       
       /* read scale information */
       mygethdval(&(otr.tr),"scalco",&val);
-      tg->scalco = vtof(hdtype("scalco"),val);
+      tg->scalco = vtoi(hdtype("scalco"),val);
       mygethdval(&(otr.tr),"scalel",&val);
-      tg->scalel = vtof(hdtype("scalel"),val);
+      tg->scalel = vtoi(hdtype("scalel"),val);
       
       /* read source position */
       mygethdval(&(otr.tr),"sx",&val);
@@ -1644,7 +1644,7 @@ void setnull_tracegeom(tracegeom * tg) {
   tg->irec=0;
   tg->first=0;
   tg->last=0;
-  tg->dtmus=0.0;
+  tg->dtmus=0;
   tg->interp=0;
   tg->dvol=0.0;
   tg->ntr=NULL;
@@ -2206,18 +2206,18 @@ int assembletrace(tracegeom const * tg,
   tmps=oxg +((tg->is)[idx]+(tg->rs)[idx])*dx;
   if (tg->scalco > 0) { tmp /=  tg->scalco; tmps /=  tg->scalco; }
   if (tg->scalco < 0) { tmp *= -tg->scalco; tmps *= -tg->scalco; }
-  val.i=tmp;
+  val.i=(int)tmp;
   myputhdval(&(otr->tr),"gx",&val);
-  val.i=tmps;
+  val.i=(int)tmps;
   myputhdval(&(otr->tr),"sx",&val);
   
   tmp =oyg + ((tg->ig)[nb][idy]+(tg->rg)[nb][idy])*dy;
   tmps=oyg + ((tg->is)[idy]+(tg->rs)[idy])*dy;
   if (tg->scalco > 0) { tmp /=  tg->scalco; tmps /=  tg->scalco; }
   if (tg->scalco < 0) { tmp *= -tg->scalco; tmps *= -tg->scalco; }
-  val.i=tmp;
+  val.i=(int)tmp;
   myputhdval(&(otr->tr),"gy",&val);
-  val.i=tmps;
+  val.i=(int)tmps;
   myputhdval(&(otr->tr),"sy",&val);
   
   val.h=tg->scalel;
@@ -2227,9 +2227,9 @@ int assembletrace(tracegeom const * tg,
   tmps= -(ozg + ((tg->is)[idz]+(tg->rs)[idz])*dz);
   if (tg->scalel > 0) { tmp /=  tg->scalel; tmps /=  tg->scalel; }
   if (tg->scalel < 0) { tmp *= -tg->scalel; tmps *= -tg->scalel; }
-  val.i=tmp;
+  val.i=(int)tmp;
   myputhdval(&(otr->tr),"gelev",&val);
-  val.i=tmps;
+  val.i=(int)tmps;
   myputhdval(&(otr->tr),"selev",&val);
   
   /*  val.u=1000.0*(tg->dtout);
@@ -2240,7 +2240,7 @@ int assembletrace(tracegeom const * tg,
   val.u=tg->ntout;
   myputhdval(&(otr->tr),"ns",&val);
   
-  val.h=tg->t0out;
+  val.h=(int)(tg->t0out);
   myputhdval(&(otr->tr),"delrt",&val);
   
   val.i=(tg->tracl)[nb];

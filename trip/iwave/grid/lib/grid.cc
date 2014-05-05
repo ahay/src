@@ -108,7 +108,7 @@ int compatible_grid(const grid g1, const grid g2) {
   for (i=0;i<g1.gdim;i++) { 
     if (iwave_abs(g1.axes[i].d-g2.axes[i].d) > TOL*g1.axes[i].d) return 3;
     rtest = g1.axes[i].o-g2.axes[i].o;
-    itest = rtest/g1.axes[i].d;
+    itest = (int) (rtest/g1.axes[i].d);
     if ((iwave_abs((itest-1)*g1.axes[i].d-rtest) > TOL*g1.axes[i].d) &&
 	(iwave_abs((itest+0)*g1.axes[i].d-rtest) > TOL*g1.axes[i].d) &&
 	(iwave_abs((itest+1)*g1.axes[i].d-rtest) > TOL*g1.axes[i].d)) return 4;

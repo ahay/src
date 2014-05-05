@@ -29,6 +29,14 @@ and its application in least-squares reverse-time migration." Geophysics
 
 #ifdef _OPENMP
 #include <omp.h>
+
+#if defined __INTEL_COMPILER && __INTEL_COMPILER_BUILD_DATE >= 20130607 && _OPENMP < 201107
+
+#undef  _OPENMP
+#define _OPENMP 201107
+
+#endif
+
 #endif
 
 #include "rtm2d.h"
@@ -45,9 +53,15 @@ void step_forward(float **u0, float **u1, float **u2, float **vv, bool adj)
 
 	if(adj){
 #ifdef _OPENMP
+#if _OPENMP >= 201107
 #pragma omp parallel for collapse(2) default(none)	\
     private(i2,i1,u)		    			\
     shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
+#else
+#pragma omp parallel for default(none)	\
+    private(i2,i1,u)		    			\
+    shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
+#endif
 #endif
 		for (i2=0; i2<nxpad; i2++) 
 		for (i1=0; i1<nzpad; i1++) 
@@ -65,9 +79,15 @@ void step_forward(float **u0, float **u1, float **u2, float **vv, bool adj)
 		}
 	}else{
 #ifdef _OPENMP
+#if _OPENMP >= 201107
 #pragma omp parallel for collapse(2) default(none)	\
     private(i2,i1,u)		    			\
     shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
+#else
+#pragma omp parallel for default(none)	\
+    private(i2,i1,u)		    			\
+    shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
+#endif
 #endif
 		for (i2=0; i2<nxpad; i2++) 
 		for (i1=0; i1<nzpad; i1++) 

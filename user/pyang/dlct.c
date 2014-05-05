@@ -21,14 +21,15 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
 */
 
 #include <rsf.h>
-#include <complex.h>
-#include <fftw3.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 #include "dlct.h"
+
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
 
 void forward_dlct(int N 	/* length of the signal */,
 		int L		/* length of freq-instaneous freq */, 
@@ -112,3 +113,5 @@ void inverse_dlct(int N 	/* length of the signal */,
     fftwf_free(p);
     fftwf_free(q);
 }
+
+#endif

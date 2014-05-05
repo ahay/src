@@ -584,7 +584,7 @@ void acd_check(RDOM * dom, void * specs, FILE * stream) {
   ra_a_datasize(&(dom->_s[0]),&n);
 
   /* max & min */
-  for (int i=0;i<n;i++) {
+  for (int i=0;i<(int)n;i++) {
     vmax=iwave_max((dom->_s[0]._s0)[i],vmax);
     vmin=iwave_min((dom->_s[0]._s0)[i],vmin);
     if (vmax<0.0f || sqrt(vmax)>acdpars->cmax || 
@@ -592,7 +592,6 @@ void acd_check(RDOM * dom, void * specs, FILE * stream) {
       RVLException e;
       e<<"Error: input csq at index "<<i<<" = "<<(dom->_s[0]._s0)[i]<<"\n";
       e<<"  out of bounds ["<<acdpars->cmin<<", "<<acdpars->cmax<<"]\n";
-      e<<"  min csq = "<<vmin<<" max csq = "<<vmax<<"\n";
       throw e;
     }
   }

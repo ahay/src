@@ -113,7 +113,7 @@ void checkImageParams () {
 
     if (vp.zStart - ip.zStart > 1E-6) {
 	float diff = vp.zStart - ip.zStart;
-	ip.zNum -= (diff / ip.zStep + 1);
+	ip.zNum -= (int) floorf(diff / ip.zStep + 1);
 	ip.zStart += (diff / ip.zStep + 1) * ip.zStep;
 	sf_warning ("first migrated depth was changed to %g", ip.zStart);			
     }
@@ -121,7 +121,7 @@ void checkImageParams () {
     float zImageMax = ip.zStart + ip.zStep * (ip.zNum - 1);
     if (zImageMax - zVelMax > 1E-6) {
 	float diff = zImageMax - zVelMax; 
-	ip.zNum -= (diff / ip.zStep + 1);
+	ip.zNum -= (int) floorf(diff / ip.zStep + 1);
 	sf_warning ("depth sample number was changed to %d", ip.zNum);	
     }
     if (ip.zNum <= 0) sf_error ("wrong image depth sample number");	
@@ -130,7 +130,7 @@ void checkImageParams () {
 
     if (vp.xStart - ip.xStart > 1E-6) {
 	float diff = vp.xStart - ip.xStart;
-	ip.xNum -= (diff / ip.xStep + 1);
+	ip.xNum -= (int) floorf(diff / ip.xStep + 1);
 	ip.xStart += (diff / ip.xStep + 1) * ip.xStep;
 	sf_warning ("first inline coord was changed to %g", ip.xStart);			
     }
@@ -138,7 +138,7 @@ void checkImageParams () {
     float xImageMax = ip.xStart + ip.xStep * (ip.xNum - 1);
     if (xImageMax - xVelMax > 1E-6) {
 	float diff = xImageMax - xVelMax; 
-	ip.xNum -= (diff / ip.xStep + 1);
+	ip.xNum -= (int) floorf(diff / ip.xStep + 1);
 	sf_warning ("inline number was changed to %d", ip.xNum);	
     }
     if (ip.xNum <= 0) sf_error ("wrong image inline number");	
@@ -150,7 +150,7 @@ void checkImageParams () {
 
     if (vp.yStart - ip.yStart > 1E-6) {
 	float diff = vp.yStart - ip.yStart;
-	ip.yNum -= (diff / ip.yStep + 1);
+	ip.yNum -= (int) floorf(diff / ip.yStep + 1);
 	ip.yStart += (diff / ip.yStep + 1) * ip.yStep;
 	sf_warning ("first crossline coord was changed to %g", ip.yStart);			
     }
@@ -158,7 +158,7 @@ void checkImageParams () {
     float yImageMax = ip.yStart + ip.yStep * (ip.yNum - 1);
     if (yImageMax - yVelMax > 1E-6) {
 	float diff = yImageMax - yVelMax; 
-	ip.yNum -= (diff / ip.yStep + 1);
+	ip.yNum -= (int) floorf(diff / ip.yStep + 1);
 	sf_warning ("crossline number was changed to %d", ip.yNum);	
     }
     if (ip.yNum <= 0) sf_error ("wrong image crossline number");	
@@ -338,7 +338,7 @@ int main (int argc, char* argv[]) {
     if ( !sf_getfloat ("ttd",  &ttStep) ) ttStep = 0.002f;
     /* travel-times increment */
 	// not sure that "0.002f" is the optimal value
-    if ( !sf_getint  ("ttn", &ttNum) ) ttNum = 0.001 * 0.5 * maxTime / ttStep + 1;
+    if ( !sf_getint  ("ttn", &ttNum) ) ttNum = (int) floorf(0.001 * 0.5 * maxTime / ttStep + 1);
     /* travel-times number */
 
 	// travel-times rays
@@ -352,7 +352,7 @@ int main (int argc, char* argv[]) {
     /* travel-times rays increment */
     if ( !sf_getfloat ("ttrayo",  &ttRayStart) ) ttRayStart = minttRay;
     /* travel-times rays start */
-    if ( !sf_getint  ("ttrayn", &ttRayNum) ) ttRayNum = (maxttRay - minttRay) / ttRayStep + 1;
+    if ( !sf_getint  ("ttrayn", &ttRayNum) ) ttRayNum = (int) floorf((maxttRay - minttRay) / ttRayStep + 1);
     /* travel-times rays number */
 
     // INITIATE OUTPUT

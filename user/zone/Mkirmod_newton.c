@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
     double tolerance;
-    float **rr, **rd, *updown;
+    float **rr=NULL, **rd=NULL, *updown=NULL;
     bool newton, debug, fwdxini;
     velocity2 vn; 
     /*------------------------*/
@@ -48,10 +48,10 @@ int main(int argc, char* argv[])
     float **rfl, **rgd, **crv, **dip, *trace, *trace2;
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, mint;
-    const char *type, *type2;
+    char *type=NULL, *type2=NULL;
     bool twod, verb, adj, lin, cmp, absoff;
     surface inc, ref;
-    velocity vel, vel2;
+    velocity vel=NULL, vel2=NULL;
     ktable ts, tg, **tss, **tgs;
     sf_file data, refl, curv, modl, vti, picks = NULL, slopes = NULL;
 	

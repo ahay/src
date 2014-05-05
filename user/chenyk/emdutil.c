@@ -89,10 +89,12 @@ extrema_t init_extr(int n)
 /*<initialization for extremas extraction>*/
 {
     extrema_t ex;
-    ex.x_min=(double *)malloc(n*sizeof(double));
-    ex.x_max=(double *)malloc(n*sizeof(double));
-    ex.y_min=(double *)malloc(n*sizeof(double));
-    ex.y_max=(double *)malloc(n*sizeof(double));
+    ex.x_min=(double *)sf_alloc(n,sizeof(double));
+    ex.x_max=(double *)sf_alloc(n,sizeof(double));
+    ex.y_min=(double *)sf_alloc(n,sizeof(double));
+    ex.y_max=(double *)sf_alloc(n,sizeof(double));
+    ex.n_min=n;
+    ex.n_max=n;
     return ex;
 }
 
@@ -377,9 +379,9 @@ imf_list_t init_imf_list(int n)
 void add_imf(imf_list_t *list,double *p,int nb_it) 
 /*< adding imf to imf list >*/
 {
-  double *v=(double *)malloc(list->n*sizeof(double));
+    double *v=(double *)sf_alloc(list->n,sizeof(double));
   int i;
-  imf_t *mode=(imf_t *)malloc(sizeof(imf_t));
+  imf_t *mode=(imf_t *)sf_alloc(1,sizeof(imf_t));
   for (i=0;i<list->n;i++) v[i]=p[i];
   mode->pointer=v;
   mode->nb_iterations=nb_it;
@@ -421,10 +423,11 @@ envelope_t init_local_mean(int n)
 /*<free allocated local mean struct >*/
 {
   envelope_t env;
-  env.e_min = (double*)malloc(n*sizeof(double));
-  env.e_max = (double*)malloc(n*sizeof(double));
-  env.tmp1 = (double*)malloc(n*sizeof(double));
-  env.tmp2 = (double*)malloc(n*sizeof(double));
+  env.e_min = (double*)sf_alloc(n,sizeof(double));
+  env.e_max = (double*)sf_alloc(n,sizeof(double));
+  env.tmp1 = (double*)sf_alloc(n,sizeof(double));
+  env.tmp2 = (double*)sf_alloc(n,sizeof(double));
+  env.n = n;
   return env;
 }
 

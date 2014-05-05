@@ -121,6 +121,8 @@ if fftw:
 # files with FFTW dependence
 fftws = map(lambda x: File(x+'.c'),Split('seplowrank decomplowrank spectramultipy sepdivcurl'))
 
+lapack = env.get('LAPACK')
+
 for source in src:
     inc = env.RSF_Include(source,prefix='')
     if fftw or not source in fftws:
@@ -133,7 +135,8 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends (env, sources, 'M'+prog)
-    if fftw or not prog in Split('tti2delrseparation vti2delrseparation'):
+    if (fftw or not prog in Split('tti2delrseparation vti2delrseparation')) \
+        and (lapack or not prog in Split('ort3dhomodevK')):
         env.StaticObject('M'+prog+'.c')
         prog = env.Program (prog, map (lambda x: x + '.c',sources))
     else:
@@ -148,9 +151,7 @@ for prog in mains:
 dynpre = env.get('DYNLIB','') 
 libs = [dynpre+'rsf']+env.get('LIBS',[])
 
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
+if not 'c++' in env.get('API',[]):
     lapack = None
 
 if lapack:
@@ -158,8 +159,6 @@ if lapack:
     if not isinstance(lapack,bool):
         libsxx.extend(lapack)
     libsxx.extend(libs)
-
-
 
 ccmains = Split(ccprogs)
 for prog in ccmains:

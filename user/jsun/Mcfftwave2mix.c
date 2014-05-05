@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     sf_complex *ww, *cwave, *cwavem;
 
     sf_complex **wave,**wave2, *curr, *currm;
-    float *rcurr;
+    float *rcurr=NULL;
     
     sf_file Fw,Fr,Fo;    /* I/O files */
     sf_axis at,az,ax;    /* cube axes */

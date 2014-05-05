@@ -206,7 +206,7 @@ int cubicadj_(float const *x1i,
 
   i__1 = *ni;
   for (i__ = 1; i__ <= i__1; ++i__) {
-    j = work[i__];
+      j = (int) work[i__];
     dx = *x1i + (i__ - 1) * *hi - (*x1o + (j - 1) * *ho);
     /* Computing 3rd power */
     r__1 = dx;
@@ -402,7 +402,7 @@ int cubicadj_(float const *x1i,
 
   i__1 = *ni;
   for (i__ = 1; i__ <= i__1; ++i__) {
-    j = work[i__];
+      j = (int) work[i__];
     work[*ni + *no * 3 + j] += vi[i__];
     dx = *x1i + (i__ - 1) * *hi - (*x1o + (j - 1) * *ho);
     work[*ni + (*no << 2) + j] += vi[i__] * dx;
