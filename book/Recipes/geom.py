@@ -14,7 +14,7 @@ def point2d(cc,xcoord,zcoord,custom,par):
 def point3d(cc,xcoord,ycoord,zcoord,custom,par):
     Flow(cc,None,
          '''
-         spike nsp=3 mag=%g,%g,%g n1=3 o1=0 d1=1 k1=1,2,3 | 
+         spike nsp=3 mag=%g,%g,%g n1=3 o1=0 d1=1 k1=1,2,3 n2=1 n3=1 | 
          put label1="" unit1=""
          '''%(xcoord,ycoord,zcoord) +' '+ custom)
 
