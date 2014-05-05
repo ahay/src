@@ -95,7 +95,7 @@ def param(par):
     else:                  par['dheight3d']=12*par['dratio3d']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=8 labelfat=5 titlesz=12 titlefat=3 xll=2.0 yll=1.5 ' + ' '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=8 labelfat=5 titlesz=12 titlefat=3 xll=2.5 yll=1.5 ' + ' '
     
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
