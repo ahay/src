@@ -289,7 +289,7 @@ int main(int argc, char* argv[])
 	float **v0, **vv, **dcal, **tmpw, **den, **num, **img;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
 	FILE *fp1;
-    	sf_file vmodl, imag1, imag2; /* I/O files */
+    	sf_file vmodl, image, adcig; /* I/O files */
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -298,8 +298,8 @@ int main(int argc, char* argv[])
 
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
-    	imag1 = sf_output("out");  /* RTM image */ 
-    	imag2 = sf_output("imag2");  /* ADCIG obtained by Poynting vector */
+    	image = sf_output("out");  /* RTM image */ 
+    	adcig = sf_output("ADCIG");  /* ADCIG obtained by Poynting vector */
 
     	/* get parameters for RTM */
     	if (!sf_histint(vmodl,"n1",&nz)) sf_error("no n1");
@@ -420,14 +420,6 @@ int main(int argc, char* argv[])
 
 			window2d(tmpw,sp);
 			fwrite(tmpw[0],sizeof(float),nz*nx,fp1);
-
-			if(it==200)
-			{
-				window2d(tmpw,spx);
-				sf_floatwrite(tmpw[0],nz*nx,imag1);
-				window2d(tmpw,spz);
-				sf_floatwrite(tmpw[0],nz*nx,imag2);
-			}
 		}
 		fclose(fp1);
 
@@ -450,7 +442,7 @@ int main(int argc, char* argv[])
 		for(i1=0; i1<nz; i1++)
 			img[i2][i1]+=num[i2][i1];// /(den[i2][i1]+FLT_EPSILON);
 	}
-	//sf_floatwrite(img[0],nz*nx,image);
+	sf_floatwrite(img[0],nz*nx,image);
 
 	free(wlt);
 	free(*v0); free(v0);
