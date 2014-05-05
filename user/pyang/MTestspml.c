@@ -153,7 +153,7 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 int main(int argc, char* argv[])
 {
 	bool verb;
-	int jt, ft, it, i2, i1, sx, sz;
+	int jt, ft, it, kt, i2, i1, sx, sz;
 	float tmp, vmax;
 	float *wlt, *d2x, *d1z;
 	float **v0, **vv, **p, **pz, **px, **vz, **vx;
@@ -167,11 +167,6 @@ int main(int argc, char* argv[])
 	Fv = sf_input("in");/* veloctiy model */
 	Fw = sf_output("out");/* wavefield snaps */
 
-    	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity, if y, output px and pz */
-	if(verb){
-		Fpz = sf_output("pz");/* wavefield component px */
-		Fpx = sf_output("px");/* wavefield component px */
-	}
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
@@ -182,6 +177,13 @@ int main(int argc, char* argv[])
     	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
    	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
     	if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
+
+    	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity, if y, output px and pz */
+	if(verb){
+		Fpz = sf_output("pz");/* wavefield component px */
+		Fpx = sf_output("px");/* wavefield component px */
+    		if (!sf_getint("kt",&kt)) sf_error("kt required"); /* output px and pz component at kt */
+	}
 
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
@@ -231,7 +233,7 @@ int main(int argc, char* argv[])
 			window2d(v0,p);
 			sf_floatwrite(v0[0],nz*nx,Fw);
 		}
-		if(verb){
+		if(verb && (it==kt)){
 			window2d(v0,pz);
 			sf_floatwrite(v0[0],nz*nx,Fpz);
 			window2d(v0,px);
