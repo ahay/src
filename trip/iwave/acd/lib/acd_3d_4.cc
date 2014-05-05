@@ -59,7 +59,7 @@ void acd_3d_4(float *** uc,
   }
   if (rbc[1]) {
     for (i2=s[2];i2<=e[2];i2++) {
-#pragma ivdpe
+#pragma ivdep
       for (i0=s0;i0<=e0;i0++) {
 	up[i2][e[1]+2][i0]=-up[i2][e[1]][i0];
       }

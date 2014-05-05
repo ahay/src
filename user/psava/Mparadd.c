@@ -63,7 +63,7 @@ int main (int argc, char* argv[])
     float   *scale, *add;
     bool collect;
     char cmode, *mode;
-    sf_datatype type;
+/*    sf_datatype type; */
 
     int   mem;
     
@@ -140,7 +140,7 @@ int main (int argc, char* argv[])
     bufo = sf_floatalloc( nbuf);
     
     /*------------------------------------------------------------*/
-    type = sf_gettype (out); /* input/output files format */
+    /*  type = sf_gettype (out); input/output files format */
     
     for (; nsiz > 0; nsiz -= nbuf) {
 	sf_warning("nsiz=%ld nbuf=%ld",nsiz,nbuf);
