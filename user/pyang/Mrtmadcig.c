@@ -261,6 +261,8 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, i
 
 
 
+
+
 void cross_correlation(float **spc, float **gp, float **num, float **den)
 /*< compute cross-correlation: spc: center zone of sp, nz X nx >*/
 {
@@ -326,14 +328,14 @@ int main(int argc, char* argv[])
 
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
 	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=200;/* number of deleyed time samples to mute */
-/*
-    	sf_putint(snap,"n1",nt);
-    	sf_putint(snap,"n2",ng);
-    	sf_putfloat(snap,"d1",dt);
-    	sf_putfloat(snap,"d2",dx);
-	sf_putfloat(snap,"n3",ns);
-*/
+	if (!sf_getint("tdmute",&tdmute))   tdmute=1./(fm*dt);/* number of deleyed time samples to mute */
+
+    	sf_putint(adcig,"n1",ng);
+    	sf_putint(adcig,"n2",nt);
+    	sf_putfloat(adcig,"d1",dt);
+    	sf_putfloat(adcig,"d2",dx);
+	sf_putfloat(adcig,"n3",ns);
+
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
@@ -401,7 +403,6 @@ int main(int argc, char* argv[])
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 	memset(img[0],0,nz*nx*sizeof(float));
 
-
 	for(is=0; is<ns; is++)
 	{
 		wavefield_init(sp, spz, spx, svz, svx);
@@ -416,7 +417,7 @@ int main(int argc, char* argv[])
 			step_forward(sp, spz, spx, svz, svx, vv, d1z, d2x);
 		
 			record_seis(dcal[it], gxz, sp, ng);
-			//muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
+			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
 
 			window2d(tmpw,sp);
 			fwrite(tmpw[0],sizeof(float),nz*nx,fp1);
@@ -432,7 +433,9 @@ int main(int argc, char* argv[])
 			add_source(gxz, gp, ng, dcal[it], true);
 			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);
 
-        		fread(tmpw[0], sizeof(float), nz*nx, fp1);			
+			fseek(fp1,it*nz*nx*sizeof(float),SEEK_SET);
+        		fread(tmpw[0], sizeof(float), nz*nx, fp1);		
+	
 			cross_correlation(tmpw, gp, num, den);
 		}
 		fclose(fp1);
