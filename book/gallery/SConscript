@@ -7,8 +7,11 @@ pyc = str(py)+'c'
 env.RSF_Pycompile(pyc,py)
 env.Install(os.path.join(pkgdir,'gallery'),[py,pyc])
 
-for py in Glob('[a-z]*/[_a-z]*.py'):
-    pyc = str(py)+'c'
-    env.RSF_Pycompile(pyc,py)	
-    env.Install(os.path.join(pkgdir,'gallery'),[py,pyc])
+for mod in Glob('[a-z]*'):
+    name = os.path.split(str(mod))[-1]
+    py = File(os.path.join(str(mod),name+'.py'))
+    if os.path.isfile(str(py)):
+        pyc = str(py)+'c'
+        env.RSF_Pycompile(pyc,py)	
+        env.Install(os.path.join(pkgdir,'gallery'),[py,pyc])
 
