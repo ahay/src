@@ -152,11 +152,12 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 
 int main(int argc, char* argv[])
 {
+	bool verb;
 	int jt, ft, it, i2, i1, sx, sz;
 	float tmp, vmax;
 	float *wlt, *d2x, *d1z;
 	float **v0, **vv, **p, **pz, **px, **vz, **vx;
-	sf_file Fv, Fw;
+	sf_file Fv, Fw, Fpx, Fpz;
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -166,6 +167,11 @@ int main(int argc, char* argv[])
 	Fv = sf_input("in");/* veloctiy model */
 	Fw = sf_output("out");/* wavefield snaps */
 
+    	if(!sf_getbool("verb",&verb)) verb=false;    /* verbosity, if y, output px and pz */
+	if(verb){
+		Fpz = sf_output("pz");/* wavefield component px */
+		Fpx = sf_output("px");/* wavefield component px */
+	}
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
     	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
@@ -224,6 +230,12 @@ int main(int argc, char* argv[])
 		{
 			window2d(v0,p);
 			sf_floatwrite(v0[0],nz*nx,Fw);
+		}
+		if(verb){
+			window2d(v0,pz);
+			sf_floatwrite(v0[0],nz*nx,Fpz);
+			window2d(v0,px);
+			sf_floatwrite(v0[0],nz*nx,Fpx);
 		}
 		p[sx][sz]+=wlt[it];
 		step_forward(p, pz, px, vz, vx, vv, d1z, d2x);

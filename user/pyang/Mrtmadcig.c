@@ -202,42 +202,6 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 }
 
 
-void step_backward(float **p, float **pz, float **px, float **vz, float **vx, float **vv)
-/*< backward reconstruction >*/
-{
-	int i1, i2;
-	float tmp, diff1, diff2;
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)			\
-	private(i1,i2,diff1, diff2, tmp)		\
-	shared(nz, nx, nb, vv, p, pz, px, vz, vx, dt, _dz, _dx)
-#endif
-	for(i2=nb+1; i2<nx+nb-1; i2++)
-	for(i1=nb+1; i1<nz+nb-1; i1++)
-	{
-		tmp=vv[i2][i1]; tmp=tmp*tmp;
-		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
-		diff2=1.125*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667*(vx[i2+1][i1]-vx[i2-2][i1]);
-		pz[i2][i1]-=dt*tmp*_dz*diff1;
-		px[i2][i1]-=dt*tmp*_dx*diff2;
-		p[i2][i1]=px[i2][i1]+pz[i2][i1];
-	}
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)			\
-	private(i1,i2,diff1,diff2)			\
-	shared(nz, nx, nb, p, vz, vx, dt, _dz, _dx)
-#endif
-	for(i2=nb; i2<nx+nb-2; i2++)
-	for(i1=nb; i1<nz+nb-2; i1++)
-	{
-		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
-		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
-		vz[i2][i1]-=dt*_dz*diff1;
-		vx[i2][i1]-=dt*_dx*diff2;
-	}
-}
 void record_seis(float *seis_it, int *gxz, float **p, int ng)
 /*< record seismogram at time it into a vector length of ng >*/
 {
@@ -274,44 +238,6 @@ void matrix_transpose(float **mat, int n1, int n2)
 	free(*tmp);free(tmp);
 }
 
-
-
-void cross_correlation(float **sp, float **gp, float **num, float **den)
-/*< compute cross-correlation >*/
-{
-	int ix,iz;
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(ix,iz)			\
-    shared(num,den,sp,gp,nx,nz,nb)  
-#endif 
-	for(ix=0; ix<nx; ix++)
-	for(iz=0; iz<nz; iz++)
-	{
-		num[ix][iz]+=sp[ix+nb][iz+nb]*gp[ix+nb][iz+nb];
-		den[ix][iz]+=sp[ix+nb][iz+nb]*sp[ix+nb][iz+nb];
-	}
-}
-
-void normalize_image(float **imag1, float **imag2, float **num, float **den)
-/*< do image normalization >*/
-{
-	int ix,iz;
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(ix,iz)			\
-    shared(imag1,imag2,num, den, nx,nz)  
-#endif 
-	for(ix=0; ix<nx; ix++)
-	for(iz=0; iz<nz; iz++)
-	{
-		imag1[ix][iz]+=num[ix][iz];
-		imag2[ix][iz]+=num[ix][iz]/den[ix][iz];
-	}
-}
-
 void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, int it, int tdmute)
 /*< muting the direct arrivals >*/
 {
@@ -328,44 +254,28 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, i
 		a=dx*abs(gxbeg+id*jgx-sxc);
 		b=dz*(gzbeg-szbeg);
 		t0=sqrtf(a*a+b*b)/vmute;
-		kt=t0/dt+tdmute;// ntd is manually added to obtain the best muting effect.
+		kt=t0/dt+tdmute;// tdmute manually added to obtain the best muting effect.
     		if (it<kt) seis_kt[id]=0.;
 	}
 }
 
-void bndr_rw(bool read, float **p, float *bndr)
-/*< saving the effective boundaries on each inner side >*/
+
+
+void cross_correlation(float **spc, float **gp, float **num, float **den)
+/*< compute cross-correlation: spc: center zone of sp, nz X nx >*/
 {
-	int i2, i1;
-	
-	if(read){
-		for(i2=0; i2<nx; i2++)
-		for(i1=0; i1<3; i1++)
-		{
-			p[i2+nb][i1+nb]=bndr[i1+6*i2];
-			p[i2+nb][i1+nz+nb-3]=bndr[(i1+3)+6*i2];
-		}
-		
-		for(i2=0; i2<3; i2++)
-		for(i1=0; i1<nz; i1++)
-		{
-			p[i2+nb][i1+nb]=bndr[6*nx+i1+nz*i2];
-			p[i2+nb+nx-3][i1+nb]=bndr[6*nx+i1+nz*(i2+3)];
-		}
-	}else{
-		for(i2=0; i2<nx; i2++)
-		for(i1=0; i1<3; i1++)
-		{
-			bndr[i1+6*i2]=p[i2+nb][i1+nb];
-			bndr[(i1+3)+6*i2]=p[i2+nb][i1+nz+nb-3];
-		}
-		
-		for(i2=0; i2<3; i2++)
-		for(i1=0; i1<nz; i1++)
-		{
-			bndr[6*nx+i1+nz*i2]=p[i2+nb][i1+nb];
-			bndr[6*nx+i1+nz*(i2+3)]=p[i2+nb+nx-3][i1+nb];
-		}
+	int ix,iz;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+    private(ix,iz)			\
+    shared(num,den,spc,gp,nx,nz,nb)  
+#endif 
+	for(ix=0; ix<nx; ix++)
+	for(iz=0; iz<nz; iz++)
+	{
+		num[ix][iz]+=spc[ix][iz]*gp[ix+nb][iz+nb];
+		den[ix][iz]+=spc[ix][iz]*spc[ix][iz];
 	}
 }
 
@@ -375,9 +285,10 @@ int main(int argc, char* argv[])
 	int it, is,i1,i2, tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, vmax;
-	float *wlt, *d2x, *d1z, *bndr;
-	float **v0, **vv, **dcal;
+	float *wlt, *d2x, *d1z;
+	float **v0, **vv, **dcal, **tmpw, **den, **num, **img;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
+	FILE *fp1;
     	sf_file vmodl, imag1, imag2; /* I/O files */
 
     	sf_init(argc,argv);
@@ -387,8 +298,8 @@ int main(int argc, char* argv[])
 
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
-    	imag1 = sf_output("out");  /* output image with correlation imaging condition */ 
-    	imag2 = sf_output("imag2");  /* output image with normalized correlation imaging condition */ 
+    	imag1 = sf_output("out");  /* RTM image */ 
+    	imag2 = sf_output("imag2");  /* ADCIG obtained by Poynting vector */
 
     	/* get parameters for RTM */
     	if (!sf_histint(vmodl,"n1",&nz)) sf_error("no n1");
@@ -416,16 +327,13 @@ int main(int argc, char* argv[])
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
 	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
 	if (!sf_getint("tdmute",&tdmute))   tdmute=200;/* number of deleyed time samples to mute */
-
-    	sf_putint(imag1,"n1",nz);
-    	sf_putint(imag1,"n2",nx);
-    	sf_putfloat(imag1,"d1",dz);
-    	sf_putfloat(imag1,"d2",dx);
-    	sf_putint(imag2,"n1",nz);
-    	sf_putint(imag2,"n2",nx);
-    	sf_putfloat(imag2,"d1",dz);
-    	sf_putfloat(imag2,"d2",dx);
-
+/*
+    	sf_putint(snap,"n1",nt);
+    	sf_putint(snap,"n2",ng);
+    	sf_putfloat(snap,"d1",dt);
+    	sf_putfloat(snap,"d2",dx);
+	sf_putfloat(snap,"n3",ns);
+*/
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
@@ -450,7 +358,10 @@ int main(int argc, char* argv[])
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
 	dcal=sf_floatalloc2(ng,nt);
-	bndr=sf_floatalloc(nt*6*(nx+nz));
+	tmpw=sf_floatalloc2(nz,nx); 	
+	num=sf_floatalloc2(nz,nx); 	
+	den=sf_floatalloc2(nz,nx); 	
+	img=sf_floatalloc2(nz,nx); 	
 
 	/* initialize variables */
 	for(it=0;it<nt;it++){
@@ -483,13 +394,13 @@ int main(int argc, char* argv[])
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
 		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
-	}
-	else{
+	}else{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
 		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-	memset(bndr, 0, 6*(nx+nz)*sizeof(float));
+	memset(img[0],0,nz*nx*sizeof(float));
+
 
 	for(is=0; is<ns; is++)
 	{
@@ -498,36 +409,48 @@ int main(int argc, char* argv[])
 			gxbeg=sxbeg+is*jsx-distx;
 			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 		}
+		fp1=fopen("wavsnap","wb");
 		for(it=0; it<nt; it++)
 		{
-			bndr_rw(false, sp, &bndr[it*6*(nz+nx)]);
 			add_source(&sxz[is], sp, 1, &wlt[it], true);
 			step_forward(sp, spz, spx, svz, svx, vv, d1z, d2x);
-
-			if(it==200)
-			{
-				window2d(v0,sp);
-				sf_floatwrite(v0[0],nz*nx,imag1);
-			}
 		
-			//record_seis(dcal[it], gxz, sp, ng);
+			record_seis(dcal[it], gxz, sp, ng);
 			//muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
-		}
 
-		wavefield_init(gp, gpz, gpx, gvz, gvx);
-		for(it=nt-1; it>-1; it--)
-		{
-			step_backward(sp, spz, spx, svz, svx, vv);
-			add_source(&sxz[is], sp, 1, &wlt[it], false);
-			bndr_rw(true, sp, &bndr[it*6*(nz+nx)]);
+			window2d(tmpw,sp);
+			fwrite(tmpw[0],sizeof(float),nz*nx,fp1);
 
 			if(it==200)
 			{
-				window2d(v0,sp);
-				sf_floatwrite(v0[0],nz*nx,imag2);
+				window2d(tmpw,spx);
+				sf_floatwrite(tmpw[0],nz*nx,imag1);
+				window2d(tmpw,spz);
+				sf_floatwrite(tmpw[0],nz*nx,imag2);
 			}
 		}
+		fclose(fp1);
+
+		fp1=fopen("wavsnap","rb");
+		wavefield_init(gp, gpz, gpx, gvz, gvx);
+		memset(num[0],0,nz*nx*sizeof(float));
+		memset(den[0],0,nz*nx*sizeof(float));
+		for(it=nt-1; it>-1; it--)
+		{			
+			add_source(gxz, gp, ng, dcal[it], true);
+			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);
+
+        		fread(tmpw[0], sizeof(float), nz*nx, fp1);			
+			cross_correlation(tmpw, gp, num, den);
+		}
+		fclose(fp1);
+		remove("wavsnap");
+		
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<nz; i1++)
+			img[i2][i1]+=num[i2][i1];// /(den[i2][i1]+FLT_EPSILON);
 	}
+	//sf_floatwrite(img[0],nz*nx,image);
 
 	free(wlt);
 	free(*v0); free(v0);
@@ -546,7 +469,10 @@ int main(int argc, char* argv[])
 	free(d2x);
 	free(sxz);
 	free(gxz);
-	free(bndr);
+	free(*tmpw); free(tmpw);
+	free(*num); free(num);
+	free(*den); free(den);
+	free(*img); free(img);
 
     	exit(0);
 }
