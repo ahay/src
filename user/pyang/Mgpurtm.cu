@@ -389,7 +389,7 @@ int main(int argc, char* argv[])
     	if (!sf_getfloat("phost",&phost)) phost=0;/* phost% points on host with zero-copy pinned memory, the rest on device */
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
 	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq artifacts, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=200;/* number of deleyed time samples to mute */
+	if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);/* number of deleyed time samples to mute */
 
     	sf_putint(imag1,"n1",nz1);
     	sf_putint(imag1,"n2",nx1);

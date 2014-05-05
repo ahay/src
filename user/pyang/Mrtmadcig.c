@@ -328,7 +328,7 @@ int main(int argc, char* argv[])
 
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
 	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=1./(fm*dt);/* number of deleyed time samples to mute */
+	if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);/* number of deleyed time samples to mute */
 
     	sf_putint(adcig,"n1",ng);
     	sf_putint(adcig,"n2",nt);
