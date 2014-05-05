@@ -106,7 +106,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
     }
 
     if (adj) { /* migration <- read data */
-	wfit = (int)(nt-1)/snap; // wfnt-1
+        if (snap>0) wfit = (int)(nt-1)/snap; // wfnt-1
 	/* time stepping */
 	for (it=nt-1; it > -1; it--) {
 	    if (verb) sf_warning("it=%d;",it);
@@ -164,7 +164,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 			wvfld[wfit][ix][iz] = curr[j];
 		    }
 		}
-		wfit--;
+		if (snap>0) wfit--;
 	    }
 	} /*time iteration*/
 	/*generate image*/
@@ -186,7 +186,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 		curr[iz+ix*nz2]=img[ix][iz];
 	    }
 	}
-	wfit = 0;
+	if (snap>0) wfit = 0;
 	/* time stepping */
 	for (it=0; it < nt; it++) {
 	    if (verb) sf_warning("it=%d;",it);
@@ -243,7 +243,7 @@ int lrexp(sf_complex **img, sf_complex **dat, bool adj, sf_complex **lt, sf_comp
 			wvfld[wfit][ix][iz] = curr[j];
 		    }
 		}
-		wfit++;
+		if (snap>0) wfit++;
 	    }
 	}
     }
@@ -339,9 +339,9 @@ int main(int argc, char* argv[])
     nzx = nz*nx;
     nzx2 = nz2*nx2;
     ntx = nt*nx;
-    wfnt = (int)(nt-1)/snap+1;
 
     if (snap > 0) {
+        wfnt = (int)(nt-1)/snap+1;
 	snaps = sf_output("snaps");
 	/* (optional) snapshot file */
 	sf_settype(snaps,SF_COMPLEX);
@@ -358,6 +358,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(snaps,"o3",0.);
 	sf_putstring(snaps,"label3","Time");
     } else {
+        wfnt = 0;
 	snaps = NULL;
     }
 
