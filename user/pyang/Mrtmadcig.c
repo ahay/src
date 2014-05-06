@@ -25,6 +25,12 @@ effective boundary saving strategy used!
 	102-107.
   	[2] Costa, J. C., et al. "Obliquity-correction imaging condition 
 	for reverse time migration." Geophysics 74.3 (2009): S57-S66.
+	[3] Xu, Sheng, et al. "Common-angle migration: A strategy for 
+	imaging complex media." Geophysics 66.6 (2001): 1877-1894.
+	[4] Xu, Sheng, Yu Zhang, and Bing Tang. "3D angle gathers from 
+	reverse time migration." Geophysics 76.2 (2011): S77-S92.
+	[5] Zhang, Yu, et al. "Angle gathers from reverse time migration."
+	The Leading Edge 29.11 (2010): 1364-1371.
 */
 #include <rsf.h>
 
