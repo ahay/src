@@ -200,10 +200,10 @@ int main (int argc, char *argv[])
     }
 
     /* source wavefield extrapolation */
-    wex(weop,cub,ssr,tap,slo,1,Fws,Fts,1);
+    wex(weop,cub,ssr,tap,slo,1,Fws,Fts,true);
 
     /* receiver wavefield extrapolation */
-    wex(weop,cub,ssr,tap,slo,-1,Fd,Ftr,1);
+    wex(weop,cub,ssr,tap,slo,-1,Fd,Ftr,true);
 
     /* initialize CIP gathers */
     cip = wexcip_init(cub,nhx,nhy,nhz,nht,nhx2,nhy2,nhz2,nht2,nc,dht,oht,Fc,eic);

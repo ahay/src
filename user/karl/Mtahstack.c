@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
   float* stktrace=NULL;
   float* stkheader=NULL;
   float* time_variant_fold=NULL;
-  bool eof_get_tah;
+  int eof_get_tah;
   int fold;
   int itrace=0;
 
@@ -238,27 +238,25 @@ sf_warning("verbose=%d",verbose);
 
     /* did any of the header keys in indx_of_keys change? */
     pkeychanged=false;
-    if(!eof_get_tah){
-      if(itrace>0){
-	for(ikey=0; ikey<numkeys; ikey++){
-	  if(typehead == SF_INT){
-	    if(((int*)fheader  )[indx_of_keys[ikey]]!=
-	       ((int*)stkheader)[indx_of_keys[ikey]]){
-	      pkeychanged=true;
-	      break;
-	    }
-	  } else {
-	    if(fheader[indx_of_keys[ikey]]!=stkheader[indx_of_keys[ikey]]){
-	      pkeychanged=true;
-	      break;
-	    }
+    if(itrace>0){
+      for(ikey=0; ikey<numkeys; ikey++){
+	if(typehead == SF_INT){
+	  if(((int*)fheader  )[indx_of_keys[ikey]]!=
+	     ((int*)stkheader)[indx_of_keys[ikey]]){
+	    pkeychanged=true;
+	    break;
+	  }
+	} else {
+	  if(fheader[indx_of_keys[ikey]]!=stkheader[indx_of_keys[ikey]]){
+	    pkeychanged=true;
+	    break;
 	  }
 	}
       }
     }
     /* if one of the headers changes, apply fold recovery, output trace, and 
        set fold=0.  Fold=0 will initialize the stktrace to zero at top f loop*/
-    if(pkeychanged || eof_get_tah){
+    if(pkeychanged){
       /***********************************/
       /* divide by the time variant fold */
       /***********************************/

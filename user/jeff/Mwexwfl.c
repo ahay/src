@@ -166,7 +166,7 @@ int main (int argc, char *argv[])
       wexdatum(weop,cub,ssr,tap,slo,wexsign,Ft,Fr,inv);
     }
     else
-      wex(weop,cub,ssr,tap,slo,wexsign,Fd,Fr,1);
+      wex(weop,cub,ssr,tap,slo,wexsign,Fd,Fr,true);
 
     sf_filefresh(Fr);
     sf_filecopy(Fw,Fr,SF_COMPLEX);

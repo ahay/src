@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     float **um,**uo,**up,**ud,**uc;/* tmp arrays */
  
     sf_init(argc,argv);
-    if(! sf_getbool("verb",&verb)) verb=0;
+    if(!sf_getbool("verb",&verb)) verb=false;
  
     /* setup I/O files */
     Fw = sf_input ("in" );
