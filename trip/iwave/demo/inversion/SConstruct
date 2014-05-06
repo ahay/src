@@ -47,6 +47,7 @@ Flow('rext','csq24base','window f2=383 n2=1 | spray axis=2 d=24 n=60')
 Flow('csq24',['csq24base', 'rext'],'cat axis=2 d=24 csq24base.rsf rext.rsf',stdin=0)  
 Flow('csq24hom','','makevel n1=126 d1=24 n2=444 d2=24 o1=0 o2=0 v000=2.25 | put data_type=csq data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m^2/ms^2 esize=4',stdin=0) 
 Flow('csq24sm','csq24','smooth rect1=10 rect2=10 repeat=2')
+Flow('csq24ssm','csq24','smooth rect1=40 rect2=40 repeat=2')
 Flow('csq24sm2','csq24','smooth rect1=5 rect2=5 repeat=2')
 Flow('dcsq24', ['csq24', 'csq24sm2'],'add mode=a scale=1,-1 < csq24.rsf csq24sm2.rsf |window min1=180| sfpad beg1=8') 
 Flow('csqext.rsf','csq24sm.rsf', 'sfcat csq24sm.rsf csq24sm.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
@@ -59,8 +60,8 @@ Flow('hdr2shot.su', 'line100m.su', suwind + ' key=sx min=6000 max=7000 j=1000 tm
 # create base wavelet (just time series, without source position
 # information) via suwaveform
 Flow('wavelet_base.su','',
-     suwaveform + ' type=ricker1 fpeak=10 ns=51 | ' + 
-     sushw + ' key=delrt  a=-100 > ${TARGETS[0]} ',
+     suwaveform + ' type=ricker1 fpeak=6 ns=101 | ' + 
+     sushw + ' key=delrt  a=-200 > ${TARGETS[0]} ',
      stdin=0)
 
 # add source coordinates from hdrfile to source AND receiver 
@@ -104,6 +105,40 @@ t=Flow(['shot6km.work', 'shot6km.su'],['wavelet_hdr6km.su','csq24.rsf'],
 	stdin=0,stdout=0)
 Clean(t,'shot6km.work')
 
+# simulation - one shot, smoothed velo
+t=Flow(['shot6kmsm.work', 'shot6kmsm.su'],['wavelet_hdr6km.su','csq24sm.rsf'],
+        '''
+        /bin/cp hdr6km.su shot6kmsm.su;
+        /bin/rm -rf shot6kmsm.work; 
+        /bin/mkdir shot6kmsm.work; 
+        cd shot6kmsm.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24sm.rsf source=../wavelet_hdr6km.su 
+        data=../shot6kmsm.su 
+	''',
+	stdin=0,stdout=0)
+Clean(t,'shot6kmsm.work')
+
+# simulation - one shot, supersmoothed velo
+t=Flow(['shot6kmssm.work', 'shot6kmssm.su'],['wavelet_hdr6km.su','csq24ssm.rsf'],
+        '''
+        /bin/cp hdr6km.su shot6kmssm.su;
+        /bin/rm -rf shot6kmssm.work; 
+        /bin/mkdir shot6kmssm.work; 
+        cd shot6kmssm.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24ssm.rsf source=../wavelet_hdr6km.su 
+        data=../shot6kmssm.su 
+	''',
+	stdin=0,stdout=0)
+Clean(t,'shot6kmssm.work')
+
 # Born simulation - one shot
 t=Flow(['born6km.work', 'born6km.su'],['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf'],
         '''
@@ -120,6 +155,23 @@ t=Flow(['born6km.work', 'born6km.su'],['wavelet_hdr6km.su','csq24sm.rsf','dcsq24
 	''',
 	stdin=0,stdout=0)
 Clean(t,'born6km.work')
+
+# Born simulation - one shot, supersmooth bg
+t=Flow(['born6kms.work', 'born6kms.su'],['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf'],
+        '''
+        /bin/cp hdr6km.su born6kms.su;
+        /bin/rm -rf born6kms.work; 
+        /bin/mkdir born6kms.work; 
+        cd born6kms.work;
+        '''
+        +  acd  + ' ' +  
+	'''
+	deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+	csq=../csq24ssm.rsf csq_d1=../dcsq24.rsf source=../wavelet_hdr6km.su 
+        data=../born6kms.su
+	''',
+	stdin=0,stdout=0)
+Clean(t,'born6kms.work')
 
 # Born simulation - two shots
 t=Flow(['born2shot.work', 'born2shot.su'],['wavelet_hdr2shot.su','csq24sm.rsf','dcsq24.rsf'],
@@ -176,7 +228,7 @@ t=Flow(['icsq6kmhom.work', 'icsq6kmhom.rsf'],['born6km.su', 'wavelet_hdr6km.su',
         data=../born6km.su outfile=cgne.out 
 	ResidualTol = 0.01 GradientTol = 0.01
         MaxIter = 20 dataest = est.su datares = res.su
-	datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
+	datamut=mut.su mute_slope=0.0 mute_zotime=0 mute_width=200
 
 	''',
 	stdin=0,stdout=0)

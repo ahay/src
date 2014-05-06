@@ -9,19 +9,20 @@
 using namespace std;
 
 /* helmholtz power function */
-extern "C" void helm_(integer *,   /* n1 */
-		  integer *,   /* n2 */
-		  float *,     /* d1 */
-		  float *,     /* d2 */
-		  float *,     /* w1 */
-		  float *,     /* w2 */
-		  float *,     /* p */
-		  float *,     /* datum */
-		  float *,     /* data in */
-		  float *,     /* data out */
-		  float *,     /* workspace */
-		  integer *,   /* length of workspace */
-		  integer *    /* error flag */
+extern "C" void helm_(int,         /* bc */
+		      integer *,   /* n1 */
+		      integer *,   /* n2 */
+		      float *,     /* d1 */
+		      float *,     /* d2 */
+		      float *,     /* w1 */
+		      float *,     /* w2 */
+		      float *,     /* p */
+		      float *,     /* datum */
+		      float *,     /* data in */
+		      float *,     /* data out */
+		      float *,     /* workspace */
+		      integer *,   /* length of workspace */
+		      integer *    /* error flag */
     );
 
 /* lenwork must be > 6*n1*n2+3*max(n2,2*n1)+21 */
@@ -104,6 +105,7 @@ int main(int argc, char ** argv) {
     float * refdata = NULL;
 
     int i;
+    int bc;
 
     xargc = argc;
     xargv = argv;
@@ -114,17 +116,17 @@ int main(int argc, char ** argv) {
 	exit(1);
     }
 
-    if (ps_ffcstring(*par,"in",&in)) {
+    if (ps_flcstring(*par,"in",&in)) {
 	printf("Error: HELM failed to parse in = [input RSF file]. ABORT.\n");
 	exit(1);
     }
 
-    if (ps_ffcstring(*par,"out",&out)) {
+    if (ps_flcstring(*par,"out",&out)) {
 	printf("Error: HELM failed to parse out = [output RSF file]. ABORT.\n");
 	exit(1);
     }
 
-    ps_ffcstring(*par,"ref",&ref);
+    ps_flcstring(*par,"ref",&ref);
 
     if (ps_createfile(gpar,in)) {
 	fprintf(stderr,"Error: HELM failed to parse file %s\n",in);
@@ -148,10 +150,12 @@ int main(int argc, char ** argv) {
     w_arr[1]=REAL_ONE;
     power = REAL_ZERO;
     datum = REAL_ZERO;
-    ps_fffloat(*par,"scale1",&(w_arr[0]));
-    ps_fffloat(*par,"scale2",&(w_arr[1]));
-    ps_fffloat(*par,"power",&power);
-    ps_fffloat(*par,"datum",&datum);
+    bc = 0; // 0 = Neumann on sides, !0 = Dirichlet
+    ps_flfloat(*par,"scale1",&(w_arr[0]));
+    ps_flfloat(*par,"scale2",&(w_arr[1]));
+    ps_flfloat(*par,"power",&power);
+    ps_flfloat(*par,"datum",&datum);
+    ps_flint(*par,"DirichletSides",&bc);
 
     /* initialize grid quantities */
     get_n(n_arr,g);
@@ -160,12 +164,12 @@ int main(int argc, char ** argv) {
     get_o(o_arr,g);
     get_ord(ord_arr,g);
     data_format=NULL;
-    ps_ffcstring(*gpar,"data_format",&data_format);
+    ps_flcstring(*gpar,"data_format",&data_format);
     if (!data_format) {
 	data_format=(char *)malloc(100*sizeof(char));
 	strcpy(data_format,"native_float");
     }
-    ps_ffint(*gpar,"scale",&scale);
+    ps_flint(*gpar,"scale",&scale);
 
     /* allocate data arrays */
     if (!(indata = (float *)malloc(get_datasize_grid(g)*sizeof(float)))) {
@@ -186,6 +190,8 @@ int main(int argc, char ** argv) {
     if (read_grid(&gout, out, stderr)) {
 	fprintf(stderr,"HELM: output header file = %s does not exist, or is not RSF header file\n",out);
 	fprintf(stderr," - write new RSF header, data files\n");
+	exit(1);
+	/*
 	outd = (char *)malloc(strlen(out)+10);
 	strcpy(outd,out);
 	strcat(outd,"@");
@@ -198,6 +204,7 @@ int main(int argc, char ** argv) {
 	fwrite(outdata,sizeof(float),get_datasize_grid(g),fp);
 	fflush(fp);
 	iwave_fclose(fp);
+	*/
     }
     else {
 	if (compare_grid(g,gout)) {
@@ -237,7 +244,7 @@ int main(int argc, char ** argv) {
     }
     ier = 0;
 
-    helm_(&f2c_n1,&f2c_n2,
+    helm_(bc,&f2c_n1,&f2c_n2,
 	  &(d_arr[0]),&(d_arr[1]),
 	  &(w_arr[0]),&(w_arr[1]),
 	  &power,&datum,
