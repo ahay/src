@@ -62,11 +62,8 @@ int main(int argc, char* argv[])
 	sf_floatread(trace,nbuf,in);
 
 	for (i=0; i < nbuf; i++) {
-#ifdef sun
-	    nan = (bool) !finite(trace[i]);
-#else
 	    nan = (bool) !isfinite(trace[i]);
-#endif
+
 	    if (nan) trace[i] = SF_SIG(trace[i])*clip; 
 	    else if (trace[i] >  clip) trace[i]= clip;
 	    else if (trace[i] < -clip) trace[i]=-clip;

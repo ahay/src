@@ -36,8 +36,7 @@ typedef struct{
 
 #endif
 
-/* lapack driver */
-static void sgtsv(int n,int nrhs,float *dl,float *d,float *du,float *b,int ldb)
+static void mysgtsv(int n,int nrhs,float *dl,float *d,float *du,float *b,int ldb)
 {
 	int info;
 	sgtsv_(&n,&nrhs,dl,d,du,b,&ldb,&info);
@@ -95,7 +94,7 @@ Spl *spline_init(const float *ff, /* [n] */
 			u[i] = 2. * (h[i+1] + h[i]) - h[i]*h[i] / tmp;
 			v[i] = 6. * (b[i+1] - b[i]) - h[i]*v[i-1] / tmp;
 		}
-		sgtsv(n-2,1,&h[1],u,&h[1],v,n-2);
+		mysgtsv(n-2,1,&h[1],u,&h[1],v,n-2);
 
 		/* natural boudary */
 		A[0] = f[0];

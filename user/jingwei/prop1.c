@@ -82,7 +82,7 @@ int prop1(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt,
 #ifdef SF_HAS_COMPLEX_H
 		c += wave[im][ik]*conjf(rt[ik*m2+im]);
 #else
-		c += sf_cmul(wave[im][ik],conjf(rt[ik*m2+im]));
+		c = sf_cadd(c,sf_cmul(wave[im][ik],conjf(rt[ik*m2+im])));
 #endif
 	    }
 	    cwave[ik] = c;
@@ -115,7 +115,7 @@ int prop1(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt,
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im*nzx+i]*wave2[im][j];
 #else
-		    c += sf_cmul(lt[im*nzx+i], wave2[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im*nzx+i], wave2[im][j]));
 #endif
 		}
 		curr[j] = c;
@@ -138,7 +138,7 @@ int prop1(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt,
 #ifdef SF_HAS_COMPLEX_H
 	    output[i] += input[i]*reg; 
 #else
-	    output[i] += sf_crmul(input[i],reg);
+	    output[i] = sf_cadd(output[i],sf_crmul(input[i],reg));
 #endif
 	}
     }

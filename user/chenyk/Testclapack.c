@@ -82,8 +82,11 @@ int main(void)
       {  printf("ca [%d][0]=%.3f+i%.3f, ca [%d][1]=%.3f+i%.3f, ca [%d][2]=%.3f+i%.3f",j,ca[j][0].r,ca[j][0].i,j,ca[j][1].r,ca[j][1].i,j,ca[j][2].r,ca[j][2].i); printf("\n");}
 
 	printf("cb [0]=%.3f+i%.3f, cb [1]=%.3f+i%.3f, cb [2]=%.3f+i%.3f",cb[0].r,cb[0].i,cb[1].r,cb[1].i,cb[2].r,cb[2].i);printf("\n");
+#ifdef HAVE_MKL
+    cgesv_(&N, &nrhs, (MKL_Complex8 *) ca[0], &lda, ipiv, (MKL_Complex8 *) cb, &ldb, &info);
+#else
     cgesv_(&N, &nrhs, (sf_complex*) ca[0], &lda, ipiv, (sf_complex*) cb, &ldb, &info);
-
+#endif
 
     printf("cx [0]=%.3f+i%.3f, cx [1]=%.3f+i%.3f, cx [2]=%.3f+i%.3f",cb[0].r,cb[0].i,cb[1].r,cb[1].i,cb[2].r,cb[2].i);printf("\n");
 /*************************************************************************************************/
@@ -105,7 +108,11 @@ int main(void)
         printf("ca[%d][0]=%.3f+i%.3f, ca[%d][1]=%.3f+i%.3f, ca[%d][2]=%.3f+i%.3f",j,crealf(ca1[j][0]),cimagf(ca1[j][0]),j,crealf(ca1[j][1]),cimagf(ca1[j][1]),j,crealf(ca1[j][2]),cimagf(ca1[j][2])); printf("\n");
 
 	printf("cb[0]=%.3f+i%.3f, cb[1]=%.3f+i%.3f, cb[2]=%.3f+i%.3f",crealf(cb1[0]),cimagf(cb1[0]),crealf(cb1[1]),cimagf(cb1[1]),crealf(cb1[2]),cimagf(cb1[2])); printf("\n"); */
+#ifdef HAVE_MKL
+    cgesv_(&N, &nrhs, (MKL_Complex8 *) ca1[0], &lda, ipiv, (MKL_Complex8 *) cb1, &ldb, &info);
+#else
     cgesv_(&N, &nrhs, ca1[0], &lda, ipiv, cb1, &ldb, &info);
+#endif
 
     printf("cx1[0]=%.3f+i%.3f, cx1[1]=%.3f+i%.3f, cx1[2]=%.3f+i%.3f",crealf(cb1[0]),cimagf(cb1[0]),crealf(cb1[1]),cimagf(cb1[1]),crealf(cb1[2]),cimagf(cb1[2]));printf("\n");
 

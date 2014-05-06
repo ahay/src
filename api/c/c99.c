@@ -298,10 +298,13 @@ strtoull(const char *ptr, const char **endptr, int base)
 	return ret;
 }
 
-
-#define finite(x) isfinite(x)
 #endif
 /*^*/
+
+#ifdef sun
+extern int finite(double);
+#define isfinite(x) finite(x)
+#endif
 
 #endif
 /*^*/
