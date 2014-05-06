@@ -61,15 +61,15 @@ def param(par):
         if(dx==0.0): par['iratio2d']=1.0
         else:        par['iratio2d']=1.0*(dz)/(dx)
     if(not par.has_key('iheight2d')):
-        if(par['iratio2d']>=0.8): par['iheight2d']=10
-        else:                     par['iheight2d']=12*par['iratio2d']
+        if(par['iratio2d']>=0.8): par['iheight2d']=12
+        else:                     par['iheight2d']=14*par['iratio2d']
             
     if(not par.has_key('dratio2d')):
         par['dratio2d']=par['iratio2d']
 
     if(not par.has_key('dheight2d')):
-#       par['dheight2d']=par['iheight2d']
-       par['dheight2d']=12*par['dratio2d']
+       par['dheight2d']=par['iheight2d']
+       #       par['dheight2d']=10*par['dratio2d']
 
     if((dx+dy) == 0.0)  : yxratio=1.0
     else                : yxratio=1.0*dx/(dx+dy)
@@ -95,7 +95,7 @@ def param(par):
     else:                  par['dheight3d']=12*par['dratio3d']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=8 labelfat=5 titlesz=12 titlefat=3 xll=2.5 yll=1.5 ' + ' '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1.5 ' + ' '
     
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
@@ -289,7 +289,7 @@ def specplot(custom,par):
     graph title=""
     min1=%g max1=%g
     min2=0 max2=+1 
-    plotfat=5 plotcol=5
+    plotfat=8 plotcol=6
     label1=%s unit1=%s
     label2="" unit2=""
     screenratio=0.3 screenht=4
