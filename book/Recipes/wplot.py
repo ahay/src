@@ -276,7 +276,7 @@ def waveplot(custom,par):
     plotfat=8 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
-    screenratio=0.3 screenht=3
+    screenratio=0.3 screenht=4
     %s
     ''' % (par['tmin'],par['tmax'],
            par['lt'],par['ut'],
@@ -292,7 +292,7 @@ def specplot(custom,par):
     plotfat=5 plotcol=5
     label1=%s unit1=%s
     label2="" unit2=""
-    screenratio=0.3 screenht=4.5
+    screenratio=0.3 screenht=4
     %s
     ''' % (par['fmin'],par['fmax'],
            par['lf'],par['uf'],
