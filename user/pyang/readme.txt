@@ -88,6 +88,12 @@ Depends on:	ctoeplitz_reg.c, myradon2.c
 Test file: 	/book/xjtu/test/myradon2/SConstruct
 NB: 	Myradon1.c is not tested yet!
 
+10) Angle gather (ADCIG) extraction using Poynting vector
+Main: 		Mrtmadcig.c
+Test file: 
+NB: ADCIG computation is much more expensive than RTM imaging.
+An MPI version of this program is in preparation!
+
 
 ===================================================================
 The following codes are under construction. Be careful!
