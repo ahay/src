@@ -33,8 +33,8 @@ effective boundary saving strategy used!
 #endif
 
 static bool 	csdgather; 	// common shot gather (CSD) or not 
-static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng;
-static float 	fm, dt, dz, dx, _dz, _dx, vmute;
+static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, noa;
+static float 	fm, dt, dz, dx, _dz, _dx, vmute, aunit;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -244,13 +244,22 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 {
 	int i1, i2;
 	if(read){
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(i1,i2)			\
+	shared(nz,nx,nb,vz,bndr)
+#endif
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<4; i1++)
 		{	
 			vz[i2+nb][i1+nb]=bndr[i1+8*i2];
 			vz[i2+nb][i1+nz+nb-4]=bndr[i1+4+8*i2];
 		}
-
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(i1,i2)			\
+	shared(nz,nx,nb,vx,bndr)
+#endif
 		for(i2=0; i2<4; i2++)
 		for(i1=0; i1<nz; i1++)
 		{
@@ -258,13 +267,22 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 			vx[i2+nx+nb-4][i1+nb]=bndr[8*nx+i1+nz*(i2+4)];
 		}
 	}else{	
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(i1,i2)			\
+	shared(nz,nx,nb,vz,bndr)
+#endif
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<4; i1++)
 		{	
 			bndr[i1+8*i2]=vz[i2+nb][i1+nb];
 			bndr[i1+4+8*i2]=vz[i2+nb][i1+nz+nb-4];
 		}
-
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(i1,i2)			\
+	shared(nz,nx,nb,vx,bndr)
+#endif
 		for(i2=0; i2<4; i2++)
 		for(i1=0; i1<nz; i1++)
 		{
@@ -333,23 +351,40 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, i
 }
 
 
-
-
-void extract_adcig(float **sp, float **gp, float **num, float **den)
+void compute_adcig(float ***adcig, float **sp, float **svz, float **svx, float **gp, float **gvz, float **gvx)
 /*< compute cross-correlation >*/
 {
-	int ix,iz;
+	int ix,iz,ia;
+	float Ssx, Ssz, Sgx, Sgz,ps,pg,b1,b2,a;
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(ix,iz)			\
-    shared(num,den,sp,gp,nx,nz,nb)  
+#pragma omp parallel for default(none)			\
+    private(ix,iz,ia,Ssx,Ssz,Sgx,Sgz,b1,b2,a,ps,pg)	\
+    shared(adcig,sp,svz,svx,gp,gvz,gvx,nx,nz,nb,noa,aunit)  
 #endif 
 	for(ix=0; ix<nx; ix++)
 	for(iz=0; iz<nz; iz++)
 	{
-		num[ix][iz]+=sp[ix+nb][iz+nb]*gp[ix+nb][iz+nb];
-		den[ix][iz]+=sp[ix+nb][iz+nb]*sp[ix+nb][iz+nb];
+		ps=sp[ix+nb][iz+nb];
+		pg=gp[ix+nb][iz+nb];
+		// Poynting vector for source: 	Ss=(Ssx,Ssz)
+		Ssx=svx[ix+nb][iz+nb]*ps;
+		Ssz=svz[ix+nb][iz+nb]*ps;
+		// Poynting vector for receiver: Sg=(Sgx,Sgz)
+		Sgx=gvx[ix+nb][iz+nb]*pg;
+		Sgz=gvz[ix+nb][iz+nb]*pg;
+		
+		b1=sqrtf(Ssx*Ssx+Ssz*Ssz);	// |Ss|
+		b2=sqrtf(Sgx*Sgx+Sgz*Sgz);	// |Sg|
+		a=b1*b2;			// |Ss||Sg|
+		if (a>FLT_EPSILON) a=(Ssx*Sgx+Ssz*Sgz)/a;	// a=Ss*Sg/(|Ss||Sg|)
+		else a=0.0f;
+
+		a=0.5*acosf(a);
+		ia=(int)(a/aunit);
+		if(ia==noa) ia=ia-1;
+		a=(ia+1)*aunit;
+		adcig[ia][ix][iz]+=ps*pg/sinf(a);
 	}
 }
 
@@ -375,13 +410,14 @@ void cross_correlation(float **sp, float **gp, float **num, float **den)
 
 int main(int argc, char* argv[])
 {
-	int it, is,i1,i2, tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+	int it,ia,is,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, vmax;
 	float *wlt, *d2x, *d1z, *bndr;
-	float **v0, **vv, **dcal, **tmpw, **den, **num, **img;
+	float **v0, **vv, **dcal;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
-    	sf_file vmodl, image, adcig; /* I/O files */
+	float ***adcig;
+    	sf_file vmodl, rtmadcig; /* I/O files */
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -390,8 +426,7 @@ int main(int argc, char* argv[])
 
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
-    	image = sf_output("out");  /* RTM image */ 
-    	adcig = sf_output("ADCIG");  /* ADCIG obtained by Poynting vector */
+    	rtmadcig = sf_output("out");  /* ADCIG obtained by Poynting vector */
 
     	/* get parameters for RTM */
     	if (!sf_histint(vmodl,"n1",&nz)) sf_error("no n1");
@@ -406,6 +441,7 @@ int main(int argc, char* argv[])
     	if (!sf_getint("ns",&ns))   sf_error("no ns");	/* total shots */
     	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */
     	if (!sf_getint("nb",&nb))   nb=20; /* thickness of split PML */
+    	if (!sf_getint("noa",&noa)) noa=30; /* number of angle gathers*/
 	
     	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
     	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
@@ -420,16 +456,17 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
 	if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);/* number of deleyed time samples to mute */
 
-    	sf_putint(adcig,"n1",ng);
-    	sf_putint(adcig,"n2",nt);
-    	sf_putfloat(adcig,"d1",dt);
-    	sf_putfloat(adcig,"d2",dx);
-	sf_putfloat(adcig,"n3",ns);
+    	sf_putint(rtmadcig,"n1",nz);
+    	sf_putint(rtmadcig,"n2",nx);
+    	sf_putfloat(rtmadcig,"d1",dz);
+    	sf_putfloat(rtmadcig,"d2",dx);
+	sf_putfloat(rtmadcig,"n3",noa);
 
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
+	aunit=SF_PI/noa;//angle unit;
 
 	/* allocate variables */
 	wlt=sf_floatalloc(nt);
@@ -450,11 +487,8 @@ int main(int argc, char* argv[])
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
 	dcal=sf_floatalloc2(ng,nt);
-	tmpw=sf_floatalloc2(nz,nx); 	
-	num=sf_floatalloc2(nz,nx); 	
-	den=sf_floatalloc2(nz,nx); 	
-	img=sf_floatalloc2(nz,nx); 	
 	bndr=(float*)malloc(nt*8*(nx+nz)*sizeof(float));
+	adcig=sf_floatalloc3(nz,nx,noa);
 
 	/* initialize variables */
 	for(it=0;it<nt;it++){
@@ -492,7 +526,7 @@ int main(int argc, char* argv[])
 		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-	memset(img[0],0,nz*nx*sizeof(float));
+	memset(adcig[0][0],0,noa*nz*nx*sizeof(float));
 
 	for(is=0; is<ns; is++)
 	{
@@ -508,12 +542,10 @@ int main(int argc, char* argv[])
 			bndr_rw(false, svz, svx, &bndr[it*8*(nx+nz)]);
 		
 			record_seis(dcal[it], gxz, sp, ng);
-			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
+			//muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
 		}
 
 		wavefield_init(gp, gpz, gpx, gvz, gvx);
-		memset(num[0],0,nz*nx*sizeof(float));
-		memset(den[0],0,nz*nx*sizeof(float));
 		for(it=nt-1; it>-1; it--)
 		{
 			bndr_rw(true, svz, svx, &bndr[it*8*(nx+nz)]);	
@@ -522,15 +554,15 @@ int main(int argc, char* argv[])
 	
 			add_source(gxz, gp, ng, dcal[it], true);
 			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);
-	
-			cross_correlation(sp, gp, num, den);
+
+			compute_adcig(adcig, sp, svz, svx, gp, gvz, gvx);
 		}
-		
-		for(i2=0; i2<nx; i2++)
-		for(i1=0; i1<nz; i1++)
-			img[i2][i1]+=num[i2][i1];// /(den[i2][i1]+FLT_EPSILON);
 	}
-	sf_floatwrite(img[0],nz*nx,image);
+	for(ia=0; ia<noa; ia++)
+	for(i2=0; i2<nx; i2++)
+	for(i1=0; i1<nz; i1++)
+		adcig[ia][i2][i1]=adcig[ia][i2][i1]*vv[i2][i1];
+	sf_floatwrite(adcig[0][0],noa*nz*nx,rtmadcig);
 
 	free(wlt);
 	free(*v0); free(v0);
@@ -549,11 +581,8 @@ int main(int argc, char* argv[])
 	free(d2x);
 	free(sxz);
 	free(gxz);
-	free(*tmpw); free(tmpw);
-	free(*num); free(num);
-	free(*den); free(den);
-	free(*img); free(img);
 	free(bndr);
+	free(**adcig); free(*adcig); free(adcig);
 
     	exit(0);
 }
