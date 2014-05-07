@@ -40,7 +40,7 @@ effective boundary saving strategy used!
 
 static bool 	csdgather; 	// common shot gather (CSD) or not 
 static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, noa;
-static float 	fm, dt, dz, dx, _dz, _dx, vmute, aunit;
+static float 	fm, dt, dz, dx, _dz, _dx, vmute, da;
 
 void expand2d(float** b, float** a)
 /*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
@@ -208,7 +208,7 @@ void step_forward(float **p, float **pz, float **px, float **vz, float **vx, flo
 }
 
 
-void step_backward(float **p, float **pz, float **px, float **vz, float **vx, float **vv)
+void step_backward(float **p, float **vz, float **vx, float **vv)
 /*< backward reconstruction step >*/
 {
 	int i1, i2;
@@ -217,17 +217,16 @@ void step_backward(float **p, float **pz, float **px, float **vz, float **vx, fl
 #ifdef _OPENMP
 #pragma omp parallel for default(none)			\
 	private(i1,i2,diff1, diff2, tmp)		\
-	shared(nz, nx, nb, vv, p, pz, px, vz, vx, dt, _dz, _dx)
+	shared(nz, nx, nb, vv, p, vz, vx, dt, _dz, _dx)
 #endif
-	for(i2=nb+2; i2<nx+nb-1; i2++)
-	for(i1=nb+2; i1<nz+nb-1; i1++)
+	for(i2=nb; i2<nx+nb; i2++)
+	for(i1=nb; i1<nz+nb; i1++)
 	{
 		tmp=vv[i2][i1]; tmp=tmp*tmp;
 		diff1=1.125*(vz[i2][i1]-vz[i2][i1-1])-0.041666666666667*(vz[i2][i1+1]-vz[i2][i1-2]);
 		diff2=1.125*(vx[i2][i1]-vx[i2-1][i1])-0.041666666666667*(vx[i2+1][i1]-vx[i2-2][i1]);
-		pz[i2][i1]-=dt*tmp*_dz*diff1;
-		px[i2][i1]-=dt*tmp*_dx*diff2;
-		p[i2][i1]=px[i2][i1]+pz[i2][i1];
+		tmp=tmp*(_dz*diff1+_dx*diff2);
+		p[i2][i1]-=dt*tmp;
 	}
 
 #ifdef _OPENMP
@@ -235,13 +234,15 @@ void step_backward(float **p, float **pz, float **px, float **vz, float **vx, fl
 	private(i1,i2,diff1,diff2)			\
 	shared(nz, nx, nb, p, vz, vx, dt, _dz, _dx)
 #endif
-	for(i2=nb+1; i2<nx+nb-2; i2++)
-	for(i1=nb+1; i1<nz+nb-2; i1++)
+	for(i2=nb; i2<nx+nb; i2++)
+	for(i1=nb; i1<nz+nb; i1++)
 	{
 		diff1=1.125*(p[i2][i1+1]-p[i2][i1])-0.041666666666667*(p[i2][i1+2]-p[i2][i1-1]);
 		diff2=1.125*(p[i2+1][i1]-p[i2][i1])-0.041666666666667*(p[i2+2][i1]-p[i2-1][i1]);
-		vz[i2][i1]-=dt*_dz*diff1;
-		vx[i2][i1]-=dt*_dx*diff2;
+		diff1*=_dz;
+		diff2*=_dx;
+		vz[i2][i1]-=dt*diff1;
+		vx[i2][i1]-=dt*diff2;
 	}
 }
 
@@ -258,8 +259,8 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<4; i1++)
 		{	
-			vz[i2+nb][i1+nb]=bndr[i1+8*i2];
-			vz[i2+nb][i1+nz+nb-4]=bndr[i1+4+8*i2];
+			vz[i2+nb][i1+nb-2]=bndr[i1+8*i2];
+			vz[i2+nb][i1+nz+nb-2]=bndr[i1+4+8*i2];
 		}
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
@@ -269,8 +270,8 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 		for(i2=0; i2<4; i2++)
 		for(i1=0; i1<nz; i1++)
 		{
-			vx[i2+nb][i1+nb]=bndr[8*nx+i1+nz*i2];
-			vx[i2+nx+nb-4][i1+nb]=bndr[8*nx+i1+nz*(i2+4)];
+			vx[i2+nb-2][i1+nb]=bndr[8*nx+i1+nz*i2];
+			vx[i2+nx+nb-2][i1+nb]=bndr[8*nx+i1+nz*(i2+4)];
 		}
 	}else{	
 #ifdef _OPENMP
@@ -281,8 +282,8 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<4; i1++)
 		{	
-			bndr[i1+8*i2]=vz[i2+nb][i1+nb];
-			bndr[i1+4+8*i2]=vz[i2+nb][i1+nz+nb-4];
+			bndr[i1+8*i2]=vz[i2+nb][i1+nb-2];
+			bndr[i1+4+8*i2]=vz[i2+nb][i1+nz+nb-2];
 		}
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
@@ -292,8 +293,8 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 		for(i2=0; i2<4; i2++)
 		for(i1=0; i1<nz; i1++)
 		{
-			bndr[8*nx+i1+nz*i2]=vx[i2+nb][i1+nb];
-			bndr[8*nx+i1+nz*(i2+4)]=vx[i2+nx+nb-4][i1+nb];
+			bndr[8*nx+i1+nz*i2]=vx[i2+nb-2][i1+nb];
+			bndr[8*nx+i1+nz*(i2+4)]=vx[i2+nx+nb-2][i1+nb];
 		}
 	}
 }
@@ -357,73 +358,50 @@ void muting(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int sxc, int jgx, i
 }
 
 
-void compute_adcig(float ***adcig, float **sp, float **svz, float **svx, float **gp, float **gvz, float **gvx)
-/*< compute cross-correlation >*/
+
+void cross_correlation(float ***num, float **den, float **sp, float **gp, float **svz, float **svx, float **gvz, float **gvx)
+/*< cross correlation and poynting vector computing >*/
 {
-	int ix,iz,ia;
-	float Ssx, Ssz, Sgx, Sgz,ps,pg,b1,b2,a;
+	int i1, i2, ia;
+	float Ssz,Ssx,Sgz,Sgx,b1, b2, a;	
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none)			\
-    private(ix,iz,ia,Ssx,Ssz,Sgx,Sgz,b1,b2,a,ps,pg)	\
-    shared(adcig,sp,svz,svx,gp,gvz,gvx,nx,nz,nb,noa,aunit)  
-#endif 
-	for(ix=0; ix<nx; ix++)
-	for(iz=0; iz<nz; iz++)
+	private(i1,i2,ia,Ssz,Ssx,Sgz,Sgx,b1,b2,a)	\
+	shared(num,den,sp,gp,svz,svx,gvz,gvx,noa,nb,nz,nx,da)
+#endif
+	for(i2=0; i2<nx; i2++)
+	for(i1=0; i1<nz; i1++)
 	{
-		ps=sp[ix+nb][iz+nb];
-		pg=gp[ix+nb][iz+nb];
-		// Poynting vector for source: 	Ss=(Ssx,Ssz)
-		Ssx=svx[ix+nb][iz+nb]*ps;
-		Ssz=svz[ix+nb][iz+nb]*ps;
-		// Poynting vector for receiver: Sg=(Sgx,Sgz)
-		Sgx=gvx[ix+nb][iz+nb]*pg;
-		Sgz=gvz[ix+nb][iz+nb]*pg;
-		
-		b1=sqrtf(Ssx*Ssx+Ssz*Ssz);	// |Ss|
-		b2=sqrtf(Sgx*Sgx+Sgz*Sgz);	// |Sg|
-		a=b1*b2;			// |Ss||Sg|
-		if (a>FLT_EPSILON) a=(Ssx*Sgx+Ssz*Sgz)/a;	// a=Ss*Sg/(|Ss||Sg|)
-		else a=0.0f;
-
+		Ssz=1.e5*sp[i2+nb][i1+nb]*svz[i2+nb][i1+nb];
+		Ssx=1.e5*sp[i2+nb][i1+nb]*svx[i2+nb][i1+nb];
+		Sgz=1.e5*gp[i2+nb][i1+nb]*gvz[i2+nb][i1+nb];
+		Sgx=1.e5*gp[i2+nb][i1+nb]*gvx[i2+nb][i1+nb];
+		b1=Ssz*Ssz+Ssx*Ssx;//|Ss|^2
+		b2=Sgz*Sgz+Sgx*Sgx;//|Sg|^2
+		a=Ssx*Sgx+Ssz*Sgz; //<Ss,Sg>
+		a=a/sqrtf(b1*b2+FLT_EPSILON);	
+	
 		a=0.5*acosf(a);
-		ia=(int)(a/aunit);
+		ia=(int)(a/da);
 		if(ia==noa) ia=ia-1;
-		a=(ia+1)*aunit;
-		adcig[ia][ix][iz]+=ps*pg/sinf(a);
+		num[i2][ia][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-0.5*(a-ia*da)); //  /sinf((ia+1)*da);
+		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];
 	}
 }
 
-
-void cross_correlation(float **sp, float **gp, float **num, float **den)
-/*< compute cross-correlation >*/
-{
-	int ix,iz;
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(ix,iz)			\
-    shared(num,den,sp,gp,nx,nz,nb)  
-#endif 
-	for(ix=0; ix<nx; ix++)
-	for(iz=0; iz<nz; iz++)
-	{
-		num[ix][iz]+=sp[ix+nb][iz+nb]*gp[ix+nb][iz+nb];
-		den[ix][iz]+=sp[ix+nb][iz+nb]*sp[ix+nb][iz+nb];
-	}
-}
 
 
 int main(int argc, char* argv[])
 {
-	int it,ia,is,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+	int it,kt,ia,is,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, vmax;
 	float *wlt, *d2x, *d1z, *bndr;
-	float **v0, **vv, **dcal;
+	float **v0, **vv, **dcal, **den;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
-	float ***adcig;
-    	sf_file vmodl, rtmadcig; /* I/O files */
+	float ***num, ***adcig;
+    	sf_file vmodl, rtmadcig, vecx,vecz; /* I/O files */
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -433,6 +411,8 @@ int main(int argc, char* argv[])
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
     	rtmadcig = sf_output("out");  /* ADCIG obtained by Poynting vector */
+	vecx=sf_output("vecx");
+	vecz=sf_output("vecz");
 
     	/* get parameters for RTM */
     	if (!sf_histint(vmodl,"n1",&nz)) sf_error("no n1");
@@ -446,8 +426,9 @@ int main(int argc, char* argv[])
     	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
     	if (!sf_getint("ns",&ns))   sf_error("no ns");	/* total shots */
     	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */
-    	if (!sf_getint("nb",&nb))   nb=20; /* thickness of split PML */
+    	if (!sf_getint("nb",&nb))   nb=20;  /* thickness of split PML */
     	if (!sf_getint("noa",&noa)) noa=30; /* number of angle gathers*/
+    	if (!sf_getint("kt",&kt))   kt=200; /* record poynting vector at kt */
 	
     	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
     	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
@@ -462,17 +443,19 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
 	if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);/* number of deleyed time samples to mute */
 
-    	sf_putint(rtmadcig,"n1",nz);
-    	sf_putint(rtmadcig,"n2",nx);
-    	sf_putfloat(rtmadcig,"d1",dz);
-    	sf_putfloat(rtmadcig,"d2",dx);
-	sf_putfloat(rtmadcig,"n3",noa);
-
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	aunit=SF_PI/noa;//angle unit;
+	da=SF_PI/noa;//angle unit, rad;
+
+    	sf_putint(rtmadcig,"n1",nz);
+	sf_putfloat(rtmadcig,"n2",noa);
+    	sf_putint(rtmadcig,"n3",nx);
+    	sf_putfloat(rtmadcig,"d1",dz);
+	sf_putfloat(rtmadcig,"d2",90./noa);
+    	sf_putfloat(rtmadcig,"d3",dx);
+	sf_putfloat(rtmadcig,"o2",0);
 
 	/* allocate variables */
 	wlt=sf_floatalloc(nt);
@@ -494,7 +477,9 @@ int main(int argc, char* argv[])
 	gxz=sf_intalloc(ng);
 	dcal=sf_floatalloc2(ng,nt);
 	bndr=(float*)malloc(nt*8*(nx+nz)*sizeof(float));
-	adcig=sf_floatalloc3(nz,nx,noa);
+	den=sf_floatalloc2(nz,nx);
+	num=sf_floatalloc3(nz,noa,nx);
+	adcig=sf_floatalloc3(nz,noa,nx);
 
 	/* initialize variables */
 	for(it=0;it<nt;it++){
@@ -548,26 +533,43 @@ int main(int argc, char* argv[])
 			bndr_rw(false, svz, svx, &bndr[it*8*(nx+nz)]);
 		
 			record_seis(dcal[it], gxz, sp, ng);
-			//muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
+			muting(dcal[it], gzbeg, szbeg, gxbeg, sxbeg+is*jsx, jgx, it, tdmute);
 		}
 
 		wavefield_init(gp, gpz, gpx, gvz, gvx);
+		memset(num[0][0],0,noa*nz*nx*sizeof(float));
+		memset(den[0],0,nz*nx*sizeof(float));
 		for(it=nt-1; it>-1; it--)
-		{
-			bndr_rw(true, svz, svx, &bndr[it*8*(nx+nz)]);	
-			step_backward(sp, spz, spx, svz, svx, vv);
-			add_source(&sxz[is], sp, 1, &wlt[it], false);
-	
+		{	
 			add_source(gxz, gp, ng, dcal[it], true);
-			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);
+			step_forward(gp, gpz, gpx, gvz, gvx, vv, d1z, d2x);	
 
-			compute_adcig(adcig, sp, svz, svx, gp, gvz, gvx);
-		}
+			if(it==kt)
+			{
+				window2d(v0,svx);
+				sf_floatwrite(v0[0],nz*nx,vecx);
+				window2d(v0,svz);
+				sf_floatwrite(v0[0],nz*nx,vecz);
+			}
+
+
+			bndr_rw(true, svz, svx, &bndr[it*8*(nx+nz)]);	
+			cross_correlation(num, den, sp, gp, svz, svx, gvz, gvx);
+
+			step_backward(sp, svz, svx, vv);
+			add_source(&sxz[is], sp, 1, &wlt[it], false);
+		}	
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+    private(i1,i2,ia)			\
+    shared(adcig,num,den,vv,da,nz,nx,noa)  
+#endif 	
+		for(i2=0; i2<nx; i2++)
+		for(ia=0; ia<noa; ia++)
+		for(i1=0; i1<nz; i1++)
+			adcig[i2][ia][i1]+=num[i2][ia][i1]*vv[i2][i1]/((den[i2][i1]+1.e-15)*sinf((ia+1)*da));
 	}
-	for(ia=0; ia<noa; ia++)
-	for(i2=0; i2<nx; i2++)
-	for(i1=0; i1<nz; i1++)
-		adcig[ia][i2][i1]=adcig[ia][i2][i1]*vv[i2][i1];
 	sf_floatwrite(adcig[0][0],noa*nz*nx,rtmadcig);
 
 	free(wlt);
@@ -588,6 +590,8 @@ int main(int argc, char* argv[])
 	free(sxz);
 	free(gxz);
 	free(bndr);
+	free(*den); free(den);
+	free(**num); free(*num); free(num);
 	free(**adcig); free(*adcig); free(adcig);
 
     	exit(0);
