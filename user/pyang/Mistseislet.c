@@ -135,8 +135,9 @@ int main(int argc, char *argv[])
 
 	if (verb)    sf_warning("iteration %d;",iter+1);
     }
-
     sf_floatwrite(drec,n1*n2,Fout);
+
+    seislet_close();
     exit(0);
 }
 
