@@ -196,6 +196,8 @@ int main(int argc, char *argv[])
 
     	sf_floatwrite(drec, nt*nx*2, out);
 
+	sf_radon2_close();
+
 	free(p);
 	free(xx);
     	free(dobs);
