@@ -9,22 +9,10 @@ x1=exp(j*2*pi* t.^2);%sin(2*pi* t.^2)
 x2=exp(j*2*pi*5*t.^2);%sin(2*pi*5*t.^2)
 x =x1 +x2;
 
-
-
-
 % -------------decomposition-----------------------
 L=100;
 C=0.01;
-XX=dlct(x, C, L,N);
-u=fftshift(abs(XX),1);
-u=abs(XX);
-figure(1),clf
-subplot(121)
-mesh(u),shading interp
-%pcolor(u), shading interp
-xlabel('l:[-L/2,L/2-1]')
-ylabel('k:[-N/2:N/2-1]')
-title('(a) mesh plot of DLCT')
+
 
 mask=ones(N,L);
 for ix=1:L
@@ -34,71 +22,68 @@ for ix=1:L
         end
     end
 end
-XX=ifftshift(mask.*fftshift(XX,1),1);
+
+XX1=dlct(x, C, L,N);
+[Y,ind]=sort(abs(XX1),'ascend');
+thr=Y(floor(0.1*N*L));
+XX=thresholding(XX1,thr);
+XX=ifftshift(mask.*fftshift(XX1,1),1);
+
+
+u=fftshift(abs(XX1),1);
+figure(2),clf
+subplot(121)
+mesh(u),shading interp
+xlabel('l:[-L/2,L/2-1]')
+ylabel('k:[-N/2:N/2-1]')
+title('mesh plot of DLCT')
 u1=fftshift(abs(XX),1);
 subplot(122)
 mesh(u1),shading interp
-title('(b) masking the DLCT')
-set(gcf,'PaperPosition',[0 0 12 6])
-% print -depsc mesh_dlct.eps
 
-
-
-figure(2),clf
-subplot(311)
-plot(t,real(x))
-xlabel('Time:s'),ylabel('Amplitude')
-title('(a) original chirp signal')
-
-subplot(312)
-plot(t,real(x1))
-xlabel('Time:s'),ylabel('Amplitude')
-title('(b) signal component 1')
-set(gca,'CLim',[-1,1])
-
-subplot(313)
-plot(t,real(x2))
-xlabel('Time:s'),ylabel('Amplitude')
-title('(c) signal component 2')
-set(gca,'CLim',[-1,1])
-
-
-set(gcf,'PaperPosition',[0 0 12 6])
-% print -depsc chirps.eps
 
 
 
 %------------------- reconstruct ---------------------
 x_rec=idlct(XX,C,L,N);
+% figure(3),clf
+% %plot(real(x_rec))
+% plot(real(x-x_rec))
+% title('reconstruction error')
 
 figure(4),clf
-subplot(411)
-plot(t,real(x1))
+subplot(511)
+plot(real(x1))
 xlabel('Time:s'),ylabel('Amplitude')
-title('(a) signal component 1')
+title('signal component 1')
 set(gca,'CLim',[-1,1])
 
-subplot(412)
-plot(t,real(x_rec))
+subplot(512)
+plot(real(x_rec))
 xlabel('Time:s'),ylabel('Amplitude')
-title('(b) estimated component 1')
+title('estimated component 1')
 set(gca,'yLim',[-1,1])
 
-subplot(413)
-plot(t,real(x2))
+subplot(513)
+plot(real(x2))
 xlabel('Time:s'),ylabel('Amplitude')
-title('(c) signal component 2')
+title('signal component 2')
 set(gca,'CLim',[-1,1])
 
-subplot(414)
-plot(t,real(x-x_rec))
+subplot(514)
+plot(real(x-x_rec))
 xlabel('Time:s'),ylabel('Amplitude')
-title('(d) estimated component 2')
+title('estimated component 2')
 set(gca,'yLim',[-1,1])
 
-set(gcf,'PaperPosition',[0 0 12 6])
-% print -depsc estimated.esp
+subplot(515)
+plot(real(x))
+xlabel('Time:s'),ylabel('Amplitude')
+title('original chirp signal')
 
+
+function y=thresholding(x,thr)
+y=x.*(abs(x)>thr);
 
 
 function y=dlct(x,C, L,N)
@@ -120,8 +105,3 @@ for l=-L/2:L/2-1
 end
 x=sum(g.*exp(j*2*pi*C*n'.^2*[-L/2:L/2-1]/N),2)/L;
 x=real(x);
-
-
-
-
-
