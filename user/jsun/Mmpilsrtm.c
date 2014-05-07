@@ -19,7 +19,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <complex.h>
 #include <rsf.h>
 #include <mpi.h>
 #include <math.h>
@@ -118,7 +117,11 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
     /* FFT centering */
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:-inp[i2*n1+i1];
+#else
+		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:sf_cneg(inp[i2*n1+i1]);
+#endif
 	  /*
 #ifdef SF_HAS_COMPLEX_H
 		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:(-1*inp[i2*n1+i1]);
@@ -302,11 +305,14 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 /*< low-rank one-step forward modeling >*/
 {
     int it,iz,im,ik,ix,i,j;     /* index variables */
-    int nxb,nzb,gpz,gpx,gpl,snpint,dt,nth=1,wfit;
+    int nxb,nzb,gpz,gpx,gpl,snpint,dt,wfit;
     int nt,nz,nx, nk, nz2, nx2, nzx2;
     sf_complex c;
     sf_complex *cwave, *cwavem;
     sf_complex **wave, *curr;
+#ifdef _OPENMP
+    int nth;
+#endif
 
     nx = geop->nx;
     nz = geop->nz;
@@ -394,7 +400,7 @@ int lrosfor2(sf_complex ***wavfld, float **sill, sf_complex **rcd, bool verb,
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];
 #else
-		    c += sf_cmul(lt[im][i], wave[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif
 		}
 		curr[j] = c;
@@ -502,7 +508,11 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 #endif
         for (ix=0; ix<gpl; ix++)  {
 	  j = (gpz+geop->top)+(ix+gpx+geop->lft)*nz2; /* padded grid */
+#ifdef SF_HAS_COMPLEX_H
 	  curr[j]+=rcd[ix][it]; /* data injection */
+#else
+	  curr[j]=sf_cadd(curr[j],rcd[ix][it]);
+#endif
 	}
 	/*matrix multiplication*/
 	cfft2(curr,cwave);
@@ -532,7 +542,7 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 #ifdef SF_HAS_COMPLEX_H
 	      c += lt[im][i]*wave[im][j];
 #else
-	      c += sf_cmul(lt[im][i], wave[im][j]);
+	      c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif
 	    }
 	    curr[j] = c;
@@ -550,7 +560,7 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 #ifdef SF_HAS_COMPLEX_H
 	      ccr[ix][iz] += conjf(wavfld[wfit][ix][iz])*curr[j];
 #else
-	      ccr[ix][iz] += sf_cmul(conjf(wavfld[wfit][ix][iz]),curr[j]);
+	      ccr[ix][iz] = sf_cadd(ccr[ix][iz],sf_cmul(conjf(wavfld[wfit][ix][iz]),curr[j]));
 #endif
 	    }
 	  }
@@ -602,9 +612,9 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 	    for (iz=0; iz<nz; iz++) {
 	      j = (iz+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
 #ifdef SF_HAS_COMPLEX_H
-	      curr[j] += (wavfld[wfit][ix][iz])*ccr[ix][iz];//adjoint of ccr[ix][iz] += conjf(wavfld[wfit][ix][iz])*curr[j]; ???
+	      curr[j] += (wavfld[wfit][ix][iz])*ccr[ix][iz];/* adjoint of ccr[ix][iz] += conjf(wavfld[wfit][ix][iz])*curr[j]; ??? */
 #else
-	      curr[j] += sf_cmul((wavfld[wfit][ix][iz]),ccr[ix][iz]);
+	      curr[j] = sf_cadd(curr[j],sf_cmul((wavfld[wfit][ix][iz]),ccr[ix][iz]));
 #endif
 	    }
 	  }
@@ -637,7 +647,7 @@ int lrosback2(sf_complex **img, sf_complex ***wavfld, float **sill, sf_complex *
 #ifdef SF_HAS_COMPLEX_H
 	    c += wave[im][ik]*conjf(rt[ik][im]);
 #else
-	    c += sf_cmul(wave[im][ik],conjf(rt[ik][im])); //complex multiplies complex
+	    c = sf_cadd(c,sf_cmul(wave[im][ik],conjf(rt[ik][im]))); 
 #endif
 	  }
 	  cwave[ik] = c;
@@ -1011,10 +1021,16 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
 #endif
-	for (ix=0; ix<nx; ix++)
-	  for (iz=0; iz<nz; iz++)
-	    imgsum[ix][iz] += img[ix][iz];
-      
+	  for (ix=0; ix<nx; ix++) {
+	      for (iz=0; iz<nz; iz++) {
+#ifdef SF_HAS_COMPLEX_H
+		  imgsum[ix][iz] += img[ix][iz];
+#else
+		  imgsum[ix][iz] = sf_cadd(imgsum[ix][iz],img[ix][iz]);
+#endif      
+	      }
+	  }
+
       if (!adj || !wantrecord) {
 	//	MPI_Barrier(MPI_COMM_WORLD);
 	if (rank==0) recvbuf = record[is*nodes][0];
@@ -1031,7 +1047,11 @@ int main(int argc, char* argv[])
     /*write record/image*/
     if (adj) {
       if (rank==0) {
+#if MPI_VERSION >= 2
 	sendbuf = (sf_complex *) MPI_IN_PLACE;
+#else /* will fail */
+	sendbuf = NULL;
+#endif 
 	recvbuf = imgsum[0];
       } else {
 	sendbuf = imgsum[0];

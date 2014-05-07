@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		c += wave[im][ik]*rt[ik][im];
 #else
-		c += sf_cmul(wave[im][ik],rt[ik][im]); //complex multiplies complex
+		c = sf_cadd(c,sf_cmul(wave[im][ik],rt[ik][im])); /* complex multiplies complex */
 #endif
 	    }
 	    cwave[ik] = c;
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		cwavem[ik] = cwave[ik]*rt[ik][im];
 #else
-		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]); //complex multiplies complex
+		cwavem[ik] = sf_cmul(cwave[ik],rt[ik][im]); /* complex multiplies complex */
 #endif
 	    }
 	    icfft2(wave2[im],cwavem);
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave2[im][j];
 #else
-		    c += sf_cmul(lt[im][i], wave2[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im][i], wave2[im][j]));
 #endif
 		}
 

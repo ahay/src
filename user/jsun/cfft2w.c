@@ -107,7 +107,11 @@ void cfft2(sf_complex *inp /* [n1*n2] */,
     /* FFT centering */
     for (i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:-inp[i2*n1+i1];
+#else
+		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:sf_cneg(inp[i2*n1+i1]);
+#endif
 	  /*
 #ifdef SF_HAS_COMPLEX_H
 		cc[i2][i1] = ((i2%2==0)==(i1%2==0))? inp[i2*n1+i1]:(-1*inp[i2*n1+i1]);

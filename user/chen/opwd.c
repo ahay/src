@@ -100,9 +100,14 @@ void opwd_freq(sf_complex dip, int nk, sf_complex**out, bool iir)
 		for(i1=-nk; i1<=nk; i1++)
 		{
 			c1 = fir_freq(-nf1, nf2, b1+nf1, 0.5*i1/nk);
-			z1 = conj(c1);	z2 = conj(c2);
+			z1 = conjf(c1);	z2 = conjf(c2);
+#ifdef SF_HAS_COMPLEX_H
 			if(iir)	out[i2+nk][i1+nk] = 1.0 - c1*c2/(z1*z2);
 			else	out[i2+nk][i1+nk] = z1*z2 - c1*c2;
+#else
+			if(iir)	out[i2+nk][i1+nk] = sf_cadd(sf_cmplx(1.0,0.0),sf_cneg(sf_cdiv(sf_cmul(c1,c2),sf_cmul(z1,z2))));
+			else	out[i2+nk][i1+nk] = sf_cadd(sf_cmul(z1,z2),sf_cneg(sf_cmul(c1,c2)));
+#endif
 		}
 	}
 

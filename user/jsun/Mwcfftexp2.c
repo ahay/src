@@ -172,7 +172,11 @@ int main(int argc, char* argv[])
 
 	for (ix=0; ix < nx; ix++) {
 	    if (mig) {
+#ifdef SF_HAS_COMPLEX_H
 		curr[ix] += dat[ix];
+#else
+		curr[ix] = sf_cadd(curr[ix],dat[ix]);
+#endif
 	    } else {
 		dat[ix] = curr[ix];
 	    }
@@ -207,7 +211,7 @@ int main(int argc, char* argv[])
 #ifdef SF_HAS_COMPLEX_H
 		    c += lft[im][i]*wave[im][j];
 #else
-		    c += sf_cmul(lft[im][i], wave[im][j]);
+		    c = sf_cadd(c,sf_cmul(lft[im][i], wave[im][j]));
 #endif	    
 		}
 

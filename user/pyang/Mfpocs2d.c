@@ -22,7 +22,6 @@
 */
 #include <rsf.h>
 #include <math.h>
-#include <complex.h>
 #include <fftw3.h>
 
 #ifdef _OPENMP
