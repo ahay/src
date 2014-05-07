@@ -54,7 +54,7 @@ void forward_dlct(int N 	/* length of the signal */,
 #endif	
 	for(n=0;n<N;n++){
 #ifdef SF_HAS_COMPLEX_H
-	  p[n]=d[n]*cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N));
+	  p[n]=d[n]*cexpf(-I*2*SF_PI*C*l*n*n/N);
 #else
 	  p[n]=sf_crmul(d[n],cexpf(sf_cmplx(0, -2*SF_PI*C*l*n*n/N)));
 #endif
@@ -102,7 +102,7 @@ void inverse_dlct(int N 	/* length of the signal */,
 #endif	
 	for(n=0;n<N;n++){	
 #ifdef SF_HAS_COMPLEX_H	
-	  d[n]+=crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L));
+	  d[n]+=crealf(q[n]*cexpf(I*2*SF_PI*C*l*n*n/N)/sqrtf(N*L));
 #else
 	  d[n]=sf_cadd(d[n],crealf(q[n]*cexpf(sf_cmplx(0, 2*SF_PI*C*l*n*n/N))/sqrtf(N*L)));
 #endif

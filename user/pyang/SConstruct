@@ -5,10 +5,10 @@ import bldutil
 # C main programs
 progs = '''
 pocs3d fpocs2d fpocs3d mwni2d pocs
-pocsseislet istseislet mcaseislet matflip 
+pocsseislet istseislet mcaseislet matflip mcaradon
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 modeling2d rtm2d lsrtm2d Testadcig
-dlct dlct2 myradon1 myradon2 
+dlct dlctk myradon1 myradon2 
 cohn
 '''
 # gensyn5d
