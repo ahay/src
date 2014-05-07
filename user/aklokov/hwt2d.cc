@@ -24,7 +24,7 @@
 #include "hwt2d.hh"
 
 static sf_axa az,ax;
-static sf_axa at,ag;
+static sf_axa at;
 static float **vv;
 /*------------------------------------------------------------*/
 
@@ -38,7 +38,7 @@ void hwt2d_init(float** vv_in    /* velocity */,
     az = sf_nod(az_in);
     ax = sf_nod(ax_in);
     at = sf_nod(at_in);
-    ag = sf_nod(ag_in);
+//    ag = sf_nod(ag_in);
 
     vv = vv_in;
 }

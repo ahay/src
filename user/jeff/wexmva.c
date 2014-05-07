@@ -177,20 +177,37 @@ void wexmva(wexmvaop3d      wexmvaop,
            for (iz=cub->az.n-1; iz>=0; iz--) {
 
                 /* CONJ(Ts(m)) += CONJ(dWs(m)), Tr(m) += dWr(m) */
+#ifdef SF_HAS_COMPLEX_H
                 LOOP( 
                       wexmvaop->dws[ompith][imy][imx] += wexmvaop->pws[ompith][iz][imy][imx];
                       wexmvaop->dwr[ompith][imy][imx] += wexmvaop->pwr[ompith][iz][imy][imx]; 
                     );
+#else
+		 LOOP( 
+		     wexmvaop->dws[ompith][imy][imx] = sf_cadd(wexmvaop->dws[ompith][imy][imx],
+							       wexmvaop->pws[ompith][iz][imy][imx]);
+		     wexmvaop->dwr[ompith][imy][imx] = sf_cadd(wexmvaop->dwr[ompith][imy][imx],
+							       wexmvaop->pwr[ompith][iz][imy][imx]); 
+                    );
+#endif
 
                 /* Wavefield Scattering (W.S.) dW -> dS */                wexlsr_w2s(wr,wexmvaop->bws[ompith][iz],cub,lsr,slo,wexmvaop->dws[ompith],wexmvaop->stmp[ompith],iz,ompith);
                 wexlsr_w2s(wr,wexmvaop->bwr[ompith][iz],cub,lsr,slo,wexmvaop->dwr[ompith],wexmvaop->rtmp[ompith],iz,ompith);
 
                 /* store perturbed slowness, ds(m,z) += S^+[Ws(m,z),CONJ(Ts(m))]; ds(m) += S^+[Wr(m,z),Tr(m)] */
+#ifdef SF_HAS_COMPLEX_H
                 LOOP(
                       wexmvaop->pssum[iz][imy][imx] += wexmvaop->stmp[ompith][imy][imx];
                       wexmvaop->pssum[iz][imy][imx] += wexmvaop->rtmp[ompith][imy][imx];
                     );
-
+#else
+		LOOP(
+		    wexmvaop->pssum[iz][imy][imx] = sf_cadd(wexmvaop->pssum[iz][imy][imx],
+							    wexmvaop->stmp[ompith][imy][imx]);
+		    wexmvaop->pssum[iz][imy][imx] = sf_cadd(wexmvaop->pssum[iz][imy][imx],
+							    wexmvaop->rtmp[ompith][imy][imx]);
+                    );
+#endif
                 /* wavefield extrapolation, CONJ(Ts(m)) = E^- [CONJ(Ts(m))], Tr(m) = E^+ [Tr(m)] */
                 if(iz>0){
                     wexssr(wr,wexmvaop->dws[ompith],cub,ssr,tap,slo,iz,ompith,false);
@@ -222,8 +239,15 @@ void wexmva(wexmvaop3d      wexmvaop,
                 wexlsr_s2w(wr,wexmvaop->bwr[ompith][iz],cub,lsr,slo,wexmvaop->rtmp[ompith],wexmvaop->psr[iz],iz,ompith);
 
                 /* CONJ(Ts(m)) += S^- [CONJ(Ws(m)),ds(m,z)], Tr(m) += S^- [Wr(m),ds(m,z)] */
+#ifdef SF_HAS_COMPLEX_H
                 LOOP( wexmvaop->dws[ompith][imy][imx] += wexmvaop->stmp[ompith][imy][imx]; );
                 LOOP( wexmvaop->dwr[ompith][imy][imx] += wexmvaop->rtmp[ompith][imy][imx]; );
+#else
+		LOOP( wexmvaop->dws[ompith][imy][imx] = sf_cadd(wexmvaop->dws[ompith][imy][imx],
+								wexmvaop->stmp[ompith][imy][imx]); );
+                LOOP( wexmvaop->dwr[ompith][imy][imx] = sf_cadd(wexmvaop->dwr[ompith][imy][imx],
+								wexmvaop->rtmp[ompith][imy][imx]); );
+#endif
 
                 /* store perturbed wavefield, dWs(m,z) = Ts(m), dWr(m,z) = Tr(m) */
                 LOOP( 
@@ -314,13 +338,23 @@ void wexzomva(wexmvaop3d      wexmvaop,
 
            for (iz=cub->az.n-1; iz>=0; iz--) {
                 /* CONJ(Ts(m)) += CONJ(dWs(m)), Tr(m) += dWr(m) */
+#ifdef SF_HAS_COMPLEX_H
                 LOOP( wexmvaop->dwr[ompith][imy][imx] += wexmvaop->pwr[ompith][iz][imy][imx];);
+#else
+		LOOP( wexmvaop->dwr[ompith][imy][imx] = sf_cadd(wexmvaop->dwr[ompith][imy][imx],
+								wexmvaop->pwr[ompith][iz][imy][imx]););
+#endif
 
                 /* Wavefield Scattering (W.S.) dW -> dS */
           		wexlsr_w2s(wr,wexmvaop->bwr[ompith][iz],cub,lsr,slo,wexmvaop->dwr[ompith],wexmvaop->rtmp[ompith],iz,ompith);
 
                 /* store perturbed slowness, ds(m,z) += S^+[Ws(m,z),CONJ(Ts(m))]; ds(m) += S^+[Wr(m,z),Tr(m)] */
+#ifdef SF_HAS_COMPLEX_H
                 LOOP( wexmvaop->pssum[iz][imy][imx] += wexmvaop->rtmp[ompith][imy][imx]; );
+#else
+		LOOP( wexmvaop->pssum[iz][imy][imx] = sf_cadd(wexmvaop->pssum[iz][imy][imx],
+							      wexmvaop->rtmp[ompith][imy][imx]); );
+#endif
 
                 /* wavefield extrapolation, CONJ(Ts(m)) = E^- [CONJ(Ts(m))], Tr(m) = E^+ [Tr(m)] */
                 if(iz>0){
@@ -340,7 +374,12 @@ void wexzomva(wexmvaop3d      wexmvaop,
                 wexlsr_s2w(wr,wexmvaop->bwr[ompith][iz],cub,lsr,slo,wexmvaop->rtmp[ompith],wexmvaop->psr[iz],iz,ompith);
 
                 /* CONJ(Ts(m)) += S^- [CONJ(Ws(m)),ds(m,z)], Tr(m) += S^- [Wr(m),ds(m,z)] */
+#ifdef SF_HAS_COMPLEX_H
                 LOOP( wexmvaop->dwr[ompith][imy][imx] += wexmvaop->rtmp[ompith][imy][imx]; );
+#else
+		LOOP( wexmvaop->dwr[ompith][imy][imx] = sf_cadd(wexmvaop->dwr[ompith][imy][imx],
+								wexmvaop->rtmp[ompith][imy][imx]); );
+#endif
 
                 /* store perturbed wavefield, dWs(m,z) = Ts(m), dWr(m,z) = Tr(m) */
                 LOOP( wexmvaop->pwr[ompith][iz][imy][imx] = wexmvaop->dwr[ompith][imy][imx];);   

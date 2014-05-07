@@ -41,8 +41,8 @@
 #define cACOR(a,b) (a*b)
 #define cMUL(a,b) (a*b) 
 #else
-#define cWGH(a,b,c) (+1.*sf_cmul((sf_cmul(conjf(a),b)),c))
-#define cAWGH(a,b,c) (+1.*sf_cmul((sf_cmul(a,b)),c))
+#define cWGH(a,b,c) (sf_cmul((sf_cmul(conjf(a),b)),c))
+#define cAWGH(a,b,c) (sf_cmul((sf_cmul(a,b)),c))
 #define cCOR(a,b) (sf_cmul(conjf(a),b))
 #define cACOR(a,b) (sf_cmul(a,b))
 #define cMUL(a,b) (sf_cmul(a,b))
@@ -280,7 +280,11 @@ void wexcip_for(wexcub3d cub,
                                 uu = cACOR(cip->ws[mcz][mcy][mcx],cip->wr[pcz][pcy][pcx]);
                                 for(iht=0; iht<cip->nht2; iht++) {
                                     wt = cip->tt[iw][iht];
+#ifdef SF_HAS_COMPLEX_H
          cip->ei[ic][iht][ihz][ihy][ihx] += cACOR(uu,wt); //uu);
+#else
+	 cip->ei[ic][iht][ihz][ihy][ihx] = sf_cadd(cip->ei[ic][iht][ihz][ihy][ihx],cACOR(uu,wt));
+#endif
                                 } /* loop over ht */
                             } /* loop over hz */
                         } /* loop over hy */
@@ -302,7 +306,11 @@ void wexcip_for(wexcub3d cub,
                                 uu = cCOR(cip->ws[mcz][mcy][mcx],cip->wr[pcz][pcy][pcx]);
                                 for(iht=0; iht<cip->nht2; iht++) {
                                     wt = cip->tt[iw][iht];
+#ifdef SF_HAS_COMPLEX_H
                                     cip->ei[ic][iht][ihz][ihy][ihx] += cACOR(uu,wt);
+#else
+				    cip->ei[ic][iht][ihz][ihy][ihx] = sf_cadd(cip->ei[ic][iht][ihz][ihy][ihx],cACOR(uu,wt));
+#endif
                                 } /* loop over ht */
                             } /* loop over hz */
                         } /* loop over hy */
@@ -321,7 +329,11 @@ void wexcip_for(wexcub3d cub,
               for(     iz=0;   iz<cub->az.n;  iz++){
                 for(  imy=0; imy<cub->amy.n; imy++){  
                   for(imx=0; imx<cub->amx.n; imx++){
+#ifdef SF_HAS_COMPLEX_H
                     cip->ci[iz][imy][imx] += cACOR(cip->ws[iz][imy][imx],cip->wr[iz][imy][imx]); 
+#else
+		    cip->ci[iz][imy][imx] = sf_cadd(cip->ci[iz][imy][imx],cACOR(cip->ws[iz][imy][imx],cip->wr[iz][imy][imx])); 
+#endif
                   } /* loop over amx */
                 } /* loop over amy */
               } /* loop over az */
@@ -335,7 +347,11 @@ void wexcip_for(wexcub3d cub,
               for(     iz=0;   iz<cub->az.n;  iz++){
                 for(  imy=0; imy<cub->amy.n; imy++){  
                   for(imx=0; imx<cub->amx.n; imx++){
+#ifdef SF_HAS_COMPLEX_H
                     cip->ci[iz][imy][imx] += cCOR(cip->ws[iz][imy][imx],cip->wr[iz][imy][imx]); 
+#else
+		    cip->ci[iz][imy][imx] = sf_cadd(cip->ci[iz][imy][imx],cCOR(cip->ws[iz][imy][imx],cip->wr[iz][imy][imx])); 
+#endif
                   } /* loop over ax  */
                 } /* loop over amy  */
               } /* loop over az   */
@@ -400,7 +416,11 @@ void wexcip_adj(wexcub3d cub,
                                 uu = sf_cmplx(0.0,0.0);
                                 for(iht=0; iht<cip->nht2; iht++) {
                                     wt = cip->tt[iw][iht];
+#ifdef SF_HAS_COMPLEX_H
                                     cip->wr[mcz][mcy][mcx] += cWGH(cip->ws[pcz][pcy][pcx],cip->ei[ic][iht][ihz][ihy][ihx],conjf(wt));
+#else
+				    cip->wr[mcz][mcy][mcx] = sf_cadd(cip->wr[mcz][mcy][mcx],cWGH(cip->ws[pcz][pcy][pcx],cip->ei[ic][iht][ihz][ihy][ihx],conjf(wt)));
+#endif
                   //                  sf_warning("ps=%f+%f,br=%f+%f,dr=%f+%f,iz=%d",crealf(cip->wr[mcz][mcy][mcx]),cimagf(cip->wr[mcz][mcy][mcx]),crealf(cip->ws[pcz][pcy][pcx]),cimagf(cip->ws[pcz][pcy][pcx]),crealf(cip->ei[ic][iht][ihz][ihy][ihx]),cimagf(cip->ei[ic][iht][ihz][ihy][ihx]),mcz);
                                 } /* loop over ht */
 
@@ -424,9 +444,17 @@ void wexcip_adj(wexcub3d cub,
                                 uu = sf_cmplx(0.0,0.0);
                                 for(iht=0; iht<cip->nht2; iht++) {
                                     wt = cip->tt[iw][iht];
+#ifdef SF_HAS_COMPLEX_H
                                     uu += cACOR(cip->ei[ic][iht][ihz][ihy][ihx],conjf(wt));
+#else
+				    uu = sf_cadd(uu,cACOR(cip->ei[ic][iht][ihz][ihy][ihx],conjf(wt)));
+#endif
                                 } /* loop over ht */
+#ifdef SF_HAS_COMPLEX_H
                                 cip->wr[pcz][pcy][pcx] += cACOR(cip->ws[mcz][mcy][mcx],uu);
+#else
+				cip->wr[pcz][pcy][pcx] = sf_cadd(cip->wr[pcz][pcy][pcx],cACOR(cip->ws[mcz][mcy][mcx],uu));
+#endif
                             } /* loop over hz */
                         } /* loop over hy */
                     } /* loop over hx */
@@ -514,10 +542,12 @@ void wexcip_for_drv(wexcub3d cub,
                                 dr = sf_cmplx(cub->eps*cub->aw.d,-2.0*w);
 #ifdef SF_HAS_COMPLEX_H
                                 dr = wt*dr;
+                                cip->ei[ic][iht][ihz][ihy][ihx] += cACOR(uu,dr);
 #else
                                 dr = sf_cmul(wt,dr);
+                                cip->ei[ic][iht][ihz][ihy][ihx] = sf_cadd(cip->ei[ic][iht][ihz][ihy][ihx],cACOR(uu,dr));
 #endif
-                                cip->ei[ic][iht][ihz][ihy][ihx] += cACOR(uu,dr);
+
                             } /* loop over ht */
                         } /* loop over hz */
                     } /* loop over hy */
@@ -569,10 +599,12 @@ void wexcip_for_new(wexcub3d cub,
                                 wt = cip->tt[iw][iht];
 #ifdef SF_HAS_COMPLEX_H
                                 wt *= sf_cmplx(0.0,-1.0);
+                                cip->ei[ic][iht][ihz][ihy][ihx] += cACOR(uu,wt);
 #else
                                 wt = sf_cmul(wt,sf_cmplx(0.0,-1.0));
+				cip->ei[ic][iht][ihz][ihy][ihx] = sf_cadd(cip->ei[ic][iht][ihz][ihy][ihx],cACOR(uu,wt));
 #endif
-                                cip->ei[ic][iht][ihz][ihy][ihx] += cACOR(uu,wt);
+
                             } /* loop over ht */
                         } /* loop over hz */
                     } /* loop over hy */
@@ -611,7 +643,11 @@ void wexzocip_for(wexcub3d cub,
 	  for(     iz=0;   iz<cub->az.n;  iz++){
 	    for(  imy=0; imy<cub->amy.n; imy++){  
 	      for(imx=0; imx<cub->amx.n; imx++){
+#ifdef SF_HAS_COMPLEX_H
 		cip->ci[iz][imy][imx] += cip->wr[iz][imy][imx]; 
+#else
+		cip->ci[iz][imy][imx] = sf_cadd(cip->ci[iz][imy][imx],cip->wr[iz][imy][imx]); 
+#endif
 	      } /* loop over amx */
 	    } /* loop over amy */
 	  } /* loop over az */

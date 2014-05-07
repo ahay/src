@@ -49,7 +49,9 @@ void DepthMigrator2D::processGather (Point2D& curGatherCoords, const float* cons
     memset ( mCig, 0, scatSize * dipNum * sizeof (float) );
 
     // loop over depth samples
+#ifdef _OPENMP
 #pragma omp parallel for
+#endif
     for (int iz = 0; iz < zNum; ++iz) {	  
 	const float curZ = zStart + iz * zStep;		
 	if (curZ < velModelDepthMin || curZ > velModelDepthMax)
@@ -270,7 +272,7 @@ bool DepthMigrator2D::getSampleByRay (EscapePoint* travelTimes, float dipAngle, 
     const float xStartData = dp_->xStart;
     const float xStepData  = dp_->xStep;
 
-    const int   curXSamp = (int) roundf((sampleX - xStartData) / xStepData);
+    const int   curXSamp = (int) ((sampleX - xStartData) / xStepData);
     const float posLeftTrace = curXSamp * xStepData + xStartData;
     const float posRightTrace = (curXSamp + 1) * xStepData + xStartData;
 	
@@ -417,7 +419,7 @@ bool DepthMigrator2D::getSampleFromData (const float h, const float geoY, const 
 
     // offset
 
-    const int offsetInd = (int) roundf((h - dp_->hStart) / dp_->hStep);
+    const int offsetInd = (int) ((h - dp_->hStart) / dp_->hStep);
     if (offsetInd >= dp_->hNum || offsetInd < 0) return false;
 
     float* const trace = ptrToData_ + xSamp * tNum + xNum * tNum * offsetInd;
@@ -490,10 +492,10 @@ void DepthMigrator2D::setWavefrontTracerParams (int ttRayNum, float ttRayStep, f
 
 float DepthMigrator2D::getVel (float curZ, float xCIG) {
 
-    int zInd = (int) roundf((curZ - vp_->zStart) / vp_->zStep);	
+    int zInd = (int) ((curZ - vp_->zStart) / vp_->zStep);	
     if (zInd < 0 || zInd >= vp_->zNum) return 1.f;	
 
-    int xInd = (int) roundf((xCIG - vp_->xStart) / vp_->xStep);
+    int xInd = (int) ((xCIG - vp_->xStart) / vp_->xStep);
     if (xInd < 0 || xInd >= vp_->xNum) return 1.f;	
 		
     return velField_[xInd][zInd];

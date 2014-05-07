@@ -80,7 +80,11 @@ int main(int argc, char*argv[])
 		{
 			f = (o1+d1*i1);
 			z1 = fir_freq(-m, n, b1+m, f);
-			if(iir) z1 = z1*z1/(z1*conj(z1)+0.000001);
+#ifdef SF_HAS_COMPLEX_H
+			if(iir) z1 = z1*z1/(z1*conjf(z1)+0.000001);
+#else
+			if(iir) z1 = sf_crmul(sf_cmul(z1,z1),1.0/(crealf(sf_cmul(z1,conjf(z1)))+0.000001));
+#endif
 			bf[i2][i1] = z1;
 		}
 	}
@@ -91,7 +95,7 @@ int main(int argc, char*argv[])
 	free(c[0]);
 	free(c);
 	free(b1);
-	return 0;
+	exit(0);
 }
 
 

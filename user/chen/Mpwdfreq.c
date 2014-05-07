@@ -76,7 +76,11 @@ int main(int argc, char*argv[])
 		for(i3=0; i3<n3; i3++)
 		{
 			c1 = sf_cmplx(0, (d3*i3+o3)/180*SF_PI);
+#ifdef SF_HAS_COMPLEX_H
 			opwd_freq(radius*cexpf(c1), n1, buf, iir);
+#else
+			opwd_freq(sf_crmul(cexpf(c1),radius), n1, buf, iir);
+#endif
 			sf_complexwrite(buf[0], (2*n1+1)*(2*n1+1), out);
 		}
 		opwd_close();
@@ -92,7 +96,7 @@ int main(int argc, char*argv[])
 	free(buf[0]);
 	free(buf);
 
-	return 0;
+	exit(0);
 }
 
 

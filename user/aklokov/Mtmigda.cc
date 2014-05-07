@@ -90,7 +90,7 @@ void checkImageParams () {
 
     if (vp.zStart - ip.zStart > 1E-6) {
 	float diff = vp.zStart - ip.zStart;
-	ip.zNum -= (int) floorf(diff / ip.zStep + 1);
+	ip.zNum -= (int) floor(diff / ip.zStep + 1);
 	ip.zStart += (diff / ip.zStep + 1) * ip.zStep;
 	sf_warning ("first migrated time was changed to %g", ip.zStart);			
     }
@@ -98,7 +98,7 @@ void checkImageParams () {
     float zImageMax = ip.zStart + ip.zStep * (ip.zNum - 1);
     if (zImageMax - zVelMax > 1E-6) {
 	float diff = zImageMax - zVelMax; 
-	ip.zNum -= (int) floorf(diff / ip.zStep + 1);
+	ip.zNum -= (int) floor(diff / ip.zStep + 1);
 	sf_warning ("time sample number was changed to %d", ip.zNum);	
     }
     if (ip.zNum <= 0) sf_error ("wrong image time sample number");	
@@ -107,7 +107,7 @@ void checkImageParams () {
 
     if (vp.xStart - ip.xStart > 1E-6) {
 	float diff = vp.xStart - ip.xStart;
-	ip.xNum -= (int) floorf(diff / ip.xStep + 1);
+	ip.xNum -= (int) floor(diff / ip.xStep + 1);
 	ip.xStart += (diff / ip.xStep + 1) * ip.xStep;
 	sf_warning ("first inline coord was changed to %g", ip.xStart);			
     }
@@ -115,7 +115,7 @@ void checkImageParams () {
     float xImageMax = ip.xStart + ip.xStep * (ip.xNum - 1);
     if (xImageMax - xVelMax > 1E-6) {
 	float diff = xImageMax - xVelMax; 
-	ip.xNum -= (int) floorf(diff / ip.xStep + 1);
+	ip.xNum -= (int) floor(diff / ip.xStep + 1);
 	sf_warning ("inline number was changed to %d", ip.xNum);	
     }
     if (ip.xNum <= 0) sf_error ("wrong image inline number");	
@@ -127,7 +127,7 @@ void checkImageParams () {
 
     if (vp.yStart - ip.yStart > 1E-6) {
 	float diff = vp.yStart - ip.yStart;
-	ip.yNum -= (int) floorf(diff / ip.yStep + 1);
+	ip.yNum -= (int) floor(diff / ip.yStep + 1);
 	ip.yStart += (diff / ip.yStep + 1) * ip.yStep;
 	sf_warning ("first crossline coord was changed to %g", ip.yStart);			
     }
@@ -135,7 +135,7 @@ void checkImageParams () {
     float yImageMax = ip.yStart + ip.yStep * (ip.yNum - 1);
     if (yImageMax - yVelMax > 1E-6) {
 	float diff = yImageMax - yVelMax; 
-	ip.yNum -= (int) floorf(diff / ip.yStep + 1);
+	ip.yNum -= (int) floor(diff / ip.yStep + 1);
 	sf_warning ("crossline number was changed to %d", ip.yNum);	
     }
     if (ip.yNum <= 0) sf_error ("wrong image crossline number");	
@@ -154,8 +154,8 @@ void prepareVelocityTrace (int taskX, int taskY, float* velTrace) {
     const float geoX = ip.xStart + taskX * ip.xStep;
     const float geoY = ip.yStart + taskY * ip.yStep;	
 	
-    const int velX = (int) roundf((geoX - vp.xStart) / vp.xStep);
-    const int velY = rp.is3D ? (int) roundf((geoY - vp.yStart) / vp.yStep) : 0;
+    const int velX = (int) ((geoX - vp.xStart) / vp.xStep);
+    const int velY = rp.is3D ? (int) ((geoY - vp.yStart) / vp.yStep) : 0;
 
     const size_t startPos = (velX + velY * vp.xNum) * vp.zNum * sizeof(float);
 

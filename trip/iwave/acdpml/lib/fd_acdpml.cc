@@ -178,34 +178,34 @@ int acdpml_modelinit(PARARRAY *pars,
     parse(*pars,"PMLtype", PMLtype);
     if (PMLtype==0){
     for (i1=0; i1<=L1; i1++) {
-        acdpmlpars->dp1[i1]=pmlampl*( fabs(i1-L1-1)/L1-sin(2*pi*fabs(i1-L1-1)/L1)/2.0/pi);
+        acdpmlpars->dp1[i1]=pmlampl*( fabs(i1-L1-1.0)/L1-sin(2*pi*fabs(i1-L1-1.0)/L1)/2.0/pi);
     }
     for (i1=gd1-L1-1; i1<gd1; i1++) {
-        acdpmlpars->dp1[i1]=pmlampl*(fabs(i1-(gd1-1-L1))/L1-sin(2*pi*fabs(i1-(gd1-1-L1))/L1)/2.0/pi);
+        acdpmlpars->dp1[i1]=pmlampl*(fabs(i1-(gd1-1.0-L1))/L1-sin(2*pi*fabs(i1-(gd1-1.0-L1))/L1)/2.0/pi);
     }
     if (freesurface == 0) {
         for (i0=0; i0<=L0; i0++) {
-            acdpmlpars->dp0[i0]=pmlampl*(fabs(i0-L0-1)/L0-sin(2*pi*fabs(i0-L0-1)/L0)/2.0/pi);
+            acdpmlpars->dp0[i0]=pmlampl*(fabs(i0-L0-1.0)/L0-sin(2*pi*fabs(i0-L0-1.0)/L0)/2.0/pi);
         }
     }
     for (i0=gd0-L0-1; i0<gd0; i0++) {
-        acdpmlpars->dp0[i0]=pmlampl*(fabs(i0-(gd0-1-L0))/L0-sin(2*pi*fabs(i0-(gd0-1-L0))/L0)/2.0/pi);
+        acdpmlpars->dp0[i0]=pmlampl*(fabs(i0-(gd0-1.0-L0))/L0-sin(2*pi*fabs(i0-(gd0-1.0-L0))/L0)/2.0/pi);
     }
     }
     else{
         for (i1=0; i1<=L1; i1++) {
-            acdpmlpars->dp1[i1]=pmlampl*(fabs((i1-L1-1)*(i1-L1-1)*(i1-L1-1))/L1/L1/L1);
+            acdpmlpars->dp1[i1]=pmlampl*(fabs((i1-L1-1.0)*(i1-L1-1)*(i1-L1-1))/L1/L1/L1);
         }
         for (i1=gd1-L1; i1<gd1; i1++) {
-            acdpmlpars->dp1[i1]=pmlampl*(fabs((i1-(gd1-1-L1))*(i1-(gd1-1-L1))*(i1-(gd1-1-L1)))/L1/L1/L1);
+            acdpmlpars->dp1[i1]=pmlampl*(fabs((i1-(gd1-1.0-L1))*(i1-(gd1-1-L1))*(i1-(gd1-1-L1)))/L1/L1/L1);
         }
         if (freesurface == 0) {
             for (i0=0; i0<=L0; i0++) {
-                acdpmlpars->dp0[i0]=pmlampl*(fabs((i0-L0-1)*(i0-L0-1)*(i0-L0-1))/L0/L0/L0);
+                acdpmlpars->dp0[i0]=pmlampl*(fabs((i0-L0-1.0)*(i0-L0-1)*(i0-L0-1))/L0/L0/L0);
             }
         }
         for (i0=gd0-L0; i0<gd0; i0++) {
-            acdpmlpars->dp0[i0]=pmlampl*(fabs((i0-(gd0-1-L0))*(i0-(gd0-1-L0))*(i0-(gd0-1-L0)))/L0/L0/L0);
+            acdpmlpars->dp0[i0]=pmlampl*(fabs((i0-(gd0-1.0-L0))*(i0-(gd0-1-L0))*(i0-(gd0-1-L0)))/L0/L0/L0);
         }
     }
 /*    fprintf(stderr, "gd0 = %d\n", gd0);

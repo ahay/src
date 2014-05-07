@@ -855,7 +855,7 @@ ACTION::action Moin::revolve(ostream & str)
 			
 		}
 	}
-	str << "\n \n Irgendwas ist falsch \n\n";
+//	str << "\n \n Irgendwas ist falsch \n\n";
 	return ACTION::terminate;	
 }
 

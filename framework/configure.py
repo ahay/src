@@ -1508,7 +1508,7 @@ def omp(context):
     icc = (string.rfind(CC,'icc') >= 0)
     if pgcc:
         CFLAGS = flags + ' -mp'
-        CXXFLAGS = ccflags + '-mp'
+        CXXFLAGS = ccflags + ' -mp'
         LINKFLAGS = lflags + ' -mp'
     elif gcc:
         LIBS.append('gomp')
