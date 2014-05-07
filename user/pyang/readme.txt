@@ -31,8 +31,11 @@ For more information on FPOCS, check the paper:
 Main:		Mdlct.c, Mdlct2.c
 Depends on: 	dlct.c
 Test file: 	/book/xjtu/test/dlct/SConstruct
+		/book/user/pyang/test_dlct1.m
+		/book/user/pyang/test_dlct2.m
 Note: To make the adjoint of DLCT same as inverse, I normalized 
 	the forward and inverse DLCT with a factor. 
+The matlab scripts can run directly within MATLAB software environment.
 
 3) 2D and 3D FD for forward modelling
 Main:		MTestfd2d.c, MTestfd3d.c

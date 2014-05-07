@@ -1,4 +1,4 @@
-function test_dlct
+function test_dlct1
 
 % Reference: Alkishriwo, Osama A., and Luis F. Chaparro. "A discrete 
 %  linear chirp transform (DLCT) for data compression." Information 
