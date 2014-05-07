@@ -89,11 +89,11 @@ int prop1(sf_complex *input, sf_complex *output, sf_complex *lt, sf_complex *rt,
 	}
 	
 	/* saving a pair of FFTs */
-	// icfft2(curr,cwave);
+	/* icfft2(curr,cwave); */
 
         /* pspi(+) */
 
-	//  cfft2(curr,cwave);
+	/*  cfft2(curr,cwave); */
 
 	for (im = 0; im < m2; im++) {
 	    for (ik = 0; ik < nk; ik++) {

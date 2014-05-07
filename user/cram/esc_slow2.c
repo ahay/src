@@ -40,7 +40,7 @@ struct EscSlowness2 {
     float                xmin, xmax;
     bool                 aniso;
     size_t               offs;
-    unsigned char       *mmaped;
+    char                *mmaped;
     multi_UBspline_2d_s  velspline;
 };
 /* concrete data type */
@@ -108,10 +108,10 @@ sf_esc_slowness2 sf_esc_slowness2_init (sf_file vspline, bool verb)
         && 0 == (esc_slow->offs % 64)
 #endif
         ) {
-        esc_slow->mmaped = (unsigned char*)mmap (NULL, (size_t)esc_slow->offs +
-                                                       (size_t)esc_slow->velspline.nc,
-                                                 PROT_READ, MAP_SHARED,
-                                                 fileno (stream), 0);
+        esc_slow->mmaped = (char*)mmap (NULL, (size_t)esc_slow->offs +
+					(size_t)esc_slow->velspline.nc,
+					PROT_READ, MAP_SHARED,
+					fileno (stream), 0);
         if (esc_slow->mmaped == MAP_FAILED)
             sf_error ("Velocity spline coefficients mmap failed: %s", strerror (errno));
         esc_slow->velspline.coefs = (float*)(esc_slow->mmaped + esc_slow->offs);

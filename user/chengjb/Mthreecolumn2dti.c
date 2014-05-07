@@ -35,6 +35,9 @@ int main(int argc, char* argv[])
         float  vp0_2, vs0_2, eps_2, del_2, the_2;
         float  vp0_3, vs0_3, eps_3, del_3, the_3;
         float  **w;
+	int   i,j;
+        sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6;
+	int nx1, nx2;
 
         sf_init(argc,argv);
 
@@ -51,12 +54,12 @@ int main(int argc, char* argv[])
         if (!sf_getfloat("vs0_2",&vs0_2)) vs0_2=1200.0;
         if (!sf_getfloat("eps_2",&eps_2)) eps_2=0.2;
         if (!sf_getfloat("del_2",&del_2)) del_2=0.1;
-        if (!sf_getfloat("the_2",&the_2)) the_2=30.0;  // Unit: degree
+        if (!sf_getfloat("the_2",&the_2)) the_2=30.0;  /* Unit: degree */
         if (!sf_getfloat("vp0_3",&vp0_3)) vp0_3=3000.0;
         if (!sf_getfloat("vs0_3",&vs0_3)) vs0_3=1200.0;
         if (!sf_getfloat("eps_3",&eps_3)) eps_3=0.2;
         if (!sf_getfloat("del_3",&del_3)) del_3=0.1;
-        if (!sf_getfloat("the_3",&the_3)) the_3=0.0;  // Unit: degree
+        if (!sf_getfloat("the_3",&the_3)) the_3=0.0;  /* Unit: degree */
 
         sf_warning("nx= %d nz= %d",nx,nz);
         sf_warning("dx= %f dz= %f",dx,dz);
@@ -68,16 +71,13 @@ int main(int argc, char* argv[])
 
 	zero2float(w,nz,nx);
 
-	int   i,j;
-
         /* setup I/O files */
-        sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6;
-        Fo1 = sf_output("out"); // Vp0
-        Fo2 = sf_output("vs0"); // Vs0
-        Fo3 = sf_output("epsi"); // Epsilon
-        Fo4 = sf_output("del"); // Delta
-        Fo5 = sf_output("the"); // theta
-        Fo6 = sf_output("interf"); // interface
+        Fo1 = sf_output("out"); /* Vp0 */
+        Fo2 = sf_output("vs0"); /* Vs0 */
+        Fo3 = sf_output("epsi"); /* Epsilon */
+        Fo4 = sf_output("del"); /* Delta */
+        Fo5 = sf_output("the"); /* theta */
+        Fo6 = sf_output("interf"); /* interface */
 
         puthead2(Fo1, nz, nx, dz, 0.0, dx, 0.0);
         puthead2(Fo2, nz, nx, dz, 0.0, dx, 0.0);
@@ -86,10 +86,10 @@ int main(int argc, char* argv[])
         puthead2(Fo5, nz, nx, dz, 0.0, dx, 0.0);
         puthead2(Fo6, nz, nx, dz, 0.0, dx, 0.0);
 
-        int nx1=nx/3;
-        int nx2=(nx*2)/3;
+        nx1=nx/3;
+        nx2=(nx*2)/3;
 
-        // Vp0
+        /* Vp0 */
         for(i=0;i<nz;i++)
         {
            for(j=0;j<nx1;j++)
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
         for(j=0;j<nx;j++)
           sf_floatwrite(w[j], nz, Fo1);
 
-        // Vs0
+        /* Vs0 */
         for(i=0;i<nz;i++)
         {
            for(j=0;j<nx1;j++)
@@ -115,7 +115,7 @@ int main(int argc, char* argv[])
         for(j=0;j<nx;j++)
            sf_floatwrite(w[j], nz, Fo2);
 
-        // Epsi
+        /* Epsi */
         for(i=0;i<nz;i++)
         {
            for(j=0;j<nx1;j++)
@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
         for(j=0;j<nx;j++)
            sf_floatwrite(w[j], nz, Fo3);
 
-        // Delta 
+        /* Delta */ 
         for(i=0;i<nz;i++)
         {
            for(j=0;j<nx1;j++)
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
         for(j=0;j<nx;j++)
            sf_floatwrite(w[j], nz, Fo4);
 
-        //  Theta
+        /*  Theta */
         for(i=0;i<nz;i++)
         {
            for(j=0;j<nx1;j++)
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
         for(j=0;j<nx;j++)
            sf_floatwrite(w[j], nz, Fo5);
 
-        //  Interface
+        /*  Interface */
         for(i=0;i<nz;i++)
         {
            for(j=0;j<nx;j++)
@@ -167,4 +167,6 @@ int main(int argc, char* argv[])
            sf_floatwrite(w[j], nz, Fo6);
 
         free(*w);
+
+	exit(0);
 }

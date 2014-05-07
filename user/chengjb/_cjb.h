@@ -13,7 +13,6 @@
 #include <ctype.h>
 #include <limits.h>
 #include <float.h>
-//#include <complex.h>
 #include <time.h>
 
 #ifdef CADDR_T_NOT_DEFINED

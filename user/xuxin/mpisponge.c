@@ -15,14 +15,11 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+
+#include <rsf.h>
 
 typedef struct {
     int bzl; float *wzl;
@@ -86,14 +83,18 @@ void sponge_apply(float *u,     /* [Nz][Nx] */
     int Nz = nz + bzl + bzh;
     int Nx = nx + bxl + bxh;
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(ix,i)
+#endif
     for (ix=0; ix < Nx; ix++) {
         for (i=1; i <= bzl; i++)
             u[ix*Nz + bzl-i] *= wzl[i-1];
         for (i=1; i <= bzh; i++)
             u[ix*Nz + bzl+i+nz-1] *= wzh[i-1];
 		}
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(iz,i)
+#endif
     for (iz=0; iz < Nz; iz++) {
         for (i=1; i <= bxl; i++)
             u[(bxl-i)*Nz + iz] *= wxl[i-1];

@@ -9,7 +9,7 @@ x0 = -1
 
 Flow('fft','data','cosft sign2=1')
 
-Flow('vc','fft','vczo v0=0.0001 dv=0.01 nv=201',split=[3,'omp'])
+Flow('vc','fft','vczo v0=0.0001 dv=0.01 nv=201',split=[2,'omp'],reduce='cat axis=3')
 
 Flow('vel','data','spike') # velocity=1
 
@@ -25,7 +25,7 @@ constant.get_impulse('imp','data')
 Flow('ifft','imp','cosft sign2=1')
 
 Flow('ivc','ifft',
-     'vczo v0=0.0001 dv=0.01 nv=201 pad2=4096',split=[3,'omp'])
+     'vczo v0=0.0001 dv=0.01 nv=201 pad2=4096',split=[2,'omp'],reduce='cat axis=3')
 
 Flow('imig','ivc vel',
      'cosft sign3=-1 o3=%g | slice pick=${SOURCES[1]}' % x0)

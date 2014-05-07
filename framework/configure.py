@@ -306,6 +306,7 @@ def libs(context):
         
     if plat['OS'] in ('sunos', 'hpux'):
         LIBS.append('nsl')
+        LIBS.append('socket')
 #    elif plat['OS'] == 'cygwin':
 #        LIBS.append('tirpc')
     elif plat['OS'] == 'darwin':
@@ -1566,7 +1567,7 @@ def pthreads(context):
     icc = (string.rfind(CC,'icc') >= 0)
     if icc or pgcc:
         LIBS.append('pthread')
-    elif gcc and plat['OS'] != 'darwin' and plat['OS'] != 'cygwin':
+    elif gcc and not plat['OS'] in ['darwin','cygwin','sunos']:
         context.env.Append(LINKFLAGS='-pthread')
 
     text = '''

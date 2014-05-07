@@ -21,7 +21,11 @@
 
 #ifndef _esc_point2_h
 
+#ifdef sun
+#include <inttypes.h>
+#else
 #include <stdint.h>
+#endif
 /*^*/
 
 typedef struct EscPoint2 *sf_esc_point2;

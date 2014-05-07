@@ -40,6 +40,7 @@ pn12(n1)=(vpgroup[0]^2/vgp).full_simplify()
 
 pn12true(n1) = sn12(n1)
 
+gpx=(arcsin(sqrt(pn12true(sin(x*pi/180))))*180/pi).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Group angle
 
 # Thomsen's weak anisotropy
 
@@ -47,10 +48,12 @@ epsilon=(c11-c33)/(2*c33)
 delta=((c55+c13)^2-(c33-c55)^2)/(2*c33* (c33-c55))
 TH(n1)=c33*(1+2*epsilon*pn12true(n1)^2+2*delta*pn12true(n1)*(1-pn12true(n1)))
 
-gpx=(arcsin(sqrt(pn12true(sin(x*pi/180))))*180/pi).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Group angle
+# Alkhalifah-Tsvankin
 
-WEAKgpz=100*abs(sqrt((TH(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Relative error
-WEAKgplot = parametric_plot([gpx,WEAKgpz],(x,0,90),linestyle=':')
+TS(n1)= 1/((1-sn12(n1))/c33 + (sn12(n1)*(-c55 + c33)*(sn12(n1)*c33*(-c55 + c33) + (1-sn12(n1))*(c13^2 + c55*(c33 + 2*c13))))/(c11*sn12(n1)*(c55 - c33)^2*c33 + (1-sn12(n1))*(c13^2 + c55*(c33 + 2*c13))^2))
+
+TSgpz=100*abs(sqrt((TS(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Relative error
+TSgplot = parametric_plot([gpx,TSgpz],(x,0,90),linestyle=':')
 
 # Muir-Dellinger
 Q,N1=var('Q,N1')
@@ -66,9 +69,6 @@ MDptrue(n1)=MDs(n1)
 qz=((2*c13 + c33)*c55 + c13^2)/(c11*c33 - c11*c55)
 QZ = 1/qz
 
-MDgpz=100*abs(sqrt((MDptrue(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).subs(Q=QZ).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Relative error
-MDgplot = parametric_plot([gpx,MDgpz],(x,0,90),linestyle='--')
-
 # Shifted hyperbola
 
 S=var('S')
@@ -77,8 +77,13 @@ SHs(n1)=((1-S)*ELs(n1)+S*sqrt(ELs(n1)^2+2*(Q-1)*(1/c11)*(1/c33)*sn12*(1-sn12)/S)
 
 SHptrue(n1)=SHs(n1)
 
+# Zhang-Uren
+
+URgpz=100*abs(sqrt((SHptrue(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).subs(S=1/2,Q=QZ).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Relative error
+URgplot = parametric_plot([gpx,URgpz],(x,0,90),linestyle='--')
+
 SHgpz=100*abs(sqrt((SHptrue(sin(x*pi/180))/vgptrue(sin(x*pi/180))))-1).subs(S=1/(2*(1+QZ)),Q=QZ).substitute(c11=14.47,c33=9.57,c55=2.28,c13=4.51) # Relative error
 SHgplot = parametric_plot([gpx,SHgpz],(x,0,90))
 
-p = WEAKgplot+MDgplot+SHgplot
+p = TSgplot+URgplot+SHgplot
 p.save(filename='junk_sage.pdf',axes_labels=['phase angle (degrees)','relative error (%)'],aspect_ratio=25,frame=True,axes=False)

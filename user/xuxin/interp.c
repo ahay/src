@@ -65,7 +65,9 @@ void int2_apply(float *F,       /* [m] */
     float dz = I2->dz; float dx = I2->dx;
     float z0 = I2->z0; float x0 = I2->x0;
     float *z = I2->z;  float *x = I2->x;
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(i,zo,xo,iz,ix,wz,wx)
+#endif
     for (i=0; i < m; i++) {
         zo = c[i*2  ]; iz = (int)((zo - z0) / dz);
         xo = c[i*2+1]; ix = (int)((xo - x0) / dx);
@@ -100,7 +102,9 @@ void int2_inject(const float *F, /* [m] */
     float dz = I2->dz; float dx = I2->dx;
     float z0 = I2->z0; float x0 = I2->x0;
     float *z = I2->z;  float *x = I2->x;
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(i,zo,xo,iz,ix,wz,wx)
+#endif
     for (i=0; i < m; i++) {
         zo = c[i*2  ]; iz = (int)((zo - z0) / dz);
         xo = c[i*2+1]; ix = (int)((xo - x0) / dx);
@@ -134,7 +138,9 @@ void int2_inject2(const float *F, /* [m] */
     float dz = I2->dz; float dx = I2->dx;
     float z0 = I2->z0; float x0 = I2->x0;
     float *z = I2->z;  float *x = I2->x;
+#ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) private(i,zo,xo,iz,ix,wz,wx)
+#endif
     for (i=0; i < m; i++) {
         zo = c[i*2  ]; iz = (int)((zo - z0) / dz);
         xo = c[i*2+1]; ix = (int)((xo - x0) / dx);

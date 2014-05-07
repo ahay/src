@@ -32,15 +32,23 @@ void sf_cpthresh(sf_complex *x, int n, float thr, float p, char* mode)
 #endif
 	for(i=0;i<n;i++){
 	    	a=cabsf(x[i]);// complex numbers
-	    	if (strcmp(mode,"hard") == 0) x[i]=(x[i])*(a>thr?1.:0.);/* hard thresholding*/
-	    	else{
+	    	if (strcmp(mode,"hard") == 0) { /* hard thresholding*/
+#ifdef SF_HAS_COMPLEX_H
+		    x[i]=(x[i])*(a>thr?1.:0.);
+#else
+		    x[i]=sf_crmul(x[i],(a>thr?1.:0.));
+#endif
+	    	} else{
 			if (strcmp(mode,"soft") == 0) a=1.0-thr/(a+(a==0));/* soft thresholding */
 		    	if (strcmp(mode,"pthresh") == 0) a=1.0-powf((a+(a==0))/thr, p-2.0);
 		    	/* generalized quasi p-norm thresholding*/
 		    	if (strcmp(mode,"exp") == 0) a=expf(-powf((a+(a==0))/thr, p-2.0));
 		    	/* exponential shrinkage */
-
+#ifdef SF_HAS_COMPLEX_H
 			x[i]=(x[i])*(a>0.0?a:0.0);
+#else
+			x[i]=sf_crmul(x[i],(a>0.0?a:0.0));
+#endif
 		}
 	}
 }

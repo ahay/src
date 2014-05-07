@@ -391,19 +391,19 @@ int dsyevc3(double A[3][3], double w[3])
 {
   double m, c1, c0;
   
-  // Determine coefficients of characteristic poynomial. We write
+  /* Determine coefficients of characteristic poynomial. We write
   //       | a   d   f  |
   //  A =  | d*  b   e  |
-  //       | f*  e*  c  |
-  double de = A[0][1] * A[1][2];                                    // d * e
-  double dd = SQR(A[0][1]);                                         // d^2
-  double ee = SQR(A[1][2]);                                         // e^2
-  double ff = SQR(A[0][2]);                                         // f^2
+  //       | f*  e*  c  | */
+  double de = A[0][1] * A[1][2];                                    /* d * e */
+  double dd = SQR(A[0][1]);                                         /* d^2 */
+  double ee = SQR(A[1][2]);                                         /* e^2 */
+  double ff = SQR(A[0][2]);                                         /* f^2 */
   m  = A[0][0] + A[1][1] + A[2][2];
-  c1 = (A[0][0]*A[1][1] + A[0][0]*A[2][2] + A[1][1]*A[2][2])        // a*b + a*c + b*c - d^2 - e^2 - f^2
+  c1 = (A[0][0]*A[1][1] + A[0][0]*A[2][2] + A[1][1]*A[2][2])        /* a*b + a*c + b*c - d^2 - e^2 - f^2 */
           - (dd + ee + ff);
   c0 = A[2][2]*dd + A[0][0]*ee + A[1][1]*ff - A[0][0]*A[1][1]*A[2][2]
-            - 2.0 * A[0][2]*de;                                     // c*d^2 + a*e^2 + b*f^2 - a*b*c - 2*f*d*e)
+      - 2.0 * A[0][2]*de;                                     /* c*d^2 + a*e^2 + b*f^2 - a*b*c - 2*f*d*e) */
 
   double p, sqrt_p, q, c, s, phi;
   p = SQR(m) - 3.0*c1;
@@ -453,17 +453,17 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
 // ---------------------------------------------------------------------------->*/
 {
 #ifndef EVALS_ONLY
-  double norm;          // Squared norm or inverse norm of current eigenvector
-  double n0, n1;        // Norm of first and second columns of A
-  double n0tmp, n1tmp;  // "Templates" for the calculation of n0/n1 - saves a few FLOPS
-  double thresh;        // Small number used as threshold for floating point comparisons
-  double error;         // Estimated maximum roundoff error in some steps
-  double wmax;          // The eigenvalue of maximum modulus
-  double f, t;          // Intermediate storage
-  int i, j;             // Loop counters
+    double norm;          /* Squared norm or inverse norm of current eigenvector */
+  double n0, n1;        /* Norm of first and second columns of A */
+  double n0tmp, n1tmp;  /* "Templates" for the calculation of n0/n1 - saves a few FLOPS */
+  double thresh;        /* Small number used as threshold for floating point comparisons */
+  double error;         /* Estimated maximum roundoff error in some steps */
+  double wmax;          /* The eigenvalue of maximum modulus */
+  double f, t;          /* Intermediate storage */
+  int i, j;             /* Loop counters */
 #endif
 
-  // Calculate eigenvalues
+  /* Calculate eigenvalues */
   dsyevc3(A, w);
 
 #ifndef EVALS_ONLY
@@ -474,15 +474,15 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
     wmax = t;
   thresh = SQR(8.0 * DBL_EPSILON * wmax);
 
-  // Prepare calculation of eigenvectors
+  /* Prepare calculation of eigenvectors */
   n0tmp   = SQR(A[0][1]) + SQR(A[0][2]);
   n1tmp   = SQR(A[0][1]) + SQR(A[1][2]);
   Q[0][1] = A[0][1]*A[1][2] - A[0][2]*A[1][1];
   Q[1][1] = A[0][2]*A[0][1] - A[1][2]*A[0][0];
   Q[2][1] = SQR(A[0][1]);
 
-  // Calculate first eigenvector by the formula
-  //   v[0] = (A - w[0]).e1 x (A - w[0]).e2
+  /* Calculate first eigenvector by the formula
+  //   v[0] = (A - w[0]).e1 x (A - w[0]).e2 */
   A[0][0] -= w[0];
   A[1][1] -= w[0];
   Q[0][0] = Q[0][1] + A[0][2]*w[0];
@@ -493,21 +493,21 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
   n1      = n1tmp + SQR(A[1][1]);
   error   = n0 * n1;
   
-  if (n0 <= thresh)         // If the first column is zero, then (1,0,0) is an eigenvector
+  if (n0 <= thresh)         /* If the first column is zero, then (1,0,0) is an eigenvector */
   {
     Q[0][0] = 1.0;
     Q[1][0] = 0.0;
     Q[2][0] = 0.0;
   }
-  else if (n1 <= thresh)    // If the second column is zero, then (0,1,0) is an eigenvector
+  else if (n1 <= thresh)    /* If the second column is zero, then (0,1,0) is an eigenvector */
   {
     Q[0][0] = 0.0;
     Q[1][0] = 1.0;
     Q[2][0] = 0.0;
   }
   else if (norm < SQR(64.0 * DBL_EPSILON) * error)
-  {                         // If angle between A[0] and A[1] is too small, don't use
-    t = SQR(A[0][1]);       // cross product, but calculate v ~ (1, -A0/A1, 0)
+  {                         /* If angle between A[0] and A[1] is too small, don't use */
+      t = SQR(A[0][1]);       /* cross product, but calculate v ~ (1, -A0/A1, 0) */
     f = -A[0][0] / A[0][1];
     if (SQR(A[1][1]) > t)
     {
@@ -521,7 +521,7 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
     Q[1][0] = f * norm;
     Q[2][0] = 0.0;
   }
-  else                      // This is the standard branch
+  else                      /* This is the standard branch */
   {
     norm = sqrt(1.0 / norm);
     for (j=0; j < 3; j++)
@@ -529,7 +529,7 @@ int dsyevv3(double A[3][3], double Q[3][3], double w[3])
   }
 
   
-  // Prepare calculation of second eigenvector
+  /* Prepare calculation of second eigenvector */
   t = w[0] - w[1];
   if (fabs(t) > 8.0 * DBL_EPSILON * wmax)
   {

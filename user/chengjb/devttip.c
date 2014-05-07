@@ -61,7 +61,7 @@ void devttip(float **apvx,float **apvz,
 		    apvz[ik][jk]=1.0;
                     continue;
                 }
-                // rotatiing according to tilted symmetry axis
+                /* rotatiing according to tilted symmetry axis */
                 kxx=kx[ik]*coss+kz[jk]*sins;
                 kzz=kz[jk]*coss-kx[ik]*sins;
                 kx2=kxx*kxx;
@@ -146,7 +146,7 @@ void devttip(float **apvx,float **apvz,
                      }
                }
                apvx[i][j]=sum/num;
-            } // end if
+            } /* end if */
             if(fabs(apvz[i][j])<0.01)
             {
                sum=0.0;
@@ -164,7 +164,7 @@ void devttip(float **apvx,float **apvz,
                       }
                }
                apvz[i][j]=sum/num;
-            } // end if
-          }//j loop
+            } /* end if */
+	 }/* j loop */
      }
 }

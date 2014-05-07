@@ -36,11 +36,17 @@ int main(int argc, char* argv[])
         float *data;
         cjbsegy  *tr;
         char *fn;
+        FILE *Fi;
+        sf_file Fo;
+
+        int   nz, nx;
+        float fz;
+        float fx;
+        float dz;
+        float dx;
 
         sf_init(argc,argv);
 
-        FILE *Fi;
-        sf_file Fo;
  
         if (NULL==(fn=sf_getstring("fn"))) fn="hess.rtm.absorb.vti.image.su.pc_LF";
 
@@ -57,20 +63,15 @@ int main(int argc, char* argv[])
         if (1 != fread(tr,sizeof(cjbsegy),1,Fi)) 
 	    sf_error("fread error:");
 
-        int   nz=(int)tr->ns;
-        float fz=tr->f1;
-        //float fx=tr->f2;
-        //float fx=-5000.0;
-        float fx=-5000.0*6.096*2/10;
-        //float dz=(float)tr->dt/1000.0;
-        float dz=6.096*2;
-        //float dx=(float)tr->d2;
-        //float dx=10.0;
-        float dx=6.096*2;
+        nz=(int)tr->ns;
+        fz=tr->f1;
+        fx=-5000.0*6.096*2/10;
+        dz=6.096*2;
+        dx=6.096*2;
 
         if(fseek(Fi, 0L, 2) ==-1)
           printf("input file size unknown; Please specify n2\n");
-        int nx=(int) (ftell(Fi)/((nz+60)*sizeof(float)));
+        nx=(int) (ftell(Fi)/((nz+60)*sizeof(float)));
 
         sf_warning("nx=%d nz=%d dx=%f dz=%f",nx,nz,dx,dz);
 

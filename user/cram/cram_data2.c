@@ -25,7 +25,11 @@
 #include <sys/time.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
+#ifdef sun
+#include <sys/filio.h>
+#else
 #include <sys/ioctl.h>
+#endif
 #include <sys/select.h>
 #include <unistd.h>
 #include <netinet/in.h>
@@ -73,7 +77,7 @@ struct CRAMData2 {
     float                t0, dt, trd;
     bool                 kmah, filter, erefl;
     float               *data;
-    unsigned char       *mmaped;
+    char                *mmaped;
     FILE                *stream;
     sf_cram_data_trvals *trvals;
     size_t               nc;
@@ -246,9 +250,9 @@ sf_cram_data2 sf_cram_data2_init (sf_file data, sf_file ddaemon)
         cram_data->ntr = 0; /* Number of buffered traces */
     } else {
         /* Local access mode via memory mapping */
-        cram_data->mmaped = (unsigned char*)mmap (NULL, n + cram_data->offs,
-                                                  PROT_READ, MAP_SHARED,
-                                                  fileno (cram_data->stream), 0);
+        cram_data->mmaped = (char*)mmap (NULL, n + cram_data->offs,
+					 PROT_READ, MAP_SHARED,
+					 fileno (cram_data->stream), 0);
         if (cram_data->mmaped == MAP_FAILED)
             sf_error ("Data mmap failed: %s", strerror (errno));
         cram_data->data = (float*)(cram_data->mmaped + cram_data->offs);

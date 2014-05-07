@@ -73,12 +73,15 @@ void devvtip(float **apvx,float **apvz, float *kx, float *kz, float *kkx, float*
                   sinx = SGN(kx[ik])*sqrt(1.0-cosx*cosx);
                 }
 
+		/*
                 //engein2dvti1(ve, va, sinx, cosx, vp2, vs2, ep2, de2, f);
                 //sf_warning("Dellinger: va[0]=%f va[1]=%f",va[0],va[1]);
                 //sf_warning("ve[0][0]=%f ve[0][1]=%f",ve[0][0],ve[0][1]);
                 //sf_warning("ve[1][0]=%f ve[1][1]=%f",ve[1][0],ve[1][1]);
+		*/
                 
                 engein2dvti2(ve, va, sinx, cosx, vp2, vs2, ep2, de2);
+		/*
                 //sf_warning("2*2Matrix: va[0]=%f va[1]=%f",va[0],va[1]);
                 //sf_warning("ve[0][0]=%f ve[0][1]=%f",ve[0][0],ve[0][1]);
                 //sf_warning("ve[1][0]=%f ve[1][1]=%f",ve[1][0],ve[1][1]);
@@ -87,6 +90,7 @@ void devvtip(float **apvx,float **apvz, float *kx, float *kz, float *kkx, float*
                 //sf_warning("Lapack: va[0]=%f va[1]=%f",va[0],va[1]);
                 //sf_warning("ve[0][0]=%f ve[0][1]=%f",ve[0][0],ve[0][1]);
                 //sf_warning("ve[1][0]=%f ve[1][1]=%f",ve[1][0],ve[1][1]);
+		*/
 
 		apvx[ik][jk]=(float)(ve[0][0]/sinx);
 		apvz[ik][jk]=(float)(ve[0][1]/cosx);

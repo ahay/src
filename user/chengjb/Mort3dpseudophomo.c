@@ -1,10 +1,10 @@
 /* 3-D three-components wavefield modeling using pseudo-pure mode P-wave equation in tilted ORT media.
 
    Refernces:
-             Cheng et al. (15th IWSA, 2012);
-             Cheng and Kang (SEG Abstract, 2012);
-             Kang and Cheng (SEG Abstract, 2012)
-             Wang et al.(SEG Abstract, 2012)      
+   Cheng et al. (15th IWSA, 2012);
+   Cheng and Kang (SEG Abstract, 2012);
+   Kang and Cheng (SEG Abstract, 2012)
+   Wang et al.(SEG Abstract, 2012)      
 
    Copyright (C) 2012 Tongji University, Shanghai, China 
 
@@ -62,16 +62,35 @@ int main(int  argc,char **argv)
 
     float vp0, vs0, epsi1, epsi2, del1, del2, del3, gam1, gam2;
 
-    sf_init(argc,argv);
-
     sf_file Fo1, Fo2, Fo3;
 
-    float f0=40;         // main frequency of the wavelet(usually 30Hz)
-    float t0=0.04;       // time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
-    float A=1.0;           // the amplitude of wavelet 
+    float f0=40;         /* main frequency of the wavelet(usually 30Hz) */
+    float t0=0.04;       /* time delay of the wavelet(if f0=30Hz, t0=0.04s)*/
+    float A=1.0;           /* the amplitude of wavelet */
 
     clock_t t2, t3;
     float   timespent;
+
+    float *coeff_2dx,*coeff_2dy,*coeff_2dz,*coeff_1dx,*coeff_1dy,*coeff_1dz;
+
+    int mm;
+    int mmix;
+
+    int nxpad, nypad, nzpad;
+
+    float*** p1;
+    float*** p2;
+    float*** p3;
+    
+    float*** q1;
+    float*** q2;
+    float*** q3;
+
+    float*** r1;
+    float*** r2;
+    float*** r3;
+
+    sf_init(argc,argv);
 
     /* t1=clock(); */
 
@@ -109,109 +128,105 @@ int main(int  argc,char **argv)
 
     sf_warning("bd=%d",bd);
 
-    int mm=2*_m+1;
-    int mmix=2*_mix+1;
+    mm=2*_m+1;
+    mmix=2*_mix+1;
 
-    float *coeff_2dx,*coeff_2dy,*coeff_2dz,*coeff_1dx,*coeff_1dy,*coeff_1dz;
+    coeff_2dy=sf_floatalloc(mm);
+    coeff_2dx=sf_floatalloc(mm);
+    coeff_2dz=sf_floatalloc(mm);
+    coeff_1dy=sf_floatalloc(mmix);
+    coeff_1dx=sf_floatalloc(mmix);
+    coeff_1dz=sf_floatalloc(mmix);
 
-       coeff_2dy=sf_floatalloc(mm);
-       coeff_2dx=sf_floatalloc(mm);
-       coeff_2dz=sf_floatalloc(mm);
-       coeff_1dy=sf_floatalloc(mmix);
-       coeff_1dx=sf_floatalloc(mmix);
-       coeff_1dz=sf_floatalloc(mmix);
+    coeff2d(coeff_2dx,dx);
+    coeff2d(coeff_2dy,dy);
+    coeff2d(coeff_2dz,dz);
 
-        coeff2d(coeff_2dx,dx);
-        coeff2d(coeff_2dy,dy);
-        coeff2d(coeff_2dz,dz);
+    coeff1dmix(coeff_1dx, dx);
+    coeff1dmix(coeff_1dy, dy);
+    coeff1dmix(coeff_1dz, dz);
 
-        coeff1dmix(coeff_1dx, dx);
-        coeff1dmix(coeff_1dy, dy);
-        coeff1dmix(coeff_1dz, dz);
+    nxpad=nx+2*bd;
+    nypad=ny+2*bd;
+    nzpad=nz+2*bd;
 
-        int nxpad, nypad, nzpad;
+    p1=sf_floatalloc3(nzpad,nxpad,nypad);
+    p2=sf_floatalloc3(nzpad,nxpad,nypad);
+    p3=sf_floatalloc3(nzpad,nxpad,nypad);
 
-        nxpad=nx+2*bd;
-        nypad=ny+2*bd;
-        nzpad=nz+2*bd;
-
-	    float*** p1=sf_floatalloc3(nzpad,nxpad,nypad);
-        float*** p2=sf_floatalloc3(nzpad,nxpad,nypad);
-        float*** p3=sf_floatalloc3(nzpad,nxpad,nypad);
-
-        zero3float(p1,nzpad,nxpad,nypad);
-        zero3float(p2,nzpad,nxpad,nypad);
-        zero3float(p3,nzpad,nxpad,nypad);
+    zero3float(p1,nzpad,nxpad,nypad);
+    zero3float(p2,nzpad,nxpad,nypad);
+    zero3float(p3,nzpad,nxpad,nypad);
     
-        float*** q1=sf_floatalloc3(nzpad,nxpad,nypad);
-        float*** q2=sf_floatalloc3(nzpad,nxpad,nypad);
-        float*** q3=sf_floatalloc3(nzpad,nxpad,nypad);
+    q1=sf_floatalloc3(nzpad,nxpad,nypad);
+    q2=sf_floatalloc3(nzpad,nxpad,nypad);
+    q3=sf_floatalloc3(nzpad,nxpad,nypad);
 
-        zero3float(q1,nzpad,nxpad,nypad);
-        zero3float(q2,nzpad,nxpad,nypad);
-        zero3float(q3,nzpad,nxpad,nypad);
+    zero3float(q1,nzpad,nxpad,nypad);
+    zero3float(q2,nzpad,nxpad,nypad);
+    zero3float(q3,nzpad,nxpad,nypad);
 
-        float*** r1=sf_floatalloc3(nzpad,nxpad,nypad);
-        float*** r2=sf_floatalloc3(nzpad,nxpad,nypad);
-        float*** r3=sf_floatalloc3(nzpad,nxpad,nypad);
+    r1=sf_floatalloc3(nzpad,nxpad,nypad);
+    r2=sf_floatalloc3(nzpad,nxpad,nypad);
+    r3=sf_floatalloc3(nzpad,nxpad,nypad);
 
-        zero3float(r1,nzpad,nxpad,nypad);
-        zero3float(r2,nzpad,nxpad,nypad);
-        zero3float(r3,nzpad,nxpad,nypad);
+    zero3float(r1,nzpad,nxpad,nypad);
+    zero3float(r2,nzpad,nxpad,nypad);
+    zero3float(r3,nzpad,nxpad,nypad);
 
-        t2=clock();
+    t2=clock();
 
-        /* setup I/O files */
-        Fo1 = sf_output("out");          /* pseudo-pure P-wave iLine x-component */
-        Fo2 = sf_output("PseudoPurePy"); /* pseudo-pure P-wave iLine y-component */
-        Fo3 = sf_output("PseudoPurePz"); /* pseudo-pure P-wave xLine z-component */
+    /* setup I/O files */
+    Fo1 = sf_output("out");          /* pseudo-pure P-wave iLine x-component */
+    Fo2 = sf_output("PseudoPurePy"); /* pseudo-pure P-wave iLine y-component */
+    Fo3 = sf_output("PseudoPurePz"); /* pseudo-pure P-wave xLine z-component */
 
-        puthead3x(Fo1, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
-        puthead3x(Fo2, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
-        puthead3x(Fo3, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
+    puthead3x(Fo1, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
+    puthead3x(Fo2, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
+    puthead3x(Fo3, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
 
- /*****************************************************************************
- *  Calculating polarization deviation operator for wave-mode separation
- * ***************************************************************************/
-        /* source definition */
-        isy=nypad/2;
-        isx=nxpad/2;
-        isz=nzpad/2;
+    /*****************************************************************************
+     *  Calculating polarization deviation operator for wave-mode separation
+     * ***************************************************************************/
+    /* source definition */
+    isy=nypad/2;
+    isx=nxpad/2;
+    isz=nzpad/2;
 
-	/*********the kernel calculation ************/
-	for(it=0;it<ns;it++)
-	{
-	     t=it*dt;
-             //sf_warning("t=%f f0=%f t0=%f A=%f",t, f0, t0, A);
-	     p2[isy][isx][isz]+=Ricker(t, f0, t0, A);
-	     q2[isy][isx][isz]+=Ricker(t, f0, t0, A);
-	     r2[isy][isx][isz]+=Ricker(t, f0, t0, A);
-		 sf_warning("p2=%f q2=%f r2=%f\n", p2[isy][isx][isz],q2[isy][isx][isz],r2[isy][isx][isz]);
+    /*********the kernel calculation ************/
+    for(it=0;it<ns;it++)
+    {
+	t=it*dt;
 
-  	     fwportpseudophomo(dt,p1,p2,p3,q1,q2,q3,r1,r2,r3,
-                           coeff_2dx,coeff_2dy,coeff_2dz,coeff_1dx,coeff_1dy,coeff_1dz,
-	                       vp0,vs0,epsi1,del1,gam1,epsi2,del2,gam2,del3,
-                           nxpad,nypad,nzpad,dx,dy,dz);//for ORT
+	p2[isy][isx][isz]+=Ricker(t, f0, t0, A);
+	q2[isy][isx][isz]+=Ricker(t, f0, t0, A);
+	r2[isy][isx][isz]+=Ricker(t, f0, t0, A);
+	sf_warning("p2=%f q2=%f r2=%f\n", p2[isy][isx][isz],q2[isy][isx][isz],r2[isy][isx][isz]);
 
-        if(it==ns-1) // output snapshot
+	fwportpseudophomo(dt,p1,p2,p3,q1,q2,q3,r1,r2,r3,
+			  coeff_2dx,coeff_2dy,coeff_2dz,coeff_1dx,coeff_1dy,coeff_1dz,
+			  vp0,vs0,epsi1,del1,gam1,epsi2,del2,gam2,del3,
+			  nxpad,nypad,nzpad,dx,dy,dz);/*for ORT */
+
+        if(it==ns-1) /* output snapshot */
         {
-        // output iLine 
-		for(i=0;i<ny;i++)
-        {
-            im=i+bd;
-		    for(j=0;j<nx;j++)
-                    {
-                        jm=j+bd;
-                        sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
-                        sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
-                        sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
-                    }
-                }
-             }
-            for(i=0;i<nypad;i++)
+	    /* output iLine */ 
+	    for(i=0;i<ny;i++)
+	    {
+		im=i+bd;
+		for(j=0;j<nx;j++)
+		{
+		    jm=j+bd;
+		    sf_floatwrite(&p3[im][jm][bd],nz,Fo1);
+		    sf_floatwrite(&q3[im][jm][bd],nz,Fo2);
+		    sf_floatwrite(&r3[im][jm][bd],nz,Fo3);
+		}
+	    }
+	}
+	for(i=0;i<nypad;i++)
             for(j=0;j<nxpad;j++)
-            for(k=0;k<nzpad;k++)
-            {
+		for(k=0;k<nzpad;k++)
+		{
                     p1[i][j][k]=p2[i][j][k];
                     p2[i][j][k]=p3[i][j][k];
 
@@ -220,9 +235,9 @@ int main(int  argc,char **argv)
 
                     r1[i][j][k]=r2[i][j][k];
                     r2[i][j][k]=r3[i][j][k];
-           }
-           sf_warning("forward propagation...  it= %d",it);
-     }
+		}
+	sf_warning("forward propagation...  it= %d",it);
+    }
 
     printf("ok3\n");
 
@@ -240,5 +255,5 @@ int main(int  argc,char **argv)
     free(**r2);
     free(**r3);
 
-    return 0;
+    exit(0);
 }

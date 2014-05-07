@@ -110,14 +110,14 @@ int main(int argc, char *argv[])
 	twlen=.3; if (verb) sf_warning("twlen cannot be less than .3s, using .3s");
     }
     /* setting taper and spatial and temporal windows */
-    n1taper =round(taper/dt);
+    n1taper =roundf(taper/dt);
     n1taper = (n1taper%2 ? n1taper+1 : n1taper); 
 
-    N1w = round((n1-1)*dt/twlen);
+    N1w = roundf((n1-1)*dt/twlen);
 
     if (N1w==1) taper=0.0;
 
-    n1ws = round(twlen/dt) + 1;
+    n1ws = roundf(twlen/dt) + 1;
     n1wf = n1ws + n1taper/2;
     n1wi = n1ws + n1taper;
 

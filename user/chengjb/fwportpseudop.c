@@ -72,9 +72,7 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
     r2dy=0.5/dy;
     r2dz=0.5/dz;
 
-    //sf_warning("r2dx=%f r2dy=%f r2dz=%f",r2dx,r2dy,r2dz);
-
-    //prepare for mixed deri calculation
+    /* prepare for mixed deri calculation */
     for(i=_mix;i<ny+_mix;i++)
 	for(j=_mix;j<nx+_mix;j++)
 	    for(k=_mix;k<nz+_mix;k++)
@@ -110,11 +108,11 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
                 if(kk<0)   kk=0;
                 if(kk>=nz) kk=nz-1;
 		vp2=vp0[ii][jj][kk]*vp0[ii][jj][kk];
-                //float tmp;
+                /*float tmp;
                 //tmp=(epsi_1[ii][jj][kk]-del_1[ii][jj][kk]);
                 //vs2=tmp*vp2;
-                //vs2=0.6*0.6*vp2;
-                vs2=vs0[ii][jj][kk]*vs0[ii][jj][kk];//*0.5*0.5;                   
+                //vs2=0.6*0.6*vp2; */
+                vs2=vs0[ii][jj][kk]*vs0[ii][jj][kk];/* *0.5*0.5; */                  
 		ep_1=1+2*epsi_1[ii][jj][kk];
 		ep_2=1+2*epsi_2[ii][jj][kk];
 		de_1=1+2*del_1[ii][jj][kk];
@@ -140,23 +138,17 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 	        RT21=-sin_alpha*sin_theta;
 	        RT22=cos_theta;
 
-                //sf_warning("vp0=%f vs0=%f ",vp0[ii][jj][kk],vs0[ii][jj][kk]);
-                //sf_warning("ep1=%f ep2=%f ",epsi_1[ii][jj][kk],epsi_2[ii][jj][kk]);
-                //sf_warning("de1=%f de2=%f de3=%f ",del_1[ii][jj][kk],del_2[ii][jj][kk],del_3[ii][jj][kk]);
-                //sf_warning("ga1=%f ga2=%f ",gama_1[ii][jj][kk],gama_2[ii][jj][kk]);
-                //sf_warning("alpha=%f the=%f phi=%f ",alpha[ii][jj][kk],the[ii][jj][kk],phi[ii][jj][kk]);
-
 		vpz=vp2;
 		vpx=vp2*ep_2;
 		vpy=vp2*ep_1;
 		vpn1=vp2*de_1;
 		vpn2=vp2*de_2;
-		vpn3=vpx*de_3;//vpx*del_3
+		vpn3=vpx*de_3;/* vpx*del_3 */
 		vsz1=vs2;
 		vsz2=vs2*gam_1/gam_2;
 		vsz3=vs2*gam_1;
 
-		//mixed deri calculation
+		/* mixed deri calculation */
 		hpxy=0;hpxz=0;hpyz=0;
 		hqxy=0;hqxz=0;hqyz=0;
 		hrxy=0;hrxz=0;hryz=0;
@@ -180,9 +172,9 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
                         hqyz+=coeff_1dz[lmix]*qy_tmp[i][j][kl]*r2dz;
                         hryz+=coeff_1dz[lmix]*ry_tmp[i][j][kl]*r2dz;
                     }
-                }// l loop
+                }/* l loop */
 
-		//deri calculation
+		/* deri calculation */
 		hpx=0;hpy=0;hpz=0;
 		hqx=0;hqy=0;hqz=0;
 		hrx=0;hry=0;hrz=0;
@@ -210,8 +202,8 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 			hqz+=coeff_2dz[lm]*q2[i][j][kl];
 			hrz+=coeff_2dz[lm]*r2[i][j][kl];
 		    }
-		}// l loop
-		// Tilted deri calculation
+		}/* l loop */
+		/* Tilted deri calculation */
 		px=0;py=0;pz=0;
 		qx=0;qy=0;qz=0;
 		rx=0;ry=0;rz=0;
@@ -342,6 +334,7 @@ void fwportpseudophomo(float dt,float***p1,float***p2,float***p3,
     float C23_44,C12_66,C13_55;
 
     int i,j,k,l, m=_m;
+#ifdef _OPENMP
 #pragma omp parallel for private(i,j,k,l)				\
     schedule(dynamic)							\
     shared(p1,p2,p3,							\
@@ -349,7 +342,7 @@ void fwportpseudophomo(float dt,float***p1,float***p2,float***p3,
 	   r1,r2,r3,							\
 	   coeff_1dx,coeff_1dy,coeff_1dz,coeff_2dx,coeff_2dy,coeff_2dz, \
 	   vp0,vs0,epsi1,del1,gama1,epsi2,del2,gama2,del3)
-
+#endif
     for(i=0;i<nx;i++)
         for(j=0;j<ny;j++)
             for(k=0;k<nz;k++)

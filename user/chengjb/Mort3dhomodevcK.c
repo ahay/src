@@ -43,19 +43,37 @@
 
 int main(int  argc,char **argv)
 {
-    sf_init(argc,argv);
-
     sf_file Fix, Fiy, Fiz;
     sf_file Fi1, Fi2, Fi3;
     sf_file Fo1, Fo2;
 
     clock_t t1, t2;
     float   timespent;
+    int     nx, ny, nz, nkx, nky, nkz;
+    float   dx, dy, dz;
+
+    /* Read/Write axes */
+    sf_axis az, ax, ay;
+
+    float*** px;
+    float*** py;
+    float*** pz;
+    float*** p;
+
+    int iy, ix, iz, iflag=1;
+    sf_axis akz, akx, aky;
+    int *ijkx, *ijky, *ijkz;
+
+    float*** apvx;
+    float*** apvy;
+    float*** apvz;
 
     t1=clock();
 
     /* time samping paramter */
     /* setup I/O files */
+    sf_init(argc,argv);
+
     Fix = sf_input("in");
     Fiy = sf_input("apvy");
     Fiz = sf_input("apvz");
@@ -66,11 +84,7 @@ int main(int  argc,char **argv)
     Fo1 = sf_output("out");               /* pseudo-pure scalar P-wave */
     Fo2 = sf_output("PseudoPureSepP");    /* separated scalar P-wave */
 
-    int     nx, ny, nz, nkx, nky, nkz;
-    float   dx, dy, dz;
 
-    /* Read/Write axes */
-    sf_axis az, ax, ay;
 
     az = sf_iaxa(Fi1,1); nz = sf_n(az); dz = sf_d(az)*1000.0;
     ax = sf_iaxa(Fi1,2); nx = sf_n(ax); dx = sf_d(ax)*1000.0;
@@ -86,12 +100,10 @@ int main(int  argc,char **argv)
     puthead3x(Fo1, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
     puthead3x(Fo2, nz, nx, ny, dz/1000.0, dx/1000.0, dy/1000.0, 0.0, 0.0, 0.0);
 
-    float*** px=sf_floatalloc3(nz,nx,ny);
-    float*** py=sf_floatalloc3(nz,nx,ny);
-    float*** pz=sf_floatalloc3(nz,nx,ny);
-    float*** p=sf_floatalloc3(nz,nx,ny);
-
-    int iy, ix, iz, iflag=1;
+    px=sf_floatalloc3(nz,nx,ny);
+    py=sf_floatalloc3(nz,nx,ny);
+    pz=sf_floatalloc3(nz,nx,ny);
+    p=sf_floatalloc3(nz,nx,ny);
 
     for(iy=0;iy<ny;iy++)
     for(ix=0;ix<nx;ix++)
@@ -109,7 +121,6 @@ int main(int  argc,char **argv)
     }
 
     /* Read axes */
-    sf_axis akz, akx, aky;
     akz = sf_iaxa(Fix,1); nkz = sf_n(akz); /* dkz = sf_d(akz); */
     akx = sf_iaxa(Fix,2); nkx = sf_n(akx); /* dkx = sf_d(akx); */
     aky = sf_iaxa(Fix,3); nky = sf_n(aky); /* dky = sf_d(aky); */
@@ -130,16 +141,15 @@ int main(int  argc,char **argv)
        exit(0);
     }
 
-    int *ijkx, *ijky, *ijkz;
     ijkx = sf_intalloc(nx);
     ijky = sf_intalloc(ny);
     ijkz = sf_intalloc(nz);
 
     ikxikyikz(ijkx, ijky, ijkz, nx, ny, nz);
 
-    float*** apvx=sf_floatalloc3(nz,nx,ny);
-    float*** apvy=sf_floatalloc3(nz,nx,ny);
-    float*** apvz=sf_floatalloc3(nz,nx,ny);
+    apvx=sf_floatalloc3(nz,nx,ny);
+    apvy=sf_floatalloc3(nz,nx,ny);
+    apvz=sf_floatalloc3(nz,nx,ny);
 
     for(iy=0;iy<ny;iy++)
     for(ix=0;ix<nx;ix++)
@@ -191,5 +201,6 @@ int main(int  argc,char **argv)
     free(ijkx);
     free(ijky);
     free(ijkz);
-    return 0;
+
+    exit(0);
 }

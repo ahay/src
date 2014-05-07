@@ -6,7 +6,9 @@ Igor Terentyev.
 
 #include "utils.h"
 
-#include "mm_malloc.h"
+#ifndef sun
+#include <mm_malloc.h>
+#endif
 
 /*----------------------------------------------------------------------------*/
 
@@ -35,15 +37,21 @@ static MPI_Comm m_rcm = 0;
 
 void* usermalloc_(size_t size)
 {
-/*    return malloc(size); */
+#ifdef sun
+    return malloc(size);
+#else
     return _mm_malloc(size, 16);
+#endif
 }
 /*----------------------------------------------------------------------------*/
 
 void userfree_(void *ptr)
 {
-/*    free(ptr); */
+#ifdef sun
+    free(ptr); 
+#else
     _mm_free(ptr);
+#endif
 }
 /*----------------------------------------------------------------------------*/
 

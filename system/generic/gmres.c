@@ -197,8 +197,8 @@ void gmres (const float *f                                         /* data */,
       /* use ATLAS' CBLAS routines */
 
       /* v = f - v */
-      cblas_sscal (n, -1.0, v, 1); // v = - v
-      cblas_saxpy (n, 1.0, f, 1, v, 1); // v = f - v
+      cblas_sscal (n, -1.0, v, 1); /* v = - v */
+      cblas_saxpy (n, 1.0, f, 1, v, 1); /* v = f - v */
 
       /* g [0] = cblas_dnrm2 (n, v, 1); */
       g[0] = sqrt (cblas_sdot (n, v, 1, v, 1));

@@ -81,10 +81,12 @@ int main(int argc, char* argv[])
     double  vp2, vs2, ep2, de2, the;
 
     sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8, Fo9, Fo10, Fo11, Fo12;
+    sf_file Fvp0, Fvs0, Feps, Fdel, Fthe;
+
+    sf_axis az, ax;
 
     sf_init(argc,argv);
-
-       
+   
     /*  wavelet parameter for source definition */
     f0=30.0;                  
     t0=0.04;                  
@@ -107,16 +109,13 @@ int main(int argc, char* argv[])
     sf_warning("read velocity model parameters");
 
     /* setup I/O files */
-    sf_file Fvp0, Fvs0, Feps, Fdel, Fthe;
-
-    Fvp0 = sf_input ("in");  /* vp0 using standard input */
+     Fvp0 = sf_input ("in");  /* vp0 using standard input */
     Fvs0 = sf_input ("vs0");  /* vs0 */
     Feps = sf_input ("epsi");  /* epsi */
     Fdel = sf_input ("del");  /* delta */
     Fthe = sf_input ("the");  /* theta */
 
     /* Read/Write axes */
-    sf_axis az, ax;
     az = sf_iaxa(Fvp0,1); nvz = sf_n(az); dz = sf_d(az)*1000.0;
     ax = sf_iaxa(Fvp0,2); nvx = sf_n(ax); dx = sf_d(ax)*1000.0;
     fx=sf_o(ax)*1000.0;
@@ -125,7 +124,7 @@ int main(int argc, char* argv[])
     /* source definition */
     isx=nvx/2;
     isz=nvz/2;
-    //isz=nvz*2/5;
+    /* isz=nvz*2/5; */
 
     /* wave modeling space */
     nx=nvx;
@@ -213,7 +212,7 @@ int main(int argc, char* argv[])
 
 	taper=sf_floatalloc2(nkz, nkx);
 
-	// define axis samples and taper in wavenumber domain 
+	/* define axis samples and taper in wavenumber domain */
 	kxkztaper(kx, kz, kkx, kkz, kx2, kz2, taper, nkx, nkz, hnkx, hnkz, dkx, dkz, kxmax, kzmax, tapertype);
 
 	nkxz=nkx*nkz;
@@ -297,7 +296,7 @@ int main(int argc, char* argv[])
                 ikxkz2xz(apxs, apxxs, hnkx, hnkz, nkx, nkz);
                 ikxkz2xz(apzs, apzzs, hnkx, hnkz, nkx, nkz);
 
-                // truncation and saving of operator in space-domain
+                /* truncation and saving of operator in space-domain */
                 if(ihomo==1)
                 {
 		    for(jx=-hnkx1,ixx=hnkx-hnkx1;jx<=hnkx1;jx++,ixx++) 
@@ -321,21 +320,21 @@ int main(int argc, char* argv[])
                 
                 if((ixf==nxf/2&&izf==nzf/2&&ihomo==0)||ihomo==1)
                 {
-		    //write-disk operators in kx-kz domain
+		    /* write-disk operators in kx-kz domain */
 		    sf_floatwrite(apx[0], nkxz, Fo3);
 		    sf_floatwrite(apz[0], nkxz, Fo4);
 		    sf_floatwrite(apxs[0], nkxz, Fo5);
 		    sf_floatwrite(apzs[0], nkxz, Fo6);
 
-		    //write-disk operators in x-z domain
+		    /* write-disk operators in x-z domain */
 		    sf_floatwrite(apxx[0], nkxz, Fo7);
 		    sf_floatwrite(apzz[0], nkxz, Fo8);
 		    sf_floatwrite(apxxs[0], nkxz, Fo9);
 		    sf_floatwrite(apzzs[0], nkxz, Fo10);
                 }
                 if(ihomo==1) goto loop;
-	    }// iz loop
-	}//ix loop
+	    }/* iz loop */
+	}/* ix loop */
     loop:;
 
 	free(kx);
@@ -355,7 +354,7 @@ int main(int argc, char* argv[])
 	free(*apzz);
 	free(*apxxs);
 	free(*apzzs);
-    }// isep loop
+    }/* isep loop */
     /****************End of Calculating Projection Deviation Operator****************/
  
     /****************begin to calculate wavefield****************/
@@ -417,7 +416,7 @@ int main(int argc, char* argv[])
     {
 	t=it*dt;
 
-	// 2D exploding force source (e.g., Wu's PhD
+	/* 2D exploding force source (e.g., Wu's PhD) */
 	for(i=-1;i<=1;i++)
 	    for(j=-1;j<=1;j++)
 	    {
@@ -427,7 +426,7 @@ int main(int argc, char* argv[])
 		    q2[isxm+i][iszm+j]+=j*Ricker(t, f0, t0, A);
 		}
 	    }
-        // 2D equil-energy force source (e.g., Wu's PhD)
+        /* 2D equil-energy force source (e.g., Wu's PhD) */
         /*
 	  for(i=-1;i<=1;i++)
 	  for(j=-1;j<=1;j++)
@@ -466,7 +465,6 @@ int main(int argc, char* argv[])
                        
 	    if(isep==1)
 	    {
-		//////////////////////////////////////////////////////////////////////////////////////////
 		/* applying P-wave polarization projection operator in spatial domain */
 		zero2float(p3c,nz,nx);
 		zero2float(q3c,nz,nx);
@@ -483,7 +481,6 @@ int main(int argc, char* argv[])
 
 		sf_floatwrite(sum[0],nx*nz, Fo11);
           
-		//////////////////////////////////////////////////////////////////////////////////////////
 		/* applying SV-wave polarization projection operator in spatial domain */
 		zero2float(p3c,nz,nx);
 		zero2float(q3c,nz,nx);
@@ -499,7 +496,7 @@ int main(int argc, char* argv[])
 			sum[i][j]=p3c[i][j]+q3c[i][j];
 
 		sf_floatwrite(sum[0],nx*nz, Fo12);
-	    }// isep==1
+	    }/* isep==1 */
 
 	}/* (it+1)%ntstep==0 */
 

@@ -120,11 +120,16 @@ void explsourcet(sf_complex *curr/*@out@*/,
 #ifdef SF_HAS_COMPLEX_H
 		curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)] += vwavlet[vit]*phi;
 #else
-		curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)] += sf_crmul(vwavlet[vit],phi);
+		curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)] = sf_cadd(curr[(vsx-cent+ix)*nz2+(vsdepth-cent+iz)],
+								    sf_crmul(vwavlet[vit],phi));
 #endif
 	    }
     } else {
+#ifdef SF_HAS_COMPLEX_H
 	curr[vsx*nz2+vsdepth] += vwavlet[vit];
+#else
+	curr[vsx*nz2+vsdepth] = sf_cadd(curr[vsx*nz2+vsdepth],vwavlet[vit]);
+#endif
     } 
 }
 
@@ -228,7 +233,7 @@ int lrosfor2(float ***wavfld, sf_complex **rcd, bool verb,
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];
 #else
-		    c += sf_cmul(lt[im][i], wave[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif
 		}
 		curr[j] = c;
@@ -341,7 +346,11 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 #endif
         for (ix=0; ix<nx; ix++)  {
 	    j = (gp+geop->top)+(ix+geop->lft)*nz2; /* padded grid */
+#ifdef SF_HAS_COMPLEX_H
 	    curr[j]+=rcd[ix][it];
+#else
+	    curr[j]=sf_cadd(curr[j],rcd[ix][it]);
+#endif
 	}
 
 	/*matrix multiplication*/
@@ -373,7 +382,7 @@ int lrosback2(float **img1, float **img2, float ***wavfld, sf_complex **rcd,
 #ifdef SF_HAS_COMPLEX_H
 		    c += lt[im][i]*wave[im][j];
 #else
-		    c += sf_cmul(lt[im][i], wave[im][j]);
+		    c = sf_cadd(c,sf_cmul(lt[im][i], wave[im][j]));
 #endif
 		}
 		curr[j] = c;

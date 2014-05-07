@@ -1,7 +1,7 @@
 #include "segyops.hh"
 
 float mutefun(float t) {
-  t = fminf(1.0f,fmaxf(t,0.0f));
+  t = MIN(1.0f,MAX(t,0.0f));
   return 3*t*t-2*t*t*t;
 }   
 
@@ -51,13 +51,13 @@ namespace TSOpt {
       
       // adjust mute so that w=0 works
       if (mute_type) {
-	wm = fmaxf(dt/s,w);
+	wm = MAX(dt/s,w);
 	float wtmp = mutefun((gx - s)/wm) * mutefun((tm - gx)/wm);
 	for (int i=0;i<nt;i++) 
 	  trout.data[i] = trin.data[i]*wtmp;
       }
       else {
-	wm=fmaxf(dt,w);
+	wm=MAX(dt,w);
 	//      cerr<<"mute at offset="<<x<<" slope="<<s<<" zotime="<<tm<<" width="<<wm<<endl;
 	for (int i=0;i<nt;i++) 
 	  //	trout.data[i] = trin.data[i]*mutefun((t0+i*dt-s*fabs(x)-tm)/wm);
