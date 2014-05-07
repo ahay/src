@@ -2,10 +2,6 @@
 ###################### COMMON DEFINITIONS - DO NOT ALTER ####################
 #############################################################################
 from rsf.proj import *
-from iwave import getFlowSignature
-WORKPATH        = os.getenv('DATAPATH')
-# todo: WORKPATH should be checked
-#Decider('timestamp-match')
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
 #############################################################################
@@ -26,11 +22,11 @@ suchw           = os.path.join(CWPROOT,'bin/suchw')
 sugain          = os.path.join(CWPROOT,'bin/sugain')
 suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 supsimage       = os.path.join(CWPROOT,'bin/supsimage')
-IWAVE           = os.getenv('NEWIWAVE')
+RSFSRC          = os.getenv('RSFSRC')
+IWAVE           = os.path.join(RSFSRC,'trip/iwave')
 stdmdl          = os.path.join(IWAVE,'demo/main/standardmodel.x')
 towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 acd             = os.path.join(IWAVE,'acd/main/acd.x')
-#acd             = os.path.join(IWAVE,'newacd/main/acd.x')
 
 ######### fetch list - non-reproducible data fetched from web archive.
 # the format for this dictionary is 
