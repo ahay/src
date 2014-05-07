@@ -32,6 +32,7 @@ static float C, **sig;
 static sf_complex **Sc;
 
 void dlctk_init(int n1_, int n2_, int L_, float C_)
+/*< allocate variables and initilize >*/
 {
     n1=n1_;
     n2=n2_;
@@ -46,6 +47,7 @@ void dlctk_init(int n1_, int n2_, int L_, float C_)
 }
 
 void dlctk_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, float *dd)
+/*< DLCT-k linear operator >*/
 {
 	int i1, i2, il;
 
@@ -89,6 +91,7 @@ void dlctk_lop(bool adj, bool add, int nm, int nd, sf_complex *mm, float *dd)
 }
 
 void dlctk_close()
+/*< free the allovated variables >*/
 {
     free(*sig); free(sig);
     free(*Sc); free(Sc);

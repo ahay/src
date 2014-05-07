@@ -61,6 +61,7 @@ int main(int argc, char* argv[])
     tmp=sf_floatalloc(n1*n2*L);// save thresholds
     sf_floatread(dat, n1*n2, in);
 
+    dlctk_init(n1, n2, L, C);
     for(iter=0; iter<niter; iter++)
     {
 	dlctk_lop(true, false, n1*n2*L, n1*n2, coeffs, dat);
@@ -77,7 +78,7 @@ int main(int argc, char* argv[])
 
 	if (verb) sf_warning("iteration %d", iter);
     }
-
+    dlctk_close();
     sf_floatwrite(dat, n1*n2, out);
 
     free(dat);

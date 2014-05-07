@@ -26,7 +26,7 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
 int main(int argc, char* argv[])
 {
     bool inv, verb;
-    int L, N, n2;
+    int L, N, n2, i2;
     float C;
     float *sig;
     sf_complex *Sc;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     sig = sf_floatalloc(N);
     Sc = sf_complexalloc(N*L);
 
-    for (int i2=0; i2 < n2; i2++)  {
+    for (i2=0; i2 < n2; i2++)  {
 	if (verb) sf_warning("trace %d of %d;",i2+1,n2);
 	    if(!inv){
 		sf_floatread(sig,N,in);
