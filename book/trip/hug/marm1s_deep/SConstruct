@@ -17,14 +17,6 @@ thispath        = os.getcwd()
 #          CWPROOT         = os.getenv('CWPROOT')
 #          ...
 #          sunull          = os.path.join(CWPROOT,'bin/sunull')
-CWPROOT         = os.getenv('CWPROOT')
-sunull          = os.path.join(CWPROOT,'bin/sunull')
-sushw           = os.path.join(CWPROOT,'bin/sushw')
-suchw           = os.path.join(CWPROOT,'bin/suchw')
-sugain          = os.path.join(CWPROOT,'bin/sugain')
-suwind          = os.path.join(CWPROOT,'bin/suwind')
-suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
-supsimage       = os.path.join(CWPROOT,'bin/supsimage')
 RSFSRC          = os.getenv('RSFSRC')
 towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
 acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
@@ -82,7 +74,7 @@ Flow('dcsqext.rsf','dcsq24.rsf', 'sfcat dcsq24.rsf dcsq24.rsf d=1.0 o=0.0 | sfpu
 # headers for experiment foo stored in hdrfoo.su, wavelet in
 # waveletfoo.su
 
-for foo in ['line100m', 'hdr6km', 'hdr2shot']:
+for foo in ['line100m', 'hdr6km']:
     Flow('wavelet_' + foo + '.su', ['wavelet_base.su', foo + '.su'],
          towed_array + 
          '''
