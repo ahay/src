@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     newl = 1 + lefts + rights;
     nxb = newl + nbl + nbr;
     nzb = nzorg + nbt + nbb;
-    //tl = nx*nz;
+    /* tl = nx*nz; */
     tl = newl*nzorg;
 
 /*
@@ -381,7 +381,7 @@ int main(int argc, char* argv[])
         /*input & extend velocity model*/
         for (iz=nbt; iz<nzorg+nbt; iz++){
             for (ix=0; ix<nxb; ix++){
-                //v[iz][ix] = vorg[iz-nbt][ix+isx-lefts-nbl];
+                /* v[iz][ix] = vorg[iz-nbt][ix+isx-lefts-nbl]; */
                 v[iz][ix] = vorg[iz-nbt][ix+isx];
             }
         }
@@ -445,9 +445,9 @@ int main(int argc, char* argv[])
         /* propagation in time */
         for (it=0; it < nt; it++) {
             if(it<1500 )  { 
-		//cur[isz+nbt][isx+nbl] += wav[it];
+		/* cur[isz+nbt][isx+nbl] += wav[it]; */
 		cur[isz+nbt][lefts+nbl] += wav[it];
-		//source_smooth(cur,isz+nbt,isx+nbl,wav[it]);
+		/* source_smooth(cur,isz+nbt,isx+nbl,wav[it]); */
 		source_smooth(cur,isz+nbt,lefts+nbl,wav[it]);
 	    }
 
@@ -599,7 +599,7 @@ int main(int argc, char* argv[])
             /* sf_floatread(rvr,nr,input); */
 	    /*     for (ix=r0; ix < nx; ix+=jr) cur[irz+nbt][ix+nbl] += rvr[ix][it]; */
             for (ir=0; ir < nl; ir++) {
-                //ix = r0 + ir*jr;
+                /* ix = r0 + ir*jr; */
                 ix = r0 + ir*jr -isx + lefts;
                 if(topo) irz = irze[ir];
                 cur[irz+nbt][ix+nbl] += rvr[rb+ir][it];

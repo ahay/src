@@ -120,8 +120,6 @@ int main(int argc, char* argv[])
     sf_putint(output,"n2",nz);
     sf_putfloat(output,"d2",dz);
     sf_putfloat(output,"o2",o2);
-    //sf_settype(output,SF_FLOAT);
-
 
     nxb = nx + nbl + nbr;
     nzb = nz + nbt + nbb;

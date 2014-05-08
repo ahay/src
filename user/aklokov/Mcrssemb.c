@@ -176,8 +176,13 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
     float stackVal   = 0.f;
     float stackSqVal = 0.f;
 
-    float* traceSumOutput = sf_floatalloc (zNumFull);
-    float* traceSumInput  = sf_floatalloc (zNumFull);
+    float sembval;
+
+    float* traceSumOutput; 
+    float* traceSumInput;  
+
+    traceSumOutput = sf_floatalloc (zNumFull);
+    traceSumInput  = sf_floatalloc (zNumFull);
 
     memset (traceSumOutput, 0, zNumFull * sizeof (float));   
     memset (traceSumInput,  0, zNumFull * sizeof (float));   
@@ -204,7 +209,7 @@ void getSemblanceForTrace (int tracesNum, float* stack, float* stackSq, float* s
 		    sumInput  += traceSumInput[j];
 		}
 
-		const float sembval = sumInput ? sumOutput / (k * sumInput) : 0.f;
+		sembval = sumInput ? sumOutput / (k * sumInput) : 0.f;
 
 		if (makeWeight_) {
 			if (sembval > s2_) semb [it] = 1.0;
@@ -368,9 +373,5 @@ int main (int argc, char* argv[])
 
     sf_warning (".");
 
-    sf_fileclose (inDags_);
-    sf_fileclose (inDagsSq_);
-    sf_fileclose (sembFile_);
-
-    return 0;
+    exit(0);
 }

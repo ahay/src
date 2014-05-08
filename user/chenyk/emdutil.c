@@ -13,7 +13,7 @@
 /*^*/
 
 #ifndef _emdutil_h
-//extr.h
+
 #ifndef EXTR_H
 #define EXTR_H
 
@@ -29,12 +29,10 @@ typedef struct {
 /*^*/
 #endif
 
-//interpolation.h
 #ifndef INTERPOLATION_H
 #define INTERPOLATION_H
 #endif
 
-//io.h
 #ifndef EMD_IO_H
 #define EMD_IO_H
 
@@ -62,7 +60,6 @@ typedef struct {
 /*^*/
 #endif
 
-//local_mean.h
 #ifndef LOCAL_MEAN_H
 #define LOCAL_MEAN_H
 
@@ -78,7 +75,6 @@ typedef struct {
 #endif
 #endif
 
-//extr.c
 /************************************************************************/
 /*                                                                      */
 /* INITIALIZATION OF EXTREMA STRUCTURE                                  */
@@ -292,7 +288,6 @@ void free_extr(extrema_t ex)
     free(ex.y_min);
 }
 
-//interpolation.c
 /*************************************************************************/
 /*                                                                       */
 /* INTERPOLATION                                                         */
@@ -351,7 +346,6 @@ void interpolation(double y[],double xs[],double ys[],int n,double x[], int nx,d
   }
 }
 
-//io.c
 /************************************************************************/
 /*                                                                      */
 /* INITIALIZATION OF THE LIST                                           */
@@ -414,7 +408,6 @@ void free_imf_list(imf_list_t list)
   }
 }
 
-//local_mean.c
 /********************************************************/
 /* ALLOCATE MEMORY FOR THE ENVELOPES AND TEMPORARY DATA */
 /********************************************************/
@@ -497,7 +490,6 @@ int mean_and_amplitude(double *x,double *z,double *m,double *a,int n,extrema_t *
   return 0;
 }
 
-//emdc.c
 /************************************************************************/
 /* ABSOLUTE VALUE                                                       */
 /************************************************************************/

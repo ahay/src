@@ -36,95 +36,95 @@
 #include <omp.h>
 #endif
 
-// VARIABLES
+/* VARIABLES */
 
-// files
-sf_file inDags_;            // dip-angle gathers file - stack in the scattering-angle direction
-sf_file inDagsSq_;          // stack of amplitude squares in the scattering-angle direction
-sf_file sembFile_;          // output file - crs-base semblance
+/* files */
+static sf_file inDags_;            /* dip-angle gathers file - stack in the scattering-angle direction */
+static sf_file inDagsSq_;          /* stack of amplitude squares in the scattering-angle direction */
+static sf_file sembFile_;          /* output file - crs-base semblance */
 
-// data
-float* ptrToDags_;          // pointer to the dip-angle gathers data
-float* ptrToDagsSq_;        //  --"--  --"--  square gathers data 
-float* ptrToSembPanel_;     //  --"--  --"--  result - crs-based semblance
+/* data */
+static float* ptrToDags_;          /* pointer to the dip-angle gathers data */
+static float* ptrToDagsSq_;        /*  --"--  --"--  square gathers data  */
+static float* ptrToSembPanel_;     /*  --"--  --"--  result - crs-based semblance */
 
-float* ptrToData_;          // pointer to the dip-angle gathers data
-float* ptrToDataSq_;        //  --"--  --"--  square gathers data 
-
-
-// dip-angle gathers dimensions:
-int   zNum_;                 
-float zStart_;
-float zStep_;
-
-int   dipxNum_;
-float dipxStart_;
-float dipxStep_;
-
-int   dipyNum_;
-float dipyStart_;
-float dipyStep_;
-
-int   xNum_;
-float xStart_;
-float xStep_;
-
-int   yNum_;
-float yStart_;
-float yStep_;
-
-int dagSize_;               // size (in samples) of one dip-angle gather
-int scatnum_;               // shows how many traces were stacked in the scattering angle direction
-int coher_;                 // height (in samples) of a vertical window for semblance calculation
-int halfCoher_;             // half of the "coher"
-
-int xapp_;                  // number of CIGs in the inline-direction processed simultaneously
-int halfXapp_;              // half of the "xapp"
-int xdipapp_;               // number of traces in the x-dip direction processed simultaneously
-
-int yapp_;                  // number of CIGs in the crossline-direction processed simultaneously
-int halfYapp_;              // half of the "yapp"
-int ydipapp_;               // number of traces in the y-dip direction processed simultaneously
-
-int substackNum_;           // equals xdipapp_ * ydipapp_; should be taken into account by semblance calculation
-
-int fullSampNumber_;        // number of samples included semblance windows
+static float* ptrToData_;          /* pointer to the dip-angle gathers data */
+static float* ptrToDataSq_;        /*  --"--  --"--  square gathers data  */
 
 
+/* dip-angle gathers dimensions: */
+static int   zNum_;                 
+static float zStart_;
+static float zStep_;
 
-// FUNCTIONS
+static int   dipxNum_;
+static float dipxStart_;
+static float dipxStep_;
 
-// Check if the point with its surounding is inside data volume;
-// if not - correct analysis aperture
+static int   dipyNum_;
+static float dipyStart_;
+static float dipyStep_;
+
+static int   xNum_;
+static float xStart_;
+static float xStep_;
+
+static int   yNum_;
+static float yStart_;
+static float yStep_;
+
+static int dagSize_;               /* size (in samples) of one dip-angle gather */
+static int scatnum_;               /* shows how many traces were stacked in the scattering angle direction */
+static int coher_;                 /* height (in samples) of a vertical window for semblance calculation */
+static int halfCoher_;             /* half of the "coher" */
+
+static int xapp_;                  /* number of CIGs in the inline-direction processed simultaneously */
+static int halfXapp_;              /* half of the "xapp" */
+static int xdipapp_;               /* number of traces in the x-dip direction processed simultaneously */
+
+static int yapp_;                  /* number of CIGs in the crossline-direction processed simultaneously */
+static int halfYapp_;              /* half of the "yapp" */
+static int ydipapp_;               /* number of traces in the y-dip direction processed simultaneously */
+
+static int substackNum_;           /* equals xdipapp_ * ydipapp_; should be taken into account by semblance calculation */
+
+static int fullSampNumber_;        /* number of samples included semblance windows */
+
+
+
+/* FUNCTIONS */
+
+/* Check if the point with its surounding is inside data volume; */
+/* if not - correct analysis aperture */
 void checkBoundary (int* yPos, int* curYapp, int* xPos, int* curXapp) 
 {
     int diff;
 
-    // checking in X-dimension
+    /* checking in X-dimension */
 
-    // left edge
+       /* left edge */
     if (*xPos < 0) {
         diff = -1 * *xPos;
 	*curXapp -= diff;
 	*xPos = 0;
     }
 
-    // right edge
+    /* right edge */
     if (*xPos + *curXapp - 1 >= xNum_) {
         diff = *xPos + *curXapp - xNum_; 
         *curXapp -= diff;
     }
 
-    // checking in Y-dimension
+    /* checking in Y-dimension */
 
-    // bottom edge
+    /* bottom edge */
     if (*yPos < 0) {
         diff = -1 * *yPos;
 	*curYapp -= diff;
 	*yPos = 0;
     }
 
-    // top edge
+    /* top edge */
     if (*yPos + *curYapp - 1 >= yNum_) {
         diff = *yPos + *curYapp - yNum_; 
         *curYapp -= diff;
@@ -144,7 +144,7 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
     int startY = yPos - halfYapp;
     int startX = xPos - halfXapp;
     
-    // check if the apperture is adequate... if not - correct it and the start point
+    /* check if the apperture is adequate... if not - correct it and the start point */
     checkBoundary (&startY, curYapp, &startX, curXapp);
     *leftShift = xPos - startX;
     *bottomShift = yPos - startY;
@@ -176,15 +176,13 @@ void readBlockAroundPoint (int yPos, int xPos, int halfYapp, int halfXapp, int* 
 		sf_floatread (ptrToDataSq_ + shift, pointsNumToRead, inDagsSq_);
     }
 
-    // substacking in the y-dip and x-dip directions
+    /* substacking in the y-dip and x-dip directions */
     for (iy = 0; iy < *curYapp; ++iy) {
 		yShift = iy * (*curXapp) * dipyNum_ * dipxNum_ * zNum_;
 		for (ix = 0; ix < *curXapp; ++ix) {
 		    xShift = ix * dipyNum_ * dipxNum_ * zNum_;
 		    shiftToGather = yShift + xShift;
-//#ifdef _OPENMP 
-//#pragma omp parallel for
-//#endif
+
 		    for (idy = 0; idy < dipyNum_; ++idy) {
 				for (idx = 0; idx < dipxNum_; ++idx) {
 				    tracesShift = shiftToGather + (idy * dipxNum_ + idx) * zNum_;
@@ -333,9 +331,6 @@ void buildFilter (int curyapp, int bottomShift, int curxapp, int leftShift, floa
     float* ptrToSembTrace = ptrToSembPanel;
     const float CONVRATIO = SF_PI / 180.f;
 		
-//#ifdef _OPENMP 
-//#pragma omp parallel for
-//#endif
     for (idy = 0; idy < dipyNum_; ++idy) {
 		curyDip = dipyStart_ + idy * dipyStep_;
 		curyDipInRad = curyDip * CONVRATIO;
@@ -359,38 +354,38 @@ int main (int argc, char* argv[])
 {
     int cigNum, cigInd, iy, ix, curxapp, leftShift, curyapp, bottomShift;
    
-// Initialize RSF 
+/* Initialize RSF */
     sf_init (argc,argv);
-// Input files
+/* Input files */
     inDags_   = sf_input("in");
     inDagsSq_ = sf_input("dataSq");
 
-// check that the input is float 
+/* check that the input is float */
     if ( SF_FLOAT != sf_gettype (inDags_) )   sf_error ("Need float input: dip-angle gathers");
     /* dip-angle gathers - stacks in the scattering-angle direction */
     if ( SF_FLOAT != sf_gettype (inDagsSq_) ) sf_error ("Need float input: dip-angle gathers in squares");
     /* stacks of amplitude squares in the scattering-angle direction */
 
-// Output file
+/* Output file */
     sembFile_ = sf_output("out");
 
-// Depth/time axis 
+/* Depth/time axis  */
     if ( !sf_histint   (inDags_, "n1", &zNum_) )      sf_error ("Need n1= in input");
     if ( !sf_histfloat (inDags_, "d1", &zStep_) )     sf_error ("Need d1= in input");
     if ( !sf_histfloat (inDags_, "o1", &zStart_) )    sf_error ("Need o1= in input");
-// x-dip angle axis 
+/* x-dip angle axis  */
     if ( !sf_histint   (inDags_, "n2", &dipxNum_) )   sf_error ("Need n2= in input");
     if ( !sf_histfloat (inDags_, "d2", &dipxStep_) )  sf_error ("Need d2= in input");
     if ( !sf_histfloat (inDags_, "o2", &dipxStart_) ) sf_error ("Need o2= in input");
-// y-dip angle axis 
+/* y-dip angle axis  */
     if ( !sf_histint   (inDags_, "n3", &dipyNum_) )   sf_error ("Need n3= in input");
     if ( !sf_histfloat (inDags_, "d3", &dipyStep_) )  sf_error ("Need d3= in input");
     if ( !sf_histfloat (inDags_, "o3", &dipyStart_) ) sf_error ("Need o3= in input");
-// x axis 
+/* x axis  */
     if ( !sf_histint   (inDags_, "n4", &xNum_) )      sf_error ("Need n4= in input");
     if ( !sf_histfloat (inDags_, "d4", &xStep_) )     sf_error ("Need d4= in input");
     if ( !sf_histfloat (inDags_, "o4", &xStart_) )    sf_error ("Need o4= in input");
-// y axis 
+/* y axis  */
     if ( !sf_histint   (inDags_, "n5", &yNum_) )      sf_error ("Need n5= in input");
     if ( !sf_histfloat (inDags_, "d5", &yStep_) )     sf_error ("Need d5= in input");
     if ( !sf_histfloat (inDags_, "o5", &yStart_) )    sf_error ("Need o5= in input");
@@ -422,9 +417,9 @@ int main (int argc, char* argv[])
 
     fullSampNumber_ = 2 * halfCoher_ + zNum_;
     dagSize_   = zNum_ * dipxNum_ * dipyNum_;
-    halfCoher_ = coher_ / 2;    // yes - this is the integer division	
-    halfXapp_  = xapp_ / 2;     // this is the integer division too	
-    halfYapp_  = yapp_ / 2;     // this is the integer division too	
+    halfCoher_ = coher_ / 2;    /* yes - this is the integer division */
+    halfXapp_  = xapp_ / 2;     /* this is the integer division too */
+    halfYapp_  = yapp_ / 2;     /* this is the integer division too */
 
     cigNum = xNum_ * yNum_;
     cigInd = 1;
@@ -434,13 +429,13 @@ int main (int argc, char* argv[])
 		
 	    sf_warning ("CIG %d of %d;", cigInd, cigNum);
 		
-	    // xapp for the currect core CIG; it can be changed by the checkBoundary ()
+	    /* xapp for the currect core CIG; it can be changed by the checkBoundary () */
 	    curxapp = xapp_; 
-	    // distance between the core gather and the left side of the aperture
+	    /* distance between the core gather and the left side of the aperture */
 	    leftShift = 0;	
-	    // yapp for the currect core CIG; it can be changed by the checkBoundary ()
+	    /* yapp for the currect core CIG; it can be changed by the checkBoundary () */
 	    curyapp = yapp_; 
-	    // distance between the core gather and the bottom side of the aperture
+	    /* distance between the core gather and the bottom side of the aperture */
 	    bottomShift = 0;	
 
 	    ptrToSembPanel_ = sf_floatalloc (dagSize_);
@@ -462,9 +457,5 @@ int main (int argc, char* argv[])
 
     sf_warning (".");
 
-    sf_fileclose (inDags_);
-    sf_fileclose (inDagsSq_);
-    sf_fileclose (sembFile_);
-
-    return 0;
+    exit(0);
 }

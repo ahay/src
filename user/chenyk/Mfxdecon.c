@@ -78,8 +78,9 @@ int main(int argc, char *argv[])
     kiss_fft_cpx *filter;	/* filter               	  	*/
 
     kiss_fftr_cfg forw, invs;
-    sf_init(argc,argv);
     sf_file in, out;
+
+    sf_init(argc,argv);
 
     in = sf_input("in");
     out = sf_output("out");

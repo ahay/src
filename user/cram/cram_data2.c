@@ -61,7 +61,7 @@ typedef struct {
 typedef struct {
     size_t id;        /* Message ID */
     size_t n;         /* Number of received traces */
-    float  samples[]; /* Trace samples */
+    float *samples;   /* Trace samples */
 } sf_cram_data_trvals;
 /* Structure for getting requested traces back */
 /*^*/

@@ -34,7 +34,6 @@ int main(int argc, char* argv[])
     /*Timing*/
     clock_t tstart, tstop;
     double timespend;
-    tstart = clock();
 
     /* For newton-------------*/
     int niter, vstatus, order, count, count1, count2, count3;
@@ -54,6 +53,8 @@ int main(int argc, char* argv[])
     velocity vel=NULL, vel2=NULL;
     ktable ts, tg, **tss, **tgs;
     sf_file data, refl, curv, modl, vti, picks = NULL, slopes = NULL;
+
+    tstart = clock();
 	
     sf_init(argc,argv);
 	

@@ -20,9 +20,6 @@
 
 
 #include <rsf.h>
-/*#ifdef _OPENMP
-//#include <omp.h>
-//#endif */
 
 #include "svd.h"
 #include "pca.h"

@@ -840,7 +840,7 @@ params['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                          '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                          '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
 param2['c'] = re.compile(r'sf_get(?P<type>bool|largeint|int|float|string)\s*'
-                    '\([^/]+\/\*\(\s*(?P<name>[\w\#]+)'
+                    '\((?:[^/]|/[^\*])+\/\*\(\s*(?P<name>[\w\#]+)'
                     '(?:=(?P<default>\S+))?'
                     '\s*(?P<desc>[^\)]+)\)\*\/')
 params2['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'

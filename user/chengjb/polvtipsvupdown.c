@@ -47,12 +47,9 @@ void polvtipsvupdown(float **apx,float **apz, float **apxs,float **apzs,
 
 	int nkx;
 
-        //for( i=-hnkx; i<=hnkx ; i++ )
-        //for( i=0; i<=hnkx ; i++ )
         for( i=-hnkx; i<=0 ; i++ )
         {
            ik=i+hnkx;
-           //for( j=-hnkz; j<=hnkz ; j++)
            for( j=0; j<=hnkz ; j++)
            {
                 jk=j+hnkz;

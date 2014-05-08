@@ -31,10 +31,10 @@ int main(int argc, char*argv[])
 	sf_complex **p1;
 	opwd_init(1, 1, "maxflat", 1.0);
 
-// **c@9
+/* **c@9
 //  0.1666   0.25    0.8333 
 //  0.6666   0.00   -0.1666
-//  0.1666  -0.25    0.8333
+//  0.1666  -0.25    0.8333 */
 
 
 	in = sf_floatalloc2(n1, n2);
@@ -44,9 +44,9 @@ int main(int argc, char*argv[])
 	d2 = sf_floatalloc2(n1, n2);
 /*	fb = sf_floatalloc4(3, 3, n1, n2); */
 
-//  0.1   0.2   0.3
+/*  0.1   0.2   0.3
 //  1.1   1.2   1.3
-//  2.1   2.2   2.3
+//  2.1   2.2   2.3 */
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{
@@ -56,17 +56,17 @@ int main(int argc, char*argv[])
 
 
 	opwd(3,3, in, p1, u1);
-//	u1[1][1] = 0.1;
+/*	u1[1][1] = 0.1; */
 	opwdpd(3,3, in, p1, d1, 0);
-//	d1[1][1] = 1.0
+/*	d1[1][1] = 1.0 */
 	opwdpd(3,3, in, p1, d2, 1);
-//	d2[1][1] = 0.1
+/*	d2[1][1] = 0.1 */
 
 
-// large angle model
+/* large angle model
 //  1	2	1.5
 //  1	2	1.5
-//  1	2	1.5
+//  1	2	1.5 */
 	
 	for(i1=0; i1<n1; i1++)
 	{
@@ -80,11 +80,11 @@ int main(int argc, char*argv[])
 
 
 	opwd(3,3, in, p1, u1);
-//	u1[1][1] = 9.0;
+/*	u1[1][1] = 9.0; */
 	opwdpd(3,3, in, p1, d1, 0);
-//	d1[1][1] = 0.0
+/*	d1[1][1] = 0.0 */
 	opwdpd(3,3, in, p1, d2, 1);
-//	d2[1][1] = 9.0
+/*	d2[1][1] = 9.0 */
 
 
 	return 0;

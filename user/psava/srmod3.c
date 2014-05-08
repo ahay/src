@@ -197,9 +197,6 @@ void srmod3(ssroperator3d weop,
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( weop->ww_s[ompith][imy][imx] *= weop->rr[ompith]  [imy][imx];
 		      weop->ww_r[ompith][imy][imx] += weop->ww_s[ompith][imy][imx]; 
-//                      if((imz<102)&&(imz>90)&&(imx>297)&&(imx<303))
-//                        sf_warning("iz=%d,imx=%d,rr=%1.10f,ws=%1.10f+%1.10f",imz,imx,weop->rr[ompith][imy][imx],crealf(weop->ww_s[ompith][imy][imx]),cimagf(weop->ww_s[ompith][imy][imx]));
-
                     );
 #else
 		LOOP( weop->ww_s[ompith][imy][imx] = 
@@ -212,16 +209,6 @@ void srmod3(ssroperator3d weop,
 		
 		ssr3_ssf(w,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
 		
-/*
-                if((imz>90)&&(imz<102)){
-                    for(imy=0; imy<cub->amy.n; imy++){
-                        for(imx=298; imx<303; imx++){
-                          sf_warning("iz=%d,wwr=%f+%f",imz,crealf(weop->ww_r[ompith][imy][imx]),cimagf(weop->ww_r[ompith][imy][imx]));
-                        }
-                    }
-                }
-*/
-
 		slow3_advance(cub,s_r,ompith);
 	    } /* z (up-going) */
 	    

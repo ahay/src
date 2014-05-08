@@ -33,7 +33,7 @@
 
 int main (int argc, char* argv[]) 
 {
-// dip-angle gathers dimensions
+/* dip-angle gathers dimensions */
     int zNum_;   float zStart_;   float zStep_;
     int dipNum_; float dipStart_; float dipStep_;
     int xNum_;	 float xStart_;   float xStep_;
@@ -47,11 +47,14 @@ int main (int argc, char* argv[])
     float curDipRad, curDipSin, curDipCos, ksicos2, a, b, c;
     float sqrtD, sin1, sin2, dip1, dip2, secondLeft, secondRight, taper;
 
-// Initialize RSF 
+    float* dipPanel;
+    float* taperPanel;
+
+/* Initialize RSF */
     sf_init (argc,argv);
-// Input files
+/* Input files */
     dagFile = sf_input ("in");
-// check that the input is float 
+/* check that the input is float  */
     if ( SF_FLOAT != sf_gettype (dagFile) ) sf_error ("Need float input: dip-angle gathers");
     /* dip-angle gathers - stacks in the scattering-angle direction */
 
@@ -60,24 +63,24 @@ int main (int argc, char* argv[])
 	dipFile  = sf_input ("dips");
     }
 
-// Output file
+/* Output file */
     taperFile = sf_output("out");
 
 
-// Depth/time axis 
+/* Depth/time axis  */
     if ( !sf_histint   (dagFile, "n1", &zNum_) )   sf_error ("Need n1= in input");
     if ( !sf_histfloat (dagFile, "d1", &zStep_) )  sf_error ("Need d1= in input");
     if ( !sf_histfloat (dagFile, "o1", &zStart_) ) sf_error ("Need o1= in input");
-// Dip angle axis 
+/* Dip angle axis  */
     if ( !sf_histint   (dagFile, "n2", &dipNum_) )     sf_error ("Need n2= in input");
     if ( !sf_histfloat (dagFile, "d2", &dipStep_) )    sf_error ("Need d2= in input");
     if ( !sf_histfloat (dagFile, "o2", &dipStart_) )   sf_error ("Need o2= in input");
-// x axis 
+/* x axis  */
     if ( !sf_histint   (dagFile, "n3", &xNum_) )   sf_error ("Need n3= in input");
     if ( !sf_histfloat (dagFile, "d3", &xStep_) )  sf_error ("Need d3= in input");
     if ( !sf_histfloat (dagFile, "o3", &xStart_) ) sf_error ("Need o3= in input");
 
-// tapering paremeters
+/* tapering paremeters */
     if (!sf_getbool ("ddep", &isDepthDep)) isDepthDep = true;
     /* if y, taper depends on depth; if n, no */
 
@@ -91,14 +94,14 @@ int main (int argc, char* argv[])
     /* half of a migrated wave length */
     if (dz < 0) {sf_warning ("dz value is changed to 20"); dz = 20.f;}
 
-    // input dips
+    /* input dips */
     panelSize = xNum_ * zNum_;
-    float* dipPanel   = sf_floatalloc (panelSize);
+    dipPanel   = sf_floatalloc (panelSize);
     sf_seek (dipFile, 0, SEEK_SET);		
     sf_floatread (dipPanel, panelSize, dipFile);
-    // output taper
+    /* output taper */
     taperSize = dipNum_ * zNum_;
-    float* taperPanel = sf_floatalloc (taperSize);
+    taperPanel = sf_floatalloc (taperSize);
 
     CONVRATIO = SF_PI / 180.f;
     temp = 0.f;
@@ -107,11 +110,11 @@ int main (int argc, char* argv[])
 	memset (taperPanel, 0, taperSize * sizeof (float));
 	for (iz = 0; iz < zNum_; ++iz) {
 	    ind = ix * zNum_ + iz;
-	    dip = dipPanel [ind]; // local slope in degree
+	    dip = dipPanel [ind]; /* local slope in degree */
 
 
 	    curZ = zStart_ + iz * zStep_;
-	    if (! (curZ - dz > 0) ) continue; // out from data
+	    if (! (curZ - dz > 0) ) continue; /* out from data */
 
 	    ksi = curZ / (curZ - dz); 			
 
@@ -123,7 +126,7 @@ int main (int argc, char* argv[])
 		dipLeft  = 0.f;
 		dipRight = 0.f;
 
-		if (isDepthDep) { // depth-dependent taper - based on the equation from Landa et al., 2008
+		if (isDepthDep) { /* depth-dependent taper - based on the equation from Landa et al., 2008 */
 
 		    curDipRad = dip * CONVRATIO; 
 		    curDipSin = sin (curDipRad);
@@ -145,20 +148,20 @@ int main (int argc, char* argv[])
 	
 		    dipLeft  = dip1 < dip2 ? dip1 : dip2;
 		    dipRight = dip1 < dip2 ? dip2 : dip1;
-		} else { // taper widht is constant along depths
+		} else { /* taper widht is constant along depths */
 		    dipLeft  = dip - pwidth;
 		    dipRight = dip + pwidth;
 		}
 
-		// define tails tapering intervals
+		/* define tails tapering intervals */
 		secondLeft  = dipLeft  - greyarea;
 		secondRight = dipRight + greyarea;
 
 		taper = 1;
-		if (curDip > dipLeft && curDip < dipRight) // the slope is in a constructive zone
+		if (curDip > dipLeft && curDip < dipRight) /* the slope is in a constructive zone */
 		    taper = 1;
 		else {	
-		    if (curDip < secondLeft || curDip > secondRight) { // the slope is out from the tapering zone
+		    if (curDip < secondLeft || curDip > secondRight) { /* the slope is out from the tapering zone */
 			taper = 0;
 		    } else {
 			if (curDip < dipLeft) temp = -M_PI + M_PI * (curDip - secondLeft) * 1.f / (dipLeft - secondLeft); 
@@ -174,12 +177,8 @@ int main (int argc, char* argv[])
 
     sf_warning (".");
 
-    sf_fileclose (dipFile);
-    sf_fileclose (dagFile);
-    sf_fileclose (taperFile);
-
     free (dipPanel);
     free (taperPanel);
 
-    return 0;
+    exit(0);
 }

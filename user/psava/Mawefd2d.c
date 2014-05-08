@@ -102,6 +102,11 @@ int main(int argc, char* argv[])
     clock_t start_t, end_t;
     float total_t;
 
+    float ox;
+    float mx;
+    float oz;
+    float mz;
+
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -224,10 +229,8 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* coordinate check: if point is outside the grid, an error is thrown */
-    float ox = sf_o(ax);
-    float mx = ox + (sf_n(ax)-1)*sf_d(ax);
-    float oz = sf_o(az);
-    float mz = oz + (sf_n(az)-1)*sf_d(az);
+    ox = sf_o(ax); mx = ox + (sf_n(ax)-1)*sf_d(ax);
+    oz = sf_o(az); mz = oz + (sf_n(az)-1)*sf_d(az);
 
     for (ix=0; ix<ns; ++ix){
       if (ss[ix].x < ox || ss[ix].x > mx){
@@ -450,14 +453,14 @@ int main(int argc, char* argv[])
 #pragma omp parallel private(ix,iz)	
 #endif
 		{		
-		    // Z spatial derivatives    
+		    /* Z spatial derivatives */
 #ifdef _OPENMP
 #pragma omp for schedule(dynamic,fdm->ompchunk)
 #endif
 		    for    (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for(iz=NOP; iz<fdm->nzpad-NOP; iz++) {		
 			    
-			    // gather
+			    /* gather */
 			    uat[ix][iz]  = iro[ix][iz]*(
 				f1z*(uo[ix  ][iz  ] - uo[ix  ][iz-1]) +
 				f2z*(uo[ix  ][iz+1] - uo[ix  ][iz-2]));
@@ -471,7 +474,7 @@ int main(int argc, char* argv[])
 		    for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 			    
-			    // scatter
+			    /* scatter */
 			    ua[ix][iz  ]  =    
 				f1z*(uat[ix][iz  ] - 
 				     uat[ix][iz+1]) + 
@@ -480,13 +483,13 @@ int main(int argc, char* argv[])
 			}
 		    }
 	
-		    // X spatial derivatives	    
+		    /* X spatial derivatives */	    
 #ifdef _OPENMP
 #pragma omp for schedule(dynamic,fdm->ompchunk)
 #endif
 		    for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-			    // gather
+			    /* gather */
 			    uat[ix][iz]  = iro[ix][iz]*(
 				f1x*(uo[ix  ][iz  ] - uo[ix-1][iz  ]) +
 				f2x*(uo[ix+1][iz  ] - uo[ix-2][iz  ]));
@@ -500,7 +503,7 @@ int main(int argc, char* argv[])
 		    for 	(ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for	(iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 			    
-			    // scatter
+			    /* scatter */
 			    ua[ix  ][iz]  +=    
 				f1x*(uat[ix  ][iz] -
 				     uat[ix+1][iz]) +

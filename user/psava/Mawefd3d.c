@@ -452,7 +452,7 @@ int main(int argc, char* argv[])
     private(ix,iy,iz)
 #endif
 	    {		
-		// Z spatial derivatives
+		/* Z spatial derivatives */
 #ifdef _OPENMP
 #pragma omp for schedule(dynamic,fdm->ompchunk)
 #endif
@@ -460,7 +460,7 @@ int main(int argc, char* argv[])
 		    for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 			    
-			    // gather
+			    /* gather */
 			    uat[iy][ix][iz]  = iro[iy][ix][iz]*(
 				f1z*(uo[iy  ][ix  ][iz  ] - uo[iy  ][ix  ][iz-1]) +
 				f2z*(uo[iy  ][ix  ][iz+1] - uo[iy  ][ix  ][iz-2])
@@ -475,7 +475,7 @@ int main(int argc, char* argv[])
 		for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
 		    for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-			    // scatter
+			    /* scatter */
 			    ua[iy][ix][iz  ]  =	 
 				f1z*(uat[iy][ix][iz]    - 
 				     uat[iy][ix][iz+1]) +
@@ -485,15 +485,15 @@ int main(int argc, char* argv[])
 		    }
 		}
 		
-		// X spatial derivatives		
+		/* X spatial derivatives */	
 #ifdef _OPENMP
 #pragma omp for schedule(dynamic,fdm->ompchunk)
-				#endif
+#endif
 		for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
 		    for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 			    
-			    // gather
+			    /* gather */
 			    uat[iy][ix][iz]  = iro[iy][ix][iz]*(
 				f1x*(uo[iy  ][ix  ][iz  ] - uo[iy  ][ix-1][iz  ]) +
 				f2x*(uo[iy  ][ix+1][iz  ] - uo[iy  ][ix-2][iz  ])
@@ -508,7 +508,7 @@ int main(int argc, char* argv[])
 		for         (iy=NOP; iy<fdm->nypad-NOP; iy++) {				
 		    for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {	
-			    // scatter
+			    /* scatter */
 			    ua[iy][ix  ][iz]  += 
 				f1x*(uat[iy][ix  ][iz]  -  
 				     uat[iy][ix+1][iz]) + 
@@ -518,7 +518,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 		
-		// Y spatial derivatives
+		/* Y spatial derivatives */
 #ifdef _OPENMP
 #pragma omp for schedule(dynamic,fdm->ompchunk)
 #endif
@@ -526,7 +526,7 @@ int main(int argc, char* argv[])
 		    for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
 			    
-			    // gather
+			    /* gather */
 			    uat[iy][ix][iz]  = iro[iy][ix][iz]*(
 				f1y*(uo[iy  ][ix  ][iz  ] - uo[iy-1][ix  ][iz  ]) +
 				f2y*(uo[iy+1][ix  ][iz  ] - uo[iy-2][ix  ][iz  ])
@@ -540,7 +540,7 @@ int main(int argc, char* argv[])
 		for 		(iy=NOP; iy<fdm->nypad-NOP; iy++) {
 		    for     (ix=NOP; ix<fdm->nxpad-NOP; ix++) {
 			for (iz=NOP; iz<fdm->nzpad-NOP; iz++) {
-			    // scatter
+			    /* scatter */
 			    ua[iy  ][ix][iz]  +=   	
 				f1y*(uat[iy  ][ix][iz]  - 
 				     uat[iy+1][ix][iz]) +

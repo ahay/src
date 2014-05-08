@@ -79,7 +79,7 @@ void opwdpd(int n1, int n2, float **in,
 		}
 		z1 = fir2(-nf1, nf2, b1+nf1, -nf1, nf2, b2+nf1, in[i2]+i1, 1, n1);
 		c1 = fir2(-nf1, nf2, b1+nf1, -nf1, nf2, b2+nf1, in[i2]+i1, -1, -n1);
-		out[i2][i1] = (c1 - z1);//*(id==0?p2:-p1);
+		out[i2][i1] = (c1 - z1);/*(id==0?p2:-p1);*/
 	}
 }
 

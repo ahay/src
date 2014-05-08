@@ -12,6 +12,10 @@
 
 #include <inttypes.h>
 
+#if defined(__sun) && !defined(__GNUC__)
+#define restrict _Restrict
+#endif
+
 /*
  * bspline_base.h
  */

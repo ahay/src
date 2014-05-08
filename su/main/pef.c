@@ -156,12 +156,12 @@ main(int argc, char **argv)
 	
     /* .. mincorr and maxcorr */
     if (sf_getfloat("mincorr", &mincorr)) imincorr = SF_NINT(mincorr/dt);
-    /* start of autocorrelation window (sec) */
+    /*(mincorr start of autocorrelation window in sec )*/
     else				  imincorr = 0;
     if (imincorr < 0) sf_error("mincorr=%g too small", mincorr);
 	
     if (sf_getfloat("maxcorr", &maxcorr)) imaxcorr = SF_NINT(maxcorr/dt);
-    /* 	end of autocorrelation window (sec) */
+    /*(maxcorr end of autocorrelation window in sec )*/
     else				  imaxcorr = nt;
     if (imaxcorr > nt) sf_error("maxcorr=%g too large", maxcorr);
 
