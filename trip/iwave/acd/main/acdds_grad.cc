@@ -255,7 +255,7 @@ int main(int argc, char ** argv) {
 	FcnlOpComp<float> const & f2 =
 	  dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
 	FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
-	LinFitLS<float, CGNE<float>, CGNEPolicyData<float> > const & f3 =
+	LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & f3 =
 	  dynamic_cast<LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > const & >
 	  (fe2.getFunctional()); // current clone of LSLinFit
 	dltm.copy(f3.getLSSoln()); // copy dx from LSLinFit
