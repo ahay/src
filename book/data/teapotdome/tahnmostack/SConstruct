@@ -13,7 +13,7 @@ Result('sustack3d','../fetch/final_stack.rsf',
 Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
      ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
      '''
-     sftahread verbose=1 input=${SOURCES[0]} headers=${SOURCES[1]} 
+     sftahread verbose=1 input=${SOURCES[0]} 
      | sftahnmo 
        verbose=1  
        tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
@@ -74,10 +74,34 @@ Flow(['mappedgathernmo.rsf','mappedgathernmo_hdr.rsf'],
         label3="xline" o3=100 n3=5 d3=10   
         label4="iline" o4=100 n4=3  d4=50   
         output=$TARGET 
-     ''',stdout=0,stdin=0)
+      ''',stdout=0,stdin=0)
 Plot('mappedgathernmo','grey title="tah nmo gather"',view=1)
 Plot('zoommappedgathernmo','mappedgathernmo',
      'sfwindow max1=2. | grey title="tah nmo gather"',view=1)
+Flow(['mappedgathershot.rsf','mappedgathershot_hdr.rsf',
+      'mappedgathernmoshot.rsf','mappedgathernmoshot_hdr.rsf'],
+     ['../fetch/npr3_gathers.rsf','../fetch/npr3_gathers_hdr.rsf'],
+     '''
+     sftahread verbose=0 input=$SOURCE 
+     | sftahwrite 
+        verbose=1                           
+	label2="tracf"  o2=1 n2=863  d2=1   
+        label3="fldr" o3=14 n3=9 d3=100   
+        output=${TARGETS[0]}
+     | sftahnmo 
+       verbose=1  
+       tnmo=0.000,0.373,0.619,0.826,0.909,1.017,1.132,1.222,1.716,3.010 
+       vnmo=9086.27,10244.26,11085.81,10803.11,10969.02,11578.66,12252.14,12669.89,14590.08,17116.54 
+     | sftahwrite 
+        verbose=1                           
+	label2="tracf"  o2=1 n2=863  d2=1   
+        label3="fldr" o3=14 n3=9 d3=100   
+        output=${TARGETS[2]}
+      ''',stdout=0,stdin=0)
+Plot('zoommappedgathershot','mappedgathershot',
+     'sfwindow max1=2. | grey title="tah gather shot"',view=1)
+Plot('zoommappedgathernmoshot','mappedgathernmoshot',
+     'sfwindow max1=2. | grey title="tah gather nmo shot"',view=1)
 
 # from command line:
 # wget http://s3.amazonaws.com/teapot/npr3_field.sgy
