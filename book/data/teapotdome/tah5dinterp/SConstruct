@@ -1,0 +1,20 @@
+from rsf.proj import *
+
+#SConscript('../fetch/SConstruct')
+
+Flow(['temp.rsf', 'temp_hdr.rsf'],
+     ['../tahsubset/alltraces.rsf','../tahsubset/alltraces_hdr.rsf'],
+     '''
+     sftahread
+  	input=$SOURCE 
+        verbose=1  
+     | sftah5dinterp
+       key=sx 
+       verbose=1  
+     | sftahwrite 
+        verbose=1                           
+	label2="tracr"  o2=1 n2=5047  d2=1   
+        output=${TARGETS[0]}
+     ''',stdout=0,stdin=0)
+
+End()
