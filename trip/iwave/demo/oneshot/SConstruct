@@ -119,61 +119,46 @@ for foo in ['12000']:
 Flow('init',None,'makevel n1=416 n2=800 d1=25 d2=25 dlens=200 tlens=200 v000=0 vlens=100 x1lens=1875 x2lens=12000 | sfput id1=0 id2=1 id3=2 dim=2 gdim=3 n3=1 o3=0 d3=1')
 
 # movie-init output file
-t=Flow(['movieinit.work', 'movieinit.rsf'],['init.rsf','csq_4layer.rsf'],
+Flow('movieinit.rsf',['init.rsf','csq_4layer.rsf'],
 	'''				
 	sfmakevel n1=416 n2=800 n3=33 d1=25 d2=25 d3=160 v000=0  | 
-	sfput id1=0 id2=1 id3=2 dim=2 gdim=3 > movieinit.rsf; 
-	/bin/rm -rf movieinit.work; 
-	/bin/mkdir movieinit.work; 
-	cd movieinit.work;
+	sfput id1=0 id2=1 id3=2 dim=2 gdim=3 > ../movieinit.rsf; 
 	'''
-	 +  acd  + ' par=../movieinit.par',stdin=0,stdout=0)
-Clean(t,'movieinit.work')
+	 +  acd  + ' par=../movieinit.par',
+	 stdin=0,stdout=0,workdir='movieinit.work')
 
 # movie-src output file
-t=Flow(['moviesrc.work', 'moviesrc.rsf'],['wavelet12000.su','csq_4layer.rsf'],
+Flow('moviesrc.rsf',['wavelet12000.su','csq_4layer.rsf'],
 	'''
 	sfmakevel n1=416 n2=800 n3=33 d1=25 d2=25 d3=160 v000=0  | 
-	sfput id1=0 id2=1 id3=2 dim=2 gdim=3 > moviesrc.rsf; 
-	/bin/rm -rf moviesrc.work; 
-	/bin/mkdir moviesrc.work; 
-	cd moviesrc.work;
+	sfput id1=0 id2=1 id3=2 dim=2 gdim=3 > ../moviesrc.rsf; 
 	'''
-	 +  acd  + ' par=../moviesrc.par',stdin=0,stdout=0)
-Clean(t,'moviesrc.work')
+	 +  acd  + ' par=../moviesrc.par',
+	 stdin=0, stdout=0, workdir='moviesrc.work')
 
 # trace-src output file
-t=Flow(['shot12000.work', 'shot12000.su'],['wavelet12000.su','csq_4layer.rsf'],
+Flow('shot12000.su',['wavelet12000.su','csq_4layer.rsf'],
 	'''
-	/bin/cp hdr12000.su shot12000.su;
-	/bin/rm -rf shot12000.work; 
-	/bin/mkdir shot12000.work; 
-	cd shot12000.work;
+	/bin/cp ../hdr12000.su ../shot12000.su;
 	'''
-	 +  acd  + ' par=../shot12000.par',stdin=0,stdout=0)
-Clean(t,'shot12000.work')
+	 +  acd  + ' par=../shot12000.par',
+	 stdin=0, stdout=0, workdir='shot12000.work')
 
 # linearized modeling
-t=Flow(['born12000.work', 'born12000.su'],['wavelet12000.su','csq_4layersm.rsf','dcsq_4layer.rsf'],
+Flow('born12000.su',['wavelet12000.su','csq_4layersm.rsf','dcsq_4layer.rsf'],
 	'''
-	/bin/cp hdr12000.su born12000.su;
-	/bin/rm -rf born12000.work; 
-	/bin/mkdir born12000.work; 
-	cd born12000.work;
+	/bin/cp ../hdr12000.su ../born12000.su;
 	'''
-	 +  acd  + ' par=../born12000.par',stdin=0,stdout=0)
-Clean(t,'born12000.work')
+	 +  acd  + ' par=../born12000.par',
+	 stdin=0, stdout=0, workdir='born12000.work')
 
 # rtm
-t=Flow(['migr12000.work', 'mcsq_4layer.rsf'],['born12000.su'],
+t=Flow('mcsq_4layer.rsf',['born12000.su'],
 	'''
-	sfscale < dcsq_4layer.rsf > mcsq_4layer.rsf dscale=0.0;
-	/bin/rm -rf migr12000.work; 
-	/bin/mkdir migr12000.work; 
-	cd migr12000.work;
+	sfscale < ../dcsq_4layer.rsf > ../mcsq_4layer.rsf dscale=0.0;
 	'''
-	 +  acd  + ' par=../migr12000.par',stdin=0,stdout=0)
-Clean(t,'migr12000.work')
+	 +  acd  + ' par=../migr12000.par',
+	 stdin=0, stdout=0, workdir='mcsq_4layer.work')
 
 Result('csq_4layer', 'csq_4layer', 'put label1=Depth unit1=m label2=Distance unit2=m label=V_p^2 unit=m^2/ms^2 | grey color=c mean=y title="Atlantis Cartoon" scalebar=y barreverse=y')
 
