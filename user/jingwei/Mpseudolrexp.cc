@@ -66,8 +66,8 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 	    // apply cout = lrexp(cin)
 	    if (flag==1) {
 		lrexp( cin, ctmp, false, cleft, cright, nt, nx, nz, nkzx, m2, gpz); 
-		lrexp( cout, ctmp, true, cleft, cright, nt, nx, nz, nkzx, m2, gpz);
-  	    } else {
+		lrexp( cout, ctmp, true, cleft, cright, nt, nx, nz, nkzx, m2, gpz); 
+	    } else {
 		cerr<<"Need to provide flag#"<<endl;
 	    }
 
@@ -105,8 +105,8 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 		    cfin[j*nkz+i] = sf_cmplx(cos(phs),-sin(phs));
 		}
 
-            // inverse fft on cfin to get cin1	
-            nk = cfft2_init(1,nz,nx,&nz2,&nx2);
+            // inverse fft on cfin to get cin1
+	    nk = cfft2_init(1,nz,nx,&nz2,&nx2);
 	    if(nk!=nkzx) cerr<<"nk discrepancy "<<endl;
             icfft2_allocate(cfin);
 	    icfft2(cin1,cfin);

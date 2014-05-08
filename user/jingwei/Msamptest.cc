@@ -82,7 +82,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
                 cout[izx] = sf_cmul(cout[izx], conjf(cin[izx]));
 		res(a,b) = cpx(crealf(cout[izx]),cimagf(cout[izx]));
 	    }
-        }
+	}
     } else {
 	// sample rows
 	for(int a=0; a<nr; a++) {
@@ -93,24 +93,14 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 	    sf_complex *cin, *cout;
 	    cin = sf_complexalloc(nzx);
 	    cout = sf_complexalloc(nzx);
+             
+	    // construct cin = delta(x-x0) for all x
             int nz2, nx2, nk;
             sf_complex *cfin, *cin1, *cout1, *cfout;
 	    cfin = sf_complexalloc(nkzx);
 	    cin1 = sf_complexalloc(nkzx);
             cout1 = sf_complexalloc(nkzx);
             cfout = sf_complexalloc(nkzx);
-             
-	    /*
-            //--------construct cin = delta(x-x0) for all x------------
-	    for(int i=0; i<nz; i++)
-	    	for(int j=0; j<nx; j++) {
-	    	    if(i==iz && j==ix)
-	    		cin[j*nz+i] = sf_cmplx(1.0,0.0);
-	    	    else 
-	    		cin[j*nz+i] = sf_cmplx(0.0,0.0);
-	    	}
-            //---------------------------------------------------------
-	    */
 	    
             // construct cfin = exp(-2*pi*i*x0*k) for all k
             float phs;
@@ -120,14 +110,13 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 		    cfin[j*nkz+i] = sf_cmplx(cos(phs),-sin(phs));
 		}
 
-            
-            //--------construct cin in a different way----------------
-            // inverse fft on cfin to get cin1
+            // inverse fft on cfin to get cin1	    
 	    nk = cfft2_init(1,nz,nx,&nz2,&nx2);
-	    if(nk!=nkzx) cerr<<"nk discrepancy in samptest1"<<endl;
+	    if(nk!=nkzx) cerr<<"nk discrepancy "<<endl;
             icfft2_allocate(cfin);
 	    icfft2(cin1,cfin);
 	    cfft2_finalize();
+
             // truncate cin1 to get cin
 	    for (int ix = 0; ix < nx; ix++) {
 		for (int iz = 0; iz < nz; iz++) {
@@ -136,9 +125,20 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 		    cin[i] = cin1[j];
 		}
 	    }
-	    //---------------------------------------------------------
-	    
 
+            /*
+            //--------construct cin in a different way-----------------
+            //--------cin = delta(x-x0) for all x------------
+	    for(int i=0; i<nz; i++)
+	    	for(int j=0; j<nx; j++) {
+	    	    if(i==iz && j==ix)
+	    		cin[j*nz+i] = sf_cmplx(1.0,0.0);
+	    	    else 
+	    		cin[j*nz+i] = sf_cmplx(0.0,0.0);
+	    	}
+            //---------------------------------------------------------
+	    */
+	
 	    // apply cout = prop(cin)
 	    if (flag==1) {
 		prop1( cin, cout, cleft, cright, nz, nx, nkzx, m2, reg);  
@@ -154,7 +154,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
        
             // pad cout to get cout1
             nk = cfft2_init(1,nz,nx,&nz2,&nx2);
-	    if(nk!=nkzx) cerr<<"nk discrepancy in samptest2"<<endl;
+	    if(nk!=nkzx) cerr<<"nk discrepancy "<<endl;
             for (int ix = 0; ix < nx2; ix++) {
 		for (int iz = 0; iz < nz2; iz++) {
 		    int i = iz+ix*nz;
@@ -166,7 +166,7 @@ int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res, int hu)
 		}
 	    }
 
-	    // forward fft on cout1 to get cfout  
+	    // forward fft on cout1 to get cfout  	    
 	    cfft2(cout1,cfout);
 	    cfft2_finalize();  
            

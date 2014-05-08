@@ -123,7 +123,6 @@ int lrexp(sf_complex *mod, sf_complex *dat, bool adj, sf_complex *lt, sf_complex
 		}
 		icfft2(wave[im],cwavem);
 	    }
-
 	    for (ix = 0; ix < nx; ix++) {
 		for (iz=0; iz < nz; iz++) {
 		    i = iz+ix*nz;  /* original grid */
