@@ -233,25 +233,84 @@ int main(int argc, char ** argv) {
       float hmin=valparse<float>(*pars,"HMin",0.1f);
       float hmax=valparse<float>(*pars,"HMax",1.0f);
         
-      /* scan */
-      GradientTest(fbd,m,dm,strgrad,nhval,hmin,hmax);
-
+      Vector<ireal> grad(dom);
+      if (valparse<int>(*pars,"Nhval",3) <=0 ) {
+	FunctionalEvaluation<float> Fm(fbd,m);
+	// cerr<<" \n  compute gradient \n";
+	AssignFilename gradfn(valparse<std::string>(*pars,"grad"));
+	Components<ireal> cgrad(grad);
+	cgrad[0].eval(gradfn);
+	//strgrad << "\n getgradient norm = " << (Fm.getGradient()).norm() << endl;
+	grad.copy(Fm.getGradient());
+	//strgrad << "\n grad norm = " << grad.norm() << endl;
+            
+	Vector<ireal> dltm(op.getDomain());
+	AssignFilename dltmfn(valparse<std::string>(*pars,"reflectivity"));
+	Components<ireal> cdltm(dltm);
+	cdltm[0].eval(dltmfn);
+	dltm.zero();
+            
+	FunctionalBd<float> const & f1 =
+	  dynamic_cast<FunctionalBd<float> const &>(Fm.getFunctional()); // current clone of fbd
+	FcnlOpComp<float> const & f2 =
+	  dynamic_cast<FcnlOpComp<float> const &>(f1.getFunctional()); // function in fbd = gf = fcnaopcomp
+	FunctionalEvaluation<float> const & fe2 = f2.getFcnlEval(); // current feval part of gf
+	LinFitLS<float, ChebPolicy<float>, ChebPolicyData<float> > const & f3 =
+	  dynamic_cast<LinFitLS<float, ChebPolicy<float>, ChebPolicyData<float> > const & >
+	  (fe2.getFunctional()); // current clone of LSLinFit
+	dltm.copy(f3.getLSSoln()); // copy dx from LSLinFit
+            
+	std::string dataest = valparse<std::string>(*pars,"dataest","");
+	std::string datares = valparse<std::string>(*pars,"datares","");
+	std::string normalres = valparse<std::string>(*pars,"normalres","");
+	if (dataest.size()>0) {
+	  OperatorEvaluation<float> gopeval(g,m);
+	  OperatorEvaluation<float> opeval(op,gopeval.getValue());
+	  Vector<float> est(op.getRange());
+	  AssignFilename estfn(dataest);
+	  est.eval(estfn);
+	  opeval.getDeriv().applyOp(dltm,est);
+	  if (datares.size()>0) {
+	    Vector<float> res(op.getRange());
+	    AssignFilename resfn(datares);
+	    res.eval(resfn);
+	    res.copy(est);
+	    res.linComb(-1.0f,mdd);
+	    if (normalres.size()>0){
+	      OperatorEvaluation<float> topeval(top,gopeval.getValue());
+	      Vector<float> nres(op.getDomain());
+	      AssignFilename nresfn(normalres);
+	      nres.eval(nresfn);
+	      // create RHS of block system
+	      Vector<float> tres(top.getRange());
+	      Components<float> ctres(tres);
+	      ctres[0].copy(res);
+	      ctres[1].zero();
+	      topeval.getDeriv().applyAdjOp(tres,nres);
+	    }
+	  }
+	}
+      }
+      else {
+	/* scan */
+	GradientTest(fbd,m,dm,strgrad,nhval,hmin,hmax);
+      }
       if (retrieveRank() == 0) {
 	std::string outfile = valparse<std::string>(*pars,"outfile","");
 	if (outfile.size()>0) {
 	  ofstream outf(outfile.c_str());
-      outf<<strgrad.str();
-      outf<<"\n ================================================= \n";
-      outf<<res.str();
+	  outf<<strgrad.str();
+	  outf<<"\n ================================================= \n";
+	  outf<<res.str();
 	  outf.close();
 	}
 	else {
-      cout<<strgrad.str();
-      cout<<"\n ================================================= \n";
+	  cout<<strgrad.str();
+	  cout<<"\n ================================================= \n";
 	  cout<<res.str();
 	}
       }
-    
+      
 #ifdef IWAVE_USE_MPI
     }
     MPI_Finalize();
