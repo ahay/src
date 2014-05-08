@@ -3,9 +3,6 @@
 #############################################################################
 from rsf.proj import *
 from batch import getFlowSignature
-WORKPATH        = os.getenv('DATAPATH')
-# todo: WORKPATH should be checked
-#Decider('timestamp-match')
 #############################################################################
 ###################### END COMMON DEFINITIONS ###############################
 #############################################################################
@@ -40,7 +37,7 @@ suchw           = os.path.join(CWPROOT,'bin/suchw')
 sugain          = os.path.join(CWPROOT,'bin/sugain')
 suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 supsimage       = os.path.join(CWPROOT,'bin/supsimage')
-IWAVE           = os.getenv('NEWIWAVE')
+IWAVE           = os.path.join(os.getenv('RSFSRC'),'trip/iwave')
 stdmdl          = os.path.join(IWAVE,'demo/main/standardmodel.x')
 towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
 acd             = os.path.join(IWAVE,'acd/main/acd.x')
@@ -150,7 +147,7 @@ for foo in ['hdr8-12km']:
 #Clean(t,'line8-12km.work')
 
 jobs = [{ 'job': 'line8-12km',
-          'pre': '/bin/cp hdr8-12km.su line8-12km.su' ,
+          'pre': '/bin/cp ../hdr8-12km.su ../line8-12km.su' ,
           'cmd': acd  + ' par=../line8-12km.par partask=' + str(NP) , 
           'src': ['hdr8-12km.su', 'wavelet_hdr8-12km.su', 'csq_4layer.rsf'],
 	  'tgt': ['line8-12km.su'],
@@ -196,9 +193,7 @@ for i in range(len(jobs)):
 #        print 'sig.src = ' + ' '.join(sig['src']) + '\n'
 #        print 'sig.tgt = ' + ' '.join(sig['tgt']) + '\n'
 #        print 'sig.wcd = ' + sig['wcd'] + '\n'
-        t=Flow(sig['dir'],None,sig['wcd'],stdin=0,stdout=0)  
-        Flow(sig['tgt'], sig['src']+[sig['dir']], sig['cmd'], stdin=0, stdout=0)
-	Clean(t,sig['dir'])
+        Flow(sig['tgt'], sig['src'], sig['cmd'], stdin=0, stdout=0, workdir=sig['dir'])
 
 End()
 
