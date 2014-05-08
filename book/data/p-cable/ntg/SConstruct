@@ -1,0 +1,22 @@
+from rsf.proj import *
+import math
+
+Flow('ntg','../segy/DeconShots3.rsf',
+    '''
+      sftahsort input=$SOURCE sort="iline xline -offset"
+      | sftahwrite \
+        verbose=1
+	label2=xline o2=1001 n2=1943 d2=1 
+        label3=iline o3=5100 n3=296  d3=1   
+	output=${TARGETS[0]}
+    ''',stdout=0,stdin=0)
+
+Result('ntg',
+        '''
+	   sfpow pow1=1.5 \
+	   |  sfgrey title="near trace gather"
+	''')
+ 	
+
+
+End()
