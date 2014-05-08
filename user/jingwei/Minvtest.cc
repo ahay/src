@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     par.get("dx",dx);
     par.get("x0",x0);  
 
-    iRSF model, fft("fft"), left("left"), right("right"), alpha("alpha"), beta("beta"); // Get input
+    iRSF input, fft("fft"), left("left"), right("right"), alpha("alpha"), beta("beta"); // Get input
     fft.get("n1",nkz);
     fft.get("d1",dkz);
     fft.get("o1",kz0);
@@ -62,52 +62,52 @@ int main(int argc, char** argv)
     nkzx = nkz*nkx;
 
     // Read input
-    std::valarray<sf_complex> mod(nzx), lt(nzx*m2), rt(m2*nkzx), al(nzx), be(nkzx);
-    model >> mod;
+    std::valarray<sf_complex> ipt(nzx), lt(nzx*m2), rt(m2*nkzx), al(nzx), be(nkzx);
+    input >> ipt;
     left >> lt;
     right >> rt;
     alpha >> al;
     beta >> be;
 
-    sf_complex *cmod, *cdat, *cleft, *cright, *calpha, *cbeta;
- 
-    cmod = sf_complexalloc(nzx);
-    cdat = sf_complexalloc(nzx);
-    cleft = sf_complexalloc(nzx*m2);    
-    cright = sf_complexalloc(m2*nkzx);
-    calpha = sf_complexalloc(nzx);
-    cbeta = sf_complexalloc(nkzx);
-    for (int i=0; i<nzx; i++) cmod[i] = mod[i];
-    for (int i=0; i<nzx*m2; i++) cleft[i] = lt[i];
-    for (int i=0; i<m2*nkzx; i++) cright[i] = rt[i];
-    for (int i=0; i<nzx; i++) calpha[i] = al[i];
-    for (int i=0; i<nkzx; i++) cbeta[i] = be[i];
+    sf_complex *cipt, *clt, *crt, *cal, *cbe;
+    cipt = sf_complexalloc(nzx);    
+    clt = sf_complexalloc(nzx*m2);    
+    crt = sf_complexalloc(m2*nkzx);
+    cal = sf_complexalloc(nzx);
+    cbe = sf_complexalloc(nkzx);
+    for (int i=0; i<nzx; i++) cipt[i] = ipt[i];
+    for (int i=0; i<nzx*m2; i++) clt[i] = lt[i];
+    for (int i=0; i<m2*nkzx; i++) crt[i] = rt[i];
+    for (int i=0; i<nzx; i++) cal[i] = al[i];
+    for (int i=0; i<nkzx; i++) cbe[i] = be[i];
 
-    // first apply prop
+
+    // first apply prop to input to get output1
+    sf_complex *copt1;
+    copt1 = sf_complexalloc(nzx);
     if (flag==1) {
-	prop1( cmod, cdat, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop1( cipt, copt1, clt, crt, nz, nx, nkzx, m2, reg);  
     } else if (flag==2) {
-	prop2( cmod, cdat, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop2( cipt, copt1, clt, crt, nz, nx, nkzx, m2, reg);  
     } else if (flag==3) {
-	prop3( cmod, cdat, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop3( cipt, copt1, clt, crt, nz, nx, nkzx, m2, reg);  
     } else if (flag==4) {
-	prop4( cmod, cdat, cleft, cright, nz, nx, nkzx, m2, reg);  
+	prop4( cipt, copt1, clt, crt, nz, nx, nkzx, m2, reg);  
     } else {
 	cerr<<"Need to provide flag#"<<endl;
     }
 
-    // then apply approximate rank-1 inverse
-    sf_complex *cdat1, *cdat2, *cfdat2, *cfdat3, *cdat3, *cPdat;
+    // then apply approximate rank-1 inverse to output1 to get output2
+    sf_complex *cdat1, *cdat2, *cfdat2, *cfdat3, *cdat3, *copt2;
     cdat1 = sf_complexalloc(nzx);
     cdat2 = sf_complexalloc(nkzx);
     cfdat2 = sf_complexalloc(nkzx);
     cfdat3 = sf_complexalloc(nkzx);
     cdat3 = sf_complexalloc(nkzx);
-    cPdat = sf_complexalloc(nzx);    
+    copt2 = sf_complexalloc(nzx);    
 
     // divide by alpha
-    for (int i=0; i<nzx; i++) cdat1[i] = sf_cdiv(cdat[i],calpha[i]);    
-    //for (int i=0; i<nzx; i++) cdat1[i] = sf_crmul(cdat[i],1./sqrt(crealf(calpha[i])));    
+    for (int i=0; i<nzx; i++) cdat1[i] = sf_cdiv(copt1[i],cal[i]);    
    
     // forward fft
     int nz2, nx2, nk; 
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
     cfft2_finalize();  
     
     // divide by beta
-    for (int i=0; i<nkzx; i++) cfdat3[i] = sf_cdiv(cfdat2[i],cbeta[i]);
+    for (int i=0; i<nkzx; i++) cfdat3[i] = sf_cdiv(cfdat2[i],cbe[i]);
     
     // inverse fft
     nk = cfft2_init(1,nz,nx,&nz2,&nx2);
@@ -139,27 +139,27 @@ int main(int argc, char** argv)
 	for (int iz = 0; iz < nz; iz++) {
 	    int i = iz+ix*nz;
 	    int j = iz+ix*nz2;
-	    cPdat[i] = cdat3[j];
+	    copt2[i] = cdat3[j];
 	}
     }
 
-    // Write cdat and cPdat
-    std::valarray<sf_complex> dat(nzx), Pdat(nzx);
+    // Write output1 and ouput2
+    std::valarray<sf_complex> opt1(nzx), opt2(nzx);
     for (int i=0; i<nzx; i++) {
-        dat[i] = cdat[i];
-        Pdat[i] = cPdat[i];
+        opt1[i] = copt1[i];
+        opt2[i] = copt2[i];
     }
 
-    oRSF data, Pdata("Pdata");
-    data.type(SF_COMPLEX);
-    data.put("n1",nz);
-    data.put("n2",nx);
-    data << dat;  
+    oRSF output1, output2("output2");
+    output1.type(SF_COMPLEX);
+    output1.put("n1",nz);
+    output1.put("n2",nx);
+    output1 << opt1;  
 
-    Pdata.type(SF_COMPLEX);
-    Pdata.put("n1",nz);
-    Pdata.put("n2",nx);
-    Pdata << Pdat;
+    output2.type(SF_COMPLEX);
+    output2.put("n1",nz);
+    output2.put("n2",nx);
+    output2 << opt2;
 
     exit(0);
 }
