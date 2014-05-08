@@ -48,9 +48,9 @@ void engein2dvti1(double ve[2][2], double va[2], double sinx, double cosx, doubl
         sin2cos2_4=4*sin2cos2;
 
         /* Dellinger's direct method PhD Chapter2 P.12 */ 
-        // d33 = C33 - C55;
-        // d11 = C11 - C55;
-        // psi = C13 + C55
+        /* d33 = C33 - C55; */
+        /* d11 = C11 - C55; */
+        /* psi = C13 + C55 */
         d33=vp2-vs2;
         d11=ep2*vp2-vs2;
         psi2=d33*(de2*vp2-vs2);
@@ -60,8 +60,8 @@ void engein2dvti1(double ve[2][2], double va[2], double sinx, double cosx, doubl
         tmpa=vs2+vp2*cos2+(ep2*vp2)*sin2;
         tmpb=sqrtf(d33d11_2+sin2cos2_4*psi2);
 
-        va[0]=sqrtf(0.5*(tmpa+tmpb));  // P-wave phase vlocity
-        va[1]=sqrtf(0.5*(tmpa-tmpb));  // SV-wave phase vlocity
+        va[0]=sqrtf(0.5*(tmpa+tmpb));  /* P-wave phase vlocity */
+        va[1]=sqrtf(0.5*(tmpa-tmpb));  /* SV-wave phase vlocity */
 
         u1=2*psi*sqrtf(sin2*cos2);
         u2=sqrtf(d33d11_2+sin2cos2_4*psi2) + d33d11;
@@ -110,10 +110,10 @@ void engein2dvti2(double ve[2][2], double va[2], double kx, double kz, double vp
         c33=vp2;
         c44=vs2;
         c11=ep2*c33;
-        //c13=sqrt(2*c33*(c33-c44)*de+(c33-c44)*(c33-c44))-c44;
-        //c13=sqrt((2*c33*de+(c33-c44))*(c33-c44))-c44;
-        //c13=sqrt((2*c33*de+c33-c44)*(c33-c44))-c44;
-        //c13=sqrt((2*de+1.0)*c33-c44)*(c33-c44))-c44;
+        /*c13=sqrt(2*c33*(c33-c44)*de+(c33-c44)*(c33-c44))-c44;*/
+        /*c13=sqrt((2*c33*de+(c33-c44))*(c33-c44))-c44;*/
+        /*c13=sqrt((2*c33*de+c33-c44)*(c33-c44))-c44;*/
+        /*c13=sqrt((2*de+1.0)*c33-c44)*(c33-c44))-c44;*/
         c13c44=sqrt((de2*c33-c44)*(c33-c44));
 
         a11= c11*kx*kx+c44*kz*kz;

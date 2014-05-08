@@ -43,6 +43,7 @@ void devttip(float **apvx,float **apvz,
         double sum, kxx, kzz;
 
         double ve[2][2],va[2];
+	int nkx, nkz;
 
         coss=cos(the);
         sins=sin(the);
@@ -106,7 +107,6 @@ void devttip(float **apvx,float **apvz,
           } /* j loop */
       } /*i loop */
 
-     int nkx, nkz;
      nkx=2*hnkx+1;
      nkz=2*hnkz+1;
 

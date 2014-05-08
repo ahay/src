@@ -44,6 +44,8 @@ void devvtip(float **apvx,float **apvz, float *kx, float *kz, float *kkx, float*
 
         double   ve[2][2], va[2];  /*eigeinvector and eigeinvalues*/
 
+	int nkx, nkz;
+
         for( i=-hnkx; i<=hnkx ; i++ )
         {
            ik=i+hnkx;
@@ -114,7 +116,6 @@ void devvtip(float **apvx,float **apvz, float *kx, float *kz, float *kkx, float*
           } /* j loop */
       } /*i loop */
 
-     int nkx, nkz;
      nkx=2*hnkx+1;
      nkz=2*hnkz+1;
 
@@ -143,6 +144,8 @@ void devvtips(float **apvx,float **apvz, float *kx, float *kz, float *kkx, float
         double k2, rk, sinx, cosx;
 
         double   ve[2][2], va[2];  /*eigeinvector and eigeinvalues*/
+
+	int nkx, nkz;
 
         for( i=-hnkx; i<=hnkx ; i++ )
         {
@@ -197,7 +200,6 @@ void devvtips(float **apvx,float **apvz, float *kx, float *kz, float *kkx, float
           } /* j loop */
       } /*i loop */
 
-     int nkx, nkz;
      nkx=2*hnkx+1;
      nkz=2*hnkz+1;
 

@@ -43,6 +43,8 @@ void divpoldevvtip(float **adx,float **adz, float **apx,float **apz,float **apvx
 
         double k2, rk, sinx, cosx;
         double ve[2][2], va[2];  /*eigeinvector and eigeinvalues*/
+	
+	int nkx, nkz;
 
         for( i=-hnkx; i<=hnkx ; i++ )
         {
@@ -128,7 +130,6 @@ void divpoldevvtip(float **adx,float **adz, float **apx,float **apz,float **apvx
 
      /* interpolating */
 
-     int nkx, nkz;
      nkx=2*hnkx+1;
      nkz=2*hnkz+1;
      for( i=0; i<nkx; i++ )

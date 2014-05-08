@@ -43,6 +43,7 @@ void polttipsv(float **apx,float **apz, float **apxs,float **apzs,
         double k2, rk, sinx, cosx, coss, sins;
         double kxx, kzz, kx2, kz2;
         double ve[2][2], va[2];
+	int nkx, nkz;
 
         coss=cos(the);
         sins=sin(the);
@@ -62,7 +63,7 @@ void polttipsv(float **apx,float **apz, float **apxs,float **apzs,
                   continue;
                 }
 
-                // rotatiing according to tilted symmetry axis
+                /* rotatiing according to tilted symmetry axis */
                 kxx=kx[ik]*coss+kz[jk]*sins;
                 kzz=kz[jk]*coss-kx[ik]*sins;
                 kx2=kxx*kxx;
@@ -109,7 +110,6 @@ void polttipsv(float **apx,float **apz, float **apxs,float **apzs,
           } /* j loop */
       } /*i loop */
 
-     int nkx, nkz;
      nkx=2*hnkx+1;
      nkz=2*hnkz+1;
      /* interpolating */

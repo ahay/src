@@ -53,12 +53,21 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
         
     float RT00,RT01,RT02,RT10,RT11,RT12,RT20,RT21,RT22;
 
-    float ***px_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float ***py_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float ***qx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float ***qy_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float ***rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
-    float ***ry_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    float r2dx,r2dy,r2dz;
+
+    float ***px_tmp;
+    float ***py_tmp;
+    float ***qx_tmp;
+    float ***qy_tmp;
+    float ***rx_tmp;
+    float ***ry_tmp;
+
+    px_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    py_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    qx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    qy_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    rx_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
+    ry_tmp=sf_floatalloc3(nzpad,nxpad,nypad);
 
     zero3float(px_tmp,nzpad,nxpad,nypad);
     zero3float(py_tmp,nzpad,nxpad,nypad);
@@ -67,7 +76,7 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
     zero3float(rx_tmp,nzpad,nxpad,nypad);
     zero3float(ry_tmp,nzpad,nxpad,nypad);
 
-    float r2dx,r2dy,r2dz;
+
     r2dx=0.5/dx;
     r2dy=0.5/dy;
     r2dz=0.5/dz;
@@ -231,9 +240,9 @@ void fwportpseudop1(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
   sf_warning("r3= %f ",r3[i][j][k]);
   }
 */
-	    }// k llop
-	}// j llop
-    }// i loop
+	    }/* k llop */
+	}/* j llop */
+    }/* i loop */
     free(**px_tmp);
     free(**py_tmp);
     free(**qx_tmp);
@@ -263,9 +272,9 @@ void fwportpseudop(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
 	for(i=0;i<nx;i++)
 	    for(k=0;k<nz;k++){
 		vp2=vp0[j][i][k]*vp0[j][i][k];
-		//tmp=(epsi_1[j][i][k]-del_1[j][i][k]);
+		/* tmp=(epsi_1[j][i][k]-del_1[j][i][k]);
 		//vs2=tmp*vp2;
-		//vs2=vs0[j][i][k]*vs0[j][i][k];//*0.5*0.5;                   
+		//vs2=vs0[j][i][k]*vs0[j][i][k];/0.5*0.5; */              
 		vs2=0.6*0.6*vp2;
 		ep_1=1+2*epsi_1[j][i][k];
 		de_1=1+2*del_1[j][i][k];
@@ -280,14 +289,14 @@ void fwportpseudop(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,flo
 		vpy=vp2*ep_1;
 		vpn1=vp2*de_1;
 		vpn2=vp2*de_2;
-		vpn3=vpx*de_3;//vpx*del_3
+		vpn3=vpx*de_3;/* vpx*del_3 */
 		vsz1=vs2;
 		vsz2=vs2*ga_1/ga_2;
 		vsz3=vs2*ga_1;
 		C23_44=sqrt(vpz-vsz2)*sqrt(vpn1-vsz2);
 		C12_66=sqrt(vpx-vsz3)*sqrt(vpn3-vsz3);
 		C13_55=sqrt(vpz-vsz1)*sqrt(vpn2-vsz1);
-		//deri calculation
+		/* deri calculation */
 		px=0;py=0;pz=0;
 		qx=0;qy=0;qz=0;
 		rx=0;ry=0;rz=0;
@@ -347,7 +356,6 @@ void fwportpseudophomo(float dt,float***p1,float***p2,float***p3,
         for(j=0;j<ny;j++)
             for(k=0;k<nz;k++)
             {
-
 		dt2=dt*dt;
 		vp2=vp0*vp0;
 		vs2=vs0*vs0;
@@ -366,14 +374,14 @@ void fwportpseudophomo(float dt,float***p1,float***p2,float***p3,
 		vpy=vp2*ep_1;
 		vpn1=vp2*de_1;
 		vpn2=vp2*de_2;
-		vpn3=vpx*de_3;//vpx*del_3
+		vpn3=vpx*de_3;/* vpx*del_3 */
 		vsz1=vs2;
 		vsz2=vs2*gam_1/gam_2;
 		vsz3=vs2*gam_1;
 		C23_44=sqrt(vpz-vsz2)*sqrt(vpn1-vsz2);
 		C12_66=sqrt(vpx-vsz3)*sqrt(vpn3-vsz3);
 		C13_55=sqrt(vpz-vsz1)*sqrt(vpn2-vsz1);
-		//deri calculation
+		/* deri calculation */
 		px=0;py=0;pz=0;
 		qx=0;qy=0;qz=0;
 		rx=0;ry=0;rz=0;
@@ -413,24 +421,27 @@ void fwportpseudop2(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 {
 
     int i,j,k,l;
+    float px,py,pz,qx,qy,qz,rx,ry,rz;
+    float vp2,vs2;
+    float vpx,vpy,vpz,vsz1,vsz2,vsz3,vpn1,vpn2,vpn3;
+    float ep_1,de_1,gam_1,ep_2,de_2,gam_2,de_3;
+    float C23_44,C12_66,C13_55;
+    float tmp;
+    int il;
+    int jl;
+    int kl;
+    int lm;
+    int im, jm, km;
 
     for(i=0;i<ny;i++)
         for(j=0;j<nx;j++)
 	    for(k=0;k<nz;k++)
 	    {
-                //sf_warning("i%d j=%d k=%d",i,j,k);
-		float px,py,pz,qx,qy,qz,rx,ry,rz;
-		float vp2,vs2;
-		float vpx,vpy,vpz,vsz1,vsz2,vsz3,vpn1,vpn2,vpn3;
-		float ep_1,de_1,gam_1,ep_2,de_2,gam_2,de_3;
-		float C23_44,C12_66,C13_55;
-
 		vp2=vp0[i][j][k]*vp0[i][j][k];
-		float tmp;
 		tmp=(epsi_1[i][j][k]-del_1[i][j][k]);
 		vs2=tmp*vp2;
 		vs2=0.6*0.6*vp2;
-                vs2=vs0[i][j][k]*vs0[i][j][k];//*0.5*0.5;                   
+                vs2=vs0[i][j][k]*vs0[i][j][k];/* *0.5*0.5; */                   
 		ep_1=1+2*epsi_1[i][j][k];
 		de_1=1+2*del_1[i][j][k];
 		gam_1=1+2*gama_1[i][j][k];
@@ -444,23 +455,23 @@ void fwportpseudop2(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 		vpy=vp2*ep_1;
 		vpn1=vp2*de_1;
 		vpn2=vp2*de_2;
-		vpn3=vpx*de_3;//vpx*del_3
+		vpn3=vpx*de_3;/* vpx*del_3 */
 		vsz1=vs2;
 		vsz2=vs2*gam_1/gam_2;
 		vsz3=vs2*gam_1;
 		C23_44=sqrt(vpz-vsz2)*sqrt(vpn1-vsz2);
 		C12_66=sqrt(vpx-vsz3)*sqrt(vpn3-vsz3);
 		C13_55=sqrt(vpz-vsz1)*sqrt(vpn2-vsz1);
-		//deri calculation
+		/* deri calculation */
 		px=0;py=0;pz=0;
 		qx=0;qy=0;qz=0;
 		rx=0;ry=0;rz=0;
 		for(l=-_m;l<=_m;l++)
 		{
-		    int il=i+l;
-		    int jl=j+l;
-		    int kl=k+l;
-		    int lm=l+_m;
+		    il=i+l;
+		    jl=j+l;
+		    kl=k+l;
+		    lm=l+_m;
 		    if(il>=0&&il<nypad)
 		    {
 			py+=coeff_2dy[lm]*p2[il][j][k];
@@ -480,7 +491,6 @@ void fwportpseudop2(float dt2,float*** p1,float*** p2,float*** p3,float*** q1,fl
 			rz+=coeff_2dz[lm]*r2[i][j][kl];
 		    }
 		}
-                int im, jm, km;
                 im=i+_m;
                 jm=j+_m;
                 km=k+_m;

@@ -29,9 +29,11 @@
 int fac(int n)
 /*< fac for FD coefficent calculation >*/
 {
+        int s;
+
         if(n==0)
                 return 1;
-        int s=1;
+	s=1;
         while(n>0)
         {
                 s=s*n;

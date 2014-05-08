@@ -36,6 +36,10 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
 {
         int   i,j,k;
         float **p_temp, **q_temp;
+	int im, jm, km;
+	
+	float px,pz,qx,qz,vp2,vs2,vpx2,vpn2,ep,de,the,coef;
+	float sinthe,costhe,cos2,sin2,sin2a,hxp,hxq,hzp,hzq,pxz,qxz;
 
         p_temp=sf_floatalloc2(nzpad,nxpad);
         q_temp=sf_floatalloc2(nzpad,nxpad);
@@ -65,12 +69,10 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
 #endif
         for(i=_m;i<nx+_m;i++)
         {
-            int im=i-_m;
+            im=i-_m;
             for(j=_m;j<nz+_m;j++)
             {
-                        int jm=j-_m;
-						float px,pz,qx,qz,vp2,vs2,vpx2,vpn2,ep,de,the,coef;
-						float sinthe,costhe,cos2,sin2,sin2a,hxp,hxq,hzp,hzq,pxz,qxz;
+                        jm=j-_m;
 
                         vp2=vp0[im][jm]*vp0[im][jm];
                         vs2=vs0[im][jm]*vs0[im][jm];
@@ -94,11 +96,9 @@ void fwpttipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                         vpn2=vp2*de;
                         coef=sqrt((vpn2-vs2)*(vp2-vs2));
                         
-                        //sf_warning("vp2=%f vs2=%f ep=%f de=%f",vp2,vs2,ep,de);
-
                         for(k=-_m;k<=_m;k++)
                         {
-                                int km=k+_m;
+                                km=k+_m;
                                 px+=coeff_x[km]*p2[i+k][j];
                                 pz+=coeff_z[km]*p2[i][j+k];
                                 qx+=coeff_x[km]*q2[i+k][j];

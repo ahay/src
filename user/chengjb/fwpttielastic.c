@@ -43,8 +43,13 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
     float sinthe,costhe,cos2,sin2,sin2a,cos_sin;
     float px,pxz,qxz,qx,px1, qxz1, qx1, pxz1,hpx,hqx,hpz,hqz;
     
-    float **px_tmp=sf_floatalloc2(nzpad,nxpad);
-    float **qx_tmp=sf_floatalloc2(nzpad,nxpad);
+    float **px_tmp;
+    float **qx_tmp;
+
+    int im, jm;
+
+    px_tmp=sf_floatalloc2(nzpad,nxpad);
+    qx_tmp=sf_floatalloc2(nzpad,nxpad);
 
     zero2float(px_tmp,nzpad,nxpad);	
     zero2float(qx_tmp,nzpad,nxpad);	
@@ -75,10 +80,11 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 #endif
     for(i=_m;i<nx+_m;i++)
     {
-	int im=i-_m;
+	im=i-_m;
 	for(j=_m;j<nz+_m;j++)
 	{
-	    int jm=j-_m;
+	    jm=j-_m;
+
 
 	    vp2=vp0[im][jm]*vp0[im][jm];
 	    vs2=vs0[im][jm]*vs0[im][jm];
@@ -154,6 +160,10 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
     float sinthe,costhe,sinphi,cosphi;
     float r11, r12, r13, r21, r22, r23, r31, r32, r33;
     float a11, a33, a44, a66, a11a66, a13a44;
+    float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
+
+    float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
+    float qxy1, rxz1, pxy1, ryz1, pxz1, qyz1;
 		
     zero3float(px_tmp,nzpad,nxpad,nypad);	
     zero3float(pz_tmp,nzpad,nxpad,nypad);	
@@ -264,8 +274,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 			rxz+=coeff_1dz[l+_mix]*rx_tmp[k][i][j+l]/2.0/dz;
 		    }
 		}
-		float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
-		// 2nd-order derivatives
+		/* 2nd-order derivatives */
 		hpy =0;
 		hqy =0;
 		hry =0;
@@ -297,10 +306,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 		    }
 		}
 
-		float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
-		float qxy1, rxz1, pxy1, ryz1, pxz1, qyz1;
-
-		// x-component
+		/* x-component */
 		px2 = r11*r11*hpx+r21*r21*hpy+r31*r31*hpz+2*r11*r21*pxy+2*r11*r31*pxz+2*r21*r31*pyz;
 		py2 = r12*r12*hpx+r22*r22*hpy+r32*r32*hpz+2*r12*r22*pxy+2*r12*r32*pxz+2*r22*r32*pyz;
 		pz2 = r13*r13*hpx+r23*r23*hpy+r33*r33*hpz+2*r13*r23*pxy+2*r13*r33*pxz+2*r23*r33*pyz;
@@ -310,7 +316,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 
 		p3[k][i][j]=2*p2[k][i][j] - p1[k][i][j] + dt2*( a11*px2 +  a66*py2 + a44*pz2 + a11a66*qxy1 + a13a44*rxz1);
 
-		// y-component
+		/* y-component */
 		qx2 = r11*r11*hqx+r21*r21*hqy+r31*r31*hqz+2*r11*r21*qxy+2*r11*r31*qxz+2*r21*r31*qyz;
 		qy2 = r12*r12*hqx+r22*r22*hqy+r32*r32*hqz+2*r12*r22*qxy+2*r12*r32*qxz+2*r22*r32*qyz;
 		qz2 = r13*r13*hqx+r23*r23*hqy+r33*r33*hqz+2*r13*r23*qxy+2*r13*r33*qxz+2*r23*r33*qyz;
@@ -320,7 +326,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 
 		q3[k][i][j]=2*q2[k][i][j] - q1[k][i][j] + dt2*( a66*qx2 +  a11*qy2 + a44*qz2 + a11a66*pxy1 + a13a44*ryz1);
 
-		// z-component
+		/* z-component */
 		rx2 = r11*r11*hrx+r21*r21*hry+r31*r31*hrz+2*r11*r21*rxy+2*r11*r31*rxz+2*r21*r31*ryz;
 		ry2 = r12*r12*hrx+r22*r22*hry+r32*r32*hrz+2*r12*r22*rxy+2*r12*r32*rxz+2*r22*r32*ryz;
 		rz2 = r13*r13*hrx+r23*r23*hry+r33*r33*hrz+2*r13*r23*rxy+2*r13*r33*rxz+2*r23*r33*ryz;
@@ -346,6 +352,10 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
     float qxy1, rxz1, pxy1, ryz1, pxz1, qyz1;
     float hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz;
     float pxy=0, pxz=0, pyz=0, qxy=0, qxz=0, qyz=0, rxy=0, rxz=0, ryz=0;
+    float vp2,vs2,ep,de,ga,vpn2;
+    float sinthe,costhe,sinphi,cosphi;
+    float a11, a33, a44, a66, a11a66, a13a44;
+    float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
 		
     zero3float(px_tmp,nzpad,nxpad,nypad);	
     zero3float(qy_tmp,nzpad,nxpad,nypad);	
@@ -381,10 +391,6 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 	for(i=0;i<nxpad;i++)
 	    for(j=0;j<nzpad;j++)
 	    {
-		float vp2,vs2,ep,de,ga,vpn2;
-		float sinthe,costhe,sinphi,cosphi;
-		float a11, a33, a44, a66, a11a66, a13a44;
-		float px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2;
 		vp2=vp0*vp0;
 		vs2=vs0*vs0;
 		ep=1+2*epsilon;
@@ -439,7 +445,7 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 		    }
 		}
 
-		// 2nd-order derivatives
+		/* 2nd-order derivatives */
 		hpy =0;
 		hqy =0;
 		hry =0;
@@ -471,7 +477,7 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 		    }
 		}
 
-		// x-component
+		/* x-component */
 		px2 = r11*r11*hpx+r21*r21*hpy+r31*r31*hpz+2*r11*r21*pxy+2*r11*r31*pxz+2*r21*r31*pyz;
 		py2 = r12*r12*hpx+r22*r22*hpy+r32*r32*hpz+2*r12*r22*pxy+2*r12*r32*pxz+2*r22*r32*pyz;
 		pz2 = r13*r13*hpx+r23*r23*hpy+r33*r33*hpz+2*r13*r23*pxy+2*r13*r33*pxz+2*r23*r33*pyz;
@@ -481,7 +487,7 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 
 		p3[k][i][j]=2*p2[k][i][j] - p1[k][i][j] + dt2*( a11*px2 +  a66*py2 + a44*pz2 + a11a66*qxy1 + a13a44*rxz1);
 
-		// y-component
+		/* y-component */
 		qx2 = r11*r11*hqx+r21*r21*hqy+r31*r31*hqz+2*r11*r21*qxy+2*r11*r31*qxz+2*r21*r31*qyz;
 		qy2 = r12*r12*hqx+r22*r22*hqy+r32*r32*hqz+2*r12*r22*qxy+2*r12*r32*qxz+2*r22*r32*qyz;
 		qz2 = r13*r13*hqx+r23*r23*hqy+r33*r33*hqz+2*r13*r23*qxy+2*r13*r33*qxz+2*r23*r33*qyz;
@@ -491,7 +497,7 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 
 		q3[k][i][j]=2*q2[k][i][j] - q1[k][i][j] + dt2*( a66*qx2 +  a11*qy2 + a44*qz2 + a11a66*pxy1 + a13a44*ryz1);
 		;
-		// z-component
+		/* z-component */
 		rx2 = r11*r11*hrx+r21*r21*hry+r31*r31*hrz+2*r11*r21*rxy+2*r11*r31*rxz+2*r21*r31*ryz;
 		ry2 = r12*r12*hrx+r22*r22*hry+r32*r32*hrz+2*r12*r22*rxy+2*r12*r32*rxz+2*r22*r32*ryz;
 		rz2 = r13*r13*hrx+r23*r23*hry+r33*r33*hrz+2*r13*r23*rxy+2*r13*r33*rxz+2*r23*r33*ryz;

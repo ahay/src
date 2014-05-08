@@ -34,6 +34,9 @@ int main(int argc, char* argv[])
         float  vp0_1, vs0_1, eps_1, del_1, the_1;
         float  vp0_2, vs0_2, eps_2, del_2, the_2;
         float  **w;
+	int   i,j;
+        sf_file Fo1, Fo2, Fo3, Fo4, Fo5;
+	int nnz;
 
         sf_init(argc,argv);
 
@@ -50,7 +53,7 @@ int main(int argc, char* argv[])
         if (!sf_getfloat("vs0_2",&vs0_2)) vs0_2=1200.0;
         if (!sf_getfloat("eps_2",&eps_2)) eps_2=0.2;
         if (!sf_getfloat("del_2",&del_2)) del_2=0.1;
-        if (!sf_getfloat("the_2",&the_2)) the_2=30.0;  // Unit: degree
+        if (!sf_getfloat("the_2",&the_2)) the_2=30.0;  /* Unit: degree */
 
         sf_warning("nx= %d nz= %d",nx,nz);
         sf_warning("dx= %f dz= %f",dx,dz);
@@ -61,15 +64,12 @@ int main(int argc, char* argv[])
 
 	zero2float(w,nz,nx);
 
-	int   i,j;
-
         /* setup I/O files */
-        sf_file Fo1, Fo2, Fo3, Fo4, Fo5;
-        Fo1 = sf_output("out"); // Vp0
-        Fo2 = sf_output("vs0"); // Vs0
-        Fo3 = sf_output("epsi"); // Epsilon
-        Fo4 = sf_output("del"); // Delta
-        Fo5 = sf_output("the"); // theta
+        Fo1 = sf_output("out"); /* Vp0 */
+        Fo2 = sf_output("vs0"); /* Vs0 */
+        Fo3 = sf_output("epsi"); /* Epsilon */
+        Fo4 = sf_output("del"); /* Delta */
+        Fo5 = sf_output("the"); /* theta */
 
         puthead2(Fo1, nz, nx, dz, 0.0, dx, 0.0);
         puthead2(Fo2, nz, nx, dz, 0.0, dx, 0.0);
@@ -77,9 +77,9 @@ int main(int argc, char* argv[])
         puthead2(Fo4, nz, nx, dz, 0.0, dx, 0.0);
         puthead2(Fo5, nz, nx, dz, 0.0, dx, 0.0);
 
-        int nnz=nz*7/12;
+        nnz=nz*7/12;
 
-        // Vp0
+        /* Vp0 */
         for(i=0;i<nx;i++)
         {
            for(j=0;j<nnz;j++)
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
            
            sf_floatwrite(w[i], nz, Fo1);
         }
-        // Vs0
+        /* Vs0 */
         for(i=0;i<nx;i++)
         {
            for(j=0;j<nnz;j++)
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
            
            sf_floatwrite(w[i], nz, Fo2);
         }
-        // Epsi
+        /* Epsi */
         for(i=0;i<nx;i++)
         {
            for(j=0;j<nnz;j++)
@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
            
            sf_floatwrite(w[i], nz, Fo3);
         }
-        // Delta 
+        /* Delta */
         for(i=0;i<nx;i++)
         {
            for(j=0;j<nnz;j++)
@@ -119,7 +119,7 @@ int main(int argc, char* argv[])
            
            sf_floatwrite(w[i], nz, Fo4);
         }
-        //  Theta
+        /*  Theta */
         for(i=0;i<nx;i++)
         {
            for(j=0;j<nnz;j++)
@@ -130,4 +130,6 @@ int main(int argc, char* argv[])
            sf_floatwrite(w[i], nz, Fo5);
         }
         free(*w);
+
+	exit(0);
 }

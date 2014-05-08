@@ -77,10 +77,13 @@ int main(int argc, char* argv[])
         int     isep=1;
         int     ihomo=1;
 
+        sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8;
+        sf_file Fvp0, Fvs0, Feps, Fdel;
+
+        sf_axis az, ax;
+       
         sf_init(argc,argv);
 
-        sf_file Fo1, Fo2, Fo3, Fo4, Fo5, Fo6, Fo7, Fo8;
-       
         /* t1=clock(); */
  
         /*  wavelet parameter for source definition */
@@ -107,15 +110,12 @@ int main(int argc, char* argv[])
         sf_warning("read velocity model parameters");
 
         /* setup I/O files */
-        sf_file Fvp0, Fvs0, Feps, Fdel;
-
         Fvp0 = sf_input ("in");  /* vp0 using standard input */
         Fvs0 = sf_input ("vs0");  /* vs0 */
         Feps = sf_input ("epsi");  /* epsi */
         Fdel = sf_input ("del");  /* delta */
 
         /* Read/Write axes */
-        sf_axis az, ax;
         az = sf_iaxa(Fvp0,1); nvz = sf_n(az); dz = sf_d(az)*1000.0;
         ax = sf_iaxa(Fvp0,2); nvx = sf_n(ax); dx = sf_d(ax)*1000.0;
         fx=sf_o(ax)*1000.0;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
         /* source definition */
         isx=nvx/2;
         isz=nvz/2;
-        //isz=nvz*2/5;
+        /* isz=nvz*2/5; */
 
         /* wave modeling space */
 	nx=nvx;
@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
 
            taper=sf_floatalloc2(nkz, nkx);
 
-           // define axis samples and taper in wavenumber domain 
+           /* define axis samples and taper in wavenumber domain */
            kxkztaper(kx, kz, kkx, kkz, kx2, kz2, taper, nkx, nkz, hnkx, hnkz, dkx, dkz, kxmax, kzmax, tapertype);
 
 	   p3c=sf_floatalloc2(nz,nx);
@@ -220,7 +220,7 @@ int main(int argc, char* argv[])
 	      exx=sf_floatalloc2(nkz1, nkx1);
 	      ezz=sf_floatalloc2(nkz1, nkx1);
            }
-           else{ // to store spatail varaied operators
+           else{ /* to store spatail varaied operators */
 	      ex=sf_floatalloc4(nkz1, nkx1, nzf, nxf);
 	      ez=sf_floatalloc4(nkz1, nkx1, nzf, nxf);
            }
@@ -256,7 +256,6 @@ int main(int argc, char* argv[])
                 if(ixf%10==0&&izf%100==0) sf_warning("Operator: nxf=%d ixf=%d izf=%d vp2=%f vs2=%f",nxf, ixf,izf,vp2,vs2);
 
    	        /*************calculate projection deviation without tapering **********/
-                //sf_warning("calculate projection deviation operators");
                 /* devvtip: projection deviation operators for P-wave in VTI media */
                 devvtip(apvx,apvz,kx,kz,kkx,kkz,kx2,kz2,taper,hnkx,hnkz,dkx,dkz,vp2,vs2,ep2,de2,itaper);
 
@@ -264,7 +263,7 @@ int main(int argc, char* argv[])
                 kxkz2xz(apvx, apvxx, hnkx, hnkz, nkx, nkz);
                 kxkz2xz(apvz, apvzz, hnkx, hnkz, nkx, nkz);
 
-                // truncation and saving of operator in space-domain
+                /* truncation and saving of operator in space-domain */
                 if(ihomo==1)
                 {
                    for(jx=-hnkx1,ixx=hnkx-hnkx1;jx<=hnkx1;jx++,ixx++) 
@@ -283,7 +282,6 @@ int main(int argc, char* argv[])
                 }
                 if((ixf==nxf/2&&izf==nzf/2&&ihomo==0)||ihomo==1)
                 {
-                   //sf_warning("write-disk projection-deviation operators in kx-kz domain");
 	           sf_floatwrite(apvx[0], nkxz, Fo4);
 	           sf_floatwrite(apvz[0], nkxz, Fo5);
 
@@ -292,8 +290,8 @@ int main(int argc, char* argv[])
                 }
                 if(ihomo==1) goto loop;
 
-              }// iz loop
-            }//ix loop
+              }/* iz loop */
+	   }/* ix loop */
             loop:;
             free(*apvx);
             free(*apvz);
@@ -308,7 +306,7 @@ int main(int argc, char* argv[])
             free(kz2);
             free(kkx);
             free(kkz);
-       }//isep==1
+	}/* isep==1 */
        /****************End of Calculating Projection Deviation Operator****************/
        t3=clock();
        timespent=(float)(t3-t2)/CLOCKS_PER_SEC;
@@ -390,7 +388,6 @@ int main(int argc, char* argv[])
 
                       if(isep==1)
                       {
-                        //////////////////////////////////////////////////////////////////////////////////////////
                         /* correct projection error for accurate separate qP wave in spatial domain */
 	                zero2float(p3c,nz,nx);
 	                zero2float(q3c,nz,nx);
@@ -407,7 +404,7 @@ int main(int argc, char* argv[])
 
 			sf_floatwrite(sum[0],nx*nz, Fo8);
           
-                      } // isep==1
+                      } /* isep==1 */
                 }/* (it+1)%ntstep==0 */
 
                 /**************************************/

@@ -48,8 +48,6 @@ void fwpvtipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                         vpx2=vp2*ep;
                         vpn2=vp2*de;
                         coef=sqrt((vpn2-vs2)*(vp2-vs2));
-                        
-                        //sf_warning("vp2=%f vs2=%f ep=%f de=%f",vp2,vs2,ep,de);
 
                         px=0;
                         qx=0;
@@ -96,8 +94,6 @@ void bwpvtipseudop(float dt2,float** p1,float** p2,float** p3,float** q1,float**
                         vpn2=vp2*de;
                         coef=sqrt((vpn2-vs2)*(vp2-vs2));
                         
-                        //sf_warning("vp2=%f vs2=%f ep=%f de=%f",vp2,vs2,ep,de);
-
                         px=0;
                         qx=0;
                         pz=0;

@@ -104,15 +104,16 @@ float apgroup2dvti(float vp0, float vs0, float eps, float del, float ap)
 	float B = 1-tan(ap)*dvda/vpp;
 	float D = tan(ap)+dvda/vpp;
 
+	float C, apg;
+
 	if(fabs(B)<1e-30)
 		B=1e-30;
 
-	float C=D/B;
-
+	C=D/B;
 	if(fabs(C)>1e30)
 		C=1e30;
 
-	float apg=atan(C);
+	apg=atan(C);
 	if(apg<0)
 		apg+=SF_PI;
 	
@@ -136,15 +137,16 @@ float asgroup2dvti(float vp0, float vs0, float eps, float del, float ap)
 	float B=1-tan(ap)*dvda/vsp;
 	float D=tan(ap)+dvda/vsp;
 
+	float C, asg;
+
 	if(fabs(B)<1e-20)
 		B=1e-20;
 
-	float C=D/B;
-
+	C=D/B;
 	if(fabs(C)>1e5)
 		C=1e5;
 
-	float asg=atan(C);
+	asg=atan(C);
 	if(asg<0)
 		asg+=SF_PI;
 	
@@ -166,15 +168,17 @@ void vapgroup2dvti(float vp0, float vs0, float eps, float del, float ap, float *
 
         float dvda = A*vp0*vp0/vpp/2.0;
 
+	float B, D, C;
+
         *vpg = vpp*sqrt(1+pow(dvda/vpp,2));
 
-	float B=1-tan(ap)*dvda/vpp;
-	float D=tan(ap)+dvda/vpp;
+	B=1-tan(ap)*dvda/vpp;
+	D=tan(ap)+dvda/vpp;
 
 	if(fabs(B)<1e-30)
 		B=1e-30;
 
-	float C=D/B;
+	C=D/B;
 
 	if(fabs(C)>1e30)
 		C=1e30;
@@ -199,16 +203,17 @@ void vasgroup2dvti(float vp0, float vs0, float eps, float del, float ap, float *
 
         float dvda = A*vp0*vp0/vsp/2.0;
 
+	float B, D, C;
+
         *vsg = vsp*sqrt(1+pow(dvda/vsp,2));
 
-	float B=1-tan(ap)*dvda/vsp;
-	float D=tan(ap)+dvda/vsp;
+	B=1-tan(ap)*dvda/vsp;
+	D=tan(ap)+dvda/vsp;
 
 	if(fabs(B)<1e-30)
 		B=1e-30;
 
-	float C=D/B;
-
+	C=D/B;
 	if(fabs(C)>1e20)
 		C=1e20;
 

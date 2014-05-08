@@ -32,7 +32,7 @@
 #define TAPER(k) (0.5*(1+cosf(k))) 
 
 /*#define filter(k) sin(k)/k*/
-//#define TAPER(k) (k!=0 ? (k<PI ? filter(k) :0) :1)
+/*#define TAPER(k) (k!=0 ? (k<PI ? filter(k) :0) :1)*/
 
 #define filter(k) 8./5.  *sin(  k)/k -			\
 				  2./5.  *sin(2*k)/k +  \
@@ -74,9 +74,9 @@
 #define filterBreal(k)   4*pow(cos(k/2),4) * (-1+3*cos(k))         /(5+3*cos(2*k))
 #define filterBimag(k)   4*pow(cos(k/2),3) * ( 1+3*cos(k))*sin(k/2)/(5+3*cos(2*k))
 
-#define TAPERB(kmag)  (kmag<PI  ? filterB(kmag)  :0 )
-#define TAPERBR(kmag) (kmag<PI  ? filterBreal(kmag)  :0 )
-#define TAPERBI(kmag) (kmag<PI  ? filterBimag(kmag)  :0 ) 
+#define TAPERB(kmag)  (kmag<SF_PI  ? filterB(kmag)  :0 )
+#define TAPERBR(kmag) (kmag<SF_PI  ? filterBreal(kmag)  :0 )
+#define TAPERBI(kmag) (kmag<SF_PI  ? filterBimag(kmag)  :0 ) 
 
 void ikx(int *ijkx, int nkx)
 /*< ikx: re-define the index for kx axis after FFT >*/
@@ -213,6 +213,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
     float rkx, rkz, k2;
     float *taperx, *taperz;
     int order=8;
+    float sig=1.5;          
 
     for( i=-hnkx; i<=hnkx ; i++ )
     {
@@ -240,7 +241,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
 	kx2[ik]=kx[ik]*kx[ik];
 	kkx[ik] = 2*SF_PI*i/nkx;
 	rkx=kkx[ik];
-	if(tapertype[0]=='S')// Jia Yan's Sinc taper
+	if(tapertype[0]=='S')/* Jia Yan's Sinc taper */
 	{
 	    switch(order){
                 case 8: taperx[ik]=TAPER8(rkx); break;
@@ -248,7 +249,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
                 case 4: taperx[ik]=TAPER4(rkx); break;
                 case 2: taperx[ik]=TAPER2(rkx);
 	    }
-	}else if(tapertype[0]=='C'||tapertype[0]=='T')//Joe Dellinger's Cosine taper
+	}else if(tapertype[0]=='C'||tapertype[0]=='T')/*Joe Dellinger's Cosine taper */
 	{
 	    /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
 	    taperx[ik]=TAPER(rkx);
@@ -261,7 +262,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
 	kz2[jk]=kz[jk]*kz[jk];
 	kkz[jk] = 2*SF_PI*j/nkz;
 	rkz=kkz[jk];
-	if(tapertype[0]=='S') // Jia Yan's Sinc taper
+	if(tapertype[0]=='S') /* Jia Yan's Sinc taper */
 	{
 
 	    switch(order){
@@ -270,7 +271,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
                 case 4: taperz[jk]=TAPER4(rkz); break;
                 case 2: taperz[jk]=TAPER2(rkz);
 	    }
-	}else if(tapertype[0]=='C'||tapertype[0]=='T')//Joe Dellinger's Cosine taper
+	}else if(tapertype[0]=='C'||tapertype[0]=='T')/*Joe Dellinger's Cosine taper */
 	{
 	    /* 0.5*(1.0+cos(SF_PI*kx[ik]/kx_nyquist)) */
 	    taperz[jk]=TAPER(rkz);
@@ -278,10 +279,8 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
     }
 
     /******************* calculate 2D taper *************************/
-    if(tapertype[0]=='D')// Dale Hale's taper
+    if(tapertype[0]=='D')/* Dale Hale's taper */
     {
-	float sig=1.5;          
-
 	for( i=-hnkx; i<=hnkx ; i++ )
 	{
 	    ik=i+hnkx;
@@ -290,10 +289,10 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
 		jk=j+hnkz;
 		k2=kx2[ik]+kz2[jk];
 		taper[ik][jk] = TAPERG(k2, sig);
-		//taper[ik][jk] = TAPERD(kx[ik], kz[jk]);
+		/* taper[ik][jk] = TAPERD(kx[ik], kz[jk]); */
 	    }
 	}
-    }else if(tapertype[0]=='K')// 
+    }else if(tapertype[0]=='K') 
     {
 	for( i=-hnkx; i<=hnkx ; i++ )
 	{
@@ -304,7 +303,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
 		taper[ik][jk] = TAPERK(kx[ik], kz[jk]);
 	    }
 	}
-    }else if(tapertype[0]=='T') //CJB' Taper for TTI
+    }else if(tapertype[0]=='T') /* CJB' Taper for TTI */
     {
 	for( i=-hnkx; i<=hnkx ; i++ )
 	{
@@ -315,7 +314,7 @@ void kxkztaper(float *kx,float *kz, float *kkx,float *kkz, float *kx2, float *kz
 		taper[ik][jk] = taperx[ik]*taperz[jk];
 	    }
 	}
-    }else //Joe Dellinger's Cosine taper or Jia Yan's Sinc Taper
+    }else /* Joe Dellinger's Cosine taper or Jia Yan's Sinc Taper */
     {
 	for( i=-hnkx; i<=hnkx ; i++ )
 	{
