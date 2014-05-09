@@ -277,6 +277,7 @@ int main(int argc, char *argv[])
 	sf_putstring(grads,"label2","Distance");
 	sf_putstring(grads,"label3","Iteration");
 	sf_putint(objs,"n1",niter);
+	sf_putint(objs,"n2",1);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
