@@ -201,21 +201,13 @@ void wavefield_init(float *d_p0, float *d_p1, int N)
 }
 
 
-void report_par(float *d_par,char *s)
-/*< report the parameter with name s[] >*/
-{
-	float tmp;
-	cudaMemcpy(&tmp, d_par, sizeof(float), cudaMemcpyDeviceToHost);
-	sf_warning("%s=%f\n",s, tmp);
-}
-
-
 int main(int argc, char *argv[])
 {
+	bool verb;
 	int is, it, iter, distx, distz, csd;
-	float dtx, dtz, _dx2, _dz2, mstimer,amp;
-	float *ptr=NULL;
-	sf_file vinit, shots, vupdates, grads;
+	float dtx, dtz, _dx2, _dz2, mstimer,amp,tmp,obj1;
+	float *objval, *ptr=NULL;
+	sf_file vinit, shots, vupdates, grads, objs;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -225,10 +217,12 @@ int main(int argc, char *argv[])
 	shots=sf_input("shots"); /* recorded shots from exact velocity model */
     	vupdates=sf_output("out"); /* updated velocity in iterations */ 
     	grads=sf_output("grads");  /* gradient in iterations */ 
+	objs=sf_output("objs");/* values of objective function in iteration */
 
     	/* get parameters from velocity model and recorded shots */
-    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
-    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
+	if (!sf_getbool("verb",&verb)) verb=true;
+    	if (!sf_histint(vinit,"n1",&nz1)) sf_error("no n1");
+    	if (!sf_histint(vinit,"n2",&nx1)) sf_error("no n2");
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
@@ -265,6 +259,7 @@ int main(int argc, char *argv[])
     	if (!sf_getint("niter",&niter))   niter=100;
 	/* number of iterations */
 
+
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);
 	sf_putfloat(vupdates,"d1",dz);
@@ -281,6 +276,7 @@ int main(int argc, char *argv[])
 	sf_putstring(grads,"label1","Depth");
 	sf_putstring(grads,"label2","Distance");
 	sf_putstring(grads,"label3","Iteration");
+	sf_putint(objs,"n1",niter);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -294,9 +290,11 @@ int main(int argc, char *argv[])
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
+	objval=(float*)malloc(niter*sizeof(float));
 	sf_floatread(v0, nz1*nx1, vinit);
 	expand(vv, v0, nz, nx, nz1, nx1);
 	memset(dobs,0,ng*nt*sizeof(float));
+	memset(objval,0,niter*sizeof(float));
 
     	cudaSetDevice(0);
     	cudaError_t err = cudaGetLastError();
@@ -314,6 +312,7 @@ int main(int argc, char *argv[])
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
 	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
+
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
@@ -399,17 +398,14 @@ int main(int argc, char *argv[])
 		//cuda_gaussian_smoothx<<<dimg,dimb>>>(d_sillum, d_g1, d_bell, nz, nx);
 
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
-		report_par(&d_pars[0], "obj");
 
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
-		sf_floatwrite(v0, nz*nx, grads);
+		sf_floatwrite(v0, nz1*nx1, grads);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cuda_cal_conjgrad<<<dimg, dimb>>>(d_g1, d_cg, &d_pars[1], nz, nx);
 		cuda_cal_epsilon<<<1, Block_Size>>>(d_vv, d_cg, &d_pars[2], nz*nx);
-		report_par(&d_pars[1], "beta");
-		report_par(&d_pars[2], "epsil");
 
 		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemset(d_alpha1, 0, ng*sizeof(float));
@@ -436,25 +432,40 @@ int main(int argc, char *argv[])
 			}
 		}
 		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, &d_pars[2], ng);
-		report_par(&d_pars[3], "alpha");
 		cuda_update_vel<<<dimg,dimb>>>(d_vv, d_cg, &d_pars[3], nz, nx);
 
 		cudaMemcpy(vv, d_vv, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
-		sf_floatwrite(v0, nz*nx, vupdates);
+		sf_floatwrite(v0, nz1*nx1, vupdates);
 
 		cudaEventRecord(stop);
   		cudaEventSynchronize(stop);
   		cudaEventElapsedTime(&mstimer, start, stop);
-    		sf_warning("iteration %d finished: %f (s)\n",iter+1, mstimer*1e-3);
+		if(verb)
+		{
+			cudaMemcpy(&tmp, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
+			sf_warning("beta=%f",tmp);
+			cudaMemcpy(&tmp, &d_pars[2], sizeof(float), cudaMemcpyDeviceToHost);
+			sf_warning("epsil=%f",tmp);
+			cudaMemcpy(&tmp, &d_pars[3], sizeof(float), cudaMemcpyDeviceToHost);
+			sf_warning("alpha=%f",tmp);
+			cudaMemcpy(&tmp, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
+			if(iter==0) { obj1=tmp; objval[iter]=1.;}
+			else objval[iter]=tmp/obj1;
+			sf_warning("obj=%f",objval[iter]);
+
+			sf_warning("iteration %d finished: %f (s)",iter+1, mstimer*1e-3);
+		}
 	}
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
+	sf_floatwrite(objval,niter,objs);
 	sf_fileclose(shots);
 
 	free(v0);
 	free(vv);
 	free(dobs);
+	free(objval);
 	device_free();
 
 	return 0;
