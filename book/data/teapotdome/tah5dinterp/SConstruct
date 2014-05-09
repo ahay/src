@@ -10,9 +10,9 @@ Flow(['temp.rsf', 'temp_hdr.rsf'],
         verbose=1  
      | sftah5dinterp
        key=sx 
-       verbose=1  
+       verbose=2  
      | sftahwrite 
-        verbose=1                           
+        verbose=1                          
 	label2="tracr"  o2=1 n2=5047  d2=1   
         output=${TARGETS[0]}
      ''',stdout=0,stdin=0)
