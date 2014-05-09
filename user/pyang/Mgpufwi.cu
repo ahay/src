@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
 	shots=sf_input("shots"); /* recorded shots from exact velocity model */
-    	vupdates=sf_output("out");  /* updated velocity in iterations */ 
+    	vupdates=sf_output("out"); /* updated velocity in iterations */ 
     	grads=sf_output("grads");  /* gradient in iterations */ 
 
     	/* get parameters from velocity model and recorded shots */
@@ -232,21 +232,36 @@ int main(int argc, char *argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
-   	if (!sf_histint(shots,"n1",&nt)) sf_error("no nt");/* total modeling time steps */
-   	if (!sf_histint(shots,"n2",&ng)) sf_error("no ng");/* total receivers in each shot */
-   	if (!sf_histint(shots,"n3",&ns)) sf_error("no ns");/* number of shots */
-   	if (!sf_histfloat(shots,"d1",&dt)) sf_error("no dt");/* time sampling interval */
-   	if (!sf_histfloat(shots,"fm",&fm)) sf_error("no fm");/* dominant freq of ricker */
-   	if (!sf_histint(shots,"sxbeg",&sxbeg)) sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
-   	if (!sf_histint(shots,"szbeg",&szbeg)) sf_error("no szbeg");/* x-begining index of sources, starting from 0 */
-   	if (!sf_histint(shots,"gxbeg",&gxbeg)) sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
-   	if (!sf_histint(shots,"gzbeg",&gzbeg)) sf_error("no gzbeg");/* x-begining index of receivers, starting from 0 */
-   	if (!sf_histint(shots,"jsx",&jsx)) sf_error("no jsx");/* source x-axis  jump interval  */
-   	if (!sf_histint(shots,"jsz",&jsz)) sf_error("no jsz");/* source z-axis jump interval  */
-   	if (!sf_histint(shots,"jgx",&jgx)) sf_error("no jgx");/* receiver x-axis jump interval  */
-   	if (!sf_histint(shots,"jgz",&jgz)) sf_error("no jgz");/* receiver z-axis jump interval  */
-   	if (!sf_histint(shots,"csdgather",&csd)) sf_error("csdgather or not required");/* default, common shot-gather; if n, record at every point*/
-    	if (!sf_getint("niter",&niter))   niter=100;/* number of iterations */
+   	if (!sf_histint(shots,"n1",&nt)) sf_error("no nt");
+	/* total modeling time steps */
+   	if (!sf_histint(shots,"n2",&ng)) sf_error("no ng");
+	/* total receivers in each shot */
+   	if (!sf_histint(shots,"n3",&ns)) sf_error("no ns");
+	/* number of shots */
+   	if (!sf_histfloat(shots,"d1",&dt)) sf_error("no dt");
+	/* time sampling interval */
+   	if (!sf_histfloat(shots,"fm",&fm)) sf_error("no fm");
+	/* dominant freq of ricker */
+   	if (!sf_histint(shots,"sxbeg",&sxbeg)) sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+   	if (!sf_histint(shots,"szbeg",&szbeg)) sf_error("no szbeg");
+	/* x-begining index of sources, starting from 0 */
+   	if (!sf_histint(shots,"gxbeg",&gxbeg)) sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+   	if (!sf_histint(shots,"gzbeg",&gzbeg)) sf_error("no gzbeg");
+	/* x-begining index of receivers, starting from 0 */
+   	if (!sf_histint(shots,"jsx",&jsx)) sf_error("no jsx");
+	/* source x-axis  jump interval  */
+   	if (!sf_histint(shots,"jsz",&jsz)) sf_error("no jsz");
+	/* source z-axis jump interval  */
+   	if (!sf_histint(shots,"jgx",&jgx)) sf_error("no jgx");
+	/* receiver x-axis jump interval  */
+   	if (!sf_histint(shots,"jgz",&jgz)) sf_error("no jgz");
+	/* receiver z-axis jump interval  */
+   	if (!sf_histint(shots,"csdgather",&csd)) sf_error("csdgather or not required");
+	/* default, common shot-gather; if n, record at every point*/
+    	if (!sf_getint("niter",&niter))   niter=100;
+	/* number of iterations */
 
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);

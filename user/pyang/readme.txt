@@ -98,11 +98,14 @@ NB: ADCIG computation is much more expensive than RTM imaging.
 An MPI version of this program is in preparation!
 
 11) 2D GPU-based full waveform inversion (FWI)
-Main:		Mgenshots.cu, Mgpufwi.cu
-Test file:	/book/xjtu/primer/fwi/SConstruct
+Main:		Mgenshots.cu, Mfbrec.cu,Mgpufwi.cu
+Test file:	/book/xjtu/fwi/fbrec/SConstruct
+		/book/xjtu/fwi/genshots/SConstruct
 NB: Mgenshots.cu is used to generate shots by forward modeling using
 the exact velocity model. We can use a starting model to do FWI by
-invoking Mgpufwi.cu.
+invoking Mgpufwi.cu. We are using boundary saving strategy in FWI. To 
+demonstrate that the modeled wavefield can be precisely reconstructed,
+we design the code Mfbrec.cu befere going to FWI.
 
 
 ===================================================================
