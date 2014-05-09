@@ -146,7 +146,7 @@ void put_tah(float* trace, float* header,
 
 int get_tah(float* trace, float* header, 
 	    int n1_traces, int n1_headers, sf_file file)
-/*< get tah >*/
+/*< get tah.  return 1 if eof encountered, 0 otherwise >*/
 {
   int input_record_length;
   char type_input_record[5];

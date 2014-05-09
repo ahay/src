@@ -23,6 +23,7 @@ tahstack
 tahsort
 tahscscale
 lintshape2d
+tah5dinterp
 '''
 
 src = Glob('[a-z]*.c')
