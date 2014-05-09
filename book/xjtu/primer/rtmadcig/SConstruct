@@ -16,7 +16,7 @@ Result('veladcig','grey title="velocity model:2 layers" color=j scalebar=y')
 
 Flow('adcig vecx vecz','veladcig',
 	'''
-	sfTestadcig vecx=${TARGETS[1]} vecz=${TARGETS[2]} nb=20 noa=45 
+	rtmadcig vecx=${TARGETS[1]} vecz=${TARGETS[2]} nb=20 noa=45 
 	nt=1500 kt=250 fm=25 dt=0.001 ns=1 ng=200 csdgather=n
 	sxbeg=100 szbeg=1 jsx=40 jsz=0 
 	gxbeg=0 gzbeg=1 jgx=1 jgz=0 
