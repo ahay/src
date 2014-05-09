@@ -1,4 +1,36 @@
-==Release 1.6 (TBD)==
+==Release 1.7 (TBA)==
+
+===Additions and enhancements===
+
+To the reproducible documents collection:
+
+To SCons:
+
+To documentation:
+
+To APIs:
+
+To the Python package:
+
+To programs:
+
+===Bug fixes===
+
+In the reproducible documents collection:
+
+In documentation:
+
+In APIs:
+
+In the Python package:
+
+In programs:
+
+In the build system:
+
+===Changes in defaults and interfaces===
+
+==Release 1.6 (2014-05-09)==
 
 ===Additions and enhancements===
 
