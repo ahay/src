@@ -105,13 +105,12 @@ int main(int argc, char *argv[])
 	for(i1=0; i1<n1; i1++) 
 	{	
 		if (mask[i1+i2*n1]) drec[i1+n1*i2]=dobs[i1+n1*i2];
-		//else  drec[i1+n1*i2]+=dobs[i1+n1*i2];
 	}
 
-	// adjoint: At(drec)
+	/* adjoint: At(drec) */
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec);
 
-	// perform thresholding; T{ At(drec) }
+	/* perform thresholding; T{ At(drec) } */
 #ifdef _OPENMP
 #pragma omp parallel for default(none) collapse(2)	\
 	private(i1,i2)					\
@@ -120,17 +119,17 @@ int main(int argc, char *argv[])
 	for(i2=0; i2<n2; i2++)    		
 	for(i1=0; i1<n1; i1++) 
 	{	
-		//if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0;// set large scale to 0
+	  /* if (i2>0.01*pscale*n2) dtmp[i1+i2*n1]=0; */
+	  /* set large scale to 0 */
 		tmp[i1+n1*i2]=fabsf(dtmp[i1+n1*i2]);
 	}	
    	nthr = 0.5+n1*n2*(1.-0.01*pclip);  
     	if (nthr < 0) nthr=0;
     	if (nthr >= n1*n2) nthr=n1*n2-1;
 	thr=sf_quantile(nthr,n1*n2,tmp);
-	//thr*=(niter-iter)/niter;
 	sf_pthresh(dtmp, n1*n2, thr, p, mode);
 
-	// forward: A T{ At(drec) } 
+	/* forward: A T{ At(drec) } */
 	seislet_lop(false,false,n1*n2,n1*n2,dtmp,drec);
 
 	if (verb)    sf_warning("iteration %d;",iter+1);

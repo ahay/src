@@ -49,25 +49,25 @@ Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
     	fft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_FORWARD,FFTW_MEASURE);	
    	ifft1=fftwf_plan_dft_1d(n,tmp,tmp,FFTW_BACKWARD,FFTW_MEASURE);
 	
-	// dd-->F {dd}
+	/* dd-->F {dd}*/
 	memcpy(tmp, dd, n*sizeof(sf_complex));
 	fftwf_execute(fft1);
 	memcpy(dd, tmp, n*sizeof(sf_complex));
 
-	// c-->FFT{c}
+	/* c-->FFT{c}*/
 	memcpy(tmp, c, n*sizeof(sf_complex));
 	fftwf_execute(fft1);
 	memcpy(c, tmp, n*sizeof(sf_complex));
 
-	// multiplication in Fourier domain: diag(conj(c)./(c*conj(c) +mu)) F dd
+	/*multiplication in Fourier domain: diag(conj(c)./(c*conj(c)+mu)) F dd*/
 	for(i=0; i<n; i++)
 	{
 		a=c[i]*conjf(c[i]);
-		//dd[i]=(a==0.)?0.:(dd[i]*conjf(c[i])/a);
+		/*dd[i]=(a==0.)?0.:(dd[i]*conjf(c[i])/a);*/
 		dd[i]*=conjf(c[i])/(a+mu);
 	}
 
-	// IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)
+	/* IFFT{FFT{c}.*FFT{dd}/sqrtf(n)}/sqrtf(n)*/
 	memcpy(tmp, dd, n*sizeof(sf_complex));
 	fftwf_execute(ifft1);
 	for(i=0; i<n; i++) mm[i]=tmp[i]/n;

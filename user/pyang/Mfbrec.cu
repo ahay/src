@@ -36,10 +36,10 @@ extern "C" {
 #endif
 
 #define PI 	3.141592653589793f
-#define Block_Size1 16		// 1st dim block size
-#define Block_Size2 16		// 2nd dim block size
-#define Block_Size  512		// vector computation blocklength
-#define nbell	2		// radius of Gaussian bell: diameter=2*nbell+1
+#define Block_Size1 16		
+#define Block_Size2 16		
+#define Block_Size  512		
+#define nbell	2		
 
 #include "cuda_fwi_kernels.cu"
 
@@ -48,19 +48,20 @@ static int nz,nx,nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 static float dx, dz, fm, dt;
 
 
-// variables on host
+/* variables on host */
 float 	*v0, *dobs, *vv;
-// variables on device
+/* variables on device */
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_dobs, *d_bndr;
 
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
 {
+	int i1, i2;
 	float *tmp=(float*)malloc(n1*n2*sizeof(float));
 	if (tmp==NULL) {printf("out of memory!"); exit(1);}
-	for(int i2=0; i2<n2; i2++){
-		for(int i1=0; i1<n1; i1++){
+	for(i2=0; i2<n2; i2++){
+		for(i1=0; i1<n1; i1++){
 			tmp[i2+n2*i1]=matrix[i1+n1*i2];
 		}
 	}
@@ -144,7 +145,7 @@ void wavefield_init(float *d_p0, float *d_p1, int N)
 int main(int argc, char *argv[])
 {
 	int is, ft, jt, it, distx, distz;
-	float dtx,dtz,mstimer,amp;
+	float dtx,dtz,amp;
 	float *ptr=NULL;
 	sf_file vinit, Fw1, Fw2;
 
@@ -193,7 +194,7 @@ int main(int argc, char *argv[])
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
-	// round the size up to multiples of Block size
+	/* round the size up to multiples of Block size */
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2;
 
@@ -231,13 +232,8 @@ int main(int argc, char *argv[])
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
-
-	cudaEvent_t start, stop;
-  	cudaEventCreate(&start);	
-	cudaEventCreate(&stop);
-	//for(is=0;is<ns;is++)
-	//{
-		cudaEventRecord(start);
+	for(is=0; is<ns; is++)
+	{
 		cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
 		if (csdgather)	{
 			gxbeg=sxbeg+is*jsx-distx;
@@ -258,11 +254,6 @@ int main(int argc, char *argv[])
 				sf_floatwrite(v0,nz1*nx1,Fw1);
 			}
 		}
-/*
-		cudaMemcpy(dobs, d_dobs, ng*nt*sizeof(float), cudaMemcpyDeviceToHost);
-		matrix_transpose(dobs, ng, nt);
-		sf_floatwrite(dobs,ng*nt,shots);
-*/
 
 		ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 		for(it=nt-1; it>-1; it--)
@@ -280,16 +271,7 @@ int main(int argc, char *argv[])
 
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 		}
-
-
-		cudaEventRecord(stop);
-  		cudaEventSynchronize(stop);
-  		cudaEventElapsedTime(&mstimer, start, stop);
-    		//sf_warning("shot %d finished: %f (s)",is+1, mstimer*1e-3);
-	//}
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);
-
+	}
 	free(v0);
 	free(vv);
 	free(dobs);

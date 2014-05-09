@@ -55,11 +55,10 @@ extern "C" {
 #endif
 
 #define PI 	3.141592653589793f
-#define Block_Size1 16		// 1st dim block size
-#define Block_Size2 16		// 2nd dim block size
-#define Block_Size  512		// vector computation blocklength
-#define nbell	2		// radius of Gaussian bell: diameter=2*nbell+1
-//const int niter=300;		// total iterations
+#define Block_Size1 16	/* 1st dim block size */
+#define Block_Size2 16	/* 2nd dim block size */
+#define Block_Size  512	/* vector computation blocklength */
+#define nbell	2	/* radius of Gaussian bell: diameter=2*nbell+1 */
 
 #include "cuda_fwi_kernels.cu"
 
@@ -67,11 +66,9 @@ static bool csdgather;
 static int niter,nz,nx, nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 static float dx, dz, fm, dt;
 
-char *shots_file="shots.bin";
-
-// variables on host
+/* variables on host */
 float 	*v0, *vv, *dobs;
-// variables on device
+/* variables on device */
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_sillum, *d_gillum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
 float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2, *d_bell;
@@ -85,6 +82,7 @@ d_alpha2[]: denominator of alpha, length=ng
 */
 
 void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
+/*< round up the model size to be multiples of block size >*/
 {
 	int i1,i2,i11,i22;
 
@@ -97,8 +95,8 @@ void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
 	}	
 }
 
-
 void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
+/*< window the portion to be the same size as initial model >*/
 {
 	int i1, i2;
 
@@ -110,18 +108,19 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
 {
-	float *tmp=(float*)malloc(n1*n2*sizeof(float));
-	if (tmp==NULL) {sf_warning("out of memory!"); exit(1);}
-	for(int i2=0; i2<n2; i2++){
-		for(int i1=0; i1<n1; i1++){
+	int i2, i1;
+	float *tmp;
+	if (!(tmp=(float*)malloc(n1*n2*sizeof(float))))
+	 {sf_warning("out of memory!"); exit(1);}
+	
+	for(i2=0; i2<n2; i2++){
+		for(i1=0; i1<n1; i1++){
 			tmp[i2+n2*i1]=matrix[i1+n1*i2];
 		}
 	}
 	memcpy(matrix, tmp, n1*n2*sizeof(float));
 	free(tmp);
 }
-
-
 
 void device_alloc()
 /*< allocate memories for variables on device >*/
@@ -152,9 +151,8 @@ void device_alloc()
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
+	sf_warning("Cuda error: Failed to allocate required memory!: %s", cudaGetErrorString(err));
 }
-
 
 void device_free()
 /*< free the variables on device >*/
@@ -185,7 +183,7 @@ void device_free()
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err)
-	sf_warning("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
+	sf_warning("Cuda error: Failed to free the allocated memory!: %s", cudaGetErrorString(err));
 }
 
 
@@ -284,7 +282,7 @@ int main(int argc, char *argv[])
 	_dz2=1.0/(dz*dz);
 	_dx2=1.0/(dx*dx);
 	csdgather=(csd>0)?true:false;
-	// round the size up to multiples of Block size
+	/* round the size up to multiples of Block size */
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2; 
 
@@ -387,17 +385,18 @@ int main(int argc, char *argv[])
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
 
-				//cuda_cal_grad<<<dimg,dimb>>>(d_g1, d_sillum, d_gillum, d_lap, d_gp1, _dz2, _dx2, nz, nx);
+				/*cuda_cal_grad<<<dimg,dimb>>>(d_g1, d_sillum, d_gillum, d_lap, d_gp1, _dz2, _dx2, nz, nx);*/
 				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_sillum, d_lap, d_gp1, _dz2, _dx2, nz, nx);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
 			}
 		}
 		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, nz, nx);
-		//cuda_scale_grad<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, d_gillum, nz, nx);
-		//cuda_gaussian_smoothz<<<dimg,dimb>>>(d_g1, d_sillum, d_bell, nz, nx);
-		//cuda_gaussian_smoothx<<<dimg,dimb>>>(d_sillum, d_g1, d_bell, nz, nx);
-
+/*		
+		cuda_scale_grad<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, d_gillum, nz, nx);
+		cuda_gaussian_smoothz<<<dimg,dimb>>>(d_g1, d_sillum, d_bell, nz, nx);
+		cuda_gaussian_smoothx<<<dimg,dimb>>>(d_sillum, d_g1, d_bell, nz, nx);
+*/
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
 
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);

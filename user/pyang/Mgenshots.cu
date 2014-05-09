@@ -55,10 +55,10 @@ extern "C" {
 #endif
 
 #define PI 	3.141592653589793f
-#define Block_Size1 16		// 1st dim block size
-#define Block_Size2 16		// 2nd dim block size
-#define Block_Size  512		// vector computation blocklength
-#define nbell	2		// radius of Gaussian bell: diameter=2*nbell+1
+#define Block_Size1 16	/* 1st dim block size */
+#define Block_Size2 16  /* 2nd dim block size */
+#define Block_Size  512	/* vector computation blocklength */
+#define nbell	2	/* radius of Gaussian bell: diameter=2*nbell+1 */
 
 #include "cuda_fwi_kernels.cu"
 
@@ -67,19 +67,20 @@ static int nz,nx,nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 static float dx, dz, fm, dt;
 
 
-// variables on host
+/* variables on host */
 float 	*v0, *dobs, *vv;
-// variables on device
+/* variables on device */
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_dobs;
 
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
 {
+	int i1, i2;
 	float *tmp=(float*)malloc(n1*n2*sizeof(float));
 	if (tmp==NULL) {printf("out of memory!"); exit(1);}
-	for(int i2=0; i2<n2; i2++){
-		for(int i1=0; i1<n1; i1++){
+	for(i2=0; i2<n2; i2++){
+		for(i1=0; i1<n1; i1++){
 			tmp[i2+n2*i1]=matrix[i1+n1*i2];
 		}
 	}
@@ -88,6 +89,7 @@ void matrix_transpose(float *matrix, int n1, int n2)
 }
 
 void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
+/*< round up the model size to be multiples of block size >*/
 {
 	int i1,i2,i11,i22;
 
@@ -102,6 +104,7 @@ void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
 
 
 void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
+/*< window the portion to be the same size as initial model >*/
 {
 	int i1, i2;
 
@@ -176,21 +179,36 @@ int main(int argc, char *argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
-	if (!sf_getfloat("amp",&amp)) amp=1000;/* maximum amplitude of ricker */
-    	if (!sf_getfloat("fm",&fm)) fm=10;	/* dominant freq of ricker */
-    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	/* time interval */
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   sf_error("no ns");	/* total shots */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */	
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");/* z-begining index of receivers, starting from 0 */
-	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
+	if (!sf_getfloat("amp",&amp)) amp=1000;
+	/* maximum amplitude of ricker */
+    	if (!sf_getfloat("fm",&fm)) fm=10;	
+	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	/* time interval */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
+	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	/* total receivers in each shot */	
+    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
+	/* z-begining index of receivers, starting from 0 */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+	/* default, common shot-gather; if n, record at every point*/
 
 	sf_putint(shots,"n1",nt);	
 	sf_putint(shots,"n2",ng);
@@ -218,14 +236,13 @@ int main(int argc, char *argv[])
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
-	// round the size up to multiples of Block size
+	/* round the size up to multiples of Block size */
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2;
 
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
-
 	sf_floatread(v0,nz1*nx1,vinit);
 	expand(vv, v0, nz, nx, nz1, nx1);
 	memset(dobs,0,ng*nt*sizeof(float));

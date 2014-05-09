@@ -533,19 +533,11 @@ int main(int argc, char* argv[])
 	cudaMemcpy(p, d_sp0, N*sizeof(float), cudaMemcpyDeviceToHost);
 	window(v0, p, npml, nnz, nnx, nz1, nx1);
 	sf_floatwrite(v0,nz1*nx1,imag1); 
-	cuda_laplace_filter<<<dimg0,dimb0>>>(d_I2,d_gp0,_dz,_dx, npml, nnz, nnx);
+	cuda_laplace_filter<<<dimg0,dimb0>>>(d_I2,d_gp0,_dz,_dx, npml, nnz,nnx);
 	cudaMemcpy(p, d_gp0, N*sizeof(float), cudaMemcpyDeviceToHost);
 	window(v0, p, npml, nnz, nnx, nz1, nx1);
 	sf_floatwrite(v0,nz1*nx1,imag2); 
-/*
-	cudaMemcpy(p, d_I1, N*sizeof(float), cudaMemcpyDeviceToHost);
-	window(v0, p, npml, nnz, nnx, nz1, nx1);
-	sf_floatwrite(v0,nz1*nx1,imag1); 
 
-	cudaMemcpy(p, d_I2, N*sizeof(float), cudaMemcpyDeviceToHost);
-	window(v0, p, npml, nnz, nnx, nz1, nx1);
-	sf_floatwrite(v0,nz1*nx1,imag2); 
-*/
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 

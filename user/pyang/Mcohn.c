@@ -130,7 +130,7 @@ int main(int argc, char *argv[])
 				s+=u1[i3+j3][i2+j2][i1+j1]*u1[i3+k3][i2+k2][i1+j1];
 			}
 			cxy[py][px]=s;
-		}// construct the covariance matrix
+		}/* construct the covariance matrix */
 
 		u2[i3][i2][i1]=cohn(cxy, J);
 	}

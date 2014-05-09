@@ -41,8 +41,8 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;/* verbosity flag */
     if (!sf_getint("niter",&niter)) niter=1;
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input"); /*trace length */
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input"); /*number of traces */
-    /* n1,n2 are assumed to be 2^k */ 
+    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input"); 
+    /*number of traces, n1,n2 are assumed to be 2^k */ 
     if (!sf_getint("L",&L)) sf_error("No L");
     if (!sf_getfloat("C",&C)) C=0.005;/* C=2*Lambda/L, unit slice */
     if (!sf_getfloat("pclip",&pclip)) 	pclip=99.;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
     dat=sf_floatalloc(n1*n2);
     coeffs=sf_complexalloc(n1*n2*L);
-    tmp=sf_floatalloc(n1*n2*L);// save thresholds
+    tmp=sf_floatalloc(n1*n2*L);/* save thresholds */
     sf_floatread(dat, n1*n2, in);
 
     dlctk_init(n1, n2, L, C);
