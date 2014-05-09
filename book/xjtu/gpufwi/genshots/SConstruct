@@ -39,7 +39,25 @@ Flow('shots','vel',
 	sxbeg=15 szbeg=1 jsx=37 jsz=0 gxbeg=0 gzbeg=1 jgx=1 jgz=0
 	''')
 Result('shots','grey color=g ')
+Flow('vsnaps grads objs','smvel shots',
+	'''
+	sfgpufwi shots=${SOURCES[1]} grads=${TARGETS[1]} 
+	objs=${TARGETS[2]} niter=10
+	''')
+Result('vsnaps',
+	'''
+	grey title="Updated velocity" allpos=y color=j pclip=100 
+	scalebar=y bartype=y barlabel="V" barunit="m/s" screenratio=0.45
+	''')
 
+Result('grads','grey title="Updated gradient"')
+
+Result('objs',
+	'''
+	put n2=1|
+	graph title="Misfit function" dash=0 plotfat=5 label1=Iteration 
+	label2=Objective grid=y yreverse=n
+	''')
 
 
 End()
