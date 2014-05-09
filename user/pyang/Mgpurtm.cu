@@ -435,7 +435,6 @@ int main(int argc, char* argv[])
 	sf_warning("Cuda error: Failed to initialize device: %s", cudaGetErrorString(err));
 	device_alloc(); 
 
-	mstimer = 0;// timer unit: millionseconds
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);

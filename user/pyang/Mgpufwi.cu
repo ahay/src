@@ -34,6 +34,10 @@ References:
 #include <math.h>
 #include <cuda_runtime.h>
 
+extern "C" {
+#include <rsf.h>
+}
+
 #ifndef MAX
 #define	MAX(x,y) ((x) > (y) ? (x) : (y))
 #endif
@@ -55,58 +59,18 @@ References:
 #define Block_Size2 16		// 2nd dim block size
 #define Block_Size  512		// vector computation blocklength
 #define nbell	2		// radius of Gaussian bell: diameter=2*nbell+1
-const int niter=300;		// total iterations
+//const int niter=300;		// total iterations
 
 #include "cuda_fwi_kernels.cu"
 
-/*
-const bool csdgather=false; 	// common shot gather (CSD) or not
-char *model_file="ini_syn100x120.bin";
+static bool csdgather;
+static int niter,nz,nx, nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+static float dx, dz, fm, dt;
+
 char *shots_file="shots.bin";
-const int 	nz=100;
-const int 	nx=120;
-const float 	dx=5.0;
-const float 	dz=5.0;
-const float 	fm=20.0;
-const float 	dt=0.001;
-const int 	nt=800;
-const int 	ns=12;
-const int 	ng=120;
-
-int jsx=10;	//source x-axis jump interval
-int jsz=0;	//source z-axis jump interval
-int jgx=1;      //geophone x-axis jump interval
-int jgz=0;	//geophone z-axis jump interval
-int sxbeg=5;	//x-begining index of source, starting from 0
-int szbeg=2;	//z-begining index of source, starting from 0
-int gxbeg=0;	//x-begining index of geophone, starting from 0
-int gzbeg=3;	//z-begining index of geophone, starting from 0
-*/
-
-const bool csdgather=false; 	// common shot gather (CSD) or not
-char *model_file="sm_marm240x737.bin";
-char *shots_file="shots.bin";
-const int 	nz=240;
-const int 	nx=737;
-const float 	dx=12.5;
-const float 	dz=12.5;
-const float 	fm=15.0;
-const float 	dt=0.001;
-const int 	nt=3000;
-const int 	ns=20;
-const int 	ng=737;
-
-int jsx=37;
-int jsz=0;
-int jgx=1;
-int jgz=0;
-int sxbeg=15;//x-begin point of source, index starting from 0
-int szbeg=2;//z-begin point of source, index starting from 0
-int gxbeg=0;//x-begin point of geophone, index starting from 0
-int gzbeg=3;//z-begin point of geophone, index starting from 0
 
 // variables on host
-float 	*v0, *dobs;
+float 	*v0, *vv, *dobs;
 // variables on device
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_sillum, *d_gillum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
@@ -119,6 +83,29 @@ d_pars[3]: alpha;
 d_alpha1[]: numerator of alpha, length=ng
 d_alpha2[]: denominator of alpha, length=ng
 */
+
+void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
+{
+	int i1,i2,i11,i22;
+
+	for(i2=0; i2<nx; i2++)
+	for(i1=0; i1<nz; i1++)
+	{
+		i11=(i1<nz1)?i1:(nz1-1);
+		i22=(i2<nx1)?i2:(nx1-1);
+		vv[i1+i2*nz]=v0[i11+nz1*i22];
+	}	
+}
+
+
+void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
+{
+	int i1, i2;
+
+	for(i2=0; i2<nx1; i2++)
+	for(i1=0; i1<nz1; i1++)
+		  v0[i1+i2*nz1]=vv[i1+nz*i2];
+}
 
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
@@ -225,40 +212,93 @@ void report_par(float *d_par,char *s)
 
 int main(int argc, char *argv[])
 {
-	v0=(float*)malloc(nz*nx*sizeof(float));
+	int is, it, iter, distx, distz, csd;
+	float dtx, dtz, _dx2, _dz2, mstimer;
+	float *ptr=NULL;
+	sf_file vinit, shots, vupdates, grads;
+
+    	/* initialize Madagascar */
+    	sf_init(argc,argv);
+
+    	/*< set up I/O files >*/
+    	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
+	shots=sf_input("shots"); /* recorded shots from exact velocity model */
+    	vupdates=sf_output("out");  /* updated velocity in iterations */ 
+    	grads=sf_output("grads");  /* gradient in iterations */ 
+
+    	/* get parameters from velocity model and recorded shots */
+    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
+    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
+    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
+   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
+
+   	if (!sf_histint(shots,"n1",&nt)) sf_error("no nt");/* total modeling time steps */
+   	if (!sf_histint(shots,"n2",&ng)) sf_error("no ng");/* total receivers in each shot */
+   	if (!sf_histint(shots,"n3",&ns)) sf_error("no ns");/* number of shots */
+   	if (!sf_histfloat(shots,"d1",&dt)) sf_error("no dt");/* time sampling interval */
+   	if (!sf_histfloat(shots,"fm",&fm)) sf_error("no fm");/* dominant freq of ricker */
+   	if (!sf_histint(shots,"sxbeg",&sxbeg)) sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
+   	if (!sf_histint(shots,"szbeg",&szbeg)) sf_error("no szbeg");/* x-begining index of sources, starting from 0 */
+   	if (!sf_histint(shots,"gxbeg",&gxbeg)) sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
+   	if (!sf_histint(shots,"gzbeg",&gzbeg)) sf_error("no gzbeg");/* x-begining index of receivers, starting from 0 */
+   	if (!sf_histint(shots,"jsx",&jsx)) sf_error("no jsx");/* source x-axis  jump interval  */
+   	if (!sf_histint(shots,"jsz",&jsz)) sf_error("no jsz");/* source z-axis jump interval  */
+   	if (!sf_histint(shots,"jgx",&jgx)) sf_error("no jgx");/* receiver x-axis jump interval  */
+   	if (!sf_histint(shots,"jgz",&jgz)) sf_error("no jgz");/* receiver z-axis jump interval  */
+   	if (!sf_histint(shots,"csdgather",&csd)) sf_error("csdgather or not required");/* default, common shot-gather; if n, record at every point*/
+    	if (!sf_getint("niter",&niter))   niter=100;/* number of iterations */
+
+	sf_putint(vupdates,"n1",nz1);	
+	sf_putint(vupdates,"n2",nx1);
+	sf_putfloat(vupdates,"d1",dz);
+	sf_putfloat(vupdates,"d2",dx);
+	sf_putint(vupdates,"n3",niter);
+	sf_putstring(vupdates,"label1","Depth");
+	sf_putstring(vupdates,"label2","Distance");
+	sf_putstring(vupdates,"label3","Iteration");
+
+	dtx=dt/dx; 
+	dtz=dt/dz; 
+	_dz2=1.0/(dz*dz);
+	_dx2=1.0/(dx*dx);
+	csdgather=(csd>0)?true:false;
+	// round the size up to multiples of Block size
+	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
+	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2; 
+
+	v0=(float*)malloc(nz1*nx1*sizeof(float));
+	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
-	FILE *fp;
-	fp=fopen(model_file,"rb");
-	if (fp==NULL) { printf("cannot open file %s:\n",__FILE__); exit(1);}
-	fread(v0, sizeof(float), nz*nx, fp);
-	fclose(fp);
-	memset(dobs,0, ng*nt*sizeof(float));
+	sf_floatread(v0, nz1*nx1, vinit);
+	expand(vv, v0, nz, nx, nz1, nx1);
+	memset(dobs,0,ng*nt*sizeof(float));
 
     	cudaSetDevice(0);
     	cudaError_t err = cudaGetLastError();
     	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize device: %s", cudaGetErrorString(err));
+	printf("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
 	device_alloc(); 
 
+	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2), dimb=dim3(Block_Size1, Block_Size2); 
 
-	cudaMemcpy(d_vv, v0, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 	cudaMemset(d_gp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_gp1,0,nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, fm, dt, nt);
-	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
+	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
 	{ printf("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
-	int distx=sxbeg-gxbeg;
-	int distz=szbeg-gzbeg;
+	distx=sxbeg-gxbeg;
+	distz=szbeg-gzbeg;
 	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
+		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
@@ -277,33 +317,22 @@ int main(int argc, char *argv[])
 	cudaMemset(d_alpha2, 0, ng*sizeof(float));
 	cudaMemset(d_vtmp, 0, nz*nx*sizeof(float));
 	cuda_init_bell<<<1,2*nbell+1>>>(d_bell);
-
 	
-	dim3 dimg=dim3((nz+Block_Size1-1)/Block_Size1, (nx+Block_Size2-1)/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
-	float dtx=dt/dx; 
-	float dtz=dt/dz; 
-	float _dz2=1.0/(dz*dz);
-	float _dx2=1.0/(dx*dx);
-
-	float *ptr=NULL;
-
-	float mstimer = 0;// timer unit: millionseconds
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);
-	fp=fopen(shots_file,"rb");
-	if (fp==NULL) { fprintf(stderr, "cannot open file %s:\n",__FILE__); exit(1);}
-	for(int iter=0;iter<niter;iter++)
+	for(iter=0; iter<niter; iter++)
 	{
 		cudaEventRecord(start);
-		rewind(fp);
+
+		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
 		cudaMemset(d_g1, 0, nz*nx*sizeof(float));
 		cudaMemset(d_sillum, 0, nz*nx*sizeof(float));
 		cudaMemset(d_gillum, 0, nz*nx*sizeof(float));
-		for(int is=0;is<ns;is++)
+		for(is=0;is<ns;is++)
 		{
-        		fread(dobs, sizeof(float), ng*nt, fp);
+			sf_floatread(dobs, ng*nt, shots);
 			matrix_transpose(dobs, nt, ng);
 			cudaMemcpy(d_dobs, dobs, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
 			if (csdgather)	{
@@ -311,7 +340,7 @@ int main(int argc, char *argv[])
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
 			wavefield_init(d_sp0, d_sp1, nz*nx);
-			for(int it=0; it<nt; it++)
+			for(it=0; it<nt; it++)
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
@@ -319,17 +348,14 @@ int main(int argc, char *argv[])
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
 				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
-				cuda_rw_bndr<<<(2*nz+nx+512)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp0, nz, nx, true);
+				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp0, nz, nx, true);
 			}
-			//cudaMemcpy(dobs, d_dobs, ng*nt*sizeof(float), cudaMemcpyDeviceToHost);
-			//matrix_transpose(dobs, ng, nt);
-			//fwrite(dobs, sizeof(float), nt*ng, fp);
 
 			ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 			wavefield_init(d_gp0, d_gp1, nz*nx);
-			for(int it=nt-1; it>-1; it--)
+			for(it=nt-1; it>-1; it--)
 			{
-				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
+				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
 				cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
@@ -361,13 +387,13 @@ int main(int argc, char *argv[])
 		report_par(&d_pars[1], "beta");
 		report_par(&d_pars[2], "epsil");
 
-		rewind(fp);
+		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemset(d_alpha1, 0, ng*sizeof(float));
 		cudaMemset(d_alpha2, 0, ng*sizeof(float));
 		cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, &d_pars[2], nz, nx);
-		for(int is=0;is<ns;is++)
+		for(is=0;is<ns;is++)
 		{
-        		fread(dobs, sizeof(float), ng*nt, fp);
+			sf_floatread(dobs, ng*nt, shots);
 			matrix_transpose(dobs, nt, ng);
 			cudaMemcpy(d_dobs, dobs, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
 			if (csdgather)	{
@@ -375,7 +401,7 @@ int main(int argc, char *argv[])
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
 			wavefield_init(d_sp0, d_sp1, nz*nx);
-			for(int it=0; it<nt; it++)
+			for(it=0; it<nt; it++)
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vtmp, dtz, dtx, nz, nx);
@@ -389,22 +415,21 @@ int main(int argc, char *argv[])
 		report_par(&d_pars[3], "alpha");
 		cuda_update_vel<<<dimg,dimb>>>(d_vv, d_cg, &d_pars[3], nz, nx);
 
-
-		FILE *fp2=fopen("newvel.bin","wb");
-		cudaMemcpy(v0, d_vv, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
-		fwrite(v0, sizeof(float), nz*nx, fp2);
-		fclose(fp2);
+		cudaMemcpy(vv, d_vv, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
+		window(v0, vv, nz, nx, nz1, nx1);
+		sf_floatwrite(v0, nz*nx, vupdates);
 
 		cudaEventRecord(stop);
   		cudaEventSynchronize(stop);
   		cudaEventElapsedTime(&mstimer, start, stop);
-    		printf("iteration %d finished: %f (s)\n",iter+1, mstimer*1e-3);
+    		sf_warning("iteration %d finished: %f (s)\n",iter+1, mstimer*1e-3);
 	}
-	fclose(fp);
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
+	sf_fileclose(shots);
 
 	free(v0);
+	free(vv);
 	free(dobs);
 	device_free();
 

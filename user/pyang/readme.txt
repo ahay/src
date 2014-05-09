@@ -97,15 +97,22 @@ Test file: 	/book/xjtu/primer/rtmadcig/SConstruct
 NB: ADCIG computation is much more expensive than RTM imaging.
 An MPI version of this program is in preparation!
 
+11) 2D GPU-based full waveform inversion (FWI)
+Main:		Mgenshots.cu, Mgpufwi.cu
+Test file:	/book/xjtu/primer/fwi/SConstruct
+NB: Mgenshots.cu is used to generate shots by forward modeling using
+the exact velocity model. We can use a starting model to do FWI by
+invoking Mgpufwi.cu.
+
 
 ===================================================================
 The following codes are under construction. Be careful!
 ===================================================================
-10) 3D coherence calculation
+12) 3D coherence calculation
 Main: 		Mcohn.c
 Depends on: 	svd.c
 
-11) MWNI (minimum weighted norm interpolation), FFTW requred
+13) MWNI (minimum weighted norm interpolation), FFTW requred
 Main:		Mmwni2d.c Mmwni3d.c
 Test file: 	/book/xjtu/test/mwni2d/SConstruct
 Note: I use conjugate gradient algorithm here. Although the testing
