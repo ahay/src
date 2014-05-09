@@ -110,7 +110,12 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 {
 	float **rr, **rd;
 	int ir2;
+	int d1,d2,d3,d4,d5,d6,p3; /*counter*/
+	/*int p1,p2; Temp value*/
+	float p4=0; /*Temp value*/
+	int ithick;
 	
+		
 	rr = sf_floatalloc2(N1,n+2); /* Reflector values according to updown*/
 	rd = sf_floatalloc2(N1,n+2); /* Slope values according to updown*/
 	
@@ -128,10 +133,6 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 	vstatus = vstatus1;
 
 	/* Check the array, consecutive two inputs must not differ by more than 1-----------------------------*/
-	
-	int d1,d2,d3,d4,d5,d6,p3; /*counter*/
-	/*int p1,p2; Temp value*/
-	float p4=0; /*Temp value*/
 	
 	/* Allow skipping of layer if the thickness is zero*/
 	/*for (p1=0; p1<n-1; p1++) {
@@ -212,8 +213,6 @@ void kirmodnewton_init(float **temp_rr /* Reflectors data of dimension N2xN1 */,
 			}	
 		}
 	}
-	
-	int ithick;
 	
 	for(ithick = 0; ithick < n+1; ithick++){ /*To calculate the average thickness of each layer measured from both ends for xinitial*/
 		v.thick[ithick] = ((rr[ithick+1][0] - rr[ithick][0]) + (rr[ithick+1][N1-1] - rr[ithick][N1-1]))/2;

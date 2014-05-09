@@ -77,6 +77,21 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     float dktemp;
     int t,a,b1,b2,b4; /* Counter*/
 
+    float value;
+    func3 f;
+
+    int i,j1,i3,i4; /* Counter*/
+    float Ftem=0;
+
+    int i2,j2,i5; /* Counter*/
+    int w = niter; /* Number of loops for yk=yk-dk*/
+    int l; /* Counter*/
+    int m; /* Counter*/
+
+    float ck_in, ck_in_temp,S1,S3;
+    int c1,c2,c3,c4,c5;
+    int c; /* Counter*/
+	   
     /* Allocate space-------------------------------------------------------------------------------------*/
 	
     xx = sf_floatalloc(n+2); /* Positions of intersection points to be iteratively perturbed*/
@@ -92,15 +107,12 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     /* Switch bmin and bmax if necessary */
 	
     if(bmin>bmax) {
-	float value;
 	value = bmin;
 	bmin = bmax;
 	bmax = value;
     }
 	
     /* Set vconstant or vgradient----------------------------------------------------------------------*/
-	
-    func3 f;
 	
     f.T_k = 0; /* Initialize structure f*/
     f.T_k_k = 0;
@@ -121,9 +133,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     setfunc(vstatus,&f); /* Set value of structure f*/
 
     /* Step 1: Calculate F(y) to see if it is sufficiently close to zero----------------------------------*/
-	
-    int i,j1,i3,i4; /* Counter*/
-    float Ftem=0;
 	
     xx[0] = xs;
     xx[n+1] = xr;
@@ -157,9 +166,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 	
     /* MAIN LOOP through the output for repeating yk=yk-dk-----------------------------------------------*/
 	
-    int i2,j2,i5; /* Counter*/
-    int w = niter; /* Number of loops for yk=yk-dk*/
-	
     for (q=0; q<w; q++) {
 	Ftem=0; /* Reset Ftem to zero*/
 		
@@ -188,7 +194,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		
 	/* Step 2: Forward recursion-------------------------------------------------------------------------*/
 		
-	int l; /* Counter*/
 	for (l=0; l<n; l++) {
 	    initialize(l+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 	    if (l==0) {
@@ -209,7 +214,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		
 	/* Step 3: Backward recursion-----------------------------------------------------------------------*/
 		
-	int m; /* Counter*/
 	for (m=n-1; m>=0; m--) { 
 	    initialize(m+1,n,xx,v,xref,zref,gx,gz,aniso,z,zder,zder2);
 	    if (m==n-1) {
@@ -316,9 +320,6 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
     /* END OF MAIN LOOP--------------------------------------------------------------------------------*/	
 	
     /* Write Compute traveltime-----------------------------------------------------*/
-    float ck_in, ck_in_temp,S1,S3;
-    int c1,c2,c3,c4,c5;
-    int c; /* Counter*/
 	
 mark: /* Mark point for goto*/
 	

@@ -33,10 +33,10 @@ void lsrtm2d_init(int nm_, int nd_, float tol_, bool verb_)
 	nd=nd_;
 	tol=tol_;
 	verb=verb_;
-	rr=(float*)malloc(nd*sizeof(float));
-	gr=(float*)malloc(nd*sizeof(float));
-	mm=(float*)malloc(nd*sizeof(float));
-	gm=(float*)malloc(nd*sizeof(float));
+	rr=sf_floatalloc(nd);
+	gr=sf_floatalloc(nd);
+	mm=sf_floatalloc(nd);
+	gm=sf_floatalloc(nd);
 }
 
 void lsrtm2d_close()
@@ -64,9 +64,9 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 	res0=cblas_dsdot(nd, rr, 1, rr, 1);
 	for(int iter=0;iter<niter;iter++)
 	{
-		rtm2d_lop(true,  false, nm, nd, gm, rr);// gm=Ft[rr]
-		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]		
-	    	bool forget = (bool) (0 == (iter+1)%10); // restart every 10 iterations
+	    rtm2d_lop(true,  false, nm, nd, gm, rr);/* gm=Ft[rr] */
+	    rtm2d_lop(false, false, nm, nd, gm, gr);/* gr=F [gm] */		
+	    bool forget = (bool) (0 == (iter+1)%10); /* restart every 10 iterations */
 		/* Claerbout's CG: (mm, rr)=cgstep(mm, rr, gm, gr); */	
 		sf_cgstep(forget, nm, nd, mm, gm, rr, gr); 	
 		res=cblas_dsdot(nd, rr, 1, rr, 1);
@@ -142,14 +142,14 @@ int main(int argc, char* argv[])
 	memset(mod,0,(n1+2*nb)*(n2+2*nb)*sizeof(float));
 	sf_floatread(dat,nt*n2,data);
 /*
-// method 1: use my own CG solver, no reweighting
+  method 1: use my own CG solver, no reweighting 
 	lsrtm2d_init(n1*n2, nt*n2, tol, verb);
 	lsrtm2d(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat, niter);
 	lsrtm2d_close();
 */
 
 
-// method 2: use bigsolver, no reweighting (=method 1)
+/* method 2: use bigsolver, no reweighting (=method 1) */
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
    	sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, niter, "verb", verb, "end");
 	rtm2d_close();

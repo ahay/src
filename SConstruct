@@ -122,8 +122,8 @@ for dir in map(lambda x: os.path.join('framework',x),Split('rsf doc ptools')):
     SConscript(dirs=build,name='SConscript',exports=frame_exports)
     Default(build)
 
-for dir in filter(os.path.isdir,['Recipes','gallery']):
-    build = os.path.join('build','book',dir)
+for dir in map(lambda x: os.path.join('book',x),Split('Recipes gallery')):
+    build = os.path.join('build',dir)
     if configure.version[0] > 1:
         VariantDir(build,dir)
     else:
@@ -257,7 +257,7 @@ if os.path.isdir('su'):
 # TRIP BUILD
 ##########################################################################
 
-if os.path.isdir('trip'):
+if os.path.isdir('trip') and 'c++' in env.get('API',[]):
 
     tripdirs = ('iwave','rvl','iwave++')
     for dir in map(lambda x: os.path.join('trip',x), tripdirs):

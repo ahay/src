@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     	if (!sf_getint("n0",&n0)) n0=0;
 	/* shot depth in the grid */
 
-	if(adj){// migration    
+	if(adj){/* migration */   
 	    data = sf_input ("in"); /* seismic data */
 	    imag = sf_output("out");  /* output image */
 	    if (!sf_histint(data,"n1",&nt)) sf_error("n1");
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	    sf_putfloat(imag,"o2",o2-nb*dx);
 	    sf_putstring(imag,"label1","Depth");
 	    sf_putstring(imag,"label2","Distance");
-	}else{//modeling
+	}else{/* modeling */
 	    imag = sf_input ("in"); /* input image */
 	    data = sf_output("out");  /* output seismic data */
 	    if (!sf_histint(imag,"n1",&nz) || nz != n1+2*nb)
@@ -101,9 +101,9 @@ int main(int argc, char* argv[])
     	dat = sf_floatalloc(nt*n2);
 
     	sf_floatread(v0[0],n1*n2,modl);
-    	if(adj){// migration
+    	if(adj){/* migration */
 		sf_floatread(dat,nt*n2,data);
-    	}else{ // modeling
+    	}else{ /* modeling */
 		sf_floatread(mod,(n1+2*nb)*(n2+2*nb),imag);
     	}
 
