@@ -362,7 +362,7 @@ int main(int argc, char* argv[])
     zero2float(q3, nzpad, nxpad);
 
     sf_warning("==================================================");
-    sf_warning("==  Porpagation Using Elastic anisotropic Eq.   ==");
+    sf_warning("==  Propagation Using Elastic anisotropic Eq.   ==");
     sf_warning("==================================================");
 
     float *pp, *qq;

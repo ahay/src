@@ -361,7 +361,7 @@ int main(int argc, char* argv[])
 	/****************begin to calculate wavefield****************/
 	/****************begin to calculate wavefield****************/
         sf_warning("==================================================");
-        sf_warning("==      Porpagation Using Elastic Wave Eq.      ==");
+        sf_warning("==      Propagation Using Elastic Wave Eq.      ==");
         sf_warning("==================================================");
 
         coeff_2dx=sf_floatalloc(mm);

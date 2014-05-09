@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
       zero2float(q3, nzpad, nxpad);
         
       sf_warning("==================================================");
-      sf_warning("==  Porpagation Using Pseudo-Pure P-Wave Eq.    ==");
+      sf_warning("==  Propagation Using Pseudo-Pure P-Wave Eq.    ==");
       sf_warning("==================================================");
       for(it=0;it<ns;it++)
       {
