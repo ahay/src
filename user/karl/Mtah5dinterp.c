@@ -89,6 +89,8 @@ int main(int argc, char* argv[])
   char** list_of_keys;
   int *indx_of_keys;
   int indx_sx, indx_sy, indx_gx, indx_gy;
+  int indx_iline, indx_xline, indx_offset;
+  int indx_cdpx, indx_cdpy;
   int superbin_maxfold;
   float** superbin_traces;
   float** superbin_headers;
@@ -98,7 +100,10 @@ int main(int argc, char* argv[])
   bool end_of_gather;
   float sx, sy, gx, gy, offx, offy;
   int fold;
-  
+  float* outtrace=NULL;
+  float* outheader=NULL;  
+  int* ioutheader=NULL;  
+
   /*****************************/
   /* initialize verbose switch */
   /*****************************/
@@ -186,48 +191,41 @@ int main(int argc, char* argv[])
     indx_of_keys[ikey]=segykey(list_of_keys[ikey]);
   }
 
+  /* I used Mtahstack.c and Mtahgethw to for inspiration for data flow */
+
+  /* more initalization before starting the trace read loop */
   indx_sx=segykey("sx");
   indx_sy=segykey("sy");
   indx_gx=segykey("gx");
   indx_gy=segykey("gy");
+  indx_iline=segykey("iline");
+  indx_xline=segykey("xline");
+  indx_offset=segykey("offset");
+  indx_cdpx=segykey("cdpx");
+  indx_cdpy=segykey("cdpx");
 
   /* allocate processing arrays */
-  superbin_maxfold=5100; /* This should be computed, but for now 5100 kls */
+  superbin_maxfold=1000;
   superbin_traces =sf_floatalloc2(n1_traces , superbin_maxfold);
   superbin_headers=sf_floatalloc2(n1_headers, superbin_maxfold);
+  
+  /* allocate output trace arrays */
+  outtrace  = sf_floatalloc(n1_traces);
+  outheader = sf_floatalloc(n1_headers);
+  ioutheader=(int*)outheader;
 
-  /***************************/
+   /***************************/
   /* start trace loop        */
   /***************************/
   if(verbose>0)fprintf(stderr,"start trace loop\n");
 
-  /* look at Mtahstack.c
-     loop until you read eof.  read each.  Put in arrays 
-     traces[itrace][n1_traces] and hdr[itrace][n1_headers]
-     use logic from Mtahgethw.c to get each trace's iline, xline, sx, sy, gx, gy
-     compute offset_xline and offset_iline.  Load data into array 
-     amp[it][xline][iline][offset_xline][offset_iline]
-     This will require user parameters that control offset_xline_min/max/delta
-     Use symmetry to flip source and group (x,y)'s so offset_xline is always 
-     positive and offset_iline can be positive or negative.
-     What trace headers for interpolated output traces?  Statics do not make
-     sense any more.
-     
-     wait for a later version to panel the super gather into offset vector 
-     tiles.
-
-     what output headers will be required? I think you just need iline, xline, 
-     offset_xlnie, & offset_iline.  Maybe the offset can be coded into sx,sy, 
-     gx, gy.
-
-   */
-  
-  while (0==get_tah(intrace, fheader, n1_traces, n1_headers, in)){
-    if(verbose>1)fprintf(stderr,"process the tah in sftahgethw\n");
-    /********************/
-    /* process the tah. */
-    /********************/
-    /* this program prints selected header keys */
+  if(verbose>0)fprintf(stderr,"start the the trace read loop\n");
+  itrace=0;
+  eof_get_tah=get_tah(intrace, fheader, n1_traces, n1_headers, in);
+  fold=0;
+  while (!eof_get_tah){
+    if(verbose>1 || (verbose==1 && itrace<5)){
+      fprintf(stderr,"process the tah in sftahstack\n");
       for(ikey=0; ikey<numkeys; ikey++){
 	fprintf(stderr," %s=",list_of_keys[ikey]);
 	if(typehead == SF_INT){
@@ -238,64 +236,68 @@ int main(int argc, char* argv[])
 	}
       } /* end of the for(ikey..) loop */
       fprintf(stderr,"\n");
-      /***************************/
-      /* write trace and headers */
-      /***************************/
-      put_tah(intrace, fheader, n1_traces, n1_headers, out);
-  }
-
-  /* this stuff from tahstack may be useful */
-  itrace=0;
-  eof_get_tah=get_tah(intrace, fheader, n1_traces, n1_headers, in);
-  fold=0;
-  while (!eof_get_tah){
-    if(verbose>1 && itrace<5)fprintf(stderr,"process the tah in sftahstack\n");
+    }
     /********************/
     /* process the tah. */
     /********************/
     /* loop reading traces in supergather */
-
+    
     if(fold==0){
+      if(verbose>0)fprintf(stderr,"start a new supergather\n");
       /* apply any initialization */
-    } else {
-      if(fold>=superbin_maxfold){
-	/* increase buffer sizes */
-	superbin_maxfold*=1.2;
-	superbin_traces =sf_floatrealloc2(superbin_traces, 
-					  n1_traces , superbin_maxfold);
-	superbin_headers=sf_floatrealloc2(superbin_headers, 
-					  n1_headers, superbin_maxfold);
-      }
-      memcpy(superbin_headers[fold],fheader,n1_headers*sizeof(int));
-      memcpy(superbin_traces [fold],intrace,n1_traces*sizeof(int));
     }
+    if(fold>=superbin_maxfold){
+      /* increase buffer sizes */
+      superbin_maxfold*=1.2;
+      superbin_traces =sf_floatrealloc2(superbin_traces, 
+					n1_traces , superbin_maxfold);
+      superbin_headers=sf_floatrealloc2(superbin_headers, 
+					n1_headers, superbin_maxfold);
+    }
+    memcpy(superbin_headers[fold],fheader,n1_headers*sizeof(int));
+    memcpy(superbin_traces [fold],intrace,n1_traces*sizeof(int));
     fold++;
+
+    /* get the next trace so you can test the current and next headers
+       to determine if this is the end of a superbin */
     eof_get_tah=get_tah(intrace, fheader, n1_traces, n1_headers, in);
 
     /* this is the end of gather if eof was encounterred or if at least one 
        of the header keys in indx_of_keys changed. */
     end_of_gather=eof_get_tah;
-    if(!end_of_gather){
-      if(itrace>0){
-	/* kls for now turn off the header key test kls */
-	for(ikey=0; ikey<0*numkeys; ikey++){
-	  /*
-	  if(typehead == SF_INT){
-	    if(((int*)fheader  )[indx_of_keys[ikey]]!=
-	       ((int*)stkheader)[indx_of_keys[ikey]]){
-	      end_of_gather=true;
-	      break;
-	    }
-	  } else {
-	    if(fheader[indx_of_keys[ikey]]!=stkheader[indx_of_keys[ikey]]){
-	      end_of_gather=true;
-	      break;
-	    }
-	  }
-	  */
-	}
+
+    /* if there is no next trace, do not try to test the header keys.  
+       You already know it is the end of the superbin. */
+    if(!eof_get_tah){ 
+      if(fold>1){
+	/* kls for now turn off the header key.  Need to turn it back on
+	   when we start doing multiple suberbins */
+	if(0)for(ikey=0; ikey<0*numkeys; ikey++){
+	    if(typehead == SF_INT){
+	      /* kls need to define prevheader and use it instead of stkheader.
+		 stkheader was used in sftahstack and a more suitable name
+		 needs to be seleted for the array holding the previous header
+	      */
+	      /*
+	      if(((int*)fheader  )[indx_of_keys[ikey]]!=
+		 ((int*)stkheader)[indx_of_keys[ikey]]){
+		end_of_gather=true;
+		break;
+	      }
+	      */
+	    } else {
+	      /* kls need to repeat the updates from previous code segment 
+	      if(fheader[indx_of_keys[ikey]]!=stkheader[indx_of_keys[ikey]]){
+		end_of_gather=true;
+		break;
+	      }
+	      */
+	    } /* end if(typehead == SF_INT)...else */
+	  } /* end for(ikey=0; ikey<0*numkeys; ikey++) */
       }
-    }
+    } /* end if(!eof_get_tah) the code segment to test hdrs for key change */
+
+
     /* if this is the last trace in the gather, process the gather and
        set fold=0.  Fold=0 will cause gather initialization on the next
        iteration through the loop */
@@ -303,29 +305,62 @@ int main(int argc, char* argv[])
       /***********************************/
       /* process the supergather         */
       /***********************************/
+      /* OK.  You have a superbin in memory.  Do your 5D interpolation. */
       if(verbose>1)fprintf(stderr,"end_of_gather.  process it.\n");
-      for(iitrace=0; iitrace<fold; iitrace++){
-	if (typehead == SF_INT){
-	  sx=((int**)superbin_headers)[iitrace][indx_sx];
-	  sy=((int**)superbin_headers)[iitrace][indx_sy];
-	  gx=((int**)superbin_headers)[iitrace][indx_gx];
-	  gy=((int**)superbin_headers)[iitrace][indx_gy];
-	} else {
-	  sx=((float**)superbin_headers)[iitrace][indx_sx];
-	  sy=((float**)superbin_headers)[iitrace][indx_sy];
-	  gx=((float**)superbin_headers)[iitrace][indx_gx];
-	  gy=((float**)superbin_headers)[iitrace][indx_gy];
+
+      /* this loop just prints some headers. */
+      if(verbose>1){
+	for(iitrace=0; iitrace<fold; iitrace++){
+	  if (typehead == SF_INT){
+	    sx=((int**)superbin_headers)[iitrace][indx_sx];
+	    sy=((int**)superbin_headers)[iitrace][indx_sy];
+	    gx=((int**)superbin_headers)[iitrace][indx_gx];
+	    gy=((int**)superbin_headers)[iitrace][indx_gy];
+	  } else {
+	    sx=((float**)superbin_headers)[iitrace][indx_sx];
+	    sy=((float**)superbin_headers)[iitrace][indx_sy];
+	    gx=((float**)superbin_headers)[iitrace][indx_gx];
+	    gy=((float**)superbin_headers)[iitrace][indx_gy];
+	  }
+	  offx=sx-gx;	
+	  offy=sy-gy;
+	  fprintf(stderr,"iitrace=%d,sx=%f,sy=%f,gx=%f,gy=%f,offx=%f,offy=%f\n",
+		  iitrace   ,sx   ,sy   ,gx   ,gy   ,offx   ,offy);
 	}
-	offx=sx-gx;	
-	offy=sy-gy;
-	fprintf(stderr,"iitrace=%d,sx=%f,sy=%f,gx=%f,gy=%f,offx=%f,offy=%f\n",
-		        iitrace   ,sx   ,sy   ,gx   ,gy   ,offx   ,offy);
-	/***************************/
-        /* write trace and headers */
-	/***************************/
-	/*
-	put_tah(stktrace, stkheader, n1_traces, n1_headers, out);
-	*/
+      }
+      /* Do your 5D interpolation. */
+
+
+
+
+      /* now you need loop to create the  output traces and hdrs and write 
+	 them to the output pipe with put_tah */
+      /***************************/
+      /* write trace and headers */
+      /***************************/
+      /* kls as example I will just write the input traces back out.  
+	 the real code will need to output all the interpolated traces, 
+	 probable many more than fold traces.  Maybe the interpolated 
+         results are in model domain, eg (kx,ky,koffx,koffy) or 
+	 (tau,px,py,soffx,soffy,soffxy), and you will inverse transform
+         to create traces at desired locations inside the output trace
+         loop.
+      */
+      for (iitrace=0; iitrace<fold; iitrace++){
+	if(typehead == SF_INT){
+	  memcpy(ioutheader,superbin_headers[iitrace],n1_headers*sizeof(int));
+	  /* kls you should set sx,sy,gx,gy,iline,xline,offset,cdpx,cdpy */
+	  /* kls i know headers on Teapot are integer at this stage.  
+	     Code should support integer of float.  Lots of madagascar used
+	     floating point headers */
+	} else {
+	  sf_error("someone needs to update sftah5dinterp for float headers");
+	}
+
+	memcpy(outtrace,superbin_traces [iitrace],n1_traces*sizeof(int));
+
+	put_tah(outtrace, outheader, n1_traces, n1_headers, out);
+      
       }
       fold=0;
     }
