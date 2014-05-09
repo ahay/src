@@ -256,6 +256,14 @@ int main(int argc, char *argv[])
 	sf_putstring(vupdates,"label1","Depth");
 	sf_putstring(vupdates,"label2","Distance");
 	sf_putstring(vupdates,"label3","Iteration");
+	sf_putint(grads,"n1",nz1);	
+	sf_putint(grads,"n2",nx1);
+	sf_putfloat(grads,"d1",dz);
+	sf_putfloat(grads,"d2",dx);
+	sf_putint(grads,"n3",niter);
+	sf_putstring(grads,"label1","Depth");
+	sf_putstring(grads,"label2","Distance");
+	sf_putstring(grads,"label3","Iteration");
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -376,10 +384,9 @@ int main(int argc, char *argv[])
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
 		report_par(&d_pars[0], "obj");
 
-		FILE *fp1=fopen("grad.bin","wb");
-		cudaMemcpy(v0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
-		fwrite(v0, sizeof(float), nz*nx, fp1);
-		fclose(fp1);
+		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
+		window(v0, vv, nz, nx, nz1, nx1);
+		sf_floatwrite(v0, nz*nx, grads);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cuda_cal_conjgrad<<<dimg, dimb>>>(d_g1, d_cg, &d_pars[1], nz, nx);

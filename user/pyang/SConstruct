@@ -11,7 +11,7 @@ modeling2d rtm2d lsrtm2d
 dlct dlctk myradon1 myradon2 
 cohn
 '''
-# gensyn5d Testadcig
+# gensyn5d 
 
 # C++ main programs
 ccprogs = '''
