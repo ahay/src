@@ -144,7 +144,7 @@ void wavefield_init(float *d_p0, float *d_p1, int N)
 int main(int argc, char *argv[])
 {
 	int is, ft, jt, it, distx, distz;
-	float dtx,dtz,mstimer;
+	float dtx,dtz,mstimer,amp;
 	float *ptr=NULL;
 	sf_file vinit, Fw1, Fw2;
 
@@ -162,6 +162,7 @@ int main(int argc, char *argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
+	if (!sf_getfloat("amp",&amp)) amp=1000;/* maximum amplitude of ricker */
     	if (!sf_getfloat("fm",&fm)) fm=10;	/* dominant freq of ricker */
     	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	/* time interval */
     	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
@@ -214,7 +215,7 @@ int main(int argc, char *argv[])
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
-	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, fm, dt, nt);
+	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt,amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
 	{ printf("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);

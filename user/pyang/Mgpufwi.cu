@@ -111,7 +111,7 @@ void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
 {
 	float *tmp=(float*)malloc(n1*n2*sizeof(float));
-	if (tmp==NULL) {printf("out of memory!"); exit(1);}
+	if (tmp==NULL) {sf_warning("out of memory!"); exit(1);}
 	for(int i2=0; i2<n2; i2++){
 		for(int i1=0; i1<n1; i1++){
 			tmp[i2+n2*i1]=matrix[i1+n1*i2];
@@ -152,7 +152,7 @@ void device_alloc()
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
+	sf_warning("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
 }
 
 
@@ -185,7 +185,7 @@ void device_free()
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err)
-	printf("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
+	sf_warning("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
 }
 
 
@@ -197,7 +197,7 @@ void wavefield_init(float *d_p0, float *d_p1, int N)
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
+	sf_warning("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
 }
 
 
@@ -206,14 +206,14 @@ void report_par(float *d_par,char *s)
 {
 	float tmp;
 	cudaMemcpy(&tmp, d_par, sizeof(float), cudaMemcpyDeviceToHost);
-	printf("%s=%f\n",s, tmp);
+	sf_warning("%s=%f\n",s, tmp);
 }
 
 
 int main(int argc, char *argv[])
 {
 	int is, it, iter, distx, distz, csd;
-	float dtx, dtz, _dx2, _dz2, mstimer;
+	float dtx, dtz, _dx2, _dz2, mstimer,amp;
 	float *ptr=NULL;
 	sf_file vinit, shots, vupdates, grads;
 
@@ -240,6 +240,8 @@ int main(int argc, char *argv[])
 	/* number of shots */
    	if (!sf_histfloat(shots,"d1",&dt)) sf_error("no dt");
 	/* time sampling interval */
+   	if (!sf_histfloat(shots,"amp",&amp)) sf_error("no amp");
+	/* maximum amplitude of ricker */
    	if (!sf_histfloat(shots,"fm",&fm)) sf_error("no fm");
 	/* dominant freq of ricker */
    	if (!sf_histint(shots,"sxbeg",&sxbeg)) sf_error("no sxbeg");
@@ -299,7 +301,7 @@ int main(int argc, char *argv[])
     	cudaSetDevice(0);
     	cudaError_t err = cudaGetLastError();
     	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
+	sf_warning("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
 	device_alloc(); 
 
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2), dimb=dim3(Block_Size1, Block_Size2); 
@@ -309,20 +311,20 @@ int main(int argc, char *argv[])
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 	cudaMemset(d_gp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_gp1,0,nz*nx*sizeof(float));
-	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, fm, dt, nt);
+	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
-	{ printf("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
 	if (csdgather)	{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	else{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 	cudaMemset(d_bndr, 0, nt*2*(nz+nx)*sizeof(float));

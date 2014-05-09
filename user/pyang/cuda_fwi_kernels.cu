@@ -23,13 +23,13 @@ __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, in
     	if (id<ns) sxz[id]=(szbeg+id*jsz)+nz*(sxbeg+id*jsx);
 }
 
-__global__ void cuda_ricker_wavelet(float *wlt, float fm, float dt, int nt)
+__global__ void cuda_ricker_wavelet(float *wlt, float amp, float fm, float dt, int nt)
 /*< generate ricker wavelet with time deley >*/
 {
 	int it=threadIdx.x+blockDim.x*blockIdx.x;
     	float tmp = PI*fm*(it*dt-1.0/fm);
     	tmp *=tmp;
-    	if (it<nt) wlt[it]= (1.0-2.0*tmp)*expf(-tmp);
+    	if (it<nt) wlt[it]= amp*(1.0-2.0*tmp)*expf(-tmp);
 }
 
 __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool add)
