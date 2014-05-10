@@ -61,8 +61,8 @@ def param(par):
         if(dx==0.0): par['iratio2d']=1.0
         else:        par['iratio2d']=1.0*(dz)/(dx)
     if(not par.has_key('iheight2d')):
-        if(par['iratio2d']>=0.8): par['iheight2d']=12
-        else:                     par['iheight2d']=14*par['iratio2d']
+        if(par['iratio2d']>=0.8): par['iheight2d']=10
+        else:                     par['iheight2d']=12*par['iratio2d']
             
     if(not par.has_key('dratio2d')):
         par['dratio2d']=par['iratio2d']

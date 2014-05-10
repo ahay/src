@@ -799,13 +799,13 @@ void fdbell_init(int n)
     float s;
 
     nbell = n;
-    s = 0.5*nbell;
+    s = nbell==0?1:2.0/(nbell*nbell);
 
     bell=sf_floatalloc2(2*nbell+1,2*nbell+1);
 
     for    (ix=-nbell;ix<=nbell;ix++) {
 	for(iz=-nbell;iz<=nbell;iz++) {
-	    bell[nbell+ix][nbell+iz] = exp(-(iz*iz+ix*ix)/s);
+	    bell[nbell+ix][nbell+iz] = exp(-(iz*iz+ix*ix)*s);
 	}
     }    
 }
@@ -814,18 +814,18 @@ void fdbell_init(int n)
 void fdbell3d_init(int n)
 /*< init bell taper >*/
 {
-    int   iz,ix,i3;
+    int   iz,ix,iy;
     float s;
 
     nbell = n;
-    s = 0.5*nbell;
+    s = nbell==0?1:2.0/(nbell*nbell);
 
     bell3d=sf_floatalloc3(2*nbell+1,2*nbell+1,2*nbell+1);
 
-    for        (i3=-nbell;i3<=nbell;i3++) {
+    for        (iy=-nbell;iy<=nbell;iy++) {
 	for    (ix=-nbell;ix<=nbell;ix++) {
 	    for(iz=-nbell;iz<=nbell;iz++) {
-		bell3d[nbell+i3][nbell+ix][nbell+iz] = exp(-(iz*iz+ix*ix+i3*i3)/s);
+		bell3d[nbell+iy][nbell+ix][nbell+iz] = exp(-(iz*iz+ix*ix+iy*iy)*s);
 	    }
 	}    
     }
@@ -924,10 +924,9 @@ void lint3d_bell1(float***uu,
     for        (iy=-nbell;iy<=nbell;iy++) {
 	for    (ix=-nbell;ix<=nbell;ix++) {
 	    for(iz=-nbell;iz<=nbell;iz++) {
-		
+		wa = ww * bell3d[nbell+iy][nbell+ix][nbell+iz];
+
 		for (ia=0;ia<ca->n;ia++) {
-		    wa = ww * bell3d[nbell+iy][nbell+ix][nbell+iz];
-		    
 		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]   ] += wa * ca->w000[ia];
 		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]   ][ iz+ca->jz[ia]+1 ] += wa * ca->w001[ia];
 		    uu[ iy+ca->jy[ia]   ][ ix+ca->jx[ia]+1 ][ iz+ca->jz[ia]   ] += wa * ca->w010[ia];

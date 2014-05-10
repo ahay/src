@@ -97,6 +97,8 @@ int main(int argc, char* argv[])
     float     oqz,oqx;
     float     dqz,dqx;
     float     **uc=NULL;
+    
+    int nbell;
 
     /* for benchmarking */
     clock_t start_t, end_t;
@@ -127,6 +129,8 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("free",&fsrf)) fsrf=false; /* Free surface flag */
     if(! sf_getbool("fsrf",&fsrf)) fsrf=false; /* Free surface flag */
+
+    if(! sf_getint("nbell",&nbell)) nbell=5; /* gaussian for source injection */
     /*------------------------------------------------------------*/
 
     /*------------------------------------------------------------*/
@@ -253,7 +257,7 @@ int main(int argc, char* argv[])
 
     cs = lint2d_make(ns,ss,fdm);
     cr = lint2d_make(nr,rr,fdm);
-    fdbell_init(5);
+    fdbell_init(nbell);
 
     /*------------------------------------------------------------*/
     /* setup FD coefficients */

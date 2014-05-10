@@ -1599,6 +1599,16 @@ def ewefd3d(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          ''' % par)
 
 # ------------------------------------------------------------
+def gauss1t(gaus,tcen,tsig,par):
+    Flow(gaus,None,
+         '''
+         math output="exp( -(x1-%g)^2/(2*%g) )"
+         ''' % (tcen,tsig*tsig) +
+         '''
+         n1=%(nt)d d1=%(dt)g o1=%(ot)g |
+         scale axis=123
+         ''' % par)
+
 def gauss1x(gaus,xcen,xsig,par):
     Flow(gaus,None,
          '''
