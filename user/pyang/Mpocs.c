@@ -36,7 +36,6 @@ int main(int argc, char* argv[])
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
     	float thr, p, pclip, m;
-    	//float t0, t1, beta;	
     	float *tdat, *thresh, *mask;
     	char *mode, key[7];
     	fftwf_complex *wdat, *wdat1;
@@ -52,7 +51,7 @@ int main(int argc, char* argv[])
     	/* setup I/O files */
     	in=sf_input("in");	/* read the data to be interpolated */
     	out=sf_output("out"); 	/* output the reconstructed data */
-    	Fmask=sf_input("mask");  	/* read the (n-1)-D mask for n-D data */
+    	Fmask=sf_input("mask");	/* read the (n-1)-D mask for n-D data */
  
     	if(!sf_getbool("verb",&verb))    	verb=false;
     	/* verbosity */
@@ -86,13 +85,15 @@ int main(int argc, char* argv[])
     	n1=n[0];
     	n2=sf_leftsize(in,1);
 	nw=n1/2+1;
-	num=nw*n2;//total number of elements in frequency domain
+	num=nw*n2;/* total number of elements in frequency domain */
  
     	/* allocate data and mask arrays */
 	thresh=(float*)malloc(nw*n2*sizeof(float));
-    	tdat=(float*)fftwf_malloc(n1*n2*sizeof(float)); // data in time domain
-    	wdat=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));// data in frequency domain
-    	wdat1=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));// data in frequency domain
+    	tdat=(float*)fftwf_malloc(n1*n2*sizeof(float)); /* data in time domain*/
+    	wdat=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
+	/* data in frequency domain */
+    	wdat1=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
+	/* data in frequency domain */
     	fft1=fftwf_plan_many_dft_r2c(1, &n1, n2, tdat, &n1, 1, n1, wdat, &n1, 1, nw, FFTW_MEASURE);	
    	ifft1=fftwf_plan_many_dft_c2r(1, &n1, n2, wdat, &n1, 1, nw, tdat, &n1, 1, n1, FFTW_MEASURE);
 	fft2=fftwf_plan_many_dft(dim-1, &n[1], nw, wdat1, &n[1], nw, 1, wdat1, &n[1], nw, 1, FFTW_FORWARD,FFTW_MEASURE);
@@ -105,7 +106,7 @@ int main(int argc, char* argv[])
 		sf_floatread(mask,n2,Fmask);
     	}
 
-	// transform the data from time domain to frequency domain: tdat-->wdat 
+	/*transform the data from time domain to frequency domain: tdat-->wdat*/
 	fftwf_execute(fft1);
 	for(i=0; i<num; i++) wdat[i]/=sqrtf(n1);
 	memset(wdat1,0,num*sizeof(fftwf_complex));
@@ -120,7 +121,7 @@ int main(int argc, char* argv[])
 	#endif
 		for(i=0; i<num; i++) wdat1[i]/=sqrtf(n2);
 
-		// perform hard thresholding
+		/* perform hard thresholding */
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
@@ -132,7 +133,7 @@ int main(int argc, char* argv[])
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
 		thr=sf_quantile(nthr,num,thresh);
-		//thr*=powf(0.01,(iter-1.0)/(niter-1.0));
+		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
 
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
@@ -149,7 +150,7 @@ int main(int argc, char* argv[])
 	#endif
 		for(i=0; i<num; i++) wdat1[i]/=sqrtf(n2);		
 
-		// d_rec = d_obs+(1-M)*A T{ At(d_rec) } 
+		/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i1,i2,index,m)		\
@@ -166,7 +167,7 @@ int main(int argc, char* argv[])
 		if (verb)    sf_warning("iteration %d;",iter);
     	}
 
-	// transform the data from frequency domain to time domain: wdat-->tdat
+	/*transform the data from frequency domain to time domain: wdat-->tdat*/
 	memcpy(wdat, wdat1, num*sizeof(fftwf_complex));
 	fftwf_execute(ifft1);
 	for(i=0; i<n1*n2; i++) tdat[i]/=sqrtf(n1);

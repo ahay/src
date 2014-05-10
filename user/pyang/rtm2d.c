@@ -217,7 +217,7 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 	memset(u1[0], 0, nzpad*nxpad*sizeof(float));
 	memset(u2[0], 0, nzpad*nxpad*sizeof(float));
 
-    	if(adj){/* migration */
+    	if(adj){// migration
 	    	for (it=nt-1; it >-1; it--) {
 			sf_warning("%d;",it);
 
@@ -239,7 +239,7 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 		{
 			mod[i1+nzpad*i2]+=u1[i2][i1];
 		}
-    	}else{ /* modeling */
+    	}else{ // modeling
 		for(i2=0; i2<nxpad; i2++)
 		for(i1=0; i1<nzpad; i1++)
 		{

@@ -38,7 +38,7 @@ effective boundary saving strategy used!
 #include <omp.h>
 #endif
 
-static bool 	csdgather; 	// common shot gather (CSD) or not 
+static bool 	csdgather;/* common shot gather (CSD) or not */
 static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, noa;
 static float 	fm, dt, dz, dx, _dz, _dx, vmute, da;
 
@@ -130,6 +130,7 @@ sxz/gxz; szbeg/gzbeg; sxbeg/gxbeg; jsz/jgz; jsx/jgx; ns/ng; >*/
 }
 
 void wavefield_init(float **p, float **pz, float **px, float **vx, float **vz)
+/*< wavefield initialization >*/
 {
 	memset(p[0],0,nzpad*nxpad*sizeof(float));
 	memset(pz[0],0,nzpad*nxpad*sizeof(float));
@@ -144,7 +145,7 @@ void add_source(int *sxz, float **p, int ns, float *source, bool add)
 {
 	int is, sx, sz;
 
-	if(add){// add sources
+	if(add){/* add sources*/
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
 	private(is,sx,sz)		\
@@ -155,7 +156,7 @@ void add_source(int *sxz, float **p, int ns, float *source, bool add)
 			sz=sxz[is]%nz+nb;
 			p[sx][sz]+=source[is];
 		}
-	}else{ // subtract sources
+	}else{ /* subtract sources */
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
 	private(is,sx,sz)		\
@@ -250,6 +251,7 @@ void bndr_rw(bool read, float **vz, float **vx, float *bndr)
 /*< read boundaries into vx and vz or write vx and vz for saving >*/
 {
 	int i1, i2;
+
 	if(read){
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
@@ -385,7 +387,7 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		a=0.5*acosf(a);
 		ia=(int)(a/da);
 		if(ia==noa) ia=ia-1;
-		num[i2][ia][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-0.5*(a-ia*da)); //  /sinf((ia+1)*da);
+		num[i2][ia][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-0.5*(a-ia*da)); 
 		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];
 	}
 }
@@ -420,34 +422,50 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(vmodl,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vmodl,"d2",&dx)) sf_error("no d2");
 
-    	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	/* dominant freq of ricker */
-    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	/* time interval */
-
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   sf_error("no ns");	/* total shots */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */
-    	if (!sf_getint("nb",&nb))   nb=20;  /* thickness of split PML */
-    	if (!sf_getint("noa",&noa)) noa=30; /* number of angle gathers*/
-    	if (!sf_getint("kt",&kt))   kt=200; /* record poynting vector at kt */
-	
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");/* z-begining index of receivers, starting from 0 */
-
-	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
-	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq noise, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);/* number of deleyed time samples to mute */
+    	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	
+	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	/* time interval */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
+	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	/* total receivers in each shot */
+    	if (!sf_getint("nb",&nb))   nb=20; 
+	/* thickness of split PML */
+    	if (!sf_getint("noa",&noa)) noa=30;
+	/* number of angle gathers*/
+    	if (!sf_getint("kt",&kt))   kt=200;
+	/* record poynting vector at kt */
+	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
+	/* z-begining index of receivers, starting from 0 */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+	/* default, common shot-gather; if n, record at every point*/
+	if (!sf_getfloat("vmute",&vmute))   vmute=1500;
+	/* muting velocity to remove the low-freq noise, unit=m/s*/
+	if (!sf_getint("tdmute",&tdmute))   tdmute=2./(fm*dt);
+	/* number of deleyed time samples to mute */
 
 	_dx=1./dx;
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	da=SF_PI/noa;//angle unit, rad;
+	da=SF_PI/noa;/* angle unit, rad; */
 
     	sf_putint(rtmadcig,"n1",nz);
 	sf_putfloat(rtmadcig,"n2",noa);

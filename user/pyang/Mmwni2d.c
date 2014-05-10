@@ -29,12 +29,13 @@
 void apply_mask(float *mask, sf_complex *before, sf_complex *after, int n1, int n2)
 /*< apply the mask >*/
 {
-	for(int i2=0;i2<n2;i2++)
+  int i1, i2;
+	for(i2=0;i2<n2;i2++)
 	{
 		if (mask[i2]){			
-		    for(int i1=0; i1<n1; i1++) after[i1+n1*i2]=before[i1+n1*i2];
+		    for(i1=0; i1<n1; i1++) after[i1+n1*i2]=before[i1+n1*i2];
 		}else{		
-		    for(int i1=0; i1<n1; i1++) after[i1+n1*i2]=0.0;			
+		    for(i1=0; i1<n1; i1++) after[i1+n1*i2]=0.0;			
 		}
 	}
 }
@@ -42,9 +43,10 @@ void apply_mask(float *mask, sf_complex *before, sf_complex *after, int n1, int 
 void lowpass_filter(fftwf_complex *tmp, int n1, int n2)
 /*< only low-wavenumber preserved >*/
 {
-	for(int i2=0;i2<n2;i2++){			
+  int i1, i2;
+	for(i2=0;i2<n2;i2++){			
 		if(i2>SF_NINT(n2*0.1) && i2<SF_NINT(n2*0.9))  {	
-			for(int i1=0; i1<n1; i1++) 
+			for(i1=0; i1<n1; i1++) 
 				tmp[i1+n1*i2]=0.0;
 		}	
 	}
@@ -55,7 +57,7 @@ int main(int argc, char* argv[])
 {
     /* input and output variables */
     bool verb;
-    int niter; 
+    int i, iter, niter; 
     float tol;
     sf_file Fin, Fout, Fmask;/* mask and I/O files*/ 
 
@@ -94,7 +96,7 @@ int main(int argc, char* argv[])
 	mask=NULL;
     }
 
-    /*=========================== conjugate gradient iterations ================= */
+    /*====================== conjugate gradient iterations ================= */
     float g0, gnp, gn, beta, alpha, resp, res;
     fftwf_complex *gm;
     sf_complex *m, *r, *gr, *s;
@@ -109,7 +111,7 @@ int main(int argc, char* argv[])
     ifft2=fftwf_plan_dft_2d(n1,n2,gm,gm,FFTW_BACKWARD,FFTW_MEASURE);
 
     /* initialization */
-    for(int i=0; i<n1*n2; i++) 
+    for(i=0; i<n1*n2; i++) 
     {
 	r[i]=-din[i];
 	m[i]=0.0;
@@ -121,13 +123,13 @@ int main(int argc, char* argv[])
     resp=cblas_scnrm2(n1*n2, r, 1);	
 
     /* conjugate gradient loop */
-    for(int iter=0;iter<niter;iter++)
+    for(iter=0;iter<niter;iter++)
     {
-	apply_mask(mask, r, gm, n1, n2); 		/* gm=M.*r */
-	fftwf_execute(ifft2);				/* gm=ifft3(M.*r); */
-	for(int i=0;i<n1*n2;i++) gm[i]/=sqrtf(n1*n2);
-	lowpass_filter(gm, n1, n2);			/* gm=p.*fft3(M.*r); */
-	gn=cblas_scnrm2(n1*n2, gm, 1);			/* gn=sum(abs(gm(:)).^2); */
+      apply_mask(mask, r, gm, n1, n2); 		/* gm=M.*r */
+      fftwf_execute(ifft2);			/* gm=ifft3(M.*r); */
+	for(i=0;i<n1*n2;i++) gm[i]/=sqrtf(n1*n2);
+	lowpass_filter(gm, n1, n2);		/* gm=p.*fft3(M.*r); */
+	gn=cblas_scnrm2(n1*n2, gm, 1);		/* gn=sum(abs(gm(:)).^2); */
 
 	if (iter == 0) {
 	    beta=0.0;
@@ -140,22 +142,23 @@ int main(int argc, char* argv[])
 	gnp=gn;
 
 	for(int i=0;i<n1*n2;i++){
-	    s[i]=gm[i]+beta*s[i]; 			/* s=gm+beta*s */
-	    gm[i]=s[i];					/* copy s(:) to gm(:) */
+	  s[i]=gm[i]+beta*s[i]; 		/* s=gm+beta*s */
+	  gm[i]=s[i];				/* copy s(:) to gm(:) */
 	}
 
-	fftwf_execute(fft2);				/* gm=fft3(s); */
+	fftwf_execute(fft2);			/* gm=fft3(s); */
 	for(int i=0;i<n1*n2;i++) gm[i]/=sqrtf(n1*n2);
-	apply_mask(mask, gm, gr, n1, n2); 		/* gr=M.*fft3(gm); */
+	apply_mask(mask, gm, gr, n1, n2); 	/* gr=M.*fft3(gm); */
 
-    	alpha=-gn/cblas_scnrm2 (n1*n2, gr, 1); 		/* alpha=-gn/sum(abs(gr(:)).^2); */
+    	alpha=-gn/cblas_scnrm2 (n1*n2, gr, 1);/* alpha=-gn/sum(abs(gr(:)).^2);*/
 	do{
-		for(int i=0;i<n1*n2;i++) gm[i]=r[i]+alpha*gr[i];/* r=r+alpha*gr; */
+		for(int i=0;i<n1*n2;i++) 
+		  gm[i]=r[i]+alpha*gr[i];/* r=r+alpha*gr; */
 		res=cblas_scnrm2 (n1*n2, gm, 1); 
 		if(res<resp){
 			for(int i=0;i<n1*n2;i++){ 
-			    m[i]+=alpha*s[i];			/* m=m+alpha*s; */
-			    r[i]=gm[i];				/* r=r+alpha*gr; */
+			  m[i]+=alpha*s[i];/* m=m+alpha*s; */
+			  r[i]=gm[i];/* r=r+alpha*gr; */
 			}	
 			break;
 		}
@@ -165,9 +168,9 @@ int main(int argc, char* argv[])
 	resp=res;
 	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, res);
     }
-    for(int i=0; i<n1*n2; i++) gm[i]=m[i];    		/* copy m(:) to g(:) */
-    fftwf_execute(fft2);			 	/* gm=fft3(m); */
-    for(int i=0; i<n1*n2; i++) din[i]=crealf(gm[i])/sqrtf(n1*n2);	/* drec=real(ifft2(m)*n1*n2); */
+    for(int i=0; i<n1*n2; i++) gm[i]=m[i];/* copy m(:) to g(:) */
+    fftwf_execute(fft2);		  /* gm=fft3(m); */
+    for(int i=0; i<n1*n2; i++) din[i]=crealf(gm[i])/sqrtf(n1*n2);/* drec=real(ifft2(m)*n1*n2); */
 
     free(m);
     free(r);
@@ -176,7 +179,7 @@ int main(int argc, char* argv[])
     fftwf_free(gm);
     fftwf_destroy_plan(fft2);
     fftwf_destroy_plan(ifft2);
-    /* ============================================================================= */
+    /* ====================================================================== */
 
     sf_floatwrite(din,n1*n2,Fout); /* output reconstructed seismograms */
 

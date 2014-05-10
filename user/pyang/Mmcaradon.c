@@ -117,14 +117,14 @@ int main(int argc, char *argv[])
 	sf_putfloat(out, "d2", dx);
     	sf_putint(out,"n3",2);
 
-	p=(float*)malloc(np*sizeof(float));		// ray parameter
-	xx=(float*)malloc(nx*sizeof(float));		// offset
-    	dobs=(float*)malloc(nt*nx*sizeof(float));	// observations
-    	res=(float*)malloc(nt*nx*sizeof(float));	// residual 
-    	drec=(float*)malloc(2*nt*nx*sizeof(float));	// reconstructed nc components
-    	coeffs=(float*)malloc(nt*np*sizeof(float));	// seislet coefficients
-    	tmp=(float*)malloc(nt*np*sizeof(float));	// absolute valuse of coeffs
-    	mask=(float*)malloc(nt*nx*sizeof(float));	// mask
+	p=(float*)malloc(np*sizeof(float));	/* ray parameter */
+	xx=(float*)malloc(nx*sizeof(float));	/* offset */
+    	dobs=(float*)malloc(nt*nx*sizeof(float));/* observations */
+    	res=(float*)malloc(nt*nx*sizeof(float)); /* residual */
+    	drec=(float*)malloc(2*nt*nx*sizeof(float));/*reconstructed 2 components */
+    	coeffs=(float*)malloc(nt*np*sizeof(float));/* seislet coefficients */
+    	tmp=(float*)malloc(nt*np*sizeof(float));/* absolute valuse of coeffs */
+    	mask=(float*)malloc(nt*nx*sizeof(float));/* mask */
 
 	for(ip=0; ip<np; ip++) p[ip]=p0+ip*dp;	
     	if (NULL != offset) {
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
     	if (NULL != sf_getstring("mask")){
 	    	Fmask=sf_input("mask");  /* mask for missing values */
 		sf_floatread(mask, nt*nx, Fmask);
-    	}else{//no mask, just for separation
+    	}else{/* no mask, just for separation */
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nt; i1++) 
 			mask[i1+i2*nt]=1;
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nt; i1++) 
 		{	
-			//sum of 2 components-->res
+		  /* sum of 2 components-->res */
 			for(ic=0; ic<2; ic++) res[i1+nt*i2]+=drec[i1+nt*i2+nt*nx*ic];
 			m=(mask[i1+i2*nt])?1.:0; 
 			res[i1+nt*i2]=dobs[i1+nt*i2]-m*res[i1+nt*i2];
@@ -163,16 +163,16 @@ int main(int argc, char *argv[])
 		for(ic=0; ic<2; ic++)
 		{
 			sf_radon2_set(par);
-			// sparsifying ic-th component with shrinkage/thresholding
+			/* sparsifying ic-th component with shrinkage/thresholding */
 			for(i2=0; i2<nx; i2++)
 			for(i1=0; i1<nt; i1++) 
 			{	
 				drec[i1+nt*i2+nt*nx*ic]+=res[i1+nt*i2];
 			}
-			// seislet adjoint: At(drec^{ic})
+			/* radon adjoint: At(drec^{ic}) */
 			sf_radon2_lop(true, false, nt*np, nt*nx, coeffs, &drec[ic*nt*nx]);
 
-			// perform thresholding; T{ At(drec) }
+			/* perform thresholding; T{ At(drec) } */
 			for(i2=0; i2<np; i2++)
 			for(i1=0; i1<nt; i1++) 
 				tmp[i1+nt*i2]=fabsf(coeffs[i1+nt*i2]);
@@ -185,10 +185,9 @@ int main(int argc, char *argv[])
 			sf_warning("thr=%g",thr);
 			sf_pthresh(coeffs, nt*np, thr, normp, mode);
 
-			// forward seislet: A T{ At(drec^{ic}) } 		
+			/* radon: A T{ At(drec^{ic}) } 	*/
 			sf_radon2_lop(false, false, nt*np, nt*nx, coeffs, &drec[ic*nt*nx]);
-
-			par=!par;//parabolic-->linear; linear-->parabolic
+			par=!par;/* parabolic-->linear; linear-->parabolic */
 		}
 
 		if (verb) sf_warning("iteration %d;",iter+1);	

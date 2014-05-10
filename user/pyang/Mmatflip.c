@@ -41,14 +41,14 @@ int main(int argc, char *argv[])
     dout = sf_floatalloc2(n1,n2);
     sf_floatread(din[0],n1*n2,Fin);
 
-    if(0==strcmp(mode,"lr")){//flip left and right
+    if(0==strcmp(mode,"lr")){/* flip left and right */
     	for(i2=0; i2<n2; i2++)
     	for(i1=0; i1<n1; i1++)
     	{
    		dout[i2][i1]=din[n2-1-i2][i1];
     	}
     }
-    if(0==strcmp(mode,"ud")){//flip up and down
+    if(0==strcmp(mode,"ud")){/* flip up and down */
     	for(i2=0; i2<n2; i2++)
     	for(i1=0; i1<n1; i1++)
     	{

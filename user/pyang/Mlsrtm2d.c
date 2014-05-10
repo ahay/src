@@ -33,10 +33,10 @@ void lsrtm2d_init(int nm_, int nd_, float tol_, bool verb_)
 	nd=nd_;
 	tol=tol_;
 	verb=verb_;
-	rr=sf_floatalloc(nd);
-	gr=sf_floatalloc(nd);
-	mm=sf_floatalloc(nd);
-	gm=sf_floatalloc(nd);
+	rr=(float*)malloc(nd*sizeof(float));
+	gr=(float*)malloc(nd*sizeof(float));
+	mm=(float*)malloc(nd*sizeof(float));
+	gm=(float*)malloc(nd*sizeof(float));
 }
 
 void lsrtm2d_close()
@@ -54,26 +54,28 @@ void lsrtm2d(float dz, float dx, float dt, int n0, int n1,
 int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 /*< LSRTM with conjugate gradient method >*/
 {
+  bool forget;
+  int i, iter;
 	float res0, res;
-	for(int i=0; i<nd;i++) 	rr[i]=-dat[i];
+	for(i=0; i<nd;i++) 	rr[i]=-dat[i];
 	memset(gr, 0, nd*sizeof(float));
 	memset(mm, 0, nm*sizeof(float));
 	memset(gm, 0, nm*sizeof(float));
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
 
 	res0=cblas_dsdot(nd, rr, 1, rr, 1);
-	for(int iter=0;iter<niter;iter++)
+	for(iter=0;iter<niter;iter++)
 	{
-	    rtm2d_lop(true,  false, nm, nd, gm, rr);/* gm=Ft[rr] */
-	    rtm2d_lop(false, false, nm, nd, gm, gr);/* gr=F [gm] */		
-	    bool forget = (bool) (0 == (iter+1)%10); /* restart every 10 iterations */
+		rtm2d_lop(true,  false, nm, nd, gm, rr);// gm=Ft[rr]
+		rtm2d_lop(false, false, nm, nd, gm, gr);// gr=F [gm]		
+	    	forget = (bool) (0 == (iter+1)%10); // restart every 10 iterations
 		/* Claerbout's CG: (mm, rr)=cgstep(mm, rr, gm, gr); */	
 		sf_cgstep(forget, nm, nd, mm, gm, rr, gr); 	
 		res=cblas_dsdot(nd, rr, 1, rr, 1);
 		if (verb) sf_warning("iteration %d; res %g",iter+1, res);
 		if (res/res0<tol) break;
 	}
-	for(int i=0; i<nm; i++)	mod[i]=mm[i];
+	for(i=0; i<nm; i++)	mod[i]=mm[i];
 
 	rtm2d_close();
 }
@@ -142,7 +144,7 @@ int main(int argc, char* argv[])
 	memset(mod,0,(n1+2*nb)*(n2+2*nb)*sizeof(float));
 	sf_floatread(dat,nt*n2,data);
 /*
-  method 1: use my own CG solver, no reweighting 
+// method 1: use my own CG solver, no reweighting
 	lsrtm2d_init(n1*n2, nt*n2, tol, verb);
 	lsrtm2d(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat, niter);
 	lsrtm2d_close();

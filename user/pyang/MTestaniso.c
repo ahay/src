@@ -114,14 +114,14 @@ void apply_sponge(float**p0, float **p1)
 #endif
 	for(ix=0; ix<nxpad; ix++)
 	{
-		for(iz=0;iz<nb;iz++){	// top ABC			
-			p0[ix][iz]=bndr[iz]*p0[ix][iz];
-			p1[ix][iz]=bndr[iz]*p1[ix][iz];
-		}
-		for(iz=nz+nb;iz<nzpad;iz++){// bottom ABC			
-			p0[ix][iz]=bndr[nzpad-iz-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[nzpad-iz-1]*p1[ix][iz];
-		}
+	  for(iz=0;iz<nb;iz++){	/* top ABC */
+	    p0[ix][iz]=bndr[iz]*p0[ix][iz];
+	    p1[ix][iz]=bndr[iz]*p1[ix][iz];
+	}
+	  for(iz=nz+nb;iz<nzpad;iz++){/* bottom ABC*/
+	    p0[ix][iz]=bndr[nzpad-iz-1]*p0[ix][iz];
+	    p1[ix][iz]=bndr[nzpad-iz-1]*p1[ix][iz];
+	  }
 	}
 
 #ifdef _OPENMP
@@ -131,17 +131,16 @@ void apply_sponge(float**p0, float **p1)
 #endif
 	for(iz=0; iz<nzpad; iz++)
 	{
-		for(ix=0;ix<nb;ix++){	// left ABC			
-			p0[ix][iz]=bndr[ix]*p0[ix][iz];
-			p1[ix][iz]=bndr[ix]*p1[ix][iz];
-		}	
-		for(ix=nx+nb;ix<nxpad;ix++){// right ABC			
-			p0[ix][iz]=bndr[nxpad-ix-1]*p0[ix][iz];
-			p1[ix][iz]=bndr[nxpad-ix-1]*p1[ix][iz];
-		}	
+	  for(ix=0;ix<nb;ix++){	/* left ABC */
+	    p0[ix][iz]=bndr[ix]*p0[ix][iz];
+	    p1[ix][iz]=bndr[ix]*p1[ix][iz];
+	  }	
+	  for(ix=nx+nb;ix<nxpad;ix++){/* right ABC */
+	    p0[ix][iz]=bndr[nxpad-ix-1]*p0[ix][iz];
+	    p1[ix][iz]=bndr[nxpad-ix-1]*p1[ix][iz];
+	  }	
 	}
 }
-
 
 
 int main(int argc, char* argv[])
@@ -161,17 +160,28 @@ int main(int argc, char* argv[])
 	Fvx = sf_input("vx");/* veloctiy-x */
 	Fw = sf_output("out");/* wavefield snaps */
 
-   	if(!sf_getbool("verb",&verb))  verb=false;    /* verbosity */
-    	if (!sf_histint(Fvz,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
-    	if (!sf_histint(Fvz,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
-    	if (!sf_histfloat(Fvz,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
-    	if (!sf_histfloat(Fvz,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nb",&nb)) nb=30; /* thickness of sponge ABC */
-    	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
-    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
-    	if (!sf_getfloat("fm",&fm)) fm=20.0; /*dominant freq of Ricker wavelet */
-   	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
-    	if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
+   	if(!sf_getbool("verb",&verb))  verb=false;   
+	/* verbosity */
+    	if (!sf_histint(Fvz,"n1",&nz)) sf_error("No n1= in input");
+	/* veloctiy model: nz */
+    	if (!sf_histint(Fvz,"n2",&nx)) sf_error("No n2= in input");
+	/* veloctiy model: nx */
+    	if (!sf_histfloat(Fvz,"d1",&dz)) sf_error("No d1= in input");
+	/* veloctiy model: dz */
+    	if (!sf_histfloat(Fvz,"d2",&dx)) sf_error("No d2= in input");
+	/* veloctiy model: dx */
+    	if (!sf_getint("nb",&nb)) nb=30; 
+	/* thickness of sponge ABC */
+    	if (!sf_getint("nt",&nt)) sf_error("nt required");
+	/* number of time steps */
+    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");
+	/* time sampling interval */
+    	if (!sf_getfloat("fm",&fm)) fm=20.0;
+	/*dominant freq of Ricker wavelet */
+   	if (!sf_getint("ft",&ft)) ft=0;
+	/* first recorded time */
+    	if (!sf_getint("jt",&jt)) jt=1;
+	/* time interval */
 
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
@@ -217,9 +227,8 @@ int main(int argc, char* argv[])
 	expand2d(vx, vx0);
 	for(ix=0;ix<nxpad;ix++){
 	    for(iz=0;iz<nzpad;iz++){
-		// vv=vv^2*dt^2
-		tmp=vz[ix][iz]*dt; vz[ix][iz]=tmp*tmp;
-		tmp=vx[ix][iz]*dt; vx[ix][iz]=tmp*tmp;
+	      tmp=vz[ix][iz]*dt; vz[ix][iz]=tmp*tmp;
+	      tmp=vx[ix][iz]*dt; vx[ix][iz]=tmp*tmp;
 	    }
 	}
 	memset(p0[0],0,nzpad*nxpad*sizeof(float));

@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
     	if (!sf_getint("n0",&n0)) n0=0;
 	/* shot depth in the grid */
 
-	if(adj){/* migration */   
+	if(adj){/* migration */
 	    data = sf_input ("in"); /* seismic data */
 	    imag = sf_output("out");  /* output image */
 	    if (!sf_histint(data,"n1",&nt)) sf_error("n1");
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 	rtm2d_lop(adj, false, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat);
 	rtm2d_close();
 
-    	if(adj) sf_floatwrite(mod, (n1+2*nb)*(n2+2*nb), imag);  /* output image */
+    	if(adj) sf_floatwrite(mod, (n1+2*nb)*(n2+2*nb), imag);/*output image */
     	else	sf_floatwrite(dat, nt*n2, data);  /* output data */
 
 	free(*v0); free(v0);

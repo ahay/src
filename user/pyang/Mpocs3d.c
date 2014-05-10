@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     {
 	fftn_lop(true, false, num, num, dtmp, drec);
 
-	// perform hard thresholding
+	/* perform hard thresholding */
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
 	private(i1)			\
