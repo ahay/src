@@ -2,30 +2,17 @@ from rsf.proj import *
 
 Fetch('marmvel.hh','marm')
 
-Flow('marmousi','marmvel.hh','dd form=native | window j1=3 j2=3')
-
-Result('marmousi','grey color=j mean=y scalebar=y')
-
-# test: marm240x737.bin
-nz=240
-nx=737
-dz=12.5	#unit: m
-dx=12.5	#unit: m
-
-# original velocity model
-Flow('vel','marm240x737.bin',
+Flow('vel','marmvel.hh',
 	'''
-     	echo in=${SOURCES[0]} n1=%d n2=%d data_format=native_float |
-     	put d1=%g o1=0 label1=Depth   unit1=m
-     	 d2=%g o2=0 label2=Lateral unit2=m
-	'''%(nz,nx,dz,dx))
-Plot('vel',
-     '''
-     grey title="Marmousi model" wantitle=y allpos=y color=j
-     pclip=100 scalebar=y bartype=v barlabel="V" barunit="m/s"
-	screenratio=0.45 
-     ''' )
+	dd form=native | window j1=3 j2=3 | 
+     	put label1=Depth  unit1=m label2=Lateral unit2=m
+	''')
 
+Plot('vel',
+	'''
+	grey color=j mean=y scalebar=y bartype=v barlabel="V" 
+	barunit="m/s"	screenratio=0.45 
+	''')
 
 # smoothed velocity model, it will be the initial model for FWI   
 Flow('smvel','vel','smooth repeat=10 rect1=10 rect2=20')
@@ -48,7 +35,7 @@ Result('shots','grey color=g ')
 Flow('vsnaps grads objs','smvel shots',
 	'''
 	sfgpufwi shots=${SOURCES[1]} grads=${TARGETS[1]} 
-	objs=${TARGETS[2]} niter=10
+	objs=${TARGETS[2]} niter=20
 	''')
 Result('vsnaps',
 	'''
