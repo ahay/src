@@ -31,7 +31,7 @@ void sf_cpthresh(sf_complex *x, int n, float thr, float p, char* mode)
 #pragma omp parallel for default(none) private(i,a) shared(x,n,thr,p,mode)
 #endif
 	for(i=0;i<n;i++){
-	    	a=cabsf(x[i]);// complex numbers
+	  a=cabsf(x[i]);/* complex numbers */
 	    	if (strcmp(mode,"hard") == 0) { /* hard thresholding*/
 #ifdef SF_HAS_COMPLEX_H
 		    x[i]=(x[i])*(a>thr?1.:0.);
@@ -63,7 +63,7 @@ void sf_pthresh(float *x, int n, float thr, float p, char* mode)
 #pragma omp parallel for default(none) private(i,a) shared(x,n,thr,p,mode)
 #endif
 	for(i=0;i<n;i++){
-	    	a=fabsf(x[i]);// float numbers
+	  a=fabsf(x[i]);/* float numbers */
 	    	if (strcmp(mode,"hard") == 0) x[i]=(x[i])*(a>thr?1.:0.);/* hard thresholding*/
 	    	else{
 			if (strcmp(mode,"soft") == 0) a=1.0-thr/(a+(a==0));/* soft thresholding */

@@ -103,6 +103,7 @@ void add_source(float ***u1, float *wlt, int **Szxy, int ns, bool add)
 /*< add source >*/
 {
 	int is, sz, sx, sy;
+
 	for (is=0; is<ns; is++)
 	{
 		sz=Szxy[is][0]+nb;
@@ -120,6 +121,7 @@ void step_forward(float ***u0, float ***u1, float ***vv)
 {
 	int iz, ix, iy;
 	float ua;
+
 #ifdef _OPENMP
 #pragma omp parallel for default(none) private(iz,ix,iy,ua) 	\
 	shared(nzpad,nxpad,nypad,c0,c11,c12,c21,c22,c31,c32,u0,u1,vv)	
