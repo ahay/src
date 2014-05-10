@@ -131,8 +131,10 @@ namespace TSOpt {
 
     ~IWaveOp();
 
-    const Space<ireal> & getDomain() const;
-    const Space<ireal> & getRange() const;
+    const IWaveSpace & getIWaveDomain() const { return dom; } 
+    const IWaveSpace & getIWaveRange() const { return rng; } 
+    const Space<ireal> & getDomain() const { return getIWaveDomain(); }
+    const Space<ireal> & getRange() const { return getIWaveRange(); }
 
     // added 23.06.10 to facilitate using source as variable
     // without admitting that it's part of domain

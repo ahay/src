@@ -13,6 +13,7 @@
 #include "acdds_grad_selfdoc.hh"
 #include <par.h>
 #include "gradtest.hh"
+#include "scantest.hh"
 #include "segyops.hh"
 
 //#define GTEST_VERBOSE
@@ -40,6 +41,7 @@ using RVL::RVLRandomize;
 using RVL::ScaleOpFwd;
 using RVL::TensorOp;
 using RVL::GradientTest;
+using RVL::Scan;
 using RVLUmin::CGNEPolicy;
 using RVLUmin::CGNEPolicyData;
 using RVLUmin::LBFGSBT;
@@ -108,17 +110,18 @@ int main(int argc, char ** argv) {
     else {
 #endif
 
-      // the Op
+      // the Op - note that it comes equpped with domain, range spaces!
       IWaveOp iwop(*pars,stream);
         
       SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
-                         valparse<float>(*pars,"mute_zotime",0.0f),
-                         valparse<float>(*pars,"mute_width",0.0f));
+		       valparse<float>(*pars,"mute_zotime",0.0f),
+		       valparse<float>(*pars,"mute_width",0.0f));
         
       LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
       OpComp<float> op(iwop,muteop);
     
-      /* generate physical model space */
+      /* generate physical model space - a priori distinct from extended space
+         without even the same grid */
 #ifdef IWAVE_USE_MPI
       MPIGridSpace csqsp(valparse<std::string>(*pars,"csq"),"notype",true);
 #else
@@ -126,51 +129,34 @@ int main(int argc, char ** argv) {
 #endif
       // make it a product, so it's compatible with domain of op
       StdProductSpace<ireal> dom(csqsp);
+      // build grid extension op - checks compatibility between physical,
+      // extended model-space specs
 
-      // vel-squared model!
+      GridExtendOp gext(dom,op.getDomain());
+
+      // reference vel-squared model - assumed to be data used to spec
+      // physical model space
       Vector<ireal> m(dom);
-      Vector<ireal> m_end(dom);
-      Vector<ireal> dm(dom);
-      Vector<ireal> dd(op.getRange());
-      Vector<ireal> mdd(op.getRange());
-
-      // read in start point and end point
       AssignFilename mfn(valparse<std::string>(*pars,"csq"));
       Components<ireal> cm(m);
       cm[0].eval(mfn);
 
-      AssignFilename mfn_end(valparse<std::string>(*pars,"csq_end"));
-      Components<ireal> cm_end(m_end);
-      cm_end[0].eval(mfn_end);
-        
-      Components<ireal> cdm(dm);
-      dm.copy(m_end);
-      dm.linComb(-1.0f,m);
-      
-      
-//      AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
-//      Components<ireal> cdm(dm);
-//      cdm[0].eval(dmfn);
-//      dm.zero();
-    
-      AssignFilename ddfn(valparse<std::string>(*pars,"data"));
-      Components<ireal> cdd(dd);
-      cdd[0].eval(ddfn);
-
+      // muted data - optionally archived
+      Vector<ireal> mdd(op.getRange());
       std::string mddnm = valparse<std::string>(*pars,"datamut","");
       if (mddnm.size()>0) {
         AssignFilename mddfn(mddnm);
         mdd.eval(mddfn);
       }
-      muteop.applyOp(dd,mdd);
+      {
+	// read data - only needed to define muted data
+	Vector<ireal> dd(op.getRange());
+	AssignFilename ddfn(valparse<std::string>(*pars,"data"));
+	Components<ireal> cdd(dd);
+	cdd[0].eval(ddfn);
+	muteop.applyOp(dd,mdd);
+      }
 
-
-      CGNEPolicyData<float> pd(
-            valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
-            valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon()),
-            valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
-            valparse<int>(*pars,"MaxIter",10),true);
-    
       /* output stream */
       std::stringstream res,strgrad;
       res<<scientific;
@@ -202,10 +188,14 @@ int main(int argc, char ** argv) {
 
       // choice of preop is placeholder
       ScaleOpFwd<float> preop(top.getDomain(),1.0f);
-
+      CGNEPolicyData<float> pd(
+            valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
+            valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon()),
+            valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
+            valparse<int>(*pars,"MaxIter",10),true);    
       LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,preop,td,pd,false,res);
-      GridExtendOp g(dom,op.getDomain());
-      FcnlOpComp<float> gf(f,g);
+      // compose with grid extension op
+      FcnlOpComp<float> gf(f,gext);
 
       // lower, upper bds for csq
       Vector<float> lb(gf.getDomain());
@@ -227,17 +217,16 @@ int main(int argc, char ** argv) {
 #endif
 
       FunctionalBd<float> fbd(gf,ultest);
+     
+      // if gradient requested, compute and store, along with other quantities
+      // at reference model
+      string gradname = valparse<std::string>(*pars,"grad","");
+      if (gradname.size()>0) {
 
-      // read in scan test parameters
-      int  nhval=valparse<int>(*pars,"Nhval",11);
-      float hmin=valparse<float>(*pars,"HMin",0.1f);
-      float hmax=valparse<float>(*pars,"HMax",1.0f);
-        
-      Vector<ireal> grad(dom);
-      if (valparse<int>(*pars,"Nhval",3) <=0 ) {
 	FunctionalEvaluation<float> Fm(fbd,m);
 	// cerr<<" \n  compute gradient \n";
-	AssignFilename gradfn(valparse<std::string>(*pars,"grad"));
+	AssignFilename gradfn(gradname);
+	Vector<ireal> grad(dom);
 	Components<ireal> cgrad(grad);
 	cgrad[0].eval(gradfn);
 	//strgrad << "\n getgradient norm = " << (Fm.getGradient()).norm() << endl;
@@ -264,7 +253,7 @@ int main(int argc, char ** argv) {
 	std::string datares = valparse<std::string>(*pars,"datares","");
 	std::string normalres = valparse<std::string>(*pars,"normalres","");
 	if (dataest.size()>0) {
-	  OperatorEvaluation<float> gopeval(g,m);
+	  OperatorEvaluation<float> gopeval(gext,m);
 	  OperatorEvaluation<float> opeval(op,gopeval.getValue());
 	  Vector<float> est(op.getRange());
 	  AssignFilename estfn(dataest);
@@ -291,9 +280,25 @@ int main(int argc, char ** argv) {
 	  }
 	}
       }
-      else {
-	/* scan */
-	GradientTest(fbd,m,dm,strgrad,nhval,hmin,hmax);
+
+      // if model perturbation supplied, try scan, gradient tests
+      string pertname = valparse<std::string>(*pars,"csq_d1");
+      if (pertname.size()>0) {
+	Vector<ireal> dm(op.getDomain());
+	AssignFilename mfn_d1(pertname);
+	Components<ireal> cm_d1(dm);
+	cm_d1[0].eval(mfn_d1);
+	// perform gradient test if nhval > 0
+	GradientTest(fbd,m,dm,strgrad,
+		     valparse<int>(*pars,"nhval",0),
+		     valparse<float>(*pars,"hmin",0.1f),
+		     valparse<float>(*pars,"hmax",1.0f));
+	// perform scan if nscan > -1
+	Scan(fbd,m,dm,
+	     valparse<int>(*pars,"nscan",-1),
+	     valparse<float>(*pars,"hmin",-1.0f),
+	     valparse<float>(*pars,"hmax",1.0f),
+	     strgrad);	     
       }
       if (retrieveRank() == 0) {
 	std::string outfile = valparse<std::string>(*pars,"outfile","");

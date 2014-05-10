@@ -551,9 +551,6 @@ namespace TSOpt {
     ps_delete(&pars);
     /* cerr<<"good bye!\n"; */ }
       
-  const Space<ireal> & IWaveOp::getDomain() const { return dom; }
-  const Space<ireal> & IWaveOp::getRange() const { return rng; }
-
   // added 23.06.10 to facilitate using source as variable
   // without admitting that it's part of domain
   PARARRAY & IWaveOp::getPar() { return *pars; }

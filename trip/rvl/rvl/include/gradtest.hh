@@ -81,7 +81,12 @@ namespace RVL {
 	hmin = 0.1;
 	hmax = 1.0;
       }
-      if (n <= 0) n = 10;
+      if (n < 2) { 
+	RVLException e;
+	e<<"RVL::GradientTest:\n";
+	e<<"  test not performed because number of samples = "<<n<<" too small\n";
+	throw e;
+      }
 
       Scalar hlimit1;
       Scalar hlimit2;

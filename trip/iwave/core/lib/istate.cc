@@ -1847,12 +1847,17 @@ namespace TSOpt {
 
 #ifdef IWAVE_USE_MPI
       if (retrieveGroupID() == MPI_UNDEFINED) {
+#ifdef IWAVE_VERBOSE
+	fprintf(stderr,"NOTE: idle rank=%d, finalize MPI, cleanup, exit\n",retrieveGlobalRank());
+#endif	
 	fprintf(stream,"NOTE: finalize MPI, cleanup, exit\n");
 	fflush(stream);
       }
       else {
 #endif
-
+#ifdef IWAVE_VERBOSE
+	fprintf(stderr,"NOTE: working rank=%d proceed with sim\n",retrieveGlobalRank());
+#endif	
 	int dryrun = 0;
 	parse(*par,"dryrun",dryrun);
 	ofstream * drystr = NULL;
@@ -1934,8 +1939,6 @@ namespace TSOpt {
 #ifdef IWAVE_VERBOSE
 	cerr<<"IWaveApply -> exit\n";
 #endif
-	ps_delete(&par);
-	fclose(stream);
 	if (drystr) {
 	  drystr->close();
 	  delete drystr;
@@ -1945,6 +1948,8 @@ namespace TSOpt {
       }
       MPI_Barrier(MPI_COMM_WORLD);
 #endif
+      ps_delete(&par);
+      fclose(stream);
     }
     catch (RVLException & e) {
       e<<"\ncalled from IWaveApply\n";
