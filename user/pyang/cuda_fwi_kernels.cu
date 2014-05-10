@@ -165,15 +165,15 @@ __global__ void cuda_rw_bndr(float *bndr, float *p1, int nz, int nx, bool read)
 {
 	int id=threadIdx.x+blockIdx.x*blockDim.x;
 	if(read){
-		if(id<nz) bndr[id]=p1[id];/*left boundary*/
-		else if (id<2*nz) bndr[id]=p1[(id-nz)+nz*(nx-1)];/*right boundary */
-		else if (id<2*nz+nx) bndr[id]=p1[nz*(id-2*nz)];/*top boundary*/
-		else if (id<2*(nz+nx)) bndr[id]=p1[nz-1+nz*(id-2*nz-nx)];/*bottom boundary*/
-	}else{
 		if(id<nz) p1[id]=bndr[id];/*left boundary*/
 		else if (id<2*nz) p1[(id-nz)+nz*(nx-1)]=bndr[id];/*right boundary*/
 		else if (id<2*nz+nx) p1[nz*(id-2*nz)]=bndr[id];/* top boundary*/
 		else if (id<2*(nz+nx)) p1[nz-1+nz*(id-2*nz-nx)]=bndr[id];/*bottom boundary*/
+	}else{
+		if(id<nz) bndr[id]=p1[id];/*left boundary*/
+		else if (id<2*nz) bndr[id]=p1[(id-nz)+nz*(nx-1)];/*right boundary */
+		else if (id<2*nz+nx) bndr[id]=p1[nz*(id-2*nz)];/*top boundary*/
+		else if (id<2*(nz+nx)) bndr[id]=p1[nz-1+nz*(id-2*nz-nx)];/*bottom boundary*/
 	}
 }
 
@@ -510,7 +510,7 @@ configuration requirement: <<<1, Block_Size>>> >*/
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
+    	/* do reduction in shared mem */
     	for(s=blockDim.x/2; s>32; s>>=1) 
     	{
 		if (threadIdx.x < s) { sdata[tid] += sdata[tid + s];tdata[tid] += tdata[tid + s]; } __syncthreads();

@@ -371,7 +371,7 @@ int main(int argc, char *argv[])
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
 				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
-				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp0, nz, nx, true);
+				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp0, nz, nx, false);
 			}
 
 			ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
@@ -380,7 +380,7 @@ int main(int argc, char *argv[])
 			{
 				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
 				cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
-				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
+				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);

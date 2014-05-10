@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
 	sf_putfloat(shots,"d2",jgx*dx);
 	sf_putfloat(shots,"o1",0);
 	sf_putstring(shots,"label1","Time");
-	sf_putstring(shots,"label2","Offset");
+	sf_putstring(shots,"label2","Lateral");
 	sf_putstring(shots,"label3","Shot");
 	sf_putstring(shots,"unit1","sec");
 	sf_putstring(shots,"unit2","m");
