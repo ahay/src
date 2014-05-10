@@ -37,9 +37,11 @@
     extern int sint2d_(integer *, integer *, float *, float *, float *); 
     extern int getcoef_(integer *, float *, float *, integer *, float *, 
 			float *, float *, integer *);
+    /*
     extern int sincost_(integer *, integer *, float *, float *, float *);
     extern int getcoefn_(integer *, float *, float *, integer *, float *, 
 			 float *, float *, integer *);
+    */
     static integer stridex;
 
 
@@ -175,12 +177,12 @@
 
 /* transform, Fourier multiplier, inverse transform */
 
-    if (bc) 
-      sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
-    else 
-      fprintf(stderr,"neumann case\n");
+//    if (bc) 
+    sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
+      //    else 
+      //      fprintf(stderr,"neumann case\n");
       //sincost_(integer *m, integer *n, float *x, float *xt, float *wsave)      
-      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
+      //      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
     i__1 = nfft;
     for (j = 1; j <= i__1; ++j) {
       d__1 = 1.0 + (double) work[ptr_to_coef__ - 1 + j];
@@ -188,10 +190,10 @@
       /*	work[ptr_to_x__ - 1 + j] *= pow_dd(&d__1, &d__2); */
       work[ptr_to_x__ - 1 + j] *= pow(d__1, d__2);
     }
-    if (bc) 
-      sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
-    else
-      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
+    //    if (bc) 
+    sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
+    //    else
+    //      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
 /* zero out last column in dirichlet case */
     if (*ntx > 1 && bc) {
 	i__1 = nsx2;
