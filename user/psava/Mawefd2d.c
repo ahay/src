@@ -275,14 +275,14 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/ 
     tt = sf_floatalloc2(nz,nx); 
 
-    vp  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
-    vt  =sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
+    vp = sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
+    vt = sf_floatalloc2(fdm->nzpad,fdm->nxpad); 
 
     if (!cden) {
 
         /* input density */
         ro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);
-        iro  =sf_floatalloc2(fdm->nzpad,fdm->nxpad);        
+        iro =sf_floatalloc2(fdm->nzpad,fdm->nxpad);        
         sf_floatread(tt[0],nz*nx,Fden); expand(tt,ro ,fdm);
 	
         /* auxiliary vector */
