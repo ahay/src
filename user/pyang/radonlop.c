@@ -121,21 +121,21 @@ void sf_radon2_lop(bool adj, bool add, int nm, int nd, float *xxmm, float *yydd)
 		if(!add) memset(dd[0],0,nd*sizeof(float));
 	}
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
-		for(ix=0; ix<nx; ix++) // loop over offsets
+	if(adj){/* m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i) */
+		for(ix=0; ix<nx; ix++) 
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
 			memcpy(tmpr, dd[ix], nt*sizeof(float));
-		 	fftwf_execute(fft1);// FFT: dd-->cdd
+		 	fftwf_execute(fft1);/* FFT: dd-->cdd */
 			memcpy(&cdd[ix*nw], tmpc, nw*sizeof(sf_complex));
 		}
 		matrix_transpose(cdd, nw, nx);
-	}else{	// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
-		for(ip=0; ip<np; ip++) // loop over slopes
+	}else{	/* d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)*/
+		for(ip=0; ip<np; ip++) 
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
 			memcpy(tmpr, mm[ip], nt*sizeof(float));
-		 	fftwf_execute(fft1);// FFT: mm-->cmm
+		 	fftwf_execute(fft1);/* FFT: mm-->cmm */
 			memcpy(&cmm[ip*nw], tmpc, nw*sizeof(float));			
 		}
 		matrix_transpose(cmm, nw, np);
@@ -151,22 +151,20 @@ void sf_radon2_lop(bool adj, bool add, int nm, int nd, float *xxmm, float *yydd)
 	}
 
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj){/* m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)*/
 		matrix_transpose(cmm, np, nw);
-		for(ip=0; ip<np; ip++) // loop over slopes
+		for(ip=0; ip<np; ip++) 
 		{			
 			memcpy(tmpc, &cmm[ip*nw], nw*sizeof(sf_complex));
-		 	fftwf_execute(ifft1); // IFFT: cmm-->mm
-			//for(iw=0; iw<nt; iw++) mm[ip][iw]=tmpr[iw]/nfft;
+		 	fftwf_execute(ifft1); /* IFFT: cmm-->mm */
 			for(iw=0; iw<nt; iw++) xxmm[iw+ip*nt]+=tmpr[iw]/nfft;
 		}
-	}else{// d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)
+	}else{/* d(t,h)=sum_{i=0}^{np} m(tau=t-p_i*h,p_i)*/
 		matrix_transpose(cdd, nx, nw);
-		for(ix=0; ix<nx; ix++) // loop over offsets
+		for(ix=0; ix<nx; ix++) 
 		{
 			memcpy(tmpc, &cdd[ix*nw], nw*sizeof(sf_complex));
-		 	fftwf_execute(ifft1);// IFFT: cmm-->mm
-			//for(iw=0; iw<nt; iw++) dd[ix][iw]=tmpr[iw]/nfft;
+		 	fftwf_execute(ifft1);/* IFFT: cmm-->mm */
 			for(iw=0; iw<nt; iw++) yydd[iw+ix*nt]+=tmpr[iw]/nfft;
 		}
 	}
