@@ -282,17 +282,20 @@ int main(int argc, char ** argv) {
       }
 
       // if model perturbation supplied, try scan, gradient tests
-      string pertname = valparse<std::string>(*pars,"csq_d1");
+      string pertname = valparse<std::string>(*pars,"csq_d1","");
       if (pertname.size()>0) {
+
 	Vector<ireal> dm(op.getDomain());
 	AssignFilename mfn_d1(pertname);
 	Components<ireal> cm_d1(dm);
 	cm_d1[0].eval(mfn_d1);
+
 	// perform gradient test if nhval > 0
 	GradientTest(fbd,m,dm,strgrad,
 		     valparse<int>(*pars,"nhval",0),
 		     valparse<float>(*pars,"hmin",0.1f),
 		     valparse<float>(*pars,"hmax",1.0f));
+
 	// perform scan if nscan > -1
 	Scan(fbd,m,dm,
 	     valparse<int>(*pars,"nscan",-1),
