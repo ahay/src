@@ -1,5 +1,11 @@
 from rsf.proj import *
 
+Fetch('marmvel.hh','marm')
+
+Flow('marmousi','marmvel.hh','dd form=native | window j1=3 j2=3')
+
+Result('marmousi','grey color=j mean=y scalebar=y')
+
 # test: marm240x737.bin
 nz=240
 nx=737
