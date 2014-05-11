@@ -70,7 +70,7 @@ static float dx, dz, fm, dt;
 float 	*v0, *vv, *dobs;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_sillum, *d_gillum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
+float 	*d_wlt, *d_vv, *d_sillum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
 float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2, *d_bell;
 /*
 d_pars[0]: obj;
@@ -142,7 +142,6 @@ void device_alloc()
 	cudaMalloc(&d_cg, nz*nx*sizeof(float));
 	cudaMalloc(&d_lap, nz*nx*sizeof(float));
 	cudaMalloc(&d_sillum, nz*nx*sizeof(float));
-	cudaMalloc(&d_gillum, nz*nx*sizeof(float));
 	cudaMalloc(&d_pars, 4*sizeof(float));
 	cudaMalloc(&d_alpha1, ng*sizeof(float));
 	cudaMalloc(&d_alpha2, ng*sizeof(float));
@@ -174,7 +173,6 @@ void device_free()
 	cudaFree(d_cg);
 	cudaFree(d_lap);
 	cudaFree(d_sillum);
-	cudaFree(d_gillum);
 	cudaFree(d_pars);
 	cudaFree(d_alpha1);
 	cudaFree(d_alpha2);
@@ -203,7 +201,7 @@ int main(int argc, char *argv[])
 {
 	bool verb;
 	int is, it, iter, distx, distz, csd;
-	float dtx, dtz, _dx2, _dz2, mstimer,amp,tmp,obj1;
+	float dtx, dtz, mstimer,amp, obj, beta, epsil, alpha, obj1;
 	float *objval, *ptr=NULL;
 	sf_file vinit, shots, vupdates, grads, objs;
 
@@ -279,8 +277,6 @@ int main(int argc, char *argv[])
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
-	_dz2=1.0/(dz*dz);
-	_dx2=1.0/(dx*dx);
 	csdgather=(csd>0)?true:false;
 	/* round the size up to multiples of Block size */
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
@@ -334,7 +330,6 @@ int main(int argc, char *argv[])
 	cudaMemset(d_cg, 0, nz*nx*sizeof(float));
 	cudaMemset(d_lap, 0, nz*nx*sizeof(float));
 	cudaMemset(d_sillum, 0, nz*nx*sizeof(float));
-	cudaMemset(d_gillum, 0, nz*nx*sizeof(float));
 	cudaMemset(d_pars, 0, 4*sizeof(float));
 	cudaMemset(d_alpha1, 0, ng*sizeof(float));
 	cudaMemset(d_alpha2, 0, ng*sizeof(float));
@@ -351,8 +346,7 @@ int main(int argc, char *argv[])
 		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
 		cudaMemset(d_g1, 0, nz*nx*sizeof(float));
-		cudaMemset(d_sillum, 0, nz*nx*sizeof(float));
-		cudaMemset(d_gillum, 0, nz*nx*sizeof(float));
+		cudaMemset(d_sillum, 0, nz*nx*sizeof(float));/* source illumination */
 		for(is=0;is<ns;is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
@@ -362,56 +356,67 @@ int main(int argc, char *argv[])
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
+			/* model the synthetic data and calculate the residual wavefield */
 			wavefield_init(d_sp0, d_sp1, nz*nx);
 			for(it=0; it<nt; it++)
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
+				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
 				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
-				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp0, nz, nx, false);
 			}
 
-			ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 			wavefield_init(d_gp0, d_gp1, nz*nx);
 			for(it=nt-1; it>-1; it--)
 			{
+				/* backward reconstruct the source wavefield with saved boundaries */
+				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
-				cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
+				cuda_step_backward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, d_lap, d_sillum, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 
+				/* receiver wavefield extrapolation */
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
-
-				/*cuda_cal_grad<<<dimg,dimb>>>(d_g1, d_sillum, d_gillum, d_lap, d_gp1, _dz2, _dx2, nz, nx);*/
-				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_sillum, d_lap, d_gp1, _dz2, _dx2, nz, nx);
-				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
+				
+				/* calculate the gradient (up to a factor) */
+				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_lap, d_gp0, nz, nx);
 			}
 		}
-		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, nz, nx);
-/*		
-		cuda_scale_grad<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, d_gillum, nz, nx);
-		cuda_gaussian_smoothz<<<dimg,dimb>>>(d_g1, d_sillum, d_bell, nz, nx);
-		cuda_gaussian_smoothx<<<dimg,dimb>>>(d_sillum, d_g1, d_bell, nz, nx);
-*/
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
+		cudaMemcpy(&obj, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
 
+		if(verb) {
+			if(iter==0) { 
+				obj1=obj;  sf_warning("obj1=%f",obj1);
+				if(obj1<EPS) {sf_warning("converged!");exit(1);}
+				objval[iter]=1.;
+			}else objval[iter]=obj/obj1;
+			sf_warning("obj=%f",objval[iter]);
+		}
+
+		/* scale the gradient to the right value and save it */
+		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, nz, nx);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
-		cuda_cal_conjgrad<<<dimg, dimb>>>(d_g1, d_cg, &d_pars[1], nz, nx);
+		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
+
+		cuda_cal_conjgrad<<<dimg, dimb>>>(d_g1, d_cg, beta, nz, nx);
 		cuda_cal_epsilon<<<1, Block_Size>>>(d_vv, d_cg, &d_pars[2], nz*nx);
+		cudaMemcpy(&epsil, &d_pars[2], sizeof(float), cudaMemcpyDeviceToHost);
 
 		sf_seek(shots, 0L, SEEK_SET);
-		cudaMemset(d_alpha1, 0, ng*sizeof(float));
-		cudaMemset(d_alpha2, 0, ng*sizeof(float));
-		cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, &d_pars[2], nz, nx);
-		for(is=0;is<ns;is++)
+		cudaMemset(d_alpha1, 0, ng*sizeof(float));/* numerator of alpha */
+		cudaMemset(d_alpha2, 0, ng*sizeof(float));/* denominator of alpha */
+		cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, epsil, nz, nx);
+		for(is=0; is<ns; is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
 			matrix_transpose(dobs, nt, ng);
@@ -431,8 +436,9 @@ int main(int argc, char *argv[])
 				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
 			}
 		}
-		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, &d_pars[2], ng);
-		cuda_update_vel<<<dimg,dimb>>>(d_vv, d_cg, &d_pars[3], nz, nx);
+		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, epsil, ng);
+		cudaMemcpy(&alpha, &d_pars[3], sizeof(float), cudaMemcpyDeviceToHost);
+		cuda_update_vel<<<dimg,dimb>>>(d_vv, d_cg, alpha, nz, nx);
 
 		cudaMemcpy(vv, d_vv, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
@@ -441,19 +447,9 @@ int main(int argc, char *argv[])
 		cudaEventRecord(stop);
   		cudaEventSynchronize(stop);
   		cudaEventElapsedTime(&mstimer, start, stop);
-		if(verb)
-		{
-			cudaMemcpy(&tmp, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
-			sf_warning("beta=%f",tmp);
-			cudaMemcpy(&tmp, &d_pars[2], sizeof(float), cudaMemcpyDeviceToHost);
-			sf_warning("epsil=%f",tmp);
-			cudaMemcpy(&tmp, &d_pars[3], sizeof(float), cudaMemcpyDeviceToHost);
-			sf_warning("alpha=%f",tmp);
-			cudaMemcpy(&tmp, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
-			if(iter==0) { obj1=tmp; objval[iter]=1.;}
-			else objval[iter]=tmp/obj1;
-			sf_warning("obj=%f",objval[iter]);
-
+		if(verb) 
+		{			
+			sf_warning("beta=%f epsil=%f alpha=%f",beta, epsil, alpha);
 			sf_warning("iteration %d finished: %f (s)",iter+1, mstimer*1e-3);
 		}
 	}

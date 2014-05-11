@@ -62,8 +62,8 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 	s_p1[threadIdx.x+1][threadIdx.y+1]=p1[id];
 	if(threadIdx.x==0)
 	{
-		if(blockIdx.x>0)	{ s_p0[threadIdx.x][threadIdx.y+1]=p0[id-1];	s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
-		else			{ s_p0[threadIdx.x][threadIdx.y+1]=0.0f;	s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
+		if(blockIdx.x>0)		{ s_p0[threadIdx.x][threadIdx.y+1]=p0[id-1];	s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
+		else				{ s_p0[threadIdx.x][threadIdx.y+1]=0.0f;	s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
 	}
 	if(threadIdx.x==blockDim.x-1)
 	{
@@ -72,8 +72,8 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 	}
 	if(threadIdx.y==0)
 	{
-		if(blockIdx.y>0)	{ s_p0[threadIdx.x+1][threadIdx.y]=p1[id-nz]; 	s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
-		else			{ s_p0[threadIdx.x+1][threadIdx.y]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
+		if(blockIdx.y>0)		{ s_p0[threadIdx.x+1][threadIdx.y]=p1[id-nz]; 	s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
+		else				{ s_p0[threadIdx.x+1][threadIdx.y]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
 	}
 	if(threadIdx.y==blockDim.y-1)
 	{
@@ -119,7 +119,7 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 }
 
 
-__global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)
+__global__ void cuda_step_backward(float *p0, float *p1, float *vv, float *lap, float *sillum, float dtz, float dtx, int nz, int nx)
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
@@ -129,8 +129,8 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 	s_p1[threadIdx.x+1][threadIdx.y+1]=p1[id];
 	if(threadIdx.x==0)
 	{
-		if(blockIdx.x>0)	{ s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
-		else			{ s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
+		if(blockIdx.x>0)		{ s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
+		else				{ s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
 	}
 	if(threadIdx.x==blockDim.x-1)
 	{
@@ -139,8 +139,8 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 	}
 	if(threadIdx.y==0)
 	{
-		if(blockIdx.y>0)	{s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
-		else			{s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
+		if(blockIdx.y>0)		{s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
+		else				{s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
 	}
 	if(threadIdx.y==blockDim.y-1)
 	{
@@ -157,7 +157,8 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 	if (i1<nz && i2<nx) 
 	{
 		p0[id]=2*s_p1[threadIdx.x+1][threadIdx.y+1]-p0[id]+c1+c2;
-		lap[id]=c1+c2;
+		sillum[id]+=s_p1[threadIdx.x+1][threadIdx.y+1]*s_p1[threadIdx.x+1][threadIdx.y+1];
+		lap[id]=c1+c2;/* laplacian(p) */
 	}
 }
 __global__ void cuda_rw_bndr(float *bndr, float *p1, int nz, int nx, bool read)
@@ -189,26 +190,29 @@ __global__ void cuda_cal_residuals(float *dcal, float *dobs, float *derr, int ng
 }
 
 __global__ void cuda_cal_objective(float *obj, float *err, int ng)
-/*< calculate the value of objective function: obj >*/
+/*< calculate the value of objective/misfit function: obj >*/
 {
   	__shared__ float  sdata[Block_Size];
     	int tid=threadIdx.x;
+	int s,id;
+	float a;
     	sdata[tid]=0.0f;
-	for(int s=0; s<(ng+Block_Size-1)/Block_Size; s++)
+	for(s=0; s<(ng+Block_Size-1)/Block_Size; s++)
 	{
-		int id=s*blockDim.x+threadIdx.x;
-		float a=(id<ng)?err[id]:0.0f;
+		id=s*blockDim.x+threadIdx.x;
+		a=(id<ng)?err[id]:0.0f;
 		sdata[tid] += a*a;	
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
-    	for(int s=blockDim.x/2; s>32; s>>=1) 
-    	{
-		if (threadIdx.x < s) sdata[tid] += sdata[tid + s]; __syncthreads();
+    	/* do reduction in shared mem */
+    	for(s=blockDim.x/2; s>32; s>>=1) 
+    	{/* synchronization is required between different blocks */	
+		if (threadIdx.x < s) sdata[tid] += sdata[tid + s]; 
+		__syncthreads();
     	}
    	if (tid < 32)
-   	{
+   	{/* no synchronization required in the same block */
 		if (blockDim.x >=  64) { sdata[tid] += sdata[tid + 32]; }
 		if (blockDim.x >=  32) { sdata[tid] += sdata[tid + 16]; }
 		if (blockDim.x >=  16) { sdata[tid] += sdata[tid +  8]; }
@@ -221,18 +225,14 @@ __global__ void cuda_cal_objective(float *obj, float *err, int ng)
 }
 
 
-__global__ void cuda_cal_gradient(float *g1, float *illum, float *lap, float *gp, float _dz2, float _dx2, int nz, int nx)
+__global__ void cuda_cal_gradient(float *g1, float *lap, float *gp, int nz, int nx)
 /*< calculate gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;	
 
-	if (i1<nz && i2<nx)
-	{
-		g1[id]+=lap[id]*gp[id];
-		illum[id]+=lap[id]*lap[id];
-	}
+	if (i1<nz && i2<nx) g1[id]+=lap[id]*gp[id];
 }
 
 __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, int nx)
@@ -242,39 +242,9 @@ __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, 
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;
 
-	if (i1<nz && i2<nx)	g1[id]*=2.0f/(vv[id]*illum[id]);//
+	if (i1<nz && i2<nx)	g1[id]*=2.e4*(1.+(15.0*i1)/nz)/(vv[id]*illum[id]);
 }
 
-
-
-__global__ void cuda_cal_grad(float *g1, float *sillum, float*gillum, float *lap, float *gp, float _dz2, float _dx2, int nz, int nx)
-/*< calculate gradient >*/
-{
-	int i1=threadIdx.x+blockIdx.x*blockDim.x;
-	int i2=threadIdx.y+blockIdx.y*blockDim.y;
-	int id=i1+nz*i2;	
-
-	if (i1<nz && i2<nx)
-	{
-		g1[id]+=lap[id]*gp[id];
-		sillum[id]+=lap[id]*lap[id];
-		gillum[id]+=gp[id]*gp[id];
-	}
-}
-
-
-__global__ void cuda_scale_grad(float *g1, float *vv, float *sillum, float *gillum, int nz, int nx)
-/*< scale gradient >*/
-{
-	int i1=threadIdx.x+blockIdx.x*blockDim.x;
-	int i2=threadIdx.y+blockIdx.y*blockDim.y;
-	int id=i1+nz*i2;
-	if (i1<nz && i2<nx)
-	{
-		float a=sqrtf(sillum[id]*gillum[id]);
-		g1[id]*=2.0f/(vv[id]*a);//g1[id]*=2.0f/(vv[id]*illum[id]);
-	}
-}
 __global__ void cuda_init_bell(float *bell)
 /*< initialize 1D bell function:<<<1, 2*nbell+1>>> >*/
 {
@@ -414,14 +384,14 @@ configuration requirement: <<<1,Block_Size>>> >*/
 	}	
 }
 
-__global__ void cuda_cal_conjgrad(float *g1, float *cg, float *beta, int nz, int nx)
+__global__ void cuda_cal_conjgrad(float *g1, float *cg, float beta, int nz, int nx)
 /*< calculate nonlinear conjugate gradient >*/
 {
 	int i1=blockIdx.x*blockDim.x+threadIdx.x;
 	int i2=blockIdx.y*blockDim.y+threadIdx.y;
 	int id=i1+i2*nz;
 
-	if (i1<nz && i2<nx) cg[id]=-g1[id]+(*beta)*cg[id];
+	if (i1<nz && i2<nx) cg[id]=-g1[id]+beta*cg[id];
 }
 
 
@@ -431,8 +401,8 @@ configuration requirement: <<<1, Block_Size>>> >*/
 {
 	int s,id;
 	float a,b;
-    	__shared__ float sdata[Block_Size];// find max(|vv(:)|)
-	__shared__ float tdata[Block_Size];// find max(|cg(:)|)
+    	__shared__ float sdata[Block_Size];/* find max(|vv(:)|) */
+	__shared__ float tdata[Block_Size];/* find max(|cg(:)|) */
     	int tid = threadIdx.x;
     	sdata[tid] = 0.0f;
     	tdata[tid] = 0.0f;
@@ -441,12 +411,12 @@ configuration requirement: <<<1, Block_Size>>> >*/
 		id=s*blockDim.x+threadIdx.x;
 		a=(id<N)?fabsf(vv[id]):0.0f;
 		b=(id<N)?fabsf(cg[id]):0.0f;
-		sdata[tid]= MAX(sdata[tid], a);
-		tdata[tid]= MAX(tdata[tid], b);
+		sdata[tid]=MAX(sdata[tid], a);
+		tdata[tid]=MAX(tdata[tid], b);
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
+    	/* do reduction in shared mem */
     	for(s=blockDim.x/2; s>32; s>>=1) 
     	{
 		if (threadIdx.x < s)	{sdata[tid]=MAX(sdata[tid], sdata[tid+s]);tdata[tid]=MAX(tdata[tid], tdata[tid+s]);} 
@@ -465,13 +435,13 @@ configuration requirement: <<<1, Block_Size>>> >*/
     	if (tid == 0) { if(fabsf(tdata[0])>EPS) *epsil=0.01*sdata[0]/tdata[0];	else *epsil=0.0f; }
 }
 
-__global__ void cuda_cal_vtmp(float *vtmp, float *vv, float *cg, float *epsil, int nz, int nx)
+__global__ void cuda_cal_vtmp(float *vtmp, float *vv, float *cg, float epsil, int nz, int nx)
 /*< calculate temporary velocity >*/ 
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	if (i1<nz && i2<nx)	vtmp[id]=vv[id]+(*epsil)*cg[id];
+	if (i1<nz && i2<nx) vtmp[id]=vv[id]+epsil*cg[id];
 }
 
 __global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, float *dobs, float *derr, int ng)
@@ -480,16 +450,18 @@ __global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, f
 	alpha2: denominator; length=ng >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	float a=(id<ng)?dcaltmp[id]:0.0f;//f(mk+epsil*cg)
-	float b=(id<ng)?dobs[id]:0.0f;
-	float c=(id<ng)?derr[id]:0.0f;
-	float d=b+c;// since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c;
-	float e=a-d;// f(mk+epsil*cg)-f(mk)
-	if(id<ng) { alpha1[id]-=e*c; alpha2[id]+=e*e; }
+	float a,b;
+	if(id<ng)
+	{
+		a=dobs[id]+derr[id];/* since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c; */ 
+		b=dcaltmp[id]-a;/* f(mk+epsil*cg)-f(mk) */ 
+		alpha1[id]-=b*derr[id]; 
+		alpha2[id]+=b*b; 
+	}
 }
 
 
-__global__ void cuda_cal_alpha(float *alpha, float *alpha1, float *alpha2, float *epsil, int ng)
+__global__ void cuda_cal_alpha(float *alpha, float *alpha1, float *alpha2, float epsil, int ng)
 /*< calculate searched stepsize (alpha) according to Taratola's method
 configuration requirement: <<<1, Block_Size>>> >*/ 
 {
@@ -525,17 +497,17 @@ configuration requirement: <<<1, Block_Size>>> >*/
 		if (blockDim.x >=   2) { sdata[tid] += sdata[tid +  1]; tdata[tid] += tdata[tid +  1];}
     	}
      
-    	if (tid == 0) { if(fabsf(tdata[0])>EPS) *alpha=(*epsil)*sdata[0]/tdata[0];	else *alpha=0.0f;}
+    	if (tid == 0) { if(fabsf(tdata[0])>EPS) *alpha=epsil*sdata[0]/tdata[0];	else *alpha=0.0f;}
 }
 
 
-__global__ void cuda_update_vel(float *vv, float *cg, float *alpha, int nz, int nx)
+__global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int nx)
 /*< update velocity model with obtained stepsize (alpha) >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	if (i1<nz && i2<nx) vv[id]=vv[id]+(*alpha)*cg[id];
+	if (i1<nz && i2<nx) vv[id]=vv[id]+alpha*cg[id];
 }
 
 
