@@ -25,29 +25,30 @@ Plot('smvel',
 
 Result('all','vel smvel','TwoRows')
 
-
 Flow('shots','vel',
 	'''
-	sfgenshots csdgather=n fm=10 dt=0.001 ns=20 ng=737 nt=3000
+	sfgenshots csdgather=n fm=10 amp=1 dt=0.0015 ns=21 ng=767 nt=3900
 	sxbeg=15 szbeg=1 jsx=37 jsz=0 gxbeg=0 gzbeg=1 jgx=1 jgz=0
 	''')
 Result('shots','grey color=g ')
-Flow('vsnaps grads objs','smvel shots',
+
+
+Flow('vsnaps grads objs illums','smvel shots',
 	'''
 	sfgpufwi shots=${SOURCES[1]} grads=${TARGETS[1]} 
-	objs=${TARGETS[2]} niter=20
+	objs=${TARGETS[2]} illums=${TARGETS[3]} niter=10
 	''')
 Result('vsnaps',
 	'''
 	grey title="Updated velocity" allpos=y color=j pclip=100 
-	scalebar=y bartype=y barlabel="V" barunit="m/s" screenratio=0.45
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
 	''')
 
-Result('grads','grey title="Updated gradient"')
+Result('grads','grey title="Updated gradient" scalebar=y color=j ')
+Result('illums','grey title="illumination" scalebar=y color=j pclip=95')
 
 Result('objs',
 	'''
-	put n2=1|
 	graph title="Misfit function" dash=0 plotfat=5 label1=Iteration 
 	label2=Objective grid=y yreverse=n
 	''')
