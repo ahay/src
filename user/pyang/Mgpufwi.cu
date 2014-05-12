@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 	int is, it, iter, distx, distz, csd;
 	float dtx, dtz, mstimer,amp, obj, beta, epsil, alpha, obj1;
 	float *objval, *ptr=NULL;
-	sf_file vinit, shots, vupdates, grads, objs;
+	sf_file vinit, shots, vupdates, grads, objs, illums;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -213,7 +213,8 @@ int main(int argc, char *argv[])
 	shots=sf_input("shots"); /* recorded shots from exact velocity model */
     	vupdates=sf_output("out"); /* updated velocity in iterations */ 
     	grads=sf_output("grads");  /* gradient in iterations */ 
-	objs=sf_output("objs");/* values of objective function in iteration */
+	objs=sf_output("objs");/* values of objective function in iterations */
+	illums=sf_output("illums");/* source illumination in iterations */
 
     	/* get parameters from velocity model and recorded shots */
 	if (!sf_getbool("verb",&verb)) verb=true;
@@ -255,7 +256,6 @@ int main(int argc, char *argv[])
     	if (!sf_getint("niter",&niter))   niter=100;
 	/* number of iterations */
 
-
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);
 	sf_putfloat(vupdates,"d1",dz);
@@ -274,6 +274,11 @@ int main(int argc, char *argv[])
 	sf_putstring(grads,"label3","Iteration");
 	sf_putint(objs,"n1",niter);
 	sf_putint(objs,"n2",1);
+	sf_putint(illums,"n1",nz1);	
+	sf_putint(illums,"n2",nx1);
+	sf_putfloat(illums,"d1",dz);
+	sf_putfloat(illums,"d2",dx);
+	sf_putint(illums,"n3",niter);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -364,9 +369,8 @@ int main(int argc, char *argv[])
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-
-				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
-				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				/* calculate residual wavefield*/
+				cuda_cal_residual<<<(ng+511)/512, 512>>>(&d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], d_sp0, d_gxz, ng);
 			}
 
 			wavefield_init(d_gp0, d_gp1, nz*nx);
@@ -378,7 +382,7 @@ int main(int argc, char *argv[])
 				cuda_step_backward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, d_lap, d_sillum, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 
-				/* receiver wavefield extrapolation */
+				/* back propagate residual wavefield */
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
@@ -389,25 +393,32 @@ int main(int argc, char *argv[])
 		}
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
 		cudaMemcpy(&obj, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(vv, d_sillum, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
+		window(v0, vv, nz, nx, nz1, nx1);
+		sf_floatwrite(v0, nz1*nx1, illums);
 
 		if(verb) {
 			if(iter==0) { 
 				obj1=obj;  sf_warning("obj1=%f",obj1);
 				if(obj1<EPS) {sf_warning("converged!");exit(1);}
-				objval[iter]=1.;
+				objval[iter]=1.0;
 			}else objval[iter]=obj/obj1;
 			sf_warning("obj=%f",objval[iter]);
 		}
 
 		/* scale the gradient to the right value and save it */
 		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_sillum, nz, nx);
+		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_sillum, d_bell, nz, nx);
+		cuda_bell_smoothx<<<dimg,dimb>>>(d_sillum, d_g1, d_bell, nz, nx);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
 
+		/* calculate the stepsize of conjugate gradient beta*/
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
 
+		/* calculate conjugate gradient, algorithm restart incorporated by beta */
 		cuda_cal_conjgrad<<<dimg, dimb>>>(d_g1, d_cg, beta, nz, nx);
 		cuda_cal_epsilon<<<1, Block_Size>>>(d_vv, d_cg, &d_pars[2], nz*nx);
 		cudaMemcpy(&epsil, &d_pars[2], sizeof(float), cudaMemcpyDeviceToHost);
@@ -415,7 +426,8 @@ int main(int argc, char *argv[])
 		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemset(d_alpha1, 0, ng*sizeof(float));/* numerator of alpha */
 		cudaMemset(d_alpha2, 0, ng*sizeof(float));/* denominator of alpha */
-		cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, epsil, nz, nx);
+		cudaMemcpy(d_vtmp, d_vv, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);	
+		cuda_update_vel<<<dimg,dimb>>>(d_vtmp, d_cg, epsil, nz, nx);	
 		for(is=0; is<ns; is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
@@ -432,8 +444,7 @@ int main(int argc, char *argv[])
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vtmp, dtz, dtx, nz, nx);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
-				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1,d_alpha2,d_sp0,&d_dobs[it*ng], &d_derr[is*ng*nt+it*ng],d_gxz, ng);
 			}
 		}
 		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, epsil, ng);
@@ -449,7 +460,7 @@ int main(int argc, char *argv[])
   		cudaEventElapsedTime(&mstimer, start, stop);
 		if(verb) 
 		{			
-			sf_warning("beta=%f epsil=%f alpha=%f",beta, epsil, alpha);
+			sf_warning("beta=%f  epsil=%f  alpha=%f",beta, epsil, alpha);
 			sf_warning("iteration %d finished: %f (s)",iter+1, mstimer*1e-3);
 		}
 	}
