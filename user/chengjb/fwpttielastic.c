@@ -71,7 +71,7 @@ void fwpttielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	}
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,j,l)			\
+#pragma omp parallel for private(i,j,l,im,jm,vp2,vs2,ep,de,vpx2,vpn2, the, sinthe,costhe,cos2,sin2,sin2a,cos_sin, px,pxz,qxz,qx,px1, qxz1, qx1, pxz1,hpx,hqx,hpz,hqz) \
     schedule(dynamic)					\
     shared(p1,p2,p3,q1,q2,q3,				\
 	   px_tmp,qx_tmp,				\
@@ -199,7 +199,7 @@ void fwpttielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 		}
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,j,k,l)				\
+#pragma omp parallel for private(i,j,k,l,hpy, hqy, hry, hpx, hqx, hrx, hpz, hqz, hrz, px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2, qxy1, rxz1, pxy1, ryz1, pxz1, qyz1) \
     schedule(dynamic)							\
     shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,					\
 	   px_tmp,pz_tmp,						\
@@ -380,7 +380,7 @@ void fwpttielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 		}
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,j,k,l)				\
+#pragma omp parallel for private(i,j,k,l,vp2,vs2,ep,de,ga,vpn2, sinthe,costhe,sinphi,cosphi, a11, a33, a44, a66, a11a66, a13a44, px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2) \
     schedule(dynamic)							\
     shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,					\
 	   px_tmp,qy_tmp,rz_tmp,					\
