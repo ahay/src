@@ -133,7 +133,7 @@ void device_alloc()
 	cudaMalloc(&d_wlt, nt*sizeof(float));
 	cudaMalloc(&d_sxz, nt*sizeof(float));
 	cudaMalloc(&d_gxz, ng*sizeof(float));
-	cudaMalloc(&d_bndr, nt*2*(nz+nx)*sizeof(float));
+	cudaMalloc(&d_bndr, nt*(2*nz+nx)*sizeof(float));
 	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
 	cudaMalloc(&d_dcal, ng*sizeof(float));
 	cudaMalloc(&d_derr, ns*ng*nt*sizeof(float));
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
-	cudaMemset(d_bndr, 0, nt*2*(nz+nx)*sizeof(float));
+	cudaMemset(d_bndr, 0, nt*(2*nz+nx)*sizeof(float));
 	cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
 	cudaMemset(d_dcal, 0, ng*sizeof(float));
 	cudaMemset(d_derr, 0, ns*ng*nt*sizeof(float));
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
-				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
+				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 				/* calculate residual wavefield*/
 				cuda_cal_residual<<<(ng+511)/512, 512>>>(&d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], d_sp0, d_gxz, ng);
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
 			{
 				/* backward reconstruct the source wavefield with saved boundaries */
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, false);
+				cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
 				cuda_step_backward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, d_lap, d_sillum, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 

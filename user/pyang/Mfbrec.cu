@@ -104,7 +104,7 @@ void device_alloc()
 	cudaMalloc(&d_sxz, nt*sizeof(float));
 	cudaMalloc(&d_gxz, ng*sizeof(float));
 	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
-	cudaMalloc(&d_bndr, nt*2*(nx+nz)*sizeof(float));
+	cudaMalloc(&d_bndr, nt*(2*nx+nz)*sizeof(float));
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 			cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp0, nz, nx, false);
+			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, false);
 
 			if(it>=ft)
 			{
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 				sf_floatwrite(v0,nz1*nx1,Fw2);
 			}
 
-			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*2*(nz+nx)], d_sp1, nz, nx, true);
+			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, true);
 			cuda_step_backward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, d_lap, d_sillum, dtz, dtx, nz, nx);
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
