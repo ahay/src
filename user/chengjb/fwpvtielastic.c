@@ -68,7 +68,7 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
     zero2float(qx_tmp,nzpad,nxpad);	
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,j,l)		\
+#pragma omp parallel for private(i,j,l,lm)	\
     schedule(dynamic)				\
     shared(p2,q2,px_tmp,qx_tmp,coeff_1dx,dx)
 #endif
@@ -84,7 +84,7 @@ void fwpvtielastic(float dt2, float** p1,float** p2,float** p3, float** q1,float
 	}
 
 #ifdef _OPENMP
-#pragma omp parallel for private(i,j,l)		\
+#pragma omp parallel for private(i,j,l,im,jm,lm,vp2,vs2,ep,de,vpx2,vpn2,coef,px,pz,qx,qz,pxz,qxz) \
     schedule(dynamic)				\
     shared(p1,p2,p3,q1,q2,q3,px_tmp,qx_tmp,	\
 	   coeff_1dx,coeff_1dz,			\
@@ -172,7 +172,7 @@ void fwpvtielastic3d(float dt2,float***p1,float***p2,float***p3,float***q1,float
 		}
 
 #ifdef _OPENMP
-#pragma omp parallel for private(k,i,j,l)			\
+#pragma omp parallel for private(k,i,j,l,vp2,vs2,ep,de,ga,vpn2,a11, a33, a44, a66, a11a66, a13a44,px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2, pxy, pxz, qxy, qyz, rxz, ryz, il, kl, jl, lm) \
     schedule(dynamic)						\
     shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,px_tmp,qy_tmp,rz_tmp,	\
 	   coeff_1dx,coeff_1dy,coeff_1dz,			\
@@ -312,7 +312,7 @@ void fwpvtielastic3dhomo(float dt2,float***p1,float***p2,float***p3,float***q1,f
 		}
 
 #ifdef _OPENMP
-#pragma omp parallel for private(k,i,j,l)			\
+#pragma omp parallel for private(k,i,j,l,vp2,vs2,ep,de,ga,vpn2,a11, a33, a44, a66, a11a66, a13a44, px2, py2, pz2, qx2, qy2, qz2, rx2, ry2, rz2, pxy, pxz, qxy, qyz, rxz, ryz, kl, il, jl, lm) \
     schedule(dynamic)						\
     shared(p1,p2,p3,q1,q2,q3,r1,r2,r3,px_tmp,qy_tmp,rz_tmp,	\
 	   coeff_1dx,coeff_1dy,coeff_1dz,			\
