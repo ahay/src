@@ -31,7 +31,7 @@ namespace TSOpt {
 	  size_t pos = hdr.find_last_of(".");
 	  if (pos==std::string::npos || pos >= hdr.size()-1) {
 	    RVLException e;
-	    e<<"Error: IWaveSpace constructor - filename "<<hdr<<" has no  suffix\n";
+	    e<<"Error: IWaveSpace constructor - filename "<<hdr<<" has no suffix\n";
 	    throw e;
 	  }
 	  size_t net = hdr.size()-pos-1;
