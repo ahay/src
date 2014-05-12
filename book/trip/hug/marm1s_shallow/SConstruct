@@ -14,21 +14,30 @@ from rsf.proj import *
 #          CWPROOT         = os.getenv('CWPROOT')
 #          ...
 #          sunull          = os.path.join(CWPROOT,'bin/sunull')
-CWPROOT         = os.getenv('CWPROOT')
-sunull          = os.path.join(CWPROOT,'bin/sunull')
-sushw           = os.path.join(CWPROOT,'bin/sushw')
-suchw           = os.path.join(CWPROOT,'bin/suchw')
-sugain          = os.path.join(CWPROOT,'bin/sugain')
-suwind          = os.path.join(CWPROOT,'bin/suwind')
-suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
-supsimage       = os.path.join(CWPROOT,'bin/supsimage')
-RSFSRC          = os.getenv('RSFSRC')
-towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
-acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
-acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcgne.x')
-acdlbfgs        = os.path.join(RSFSRC,'trip/iwave/acd/main/acdlbfgs.x')
-acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
-acdadjtest      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdadjtest.x')
+#CWPROOT         = os.getenv('CWPROOT')
+#sunull          = os.path.join(CWPROOT,'bin/sunull')
+#sushw           = os.path.join(CWPROOT,'bin/sushw')
+#suchw           = os.path.join(CWPROOT,'bin/suchw')
+#sugain          = os.path.join(CWPROOT,'bin/sugain')
+#suwind          = os.path.join(CWPROOT,'bin/suwind')
+#suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+#supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+
+if os.getenv('IWAVE'): # local version
+    RSFSRC          = os.getenv('RSFSRC')
+    towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
+    acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
+    acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcgne.x')
+    acdlbfgs        = os.path.join(RSFSRC,'trip/iwave/acd/main/acdlbfgs.x')
+    acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
+    acdadjtest      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdadjtest.x')
+else: # Madagascar version
+    towed_array     = 'towed_array'
+    acd             = 'acd'
+    acdcgne         = 'acdcgne'
+    acdlbfgs        = 'acdlbfgs'
+    acdiva          = 'acdiva'
+    acdadjtest      = 'acdadjtest'
 
 fetches = {
     'line100m.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
@@ -75,123 +84,101 @@ for foo in ['line100m', 'hdr6km', 'hdr2shot']:
          ''',
          stdin=0, stdout=0)
 
+oneshot = '''
+/bin/cp ${SOURCES[2]} $TARGET && %s 
+deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+csq=${SOURCES[1]} source=${SOURCES[0]} data=$TARGET 
+''' % acd
+
 # simulation - one shot
-Flow('shot6km.su',['wavelet_hdr6km.su','csq24.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6km.su && ' + 
-       	acd  + ' ' +  
-	'''
-	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
-	csq=../csq24.rsf source=../wavelet_hdr6km.su 
-        data=../shot6km.su 
-	''',
-	stdin=0,stdout=0, workdir='shot6km.work')
+Flow('shot6km.su',['wavelet_hdr6km.su','csq24.rsf','hdr6km.su'],
+     oneshot,stdin=0,stdout=0, workdir='shot6km.work')
 
 # simulation - one shot, smoothed velo
-Flow('shot6kmsm.su',['wavelet_hdr6km.su','csq24sm.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmsm.su && ' + 
-        acd  + ' ' +  
-	'''
-	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
-	csq=../csq24sm.rsf source=../wavelet_hdr6km.su 
-        data=../shot6kmsm.su 
-	''',
-	stdin=0,stdout=0, workdir='shot6kmsm.work')
+Flow('shot6kmsm.su',['wavelet_hdr6km.su','csq24sm.rsf','hdr6km.su'],
+     oneshot,stdin=0,stdout=0, workdir='shot6kmsm.work')
 
 # simulation - one shot, smoothed velo
-Flow('shot6kmhom.su',['wavelet_hdr6km.su','csq24hom.rsf'],
-        '/bin/cp ../hdr6km.su ../shot6kmhom.su && ' + 
-        acd  + ' ' +  
-	'''
-	deriv=0 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
-	csq=../csq24hom.rsf source=../wavelet_hdr6km.su 
-        data=../shot6kmhom.su 
-	''',
-	stdin=0,stdout=0, workdir='shot6kmhom.work')
+Flow('shot6kmhom.su',['wavelet_hdr6km.su','csq24hom.rsf','hdr6km.su'],
+     oneshot,stdin=0,stdout=0, workdir='shot6kmhom.work')
 
 # Born simulation - one shot
-Flow('born6km.su',['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf'],
-      '/bin/cp ../hdr6km.su ../born6km.su && ' +
-      acd  + ' ' +  
-      '''
-      deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
-      csq=../csq24sm.rsf csq_d1=../dcsq24.rsf source=../wavelet_hdr6km.su 
-      data=../born6km.su
-      ''',
-      stdin=0,stdout=0,workdir='born6km.work')
+Flow('born6km.su',['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf','hdr6km.su'],
+     '''
+     /bin/cp ${SOURCES[3]} $TARGET && %s
+     deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 
+     csq=${SOURCES[1]} csq_d1=${SOURCES[2]} source=${SOURCES[0]} 
+     data=$TARGET
+     ''' % acd,stdin=0,stdout=0,workdir='born6km.work')
 
 # Born inversion - one shot, mute
-t=Flow(['icsq6km.rsf', 'icsq6km_est.su', 'icsq6km_res.su'], ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
-        'sfadd < ../csq24.rsf > ../icsq6km.rsf scale=0.0 && ' +
-        acdcgne  + ' ' +  
-	'''
-	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
-	csq=../csq24.rsf rcsq=../csq24sm.rsf 
-	icsq=../icsq6km.rsf source=../wavelet_hdr6km.su 
-        data=../born6km.su outfile=cgne.out 
-	ResidualTol = 0.01 GradientTol = 0.01
-        MaxIter = 20 dataest = ../icsq6km_est.su datares = ../icsq6km_res.su
-	datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
-	''',
-	stdin=0,stdout=0, workdir='icsq6km.work')
+Flow(['icsq6km.rsf', 'icsq6km_est.su', 'icsq6km_res.su'], 
+     ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf','csq24.rsf'],
+     '''
+     sfmath < ${SOURCES[3]} > ${TARGETS[0]} output=0 && %s
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq=${SOURCES[3]} rcsq=${SOURCES[2]}
+     icsq=${TARGETS[0]} source=${SOURCES[1]} 
+     data=${SOURCES[0]} outfile=cgne.out 
+     ResidualTol = 0.01 GradientTol = 0.01
+     MaxIter = 20 dataest=${TARGETS[1]} datares=${TARGETS[2]}
+     datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
+     ''' % acdcgne,stdin=0,stdout=0, workdir='icsq6km.work')
 
 # Born inversion - one shot, homog bg, no mute
-t=Flow(['icsq6kmhomnm.rsf', 'icsq6kmhomnm_est.su', 'icsq6kmhomnm_res.su'],
-       ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
-        'sfadd < ../csq24.rsf > ../icsq6kmhomnm.rsf scale=0.0 && ' +
-        acdcgne  + ' ' +  
-	'''
-	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
-	csq=../csq24.rsf rcsq=../csq24hom.rsf 
-	icsq=../icsq6kmhomnm.rsf source=../wavelet_hdr6km.su 
-        data=../born6km.su outfile=cgne.out 
-	ResidualTol = 0.01 GradientTol = 0.01
-        MaxIter = 20 dataest = ../icsq6kmhomnm_est.su datares = ../icsq6kmhomnm_res.su
-	datamut=mut.su mute_slope=0.0 mute_zotime=0 mute_width=200
-	''',
-	stdin=0,stdout=0, workdir='icsq6kmhomnm.work')
+Flow(['icsq6kmhomnm.rsf', 'icsq6kmhomnm_est.su', 'icsq6kmhomnm_res.su'],
+     ['born6km.su', 'wavelet_hdr6km.su', 'csq24hom.rsf','csq24.rsf'],
+     '''
+     sfmath < ${SOURCES[3]} > ${TARGETS[0]} output=0 && %s
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq=${SOURCES[3]} rcsq=${SOURCES[2]}
+     icsq=${TARGETS[0]} source=${SOURCES[1]} 
+     data=${SOURCES[0]} outfile=cgne.out 
+     ResidualTol = 0.01 GradientTol = 0.01
+     MaxIter = 20 dataest=${TARGETS[1]} datares=${TARGETS[2]}
+     datamut=mut.su mute_slope=0.0 mute_zotime=0 mute_width=200
+     ''' % acdcgne,stdin=0,stdout=0, workdir='icsq6kmhomnm.work')
 
 # Born inversion - one shot, homog bg, mute
-t=Flow(['icsq6kmhom.rsf', 'icsq6kmhom_mut.su', 'icsq6kmhom_est.su', 'icsq6kmhom_res.su'],
-       ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf'],
-        'sfadd < ../csq24.rsf > ../icsq6kmhom.rsf scale=0.0 && ' +
-        acdcgne  + ' ' +  
-	'''
-	order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
-	csq=../csq24.rsf rcsq=../csq24hom.rsf 
-	icsq=../icsq6kmhom.rsf source=../wavelet_hdr6km.su 
-        data=../born6km.su outfile=cgne.out 
-	ResidualTol = 0.01 GradientTol = 0.01
-        MaxIter = 20 dataest = ../icsq6kmhom_est.su datares = ../icsq6kmhom_res.su
-	datamut=../icsq6kmhom_mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
-	''',
-	stdin=0,stdout=0, workdir='icsq6kmhom.work')
+Flow(['icsq6kmhom.rsf', 'icsq6kmhom_mut.su', 'icsq6kmhom_est.su', 'icsq6kmhom_res.su'],
+     ['born6km.su', 'wavelet_hdr6km.su', 'csq24hom.rsf','csq24.rsf'],
+     '''
+     sfmath < ${SOURCES[3]} > ${TARGETS[0]} output=0 && %s
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq=${SOURCES[3]} rcsq=${SOURCES[2]}
+     icsq=${TARGETS[0]} source=${SOURCES[1]} 
+     data=${SOURCES[0]} outfile=cgne.out 
+     ResidualTol = 0.01 GradientTol = 0.01
+     MaxIter = 20 dataest=${TARGETS[2]} datares=${TARGETS[3]}
+     datamut=${TARGETS[1]} mute_slope=0.7 mute_zotime=0 mute_width=200
+     ''' % acdcgne,stdin=0,stdout=0, workdir='icsq6kmhomnm.work')
 
-Result('csq24', 'csq24', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\_" unit="m\_/ms\_" | grey color=c mean=y title="Marmousi c\^2\_" scalebar=y barreverse=y')
+Result('csq24', 'csq24', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^" unit="m\^2\_/ms\^2\_" | grey color=c mean=y title="Marmousi c\^2\_" scalebar=y barreverse=y')
 
-Result('csq24sm', 'csq24sm', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\_" unit="m\_/ms\_" | grey color=c mean=y title="Marmousi c\^2\_ smoothed" scalebar=y barreverse=y')
+Result('csq24sm', 'csq24sm', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\^" unit="m^2\_/ms\^2\_" | grey color=c mean=y title="Marmousi c\^2\_ smoothed" scalebar=y barreverse=y')
 
 Result('wavelet','wavelet_base.su', 'suread endian=0 read=data | put label1=Time label2=Pressure unit1=s unit2=GPa title="Gaussian deriv fpeak=6 Hz" unit="GPa" |sfgraph')
 
 Result('shot6km','shot6km.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('shot6kmsm','shot6kmsm.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('shot6kmsm','shot6kmsm.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('shot6kmhom','shot6kmhom.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('shot6kmhom','shot6kmhom.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('born6km','born6km.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('born6km','born6km.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6kmhom_mut','icsq6kmhom_mut.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6kmhom_mut','icsq6kmhom_mut.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6kmhom_est','icsq6kmhom_est.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6kmhom_est','icsq6kmhom_est.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6kmhom_res','icsq6kmhom_res.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6kmhom_res','icsq6kmhom_res.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6kmhomnm_est','icsq6kmhomnm_est.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6kmhomnm_est','icsq6kmhomnm_est.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6kmhomnm_res','icsq6kmhomnm_res.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6kmhomnm_res','icsq6kmhomnm_res.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6km_est','icsq6km_est.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6km_est','icsq6km_est.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
-Result('icsq6km_res','icsq6km_res.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\_=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
+Result('icsq6km_res','icsq6km_res.su', 'suread endian=0 read=data | put label1=Time label2=Distance d2=0.025 o2=0 unit1=s unit2=km title="x\_s\^=6 km" label="Pressure" unit="GPa" | grey scalebar=y barreverse=y')
 
 End()
