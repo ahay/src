@@ -1,4 +1,8 @@
-/* Multidimensional convolution and deconvolution by helix transform. */
+/* Multidimensional convolution and deconvolution by helix transform. 
+
+May 2014 program of the month:
+http://ahay.org/rsflog/index.php?/archives/387-Program-of-the-math-sfhelicon.html
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 

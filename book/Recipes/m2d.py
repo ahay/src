@@ -249,7 +249,7 @@ def iw(Fwf, Frec, Fsrc, Fvel, Fden, par, prefix, suffix):
         ''' %(par['iwdt']*par['snpi'],suiwrec),stdin=0,stdout=-1)
 
     # --- IWAVE modeling --- #
-    Flow([Frec,suiwrec],iwpar,
+    Flow([Frec,suiwrec,'movie_p'],iwpar,
          '''
          asg par=$SOURCE &&
          suread < ${TARGETS[1]} read=data endian=0
