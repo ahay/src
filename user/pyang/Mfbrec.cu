@@ -52,7 +52,7 @@ static float dx, dz, fm, dt;
 float 	*v0, *dobs, *vv;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_sillum, *d_dobs, *d_bndr;
+float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_dobs, *d_bndr;
 
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
@@ -99,7 +99,6 @@ void device_alloc()
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
 	cudaMalloc(&d_lap, nz*nx*sizeof(float));
-	cudaMalloc(&d_sillum, nz*nx*sizeof(float));
 	cudaMalloc(&d_wlt, nt*sizeof(float));
 	cudaMalloc(&d_sxz, nt*sizeof(float));
 	cudaMalloc(&d_gxz, ng*sizeof(float));
@@ -119,7 +118,6 @@ void device_free()
 	cudaFree(d_sp0);
 	cudaFree(d_sp1);
 	cudaFree(d_lap);
-	cudaFree(d_sillum);
 	cudaFree(d_wlt);
 	cudaFree(d_sxz);
 	cudaFree(d_gxz);
@@ -218,7 +216,6 @@ int main(int argc, char *argv[])
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
-	cudaMemset(d_sillum,0,nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt,amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
 	{ printf("sources exceeds the computing zone!\n"); exit(1);}
@@ -249,7 +246,7 @@ int main(int argc, char *argv[])
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 			cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, false);
+			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 
 			if(it>=ft)
 			{
@@ -269,8 +266,8 @@ int main(int argc, char *argv[])
 				sf_floatwrite(v0,nz1*nx1,Fw2);
 			}
 
-			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, true);
-			cuda_step_backward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, d_lap, d_sillum, dtz, dtx, nz, nx);
+			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
+			cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
