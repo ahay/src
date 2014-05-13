@@ -57,7 +57,7 @@ Result('illums','grey title="illumination" scalebar=y color=j')
 
 Result('objs',
 	'''
-	graph title="Normalized Misfit" dash=0 plotfat=5 label1=Iteration 
+	graph title="Misfit function" dash=0 plotfat=5 label1=Iteration 
 	label2=Objective grid=y yreverse=n
 	''')
 
