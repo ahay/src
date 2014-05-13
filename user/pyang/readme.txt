@@ -100,14 +100,16 @@ An MPI version of this program is in preparation!
 11) 2D GPU-based full waveform inversion (FWI)
 Main:		Mgenshots.cu, Mfbrec.cu,Mgpufwi.cu
 Test file:	/book/xjtu/gpufwi/fbrec/SConstruct
-		/book/xjtu/gpufwi/genshots/SConstruct
+		/book/xjtu/gpufwi/syntest/SConstruct
+		/book/xjtu/gpufwi/marmtest/SConstruct
 NB: Mgenshots.cu is used to generate shots by forward modeling using
 the exact velocity model. We can use a starting model to do FWI by
 invoking Mgpufwi.cu. We are using boundary saving strategy in FWI. To 
 demonstrate that the modeled wavefield can be precisely reconstructed,
 we design the code Mfbrec.cu befere going to FWI. It is important to
 note that the top boundary is free surface boundary condition (no ABC 
-applied here!).
+applied here!). /book/xjtu/gpufwi/syntest/SConstruct is a small and 
+quick example to show the correctness of the FWI code. 
 
 
 ===================================================================

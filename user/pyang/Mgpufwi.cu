@@ -263,8 +263,10 @@ int main(int argc, char *argv[])
 	sf_putstring(vupdates,"label1","Depth");
 	sf_putstring(vupdates,"label2","Distance");
 	sf_putstring(vupdates,"label3","Iteration");
+	sf_putint(vupdates,"n3",niter);
 	sf_putint(grads,"n1",nz1);	
 	sf_putint(grads,"n2",nx1);
+	sf_putint(grads,"n3",niter);
 	sf_putfloat(grads,"d1",dz);
 	sf_putfloat(grads,"d2",dx);
 	sf_putstring(grads,"label1","Depth");
@@ -274,6 +276,9 @@ int main(int argc, char *argv[])
 	sf_putint(illums,"n2",nx1);
 	sf_putfloat(illums,"d1",dz);
 	sf_putfloat(illums,"d2",dx);
+	sf_putint(illums,"n3",niter);
+	sf_putint(objs,"n1",niter);
+	sf_putint(objs,"n2",1);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -334,7 +339,7 @@ int main(int argc, char *argv[])
 	cudaMemset(d_alpha1, 0, ng*sizeof(float));
 	cudaMemset(d_alpha2, 0, ng*sizeof(float));
 	cudaMemset(d_vtmp, 0, nz*nx*sizeof(float));
-	//cuda_init_bell<<<1,2*nbell+1>>>(d_bell);
+	cuda_init_bell<<<1,2*nbell+1>>>(d_bell);
 	
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
@@ -387,14 +392,17 @@ int main(int argc, char *argv[])
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
 		cudaMemcpy(&obj, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
 
+		cudaMemcpy(vv, d_illum, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
+		window(v0, vv, nz, nx, nz1, nx1);
+		sf_floatwrite(v0, nz1*nx1, illums);
+
 		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
+		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, d_bell, nz, nx);
+		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, d_bell, nz, nx);
 
-		cudaMemcpy(vv, d_illum, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
-		window(v0, vv, nz, nx, nz1, nx1);
-		sf_floatwrite(v0, nz1*nx1, illums);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
@@ -448,11 +456,6 @@ int main(int argc, char *argv[])
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
-	sf_putint(vupdates,"n3",iter);
-	sf_putint(grads,"n3",iter);
-	sf_putint(illums,"n3",iter);
-	sf_putint(objs,"n1",iter);
-	sf_putint(objs,"n2",1);
 	sf_floatwrite(objval,iter,objs);
 	sf_fileclose(shots);
 

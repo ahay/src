@@ -482,3 +482,35 @@ __global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int n
 }
 
 
+
+__global__ void cuda_init_bell(float *bell)
+/*< initialize 1D bell function:<<<1, 2*nbell+1>>> >*/
+{
+    	int id=threadIdx.x;
+	bell[id]=expf(-(id-nbell)*(id-nbell)/(0.5*nbell));
+}
+
+
+__global__ void cuda_bell_smoothz(float *g, float *smg, float *bell, int nz, int nx)
+/*< smoothing with gaussian function >*/
+{
+	int i;
+	int i1=threadIdx.x+blockIdx.x*blockDim.x;
+	int i2=threadIdx.y+blockIdx.y*blockDim.x;
+	int id=i1+i2*nz;
+	float s=0;
+	for(i=-nbell; i<=nbell; i++) if(i1+i>=0 && i1+i<nz) s+=bell[i+nbell]*g[id+i];
+	if(i1<nz && i2<nx) smg[id]=s;
+}
+__global__ void cuda_bell_smoothx(float *g, float *smg, float *bell, int nz, int nx)
+/*< smoothing with gaussian function >*/
+{
+	int i;
+	int i1=threadIdx.x+blockIdx.x*blockDim.x;
+	int i2=threadIdx.y+blockIdx.y*blockDim.x;
+	int id=i1+i2*nz;
+	float s=0;
+	for(i=-nbell; i<=nbell; i++) if(i2+i>=0 && i2+i<nx) s+=bell[i+nbell]*g[id+nz*i];
+	if(i1<nz && i2<nx) smg[id]=s;
+}
+
