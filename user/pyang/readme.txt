@@ -14,6 +14,7 @@ Main:		Mpocs3d.c, Mfpocs2d.c, Mfpocs3d.c, Mpocs.c,
 Depends on:	fftn.c
 Test file: 	/book/xjtu/test/fpocs3d/SConstruct
 		/book/xjtu/test/fpocs2d/SConstruct
+		/book/xjtu/test/pocs5d/SConstruct
 Note: fpocs is a two-step version of POCS. You are able to test 
     sfpocs3d and sffpocs3d by changing the name of the
     program in /book/xjtu/test/fpocs3d/SConstruct. 
@@ -21,6 +22,9 @@ Note: fpocs is a two-step version of POCS. You are able to test
     POCS implemented in frequency domain (see sfpocs) data gives 
     much faster speed. It saves the storage and computational cost 
     of FFT. sfpocs can handle any dimensional data interpolation.
+    Thanks ot the data generation effort done by Sergey in the sript
+    of /book/xjtu/test/pocs5d/SConstruct as the validation.
+
 For more information on FPOCS, check the paper:
  Yang Pengliang, Gao Jinghuai, Chen Wenchao, "On analysis-based 
  two-step interpolation methods for randomly sampled seismic data"
