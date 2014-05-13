@@ -1,33 +1,33 @@
 from rsf.proj import *
 from decimal import *
 
-# --- User set --- #
+# --- User set example --- #
 
 # model
 
 model = {
-    'X':    2000,
-    'Z':    2000,
-    'T':    0.5,
+    'X':     2000,
+    'Z':     2000,
+    'T':     0.5,
     'SelT':  0.15,
-    'dx':   20.0,
-    'dz':   20.0,
+    'dx':    20.0,
+    'dz':    20.0,
     'snpintvl': 1.0,
     'size'    : 12,   # FD order
     'frqcut'  : 0.9,
     'pml'     : 30,
-    'vel'     : '1800+0.000002*x1*x1',#3715 4500 3.0+0.005*x1*x1
+    'vel'     : '1800+0.000002*x1*x1',
     'den'     : '2000'
 }
 # source & receiver
 srp = {
      'bgn'   : 0.15,     # s, time of maximum ricker
      'frq'   : 12.5,     # source domain frequence
-     'srcmms'  : 'y',      # point source
+     'srcmms'  : 'y',    # point source
      'inject': 'y',      # if y, inject; if n, Initiate conditon
-     'slx'   : 1000,   # source location (x), meter
-     'slz'   : 1000,   # source location (x), meter
-     'gdep'  : 800      # receiver location (z), meter
+     'slx'   : 1000,     # source location (x), meter
+     'slz'   : 1000,     # source location (x), meter
+     'gdep'  : 800       # receiver location (z), meter
      }
 
 # ------------------------------------------------------------------
