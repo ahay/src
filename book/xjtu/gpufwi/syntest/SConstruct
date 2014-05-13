@@ -5,10 +5,14 @@ nx=120
 dz=5	#unit: m
 dx=5	#unit: m
 
-Flow('vel','syn100x120.bin',
-	'''
-	sfbin2rsf n1=%d n2=%d d1=%g d2=%g 
-	'''%(nz,nx,dz,dx))
+Flow('layer1',None,'math output=1600 n1=30 n2=120 d1=5 d2=5')
+Flow('block1',None,'math output=1600 n1=40 n2=35 d1=5 d2=5')
+Flow('block2',None,'math output=1800 n1=40 n2=50 d1=5 d2=5')
+Flow('block3',None,'math output=1600 n1=40 n2=35 d1=5 d2=5')
+Flow('layer2','block1 block2 block3','cat axis=2 ${SOURCES[1:3]}')
+Flow('layer3',None,'math output=1600 n1=30 n2=120 d1=5 d2=5')
+
+Flow('vel','layer1 layer2 layer3','cat axis=1 ${SOURCES[1:3]}')
 Plot('vel',
 	'''
 	sfput label1=Depth unit1=m \
