@@ -11,6 +11,22 @@ Result('model',
        frame1=175 frame2=60 frame3=80 flat=n 
        ''')
 
+# 2D test
+
+french.get_zodata2d('data2d')
+
+Result('data2d','grey title="Zero Offset" ')
+
+Flow('fft2d','data2d','cosft sign2=1')
+
+Flow('vc2d','fft2d','vczo v0=0.0001 dv=400 nv=10',
+     split=[2,'omp'],reduce='cat axis=3')
+
+Flow('vel2d','data2d','spike mag=2000') 
+
+Flow('mig2d','vc2d vel2d',
+     'cosft sign3=-1 | slice pick=${SOURCES[1]}')
+
 # Zero-offset
 
 french.get_zodata('data')

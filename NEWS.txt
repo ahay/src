@@ -4,6 +4,9 @@
 
 To the reproducible documents collection:
 
+* tccs/sglowrank: Lowrank seismic wave extrapolation on a staggered
+  grid (Fang, Fomel, Du, and Hu)
+
 To SCons:
 
 To documentation:

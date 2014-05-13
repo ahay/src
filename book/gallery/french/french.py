@@ -12,6 +12,27 @@ def get_refl(refl):
          remap1 n1=161 o1=0 d1=51.325 | transp |
          remap1 n1=161 o1=0 d1=51.325 | transp
          ''')
+
+def get_zodata2d(data):
+    refl = data+'-refl'
+
+    get_refl(refl)
+    refl2 = refl+'2'
+    dipx2 = data+'-dip2'
+
+    Flow(refl2,refl,'window n2=1 f2=80')
+    Flow(dipx2,refl2,'smooth rect1=5 | deriv scale=y')
+
+    Flow(data,[refl2,dipx2],
+         '''
+         kirmod nt=601 dt=0.010265 vel=2000
+         dip=${SOURCES[1]} 
+         s0=0 ds=51.325 ns=161 verb=y
+         nh=1 h0=0 dh=51.325 |
+         window |
+         put label1=Time unit1=s
+         label2=North-South unit2=m
+         ''')
     
 def get_zodata(data):
     refl = data+'-refl'

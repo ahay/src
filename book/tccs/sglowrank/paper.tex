@@ -1,0 +1,348 @@
+\title{Lowrank seismic wave extrapolation on a staggered grid}
+\author{Gang Fang\footnotemark[1], Sergey Fomel\footnotemark[2], Qizhen Du\footnotemark[3], and Jingwei Hu\footnotemark[4]}
+
+\address{
+\footnotemark[1]School of Geosciences\\
+China University of Petroleum (East China)\\
+Qingdao, Shandong 266580, China \\ 
+fangg.geo@gmail.com; gangfang@utexas.edu\\
+\footnotemark[2]Bureau of Economic Geology, \\
+John A. and Katherine G. Jackson School of Geosciences \\
+The University of Texas at Austin \\
+University Station, Box X \\
+Austin, TX 78713-8972, USA \\
+sergey.fomel@beg.utexas.edu \\
+\footnotemark[3]School of Geosciences\\
+China University of Petroleum (East China)\\
+Qingdao, Shandong  266580, China \\ 
+multicomponent@163.com; duqizhen@upc.edu.cn\\
+\footnotemark[4]Institute for Computational Engineering and Sciences (ICES)\\
+The University of Texas at Austin\\
+201 East 24th St, Stop C0200, Austin, TX 78712, USA\\
+hu@ices.utexas.edu\\
+}
+
+
+\lefthead{Fang et al.}
+\righthead{Staggered grid lowrank methods}
+\footer{TCCS-7}
+
+\maketitle
+
+\begin{abstract}
+We propose a new spectral method and a new finite-difference method for seismic wave extrapolation in time. Using staggered temporal and spatial grids, we derive a wave extrapolation operator using a lowrank decomposition for a first-order system of wave equations and design the corresponding finite-difference scheme. The proposed methods extend previously proposed lowrank and lowrank finite-difference wave extrapolation methods from the cases of constant density to those of variable density. Dispersion analysis demonstrates that the proposed methods have high accuracy for a wide wavenumber range and significantly reduce the numerical dispersion. The method of manufactured solutions coupled with mesh refinement is used to verify each method and to compare numerical errors. 2-D synthetic examples demonstrate that the proposed method is highly accurate and stable. The proposed methods can be used for seismic modeling or reverse time migration.
+\end{abstract}
+
+
+\section{Introduction}
+
+Wave extrapolation in time is an essential part of seismic imaging, modeling, and full waveform inversion. Finite-difference methods \cite[]{etgen86, wu1996} and spectral methods \cite[]{tal,pseudo} are the two most popular and straightforward ways of implementing wave extrapolation in time. The finite-difference (FD) methods are highly efficient and easy to implement. However, the traditional FD methods are only conditionally stable and suffer from numerical dispersion \cite[]{kastner}. Thanks to advances in supercomputer technology, spectral methods have become feasible for large-scale problems. Compared with FD methods, spectral methods have superior accuracy and are able to suppress dispersion artifacts \cite[]{etgen09}.
+
+Several spectral methods have been developed for seismic wave extrapolation in variable-velocity media \cite[]{fowler2010,dux}. \cite{zhang07} and \cite{zhang09} proposed a one-step extrapolation algorithm, which is  derived from an optimized separable approximation (OSA). This algorithm formulates the two-way wave equation as a first-order partial differential equation in time without suffering from numerical instability or dispersion problems. \cite{yu} proposed a two-step extrapolation method that is based on a high-order differential operator, which allows for large time steps in extrapolation. However, the decomposition algorithm in OSA can be expensive, particularly in anisotropic media. \cite{fomellowrankgp} presented an approach to approximating the mixed-domain operator using a lowrank decomposition, which reduces computational cost by optimally selecting reference velocities and weights. \cite{songx}  developed a related method, Fourier finite-differences (FFD),  by cascading a Fourier transform operator and a finite-difference operator to form a chain operator. 
+
+In practice, first-order wave equations are often involved in handling wave extrapolation in media with both velocity and density variations. \cite{mast} provided a derivation of the $k$-space method for solving the ultrasonic wave equation. \cite{tabei} extended this method to solving coupled first-order differential equations for wave propagation, efficiently accounting for velocity and density variations. In the $k$-space method, dispersion errors from a second-order time integration operator are compensated by a modified spectral operator in the wavenumber domain. This correction is exact for a medium with constant velocity in particular. \cite{songffd} modified the $k$-space method with a mixed-domain operator and applied FFD to hand these operators. This method has highly accurate for variable velocity and density. 
+
+In the FD methods, the FD coefficients are conventionally determined through a Taylor-series expansion around the zero wavenumber \cite[]{dablain,kindelan}. Traditional FD methods are therefore particularly accurate for long-wavelength components. Several approaches have been proposed to improve the performance of FD method in practice. Implicit FD operators \cite[]{liuimp,chu12} can be used to achieve high numerical accuracy. Another way to control numerical errors is to use optimized FD operators \cite[]{geller2,chu09,liuomp}. \cite{songlfd} derived optimized coefficients of the FD operator from a lowrank approximation \cite[]{fomellowrankgp} of the space-wavenumber extrapolation matrix.To improve the accuracy and stability, the FD methods have been developed on a staggered grid \cite[]{madariaga,virieux1984,virieux1986,levander}. \cite{moczo} investigated the stability and grid dispersion in the 3D fourth-order staggered grid FD scheme. In the past years, the viscous wave modeling using staggered grid FD methods \cite[]{robertsson,bohlen,operto}have also been studied and reported.
+
+In this paper, we use modified staggered grid $k$-space method \cite[]{tabei,songffd} to handle the derivative operator in mixed-domain for variable velocity and density. We introduce lowrank decomposition \cite[]{fomellowrankgp} to approximate the modified k-space extrapolation operator and reduce the computational cost. Inspired by lowrank finite-differences \cite[]{songlfd}, we derive optimized finite-difference coefficients for coupled first-order wave-propagation equations using staggered spatial and temporal grids \cite[]{virieux1984,virieux1986,levander}. We apply dispersion analysis and use the method of manufactured solutions to evaluate the accuracy of the proposed methods. Numerical tests demonstrate that the proposed SGL(staggered grid lowrank) and SGLFD(staggered grid lowrank finite-differences) methods are highly accurate and applicable for variable velocity and density modeling and reverse time migration (RTM) in complicated models. Our implementation of the new methods and the numerical examples are based on \emph{Madagascar} software \cite[]{m8r} and can be reproduced using the latest version of \emph{Madagascar}.
+
+% ==========================================================
+% Theory
+% ==========================================================
+\section{Theory}
+
+
+\subsection{Second-order and first-order mixed-domain methods}
+
+
+We consider first-order acoustic wave equations for a medium of variable velocity and density. For a lossless 2-D medium,
+\begin{equation}
+\begin{array}{l}
+\label{eq:fowq}
+\displaystyle \rho(\mathbf{x})\frac{\partial\mathbf{u}(\mathbf{x},t)}{\partial t} = -\nabla p(\mathbf{x},t), \\
+\displaystyle \frac{1}{\rho(\mathbf{x})v^2(\mathbf{x})} \frac{\partial p(\mathbf{x},t)}{\partial t} = -\nabla \cdot \mathbf{u}(\mathbf{x},t),
+\end{array}
+\end{equation}
+where $\mathbf{u}(\mathbf{x},t)$ is acoustic particle velocity with components $u_x(\mathbf{x},t)$ and $u_z(\mathbf{x},t)$; $p(\mathbf{x},t)$ is the acoustic pressure; $\rho(\mathbf{x})$ is density of the medium; $v(\mathbf{x})$ is seismic wave velocity of the medium; and $\mathbf{x}=(x,z)$ denotes the space location in vector coordinate.
+
+The second-order wave equation corresponding to equation~\ref{eq:fowq} is 
+\begin{equation}
+\label{eq:second}
+\nabla\cdot \frac{1}{\rho(\mathbf{x})}\nabla p(\mathbf{x},t) - \frac{1}{\rho(\mathbf{x})v^2(\mathbf{x})}\frac{\partial^2 p(\mathbf{x},t)}{\partial t^2} = 0.
+\end{equation}
+In the case of homogeneous velocity and density, equation~\ref{eq:second} can be written in the spatial-frequency domain as 
+\begin{equation}
+\label{eq:eqk}
+\frac{\partial^2 \hat{p}(\mathbf{k},t)}{\partial t^2 } = -v^2_0\mathbf{k}^2\hat{p}(\mathbf{k},t),
+\end{equation}
+where $\hat{p}(\mathbf{k},t)$ is the 2-D spatial Fourier transform of $p(\mathbf{x},t)$. Equation~\ref{eq:eqk} has an analytical solution,
+\begin{equation}
+\label{eq:solution}
+\hat{p}(\mathbf{k}, t+\Delta t) = e^{\pm iv_0\left|\mathbf{k}\right|\Delta t}\hat{p}(\mathbf{k},t).
+\end{equation}
+Applying the second-order time-marching scheme leads to the k-space scheme \cite[]{tabei},
+\begin{equation}
+\label{eq:kspace}
+\begin{array}{c}
+\displaystyle \frac{\hat{p}(\mathbf{k},t+\Delta t)-2\hat{p}(\mathbf{k},t)+\hat{p}(\mathbf{k},t-\Delta t)}{\Delta t^2} \\
+= -(v_0\left|\mathbf{k}\right|)^2\mbox{sinc}^2(v_0\left|\mathbf{k}\right|\Delta t/2)\hat{p}(\mathbf{k},t),
+\end{array}
+\end{equation}  
+where $\mbox{sinc}(x)=\sin(x)/x$. In general, velocity and density vary in space. When both the gradient of velocity and the time step are small, replacing $v_0$ with $v(\mathbf{x})$ in equation~\ref{eq:kspace} provides a new approximation. Applying inverse Fourier transform to this approximation leads to the scheme
+\begin{equation}
+\label{eq:sinc}
+\begin{array}{c}
+\displaystyle \frac{p(\mathbf{x},t+\Delta t) -2p(\mathbf{x},t) +p(\mathbf{x},t-\Delta t)}{\Delta t^2} \\
+= -v^2(\mathbf{x})\mathbf{F}^{-1}\left[\left|\mathbf{k}\right|^2\mbox{sinc}^2(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2)\mathbf{F}\left[p(\mathbf{x},t)\right]\right],
+\end{array}
+\end{equation}
+where $\mathbf{F}$ denotes a spatial Fourier transform. The operator on the right-hand side of equation~\ref{eq:sinc} depends on both $\mathbf{x}$ and $\mathbf{k}$. Following \cite{tabei} we call it second-order $kx$-space operator, 
+\begin{equation}
+\label{eq:laplacect}
+\left[\nabla^{v(\mathbf{x})\Delta t}\right]^2 p(\mathbf{x},t)\equiv -\mathbf{F}^{-1}\left[\left|\mathbf{k}\right|^2\mbox{sinc}^2(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2)\mathbf{F}\left[p(\mathbf{x},t)\right]\right],
+\end{equation}
+where the operator $\left[\nabla^{v(\mathbf{x})\Delta t}\right]^2$ is analogous to the standard gradient operator, but it is a function of parameter $v(\mathbf{x})\Delta t$. Similar to the definition of the standard gradient operator, we can define
+\begin{equation}
+\label{eq:deflaplace}
+\left[\nabla^{v(\mathbf{x})\Delta t}\right]^2p(\mathbf{x},t) \equiv \left(\frac{\partial}{\partial^+x}\frac{\partial}{\partial^-x}+\frac{\partial}{\partial^+z}\frac{\partial}{\partial^-z}\right)p(\mathbf{x},t).
+\end{equation}
+\cite{tabei} suggested a factorization, which can factor their second-order $k$-space operator into parts associated with each spatial direction. This factorization can also be applied to $kx$-space operator by replacing constant velocity with variable velocity. The factored operators are called first-order $kx$-space operators: 
+\begin{equation}
+\label{eq:firstorder}
+\begin{array}{l}
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+x} \equiv \mathbf{F}^{-1}\left[ik_xe^{ik_x\Delta x/2}\mbox{sinc}(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2)\mathbf{F}[p(\mathbf{x},t)]\right], \\
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^-x} \equiv \mathbf{F}^{-1}\left[ik_xe^{-ik_x\Delta x/2}\mbox{sinc}(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2)\mathbf{F}[p(\mathbf{x},t)]\right], \\
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+z} \equiv \mathbf{F}^{-1}\left[ik_ze^{ik_z\Delta z/2}\mbox{sinc}(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2)\mathbf{F}[p(\mathbf{x},t)]\right], \\
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^-z} \equiv \mathbf{F}^{-1}\left[ik_ze^{-ik_z\Delta z/2}\mbox{sinc}(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2)\mathbf{F}[p(\mathbf{x},t)]\right]. \\
+\end{array}
+\end{equation}
+
+The spatial frequency components $k_x$ and $k_z$ are defined so that $k^2=k_x^2+k_z^2$. Application of the exponential coefficient in equation~\ref{eq:firstorder} requires the corresponding wavefield to be evaluated on grid points staggered by distance of $\Delta x/2$ along the positive or negative $x$ direction and $\Delta z/2$ along the positive or negative $z$ direction. The spatial staggering in equation~\ref{eq:firstorder} is implicitly incorporated into the spatial derivative by the shift property of the Fourier transform. Using operators in equation~\ref{eq:firstorder} within equation~\ref{eq:fowq} enables a new construction of spectral method. The first-order coupled equations for acoustic-wave extrapolation in variable velocity and density media with staggered spatial and temporal grids are therefore:
+\begin{equation}
+\label{eq:sg}
+\begin{array}{l}
+\displaystyle \frac{u_x(\mathbf{x}_1,t^+) - u_x(\mathbf{x}_1,t^-)}{\Delta t} = -\frac{1}{\rho(\mathbf{x}_1)}\frac{\partial p(\mathbf{x},t)}{\partial^+x}, \\
+\displaystyle \frac{u_z(\mathbf{x}_2,t^+) - u_z(\mathbf{x}_2,t^-)}{\Delta t} = -\frac{1}{\rho(\mathbf{x}_2)}\frac{\partial p(\mathbf{x},t)}{\partial^+z}, \\
+\displaystyle \frac{p(\mathbf{x},t+\Delta t)-p(\mathbf{x},t)}{\Delta t} = -\rho(\mathbf{x})v^2(\mathbf{x})(\frac{\partial u_x(\mathbf{x}_1,t^+)}{\partial^- x}+ \displaystyle \frac{\partial u_z(\mathbf{x}_2,t^+)}{\partial^- z}), 
+\end{array}
+\end{equation}
+where $\mathbf{x}_1\equiv(x+\Delta x/2, z)$, $\mathbf{x}_2\equiv(x, z+\Delta z/2)$, $t^+ \equiv t+\Delta t/2$, $t^- \equiv t-\Delta t/2$.
+
+The partial derivative operators in equation~\ref{eq:sg} are defined by equation~\ref{eq:firstorder}. Note that the ordering of $\partial/\partial^+x$ and $\partial/\partial^-x$ is arbitrary depending on the configuration of staggered grid. However, these operators should be used in pairs, such that the spatial shifting cancel out over any temporal interval length $\Delta t$. The spatial and temporal staggered grids used in equation~\ref{eq:sg} are analogous to staggered scheme employed in previous finite-difference methods\cite[]{madariaga, virieux1984, virieux1986}, which are know to increase accuracy and stability by halving spatial and time interval without increasing the number of computational points. Equation~\ref{eq:firstorder} can be solved with a localized Fourier transform \cite[]{wards2008}. However, this kind of solution has a high computational cost. \cite{songffd} proposed to apply FFD method to calculate the first-order $kx$-space operators in equation~\ref{eq:firstorder}, which can handle the variable velocity and density accurately and efficiently. Another possible ways to speed up the computation is to represent the extrapolation operator with a lowrank matrix.  
+
+
+\subsection{Lowrank approximation for first-order extrapolation operators}
+
+In this section, we apply lowrank decomposition to approximate the extrapolation   operator in equation~\ref{eq:firstorder}. As indicated by \cite{fomellowrank2010,fomellowrankgp}, the mixed-domain matrix in equation~\ref{eq:firstorder}, taking $\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+x}$ as an example,
+\begin{equation}
+\label{eq:operator}
+W_x(\mathbf{x}, \mathbf{k}) = k_x\mbox{sinc}(v(\mathbf{x})\left|\mathbf{k}\right|\Delta t/2),
+\end{equation}
+can be efficiently decomposed into a separated representation as follows:
+\begin{equation}
+\label{eq:wxplus}
+W_x(\mathbf{x}, \mathbf{k}) \approx \sum\limits_{m=1}^M\sum\limits_{n=1}^N W_x(\mathbf{x}, \mathbf{k}_m)a_{mn}W_x(\mathbf{x}_n, \mathbf{k}),
+\end{equation}
+where $W_x(\mathbf{x}, \mathbf{k}_m)$ is a submatrix of $W_x(\mathbf{x}, \mathbf{k})$ which consists of selected columns associated with $\mathbf{k}_m$; $W_x(\mathbf{x}_n,  \mathbf{k})$ is another submatrix that contains selected rows associated with $\mathbf{x}_n$; and $a_{nm}$ stands for middle matrix coefficients. The numerical construction of the separated representation in equation~\ref{eq:wxplus} follows the method of \cite{eng2009}.
+
+Using representation~\ref{eq:wxplus}, we can calculate $\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+x}$ using a small number of fast Fourier transforms (FFTs), because
+\begin{equation}
+\label{eq:firstorderx}
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+x} \approx \sum\limits_{m=1}^M \sum\limits_{n=1}^NW_x(\mathbf{x},\mathbf{k}_m)a_{mn}\mathbf{F}^{-1}\left[ie^{ik_x\Delta x/2}W_x(\mathbf{x}_n, \mathbf{k})\mathbf{F}\left[p(\mathbf{x},t)\right]\right].
+\end{equation}
+The same lowrank decomposition approach can be applied to the remaining three partial derivative operators in equation~\ref{eq:firstorder}. Evaluation of equation~\ref{eq:firstorderx} only needs $N$ inverse FFTs, whose computational cost is $O(NN_xlogN_x)$. However a straightforward application of equation~\ref{eq:firstorder} needs computational cost of $O(N^2_x)$, where $N_x$ is the total size of the space grid. $N$ is related to the rank of the decomposed mixed-domain matrix~\ref{eq:wxplus}, which is usually significantly smaller than $N_x$. Note that the number of FFTs $N$ also depends on the given error level of lowrank decomposition with a predetermined $\Delta t$. Thus a complex model or increasing the time interval size $\Delta t$ may increase the rank of the approximation matrix and correspondingly $N$. In the numerical examples in this paper, the values of rank are usually between $2$ and $4$. Lowrank decomposition saves cost in calculating equations~\ref{eq:firstorder} and~\ref{eq:sg}. We propose to apply it for seismic wave extrapolation in variable velocity and density media on a staggered grid. We call this method \emph{staggered grid lowrank}(SGL) method.  
+
+
+\subsection{Lowrank FD for first-order extrapolation operators}
+
+
+Approximation~\ref{eq:wxplus} can also be used to design accurate finite-difference schemes. Here we extend the lowrank finite-difference method \cite[]{songlfd} to first-order $kx$-space operators. Note that $W_x(\mathbf{x}_n,\mathbf{k})$ in equation~\ref{eq:firstorderx} is a matrix related only to wavenumber $\mathbf{k}$. It can be further decomposed as follows:
+\begin{equation}
+\label{eq:w2}
+\displaystyle W_x(\mathbf{x}_n,\mathbf{k}) \approx \sum\limits_{l=1}^LC(\mathbf{x}_n,\mathbf{\xi}_l)B(\mathbf{\xi}_l,\mathbf{k}), 
+\end{equation}
+where $B$ is an $L \times N_x$ matrix. Specifically, we can define $B(\mathbf{\xi}_l,\mathbf{k})$ to take the form of $\sin(\sum_{j=1}^3\xi_l^jk_j\Delta_j)$, in which $\xi_l^j$ is the $j$-th component of a $3$-D vector, $\mathbf{\xi}_l=(\xi_l^1,\xi_l^2,\xi_l^3)$, $k_j$ is the $j$-th component of wavenumber $\mathbf{k}$, $\Delta_j$ is the space grid size in the $j$-th direction, $j=1,2,3$ corresponds to $x,y,z$ direction in space. $C$ is the matrix product of $W_x$ and the pseudo-inverse of $B$. If we define
+\begin{equation}
+\label{eq:defG}
+\displaystyle G(\mathbf{x},l) = \sum\limits_{m=1}^M\sum\limits_{n=1}^NW_x(\mathbf{x},\mathbf{k}_m)a_{mn}C(\mathbf{x}_n,\mathbf{\xi}_l),
+\end{equation}
+then equation~\ref{eq:firstorderx} can be described as 
+\begin{equation}
+\label{eq:fistorderxnew}
+\begin{array} {l}
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+x} \approx \sum\limits_{l=1}^L G(\mathbf{x},l)\mathbf{F}^{-1}\left[ie^{ik_x\Delta x/2}B(\mathbf{x}_n, \mathbf{\xi}_l)\mathbf{F}\left[p(\mathbf{x},t)\right]\right]\\
+ \approx \sum\limits_{l=1}^LG(\mathbf{x},l)\mathbf{F}^{-1}\left[ie^{ik_x\Delta x/2}\sin(\sum\limits_{j=1}^3\mathbf{\xi}_l^jk_j\Delta_j)\mathbf{F}\left[p(\mathbf{x},t)\right]\right] \\
+ \approx \displaystyle \frac{1}{2}\sum\limits_{l=1}^LG(\mathbf{x},l)\mathbf{F}^{-1}[e^{ik_x\Delta x/2}(e^{i \sum_{j=1}^3\mathbf{\xi}_l^jk_j\Delta_j} \\
+\qquad\qquad\qquad\qquad-e^{-i \sum_{j=1}^3\mathbf{\xi}_l^jk_j\Delta_j})\mathbf{F}\left[p(\mathbf{x},t)\right]] .
+\end{array}
+\end{equation}
+For a staggered grid, in which pressure is defined on main grid points and partial velocity on half-grid points, we can choose $\mathbf{\xi}_l$ as $\mathbf{\xi}_l^1 = (2l^1-1)/2, \: \mathbf{\xi}_l^2 = l^2, \: \mathbf{\xi}_l^3 = l^3 $ to calculate partial derivative in $x$-direction, where $l^1$, $l^2$, $l^3 = 1,2,\cdots,L$, and $L$ is the length of the stencil. According to the shift property of FFTs, we can finally obtain the following expression in the space domain:
+\begin{equation}
+\label{eq:lfd}
+\displaystyle \frac{\partial p(\mathbf{x},t)}{\partial^+x} \approx \displaystyle \frac{1}{2}\sum\limits_{l=1}^LG(\mathbf{x},l)[P(\mathbf{x}_R,t)-P(\mathbf{x}_L,t)], 
+\end{equation}
+where $\mathbf{x}_R=(x_1+l^1\Delta_1,x_2+l^2\Delta_2,x_3+l^3\Delta_3)$ and $\mathbf{x}_L=(x_1-(l^1-1)\Delta_1,x_2-l^2\Delta_2,x_3-l^3\Delta_3)$. 
+
+Equation~\ref{eq:lfd} corresponds to the procedure of finite-difference scheme for calculating the $kx$-space operator. The vector $\mathbf{\xi}_l = (\xi_l^1, \xi_l^2,\xi_l^3)$ provides stencil information, and $G(\mathbf{x},l)$ stores the corresponding coefficients. A similar derivation can be applied to the remaining partial derivative operators in equation~\ref{eq:firstorder}. We call this \emph{staggered grid lowrank finite-differences} (SGLFD) method.
+
+% ------------------------------------
+While the SGL method (equation~\ref{eq:firstorderx}) is proposed by applying lowrank approximation to the $kx-$space method on a staggered grid (equation~\ref{eq:firstorder}), SGLFD (equation~\ref{eq:lfd}) is a further approximation of SGL. Theoretically, the SGLFD method using a longer stencil reaches higher accuracy. It is hard to derive stability condition for SGL. However, applying Von Neumann stability analysis, we can easily obtain a sufficient condition of stability for SGLFD as
+\begin{equation}
+\label{eq:stability}
+\left|\Delta tv_{max}\sum\limits_{l=1}^{L}G(x,l)sin(\sum\limits_{j=1}^3\xi_l^jk_j\Delta_j) \right| \leq 1,
+\end{equation}
+where $v_{max}$ is the maximum value of velocity. Once we obtain the finite difference coefficient $G(\mathbf{x},l)$ for certain velocity $v(\mathbf{x})$ and the predefined parameters $\Delta_j$ and $\Delta t$, we can use condition~\ref{eq:stability} to estimate the stability of the SGLFD scheme in equation~\ref{eq:lfd}.
+
+% --------------------------------------
+
+Next, we use the plane wave theory to evaluate numerical dispersion for SGLFD method. Inserting the plane wave solution,
+\begin{equation}
+\begin{array}{l}
+\label{plane}
+\displaystyle p(\mathbf{x},t)=p_0e^{i\mathbf{k}\cdot\mathbf{x}-\omega t} \\
+\displaystyle \mathbf{u}(\mathbf{x},t)=\mathbf{u}_0e^{i\mathbf{k}\cdot\mathbf{x}-\omega t}
+\end{array}
+\end{equation} 
+into equation~\ref{eq:lfd}, and also adopting the dispersion relation $\omega=|\mathbf{k}|v$, the relative error of phase velocity is defined as
+\begin{equation}
+\label{phvel}
+\displaystyle \varepsilon=\frac{v_{LFD}}{v}-1=\frac{1}{\omega\Delta t}\arcsin\left( \sum\limits_{l=1}^LG(\mathbf{x},l)\sum\limits_{j=1}^3\sin(\xi_l^jk_j\Delta_j)\right)-1.
+\end{equation}
+The relative error $\varepsilon$ describes the numerical dispersion of SGLFD method. If $\varepsilon$ equals $0$, there is no dispersion. If $\varepsilon$ is far from 0, a large dispersion will occur. Here we define the order of SGLFD as that of conventional FD, which has the same stencil length ($L$). Next we compare the conventional SGFD method with the SGLFD method by the dispersion curves for different orders, time intervals and velocities.
+
+Figure~\ref{fig:Mfd,Mlr} shows the variation of $\varepsilon$ with frequency for different order. This figure demonstrates that dispersion decrease with the increase of the order for both SGFD and SGLFD method. Note that for SGFD method increase of order decreases the magnitude of the dispersion error without increasing the area where $\varepsilon$ nearly equals 0. Compared with the SGFD method, the SGLFD method is high accurate in a wider range of wavenumber.
+Figure~\ref{fig:Mfdt,Mlrt} shows the variation of the $\varepsilon$ with frequency for difference time interval. From this figure, we can see that the dispersion becomes stronger when the SGFD method uses larger time interval. Moreover, if a large time interval is used, like $\Delta t=2.5ms$ in this example, the SGFD method will be unstable. However, for the SGLFD method, its dispersion mainly depends on the frequency. Compared with the SGFD method, the SGLFD method keeps high accuracy for different time intervals (up to $70\%$ of the Nyquist frequency).
+Figure~\ref{fig:Mfdv,Mlrv} illustrates the effect of velocity on dispersion. Note that for the SGFD method, its dispersion curves change greatly with the variation of velocity. Compared with the SGFD method, the SGLFD method is more stable and accurate in a wider range of frequency(up to $70\%$ of the Nyquist frequency).
+In the previous examples, we used least squares to fit to nearly the $67\%$ of the Nyquist frequency.
+
+\inputdir{dispersion} 
+\multiplot{2}{Mfd,Mlr}{width=0.6\textwidth}{Plot of $1$-D dispersion curves of (a) the conventional SGFD method and (b) the SGLFD method for different orders, $4th-$order(red, $2L=4$), $6th-$order(pink, $2L=6$), $8th-$order(green, $2L=8$), $16th-$order(blue, $2L=16$), time interval $\Delta t=1ms$, space interval $\Delta_x=10m$, velocity $v=3000m/s$.}
+
+\multiplot{2}{Mfdt,Mlrt}{width=0.6\textwidth}{Plot of $1$-D dispersion curves of (a) the conventional SGFD method and (b) the SGLFD method for different time interval, $\Delta t=1ms$(red), $\Delta t=1.5ms$(pink), $\Delta t=2ms$(green), $\Delta t=2.5ms$(blue), $\Delta x=10m$, $v=3000m/s$, $2L=16$.}
+
+\multiplot{2}{Mfdv,Mlrv}{width=0.6\textwidth}{Plot of $1$-D dispersion curves of (a) the conventional SGFD method and (b) the SGLFD method for different velocity, $v=2500m/s$(red), $v=3500m/s$(pink), $v=4000m/s$(green), $\Delta t=4500m/s$(blue), $\Delta t=1ms$, $\Delta x=10m$, $2L=16$.}
+
+% ==============================================================
+% Accuracy analysis
+% ==============================================================
+\section{Comparison of accuracy between the conventional SGFD method and the lowrank methods}
+
+The study of the accuracy is important especially for the heterogeneous media. However, for lowrank methods, it is hard to derive the theoretical accuracy order as what the Taylor-series expansion based SGFD method usually did. In this section, we compare the accuracy of the conventional SGFD method and the new lowrank methods numerically. We focus on the variable velocity case in the following analysis.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{A simple illustration of the accuracy} 
+
+We first use a simple 1-D example shown in Figure~\ref{fig:Mexact,Mlrerr,Mapperr,Mfd10err} to demonstrate the accuracy of the SGL method and SGLFD method when they are used to calculate the partial derivatives in equation~\ref{eq:firstorder}. The velocity increases linearly from 1000 to 2275 m/s. The rank is 2 for lowrank decomposition, assuming 1 ms time step. The exact $kx$-space operator $\partial/\partial^+x$ in equation~\ref{eq:firstorder} is shown in Figure~\ref{fig:Mexact}. Figures~\ref{fig:Mlrerr},~\ref{fig:Mapperr} and~\ref{fig:Mfd10err} display errors of approximation operators of SGL, SGLFD and conventional staggered grid finite-difference (SGFD), respectively. Figure~\ref{fig:slicel} shows the middle column of the error matrix. The errors of SGL and SGLFD are significantly smaller than that of SGFD. 
+\inputdir{oned}
+\multiplot{4}{Mexact,Mlrerr,Mapperr,Mfd10err}{width=0.4\textwidth}{(a) $kx$-space operator $\partial/\partial^+x$ for 1-D linearly increasing velocity model. (b) Error of SGL operator. (c) Error of 8th order SGLFD operator. (d) Error of 8th order SGFD operator.}
+
+\plot{slicel}{width=0.6\textwidth}{Middle column of the error matrix. Blue dashed line: SGL operator. Green dotted line: the 8th order SGLFD operator. Red solid line: the 8th order SGFD operator.}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Error analysis using the Method of Manufactured Solutions}
+
+Next we use the method of manufactured solutions (MMS) \cite[]{mms} to analyze numerical error of the proposed methods. MMS provides an approach to designing exact reference solutions for wave equations in heterogeneous media. We couple the use of manufactured solutions with mesh refinement to plot the error curve for each method. To begin our investigation, we consider the system of 1D first order wave equations,
+\begin{equation}
+\begin{array}{l}
+\label{eq:we1d}
+\displaystyle \frac{\partial u(x,t)}{\partial t} = -\frac{1}{\rho(x)}\frac{\partial p(x,t)}{\partial x}+s_u(x,t), \\
+\displaystyle \frac{\partial p(x,t)}{\partial t} = -\rho(x)v^2(x)\frac{\partial u(x,t)}{\partial x}+s_p(x,t),
+\end{array}
+\end{equation}
+which are subjected to appropriate boundary and initial conditions, where $s_u$ and $s_p$ represent inject source terms for the particle velocity $u$ and pressure $p$, respectively. For this study, we are interested in the governing equation. We choose a Gaussian pulse as the solution of the pressure and particle velocity in variable velocity media \cite[]{mmsawe},
+\begin{equation}
+\label{eq:mmsslt}
+\displaystyle u(x,t) = p(x,t) = e^{-\lambda^2(x-x_0-v(x)t)^2},
+\end{equation}
+where $\lambda$ is the wavelength of the Gaussian pulse. $x_0$ is the source location and $v(x)$ is the variable velocity. It is easy to derive the corresponding source terms from equations~\ref{eq:we1d} and~\ref{eq:mmsslt},
+\begin{equation}
+\begin{array}{l}
+\label{eq:mmssrc}
+\displaystyle s_u(x,t) = 2\lambda^2[x-x_0-v(x)t][v(x)+\frac{v'(x)t-1}{\rho(x)}]p(x,t), \\
+\displaystyle s_p(x,t) = 2\lambda^2[x-x_0-v(x)t][v(x)+\rho(x)v^2(x)(v'(x)t-1)]p(x,t).
+\end{array}
+\end{equation}
+
+For numerical solution, accuracy is often affected by various factors. In this study, we examine the numerical error of the proposed methods when using different temporal and spatial discretization and wavelets of different dominant frequencies. The velocity we used here increases with $x$, defined as $v(x)=2.1+0.1x^2(km/s)$. Its gradient is $v'(x)=0.2x$ correspondingly. We use constant density in this experiment. Figure~\ref{fig:et} shows the RMS errors of the wavefields for different time interval. For all these calculations, we keep space interval $\Delta x = 25m$ as constant. The blue dashed line and green dotted line indicate the errors of SGL method and SGLFD method respectively, while red solid line plots the errors of the traditional SGFD method. Compared with the traditional SGFD method, the proposed lowrank methods correct the distortion caused by increasing $\Delta t$. They exhibit a high accuracy in time. Figure~\ref{fig:trec19} shows the recorded trace at the $x$ of $4km$ for $\Delta t=4 ms$.The black solid line corresponds to the exact solution generated by MMS. The colors of remaining lines has the same meaning as in Figure~\ref{fig:et}. Numerical dispersion is more visible when $\Delta t$ is increased; this effect is much less significant in our methods.   
+
+\inputdir{mms1d-dt-vv}
+\multiplot{2}{et,trec19}{width=0.5\textwidth}{(a) RMS errors as function of time interval. (b) Recorded data for $\Delta t=4 ms$. Blue dashed line: SGL method. Green dotted line: SGLFD method. Red solid line: SGFD method. Black solid line: MMS.}
+
+Figure~\ref{fig:em} shows the RMS errors of the wavefields for
+different space intervals. We use a small time interval $\Delta t = 0.4ms$
+to keep time error small. Figure~\ref{fig:mrec7} shows the recorded data for $\Delta x=40m$. The first-order $kx$-space operators
+(equation~\ref{eq:firstorder}) have a high accuracy in space which
+make the error of SGL method increase slowly when $\Delta x$
+increase. The coefficients of the SGLFD are obtained by applying least-squares fitting to the SGL method. The error from the least-squares fitting make SGLFD method less accurate than SGL method. On the other hand, the
+coefficients of lowrank FD are optimized and auto-adapted to variations in velocity, which makes it significantly more accurate than SGFD method.  
+
+\inputdir{mms1d-dx-vv}
+\multiplot{2}{em,mrec7}{width=0.5\textwidth}{(a) RMS errors as function of space interval. (b) Recorded data for $\Delta x=40m$. Blue dashed line: SGL method. Green dotted line: SGLFD method. Red solid line: SGFD method. Black solid line: MMS.}
+
+In applications of seismic wave extrapolation, temporal and spatial intervals are often increased at a 
+certain ratio for saving computational cost. Figure~\ref{fig:ea2,ea4,ea8}
+show the error curves for a temporal and spatial refinement study where
+both $\Delta x$ and $\Delta t$ are increased
+simultaneously. We define the Courant-Friedrichs-Lewy (CFL) number as $\alpha=v_{max}\Delta t/\Delta x$ to specify the stability condition, where $v_{max}$ is the maximum velocity. Figure~\ref{fig:ea2} shows the RMS errors for $\alpha= 0.2$. Figure~\ref{fig:ea4} shows the RMS error of $\alpha=0.4$, while figure~\ref{fig:ea8} for $\alpha=0.8$. The color of the lines has the same meaning as indicated before. We can see that the errors increase with the CFL number $\alpha$. This increase is especially significant for SGFD method. Both SGL and SGLFD methods keep high accuracy for a larger scale of temporal and spatial intervals than SGFD. 
+
+\inputdir{mms1d-all-vv}
+\multiplot{3}{ea2,ea4,ea8}{width=0.5\textwidth}{RMS errors for CFL number (a) $\alpha=0.2$, (b) $\alpha=0.4$, (c) $\alpha=0.8$. Blue dashed line: SGL method. Green dotted line: SGLFD method. Red solid line: SGFD method.}
+
+Seismic exploration techniques, such as prestack depth migration or FWI, need the modeling engine which remains highly accurate for a wide band seismic wavelet.  The numerical dispersion can be serious for a high frequency source. Figure~\ref{fig:fre} compares the accuracy of different methods for different source frequencies. The meanings of different line colors are the same as before. Figure~\ref{fig:frec15} shows the recorded data with source frequency of $40Hz$.  It can be seen that the SGFD method has a visible dispersion, while SGL and SGLFD methods remain almost dispersion free.
+
+\inputdir{mms1d-fre}
+\multiplot{2}{fre,frec15}{width=0.5\textwidth}{(a) RMS errors as function of dominant frequency of source wavelet. (b) Recorded data for frequency of $40Hz$. Blue dashed line: SGL method. Green dotted line: SGLFD method. Red solid line: SGFD method. Black solid line: MMS.}
+
+\subsection{The accuracy estimation for planar interface}
+For seismic modeling, it is important to estimate the accuracy of the proposed methods for heterogeneous media, especially for the amplitude variation with offset(AVO) or amplitude variation with angle(AVA) effects of reflected or transmitted wavefields along the interface. The theoretical analysis of this feature can be complicated. Here, we provide a simple numerical test to illustrate the accuracy of the proposed methods. We design a planar interface model which is defined on a grid system of $601\times501$ with a space interval of $10m$ in both horizontal and vertical direction, as shown in figure~\ref{fig:geo}. The planar interface is aligned with the vertical $251th$ grid. The velocities of upper and lower layer are designed as $4000m/s$ and $2000m/s$ to avoid critical reflection. We use constant density $\rho=1700 kg/m^3$. We synthesize a shot record to examine the accuracy of our methods. The source is located at the position of $3000m$ in horizontal direction and $1500m$ in vertical direction. Thus the maximum incident angle is $71.6^{\circ}$. We place two receiver lines above and below the interface and measure the amplitudes of incident, reflected and transmitted wavefields. The reflection coefficient is given by the ratio of amplitudes of the reflected wavefield and the incident wavefield. The transmission coefficient is given by the ratio of amplitudes of transmitted wavefield and reflected wavefield. Figure~\ref{fig:rpp,tpp} compares the reflection and transmission coefficients calculated by the SGL and SGLFD methods with the theoretical values calculated by solving Zoeppritz equations. From this figure, we see that the reflection and transmission coefficients calculated by the SGL and SGLFD method match well with the theoretical values. Thus, both the SGL and SGLFD methods appear sufficiently accurate to provide correct dynamic information of wavefields.
+
+
+\inputdir{.}
+\plot{geo}{width=0.8\textwidth}{The geometry of the planar interface model. The star denotes the source location and the triangles denote the receiver locations. The values of incident angle along the planar interface are between $0$ and $71.6$ degree.}
+\inputdir{avo}
+\multiplot{2}{rpp,tpp}{width=0.6\textwidth}{Comparison of reflection (a) and transmission (b) coefficients calculated by the SGL method (red dashed line) and the SGLFD method (green dashed line) with the theoretical values (blue solid line).}
+
+% ========================================================
+% Numerical
+% =======================================================
+\section{Numerical examples}
+
+\subsection{2D examples of a two-layer model}
+
+To test the performance of the proposed methods with a rough velocity model, we use a two-layer model with high velocity and density contrasts. The model is defined on a $501 \times 501$ grid, with $\Delta x=\Delta z=10 m$ and $\Delta t=1.5ms$.  Velocities of the upper and lower layers are $1.3 km/s$ and $3.2 km/s$. The densities of upper and lower layers are $1.7 g/cm^3$ and $2.7 g/cm^3$ respectively. A point source of a Ricker-wavelet with dominant frequency of 20 Hz is located in the center of the model at a depth of $0.2 km$.The maximum frequency ($f_{max}$) is around $60Hz$. Following \cite{songlfd}, we still use the CFL number $\alpha$ to specify the stability and define dispersion factor as $\beta=v_{min}/(f_{max}\Delta x)$ to indicate the sample points per wavelength, where $v_{min}$ is the minimum velocity of the model. For modeling with above parameters, $\alpha=0.32$ and $\beta=2.2$. Figure~\ref{fig:iwsnap,lrsnap} shows wavefield snapshot in a two-layer model with time interval of $1 ms$. Figure~\ref{fig:trace} displaces two vertical traces at a distance of $2.5 km$ selected from the wavefield snapshots shown in Figure~\ref{fig:iwsnap,lrsnap}. The top trace is calculated using a fourth-order SGFD method. The bottom trace is calculated using the SGL method proposed in this paper. Note the obvious numerical dispersion of the SGFD method. Figure~\ref{fig:lfd4snap2,lfd8snap2} shows a  wavefield snapshot generated by lowrank FD with a time interval equal to $2 ms$. At this time interval, the SGFD method becomes unstable. 
+
+\inputdir{tlayer3}
+\multiplot{2}{iwsnap,lrsnap}{width=0.5\textwidth}{Wavefield snapshot in a two-layer model with variable density and velocity using (a) SGFD and (b) SGL methods. }
+
+\plot{trace}{width=0.8\textwidth}{Vertical trace at a distance of $2.5 km$ selected from snapshots shown in Figure~\ref{fig:iwsnap,lrsnap} for comparison of SGFD method (top) and SGL method (bottom).}
+
+\multiplot{2}{lfd4snap2,lfd8snap2}{width=0.5\textwidth}{Wavefield snapshot in a two-layer model with variable density and velocity using (a) 4th order SGLFD method and (b) 8th order SGLFD method.}
+
+
+\subsection{Example of BP model}
+
+Finally we test the proposed methods in a complex velocity model. Figure~\ref{fig:vel,den} shows a part of the BP-2004 model, which is a complicated model containing a salt body and sharp velocity and density contrasts on the flanks of the salt body \cite[]{bp2004}. We use a Ricker-wavelet at a point source with a dominant frequency of $20 Hz$ $(f_{max} \approx 60Hz)$. Both of the horizontal grid size $\Delta x$ and vertical grid size $\Delta z$ are $12.5m$, and the time step is $1.5ms$, thus, $\alpha \approx 0.57$ and $\beta \approx 1.98$. Figure~\ref{fig:lrsnap,lfdsnap} shows the wavefield snapshot in the BP model generated by SGL method and 6th order SGLFD with a rank of 3. This experiment confirms that the staggered grid lowrank methods are able to handle sharp velocity and density variations.   
+
+\inputdir{bp3}
+\multiplot{2}{vel,den}{width=0.5\textwidth}{BP model: (a) velocity, (b) density. }
+\multiplot{2}{lrsnap,lfdsnap}{width=0.5\textwidth}{Wavefield snapshot modeled through for BP Model using (a) SGL method and (b) SGLFD method. }
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Conclusions}
+FD methods and spectral methods are the two most popular wavefield extrapolation approaches for seismic modeling and seismic wavefield imaging. To handle variable density and velocity in seismic modeling or RTM, we have proposed SGL method by applying lowrank decomposition to first-order $kx$-space propagation operators on a staggered grid. The cost of the new method amounts to using a small number of FFTs, which corresponds to the approximation rank. On the basis of the SGL method, we have also designed the SGLFD method, which extends the lowrank finite-differences from a case of constant density to one of variable density. This approach promises higher accuracy and better stability than those of the traditional, explicit staggered grid finite-difference methods. We tested the proposed methods using the MMS solutions and concluded that they retained high accuracy for large temporal and spatial intervals or high frequency sources. Results for synthetic models illustrate that our proposed methods are highly accurate for heterogeneous media and can handle sharp velocity and density variations. Although the proposed methods are focused on the acoustic case, they can also be extended in principle to elastic, anisotropic or attenuating media. The methods can be used for seismic modeling or RTM.  
+
+
+\section{Acknowledgments}
+We appreciate the support of the China State Scholarship Fund, the Natural Science
+Foundation of China (41074087, 41174100), the Fundamental Research Funds for the Central Universities(11CX06002A). We thank KAUST and the Texas Consortium for Computational Seismology (TCCS) for partial financial support. We also thank all developers of the Madagascar open-source software package (\url{http://ahay.org}). We thank TACC (Texas Advanced Computing Center) for providing supercomputing resources used in this study. 
+
+\bibliographystyle{seg}
+\bibliography{sglfd,SEP2}
+
+
+
+
