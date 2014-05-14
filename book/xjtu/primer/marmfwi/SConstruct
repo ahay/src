@@ -15,8 +15,8 @@ Plot('vel',
 
 Flow('shots','vel',
 	'''
-	sfgenshots csdgather=n fm=10 amp=1 dt=0.0015 ns=21 ng=575 nt=2800
-	sxbeg=10 szbeg=2 jsx=28 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
+	sfgenshots csdgather=n fm=10 amp=1 dt=0.0015 ns=21 ng=767 nt=2800
+	sxbeg=4 szbeg=2 jsx=37 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
 	''')
 Result('shots','grey color=g ')
 
@@ -35,7 +35,7 @@ Result('all','vel smvel','TwoRows')
 Flow('vsnaps grads objs illums','smvel shots',
 	'''
 	sfgpufwi shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
-	illums=${TARGETS[3]} niter=250
+	illums=${TARGETS[3]} niter=150
 	''')
 Result('vsnaps',
 	'''
@@ -48,8 +48,8 @@ Result('illums','grey title="illumination" scalebar=y color=j')
 
 Result('objs',
 	'''
-	graph title="Misfit" dash=0 plotfat=5 label1=Iteration 
-	label2=Objective grid=y yreverse=n
+	sfput n2=1 label1=Iteration unit1= unit2= label2= |
+	graph title="Misfit" dash=0 plotfat=5  grid=y yreverse=n
 	''')
 
 
