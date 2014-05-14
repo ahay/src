@@ -35,7 +35,7 @@ Result('all','vel smvel','TwoRows')
 Flow('vsnaps grads objs illums','smvel shots',
 	'''
 	sfgpufwi shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
-	illums=${TARGETS[3]} niter=1
+	illums=${TARGETS[3]} niter=150
 	''')
 Result('vsnaps',
 	'''
