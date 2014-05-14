@@ -264,11 +264,15 @@ int main(int argc, char *argv[])
 	sf_putstring(vupdates,"label2","Distance");
 	sf_putstring(vupdates,"label3","Iteration");
 	sf_putint(vupdates,"n3",niter);
+	sf_putint(vupdates,"d3",1);
+	sf_putint(vupdates,"o3",1);
 	sf_putint(grads,"n1",nz1);	
 	sf_putint(grads,"n2",nx1);
 	sf_putint(grads,"n3",niter);
 	sf_putfloat(grads,"d1",dz);
 	sf_putfloat(grads,"d2",dx);
+	sf_putint(grads,"d3",1);
+	sf_putint(grads,"o3",1);
 	sf_putstring(grads,"label1","Depth");
 	sf_putstring(grads,"label2","Distance");
 	sf_putstring(grads,"label3","Iteration");
@@ -277,8 +281,12 @@ int main(int argc, char *argv[])
 	sf_putfloat(illums,"d1",dz);
 	sf_putfloat(illums,"d2",dx);
 	sf_putint(illums,"n3",niter);
+	sf_putint(illums,"d3",1);
+	sf_putint(illums,"o3",1);
 	sf_putint(objs,"n1",niter);
 	sf_putint(objs,"n2",1);
+	sf_putint(objs,"d1",1);
+	sf_putint(objs,"o1",1);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
