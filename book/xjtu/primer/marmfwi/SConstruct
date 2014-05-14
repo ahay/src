@@ -1,0 +1,56 @@
+from rsf.proj import *
+
+Fetch('marmvel.hh','marm')
+
+Flow('vel','marmvel.hh',
+	'''
+	dd form=native | window j1=3 j2=3 | 
+     	put label1=Depth  unit1=m label2=Lateral unit2=m
+	''')
+Plot('vel',
+	'''
+	grey color=j mean=y scalebar=y bartype=v barlabel="V" 
+	barunit="m/s"	screenratio=0.45 
+	''')
+
+Flow('shots','vel',
+	'''
+	sfgenshots csdgather=n fm=10 amp=1 dt=0.0015 ns=21 ng=575 nt=2800
+	sxbeg=10 szbeg=2 jsx=28 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
+	''')
+Result('shots','grey color=g ')
+
+# smoothed velocity model   
+Flow('smvel','vel','smooth repeat=10 rect1=10 rect2=20')
+Plot('smvel',
+     '''
+     grey title="Smoothed Marmousi model" wantitle=y allpos=y color=j
+     pclip=100 scalebar=y bartype=v barlabel="V" barunit="m/s"
+	screenratio=0.45 
+     ''' )
+
+Result('all','vel smvel','TwoRows')
+
+# use the over-smoothed model as initial model for FWI
+Flow('vsnaps grads objs illums','smvel shots',
+	'''
+	sfgpufwi shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
+	illums=${TARGETS[3]} niter=250
+	''')
+Result('vsnaps',
+	'''
+	grey title="Updated velocity" allpos=y color=j pclip=100 
+	scalebar=y bartype=v barlabel="V" barunit="m/s" 
+	''')
+
+Result('grads','grey title="Updated gradient" scalebar=y color=j ')
+Result('illums','grey title="illumination" scalebar=y color=j')
+
+Result('objs',
+	'''
+	graph title="Misfit" dash=0 plotfat=5 label1=Iteration 
+	label2=Objective grid=y yreverse=n
+	''')
+
+
+End()
