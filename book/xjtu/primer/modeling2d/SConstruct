@@ -22,7 +22,7 @@ Result('vel','grey title="velocity model: 3 layers" color=j scalebar=y')
 
 Flow('shots','vel',
 	'''
-	modeling2d nb=30 nt=1800 dt=0.001 ns=10 ng=200	
+	modeling2d nt=1100 dt=0.001 ns=10 ng=200	
 	sxbeg=5 szbeg=2 jsx=20 jsz=0 
 	gxbeg=0 gzbeg=3 jgx=1 jgz=0 	
 	''')
