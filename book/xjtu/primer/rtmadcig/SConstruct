@@ -23,7 +23,7 @@ Flow('adcig vecx vecz','veladcig',
 	vmute=1.50
 	''')
 
-Result('adcig','window n3=1 f3=90|grey label1=Depth unit1=km label2=Angle unit2=degree scalebar=y')
+Result('adcig','grey label1=Depth unit1=km label2=Angle unit2=degree scalebar=y')
 Result('stackedimage','adcig','stack|grey title="RTM Image" label1=Depth unit1=km label2=Distance unit2=km')
 
 
