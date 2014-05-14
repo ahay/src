@@ -375,10 +375,10 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 	for(i2=0; i2<nx; i2++)
 	for(i1=0; i1<nz; i1++)
 	{
-		Ssz=1.e5*sp[i2+nb][i1+nb]*svz[i2+nb][i1+nb];
-		Ssx=1.e5*sp[i2+nb][i1+nb]*svx[i2+nb][i1+nb];
-		Sgz=1.e5*gp[i2+nb][i1+nb]*gvz[i2+nb][i1+nb];
-		Sgx=1.e5*gp[i2+nb][i1+nb]*gvx[i2+nb][i1+nb];
+		Ssz=sp[i2+nb][i1+nb]*svz[i2+nb][i1+nb];
+		Ssx=sp[i2+nb][i1+nb]*svx[i2+nb][i1+nb];
+		Sgz=gp[i2+nb][i1+nb]*gvz[i2+nb][i1+nb];
+		Sgx=gp[i2+nb][i1+nb]*gvx[i2+nb][i1+nb];
 		b1=Ssz*Ssz+Ssx*Ssx;//|Ss|^2
 		b2=Sgz*Sgz+Sgx*Sgx;//|Sg|^2
 		a=Ssx*Sgx+Ssz*Sgz; //<Ss,Sg>
@@ -396,7 +396,7 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 
 int main(int argc, char* argv[])
 {
-	int it,kt,ia,is,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+	int it,kt,ia,is,i1,i2,amp, tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
 	float tmp, vmax;
 	float *wlt, *d2x, *d1z, *bndr;
@@ -422,6 +422,8 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(vmodl,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vmodl,"d2",&dx)) sf_error("no d2");
 
+    	if (!sf_getfloat("amp",&amp)) amp=1.e3;	
+	/* maximum amplitude of ricker wavelet*/
     	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	
 	/* dominant freq of ricker */
     	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
@@ -502,7 +504,7 @@ int main(int argc, char* argv[])
 	/* initialize variables */
 	for(it=0;it<nt;it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp*=tmp;
-		wlt[it]=(1.0-2.0*tmp)*expf(-tmp);
+		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
 	}
 	sf_floatread(v0[0],nz*nx,vmodl);
 	expand2d(vv, v0);
