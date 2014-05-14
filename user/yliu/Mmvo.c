@@ -22,32 +22,38 @@
 
 int main (int argc, char* argv[])
 {
-    bool opt,mvo,trans;
-    double n1,d1;
-    float f,nw1,dw;
-    int nt,nw,m,i,j,N,k,n,nnw,m1;                    
-    float *um,*TD,*outp;
-    float *amplitude,*phase;
-    kiss_fft_cpx *FD ;
+    bool opt, mvo, log;
+    int n1, nw1, nt, nw, i, j, N, k, n, nnw, m1;
+    float d1, f, dw;
+    float *um, *TD, *outp, *amplitude, *phase;
+    kiss_fft_cpx *FD;
     kiss_fftr_cfg cfg;
-    sf_init (argc, argv);
     sf_file in, out;
+
+    sf_init (argc, argv);
+
     in= sf_input("in");
     out = sf_output("out");
     if (!sf_getbool("opt",&opt)) opt=true;
     /* if y, determine optimal size for efficiency */
 
-    if (!sf_getbool("mvo",&mvo)) mvo=true;
-    /* if y, MVO curve, otherwise, PVO curve */    
+    if (!sf_getbool("log",&log)) log=true;
+    /* if y, calculate logarithm of MVO */
 
-    if (!sf_getbool("trans",&trans)) trans=false;
-    
-    if (!sf_histdouble(in,"d1",&d1)) sf_error("No d1= in input");
-    if (!sf_histdouble(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_getbool("mvo",&mvo)) mvo=true;
+    /* if y, MVO curve; otherwise, PVO curve */    
+
+    if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
+    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_getfloat("f",&f)) f=0.08;
-    if (!sf_getint("m",&m)) m=1;
+    /* calculate frequency */
+
     if (!sf_getint("nnw",&nnw)) nnw=1600;
+    /* sample window */
+
     if (!sf_getint("n",&n)) n=1;
+    /* number of window period */
+
     um = sf_floatalloc(n1);	
     nw=nnw*n;
     sf_floatread(um,n1,in);     
@@ -55,9 +61,8 @@ int main (int argc, char* argv[])
 
     if (nt%2) nt++;
     nw1 = nt/2+1;
-    if(!trans) dw = 128./nt;
-    if(trans) dw = 1024./nt;
-    k=(int)(f*m/dw);
+    dw = 1./(nt*d1);
+    k=(int)(f/dw);
 
     FD = (kiss_fft_cpx*)sf_complexalloc(nw1);
     TD = sf_floatalloc(nt);
@@ -70,6 +75,11 @@ int main (int argc, char* argv[])
 	if(m1%nw==0) break;
     }
     N=m1/nw;
+
+    sf_putint(out, "n1", N);
+    sf_putfloat(out, "o1", 0);
+    sf_putfloat(out, "d1", 1);
+
     outp =sf_floatalloc(N);
 
     for(j=0;j<N;j++) {
@@ -84,16 +94,19 @@ int main (int argc, char* argv[])
 	
 	kiss_fftr(cfg,TD,FD);  
 	
-	for(i=0;i<nw;i++){
-	    /*  temp1[i]=sf_crealf(FD[i]) ; */
-/* 	      temp2[i]=sf_cimagf(FD[i]); */
-/* 	      amplitude[i]=sqrt(temp1[i]*temp1[i]+temp2[i]*temp2[i]); */
-	    if(mvo) amplitude[i]=sf_cabsf(FD[i]);
+	for(i=0;i<nw1;i++){
+	    if(mvo) {
+		if(log) {
+		    amplitude[i]=log10(sf_cabsf(FD[i]));
+		} else {
+		    amplitude[i]=sf_cabsf(FD[i]);
+		}
+	    }
 	    if(!mvo) phase[i]=sf_cargf(FD[i]);
 	}	
 	
 	if(mvo) outp[j]=amplitude[k];
-	if(!mvo) outp[j]= phase[k]*57.3;
+	if(!mvo) outp[j]= 180.0*phase[k]/SF_PI;
     }
     sf_floatwrite(outp,N,out);
     
