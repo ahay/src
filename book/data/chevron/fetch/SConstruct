@@ -3,7 +3,7 @@ from rsf.proj import *
 gzips = [  'seg_workshop_fwi_2014.tar.gz.partaa',
         'seg_workshop_fwi_2014.tar.gz.partab']
 
-files=['DataLicenseAgreement', 'README', 'SEG14.Pisoelastic.segy.gz', 'SEG14.Vplog', 'SEG14.Vpsmoothstarting.segy', 'Wavelet.txt', 'WellWavePic.JPG']
+files=['./DataLicenseAgreement', './README', 'SEG14.Pisoelastic.segy.gz', 'SEG14.Vplog', 'SEG14.Vpsmoothstarting.segy', 'Wavelet.txt', 'WellWavePic.JPG']
 
 for gzip in gzips:
     Fetch(gzip,dir='seg_workshop_fwi_2014',
