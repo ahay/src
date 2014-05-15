@@ -6,8 +6,8 @@ from rsf.recipes.helderiv import Helderiv
 horizon = 'Penobscot_HorB.txt'
 
 Fetch(horizon,'data',
-      server='https://raw.github.com',
-      top='seg/tutorials/master')
+      server='https://raw.githubusercontent.com',
+      top='agile-geoscience/notebooks/master')
 
 # Convert from xyz triples to horizon
 

@@ -1,0 +1,26 @@
+from rsf.proj import *
+
+par = {
+    'before':dict(n1=327,n2=468 ,o1=557815,o2=5107985,d1=30.030675,d2=29.978587),
+    'after': dict(n1=979,n2=1400,o1=557805,o2=5107965,d1=10.030675,d2=10.035740),
+    }
+
+for case in ('before','after'):
+    txt = 'st-helens_%s.txt' % case
+    Fetch(txt,'data',
+          server='https://raw.githubusercontent.com',
+          top='agile-geoscience/notebooks/master')
+    asc = case+'.asc'
+    Flow(asc,txt,'/usr/bin/tail -n +6')
+    # scaling by 0.3048 converts feet to meters
+    Flow(case,asc,
+         '''
+         echo in=$SOURCE data_format=ascii_float
+         label=Elevation unit=m
+         n1=%(n1)d o1=%(o1)g d1=%(d1)g 
+         n2=%(n2)d o2=%(o2)g d2=%(d2)g |
+         dd form=native | scale dscale=0.3048
+         ''' % par[case],stdin=0)
+    Result(case,'clip2 lower=0 | grey mean=y color=j title=%s scalebar=y' % case.capitalize())
+
+End()
