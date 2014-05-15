@@ -3,4 +3,5 @@ from rsf.tex import *
 
 End(use='amsmath,amsfonts,amssymb,hyperref,listings,xcolor,tikz',
 	color='''snapfd2d snapfd3d snapaniso snapspml elasticxz 
-	vp vx vel fb shots marmousi mimag1 mimag2 sigsbee simag1 simag2''')
+	vp vx vel fb shots marmousi mimag1 mimag2 sigsbee simag1 
+	simag2 marm shotsnap vsnap''')
