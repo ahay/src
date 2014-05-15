@@ -107,6 +107,9 @@ int main(int argc, char* argv[])
     dx *= 2.*SF_PI;
     x0 *= 2.*SF_PI;
 
+    dy *= 2.*SF_PI;
+    y0 *= 2.*SF_PI;
+
     trace = sf_floatalloc(n1);
     t2 = sf_floatalloc(n2);
 
@@ -123,13 +126,11 @@ int main(int argc, char* argv[])
 	if (verb) sf_warning("wavenumber %d of %d;", iy+1,ny);
 
 	y = y0+iy*dy; 
-	y *= y;
-	y *= 0.5;
+	y *= y * 0.5;
 
 	for (ix=0; ix < nx; ix++) {
 	    x = x0+ix*dx; 
-	    x *= x;
-	    x *= 0.5;
+	    x *= x * 0.5;
 
 	    x += y;
 
