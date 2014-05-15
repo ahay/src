@@ -1,3 +1,4 @@
+
 /* 2-D Staggered Grid Lowrank Finite-difference RTM 
      img1 :  crosscorrelation (stdout)
      img2 :  crosscorrelation with source normalization
@@ -66,6 +67,7 @@ int main(int argc, char* argv[])
     int   spx, spz;
     float gdep;
     int   gp;
+    int   ginter, gn;
 
     /*SG LFD coefficient*/
     int lenx, lenz;
@@ -88,9 +90,9 @@ int main(int argc, char* argv[])
     bool decay, freesurface;
 
     /*memoray*/
-    float memneed;
+    //float memneed;
     int tmpint;
-    float tmpfloat;
+    //float tmpfloat;
 
     tstart = clock();
     sf_init(argc, argv);
@@ -211,15 +213,18 @@ int main(int argc, char* argv[])
     if ( gdep>=oz) { gp = (int)((gdep-oz)/dz+0.5);}
     if (gp < 0.0) sf_error("gdep need to be >=oz");
     /*source and receiver location*/
+    if (!sf_getint("ginter", &ginter)) ginter = 1;
+    /*geophone interval*/
+    gn = (nx-1)/ginter+1; /*ceil*/
     if (!sf_getint("snapinter", &snpint)) snpint=10;
     /* snap interval */
-
+    
     /*check record data*/
     if (wantrecord){
 	sf_histint(Frcd,"n1", &tmpint);
 	if (tmpint != nt ) sf_error("Error parameter n1 in record!");
 	sf_histint(Frcd,"n2", &tmpint);
-	if (tmpint != nx ) sf_error("Error parameter n2 in record!");
+	if (tmpint != gn ) sf_error("Error parameter n2 in record!");
     }
     
     geop->nx  = nx;
@@ -234,11 +239,13 @@ int main(int argc, char* argv[])
     geop->spx = spx;
     geop->spz = spz;
     geop->gp = gp;
+    geop->gn = gn;
+    geop->ginter = ginter;
 
     /* wavefield and record  */
     wfnt = (int)(nt-1)/snpint+1;
     wfdt = dt*snpint;
-    record = sf_floatalloc2(nt, nx);
+    record = sf_floatalloc2(nt, gn);
     wavefld = sf_floatalloc3(nz, nx, wfnt);
     
     /* read model */
@@ -284,16 +291,20 @@ int main(int argc, char* argv[])
     }
 
     /* write record */
-    sf_setn(ax, nx);
+    sf_setn(ax, gn);
     sf_setn(az, nz);
     
     if(!wantrecord) {
 	sf_oaxa(Frcd, at, 1);
 	sf_oaxa(Frcd, ax, 2);
     }
+    
+    /*wavefiel and image*/
+    sf_setn(ax,nx);
 
     if (wantwf) {
 	/*write temp wavefield */
+	sf_setn(ax, nx);
 	sf_setn(at, wfnt);
 	sf_setd(at, wfdt);
 	
@@ -316,12 +327,12 @@ int main(int argc, char* argv[])
 
     sglfdfor2(wavefld, record, verb, fden, fc11, geop, srcp, pmlp);
     if(wantrecord) {
-	sf_floatread(record[0], nx*nt, Frcd);
+	sf_floatread(record[0], gn*nt, Frcd);
     }
     sglfdback2(img1, img2, wavefld, record, verb, wantwf, bden, bc11, geop, srcp, pmlp, Ftmpbwf);
     
     if (!wantrecord) {
-	for (ix=0; ix<nx; ix++) 
+	for (ix=0; ix<gn; ix++) 
 	    sf_floatwrite(record[ix], nt, Frcd);
     }
     

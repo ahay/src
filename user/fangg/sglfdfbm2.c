@@ -38,7 +38,10 @@ typedef struct GeoPar {
     int   spx;
     int   spz;
     int   gp;
+    int   gn;
+    int   ginter;
     int   snpint;
+   
 } *geopar; /*geometry parameters*/
 /*^*/
 
@@ -65,7 +68,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     /*grid index*/
     int nx, nz, nt, ix, iz, it;
     int nxb, nzb, snpint;
-    int spx, spz, gp;
+    int spx, spz, gp, gn, ginter;
     float dt, dx, dz;
     int pmlout, marg;
     bool freesurface;
@@ -83,6 +86,8 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
     spx = geop->spx;
     spz = geop->spz;
     gp  = geop->gp;
+    gn  = geop->gn;
+    ginter = geop->ginter;
     snpint = geop->snpint;
 
     nt = srcp->nt;
@@ -156,7 +161,7 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	}
     }  
     for (it = 0; it < nt; it++) {
-	for (ix = 0; ix < nx; ix++) {
+	for (ix = 0; ix < gn; ix++) {
 	    rcd[ix][it] = 0.0;
 	}
     }  
@@ -198,8 +203,8 @@ int sglfdfor2(float ***wavfld, float **rcd, bool verb,
 	    wfit++;
 	}
 		 
-	for ( ix =0 ; ix < nx; ix++) {
-	    rcd[ix][it] = txxn0[ix+pmlout+marg][pmlout+marg+gp];
+	for ( ix =0 ; ix < gn; ix++) {
+	    rcd[ix][it] = txxn0[ix*ginter+pmlout+marg][pmlout+marg+gp];
 	    //sf_warning("rcd=%f ix=%d it=%d", rcd[ix][it], ix, it);
 	}
 	
@@ -228,7 +233,7 @@ int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd,
     float **denx, **denz;
     float **sill, **ccr;
     /*grid index*/
-    int nx, nz, nt, ix, iz, it;
+    int nx, nz, nt, ix, iz, it, gn, ginter;
     int nxb, nzb, snpint;
     int gp;
     float dt, dx, dz;
@@ -246,6 +251,8 @@ int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd,
     dz = geop->dz;
     
     gp  = geop->gp;
+    gn  = geop->gn;
+    ginter = geop->ginter;
     snpint = geop->snpint;
     
     nt = srcp->nt;
@@ -346,8 +353,8 @@ int sglfdback2(float **img1, float **img2, float ***wavfld, float **rcd,
 	/*Stress PML */
 	pml_txxb(txxn0, vxn1, vzn1, c11, ldx, ldz, freesurface);
 	
-	for (ix=0; ix<nx; ix++)  {
-	    txxn0[ix+pmlout+marg][pmlout+marg+gp] = rcd[ix][it];
+	for (ix=0; ix<gn; ix++)  {
+	    txxn0[ix*ginter+pmlout+marg][pmlout+marg+gp] = rcd[ix][it];
 	}
 	
 	/*velocity*/

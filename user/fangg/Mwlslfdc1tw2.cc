@@ -117,6 +117,8 @@ int main(int argc, char** argv)
     
     par.get("a0", a0, 0.0001); // weight parameters
 
+    bool taper;
+    par.get("taper",taper, true);
     par.get("tpa", tpa, 0.0); //taper for stability
     par.get("tpb", tpb, 0.0); 
     
@@ -130,7 +132,7 @@ int main(int argc, char** argv)
     
     bool weight;
     par.get("weight", weight, true);
-    
+        
     iRSF velf;
     oRSF outm;  
     oRSF fsx("sx");//, Mexactfile("Mexact"),Mlrfile("Mlr"), Mappfile("Mapp"); 
@@ -164,6 +166,8 @@ int main(int argc, char** argv)
     sf_warning("==========================");
     sf_warning("Weighted LS LFD");
     //sf_warning("LEN=%d", sx._m);
+    sf_warning("weight=%d",weight);
+    sf_warning("taper=%d",taper);
     sf_warning("n=%d",n);
     sf_warning("m=%d",m);
     sf_warning("tpa=%f", tpa);
@@ -243,7 +247,13 @@ int main(int argc, char** argv)
 		w = 1.0;
 	    }
 	    tpk = twopi*ks[ik];
-	    tp  = tpfun(tpa, tpb, tpk, tpk0); 
+
+	    if (taper == true ) {
+		tp  = tpfun(tpa, tpb, tpk, tpk0);
+	    } else {
+		tp = 1.0;
+	    }
+
 	    wtM2(0,ik) = tp*w*M2(ixm, ik);
 	    tpM2(ixm,ik) = tp*M2(ixm, ik);
 	    /*weight*M2*/
@@ -330,8 +340,10 @@ int main(int argc, char** argv)
 
     Mappfile.put("n1",nx);
     Mappfile.put("n2",nx);
-    Mappfile.put("d2",dk);
-    Mappfile.put("o2",0);
+    Mappfile.put("d2",dk*twopi);
+    Mappfile.put("o1",0);
+    float o2 = -1*dk*B._n/2.0;
+    Mappfile.put("o2",o2*twopi);
     
     ldat = Mapp.data();
     for (int k=0; k < nx*nx; k++) {
@@ -342,10 +354,10 @@ int main(int argc, char** argv)
     //wfun3
     Mwfun.put("n1",B._n);
     Mwfun.put("n2",(int)ridx.size());
-    Mwfun.put("d1",dk);
+    Mwfun.put("d1",dk*twopi);
     Mwfun.put("d2",dx);
     float o1 = -1*dk*B._n/2.0;
-    Mwfun.put("o1",o1);
+    Mwfun.put("o1",o1*twopi);
     Mwfun << wfun ;
 
 
@@ -362,9 +374,9 @@ int main(int argc, char** argv)
 
     Mtpfile.put("n1",nx);
     Mtpfile.put("n2",nx);
-    Mtpfile.put("d1",dk);
+    Mtpfile.put("d1",twopi*dk);
     Mtpfile.put("d2",dx);
-    Mtpfile.put("o1",o1);
+    Mtpfile.put("o1",o1*twopi);
     Mtpfile << Mtp ;
 
     return 0;
