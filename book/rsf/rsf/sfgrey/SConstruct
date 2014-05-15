@@ -66,7 +66,8 @@ Result('monaclip','mona+i mona+iC','SideBySideIso',vppen='ysize=10 xsize=10')
 colors = {
     'cubeyf1': 'Perceptual Rainbow',
     'linearlfb': 'LinearL Face Based',
-    'x': 'Cube Helix'
+    'x': 'Cube Helix',
+    'lb': 'Light Bartlein'
 }
 
 for col in colors.keys():

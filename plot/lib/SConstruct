@@ -60,7 +60,7 @@ if root:
     install = env.Install(libdir,libs)
     env.Install(incdir,inc)
 
-    for color in Split('cubeyf1 linearlfb'):
+    for color in Split('cubeyf1 linearlfb lb'):
         env.Install(incdir,color+'.csv')
 
     if dynlib and env['PLATFORM'] == 'darwin':                

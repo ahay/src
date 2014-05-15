@@ -17,6 +17,8 @@ To the Python package:
 
 To programs:
 
+* Added color=lb Light-Bartlein color scheme in sfgrey and sfgrey3
+
 ===Bug fixes===
 
 In the reproducible documents collection:
