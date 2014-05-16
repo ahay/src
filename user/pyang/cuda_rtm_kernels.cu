@@ -18,6 +18,10 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Reference: Micikevicius, Paulius. "3D finite difference computation on GPUs
+	using CUDA." Proceedings of 2nd Workshop on General Purpose 
+	Processing on Graphics Processing Units. ACM, 2009.
 */
 
 // set the positions of sources and geophones in whole domain

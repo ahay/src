@@ -67,6 +67,10 @@ Some basic descriptions of this code are in order.
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+Reference: Micikevicius, Paulius. "3D finite difference computation on GPUs
+	using CUDA." Proceedings of 2nd Workshop on General Purpose 
+	Processing on Graphics Processing Units. ACM, 2009.
 */
 
 #include <stdio.h>
@@ -101,7 +105,6 @@ extern "C" {
 #define Block_Size2 16		// 2nd dim block size
 const int npml=32;		// thickness of PML boundary
 const int nbell=1;		// radius of Gaussian bell 
-//const bool frsf=fasle;	// free surface on top boundary or not
 
 #include "cuda_rtm_kernels.cu"
 
@@ -113,13 +116,13 @@ static dim3 	dimbbell, dimg0, dimb0;
 static dim3 	dimglr1, dimblr1, dimglr2, dimblr2;//lr=left and right
 static dim3 	dimgtb1, dimbtb1, dimgtb2, dimbtb2;//tb=top and bottom
 
-// variables on host
+/* variables on host */
 float 	*seis, *v0, *vel, *p;
-// variables on device
+/* variables on device */
 int 	*d_Sxz, *d_Gxz;				// set source and geophone position
 float 	*d_bell,*d_wlt, *d_dobs,  *d_vel;	// bell, wavelet, seismograms, velocity (vel)
-float 	*d_sp0, *d_sp1, *d_svx, *d_svz;	// p, vx, vz for sources
-float 	*d_gp0, *d_gp1, *d_gvx, *d_gvz;	// p, vx, vz for geophones
+float 	*d_sp0, *d_sp1, *d_svx, *d_svz;		/* p, vx, vz for sources */
+float 	*d_gp0, *d_gp1, *d_gvx, *d_gvz;	/* p, vx, vz for geophones */
 float 	*d_bx1, *d_bx2, *d_bz1, *d_bz2;		// PML ABC coefficients for p and v (vx, vz)
 float 	*d_convpx, *d_convpz, *d_convvx, *d_convvz;// auxiliary variables to decay p and v in PML zone
 float 	*d_Iss, *d_Isg, *d_I1,*d_I2;		// I1: image without normalization; I2: normalized image; 
