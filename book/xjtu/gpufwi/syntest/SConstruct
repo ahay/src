@@ -17,7 +17,7 @@ Plot('vel',
 	'''
 	sfput label1=Depth unit1=m \
 	label2=Distance unit2=m | 
-	grey allpos=y scalebar=y color=j
+	grey allpos=y scalebar=y color=j minval=1500 maxval=2000
 	screenratio=0.45 
 	''')
   
@@ -27,8 +27,8 @@ Flow('smvel',None,
 	'''%(nz,nx,dz,dx))
 Plot('smvel',
      ''' 
-	grey allpos=y scalebar=y color=j
-	screenratio=0.45 
+	grey scalebar=y color=j minval=1500 maxval=2000
+	screenratio=0.45 mean=y
      ''' )
 
 Result('all','vel smvel','TwoRows')
@@ -60,9 +60,5 @@ Result('objs',
 	graph title="Misfit function" dash=0 plotfat=5 label1=Iteration 
 	label2=Objective grid=y yreverse=n
 	''')
-
-
-
-
 
 End()
