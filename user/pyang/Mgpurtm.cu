@@ -101,32 +101,32 @@ extern "C" {
 #ifndef PI
 #define PI 	3.141592653589793f
 #endif
-#define Block_Size1 16		// 1st dim block size
-#define Block_Size2 16		// 2nd dim block size
-const int npml=32;		// thickness of PML boundary
-const int nbell=1;		// radius of Gaussian bell 
+#define Block_Size1 16		/* 1st dim block size */
+#define Block_Size2 16		/* 2nd dim block size */
+const int npml=32;		/* thickness of PML boundary */
+const int nbell=1;		/* radius of Gaussian bell */
 
 #include "cuda_rtm_kernels.cu"
 
-static bool 	csdgather; 	// common shot gather (CSD) or not 
+static bool 	csdgather; 	/* common shot gather (CSD) or not */
 static int 	nz1,nx1, nz, nx, nnz, nnx, N, NJ, ns, ng, nt, nt_h;
 static int 	jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg;
 static float 	fm, dt, dz, dx, _dz, _dx, vmute;
 static dim3 	dimbbell, dimg0, dimb0;
-static dim3 	dimglr1, dimblr1, dimglr2, dimblr2;//lr=left and right
-static dim3 	dimgtb1, dimbtb1, dimgtb2, dimbtb2;//tb=top and bottom
+static dim3 	dimglr1, dimblr1, dimglr2, dimblr2;/* lr=left and right */
+static dim3 	dimgtb1, dimbtb1, dimgtb2, dimbtb2;/* tb=top and bottom */
 
 /* variables on host */
 float 	*seis, *v0, *vel, *p;
 /* variables on device */
-int 	*d_Sxz, *d_Gxz;				// set source and geophone position
-float 	*d_bell,*d_wlt, *d_dobs,  *d_vel;	// bell, wavelet, seismograms, velocity (vel)
-float 	*d_sp0, *d_sp1, *d_svx, *d_svz;		/* p, vx, vz for sources */
+int 	*d_Sxz, *d_Gxz;		/* set source and geophone position */
+float 	*d_bell,*d_wlt, *d_dobs,  *d_vel;/* bell, wavelet, seismograms, velocity (vel)*/
+float 	*d_sp0, *d_sp1, *d_svx, *d_svz;	/* p, vx, vz for sources */
 float 	*d_gp0, *d_gp1, *d_gvx, *d_gvz;	/* p, vx, vz for geophones */
-float 	*d_bx1, *d_bx2, *d_bz1, *d_bz2;		// PML ABC coefficients for p and v (vx, vz)
-float 	*d_convpx, *d_convpz, *d_convvx, *d_convvz;// auxiliary variables to decay p and v in PML zone
-float 	*d_Iss, *d_Isg, *d_I1,*d_I2;		// I1: image without normalization; I2: normalized image; 
-float 	*h_boundary, *d_boundary;		// boundary on host and device
+float 	*d_bx1, *d_bx2, *d_bz1, *d_bz2; /* PML ABC coefficients for p and v (vx, vz) */
+float 	*d_convpx, *d_convpz, *d_convvx, *d_convvz;/* auxiliary variables to decay p and v in PML zone */
+float 	*d_Iss, *d_Isg, *d_I1,*d_I2; /* I1: image without normalization; I2: normalized image; */
+float 	*h_boundary, *d_boundary;    /* boundary on host and device */
 float	*ptr=NULL;
 
 
@@ -282,9 +282,7 @@ void wavefield_init(float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d
 void step_forward(float *vel, float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d_convvx, float *d_convvz, float *d_convpx, float *d_convpz, float *d_bx1, float *d_bz1, float *d_bx2, float *d_bz2)
 /*< step of forward propagation >*/
 {
-	// p0: p{it-1}; 
-	// p1: p{it};
-	// p2-->p0: p{it+1};
+	/* p0: p{it-1};  p1: p{it}; p2-->p0: p{it+1}; */
 	if (NJ==2)	{
 		cuda_forward_v_2<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
 		cuda_PML_vz_2<<<dimgtb1, dimbtb1>>>(d_p1, d_convpz, d_bz2, d_vz, _dz, npml, nnz, nnx);
@@ -326,9 +324,7 @@ void step_forward(float *vel, float *d_p0, float *d_p1, float *d_vx, float *d_vz
 void step_backward(float *d_vel, float *d_p0, float *d_p1, float *d_vx, float *d_vz)
 /*< step of backward propagation >*/
 {
-	// p0: p{it-1}; 
-	// p1: p{it};
-	// p2-->p0: p{it+1};
+	/* p0: p{it-1};  p1: p{it}; p2-->p0: p{it+1}; */
 	if (NJ==2){
 		cuda_forward_v_2<<<dimg0, dimb0>>>(d_p1, d_vx, d_vz, _dx, _dz, npml, nnz, nnx);
 		cuda_forward_p_2<<<dimg0, dimb0>>>(d_vel, d_p0, d_p1, d_vx, d_vz, dt, _dx, _dz, npml, nnz, nnx);
@@ -486,7 +482,7 @@ int main(int argc, char* argv[])
 		for(kt=0; kt<nt; kt++)
 		{
 			cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, true);
-			//cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, true);
+			/*cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, true);*/
 			step_forward(d_vel, d_sp0, d_sp1, d_svx, d_svz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
@@ -503,22 +499,22 @@ int main(int argc, char* argv[])
 		wavefield_init(d_gp0, d_gp1, d_gvx, d_gvz, d_convpx, d_convpz, d_convvx, d_convvz);
 		for(kt=nt-1; kt>-1; kt--)
 		{
-			// read saved boundary
+			/* read saved boundary */
 			if(kt<nt_h) cudaHostGetDevicePointer(&ptr, &h_boundary[kt*2*(NJ-1)*(nx+nz)], 0);
 			else  ptr=&d_boundary[(kt-nt_h)*2*(NJ-1)*(nx+nz)];
 			cuda_rw_innertb<<<dimgtb2, dimbtb2>>>(ptr, 		d_sp1, npml, nnz, nnx, NJ, true);
 			cuda_rw_innerlr<<<dimglr2, dimblr2>>>(&ptr[2*(NJ-1)*nx], d_sp1, npml, nnz, nnx, NJ, true);
 
-			// backward time step source wavefield
+			/* backward time step source wavefield */
 			step_backward(d_vel, d_sp0, d_sp1, d_svx, d_svz);
-			// subtract the wavelet
+			/* subtract the wavelet */
 			cuda_add_bellwlt<<<dim3(1,1), dimbbell>>>(d_sp1, d_bell, &d_wlt[kt], &d_Sxz[is], 1, npml, nnz, nnx, false);
-			//cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, false);
+			/*cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[kt], &d_Sxz[is], 1, false);*/
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-			// add receiver term
+			/* add receiver term */
 			cuda_add_source<<<(ng+255)/256,256>>>(d_gp0, &d_dobs[kt*ng], d_Gxz, ng, true);
-			// backward time step receiver wavefield
+			/* backward time step receiver wavefield */
 			step_forward(d_vel, d_gp0, d_gp1, d_gvx, d_gvz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
 			ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
 
