@@ -931,7 +931,7 @@ Time domain FWI was proposed by \cite{tarantola1984inversion}, and developed in 
 \begin{equation}\label{eq:obj}
 E(\textbf{m})=\frac{1}{2}\Delta \textbf{p}^{\dagger}\Delta \textbf{p}
 =\frac{1}{2}\Delta \textbf{p}^T\Delta \textbf{p}^*
-=\sum_{r=1}^{ng}\sum_{s=1}^{ns}\int_{0}^{t_{\max}}\mathrm{d}t|p_{cal}(\textbf{x}_r, t;\textbf{x}_s)-p_{obs}(\textbf{x}_r, t;\textbf{x}_s)|^2
+=\frac{1}{2}\sum_{r=1}^{ng}\sum_{s=1}^{ns}\int_{0}^{t_{\max}}\mathrm{d}t|p_{cal}(\textbf{x}_r, t;\textbf{x}_s)-p_{obs}(\textbf{x}_r, t;\textbf{x}_s)|^2
 \end{equation}
 where $ns$ and $ng$ are the number of sources and geophones, $\dagger$ denotes the adjoint and $*$ the complex conjugate, while $\textbf{f}(\cdot)$ indicates the forward modeling of the wave propagation. The recorded seismic data is only a small subset of the whole wavefield.
 
