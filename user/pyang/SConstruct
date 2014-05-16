@@ -18,7 +18,7 @@ ccprogs = '''
 
 # CUDA main programs
 cuda_progs = '''
-gpurtm gpufwi genshots fbrec 
+gpurtm gpufwi genshots fbrec gpufwi2
 '''
 
 try:  # distributed version

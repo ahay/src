@@ -294,6 +294,7 @@ int main(int argc, char *argv[])
 	/* round the size up to multiples of Block size */
 	nx=(int)((nx1+Block_Size1-1)/Block_Size1)*Block_Size1;
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2; 
+	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2), dimb=dim3(Block_Size1, Block_Size2); 
 
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
@@ -310,7 +311,6 @@ int main(int argc, char *argv[])
 	sf_warning("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
 	device_alloc(); 
 
-	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2), dimb=dim3(Block_Size1, Block_Size2); 
 
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
