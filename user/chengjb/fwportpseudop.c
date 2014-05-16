@@ -344,7 +344,9 @@ void fwportpseudophomo(float dt,float***p1,float***p2,float***p3,
 
     int i,j,k,l, m=_m;
 #ifdef _OPENMP
-#pragma omp parallel for private(i,j,k,l)				\
+#pragma omp parallel for private(i,j,k,l,px,py,pz,qx,qy,qz,rx,ry,rz,   \
+                                 vp2,vs2,dt2,vpx,vpy,vpz,vsz1,vsz2,vsz3,vpn1,vpn2,vpn3, \
+                                 ep_1,de_1,gam_1,ep_2,de_2,gam_2,de_3,C23_44,C12_66,C13_55) \
     schedule(dynamic)							\
     shared(p1,p2,p3,							\
 	   q1,q2,q3,							\
