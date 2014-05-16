@@ -95,7 +95,7 @@ def param(par):
     else:                  par['dheight3d']=12*par['dratio3d']
         
     if(not par.has_key('scalebar')): par['scalebar']='n'    
-    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1.5 ' + ' '
+    if(not par.has_key('labelattr')): par['labelattr']=' parallel2=n labelsz=7 labelfat=4 titlesz=12 titlefat=3 xll=2.5 yll=1. ' + ' '
     
     par['labelrot0']=' parallel2=n format1=%3.0f format2=%3.0f format3=%3.0f '
     par['labelrot1']=' parallel2=n format1=%3.1f format2=%3.1f format3=%3.1f '
@@ -164,6 +164,17 @@ def iovlE2d(out,inp,par,xscale=0.5,yscale=0.5,shift=-11):
     Plot(out+'_H',inp,'Overlay')
     pplot.p1x2(out,out+'_V',out+'_H',xscale,yscale,shift)
 
+# ------------------------------------------------------------
+def dgrey2d_init(vel,par):
+    dx=par['xmax']-par['xmin'];
+    dt=par['tmax']-par['tmin'];
+    dz=dt*vel;
+    
+    if((dx) == 0.0): par['dratio2d']=1
+    else:            par['dratio2d']=(dz)/(dx)
+    if(par['dratio2d']>1): par['dheight2d']=11
+    else:                  par['dheight2d']=11*par['dratio2d']
+        
 # grey 2D data
 def dgrey2d(custom,par):
     return '''
