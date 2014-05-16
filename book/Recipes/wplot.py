@@ -193,7 +193,7 @@ def dgrey3d_init(vel,par):
     dy=par['ymax']-par['ymin'];
     dt=par['tmax']-par['tmin'];
     dz=dt*vel;
-    
+
     if((dx+dy) == 0.0): par['pointx']=1.0
     else              : par['pointx']=dx/(dx+dy)
     if((dt+dy) == 0.0): par['pointt']=1.0
@@ -201,7 +201,7 @@ def dgrey3d_init(vel,par):
     if((dx+dy) == 0.0): par['dratio3d']=1
     else:               par['dratio3d']=(dz+dy)/(dx+dy)
     if(par['dratio3d']>1): par['dheight3d']=11
-    else:                  par['dheight3d']=11*par['dratio3d']
+    else:                  par['dheight3d']=12*par['dratio3d']
 
 def dgrey3d(custom,par):
     return '''

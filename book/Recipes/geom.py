@@ -8,14 +8,14 @@ def point2d(cc,xcoord,zcoord,custom,par):
     Flow(cc,None,
          '''
          spike nsp=2 mag=%g,%g n1=2 o1=0 d1=1 k1=1,2 | 
-         put label1="" unit1=""
+         put label1="" unit1="" n2=1 o2=0 d2=1
          '''%(xcoord,zcoord) +' '+ custom)
     
 def point3d(cc,xcoord,ycoord,zcoord,custom,par):
     Flow(cc,None,
          '''
          spike nsp=3 mag=%g,%g,%g n1=3 o1=0 d1=1 k1=1,2,3 n2=1 n3=1 | 
-         put label1="" unit1=""
+         put label1="" unit1="" n2=1 o2=0 d2=1 n3=1 o3=0 d3=1
          '''%(xcoord,ycoord,zcoord) +' '+ custom)
 
 # ------------------------------------------------------------
@@ -372,7 +372,9 @@ def boxarray2d(cc,nz,oz,dz,nx,ox,dx,par):
          %smath <%s output="x2" | put n1=%d n2=1 >%s datapath=%s/;
          '''%(M8R,cco,nz*nx,ccx,DPT) +
          '''
-         %scat axis=2 space=n %s %s | transp >${TARGETS[0]};
+         %scat axis=2 space=n %s %s | 
+         transp | 
+         put o1=0 d1=1 o2=0 d2=1 label1="" unit1="" label2="" unit2="">${TARGETS[0]};
          '''%(M8R,ccx,ccz) +
          '''     
          %srm %s %s %s
