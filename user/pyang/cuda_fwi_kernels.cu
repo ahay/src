@@ -113,14 +113,14 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 		if(i2>0 && i2<nx-1) c2=0.5*c2;
 	}
 */
-	if(i1==nz-1) // bottom boundary
+	if(i1==nz-1) /* bottom boundary */
 	{
 		c1=v1*(s_p1[threadIdx.x][threadIdx.y+1]-s_p1[threadIdx.x+1][threadIdx.y+1]
 					-s_p0[threadIdx.x][threadIdx.y+1]+s_p0[threadIdx.x+1][threadIdx.y+1]);
 		if(i2>0 && i2<nx-1) c2=0.5*c2;
 	}
 
-	if(i2==0)// left boundary
+	if(i2==0)/* left boundary */
 	{
 		if(i1>0 && i1<nz-1) c1=0.5*c1;
 		c2=v2*(-s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+1][threadIdx.y+2]
@@ -128,7 +128,7 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 
 	}
 
-	if(i2==nx-1) // right boundary
+	if(i2==nx-1) /* right boundary */
 	{
 		if(i1>0 && i1<nz-1) c1=0.5*c1;
 		c2=v2*(s_p1[threadIdx.x+1][threadIdx.y]-s_p1[threadIdx.x+1][threadIdx.y+1]
@@ -143,13 +143,13 @@ __global__ void cuda_rw_bndr(float *bndr, float *p1, int nz, int nx, bool write)
 {
 	int id=threadIdx.x+blockIdx.x*blockDim.x;
 	if(write){
-		if(id<nz) bndr[id]=p1[id];//left boundary
-		else if (id<2*nz) bndr[id]=p1[(id-nz)+nz*(nx-1)];//right boundary
-		else if (id<2*nz+nx) bndr[id]=p1[nz-1+nz*(id-2*nz)];//bottom boundary
+		if(id<nz) bndr[id]=p1[id];/* left boundary */
+		else if (id<2*nz) bndr[id]=p1[(id-nz)+nz*(nx-1)];/*right boundary */
+		else if (id<2*nz+nx) bndr[id]=p1[nz-1+nz*(id-2*nz)];/* bottom boundary */
 	}else{
-		if(id<nz) p1[id]=bndr[id];//left boundary
-		else if (id<2*nz) p1[(id-nz)+nz*(nx-1)]=bndr[id];//right boundary
-		else if (id<2*nz+nx) p1[nz-1+nz*(id-2*nz)]=bndr[id];//bottom boundary
+		if(id<nz) p1[id]=bndr[id];/*left boundary */
+		else if (id<2*nz) p1[(id-nz)+nz*(nx-1)]=bndr[id];/*right boundary*/
+		else if (id<2*nz+nx) p1[nz-1+nz*(id-2*nz)]=bndr[id];/*bottom boundary */
 	}
 }
 
@@ -183,7 +183,7 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 		if(blockIdx.y<gridDim.y-1)	{s_p1[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];}
 		else				{s_p1[threadIdx.x+1][threadIdx.y+2]=0.0f;}
 	}
-    	if(i1==0) s_p1[0][threadIdx.y+1]=0;  //top boundary, free surface boundary condition
+    	if(i1==0) s_p1[0][threadIdx.y+1]=0; /* top boundary, free surface boundary condition */
 	__syncthreads();
 
 	float v1=vv[id]*dtz;
@@ -223,7 +223,7 @@ __global__ void cuda_cal_objective(float *obj, float *err, int ng)
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
+    	/* do reduction in shared mem */
     	for(int s=blockDim.x/2; s>32; s>>=1) 
     	{
 		if (threadIdx.x < s) sdata[tid] += sdata[tid + s]; __syncthreads();
@@ -262,7 +262,7 @@ __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, 
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;
-	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1)	g1[id]*=2.0f/(vv[id]);//g1[id]*=2.0f/(vv[id]*illum[id]);
+	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) g1[id]*=2.0f/(vv[id]);
 	__syncthreads();
 	// handling the outliers at the boundary
 	if (i1==0) 	g1[id]=g1[1+nz*i2];
@@ -293,7 +293,7 @@ configuration requirement: <<<1,Block_Size>>> >*/
 		float b=(id<N)?g1[id]:0.0f;
 		float c=(id<N)?cg[id]:0.0f;
 
-		// HS: Hestenses-Stiefel NLCG algorithm 
+		/* HS: Hestenses-Stiefel NLCG algorithm */
 		sdata[tid] += b*(b-a);	// numerator of HS
 		tdata[tid] += c*(b-a);	// denominator of HS,DY
 		rdata[tid] += b*b;	// numerator of DY
@@ -321,7 +321,7 @@ configuration requirement: <<<1,Block_Size>>> >*/
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
+    	/* do reduction in shared mem */
     	for(int s=blockDim.x/2; s>32; s>>=1) 
     	{
 		if (threadIdx.x < s)	{ sdata[tid]+=sdata[tid+s]; tdata[tid]+=tdata[tid+s]; rdata[tid]+=rdata[tid+s];}
@@ -346,9 +346,8 @@ configuration requirement: <<<1,Block_Size>>> >*/
 			beta_HS=sdata[0]/tdata[0]; 
 			beta_DY=rdata[0]/tdata[0];
 		} 
-		*beta=MAX(0, MIN(beta_HS, beta_DY));// Hybrid HS-DY method combined with iteration restart
-	}
-	
+		*beta=MAX(0, MIN(beta_HS, beta_DY));/* Hybrid HS-DY method combined with iteration restart */
+	}	
 }
 
 __global__ void cuda_cal_conjgrad(float *g1, float *cg, float beta, int nz, int nx)
@@ -366,8 +365,8 @@ __global__ void cuda_cal_epsilon(float *vv, float *cg, float *epsil, int N)
 /*< calculate estimated stepsize (epsil) according to Taratola's method
 configuration requirement: <<<1, Block_Size>>> >*/ 
 {
-    	__shared__ float sdata[Block_Size];// find max(|vv(:)|)
-	__shared__ float tdata[Block_Size];// find max(|cg(:)|)
+    	__shared__ float sdata[Block_Size];/* find max(|vv(:)|) */
+	__shared__ float tdata[Block_Size];/* find max(|cg(:)|) */
     	int tid = threadIdx.x;
     	sdata[tid] = 0.0f;
     	tdata[tid] = 0.0f;
@@ -381,7 +380,7 @@ configuration requirement: <<<1, Block_Size>>> >*/
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
+    	/* do reduction in shared mem */
     	for(int s=blockDim.x/2; s>32; s>>=1) 
     	{
 		if (threadIdx.x < s)	{sdata[tid]=MAX(sdata[tid], sdata[tid+s]);tdata[tid]=MAX(tdata[tid], tdata[tid+s]);} 
@@ -415,11 +414,11 @@ __global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, f
 	alpha2: denominator; length=ng >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	float a=(id<ng)?dcaltmp[id]:0.0f;//f(mk+epsil*cg)
+	float a=(id<ng)?dcaltmp[id]:0.0f;/* f(mk+epsil*cg) */
 	float b=(id<ng)?dobs[id]:0.0f;
 	float c=(id<ng)?derr[id]:0.0f;
-	float d=b+c;// since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c;
-	float e=a-d;// f(mk+epsil*cg)-f(mk)
+	float d=b+c;/* since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c; */
+	float e=a-d;/* f(mk+epsil*cg)-f(mk) */
 	if(id<ng) { alpha1[id]-=e*c; alpha2[id]+=e*e; }
 }
 
@@ -443,7 +442,7 @@ configuration requirement: <<<1, Block_Size>>> >*/
 	} 
     	__syncthreads();
 
-    	// do reduction in shared mem
+    	/* do reduction in shared mem */
     	for(int s=blockDim.x/2; s>32; s>>=1) 
     	{
 		if (threadIdx.x < s) { sdata[tid] += sdata[tid + s];tdata[tid] += tdata[tid + s]; } __syncthreads();
@@ -470,7 +469,7 @@ __global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int n
 	int id=i1+i2*nz;
 	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) vv[id]=vv[id]+alpha*cg[id];
 	__syncthreads();
-	// handling the outliers at the boundary
+	/* handling the outliers at the boundary */
 	if (i1==0) 	vv[id]=vv[1+nz*i2];
 	__syncthreads();
 	if (i1==nz-1)	vv[id]=vv[nz-2+nz*i2];
