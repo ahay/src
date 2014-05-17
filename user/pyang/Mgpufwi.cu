@@ -70,7 +70,7 @@ float 	*v0, *vv, *dobs;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_illum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
-float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
+float	*d_dobs, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
 /*
 d_pars[0]: obj;
 d_pars[1]: beta;
@@ -127,7 +127,6 @@ void device_alloc()
 	cudaMalloc(&d_gxz, ng*sizeof(float));
 	cudaMalloc(&d_bndr, nt*(2*nz+nx)*sizeof(float));
 	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
-	cudaMalloc(&d_dcal, ng*sizeof(float));
 	cudaMalloc(&d_derr, ns*ng*nt*sizeof(float));
 	cudaMalloc(&d_g0, nz*nx*sizeof(float));
 	cudaMalloc(&d_g1, nz*nx*sizeof(float));
@@ -157,7 +156,6 @@ void device_free()
 	cudaFree(d_gxz);
 	cudaFree(d_bndr);
 	cudaFree(d_dobs);
-	cudaFree(d_dcal);
 	cudaFree(d_derr);
 	cudaFree(d_g0);
 	cudaFree(d_g1);
@@ -316,7 +314,6 @@ int main(int argc, char *argv[])
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 	cudaMemset(d_bndr, 0, nt*(2*nz+nx)*sizeof(float));
 	cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
-	cudaMemset(d_dcal, 0, ng*sizeof(float));
 	cudaMemset(d_derr, 0, ns*ng*nt*sizeof(float));
 	cudaMemset(d_g0, 0, nz*nx*sizeof(float));
 	cudaMemset(d_g1, 0, nz*nx*sizeof(float));
