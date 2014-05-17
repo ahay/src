@@ -265,13 +265,11 @@ __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, 
 	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) g1[id]*=2.0f/(vv[id]);
 	__syncthreads();
 	// handling the outliers at the boundary
-	if (i1==0) 	g1[id]=g1[1+nz*i2];
+	if (i1==0) 		g1[id]=g1[1+nz*i2];
+	else if (i1==nz-1)	g1[id]=g1[nz-2+nz*i2];
 	__syncthreads();
-	if (i1==nz-1)	g1[id]=g1[nz-2+nz*i2];
-	__syncthreads();
-	if (i2==0)	g1[id]=g1[i1+nz];
-	__syncthreads();
-	if (i2==nx-1)	g1[id]=g1[i1+nz*(nx-2)];
+	if (i2==0)		g1[id]=g1[i1+nz];
+	else if (i2==nx-1)	g1[id]=g1[i1+nz*(nx-2)];
 	__syncthreads();
 }
 
@@ -423,7 +421,7 @@ __global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, f
 }
 
 
-__global__ void cuda_cal_alpha(float *alpha, float *alpha1, float *alpha2, float *epsil, int ng)
+__global__ void cuda_cal_alpha(float *alpha, float *alpha1, float *alpha2, float epsil, int ng)
 /*< calculate searched stepsize (alpha) according to Taratola's method
 configuration requirement: <<<1, Block_Size>>> >*/ 
 {
@@ -457,7 +455,7 @@ configuration requirement: <<<1, Block_Size>>> >*/
 		if (blockDim.x >=   2) { sdata[tid] += sdata[tid +  1]; tdata[tid] += tdata[tid +  1];}
     	}
      
-    	if (tid == 0) { if(fabsf(tdata[0])>EPS) *alpha=(*epsil)*sdata[0]/tdata[0];	else *alpha=0.0f;}
+    	if (tid == 0) { if(fabsf(tdata[0])>EPS) *alpha=epsil*sdata[0]/tdata[0];	else *alpha=0.0f;}
 }
 
 
@@ -471,26 +469,14 @@ __global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int n
 	__syncthreads();
 	/* handling the outliers at the boundary */
 	if (i1==0) 	vv[id]=vv[1+nz*i2];
-	__syncthreads();
-	if (i1==nz-1)	vv[id]=vv[nz-2+nz*i2];
+	else if (i1==nz-1)	vv[id]=vv[nz-2+nz*i2];
 	__syncthreads();
 	if (i2==0)	vv[id]=vv[i1+nz];
-	__syncthreads();
-	if (i2==nx-1)	vv[id]=vv[i1+nz*(nx-2)];
+	else if (i2==nx-1)	vv[id]=vv[i1+nz*(nx-2)];
 	__syncthreads();
 }
 
-
-
-__global__ void cuda_init_bell(float *bell)
-/*< initialize 1D bell function:<<<1, 2*nbell+1>>> >*/
-{
-    	int id=threadIdx.x;
-	bell[id]=expf(-(id-nbell)*(id-nbell)/(0.5*nbell));
-}
-
-
-__global__ void cuda_bell_smoothz(float *g, float *smg, float *bell, int nz, int nx)
+__global__ void cuda_bell_smoothz(float *g, float *smg, int rbell, int nz, int nx)
 /*< smoothing with gaussian function >*/
 {
 	int i;
@@ -498,10 +484,15 @@ __global__ void cuda_bell_smoothz(float *g, float *smg, float *bell, int nz, int
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
 	float s=0;
-	for(i=-nbell; i<=nbell; i++) if(i1+i>=0 && i1+i<nz) s+=bell[i+nbell]*g[id+i];
-	if(i1<nz && i2<nx) smg[id]=s;
+	if(i1<nz && i2<nx)
+	{
+		for(i=-rbell; i<=rbell; i++) if(i1+i>=0 && i1+i<nz) s+=expf(-(2.0*i*i)/rbell)*g[id+i];
+		smg[id]=s;
+	}
 }
-__global__ void cuda_bell_smoothx(float *g, float *smg, float *bell, int nz, int nx)
+
+
+__global__ void cuda_bell_smoothx(float *g, float *smg, int rbell, int nz, int nx)
 /*< smoothing with gaussian function >*/
 {
 	int i;
@@ -509,7 +500,10 @@ __global__ void cuda_bell_smoothx(float *g, float *smg, float *bell, int nz, int
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
 	float s=0;
-	for(i=-nbell; i<=nbell; i++) if(i2+i>=0 && i2+i<nx) s+=bell[i+nbell]*g[id+nz*i];
-	if(i1<nz && i2<nx) smg[id]=s;
+	if(i1<nz && i2<nx)
+	{
+		for(i=-rbell; i<=rbell; i++) if(i2+i>=0 && i2+i<nx) s+=expf(-(2.0*i*i)/rbell)*g[id+nz*i];
+		smg[id]=s;
+	}
 }
 

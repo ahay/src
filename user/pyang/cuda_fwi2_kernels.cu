@@ -1,3 +1,44 @@
+/* CUDA based FWI using PML absorbing boundary condition
+
+Note: 	You can try other complex boundary condition but we do not
+	recommend to do so. The main reason is that FWI is to recover
+	the low-frequency information of the earth model. Low-freq 
+	means that exact absorbing is not necessarilly needed. The 
+	result will be improved with the optimization precedure. 
+	Furthermore, complex boundary condition (such as sponge ABC or
+	PML) implies more computational cost, which will degrade the
+	efficiency of FWI. 
+   	coordinate configuration of dobsmic data:
+		o--------------> x (2nd dim: *.y)
+		|
+		|
+		|
+		|
+		|
+		z (1st dim: *.x)
+
+	 1st dim: i1=threadIdx.x+blockDim.x*blockIdx.x;
+	 2nd dim: i2=threadIdx.y+blockDim.y*blockIdx.y;
+	 (i1, i2)=i1+i2*nnz;
+
+	 2nd-order stability condition:	min(dx, dz)>sqrt(2)*dt*max(v)
+	 numerical dispersion condition:	max(dx, dz)<min(v)/(10*fmax)
+*/
+/*
+  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+    Email: ypl.2100@gmail.com	
+    Acknowledgement: This code is written with the help of Baoli Wang.
+
+References:
+    [1] Tarantola, Albert. "Inversion of seismic reflection data in the 
+	acoustic approximation." Geophysics 49.8 (1984): 1259-1266.
+    [2] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
+	of seismic reflection data in a laterally invariant medium." 
+	Geophysics 55.3 (1990): 284-292.
+    [3] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+	conjugate gradient methods." Pacific journal of Optimization 
+	2.1 (2006): 35-58.
+*/
 
 // set the positions of sources and geophones
 __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, int ns, int npml, int nnz)
@@ -26,7 +67,6 @@ __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool 
 		else 		p[sxz[id]]-=source[id];
 	}	
 }
-
 
 // record the seismogram at time kt
 __global__ void cuda_record(float*p, float *seis_kt, int *Gxz, int ng)
@@ -534,7 +574,7 @@ __global__ void cuda_forward_p_2(float *vel, float *p0, float *p1, float *vx, fl
 	}
 	__syncthreads();
 
-	if (!( i1<npml))
+	if (!(i1<npml))
 	{
 		float diff1=(s_v1[threadIdx.x+1][threadIdx.y]-s_v1[threadIdx.x][threadIdx.y]);
 		float diff2=(s_v2[threadIdx.x][threadIdx.y+1]-s_v2[threadIdx.x][threadIdx.y]);

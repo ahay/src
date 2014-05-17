@@ -58,7 +58,6 @@ extern "C" {
 #define Block_Size1 16	/* 1st dim block size */
 #define Block_Size2 16	/* 2nd dim block size */
 #define Block_Size  512	/* vector computation blocklength */
-#define nbell	2	/* radius of Gaussian bell: diameter=2*nbell+1 */
 
 #include "cuda_fwi_kernels.cu"
 
@@ -71,7 +70,7 @@ float 	*v0, *vv, *dobs;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_illum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
-float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2, *d_bell;
+float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
 /*
 d_pars[0]: obj;
 d_pars[1]: beta;
@@ -146,7 +145,6 @@ void device_alloc()
 	cudaMalloc(&d_alpha1, ng*sizeof(float));
 	cudaMalloc(&d_alpha2, ng*sizeof(float));
 	cudaMalloc(&d_vtmp, nz*nx*sizeof(float));
-	cudaMalloc(&d_bell, (2*nbell+1)*sizeof(float));
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err) 
@@ -177,7 +175,6 @@ void device_free()
 	cudaFree(d_alpha1);
 	cudaFree(d_alpha2);
 	cudaFree(d_vtmp);
-	cudaFree(d_bell);
 
     	cudaError_t err = cudaGetLastError ();
     	if (cudaSuccess != err)
@@ -200,7 +197,7 @@ void wavefield_init(float *d_p0, float *d_p1, int N)
 int main(int argc, char *argv[])
 {
 	bool verb;
-	int is, it, iter, distx, distz, csd;
+	int is, it, iter, distx, distz, csd, rbell;
 	float dtx, dtz, mstimer,amp, obj, beta, epsil, alpha;
 	float *objval, *ptr=NULL;
 	sf_file vinit, shots, vupdates, grads, objs, illums;
@@ -255,6 +252,7 @@ int main(int argc, char *argv[])
 	/* default, common shot-gather; if n, record at every point*/
     	if (!sf_getint("niter",&niter))   niter=100;
 	/* number of iterations */
+	if (!sf_getint("rbell",&rbell))	  rbell=2;
 
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);
@@ -347,7 +345,6 @@ int main(int argc, char *argv[])
 	cudaMemset(d_alpha1, 0, ng*sizeof(float));
 	cudaMemset(d_alpha2, 0, ng*sizeof(float));
 	cudaMemset(d_vtmp, 0, nz*nx*sizeof(float));
-	cuda_init_bell<<<1,2*nbell+1>>>(d_bell);
 	
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
@@ -408,9 +405,8 @@ int main(int argc, char *argv[])
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
-		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, d_bell, nz, nx);
-		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, d_bell, nz, nx);
-
+		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, rbell, nz, nx);
+		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, rbell, nz, nx);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
@@ -443,7 +439,7 @@ int main(int argc, char *argv[])
 				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
 			}
 		}
-		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, &d_pars[2], ng);
+		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, epsil, ng);
 		cudaMemcpy(&alpha, &d_pars[3], sizeof(float), cudaMemcpyDeviceToHost);
 
 		cuda_update_vel<<<dimg,dimb>>>(d_vv, d_cg, alpha, nz, nx);

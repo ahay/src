@@ -1,18 +1,44 @@
-// coordinate configuration of dobsmic data:
-//		o--------------> x (2nd dim: *.y)
-//		|
-//		|
-//		|
-//		|
-//		|
-//		z (1st dim: *.x)
-//
-// 1st dim: i1=threadIdx.x+blockDim.x*blockIdx.x;
-// 2nd dim: i2=threadIdx.y+blockDim.y*blockIdx.y;
-// (i1, i2)=i1+i2*nnz;
-//
-// 2nd-order stability condition:	min(dx, dz)>sqrt(2)*dt*max(v)
-// numerical dispersion condition:	max(dx, dz)<min(v)/(10*fmax)
+/* CUDA based FWI using PML absorbing boundary condition
+
+Note: 	You can try other complex boundary condition but we do not
+	recommend to do so. The main reason is that FWI is to recover
+	the low-frequency information of the earth model. Low-freq 
+	means that exact absorbing is not necessarilly needed. The 
+	result will be improved with the optimization precedure. 
+	Furthermore, complex boundary condition (such as sponge ABC or
+	PML) implies more computational cost, which will degrade the
+	efficiency of FWI. 
+   	coordinate configuration of dobsmic data:
+		o--------------> x (2nd dim: *.y)
+		|
+		|
+		|
+		|
+		|
+		z (1st dim: *.x)
+
+	 1st dim: i1=threadIdx.x+blockDim.x*blockIdx.x;
+	 2nd dim: i2=threadIdx.y+blockDim.y*blockIdx.y;
+	 (i1, i2)=i1+i2*nnz;
+
+	 2nd-order stability condition:	min(dx, dz)>sqrt(2)*dt*max(v)
+	 numerical dispersion condition:	max(dx, dz)<min(v)/(10*fmax)
+*/
+/*
+  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+    Email: ypl.2100@gmail.com	
+    Acknowledgement: This code is written with the help of Baoli Wang.
+
+References:
+    [1] Tarantola, Albert. "Inversion of seismic reflection data in the 
+	acoustic approximation." Geophysics 49.8 (1984): 1259-1266.
+    [2] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
+	of seismic reflection data in a laterally invariant medium." 
+	Geophysics 55.3 (1990): 284-292.
+    [3] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+	conjugate gradient methods." Pacific journal of Optimization 
+	2.1 (2006): 35-58.
+*/
 
 
 
@@ -21,8 +47,6 @@
 #include <string.h>
 #include <math.h>
 #include <cuda_runtime.h>
-#include <time.h>
-
 
 extern "C" {
 #include <rsf.h>
@@ -79,7 +103,7 @@ void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
 {
 	float *tmp=(float*)malloc(n1*n2*sizeof(float));
-	if (tmp==NULL) {printf("out of memory!"); exit(1);}
+	if (tmp==NULL) {sf_warning("out of memory!"); exit(1);}
 	for(int i2=0; i2<n2; i2++){
 		for(int i1=0; i1<n1; i1++){
 			tmp[i2+n2*i1]=matrix[i1+n1*i2];
@@ -278,10 +302,10 @@ void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float d
 	}
 	float tmp=dt*maxvel*sqrtf(1.0/(dx*dx)+1.0/(dz*dz));
 
-	if (tmp>=C) printf("Stability condition not satisfied!\n");
+	if (tmp>=C) sf_warning("Stability condition not satisfied!");
 	if ( 	((NJ==2) &&(fm>=minvel/(10*MAX(dx,dz))))||
 		((NJ==4) &&(fm>=minvel/(5*MAX(dx,dz))))	)
-	printf("Non-dispersion relation not satisfied!\n");
+	sf_warning("Non-dispersion relation not satisfied!");
 }
 
 // a: size=nz1*nx1; b: size=nnz*nnx; 
@@ -430,14 +454,12 @@ int main(int argc, char *argv[])
 	if (!(v0=(float*)malloc(nx1*nz1*sizeof(float)))) { sf_warning("out of memory!"); exit(1);}
 	if (!(vel=(float*)malloc(nnz*nnx*sizeof(float)))){ sf_warning("out of memory!"); exit(1);}    	
 	if (!(p=(float*)malloc(nnz*nnx*sizeof(float))))  { sf_warning("out of memory!"); exit(1);}    	
-	if (!(objval=(float*)malloc(niter*sizeof(float))))  { sf_warning("out of memory!"); exit(1);}
-    	memset(dobs, 0, ng*nt*sizeof(float));
-    	memset(v0, 0, nz1*nx1*sizeof(float));
-    	memset(vel, 0, nnz*nnx*sizeof(float));
-    	memset(p, 0, nnz*nnx*sizeof(float));
+	if (!(objval=(float*)malloc(niter*sizeof(float)))){ sf_warning("out of memory!"); exit(1);}
+
 	sf_floatread(v0, nz1*nx1, vinit);
 	expand(vel, v0, npml, nnz, nnx, nz1, nx1);
-	memset(dobs,0,ng*nt*sizeof(float));
+    	memset(dobs, 0, ng*nt*sizeof(float));
+    	memset(p, 0, nnz*nnx*sizeof(float));
 	memset(objval,0,niter*sizeof(float));
 
     	cudaSetDevice(0);
