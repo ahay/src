@@ -44,12 +44,6 @@ __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool 
 	}	
 }
 
-__global__ void cuda_record(float*p, float *seis, int *gxz, int ng)
-/*< record the seismogram at time it >*/
-{
-	int id=threadIdx.x+blockDim.x*blockIdx.x;
-    	if (id<ng) seis[id]=p[gxz[id]];
-}
 
 __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)
 /*< step forward: dtz=dt/dx; dtx=dt/dz; >*/
@@ -182,15 +176,21 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 	}
 }
 
+__global__ void cuda_record(float*p, float *seis, int *gxz, int ng)
+/*< record the seismogram at time it >*/
+{
+	int id=threadIdx.x+blockDim.x*blockIdx.x;
+    	if (id<ng) seis[id]=p[gxz[id]];
+}
 
-__global__ void cuda_cal_residuals(float *dcal, float *dobs, float *derr, int ng)
+__global__ void cuda_cal_residuals(float *p, float *dobs, float *derr, int *gxz, int ng)
 /* calculate residual wavefield at the receiver positions
    dcal: d_{cal}
    dobs: d_{obs}
    derr: d_{err}=d_{cal}-d_{obs} */
 {
 	int id=blockIdx.x*blockDim.x+threadIdx.x;
-	if (id<ng) derr[id]=dcal[id]-dobs[id];
+	if (id<ng) derr[id]=p[gxz[id]]-dobs[id];
 }
 
 __global__ void cuda_cal_objective(float *obj, float *err, int ng)
@@ -390,13 +390,13 @@ __global__ void cuda_cal_vtmp(float *vtmp, float *vv, float *cg, float epsil, in
 	if (i1<nz && i2<nx)	vtmp[id]=vv[id]+epsil*cg[id];
 }
 
-__global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, float *dobs, float *derr, int ng)
+__global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *p, float *dobs, float *derr, int *gxz, int ng)
 /*< calculate the numerator and denominator of alpha
 	alpha1: numerator; length=ng
 	alpha2: denominator; length=ng >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	float a=(id<ng)?dcaltmp[id]:0.0f;/* f(mk+epsil*cg) */
+	float a=(id<ng)?p[gxz[id]]:0.0f;/* f(mk+epsil*cg) */
 	float b=(id<ng)?dobs[id]:0.0f;
 	float c=(id<ng)?derr[id]:0.0f;
 	float d=b+c;/* since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c; */

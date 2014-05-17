@@ -358,8 +358,7 @@ int main(int argc, char *argv[])
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 				cuda_rw_bndr<<<(2*nz+nx+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 
-				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
-				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_sp0, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], d_gxz, ng);
 			}
 
 			cudaMemset(d_gp0,0,nz*nx*sizeof(float));
@@ -421,8 +420,7 @@ int main(int argc, char *argv[])
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vtmp, dtz, dtx, nz, nx);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
-				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_sp0, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng],d_gxz, ng);
 			}
 		}
 		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, epsil, ng);
