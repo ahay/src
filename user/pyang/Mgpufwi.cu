@@ -104,21 +104,14 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 		  v0[i1+i2*nz1]=vv[i1+nz*i2];
 }
 
-void matrix_transpose(float *matrix, int n1, int n2)
-/*< matrix transpose >*/
+void matrix_transpose(float *matrix, float *trans, int n1, int n2)
+/*< matrix transpose: matrix tansposed to be trans >*/
 {
-	int i2, i1;
-	float *tmp;
-	if (!(tmp=(float*)malloc(n1*n2*sizeof(float))))
-	 {sf_warning("out of memory!"); exit(1);}
-	
-	for(i2=0; i2<n2; i2++){
-		for(i1=0; i1<n1; i1++){
-			tmp[i2+n2*i1]=matrix[i1+n1*i2];
-		}
-	}
-	memcpy(matrix, tmp, n1*n2*sizeof(float));
-	free(tmp);
+	int i1, i2;
+
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	    trans[i2+n2*i1]=matrix[i1+n1*i2];
 }
 
 void device_alloc()
@@ -186,7 +179,7 @@ int main(int argc, char *argv[])
 	bool verb;
 	int is, it, iter, distx, distz, csd, rbell;
 	float dtx, dtz, mstimer,amp, obj, beta, epsil, alpha;
-	float *objval, *ptr=NULL;
+	float *trans,*objval, *ptr=NULL;
 	sf_file vinit, shots, vupdates, grads, objs, illums;
 
     	/* initialize Madagascar */
@@ -284,10 +277,12 @@ int main(int argc, char *argv[])
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
+	trans=(float*)malloc(ng*nt*sizeof(float));
 	objval=(float*)malloc(niter*sizeof(float));
 	sf_floatread(v0, nz1*nx1, vinit);
 	expand(vv, v0, nz, nx, nz1, nx1);
 	memset(dobs,0,ng*nt*sizeof(float));
+	memset(trans,0,ng*nt*sizeof(float));
 	memset(objval,0,niter*sizeof(float));
 
     	cudaSetDevice(0);
@@ -347,7 +342,8 @@ int main(int argc, char *argv[])
 		for(is=0;is<ns;is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
-			matrix_transpose(dobs, nt, ng);
+			matrix_transpose(dobs, trans, nt, ng); 
+			ptr=dobs; dobs=trans; trans=ptr;
 			cudaMemcpy(d_dobs, dobs, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
 			if (csdgather)	{
 				gxbeg=sxbeg+is*jsx-distx;
@@ -360,27 +356,26 @@ int main(int argc, char *argv[])
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+				cuda_rw_bndr<<<(2*nz+nx+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
 				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
-				cuda_rw_bndr<<<(2*nz+nx+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 			}
 
-			ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 			cudaMemset(d_gp0,0,nz*nx*sizeof(float));
 			cudaMemset(d_gp1,0,nz*nx*sizeof(float));
 			for(it=nt-1; it>-1; it--)
 			{
-				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
+				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, false);
+				ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 				cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
 				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
-
-				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_illum, d_lap, d_gp1, nz, nx);
-				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
+
+				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_illum, d_lap, d_gp0, nz, nx);
 			}
 		}
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
@@ -411,7 +406,8 @@ int main(int argc, char *argv[])
 		for(is=0;is<ns;is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
-			matrix_transpose(dobs, nt, ng);
+			matrix_transpose(dobs, trans, nt, ng);
+			ptr=dobs; dobs=trans; trans=ptr;
 			cudaMemcpy(d_dobs, dobs, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
 			if (csdgather)	{
 				gxbeg=sxbeg+is*jsx-distx;
@@ -456,6 +452,7 @@ int main(int argc, char *argv[])
 	free(v0);
 	free(vv);
 	free(dobs);
+	free(trans);
 	free(objval);
 	device_free();
 
