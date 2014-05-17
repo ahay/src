@@ -181,19 +181,6 @@ void device_free()
 	sf_warning("Cuda error: Failed to free the allocated memory!: %s", cudaGetErrorString(err));
 }
 
-
-void wavefield_init(float *d_p0, float *d_p1, int N)
-/*< initialize wavefield >*/
-{
-	cudaMemset(d_p0, 0, N*sizeof(float));
-	cudaMemset(d_p1, 0, N*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
-}
-
-
 int main(int argc, char *argv[])
 {
 	bool verb;
@@ -366,7 +353,8 @@ int main(int argc, char *argv[])
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
-			wavefield_init(d_sp0, d_sp1, nz*nx);
+			cudaMemset(d_sp0,0,nz*nx*sizeof(float));
+			cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 			for(it=0; it<nt; it++)
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
@@ -379,7 +367,8 @@ int main(int argc, char *argv[])
 			}
 
 			ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
-			wavefield_init(d_gp0, d_gp1, nz*nx);
+			cudaMemset(d_gp0,0,nz*nx*sizeof(float));
+			cudaMemset(d_gp1,0,nz*nx*sizeof(float));
 			for(it=nt-1; it>-1; it--)
 			{
 				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
@@ -428,7 +417,8 @@ int main(int argc, char *argv[])
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 			}
-			wavefield_init(d_sp0, d_sp1, nz*nx);
+			cudaMemset(d_sp0,0,nz*nx*sizeof(float));
+			cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 			for(it=0; it<nt; it++)
 			{
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);

@@ -15,24 +15,8 @@ References:
     [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
-*//*
-  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
-    Email: ypl.2100@gmail.com	
-    Acknowledgement: This code is written with the help of Baoli Wang.
-
-References:
-    [1] Clayton, Robert, and Björn Engquist. "Absorbing boundary 
-	conditions for acoustic and elastic wave equations." Bulletin 
-	of the Seismological Society of America 67.6 (1977): 1529-1540.
-    [2] Tarantola, Albert. "Inversion of seismic reflection data in the 
-	acoustic approximation." Geophysics 49.8 (1984): 1259-1266.
-    [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
-	of seismic reflection data in a laterally invariant medium." 
-	Geophysics 55.3 (1990): 284-292.
-    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
-	conjugate gradient methods." Pacific journal of Optimization 
-	2.1 (2006): 35-58.
 */
+
 __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, int ns, int nz)
 /*< set the positions of sources/geophones >*/
 {
