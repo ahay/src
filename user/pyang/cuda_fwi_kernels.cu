@@ -313,7 +313,7 @@ __global__ void cuda_cal_gradient(float *g1, float *illum, float *slap, float *g
 	}
 }
 
-__global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, int nx, bool precon)
+__global__ void cuda_scale_gradient(float *g1, float *vv, float *precond, int nz, int nx, bool precon)
 /*< scale gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
@@ -322,7 +322,7 @@ __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, 
 	float a;
 	if (i1<nz && i2<nx) 
 	{
-		a=precon?(vv[id]*illum[id]):vv[id];
+		a=precon?(vv[id]*precond[id]):vv[id];
 		g1[id]*=2.0f/a;
 	}
 }

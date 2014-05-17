@@ -69,7 +69,7 @@ static float dx, dz, fm, dt;
 float 	*v0, *vv, *dobs;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_illum, *d_slap, *d_glap,*d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
+float 	*d_wlt, *d_vv, *d_precon, *d_slap, *d_glap,*d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
 float	*d_dobs, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
 /*
 d_pars[0]: obj;
@@ -133,7 +133,7 @@ void device_alloc()
 	cudaMalloc(&d_cg, nz*nx*sizeof(float));
 	cudaMalloc(&d_slap, nz*nx*sizeof(float));
 	cudaMalloc(&d_glap, nz*nx*sizeof(float));
-	cudaMalloc(&d_illum, nz*nx*sizeof(float));
+	cudaMalloc(&d_precon, nz*nx*sizeof(float));
 	cudaMalloc(&d_pars, 4*sizeof(float));
 	cudaMalloc(&d_alpha1, ng*sizeof(float));
 	cudaMalloc(&d_alpha2, ng*sizeof(float));
@@ -163,7 +163,7 @@ void device_free()
 	cudaFree(d_cg);
 	cudaFree(d_slap);
 	cudaFree(d_glap);
-	cudaFree(d_illum);
+	cudaFree(d_precon);
 	cudaFree(d_pars);
 	cudaFree(d_alpha1);
 	cudaFree(d_alpha2);
@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 	int is, it, iter,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz, distx, distz, csd, rbell,radius;
 	float dtx, dtz, mstimer,amp, obj, beta, epsil, alpha;
 	float *trans,*objval, *ptr=NULL;
-	sf_file vinit, shots, vupdates, grads, objs, illums;
+	sf_file vinit, shots, vupdates, grads, objs, preconds;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
     	vupdates=sf_output("out"); /* updated velocity in iterations */ 
     	grads=sf_output("grads");  /* gradient in iterations */ 
 	objs=sf_output("objs");/* values of objective function in iterations */
-	illums=sf_output("illums");/* source illumination in iterations */
+	preconds=sf_output("illums");/* precondition matrix in iterations */
 
     	/* get parameters from velocity model and recorded shots */
 	if (!sf_getbool("verb",&verb)) verb=true;
@@ -257,13 +257,13 @@ int main(int argc, char *argv[])
 	sf_putstring(grads,"label1","Depth");
 	sf_putstring(grads,"label2","Distance");
 	sf_putstring(grads,"label3","Iteration");
-	sf_putint(illums,"n1",nz1);	
-	sf_putint(illums,"n2",nx1);
-	sf_putfloat(illums,"d1",dz);
-	sf_putfloat(illums,"d2",dx);
-	sf_putint(illums,"n3",niter);
-	sf_putint(illums,"d3",1);
-	sf_putint(illums,"o3",1);
+	sf_putint(preconds,"n1",nz1);	
+	sf_putint(preconds,"n2",nx1);
+	sf_putfloat(preconds,"d1",dz);
+	sf_putfloat(preconds,"d2",dx);
+	sf_putint(preconds,"n3",niter);
+	sf_putint(preconds,"d3",1);
+	sf_putint(preconds,"o3",1);
 	sf_putint(objs,"n1",niter);
 	sf_putint(objs,"n2",1);
 	sf_putint(objs,"d1",1);
@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
 	cudaMemset(d_cg, 0, nz*nx*sizeof(float));
 	cudaMemset(d_slap, 0, nz*nx*sizeof(float));
 	cudaMemset(d_glap, 0, nz*nx*sizeof(float));
-	cudaMemset(d_illum, 0, nz*nx*sizeof(float));
+	cudaMemset(d_precon, 0, nz*nx*sizeof(float));
 	cudaMemset(d_pars, 0, 4*sizeof(float));
 	cudaMemset(d_alpha1, 0, ng*sizeof(float));
 	cudaMemset(d_alpha2, 0, ng*sizeof(float));
@@ -341,7 +341,7 @@ int main(int argc, char *argv[])
 		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
 		cudaMemset(d_g1, 0, nz*nx*sizeof(float));
-		cudaMemset(d_illum, 0, nz*nx*sizeof(float));
+		cudaMemset(d_precon, 0, nz*nx*sizeof(float));
 		for(is=0;is<ns;is++)
 		{
 			sf_floatread(dobs, ng*nt, shots);
@@ -377,23 +377,23 @@ int main(int argc, char *argv[])
 				cuda_step_forwardg<<<dimg,dimb>>>(d_glap, d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
 
-				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_illum, d_slap, d_glap, d_gp0, nz, nx);
+				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_precon, d_slap, d_glap, d_gp0, nz, nx);
 			}
 		}
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
 		cudaMemcpy(&obj, &d_pars[0], sizeof(float), cudaMemcpyDeviceToHost);
 
-		cudaMemcpy(vv, d_illum, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(vv, d_precon, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
-		sf_floatwrite(v0, nz1*nx1, illums);
+		sf_floatwrite(v0, nz1*nx1, preconds);
 
-		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx, precon);
+		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_precon, nz, nx, precon);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
 		radius=(int)(rbell*(1.0-(iter+1.0)/niter));/* decrease radius with iterations */
-		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, radius, nz, nx);
-		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, radius, nz, nx);
+		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_precon, radius, nz, nx);
+		cuda_bell_smoothx<<<dimg,dimb>>>(d_precon, d_g1, radius, nz, nx);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);
