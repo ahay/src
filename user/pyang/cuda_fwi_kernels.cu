@@ -76,7 +76,6 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 		if(blockIdx.y<gridDim.y-1)	{ s_p0[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];	s_p1[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];}
 		else				{ s_p0[threadIdx.x+1][threadIdx.y+2]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y+2]=0.0f;}
 	}
-    	if(i1==0) s_p1[0][threadIdx.y+1]=0;  //top boundary, free surface boundary condition
 	__syncthreads();
 
 	float v1=vv[id]*dtz;
@@ -114,6 +113,81 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 	}
 	
 	if (i1<nz && i2<nx) p0[id]=2*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
+}
+
+
+__global__ void cuda_step_forwardg(float *glap, float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)
+/*< step forward: dtz=dt/dx; dtx=dt/dz; >*/
+{
+	int i1=threadIdx.x+blockIdx.x*blockDim.x;
+	int i2=threadIdx.y+blockIdx.y*blockDim.y;
+	int id=i1+i2*nz;
+
+	__shared__ float s_p0[Block_Size1+2][Block_Size2+2];
+	__shared__ float s_p1[Block_Size1+2][Block_Size2+2];
+	s_p0[threadIdx.x+1][threadIdx.y+1]=p0[id];
+	s_p1[threadIdx.x+1][threadIdx.y+1]=p1[id];
+	if(threadIdx.x==0)
+	{
+		if(blockIdx.x>0)	{ s_p0[threadIdx.x][threadIdx.y+1]=p0[id-1];	s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
+		else			{ s_p0[threadIdx.x][threadIdx.y+1]=0.0f;	s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
+	}
+	if(threadIdx.x==blockDim.x-1)
+	{
+		if(blockIdx.x<gridDim.x-1)	{ s_p0[threadIdx.x+2][threadIdx.y+1]=p0[id+1];	s_p1[threadIdx.x+2][threadIdx.y+1]=p1[id+1];}
+		else				{ s_p0[threadIdx.x+2][threadIdx.y+1]=0.0f;	s_p1[threadIdx.x+2][threadIdx.y+1]=0.0f;}
+	}
+	if(threadIdx.y==0)
+	{
+		if(blockIdx.y>0)	{ s_p0[threadIdx.x+1][threadIdx.y]=p1[id-nz]; 	s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
+		else			{ s_p0[threadIdx.x+1][threadIdx.y]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
+	}
+	if(threadIdx.y==blockDim.y-1)
+	{
+		if(blockIdx.y<gridDim.y-1)	{ s_p0[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];	s_p1[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];}
+		else				{ s_p0[threadIdx.x+1][threadIdx.y+2]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y+2]=0.0f;}
+	}
+	__syncthreads();
+
+	float v1=vv[id]*dtz;
+	float v2=vv[id]*dtx; 
+	float c1=v1*v1*(s_p1[threadIdx.x+2][threadIdx.y+1]-2.0*s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x][threadIdx.y+1]);
+	float c2=v2*v2*(s_p1[threadIdx.x+1][threadIdx.y+2]-2.0*s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+1][threadIdx.y]);
+/*
+	if(i1==0)// top boundary
+	{
+		c1=v1*(-s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+2][threadIdx.y+1]
+					+s_p0[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+2][threadIdx.y+1]);
+		if(i2>0 && i2<nx-1) c2=0.5*c2;
+	}
+*/
+	if(i1==nz-1) /* bottom boundary */
+	{
+		c1=v1*(s_p1[threadIdx.x][threadIdx.y+1]-s_p1[threadIdx.x+1][threadIdx.y+1]
+					-s_p0[threadIdx.x][threadIdx.y+1]+s_p0[threadIdx.x+1][threadIdx.y+1]);
+		if(i2>0 && i2<nx-1) c2=0.5*c2;
+	}
+
+	if(i2==0)/* left boundary */
+	{
+		if(i1>0 && i1<nz-1) c1=0.5*c1;
+		c2=v2*(-s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+1][threadIdx.y+2]
+					+s_p0[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+2]);
+
+	}
+
+	if(i2==nx-1) /* right boundary */
+	{
+		if(i1>0 && i1<nz-1) c1=0.5*c1;
+		c2=v2*(s_p1[threadIdx.x+1][threadIdx.y]-s_p1[threadIdx.x+1][threadIdx.y+1]
+					-s_p0[threadIdx.x+1][threadIdx.y]+s_p0[threadIdx.x+1][threadIdx.y+1]);
+	}
+	
+	if (i1<nz && i2<nx)
+	{
+		p0[id]=2*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
+		glap[id]=c1+c2;
+	}
 }
 
 __global__ void cuda_rw_bndr(float *bndr, float *p1, int nz, int nx, bool write)
@@ -161,7 +235,6 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 		if(blockIdx.y<gridDim.y-1)	{s_p1[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];}
 		else				{s_p1[threadIdx.x+1][threadIdx.y+2]=0.0f;}
 	}
-    	if(i1==0) s_p1[0][threadIdx.y+1]=0; /* top boundary, free surface boundary condition */
 	__syncthreads();
 
 	float v1=vv[id]*dtz;
@@ -226,7 +299,7 @@ __global__ void cuda_cal_objective(float *obj, float *err, int ng)
 }
 
 
-__global__ void cuda_cal_gradient(float *g1, float *illum, float *lap, float *gp, int nz, int nx)
+__global__ void cuda_cal_gradient(float *g1, float *illum, float *slap, float *glap, float *gp, int nz, int nx)
 /*< calculate gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
@@ -235,26 +308,23 @@ __global__ void cuda_cal_gradient(float *g1, float *illum, float *lap, float *gp
 
 	if (i1<nz && i2<nx)
 	{
-		g1[id]+=lap[id]*gp[id];
-		illum[id]+=lap[id]*lap[id];
+		g1[id]+=slap[id]*gp[id];
+		illum[id]+=fabsf(slap[id]*glap[id]);
 	}
 }
 
-__global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, int nx)
+__global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, int nz, int nx, bool precon)
 /*< scale gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;
-	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) g1[id]*=2.0f/(vv[id]);
-	__syncthreads();
-	// handling the outliers at the boundary
-	if (i1==0) 		g1[id]=g1[1+nz*i2];
-	else if (i1==nz-1)	g1[id]=g1[nz-2+nz*i2];
-	__syncthreads();
-	if (i2==0)		g1[id]=g1[i1+nz];
-	else if (i2==nx-1)	g1[id]=g1[i1+nz*(nx-2)];
-	__syncthreads();
+	float a;
+	if (i1<nz && i2<nx) 
+	{
+		a=precon?(vv[id]*illum[id]):vv[id];
+		g1[id]*=2.0f/a;
+	}
 }
 
 __global__ void cuda_cal_beta(float *beta, float *g0, float *g1, float *cg, int N)
@@ -449,15 +519,7 @@ __global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int n
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) vv[id]=vv[id]+alpha*cg[id];
-	__syncthreads();
-	/* handling the outliers at the boundary */
-	if (i1==0) 	vv[id]=vv[1+nz*i2];
-	else if (i1==nz-1)	vv[id]=vv[nz-2+nz*i2];
-	__syncthreads();
-	if (i2==0)	vv[id]=vv[i1+nz];
-	else if (i2==nx-1)	vv[id]=vv[i1+nz*(nx-2)];
-	__syncthreads();
+	if (i1<nz && i2<nx ) vv[id]=vv[id]+alpha*cg[id];
 }
 
 __global__ void cuda_bell_smoothz(float *g, float *smg, int rbell, int nz, int nx)

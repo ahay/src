@@ -63,7 +63,7 @@ extern "C" {
 #include "cuda_fwi_kernels.cu"
 
 static bool csdgather;
-static int nz,nx,nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+static int nz,nx,nz1,nx1,nt,ns,ng;
 static float dx, dz, fm, dt;
 
 
@@ -73,19 +73,14 @@ float 	*v0, *dobs, *vv;
 int 	*d_sxz, *d_gxz;			
 float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_dobs;
 
-void matrix_transpose(float *matrix, int n1, int n2)
-/*< matrix transpose >*/
+void matrix_transpose(float *matrix, float *trans, int n1, int n2)
+/*< matrix transpose: matrix tansposed to be trans >*/
 {
 	int i1, i2;
-	float *tmp=(float*)malloc(n1*n2*sizeof(float));
-	if (tmp==NULL) {printf("out of memory!"); exit(1);}
-	for(i2=0; i2<n2; i2++){
-		for(i1=0; i1<n1; i1++){
-			tmp[i2+n2*i1]=matrix[i1+n1*i2];
-		}
-	}
-	memcpy(matrix, tmp, n1*n2*sizeof(float));
-	free(tmp);
+
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	    trans[i2+n2*i1]=matrix[i1+n1*i2];
 }
 
 void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
@@ -147,23 +142,11 @@ void device_free()
 }
 
 
-void wavefield_init(float *d_p0, float *d_p1, int N)
-/*< initialize wavefield >*/
-{
-	cudaMemset(d_p0, 0, N*sizeof(float));
-	cudaMemset(d_p1, 0, N*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
-}
-
-
 int main(int argc, char *argv[])
 {
-	int is, it, distx, distz;
+	int is, it, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 	float dtx,dtz,mstimer,amp;
-	float *ptr=NULL;
+	float *trans, *ptr=NULL;
 	sf_file vinit, shots;
 
     	/* initialize Madagascar */
@@ -207,7 +190,7 @@ int main(int argc, char *argv[])
 	/* x-begining index of receivers, starting from 0 */
     	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
 	/* z-begining index of receivers, starting from 0 */
-	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=false;
 	/* default, common shot-gather; if n, record at every point*/
 
 	sf_putint(shots,"n1",nt);	
@@ -243,9 +226,11 @@ int main(int argc, char *argv[])
 	v0=(float*)malloc(nz1*nx1*sizeof(float));
 	vv=(float*)malloc(nz*nx*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
+	trans=(float*)malloc(ng*nt*sizeof(float));
 	sf_floatread(v0,nz1*nx1,vinit);
 	expand(vv, v0, nz, nx, nz1, nx1);
 	memset(dobs,0,ng*nt*sizeof(float));
+	memset(trans,0,ng*nt*sizeof(float));
 
     	cudaSetDevice(0);
     	cudaError_t err = cudaGetLastError();
@@ -286,7 +271,8 @@ int main(int argc, char *argv[])
 			gxbeg=sxbeg+is*jsx-distx;
 			cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 		}
-		wavefield_init(d_sp0, d_sp1, nz*nx);
+		cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
+		cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
 		for(it=0; it<nt; it++)
 		{
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
@@ -296,8 +282,8 @@ int main(int argc, char *argv[])
 			cuda_record<<<(ng+511)/512, 512>>>(d_sp0, &d_dobs[it*ng], d_gxz, ng);
 		}
 		cudaMemcpy(dobs, d_dobs, ng*nt*sizeof(float), cudaMemcpyDeviceToHost);
-		matrix_transpose(dobs, ng, nt);
-		sf_floatwrite(dobs,ng*nt,shots);
+		matrix_transpose(dobs, trans, ng, nt);
+		sf_floatwrite(trans,ng*nt,shots);
 
 		cudaEventRecord(stop);
   		cudaEventSynchronize(stop);
@@ -310,6 +296,7 @@ int main(int argc, char *argv[])
 	free(v0);
 	free(vv);
 	free(dobs);
+	free(trans);
 	device_free();
 
 	return 0;

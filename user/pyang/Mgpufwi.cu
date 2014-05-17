@@ -62,14 +62,14 @@ extern "C" {
 #include "cuda_fwi_kernels.cu"
 
 static bool csdgather;
-static int niter,nz,nx, nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+static int niter,nz,nx, nz1,nx1,nt,ns,ng;
 static float dx, dz, fm, dt;
 
 /* variables on host */
 float 	*v0, *vv, *dobs;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_illum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
+float 	*d_wlt, *d_vv, *d_illum, *d_slap, *d_glap,*d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
 float	*d_dobs, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
 /*
 d_pars[0]: obj;
@@ -131,7 +131,8 @@ void device_alloc()
 	cudaMalloc(&d_g0, nz*nx*sizeof(float));
 	cudaMalloc(&d_g1, nz*nx*sizeof(float));
 	cudaMalloc(&d_cg, nz*nx*sizeof(float));
-	cudaMalloc(&d_lap, nz*nx*sizeof(float));
+	cudaMalloc(&d_slap, nz*nx*sizeof(float));
+	cudaMalloc(&d_glap, nz*nx*sizeof(float));
 	cudaMalloc(&d_illum, nz*nx*sizeof(float));
 	cudaMalloc(&d_pars, 4*sizeof(float));
 	cudaMalloc(&d_alpha1, ng*sizeof(float));
@@ -160,7 +161,8 @@ void device_free()
 	cudaFree(d_g0);
 	cudaFree(d_g1);
 	cudaFree(d_cg);
-	cudaFree(d_lap);
+	cudaFree(d_slap);
+	cudaFree(d_glap);
 	cudaFree(d_illum);
 	cudaFree(d_pars);
 	cudaFree(d_alpha1);
@@ -174,8 +176,8 @@ void device_free()
 
 int main(int argc, char *argv[])
 {
-	bool verb;
-	int is, it, iter, distx, distz, csd, rbell;
+	bool verb,precon;
+	int is, it, iter,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz, distx, distz, csd, rbell,radius;
 	float dtx, dtz, mstimer,amp, obj, beta, epsil, alpha;
 	float *trans,*objval, *ptr=NULL;
 	sf_file vinit, shots, vupdates, grads, objs, illums;
@@ -230,7 +232,10 @@ int main(int argc, char *argv[])
 	/* default, common shot-gather; if n, record at every point*/
     	if (!sf_getint("niter",&niter))   niter=100;
 	/* number of iterations */
-	if (!sf_getint("rbell",&rbell))	  rbell=2;
+	if (!sf_getint("rbell",&rbell))	  rbell=5;
+	/* maximu smooth radius for preconditioning */
+	if (!sf_getbool("precon",&precon)) precon=true;
+	/* precondition FWI or not */
 
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);
@@ -318,7 +323,8 @@ int main(int argc, char *argv[])
 	cudaMemset(d_g0, 0, nz*nx*sizeof(float));
 	cudaMemset(d_g1, 0, nz*nx*sizeof(float));
 	cudaMemset(d_cg, 0, nz*nx*sizeof(float));
-	cudaMemset(d_lap, 0, nz*nx*sizeof(float));
+	cudaMemset(d_slap, 0, nz*nx*sizeof(float));
+	cudaMemset(d_glap, 0, nz*nx*sizeof(float));
 	cudaMemset(d_illum, 0, nz*nx*sizeof(float));
 	cudaMemset(d_pars, 0, 4*sizeof(float));
 	cudaMemset(d_alpha1, 0, ng*sizeof(float));
@@ -364,14 +370,14 @@ int main(int argc, char *argv[])
 			{
 				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, false);
 				ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
-				cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
+				cuda_step_backward<<<dimg,dimb>>>(d_slap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
-				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
+				cuda_step_forwardg<<<dimg,dimb>>>(d_glap, d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
 
-				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_illum, d_lap, d_gp0, nz, nx);
+				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_illum, d_slap, d_glap, d_gp0, nz, nx);
 			}
 		}
 		cuda_cal_objective<<<1, Block_Size>>>(&d_pars[0], d_derr, ns*ng*nt);
@@ -381,12 +387,13 @@ int main(int argc, char *argv[])
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, illums);
 
-		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx);
+		cuda_scale_gradient<<<dimg,dimb>>>(d_g1, d_vv, d_illum, nz, nx, precon);
 		cudaMemcpy(vv, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, grads);
-		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, rbell, nz, nx);
-		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, rbell, nz, nx);
+		radius=(int)(rbell*(1.0-(iter+1.0)/niter));/* decrease radius with iterations */
+		cuda_bell_smoothz<<<dimg,dimb>>>(d_g1, d_illum, radius, nz, nx);
+		cuda_bell_smoothx<<<dimg,dimb>>>(d_illum, d_g1, radius, nz, nx);
 
 		if (iter>0) cuda_cal_beta<<<1, Block_Size>>>(&d_pars[1], d_g0, d_g1, d_cg, nz*nx); 
 		cudaMemcpy(&beta, &d_pars[1], sizeof(float), cudaMemcpyDeviceToHost);

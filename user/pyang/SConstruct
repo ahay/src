@@ -9,7 +9,7 @@ pocsseislet istseislet mcaseislet matflip
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 modeling2d rtm2d lsrtm2d rtmadcig
 dlct dlctk myradon1 myradon2 
-cohn
+cohn fwishots
 '''
 
 # C++ main programs
@@ -18,7 +18,7 @@ ccprogs = '''
 
 # CUDA main programs
 cuda_progs = '''
-gpurtm gpufwi genshots fbrec gpufwi2
+gpurtm gpufwi genshots fbrec 
 '''
 
 try:  # distributed version
