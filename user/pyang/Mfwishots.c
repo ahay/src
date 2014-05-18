@@ -1,5 +1,5 @@
-/* Generate shot records for FWI using sponge ABC and 4-th order FD
-Note that top boundary is free surface boundary condition, no ABC applied.
+/* 2-D forward modeling to generate shot records 
+Note: 	Here, the sponge absorbing boundary condition is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)

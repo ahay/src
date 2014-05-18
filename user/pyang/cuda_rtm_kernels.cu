@@ -85,7 +85,7 @@ __global__ void cuda_init_abcx(float *vel, float *bx1, float *bx2, float dx, flo
 	int ik=i1+nnz*i2;
 
 	float Rc=1.0e-5f;
-	float d=npml*MAX(dx,dz);
+	float d=npml*max(dx,dz);
 	float d0=-3.0f*vel[id]*logf(Rc)/d/2.0f;
 	float tmp1, tmp2;
 
@@ -125,7 +125,7 @@ __global__ void cuda_init_abcz(float *vel, float *bz1, float *bz2, float dx, flo
 	int ik=i1+2*npml*i2;
 
 	float Rc=1.0e-5f;
-	float d=npml*MAX(dx,dz);
+	float d=npml*max(dx,dz);
 	float d0=-3.0f*vel[id]*logf(Rc)/d/2.0f;
 	float tmp1, tmp2;
 

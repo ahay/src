@@ -15,8 +15,24 @@ References:
     [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
-*/
+*//*
+  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
+    Email: ypl.2100@gmail.com	
+    Acknowledgement: This code is written with the help of Baoli Wang.
 
+References:
+    [1] Clayton, Robert, and Björn Engquist. "Absorbing boundary 
+	conditions for acoustic and elastic wave equations." Bulletin 
+	of the Seismological Society of America 67.6 (1977): 1529-1540.
+    [2] Tarantola, Albert. "Inversion of seismic reflection data in the 
+	acoustic approximation." Geophysics 49.8 (1984): 1259-1266.
+    [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
+	of seismic reflection data in a laterally invariant medium." 
+	Geophysics 55.3 (1990): 284-292.
+    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
+	conjugate gradient methods." Pacific journal of Optimization 
+	2.1 (2006): 35-58.
+*/
 __global__ void cuda_set_sg(int *sxz, int sxbeg, int szbeg, int jsx, int jsz, int ns, int nz)
 /*< set the positions of sources/geophones >*/
 {
@@ -44,6 +60,12 @@ __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool 
 	}	
 }
 
+__global__ void cuda_record(float*p, float *seis, int *gxz, int ng)
+/*< record the seismogram at time it >*/
+{
+	int id=threadIdx.x+blockDim.x*blockIdx.x;
+    	if (id<ng) seis[id]=p[gxz[id]];
+}
 
 __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)
 /*< step forward: dtz=dt/dx; dtx=dt/dz; >*/
@@ -112,11 +134,11 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 					-s_p0[threadIdx.x+1][threadIdx.y]+s_p0[threadIdx.x+1][threadIdx.y+1]);
 	}
 	
-	if (i1<nz && i2<nx) p0[id]=2*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
+	if (i1<nz && i2<nx) p0[id]=2.0*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
 }
 
 
-__global__ void cuda_step_forwardg(float *glap, float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)
+__global__ void cuda_step_forwardg(float *illum, float *p0, float *p1, float *vv, float dtz, float dtx, int nz, int nx)
 /*< step forward: dtz=dt/dx; dtx=dt/dz; >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
@@ -183,10 +205,10 @@ __global__ void cuda_step_forwardg(float *glap, float *p0, float *p1, float *vv,
 					-s_p0[threadIdx.x+1][threadIdx.y]+s_p0[threadIdx.x+1][threadIdx.y+1]);
 	}
 	
-	if (i1<nz && i2<nx)
+	if (i1<nz && i2<nx) 
 	{
-		p0[id]=2*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
-		glap[id]=c1+c2;
+		p0[id]=2.0*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
+		illum[id]+=s_p1[threadIdx.x+1][threadIdx.y+1]*s_p1[threadIdx.x+1][threadIdx.y+1];
 	}
 }
 
@@ -244,26 +266,20 @@ __global__ void cuda_step_backward(float *lap, float *p0, float *p1, float *vv, 
 
 	if (i1<nz && i2<nx) 
 	{
-		p0[id]=2*s_p1[threadIdx.x+1][threadIdx.y+1]-p0[id]+c1+c2;
+		p0[id]=2.0*s_p1[threadIdx.x+1][threadIdx.y+1]-p0[id]+c1+c2;
 		lap[id]=c1+c2;
 	}
 }
 
-__global__ void cuda_record(float*p, float *seis, int *gxz, int ng)
-/*< record the seismogram at time it >*/
-{
-	int id=threadIdx.x+blockDim.x*blockIdx.x;
-    	if (id<ng) seis[id]=p[gxz[id]];
-}
 
-__global__ void cuda_cal_residuals(float *p, float *dobs, float *derr, int *gxz, int ng)
+__global__ void cuda_cal_residuals(float *dcal, float *dobs, float *derr, int ng)
 /* calculate residual wavefield at the receiver positions
    dcal: d_{cal}
    dobs: d_{obs}
    derr: d_{err}=d_{cal}-d_{obs} */
 {
 	int id=blockIdx.x*blockDim.x+threadIdx.x;
-	if (id<ng) derr[id]=p[gxz[id]]-dobs[id];
+	if (id<ng) derr[id]=dcal[id]-dobs[id];
 }
 
 __global__ void cuda_cal_objective(float *obj, float *err, int ng)
@@ -299,33 +315,38 @@ __global__ void cuda_cal_objective(float *obj, float *err, int ng)
 }
 
 
-__global__ void cuda_cal_gradient(float *g1, float *illum, float *slap, float *glap, float *gp, int nz, int nx)
+__global__ void cuda_cal_gradient(float *g1, float *lap, float *gp, int nz, int nx)
 /*< calculate gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;	
 
-	if (i1<nz && i2<nx)
-	{
-		g1[id]+=slap[id]*gp[id];
-		illum[id]+=fabsf(slap[id]*glap[id]);
-	}
+	if (i1<nz && i2<nx) g1[id]+=lap[id]*gp[id];
 }
 
-__global__ void cuda_scale_gradient(float *g1, float *vv, float *precond, int nz, int nx, bool precon)
+__global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, float dt, int nz, int nx, bool precon)
 /*< scale gradient >*/
 {
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;
 	float a;
-	if (i1<nz && i2<nx) 
+	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) 
 	{
-		a=precon?(vv[id]*precond[id]):vv[id];
-		g1[id]*=2.0f/a;
+		a=dt*vv[id];
+		if (precon) a*=dt*illum[id];/*precondition with residual wavefield illumination*/
+		g1[id]*=2.0/a;
 	}
+	__syncthreads();
+	// handling the outliers at the boundary
+	if (i1==0) 		g1[id]=g1[1+nz*i2];
+	else if (i1==nz-1)	g1[id]=g1[nz-2+nz*i2];
+	__syncthreads();
+	if (i2==0)		g1[id]=g1[i1+nz];
+	else if (i2==nx-1)	g1[id]=g1[i1+nz*(nx-2)];
 }
+
 
 __global__ void cuda_cal_beta(float *beta, float *g0, float *g1, float *cg, int N)
 /*< calculate beta for nonlinear conjugate gradient algorithm 
@@ -391,14 +412,14 @@ configuration requirement: <<<1,Block_Size>>> >*/
      
 	if (tid == 0) 
 	{ 
-		float beta_HS=0;
-		float beta_DY=0;
+		float beta_HS=0.0;
+		float beta_DY=0.0;
 		if(fabsf(tdata[0])>EPS) 
 		{
 			beta_HS=sdata[0]/tdata[0]; 
 			beta_DY=rdata[0]/tdata[0];
 		} 
-		*beta=MAX(0, MIN(beta_HS, beta_DY));/* Hybrid HS-DY method combined with iteration restart */
+		*beta=max(0.0, min(beta_HS, beta_DY));/* Hybrid HS-DY method combined with iteration restart */
 	}	
 }
 
@@ -427,25 +448,25 @@ configuration requirement: <<<1, Block_Size>>> >*/
 		int id=s*blockDim.x+threadIdx.x;
 		float a=(id<N)?fabsf(vv[id]):0.0f;
 		float b=(id<N)?fabsf(cg[id]):0.0f;
-		sdata[tid]= MAX(sdata[tid], a);
-		tdata[tid]= MAX(tdata[tid], b);
+		sdata[tid]= max(sdata[tid], a);
+		tdata[tid]= max(tdata[tid], b);
 	} 
     	__syncthreads();
 
     	/* do reduction in shared mem */
     	for(int s=blockDim.x/2; s>32; s>>=1) 
     	{
-		if (threadIdx.x < s)	{sdata[tid]=MAX(sdata[tid], sdata[tid+s]);tdata[tid]=MAX(tdata[tid], tdata[tid+s]);} 
+		if (threadIdx.x < s)	{sdata[tid]=max(sdata[tid], sdata[tid+s]);tdata[tid]=max(tdata[tid], tdata[tid+s]);} 
 		__syncthreads();
     	}  
    	if (tid < 32)
    	{
-		if (blockDim.x >=  64) { sdata[tid] =MAX(sdata[tid],sdata[tid + 32]);tdata[tid]=MAX(tdata[tid], tdata[tid+32]);}
-		if (blockDim.x >=  32) { sdata[tid] =MAX(sdata[tid],sdata[tid + 16]);tdata[tid]=MAX(tdata[tid], tdata[tid+16]);}
-		if (blockDim.x >=  16) { sdata[tid] =MAX(sdata[tid],sdata[tid + 8]);tdata[tid]=MAX(tdata[tid], tdata[tid+8]);}
-		if (blockDim.x >=   8) { sdata[tid] =MAX(sdata[tid],sdata[tid + 4]);tdata[tid]=MAX(tdata[tid], tdata[tid+4]);}
-		if (blockDim.x >=   4) { sdata[tid] =MAX(sdata[tid],sdata[tid + 2]);tdata[tid]=MAX(tdata[tid], tdata[tid+2]);}
-		if (blockDim.x >=   2) { sdata[tid] =MAX(sdata[tid],sdata[tid + 1]);tdata[tid]=MAX(tdata[tid], tdata[tid+1]);}
+		if (blockDim.x >=  64) { sdata[tid] =max(sdata[tid],sdata[tid + 32]);tdata[tid]=max(tdata[tid], tdata[tid+32]);}
+		if (blockDim.x >=  32) { sdata[tid] =max(sdata[tid],sdata[tid + 16]);tdata[tid]=max(tdata[tid], tdata[tid+16]);}
+		if (blockDim.x >=  16) { sdata[tid] =max(sdata[tid],sdata[tid + 8]);tdata[tid]=max(tdata[tid], tdata[tid+8]);}
+		if (blockDim.x >=   8) { sdata[tid] =max(sdata[tid],sdata[tid + 4]);tdata[tid]=max(tdata[tid], tdata[tid+4]);}
+		if (blockDim.x >=   4) { sdata[tid] =max(sdata[tid],sdata[tid + 2]);tdata[tid]=max(tdata[tid], tdata[tid+2]);}
+		if (blockDim.x >=   2) { sdata[tid] =max(sdata[tid],sdata[tid + 1]);tdata[tid]=max(tdata[tid], tdata[tid+1]);}
     	}
 
     	if (tid == 0) { if(fabsf(tdata[0])>EPS) *epsil=0.01*sdata[0]/tdata[0];	else *epsil=0.0f; }
@@ -460,13 +481,13 @@ __global__ void cuda_cal_vtmp(float *vtmp, float *vv, float *cg, float epsil, in
 	if (i1<nz && i2<nx)	vtmp[id]=vv[id]+epsil*cg[id];
 }
 
-__global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *p, float *dobs, float *derr, int *gxz, int ng)
+__global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, float *dobs, float *derr, int ng)
 /*< calculate the numerator and denominator of alpha
 	alpha1: numerator; length=ng
 	alpha2: denominator; length=ng >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	float a=(id<ng)?p[gxz[id]]:0.0f;/* f(mk+epsil*cg) */
+	float a=(id<ng)?dcaltmp[id]:0.0f;/* f(mk+epsil*cg) */
 	float b=(id<ng)?dobs[id]:0.0f;
 	float c=(id<ng)?derr[id]:0.0f;
 	float d=b+c;/* since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c; */
@@ -519,7 +540,14 @@ __global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int n
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	if (i1<nz && i2<nx ) vv[id]=vv[id]+alpha*cg[id];
+	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) vv[id]=vv[id]+alpha*cg[id];
+	__syncthreads();
+	/* handling the outliers at the boundary */
+	if (i1==0) 	vv[id]=vv[1+nz*i2];
+	else if (i1==nz-1)	vv[id]=vv[nz-2+nz*i2];
+	__syncthreads();
+	if (i2==0)	vv[id]=vv[i1+nz];
+	else if (i2==nx-1)	vv[id]=vv[i1+nz*(nx-2)];
 }
 
 __global__ void cuda_bell_smoothz(float *g, float *smg, int rbell, int nz, int nx)

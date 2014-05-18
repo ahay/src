@@ -83,12 +83,6 @@ extern "C" {
 #include <rsf.h>
 }
 
-#ifndef MAX
-#define	MAX(x,y) ((x) > (y) ? (x) : (y))
-#endif
-#ifndef MIN
-#define	MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
 #ifndef true
 #define true    (1)
 #endif
@@ -181,8 +175,8 @@ void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float d
 	float tmp=dt*maxvel*sqrtf(1.0/(dx*dx)+1.0/(dz*dz));
 
 	if (tmp>=C) printf("Stability condition not satisfied!\n");
-	if ( 	((NJ==2) &&(fm>=minvel/(10*MAX(dx,dz))))||
-		((NJ==4) &&(fm>=minvel/(5*MAX(dx,dz))))	)
+	if ( 	((NJ==2) &&(fm>=minvel/(10.0*max(dx,dz))))||
+		((NJ==4) &&(fm>=minvel/(5.0*max(dx,dz))))	)
 	printf("Non-dispersion relation not satisfied!\n");
 }
 
