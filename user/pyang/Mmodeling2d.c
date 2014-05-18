@@ -26,91 +26,39 @@ Note: 	Here, the Enquist absorbing boundary condition is applied!
 #include <omp.h>
 #endif
 
-static int nz, nx, nt;
-static float dz, dx, dt, fm, c10, c11, c12, c20, c21, c22;
+static bool csdgather;
+static int nz,nx,nt,ns,ng;
+static float dx, dz, fm, dt;
+int *sxz, *gxz;
+float *wlt,*dobs, **vv, **p0, **p1, **p2, **ptr=NULL;
+
 static float *bndr;
-static float **vv, **p0, **p1, **p2, **ptr=NULL;
 
-void fd2d_init(float **v0)
-/* allocate and initialize variables */
+void matrix_transpose(float *matrix, float *trans, int n1, int n2)
+/*< matrix transpose: matrix tansposed to be trans >*/
 {
-	int iz, ix;
-	float tmp;
+	int i1, i2;
 
-#ifdef _OPENMP
-    	omp_init();
-#endif
-	
-	vv=sf_floatalloc2(nz, nx);
-	p0=sf_floatalloc2(nz, nx);
-	p1=sf_floatalloc2(nz, nx);
-	p2=sf_floatalloc2(nz, nx);
-
-	for(ix=0;ix<nx;ix++){
-	    for(iz=0;iz<nz;iz++){
-		tmp=v0[ix][iz]*dt;
-		vv[ix][iz]=tmp*tmp;// vv=vv^2*dt^2
-	    }
-	}
-
-	/*< initialize 4-th order fd coefficients >*/
-    	c11 = 4.0/3.0;
-    	c12 =  -1.0/12.0;
-    	c21 = 4.0/3.0;
-    	c22 =  -1.0/12.0;
-    	c10  = -2.0 * (c11+c12);
-    	c20  = -2.0 * (c21+c22);
+	for(i2=0; i2<n2; i2++)
+	for(i1=0; i1<n1; i1++)
+	    trans[i2+n2*i1]=matrix[i1+n1*i2];
 }
 
 
-void wavefield_init(float **p0, float**p1, float **p2)
+void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx)
 {
-	memset(p0[0],0,nz*nx*sizeof(float));
-	memset(p1[0],0,nz*nx*sizeof(float));
-	memset(p2[0],0,nz*nx*sizeof(float));
-}
-
-void step_forward(float **p0, float **p1, float**p2)
-{
-	int ix,iz;
-	float diff1,diff2;
-	float _dz2=1.0/(dz*dz);
-	float _dx2=1.0/(dx*dx);
-
-#ifdef _OPENMP
-#pragma omp parallel for default(none)			\
-    private(ix,iz,diff1,diff2)				\
-    shared(vv,p2,p1,p0,_dz2,_dx2,c10,c11,c12,c20,c21,c22,nz,nx)  
-#endif	
-/*
-	for (ix=2; ix < nx-2; ix++) 
-	for (iz=2; iz < nz-2; iz++) 
-	{
-		diff1 =	c10*p1[ix][iz]+
-			c11*(p1[ix][iz-1]+p1[ix][iz+1])+
-			c12*(p1[ix][iz-2]+p1[ix][iz+2]);
-		diff2 =	c20*p1[ix][iz]+
-			c21*(p1[ix-1][iz]+p1[ix+1][iz])+
-			c22*(p1[ix-2][iz]+p1[ix+2][iz]);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]
-			+vv[ix][iz]*(_dz2*diff1+_dx2*diff2);
-	}
-*/
-	for (ix=1; ix < nx-1; ix++) 
-	for (iz=1; iz < nz-1; iz++) 
-	{
-		diff1 =	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-		diff2 =	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]
-			+vv[ix][iz]*(_dz2*diff1+_dx2*diff2);
-	}
-}
-
-
-void apply_abc(float **p0, float **p1, float **p2)
-{
-	int ix,iz;
-	float diff1,diff2;
+    int ix,iz;
+    float v1,v2,diff1,diff2;
+    
+    for (ix=1; ix < nx-1; ix++) 
+    for (iz=1; iz < nz-1; iz++) 
+    {
+	    v1=vv[ix][iz]*dtz; 
+	    v2=vv[ix][iz]*dtx;
+            diff1 =v1*v1*(p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1]);
+	    diff2 =v2*v2*(p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz]);
+	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+    }
 
     for (ix=2; ix < nx-2; ix++) { 
 	//top boundary
@@ -126,45 +74,38 @@ void apply_abc(float **p0, float **p1, float **p2)
 		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	} 
 */
-	p2[ix][0]=0;
 	//bottom boundary
 	for (iz=nz-2; iz < nz; iz++){
+	    	v1=vv[ix][iz]*dtz; 
+	    	v2=vv[ix][iz]*dtx;
 	    	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
 	    	diff2=p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-		diff1*=sqrtf(vv[ix][iz])/dz;
- 	    	diff2*=vv[ix][iz]/(2.0*dx*dx);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+		diff1*=v1;
+ 	    	diff2*=0.5*v2*v2;
+		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	}
     }
 
     for (iz=2; iz <nz-2; iz++){ 
 	//left boundary
     	for(ix=0;ix<2;ix++){
+	    	v1=vv[ix][iz]*dtz; 
+	    	v2=vv[ix][iz]*dtx;
 	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
 	    	diff2=(p1[ix+1][iz]-p1[ix][iz])-(p0[ix+1][iz]-p0[ix][iz]);
- 	    	diff1*=vv[ix][iz]/(2.0*dz*dz);
-		diff2*=sqrtf(vv[ix][iz])/dx;
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+ 	    	diff1*=0.5*v1*v1;
+		diff2*=v2;
+		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	}
 	//right boundary
     	for(ix=nx-2;ix<nx;ix++){
 	    	diff1=	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
 	    	diff2=	-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
- 	    	diff1*=vv[ix][iz]/(2.0*dz*dz);
-		diff2*=sqrtf(vv[ix][iz])/dx;
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+ 	    	diff1*=0.5*v1*v1;
+		diff2*=v2;
+		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	}
     }  
-}
-
-
-void fd2d_close()
-/* free the allocated variables */
-{
-	free(*vv); free(vv);
-	free(*p0); free(p0);
-	free(*p1); free(p1);
-	free(*p2); free(p2);
 }
 
 
@@ -196,22 +137,6 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 		gz=gxz[ig]%nz;
 		seis_it[ig]=p[gx][gz];
 	}
-}
-
-
-void matrix_transpose(float *matrix, int n1, int n2)
-/* transpose a matrix n1xn2 into n2xn1 */
-{
-	int i1, i2;
-	float *tmp=(float*)malloc(n1*n2*sizeof(float));
-	if (tmp==NULL) {printf("out of memory!"); exit(1);}
-	for(i2=0; i2<n2; i2++)
-	for(i1=0; i1<n1; i1++)
-	{
-		tmp[i2+n2*i1]=matrix[i1+n1*i2];
-	}
-	memcpy(matrix, tmp, n1*n2*sizeof(float));
-	free(tmp);
 }
 
 void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
@@ -251,103 +176,158 @@ void rw_bndr(float **p, float *bndr, bool read)
 
 int main(int argc, char* argv[])
 {
-	int it, is, ns, ng, jsx, jsz, jgx, jgz, sxbeg, szbeg, gxbeg, gzbeg;
-	int *sxz, *gxz;
-	float a;
-	float **v0,*dobs, *dcal, *wlt;	
-	sf_file Fv, Fs;
+  	int is,it, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+  	float dtx,dtz,amp,tmp;
+	float *trans, *ptr=NULL;
+	clock_t start, end;
+	sf_file vinit, shots;
 
+    	/* initialize Madagascar */
     	sf_init(argc,argv);
 
-	Fv = sf_input("in");/* veloctiy model */
-	Fs = sf_output("out");/* shot records */
+    	/*< set up I/O files >*/
+    	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
+    	shots=sf_output("out");  /* output image with correlation imaging condition */ 
 
-    	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");/* veloctiy model: nz */
-    	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");/* veloctiy model: nx */
-    	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");/* veloctiy model: dz */
-    	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");/* veloctiy model: dx */
-    	if (!sf_getint("nt",&nt)) sf_error("nt required");/* number of time steps */
-    	if (!sf_getfloat("dt",&dt)) sf_error("dt required");/* time sampling interval */
-    	if (!sf_getfloat("fm",&fm)) fm=15.0; /*dominant freq of Ricker wavelet */
-	if (!sf_getint("ns",&ns)) ns=1;	/* number of shots */
-	if (!sf_getint("ng",&ng)) ng=nx;/* number of receivers */
-	if (ng>nx) sf_error("make sure ng<=nx!");
+    	/* get parameters for forward modeling */
+    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
+    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
+    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
+   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");/* z-begining index of receivers, starting from 0 */
+	if (!sf_getfloat("amp",&amp)) amp=1000;
+	/* maximum amplitude of ricker */
+    	if (!sf_getfloat("fm",&fm)) fm=10;	
+	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	/* time interval */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
+	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	/* total receivers in each shot */	
+    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
+	/* z-begining index of receivers, starting from 0 */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=false;
+	/* default, common shot-gather; if n, record at every point*/
 
-	sf_putint(Fs,"n1",nt);
-	sf_putint(Fs,"n2",ng);
-    	sf_putint(Fs,"n3",ns);
-    	sf_putfloat(Fs,"d1",dt);
+	sf_putint(shots,"n1",nt);	
+	sf_putint(shots,"n2",ng);
+	sf_putint(shots,"n3",ns);
+	sf_putfloat(shots,"d1",dt);
+	sf_putfloat(shots,"d2",jgx*dx);
+	sf_putfloat(shots,"o1",0);
+	sf_putstring(shots,"label1","Time");
+	sf_putstring(shots,"label2","Lateral");
+	sf_putstring(shots,"label3","Shot");
+	sf_putstring(shots,"unit1","sec");
+	sf_putstring(shots,"unit2","m");
+	sf_putfloat(shots,"amp",amp);
+	sf_putfloat(shots,"fm",fm);
+	sf_putint(shots,"ng",ng);
+	sf_putint(shots,"szbeg",szbeg);
+	sf_putint(shots,"sxbeg",sxbeg);
+	sf_putint(shots,"gzbeg",gzbeg);
+	sf_putint(shots,"gxbeg",gxbeg);
+	sf_putint(shots,"jsx",jsx);
+	sf_putint(shots,"jsz",jsz);
+	sf_putint(shots,"jgx",jgx);
+	sf_putint(shots,"jgz",jgz);
+	sf_putint(shots,"csdgather",csdgather?1:0);
 
-	bndr=(float*)malloc(nt*(2*nz+nx)*sizeof(float));
-	dobs=(float*)malloc(ns*ng*nt*sizeof(float));
-	dcal=(float*)malloc(ng*nt*sizeof(float));
-	memset(bndr,0,nt*(2*nz+nx)*sizeof(float));
-	memset(dobs,0,ns*ng*nt*sizeof(float));
-	memset(dcal,0,ng*nt*sizeof(float));
-	v0=sf_floatalloc2(nz,nx); 
-	sf_floatread(v0[0],nz*nx,Fv);
-	fd2d_init(v0);
+	dtx=dt/dx; 
+	dtz=dt/dz; 
 
 	wlt=(float*)malloc(nt*sizeof(float));
-	for(it=0; it<nt; it++){
-		a=SF_PI*fm*(it*dt-1.0/fm);a=a*a;
-		wlt[it]=(1.0-2.0*a)*expf(-a);
-	}
-
+	bndr=(float*)malloc(nt*(2*nz+nx)*sizeof(float));
+	dobs=(float*)malloc(ng*nt*sizeof(float));
+	trans=(float*)malloc(ng*nt*sizeof(float));
 	sxz=(int*)malloc(ns*sizeof(int));
-	gxz=(int*)malloc(ng*sizeof(int));
-	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
+	gxz=(int*)malloc(ng*sizeof(int));	
+	vv=sf_floatalloc2(nz, nx);
+	p0=sf_floatalloc2(nz, nx);
+	p1=sf_floatalloc2(nz, nx);
+	p2=sf_floatalloc2(nz, nx);
+
+
+	for(it=0; it<nt; it++){
+		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp=tmp*tmp;
+		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
+	}
+	memset(bndr,0,nt*(2*nz+nx)*sizeof(float));
+	memset(dobs,0,ng*nt*sizeof(float));
+	memset(trans,0,ng*nt*sizeof(float));
+	sf_floatread(vv[0],nz*nx,vinit);
+
+
+	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
+	{ printf("sources exceeds the computing zone!\n"); exit(1);}
+ 	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
+	distx=sxbeg-gxbeg;
+	distz=szbeg-gzbeg;
+	if (csdgather)	{
+		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
+		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+	}
+	else{
+		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 
 	for(is=0; is<ns; is++)
 	{
-		wavefield_init(p0, p1, p2);
+		start = clock();
+
+		if (csdgather)	{
+			gxbeg=sxbeg+is*jsx-distx;
+			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+		}
+		memset(p0[0],0,nz*nx*sizeof(float));
+		memset(p1[0],0,nz*nx*sizeof(float));
+		memset(p2[0],0,nz*nx*sizeof(float));
 		for(it=0; it<nt; it++)
 		{
 			add_source(&sxz[is], p1, 1, &wlt[it], true);
-			step_forward(p0, p1, p2);
-			apply_abc(p0,p1,p2);
+			step_forward(p0, p1, p2, vv, dtz, dtx);
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
-			record_seis(&dcal[it*ng], gxz, p0, ng);
+			record_seis(&dobs[it*ng], gxz, p0, ng);
 			rw_bndr(p0, &bndr[it*(2*nz+nx)], false);
 
 		}
-		matrix_transpose(dcal, ng, nt);
-		memcpy(&dobs[is*ng*nt], dcal, ng*nt*sizeof(float));
-/*
-		ptr=p0; p0=p1; p1=ptr;
-		for(int it=nt-1; it>-1; it--)
-		{
-			rw_bndr(p1, &bndr[it*(2*nz+nx)], true);
-			step_forward(p0, p1, p2);
-			add_source(&sxz[is], p1, 1, &wlt[it], false);
-			ptr=p0; p0=p1; p1=p2; p2=ptr;
-
-			if (it==200) sf_floatwrite(p0[0],nz*nx,Fs);
-		}
-*/
+		matrix_transpose(dobs, trans, ng, nt);
+		sf_floatwrite(trans,ng*nt,shots);
+		
+ 		end = clock();
+ 		sf_warning("shot %d finished: %f (s)", is+1,((float)(end-start))/CLOCKS_PER_SEC); 
 	}
-	sf_floatwrite(dobs, ns*ng*nt, Fs);
-
-
 
 	free(sxz);
 	free(gxz);
 	free(bndr);
 	free(dobs);
-	free(dcal);
+	free(trans);
 	free(wlt);
-	free(*v0); free(v0);
-	fd2d_close();
+	free(*vv); free(vv);
+	free(*p0); free(p0);
+	free(*p1); free(p1);
+	free(*p2); free(p2);
 
     	exit(0);
 }
