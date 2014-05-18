@@ -9,7 +9,7 @@ Flow('vel',None,
 
 Flow('wavf wavb','vel',
 	'''	
-	sffbrec back=${TARGETS[1]} csdgather=n fm=15 dt=0.001 ns=1 ng=200 nt=450
+	sffbrec back=${TARGETS[1]} csdgather=n fm=15 dt=0.001 ns=1 ng=200 nt=800
 	sxbeg=100 szbeg=100 jsx=37 jsz=0 gxbeg=0 gzbeg=1 jgx=1 jgz=0
 	''')
 

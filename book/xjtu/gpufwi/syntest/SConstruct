@@ -36,7 +36,7 @@ Result('all','vel smvel','TwoRows')
 
 Flow('shots','vel',
 	'''
-	sfgenshots csdgather=n fm=20 amp=1 dt=0.0015 ns=12 ng=120 nt=800
+	sffwishots csdgather=n fm=20 amp=1 dt=0.0015 ns=12 ng=120 nt=800
 	sxbeg=5 szbeg=2 jsx=10 jsz=0 gxbeg=0 gzbeg=3 jgx=1 jgz=0
 	''')
 Result('shots','grey color=g ')
