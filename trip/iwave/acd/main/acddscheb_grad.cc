@@ -153,22 +153,22 @@ int main(int argc, char ** argv) {
 //      dm.zero();
     
       AssignFilename ddfn(valparse<std::string>(*pars,"data"));
-      Components<ireal> cdd(dd);
-      cdd[0].eval(ddfn);
+      dd.eval(ddfn);
 
       std::string mddnm = valparse<std::string>(*pars, "datamut","");
       if (mddnm.size()>0) {
          AssignFilename mddfn(mddnm);
          mdd.eval(mddfn);
       }
+      //cerr << "\n before apply mute to data\n";
       muteop.applyOp(dd,mdd);
-
 
       ChebPolicyData<float> pd(valparse<float>(*pars,"gamma",0.04f),
                                  valparse<float>(*pars,"epsilon",0.1),
                                  valparse<float>(*pars,"alpha",1.01),
                                  valparse<int>(*pars,"MaxIter",10),true);
     
+      cerr << "\n Read in cheb policy data\n";
       /* output stream */
       std::stringstream res,strgrad;
       res<<scientific;
@@ -182,6 +182,8 @@ int main(int argc, char ** argv) {
       // defn of DSOp to include internal extd axis case (space/time shift)
       int dsdir = INT_MAX;
       if (retrieveGlobalRank()==0) dsdir=csqsp.getGrid().dim;
+      cerr << "\n after get grid dim \n";
+      cerr << "\n" << retrieveGlobalRank() << "  dsdir = " << dsdir << endl;
 #ifdef IWAVE_USE_MPI
       if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
 	RVLException e;

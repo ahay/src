@@ -154,7 +154,9 @@ int main(int argc, char ** argv) {
 	AssignFilename ddfn(valparse<std::string>(*pars,"data"));
 	Components<ireal> cdd(dd);
 	cdd[0].eval(ddfn);
+        cerr << "\n" << retrieveGlobalRank() << " before mute \n ";
 	muteop.applyOp(dd,mdd);
+        cerr << "\n" << retrieveGlobalRank() << " after  mute \n ";
       }
 
       /* output stream */
@@ -285,7 +287,7 @@ int main(int argc, char ** argv) {
       string pertname = valparse<std::string>(*pars,"csq_d1","");
       if (pertname.size()>0) {
 
-	Vector<ireal> dm(op.getDomain());
+	Vector<ireal> dm(dom);
 	AssignFilename mfn_d1(pertname);
 	Components<ireal> cm_d1(dm);
 	cm_d1[0].eval(mfn_d1);
