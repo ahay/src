@@ -3,22 +3,20 @@
     Email: ypl.2100@gmail.com	
     Acknowledgement: This code is written with the help of Baoli Wang.
 
-References:
-    [1] Clayton, Robert, and Björn Engquist. "Absorbing boundary 
-	conditions for acoustic and elastic wave equations." Bulletin 
-	of the Seismological Society of America 67.6 (1977): 1529-1540.
-    [2] Tarantola, Albert. "Inversion of seismic reflection data in the 
-	acoustic approximation." Geophysics 49.8 (1984): 1259-1266.
-    [3] Pica, A., J. P. Diet, and A. Tarantola. "Nonlinear inversion 
-	of seismic reflection data in a laterally invariant medium." 
-	Geophysics 55.3 (1990): 284-292.
-    [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
-	conjugate gradient methods." Pacific journal of Optimization 
-	2.1 (2006): 35-58.
-*//*
-  Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
-    Email: ypl.2100@gmail.com	
-    Acknowledgement: This code is written with the help of Baoli Wang.
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 References:
     [1] Clayton, Robert, and Björn Engquist. "Absorbing boundary 
