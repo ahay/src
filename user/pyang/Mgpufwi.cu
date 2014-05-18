@@ -134,7 +134,7 @@ void device_alloc()
 	cudaMalloc(&d_sxz, nt*sizeof(float));
 	cudaMalloc(&d_gxz, ng*sizeof(float));
 	cudaMalloc(&d_bndr, nt*(2*nz+nx)*sizeof(float));
-	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
+	cudaMalloc(&d_dobs, ns*ng*nt*sizeof(float));
 	cudaMalloc(&d_dcal, ng*sizeof(float));
 	cudaMalloc(&d_derr, ns*ng*nt*sizeof(float));
 	cudaMalloc(&d_g0, nz*nx*sizeof(float));
@@ -325,7 +325,12 @@ int main(int argc, char *argv[])
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 	cudaMemset(d_bndr, 0, nt*(2*nz+nx)*sizeof(float));
-	cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
+	for(is=0; is<ns; is++)
+	{
+		sf_floatread(dobs, ng*nt, shots);
+		matrix_transpose(dobs, trans, nt, ng);
+		cudaMemcpy(&d_dobs[is*ng*nt], trans, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
+	}
 	cudaMemset(d_dcal, 0, ng*sizeof(float));
 	cudaMemset(d_derr, 0, ns*ng*nt*sizeof(float));
 	cudaMemset(d_g0, 0, nz*nx*sizeof(float));
@@ -345,15 +350,11 @@ int main(int argc, char *argv[])
 	{
 		cudaEventRecord(start);
 
-		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
 		cudaMemset(d_g1, 0, nz*nx*sizeof(float));
 		cudaMemset(d_illum, 0, nz*nx*sizeof(float));
 		for(is=0;is<ns;is++)
 		{
-			sf_floatread(dobs, ng*nt, shots);
-			matrix_transpose(dobs, trans, nt, ng);
-			cudaMemcpy(d_dobs, trans, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
 			if (csdgather)	{
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
@@ -367,7 +368,7 @@ int main(int argc, char *argv[])
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
-				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				cuda_cal_residuals<<<(ng+511)/512, 512>>>(d_dcal, &d_dobs[it*ng+is*ng*nt], &d_derr[is*ng*nt+it*ng], ng);
 				cuda_rw_bndr<<<(2*nz+nx+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 			}
 
@@ -414,9 +415,6 @@ int main(int argc, char *argv[])
 		cuda_cal_vtmp<<<dimg, dimb>>>(d_vtmp, d_vv, d_cg, epsil, nz, nx);
 		for(is=0;is<ns;is++)
 		{
-			sf_floatread(dobs, ng*nt, shots);
-			matrix_transpose(dobs, trans, nt, ng);
-			cudaMemcpy(d_dobs, trans, ng*nt*sizeof(float), cudaMemcpyHostToDevice);
 			if (csdgather)	{
 				gxbeg=sxbeg+is*jsx-distx;
 				cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
@@ -430,7 +428,7 @@ int main(int argc, char *argv[])
 				ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
 				cuda_record<<<(ng+511)/512, 512>>>(d_sp0, d_dcal, d_gxz, ng);
-				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng], &d_derr[is*ng*nt+it*ng], ng);
+				cuda_sum_alpha12<<<(ng+511)/512, 512>>>(d_alpha1, d_alpha2, d_dcal, &d_dobs[it*ng+is*ng*nt], &d_derr[is*ng*nt+it*ng], ng);
 			}
 		}
 		cuda_cal_alpha<<<1,Block_Size>>>(&d_pars[3], d_alpha1, d_alpha2, epsil, ng);
@@ -457,7 +455,6 @@ int main(int argc, char *argv[])
 	cudaEventDestroy(stop);
 
 	sf_floatwrite(objval,iter,objs);
-	sf_fileclose(shots);
 
 	free(v0);
 	free(vv);

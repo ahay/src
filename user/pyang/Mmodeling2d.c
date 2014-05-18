@@ -50,20 +50,40 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
     int ix,iz;
     float v1,v2,diff1,diff2;
     
-    for (ix=1; ix < nx-1; ix++) 
-    for (iz=1; iz < nz-1; iz++) 
+
+	for (ix=1; ix < nx-1; ix++) 
+	for (iz=1; iz < nz-1; iz++) 
+	{
+	    	v1=vv[ix][iz]*dtz; v1=v1*v1;
+	    	v2=vv[ix][iz]*dtx; v2=v2*v2;
+		diff1 =	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+		diff2 =	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
+	    	diff1*=v1;
+	    	diff2*=v2;		
+		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+	}
+
+
+/*
+    for (ix=0; ix < nx; ix++) 
+    for (iz=0; iz < nz; iz++) 
     {
-	    v1=vv[ix][iz]*dtz; 
-	    v2=vv[ix][iz]*dtx;
-            diff1 =v1*v1*(p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1]);
-	    diff2 =v2*v2*(p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz]);
+	    v1=vv[ix][iz]*dtz; v1=v1*v1;
+	    v2=vv[ix][iz]*dtx; v2=v2*v2;
+	    diff1=diff2=-2.0*p1[ix][iz];
+	    if (iz-1>=0) diff1+=p1[ix][iz-1];
+	    if (iz+1<nz) diff1+=p1[ix][iz+1];
+	    if (ix-1>=0) diff2+=p1[ix-1][iz];
+	    if (ix+1<nx) diff2+=p1[ix+1][iz];
+	    diff1*=v1;
+	    diff2*=v2;
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
-
-    for (ix=2; ix < nx-2; ix++) { 
+*/
+    for (ix=1; ix < nx-1; ix++) { 
 	//top boundary
 /*
-	for (iz=0; iz < 2; iz++){
+	if(iz==0){
 	    	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
 			(p0[ix][iz+1]-p0[ix][iz]);
 	    	diff2=	c21*(p1[ix-1][iz]+p1[ix+1][iz]) +
@@ -74,8 +94,8 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	} 
 */
-	//bottom boundary
-	for (iz=nz-2; iz < nz; iz++){
+	/* bottom boundary */
+	if(iz==nz-1){
 	    	v1=vv[ix][iz]*dtz; 
 	    	v2=vv[ix][iz]*dtx;
 	    	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
@@ -86,9 +106,9 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	}
     }
 
-    for (iz=2; iz <nz-2; iz++){ 
-	//left boundary
-    	for(ix=0;ix<2;ix++){
+    for (iz=1; iz <nz-1; iz++){ 
+	/* left boundary */
+    	if(ix==0){
 	    	v1=vv[ix][iz]*dtz; 
 	    	v2=vv[ix][iz]*dtx;
 	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
@@ -97,10 +117,12 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 		diff2*=v2;
 		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	}
-	//right boundary
-    	for(ix=nx-2;ix<nx;ix++){
-	    	diff1=	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-	    	diff2=	-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
+	/* right boundary */
+    	if(ix==nx-1){
+	    	v1=vv[ix][iz]*dtz; 
+	    	v2=vv[ix][iz]*dtx;
+	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	    	diff2=-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
  	    	diff1*=0.5*v1*v1;
 		diff2*=v2;
 		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
@@ -109,7 +131,7 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 }
 
 
-void add_source(int *sxz, float **p, int ns, float *source, bool add)
+void add_source(float **p, float *source, int *sxz, int ns, bool add)
 {
 	int is, sx, sz;
 	if(add){
@@ -176,11 +198,12 @@ void rw_bndr(float **p, float *bndr, bool read)
 
 int main(int argc, char* argv[])
 {
-  	int is,it, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
-  	float dtx,dtz,amp,tmp;
-	float *trans, *ptr=NULL;
+	bool chk;
+  	int is,it,kt, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+  	float dtx,dtz,amp,tmp, totaltime=0	;
+	float *trans, **ptr=NULL;
 	clock_t start, end;
-	sf_file vinit, shots;
+	sf_file vinit, shots, check, time;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -188,6 +211,8 @@ int main(int argc, char* argv[])
     	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
+	time=sf_output("time"); /* output total time */ 
+	check=sf_output("check");
 
     	/* get parameters for forward modeling */
     	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
@@ -195,6 +220,11 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
+    	if(!sf_getbool("chk",&chk)) chk=false;
+    	/*check whether GPU-CPU implementation coincide with each other or not */
+	if(chk){
+    		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
+	}
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */
     	if (!sf_getfloat("fm",&fm)) fm=10;	
@@ -249,6 +279,8 @@ int main(int argc, char* argv[])
 	sf_putint(shots,"jgx",jgx);
 	sf_putint(shots,"jgz",jgz);
 	sf_putint(shots,"csdgather",csdgather?1:0);
+	sf_putint(time,"n1",1);
+	sf_putint(time,"n2",1);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -257,13 +289,12 @@ int main(int argc, char* argv[])
 	bndr=(float*)malloc(nt*(2*nz+nx)*sizeof(float));
 	dobs=(float*)malloc(ng*nt*sizeof(float));
 	trans=(float*)malloc(ng*nt*sizeof(float));
-	sxz=(int*)malloc(ns*sizeof(int));
-	gxz=(int*)malloc(ng*sizeof(int));	
 	vv=sf_floatalloc2(nz, nx);
 	p0=sf_floatalloc2(nz, nx);
 	p1=sf_floatalloc2(nz, nx);
 	p2=sf_floatalloc2(nz, nx);
-
+	sxz=(int*)malloc(ns*sizeof(int));
+	gxz=(int*)malloc(ng*sizeof(int));
 
 	for(it=0; it<nt; it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp=tmp*tmp;
@@ -273,8 +304,9 @@ int main(int argc, char* argv[])
 	memset(dobs,0,ng*nt*sizeof(float));
 	memset(trans,0,ng*nt*sizeof(float));
 	sf_floatread(vv[0],nz*nx,vinit);
-
-
+	memset(p0[0],0,nz*nx*sizeof(float));
+	memset(p1[0],0,nz*nx*sizeof(float));
+	memset(p2[0],0,nz*nx*sizeof(float));
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
 	{ printf("sources exceeds the computing zone!\n"); exit(1);}
  	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
@@ -284,8 +316,7 @@ int main(int argc, char* argv[])
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
-	}
-	else{
+	}else{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
@@ -304,19 +335,25 @@ int main(int argc, char* argv[])
 		memset(p2[0],0,nz*nx*sizeof(float));
 		for(it=0; it<nt; it++)
 		{
-			add_source(&sxz[is], p1, 1, &wlt[it], true);
+			add_source(p1, &wlt[it], &sxz[is], 1, true);
+			
 			step_forward(p0, p1, p2, vv, dtz, dtx);
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
 			record_seis(&dobs[it*ng], gxz, p0, ng);
-			rw_bndr(p0, &bndr[it*(2*nz+nx)], false);
 
+			if(it==kt){
+				sf_floatwrite(p0[0],nz*nx, check);
+			}
 		}
 		matrix_transpose(dobs, trans, ng, nt);
 		sf_floatwrite(trans,ng*nt,shots);
 		
  		end = clock();
  		sf_warning("shot %d finished: %f (s)", is+1,((float)(end-start))/CLOCKS_PER_SEC); 
+		totaltime+=((float)(end-start))/CLOCKS_PER_SEC;
 	}
+	totaltime/=ns;
+	sf_floatwrite(&totaltime,1,time);
 
 	free(sxz);
 	free(gxz);
@@ -328,6 +365,7 @@ int main(int argc, char* argv[])
 	free(*p0); free(p0);
 	free(*p1); free(p1);
 	free(*p2); free(p2);
+
 
     	exit(0);
 }

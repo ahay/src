@@ -48,7 +48,7 @@ extern "C" {
 #define EPS	1.0e-15f
 #endif
 
-#define PI 	3.141592653589793f
+#define PI 	SF_PI
 #define Block_Size1 16	/* 1st dim block size */
 #define Block_Size2 16  /* 2nd dim block size */
 #define Block_Size  512	/* vector computation blocklength */
@@ -138,10 +138,11 @@ void device_free()
 
 int main(int argc, char *argv[])
 {
-	int is, it, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
-	float dtx,dtz,mstimer,amp;
+	bool chk;
+	int is, it,kt, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+	float dtx,dtz,mstimer,amp, totaltime=0;
 	float *trans, *ptr=NULL;
-	sf_file vinit, shots;
+	sf_file vinit, shots, check, time;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -149,6 +150,8 @@ int main(int argc, char *argv[])
     	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
+	time=sf_output("time"); /* output total time */ 
+	check=sf_output("check");
 
     	/* get parameters for forward modeling */
     	if (!sf_histint(vinit,"n1",&nz1)) sf_error("no n1");
@@ -156,6 +159,11 @@ int main(int argc, char *argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
+    	if(!sf_getbool("chk",&chk)) chk=false;
+    	/*check whether GPU-CPU implementation coincide with each other or not */
+	if(chk){
+    		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
+	}
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */
     	if (!sf_getfloat("fm",&fm)) fm=10;	
@@ -210,6 +218,8 @@ int main(int argc, char *argv[])
 	sf_putint(shots,"jgx",jgx);
 	sf_putint(shots,"jgz",jgz);
 	sf_putint(shots,"csdgather",csdgather?1:0);
+	sf_putint(time,"n1",1);
+	sf_putint(time,"n2",1);
 
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -247,8 +257,7 @@ int main(int argc, char *argv[])
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
-	}
-	else{
+	}else{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
@@ -272,8 +281,17 @@ int main(int argc, char *argv[])
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 			cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-
 			cuda_record<<<(ng+511)/512, 512>>>(d_sp0, &d_dobs[it*ng], d_gxz, ng);
+
+			if(chk && it==kt){			
+				float *test=(float*)malloc(nz*nx*sizeof(float));
+
+				cudaMemcpy(test, d_sp0, nz*nx*sizeof(float), cudaMemcpyDeviceToHost);
+				window(v0, test, nz, nx, nz1, nx1);
+				sf_floatwrite(v0,nz*nx, check);
+				
+				free(test);
+			}
 		}
 		cudaMemcpy(dobs, d_dobs, ng*nt*sizeof(float), cudaMemcpyDeviceToHost);
 		matrix_transpose(dobs, trans, ng, nt);
@@ -282,10 +300,13 @@ int main(int argc, char *argv[])
 		cudaEventRecord(stop);
   		cudaEventSynchronize(stop);
   		cudaEventElapsedTime(&mstimer, start, stop);
-    		sf_warning("shot %d finished: %f (s)",is+1, mstimer*1e-3);
+    		sf_warning("shot %d finished: %f (s)",is+1, mstimer*1.e-3);
+		totaltime+=mstimer*1.e-3;/* mstimer with different unit, be careful! */
 	}
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
+	totaltime/=ns;
+	sf_floatwrite(&totaltime,1,time);
 
 	free(v0);
 	free(vv);
