@@ -1,5 +1,5 @@
 from rsf.proj import *
-from m2d import *
+from rsf.recipes.m2d import *
 
 ##########################################
 # Parameters
