@@ -1,5 +1,5 @@
 from rsf.proj import *
-from m1d import *
+from rsf.recipes.m1d import *
 
 # ------------------------------------------------------------------------------
 nn = 8
@@ -267,7 +267,7 @@ def errcur(errc, err, par, mode, nn):
     
 # ------------------------------------------------------------------------------
 def mgraph(fin, title):
-    Result(fin, 
+    Plot(fin, 
            '''
            put label1 = "depth" unit1="m" label2="Amplitude" unit2="" |
            window j2=50 squeeze=n |
@@ -276,7 +276,7 @@ def mgraph(fin, title):
            '''%(str(title)))
 
 def graph(min1, max1, fin, title):
-    Result(fin, 
+    Plot(fin, 
            '''
            graph grid1=n grid2=n g2num=0.25 g1num=0.1
                  wanttitle=n 

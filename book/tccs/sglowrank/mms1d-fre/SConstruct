@@ -1,5 +1,5 @@
 from rsf.proj import *
-from m1d import *
+from rsf.recipes.m1d import *
 
 # ------------------------------------------------------------------------------
 nn = 16
@@ -281,7 +281,7 @@ def errcur(errc, err, par, mode, nn):
         
 # ------------------------------------------------------------------------------
 def mgraph(fin, title):
-    Result(fin, 
+    Plot(fin, 
            '''
            put label1 = "depth" unit1="m" label2="Amplitude" unit2="" |
            window j2=50 squeeze=n |
@@ -290,7 +290,7 @@ def mgraph(fin, title):
            '''%(str(title)))
 
 def graph(min1, max1, fin, title):
-    Result(fin, 
+    Plot(fin, 
            '''
            graph grid1=n grid2=n g2num=0.25 g1num=0.1
                  wanttitle=n 
@@ -349,5 +349,19 @@ Result(mode,
        ''') 
 
 print errlist.keys()
+
+
+Result('frec15', 
+     '''
+     graph grid1=n grid2=n g2num=0.25 g1num=0.1
+           wanttitle=n 
+           plotcol=7,6,3,5 dash=0,1,2,3,5
+           min1=%g max1=%g min2=-0.6 max2=1.2 
+           screenratio=0.618 screenht=8 plotfat=4
+     '''%(float(recmin),float(recmax)))
+
+
+
+
 
 End()
