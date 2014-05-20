@@ -43,6 +43,7 @@ eicop2d eicop3d
 aweop2d aweop3d
 accumulate
 decibel
+itrack2d itrack3d
 '''
 
 # Python targets
