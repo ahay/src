@@ -115,28 +115,28 @@ in practice, we handle an operator differently.
 Each practical application requires the practitioner to
 prepare two computer programs.
 One performs the matrix multiply
-$\bold y =\bold A \bold x$
+$\bold y =\bold B \bold x$
 and another multiplys by the transpose
-$\tilde{\bold x} =\bold A\T \bold y$
+$\tilde{\bold x} =\bold B\T \bold y$
 (without ever having the matrix itself in memory).
 It is always easy to transpose a matrix.
 It is less easy to take a computer program that does
-$\bold y =\bold A \bold x$
+$\bold y =\bold B \bold x$
 and convert it to another to do
-$\tilde{\bold x} =\bold A\T \bold y$.
+$\tilde{\bold x} =\bold B\T \bold y$.
 In this chapter are many examples of increasing complexity.
 At the end of the chapter we will see a test for any program pair
-to see whether the operators $\bold A$ and $\bold A\T$ are mutually adjoint
+to see whether the operators $\bold B$ and $\bold B\T$ are mutually adjoint
 as they should be.
 Doing the job correctly (coding adjoints without making approximations)
 will reward us later when we tackle model and image estimation applications.
 
 \par
 Mathematicians often denote the transpose of a matrix
-$\bold F$ by $\bold F^{\rm T}$.
+$\bold B$ by $\bold B^{\rm T}$.
 In physics and engineering we often encounter complex numbers.
 There the adjoint is the complex-conjugate transposed matrix
-denoted $\bold F^\ast$.
+denoted $\bold B^\ast$.
 %In this book, the adjoint is simply written as $\bold F\T$.
 What this book calls the adjoint is more properly called the Hilbert adjoint.
 
@@ -899,7 +899,7 @@ The
 \bx{end effect}s
 of the convolution modules are summarized
 in Figure~\ref{fig:conv}.%
-\sideplot{conv}{width=3in}{
+\sideplot{conv}{width=0.7\textwidth}{
         Example of convolution end-effects.
         From top to bottom:
         input;
@@ -1090,7 +1090,7 @@ and divided by the number in the bin, is represented by
 Empty bins, of course, leave us a problem since we dare not divide by the zero sum they contain.
 That we'll address in chapter \ref{paper:iin}.
 In Figure \ref{fig:galbin}, the empty bins contain zero values.
-\plot{galbin}{width=6in,height=4.0in}{
+\plot{galbin}{width=\textwidth,height=.66\textwidth}{
   Binned depths of the Sea of Galilee.
 }
 
@@ -1115,7 +1115,7 @@ and a third data point exactly in the middle.
 Then for a model space 6 points long,
 as shown in Figure \ref{fig:helgerud},
 we have the operator in (\ref{eqn:lintseq}).
-\sideplot{helgerud}{width=3in}{
+\sideplot{helgerud}{width=0.8\textwidth}{
   Uniformly sampled model space
   and irregularly sampled data space corresponding
   to \protect(\ref{eqn:lintseq}).
@@ -1330,8 +1330,7 @@ and take care to get the ends correct.
 Figure \ref{fig:causint} illustrates the program for $\rho = 1$.
 \opdex{causint}{causal integral}{35}{46}{api/c}
 \par
-%\activesideplot{causint}{width=3.00in,height=3.2in}{}
-\sideplot{causint}{width=3.00in}{
+\sideplot{causint}{width=.8\textwidth}{
   {\tt in1} is an input pulse.
   {\tt C in1} is its causal integral.
   {\tt C' in1} is the anticausal integral of the pulse.
@@ -1343,9 +1342,9 @@ Figure \ref{fig:causint} illustrates the program for $\rho = 1$.
 }
 \par
 Later we will consider equations
-to march wavefields up towards the earth's surface,
+to march wavefields up towards the earth surface,
 a layer at a time, an operator for each layer.
-Then the adjoint will start from the earth's surface
+Then the adjoint will start from the earth surface
 and march down, a layer at a time, into the earth.
 
 %\begin{notforlecture}
@@ -1403,13 +1402,13 @@ of ordinary differential equations
 that lead to equations of this type.
 Rather than derive such an equation on the basis
 of many possible physical arrangements,
-we can begin from the filter transformation $\bold B$ in (\ref{eqn:contran1})
-but put the matrix on the other side of the equation
+we can begin from the filter transformation in (\ref{eqn:contran1})
+but put the top square of the matrix on the other side of the equation
 so our transformation can be called one of inversion or backsubstitution.
-Let us also force the matrix $\bold B$ to be a square matrix
-by truncating it with
-$\bold T = \left[ \bold I \quad \bold 0 \right]$, say
-$\bold A =\left[ \bold I \quad \bold 0 \right] \bold B = \bold T \bold B$.
+%Let us also force the matrix $\bold B$ to be a square matrix
+%by truncating it with
+%$\bold T = \left[ \bold I \quad \bold 0 \right]$, say
+%$\bold A =\left[ \bold I \quad \bold 0 \right] \bold B = \bold T \bold B$.
 To link up with applications in later chapters,
 I specialize to 1's on the main diagonal and insert some bands of zeros.
 \begin{equation}
@@ -1492,10 +1491,6 @@ $Y(Z) = X(Z)/A(Z)$.
 Thus, convolution is amounts to polynomial multiplication
 while the backsubstitution we are doing here
 is called deconvolution, and it amounts to polynomial division.
-
-
-
-
 \par
 A causal operator is one that uses its present and past inputs
 to make its current output.
@@ -1516,30 +1511,22 @@ A module to backsolve equation (\ref{eqn:polydiv}) is \texttt{recfilt}.
 \opdex{recfilt}{deconvolve}{49}{75}{api/c}
 
 \par
-The more complicated an operator, the more complicated is its adjoint.
-Given a transformation from $\bold x$ to $\bold y$ that is
-$\bold T\bold B \bold y = \bold x$,
-we may wonder if the adjoint transform really is
-$(\bold T\bold B)\T \hat{\bold x}= \bold y$.
-It amounts to asking if the adjoint of
-$\bold y = (\bold T\bold B)^{-1}\bold x$ is
-$\hat{\bold x} = ((\bold T\bold B)\T)^{-1}\bold y$.
-Mathematically we are asking if
-the inverse of a transpose is the transpose of the inverse.
-This is so because in
-$\bold A\bold A^{-1} = \bold I = \bold I\T = (\bold A^{-1})\T\bold A\T$
-the parenthesized object must be the inverse of its neighbor $\bold A\T$.
-
-
-
-\par
-The adjoint has a meaning which is nonphysical.
-It is like the forward operator except that we must
-begin at the final time and revert towards the first.
-The adjoint pendulum damps as we compute it backward in time,
-but that, of course, means that the adjoint pendulum diverges
-as it is viewed moving forward in time.
-
+We may wonder why the adjoint of
+$\bold A \bold y = \bold x$
+actually is
+$\bold A\T \hat{\bold x}= \bold y$.
+With the well known fact that
+the inverse of a transpose is the transpose of the inverse
+we have
+\begin{eqnarray}
+\bold y          &=& \bold A^{-1} \bold x
+\\
+\hat \bold x     &=& (\bold A^{-1})\T \bold y
+\\
+\hat \bold x     &=& (\bold A\T)^{-1} \bold y 
+\\
+\bold A\T \hat \bold x &=& \bold y
+\end{eqnarray}
 
 \subsection{The basic low-cut filter}
 Many geophysical measurements contain
@@ -1567,7 +1554,7 @@ for choosing the bandwidth of the low cut;
 and it is causal (uses the past but not the future).
 
 \par
-We make our causal lowcut filter (highpass filter) by
+We make a causal lowcut filter (highpass filter) by
 two stages which can be done in either order.
 \begin{enumerate}
 \item
@@ -1578,332 +1565,63 @@ two stages which can be done in either order.
         to deconvolve with $(1,-\rho)$ where numerically,
         $\rho$ is slightly less than unity.
 \end{enumerate}
-The convolution ensures that the zero frequency is removed.
+The convolution with $(1,-1)$  ensures that the zero frequency is removed.
 The leaky integration almost undoes the differentiation
-(but does not restore the zero frequency).
-Adjusting the numerical value of $\rho$ adjusts
-the cutoff frequency of the filter.
-To learn the impulse response of the combined processes, we
-need to convolve the finite difference $(1,-1)$
-with the leaky integration 
-$(1, \rho, \rho^2, \rho^3, \rho^4, \cdots)$.
-The result is
-$(   1, \rho, \rho^2, \rho^3, \rho^4, \cdots)$ minus
-$(0, 1, \rho, \rho^2, \rho^3,         \cdots)$.
-We can think of this as
-$(1,    0,      0,      0,      0, \cdots)$ minus
-$(1-\rho) (1, \rho, \rho^2, \rho^3, \cdots)$.
-In other words the impulse response is an impulse
-followed by the negative of a weak $(1-\rho)$ decaying exponential $\rho^t$.
+with $(1,-1)$ but cannot restore the zero frequency.
+Adjusting the numerical value of $\rho$ has interesting effects
+in the time domain and in the frequency domain.
+Convolving the finite difference $(1,-1)$ with the leaky integration 
+$(1, \rho, \rho^2, \rho^3, \rho^4, \cdots)$
+gives the result
+\begin{eqnarray}
+\nonumber
+&(   1,& \rho, \rho^2, \rho^3, \rho^4, \cdots)
+\\
+\nonumber
+\ -\ 
+&(0,& 1, \rho, \rho^2, \rho^3,         \cdots).
+\end{eqnarray}
+Rearranging, it becomes
+\begin{eqnarray}
+\nonumber
+&(1,&    0,      0,      0,      0, \cdots) \ +\ 
+\\
+\nonumber
+(\rho-1) &(0, &1, \rho, \rho^2, \rho^3, \cdots).
+\end{eqnarray}
+Since $\rho$ is a tiny bit less than one,
+$(1-\rho)$ is a small number.
+Thus our filter is an impulse followed by the negative
+of a weak decaying exponential $\rho^t$.
+If you prefer a time-symmetric (phaseless) filter,
+you could follow this one by its time reverse.
+\par
 Roughly speaking, the cutoff frequency of the filter corresponds
 to matching one wavelength to the exponential decay time.
-
-\par
-Some exercise with Fourier transforms
-or $Z$-transforms\footnote{
-        An introduction to $Z$-transforms is found in my
-        earlier books, FGDP and ESA-PVI.
-        },
-shows the
-Fourier transform of this highpass filter 
-to be
-\begin{equation}
-H(Z) \eq \frac{1-Z }{ 1-\rho Z}
-\eq
-1
--(1-\rho) [
-Z^1
-+\rho    Z^2
-+\rho^2  Z^3
-+\rho^3  Z^4
-\cdots
-]
-\label{eqn:lowcut}
-\end{equation}
-where the unit-delay operator is $Z=e^{i\omega\Delta t}$
+More formally,
+the Fourier domain representation of this filter is
+$H(Z) = (1-Z)/(1-\rho Z)$
+where $Z$ is the unit-delay operator is $Z=e^{i\omega\Delta t}$
 and where $\omega$ is the frequency.
-A symmetrical (noncausal) lowcut filter would filter once forward
-with $H(Z)$ and once backwards (adjoint) with $H(1/Z)$.
-This is not the place for a detailed Fourier analysis of this filter
-but it is the place to mention that a cutoff filter is typically
-specified by its cutoff frequency,
-a frequency that separates the pass and reject region.
-For this filter, the cutoff frequency $\omega_0$
-would correspond to matching a quarter wavelength of a sinusoid
-to the exponential decay length of $\rho^k$, namely,
-say the value of $k$ for which $\rho^k \approx 1/2$
-
-\par
-Seismological data is more complex.  A single ``measurement''
-consists of an explosion and echo signals recorded at many locations.
-As before, a complete survey is a track (or tracks)
-of explosion locations.
-Thus, in seismology, data space is higher dimensional.
-Its most troublesome noise is not simply low frequency;
-it is low velocity.
-We will do more with multidimensional data in later chapters.
-
-
-
-
-%\subsection{Adjoints}
-%\par %XXX
-%The operators and adjoints above transform vectors to other vectors.
-%They also transform data planes to model planes, volumes, etc.
-%A mathematical operator transforms an ``abstract vector'' which
-%might be packed full of volumes of information like television
-%signals (time series) can pack together a movie, a sequence of frames.
-%We can always think of the operator as being a matrix
-%but the matrix can be truly huge.
-%When the vectors transformed by the matrices are large like
-%geophysical data set sizes
-%then the matrix sizes are ``large squared,''
-%far too big for computers.
-%Thus although we can always think of an operator as a matrix,
-%in practice, we handle an operator differently.
-%Each practical application requires the practitioner to
-%prepare two computer programs.
-%One performs the matrix multiply
-%$\bold y =\bold A \bold x$
-%and another multiplys by the transpose
-%$\tilde{\bold x} =\bold A\T \bold y$
-%(without ever having the matrix itself in memory).
-%It is always easy to transpose a matrix.
-%It is less easy to take a computer program that does
-%$\bold y =\bold A \bold x$
-%and convert it to another to do
-%$\tilde{\bold x} =\bold A\T \bold y$.
-%In this chapter are many examples of increasing complexity.
-%At the end of the chapter we will see a test for any program pair
-%to see whether the operators $\bold A$ and $\bold A\T$  are mutually adjoint.
-%Doing the job correctly (coding adjoints without making approximations)
-%will reward us later when we tackle model and image estimation problems.
-
-
-
-
-
-%\subsection{Killing secular noise}
-%Many geophysical measurements contain
-%very low-frequency noise called ``drift.''
-%For example, it might take some months to survey the depth of a lake.
-%Meanwhile, rainfall or evaporation could change the lake level so that
-%new survey lines become inconsistant with old ones.
-%Likewise, gravimenters are sensitive to atmospheric pressure
-%which changes with the weather.
-%A magnetic survey of an archeological site would need to contend
-%with the fact that the earth's main magnetic field is changing randomly
-%through time while the survey is being done.
-%Such noises are sometimes called ``secular noise.''
-%\par
-%The simplest way to eliminate low frequency noise is
-%to take a time derivative.
-%A disadvantage of the derivative is that it causes the signal
-%at high frequencies to change from a pulse to a doublet.
-%Here we examine a simple ``polarity-preserving low-cut filter.''
-%It preserves the wave shape at high frequencies
-%and it has an adjustable parameter
-%for choosing the bandwidth of the low cut.
-%\par
-%A low-cut filter is one that removes from $X$
-%the zero frequency $\omega=0$ component,
-%and suppresses low frequency components
-%($\omega^2 < \epsilon^2$)
-%in the output $Y$.
-%\begin{equation}
-%Y \eq \frac{\omega^2 }{ \omega^2 + \epsilon^2} \ X
-%\label{eqn:locut}
-%\end{equation}
-%To exercise various popular notations we rewrite this as
-%\begin{equation}
-%( \omega^2 + \epsilon^2)  Y \eq \omega^2  X
-%\end{equation}
-%Recalling the fact that the negative of a second derivative operator
-%$-(-i\omega)^2$
-%corresponds to convolution with the coefficients $(-1,2,-1)$
-%we can express the same thought using a convolution notation
-%\begin{equation}
-%(-1, 2+\epsilon^2, -1)
-%\ {\tt \ast} \ 
-%Y \eq
-%(-1, 2, -1)
-%\ {\tt \ast} \ 
-%X
-%\end{equation}
-%which you can think of as a convolution matrix equation where both sides
-%have tridiagonal matrices.
-%We can express the same thought in $Z$-transform notation as
-%\begin{equation}
-%\left(\frac{-1}{Z} +(2+\epsilon^2) -Z\right)
-%Y \eq
-%\left(\frac{-1}{Z} +2 -Z\right)
-%X
-%\end{equation}
-%and we can factor the polynomials
-%\begin{equation}
-%\label{eqn:lofact}
-%{1\over\rho}
-%\left(1-{\rho\over Z}\right)
-%\left(1-{\rho      Z}\right)
-%Y(Z) \eq
-%\left(1-{1\over Z}\right)
-%\left(1-{       Z}\right)
-%X(Z)
-%\end{equation}
-%where $2+\epsilon^2 = (1+\rho^2)/\rho$.
-%(Factoring the polynomial amounts to factoring tridiagonal
-%matrices into a product of upper and lower bidiagonal matrices.)
-%We can group the causal filter parts together
-%thereby defining a causal operator polynomial ratio $H(Z)$:
-%\begin{equation}
-%Y(Z) \eq
-%\rho \
-%{\left(1-{1\over Z}\right)  \over \left(1-{\rho\over Z}\right)} \ 
-%{\left(1-{       Z}\right)  \over \left(1-{\rho      Z}\right)} \
-%X(Z)
-%\eq
-%\rho \
-%\bar H(1/Z) \ H(Z) \ \ X(Z)
-%\label{eqn:lowfac}
-%\end{equation}
-%\par
-%Here $H=\bar H$ because the filter coefficients are not complex numbers.
-%$H(Z)$ is called a causal filter because it uses past values
-%of the filter inputs to create the output.
-%Likewise $H(1/Z)$ is called anticausal because the present output
-%comes from future inputs.
-%If you filter with both,
-%$\bar H(1/Z) H(Z)$,
-%the filter response is 
-%$\omega^2/(\omega^2+\epsilon^2$
-%(to the extent that a time derivative is the same as a finite difference).
-%\par
-%For any application
-%we have a choice between a symmetrical filter $\bar H(1/Z) H(Z)$ whose
-%{\em  amplitude} response is $\bar H(1/Z) H(Z)$,
-%or the causal filter $H(Z)$ whose
-%{\em  energy} response is $\bar H(1/Z) H(Z)$.
-%The causal filter
-%\begin{equation}
-%H(Z) \eq {1-Z \over 1-\rho Z}
-%\label{eqn:lowcut}
-%\end{equation}
-%obviously kills zero frequency because of the time derivative $(1-Z)$.
-%The denominator $1/(1-\rho Z)$ looks like the response of leaky integration.
-%The combination of numerator and denominator
-%has an impulse response that is a positive impulse,
-%followed by a damped exponential of negative polarity.
-%The area of the pulse equals the area of the damped exponential,
-%assuring that the zero-frequency response vanishes
-%and the high-frequency response is an impulse,
-%i.e.\ it does not distort high frequencies.
-%XX
-%
-
-\begin{exer}
-\item
-        Give an analytic expression for
-        the waveform of equation (\ref{eqn:lowcut}).
-\item
-        Define a low-pass filter as $1-H(Z)$.
-        What is the low-pass impulse response?
-\item
-        Put Galilee data on a coarse mesh.
-        Consider north-south lines as one-dimensional signals.
-        Find the value of $\rho$ for which $H$ is the most pleasing filter.
-\item
-        Find the value of $\rho$ for which $\bar HH$ is the most pleasing filter.
-\item
-        Find the value of $\rho$ for which $H$ applied to Galilee has minimum energy.
-        (Experiment with a range of about ten values around your favorite value.)
-\item
-        Find the value of $\rho$ for which $\bar HH$ applied to Galilee has minimum energy.
-\item
-        Repeat above for east-west lines.
-\end{exer}
-
-
-
-%\subsection{Smoothing and roughening with triangles}
-%\sx{triangle function}
-%We commonly need to smooth signals and images.
-%It is particularly economical to smooth with \bx{rectangle function}s.
-%To do this, we first apply causal integration.
-%Then we subtract the integral at two locations
-%and this provides
-%the integral between those locations.
-%This process is usually much more economical
-%than performing convolution with a rectangle,
-%because using integration makes the computational cost
-%independent of the length of the rectangle.
-%Subroutine \texttt{boxconv}
-%from my previous book, PVI, does the job.
-%\progdex{boxconv}{convolve with box}
-%Convolving twice with a box function
-%yields a triangle function as the impulse response of the smoothing.
-%Subroutine \texttt{triangle} does it
-%and also handles side boundaries as also described in PVI.
-%Basically, the output flowing off the side boundaries
-%is folded back in,
-%so that the output the same length as the input.
-%(I need a clever programmer to show me how to
-%use modulo functions to do the folding back.
-%This version does not allow the data
-%to be shorter than the smoothing rectangle.)
-%\progdex{triangle}{convolve with triangle}
-%Subroutine \texttt{triangle2} performs simple Fortran rituals
-%to give us triangle smoothing on both the 1-axis and the 2-axis.
-%\progdex{triangle2}{convolve 2-D triangle}
-%The resulting 2-D impulse response is pleasingly
-%circularly symmetric.
-%This occurs because a triangle function is a good
-%approximation to a Gaussian function.
-%The product of two one-dimensional Gaussians
-%is a two-dimensional one; i.e.,
-%$ e^{-x^2} e^{-y^2} = e^{-(x^2+y^2)}$.
-%The departures from symmetry (which are small)
-%can be seen in Figure \ref{fig:triangle2}.
-%(They are a plus-like image at the apex and rectangle at the floor.)
-%%XXXX
-%%\activesideplot{triangle2}{width=3in,height=1.5in}{}{
-%\activeplot{triangle2}{width=6in,height=3in}{}{
-%        Impulse and its response to the triangle smoother.
-%        }
-%
-%\par
-%In later chapters we will see frequent need for a \bx{roughening operator}.
-%The simplest roughening operator is a derivative in 1-D
-%or a gradient or Laplacian in 2-D.
-%A roughening operator with an adjustable parameter
-%is simply an impulse minus the smoothing operator.
-%This is provided by module \texttt{rufftri2}.
-%\progdex{rufftri2}{roughen with triangle}
-%
-%\par
-%Some linear operators like these smoothing operators
-%turn out to be their own adjoint.
-%(A method to verify this is in the next section.)
-%Then there is no need to include the {\tt adj} argument.
-%(I may eventually come to regret also omitting the {\tt add} argument.)
-%
-%\par
-%Figure \ref{fig:galocut90} shows the effect of roughening
-%(low cut filtering) the depth map of the Sea of Galilee.
-%On the positive side, the roughening gives us a better view
-%of ancient sunken shorelines.
-%On the negative side, it exaggerates various defects in the data
-%(such as spikes and tracks)
-%and defects in data processing (empty bins).
-%\par
+The spectral response of the filter is $|H(\omega)|$.
+Were we to plot this function we would see it is nearly 1
+everywhere except in a small region near $\omega=0$
+where it becomes tiny.
+It is called a ``low-cut'' filter.
+Figure~\ref{fig:galocut} compares a low-cut filter to a finite
+difference.
 \inputdir{galilee}
+\plot{galocut}{width=\textwidth,height=.66\textwidth}{
+        The depth of the Sea of Galilee after roughening.
+	On the left, the smoothing is done by low-cut
+	filtering on the horizontal axis.
+	On the right it is a finite difference.
+	We know this because of a few scattered impulses
+	(navigation failure) outside the lake.
+	Both results solve the problem of Figure~\ref{fig:galbin}
+	which is too smooth to see interesting features.
+        }
 
-\plot{galocut}{width=6in,height=4.0in} {
-  The depth of the Sea of Galilee after roughening.
-}
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% . . JCS Include
 
 \subsection{Smoothing with box and triangle}
 \inputdir{XFig}
@@ -1974,16 +1692,19 @@ distortion.  The result is like a wave reflected by a
 \bxbx{zero-slope}{zero slope} end condition.  Impulses are smoothed
 into triangles except near the boundaries.  What happens near the
 boundaries is shown in Figure~\ref{fig:triend}.
-% \sideplot{triend}{width=3in}{
-%	Edge effects when smoothing an impulse with a triangle function.
-%	Inputs are spikes at various distances from the edge.
-%	}
 \inputdir{triangle}
-\sideplot{triend}{width=3in}{
+\sideplot{triend}{width=.8\textwidth}{
 	Edge effects when smoothing an impulse with a triangle function.
 	Inputs are spikes at various distances from the edge.}
 Note that at the boundary, there is necessarily only half a triangle,
 but it is twice as tall.
+\par
+Why might this be useful?
+Consider a survey of water depth in an area of the deep ocean.
+All the depths are strongly positive with interesting but small variations on them.
+Ordinarily we can enhance high frequency fluctuations by one minus a low pass filter,
+say $H=1-L$.  If this is to work, however, it is important
+that the $L$ truly cancel the $1$ near zero frequency.
 %
 \par
 %
@@ -2101,7 +1822,7 @@ and spray this model to all offsets.
 From a matrix viewpoint, stacking is like a {\em  row} vector
 of normal moveout operators and modeling is like a {\em  column}.
 An example is shown in Figure \ref{fig:cunha}.
-\sideplot{cunha}{width=3in}{
+\sideplot{cunha}{width=.8\textwidth}{
   Hypothetical model,
   synthetic data, and model image.
 }
@@ -2216,26 +1937,19 @@ which we'd turn off if we wanted to add one stack upon another.
 
 With a collection of operators,
 we can build more elaborate operators.
-One method is chaining.
-For example, the operator product
+An amazing thing about matrices is that their elements
+may themselves be matrices.
+A row is a matrix containing two matrices.
+This is done by subroutine \texttt{row0}
+also in module \texttt{smallchain3}.
+An operator product
 $\bold A = \bold B \bold C$
 is represented in the subroutine 
 \texttt{ chain2( op1, op2, ...)}.
-Likewise the operator product
-$\bold A = \bold B \bold C \bold D$
-is represented in the in the subroutine 
-\texttt{ chain3( op1, op2, op3,...)}.
 As you read these codes, please remember the
 output is the last argument only when the output is $\bold d$.
 When the output is $\bold m$, the output is the second from last.
-\par
-Another amazing thing about matrices is that their elements
-may themselves be matrices.
-A very common example
-is a row matrix containing two elements,
-each element itself a matrix.
-This is done by subroutine \texttt{row}
-also in module \texttt{chain}.
+
 
 
 
@@ -2298,8 +2012,9 @@ The norm is usually defined to be the \bx{dot product}
 For complex data it is
 $\bar{\bold{d}} \cdot \bold{d}$
 where $\bar{\bold{d}}$ is the complex conjugate of $\bold{d}$.
-In theoretical work the ``length of a vector'' means the vector's norm.
-In computational work the ``length of a vector'' means the
+A notation that does transpose and complex conjugate at the same time is $\bold d\T\,\bold d$.
+In theoretical work the ``size of a vector'' means the vector's norm.
+In computational work the ``size of a vector'' means the
 number of components in the vector.
 
 \par
@@ -2342,61 +2057,64 @@ the program for the adjoint of an operator
 is precisely consistent with the operator itself.
 It can be, and it should be.
 
-\par
 Conceptually, the idea of matrix transposition is simply ${a}_{ij}'=a_{ji}$.
 In practice, however, we often encounter matrices far too large
 to fit in the memory of any computer.
 Sometimes it is also not obvious how to formulate the process at hand
 as a matrix multiplication.
 (Examples are differential equations and fast Fourier transforms.)
-What we find in practice is that an application and its adjoint 
-amounts to two routines. The first routine
-amounts to the matrix multiplication $ \bold F \bold m$.
+What we find in practice is that an operator and its adjoint 
+are two routines. 
+The first amounts to the matrix multiplication $ \bold F \bold m$.
 The adjoint routine computes $\bold F\T \bold d$,
 where $\bold F\T$ is the \bx{conjugate-transpose} matrix.
 In later chapters we will be solving huge sets of simultaneous equations,
 in which both routines are required.
 If the pair of routines are inconsistent,
-we are doomed from the start.
+we may be doomed from the start.
 The dot-product test is a simple test for verifying that the two 
 routines are adjoint to each other.
 
 \par
-The associative property of linear algebra says that
-we do not need parentheses in a vector-matrix-vector product
-like $\bold d\T \bold F \bold m $ because we get the same
-result no matter where we put the parentheses.
-They serve only to determine the
-sequence of computation.
-Thus,
+I'll tell you first what the dot-product test is,
+and then explain how it works.
+Take a model space vector $\bold m$ filled with random numbers, and likewise
+a data space  vector $\bold d$ filled with random numbers.
+Use your forward modeling code to compute
+\begin{eqnarray}
+\bold m & \Leftarrow & {\rm random}
+\\
+\bold d & \Leftarrow & {\rm random}
+\\
+\bold {\hat d} &=& \bold F \bold m
+\\
+\bold {\hat m} &=& \bold F\T \bold d
+\end{eqnarray}
+You should find these two inner products equal:
+\begin{equation}
+\bold {\hat m} \cdot \bold m  =
+\bold {\hat d} \cdot \bold d
+\end{equation}
+If they are, it means what you coded for $\bold F\T$ is indeed the adjoint of $\bold F$.
+There is a glib way of saying why this must be so:
 \begin{eqnarray}
 \bold d\T ( \bold F \bold m ) &=& ( \bold d\T \bold F )  \bold m   \\
 \bold d\T ( \bold F \bold m ) &=& ( \bold F\T \bold d )\T \bold m 
 \label{eqn:bilin2}
 \end{eqnarray}
-(In general, the matrix is not square.)
-To perform the dot-product test,
-load the vectors $\bold m$ and $\bold d$ with random numbers.
-Using your program for $\bold F$,
-compute the vector $\tilde{\bold{d}} = \bold{F}\bold{m}$,
-and using your program for $\bold{F}\T$,
-compute $\tilde{\bold{m}} = \bold{F}\T\bold{d}$.
-Inserting these into equation~(\ref{eqn:bilin2})
-gives you two scalars that should be equal.
-\begin{equation}
-\bold{d}\T ( \bold F \bold m ) \eq
-\bold d\T \tilde{\bold d} \eq \tilde{\bold m}\T \bold m
-\eq ( \bold F\T \bold d )\T \bold m
-\label{eqn:bilin}
-\end{equation}
-The left and right sides of this equation will be computationally equal
-only if the program doing $\bold F\T$ is indeed adjoint
-to the program doing $\bold F$
-(unless the random numbers do something miraculous).
-A final word: If an operator uses complex arithmetic
-then both its input and output are ``in the field of complex numbers.''
-The conversion between real and complex numbers is not a linear operator
-despite its seeming similarity to truncation and zero padding.
+This glib way is easily made concrete with explicit summation.
+We may express $\sum_i \sum_j d_i F_{ij} m_j$ in two different ways.
+\begin{eqnarray}
+\sum_i d_i ( \sum_j F_{ij} m_m) &=& \sum_j (\sum_i d_i F_{ij}     ) m_j
+\\
+                                &=& \sum_j (\sum_i     F_{ij} d_i ) m_j
+\\
+ \bold d\T \cdot (\bold F\bold m)     &=& (\bold F\T \bold d) \cdot  \bold m
+\\
+ \bold d\T \cdot \bold{\hat d}        &=& \bold{\hat m}\cdot  \bold m
+\end{eqnarray}
+Should $\bold F$ contain complex numbers, the dot-product test is a comparison
+for both real parts and for imaginary parts.
 
 \par
 The program for applying the dot product test is \texttt{dottest}
@@ -2418,24 +2136,25 @@ $\bold d \leftarrow \bold d+\bold F\bold m$.
 %\end{notforlecture}
 
 \par
-I tested (\ref{eqn:bilin}) on many operators
+I ran the dot product test on many operators
 and was surprised and delighted to find
-that it is often satisfied to an accuracy near the computing precision.
-I do not doubt that larger rounding errors could occur,
-but so far,
-every time I encountered a relative discrepancy of $10^{-5}$ or more,
+that for small operators
+it is generally satisfied to an accuracy near the computing precision.
+For large operators, precision can become and issue.
+Every time I encountered a relative discrepancy of $10^{-5}$ or more
+on a small operator (small data and model spaces)
 I was later able to uncover a conceptual or programming error.
 Naturally,
-when I do dot-product tests, I scale the implied matrix to a
-small dimension in order
+when I run dot-product tests, I scale the implied matrix to a
+small size both
 to speed things along, and to be sure that
 boundaries are not overwhelmed by the much larger interior.
 
 \par
 Do not be alarmed if the operator you have defined has \bx{truncation} errors.
 Such errors in the definition of the original operator
-should be identically matched by
-truncation errors in the adjoint operator.
+should be matched by
+like errors in the adjoint operator.
 \sx{adjoint ! truncation errors}
 If your code passes the \bx{dot-product test},
 then you really have coded the adjoint operator.
@@ -2455,14 +2174,33 @@ may need to be changed to an integral.
 The input or the output or both can be given
 either on a continuum or in a discrete domain.
 So the dot-product test
-$\bold y\T \tilde{\bold y} = \tilde{\bold x}\T \bold x$
-alternately
-$ \bold m_2 \cdot \bold m_2 = \bold d_2 \cdot \bold d_1) $
+$\hat {\bold m} \cdot \bold m  =
+\hat {\bold d} \cdot \bold d
+$
 could have an integration on one side of the equal sign
 and a summation on the other.
 Linear-operator theory is rich with concepts not developed here.
-%I assume that you studied it before you came to read this book,
-%and that it is my job to show you how to use it.
+
+
+\subsection{Automatic adjoints}
+Computers are not only able to perform computations;
+they can do mathematics.
+Well known software is Mathematica and Maple.
+Adjoints can also be done by symbol manipulation.
+For example Ralf Giering
+offers a program for converting
+linear operator programs into their adjoints.
+Actually, it does more than that.
+He says:\footnote{\url{http://www.autodiff.com/tamc/}}
+\begin{quote}
+Given a Fortran routine (or collection of routines) for a function,
+TAMC produces Fortran routines for the computation
+of the derivatives of this function.
+The derivatives are computed in the reverse mode (adjoint model)
+or in the forward mode (tangent-linear model).
+In both modes Jacobian-Matrix products can be computed.
+\end{quote}
+
 
 \subsection{The word ``adjoint''}
 In mathematics the word ``\bx{adjoint}'' has two meanings.
@@ -2491,6 +2229,7 @@ Thus I decided to use the word adjoint
 and have it always mean the Hilbert adjoint
 found in physics and engineering.
 
+\begin{comment}
 \subsection{Matrix versus operator}
 \sx{operator}
 Here is a short summary of where we have been and where we are going:
@@ -2600,17 +2339,18 @@ is a partial derivative matrix
 (and there are potential underlying nonlinearities).
 This begins another story with new ingredients,
 weighting functions and statistics.
+\end{comment}
 
 \subsection{Inverse operator}
 A common practical task is to fit a vector of observed data
 $\bold d_{\rm obs}$
-to some theoretical data
-$\bold d_{\rm theor}$
+to some modeled data
+$\bold d_{\rm model}$
 by the adjustment of components in a vector of model parameters $\bold m$.
 \begin{equation}
 \bold d_{\rm obs}
 \quad\approx\quad
-\bold d_{\rm theor}
+\bold d_{\rm model}
 \eq
 \bold F \bold m
 \label{eqn:wefit}
@@ -2625,7 +2365,6 @@ $\hat {\bold m}_2$, where
 \hat {\bold m}_2 &=& \bold F\T(\bold F\bold F\T)^{-1}\bold d
                                                 \label{eqn:underdeterm}
 \end{eqnarray}
-
 Some reasons for the literature being huge are the
 many questions
 about the existence, quality, and cost
@@ -2644,19 +2383,18 @@ we get the reasonable statements:
 \begin{eqnarray}
 \hat {\bold m}_1 &=& (\bold F\T\bold F)^{-1}(\bold F\T\bold F)\bold m \eq\bold m
                                                 \label{eqn:overimplication} \\
-\hat {\bold d}_{\rm theor} &=&
+\hat {\bold d}_{\rm model} &=&
                      (\bold F\bold F\T)(\bold F\bold F\T)^{-1}\bold d \eq\bold d
                                                 \label{eqn:underimplication}
 \end{eqnarray}
 Equation (\ref{eqn:overimplication}) says that the estimate $\hat {\bold m}_1$
 gives the correct model $\bold m$
-if you start from the theoretical data.
-Equation (\ref{eqn:underimplication}) says that the model estimate $\hat {\bold m}_2$
-gives the theoretical data if we derive $\hat{\bold m}_2$
-from the theoretical data.
+if you start from the modeled data.
+Equation (\ref{eqn:underimplication}) says that the model estimate $\hat {\bold m_2}$
+gives the modeled data if we derive $\hat{\bold m}_2$
+from the modeled data.
 Both of these statements are delightful.
 Now let us return to the problem of the inverse matrices.
-
 \par
 Normally a rectangular matrix does not have an inverse.
 Surprising things often happen, but commonly,
@@ -2675,52 +2413,61 @@ $\bold F\T\bold F$ nor
 $\bold F\bold F\T$ 
 is invertible.  This difficulty is
 solved by ``\bx{damping}'' as we will see in later chapters.
-The point to notice in this chapter on adjoints
-is that in any application where
+If it happens that
 $\bold F \bold F\T$
 or
-$\bold F\T \bold F$ equals $\bold I$ (unitary operator),
-that the adjoint operator $\bold F\T$ is the inverse $\bold F^{-1}$
-by either equation (\ref{eqn:overdeterm}) or (\ref{eqn:underdeterm}).
-\par
-Theoreticians like to study inverse problems where $\bold m$
-is drawn from the field of continuous functions.
-This is like the vector $\bold m$ having infinitely many components.
-Such problems are hopelessly intractable unless we find,
-or assume, that the operator
 $\bold F\T \bold F$
-is an identity or diagonal matrix.
+equals $\bold I$ (unitary operator),
+then the adjoint operator $\bold F\T$ is the inverse $\bold F^{-1}$
+by either equation (\ref{eqn:overdeterm}) or (\ref{eqn:underdeterm}).
 
 \par
-In practice, theoretical considerations may have little
-bearing on how we proceed.
 Current computational power limits matrix inversion
 jobs to about $10^4$ variables.
 This book specializes in big problems,
-those with more than about $10^4$ variables,
-but the methods we learn are also excellent for smaller problems.
-
-%\begin{notforlecture}
-\subsection{Automatic adjoints}
-Computers are not only able to perform computations; they can do
-mathematics.  Well known software is Mathematica and Maple.  Adjoints
-can also be done by symbol manipulation.  For example
-Ralf Giering
-offers a program for converting linear operator programs into their
-adjoints.
-Actually, it does more than that.
-He says:\footnote{\url{http://www.autodiff.com/tamc/}}
-\begin{quote}
-Given a Fortran routine (or collection of routines) for a function,
-TAMC produces Fortran routines for the computation
-of the derivatives of this function.
-The derivatives are computed in the reverse mode (adjoint model)
-or in the forward mode (tangent-linear model).
-In both modes Jacobian-Matrix products can be computed.
-\end{quote}
-
+those with more than about $10^4$ variables.
+The iterative methods we learn here for giant problems
+are also excellent for smaller problems,
+so we rarely here speak of inverse matrices
+or worry much if neither
+$\bold F \bold F\T$
+nor
+$\bold F\T \bold F$ is an identity.
 
 \begin{exer}
+\item
+Consider the matrix
+\begin{equation}
+  \left[
+        \begin{array}{cccccccc}
+             1 &     0 &     0 &     0 &     0 &     0 &     0 \\
+             0 &     1 &     0 &     0 &     0 &     0 &     0 \\
+             0 &  \rho &     1 &     0 &     0 &     0 &     0 \\
+             0 &     0 &     0 &     1 &     0 &     0 &     0 \\
+             0 &     0 &     0 &     0 &     1 &     0 &     0 \\
+             0 &     0 &     0 &     0 &     0 &     1 &     0 \\
+             0 &     0 &     0 &     0 &     0 &     0 &     1 
+        \end{array}
+  \right]
+\end{equation}
+and others like it with $\rho$ in other locations.
+Show what combination of these matrices will represent
+the leaky integration matrix
+in equation (\ref{eqn:leakinteq}).  What is the adjoint?
+\item
+Modify the calculation in Figure~\ref{fig:causint} so that there is
+a triangle waveform on the bottom row.
+\item
+Notice that the triangle waveform is not time aligned
+with the input {\tt in2}.
+Force time alignment with the operator 
+${\bold C\T \bold C}$ or
+${\bold C  \bold C\T}$.
+\item
+Modify \texttt{leakint}
+by changing the diagonal to contain
+1/2 instead of 1.
+Notice how time alignment changes in Figure~\ref{fig:causint}.
 \item
 Suppose a linear operator $\bold F$ has
 its input in the discrete domain and
