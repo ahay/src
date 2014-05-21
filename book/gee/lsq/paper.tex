@@ -35,11 +35,8 @@ and write a subroutine for it that will be used in most of
 the examples in this book.
 %\end{notforlecture}
 
-\section{HOW TO DIVIDE NOISY SIGNALS}
+\section{UNIVARIATE LEAST SQUARES}
 %\begin{notforlecture}
-If "inversion" is dividing by a matrix,
-then the place to begin is dividing one number by another,
-say one function of frequency by another function of frequency.
 A single parameter fitting problem arises in Fourier analysis,
 where we seek a ``best answer'' at each frequency,
 then combine all the frequencies to get a best signal.
@@ -73,7 +70,6 @@ to cope with
 \bxbx{zero division}{zero divide},
 but it is a good way,
 and it permeates the subject of signal analysis.
-
 \par
 To apply this method in the Fourier domain,
 suppose that $X$, $Y$, and $F$ are complex numbers.
@@ -99,13 +95,12 @@ Notice that for any complex number $F$,
 the phase of $1/F$ equals the phase of $\overline{F}$,
 so the filters 
 have the same phase.
-
+%
 \subsection{Damped solution}
-Equation (\ref{eqn:z1}) is the solution to an optimization problem
-that arises in many applications.
-Now that we know the solution, let us formally define the problem.
-First, we will solve a simpler problem with real values:
-we will choose to minimize the \bx{quadratic function} of $x$:
+Another way to say $x=y/f$ is to say $fx-y$ is small, or $(fx-y)^2$ is small.
+This doesn't solve the problem of $f$ going to zero,
+so we need the idea that $x^2$ does not get too big.
+To find $x$ we minimize the quadratic function in $x$.
 \begin{equation}
 Q(x) \eq (f x-y)^2 + \epsilon^2 x^2
 \label{eqn:z2}
@@ -117,7 +112,9 @@ Set $dQ/dx=0$, which gives
 0 \eq f(f x-y) + \epsilon^2 x
 \label{eqn:z3}
 \end{equation}
-This yields the earlier answer $x=fy/(f^2+\epsilon^2)$.
+This yields our earlier common-sense answer $x=fy/(f^2+\epsilon^2)$.
+It also leads is to wider areas of application where the elements are complex
+vectors and matrices.
 
 \par
 With Fourier transforms,
@@ -202,7 +199,6 @@ a function of time and space from another textbook.
 Let us call this data $f(t,x)$ and its 2-D Fourier transform
 $F(\omega, k_x)$.
 The data and its autocorrelation are in Figure~\ref{fig:antoine10}.
-
 \par
 The autocorrelation $a(t,x)$ of $f(t,x)$ is
 the inverse 2-D Fourier Transform  of 
@@ -234,7 +230,7 @@ and with
 1 = F/F \quad \approx\quad  \frac{\overline{F}F}{\left< \overline{F}F \right>}
 \end{equation}
 %
-\plot{antoine10}{width=\textwidth,height=7in}{
+\plot{antoine10}{width=\textwidth,height=1.6\textwidth}{
   2-D data (right) and a quadrant of its autocorrelation (left).
   Notice the longest nonzero time lag on the data is about 5.5 sec
   which is the latest nonzero signal on the autocorrelation.
@@ -251,7 +247,7 @@ It is much easier to make physical sense of choosing a smoothing window.
 The smoothing window is in $(\omega,k_x)$ space,
 but Fourier transformation tells us its effect in $(t,x)$ space.
 
-\plot{antoine11}{width=\textwidth,height=7in}{
+\plot{antoine11}{width=\textwidth,height=1.16\textwidth}{
   Equation~\ref{eqn:z7} (left) and
   equation~\ref{eqn:z8} (right).
   Both ways of dividing by zero give similar results.
@@ -314,16 +310,11 @@ or
 m \eq  {\omega^2 \over \omega^2+ \epsilon^2}\  d
 \label{eqn:lowcut}
 \end{equation}
-which is the low-cut filter
-with a cutoff frequency of $\omega_0=\epsilon$.
-%we found less formally earlier, equation (\ref{ajt/eqn:locut}).
-
-\par
-Of some curiosity and significance is the numerical choice of $\epsilon$.
-The general theory says we need an epsilon,
-but does not say how much.
-For now let us simply rename $\epsilon=\omega_0$
-and think of it as a ``cut-off frequency''.
+Let us rename $\epsilon$ to give it physical units of frequency $\omega_0 = \epsilon$.
+Our expression says
+says $m$ will match $d$ except for low frequencies $|m| <|\omega_0|$ where it will tend to zero.
+This defines a low-cut filter with 
+``cut-off frequency''  $\omega_0$.
 
 %Our low-pass filter approach in Chapter \ref{ajt/paper:ajt}
 %made it quite clear that $\epsilon$ is a filter cutoff
@@ -342,14 +333,19 @@ and think of it as a ``cut-off frequency''.
 
 \subsection{The plane-wave destructor}
 %
-We address the question of shifting signals into best alignment. The most natural approach might seem to be via cross correlations.  That is indeed a good approach when signals are shifted by large amounts.  Here we assume signals are shifted by small amounts, often less than a single pixel.  We'll take an approach closely related to differential equations. Consider this definition of a residual. 
+We address the question of shifting signals into best alignment. The
+most natural approach might seem to be via cross correlations.  That
+is indeed a good approach when signals are shifted by large amounts.
+Here we assume signals are shifted by small amounts, often less than a
+single pixel.  We'll take an approach closely related to differential
+equations. Consider this definition of a residual.
 \begin{equation}
 0 \quad \approx \quad \hbox{residual}(t,x) \eq \left( \frac{\partial}{\partial x} + p \frac{\partial}{\partial t} \right) u(t,x)
 \label{eqn:PWDresidual}
 \end{equation}
 By taking derivatives we see the residual vanishes when the two-dimensional observation $u(t,x)$ matches the equation of moving waves $u(t-px)$.  The parameter $p$ has units inverse to velocity, the velocity of propagation. 
 \par
-In practice, $u(t,x)$ might not be a perfect wave but an observed field of many waves that we might wish to fit to the idea of a single wave of a single $p$. We seek the parameter $p$.  First we need a method of discretization that allows the mesh for ${\rm d}u/{\rm d}t$ to overlay exactly $\partial u /\partial x$.  To this end I chose to represent the $t$-derivative by averaging a finite difference at $x$ with one at $x+\Delta x$. 
+In practice, $u(t,x)$ might not be a perfect wave but an observed field of many waves that we might wish to fit to the idea of a single wave of a single $p$. We seek the parameter $p$.  First we need a method of discretization that allows the mesh for $\partial du/\partial dt$ to overlay exactly $\partial u /\partial x$.  To this end I chose to represent the $t$-derivative by averaging a finite difference at $x$ with one at $x+\Delta x$. 
 \begin{equation}
 \frac{\partial u}{\partial t} \quad \approx \quad \frac{1}{2} 
 \left(
@@ -359,16 +355,23 @@ In practice, $u(t,x)$ might not be a perfect wave but an observed field of many 
 \frac{u(t+\Delta t,x+\Delta x) - u(t,x+\Delta x) }{\Delta t}
 \right)
 \end{equation}
-Likewise there is an analogous expression for the $x$-derivative with $t$ and $x$ interchanged.  Now the difference operator $\delta_x + p\delta_t$ is a two-dimensional filter that fits  on a 2 x 2 differencing star.  We may represent equation~(\ref{eqn:PWDresidual}) as a matrix operation,
+Likewise there is an analogous expression for the $x$-derivative with $t$ and $x$ interchanged.
+The function $u(t,x)$ lies on a grid, and the
+differencing operator $\delta_x + p\delta_t$ lies atop it and convolves across it.
+The operator is a $2\times 2$ convolution filter.
+We may represent equation~(\ref{eqn:PWDresidual}) as a matrix operation,
 \begin{equation}
 {\bf 0} \quad \approx\quad  {\bf r} = {\bf A}{\bf u}
 \end{equation}
-where the two-dimensional convolution with the differential operator is denoted ${\bf A}$.
+where the two-dimensional convolution with the difference operator is denoted ${\bf A}$.
 \par
 %The module {\tt wavekill()}  applies the operator a $\delta_x + b \delta_t$, which can be specialized to the operators we will actually need, namely $\delta_x, \delta_t, \delta_x+p_i\delta_t$. 
 %\moddex{wavekill}{wavekill()}
 %\par
-Now let us find the numerical value of $p$ that fits a plane wave $u(t-px)$ to  observations $u (t , x )$. Let $x$ be an abstract vector whose components are values of $\partial u /\partial x$ taken everywhere on a 2-D mesh in $(t,x)$. Likewise, let $t$ contain $\partial u /\partial t$.  Since we want ${\bf x} + p {\bf t} \approx {\bf 0}$, we minimize the quadratic function of $p$, 
+Now let us find the numerical value of $p$ that fits a plane wave
+$u(t-px)$ to  observations $u (t , x )$. Let $\bold x$ be an abstract
+vector whose components are values of $\partial u /\partial x$ taken
+everywhere on a 2-D mesh in $(t,x)$. Likewise, let $\bold t$ contain $\partial u /\partial t$.  Since we want ${\bf x} + p {\bf t} \approx {\bf 0}$, we minimize the quadratic function of $p$, 
 \begin{equation}
 Q( p) = ({\bf x} + p {\bf t}) \cdot ({\bf x} + p {\bf t}) 
 \end{equation}
@@ -398,7 +401,7 @@ is known as the ``{\bf normalized correlation}.''
 \sideplot{residual5}{width=3in}{
 	Residuals, i.e., an evaluation of $U_x + pU_t$.}  
 
-\sideplot{puckout}{width=3in}{
+\sideplot{puckout}{width=0.8\textwidth}{
 	Output values of $p$ are shown by the slope of short line segments.
 	}
 
@@ -414,7 +417,7 @@ as if recorded on a patch of unconsolidated {\bf soil}.
 \par
 Figure~\ref{fig:residual5} shows the {\bf residual}.
 The residual is small in the central region of the data;
-it is large where there is {\bf spatial alias}ing;
+it is large where the signal is not sampled densely enough
 and it is large at the transient onset of the signal.
 The residual is rough because of the noise in the signal,
 because it is made from derivatives,
@@ -446,23 +449,7 @@ Once the stepout $p = d t /d x$ is known between each of the signals, it is a si
 %
 In this case the flattening was a function of $x$ only.  More interesting (and more complicated) cases arise when the stepout $p = d t /d x$ is a function of both $x$ and $t$.  The code shown here should work well in such cases.
 \par
-A disadvantage, well known to people who routinely work with finite-difference solutions to partial differential equations, is that for short wavelengths a finite difference operator is not the same as a differential operator; therefore the numerical value of $p$ is biased.  This problem can be overcome in the following way.  First estimate the slope $p= d t /d x$ between each trace. Then shift the traces to flatten them.  Now there may be a residual $p$ because of the bias in the initial estimate of $p$.  This process can be iterated until the data is flattened.  Everywhere in a plane we have solved a least squares problem for a single value $p$.  In the next section we undertake to solve least squares problems for multiple parameters. 
-\begin{exer}
-\item It is possible to reject two dips with the operator
-\begin{equation}
-(\partial_x + p_1 \partial_t)(\partial_x + p_2 \partial_t)
-\end{equation}
-This is equivalent to
-\begin{equation}
-\left(
-\frac{\partial^2}{\partial x^2} + a \frac{\partial^2}{\partial x \partial t} + b \frac{\partial^2}{\partial t^2} 
-\right)
-u(t,x) \eq v(t,x) \quad \approx \quad 0
-\end{equation}
-where $u$ is the input signal and $v$ is the output signal.  Show how to solve for $a$ and $b$ by minimizing the energy in $v$.
-\item Given $a$ and $b$ from the previous exercise, what are $p_1$ and $p_2$?
-\end{exer}
-	
+A disadvantage, well known to people who routinely work with finite-difference solutions to partial differential equations, is that for short wavelengths a finite difference operator is not the same as a differential operator; therefore the numerical value of $p$ is biased.  This problem can be overcome in the following way.  First estimate the slope $p= d t /d x$ between each trace. Then shift the traces to flatten them.  Now there may be a residual $p$ because of the bias in the initial estimate of $p$.  This process can be iterated until the data is flattened.  Everywhere in a plane we have solved a least squares problem for a single value $p$.  
 	
 \section{MULTIVARIATE LEAST SQUARES}
 
@@ -495,7 +482,6 @@ abstract vectors are \bx{orthogonal}
 when their dot product vanishes: $\bold p \cdot \bold s =0$.
 Orthogonal vectors are well known in physical space;
 we will also encounter them in abstract vector space.
-
 \par
 We consider first a hypothetical application
 with one data vector $\dd$ and two
@@ -503,37 +489,36 @@ fitting vectors $\bold f_1$ and $\bold f_2$.
 Each fitting vector is also known as a ``\bx{regressor}.''
 Our first task is to approximate the data vector $\dd$
 by a scaled combination of the two regressor vectors.
-The scale factors $x_1$ and $x_2$
+The scale factors $m_1$ and $m_2$
 should be chosen so that the model matches the data; i.e.,
 \begin{equation}
-        \dd  \quad \approx \quad \bold f_1 x_1 + \bold f_2 x_2
+        \dd  \quad \approx \quad \bold f_1 m_1 + \bold f_2 m_2
         \label{eqn:wish1}
 \end{equation}
 \par
 Notice that we could take the partial derivative
 of the data in (\ref{eqn:wish1}) with respect to an unknown,
-say $x_1$,
+say $m_1$,
 and the result is the regressor $\bold f_1$.
-The \bx{partial derivative} of all theoretical data
-with respect to any model parameter
+The \bx{partial derivative} of all modeled data $d_i$
+with respect to any particular model parameter $m_j$
 gives a \bx{regressor}.
 \par
 \boxit{
         A \bx{regressor} is a column in the
         matrix of partial-derivatives, 
-
         $\partial d_i /\partial m_j$.
         }
 
 \par
 The fitting goal (\ref{eqn:wish1}) is often expressed in the more compact
-mathematical matrix notation $\dd  \approx \bold F   \bold x $,
+mathematical matrix notation $\dd  \approx \bold F   \bold m$,
 but in our derivation here
 we will keep track of each component explicitly
 and use mathematical matrix notation to summarize the final result.
 Fitting the observed data $\bold d = \bold d^{\rm obs}$
 to its two theoretical parts
-          $\bold f_1x_1$ and $\bold f_2x_2$
+          $\bold f_1m_1$ and $\bold f_2m_2$
 can be expressed
 as minimizing the length of the residual vector $\bold r$, where
 \begin{eqnarray}
@@ -541,20 +526,21 @@ as minimizing the length of the residual vector $\bold r$, where
         \bold r &=&  \bold d^{\rm theor} -  \bold d^{\rm obs}
         \\
         \bold 0 \quad\approx\quad
-        \bold r &=&  \bold f_1 x_1 + \bold f_2 x_2  \ -\ \dd
+        \bold r &=&  \bold f_1 m_1 + \bold f_2 m_2  \ -\ \dd
         \label{eqn:resdef}
 \end{eqnarray}
 
 We use a dot product to construct a sum of squares (also called a ``\bx{quadratic form}'')
 of the components of the residual vector:
 \begin{eqnarray}
-Q(x_1,x_2) &=& \bold r \cdot \bold r \\
-Q(x_1,x_2) &=&
-                   (\ff_1 x_1 + \ff_2 x_2 - \dd )
+Q(m_1,m_2) &=& \bold r \cdot \bold r \\
+Q(m_1,m_2) &=&
+                   (\ff_1 m_1 + \ff_2 m_2 - \dd )
            \cdot
-                   (\ff_1 x_1 + \ff_2 x_2 - \dd )
+                   (\ff_1 m_1 + \ff_2 m_2 - \dd )
+\label{eqn:allquadratics}
 \end{eqnarray}
-To find the gradient of the quadratic form $Q(x_1,x_2)$,
+To find the gradient of the quadratic form $Q(m_1,m_2)$,
 you might be tempted to expand out the dot product into all nine terms
 and then differentiate.
 It is less cluttered, however, to remember the product rule, that
@@ -567,26 +553,26 @@ It is less cluttered, however, to remember the product rule, that
 \cdot
 {d\bold r \over dx}
 \end{equation}
-Thus, the gradient of $ Q(x_1,x_2)$  is defined by its two components:
+Thus, the gradient of $ Q(m_1,m_2)$  is defined by its two components:
 
 \begin{eqnarray} \label{eqn:Q1comp}
- {\partial Q \over \partial x_1} &= &
-                    \ff_1  \cdot (\ff_1 x_1 + \ff_2 x_2 -\dd )  
-                         +        (\ff_1 x_1 + \ff_2 x_2 -\dd ) \cdot  \ff_1
+ {\partial Q \over \partial m_1} &= &
+                    \ff_1  \cdot (\ff_1 m_1 + \ff_2 m_2 -\dd )  
+                         +        (\ff_1 m_1 + \ff_2 m_2 -\dd ) \cdot  \ff_1
  \\
- {\partial Q \over \partial x_2} &= &
-                            \ff_2  \cdot (\ff_1 x_1 + \ff_2 x_2 -\dd )  
-                         +   (\ff_1 x_1 + \ff_2 x_2 -\dd ) \cdot  \ff_2
+ {\partial Q \over \partial m_2} &= &
+                            \ff_2  \cdot (\ff_1 m_1 + \ff_2 m_2 -\dd )  
+                         +   (\ff_1 m_1 + \ff_2 m_2 -\dd ) \cdot  \ff_2
 \end{eqnarray}
 Setting these derivatives to zero and using
 $(\ff_1 \cdot \ff_2)=(\ff_2 \cdot \ff_1)$ etc.,
 we get
 \begin{eqnarray}
-(\ff_1 \cdot \dd ) &= & (\ff_1 \cdot \ff_1) x_1 + (\ff_1 \cdot \ff_2)  x_2  \\
-(\ff_2 \cdot \dd ) &= & (\ff_2 \cdot \ff_1) x_1 + (\ff_2 \cdot \ff_2)  x_2
+(\ff_1 \cdot \dd ) &= & (\ff_1 \cdot \ff_1) m_1 + (\ff_1 \cdot \ff_2)  m_2  \\
+(\ff_2 \cdot \dd ) &= & (\ff_2 \cdot \ff_1) m_1 + (\ff_2 \cdot \ff_2)  m_2
 \end{eqnarray}
 We can use these two equations to solve for
-the two unknowns $x_1$ and $x_2$.
+the two unknowns $m_1$ and $m_2$.
 Writing this expression in matrix notation, we have
 \begin{equation}
 \left[ 
@@ -599,8 +585,8 @@ Writing this expression in matrix notation, we have
   (\ff_2 \cdot \ff_1) & (\ff_2 \cdot \ff_2)  \end{array} \right] 
 \; \left[ 
 \begin{array}{c}
-  x_1 \\ 
-  x_2 \end{array} \right]  \label{eqn:2by2}
+  m_1 \\ 
+  m_2 \end{array} \right]  \label{eqn:2by2}
 \end{equation}
 It is customary to use matrix notation without dot products.
 To do this, we need some additional definitions.
@@ -632,8 +618,8 @@ It is used in nearly every example in this book.
 \bold g \eq 
 \left[
 \begin{array}{c}
-\frac{\partial Q}{\partial x_1} \\
-\frac{\partial Q}{\partial x_2}
+\frac{\partial Q}{\partial m_1} \\
+\frac{\partial Q}{\partial m_2}
 \end{array}
 \right]
 \eq
@@ -657,11 +643,11 @@ r_3
 \end{array}
 \right]
 \eq
-{\bf F}\T {\bf r}
+{\bf F}\T\,{\bf r}
 \label{eqn:gexample}
 \end{equation}
 %
-In words this expression says, the gradient is found by putting the residual into the adjoint operator ${\bf g} = {\bf F}\T {\bf r}$. Notice the gradient ${\bf g}$ has the same number of components as the unknown solution ${\bf x}$, so we can think of the gradient as a $\Delta {\bf x}$, something we could add to ${\bf x}$ getting ${\bf x}  + \Delta {\bf x}$.  Later we'll see how much of $\Delta {\bf x}$ we'll want to add to ${\bf x}$.  We will have reached the best solution when we find the gradient ${\bf g} = {\bf 0}$ vanishes which happens, as equation~(\ref{eqn:gexample}) says, when the residual is orthogonal to all the fitting functions (all the rows in the matrix ${\bf F}\T$, the columns in ${\bf F}$, are perpendicular  to ${\bf r}$). 
+In words this expression says, the gradient is found by putting the residual into the adjoint operator ${\bf g} = {\bf F}\T {\bf r}$. Notice the gradient ${\bf g}$ has the same number of components as the unknown solution ${\bf m}$, so we can think of the gradient as a $\Delta {\bf m}$, something we could add to ${\bf m}$ getting ${\bf m}  + \Delta {\bf m}$.  Later we'll see how much of $\Delta {\bf m}$ we'll want to add to ${\bf m}$.  We will have reached the best solution when we find the gradient ${\bf g} = {\bf 0}$ vanishes which happens, as equation~(\ref{eqn:gexample}) says, when the residual is orthogonal to all the fitting functions (all the rows in the matrix ${\bf F}\T$, the columns in ${\bf F}$, are perpendicular  to ${\bf r}$). 
 \par
 The matrix in equation (\ref{eqn:2by2})
 contains dot products.
@@ -706,12 +692,13 @@ Thus, equation (\ref{eqn:2by2}) without dot products is
   f_{31} & f_{32}  \end{array} \right] 
 \left[ 
 \begin{array}{ccc}
-  x_1  \\
-  x_2  \end{array} \right] 
+  m_1  \\
+  m_2  \end{array} \right] 
+\label{eqn:allmats}
 \end{equation}
 which has the matrix abbreviation
 \begin{equation}
-\bold F\T \dd \eq ( \bold F\T \; \bold F )  \bold x
+\bold F\T\,\dd \eq ( \bold F\T \; \bold F )  \bold m
 \label{eqn:analytic}
 \end{equation}
 Equation
@@ -722,14 +709,14 @@ Obviously, the same matrix form applies when there are more than
 two regressors and each vector has more than three components.
 Equation
 (\ref{eqn:analytic})
-leads to an \bx{analytic solution} for $\bold x$
+leads to an \bx{analytic solution} for $\bold m$
 using an inverse matrix.
-To solve formally for the unknown $\bold x$,
+To solve formally for the unknown $\bold m$,
 we premultiply by the inverse matrix $( \bold F\T \; \bold F )^{-1}$:
 
 \par
 \begin{equation}
-\bold x \eq
+\bold m \eq
 ( \bold F\T \; \bold F )^{-1} \;
 \bold F\T \dd 
 \label{eqn:sln}
@@ -738,23 +725,23 @@ we premultiply by the inverse matrix $( \bold F\T \; \bold F )^{-1}$:
 The central result of
 \bxbx{least-squares}{least squares, central equation of}
 theory is
-$\bold x =
+$\bold m =
 ( \bold F\T \; \bold F )^{-1} \;
-\bold F\T \dd $
+\bold F\T\, \dd $.
 We see it everywhere.
 }
 
 \par
-Let us examine all the second derivatives of $Q(x_1,x_2)$ defined by equation (\ref{eqn:allquadratics}).
+Let us examine all the second derivatives of $Q(m_1,m_2)$ defined by equation (\ref{eqn:allquadratics}).
 Any multiplying $\dd$ will not survive the second derivative, so the terms we are left with are
 \begin{equation}
-Q(x_1,x_2) = (\ff_1\cdot\ff_1) x_1^2 +
-           2 (\ff_1\cdot\ff_2) x_1 x_2 +
-             (\ff_2\cdot\ff_2) x_2^2
+Q(m_1,m_2) = (\ff_1\cdot\ff_1) m_1^2 +
+           2 (\ff_1\cdot\ff_2) m_1 m_2 +
+             (\ff_2\cdot\ff_2) m_2^2
 \end{equation}
 After taking the second derivative, we can organize all these terms in a matrix
 \begin{equation}
-\frac{\partial^2 Q}{\partial x_i\partial x_j} \eq
+\frac{\partial^2 Q}{\partial m_i\partial m_j} \eq
         \left[
                 \begin{array}{cc}
                         (\ff_1\cdot  \ff_1) &  (\ff_1 \cdot \ff_2)   \\
@@ -763,7 +750,7 @@ After taking the second derivative, we can organize all these terms in a matrix
         \right]
 \end{equation}
 Comparing this to equation (\ref{eqn:covmat}) we conclude
-that $\bold F\T \bold F$ is a matrix of second derivatives.
+that $\bold F\T\,\bold F$ is a matrix of second derivatives.
 This matrix is also known as the
 \bxbx{Hessian}{Hessian}.
 This matrix often plays an important role in small problems.
@@ -778,7 +765,7 @@ working instead with gradients.
 \par
 Rearrange parentheses representing (\ref{eqn:allmats}).
 \begin{equation}
-\bold F\T \dd \eq  \bold F\T \; (\bold F   \bold x )
+\bold F\T\,\dd \eq  \bold F\T \; (\bold F   \bold m )
 \label{eqn:comp}
 \end{equation}
 Equation
@@ -804,7 +791,7 @@ If you really want to cancel the matrix $\bold F\T$, you may,
 but the equation is then only an approximation
 that restates our original goal (\ref{eqn:wish1}):
 \begin{equation}
-\dd  \quad \approx \quad \bold F   \bold x 
+\dd  \quad \approx \quad \bold F   \bold m 
 \label{eqn:wish2}
 \end{equation}
 
@@ -820,7 +807,7 @@ replace $\approx$ by =,
 getting~(\ref{eqn:analytic}),
 and take
 (\ref{eqn:analytic})
-to a simultaneous equation-solving program to get $\bold x$.
+to a simultaneous equation-solving program to get $\bold m$.
 
 \par
 What I call ``\bx{fitting goals}'' are called
@@ -828,10 +815,10 @@ What I call ``\bx{fitting goals}'' are called
 In common language the word regression means
 to ``trend toward a more primitive perfect state''
 which vaguely resembles reducing the size of (energy in)
-the residual $\bold r = \bold F \bold x - \bold d $.
+the residual $\bold r = \bold F \bold m - \bold d $.
 Formally this is often written as:
 \begin{equation}
-\min_{\bold x} \ \  \| \bold F \bold x - \bold d \| 
+\min_{\bold m} \ \  \| \bold F \bold m - \bold d \| 
 \label{eqn:norm}
 \end{equation}
 The notation above with two pairs of vertical lines
@@ -852,8 +839,8 @@ to do this, we'll show
 that those two vectors are orthogonal.
 Energy minimum is found by
 \begin{equation}
-0  \quad = \quad {\partial\over \partial x_2}\ \bold r \cdot \bold r
-   \quad = \quad 2\; \bold r \cdot {\partial \bold r\over \partial x_2}
+0  \quad = \quad {\partial\over \partial m_2}\ \bold r \cdot \bold r
+   \quad = \quad 2\; \bold r \cdot {\partial \bold r\over \partial m_2}
    \quad = \quad 2\; \bold r \cdot \bold f_2
 \label{eqn:orthogtofit}
 \end{equation}
@@ -874,8 +861,8 @@ and recall the definition of the residual $\bold r$
 from equation (\ref{eqn:resdef}):
 \begin{eqnarray}
 \label{eqn:fitorth1}
-\bold 0  &=& \bold F\T ( \bold F   \bold x - \dd)  \\
-\bold 0  &=& \bold F\T  \bold r 
+\bold 0  &=& \bold F\T\,( \bold F   \bold m - \dd)  \\
+\bold 0  &=& \bold F\T\,\bold r 
 \label{eqn:fitorth2}
 \end{eqnarray}
 Equation (\ref{eqn:fitorth2}) says that the \bx{residual} vector $\bold r$
@@ -897,24 +884,24 @@ the fitting functions.
 Complex numbers frequently arise in physical applications,
 particularly those with Fourier series.
 Let us extend the multivariable least-squares theory
-to the use of complex-valued unknowns $\bold x$.
+to the use of complex-valued unknowns $\bold m$.
 First recall how complex numbers were handled
 with single-variable least squares;
 i.e.,~as in the discussion leading up to equation~(\ref{eqn:z5}).
-Use a prime, such as $\bold x\T$, to denote the complex conjugate
-of the transposed vector $\bold x$.
+Use an asterisk, such as $\bold m\T$, to denote the complex conjugate
+of the transposed vector $\bold m$.
 Now write the positive \bx{quadratic form} as
 \begin{equation}
-Q(\bold x\T, \bold x) \eq
-(\bold F\bold x - \bold d)\T
-(\bold F\bold x - \bold d)
+Q(\bold m\T, \bold m) \eq
+(\bold F\bold m - \bold d)\T\,
+(\bold F\bold m - \bold d)
 \eq
-(\bold x\T \bold F\T - \bold d\T)
-(\bold F\bold x - \bold d)
+(\bold m\T\,\bold F\T - \bold d\T)
+(\bold F\bold m - \bold d)
 \label{eqn:6-1-23}
 \end{equation}
 
-After equation (\ref{eqn:z4}),
+Recall from equation (\ref{eqn:z4}) where
 we minimized a quadratic form $Q(\bar X,X)$
 by setting to zero both
 $\partial Q/\partial \bar X$ and $\partial Q/\partial X$.
@@ -923,14 +910,14 @@ $\partial Q/\partial \bar X$ and $\partial Q/\partial X$
 is necessarily zero
 because they are conjugates of each other.
 Now take the derivative of $Q$
-with respect to the (possibly complex, row) vector $\bold x\T$.
-Notice that $\partial Q/\partial  \bold x\T$ is the complex conjugate transpose
-of $\partial Q/\partial  \bold x$.
-Thus, setting one to zero sets the other also to zero.
-Setting $\partial Q/\partial \bold x\T =\bold 0$ gives the normal equations:
+with respect to the (possibly complex, row) vector $\bold m\T$.
+Notice that $\partial Q/\partial  \bold m\T$ is the complex conjugate transpose
+of $\partial Q/\partial  \bold m$.
+Thus, setting one to zero sets the other to zero also.
+Setting $\partial Q/\partial \bold m\T =\bold 0$ gives the normal equations:
 \begin{equation}
-\bold 0 \eq \frac{\partial Q}{\partial \bold x\T} \eq
-\bold F\T (\bold F \bold x - \bold d)
+\bold 0 \eq \frac{\partial Q}{\partial \bold m\T} \eq
+\bold F\T\,(\bold F \bold m - \bold d)
 \label{eqn:normeq}
 \end{equation}
 The result is merely the complex form of
@@ -945,6 +932,10 @@ and it saves much clutter.
 
 %\begin{notforlecture}
 \subsection{From the frequency domain to the time domain}
+Where data fitting uses
+the notation $\bold m \rightarrow \bold d$,
+linear algebra and signal analysis often use
+the notation $\bold x \rightarrow \bold y$.
 Equation~(\ref{eqn:z4}) is a frequency-domain quadratic form
 that we minimized by varying a single parameter,
 a Fourier coefficient.
@@ -967,13 +958,13 @@ is a restatement of equation~(\ref{eqn:6-1-23})
 with filter definitions:
 \begin{equation}
 Q(\bold f\T, \bold f) \eq
-(\bold X\bold f - \bold y)\T
+(\bold X\bold f - \bold y)\T\,
 (\bold X\bold f - \bold y)
 \end{equation}
 The solution $\bold f$ is found just as we found
 (\ref{eqn:normeq}),
 and it is the set of simultaneous equations
-$ \bold 0 = \bold X\T(\bold X\bold f - \bold y)$.
+$ \bold 0 = \bold X\T\,(\bold X\bold f - \bold y)$.
 
 \subsubsection{Unknown input: deconvolution with a known filter}
 \sx{deconvolution}
@@ -1025,14 +1016,14 @@ Putting both wishes into a single, partitioned matrix equation gives
 \end{equation}
 To minimize the residuals $\bold r_1$ and $\bold r_2$,
 we can minimize the scalar
-$\bold r\T \bold r = \bold {r'}_1\bold r_1 + \bold {r'}_2\bold r_2$.
+$\bold r\T\, \bold r = \bold r_1\T\, \bold r_1 + \bold r_2\T\, \bold r_2$.
 This is
 \begin{eqnarray}
-Q(\bold x\T, \bold x) &=& (\bold F  \bold x  - \bold y)\T (\bold F\bold x-\bold y)
-                                        + \epsilon^2 \bold x\T \bold x
+Q(\bold x\T, \bold x) &=& (\bold F  \bold x  - \bold y)\T\,(\bold F\bold x-\bold y)
+                                        + \epsilon^2 \bold x\T\,\bold x
                                                                 \nonumber \\
-                     &=& (\bold x\T \bold F\T - \bold y\T) (\bold F\bold x-\bold y)
-                                        + \epsilon^2 \bold x\T \bold x
+                     &=& (\bold x\T\,\bold F\T - \bold y\T) (\bold F\bold x-\bold y)
+                                        + \epsilon^2 \bold x\T\,\bold x
 \label{eqn:knownfilt}
 \end{eqnarray}
 We solved this minimization
@@ -1059,56 +1050,6 @@ whether the cost of a method is justified by its need.
 %Which works best?
 %Why?
 
-%\end{notforlecture}
-
-\begin{exer}
-\item
-\sx{zero absolute temperature}
-In 1695, 150 years before Lord Kelvin's absolute temperature scale,
-120 years before Sadi Carnot's PhD thesis,
-40 years before Anders Celsius,
-and 20 years before Gabriel Farenheit,
-the French physicist Guillaume
-\bx{Amontons},
-deaf since birth,
-took a mercury manometer (pressure gauge) and
-sealed it inside a glass pipe (a constant volume of air).
-He heated it to the boiling point of water at $100^\circ$C.
-As he lowered the temperature to freezing at $0^\circ$ C,
-he observed the pressure dropped by 25\% .
-He could not drop the temperature any further
-but he supposed that if he could drop it further by a factor of three,
-the pressure would drop to zero (the lowest possible pressure)
-and the temperature would have been the lowest possible temperature.
-Had he lived after Anders Celsius he might have calculated
-this temperature to be $-300^\circ$ C (Celsius).
-Absolute zero is now known to be $-273^\circ$ C.
-\par
-It is your job to be Amontons' lab assistant.
-Your $i$th measurement of temperature
-$T_i$ you make with Issac Newton's thermometer and
-you measure pressure $P_i$ and volume $V_i$ in the metric system.
-Amontons needs you to fit his data with the regression
-$
-0\approx \alpha(T_i-T_0)-P_i V_i
-$
-and calculate the temperature shift $T_0$ that Newton should have made
-when he defined his temperature scale.
-%In the theory of least squares fitting, what is the data?
-%What are the fitting functions?
-%and what are the two model parameters?
-Do not solve this problem!
-Instead, cast it in the form of equation (\ref{eqn:wish1}),
-identifying the data $d$ and the two column vectors
-$f_1$ and
-$f_2$
-that are the fitting functions.
-Relate the model parameters $x_1$ and $x_2$
-to the physical parameters $\alpha$ and $T_0$.
-Suppose you make ALL your measurements at room temperature,
-can you find $T_0$?  Why or why not?
-
-\end{exer}
 
 \section{KRYLOV SUBSPACE ITERATIVE METHODS}
 The \bx{solution time} for simultaneous \bx{linear equations}
@@ -1119,7 +1060,7 @@ depends on the number of unknowns $m$.
 For $m$ three or less, we use analytical methods.
 We also sometimes use analytical methods on matrices of size $4\times 4$
 if the matrix contains many zeros.
-A 1988 my desktop workstation solved a $100 \times 100$
+My 1988 desktop workstation solved a $100 \times 100$
 system in a minute.
 Ten years later it would do a $600\times 600$ system in about a minute.
 A nearby more powerful computer would do
@@ -1132,15 +1073,15 @@ For significantly larger values of $m$,
 exact numerical methods must be abandoned
 and \bx{iterative method}s must be used.
 \par
-(The compute time for a rectangular matrix is slightly more pessimistic.
+The compute time for a rectangular matrix is slightly more pessimistic.
 It is the product of the number of data points $n$
 times the number of model points squared $m^2$.
 This happens to be the cost of computing the matrix
-$\bold F\T\bold F$ from $\bold F$.
+$\bold F\T\,\bold F$ from $\bold F$.
 Since the number of data points generally exceeds the number of model
 points $n>m$ by a substantial factor
 (to allow averaging of noises),
-it leaves us with significantly fewer than 4000 points in model space.)
+it leaves us with significantly fewer than 4000 points in model space.
 \par
 A square image packed into a 4096 point vector is a $64\times 64$ array.
 The computer power for linear algebra to give us solutions that
@@ -1200,9 +1141,12 @@ of the error as a theoretical problem.
 Regardless of the above, and opposite to common practice,
 I define the \bx{sign convention} for the error (or residual) as
 $(\bold F\bold m-\bold d)$.
-When we choose this sign convention,
-our hazard for analysis errors will be reduced
-because $\bold F$ is often complicated and formed by combining many parts.
+Here is why.
+Minus signs are a source of confusion and errors.
+Putting the minus sign on the field data limits it to one location
+while putting it in model space would spread it into as many parts
+as model space has parts.
+
 \begin{comment}
 So in this book
 we see positive signs on operators
@@ -1216,7 +1160,8 @@ often with subroutine \texttt{negcopy()}.
         when the data does not fit the model very well.
         They see it as a defect in the data
         instead of an opportunity
-        to design a stronger theory.
+        to discover what our data contains
+	that our theory does not.
         }
 \par
 
@@ -1227,10 +1172,10 @@ Let us minimize the sum of the squares of the components
 of the \bx{residual} vector given by
 \begin{eqnarray}
 {\rm residual}
-&=&
+&=& \quad\quad
 {\rm 
-\hbox{transform} \ \ \  \ \hbox{model space}
-\ \ -\ \  \
+\ \ \hbox{transform} \ \ \  \ \quad \hbox{model space} 
+\ \ \ -\ \
 \ \hbox{data space}
 }
         \\                                                                               
@@ -1299,7 +1244,7 @@ of the \bx{residual} vector given by
 \label{eqn:cg1b}
 \end{eqnarray}
 \par
-A \bx{contour plot} is based on an altitude function of space.
+A contour plot is based on an altitude function of space.
 The altitude is the \bx{dot product}  $\bold r \cdot \bold r$.
 By finding the lowest altitude,
 we are driving the residual vector  $\bold r$  as close as we can to zero.
@@ -1314,7 +1259,7 @@ of uncertainty in $(x_1 , x_2 )$, with measurement errors in $\bold d$.
 \par
 Let us see how a random search-direction
 can be used to reduce the residual
-$0\approx \bold r= \bold F \bold x - \bold d$.
+$\bold 0\approx \bold r= \bold F \bold x - \bold d$.
 Let $\Delta \bold x$ be an abstract vector
 with the same number of components as the solution $\bold x$,
 and let $\Delta \bold x$ contain arbitrary or random numbers.
@@ -1346,21 +1291,10 @@ $ \bold r_{\rm new} \cdot \bold r_{\rm new} $
 \alpha^2 \Delta \bold r \cdot \Delta \bold r
 \label{eqn:mindot}
 \end{equation}
-Set to zero its derivative with respect to  $\alpha$ using the chain rule
+Set to zero its derivative with respect to  $\alpha$ 
 \begin{equation}
 0\eq 
-(\bold r+\alpha\Delta \bold r)
-\cdot
-\Delta \bold r
-\ +\ 
-\Delta \bold r
-\cdot
-(\bold r+\alpha\Delta \bold r)
-\eq
-2
-(\bold r+\alpha\Delta \bold r)
-\cdot
-\Delta \bold r
+2 \bold r \cdot \Delta \bold r  + 2\alpha \Delta \bold r \cdot \Delta \bold r
 \label{eqn:newresperp}
 \end{equation}
 which says that
@@ -1400,9 +1334,9 @@ In practice, random directions are rarely used.
 It is more common to use the \bx{gradient} direction than a random direction.
 Notice that a vector of the size of $\Delta \bold x$ is
 \begin{equation}
-\bold g \eq  \bold F\T \bold r
+\bold g \eq  \bold F\T\,\bold r
 \end{equation}
-Notice also that this vector can be found by taking the gradient
+Recall this vector can be found by taking the gradient
 of the size of the residuals:
 \begin{equation}
 {\partial \over  \partial \bold x\T }  \ \bold r \cdot \bold r
@@ -1414,7 +1348,7 @@ of the size of the residuals:
 \bold F\T \  \bold r
 \end{equation}
 Choosing $\Delta \bold x$ to be the gradient vector
-$\Delta\bold x = \bold g = \bold F\T \bold r$
+$\Delta\bold x = \bold g = \bold F\T\,\bold r$
 is called ``the method of \bx{steepest descent}.''
 
 \par
@@ -1439,24 +1373,79 @@ mmmmmm \= mmmmmm \= mmmmm \kill
 \>      \> \}                                                   
 \end{tabbing}
 
-\subsection{The meaning of the gradient}
-Imagine yourself doing a big modeling job by these methods.
-At each iteration you will be pushing the residual into
-the adjoint operator to see which direction you will move next,
-$\Delta \bold m = \bold F\T\bold r$.
-If each iteration is taking you a day,
-you will be looking at all your intermediate results each day.
-You will be looking at your current model $\bold m$ and your
-current residual $\bold r$.
-But your residual $\bold r$ can be carried into model space
-with the $\bold F\T$ operator.
-We have been calling this the gradient and the model change
-$\Delta \bold m = \bold F\T\bold r$,
-and it is, but it is also the current residual
-as it appears in model space.
-Viewing it, you'll see where in model space
-your theoretical data mismatches your observed data.
-In some applications it might be more informative than $\bold r$ itself.
+
+\par
+Good science and engineering is finding something unexpected.
+For this you look both in data space and in model space.
+In data space you look at the residual $\bold r$.
+In model space, you look at the residual projected there $\bold F\T\,\bold r$.
+What does it mean?
+It is simply $\Delta m$,
+the changes you need to make to your model.
+It will mean more in later chapters
+where the operator $\bold F$ is a column vector of operators
+that are fighting with one another to grab the data.
+
+
+
+\subsection{Why steepest descent is so slow}
+Before we can understand why the \bx{conjugate-direction method} is so fast,
+we need to see why the
+\bxbx{steepest-descent method}{steepest descent}
+is so slow.
+The process of selecting $\alpha$ is called ``\bx{line search}'',
+but for a linear problem like the one we have chosen here,
+we hardly recognize choosing $\alpha$ as searching a line.
+A more graphic understanding of the whole process is possible
+from considering a two-dimensional space
+where the vector of unknowns $\bold x$
+has just two components, $x_1$ and $x_2$.
+Then the size of the residual vector $\bold r \cdot \bold r$ can be
+displayed with a contour plot in the plane of $(x_1,x_2)$.
+Figure \ref{fig:yunyue}
+shows a contour plot of the penalty function
+of $(x_1,x_2)=(m_1,m_2)$.
+The gradient is perpendicular to the contours.
+Contours and gradients are {\it curved lines}.
+When we use the steepest-descent method we start at a point
+and compute the gradient direction at that point.
+Then we begin a %
+\it straight-line %
+\rm descent in that direction.
+The gradient direction curves away from our direction of travel,
+but we continue on our straight line
+until we have stopped descending and are about to ascend.
+There we stop, compute another gradient vector,
+turn in that direction, and descend along a new straight line.
+The process repeats until we get to the bottom,
+or until we get tired.
+
+\inputdir{Matlab}
+\sideplot{yunyue}{width=0.9\textwidth}{
+	Route of steepest descent (black)
+	and route of conjugate direction (light grey or red).
+	}
+
+What could be wrong with such a direct strategy?
+The difficulty is at the stopping locations.
+These occur where the descent direction
+becomes %
+\it parallel %
+\rm to the contour lines.
+(There the path becomes level.)
+So after each stop, we turn $90^\circ$,
+from parallel to perpendicular to the local contour line
+for the next descent.
+What if the final goal is at a $45^\circ$ angle to our path?
+A $45^\circ$ turn cannot be made.
+Instead of moving like a rain drop down the centerline of a rain gutter,
+we move along a fine-toothed zigzag path,
+crossing and recrossing the centerline.
+The gentler the slope of the rain gutter,
+the finer the teeth on the zigzag path.
+%\todo{Missing figure (ls-sawtooth) A search path for steepest
+%  descent.}
+
 \par
 
 \subsection{Null space and iterative methods}
@@ -1476,23 +1465,28 @@ When we use the steepest-descent method,
 we iteratively find solutions by this updating:
 \begin{eqnarray}
 \bold x_{i+1} &=& \bold x_i + \alpha \Delta \bold x                     \\
-\bold x_{i+1} &=& \bold x_i + \alpha \bold F\T \bold r                   \\
-\bold x_{i+1} &=& \bold x_i + \alpha \bold F\T(\bold F\bold x -\bold d)
+\bold x_{i+1} &=& \bold x_i + \alpha \bold F\T\,\bold r                   \\
+\bold x_{i+1} &=& \bold x_i + \alpha \bold F\T\,(\bold F\bold x -\bold d)
 \end{eqnarray}
 After we have iterated to convergence,
-the gradient $ \Delta \bold x$ vanishes
-as does $\bold F\T(\bold F\bold x -\bold d)$.
-Thus, an iterative solver gets the same solution
-as the theory leading to equation (\ref{eqn:sln}).
-\par
-Suppose that by adding a huge amount of $\bold x_{\rm null}$,
-we now change $\bold x$
-and continue iterating.
-Notice that $ \Delta \bold x$ remains zero
-because $\bold F \bold x_{\rm null}$ vanishes.
+the gradient
+$ \Delta \bold x=\bold F\T\, \bold r$
+vanishes.
+Adding any $\bold x_{\rm null}$ to $\bold x$
+does not change the residual
+$\bold r=\bold F\bold x -\bold d$.
+Since $\bold r$ is unchanged
+$ \Delta \bold x=\bold F\T\, \bold r$
+remains zero and $\bold x_{i+1} =\bold x_i$.
 Thus we conclude that any null space in the initial guess $\bold x_0$
 will remain there unaffected by the gradient-descent process.
-
+So, in the presense of null space,
+the answer we get from an iterative method
+depends on the starting guess.
+Oops!
+The analytic solution does not do any better.
+It needs to deal with a singular matrix.
+Existence of a null space destroys the uniqueness of any resulting model.
 \par
 Linear algebra theory enables us to dig up the entire null space
 should we so desire.
@@ -1525,13 +1519,13 @@ we find
 $0=\bold r_1-\bold r_2 =\bold F(\bold x_1-\bold x_2)$
 proving that $\bold x_1-\bold x_2$ is a model in the null space.
 Adding $\bold x_1-\bold x_2$ to any to any model $\bold x$
-will not change the theoretical data.
-Are you having trouble visualizing $\bold r$ being unique,
-but $\bold x$ not being unique?  Imagine that $\bold r$
-happens to be independent of one of the components of $\bold x$.
-That component is non-unique.
-More generally, it is some linear combination of components of $\bold x$
-that $\bold r$ is independent of.
+will not change the modeled data.
+%Are you having trouble visualizing $\bold r$ being unique,
+%but $\bold x$ not being unique?  Imagine that $\bold r$
+%happens to be independent of one of the components of $\bold x$.
+%That component is non-unique.
+%More generally, it is some linear combination of components of $\bold x$
+%that $\bold r$ is independent of.
 
 \par
 \boxit{
@@ -1540,14 +1534,12 @@ that $\bold r$ is independent of.
         gradient-descent methods
         beginning from various different starting guesses.
         }
-
 \par
 ``Did I fail to run my iterative solver long enough?'' is
 a question you might have.
 If two residuals from two starting solutions are not equal,
 $\bold r_1 \ne \bold r_2$,
 then you should be running your solver through more iterations.
-
 \par
 \boxit{
         If two different starting solutions
@@ -1555,66 +1547,7 @@ then you should be running your solver through more iterations.
         then you didn't run your solver through enough iterations.
         }
 
-\subsection{Why steepest descent is so slow}
-\inputdir{Matlab}
-Before we can understand why the \bx{conjugate-direction method} is so fast,
-we need to see why the
-\bxbx{steepest-descent method}{steepest descent}
-is so slow.
-The process of selecting $\alpha$ is called ``\bx{line search}'',
-but for a linear problem like the one we have chosen here,
-we hardly recognize choosing $\alpha$ as searching a line.
-A more graphic understanding of the whole process is possible
-from considering a two-dimensional space
-where the vector of unknowns $\bold x$
-has just two components, $x_1$ and $x_2$.
-Then the size of the residual vector $\bold r \cdot \bold r$ can be
-displayed with a contour plot in the plane of $(x_1,x_2)$.
-Figure \ref{fig:yunyue}
-shows a contour plot of the penalty function
-of $(x_1,x_2)=(m_1,m_2)$.
-The gradient is perpendicular to the contours.
-Contours and gradients are {\it curved lines}.
-When we use the steepest-descent method we start at a point
-and compute the gradient direction at that point.
-Then we begin a %
-\it straight-line %
-\rm descent in that direction.
-The gradient direction curves away from our direction of travel,
-but we continue on our straight line
-until we have stopped descending and are about to ascend.
-There we stop, compute another gradient vector,
-turn in that direction, and descend along a new straight line.
-The process repeats until we get to the bottom,
-or until we get tired.
-
-\sideplot{yunyue}{width=3.6in}{
-	Route of steepest descent (black)
-	and route of conjugate direction (light grey or green).
-	}
-
-\par
-What could be wrong with such a direct strategy?
-The difficulty is at the stopping locations.
-These occur where the descent direction
-becomes %
-\it parallel %
-\rm to the contour lines.
-(There the path becomes level.)
-So after each stop, we turn $90^\circ$,
-from parallel to perpendicular to the local contour line
-for the next descent.
-What if the final goal is at a $45^\circ$ angle to our path?
-A $45^\circ$ turn cannot be made.
-Instead of moving like a rain drop down the centerline of a rain gutter,
-we move along a fine-toothed zigzag path,
-crossing and recrossing the centerline.
-The gentler the slope of the rain gutter,
-the finer the teeth on the zigzag path.
-
-\todo{Missing figure (ls-sawtooth) A search path for steepest descent.}
-
-\subsection{Conjugate direction}
+\subsection{The magical property of the conjugate direction method}
 In the \bx{conjugate-direction method}, not a line, but rather a plane,
 is searched.
 A plane is made from an arbitrary linear combination of two vectors.
@@ -1626,25 +1559,15 @@ say  $\alpha \bold g + \beta  \bold s$.
 For minimizing quadratic functions the plane search requires
 only the solution of a two-by-two set of linear equations
 for  $\alpha$  and  $\beta$.
-The equations will be specified here along with the program.
-(For %
-\it nonquadratic %
-\rm functions a plane search is considered intractable,
-whereas a line search proceeds by bisection.)
 \par
-For use in linear problems,
-the conjugate-direction method described in this book
-follows an identical path with the more well-known conjugate-gradient method.
-We use the conjugate-direction method
-for convenience in exposition and programming.
-
-\par
-%\boxit{
-        The simple form of the conjugate-direction algorithm covered here
-        is a sequence of steps.
-        In each step the minimum is found in the plane given by two vectors:
-        the gradient vector and the vector of the previous step.
-%        }
+The conjugate-direction (CD) method described in this book
+has a magical property shared by the more famous conjugate-gradient method.
+This magical property is not proven in this book,
+but it may be found in many sources.
+Although these methods are iterative methods,
+they converge on the exact answer (assuming perfect numerical precision)
+in a fixed number of steps.
+That number is the number of components in model space $\bold x$.
 
 %\begin{comment}
 %\subsection{Magic (abandoned)}
@@ -1673,31 +1596,18 @@ for convenience in exposition and programming.
 %\end{itemize}
 %\end{comment}
 
-%\subsection{Magical properties of conjugate directions (Sergey)}
-Given the linear operator $\bold F$ and a generator of solution steps
-(random in the case of random directions or gradient in the case of
-steepest descent),
-we can construct an optimally convergent iteration process,
-which finds the solution in no more than $n$ steps,
-where $n$ is the size of the problem.
-This result should not be surprising.
-If $\bold F$ is represented by a full matrix,
-then the cost of direct inversion is proportional to $n^3$,
-and the cost of matrix multiplication is $n^2$.
-Each step of an iterative method boils down to a matrix multiplication.
-Therefore, we need at least $n$ steps to arrive at the exact solution.
-Two circumstances make large-scale optimization practical.
-First, for sparse convolution matrices
-the cost of matrix multiplication is $n$ instead of $n^2$.
-Second, we can often find a reasonably good solution
-after a limited number of iterations.
-If both these conditions are met, the cost of optimization
-grows linearly with $n$,
-which is a practical rate even for very large applications.
+\par
+Where we benefit from iterative methods is if they happen to require less than
+the theoretically require nunber of iterations.
+%$m$ iterations.
+Whether that is so, depends on the problem at hand.
+Reflection seismology has many problems so massive they are said
+to be solved simply by one application of the adjoint operator.
+The idea that such solutions might be improved
+by a small number of iterations is very appealing.
 
 
-
-%\subsection{Conjugate-direction theory for programmers}
+\subsection{Conjugate-direction theory for programmers}
 Fourier-transformed variables are often capitalized.
 This convention will be helpful here,
 so in this subsection only,
@@ -1710,16 +1620,17 @@ Thus we define the solution, the solution step
 (from one iteration to the next),
 and the gradient by
 \begin{eqnarray}
-X   &=& \bold F \  x\   \quad\quad\quad  {\rm solution}         \\
-S_j &=& \bold F \  s_j  \quad\quad\quad  {\rm solution\ step}    \\
-G_j &=& \bold F \  g_j  \quad\quad\quad  {\rm solution\ gradient}  
+X   &=& \bold F \  x\   \quad\quad\quad  {\rm modeled\ data\ } = \bold F\ {\rm model}
+\\
+S_j &=& \bold F \  s_j  \quad\quad\quad  {\rm model\ solution\ step}    \\
+G_j &=& \bold F \  g_j  \quad\quad\quad  \Delta\bold r = \bold F\Delta\bold m
 \end{eqnarray}
 A linear combination in solution space,
-say  $s+g$,  corresponds to  $S+G$  in the conjugate space,
+say  $s+g$,  corresponds to  $S+G$  in the conjugate space, the data space,
 because $S+G = \bold F s + \bold F g = \bold F(s+g)$.
 According to equation 
 (\ref{eqn:cg1b}),
-the residual is the theoretical data minus the observed data.
+the residual is the modeled data minus the observed data.
 \begin{equation}
 R \eq \bold F  x \ -\ D
   \eq          X \ -\ D
@@ -1742,7 +1653,7 @@ of components as the solution vector $x$.
 A vector with this number of components is
 \begin{eqnarray}
 g &=& \bold F\T \  R \eq \hbox{gradient}                 \label{eqn:g} \\
-G &=& \bold F  \  g \eq \hbox{conjugate gradient}       \label{eqn:G}
+G &=& \bold F  \  g \eq \hbox{conjugate gradient}   \ =\ \Delta r     \label{eqn:G}
 \end{eqnarray}
 The gradient $g$ in the transformed space is $G$,
 also known as the \bx{conjugate gradient}.
@@ -1752,16 +1663,17 @@ It will be some unknown amount $\alpha$ of the gradient $\bold g$ plus
 another unknown amount         $\beta$  of the previous step $\bold s$.
 Likewise in residual space.
 \begin{eqnarray}
-\Delta \bold x = \alpha \bold g + \beta \bold s
+\Delta \bold x &=& \alpha \bold g + \beta \bold s \quad\quad \hbox{model space}
 \\
-\Delta \bold r = \alpha \bold G + \beta \bold S
+\Delta \bold r &=& \alpha \bold G + \beta \bold S \quad\quad \hbox{data space}
 \end{eqnarray}
 
 \par
 The minimization (\ref{eqn:mindot}) is now generalized
 to scan not only in a line with $\alpha$,
 but simultaneously another line with $\beta$.
-The combination of the two lines is a plane:
+The combination of the two lines is a plane.
+We now set out to find the location in this plane that minimizes the quadratic $Q$.
 \begin{equation}
 Q(\alpha ,\beta ) \eq
 ( R + \alpha G + \beta S) \ \cdot\  (R + \alpha G + \beta S )
@@ -1769,31 +1681,33 @@ Q(\alpha ,\beta ) \eq
 \end{equation}
 The minimum is found at  $\partial Q / \partial \alpha \,=\,0$  and
 $\partial Q / \partial \beta \,=\,0$, namely,
-\begin{equation}
-0\eq G \ \cdot\  ( R + \alpha G + \beta S )
-\end{equation}
-\begin{equation}
-0\eq S \ \cdot\  ( R + \alpha G + \beta S )
-\end{equation}
-The solution is
+\begin{eqnarray}
+0 &=& G \ \cdot\  ( R + \alpha G + \beta S )
+\\
+0 &=& S \ \cdot\  ( R + \alpha G + \beta S )
+\end{eqnarray}
+\par
+%XXX NEW EQUATION BEGIN
 \begin{equation}
 \label{eqn:twobytwosln}
+-\ \ 
+\left[ 
+\begin{array}{c}
+  (G\cdot R) \\
+  (S\cdot R) \end{array} \right]
+\quad = \quad
+\left[ 
+\begin{array}{rr}
+   (G \cdot G) & (S \cdot G)  \\
+   (G \cdot S) & (S \cdot S)  \end{array} \right] 
+\;
 \left[ 
 \begin{array}{c}
   \alpha \\ 
   \beta \end{array} \right] 
-\ = \ 
-        {-1 \over (G\cdot G)(S\cdot S)-(G\cdot S)^2}
-\left[ 
-\begin{array}{rr}
-  (S \cdot S) & -(S \cdot G)  \\
-  -(G \cdot S) & (G \cdot G)  \end{array} \right] 
-\; \left[ 
-\begin{array}{c}
-  (G\cdot R) \\
-  (S\cdot R) \end{array} \right]
 \end{equation}
-
+This is a set of two equations for $\alpha$ and $\beta$.
+Recall the inverse of a $2\times 2$ matrix, equation (\ref{eqn:twobytwoinv}).
 \par
 The many applications in this book all need to
 find $\alpha$ and $\beta$ with (\ref{eqn:twobytwosln}) and then
@@ -1802,8 +1716,9 @@ update the residual with (\ref{eqn:Rupdate}).
 Thus we package these activities in a subroutine
 named \texttt{cgstep()}.
 To use that subroutine we will have a computation \bx{template}
-like we had for steepest descents, except that we
-will have the repetitive work done by subroutine {\tt cgstep()}.
+%like we had for steepest descents, except that we
+with
+repetitive work done by subroutine {\tt cgstep()}.
 This template (or pseudocode) for minimizing the residual
 $\bold 0\approx \bold r = \bold F \bold x - \bold d$
 by the conjugate-direction method is
@@ -1864,7 +1779,7 @@ operator invocations, and initializations.
 Because \bx{Fortran} does not recognize the difference between upper- and
 lower-case letters,
 \end{comment}
-the conjugate vectors $G$ and $S$ in the program are denoted by
+The conjugate vectors $G$ and $S$ in the program are denoted by
 {\tt gg} and {\tt ss}.
 The inner part of the conjugate-direction task is in
 function {\tt cgstep()}.%
@@ -1955,138 +1870,41 @@ We will watch how the list of optional parameters
 to the generic solver routine grows
 as we attack more and more complex applications in later chapters.
 
-\subsection{The modeling success and the solver success}
+\subsection{Fitting success and solver success}
 Every time we run a data modeling program
 we have access to two publishable numbers
 $1-|\bold r|/|\bold d|$ and
-$1-|\bold F\T\bold r|/|\bold F\T\bold d|$.
+$1-|\bold F\T\,\bold r|/|\bold F\T\,\bold d|$.
 The first says how well the model fits the data.
 The second says how well we did the job of finding out.
-
 \par
 Define the residual $\bold r=\bold F\bold m-\bold d$ and
 the ``size'' of any vector, such as the data vector,
 as $|\bold d|=\sqrt{\bold d \cdot \bold d}$.
 The number $1-|\bold r|/|\bold d|$, will be called the
-``modeling success at fitting data.''
-(When the data fitting includes a residual weighting function,
-it should be incorporated in $\bold F$ and $\bold d$.)
-
+``success at fitting data.''
+(Any data-space weighting function
+should have been incorporated in both $\bold F$ and $\bold d$.)
 \par
-While the modeling success is of interest to everyone, the second number
-$1-|\bold F\T\bold r|/|\bold F\T\bold d|$,
-to be called the ``solver success at achieving goals,''
-is more of interest to us, the analysts.
-It tells us to what extent our program
-has achieved our stated goals
-of data fitting (and regularization).
-Experience seeing this number may give us guidance
-to where opportunities have been missed
-and where more work might be worthwhile.
-In applications of low dimensionality
-we can normally drive the solver success to unity.
-Conjugate-gradient theory says given infinite precision arithmetic,
-iteration should converge to the exact solution in a number of
-iterations equal to the number of unknowns.
-In reality, however,
-in Geophysics we often find ourselves iterating on applications
-far too large to run to completion.
-The solver success number tells us how well we are doing.
-\par
-
-There are three ways to understand the important expression $\bold F\T\bold r$.
-First, it is the residual $\bold r$, 
-originally in data space, transformed to model space by $\bold F\T$.
-The second is that $\bold F\T \bold r$
-is the gradient of the penalty function,
-namely $d(\bold r \cdot \bold r)/d\bold m$.
-This gradient vanishes as the best fit is found.
-The statement that this gradient vanishes is the ``normal equations''
-\begin{equation}
- \bold 0 \eq
- \bold F\T \bold r 
- \eq  \bold F\T(\bold F\bold m-\bold d) 
- \eq (\bold F\T\bold F) \bold m - \bold F\T\bold d
-\end{equation}
-The third way to understand the gradient $\bold F\T \bold r$
-is that it is called $\Delta \bold m$ in many solver programs
-because of its role in building an update for the model $\bold m$.
-
-\par
-The progress of a solver can be observed by a plot of 
-$|\Delta\bold m| = \sqrt{\Delta\bold m \cdot \Delta\bold m }$ versus iteration.
-Ideally it converges to zero.
-Unfortunately the amplitude axis of this plot
-scales with the units of model space.
-We should nondimensionalize it.
-Then we could make a simple statements like,
-``We iterated 90\% of the way to the solution.''
-
-\par
-Starting from a zero model $\bold m=\bold 0$
-the first residual is $\bold r = -\bold d$.
-Its size in model space is $|\bold F\T\bold d|$
-(which also happens to be our first estimated model).
-After many iterations the residual in model space is
-$|\bold F\T\bold r|$.
-The ratio
-$|\bold F\T\bold r|/|\bold F\T\bold d|$
-progresses towards zero as we progress.
-The degree of success our solver is having is
-$1-|\bold F\T\bold r|/|\bold F\T\bold d|$.
-We could say,
-``Starting from our first model, we iterated
-until we had gone
-$100\times (1- |\bold F\T\bold r|/\bold F\T\bold d|)$\%
-of the way to the ultimate model $\bold m$.''
-More simply,
-$1- |\bold F\T\bold r|/\bold F\T\bold d|$ is the ``solver success.''
-
-
-%\par
-%For almost two decades
-%I have been iterating to a limit \texttt{niter} set by experience.
-%This page sets the ground for a more rational limit.
-
+While the data fitting success is of interest to everyone,
+the second number
+$1-|\bold F\T\,\bold r|/|\bold F\T\,\bold d|$
+is of interest in QA (quality analysis).
+In giant problems,
+especially those arising in seismology,
+running iterations to completion is impractical.
+A question always of interest is whether enough iterations have been run.
+This number gives us guidance to where more effort could be worthwhile.
 \par
 \boxit{
-The ``modeling success at fitting data'' is the number
-$1-|\bold r|/|\bold d|$.
-The ``solver success at achieving goals'' is the number
-$1-|\bold F\T\bold r|/|\bold F\T\bold d|$.
+$ 0 \quad \le \quad {\rm Success} \quad \le \quad 1$
+\par
+Fitting success: \quad $1-|\bold r|/|\bold d|$
+\par
+Numerical success: \quad $1-|\bold F\T\,\bold r|/|\bold F\T\,\bold d|$
 }
-\par
 
-\subsection{Measuring success}
-In image estimation we have data $\bold d$, residual $\bold r$, operator $\bold F$,
-and final solution, the image $\bold m$.
-We minimize the norm of $\bold r(\bold m) = \bold F\bold m-\bold d$
-by variation of $\bold m$.
-With least squares, minimizing the norm squared is equivalent to minimizing the norm.
-We measure the success of the model fitting the data by
-\begin{equation}
-\label{eqn:datafit}
-{\rm Fitting~success} = \ 1 - |\bold r|/|\bold d|
-\end{equation}
-where the norm of any vector, say $\bold r$, is $|\bold r|=\sqrt{\bold r \cdot \bold r}$.
-\par
-Since with image estimation applications
-the number of unknowns (dimension of $\bold m$) is usually hopelessly large,
-we can never iterate long enough to actually solve
-the normal equations $\bold F\T \bold r=\bold 0$
-(which is the same as iterating until the gradient $\bold F\T\bold r$ vanishes)
-so we are obliged to report this fact.  I advocate this:
-\begin{equation}
-\label{eqn:modelfit}
-{\rm Computational~success} = \ 1 - |\bold F\T\bold r|/|\bold F\T\bold d|
-\end{equation}
-There are three ways to think about this:
-First $\bold F\T\bold r$ is the gradient which should vanish.
-Second, it is the data fitting residual transformed into model space.
-Third, $\bold F\T\bold r$ is the final $\Delta \bold m$, while
-$\bold F\T\bold d$ is the first estimated model $\bold m_1$ (often called the adjoint model).
-Although it seems like the gradient should diminish monotonically in size
-(it certainly would in one dimension), I am not able to prove it here.
+
 
 \subsection{Roundoff}
 
@@ -2094,7 +1912,6 @@ Surprisingly, as a matter of practice, the simple conjugate-direction method
 defined in this book is more reliable than the conjugate-gradient method
 defined in the formal professional literature.
 I know this sounds unlikely, but I'll tell you why.
-
 \par
 In large applications numerical roundoff can be a problem. 
 Calculations need to be done in higher precision.
@@ -2105,7 +1922,6 @@ by the roundoff in the adjoint.   This is unrealistic.
 Thus optimization may diverge while theoretically converging.
 The conjugate direction method doesn't mind the roundoff.
 It simply takes longer to converge.
-
 \par
 Let us see an example of a situation where roundoff becomes a problem.
 Suppose we add 100 million ones.  You expect the sum to be 100 million.
@@ -2128,31 +1944,8 @@ because modern compilers are so clever.
 When told to add all the values in a vector they know
 it is wise to add the numbers in groups, and then add the groups.
 Thus I had to hide the fact I was adding ones by getting them
-from a subroutine that seems to depend upon the sum (but really doesn't).
-
-
-\begin{comment}
-\subsection{Why C is much better than Fortran 77}
-I'd like to digress from our geophysics-mathematics themes
-to explain why C has been a great step forward
-over Fortran 77.
-All the illustrations in this book were originally computed in F77.
-Then module
-\texttt{tinysolver} \vpageref{lst:tinysolver}
-was simply a subroutine.
-It was not one module for the whole book, as it is now,
-but it was many conceptually identical subroutines,
-dozens of them, one subroutine for each application.
-The reason for the proliferation was that F77 lacks the ability of C
-to represent operators as having two ways to enter,
-one for science and another for math.
-On the other hand, F77 did not require the half a page
-of definitions that we see here in C.
-But the definitions are not difficult to understand,
-and they are a clutter that we must see once and never again.
-Another benefit is that the book in F77 had no easy way to switch
-from the \texttt{cgstep} solver to other solvers.
-\end{comment}
+from a subroutine that seems to depend upon the sum (but really
+doesn't).
 
 \subsection{Test case: solving some simultaneous equations}
 \par
@@ -2195,21 +1988,6 @@ res -0.00000001 -0.00000001  0.00000001  0.00000002 -0.00000001
 \end{verbatim}
 \normalsize
 
-\begin{exer}
-\item
-One way to remove a mean value $m$ from signal $s(t)= \bold s$
-is with the fitting goal $\bold 0 \approx \bold s - m$.
-What operator matrix is involved?
-\item
-What linear operator subroutine from Chapter \ref{paper:ajt}
-can be used for finding the mean?
-\item
-How many CD iterations should be required to get the exact mean value?
-\item
-Write a mathematical expression for finding the mean by the CG method.
-\end{exer}
-
-%\end{notforlecture}
 
 \section{INVERSE NMO STACK}
 \inputdir{invstack}
@@ -2220,7 +1998,7 @@ equations without ever writing down the matrix of coefficients
 we consider how
 {\it \bx{back projection}} can be upgraded towards
 {\it \bx{inversion}} in the application called \bx{moveout and stack}.
-\sideplot{invstack}{width=3in}{
+\sideplot{invstack}{width=.8\textwidth,height=.8\textwidth}{
   Top is a model trace $\bold m$.
   Next are the synthetic data traces, $\bold d = \bold M \bold m$.
   Then, labeled {\tt niter=0} is the \protect\bx{stack},
@@ -2242,7 +2020,7 @@ as they began.
 Mathematically,
 we can denote the top trace as the model $\bold m$,
 the synthetic data signals as $\bold d = \bold M \bold m$,
-and the stack as $\bold M\T \bold d$.
+and the stack as $\bold M\T\,\bold d$.
 The conjugate-gradient algorithm optimizes the fitting goal
 $\bold d \approx \bold M \bold x$ by variation of $\bold x$,
 and the figure shows $\bold x$ converging to $\bold m$.
@@ -2264,7 +2042,7 @@ All the signals in Figure~\ref{fig:invstack} are intrinsically the same scale.%
 This simple inversion is inexpensive.
 Has anything been gained over conventional stack?
 First,
-though we used \bx{nearest-neighbor} interpolation,
+though we used nearest-neighbor interpolation,
 we managed to preserve the spectrum of the input,
 apparently all the way to the Nyquist frequency.
 Second, we preserved the true amplitude scale
@@ -2283,7 +2061,7 @@ offers interesting opportunities for inversion.
 \inputdir{lomask}
 
 Here we follow the doctoral dissertation of Jesse Lomask.
-In Figure~\ref{fig:TwoD} we have seen how to flatten 2-D seismic data.
+In Figure~\ref{fig:twod} we have seen how to flatten 2-D seismic data.
 The 3-D process is much more interesting. 
 To see why,
 consider this: Starting from the origin $(x , y ) = (0, 0)$
@@ -2334,6 +2112,12 @@ Expressed as a regression equation~(\ref{eqn:TauFields}) becomes
 \begin{equation}
 {\bf 0} \quad \approx\quad  {\bf r} \eq \nabla \tau \ -\  {\bf d}
 \end{equation}
+Figure~\ref{fig:chev} shows slices through a cube of seismic data.
+A paper book is inadequate to display all the images required
+to compare before and after
+(one image of output is blended over multiple images of input),
+so we move on to a radar application of much the same idea,
+but in 2-D instead of 3-D.
 
 \plot{chev}{width=\textwidth}{
 	Chevron data cube from the Gulf of Mexico.
@@ -2422,14 +2206,7 @@ rings are replace by a bedding plane.
 \sx{phase unwrapping}
 \sx{phase}
 Figure \ref{fig:vesuvio} shows
-radar\footnote{
-	Here we do not require knowledge of radar fundamentals.
-	Common theory and practice is briefly surveyed in
-	Reviews of Geophysics, Vol 36, No 4, November 1998,
-	Radar Interferometry and its application to changes
-	in the earth's surface, Didier Massonnet and Kurt Feigl.
-	}
-images of
+radar images of
 Mt.~Vesuvius\footnote{
         A web search engine quickly finds you other views.
         }
@@ -2452,7 +2229,7 @@ shows that there are a few somewhat large local amplitudes
 (clipped in Figure \ref{fig:vesuvio})
 but because these generally have spatially consistent phase,
 I would not describe the data as containing noise bursts.
-\plot{vesuvio}{width=6in,height=3in}{
+\plot{vesuvio}{width=\textwidth,height=.5\textwidth}{
   Radar image of Mt. Vesuvius.
   Left is the amplitude $|Z(x,y)|$.
   Non-reflecting ocean in upper left corner.
@@ -2473,14 +2250,14 @@ plane of the real part and the plane of the imaginary part.
 Putting them back together again showed that the phase
 angle of the averaged data behaves much more consistently.
 This adds evidence that the data is not troubled by noise bursts.
-\plot{squeeze}{width=6in,height=3in}{
+\plot{squeeze}{width=\textwidth,height=.5\textwidth}{
   Phase based on decimated data (left)
   and smoothed data (right).
 }
 
 \par
 From Figures \ref{fig:vesuvio} and \ref{fig:squeeze}
-we see that \bx{contour}s of constant phase
+we see that contours of constant phase
 appear to be contours of constant altitude;
 this conclusion leads us to suppose that a study of radar theory
 would lead us to a relation like $Z(x,y)=e^{ih(x,y)}$
@@ -2523,9 +2300,8 @@ which will put the phase in the range $-\pi < \phi \le \pi$
 although any multiple of $2\pi$ could be added.
 We seem to escape the $2\pi N$ phase ambiguity by differentiating:
 \begin{eqnarray}
-{\partial\phi \over \partial x}&=& \Im {1 \over Z}{\partial Z \over \partial x}\\
-{\partial\phi \over \partial x}&=&
-        {\Im  \bar Z {\partial Z \over \partial x} \over \bar Z Z }
+{\partial\phi \over \partial x} \eq \Im {1 \over Z}{\partial Z \over \partial x} \eq
+                                   {\Im  \bar Z {\partial Z \over \partial x} \over \bar Z Z }
 \label{eqn:integrate1D}
 \end{eqnarray}
 For every point on the $y$-axis, equation (\ref{eqn:integrate1D})
@@ -2546,7 +2322,7 @@ where
 $\nabla = ({\partial \over \partial x}, {\partial \over \partial y} ) $.
 This is essentially the same application we solved flattening seismic data with the regression 
 $\nabla \tau \approx {\bf d}$. Taking measurements to be phase differences 
-between neighboring mesh points, it is more correct to interpret equation~\ref{eqn:integrateme} as 
+between neighboring mesh points, it is more correct to interpret equation~(\ref{eqn:integrateme}) as 
 a difference equation than a differential equation. Since we measure phase differences only over tiny distances (one pixel) we hope not to worry about phases greater than $2\pi$.
 But if such jumps do occur, they will contribute to overall error.
 \par
@@ -2641,7 +2417,7 @@ An open question is whether the required number of iterations is reasonable
 or whether we would need to uncover a preconditioner
 or more rapid solution method.
 I adjusted the frame size 
-(by the amount of smoothing in Figure \ref{fig:squeeze90})
+(by the amount of smoothing in Figure \ref{fig:squeeze})
 so that I would get the solution in about ten seconds with 400 iterations.
 Results are shown in Figure~\ref{fig:veshigh}.
 \plot{veshigh}{width=6in,height=3in}{
@@ -2657,183 +2433,10 @@ of iterative descent.
 \progdex{klick}{Logarithmic increment detect}
 \end{comment}
 
-%\begin{notforlecture}
-\subsection{Digression: curl grad as a measure of bad data}
-\sx{curl grad}
-The relation (\ref{eqn:thedeltas}) between the phases and the phase differences is
-\begin{equation}
-\left[
-        \begin{array}{rrrr}
-                -1 &  1&  0& 0 \\
-                 0 &  0& -1& 1 \\
-                -1 &  0&  1& 0 \\
-                 0 & -1&  0& 1
-        \end{array}
-\right]
-\left[
-        \begin{array}{l}
-                \phi_a \\
-                \phi_b \\
-                \phi_c \\
-                \phi_d 
-        \end{array}
-\right]
-\eq
-\left[
-        \begin{array}{l}
-                \Delta \phi_{ab} \\
-                \Delta \phi_{cd} \\
-                \Delta \phi_{ac} \\
-                \Delta \phi_{bd} 
-        \end{array}
-\right]
-\label{eqn:fourbyfour}
-\end{equation}
-Starting from the phase differences,
-equation (\ref{eqn:fourbyfour}) hope to find all the phases themselves
-because an additive constant cannot be found.
-In other words,
-the column vector $[1,1,1,1]'$ is in the null space.
-Likewise, if we add phase increments while we move around a loop,
-the sum should be zero.
-Let the loop be
-$ a \rightarrow c \rightarrow d \rightarrow b \rightarrow a $.
-The phase increments that sum to zero are:
-
-\begin{equation}
-  \Delta \phi_{ac} + \Delta \phi_{cd} - \Delta \phi_{bd} - \Delta \phi_{ab}
-  \eq 0
-\label{eqn:curly}
-\end{equation}
-Rearranging to agree with the order in equation (\ref{eqn:fourbyfour}) yields
-\begin{equation}
-  - \Delta \phi_{ab}
-  + \Delta \phi_{cd}
-  + \Delta \phi_{ac}
-  - \Delta \phi_{bd}
-  \eq 0
-\end{equation}
-which says that the row vector $[-1,+1,+1,-1]$
-premultiplies (\ref{eqn:fourbyfour}),
-yielding zero.
-Rearrange again
-\begin{equation}
-  - \Delta \phi_{bd}
-  + \Delta \phi_{ac}
-  \eq 
-    \Delta \phi_{ab}
-  - \Delta \phi_{cd}
-\end{equation}
-and finally interchange signs and directions
-(i.e., $\Delta \phi_{db} = -\Delta \phi_{bd}$)
-\begin{equation}
-    (\Delta \phi_{db} - \Delta \phi_{ca})
-  \ -\ 
-    (\Delta \phi_{dc} - \Delta \phi_{ba})
-  \eq 0
-\end{equation}
-This is the finite-difference equivalent of
-\begin{equation}
-{\partial^2 \phi \over \partial x \partial y}
-\ -\ 
-{\partial^2 \phi \over \partial y \partial x}
-\eq 0
-\end{equation}
-and is also
-the $z$-component of the theorem that the curl of a gradient
-$\nabla\times\nabla\phi$ vanishes for any $\phi$.
-\par
-The four $\Delta\phi$ summed around the $2\times 2$ mesh
-should add to zero.
-I wondered what would happen if random complex numbers
-were used for $a$, $b$, $c$, and $d$,
-so I computed the four $\Delta\phi$s with equation (\ref{eqn:thedeltas}),
-and then computed the sum with (\ref{eqn:curly}).
-They did sum to zero for 2/3 of my random numbers.
-Otherwise,
-with probability 1/6 each, they summed to $\pm2\pi$.
-The nonvanishing curl represents a phase that is changing
-too rapidly between the mesh points.
-Figure \ref{fig:screw} shows the locations
-at Vesuvius where bad data occurs.
-This is shown at two different resolutions.
-The figure shows a tendency for
-bad points with curl $2\pi$ to have a neighbor with $-2\pi$.
-If Vesuvius were random noise instead of good data,
-the planes in Figure \ref{fig:screw} would be one-third covered with dots
-but as expected, we see considerably fewer.
-\plot{screw}{width=6in,height=3in}{ 
-  Values of curl at Vesuvius.
-  The bad data locations at both coarse and fine resolution
-  tend to occur in pairs of opposite polarity.
-}
-
-\subsection{Discontinuity in the solution}
-The viewing angle (23 degrees off vertical)
-in Figure \ref{fig:vesuvio} might be such
-that the mountain blocks some of the landscape behind it.
-This leads to the interesting possibility
-that the phase function must have a discontinuity
-where our viewing angle jumps over the hidden terrain.
-It will be interesting to discover whether
-we can estimate functions with such discontinuities.
-I am not certain that the Vesuvius data
-really has such a shadow zone, so I prepared the synthetic
-data in Figure \ref{fig:synmod},
-which is noise free and definitely has one.
-\par
-We notice the polarity of the synthetic data in \ref{fig:synmod}
-is opposite that of the Vesuvius data. 
-This means that the radar altitude of Vesuvius is
-not measured from sea level but from the satellite level.
-
-\par
-A reason I particularly like this Vesuvius exercise
-is that slight variations on the theme occur in various other fields.
-For example,
-in 3-D seismology
-we can take the cross-correlation of each seismogram
-with its neighbor and pick the time lag of the maximum correlation.
-Such time shifts from trace to trace
-can be organized as we have organized the $\Delta\phi$ values of Vesuvius.
-The discontinuity in phase along the skyline of our Vesuvius view
-is like the faults we find in the earth.
-
-\begin{exer}
-\begin{comment}
-\item
-  
- At iterations determined by
- \texttt{klick()} \vpageref{lst:klick}
- make snapshots 
- {\tt call snap( 'resphz.H', n1,n2, phz)}
- of a residual phase
- {\tt phz(i1,i2) = aimag( clog( zr))}
- of a complex number that you compute by multiplying
- the raw data by the complex conjugate
- of the theoretical data
- {\tt zr = zz(i1,i2) * cexp( cmplx( 0., -hh(i1,i2)))}.
- Examine the movie with
- {\tt <resphz.H Byte | Ta2vplot | Tube}.
- Has the iteration converged?
- Does it look like the correct answer was obtained?  Why or why not?
-\end{comment}
-\item
-In differential equations,
-boundary conditions are often (1) a specified function value
-or (2) a specified derivative.
-These are associated with (1) transient convolution
-or (2) internal convolution.
-Gradient operator \texttt{igrad2} \vpageref{lst:igrad2}
-is based on internal convolution with the filter $(1,-1)$.
 Revise \texttt{igrad2} to make a module called {\tt tgrad2}
 which has transient boundaries.
-%Hint: Compare with
-%\texttt{icai2} \vpageref{lst:icai2} and
-%\texttt{tcai2} \vpageref{lst:tcai2}.
-\end{exer}
 
-\plot{synmod}{width=6in,height=1.5in}{ 
+\plot{synmod}{width=\textwidth,height=.25\textwidth}{ 
   Synthetic mountain with hidden backside.
   For your estimation enjoyment.
 }
@@ -2849,7 +2452,7 @@ An analytical solution will be much faster.
 From any regression we get the least 
 squares solution when we multiply by the transpose of the operator. Thus 
 \begin{equation}
-{\bf 0} \eq \nabla\T \nabla \tau \ -\ \nabla\T {\bf d}
+{\bf 0} \eq \nabla\T\,\nabla \tau \ -\ \nabla\T\,{\bf d}
 \end{equation} 
 We need to understand what is the transpose of the gradient operator.
 Recall the finite difference representation of a derivative in chapter~1.
@@ -2859,7 +2462,7 @@ Since the transpose of a column vector is a row vector,
 the adjoint of a gradient $\nabla$, namely,
 $\nabla\T$ is more commonly known as the vector divergence 
 ($\nabla \cdot$).
-Likewise $\nabla\T\nabla$ is a positive definite matrix,
+Likewise $\nabla\T\,\nabla$ is a positive definite matrix,
 the negative of the Laplacian $\nabla^2$.
 Thus, in more conventional mathematical notation,
 the solution $\tau$ is that of Poisson's equation. 
@@ -2897,7 +2500,7 @@ For example, suppose we feel some data values are bad and we
 would like to throw out the regression equations involving the bad data points. At 
 Vesuvius we might consider the strength of the radar return (which we have
 previously ignored) and use it as a weighting function ${\bf W}$.
-Now our regression~\label{eqn:analyticsolution} becomes 
+Now our regression~(\ref{eqn:analyticsolution}) becomes 
 \begin{equation}
 {\bf 0} \quad \approx\quad
 {\bf W} \ (\nabla \phi -{\bf d})
@@ -2906,13 +2509,14 @@ Now our regression~\label{eqn:analyticsolution} becomes
 This is a problem we know how to solve,
 a regression with an operator ${\bf W \nabla}$  and 
 data ${\bf Wd}$. The weighted problem is not solvable in the Fourier domain because 
-the operator $({\bf W} \nabla )\T {\bf W} \nabla$ has no simple expression in the Fourier domain. Thus we would use the analytic solution to the unweighted problem as a starting guess for 
+the operator $({\bf W} \nabla )\T\;{\bf W} \nabla$ has no simple expression in the Fourier domain. Thus we would use the analytic solution to the unweighted problem as a starting guess for 
 the iterative solution to the real problem. 
 \par
-With the Vesuvius data we might we construct the weight ${\bf W}$ from the signal 
-strength. We also have available the curl, which should vanish. Its non-vanishing 
-is an indicator of questionable data which could be weighted down relative to other 
-data.
+With the Vesuvius data we could construct a weight ${\bf W}$ from the signal strength.
+We also have available the curl, which should vanish.
+Vanishing is an indicator of questionable data
+which could be weighted down relative to other data.
+
 
 %\begin{notforlecture}
 \section{OPERATOR SCALING (BINORMALIZATION)}
@@ -3049,17 +2653,17 @@ I imagined the $(\bold u,\bold v)$ variables might be especially suitable for di
 \section{THE WORLD OF CONJUGATE GRADIENTS}
 
 Nonlinearity arises in two ways:
-First, theoretical data might be a nonlinear function of the model parameters.
+First, modeled data might be a nonlinear function of the model parameters.
 Second, observed data could contain imperfections that force us to use
 \bx{nonlinear methods} of statistical estimation.
 
 \subsection{Physical nonlinearity}
 When standard methods of physics
-relate theoretical data $\bold d_{\rm theor}$ to model parameters $\bold m$,
+relate modeled data $\bold d_{\rm theor}$ to model parameters $\bold m$,
 they often use a nonlinear relation,
 say $\bold d_{\rm theor} =\bold f(\bold m)$.
 The power-series approach then leads to
-representing theoretical data as
+representing modeled data as
 \begin{equation}
 \bold d_{\rm theor} \eq
   \bold f(\bold m_0 + \Delta \bold m)
@@ -3070,7 +2674,7 @@ where $\bold F$ is the matrix of partial derivatives
 of data values by model parameters,
 say $\partial d_i/\partial m_j$,
 evaluated at $\bold m_0$.
-The theoretical data  $\bold d_{\rm theor}$ minus
+The modeled data  $\bold d_{\rm theor}$ minus
 the observed data $\bold d_{\rm obs}$ is the residual we minimize.
 \begin{eqnarray}
 \bold 0 \quad\approx\quad
@@ -3098,19 +2702,10 @@ The pathway of inversion with physical nonlinearity
 is well developed in the academic literature
 and Bill \bx{Symes} at Rice University has a particularly active group.
 
-\subsection{Statistical nonlinearity}
-The data itself often has \bx{noise bursts} or \bx{gaps}, and we will
-see later in Chapter \ref{paper:noiz} that this leads us to
-readjusting the \bx{weighting function}.  In principle, we should fix
-the weighting function and solve the problem.  Then we should revise
-the weighting function and solve the problem again.  In practice we
-find it convenient to change the weighting function during the
-optimization descent.  Failure is possible when the weighting function
-is changed too rapidly or drastically.  (The proper way to solve this
-problem is with robust estimators.  Unfortunately, I do not yet have
-an all-purpose robust solver.  Thus we are (temporarily, I hope)
-reduced to using crude reweighted least-squares methods.  Sometimes
-they work and sometimes they don't.)
+\par
+There are occasions to change the weighting function during model fitting.
+Then one simply restarts the calculation from the current model.
+In the code you would flag a restart with the expression \texttt{forget=true}.
 
 \subsection{Coding nonlinear fitting problems}
 We can solve nonlinear least-squares problems
@@ -3145,24 +2740,49 @@ where inside \texttt{solver} \vpageref{lst:tinysolver},
 we check to see if the residual
 diminished in the {\it previous} step, and if it did not,
 restart the iteration (choose the {\it current} step to be steepest descent instead of CD).
-I am planning to work with some mathematicians
-to gain experience with other solvers.
-
 \par
 Experience shows that nonlinear applications have many pitfalls.
 Start with a linear problem,
-add a minor physical improvement or unnormal noise,
+add a minor physical improvement or abnormal noise,
 and the problem becomes nonlinear and probably has another solution
 far from anything reasonable.
 When solving such a nonlinear problem,
 we cannot arbitrarily begin from zero as we do with linear problems.
-We must choose a reasonable starting guess,
-and then move in a stable and controlled manner.
-A simple solution is to begin with several steps of steepest descent
-and then switch over to do some more steps of CD.
-Avoiding CD in earlier iterations can avoid instability.
-Strong linear ``regularization'' discussed later
-can also reduce the effect of nonlinearity.
+We must choose a reasonable starting guess.
+Chapter \ref{paper:iin} on the topic of regularization
+offers an additional way to reduce the dangers of nonlinearity.
+
+\subsection{Inverse of a $2\times 2$ matrix}
+
+\begin{eqnarray}
+\bold A ^{-1} \quad\quad\quad\quad \bold A \quad\quad &=& \ \quad\bold I
+\\
+\label{eqn:twobytwoinv}
+\frac{1}{ad-bc}
+\left[
+\begin{array}{rr}
+d & -b  \\
+-c & a
+\end{array}
+\right]
+\quad
+\left[
+\begin{array}{rr}
+a & b  \\
+c & d
+\end{array}
+\right]
+&=&
+\left[
+\begin{array}{rr}
+1 & 0  \\
+0 & 1
+\end{array}
+\right]
+\end{eqnarray}
+
+
+
 
 \subsection{Standard methods}
 The conjugate-direction method is really a family of methods.
@@ -3199,20 +2819,20 @@ they are equivalent to minimizing the quadratic form:
 \begin{equation}
 \bold  m:  \quad\quad
 \min_{\bold m}  Q(\bold m) \eq
-( \bold m\T\bold F\T - \bold d\T)\bold W\T\bold W
+( \bold m\T\,\bold F\T - \bold d\T)\bold W\T\,\bold W
 ( \bold F \bold m  - \bold d)
-\ +\ \bold m\T\bold A\T\bold A\bold m
+\ +\ \bold m\T\,\bold A\T\,\bold A\bold m
 \label{eqn:geoinvtheory}
 \end{equation}
 The optimization theory (OT) literature starts from a minimization of
 \begin{equation}
  \bold x:  \quad\quad
- \min_{\bold x} Q(\bold x) \eq \bold x\T\bold H \bold x - \bold b\T \bold x
+ \min_{\bold x} Q(\bold x) \eq \bold x\T\,\bold H \bold x - \bold b\T\,\bold x
 \label{eqn:optimtheory}
 \end{equation}
 To relate equation (\ref{eqn:geoinvtheory}) to (\ref{eqn:optimtheory})
 we expand the parentheses in (\ref{eqn:geoinvtheory}) 
-and abandon the constant term $\bold d\T\bold d$.
+and abandon the constant term $\bold d\T\,\bold d$.
 Then gather the quadratic term in $\bold m$ and the linear term in $\bold m$.
 There are two terms linear in $\bold m$
 that are transposes of each other.
@@ -3221,8 +2841,8 @@ Thus, to invoke ``standard methods,'' you take
 your problem-formulation operators $\bold F$, $\bold W$, $\bold A$
 and create two subroutines that apply:
 \begin{eqnarray}
- \bold H   &=&  \bold F\T\bold W\T\bold W\bold F + \bold A\T\bold A  \\
- \bold b\T  &=&  2(\bold F\T\bold W\T\bold W\bold d)\T
+ \bold H   &=&  \bold F\T\,\bold W\T\,\bold W\bold F + \bold A\T\,\bold A  \\
+ \bold b\T  &=&  2(\bold F\T\,\bold W\T\,\bold W\bold d)\T
 \end{eqnarray}
 The operators $\bold H$ and $\bold b\T$ operate on model space.
 Standard procedures do not require their adjoints
@@ -3524,16 +3144,16 @@ $\beta \padarrow \frac{ (\Delta \bold x \cdot \Delta \bold x )}
 %
 %\moddex{conjgrad}{one step of CG}
 
-\section{REFERENCES}
+%\section{REFERENCES}
 
 %\reference{Gill, P.E., Murray, W., and Wright, M.H., 1981,
 %        Practical optimization:  Academic Press.
 %        }
-\reference{Hestenes, M.R., and Stiefel, E., 1952,
-        Methods of
-        conjugate gradients for solving linear systems:
-        J. Res. Natl. Bur. Stand., {\bf 49}, 409-436.
-        }
+%\reference{Hestenes, M.R., and Stiefel, E., 1952,
+%        Methods of
+ %       conjugate gradients for solving linear systems:
+ %       J. Res. Natl. Bur. Stand., {\bf 49}, 409-436.
+ %       }
 %\reference{Luenberger, D.G., 1973,
 %        Introduction to linear and nonlinear programming:
 %        Addison-Wesley.
@@ -3543,24 +3163,105 @@ $\beta \padarrow \frac{ (\Delta \bold x \cdot \Delta \bold x )}
 %        tomographic systems:
 %        J. Comp. Phys., {\bf 61}, 463-482.
 %        }
-\reference{Paige, C.C., and Saunders, M.A., 1982a,
-        LSQR: an algorithm for sparse linear equations
-        and sparse least squares:
-        Assn. Comp. Mach. Trans. Mathematical Software,
-        {\bf 8,} 43-71.
-        }
-\reference{Paige, C.C., and Saunders, M.A., 1982b,
-        Algorithm 583, LSQR:
-        sparse linear equations and least squares problems:
-        Assn. Comp. Mach. Trans. Mathematical Software,
-        {\bf 8,}  195-209.
-        }
+%\reference{Paige, C.C., and Saunders, M.A., 1982a,
+ %       LSQR: an algorithm for sparse linear equations
+  %      and sparse least squares:
+ %       Assn. Comp. Mach. Trans. Mathematical Software,
+ %       {\bf 8,} 43-71.
+ %       }
+%\reference{Paige, C.C., and Saunders, M.A., 1982b,
+%        Algorithm 583, LSQR:
+%        sparse linear equations and least squares problems:
+%        Assn. Comp. Mach. Trans. Mathematical Software,
+%        {\bf 8,}  195-209.
+%        }
 %\reference{Strang, G., 1986,
 %        Introduction to applied mathematics:
 %        Wellesley-Cambridge Press.
 %        }
 
 %\end{notforlecture}
+
+\begin{exer}
+\item It is possible to reject two dips with the operator
+\begin{equation}
+(\partial_x + p_1 \partial_t)(\partial_x + p_2 \partial_t)
+\end{equation}
+This is equivalent to
+\begin{equation}
+\left(
+\frac{\partial^2}{\partial x^2} + a \frac{\partial^2}{\partial x \partial t} + b \frac{\partial^2}{\partial t^2} 
+\right)
+u(t,x) \eq v(t,x) \quad \approx \quad 0
+\end{equation}
+where $u$ is the input signal and $v$ is the output signal.  Show how to solve for $a$ and $b$ by minimizing the energy in $v$.
+
+\item Given $a$ and $b$ from the previous exercise, what are $p_1$ and $p_2$?
+
+\item
+Reduce $\bold d =\bold F\bold m$ to the special case of one data point and two model points like this
+\begin{equation}
+d \quad =\quad
+\left[
+\begin{array}{cc}
+2 & 1
+\end{array}
+\right]
+\left[
+\begin{array}{c}
+m_1
+\\
+m_2
+\end{array}
+\right]
+\end{equation}
+What is the null space?
+
+\item In 1695,
+150 years before Lord Kelvin's absolute temperature scale,
+120 years before Sadi Carnot's PhD thesis,
+40 years before Anders Celsius,
+and 20 years before Gabriel Fahrenheit,
+the French physicist Guillaume Amontons,
+deaf  since birth,
+took a mercury manometer (pressure gauge) and sealed it inside a glass pipe (a constant volume of air).
+He heated it to the boiling point of water at 100$^\circ$C.
+As he lowered the temperature to freezing at 0$^\circ$C,
+he observed the pressure dropped by 25\% .
+He could not drop the temperature any further but he supposed that if he could drop it further by a factor of three,
+the pressure would drop to zero (the lowest possible pressure) and the temperature would have been the lowest possible temperature.
+Had he lived after Anders Celsius he might have calculated this temperature to be -300$^\circ$C (Celsius).
+Absolute  zero is now known to be -273$^\circ$C.
+\par
+It is your job to be Amontons' lab assistant.
+Your {\it i}th measurement of temperature $T_i$ you make with Issac Newton's thermometer and you measure pressure $P_i$ and volume $V_i$ in the metric system.
+Amontons needs you to fit his data with the regression $0 \approx \alpha (T_i - T_0 ) - P_i V_i$ and calculate the temperature shift $T_0$ that Newton should have made when he defined his temperature scale.
+Do not solve this problem!
+Instead,
+cast it in the form of equation (2.23),
+identifying the data $d$ and the two column vectors $f_1$ and $f_2$ that are the fitting functions.
+Relate the model parameters $x_1$ and $x_2$ to the physical parameters $\alpha$ and $T_0$ .
+Suppose you make ALL your measurements at room temperature,
+can you find $T_0$ ?
+Why or why not? 
+
+\item
+One way to remove a mean value $m$ from signal $s(t)= \bold s$
+is with the fitting goal $\bold 0 \approx \bold s - m$.
+What operator matrix is involved?
+
+\item
+What linear operator subroutine from Chapter \ref{paper:ajt}
+can be used for finding the mean?
+
+\item
+How many CD iterations should be required to get the exact mean value?
+
+\item
+Write a mathematical expression for finding the mean by the CG method.
+
+\end{exer}
+
 
 \clearpage
 
