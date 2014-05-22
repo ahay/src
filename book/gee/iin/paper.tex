@@ -1,133 +1,29 @@
 % copyright (c) 1997 Jon Claerbout
 
-\title{Empty bins and inverse interpolation}
+\title{Regularization is model styling}
 \author{Jon Claerbout}
 \maketitle
 
 \label{paper:iin}
 	
-\begin{comment}
-\par
-Let us review the big picture.
-In Chapter \ref{paper:ajt} we developed adjoints and
-in Chapter \ref{paper:lsq} we developed inverse operators.
-Logically, correct solutions come only through inversion.
-Real life, however, seems nearly the opposite.
-This is puzzling but intriguing.
+{\em Regularization} is a method used in mathematics and statistics
+to deal with insufficient information.
+The reader must supply additional information in the form of an operator.
+Where is this operator to come from, and what does it mean?
+It amounts to us practitioners specifying a ``style'' of model.
+Where the model is a signal or an image
+it amounts to specifying one weighting function in physical space
+and another in Fourier space.
 
-\par
-Every time you fill your car with gasoline,
-it derives much more from the adjoint than from inversion.
-I refer to the fact that ``practical seismic data processing''
-relates much more to the use of adjoints than of inverses.
-It has been widely known for about the last 15 years
-that medical imaging and all basic image creation methods are like this.
-It might seem that an easy path to fame and profit would
-be to introduce the notion of inversion,
-but it is not that easy.
-Both cost and result quality enter the picture.
+%\par
+%In this chapter we study the simplest, most transparent example
+%of data insufficiency.
+%Data exists at irregularly spaced positions in a plane.
+%We set up a cartesian mesh and we discover that some
+%of the bins contain no data points.
+%What then?
 
-\par
-First consider cost.
-For simplicity, consider a data space with $N$ values
-and a model (or image) space of the same size.
-The computational cost of applying a dense adjoint
-operator increases in direct proportion to the number
-of elements in the matrix, in this case $N^2$.
-To achieve the minimum discrepancy between theoretical data
-and observed data (inversion) theoretically requires $N$ iterations
-raising the cost to $N^3$.
-
-\par
-Consider an image of size $m\times m=N$.
-Continuing, for simplicity, to assume a dense matrix of relations between
-model and data,
-the cost for the adjoint is $m^4$ whereas the cost for inversion is $m^6$.
-We'll consider computational costs for the year 2000, but
-noticing that costs go as the sixth power of the mesh size,
-the overall situation will not change much in the foreseeable future.
-Suppose you give a stiff workout to a powerful machine;
-you take an hour to invert a $4096\times 4096$ matrix.
-The solution, a vector of $4096$ components could
-be laid into an image of size $64\times 64= 2^6\times 2^6 = 4096$.
-Here is what we are looking at for costs:
-
-\par
-\begin{center}
-\begin{tabular}{||r|r|r|r|r||}                                          \hline
-adjoint cost &$(m\times m )^2$ & $(512\times 512)^2$ & $(2^9 2^9)^2$ & $2^{36}$
-\\ \hline
-inverse cost &$(m\times m )^3$ & $  (64\times 64)^3$ & $(2^6 2^6)^3$ & $2^{36}$
-\\ \hline
-\end{tabular}
-
-\end{center}
-
-\par\noindent
-These numbers tell us that for applications with dense operators,
-the biggest images that we are likely to see coming from inversion methods
-are $64\times 64$ whereas those from adjoint methods are $512\times 512$.
-For comparison, the retina of your eye is comparable to your computer
-screen at $1000\times 1000$.
-We might summarize by saying that while adjoint methods are less than perfect,
-inverse methods are ``legally blind'' :-)
-\par\noindent
-\url{http://sepwww.stanford.edu/sep/jon/family/jos/gifmovie.html} holds a movie
-blinking between Figures \ref{fig:512x512} and \ref{fig:64x64}.
-
-\inputdir{.}
-\sideplot{512x512}{height=3.5in,width=3.5in}{
-  Jos greets Andrew, ``Welcome back Andrew''
-  from the Peace Corps.
-  At a resolution of $512\times 512$, this picture
-  is about the same as the resolution
-  as the paper it is printed on,
-  or the same as your viewing screen,
-  if you have scaled it to 50\%\ of screen size.
-}
-%\newslide
-
-\sideplot{64x64}{height=3.5in,width=3.5in}{
-  Jos greets Andrew, ``Welcome back Andrew'' again.
-  At a resolution of $64\times 64$
-  the pixels are clearly visible.
-  From far the pictures are the same.
-  From near, examine their glasses.
-}
-%\newslide
-
-\par
-This cost analysis is oversimplified in that most applications
-do not require dense operators.
-With sparse operators, the cost advantage of adjoints is even more
-pronounced since for adjoints,
-the cost savings of operator sparseness translate directly to
-real cost savings.
-The situation is less favorable and much more muddy for inversion.
-The reason that Chapter 2 covers iterative methods
-and neglects exact methods is that in practice
-iterative methods are not run to their theoretical completion
-but they run until we run out of patience.
-
-\par
-Cost is a big part of the story, but the story has many other parts.
-Inversion, while being the only logical path to the best answer,
-is a path littered with pitfalls.
-The first pitfall is that the data is rarely able to 
-determine a complete solution reliably.
-Generally there are aspects of the image that are not learnable
-from the data.
-\end{comment}
-
-\par
-In this chapter we study the simplest, most transparent example
-of data insufficiency.
-Data exists at irregularly spaced positions in a plane.
-We set up a cartesian mesh and we discover that some
-of the bins contain no data points.
-What then?
-
-\section{MISSING DATA IN ONE DIMENSION}
+\section{EMPTY BINS AND INVERSE INTERPOLATION}
 \inputdir{miss1figs}
 \par
 A method for restoring \bx{missing data} is to ensure that the restored data,
@@ -157,24 +53,25 @@ The unfiltered data is data that has been filtered by
 an impulse function.
 To find the missing values
 that minimize energy out of other filters,
-we can use subroutine \texttt{mis1()} \vpageref{lst:mis1}.
+we can use subroutine \texttt{mis1()}.
+%\vpageref{lst:mis1}.
 Figure~\ref{fig:mlines}
 shows interpolation of the dataset with $(1,-1)$ as a roughening filter.
 The interpolated data matches the given data where they overlap.%
-\sideplot{mlines}{width=2.2in}{
+\sideplot{mlines}{width=.73\textwidth}{
   Top is given data.
   Middle is given data with interpolated values.
   Missing values seem to be interpolated by straight lines.
   Bottom shows the filter $(1,-1)$,
   whose output has minimum energy.
 }
-\sideplot{mparab}{width=2.2in}{
+\sideplot{mparab}{width=.73\textwidth}{
   Top is the same input data as in Figure~\protect\ref{fig:mlines}.
   Middle is interpolated.
   Bottom shows the filter $(-1,2,-1)$.
   The missing data seems to be interpolated by parabolas.
 }
-\sideplot{mseis}{width=2.2in}{
+\sideplot{mseis}{width=.73\textwidth}{
   Top is the same input.
   Middle is interpolated.
   Bottom shows the filter $(1,-3,3,-1)$.
@@ -242,7 +139,7 @@ based on the idea that the missing data should look like the given data.
 The \bx{interpolation} and \bx{extrapolation}s are so good that
 you can hardly guess which data values are given
 and which are interpolated.
-\sideplot{mbest}{width=2.2in}{
+\sideplot{mbest}{width=.73\textwidth}{
   Top is the same as in
   Figures~\protect\ref{fig:mlines} to \protect\ref{fig:moscil}.
   Middle is interpolated.
@@ -257,10 +154,9 @@ and which are interpolated.
 \sx{missing data}
 Now let us see how Figures \ref{fig:mlines}-\ref{fig:mbest}
 could have been calculated and how they were calculated.
-They could have been calculated with matrices,
-in which matrices were pulled apart according to subscripts of known
-or missing data;
-instead I computed them with operators,
+They could have been calculated with matrices
+where the matrices were pulled apart according to subscripts of known and missing data.
+Instead I computed them with operators,
 and applied only operators and their adjoints.
 First we inspect the matrix approach
 because it is more conventional.
@@ -420,7 +316,7 @@ $ -\bold F_k \bold m_k \approx \bold F \bold J \bold m $ where
 
 \begin{equation} 
 -\bold F_k \bold m_k
-\quad \approx \quad
+\ \approx \ 
 \left[ 
 \begin{array}{cccccc}
   a_1 & 0   & 0    & 0   & 0   & 0   \\
@@ -452,7 +348,7 @@ $ -\bold F_k \bold m_k \approx \bold F \bold J \bold m $ where
   m_5 \\ 
   m_6
   \end{array} \right]
-\quad =\quad \bold F \bold J \bold m
+\ =\ \bold F \bold J \bold m
 \label{eqn:migraine}
 \end{equation}
 Notice the introduction of the new diagonal matrix $\bold J$,
@@ -483,11 +379,11 @@ As usual, we find a direction to go $\Delta \bold m$
 by the gradient of the residual energy.
 \begin{equation}
 \Delta\bold m
-\eq \frac{\partial }{\partial \bold m\T}\ \bold r\T\bold r
-\eq \left( \frac{\partial }{\partial \bold m\T} \ \bold r\T \right) \bold r
-\eq \left( \frac{\partial }{\partial \bold m\T} \
+= \frac{\partial }{\partial \bold m\T}\ \bold r\T\bold r
+= \left( \frac{\partial }{\partial \bold m\T} \ \bold r\T \right) \bold r
+= \left( \frac{\partial }{\partial \bold m\T} \
 (\bold m\T\bold J\T\bold F\T + \bold r\T_0)                 \right) \bold r
-\eq  \bold J\T \bold F\T \bold r
+=  \bold J\T \bold F\T \bold r
 \label{eqn:fooo}
 \end{equation}
 
@@ -500,7 +396,7 @@ getting $\bold F(\bold I-\bold J)\bold m$,
 and load it into the residual $\bold r_0$.
 With this initialization completed,
 we begin an iteration loop.
-First we compute $\Delta m$ from equation (\ref{eqn:fooo}).
+First we compute $\Delta \bold m$ from equation (\ref{eqn:fooo}).
 \begin{equation}
 \Delta\bold m \quad\longleftarrow\quad \bold J\T \bold F\T \bold r
 \end{equation}
@@ -586,7 +482,8 @@ The subroutine to find missing data is \texttt{mis1()}.
 It assumes that zero values in the input data
 correspond to missing data locations.
 It uses our convolution operator
-\texttt{tcai1()} \vpageref{lst:tcai1}.
+\texttt{tcai1()}.
+% \vpageref{lst:tcai1}.
 You can also check the Index for other
 \bx{operators} and \bx{modules}.
 %\progdex{mis1}{1-D missing data}
@@ -608,28 +505,10 @@ I tested the code and it did converge in a finite number of iterations.
 The explanation is that these constraints are almost trivial.
 We pretended we had extra variables,
 and computed a $\Delta \bold m =\bold g$ for each of them.
-Then we set the $\Delta \bold m =\bold g$ to zero,
+Using $\bold J$ we then set the gradient $\Delta \bold m =\bold g$ to zero,
 hence making no changes to anything,
 like as if we had never calculated the extra  $\Delta \bold m$'s.
 
-\begin{exer}
-\item
-        Figures~\ref{fig:mlines}--\ref{fig:moscil}
-        seem to extrapolate to vanishing signals at the side boundaries.
-        Why is that so, and what could be done to leave the sides
-        unconstrained in that way?
-\item
-        Show that the interpolation curve in Figure~\ref{fig:mparab} is not
-        parabolic as it appears, but cubic.
-        ({\sc hint}:  First show that $(\nabla^2)\T\nabla^2 u = \bold 0$.)
-        \item
-        Verify by a program example that the number of iterations
-        required with simple constraints is the number of free parameters.
-        \todo{ idoc to reference printout}
-\item
-        A signal on a uniform mesh has missing values.
-        How should we estimate the mean?
-\end{exer}
 
 \section{WELLS NOT MATCHING THE SEISMIC MAP}
 \inputdir{chevron}
@@ -661,8 +540,6 @@ each with the seismic travel time to that fixed depth
 as estimated wholly from surface seismology.
 Such empirical corrections are often called ``\bx{fudge factor}s''.
 An example is the Chevron oil field in Figure \ref{fig:wellseis}.
-%\activesideplot{wellseis90}{width=3in,height=2in}{ER}{
-%\activeplot{wellseis90}{width=6in,height=4in}{ER}{
 \plot{wellseis}{width=4.5in,height=3in}{
   Binning by data push.
   Left is seismic data.
@@ -674,47 +551,29 @@ The binning of the seismic data in Figure \ref{fig:wellseis}
 is not really satisfactory when we have available
 the techniques of missing data estimation
 to fill the empty bins.
-Using the ideas of subroutine \texttt{mis1()} \vpageref{lst:mis1},
+Using the ideas of subroutine \texttt{mis1()} 
 we can extend the seismic data into the empty part of the plane.
 We use the same principle that we minimize the energy in 
 the filtered map where the map must match the data where it is known.
-I chose the filter $\bold A = \nabla'\nabla=-\nabla^2$
+I chose the filter $\bold A = \nabla\T\,\nabla=-\nabla^2$
 to be the Laplacian operator (actually, its negative)
 to obtain the result in Figure \ref{fig:misseis}.
-%\activesideplot{misseis90}{width=3in,height=2in}{ER}{
-%\activeplot{misseis90}{width=6in,height=4in}{ER}{
-\plot{misseis}{width=4.5in,height=3in}{
+\plot{misseis}{width=\textwidth,height=.5\textwidth}{
   Seismic binned (left) and extended (right)
   by minimizing energy in $\nabla^2 \bold s$.
 }
-
-%\begin{notforlecture}
-\par
-Figure \ref{fig:misseis} also involves a \bx{boundary condition calculation}.
-Many differential equations have a solution that becomes infinite
-at infinite distance, and in practice this means that the largest
-solutions may often be found on the boundaries of the plot,
-exactly where there is the least information.
-To obtain a more pleasing result,
-I placed artificial ``average'' data
-along the outer boundary.
-Each boundary point was given the value of an average
-of the interior data values.
-The average was weighted,
-each weight being an inverse power of the separation distance
-of the boundary point from the interior point.
-
-\par
-Parenthetically, we notice that all the unknown interior points
-could be guessed by the same method we used on the outer boundary.
-After some experience guessing what inverse power would
-be best for the weighting functions, I do not recommend this method.
-Like gravity, the forces of interpolation from the weighted sums
-are not blocked by intervening objects.
-But the temperature in a house is not a function of temperature
-in its neighbor's house.
-To further isolate the more remote points,
-I chose weights to be the inverse fourth power of distance.
+There are basically two ways to handle boundary conditions.
+First as we did in Figure \ref{fig:mlines},
+by using a transient filter operator
+which assumes zero outside to region of interest.
+Second is to use an internal filter operator.
+It's a bit trickier.
+Solutions could be growing at the boundaries.
+That's almost never desirable.
+In that case it is better to assign boundary values.
+That is what I did here in Figure \ref{fig:misseis}.
+I didn't do it because it is better,
+but to minimize the area surrounding the data of interest.
 
 \par
 The first job is to fill the gaps in the seismic data.
@@ -773,7 +632,7 @@ to the wells (where we have wells, and zero elsewhere).
 After we find the gradient direction to suggest some changes
 to $\bold m$, we simply will not allow those changes at well locations.
 We do this with a mask.
-We apply a "missing data selector" to the gradient.
+We apply a ``missing data selector'' to the gradient.
 It zeros out possible changes at well locations.
 Like with the goal (\ref{eqn:misfitgoal2}),
 we have
@@ -787,20 +646,24 @@ we have our solution $ \bold m =  \bold x + \bold s $.
 \par
 Now we prepare some roughening operators $\bold A$.
 We have already coded a 2-D gradient operator
-\texttt{igrad2} \vpageref{lst:igrad2}.
+\texttt{igrad2}.
+% \vpageref{lst:igrad2}.
 Let us combine it with its adjoint to get the 2-D laplacian operator.
 (You might notice that the laplacian operator is ``self-adjoint'' meaning
 that the operator does the same calculation that its adjoint does.
 Any operator of the form $\bold A\T\bold A$ is self-adjoint because
 $(\bold A\T\bold A)\T=\bold A\T (\bold A\T)\T=\bold A\T\bold A$. )
 \par
-\opdex{laplac2}{Laplacian in 2-D}{34}{78}{system/generic} 
+\opdex{laplac2}{Laplacian in 2-D}{34}{79}{system/generic} 
 Subroutine \texttt{lapfill()}
-\vpageref{lst:lapfill} is the same idea as \texttt{mis1()}
-\vpageref{lst:mis1} except that 
+%\vpageref{lst:lapfill} 
+is the same idea as \texttt{mis1()}
+%\vpageref{lst:mis1} 
+except that 
 the filter $\bold A$ has been specialized to the 
 laplacian
-implemented by module \texttt{laplac2} \vpageref{lst:laplac2}. 
+implemented by module \texttt{laplac2}.
+% \vpageref{lst:laplac2}. 
 
 
 \moddex{lapfill}{Find 2-D missing data}{64}{79}{system/generic}
@@ -825,7 +688,7 @@ That is done by calling
 
 \par
 The final map is shown in Figure \ref{fig:finalmap}.
-\plot{finalmap}{width=4.5in,height=3in}{
+\plot{finalmap}{width=\textwidth,height=.5\textwidth}{
   Final map based on Laplacian roughening.
 }
 
@@ -854,7 +717,7 @@ we have and have not acquired data, but we'd like to minimize that aspect.
 \boxit{ A good image of the earth hides our data \bx{acquisition footprint}.  }
 
 
-\plot{diffdiff}{width=5in,height=2.25in}{
+\plot{diffdiff}{width=\textwidth,height=.375\textwidth}{
   Difference between wells (the final map)
   and the extended seismic data.
   Left is plotted at the wells (with gray background for zero).
@@ -871,8 +734,8 @@ and $\nabla^2$ interpolates with cubics.
 This is because the fitting goal
 $\bold 0 \approx \nabla \bold m$,
 leads to
-$\frac{\partial }{\partial \bold m\T} \bold m\T\nabla'\nabla \bold m = \bold 0$
-or $\nabla\T\nabla \bold m = \bold 0$, whereas the fitting goal 
+$\frac{\partial }{\partial \bold m\T} \bold m\T\nabla\T\,\nabla \bold m = \bold 0$
+or $\nabla\T\,\nabla \bold m = \bold 0$, whereas the fitting goal 
         $\bold 0 \approx \nabla^2 \bold m$
 leads to
         $\nabla^4 \bold m = \bold 0$
@@ -913,7 +776,7 @@ We might delineate the Jordan River delta.
 We might find springs on the water bottom.
 We might find archaeological objects.
 \par
-\plot{locfil}{width=6in,height=8.5in}{
+\plot{locfil}{width=\textwidth,height=1.4\textwidth}{
   Views of the bottom of the Sea of Galilee.
 }
 The raw data is 132,044 triples, $(x_i,y_i,z_i)$,
@@ -931,13 +794,14 @@ as does the care needed in devising a technique
 for filling them.
 This first frame uses the simple idea from Chapter \ref{paper:ajt} of
 spraying all the data values to the nearest bin
-with \texttt{bin2()} \vpageref{lst:bin2}
+with \texttt{bin2()} 
+%\vpageref{lst:bin2}
 and dividing by the number in the bin.
 Bins with no data obviously need to be filled in some other way.
 I used a missing data program like that in the recent section
 on ``wells not matching the seismic map.''
 Instead of roughening with a Laplacian, however,
-I used the gradient operator \texttt{igrad2} \vpageref{lst:igrad2}
+I used the gradient operator \texttt{igrad2}. 
 % I used the \bx{roughening operator} \texttt{rufftri2()} \vpageref{lst:rufftri2},
 % which is an impulse minus a broad smoothing operator.
 The solver is \texttt{grad2fill()}.
@@ -961,9 +825,10 @@ For example,
 scanning the shoreline of the roughened image
 (after missing data was filled),
 we see several ancient shorelines, now submerged.
-\par
-\boxit{The adjoint is the easiest image to build.
-The roughened map is often more informative than the map itself.}
+%\boxit{
+%The adjoint is the easiest image to build.
+The roughened map is often more informative than the map itself.
+%}
 \par
 The views expose several defects
 of the data acquisition and of our data processing.
@@ -980,7 +845,7 @@ As for the navigation equipment,
 we can see that some data values are reported outside the lake!
 \par
 %\boxit{ A good image of the earth hides our data \bx{acquisition footprint}.  }
-\par
+%\par
 We want the sharpest possible view
 of this classical site.
 A treasure hunt is never easy
@@ -990,7 +855,7 @@ but at least the exercise is a good warm-up
 for submarine petroleum exploration.
 
 
-\section{INVERSE LINEAR INTERPOLATION}
+\section{CODE FOR THE REGULARIZED SOLVER}
 \inputdir{invint}
 In Chapter \ref{paper:ajt} we defined \bx{linear interpolation}
 \sx{interpolation}
@@ -998,7 +863,8 @@ as the extraction of values from between mesh points.
 In a typical setup (occasionally the role of data and model are swapped),
 a model is given on a uniform mesh
 and we solve the easy problem of extracting values
-between the mesh points with subroutine \texttt{lint1()} % \vpageref{lst:lint1}.
+between the mesh points with subroutine \texttt{lint1()}.
+% \vpageref{lst:lint1}.
 The genuine problem is the inverse problem, which we attack here.
 Data values are sprinkled all around,
 and we wish to find a function on a uniform mesh
@@ -1093,6 +959,18 @@ The data residual
 should vanish except where contradictory data values
 happen to lie in the same place.
 The model residual is the roughened model.
+
+\par
+Finding something unexpected is good science and engineering.
+For this we look both in data space and in model space.
+In data space we look at the residual $\bold r$.
+In model space, we look at the residual projected there
+$\Delta \bold m =\bold F\T\bold r$.
+After iterating to completion we have
+$\Delta \bold m = \bold 0 = \bold F\T \bold r_d + \bold A\T\bold r_m$,
+a sum of two images identical but for polarity.
+They tell us what we have learned from the data;
+how the model differs from what we thought it would be.
 
 \begin{comment}
 \par
@@ -1204,7 +1082,8 @@ and to choose how much of the previous step to include.
 An example of using the new solver is subroutine \texttt{invint1}.
 %\vpageref{lst:invint1}.
 I chose to implement the model roughening operator $\bold A$
-with the convolution subroutine \texttt{tcai1()} \vpageref{lst:tcai1},
+with the convolution subroutine \texttt{tcai1()}
+% \vpageref{lst:tcai1},
 which has transient end effects
 (and an output length equal to the input length plus the filter length).
 The adjoint of subroutine {\tt tcai1()} suggests perturbations
@@ -1218,7 +1097,7 @@ passes through the data points.
 Because the models are computed with transient convolution end-effects,
 the models tend to damp linearly to zero outside the region where
 signal samples are given.
-\sideplot{im1-2+1}{width=3in,height=1.5in}{
+\sideplot{im1-2+1}{width=.8\textwidth,height=.35\textwidth}{
   Sample points and estimation of a continuous function through them.
 }
 \par
@@ -1237,7 +1116,7 @@ $         \bold A\T\bold A \bold x=\bold 0$.
 (By this logic, the curves between data points in Figure \ref{fig:im1-2+1}
 must be cubics.)
 The $(1,-1)$ result is shown in Figure \ref{fig:im1-1a}.
-\sideplot{im1-1a}{width=3in,height=1.5in}{
+\sideplot{im1-1a}{width=.8\textwidth,height=.35\textwidth}{
   The same data samples
   and a function through them that minimizes
   the energy in the first derivative.
@@ -1287,28 +1166,8 @@ A formulation like (\ref{eqn:toldisregression}) is more likely
 to be helpful where we need to handle rapidly changing functions
 where binning is inferior to linear interpolation,
 perhaps in reflection seismology where high resolution is meaningful.
-\begin{exer}
-\item
-        It is desired to find a compromise between
-        the Laplacian roughener
-        and the gradient roughener.
-        What is the size of the residual space?
-        \sx{roughener ! Laplacian}
-        \sx{roughener ! gradient}
-\item
-        Like the seismic prospecting industry,
-        you have solved a huge problem using binning.
-        You have computer power left over
-        to do a few iterations with linear interpolation.
-        How much does the cost per iteration increase?
-        Should you refine your model mesh,
-        or can you use the same model mesh
-        that you used when binning?
-\end{exer}
-%\end{notforlecture}
 
-
-\section{PREJUDICE, BULLHEADEDNESS, AND CROSS VALIDATION}
+\section{PRECONCEPTION AND CROSS VALIDATION}
 
 First we first look at data $\bold d$.
 Then we think about a model $\bold m$,
@@ -1340,7 +1199,7 @@ ill fits our economical sparse sampling of data.
 Thus we adopt a fitting goal that mathematicians call ``regularization''
 and we might call a ``model style'' goal
 or more simply,
-a quantification of our prejudice about models.
+a quantification of our preconception of the best model.
 We express this by choosing an operator $\bold A$,
 often simply a roughener like a gradient
 (the choice again a topic in this and later chapters).
@@ -1352,7 +1211,7 @@ $\bold A ( \bold m-\bold m_0)$, say we choose
 \end{equation}
 
 \par
-In an ideal world, our model prejudice would not conflict
+In an ideal world, our model preconception (prejudice?) would not conflict
 with measured data, however,
 life is not so simple.
 Since conflicts between data and preconceived notions invariably arise
@@ -1361,7 +1220,7 @@ we need an adjustable parameter
 that measures our ``bullheadedness'', how much we intend
 to stick to our preconceived notions in spite of contradicting data.
 This parameter is generally called epsilon $\epsilon$
-because we like to imagine that our bullheadedness is small.
+because we like to imagine that our bullheadedness (prejudice?) is small.
 (In mathematics, $\epsilon$ is often taken to be
 an infinitesimally small quantity.)
 Although any bullheadedness seems like a bad thing,
@@ -1415,7 +1274,7 @@ Computationally, we could choose a new $\epsilon$ with each iteration,
 but it is more expeditious
 to freeze $\epsilon$, solve the problem,
 recompute $\epsilon$, and solve the problem again.
-I have never seen a case where more than one iteration was necessary.
+I have never seen a case where more than one repetition was necessary.
 
 \par
 People who work with small applications
@@ -1492,6 +1351,42 @@ within the data space and/or model space.
         Wellesley-Cambridge Press.
         }
 \end{comment}
+
+\begin{exer}
+\item
+        Figures~\ref{fig:mlines}--\ref{fig:moscil}
+        seem to extrapolate to vanishing signals at the side boundaries.
+        Why is that so, and what could be done to leave the sides
+        unconstrained in that way?
+\item
+        Show that the interpolation curve in Figure~\ref{fig:mparab} is not
+        parabolic as it appears, but cubic.
+        ({\sc hint}:  First show that $(\nabla^2)\T\,\nabla^2 u = \bold 0$.)
+        \item
+        Verify by a program example that the number of iterations
+        required with simple constraints is the number of free parameters.
+        \todo{ idoc to reference printout}
+\item
+        A signal on a uniform mesh has missing values.
+        How should we estimate the mean?
+\item
+        It is desired to find a compromise between
+        the Laplacian roughener
+        and the gradient roughener.
+        What is the size of the residual space?
+        \sx{roughener ! Laplacian}
+        \sx{roughener ! gradient}
+\item
+        Like the seismic prospecting industry,
+        you have solved a huge problem using binning.
+        You have computer power left over
+        to do a few iterations with linear interpolation.
+        How much does the cost per iteration increase?
+        Should you refine your model mesh,
+        or can you use the same model mesh
+        that you used when binning?
+\end{exer}
+
 
 \clearpage
 
