@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     int n1, n2, n12, i1, i2;
     int n[SF_MAX_DIM], rect[SF_MAX_DIM], niter, dim, i;
     float **data, **top, **bot, eps;
-    const float t1=24.0f, t2=-6.0f, b1=-16.0f, b2=1.0f;
+    const float t1=6, t2=3, b1=16, b2=2;
     sf_file inp, rct;
 
     sf_init(argc, argv);
@@ -68,12 +68,12 @@ int main(int argc, char* argv[])
 	bot[i2][0]=top[i2][0]=0.0f;
 	bot[i2][1]=top[i2][1]=0.0f;
 	for (i1=2; i1 < n1-2; i1++) {
-	    bot[i2][i1]= 2*(b1+b2)*data[i2][i1]    -
-		b1*(data[i2][i1-1]+data[i2][i1+1]) - 
-		b2*(data[i2][i1-2]+data[i2][i1+2]);
-	    top[i2][i1]= 2*(t1+t2)*data[i2][i1]    -
-		t1*(data[i2][i1-1]+data[i2][i1+1]) - 
-		t2*(data[i2][i1-2]+data[i2][i1+2]);
+	    bot[i2][i1]= 
+		b1*(data[i2][i1-1]-data[i2][i1+1]) - 
+		b2*(data[i2][i1-2]-data[i2][i1+2]);
+	    top[i2][i1]= 
+		t1*(data[i2][i1+1]-data[i2][i1-1]) - 
+		t2*(data[i2][i1+2]-data[i2][i1-2]);
 	}
 	bot[i2][n1-2]=top[i2][n1-2]=0.0f;
 	bot[i2][n1-1]=top[i2][n2-1]=0.0f;

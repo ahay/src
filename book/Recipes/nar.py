@@ -11,7 +11,7 @@ def NAR(data,
         rect2,        # smoothing radius for amplitude estimation
         ns=8,         # number of components
         list=[5,6,7], # significant components
-        amin=0.2,     # minimum aplitude for significant components
+        amin=0.2,     # minimum amplitude for significant components
         ):
     'Non-stationary auto-regressions'
 
@@ -81,6 +81,7 @@ def NAR(data,
     Flow(n('mask'),n('cwht'),
          'math output="abs(input)" | real | mask min=%g' % amin)
 
+    group = []
     for emd in list:
         mask = n('mask%d' % emd)
         Flow(mask,n('mask'),'window n2=1 f2=%d' % emd)
