@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
     if (NULL == (type=sf_getstring("type"))) type="biorthogonal";
     /* [haar,linear,biorthogonal] wavelet type, the default is biorthogonal  */
 
-    if (NULL == (oper=sf_getstring("oper"))) oper="shaping";
-    /* [Shaping,thresholding] method, the default is shaping  */
+    if (NULL == (oper=sf_getstring("oper"))) oper="bregman";
+    /* [bregman,thresholding] method, the default is bregman  */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -111,9 +111,9 @@ int main(int argc, char* argv[])
 	}
 	for (iter=0; iter < niter; iter++) { /* Start iteration */
 	    switch (oper[0]) {
-		case 's':
+		case 'b':
 		    if (verb)
-			sf_warning("Shaping iteration %d of %d;",iter+1,niter);
+			sf_warning("Bregman iteration %d of %d;",iter+1,niter);
 		    
 		    for (i1=0; i1 < n12; i1++) {
 			if (known[i1]) {
@@ -146,6 +146,9 @@ int main(int argc, char* argv[])
 			dd2[i1] = dd3[i1]; 
 		    }
 
+		    break;
+		default:
+		    sf_error("Unknown wavelet type=%c",oper);
 		    break;
 	    }
 	    seislet_lop(true,false,n12,n12,mm,dd2);
