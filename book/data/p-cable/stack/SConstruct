@@ -22,7 +22,7 @@ Result('stack',
 Flow('transpose','stack',
      '''
      sfwindow d1=.002 max1=.8 \
-     | sftrans plane=13 
+     | sftransp plane=13 
      ''')
 Result('tslice','transpose','sfgrey title=stack')
 

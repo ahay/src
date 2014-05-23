@@ -2,6 +2,30 @@ from rsf.proj import *
 
 #SConscript('../segy/SConstruct')
 
+Result('shots1','../segy/DeconShots3.rsf',
+       '''
+       sfwindow n2=100000 j1=2 | sfput n2=1000 n3=100 | sfgrey title="first 10000 traces"
+       ''')
+
+Result('shots2','../segy/DeconShots3.rsf',
+       '''
+       sfwindow n2=100000 f2=200000 j1=2 | sfput n2=1000 n3=100 | sfgrey title="2nd 10000 traces"
+       ''')
+
+Result('shots3','../segy/DeconShots3.rsf',
+       '''
+       sfwindow n2=100000 f2=300000 j1=2 | sfput n2=1000 n3=100 | sfgrey title="3rd 10000 traces"
+       ''')
+
+Result('shots4','../segy/DeconShots3.rsf',
+       '''
+       sfwindow n2=100000 f2=400000 j1=2 | sfput n2=1000 n3=100 | sfgrey title="4rd 10000 traces"
+       ''')
+Result('shots_d1000','../segy/DeconShots3.rsf',
+       '''
+       sfwindow j2=100 j1=2 | sfgrey title="4rd 10000 traces"
+       ''')
+
 Flow('foldplot','../segy/DeconShots3_hdr.rsf',
      '''
       dd type=float |
