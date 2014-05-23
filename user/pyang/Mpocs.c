@@ -1,4 +1,5 @@
-/* n-D Two-step POCS interpolation using a general Lp-norm optimization
+/* n-D POCS interpolation using a general Lp-norm optimization
+Note: Acquistion geometry represented by mask operator.
 */
 /*
   Copyright (C) 2013  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -16,9 +17,6 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-  Reference: On analysis-based two-step interpolation methods for randomly 
-	sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
 */
 #include <rsf.h>
 #include <math.h>
@@ -35,10 +33,10 @@ int main(int argc, char* argv[])
 {
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
-    	float thr, p, pclip, m;
-    	float *tdat, *thresh, *mask;
+    	float thr, p, pclip;
+    	float *dobs_t, *thresh, *mask;
     	char *mode, key[7];
-    	fftwf_complex *wdat, *wdat1;
+    	fftwf_complex *mm, *dd, *dobs;
     	fftwf_plan fft1, ifft1, fft2, ifft2;/* execute plan for FFT and IFFT */
     	sf_file in, out, Fmask;/* mask and I/O files*/ 
 
@@ -89,18 +87,18 @@ int main(int argc, char* argv[])
  
     	/* allocate data and mask arrays */
 	thresh=(float*)malloc(nw*n2*sizeof(float));
-    	tdat=(float*)fftwf_malloc(n1*n2*sizeof(float)); /* data in time domain*/
-    	wdat=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
-	/* data in frequency domain */
-    	wdat1=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
-	/* data in frequency domain */
-    	fft1=fftwf_plan_many_dft_r2c(1, &n1, n2, tdat, &n1, 1, n1, wdat, &n1, 1, nw, FFTW_MEASURE);	
-   	ifft1=fftwf_plan_many_dft_c2r(1, &n1, n2, wdat, &n1, 1, nw, tdat, &n1, 1, n1, FFTW_MEASURE);
-	fft2=fftwf_plan_many_dft(dim-1, &n[1], nw, wdat1, &n[1], nw, 1, wdat1, &n[1], nw, 1, FFTW_FORWARD,FFTW_MEASURE);
-	ifft2=fftwf_plan_many_dft(dim-1, &n[1], nw, wdat1, &n[1], nw, 1, wdat1, &n[1], nw, 1, FFTW_BACKWARD,FFTW_MEASURE);
+    	dobs_t=(float*)fftwf_malloc(n1*n2*sizeof(float)); /* data in time domain*/
+    	dobs=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
+    	dd=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
+    	mm=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
+
+    	fft1=fftwf_plan_many_dft_r2c(1, &n1, n2, dobs_t, &n1, 1, n1, dobs, &n1, 1, nw, FFTW_MEASURE);	
+   	ifft1=fftwf_plan_many_dft_c2r(1, &n1, n2, dobs, &n1, 1, nw, dobs_t, &n1, 1, n1, FFTW_MEASURE);
+	fft2=fftwf_plan_many_dft(dim-1, &n[1], nw, mm, &n[1], nw, 1, mm, &n[1], nw, 1, FFTW_FORWARD,FFTW_MEASURE);
+	ifft2=fftwf_plan_many_dft(dim-1, &n[1], nw, mm, &n[1], nw, 1, mm, &n[1], nw, 1, FFTW_BACKWARD,FFTW_MEASURE);
 
 	/* initialization */
-    	sf_floatread(tdat, n1*n2, in);
+    	sf_floatread(dobs_t, n1*n2, in);
     	if (NULL != sf_getstring("mask")){
 		mask=sf_floatalloc(n2);
 		sf_floatread(mask,n2,Fmask);
@@ -108,26 +106,28 @@ int main(int argc, char* argv[])
 
 	/*transform the data from time domain to frequency domain: tdat-->wdat*/
 	fftwf_execute(fft1);
-	for(i=0; i<num; i++) wdat[i]/=sqrtf(n1);
-	memset(wdat1,0,num*sizeof(fftwf_complex));
+	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
+	memset(dd,0,num*sizeof(fftwf_complex));
 
     	for(iter=1; iter<=niter; iter++)
     	{
+		/* mm<--A^t dd */
+		memcpy(mm, dd, num*sizeof(fftwf_complex));
 		fftwf_execute(fft2);
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
-		shared(wdat1,num,n2)
+		shared(mm,num,n2)
 	#endif
-		for(i=0; i<num; i++) wdat1[i]/=sqrtf(n2);
+		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);
 
-		/* perform hard thresholding */
+		/* perform hard thresholding: mm<--T{mm} */
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
-		shared(thresh,wdat1,num)
+		shared(thresh,mm,num)
 	#endif
-		for(i=0; i<num; i++)	thresh[i]=cabsf(wdat1[i]);
+		for(i=0; i<num; i++)	thresh[i]=cabsf(mm[i]);
 
 	   	nthr = 0.5+num*(1.-0.01*pclip); 
 	    	if (nthr < 0) nthr=0;
@@ -138,45 +138,46 @@ int main(int argc, char* argv[])
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
-		shared(wdat1,num,thr)
+		shared(mm,num,thr)
 	#endif
-		for(i=0; i<num; i++) wdat1[i]*=(cabsf(wdat1[i])>thr?1.:0.);
+		for(i=0; i<num; i++) mm[i]*=(cabsf(mm[i])>thr?1.:0.);
 
+		/* mm<--A mm*/
 		fftwf_execute(ifft2);
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
-		shared(wdat1,num,n2)
+		shared(mm,num,n2)
 	#endif
-		for(i=0; i<num; i++) wdat1[i]/=sqrtf(n2);		
+		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);		
 
 		/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
-		private(i1,i2,index,m)		\
-		shared(mask,wdat,wdat1,nw,n2)
+		private(i1,i2,index)		\
+		shared(mask,dd,mm,dobs,nw,n2)
 	#endif
 		for(i2=0; i2<n2; i2++)
 		for(i1=0; i1<nw; i1++)
 		{ 
-			m=(mask[i2])?1:0;
 			index=i1+nw*i2;
-			wdat1[index]=wdat[index]+(1.-m)*wdat1[index];
+			dd[index]=dobs[index]+(1.-mask[i2])*mm[index];
 		}
 
 		if (verb)    sf_warning("iteration %d;",iter);
     	}
 
 	/*transform the data from frequency domain to time domain: wdat-->tdat*/
-	memcpy(wdat, wdat1, num*sizeof(fftwf_complex));
+	memcpy(dobs, dd, num*sizeof(fftwf_complex));
 	fftwf_execute(ifft1);
-	for(i=0; i<n1*n2; i++) tdat[i]/=sqrtf(n1);
-    	sf_floatwrite(tdat, n1*n2, out);/* output reconstructed seismograms */
+	for(i=0; i<n1*n2; i++) dobs_t[i]/=sqrtf(n1);
+    	sf_floatwrite(dobs_t, n1*n2, out);/* output reconstructed seismograms */
 
 	free(thresh);
-	fftwf_free(tdat);
-	fftwf_free(wdat);
-	fftwf_free(wdat1);	
+	fftwf_free(dobs_t);	
+	fftwf_free(dobs);
+	fftwf_free(mm);
+	fftwf_free(dd);
 
     	exit(0);
 }
