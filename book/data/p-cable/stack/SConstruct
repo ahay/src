@@ -1,0 +1,24 @@
+from rsf.proj import *
+import math
+
+Flow(['stack.rsf','stack_hdr.rsf'],'../segy/DeconShots3.rsf',
+    '''
+      sftahsort input=$SOURCE sort="iline xline offset" \
+      | sftahnmo tnmo=0,.1,.4,3 vnmo=1500,1650,1900,2100 \
+      | sfstack key=iline,xline \
+      | sftahwrite \
+        verbose=1 \
+	label2=xline o2=1001 n2=1943 d2=1 
+        label3=iline o3=5100 n3=296  d3=1   
+	output=${TARGETS[0]}
+    ''',stdout=0,stdin=0)
+
+Result('stack',
+        '''
+	   sfwindow j3=20 max1=1 \
+	   |  sfgrey title="stack"
+	''')
+
+
+ 	
+End()

@@ -13,10 +13,28 @@ Flow('ntg','../segy/DeconShots3.rsf',
 
 Result('ntg',
         '''
-	   sfpow pow1=1.5 \
+	   sfwindow j3=20 max1=1 \
 	   |  sfgrey title="near trace gather"
 	''')
  	
+Flow(['nmontg.rsf','nmontg_hdr.rsf'],'../segy/DeconShots3.rsf',
+    '''
+      sftahsort input=$SOURCE sort="iline xline -offset"
+      | sftahnmo \
+        vnmo=1500,1650,1700 \
+	tnmo=0,.8,3 \
+      | sftahwrite \
+        verbose=1
+	label2=xline o2=1001 n2=1943 d2=1 
+        label3=iline o3=5100 n3=296  d3=1   
+	output=${TARGETS[0]}
+    ''',stdout=0,stdin=0)
 
+Result('nmontg',
+        '''
+	   sfwindow j3=20 max1=1 \
+	   |  sfgrey title="near trace gather"
+	''')
+ 
 
 End()

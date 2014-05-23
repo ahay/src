@@ -9,7 +9,7 @@ print "mysegy=",mysegy
 print "myrsf=",myrsf
 print "targets=",targets
 
-Fetch(mysegy,'tip',server)
+#Fetch(mysegy,'tip',server)
 
 Flow(targets,
      mysegy,
