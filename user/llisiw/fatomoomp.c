@@ -26,7 +26,7 @@
 #include "fastmarchomp.h"
 #include "fatomoomp.h"
 
-static int nt, **mask, ns, **list, *upgnum;
+static int nt, **mask, ns, **list, *upgnum, *mp;
 static float **tempt, **tempx, **psum, **data, *wght;
 static upgrad *upglist;
 
@@ -39,7 +39,8 @@ void fatomo_init(int dim      /* model dimension */,
 		 int **rhslist /* rhs list */,
 		 int **recv   /* receiver list */,
 		 float **reco /* record list */,
-		 float *weight /* data weighting */)
+		 float *weight /* data weighting */,
+                 int *mp0 /* model mask */)
 /*< initialize >*/
 {
     int i, is, mts;
@@ -55,6 +56,7 @@ void fatomo_init(int dim      /* model dimension */,
     mask = recv;
     data = reco;
     wght = weight;
+    mp = mp0;
 
     /* initialize upwind stencil and fast marching */
     upgrad_init(dim,n,d);
@@ -165,12 +167,21 @@ void fatomo_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 #pragma omp critical
 #endif
 	    {
-		for (it=0; it < nt; it++) x[it]+=psum[its][it];
+		for (it=0; it < nt; it++) {
+		    if (mp == NULL || (mp != NULL && mp[it] == 1))
+			x[it]+=psum[its][it];
+		}
 	    }
 	}
 	
     } else {
 	/* given ds solve dt */
+
+	if (mp != NULL){
+	    for (it=0; it < nt; it++) {
+		if (mp[it] != 1) x[it] = 0.;
+	    }
+	}
 
 #ifdef _OPENMP	
 #pragma omp parallel private(its,i,it)

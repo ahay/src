@@ -31,11 +31,11 @@ int main(int argc, char* argv[])
 {
     bool velocity, shape, verb, weight;
     int dim, i, n[SF_MAX_DIM], rect[SF_MAX_DIM], it, nt, **m, is, nshot, order, seg;
-    int iter, niter, stiter, istep, nstep, *k, nrhs, **rhslist, nrecv;
+    int iter, niter, stiter, istep, nstep, *k, nrhs, **rhslist, nrecv, *mp;
     float o[SF_MAX_DIM], d[SF_MAX_DIM], **t, **t0, *s, *temps, *dv=NULL, **source, *rhs, *ds, *p=NULL, **modl, **ray, *wght=NULL;
     float tol, rhsnorm, rhsnorm0, rhsnorm1, rate, eps, step, pow;
     char key[6], *what;
-    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, rayd, time;
+    sf_file sinp, sout, shot, reco, recv, topo, grad, norm, rayd, time, prec;
     
     sf_init(argc,argv);
     sinp = sf_input("in");
@@ -150,6 +150,17 @@ int main(int argc, char* argv[])
 	k = NULL;
     }
     
+    /* read model mask */
+    if (NULL == sf_getstring("prec")) {
+	prec = NULL;
+	mp = NULL;
+    } else {
+	prec = sf_input("prec");
+	mp = sf_intalloc(nt);
+	sf_intread(mp,nt,prec);
+	sf_fileclose(prec);
+    }
+
     if (!sf_getint("order",&order)) order=2;
     /* fast marching accuracy order */
     
@@ -259,7 +270,7 @@ int main(int argc, char* argv[])
     }
     
     /* initialize fatomo */
-    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,t0,wght);
+    fatomo_init(dim,n,o,d,order,nshot,rhslist,m,t0,wght,mp);
 
     /* initial misfit */
     fatomo_fastmarch(s,t,source,rhs);
