@@ -24,7 +24,7 @@ Flow('transpose','stack',
      sfwindow d1=.002 max1=.8 \
      | sftransp plane=13 
      ''')
-Result('tslice','transpose','sfgrey title=stack')
+Result('tslice','transpose','sfgrey title=stack pclip=97 gainpanel=a')
 
  	
 End()
