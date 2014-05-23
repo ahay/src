@@ -3,9 +3,9 @@ import math
 
 Flow(['stack.rsf','stack_hdr.rsf'],'../segy/DeconShots3.rsf',
     '''
-      sftahsort input=$SOURCE sort="iline xline offset" \
-      | sftahnmo tnmo=0,.1,.4,3 vnmo=1500,1650,1900,2100 \
-      | sfstack key=iline,xline \
+      sftahsort input=$SOURCE sort="iline:5100,5400 xline:1001,2943 offset" \
+      | sftahnmo tnmo=0,.1,.4,3 vnmo=1500,1650,1900,2100 str=.2 \
+      | sftahstack key=iline,xline \
       | sftahwrite \
         verbose=1 \
 	label2=xline o2=1001 n2=1943 d2=1 
@@ -19,6 +19,12 @@ Result('stack',
 	   |  sfgrey title="stack"
 	''')
 
+Flow('transpose','stack',
+     '''
+     sfwindow d1=.002 max1=.8 \
+     | sftrans plane=13 
+     ''')
+Result('tslice','transpose','sfgrey title=stack')
 
  	
 End()
