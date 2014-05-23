@@ -26,12 +26,42 @@
 
 #include "iwilbfgs.h"
 
-static bool verb, bound;
+static bool verb, deriv, bound;
 static int nn[3], ss[2], grect[2];
 static float dd[3], **vel;
 static sf_fslice sfile, rfile;
 static float *image, *pimage, *pipz, *piph;
 static lbfgsfloatval_t gscale, lower, upper;
+
+void didz(bool adj, float *img)
+/* apply derivative */
+{
+    int i1, i2, i3;
+    float *din, *dout;
+
+    din  = sf_floatalloc(nn[0]);
+    dout = sf_floatalloc(nn[0]);
+
+    for (i3=0; i3 < nn[2]; i3++) {
+	for (i2=0; i2 < nn[1]; i2++) {
+	    for (i1=0; i1 < nn[0]; i1++) {
+		din[i1] = img[i3*nn[0]*nn[1]+i2*nn[0]+i1];
+	    }
+	    
+	    if (adj) {
+		sf_igrad1_lop (true, false,nn[0],nn[0],dout,din);
+	    } else {
+		sf_igrad1_lop (false,false,nn[0],nn[0],din,dout);
+	    }
+
+	    for (i1=0; i1 < nn[0]; i1++) {
+		img[i3*nn[0]*nn[1]+i2*nn[0]+i1] = dout[i1]/dd[0];
+	    }
+	}
+    }
+    
+    free(din); free(dout);
+}
 
 void scale(const lbfgsfloatval_t *x, lbfgsfloatval_t *g)
 /* re-scale gradient */
@@ -39,6 +69,7 @@ void scale(const lbfgsfloatval_t *x, lbfgsfloatval_t *g)
     int i1, i2;
     lbfgsfloatval_t scale=0.;
 
+    /* scan for maximum absolute ratio */
     for (i2=0; i2 < nn[1]; i2++) {
 	for (i1=0; i1 < nn[0]; i1++) {
 	    scale = (fabs(g[i2*nn[0]+i1])/x[i2*nn[0]+i1])>scale? 
@@ -48,6 +79,7 @@ void scale(const lbfgsfloatval_t *x, lbfgsfloatval_t *g)
 
     if (scale <= gscale) return;
 
+    /* re-scale to pre-defined ratio */
     scale /= gscale;
 
     for (i2=0; i2 < nn[1]; i2++) {
@@ -65,6 +97,7 @@ void iwilbfgs_init(bool verb0,
 		   int nh, int ns, 
 		   float ow, float dw, int nw,
 		   sf_file source, sf_file data,
+		   bool deriv0,
 		   bool load, char *datapath,
 		   int uts,
 		   int grect1, int grect2,
@@ -73,6 +106,7 @@ void iwilbfgs_init(bool verb0,
 /*< initialization >*/
 {
     verb = verb0;
+    deriv = deriv0;
 
     /* model */
     nn[0] = n1; nn[1] = n2; nn[2] = 2*nh+1;
@@ -126,25 +160,25 @@ void iwilbfgs_free()
 }
 
 lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
-			      float ***mask, float ***wght)
+			      float ***wdso, float ***wstk)
 /*< forward modeling and evaluate objective function >*/
 {
-    int i, j;
+    int i1, i2, i3, ii;
     lbfgsfloatval_t fx=0.;
 
     bound = false;
-    for (j=0; j < nn[1]; j++) {
-	for (i=0; i < nn[0]; i++) {
-	    if (x[j*nn[0]+i] < lower) {
+    for (i2=0; i2 < nn[1]; i2++) {
+	for (i1=0; i1 < nn[0]; i1++) {
+	    if (x[i2*nn[0]+i1] < lower) {
 		bound = true;
 		return DBL_MAX;
 	    }
-	    if (x[j*nn[0]+i] > upper) {
+	    if (x[i2*nn[0]+i1] > upper) {
 		bound = true;
 		return DBL_MAX;
 	    }
 
-	    vel[j][i] = (float) x[j*nn[0]+i];
+	    vel[i2][i1] = (float) x[i2*nn[0]+i1];
 	}
     }
 
@@ -155,24 +189,34 @@ lbfgsfloatval_t iwilbfgs_eval(const lbfgsfloatval_t *x,
 
     /* forward modeling */
     iwimodl_modl(vel,image);
-    
-    if (mask != NULL) {
-	for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
-	    image[i] *= mask[0][0][i];
-	}
-    }
 
+    /* apply image derivative */
+    if (deriv) didz(false,image);
+    
     /* evaluate objective function */
-    for (i=0; i < nn[0]*nn[1]*nn[2]; i++) {
-	fx += (lbfgsfloatval_t) 
-	    image[i]*wght[0][0][i]*image[i]*wght[0][0][i];
+    for (i3=0; i3 < nn[2]; i3++) {
+	for (i2=0; i2 < nn[1]; i2++) {
+	    for (i1=0; i1 < nn[0]; i1++) {
+		ii = i3*nn[0]*nn[1]+i2*nn[0]+i1;
+
+		/* DSO */
+		fx += (lbfgsfloatval_t) 0.5*
+		    image[ii]*wdso[i3][i2][i1]*image[ii]*wdso[i3][i2][i1];
+
+		/* STK */
+		if (wstk != NULL) {
+		    fx -= (lbfgsfloatval_t) 0.5*
+			image[ii]*wstk[i3][i2][i1]*image[ii]*wstk[i3][i2][i1];
+		}
+	    }
+	}
     }
 
     return fx;
 }
 
 void iwilbfgs_grad(const lbfgsfloatval_t *x,
-		   float ***wght, float **prec,
+		   float ***wdso, float ***wstk, float **prec,
 		   lbfgsfloatval_t *g)
 /*< prepare image perturbation and compute gradient >*/
 {
@@ -192,15 +236,23 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     if (verb) sf_warning("Computing gradient...");
 
     /* set-up linear operator */
-    iwigrad_set(vel, wght,prec);    
+    iwigrad_set(vel, NULL,prec);    
 
     /* prepare image perturbation */
+    if (deriv) didz(true,image);
+
     for (i3=0; i3 < nn[2]; i3++) {
 	for (i2=0; i2 < nn[1]; i2++) {
 	    for (i1=0; i1 < nn[0]; i1++) {
 		ii = i3*nn[0]*nn[1]+i2*nn[0]+i1;
 
-		pimage[ii] = image[ii]*wght[i3][i2][i1];
+		/* DSO */
+		pimage[ii] = image[ii]*wdso[i3][i2][i1]*wdso[i3][i2][i1];
+
+		/* STK */
+		if (wstk != NULL) {
+		    pimage[ii] -= image[ii]*wstk[i3][i2][i1]*wstk[i3][i2][i1];
+		}
 	    }
 	}
     }
@@ -236,5 +288,5 @@ void iwilbfgs_grad(const lbfgsfloatval_t *x,
     }
 
     /* re-scale */
-    scale(x,g);
+    if (0. < gscale && gscale < 1.) scale(x,g);
 }

@@ -26,7 +26,25 @@
 #include "lbfgs.h"
 #include "iwilbfgs.h"
 
-static float ***mask, ***wght, **prec;
+static int n1, n2;
+static float ***dso, ***stk, **prec;
+static bool verb;
+static sf_file grad;
+static float *g0;
+
+static void gwrite(const lbfgsfloatval_t *g)
+/* write gradient */
+{
+    int i1, i2;
+
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    g0[i2*n1+i1] = (float) g[i2*n1+i1];
+	}
+    }
+
+    sf_floatwrite(g0,n1*n2,grad);
+}
 
 static lbfgsfloatval_t evaluate(void *instance,
 				const lbfgsfloatval_t *x,
@@ -37,9 +55,9 @@ static lbfgsfloatval_t evaluate(void *instance,
 {
     lbfgsfloatval_t fx;
 
-    fx = iwilbfgs_eval(x,mask,wght);
-
-    iwilbfgs_grad(x,wght,prec,g);
+    fx = iwilbfgs_eval(x,dso,stk);
+    
+    iwilbfgs_grad(x,dso,stk,prec,g);
 
     return fx;
 }
@@ -56,22 +74,25 @@ static int progress(void *instance,
 		    int ls)
 /* report optimization progress */
 {
-    sf_warning("L-BFGS iteration %d: fx=%g, xnorm=%g, gnorm=%g, step=%g after %d."
-	       ,k,fx,xnorm,gnorm,step,ls);
+    /* write auxiliary outputs */
+    if (grad != NULL) gwrite(g);
+
+    if (verb) sf_warning("L-BFGS iteration %d: fx=%g, xnorm=%g, gnorm=%g, step=%g after %d.",
+			 k,fx,xnorm,gnorm,step,ls);
 
     return 0;
 }
 
 int main(int argc, char* argv[])
 {
-    bool verb, load;
-    int n1, n2, npml, nh, ns, nw;
+    bool load, deriv;
+    int npml, nh, ns, nw;
     int grect[2], mline;
-    float gscale, epsilon;
+    float beta, gscale, epsilon;
     float d1, d2, **vel, dw, ow;
     char *datapath;
     sf_file in, out, source, data;
-    sf_file imask, weight, precon;
+    sf_file wdso, wstk, precon;
     int uts, mts, ret, i, j;
     char *order;
     lbfgsfloatval_t fx, *x;
@@ -83,8 +104,11 @@ int main(int argc, char* argv[])
     in  = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_getbool("verb",&verb)) verb=false;
+    if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
+
+    if (!sf_getbool("deriv",&deriv)) deriv=true;
+    /* if y, apply derivative in z */
 
     if (!sf_getint("nh",&nh)) nh=0;
     /* horizontal space-lag */
@@ -107,15 +131,18 @@ int main(int argc, char* argv[])
     /* PML width */
 
     if (NULL == (order = sf_getstring("order"))) order="j";
-    /* discretization scheme (default optimal 9-point) */    
+    /* discretization scheme (default optimal 9-point) */
+
+    if (!sf_getfloat("beta",&beta)) beta=0.;
+    /* stacking power cost function */
 
     if (!sf_getint("grect1",&grect[0])) grect[0]=5;
     /* gradient smoothing radius on axis 1 */
     if (!sf_getint("grect2",&grect[1])) grect[1]=5;
     /* gradient smoothing radius on axis 2 */
 
-    if (!sf_getfloat("gscale",&gscale)) gscale=0.5;
-    /* gradient re-scale */
+    if (!sf_getfloat("gscale",&gscale)) gscale=-1.;
+    /* gradient re-scale (enabled if (0,1)) */
 
     if (!sf_getint("nhess",&nhess)) nhess=6;
     /* L-BFGS # of Hessian corrections */
@@ -126,14 +153,14 @@ int main(int argc, char* argv[])
     if (!sf_getint("mline",&mline)) mline=5;
     /* L-BFGS maximum # of line search */
 
-    if (!sf_getfloat("epsilon",&epsilon)) epsilon=1.e-2;
+    if (!sf_getfloat("epsilon",&epsilon)) epsilon=1.e-7;
     /* L-BFGS termination epsilon */
 
     if (!sf_getfloat("lower",&lower)) lower=1.5;
     /* lower bound of feasible set */
 
     if (!sf_getfloat("upper",&upper)) upper=7.5;
-    /* upper bound of feasible set */
+    /* upper bound of feasible set */    
 
     /* read initial model */
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input.");
@@ -165,29 +192,29 @@ int main(int argc, char* argv[])
 	sf_error("Need data=");
     data = sf_input("data");
 
-    /* read image mask */
-    if (NULL == sf_getstring("imask")) {
-	imask = NULL;
-	mask = NULL;
-    } else {
-	imask = sf_input("imask");
-	mask = sf_floatalloc3(n1,n2,2*nh+1);
-	sf_floatread(mask[0][0],n1*n2*(2*nh+1),imask);
-	sf_fileclose(imask);
-    }
+    /* read DSO weight */
+    dso = sf_floatalloc3(n1,n2,2*nh+1);    
 
-    /* read image weight */
-    wght = sf_floatalloc3(n1,n2,2*nh+1);    
-
-    if (NULL == sf_getstring("weight")) {
-	weight = NULL;
+    if (NULL == sf_getstring("wdso")) {
+	wdso = NULL;
 	for (i=0; i < n1*n2*(2*nh+1); i++) {
-	    wght[0][0][i] = 1.;
+	    dso[0][0][i] = 1.;
 	}
     } else {
-	weight = sf_input("weight");
-	sf_floatread(wght[0][0],n1*n2*(2*nh+1),weight);
-	sf_fileclose(weight);
+	wdso = sf_input("wdso");
+	sf_floatread(dso[0][0],n1*n2*(2*nh+1),wdso);
+	sf_fileclose(wdso);
+    }
+
+    /* read STK weight */
+    if (NULL == sf_getstring("wstk")) {
+	wstk = NULL;
+	stk = NULL;
+    } else {
+	wstk = sf_input("wstk");
+	stk = sf_floatalloc3(n1,n2,2*nh+1);    
+	sf_floatread(stk[0][0],n1*n2*(2*nh+1),wstk);
+	sf_fileclose(wstk);
     }
 
     /* read model preconditioner */
@@ -199,6 +226,16 @@ int main(int argc, char* argv[])
 	prec = sf_floatalloc2(n1,n2);
 	sf_floatread(prec[0],n1*n2,precon);
 	sf_fileclose(precon);
+    }
+
+    /* output gradient */
+    if (NULL == sf_getstring("grad")) {
+	grad = NULL;
+	g0 = NULL;
+    } else {
+	grad = sf_output("grad");
+	sf_putint(grad,"n3",miter);
+	g0 = sf_floatalloc(n1*n2);
     }
 
     /* allocate temporary memory */
@@ -214,9 +251,9 @@ int main(int argc, char* argv[])
     iwilbfgs_init(verb,order, npml,
 		  n1,n2, d1,d2,
 		  nh,ns, ow,dw,nw,
-		  source,data, load,datapath, uts,
-		  grect[0],grect[1],
-		  gscale,
+		  source,data, deriv,
+		  load,datapath, uts,
+		  grect[0],grect[1],gscale,
 		  lower,upper);
     
     /* initialize L-BFGS */
@@ -228,11 +265,7 @@ int main(int argc, char* argv[])
     param.epsilon = (lbfgsfloatval_t) epsilon;
 
     /* L-BFGS optimization */
-    if (verb) {
-	ret = lbfgs(n1*n2,x,&fx, evaluate,progress, NULL,&param);
-    } else {
-	ret = lbfgs(n1*n2,x,&fx, evaluate,NULL,     NULL,&param);
-    }
+    ret = lbfgs(n1*n2,x,&fx, evaluate,progress, NULL,&param);
 
     if (verb) sf_warning("L-BFGS optimization terminated with status code %d.",ret);
 

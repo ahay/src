@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     in  = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_getbool("verb",&verb)) verb=false;
+    if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
 
     if (!sf_getint("nh",&nh)) nh=0;
