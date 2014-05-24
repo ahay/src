@@ -33,15 +33,15 @@ int main(int argc, char* argv[])
 {
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
-    	float thr, p, pclip;
+    	float thr, pclip;
     	float *dobs_t, *thresh, *mask;
-    	char *mode, key[7];
+    	char key[7];
     	fftwf_complex *mm, *dd, *dobs;
     	fftwf_plan fft1, ifft1, fftrem, ifftrem;/* execute plan for FFT and IFFT */
     	sf_file in, out, Fmask;/* mask and I/O files*/ 
 
 
-    	sf_init(argc,argv);	/* Madagascar initialization */
+    	sf_init(argc,argv);/* Madagascar initialization */
 #ifdef _OPENMP
     	omp_init(); 	/* initialize OpenMP support */
 #endif
@@ -59,14 +59,6 @@ int main(int argc, char* argv[])
     	/* starting data clip percentile (default is 99)*/
     	if (pclip <=0. || pclip > 100.)
 	sf_error("pclip=%g should be > 0 and <= 100",pclip);
-    	if ( !(mode=sf_getstring("mode")) ) mode = "exp";
-    	/* thresholding mode: 'hard', 'soft','pthresh','exp';
-	'hard', hard thresholding;	'soft', soft thresholding; 
-	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
-    	if (!sf_getfloat("p",&p)) 		p=0.35;
-    	/* norm=p, where 0<p<=1 */;
-    	if (strcmp(mode,"soft") == 0) 		p=1;
-    	else if (strcmp(mode,"hard") == 0) 	p=0;
 
     	/* dimensions */
    	for (i=0; i < SF_MAX_DIM; i++) {
@@ -149,7 +141,7 @@ int main(int argc, char* argv[])
 			dd[index]=mask[i2]*dd[index];
 		}
 
-		/* mm^k+= A^* dd */
+		/* mm^k += A^* dd */
 		fftwf_execute(fftrem);
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
@@ -159,7 +151,7 @@ int main(int argc, char* argv[])
 		for(i=0; i<num; i++) mm[i]+=dd[i]/sqrtf(n2);
 		
 
-		/* perform hard thresholding */
+		/* perform thresholding */
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\

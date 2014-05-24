@@ -33,9 +33,9 @@ int main(int argc, char* argv[])
 {
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
-    	float thr, p, pclip;
+    	float thr, pclip;
     	float *dobs_t, *thresh, *mask;
-    	char *mode, key[7];
+    	char key[7];
     	fftwf_complex *mm, *dd, *dobs;
     	fftwf_plan fft1, ifft1, fft2, ifft2;/* execute plan for FFT and IFFT */
     	sf_file in, out, Fmask;/* mask and I/O files*/ 
@@ -59,14 +59,6 @@ int main(int argc, char* argv[])
     	/* starting data clip percentile (default is 99)*/
     	if (pclip <=0. || pclip > 100.)
 	sf_error("pclip=%g should be > 0 and <= 100",pclip);
-    	if ( !(mode=sf_getstring("mode")) ) mode = "exp";
-    	/* thresholding mode: 'hard', 'soft','pthresh','exp';
-	'hard', hard thresholding;	'soft', soft thresholding; 
-	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
-    	if (!sf_getfloat("p",&p)) 		p=0.35;
-    	/* norm=p, where 0<p<=1 */;
-    	if (strcmp(mode,"soft") == 0) 		p=1;
-    	else if (strcmp(mode,"hard") == 0) 	p=0;
 
     	/* dimensions */
    	for (i=0; i < SF_MAX_DIM; i++) {
@@ -109,7 +101,7 @@ int main(int argc, char* argv[])
 	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
 	memset(dd,0,num*sizeof(fftwf_complex));
 
-    	for(iter=1; iter<=niter; iter++)
+    	for(iter=0; iter<niter; iter++)
     	{
 		/* mm<--A^t dd */
 		memcpy(mm, dd, num*sizeof(fftwf_complex));
@@ -122,6 +114,7 @@ int main(int argc, char* argv[])
 		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);
 
 		/* perform hard thresholding: mm<--T{mm} */
+		if(iter==0){
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
@@ -133,6 +126,8 @@ int main(int argc, char* argv[])
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
 		thr=sf_quantile(nthr,num,thresh);
+		}
+		thr*=(float)(niter-iter)/niter;
 		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
 
 	#ifdef _OPENMP
@@ -164,7 +159,7 @@ int main(int argc, char* argv[])
 			dd[index]=dobs[index]+(1.-mask[i2])*mm[index];
 		}
 
-		if (verb)    sf_warning("iteration %d;",iter);
+		if (verb)    sf_warning("iteration %d;",iter+1);
     	}
 
 	/*transform the data from frequency domain to time domain: wdat-->tdat*/
