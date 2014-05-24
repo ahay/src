@@ -188,7 +188,7 @@ for case in range(4):
      Result(sign,'csign',
             '''
             window n2=1 f2=%d | real | %s plotcol=%d min2=-5 max2=5 crowd2=0.2 parallel2=n
-            ''' % (case,graph,(2,3,4,2)[case]))
+            ''' % (case,graph,(1,3,4,2)[case]))
 
 # mask low amplitudes
 
@@ -209,7 +209,7 @@ for case in range(4):
          '''
          graph  title="Instantaneous Frequencies" label1=Time unit1=s label2=Frequency unit2=Hz
          plotfat=3 min2=0 plotcol=%d min2=0 max2=80 min1=0 max1=6
-         ''' % (2,3,4,1)[case])
+         ''' % (1,3,4,2)[case])
     group.append(grup)
 
 Result('tgroup',group,'Overlay')
