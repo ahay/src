@@ -169,7 +169,7 @@ The wavefield extrapolation can be stepped efficiently via pointer swap, i.e.,
 where $(:)=[ix,iz]$, $p_0$ and $p_1$ are $p^{k+1}/p^{k-1}$ and $p^k$, respectively. 
 
 
-Note that all the computation is done on GPU blocks. In our codes, the size of the block is set to be 16x16. We pad the velocity model to be mutiple of 16x16 in order to coalesce thread loads. As shown in Figure~\ref{fig:blocks}, the whole computation area are divided into 16x16 blocks. For each block, we use a 18x18 shared memory array to cover all the grid points in this block. It implies that we add a redundant point on each side, which stores the value from other blocks, as marked by the window in Figure~\ref{fig:blocks}.  When the computation is not performed for the interior blocks, special care needs to be paid to the choice of absorbing boundary condition (ABC) in the design of FWI codes. Allowing for efficient GPU implementation, we use the $45^o$ Clayton-Enquist ABC proposed in \cite{clayton1977absorbing,engquist1977absorbing}. For the left boundary, it is
+Note that all the computation is done on GPU blocks. In our codes, the size of the block is set to be 16x16. We pad the velocity model to be mutiple of 16x16 in order to coalesce thread loads. As shown in Figure~\ref{fig:blocks}, the whole computation area are divided into 16x16 blocks. For each block, we use a 18x18 shared memory array to cover all the grid points in this block. It implies that we add a redundant point on each side, which stores the value from other blocks, as marked by the window in Figure~\ref{fig:blocks}.  When the computation is not performed for the interior blocks, special care needs to be paid to the choice of absorbing boundary condition (ABC) in the design of FWI codes. Allowing for efficient GPU implementation, we use the $45^o$ Clayton-Enquist ABC proposed in \cite{clayton1977absorbing} and \cite{engquist1977absorbing}. For the left boundary, it is
 \begin{equation}
  \frac{\partial^2 p}{\partial x\partial t}-\frac{1}{v}\frac{\partial^2 p}{\partial t^2}=\frac{v}{2}\frac{\partial^2 p}{\partial z^2}
 \end{equation}
@@ -203,7 +203,7 @@ which requires only one layer to be saved on each side for wavefield reconstruct
     \draw[very thick] (-4,1)--(4,1);    
     \draw [very thick,red] (-1.2,-1.2) rectangle (0.2,0.2);    
   \end{tikzpicture}
-  \caption{2D blocks in GPU memory. The marked window indicates that the shared memory in every block needs to be extended on each side which stores the grid value from other blocks.}\label{fig:blocks}
+  \caption{2D blocks in GPU memory. The marked window indicates that the shared memory in every block needs to be extended on each side with halo cells which stores the grid value from other blocks.}\label{fig:blocks}
 \end{figure}
 
 
