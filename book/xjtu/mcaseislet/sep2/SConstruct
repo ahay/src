@@ -72,7 +72,7 @@ Flow('mask2','mdip','mask max=5 | dd type=float | smooth rect1=5 rect2=5')
 
 Flow('mdip2','cmp2 mdip mask2 vdip',
      '''
-     twodip2 eps=15 lam=5 dip2=${SOURCES[1]} dip1=${SOURCES[3]} mask=${SOURCES[2]} verb=y 
+     twodip2 eps=30  dip2=${SOURCES[1]} dip1=${SOURCES[3]} mask=${SOURCES[2]} verb=y 
      ''')
 
 Flow('mdip0','mdip2','window n3=1 f2=6')
