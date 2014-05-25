@@ -28,11 +28,11 @@ Flow('rec','datapad pq',
      	''')
 
 
-Plot('data',gdat)
+Plot('data',gdat+'title="CMP data" wantaxis2=n')
 Flow('rec1','rec','window n3=1 f2=4')
 Flow('rec2','rec','window f3=1 f2=4')
-Plot('rec1',gdat)
-Plot('rec2',gdat)
+Plot('rec1',gdat+'title="multiples" wantaxis2=n')
+Plot('rec2',gdat+'title="primaries" wantaxis2=n')
 Result('all1','data rec1 rec2', 'SideBySideAniso')
 
 ##################################################################
@@ -49,11 +49,11 @@ Flow('recc','gulfpad pqq',
 	verb=y order=2 type=b eps=0.01 niter=10 pclip=5 pscale=30
      	''')
 
-Plot('gulf',gdat)
+Plot('gulf',gdat+'title="Gulf of Mexico:CMP" wantaxis2=n')
 Flow('recc1','recc','window n3=1 f2=38')
 Flow('recc2','recc','window f3=1 f2=38')
-Plot('recc1',gdat)
-Plot('recc2',gdat)
+Plot('recc1',gdat+'title="multiples" wantaxis2=n')
+Plot('recc2',gdat+'title="primaries" wantaxis2=n')
 Result('all2','gulf recc1 recc2', 'SideBySideAniso')
 
 End()
