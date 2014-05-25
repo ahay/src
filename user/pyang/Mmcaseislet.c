@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
     /* accuracy order for seislet transform*/
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* [haar,linear,biorthogonal] wavelet type, the default is linear  */
-    if (!sf_getfloat("pscale",&pscale)) pscale=100;
+    if (!sf_getfloat("pscale",&pscale)) pscale=25;
     /* percentile of small scale to be preserved (default is 100)*/
     if(!sf_getbool("verb",&verb))    	verb=false;
     /* verbosity or not */
