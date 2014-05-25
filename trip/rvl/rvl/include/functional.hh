@@ -1772,8 +1772,8 @@ namespace RVL {
 	  fneval = new FunctionalEvaluation<Scalar>(f,opeval->getValue());
 	//	cerr<<"FcnlOpComp::apply -> getValue()\n";
 	val=fneval->getValue();
-	//delete fneval; fneval=NULL;
-	//delete opeval; opeval=NULL;
+	// delete fneval; fneval=NULL;
+	// delete opeval; opeval=NULL;
       }
       catch (RVLException & e) {
 	e<<"\ncalled from FcnlOpComp::apply\n";
@@ -1789,7 +1789,6 @@ namespace RVL {
 	  opeval = new OperatorEvaluation<Scalar>(op,x);
 	if (!fneval)
 	  fneval = new FunctionalEvaluation<Scalar>(f,opeval->getValue());
-	//	cerr<<"FcnlOpComp::applyGradient -> getGradient, applyAdjOp\n";
 	Vector<Scalar> const & gtmp = fneval->getGradient();
 	opeval->getDeriv().applyAdjOp(gtmp,g);
 	//	delete fneval; fneval=NULL;

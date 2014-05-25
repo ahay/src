@@ -95,6 +95,7 @@ namespace RVLUmin {
 	  if(!applied){
             Scalar val;
             this->apply(x,val);
+            cerr << "\n val=" << val << endl;
 	  }
 	  OperatorEvaluation<Scalar> opeval(op,x);
 	  LinearOp<Scalar> const & lop = opeval.getDeriv();
@@ -102,12 +103,17 @@ namespace RVLUmin {
 	  Vector<Scalar> dltd(lop.getRange());
 	  // compute dltx and dltd = DF * dltx - d
 	  lop.applyOp(dltx,dltd);
+          //  cerr << "\n dltx.norm()=" << dltx.norm() << endl;
 	  dltd.linComb(-1.0,d);
+          //cerr << "\n dltd.norm()=" << dltd.norm() << endl;
 	  // naive computation of gradient
 	  sblop.applyAdjOp(dltx,dltd,g);
+          //  cerr << "\n g.norm()=" << g.norm() << endl;
 	  
 	  // compute and add correction term to gradient
+          cerr << "\n LinFitLS refine=" << refine << endl;
 	  if (refine) {
+          cerr << "\n LinFitLS: inside refine branch\n" ;
 	    atype rnorm;
 	    atype nrnorm;
 	    OpComp<Scalar> gop(preop,lop);
@@ -126,7 +132,10 @@ namespace RVLUmin {
 	    preop.applyOp(dx1,dx2);
 	    // compute and add correction term tmp to gradient g
 	    sblop.applyAdjOp(dx2,d,tmp);
+            cerr << "\n LinFitLS:applyGradient  term1.norm = " << g.norm() << endl;
+            cerr << "\n LinFitLS:applyGradient  term2.norm = " << tmp.norm() << endl;
 	    g.linComb(1.0, tmp);
+            cerr << "\n LinFitLS:applyGradient  g.norm = " << g.norm() << endl;
 	  }
         }
         catch (RVLException & e) {

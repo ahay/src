@@ -22,7 +22,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
         csq, float **csqb, float **phi1, float **phi1b, float **phi0, float **
         phi0b, float *dp1, float *dp0, float *di, float dt, int *s, int *e, 
         float c0, float *c1, float *c2, int *lbc, int *rbc) {
-    // current field
+    /* current field
     // previous field
     // csq
     // phi1
@@ -30,7 +30,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     // damping profile zeta_x
     // damping profile zeta_x
     // start index
-    // end index
+    // end index */
     int i1, i0;
     int branch;
     float temp3;
@@ -77,12 +77,12 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     float temp5;
     float temp10b0;
     float temp4;
-    //fprintf(stderr, "dp0[%d] = %f\n",e[0], dp0[e[0]]);
+    /* fprintf(stderr, "dp0[%d] = %f\n",e[0], dp0[e[0]]);
     // PML
     //fprintf(stderr, " after computing Du_x Du_z acdpml_2d_2!!!\n");
     // \phi separate loops along boundary !!!!!!!!!!!!!!!! csq and damp profile
     // compute interior of the domain
-    // update wavefield up
+    // update wavefield up */
     for (i1 = s[1]; i1 < e[1]+1; ++i1)
         for (i0 = s[0]; i0 < e[0]+1; ++i0)
             up[i1][i0] = 1.0/(1.0+(dp1[i1]+dp0[i0])*dt/2.0)*(uc[i1][i0]*(2.0-
@@ -97,7 +97,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
     pushinteger4(i1);
     pushinteger4(i0);
     pushinteger4(i1);
-    // Homogeneous Dirichlet boundary conditions
+    /* Homogeneous Dirichlet boundary conditions */
     if (lbc[1]) {
         pushinteger4(i0);
         pushcontrol1b(0);
@@ -146,7 +146,7 @@ void acdpml_2d_4_b(float **uc, float **ucb, float **up, float **upb, float **
         popinteger4(&i0);
     }
     i0 = e[0];
-    //**csqb = 0.0;
+    /* **csqb = 0.0; */
     for (i1 = e[1]-1; i1 > s[1]-1; --i1) {
         temp10 = 4.0*di[0]*(dt*dp0[i0]+2.0);
         temp10b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];

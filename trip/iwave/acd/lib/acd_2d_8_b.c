@@ -83,7 +83,7 @@ void acd_2d_8_b(float **uc, float **ucb, float **up, float **upb, float **csq,
             upb[s[1] - 2][i0] = 0.0;
             upb[s[1] + 0][i0] = upb[s[1] + 0][i0] - tmpb;
         }
-//    **csqb = 0.0;
+/*    **csqb = 0.0; */
     for (i1 = e[1]; i1 > s[1]-1; --i1)
         for (i0 = e[0]; i0 > s[0]-1; --i0) {
             float lap = c0*uc[i1][i0]	+

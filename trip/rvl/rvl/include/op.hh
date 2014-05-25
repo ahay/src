@@ -810,7 +810,6 @@ namespace RVL {
 
     /** const reference to derivative (internal datum) */
     LinearOp<Scalar> const & getDeriv() const { return *deriv; }
-
     /** const reference to 2nd derivative (internal datum) */
     SymmetricBilinearOp<Scalar> const & getDeriv2() const { return *deriv2; }
 
@@ -2164,12 +2163,14 @@ namespace RVL {
                   Vector<Scalar> dgx0(opvec[1]->getDomain());
                   Vector<Scalar> dgx1(opvec[1]->getDomain());
                   Vector<Scalar> d2gx(opvec[1]->getDomain());
-
+                    
                   opeval[0]->getDeriv().applyOp(dx0,dgx0);
                   opeval[0]->getDeriv().applyOp(dx1,dgx1);
                   opeval[0]->getDeriv2().applyOp(dx0,dx1,d2gx);
                   opeval[1]->getDeriv2().applyOp(dgx0,dgx1,tmp);
                   opeval[1]->getDeriv().applyOp(d2gx,dy);
+                  //cerr << "\n OpComp:applyDeriv2  term1.norm = " << tmp.norm() << endl;
+                  //cerr << "\n OpComp:applyDeriv2  term2.norm = " << dy.norm() << endl;
                   dy.linComb(1.0, tmp);
                   for (int i=opvec.size()-1;i>-1;i--) if (opeval[i]) delete opeval[i];
                   
@@ -2217,9 +2218,11 @@ namespace RVL {
                   opeval[0]->getDeriv().applyOp(dx0,dgx0);
                   opeval[1]->getDeriv2().applyAdjOp(dgx0,dy,tmp0);
                   opeval[0]->getDeriv().applyAdjOp(tmp0,tmp);
+                  //cerr << "\n OpComp:applyAdjDeriv2  term1.norm = " << tmp.norm() << endl;
                   
                   opeval[1]->getDeriv().applyAdjOp(dy,dftdy);
                   opeval[0]->getDeriv2().applyAdjOp(dx0,dftdy,dx1);
+                  //cerr << "\n OpComp:applyAdjDeriv2  term2.norm = " << dx1.norm() << endl;
                   dx1.linComb(1.0, tmp);
                   for (int i=opvec.size()-1;i>-1;i--) if (opeval[i]) delete opeval[i];
                   

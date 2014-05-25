@@ -15,7 +15,7 @@ void acd_2d_2_b(float **uc, float **ucb, float **up, float **upb, float **csq,
         float **csqb, int *s, int *e, float c0, float *c1) {
     int i0, i1;
     float tempb;
-    //**csqb = 0.0;
+    /* **csqb = 0.0; */
     for (i1 = e[1]; i1 > s[1]-1; --i1)
         for (i0 = e[0]; i0 > s[0]-1; --i0) {
             float lap=(c0*uc[i1][i0]+

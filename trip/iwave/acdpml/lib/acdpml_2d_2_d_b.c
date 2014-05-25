@@ -35,7 +35,7 @@ void acdpml_2d_2_d_b(float **uc, float **ucb, float **ucd, float **ucdb, float
         **phi1db, float **phi0, float **phi0b, float **phi0d, float **phi0db, 
         float *dp1, float *dp0, float *di, float dt, int *s, int *e, float c0,
         float *c1, int *lbc, int *rbc) {
-    // current field
+    /* current field
     // previous field
     // csq
     // phi1
@@ -43,7 +43,7 @@ void acdpml_2d_2_d_b(float **uc, float **ucb, float **ucd, float **ucdb, float
     // damping profile zeta_x
     // damping profile zeta_x
     // start index
-    // end index
+    // end index  */
     int i1, i0;
     float temp3;
     float temp2;
@@ -142,12 +142,12 @@ void acdpml_2d_2_d_b(float **uc, float **ucb, float **ucd, float **ucdb, float
     float temp5;
     float temp10b0;
     float temp4;
-    //fprintf(stderr, "dp0[%d] = %f\n",e[0], dp0[e[0]]);
+    /* fprintf(stderr, "dp0[%d] = %f\n",e[0], dp0[e[0]]);
     // PML
     //fprintf(stderr, " after computing Du_x Du_z acdpml_2d_2!!!\n");
     // \phi separate loops along boundary !!!!!!!!!!!!!!!! csq and damp profile
     // compute interior of the domain
-    // update wavefield up
+    // update wavefield up */
     for (i1 = s[1]; i1 < e[1]+1; ++i1)
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
             float lap = c0*uc[i1][i0] + c1[0]*(uc[i1][i0+1]+uc[i1][i0-1]) + c1
@@ -171,10 +171,10 @@ void acdpml_2d_2_d_b(float **uc, float **ucb, float **ucd, float **ucdb, float
     pushinteger4(i0);
     pushinteger4(i1);
     pushinteger4(i0);
-    // compute i0=e[0]
+    /* compute i0=e[0] */
     i0 = e[0];
     pushinteger4(i1);
-//    **csqb = 0.0;
+    /*  **csqb = 0.0; */
     for (i1 = e[1]-1; i1 > s[1]-1; --i1) {
         temp22 = 4.0*di[0]*(dt*dp0[i0]+2.0);
         temp22b = (dp1[i1]-dp0[i0])*dt*2.0*phi0b[i1][i0];

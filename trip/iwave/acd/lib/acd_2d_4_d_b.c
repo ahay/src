@@ -83,7 +83,7 @@ void acd_2d_4_d_b(float **uc, float **ucb, float **ucd, float **ucdb, float **
             updb[s[1] - 2][i0] = 0.0;
             updb[s[1]][i0] = updb[s[1]][i0] - tmpb;
         }
-    //**csqb = 0.0;
+    /* **csqb = 0.0; */
     for (i1 = e[1]; i1 > s[1]-1; --i1)
         for (i0 = e[0]; i0 > s[0]-1; --i0) {
             tempb = csq[i1][i0]*upb[i1][i0];
