@@ -65,6 +65,7 @@ Result('monaclip','mona+i mona+iC','SideBySideIso',vppen='ysize=10 xsize=10')
 
 colors = {
     'cubeyf1': 'Perceptual Rainbow',
+    'gist_earth': 'GIST Earth',
     'linearlfb': 'LinearL Face Based',
     'x': 'Cube Helix',
     'lb': 'Light Bartlein'

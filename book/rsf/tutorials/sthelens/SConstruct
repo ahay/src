@@ -23,4 +23,23 @@ for case in ('before','after'):
          ''' % par[case],stdin=0)
     Result(case,'clip2 lower=0 | grey mean=y color=j title=%s scalebar=y' % case.capitalize())
 
+    # fill zeros
+    fill = case+'-fill'
+    Flow(fill,case,'clip2 lower=0 | lapfill grad=y niter=200 verb=y')
+    Result(fill,'grey mean=y color=j title=%s scalebar=y' % case.capitalize())
+
+# interpolate to a common grid
+Flow('after-int','after-fill',
+     '''
+     remap1 n1=%(n1)d o1=%(o1)g d1=%(d1)g | transp | 
+     remap1 n1=%(n2)d o1=%(o2)g d1=%(d2)g | transp
+     ''' % par['before'])
+Result('after-int','grey mean=y color=j title=After scalebar=y')   
+
+# Compute difference
+Flow('diff','after-int before-fill','add scale=1,-1 ${SOURCES[1]}')
+Result('diff','grey mean=y color=j title=Difference scalebar=y')
+
+
+    
 End()
