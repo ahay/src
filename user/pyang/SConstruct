@@ -4,14 +4,18 @@ import bldutil
 
 # C main programs
 progs = '''
-pocs3d fpocs2d fpocs3d mwni2d pocs istinterp
+pocs3d fpocs2d fpocs3d mwni2d pocs istinterp lsinterp2d
 pocsseislet istseislet mcaseislet matflip
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 modeling2d rtm2d lsrtm2d rtmadcig
 dlct dlctk myradon1 myradon2 
-cohn fwishots 
+cohn fwishots
 '''
 
+mpi_progs='''
+mpifwi
+'''
+ 
 # C++ main programs
 ccprogs = '''
 '''
@@ -61,6 +65,19 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+
+mpicc = env.get('MPICC')
+
+mpi_mains = Split(mpi_progs)
+for prog in mpi_mains:
+    sources = ['M' + prog]
+    bldutil.depends(env,sources,'M'+prog)
+    if mpicc:
+    	prog = env.Program(prog,map(lambda x: x + '.c',sources),CC=mpicc)
+    else:
+	prog = env.RSF_Place('sf'+prog,None,var='MPICC',package='mpi')
+    if root:
+        env.Install(bindir,prog)
 
 
 if 'c++' in env.get('API',[]):
