@@ -1,9 +1,14 @@
 from rsf.proj import *
 
 par = {
-    'before':dict(n1=327,n2=468 ,o1=557815,o2=5107985,d1=30.030675,d2=29.978587),
-    'after': dict(n1=979,n2=1400,o1=557805,o2=5107965,d1=10.030675,d2=10.035740),
+    'before':dict(n1=327,n2=468 ,o1=557.815,o2=5107.985,d1=0.030030675,d2=0.029978587),
+    'after': dict(n1=979,n2=1400,o1=557.805,o2=5107.965,d1=0.010030675,d2=0.010035740),
     }
+
+def grey(title,color='gist_earth'):
+    return '''
+    grey mean=y color=%s title="%s" scalebar=y transp=n yreverse=n 
+    ''' % (color,title)
 
 for case in ('before','after'):
     txt = 'st-helens_%s.txt' % case
@@ -17,16 +22,16 @@ for case in ('before','after'):
          '''
          echo in=$SOURCE data_format=ascii_float
          label=Elevation unit=m
-         n1=%(n1)d o1=%(o1)g d1=%(d1)g 
-         n2=%(n2)d o2=%(o2)g d2=%(d2)g |
+         n1=%(n1)d o1=%(o1)g d1=%(d1)g label1=X
+         n2=%(n2)d o2=%(o2)g d2=%(d2)g label2=Y |
          dd form=native | scale dscale=0.3048
          ''' % par[case],stdin=0)
-    Result(case,'clip2 lower=0 | grey mean=y color=j title=%s scalebar=y' % case.capitalize())
+    Result(case,'clip2 lower=0 | ' + grey(case.capitalize()))
 
     # fill zeros
     fill = case+'-fill'
     Flow(fill,case,'clip2 lower=0 | lapfill grad=y niter=200 verb=y')
-    Result(fill,'grey mean=y color=j title=%s scalebar=y' % case.capitalize())
+    Result(fill,grey(case.capitalize()))
 
 # interpolate to a common grid
 Flow('after-int','after-fill',
@@ -34,12 +39,12 @@ Flow('after-int','after-fill',
      remap1 n1=%(n1)d o1=%(o1)g d1=%(d1)g | transp | 
      remap1 n1=%(n2)d o1=%(o2)g d1=%(d2)g | transp
      ''' % par['before'])
-Result('after-int','grey mean=y color=j title=After scalebar=y')   
+Result('after-int',grey('After'))
 
 # Compute difference
 Flow('diff','after-int before-fill','add scale=1,-1 ${SOURCES[1]}')
-Result('diff','grey mean=y color=j title=Difference scalebar=y')
+Result('diff',grey('Difference'))
 
-
+Result('diff3','diff','window j1=2 j2=2 | plsurf title=Difference color=gist_earth')
     
 End()
