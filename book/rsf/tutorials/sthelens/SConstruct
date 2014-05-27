@@ -1,8 +1,10 @@
 from rsf.proj import *
 
+
 par = {
-    'before':dict(n1=327,n2=468 ,o1=557.815,o2=5107.985,d1=0.030030675,d2=0.029978587),
-    'after': dict(n1=979,n2=1400,o1=557.805,o2=5107.965,d1=0.010030675,d2=0.010035740),
+    'before':dict(n1=327,n2=468 ,o1=557.815,o2=5107.985,d1=0.030030675,d2=0.029978587,scale=''),
+    'after': dict(n1=979,n2=1400,o1=557.805,o2=5107.965,d1=0.010030675,d2=0.010035740,
+                  scale='| scale dscale=0.3048'), # scaling by 0.3048 converts feet to meters
     }
 
 def grey(title,color='gist_earth'):
@@ -17,14 +19,13 @@ for case in ('before','after'):
           top='agile-geoscience/notebooks/master')
     asc = case+'.asc'
     Flow(asc,txt,'/usr/bin/tail -n +6')
-    # scaling by 0.3048 converts feet to meters
     Flow(case,asc,
          '''
          echo in=$SOURCE data_format=ascii_float
          label=Elevation unit=m
          n1=%(n1)d o1=%(o1)g d1=%(d1)g label1=X
          n2=%(n2)d o2=%(o2)g d2=%(d2)g label2=Y |
-         dd form=native | scale dscale=0.3048
+         dd form=native %(scale)s 
          ''' % par[case],stdin=0)
     Result(case,'clip2 lower=0 | ' + grey(case.capitalize()))
 
@@ -41,10 +42,19 @@ Flow('after-int','after-fill',
      ''' % par['before'])
 Result('after-int',grey('After'))
 
-# Compute difference
-Flow('diff','after-int before-fill','add scale=1,-1 ${SOURCES[1]}')
-Result('diff',grey('Difference'))
+def plsurf(title):
+    return '''
+    window j1=2 j2=2 | plsurf title="%s" color=gist_earth
+    ''' % title
 
-Result('diff3','diff','window j1=2 j2=2 | plsurf title=Difference color=gist_earth')
+# Displayed as 3-D surfaces
+Result('before3','before-fill',plsurf('Before'))
+Result('after3','after-int',plsurf('After'))
+
+# Compute difference
+Flow('diff','before-fill after-int','add scale=1,-1 ${SOURCES[1]}')
+Result('diff',grey('Difference') + ' allpos=y minval=0')
+
+Result('diff3','diff',plsurf('Difference'))
     
 End()
