@@ -52,7 +52,7 @@ static float dx, dz, fm, dt;
 float 	*v0, *dobs, *vv;
 /* variables on device */
 int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_dobs, *d_bndr;
+float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_illum, *d_dobs, *d_bndr;
 
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
@@ -99,6 +99,7 @@ void device_alloc()
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
 	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
 	cudaMalloc(&d_lap, nz*nx*sizeof(float));
+	cudaMalloc(&d_illum, nz*nx*sizeof(float));
 	cudaMalloc(&d_wlt, nt*sizeof(float));
 	cudaMalloc(&d_sxz, nt*sizeof(float));
 	cudaMalloc(&d_gxz, ng*sizeof(float));
@@ -118,6 +119,7 @@ void device_free()
 	cudaFree(d_sp0);
 	cudaFree(d_sp1);
 	cudaFree(d_lap);
+	cudaFree(d_illum);
 	cudaFree(d_wlt);
 	cudaFree(d_sxz);
 	cudaFree(d_gxz);
@@ -267,7 +269,7 @@ int main(int argc, char *argv[])
 			}
 
 			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
-			cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
+			cuda_step_backward<<<dimg,dimb>>>(d_illum, d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;

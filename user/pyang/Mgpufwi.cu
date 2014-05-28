@@ -377,11 +377,11 @@ int main(int argc, char *argv[])
 			{
 				ptr=d_sp0;d_sp0=d_sp1;d_sp1=ptr;
 				cuda_rw_bndr<<<(2*nz+nx+255)/256,256>>>(&d_bndr[it*(2*nz+nx)], d_sp1, nz, nx, false);
-				cuda_step_backward<<<dimg,dimb>>>(d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
+				cuda_step_backward<<<dimg,dimb>>>(d_illum, d_lap, d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 				cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, false);
 
 				cuda_add_source<<<(ng+511)/512, 512>>>(d_gp1, &d_derr[is*ng*nt+it*ng], d_gxz, ng, true);
-				cuda_step_forwardg<<<dimg,dimb>>>(d_illum, d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
+				cuda_step_forward<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, dtz, dtx, nz, nx);
 
 				cuda_cal_gradient<<<dimg,dimb>>>(d_g1, d_lap, d_gp1, nz, nx);
 				ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
