@@ -257,7 +257,7 @@ if os.path.isdir('su'):
 # TRIP BUILD
 ##########################################################################
 
-if os.path.isdir('trip') and 'c++' in env.get('API',[]):
+if os.path.isdir('trip'):
 
     tripdirs = ('iwave','rvl','iwave++')
     for dir in map(lambda x: os.path.join('trip',x), tripdirs):
