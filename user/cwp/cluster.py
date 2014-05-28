@@ -15,15 +15,29 @@ online for Mio (on the iTeam website) to learn how to
 configure your SConstructs to use this module.
 
 author:  Jeff Godwin, Jan 12 2011, CWP
+
+Some new functions are added to make cscons working in an 
+iterative inversion scheme. These functions include reading
+user input from command line, setup different pbs directory
+name at each iteration, executing an command line input, etc.
+
+author: Tonging Yang, Jun 16 2011, CWP
+
+Adapted for the FORNAX cluster @ IVEC
+
+author: Jeffrey Shragge, 16 AUG 2011, UWA
+
 '''
-import rsf.proj, os, string, subprocess
+import rsf.proj, os, string, subprocess, sys
+import SCons
+import SCons.Script
+import SCons.Script.SConsOptions as SConsOptions
+
 # Default project
 project = rsf.proj.Project()
 
 ###############
-######################
-# CWPONLY - From here down, the rest of this file is basically custom. 
-###############
+
 JOB_NAME = None
 EMAIL    = None
 DEFAULT_TIME= None
@@ -32,57 +46,107 @@ NODETYPE = None
 CLUSTER = None
 AUTO_SUBMIT = False
 SAVED = []
-PREPEND_JOB_LINES = []
-APPEND_JOB_LINES = []
-
 JOB_QUEUE    = []
 CURRENT_JOB  = None
-
 CSCONS  = False
 CLUSTER_CONFIGURED = False
-
 SCONSIGNS = []
 
-def createPBSfile(name,email,nodes,ppn,time,last,next,tasks,nodetype=None,parallel=False):
+QDEFAULT= None 
+QCOMMAND = {'slurm':'sbatch ','pbs':'qsub '}
+
+NAMED = False
+
+def NamePbsDirectory(name):
+    global pbs_dirt,NAMED
+    pbs_dirt = name
+    NAMED = True
+
+class FakeOptionParser(object):
+    """
+    A do-nothing option parser, used for the initial OptionsParser variable.
+
+    During normal SCons operation, the OptionsParser is created right
+    away by the main() function.  Certain tests scripts however, can
+    introspect on different Tool modules, the initialization of which
+    can try to add a new, local option to an otherwise uninitialized
+    OptionsParser object.  This allows that introspection to happen
+    without blowing up.
+
+    """
+    class FakeOptionValues(object):
+        def __getattr__(self, attr):
+            return None
+    values = FakeOptionValues()
+    def add_local_option(self, *args, **kw):
+        pass
+
+OptionsParser = FakeOptionParser()
+
+def OptionInitial():
+
+    global OptionsParser
+
+    parser = SConsOptions.Parser('')
+    values = SConsOptions.SConsValues(parser.get_default_values())
+
+    OptionsParser = parser
+
+    sconsflags = os.environ.get('SCONSFLAGS', '')
+    all_args = sconsflags.split() + sys.argv[1:]
+
+    options, args = parser.parse_args(all_args, values)
+    options = parser.values
+
+def AddOption(*args, **kw):
+
+    if 'default' not in kw:
+        kw['default'] = None
+    result = OptionsParser.add_local_option(*args, **kw)
+
+    return result
+
+def GetOption(name):
+    return getattr(OptionsParser.values, name)
+
+def createSlurmfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype='psava',parallel=False):
+#name,email,nodes,ppn,time,last,next,tasks,nodetype=None,parallel=False):
     '''
-    Where we actually create our pbs job files. Modify this to change this to fit
-    your cluster, or changes to Mio and Ra.
+    This function creates the sumsission job for the Slurm scheduler
     '''
     lines = []
     lines.append('#!/bin/bash')
-
+    lines.append('#SBATCH -J %s' % (name))
+    lines.append('#SBATCH --nodes=%d' % (nodes))
+    lines.append('#SBATCH --time=%d:00:00' % time)
+    lines.append('#SBATCH --job-name=%s' % name)
+    lines.append('#SBATCH -o %s/%s.log' % (pbs_dirt,name))
+    lines.append('#SBATCH -e %s/%s.log' % (pbs_dirt,name))
+    lines.append('#SBATCH --export=ALL')
+    lines.append('#SBATCH --ntasks-per-node=1') # 1 task per node, then it gives all cpus to task (OMP) 
+    lines.append('#SBATCH --exclusive ') 
     if nodetype:
-        lines.append('#PBS -l nodes=%d:ppn=%d:%s' % (nodes,ppn,nodetype))
-    else:
-        lines.append('#PBS -l nodes=%d:ppn=%d' % (nodes,ppn))
-    lines.append('#PBS -l naccesspolicy=singlejob')
-    lines.append('#PBS -l walltime=%d:00:00' % time)
-    lines.append('#PBS -N %s' % name)
-    lines.append('#PBS -o pbs/%s.log' % name)
-    lines.append('#PBS -j oe')
-    lines.append('#PBS -V')
+      lines.append('#SBATCH --partition=%s'%nodetype)
     if email:
-        lines.append('#PBS -m e')
-        lines.append('#PBS -M %s' % email)
+        lines.append('#SBATCH --mail-type=ALL')
+        lines.append('#SBATCH --mail-user=%s' % email)
     lines.append('#-----------')
 #    lines.append('export DATAPATH=%s' % rsf.path.getpath(os.getcwd()))
     lines.append('export SCONS_OVERRIDE=1')
     lines.append('cd %s' % os.getcwd())
-    lines.append('set -e # Catch all errors immediately and exit')
-    for newline in PREPEND_JOB_LINES:
-        lines.append(newline)
 #    lines.append('echo "JOB: %s running" >> pbs/jobs.txt' % name)
 
     if last:
         depends = string.join(['%s' % item for item in last])
-#        lines.append("""for i in %s; do  if [ -n "$(grep "$i done" pbs/jobs.txt)" ]; then echo "found $i"; elif [ -n "$(grep "$i running" pbs/jobs.txt)" ]; then echo "running $i"; if [ `grep "$i check" pbs/jobs.txt | wc -l` -ge 5 ]; then echo "already checked $i 5 times"; exit; else echo "JOB: $i check" >> pbs/jobs.txt; sleep 300; echo "Resubmitting myself"; ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; qsub pbs/%s" ; exit; fi; elif [ -n "$(grep "$i error" pbs/jobs.txt)" ]; then echo "error $i"; exit; else echo "did not find $i"; exit; fi; done""" % (depends, name))
-
     if parallel:
-        lines.append('sort -u $PBS_NODEFILE > pbs/%s-nodes' % name)
-        lines.append('match pbs/%s-nodes pbs/%s-shell > pbs/%s-app' % (name,name,name))
-        lines.append('mpiexec -app pbs/%s-app' % name)
+        lines.append('echo $SLURM_JOB_NODELIST > %s/%s-nodes' % (pbs_dirt,name))
+        lines.append('mymatch %s/%s-shell > %s/%s-app' % (pbs_dirt,name,pbs_dirt,name))
+        lines.append('mpiexec -app %s/%s-app' % (pbs_dirt,name))
     else:
-        lines.append('scons -f pbs/SConstruct-%s' % name)
+        if relaunch or run:
+          lines.append('%s' % content)
+        else:
+          lines.append('scons -f %s/SConstruct-%s' % (pbs_dirt,name))
         #lines.append(tasks+'\n')
 
 #    lines.append('echo "JOB: %s done" >> pbs/jobs.txt' % name)
@@ -91,16 +155,69 @@ def createPBSfile(name,email,nodes,ppn,time,last,next,tasks,nodetype=None,parall
         global SCONSIGNS
         lines.append('sfdbmerge outdb=%s %s ' % (project.path+'.sconsign.dbhash', ' '.join(SCONSIGNS)))
 
-    for endline in APPEND_JOB_LINES:
-        lines.append(endline)
+    file = open('%s/%s' % (pbs_dirt,name),'w')
+    text = string.join(lines,'\n')
+    file.write(text)
+    file.close()
 
-    file = open('pbs/%s' % name,'w')
+
+
+def createPBSfile(name,email,nodes,ppn,time,last,next,tasks,relaunch,run,content,nodetype=None,parallel=False):
+    '''
+    Where we actually create our pbs job files. Modify this to change this to fit
+    your cluster, or changes to Mio and Ra.
+    '''
+
+    global pbs_dirt
+
+    lines = []
+    lines.append('#!/bin/bash')
+    print 'nodes: ',nodes
+    if nodetype:
+	    lines.append('#PBS -l nodes=%d:ppn=%d:%s' % (nodes,ppn,nodetype))
+    else:
+            lines.append('#PBS -l nodes=%d:ppn=%d' % (nodes,ppn))
+
+    lines.append('#PBS -e %s/%s.err' % (pbs_dirt,name))
+    lines.append('#PBS -o %s/%s.out' % (pbs_dirt,name))
+    lines.append('#PBS -l naccesspolicy=singlejob')
+    lines.append('#PBS -N %s' % name)
+    lines.append('#PBS -j oe')
+    lines.append('#PBS -l walltime=%d:00:00' % time)
+    lines.append('#PBS -V')
+    if email:
+        lines.append('#PBS -m a')
+        lines.append('#PBS -M %s' % email)
+    lines.append('#-----------')
+    lines.append('export SCONS_OVERRIDE=1')
+    lines.append('cd %s' % os.getcwd())
+
+    if last:
+        depends = string.join(['%s' % item for item in last])
+
+    if parallel:
+        lines.append('sort -u $PBS_NODEFILE > %s/%s-nodes' % (pbs_dirt,name))
+        lines.append('match %s/%s-nodes %s/%s-shell > %s/%s-app ' % (pbs_dirt,name,pbs_dirt,name,pbs_dirt,name))
+        lines.append('mpiexec -app %s/%s-app' % (pbs_dirt,name))
+    else:
+        if relaunch or run:
+            lines.append('%s' % content)
+        else:
+            lines.append('scons -f %s/SConstruct-%s' % (pbs_dirt,name))
+
+    if next == None:
+        if not relaunch:
+            global SCONSIGNS
+            lines.append('sfdbmerge outdb=%s %s ' % (project.path+'.sconsign.dbhash', ' '.join(SCONSIGNS)))
+
+    file = open('%s/%s' % (pbs_dirt,name),'w')
     text = string.join(lines,'\n')
     if CLUSTER=='ra':
         text.replace('qsub','msub')
     file.write(text)
     file.close()
 
+QSYS = {'slurm':createSlurmfile,'pbs':createPBSfile}
 
 class Job:
     def __init__(self,time=0,nodes=1,ppn=0,notes=''):
@@ -118,10 +235,14 @@ class Job:
         self.last = None
         self.next = None
         self.sconsign = []
+        self.content = ''
+        self.relaunch = False
+        self.run = False
 
     def make(self):
-        createPBSfile(self.name,EMAIL,self.nodes,self.ppn,
-            self.time,self.last,self.next,'\n'.join(self.tasks),nodetype=NODETYPE)
+        qfunction = QSYS[QDEFAULT] 
+        qfunction(self.name,EMAIL,self.nodes,self.ppn,
+            self.time,self.last,self.next,'\n'.join(self.tasks),self.relaunch,self.run,self.content,nodetype=NODETYPE)
 
     def keep(self):
         if len(self.tasks) > 0:
@@ -135,15 +256,16 @@ class Job:
         self.next = next
 
     def prepare(self):
+        global pbs_dirt
         if self.name:
             sconsign = '%s.sconsign.dbhash' % self.name
             self.sconsign.append(sconsign)
             self.all = [self.name]
-            file = open('pbs/SConstruct-%s' % self.name,'w')
+            file = open('%s/SConstruct-%s' % (pbs_dirt,self.name),'w')
             file.write('from rsf.proj import *\n')
             file.write( \
 '''
-import dbhash 	 
+import dbhash  
 proj = Project()
 proj.SConsignFile("%s",dbhash)	 
 ''' % (sconsign))
@@ -154,6 +276,12 @@ proj.SConsignFile("%s",dbhash)
 
     def add(self, command):
         self.tasks.append(command)
+
+    def store(self,content):
+        self.content = content
+
+    def restart(self):
+        self.all = [self.name]
 
     def __str__(self):
         return 'Serial:%d %d %d %s' % (self.time,self.nodes,self.ppn,self.notes)
@@ -172,8 +300,9 @@ class Parallel(Job):
             if i == len(self.all)-1:
                 next = self.next
                 nodes = self.nnl
-            createPBSfile(self.all[i],EMAIL,nodes,self.ppn,
-                self.time,self.last,next,'',nodetype=NODETYPE,parallel=True)
+            qfunction = QSYS[QDEFAULT] 
+            qfunction(self.all[i],EMAIL,nodes,self.ppn,
+                self.time,self.last,next,'',False,False,'',nodetype=NODETYPE,parallel=True)
 
     def keep(self):
         if len(self.scripts) > 0:
@@ -188,6 +317,7 @@ class Parallel(Job):
             self.tasks = []
 
     def prepare(self):
+        global pbs_dirt
         if self.name:
             nscripts = len(self.scripts)
            
@@ -204,12 +334,12 @@ class Parallel(Job):
                     scriptname = self.name+'-%02d-%02d' % (ijob,inode)
                     names.append(scriptname)
 
-                    file = open('pbs/SConstruct-%s' % scriptname,'w')
+                    file = open('%s/SConstruct-%s' % (pbs_dirt,scriptname),'w')
                     file.write('from rsf.proj import *\n')
                     sconsign = '%s.sconsign.dbhash' % scriptname
                     file.write( \
 '''
-import dbhash 	 
+import dbhash
 proj = Project()
 proj.SConsignFile("%s",dbhash)	 
 ''' % (sconsign))
@@ -231,8 +361,8 @@ proj.SConsignFile("%s",dbhash)
 
                 if inode == self.nodes or i == len(self.scripts)-1:
                     jobname = self.name+'-%02d' % ijob
-                    file = open('pbs/%s-shell'%jobname,'w')
-                    file.write(string.join(['scons -f pbs/SConstruct-%s'% name for name in names],'\n'))
+                    file = open('%s/%s-shell'%(pbs_dirt,jobname),'w')
+                    file.write(string.join(['scons -f %s/SConstruct-%s'% (pbs_dirt,name) for name in names],'\n'))
                     file.close()
                     ijob += 1
                     if i == len(self.scripts)-1 and inode != self.nodes:
@@ -245,17 +375,8 @@ proj.SConsignFile("%s",dbhash)
     def __str__(self):
         return 'Parallel: %d %d %d %d'  % (self.time,self.nodes,self.ppn,self.ipn)
 
-
-def Prepend(lines):
-    global PREPEND_JOB_LINES
-    PREPEND_JOB_LINES = lines
-
-def Append(lines):
-    global APPEND_JOB_LINES
-    APPEND_JOB_LINES = lines
-
-def Cluster(name, email=None, cluster='mio', time=1,ppn=8,nodetype=None,submit=False):
-    global DEFAULT_TIME, DEFAULT_PPN, JOB_NAME,EMAIL,CLUSTER,NODETYPE,CLUSTER_CONFIGURED
+def Cluster(name, email=None, cluster='mio', time=1,ppn=12,nodetype='psava',submit=False,scheduler='slurm'):
+    global DEFAULT_TIME, DEFAULT_PPN, JOB_NAME,EMAIL,CLUSTER,NODETYPE,CLUSTER_CONFIGURED,QDEFAULT
     DEFAULT_TIME = time
     DEFAULT_PPN  = ppn
     JOB_NAME = name
@@ -263,7 +384,7 @@ def Cluster(name, email=None, cluster='mio', time=1,ppn=8,nodetype=None,submit=F
     CLUSTER = cluster
     NODETYPE = nodetype
     AUTO_SUBMIT =submit 
-
+    QDEFAULT = scheduler 
     CLUSTER_CONFIGURED = True
 
 def Serial(time=None,ppn=None,tasks=None):
@@ -367,17 +488,9 @@ def Flow(target,source,flow,**kw):
 
             if not kw.has_key('np'):
                 if nodes <= 0:
-                #try:
-                #    kw['np'] = nodes
                     raise Exception('You must specify the number of nodes for mpi jobs')
             else:
                 kw.pop('np')
-
-                #if not kw['np']: 
-                #    kw['np'] = nodes
-
-
-#        command = project.Flow(target,source,flow,**kw)
 
         if mpi and nodes > 0:
             CURRENT_JOB = Job(nodes=nodes,time=time,ppn=ppn,notes='MPI')
@@ -385,6 +498,7 @@ def Flow(target,source,flow,**kw):
        
         command = __createstring('Flow',target,source,flow,kw)
         CURRENT_JOB.add(command)
+
     else:
         if kw.has_key('time'): 
             kw.pop('time')
@@ -405,7 +519,6 @@ def Plot (target,source,flow=None,**kw):
         if not CURRENT_JOB: # No job
             Serial()
 
-#        command = project.Plot(target,source,flow,**kw)
         if flow == None:
             flow = source
             source = None
@@ -425,6 +538,30 @@ def Result(target,source,flow=None,**kw):
         CURRENT_JOB.add(command)
     else:
         return apply(project.Result,(target,source,flow),kw)
+
+def Force(content):
+    global CURRENT_JOB
+
+    CURRENT_JOB = None
+    Serial()
+
+    CURRENT_JOB.add('ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; ' + content + '"')
+    CURRENT_JOB.store('ssh $PBS_O_HOST "source ~/.bash_profile; cd $PBS_O_WORKDIR; ' + content + '"')
+    CURRENT_JOB.relaunch = True
+
+def Run(content):
+    global CURRENT_JOB
+
+    CURRENT_JOB = None
+    Serial()
+
+    CURRENT_JOB.add(content)
+    CURRENT_JOB.store(content)
+    CURRENT_JOB.relaunch = False 
+    CURRENT_JOB.run = True
+
+    CURRENT_JOB = None
+
 ####
 # No changes here
 def Fetch(file,dir,private=0,**kw):
@@ -435,6 +572,10 @@ def Save(file):
     Flow(file+'.hh',file,'window out=stdout')
 
 def End(**kw):
+    global pbs_dirt,NAMED
+    if not NAMED:
+       NamePbsDirectory('pbs')
+
     if CSCONS and CLUSTER_CONFIGURED:
         if len(JOB_QUEUE) > 0:
             print "Removing extra jobs..."
@@ -447,10 +588,10 @@ def End(**kw):
 
             print "Found: %d jobs" % len(final_queue)
             print 'Creating job directory...'
-            if not os.path.exists('pbs'):
-                os.mkdir('pbs')
+            if not os.path.exists(pbs_dirt):
+                os.mkdir(pbs_dirt)
             else:
-                if os.path.isdir('pbs'):
+                if os.path.isdir(pbs_dirt):
                     print '......pbs directory already exists'
                 else:
                     raise Exception('pbs directory exists, but is not suitable for script files?')
@@ -466,6 +607,7 @@ def End(**kw):
             print 'Preparing jobs...'
             
             global SCONSIGNS
+
             i = 0; n = len(final_queue);
             for job in final_queue:
                 if isinstance(job,Parallel):
@@ -473,11 +615,15 @@ def End(**kw):
                 else:
                     job.name = JOB_NAME+'-s-%02d' % i
                 print 'Job %d/%d - %s - %s' % (i,n,str(job),job.name)
-                job.prepare()
-                SCONSIGNS.extend(job.sconsign)
+                if not job.relaunch:
+                  job.prepare()
+                  SCONSIGNS.extend(job.sconsign)
+                else:
+                  job.restart()
+
                 i += 1
 
-            SCONSIGNS = map(lambda x: 'pbs/'+x, SCONSIGNS)
+            SCONSIGNS = map(lambda x: pbs_dirt + '/' + x, SCONSIGNS)
 
             print 'Making job files...'
             i = 0
@@ -500,12 +646,14 @@ def End(**kw):
             for job in final_queue:
                 subjobs = []
                 for pbs in job.all:
-                    command = 'qsub pbs/'
-                    if CLUSTER == 'ra':
-                        command = command.replace('qsub','msub')
-                    command += pbs
+                    command = QCOMMAND[QDEFAULT] # 'qsub ' 
                     if job.last != None:
-                        command +=' -W depend=afterok:%s' % (':'.join(pbs_names[j-1]))
+                        if QDEFAULT=='slurm':
+                          jobIdName=(':'.join(pbs_names[j-1])).replace("Submitted batch job ","")
+                          command += '--dependency=afterok:%s '%jobIdName
+                        else:
+                          command +=' -W depend=afterok:%s ' % (':'.join(pbs_names[j-1]))
+                    command += '%s/%s ' %(pbs_dirt, pbs)
                     print 'Executing...',command
                     process = subprocess.Popen(command,shell=True,stdout=subprocess.PIPE)
                     stdout,stderr  = process.communicate()
