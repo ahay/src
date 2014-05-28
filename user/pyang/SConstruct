@@ -4,13 +4,15 @@ import bldutil
 
 # C main programs
 progs = '''
-pocs3d fpocs2d fpocs3d mwni2d pocs istinterp lsinterp2d
+pocs3d fpocs2d fpocs3d mwni2d pocs istinterp 
 pocsseislet istseislet mcaseislet matflip
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 modeling2d rtm2d lsrtm2d rtmadcig
 dlct dlctk myradon1 myradon2 
 cohn fwishots
 '''
+
+# lsinterp2d
 
 mpi_progs='''
 mpifwi
