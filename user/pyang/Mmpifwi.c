@@ -27,11 +27,13 @@ Note: 	Here, the Enquist absorbing boundary condition is applied!
 #include <omp.h>
 #endif
 
+static float EPS=1.e-15;
+
 static bool csdgather;
-static int nz,nx,nt,ns,ng;
+static int nz, nx, nt, ns, ng;
 static float dx, dz, fm, dt;
 static int *sxz, *gxz;
-static float *wlt, *bndr, *dobs, *dcal, *dres;
+static float *wlt, *bndr, *dobs, *dcal, *dres, *alpha1, *alpha2;
 static float **vv, **sp0, **sp1, **sp2, **gp0, **gp1, **gp2, **g0, **g1, **cg, **lap, **vtmp;
 
 
@@ -136,7 +138,6 @@ void step_backward(float **lap, float **p0, float **p1, float **p2, float **vv, 
     int ix,iz;
     float v1,v2,diff1,diff2;
     
-
 	for (ix=1; ix < nx-1; ix++) 
 	for (iz=1; iz < nz-1; iz++) 
 	{
@@ -147,7 +148,7 @@ void step_backward(float **lap, float **p0, float **p1, float **p2, float **vv, 
 	    	diff1*=v1;
 	    	diff2*=v2;		
 		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-		lap[ix][iz]+=diff1+diff2;
+		lap[ix][iz]=diff1+diff2;
 	}
 }
 
@@ -234,25 +235,140 @@ void cal_gradient(float **grad, float **lap, float **gp)
   }
 }
 
+void scale_gradient(float **grad, float **vv)
+{
+  int ix, iz;
+  for(ix=0; ix<nx; ix++){
+    for(iz=0; iz<nz; iz++){
+      grad[ix][iz]*=2.0/vv[ix][iz];
+    }
+  }
+}
+
+float cal_objective(float *dres)
+{
+  int i;
+  float a, obj=0;
+
+  for(i=0; i<ng*nt*ns; i++){
+    a=dres[i];
+    obj+=a*a;
+  }
+  return obj;
+}
+
+float cal_beta(float **g0, float **g1, float **cg)
+{
+  int ix, iz;
+  float a,b;
+
+  a=b=0;
+  for(ix=0; ix<nx; ix++){
+    for(iz=0; iz<nz; iz++){
+      a+=g1[ix][iz]*(g1[ix][iz]-g0[ix][iz]);
+      b+=g0[ix][iz]*g0[ix][iz];
+    }
+  }
+  return (a/(b+EPS));
+}
+
+
+void cal_conjgrad(float **cg, float **g1, float beta)
+{
+  int ix, iz;
+
+  for(ix=0; ix<nx; ix++){
+    for(iz=0; iz<nz; iz++){
+      cg[ix][iz]=-g1[ix][iz]+beta*cg[ix][iz];
+    }
+  }
+}
+
+float cal_epsilon(float **vv, float **cg)
+{
+  int ix, iz;
+  float vvmax=vv[0][0];
+  float cgmax=cg[0][0];
+
+  for(ix=0; ix<nx; ix++){
+    for(iz=0; iz<nz; iz++){
+      vvmax=SF_MAX(vvmax, vv[ix][iz]);
+      cgmax=SF_MAX(cgmax, cg[ix][iz]);
+    }
+  }
+
+  return (0.01*vvmax/cgmax);
+}
+
+void cal_vtmp(float **vtmp, float **vv, float **cg, float epsil)
+{
+  int ix, iz;
+
+  for(ix=0; ix<nx; ix++){
+    for(iz=0; iz<nz; iz++){
+      vtmp[ix][iz]=vv[ix][iz]+epsil*cg[ix][iz];
+    }
+  }
+}
+
+void cal_alpha12(float *dcal, float *dobs, float *dres, float *alpha1, float *alpha2)
+{
+  int ig;
+  float a, b;
+  for(ig=0; ig<ng; ig++){
+    a=dobs[ig]+dres[ig];/*fmk*/
+    b=dcal[ig]-a;
+    alpha1[ig]+=b*(dcal[ig]-dobs[ig]);
+    alpha2[ig]+=b*b;
+  }
+}
+
+
+float cal_alpha(float *alpha1, float *alpha2, float epsil)
+{
+  int ig;
+  float a,b;
+
+  a=b=0;
+  for(ig=0; ig<ng; ig++){
+    a+=alpha1[ig];
+    b+=alpha2[ig];
+  }
+
+  return (a*epsil/(b+EPS));
+}
+
+void update_vel(float **vv, float **cg, float alpha)
+{
+  int ix, iz;
+
+  for(ix=0; ix<nx; ix++){
+    for(iz=0; iz<nz; iz++){
+      vv[ix][iz]+=alpha*cg[ix][iz];
+    }
+  }
+}
+
+
 int main(int argc, char* argv[])
 {
 	bool verb, precon;
-	int is, it, iter, niter, distx, distz, csd, rbell;
+	int j, is, it, iter, niter, distx, distz, csd, rbell;
 	int sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
-	float dtx, dtz,amp, tmp;
+	float dtx, dtz, amp, tmp, obj, beta, alpha, epsil;
 	float *trans, **ptr=NULL;
-	sf_file vinit, shots, vupdates, grads;
+	sf_file vinit, shots, vupdates, grads, objs;
 
 	float tstart, tend, timer;
 	int rank, size;
+	float *sendbuf, *recvbuf;
 	MPI_Comm comm;
+	MPI_Status stat;
 	comm=MPI_COMM_WORLD;
 
 	MPI_Init(&argc,&argv);
 	MPI_Comm_size(comm, &size);
 	MPI_Comm_rank(comm, &rank);
-	tstart=MPI_Wtime();
-	if(rank==0) fprintf(stderr, "numprocs=%d\n",size);
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -262,6 +378,7 @@ int main(int argc, char* argv[])
 	shots=sf_input("shots"); /* recorded shots from exact velocity model */
     	vupdates=sf_output("out"); /* updated velocity in iterations */ 
     	grads=sf_output("grads");  /* gradient in iterations */ 
+	objs=sf_output("objs"); /* value of misfit/objective function */
 
     	/* get parameters from velocity model and recorded shots */
 	if (!sf_getbool("verb",&verb)) verb=true;
@@ -328,6 +445,12 @@ int main(int argc, char* argv[])
 	  sf_putstring(grads,"label1","Depth");
 	  sf_putstring(grads,"label2","Distance");
 	  sf_putstring(grads,"label3","Iteration");
+	  sf_putint(objs,"n1",niter);
+	  sf_putint(objs,"n2",1);
+	  sf_putint(objs,"d1",1);
+	  sf_putint(objs,"o1",1);
+	  
+	  fprintf(stderr, "numprocs=%d\n",size);
 	}
 	dtx=dt/dx; 
 	dtz=dt/dz; 
@@ -344,15 +467,18 @@ int main(int argc, char* argv[])
 	sp2=sf_floatalloc2(nz, nx);
 	gp0=sf_floatalloc2(nz, nx);
 	gp1=sf_floatalloc2(nz, nx);
-	gp2=sf_floatalloc2(nz, nx);
+       	gp2=sf_floatalloc2(nz, nx);
 	lap=sf_floatalloc2(nz, nx);
-	g0=sf_floatalloc2(nz, nx);
 	g1=sf_floatalloc2(nz, nx);
-	cg=sf_floatalloc2(nz, nx);
 	vtmp=sf_floatalloc2(nz, nx);
 	sxz=(int*)malloc(ns*sizeof(int));
 	gxz=(int*)malloc(ng*sizeof(int));
-
+	alpha1=(float*)malloc(ng*sizeof(float));
+	alpha2=(float*)malloc(ng*sizeof(float));
+	if(rank==0){
+	  g0=sf_floatalloc2(nz, nx);
+	  cg=sf_floatalloc2(nz, nx);
+	}
 	for(it=0; it<nt; it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp=tmp*tmp;
 		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
@@ -362,7 +488,7 @@ int main(int argc, char* argv[])
 	memset(dobs,0,ng*nt*sizeof(float));
 	memset(dres,0,ns*ng*nt*sizeof(float));
 	memset(trans,0,ng*nt*sizeof(float));
-	sf_floatread(vv[0],nz*nx,vinit);
+	sf_floatread(vv[0], nz*nx, vinit);
 	memset(sp0[0],0,nz*nx*sizeof(float));
 	memset(sp1[0],0,nz*nx*sizeof(float));
 	memset(sp2[0],0,nz*nx*sizeof(float));
@@ -370,10 +496,12 @@ int main(int argc, char* argv[])
 	memset(gp1[0],0,nz*nx*sizeof(float));
 	memset(gp2[0],0,nz*nx*sizeof(float));
 	memset(lap[0],0,nz*nx*sizeof(float));
-	memset(g0[0],0,nz*nx*sizeof(float));
-	memset(g1[0],0,nz*nx*sizeof(float));
-	memset(cg[0],0,nz*nx*sizeof(float));
 	memset(vtmp[0],0,nz*nx*sizeof(float));
+	memset(g1[0],0,nz*nx*sizeof(float));
+	if(rank==0){
+	  memset(g0[0],0,nz*nx*sizeof(float));
+	  memset(cg[0],0,nz*nx*sizeof(float));
+	}
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
 	  { fprintf(stderr,"sources exceeds the computing zone!\n");
 	    MPI_Finalize(); exit(1);}
@@ -393,54 +521,150 @@ int main(int argc, char* argv[])
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 
 	for(iter=0; iter<niter; iter++){
-	  memcpy(g0[0], g1[0], nz*nx*sizeof(float));
+	  if(rank==0){
+	    tstart=MPI_Wtime();
+	    memcpy(g0[0], g1[0], nz*nx*sizeof(float));
+	  }
 	  memset(g1[0], 0, nz*nx*sizeof(float));
-
 	  for(is=rank; is<ns; is+=size)	    {
-	      sf_seek(shots, is*ng*nt*sizeof(float), SEEK_SET);
-	      sf_floatread(dobs, ng*nt, shots);
-	      matrix_transpose(dobs, trans, nt, ng);
+	    /* read shots from file */
+	    sf_seek(shots, is*ng*nt*sizeof(float), SEEK_SET);
+	    sf_floatread(dobs, ng*nt, shots);
+	    matrix_transpose(dobs, trans, nt, ng);
 
-	      if (csdgather)	{
-		gxbeg=sxbeg+is*jsx-distx;
-		sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-	      }
-	      memset(sp0[0],0,nz*nx*sizeof(float));
-	      memset(sp1[0],0,nz*nx*sizeof(float));
-	      memset(sp2[0],0,nz*nx*sizeof(float));
-	      for(it=0; it<nt; it++)   {
-		add_source(sp1, &wlt[it], &sxz[is], 1, true);
-		step_forward(sp0, sp1, sp2, vv, dtz, dtx);
-		ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
-		rw_bndr(sp0, &bndr[it*(2*nz+nx)], false);		
-
-		record_seis(dcal, gxz, sp0, ng);
-		cal_residual(&dobs[it*ng], dcal, &dres[is*ng*nt+it*ng], ng);
-	      }
-
-	      ptr=sp0; sp0=sp1; sp1=ptr;
-	      memset(lap[0],0,nz*nx*sizeof(float));
-	      memset(gp0[0],0,nz*nx*sizeof(float));
-	      memset(gp1[0],0,nz*nx*sizeof(float));
-	      memset(gp2[0],0,nz*nx*sizeof(float));
-	      for(it=nt-1; it>-1; it--)   {
-		add_source(gp1, &dres[is*ng*nt+it*ng], &gxz[is], ng, true);
-		step_forward(gp0, gp1, gp2, vv, dtz, dtx);
-		ptr=gp0; gp0=gp1; gp1=gp2; gp2=ptr;
-
-		rw_bndr(sp1, &bndr[it*(2*nz+nx)], true);
-		step_backward(lap, sp0, sp1, sp2, vv, dtz, dtx);
-		add_source(sp1, &wlt[it], &sxz[is], 1, false);
-		ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
-		
-		cal_gradient(g1, lap, gp0);
-	      }	      
+	    if (csdgather)	{
+	      gxbeg=sxbeg+is*jsx-distx;
+	      sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+	    }
+	    memset(sp0[0],0,nz*nx*sizeof(float));
+	    memset(sp1[0],0,nz*nx*sizeof(float));
+	    memset(sp2[0],0,nz*nx*sizeof(float));
+	    for(it=0; it<nt; it++)   {
+	      add_source(sp1, &wlt[it], &sxz[is], 1, true);
+	      step_forward(sp0, sp1, sp2, vv, dtz, dtx);
+	      ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
+	      rw_bndr(sp0, &bndr[it*(2*nz+nx)], false);		
+	      
+	      record_seis(dcal, gxz, sp0, ng);
+	      cal_residual(&dobs[it*ng], dcal, &dres[is*ng*nt+it*ng], ng);
+	    }
+	    
+	    ptr=sp0; sp0=sp1; sp1=ptr;
+	    memset(gp0[0],0,nz*nx*sizeof(float));
+	    memset(gp1[0],0,nz*nx*sizeof(float));
+	    memset(gp2[0],0,nz*nx*sizeof(float));
+	    for(it=nt-1; it>-1; it--)   {
+	      add_source(gp1, &dres[is*ng*nt+it*ng], &gxz[is], ng, true);
+	      step_forward(gp0, gp1, gp2, vv, dtz, dtx);
+	      ptr=gp0; gp0=gp1; gp1=gp2; gp2=ptr;
+	      
+	      rw_bndr(sp1, &bndr[it*(2*nz+nx)], true);
+	      step_backward(lap, sp0, sp1, sp2, vv, dtz, dtx);
+	      add_source(sp1, &wlt[it], &sxz[is], 1, false);
+	      ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
+	      
+	      cal_gradient(g1, lap, gp0);
+	    }	      
+	  }
+	  /* collect results for gradient calculation */
+	  if(rank==0){
+            sendbuf=MPI_IN_PLACE;
+            recvbuf=g1[0];
+	  }else{
+            sendbuf=g1[0];
+            recvbuf=NULL;
+	  }
+	  MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, comm);
+	  if(rank==0){
+	    sf_floatwrite(g1[0], nz*nx, grads);
 	  }
 
+	  if(rank==0){/* collect results from all nodes */
+	    for(is=0; is<ns; is++){
+	      j=is%size;
+	      if(j) /* receive from nonzero cpu */
+		MPI_Recv(&dres[is*ng*nt], ng*nt, MPI_FLOAT, j, j, comm, &stat);
+	    }
+	  }else{/* send results to cpu #0 */
+	    for(is=0; is<ns; is++){
+	      j=is%size;
+	      if(j==rank)
+		MPI_Send(&dres[is*ng*nt], ng*nt, MPI_FLOAT, j, j, comm);
+	    }
+	  }
+	  MPI_Bcast(dres, ng*nt*ns, MPI_FLOAT, 0, comm);
+	  if(rank==0){
+	    obj=cal_objective(dres);
+	    sf_floatwrite(&obj, 1, objs);
+	    if(verb) fprintf(stderr, "misfit=%g\n", obj);
+	    
+	    scale_gradient(g1, vv);
 
+	    if (iter>0) beta=cal_beta(g0, g1, cg);
+	    else beta=0.0;
+	    cal_conjgrad(g1, cg, beta);
+	    epsil=cal_epsilon(vv, cg);
+
+	    cal_vtmp(vtmp, vv, cg, epsil);	    
+	  }
+	  MPI_Bcast(vtmp[0], nz*nx, MPI_FLOAT, 0, comm);
+
+
+	  memset(alpha1, 0, ng*sizeof(float));
+	  memset(alpha2, 0, ng*sizeof(float));
+	  for(is=rank; is<ns; is+=size)	    {
+	    /* read shots from file */
+	    sf_seek(shots, is*ng*nt*sizeof(float), SEEK_SET);
+	    sf_floatread(dobs, ng*nt, shots);
+	    matrix_transpose(dobs, trans, nt, ng);
+	    
+	    if (csdgather)	{
+	      gxbeg=sxbeg+is*jsx-distx;
+	      sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+	    }
+	    memset(sp0[0],0,nz*nx*sizeof(float));
+	    memset(sp1[0],0,nz*nx*sizeof(float));
+	    memset(sp2[0],0,nz*nx*sizeof(float));
+	    for(it=0; it<nt; it++)   {
+	      add_source(sp1, &wlt[it], &sxz[is], 1, true);
+	      step_forward(sp0, sp1, sp2, vtmp, dtz, dtx);
+	      ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
+	      
+	      record_seis(dcal, gxz, sp0, ng);
+	      cal_alpha12(dcal, &dobs[it*ng], &dres[is*ng*nt], alpha1, alpha2);
+	    }
+	  }
+	  if(rank==0){
+            sendbuf=MPI_IN_PLACE;
+            recvbuf=alpha1;
+	  }else{
+            sendbuf=alpha1;
+            recvbuf=NULL;
+	  }
+	  MPI_Reduce(sendbuf, recvbuf, ng, MPI_FLOAT, MPI_SUM, 0, comm);
+	  if(rank==0){
+            sendbuf=MPI_IN_PLACE;
+            recvbuf=alpha2;
+	  }else{
+            sendbuf=alpha2;
+            recvbuf=NULL;
+	  }
+	  MPI_Reduce(sendbuf, recvbuf, ng, MPI_FLOAT, MPI_SUM, 0, comm);
+
+	  if(rank==0){
+	    alpha=cal_alpha(alpha1, alpha2, epsil);
+	    update_vel(vv, cg, alpha);
+	    sf_floatwrite(vv[0], nz*nx, vupdates);
+	  }
+	  MPI_Bcast(vv[0], nz*nx, MPI_FLOAT, 0, comm);
+
+	  if(rank==0){
+	    tend=MPI_Wtime();
+	    timer=tend-tstart;
+	    if(verb) fprintf(stderr,"iteration %d  %g (s)\n", iter, timer);
+	  }
 
 	}
-
 
 	free(sxz);
 	free(gxz);
@@ -450,6 +674,8 @@ int main(int argc, char* argv[])
 	free(dres);
 	free(trans);
 	free(wlt);
+	free(alpha1);
+	free(alpha2);
 	free(*vv); free(vv);
 	free(*sp0); free(sp0);
 	free(*sp1); free(sp1);
@@ -458,14 +684,12 @@ int main(int argc, char* argv[])
 	free(*gp1); free(gp1);
 	free(*gp2); free(gp2);
 	free(*lap); free(lap);
-	free(*g0); free(g0);
-	free(*g1); free(g1);
-	free(*cg); free(cg);
 	free(*vtmp); free(vtmp);
-
-	tend=MPI_Wtime();
-	timer=tend-tstart;
-	if(verb) fprintf(stderr,"rank=%d time=%g (s)\n",rank, timer);
+	free(*g1); free(g1);
+	if(rank==0){
+	  free(*g0); free(g0);
+	  free(*cg); free(cg);
+	}
 
 	MPI_Finalize();
 
