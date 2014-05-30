@@ -1,12 +1,8 @@
-
-
 \title{A numerical tour of wave propagation}
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
-\author{Pengliang Yang\footnotemark[1]\\
-\footnotemark[1]Xi'an Jiaotong University, Xi'an, China, 710049
-}
-\usetikzlibrary{decorations.pathreplacing} 
-\usetikzlibrary{scopes}
+\author{Pengliang Yang}
+
+\address{Xi'an Jiaotong University, Xi'an, China, 710049}       
 
 \righthead{Primer for wave propagation}
 \lefthead{Pengliang Yang}
@@ -220,7 +216,7 @@ The corresponding time domain equations are:
 \begin{equation}\left\{
 \begin{split}
 &\mathrm{1st-order:}
-\frac{\partial^2 p}{\partial z^2}+\frac{v}{2}\frac{\partial^2 p}{\partial x^2}
+\frac{\partial^2 p}{\partial t\,\partial z}+\frac{v}{2}\frac{\partial^2 p}{\partial x^2}
 -\frac{1}{v}\frac{\partial^2 p}{\partial t^2}=0, \mathrm{(the \, well-known\, 15^{\circ}\, wave\, equation)}\\
 &\mathrm{2nd-order:}
 \frac{\partial^3 p}{\partial t^2\partial z}-\frac{v^2}{4}\frac{\partial^3 p}{\partial x^2\partial z}-\frac{1}{v}\frac{\partial^3 p}{\partial t^3}+\frac{3v}{4}\frac{\partial^3 p}{\partial x^2\partial t}=0,  \mathrm{(45^{\circ}\, wave\, equation)}\\
@@ -279,39 +275,8 @@ The sponge ABC can be easily applied to a wide range of wave propagation problem
 %\inputdir{../}
 %\plot{pml}{width=0.6\textwidth}{A schematic diagram of extended artificial boundary area}
 
-
-\begin{figure}
-  \centering
-  \begin{tikzpicture}
-    \draw[step=0.2cm,color=gray] (-4,-4) grid (4,4);
-    \draw[below left] (-3,-3) node(s){$A_1$};
-    \draw[below left] (-3,3) node(s){$A_2$};
-    \draw[below left] (3,3) node(s){$A_3$};
-    \draw[below left] (3,-3) node(s){$A_4$};
-    \draw[below left] (-4,-4) node(s){$B_1$};
-    \draw[below left] (-4,4) node(s){$B_2$};
-    \draw[below left] (4,4) node(s){$B_3$};
-    \draw[below left] (4,-4) node(s){$B_4$};
-    \draw[very thick] (-3,-4)--(-3,4);    
-    \draw[very thick] (3,-4)--(3,4);
-    \draw[very thick] (-4,3)--(4,3);    
-    \draw[very thick] (-4,-3)--(4,-3);
-    \draw[very thick] (-4,-4)--(-4,4)--(4,4)--(4,-4)--cycle;   
-    \fill (-3,-3) circle (0.06cm) (-3,3) circle (0.06cm) (3,3) circle (0.06cm) (3,-3)circle (0.06cm);
-    \fill (-4,-4) circle (0.06cm) (-4,4) circle (0.06cm) (4,4) circle (0.06cm) (4,-4)circle (0.06cm); 
-    
-    \draw [thick,gray,decorate,decoration={brace,amplitude=5pt}] (-4,4)  -- (-3,4) 
-      node [black,midway,above=4pt,xshift=-2pt] {\footnotesize $d(x)\neq 0$};
-    \draw [thick,gray,decorate,decoration={brace,amplitude=5pt}] (3,4) -- (4,4)
-      node [black,midway,above=4pt,xshift=8pt] {\footnotesize $d(x)\neq 0$};
-    \draw [thick,gray,decorate,decoration={brace,amplitude=5pt}] (-4,-4)  -- (-4,-3) 
-      node [black,midway,left=10pt,xshift=8pt] {\footnotesize $d(z)\neq 0$};
-    \draw [thick,gray,decorate,decoration={brace,amplitude=5pt}] (-4,3) -- (-4,4)
-      node [black,midway,left=10pt,xshift=8pt] {\footnotesize $d(z)\neq 0$};
-  \end{tikzpicture}
-  \caption{A schematic diagram of extended artificial boundary area. $A_1A_2A_3A_4$ is the original model zone, which is extended to be $B_1B_2B_3B_4$  with artificial boundary. In the extended bounary area, the attenuation coeffcient $d(u)\neq 0$; In the model zone $A_1A_2A_3A_4$, $d(u)= 0$, $u=x,z$. }\label{fig:extbndr}
-\end{figure}
-
+\inputdir{Tikz}
+\plot{extbndr}{width=0.6\textwidth}{A schematic diagram of extended artificial boundary area. $A_1A_2A_3A_4$ is the original model zone, which is extended to be $B_1B_2B_3B_4$  with artificial boundary. In the extended bounary area, the attenuation coeffcient $d(u)\neq 0$; In the model zone $A_1A_2A_3A_4$, $d(u)= 0$, $u=x,z$.}
 
 
 \subsection{Perfectly Matched Layer (PML)}
@@ -543,7 +508,7 @@ in which $x_i=(2i-1)^2$, has analytic solutions. $\textbf{V} \textbf{a}=\textbf{
 The MATLAB code for solving the 2\textit{N}-order finite difference coefficients is provided in the following. 
 
 
-\lstset{language=Matlab,
+\lstset{language=matlab,
 numbers=left,
 numberstyle= \tiny,
 keywordstyle= \color{ blue!70},commentstyle=\color{red!50!green!50!blue!50},
@@ -1000,7 +965,7 @@ That is to say,
 =\mathtt{Re}\left[\left(\frac{\partial \textbf{f}(\textbf{m})}{\partial \textbf{m}}\right)^{\dagger}\Delta \textbf{p}\right]
 =\mathtt{Re}\left[\textbf{J}^{\dagger}\Delta \textbf{p}\right]
 \end{equation}
-where $\mathtt{Re}$ takes the real part, and $\textbf{J}=\frac{\partial \textbf{p}_{cal}}{\partial \textbf{m}}=\frac{\partial \textbf{f}(\textbf{m})}{\partial \textbf{m}}$ is the Jacobian matrix, i.e., the sensitivity or the Fréchet derivative matrix.
+where $\mathtt{Re}$ takes the real part, and $\textbf{J}=\frac{\partial \textbf{p}_{cal}}{\partial \textbf{m}}=\frac{\partial \textbf{f}(\textbf{m})}{\partial \textbf{m}}$ is the Jacobian matrix, i.e., the sensitivity or the Fr\'{e}chet derivative matrix.
 
 
 Differentiation of the gradient expression \eqref{eq:descent1} with respect to the model parameters gives the following expression for the Hessian $\textbf{H}$:
@@ -1130,7 +1095,7 @@ with a small parameter $\epsilon$. In practice, we chose an $\epsilon$ such that
 \max(\epsilon |\textbf{d}_k|)\leqslant \frac{\max(|\textbf{m}_k|)}{100}.
 \end{equation}
 
-\subsection{Fréchet derivative}
+\subsection{Fr\'{e}chet derivative}
 
 Recall that the basic acoustic wave equation can be specified as
 \begin{equation}\label{eq:acoustic}

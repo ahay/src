@@ -254,12 +254,12 @@ void kirmodnewton_table(int vstatus /* Type of model (vconstant(0) or vgradient(
 		b2++;
 	    }
 	    if (b1>=20) {
-		sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g \n", n+1,xx[0],xx[n+1]);
+		sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g", n+1,xx[0],xx[n+1]);
 		b3 = -1;
 		goto mark;
 	    }
 	    if (b2>=20) {
-		sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g \n", n+1,xx[0],xx[n+1]);
+		sf_warning("The ray can't be traced at Reflector %d s=%g and r=%g", n+1,xx[0],xx[n+1]);
 		b3= -1;
 		goto mark;
 	    }

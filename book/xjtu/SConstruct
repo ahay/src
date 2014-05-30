@@ -3,8 +3,9 @@ from rsf.book import *
 Papers(copyr='Xi\'an Jiaotong University',
        group='National Engineering Laboratory for Offshore Oil Exploration',
        authors = {'gpurtm':'Pengliang Yang, Baoli Wang, and Jinghuai Gao'},
-       papers=Split('gpurtm')
+       papers=Split('gpurtm primer'),
+       fig=('primer/marmfwi','vsnap','width=\\textwidth'))
        )
        
-End(use='amsmath,amsfonts,amssymb,hyperref')
+End(use='amsmath,amsfonts,amssymb,hyperref,listings,xcolor')
 

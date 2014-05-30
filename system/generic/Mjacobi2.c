@@ -23,6 +23,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool verb;
     int j, k, n, n2, i3, n3, iter, niter;
     sf_complex **a=NULL, *e=NULL;
     float s2;
@@ -40,10 +41,11 @@ int main(int argc, char* argv[])
     sf_putint(val,"n2",1);
 
     if (!sf_getint("niter",&niter)) niter=10;
+    if (!sf_getbool("verb",&verb)) verb=false;
 
     a = sf_complexalloc2(n,n);
     e = sf_complexalloc(n);
-    jacobi2_init(n,true);
+    jacobi2_init(n,verb);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_complexread(a[0],n*n,mat);

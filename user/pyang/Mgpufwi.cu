@@ -457,7 +457,7 @@ int main(int argc, char *argv[])
 	cudaEventDestroy(stop);
 
 	sf_floatwrite(objval,iter,objs);
-	sf_fileclose(shots);
+/*	sf_fileclose(shots); */
 
 	free(v0);
 	free(vv);
@@ -466,5 +466,5 @@ int main(int argc, char *argv[])
 	free(objval);
 	device_free();
 
-	return 0;
+	exit(0);
 }
