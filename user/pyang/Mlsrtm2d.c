@@ -78,6 +78,7 @@ int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 	for(i=0; i<nm; i++)	mod[i]=mm[i];
 
 	rtm2d_close();
+	sf_cgstep_close();
 }
 
 int main(int argc, char* argv[])
@@ -155,6 +156,7 @@ int main(int argc, char* argv[])
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
    	sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, niter, "verb", verb, "end");
 	rtm2d_close();
+	sf_cgstep_close();
 
 
 
@@ -172,6 +174,7 @@ int main(int argc, char* argv[])
 		if(verb) sf_warning("iteration %d;",iter+1);
     	}
 	rtm2d_close();
+	sf_cgstep_close();
 	free(w);
 */
 
