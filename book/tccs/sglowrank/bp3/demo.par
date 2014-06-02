@@ -1,0 +1,31 @@
+         order=4          scheme half-order
+           cfl=0.7        proportion of max dt/dx
+          cmin=1.0
+          cmax=5.5
+          dmin=0.5
+          dmax=5.0
+         fpeak=0.010      central frequency
+
+           nl1=0.5         z - neg
+           nr1=0.5         z - pos
+           nl2=0.5         x - neg
+           nr2=0.5         x - pos
+
+       srctype=point
+       sampord=1             sampling order
+         phase=zerophase     wavelet phase
+       refdist=0.0        reference distance
+        refamp=1.0           reference pressure 
+
+       mpi_np1=1      n_doms along axis 1
+       mpi_np2=1      n_doms along axis 2
+       mpi_np3=1      n_doms along axis 3
+       partask=1       task parallelization
+
+      movie1=p
+      
+      dump_pi=1           dump parallel/dom. decomp info
+      dump_lda=1           dump grid data for allocated arrays
+      dump_ldc=1           dump grid data for computational arrays
+     dump_term=1           dump terminator data
+        

@@ -184,10 +184,18 @@ Result('shot118','shot118 boff118',
 Flow('static2','elevation static','add ${SOURCES[1]}')
 Flow('lines2','lines static2','datstretch datum=${SOURCES[1]}')
 
+Result('lines2',
+       '''
+       transp memsize=1000 plane=23 |
+       byte gainpanel=each |
+       grey3 frame1=500 frame2=100 frame3=120 flat=n
+       title="Elevation Statics Applied"
+       ''')
+
 ##################
 # Convert to CMPs
 ##################
-Flow('rcmps mask','lines',
+Flow('rcmps mask','lines2',
      '''
      shot2cmp mask=${TARGETS[1]} half=n |
      put o2=-1.75 d2=0.05 label2="Half-offset"
@@ -215,7 +223,7 @@ Result('rstack','fold rstack',
 # First break mute
 ##################
 # Select 4 shots every tenth sequential shot
-Flow('inpmute','lines',
+Flow('inpmute','lines2',
      '''
      window f3=198 j3=10 n3=4 
      ''')
@@ -237,7 +245,7 @@ Result('outmute',
        ''')
 
 # First break muting for all shots
-Flow('mutes','lines',
+Flow('mutes','lines2',
      '''
      mutter t0=0.1 v0=5.2 | 
      transp memsize=1000 plane=23
@@ -354,7 +362,7 @@ Flow('cmps','signals',
 Result('cmps',
        '''
        byte gainpanel=each | window j3=2 |
-       grey3 frame1=500 frame2=36 frame3=642 flat=n
+       grey3 frame1=500 frame2=36 frame3=321 flat=n
        title="CMP gathers" point1=0.7 label2=Offset label3=Midpoint
        ''')
 
@@ -391,7 +399,7 @@ Flow('nmo','cmps vel',
 Result('nmo',
        '''
        byte gainpanel=each | window j3=2 |
-       grey3 frame1=500 frame2=36 frame3=642 flat=n
+       grey3 frame1=500 frame2=36 frame3=321 flat=n
        title="NMOed Data" point1=0.7
        label2=Offset label3=Midpoint
        ''')

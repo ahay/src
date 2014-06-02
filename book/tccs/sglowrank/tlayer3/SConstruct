@@ -143,31 +143,31 @@ iwr = 'iwrec'
 iws = 'iwsnap' 
 iwtr= 'iwtr'
 iwtrfft = 'iwtrfft'
-iw(iww, iwr, 'srcp', 'iwvel', 'iwden', par, '', 0)
-Flow(iws, 'movie_p', 'window n3=1 f3=%(snt)d ' %par)
-Flow(iwtr,iws, 'window n2=1 f2=250 | scale axis=1 ')
-Result(iws,
-       '''
-       put unit1="km" unit2="km" d1=%g d2=%g label2="Distance" label1="Depth" |
-       grey screenratio=1 pclip=95
-       title="Fourth-order SGFD method"
-       '''%(par['dz']/1000,par['dx']/1000))
+#iw(iww, iwr, 'srcp', 'iwvel', 'iwden', par, '', 0)
+#Flow(iws, 'movie_p', 'window n3=1 f3=%(snt)d ' %par)
+#Flow(iwtr,iws, 'window n2=1 f2=250 | scale axis=1 ')
+#Result(iws,
+#       '''
+#       put unit1="km" unit2="km" d1=%g d2=%g label2="Distance" label1="Depth" |
+#       grey screenratio=1 pclip=95
+#       title="Fourth-order SGFD method"
+#       '''%(par['dz']/1000,par['dx']/1000))
 
 
-Plot('iwtr',
-     '''
-     put label1='Depth' unit1='km' d1=%g |
-     graph  wantaxis2=n wherexlabel=top title="Fourth-order SGFD method"  labelsz=12 titlesz=12
-            wheretitle=bottom  yreverse=n transp=n plotfat=7 plotcol=7  screenratio=0.3 screenht=8 
-     '''%(par['dz']/1000))
-Plot('lrtr',
-     '''
-     put label1='Depth' unit1='km' d1=%g | 
-     graph  wantaxis2=n wherexlabel=top title="SGL method"  labelsz=12 titlesz=12
-            wheretitle=bottom yreverse=n transp=n plotfat=7 plotcol=7  screenratio=0.3 screenht=8 
-     '''%(par['dz']/1000))
+#Plot('iwtr',
+#     '''
+#     put label1='Depth' unit1='km' d1=%g |
+#     graph  wantaxis2=n wherexlabel=top title="Fourth-order SGFD method"  labelsz=12 titlesz=12
+#            wheretitle=bottom  yreverse=n transp=n plotfat=7 plotcol=7  screenratio=0.3 screenht=8 
+#     '''%(par['dz']/1000))
+#Plot('lrtr',
+#     '''
+#     put label1='Depth' unit1='km' d1=%g | 
+#     graph  wantaxis2=n wherexlabel=top title="SGL method"  labelsz=12 titlesz=12
+#            wheretitle=bottom yreverse=n transp=n plotfat=7 plotcol=7  screenratio=0.3 screenht=8 
+#     '''%(par['dz']/1000))
 
-Result('trace','iwtr lrtr','OverUnderIso')
+#Result('trace','iwtr lrtr','OverUnderIso')
 
 # ------------------------------------------------------------------------------
 
