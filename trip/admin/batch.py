@@ -136,7 +136,7 @@ def getFlowSignature(workdir, jobdict, envdict):
         if bsys == None:
             print 'iwave.signature: failed to parse batch submission system'
             return
-        
+
         # create batch file names
         thisbat = jobdict['job'] + '.' + bsys['suff']
         
@@ -151,13 +151,16 @@ def getFlowSignature(workdir, jobdict, envdict):
                     jobdict['exe']['nodes'],
                     jobdict['exe']['ppn'],
                     jobdict['cmd'])
-        
-        workcmd = jobdict['pre'] + '; cd ' + workdir + \
+
+        workcmd = jobdict['pre'] + \
             '; /bin/mv ' + os.path.join(THISPATH,thisbat) + \
-            ' ./' + thisbat  + '; /bin/rm -f jobid; ' + \
-            bsys['bshl'] + ' -c "' + \
-            bsys['bcmd'] + ' ' + thisbat + '"' \
+            ' ./' + thisbat  + \
+            '; /bin/rm -f jobid; ' + \
+            bsys['bshl'] + envdict[jobdict['exe']['platf']]['local'] + \
+            ' bash -c "' + bsys['bcmd'] + ' ' + thisbat + '"' + \
             '; (while [ ! -f ./jobid ]; do (sleep 1); done)'
+
+#            bsys['bcmd'] + ' ' + thisbat + '"' \
 
     elif isMPI(jobdict):
 
@@ -211,7 +214,6 @@ def writeScript(batch,job,path,queue,mail,acct,wall,nodes,ppn,exe):
         f.write('#SBATCH --mail-type=end\n')
         f.write('#SBATCH --mail-user='+mail + '\n')
         f.write('#SBATCH --uid=' + os.getenv('USER') + '\n')
-        f.write('#SBATCH --get-user-env\n')
         f.write('#SBATCH -o '+os.path.join(THISPATH,path)+'/cout.txt\n')
         f.write('#SBATCH -e '+os.path.join(THISPATH,path)+'/cerr.txt\n')
         f.write('cd '+os.path.join(THISPATH,path)+'\n')
@@ -267,7 +269,7 @@ def getBatchAttributes(batch):
         var = os.getenv(i)
         if var != None:
             exp = exp + ['export ' + i + '=' + var + '; ']
-            
+
     syslist = ['slurm', 'pbs']
     bcmdlist = ['/usr/bin/sbatch', '/usr/bin/qsub']
     wcmdlist = ['--dependency=afterok:', '-W depend=afterok:']
@@ -288,7 +290,7 @@ def getBatchAttributes(batch):
         print ' '.join(syslist)
         return
 
-    bshl = ' '.join(exp) + ' bash'
+    bshl = ' '.join(exp)
     
     bsys = {'bcmd' : bcmd, 
             'bshl' : bshl,
