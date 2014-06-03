@@ -55,6 +55,8 @@ Result('after3','after-int',plsurf('After'))
 Flow('diff','before-fill after-int','add scale=1,-1 ${SOURCES[1]}')
 Result('diff',grey('Difference') + ' allpos=y minval=0')
 
+# Result('ldiff','diff',grey('Difference') + ' allpos=y minval=0 color=linearlfb')
+
 Result('diff3','diff',plsurf('Difference'))
     
 End()
