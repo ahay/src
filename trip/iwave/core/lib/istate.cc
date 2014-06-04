@@ -1393,8 +1393,9 @@ namespace TSOpt {
 	    }
 	    
 	    // first time through, call check
+            if (!dryrun) {
 	    if (it==start[g.dim]) ic.get_check()(w->getRDOMArray()[0],fdm,stream);
-
+            }
 	    if (dryrun) {
 	      drystr<<"\nIWaveSim::run fwd step "<<it<<" -> "<<it+1<<"\n";
 	    }
@@ -1456,7 +1457,9 @@ namespace TSOpt {
 	    }
 	  }
 	  // check
+          if (!dryrun) {
           ic.get_check()(w->getRDOMArray()[0],fdm,stream);
+          }
 
 	  // load adjoint data 
 	  step[g.dim]=at;
@@ -1545,7 +1548,9 @@ namespace TSOpt {
 	  }
 
 	  // check if it=start
+          if (!dryrun) {
 	  if (it==start[g.dim]) ic.get_check()(w->getRDOMArray()[0],fdm,stream);
+          }
 
 	  ACTION::action whatodo;
 
