@@ -22,6 +22,7 @@ Note: Acquistion geometry represented by mask operator.
 #include <math.h>
 #include <complex.h>
 #include <fftw3.h>
+#include <decart.h>
 
 #include "pthresh.h"
 
@@ -29,6 +30,7 @@ int main(int argc, char* argv[])
 {
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
+	int npadded[SF_MAX_DIM],indxpadded[SF_MAX_DIM],indxnotpadded[SF_MAX_DIM];
     	float thr, pclip;
     	float *dobs_t, *thresh, *mask;
     	char key[7];
@@ -67,8 +69,28 @@ int main(int argc, char* argv[])
 
     	n1=n[0];
     	n2=sf_leftsize(in,1);
-	nw=n1/2+1;
-	num=nw*n2;/* total number of elements in frequency domain */
+	/* use a 25 point padd in all directions */
+	for (i=0; i<SF_MAX_DIM; i++){
+	  npadded[i]=1;
+	}
+	for (i=0; i<dim; i++){
+	  npadded[i]=n[i]+25;
+	}
+	n2padded=1
+	for (i=1; i<dim; i++){
+	  n2padded*=npadded[i];
+	}
+	
+	
+	for (i2=0; i<n2; i2++){
+	  sf_line2cart(dim-1,&(n[1]),i2*n1,&(ii[1]));
+	  indxpadded=sf_cart2line(dim-1,&(npadded[1]),&(ii[1]));
+	  sf_floatread(&(dobs_t[indxpadded*npadded[0]]),n1,in   );
+	  sf_floatread(&(mask[indxpadded]             ), 1,Fmask);
+	}
+				  
+	nw=npadded[0]/2+1;
+	num=nw*n2padded;/* total number of elements in frequency domain */
  
     	/* allocate data and mask arrays */
 	thresh=(float*)malloc(nw*n2*sizeof(float));
@@ -96,7 +118,7 @@ int main(int argc, char* argv[])
 	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
 	memset(dd,0,num*sizeof(fftwf_complex));
 
-    	for(iter=0; iter<niter; iter++)
+    	For(iter=0; iter<niter; iter++)
     	{
 		/* mm<--A^t dd */
 		memcpy(mm, dd, num*sizeof(fftwf_complex));
