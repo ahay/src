@@ -27,7 +27,7 @@ Flow(['mappedstack.rsf','mappedstack_hdr.rsf'],
         outheaders=${TARGETS[1]} 
      ''',stdout=0,stdin=0)
 
-Plot('mappedstack','grey title="tah stack"',view=1)
+Plot('mappedstack','window n1=1000 j3=20 | grey title="tah stack"',view=1)
 Result('mappedstack3d','mappedstack',
        '''
        window n1=1000

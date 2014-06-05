@@ -1,0 +1,51 @@
+from rsf.proj import *
+
+# courtesy of Sergey :-)
+
+# 2-D plane wave
+Flow('spike2',None,'spike n1=100 n2=10 k1=20 | ricker1 frequency=40')
+Flow('plane2','spike2','window n1=1 | math output="0.05*x1" ')
+Flow('data2','spike2 plane2','datstretch datum=${SOURCES[1]} inv=y')
+
+Result('data2','wiggle transp=y yreverse=y poly=y title="2-D Plane Wave" ')
+
+# 5-D plane wave
+
+Flow('spike5',None,'spike n1=100 n2=10 n3=10 n4=10 n5=10 k1=20 | ricker1 frequency=40')
+
+# slopes
+p = (-0.025,0,0.1,0.05)
+
+Flow('plane5','spike5','window n1=1 | math output="%g*x1+%g*x2+%g*x3+%g*x4" ' % p)
+Flow('data5','spike5 plane5','datstretch datum=${SOURCES[1]} inv=y')
+
+Result('data5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D Plane Wave" ')
+Plot('data5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D Plane Wave" ')
+
+# Extract 3-D cube
+Flow('data3','data5','window n3=1 n5=1 f3=5 f5=5')
+Plot('data3','byte | grey3 frame1=30 frame2=5 frame3=5 title="3-D Plane Wave" flat=n point1=0.9')
+
+# Randomly remove traces
+perc = 90
+Flow('mask','plane5','noise rep=y seed=2014 type=n mean=0.5 | mask min=%g  | dd type=float' % (perc/100.0))
+
+Flow('idata5','mask data5','spray axis=1 n=100 d=0.004 | mul ${SOURCES[1]}')
+Result('idata5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D Plane Wave" ')
+Plot('idata5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D Plane Wave" ')
+
+# Extract 3-D cube
+Flow('idata3','idata5','window n3=1 n5=1 f3=5 f5=5')
+Plot('idata3','byte gainpanel=all | grey3 frame1=30 frame2=5 frame3=5 title="3-D Plane Wave with missing traces" flat=n point1=0.9')
+
+Flow('rec5','idata5 mask','pocs mask=${SOURCES[1]} niter=50 verb=y normp=0.4 pclip=3')
+Result('rec5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D reconstructed Plane Wave" ')
+Plot('rec5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D reconstructed Plane Wave" ')
+Result('cmp5','data5 idata5 rec5','SideBySideIso')
+
+Flow('rec3','rec5','window n3=1 n5=1 f3=5 f5=5')
+Plot('rec3','byte gainpanel=all | grey3 frame1=30 frame2=5 frame3=5 title="3-D Plane Wave with missing traces" flat=n point1=0.9')
+
+Result('cmp3','data3 idata3 rec3','SideBySideIso')
+
+End()
