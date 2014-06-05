@@ -24,20 +24,21 @@
 */
 
 #include <rsf.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-#include "svd.h"
 
 float coh1(float **cxy, int J)
+/*< 1st generation coherence >*/
 {
 	float t=cxy[0][0]*sqrtf(cxy[1][1]*cxy[2][2]);
-	if (t<=FLT_EPSILON) return 1.0;
-	return sqrtf(cxy[0][1]*cxy[0][2]/t);
+	return sqrtf(cxy[0][1]*cxy[0][2]/(t+FLT_EPSILON));
 }
 
 float coh2(float **cxy, int J)
+/*< 2nd generation coherence >*/
 {
 	int i,j;
 	float s1,s2;
@@ -47,30 +48,48 @@ float coh2(float **cxy, int J)
 		for(j=0; j<J; j++) s1+=cxy[i][j];
 		s2+=cxy[i][i];
 	}
-	return (s1/s2/J);
+	return (s1/(s2+FLT_EPSILON)/J);
 }
 
 
-
-static float* d, ** tmp; 
-static bool Allocated = false; /* if d and tmp are allocated */
 float coh3(float **cxy, int J)
+/*< find the maximum eigenvalue using power method
+NB: sum of eigenvalues=trace of cxy >*/
 {
-	int i;
-	float *d, s, **tmp;
+	int i, j, k, maxidx, niter=30;
+	float s, m1, m;
+	float *u, *v;
+	u=(float*)malloc(J*sizeof(float));/* alloc out of this function for efficiency */
+	v=(float*)malloc(J*sizeof(float));
+
+	s=m1=0;
+	for(i=0; i<J; i++) {
+		s+=cxy[i][i];/* trace of matrix */
+		u[i]=1.0;/* initialize u */
+	}
 	
-    	if (!Allocated) {
-		Allocated = true;
-		d=(float*)malloc(J*sizeof(float));
-		tmp=sf_floatalloc2(J,J);
-    	}
-	memset(d,0,J*sizeof(float));
-	memset(tmp[0],0, J*J*sizeof(float));
+	for(k=0; k<niter; k++){
+		memset(v, 0, J*sizeof(float));
+		for(i=0; i<J; i++)
+		for(j=0; j<J; j++)
+			v[i]+=cxy[i][j]*u[j];/* v=A u*/
 
-	svdcmp(cxy, J, J, d, tmp);
-	for(i=0; i<J; i++) s+=d[i]*d[i];
+		m=fabsf(v[0]); maxidx=0;
+		for(i=0; i<J; i++) { 
+			maxidx=(m>fabsf(v[i]))?(maxidx):(i);
+			m=(m>fabsf(v[i]))?(m):(fabsf(v[i])); 
+		}
+		m=v[maxidx];
+		for(i=0; i<J; i++) u[i]=v[i]/m;
 
-	return (d[0]*d[0]/s);
+		if(fabsf(m-m1)<1.e-6) break;
+		m1=m;	
+	}
+
+	free(u);
+	free(v);
+
+	return (m/(s+FLT_EPSILON));
 }
 
 int main(int argc, char *argv[])
@@ -90,23 +109,23 @@ int main(int argc, char *argv[])
     	if (!sf_histint(in,"n2",&n2)) 	sf_error("No n2= in input");
     	if (!sf_histint(in,"n3",&n3)) 	n3=1;	/* default: n3=1 if 2D */
 
-    	if (!sf_getint("ntw",&ntw)) 	ntw=5; /* radius of the window in t */
-    	if (!sf_getint("nxw",&nxw)) 	nxw=5; /* radius of the window in x */
-    	if (!sf_getint("nyw",&nyw)) 	nyw=5; /* radius of the window in y */
+    	if (!sf_getint("ntw",&ntw)) 	ntw=10; /* radius of the window in t */
+    	if (!sf_getint("nxw",&nxw)) 	nxw=1; /* radius of the window in x */
+    	if (!sf_getint("nyw",&nyw)) 	nyw=1; /* radius of the window in y */
 	if(!(mode=sf_getstring("mode"))) mode = "c3"; /* coherence type: c1,c2,c3 */
 	switch(mode[1])
 	{
-		case '2': cohn=coh2; break;
 		case '3': cohn=coh3; break;
-		default: cohn=coh1; nxw=1; nyw=1;
+		case '2': cohn=coh2; break;
+		default: cohn=coh1;
 	}
 
+	J=(2*nxw+1)*(2*nyw+1);
+	cxy=sf_floatalloc2(J,J);
 	u1 = sf_floatalloc3(n1, n2, n3);
 	u2 = sf_floatalloc3(n1, n2, n3);
 	sf_floatread(u1[0][0], n1*n2*n3, in);
-
-	J=(2*nxw+1)*(2*nyw+1);
-	cxy=sf_floatalloc2(J,J);	
+	
 
 	for(i3=0; i3<n3; i3++)
 	for(i2=0; i2<n2; i2++)
@@ -117,8 +136,8 @@ int main(int argc, char *argv[])
 		for(k3=-nyw; k3<=nyw; k3++)
 		for(k2=-nxw; k2<=nxw; k2++)
 		{
-			px=j2+nxw+J*(j3+nyw);
-			py=k2+nxw+J*(k3+nyw);
+			px=j2+nxw+(2*nxw+1)*(j3+nyw);
+			py=k2+nxw+(2*nxw+1)*(k3+nyw);
 			s=0;
 			for(j1=-ntw; j1<=ntw; j1++)
 			{
