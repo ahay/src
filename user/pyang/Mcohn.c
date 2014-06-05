@@ -18,9 +18,12 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-  Reference: Marfurt, Kurt J., et al. "Coherency calculations in the presence 
+  Reference: 
+	1) Marfurt, Kurt J., et al. "Coherency calculations in the presence 
 	of structural dip." Geophysics 64.1 (1999): 104-111.
-
+	2) Wang, Xiaokai, et al. "An efficient implementation of 
+	eigenstructure-based coherence algorithm using recursion strategies 
+	and the power method." Journal of Applied Geophysics 82 (2012): 11-18.
 */
 
 #include <rsf.h>
