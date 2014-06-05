@@ -358,6 +358,7 @@ int main(int argc, char* argv[])
 	}
 
 	memcpy(outtrace,superbin_traces [iitrace],n1_traces*sizeof(int));
+	memcpy(outheader,superbin_headers [iitrace],n1_traces*sizeof(int));
 
 	put_tah(outtrace, outheader, n1_traces, n1_headers, out);
       
