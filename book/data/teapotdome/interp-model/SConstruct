@@ -38,8 +38,12 @@ Plot('idata5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D Plane Wave" ')
 Flow('idata3','idata5','window n3=1 n5=1 f3=5 f5=5')
 Plot('idata3','byte gainpanel=all | grey3 frame1=30 frame2=5 frame3=5 title="3-D Plane Wave with missing traces" flat=n point1=0.9')
 
-Flow('rec5','idata5 mask','pocs mask=${SOURCES[1]} niter=50 verb=y normp=0.4 pclip=3')
+# 5d reconstruction using sfpocs or sfistinterp
+Flow('rec5','idata5 mask','karlposc istinterp mask=${SOURCES[1]} niter=200 verb=y normp=0.4 pclip=0.001')
 Result('rec5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D reconstructed Plane Wave" ')
+Result('rec5w','rec5','put n2=10 n3=100 n4=1 n5=1 | wiggle transp=y yreverse=y poly=y title="2-D Plane Wave"')
+
+
 Plot('rec5','put n2=1000 n3=1 n4=1 n5=1 | grey title="5-D reconstructed Plane Wave" ')
 Result('cmp5','data5 idata5 rec5','SideBySideIso')
 
