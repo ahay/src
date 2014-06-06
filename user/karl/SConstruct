@@ -25,16 +25,21 @@ tahscscale
 lintshape2d
 tah5dinterp
 karlistinterp
-karlposc
+karlpocs
 '''
-
-src = Glob('[a-z]*.c')
+#karlistinterp
+#karlposc
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
             LIBPATH=[RSFSRC+'/lib'],
             LIBS=[env.get('DYNLIB','')+'rsfsegy',
                   env.get('DYNLIB','')+'su',
                   env.get('DYNLIB','')+'rsf'])
+# fftw settings
+fftw = env.get('FFTW')
+if fftw:
+    env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+src = Glob('[a-z]*.c')
 
 for source in src:
     inc = env.RSF_Include(source,prefix='')
@@ -45,7 +50,11 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if fftw:
+        env.StaticObject('M'+prog+'.c')
+        prog = env.Program(prog,map(lambda x: x + '.o',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw')
     if root:
         env.Install(bindir,prog)
 
