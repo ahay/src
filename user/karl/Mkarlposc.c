@@ -22,7 +22,6 @@ Note: Acquistion geometry represented by mask operator.
 #include <math.h>
 #include <complex.h>
 #include <fftw3.h>
-#include <decart.h>
 
 #include "pthresh.h"
 
@@ -30,7 +29,9 @@ int main(int argc, char* argv[])
 {
     	bool verb;
     	int i, i1, i2, index, n1, n2, num, dim, n[SF_MAX_DIM], nw, iter, niter, nthr;
-	int npadded[SF_MAX_DIM],indxpadded[SF_MAX_DIM],indxnotpadded[SF_MAX_DIM];
+	int npad;
+	int npadded[SF_MAX_DIM],n1padded, n2padded, indxfile,ii[SF_MAX_DIM];
+	int indxpadded;
     	float thr, pclip;
     	float *dobs_t, *thresh, *mask;
     	char key[7];
@@ -69,67 +70,87 @@ int main(int argc, char* argv[])
 
     	n1=n[0];
     	n2=sf_leftsize(in,1);
-	/* use a 25 point padd in all directions */
 	for (i=0; i<SF_MAX_DIM; i++){
 	  npadded[i]=1;
 	}
-	for (i=0; i<dim; i++){
-	  npadded[i]=n[i]+25;
-	}
-	n2padded=1
+	npad=10;
+	/* if necessary increase n[0] to an even number, then pad */
+	npadded[0]=((n[0]+1)/2)*2+npad; 
+	n1padded=npadded[0];
+	n2padded=1;
 	for (i=1; i<dim; i++){
+	  fprintf(stderr,"n[%d]=%d n2padded=%d\n",i,n[i],n2padded);
+	  if(n[i]==1){
+	    npadded[i]=n[i];
+	    fprintf(stderr,"dim=%d and n[%d]=%d.  Why?\n",dim,i,n[i]);
+	  }  else {
+	    npadded[i]=n[i]+npad;
+	  }
 	  n2padded*=npadded[i];
 	}
 	
-	
-	for (i2=0; i<n2; i2++){
-	  sf_line2cart(dim-1,&(n[1]),i2*n1,&(ii[1]));
-	  indxpadded=sf_cart2line(dim-1,&(npadded[1]),&(ii[1]));
-	  sf_floatread(&(dobs_t[indxpadded*npadded[0]]),n1,in   );
-	  sf_floatread(&(mask[indxpadded]             ), 1,Fmask);
-	}
-				  
-	nw=npadded[0]/2+1;
+	nw=n1padded/2+1;
 	num=nw*n2padded;/* total number of elements in frequency domain */
- 
+	fprintf(stderr,"n1padded=%d, n2padded=%d, nw=%d, num=%d\n",
+		n1padded   , n2padded   , nw   , num);
     	/* allocate data and mask arrays */
-	thresh=(float*)malloc(nw*n2*sizeof(float));
-    	dobs_t=(float*)fftwf_malloc(n1*n2*sizeof(float)); /* data in time domain*/
-    	dobs=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
-    	dd=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
-    	mm=(fftwf_complex*)fftwf_malloc(nw*n2*sizeof(fftwf_complex));
+	thresh=(float*)            malloc(nw      *n2padded*sizeof(float));
+    	dobs_t=(float*)      fftwf_malloc(n1padded*n2padded*sizeof(float)); 
+    	dobs=(fftwf_complex*)fftwf_malloc(nw      *n2padded*sizeof(fftwf_complex));
+    	dd=(fftwf_complex*)  fftwf_malloc(nw      *n2padded*sizeof(fftwf_complex));
+    	mm=(fftwf_complex*)  fftwf_malloc(nw      *n2padded*sizeof(fftwf_complex));
 
-    	fft1=fftwf_plan_many_dft_r2c(1, &n1, n2, dobs_t, &n1, 1, n1, dobs, &n1, 1, nw, FFTW_MEASURE);	
-   	ifft1=fftwf_plan_many_dft_c2r(1, &n1, n2, dobs, &n1, 1, nw, dobs_t, &n1, 1, n1, FFTW_MEASURE);
-	fft2=fftwf_plan_many_dft(dim-1, &n[1], nw, mm, &n[1], nw, 1, mm, &n[1], nw, 1, FFTW_FORWARD,FFTW_MEASURE);
-	ifft2=fftwf_plan_many_dft(dim-1, &n[1], nw, mm, &n[1], nw, 1, mm, &n[1], nw, 1, FFTW_BACKWARD,FFTW_MEASURE);
-
-	/* initialization */
-	/* read the data into memory */
-	/* kls need to read and skip over pad space */
-    	sf_floatread(dobs_t, n1*n2, in);
     	if (NULL != sf_getstring("mask")){
-		mask=sf_floatalloc(n2);
-		sf_floatread(mask,n2,Fmask);
-    	}
+		mask=sf_floatalloc(n2padded);
+    	} else sf_error("mask needed. the name of the mask file.");
 
+	fprintf(stderr,"initialize data and mask\n");
+	/* initialize the input data and mask arrays */
+	memset(dobs_t,0,n1padded*n2padded*sizeof(float));
+	memset(mask,0,n2padded*sizeof(float));
+	for (indxfile=0; indxfile<n1*n2; indxfile+=n1){
+	  sf_line2cart(dim,n,indxfile,ii);
+	  indxpadded=sf_cart2line(dim,npadded,ii);
+	  if(0)fprintf(stderr,
+		  "indxpadded=%d,n1padded*n2padded=%d,indxpadded+n1=%d\n"
+		  ,indxpadded   ,n1padded*n2padded   ,indxpadded+n1);
+	  sf_floatread(&(dobs_t[indxpadded         ]),n1,in   );
+	  sf_floatread(&(mask  [indxpadded/n1padded]), 1,Fmask);
+	}
+
+	fprintf(stderr,"fft1=fftwf_plan\n");
+      /*fft1=fftwf_plan_many_dft_r2c(1, &n1      , n2      , dobs_t, &n1      , 1, n1      , dobs, &n1,       1, nw, FFTW_MEASURE);*/
+     	fft1=fftwf_plan_many_dft_r2c(1, &n1padded, n2padded, dobs_t, &n1padded, 1, n1padded, dobs, &n1padded, 1, nw, FFTW_MEASURE);	
+	fprintf(stderr,"ifft1=fftwf_plan\n");
+   	ifft1=fftwf_plan_many_dft_c2r(1, &n1padded, n2padded, dobs, &n1padded, 1, nw, dobs_t, &n1padded, 1, n1padded, FFTW_MEASURE);
+	fprintf(stderr,"fft2=fftwf_plan\n");
+	fft2=fftwf_plan_many_dft(dim-1, &npadded[1], nw, mm, &npadded[1], nw, 1, mm, &npadded[1], nw, 1, FFTW_FORWARD,FFTW_MEASURE);
+	fprintf(stderr,"ifft2=fftwf_plan\n");
+	ifft2=fftwf_plan_many_dft(dim-1, &npadded[1], nw, mm, &npadded[1], nw, 1, mm, &npadded[1], nw, 1, FFTW_BACKWARD,FFTW_MEASURE);
+
+	fprintf(stderr,"fftwf_execute\n");
 	/*transform the data from time domain to frequency domain: tdat-->wdat*/
 	fftwf_execute(fft1);
-	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1);
+	fprintf(stderr,"fft normalize\n");
+	for(i=0; i<num; i++) dobs[i]/=sqrtf(n1padded);
+	fprintf(stderr,"initialize dd to 0\n");
 	memset(dd,0,num*sizeof(fftwf_complex));
 
-    	For(iter=0; iter<niter; iter++)
+    	for(iter=0; iter<niter; iter++)
     	{
-		/* mm<--A^t dd */
+	        /* mm<--A^t dd */
+	        fprintf(stderr,"memcpy\n");
 		memcpy(mm, dd, num*sizeof(fftwf_complex));
+		fprintf(stderr,"fftw\n");
 		fftwf_execute(fft2);
-		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);
+		for(i=0; i<num; i++) mm[i]/=sqrtf(n2padded);
 
+		fprintf(stderr,"threshold\n");
 		/* perform hard thresholding: mm<--T{mm} */
 		for(i=0; i<num; i++)	thresh[i]=cabsf(mm[i]);
 
 	   	nthr = 0.5+num*(1.-0.01*pclip);
-		fprintf(stderr,"num=%d,nth=%d\n,nthr=%d\n",num,nthr); 
+		fprintf(stderr,"num=%d,nthr=%d\n",num,nthr); 
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
 		thr=sf_quantile(nthr,num,thresh);
@@ -144,10 +165,10 @@ int main(int argc, char* argv[])
 		/* mm<--A mm*/
 		fftwf_execute(ifft2);
 
-		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);		
+		for(i=0; i<num; i++) mm[i]/=sqrtf(n2padded);		
 
 		/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
-		for(i2=0; i2<n2; i2++)
+		for(i2=0; i2<n2padded; i2++)
 		for(i1=0; i1<nw; i1++)
 		{ 
 			index=i1+nw*i2;
@@ -160,8 +181,14 @@ int main(int argc, char* argv[])
 	/*transform the data from frequency domain to time domain: wdat-->tdat*/
 	memcpy(dobs, dd, num*sizeof(fftwf_complex));
 	fftwf_execute(ifft1);
-	for(i=0; i<n1*n2; i++) dobs_t[i]/=sqrtf(n1);
-    	sf_floatwrite(dobs_t, n1*n2, out);/* output reconstructed seismograms */
+	for(i=0; i<n1padded*n2padded; i++) dobs_t[i]/=sqrtf(n1padded);
+
+	/* write the data from the padded memory array to output file */	
+    	for (indxfile=0; indxfile<n1*n2; indxfile+=n1){
+	  sf_line2cart(dim,n,indxfile,ii);
+	  indxpadded=sf_cart2line(dim,npadded,ii);
+	  sf_floatwrite(&(dobs_t[indxpadded]),n1,out   );
+	}
 
 	free(thresh);
 	fftwf_free(dobs_t);	
