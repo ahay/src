@@ -105,8 +105,9 @@ int main(int argc, char ** argv) {
           AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
           
           opeval.getDeriv().applyOp(min,mout);
-    
+      
 #ifdef IWAVE_USE_MPI
+          }
     MPI_Finalize();
 #endif
   }
