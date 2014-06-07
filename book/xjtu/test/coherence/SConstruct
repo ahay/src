@@ -1,0 +1,17 @@
+from rsf.proj import *
+
+Flow('data','dat3d_601x401x681.bin',
+	'''
+     	echo in=${SOURCES[0]} n1=601 n2=401 n3=681 data_format=native_float |
+     	put d1=0.001 o1=0 label1=Depth unit1=s
+     	 d2=0.02 o2=0 label2=xline unit2=km
+     	 d3=0.02 o3=0 label3=iline unit3=km |
+	sfwindow j1=3 j2=3 j3=3 
+	''')
+Result('data','byte allpos=n gainpanel=all | sfgrey3 color=j frame1=80 frame2=80 frame3=85')
+
+Flow('coh3d', 'data','sfcohn mode=c3')
+Result('coh3d','byte allpos=n gainpanel=all | sfgrey3 color=i frame1=80 frame2=80 frame3=85')
+
+
+End()
