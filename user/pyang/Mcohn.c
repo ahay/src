@@ -56,15 +56,13 @@ float coh2(float **cxy, int J)
 }
 
 
+static	float *u, *v;
 float coh3(float **cxy, int J)
 /*< find the maximum eigenvalue using power method
 NB: sum of eigenvalues=trace of cxy >*/
 {
 	int i, j, k, maxidx, niter=30;
-	float s, m1, m;
-	float *u, *v;
-	u=(float*)malloc(J*sizeof(float));/* alloc out of this function for efficiency */
-	v=(float*)malloc(J*sizeof(float));
+	float s, t, m1, m;
 
 	s=m1=0;
 	for(i=0; i<J; i++) {
@@ -73,10 +71,12 @@ NB: sum of eigenvalues=trace of cxy >*/
 	}
 	
 	for(k=0; k<niter; k++){
-		memset(v, 0, J*sizeof(float));
-		for(i=0; i<J; i++)
-		for(j=0; j<J; j++)
-			v[i]+=cxy[i][j]*u[j];/* v=A u*/
+		for(i=0; i<J; i++){
+			t=0.0;
+			for(j=0; j<J; j++)
+				t+=cxy[i][j]*u[j];/* v=A u*/
+			v[i]=t;			
+		}
 
 		m=fabsf(v[0]); maxidx=0;
 		for(i=0; i<J; i++) { 
@@ -89,10 +89,6 @@ NB: sum of eigenvalues=trace of cxy >*/
 		if(fabsf(m-m1)<1.e-6) break;
 		m1=m;	
 	}
-
-	free(u);
-	free(v);
-
 	return (m/(s+FLT_EPSILON));
 }
 
@@ -117,19 +113,24 @@ int main(int argc, char *argv[])
     	if (!sf_getint("nxw",&nxw)) 	nxw=1; /* radius of the window in x */
     	if (!sf_getint("nyw",&nyw)) 	nyw=1; /* radius of the window in y */
 	if(!(mode=sf_getstring("mode"))) mode = "c3"; /* coherence type: c1,c2,c3 */
+	J=(2*nxw+1)*(2*nyw+1);
 	switch(mode[1])
 	{
-		case '3': cohn=coh3; break;
-		case '2': cohn=coh2; break;
+		case '3': cohn=coh3; 
+			u=(float*)malloc(J*sizeof(float));
+			v=(float*)malloc(J*sizeof(float));
+			memset(u, 0, J*sizeof(float));
+			memset(v, 0, J*sizeof(float));
+			break;
+		case '2': cohn=coh2; 
+			break;
 		default: cohn=coh1;
 	}
 
-	J=(2*nxw+1)*(2*nyw+1);
 	cxy=sf_floatalloc2(J,J);
 	u1 = sf_floatalloc3(n1, n2, n3);
 	u2 = sf_floatalloc3(n1, n2, n3);
-	sf_floatread(u1[0][0], n1*n2*n3, in);
-	
+	sf_floatread(u1[0][0], n1*n2*n3, in);	
 
 	for(i3=0; i3<n3; i3++)
 	for(i2=0; i2<n2; i2++)
@@ -162,6 +163,7 @@ int main(int argc, char *argv[])
 	free(**u1); free(*u1); free(u1);
 	free(**u2); free(*u2); free(u2);
 	free(*cxy); free(cxy);
+	if(strcmp(mode,"c3")==0) { free(u); free(v);}
 
     	exit(0);
 }
