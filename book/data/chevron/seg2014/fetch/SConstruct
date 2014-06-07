@@ -3,7 +3,7 @@ from rsf.proj import *
 gzips = [  'seg_workshop_fwi_2014.tar.gz.partaa',
         'seg_workshop_fwi_2014.tar.gz.partab']
 
-files=['./DataLicenseAgreement', './README', 'SEG14.Pisoelastic.segy.gz', 'SEG14.Vplog', 'SEG14.Vpsmoothstarting.segy', 'Wavelet.txt', 'WellWavePic.JPG']
+files=['./DataLicenseAgreement', './README', 'SEG14.Pisoelastic.segy.gz', 'SEG14.Vplog', 'SEG14.Vpsmoothstarting.segy', 'Wavelet.txt', 'ntgWellWavePic.JPG']
 
 for gzip in gzips:
     Fetch(gzip,dir='seg_workshop_fwi_2014',
@@ -87,21 +87,6 @@ Flow('vheaderattr.txt','SEG14.Vpsmoothstarting_hdr.rsf',
 #xline      74              1 @ 0	          3820 @ 3819	        1910.5
 #tscalar    82              1 @ 0	             1 @ 0	             1
 #*******************************************************************************
-
-# near trace gather
-Flow(['ntg.rsf','ntg_hdr.rsf'],['SEG14.Pisoelastic.rsf','SEG14.Pisoelastic_hdr.rsf'],
-     '''
-     sftahsort \
-          input=${SOURCES[0]} \
-	  sort="sx offset:0,0" \
-	  verbose=1 \
-     | sftahwrite \
-          output=${TARGETS[0]} \
-          label2="sx" o2=10000000 n2=1250 d2=250000 \
-	  verbose=1
-     ''',stdout=0, stdin=0)
-       
-Result('ntg',"sfgrey title='near trace gather'")
 
        
 End()

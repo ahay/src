@@ -1,5 +1,6 @@
 from rsf.proj import *
 
+# this fold plot does not work ecause iline/xline are not in headers.
 # SConscript('../fetch/SConstruct')
 # on the chevron 2014 fwi synthetic you need to use sx,sy and 
 # gx,gy to compute xline,iline.  Coordinates and depths all need to be 
