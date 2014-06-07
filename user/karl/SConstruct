@@ -24,8 +24,6 @@ tahsort
 tahscscale
 lintshape2d
 tah5dinterp
-karlistinterp
-karlpocs
 '''
 #karlistinterp
 #karlposc
@@ -39,9 +37,13 @@ env.Prepend(CPPPATH=[RSFSRC+'/include'],
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+
+if fftw:
+   progs=progs+' karlistinterp karlposc'
+
 src = Glob('[a-z]*.c')
 
-for source in src:
+for source in Split(src):
     inc = env.RSF_Include(source,prefix='')
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
@@ -50,11 +52,8 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     bldutil.depends(env,sources,'M'+prog)
-    if fftw:
-        env.StaticObject('M'+prog+'.c')
-        prog = env.Program(prog,map(lambda x: x + '.o',sources))
-    else:
-        prog = env.RSF_Place('sf'+prog,None,var='FFTW',package='fftw')
+    env.StaticObject('M'+prog+'.c')
+    prog = env.Program(prog,map(lambda x: x + '.o',sources))
     if root:
         env.Install(bindir,prog)
 
