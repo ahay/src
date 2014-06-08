@@ -1,7 +1,7 @@
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
-\title{A GPU implementation of time domain full waveform inversion}
+\title{A GPU implementation of time-domain full waveform inversion}
 
 \author{Pengliang Yang\footnotemark[1], Jinghuai Gao\footnotemark[1], and Baoli Wang\footnotemark[2] \\
 \footnotemark[1]Xi'an Jiaotong University, National Engineering Laboratory for Offshore Oil Exploration, Xi'an, China, 710049\\
@@ -18,14 +18,15 @@
 \maketitle
 
 \begin{abstract}
-GPU has become a popular programming tool for seismic imaging and inversion due to its superior speedup performance. One key problem for GPU implementation is that the computation is much faster than the data exchange between host and device. In this paper we implement GPU-based full waveform inversion (FWI) using the wavefield reconstruction strategy. The boundaries of the forward modeling are saved on device to avert the issue of CPU-GPU data transfer. The Clayton-Enquist absorbing boundary is utilized to maintain the efficiency of GPU computation. A hybrid nonlinear conjugate gradient method is adopted in the FWI optimization.  The parallel reduction algorithm is deployed to do computation on GPU blocks. The numerical results demonstrate the validity of our GPU implementation. 
+GPU has become a popular programming tool for seismic imaging and inversion due to its superior speedup performance. In this paper we implement GPU-based full waveform inversion (FWI) using the wavefield reconstruction strategy. Because the computation on GPU is much faster than CPU-GPU data transfer, in our implementation the boundaries of the forward modeling are saved on device to avert the issue of data transfer between host and device. The Clayton-Enquist absorbing boundary is adopted to maintain the efficiency of GPU computation. A hybrid nonlinear conjugate gradient method is adopted in the FWI optimization.  The parallel reduction algorithm is utlized to do computation in GPU blocks. The numerical results demonstrate the validity of our implementation. 
 
 \end{abstract}
 
 
 \section{Introduction}
 
-Time domain full waveform inversion (FWI) was proposed by \cite{tarantola1984inversion} to refine the velocity model, and developed by   \cite{tarantola1986strategy} and \cite{pica1990nonlinear} as well as many others. Later, frequency domain FWI was proposed by Pratt and Shin in \cite{pratt1998gauss}. In recent years, the Laplace domain FWI and the Laplace-Fourier domain variant have also been developed by \cite{shin2008waveform,shin2009waveform}. Until now, building a good velocity model is still a chanllenging problem and gains increasing effort of geophysicists. 
+The classical time-domain full waveform inversion (FWI) was originally proposed by \cite{tarantola1984inversion} to refine the velocity model by minimizing the energy in the difference between predicted and observed data in the least-squares sense \citep{symes2008migration}. It was further developed by \cite{tarantola1986strategy} with applications to elastic cases \citep{pica1990nonlinear}. 
+After \cite{pratt1998gauss} proposed frequency domain FWI, the multiscale inversion becomes active research which provides a hierarchical framework for robust inversion. The Laplace-domain FWI and the Laplace-Fourier domain variant have also been developed by \cite{shin2008waveform,shin2009waveform}. \cite{virieux2009overview} gave a panoraoma perspective on the development of FWI in exploration geophysics.  Until now, building a good velocity model is still a chanllenging problem and gains increasing effort of geophysicists. 
 
 There are many drawbacks in FWI, such as the non-linearity, the non-uniqueness of the solution, as well as the expensive computational cost. The goal of FWI is to match the synthetic and the observed data.
 The minimization of the misfit function is essentially an iterative, computation intensive procedure: at each iteration one has to calculate the derivative of the objective function with respect to the model parameters by cross correlating the back propagated residual wavefield with the corresponding forward source propagated wavefield. The forward modeling itself demands large computational effort, while back propagated residual wavefield begs for large memory requirement to store the source wavefield. 
@@ -203,14 +204,14 @@ which requires only one layer to be saved on each side for wavefield reconstruct
     \draw[very thick] (-4,1)--(4,1);    
     \draw [very thick,red] (-1.2,-1.2) rectangle (0.2,0.2);    
   \end{tikzpicture}
-  \caption{2D blocks in GPU memory. The marked window indicates that the shared memory in every block needs to be extended on each side with halo cells which stores the grid value from other blocks.}\label{fig:blocks}
+  \caption{2D blocks in GPU memory. The marked window indicates that the shared memory in every block needs to be extended on each side with halo ghost points which stores the grid value from other blocks.}\label{fig:blocks}
 \end{figure}
 
 
 \subsection{Parallel reduction on CUDA blocks}
 
-Recognizing that  hardware serializes divergent thread execution within same warp whereas all threads of warp have to complete execution before warp ends, we use parallel reduction technique to find the maximum of model vector $\max(\textbf{m}_k)$ and the descent vector $\max(\textbf{d}_k)$, as well as the inner product in the numerator and the denominator of $\alpha_k$. 
-A sequential addressing scheme is utilized because it is free of conflict\citep{harris2007optimizing}. As shown in Figure~\ref{fig:reduction}, in each level half of the threads will perform the reading from global memory and writing to shared memory. The required number of threads will decrease to be half of the previous level. Theoretically, this kind of parallel reduction reduces original computational complexity $O(N)$ to be $O(\log_2(N))$, which may bring significant improvement in computational efficiency. 
+Recognizing that  hardware serializes divergent thread execution within same warp whereas all threads of warp have to complete execution before warp ends, we use parallel reduction technique to find the maximum of model vector $\textbf{m}_k$ and the descent vector $\textbf{d}_k$, as well as summation for the inner product in the numerator and the denominator of $\alpha_k$. 
+A sequential addressing scheme is utilized because it is free of conflict\citep{harris2007optimizing}. As shown in Figure~\ref{fig:reduction}, parallel reduction approach builds a summation tree to do stepwise partial sums.  In each level half of the threads will perform the reading from global memory and writing to shared memory. The required number of threads will decrease to be half of the previous level. It reduces a serial computational complexity $O(N)$ to be $O(\log_2(N))$ steps: in each step many threads perform computation simultaneously, leading to low arithmetic intensity. In this way, it may bring significant improvement in computational efficiency. 
 
 
 \begin{figure}
@@ -239,7 +240,7 @@ A sequential addressing scheme is utilized because it is free of conflict\citep{
   \draw[thick,->] (0,-4.25)--(0,-5.75);
   \draw[thick,->] (1,-4.25)--(0,-5.75);
 \end{tikzpicture}
-\caption{Parallel reduction on GPU blocks using a sequential addressing scheme}\label{fig:reduction}
+\caption{Parallel reduction on GPU block. It reduces a serial computational complexity $O(N)$ to be $O(\log_2(N))$ steps: in each step many threads perform computation simultaneously, leading to low arithmetic intensity. }\label{fig:reduction}
 \end{figure}
 
 
