@@ -23,7 +23,7 @@ static integer c__1 = 1;
     integer i__1;
 
     /* Local variables */
-    static integer i__, m1, n1;
+    static integer i__, m1; /* n1; */
     extern /* Subroutine */ int f2c_scopy(integer *, float *, integer *, float *, 
 	    integer *), vcost_(integer *, integer *, float *, float *, integer *
 	    , float *), vsint_(integer *, integer *, float *, float *, integer *,
@@ -68,7 +68,7 @@ static integer c__1 = 1;
 
     /* Function Body */
     m1 = *m - 1;
-    n1 = *n - 1;
+/*    n1 = *n - 1; */
 /* transform the rows if n > 1: */
     if (*n > 1) {
 	vcosti_(n, &wsave[1]);

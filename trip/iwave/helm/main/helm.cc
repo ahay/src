@@ -69,7 +69,7 @@ int main(int argc, char ** argv) {
     /* COMMAND-LINE PARAMS */
     char * in   = NULL;            /* input RSF header file */
     char * out  = NULL;            /* output RSF header file */
-    char * outd = NULL;            /* output RSF data file (for write, if needed) */
+//    char * outd = NULL;            /* output RSF data file (for write, if needed) */
     char * ref  = NULL;            /* reference RSF data file (optional) - if supplied, array is */
     /* subtracted at start, added back at end */
     grid g;
@@ -95,7 +95,7 @@ int main(int argc, char ** argv) {
     integer lenwork;
     integer ier;
 
-    FILE * fp;
+//    FILE * fp;
   
     PARARRAY *par=ps_new();
     PARARRAY *gpar=ps_new();
@@ -104,7 +104,7 @@ int main(int argc, char ** argv) {
     float * outdata = NULL;
     float * refdata = NULL;
 
-    int i;
+//    int i;
     int bc;
 
     xargc = argc;

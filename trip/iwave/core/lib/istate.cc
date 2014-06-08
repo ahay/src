@@ -253,6 +253,7 @@ namespace TSOpt {
     if (parse(pars,key,pname)) {
       string gname = "";
 
+#ifdef IWAVE_USE_MPI
       // extract proto name - use preferentially to actual file name,
       // particularly to handle temp filenames, which do not have suffixes.
       // note that only geometrical info will be extracted here, which can
@@ -265,6 +266,7 @@ namespace TSOpt {
       // implementation details against future changes eg. to distrtibuted
       // or network database. As is, will work properly so long as prototype
       // file is used in iwave_fopen on rk=0.
+
       int cprotolen=0;
       if (retrieveGlobalRank()==0) {
 	if ((rname = iwave_getproto(pname.c_str()))) gname = rname;
@@ -273,7 +275,6 @@ namespace TSOpt {
 	cprotolen = gname.size()+1;
       }
 
-#ifdef IWAVE_USE_MPI
       MPI_Bcast(&cprotolen,1,MPI_INT,0,retrieveGlobalComm());
       char * cproto = new char[cprotolen];
       if (retrieveGlobalRank()==0) strcpy(cproto,gname.c_str());
