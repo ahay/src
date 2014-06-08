@@ -35,21 +35,16 @@ bindir   = os.path.join(rsf.prog.RSFROOT,'bin')
 sfgrey   = os.path.join(bindir,'sfgrey')
 sfget    = os.path.join(bindir,'sfget')
 ppmpen   = os.path.join(bindir,'ppmpen')
-sfrm     = os.path.join(bindir,'sfrm')
-
-ppmfiles = []
-rsffiles = []
+ppm = None
 
 def rsf2image(rsf):
-    global ppmfiles
+    global ppm
     ppm = os.path.splitext(rsf)[0]+'.ppm'
     command = '< %s %s %s | %s > %s' % (rsf,sfgrey,' '.join(sys.argv[2:]),ppmpen,ppm)
     if os.system(command) or not os.path.isfile(ppm):
         sys.stderr.write('Failed to execute "%s"\n\n' % command)
         sys.exit(3)
     img = PhotoImage(file=ppm)
-    if not ppm in ppmfiles:
-        ppmfiles.append(ppm)
     return img
     
 root = Tk()
@@ -126,16 +121,13 @@ canvas.pack(side=BOTTOM)
 
 @atexit.register
 def cleanup():
-    global ppmfiles,rsffiles,sfrm
-    for ppm in filter(os.path.isfile,ppmfiles):
+    global ppm
+    if os.path.isfile(ppm):
         os.unlink(ppm)
-    for rsf in filter(os.path.isfile,rsffiles):
-        os.system(' '.join([sfrm,rsf]))
 
 def bye(event):
     sys.exit(0)
 
 root.bind("q",bye)
-#root.bind("<Escape>",restore)
 root.mainloop()
 
