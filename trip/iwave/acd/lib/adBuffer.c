@@ -110,7 +110,9 @@ void pushbit(int bit) {
     adbitibuf++ ;
 }
 
-int lookbit() {
+int lookbit(void) {
+    int bit;
+
   if (adbitilbuf==-1) {
     adbitilbuf=adbitibuf ;
     adbitlbuf = adbitbuf ;
@@ -120,12 +122,14 @@ int lookbit() {
     adbitilbuf = 32 ;
   } else
     adbitilbuf-- ;
-  int bit = adbitlbuf%2 ;
+  bit = adbitlbuf%2 ;
   adbitlbuf>>=1 ;
   return bit ;
 }
 
-int popbit() {
+int popbit(void) {
+    int bit;
+
   if (adbitilbuf != -1) {
     adbitilbuf = -1 ;
     adbitinlbuf = 0 ;
@@ -135,7 +139,7 @@ int popbit() {
     adbitibuf = 32 ;
   } else
     adbitibuf-- ;
-  int bit = adbitbuf%2 ;
+  bit = adbitbuf%2 ;
   adbitbuf>>=1 ;
   return bit ;
 }

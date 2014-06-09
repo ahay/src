@@ -148,10 +148,10 @@
 	    work[i__] = 0.f;
 	}
     }
-    //    if (bc) 
+    /*    if (bc) */ 
       getcoef_(&nsx2, dt, st, ntx, dx, sx, &work[ptr_to_coef__], ier);
-      //    else 
-      //      getcoefn_(&nsx2, dt, st, ntx, dx, sx, &work[ptr_to_coef__], ier);
+      /*    else */ 
+      /*      getcoefn_(&nsx2, dt, st, ntx, dx, sx, &work[ptr_to_coef__], ier); */
     if (*ier != 0) {
 	return 0;
     }
@@ -177,12 +177,12 @@
 
 /* transform, Fourier multiplier, inverse transform */
 
-//    if (bc) 
+/*    if (bc) */
     sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
-      //    else 
+    /*    else 
       //      fprintf(stderr,"neumann case\n");
       //sincost_(integer *m, integer *n, float *x, float *xt, float *wsave)      
-      //      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
+      //      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]); */
     i__1 = nfft;
     for (j = 1; j <= i__1; ++j) {
       d__1 = 1.0 + (double) work[ptr_to_coef__ - 1 + j];
@@ -190,10 +190,10 @@
       /*	work[ptr_to_x__ - 1 + j] *= pow_dd(&d__1, &d__2); */
       work[ptr_to_x__ - 1 + j] *= pow(d__1, d__2);
     }
-    //    if (bc) 
+    /*   if (bc) */
     sint2d_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
-    //    else
-    //      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]);
+    /*    else
+    //      sincost_(&nsx2, ntx, &work[ptr_to_x__], &work[ptr_to_xt__], &work[ptr_to_wsave__]); */
 /* zero out last column in dirichlet case */
     if (*ntx > 1 && bc) {
 	i__1 = nsx2;

@@ -43,6 +43,8 @@ void acdpml_2d_8_d_d(float **uc, float **ucd0, float **ucd, float **ucdd,
     // start index
     // end index */
     int i1, i0;
+    float lap, lapd0, lapd, lapdd, cff, cffuc, cffup, cff1, cff0;
+    float tmp, tmpd0, tmpd, tmpux, tmpuxd0, tmpuxd, tmpuxdd, tmpuz, tmpuzd0, tmpuzd, tmpuzdd;
     /*fprintf(stderr, "dp0[%d] = %f\n",e[0], dp0[e[0]]);
     // PML
     //fprintf(stderr, " after computing Du_x Du_z acdpml_2d_2!!!\n");
@@ -51,34 +53,34 @@ void acdpml_2d_8_d_d(float **uc, float **ucd0, float **ucd, float **ucdd,
     // update wavefield up */
     for (i1 = s[1]; i1 < e[1]+1; ++i1)
         for (i0 = s[0]; i0 < e[0]+1; ++i0) {
-            float lap = c0*uc[i1][i0] + c1[0]*(uc[i1][i0+1]+uc[i1][i0-1]) + c1
+            lap = c0*uc[i1][i0] + c1[0]*(uc[i1][i0+1]+uc[i1][i0-1]) + c1
             [1]*(uc[i1+1][i0]+uc[i1-1][i0]) + c2[0]*(uc[i1][i0+2]+uc[i1][i0-2]
             ) + c2[1]*(uc[i1+2][i0]+uc[i1-2][i0]) + c3[0]*(uc[i1][i0+3]+uc[i1]
             [i0-3]) + c3[1]*(uc[i1+3][i0]+uc[i1-3][i0]) + c4[0]*(uc[i1][i0+4]+
             uc[i1][i0-4]) + c4[1]*(uc[i1+4][i0]+uc[i1-4][i0]);
-            float lapd0 = c0*ucd0[i1][i0] + c1[0]*(ucd0[i1][i0+1]+ucd0[i1][i0-
+            lapd0 = c0*ucd0[i1][i0] + c1[0]*(ucd0[i1][i0+1]+ucd0[i1][i0-
             1]) + c1[1]*(ucd0[i1+1][i0]+ucd0[i1-1][i0]) + c2[0]*(ucd0[i1][i0+2
             ]+ucd0[i1][i0-2]) + c2[1]*(ucd0[i1+2][i0]+ucd0[i1-2][i0]) + c3[0]*
             (ucd0[i1][i0+3]+ucd0[i1][i0-3]) + c3[1]*(ucd0[i1+3][i0]+ucd0[i1-3]
             [i0]) + c4[0]*(ucd0[i1][i0+4]+ucd0[i1][i0-4]) + c4[1]*(ucd0[i1+4][
             i0]+ucd0[i1-4][i0]);
-            float lapd = c0*ucd[i1][i0] + c1[0]*(ucd[i1][i0+1]+ucd[i1][i0-1]) 
+            lapd = c0*ucd[i1][i0] + c1[0]*(ucd[i1][i0+1]+ucd[i1][i0-1]) 
             + c1[1]*(ucd[i1+1][i0]+ucd[i1-1][i0]) + c2[0]*(ucd[i1][i0+2]+ucd[
             i1][i0-2]) + c2[1]*(ucd[i1+2][i0]+ucd[i1-2][i0]) + c3[0]*(ucd[i1][
             i0+3]+ucd[i1][i0-3]) + c3[1]*(ucd[i1+3][i0]+ucd[i1-3][i0]) + c4[0]
             *(ucd[i1][i0+4]+ucd[i1][i0-4]) + c4[1]*(ucd[i1+4][i0]+ucd[i1-4][i0
             ]);
-            float lapdd = c0*ucdd[i1][i0] + c1[0]*(ucdd[i1][i0+1]+ucdd[i1][i0-
+            lapdd = c0*ucdd[i1][i0] + c1[0]*(ucdd[i1][i0+1]+ucdd[i1][i0-
             1]) + c1[1]*(ucdd[i1+1][i0]+ucdd[i1-1][i0]) + c2[0]*(ucdd[i1][i0+2
             ]+ucdd[i1][i0-2]) + c2[1]*(ucdd[i1+2][i0]+ucdd[i1-2][i0]) + c3[0]*
             (ucdd[i1][i0+3]+ucdd[i1][i0-3]) + c3[1]*(ucdd[i1+3][i0]+ucdd[i1-3]
             [i0]) + c4[0]*(ucdd[i1][i0+4]+ucdd[i1][i0-4]) + c4[1]*(ucdd[i1+4][
             i0]+ucdd[i1-4][i0]);
-            float cff = 1.0/(1.0+(dp1[i1]+dp0[i0])*dt/2.0);
-            float cffuc = (2.0-dp1[i1]*dp0[i0]*dt*dt)*cff;
-            float cffup = ((dp1[i1]+dp0[i0])/2.0*dt-1.0)*cff;
-            float cff1 = dt*dt/2.0/di[1]*cff;
-            float cff0 = dt*dt/2.0/di[0]*cff;
+            cff = 1.0/(1.0+(dp1[i1]+dp0[i0])*dt/2.0);
+            cffuc = (2.0-dp1[i1]*dp0[i0]*dt*dt)*cff;
+            cffup = ((dp1[i1]+dp0[i0])/2.0*dt-1.0)*cff;
+            cff1 = dt*dt/2.0/di[1]*cff;
+            cff0 = dt*dt/2.0/di[0]*cff;
             updd[i1][i0] = cffuc*ucdd[i1][i0] + cffup*updd[i1][i0] + cff*(csqd
                 [i1][i0]*lapd0+csqd0[i1][i0]*lapd+csq[i1][i0]*lapdd) + cff1*(
                 phi1dd[i1][i0-1]+phi1dd[i1][i0]-phi1dd[i1-1][i0-1]-phi1dd[i1-1
@@ -100,36 +102,36 @@ void acdpml_2d_8_d_d(float **uc, float **ucd0, float **ucd, float **ucdd,
         }
     for (i1 = s[1]; i1 < e[1]; ++i1)
         for (i0 = s[0]; i0 < e[0]; ++i0) {
-            float cff1 = (2.0-dt*dp1[i1])/(2.0+dt*dp1[i1]);
-            float cff0 = (2.0-dt*dp0[i0])/(2.0+dt*dp0[i0]);
-            float tmp = (csq[i1][i0]+csq[i1+1][i0]+csq[i1][i0+1]+csq[i1+1][i0+
+            cff1 = (2.0-dt*dp1[i1])/(2.0+dt*dp1[i1]);
+            cff0 = (2.0-dt*dp0[i0])/(2.0+dt*dp0[i0]);
+            tmp = (csq[i1][i0]+csq[i1+1][i0]+csq[i1][i0+1]+csq[i1+1][i0+
             1])/4.0*2.0*dt;
-            float tmpd0 = 2.0*dt*(csqd0[i1][i0]+csqd0[i1+1][i0]+csqd0[i1][i0+1
+            tmpd0 = 2.0*dt*(csqd0[i1][i0]+csqd0[i1+1][i0]+csqd0[i1][i0+1
             ]+csqd0[i1+1][i0+1])/4.0;
-            float tmpd = 2.0*dt*(csqd[i1][i0]+csqd[i1+1][i0]+csqd[i1][i0+1]+
+            tmpd = 2.0*dt*(csqd[i1][i0]+csqd[i1+1][i0]+csqd[i1][i0+1]+
             csqd[i1+1][i0+1])/4.0;
-            float tmpux = (uc[i1+1][i0]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1][i0+1]
+            tmpux = (uc[i1+1][i0]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1][i0+1]
             +up[i1+1][i0]+up[i1+1][i0+1]-up[i1][i0]-up[i1][i0+1])/4.0/di[1]*(
             dp0[i0]-dp1[i1])/(2.0+dt*dp1[i1]);
-            float tmpuxd0 = (dp0[i0]-dp1[i1])*(ucd0[i1+1][i0]+ucd0[i1+1][i0+1]
+            tmpuxd0 = (dp0[i0]-dp1[i1])*(ucd0[i1+1][i0]+ucd0[i1+1][i0+1]
             -ucd0[i1][i0]-ucd0[i1][i0+1]+upd0[i1+1][i0]+upd0[i1+1][i0+1]-upd0[
             i1][i0]-upd0[i1][i0+1])/(4.0*di[1])/(2.0+dt*dp1[i1]);
-            float tmpuxd = (dp0[i0]-dp1[i1])*(ucd[i1+1][i0]+ucd[i1+1][i0+1]-
+            tmpuxd = (dp0[i0]-dp1[i1])*(ucd[i1+1][i0]+ucd[i1+1][i0+1]-
             ucd[i1][i0]-ucd[i1][i0+1]+upd[i1+1][i0]+upd[i1+1][i0+1]-upd[i1][i0
             ]-upd[i1][i0+1])/(4.0*di[1])/(2.0+dt*dp1[i1]);
-            float tmpuxdd = (dp0[i0]-dp1[i1])*(ucdd[i1+1][i0]+ucdd[i1+1][i0+1]
+            tmpuxdd = (dp0[i0]-dp1[i1])*(ucdd[i1+1][i0]+ucdd[i1+1][i0+1]
             -ucdd[i1][i0]-ucdd[i1][i0+1]+updd[i1+1][i0]+updd[i1+1][i0+1]-updd[
             i1][i0]-updd[i1][i0+1])/(4.0*di[1])/(2.0+dt*dp1[i1]);
-            float tmpuz = (uc[i1][i0+1]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1+1][i0]
+            tmpuz = (uc[i1][i0+1]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1+1][i0]
             +up[i1][i0+1]+up[i1+1][i0+1]-up[i1][i0]-up[i1+1][i0])/4.0/di[0]*(
             dp1[i1]-dp0[i0])/(2.0+dt*dp0[i0]);
-            float tmpuzd0 = (dp1[i1]-dp0[i0])*(ucd0[i1][i0+1]+ucd0[i1+1][i0+1]
+            tmpuzd0 = (dp1[i1]-dp0[i0])*(ucd0[i1][i0+1]+ucd0[i1+1][i0+1]
             -ucd0[i1][i0]-ucd0[i1+1][i0]+upd0[i1][i0+1]+upd0[i1+1][i0+1]-upd0[
             i1][i0]-upd0[i1+1][i0])/(4.0*di[0])/(2.0+dt*dp0[i0]);
-            float tmpuzd = (dp1[i1]-dp0[i0])*(ucd[i1][i0+1]+ucd[i1+1][i0+1]-
+            tmpuzd = (dp1[i1]-dp0[i0])*(ucd[i1][i0+1]+ucd[i1+1][i0+1]-
             ucd[i1][i0]-ucd[i1+1][i0]+upd[i1][i0+1]+upd[i1+1][i0+1]-upd[i1][i0
             ]-upd[i1+1][i0])/(4.0*di[0])/(2.0+dt*dp0[i0]);
-            float tmpuzdd = (dp1[i1]-dp0[i0])*(ucdd[i1][i0+1]+ucdd[i1+1][i0+1]
+            tmpuzdd = (dp1[i1]-dp0[i0])*(ucdd[i1][i0+1]+ucdd[i1+1][i0+1]
             -ucdd[i1][i0]-ucdd[i1+1][i0]+updd[i1][i0+1]+updd[i1+1][i0+1]-updd[
             i1][i0]-updd[i1+1][i0])/(4.0*di[0])/(2.0+dt*dp0[i0]);
             phi1dd[i1][i0] = cff1*phi1dd[i1][i0] + tmpuxdd*tmp + tmpuxd*tmpd0 
@@ -145,30 +147,30 @@ void acdpml_2d_8_d_d(float **uc, float **ucd0, float **ucd, float **ucdd,
         }
     i1 = s[1] - 1;
     i0 = s[0] - 1;
-    float cff1 = (2.0-dt*dp1[i1])/(2.0+dt*dp1[i1]);
-    float cff0 = (2.0-dt*dp0[i0])/(2.0+dt*dp0[i0]);
-    float tmpux = (uc[i1+1][i0]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1][i0+1]+up[i1+1
+    cff1 = (2.0-dt*dp1[i1])/(2.0+dt*dp1[i1]);
+    cff0 = (2.0-dt*dp0[i0])/(2.0+dt*dp0[i0]);
+    tmpux = (uc[i1+1][i0]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1][i0+1]+up[i1+1
     ][i0]+up[i1+1][i0+1]-up[i1][i0]-up[i1][i0+1])/4.0/di[1]*(dp0[i0]-dp1[i1])/
     (2.0+dt*dp1[i1]);
-    float tmpuxd0 = (dp0[i0]-dp1[i1])*(ucd0[i1+1][i0]+ucd0[i1+1][i0+1]-ucd0[i1
+    tmpuxd0 = (dp0[i0]-dp1[i1])*(ucd0[i1+1][i0]+ucd0[i1+1][i0+1]-ucd0[i1
     ][i0]-ucd0[i1][i0+1]+upd0[i1+1][i0]+upd0[i1+1][i0+1]-upd0[i1][i0]-upd0[i1]
     [i0+1])/(4.0*di[1])/(2.0+dt*dp1[i1]);
-    float tmpuxd = (dp0[i0]-dp1[i1])*(ucd[i1+1][i0]+ucd[i1+1][i0+1]-ucd[i1][i0
+    tmpuxd = (dp0[i0]-dp1[i1])*(ucd[i1+1][i0]+ucd[i1+1][i0+1]-ucd[i1][i0
     ]-ucd[i1][i0+1]+upd[i1+1][i0]+upd[i1+1][i0+1]-upd[i1][i0]-upd[i1][i0+1])/(
     4.0*di[1])/(2.0+dt*dp1[i1]);
-    float tmpuxdd = (dp0[i0]-dp1[i1])*(ucdd[i1+1][i0]+ucdd[i1+1][i0+1]-ucdd[i1
+    tmpuxdd = (dp0[i0]-dp1[i1])*(ucdd[i1+1][i0]+ucdd[i1+1][i0+1]-ucdd[i1
     ][i0]-ucdd[i1][i0+1]+updd[i1+1][i0]+updd[i1+1][i0+1]-updd[i1][i0]-updd[i1]
     [i0+1])/(4.0*di[1])/(2.0+dt*dp1[i1]);
-    float tmpuz = (uc[i1][i0+1]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1+1][i0]+up[i1][
+    tmpuz = (uc[i1][i0+1]+uc[i1+1][i0+1]-uc[i1][i0]-uc[i1+1][i0]+up[i1][
     i0+1]+up[i1+1][i0+1]-up[i1][i0]-up[i1+1][i0])/4.0/di[0]*(dp1[i1]-dp0[i0])/
     (2.0+dt*dp0[i0]);
-    float tmpuzd0 = (dp1[i1]-dp0[i0])*(ucd0[i1][i0+1]+ucd0[i1+1][i0+1]-ucd0[i1
+    tmpuzd0 = (dp1[i1]-dp0[i0])*(ucd0[i1][i0+1]+ucd0[i1+1][i0+1]-ucd0[i1
     ][i0]-ucd0[i1+1][i0]+upd0[i1][i0+1]+upd0[i1+1][i0+1]-upd0[i1][i0]-upd0[i1+
     1][i0])/(4.0*di[0])/(2.0+dt*dp0[i0]);
-    float tmpuzd = (dp1[i1]-dp0[i0])*(ucd[i1][i0+1]+ucd[i1+1][i0+1]-ucd[i1][i0
+    tmpuzd = (dp1[i1]-dp0[i0])*(ucd[i1][i0+1]+ucd[i1+1][i0+1]-ucd[i1][i0
     ]-ucd[i1+1][i0]+upd[i1][i0+1]+upd[i1+1][i0+1]-upd[i1][i0]-upd[i1+1][i0])/(
     4.0*di[0])/(2.0+dt*dp0[i0]);
-    float tmpuzdd = (dp1[i1]-dp0[i0])*(ucdd[i1][i0+1]+ucdd[i1+1][i0+1]-ucdd[i1
+    tmpuzdd = (dp1[i1]-dp0[i0])*(ucdd[i1][i0+1]+ucdd[i1+1][i0+1]-ucdd[i1
     ][i0]-ucdd[i1+1][i0]+updd[i1][i0+1]+updd[i1+1][i0+1]-updd[i1][i0]-updd[i1+
     1][i0])/(4.0*di[0])/(2.0+dt*dp0[i0]);
     phi1dd[i1][i0] = cff1*phi1dd[i1][i0] + 2.0*dt*(tmpuxdd*csq[i1+1][i0+1]+

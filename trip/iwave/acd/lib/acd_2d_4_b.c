@@ -3,7 +3,7 @@
 */
 #include "cstd.h"
 
-//#define TAPENADE
+/* #define TAPENADE */
 
 /*
   Differentiation of acd_2d_4 in reverse (adjoint) mode:

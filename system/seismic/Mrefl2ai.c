@@ -1,8 +1,4 @@
-/* Convert acoustic impedance to reflectivity. 
-
-August 2013 program of the month:
-http://www.ahay.org/rsflog/index.php?/archives/350-Program-of-the-month-sfai2refl.html
-*/
+/* Convert reflectivity to acoustic impedance. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -29,35 +25,34 @@ http://www.ahay.org/rsflog/index.php?/archives/350-Program-of-the-month-sfai2ref
 int main (int argc, char* argv[])
 {
     int nt, it, n2, i2;
-    float imp1, imp2, *imp, *sig;
-    sf_file ai, mod;
+    float r, a, *imp, *sig;
+    sf_file ref, ai, a0;
 
     sf_init (argc,argv);
-    ai  = sf_input("in");
-    mod = sf_output("out");
+    ref  = sf_input("in");
+    ai = sf_output("out");
+    a0 = sf_output("a0"); /* impedance on the surface */
 
-    if (!sf_histint(ai,"n1",&nt)) sf_error("No n1= in input");
-    n2 = sf_leftsize(ai,1);
+    if (!sf_histint(ref,"n1",&nt)) sf_error("No n1= in input");
+    n2 = sf_leftsize(ref,1);
 
     imp = sf_floatalloc (nt);
     sig = sf_floatalloc (nt);
-
+    
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(imp,nt,ai);
+	sf_floatread(&a,1,a0);
+	sf_floatread(sig,nt,ref);
 
-	imp1=imp[0];
-	for (it=0; it < nt-1; it++) {
-	    imp2 = imp[it+1];
-	    sig[it] = (imp2-imp1)/(imp2+imp1+FLT_EPSILON);
-	    imp1 = imp2;
+	for (it=0; it < nt; it++) {
+	    imp[it] = a;
+	    r = sig[it];
+	    a *= (1.0f+r)/(1.0f-r);
 	}
-	sig[nt-1] = 0.;
-
-	sf_floatwrite(sig,nt,mod);
+	
+	sf_floatwrite(imp,nt,ai);
     }
-
-
+    
     exit (0);
 }
 
-/* 	$Id$	 */
+
