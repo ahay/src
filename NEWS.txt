@@ -7,6 +7,7 @@ To the reproducible documents collection:
 * tccs/sglowrank: Lowrank seismic wave extrapolation on a staggered
   grid (Fang, Fomel, Du, and Hu)
 * xjtu/primer: A numerical tour of wave propagation (Yang)
+* Moved rsf/usp/data to data/freeusp/land
 
 To SCons:
 

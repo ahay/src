@@ -28,7 +28,7 @@ void spec3dmultiply(float ***d, float ***f, int nx, int ny, int nz,
                     int *ijkx, int *ijky, int *ijkz, int iflag) 
 /*< spec3dmultiply: multiply in 3D k-domain (kx, ky, kz) >*/
 {
-#ifdef SF_HAS_FFTW  // using FFTW in Madagascar
+#ifdef SF_HAS_FFTW  
     int ix, iy, iz, ixf, iyf, izf, i;
 
 

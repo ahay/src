@@ -503,7 +503,7 @@ float qsolve(float* time, long i, int *f, float *al)
 	    return res4;
 	}
 
-	return SF_HUGE;
+/*	return SF_HUGE; */
     }
 
     /* r-s */

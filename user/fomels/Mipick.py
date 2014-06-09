@@ -21,6 +21,7 @@ import rsf.prog
 
 try:
     from Tkinter import *
+    import tkColorChooser 
 except:
     sys.stderr.write('Please install Tkinter!\n\n')
     sys.exit(1)
@@ -64,6 +65,10 @@ x1 = 937
 y0 = 96
 y1 = 671
 
+r = 5 # circle radius
+
+picks =[]
+
 canvas = Canvas(root,cursor='crosshair',
                 width=width,height=height,
                 background='black')
@@ -98,6 +103,15 @@ def setframe(inp):
 
 setframe(inp)
 
+def getcoords(event):
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasx(event.y)    
+    if x >= x0 and y >= y0 and x <= x1 and y <= y1:
+        x = o2+(x-x0)*xscale
+        y = o1+(y-y0)*yscale
+        return (x,y)
+    return (None,None)
+
 def display(event):
     canvas = event.widget
     x = canvas.canvasx(event.x)
@@ -110,13 +124,20 @@ def display(event):
     else:
 	coords.set("")
 
+def getpick(event):
+    canvas = event.widget
+    x = canvas.canvasx(event.x)
+    y = canvas.canvasx(event.y)   
+    if x >= x0 and y >= y0 and x <= x1 and y <= y1:
+        canvas.create_oval(x-r,y-r,x+r,y+r,fill='yellow')
+        xs = o2+(x-x0)*xscale
+        ys = o1+(y-y0)*yscale
+        picks.append((xs,ys))
+
 image = rsf2image(inp)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
 canvas.bind("<Motion>",display)
-#canvas.bind("<ButtonPress-1>",startwin)
-#canvas.bind("<B1-Motion>",drawwin)
-#canvas.bind("<ButtonRelease-1>",endwin)
-#canvas.bind("<Button-3>",restore)
+canvas.bind("<Button-1>",getpick)
 canvas.pack(side=BOTTOM)
 
 @atexit.register
@@ -131,3 +152,8 @@ def bye(event):
 root.bind("q",bye)
 root.mainloop()
 
+# Add:
+# 1. write picks
+# 2. color picker
+# 3. remove picks with Button-3
+# 4. 3-D

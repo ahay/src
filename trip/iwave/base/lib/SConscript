@@ -26,5 +26,5 @@ for dir in srclist:
     srcs=srcs+Glob(os.path.join('..',dir,'*.cpp'))
 
 # create library
-if len(srcs) > 0:
+if len(srcs) > 0 and (not root or 'c++' in env.get('API',[])):
     env.Library(libname,srcs)
