@@ -30,7 +30,7 @@ using RVL::SymmetricBilinearOp;
 using RVL::AssignFilename;
 using RVL::AssignParams;
 using RVL::RVLRandomize;
-using RVL::AdjointTest;
+using RVL::AdjointTest;`
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
 using TSOpt::IWaveSampler;
@@ -80,10 +80,17 @@ int main(int argc, char ** argv) {
                      valparse<float>(*pars,"mute_zotime",0.0f),
                      valparse<float>(*pars,"mute_width",0.0f));
       
+    // fixed geophone taper
+    SEGYLinMute taper(valparse<float>(*pars,"min_gx",0.0f),
+                     valparse<float>(*pars,"max_gx",0.0f),
+                     valparse<float>(*pars,"taper_width",0.0f),1);
+      
     LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
+    LinearOpFO<float> taperop(iwop.getRange(),iwop.getRange(),taper,taper);
+    OpComp<float> op(taperop,muteop);
 
-    Vector<ireal> ddin(muteop.getRange());
-    Vector<ireal> ddout(muteop.getRange());
+    Vector<ireal> ddin(op.getRange());
+    Vector<ireal> ddout(op.getRange());
       
     AssignFilename ddinfn(valparse<std::string>(*pars,"data"));
     Components<ireal> cddin(ddin);
