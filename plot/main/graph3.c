@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
 {
     int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe, np=3, orient;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1; 
-    float point1, point2, **front, **side, **top, *x, *y, o1, d1, o2, d2;    
+    float point1, point2, **front, **side, **top, **topt, *x, *y, o1, d1, o2, d2;    
     float min, max, f, frame1, dframe, oo1, dd1;
-    bool nomin, nomax;
+    bool nomin, nomax, yreverse;
     char *label1, *label2, *unit1, *unit2;
     off_t esize;
     bool flat;
@@ -52,9 +52,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("orient",&orient)) orient=1;
     /* function orientation */
 
+    if (!sf_getbool("yreverse",&yreverse)) yreverse=false;
+
     front = sf_floatalloc2(n1,1);
     side = sf_floatalloc2(1,n2);
     top = sf_floatalloc2(n1,n2);
+    topt = (2==orient)? sf_floatalloc2(n2,n1): NULL;
 
     nomin = (bool) !sf_getfloat("min",&min);
     /* minimum function value */
@@ -284,10 +287,18 @@ int main(int argc, char* argv[])
 		    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
 		    sf_floatread(front[0],n1,in);
 
-		    vp_cubecoord(3,min,max,x[0],x[n1-1]);
-		    vp_umove(front[0][0],x[0]);
-		    for (i1=1; i1 < n1; i1++) {
-			vp_udraw(front[0][i1],x[i1]);
+		    if (yreverse) {
+			vp_cubecoord(3,min,max,x[n1-1],x[0]);
+			vp_umove(front[0][n1-1],x[n1-1]);
+			for (i1=n1-2; i1 >= 0; i1--) {
+			    vp_udraw(front[0][i1],x[i1]);
+			}
+		    } else {
+			vp_cubecoord(3,min,max,x[0],x[n1-1]);
+			vp_umove(front[0][0],x[0]);
+			for (i1=1; i1 < n1; i1++) {
+			    vp_udraw(front[0][i1],x[i1]);
+			}
 		    }
 		    
 		    break;
@@ -323,8 +334,19 @@ int main(int argc, char* argv[])
 		    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
 		    sf_floatread(top[0],n1*n2,in);
 
-		    vp_cubecoord(2,x[0],x[n1-1],y[0],y[n2-1]);
-		    vp_contour_draw(cnt,false,top,frame1);
+		    /* transpose */
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    topt[i1][i2] = top[i2][i1];
+			}
+		    }
+		    
+		    if (yreverse) {
+			vp_cubecoord(2,y[0],y[n2-1],x[n1-1],x[0]);
+		    } else {
+			vp_cubecoord(2,y[0],y[n2-1],x[0],x[n1-1]);
+		    }
+		    vp_contour_draw(cnt,false,topt,frame1);
 		    
 		    break;
 		case 3:

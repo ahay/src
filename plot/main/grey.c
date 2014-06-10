@@ -41,7 +41,6 @@ int main(int argc, char* argv[])
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0., minmax[2];
     float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
-    float min1, max1, min2, max2;
     bool transp, yreverse, xreverse, allpos, polarity, symcp, verb;
     bool eclip=false, egpow=false, barreverse, mean=false;
     bool scalebar, nomin=true, nomax=true, framenum, sfbyte, sfbar, charin;

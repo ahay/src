@@ -21,7 +21,7 @@ import rsf.prog
 
 try:
     from Tkinter import *
-    import tkColorChooser 
+    from tkColorChooser import askcolor
 except:
     sys.stderr.write('Please install Tkinter!\n\n')
     sys.exit(1)
@@ -47,14 +47,30 @@ def rsf2image(rsf):
         sys.exit(3)
     img = PhotoImage(file=ppm)
     return img
-    
+
+color='#ffff00'
+def pickcolor():
+    global color
+    col = askcolor()
+    color = col[1]
+   
 root = Tk()
 root.title(inp)
 
 coords = StringVar()
 
-label = Label(root,textvariable=coords,relief=RIDGE,borderwidth=3)
-label.pack(side=BOTTOM,fill=X)
+frame = Frame(root)
+
+button = Button(frame,text='Quit',bg='red',command=sys.exit)
+button.pack(side=RIGHT)
+
+button = Button(frame,text='Set Color',command=pickcolor)
+button.pack(side=RIGHT)
+
+label = Label(frame,textvariable=coords)
+label.pack()
+
+frame.pack(side=BOTTOM,fill=X)
 
 width = 1024
 height = 768
@@ -89,28 +105,15 @@ unit1  = hist(inp,str,'unit1','')
 label2 = hist(inp,str,'label2','X')
 unit2  = hist(inp,str,'unit2','')
 
-def setframe(inp):
-    global o1,d1,o2,d2,xscale,yscale
-    n1 = hist(inp,int,'n1',1)
-    d1 = hist(inp,float,'d1',1.0)
-    o1 = hist(inp,float,'o1',0.0)
-    yscale = (n1-1)*d1/(y1-y0)
+n1 = hist(inp,int,'n1',1)
+d1 = hist(inp,float,'d1',1.0)
+o1 = hist(inp,float,'o1',0.0)
+yscale = (n1-1)*d1/(y1-y0)
 
-    n2 = hist(inp,int,'n2',1)
-    d2 = hist(inp,float,'d2',1.0)
-    o2 = hist(inp,float,'o2',0.0)
-    xscale = (n2-1)*d2/(x1-x0)
-
-setframe(inp)
-
-def getcoords(event):
-    x = canvas.canvasx(event.x)
-    y = canvas.canvasx(event.y)    
-    if x >= x0 and y >= y0 and x <= x1 and y <= y1:
-        x = o2+(x-x0)*xscale
-        y = o1+(y-y0)*yscale
-        return (x,y)
-    return (None,None)
+n2 = hist(inp,int,'n2',1)
+d2 = hist(inp,float,'d2',1.0)
+o2 = hist(inp,float,'o2',0.0)
+xscale = (n2-1)*d2/(x1-x0)
 
 def display(event):
     canvas = event.widget
@@ -129,10 +132,10 @@ def getpick(event):
     x = canvas.canvasx(event.x)
     y = canvas.canvasx(event.y)   
     if x >= x0 and y >= y0 and x <= x1 and y <= y1:
-        canvas.create_oval(x-r,y-r,x+r,y+r,fill='yellow')
+        canvas.create_oval(x-r,y-r,x+r,y+r,fill=color)
         xs = o2+(x-x0)*xscale
         ys = o1+(y-y0)*yscale
-        picks.append((xs,ys))
+        picks.append((ys,xs))
 
 image = rsf2image(inp)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
@@ -142,18 +145,18 @@ canvas.pack(side=BOTTOM)
 
 @atexit.register
 def cleanup():
-    global ppm
+    global ppm, picks
+    for pick in picks:
+        sys.stdout.write('%g\t%g\n' % pick)
     if os.path.isfile(ppm):
         os.unlink(ppm)
 
 def bye(event):
     sys.exit(0)
-
+ 
 root.bind("q",bye)
 root.mainloop()
 
 # Add:
-# 1. write picks
-# 2. color picker
-# 3. remove picks with Button-3
-# 4. 3-D
+# 2. remove picks with Button-3
+# 3. 3-D
