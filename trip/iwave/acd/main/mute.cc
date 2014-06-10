@@ -30,7 +30,7 @@ using RVL::SymmetricBilinearOp;
 using RVL::AssignFilename;
 using RVL::AssignParams;
 using RVL::RVLRandomize;
-using RVL::AdjointTest;`
+using RVL::AdjointTest;
 using TSOpt::IWaveEnvironment;
 using TSOpt::IWaveTree;
 using TSOpt::IWaveSampler;
