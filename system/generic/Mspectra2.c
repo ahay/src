@@ -16,9 +16,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <stdio.h>
-#include <math.h>
 #include <rsf.h>
 
 #ifdef SF_HAS_FFTW
@@ -30,7 +27,7 @@ int main (int argc, char* argv[])
     int nw, n1, n2, nk, n3, ni, nfft, i, i1, i2, i3;
     float d1, o1, d2, o2, dw, dk, k0, **spec, scale, *trace, **traces;
     kiss_fft_cpx **fft;
-    char key[3];
+    char key[3], *label;
     bool sum;
     sf_file in, out;
 
@@ -95,6 +92,17 @@ int main (int argc, char* argv[])
     sf_putint(out,"n2",nk);
     sf_putfloat(out,"d2",dk);
     sf_putfloat(out,"o2",k0);
+
+    /* fix labels and units */
+    if (NULL != (label = sf_histstring(in,"label1")) &&
+	!sf_fft_label(1,label,out))
+	sf_putstring(out,"label1","Wavenumber");
+    if (NULL != (label = sf_histstring(in,"label2")) &&
+	!sf_fft_label(2,label,out))
+	sf_putstring(out,"label2","Wavenumber");
+
+    sf_fft_unit(1,sf_histstring(in,"unit1"),out);
+    sf_fft_unit(2,sf_histstring(in,"unit2"),out);
 
     if (sum) {
 	for (i=2; i < SF_MAX_DIM; i++) {
