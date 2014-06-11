@@ -103,6 +103,8 @@ int main(int argc, char ** argv) {
     float gamma=valparse<float>(*pars,"gamma",0.04f);
     float epsilon=valparse<float>(*pars,"epsilon",0.1);
     float alpha=valparse<float>(*pars,"alpha",1.01);
+    float lbd_est=valparse<float>(*pars,"lbd_est",1.01);
+
 
     RVLRandomize<float> rnd(getpid(),-1.0,1.0);
     
@@ -117,6 +119,7 @@ int main(int argc, char ** argv) {
     res<<"* error reduction   = "<<epsilon<<endl;
     res<<"* inversion level   = "<<gamma<<endl;
     res<<"* fudge factor      = "<<alpha<<endl;
+    res<<"* spectrum bound    = "<<alpha<<endl;
     res<<"*******************************************************"<<endl;
     
     /* create Cheb object */
@@ -125,7 +128,7 @@ int main(int argc, char ** argv) {
     OperatorEvaluation<ireal> opeval(op,m);
     AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
     ChebAlg<float> alg(dm,opeval.getDeriv(),mdd,
-		       rnorm, nrnorm, gamma, epsilon, alpha, maxcount, res);
+		       rnorm, nrnorm, gamma, epsilon, alpha, lbd_est, maxcount, res);
     float nrnorm0=nrnorm;
     float rnorm0=rnorm;
     

@@ -166,9 +166,9 @@ int main(int argc, char ** argv) {
       ChebPolicyData<float> pd(valparse<float>(*pars,"gamma",0.04f),
                                  valparse<float>(*pars,"epsilon",0.1),
                                  valparse<float>(*pars,"alpha",1.01),
+                                 valparse<float>(*pars,"lbd_est",0.0),
                                  valparse<int>(*pars,"MaxIter",10),true);
     
-      cerr << "\n Read in cheb policy data\n";
       /* output stream */
       std::stringstream res,strgrad;
       res<<scientific;
@@ -182,8 +182,6 @@ int main(int argc, char ** argv) {
       // defn of DSOp to include internal extd axis case (space/time shift)
       int dsdir = INT_MAX;
       if (retrieveGlobalRank()==0) dsdir=csqsp.getGrid().dim;
-      cerr << "\n after get grid dim \n";
-      cerr << "\n" << retrieveGlobalRank() << "  dsdir = " << dsdir << endl;
 #ifdef IWAVE_USE_MPI
       if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
 	RVLException e;

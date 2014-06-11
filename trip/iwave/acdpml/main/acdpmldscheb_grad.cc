@@ -158,6 +158,7 @@ int main(int argc, char ** argv) {
       ChebPolicyData<float> pd(valparse<float>(*pars,"gamma",0.04f),
                                valparse<float>(*pars,"epsilon",0.1),
                                valparse<float>(*pars,"alpha",1.01),
+                               valparse<float>(*pars,"lbd_est",1.01),
                                valparse<int>(*pars,"MaxIter",10),true);
     
       /* output stream */

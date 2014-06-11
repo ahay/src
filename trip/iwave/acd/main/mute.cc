@@ -11,10 +11,10 @@
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]
 = {
-  {"csq",    0, true,  true },
-  {"data",   1, false, true },
-  {"source", 1, true,  false},
-  {"",       0, false, false}
+    {"csq",    0, true,  true },
+    {"data",   1, false, true },
+    {"source", 1, true,  false},
+    {"",       0, false, false}
 };
 
 using RVL::parse;
@@ -53,72 +53,63 @@ int xargc;
 char **xargv;
 
 int main(int argc, char ** argv) {
-
-  try {
-
+    
+    try {
+        
 #ifdef IWAVE_USE_MPI
-    int ts=0;
-    MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&ts);    
+        int ts=0;
+        MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&ts);
 #endif
-
-    PARARRAY * pars = NULL;
-    FILE * stream = NULL;
-    IWaveEnvironment(argc, argv, 0, &pars, &stream);
-    
-    // the Op
-    IWaveOp iwop(*pars,stream);
-      
-//    // assign window widths - default = 0;
-//    RPNT wind;
-//    RASN(wind,RPNT_0);
-//    wind[0]=valparse<float>(*pars,"windw1",0.0f);
-//    wind[1]=valparse<float>(*pars,"windw2",0.0f);
-//    wind[2]=valparse<float>(*pars,"windw3",0.0f);
-//    GridWindowOp wop(iwop.getDomain,x,wind);
-      
-    SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
-                     valparse<float>(*pars,"mute_zotime",0.0f),
-                     valparse<float>(*pars,"mute_width",0.0f));
-      
-    // fixed geophone taper
-    SEGYLinMute taper(valparse<float>(*pars,"min_gx",0.0f),
-                     valparse<float>(*pars,"max_gx",0.0f),
-                     valparse<float>(*pars,"taper_width",0.0f),1);
-      
-    LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
-    LinearOpFO<float> taperop(iwop.getRange(),iwop.getRange(),taper,taper);
-    OpComp<float> op(taperop,muteop);
-
-    Vector<ireal> ddin(op.getRange());
-    Vector<ireal> ddout(op.getRange());
-      
-    AssignFilename ddinfn(valparse<std::string>(*pars,"data"));
-    Components<ireal> cddin(ddin);
-    cddin[0].eval(ddinfn);
-      
-    AssignFilename ddoutfn(valparse<std::string>(*pars,"data_out"));
-    Components<ireal> cddout(ddout);
-    cddout[0].eval(ddoutfn);
-
-    
-    RVLRandomize<float> rnd(getpid(),-1.0,1.0);
-    
-    OperatorEvaluation<ireal> opeval(muteop,ddin);
-    AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
-    
-    ddout.copy(opeval.getValue());
-
-    
+        
+        PARARRAY * pars = NULL;
+        FILE * stream = NULL;
+        IWaveEnvironment(argc, argv, 0, &pars, &stream);
+        
+        // the Op
+        IWaveOp iwop(*pars,stream);
+        
+        SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
+                         valparse<float>(*pars,"mute_zotime",0.0f),
+                         valparse<float>(*pars,"mute_width",0.0f));
+        
+        // fixed geophone taper
+        SEGYLinMute taper(valparse<float>(*pars,"min_gx",0.0f),
+                          valparse<float>(*pars,"max_gx",0.0f),
+                          valparse<float>(*pars,"taper_width",0.0f),1);
+        
+        LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
+        LinearOpFO<float> taperop(iwop.getRange(),iwop.getRange(),taper,taper);
+        OpComp<float> op(taperop,muteop);
+        
+        Vector<ireal> ddin(op.getRange());
+        Vector<ireal> ddout(op.getRange());
+        
+        AssignFilename ddinfn(valparse<std::string>(*pars,"data"));
+        Components<ireal> cddin(ddin);
+        cddin[0].eval(ddinfn);
+        
+        AssignFilename ddoutfn(valparse<std::string>(*pars,"data_out"));
+        Components<ireal> cddout(ddout);
+        cddout[0].eval(ddoutfn);
+        
+        
+        RVLRandomize<float> rnd(getpid(),-1.0,1.0);
+        
+        OperatorEvaluation<ireal> opeval(muteop,ddin);
+        AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
+        
+        ddout.copy(opeval.getValue());
+        
+        
 #ifdef IWAVE_USE_MPI
-    MPI_Finalize();
+        MPI_Finalize();
 #endif
-  }
-  catch (RVLException & e) {
-    e.write(cerr);
+    }
+    catch (RVLException & e) {
+        e.write(cerr);
 #ifdef IWAVE_USE_MPI
-    MPI_Abort(MPI_COMM_WORLD,0);
+        MPI_Abort(MPI_COMM_WORLD,0);
 #endif
-    exit(1);
-  }
-  
+        exit(1);
+    }
 }
