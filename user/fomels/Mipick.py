@@ -53,24 +53,16 @@ def pickcolor():
     global color
     col = askcolor()
     color = col[1]
-   
-root = Tk()
-root.title(inp)
 
-coords = StringVar()
-
-frame = Frame(root)
-
-button = Button(frame,text='Quit',bg='red',command=sys.exit)
-button.pack(side=RIGHT)
-
-button = Button(frame,text='Set Color',command=pickcolor)
-button.pack(side=RIGHT)
-
-label = Label(frame,textvariable=coords)
-label.pack()
-
-frame.pack(side=BOTTOM,fill=X)
+def hist(inp,func,var,default=None):
+    command = '< %s %s %s parform=n' % (inp,sfget,var)
+    devnull = open(os.devnull,"w")
+    pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
+    val = pipe.stdout.read().rstrip()
+    if val:
+        return func(val)
+    else:
+        return default
 
 width = 1024
 height = 768
@@ -82,23 +74,6 @@ y0 = 96
 y1 = 671
 
 r = 5 # circle radius
-
-picks = {}
-npick = 0
-
-canvas = Canvas(root,cursor='crosshair',
-                width=width,height=height,
-                background='black')
-
-def hist(inp,func,var,default=None):
-    command = '< %s %s %s parform=n' % (inp,sfget,var)
-    devnull = open(os.devnull,"w")
-    pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
-    val = pipe.stdout.read().rstrip()
-    if val:
-        return func(val)
-    else:
-        return default
 
 label1 = hist(inp,str,'label1','Y')
 unit1  = hist(inp,str,'unit1','')
@@ -116,6 +91,67 @@ d2 = hist(inp,float,'d2',1.0)
 o2 = hist(inp,float,'o2',0.0)
 xscale = (n2-1)*d2/(x1-x0)
 
+n3 = hist(inp,int,'n3',1)
+d3 = hist(inp,float,'d3',1.0)
+o3 = hist(inp,float,'o3',0.0)
+
+i3 = 0
+
+root = Tk()
+root.title(inp)
+
+coords = StringVar()
+
+frame = Frame(root)
+
+button = Button(frame,text='Quit',bg='red',command=sys.exit)
+button.pack(side=RIGHT)
+
+button = Button(frame,text='Set Color',command=pickcolor)
+button.pack(side=RIGHT)
+
+def nextframe():
+    global i3
+    i3 += 1
+    if i3 == n3-1:
+        next.config(state='disabled')
+    prev.config(state='normal')
+    i3frame.set('%d of %d' % (i3+1,n3))
+
+def prevframe():
+    global i3
+    i3 -= 1
+    if i3 == 0:
+        prev.config(state='disabled')
+    next.config(state='normal')
+    i3frame.set('%d of %d' % (i3+1,n3))
+
+if n3 > 1:
+    i3frame = StringVar()
+    i3frame.set('%d of %d' % (i3+1,n3))
+
+    next = Button(frame,text='Next >',command=nextframe)
+    next.pack(side=LEFT)
+
+    prev = Button(frame,text='< Prev',command=prevframe)
+    prev.config(state='disabled')
+    prev.pack(side=LEFT)
+
+    label = Label(frame,textvariable=i3frame,relief=RIDGE,borderwidth=3)
+    label.pack(side=LEFT)
+
+label = Label(frame,textvariable=coords)
+label.pack()
+
+frame.pack(side=BOTTOM,fill=X)
+
+picks = {}
+npick = 0
+
+canvas = Canvas(root,cursor='crosshair',
+                width=width,height=height,
+                background='black')
+
 def display(event):
     canvas = event.widget
     x = canvas.canvasx(event.x)
@@ -130,6 +166,16 @@ def display(event):
 
 current = None
 
+def scalepick(x,y):
+    global o1,o2,x0,y0,xscale,yscale,o3,i3,d3
+    xs = o2+(x-x0)*xscale
+    ys = o1+(y-y0)*yscale
+    if n3 > 1:
+        zs = o3+i3*d3
+        return (ys,xs,zs)
+    else:
+        return (ys,xs)
+
 def selectpick(event):
     global current
     current = canvas.find_closest(event.x, event.y)
@@ -143,6 +189,8 @@ def movepick(event):
 
 def movedpick(event):
     global current
+    tag = canvas.gettags(current)[0]
+    picks[tag] = scalepick(event.x,event.y)
     current = None
 
 def deletepick(event):
@@ -164,9 +212,7 @@ def getpick(event):
         canvas.tag_bind(tag,'<B2-Motion>',movepick)
         canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
         canvas.tag_bind(tag,'<Button-3>',deletepick)
-        xs = o2+(x-x0)*xscale
-        ys = o1+(y-y0)*yscale
-        picks[tag]=(ys,xs)
+        picks[tag]=scalepick(x,y)
 
 image = rsf2image(inp)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
@@ -178,7 +224,10 @@ canvas.pack(side=BOTTOM)
 def cleanup():
     global ppm, picks
     for pick in picks.values():
-        sys.stdout.write('%g\t%g\n' % pick)
+        if n3 > 1:
+            sys.stdout.write('%g\t%g\t%g\n' % pick)
+        else:
+            sys.stdout.write('%g\t%g\n' % pick)
     if os.path.isfile(ppm):
         os.unlink(ppm)
 
@@ -188,6 +237,4 @@ def bye(event):
 root.bind("q",bye)
 root.mainloop()
 
-# Add:
-# 1. OOP
-# 2. 3-D
+# 3-D: load image, dots
