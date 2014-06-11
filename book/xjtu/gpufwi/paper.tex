@@ -8,10 +8,6 @@
 \footnotemark[2]CCTEG  Xi'an Research Institute, Xi'an, China, 710077
 }
 
-\usetikzlibrary{decorations.pathreplacing} 
-\usetikzlibrary{shapes,arrows,chains}
-
-
 \righthead{GPU-based FWI}
 \lefthead{Yang et al.}
 
@@ -71,6 +67,7 @@ in which we use the approximate Hessian $\textbf{H}_k:=\textbf{H}_a=\textbf{J}_k
 
 \subsection{Nonlinear conjugate gradient method}
 
+\inputdir{Tikz}
 The conjugate gradient (CG) algorithm decreases the misfit function along the conjugate gradient direction:
 \begin{equation}
 	\textbf{d}_k=
@@ -109,46 +106,8 @@ and the Taylor approximation
 We summarize the FWI flowchart in Figure~\ref{fig:flowchart}.
 
 
-% Define block styles
-\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
-    text width=4.5em, text badly centered, node distance=2.8cm, inner sep=0pt]
-\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
-    text width=14em, text centered, rounded corners, minimum height=2em]
-\tikzstyle{blocksmall} = [rectangle, draw, fill=blue!20, node distance=4cm,
-    text width=6em, text centered, rounded corners, minimum height=2em]
-\tikzstyle{line} = [draw, -latex']
+\plot{flowchart}{width=0.8\textwidth}{Backward reconstruction can be realized using the saved boundaries. Note that no absorbing boundary condition is applied on the top boundary of the model in the forward modeling.}
 
-\begin{figure}
-  \centering 
-\begin{tikzpicture}[node distance = 3.5cm, auto]
-    % Place nodes
-    \node [blocksmall] (init) {initialize with starting model};
-    \node [decision, below of=init] (iter) {k$<$niter?};
-    \node [blocksmall, left of=iter](output) {output FWI result};   
-    \node [block, below of=iter] (forw) {1)generate synthetic seismogram via modeling, 2) save the effective boundaries, and 3) compute the residual wavefield};
-    \node [block, below of=forw] (back) {1)reconstruct source wavefield with saved boundaries, 2)back propagate residual wavefield, and 3) calculate the gradient}; 
-    \node [decision, below of=back] (is) {is$<$ns?};
-    \node [blocksmall,left of=is] (loop) {loop over shots: is++};
-    \node [blocksmall, right of=is] (cg) {calculate $\beta_k$ and the conjugate gradient};
-    \node [blocksmall, right of=cg] (eps) {estimate trial stepsize $\epsilon$ and a test velocity};
-    \node [blocksmall, above of=eps] (est) {estimate stepsize $\alpha_k$: redo forward modeling (ns shots)};
-    \node [blocksmall, above of=est] (update) {update velocity model, k++};
-    % Draw edges
-    \path [line] (init) -- (iter);
-    \path [line] (iter) --node [near start] {Yes} (forw);
-    \path [line] (forw) -- (back);
-    \path [line] (back) -- (is);
-    \path [line] (is) --node [near start] {Yes} (loop);
-    \path [line] (loop) |- (forw);
-    \path [line] (is)--node[near start]{No} (cg);
-    \path [line] (cg)--(eps);
-    \path [line] (eps)--(est);
-    \path [line] (est)--(update);
-    \path [line] (update)|-(iter);
-    \path [line] (iter)--node[near start]{No}(output);
-\end{tikzpicture}
-  \caption{The flowchart of FWI}\label{fig:flowchart}
-\end{figure}
 
 \subsection{Wavefield reconstruction via boundary saving}
 
@@ -176,36 +135,7 @@ Note that all the computation is done on GPU blocks. In our codes, the size of t
 \end{equation}
 which requires only one layer to be saved on each side for wavefield reconstruction. The equations for right and bottom boundary can also be written in a similar way. To simulate free surface boundary condition, no ABC is applied to the top boundary. The same tenique has been adopted by \cite{liu2013wavefield} for reverse time migration. We believe its application to FWI is straightforward and more valuable.
 
-
-\begin{figure}
-  \centering
-  \begin{tikzpicture}
-    % Draw x and y axis lines
-    \draw [->] (-5,4) -- (5,4) node [below] {$x$};
-    \draw [->] (-4,5) -- (-4,-5) node [left] {$z$};
-    \draw[step=0.2cm,color=gray] (-4,-4) grid (4,4);   
-    \draw[very thick] (-4,-4)--(-4,4);
-    \draw[very thick] (4,-4)--(4,4);
-    \draw[very thick] (3,-4)--(3,4);
-    \draw[very thick] (2,-4)--(2,4);
-    \draw[very thick] (1,-4)--(1,4);
-    \draw[very thick] (0,-4)--(0,4);
-    \draw[very thick] (-3,-4)--(-3,4);
-    \draw[very thick] (-2,-4)--(-2,4);
-    \draw[very thick] (-1,-4)--(-1,4);
-    \draw[very thick] (-4,-4)--(4,-4);
-    \draw[very thick] (-4,-3)--(4,-3);
-    \draw[very thick] (-4,-2)--(4,-2);
-    \draw[very thick] (-4,-1)--(4,-1);
-    \draw[very thick] (-4,0)--(4,0);
-    \draw[very thick] (-4,4)--(4,4);
-    \draw[very thick] (-4,3)--(4,3);
-    \draw[very thick] (-4,2)--(4,2);
-    \draw[very thick] (-4,1)--(4,1);    
-    \draw [very thick,red] (-1.2,-1.2) rectangle (0.2,0.2);    
-  \end{tikzpicture}
-  \caption{2D blocks in GPU memory. The marked window indicates that the shared memory in every block needs to be extended on each side with halo ghost points storing the grid value from other blocks.}\label{fig:blocks}
-\end{figure}
+\plot{blocks}{width=0.6\textwidth}{2D blocks in GPU memory. The marked window indicates that the shared memory in every block needs to be extended on each side with halo ghost points storing the grid value from other blocks.}
 
 
 \subsection{Parallel reduction on CUDA blocks}
@@ -213,47 +143,18 @@ which requires only one layer to be saved on each side for wavefield reconstruct
 Recognizing that  hardware serializes divergent thread execution within same warp whereas all threads of warp have to complete execution before warp ends, we use parallel reduction technique to find the maximum of model vector $\textbf{m}_k$ and the descent vector $\textbf{d}_k$, as well as summation for the inner product in the numerator and the denominator of $\alpha_k$. 
 A sequential addressing scheme is utilized because it is free of conflict \citep{harris2007optimizing}. As shown in Figure~\ref{fig:reduction}, parallel reduction approach builds a summation tree to do stepwise partial sums.  In each level half of the threads will perform reading from global memory and writing to shared memory. The required number of threads will decrease to be half of previous level. It reduces a serial computational complexity $O(N)$ to be $O(\log_2(N))$ steps: in each step many threads perform computation simultaneously, leading to low arithmetic intensity. In this way, it may bring a significant improvement in computational efficiency. 
 
-
-\begin{figure}
-\centering
-\begin{tikzpicture}
-  \fill[semithick,blue] (0,0)  circle (0.25) (1,0) circle(0.25)  (2,0) circle(0.25)   (3,0) circle(0.25) 
-  (4,0) circle(0.25) (5,0) circle(0.25) (6,0) circle(0.25) (7,0) circle(0.25); 
-  \fill [semithick,blue] (0,-2)  circle (0.25) (1,-2) circle(0.25)  (2,-2) circle(0.25)   (3,-2) circle(0.25);  
-  \draw[thick,->] (0,-0.25)--(0,-1.75);
-  \draw[thick,->] (4,-0.25)--(0,-1.75);  
-  \draw[thick,->] (1,-0.25)--(1,-1.75);
-  \draw[thick,->] (5,-0.25)--(1,-1.75);
-  \draw[thick,->] (2,-0.25)--(2,-1.75);
-  \draw[thick,->] (6,-0.25)--(2,-1.75);  
-  \draw[thick,->] (3,-0.25)--(3,-1.75);
-  \draw[thick,->] (7,-0.25)--(3,-1.75);
-  
-  \fill [semithick,blue] (0,-4) circle (0.25) (1,-4) circle(0.25); 
-  \draw[->] (2,-0.25)--(2,-1.75); 
-  \draw[thick,->] (0,-2.25)--(0,-3.75);
-  \draw[thick,->] (2,-2.25)--(0,-3.75);  
-  \draw[thick,->] (1,-2.25)--(1,-3.75);
-  \draw[thick,->] (3,-2.25)--(1,-3.75);
-  
-  \fill [semithick,blue] (0,-6) circle (0.25);
-  \draw[thick,->] (0,-4.25)--(0,-5.75);
-  \draw[thick,->] (1,-4.25)--(0,-5.75);
-\end{tikzpicture}
-\caption{Parallel reduction on GPU block. It reduces a serial computational complexity $O(N)$ to be $O(\log_2(N))$ steps: in each step many threads perform computation simultaneously, leading to low arithmetic intensity. }\label{fig:reduction}
-\end{figure}
-
-
+\plot{reduction}{width=0.6\textwidth}{Parallel reduction on GPU block. It reduces a serial computational complexity $O(N)$ to be $O(\log_2(N))$ steps: in each step many threads perform computation simultaneously, leading to low arithmetic intensity. }
 
 \section{Numerical results}
 
 \subsection{Exact reconstruction with saved boundaries}
+
 \inputdir{fbrec}
 
 Since we are advocating the wavefield reconstruction method in FWI, the foremost thing is to demonstrate that the boundary saving strategy does not introduce any kind of errors or artifacts for the wavefield to be reconstructed. To attain this goal, we design a constant velocity model: velocity=2000 m/s, $nz=nx=200$, $\Delta z=\Delta x=5m$. The 15Hz Ricker wavelet is taken as the source and set at the center of the model. We do the modeling process for 1000 steps with time interval $\Delta t=1$ms. We record the modeled wavefield snap at 0.28s and 0.4s, as shown in the top panels of Figure~\ref{fig:fb}. The figure shows that at time 0.4s, the wavefield has already spead to the boundaries which absorb most of the reflection energy. In the backward steps, the reconstructed wavefields at 0.4s and 0.28s are also recorded, shown in the bottom panels of Figure~\ref{fig:fb}. As can be seen from the figure, the backward reconstruction starts from the boudaries (bottom left) and gradually recovers the interior wavefield (bottom right). 
 
 
-\plot{fb}{width=\textwidth}{Backward reconstruction can be realized using the saved boundaries. Note that no absorbing boundary condition is applied on the top boundary of the model in the forward modeling.}
+\plot{fb}{width=0.8\textwidth}{Backward reconstruction can be realized using the saved boundaries. Note that no absorbing boundary condition is applied on the top boundary of the model in the forward modeling.}
 
 \subsection{Speedup performance}
 \inputdir{speedup}

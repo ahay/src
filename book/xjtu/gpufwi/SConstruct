@@ -1,3 +1,8 @@
 from rsf.tex import *
 
-End(use='amsmath,amsfonts,amssymb,hyperref,url,tikz',color='fb marm shotsnap vsnap')
+End(use='''amsmath,amsfonts,amssymb,hyperref,url,tikz''',
+	include='''
+%\usetikzlibrary{decorations.pathreplacing} 
+%\usetikzlibrary{shapes,arrows,chains}
+	''',
+	color='fb marm shotsnap vsnap')
