@@ -83,7 +83,8 @@ y1 = 671
 
 r = 5 # circle radius
 
-picks =[]
+picks = {}
+npick = 0
 
 canvas = Canvas(root,cursor='crosshair',
                 width=width,height=height,
@@ -127,15 +128,45 @@ def display(event):
     else:
 	coords.set("")
 
+current = None
+
+def selectpick(event):
+    global current
+    current = canvas.find_closest(event.x, event.y)
+
+def movepick(event):
+    global current,r
+    if current:
+        x=event.x
+        y=event.y
+        canvas.coords(current,x-r,y-r,x+r,y+r)
+
+def movedpick(event):
+    global current
+    current = None
+
+def deletepick(event):
+    pick = canvas.find_closest(event.x, event.y)
+    tag = canvas.gettags(pick)[0]
+    canvas.delete(pick)
+    del picks[tag]
+
 def getpick(event):
+    global npick,r
     canvas = event.widget
     x = canvas.canvasx(event.x)
     y = canvas.canvasx(event.y)   
     if x >= x0 and y >= y0 and x <= x1 and y <= y1:
-        canvas.create_oval(x-r,y-r,x+r,y+r,fill=color)
+        npick += 1
+        tag = 'pick%d' % npick
+        canvas.create_oval(x-r,y-r,x+r,y+r,fill=color,tags=tag)
+        canvas.tag_bind(tag,'<ButtonPress-2>',selectpick)
+        canvas.tag_bind(tag,'<B2-Motion>',movepick)
+        canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
+        canvas.tag_bind(tag,'<Button-3>',deletepick)
         xs = o2+(x-x0)*xscale
         ys = o1+(y-y0)*yscale
-        picks.append((ys,xs))
+        picks[tag]=(ys,xs)
 
 image = rsf2image(inp)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
@@ -146,7 +177,7 @@ canvas.pack(side=BOTTOM)
 @atexit.register
 def cleanup():
     global ppm, picks
-    for pick in picks:
+    for pick in picks.values():
         sys.stdout.write('%g\t%g\n' % pick)
     if os.path.isfile(ppm):
         os.unlink(ppm)
@@ -158,5 +189,5 @@ root.bind("q",bye)
 root.mainloop()
 
 # Add:
-# 2. remove picks with Button-3
-# 3. 3-D
+# 1. OOP
+# 2. 3-D
