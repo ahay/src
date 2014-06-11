@@ -58,7 +58,7 @@ namespace RVL {
     matvec(int _rows, int _cols): rows(_rows), cols(_cols), adj(false), mat(rows*cols) {
       for (int i=0;i<rows*cols; i++) mat.getData()[i]=ScalarFieldTraits<T>::Zero();
     }
-    matvec(matvec<T> const * m): rows(m.rows), cols(m.cols), adj(m.adj), mat(m.mat) {}
+    matvec(matvec<T> const * m): rows(m->rows), cols(m->cols), adj(m->adj), mat(m->mat) {}
     ~matvec() {}
 
     /** expose data */

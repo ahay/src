@@ -94,8 +94,9 @@ namespace RVLUmin {
          atype _gamma = 0.04,     // inversion level
          atype _epsilon = 0.001,  // error reduction
          atype _alpha = 1.1,      // 'fudge factor'
+         atype _lbd_est = 0.0,    // input operator spectrum in case it is know prior
          ostream & _str = cout)
-      : A(_A), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), coeff(_coeff), gamma(_gamma), epsilon(_epsilon), alpha(_alpha), kc(_kc), nrt(_nrt), str(_str), dx(A.getDomain()), r(A.getDomain()), ndx(A.getDomain()), tmp_vector(A.getRange()), x_init(_x),dx_init(A.getDomain()),r_init(A.getDomain()),ndx_init(A.getDomain()){
+      : A(_A), x(_x), b(_b), rnorm(_rnorm), nrnorm(_nrnorm), coeff(_coeff), gamma(_gamma), epsilon(_epsilon), alpha(_alpha), lbd_est(_lbd_est),kc(_kc), nrt(_nrt), str(_str), dx(A.getDomain()), r(A.getDomain()), ndx(A.getDomain()), tmp_vector(A.getRange()), x_init(_x),dx_init(A.getDomain()),r_init(A.getDomain()),ndx_init(A.getDomain()){
         
       atype one = ScalarFieldTraits<atype>::One();
       atype tmp = one;
@@ -112,10 +113,17 @@ namespace RVLUmin {
       //nrnorm=ndx_init.norm();
       
       tmp = abs(r_init.inner(ndx_init));
-      ProtectedDivision<atype>(tmp,r_init.normsq(),RQ);
-      lbd_est = alpha * RQ;
+      if (ProtectedDivision<atype>(tmp,r_init.normsq(),RQ)) {
+          RVLException e;
+          e<<"Error: ChebStep::ChebStep() from ProtectedDivision: RQ\n";
+          throw e;
+      }
+      if(RQ > lbd_est){
+          lbd_est = alpha * RQ;
+          nrt = nrt + 1;
+      }
+
       ProtectedDivision<atype>(2*one,(one+gamma)*lbd_est,s);
-//      str<<"Estimated spectrum bound at iter [0] = "<< lbd_est << endl;
     }
       
     /**
@@ -135,6 +143,7 @@ namespace RVLUmin {
       
           atype tmp;
           dx.linComb(s*coeff[kc+1],r,coeff[kc+1]-one); // this = a*x+b*this
+          
           x.linComb(one,dx);
           A.applyOp(dx,tmp_vector);
           A.applyAdjOp(tmp_vector,ndx);
@@ -156,9 +165,6 @@ namespace RVLUmin {
               ProtectedDivision<atype>(2*one,(one+gamma)*lbd_est,s);
               kc = -1;
               nrt = nrt + 1;
-//              str<<"Estimated spectrum bound at iter ["<<nrt<<"] = "<< lbd_est << endl;
-//              str << "NOTE: The  " << nrt << "-th restart\n";
-    
           }
           kc = kc + 1;
       }
@@ -168,6 +174,8 @@ namespace RVLUmin {
       }
      
     }
+    
+    atype getSpectrumBound() const { return lbd_est; }
 
     ~ChebStep() {}
 
@@ -188,7 +196,7 @@ namespace RVLUmin {
     atype alpha;		   // 'fudge factor'
     atype beta;
     atype RQ;
-    atype lbd_est;
+    atype lbd_est;         // estimated spectrum bound
     atype s;
     int &kc;
     int &nrt;
@@ -386,9 +394,10 @@ necessary number of iterations.
 	    atype _gamma = 0.04,     // inversion level
 	    atype _epsilon = 0.001,  // error reduction
 	    atype _alpha = 1.1,      // 'fudge factor'
+        atype _lbd_est=0.0,
 	    int _maxcount = 10,      // upper bound of iterations
 	    ostream & _str = cout)  
-      : inA(_inA), x(_x), rhs(_rhs), rnorm(_rnorm), nrnorm(_nrnorm), gamma(_gamma),epsilon(_epsilon),alpha(_alpha),maxcount(_maxcount), kmax(_maxcount), kc(0), ktot(0), str(_str), step(inA,x,rhs,rnorm,nrnorm,coeff,kc,nrt,gamma,epsilon,alpha,str)
+      : inA(_inA), x(_x), rhs(_rhs), rnorm(_rnorm), nrnorm(_nrnorm), gamma(_gamma),epsilon(_epsilon),alpha(_alpha),lbd_est(_lbd_est),maxcount(_maxcount), kmax(_maxcount), kc(0), ktot(0), str(_str), step(inA,x,rhs,rnorm,nrnorm,coeff,kc,nrt,gamma,epsilon,alpha,lbd_est,str)
 	// NOTE: reference to coeff has been passed to ChebStep object step, however
 	// coeff has not been initialized.
     { x.zero();
@@ -457,6 +466,8 @@ necessary number of iterations.
     int getCount() const { return kc; }
     int getTotalCount() const { return ktot; }
     int getRestartCount() const { return nrt+1; }
+    atype getSpectrumBound() const { return step.getSpectrumBound(); }
+
 
   private:
 
@@ -467,10 +478,11 @@ necessary number of iterations.
     atype & nrnorm;                // gradient norm
 
     // added for Chebyshev
-      std::vector<atype> coeff;
+    std::vector<atype> coeff;
     atype gamma; 		   // inversion level
     atype epsilon; 		   // error reduction factor
     atype alpha;		   // 'fudge factor'
+    atype lbd_est;         // spectrum bound of op
     int maxcount;                  // upper bound for iteration count
     int nrt;                       // upper bound for restarting
     // end of added 
@@ -519,27 +531,30 @@ necessary number of iterations.
     
     int maxcount;
     atype gamma;     // inversion level
-    atype epsilon;  // error reduction
-    atype alpha;      // 'fudge factor'
+    atype epsilon;   // error reduction
+    atype alpha;     // 'fudge factor'
+    atype lbd_est;   // estimated spectrum bound
     bool verbose;
     
     ChebPolicyData(atype _gamma = 0.04,
 		   atype _epsilon = 0.01,
 		   atype _alpha = 1.001,
+           atype _lbd_est = 0.0,
 		   int _maxcount = 0,
            bool _verbose = false)
-      : maxcount(_maxcount), gamma(_gamma), epsilon(_epsilon), alpha(_alpha),verbose(_verbose) {}
+      : maxcount(_maxcount), gamma(_gamma), epsilon(_epsilon), alpha(_alpha),lbd_est(_lbd_est),verbose(_verbose) {}
     
     ChebPolicyData(ChebPolicyData<Scalar> const & a)
-      : maxcount(a.maxcount), gamma(a.gamma), epsilon(a.epsilon), alpha(a.alpha), verbose(a.verbose) {}
+      : maxcount(a.maxcount), gamma(a.gamma), epsilon(a.epsilon), alpha(a.alpha), lbd_est(a.lbd_est), verbose(a.verbose) {}
       
     ostream & write(ostream & str) const {
           str<<"\n";
           str<<"==============================================\n";
           str<<"ChebPolicyData: \n";
-          str<<"gamma      = "<<gamma<<"\n";
-          str<<"epsilon     = "<<epsilon<<"\n";
+          str<<"gamma     = "<<gamma<<"\n";
+          str<<"epsilon   = "<<epsilon<<"\n";
           str<<"alpha     = "<<alpha<<"\n";
+          str<<"lbd_est   = "<<lbd_est<<"\n";
           str<<"maxcount  = "<<maxcount<<"\n";
           str<<"verbose   = "<<verbose<<"\n";
           str<<"==============================================\n";
@@ -580,9 +595,9 @@ necessary number of iterations.
 			    atype & nrnorm,
 			    ostream & str) const {
         if (verbose)
-      return new ChebAlg<Scalar>(x, A, d,rnorm,nrnorm,gamma,epsilon,alpha,maxcount,str);
+      return new ChebAlg<Scalar>(x, A, d,rnorm,nrnorm,gamma,epsilon,alpha,lbd_est,maxcount,str);
         else
-      return new ChebAlg<Scalar>(x, A, d,rnorm,nrnorm,gamma,epsilon,alpha,maxcount,nullstr);
+      return new ChebAlg<Scalar>(x, A, d,rnorm,nrnorm,gamma,epsilon,alpha,lbd_est,maxcount,nullstr);
     }
 
     /** post-construction initialization
@@ -590,8 +605,8 @@ necessary number of iterations.
 	@param _nrtol - normal residual (LS gradient) norm stopping threshhold
 	@param _maxcount - max number of permitted iterations
     */
-    void assign(atype _rtol, atype _nrtol, atype _gamma, atype _epsilon, atype _alpha, int _maxcount, bool _verbose) {
-        gamma = _gamma; epsilon=_epsilon; alpha=_alpha; maxcount=_maxcount; verbose=_verbose;
+    void assign(atype _rtol, atype _nrtol, atype _gamma, atype _epsilon, atype _alpha, atype _lbd_est, int _maxcount, bool _verbose) {
+        gamma = _gamma; epsilon=_epsilon; alpha=_alpha; lbd_est=_lbd_est; maxcount=_maxcount; verbose=_verbose;
     }
 
     /** parameter table overload */
@@ -599,6 +614,7 @@ necessary number of iterations.
       gamma=getValueFromTable<atype>(t,"Cheb_gamma");
       epsilon=getValueFromTable<atype>(t,"Cheb_epsilon");
       alpha=getValueFromTable<atype>(t,"Cheb_alpha");
+      lbd_est=getValueFromTable<atype>(t,"Cheb_lbd_est");
       maxcount=getValueFromTable<int>(t,"Cheb_MaxItn");
       verbose=getValueFromTable<bool>(t,"Cheb_Verbose");
     }
@@ -608,6 +624,7 @@ necessary number of iterations.
       gamma=s.gamma;
       epsilon=s.epsilon;
       alpha=s.alpha;
+      lbd_est=s.lbd_est;
       maxcount=s.maxcount;
       verbose=s.verbose;
     }
@@ -623,14 +640,16 @@ necessary number of iterations.
     ChebPolicy(atype _gamma = 0.04,
                atype _epsilon = 0.01,
                atype _alpha = 1.001,
+               atype _lbd_est = 0.0,
 	       int _maxcount = 0,
             bool _verbose = true)
-      : gamma(_gamma), epsilon(_epsilon), alpha(_alpha),maxcount(_maxcount), verbose(_verbose), nullstr(0){}
+      : gamma(_gamma), epsilon(_epsilon), alpha(_alpha), lbd_est(_lbd_est),maxcount(_maxcount), verbose(_verbose), nullstr(0){}
       
     ChebPolicy(ChebPolicy<Scalar> const & p)
       : gamma(p.gamma),
     epsilon(p.epsilon),
     alpha(p.alpha),
+    lbd_est(p.lbd_est),
     maxcount(p.maxcount),
     verbose(p.verbose),
     nullstr(0) {}
@@ -639,6 +658,7 @@ necessary number of iterations.
     mutable atype gamma;
     mutable atype epsilon;
     mutable atype alpha;
+    mutable atype lbd_est;
     mutable int maxcount;
     mutable bool verbose;
     mutable std::ostream nullstr;

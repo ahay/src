@@ -48,11 +48,12 @@ void ChebTest(int rows,
 	      int cols, 
 	      typename ScalarFieldTraits<T>::AbsType _nlvl, // noise level
 	      int maxit, 
-	      typename ScalarFieldTraits<T>::AbsType minsig, // max singular val
-	      typename ScalarFieldTraits<T>::AbsType maxsig, // max singular val
-	      typename ScalarFieldTraits<T>::AbsType gamma,  // inversion level
-              typename ScalarFieldTraits<T>::AbsType epsilon,// error reduction
-              typename ScalarFieldTraits<T>::AbsType alpha,  // 'fudge factor'
+	      typename ScalarFieldTraits<T>::AbsType minsig,   // max singular val
+	      typename ScalarFieldTraits<T>::AbsType maxsig,   // max singular val
+	      typename ScalarFieldTraits<T>::AbsType gamma,    // inversion level
+          typename ScalarFieldTraits<T>::AbsType epsilon,  // error reduction
+          typename ScalarFieldTraits<T>::AbsType alpha,    // 'fudge factor'
+          typename ScalarFieldTraits<T>::AbsType lbd_est,  // input spectrum bound
 	      string testno, string datatype, string output, 
 	      ostream & str) {
 
@@ -122,10 +123,11 @@ void ChebTest(int rows,
     // allocate rnorm, nrnorm scalars
     atype rnorm = numeric_limits<atype>::max();
     atype nrnorm = numeric_limits<atype>::max();
-    ChebAlg<T> iter(est,A,rhs,rnorm,nrnorm,gamma,epsilon,alpha,maxit,strout);
+    ChebAlg<T> iter(est,A,rhs,rnorm,nrnorm,gamma,epsilon,alpha,lbd_est,maxit,strout);
     // run it
     iter.run();
 
+    str << "\n estimated spectrum bound = " << iter.getSpectrumBound() << endl;
     // display results
     atype snorm = sol.norm();
     atype enorm = est.norm();
@@ -187,17 +189,17 @@ int main() {
 
     int cols=100;
 
-    ChebTest<double>(cols,cols,0.0,1000,0.1,1.0,0.04,0.001,1.1,
+    ChebTest<double>(cols,cols,0.0,1000,0.1,1.0,0.04,0.001,1.1,0.0,
 		     "0.0","double","./Chebdbl0.rpt",cout);
-    ChebTest<double>(cols,cols,0.0,1000,0.1,1.0,0.01,0.001,1.1,
+    ChebTest<double>(cols,cols,0.0,1000,0.1,1.0,0.01,0.001,1.1,0.5,
 		     "0.1","double","./Chebdbl1.rpt",cout);
-    ChebTest<double>(cols,cols,0.0,1000,0.01,1.0,0.04,0.001,1.1,
+    ChebTest<double>(cols,cols,0.0,1000,0.01,1.0,0.04,0.001,1.1,0.9,
 		     "0.2","double","./Chebdbl2.rpt",cout);
-    ChebTest<double>(cols,cols,0.0,1000,0.01,1.0,0.0001,0.001,1.1,
+    ChebTest<double>(cols,cols,0.0,1000,0.01,1.0,0.0001,0.001,1.1,1.0,
 		     "0.3","double","./Chebdbl3.rpt",cout);
-    ChebTest<double>(cols,cols,0.0,1000,0.0,1.0,0.04,0.001,1.1,
+    ChebTest<double>(cols,cols,0.0,1000,0.0,1.0,0.04,0.001,1.1,1.5,
 		     "0.4","double","./Chebdbl4.rpt",cout);
-    ChebTest<double>(cols,cols,0.0,1000,0.0,1.0,0.0001,0.001,1.1,
+    ChebTest<double>(cols,cols,0.0,1000,0.0,1.0,0.0001,0.001,1.1,2.0,
 		     "0.5","double","./Chebdbl5.rpt",cout);
   }
   catch (RVLException & e) {
