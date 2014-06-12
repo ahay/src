@@ -16,8 +16,8 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import sys, os, subprocess, atexit, tempfile
-import rsf.prog
+import sys, os, atexit, tempfile, subprocess
+from rsf.prog import RSFROOT
 
 try:
     from Tkinter import *
@@ -27,24 +27,41 @@ except:
     sys.exit(1)
 
 if len(sys.argv) < 2:
-    sys.stderr.write('Usage: %s file.rsf pick=pick.txt <sfgrey options>\n\n' % sys.argv[0])
+    sys.stderr.write('Usage: %s < file.rsf pick=pick.txt [sfgrey/ppmpen options] > picks.txt\n\n' % sys.argv[0])
     sys.exit(2)
+ 
+byte = tempfile.mktemp(suffix='.rsf')
+name = os.path.splitext(byte)[0]
 
-inp = sys.argv[1]
+args = ' '.join(sys.argv[1:])
 
-bindir   = os.path.join(rsf.prog.RSFROOT,'bin')
+ppms = []
+
+bindir   = os.path.join(RSFROOT,'bin')
+sfwindow = os.path.join(bindir,'sfwindow')
+sfbyte   = os.path.join(bindir,'sfbyte')
 sfgrey   = os.path.join(bindir,'sfgrey')
 sfget    = os.path.join(bindir,'sfget')
+sfrm     = os.path.join(bindir,'sfrm')
 ppmpen   = os.path.join(bindir,'ppmpen')
-ppm = None
 
-def rsf2image(rsf):
-    global ppm
-    ppm = os.path.splitext(rsf)[0]+'.ppm'
-    command = '< %s %s %s | %s > %s' % (rsf,sfgrey,' '.join(sys.argv[2:]),ppmpen,ppm)
-    if os.system(command) or not os.path.isfile(ppm):
-        sys.stderr.write('Failed to execute "%s"\n\n' % command)
-        sys.exit(3)
+command = '%s %s > %s' % (sfbyte,args,byte)
+p = subprocess.Popen(command,shell=True)
+
+#if not os.path.isfile(byte):
+#    sys.stderr.write('Failed to execute "%s"\n\n' % command)
+#    sys.exit(2)
+
+def rsf2image(i3):
+    global byte
+    ppm = '%s%d.ppm' % (name,i3)
+    if not os.path.isfile(ppm):
+        command = '< %s %s n3=1 f3=%d | %s %s | %s %s > %s' % \
+            (byte,sfwindow,i3,sfgrey,args,ppmpen,args,ppm)
+        if os.system(command) or not os.path.isfile(ppm):
+            sys.stderr.write('Failed to execute "%s"\n\n' % command)
+            sys.exit(3)
+        ppms.append(ppm)
     img = PhotoImage(file=ppm)
     return img
 
@@ -54,8 +71,9 @@ def pickcolor():
     col = askcolor()
     color = col[1]
 
-def hist(inp,func,var,default=None):
-    command = '< %s %s %s parform=n' % (inp,sfget,var)
+def hist(func,var,default=None):
+    global byte
+    command = '< %s %s %s parform=n' % (byte,sfget,var)
     devnull = open(os.devnull,"w")
     pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
     val = pipe.stdout.read().rstrip()
@@ -75,30 +93,27 @@ y1 = 671
 
 r = 5 # circle radius
 
-label1 = hist(inp,str,'label1','Y')
-unit1  = hist(inp,str,'unit1','')
+label1 = hist(str,'label1','Y')
+unit1  = hist(str,'unit1','')
 
-label2 = hist(inp,str,'label2','X')
-unit2  = hist(inp,str,'unit2','')
+label2 = hist(str,'label2','X')
+unit2  = hist(str,'unit2','')
 
-n1 = hist(inp,int,'n1',1)
-d1 = hist(inp,float,'d1',1.0)
-o1 = hist(inp,float,'o1',0.0)
+n1 = hist(int,'n1',1)
+d1 = hist(float,'d1',1.0)
+o1 = hist(float,'o1',0.0)
 yscale = (n1-1)*d1/(y1-y0)
 
-n2 = hist(inp,int,'n2',1)
-d2 = hist(inp,float,'d2',1.0)
-o2 = hist(inp,float,'o2',0.0)
+n2 = hist(int,'n2',1)
+d2 = hist(float,'d2',1.0)
+o2 = hist(float,'o2',0.0)
 xscale = (n2-1)*d2/(x1-x0)
 
-n3 = hist(inp,int,'n3',1)
-d3 = hist(inp,float,'d3',1.0)
-o3 = hist(inp,float,'o3',0.0)
-
+n3 = hist(int,'n3',1)
 i3 = 0
 
 root = Tk()
-root.title(inp)
+root.title('Interactive Picking')
 
 coords = StringVar()
 
@@ -110,23 +125,37 @@ button.pack(side=RIGHT)
 button = Button(frame,text='Set Color',command=pickcolor)
 button.pack(side=RIGHT)
 
-def nextframe():
-    global i3
-    i3 += 1
-    if i3 == n3-1:
-        next.config(state='disabled')
-    prev.config(state='normal')
-    i3frame.set('%d of %d' % (i3+1,n3))
-
-def prevframe():
-    global i3
-    i3 -= 1
-    if i3 == 0:
-        prev.config(state='disabled')
-    next.config(state='normal')
-    i3frame.set('%d of %d' % (i3+1,n3))
-
 if n3 > 1:
+    def nextframe(event=None):
+        global i3,n3,canvas,next,prev,picks
+        for pick in picks[i3].keys():
+            canvas.itemconfigure(pick,state=HIDDEN)
+        i3 += 1
+        if i3 == n3-1:
+            next.config(state='disabled')
+        prev.config(state='normal')
+        for pick in picks[i3].keys():
+            canvas.itemconfigure(pick,state=NORMAL)   
+        i3frame.set('%d of %d' % (i3+1,n3))
+        image = rsf2image(i3)
+        canvas.itemconfigure('image', image=image)
+        canvas.image=image
+
+    def prevframe(event=None):
+        global i3,n3,canvas,next,prev,picks
+        for pick in picks[i3].keys():
+            canvas.itemconfigure(pick,state=HIDDEN)
+        i3 -= 1
+        if i3 == 0:
+            prev.config(state='disabled')
+        next.config(state='normal')
+        for pick in picks[i3].keys():
+            canvas.itemconfigure(pick,state=NORMAL)   
+        i3frame.set('%d of %d' % (i3+1,n3))
+        image = rsf2image(i3)
+        canvas.itemconfigure('image', image=image)
+        canvas.image=image
+
     i3frame = StringVar()
     i3frame.set('%d of %d' % (i3+1,n3))
 
@@ -140,13 +169,20 @@ if n3 > 1:
     label = Label(frame,textvariable=i3frame,relief=RIDGE,borderwidth=3)
     label.pack(side=LEFT)
 
+    root.bind('n',nextframe)
+    root.bind('p',prevframe)
+    root.bind('m',prevframe)
+
 label = Label(frame,textvariable=coords)
 label.pack()
 
 frame.pack(side=BOTTOM,fill=X)
 
-picks = {}
+picks = []
 npick = 0
+
+for i in range(n3):
+    picks.append({})
 
 canvas = Canvas(root,cursor='crosshair',
                 width=width,height=height,
@@ -167,14 +203,10 @@ def display(event):
 current = None
 
 def scalepick(x,y):
-    global o1,o2,x0,y0,xscale,yscale,o3,i3,d3
+    global o1,o2,x0,y0,xscale,yscale,i3
     xs = o2+(x-x0)*xscale
     ys = o1+(y-y0)*yscale
-    if n3 > 1:
-        zs = o3+i3*d3
-        return (ys,xs,zs)
-    else:
-        return (ys,xs)
+    return (ys,xs,i3)
 
 def selectpick(event):
     global current
@@ -190,16 +222,16 @@ def movepick(event):
 def movedpick(event):
     global current
     tag = canvas.gettags(current)[0]
-    picks[tag] = scalepick(event.x,event.y)
+    picks[i3][tag] = scalepick(event.x,event.y)
     current = None
 
 def deletepick(event):
     pick = canvas.find_closest(event.x, event.y)
     tag = canvas.gettags(pick)[0]
+    del picks[i3][tag]
     canvas.delete(pick)
-    del picks[tag]
 
-def getpick(event):
+def addpick(event):
     global npick,r
     canvas = event.widget
     x = canvas.canvasx(event.x)
@@ -212,24 +244,26 @@ def getpick(event):
         canvas.tag_bind(tag,'<B2-Motion>',movepick)
         canvas.tag_bind(tag,'<ButtonRelease-2>',movedpick)
         canvas.tag_bind(tag,'<Button-3>',deletepick)
-        picks[tag]=scalepick(x,y)
+        picks[i3][tag]=scalepick(x,y)
 
-image = rsf2image(inp)
+image = rsf2image(0)
 canvas.create_image(0,0,image=image,anchor=NW,tags="image")
+canvas.image=image
 canvas.bind("<Motion>",display)
-canvas.bind("<Button-1>",getpick)
+canvas.bind("<Button-1>",addpick)
 canvas.pack(side=BOTTOM)
 
 @atexit.register
 def cleanup():
-    global ppm, picks
-    for pick in picks.values():
-        if n3 > 1:
-            sys.stdout.write('%g\t%g\t%g\n' % pick)
-        else:
-            sys.stdout.write('%g\t%g\n' % pick)
-    if os.path.isfile(ppm):
-        os.unlink(ppm)
+    global ppms, picks
+    for i in range(n3):
+        for pick in picks[i].values():
+            sys.stdout.write('%g\t%g\t%d\n' % pick)
+    for ppm in ppms:
+        if os.path.isfile(ppm):
+            os.unlink(ppm)
+    if os.path.isfile(byte):
+        os.system(' '.join([sfrm,byte]))
 
 def bye(event):
     sys.exit(0)
@@ -237,4 +271,3 @@ def bye(event):
 root.bind("q",bye)
 root.mainloop()
 
-# 3-D: load image, dots

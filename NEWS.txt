@@ -19,7 +19,8 @@ To the Python package:
 
 To programs:
 
-* Added color=lb Light-Bartlein color scheme in sfgrey and sfgrey3
+* Added color=lb (Light-Bartlein) and color=gist_earth color schemes
+* sfipick: example Tkinter script for interactive zooming
 
 ===Bug fixes===
 
