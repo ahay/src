@@ -182,7 +182,7 @@ Result('shot118','shot118 boff118',
 
 # Apply static corrections
 Flow('static2','elevation static','add ${SOURCES[1]}')
-Flow('lines2','lines static2','datstretch datum=${SOURCES[1]}')
+Flow('lines2','lines static2','datstretch datum=${SOURCES[1]} inv=y')
 
 Result('lines2',
        '''
