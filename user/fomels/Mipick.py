@@ -26,8 +26,8 @@ except:
     sys.stderr.write('Please install Tkinter!\n\n')
     sys.exit(1)
 
-if len(sys.argv) < 2:
-    sys.stderr.write('Usage: %s < file.rsf pick=pick.txt [sfgrey/ppmpen options] > picks.txt\n\n' % sys.argv[0])
+if os.isatty(sys.stdin.fileno()):
+    sys.stderr.write('Usage: %s < file.rsf [sfgrey/ppmpen options] > picks.txt\n\n' % sys.argv[0])
     sys.exit(2)
  
 byte = tempfile.mktemp(suffix='.rsf')
