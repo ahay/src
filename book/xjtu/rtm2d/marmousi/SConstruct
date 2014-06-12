@@ -12,22 +12,22 @@ Result('marm',
 	grey color=j mean=y title="Marmousi model" scalebar=y 
 	bartype=v barlabel="V" 	barunit="m/s" 
 	''')
-Flow('vel','marm','math output="0.5*input"')
 
 n0=2
-nt=2500
-dt=0.002
+nt=2501
+dt=0.001
 
 # Compute approximate reflectivity
-Flow('refl','vel',
+Flow('refl','marm',
      '''
      depth2time velocity=$SOURCE nt=%d dt=%g |
-     ai2refl | ricker1 frequency=10 |
+     ai2refl | ricker1 frequency=20 |
      time2depth velocity=$SOURCE
      '''%(nt, dt))
 
 Result('refl','grey title=Reflectivity titlesz=7 labelsz=5')
 
+Flow('vel','marm','math output="0.5*input"')
 
 Flow('data','refl vel',
      '''
