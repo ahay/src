@@ -1,8 +1,4 @@
 /* 2-D zero-offset reverse-time migration linear operator
-Note: 	1) Migration should be the adjoint of modeling. If you pass the 
-    dot-product test, you can use least-squares method with this 
-    rtm operator! 
-	2) Here, the sponge absorbing boundary condition is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -29,14 +25,6 @@ and its application in least-squares reverse-time migration." Geophysics
 
 #ifdef _OPENMP
 #include <omp.h>
-
-#if defined __INTEL_COMPILER && __INTEL_COMPILER_BUILD_DATE >= 20130607 && _OPENMP < 201107
-
-#undef  _OPENMP
-#define _OPENMP 201107
-
-#endif
-
 #endif
 
 #include "rtm2d.h"
@@ -44,24 +32,18 @@ and its application in least-squares reverse-time migration." Geophysics
 static int n0, nzpad, nxpad, nb, nz, nx, nt, nm, nd;
 static float c0, c11, c21, c12, c22;
 static float *bndr, *mod, *dat;
-static float **u0, **u1, **u2, **vv, **ptr=NULL;
+static float **u0, **u1, **vv, **ptr=NULL;
 
-void step_forward(float **u0, float **u1, float **u2, float **vv, bool adj)
+void step_forward(float **u0, float **u1, float **vv, bool adj)
 {
 	int i1, i2;
 	float u;
 
 	if(adj){
 #ifdef _OPENMP
-#if _OPENMP >= 201107
-#pragma omp parallel for collapse(2) default(none)	\
-    private(i2,i1,u)		    			\
-    shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
-#else
 #pragma omp parallel for default(none)	\
     private(i2,i1,u)		    			\
-    shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
-#endif
+    shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
 #endif
 		for (i2=0; i2<nxpad; i2++) 
 		for (i1=0; i1<nzpad; i1++) 
@@ -75,19 +57,13 @@ void step_forward(float **u0, float **u1, float **u2, float **vv, bool adj)
 			if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
 			if(i2 < nxpad-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
 			if(i2 < nxpad-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
-			u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+u;
+			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+u;
 		}
 	}else{
 #ifdef _OPENMP
-#if _OPENMP >= 201107
-#pragma omp parallel for collapse(2) default(none)	\
-    private(i2,i1,u)		    			\
-    shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
-#else
 #pragma omp parallel for default(none)	\
     private(i2,i1,u)		    			\
-    shared(nzpad,nxpad,u1,vv,u0,u2,c0,c11,c12,c21,c22)
-#endif
+    shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
 #endif
 		for (i2=0; i2<nxpad; i2++) 
 		for (i1=0; i1<nzpad; i1++) 
@@ -101,7 +77,7 @@ void step_forward(float **u0, float **u1, float **u2, float **vv, bool adj)
 			if(i2 >= 2)   u+= c22*u1[i2-2][i1];
 			if(i2 < nxpad-1) u+= c21*u1[i2+1][i1];
 			if(i2 < nxpad-2) u+= c22*u1[i2+2][i1];
-			u2[i2][i1]=2*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
+			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
 		}
 	}
 }
@@ -168,11 +144,10 @@ int nx_, int nb_, int nt_, float **v0, float *mod_, float *dat_)
     	bndr=sf_floatalloc(nb);
     	u0=sf_floatalloc2(nzpad,nxpad);
     	u1=sf_floatalloc2(nzpad,nxpad);
-    	u2=sf_floatalloc2(nzpad,nxpad);
     	vv=sf_floatalloc2(nzpad,nxpad);
 	/* initialized sponge ABC coefficients */
 	for(ib=0;ib<nb;ib++){
-		t=0.015*(nb-1-ib);
+		t=0.01*(nb-1-ib);
 		bndr[ib]=expf(-t*t);
 	}
 	mod=mod_;
@@ -203,7 +178,6 @@ void rtm2d_close()
 	free(bndr);
 	free(*u0); free(u0);
 	free(*u1); free(u1);
-	free(*u2); free(u2);
 	free(*vv); free(vv);
 }
 
@@ -211,11 +185,10 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 /*< rtm2d linear operator >*/
 {
 	int i1,i2,it;
-	sf_adjnull (adj, add, nm, nd, mod, dat);
- 
+
+	sf_adjnull (adj, add, nm, nd, mod, dat); 
 	memset(u0[0], 0, nzpad*nxpad*sizeof(float));
 	memset(u1[0], 0, nzpad*nxpad*sizeof(float));
-	memset(u2[0], 0, nzpad*nxpad*sizeof(float));
 
     	if(adj){// migration
 	    	for (it=nt-1; it >-1; it--) {
@@ -223,8 +196,8 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 
 			apply_sponge(u0, bndr); 
 			apply_sponge(u1, bndr); 
-			step_forward(u0, u1, u2, vv, true);
-			ptr=u0; u0=u1; u1=u2; u2=ptr;
+			step_forward(u0, u1, vv, true);
+			ptr=u0; u0=u1; u1=ptr;
 
 #ifdef _OPENMP
 #pragma omp parallel for	\
@@ -232,21 +205,21 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     shared(it,u1,dat,n0,nb)
 #endif
 			for (i2=0; i2<nx; i2++)	u1[i2+nb][n0+nb] += dat[i2*nt+it];
+
 	    	}
-		/* output image (mod is image) */
-		for(i2=0; i2<nxpad; i2++)
-		for(i1=0; i1<nzpad; i1++)
+		/* output image (mod is image, i.e. truncation of u1) */
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<nz; i1++)
 		{
-			mod[i1+nzpad*i2]+=u1[i2][i1];
+			mod[i1+nz*i2]+=u1[i2+nb][i1+nb];
 		}
     	}else{ // modeling
-		for(i2=0; i2<nxpad; i2++)
-		for(i1=0; i1<nzpad; i1++)
-		{
-			u1[i2][i1]+=mod[i1+nzpad*i2];
-		}
+		for(i2=0; i2<nx; i2++)
+		for(i1=0; i1<nz; i1++)
+			u1[i2+nb][i1+nb]+=mod[i1+nz*i2];// zero-paded
+
     		for (it=0; it <nt; it++) {
-			sf_warning("%d;",it);
+			sf_warning("%d;",it);	
 	  
 		/* record data */
 #ifdef _OPENMP
@@ -255,11 +228,11 @@ void rtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
     shared(it,u1,dat,n0,nb)
 #endif
 			for (i2=0; i2<nx; i2++) dat[i2*nt+it]+=u1[i2+nb][n0+nb];
-	
-			step_forward(u0, u1, u2, vv, false);
+
+			step_forward(u0, u1, vv, false);
 			apply_sponge(u1, bndr);
-			apply_sponge(u2, bndr);
-			ptr=u0; u0=u1; u1=u2; u2=ptr;
+			apply_sponge(u0, bndr);
+			ptr=u0; u0=u1; u1=ptr;
     		}
     	}
 }

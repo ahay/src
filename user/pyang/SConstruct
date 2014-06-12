@@ -68,6 +68,7 @@ for prog in mains:
         env.Install(bindir,prog)
 
 
+
 mpicc = env.get('MPICC')
 
 mpi_mains = Split(mpi_progs)
@@ -97,8 +98,6 @@ for prog in ccmains:
         prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
     if root:
         env.Install(bindir,prog)
-
-
 
 
 # compiling CUDA programs

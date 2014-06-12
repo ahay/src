@@ -1,6 +1,4 @@
 /* 2-D zero-offset reverse-time migration
-Note: Migration should be the adjoint of modeling. If you pass the 
-    dot-product test, you can do least-squares rtm!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -65,21 +63,21 @@ int main(int argc, char* argv[])
 	    /* time sampling interval: dt */
 	    if (!sf_histint(data,"n2",&nx) || nx != n2) 
 		sf_error("Need n2=%d in data",n2);
-	    sf_putint(imag,"n1",n1+2*nb);
-	    sf_putint(imag,"n2",n2+2*nb);
+	    sf_putint(imag,"n1",n1);
+	    sf_putint(imag,"n2",n2);
 	    sf_putfloat(imag,"d1",dz);
 	    sf_putfloat(imag,"d2",dx);
-	    sf_putfloat(imag,"o1",o1-nb*dz);
-	    sf_putfloat(imag,"o2",o2-nb*dx);
+	    sf_putfloat(imag,"o1",o1);
+	    sf_putfloat(imag,"o2",o2);
 	    sf_putstring(imag,"label1","Depth");
 	    sf_putstring(imag,"label2","Distance");
 	}else{/* modeling */
 	    imag = sf_input ("in"); /* input image */
 	    data = sf_output("out");  /* output seismic data */
-	    if (!sf_histint(imag,"n1",&nz) || nz != n1+2*nb)
-		    sf_error("Need n1=%d in imag",n1+2*nb);
-	    if (!sf_histint(imag,"n2",&nx) || nx != n2+2*nb) 
-		    sf_error("Need n2=%d in imag",n2+2*nb);
+	    if (!sf_histint(imag,"n1",&nz) || nz != n1)
+		    sf_error("Need n1=%d in imag",n1);
+	    if (!sf_histint(imag,"n2",&nx) || nx != n2) 
+		    sf_error("Need n2=%d in imag",n2);
 	    if (!sf_getint("nt",&nt)) sf_error("nt");
 	    /* number of time steps */
 	    if (!sf_getfloat("dt",&dt)) sf_error("dt");
@@ -97,22 +95,22 @@ int main(int argc, char* argv[])
 	/* In rtm, v0 is the velocity model [modl], which is input parameter; 
 	   mod is the image/reflectivity [imag]; dat is seismogram [data]! */
     	v0 = sf_floatalloc2(n1,n2);
-    	mod = sf_floatalloc((n1+2*nb)*(n2+2*nb));
+    	mod = sf_floatalloc(n1*n2);
     	dat = sf_floatalloc(nt*n2);
 
     	sf_floatread(v0[0],n1*n2,modl);
     	if(adj){/* migration */
 		sf_floatread(dat,nt*n2,data);
     	}else{ /* modeling */
-		sf_floatread(mod,(n1+2*nb)*(n2+2*nb),imag);
+		sf_floatread(mod,n1*n2,imag);
     	}
 
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, v0, mod, dat);
-	rtm2d_lop(adj, false, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat);
+	rtm2d_lop(adj, false, n1*n2, nt*n2, mod, dat);
 	rtm2d_close();
 
-    	if(adj) sf_floatwrite(mod, (n1+2*nb)*(n2+2*nb), imag);/*output image */
-    	else	sf_floatwrite(dat, nt*n2, data);  /* output data */
+    	if(adj) sf_floatwrite(mod, n1*n2, imag);/*output image */
+    	else	sf_floatwrite(dat, nt*n2, data);/* output data */
 
 	free(*v0); free(v0);
 	free(mod);

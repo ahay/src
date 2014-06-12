@@ -54,8 +54,8 @@ void lsrtm2d(float dz, float dx, float dt, int n0, int n1,
 int n2, int nb, int nt, float **vv, float *mod, float *dat, int niter)
 /*< LSRTM with conjugate gradient method >*/
 {
-  bool forget;
-  int i, iter;
+  	bool forget;
+  	int i, iter;
 	float res0, res;
 	for(i=0; i<nd;i++) 	rr[i]=-dat[i];
 	memset(gr, 0, nd*sizeof(float));
@@ -126,23 +126,23 @@ int main(int argc, char* argv[])
 	/* time sampling interval: dt */
 	if (!sf_histint(data,"n2",&nx) || nx != n2) 
 	sf_error("Need n2=%d in data",n2);
-	sf_putint(imag,"n1",n1+2*nb);
-	sf_putint(imag,"n2",n2+2*nb);
+	sf_putint(imag,"n1",n1);
+	sf_putint(imag,"n2",n2);
 	sf_putfloat(imag,"d1",dz);
 	sf_putfloat(imag,"d2",dx);
-	sf_putfloat(imag,"o1",o1-nb*dz);
-	sf_putfloat(imag,"o2",o2-nb*dx);
+	sf_putfloat(imag,"o1",o1);
+	sf_putfloat(imag,"o2",o2);
 	sf_putstring(imag,"label1","Depth");
 	sf_putstring(imag,"label2","Distance");
 
 	/* In rtm, vv is the velocity model [modl], which is input parameter; 
 	   mod is the image/reflectivity [imag]; dat is seismogram [data]! */
     	vv = sf_floatalloc2(n1,n2);
-    	mod = sf_floatalloc((n1+2*nb)*(n2+2*nb));
+    	mod = sf_floatalloc(n1*n2);
     	dat = sf_floatalloc(nt*n2);
 
     	sf_floatread(vv[0],n1*n2,modl);
-	memset(mod,0,(n1+2*nb)*(n2+2*nb)*sizeof(float));
+	memset(mod,0,n1*n2*sizeof(float));
 	sf_floatread(dat,nt*n2,data);
 /*
 // method 1: use my own CG solver, no reweighting
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
 
 /* method 2: use bigsolver, no reweighting (=method 1) */
 	rtm2d_init(dz, dx, dt, n0, n1, n2, nb, nt, vv, mod, dat);
-   	sf_solver(rtm2d_lop, sf_cgstep, (n1+2*nb)*(n2+2*nb), nt*n2, mod, dat, niter, "verb", verb, "end");
+   	sf_solver(rtm2d_lop, sf_cgstep, n1*n2, nt*n2, mod, dat, niter, "verb", verb, "end");
 	rtm2d_close();
 	sf_cgstep_close();
 
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
 	free(w);
 */
 
-    	sf_floatwrite(mod, (n1+2*nb)*(n2+2*nb), imag);  /* output image */
+    	sf_floatwrite(mod, n1*n2, imag);  /* output image */
 
 	free(*vv); free(vv);
 	free(mod);

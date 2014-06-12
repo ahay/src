@@ -115,13 +115,18 @@ note that the top boundary is free surface boundary condition (no ABC
 applied here!). /book/xjtu/gpufwi/syntest/SConstruct is a small and 
 quick example to show the correctness of the FWI code. 
 
-
-===================================================================
-The following codes are under construction. Be careful!
-===================================================================
 12) 3D coherence calculation
 Main: 		Mcohn.c
-Depends on: 	svd.c
+Test file:	/book/xjtu/test/coherence/SConstruct
+
+===================================================================
+I try my best to make my code self-contained. I believe it brings 
+convenience and readability, because for readers much effort will
+be saved on understanding how to invoke complicated functions which may 
+not be written by the coder. I strongly discourage that kind of style!
+
+The following codes are under construction. Be careful!
+===================================================================
 
 13) MWNI (minimum weighted norm interpolation), FFTW requred
 Main:		Mmwni2d.c Mmwni3d.c
