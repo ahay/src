@@ -47,10 +47,11 @@ ppmpen   = os.path.join(bindir,'ppmpen')
 
 command = '%s %s > %s' % (sfbyte,args,byte)
 p = subprocess.Popen(command,shell=True)
+res = p.communicate()
 
-#if not os.path.isfile(byte):
-#    sys.stderr.write('Failed to execute "%s"\n\n' % command)
-#    sys.exit(2)
+if not os.path.isfile(byte):
+    sys.stderr.write('Failed to execute "%s"\n\n' % command)
+    sys.exit(2)
 
 def rsf2image(i3):
     global byte
@@ -72,7 +73,7 @@ def pickcolor():
     color = col[1]
 
 def hist(func,var,default=None):
-    global byte
+    global byte,sfget
     command = '< %s %s %s parform=n' % (byte,sfget,var)
     devnull = open(os.devnull,"w")
     pipe = subprocess.Popen(command,stdout=subprocess.PIPE,stderr=devnull,shell=True)
