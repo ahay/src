@@ -99,7 +99,7 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 			}
 		}
 
-		/******************************************* C3 calculation using power method ********************************/
+		/************* C3 calculation using power method ************/
 		float s, t, m1, m;
 		int i,j,k, maxidx;
 
