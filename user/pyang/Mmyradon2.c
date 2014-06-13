@@ -29,7 +29,6 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 	3) Vogel, Curtis R. Computational methods for inverse problems. 
 	Vol. 23. Siam, 2002.	[Chapter 5.2.]
 */
-
 #include <rsf.h>
 #include <time.h>
 #include <complex.h>
