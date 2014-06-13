@@ -59,7 +59,6 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 	__shared__ float s_u[BlockSizeY+2*nyw][BlockSizeX+2*nxw];
 	const int tx=threadIdx.x+nxw;
 	const int ty=threadIdx.y+nyw;
-	const int stride=dimx*dimy;
 
 	float cxy[J][J];
 	float u[J];
@@ -74,7 +73,7 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 		{
 			if(iz+izw>=0 && iz+izw<dimz)
 			{
-				int idtmp=id+izw*stride;
+				int idtmp=id+izw*dimx*dimy;
 				s_u[ty][tx]=u1[idtmp];
 				if(threadIdx.y<nyw)// halo above/below
 				{
@@ -93,16 +92,9 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 				for(int iy2=-nyw; iy2<=nyw; iy2++)
 				for(int ix2=-nxw; ix2<=nxw; ix2++)
 				{
-					int ixc1=ix+ix1;
-					int iyc1=iy+iy1;
-					int ixc2=ix+ix2;
-					int iyc2=iy+iy2;
-					// check in bounds
-					if( (ixc1>=0)&&(ixc1<dimx)&&
-					    (iyc1>=0)&&(iyc2<dimy)&&
-					    (ixc2>=0)&&(ixc2<dimx)&&
-					    (iyc2>=0)&&(iyc2<dimy))
-					cxy[ix2+nxw+(2*nxw+1)*(iy2+nyw)][ix1+nxw+(2*nxw+1)*(iy1+nyw)]+=s_u[iy1+ty][ix1+tx]*s_u[iy2+ty][ix2+tx];
+					int px=ix1+nxw+(2*nxw+1)*(iy1+nyw);
+					int py=ix2+nxw+(2*nxw+1)*(iy2+nyw);
+					cxy[py][px]+=s_u[iy1+ty][ix1+tx]*s_u[iy2+ty][ix2+tx];
 				}	
 			}
 		}
@@ -141,7 +133,7 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 		u2[id]=m;
 		/************************ End C3 calculation *****************/
 		__syncthreads();
-		id+=stride;// move to next time slice
+		id+=dimx*dimy;// move to next time slice
 	}
 }
 

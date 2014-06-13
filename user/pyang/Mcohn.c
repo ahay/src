@@ -147,10 +147,8 @@ int main(int argc, char *argv[])
 			for(j1=-ntw; j1<=ntw; j1++)
 			{
 				if ( 	(i1+j1>=0 && i1+j1<n1) &&
-					(i2+j2>=0 && i2+j2<n2) &&
-					(i3+j3>=0 && i3+j3<n3) &&
-					(i2+k2>=0 && i2+k2<n2) &&
-					(i3+k3>=0 && i3+k3<n3) 	)
+					(i2+j2>=0 && i2+j2<n2) && (i3+j3>=0 && i3+j3<n3) &&
+					(i2+k2>=0 && i2+k2<n2) && (i3+k3>=0 && i3+k3<n3) )
 				s+=u1[i3+j3][i2+j2][i1+j1]*u1[i3+k3][i2+k2][i1+j1];
 			}
 			cxy[py][px]=s;
