@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 	sf_complex *cdd, *cmm;
 	fftwf_complex *tmpc;
 	fftwf_plan fft1, ifft1;
-	sf_file in, out, offset;
+	sf_file in, out, offset=NULL;
 
     	sf_init(argc,argv);
 	in = sf_input("in");	/* input data or radon  */
@@ -83,12 +83,8 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(in,"o1",&t0)) t0=0.;
 	/* origin of time axis */
 
-    	if (NULL != sf_getstring("offset")) {
-		offset = sf_input("offset");
-		if (nx!=sf_filesize(offset)) sf_error("Wrong dimensions in offset");
-    	} else offset = NULL;
 
-    	if (adj) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+    	if (adj||inv) { // m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 		/* number of offset if the input in the data domain */
 
@@ -138,7 +134,7 @@ int main(int argc, char* argv[])
    	ifft1=fftwf_plan_dft_c2r_1d(nfft,tmpc,tmpr,FFTW_MEASURE);
 
 	for(ip=0; ip<np; ip++) p[ip]=p0+ip*dp;	
-	if (adj) {// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if (adj||inv) {// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		sf_floatread(dd[0], nt*nx, in);
 
 	    	if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
@@ -173,7 +169,7 @@ int main(int argc, char* argv[])
 		else if (x0!=1.) xx[ix] /= x0;
 	}
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		for(ix=0; ix<nx; ix++) // loop over offsets
 		{
 			memset(tmpr, 0, nfft*sizeof(float));
@@ -210,7 +206,7 @@ int main(int argc, char* argv[])
 	}
 
 
-	if(adj){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
+	if(adj||inv){// m(tau,p)=sum_{i=0}^{nx} d(t=tau+p*x_i,x_i)
 		matrix_transpose(cmm, np, nw);
 		for(ip=0; ip<np; ip++) // loop over slopes
 		{			

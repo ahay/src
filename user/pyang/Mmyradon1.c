@@ -45,20 +45,20 @@ adjoint: m(tau,p) = sum_{ih=1}^{nh} d(tau, sqrt{tau^2+h[ih]^2/p^2)}
 >*/
 {   
 	int itau, ih, iv, it;
-	float tau, h_v, t;
+	float tau, hov, t;
 	
 	sf_adjnull(adj, add, nx, ny, x, y);/* x=m; y=d; nx=nt*nv; ny=nt*nh; */ 
 	
 	for(ih=0; ih<nh; ih++)
 	for(iv=0; iv<nv; iv++)
 	{
-		h_v=h[ih]/v[iv];
+		hov=h[ih]/v[iv];// h over v
 		for(itau=0; itau<nt; itau++)
 		{
 			tau=itau*dt;
-			t=sqrtf(tau*tau+h_v*h_v);
-			it=(int)(t/dt)+1;
-			if(it<=nt)
+			t=sqrtf(tau*tau+hov*hov);
+			it=(int)(t/dt);
+			if(it<nt)
 			{
 				if (adj) x[iv*nt+itau]+=y[ih*nt+it];
 				else	 y[ih*nt+it]+=x[iv*nt+itau]; 
@@ -67,29 +67,22 @@ adjoint: m(tau,p) = sum_{ih=1}^{nh} d(tau, sqrt{tau^2+h[ih]^2/p^2)}
 	}
 }
 
-void inv_hradon(float *mod, float *dat, float *v, float *h, int nt, 
-	int nh, int nv, float dt, int niter, bool verb)
-/* least-squares inversion for hyperbolic radon transform */
-{
-	hradon_init(nt, nh, nv, dt, v, h);
-   	sf_solver(hradon_lop, sf_cgstep, nt*nv, nt*nh, mod, dat, niter, "verb", verb, "end");
-}
-
 
 int main(int argc, char* argv[])
 {
 	bool adj, inv, verb;
-	int i, j, k, np, nt, nx;
-	float dp, p0, dt, t0;
-	sf_file in, out;
+	int ix, iv, nv, nt, nx, niter;
+	float ox, dx, dv, v0, dt, t0;
+	float *vv, *xx, *mm, *dd;
+	sf_file in, out, offset=NULL, vel=NULL;
 
     	sf_init(argc,argv);
-	in = sf_input("in");	/* veloctiy model */
-	out =sf_output("out");	/* shot records */
+	in = sf_input("in");	/* input data or radon  */
+	out =sf_output("out");	/* output radon or data */
 
-    	if (!sf_getbool("adj",&adj)) adj=true;
+    	if (!sf_getbool("adj",&adj)) adj=false;
 	/* if y, perform adjoint operation */
-    	if (!sf_getbool("inv",&inv)) inv=adj; 
+    	if (!sf_getbool("inv",&inv)) inv=true; 
 	/* if y, perform inverse operation */
     	if (!sf_getbool ("verb",&verb)) verb=false;
 	/* verbosity flag */
@@ -99,29 +92,79 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     	if (!sf_histfloat(in,"o1",&t0)) t0=0.;
 
-    	if (adj) { 
+    	if (adj||inv) { 
 		if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 
 		/* specify slope axis */
-		if (!sf_getint  ("np",&np)) sf_error("Need np=");
+		if (!sf_getint  ("nv",&nv)) sf_error("Need nv=");
 		/* number of p values (if adj=y) */
-		if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
+		if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
 		/* p sampling (if adj=y) */
-		if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
+		if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");
 		/* p origin (if adj=y) */
+		if (inv && !sf_getint("niter",&niter)) niter=100;
+		/* number of CGLS iterations */
 
-		sf_putint(  out,"n2",np);
-		sf_putfloat(out,"d2",dp);
-		sf_putfloat(out,"o2",p0);
+		sf_putint(  out,"n2",nv);
+		sf_putfloat(out,"d2",dv);
+		sf_putfloat(out,"o2",v0);
     	} else { /* modeling */
-		if (!sf_histint  (in,"n2",&np)) sf_error("No n2= in input");
-		if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
-		if (!sf_histfloat(in,"o2",&p0)) sf_error("No o2= in input");
+		if (!sf_histint  (in,"n2",&nv)) sf_error("No n2= in input");
+		/* number of ray parameter if input in radon domain */
+		if (!sf_histfloat(in,"d2",&dv)) sf_error("No d2= in input");
+		/* p sampling interval if input in radon domain */
+		if (!sf_histfloat(in,"o2",&v0)) sf_error("No o2= in input");
+		/* p origin if input in radon domain */
 		if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
 		/* number of offsets (if adj=n) */
 	
 		sf_putint(out,"n2",nx);
     	}
+
+	vv=sf_floatalloc(nv);
+	xx=sf_floatalloc(nx);
+	dd=sf_floatalloc(nt*nx);
+	mm=sf_floatalloc(nt*nv);
+
+    	if (NULL != vel) {// velocity axis
+		sf_floatread(vv,nv,vel);
+		sf_fileclose(vel);
+    	} else {
+		for(iv=0; iv<nv; iv++) vv[iv]=v0+iv*dv;	
+	}
+	if (adj||inv) {// m(tau,p)=sum_{i=0}^{nx} d(t=sqrt(tau^2+(x_i/v_j)^2),x_i)
+		sf_floatread(dd, nt*nx, in);
+
+	    	if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
+		/* data origin in x */
+	    	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
+		/* sampling interval in x */
+	} else {// d(t,h)=sum_{i=0}^{np} m(tau=sqrt(t^2-(x_i/v_j)^2),p_i)
+		sf_floatread(mm, nt*nv, in);
+	    	if (!sf_getfloat("ox",&ox)) sf_error("Need ox=");
+		/* x origin */
+	    	if (!sf_getfloat("dx",&dx)) sf_error("Need dx=");
+		/* sampling interval in x */
+
+	    	sf_putfloat(out,"o2",ox);
+	    	sf_putfloat(out,"d2",dx);
+	}
+    	if (NULL != offset) {// offset axis
+		sf_floatread(xx,nx,offset);
+		sf_fileclose(offset);
+    	} else {
+		for(ix=0; ix<nx; ix++) xx[ix]=ox+ix*dx;
+	}
+
+	hradon_init(nt, nx, nv, dt, vv, xx);
+	hradon_lop(adj, false, nt*nv, nt*nh, mm, dd);
+	/* least-squares inversion for hyperbolic radon transform */
+	if(inv) sf_solver(hradon_lop, sf_cgstep, nt*nv, nt*nx, mm, dd, niter,"x0", mm, "verb", verb, "end");
+
+	free(vv);
+	free(xx);
+	free(mm);
+	free(dd);
 
     	exit(0);
 }
