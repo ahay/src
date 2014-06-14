@@ -2,7 +2,6 @@ from rsf.proj import *
 
 
 # First, demonstrate that GPU implementation generate same result as accurate 
-
 # as the CPU output up to floating precision (1e-7)
 Flow('layer1',None,'math output=1600 n1=80 n2=160 d1=5 d2=5')
 Flow('layer2',None,'math output=1800 n1=80 n2=160 d1=5 d2=5')
