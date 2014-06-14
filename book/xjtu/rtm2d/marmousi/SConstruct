@@ -56,10 +56,10 @@ Result('image',
 #Flow('invs','data vel image',
 #     '''
 #     conjgrad sfrtm2d split=2 n0=2 nt=2500 dt=0.002
-#     vel=${SOURCES[1]} mod=${SOURCES[2]} niter=3
+#     vel=${SOURCES[1]} mod=${SOURCES[2]} niter=20
 #     ''')
 
-Flow('invs','data vel','lsrtm2d vel=${SOURCES[1]} n0=%d nt=%d dt=%g niter=5 verb=y'%(n0,nt,dt))
+Flow('invs','data vel','lsrtm2d vel=${SOURCES[1]} n0=%d nt=%d dt=%g niter=20 verb=y'%(n0,nt,dt))
 
 Result('invs',
      '''
