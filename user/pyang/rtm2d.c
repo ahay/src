@@ -37,50 +37,42 @@ static float **u0, **u1, **vv, **ptr=NULL;
 void step_forward(float **u0, float **u1, float **vv, bool adj)
 {
 	int i1, i2;
-	float u;
 
 	if(adj){
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
-    private(i2,i1,u)		    			\
+    private(i2,i1)		    	\
     shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
 #endif
-		for (i2=0; i2<nxpad; i2++) 
-		for (i1=0; i1<nzpad; i1++) 
+		for (i2=2; i2<nxpad-2; i2++) 
+		for (i1=2; i1<nzpad-2; i1++) 
 		{
-			u 		= vv[i2][i1  ]*c0 *u1[i2][i1  ];
-			if(i1 >= 1)   u+= vv[i2][i1-1]*c11*u1[i2][i1-1];
-			if(i1 >= 2)   u+= vv[i2][i1-2]*c12*u1[i2][i1-2];
-			if(i1 < nzpad-1) u+= vv[i2][i1+1]*c11*u1[i2][i1+1];
-			if(i1 < nzpad-2) u+= vv[i2][i1+2]*c12*u1[i2][i1+2];
-			if(i2 >= 1)   u+= vv[i2-1][i1]*c21*u1[i2-1][i1];
-			if(i2 >= 2)   u+= vv[i2-2][i1]*c22*u1[i2-2][i1];
-			if(i2 < nxpad-1) u+= vv[i2+1][i1]*c21*u1[i2+1][i1];
-			if(i2 < nxpad-2) u+= vv[i2+2][i1]*c22*u1[i2+2][i1];
-			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+u;
+			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+
+				c0 *vv[i2][i1  ]*u1[i2][i1  ]+
+				c11*(vv[i2][i1-1]*u1[i2][i1-1]+vv[i2][i1+1]*u1[i2][i1+1])+
+				c12*(vv[i2][i1-2]*u1[i2][i1-2]+vv[i2][i1+2]*u1[i2][i1+2])+
+				c21*(vv[i2-1][i1]*u1[i2-1][i1]+vv[i2+1][i1]*u1[i2+1][i1])+
+				c22*(vv[i2-2][i1]*u1[i2-2][i1]+vv[i2+2][i1]*u1[i2+2][i1]);
 		}
 	}else{
 #ifdef _OPENMP
 #pragma omp parallel for default(none)	\
-    private(i2,i1,u)		    			\
+    private(i2,i1)		    	\
     shared(nzpad,nxpad,u1,vv,u0,c0,c11,c12,c21,c22)
 #endif
-		for (i2=0; i2<nxpad; i2++) 
-		for (i1=0; i1<nzpad; i1++) 
+		for (i2=2; i2<nxpad-2; i2++) 
+		for (i1=2; i1<nzpad-2; i1++) 
 		{
-			u 		= c0*u1[i2][i1];
-			if(i1 >= 1)   u+= c11*u1[i2][i1-1];
-			if(i1 >= 2)   u+= c12*u1[i2][i1-2];
-			if(i1 < nzpad-1) u+= c11*u1[i2][i1+1];
-			if(i1 < nzpad-2) u+= c12*u1[i2][i1+2];
-			if(i2 >= 1)   u+= c21*u1[i2-1][i1];
-			if(i2 >= 2)   u+= c22*u1[i2-2][i1];
-			if(i2 < nxpad-1) u+= c21*u1[i2+1][i1];
-			if(i2 < nxpad-2) u+= c22*u1[i2+2][i1];
-			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+vv[i2][i1]*u;
+			u0[i2][i1]=2.*u1[i2][i1]-u0[i2][i1]+
+				vv[i2][i1]*(c0*u1[i2][i1]+
+					c11*(u1[i2][i1-1]+u1[i2][i1+1])+
+					c12*(u1[i2][i1-2]+u1[i2][i1+2])+
+					c21*(u1[i2-1][i1]+u1[i2+1][i1])+
+					c22*(u1[i2-2][i1]+u1[i2+2][i1]));
 		}
 	}
 }
+
 
 void apply_sponge(float **p0, float *bndr)
 /* apply sponge absorbing boundary condition */
