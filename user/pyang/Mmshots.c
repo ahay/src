@@ -1,5 +1,6 @@
-/* 2-D forward modeling to generate shot records 
-Note: 	Here, the sponge absorbing boundary condition is applied!
+/* 2-D prestack forward modeling using sponge ABC using 4-th order FD
+NB: prepare high quality prestack seismic data for LSRTM and FWI
+Top boundary is free surface (no ABC applied)!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
