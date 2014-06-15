@@ -25,19 +25,19 @@ NB: Sponge ABC is applied!
 int main(int argc, char* argv[])
 {   
 	bool verb;
-    	int niter, nx, nz, nb, nt, ns, ng;
-	int sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, csd;
-    	float dt, dx, dz, o1, o2, amp, fm;
-    	float *mod, *dat, **v0;      
+	int nb, nz, nx, nt, ns, ng, niter, csd, sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz;
+    	float dz, dx, dt, fm, o1, o2, amp;
+    	float **v0, *mod, *dat;      
 
-    	sf_file shots, imag, velo;/* I/O files */
+    	sf_file shots, imag, imgrtm, velo;/* I/O files */
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
 
 	shots = sf_input ("in"); /* shot records, data 	*/
-    	velo = sf_input ("vel"); /* velocity model 	*/
-	imag = sf_output("out"); /* output image, model */
+    	velo = sf_input ("vel"); /* velocity */
+	imag = sf_output("out"); /* output LSRTM image, model */
+	imgrtm = sf_output("imgrtm"); /* output RTM image */
     
     	if (!sf_histint(velo,"n1",&nz)) sf_error("n1");
 	/* 1st dimension size */
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 	/* o1 */
     	if (!sf_histfloat(velo,"o2",&o2)) sf_error("o2");
 	/* o2 */
-    	if (!sf_getbool("verb",&verb)) verb=false;
+    	if (!sf_getbool("verb",&verb)) verb=true;
 	/* verbosity */
     	if (!sf_getint("niter",&niter)) niter=10;
 	/* totol number of least-squares iteration*/
@@ -99,6 +99,16 @@ int main(int argc, char* argv[])
 	sf_putstring(imag,"label1","Depth");
 	sf_putstring(imag,"label2","Distance");
 
+	sf_putint(imgrtm,"n1",nz);
+	sf_putint(imgrtm,"n2",nx);
+	sf_putint(imgrtm,"n3",1);
+	sf_putfloat(imgrtm,"d1",dz);
+	sf_putfloat(imgrtm,"d2",dx);
+	sf_putfloat(imgrtm,"o1",o1);
+	sf_putfloat(imgrtm,"o2",o2);
+	sf_putstring(imgrtm,"label1","Depth");
+	sf_putstring(imgrtm,"label2","Distance");
+
 	/* In rtm, vv is the velocity model [modl], which is input parameter; 
 	   mod is the image/reflectivity [imag]; dat is seismogram [data]! */
     	v0=sf_floatalloc2(nz,nx);
@@ -109,14 +119,15 @@ int main(int argc, char* argv[])
     	sf_floatread(v0[0], nz*nx, velo);
 	memset(mod, 0, nz*nx*sizeof(float));
 	sf_floatread(dat, nt*ng*ns, shots);
+	prtm2d_init(verb, csd, dz, dx, dt, amp, fm, nz, nx, nb, nt, ns, ng, 
+		sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
+
+	/* original RTM is simply apply adjoint of prtm2d_lop once!*/
+	prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); 
+    	sf_floatwrite(mod, nz*nx, imgrtm);  
 
 	/* least squares inversion */
-	prtm2d_init(verb, csd?true:false, dz, dx, dt, amp, fm, nz, nx, nb, nt, ns, ng, 
-	sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
-	/* Original RTM is simply apply adjoint of prtm2d_lop once!
-	prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); */
-   	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
-
+   	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "x0", mod, "verb", verb, "end");
 	/* output inverted image */
     	sf_floatwrite(mod, nz*nx, imag);  
 
