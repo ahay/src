@@ -25,10 +25,10 @@ NB: Sponge ABC is applied!
 int main(int argc, char* argv[])
 {   
 	bool verb;
-    	int niter, nx, nz, nb, nt, ns, ng, it;
+    	int niter, nx, nz, nb, nt, ns, ng;
 	int sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, csd;
-    	float dt, dx, dz, o1, o2, amp, fm, tmp;
-    	float *wlt, *mod, *dat, **v0;      
+    	float dt, dx, dz, o1, o2, amp, fm;
+    	float *mod, *dat, **v0;      
 
     	sf_file shots, imag, velo;/* I/O files */
 
@@ -91,6 +91,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(imag,"n1",nz);
 	sf_putint(imag,"n2",nx);
+	sf_putint(imag,"n3",1);
 	sf_putfloat(imag,"d1",dz);
 	sf_putfloat(imag,"d2",dx);
 	sf_putfloat(imag,"o1",o1);
@@ -100,31 +101,27 @@ int main(int argc, char* argv[])
 
 	/* In rtm, vv is the velocity model [modl], which is input parameter; 
 	   mod is the image/reflectivity [imag]; dat is seismogram [data]! */
-	wlt=sf_floatalloc(nt);
     	v0=sf_floatalloc2(nz,nx);
     	mod=sf_floatalloc(nz*nx);
     	dat=sf_floatalloc(nt*ng*ns);
 
-	/* initialize wavelet, velocity, model and data */
-	for(it=0; it<nt; it++){
-		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp=tmp*tmp;
-		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
-	}
+	/* initialize velocity, model and data */
     	sf_floatread(v0[0], nz*nx, velo);
 	memset(mod, 0, nz*nx*sizeof(float));
 	sf_floatread(dat, nt*ng*ns, shots);
 
 	/* least squares inversion */
-	prtm2d_init(verb, csd?true:false, dz, dx, dt, nz, nx, nb, nt, ns, ng, sxbeg, szbeg, 
-		jsx, jsz, gxbeg, gzbeg, jgx, jgz, wlt, v0, mod, dat);
+	prtm2d_init(verb, csd?true:false, dz, dx, dt, amp, fm, nz, nx, nb, nt, ns, ng, 
+	sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, v0, mod, dat);
+	/* Original RTM is simply apply adjoint of prtm2d_lop once!
+	prtm2d_lop(true, false, nz*nx, nt*ng*ns, mod, dat); */
    	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
-	sf_cgstep_close();
-	prtm2d_close();
 
 	/* output inverted image */
     	sf_floatwrite(mod, nz*nx, imag);  
 
-	free(wlt);
+	sf_cgstep_close();
+	prtm2d_close();
 	free(*v0); free(v0);
 	free(mod);
 	free(dat); 

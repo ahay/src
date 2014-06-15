@@ -31,50 +31,67 @@ and its application in least-squares reverse-time migration." Geophysics
 #include "prtm2d.h"
 
 static bool csdgather, verb;
-static int sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz;
-static int distx, distz, *sxz, *gxz;
-static float *wlt, *bndr;
-
-static int nzpad, nxpad, nb, nz, nx, nt, ns, ng;
+static int nzpad, nxpad, nb, nz, nx, nt, ns, ng, sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz, distx, distz;
+static int *sxz, *gxz;
 static float c0, c11, c21, c12, c22;
-static float *rwbndr, *mod, *dat;
+static float *wlt, *bndr,*rwbndr, *mod, *dat;
 static float **sp0, **sp1, **gp0, **gp1, **vv, **ptr=NULL;
 
-void bndr_rw(bool read, float *rwbndr, float **p)
-/*< read/write effective boundary >*/
-{
-	int i1, i2;
 
-	if(read){// read rwbndr into wavefield	
-		for(i2=0; i2<nx; i2++)
-		for(i1=0; i1<2; i1++)
-		{	
-			p[i2+nb][i1+nb]=rwbndr[i1+4*i2];
-			p[i2+nb][i1+nz+nb-2]=rwbndr[i1+2+4*i2];
-		}
-		for(i2=0; i2<2; i2++)
-		for(i1=0; i1<nz; i1++)
+void boundary_rw(float **p, float *spo, bool read)
+/* read/write using effective boundary saving strategy: 
+if read=true, read the boundary out; else save/write the boundary*/
+{
+	int ix,iz;
+
+	if (read){
+#ifdef _OPENMP
+#pragma omp parallel for	\
+    private(ix,iz)		\
+    shared(p,spo,nx,nz,nb)  
+#endif	
+		for(ix=0; ix<nx; ix++)
+		for(iz=0; iz<2; iz++)
 		{
-			p[i2+nb][i1+nb]=rwbndr[4*nx+i1+nz*i2];
-			p[i2+nb+nx-2][i1+nb]=rwbndr[4*nx+i1+nz*(i2+2)];
+			p[ix+nb][iz-2+nb]=spo[iz+4*ix];
+			p[ix+nb][iz+nz+nb]=spo[iz+2+4*ix];
 		}
-	}else{	// write effective boundary into rwbndr	
-		for(i2=0; i2<nx; i2++)
-		for(i1=0; i1<2; i1++)
-		{	
-			rwbndr[i1+4*i2]=p[i2+nb][i1+nb];
-			rwbndr[i1+2+4*i2]=p[i2+nb][i1+nz+nb-2];
-		}
-		for(i2=0; i2<2; i2++)
-		for(i1=0; i1<nz; i1++)
+#ifdef _OPENMP
+#pragma omp parallel for	\
+    private(ix,iz)		\
+    shared(p,spo,nx,nz,nb)  
+#endif	
+		for(iz=0; iz<nz; iz++)
+		for(ix=0; ix<2; ix++)
 		{
-			rwbndr[4*nx+i1+nz*i2]=p[i2+nb][i1+nb];
-			rwbndr[4*nx+i1+nz*(i2+2)]=p[i2+nb+nx-2][i1+nb];
+			p[ix-2+nb][iz+nb]=spo[4*nx+iz+nz*ix];
+			p[ix+nx+nb][iz+nb]=spo[4*nx+iz+nz*(ix+2)];
+		}
+	}else{
+#ifdef _OPENMP
+#pragma omp parallel for	\
+    private(ix,iz)		\
+    shared(p,spo,nx,nz,nb)  
+#endif	
+		for(ix=0; ix<nx; ix++)
+		for(iz=0; iz<2; iz++)
+		{
+			spo[iz+4*ix]=p[ix+nb][iz-2+nb];
+			spo[iz+2+4*ix]=p[ix+nb][iz+nz+nb];
+		}
+#ifdef _OPENMP
+#pragma omp parallel for	\
+    private(ix,iz)		\
+    shared(p,spo,nx,nz,nb)  
+#endif	
+		for(iz=0; iz<nz; iz++)
+		for(ix=0; ix<2; ix++)
+		{
+			spo[4*nx+iz+nz*ix]=p[ix-2+nb][iz+nb];
+			spo[4*nx+iz+nz*(ix+2)]=p[ix+nx+nb][iz+nb];
 		}
 	}
 }
-
-
 
 void step_forward(float **u0, float **u1, float **vv, bool adj)
 /*< forward step for wave propagation >*/
@@ -186,11 +203,61 @@ void add_source(int *sxz, float **p, int ns, float *source, bool add)
 }
 
 
+void expand2d(float** b, float** a)
+/*< expand domain of 'a' to 'b': source(a)-->destination(b) >*/
+{
+    int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
+    for     (ix=0;ix<nx;ix++) {
+	for (iz=0;iz<nz;iz++) {
+	    b[nb+ix][nb+iz] = a[ix][iz];
+	}
+    }
+
+    for     (ix=0; ix<nxpad; ix++) {
+	for (iz=0; iz<nb;    iz++) {
+	    b[ix][      iz  ] = b[ix][nb  ];
+	    b[ix][nzpad-iz-1] = b[ix][nzpad-nb-1];
+	}
+    }
+
+    for     (ix=0; ix<nb;    ix++) {
+	for (iz=0; iz<nzpad; iz++) {
+	    b[ix 	 ][iz] = b[nb  		][iz];
+	    b[nxpad-ix-1 ][iz] = b[nxpad-nb-1	][iz];
+	}
+    }
+}
+
+
+void window2d(float **a, float **b)
+/*< window 'b' to 'a': source(b)-->destination(a) >*/
+{
+    int iz,ix;
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(ix,iz)			\
+	shared(b,a,nb,nz,nx)
+#endif
+    for     (ix=0;ix<nx;ix++) {
+	for (iz=0;iz<nz;iz++) {
+	    a[ix][iz]=b[nb+ix][nb+iz] ;
+	}
+    }
+}
+
 void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_, 
-	int nz_, int nx_, int nb_, int nt_, int ns_, int ng_,
+	float amp, float fm, 
+	int nz_, int nx_, int nb_, int nt_, int ns_, int ng_, 
 	int sxbeg_, int szbeg_, int jsx_, int jsz_, 
 	int gxbeg_, int gzbeg_, int jgx_, int jgz_,
-	float *wlt_, float **v0, float *mod_, float *dat_)
+	float **v0, float *mod_, float *dat_)
 /*< allocate variables and initialize parameters >*/
 {  
    	/* initialize OpenMP support */ 
@@ -198,7 +265,7 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
    	omp_init();
 #endif
 	float t;
-	int ib,i1,i2;
+	int i1, i2, it,ib;
 	t = 1.0/(dz_*dz_);
 	c11 = 4.0*t/3.0;
 	c12= -t/12.0;
@@ -224,7 +291,6 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
 	gzbeg=gzbeg_;
 	jgx=jgx_;
 	jgz=jgz_;
-	wlt=wlt_;
 
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
@@ -236,6 +302,7 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
     	gp0=sf_floatalloc2(nzpad,nxpad);
     	gp1=sf_floatalloc2(nzpad,nxpad);
     	vv=sf_floatalloc2(nzpad,nxpad);
+	wlt=sf_floatalloc(nt);
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
 	rwbndr=sf_floatalloc(nt*4*(nx+nz));
@@ -265,6 +332,10 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
 	    vv[   i2  ][i1] =vv[   nb  ][i1];
 	    vv[nxpad-i2-1][i1] =vv[nxpad-nb-1][i1];
 	}
+	for(it=0; it<nt; it++){
+		t=SF_PI*fm*(it*dt_-1.0/fm);t=t*t;
+		wlt[it]=amp*(1.0-2.0*t)*expf(-t);
+	}
 
 	/* configuration of sources and geophones */
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
@@ -293,6 +364,7 @@ void prtm2d_close()
 	free(*gp0); free(gp0);
 	free(*gp1); free(gp1);
 	free(*vv); free(vv);
+	free(wlt);
 	free(sxz);
 	free(gxz);
 }
@@ -314,25 +386,26 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 				gxbeg=sxbeg+is*jsx-distx;
 				sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 			}
-			for(it=0; it<nt; it++){		
-				bndr_rw(false, &rwbndr[it*4*(nx+nz)], sp1);	
+			for(it=0; it<nt; it++){			
 				add_source(&sxz[is], sp1, 1, &wlt[it], true);
 				step_forward(sp0, sp1, vv, false);
 				apply_sponge(sp0);
 				apply_sponge(sp1);
-				ptr=sp0; sp0=sp1; sp1=ptr;	
+				ptr=sp0; sp0=sp1; sp1=ptr;
+				boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
 			}
 
+			ptr=sp0; sp0=sp1; sp1=ptr;
 			memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
 			memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
 		    	for (it=nt-1; it >-1; it--) {// dat-->mod
 				if(verb) sf_warning("%d;",it);
 				
 				/* reconstruct source wavefield */
-				ptr=sp0; sp0=sp1; sp1=ptr;
+				boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
 				step_forward(sp0, sp1, vv, false);
-				add_source(&sxz[is], sp1, 1, &wlt[it], false);
-				bndr_rw(true, &rwbndr[it*4*(nx+nz)], sp1);
+				add_source(&sxz[is], sp1, 1, &wlt[it], false);	
+				ptr=sp0; sp0=sp1; sp1=ptr;
 				
 				/* backpropagate receiver wavefield */
 				for(ig=0;ig<ng; ig++){
@@ -359,27 +432,27 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 				gxbeg=sxbeg+is*jsx-distx;
 				sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 			}
-			for(it=0; it<nt; it++){		
-				bndr_rw(false, &rwbndr[it*4*(nx+nz)], sp1);
-	
+			for(it=0; it<nt; it++){			
 				add_source(&sxz[is], sp1, 1, &wlt[it], true);
 				step_forward(sp0, sp1, vv, false);
 				apply_sponge(sp0);
 				apply_sponge(sp1);
-				ptr=sp0; sp0=sp1; sp1=ptr;	
+				ptr=sp0; sp0=sp1; sp1=ptr;
+				boundary_rw(sp0, &rwbndr[it*4*(nx+nz)], false);
 			}
 
+			ptr=sp0; sp0=sp1; sp1=ptr;
 			memset(gp0[0], 0, nzpad*nxpad*sizeof(float));
 			memset(gp1[0], 0, nzpad*nxpad*sizeof(float));
-		    	for (it=0; it<nt; it++) {//mod-->dat
+		    	for (it=nt-1; it >-1; it--) {// dat-->mod
 				if(verb) sf_warning("%d;",it);
 				
 				/* reconstruct source wavefield */
+				boundary_rw(sp1, &rwbndr[it*4*(nx+nz)], true);
+				step_forward(sp0, sp1, vv, false);
+				add_source(&sxz[is], sp1, 1, &wlt[it], false);	
 				ptr=sp0; sp0=sp1; sp1=ptr;
-				step_forward(sp0, sp1, vv, false);				
-				add_source(&sxz[is], sp1, 1, &wlt[it], false);
-				bndr_rw(true, &rwbndr[it*4*(nx+nz)], sp1);
-					
+
 				for(i2=0; i2<nx; i2++)
 				for(i1=0; i1<nz; i1++)
 					gp1[i2+nb][i1+nb]+=mod[i1+nz*i2];
