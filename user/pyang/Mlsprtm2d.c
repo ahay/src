@@ -20,12 +20,7 @@ NB: Sponge ABC is applied!
 */
 #include <rsf.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include "prtm2d.h"
-
 
 int main(int argc, char* argv[])
 {   

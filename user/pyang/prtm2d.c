@@ -78,6 +78,7 @@ void bndr_rw(bool read, float *rwbndr, float **p)
 
 
 void step_forward(float **u0, float **u1, float **vv, bool adj)
+/*< forward step for wave propagation >*/
 {
 	int i1, i2;
 
@@ -333,7 +334,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 				ptr=sp0; sp0=sp1; sp1=ptr;
 				step_forward(sp0, sp1, vv, false);
 				add_source(&sxz[is], sp1, 1, &wlt[it], false);
-				bndr_rw(false, &rwbndr[it*4*(nx+nz)], sp1);
+				bndr_rw(true, &rwbndr[it*4*(nx+nz)], sp1);
 				
 				/* backpropagate receiver wavefield */
 				for(ig=0;ig<ng; ig++){
@@ -379,7 +380,7 @@ void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
 				ptr=sp0; sp0=sp1; sp1=ptr;
 				step_forward(sp0, sp1, vv, false);				
 				add_source(&sxz[is], sp1, 1, &wlt[it], false);
-				bndr_rw(false, &rwbndr[it*4*(nx+nz)], sp1);
+				bndr_rw(true, &rwbndr[it*4*(nx+nz)], sp1);
 					
 				for(i2=0; i2<nx; i2++)
 				for(i1=0; i1<nz; i1++)
