@@ -8,10 +8,18 @@ Flow('data','dat3d_601x401x681.bin',
      	 d3=0.02 o3=0 label3=iline unit3=km |
 	sfwindow j1=3 j2=3 j3=3 
 	''')
-Result('data','byte allpos=n gainpanel=all | sfgrey3 color=j frame1=80 frame2=80 frame3=85')
+Plot('data','byte allpos=n gainpanel=all | sfgrey3 frame1=80 frame2=80 frame3=85')
 
-Flow('coh3d', 'data','sfcohn mode=c3')
-Result('coh3d','byte allpos=n gainpanel=all | sfgrey3 color=i frame1=80 frame2=80 frame3=85')
+Flow('coh3d', 'data','sfcoherence mode=c3 ntw=10 nxw=1 nxw=1')
+Plot('coh3d','byte allpos=n gainpanel=all | sfgrey3 frame1=80 frame2=80 frame3=85')
 
+Flow('mycoh3d', 'data','sfcohn mode=c3')
+Plot('mycoh3d','byte allpos=n gainpanel=all | sfgrey3 frame1=80 frame2=80 frame3=85')
+
+
+Flow('mygpucoh3d', 'data','sfgpucohn mode=c3')
+Plot('mygpucoh3d','byte allpos=n gainpanel=all | sfgrey3 frame1=80 frame2=80 frame3=85')
+
+Result('all','data coh3d mycoh3d mygpucoh3d','TwoColumns')
 
 End()
