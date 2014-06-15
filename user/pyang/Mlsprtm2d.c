@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     	sf_init(argc,argv);
 
 	shots = sf_input ("in"); /* shot records, data 	*/
-	imag = sf_output("out"); /* output image, model */
     	velo = sf_input ("vel"); /* velocity model 	*/
+	imag = sf_output("out"); /* output image, model */
     
     	if (!sf_histint(velo,"n1",&nz)) sf_error("n1");
 	/* 1st dimension size */
@@ -115,11 +115,11 @@ int main(int argc, char* argv[])
 	sf_floatread(dat, nt*ng*ns, shots);
 
 	/* least squares inversion */
-	prtm2d_init(verb, csd, dz, dx, dt, nz, nx, nb, nt, ns, ng, sxbeg, szbeg, 
+	prtm2d_init(verb, csd?true:false, dz, dx, dt, nz, nx, nb, nt, ns, ng, sxbeg, szbeg, 
 		jsx, jsz, gxbeg, gzbeg, jgx, jgz, wlt, v0, mod, dat);
    	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
-	prtm2d_close();
 	sf_cgstep_close();
+	prtm2d_close();
 
 	/* output inverted image */
     	sf_floatwrite(mod, nz*nx, imag);  

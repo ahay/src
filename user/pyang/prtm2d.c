@@ -35,18 +35,17 @@ static int sxbeg, szbeg, jsx, jsz, gxbeg, gzbeg, jgx, jgz;
 static int distx, distz, *sxz, *gxz;
 static float *wlt, *bndr;
 
-static int nzpad, nxpad, nb, nz, nx, nt, ns, ng, nm, nd;
+static int nzpad, nxpad, nb, nz, nx, nt, ns, ng;
 static float c0, c11, c21, c12, c22;
 static float *rwbndr, *mod, *dat;
 static float **sp0, **sp1, **gp0, **gp1, **vv, **ptr=NULL;
-
 
 void bndr_rw(bool read, float *rwbndr, float **p)
 /*< read/write effective boundary >*/
 {
 	int i1, i2;
 
-	if(read){// read bndr into wavefield	
+	if(read){// read rwbndr into wavefield	
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<2; i1++)
 		{	
@@ -56,10 +55,10 @@ void bndr_rw(bool read, float *rwbndr, float **p)
 		for(i2=0; i2<2; i2++)
 		for(i1=0; i1<nz; i1++)
 		{
-			p[i2+nb][i1+nb]=rwbndr[4*nz+i1+nz*i2];
-			p[i2+nb+nx-2][i1+nb]=rwbndr[4*nz+i1+nz*(i2+2)];
+			p[i2+nb][i1+nb]=rwbndr[4*nx+i1+nz*i2];
+			p[i2+nb+nx-2][i1+nb]=rwbndr[4*nx+i1+nz*(i2+2)];
 		}
-	}else{	// write effective boundary into bndr	
+	}else{	// write effective boundary into rwbndr	
 		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<2; i1++)
 		{	
@@ -69,8 +68,8 @@ void bndr_rw(bool read, float *rwbndr, float **p)
 		for(i2=0; i2<2; i2++)
 		for(i1=0; i1<nz; i1++)
 		{
-			rwbndr[4*nz+i1+nz*i2]=p[i2+nb][i1+nb];
-			rwbndr[4*nz+i1+nz*(i2+2)]=p[i2+nb+nx-2][i1+nb];
+			rwbndr[4*nx+i1+nz*i2]=p[i2+nb][i1+nb];
+			rwbndr[4*nx+i1+nz*(i2+2)]=p[i2+nb+nx-2][i1+nb];
 		}
 	}
 }
@@ -115,7 +114,7 @@ void step_forward(float **u0, float **u1, float **vv, bool adj)
 
 
 void apply_sponge(float **p0)
-/* apply sponge absorbing boundary condition */
+/*< apply sponge absorbing boundary condition >*/
 {
 	int ix,iz,ib,ibx,ibz;
 	float w;
@@ -229,8 +228,6 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
 
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	nm=nzpad*nxpad;
-	nd=nt*nx;
 
     	/* allocate temporary arrays */
     	bndr=sf_floatalloc(nb);
@@ -241,6 +238,7 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
     	vv=sf_floatalloc2(nzpad,nxpad);
 	sxz=sf_intalloc(ns);
 	gxz=sf_intalloc(ng);
+	rwbndr=sf_floatalloc(nt*4*(nx+nz));
 
 	/* initialized sponge ABC coefficients */
 	for(ib=0;ib<nb;ib++){
