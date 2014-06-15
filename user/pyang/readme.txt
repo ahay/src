@@ -1,10 +1,11 @@
-Author: Pengliang Yang, Xi'an Jiatong Universtiy
+Author: Pengliang Yang, Xi'an Jiatong Universtiy, UT Austin
 Email: 	ypl.2100@gmail.com
 
 =================================================================
 Preamble: This readme files is committed to explain my programs. 
 Some of them have been tested. The rest are under construction.
-Be careful when you try to use them!
+Be careful when you try to use them! Please feel free to contact
+me if you find errors or have suggestions!
 =================================================================
 
 Under this directory, I implemented the algorithms:
@@ -47,11 +48,13 @@ Test file:	/book/xjtu/test/Testfd3d/SConstruct
 		/book/xjtu/test/Testfd2d/SConstruct
 
 4) Least-squares reverse time migration (LSRTM)
-Main:		Mrtm2d.c, Mlsprtm2d.c
+Main:		Mrtm2d.c, Mlsrtm2d.c, Mlsprtm2d.c
 Depends on:	rtm2d.c, prtm2d.c
 Test file:	/book/xjtu/test/zortm2d/marmousi/SConstruct
 		/book/xjtu/test/zortm2d/sigsbee/SConstruct
-Test file: 	/book/xjtu/test/plsrtm2d/SConstruct (under construction)
+		(zero-offset RTM)
+Test file: 	/book/xjtu/test/lsprtm2d/SConstruct (under construction)
+		(prestack RTM)
 
 5) Prestack RTM using GPU with staggered grid
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
@@ -113,7 +116,7 @@ demonstrate that the modeled wavefield can be precisely reconstructed,
 we design the code Mfbrec.cu befere going to FWI. It is important to
 note that the top boundary is free surface boundary condition (no ABC 
 applied here!). /book/xjtu/gpufwi/syntest/SConstruct is a small and 
-quick example to show the correctness of the FWI code. 
+quick example to show the minimization process of the FWI code. 
 
 12) 3D coherence calculation
 Main: 		Mcohn.c
@@ -135,6 +138,7 @@ Test file: 	/book/xjtu/test/mwni2d/SConstruct
 Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
+
 
 
 
