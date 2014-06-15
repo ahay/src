@@ -338,9 +338,9 @@ int main(int argc, char* argv[])
 	{
 		boundary_rw(p1, &spo[it*4*(nx+nz)], true);
 		step_forward(p0, p1);
+		add_source(sxz, p1, 1, &wlt[it], false);
 		ptr=p0; p0=p1; p1=ptr;
 
-		add_source(sxz, p1, 1, &wlt[it], false);
 		if(it>=ft)
 		{
 			window2d(v0, p0);
