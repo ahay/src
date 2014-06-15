@@ -268,6 +268,9 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
 	}
 
 	/* configuration of sources and geophones */
+	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
+	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
+	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
 	if (csdgather)	{
@@ -279,6 +282,7 @@ void prtm2d_init(bool verb_, bool csdgather_, float dz_, float dx_, float dt_,
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
 		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
 	}
+	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
 }
 
 void prtm2d_close()
@@ -295,7 +299,7 @@ void prtm2d_close()
 }
 
 void prtm2d_lop(bool adj, bool add, int nm, int nd, float *mod, float *dat)
-/*< prtm2d linear operator >*/
+/*< prtm2d linear operator: it may be parallized using MPI >*/
 {
 	int i1,i2,it,is,ig, gx, gz;
 	if(nm!=nx*nz) sf_error("model size mismatch: %d!=%d",nm, nx*nz);

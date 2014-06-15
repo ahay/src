@@ -8,7 +8,7 @@ Be careful when you try to use them! Please feel free to contact
 me if you find errors or have suggestions!
 =================================================================
 
-Under this directory, I implemented the algorithms:
+In this directory, I implemented the algorithms:
 
 1) POCS (projection onto convex sets), FFTW required
 Main:		Mpocs3d.c, Mfpocs2d.c, Mfpocs3d.c, Mpocs.c,
@@ -42,12 +42,12 @@ Note: To make the adjoint of DLCT same as inverse, I normalized
 	the forward and inverse DLCT with a factor. 
 The matlab scripts can run directly within MATLAB software environment.
 
-3) 2D and 3D FD for forward modelling
+3) 2-D and 3-D FD for forward modelling
 Main:		MTestfd2d.c, MTestfd3d.c
 Test file:	/book/xjtu/test/Testfd3d/SConstruct
 		/book/xjtu/test/Testfd2d/SConstruct
 
-4) Least-squares reverse time migration (LSRTM)
+4) 2-D Least-squares reverse time migration (LSRTM)
 Main:		Mrtm2d.c, Mlsrtm2d.c, Mlsprtm2d.c
 Depends on:	rtm2d.c, prtm2d.c
 Test file:	/book/xjtu/test/zortm2d/marmousi/SConstruct
@@ -63,7 +63,7 @@ Test file: 	/book/xjtu/gpurtm/marmousi/SConstruct
 		/book/xjtu/gpurtm/sigsbee/SConstruct
 		/book/xjtu/test/Testeb/SConstruct
 Note: 	(a)staggered_fdcoeff.m is a matlab script to find the finite 
-	difference coefficients with order-NJ(NJ=2N);
+	difference coefficients with order-NJ (NJ=2N);
 	(b) MTesteb.c is a file to test the validity of the proposed
 	effective boundary saving strategy! 
 	(c) Most of the detail explaination for GPU-based RTM can be
@@ -109,7 +109,7 @@ Main:		Mgenshots.cu, Mfbrec.cu,Mgpufwi.cu
 Test file:	/book/xjtu/gpufwi/fbrec/SConstruct
 		/book/xjtu/gpufwi/syntest/SConstruct
 		/book/xjtu/gpufwi/marmtest/SConstruct
-NB: Mgenshots.cu is used to generate shots by forward modeling using
+Note: Mgenshots.cu is used to generate shots by forward modeling using
 the exact velocity model. We can use a starting model to do FWI by
 invoking Mgpufwi.cu. We are using boundary saving strategy in FWI. To 
 demonstrate that the modeled wavefield can be precisely reconstructed,
