@@ -110,23 +110,24 @@ int main(int argc, char* argv[])
     	mod=sf_floatalloc(nz*nx);
     	dat=sf_floatalloc(nt*ng*ns);
 
+	/* initialize wavelet, velocity, model and data */
 	for(it=0; it<nt; it++){
 		tmp=SF_PI*fm*(it*dt-1.0/fm);tmp=tmp*tmp;
 		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
 	}
-
     	sf_floatread(v0[0], nz*nx, velo);
 	memset(mod, 0, nz*nx*sizeof(float));
 	sf_floatread(dat, nt*ng*ns, shots);
 
+	/* least squares inversion */
 	prtm2d_init(verb, csd, dz, dx, dt, nz, nx, nb, nt, ns, ng, sxbeg, szbeg, 
 		jsx, jsz, gxbeg, gzbeg, jgx, jgz, wlt, v0, mod, dat);
    	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
-
-    	sf_floatwrite(mod, nz*nx, imag);  /* output image */
-
 	prtm2d_close();
 	sf_cgstep_close();
+
+	/* output inverted image */
+    	sf_floatwrite(mod, nz*nx, imag);  
 
 	free(wlt);
 	free(*v0); free(v0);
