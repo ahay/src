@@ -46,12 +46,12 @@ Main:		MTestfd2d.c, MTestfd3d.c
 Test file:	/book/xjtu/test/Testfd3d/SConstruct
 		/book/xjtu/test/Testfd2d/SConstruct
 
-4) RTM and LSRTM (2-D zero-offset least squares RTM)
-Main: 		Mrtm2d.c Mlsrtm2d.c
-Depends on: 	rtm2d.c
-Test file:	/book/xjtu/rtm2d/hyper/SConstruct
-		/book/xjtu/rtm2d/marmousi/SConstruct
-		/book/xjtu/rtm2d/sigsbee/SConstruct
+4) Least-squares reverse time migration (LSRTM)
+Main:		Mrtm2d.c, Mlsprtm2d.c
+Depends on:	rtm2d.c, prtm2d.c
+Test file:	/book/xjtu/test/zortm2d/marmousi/SConstruct
+		/book/xjtu/test/zortm2d/sigsbee/SConstruct
+Test file: 	/book/xjtu/test/plsrtm2d/SConstruct (under construction)
 
 5) Prestack RTM using GPU with staggered grid
 Main: 		staggered_fdcoeff.m, MTesteb.c, Mgpurtm.c
@@ -119,12 +119,6 @@ quick example to show the correctness of the FWI code.
 Main: 		Mcohn.c
 Test file:	/book/xjtu/test/coherence/SConstruct
 
-13) Least-squares reverse time migration (LSRTM)
-Main:		Mrtm2d.c, Mlsprtm2d.c
-Depends on:	rtm2d.c, prtm2d.c
-Test file:	/book/xjtu/test/zortm2d/marmousi/SConstruct
-		/book/xjtu/test/zortm2d/sigsbee/SConstruct
-Test file: 	/book/xjtu/test/plsrtm2d/SConstruct (under construction)
 
 ===================================================================
 I try my best to make my code self-contained. I believe it brings 
