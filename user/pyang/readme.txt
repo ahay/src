@@ -119,6 +119,13 @@ quick example to show the correctness of the FWI code.
 Main: 		Mcohn.c
 Test file:	/book/xjtu/test/coherence/SConstruct
 
+13) Least-squares reverse time migration (LSRTM)
+Main:		Mrtm2d.c, Mlsprtm2d.c
+Depends on:	rtm2d.c, prtm2d.c
+Test file:	/book/xjtu/test/zortm2d/marmousi/SConstruct
+		/book/xjtu/test/zortm2d/sigsbee/SConstruct
+Test file: 	/book/xjtu/test/plsrtm2d/SConstruct (under construction)
+
 ===================================================================
 I try my best to make my code self-contained. I believe it brings 
 convenience and readability, because for readers much effort will
@@ -128,8 +135,8 @@ not be written by the coder. I strongly discourage that kind of style!
 The following codes are under construction. Be careful!
 ===================================================================
 
-13) MWNI (minimum weighted norm interpolation), FFTW requred
-Main:		Mmwni2d.c Mmwni3d.c
+14) MWNI (minimum weighted norm interpolation), FFTW requred
+Main:		Mmwni2d.c 
 Test file: 	/book/xjtu/test/mwni2d/SConstruct
 Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
