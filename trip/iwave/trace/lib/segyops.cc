@@ -135,10 +135,11 @@ namespace TSOpt {
                 e<<"taper_type for offset has not been implemented!\n";
                 throw e;
             }
-            else { // taper geophon position
-                wm=MAX(dt,width);
+            else { // taper geophone position
+                wm=MAX(dt/min,width);
+                float wtmp = mutefun((gx - min)/wm) * mutefun((max-gx)/wm);
                 for (int i=0;i<nt;i++)
-                    trout.data[i] = trin.data[i]*mutefun((i*dt+t0-min*fabs(x)-max)/wm);
+                    trout.data[i] = trout.data[i]*wtmp;
             }
         }
         catch (bad_cast) {
