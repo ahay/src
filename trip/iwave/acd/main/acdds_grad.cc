@@ -54,7 +54,7 @@ using TSOpt::IWaveSim;
 using TSOpt::TASK_RELN;
 using TSOpt::IOTask;
 using TSOpt::IWaveOp;
-using TSOpt::SEGYLinMute;
+using TSOpt::SEGYTaperMute;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 using TSOpt::MPISEGYSpace;
@@ -113,12 +113,16 @@ int main(int argc, char ** argv) {
             // the Op - note that it comes equpped with domain, range spaces!
             IWaveOp iwop(*pars,stream);
             
-            SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
-                             valparse<float>(*pars,"mute_zotime",0.0f),
-                             valparse<float>(*pars,"mute_width",0.0f));
+            SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
+                              valparse<float>(*pars,"mute_zotime",0.0f),
+                              valparse<float>(*pars,"mute_width",0.0f),0,
+                              valparse<float>(*pars,"min_gx",0.0f),
+                              valparse<float>(*pars,"max_gx",numeric_limits<float>::max()),
+                              valparse<float>(*pars,"taper_width",0.0f),0);
             
-            LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
-            OpComp<float> op(iwop,muteop);
+            LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
+        
+            OpComp<float> op(iwop,tnmop);
             
             /* generate physical model space - a priori distinct from extended space
              without even the same grid */
@@ -154,9 +158,7 @@ int main(int argc, char ** argv) {
                 AssignFilename ddfn(valparse<std::string>(*pars,"data"));
                 Components<ireal> cdd(dd);
                 cdd[0].eval(ddfn);
-                cerr << "\n" << retrieveGlobalRank() << " before mute \n ";
-                muteop.applyOp(dd,mdd);
-                cerr << "\n" << retrieveGlobalRank() << " after  mute \n ";
+                tnmop.applyOp(dd,mdd);
             }
             
             /* output stream */
