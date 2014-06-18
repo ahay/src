@@ -48,7 +48,7 @@ Flow('G4 Mlr4 Mfd4','vel',
      ''')
 
 
-Flow(['G','sx'],'vel1',
+Flow(['G','sx'],'vel',
          '''
          sfsglfdc1 dt=%(dt)g eps=0.00001 npk=70 seed=2010
                    sx=${TARGETS[1]} size=%(size)d wavnumcut=0.6
