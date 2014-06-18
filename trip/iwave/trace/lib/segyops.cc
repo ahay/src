@@ -91,6 +91,7 @@ namespace TSOpt {
             float dt;
             float t0;
             float wm;
+            float wt;
             int nt;
             
             string name="ns";
@@ -113,33 +114,44 @@ namespace TSOpt {
             gethdval(&trin,(char *)(name.c_str()),&val);
             x = gx - vtof(hdtype((char *)(name.c_str())),val);
             
+            int itw = (int) (tw/dt + 0.1);
+            itw = MAX(0,itw);
+
             // adjust mute so that w=0 works
             if (mute_type) {
                 wm = MAX(dt/s,w);
                 float wtmp = mutefun((gx - s)/wm) * mutefun((tm - gx)/wm);
-                for (int i=0;i<nt;i++)
-                    trout.data[i] = trin.data[i]*wtmp;
+                if (taper_type){ // offset
+                    RVLException e;
+                    e<<"Error: SEGYTaperMute::operator()\n";
+                    e<<"taper_type for offset has not been implemented!\n";
+                    throw e;
+                }
+                else { // taper geophone position
+                    wt=MAX(dt/min,width);
+                    float wttmp = mutefun((gx - min)/wm) * mutefun((max-gx)/wm);
+                    for (int i=0;i<nt-itw;i++)
+                        trout.data[i] = trin.data[i]*wtmp*wttmp;
+                    for (int i=nt-itw;i<nt;i++)
+                        trout.data[i] = trin.data[i]*wtmp*wttmp*mutefun(float((i-nt+itw)/itw));
+                }
             }
             else {
                 wm=MAX(dt,w);
-                //      cerr<<"mute at offset="<<x<<" slope="<<s<<" zotime="<<tm<<" width="<<wm<<endl;
-                for (int i=0;i<nt;i++)
-                    //	trout.data[i] = trin.data[i]*mutefun((t0+i*dt-s*fabs(x)-tm)/wm);
-                    // this version: tm = time AFTER first sample
-                    trout.data[i] = trin.data[i]*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
-            }
-            // do taper
-            if (taper_type){ // offset
-                RVLException e;
-                e<<"Error: SEGYTaperMute::operator()\n";
-                e<<"taper_type for offset has not been implemented!\n";
-                throw e;
-            }
-            else { // taper geophone position
-                wm=MAX(dt/min,width);
-                float wtmp = mutefun((gx - min)/wm) * mutefun((max-gx)/wm);
-                for (int i=0;i<nt;i++)
-                    trout.data[i] = trout.data[i]*wtmp;
+                if (taper_type){ // offset
+                    RVLException e;
+                    e<<"Error: SEGYTaperMute::operator()\n";
+                    e<<"taper_type for offset has not been implemented!\n";
+                    throw e;
+                }
+                else { // taper geophone position
+                    wt=MAX(dt/min,width);
+                    float wttmp = mutefun((gx - min)/wm) * mutefun((max-gx)/wm);
+                    for (int i=0;i<nt-itw;i++)
+                        trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
+                    for (int i=nt-itw;i<nt;i++)
+                        trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*mutefun(float((i-nt+itw)/itw));
+                }
             }
         }
         catch (bad_cast) {

@@ -115,17 +115,17 @@ namespace TSOpt {
         float min;   // minimum value of keyword where taper starts
         float max;   // maximum value of keyword where taper ends
         float width; // width of taper zone
-        
+        float tw;    // taper of end time width, unit(ms)
         int taper_type; // taper type: 0, geophone position; 1, offset
 
     public:
         
-        SEGYTaperMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _type = 0, float _min=0.0f, float _max=0.0f, float _width=0.0f, int _tapertype=0)
-        : s(_s),tm(_tm),w(_w),mute_type(_type), min(_min), max(_max), width(_width), taper_type(_tapertype){}
+        SEGYTaperMute(float _s=0.0f, float _tm=0.0f, float _w=0.0f, int _type = 0, float _min=0.0f, float _max=0.0f, float _width=0.0f, int _tapertype=0, float _tw=0.0f)
+        : s(_s),tm(_tm),w(_w),mute_type(_type), min(_min), max(_max), width(_width), taper_type(_tapertype), tw(_tw){}
         
         SEGYTaperMute(SEGYTaperMute const & m)
-        : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),min(m.min),max(m.max),width(m.width),taper_type(m.taper_type) {}
-        void set(float _s, float _tm, float _w, int _type = 0, float _min =0.0f , float _max = numeric_limits<float>::max(), float _width=0.0f, int _tapertype=0)
+        : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),min(m.min),max(m.max),width(m.width),taper_type(m.taper_type),tw(m.tw) {}
+        void set(float _s, float _tm, float _w, int _type = 0, float _min =0.0f , float _max = numeric_limits<float>::max(), float _width=0.0f, int _tapertype=0, float _tw=0.0f)
         {
             mute_type = _type;
             s = _s;
@@ -136,6 +136,8 @@ namespace TSOpt {
             max = _max;
             width = _width;
             taper_type = _tapertype;
+            
+            tw=_tw;
             
         }
         
