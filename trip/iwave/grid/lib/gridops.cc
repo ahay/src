@@ -20,6 +20,260 @@ namespace TSOpt {
   using RVL::MPISerialFunctionObject;
   using RVL::MPISerialFunctionObjectRedn;
 
+    void GridMaskFO::operator()(LocalDataContainer<ireal> & x,
+                                  LocalDataContainer<ireal> const & y) {
+        try {
+            // cerr<<"GridWindowFO::operator() begin\n";
+            ContentPackage< ireal, RARR > const & gy =
+            dynamic_cast<ContentPackage< ireal, RARR > const &>(y);
+            
+            ContentPackage< ireal, RARR > & gx =
+            dynamic_cast<ContentPackage< ireal, RARR > &>(x);
+            
+            // precondition - metadata are same dimn
+            RARR & rax = gx.getMetadata();
+            RARR const & ray = gy.getMetadata();
+            int dimx; int dimy;
+            ra_ndim(&rax,&dimx);
+            ra_ndim(&ray,&dimy);
+            if (dimx != dimy) {
+                RVLException e;
+                e<<"Error: GridMaskFO::operator()\n";
+                e<<"arguments have different dims:\n";
+                e<<"dimx="<<dimx<<" dimy="<<dimy<<"\n";
+                throw e;
+            }
+            
+            // compute grid params
+            IPNT gsx; IPNT gex;
+            IPNT gsy; IPNT gey;
+            IPNT s; IPNT e;
+            ra_a_gse(&rax,gsx,gex);
+            ra_a_gse(&ray,gsy,gey);
+            // calculate grid overlap
+            for (int ii=0;ii<dimx;ii++)  {
+                s[ii]=max(gsy[ii],gsx[ii]);
+                e[ii]=min(gey[ii],gex[ii]);
+            }
+            
+            IPNT i;
+            RPNT fac;
+            RASN(fac,RPNT_1);
+#if RARR_MAX_NDIM > 0
+            if (dimx==1) {
+                for (i[0]=siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+                    if (bias) {
+                        rax._s1[i[0]]+=ray._s1[i[0]];
+                    }
+                    else{
+                        rax._s1[i[0]]=ray._s1[i[0]];
+                    }
+                }
+            }
+#endif
+#if RARR_MAX_NDIM > 1
+            if (dimx==2) {
+                for (i[1]=siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
+                    for (i[0]=siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+                        if (bias) {
+                            rax._s2[i[1]][i[0]]+=ray._s2[i[1]][i[0]];
+                        }
+                        else{
+                            rax._s2[i[1]][i[0]]=ray._s2[i[1]][i[0]];
+                        }
+                    }
+                }
+            }
+#endif
+#if RARR_MAX_NDIM > 2
+            if (dimx==3) {
+                for (i[2]=siw[2];i[2]<=e[2]-eiw[2];i[2]++) {
+                    for (i[1]=siw[1];i[1]<=e[1]-eiw[1];i[1]++) {
+                        for (i[0]=siw[0];i[0]<=e[0]-eiw[0];i[0]++) {
+                            if (bias) {
+                                rax._s3[i[2]][i[1]][i[0]]+=ray._s3[i[2]][i[1]][i[0]];
+                            }
+                            else{
+                                rax._s3[i[2]][i[1]][i[0]]=ray._s3[i[2]][i[1]][i[0]];
+                            }
+                        }
+                    }
+                }
+            }
+#endif
+            if (dimx<1 || dimx>3) {
+                RVLException e;
+                e<<"Error: GridMaskFO::operator()\n";
+                e<<"dim = "<<dimx<<" outside of admissible set {1, 2, 3}\n";
+                throw e;
+            }
+            // cerr<<"GridWindowFO::operator() end\n";
+        }
+        catch (bad_cast) {
+            RVLException e;
+            e<<"\nError: GridMaskFO::operator()\n";
+            e<<"at least one arg is not ContentPackage<ireal,RARR>\n";
+            throw e;
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from GridMaskFO::operator()\n";
+            throw e;
+        }
+    }
+    
+   
+#ifdef IWAVE_USE_MPI
+    typedef MPIGridSpace myGridSpace;
+#else
+    typedef GridSpace myGridSpace;
+#endif
+    
+    GridMaskOp::GridMaskOp(Space<ireal> const & _dom,
+                               Vector<ireal> const & _bg,
+                               RPNT const & sw, RPNT const & ew)
+    : dom(_dom), bg(_bg) {
+        try {
+            // generic initialization of iw
+            IASN(siw,IPNT_0);
+            IASN(eiw,IPNT_0);
+            
+            // branch on product structure - unfortunately required
+            ProductSpace<ireal> const * pdom = dynamic_cast<ProductSpace<ireal> const *>(&dom);
+            ProductSpace<ireal> const * prng = dynamic_cast<ProductSpace<ireal> const *>(&(bg.getSpace()));
+            if (pdom && prng) {
+                if (pdom->getSize() != prng->getSize()) {
+                    RVLException e;
+                    e<<"Error GridMaskOp constructor\n";
+                    e<<"  domain and range are product spaces with different numbers of components\n";
+                    throw e;
+                }
+                // check that component gridspaces are pairwise compatible and compatible
+                // with 0th domain component - then they are all compatible
+                
+                myGridSpace const & gref = dynamic_cast<myGridSpace const &>((*pdom)[0]);
+                for (int j=0; j<(int)pdom->getSize(); j++) {
+                    myGridSpace const & gdom = dynamic_cast<myGridSpace const &>((*pdom)[j]);
+                    myGridSpace const & grng = dynamic_cast<myGridSpace const &>((*prng)[j]);
+                    
+                    if (retrieveGlobalRank()==0) {
+                        if (compatible_grid(gdom.getGrid(),grng.getGrid()) ||
+                            compatible_grid(gref.getGrid(),grng.getGrid())) {
+                            RVLException e;
+                            e<<"Error: GridWindowOp constructor\n";
+                            e<<"  domain, range defined on incompatible grids\n";
+                            e<<"  product case, component = "<<j<<"\n";
+                            e<<"  domain:\n";
+                            for (int i=0;i<gdom.getGrid().gdim;i++)
+                                e<<"    axis "<<i<<" d="<<gdom.getGrid().axes[i].d<<" o="<<gdom.getGrid().axes[i].o<<"\n";
+                            e<<"  range:\n";
+                            for (int i=0;i<grng.getGrid().gdim;i++)
+                                e<<"    axis "<<i<<" d="<<grng.getGrid().axes[i].d<<" o="<<grng.getGrid().axes[i].o<<"\n";
+                            throw e;
+                        }
+                    }
+                }
+                if (retrieveGlobalRank()==0) {
+                    grid const & g = gref.getGrid();
+                    for (int i=0; i< g.dim; i++) {
+                        siw[i]=(int) (sw[i]/(g.axes[i].d) + 0.1);
+                        eiw[i]=(int) (ew[i]/(g.axes[i].d) + 0.1);
+
+                        siw[i]=iwave_max(siw[i],1);
+                        eiw[i]=iwave_max(eiw[i],1);
+                    }
+                }
+            }
+            else {
+                myGridSpace const & gdom = dynamic_cast<myGridSpace const &> (dom);
+                myGridSpace const & grng = dynamic_cast<myGridSpace const &>(bg.getSpace());
+                if (retrieveGlobalRank()==0) {
+                    if (compatible_grid(gdom.getGrid(),grng.getGrid())) {
+                        RVLException e;
+                        e<<"Error: GridMaskOp constructor\n";
+                        e<<"  domain, range defined on incompatible grids\n";
+                        e<<"  domain:\n";
+                        for (int i=0;i<gdom.getGrid().gdim;i++) 
+                            e<<"    axis "<<i<<" d="<<gdom.getGrid().axes[i].d<<" o="<<gdom.getGrid().axes[i].o<<"\n";
+                        e<<"  range:\n";
+                        for (int i=0;i<grng.getGrid().gdim;i++) 
+                            e<<"    axis "<<i<<" d="<<grng.getGrid().axes[i].d<<" o="<<grng.getGrid().axes[i].o<<"\n";
+                        throw e;
+                    }
+                    grid const & g = gdom.getGrid();
+                    for (int i=0; i< g.dim; i++) {
+                        siw[i]=(int) (sw[i]/(g.axes[i].d) + 0.1);
+                        eiw[i]=(int) (ew[i]/(g.axes[i].d) + 0.1);
+
+                        siw[i]=iwave_max(siw[i],0);
+                        eiw[i]=iwave_max(eiw[i],0);
+                    }
+                }
+            }
+        }
+        catch (bad_cast) {
+            RVLException e;
+            e<<"Error: GridWindowOp constructor\n";
+            e<<"  either domain or range is neither product nor a GridSpace,\n";
+            e<<"  or some component is not a GridSpace\n";
+            throw e;
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from GridWindowOp constructor\n";
+            throw e;
+        }
+    }
+    
+    void GridMaskOp::apply(Vector<ireal> const & x,
+                             Vector<ireal> & y) const {
+        try {
+            GridMaskFO op(siw,eiw,true);
+            MPISerialFunctionObject<ireal> mpiop(op);
+            y.copy(bg);
+            y.eval(mpiop,x);
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from GridMaskOp::apply\n";
+            throw e;
+        }
+    }
+    
+    void GridMaskOp::applyDeriv(Vector<ireal> const & x,
+                                  Vector<ireal> const & dx,
+                                  Vector<ireal> & dy) const {
+        try {
+            GridMaskFO op(siw,eiw,false);
+            MPISerialFunctionObject<ireal> mpiop(op);
+            dy.zero();
+            dy.eval(mpiop,dx);
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from GridMaskOp::applyDeriv\n";
+            throw e;
+        }
+    }
+    
+    void GridMaskOp::applyAdjDeriv(Vector<ireal> const & x,
+                                     Vector<ireal> const & dy,
+                                     Vector<ireal> & dx) const {
+        try {
+            GridMaskFO op(siw,eiw,false);
+            MPISerialFunctionObject<ireal> mpiop(op);
+            dx.zero();
+            dx.eval(mpiop,dy);
+        }
+        catch (RVLException & e) {
+            e<<"\ncalled from GridMaskOp::applyAdjDeriv\n";
+            throw e;
+        }
+        
+    }
+    ostream & GridMaskOp::write(ostream & str) const {
+        if (!retrieveGlobalRank()) {
+            str<<"GridMaskOp\n";
+        }
+        return str;
+    }
+    
   void GridWindowFO::operator()(LocalDataContainer<ireal> & x,
 				LocalDataContainer<ireal> const & y) {
     try {
@@ -127,11 +381,6 @@ namespace TSOpt {
     }
   }
 
-#ifdef IWAVE_USE_MPI
-  typedef MPIGridSpace myGridSpace; 
-#else
-  typedef GridSpace myGridSpace; 
-#endif
 
   GridWindowOp::GridWindowOp(Space<ireal> const & _dom,
 			     Vector<ireal> const & _bg,

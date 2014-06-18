@@ -38,6 +38,106 @@ namespace TSOpt {
   using RVL::ContentPackage;
   using RVL::LocalDataContainer;
 
+    
+    /** function object for masking a 1D grid function, in the form of
+     a CP with Grid metadata. Scalar arrays ffset between input and
+     output grids computed by calling unit
+     */
+    
+    class GridMaskFO: public BinaryLocalFunctionObject<ireal> {
+        
+    private:
+        
+        IPNT siw;     // mask start points in gridpoints
+        IPNT eiw;     // mask end points in gridpoints
+        bool bias;
+        GridMaskFO();
+        
+    public:
+        
+        GridMaskFO(IPNT const & _siw, IPNT const & _eiw, bool _bias=false)
+        : bias(_bias){
+            IASN(siw,_siw);
+            IASN(eiw,_eiw);
+        }
+        
+        GridMaskFO(GridMaskFO const & f)
+        : bias(f.bias){
+            IASN(siw,f.siw);
+            IASN(eiw,f.eiw);
+        }
+        
+        using RVL::LocalEvaluation<ireal>::operator();
+        void operator()(LocalDataContainer<ireal> & x,
+                        LocalDataContainer<ireal> const & y);
+        
+        string getName() const { string tmp = "GridMaskFO"; return tmp; }
+        
+    };
+    
+    /** Mask operator for grid objects. Apply method outputs
+     masked version of background Vector data member: thus
+     
+     \f$ y = x outside of mask, or 0 inside mask\f$
+     
+     Derivative and adjoint derivative are implement standard linear injection and
+     projection operators.
+     */
+    class GridMaskOp: public Operator<ireal> {
+        
+    private:
+        
+        Space<ireal> const & dom;
+        Vector<ireal> const & bg;
+        IPNT siw;
+        IPNT eiw;
+        GridMaskOp();
+        
+    protected:
+        
+        void apply(Vector<ireal> const & x,
+                   Vector<ireal> & y) const;
+        void applyDeriv(Vector<ireal> const & x,
+                        Vector<ireal> const & dx,
+                        Vector<ireal> & dy) const;
+        void applyAdjDeriv(Vector<ireal> const & x,
+                           Vector<ireal> const & dy,
+                           Vector<ireal> & dx) const;
+        void applyDeriv2(const Vector<ireal> & x,
+                         const Vector<ireal> & dx0,
+                         const Vector<ireal> & dx1,
+                         Vector<ireal> & dy) const { dy.zero(); }
+        void applyAdjDeriv2(const Vector<ireal> & x,
+                            const Vector<ireal> & dx0,
+                            const Vector<ireal> & dy,
+                            Vector<ireal> & dx1) const { dx1.zero(); }
+        
+        Operator<ireal> * clone() const { return new GridMaskOp(*this); }
+        
+    public:
+        
+        /** main constructor: takes Grid defining increment window, and width
+         parameter defining zone of smooth taper - same on all sides.
+         */
+        GridMaskOp(Space<ireal> const & _dom,
+                     Vector<ireal> const & _bg,
+                     RPNT const & sw = RPNT_0, RPNT const & ew = RPNT_0);
+        
+        /** Copy constructor - memberwise */
+        GridMaskOp(GridMaskOp const & op)
+        : dom(op.dom), bg(op.bg) {
+            IASN(siw,op.siw);
+            IASN(eiw,op.eiw);
+        }
+        
+        ~GridMaskOp() {}
+        
+        Space<ireal> const & getDomain() const { return dom; }
+        Space<ireal> const & getRange() const { return bg.getSpace(); }
+        
+        ostream & write(ostream & str) const;
+    };
+    
   /** function object for tapering a 1D grid function, in the form of
       a CP with Grid metadata. Scalar arrays ffset between input and
       output grids computed by calling unit
@@ -118,7 +218,7 @@ namespace TSOpt {
     */
     GridWindowOp(Space<ireal> const & _dom,
 		 Vector<ireal> const & _bg,
-      		 RPNT const & w = RPNT_0);
+      		 RPNT const & sw = RPNT_0);
 
     /** Copy constructor - memberwise */
     GridWindowOp(GridWindowOp const & op) 
