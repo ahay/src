@@ -446,6 +446,8 @@ necessary number of iterations.
       vector<string> names(2);
       vector<atype *> nums(2);
       vector<atype> tols(2);
+      atype rnorm0=rnorm;
+      atype nrnorm0=nrnorm;
       names[0]="Residual Norm"; nums[0]=&rnorm; tols[0]=ScalarFieldTraits<atype>::Zero();
       names[1]="Normal Residual Norm"; nums[1]=&nrnorm; tols[1]=tols[0]=ScalarFieldTraits<atype>::Zero();
       str<<"========================== BEGIN Cheb =========================\n";
@@ -461,6 +463,14 @@ necessary number of iterations.
       ktot = stop1.getCount();
 
       str<<"=========================== END Cheb ==========================\n";
+        // display results
+        str<<"\n ******* summary ********  "<<endl;
+        str<<"initial residual norm      = "<<rnorm0<<endl;
+        str<<"residual norm              = "<<rnorm<<endl;
+        str<<"residual redn              = "<<rnorm/rnorm0<<endl;
+        str<<"initial gradient norm      = "<<nrnorm0<<endl;
+        str<<"gradient norm              = "<<nrnorm<<endl;
+        str<<"gradient redn              = "<<nrnorm/nrnorm0<<endl;
     }
 
     int getCount() const { return kc; }

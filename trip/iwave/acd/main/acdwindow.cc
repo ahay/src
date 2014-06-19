@@ -83,15 +83,7 @@ int main(int argc, char ** argv) {
     wind[0]=valparse<float>(*pars,"windw1",0.0f);
     wind[1]=valparse<float>(*pars,"windw2",0.0f);
     wind[2]=valparse<float>(*pars,"windw3",0.0f);
-//
-//    SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
-//                     valparse<float>(*pars,"mute_zotime",0.0f),
-//                     valparse<float>(*pars,"mute_width",0.0f));
-//      
-//    LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
-//
-//    Vector<ireal> ddin(muteop.getRange());
-//    Vector<ireal> ddout(muteop.getRange());
+
     Vector<ireal> min(iwop.getDomain());
     Vector<ireal> mout(iwop.getDomain());
 

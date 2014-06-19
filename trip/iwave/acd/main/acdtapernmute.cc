@@ -73,7 +73,8 @@ int main(int argc, char ** argv) {
                          valparse<float>(*pars,"mute_width",0.0f),0,
                          valparse<float>(*pars,"min_gx",0.0f),
                          valparse<float>(*pars,"max_gx",numeric_limits<float>::max()),
-                         valparse<float>(*pars,"taper_width",0.0f),0);
+                         valparse<float>(*pars,"taper_width",0.0f),0,
+                         valparse<float>(*pars,"time_width",0.0f));
         
         LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
         

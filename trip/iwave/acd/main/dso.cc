@@ -11,10 +11,10 @@
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]
 = {
-  {"csq",    0, true,  true },
-  {"data",   1, false, true },
-  {"source", 1, true,  false},
-  {"",       0, false, false}
+    {"csq",    0, true,  true },
+    {"data",   1, false, true },
+    {"source", 1, true,  false},
+    {"",       0, false, false}
 };
 
 using RVL::parse;
@@ -32,7 +32,7 @@ using RVL::AssignParams;
 using RVL::RVLRandomize;
 using RVL::AdjointTest;
 using TSOpt::IWaveEnvironment;
-
+using TSOpt::GridWindowOp;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 #else
@@ -45,78 +45,87 @@ int xargc;
 char **xargv;
 
 int main(int argc, char ** argv) {
-
-  try {
-
+    
+    try {
+        
 #ifdef IWAVE_USE_MPI
-    int ts=0;
-    MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&ts);    
+        int ts=0;
+        MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&ts);
 #endif
-      
-    PARARRAY * pars = NULL;
-    FILE * stream = NULL;
-    IWaveEnvironment(argc, argv, 0, &pars, &stream);
+        
+        PARARRAY * pars = NULL;
+        FILE * stream = NULL;
+        IWaveEnvironment(argc, argv, 0, &pars, &stream);
 #ifdef IWAVE_USE_MPI
-      if (retrieveGroupID() == MPI_UNDEFINED) {
-          fprintf(stream,"NOTE: finalize MPI, cleanup, exit\n");
-          fflush(stream);
-      }
-      else {
+        if (retrieveGroupID() == MPI_UNDEFINED) {
+            fprintf(stream,"NOTE: finalize MPI, cleanup, exit\n");
+            fflush(stream);
+        }
+        else {
 #endif
-      
-      
-      /* generate physical model space */
+            
+            
+            /* generate physical model space */
 #ifdef IWAVE_USE_MPI
-      MPIGridSpace csqsp(valparse<std::string>(*pars,"csqext"),"notype",true);
+            MPIGridSpace csqsp(valparse<std::string>(*pars,"csqext"),"notype",true);
 #else
-      GridSpace csqsp(valparse<std::string>(*pars,"csqext"),"notype",true);
+            GridSpace csqsp(valparse<std::string>(*pars,"csqext"),"notype",true);
 #endif
-          
-      // make it a product, so it's compatible with domain of op
-      StdProductSpace<ireal> dom(csqsp);
-          int dsdir = INT_MAX;
-          if (retrieveGlobalRank()==0) dsdir=csqsp.getGrid().dim;
-          cerr << "\n after get grid dim \n";
-          cerr << "\n" << retrieveGlobalRank() << "  dsdir = " << dsdir << endl;
+            
+            // make it a product, so it's compatible with domain of op
+            StdProductSpace<ireal> dom(csqsp);
+            int dsdir = INT_MAX;
+            if (retrieveGlobalRank()==0) dsdir=csqsp.getGrid().dim;
 #ifdef IWAVE_USE_MPI
-          if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
-              RVLException e;
-              e<<"Error: acddscheb_grad, rank="<<retrieveGlobalRank()<<"\n";
-              e<<"  failed to bcast dsdir\n";
-              throw e;
-          }
+            if (MPI_Bcast(&dsdir,1,MPI_INT,0,retrieveGlobalComm())) {
+                RVLException e;
+                e<<"Error: acddscheb_grad, rank="<<retrieveGlobalRank()<<"\n";
+                e<<"  failed to bcast dsdir\n";
+                throw e;
+            }
 #endif
-      GridDerivOp dsop(dom,dsdir,valparse<float>(*pars,"DSWeight",1.0f));
-          
-          Vector<ireal> min(dom);
-          Vector<ireal> mout(dom);
-          
-          AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
-          Components<ireal> cmin(min);
-          cmin[0].eval(minfn);
-          
-          AssignFilename moutfn(valparse<std::string>(*pars,"dcsqextout"));
-          Components<ireal> cmout(mout);
-          cmout[0].eval(moutfn);
-          
-          RVLRandomize<float> rnd(getpid(),-1.0,1.0);
-          
-          OperatorEvaluation<ireal> opeval(dsop,min);
-          AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
-          
-          opeval.getDeriv().applyOp(min,mout);
-      
+            
+            // assign window widths - default = 0;
+            RPNT wind;
+            RASN(wind,RPNT_0);
+            wind[0]=valparse<float>(*pars,"windw1",0.0f);
+            wind[1]=valparse<float>(*pars,"windw2",0.0f);
+            wind[2]=valparse<float>(*pars,"windw3",0.0f);
+            
+            GridDerivOp dsop(dom,dsdir,valparse<float>(*pars,"DSWeight",1.0f));
+            
+            Vector<ireal> min(dom);
+            Vector<ireal> mout(dom);
+            
+            AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
+            Components<ireal> cmin(min);
+            cmin[0].eval(minfn);
+            
+            GridWindowOp wop(dom,min,wind);
+            OpComp<float> op(wop,dsop);
+            
+            AssignFilename moutfn(valparse<std::string>(*pars,"dcsqextout"));
+            Components<ireal> cmout(mout);
+            cmout[0].eval(moutfn);
+            
+            RVLRandomize<float> rnd(getpid(),-1.0,1.0);
+            
+            OperatorEvaluation<ireal> opeval(op,min);
+            AdjointTest<float>(opeval.getDeriv(),rnd,cerr);
+            
+            opeval.getDeriv().applyOp(min,mout);
+            
 #ifdef IWAVE_USE_MPI
-          }
-    MPI_Finalize();
+        }
+        MPI_Finalize();
 #endif
-  }
-  catch (RVLException & e) {
-    e.write(cerr);
+    }
+    catch (RVLException & e) {
+        e.write(cerr);
 #ifdef IWAVE_USE_MPI
-    MPI_Abort(MPI_COMM_WORLD,0);
+        MPI_Abort(MPI_COMM_WORLD,0);
 #endif
-    exit(1);
-  }
-  
+        exit(1);
+    }
+    
 }

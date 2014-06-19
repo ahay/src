@@ -4,7 +4,12 @@ float mutefun(float t) {
     t = MIN(1.0f,MAX(t,0.0f));
     return 3*t*t-2*t*t*t;
 }
-
+float cosfun(float t){
+    return 0.5 - cos(M_PI * t)/2.0f;
+}
+float cosfun2(float t){
+    return 0.5 + cos(M_PI * t)/2.0f;
+}
 namespace TSOpt {
     
     using RVL::LocalDataContainer;
@@ -115,7 +120,7 @@ namespace TSOpt {
             x = gx - vtof(hdtype((char *)(name.c_str())),val);
             
             int itw = (int) (tw/dt + 0.1);
-            itw = MAX(0,itw);
+            itw = MAX(1,itw);
 
             // adjust mute so that w=0 works
             if (mute_type) {
@@ -129,11 +134,14 @@ namespace TSOpt {
                 }
                 else { // taper geophone position
                     wt=MAX(dt/min,width);
-                    float wttmp = mutefun((gx - min)/wm) * mutefun((max-gx)/wm);
+                    float wttmp=1.0;
+                    if (gx < min) wttmp = cosfun2((min-gx)/wt);
+                    else if (gx > max) wttmp = cosfun2((gx - max)/wt);
+                    
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wtmp*wttmp;
                     for (int i=nt-itw;i<nt;i++)
-                        trout.data[i] = trin.data[i]*wtmp*wttmp*mutefun(float((i-nt+itw)/itw));
+                        trout.data[i] = trin.data[i]*wtmp*wttmp*cosfun(float(nt-i)/(itw+0.0f));
                 }
             }
             else {
@@ -146,11 +154,14 @@ namespace TSOpt {
                 }
                 else { // taper geophone position
                     wt=MAX(dt/min,width);
-                    float wttmp = mutefun((gx - min)/wm) * mutefun((max-gx)/wm);
+                    float wttmp=1.0;
+                    if (gx < min) wttmp = cosfun2((min-gx)/wt);
+                    else if (gx > max) wttmp = cosfun2((gx - max)/wt);
+
                     for (int i=0;i<nt-itw;i++)
                         trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
                     for (int i=nt-itw;i<nt;i++)
-                        trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*mutefun(float((i-nt+itw)/itw));
+                        trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*cosfun(float(nt-i)/(itw+0.0f));
                 }
             }
         }

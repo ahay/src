@@ -547,6 +547,9 @@ namespace RVLUmin {
 	vector<string> names(2);
 	vector<atype *> nums(2);
 	vector<atype> tols(2);
+    atype rnorm0=rnorm;
+    atype nrnorm0=nrnorm;
+          
 	names[0]="Residual Norm"; nums[0]=&rnorm; tols[0]=rtol;
 	names[1]="Gradient Norm"; nums[1]=&nrnorm; tols[1]=nrtol;
 	if (pcg) str<<"========================== BEGIN PCGNE =========================\n";
@@ -593,6 +596,14 @@ namespace RVLUmin {
 	count = stop1.getCount();
 	if (pcg) str<<"=========================== END PCGNE ==========================\n";
 	else str<<"=========================== END CGNE ==========================\n";
+          // display results
+          str<<"\n ******* summary ********  "<<endl;
+          str<<"initial residual norm      = "<<rnorm0<<endl;
+          str<<"residual norm              = "<<rnorm<<endl;
+          str<<"residual redn              = "<<rnorm/rnorm0<<endl;
+          str<<"initial gradient norm      = "<<nrnorm0<<endl;
+          str<<"gradient norm              = "<<nrnorm<<endl;
+          str<<"gradient redn              = "<<nrnorm/nrnorm0<<endl;
       }
       catch (RVLException & e) {
 	e<<"\ncalled from CGNEAlg::run\n";

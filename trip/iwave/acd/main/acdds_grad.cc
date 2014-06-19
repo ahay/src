@@ -55,6 +55,7 @@ using TSOpt::TASK_RELN;
 using TSOpt::IOTask;
 using TSOpt::IWaveOp;
 using TSOpt::SEGYTaperMute;
+using TSOpt::GridWindowOp;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 using TSOpt::MPISEGYSpace;
@@ -182,7 +183,25 @@ int main(int argc, char ** argv) {
                 throw e;
             }
 #endif
-            GridDerivOp dsop(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
+            
+            // assign window widths - default = 0;
+            RPNT wind;
+            RASN(wind,RPNT_0);
+            wind[0]=valparse<float>(*pars,"windw1",0.0f);
+            wind[1]=valparse<float>(*pars,"windw2",0.0f);
+            wind[2]=valparse<float>(*pars,"windw3",0.0f);
+            
+            GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
+            
+            // need to read in model space for bg input to GridWindowOp
+            Vector<ireal> m_in(op.getDomain());
+            AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
+            Components<ireal> cmin(m_in);
+            cmin[0].eval(minfn);
+            GridWindowOp wop(op.getDomain(),m_in,wind);
+            
+            OpComp<float> dsop(wop,dsop0);
+            
             TensorOp<float> top(op,dsop);
             // create RHS of block system
             Vector<float> td(top.getRange());
@@ -196,7 +215,15 @@ int main(int argc, char ** argv) {
                                      valparse<float>(*pars,"GradientTol",100.0*numeric_limits<float>::epsilon()),
                                      valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
                                      valparse<int>(*pars,"MaxIter",10),true);
-            LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,preop,td,pd,false,res);
+            Vector<float> dm0(op.getDomain());
+            string refname = valparse<std::string>(*pars,"ref0");
+            if (refname.size()>0){
+                AssignFilename dmfn(refname);
+                Components<float> cdm0(dm0);
+                cdm0[0].eval(dmfn);
+            }
+            else { dm0.zero(); }
+            LinFitLS<float, CGNEPolicy<float>, CGNEPolicyData<float> > f(top,preop,td,dm0,pd,false,res);
             // compose with grid extension op
             FcnlOpComp<float> gf(f,gext);
             
