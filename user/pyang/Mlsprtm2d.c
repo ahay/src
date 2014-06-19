@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
     	sf_floatwrite(mod, nz*nx, imgrtm);  
 
 	/* least squares inversion */
-   	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "x0", mod, "verb", verb, "end");
+   	sf_solver(prtm2d_lop, sf_cgstep, nz*nx, nt*ng*ns, mod, dat, niter, "verb", verb, "end");
 	/* output inverted image */
     	sf_floatwrite(mod, nz*nx, imag);  
 

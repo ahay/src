@@ -27,7 +27,6 @@ Note: Acquistion geometry represented by mask operator.
 #include <omp.h>
 #endif
 
-#include "pthresh.h"
 
 int main(int argc, char* argv[])
 {
@@ -114,7 +113,6 @@ int main(int argc, char* argv[])
 		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);
 
 		/* perform hard thresholding: mm<--T{mm} */
-		if(iter==0){
 	#ifdef _OPENMP
 	#pragma omp parallel for default(none)	\
 		private(i)			\
@@ -126,8 +124,6 @@ int main(int argc, char* argv[])
 	    	if (nthr < 0) nthr=0;
 	    	if (nthr >= num) nthr=num-1;
 		thr=sf_quantile(nthr,num,thresh);
-		}
-		thr*=(float)(niter-iter)/niter;
 		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
 
 	#ifdef _OPENMP
