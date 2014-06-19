@@ -2,13 +2,23 @@ from rsf.proj import *
 
 #SConscript('../segy/SConstruct')
 
-for win in range(4):
-    shots = 'shots%d' % win
+#Result('shots2','../segy/DeconShots3.rsf',
+#      '''
+#       sfwindow n2=100000 f2=200000 j1=2 | sfput n2=1000 n3=100 | sfgrey title="2nd 10000 traces"
+#       ''')
+#Result('shots2a','../segy/DeconShots3.rsf',
+#      '''
+#       sfwindow n2=25000 f2=200000 j1=2 | sfput n2=1000 n3=25 | sfgrey title="2nd 10000 traces"
+#       ''')
+Result('shots2b','../segy/DeconShots3.rsf',
+      '''
+       sfwindow n2=5000 f2=200000 j1=2 | sfput n2=300 n3=5 | sfgrey title="2nd 10000 traces"
+       ''')
 
-    Plot(shots,'../segy/DeconShots3.rsf',
-         '''
-     window n2=100000 f2=%d j1=2 | put n2=1000 n3=100 | grey title="%s 10000 traces"
-     ''' % (win*100000,('1st','2nd','3rd','4th')[win]),view=1)
+#Result('shots_d1000','../segy/DeconShots3.rsf',
+#       '''
+#       sfwindow j2=100 j1=2 | sfgrey title="4rd 10000 traces"
+#       ''')
 
 Flow('foldplot','../segy/DeconShots3_hdr.rsf',
      '''
