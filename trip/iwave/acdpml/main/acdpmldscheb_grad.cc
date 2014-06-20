@@ -194,13 +194,12 @@ int main(int argc, char ** argv) {
       ScaleOpFwd<float> preop(top.getDomain(),1.0f);
 
             Vector<float> dm0(op.getDomain());
-            dm0.zero();
-            string refname = valparse<std::string>(*pars,"ref0");
+            string refname = valparse<std::string>(*pars,"ref0","");
             if (refname.size()>0){
                 AssignFilename dmfn(refname);
                 Components<float> cdm0(dm0);
                 cdm0[0].eval(dmfn);
-            }
+            } else { dm0.zero(); }
       LinFitLS<float, ChebPolicy<float>, ChebPolicyData<float> > f(top,preop,td,dm0,pd,valparse<bool>(*pars,"refine",false),res);
       GridExtendOp g(dom,op.getDomain());
       FcnlOpComp<float> gf(f,g);
