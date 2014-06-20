@@ -216,7 +216,7 @@ int main(int argc, char ** argv) {
                                      valparse<float>(*pars,"MaxStep",numeric_limits<float>::max()),
                                      valparse<int>(*pars,"MaxIter",10),true);
             Vector<float> dm0(op.getDomain());
-            string refname = valparse<std::string>(*pars,"ref0");
+            string refname = valparse<std::string>(*pars,"ref0","");
             if (refname.size()>0){
                 AssignFilename dmfn(refname);
                 Components<float> cdm0(dm0);
