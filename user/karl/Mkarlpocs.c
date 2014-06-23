@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 		thr=sf_quantile(nthr,num,thresh);
 
 		fprintf(stderr,"initial thr=%e\n",thr);
-		thr*=((float)(niter-iter))/niter;
+		thr*=(float)(niter-iter)/niter;
 		fprintf(stderr,"thr=%e\n",thr);
 		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
 

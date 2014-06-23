@@ -17,19 +17,17 @@ and sftahwrite.
 
 EXAMPLE:
 
-sftahread \\
-   verbose=1 \\
-   input=npr3_gathers.rsf \\
-| sftahnmo \\
-   verbose=1  \\
-   tnmo=0,.373,.619,.826,.909,1.017,1.132,1.222,1.716,3.010 \\
-   vnmo=9086,10244,11085,10803,10969,11578,12252,12669,14590,17116 \\
-| sftahstack key=iline,xline verbose=1 \\
+sftahsort               \\
+   verbose=1            \\
+   input=npr3_field.rsf \\
+   sort="iline:100,200,50  +xline:100,140,10 offset" \\
+| sftahmakeskey pkey=iline,xline skey=cdpt verbose=1 \\
 | sftahwrite \\
-   verbose=1                           \\
-   label2="xline" o2=1 n2=188 d2=1   \\
-   label3="iline" o3=1 n3=345 d3=1   \\
-   output=mappedstack.rsf \\
+   verbose=1 \\                          
+   label2="cdpt"  o2=1 n2=50  d2=1    \\
+   label3="xline" o3=100 n3=5 d3=10   \\
+   label4="iline" o4=100 n4=3  d4=50  \\
+   output=mappedfieldsort.rsf         \\
 >/dev/null
 
 sfgrey <mappedstack.rsf | sfpen
@@ -371,7 +369,7 @@ int main(int argc, char* argv[])
       }
     }
     if(false==passrangetest) continue; /* do not add header to list of keys
-                                          header is outsidd the sort ranges */
+                                          header is outside the sort ranges */
 			       
     /* add this trace to the headers to sort */
     if(numtracestosort>=size_myarray_pointers_to_sortkey){
