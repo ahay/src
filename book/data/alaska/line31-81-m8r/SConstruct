@@ -306,4 +306,26 @@ Flow('dec368','decon','window n3=1 f3=368')
 Plot('dec368','grey title=Deconvolution')
 Result('dec368','cmp368g dec368','SideBySideAniso')
 
+# NMO, gain, and mute
+Flow('vpicks','vpick','spray axis=3 n=551')
+Flow('nmo','decon vpicks','nmo velocity=${SOURCES[1]} half=n | shapeagc rect1=50 rect2=50 rect3=1000')
+
+Plot('nmo','grey title=CMPs gainpanel=all pclip=90',view=1)
+
+##########################################
+# brute stack, display, and zoom display
+##########################################
+Flow('brutestack','nmo','stack')
+
+Result('brutestack',
+       '''
+       grey title="brutestack" 
+       ''')
+
+Result('zoombrutestack','brutestack',
+       '''
+       window max1=3.0 |
+       grey title="brutestack" 
+       ''')
+
 End()

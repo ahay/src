@@ -1,40 +1,52 @@
 from rsf.proj import *
-import math
+
+# Sconscript('../segy/SConstruct')
 
 Flow('ntg','../segy/DeconShots3.rsf',
     '''
       sftahsort input=$SOURCE sort="iline xline -offset"
-      | sftahwrite \
+      | sftahwrite 
         verbose=1
 	label2=xline o2=1001 n2=1943 d2=1 
         label3=iline o3=5100 n3=296  d3=1   
 	output=${TARGETS[0]}
     ''',stdout=0,stdin=0)
 
-Result('ntg',
-        '''
-	   sfwindow j3=20 max1=1 \
-	   |  sfgrey title="near trace gather"
-	''')
+Plot('ntg',
+     '''
+     window j3=20 max1=1 | grey title="near trace gather"
+      ''',view=1)
  	
 Flow(['nmontg.rsf','nmontg_hdr.rsf'],'../segy/DeconShots3.rsf',
     '''
       sftahsort input=$SOURCE sort="iline xline -offset"
-      | sftahnmo \
-        vnmo=1500,1650,1700 \
-	tnmo=0,.8,3 \
-      | sftahwrite \
+      | sftahnmo 
+        vnmo=1500,1650,1700 
+	tnmo=0,.8,3 
+      | sftahwrite 
         verbose=1
 	label2=xline o2=1001 n2=1943 d2=1 
         label3=iline o3=5100 n3=296  d3=1   
 	output=${TARGETS[0]}
     ''',stdout=0,stdin=0)
 
-Result('nmontg',
-        '''
-	   sfwindow j3=20 max1=1 \
-	   |  sfgrey title="near trace gather"
-	''')
- 
+Plot('nmontg',
+     '''
+     window j3=20 max1=1 | grey title="near trace gather"
+     ''',view=1)
+
+# Doing it without tah
+Flow('iline','../segy/DeconShots3_hdr.rsf',
+     'window n1=1 f1=73 | mask min=5100 max=5395')
+Flow('xline','../segy/DeconShots3_hdr.rsf',
+     'window n1=1 f1=74 | mask min=1001 max=1943')
+Flow('mask','iline xline','mul ${SOURCES[1]}')
+
+Flow('gather','../segy/DeconShots3.rsf mask',
+     'headerwindow mask=${SOURCES[1]}')
+Flow('gather_hdr','../segy/DeconShots3_hdr.rsf mask',
+     'headerwindow mask=${SOURCES[1]}')
+
+Flow('ntg2','gather gather_hdr','intbin xk=xline yk=iline head=${SOURCES[1]}')
 
 End()

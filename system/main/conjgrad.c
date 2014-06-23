@@ -58,18 +58,16 @@
 int main(int argc, char* argv[])
 {
     int i, iter, niter, p[6][2], status;
-    float *buf, *buf2;
+    float *buf, *buf2, *wht;
     double rn, rnp, alpha, beta;
     pid_t pid[6]={1,1,1,1,1,1};
     off_t nm, nd, msiz, dsiz, pos;
     size_t nbuf, mbuf, dbuf;
     FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
     char *x, *R, *g, *s, *S, *prog;
-    sf_file mod=NULL;  /* input */
-    sf_file dat=NULL;  /* input */
-    sf_file from=NULL; /* input */
-    sf_file out=NULL; /* output */
-    sf_file to=NULL;  /* output */
+    sf_file mod, dat, from, mwt, x0;  /* input */
+    sf_file out, to;                  /* output */
+
     extern int fseeko(FILE *stream, off_t offset, int whence);
     extern off_t ftello (FILE *stream);
 
@@ -120,6 +118,19 @@ int main(int argc, char* argv[])
     buf  = sf_floatalloc(nbuf);
     buf2 = sf_floatalloc(nbuf);
 
+    if (NULL != sf_getstring("mwt")) {
+	mwt = sf_input("mwt"); /* model weight */
+	wht = sf_floatalloc(nbuf);
+    } else {
+	mwt = NULL;
+	wht = NULL;
+    }
+
+    if (NULL != sf_getstring("x0")) {
+	x0 = sf_input("x0"); /* initial model */
+    } else {
+	x0 = NULL;
+    }
 
     for (i=0; i < 6; i++) { /* make six pipes */
 	if (pipe(p[i]) < 0) sf_error("pipe error:");
@@ -142,8 +153,14 @@ int main(int argc, char* argv[])
 
 	    if (0 == iter) {
 		xfile = fopen(x,"wb");
-		for (i=0; i < nbuf; i++) { buf[i] = 0.; }		
-		MLOOP( MWRITE(xfile); );
+
+		if (NULL == x0) {
+		    for (i=0; i < nbuf; i++) { buf[i] = 0.0f; }
+		}
+		
+		MLOOP( if (NULL != x0) sf_floatread(buf,mbuf,x0);
+		    MWRITE(xfile); );
+		
 		fclose(xfile);
 
 		Rfile = fopen(R,"wb");
@@ -201,10 +218,18 @@ int main(int argc, char* argv[])
 	    
 	    rn = 0.;
 
+	    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
+
 	    MLOOP( sf_floatread(buf,mbuf,from);
+
+		   if (NULL != mwt) { 
+		       sf_floatread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] *= wht[i]; }
+		   }
+
 		   for (i=0; i < mbuf; i++) { rn += (double) buf[i] * buf[i]; }
 		   MWRITE(gfile); );
-
+	    
 	    sfile = fopen(s,"r+b");
 
 	    if (0==iter) {
@@ -217,7 +242,7 @@ int main(int argc, char* argv[])
 		if (0 > fseeko(sfile,0,SEEK_SET))
 		    sf_error ("seek problem");
 	    }
-
+	    
 	    if (sizeof(double) != write(p[4][1],&alpha,sizeof(double)))
 		sf_error("write error");
 	    
@@ -227,8 +252,15 @@ int main(int argc, char* argv[])
 		sf_error ("seek problem");
 
 	    /* s = g + alpha*s */
+
+	    if (NULL != mwt) sf_seek(mwt,0,SEEK_SET);
 	    
 	    MLOOP( MREAD(gfile); sf_floatwrite(buf,mbuf,to);
+		   
+		   if (NULL != mwt) { 
+		       sf_floatread(wht,mbuf,mwt);
+		       for (i=0; i < mbuf; i++) { buf[i] *= wht[i]; }
+		   }
 
 		   if (iter > 0) {
 		       pos = ftello(sfile);

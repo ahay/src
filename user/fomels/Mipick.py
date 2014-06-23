@@ -218,12 +218,30 @@ def movepick(event):
     if current:
         x=event.x
         y=event.y
+        if x < x0:
+            x=x0
+        elif x > x1:
+            x=x1
+        if y < y0:
+            y=y0
+        elif y > y1:
+            y=y1
         canvas.coords(current,x-r,y-r,x+r,y+r)
 
 def movedpick(event):
     global current
     tag = canvas.gettags(current)[0]
-    picks[i3][tag] = scalepick(event.x,event.y)
+    x=event.x
+    y=event.y
+    if x < x0:
+        x=x0
+    elif x > x1:
+        x=x1
+    if y < y0:
+        y=y0
+    elif y > y1:
+        y=y1
+    picks[i3][tag] = scalepick(x,y)
     current = None
 
 def deletepick(event):
