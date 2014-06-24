@@ -1,0 +1,72 @@
+from rsf.proj import *
+from rsf.recipes import fdmod
+
+# Fetch Files from repository
+Fetch("marmrefl.hh","marm")
+
+par={'nx':575,'dx':0.0125,'ox':1.725,
+     'nt':726,'dt':0.004,'ot':0.0}
+fdmod.param(par)
+# Convert Files to RSF and update header
+Flow('marmrefl','marmrefl.hh', '''dd form=native | put
+    label1=Depth\ Z label2=Offset unit2=km unit1=sec
+    label3=Position unit3=km d2=.025 d3=.025 o2=.2  o3=3|
+    reverse which=2 opt=i''')
+
+# Plotting Section
+#Result('marmrefl','window j3=10 | grey')
+
+Result('nearOffset','marmrefl','''window $SOURCE min2=.200 max2=.200 size2=1 | 
+    grey color=I gainpanel=a title=Near\ Offset\ Data label1=Time label2=Position
+    screenratio=1.3 labelsz=4 titlesz=6 wheretitle=t''')
+
+Result('shot20','marmrefl','''window $SOURCE min3=3.500 max3=3.500 size3=1 | 
+    grey color=I gainpanel=a title=Shot\ \#\ 20 wantframenum=y label2=Offset
+    label1=Time screenratio=1.3 labelsz=4 titlesz=6 wheretitle=t''')
+
+Flow('cmps','marmrefl',
+  '''
+  shot2cmp half=n positive=n
+  ''')
+
+# window cmps to pick every .5 km
+Flow('w_cmps','cmps',
+  '''
+  window j3=40|
+  window f3=1 n3=13
+  ''')
+# create semblance panels:
+Flow('w_semb','w_cmps',
+  '''
+  vscan semblance=y slowness=n str=0.7 dv=0.05 v0=2.4 nv=70
+  ''')
+
+
+#Interactive picking:
+Flow('picked_vel',['w_semb','w_cmps'],
+  '''
+  velan cmp=${SOURCES[1]} useoffset=n half=y
+  ''')
+
+def interp(out,inp):
+  Flow(out,inp,
+    '''
+    transp plane=12 |
+    spline n1=%(nx)d d1=%(dx)g o1=%(ox)g |
+    transp plane=12|
+    spline n1=%(nt)d d1=%(dt)g o1=%(ot)g
+    '''%par)
+
+interp('inter_vstack','picked_vel')
+
+Flow('stack',['cmps','inter_vstack'],
+  '''
+  nmo velocity=${SOURCES[1]} half=y str=0.7 |
+  stack 
+  ''')
+
+Result('vstack','inter_vstack',fdmod.dgrey('color=j mean=y',par))
+Result('stack','stack',fdmod.dgrey('pclip=99.5',par))
+
+End()
+

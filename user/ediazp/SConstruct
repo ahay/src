@@ -29,6 +29,7 @@ targets.py = '''
 nderiv
 npyCorr
 npyConv
+velan
 '''
 
 try:  # distributed version

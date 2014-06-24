@@ -23,7 +23,8 @@ To the Python package:
 To programs:
 
 * Added color=lb (Light-Bartlein) and color=gist_earth color schemes
-* sfipick: example Tkinter script for interactive zooming
+* sfipick: example Tkinter script for interactive picking
+* sfvelan: interactive velocity picking using matplotlib
 * Added x0= and mwt= parameters in sfconjgrad
 
 ===Bug fixes===
