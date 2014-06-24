@@ -65,7 +65,7 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 	float v[J];
 	for(int iz=0; iz<dimz; iz++)
 	{
-		/********************************* construct covariance matrix cxy **************************************/
+		/********** construct covariance matrix cxy *********/
 		for(int i2=0; i2<J; i2++)
 		for(int i1=0; i1<J; i1++)
 			cxy[i2][i1]=0.0;
@@ -123,7 +123,7 @@ NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
 				 maxidx=(m>fabsf(v[i]))?maxidx:i;
 				 m=(m>fabsf(v[i]))?m:fabsf(v[i]);
 			}
-			m=v[maxidx];
+			m=fabsf(v[maxidx]);
 			for(i=0; i<J; i++) u[i]=v[i]/m;
 
 			if(fabsf(m-m1)<1.e-5) break;
