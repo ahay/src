@@ -1,0 +1,213 @@
+\section {Examples}
+
+\new{This section contains four examples. They are for 2D and 3D two-layer models, the SEG/Hess VTI model
+and the BP 2007 TTI model, respectively. We use 10th-order finite-differnece algorithm for elastic wavefield 
+extrapolation. To accurately compare the used CPU times, algorithm parallelization is not considered for 
+wave mode separation and vector decomposition.}
+}
+
+\subsection{A 2D two-layer TI model}
+\old{For all examples in this section, relative accuracy of $10^{-6}$ is required for the low-rank decomposition.}
+We first test our approach on a two-layer TI model \new{with the size of $N_{x}=401\times401$.}\old{, in which t}\new{T}he 
+first layer is a \old{strong} VTI medium
+with $v_{p0}=2500 m/s$, $v_{s0}=1200 m/s$, $\epsilon=0.25$, and $\delta=-0.25$,
+and the second layer is a TTI medium with $v_{p0}=3600 m/s$, $v_{s0}=1800 m/s$, $\epsilon=0.2$, 
+$\delta=0.1$, and \new{the tilt angle} $\theta=30^{\circ}$. A point-source is placed at the center of this model.
+To aim for the relative accuracy, rank $N=M=2$ is re\new{q}uired for both mode separation and vector decomposition.
+Thanks to small approximation errors \old{of}\new{in} low-rank decompositions (see Figures~\ref{fig:Polxp1,Polzp1,Polxp2,Polzp2,Errpolxp1,Errpolzp1,Errpolxp2,Errpolzp2} and Figure~\ref{fig:Decompxp1,Decompzp1,Decompxzp1,Errdecxp1,Errdeczp1,Errdecxzp1,Decompxp2,Decompzp2,Decompxzp2,Errdecxp2,Errdeczp2,Errdecxzp2}), we obtain good mode separation 
+ and vector decomposition for the synthesized elastic wavefields (see Figures 2 and 4).
+\new{It took CPU time of 7.5 seconds to construct the separated forms (as equation 15 expressed) of the mode separation matrixes 
+	for qP- and qSV-waves.}
+For one time step, it took CPU time of 0.12, 0.21, and 0.33 seconds to extrapolate, separate and decompose the elastic
+wavefields, repectively.
+
+\subsection{A 3D two-layer TI model}
+We also test the mode separation approach on a 3D two-layer TI model, with 
+$v_{p0}=2500 m/s$, $v_{s0}=1200 m/s$, $\epsilon=0.25$, $\delta=-0.25$ and $\gamma=0$ in the first layer, and
+$v_{p0}=3600 m/s$, $v_{s0}=1800 m/s$, $\epsilon=0.2$, $\delta=0.1$ and $\gamma=0.05$ in the second layer.
+\new{The size of the model is $N_{x}=201\times201\times201$.}
+A displacement source located at the center of the model and oriented at tilt
+$45^{\circ}$ and azimuth $45^{\circ}$. Figure 5 displays the elastic wavefields and the separated qP-, qSV- and
+SH-wave fields using the low-rank approximate algorithm.
+\new{
+Because the substantial increase of the model size, it is still time consuming to separate the 3D wave modes even if 
+the proposed fast algorithm is used.
+It took 4008.0, 4130.0 and 91.8 seconds to construct the separated forms of the mode separation matrixes for qP-, qSV- and SH-waves, respectively.
+For one time step, it took 61.4 seconds to extrapolate the elastic wavefield, and 15.2, 15.8 and 6.8 seconds to
+separate qP-, qSV- and SH-wave fields with the rank $N=M=2$.}
+
+\new{
+For comparison, we only change the second layer to a TTI medium with a tilt angle $\theta=30^{\circ}$ and azimuth $\phi=30^{\circ}$
+(other paramters continue to use).
+Figure 6 displays the corresponding elastic wavefields and their mode separation results.
+It took 4087.8, 4280.8 and 206.2 seconds to construct the separated forms of the mode separation matrixes for qP-, qSV- and SH-waves, respectively.
+For one time step, it took 101.0 seconds to extrapolate the elastic wavefield, and 15.2 and 15.8 seconds to separate qP- and qSV-wave modes with
+the rank $N=M=2$. It took 14.1 seconds to separate SH-wave with the rank $N=M=2$.
+As we observed, the most time-consuming task here is to construct the separated forms of the mode separation matrixes.
+More CPU time is required to separate SH-wave in 3D TTI media as well.
+}
+
+\inputdir{twolayer2dti}
+
+\multiplot{8}{Polxp1,Polzp1,Polxp2,Polzp2,Errpolxp1,Errpolzp1,Errpolxp2,Errpolzp2}{width=0.28\textwidth}
+{
+Low-rank approximate mode separators of qP-wave in a 2D two-layer TI model:
+(a) $a_{px}(\mathbf{x},\mathbf{k})$ and (b) $a_{pz}(\mathbf{x},\mathbf{k})$ constructed by using low-rank decomposition in the VTI layer;
+(c) $a_{px}(\mathbf{x},\mathbf{k})$ and (d) $a_{pz}(\mathbf{x},\mathbf{k})$ constructed by using low-rank decomposition in the TTI layer;
+(e), (f), (g) and (h) represent the low-rank approximation errors of these operators.
+According to the qP-qSV mode polarization orthogonality, we have the following relations:
+$a_{svx}(\mathbf{x},\mathbf{k})=-a_{pz}(\mathbf{x},\mathbf{k})$ and
+$a_{svz}(\mathbf{x},\mathbf{k})=a_{px}(\mathbf{x},\mathbf{k})$. Therefore, the above pictures also
+demonstrate the low-rank approximate separators and their errors for qSV-wave.
+}
+\multiplot{4}{ElasticxInterf,ElasticzInterf,ElasticSepPInterf,ElasticSepSVInterf}{width=0.28\textwidth}
+{
+Elastic wave mode separation in the two-layer TI model:
+(a) x- and (b) z-components of the synthetic elastic displacement wavefields synthesized at 0.3s;
+(c) and (d) are the separated scalar qP- and qSV-wave fields using low-rank approximation.
+}
+
+\multiplot{12}{Decompxp1,Decompzp1,Decompxzp1,Errdecxp1,Errdeczp1,Errdecxzp1,Decompxp2,Decompzp2,Decompxzp2,Errdecxp2,Errdeczp2,Errdecxzp2}{width=0.28\textwidth}
+{
+Low-rank approximate vector decomposition operators of qP-wave in the 2D two-layer TI model:
+(a) $a_{px}(\mathbf{x},\mathbf{k})a_{px}(\mathbf{x},\mathbf{k})$,
+	(b) $a_{pz}(\mathbf{x},\mathbf{k})a_{pz}(\mathbf{x},\mathbf{k})$,
+	and (c) $a_{px}(\mathbf{x},\mathbf{k})a_{pz}(\mathbf{x},\mathbf{k})$,
+	and (e), (f) and (g) represent their low-rank approximation errors in the VTI layer.
+(h), (i), (j), (k), (l) and (m) are these operators and their low-rank approximation errors in the TTI layer.
+\old{Similarly, these pictures also demonstrate the low-rank approximate vector decomposition operators
+and their errors for qSV-wave.}
+}
+
+\multiplot{4}{ElasticPxInterf,ElasticPzInterf,ElasticSVxInterf,ElasticSVzInterf}{width=0.30\textwidth}
+{
+Elastic wave vector decomposition in the two-layer VTI/VTI model:
+(a) x- and (b) z-components of vector qP-wave fields;
+(c) x- and (d) z-components of vector qSV-wave fields.
+}
+
+\inputdir{twolayer3dvti}
+\multiplot{6}{ElasticxInterf,ElasticyInterf,ElasticzInterf,ElasticPInterf,ElasticSVInterf,ElasticSHInterf}{width=0.32\textwidth}
+{
+Elastic wave mode separation in the 3D two-layer VTI model:
+(a) x-, (b) y- and (c) z-components of the synthetic elastic displacement wavefields synthesized at 0.17s;
+(d) qP-, (e) qSV- and (e) SH-wave fields separated from the elastic wavefields.
+}
+
+\inputdir{twolayer3dtti}
+\multiplot{6}{ElasticxInterf,ElasticyInterf,ElasticzInterf,ElasticPInterf,ElasticSVInterf,ElasticSHInterf}{width=0.32\textwidth}
+{
+Elastic wave mode separation in the 3D two-layer VTI/TTI model:
+(a) x-, (b) y- and (c) z-components of the synthetic elastic displacement wavefields synthesized at 0.17s;
+(d) qP-, (e) qSV- and (e) SH-wave fields separated from the elastic wavefields.
+}
+
+\subsection{SEG Hess VTI model}
+\inputdir{hessvti}
+
+Then we demonstrate the approach in the 2D Hess VTI model (Figure~\ref{fig:vp-hess,epsilon-hess,delta-hess}).
+Vertical S-wave velocity is set \old{a}\new{to equal} half the vertical P-wave velocity everywhere. A point-source is placed
+ at \old{the} location of (13.264, 4.023) km.
+Figure 7 shows results of mode separation and vector decomposition, with the rank of about $6$ in both cases.
+It took 133.0 seconds to decompose the operator matrixes for mode separation with rank $N=M=6$, and 154.1 seconds to decompose the operator matrixes for vector decomposition with rank $N, M\in[6,7]$.
+For one time step, it took about 2.2, 4.0, and 7.7 seconds to extrapolate, separate and decompose the elastic wavefields, repectively.
+However, if nonstaionary spatial filtering is used to separate qP- and qSV-waves at every grid-point, it took about 2340.7 seconds
+to calculate the filters in advance, and about 444.0 seconds with the truncated operator of size $51\times51$ 
+at each time step during wavefield extrapolation.
+ This indicates that the mixed domain algorithms using low-rank approximation significantly improve the efficiency for wave mode separation.
+Of course, larger amount of CPU time has been saved for vector decomposition by using the corresponding low-rank approximate algorithm.
+
+\multiplot{3}{vp-hess,epsilon-hess,delta-hess}{width=0.4\textwidth}
+{
+Hess VTI model with parameters of (a) vertical P-wave velocity, Thomsen coefficients (b) $\epsilon$ and (c) $\delta$.
+}
+
+\multiplot{8}{Elasticx,Elasticz,ElasticSepP,ElasticSepSV,ElasticPx,ElasticPz,ElasticSVx,ElasticSVz}{width=0.28\textwidth}
+{
+Elastic wave mode separation and vector decomposition in the Hess VTI model:
+(a) x- and (b) z-components of the synthetic elastic displacement wavefields at 1.1s;
+(c) and (d) are the separated scalar qP- and qSV-wave fields;
+(e) x- and (f) z-components of vector qP-wave fields;
+(g) x- and (h) z-components of vector qSV-wave fields.
+} 
+
+\subsection{BP 2007 TTI model}
+\inputdir{bptti2007}
+This example displays the wave mode separation and vector decomposition results in the BP 2007 TTI  model (Figure 9).
+A point-source is placed near the second salt body at the location of (35.625, 5.0) km.
+Before wavefield extrapolation, separated representations of the operator matrixes are constructed using the 
+low-rank decomposition approach within the computational zone.
+It took 217.0 seconds to decompose the operator matrixes for mode separation with rank $N, M\in[15,17]$, and 
+345.5 seconds to decompose the operator matrixes for vector decomposition with rank $N, M\in[16,18]$.
+For one time step, it took 4.3, 16.0 and 34.8 seconds to extrapolated, separate and decompose the elastic wavefields, repectively.
+From the separated and decomposed wavefields (Figure 10), we can clearly observe the converted waves from the dipping salt flanks.
+Due to the low velocities of qSV-wave in some directions at some locations, there are numerical dispersion in the qSV-wave fields. 
+In spite of the dispersion, we obtain well separated qP- and qSV-wave fields, as well as their decomposed x- and z-components.
+
+\new{Then we investigate the effect of the relative accuracy requirement on wave mode separation. 
+Figure 11 demonstrates the separated P- and qSV-wave fields, and their variations when we relax the approximation level
+from $10^{-6}$ to $10^{-3}$.
+It took 174.0 seconds to decompose the operator matrixes for mode separation with rank $N, M\in[7,8]$, and 
+345.5 seconds to decompose the operator matrixes for vector decomposition with rank $N, M\in[8,9]$.
+And it took 8.0 and 14.9 seconds to separate and decompose the elastic wavefields, repectively.
+The results are acceptable although more errors are introduced in the separated wavefields
+when we turn down the relative accuracy requirement.
+}
+
+\new{
+To further analysize the rough relationship of rank $(N,M)$ with the model complexity, we smooth the BP TTI model 
+by applying a 2D triangle smoothing operator with the radius of 1875m on both x- and z-axes (Figure 12).
+To maintain the range of the tilt angles, we first double the values of the original model and then apply the smoothing operation
+for this parameter.
+Figure 13 demonstrates the synthetic elastic wavefields and the mode separation and vector decomposition results.
+In this case, it took 207.0 seconds to decompose the operator matrixes for mode separation with rank $N, M\in[13,14]$, and
+310.2 seconds to decompose the operator matrixes for vector decomposition with rank $N, M\in[14,16]$.
+It took 15.0 and 29.4 seconds to separate and decompose the elastic wavefields, repectively.
+We observe that the ranks further decrease to about 12 if we double the smoothing radius to 3750m.
+For homogeneous TI medium, the ranks automatically decrease to 1.
+We obtain accurate mode separation and decomposition of the isotropic and elastic wavefields
+at negligible computational cost with rank $N=M=1$,
+if $\epsilon$, $\delta$ and $\theta$ are all set as $0.0$ in the models.
+}
+
+\multiplot{4}{vp0,epsi,del,the}{width=0.30\textwidth}
+{
+BP 2007 TTI model with parameters of (a) vertical P-wave velocity, Thomsen coefficients
+(b) $\epsilon$ and (c) $\delta$, and (d) tilt angle $\theta$.
+}
+
+\multiplot{8}{Elasticx,Elasticz,ElasticSepP,ElasticSepSV,ElasticPx,ElasticPz,ElasticSVx,ElasticSVz}{width=0.28\textwidth}
+{
+Mode separation and vector decomposition using low-rank approximate algorithms in the BP 2007 TTI model:
+(a) x- and (b) z-components of the synthetic elastic displacement wavefields at 1.4s;
+(c) and (d) are the separated scalar qP- and qSV-wave fields;
+(e) x- and (f) z-components of vector qP-wave fields;
+(g) x- and (h) z-components of vector qSV-wave fields.
+}
+
+\inputdir{bptti2007.comparison}
+
+\multiplot{8}{ElasticSepP3,ElasticSepSV3,ElasticSepP6vs3Dif,ElasticSepSV6vs3Dif}{width=0.3\textwidth}
+{
+Elastic wave mode separation using low-rank approximation with relaxed accuracy requirements:
+Separated (a) qP- and (b) qSV-wave fields at the error level of $10^{-3}$ in low-rank decomposition;
+Differences of (c) qP- and (d) qSV-wave fields to those separated with the error level of $10^{-6}$.
+}
+
+\inputdir{bptti2007.smth}
+
+\multiplot{4}{vp0,epsi,del,the}{width=0.30\textwidth}
+{
+Smoothed BP 2007 TTI model with parameters of (a) vertical P-wave velocity, Thomsen coefficients
+(b) $\epsilon$ and (c) $\delta$, and (d) tilt angle $\theta$. 2D triangle smoothing with the smoothing radius
+of 1875m on both axis is applied to the paramaters shown in Figure 9.
+}
+
+\multiplot{8}{Elasticx,Elasticz,ElasticSepP,ElasticSepSV,ElasticPx,ElasticPz,ElasticSVx,ElasticSVz}{width=0.28\textwidth}
+{
+Mode separation and vector decomposition using low-rank approximate algorithms in the BP 2007 TTI model:
+(a) x- and (b) z-components of the synthetic elastic displacement wavefields at 1.4s;
+(c) and (d) are the separated scalar qP- and qSV-wave fields;
+(e) x- and (f) z-components of vector qP-wave fields;
+(g) x- and (h) z-components of vector qSV-wave fields.
+}

@@ -1,0 +1,108 @@
+\section{Elastic wave mode separation}
+Using the Helmholtz decomposition theory \cite[]{morse.feshbach:1953,aki.richards:1980}, 
+a vector wavefield $\mathbf{U}=\{U_{x},U_{y},U_{z}\}$ can be decomposed into
+a curl-free P-wavefield and a divergence-free S-wavefield:
+$\mathbf{U} = \mathbf{U}^{P} + \mathbf{U}^{S}$\old{, in which P-waves}\new{. The P- and S-waves satisfy, respectively,}
+\begin{equation}
+\label{eq:helmP}
+\nabla\times\mathbf{U}^{P} = 0,\qquad \mbox{and} \qquad \nabla\cdot\mathbf{U} = \nabla\cdot\mathbf{U}^{P},
+\end{equation}
+and \old{S-waves satisfy,}
+\begin{equation}
+\label{eq:helmS}
+\nabla\cdot\mathbf{U}^{S} = 0,\qquad \mbox{and} \qquad \nabla\times\mathbf{U} = \nabla\times\mathbf{U}^{S}.
+\end{equation}
+These equations imply that \new{the} divergence and curl operations pass P- and S-wave modes respectively.
+In the Fourier-domain, equivalent operations are expressed as follows:
+\begin{equation}
+\label{eq:helmPK}
+\tilde{P}(\mathbf{k}) = i\mathbf{k}\cdot\tilde{\mathbf{U}}(\mathbf{k}), \qquad \mbox{and} \qquad \widetilde{S}(\mathbf{k}) = i\mathbf{k}\times\tilde{\mathbf{U}}(\mathbf{k}),
+\end{equation}
+where $\mathbf{k}=\{k_{x}, k_{y}, k_{z}\}$ represents the wave vector and $\tilde{U}(k_{x}, k_{y}, k_{z})$ is the
+ 3D wavefield in the wavenumber domain. 
+These operations essentially project the elastic wavefield onto the wave vector or its orthogonal directions,
+thus separate P- and S-waves successfully.
+In anisotropic media, however, qP- and qS-waves are not generally polarized parallel and perpendicular to the wave vector.
+\cite {dellinger.etgen:1990} extended wave mode separation to anisotropic media with the following divergence-like and
+curl-like operators in the wavenumber-domain,
+\begin{equation}
+\label{eq:div.curl.like}
+\widetilde{qP}(\mathbf{k}) = i\mathbf{a}_{p}(\mathbf{k})\cdot\tilde{\mathbf{U}}(\mathbf{k}), \qquad \mbox{and} \qquad \widetilde{qS}(\mathbf{k}) = i\mathbf{a}_{p}(\mathbf{k})\times\tilde{\mathbf{U}}(\mathbf{k}),
+\end{equation}
+where $\mathbf{a}_{p}(\mathbf{k})$ stands for the normalized polarization vector of qP wave \new{in the wavenumber domain, calculated 
+	from Christoffel equation.}
+Note that the second equation of equation~\ref{eq:div.curl.like} separates only the \old{non-qP}\new{shear} part of the
+elastic wavefields\new{, which contain the fast and low S-waves, i.e., $qS_{1}$- and $qS_{2}$ modes. 
+Unlike the well-behaved qP mode, the two qS modes do not consistently polarize as a function of the propagation direction (or wavenumber) and
+thus cannot be designated as SV and SH waves, except in isotropic and TI media \cite[]{winterstein,crampin:1991,dellinger.thesis,zhang.mcmechan:2010}.
+In this paper, the approaches to separate and decompose qS-waves are restricted to TI anisotropy.}
+\old{Alternatively, we can separate scalar qSV and SH waves in TI media by projecting the elastic wavefield onto their polarization directions using:}
+
+\new{
+For TI media, one can separate scalar qSV and SH waves by projecting the 
+elastic wavefield onto their polarization directions using}
+\begin{equation}
+\label{eq:curllikeSV}
+\widetilde{qSV}(\mathbf{k}) = i\mathbf{a}_{sv}(\mathbf{k})\cdot\tilde{\mathbf{U}}(\mathbf{k}), \qquad \mbox{and} \qquad \widetilde{SH}(\mathbf{k}) = i\mathbf{a}_{sh}(\mathbf{k})\cdot\tilde{\mathbf{U}}(\mathbf{k}),
+\end{equation}
+where $\mathbf{a}_{sv}(\mathbf{k})$ and $\mathbf{a}_{sh}(\mathbf{k})$ represent normalized polarization vectors of the qSV and SH waves, respectively.
+For heterogeneous TI media, these operations can be expressed as nonstationary filtering in the space domain \cite[]{yan.sava:2009}. 
+In fact, the cost may become prohibitive in 3D because it is proportional to the number of grids in the model and the size of each filter \new{ \cite[]{yan.sava:2011}.}
+
+In general, we can determine polarization \new{vectors} by solving the Christoffel equation:
+\begin{equation}
+\label{eq:christoffel}
+(\widetilde{\mathbf{G}}-\rho{V_{n}}^2\mathbf{I})\mathbf{a}_{n}=0,
+\end{equation}
+where $\widetilde{\mathbf{G}}$ represents the Christoffel tensor in the Voigt notation with $\widetilde{G}_{ij}=c_{ijkl}n_{j}n_{l},
+ c_{ijkl}$ as the stiffness tensor, and
+$n_{j}$ and $n_{l}$ are the normalized wave vector components in $j$ and $l$ directions, with $i,j,k,l=1,2,3$. The
+parameter $V_{n} (n=qP, qS_{1}, qS_{2})$ represents phase velocities of $qP$-, $qS_{1}$- and $qS_{2}$-wave modes. 
+ The Christoffel equation poses a standard $3\times3$ eigenvalue problem, the three eigenvalues of which correspond to phase
+velocities of the three wave modes and the corresponding eigenvector $\mathbf{a}_{n}$ represents polarization direction of the given mode.
+When shear singularities appear, \old{local discontinuity of the polarization} \new{the coincidence of the longitudinal and
+transverse polarizations} prevents us from
+constructing 3D global operators to separate qSV and SH waves on the base of the Christoffel solution\new{,
+and the polarization discontinuity will cause the two modes to leak energy into each other
+\cite[]{dellinger.thesis,yan:2009,zhang.mcmechan:2010,yan.sava:2011}.}
+Following \cite {yan:2009,yan.sava:2011}, we mitigate the kiss singularity \new{at $k_{z}=\pm1$} in \new{3D} TI media by using relative qP-qSV-SH mode 
+polarization orthogonality and scaling the polarizations of the qSV- and SH-waves by $\sin{\phi}$,
+ with $\phi$ being the polar angle.
+
+\section{Elastic wave vector decomposition}
+Wavefield decomposition aims achieving mode separation and vector decomposition simultan\old{u}\new{e}ously.
+On the base of the Helmholtz theory and the theory of anisotropic wave mode separation via the Christoffell equation,
+\cite{zhang.mcmechan:2010} develop a new solution to the problem of decomposing an elastic wavefield into P- and S-waves for
+isotropic and VTI media. We summarize here only the\new{ir} results used \old{in}\new{for} this study.
+
+For isotropic media, the Helmholtz equations for the P-wave are transformed into the wavenumber-domain as,
+\begin{equation}
+\label{eq:helmP1K}
+\mathbf{k}\times\tilde{\mathbf{U}}^P = \mathbf{0}, \qquad \mbox{and} \qquad \mathbf{k}\cdot\tilde{\mathbf{U}} = \mathbf{k}\cdot\tilde{\mathbf{U}}^P.
+\end{equation}
+From these \new{equations}, the vector decomposition equation of the separated P-wave is given by:
+\begin{equation}
+\label{eq:decomPK}
+\tilde{\mathbf{U}}^P(\mathbf{k}) = \bar{\mathbf{k}}[\bar{\mathbf{k}}\cdot\tilde{\mathbf{U}(\mathbf{k})}].
+\end{equation}
+where $\bar{\mathbf{k}}$ represents the normalized wave vector.
+
+In a TI medium, equation~\ref{eq:decomPK} is extended to separate and decompose qP-wave by substituting $\mathbf{a}_{p}$ for $\bar{\mathbf{k}}$,
+\begin{equation}
+\label{eq:decomPKTI}
+\tilde{\mathbf{U}}^{qP}(\mathbf{k}) = \mathbf{a}_{p}(\mathbf{k})[\mathbf{a}_{p}(\mathbf{k})\cdot\tilde{\mathbf{U}}(\mathbf{k})].
+\end{equation}
+Similar\old{ly,} \new{equations}
+\begin{equation}
+\label{eq:decomSVKTI}
+\tilde{\mathbf{U}}^{qSV}(\mathbf{k}) = \mathbf{a}_{sv}(\mathbf{k})[\mathbf{a}_{sv}(\mathbf{k})\cdot\tilde{\mathbf{U}}(\mathbf{k})],
+\end{equation}
+and
+\begin{equation}
+\label{eq:decomSHKTI}
+\tilde{\mathbf{U}}^{SH}(\mathbf{k}) = \mathbf{a}_{sh}(\mathbf{k})[\mathbf{a}_{sh}(\mathbf{k})\cdot\tilde{\mathbf{U}}(\mathbf{k})],
+\end{equation}
+\new{are proposed to }decompose qSV and SH waves using their \old{owns}\new{respective} polarization vectors\old{, respectively}.
+Note that vector decomposition satisfies the linear superposition relation
+ $\tilde{\mathbf{U}} = \tilde{\mathbf{U}}^{qP} + \tilde{\mathbf{U}}^{SH} + \tilde{\mathbf{U}}^{qSV}$, 
+and the separated wavefields are orthogonal to one another and have the same amplitude, phase, and physical units as the input wavefields.

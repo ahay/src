@@ -8,6 +8,9 @@ To the reproducible documents collection:
   grid (Fang, Fomel, Du, and Hu)
 * xjtu/primer: A numerical tour of wave propagation (Yang)
 * Moved rsf/usp/data to data/freeusp/land and added elevation statics
+* tongji/lrmode: Fast algorithms for elastic-wave-mode separation and
+  vector decomposition using low-rank approximation for anisotropic
+  media (Cheng and Fomel)
 
 To SCons:
 

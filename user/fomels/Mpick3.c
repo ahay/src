@@ -23,8 +23,8 @@
 int main(int argc, char* argv[])
 {
     int dim, n[SF_MAX_DIM], rect;
-    int it0, it1, niter, n1, n2, i2, n3, i3, i1, gate1, gate2, i0;
-    float ***scan, ***weight, **pick, *ampl, **pick2, o2, d2, o3, d3, an1, an2, asum, a, ct0, ct1, vel0;
+    int it0, it1, niter, n1, n2, i2, n3, i3, i1, gate1, gate2, k2, k3;
+    float ***scan, ***weight, **pick, *ampl, **pick2, o2, d2, o3, d3, an1, an2, asum, a, ct0, ct1, vel2, vel3;
     bool smooth;
     sf_file scn, pik;
 
@@ -46,11 +46,17 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(scn,"o3",&o3)) o3=0.;
     if (!sf_histfloat(scn,"d3",&d3)) d3=1.;
  
-    if (!sf_getfloat("vel0",&vel0)) vel0=o2;
+    if (!sf_getfloat("vel1",&vel2)) vel2=o2;
+    if (!sf_getfloat("vel2",&vel3)) vel3=o3;
     /* surface velocity */
-    i0 = 0.5 + (vel0-o2)/d2;
-    if (i0 < 0) i0=0;
-    if (i0 >= n2) i0=n2-1;
+
+    k2 = 0.5 + (vel2-o2)/d2;
+    if (k2 < 0) k2=0;
+    if (k2 >= n2) k2=n2-1;
+
+    k3 = 0.5 + (vel3-o3)/d2;
+    if (k3 < 0) k3=0;
+    if (k3 >= n3) k3=n3-1;
 
     sf_putint(pik,"n2",1);
     sf_putint(pik,"n3",1);
@@ -99,7 +105,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    dynprog3(i0, 0, weight);
+    dynprog3(k2, k3, weight);
     dynprog3_traj(pick2);
 
     if (smooth) {
@@ -151,15 +157,16 @@ int main(int argc, char* argv[])
 	asum = sqrtf (asum/n1);
 	for(i1=0; i1 < n1; i1++) {
 	    ampl[i1] /= asum;
-	    pick[0][i1] = (o2+pick2[0][i1]*d2-vel0)*ampl[i1];
-	    pick[1][i1] = (o3+pick2[1][i1]*d3)*ampl[i1];
+	    pick[0][i1] = (o2+pick2[0][i1]*d2-vel2)*ampl[i1];
+	    pick[1][i1] = (o3+pick2[1][i1]*d3-vel3)*ampl[i1];
 	}
     
 	sf_divn(pick[0],ampl,pick2[0]);
 	sf_divn(pick[1],ampl,pick2[1]);
 
 	for(i1=0; i1 < n1; i1++) {
-	    pick2[0][i1] += vel0;
+	    pick2[0][i1] += vel2;
+	    pick2[1][i1] += vel3;
 	}
     }
     

@@ -109,15 +109,15 @@ static float find_minimum(int ic1, int nc1, int jc1,
     }
     
     f00=prob[ic2][ic1];
-    f0p=prob[ic2][ic1+1];
-    f0m=prob[ic2][ic1-1];
+    fp0=prob[ic2][ic1+1];
+    fm0=prob[ic2][ic1-1];
 
-    fp0=prob[ic2+1][ic1];
+    f0p=prob[ic2+1][ic1];
     fpp=prob[ic2+1][ic1+1];
-    fpm=prob[ic2+1][ic1-1];
+    fmp=prob[ic2+1][ic1-1];
 
-    fm0=prob[ic2-1][ic1];
-    fmp=prob[ic2-1][ic1+1];
+    f0m=prob[ic2-1][ic1];
+    fpm=prob[ic2-1][ic1+1];
     fmm=prob[ic2-1][ic1-1];
     
     ic1 += jc1;
@@ -297,7 +297,7 @@ static float find_minimum(int ic1, int nc1, int jc1,
     return f00;
 }
 
-void dynprog3(int q1, int q2  /* starting velocity */,
+void dynprog3(int q2, int q3  /* starting velocity */,
 	      float*** weight /* [n1][n3][n2] */)
 /*< apply >*/
 {
@@ -308,8 +308,8 @@ void dynprog3(int q1, int q2  /* starting velocity */,
     if (NULL != ttime) {
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		w = 0.5*(weight[0][i3][i2]+weight[0][q2][q1]);
-		ttime[0][i3][i2] = dist0[SF_ABS(i3-q2)][SF_ABS(i2-q1)];
+		w = 0.5*(weight[0][i3][i2]+weight[0][q3][q2]);
+		ttime[0][i3][i2] = dist0[SF_ABS(i3-q3)][SF_ABS(i2-q2)];
 	    }
 	}
     }
@@ -317,10 +317,10 @@ void dynprog3(int q1, int q2  /* starting velocity */,
     /* second layer */
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    w = 0.5*(weight[1][i3][i2]+weight[0][q2][q1]);
-	    prev[i3][i2] = dist[SF_ABS(i3-q2)][SF_ABS(i2-q1)]*w;
-	    what[1][i3][i2][0] = q1;
-	    what[1][i3][i2][1] = q2;
+	    w = 0.5*(weight[1][i3][i2]+weight[0][q3][q2]);
+	    prev[i3][i2] = dist[SF_ABS(i3-q3)][SF_ABS(i2-q2)]*w;
+	    what[1][i3][i2][0] = q2;
+	    what[1][i3][i2][1] = q3;
 
 	    if (NULL != ttime) ttime[1][i3][i2]=prev[i3][i2];
 	}

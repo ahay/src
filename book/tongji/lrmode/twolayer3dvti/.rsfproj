@@ -1,0 +1,3 @@
+uses=['sftwolayer3dti', 'sfbyte', 'sfgrey3', 'sfvti3de', 'sfmath', 'sfgraph3', 'sfvti3delrsepP', 'sfvti3delrsepSV', 'sfvti3delrsepSH']
+data=[]
+size=  422271256

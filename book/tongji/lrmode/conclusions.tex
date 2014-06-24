@@ -1,0 +1,19 @@
+\section{Conclusions and discussion}
+We have developed two fast algorithms for wave mode separation and vector decomposition for heterogeneous TI media.
+They are based on \new{the} low-rank approximation of the space-wavenumber-domain operators, and reduces the 
+cost to that of a small number of FFT operations per time step, \old{which} correspond\new{ing} to the approximation rank times
+the number of components. Synthetic examples show that our approach have high accuracy and efficiency.
+\new{In general TI media, the rank increases when the models become complex but is always far smallar than the model size.
+For the 3D elastic wave mode separation and decomposition in heterogeneous TI media, however,
+constructing the separated representations of the 
+mixed-domain operator matrixes is still time consuming due to the substantial increase of the model size.
+Parallelizing the algorithm for this procedure may provide a practical solution.
+}
+
+The key concepts of mode separation and vector decomposition are based on polarizations. Unlike the well-behaved
+P-wave mode, the S-wave modes do not consistently polarize as a function of the propagation direction,
+and thus can not be designated as SV and SH waves, except in isotropic and TI media. For a 3D TI medium,
+the effects of kiss singularity are mitigated by using the mutual orthogonality among the qP, qSV and SH modes.
+This procedure only ensures that the two S-modes are accurately separated in kinematics.
+It is a challenge to find the right solution of the singularity problem and obtain completely separated 
+two S-modes with correct amplitudes.
