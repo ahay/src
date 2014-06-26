@@ -21,9 +21,10 @@ Note: Acquistion geometry represented by mask operator.
 #include <rsf.h>
 #include <math.h>
 #include <complex.h>
+
+#ifdef SF_HAS_FFTW
 #include <fftw3.h>
 
-#include "pthresh.h"
 
 int main(int argc, char* argv[])
 {
@@ -198,3 +199,4 @@ int main(int argc, char* argv[])
 
     	exit(0);
 }
+#endif
