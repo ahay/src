@@ -26,6 +26,7 @@ lintshape2d
 tah5dinterp
 karlistinterp
 karlpocs
+tahmakeevent
 '''
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
