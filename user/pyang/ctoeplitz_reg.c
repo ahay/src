@@ -26,9 +26,12 @@ Reference: Vogel, Curtis R. Computational methods for inverse problems.
 
 #include <rsf.h>
 #include <complex.h>
-#include <fftw3.h>
 
 #include "ctoeplitz_reg.h"
+
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
+
 
 fftwf_plan fft1, ifft1;/* execute plan for FFT and IFFT */
 fftwf_complex *tmp;
@@ -74,3 +77,4 @@ Here, mu is a stabalizing factor. Setting mu=0 implies no regularization.
 	
 }
 
+#endif
