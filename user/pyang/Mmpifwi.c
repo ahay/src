@@ -27,7 +27,7 @@ Note: 	Here, the Enquist absorbing boundary condition is applied!
 #include <omp.h>
 #endif
 
-static float EPS=1.e-15;
+static float EPS=1.e-7;
 
 static bool csdgather;
 static int nz, nx, nt, ns, ng;
@@ -608,7 +608,6 @@ int main(int argc, char* argv[])
 	    cal_vtmp(vtmp, vv, cg, epsil);	    
 	  }
 	  MPI_Bcast(vtmp[0], nz*nx, MPI_FLOAT, 0, comm);
-
 
 	  memset(alpha1, 0, ng*sizeof(float));
 	  memset(alpha2, 0, ng*sizeof(float));
