@@ -22,13 +22,15 @@
 */
 #include <rsf.h>
 #include <math.h>
-#include <fftw3.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
 #include "pthresh.h"
+
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
 
 int main(int argc, char* argv[])
 {
@@ -162,3 +164,4 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+#endif

@@ -26,7 +26,6 @@
 
 #include "fftn.h"
 
-
 int main(int argc, char* argv[])
 {
     bool verb;
