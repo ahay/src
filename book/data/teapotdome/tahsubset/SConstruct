@@ -132,6 +132,8 @@ Flow('window_hdr','../fetch/npr3_gathers_hdr.rsf mask',
 
 Flow('gather','window window_hdr','intbin3 head=${SOURCES[1]} xkey=-1')
 
+# Add NMO as above!
+
 Plot('gather','grey title="gather_subset"',view=1)
 Plot('zoomgather','gather',
      'sfwindow max1=2. | grey title="gather_subset_zoom"',view=1)
@@ -142,7 +144,7 @@ Result('gather',
        | bandpass fhi=30
        | window max1=2. 
        | byte 
-       | grey3 frame1=470 frame2=0 frame3=83
+       | grey3 frame1=400 frame2=0 frame3=83
        title=Gathers label2=Trace label3=CDP
        ''')
 

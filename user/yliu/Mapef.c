@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], m[SF_MAX_DIM], rect[SF_MAX_DIM], a[SF_MAX_DIM];
-    int mdim, nd, ns, n12, i, j, niter;
+    int ndim, mdim, nd, ns, n12, i, j, niter;
     int i1, i2, i3, j1, j2, j3, jump, i4, n4;
     float *d, *f, *g, mean, *ff, *outm;
     char key[6];
@@ -47,40 +47,41 @@ int main(int argc, char* argv[])
     /* Jump parameter */
 
     mdim = sf_filedims(mat,m);
-    n4 = sf_leftsize(mat,3);
+    
+    if (!sf_getint("dim",&ndim)) ndim=mdim; /* number of dimensions */
 
-    if (3 < mdim) mdim = 3;
+    n4 = sf_leftsize(mat,ndim);
 
-    if (!sf_getints("a",a,mdim)) sf_error("Need a=");
+    if (!sf_getints("a",a,ndim)) sf_error("Need a=");
 
-    if (mdim < 3) {
+    if (ndim < 3) {
 	a[2] = 1;
 	n[2] = 1;
 	m[2] = 1;
     }
-    if (mdim < 2) {
+    if (ndim < 2) {
 	a[1] = 1;
 	n[1] = 1;
 	m[1] = 1;
     }
 
-    for (j=0; j < mdim; j++) {
+    for (j=0; j < ndim; j++) {
 	n[j] = m[j];
     }
-    n[mdim] =1;
-    for (j=0; j < mdim; j++) {
-	n[mdim] *= a[j];
+    n[ndim] =1;
+    for (j=0; j < ndim; j++) {
+	n[ndim] *= a[j];
     }
 /*    ndim = mdim+1; */
 
     nd = 1;
-    for (j=0; j < mdim; j++) {
+    for (j=0; j < ndim; j++) {
 	nd *= m[j];
 	snprintf(key,6,"rect%d",j+1);
 	if (!sf_getint(key,rect+j)) rect[j]=1;
     }
 
-    ns = n[mdim];
+    ns = n[ndim];
     n12 = nd*ns;
 
     if (!sf_getint("niter",&niter)) niter=100;
@@ -111,7 +112,7 @@ int main(int argc, char* argv[])
     ff = sf_floatalloc(n12);
     g = sf_floatalloc(nd);
 
-    sf_multidivn_init(ns, mdim, nd, m, rect, d, NULL, verb); 
+    sf_multidivn_init(ns, ndim, nd, m, rect, d, NULL, verb); 
 
     if (1==m[2] && 1==m[1]) {
 	sf_shiftdim(mat,flt,1);
