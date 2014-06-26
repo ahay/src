@@ -33,7 +33,6 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 #include <rsf.h>
 #include <time.h>
 #include <complex.h>
-#include <fftw3.h>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -42,6 +41,9 @@ Note: I borrowed a lot from /system/seismic/radon+Mradon.c. The distinction:
 #include "myradon2.h"
 #include "radonlop.h"
 
+
+#ifdef SF_HAS_FFTW
+#include <fftw3.h>
 
 static bool inv;
 static int nt, np, nx, nw, nfft;
@@ -183,4 +185,4 @@ void sf_radon2_close()
 	fftwf_destroy_plan(fft1);
     	fftwf_destroy_plan(ifft1);
 }
-
+#endif
