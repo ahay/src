@@ -136,7 +136,9 @@ void LinFitTest(int rows, int cols, typename ScalarFieldTraits<T>::AbsType _nlvl
       for (int i=0;i<cols;i++)
           B.getElement(i,i)=ScalarFieldTraits<T>::One();
     // construct LinFitLS function
-    LinFitLS<T, CGNEPolicy<T>, CGNEPolicyData<T> > f(A,B,rhs,params,strout);
+    Vector<T> dx0(dom);
+    dx0.zero();
+    LinFitLS<T, CGNEPolicy<T>, CGNEPolicyData<T> > f(A,B,rhs,dx0,params,strout);
     est.zero();
     FunctionalEvaluation<T> feval(f,est);
     strout<<"value from LinFitLS    = "<<feval.getValue()<<endl;

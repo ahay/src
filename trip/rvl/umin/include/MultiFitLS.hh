@@ -106,9 +106,12 @@ namespace RVLUmin {
                 OperatorEvaluation<Scalar> gopeval(gop,tmp);
                 
                 SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
-
+                Vector<Scalar> tmp1(op.getDomain());
+                tmp1.zero();
+                
                 //computation of gradient of velocity
-                sblop.applyAdjOp(cx[1],dltd,cg[0]);
+                sblop.applyAdjOp(cx[1],dltd,tmp1);
+                gextop.applyAdjOp(tmp1,cg[0]);
                 gopeval.getDeriv().applyAdjOp(dltd,cg[1]);
             }
             catch (RVLException & e) {

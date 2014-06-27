@@ -87,9 +87,10 @@ int main(int argc, char ** argv) {
       ofstream str("./lbfgs1.rpt");
       //    UMinMethod<float> umin(j,x,par,str);
       LBFGSBT<float> umin(j,x,par,str);
-    
+      cout << "\n before run x.norm() = " << x.norm() << endl;
       cout<<"run optimization"<<endl;
       umin.run();
+      cout << "\n end run    x.norm() = " << x.norm() << endl;
     
       cout<<"iteration count = "<<umin.getCount()<<endl;
 

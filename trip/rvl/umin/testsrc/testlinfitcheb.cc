@@ -276,7 +276,9 @@ void LinFitTestNL(int rows, int cols, typename ScalarFieldTraits<T>::AbsType _nl
     for (int i=0;i<cols;i++)
           B.getElement(i,i)=ScalarFieldTraits<T>::One();
     // construct LinFitLS functional
-    LinFitLS<T, CGNEPolicy<T>, CGNEPolicyData<T> > f(nlop,B,rhs,params,strout);
+    Vector<T> dx0(dom);
+    dx0.zero();
+    LinFitLS<T, CGNEPolicy<T>, CGNEPolicyData<T> > f(nlop,B,rhs,dx0,params,strout);
 
     FunctionalEvaluation<T> feval(f,x0);
     strout<<"\n*******************************************************";
@@ -323,7 +325,7 @@ void LinFitTestNL(int rows, int cols, typename ScalarFieldTraits<T>::AbsType _nl
       
       
       // construct LinFitLS function
-      LinFitLS<T, ChebPolicy<T>, ChebPolicyData<T> > f1(nlop,B,rhs,param1,strout);
+      LinFitLS<T, ChebPolicy<T>, ChebPolicyData<T> > f1(nlop,B,rhs,dx0,param1,strout);
       
       FunctionalEvaluation<T> feval1(f1,x0);
       strout<<"\n Results from running Chebyshev\n";
