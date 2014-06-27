@@ -40,6 +40,7 @@ tccs/opwd/wrap
 tccs/emdpf/fxdecon
 tccs/emdpf/hyper
 tccs/emdpf/linear
+trip/hug/marm1s_shallow
 '''
 
 all =  ARGUMENTS.get('all', 'n')
