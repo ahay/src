@@ -16,28 +16,25 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-  Reference: On analysis-based two-step interpolation methods for randomly 
-	sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
 */
 #include <rsf.h>
 #include <math.h>
 #include <complex.h>
 
-#include "wfftn.h"
 #include "masklop.h"
+#include "fftn.h"
 
 int main(int argc, char* argv[])
 {
     bool verb;
     int i, iter, niter, nouter, n[2]; 
-    float eps, err;
+    float eps;
     sf_file Fin, Fout, Fmask;/* mask and I/O files*/ 
 
     /* define temporary variables */
     int n1,n2;
-    float *dat, *mask, *w;
-    sf_complex *dobs, *dd, *p;
+    float *w, *mask;
+    sf_complex *dobs, *mm, *dd;
 
     sf_init(argc,argv);	/* Madagascar initialization */
 
@@ -49,9 +46,10 @@ int main(int argc, char* argv[])
     if(!sf_getbool("verb",&verb))    	verb=false;
     /* verbosity */
     if (!sf_getint("niter",&niter)) 	niter=100;
+    /* inner iterations */
     if (!sf_getint("nouter",&nouter)) 	nouter=5;
-    /* total number iterations */
-    if (!sf_getfloat("eps",&eps)) 	eps=1.0e-2;
+    /* outer iterations */
+    if (!sf_getfloat("eps",&eps)) 	eps=1.e-2;
     /* regularization parameter */
 
     /* Read the data size */
@@ -59,11 +57,13 @@ int main(int argc, char* argv[])
     if (!sf_histint(Fin,"n2",&n2)) sf_error("No n2= in input");
 
     /* allocate data and mask arrays */
-    dat=sf_floatalloc(n1*n2);
+    w=sf_floatalloc(n1*n2);
     dobs=sf_complexalloc(n1*n2);
+    mm=sf_complexalloc(n1*n2);
     dd=sf_complexalloc(n1*n2);
-    sf_floatread(dat,n1*n2,Fin);
-    for(i=0; i<n1*n2; i++) dobs[i]=dat[i];
+
+    sf_floatread(w,n1*n2,Fin);
+    for(i=0; i<n1*n2; i++) dobs[i]=w[i];
     if (NULL != sf_getstring("mask")){
 	mask=sf_floatalloc(n2);
 	sf_floatread(mask,n2,Fmask);
@@ -72,32 +72,24 @@ int main(int argc, char* argv[])
     }
 
     n[0]=n1; n[1]=n2;
+    fftn_init(2, n);
     mask_init(n1, n2, mask);
-    w=sf_floatalloc(n1*n2);
+    for(i=0; i<n1*n2; i++) w[i]=1.0;
 
-    for(i=0; i<n1*n2; i++) w[i]=10.0;
-    fftn_init(2, n, w);
-    if(1){
-      for(iter=0; iter<nouter; iter++){
-	/* each iteration reset w */
-	if(iter==0) for(i=0; i<n1*n2; i++) w[i]=10.0;
-	else {
-	  fftn_fft(dd);
-	  for(i=0; i<n1*n2; i++) w[i]=cabsf(dd[i]); 
-	}
-	/* each iteration reset dobs=dat and dd=0 */
-	for(i=0; i<n1*n2; i++) dobs[i]=dat[i];
-	for(i=0; i<n1*n2; i++) dd[i]=0.0;
-	sf_csolver_prec(mask_lop, sf_ccgstep, fftn_lop, n1*n2, n1*n2, n1*n2, dd, dobs, niter, eps,"verb",verb,"end");
-	/* for(i=0; i<n1*n2; i++) w[i]*=cabsf(p[i]); */
-      }
+    for(iter=0; iter<nouter; iter++){
+	sf_csolver_prec(mask_lop, sf_ccgstep, fftn_lop, n1*n2, n1*n2, n1*n2, dd, dobs, niter, eps, "mwt",w,"xp",mm, "verb",verb,"end");
+	for(i=0; i<n1*n2; i++) w[i]=cabsf(mm[i]); 
     }
-
-    fftn_close();
     sf_ccgstep_close();
+    fftn_close();
 
-    for(i=0; i<n1*n2; i++) dat[i]=crealf(dd[i]);
-    sf_floatwrite(dat,n1*n2,Fout); /* output reconstructed seismograms */
+    for(i=0; i<n1*n2; i++) w[i]=crealf(dd[i]);
+    sf_floatwrite(w,n1*n2,Fout); /* output reconstructed seismograms */
+
+    free(w);
+    free(dobs);
+    free(mm);
+    free(dd);
 
     exit(0);
 }
