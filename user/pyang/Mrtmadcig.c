@@ -365,13 +365,8 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 /*< cross correlation and poynting vector computing >*/
 {
 	int i1, i2, ia;
-	float Ssz,Ssx,Sgz,Sgx,b1, b2, a;	
+	float Ssz,Ssx,Sgz,Sgx,b1, b2, a;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)			\
-	private(i1,i2,ia,Ssz,Ssx,Sgz,Sgx,b1,b2,a)	\
-	shared(num,den,sp,gp,svz,svx,gvz,gvx,noa,nb,nz,nx,da)
-#endif
 	for(i2=0; i2<nx; i2++)
 	for(i1=0; i1<nz; i1++)
 	{
