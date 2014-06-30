@@ -42,11 +42,6 @@ int main(int argc, char* argv[])
 
 
     	sf_init(argc,argv);	/* Madagascar initialization */
-#ifdef _OPENMP
-    	omp_init(); 	/* initialize OpenMP support */
-#endif
-
-    	/* setup I/O files */
     	in=sf_input("in");	/* read the data to be interpolated */
     	out=sf_output("out"); 	/* output the reconstructed data */
     	Fmask=sf_input("mask");	/* read the (n-1)-D mask for n-D data */
@@ -106,19 +101,9 @@ int main(int argc, char* argv[])
 		/* mm<--A^t dd */
 		memcpy(mm, dd, num*sizeof(fftwf_complex));
 		fftwf_execute(fft2);
-	#ifdef _OPENMP
-	#pragma omp parallel for default(none)	\
-		private(i)			\
-		shared(mm,num,n2)
-	#endif
 		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);
 
 		/* perform hard thresholding: mm<--T{mm} */
-	#ifdef _OPENMP
-	#pragma omp parallel for default(none)	\
-		private(i)			\
-		shared(thresh,mm,num)
-	#endif
 		for(i=0; i<num; i++)	thresh[i]=cabsf(mm[i]);
 
 	   	nthr = 0.5+num*(1.-0.01*pclip); 
@@ -128,28 +113,13 @@ int main(int argc, char* argv[])
 		thr*=((float)(niter-iter))/niter;
 		/* thr*=powf(0.01,(iter-1.0)/(niter-1.0)); */
 
-	#ifdef _OPENMP
-	#pragma omp parallel for default(none)	\
-		private(i)			\
-		shared(mm,num,thr)
-	#endif
 		for(i=0; i<num; i++) mm[i]*=(cabsf(mm[i])>thr?1.:0.);
 
 		/* mm<--A mm*/
 		fftwf_execute(ifft2);
-	#ifdef _OPENMP
-	#pragma omp parallel for default(none)	\
-		private(i)			\
-		shared(mm,num,n2)
-	#endif
 		for(i=0; i<num; i++) mm[i]/=sqrtf(n2);		
 
 		/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
-	#ifdef _OPENMP
-	#pragma omp parallel for default(none)	\
-		private(i1,i2,index)		\
-		shared(mask,dd,mm,dobs,nw,n2)
-	#endif
 		for(i2=0; i2<n2; i2++)
 		for(i1=0; i1<nw; i1++)
 		{ 
