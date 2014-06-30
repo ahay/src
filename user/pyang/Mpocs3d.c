@@ -20,10 +20,6 @@
 #include <rsf.h>
 #include <complex.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 #include "fftn.h"
 
 int main(int argc, char* argv[])
@@ -83,11 +79,6 @@ int main(int argc, char* argv[])
 	fftn_lop(true, false, num, num, dtmp, drec);
 
 	/* perform hard thresholding */
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(i1)			\
-	shared(dout,dtmp,num)
-#endif
 	for(i1=0; i1<num; i1++)	dout[i1]=cabsf(dtmp[i1]);
 
    	nthr = 0.5+num*(1.-0.01*pclip); 
@@ -96,22 +87,11 @@ int main(int argc, char* argv[])
 	thr=sf_quantile(nthr,num,dout);
 	thr*=powf(0.01,(iter-1.0)/(niter-1.0));
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(i1)			\
-	shared(dtmp,num,thr)
-#endif
 	for(i1=0; i1<num; i1++) dtmp[i1]*=(cabsf(dtmp[i1])>thr?1.:0.);
 
 	fftn_lop(false, false, num, num, dtmp, drec);
 	
 	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
-
-#ifdef _OPENMP
-#pragma omp parallel for collapse(3) default(none)	\
-	private(i1,i2,i3,index,m)				\
-	shared(mask,drec,dobs,n1,n2,n3)
-#endif
 	for(i3=0; i3<n3; i3++)	
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)

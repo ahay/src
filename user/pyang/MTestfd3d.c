@@ -37,11 +37,6 @@ void expand3d(float ***a, float ***b)
 {
     int iz,ix,i3;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(ix,iz,i3)		\
-	shared(b,a,nb,nz,nx,ny)
-#endif
     for         (i3=0;i3<ny;i3++) {
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
@@ -84,11 +79,6 @@ void window3d(float ***a, float ***b)
 {
     int i3, ix, iz;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(ix,iz,i3)		\
-	shared(b,a,nb,nz,nx,ny)
-#endif
     for         (i3=0;i3<ny;i3++) {
 	for     (ix=0;ix<nx;ix++) {
 	    for (iz=0;iz<nz;iz++) {
@@ -122,10 +112,6 @@ void step_forward(float ***u0, float ***u1, float ***vv)
 	int iz, ix, iy;
 	float ua;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none) private(iz,ix,iy,ua) 	\
-	shared(nzpad,nxpad,nypad,c0,c11,c12,c21,c22,c31,c32,u0,u1,vv)	
-#endif
 	for(iy=2; iy<nypad-2; iy++) 
 	for(ix=2; ix<nxpad-2; ix++)
 	for(iz=2; iz<nzpad-2; iz++) 
@@ -148,11 +134,6 @@ void sponge3d_apply(float  ***uu, float *spo)
     int iz,ix,iy,ib,ibz,ibx,iby;
     float w;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)		\
-    private(ib,iz,ix,iy,ibz,ibx,iby,w)		\
-    shared(spo,uu,nb,nzpad,nxpad,nypad)
-#endif
     for(ib=0; ib<nb; ib++) {
 	w = spo[ib];
 
@@ -189,12 +170,7 @@ void free_surface(float ***u0, float ***u1)
 {
 	int iz,ix,iy;
 	if(frsf) /* free surface */
-	{ 	 
-#ifdef _OPENMP
-#pragma omp parallel for collapse(3) default(none) 	\
-    private(iz,ix,iy)					\
-    shared(u0,u1,nb,nxpad,nypad)
-#endif   	
+	{ 
 		for(iy=0; iy<nypad; iy++) 
 		for(ix=0; ix<nxpad; ix++)
 		for(iz=0; iz<nb; iz++) 
@@ -215,9 +191,6 @@ int main(int argc, char* argv[])
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
-#ifdef _OPENMP
-    	omp_init();
-#endif
 	Fv = sf_input("in");
 	Fw = sf_output("out");
 

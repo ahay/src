@@ -43,9 +43,6 @@ int main(int argc, char* argv[])
     sf_file Fin,Fout, Fmask;
 
     sf_init(argc,argv);	/* Madagascar initialization */
-#ifdef _OPENMP
-    omp_init(); 	/* initialize OpenMP support */
-#endif
 
     /* setup I/O files */
     Fin=sf_input("in");	/* read the data to be interpolated */
@@ -104,11 +101,6 @@ int main(int argc, char* argv[])
 	beta=(t0-1.0)/t1;
 	t0=t1;
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)		\
-	private(i1)				\
-	shared(dtmp,dcurr,beta,dprev,num)
-#endif
 	for(i1=0;i1<num;i1++) {
 	    dtmp[i1]=dcurr[i1]+beta*(dcurr[i1]-dprev[i1]);
 	    dprev[i1]=dcurr[i1];
@@ -117,11 +109,6 @@ int main(int argc, char* argv[])
 	fftn_lop(true, false, num, num, dcurr, dtmp);
 
 	// perform hard thresholding
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-	private(i1)			\
-	shared(dout,dcurr,num)
-#endif
 	for(i1=0; i1<num; i1++)	dout[i1]=cabsf(dcurr[i1]);
 
    	nthr = 0.5+num*(1.-0.01*pclip); 
@@ -134,11 +121,6 @@ int main(int argc, char* argv[])
 	fftn_lop(false, false, num, num, dcurr, dtmp);
 	
 	/* d_rec = d_obs+(1-M)*A T{ At(d_rec) } */
-#ifdef _OPENMP
-#pragma omp parallel for collapse(3) default(none)	\
-	private(i1,i2,i3,index,m)				\
-	shared(mask,din,dcurr,dtmp,n1,n2,n3)
-#endif
 	for(i3=0; i3<n3; i3++)	
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
