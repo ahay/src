@@ -5,16 +5,16 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
+ctshift fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
 postrtmshape prertmshape sgewefd2d
 '''
 # differenciate
 
 mpi_progs = '''
-mpifdlsrtm mpifulrtm2d mpilrrtm mpiprertm2d
+mpitest mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
-pyprogs = 'lrrtm fdlsrtm'
+pyprogs = 'lrrtm sglrtm'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
