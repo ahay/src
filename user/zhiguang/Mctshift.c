@@ -18,7 +18,9 @@
  */
 
 #include <rsf.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 
 static int padnx, padnz;
 static float c0, c11, c21, c12, c22;
@@ -28,8 +30,10 @@ static void laplacian(float **uin, float **uout)
 {
     int ix, iz;
     
+#ifdef _OPENMP
 #pragma omp parallel for default(none) private(ix, iz) \
 shared(padnx, padnz, uin, uout, padvv, c0, c11, c12, c21, c22)
+#endif
     for(ix=2; ix<padnx-2; ix++){
         for(iz=2; iz<padnz-2; iz++){
             uout[ix][iz]=
@@ -45,7 +49,9 @@ shared(padnx, padnz, uin, uout, padvv, c0, c11, c12, c21, c22)
 void zero2( float **data, int n1, int n2)
 {
     int i1, i2;
+#ifdef _OPENMP
 #pragma omp parallel for private(i2, i1)
+#endif
     for(i2=0; i2<n2; i2++){
         for(i1=0; i1<n1; i1++){
             data[i2][i1]=0.0;
@@ -158,7 +164,9 @@ int main(int argc, char *argv[])
                 }
             }
         } else {
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
                     v0[ix+pad][iz+pad]=(dd[itau+1][ix][iz]-dd[itau-1][ix][iz])/dtau/2.0;
@@ -167,7 +175,9 @@ int main(int argc, char *argv[])
         }
         
         // calculate u1
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
         for(ix=0; ix<nx; ix++)
             for(iz=0; iz<nz; iz++)
                 u1[ix+pad][iz+pad]=dd[itau][ix][iz];
@@ -176,7 +186,9 @@ int main(int argc, char *argv[])
         if(tau>0.){
             
             laplacian(u1, ud);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
             for(ix=0; ix<padnx; ix++){
                 for(iz=0; iz<padnz; iz++){
                     u0[ix][iz]=u1[ix][iz]+ud[ix][iz]/2.0-v0[ix][iz]*dt;
@@ -190,14 +202,18 @@ int main(int argc, char *argv[])
                 tmp=u2; u2=u1; u1=u0; u0=tmp;
                 
                 laplacian(u1, ud);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
                 for(ix=0; ix<padnx; ix++){
                     for(iz=0; iz<padnz; iz++){
                         u0[ix][iz]=2*u1[ix][iz]-u2[ix][iz]+ud[ix][iz];
                     }
                 }
             } //end of it
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
                     mm[itau][ix][iz]=u0[ix+pad][iz+pad];
@@ -209,7 +225,9 @@ int main(int argc, char *argv[])
         if(tau<0.){
             
             laplacian(u1, ud);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
             for(ix=0; ix<padnx; ix++){
                 for(iz=0; iz<padnz; iz++){
                     u2[ix][iz]=u1[ix][iz]+dt*v0[ix][iz]+ud[ix][iz]/2.0;
@@ -223,14 +241,18 @@ int main(int argc, char *argv[])
                 tmp=u0; u0=u1; u1=u2; u2=tmp;
                 
                 laplacian(u1, ud);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
                 for(ix=0; ix<padnx; ix++){
                     for(iz=0; iz<padnz; iz++){
                         u2[ix][iz]=2*u1[ix][iz]-u0[ix][iz]+ud[ix][iz];
                     }
                 }
             }//end of it
+#ifdef _OPENMP
 #pragma omp parallel for private(ix, iz)
+#endif
             for(ix=0; ix<nx; ix++){
                 for(iz=0; iz<nz; iz++){
                     mm[itau][ix][iz]=u2[ix+pad][iz+pad];
