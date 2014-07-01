@@ -26,6 +26,7 @@ To programs:
 * sfipick: example Tkinter script for interactive picking
 * sfvelan: interactive velocity picking using matplotlib
 * Added x0= and mwt= parameters in sfconjgrad
+* Added griddash= parameter to stdplot
 
 ===Bug fixes===
 

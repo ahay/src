@@ -30,7 +30,7 @@
 #include "plot.h"
 
 static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3, tickscale, tickscale1, tickscale2, tickscale3, tickscale4;
-static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
+static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh, griddash;
 static float d1, d2, d3, frame1, frame2, frame3, l1min, l1max, l2min, l2max, l3min, l3max;
 static int framecol, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
@@ -950,6 +950,8 @@ static void make_grid (bool grid)
 	/* grid color */
 	if (!sf_getint("gridfat",&gridfat)) gridfat=1;
 	/* grid fatness */
+	if (!sf_getfloat("griddash",&griddash)) griddash=0.0f;
+	/* grid dash pattern */
     } 
 }
 
@@ -1135,7 +1137,7 @@ void vp_plot_unset (void)
 {
     vp_fat (gridfat);
     vp_color (gridcol);
-    vp_set_dash (0);
+    vp_set_dash (griddash);
     vp_clip(orig1-inch1,orig2-inch2,orig1+inch1,orig2+inch2);
 }
 
@@ -1147,8 +1149,9 @@ void vp_simpleframe(void)
 
     if (NULL != grid1 || NULL != grid2 || NULL != grid3) {
 	vp_bgroup("grid");
-	vp_color (gridcol);
 	vp_fat (gridfat);
+	vp_color (gridcol);
+	vp_set_dash (griddash);
 
 	if (NULL != grid1) {
 	    for (i=0; i < grid1->ntic; i++) {
@@ -1186,6 +1189,7 @@ void vp_simpleframe(void)
 	    }
 	}
 
+	vp_set_dash (0);
 	vp_egroup();
     }
 
