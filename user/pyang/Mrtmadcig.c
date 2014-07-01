@@ -391,9 +391,9 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 
 int main(int argc, char* argv[])
 {
-	int it,kt,ia,is,i1,i2,amp, tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
+	int it,kt,ia,is,i1,i2,tdmute,jsx,jsz,jgx,jgz,sxbeg,szbeg,gxbeg,gzbeg, distx, distz;
 	int *sxz, *gxz;
-	float tmp, vmax;
+	float tmp, amp, vmax;
 	float *wlt, *d2x, *d1z, *bndr;
 	float **v0, **vv, **dcal, **den;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;

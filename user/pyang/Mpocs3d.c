@@ -58,14 +58,15 @@ int main(int argc, char* argv[])
     /* allocate data and mask arrays */
     din=sf_floatalloc(num); 
     dout=sf_floatalloc(num);
+    mask=sf_floatalloc(n2*n3);
     dobs=sf_complexalloc(num);
     drec=sf_complexalloc(num);
     dtmp=sf_complexalloc(num);
 
     sf_floatread(din,num,Fin);
-    if (NULL != sf_getstring("mask")){
-	mask=sf_floatalloc(n2*n3);
-	sf_floatread(mask,n2*n3,Fmask);
+    if (NULL != sf_getstring("mask")) sf_floatread(mask,n2*n3,Fmask);
+    else {
+	for(i1=0; i1<n1*n2; i1++) mask[i1]=1.0;
     }
     for(i1=0; i1<num; i1++) 
     {
