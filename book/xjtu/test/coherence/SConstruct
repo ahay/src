@@ -28,14 +28,4 @@ Plot('mycoh3d',
 	sfgrey3 frame1=80 frame2=80 frame3=85 title=sfcohn
 	''')
 
-
-Flow('mygpucoh3d', 'data','sfgpucohn mode=c3')
-Plot('mygpucoh3d',
-	'''
-	byte gainpanel=all | 
-	sfgrey3 frame1=80 frame2=80 frame3=85 title=sfgpucohn
-	''')
-
-Result('all','data coh3d mycoh3d mygpucoh3d','TwoColumns')
-
 End()
