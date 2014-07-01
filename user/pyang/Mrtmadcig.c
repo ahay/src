@@ -575,11 +575,6 @@ int main(int argc, char* argv[])
 			add_source(&sxz[is], sp, 1, &wlt[it], false);
 		}	
 
-#ifdef _OPENMP
-#pragma omp parallel for default(none)	\
-    private(i1,i2,ia)			\
-    shared(adcig,num,den,vv,da,nz,nx,noa)  
-#endif 	
 		for(i2=0; i2<nx; i2++)
 		for(ia=0; ia<noa; ia++)
 		for(i1=0; i1<nz; i1++)
