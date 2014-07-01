@@ -401,9 +401,6 @@ int main(int argc, char* argv[])
     	sf_file vmodl, rtmadcig, vecx,vecz; /* I/O files */
 
     	sf_init(argc,argv);
-#ifdef _OPENMP
-    	omp_init();
-#endif
 
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
