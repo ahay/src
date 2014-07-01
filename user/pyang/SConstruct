@@ -10,7 +10,6 @@ pocs3d pocs pocsseislet rtm2d rtmadcig
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 '''
 
-# lsinterp2d
 
 mpi_progs='''
 mpifwi
@@ -22,7 +21,7 @@ ccprogs = '''
 
 # CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots gpucohn 
+fbrec gpurtm gpufwi genshots
 '''
 
 try:  # distributed version

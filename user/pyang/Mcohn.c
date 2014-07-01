@@ -86,7 +86,7 @@ NB: sum of eigenvalues=trace of cxy >*/
 		m=fabsf(v[maxidx]);
 		for(i=0; i<J; i++) u[i]=v[i]/m;
 
-		if(fabsf(m-m1)<1.e-6*fabs(m1)) break;
+		if(fabsf(m-m1)<1.e-6) break;
 		m1=m;	
 	}
 	return m/(s+SF_EPS);
@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++)
 	{
+	    memset(cxy[0],0,J*J*sizeof(float));
 	    for(j1=-ntw; j1<=ntw; j1++) {/* construct the covariance matrix */
 		if (i1+j1>=0 && i1+j1<n1)
 		{
