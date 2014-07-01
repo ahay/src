@@ -31,7 +31,7 @@ int main (int argc, char* argv[])
     sf_init (argc,argv);
     ref  = sf_input("in");
     ai = sf_output("out");
-    a0 = sf_output("a0"); /* impedance on the surface */
+    a0 = sf_input("a0"); /* impedance on the surface */
 
     if (!sf_histint(ref,"n1",&nt)) sf_error("No n1= in input");
     n2 = sf_leftsize(ref,1);
