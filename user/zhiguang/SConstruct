@@ -14,7 +14,7 @@ mpi_progs = '''
 mpitest mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
-pyprogs = 'lrrtm sglrtm'
+pyprogs = 'lrrtm' # sglrtm'
 
 try:  # distributed version
     Import('env root pkgdir bindir')
