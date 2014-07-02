@@ -2196,18 +2196,50 @@ check_state (const char *command1, const char *command2,
     if (warn->dash == 1 && (needtocheck1->dash != NTC_NONEED || 
 			    needtocheck2->dash != NTC_NONEED))
     {
+	warn->dash = 0;
+
 	if (dstate1->dashon != dstate2->dashon)
 	{
-	    sf_warning ("State mismatch: dash");
-	    fprintf (stderr,
-		     "\tFile %s, line %s%s: pattern of %d dashes from line %d.\n",
-		     file1, count1, command1, dstate1->dashon, dstate1->count);
-	    fprintf (stderr,
-		     "\tFile %s, line %s%s: pattern of %d dashes from line %d.\n",
-		     file2, count2, command2, dstate2->dashon, dstate2->count);
+	    if (0==dstate1->dashon) 
+	    {
+		got_error = 0;
 
-	    got_error = 1;
-	    warn->dash = 0;
+		for (ii = 0; ii < dstate2->dashon; ii++)
+		{
+		    if (0 != dstate2->dashes[2 * ii] || 0 != dstate2->dashes[2 * ii + 1])
+		    {
+			got_error = 1;
+			break;
+		    }
+		}
+	    }
+	    else if (0==dstate2->dashon) 
+	    {
+		got_error = 0;
+
+		for (ii = 0; ii < dstate1->dashon; ii++)
+		{
+		    if (0 != dstate1->dashes[2 * ii] || 0 != dstate1->dashes[2 * ii + 1])
+		    {
+			got_error = 1;
+			break;
+		    }
+		}
+	    }
+	    else
+	    {
+		got_error = 1;
+	    }
+
+	    if (0 != got_error) {
+		sf_warning ("State mismatch: dash");
+		fprintf (stderr,
+			 "\tFile %s, line %s%s: pattern of %d dashes from line %d.\n",
+			 file1, count1, command1, dstate1->dashon, dstate1->count);
+		fprintf (stderr,
+			 "\tFile %s, line %s%s: pattern of %d dashes from line %d.\n",
+			 file2, count2, command2, dstate2->dashon, dstate2->count);
+	    }
 	}
 	else
 	{
@@ -2230,7 +2262,6 @@ check_state (const char *command1, const char *command2,
 			     file2, count2, command2, dstate2->count);
 
 		    got_error = 1;
-		    warn->dash = 0;
 		    break;
 		}
 	    }
