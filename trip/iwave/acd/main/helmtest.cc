@@ -5,7 +5,7 @@
 #include "functions.hh"
 #include "cgnealg.hh"
 #include "adjtest.hh"
-#include "productspace.hh"
+//#include "productspace.hh"
 
 #ifdef IWAVE_USE_MPI
 #include "mpisegypp.hh"
@@ -26,7 +26,7 @@
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]
 = {
-    {"csq",    0, true,  true },
+    {"csqext",    0, true,  true },
     {"data",   1, false, true },
     {"source", 1, true,  false},
     {"",       0, false, false}
@@ -86,7 +86,13 @@ int main(int argc, char ** argv) {
         PARARRAY * pars = NULL;
         FILE * stream = NULL;
         IWaveEnvironment(argc, argv, 0, &pars, &stream);
-        
+#ifdef IWAVE_USE_MPI
+      if (retrieveGroupID() == MPI_UNDEFINED) {
+          fprintf(stream,"NOTE: finalize MPI, cleanup, exit\n");
+          fflush(stream);
+      }
+      else {
+#endif        
         // the Op
         IWaveOp iwop(*pars,stream);
         
@@ -109,8 +115,8 @@ int main(int argc, char ** argv) {
         // make it a product, so it's compatible with domain of op
         StdProductSpace<ireal> dom(csqsp);
         
-        Vector<ireal> m_in(dom);
-        Vector<ireal> m_out(dom);
+        Vector<ireal> m_in(iwop.getDomain());
+        Vector<ireal> m_out(iwop.getDomain());
         
         AssignFilename minfn(valparse<std::string>(*pars,"csqin"));
         Components<ireal> cmin(m_in);
@@ -122,11 +128,11 @@ int main(int argc, char ** argv) {
         
         HelmOp<ireal> hop(dom,w_arr,power,datum);
         
-        OperatorEvaluation<ireal> opeval(hop,m_in);
-        opeval.getDeriv().applyOp(m_in,m_out);
+        hop.applyOp(m_in,m_out);
         
         
 #ifdef IWAVE_USE_MPI
+        }
         MPI_Finalize();
 #endif
     }
