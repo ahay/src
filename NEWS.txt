@@ -27,6 +27,8 @@ To programs:
 * sfvelan: interactive velocity picking using matplotlib
 * Added x0= and mwt= parameters in sfconjgrad
 * Added griddash= parameter to stdplot
+* sflas2rsf: Convert LAS-2 well logs to RSF
+* Added segy= parameter to sfheaderattr
 
 ===Bug fixes===
 

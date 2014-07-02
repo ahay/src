@@ -479,6 +479,37 @@ void segy_init(int nkeys, sf_file hdr)
     }
 }
 
+void other_init(int nkeys, sf_file hdr)
+/*< initialize non-SEGY trace headers >*/
+{
+    int ik, nk, len, namelen;
+    char key[11], *name;
+
+    if (nkeys > SF_MAXKEYS) 
+	sf_error("%s: The header is too long: %d > %d",
+		 __FILE__,nkeys,SF_MAXKEYS);
+ 
+    for (ik=0; ik < nkeys; ik++) {
+	nk = ik+1;
+	    
+	snprintf(key,7,"key%d",nk);
+	if ( NULL == (name = sf_getstring(key)) &&
+	     (NULL == hdr ||
+	      NULL == (name = sf_histstring(hdr,key))) )
+	    name = "?";
+	
+	snprintf(key,11,"key%d_len",ik-SF_NKEYS+1);
+	if (!sf_getint(key,&len)) len=4;
+
+	namelen = strlen(name) + 1;
+	segy_key[ik].name = sf_charalloc(namelen);
+	strncpy((char*) segy_key[ik].name,name,namelen);
+	    
+	segy_key[ik].size=len;
+    }
+}
+
+
 /* Big-endian to Little-endian conversion and back */
 static int convert2(const char* buf);
 static int convert4(const char* buf);

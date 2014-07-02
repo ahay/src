@@ -27,6 +27,7 @@
 
 int main(int argc, char* argv[])
 {
+    bool segy;
     int i1, i2, n1, n2;
     double *max=NULL, *min=NULL, *mean=NULL;
     int *inp=NULL, *indxmax=NULL, *indxmin=NULL;
@@ -78,7 +79,14 @@ int main(int argc, char* argv[])
 	}
     }
 
-    segy_init(n1,head);
+    if (!sf_getbool("segy",&segy)) segy=true;
+    /* if SEGY headers */
+
+    if (segy) {
+	segy_init(n1,head);
+    } else {
+	other_init(n1,head);
+    }
     
     /* put headers on table of numbers */
     fprintf(stdout,"******************************************************************************* \n");
@@ -86,11 +94,19 @@ int main(int argc, char* argv[])
     fprintf(stdout,"------------------------------------------------------------------------------- \n");
     for (i1=0; i1 < n1; i1++) {
 	if (min[i1] != 0 || max[i1] != 0) {
-	    fprintf(stdout,"%-8s %4d %14ld @ %d\t%14ld @ %d\t%14g\n",
-		    segykeyword(i1),i1,
-		    lrint(min[i1]),indxmin[i1],
-		    lrint(max[i1]),indxmax[i1],
-		    mean[i1]/n2);
+	    if (SF_INT == typehead) {
+		fprintf(stdout,"%-8s %4d %14ld @ %d\t%14ld @ %d\t%14g\n",
+			segykeyword(i1),i1,
+			lrint(min[i1]),indxmin[i1],
+			lrint(max[i1]),indxmax[i1],
+			mean[i1]/n2);
+	    } else {
+		fprintf(stdout,"%-8s %4d %14g @ %d\t%14g @ %d\t%14g\n",
+			segykeyword(i1),i1,
+			min[i1],indxmin[i1],
+			max[i1],indxmax[i1],
+			mean[i1]/n2);
+	    }
 	} 
     }
     fprintf(stdout,"******************************************************************************* \n");

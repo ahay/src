@@ -2,7 +2,7 @@ import sys, os, string, re
 sys.path.append('../../framework')
 import bldutil
 
-modules = Split('m8r vplot')
+modules = Split('m8r vplot las')
 
 try: # distribution version
     Import('env root libdir pkgdir bindir')
@@ -29,6 +29,8 @@ if root:
                 env.Install(bindir,module+'test')
     except:
         pass
+
+modules.remove('las')
 
 if env.get('SWIG') and env.get('NUMPY'):
     try:
