@@ -74,7 +74,7 @@ int main (int argc, char* argv[])
                             en+=trace2[n1*j+i]*trace2[n1*j+i];
                         }
                     }
-                    snr=10*log(es/en);
+                    snr=10*log10(es/en);
                             
                     printf("***************************************\n");
                     printf("signal energy at n3=%d      = %f \n", (k+1),es);
