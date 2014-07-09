@@ -4,7 +4,8 @@ import bldutil
 
 # C main programs
 progs = '''
-cohn dlct fpocs2d fpocs3d istinterp istseislet lsrtm2d lsprtm2d lsinterp2d
+cohn dlct fpocs2d fpocs3d istinterp istseislet lsrtm2d lsprtm2d 
+lsinterp2d lsinterp5d
 mwni2d myradon1 myradon2 mshots  mcaseislet matflip modeling2d
 pocs3d pocs pocsseislet rtm2d rtmadcig 
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
@@ -21,7 +22,7 @@ ccprogs = '''
 
 # CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots
+fbrec gpurtm gpufwi genshots gpufd3d gpucohn
 '''
 
 try:  # distributed version

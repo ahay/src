@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 		default: cohn=coh1;
 	}
 
-	cxy=sf_floatalloc2(J,J);
+	cxy=sf_floatalloc2(J, J);
 	u1 = sf_floatalloc3(n1, n2, n3);
 	u2 = sf_floatalloc3(n1, n2, n3);
 	sf_floatread(u1[0][0], n1*n2*n3, in);	
