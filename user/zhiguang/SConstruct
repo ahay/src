@@ -10,7 +10,7 @@ postrtmshape prertmshape sgewefd2d pad2
 '''
 # differenciate
 
-ccprogs = 'shearlr2'
+ccprogs = ''
 mpi_progs = '''
 mpitest mpifulrtm2d mpilrrtm mpiprertm2d
 '''
@@ -74,6 +74,17 @@ if lapack:
         libsxx.extend(lapack)
     env.Prepend(LIBS=libsxx)
 
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
+        
+        
 ######################################################################
 # PYTHON METAPROGRAMS (python API not needed)
 ######################################################################
