@@ -3,6 +3,7 @@ from rsf.book import *
 papers = '''
 amoco
 marmousi
+marmousi2
 pluto
 sigsbee
 '''

@@ -1,5 +1,5 @@
-/* 2-D two-components wavefield modeling using original elastic displacement wave equation in TTI media.
-
+/* 2-D two-components wavefield modeling using original elastic displacement wave equation in TTI media. */
+/*
    Copyright (C) 2012 Tongji University, Shanghai, China 
    Authors: Jiubing Cheng, Wei Kang and Tengfei Wang
      

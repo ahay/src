@@ -18,7 +18,8 @@ Flow('div',['obc_div_v_1','obc_div_v_2'],'cat ${SOURCES[0:2]} axis=3',stdin=0)
 
 # Plot Data
 Result('movie','div','''window $SOURCE  
-               min3=4250 max3=4250 size3=1 |
+               min3=4250 max3=4250 n3=1 |
                grey color=I gainpanel=a 
                title=OBC\ Div\ Shot\ 50''')
+
 End()
