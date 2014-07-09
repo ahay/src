@@ -6,10 +6,11 @@ import bldutil
 
 progs = '''
 ctshift fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
-postrtmshape prertmshape sgewefd2d
+postrtmshape prertmshape sgewefd2d pad2
 '''
 # differenciate
 
+ccprogs = 'shearlr2'
 mpi_progs = '''
 mpitest mpifulrtm2d mpilrrtm mpiprertm2d
 '''
