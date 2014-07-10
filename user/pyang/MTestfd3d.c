@@ -124,7 +124,7 @@ void step_forward(float ***u0, float ***u1, float ***vv)
 			c22*(u1[iy  ][ix-2][iz  ] + u1[iy  ][ix+2][iz  ]) +
 			c31*(u1[iy-1][ix  ][iz  ] + u1[iy+1][ix  ][iz  ]) +
 			c32*(u1[iy-2][ix  ][iz  ] + u1[iy+2][ix  ][iz  ]) ;
-		u0[iy][ix][iz] = 2*u1[iy][ix][iz]-u0[iy][ix][iz]+ua * vv[iy][ix][iz];
+		u0[iy][ix][iz] = 2.0*u1[iy][ix][iz]-u0[iy][ix][iz]+ua * vv[iy][ix][iz];
 	}
 }
 

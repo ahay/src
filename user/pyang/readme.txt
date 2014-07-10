@@ -80,7 +80,7 @@ Test file:	/book/xjtu/mcaseislet/deblend/SConstruct
 		/book/xjtu/mcaseislet/interp/SConstruct
 		/book/xjtu/mcaseislet/sep1/SConstruct
 		/book/xjtu/mcaseislet/sep2/SConstruct
-		/book/xjtu/istpocs_seislet/SConstruct
+		/book/xjtu/test/istpocsseislet/SConstruct
 
 7) 2-D forward modeling to generate shot records
 Main: 		Mmodeling2d.c
@@ -115,24 +115,14 @@ invoking Mgpufwi.cu. We are using boundary saving strategy in FWI. To
 demonstrate that the modeled wavefield can be precisely reconstructed,
 we design the code Mfbrec.cu befere going to FWI. It is important to
 note that the top boundary is free surface boundary condition (no ABC 
-applied here!). /book/xjtu/gpufwi/syntest/SConstruct is a small and 
-quick example to show the minimization process of the FWI code. 
+applied here!). 
 
 12) 3D coherence calculation
 Main: 		Mcohn.c
 Test file:	/book/xjtu/test/coherence/SConstruct
 
 
-===================================================================
-I try my best to make my code self-contained. I believe it brings 
-convenience and readability, because for readers much effort will
-be saved on understanding how to invoke complicated functions which may 
-not be written by the coder. I strongly discourage that kind of style!
-
-The following codes are under construction. Be careful!
-===================================================================
-
-14) MWNI (minimum weighted norm interpolation), FFTW requred
+13) MWNI (minimum weighted norm interpolation), FFTW requred
 Main:		Mmwni2d.c 
 Test file: 	/book/xjtu/test/mwni2d/SConstruct
 Note: I use conjugate gradient algorithm here. Although the testing
@@ -140,6 +130,12 @@ seems nice, I found the residual of my implementation not converged
 well. Be careful! It is under modification!
 
 
+===================================================================
+I try my best to make my code self-contained. I believe it brings 
+convenience and readability, because for readers much effort will
+be saved on understanding how to invoke complicated functions which may 
+not be written by the author. I strongly discourage that kind of style!
+===================================================================
 
 
 
