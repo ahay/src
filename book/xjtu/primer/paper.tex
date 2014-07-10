@@ -357,8 +357,8 @@ where $\Psi_x$, $\Psi_z$ are the convolution terms of $Ax$ and $Az$; $\Phi_x$, $
 \begin{split}
 \Psi_x^n=b_x \Psi_x^{n-1}+(b_x-1) \partial_x^{n-1/2}Ax\\
 \Psi_z^n=b_z \Psi_z^{n-1}+(b_z-1) \partial_z^{n-1/2}Az\\
-\Phi_x^n=b_x \Phi_x^{n-1}+(b_x-1) \partial_x^{n-1/2}Px\\
-\Phi_z^n=b_z \Phi_z^{n-1}+(b_z-1) \partial_z^{n-1/2}Pz\\
+\Phi_x^n=b_x \Phi_x^{n-1}+(b_x-1) \partial_x^{n-1/2}P\\
+\Phi_z^n=b_z \Phi_z^{n-1}+(b_z-1) \partial_z^{n-1/2}P\\
 \end{split}
 \right.
 \end{equation}
@@ -619,7 +619,7 @@ In summary,
 &p_x^{k+1}[ix,iz]=\frac{1-0.5\Delta td[ix]}{1+0.5\Delta t d[ix]}p_x^{k}[ix,iz]+\\
 &\frac{1}{1+0.5\Delta t d[ix]}\frac{\Delta t v^2[ix,iz]}{\Delta x}(v_x^{k+\frac{1}{2}}[ix+\frac{1}{2},iz]-v_x^{k+\frac{1}{2}}[ix-\frac{1}{2},iz])\\
 &p_z^{k+1}[ix,iz]=\frac{1-0.5\Delta td[iz]}{1+0.5\Delta t d[iz]}p_z^{k}[ix,iz]+\\
-&\frac{1}{1+0.5\Delta t d[iz]}\frac{\Delta t v^2[ix,iz]}{\Delta z}(v_z^{k+\frac{1}{2}}[ix,iz+\frac{1}{2}]-v_z^{k+\frac{1}{2}}[ix-\frac{1}{2},iz])\\
+&\frac{1}{1+0.5\Delta t d[iz]}\frac{\Delta t v^2[ix,iz]}{\Delta z}(v_z^{k+\frac{1}{2}}[ix,iz+\frac{1}{2}]-v_z^{k+\frac{1}{2}}[ix,iz-\frac{1}{2}])\\
 &p^{k+1}[ix,iz]=p_x^{k+1}[ix,iz]+p_z^{k+1}[ix,iz]\\
 \end{split}
 \right.
