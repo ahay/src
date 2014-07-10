@@ -127,13 +127,19 @@ namespace TSOpt {
                 wm = MAX(dt/s,w);
                 float wtmp = mutefun((gx - s)/wm) * mutefun((tm - gx)/wm);
                 if (taper_type){ // offset
-                    RVLException e;
-                    e<<"Error: SEGYTaperMute::operator()\n";
-                    e<<"taper_type for offset has not been implemented!\n";
-                    throw e;
+                    wt=MAX(1.0,width);
+                    float wttmp=1.0;
+                    if (x < min) wttmp = cosfun2((min-x)/wt);
+                    else if (x > max) wttmp = cosfun2((x - max)/wt);
+                    
+                    for (int i=0;i<nt-itw;i++)
+                        trout.data[i] = trin.data[i]*wtmp*wttmp;
+                    for (int i=nt-itw;i<nt;i++)
+                        trout.data[i] = trin.data[i]*wtmp*wttmp*cosfun(float(nt-i)/(itw+0.0f));
+
                 }
                 else { // taper geophone position
-                    wt=MAX(dt/min,width);
+                    wt=MAX(1.0,width);
                     float wttmp=1.0;
                     if (gx < min) wttmp = cosfun2((min-gx)/wt);
                     else if (gx > max) wttmp = cosfun2((gx - max)/wt);
@@ -147,10 +153,15 @@ namespace TSOpt {
             else {
                 wm=MAX(dt,w);
                 if (taper_type){ // offset
-                    RVLException e;
-                    e<<"Error: SEGYTaperMute::operator()\n";
-                    e<<"taper_type for offset has not been implemented!\n";
-                    throw e;
+                    wt=MAX(1.0,width);
+                    float wttmp=1.0;
+                    if (x < min) wttmp = cosfun2((min-x)/wt);
+                    else if (x > max) wttmp = cosfun2((x - max)/wt);
+                    
+                    for (int i=0;i<nt-itw;i++)
+                        trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm);
+                    for (int i=nt-itw;i<nt;i++)
+                        trout.data[i] = trin.data[i]*wttmp*mutefun((i*dt+t0-s*fabs(x)-tm)/wm)*cosfun(float(nt-i)/(itw+0.0f));
                 }
                 else { // taper geophone position
                     wt=MAX(dt/min,width);

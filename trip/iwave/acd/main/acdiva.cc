@@ -239,7 +239,7 @@ int main(int argc, char ** argv) {
 			 valparse<float>(*pars,"GAStepAcceptThresh",0.1f),
 			 valparse<float>(*pars,"GAStepDoubleThresh",0.9f), 
 			 valparse<float>(*pars,"LSBackTrackFac",0.5f), 
-			 valparse<float>(*pars,"LSDoubleFac",1.8f),
+			 valparse<float>(*pars,"LSsDoubleFac",1.8f),
 			 valparse<float>(*pars,"MaxFracDistToBdry",1.0), 
 			 valparse<float>(*pars,"LSMinStepFrac",1.e-06),
 			 valparse<int>(*pars,"MaxLBFGSIter",3), 
