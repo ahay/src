@@ -66,15 +66,15 @@ namespace RVLUmin {
                 tmp.zero();
                 OperatorEvaluation<Scalar> gopeval(gop,tmp);
                 
-                Vector<Scalar> d0(gop.getRange());
-                gopeval.getDeriv().applyOp(cx[1],d0);
-                d0.linComb(-1.0, d);
+                gopeval.getDeriv().applyOp(cx[1],dltd);
+                dltd.linComb(-1.0, d);
                 // get the value of objective function
-                val=d0.normsq()/2.0;
+                val=dltd.normsq()/2.0;
+                cerr << "\n in MultiFitLS::apply val=" << val << endl;
                 applied = true;
             }
             catch (RVLException & e) {
-                e<<"\ncalled from LinFitLS::apply\n";
+                e<<"\ncalled from MultiFitLS::apply\n";
                 throw e;
             }
         }
@@ -108,14 +108,13 @@ namespace RVLUmin {
                 SymmetricBilinearOp<Scalar> const & sblop = opeval.getDeriv2();
                 Vector<Scalar> tmp1(op.getDomain());
                 tmp1.zero();
-                
                 //computation of gradient of velocity
                 sblop.applyAdjOp(cx[1],dltd,tmp1);
                 gextop.applyAdjOp(tmp1,cg[0]);
                 gopeval.getDeriv().applyAdjOp(dltd,cg[1]);
             }
             catch (RVLException & e) {
-                e<<"\ncalled from LinFitLS::applyGradient\n";
+                e<<"\ncalled from MultiFitLS::applyGradient\n";
                 throw e;
             }
             
@@ -166,7 +165,7 @@ namespace RVLUmin {
                 return op.getMaxStep(x,dx);
             }
             catch (RVLException & e) {
-                e<<"\ncalled from LinFitLS::getMaxStep\n";
+                e<<"\ncalled from MultiFitLS::getMaxStep\n";
                 throw e;
             }
         }

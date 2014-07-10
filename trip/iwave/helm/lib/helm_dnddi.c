@@ -17,6 +17,7 @@
 /* include C math library headers to avoid having to use libf2c version of pow */
 #include "cstd.h"
 #include "f2c.h"
+#define max(a,b) ((a) >= (b) ? (a) : (b))
 
 /* Subroutine */ int helm_(int bc, integer *nsx, integer *ntx, float *dt, float *dx, 
 	float *st, float *sx, float *p, float *d__, float *x, float *y, float *work, 

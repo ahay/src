@@ -1,4 +1,4 @@
-#include "acdpml_defn.hh"
+#include "acd_defn.hh"
 #include "grid.h"
 #include "gridpp.hh"
 #include "gridops.hh"
@@ -11,7 +11,7 @@
 #include "LBFGSBT.hh"
 #include "LinFitLS.hh"
 #include "LinFitLSSM.hh"
-//#include "acdiva_selfdoc.hh"
+#include "acdiva_selfdoc.h"
 #include <par.h>
 #include "adjtest.hh"
 #include "segyops.hh"
@@ -55,7 +55,6 @@ using TSOpt::IWaveSim;
 using TSOpt::TASK_RELN;
 using TSOpt::IOTask;
 using TSOpt::IWaveOp;
-using TSOpt::SEGYLinMute;
 using TSOpt::SEGYTaperMute;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
@@ -100,10 +99,10 @@ int main(int argc, char ** argv) {
     FILE * stream = NULL;
     IWaveEnvironment(argc, argv, 0, &pars, &stream);
 
-//    if (retrieveGlobalRank()==0 && argc<2) {
-//      pagedoc();
-//      exit(0);
-//    }
+    if (retrieveGlobalRank()==0 && argc<2) {
+      pagedoc();
+      exit(0);
+    }
 
 #ifdef IWAVE_USE_MPI
     if (retrieveGroupID() == MPI_UNDEFINED) {
@@ -113,9 +112,10 @@ int main(int argc, char ** argv) {
     else {
 #endif
 
-      // the Op
+      /* the Op */
       IWaveOp iwop(*pars,stream);
-      SEGYTaperMute mute(valparse<float>(*pars,"mute_slope",0.0f),
+        
+      SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
                         valparse<float>(*pars,"mute_zotime",0.0f),
                         valparse<float>(*pars,"mute_width",0.0f),0,
                         valparse<float>(*pars,"min",0.0f),
@@ -123,9 +123,9 @@ int main(int argc, char ** argv) {
                         valparse<float>(*pars,"taper_width",0.0f),
                         valparse<int>(*pars,"taper_type",0),
                         valparse<float>(*pars,"time_width",0.0f));
-
-      LinearOpFO<float> muteop(iwop.getRange(),iwop.getRange(),mute,mute);
-      OpComp<float> op(iwop,muteop);
+        
+      LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
+      OpComp<float> op(iwop,tnmop);
     
       /* generate physical model space */
 #ifdef IWAVE_USE_MPI
@@ -135,6 +135,8 @@ int main(int argc, char ** argv) {
 #endif
       // make it a product, so it's compatible with domain of op
       StdProductSpace<ireal> dom(csqsp);
+      
+
 
       // vel-squared model!
       Vector<ireal> m0(dom);
@@ -153,12 +155,10 @@ int main(int argc, char ** argv) {
       AssignFilename dmfn(valparse<std::string>(*pars,"reflectivity"));
       Components<ireal> cdm(dm);
       cdm[0].eval(dmfn);
-      dm.zero();
-   
-      // mute data 
+
+      // muted data
       Vector<ireal> mdd(op.getRange());
       std::string mddnm = valparse<std::string>(*pars,"datamut","");
-
       if (mddnm.size()>0) {
         AssignFilename mddfn(mddnm);
         mdd.eval(mddfn);
@@ -168,7 +168,7 @@ int main(int argc, char ** argv) {
         AssignFilename ddfn(valparse<std::string>(*pars,"data"));
         Components<ireal> cdd(dd);
         cdd[0].eval(ddfn);
-        muteop.applyOp(dd,mdd);
+        tnmop.applyOp(dd,mdd);
       }
 
       CGNEPolicyData<float> pd(valparse<float>(*pars,"ResidualTol",100.0*numeric_limits<float>::epsilon()),
@@ -209,7 +209,7 @@ int main(int argc, char ** argv) {
       ScaleOpFwd<float> preop(top.getDomain(),1.0f);
       // initial input reflectivity
       Vector<ireal> dm0(op.getDomain());
-      string refname = valparse<std::string>(*pars,"ref0");
+      string refname = valparse<std::string>(*pars,"ref0","");
       if (refname.size()>0){
           AssignFilename dmfn(refname);
           Components<ireal> cdm0(dm0);
@@ -292,36 +292,36 @@ int main(int argc, char ** argv) {
 	(fe2.getFunctional()); // current clone of LSLinFit
       dm.copy(f3.getLSSoln()); // copy dx from LSLinFit
 
-        std::string dataest = valparse<std::string>(*pars,"dataest","");
-        std::string datares = valparse<std::string>(*pars,"datares","");
-        std::string normalres = valparse<std::string>(*pars,"normalres","");
-        if (dataest.size()>0) {
-            OperatorEvaluation<float> gopeval(g,m);
-            OperatorEvaluation<float> opeval(op,gopeval.getValue());
-            Vector<float> est(op.getRange());
-            AssignFilename estfn(dataest);
-            est.eval(estfn);
-            opeval.getDeriv().applyOp(dm,est);
-            if (datares.size()>0) {
-                Vector<float> res(op.getRange());
-                AssignFilename resfn(datares);
-                res.eval(resfn);
-                res.copy(est);
-                res.linComb(-1.0f,mdd);
-                if (normalres.size()>0){
-                    OperatorEvaluation<float> topeval(top,gopeval.getValue());
-                    Vector<float> nres(op.getDomain());
-                    AssignFilename nresfn(normalres);
-                    nres.eval(nresfn);
-                    Vector<float> tres(top.getRange());
-                    Components<float> ctres(tres);
-                    ctres[0].copy(res);
-                    ctres[1].zero();
-                    topeval.getDeriv().applyAdjOp(tres,nres);        
-                }
-            }
-        }
-        
+      std::string dataest = valparse<std::string>(*pars,"dataest","");
+      std::string datares = valparse<std::string>(*pars,"datares","");
+      std::string normalres = valparse<std::string>(*pars,"normalres","");
+      if (dataest.size()>0) {
+          OperatorEvaluation<float> gopeval(g,m);
+          OperatorEvaluation<float> opeval(op,gopeval.getValue());
+          Vector<float> est(op.getRange());
+          AssignFilename estfn(dataest);
+          est.eval(estfn);
+          opeval.getDeriv().applyOp(dm,est);
+          if (datares.size()>0) {
+              Vector<float> res(op.getRange());
+              AssignFilename resfn(datares);
+              res.eval(resfn);
+              res.copy(est);
+              res.linComb(-1.0f,mdd);
+              if (normalres.size()>0){
+                  OperatorEvaluation<float> topeval(top,gopeval.getValue());
+                  Vector<float> nres(op.getDomain());
+                  AssignFilename nresfn(normalres);
+                  nres.eval(nresfn);
+                  Vector<float> tres(top.getRange());
+                  Components<float> ctres(tres);
+                  ctres[0].copy(res);
+                  ctres[1].zero();
+                  topeval.getDeriv().applyAdjOp(tres,nres);
+              }
+          }
+      }
+
       if (retrieveRank() == 0) {
 	std::string outfile = valparse<std::string>(*pars,"outfile","");
 	if (outfile.size()>0) {

@@ -184,8 +184,8 @@ namespace TSOpt {
             }
         helm_(DirichletSides,&f2c_n1,&f2c_n2,
               &(d_arr[0]),&(d_arr[1]),
-              &(scale1),&(scale2),
-              &power,&datum,
+              &(_scale1),&(_scale2),
+              &_power,&_datum,
               indata,
               outdata,
               work,
@@ -208,8 +208,8 @@ namespace TSOpt {
             }
         helm_(DirichletSides,&f2c_n1,&f2c_n2,
               &(d_arr[0]),&(d_arr[1]),
-              &(scale1),&(scale2),
-              &power,&datum,
+              &(_scale1),&(_scale2),
+              &_power,&_datum,
               indata,
               outdata,
               work,
@@ -238,8 +238,8 @@ namespace TSOpt {
             }
             helm_(DirichletSides,&f2c_n1,&f2c_n2,
               &(d_arr[0]),&(d_arr[1]),
-              &(scale1),&(scale2),
-              &power,&datum,
+              &(_scale1),&(_scale2),
+              &_power,&_datum,
               indata,
               outdata,
               work,

@@ -148,7 +148,14 @@ int main(int argc, char ** argv) {
             Components<ireal> cm(m);
             cm[0].eval(mfn);
             cm[1].eval(dmfn);
-            
+//#ifdef IWAVE_USE_MPI
+//        if (retrieveGroupID() == 0) {
+//            cerr << "\n csq.norm() = " << cm[0].norm() << endl;
+//            cerr << "\n dcsq.norm() = " << cm[1].norm() << endl;
+//            cerr << "\n m.norm() = " << m.norm() << endl;
+//        }
+//#endif
+// 
             // muted data - optionally archived
             Vector<ireal> mdd(op.getRange());
             std::string mddnm = valparse<std::string>(*pars,"datamut","");
