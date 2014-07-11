@@ -5,20 +5,20 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-ctshift fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
-postrtmshape prertmshape sgewefd2d pad2
+pad2 tsfdtest fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
+postrtmshape prertmshape sgewefd2d
 '''
 # differenciate
 
-ccprogs = ''
+ccprogs = '' #cswavelr2 swavelr2'
 mpi_progs = '''
-mpitest mpifulrtm2d mpilrrtm mpiprertm2d
+mpitest mpifdlsrtm mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
-pyprogs = 'lrrtm' # sglrtm'
+pyprogs = 'lrrtm fdlsrtm'
 
 try:  # distributed version
-    Import('env root pkgdir bindir')
+    Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
 except: # local version
     env = bldutil.Debug()
