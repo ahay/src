@@ -8,21 +8,22 @@ Flow('data','dat3d_601x401x681.bin',
      	 d3=0.02 o3=0 label3=iline unit3=km |
 	sfwindow j1=3 j2=3 j3=3 
 	''')
-Plot('data',
+Result('data',
 	'''
 	byte gainpanel=all | 
 	sfgrey3 frame1=80 frame2=80 frame3=85 title=Data
 	''')
 
-Flow('coh3d', 'data','sfcoherence mode=c3 ntw=10 nxw=1 nyw=1')
-Plot('coh3d',
+Flow('coh3d', 'data','sfcoherence mode=c3')
+Result('coh3d',
 	'''
 	byte gainpanel=all | 
 	sfgrey3 frame1=80 frame2=80 frame3=85 title=sfcoherence
 	''')
 
+#c3 coherence using power method
 Flow('mycoh3d', 'data','sfcohn mode=c3')
-Plot('mycoh3d',
+Result('mycoh3d',
 	'''
 	byte gainpanel=all | 
 	sfgrey3 frame1=80 frame2=80 frame3=85 title=sfcohn
