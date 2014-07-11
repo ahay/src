@@ -271,7 +271,6 @@ int main(int argc, char* argv[])
    	if (!sf_getint("nt",&nt))  sf_error("nt required");
     	if (!sf_getint("kt",&kt)) sf_error("kt required");
 	/* record wavefield at time kt */
-	if (kt>nt) sf_error("make sure kt<=nt");
    	if (!sf_getfloat("dt",&dt))  sf_error("dt required");
 	/* time sampling interval */
    	if (!sf_getfloat("fm",&fm))  fm=20;

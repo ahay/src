@@ -127,8 +127,11 @@ Main:		Mmwni2d.c
 Test file: 	/book/xjtu/test/mwni2d/SConstruct
 Note: I use conjugate gradient algorithm here. Although the testing
 seems nice, I found the residual of my implementation not converged
-well. Be careful! It is under modification!
+well. 
 
+14) 3D FD using GPU
+Main: 		Mgpufd3d.cu
+Test file:	/book/xjtu/test/gpufd3d/SConstruct
 
 ===================================================================
 I try my best to make my code self-contained. I believe it brings 

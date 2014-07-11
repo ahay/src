@@ -18,6 +18,11 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Reference: Alkishriwo, Osama A., and Luis F. Chaparro. "A discrete 
+	linear chirp transform (DLCT) for data compression." Information 
+	Science, Signal Processing and their Applications (ISSPA), 2012 
+	11th International Conference on. IEEE, 2012.
 */
 
 #include <rsf.h>

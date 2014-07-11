@@ -49,8 +49,7 @@ static const int J=(2*nxw+1)*(2*nyw+1);
 static float *d_u1, *d_u2;
 
 __global__ void coh3(float *u1, float *u2, int dimx, int dimy, int dimz)
-/*< C3 calculation
-NB: kernel configuration <<<gridDim, blockDim, sizeofsharedmembite>>>  >*/
+/*< C3 calculation  >*/
 {
 	const int ix=threadIdx.x+blockIdx.x*blockDim.x;
 	const int iy=threadIdx.y+blockIdx.y*blockDim.y;
@@ -188,7 +187,11 @@ int main(int argc, char *argv[])
     	cudaMemcpy(d_u1, u2, n1*n2*n3*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_u2, 0, n1*n2*n3*sizeof(float));
 
-	dim3 dimg((n2+BlockSizeX-1)/BlockSizeX,(n3+BlockSizeY-1)/BlockSizeY), dimb(BlockSizeX, BlockSizeY);
+	dim3 dimg, dimb;
+	dimg.x=(n2+BlockSizeX-1)/BlockSizeX;
+	dimg.y=(n3+BlockSizeY-1)/BlockSizeY;
+	dimb.x=BlockSizeX;
+	dimb.y=BlockSizeY;
 	coh3<<<dimg, dimb>>>(d_u1, d_u2, n2, n3, n1);
 
     	cudaMemcpy(u2, d_u2, n1*n2*n3*sizeof(float), cudaMemcpyDeviceToHost);
