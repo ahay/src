@@ -224,56 +224,81 @@ int main(int argc, char ** argv) {
             
             MultiFit<float> f(pdom, top, gext, preop, td,res);
             
-            FunctionalEvaluation<float> Fm(f,m);
+            // lower, upper bds for csq
+            Vector<float> lb(f.getDomain());
+            Vector<float> ub(f.getDomain());
+            float lbcsq=valparse<float>(*pars,"cmin");
+            float lbdcsq=valparse<float>(*pars,"dcmin");
+            lbcsq=lbcsq*lbcsq;
+            lbdcsq=lbdcsq*lbdcsq;
+            RVLAssignConst<float> asl(lbcsq);
+            RVLAssignConst<float> asld(lbdcsq);
+            Components<float> clb(lb);
+            clb[0].eval(asl);
+            clb[1].eval(asld);
+            float ubcsq=valparse<float>(*pars,"cmax");
+            float ubdcsq=valparse<float>(*pars,"dcmax");
+            ubcsq=ubcsq*ubcsq;
+            ubdcsq=ubdcsq*ubdcsq;
+            RVLAssignConst<float> asu(ubcsq);
+            RVLAssignConst<float> asud(ubdcsq);
+            Components<float> cub(ub);
+            cub[0].eval(asu);
+            cub[1].eval(asud);
+            RVLMin<float> mn;
+#ifdef IWAVE_USE_MPI
+            MPISerialFunctionObjectRedn<float,float> mpimn(mn);
+            ULBoundsTest<float> ultest(lb,ub,mpimn);
+#else
+            ULBoundsTest<float> ultest(lb,ub,mn);
+#endif
+            FunctionalBd<float> fbd(f,ultest);
             
-            // if gradient requested, compute and store, along with other quantities
-            // at reference model
-            string gradnamev = valparse<std::string>(*pars,"grad_vel","");
-            string gradnamer = valparse<std::string>(*pars,"grad_ref","");
-
-            if (gradnamev.size()>0 && gradnamer.size()>0) {
-
-                AssignFilename gradfnv(gradnamev);
-                AssignFilename gradfnr(gradnamer);
-
-                Vector<ireal> grad(pdom);
-                Components<ireal> cgrad(grad);
-                cgrad[0].eval(gradfnv);
-                cgrad[1].eval(gradfnr);
-                
-                //strgrad << "\n getgradient norm = " << (Fm.getGradient()).norm() << endl;
-                grad.copy(Fm.getGradient());
-                //strgrad << "\n grad norm = " << grad.norm() << endl;
-                
+            LBFGSBT<float> alg(fbd,m,
+                               valparse<float>(*pars,"InvHessianScale",1.0f),
+                               valparse<int>(*pars,"MaxInvHessianUpdates",5),
+                               valparse<int>(*pars,"MaxLineSrchSteps",10),
+                               valparse<bool>(*pars,"VerboseDisplay",true),
+                               valparse<float>(*pars,"FirstStepLength",1.0f),
+                               valparse<float>(*pars,"GAStepAcceptThresh",0.1f),
+                               valparse<float>(*pars,"GAStepDoubleThresh",0.9f),
+                               valparse<float>(*pars,"LSBackTrackFac",0.5f),
+                               valparse<float>(*pars,"LSsDoubleFac",1.8f),
+                               valparse<float>(*pars,"MaxFracDistToBdry",1.0),
+                               valparse<float>(*pars,"LSMinStepFrac",1.e-06),
+                               valparse<int>(*pars,"MaxLBFGSIter",3),
+                               valparse<float>(*pars,"AbsGradThresh",0.0),
+                               valparse<float>(*pars,"RelGradThresh",1.e-2),
+                               res);
+            if (valparse<int>(*pars,"MaxLBFGSIter",3) <= 0) {
+                float val = alg.getFunctionalEvaluation().getValue();
+                res<<"=========================== LINFITLS ==========================\n";
+                res<<"value of IVA functional = "<<val<<"\n";    
+                res<<"=========================== LINFITLS ==========================\n";
+            }
+            else {
+                alg.run();
             }
             
-            // if model perturbation supplied, try scan, gradient tests
-            string pertname = valparse<std::string>(*pars,"csq_d1","");
-            if (pertname.size()>0) {
-                
-                Vector<ireal> dm(pdom);
-                Components<float> cdm(dm);
-                AssignFilename mfn_d1(pertname);
-                cdm[0].eval(mfn_d1);
-                cdm[1].zero();
-                
-                // perform gradient test if nhval > 0
-                if(valparse<int>(*pars,"nhval",0)>0){
-                    GradientTest(f,m,dm,strgrad,
-                                 valparse<int>(*pars,"nhval",0),
-                                 valparse<float>(*pars,"hmin",0.1f),
-                                 valparse<float>(*pars,"hmax",1.0f));
-                }
-                
-                // perform scan if nscan > -1
-                if(valparse<int>(*pars,"nscan",-1)>-1){
-                    Scan(f,m,dm,
-                         valparse<int>(*pars,"nscan",-1),
-                         valparse<float>(*pars,"hmin",-1.0f),
-                         valparse<float>(*pars,"hmax",1.0f),
-                         strgrad);	     
+            std::string dataest = valparse<std::string>(*pars,"dataest","");
+            std::string datares = valparse<std::string>(*pars,"datares","");
+            if (dataest.size()>0) {
+                GridExtendOp g(dom,op.getDomain());
+                OperatorEvaluation<float> gopeval(g,cm[0]);
+                OperatorEvaluation<float> opeval(op,gopeval.getValue());
+                Vector<float> est(op.getRange());
+                AssignFilename estfn(dataest);
+                est.eval(estfn);
+                opeval.getDeriv().applyOp(cm[1],est);
+                if (datares.size()>0) {
+                    Vector<float> res(op.getRange());
+                    AssignFilename resfn(datares);
+                    res.eval(resfn);
+                    res.copy(est);
+                    res.linComb(-1.0f,mdd);
                 }
             }
+            
             if (retrieveRank() == 0) {
                 std::string outfile = valparse<std::string>(*pars,"outfile","");
                 if (outfile.size()>0) {

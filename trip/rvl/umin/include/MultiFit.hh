@@ -23,7 +23,7 @@ namespace RVLUmin {
     using namespace RVLAlg;
     
     template<typename Scalar>
-    class MultiFitLS: public Functional<Scalar> {
+    class MultiFit: public Functional<Scalar> {
         
         typedef typename ScalarFieldTraits<Scalar>::AbsType atype;
         
@@ -47,7 +47,7 @@ namespace RVLUmin {
                 Components<Scalar> cx(x);
                 if (cx.getSize()!=2) {
                     RVLException e;
-                    e << "Error: MultiFitLS::apply\n";
+                    e << "Error: MultiFit::apply\n";
                     e<<"input data do not have two components \n";
                     throw e;
                 }
@@ -70,11 +70,11 @@ namespace RVLUmin {
                 dltd.linComb(-1.0, d);
                 // get the value of objective function
                 val=dltd.normsq()/2.0;
-                cerr << "\n in MultiFitLS::apply val=" << val << endl;
+                cerr << "\n in MultiFit::apply val=" << val << endl;
                 applied = true;
             }
             catch (RVLException & e) {
-                e<<"\ncalled from MultiFitLS::apply\n";
+                e<<"\ncalled from MultiFit::apply\n";
                 throw e;
             }
         }
@@ -92,7 +92,7 @@ namespace RVLUmin {
                 Components<Scalar> cg(g);
                 if (cx.getSize()!=cg.getSize()) {
                     RVLException e;
-                    e << "Error: MultiFitLS::apply\n";
+                    e << "Error: MultiFit::apply\n";
                     e<<"model and gradient do not have the same dimension\n";
                     throw e;
                 }
@@ -114,7 +114,7 @@ namespace RVLUmin {
                 gopeval.getDeriv().applyAdjOp(dltd,cg[1]);
             }
             catch (RVLException & e) {
-                e<<"\ncalled from MultiFitLS::applyGradient\n";
+                e<<"\ncalled from MultiFit::applyGradient\n";
                 throw e;
             }
             
@@ -125,7 +125,7 @@ namespace RVLUmin {
                           Vector<Scalar> & dy) const {}
         
         Functional<Scalar> * clone() const {
-            return new MultiFitLS<Scalar>(*this);
+            return new MultiFit<Scalar>(*this);
         }
         
     public:
@@ -135,7 +135,7 @@ namespace RVLUmin {
          atype _nrtol,
          int _maxcount,
          */
-        MultiFitLS(StdProductSpace<Scalar> const & _pdom,
+        MultiFit(StdProductSpace<Scalar> const & _pdom,
                    Operator<Scalar> const & _op,
                    LinearOp<Scalar> const & _gextop,
                    LinearOp<Scalar> const & _preop,
@@ -148,12 +148,12 @@ namespace RVLUmin {
                 extm.zero();
             }
             catch (RVLException & e) {
-                e<<"\ncalled from MultiFitLS::Constructor\n";
+                e<<"\ncalled from MultiFit::Constructor\n";
                 throw e;
             }
         }
         
-        MultiFitLS(MultiFitLS<Scalar> const & f)
+        MultiFit(MultiFit<Scalar> const & f)
         : pdom(f.pdom), op(f.op), gextop(f.gextop), preop(f.preop), d(f.d),
         dltd(f.dltd), extm(f.extm), applied(f.applied), str(f.str) {}
         
@@ -165,13 +165,13 @@ namespace RVLUmin {
                 return op.getMaxStep(x,dx);
             }
             catch (RVLException & e) {
-                e<<"\ncalled from MultiFitLS::getMaxStep\n";
+                e<<"\ncalled from MultiFit::getMaxStep\n";
                 throw e;
             }
         }
         
         ostream & write(ostream & str) const {
-            str<<"MultiFitLS: \n";
+            str<<"MultiFit: \n";
             str<<"*** operator:\n";
             op.write(str);
             str<<"*** data vector:\n";
