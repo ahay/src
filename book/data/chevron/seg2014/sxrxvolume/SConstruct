@@ -55,7 +55,7 @@ Flow('vheaderattr.txt','../fetch/SEG14.Vpsmoothstarting_hdr.rsf',
 #tscalar    82              1 @ 0	             1 @ 0	             1
 #*******************************************************************************
 
-# near trace gather
+# volume mapped by sx,rx.  must divide axis 2 and 3 by 10000 to onvert to meters
 Flow(['sxrxvolume.rsf','sxrxvolume_hdr.rsf'],
      ['../fetch/SEG14.Pisoelastic.rsf','../fetch/SEG14.Pisoelastic_hdr.rsf'],
      '''
