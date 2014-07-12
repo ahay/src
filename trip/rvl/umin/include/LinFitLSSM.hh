@@ -68,9 +68,9 @@ namespace RVLUmin {
 	tmp.zero();
 
         // for given initial solution
-        Vector<Scalar> d0(lop.getRange());
-        lop.applyOp(x0,d0);
-        d0.linComb(1.0,d,-1.0);
+    Vector<Scalar> d0(lop.getRange());
+    lop.applyOp(x0,d0);
+    d0.linComb(1.0,d,-1.0);
 
 	dx.zero();
 
