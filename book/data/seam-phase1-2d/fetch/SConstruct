@@ -1,0 +1,90 @@
+from rsf.proj import *
+
+# data on open.source.geoscience online repository:
+#dir='2d_data_subset',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+#Shot_Receivers_23900_plots.pdf	Shots_Receivers_23900.sgy
+#Shots_Receivers_23900.pdf
+
+
+#dir='2d_model_subset',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+#2D_Model_Subset.pdf		Vp_Elastic_N23900.sgy
+#2D_Model_Subset_plots.pdf	Vs_Elastic_N23900.sgy
+#Den_Elastic_N23900.sgy
+
+
+#dir='seam_phase_1_wavelets',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic'
+#SEAM_wavelet-g-zph_8ms.sgy	Seam_wavelet.pdf
+#SEAM_wavelet-g_8ms.sgy		desig_8ms.sgy
+#SEAM_wavelet_8ms.sgy
+
+
+#dir='well_1',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+#BedDipX.Well.1			ResistivityNormal.Well.1
+#BedDipY.Well.1			ResistivityParallel.Well.1
+#Delta.Well.1			ResistivityVertical.Well.1
+#Density.Well.1			SEAM Phase I Well Log Data.pdf
+#Epsilon.Well.1			TTIDipX.Well.1
+#Gamma.Well.1			TTIDipY.Well.1
+#GeoIndexRes.Well.1		Vp.Well.1
+#GeoSaltIndex.Well.1		VsElasticOriginal.Well.1
+#LayerGeoIndex.Well.1		VsElasticSim.Well.1
+#PorosityEffective.Well.1	Vshale.Well.1
+#PorosityTotal.Well.1		Well_Log_Plots.pdf
+#ResistivityHorizontal.Well.1
+
+# there is also a single tar file
+#Fetch('seam_phase_1_2d_classic.tar.gz',dir='seam_ph1_2d_classic',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data')
+
+Fetch('Shots_Receivers_23900.sgy',dir='2d_data_subset',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+
+Flow(['shots-receivers-23900.rsf','shots-receivers-23900_hdr.rsf',
+      'shots-receivers-23900.thdr','shots-receivers-23900.bhdr'],
+     'Shots_Receivers_23900.sgy',
+     '''
+     sfsegyread tfile=${TARGETS[1]} 
+     hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+     ''')
+
+Flow('headerattr.txt','shots-receivers-23900_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#sftahread input=shots-receivers-23900.rsf | sftahgethw key=sx,gx,offset >/dev/null
+# group interval and group interval are 25 m 
+#<shots-receivers-23900_hdr.rsf sfheaderattr 
+#91 headers, 513600 traces
+#****************************************************************************** 
+#     key     	            min     	              max    	          mean
+#------------------------------------------------------------------------------
+#tracr       1              1 @ 0	        513600 @ 513599	        256800
+#fldr        2              1 @ 0	          1600 @ 513279	         800.5
+#tracf       3              1 @ 0	           321 @ 320	           161
+#ep          4              1 @ 0	          1600 @ 513279	         800.5
+#trid        7              1 @ 0	             1 @ 0	             1
+#offset     11              0 @ 0	          8000 @ 320	          4000
+#gelev      12        -150000 @ 0	       -150000 @ 0	       -150000
+#sdepth     14         150000 @ 0	        150000 @ 0	        150000
+#scalel     19         -10000 @ 0	        -10000 @ 0	        -10000
+#scalco     20         -10000 @ 0	        -10000 @ 0	        -10000
+#sx         21       10000000 @ 0	     409750000 @ 513279	   2.09875e+08
+#gx         23       10000000 @ 0	     489750000 @ 513599	   2.49875e+08
+#counit     25              1 @ 0	             1 @ 0	             1
+#ns         38           2001 @ 0	          2001 @ 0	          2001
+#dt         39           4000 @ 0	          4000 @ 0	          4000
+#tscalar    82         -10000 @ 0	        -10000 @ 0	        -10000
+#****************************************************************************** 
+ 
+Result('shots-receivers-23900','put n2=901 n3=151 | window j3=10 |grey')
+      
+End()
