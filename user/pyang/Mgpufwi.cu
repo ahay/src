@@ -69,12 +69,6 @@ extern "C" {
 
 #include "cuda_fwi_kernels.cu"
 
-static bool csdgather;
-static int niter, nz, nx, nz1, nx1, nt, ns, ng;
-static int sxbeg, szbeg, gxbeg, gzbeg, jsx, jsz, jgx, jgz;/*  parameters of acquisition geometery */
-static float dx, dz, fm, dt;
-static float *v0, *vv, *dobs;
-
 void sf_check_gpu_error (const char *msg) 
 /*< check GPU errors >*/
 {
@@ -121,16 +115,19 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 
 int main(int argc, char *argv[])
 {
-	bool verb, precon;
-	int is, it, iter, distx, distz, csd, rbell;
-	float dtx, dtz, mstimer,amp, obj1, obj, beta, epsil, alpha;
-	float *trans, *objval, *ptr=NULL;
+	/* variables on host */
+	bool verb, precon, csdgather;
+	int is, it, iter, niter, distx, distz, csd, rbell;
+	int nz, nx, nz1, nx1, nt, ns, ng;
+	int sxbeg, szbeg, gxbeg, gzbeg, jsx, jsz, jgx, jgz;/*  parameters of acquisition geometery */
+	float dx, dz, fm, dt, dtx, dtz, mstimer,amp, obj1, obj, beta, epsil, alpha;
+	float *v0, *vv, *dobs, *trans, *objval, *ptr=NULL;
+	sf_file vinit, shots, vupdates, grads, objs, illums;
 
 	/* variables on device */
 	int 	*d_sxz, *d_gxz;			
 	float 	*d_wlt, *d_vv, *d_illum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
 	float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
-	sf_file vinit, shots, vupdates, grads, objs, illums;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -243,7 +240,7 @@ int main(int argc, char *argv[])
 	cudaMalloc(&d_gp0, nz*nx*sizeof(float));/* geophone/receiver wavefield p0 */
 	cudaMalloc(&d_gp1, nz*nx*sizeof(float));/* geophone/receiver wavefield p1 */
 	cudaMalloc(&d_wlt, nt*sizeof(float));	/* ricker wavelet */
-	cudaMalloc(&d_sxz, nt*sizeof(float));	/* source positions */
+	cudaMalloc(&d_sxz, ns*sizeof(float));	/* source positions */
 	cudaMalloc(&d_gxz, ng*sizeof(float));	/* geophone positions */
 	cudaMalloc(&d_bndr, nt*(2*nz+nx)*sizeof(float));/* boundaries for wavefield reconstruction */
 	cudaMalloc(&d_dobs, ng*nt*sizeof(float));/* observed seismic data */

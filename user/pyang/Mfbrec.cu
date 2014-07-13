@@ -55,16 +55,16 @@ extern "C" {
 
 #include "cuda_fwi_kernels.cu"
 
-static bool csdgather;
-static int nz,nx,nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
-static float dx, dz, fm, dt;
 
-
-/* variables on host */
-float 	*v0, *dobs, *vv;
-/* variables on device */
-int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_illum, *d_dobs, *d_bndr;
+void sf_check_gpu_error (const char *msg) 
+/*< check GPU errors >*/
+{
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { 
+	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 
+	exit(0);   
+    }
+}
 
 void matrix_transpose(float *matrix, int n1, int n2)
 /*< matrix transpose >*/
@@ -104,44 +104,6 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 		  v0[i1+i2*nz1]=vv[i1+nz*i2];
 }
 
-void device_alloc()
-/*< allocate memories for variables on device >*/
-{
-	cudaMalloc(&d_vv, nz*nx*sizeof(float));
-	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
-	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
-	cudaMalloc(&d_lap, nz*nx*sizeof(float));
-	cudaMalloc(&d_illum, nz*nx*sizeof(float));
-	cudaMalloc(&d_wlt, nt*sizeof(float));
-	cudaMalloc(&d_sxz, nt*sizeof(float));
-	cudaMalloc(&d_gxz, ng*sizeof(float));
-	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
-	cudaMalloc(&d_bndr, nt*(2*nx+nz)*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
-}
-
-
-void device_free()
-/*< free the variables on device >*/
-{
-	cudaFree(d_vv);
-	cudaFree(d_sp0);
-	cudaFree(d_sp1);
-	cudaFree(d_lap);
-	cudaFree(d_illum);
-	cudaFree(d_wlt);
-	cudaFree(d_sxz);
-	cudaFree(d_gxz);
-	cudaFree(d_dobs);
-	cudaFree(d_bndr);
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err)
-	printf("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
-}
 
 
 void wavefield_init(float *d_p0, float *d_p1, int N)
@@ -158,10 +120,16 @@ void wavefield_init(float *d_p0, float *d_p1, int N)
 
 int main(int argc, char *argv[])
 {
+	/* variables on host */
+	bool csdgather;
 	int is, ft, jt, it, distx, distz;
-	float dtx,dtz,amp;
-	float *ptr=NULL;
+	int nz,nx,nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+	float dx, dz, fm, dt, dtx,dtz,amp;
+	float 	*v0, *dobs, *vv, *ptr=NULL;
 	sf_file vinit, Fw1, Fw2;
+	/* variables on device */
+	int 	*d_sxz, *d_gxz;			
+	float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_lap, *d_illum, *d_dobs, *d_bndr;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -220,10 +188,18 @@ int main(int argc, char *argv[])
 	memset(dobs,0,ng*nt*sizeof(float));
 
     	cudaSetDevice(0);
-    	cudaError_t err = cudaGetLastError();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
-	device_alloc(); 
+	sf_check_gpu_error("Failed to initialize device!");
+	cudaMalloc(&d_vv, nz*nx*sizeof(float));
+	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
+	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
+	cudaMalloc(&d_lap, nz*nx*sizeof(float));
+	cudaMalloc(&d_illum, nz*nx*sizeof(float));
+	cudaMalloc(&d_wlt, nt*sizeof(float));
+	cudaMalloc(&d_sxz, ns*sizeof(float));
+	cudaMalloc(&d_gxz, ng*sizeof(float));
+	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
+	cudaMalloc(&d_bndr, nt*(2*nx+nz)*sizeof(float));
+	sf_check_gpu_error("Failed to allocate required memory on device!");
 
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
 
@@ -287,10 +263,23 @@ int main(int argc, char *argv[])
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 		}
 	}
+
+	/* free memory on device */
+	cudaFree(d_vv);
+	cudaFree(d_sp0);
+	cudaFree(d_sp1);
+	cudaFree(d_lap);
+	cudaFree(d_illum);
+	cudaFree(d_wlt);
+	cudaFree(d_sxz);
+	cudaFree(d_gxz);
+	cudaFree(d_dobs);
+	cudaFree(d_bndr);
+	sf_check_gpu_error("Failed to free the allocated memory!");
+	/* free memory on host */
 	free(v0);
 	free(vv);
 	free(dobs);
-	device_free();
 
 	return 0;
 }
