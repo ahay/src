@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
     	sf_init(argc,argv);
 
     	/*< set up I/O files >*/
-    	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
+    	vinit=sf_input ("in");/* initial velocity model, unit=m/s */
 	Fw1 = sf_output("out");/* forward wavefield snaps */
 	Fw2 = sf_output("back");/* backward wavefield snaps */
 
@@ -133,23 +133,40 @@ int main(int argc, char *argv[])
     	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
 
-	if (!sf_getfloat("amp",&amp)) amp=1000;/* maximum amplitude of ricker */
-    	if (!sf_getfloat("fm",&fm)) fm=10;	/* dominant freq of ricker */
-    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	/* time interval */
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   ns=1;	/* total shots */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */	
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");/* z-begining index of receivers, starting from 0 */
-	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
-   	if (!sf_getint("ft",&ft)) ft=0; /* first recorded time */
-    	if (!sf_getint("jt",&jt)) jt=1;	/* time interval */
+	if (!sf_getfloat("amp",&amp)) amp=1000;
+	/* maximum amplitude of ricker */
+    	if (!sf_getfloat("fm",&fm)) fm=10;	
+	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	/* time interval */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   ns=1;	
+	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	/* total receivers in each shot */	
+    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");
+	/* z-begining index of receivers, starting from 0 */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+	/* default, common shot-gather; if n, record at every point*/
+   	if (!sf_getint("ft",&ft)) ft=0; 
+	/* first recorded time */
+    	if (!sf_getint("jt",&jt)) jt=1;	
+	/* time interval */
 
 	sf_putint(Fw1,"n1",nz1);
 	sf_putint(Fw1,"n2",nx1);
