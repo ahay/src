@@ -28,7 +28,7 @@ Note: 	You can try other complex boundary condition but we do not
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-References:
+  Important references:
     [1] Clayton, Robert, and Björn Engquist. "Absorbing boundary 
 	conditions for acoustic and elastic wave equations." Bulletin 
 	of the Seismological Society of America 67.6 (1977): 1529-1540.
@@ -40,6 +40,8 @@ References:
     [4] Hager, William W., and Hongchao Zhang. "A survey of nonlinear
 	conjugate gradient methods." Pacific journal of Optimization 
 	2.1 (2006): 35-58.
+    [5] Harris, Mark. "Optimizing parallel reduction in CUDA." NVIDIA 
+	Developer Technology 2.4 (2007).
 */
 
 #include <stdio.h>
