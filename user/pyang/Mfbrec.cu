@@ -44,10 +44,10 @@ extern "C" {
 #define false   (0)
 #endif
 #ifndef EPS
-#define EPS	1.0e-15f
+#define EPS	SF_EPS
 #endif
 
-#define PI 	3.141592653589793f
+#define PI 	SF_PI
 #define Block_Size1 16		
 #define Block_Size2 16		
 #define Block_Size  512		
@@ -82,6 +82,7 @@ void matrix_transpose(float *matrix, int n1, int n2)
 }
 
 void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
+/*<expand model from nz1*nx1 to nz*nx >*/
 {
 	int i1,i2,i11,i22;
 
@@ -96,6 +97,7 @@ void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
 
 
 void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
+/*<window a model from nz*nx to nz1*nx1 >*/
 {
 	int i1, i2;
 
