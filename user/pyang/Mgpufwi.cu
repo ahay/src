@@ -75,7 +75,9 @@ static int sxbeg, szbeg, gxbeg, gzbeg, jsx, jsz, jgx, jgz;/*  parameters of acqu
 static float dx, dz, fm, dt;
 static float *v0, *vv, *dobs;
 
-void sf_check_gpu_error (const char *msg) {
+void sf_check_gpu_error (const char *msg) 
+/*< check GPU errors >*/
+{
     cudaError_t err = cudaGetLastError ();
     if (cudaSuccess != err) { 
 	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 

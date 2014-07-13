@@ -40,9 +40,14 @@ extern "C" {
 #define BlockSize2 16// tile size in 2nd-axis
 #define radius 4// half of the order in space
 
-static void sf_check_gpu_error (const char *msg) {
+void sf_check_gpu_error (const char *msg) 
+/*< check GPU errors >*/
+{
     cudaError_t err = cudaGetLastError ();
-    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
+    if (cudaSuccess != err) { 
+	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 
+	exit(0);   
+    }
 }
 
 __constant__ float stencil[radius+1]={-205.0/72.0,8.0/5.0,-1.0/5.0,8.0/315.0,-1.0/560.0};

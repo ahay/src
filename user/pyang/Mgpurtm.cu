@@ -155,9 +155,14 @@ void window(float *to, float *from, int npml, int nnz, int nnx, int nz1, int nx1
 }
 
 
-static void sf_check_gpu_error (const char *msg) {
+void sf_check_gpu_error(const char *msg) 
+/*< check GPU errors >*/
+{
     cudaError_t err = cudaGetLastError ();
-    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
+    if (cudaSuccess != err) { 
+	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 
+	exit(0);   
+    }
 }
 
 void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float dt, int N)
