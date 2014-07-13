@@ -122,6 +122,11 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 	    trans[i2+n2*i1]=matrix[i1+n1*i2];
 }
 
+static void sf_check_gpu_error (const char *msg) {
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
+}
+
 void device_alloc()
 /*< allocate memories for variables on device >*/
 {
@@ -146,10 +151,7 @@ void device_alloc()
 	cudaMalloc(&d_alpha1, ng*sizeof(float));
 	cudaMalloc(&d_alpha2, ng*sizeof(float));
 	cudaMalloc(&d_vtmp, nz*nx*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to allocate required memory!: %s", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to allocate required memory!");
 }
 
 void device_free()
@@ -176,10 +178,7 @@ void device_free()
 	cudaFree(d_alpha1);
 	cudaFree(d_alpha2);
 	cudaFree(d_vtmp);
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err)
-	sf_warning("Cuda error: Failed to free the allocated memory!: %s", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to free the allocated memory!");
 }
 
 
@@ -297,9 +296,7 @@ int main(int argc, char *argv[])
 	memset(objval,0,niter*sizeof(float));
 
     	cudaSetDevice(0);
-    	cudaError_t err = cudaGetLastError();
-    	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to initialize device!");
 	device_alloc(); 
 
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);

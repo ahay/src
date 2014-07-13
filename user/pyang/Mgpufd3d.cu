@@ -40,6 +40,11 @@ extern "C" {
 #define BlockSize2 16// tile size in 2nd-axis
 #define radius 4// half of the order in space
 
+static void sf_check_gpu_error (const char *msg) {
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
+}
+
 __constant__ float stencil[radius+1]={-205.0/72.0,8.0/5.0,-1.0/5.0,8.0/315.0,-1.0/560.0};
 
 __global__ void cuda_ricker_wavelet(float *wlt, float fm, float dt, int nt)
@@ -310,9 +315,7 @@ int main(int argc, char* argv[])
 	velocity_transform(v0, vv, dt, nz, nx, ny);// init
 
     	cudaSetDevice(0);// initialize device, default device=0;
-    	cudaError_t err = cudaGetLastError();
-    	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to initialize device: %s", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to initialize device!");
 
 	dim3 dimg, dimb;
 	dimg.x=(nz+BlockSize1-1)/BlockSize1;
@@ -326,6 +329,7 @@ int main(int argc, char* argv[])
 	cudaMalloc(&d_p0, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_p1, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_szxy, ns*sizeof(int));
+	sf_check_gpu_error("Failed to allocate memory for variables!");
 
 	cuda_ricker_wavelet<<<(nt+511)/512, 512>>>(d_wlt, fm, dt, nt);
 	cudaMemcpy(d_vv, vv, nnz*nnx*nny*sizeof(float), cudaMemcpyHostToDevice);

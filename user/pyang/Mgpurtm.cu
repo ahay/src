@@ -123,8 +123,6 @@ float 	*d_Iss, *d_Isg, *d_I1,*d_I2; /* I1: image without normalization; I2: norm
 float 	*h_boundary, *d_boundary;    /* boundary on host and device */
 float	*ptr=NULL;
 
-
-
 void expand(float *b, float *a, int npml, int nnz, int nnx, int nz1, int nx1)
 /*< expand domain of 'a' to 'b':  a, size=nz1*nx1; b, size=nnz*nnx;  >*/
 {
@@ -156,6 +154,11 @@ void window(float *to, float *from, int npml, int nnz, int nnx, int nz1, int nx1
 	}
 }
 
+
+static void sf_check_gpu_error (const char *msg) {
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
+}
 
 void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float dt, int N)
 /*< sanity check about stability condition and non-dispersion condition >*/
@@ -212,10 +215,7 @@ void device_alloc()
     	cudaMalloc(&d_I2, 	N*sizeof(float));
 	cudaHostAlloc(&h_boundary, nt_h*2*(NJ-1)*(nx+nz)*sizeof(float), cudaHostAllocMapped);	
 	cudaMalloc(&d_boundary, (nt-nt_h)*2*(NJ-1)*(nx+nz)*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to allocate required memory!");
 }
 
 
@@ -250,10 +250,7 @@ void device_free()
 	cudaFree(d_I2);
 	cudaFreeHost(h_boundary);
     	cudaFree(d_boundary);
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err)
-	printf("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to free the allocated memory!");
 }
 
 void wavefield_init(float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d_convpx, float *d_convpz, float *d_convvx, float *d_convvz)
@@ -267,10 +264,7 @@ void wavefield_init(float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d
 	cudaMemset(d_convpz, 	0,	2*npml*nnx*sizeof(float));
 	cudaMemset(d_convvx, 	0,	2*npml*nnz*sizeof(float));
 	cudaMemset(d_convvz, 	0,	2*npml*nnx*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to initialize the wavefield variables!");
 }
 
 void step_forward(float *vel, float *d_p0, float *d_p1, float *d_vx, float *d_vz, float *d_convvx, float *d_convvz, float *d_convpx, float *d_convpz, float *d_bx1, float *d_bz1, float *d_bx2, float *d_bz2)
@@ -423,9 +417,7 @@ int main(int argc, char* argv[])
 	check_grid_sanity(NJ, vel, fm, dz, dx, dt, N);
 
     	cudaSetDevice(0);
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	sf_warning("Cuda error: Failed to initialize device: %s", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to initialize device");
 	device_alloc(); 
 
 	cudaEvent_t start, stop;
