@@ -19,9 +19,12 @@ NB: 2nd order FD, prepared for 3D GPU-based RTM
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference:
-	Micikevicius, Paulius. "3D finite difference computation on GPUs
+	1) Micikevicius, Paulius. "3D finite difference computation on GPUs
 	using CUDA." Proceedings of 2nd Workshop on General Purpose 
 	Processing on Graphics Processing Units. ACM, 2009.
+	2) Symes, William W., et al. "Computational Strategies For Reverse
+	time Migration." 2008 SEG Annual Meeting. Society of Exploration 
+	Geophysicists, 2008.
 */
 
 #include <stdio.h>
@@ -217,55 +220,55 @@ __global__ void cuda_rw_bndr(float *bndr, float *p1, int n1, int n2, int n3, boo
 	int nn2=n2+2;
 	int nn3=n3+2;
 	if(write){
-		if	(id<n1)	  		// z-1:	(id+1, 		1, 	1)
-			bndr[id]=p1[(id+1)     	+nn1	     	+nn1*nn2	];
-		else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	1)
-			bndr[id]=p1[(id-n1+1)  	+nn1*(nn2-1)	+nn1*nn2	];
+		if	(id<n1)	  		// z-1:	(id+1, 		0, 	0)
+			bndr[id]=p1[(id+1)     					];
+		else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	0)
+			bndr[id]=p1[(id-n1+1)  	+nn1*(nn2-1)			];
 		else if (id<3*n1) 		// z-3:	(id-2*n1+1,	nn2-1,	nn3-1)
 			bndr[id]=p1[(id-2*n1+1)	+nn1*(nn2-1)	+nn1*nn2*(nn3-1) ];
-		else if (id<4*n1) 		// z-4:	(id-3*n1+1,	1,	nn3-1)
-			bndr[id]=p1[(id-3*n1+1)	+nn1		+nn1*nn2*(nn3-1) ];
-		else if (id<4*n1+n2) 		// x-1: (1,	id-4*n1+1,	1)
-			bndr[id]=p1[1		+nn1*(id-4*n1+1)	+nn1*nn2];
-		else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	1)
-			bndr[id]=p1[nn1-1 	+nn1*(id-4*n1-n2+1)	+nn1*nn2];
+		else if (id<4*n1) 		// z-4:	(id-3*n1+1,	0,	nn3-1)
+			bndr[id]=p1[(id-3*n1+1)			+nn1*nn2*(nn3-1) ];
+		else if (id<4*n1+n2) 		// x-1: (0,	id-4*n1+1,	0)
+			bndr[id]=p1[		nn1*(id-4*n1+1)		];
+		else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	0)
+			bndr[id]=p1[nn1-1 	+nn1*(id-4*n1-n2+1)		];
 		else if (id<4*n1+3*n2)		// x-3:	(nn1-1,	id-4*n1-2*n2+1,	nn3-1)
 			bndr[id]=p1[nn1-1	+nn1*(id-4*n1-2*n2+1)	+nn1*nn2*(nn3-1)];
-		else if (id<4*n1+4*n2)		// x-4:	(1,	id-4*n1-3*n2+1,	nn3-1)
-			bndr[id]=p1[1+		+nn1*(id-4*n1-3*n2+1)	+nn1*nn2*(nn3-1)];
-		else if (id<4*n1+4*n2+n3)	// y-1:	(1,	1,	id-4*n1-4*n2+1)
-			bndr[id]=p1[1+ 		+nn1			+nn1*nn2*(id-4*n1-4*n2+1)];
-		else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	1, 	id-4*n1-4*n2-n3+1)
-			bndr[id]=p1[nn1-1	+nn1			+nn1*nn2*(id-4*n1-4*n2-n3+1)];
+		else if (id<4*n1+4*n2)		// x-4:	(0,	id-4*n1-3*n2+1,	nn3-1)
+			bndr[id]=p1[		nn1*(id-4*n1-3*n2+1)	+nn1*nn2*(nn3-1)];
+		else if (id<4*n1+4*n2+n3)	// y-1:	(0,	0,	id-4*n1-4*n2+1)
+			bndr[id]=p1[					nn1*nn2*(id-4*n1-4*n2+1)];
+		else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	0, 	id-4*n1-4*n2-n3+1)
+			bndr[id]=p1[nn1-1				+nn1*nn2*(id-4*n1-4*n2-n3+1)];
 		else if (id<4*n1+4*n2+3*n3) 	// y-3:	(nn1-1,	nn2-1,	id-4*n1-4*n2-2*n3+1)
 			bndr[id]=p1[nn1-1	+nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-2*n3+1)];
-		else if (id<4*n1+4*n2+4*n3) 	// y-4:	(1,	nn2-1,	id-4*n1-4*n2-3*n3+1)
-			bndr[id]=p1[1		+nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-3*n3+1)];
+		else if (id<4*n1+4*n2+4*n3) 	// y-4:	(0,	nn2-1,	id-4*n1-4*n2-3*n3+1)
+			bndr[id]=p1[		nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-3*n3+1)];
 	}else{
-		if	(id<n1)	  		// z-1:	(id+1, 		1, 	1)
-			p1[(id+1)     	+nn1	     	+nn1*nn2	]=bndr[id];
-		else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	1)
-			p1[(id-n1+1)  	+nn1*(nn2-1)	+nn1*nn2	]=bndr[id];
+		if	(id<n1)	  		// z-1:	(id+1, 		0, 	0)
+			p1[(id+1)     					]=bndr[id];
+		else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	0)
+			p1[(id-n1+1)  	+nn1*(nn2-1)			]=bndr[id];
 		else if (id<3*n1) 		// z-3:	(id-2*n1+1,	nn2-1,	nn3-1)
 			p1[(id-2*n1+1)	+nn1*(nn2-1)	+nn1*nn2*(nn3-1) ]=bndr[id];
-		else if (id<4*n1) 		// z-4:	(id-3*n1+1,	1,	nn3-1)
-			p1[(id-3*n1+1)	+nn1		+nn1*nn2*(nn3-1) ]=bndr[id];
-		else if (id<4*n1+n2) 		// x-1: (1,	id-4*n1+1,	1)
-			p1[1		+nn1*(id-4*n1+1)	+nn1*nn2]=bndr[id];
-		else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	1)
-			p1[nn1-1 	+nn1*(id-4*n1-n2+1)	+nn1*nn2]=bndr[id];
+		else if (id<4*n1) 		// z-4:	(id-3*n1+1,	0,	nn3-1)
+			p1[(id-3*n1+1)			+nn1*nn2*(nn3-1) ]=bndr[id];
+		else if (id<4*n1+n2) 		// x-1: (0,	id-4*n1+1,	0)
+			p1[		nn1*(id-4*n1+1)		]=bndr[id];
+		else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	0)
+			p1[nn1-1 	+nn1*(id-4*n1-n2+1)		]=bndr[id];
 		else if (id<4*n1+3*n2)		// x-3:	(nn1-1,	id-4*n1-2*n2+1,	nn3-1)
 			p1[nn1-1	+nn1*(id-4*n1-2*n2+1)	+nn1*nn2*(nn3-1)]=bndr[id];
-		else if (id<4*n1+4*n2)		// x-4:	(1,	id-4*n1-3*n2+1,	nn3-1)
-			p1[1+		+nn1*(id-4*n1-3*n2+1)	+nn1*nn2*(nn3-1)]=bndr[id];
-		else if (id<4*n1+4*n2+n3)	// y-1:	(1,	1,	id-4*n1-4*n2+1)
-			p1[1+ 		+nn1			+nn1*nn2*(id-4*n1-4*n2+1)]=bndr[id];
-		else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	1, 	id-4*n1-4*n2-n3+1)
-			p1[nn1-1	+nn1			+nn1*nn2*(id-4*n1-4*n2-n3+1)]=bndr[id];
+		else if (id<4*n1+4*n2)		// x-4:	(0,	id-4*n1-3*n2+1,	nn3-1)
+			p1[		nn1*(id-4*n1-3*n2+1)	+nn1*nn2*(nn3-1)]=bndr[id];
+		else if (id<4*n1+4*n2+n3)	// y-1:	(0,	0,	id-4*n1-4*n2+1)
+			p1[					nn1*nn2*(id-4*n1-4*n2+1)]=bndr[id];
+		else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	0, 	id-4*n1-4*n2-n3+1)
+			p1[nn1-1				+nn1*nn2*(id-4*n1-4*n2-n3+1)]=bndr[id];
 		else if (id<4*n1+4*n2+3*n3) 	// y-3:	(nn1-1,	nn2-1,	id-4*n1-4*n2-2*n3+1)
 			p1[nn1-1	+nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-2*n3+1)]=bndr[id];
-		else if (id<4*n1+4*n2+4*n3) 	// y-4:	(1,	nn2-1,	id-4*n1-4*n2-3*n3+1)
-			p1[1		+nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-3*n3+1)]=bndr[id];
+		else if (id<4*n1+4*n2+4*n3) 	// y-4:	(0,	nn2-1,	id-4*n1-4*n2-3*n3+1)
+			p1[		nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-3*n3+1)]=bndr[id];
 	}
 }
 
