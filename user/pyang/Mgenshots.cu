@@ -236,8 +236,7 @@ int main(int argc, char *argv[])
 	memset(trans,0,ng*nt*sizeof(float));
 
     	cudaSetDevice(0);
-	sf_check_gpu_error();
-    	cudaError_t err = cudaGetLastError("Failed to initialize device!");
+	sf_check_gpu_error("Failed to initialize device!");
 	device_alloc(); 
 
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
