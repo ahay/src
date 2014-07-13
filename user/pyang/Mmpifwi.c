@@ -27,8 +27,6 @@ Note: 	Here, the Enquist absorbing boundary condition is applied!
 #include <omp.h>
 #endif
 
-static float EPS=1.e-7;
-
 static bool csdgather;
 static int nz, nx, nt, ns, ng;
 static float dx, dz, fm, dt;
@@ -54,6 +52,11 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
     int ix,iz;
     float v1,v2,diff1,diff2;
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none) 		\
+	private(ix, iz, diff1, diff2, v1, v2)	\
+	shared(vv, p0, p1, p2, nz, nx, dtz, dtx)
+#endif
     for (ix=0; ix < nx; ix++) 
     for (iz=0; iz < nz; iz++) 
     {
@@ -69,6 +72,11 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none) 		\
+	private(ix, iz, diff1, diff2, v1, v2)	\
+	shared(vv, p0, p1, p2, nz, nx, dtz, dtx)
+#endif
     for (ix=1; ix < nx-1; ix++) { 
 	/* top boundary */
 /*
@@ -93,6 +101,11 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
 
+#ifdef _OPENMP
+#pragma omp parallel for default(none) 		\
+	private(ix, iz, diff1, diff2, v1, v2)	\
+	shared(vv, p0, p1, p2, nz, nx, dtz, dtx)
+#endif
     for (iz=1; iz <nz-1; iz++){ 
 	/* left boundary */
 	ix=0;
@@ -116,10 +129,16 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 }
 
 void step_backward(float **lap, float **p0, float **p1, float **p2, float **vv, float dtz, float dtx)
+/*< step backward >*/
 {
     int ix,iz;
-    float v1,v2,diff1,diff2;
-    
+    float v1,v2,diff1,diff2;    
+
+#ifdef _OPENMP
+#pragma omp parallel for default(none) 		\
+	private(ix, iz, diff1, diff2, v1, v2)	\
+	shared(vv, p0, p1, p2, lap, nz, nx, dtz, dtx)
+#endif
     for (ix=0; ix < nx; ix++) 
     for (iz=0; iz < nz; iz++) 
     {
@@ -138,6 +157,7 @@ void step_backward(float **lap, float **p0, float **p1, float **p2, float **vv, 
 }
 
 void add_source(float **p, float *source, int *sxz, int ns, bool add)
+/*< add seismic source >*/
 {
 	int is, sx, sz;
 	if(add){
@@ -233,6 +253,7 @@ void scale_gradient(float **grad, float **vv)
 }
 
 float cal_objective(float *dres)
+/*< calculate the value of objective function >*/
 {
   int i;
   float a, obj=0;
@@ -257,7 +278,7 @@ float cal_beta(float **g0, float **g1, float **cg)
       b+=g0[ix][iz]*g0[ix][iz];
     }
   }
-  return (a/(b+EPS));
+  return (a/(b+SF_EPS));
 }
 
 
@@ -328,7 +349,7 @@ float cal_alpha(float *alpha1, float *alpha2, float epsil)
     b+=alpha2[ig];
   }
 
-  return (a*epsil/(b+EPS));
+  return (a*epsil/(b+SF_EPS));
 }
 
 void update_vel(float **vv, float **cg, float alpha)
@@ -366,6 +387,9 @@ int main(int argc, char* argv[])
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
+#ifdef _OPENMP
+    	omp_init();
+#endif
 
     	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
