@@ -142,11 +142,14 @@ int main(int argc, char *argv[])
 	illums=sf_output("illums");/* source illumination in iterations */
 
     	/* get parameters from velocity model and recorded shots */
-	if (!sf_getbool("verb",&verb)) verb=true;
-    	if (!sf_histint(vinit,"n1",&nz1)) sf_error("no n1");
-    	if (!sf_histint(vinit,"n2",&nx1)) sf_error("no n2");
-    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
-   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
+	if (!sf_getbool("verb",&verb)) verb=true;/* vebosity */
+    	if (!sf_histint(vinit,"n1",&nz1)) sf_error("no n1");/* n1 */
+    	if (!sf_histint(vinit,"n2",&nx1)) sf_error("no n2");/* n2 */
+    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");/* d1 */
+   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");/* d2 */
+	if (!sf_getbool("precon",&precon)) precon=false;/* precondition or not */
+    	if (!sf_getint("niter",&niter))   niter=100;	/* number of iterations */
+	if (!sf_getint("rbell",&rbell))	  rbell=2;	/* radius of bell smooth */
 
    	if (!sf_histint(shots,"n1",&nt)) sf_error("no nt");
 	/* total modeling time steps */
@@ -178,12 +181,6 @@ int main(int argc, char *argv[])
 	/* receiver z-axis jump interval  */
    	if (!sf_histint(shots,"csdgather",&csd)) sf_error("csdgather or not required");
 	/* default, common shot-gather; if n, record at every point*/
-    	if (!sf_getint("niter",&niter))   niter=100;
-	/* number of iterations */
-	if (!sf_getint("rbell",&rbell))	  rbell=2;
-	/* radius of bell smooth */
-	if (!sf_getbool("precon",&precon)) precon=false;
-	/* precondition or not */
 
 	sf_putint(vupdates,"n1",nz1);	
 	sf_putint(vupdates,"n2",nx1);
