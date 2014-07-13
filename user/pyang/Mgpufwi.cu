@@ -59,10 +59,10 @@ extern "C" {
 #define false   (0)
 #endif
 #ifndef EPS
-#define EPS	1.e-7
+#define EPS	SF_EPS
 #endif
 
-#define PI 	3.141592653589793
+#define PI 	SF_PI
 #define Block_Size1 16	/* 1st dim block size */
 #define Block_Size2 16	/* 2nd dim block size */
 #define Block_Size  512	/* vector computation blocklength */

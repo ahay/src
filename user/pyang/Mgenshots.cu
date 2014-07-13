@@ -45,7 +45,7 @@ extern "C" {
 #define false   (0)
 #endif
 #ifndef EPS
-#define EPS	1.0e-15f
+#define EPS	SF_EPS
 #endif
 
 #define PI 	SF_PI
@@ -59,13 +59,7 @@ extern "C" {
 static bool csdgather;
 static int nz,nx,nz1,nx1,nt,ns,ng;
 static float dx, dz, fm, dt;
-
-
-/* variables on host */
-float 	*v0, *dobs, *vv;
-/* variables on device */
-int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_dobs;
+static float *v0, *dobs, *vv;/* variables on host */
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
@@ -112,40 +106,15 @@ void sf_check_gpu_error (const char *msg)
     }
 }
 
-void device_alloc()
-/*< allocate memories for variables on device >*/
-{
-	cudaMalloc(&d_vv, nz*nx*sizeof(float));
-	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
-	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
-	cudaMalloc(&d_wlt, nt*sizeof(float));
-	cudaMalloc(&d_sxz, nt*sizeof(float));
-	cudaMalloc(&d_gxz, ng*sizeof(float));
-	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
-	sf_check_gpu_error("Failed to allocate required memory!");
-}
-
-
-void device_free()
-/*< free the variables on device >*/
-{
-	cudaFree(d_vv);
-	cudaFree(d_sp0);
-	cudaFree(d_sp1);
-	cudaFree(d_wlt);
-	cudaFree(d_sxz);
-	cudaFree(d_gxz);
-	cudaFree(d_dobs);
-	sf_check_gpu_error("Failed to free the allocated memory!");
-}
-
-
 int main(int argc, char *argv[])
 {
 	bool chk;
 	int is, it,kt, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 	float dtx,dtz,mstimer,amp, totaltime=0;
 	float *trans, *ptr=NULL;
+	/* variables on device */
+	int 	*d_sxz, *d_gxz;			
+	float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_dobs;
 	sf_file vinit, shots, check, time;
 
     	/* initialize Madagascar */
@@ -242,7 +211,15 @@ int main(int argc, char *argv[])
 
     	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
-	device_alloc(); 
+	/* allocate memories for variables on device */
+	cudaMalloc(&d_vv, nz*nx*sizeof(float));
+	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
+	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
+	cudaMalloc(&d_wlt, nt*sizeof(float));
+	cudaMalloc(&d_sxz, nt*sizeof(float));
+	cudaMalloc(&d_gxz, ng*sizeof(float));
+	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
+	sf_check_gpu_error("Failed to allocate required memory!");
 
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
 
@@ -314,7 +291,15 @@ int main(int argc, char *argv[])
 	free(vv);
 	free(dobs);
 	free(trans);
-	device_free();
+	/* free the variables on device */
+	cudaFree(d_vv);
+	cudaFree(d_sp0);
+	cudaFree(d_sp1);
+	cudaFree(d_wlt);
+	cudaFree(d_sxz);
+	cudaFree(d_gxz);
+	cudaFree(d_dobs);
+	sf_check_gpu_error("Failed to free the allocated memory!");
 
 	return 0;
 }
