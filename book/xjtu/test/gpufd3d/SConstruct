@@ -13,9 +13,10 @@ Result('vel',
        title="3D velocity model" point1=0.8 point2=0.8
        ''')
 
+# replace sfgpufd3d with sfgpufbrec3d and test wavefield reconstruction in 3d
 Flow('wav','vel',
 	'''
-	gpufd3d nt=450 kt=400 fm=20 dt=0.0005 ns=1 szbeg=200 sxbeg=200 sybeg=200
+	sfgpufd3d nt=450 kt=400 fm=20 dt=0.0005 ns=1 szbeg=200 sxbeg=200 sybeg=200
 	jsz=0 jsx=10 jsy=10 
 	''')
 
