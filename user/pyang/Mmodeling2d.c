@@ -30,9 +30,7 @@ static bool csdgather;
 static int nz,nx,nt,ns,ng;
 static float dx, dz, fm, dt;
 int *sxz, *gxz;
-float *wlt,*dobs, **vv, **p0, **p1, **p2, **ptr=NULL;
-
-static float *bndr;
+float *wlt,*dobs,*bndr, **vv;
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
@@ -46,6 +44,7 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 
 
 void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx)
+/*< forward modeling step, Clayton-Enquist ABC incorporated >*/
 {
     int ix,iz;
     float v1,v2,diff1,diff2;
@@ -113,6 +112,7 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 
 
 void add_source(float **p, float *source, int *sxz, int ns, bool add)
+/*< add/subtract seismic sources >*/
 {
 	int is, sx, sz;
 	if(add){
@@ -131,7 +131,7 @@ void add_source(float **p, float *source, int *sxz, int ns, bool add)
 }
 
 void record_seis(float *seis_it, int *gxz, float **p, int ng)
-/* record seismogram at time it into a vector length of ng */
+/*< record seismogram at time it into a vector length of ng >*/
 {
 	int ig, gx, gz;
 	for(ig=0;ig<ng; ig++)
@@ -143,7 +143,7 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 }
 
 void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
-/* shot/geophone position initialize */
+/*< shot/geophone position initialize >*/
 {
 	int is, sz, sx;
 	for(is=0; is<ns; is++)
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 	bool chk;
   	int is,it,kt, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
   	float dtx,dtz,amp,tmp, totaltime=0	;
-	float *trans, **ptr=NULL;
+	float *trans, **p0, **p1, **p2, **ptr=NULL;
 	clock_t start, end;
 	sf_file vinit, shots, check, time;
 
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
 	time=sf_output("time"); /* output total time */ 
-	check=sf_output("check");
+	check=sf_output("check");/* output shotsnap for correctness checking*/
 
     	/* get parameters for forward modeling */
     	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
