@@ -34,11 +34,11 @@ extern "C" {
 }
 
 #ifndef PI
-#define PI 	3.141592653589793f
+#define PI 	SF_PI
 #endif
 #define BlockSize1 16// tile size in 1st-axis
 #define BlockSize2 16// tile size in 2nd-axis
-#define radius 4// half of the order in space
+#define radius 	4// half of the order in space
 
 void sf_check_gpu_error (const char *msg) 
 /*< check GPU errors >*/
