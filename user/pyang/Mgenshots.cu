@@ -102,6 +102,11 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 		  v0[i1+i2*nz1]=vv[i1+nz*i2];
 }
 
+static void sf_check_gpu_error (const char *msg) {
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
+}
+
 void device_alloc()
 /*< allocate memories for variables on device >*/
 {
@@ -112,10 +117,7 @@ void device_alloc()
 	cudaMalloc(&d_sxz, nt*sizeof(float));
 	cudaMalloc(&d_gxz, ng*sizeof(float));
 	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to allocate required memory!: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to allocate required memory!");
 }
 
 
@@ -129,10 +131,7 @@ void device_free()
 	cudaFree(d_sxz);
 	cudaFree(d_gxz);
 	cudaFree(d_dobs);
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err)
-	printf("Cuda error: Failed to free the allocated memory!: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error("Failed to free the allocated memory!");
 }
 
 
@@ -237,9 +236,8 @@ int main(int argc, char *argv[])
 	memset(trans,0,ng*nt*sizeof(float));
 
     	cudaSetDevice(0);
-    	cudaError_t err = cudaGetLastError();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize device: %s\n", cudaGetErrorString(err));
+	sf_check_gpu_error();
+    	cudaError_t err = cudaGetLastError("Failed to initialize device!");
 	device_alloc(); 
 
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2),dimb=dim3(Block_Size1, Block_Size2); 
