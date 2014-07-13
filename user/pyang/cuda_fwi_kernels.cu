@@ -74,30 +74,28 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 
 	__shared__ float s_p0[Block_Size2+2][Block_Size1+2];
 	__shared__ float s_p1[Block_Size2+2][Block_Size1+2];
+	if(threadIdx.x<1)
+	{
+		s_p0[threadIdx.y+1][threadIdx.x]=(blockIdx.x>0)?p0[id-1]:0.0;	
+		s_p1[threadIdx.y+1][threadIdx.x]=(blockIdx.x>0)?p1[id-1]:0.0;
+	}
+	if(threadIdx.x>=blockDim.x-1)
+	{
+		s_p0[threadIdx.y+1][threadIdx.x+2]=(blockIdx.x<gridDim.x-1)?p0[id+1]:0.0;
+		s_p1[threadIdx.y+1][threadIdx.x+2]=(blockIdx.x<gridDim.x-1)?p1[id+1]:0.0;
+	}
+	if(threadIdx.y<1)
+	{
+		s_p0[threadIdx.y][threadIdx.x+1]=(blockIdx.y>0)?p1[id-nz]:0.0;
+	 	s_p1[threadIdx.y][threadIdx.x+1]=(blockIdx.y>0)?p1[id-nz]:0.0;
+	}
+	if(threadIdx.y>=blockDim.y-1)
+	{
+		s_p0[threadIdx.y+2][threadIdx.x+1]=(blockIdx.y<gridDim.y-1)?p1[id+nz]:0.0;
+		s_p1[threadIdx.y+2][threadIdx.x+1]=(blockIdx.y<gridDim.y-1)?p1[id+nz]:0.0;
+	}
 	s_p0[threadIdx.y+1][threadIdx.x+1]=p0[id];
 	s_p1[threadIdx.y+1][threadIdx.x+1]=p1[id];
-
-
-	if(threadIdx.x==0)
-	{
-		if(blockIdx.x>0)	{ s_p0[threadIdx.y+1][threadIdx.x]=p0[id-1];	s_p1[threadIdx.y+1][threadIdx.x]=p1[id-1];}
-		else			{ s_p0[threadIdx.y+1][threadIdx.x]=0.0f;	s_p1[threadIdx.y+1][threadIdx.x]=0.0f;}
-	}
-	if(threadIdx.x==blockDim.x-1)
-	{
-		if(blockIdx.x<gridDim.x-1)	{ s_p0[threadIdx.y+1][threadIdx.x+2]=p0[id+1];	s_p1[threadIdx.y+1][threadIdx.x+2]=p1[id+1];}
-		else				{ s_p0[threadIdx.y+1][threadIdx.x+2]=0.0f;	s_p1[threadIdx.y+1][threadIdx.x+2]=0.0f;}
-	}
-	if(threadIdx.y==0)
-	{
-		if(blockIdx.y>0)	{ s_p0[threadIdx.y][threadIdx.x+1]=p1[id-nz]; 	s_p1[threadIdx.y][threadIdx.x+1]=p1[id-nz];}
-		else			{ s_p0[threadIdx.y][threadIdx.x+1]=0.0f;	s_p1[threadIdx.y][threadIdx.x+1]=0.0f;}
-	}
-	if(threadIdx.y==blockDim.y-1)
-	{
-		if(blockIdx.y<gridDim.y-1)	{ s_p0[threadIdx.y+2][threadIdx.x+1]=p1[id+nz];	s_p1[threadIdx.y+2][threadIdx.x+1]=p1[id+nz];}
-		else				{ s_p0[threadIdx.y+2][threadIdx.x+1]=0.0f;	s_p1[threadIdx.y+2][threadIdx.x+1]=0.0f;}
-	}
 	__syncthreads();
 
 	float v1=vv[id]*dtz;
@@ -163,25 +161,21 @@ __global__ void cuda_step_backward(float *illum, float *lap, float *p0, float *p
 
 	__shared__ float s_p1[Block_Size2+2][Block_Size1+2];
 	s_p1[threadIdx.y+1][threadIdx.x+1]=p1[id];
-	if(threadIdx.x==0)
+	if(threadIdx.x<1)
 	{
-		if(blockIdx.x>0)	{ s_p1[threadIdx.y+1][threadIdx.x]=p1[id-1];}
-		else			{ s_p1[threadIdx.y+1][threadIdx.x]=0.0f;}
+		s_p1[threadIdx.y+1][threadIdx.x]=(blockIdx.x>0)?p1[id-1]:0.0;
 	}
-	if(threadIdx.x==blockDim.x-1)
+	if(threadIdx.x>=blockDim.x-1)
 	{
-		if(blockIdx.x<gridDim.x-1)	{s_p1[threadIdx.y+1][threadIdx.x+2]=p1[id+1];}
-		else				{s_p1[threadIdx.y+1][threadIdx.x+2]=0.0f;}
+		s_p1[threadIdx.y+1][threadIdx.x+2]=(blockIdx.x<gridDim.x-1)?p1[id+1]:0.0;
 	}
-	if(threadIdx.y==0)
+	if(threadIdx.y<1)
 	{
-		if(blockIdx.y>0)	{s_p1[threadIdx.y][threadIdx.x+1]=p1[id-nz];}
-		else			{s_p1[threadIdx.y][threadIdx.x+1]=0.0f;}
+	 	s_p1[threadIdx.y][threadIdx.x+1]=(blockIdx.y>0)?p1[id-nz]:0.0;
 	}
-	if(threadIdx.y==blockDim.y-1)
+	if(threadIdx.y>=blockDim.y-1)
 	{
-		if(blockIdx.y<gridDim.y-1)	{s_p1[threadIdx.y+2][threadIdx.x+1]=p1[id+nz];}
-		else				{s_p1[threadIdx.y+2][threadIdx.x+1]=0.0f;}
+		s_p1[threadIdx.y+2][threadIdx.x+1]=(blockIdx.y<gridDim.y-1)?p1[id+nz]:0.0;
 	}
 	__syncthreads();
 
