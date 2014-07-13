@@ -105,8 +105,8 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 /*
 	if(i1==0)// top boundary
 	{
-		c1=v1*(-s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+2][threadIdx.y+1]
-					+s_p0[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+2][threadIdx.y+1]);
+		c1=v1*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x+2]
+					+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+2]);
 		if(i2>0 && i2<nx-1) c2=0.5*c2;
 	}
 */

@@ -1,5 +1,5 @@
 /* 2-D forward modeling to generate shot records 
-Note: 	Here, the Enquist absorbing boundary condition is applied!
+Note: 	Here, the Clayton-Enquist absorbing boundary condition is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -49,22 +49,7 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 {
     int ix,iz;
     float v1,v2,diff1,diff2;
-    
 
-	for (ix=1; ix < nx-1; ix++) 
-	for (iz=1; iz < nz-1; iz++) 
-	{
-	    	v1=vv[ix][iz]*dtz; v1=v1*v1;
-	    	v2=vv[ix][iz]*dtx; v2=v2*v2;
-		diff1 =	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-		diff2 =	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-	    	diff1*=v1;
-	    	diff2*=v2;		
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
-
-
-/*
     for (ix=0; ix < nx; ix++) 
     for (iz=0; iz < nz; iz++) 
     {
@@ -79,54 +64,50 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	    diff2*=v2;
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
-*/
+
     for (ix=1; ix < nx-1; ix++) { 
-	//top boundary
+	/* top boundary */
 /*
-	if(iz==0){
-	    	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
-			(p0[ix][iz+1]-p0[ix][iz]);
-	    	diff2=	c21*(p1[ix-1][iz]+p1[ix+1][iz]) +
-			c22*(p1[ix-2][iz]+p1[ix+2][iz]) +
-			c20*p1[ix][iz];
-		diff1*=sqrtf(vv[ix][iz])/dz;
- 	    	diff2*=vv[ix][iz]/(2.0*dx*dx);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	} 
+	iz=0;
+	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
+		(p0[ix][iz+1]-p0[ix][iz]);
+	diff2=	c21*(p1[ix-1][iz]+p1[ix+1][iz]) +
+		c22*(p1[ix-2][iz]+p1[ix+2][iz]) +
+		c20*p1[ix][iz];
+	diff1*=sqrtf(vv[ix][iz])/dz;
+	diff2*=vv[ix][iz]/(2.0*dx*dx);
+	p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 */
 	/* bottom boundary */
-	if(iz==nz-1){
-	    	v1=vv[ix][iz]*dtz; 
-	    	v2=vv[ix][iz]*dtx;
-	    	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
-	    	diff2=p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-		diff1*=v1;
- 	    	diff2*=0.5*v2*v2;
-		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
+	iz=nz-1;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
+	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
+	diff2=p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
+	diff1*=v1;
+ 	diff2*=0.5*v2*v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
 
     for (iz=1; iz <nz-1; iz++){ 
 	/* left boundary */
-    	if(ix==0){
-	    	v1=vv[ix][iz]*dtz; 
-	    	v2=vv[ix][iz]*dtx;
-	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-	    	diff2=(p1[ix+1][iz]-p1[ix][iz])-(p0[ix+1][iz]-p0[ix][iz]);
- 	    	diff1*=0.5*v1*v1;
-		diff2*=v2;
-		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
+	ix=0;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
+	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	diff2=(p1[ix+1][iz]-p1[ix][iz])-(p0[ix+1][iz]-p0[ix][iz]);
+	diff1*=0.5*v1*v1;
+	diff2*=v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	/* right boundary */
-    	if(ix==nx-1){
-	    	v1=vv[ix][iz]*dtz; 
-	    	v2=vv[ix][iz]*dtx;
-	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-	    	diff2=-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
- 	    	diff1*=0.5*v1*v1;
-		diff2*=v2;
-		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
+	ix=nx-1;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
+	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	diff2=-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
+ 	diff1*=0.5*v1*v1;
+	diff2*=v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }  
 }
 
