@@ -49,87 +49,69 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 
 
 void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx)
+/*< forward modeling step, Clayton-Enquist ABC incorporated >*/
 {
     int ix,iz;
     float v1,v2,diff1,diff2;
-    
 
-	for (ix=1; ix < nx-1; ix++) 
-	for (iz=1; iz < nz-1; iz++) 
-	{
-	    	v1=vv[ix][iz]*dtz; v1=v1*v1;
-	    	v2=vv[ix][iz]*dtx; v2=v2*v2;
-		diff1 =	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-		diff2 =	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-	    	diff1*=v1;
-	    	diff2*=v2;		
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
-
-
-/*
     for (ix=0; ix < nx; ix++) 
     for (iz=0; iz < nz; iz++) 
     {
 	    v1=vv[ix][iz]*dtz; v1=v1*v1;
 	    v2=vv[ix][iz]*dtx; v2=v2*v2;
 	    diff1=diff2=-2.0*p1[ix][iz];
-	    if (iz-1>=0) diff1+=p1[ix][iz-1];
-	    if (iz+1<nz) diff1+=p1[ix][iz+1];
-	    if (ix-1>=0) diff2+=p1[ix-1][iz];
-	    if (ix+1<nx) diff2+=p1[ix+1][iz];
+	    diff1+=(iz-1>=0)?p1[ix][iz-1]:0.0;
+	    diff1+=(iz+1<nz)?p1[ix][iz+1]:0.0;
+	    diff2+=(ix-1>=0)?p1[ix-1][iz]:0.0;
+	    diff2+=(ix+1<nx)?p1[ix+1][iz]:0.0;
 	    diff1*=v1;
 	    diff2*=v2;
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
-*/
+
     for (ix=1; ix < nx-1; ix++) { 
-	//top boundary
+	/* top boundary */
 /*
-	if(iz==0){
-	    	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
-			(p0[ix][iz+1]-p0[ix][iz]);
-	    	diff2=	c21*(p1[ix-1][iz]+p1[ix+1][iz]) +
-			c22*(p1[ix-2][iz]+p1[ix+2][iz]) +
-			c20*p1[ix][iz];
-		diff1*=sqrtf(vv[ix][iz])/dz;
- 	    	diff2*=vv[ix][iz]/(2.0*dx*dx);
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	} 
+	iz=0;
+	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
+		(p0[ix][iz+1]-p0[ix][iz]);
+	diff2=	c21*(p1[ix-1][iz]+p1[ix+1][iz]) +
+		c22*(p1[ix-2][iz]+p1[ix+2][iz]) +
+		c20*p1[ix][iz];
+	diff1*=sqrtf(vv[ix][iz])/dz;
+	diff2*=vv[ix][iz]/(2.0*dx*dx);
+	p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 */
 	/* bottom boundary */
-	if(iz==nz-1){
-	    	v1=vv[ix][iz]*dtz; 
-	    	v2=vv[ix][iz]*dtx;
-	    	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
-	    	diff2=p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-		diff1*=v1;
- 	    	diff2*=0.5*v2*v2;
-		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
+	iz=nz-1;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
+	diff1=-(p1[ix][iz]-p1[ix][iz-1])+(p0[ix][iz]-p0[ix][iz-1]);
+	diff2=p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
+	diff1*=v1;
+ 	diff2*=0.5*v2*v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }
 
     for (iz=1; iz <nz-1; iz++){ 
 	/* left boundary */
-    	if(ix==0){
-	    	v1=vv[ix][iz]*dtz; 
-	    	v2=vv[ix][iz]*dtx;
-	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-	    	diff2=(p1[ix+1][iz]-p1[ix][iz])-(p0[ix+1][iz]-p0[ix][iz]);
- 	    	diff1*=0.5*v1*v1;
-		diff2*=v2;
-		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
+	ix=0;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
+	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	diff2=(p1[ix+1][iz]-p1[ix][iz])-(p0[ix+1][iz]-p0[ix][iz]);
+	diff1*=0.5*v1*v1;
+	diff2*=v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 	/* right boundary */
-    	if(ix==nx-1){
-	    	v1=vv[ix][iz]*dtz; 
-	    	v2=vv[ix][iz]*dtx;
-	    	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-	    	diff2=-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
- 	    	diff1*=0.5*v1*v1;
-		diff2*=v2;
-		p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-	}
+	ix=nx-1;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
+	diff1=p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
+	diff2=-(p1[ix][iz]-p1[ix-1][iz])+(p0[ix][iz]-p0[ix-1][iz]);
+ 	diff1*=0.5*v1*v1;
+	diff2*=v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
     }  
 }
 
@@ -138,18 +120,21 @@ void step_backward(float **lap, float **p0, float **p1, float **p2, float **vv, 
     int ix,iz;
     float v1,v2,diff1,diff2;
     
-	for (ix=1; ix < nx-1; ix++) 
-	for (iz=1; iz < nz-1; iz++) 
-	{
-	    	v1=vv[ix][iz]*dtz; v1=v1*v1;
-	    	v2=vv[ix][iz]*dtx; v2=v2*v2;
-		diff1 =	p1[ix][iz-1]-2.0*p1[ix][iz]+p1[ix][iz+1];
-		diff2 =	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
-	    	diff1*=v1;
-	    	diff2*=v2;		
-		p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
-		lap[ix][iz]=diff1+diff2;
-	}
+    for (ix=0; ix < nx; ix++) 
+    for (iz=0; iz < nz; iz++) 
+    {
+	    v1=vv[ix][iz]*dtz; v1=v1*v1;
+	    v2=vv[ix][iz]*dtx; v2=v2*v2;
+	    diff1=diff2=-2.0*p1[ix][iz];
+	    diff1+=(iz-1>=0)?p1[ix][iz-1]:0.0;
+	    diff1+=(iz+1<nz)?p1[ix][iz+1]:0.0;
+	    diff2+=(ix-1>=0)?p1[ix-1][iz]:0.0;
+	    diff2+=(ix+1<nx)?p1[ix+1][iz]:0.0;
+	    diff1*=v1;
+	    diff2*=v2;
+	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+	    lap[ix][iz]=diff1+diff2;
+    }
 }
 
 void add_source(float **p, float *source, int *sxz, int ns, bool add)
@@ -226,6 +211,7 @@ void cal_residual(float *dobs, float *dcal, float *dres, int ng)
 }
 
 void cal_gradient(float **grad, float **lap, float **gp)
+/*< calculate gradient >*/
 {
   int ix, iz;
   for(ix=0; ix<nx; ix++){
@@ -236,6 +222,7 @@ void cal_gradient(float **grad, float **lap, float **gp)
 }
 
 void scale_gradient(float **grad, float **vv)
+/*< scale gradient >*/
 {
   int ix, iz;
   for(ix=0; ix<nx; ix++){
@@ -258,6 +245,7 @@ float cal_objective(float *dres)
 }
 
 float cal_beta(float **g0, float **g1, float **cg)
+/*< calculate beta >*/
 {
   int ix, iz;
   float a,b;
@@ -274,6 +262,7 @@ float cal_beta(float **g0, float **g1, float **cg)
 
 
 void cal_conjgrad(float **cg, float **g1, float beta)
+/*< calculate conjugate gradient >*/
 {
   int ix, iz;
 
@@ -285,6 +274,7 @@ void cal_conjgrad(float **cg, float **g1, float beta)
 }
 
 float cal_epsilon(float **vv, float **cg)
+/*< calculate epsilcon >*/
 {
   int ix, iz;
   float vvmax=vv[0][0];
@@ -301,6 +291,7 @@ float cal_epsilon(float **vv, float **cg)
 }
 
 void cal_vtmp(float **vtmp, float **vv, float **cg, float epsil)
+/*< calculate temporary velcity >*/
 {
   int ix, iz;
 
@@ -312,6 +303,7 @@ void cal_vtmp(float **vtmp, float **vv, float **cg, float epsil)
 }
 
 void cal_alpha12(float *dcal, float *dobs, float *dres, float *alpha1, float *alpha2)
+/*< calculate numerator and denominator of alpha >*/
 {
   int ig;
   float a, b;
@@ -325,6 +317,7 @@ void cal_alpha12(float *dcal, float *dobs, float *dres, float *alpha1, float *al
 
 
 float cal_alpha(float *alpha1, float *alpha2, float epsil)
+/*< calculate alpha >*/
 {
   int ig;
   float a,b;
@@ -339,6 +332,7 @@ float cal_alpha(float *alpha1, float *alpha2, float epsil)
 }
 
 void update_vel(float **vv, float **cg, float alpha)
+/*< update velcity >*/
 {
   int ix, iz;
 
