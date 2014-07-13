@@ -32,8 +32,6 @@ static int nz, nx, nt, ns, ng;
 static float dx, dz, fm, dt;
 static int *sxz, *gxz;
 static float *wlt, *bndr, *dobs, *dcal, *dres, *alpha1, *alpha2;
-static float **vv, **sp0, **sp1, **sp2, **gp0, **gp1, **gp2, **g0, **g1, **cg, **lap, **vtmp;
-
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
@@ -176,7 +174,7 @@ void add_source(float **p, float *source, int *sxz, int ns, bool add)
 }
 
 void record_seis(float *seis_it, int *gxz, float **p, int ng)
-/* record seismogram at time it into a vector length of ng */
+/*< record seismogram at time it into a vector length of ng >*/
 {
 	int ig, gx, gz;
 	for(ig=0;ig<ng; ig++)
@@ -188,7 +186,7 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 }
 
 void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
-/* shot/geophone position initialize */
+/*< shot/geophone position initialize >*/
 {
 	int is, sz, sx;
 	for(is=0; is<ns; is++)
@@ -272,12 +270,19 @@ float cal_beta(float **g0, float **g1, float **cg)
   float a,b;
 
   a=b=0;
+#ifdef _OPENMP
+#pragma omp parallel for default(none)	\
+	private(iz, ix)			\
+	shared(g1, g0, nz, nx)		\
+	reduction(+:a,b)
+#endif
   for(ix=0; ix<nx; ix++){
     for(iz=0; iz<nz; iz++){
       a+=g1[ix][iz]*(g1[ix][iz]-g0[ix][iz]);
       b+=g0[ix][iz]*g0[ix][iz];
     }
   }
+
   return (a/(b+SF_EPS));
 }
 
@@ -371,7 +376,8 @@ int main(int argc, char* argv[])
 	int j, is, it, iter, niter, distx, distz, csd, rbell;
 	int sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
 	float dtx, dtz, amp, tmp, obj, beta, alpha, epsil;
-	float *trans, **ptr=NULL;
+	float *trans;
+	float **vv, **sp0, **sp1, **sp2, **gp0, **gp1, **gp2, **g0, **g1, **cg, **lap, **vtmp, **ptr=NULL;
 	sf_file vinit, shots, vupdates, grads, objs;
 
 	float tstart, tend, timer;
@@ -399,11 +405,11 @@ int main(int argc, char* argv[])
 	objs=sf_output("objs"); /* value of misfit/objective function */
 
     	/* get parameters from velocity model and recorded shots */
-	if (!sf_getbool("verb",&verb)) verb=true;
-    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
-    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");
-    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
-   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
+	if (!sf_getbool("verb",&verb)) verb=true;/* verbosity */
+    	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");/* nz */
+    	if (!sf_histint(vinit,"n2",&nx)) sf_error("no n2");/* nx */
+    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");/* dz */
+   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");/* dx */
 
    	if (!sf_histint(shots,"n1",&nt)) sf_error("no nt");
 	/* total modeling time steps */

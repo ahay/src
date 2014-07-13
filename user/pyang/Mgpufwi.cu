@@ -59,7 +59,7 @@ extern "C" {
 #define false   (0)
 #endif
 #ifndef EPS
-#define EPS	1.e-15
+#define EPS	1.e-7
 #endif
 
 #define PI 	3.141592653589793
@@ -70,23 +70,18 @@ extern "C" {
 #include "cuda_fwi_kernels.cu"
 
 static bool csdgather;
-static int niter,nz,nx, nz1,nx1,nt,ns,ng,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+static int niter, nz, nx, nz1, nx1, nt, ns, ng;
+static int sxbeg, szbeg, gxbeg, gzbeg, jsx, jsz, jgx, jgz;/*  parameters of acquisition geometery */
 static float dx, dz, fm, dt;
+static float *v0, *vv, *dobs;
 
-/* variables on host */
-float 	*v0, *vv, *dobs;
-/* variables on device */
-int 	*d_sxz, *d_gxz;			
-float 	*d_wlt, *d_vv, *d_illum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
-float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
-/*
-d_pars[0]: obj;
-d_pars[1]: beta;
-d_pars[2]: epsilon;
-d_pars[3]: alpha;
-d_alpha1[]: numerator of alpha, length=ng
-d_alpha2[]: denominator of alpha, length=ng
-*/
+void sf_check_gpu_error (const char *msg) {
+    cudaError_t err = cudaGetLastError ();
+    if (cudaSuccess != err) { 
+	sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); 
+	exit(0);   
+    }
+}
 
 void expand(float*vv, float *v0, int nz, int nx, int nz1, int nx1)
 /*< round up the model size to be multiples of block size >*/
@@ -122,78 +117,23 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 	    trans[i2+n2*i1]=matrix[i1+n1*i2];
 }
 
-static void sf_check_gpu_error (const char *msg) {
-    cudaError_t err = cudaGetLastError ();
-    if (cudaSuccess != err) { sf_error ("Cuda error: %s: %s", msg, cudaGetErrorString (err)); exit(0);   }
-}
-
-void device_alloc()
-/*< allocate memories for variables on device >*/
-{
-	cudaMalloc(&d_vv, nz*nx*sizeof(float));
-	cudaMalloc(&d_sp0, nz*nx*sizeof(float));
-	cudaMalloc(&d_sp1, nz*nx*sizeof(float));
-	cudaMalloc(&d_gp0, nz*nx*sizeof(float));
-	cudaMalloc(&d_gp1, nz*nx*sizeof(float));
-	cudaMalloc(&d_wlt, nt*sizeof(float));
-	cudaMalloc(&d_sxz, nt*sizeof(float));
-	cudaMalloc(&d_gxz, ng*sizeof(float));
-	cudaMalloc(&d_bndr, nt*(2*nz+nx)*sizeof(float));
-	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
-	cudaMalloc(&d_dcal, ng*sizeof(float));
-	cudaMalloc(&d_derr, ns*ng*nt*sizeof(float));
-	cudaMalloc(&d_g0, nz*nx*sizeof(float));
-	cudaMalloc(&d_g1, nz*nx*sizeof(float));
-	cudaMalloc(&d_cg, nz*nx*sizeof(float));
-	cudaMalloc(&d_lap, nz*nx*sizeof(float));
-	cudaMalloc(&d_illum, nz*nx*sizeof(float));
-	cudaMalloc(&d_pars, 4*sizeof(float));
-	cudaMalloc(&d_alpha1, ng*sizeof(float));
-	cudaMalloc(&d_alpha2, ng*sizeof(float));
-	cudaMalloc(&d_vtmp, nz*nx*sizeof(float));
-	sf_check_gpu_error("Failed to allocate required memory!");
-}
-
-void device_free()
-/*< free the variables on device >*/
-{
-	cudaFree(d_vv);
-	cudaFree(d_sp0);
-	cudaFree(d_sp1);
-	cudaFree(d_gp0);
-	cudaFree(d_gp1);
-	cudaFree(d_wlt);
-	cudaFree(d_sxz);
-	cudaFree(d_gxz);
-	cudaFree(d_bndr);
-	cudaFree(d_dobs);
-	cudaFree(d_dcal);
-	cudaFree(d_derr);
-	cudaFree(d_g0);
-	cudaFree(d_g1);
-	cudaFree(d_cg);
-	cudaFree(d_lap);
-	cudaFree(d_illum);
-	cudaFree(d_pars);
-	cudaFree(d_alpha1);
-	cudaFree(d_alpha2);
-	cudaFree(d_vtmp);
-	sf_check_gpu_error("Failed to free the allocated memory!");
-}
-
-
 int main(int argc, char *argv[])
 {
 	bool verb, precon;
 	int is, it, iter, distx, distz, csd, rbell;
 	float dtx, dtz, mstimer,amp, obj1, obj, beta, epsil, alpha;
 	float *trans, *objval, *ptr=NULL;
+
+	/* variables on device */
+	int 	*d_sxz, *d_gxz;			
+	float 	*d_wlt, *d_vv, *d_illum, *d_lap, *d_vtmp, *d_sp0, *d_sp1, *d_gp0, *d_gp1,*d_bndr;
+	float	*d_dobs, *d_dcal, *d_derr, *d_g0, *d_g1, *d_cg, *d_pars, *d_alpha1, *d_alpha2;
 	sf_file vinit, shots, vupdates, grads, objs, illums;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
 
-    	/*< set up I/O files >*/
+    	/* set up I/O files */
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
 	shots=sf_input("shots"); /* recorded shots from exact velocity model */
     	vupdates=sf_output("out"); /* updated velocity in iterations */ 
@@ -285,25 +225,46 @@ int main(int argc, char *argv[])
 	nz=(int)((nz1+Block_Size2-1)/Block_Size2)*Block_Size2; 
 	dim3 dimg=dim3(nz/Block_Size1, nx/Block_Size2), dimb=dim3(Block_Size1, Block_Size2); 
 
-	v0=(float*)malloc(nz1*nx1*sizeof(float));
-	vv=(float*)malloc(nz*nx*sizeof(float));
-	dobs=(float*)malloc(ng*nt*sizeof(float));
-	trans=(float*)malloc(ng*nt*sizeof(float));
-	objval=(float*)malloc(niter*sizeof(float));
-	sf_floatread(v0, nz1*nx1, vinit);
-	expand(vv, v0, nz, nx, nz1, nx1);
-	memset(dobs,0,ng*nt*sizeof(float));
-	memset(objval,0,niter*sizeof(float));
+	v0=(float*)malloc(nz1*nx1*sizeof(float));/* initial velocity model */
+	vv=(float*)malloc(nz*nx*sizeof(float));	 /* extended velocity model, size=multiple of 16x16 block */
+	dobs=(float*)malloc(ng*nt*sizeof(float));/* observations, one shot */
+	trans=(float*)malloc(ng*nt*sizeof(float));/* transposed one shot */
+	objval=(float*)malloc(niter*sizeof(float));/* objective/misfit function */
+	sf_floatread(v0, nz1*nx1, vinit);	/* read the initial velcity model, size=nz1*nx1 */
+	expand(vv, v0, nz, nx, nz1, nx1);	/* expand the model to be of size nz*nx */
+	memset(dobs, 0, ng*nt*sizeof(float));	
+	memset(objval, 0, niter*sizeof(float));
 
     	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
-	device_alloc(); 
+	cudaMalloc(&d_vv, nz*nx*sizeof(float));	/* velocity */
+	cudaMalloc(&d_sp0, nz*nx*sizeof(float));/* source wavefield p0 */
+	cudaMalloc(&d_sp1, nz*nx*sizeof(float));/* source wavefield p1 */
+	cudaMalloc(&d_gp0, nz*nx*sizeof(float));/* geophone/receiver wavefield p0 */
+	cudaMalloc(&d_gp1, nz*nx*sizeof(float));/* geophone/receiver wavefield p1 */
+	cudaMalloc(&d_wlt, nt*sizeof(float));	/* ricker wavelet */
+	cudaMalloc(&d_sxz, nt*sizeof(float));	/* source positions */
+	cudaMalloc(&d_gxz, ng*sizeof(float));	/* geophone positions */
+	cudaMalloc(&d_bndr, nt*(2*nz+nx)*sizeof(float));/* boundaries for wavefield reconstruction */
+	cudaMalloc(&d_dobs, ng*nt*sizeof(float));/* observed seismic data */
+	cudaMalloc(&d_dcal, ng*sizeof(float));	/* calculated/synthetic seismic data */
+	cudaMalloc(&d_derr, ns*ng*nt*sizeof(float));/* residual/error between synthetic and observation */
+	cudaMalloc(&d_g0, nz*nx*sizeof(float));	/* gradient at previous step */
+	cudaMalloc(&d_g1, nz*nx*sizeof(float));	/* gradient at curret step */
+	cudaMalloc(&d_cg, nz*nx*sizeof(float));	/* conjugate gradient */
+	cudaMalloc(&d_lap, nz*nx*sizeof(float));/* laplace of the source wavefield */
+	cudaMalloc(&d_illum, nz*nx*sizeof(float));/* illumination of the source wavefield */
+	cudaMalloc(&d_pars, 4*sizeof(float));	/* d_pars[0]: obj; d_pars[1]: beta; d_pars[2]: epsilon; d_pars[3]: alpha; */
+	cudaMalloc(&d_alpha1, ng*sizeof(float));/* d_alpha1[]: numerator of alpha, length=ng */
+	cudaMalloc(&d_alpha2, ng*sizeof(float));/* d_alpha2[]: denominator of alpha, length=ng	*/
+	cudaMalloc(&d_vtmp, nz*nx*sizeof(float));/* temporary velocity computed with epsil */
+	sf_check_gpu_error("Failed to allocate required memory!");
 
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemset(d_sp0,0,nz*nx*sizeof(float));
-	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
-	cudaMemset(d_gp0,0,nz*nx*sizeof(float));
-	cudaMemset(d_gp1,0,nz*nx*sizeof(float));
+	cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
+	cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
+	cudaMemset(d_gp0, 0, nz*nx*sizeof(float));
+	cudaMemset(d_gp1, 0, nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
 	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
@@ -334,13 +295,15 @@ int main(int argc, char *argv[])
 	cudaMemset(d_alpha1, 0, ng*sizeof(float));
 	cudaMemset(d_alpha2, 0, ng*sizeof(float));
 	cudaMemset(d_vtmp, 0, nz*nx*sizeof(float));
-	
+
+	/* creat timing variables on device */
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);
+
 	for(iter=0; iter<niter; iter++)
 	{
-		cudaEventRecord(start);
+		cudaEventRecord(start);/* record starting time */
 
 		sf_seek(shots, 0L, SEEK_SET);
 		cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
@@ -438,14 +401,14 @@ int main(int argc, char *argv[])
 		window(v0, vv, nz, nx, nz1, nx1);
 		sf_floatwrite(v0, nz1*nx1, vupdates);
 
-		cudaEventRecord(stop);
+		cudaEventRecord(stop);/* record ending time */
   		cudaEventSynchronize(stop);
   		cudaEventElapsedTime(&mstimer, start, stop);
 
 		if(iter==0) {obj1=obj; objval[iter]=1.0;}
 		else	objval[iter]=obj/obj1;
 
-		if(verb) {
+		if(verb) {/* output important information at each FWI iteration */
 			sf_warning("obj=%f  beta=%f  epsil=%f  alpha=%f",obj, beta, epsil, alpha);
 			sf_warning("iteration %d finished: %f (s)",iter+1, mstimer*1e-3);
 		}
@@ -454,14 +417,36 @@ int main(int argc, char *argv[])
 	cudaEventDestroy(stop);
 
 	sf_floatwrite(objval,iter,objs);
-/*	sf_fileclose(shots); */
+	sf_fileclose(shots); 
+
+	cudaFree(d_vv);
+	cudaFree(d_sp0);
+	cudaFree(d_sp1);
+	cudaFree(d_gp0);
+	cudaFree(d_gp1);
+	cudaFree(d_wlt);
+	cudaFree(d_sxz);
+	cudaFree(d_gxz);
+	cudaFree(d_bndr);
+	cudaFree(d_dobs);
+	cudaFree(d_dcal);
+	cudaFree(d_derr);
+	cudaFree(d_g0);
+	cudaFree(d_g1);
+	cudaFree(d_cg);
+	cudaFree(d_lap);
+	cudaFree(d_illum);
+	cudaFree(d_pars);
+	cudaFree(d_alpha1);
+	cudaFree(d_alpha2);
+	cudaFree(d_vtmp);
+	sf_check_gpu_error("Failed to free the allocated memory!");
 
 	free(v0);
 	free(vv);
 	free(dobs);
 	free(trans);
 	free(objval);
-	device_free();
 
 	exit(0);
 }
