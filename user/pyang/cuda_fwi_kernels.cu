@@ -72,36 +72,38 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+i2*nz;
 
-	__shared__ float s_p0[Block_Size1+2][Block_Size2+2];
-	__shared__ float s_p1[Block_Size1+2][Block_Size2+2];
-	s_p0[threadIdx.x+1][threadIdx.y+1]=p0[id];
-	s_p1[threadIdx.x+1][threadIdx.y+1]=p1[id];
+	__shared__ float s_p0[Block_Size2+2][Block_Size1+2];
+	__shared__ float s_p1[Block_Size2+2][Block_Size1+2];
+	s_p0[threadIdx.y+1][threadIdx.x+1]=p0[id];
+	s_p1[threadIdx.y+1][threadIdx.x+1]=p1[id];
+
+
 	if(threadIdx.x==0)
 	{
-		if(blockIdx.x>0)	{ s_p0[threadIdx.x][threadIdx.y+1]=p0[id-1];	s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
-		else			{ s_p0[threadIdx.x][threadIdx.y+1]=0.0f;	s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
+		if(blockIdx.x>0)	{ s_p0[threadIdx.y+1][threadIdx.x]=p0[id-1];	s_p1[threadIdx.y+1][threadIdx.x]=p1[id-1];}
+		else			{ s_p0[threadIdx.y+1][threadIdx.x]=0.0f;	s_p1[threadIdx.y+1][threadIdx.x]=0.0f;}
 	}
 	if(threadIdx.x==blockDim.x-1)
 	{
-		if(blockIdx.x<gridDim.x-1)	{ s_p0[threadIdx.x+2][threadIdx.y+1]=p0[id+1];	s_p1[threadIdx.x+2][threadIdx.y+1]=p1[id+1];}
-		else				{ s_p0[threadIdx.x+2][threadIdx.y+1]=0.0f;	s_p1[threadIdx.x+2][threadIdx.y+1]=0.0f;}
+		if(blockIdx.x<gridDim.x-1)	{ s_p0[threadIdx.y+1][threadIdx.x+2]=p0[id+1];	s_p1[threadIdx.y+1][threadIdx.x+2]=p1[id+1];}
+		else				{ s_p0[threadIdx.y+1][threadIdx.x+2]=0.0f;	s_p1[threadIdx.y+1][threadIdx.x+2]=0.0f;}
 	}
 	if(threadIdx.y==0)
 	{
-		if(blockIdx.y>0)	{ s_p0[threadIdx.x+1][threadIdx.y]=p1[id-nz]; 	s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
-		else			{ s_p0[threadIdx.x+1][threadIdx.y]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
+		if(blockIdx.y>0)	{ s_p0[threadIdx.y][threadIdx.x+1]=p1[id-nz]; 	s_p1[threadIdx.y][threadIdx.x+1]=p1[id-nz];}
+		else			{ s_p0[threadIdx.y][threadIdx.x+1]=0.0f;	s_p1[threadIdx.y][threadIdx.x+1]=0.0f;}
 	}
 	if(threadIdx.y==blockDim.y-1)
 	{
-		if(blockIdx.y<gridDim.y-1)	{ s_p0[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];	s_p1[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];}
-		else				{ s_p0[threadIdx.x+1][threadIdx.y+2]=0.0f;	s_p1[threadIdx.x+1][threadIdx.y+2]=0.0f;}
+		if(blockIdx.y<gridDim.y-1)	{ s_p0[threadIdx.y+2][threadIdx.x+1]=p1[id+nz];	s_p1[threadIdx.y+2][threadIdx.x+1]=p1[id+nz];}
+		else				{ s_p0[threadIdx.y+2][threadIdx.x+1]=0.0f;	s_p1[threadIdx.y+2][threadIdx.x+1]=0.0f;}
 	}
 	__syncthreads();
 
 	float v1=vv[id]*dtz;
 	float v2=vv[id]*dtx; 
-	float c1=v1*v1*(s_p1[threadIdx.x+2][threadIdx.y+1]-2.0*s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x][threadIdx.y+1]);
-	float c2=v2*v2*(s_p1[threadIdx.x+1][threadIdx.y+2]-2.0*s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+1][threadIdx.y]);
+	float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
+	float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
 /*
 	if(i1==0)// top boundary
 	{
@@ -112,27 +114,27 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 */
 	if(i1==nz-1) /* bottom boundary */
 	{
-		c1=v1*(s_p1[threadIdx.x][threadIdx.y+1]-s_p1[threadIdx.x+1][threadIdx.y+1]
-					-s_p0[threadIdx.x][threadIdx.y+1]+s_p0[threadIdx.x+1][threadIdx.y+1]);
+		c1=v1*(s_p1[threadIdx.y+1][threadIdx.x]-s_p1[threadIdx.y+1][threadIdx.x+1]
+					-s_p0[threadIdx.y+1][threadIdx.x]+s_p0[threadIdx.y+1][threadIdx.x+1]);
 		if(i2>0 && i2<nx-1) c2=0.5*c2;
 	}
 
 	if(i2==0)/* left boundary */
 	{
 		if(i1>0 && i1<nz-1) c1=0.5*c1;
-		c2=v2*(-s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+1][threadIdx.y+2]
-					+s_p0[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+2]);
+		c2=v2*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+2][threadIdx.x+1]
+					+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+2][threadIdx.x+1]);
 
 	}
 
 	if(i2==nx-1) /* right boundary */
 	{
 		if(i1>0 && i1<nz-1) c1=0.5*c1;
-		c2=v2*(s_p1[threadIdx.x+1][threadIdx.y]-s_p1[threadIdx.x+1][threadIdx.y+1]
-					-s_p0[threadIdx.x+1][threadIdx.y]+s_p0[threadIdx.x+1][threadIdx.y+1]);
+		c2=v2*(s_p1[threadIdx.y][threadIdx.x+1]-s_p1[threadIdx.y+1][threadIdx.x+1]
+					-s_p0[threadIdx.y][threadIdx.x+1]+s_p0[threadIdx.y+1][threadIdx.x+1]);
 	}
 	
-	if (i1<nz && i2<nx) p0[id]=2.0*s_p1[threadIdx.x+1][threadIdx.y+1]-s_p0[threadIdx.x+1][threadIdx.y+1]+c1+c2;
+	if (i1<nz && i2<nx) p0[id]=2.0*s_p1[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+1]+c1+c2;
 }
 
 
@@ -159,40 +161,40 @@ __global__ void cuda_step_backward(float *illum, float *lap, float *p0, float *p
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+i2*nz;
 
-	__shared__ float s_p1[Block_Size1+2][Block_Size2+2];
-	s_p1[threadIdx.x+1][threadIdx.y+1]=p1[id];
+	__shared__ float s_p1[Block_Size2+2][Block_Size1+2];
+	s_p1[threadIdx.y+1][threadIdx.x+1]=p1[id];
 	if(threadIdx.x==0)
 	{
-		if(blockIdx.x>0)	{ s_p1[threadIdx.x][threadIdx.y+1]=p1[id-1];}
-		else			{ s_p1[threadIdx.x][threadIdx.y+1]=0.0f;}
+		if(blockIdx.x>0)	{ s_p1[threadIdx.y+1][threadIdx.x]=p1[id-1];}
+		else			{ s_p1[threadIdx.y+1][threadIdx.x]=0.0f;}
 	}
 	if(threadIdx.x==blockDim.x-1)
 	{
-		if(blockIdx.x<gridDim.x-1)	{s_p1[threadIdx.x+2][threadIdx.y+1]=p1[id+1];}
-		else				{s_p1[threadIdx.x+2][threadIdx.y+1]=0.0f;}
+		if(blockIdx.x<gridDim.x-1)	{s_p1[threadIdx.y+1][threadIdx.x+2]=p1[id+1];}
+		else				{s_p1[threadIdx.y+1][threadIdx.x+2]=0.0f;}
 	}
 	if(threadIdx.y==0)
 	{
-		if(blockIdx.y>0)	{s_p1[threadIdx.x+1][threadIdx.y]=p1[id-nz];}
-		else			{s_p1[threadIdx.x+1][threadIdx.y]=0.0f;}
+		if(blockIdx.y>0)	{s_p1[threadIdx.y][threadIdx.x+1]=p1[id-nz];}
+		else			{s_p1[threadIdx.y][threadIdx.x+1]=0.0f;}
 	}
 	if(threadIdx.y==blockDim.y-1)
 	{
-		if(blockIdx.y<gridDim.y-1)	{s_p1[threadIdx.x+1][threadIdx.y+2]=p1[id+nz];}
-		else				{s_p1[threadIdx.x+1][threadIdx.y+2]=0.0f;}
+		if(blockIdx.y<gridDim.y-1)	{s_p1[threadIdx.y+2][threadIdx.x+1]=p1[id+nz];}
+		else				{s_p1[threadIdx.y+2][threadIdx.x+1]=0.0f;}
 	}
 	__syncthreads();
 
 	float v1=vv[id]*dtz;
 	float v2=vv[id]*dtx; 
-	float c1=v1*v1*(s_p1[threadIdx.x+2][threadIdx.y+1]-2.0*s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x][threadIdx.y+1]);
-	float c2=v2*v2*(s_p1[threadIdx.x+1][threadIdx.y+2]-2.0*s_p1[threadIdx.x+1][threadIdx.y+1]+s_p1[threadIdx.x+1][threadIdx.y]);
+	float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
+	float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
 
 	if (i1<nz && i2<nx) 
 	{
-		p0[id]=2.0*s_p1[threadIdx.x+1][threadIdx.y+1]-p0[id]+c1+c2;
+		p0[id]=2.0*s_p1[threadIdx.y+1][threadIdx.x+1]-p0[id]+c1+c2;
 		lap[id]=c1+c2;
-		illum[id]+=s_p1[threadIdx.x+1][threadIdx.y+1]*s_p1[threadIdx.x+1][threadIdx.y+1];
+		illum[id]+=s_p1[threadIdx.y+1][threadIdx.x+1]*s_p1[threadIdx.y+1][threadIdx.x+1];
 	}
 }
 
