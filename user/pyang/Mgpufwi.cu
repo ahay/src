@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
 
     	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
+	/* allocate memory for device variables */
 	cudaMalloc(&d_vv, nz*nx*sizeof(float));	/* velocity */
 	cudaMalloc(&d_sp0, nz*nx*sizeof(float));/* source wavefield p0 */
 	cudaMalloc(&d_sp1, nz*nx*sizeof(float));/* source wavefield p1 */
@@ -260,6 +261,7 @@ int main(int argc, char *argv[])
 	cudaMalloc(&d_vtmp, nz*nx*sizeof(float));/* temporary velocity computed with epsil */
 	sf_check_gpu_error("Failed to allocate required memory!");
 
+	/* initialize varibles */
 	cudaMemcpy(d_vv, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
 	cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
@@ -268,7 +270,6 @@ int main(int argc, char *argv[])
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
 	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
-
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
@@ -413,12 +414,14 @@ int main(int argc, char *argv[])
 			sf_warning("iteration %d finished: %f (s)",iter+1, mstimer*1e-3);
 		}
 	}
+	/* destroy timing varibles */
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
 	sf_floatwrite(objval,iter,objs);
 	sf_fileclose(shots); 
 
+	/* free varibles on device */
 	cudaFree(d_vv);
 	cudaFree(d_sp0);
 	cudaFree(d_sp1);
@@ -441,7 +444,7 @@ int main(int argc, char *argv[])
 	cudaFree(d_alpha2);
 	cudaFree(d_vtmp);
 	sf_check_gpu_error("Failed to free the allocated memory!");
-
+	/* free varibles on host */
 	free(v0);
 	free(vv);
 	free(dobs);
