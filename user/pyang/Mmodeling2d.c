@@ -55,10 +55,10 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	    v1=vv[ix][iz]*dtz; v1=v1*v1;
 	    v2=vv[ix][iz]*dtx; v2=v2*v2;
 	    diff1=diff2=-2.0*p1[ix][iz];
-	    if (iz-1>=0) diff1+=p1[ix][iz-1];
-	    if (iz+1<nz) diff1+=p1[ix][iz+1];
-	    if (ix-1>=0) diff2+=p1[ix-1][iz];
-	    if (ix+1<nx) diff2+=p1[ix+1][iz];
+	    diff1+=(iz-1>=0)?p1[ix][iz-1]:0.0;
+	    diff1+=(iz+1<nz)?p1[ix][iz+1]:0.0;
+	    diff2+=(ix-1>=0)?p1[ix-1][iz]:0.0;
+	    diff2+=(ix+1<nx)?p1[ix+1][iz]:0.0;
 	    diff1*=v1;
 	    diff2*=v2;
 	    p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
