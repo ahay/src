@@ -22,15 +22,11 @@ Note: 	Here, the Clayton-Enquist absorbing boundary condition is applied!
 #include <rsf.h>
 #include <time.h>
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
-
 static bool csdgather;
-static int nz,nx,nt,ns,ng;
+static int nz, nx, nt, ns, ng;
 static float dx, dz, fm, dt;
-int *sxz, *gxz;
-float *wlt,*dobs,*bndr, **vv;
+static int *sxz, *gxz;
+static float *wlt,*dobs,*bndr, **vv;
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
