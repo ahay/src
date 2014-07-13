@@ -104,20 +104,6 @@ void window(float *v0,float *vv, int nz, int nx, int nz1, int nx1)
 		  v0[i1+i2*nz1]=vv[i1+nz*i2];
 }
 
-
-
-void wavefield_init(float *d_p0, float *d_p1, int N)
-/*< initialize wavefield:N=nz*nx >*/
-{
-	cudaMemset(d_p0, 0, N*sizeof(float));
-	cudaMemset(d_p1, 0, N*sizeof(float));
-
-    	cudaError_t err = cudaGetLastError ();
-    	if (cudaSuccess != err) 
-	printf("Cuda error: Failed to initialize the wavefield variables!: %s\n", cudaGetErrorString(err));
-}
-
-
 int main(int argc, char *argv[])
 {
 	/* variables on host */
@@ -230,13 +216,14 @@ int main(int argc, char *argv[])
 			gxbeg=sxbeg+is*jsx-distx;
 			cuda_set_sg<<<(ng+511)/512, 512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 		}
-		wavefield_init(d_sp0, d_sp1, nz*nx);
+		cudaMemset(d_sp0, 0, nz*nx*sizeof(float));
+		cudaMemset(d_sp1, 0, nz*nx*sizeof(float));
 		for(it=0; it<nt; it++)
 		{
 			cuda_add_source<<<1,1>>>(d_sp1, &d_wlt[it], &d_sxz[is], 1, true);
 			cuda_step_forward<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, dtz, dtx, nz, nx);
 			ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-			cuda_rw_bndr<<<(2*(nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
+			cuda_rw_bndr<<<((2*nz+nx)+511)/512,512>>>(&d_bndr[it*(2*nz+nx)], d_sp0, nz, nx, true);
 
 			if(it>=ft)
 			{

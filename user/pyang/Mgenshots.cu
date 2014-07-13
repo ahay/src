@@ -56,10 +56,6 @@ extern "C" {
 
 #include "cuda_fwi_kernels.cu"
 
-static bool csdgather;
-static int nz,nx,nz1,nx1,nt,ns,ng;
-static float dx, dz, fm, dt;
-static float *v0, *dobs, *vv;/* variables on host */
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
@@ -108,14 +104,17 @@ void sf_check_gpu_error (const char *msg)
 
 int main(int argc, char *argv[])
 {
-	bool chk;
-	int is, it,kt, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
-	float dtx,dtz,mstimer,amp, totaltime=0;
-	float *trans, *ptr=NULL;
+	/* variables on host */
+	bool csdgather, chk;
+	int nz, nx, nz1, nx1, nt, ns, ng;
+	int is, it,kt, distx, distz;
+	int sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+	float dx, dz, fm, dt, dtx, dtz, mstimer, amp, totaltime=0;
+	float *v0, *dobs, *vv, *trans, *ptr=NULL;
 	/* variables on device */
 	int 	*d_sxz, *d_gxz;			
 	float 	*d_wlt, *d_vv, *d_sp0, *d_sp1, *d_dobs;
-	sf_file vinit, shots, check, time;
+	sf_file vinit, shots, check=NULL, time;
 
     	/* initialize Madagascar */
     	sf_init(argc,argv);
@@ -123,19 +122,19 @@ int main(int argc, char *argv[])
     	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
-	time=sf_output("time"); /* output total time */ 
-	check=sf_output("check");
+	time=sf_output("time");  /* output total time */
 
     	/* get parameters for forward modeling */
-    	if (!sf_histint(vinit,"n1",&nz1)) sf_error("no n1");
-    	if (!sf_histint(vinit,"n2",&nx1)) sf_error("no n2");
-    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");
-   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");
+    	if (!sf_histint(vinit,"n1",&nz1)) sf_error("no n1");/* n1 */
+    	if (!sf_histint(vinit,"n2",&nx1)) sf_error("no n2");/* n2 */
+    	if (!sf_histfloat(vinit,"d1",&dz)) sf_error("no d1");/* d1 */
+   	if (!sf_histfloat(vinit,"d2",&dx)) sf_error("no d2");/* d2 */
 
     	if(!sf_getbool("chk",&chk)) chk=false;
     	/*check whether GPU-CPU implementation coincide with each other or not */
 	if(chk){
-    		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
+    		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */ 
+		check=sf_output("check");/* check reconstructed shotsnap */
 	}
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */
@@ -228,17 +227,17 @@ int main(int argc, char *argv[])
 	cudaMemset(d_sp1,0,nz*nx*sizeof(float));
 	cuda_ricker_wavelet<<<(nt+511)/512,512>>>(d_wlt, amp, fm, dt, nt);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx1 && szbeg+(ns-1)*jsz<nz1))	
-	{ printf("sources exceeds the computing zone!\n"); exit(1);}
+	{ sf_warning("sources exceeds the computing zone!\n"); exit(1);}
 	cuda_set_sg<<<(ns+511)/512,512>>>(d_sxz, sxbeg, szbeg, jsx, jsz, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
 	if (csdgather)	{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1 &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx1  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz1))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
 	}else{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx1 && gzbeg+(ng-1)*jgz<nz1))	
-		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
+		{ sf_warning("geophones exceeds the computing zone!\n"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+511)/512,512>>>(d_gxz, gxbeg, gzbeg, jgx, jgz, ng, nz);
 
