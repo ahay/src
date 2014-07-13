@@ -197,10 +197,10 @@ __global__ void cuda_step_backward(float *illum, float *lap, float *p0, float *p
 
 
 __global__ void cuda_cal_residuals(float *dcal, float *dobs, float *derr, int ng)
-/* calculate residual wavefield at the receiver positions
+/*< calculate residual wavefield at the receiver positions
    dcal: d_{cal}
    dobs: d_{obs}
-   derr: d_{err}=d_{cal}-d_{obs} */
+   derr: d_{err}=d_{cal}-d_{obs} >*/
 {
 	int id=blockIdx.x*blockDim.x+threadIdx.x;
 	if (id<ng) derr[id]=dcal[id]-dobs[id];
