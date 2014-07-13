@@ -1,8 +1,9 @@
+/* Kernels of CUDA based FWI
+*/
 /*
   Copyright (C) 2013  Xi'an Jiaotong University (Pengliang Yang)
     Email: ypl.2100@gmail.com	
     Acknowledgement: This code is written with the help of Baoli Wang.
-
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
