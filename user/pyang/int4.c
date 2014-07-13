@@ -18,6 +18,7 @@
 */
 
 #include <rsf.h>
+#include <complex.h>
 
 #include "int4.h"
 #include "lint4.h"
