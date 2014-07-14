@@ -160,7 +160,6 @@ int main(int argc, char* argv[])
     	/* initialize Madagascar */
     	sf_init(argc,argv);
 
-    	/*< set up I/O files >*/
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
 	time=sf_output("time"); /* output total time */ 
