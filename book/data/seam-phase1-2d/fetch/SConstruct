@@ -60,31 +60,50 @@ Flow(['shots-receivers-23900.rsf','shots-receivers-23900_hdr.rsf',
 Flow('headerattr.txt','shots-receivers-23900_hdr.rsf',
      'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
-#sftahread input=shots-receivers-23900.rsf | sftahgethw key=sx,gx,offset >/dev/null
-# group interval and group interval are 25 m 
-#<shots-receivers-23900_hdr.rsf sfheaderattr 
-#91 headers, 513600 traces
-#****************************************************************************** 
+#91 headers, 136051 traces
+#******************************************************************************* 
 #     key     	            min     	              max    	          mean
-#------------------------------------------------------------------------------
-#tracr       1              1 @ 0	        513600 @ 513599	        256800
-#fldr        2              1 @ 0	          1600 @ 513279	         800.5
-#tracf       3              1 @ 0	           321 @ 320	           161
-#ep          4              1 @ 0	          1600 @ 513279	         800.5
-#trid        7              1 @ 0	             1 @ 0	             1
-#offset     11              0 @ 0	          8000 @ 320	          4000
-#gelev      12        -150000 @ 0	       -150000 @ 0	       -150000
-#sdepth     14         150000 @ 0	        150000 @ 0	        150000
-#scalel     19         -10000 @ 0	        -10000 @ 0	        -10000
-#scalco     20         -10000 @ 0	        -10000 @ 0	        -10000
-#sx         21       10000000 @ 0	     409750000 @ 513279	   2.09875e+08
-#gx         23       10000000 @ 0	     489750000 @ 513599	   2.49875e+08
-#counit     25              1 @ 0	             1 @ 0	             1
+#------------------------------------------------------------------------------- 
+#tracr       1              1 @ 0	        136051 @ 136050	         68026
+#tracf       3            361 @ 0	        649261 @ 900	        324811
+#ep          4           3041 @ 0	         15191 @ 135150	          9116
+#gelev      12            -15 @ 0	           -15 @ 0	           -15
+#selev      13            -15 @ 0	           -15 @ 0	           -15
+#sdepth     14             15 @ 0	            15 @ 0	            15
+#scalel     19              1 @ 0	             1 @ 0	             1
+#scalco     20              1 @ 0	             1 @ 0	             1
+#sx         21           3700 @ 0	         18700 @ 135150	         11200
+#sy         22          23900 @ 0	         23900 @ 0	         23900
+#gx         23              0 @ 0	         22500 @ 900	         11250
+#gy         24          23900 @ 0	         23900 @ 0	         23900
 #ns         38           2001 @ 0	          2001 @ 0	          2001
-#dt         39           4000 @ 0	          4000 @ 0	          4000
-#tscalar    82         -10000 @ 0	        -10000 @ 0	        -10000
-#****************************************************************************** 
- 
-Result('shots-receivers-23900','put n2=901 n3=151 | window j3=10 |grey')
-      
+#dt         39           8000 @ 0	          8000 @ 0	          8000
+#grnlof     68             15 @ 0	            15 @ 0	            15
+#smeas4     86          26881 @ 0	         26881 @ 0	         26881
+#smeasu     88         -32768 @ 127	         32515 @ 894	       1987.64
+#unass1     89              6 @ 66	         65298 @ 113522	       32645.3
+#unass2     90          38166 @ 0	         38166 @ 0	         38166
+#******************************************************************************* 
+
+Plot('shots-receivers-23900','put n2=901 n3=151 | window j3=10 |grey title=Shots',view=1)
+
+Flow('sx','shots-receivers-23900_hdr.rsf','window n1=1 f1=21 squeeze=n | add scale=0.01')
+Flow('gx','shots-receivers-23900_hdr.rsf','window n1=1 f1=23 squeeze=n | add scale=0.04')
+Flow('head','gx sx','cat axis=1 ${SOURCES[1]}')
+
+Flow('shots','shots-receivers-23900 head',
+     '''
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 | 
+     put 
+     label3=Shot     unit3=km o3=3.7 d3=0.1
+     label2=Receiver unit2=km o2=0   d2=0.025
+     ''')
+
+Result('shots',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=1000 frame2=500 frame3=100 title=Shots
+       ''')
+
+
 End()
