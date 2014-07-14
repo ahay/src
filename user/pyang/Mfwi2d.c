@@ -1,5 +1,5 @@
-/* Time domain full waveform inversion using MPI parallel programming 
-Note: 	Here, the Enquist absorbing boundary condition is applied!
+/* Time domain full waveform inversion (serial version in 2-D) 
+Note: 	Enquist absorbing boundary condition (A2) is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
