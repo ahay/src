@@ -28,11 +28,11 @@ int main(int argc, char* argv[])
 {
     bool mig, cmplx;
     int it, nt, ix, nx, iz, nz, nx2, nz2, nzx, nzx2, pad1;
-    int im, i, j, m2, it1, it2, its, ik, n2, nk;
+    int im, i, j, m2, it1, it2, its, ik, n2, nk, snap;
     float dt, dx, dz, c, old, x0;
     float *curr, *prev, **img, *dat, **lft, **rht, **wave;
     sf_complex *cwave, *cwavem;
-    sf_file data, image, left, right;
+    sf_file data, image, left, right, snaps;
 
     sf_init(argc,argv);
 
@@ -93,6 +93,30 @@ int main(int argc, char* argv[])
 	sf_putfloat(data,"o2",0.);
 	sf_putstring(data,"label2","Time");
 	sf_putstring(data,"unit2","s");
+    }
+
+    if (!sf_getint("snap",&snap)) snap=0;
+    /* interval for snapshots */
+
+    if (snap > 0) {
+	snaps = sf_output("snaps");
+	/* (optional) snapshot file */
+	
+	sf_putint(snaps,"n1",nz);
+	sf_putfloat(snaps,"d1",dz);
+	sf_putfloat(snaps,"o1",0.);
+	sf_putstring(snaps,"label1","Depth");
+
+	sf_putint(snaps,"n2",nx);
+	sf_putfloat(snaps,"d2",dx);
+	sf_putfloat(snaps,"o2",x0);
+	sf_putstring(snaps,"label2","Distance");
+
+	sf_putint(snaps,"n3",nt/snap);
+	sf_putfloat(snaps,"d3",dt*snap);
+	sf_putfloat(snaps,"o3",0.);
+    } else {
+	snaps = NULL;
     }
 
     nk = fft2_init(cmplx,pad1,nx,nz,&nx2,&nz2);
@@ -217,6 +241,16 @@ int main(int argc, char* argv[])
 	if (!mig) { /* modeling -> write out data */
 	    sf_floatwrite(dat,nx,data);
 	}
+
+	if (NULL != snaps && 0 == it%snap) {
+	    for (ix=0; ix < nx; ix++) {
+		for (iz=0; iz < nz; iz++) {
+		    img[ix][iz] = curr[ix+iz*nx2];
+		}
+	    }
+
+	    sf_floatwrite(img[0],nzx,snaps);
+	}	
     }
     sf_warning(".");
 
