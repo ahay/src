@@ -2,29 +2,33 @@ import os, sys, re, string
 sys.path.append('../../framework')
 import bldutil
 
+######################################################################
 # C main programs
-progs = '''
-cohn dlct fpocs2d fpocs3d istinterp istseislet lsrtm2d lsprtm2d 
-lsinterp2d lsinterp5d fwi2d fbrec2d
+progs = '''cohn dlct fpocs2d fpocs3d fwi2d fbrec2d
+istinterp istseislet lsrtm2d lsprtm2d lsinterp2d lsinterp5d 
 mwni2d myradon1 myradon2 mythresh mshots mcaseislet matflip modeling2d
 pocs3d pocs pocsseislet rtm2d rtmadcig 
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 '''
 
-
-mpi_progs='''
-mpifwi
-'''
- 
+######################################################################
 # C++ main programs
 ccprogs = '''
 '''
 
+######################################################################
+# MPI main programs
+mpi_progs = '''
+mpifwi
+'''
+
+######################################################################
 # CUDA main programs
 cuda_progs = '''
 fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d
 '''
 
+######################################################################
 try:  # distributed version
     Import('env root pkgdir bindir libdir incdir')
     env = env.Clone()
@@ -33,17 +37,18 @@ except: # local version
     root = None
     SConscript('../pwd/SConstruct')
 
-
 env.Prepend(CPPPATH=['../../include'],
             LIBPATH=['../../lib'],
             LIBS=[env.get('DYNLIB','')+'rsfpwd',
                   env.get('DYNLIB','')+'rsf'])
 
-
+######################################################################
 # fftw settings
 fftw = env.get('FFTW')
 if fftw:
     env.Prepend(CPPDEFINES=['SF_HAS_FFTW'])
+    if not isinstance(fftw,bool):
+        env.Append(LIBS=['fftw3_threads','fftw3'])
 
 src = Glob('[a-z]*.c')
 
@@ -52,6 +57,7 @@ for source in Split(src):
     obj = env.StaticObject(source)
     env.Depends(obj,inc)
 
+######################################################################
 # compiling C programs
 mains = Split(progs)
 for prog in mains:
@@ -65,10 +71,26 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+######################################################################
+# compiling C++ programs
+if 'c++' in env.get('API',[]):
+    lapack = env.get('LAPACK')
+else:
+    lapack = None
 
+ccmains = Split(ccprogs)
+for prog in ccmains:
+    sources = ['M' + prog]
+    if lapack:
+        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
+    else:
+        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
+    if root:
+        env.Install(bindir,prog)
 
+######################################################################
+# compiling MPI programs
 mpicc = env.get('MPICC')
-
 mpi_mains = Split(mpi_progs)
 for prog in mpi_mains:
     sources = ['M' + prog]
@@ -81,23 +103,7 @@ for prog in mpi_mains:
         env.Install(bindir,prog)
 
 
-if 'c++' in env.get('API',[]):
-    lapack = env.get('LAPACK')
-else:
-    lapack = None
-
-
-ccmains = Split(ccprogs)
-for prog in ccmains:
-    sources = ['M' + prog]
-    if lapack:
-        prog = env.Program(prog,map(lambda x: x + '.cc',sources))
-    else:
-        prog = env.RSF_Place('sf'+prog,None,var='LAPACK',package='lapack')
-    if root:
-        env.Install(bindir,prog)
-
-
+######################################################################
 # compiling CUDA programs
 CTP = env.get('CUDA_TOOLKIT_PATH')
 NVCC = env.get('NVCC')
@@ -132,7 +138,7 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains) + \
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
 	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains)
 
     env.Depends(docs,'#/framework/rsf/doc.py')	
