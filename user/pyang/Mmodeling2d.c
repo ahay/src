@@ -1,5 +1,5 @@
 /* 2-D forward modeling to generate shot records 
-Note: 	Here, the Clayton-Enquist absorbing boundary condition is applied!
+Note: 	Clayton-Enquist absorbing boundary condition is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -22,11 +22,6 @@ Note: 	Here, the Clayton-Enquist absorbing boundary condition is applied!
 #include <rsf.h>
 #include <time.h>
 
-static bool csdgather;
-static int nz, nx, nt, ns, ng;
-static float dx, dz, fm, dt;
-static int *sxz, *gxz;
-static float *wlt,*dobs,*bndr, **vv;
 
 void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 /*< matrix transpose: matrix tansposed to be trans >*/
@@ -39,7 +34,7 @@ void matrix_transpose(float *matrix, float *trans, int n1, int n2)
 }
 
 
-void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx)
+void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, float dtx, int nz, int nx)
 /*< forward modeling step, Clayton-Enquist ABC incorporated >*/
 {
     int ix,iz;
@@ -107,7 +102,7 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 }
 
 
-void add_source(float **p, float *source, int *sxz, int ns, bool add)
+void add_source(float **p, float *source, int *sxz, int ns, int nz, bool add)
 /*< add/subtract seismic sources >*/
 {
 	int is, sx, sz;
@@ -126,7 +121,7 @@ void add_source(float **p, float *source, int *sxz, int ns, bool add)
 	}
 }
 
-void record_seis(float *seis_it, int *gxz, float **p, int ng)
+void record_seis(float *seis_it, int *gxz, float **p, int ng, int nz)
 /*< record seismogram at time it into a vector length of ng >*/
 {
 	int ig, gx, gz;
@@ -138,7 +133,7 @@ void record_seis(float *seis_it, int *gxz, float **p, int ng)
 	}
 }
 
-void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
+void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns, int nz)
 /*< shot/geophone position initialize >*/
 {
 	int is, sz, sx;
@@ -150,35 +145,15 @@ void sg_init(int *sxz, int szbeg, int sxbeg, int jsz, int jsx, int ns)
 	}
 }
 
-void rw_bndr(float **p, float *bndr, bool read)
-/*< if read==true, read boundaries into variables;
- else write/save boundaries (for 2nd order FD) >*/
-{
-	int i;
-	if(read){
-		for(i=0; i<nz; i++)
-		{
-			p[0][i]=bndr[i];
-			p[nx-1][i]=bndr[i+nz];
-		}
-		for(i=0; i<nx; i++) p[i][nz-1]=bndr[i+2*nz];
-	}else{
-		for(i=0; i<nz; i++)
-		{
-			bndr[i]=p[0][i];
-			bndr[i+nz]=p[nx-1][i];
-		}
-		for(i=0; i<nx; i++) bndr[i+2*nz]=p[i][nz-1];
-	}
-}
 
 
 int main(int argc, char* argv[])
 {
-	bool chk;
-  	int is,it,kt, distx, distz,sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
-  	float dtx,dtz,amp,tmp, totaltime=0	;
-	float *trans, **p0, **p1, **p2, **ptr=NULL;
+	bool csdgather, chk;
+	int nz, nx, nt, ns, ng, is, it, kt, distx, distz, sxbeg,szbeg,gxbeg,gzbeg,jsx,jsz,jgx,jgz;
+	int *sxz, *gxz;
+  	float dx, dz, fm, dt, dtx, dtz, amp, tmp, totaltime=0	;
+	float *trans, *wlt, *dobs, *bndr, **vv, **p0, **p1, **p2, **ptr=NULL;
 	clock_t start, end;
 	sf_file vinit, shots, check, time;
 
@@ -189,7 +164,6 @@ int main(int argc, char* argv[])
     	vinit=sf_input ("in");   /* initial velocity model, unit=m/s */
     	shots=sf_output("out");  /* output image with correlation imaging condition */ 
 	time=sf_output("time"); /* output total time */ 
-	check=sf_output("check");/* output shotsnap for correctness checking*/
 
     	/* get parameters for forward modeling */
     	if (!sf_histint(vinit,"n1",&nz)) sf_error("no n1");
@@ -201,6 +175,7 @@ int main(int argc, char* argv[])
     	/*check whether GPU-CPU implementation coincide with each other or not */
 	if(chk){
     		if (!sf_getint("kt",&kt))  kt=100;/* check it at it=100 */
+		check=sf_output("check");/* output shotsnap for correctness checking*/
 	}
 	if (!sf_getfloat("amp",&amp)) amp=1000;
 	/* maximum amplitude of ricker */
@@ -286,7 +261,7 @@ int main(int argc, char* argv[])
 	memset(p2[0],0,nz*nx*sizeof(float));
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
 	{ printf("sources exceeds the computing zone!\n"); exit(1);}
- 	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
+ 	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns, nz);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
 	if (csdgather)	{
@@ -297,7 +272,7 @@ int main(int argc, char* argv[])
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
 		{ printf("geophones exceeds the computing zone!\n"); exit(1);}
 	}
-	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng, nz);
 
 	for(is=0; is<ns; is++)
 	{
@@ -305,18 +280,17 @@ int main(int argc, char* argv[])
 
 		if (csdgather)	{
 			gxbeg=sxbeg+is*jsx-distx;
-			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
+			sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng, nz);
 		}
 		memset(p0[0],0,nz*nx*sizeof(float));
 		memset(p1[0],0,nz*nx*sizeof(float));
 		memset(p2[0],0,nz*nx*sizeof(float));
 		for(it=0; it<nt; it++)
 		{
-			add_source(p1, &wlt[it], &sxz[is], 1, true);
-			
-			step_forward(p0, p1, p2, vv, dtz, dtx);
+			add_source(p1, &wlt[it], &sxz[is], 1, nz, true);			
+			step_forward(p0, p1, p2, vv, dtz, dtx, nz, nx);
 			ptr=p0; p0=p1; p1=p2; p2=ptr;
-			record_seis(&dobs[it*ng], gxz, p0, ng);
+			record_seis(&dobs[it*ng], gxz, p0, ng, nz);
 
 			if(it==kt){
 				sf_floatwrite(p0[0],nz*nx, check);

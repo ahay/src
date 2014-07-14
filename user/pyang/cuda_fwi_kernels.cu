@@ -45,9 +45,12 @@ __global__ void cuda_ricker_wavelet(float *wlt, float amp, float fm, float dt, i
 /*< generate ricker wavelet with time deley >*/
 {
 	int it=threadIdx.x+blockDim.x*blockIdx.x;
-    	float tmp = PI*fm*(it*dt-1.0/fm);
-    	tmp *=tmp;
-    	if (it<nt) wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
+    	if (it<nt)
+	{
+	    	float tmp = PI*fm*(it*dt-1.0/fm);
+	    	tmp *=tmp;
+		wlt[it]=amp*(1.0-2.0*tmp)*expf(-tmp);
+	}
 }
 
 __global__ void cuda_add_source(float *p, float *source, int *sxz, int ns, bool add)
@@ -101,41 +104,43 @@ __global__ void cuda_step_forward(float *p0, float *p1, float *vv, float dtz, fl
 	s_p1[threadIdx.y+1][threadIdx.x+1]=p1[id];
 	__syncthreads();
 
-	float v1=vv[id]*dtz;
-	float v2=vv[id]*dtx; 
-	float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
-	float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
+	if (i1<nz && i2<nx)
+	{
+		float v1=vv[id]*dtz;
+		float v2=vv[id]*dtx; 
+		float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
+		float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
 /*
-	if(i1==0)// top boundary
-	{
-		c1=v1*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x+2]
-					+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+2]);
-		if(i2>0 && i2<nx-1) c2=0.5*c2;
-	}
+		if(i1==0)// top boundary
+		{
+			c1=v1*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x+2]
+						+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+2]);
+			if(i2>0 && i2<nx-1) c2=0.5*c2;
+		}
 */
-	if(i1==nz-1) /* bottom boundary */
-	{
-		c1=v1*(s_p1[threadIdx.y+1][threadIdx.x]-s_p1[threadIdx.y+1][threadIdx.x+1]
-					-s_p0[threadIdx.y+1][threadIdx.x]+s_p0[threadIdx.y+1][threadIdx.x+1]);
-		if(i2>0 && i2<nx-1) c2=0.5*c2;
-	}
+		if(i1==nz-1) /* bottom boundary */
+		{
+			c1=v1*(s_p1[threadIdx.y+1][threadIdx.x]-s_p1[threadIdx.y+1][threadIdx.x+1]
+						-s_p0[threadIdx.y+1][threadIdx.x]+s_p0[threadIdx.y+1][threadIdx.x+1]);
+			if(i2>0 && i2<nx-1) c2=0.5*c2;
+		}
 
-	if(i2==0)/* left boundary */
-	{
-		if(i1>0 && i1<nz-1) c1=0.5*c1;
-		c2=v2*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+2][threadIdx.x+1]
-					+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+2][threadIdx.x+1]);
+		if(i2==0)/* left boundary */
+		{
+			if(i1>0 && i1<nz-1) c1=0.5*c1;
+			c2=v2*(-s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+2][threadIdx.x+1]
+						+s_p0[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+2][threadIdx.x+1]);
 
-	}
+		}
 
-	if(i2==nx-1) /* right boundary */
-	{
-		if(i1>0 && i1<nz-1) c1=0.5*c1;
-		c2=v2*(s_p1[threadIdx.y][threadIdx.x+1]-s_p1[threadIdx.y+1][threadIdx.x+1]
-					-s_p0[threadIdx.y][threadIdx.x+1]+s_p0[threadIdx.y+1][threadIdx.x+1]);
+		if(i2==nx-1) /* right boundary */
+		{
+			if(i1>0 && i1<nz-1) c1=0.5*c1;
+			c2=v2*(s_p1[threadIdx.y][threadIdx.x+1]-s_p1[threadIdx.y+1][threadIdx.x+1]
+						-s_p0[threadIdx.y][threadIdx.x+1]+s_p0[threadIdx.y+1][threadIdx.x+1]);
+		}
+		p0[id]=2.0*s_p1[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+1]+c1+c2;
 	}
-	
-	if (i1<nz && i2<nx) p0[id]=2.0*s_p1[threadIdx.y+1][threadIdx.x+1]-s_p0[threadIdx.y+1][threadIdx.x+1]+c1+c2;
 }
 
 
@@ -182,13 +187,13 @@ __global__ void cuda_step_backward(float *illum, float *lap, float *p0, float *p
 	}
 	__syncthreads();
 
-	float v1=vv[id]*dtz;
-	float v2=vv[id]*dtx; 
-	float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
-	float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
-
 	if (i1<nz && i2<nx) 
 	{
+		float v1=vv[id]*dtz;
+		float v2=vv[id]*dtx; 
+		float c1=v1*v1*(s_p1[threadIdx.y+1][threadIdx.x+2]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y+1][threadIdx.x]);
+		float c2=v2*v2*(s_p1[threadIdx.y+2][threadIdx.x+1]-2.0*s_p1[threadIdx.y+1][threadIdx.x+1]+s_p1[threadIdx.y][threadIdx.x+1]);
+
 		p0[id]=2.0*s_p1[threadIdx.y+1][threadIdx.x+1]-p0[id]+c1+c2;
 		lap[id]=c1+c2;
 		illum[id]+=s_p1[threadIdx.y+1][threadIdx.x+1]*s_p1[threadIdx.y+1][threadIdx.x+1];
@@ -255,20 +260,12 @@ __global__ void cuda_scale_gradient(float *g1, float *vv, float *illum, float dt
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.y;
 	int id=i1+nz*i2;
-	float a;
-	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) 
+	if (i1<nz && i2<nx) 
 	{
-		a=dt*vv[id];
+		float a=dt*vv[id];
 		if (precon) a*=sqrtf(illum[id]+EPS);/*precondition with residual wavefield illumination*/
 		g1[id]*=2.0/a;
 	}
-	__syncthreads();
-	// handling the outliers at the boundary
-	if (i1==0) 		g1[id]=g1[1+nz*i2];
-	else if (i1==nz-1)	g1[id]=g1[nz-2+nz*i2];
-	__syncthreads();
-	if (i2==0)		g1[id]=g1[i1+nz];
-	else if (i2==nx-1)	g1[id]=g1[i1+nz*(nx-2)];
 }
 
 
@@ -393,7 +390,7 @@ configuration requirement: <<<1, Block_Size>>> >*/
 		if (blockDim.x >=   2) { sdata[tid] =max(sdata[tid],sdata[tid + 1]);tdata[tid]=max(tdata[tid], tdata[tid+1]);}
     	}
 
-    	if (tid == 0) { if(fabsf(tdata[0])>EPS) *epsil=0.01*sdata[0]/tdata[0];	else *epsil=0.0f; }
+    	if (tid == 0) { if(tdata[0]>EPS) *epsil=0.01*sdata[0]/tdata[0]; else *epsil=0.0;}
 }
 
 __global__ void cuda_cal_vtmp(float *vtmp, float *vv, float *cg, float epsil, int nz, int nx)
@@ -402,6 +399,7 @@ __global__ void cuda_cal_vtmp(float *vtmp, float *vv, float *cg, float epsil, in
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
+
 	if (i1<nz && i2<nx)	vtmp[id]=vv[id]+epsil*cg[id];
 }
 
@@ -411,12 +409,12 @@ __global__ void cuda_sum_alpha12(float *alpha1, float *alpha2, float *dcaltmp, f
 	alpha2: denominator; length=ng >*/
 {
 	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	float a=(id<ng)?dcaltmp[id]:0.0f;/* f(mk+epsil*cg) */
-	float b=(id<ng)?dobs[id]:0.0f;
-	float c=(id<ng)?derr[id]:0.0f;
-	float d=b+c;/* since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c; */
-	float e=a-d;/* f(mk+epsil*cg)-f(mk) */
-	if(id<ng) { alpha1[id]-=e*c; alpha2[id]+=e*e; }
+	if(id<ng) { 
+		float c=derr[id];
+		float a=dobs[id]+c;/* since f(mk)-dobs[id]=derr[id], thus f(mk)=b+c; */
+		float b=dcaltmp[id]-a;/* f(mk+epsil*cg)-f(mk) */
+		alpha1[id]-=b*c; alpha2[id]+=b*b; 
+	}
 }
 
 
@@ -454,7 +452,7 @@ configuration requirement: <<<1, Block_Size>>> >*/
 		if (blockDim.x >=   2) { sdata[tid] += sdata[tid +  1]; tdata[tid] += tdata[tid +  1];}
     	}
      
-    	if (tid == 0) { if(fabsf(tdata[0])>EPS) *alpha=epsil*sdata[0]/tdata[0];	else *alpha=0.0f;}
+    	if (tid == 0) { if(tdata[0]>EPS) *alpha=epsil*sdata[0]/(tdata[0]+EPS); else *alpha=0.0;}
 }
 
 
@@ -464,14 +462,8 @@ __global__ void cuda_update_vel(float *vv, float *cg, float alpha, int nz, int n
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	if (i1>=1 && i1<nz-1 && i2>=1 && i2<nx-1) vv[id]=vv[id]+alpha*cg[id];
-	__syncthreads();
-	/* handling the outliers at the boundary */
-	if (i1==0) 	vv[id]=vv[1+nz*i2];
-	else if (i1==nz-1)	vv[id]=vv[nz-2+nz*i2];
-	__syncthreads();
-	if (i2==0)	vv[id]=vv[i1+nz];
-	else if (i2==nx-1)	vv[id]=vv[i1+nz*(nx-2)];
+
+	if (i1<nz && i2<nx) vv[id]=vv[id]+alpha*cg[id];
 }
 
 __global__ void cuda_bell_smoothz(float *g, float *smg, int rbell, int nz, int nx)
@@ -481,9 +473,9 @@ __global__ void cuda_bell_smoothz(float *g, float *smg, int rbell, int nz, int n
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	float s=0;
 	if(i1<nz && i2<nx)
 	{
+		float s=0;
 		for(i=-rbell; i<=rbell; i++) if(i1+i>=0 && i1+i<nz) s+=expf(-(2.0*i*i)/rbell)*g[id+i];
 		smg[id]=s;
 	}
@@ -497,9 +489,9 @@ __global__ void cuda_bell_smoothx(float *g, float *smg, int rbell, int nz, int n
 	int i1=threadIdx.x+blockIdx.x*blockDim.x;
 	int i2=threadIdx.y+blockIdx.y*blockDim.x;
 	int id=i1+i2*nz;
-	float s=0;
 	if(i1<nz && i2<nx)
 	{
+		float s=0;
 		for(i=-rbell; i<=rbell; i++) if(i2+i>=0 && i2+i<nx) s+=expf(-(2.0*i*i)/rbell)*g[id+nz*i];
 		smg[id]=s;
 	}
