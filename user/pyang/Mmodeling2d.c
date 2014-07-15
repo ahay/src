@@ -1,5 +1,5 @@
 /* 2-D forward modeling to generate shot records 
-Note: 	Clayton-Enquist absorbing boundary condition is applied!
+Note: 	Clayton-Enquist absorbing boundary condition (A2) is applied!
  */
 /*
   Copyright (C) 2014  Xi'an Jiaotong University, UT Austin (Pengliang Yang)
@@ -17,6 +17,10 @@ Note: 	Clayton-Enquist absorbing boundary condition is applied!
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Reference: Clayton, Robert, and Björn Engquist. "Absorbing boundary 
+	conditions for acoustic and elastic wave equations." Bulletin 
+	of the Seismological Society of America 67.6 (1977): 1529-1540.
 */
 
 #include <rsf.h>
