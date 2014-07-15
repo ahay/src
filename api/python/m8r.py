@@ -266,7 +266,9 @@ class File(object):
 
             return map(lambda x: float(x.rstrip(',')),val.split())
     def __array_wrap__(self,array,context=None):
-        return Input(array)
+        inp = Input(self) 
+        inp.read(array)
+        return inp
     def __getitem__(self,i):
         array = self.__array__()
         return array[i]

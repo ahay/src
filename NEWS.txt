@@ -38,9 +38,13 @@ In documentation:
 
 In APIs:
 
+* Fixed __array_wrap__ bug in Python API
+
 In the Python package:
 
 In programs:
+
+* Fixed output size bug in sfinttest1
 
 In the build system:
 

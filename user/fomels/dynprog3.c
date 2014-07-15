@@ -93,8 +93,9 @@ static float find_minimum(int ic1, int nc1, int jc1,
 			  int ic2, int nc2, int jc2,
 			  float fc, float *pick)
 {
-    float f0m, f00, f0p, fpm, fp0, fpp, fmm, fm0, fmp, fmin;
-    float den, x1, x2, df;
+    float f0m, f00, f0p, fpm, fp0, fpp, fmm, fm0, fmp;
+    float den, den2, x1, x2, df;
+    const float eps=0.01;
     
     if (0==ic1) {
 	ic1++;
@@ -130,68 +131,15 @@ static float find_minimum(int ic1, int nc1, int jc1,
 	2*fpm*(32*f00 + 8*f0m + 8*f0p + 8*fm0 - 25*fmm - 7*fmp + 8*fp0) + 7*fpp*fpp - 
 	2*fpp*(32*f00 + 8*f0m + 8*f0p + 8*fm0 - 7*fmm - 25*fmp + 8*fp0 - 25*fpm);
 
-    if (den <= 0.) {
-	/* no minimum */
-
-	fmin = SF_HUGE;
-
-	if (fmin > f00) {
-	    fmin = f00;
-	    pick[0] = ic1;
-	    pick[1] = ic2;
-	}
-	if (fmin > f0p) {
-	    fmin = f0p;
-	    pick[0] = ic1+1;
-	    pick[1] = ic2;
-	}
-	if (fmin > f0m) {
-	    fmin = f0m;
-	    pick[0] = ic1-1;
-	    pick[1] = ic2;
-	}
-
-	if (fmin > fp0) {
-	    fmin = fp0;
-	    pick[0] = ic1;
-	    pick[1] = ic2+1;
-	}
-	if (fmin > fpp) {
-	    fmin = fpp;
-	    pick[0] = ic1+1;
-	    pick[1] = ic2+1;
-	}
-	if (fmin > fpm) {
-	    fmin = fpm;
-	    pick[0] = ic1-1;
-	    pick[1] = ic2+1;
-	}
-
-	if (fmin > fm0) {
-	    fmin = fm0;
-	    pick[0] = ic1;
-	    pick[1] = ic2-1;
-	}
-	if (fmin > fmp) {
-	    fmin = fmp;
-	    pick[0] = ic1+1;
-	    pick[1] = ic2-1;
-	}
-	if (fmin > fmm) {
-	    fmin = fmm;
-	    pick[0] = ic1-1;
-	    pick[1] = ic2-1;
-	}
-	
-	return fmin;
-    }
+    den2 = den*den+eps;
+    den = den/den2;
 	 
     x1 = -2*(8*fm0*fm0 + 4*fm0*(2*f00 - f0m - f0p) - fmm*fmm +
 	     fmm*(8*f00 - f0m - 7*f0p + 4*fm0) - fmp*fmp + 
 	     fmp*(8*f00 - 7*f0m - f0p + 4*fm0 - 14*fmm) - 8*fp0*fp0 - 
 	     4*fp0*(2*f00 - f0m - f0p - 3*fmm - 3*fmp) + fpm*fpm - 
 	     fpm*(8*f00 - f0m - 7*f0p + 12*fm0 + 4*fp0) + fpp*fpp - 
-	     fpp*(8*f00 - 7*f0m - f0p + 12*fm0 + 4*fp0 - 14*fpm))/den;
+	     fpp*(8*f00 - 7*f0m - f0p + 12*fm0 + 4*fp0 - 14*fpm))*den;
     x2 = 2*(-8*f00*f0m + 8*f00*f0p - 8*f0m*f0m + 8*f0p*f0p +
 	    4*fm0*(f0m - f0p) + fmm*fmm - 
 	    fmm*(8*f00 + 4*f0m + 12*f0p - fm0) - fmp*fmp + 
@@ -199,7 +147,7 @@ static float find_minimum(int ic1, int nc1, int jc1,
 	    fp0*(4*f0m - 4*f0p + 7*fmm - 7*fmp) + fpm*fpm - 
 	    fpm*(8*f00 + 4*f0m + 12*f0p - 7*fm0 - 14*fmm - fp0) - 
 	    fpp*fpp + 
-	    fpp*(8*f00 + 12*f0m + 4*f0p - 7*fm0 - 14*fmp - fp0))/den;
+	    fpp*(8*f00 + 12*f0m + 4*f0p - 7*fm0 - 14*fmp - fp0))*den;
 
     if (x1 > 1.) {
 	pick[0] = ic1+1;
@@ -281,7 +229,7 @@ static float find_minimum(int ic1, int nc1, int jc1,
 	       6*fp0*fp0 + fp0*(24*f00 + 51*f0m + 53*f0p - 4*fm0 - 
 				16*fmm - 32*fmp) + 26*fpm*fpm +
 	       2*fpm*(12*f00 - 16*f0m - 16*f0p - 35*fm0 + 12*fmm + 
-		      12*fmp - 21*fp0))/3)/den;
+		      12*fmp - 21*fp0))/3)*den;
 
     if (f00 < df) {
       pick[0] = ic1;

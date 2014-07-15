@@ -47,12 +47,15 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_histfloat(in,"d1",&d))   sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&o))   sf_error("No o1= in input");
-
     if (SF_FLOAT != sf_gettype(crd)) sf_error("Need float coord");
     if (!sf_histint(crd,"n1",&nd))   sf_error("No n1= in coord");
-    sf_fileflush(out,crd);
+    sf_putint(out,"n1",nd);
+
+    if (sf_histfloat(crd,"d1",&d)) sf_putfloat(out,"d1",d);
+    if (sf_histfloat(crd,"o1",&o)) sf_putfloat(out,"o1",o);
+    
+    if (!sf_histfloat(in,"d1",&d))   sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&o))   sf_error("No o1= in input");
 
     intp = sf_getstring("interp");
     /* interpolation (lagrange,cubic,kaiser,lanczos,cosine,welch,spline,mom) */
