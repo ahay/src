@@ -553,15 +553,14 @@ int main(int argc, char *argv[])
 
 	int size, rank, ik, nk;	
 	float start, stop;/* MPI timer */
-	float **g1loc, **illumloc, *alpha1loc, *alpha2loc;
-	float objloc;
+	float *sendbuf, *recvbuf;
 
     	MPI_Init (&argc, &argv);
     	MPI_Comm_size(MPI_COMM_WORLD, &size);/* how many nodes */
     	MPI_Comm_rank(MPI_COMM_WORLD, &rank);/* who am I? */
 
     	sf_init(argc,argv);    	/* initialize Madagascar */
-    	vinit=sf_input ("in");     /* initial velocity model, unit=m/s */
+    	vinit=sf_input ("vinit");     /* initial velocity model, unit=m/s */
 	shots=sf_input("shots");   /* recorded shots from exact velocity model */
 	if(rank==0){/* only the 1st cpu output info */
 	    	vupdates=sf_output("out"); /* updated velocity in iterations */ 
@@ -672,10 +671,6 @@ int main(int argc, char *argv[])
 	derr=(float*)malloc(nk*ng*nt*sizeof(float));/* residual/error between synthetic and observation */
 	alpha1=(float*)malloc(ng*sizeof(float));/* numerator of alpha, length=ng */
 	alpha2=(float*)malloc(ng*sizeof(float));/* denominator of alpha, length=ng */
-	g1loc=sf_floatalloc2(nz, nx);/* local gradient for MPI_Reduce */
-	illumloc=sf_floatalloc2(nz, nx);/* local illumination for MPI_Reduce */
-	alpha1loc=(float*)malloc(ng*sizeof(float));/* numerator of alpha, length=ng */
-	alpha2loc=(float*)malloc(ng*sizeof(float));/* denominator of alpha, length=ng */
 
 	/* initialize varibles */
 	sf_floatread(vv[0], nz*nx, vinit);
@@ -718,20 +713,16 @@ int main(int argc, char *argv[])
 	memset(alpha2, 0, ng*sizeof(float));
 	memset(dobs, 0, ng*nt*sizeof(float));	
 	memset(objval, 0, niter*sizeof(float));
-	memset(g1loc[0], 0, nz*nx*sizeof(float));
-	memset(illumloc[0], 0, nz*nx*sizeof(float));
-	memset(alpha1loc, 0, ng*sizeof(float));
-	memset(alpha2loc, 0, ng*sizeof(float));
+
 
 	for(iter=0; iter<niter; iter++)
 	{
 		if(rank==0 && verb) start=MPI_Wtime();// record starting time
     		sf_seek(shots, rank*nt*ng*sizeof(float), SEEK_SET);/* Starting position in input files */
 		memcpy(g0[0], g1[0], nz*nx*sizeof(float));
-		memset(g1loc[0], 0, nz*nx*sizeof(float));
-		//memset(g1[0], 0, nz*nx*sizeof(float)); // g1 <-- MPI_Reduce(g1loc);
+		memset(g1[0], 0, nz*nx*sizeof(float));
 		memset(illum[0], 0, nz*nx*sizeof(float));
-		//memset(illum[0], 0, nz*nx*sizeof(float));// illum <-- MPI_Reduce(illumloc);
+		memset(derr, 0, nk*ng*nt*sizeof(float));
 		ik=0;
 		for(is=rank; is<ns; is+=size, ik++)
 		{
@@ -766,32 +757,56 @@ int main(int argc, char *argv[])
 				add_source(gp1, &derr[ik*ng*nt+it*ng], gxz, ng, nz, true);
 				step_forward(gp0, gp1, gp2, vv, dtz, dtx, nz, nx);
 
-				cal_gradient(g1loc, lap, gp1, nz, nx);
+				cal_gradient(g1, lap, gp1, nz, nx);
 				ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
 				ptr=gp0; gp0=gp1; gp1=gp2; gp2=ptr;
 			}
         		sf_seek(shots, nt*ng*(size-1)*sizeof(float), SEEK_CUR);/* Move on to the next portion */
 		}
-		objloc=cal_objective(derr, ng*nt*nk);/* local objective for current 'rank' */
-    		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Reduce(&objloc, &obj, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(g1loc[0], g1[0], nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(illumloc[0], illum[0], nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		obj=cal_objective(derr, ng*nt*nk);/* local objective for current 'rank' */
 
-		scale_gradient(g1, vv, illum, dt, nz, nx, precon);		
-		if(rank==0) sf_floatwrite(illum[0], nz*nx, illums);
-		bell_smoothz(g1, illum, rbell, nz, nx);
-		bell_smoothx(illum, g1, rbell, nz, nx);
-		if(rank==0) sf_floatwrite(g1[0], nz*nx, grads);
+		if(rank==0){
+		    sendbuf=MPI_IN_PLACE;
+		    recvbuf=&obj;
+		}else{
+		    sendbuf=&obj;
+		    recvbuf=NULL;
+		}
+        	MPI_Reduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		if(rank==0){
+		    sendbuf=MPI_IN_PLACE;
+		    recvbuf=g1[0];
+		}else{
+		    sendbuf=g1[0];
+		    recvbuf=NULL;
+		}
+		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		if(rank==0){
+		    sendbuf=MPI_IN_PLACE;
+		    recvbuf=illum[0];
+		}else{
+		    sendbuf=illum[0];
+		    recvbuf=NULL;
+		}
+		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-		if (iter>0) beta=cal_beta(g0, g1, cg, nz, nx); else beta=0.0;
-		cal_conjgrad(g1, cg, beta, nz, nx);
-		epsil=cal_epsilon(vv, cg, nz, nx);
+		if(rank==0) {
+			scale_gradient(g1, vv, illum, dt, nz, nx, precon);		
+			sf_floatwrite(illum[0], nz*nx, illums);
+			bell_smoothz(g1, illum, rbell, nz, nx);
+			bell_smoothx(illum, g1, rbell, nz, nx);
+			sf_floatwrite(g1[0], nz*nx, grads);
+
+			if (iter>0) beta=cal_beta(g0, g1, cg, nz, nx); else beta=0.0;
+			cal_conjgrad(g1, cg, beta, nz, nx);
+			epsil=cal_epsilon(vv, cg, nz, nx);
+			cal_vtmp(vtmp, vv, cg, epsil, nz, nx);
+		}
 
     		sf_seek(shots, rank*nt*ng*sizeof(float), SEEK_SET);/* Starting position in input files */
-		memset(alpha1loc, 0, ng*sizeof(float));
-		memset(alpha2loc, 0, ng*sizeof(float));
-		cal_vtmp(vtmp, vv, cg, epsil, nz, nx);
+		memset(alpha1, 0, ng*sizeof(float));
+		memset(alpha2, 0, ng*sizeof(float));
+            	MPI_Bcast(vtmp[0], nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
 		ik=0;
 		for(is=rank; is<ns; is+=size, ik++)
 		{
@@ -810,27 +825,44 @@ int main(int argc, char *argv[])
 				ptr=sp0; sp0=sp1; sp1=sp2; sp2=ptr;
 
 				record_seis(dcal, gxz, sp0, ng, nz);
-				sum_alpha12(alpha1loc, alpha2loc, dcal, &dobs[it*ng], &derr[ik*ng*nt+it*ng], ng);
+				sum_alpha12(alpha1, alpha2, dcal, &dobs[it*ng], &derr[ik*ng*nt+it*ng], ng);
 			}
         		sf_seek(shots, nt*ng*(size-1)*sizeof(float), SEEK_CUR);/* Move on to the next portion */
 		}
-		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Reduce(alpha1loc, alpha1, ng, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-		MPI_Reduce(alpha2loc, alpha2, ng, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
-		alpha=cal_alpha(alpha1, alpha2, epsil, ng);
-		update_vel(vv, cg, alpha, nz, nx);
-		if(rank==0) sf_floatwrite(vv[0], nz*nx, vupdates); 
-		if(iter==0) {obj1=obj; objval[iter]=1.0;}
-		else	objval[iter]=obj/obj1;
+		if(rank==0){
+		    sendbuf=MPI_IN_PLACE;
+		    recvbuf=alpha1;
+		}else{
+		    sendbuf=alpha1;
+		    recvbuf=NULL;
+		}
+        	MPI_Reduce(sendbuf, recvbuf, ng, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		if(rank==0){
+		    sendbuf=MPI_IN_PLACE;
+		    recvbuf=alpha2;
+		}else{
+		    sendbuf=alpha2;
+		    recvbuf=NULL;
+		}
+        	MPI_Reduce(sendbuf, recvbuf, ng, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
+		if(rank==0){
+			alpha=cal_alpha(alpha1, alpha2, epsil, ng);
+			update_vel(vv, cg, alpha, nz, nx);
+			sf_floatwrite(vv[0], nz*nx, vupdates); 
+			if(iter==0) {obj1=obj; objval[iter]=1.0;}
+			else	objval[iter]=obj/obj1;
+		}
+	
+            	MPI_Bcast(vv[0], nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
 		if(rank==0 && verb) {// output important information at each FWI iteration
 			sf_warning("obj=%f  beta=%f  epsil=%f  alpha=%f", obj, beta, epsil, alpha);
 			stop=MPI_Wtime();// record ending time 
 			sf_warning("iteration %d finished: %f (s)",iter+1, stop-start);
 		}
 	}
-	sf_floatwrite(objval, niter, objs);
+	if(rank==0) sf_floatwrite(objval, niter, objs);
 
 	free(*vv); free(vv);
 	free(*vtmp); free(vtmp);
@@ -856,10 +888,6 @@ int main(int argc, char *argv[])
 	free(derr);
 	free(alpha1);
 	free(alpha2);
-	free(*g1loc); free(g1loc);
-	free(*illumloc); free(illumloc);
-	free(alpha1loc);
-	free(alpha2loc);
 
 	MPI_Finalize();
 	exit(0);
