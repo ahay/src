@@ -12,11 +12,11 @@ Plot('signal',plot('Signal'))
 Flow('make',None,'make second=y n1=75 n2=32 t1=2 | put o1=0 d1=1 o2=0 d2=1')
 Plot('make',plot('Signal+Noise'))
 
-Flow('pq','make','twodip2 verb=y gauss=n')
+Flow('pq','make','twodip2 order=2 eps=10 lam=10 verb=y gauss=n')
 Flow('rec','make pq',
      	'''
      	mcaseislet dips=${SOURCES[1]} 
-	verb=y order=1 type=b eps=0.01 niter=10 pclip=15 decr=n 
+	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100
      	''')
 
 Flow('rec1','rec','window n3=1')
