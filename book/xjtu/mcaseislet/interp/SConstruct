@@ -2,13 +2,10 @@ from rsf.proj import *
 
 Fetch('sean.HH','bp')
 
-def grey(title):
-    return 'grey title="%s" label2=Channel label1="Time (s)" ' % title
-
 Flow('sean','sean.HH',
      'dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50')
-Plot('sean',grey('Original')) 
-Result('sean',grey('Original')) 
+Plot('sean','window n2=180 | grey title=Original label1="Time (s)" label2=Trace labelsz=16 titlesz=20')
+Result('sean','grey label1="Time (s)" label2=Trace title=Original') 
      
 # Pad to a power of 2
 Flow('sean1','sean','pad n2=256')
@@ -21,14 +18,14 @@ Flow('mask','sean',
      spray axis=1 n=500 | dd type=float
      ''')
 Flow('sean2','sean1 mask','mul ${SOURCES[1]}')
-Plot('sean2','window n2=180 | grey title=Missing')
+Plot('sean2','window n2=180 | grey label1="Time (s)" label2=Trace title=Missing labelsz=16 titlesz=20')
 
 #================================================================================
 Flow('ppq','sean2 mask','twodip2 mask=${SOURCES[1]} order=2 eps=5 verb=y gauss=n niter=10 | pad n2=256')
 Flow('dip1','ppq','window n3=1')
 Flow('dip2','ppq','window f3=1')
-Plot('dip1','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('First Dip'))
-Plot('dip2','window n2=180 |%s pclip=100 scalebar=y color=j' % grey('Second Dip'))
+Plot('dip1','window n2=180 |grey label1="First Dip" label2=Trace pclip=100 scalebar=y color=j labelsz=16 titlesz=20')
+Plot('dip2','window n2=180 |grey label1="Second Dip" label2=Trace pclip=100 scalebar=y color=j labelsz=16 titlesz=20')
 Result('dips','dip1 dip2','SideBySideIso')
 
 # Seislet-based MCA inpainting 1st:
@@ -41,9 +38,9 @@ Flow('rec1','rec0','window n3=1')
 Flow('rec2','rec0','window f3=1')
 Flow('rec','rec1 rec2','add scale=1,1 ${SOURCES[1]}')
 
-Plot('rec1','window n2=180 | grey title=rec1')
-Plot('rec2','window n2=180 | grey title=rec2')
-Plot('rec','window n2=180 | grey title=interpolated')
+Plot('rec1','window n2=180 | grey title=rec1 label1="Time (s)" label2=Trace labelsz=16 titlesz=20')
+Plot('rec2','window n2=180 | grey title=rec2 label1="Time (s)" label2=Trace labelsz=16 titlesz=20')
+Plot('rec','window n2=180 | grey title=interpolated label1="Time (s)" label2=Trace labelsz=16 titlesz=20')
 
 Result('interp','sean sean2 rec1 rec2 rec','SideBySideAniso')
 

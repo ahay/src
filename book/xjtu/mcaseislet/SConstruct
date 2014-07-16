@@ -1,0 +1,5 @@
+from rsf.tex import *
+
+End( 	lclass='geophysics',  
+	options='times',
+	use='algorithm,algorithmic,amsmath,amssymb,graphicx,url',color='ALL')

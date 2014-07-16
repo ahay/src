@@ -7,10 +7,10 @@ def plot(title):
     ''' % title
 
 Flow('signal',None,'make second=n n1=75 n2=32 t1=2')
-Plot('signal',plot('(a) Signal'))
+Plot('signal',plot('Signal'))
 
 Flow('make',None,'make second=y n1=75 n2=32 t1=2 | put o1=0 d1=1 o2=0 d2=1')
-Plot('make',plot('(b) Signal+Noise'))
+Plot('make',plot('Signal+Noise'))
 
 Flow('pq','make','twodip2 verb=y gauss=n')
 Flow('rec','make pq',
@@ -21,8 +21,8 @@ Flow('rec','make pq',
 
 Flow('rec1','rec','window n3=1')
 Flow('rec2','rec','window f3=1')
-Plot('rec1',plot('(c) Component 1'))
-Plot('rec2',plot('(d) Component 2'))
+Plot('rec1',plot('Component 1'))
+Plot('rec2',plot('Component 2'))
 Result('signalnoise','signal make rec1 rec2', 'SideBySideAniso')
 
 End()
