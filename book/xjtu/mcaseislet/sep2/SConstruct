@@ -14,7 +14,7 @@ def grey(title,other=''):
     scalebar=y  label1="Time (s)" label2="Offset (km)" %s
     ''' % (title,other)
 
-Plot('cmp',grey('(a) Data','clip=228'))
+Plot('cmp',grey('Data','clip=228'))
 
 # Playing with amplitude gains
 ##############################
@@ -55,7 +55,7 @@ Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
 ###################
 Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
 Flow('mult','ccmp','add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000')
-Plot('mult','window f2=6 | ' + grey('(b) SRME-predicted Multiples'))
+Plot('mult','window f2=6 | ' + grey('SRME-predicted Multiples'))
 
 # Mask the important part
 #########################
@@ -78,10 +78,10 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
 Flow('mdip0','mdip2','window n3=1 f2=6')
 Flow('mdip1','mdip2','window f3=1 f2=6')
 Plot('mdip0',
-     grey('(c) Signal Slope',
+     grey('Signal Slope',
           'color=j allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
 Plot('mdip1',
-     grey('(d) Noise Slope',
+     grey('Noise Slope',
           'color=j allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
 Result('srme','cmp mult mdip0 mdip1','SideBySideAniso')
 
@@ -141,12 +141,19 @@ Plot('signsmca','window f2=6 | ' + grey('MCA Estimated Signal','clip=228'))
 Plot('vsignsmca',grey('MCA (signal)','color=j allpos=y maxval=0.75'))
 Plot('vnoissmca',grey('MCA (noise)','color=j allpos=y maxval=0.75'))
 
+Plot('markA',None,'box font=2 x0=6.5 y0=2 label="A" xt=0.0 yt=0.0 size=0.5')
+Plot('vnoisA','vnois markA','Overlay')
+Plot('vnoissA','vnoiss markA','Overlay')
+Plot('vnoissmcaA','vnoissmca markA','Overlay')
+Plot('vcmpA','vcmp markA','Overlay')
+
 Result('signal','sign signs signsmca','SideBySideAniso')
 Result('nois','nois noiss noissmca','SideBySideAniso')
 #Result('mcasn','sign nois signs noiss signsmca noissmca','SideBySideAniso')
 
 Result('vsignal','vsign vsigns vsignsmca vcmp','SideBySideAniso')
-Result('vnois','vnois vnoiss vnoissmca vcmp','SideBySideAniso')
+Result('vnois','vnoisA vnoissA vnoissmcaA vcmpA','SideBySideAniso')
 #Result('vscanmcasn','vsign vnois vsigns vnoiss vsignsmca vnoissmca vcmp','SideBySideAniso')
+
 
 End()
