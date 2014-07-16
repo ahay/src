@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
 
     for(iter=0; iter<nouter; iter++){
 	sf_csolver_prec(mask_lop, sf_ccgstep, fftn_lop, n1*n2, n1*n2, n1*n2, dd, dobs, niter, eps, "mwt",w,"xp",mm, "verb",verb,"end");
+    	sf_ccgstep_close();
 	for(i=0; i<n1*n2; i++) w[i]=cabsf(mm[i]); 
     }
-    sf_ccgstep_close();
     fftn_close();
 
     for(i=0; i<n1*n2; i++) w[i]=crealf(dd[i]);
