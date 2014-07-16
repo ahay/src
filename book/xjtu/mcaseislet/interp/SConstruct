@@ -4,7 +4,7 @@ Fetch('sean.HH','bp')
 
 Flow('sean','sean.HH',
      'dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50')
-Plot('sean','window n2=180 | grey title=Original label1="Time (s)" label2=Trace labelsz=14 titlesz=20')
+Plot('sean','window n2=180 | grey title=Original label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
 Result('sean','grey label1="Time (s)" label2=Trace title=Original') 
      
 # Pad to a power of 2
@@ -18,14 +18,14 @@ Flow('mask','sean',
      spray axis=1 n=500 | dd type=float
      ''')
 Flow('sean2','sean1 mask','mul ${SOURCES[1]}')
-Plot('sean2','window n2=180 | grey label1="Time (s)" label2=Trace title=Missing labelsz=14 titlesz=20')
+Plot('sean2','window n2=180 | grey label1="Time (s)" label2=Trace title=Missing labelsz=12 titlesz=16 labelfat=6 titlefat=6')
 
 #================================================================================
-Flow('ppq','sean2 mask','twodip2 mask=${SOURCES[1]} order=2 eps=5 verb=y gauss=n niter=10 | pad n2=256')
+Flow('ppq','sean2 mask','twodip2 mask=${SOURCES[1]} order=2 eps=5 verb=y gauss=n niter=10 | pad n2=256 labelfat=6 titlefat=6')
 Flow('dip1','ppq','window n3=1')
 Flow('dip2','ppq','window f3=1')
-Plot('dip1','window n2=180 |grey title="First Dip" label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j labelsz=14 titlesz=20')
-Plot('dip2','window n2=180 |grey title="Second Dip"  label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j labelsz=14 titlesz=20')
+Plot('dip1','window n2=180 |grey title="First Dip" label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j')
+Plot('dip2','window n2=180 |grey title="Second Dip"  label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j')
 Result('dips','dip1 dip2','SideBySideIso')
 
 # Seislet-based MCA inpainting 1st:
@@ -38,9 +38,9 @@ Flow('rec1','rec0','window n3=1')
 Flow('rec2','rec0','window f3=1')
 Flow('rec','rec1 rec2','add scale=1,1 ${SOURCES[1]}')
 
-Plot('rec1','window n2=180 | grey title=Rec1 label1="Time (s)" label2=Trace labelsz=14 titlesz=20')
-Plot('rec2','window n2=180 | grey title=Rec2 label1="Time (s)" label2=Trace labelsz=14 titlesz=20')
-Plot('rec','window n2=180 | grey title=Interpolated label1="Time (s)" label2=Trace labelsz=14 titlesz=20')
+Plot('rec1','window n2=180 | grey title=Rec1 label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec2','window n2=180 | grey title=Rec2 label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec','window n2=180 | grey title=Interpolated label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
 
 Result('interp','sean sean2 rec1 rec2 rec','SideBySideAniso')
 

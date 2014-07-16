@@ -10,29 +10,11 @@ Flow('cmp','cmp.HH','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 
 def grey(title,other=''):
     return '''
-    grey title="%s" labelsz=12 titlesz=16 labelfat=10 titlefat=10 
+    grey title="%s" labelsz=12 titlesz=16 labelfat=6 titlefat=6 
     scalebar=y  label1="Time (s)" label2="Offset (km)" %s
     ''' % (title,other)
 
 Plot('cmp',grey('Data','clip=228'))
-
-# Playing with amplitude gains
-##############################
-Flow('env','cmp','envelope | scale axis=2')
-Flow('amp','env',
-     '''
-     math output="atan(input)" |
-     math output="input-sin(input)" |
-     add mode=d $SOURCE
-     ''')
-
-Flow('acmp','cmp amp','add mode=p ${SOURCES[1]}')
-Flow('ncmp','cmp',
-     '''
-     scale axis=2 |
-     math output="atan(input)" |
-     math output="input-sin(input)"
-     ''')
 
 # Interpolate near offsets
 Flow('cmp0','cmp','window max2=1 | pad beg2=5')
@@ -75,39 +57,25 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
      twodip2 eps=30  dip2=${SOURCES[1]} dip1=${SOURCES[3]} mask=${SOURCES[2]} verb=y 
      ''')
 
-Flow('mdip0','mdip2','window n3=1 f2=6')
-Flow('mdip1','mdip2','window f3=1 f2=6')
-Plot('mdip0',
-     grey('Signal Slope',
-          'color=j allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
-Plot('mdip1',
-     grey('Noise Slope',
-          'color=j allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
-Result('srme','cmp mult mdip0 mdip1','SideBySideAniso')
-
-
-
-Flow('pvel0','cmp mdip0','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
-Flow('pvel1','cmp mdip1','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
-Flow('pvel','pvel0 pvel1','stack | envelope')
+Result('srme','cmp mult','SideBySideAniso')
 
 
 #============== Separate signal/noise [method 1: pwdsigk] ======================
 Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=10000 eps=0.01')
 
 Flow('nois','comp mask','window f3=1 | add mode=p ${SOURCES[1]}')
-Plot('nois','window f2=6 | ' + grey('PWD Noise','clip=228'))
+Plot('nois','window f2=6 | ' + grey('PWD-IRLS (noise)','clip=228'))
 
 Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
-Plot('sign','window f2=6 | ' + grey('PWD Signal','clip=228'))
+Plot('sign','window f2=6 | ' + grey('PWD-IRLS (signal)','clip=228'))
 
 
 Flow('vcmp','cmp','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 Flow('vnois','nois','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 Flow('vsign','sign','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-Plot('vcmp',grey(' data','color=j allpos=y scalebar=y maxval=0.75'))
-Plot('vnois',grey('PWD (nois)','color=j allpos=y maxval=0.75'))
-Plot('vsign',grey('PWD (signal)','color=j allpos=y maxval=0.75'))
+Plot('vcmp',grey(' Data','color=j allpos=y scalebar=y maxval=0.75'))
+Plot('vnois',grey('PWD-IRLS (noise)','color=j allpos=y maxval=0.75'))
+Plot('vsign',grey('PWD-IRLS (signal)','color=j allpos=y maxval=0.75'))
 #Result('seppwdsigk','sign nois vcmp vsign','SideBySideAniso')
 
 
@@ -122,10 +90,10 @@ Flow('signs','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
 Flow('vsigns','signs','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 Flow('vnoiss','noiss','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 
-Plot('noiss','window f2=6 | ' + grey('seisigk Estimated Noise','clip=228'))
-Plot('signs','window f2=6 | ' + grey('seisigk Estimated Signal','clip=228'))
-Plot('vsigns',grey('seisigk (signal)','color=j allpos=y maxval=0.75'))
-Plot('vnoiss',grey('seisigk (noise)','color=j allpos=y maxval=0.75'))
+Plot('noiss','window f2=6 | ' + grey('Seislet-IRLS (noise)','clip=228'))
+Plot('signs','window f2=6 | ' + grey('Seislet-IRLS (signal)','clip=228'))
+Plot('vsigns',grey('Seislet-IRLS (signal)','color=j allpos=y maxval=0.75'))
+Plot('vnoiss',grey('Seislet-IRLS (noise)','color=j allpos=y maxval=0.75'))
 
 #============== Separate signal/noise [method 3: mcaseislet] ======================
 # obtain similar separation effect with only 10-20 iterations, more efficient!
@@ -136,10 +104,10 @@ Flow('signsmca','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
 Flow('vsignsmca','signsmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 Flow('vnoissmca','noissmca','vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
 
-Plot('noissmca','window f2=6 | ' + grey('MCA Estimated Noise','clip=228'))
-Plot('signsmca','window f2=6 | ' + grey('MCA Estimated Signal','clip=228'))
-Plot('vsignsmca',grey('MCA (signal)','color=j allpos=y maxval=0.75'))
-Plot('vnoissmca',grey('MCA (noise)','color=j allpos=y maxval=0.75'))
+Plot('noissmca','window f2=6 | ' + grey('Seislet-MCA (noise)','clip=228'))
+Plot('signsmca','window f2=6 | ' + grey('Seislet-MCA (signal)','clip=228'))
+Plot('vsignsmca',grey('Seislet-MCA (signal)','color=j allpos=y maxval=0.75'))
+Plot('vnoissmca',grey('Seislet-MCA (noise)','color=j allpos=y maxval=0.75'))
 
 Plot('markA',None,'box font=2 x0=6.5 y0=2 label="A" xt=0.0 yt=0.0 size=0.5')
 Plot('vnoisA','vnois markA','Overlay')

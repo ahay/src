@@ -206,20 +206,20 @@ Based on Taylor series, this operator in \eqref{eq:gen_op} enjoys some nice prop
   t_{\lambda,1}(u)=u.*\mathrm{exp}(-(\frac{\lambda}{|u|}))\approx u.*(1-(\frac{\lambda}{|u|})).
   \end{split}
 \end{equation}
- \item It is free of non-differentiable singularity at the thresholding point $\lambda$. The transition between the small values and the large values is smoothly stretched. Due to the expenential factor less than 1 ($\mathrm{exp}(-(\frac{\lambda}{|u|})^{2-p})<1$), this operator will slightly decrease the data amplitude. It is true even for $|u|<\lambda$.
+ \item It is free of non-differentiable singularity at the thresholding point $\lambda$. The transition between the small values and the large values is smoothly stretched. Due to the expenential factor less than 1 ($\mathrm{exp}(-(\frac{\lambda}{|u|})^{2-p})<1$), this operator will slightly decrease the data amplitude, even for $|u|<\lambda$.
  \item Besides the threshold $\lambda$, we have another independent parameter $p$ which can be flexibly chosen to obtain best performance.
 \end{itemize}
-For the convenience of comparison, we plot these thresholding operators in Figure \ref{fig:thresh}. A critical point is that the exponential shrinkage function is devoted to diversifying the thresholding capability of seislet-based MCA instead of exhibiting better effect. It obtained competitive (sometimes better) sparsifying effects in our experiment compared with the existing thresholding operators.  By incorporating PWD dip estimation and exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm in Algorithm \ref{algorithm:lpmca}.
+For the convenience of comparison, we plot these thresholding operators in Figure \ref{fig:thresh}. A critical point is that the exponential shrinkage function is devoted to diversifying the thresholding capability of seislet-based MCA instead of exhibiting better effect. It obtained competitive (sometimes better) sparsifying effects in our experiment compared with the existing thresholding operators.  By incorporating PWD dip estimation and exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm in Algorithm \ref{algorithm:lpmca}. In fact, seislet transforms associated with different dips forms a combined seislet frame. Shrinkage operator plays an role of crosstalk removal in MCA algorithm, see more details in Appendex A.
 %\begin{figure}
 %\centering
 %  \includegraphics[width=\linewidth]{thresh}\\
 %  \caption{A schematic plot of the shrinkage operators,$\lambda=1$}\label{fig:thresh}
 %\end{figure}
 
-  \plot{thresh}{width=\linewidth}{A schematic plot of the shrinkage operators,$\lambda=1$}
+  \plot{thresh}{width=0.7\linewidth}{A schematic plot of the shrinkage operators,$\lambda=1$}
 
 \begin{algorithm}[htb]
-    \caption{Seislet-based MCA algorithm for simultaneous interpolation and separation}\label{algorithm:lpmca}
+    \caption{Seislet-based MCA algorithm}\label{algorithm:lpmca}
     \begin{algorithmic}[1]
     \renewcommand{\algorithmicrequire}{\textbf{Input:}}
     \REQUIRE Observed seismic image $d_{obs}$; sampling mask $M$; iteration number $niter$; shrinkage shaping parameter $p$, seislet transform $\Phi_i$  associated with the $i$th estimated slope.
@@ -243,7 +243,7 @@ For the convenience of comparison, we plot these thresholding operators in Figur
 
 \subsection{Trace interpolation}
 
-Interpolation of random missing traces is an important step in seismic data processing. Unlike most studies using only one transform, we consider the seismic data having two different components, which can be characterized by seislet transforms associated with two different slopes. PWD filter is utilized to estimate the two dip fields. The complete data (Figure~\ref{fig:interp}a) is decimated with a random eliminating rate 50\% (Figure~\ref{fig:interp}b). 10 iterations are performed to separate these components. It is shown that the separated two components (Figure~\ref{fig:interp}c and \ref{fig:interp}d) exhibit different wave propagation modes: component 2 has many conflicting seismic events while the events of component 1 are more consistent. The summation of the two components gives a reasonable interpolation result, shown in Figure~\ref{fig:interp}e.
+Interpolation of random missing traces is an important step in seismic data processing. Unlike most studies using only one transform, we consider the seismic data having two different components, which can be characterized by seislet transforms associated with two different slopes. PWD filter is utilized to estimate the two dip fields. The complete data (Figure~\ref{fig:interp}a) is decimated with a random eliminating rate 50\% (Figure~\ref{fig:interp}b). 10 iterations are performed to separate these components. The estimated dips by PWD are shown in Figure~\ref{fig:dips}, indicating that the separated two components (Figure~\ref{fig:interp}c and \ref{fig:interp}d) exhibit different modes: component 2 has many conflicting seismic events (corresponding to positive and negative dips) while the events of component 1 are more consistent (most values of the dip are positive). The summation of the two components gives a reasonable interpolation result, shown in Figure~\ref{fig:interp}e.
 
 %\begin{figure}
 %\centering
@@ -255,6 +255,7 @@ Interpolation of random missing traces is an important step in seismic data proc
 
 \inputdir{interp}
   \plot{interp}{width=\linewidth}{Simultaneous multi-component trace interpolation. From left to right: (a) Original complete seismic data, (b) data with 50\% random missing values, (c) component 1 and (d) component 2, (e) interpolated data.}
+  \plot{dips}{width=\linewidth}{PWD estimated dips: dip estimation for component 1 (Left) are positive-valued, while dip for component 2 includes negative and positive values.}
 
 
 
@@ -282,32 +283,31 @@ Interpolation of random missing traces is an important step in seismic data proc
 
 \subsection{Signal and noise separation}
 
-A challenging problem in geophysical community is coherent noise elimination. To validate performance of seislet-based MCA for coherent noise attenuation, we conduct a benchmark synthetic test used by \cite{fomel2002applications}. The synthetic signal including consistent seismic events, shown in Figure~\ref{fig:signalnoise}a,  is seriously contaminated by the synthetic dipping noise (Figure~\ref{fig:signalnoise}b), which is so strong that we treat them as another signal component. From a geometrical point of view, PWD can estimate the slopes in a nice way. Using seislet-based MCA, we obtain simultaneously separated signal and noise, as shown in Figure~\ref{fig:signalnoise}c and \ref{fig:signalnoise}d. As can be seen from the figure, the signal can be separated from the dipping noise favorably.
+A challenging problem in geophysical community is coherent noise elimination. To validate performance of seislet-based MCA for coherent noise attenuation, we conduct a benchmark synthetic test used by \cite{fomel2002applications}. As shown in Figure~\ref{fig:signalnoise}, the synthetic signal including consistent seismic events, is seriously contaminated by the synthetic dipping noise, which is so strong that we treat them as another signal component. From a geometrical point of view, PWD can estimate the slopes in a nice way. Using seislet-based MCA for only 10 iterations, we obtain simultaneously separated signal and noise. As can be seen from the figure, the signal can be separated from the dipping noise favorably.
 
 %\begin{figure}
 %\centering
 %  \includegraphics[width=0.8\linewidth]{signalnoise}\\
-%  \caption{Simple example of dip-based signal and noise separation. From left to right: (a) ideal signal, (b) input data, (c) estimated noise, (d) estimated signal.}
+%  \caption{Simple example of dip-based signal and noise separation. From left to right: ideal signal, input data, estimated noise, estimated signal.}
 %\label{fig:signalnoise}
 %\end{figure}
 
 
 \inputdir{sep1}
-  \plot{signalnoise}{width=\linewidth}{Simple example of dip-based signal and noise separation. From left to right: (a) ideal signal, (b) input data, (c) estimated noise, (d) estimated signal.}
+  \plot{signalnoise}{width=0.8\linewidth}{Simple example of dip-based signal and noise separation. From left to right: ideal signal, input data, estimated noise, estimated signal.}
   
 
 \subsection{Multiple removal}
 
-The last example is the separation of primaries and multiples borrowed from \cite{fomel2006regularizing}. The first panel of Figure~\ref{fig:srme} displays a multiple-infested
-common-midpoint (CMP) gather. The predicted multiple using surface-related multiple elimination (SRME) as well as two dominant slopes associated with primary and multiple reflections are shown in Figure~\ref{fig:srme}b--d. Even though SRME fails to predict the correct amplitudes and wavelets, however, the resulting prediction helps PWD to extract the dominant slopes of the multiple events.  The separated primaries and multiples via PWD, weighted seislet optimization as well as our seislet-based MCA are plotted in Figures~\ref{fig:signal} and \ref{fig:nois}, visually as good as weighted seislet optimization. To confirm the correctness of the separation using different methods, we draw the results of velocity scan for predicted primaries and multiples in Figures~\ref{fig:vsignal} and \ref{fig:vnois}. The panels of velocity scan in Figures~\ref{fig:vsignal} and \ref{fig:vnois} demonstrate that using MCA, the primaries correctly correspond to high speed while the multiples are associated with slow speed.
- Figures~\ref{fig:vsignal} illustrates that weighted seislet optimization does much better than PWD separation, while seislet-based MCA method obtains similar separation results as good as weighted seislet transform, however, in a more efficient way. The PWD and weighted seislet method need thousands of iterations, while seislet-based MCA algorithm only uses 15 iterations.
-Figure~\ref{fig:vnois} shows that in the deeper part (see location A) the velocity scan panel of separated multiples using seislet-MCA can best conform to the corresponding semblance scan of the original data.
+The last example is the separation of primaries and multiples for the field CMP data shown in Figure~\ref{fig:srme} \citep{fomel2006regularizing}. The multiples are predicted using surface-related multiple elimination (SRME). Even though SRME fails to predict the correct amplitudes and wavelets, however, the resulting prediction helps PWD to extract the dominant slopes of the multiple events. 
+Before applying the seislet-based MCA method, it is important to point out that iterative reweighted least-squares (IRLS) method using the model precondition is another way to sparsity-enforced separation. The multiple removal is performed using three different methods: PWD-based IRLS method, seislet-based IRLS method, as well as proposed seislet-based MCA method. For comparison, the separated primaries and multiples using these methods are plotted in Figures~\ref{fig:signal} and \ref{fig:nois}. Visually, the separated primaries by PWD-based IRLS method does not remove enough multiple contamination (especially the deeper pigleg multiples remains), while the seislet-based IRLS method and the seislet-based MCA method yield similar primaries, which can be clearly seen from the velocity scans of the primaries shown in Figure~\ref{fig:vsignal}. To further confirm our conclusion, we also draw the velocity scans of predicted multiples in \ref{fig:vnois}. The panels of velocity scan in Figures~\ref{fig:vsignal} and \ref{fig:vnois} demonstrate that using MCA, the primaries correctly correspond to high speed while the multiples are associated with slow speed. Figure~\ref{fig:vnois} shows that seislet-based MCA outperforms seislet-based IRLS method
+in the deeper part of the velocity scan panel (see marked location A) due to the best aggreement with the corresponding semblance scan of the original data. Note that the seislet-based MCA algorithm only uses 15 iterations to obtain the best separation effect, while the number of iterations for PWD-based IRLS method and seislet-based IRLS method are 10000 and 1000, respectively. Therefore, seislet-based MCA is very efficient for multiple removal.
 
 
 % \begin{figure}
 % \centering
 %   \includegraphics[width=0.8\linewidth]{srme}\\
-%   \caption{Separation of primaries and multiples using SRME. From left to right: Orignal data, SRME predicted multiples, signal slope and noise slope.}
+%   \caption{The field CMP data (left) and SRME predicted multiples (right).The field CMP data (left) and SRME predicted multiples (right). The amplitudes of SRME prediction needs to be corrected.}
 % \label{fig:srme}
 % \end{figure}
 % 
@@ -341,11 +341,11 @@ Figure~\ref{fig:vnois} shows that in the deeper part (see location A) the veloci
 
 
 \inputdir{sep2}
-  \plot{srme}{width=\linewidth}{Separation of primaries and multiples using SRME. From left to right: Orignal data, SRME predicted multiples, signal slope and noise slope.}
+  \plot{srme}{width=0.7\linewidth}{The field CMP data (left) and SRME predicted multiples (right). The amplitudes of SRME prediction needs to be corrected.}
   
-  \plot{signal}{width=\linewidth}{Separated primaries using PWD (10000 iterations), weighted seislet optimization (1000 iterations) and seislet-based MCA (15 iterations).}
+  \plot{signal}{width=0.8\linewidth}{Separated primaries using PWD (10000 iterations), weighted seislet optimization (1000 iterations) and seislet-based MCA (15 iterations).}
   
-  \plot{nois}{width=\linewidth}{Separated multiples using PWD (10000 iterations), weighted seislet optimization (1000 iterations) and seislet-based MCA (15 iterations).}
+  \plot{nois}{width=0.8\linewidth}{Separated multiples using PWD (10000 iterations), weighted seislet optimization (1000 iterations) and seislet-based MCA (15 iterations).}
 
   \plot{vsignal}{width=\linewidth}{Velocity scan for primaries obtained by PWD, weighted seislet optimization and seislet-based MCA (from left to right). The velocity scan of original data is shown in the last panel for comparison.}
 
@@ -353,9 +353,19 @@ Figure~\ref{fig:vnois} shows that in the deeper part (see location A) the veloci
   
 \section{Conclusions and discussions}
 
-We developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The potential of seislet-based MCA using shaping regularization is explored in the application to seismic trace interpolation, signal and noise separation.
+We developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The potential of seislet-based MCA using shaping regularization is explored in the application to seismic trace interpolation, signal and noise separation, as well as multiple removal. 
 
-The sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation. Note that the complete data $d$ is regarded to be superposition of several different geometrical components, and each component can be sparely represented using a seislet dictionary $\Phi_i$, i.e.,
+The sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation. The empirical experiments show that there is no big difference to choose different thresholding functions. The special importance of the proposed exponential shrinkage operator is that it unifies many existing shrinkage operators.
+
+
+\section*{Acknowledgments}
+
+The work of the first author is supported by China Scholarship Council during his visit to Bureau of Economic Geology, University of Texas at Austin. We would like to thank Wenchao Chen and Jianwei Ma for valuable discussions. The numerical examples are reproducible with  Madagascar software package \citep{m8r}.
+
+\append{Seislet frame in MCA algorithm}
+\label{app:seisletframe}
+
+The complete data $d$ is regarded to be superposition of several different geometrical components, and each component can be sparely represented using a seislet dictionary $\Phi_i$, i.e.,
 \begin{equation}
 \begin{array}{ll}
   d&=\sum_{i=1}^N d_i=\sum_{i=1}^N \Phi_i \alpha_i\\
@@ -381,16 +391,11 @@ in the sense that
 \begin{equation}
  FB=\sum_{i=1}^N\Phi_i\Phi_i^{*}=N \mathrm{Id}.
 \end{equation}
-Note that we are using BCR technique to sparsify one component while keeping all others fixed. At the $k+1$-th iteration applying the backward operator on the $i$-th component leads to
+Recall that we are using BCR technique to sparsify one component while keeping all others fixed. At the $k+1$-th iteration applying the backward operator on the $i$-th component leads to
 \begin{equation}
 \tilde{\alpha}_i^{k+1}=\alpha_i^k+\sum_{i=1}^N\Phi_i^{*} r^k=\alpha_i^k+r_i^j+\sum_{j\neq i}\Phi_i^{*} r_j^k
 \end{equation}
 where the terms $\sum_{j\neq i}\Phi_i^{*}r_j^k$ are the crosstalk between the $i$-th component and the others. An intuitive approach to filter out the undesired crosstalk is shrinkage/thresholding. The proposed exponential shrinkage provides us a flexible tool to approximate the performance of existing shrinkage/thresholding functions.
-
-\section*{Acknowledgments}
-
-The work of the first author is supported by China Scholarship Council during his visit to Bureau of Economic Geology, University of Texas at Austin. We would like to thank Wenchao Chen and Jianwei Ma for valuable discussions. The numerical examples are reproducible with  Madagascar software package \citep{m8r}.
-
 
 \bibliographystyle{seg}  % style file is seg.bst
 \bibliography{mcaseislet}
