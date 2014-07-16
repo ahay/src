@@ -1,6 +1,5 @@
 /* Morphological component analysis using 2-D Seislet transform 
-Note:  We plan to use analysis based iterative shrinkage-thresholding (IST)
- algorithm. Here, nc components with nc seislet transform builds a seislet 
+Note:  Here, nc components with nc seislet transforms build a seislet 
  frame to do the simultineous multicomponent separation and interpolation.	
 */
 
@@ -39,6 +38,7 @@ only difference lies in the thresholding function and the transform used.
 
 #include <rsf.h>
 #include <rsfpwd.h>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
     /* decrease threshold in iterations or not */
     if (!sf_getint("niter",&niter)) 	niter=10;
     /* total number iterations */
-    if (!sf_getfloat("pclip",&pclip)) 	pclip=99;
-    /* starting data clip percentile (default is 99)*/
+    if (!sf_getfloat("pclip",&pclip)) 	pclip=10;
+    /* starting data clip percentile (default is 10)*/
     if ( !(mode=sf_getstring("mode")) ) mode = "exp";
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
 	'hard', hard thresholding;	'soft', soft thresholding; 
