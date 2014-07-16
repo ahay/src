@@ -2,8 +2,8 @@ from rsf.proj import *
 
 def plot(title):
     return '''
-    grey wantaxis1=n label1=Sample label2="Trace no." title="%s"
-    labelsz=15 titlesz=18 labelfat=10 titlefat=10 crowd1=0.9
+    grey wantaxis1=n label1=Sample label2=Trace title="%s"
+    labelsz=14 titlesz=18 labelfat=10 titlefat=10 crowd1=0.9
     ''' % title
 
 Flow('signal',None,'make second=n n1=75 n2=32 t1=2')
