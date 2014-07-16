@@ -20,14 +20,14 @@ Note:  Here, nc components with nc seislet transforms build a seislet
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-References: 
-	1) Elad, Michael, et al. "Simultaneous cartoon and texture image 
-	inpainting using morphological component analysis (MCA)." Applied 
-	and Computational Harmonic Analysis 19.3 (2005): 340-358.
-	2) Starck, Jean-Luc, Michael Elad, and David Donoho. "Redundant 
+  References: 
+    [1] Starck, Jean-Luc, Michael Elad, and David Donoho. "Redundant 
 	multiscale transforms and their application for morphological 
 	component separation." Advances in Imaging and Electron Physics
 	132.82 (2004): 287-348.
+    [2] Elad, Michael, et al. "Simultaneous cartoon and texture image 
+	inpainting using morphological component analysis (MCA)." Applied 
+	and Computational Harmonic Analysis 19.3 (2005): 340-358.
 
 To know why MCA algorithm work like this, it will be much easier if you see 
 ' Yang, Pengliang, Jinghuai Gao, and Wenchao Chen. "L1/2-constrained 
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
     }else{//no mask, just for separation
 	for(i2=0; i2<n2; i2++)
 	for(i1=0; i1<n1; i1++) 
-	mask[i1+i2*n1]=1;
+		mask[i1+i2*n1]=1.0;
     }	
 
 
