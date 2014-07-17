@@ -382,7 +382,7 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		a=0.5*acosf(a);
 		ia=(int)(a/da);
 		if(ia==na) ia=ia-1;
-		num[i2][ia][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-0.5*(a-ia*da)); //numerator
+		num[ia][i2][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]; //numerator
 		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];//denominator
 	}
 }
@@ -398,7 +398,7 @@ int main(int argc, char* argv[])
 	float **v0, **vv, **dcal, **den;
 	float **sp, **spz, **spx, **svz, **svx, **gp, **gpz, **gpx, **gvz, **gvx;
 	float ***num, ***adcig;
-    	sf_file vmodl, rtmadcig, vecx,vecz; /* I/O files */
+    	sf_file vmodl, rtmadcig, vecx, vecz; /* I/O files */
 
     	sf_init(argc,argv);
 #ifdef _OPENMP
@@ -432,7 +432,7 @@ int main(int argc, char* argv[])
     	if (!sf_getint("nb",&nb))   nb=20; 
 	/* thickness of split PML */
     	if (!sf_getint("na",&na)) na=30;
-	/* number of angle gathers*/
+	/* number of angles*/
     	if (!sf_getint("kt",&kt))   kt=200;
 	/* record poynting vector at kt */
 	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
@@ -462,15 +462,14 @@ int main(int argc, char* argv[])
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	da=SF_PI/na;/* angle unit, rad; */
+	da=SF_PI/(float)na;/* angle unit, rad; */
 
     	sf_putint(rtmadcig,"n1",nz);
-	sf_putfloat(rtmadcig,"n2",na);
-    	sf_putint(rtmadcig,"n3",nx);
+    	sf_putint(rtmadcig,"n2",nx);
+	sf_putfloat(rtmadcig,"n3",na);
     	sf_putfloat(rtmadcig,"d1",dz);
-	sf_putfloat(rtmadcig,"d2",90./na);
-    	sf_putfloat(rtmadcig,"d3",dx);
-	sf_putfloat(rtmadcig,"o2",0);
+    	sf_putfloat(rtmadcig,"d2",dx);
+	sf_putfloat(rtmadcig,"d3",90./(float)na);
 
 	/* allocate variables */
 	wlt=sf_floatalloc(nt);
@@ -493,8 +492,8 @@ int main(int argc, char* argv[])
 	dcal=sf_floatalloc2(ng,nt);
 	bndr=(float*)malloc(nt*8*(nx+nz)*sizeof(float));
 	den=sf_floatalloc2(nz,nx);
-	num=sf_floatalloc3(nz,na,nx);
-	adcig=sf_floatalloc3(nz,na,nx);
+	num=sf_floatalloc3(nz,nx,na);
+	adcig=sf_floatalloc3(nz,nx,na);
 
 	/* initialize variables */
 	for(it=0;it<nt;it++){
@@ -532,7 +531,7 @@ int main(int argc, char* argv[])
 		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-	memset(adcig[0][0],0,na*nz*nx*sizeof(float));
+	memset(adcig[0][0], 0, na*nz*nx*sizeof(float));
 
 	for(is=0; is<ns; is++)
 	{
@@ -552,8 +551,8 @@ int main(int argc, char* argv[])
 		}
 
 		wavefield_init(gp, gpz, gpx, gvz, gvx);
-		memset(num[0][0],0,na*nz*nx*sizeof(float));
-		memset(den[0],0,nz*nx*sizeof(float));
+		memset(num[0][0], 0, na*nz*nx*sizeof(float));
+		memset(den[0], 0, nz*nx*sizeof(float));
 		for(it=nt-1; it>-1; it--)
 		{	
 			add_source(gxz, gp, ng, dcal[it], true);
@@ -567,7 +566,6 @@ int main(int argc, char* argv[])
 				sf_floatwrite(v0[0],nz*nx,vecz);
 			}
 
-
 			bndr_rw(true, svz, svx, &bndr[it*8*(nx+nz)]);	
 			cross_correlation(num, den, sp, gp, svz, svx, gvz, gvx);
 
@@ -575,12 +573,12 @@ int main(int argc, char* argv[])
 			add_source(&sxz[is], sp, 1, &wlt[it], false);
 		}	
 
-		for(i2=0; i2<nx; i2++)
 		for(ia=0; ia<na; ia++)
+		for(i2=0; i2<nx; i2++)
 		for(i1=0; i1<nz; i1++)
-			adcig[i2][ia][i1]+=num[i2][ia][i1]*vv[i2][i1]/((den[i2][i1]+SF_EPS)*sinf((ia+1)*da));
+			adcig[ia][i2][i1]+=num[ia][i2][i1]*vv[i2][i1]/(16.0*(den[i2][i1]+SF_EPS)*sinf((ia+1)*da));
 	}
-	sf_floatwrite(adcig[0][0],na*nz*nx,rtmadcig);
+	sf_floatwrite(adcig[0][0], na*nz*nx,rtmadcig);
 
 	free(wlt);
 	free(*v0); free(v0);
