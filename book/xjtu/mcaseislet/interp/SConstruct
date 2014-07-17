@@ -38,8 +38,8 @@ Flow('rec1','rec0','window n3=1')
 Flow('rec2','rec0','window f3=1')
 Flow('rec','rec1 rec2','add scale=1,1 ${SOURCES[1]}')
 
-Plot('rec1','window n2=180 | grey title=Rec1 label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
-Plot('rec2','window n2=180 | grey title=Rec2 label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec1','window n2=180 | grey title="Component 1" label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec2','window n2=180 | grey title="Component 2" label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
 Plot('rec','window n2=180 | grey title=Interpolated label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
 
 Result('interp','sean sean2 rec1 rec2 rec','SideBySideAniso')
