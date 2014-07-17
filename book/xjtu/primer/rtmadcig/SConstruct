@@ -3,28 +3,43 @@ from rsf.proj import *
 
 Flow('vel1',None,
      	'''
-     	math output=1.5 n1=100 n2=200 d1=0.005 d2=0.005
+     	math output=1.5 n1=40 n2=200 d1=0.005 d2=0.005
      	label1=x1 unit1=km label2=x2 unit2=km 
      	''')
 Flow('vel2',None,
      	'''
-     	math output=1.8 n1=100 n2=200 d1=0.005 d2=0.005
+     	math output=1.6 n1=40 n2=200 d1=0.005 d2=0.005
      	label1=x1 unit1=km label2=x2 unit2=km 
      	''')
-Flow('veladcig',['vel1','vel2'], 'cat axis=1 ${SOURCES[1]}')
+Flow('vel3',None,
+     	'''
+     	math output=1.7 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel4',None,
+     	'''
+     	math output=1.8 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('vel5',None,
+     	'''
+     	math output=1.9 n1=40 n2=200 d1=0.005 d2=0.005
+     	label1=x1 unit1=km label2=x2 unit2=km 
+     	''')
+Flow('veladcig',['vel1','vel2', 'vel3','vel4','vel5'], 'cat axis=1 ${SOURCES[1:5]}')
 Result('veladcig','grey title="velocity model:2 layers" color=j scalebar=y')
 
 Flow('adcig vecx vecz','veladcig',
 	'''
-	rtmadcig vecx=${TARGETS[1]} vecz=${TARGETS[2]} nb=20 noa=45 
-	nt=1500 kt=250 fm=25 dt=0.001 ns=1 ng=200 csdgather=n
+	rtmadcig vecx=${TARGETS[1]} vecz=${TARGETS[2]} nb=20 na=180 
+	nt=1500 kt=450 fm=25 dt=0.001 ns=1 ng=200 csdgather=n
 	sxbeg=100 szbeg=1 jsx=40 jsz=0 
 	gxbeg=0 gzbeg=1 jgx=1 jgz=0 
-	vmute=1.50
+	vmute=1.50 
 	''')
-
-Result('adcig','grey label1=Depth unit1=km label2=Angle unit2=degree scalebar=y')
-Result('stackedimage','adcig','stack|grey title="RTM Image" label1=Depth unit1=km label2=Distance unit2=km')
+Flow('smadcig','adcig','transp plane=23 | smooth rect2=3 repeat=5')
+Result('smadcig','grey label1=Depth unit1=km label2=Angle unit2=degree scalebar=y')
+Result('stackedimage','adcig','stack axis=3 |grey title="RTM Image" label1=Depth unit1=km label2=Distance unit2=km')
 
 
 Plot('vecx','grey title="Vector-X" scalebar=y color=j')
