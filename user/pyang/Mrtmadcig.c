@@ -20,16 +20,16 @@ effective boundary saving strategy used!
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference: 
-	[1] Yoon, Kwangjin, and Kurt J. Marfurt. "Reverse-time migration 
+    [1] Yoon, Kwangjin, and Kurt J. Marfurt. "Reverse-time migration 
 	using the Poynting vector." Exploration Geophysics 37.1 (2006): 
 	102-107.
-  	[2] Costa, J. C., et al. "Obliquity-correction imaging condition 
+    [2] Costa, J. C., et al. "Obliquity-correction imaging condition 
 	for reverse time migration." Geophysics 74.3 (2009): S57-S66.
-	[3] Xu, Sheng, et al. "Common-angle migration: A strategy for 
+    [3] Xu, Sheng, et al. "Common-angle migration: A strategy for 
 	imaging complex media." Geophysics 66.6 (2001): 1877-1894.
-	[4] Xu, Sheng, Yu Zhang, and Bing Tang. "3D angle gathers from 
+    [4] Xu, Sheng, Yu Zhang, and Bing Tang. "3D angle gathers from 
 	reverse time migration." Geophysics 76.2 (2011): S77-S92.
-	[5] Zhang, Yu, et al. "Angle gathers from reverse time migration."
+    [5] Zhang, Yu, et al. "Angle gathers from reverse time migration."
 	The Leading Edge 29.11 (2010): 1364-1371.
 */
 #include <rsf.h>
@@ -39,7 +39,7 @@ effective boundary saving strategy used!
 #endif
 
 static bool 	csdgather;/* common shot gather (CSD) or not */
-static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, noa;
+static int 	nb, nz, nx, nzpad, nxpad, nt, ns, ng, na;
 static float 	fm, dt, dz, dx, _dz, _dx, vmute, da;
 
 void expand2d(float** b, float** a)
@@ -377,13 +377,13 @@ void cross_correlation(float ***num, float **den, float **sp, float **gp, float 
 		b1=Ssz*Ssz+Ssx*Ssx;//|Ss|^2
 		b2=Sgz*Sgz+Sgx*Sgx;//|Sg|^2
 		a=Ssx*Sgx+Ssz*Sgz; //<Ss,Sg>
-		a=a/sqrtf(b1*b2+FLT_EPSILON);	
+		a=a/sqrtf(b1*b2+SF_EPS);	
 	
 		a=0.5*acosf(a);
 		ia=(int)(a/da);
-		if(ia==noa) ia=ia-1;
-		num[i2][ia][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-0.5*(a-ia*da)); 
-		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];
+		if(ia==na) ia=ia-1;
+		num[i2][ia][i1]+=sp[i2+nb][i1+nb]*gp[i2+nb][i1+nb]*expf(-0.5*(a-ia*da)); //numerator
+		den[i2][i1]+=sp[i2+nb][i1+nb]*sp[i2+nb][i1+nb];//denominator
 	}
 }
 
@@ -401,6 +401,9 @@ int main(int argc, char* argv[])
     	sf_file vmodl, rtmadcig, vecx,vecz; /* I/O files */
 
     	sf_init(argc,argv);
+#ifdef _OPENMP
+    	omp_init();
+#endif
 
     	/*< set up I/O files >*/
     	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
@@ -428,7 +431,7 @@ int main(int argc, char* argv[])
 	/* total receivers in each shot */
     	if (!sf_getint("nb",&nb))   nb=20; 
 	/* thickness of split PML */
-    	if (!sf_getint("noa",&noa)) noa=30;
+    	if (!sf_getint("na",&na)) na=30;
 	/* number of angle gathers*/
     	if (!sf_getint("kt",&kt))   kt=200;
 	/* record poynting vector at kt */
@@ -459,13 +462,13 @@ int main(int argc, char* argv[])
 	_dz=1./dz;
 	nzpad=nz+2*nb;
 	nxpad=nx+2*nb;
-	da=SF_PI/noa;/* angle unit, rad; */
+	da=SF_PI/na;/* angle unit, rad; */
 
     	sf_putint(rtmadcig,"n1",nz);
-	sf_putfloat(rtmadcig,"n2",noa);
+	sf_putfloat(rtmadcig,"n2",na);
     	sf_putint(rtmadcig,"n3",nx);
     	sf_putfloat(rtmadcig,"d1",dz);
-	sf_putfloat(rtmadcig,"d2",90./noa);
+	sf_putfloat(rtmadcig,"d2",90./na);
     	sf_putfloat(rtmadcig,"d3",dx);
 	sf_putfloat(rtmadcig,"o2",0);
 
@@ -490,8 +493,8 @@ int main(int argc, char* argv[])
 	dcal=sf_floatalloc2(ng,nt);
 	bndr=(float*)malloc(nt*8*(nx+nz)*sizeof(float));
 	den=sf_floatalloc2(nz,nx);
-	num=sf_floatalloc3(nz,noa,nx);
-	adcig=sf_floatalloc3(nz,noa,nx);
+	num=sf_floatalloc3(nz,na,nx);
+	adcig=sf_floatalloc3(nz,na,nx);
 
 	/* initialize variables */
 	for(it=0;it<nt;it++){
@@ -516,20 +519,20 @@ int main(int argc, char* argv[])
 		vmax=SF_MAX(v0[i2][i1],vmax);
 	pmlcoeff_init(d1z, d2x, vmax);
 	if (!(sxbeg>=0 && szbeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz))	
-	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
+	{ sf_error("sources exceeds the computing zone!"); exit(1);}
 	sg_init(sxz, szbeg, sxbeg, jsz, jsx, ns);
 	distx=sxbeg-gxbeg;
 	distz=szbeg-gzbeg;
 	if (csdgather)	{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
 		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
+		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
 	}else{
 		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
-		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
+		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
 	}
 	sg_init(gxz, gzbeg, gxbeg, jgz, jgx, ng);
-	memset(adcig[0][0],0,noa*nz*nx*sizeof(float));
+	memset(adcig[0][0],0,na*nz*nx*sizeof(float));
 
 	for(is=0; is<ns; is++)
 	{
@@ -549,7 +552,7 @@ int main(int argc, char* argv[])
 		}
 
 		wavefield_init(gp, gpz, gpx, gvz, gvx);
-		memset(num[0][0],0,noa*nz*nx*sizeof(float));
+		memset(num[0][0],0,na*nz*nx*sizeof(float));
 		memset(den[0],0,nz*nx*sizeof(float));
 		for(it=nt-1; it>-1; it--)
 		{	
@@ -573,11 +576,11 @@ int main(int argc, char* argv[])
 		}	
 
 		for(i2=0; i2<nx; i2++)
-		for(ia=0; ia<noa; ia++)
+		for(ia=0; ia<na; ia++)
 		for(i1=0; i1<nz; i1++)
-			adcig[i2][ia][i1]+=num[i2][ia][i1]*vv[i2][i1]/((den[i2][i1]+1.e-15)*sinf((ia+1)*da));
+			adcig[i2][ia][i1]+=num[i2][ia][i1]*vv[i2][i1]/((den[i2][i1]+SF_EPS)*sinf((ia+1)*da));
 	}
-	sf_floatwrite(adcig[0][0],noa*nz*nx,rtmadcig);
+	sf_floatwrite(adcig[0][0],na*nz*nx,rtmadcig);
 
 	free(wlt);
 	free(*v0); free(v0);

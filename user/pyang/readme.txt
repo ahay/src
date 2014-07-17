@@ -80,7 +80,7 @@ Test file:	/book/xjtu/mcaseislet/deblend/SConstruct
 		/book/xjtu/mcaseislet/interp/SConstruct
 		/book/xjtu/mcaseislet/sep1/SConstruct
 		/book/xjtu/mcaseislet/sep2/SConstruct
-		/book/xjtu/test/istpocsseislet/SConstruct
+		/book/xjtu/test/interpseislet/SConstruct
 
 7) 2-D forward modeling to generate shot records
 Main: 		Mmodeling2d.c
