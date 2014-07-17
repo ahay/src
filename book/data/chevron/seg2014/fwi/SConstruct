@@ -1,0 +1,101 @@
+from rsf.proj import *
+
+Flow('headerattr.txt','../fetch/SEG14.Pisoelastic_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#sftahread input=SEG14.Pisoelastic.rsf | sftahgethw key=sx,gx,offset >/dev/null
+# x coordinate must be divided by 10000 scalel and scaleco are both -10000
+# group interval and group interval are 25 m 
+#<SEG14.Pisoelastic_hdr.rsf sfheaderattr 
+#91 headers, 513600 traces
+#****************************************************************************** 
+#     key     	            min     	              max    	          mean
+#------------------------------------------------------------------------------
+#tracr       1              1 @ 0	        513600 @ 513599	        256800
+#fldr        2              1 @ 0	          1600 @ 513279	         800.5
+#tracf       3              1 @ 0	           321 @ 320	           161
+#ep          4              1 @ 0	          1600 @ 513279	         800.5
+#trid        7              1 @ 0	             1 @ 0	             1
+#offset     11              0 @ 0	          8000 @ 320	          4000
+#gelev      12        -150000 @ 0	       -150000 @ 0	       -150000
+#sdepth     14         150000 @ 0	        150000 @ 0	        150000
+#scalel     19         -10000 @ 0	        -10000 @ 0	        -10000
+#scalco     20         -10000 @ 0	        -10000 @ 0	        -10000
+#sx         21       10000000 @ 0	     409750000 @ 513279	   2.09875e+08
+#gx         23       10000000 @ 0	     489750000 @ 513599	   2.49875e+08
+#counit     25              1 @ 0	             1 @ 0	             1
+#ns         38           2001 @ 0	          2001 @ 0	          2001
+#dt         39           4000 @ 0	          4000 @ 0	          4000
+#tscalar    82         -10000 @ 0	        -10000 @ 0	        -10000
+#****************************************************************************** 
+
+Flow('vheaderattr.txt','../fetch/SEG14.Vpsmoothstarting_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#91 headers, 3820 traces
+#******************************************************************************* 
+#     key     	            min     	              max    	          mean
+#-------------------------------------------------------------------------------
+#tracl       0              1 @ 0	          3820 @ 3819	        1910.5
+#tracr       1              1 @ 0	          3820 @ 3819	        1910.5
+#fldr        2              1 @ 0	             1 @ 0	             1
+#tracf       3              1 @ 0	          3820 @ 3819	        1910.5
+#ep          4              1 @ 0	             1 @ 0	             1
+#trid        7              1 @ 0	             1 @ 0	             1
+#scalel     19         -10000 @ 0	        -10000 @ 0	        -10000
+#scalco     20         -10000 @ 0	        -10000 @ 0	        -10000
+#sx         21              0 @ 0	     477375000 @ 3819	   2.38688e+08
+#gx         23              0 @ 0	     477375000 @ 3819	   2.38688e+08
+#counit     25              1 @ 0	             1 @ 0	             1
+#ns         38           1200 @ 0	          1200 @ 0	          1200
+#dt         39           5000 @ 0	          5000 @ 0	          5000
+#cdpx       71              0 @ 0	     477375000 @ 3819	   2.38688e+08
+#iline      73              1 @ 0	             1 @ 0	             1
+#xline      74              1 @ 0	          3820 @ 3819	        1910.5
+#tscalar    82              1 @ 0	             1 @ 0	             1
+#*******************************************************************************
+
+# volume mapped by sx,rx.  must divide axis 2 and 3 by 10000 to onvert to meters
+Flow(['sxrxvolume.rsf','sxrxvolume_hdr.rsf'],
+     ['../fetch/SEG14.Pisoelastic.rsf','../fetch/SEG14.Pisoelastic_hdr.rsf'],
+     '''
+     sftahsort sort="offset:0,2000" \
+          input=${SOURCES[0]} \
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="gx" o2=10000000 n2=1920 d2=250000 \
+          label3="sx" o3=10000000 n3=1600 d3=250000 \
+	  verbose=1
+     ''',stdout=0, stdin=0)
+       
+Result('sxrxvolume',"byte |grey3 frame1=500 frame2=500 frame3=500 title='shot/rec volume'")
+
+Flow('sxrxsub',
+     'sxrxvolume',
+     '''
+     sfput o2=1000 d2=25 unit2="m" o3=1000 d3=25 unit3="m" \
+           csdgather=n dt=.004 nt=501
+           gxbeg=0 gzbeg=0 jgx=1 jgz=0 ng=161  
+	   sxbeg=0 szbeg=0 jsx=8 jsz=0 ns=10 
+     | window max1=2 min3=20000 n3=10 j3=8 min2=20000 max2=24000  \
+     ''')
+
+Result('sxrxsub','grey')
+
+Flow('velsub','../ntg/Vpstart.rsf',
+     '''
+     put label1="Depth" unit1="m" d1=5 
+         label2="distance" d2=12.5 o2=1000 unit2="m"
+     | window max1=2000 j1=5 min2=20000 max2=24000 j2=2
+     ''')
+Result('velsub','grey title="Vpstart sub" scalebar=y color="j"')
+
+Flow('vsnaps grads objs illums','svelsub sxrxsub',
+	'''
+	sffwi2d shots=${SOURCES[1]} grads=${TARGETS[1]} objs=${TARGETS[2]}
+	illums=${TARGETS[3]} niter=2 
+	''')
+Result('vsnaps','grey  title="vsnaps" scalebar=y color="j"')
+Result('grads','grey  title="grads" ')
+Result('illums','grey  title="illums" ')
+End()
