@@ -19,6 +19,7 @@ Result('vp','../fetch/vp.rsf',"sfgrey title='vp' scalebar=y color='j'")
 
 Flow('mshots','../fetch/vp.rsf',
      '''
+     sfput unit1="m" unit2="m" |
      sfmshots 
         amp=1000
         csdgather=n y
