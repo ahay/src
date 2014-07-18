@@ -1,0 +1,34 @@
+from rsf.proj import *
+
+Flow('headerattr.txt','../fetch/vp_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#sftahread input=SEG14.Pisoelastic.rsf | sftahgethw key=sx,gx,offset >/dev/null
+# x coordinate must be divided by 10000 scalel and scaleco are both -10000
+# group interval and group interval are 25 m 
+#<SEG14.Pisoelastic_hdr.rsf sfheaderattr 
+#91 headers, 513600 traces
+
+#dt         39           4000 @ 0	          4000 @ 0	          4000
+#tscalar    82         -10000 @ 0	        -10000 @ 0	        -10000
+#****************************************************************************** 
+
+# near trace gather - ned to drive off sx,gx headers - tahheadermath?
+
+Result('vp','../fetch/vp.rsf',"sfgrey title='vp' scalebar=y color='j'")
+
+Flow('mshots','../fetch/vp.rsf',
+     '''
+     sfmshots 
+        amp=1000
+        csdgather=n y
+        dt=.004 nt=1251 2501
+        fm=10 20
+        gzbeg=0 jgz=0 gxbeg=0 jgx=1   ng=400 
+        szbeg=0 jsz=0 sxbeg=0 jsx=100 ns=1 10
+	nb=30
+     ''')
+
+Result('mshots','grey')
+       
+End()
