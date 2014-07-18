@@ -105,5 +105,58 @@ Result('shots',
        grey3 frame1=1000 frame2=500 frame3=100 title=Shots
        ''')
 
+#dir='2d_model_subset',
+#          server='http://s3.amazonaws.com',
+#	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+#2D_Model_Subset.pdf		Vp_Elastic_N23900.sgy
+#2d_Model_Subset_plots.pdf	Vs_Elastic_N23900.sgy
+#Den_Elastic_N23900.sgy
+
+
+Fetch('Vp_Elastic_N23900.sgy',dir='2d_model_subset',
+          server='http://s3.amazonaws.com',
+	  top='open.source.geoscience/open_data/seam_ph1_2d_classic')
+Flow(['Vp_Elastic_N23900.rsf' ,'Vp_Elastic_N23900_hdr.rsf',
+      'Vp_Elastic_N23900.thdr','Vp_Elastic_N23900.bhdr'],
+     'Vp_Elastic_N23900.sgy',
+     '''
+     sfsegyread tfile=${TARGETS[1]} 
+     hfile=${TARGETS[2]}  bfile=${TARGETS[3]} 
+     ''')
+
+Flow('Vp_headerattr.txt','Vp_Elastic_N23900_hdr.rsf',
+     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+
+#<Vp_Elastic_N23900_hdr.rsf sfheaderattr 
+#91 headers, 1751 traces
+#*******************************************************************************# 
+#     key     	            min     	              max    	          mean
+#-------------------------------------------------------------------------------# 
+#tracl       0              1 @ 0	          1751 @ 1750	           876
+#tracr       1              1 @ 0	          1751 @ 1750	           876
+#trid        7              1 @ 0	             1 @ 0	             1
+#sx         21              0 @ 0	         35000 @ 1750	         17500
+#sy         22          23900 @ 0	         23900 @ 0	         23900
+#gx         23              0 @ 0	         35000 @ 1750	         17500
+#gy         24          23900 @ 0	         23900 @ 0	         23900
+#ns         38           1501 @ 0	          1501 @ 0	          1501
+#dt         39          10000 @ 0	         10000 @ 0	         10000
+#******************************************************************************* 
+
+Flow(['vp.rsf','vp_hdr.rsf'],
+     ['Vp_Elastic_N23900.rsf','Vp_Elastic_N23900_hdr.rsf'],
+     '''
+     sftahsort \
+          input=${SOURCES[0]} \
+	  sort="sx" \
+	  verbose=1 \
+     | sftahwrite \
+          output=${TARGETS[0]} \
+          label2="sx" o2=0 n2=1751 d2=20 \
+	  verbose=1
+     ''',stdout=0, stdin=0)
+       
+Result('vp',"sfgrey title='vp' scalebar=y color=j")
+
 
 End()
