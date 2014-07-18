@@ -6,78 +6,83 @@ Flow('headerattr.txt','../fetch/shots-receivers-23900_hdr.rsf',
 #sftahread input=SEG14.Pisoelastic.rsf | sftahgethw key=sx,gx,offset >/dev/null
 # x coordinate must be divided by 10000 scalel and scaleco are both -10000
 # group interval and group interval are 25 m 
-#<SEG14.Pisoelastic_hdr.rsf sfheaderattr 
-#91 headers, 513600 traces
-#****************************************************************************** 
+#<../fetch/shots-receivers-23900_hdr.rsf sfheaderattr 
+#91 headers, 136051 traces
+#*****************************************************************************# 
 #     key     	            min     	              max    	          mean
-#------------------------------------------------------------------------------
-#tracr       1              1 @ 0	        513600 @ 513599	        256800
-#fldr        2              1 @ 0	          1600 @ 513279	         800.5
-#tracf       3              1 @ 0	           321 @ 320	           161
-#ep          4              1 @ 0	          1600 @ 513279	         800.5
-#trid        7              1 @ 0	             1 @ 0	             1
-#offset     11              0 @ 0	          8000 @ 320	          4000
-#gelev      12        -150000 @ 0	       -150000 @ 0	       -150000
-#sdepth     14         150000 @ 0	        150000 @ 0	        150000
-#scalel     19         -10000 @ 0	        -10000 @ 0	        -10000
-#scalco     20         -10000 @ 0	        -10000 @ 0	        -10000
-#sx         21       10000000 @ 0	     409750000 @ 513279	   2.09875e+08
-#gx         23       10000000 @ 0	     489750000 @ 513599	   2.49875e+08
-#counit     25              1 @ 0	             1 @ 0	             1
+#-----------------------------------------------------------------------------# 
+#tracr       1              1 @ 0	        136051 @ 136050	         68026
+#tracf       3            361 @ 0	        649261 @ 900	        324811
+#ep          4           3041 @ 0	         15191 @ 135150	          9116
+#gelev      12            -15 @ 0	           -15 @ 0	           -15
+#selev      13            -15 @ 0	           -15 @ 0	           -15
+#sdepth     14             15 @ 0	            15 @ 0	            15
+#scalel     19              1 @ 0	             1 @ 0	             1
+#scalco     20              1 @ 0	             1 @ 0	             1
+#sx         21           3700 @ 0	         18700 @ 135150	         11200
+#sy         22          23900 @ 0	         23900 @ 0	         23900
+#gx         23              0 @ 0	         22500 @ 900	         11250
+#gy         24          23900 @ 0	         23900 @ 0	         23900
 #ns         38           2001 @ 0	          2001 @ 0	          2001
-#dt         39           4000 @ 0	          4000 @ 0	          4000
-#tscalar    82         -10000 @ 0	        -10000 @ 0	        -10000
+#dt         39           8000 @ 0	          8000 @ 0	          8000
+#grnlof     68             15 @ 0	            15 @ 0	            15
+#smeas4     86          26881 @ 0	         26881 @ 0	         26881
+#smeasu     88         -32768 @ 127	         32515 @ 894	       1987.64
+#unass1     89              6 @ 66	         65298 @ 113522	       32645.3
+#unass2     90          38166 @ 0	         38166 @ 0	         38166
 #****************************************************************************** 
 
-# near trace gather - ned to drive off sx,gx headers - tahheadermath?
 
-Flow(['ntg.rsf','ntg_hdr.rsf'],
+# near trace gather - need to use sx,gx headers - tahheadermath?
+# this does not work because input data does not have good offset in 
+# trace header
+
+#Flow(['ntg.rsf','ntg_hdr.rsf'],
+#     ['../fetch/shots-receivers-23900.rsf','../fetch/shots-receivers-23900_hdr.rsf'],
+#     '''
+#     sftahsort \
+#         input=${SOURCES[0]} \
+#	  sort="sx offset:0,0" \
+#	  verbose=1 \
+#     | sftahwrite \
+#         output=${TARGETS[0]} \
+#         label2="sx" o2=10000000 n2=1600 d2=250000 \
+#         verbose=1
+#     ''',stdout=0, stdin=0)
+#       
+#Result('ntg',"sfpow pow1=1.5 | sfgrey title='near trace gather'")
+
+# every10shot  You can ask for 03=370 n3=151 d3=100
+Flow(['every10shot.rsf','every10shot_hdr.rsf'],
      ['../fetch/shots-receivers-23900.rsf','../fetch/shots-receivers-23900_hdr.rsf'],
      '''
-     sftahsort \
+     sftahread \
           input=${SOURCES[0]} \
-	  sort="sx offset:0,0" \
 	  verbose=1 \
      | sftahwrite \
           output=${TARGETS[0]} \
-          label2="sx" o2=10000000 n2=1600 d2=250000 \
-	  verbose=1
-     ''',stdout=0, stdin=0)
-       
-Result('ntg',"sfpow pow1=1.5 | sfgrey title='near trace gather'")
-
-# someshots
-Flow(['someshots.rsf','someshots_hdr.rsf'],
-     ['../fetch/SEG14.Pisoelastic.rsf','../fetch/SEG14.Pisoelastic_hdr.rsf'],
-     '''
-     sftahsort \
-          input=${SOURCES[0]} \
-	  sort="sx:100000000,400000000,50000000 offset:0,8000" \
-	  verbose=1 \
-     | sftahwrite \
-          output=${TARGETS[0]} \
-          label2="offset" o2=0 n2=321 d2=25 \
-          label3="sx" o3=100000000 n3=7xs d3=50000000 \
+          label2="gx" o2=0 n2=901 d2=25 \
+          label3="sx" o3=3700 n3=16 d3=1000 \
 	  verbose=1
      ''',stdout=0, stdin=0)
 
-Result('someshots',
-       'sfpow pow1=1.5 | sfgrey title="two shots"')
+Result('every10shot',
+       'sfpow pow1=1.5 | sfgrey title="every10shot"')
 # velocity
-Flow(['Vpstart.rsf','Vpstart_hdr.rsf'],
-     ['../fetch/SEG14.Vpsmoothstarting.rsf','../fetch/SEG14.Vpsmoothstarting_hdr.rsf'],
-     '''
-     sftahsort \
-          input=${SOURCES[0]} \
-	  sort="sx" \
-	  verbose=1 \
-     | sftahwrite \
-          output=${TARGETS[0]} \
-          label2="sx" o2=10000000 n2=3740 d2=125000 \
-	  verbose=1
-     ''',stdout=0, stdin=0)
+#Flow(['Vpstart.rsf','Vpstart_hdr.rsf'],
+#     ['../fetch/SEG14.Vpsmoothstarting.rsf','../fetch/SEG14.Vpsmoothstarting_hdr.rsf'],
+#     '''
+#     sftahsort \
+#          input=${SOURCES[0]} \
+#	  sort="sx" \
+#	  verbose=1 \
+#     | sftahwrite \
+#          output=${TARGETS[0]} \
+#          label2="sx" o2=10000000 n2=3740 d2=125000 \
+#	  verbose=1
+#     ''',stdout=0, stdin=0)
        
-Result('Vpstart',"sfgrey title='Vpstart' scalebar=y color='c'")
+Result('vp','../fetch/vp.rsf',"sfgrey title='Vpstart' scalebar=y color=j")
 
        
 End()
