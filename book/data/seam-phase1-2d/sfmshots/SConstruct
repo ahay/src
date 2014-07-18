@@ -19,17 +19,17 @@ Result('vp','../fetch/vp.rsf',"sfgrey title='vp' scalebar=y color='j'")
 
 Flow('mshots','../fetch/vp.rsf',
      '''
-     sfput unit1="m" unit2="m" |
+     sfput unit1="m" unit2="m" label1="Depth" d1=10 |
      sfmshots 
-        amp=1000
-        csdgather=n y
-        dt=.004 nt=1251 2501
-        fm=10 20
-        gzbeg=0 jgz=0 gxbeg=0 jgx=1   ng=400 
-        szbeg=0 jsz=0 sxbeg=0 jsx=100 ns=1 10
+        amp=1
+        csdgather=n
+        dt=.002 nt=5000
+        fm=10 
+        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=400 
+        szbeg=2 jsz=0 sxbeg=0 jsx=100 ns=1
 	nb=30
      ''')
 
-Result('mshots','grey')
+Result('mshots','sfwindow min1=1 min2=500 | sftpow tpow1=2 | sfgrey scalebar=y pclip=99')
        
 End()
