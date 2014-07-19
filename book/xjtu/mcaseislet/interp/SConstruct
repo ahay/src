@@ -70,7 +70,7 @@ Flow('reccc','reccc1 reccc2','add scale=1,1 ${SOURCES[1]}')
 Flow('snr3','reccc sean','mysnr ref=${SOURCES[1]}')
 
 
-# Seislet-based MCA inpainting (pthresh):
+# Seislet-based MCA inpainting (Generalized quasi-p thresholding):
 Flow('recccc0','sean2 ppq mask',
      '''
      mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]} mode=pthresh p=1.3

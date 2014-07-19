@@ -209,7 +209,7 @@ Based on Taylor series, this operator in \eqref{eq:gen_op} enjoys some nice prop
  \item It is free of non-differentiable singularity at the thresholding point $\lambda$. The transition between the small values and the large values is smoothly stretched. Due to the expenential factor less than 1 ($\mathrm{exp}(-(\frac{\lambda}{|u|})^{2-p})<1$), this operator will slightly decrease the data amplitude, even for $|u|<\lambda$.
  \item Besides the threshold $\lambda$, we have another independent parameter $p$ which can be flexibly chosen to obtain best performance.
 \end{itemize}
-For the convenience of comparison, we plot these thresholding operators in Figure \ref{fig:thresh}. A critical point is that the exponential shrinkage function is devoted to diversifying the thresholding capability of seislet-based MCA instead of exhibiting better effect. It obtained competitive (sometimes better) sparsifying effects in our experiment compared with the existing thresholding operators.  By incorporating PWD dip estimation and exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm in Algorithm \ref{algorithm:lpmca}. In fact, seislet transforms associated with different dips forms a combined seislet frame. Shrinkage operator plays an role of crosstalk removal in MCA algorithm, see more details in Appendex A.
+For the convenience of comparison, we plot these thresholding operators in Figure \ref{fig:thresh}. By incorporating PWD dip estimation and exponential shrinkage shaping, we summarize the proposed seislet-based MCA algorithm in Algorithm \ref{algorithm:lpmca}. In fact, seislet transforms associated with different dips forms a combined seislet frame. Shrinkage operator plays an role of crosstalk removal in MCA algorithm, see more details in Appendex A.
 %\begin{figure}
 %\centering
 %  \includegraphics[width=\linewidth]{thresh}\\
@@ -243,7 +243,7 @@ For the convenience of comparison, we plot these thresholding operators in Figur
 
 \subsection{Trace interpolation}
 
-Interpolation of random missing traces is an important step in seismic data processing. Unlike most studies using only one transform, we consider the seismic data having two different components, which can be characterized by seislet transforms associated with two different slopes. PWD filter is utilized to estimate the two dip fields. As shown in Figure~\ref{fig:interp}, the complete data is decimated with a random eliminating rate 50\%. 10 iterations are performed to separate these components. The estimated dips (Figure~\ref{fig:dips}) by PWD are indicates that the separated two components exhibit different modes: component 2 has many conflicting seismic events (corresponding to positive and negative dips) while the events of component 1 are more consistent (most values of the dip are positive). The summation of the two components gives a reasonable interpolation result, see the last panel of Figure~\ref{fig:interp}.
+Interpolation of random missing traces is an important step in seismic data processing. Unlike most studies using only one transform, we consider the seismic data having two different components, which can be characterized by seislet transforms associated with two different slopes. PWD filter is utilized to estimate the two dip fields. As shown in Figure~\ref{fig:data}, the complete data is decimated with a random eliminating rate 25\%. 10 iterations are carried out to separate these components. The estimated dips (Figure~\ref{fig:dips}) by PWD are indicates that the separated two components exhibit different modes: component 2 has many conflicting seismic events (corresponding to positive and negative dips) while the events of component 1 are more consistent (most values of the dip are positive). The summation of the two components gives a reasonable interpolation result, see the last panel of Figure~\ref{fig:interp}. For comparison, we define the signal-to-noise ratio as $\mathrm{SNR}=10\log_10(\frac{|s|^2}{|s-\hat{s}|^2})$ to quatify the reconstruction performance. The resulting SNRs using exponential shrinkage, soft, hard, and generalied p-thresholding are 11.98 dB, 11.29 dB, 5.37 dB and 8.94 dB, respectively. It shows that the proposed exponential shrinkage outperfoms the existing methods in MCA interpolation. It is important to point out that approximating the $\ell_0$ and $\ell_1$ minimization in a smooth constraint has already been validited by \cite{cao2011review} in seismic interpolation applications. The use of exponential shrinkage enriches the sparsity-promoting shaping operator and extended the smooth constraint to MCA approach.
 
 %\begin{figure}
 %\centering
@@ -254,8 +254,9 @@ Interpolation of random missing traces is an important step in seismic data proc
 
 
 \inputdir{interp}
-  \plot{interp}{width=\linewidth}{Simultaneous multi-component trace interpolation. From left to right: Complete seismic data, data with 50\% random missing values, MCA interpolated component 1 and component 2, final interpolated data.}
+  \plot{data}{width=0.8\linewidth}{The observed seismic data (right) to be interpolated is obtained by 25\% random eliminating the complete data (left).}
   \plot{dips}{width=\linewidth}{PWD estimated dips: dip estimation for component 1 (Left) are positive-valued, while dip for component 2 includes negative and positive values.}
+  \plot{interp}{width=0.8\linewidth}{From left to right: MCA reconstructed component 1 and component 2, final interpolated data.}
 
 
 
@@ -283,7 +284,7 @@ Interpolation of random missing traces is an important step in seismic data proc
 
 \subsection{Signal and noise separation}
 
-A challenging problem in geophysical community is coherent noise elimination. To validate performance of seislet-based MCA for coherent noise attenuation, we conduct a benchmark synthetic test used by \cite{fomel2002applications}. As shown in Figure~\ref{fig:signalnoise}, the synthetic signal including consistent seismic events, is seriously contaminated by the synthetic dipping noise, which is so strong that we treat them as another signal component. From a geometrical point of view, PWD can estimate the slopes in a nice way. After 10 iterations of  seislet-based MCA computation, we obtain simultaneously separated signal and noise. As can be seen from the figure, the signal can be separated from the dipping noise favorably.
+A challenging problem in geophysical community is coherent noise elimination. To validate performance of seislet-based MCA for coherent noise attenuation, we conduct a benchmark synthetic test used by \cite{fomel2002applications}. As shown in Figure~\ref{fig:signalnoise}, the synthetic signal including consistent seismic events, is seriously contaminated by the synthetic dipping noise, which is so strong that we treat them as another signal component. From a geometrical point of view, PWD can estimate the slopes in a nice way. After 10 iterations of  seislet-based MCA computation, we obtain simultaneously separated signal and noise. As can be seen from the figure, the signal can be separated from the dipping noise favorably. Again, we compute the SNRs of seislet-based MCA using the proposed exponential shrinkage, soft, hard, and generalized quasi-p thresholding method, leading to 11.91 dB, 10.78 dB, 10.91 dB and 4.26 dB, respectively. It further confirms the outperformance of the exponential shrinkage operator in seislet-based MCA.
 
 %\begin{figure}
 %\centering
@@ -352,14 +353,13 @@ Before applying the seislet-based MCA method, it is important to point out that 
   
 \section{Conclusion and discussion}
 
-We have developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The proposed seislet-based MCA using shaping regularization is promosing in the application to seismic trace interpolation, signal and noise separation, as well as multiple removal. 
+We have developed a seislet-based MCA method for seismic data processing. PWD filter can be utilized to estimate the slopes of seismic data. An exponential shrinkage function is introduced to diversify the capability of sparsity-promoting shaping operator. The proposed seislet-based MCA using shaping regularization is promosing in the application to seismic trace interpolation, signal and noise separation, as well as multiple removal. The sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation. The additional parameter $p$ of the proposed exponential shrinkage provides us more flexibility to approximate many exisiting shrinkage operators to achieve better separation performance. Meanwhile, it is free of non-differential sigularity and unifies many existing shrinkage operators. 
 
-The sparsity-promoting shaping regularization plays an extremely important role in successful seislet-based MCA separation. The parameters needs to be set according to empirical experiments.  Our experience show that there is little difference to choose different thresholding functions for the same parameters. However, the special importance of the proposed exponential shrinkage operator is that it is free of non-differential sigularity and unifies many existing shrinkage operators.
 
 
 \section*{Acknowledgments}
 
-The work of the first author is supported by China Scholarship Council during his visit to Bureau of Economic Geology, University of Texas at Austin. We would like to thank Wenchao Chen and Jianwei Ma for valuable discussions. The numerical examples are reproducible with  Madagascar software package \citep{m8r}.
+The work of the first author is supported by China Scholarship Council during his visit to Bureau of Economic Geology, University of Texas at Austin. We would like to thank Wenchao Chen and Jianwei Ma for valuable suggestions. The numerical examples are reproducible with  Madagascar software package \citep{m8r}.
 
 \append{Seislet frame in MCA algorithm}
 \label{app:seisletframe}
