@@ -7,7 +7,7 @@ import bldutil
 progs = '''cohn dlct fpocs2d fpocs3d fwi2d fbrec2d
 istinterp istseislet lsrtm2d lsprtm2d lsinterp2d lsinterp5d 
 mwni2d myradon1 myradon2 mythresh mshots mcaseislet matflip modeling2d
-pocs3d pocs pocsseislet rtm2d rtmadcig 
+pocs3d pocs pocsseislet rtm2d rtmadcig mysnr
 Testfd2d Testfd3d Testeb Testelastic2d Testaniso Testspml
 '''
 

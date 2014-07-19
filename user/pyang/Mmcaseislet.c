@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     /* thresholding mode: 'hard', 'soft','pthresh','exp';
 	'hard', hard thresholding;	'soft', soft thresholding; 
 	'pthresh', generalized quasi-p; 'exp', exponential shrinkage */
-    if (!sf_getfloat("p",&p)) 		p=0.35;
+    if (!sf_getfloat("p",&p)) 		p=0.5;
     /* norm=p, where 0<p<=1 */;
     if (strcmp(mode,"soft") == 0) 	p=1;
     else if (strcmp(mode,"hard") == 0) 	p=0;
