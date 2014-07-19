@@ -15,7 +15,7 @@ Plot('make',plot('Signal+Noise'))
 Flow('pq','make','twodip2 order=2 eps=10 lam=10 verb=y gauss=n')
 Flow('rec','make pq',
      	'''
-     	mcaseislet dips=${SOURCES[1]} 
+     	mcaseislet dips=${SOURCES[1]} mode=exp p=0.5
 	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100
      	''')
 
@@ -24,6 +24,31 @@ Flow('rec2','rec','window f3=1')
 Plot('rec1',plot('Component 1'))
 Plot('rec2',plot('Component 2'))
 Result('signalnoise','signal make rec1 rec2', 'SideBySideAniso')
+Flow('snr1','rec2 signal','mysnr ref=${SOURCES[1]}')
+
+Flow('recc2','make pq',
+     	'''
+     	mcaseislet dips=${SOURCES[1]} mode=soft p=1
+	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100 |
+	window f3=1
+     	''')
+Flow('snr2','recc2 signal','mysnr ref=${SOURCES[1]}')
+
+Flow('reccc2','make pq',
+     	'''
+     	mcaseislet dips=${SOURCES[1]} mode=pthresh p=0.5
+	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100 |
+	window f3=1
+     	''')
+Flow('snr3','reccc2 signal','mysnr ref=${SOURCES[1]}')
+
+Flow('reccc2','make pq',
+     	'''
+     	mcaseislet dips=${SOURCES[1]} mode=hard p=1
+	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100 |
+	window f3=1
+     	''')
+Flow('snr4','reccc2 signal','mysnr ref=${SOURCES[1]}')
 
 End()
 
