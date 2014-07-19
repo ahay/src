@@ -5,20 +5,21 @@ Fetch('sean.HH','bp')
 Flow('sean','sean.HH',
      'dd form=native | window n3=1 f3=3 n1=500 | bandpass fhi=50')
 Plot('sean','window n2=180 | grey title=Original label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
-Result('sean','grey label1="Time (s)" label2=Trace title=Original') 
+
      
 # Pad to a power of 2
 Flow('sean1','sean','pad n2=256')
 
-# Randomly remove 30% of traces
+# Randomly remove 25% of traces
 Flow('mask','sean',
      '''
      window n1=1 | noise type=n seed=2014 rep=y mean=0.5 |
-     mask max=0.7 | pad n1=256 |
+     mask max=0.75 | pad n1=256 |
      spray axis=1 n=500 | dd type=float
      ''')
 Flow('sean2','sean1 mask','mul ${SOURCES[1]}')
 Plot('sean2','window n2=180 | grey label1="Time (s)" label2=Trace title=Missing labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Result('data','sean sean2','SideBySideAniso')
 
 #================================================================================
 Flow('ppq','sean2 mask','twodip2 mask=${SOURCES[1]} order=2 eps=5 verb=y gauss=n niter=10 | pad n2=256 labelfat=6 titlefat=6')
@@ -28,22 +29,58 @@ Plot('dip1','window n2=180 |grey title="First Dip" label1="Time (s)" label2=Trac
 Plot('dip2','window n2=180 |grey title="Second Dip"  label1="Time (s)" label2=Trace pclip=100 scalebar=y color=j')
 Result('dips','dip1 dip2','SideBySideIso')
 
-# Seislet-based MCA inpainting 1st:
+# Seislet-based MCA inpainting (exponential shrinkage):
 Flow('rec0','sean2 ppq mask',
      '''
-     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]}
-     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=50 
+     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]} mode=exp p=1.3
+     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=30 
      ''')
-Flow('rec1','rec0','window n3=1')
-Flow('rec2','rec0','window f3=1')
+Flow('rec1','rec0','window n2=180 n3=1 ')
+Flow('rec2','rec0','window n2=180 f3=1')
 Flow('rec','rec1 rec2','add scale=1,1 ${SOURCES[1]}')
+Flow('snr1','rec sean','mysnr ref=${SOURCES[1]}')
 
-Plot('rec1','window n2=180 | grey title="Component 1" label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
-Plot('rec2','window n2=180 | grey title="Component 2" label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
-Plot('rec','window n2=180 | grey title=Interpolated label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec1','grey title="Component 1" label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec2','grey title="Component 2" label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Plot('rec','grey title=Interpolated label1="Time (s)" label2=Trace labelsz=12 titlesz=16 labelfat=6 titlefat=6')
+Result('interp', 'rec1 rec2 rec','SideBySideAniso')
 
-Result('interp','sean sean2 rec1 rec2 rec','SideBySideAniso')
 
-#
+# Seislet-based MCA inpainting (soft thresholding):
+Flow('recc0','sean2 ppq mask',
+     '''
+     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]} mode=soft
+     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=30 
+     ''')
+Flow('recc1','recc0','window n2=180 n3=1 ')
+Flow('recc2','recc0','window n2=180 f3=1')
+Flow('recc','recc1 recc2','add scale=1,1 ${SOURCES[1]}')
+Flow('snr2','recc sean','mysnr ref=${SOURCES[1]}')
+
+
+# Seislet-based MCA inpainting (hard thresholding):
+Flow('reccc0','sean2 ppq mask',
+     '''
+     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]} mode=hard
+     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=30
+     ''')
+Flow('reccc1','reccc0','window n2=180 n3=1 ')
+Flow('reccc2','reccc0','window n2=180 f3=1')
+Flow('reccc','reccc1 reccc2','add scale=1,1 ${SOURCES[1]}')
+Flow('snr3','reccc sean','mysnr ref=${SOURCES[1]}')
+
+
+# Seislet-based MCA inpainting (pthresh):
+Flow('recccc0','sean2 ppq mask',
+     '''
+     mcaseislet dips=${SOURCES[1]} mask=${SOURCES[2]} mode=pthresh p=1.3
+     verb=y order=2 type=b eps=0.01 niter=10 pclip=3 pscale=30 
+     ''')
+Flow('recccc1','recccc0','window n2=180 n3=1 ')
+Flow('recccc2','reccc0','window n2=180 f3=1')
+Flow('recccc','recccc1 recccc2','add scale=1,1 ${SOURCES[1]}')
+Flow('snr4','recccc sean','mysnr ref=${SOURCES[1]}')
+
+
 End()
 
