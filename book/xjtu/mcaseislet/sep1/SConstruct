@@ -28,7 +28,7 @@ Flow('snr1','rec2 signal','mysnr ref=${SOURCES[1]}')
 
 Flow('recc2','make pq',
      	'''
-     	mcaseislet dips=${SOURCES[1]} mode=soft p=1
+     	mcaseislet dips=${SOURCES[1]} mode=soft 
 	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100 |
 	window f3=1
      	''')
@@ -42,13 +42,13 @@ Flow('reccc2','make pq',
      	''')
 Flow('snr3','reccc2 signal','mysnr ref=${SOURCES[1]}')
 
-Flow('reccc2','make pq',
+Flow('recccc2','make pq',
      	'''
-     	mcaseislet dips=${SOURCES[1]} mode=hard p=1
+     	mcaseislet dips=${SOURCES[1]} mode=hard 
 	verb=y order=1 type=b eps=0.03 niter=10 pclip=10 decr=y pscale=100 |
 	window f3=1
      	''')
-Flow('snr4','reccc2 signal','mysnr ref=${SOURCES[1]}')
+Flow('snr4','recccc2 signal','mysnr ref=${SOURCES[1]}')
 
 End()
 
