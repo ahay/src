@@ -35,7 +35,7 @@ printed to STDERR.  Traces are sent to STDOUT, which is directed to
 /dev/null (the bit bucket).
 
 PARAMETERS
-   strings key= no default
+   string key= no default
 
         list of header keys print.  Look at the sfsegyread for a list
 	of header names.

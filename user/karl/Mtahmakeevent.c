@@ -1,4 +1,4 @@
-/* Trace And Header GET Header Word prints trace headers.
+/* Trace And Header MAKEEVENT makes constant velocity dipping event synthetic.
 
 tah is the abbreviation of Trace And Header.  Madagascar programs 
 that begin with sftah are a designed to:
@@ -16,7 +16,8 @@ Some programs in this suite are sftahread, sftahgethw, ftahhdrmath,
 and sftahwrite.
 
 The sftahmakeevent program makes simple synthetic on input data source
-and group xy coordinates (i.e. sx, sy, gx, gy)
+and group xy coordinates (i.e. sx, sy, gx, gy).  The event has constant
+velocity and dip.  The nmo velocity will depend on source/receiver azimuth.
 EXAMPLE:
 
 sftahsort          \\

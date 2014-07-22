@@ -27,6 +27,7 @@ tah5dinterp
 karlistinterp
 karlpocs
 tahmakeevent
+tahheadermath
 '''
 
 env.Prepend(CPPPATH=[RSFSRC+'/include'],
