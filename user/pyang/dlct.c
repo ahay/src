@@ -23,6 +23,9 @@ I normalized the forward transform of DLCT with a factor sqrt(N*L).
 	linear chirp transform (DLCT) for data compression." Information 
 	Science, Signal Processing and their Applications (ISSPA), 2012 
 	11th International Conference on. IEEE, 2012.
+
+  We can think of DLCT as a complex-valued Gabor transform! Complex-valued 
+  version does not introduce amplitude scaling!
 */
 
 #include <rsf.h>

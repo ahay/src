@@ -1,4 +1,4 @@
-/* Signal-to-noise ratio (decibel)
+/* print out signal-to-noise ratio in decibel (dB)
 */
 
 /*
