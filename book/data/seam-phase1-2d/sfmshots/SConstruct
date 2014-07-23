@@ -15,21 +15,20 @@ Flow('headerattr.txt','../fetch/vp_hdr.rsf',
 
 # near trace gather - ned to drive off sx,gx headers - tahheadermath?
 
-Result('vp','../fetch/vp.rsf',"sfgrey title='vp' scalebar=y color='j'")
+Flow('vel','../fetch/vp.rsf', 
+	'''
+     	sfput unit1="m" unit2="m" d1=10 d2=20 label1=Depth label2=Distance
+     	''')
+Result('vel',"sfgrey title='vp' scalebar=y color='j'")
 
-Flow('mshots','../fetch/vp.rsf',
-     '''
-     sfput unit1="m" unit2="m" label1="Depth" d1=10 |
-     sfmshots 
-        amp=1
-        csdgather=n
-        dt=.002 nt=5000
-        fm=10 
-        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=400 
-        szbeg=2 jsz=0 sxbeg=0 jsx=100 ns=1
+Flow('mshots','vel',
+     ''' sfmshots 
+        csdgather=n  dt=.0003 nt=20000  fm=10
+        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=400
+        szbeg=2 jsz=0 sxbeg=0 jsx=100 ns=4
 	nb=30
      ''')
 
-Result('mshots','sfwindow min1=1 min2=500 | sftpow tpow1=2 | sfgrey scalebar=y pclip=99')
-       
+#Result('mshotsb','byte gainpanel=all |grey')
+Result('mshots','mshots','grey')
 End()
