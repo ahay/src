@@ -340,7 +340,14 @@ int main(int argc, char* argv[])
 	cudaMemcpy(d_vv, vv, nnz*nnx*nny*sizeof(float), cudaMemcpyHostToDevice);
 	cuda_set_sg<<<1, ns>>>(d_szxy, szbeg, sxbeg, sybeg, jsz, jsx, jsy, ns, nz, nx, ny);
 
+	float mstimer;
+	clock_t t0, t1;
+	cudaEvent_t start, stop;
+  	cudaEventCreate(&start);	
+	cudaEventCreate(&stop);
 	for(is=0; is<ns; is++){
+	  cudaEventRecord(start);
+
 	  cudaMemset(d_p0, 0, nnz*nnx*nny*sizeof(float));
 	  cudaMemset(d_p1, 0, nnz*nnx*nny*sizeof(float));
 	  for(it=0; it<nt; it++){
@@ -349,14 +356,25 @@ int main(int argc, char* argv[])
 	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;//toggle buffers
 
 	    if(it==kt){
+	      t0 = clock();
+
 	      cudaMemcpy(vv, d_p0, nnz*nnx*nny*sizeof(float), cudaMemcpyDeviceToHost);
 	      window3d(v0, vv, nz, nx, ny);
-	      sf_floatwrite(v0, nz*nx*ny, Fw);
+	      sf_floatwrite(v0, nz*nx*ny, Fw);	  
+
+ 	      t1 = clock();
+ 	      sf_warning("save the volume: %f (s)", ((float)(t1-t0))/CLOCKS_PER_SEC); 	
 	    }
 
 	    sf_warning("it=%d",it);
 	  }
+	  cudaEventRecord(stop);
+          cudaEventSynchronize(stop);
+  	  cudaEventElapsedTime(&mstimer, start, stop);
+    	  sf_warning("%d shot finished: %g (s)",is+1, mstimer*1.e-3);
 	}
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
 
 	/* free memory on device */
 	cudaFree(d_wlt);

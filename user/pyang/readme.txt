@@ -136,7 +136,7 @@ Main: 		Mgpufd3d.cu, Mgpufbrec3d.cu
 Test file:	/book/xjtu/test/gpufd3d/SConstruct
 NB: Mgpufbrec3d.cu is performing backward reconstruction for the forward 
 modeled wavefield in 3D with GPU. It is implemented 2nd order FD, and 
-prepared for 3D GPU-based RTM
+prepared for 3D GPU-based RTM.
 
 ===================================================================
 I try my best to make my code self-contained. I believe it brings 
