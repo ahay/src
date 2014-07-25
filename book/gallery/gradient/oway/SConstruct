@@ -49,4 +49,15 @@ Flow('imp','fft_impulse slowness',zomig,
 
 gradient.impulse_response('imp','veloc')
 
+# model from image
+Flow('model','mig slowness',
+   '''
+   transp| transp plane=23|
+   zomig3 ompnth=1 mode=m inv=y
+   --readwrite=y verb=y nrmax=30
+   dtmax=.001 slo=${SOURCES[1]}
+   nw=%i dw=%g
+   '''%(nf,fmax/nf))
+Flow('modelreal','model','transp plane=23| transp plane=12 |pad n1=1025| fft1 inv=y')
+Result('modelreal','grey title="Recovered-Zero-Offset" ')
 End()
