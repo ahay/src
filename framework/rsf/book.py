@@ -272,7 +272,7 @@ def thesis_intro(target=None,source=None,env=None):
             intro.write('\\previousdegrees{%s}\n' % degrees)
 	master = env.get('master')
         if master:
-            intro.write('\\degree{MASTER OF SCIENCE in GEOLOGICAL SCIENCES}\n\\degreeabbr{M.S.Geo.Sci.}\n')
+            intro.write('\\degree{Master of Science in Geological Sciences}\n\\degreeabbr{M.S.Geo.Sci.}\n')
             intro.write('\\masterthesis\n')
     else:
         intro.write('\\beforepreface\n')
