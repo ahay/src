@@ -30,5 +30,32 @@ Flow('mshots','vel',
      ''')
 
 #Result('mshotsb','byte gainpanel=all |grey')
-Result('mshots','mshots','grey')
+Result('mshots','grey')
+
+Flow('mshotscsd','vel',
+     ''' sfmshots 
+        csdgather=y  dt=.0003 nt=20000  fm=10
+        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=400
+        szbeg=2 jsz=0 sxbeg=0 jsx=100 ns=4
+	nb=30
+     ''')
+
+#Result('mshotsb','byte gainpanel=all |grey')
+Result('mshotscsd','grey')
+
+Flow('mshots1','vel',
+     ''' sfmshots 
+        csdgather=n  dt=.0003 nt=20000  fm=10
+        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=1126
+        szbeg=2 jsz=0 sxbeg=186 jsx=50 ns=2
+	nb=30
+     ''')
+
+Result('mshots1','grey')
+# could display 16 shots every km
+Result('seam','../fetch/shots.rsf',
+       '''
+       window j3=10 n3=2 max1=6 | grey
+       ''')
+ 
 End()
