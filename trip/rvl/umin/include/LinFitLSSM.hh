@@ -191,7 +191,7 @@ namespace RVLUmin {
     }
 
     LinFitLSSM(LinFitLSSM<Scalar,LSPolicy,LSPolicyData> const & f) 
-	: LSPolicy(f), op(f.op), preop(f.preop), helmop(f.helmop), d(f.d), x0(f.x0),refine(f.refine),
+	: LSPolicy(f), op(f.op), helmop(f.helmop), preop(f.preop), d(f.d), x0(f.x0),refine(f.refine),
 	  dx(f.dx), dltx(f.dltx), applied(f.applied), str(f.str) {}
 
     const Space<Scalar> & getDomain() const { return op.getDomain(); }
