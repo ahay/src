@@ -124,7 +124,7 @@ namespace TSOpt {
 	  : s(_s),tm(_tm),w(_w),mute_type(_type), min(_min), max(_max), width(_width), tw(_tw), taper_type(_tapertype) {}
         
         SEGYTaperMute(SEGYTaperMute const & m)
-        : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),min(m.min),max(m.max),width(m.width), ,tw(m.tw), taper_type(m.taper_type) {}
+        : s(m.s),tm(m.tm),w(m.w),mute_type(m.mute_type),min(m.min),max(m.max),width(m.width), tw(m.tw), taper_type(m.taper_type) {}
         void set(float _s, float _tm, float _w, int _type = 0, float _min =0.0f , float _max = numeric_limits<float>::max(), float _width=0.0f, int _tapertype=0, float _tw=0.0f)
         {
             mute_type = _type;
