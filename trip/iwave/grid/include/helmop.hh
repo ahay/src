@@ -332,8 +332,9 @@ namespace TSOpt {
     public:
         
         HelmOp(HelmOp const & A):
-        dom(A.dom), str(A.str),
-        power(A.power), datum(A.datum), DirichletSides(A.DirichletSides){
+        dom(A.dom),
+        power(A.power), datum(A.datum), DirichletSides(A.DirichletSides), 
+	str(A.str) {
             RASN(w_arr,A.w_arr);
         }
         

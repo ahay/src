@@ -30,8 +30,8 @@ namespace RVLUmin {
   private:
     
     Operator<Scalar> const & op;        // operator  
-    LinearOp<Scalar> const & preop;     // preconditioner
     LinearOp<Scalar> const & helmop;    // smoothing op applied to gradient
+    LinearOp<Scalar> const & preop;     // preconditioner
     Vector<Scalar> const & d;           // data 
     Vector<Scalar> const & x0;          // input initial linear solution
 
