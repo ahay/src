@@ -219,56 +219,37 @@ __global__ void cuda_rw_bndr(float *bndr, float *p1, int n1, int n2, int n3, boo
 	int nn1=n1+2;
 	int nn2=n2+2;
 	int nn3=n3+2;
+	int iz, ix, iy;
+
+	if	(id<n1)	  		// z-1:	(id+1, 		0, 	0)
+	{iz=id+1; ix=0; iy=0;}
+	else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	0)
+	{iz=id-n1+1; ix=nn2-1; iy=0;}
+	else if (id<3*n1) 		// z-3:	(id-2*n1+1,	nn2-1,	nn3-1)
+	{iz=id-2*n1+1; ix=nn2-1; iy=nn3-1;}		
+	else if (id<4*n1) 		// z-4:	(id-3*n1+1,	0,	nn3-1)
+	{iz=id-3*n1+1; ix=0; iy=nn3-1;}
+	else if (id<4*n1+n2) 		// x-1: (0,	id-4*n1+1,	0)
+	{iz=0; ix=id-4*n1+1; iy=0;}
+	else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	0)
+	{iz=nn1-1; ix=id-4*n1-n2+1; iy=0; }
+	else if (id<4*n1+3*n2)		// x-3:	(nn1-1,	id-4*n1-2*n2+1,	nn3-1)
+	{iz=nn1-1; ix=id-4*n1-2*n2+1; iy=nn3-1;}
+	else if (id<4*n1+4*n2)		// x-4:	(0,	id-4*n1-3*n2+1,	nn3-1)
+	{iz=0; ix=id-4*n1-3*n2+1; iy=nn3-1;}
+	else if (id<4*n1+4*n2+n3)	// y-1:	(0,	0,	id-4*n1-4*n2+1)
+	{iz=0; ix=0; iy=id-4*n1-4*n2+1;}
+	else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	0, 	id-4*n1-4*n2-n3+1)
+	{iz=nn1-1; ix=0; iy=id-4*n1-4*n2-n3+1;}
+	else if (id<4*n1+4*n2+3*n3) 	// y-3:	(nn1-1,	nn2-1,	id-4*n1-4*n2-2*n3+1)
+	{iz=nn1-1; ix=nn2-1; iy=id-4*n1-4*n2-2*n3+1;}
+	else if (id<4*n1+4*n2+4*n3) 	// y-4:	(0,	nn2-1,	id-4*n1-4*n2-3*n3+1)
+	{iz=0; ix=nn2-1; iy=id-4*n1-4*n2-3*n3+1; }
+
 	if(write){
-		if	(id<n1)	  		// z-1:	(id+1, 		0, 	0)
-			bndr[id]=p1[(id+1)     					];
-		else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	0)
-			bndr[id]=p1[(id-n1+1)  	+nn1*(nn2-1)			];
-		else if (id<3*n1) 		// z-3:	(id-2*n1+1,	nn2-1,	nn3-1)
-			bndr[id]=p1[(id-2*n1+1)	+nn1*(nn2-1)	+nn1*nn2*(nn3-1) ];
-		else if (id<4*n1) 		// z-4:	(id-3*n1+1,	0,	nn3-1)
-			bndr[id]=p1[(id-3*n1+1)			+nn1*nn2*(nn3-1) ];
-		else if (id<4*n1+n2) 		// x-1: (0,	id-4*n1+1,	0)
-			bndr[id]=p1[		nn1*(id-4*n1+1)		];
-		else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	0)
-			bndr[id]=p1[nn1-1 	+nn1*(id-4*n1-n2+1)		];
-		else if (id<4*n1+3*n2)		// x-3:	(nn1-1,	id-4*n1-2*n2+1,	nn3-1)
-			bndr[id]=p1[nn1-1	+nn1*(id-4*n1-2*n2+1)	+nn1*nn2*(nn3-1)];
-		else if (id<4*n1+4*n2)		// x-4:	(0,	id-4*n1-3*n2+1,	nn3-1)
-			bndr[id]=p1[		nn1*(id-4*n1-3*n2+1)	+nn1*nn2*(nn3-1)];
-		else if (id<4*n1+4*n2+n3)	// y-1:	(0,	0,	id-4*n1-4*n2+1)
-			bndr[id]=p1[					nn1*nn2*(id-4*n1-4*n2+1)];
-		else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	0, 	id-4*n1-4*n2-n3+1)
-			bndr[id]=p1[nn1-1				+nn1*nn2*(id-4*n1-4*n2-n3+1)];
-		else if (id<4*n1+4*n2+3*n3) 	// y-3:	(nn1-1,	nn2-1,	id-4*n1-4*n2-2*n3+1)
-			bndr[id]=p1[nn1-1	+nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-2*n3+1)];
-		else if (id<4*n1+4*n2+4*n3) 	// y-4:	(0,	nn2-1,	id-4*n1-4*n2-3*n3+1)
-			bndr[id]=p1[		nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-3*n3+1)];
+		bndr[id]=p1[iz+nn1*ix+nn1*nn2*iy];
 	}else{
-		if	(id<n1)	  		// z-1:	(id+1, 		0, 	0)
-			p1[(id+1)     					]=bndr[id];
-		else if (id<2*n1) 		// z-2:	(id-n1+1, 	nn2-1, 	0)
-			p1[(id-n1+1)  	+nn1*(nn2-1)			]=bndr[id];
-		else if (id<3*n1) 		// z-3:	(id-2*n1+1,	nn2-1,	nn3-1)
-			p1[(id-2*n1+1)	+nn1*(nn2-1)	+nn1*nn2*(nn3-1) ]=bndr[id];
-		else if (id<4*n1) 		// z-4:	(id-3*n1+1,	0,	nn3-1)
-			p1[(id-3*n1+1)			+nn1*nn2*(nn3-1) ]=bndr[id];
-		else if (id<4*n1+n2) 		// x-1: (0,	id-4*n1+1,	0)
-			p1[		nn1*(id-4*n1+1)		]=bndr[id];
-		else if (id<4*n1+2*n2)		// x-2:	(nn1-1,	id-4*n1-n2+1,	0)
-			p1[nn1-1 	+nn1*(id-4*n1-n2+1)		]=bndr[id];
-		else if (id<4*n1+3*n2)		// x-3:	(nn1-1,	id-4*n1-2*n2+1,	nn3-1)
-			p1[nn1-1	+nn1*(id-4*n1-2*n2+1)	+nn1*nn2*(nn3-1)]=bndr[id];
-		else if (id<4*n1+4*n2)		// x-4:	(0,	id-4*n1-3*n2+1,	nn3-1)
-			p1[		nn1*(id-4*n1-3*n2+1)	+nn1*nn2*(nn3-1)]=bndr[id];
-		else if (id<4*n1+4*n2+n3)	// y-1:	(0,	0,	id-4*n1-4*n2+1)
-			p1[					nn1*nn2*(id-4*n1-4*n2+1)]=bndr[id];
-		else if (id<4*n1+4*n2+2*n3)	// y-2:	(nn1-1,	0, 	id-4*n1-4*n2-n3+1)
-			p1[nn1-1				+nn1*nn2*(id-4*n1-4*n2-n3+1)]=bndr[id];
-		else if (id<4*n1+4*n2+3*n3) 	// y-3:	(nn1-1,	nn2-1,	id-4*n1-4*n2-2*n3+1)
-			p1[nn1-1	+nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-2*n3+1)]=bndr[id];
-		else if (id<4*n1+4*n2+4*n3) 	// y-4:	(0,	nn2-1,	id-4*n1-4*n2-3*n3+1)
-			p1[		nn1*(nn2-1)		+nn1*nn2*(id-4*n1-4*n2-3*n3+1)]=bndr[id];
+		p1[iz+nn1*ix+nn1*nn2*iy]=bndr[id];
 	}
 }
 
