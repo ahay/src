@@ -63,14 +63,14 @@ void step_forward(float **p0, float **p1, float **p2, float **vv, float dtz, flo
 	/* top boundary */
 /*
 	iz=0;
+	v1=vv[ix][iz]*dtz; 
+	v2=vv[ix][iz]*dtx;
 	diff1=	(p1[ix][iz+1]-p1[ix][iz])-
 		(p0[ix][iz+1]-p0[ix][iz]);
-	diff2=	c21*(p1[ix-1][iz]+p1[ix+1][iz]) +
-		c22*(p1[ix-2][iz]+p1[ix+2][iz]) +
-		c20*p1[ix][iz];
-	diff1*=sqrtf(vv[ix][iz])/dz;
-	diff2*=vv[ix][iz]/(2.0*dx*dx);
-	p2[ix][iz]=2*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
+	diff2=	p1[ix-1][iz]-2.0*p1[ix][iz]+p1[ix+1][iz];
+	diff1*=v1;
+ 	diff2*=0.5*v2*v2;
+	p2[ix][iz]=2.0*p1[ix][iz]-p0[ix][iz]+diff1+diff2;
 */
 	/* bottom boundary */
 	iz=nz-1;
