@@ -83,7 +83,7 @@ __global__ void cuda_add_source(bool add, float *p, float *source, int *szxy, in
   }
 }
 
-__global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, float _dx2, float _dy2, int n1, int n2, int n3)
+__global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float dtz, float dtx, float dty, int n1, int n2, int n3)
 /*< step forward: 3-D FD, order=2 >*/
 {
     bool validr = true;
@@ -146,19 +146,22 @@ __global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, floa
 	c1 +=tile[t2][t1-1]+ tile[t2][t1+1];
 	c2 +=tile[t2-1][t1]+ tile[t2+1][t1];
 	c3 +=infront + behind; 
-	c1*=_dz2;	
-	c2*=_dx2;
-	c3*=_dy2;
-        if (validw) p0[outIndex]=2.0*p1[outIndex]-p0[outIndex]+vv[outIndex]*(c1+c2+c3);
+	c1*=dtz*dtz;	
+	c2*=dtx*dtx;
+	c3*=dty*dty;
+	
+        if (validw){
+	  float vtmp=vv[outIndex]; vtmp=vtmp*vtmp;
+	  p0[outIndex]=2.0*p1[outIndex]-p0[outIndex]+vtmp*(c1+c2+c3);
+	}
     }
 }
 
 
-void velocity_transform(float *v0, float*vv, float dt, int n1, int n2, int n3)
- /*< velocit2 transform: vv=v0*dt; vv<--vv^2 >*/
+void extend3d(float *v0, float*vv, int n1, int n2, int n3)
+/*< extend 3d velocity model >*/
 {
   int i1, i2, i3, nn1, nn2, nn3;
-  float tmp;
 
   nn1=n1+2;
   nn2=n2+2;
@@ -167,8 +170,7 @@ void velocity_transform(float *v0, float*vv, float dt, int n1, int n2, int n3)
   for(i3=0; i3<n3; i3++){
     for(i2=0; i2<n2; i2++){
       for(i1=0; i1<n1; i1++){
-	tmp=v0[i1+n1*i2+n1*n2*i3]*dt;
-	vv[(i1+1)+nn1*(i2+1)+nn1*nn2*(i3+1)]=tmp*tmp;
+	vv[(i1+1)+nn1*(i2+1)+nn1*nn2*(i3+1)]=v0[i1+n1*i2+n1*n2*i3];
       }
     }
   }  
@@ -260,7 +262,7 @@ int main(int argc, char* argv[])
 	int nz, nx, ny, nnz, nnx, nny, ns, nt, kt, it, is, nt_h;
 	int szbeg, sxbeg, sybeg, jsz, jsx, jsy;
 	int *d_szxy;
-	float dz, dx, dy, fm, dt, _dz2, _dx2, _dy2, phost;
+	float dz, dx, dy, fm, dt, dtz, dtx, dty, phost;
 	float *v0, *vv, *d_wlt, *d_vv, *d_p0, *d_p1, *h_bndr, *d_bndr, *ptr;
 	sf_file Fv, Fw;
 
@@ -304,16 +306,16 @@ int main(int argc, char* argv[])
 	sf_putint(Fw,"n2",nx);
 	sf_putint(Fw,"n3",ny);
 
-	_dz2=1.0/(dz*dz);
-	_dx2=1.0/(dx*dx);
-	_dy2=1.0/(dy*dy);
+	dtz=dt/dz;
+	dtx=dt/dx;
+	dty=dt/dy;
 	nnz=nz+2;
 	nnx=nx+2;
 	nny=ny+2;
     	v0=(float*)malloc(nz*nx*ny*sizeof(float));
     	vv=(float*)malloc(nnz*nnx*nny*sizeof(float));
 	sf_floatread(v0, nz*nx*ny, Fv);// read velocit2 model v0
-	velocity_transform(v0, vv, dt, nz, nx, ny);// init
+	extend3d(v0, vv, nz, nx, ny);// init
 
     	cudaSetDevice(0);// initialize device, default device=0;
 	sf_check_gpu_error("Failed to initialize device!");
@@ -344,7 +346,7 @@ int main(int argc, char* argv[])
 	  cudaMemset(d_p1, 0, nnz*nnx*nny*sizeof(float));
 	  for(it=0; it<nt; it++){
 	    cuda_add_source<<<1,1>>>(true, d_p1, &d_wlt[it], &d_szxy[is], 1);
-	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, _dz2, _dx2, _dy2, nz, nx, ny);
+	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, dtz, dtx, dty, nz, nx, ny);
 	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;
 
 	    if(it<nt_h) cudaHostGetDevicePointer(&ptr, &h_bndr[it*4*(nz+nx+ny)], 0);
@@ -367,7 +369,7 @@ int main(int argc, char* argv[])
 	    else  ptr=&d_bndr[(it-nt_h)*4*(nz+nx+ny)];
 	    cuda_rw_bndr<<<(4*(nz+nx+ny)+511)/512,512>>>(ptr, d_p0, nz, nx, ny, false);
 
-	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, _dz2, _dx2, _dy2, nz, nx, ny);
+	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, dtz, dtx, dty, nz, nx, ny);
 	    cuda_add_source<<<1,1>>>(false, d_p1, &d_wlt[it], &d_szxy[is], 1);
 	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;
 	    sf_warning("it=%d",it);
