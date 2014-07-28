@@ -25,7 +25,7 @@ mpifwi
 ######################################################################
 # CUDA main programs
 cuda_progs = '''
-fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d
+fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d gpurtm3d
 '''
 
 ######################################################################
