@@ -285,7 +285,7 @@ jobs = [
 		 '| add scale=0.0 > ../lsmig_80pct_cheb.rsf && ' +
 		 'add < ../csq24big.rsf ../csq24noah.rsf ' +
                  'scale=0.8,0.2 > ../csqbig80pct.rsf',
-]	  'cmd': 'acdaltcheb order=2 cfl=0.5 cmin=1.0 cmax=6.0 ' +
+	  'cmd': 'acdaltcheb order=2 cfl=0.5 cmin=1.0 cmax=6.0 ' +
                  'sampord=1 nsnaps=20 ' + 
                  'rcsq=csqbig80pct.rsf icsq=${TARGETS[0]} ' +
                  'source=${SOURCES[1]} data=${SOURCES[0]} ' +
