@@ -394,7 +394,7 @@ necessary number of iterations.
 	    atype _gamma = 0.04,     // inversion level
 	    atype _epsilon = 0.001,  // error reduction
 	    atype _alpha = 1.1,      // 'fudge factor'
-        atype _lbd_est=0.0,
+            atype _lbd_est=0.0,
 	    int _maxcount = 10,      // upper bound of iterations
 	    ostream & _str = cout)  
       : inA(_inA), x(_x), rhs(_rhs), rnorm(_rnorm), nrnorm(_nrnorm), gamma(_gamma),epsilon(_epsilon),alpha(_alpha),lbd_est(_lbd_est),maxcount(_maxcount), kmax(_maxcount), kc(0), ktot(0), str(_str), step(inA,x,rhs,rnorm,nrnorm,coeff,kc,nrt,gamma,epsilon,alpha,lbd_est,str)
