@@ -253,7 +253,6 @@ namespace TSOpt {
     if (parse(pars,key,pname)) {
       string gname = "";
 
-#ifdef IWAVE_USE_MPI
       // extract proto name - use preferentially to actual file name,
       // particularly to handle temp filenames, which do not have suffixes.
       // note that only geometrical info will be extracted here, which can
@@ -267,10 +266,13 @@ namespace TSOpt {
       // or network database. As is, will work properly so long as prototype
       // file is used in iwave_fopen on rk=0.
 
+#ifdef IWAVE_USE_MPI
       int cprotolen=0;
       if (retrieveGlobalRank()==0) {
+#endif
 	if ((rname = iwave_getproto(pname.c_str()))) gname = rname;
 	else gname = pname;
+#ifdef IWAVE_USE_MPI
 	// C string length 
 	cprotolen = gname.size()+1;
       }
@@ -288,6 +290,9 @@ namespace TSOpt {
       if (pos==std::string::npos || pos >= gname.size()-1) {
 	RVLException e;
 	e<<"Error: IWaveSampler constructor - filename "<<gname<<" has no suffix\n";
+	e<<"gname = "<<gname<<"\n";
+	e<<"pname = "<<pname<<"\n";
+	e<<"rname = "<<rname<<"\n";
 	throw e;
       }
       size_t net = gname.size()-pos-1;
@@ -1297,8 +1302,6 @@ namespace TSOpt {
 	}
 	panelindex++;
       }
-
-      cerr<<"here\n";
 
       // pull out fdpars for use in time step - same in every
       // step, and for every RDOM, so do it once here and get 
