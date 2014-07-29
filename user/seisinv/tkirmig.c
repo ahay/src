@@ -20,16 +20,22 @@
 #include <rsf.h>
 /*^*/
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "tkirmig.h"
 #include "doubint.h"
 
+static int ompnth, ompchunk;
 static int nt, ncmp, ncdp, nh;
 static float dt,t0,dcmp,cmp0,cdp0,dcdp,h0,dh,rho,apt,aal;
 static float **vrms, *off, **mask;
-static float *img, *trace;
+static float **img, **trace;
 static bool verb, amp;
 
-void tkirmig_init(int n1, float d1, float o1, /* time axis */
+void tkirmig_init(int ompnth1, int ompchunk1, /* openmp info */
+                 int n1, float d1, float o1, /* time axis */
                  int n2, float d2, float o2,  /* cmp axis */
                  int n2_im, float d2_im, float o2_im,  /* cdp axis */
                  int n3, float d3, float o3,  /* off axis */
@@ -43,6 +49,8 @@ void tkirmig_init(int n1, float d1, float o1, /* time axis */
                  bool verb1)
 /*< Initialize >*/
 {
+    ompnth = ompnth1;
+    ompchunk = ompchunk1;
     nt=n1;
     dt=d1;
     t0=o1;
@@ -70,8 +78,8 @@ void tkirmig_init(int n1, float d1, float o1, /* time axis */
     amp = amp1;
     verb = verb1;
 
-    trace = sf_floatalloc(nt);
-    img = sf_floatalloc(nt);
+    trace = sf_floatalloc2(nt,ompnth);
+    img = sf_floatalloc2(nt,ompnth);
 
     sf_doubint_init(nt);
     sf_halfint_init (true, nt, rho);
@@ -80,8 +88,8 @@ void tkirmig_init(int n1, float d1, float o1, /* time axis */
 void tkirmig_close(void)
 /*< Free allocated storage >*/
 {
-    free (img);
-    free (trace);
+    free (*img), free(img);
+    free (*trace), free(trace);
     sf_doubint_close();
 }
 
@@ -93,31 +101,25 @@ void tkirmig_lop(bool adj, bool add, int nm, int nd,
      float cmp,cdp,tau,tau2;
      float disx,dish_plus,dish_plus2,dish_minus,dish_minus2;
      float vrms2,ts,tr,time,slope,tm,tp,h,wt;
-     sf_file ftest;
-
-     ftest = sf_output("test2.rsf");
+     int ompith=0;
 
      sf_adjnull(adj,add,nm,nd,modl,data);
     
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static,ompchunk) \
+    private(ompith,ih,it,icmp,icdp,itm,itp,im, \
+      cmp,cdp,tau,tau2, \
+      disx,dish_plus,dish_plus2,dish_minus,dish_minus2, \
+      vrms2,ts,tr,time,slope,tm,tp,h,wt) \
+    shared(adj, add, nm, nd, modl, data)
+#endif
      for (ih=0; ih < nh; ih++) {
+#ifdef _OPENMP 
+         ompith=omp_get_thread_num();
+#pragma omp critical
+#endif
+         if (verb) sf_warning("ith=%d; offset %d of %d;",ompith, ih+1,nh);
 
-         if (verb) sf_warning("offset %d of %d;",ih+1,nh);
-
-/*         if (!adj) {
-            for (icdp=0; icdp < ncdp; icdp++) {
-                for (it=0; it < nt; it++) {
-                    img[it] = modl[ih*ncdp*nt+icdp*nt+it];
-                    trace[it] = 0.;
-                }
-                sf_halfint_lop(adj, add, nt, nt, img, trace);
-                //sf_halfint(false,img);
-                for (it=0; it < nt; it++) {
-                    modl[ih*ncdp*nt+icdp*nt+it] = trace[it];
-                }
-            }
-         }
-*/
-         //sf_floatwrite (modl,nm,ftest);
          for (icmp=0; icmp < ncmp; icmp++) {
 
              if (mask[ih][icmp]==0) continue;
@@ -127,10 +129,16 @@ void tkirmig_lop(bool adj, bool add, int nm, int nd,
              h = fabsf(off[ih*ncmp+icmp]);
 
              if (adj) {
-                for (it=0; it < nt; it++) trace[it]=data[ih*ncmp*nt+icmp*nt+it];
-                sf_doubint_lop(adj, false, nt, nt, img, trace);
+                for (it=0; it < nt; it++) {
+                    trace[ompith][it]=data[ih*ncmp*nt+icmp*nt+it];
+                    img[ompith][it] = 0.;
+                }
+                sf_doubint_lop(adj, false, nt, nt, img[ompith], trace[ompith]);
              } else {
-                for (it=0; it < nt; it++) img[it] = 0.;
+                for (it=0; it < nt; it++) {
+                    img[ompith][it] = 0.;
+                    trace[ompith][it] = 0.;
+                }
              }
 
            for (icdp=0; icdp < ncdp; icdp++) {
@@ -139,9 +147,7 @@ void tkirmig_lop(bool adj, bool add, int nm, int nd,
 
               disx=cdp-cmp;
 
-              //if (verb) sf_warning("cmp=%f,cdp=%f,dcdp*apt=%f,dcdp=%f,disx=%f",cmp,cdp,dcdp*apt,dcdp,disx);
-
-              if (fabs(disx) > dcmp*apt) continue;
+              if (fabsf(disx) > dcmp*apt) continue;
 
               dish_plus=fabsf(disx+h);
               dish_plus2=dish_plus*dish_plus;
@@ -173,9 +179,9 @@ void tkirmig_lop(bool adj, bool add, int nm, int nd,
                      //amp = wt;
 
                      if (itm>=0&&itp<nt-1) {
-                        spotw(adj,-wt,nt,t0,dt,tm,&modl[im],img);
-                        spotw(adj,2*wt,nt,t0,dt,time,&modl[im],img);
-                        spotw(adj,-wt,nt,t0,dt,tp,&modl[im],img);
+                        spotw(adj,-wt,nt,t0,dt,tm,&modl[im],img[ompith]);
+                        spotw(adj,2*wt,nt,t0,dt,time,&modl[im],img[ompith]);
+                        spotw(adj,-wt,nt,t0,dt,tp,&modl[im],img[ompith]);
                      }
                   }
 
@@ -184,26 +190,11 @@ void tkirmig_lop(bool adj, bool add, int nm, int nd,
             } /* cdp loop */
 
             if (!adj) {
-               sf_doubint_lop(adj, false, nt, nt, img, trace);
-               for (it=0; it<nt; it++) data[ih*ncmp*nt+icmp*nt+it] = trace[it];
+               sf_doubint_lop(adj, false, nt, nt, img[ompith], trace[ompith]);
+               for (it=0; it<nt; it++) data[ih*ncmp*nt+icmp*nt+it] = trace[ompith][it];
             }
 
         } /* cmp loop */
-
-/*       if (adj) {
-          for (icdp=0; icdp<ncdp; icdp++) {
-              for (it=0; it<nt; it++) {
-                  img[it] = modl[ih*ncdp*nt+icdp*nt+it];
-                  trace[it] = 0.;
-              }
-              sf_halfint_lop(adj, add, nt, nt, trace, img);
-              //sf_halfint(true,img);
-              for (it=0; it<nt; it++) {
-                  modl[ih*ncdp*nt+icdp*nt+it] = trace[it];
-              }
-          }
-       }
-*/
     } /* offset loop */
 
     if (verb) sf_warning(".");
@@ -214,6 +205,8 @@ void spotw(bool adj,float w,int nt,float t0,float dt,float t,float *val, float *
 {
      int it;
      float tc,g;
+
+     //sf_adjnull(adj,false,nt,nt,val,vec);
 
      tc=(t-t0)/dt;
      it=floorf(tc);

@@ -87,6 +87,11 @@ program Mvelinvww3
      fmres = rsf_output("mres")
      allocate(mres(niter), vel0((nt*nv)))
      call rsf_read(fm,vel0)
+  else
+     fmres = rsf_output("mres")
+     allocate(mres(niter), vel0((nt*nv)))
+     vel0=0.
+     mres=0.
   endif
 
   if (flag.eq.0) then

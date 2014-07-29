@@ -25,6 +25,10 @@ reg=4: precondition => local slope constraints along t-x plane and smoothing alo
 */
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "tkirmig.h"
 #include "causinth.h"
 #include "tcaih.h"
@@ -43,7 +47,29 @@ int main(int argc, char* argv[])
     sf_file in, out, vel, offset, err=NULL;
     sf_file fdip;
 
+    int ompchunk = 1;
+    int ompnth = 1;
+
+#ifdef _OPENMP
+    int ompath=1;
+#endif
+
+    /*------------------------------------------------------------*/
     sf_init(argc,argv);
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
+    /* OpenMP data chunk size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
+    /* OpenMP available threads */
+
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
+
     in = sf_input("in");
     vel = sf_input("vel");
     out = sf_output("out");
@@ -65,9 +91,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dcmp)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&cmp0)) sf_error("No o2= in input");
 
-    if (!sf_getint("ncdp",&ncdp)) sf_error("No ncdp in parameters");
-    if (!sf_getfloat("dcdp",&dcdp)) sf_error("No dcdp in parameters");
-    if (!sf_getfloat("cdp0",&cdp0)) sf_error("No cdp0= in parameters");
+    if (!sf_getint("ncdp",&ncdp)) ncdp = ncmp;
+    if (!sf_getfloat("dcdp",&dcdp)) dcdp = dcmp;
+    if (!sf_getfloat("cdp0",&cdp0)) cdp0 = cmp0;
 
     sf_putint(out,"n2",ncdp);
     sf_putfloat(out,"d2",dcdp);
@@ -84,11 +110,16 @@ int main(int argc, char* argv[])
         off = sf_floatalloc(nh2);
         sf_floatread (off,nh2,offset);
         sf_fileclose(offset);
+        if (!half) {
+           for (ih = 0; ih < nh2; ih++) {
+               off[ih] *= 0.5;
+            }
+        }
     } else {
         if (!sf_histfloat(in,"o3",&h0)) sf_error("No o3=");
         if (!sf_histfloat(in,"d3",&dh)) sf_error("No d3=");
 
-        if (!half) dh *= 0.5;
+        if (!half) dh *= 0.5,h0 *= 0.5;
 
         off = sf_floatalloc(nh*ncmp);
         for (ix = 0; ix < ncmp; ix++) {
@@ -141,6 +172,7 @@ int main(int argc, char* argv[])
             sf_putstring(err,"label1","Iteration Number");
             sf_putstring(err,"label2","Relative Squared Error");
             sf_putint(err,"n2",1);
+            sf_putint(err,"n3",1);
         }
         error = sf_floatalloc(niter);
     }
@@ -153,7 +185,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    tkirmig_init(nt,dt,t0,ncmp,dcmp,cmp0,ncdp,dcdp,cdp0,nh,dh,h0,apt,aal,rho,vrms,off,mask,amp,verb);
+    tkirmig_init(ompnth,ompchunk,nt,dt,t0,ncmp,dcmp,cmp0,ncdp,dcdp,cdp0,nh,dh,h0,apt,aal,rho,vrms,off,mask,amp,verb);
 
     sf_cdstep_init();
 
@@ -240,6 +272,8 @@ int main(int argc, char* argv[])
         for (iter=0; iter < niter; iter++) error[iter] /=norm;
         sf_floatwrite(error,niter,err);
     }
+
+    sf_warning("iter/niter=%d/%d, err=%f",iter,niter,error);
 
     exit(0);
 }

@@ -23,6 +23,10 @@ The axes in the image are {time,cdp,offset}
 */
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "tkirmig.h"
 
 int main(int argc, char* argv[])
@@ -33,7 +37,29 @@ int main(int argc, char* argv[])
     float *data, *modl, *off, **vrms, **mask;
     sf_file in, out, vel, offset;
 
+    int ompchunk = 1;
+    int ompnth = 1;
+
+#ifdef _OPENMP
+    int ompath=1;
+#endif
+
+    /*------------------------------------------------------------*/
     sf_init(argc,argv);
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
+    /* OpenMP data chunk size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
+    /* OpenMP available threads */
+
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
+
     in = sf_input("in");
     vel = sf_input("vel");
     out = sf_output("out");
@@ -59,9 +85,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dcmp)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&cmp0)) sf_error("No o2= in input");
 
-    if (!sf_getint("ncdp",&ncdp)) sf_error("No ncdp in parameters");
-    if (!sf_getfloat("dcdp",&dcdp)) sf_error("No dcdp in parameters");
-    if (!sf_getfloat("cdp0",&cdp0)) sf_error("No cdp0= in parameters");
+    if (!sf_getint("ncdp",&ncdp)) ncdp = ncmp;
+    if (!sf_getfloat("dcdp",&dcdp)) dcdp = dcmp;
+    if (!sf_getfloat("cdp0",&cdp0)) cdp0 = cmp0;
 
     sf_putint(out,"n2",ncdp);
     sf_putfloat(out,"d2",dcdp);
@@ -73,9 +99,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dcdp)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&cdp0)) sf_error("No o2= in input");
     
-    if (!sf_getint("ncmp",&ncmp)) sf_error("No ncmp in parameters");
-    if (!sf_getfloat("dcmp",&dcmp)) sf_error("No dcmp in parameters");
-    if (!sf_getfloat("cmp0",&cmp0)) sf_error("No cmp0= in parameters");
+    if (!sf_getint("ncmp",&ncmp)) ncmp = ncdp;
+    if (!sf_getfloat("dcmp",&dcmp)) dcmp = dcdp;
+    if (!sf_getfloat("cmp0",&cmp0)) cmp0 = cdp0;
 
     sf_putint(out,"n2",ncmp);
     sf_putfloat(out,"d2",dcmp);
@@ -94,11 +120,16 @@ int main(int argc, char* argv[])
         off = sf_floatalloc(nh2);
         sf_floatread (off,nh2,offset);
         sf_fileclose(offset);
+        if (!half) {
+           for (ih = 0; ih < nh2; ih++) {
+               off[ih] *= 0.5;
+            }
+        }
     } else {
         if (!sf_histfloat(in,"o3",&h0)) sf_error("No o3=");
         if (!sf_histfloat(in,"d3",&dh)) sf_error("No d3=");
 
-        if (!half) dh *= 0.5;
+        if (!half) dh *= 0.5, h0 *= 0.5;
 
         off = sf_floatalloc(nh*ncmp);
         for (ix = 0; ix < ncmp; ix++) {
@@ -135,7 +166,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    tkirmig_init(nt,dt,t0,ncmp,dcmp,cmp0,ncdp,dcdp,cdp0,nh,dh,h0,apt,aal,rho,vrms,off,mask,amp,verb);
+    tkirmig_init(ompnth,ompchunk,nt,dt,t0,ncmp,dcmp,cmp0,ncdp,dcdp,cdp0,nh,dh,h0,apt,aal,rho,vrms,off,mask,amp,verb);
 
     memsize = nd+nm+nt*ncdp+ncmp*nh;
     if (verb) sf_warning("memory needs %f G (%f M)",4.*memsize/1024/1024/1024,4.*memsize/1024/1024);

@@ -1,5 +1,7 @@
-/* 2-D common scattering-point gathers mapping and its adjoint */
-
+/* 2-D common scattering-point gathers mapping and its adjoint
+The axes in the data space are {time,offset,cmp}
+The axes in the image space are {time,equiv_offset,csp}
+*/
 /*
   Copyright (C) 2013 China University of Petrolum (East China)
   
@@ -20,20 +22,45 @@
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "csp2d.h"
 
 int main(int argc, char* argv[])
 {
     int nhe, nxs, nh, nxm, nt;
-    float dhe, he0, dxs, xs0, dh, h0, dxm, xm0, dt, t0, v;
+    float dhe, he0, dxs, xs0, dh, h0, dxm, xm0, dt, t0, v, apt;
     int nm, nd;
-    bool adj, verb, linear, weight;
+    bool adj, half, verb, linear, weight;
 
-    float *data, *modl; /* data set [offset,cmp,t] */
+    float *data, *modl;
 
     sf_file in, out;
 
+    int ompchunk = 1;
+    int ompnth = 1;
+
+#ifdef _OPENMP
+    int ompath=1;
+#endif
+
+    /*------------------------------------------------------------*/
     sf_init(argc,argv);
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
+    /* OpenMP data chunk size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
+    /* OpenMP available threads */
+
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
 
     in = sf_input("in");
     out = sf_output("out");
@@ -50,69 +77,75 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("v",&v)) v=2000.;
     /* velocity */
 
+    if (!sf_getbool("half",&half)) half=false;
+    /* half offset flag */
+
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    if (!sf_histint(in,"n3",&nt)) sf_error("No n3= in input");
-    if (!sf_histfloat(in,"d3",&dt)) sf_error("No d3= in input");
-    if (!sf_histfloat(in,"o3",&t0)) sf_error("No o3= in input");
+    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
 
-    sf_putint(out,"n3",nt);
-    sf_putfloat(out,"d3",dt);
-    sf_putfloat(out,"o3",t0);
+    sf_putint(out,"n1",nt);
+    sf_putfloat(out,"d1",dt);
+    sf_putfloat(out,"o1",t0);
 
     if (adj) {
-       if (!sf_histint(in,"n1",&nh)) sf_error("No n1= in input");
-       if (!sf_histfloat(in,"d1",&dh)) sf_error("No d1= in input");
-       if (!sf_histfloat(in,"o1",&h0)) sf_error("No o1= in input");
+       if (!sf_histint(in,"n3",&nxm)) sf_error("No n3= in input");
+       if (!sf_histfloat(in,"d3",&dxm)) sf_error("No d3= in input");
+       if (!sf_histfloat(in,"o3",&xm0)) sf_error("No o3= in input");
 
-       if (!sf_histint(in,"n2",&nxm)) sf_error("No n2= in input");
-       if (!sf_histfloat(in,"d2",&dxm)) sf_error("No d2= in input");
-       if (!sf_histfloat(in,"o2",&xm0)) sf_error("No o2= in input");
+       if (!sf_histint(in,"n2",&nh)) sf_error("No n2= in input");
+       if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
+       if (!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input");
 
-       if (!sf_getint("nhe",&nhe)) sf_error("No nhe in parameters");
-       if (!sf_getfloat("dhe",&dhe)) sf_error("No dhe in parameters");
-       if (!sf_getfloat("he0",&he0)) sf_error("No he0 in parameters");
+       if (!sf_getint("nhe",&nhe)) nhe = nh;
+       if (!sf_getfloat("dhe",&dhe)) dhe = dh;
+       if (!sf_getfloat("he0",&he0)) he0 = h0;
 
-       if (!sf_getint("nxs",&nxs)) sf_error("No nxs in parameters");
-       if (!sf_getfloat("dxs",&dxs)) sf_error("No dxs in parameters");
-       if (!sf_getfloat("xs0",&xs0)) sf_error("No xs0 in parameters");
+       if (!sf_getint("nxs",&nxs)) nxs = nxm;
+       if (!sf_getfloat("dxs",&dxs)) dxs = dxm;
+       if (!sf_getfloat("xs0",&xs0)) xs0 = xm0;
 
-       sf_putint(out,"n1",nhe);
-       sf_putfloat(out,"d1",dhe);
-       sf_putfloat(out,"o1",he0);
+       sf_putint(out,"n2",nhe);
+       sf_putfloat(out,"d2",dhe);
+       sf_putfloat(out,"o2",he0);
 
-       sf_putint(out,"n2",nxs);
-       sf_putfloat(out,"d2",dxs);
-       sf_putfloat(out,"o2",xs0);
+       sf_putint(out,"n3",nxs);
+       sf_putfloat(out,"d3",dxs);
+       sf_putfloat(out,"o3",xs0);
 
 
     } else {
-       if (!sf_histint(in,"n1",&nhe)) sf_error("No n1= in input");
-       if (!sf_histfloat(in,"d1",&dhe)) sf_error("No d1= in input");
-       if (!sf_histfloat(in,"o1",&he0)) sf_error("No o1= in input");
+       if (!sf_histint(in,"n3",&nxs)) sf_error("No n3= in input");
+       if (!sf_histfloat(in,"d3",&dxs)) sf_error("No d3= in input");
+       if (!sf_histfloat(in,"o3",&xs0)) sf_error("No o3= in input");
 
-       if (!sf_histint(in,"n2",&nxs)) sf_error("No n2= in input");
-       if (!sf_histfloat(in,"d2",&dxs)) sf_error("No d2= in input");
-       if (!sf_histfloat(in,"o2",&xs0)) sf_error("No o2= in input");
+       if (!sf_histint(in,"n2",&nhe)) sf_error("No n2= in input");
+       if (!sf_histfloat(in,"d2",&dhe)) sf_error("No d2= in input");
+       if (!sf_histfloat(in,"o2",&he0)) sf_error("No o2= in input");
 
-       if (!sf_getint("nh",&nh)) sf_error("No nh in parameters");
-       if (!sf_getfloat("dh",&dh)) sf_error("No dh in parameters");
-       if (!sf_getfloat("h0",&h0)) sf_error("No h0 in parameters");
+       if (!sf_getint("nh",&nh)) nh = nhe;
+       if (!sf_getfloat("dh",&dh)) dh = dhe;
+       if (!sf_getfloat("h0",&h0)) h0 = he0;
 
-       if (!sf_getint("nxm",&nxm)) sf_error("No nxm in parameters");
-       if (!sf_getfloat("dxm",&dxm)) sf_error("No dxm in parameters");
-       if (!sf_getfloat("xm0",&xm0)) sf_error("No xm0 in parameters");
+       if (!sf_getint("nxm",&nxm)) nxm = nxs;
+       if (!sf_getfloat("dxm",&dxm)) dxm = dxs;
+       if (!sf_getfloat("xm0",&xm0)) xm0 = xs0;
 
-       sf_putint(out,"n1",nh);
-       sf_putfloat(out,"d1",dh);
-       sf_putfloat(out,"o1",h0);
+       sf_putint(out,"n2",nh);
+       sf_putfloat(out,"d2",dh);
+       sf_putfloat(out,"o2",h0);
 
-       sf_putint(out,"n2",nxm);
-       sf_putfloat(out,"d2",dxm);
-       sf_putfloat(out,"o2",xm0);
+       sf_putint(out,"n3",nxm);
+       sf_putfloat(out,"d3",dxm);
+       sf_putfloat(out,"o3",xm0);
 
     }
+
+    if (!sf_getfloat("apt",&apt)) apt=SF_MAX(fabsf(he0),fabsf(he0+(nhe-1)*dhe));
+    /* aperture */
 
     nm = nhe*nxs*nt;
     nd = nh*nxm*nt;
@@ -121,11 +154,12 @@ int main(int argc, char* argv[])
     data = sf_floatalloc(nd);
     modl = sf_floatalloc(nm);
 
-    if (verb) sf_warning("memory needs: %f G (%f M)", 4.*(nm+nd)/1024./1024./1024., 
+    if (verb) sf_warning("Memory needs: %f G (%f M)", 4.*(nm+nd)/1024./1024./1024., 
               4.*(nm+nd)/1024./1024);
+    if (verb) sf_warning("The aperture is %f", apt);
 
-    csp2d_init(nhe,dhe,he0,nxs,dxs,xs0,nh,dh,h0,nxm,dxm,xm0,nt,dt,t0,v,
-               weight, linear,verb);
+    csp2d_init(ompnth,ompchunk,nhe,dhe,he0,nxs,dxs,xs0,nh,dh,h0,nxm,dxm,xm0,nt,dt,t0,apt,v,
+               weight, linear,half,verb);
 
     if (adj) {
        if (verb) sf_warning("CSP mapping...");
