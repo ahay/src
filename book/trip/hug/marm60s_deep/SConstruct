@@ -277,12 +277,14 @@ jobs = [
 		 getThreads(exe_stampede_4hr),
           'exe': exe_stampede_4hr
         },
-	{ 'job': 'lsmig_80pct_cheb'
+	{ 'job': 'lsmig_80pct_cheb',
           'src': ['bornbig.su', 'wavelet_line100m.su',  'csq24noah.rsf', 'csq24sm.rsf', 'csq24.rsf'],
           'tgt': ['lsmig_80pct_cheb.rsf'],
-          'pre': 'spray < ../csq24.rsf axis=3 n=60 d=1.0 o=0.0| put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
+          'pre': 'spray < ../csq24.rsf axis=3 n=60 d=1.0 o=0.0| ' +
+	         'put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
 		 '| add scale=0.0 > ../lsmig_80pct_cheb.rsf && ' +
-		 'add < ../csq24big.rsf ../csq24noah.rsf scale=0.8,0.2 > ../csqbig80pct.rsf',
+		 'add < ../csq24big.rsf ../csq24noah.rsf ' +
+                 'scale=0.8,0.2 > ../csqbig80pct.rsf',
 ]	  'cmd': 'acdaltcheb order=2 cfl=0.5 cmin=1.0 cmax=6.0 ' +
                  'sampord=1 nsnaps=20 ' + 
                  'rcsq=csqbig80pct.rsf icsq=${TARGETS[0]} ' +
