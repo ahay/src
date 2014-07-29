@@ -23,24 +23,27 @@ from rsf.proj import *
 #suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
 #supsimage       = os.path.join(CWPROOT,'bin/supsimage')
 
-if os.getenv('IWAVE'): # local version
-    RSFSRC          = os.getenv('RSFSRC')
-    towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
-    acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
-    acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcgne.x')
-    acdlbfgs        = os.path.join(RSFSRC,'trip/iwave/acd/main/acdlbfgs.x')
-    acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
-    acdadjtest      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdadjtest.x')
-else: # Madagascar version
-    towed_array     = 'towed_array'
-    acd             = 'acd'
-    acdcgne         = 'acdcgne'
-    acdlbfgs        = 'acdlbfgs'
-    acdiva          = 'acdiva'
-    acdadjtest      = 'acdadjtest'
+#if os.getenv('IWAVE'): # local version
+RSFSRC          = os.getenv('RSFSRC')
+towed_array     = os.path.join(RSFSRC,'trip/iwave/trace/main/towed_array.x')
+acd             = os.path.join(RSFSRC,'trip/iwave/acd/main/acd.x')
+acdcgne         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcgne.x')
+acdcheb         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdcheb.x')
+acdaltcheb         = os.path.join(RSFSRC,'trip/iwave/acd/main/acdaltcheb.x')
+acdlbfgs        = os.path.join(RSFSRC,'trip/iwave/acd/main/acdlbfgs.x')
+acdiva          = os.path.join(RSFSRC,'trip/iwave/acd/main/acdiva.x')
+acdadjtest      = os.path.join(RSFSRC,'trip/iwave/acd/main/acdadjtest.x')
+#else: # Madagascar version
+#    towed_array     = 'towed_array'
+#    acd             = 'acd'
+#    acdcgne         = 'acdcgne'
+#    acdcheb         = 'acdcheb'
+#    acdlbfgs        = 'acdlbfgs'
+#    acdiva          = 'acdiva'
+#    acdadjtest      = 'acdadjtest'
 
 fetches = {
-    'line100m.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+#    'line100m.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
     'hdr6km.su'   : ['marmousi', 'http://www.trip.caam.rice.edu'],
     'wavelet_base.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
     'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu']
@@ -111,7 +114,7 @@ Flow('born6km.su',['wavelet_hdr6km.su','csq24sm.rsf','dcsq24.rsf','hdr6km.su'],
      data=$TARGET
      ''' % acd,stdin=0,stdout=0,workdir='born6km.work')
 
-# Born inversion - one shot, mute
+# Born/CG inversion - one shot, mute
 Flow(['icsq6km.rsf', 'icsq6km_est.su', 'icsq6km_res.su'], 
      ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf','csq24.rsf'],
      '''
@@ -125,7 +128,37 @@ Flow(['icsq6km.rsf', 'icsq6km_est.su', 'icsq6km_res.su'],
      datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
      ''' % acdcgne,stdin=0,stdout=0, workdir='icsq6km.work')
 
-# Born inversion - one shot, homog bg, no mute
+# Born/Cheb inversion - one shot, mute
+Flow(['icsqcheb6km.rsf', 'icsqcheb6km_est.su', 'icsqcheb6km_res.su'], 
+     ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf','csq24.rsf'],
+     '''
+     sfmath < ${SOURCES[3]} > ${TARGETS[0]} output=0 && %s
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq=${SOURCES[3]} rcsq=${SOURCES[2]}
+     icsq=${TARGETS[0]} source=${SOURCES[1]} 
+     data=${SOURCES[0]} outfile=cgne.out 
+     InversionLevel = 0.04, ResRedn = 0.5,
+     FudgeFactor = 1.1, EstimatedSpecRad = 0.0,
+     MaxIter = 10 dataest=${TARGETS[1]} datares=${TARGETS[2]}
+     datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
+     ''' % acdcheb,stdin=0,stdout=0, workdir='icsqcheb6km.work')
+
+# Born/Cheb inversion - one shot, mute
+Flow(['icsqaltcheb6km.rsf', 'icsqaltcheb6km_est.su', 'icsqaltcheb6km_res.su'], 
+     ['born6km.su', 'wavelet_hdr6km.su', 'csq24sm.rsf','csq24.rsf'],
+     '''
+     sfmath < ${SOURCES[3]} > ${TARGETS[0]} output=0 && %s
+     order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 
+     csq=${SOURCES[3]} rcsq=${SOURCES[2]}
+     icsq=${TARGETS[0]} source=${SOURCES[1]} 
+     data=${SOURCES[0]} outfile=cgne.out 
+     InversionLevel = 0.04, ResRedn = 0.1,
+     FudgeFactor = 1.1, EstimatedSpecRad = 0.0,
+     MaxIter = 50 dataest=${TARGETS[1]} datares=${TARGETS[2]}
+     datamut=mut.su mute_slope=0.7 mute_zotime=0 mute_width=200
+     ''' % acdaltcheb,stdin=0,stdout=0, workdir='icsqaltcheb6km.work')
+
+# Born/CG inversion - one shot, homog bg, no mute
 Flow(['icsq6kmhomnm.rsf', 'icsq6kmhomnm_est.su', 'icsq6kmhomnm_res.su'],
      ['born6km.su', 'wavelet_hdr6km.su', 'csq24hom.rsf','csq24.rsf'],
      '''
@@ -139,7 +172,7 @@ Flow(['icsq6kmhomnm.rsf', 'icsq6kmhomnm_est.su', 'icsq6kmhomnm_res.su'],
      datamut=mut.su mute_slope=0.0 mute_zotime=0 mute_width=200
      ''' % acdcgne,stdin=0,stdout=0, workdir='icsq6kmhomnm.work')
 
-# Born inversion - one shot, homog bg, mute
+# Born/CG inversion - one shot, homog bg, mute
 Flow(['icsq6kmhom.rsf', 'icsq6kmhom_mut.su', 'icsq6kmhom_est.su', 'icsq6kmhom_res.su'],
      ['born6km.su', 'wavelet_hdr6km.su', 'csq24hom.rsf','csq24.rsf'],
      '''
