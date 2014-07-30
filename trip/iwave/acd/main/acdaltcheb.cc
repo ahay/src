@@ -109,9 +109,22 @@ int main(int argc, char ** argv) {
     float gamma=valparse<float>(*pars,"InversionLevel",0.04f);
     float epsilon=valparse<float>(*pars,"ResRedn",0.01f);
     float alpha=valparse<float>(*pars,"FudgeFactor",1.1f);
-    float rhoest=valparse<float>(*pars,"EstimatedSpecRad",0.0);
-    bool  restart=valparse<bool>(*pars,"Restart",true);
     int maxcount=valparse<int>(*pars,"MaxIter",10);
+
+    /// no restart only if get spec bd from file
+    float rhoest = 0.0f;
+    bool restart = true;
+    string specbd = valparse<string>(*pars,"specbd","");
+    if (specbd.size() > 0) {
+      ifstream getspecbd(specbd.c_str());
+      if (getspecbd.is_open()) getspecbd >> rhoest;
+      restart=false;
+      getspecbd.close();
+    }
+    else {
+      rhoest=valparse<float>(*pars,"EstimatedSpecRad",0.0f);
+      restart=true;
+    }
 
     RVLRandomize<float> rnd(getpid(),-1.0,1.0);
     
@@ -177,6 +190,10 @@ int main(int argc, char ** argv) {
 	cout<<res.str();
       }
     }
+
+    ofstream specbd('specbd.txt');
+    specbd<<rhoest;
+    specbd.close();
     
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
