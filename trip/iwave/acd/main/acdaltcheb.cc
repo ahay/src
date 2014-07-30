@@ -191,9 +191,9 @@ int main(int argc, char ** argv) {
       }
     }
 
-    ofstream specbd("specbd.txt");
-    specbd<<rhoest;
-    specbd.close();
+    ofstream putspecbd("specbd.txt");
+    putspecbd<<rhoest;
+    putspecbd.close();
     
 #ifdef IWAVE_USE_MPI
     MPI_Finalize();
