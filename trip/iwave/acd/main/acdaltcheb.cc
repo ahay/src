@@ -191,7 +191,7 @@ int main(int argc, char ** argv) {
       }
     }
 
-    ofstream specbd('specbd.txt');
+    ofstream specbd("specbd.txt");
     specbd<<rhoest;
     specbd.close();
     
