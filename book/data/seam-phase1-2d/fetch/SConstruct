@@ -143,7 +143,7 @@ Flow('Vp_headerattr.txt','Vp_Elastic_N23900_hdr.rsf',
 #dt         39          10000 @ 0	         10000 @ 0	         10000
 #******************************************************************************* 
 
-Flow(['vp.rsf','vp_hdr.rsf'],
+Flow(['vp1.rsf','vp1_hdr.rsf'],
      ['Vp_Elastic_N23900.rsf','Vp_Elastic_N23900_hdr.rsf'],
      '''
      sftahsort \
@@ -155,7 +155,11 @@ Flow(['vp.rsf','vp_hdr.rsf'],
           label2="sx" o2=0 n2=1751 d2=20 \
 	  verbose=1
      ''',stdout=0, stdin=0)
-       
+Flow('vp','Vp_Elastic_N23900.rsf',
+     '''
+     sfput d2=20 label2="sx" 
+     ''')
+      
 Result('vp',"sfgrey title='vp' scalebar=y color=j")
 
 
