@@ -85,7 +85,7 @@ void forward_uvx_uvz(float **uvx, float **uvz, float **txx, float **tzz, float *
 	float diff1, diff2, diff3, diff4;
 
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) default(none) 	\
+#pragma omp parallel for default(none) 	\
 	private(i1,i2,diff1,diff2,diff3,diff4)		\
 	shared(uvx,uvz,txx,tzz,txz,rho,nxpad,nzpad,dt,_dx,_dz)
 #endif
@@ -121,7 +121,7 @@ void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, flo
 	float diff1, diff2, diff3, diff4;
 
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) default(none) 	\
+#pragma omp parallel for default(none) 	\
 	private(i1,i2,diff1,diff2,diff3,diff4)		\
 	shared(uvx,uvz,txx,tzz,txz,vp,vs,nxpad,nzpad,dt,_dx,_dz,)
 #endif
