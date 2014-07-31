@@ -120,7 +120,7 @@ def use(target=None,source=None,env=None):
             loc = {}
             execfile(dotproj,glo,loc)
         except:
-            sys.stderr.write('problem with %s',dotproj)
+            sys.stderr.write('problem with %s' % dotproj)
             continue
         
         dirname = os.path.dirname(dotproj)
