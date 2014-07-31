@@ -35,7 +35,7 @@ Result('mshots','grey')
 Flow('mshotscsd','vel',
      ''' sfmshots 
         csdgather=y  dt=.0003 nt=20000  fm=10
-        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=400
+        gzbeg=2 jgz=0 gxbeg=0 jgx=1   ng=400
         szbeg=2 jsz=0 sxbeg=0 jsx=100 ns=4
 	nb=30
      ''')
@@ -46,7 +46,7 @@ Result('mshotscsd','grey')
 Flow('mshots1','vel',
      ''' sfmshots 
         csdgather=n  dt=.0003 nt=20000  fm=10
-        gzbeg=4 jgz=0 gxbeg=0 jgx=1   ng=1126
+        gzbeg=2 jgz=0 gxbeg=0 jgx=1   ng=1126
         szbeg=2 jsz=0 sxbeg=186 jsx=50 ns=2
 	nb=30
      ''')
