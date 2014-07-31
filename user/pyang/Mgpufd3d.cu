@@ -237,7 +237,7 @@ void velocity_transform(float *v0, float*vv, float dt, int n1, int n2, int n3)
     for         (i3=0; i3<radius;i3++) {
 	for     (i2=0; i2<nn2; 	i2++) {
 	    for (i1=0; i1<nn1; 	i1++) {
-		vv[i1+nn1*i2+nn1*nn2*i3]=vv[i1+nn1*i2+nn1*nn2*i3];
+		vv[i1+nn1*i2+nn1*nn2*i3]=vv[i1+nn1*i2+nn1*nn2*radius];
 		vv[i1+nn1*i2+nn1*nn2*(nn3-1-i3)]=vv[i1+nn1*i2+nn1*nn2*(nn3-radius-1)];
 	    }
 	}

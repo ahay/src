@@ -107,7 +107,7 @@ void step_forward(float **p0, float **p1)
 	float tmp;
 
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2) default(none)	\
+#pragma omp parallel for default(none)	\
     	private(ix,iz,tmp)				\
     	shared(vv,p1,p0,nxpad,nzpad,c0,c11,c12,c21,c22)  
 #endif	

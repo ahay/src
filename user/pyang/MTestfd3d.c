@@ -1,10 +1,8 @@
 /* 3D acoustic time-domain FD modeling
-4th order in space, 2nd order in time. 
-Sponge absorbing boundary condition.
+4th order in space, 2nd order in time, sponge absorbing boundary condition.
 */
 /*
   Copyright (C) 2013 Xi'an Jiaotong University, UT Austin (Pengliang Yang)
-  Copyright (C) 2008 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

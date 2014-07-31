@@ -192,7 +192,7 @@ void extend3d(float *v0, float*vv, int n1, int n2, int n3)
 
 	for     (i2=0; i2<nn2; 	i2++) {
 	    for (i1=0; i1<nn1; 	i1++) {
-		vv[i1+nn1*i2 ]=vv[i1+nn1*i2 ];
+		vv[i1+nn1*i2 ]=vv[i1+nn1*i2+nn1*nn2 ];
 		vv[i1+nn1*i2+nn1*nn2*(nn3-1 )]=vv[i1+nn1*i2+nn1*nn2*(nn3-2)];
 	    }
 	}
@@ -259,11 +259,13 @@ __global__ void cuda_rw_bndr(float *bndr, float *p1, int n1, int n2, int n3, boo
 int main(int argc, char* argv[])
 {
 	bool verb;
-	int nz, nx, ny, nnz, nnx, nny, ns, nt, kt, it, is, nt_h;
+	int nz, nx, ny, nnz, nnx, nny, ns, nt, kt, it, is;
 	int szbeg, sxbeg, sybeg, jsz, jsx, jsy;
 	int *d_szxy;
-	float dz, dx, dy, fm, dt, dtz, dtx, dty, phost;
-	float *v0, *vv, *d_wlt, *d_vv, *d_p0, *d_p1, *h_bndr, *d_bndr, *ptr;
+	float dz, dx, dy, fm, dt, dtz, dtx, dty;
+	float *v0, *vv, *d_wlt, *d_vv, *d_p0, *d_p1,  *ptr;
+	// int nt_h;
+	//float *h_bndr, *d_bndr;
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
@@ -279,8 +281,6 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
    	if (!sf_getint("nt",&nt))  sf_error("nt required");
 	/* total number of time steps */
-    	if (!sf_getfloat("phost",&phost)) phost=0.0;
-	/* phost% points on host with zero-copy pinned memory, the rest on device */
     	if (!sf_getint("kt",&kt)) sf_error("kt required");
 	/* record wavefield at time kt */
    	if (!sf_getfloat("dt",&dt))  sf_error("dt required");
@@ -325,7 +325,6 @@ int main(int argc, char* argv[])
 	dimg.y=(nx+BlockSize2-1)/BlockSize2;
 	dimb.x=BlockSize1;
 	dimb.y=BlockSize2;
-	nt_h=0.01*phost*nt; 
 
 	/* allocate memory on device */
 	cudaMalloc(&d_wlt, nt*sizeof(float));
@@ -333,8 +332,8 @@ int main(int argc, char* argv[])
 	cudaMalloc(&d_p0, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_p1, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_szxy, ns*sizeof(int));
-	cudaHostAlloc(&h_bndr, nt_h*4*(nnz+nnx+nny)*sizeof(float), cudaHostAllocMapped);	
-	cudaMalloc(&d_bndr, (nt-nt_h)*4*(nnz+nnx+nny)*sizeof(float));
+	//cudaHostAlloc(&h_bndr, nt_h*4*(nnz+nnx+nny)*sizeof(float), cudaHostAllocMapped);	
+	//cudaMalloc(&d_bndr, (nt-nt_h)*4*(nnz+nnx+nny)*sizeof(float));
 	sf_check_gpu_error("Failed to allocate required memory!");
 
 	cuda_ricker_wavelet<<<(nt+511)/512, 512>>>(d_wlt, fm, dt, nt);
@@ -348,11 +347,11 @@ int main(int argc, char* argv[])
 	    cuda_add_source<<<1,1>>>(true, d_p1, &d_wlt[it], &d_szxy[is], 1);
 	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, dtz, dtx, dty, nz, nx, ny);
 	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;
-
+/*
 	    if(it<nt_h) cudaHostGetDevicePointer(&ptr, &h_bndr[it*4*(nz+nx+ny)], 0);
 	    else  ptr=&d_bndr[(it-nt_h)*4*(nz+nx+ny)];
 	    cuda_rw_bndr<<<(4*(nz+nx+ny)+511)/512,512>>>(ptr, d_p0, nz, nx, ny, true);
-
+*/
 	    sf_warning("it=%d",it);
 	  }
 
@@ -364,11 +363,11 @@ int main(int argc, char* argv[])
 	      window3d(v0, vv, nz, nx, ny);
 	      sf_floatwrite(v0, nz*nx*ny, Fw);
 	    }
-
+/*
 	    if(it<nt_h) cudaHostGetDevicePointer(&ptr, &h_bndr[it*4*(nz+nx+ny)], 0);
 	    else  ptr=&d_bndr[(it-nt_h)*4*(nz+nx+ny)];
-	    cuda_rw_bndr<<<(4*(nz+nx+ny)+511)/512,512>>>(ptr, d_p0, nz, nx, ny, false);
-
+	    cuda_rw_bndr<<<(4*(nz+nx+ny)+511)/512,512>>>(ptr, d_p1, nz, nx, ny, false);
+*/
 	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, dtz, dtx, dty, nz, nx, ny);
 	    cuda_add_source<<<1,1>>>(false, d_p1, &d_wlt[it], &d_szxy[is], 1);
 	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;
@@ -384,8 +383,8 @@ int main(int argc, char* argv[])
 	cudaFree(d_szxy);
 	free(v0);
 	free(vv);
-	cudaFreeHost(h_bndr);
-	cudaFree(d_bndr);
+	//cudaFreeHost(h_bndr);
+	//cudaFree(d_bndr);
 
     	exit (0);
 }
