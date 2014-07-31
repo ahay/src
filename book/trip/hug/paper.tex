@@ -25,6 +25,24 @@ model may be accurately fit witn another.
 \section{Theory}
 \section{Numerical Examples}
 
-\plot{csq24}{width=15cm}{Marmousi velocity model
-
-\maketitle
+\inputdir{marm1s_shallow}
+\plot{csq24}{width=15cm}{Marmousi velocity-squared model, sampled on
+  24 m grid.}
+\plot{shot6km}{width=15cm}{Shot gather, $x_s$= 6km. Source depth = 12
+  m, receiver depth = 8 m, receiver interval = 25 m, near offset = 200
+m, 96 receiver ``cable'' in left (negative $x$) direction.}
+\plot{wavelet}{width=15cm}{Source wavelet - Ricker, peak frequency = 6
+  Hz.}
+\plot{csq24sm}{width=15cm}{Smoothed velocity-squared - two-fold moving
+  average over 240 m square window}
+\plot{born6km}{width=15cm}{Linearized response (Born seismogram) for
+source at 6 km.}
+\plot{icsq6kmhom_mut}{width=15cm}{Muted linearized data.}
+\plot{icsq6km_est}{width=15cm}{Linearized data from model estimate, 20
+  iterations of CG, correct velocity field.}
+\plot{icsq6km_res}{width=15cm}{Linearized data residual from model estimate, 20
+  iterations of CG, correct velocity field.}
+\plot{icsq6kmhom_est}{width=15cm}{Linearized data from model estimate, 20
+  iterations of CG, correct velocity field.}
+\plot{icsq6kmhom_res}{width=15cm}{Linearized data residual from model estimate, 20
+  iterations of CG, correct velocity field.}

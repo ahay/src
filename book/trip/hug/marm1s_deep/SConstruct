@@ -234,108 +234,14 @@ Flow(['icsq6kmnoahnm.rsf', 'icsq6kmnoahnm_est.su', 'icsq6kmnoahnm_res.su'], ['bo
 	''',
 	stdin=0,stdout=0,workdir='icsq6kmnoahnm.work')
 
-# pre-cooked exes
-exe_serial  = {}
-exe_getafix = {'platf':'mpi', 'ppn':'16'}
-exe_stampede_4hr = {'platf':'stampede','nodes':'2','ppn':'16','wall':'04:00:00'}
-exe_stampede_10min = {'platf':'stampede','nodes':'2','ppn':'16','wall':'00:10:00'}
-# choose
-
-jobs = [
-        { 'job': 'born100m',
-          'pre': '/bin/cp ../hdr100m.su ../born100m.su',
-          'src': ['hdr100m.su', 'wavelet_line100m.su', 'csqsm.rsf', 'dcsq.rsf'],
-          'tgt': ['born100m.su'],
-          'cmd': acd + ' ' + 
-		 'deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
-		 'csq=../csqsm.rsf csq_d1=../dcsq.rsf source=../wavelet_line100m.su ' +
-		 'data=../born100m.su partask=' +
-	 	 getThreads(exe_stampede_10min),
-          'exe': exe_stampede_10min
-        },
-        { 'job': 'ds_grad_100m_2_80pct',
-          'src': ['born100m.su', 'wavelet_line100m.su', 'csqsm.rsf', 'csq.rsf'],
-          'tgt': ['ds100m_2_80pct.rsf'],
-          'pre': 'spray < ../csq.rsf axis=3 n=60 d=1.0 o=0.0| put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
-		 '| add scale=1.0 > ../ds100m_2_80pct.rsf && ' +
-		 'add < ../csqsm.rsf ../csqhom.rsf scale=0.8,0.2 > ../csq80pct.rsf && ' +
-		 'add < ../csqsm.rsf > ../csq_end100m.rsf scale=1.1 && ' +
-		 'add < ../csqsm.rsf > ../grad100m_2_80pct.rsf scale=0.0 && ' +
-		 'add < ../ds100m_2_80pct.rsf > ../nres_2_80pct.rsf scale=0.0',
-          'cmd': acddscheb_grad + ' ' + 
-		 'order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
-                 'mute_slope=0.67 mute_zotime=0.0 mute_width=300 ' +
-        	 'csq=../csq.rsf csqext=../ds100m_2_80pct.rsf ' +
-		 'csq_beg=../csq80pct.rsf ' +
-		 'csq_end=../csq_end100m.rsf ' +
-        	 'reflectivity=../ds100m_2_80pct.rsf ' +
-		 'source=../wavelet_line100m.su ' +
-		 'grad=../grad100m_2_80pct.rsf ' +
-		 'normalres=../nres_2_80pct.rsf ' +
-        	 'data=../born100m.su ' +
-		 'outfile=dsgrad.out Nhval=0 ' +
-        	 'MaxIter = 100 gamma=0.04 epsilon=0.0001 alpha=1.1 ' +
-		 'dataest = est.su datares = res.su ' +
-		 'DSWeight=0.01 partask=' +
-		 getThreads(exe_stampede_4hr),
-          'exe': exe_stampede_4hr
-        },
-        { 'job': 'ds_grad_100m_cg_80pct',
-          'src': ['born100m.su', 'wavelet_line100m.su', 'csqsm.rsf', 'csq.rsf'],
-          'tgt': ['ds100m_cg_80pct.rsf'],
-          'pre': 'spray < ../csq.rsf axis=3 n=60 d=1.0 o=0.0| put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
-		 '| add scale=1.0 > ../ds100m_cg_80pct.rsf && ' +
-		 'add < ../csqsm.rsf ../csqhom.rsf scale=0.8,0.2 > ../csq80pct.rsf && ' +
-		 'add < ../csqsm.rsf > ../csq_end100m.rsf scale=1.1 && ' +
-		 'add < ../csqsm.rsf > ../grad100m_cg_80pct.rsf scale=0.0 && ' +
-		 'add < ../ds100m_cg_80pct.rsf > ../nres_cg_80pct.rsf scale=0.0',
-          'cmd': acdds_grad + ' ' + 
-		 'order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
-                 'mute_slope=0.67 mute_zotime=0.0 mute_width=300 ' +
-        	 'csq=../csq.rsf csqext=../ds100m_cg_80pct.rsf ' +
-		 'csq_beg=../csq80pct.rsf ' +
-		 'csq_end=../csq_end100m.rsf ' +
-        	 'reflectivity=../ds100m_cg_80pct.rsf ' +
-		 'source=../wavelet_line100m.su ' +
-		 'grad=../grad100m_cg_80pct.rsf ' +
-		 'normalres=../nres_cg_80pct.rsf ' +
-        	 'data=../born100m.su ' +
-		 'outfile=dsgrad.out Nhval=0 ' +
-        	 'MaxIter = 200 ResidualTol=0.01 GradientTol=0.001 ' +
-		 'dataest = est.su datares = res.su ' +
-		 'DSWeight=0.01 partask=' +
-		 getThreads(exe_stampede_4hr),
-          'exe': exe_stampede_4hr
-        },
-        { 'job': 'ds_grad_100m_2_00pct',
-          'src': ['born100m.su', 'wavelet_line100m.su', 'csqsm.rsf', 'csq.rsf'],
-          'tgt': ['ds100m_2_00pct.rsf'],
-          'pre': 'spray < ../csq.rsf axis=3 n=60 d=1.0 o=0.0| put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
-		 '| add scale=1.0 > ../ds100m_2_00pct.rsf && ' +
-		 'add < ../csqsm.rsf ../csqhom.rsf scale=0.0,1.0 > ../csq00pct.rsf && ' +
-		 'add < ../csqsm.rsf > ../csq_end100m.rsf scale=1.1 && ' +
-		 'add < ../csqsm.rsf > ../grad100m_2_00pct.rsf scale=0.0 && ' +
-		 'add < ../ds100m_2_00pct.rsf > ../nres_2_00pct.rsf scale=0.0',
-          'cmd': acddscheb_grad + ' ' + 
-		 'order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
-                 'mute_slope=0.67 mute_zotime=0.0 mute_width=300 ' +
-        	 'csq=../csq.rsf csqext=../ds100m_2_00pct.rsf ' +
-		 'csq_beg=../csq00pct.rsf ' +
-		 'csq_end=../csq_end100m.rsf ' +
-        	 'reflectivity=../ds100m_2_00pct.rsf ' +
-		 'source=../wavelet_line100m.su ' +
-		 'grad=../grad100m_2_00pct.rsf ' +
-		 'normalres=../nres_2_00pct.rsf ' +
-        	 'data=../born100m.su ' +
-		 'outfile=dsgrad.out Nhval=0 ' +
-        	 'MaxIter = 100 gamma=0.04 epsilon=0.0001 alpha=1.1 ' +
-		 'dataest = est.su datares = res.su ' +
-		 'DSWeight=0.01 partask=' +
-		 getThreads(exe_stampede_4hr),
-          'exe': exe_stampede_4hr
-        },
-]
-
+# movie-src output file
+Flow('movie6km','wavelet_hdr6km.su csq24sm',
+     '''
+     makevel n1=141 d1=24 n2=444 d2=24 n3=21 d3=100 o1=0 o2=0 o3=0 v000=0.0 | 
+     put id1=0 id2=1 id3=2 dim=2 gdim=3 > $TARGET &&
+     acd deriv=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 
+     csq=${SOURCES[1]} source=${SOURCES[0]} sampord=1 movie=$TARGET
+     ''',stdin=0,stdout=-1,workdir='moviesrc.work')
 
 Result('vel24', 'vel24', 'put label1=Depth unit1=m label2=Distance unit2=m label="V\_p\_" unit="m\_/ms\_" | grey color=c mean=y title="Flooded Marmousi" scalebar=y barreverse=y')
 
