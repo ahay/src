@@ -80,8 +80,7 @@ int main(int argc, char ** argv) {
     
     Vector<ireal> m(op.getDomain());
     Vector<ireal> dm(op.getDomain());
-    Vector<ireal> dd(op.getRange());
-    Vector<ireal> mdd(op.getRange());
+    Vector<ireal> rhs(op.getDomain());
 
     AssignFilename mfn(valparse<std::string>(*pars,"rcsq"));
     //Components<ireal> cm(m);
@@ -94,17 +93,8 @@ int main(int argc, char ** argv) {
     dm.eval(dmfn);
     dm.zero();
 
-    AssignFilename ddfn(valparse<std::string>(*pars,"data"));
-    //    Components<ireal> cdd(dd);
-    //    cdd[0].eval(ddfn);
-    dd.eval(ddfn);
-
-    std::string mddnm = valparse<std::string>(*pars,"datamut","");
-    if (mddnm.size()>0) {
-      AssignFilename mddfn(mddnm);
-      mdd.eval(mddfn);
-    }
-    muteop.applyOp(dd,mdd);
+    AssignFilename rhsfn(valparse<std::string>(*pars,"rhs"));
+    rhs.eval(rhsfn);
 
     float gamma=valparse<float>(*pars,"InversionLevel",0.04f);
     float epsilon=valparse<float>(*pars,"ResRedn",0.01f);
@@ -126,8 +116,6 @@ int main(int argc, char ** argv) {
       restart=true;
     }
 
-    RVLRandomize<float> rnd(getpid(),-1.0,1.0);
-    
     /* output stream */
     std::stringstream res;
     res<<scientific;
@@ -147,38 +135,13 @@ int main(int argc, char ** argv) {
     OperatorEvaluation<ireal> opeval(op,m);
 
     /* optional branch for "unbundled" Normal eqn test */
-#ifdef FORM_NON_NORM
-    Vector<float> rhs(opeval.getDomain());
-    opeval.getDeriv().applyAdjOp(mdd,rhs);
     AltChebAlg<float> alg(dm,opeval.getDeriv(),rhs,
 			  nrnorm, gamma, epsilon, 
 			  alpha, rhoest, maxcount, 
 			  restart, res);
-#else
-    AltChebAlg<float> alg(dm,opeval.getDeriv(),mdd,
-			  nrnorm, gamma, epsilon, 
-			  alpha, rhoest, maxcount, 
-			  restart, res);
-#endif
 
     alg.run();
     
-    std::string dataest = valparse<std::string>(*pars,"dataest","");
-    std::string datares = valparse<std::string>(*pars,"datares","");
-    if (dataest.size()>0) {
-      Vector<float> est(op.getRange());
-      AssignFilename estfn(dataest);
-      est.eval(estfn);
-      opeval.getDeriv().applyOp(dm,est);
-      if (datares.size()>0) {
-	Vector<float> dres(op.getRange());
-	AssignFilename resfn(datares);
-	dres.eval(resfn);
-	dres.copy(mdd);
-	dres.linComb(-1.0f,est);
-      } 
-    }
-
     if (retrieveRank() == 0) {
       std::string outfile = valparse<std::string>(*pars,"outfile","");
       if (outfile.size()>0) {
