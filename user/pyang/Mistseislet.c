@@ -33,7 +33,7 @@ IST=iterative shrinkage-thresholding
 int main(int argc, char *argv[])
 {
     bool verb;
-    int niter, n1, n2, nthr, i1,i2, order;
+    int niter, iter, n1, n2, nthr, i1,i2, order;
     float pscale, p, pclip, thr, eps;
     float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
     char *type, *mode;
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     seislet_set(dip);
 
     /* drec = A T{ At(dobs+(1-M)*drec) } */
-    for(int iter=0; iter<niter; iter++)  {
+    for(iter=0; iter<niter; iter++)  {
 
 #ifdef _OPENMP
 #pragma omp parallel for default(none) \
