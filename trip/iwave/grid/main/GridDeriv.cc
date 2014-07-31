@@ -1,9 +1,5 @@
 #include "parser.h"
-#ifdef IWAVE_USE_MPI
-#include "mpigridpp.hh"
-#else
 #include "gridpp.hh"
-#endif
 #include "gridops.hh"
 
 using RVL::valparse;
@@ -13,13 +9,8 @@ using RVL::LinearOp;
 using RVL::AssignFilename;
 
 using TSOpt::GridDerivOp;
-#ifdef IWAVE_USE_MPI
-using TSOpt::MPIGridSpace;
-typedef TSOpt::MPIGridSpace gsp;
-#else
 using TSOpt::GridSpace;
 typedef TSOpt::GridSpace gsp;
-#endif
 
 int xargc;
 char **xargv;
@@ -27,11 +18,6 @@ char **xargv;
 int main(int argc, char ** argv) {
 
   try {
-
-#ifdef IWAVE_USE_MPI
-    int ts=0;
-    MPI_Init_thread(&argc,&argv,MPI_THREAD_FUNNELED,&ts);    
-#endif
 
     PARARRAY * pars = ps_new();
     
@@ -66,15 +52,9 @@ int main(int argc, char ** argv) {
 
     op.applyOp(invec,outvec);
 
-#ifdef IWAVE_USE_MPI
-    MPI_Finalize();
-#endif
   }
   catch (RVLException & e) {
     e.write(cerr);
-#ifdef IWAVE_USE_MPI
-    MPI_Abort(MPI_COMM_WORLD,0);
-#endif
     exit(1);
   }
   
