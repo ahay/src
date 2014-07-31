@@ -80,7 +80,7 @@ Flow('csq24big80pct',['csq24big.rsf', 'csq24noah.rsh'],
 Flow('csq24big80pct_ext','csq24big80pct', 
      'spray < ${SOURCES[0]} axis=3 n=60 d=1.0 o=0.0| ' +
      'put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
-     '> ${TARGETS[0]})
+     '> ${TARGETS[0]}')
 
 
 Flow('dcsq24', ['csq24', 'csq24sm2'],'add mode=a scale=1,-1 < csq24.rsf csq24sm2.rsf |window min1=180| sfpad beg1=8') 
@@ -170,7 +170,7 @@ jobs = [
           'exe': exe_stampede_30min
         },
         { 'job': 'ata_lsmig_80pct_altcheb',
-	  'pre': add scale=0.0 < ../csqbig80pct_ext.rsf > ' +
+	  'pre': 'add scale=0.0 < ../csqbig80pct_ext.rsf > ' +
                  '../ata_lsmig_80pct_altcheb.rsf',
 	  'src': ['lsmig_80pct_altcheb.rsf'],
 	  'tgt': ['ata_lsmig_80pct_altcheb.rsf'],
