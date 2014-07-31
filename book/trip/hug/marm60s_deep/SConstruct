@@ -132,7 +132,7 @@ jobs = [
           'exe': exe_stampede_10min
 	},
 	{ 'job': 'mute2',
-	  'pre': '',
+	  'pre': '/bin/cp bornbig.su bornbigm.su; /bin/cp bornbig.su bornbigm2.su',
 	  'src': ['bornbig.su'],
 	  'tgt': ['bornbigm.su', 'bornbigm2.su'],
 	  'cmd': linmute + ' input=bornbig.su output=bornbigm.su ' +
