@@ -1,6 +1,7 @@
 #include "parser.h"
 #ifdef IWAVE_USE_MPI
 #include "mpisegypp.hh"
+#include "mpiserialfo.hh"
 #else
 #include "segypp.hh"
 #endif
@@ -17,6 +18,7 @@ using RVL::AssignFilename;
 using TSOpt::SEGYLinMute;
 
 #ifdef IWAVE_USE_MPI
+using RVL::MPISerialFunctionObject
 using TSOpt::MPISEGYSpace;
 typedef TSOpt::MPISEGYSpace tsp;
 #else
@@ -58,8 +60,12 @@ int main(int argc, char ** argv) {
     SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
 		     valparse<float>(*pars,"mute_zotime",0.0f),
 		     valparse<float>(*pars,"mute_width",0.0f));
-    
+#ifdef IWAVE_USE_MPI
+    MPISerialFunctionObject<float> mpimute(mute);
+    LinearOpFO<float> muteop(dom,dom,mpimute,mpimute);
+#else
     LinearOpFO<float> muteop(dom,dom,mute,mute);
+#endif
 
     Vector<ireal> ddin(dom);
     Vector<ireal> ddout(dom);
