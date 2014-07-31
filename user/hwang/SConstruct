@@ -24,7 +24,7 @@ else:
 cprogs = '''permwave2d'''
 ccprogs = '''permlr2ddti'''
 cuprogs = '''awefd3dgpu'''
-cmpiprogs = '''transpmpi'''
+cmpiprogs = '''mpitransp'''
 
 #--------------------------------------------------------------------------
 lapack = env.get('LAPACK')
