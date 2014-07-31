@@ -141,22 +141,22 @@ int main(int argc, char* argv[])
 	}
 	gnp=gn;
 
-	for(int i=0;i<n1*n2;i++){
+	for(i=0;i<n1*n2;i++){
 	  s[i]=gm[i]+beta*s[i]; 		/* s=gm+beta*s */
 	  gm[i]=s[i];				/* copy s(:) to gm(:) */
 	}
 
 	fftwf_execute(fft2);			/* gm=fft3(s); */
-	for(int i=0;i<n1*n2;i++) gm[i]/=sqrtf(n1*n2);
+	for(i=0;i<n1*n2;i++) gm[i]/=sqrtf(n1*n2);
 	apply_mask(mask, gm, gr, n1, n2); 	/* gr=M.*fft3(gm); */
 
     	alpha=-gn/cblas_scnrm2 (n1*n2, gr, 1);/* alpha=-gn/sum(abs(gr(:)).^2);*/
 	do{
-		for(int i=0;i<n1*n2;i++) 
+		for(i=0;i<n1*n2;i++) 
 		  gm[i]=r[i]+alpha*gr[i];/* r=r+alpha*gr; */
 		res=cblas_scnrm2 (n1*n2, gm, 1); 
 		if(res<resp){
-			for(int i=0;i<n1*n2;i++){ 
+			for(i=0;i<n1*n2;i++){ 
 			  m[i]+=alpha*s[i];/* m=m+alpha*s; */
 			  r[i]=gm[i];/* r=r+alpha*gr; */
 			}	
@@ -168,9 +168,9 @@ int main(int argc, char* argv[])
 	resp=res;
 	if (verb) sf_warning("iteration %d of %d res %g", iter+1, niter, res);
     }
-    for(int i=0; i<n1*n2; i++) gm[i]=m[i];/* copy m(:) to g(:) */
+    for(i=0; i<n1*n2; i++) gm[i]=m[i];/* copy m(:) to g(:) */
     fftwf_execute(fft2);		  /* gm=fft3(m); */
-    for(int i=0; i<n1*n2; i++) din[i]=crealf(gm[i])/sqrtf(n1*n2);/* drec=real(ifft2(m)*n1*n2); */
+    for(i=0; i<n1*n2; i++) din[i]=crealf(gm[i])/sqrtf(n1*n2);/* drec=real(ifft2(m)*n1*n2); */
 
     free(m);
     free(r);
