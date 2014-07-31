@@ -18,7 +18,7 @@ using RVL::AssignFilename;
 using TSOpt::SEGYLinMute;
 
 #ifdef IWAVE_USE_MPI
-using RVL::MPISerialFunctionObject
+using RVL::MPISerialFunctionObject;
 using TSOpt::MPISEGYSpace;
 typedef TSOpt::MPISEGYSpace tsp;
 #else
@@ -57,16 +57,6 @@ int main(int argc, char ** argv) {
 
     tsp dom(inp,"data");
         
-    SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
-		     valparse<float>(*pars,"mute_zotime",0.0f),
-		     valparse<float>(*pars,"mute_width",0.0f));
-#ifdef IWAVE_USE_MPI
-    MPISerialFunctionObject<float> mpimute(mute);
-    LinearOpFO<float> muteop(dom,dom,mpimute,mpimute);
-#else
-    LinearOpFO<float> muteop(dom,dom,mute,mute);
-#endif
-
     Vector<ireal> ddin(dom);
     Vector<ireal> ddout(dom);
         
@@ -77,11 +67,18 @@ int main(int argc, char ** argv) {
     AssignFilename ddoutfn(outp);
     Components<ireal> cddout(ddout);
     cddout[0].eval(ddoutfn);
-        
-    muteop.applyOp(ddin,ddout);
 
+    SEGYLinMute mute(valparse<float>(*pars,"mute_slope",0.0f),
+		     valparse<float>(*pars,"mute_zotime",0.0f),
+		     valparse<float>(*pars,"mute_width",0.0f));
 #ifdef IWAVE_USE_MPI
-        MPI_Finalize();
+    MPISerialFunctionObject<float> mpimute(mute);
+    LinearOpFO<float> muteop(dom,dom,mpimute,mpimute);
+    muteop.applyOp(ddin,ddout);
+    MPI_Finalize();
+#else
+    LinearOpFO<float> muteop(dom,dom,mute,mute);
+    muteop.applyOp(ddin,ddout);
 #endif
     }
     catch (RVLException & e) {
