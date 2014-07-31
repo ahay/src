@@ -30,7 +30,7 @@ POCS=projection onto convex sets
 int main(int argc, char *argv[])
 {
     bool verb;
-    int niter, n1, n2, nthr, i1, i2,order;
+    int iter, niter, n1, n2, nthr, i1, i2,order;
     float pscale, p, pclip, thr, eps;
     float *dobs, *drec, *dtmp, *tmp, *mask, **dip;
     char *type, *mode;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     seislet_init(n1,n2,true,false,eps,order,type[0]);  /* unit=false inv=true */
     seislet_set(dip);
 
-    for(int iter=0; iter<niter; iter++)  {
+    for(iter=0; iter<niter; iter++)  {
 	// seislet adjoint: At(drec)
 	seislet_lop(true,false,n1*n2,n1*n2,dtmp,drec);
 
