@@ -123,7 +123,7 @@ void forward_txx_tzz_txz(float **uvx, float **uvz, float **txx, float **tzz, flo
 #ifdef _OPENMP
 #pragma omp parallel for default(none) 	\
 	private(i1,i2,diff1,diff2,diff3,diff4)		\
-	shared(uvx,uvz,txx,tzz,txz,vp,vs,nxpad,nzpad,dt,_dx,_dz,)
+	shared(uvx,uvz,txx,tzz,txz,vp,vs,nxpad,nzpad,dt,_dx,_dz)
 #endif
 	for(i2=3; i2<nxpad-4; i2++)
 	for(i1=3; i1<nzpad-4; i1++)
