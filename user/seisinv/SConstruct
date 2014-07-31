@@ -31,11 +31,12 @@ targets.c = '''
 tkirmig 
 tkirinv
 csp2d
-icsp2d
 kirchinvs
 lsm_dsr2d
 lsdmo
 '''
+
+# icsp2d
 
 # F90 mains
 targets.f90 = '''

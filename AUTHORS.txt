@@ -23,8 +23,8 @@ Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Jie Hou <jasonhupc@gmail.com>
 Jingwei Hu <hu@ices.utexas.edu>
 Yin Huang <maggiehuangyin@gmail.com>
-Detchai Ittharat < ditthara@mines.edu>
 Trevor Irons <tirons@mines.edu>
+Detchai Ittharat < ditthara@mines.edu>
 Jim Jennings <jenningsjwj@mac.com>
 Jun Ji <junji64@gmail.com>
 Long Jin <long.jin@shell.com>

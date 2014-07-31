@@ -97,6 +97,8 @@ down = '''
 27427
 27734
 28131
+28630
+28973
 '''
 
 down = map(int,down.split())
@@ -107,7 +109,7 @@ clf()
 p1 = bar(ind,down,width)
 ylabel('Downloads')
 xticks(ind[::12]+width/2, 
-       ('6/06','6/07','6/08','6/09','6/10','6/11','6/12','6/13'))
+       ('6/06','6/07','6/08','6/09','6/10','6/11','6/12','6/13','6/14'))
 title('Cumulative Downloads')
 #grid(True)
 
