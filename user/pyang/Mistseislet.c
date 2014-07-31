@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
     for(int iter=0; iter<niter; iter++)  {
 
 #ifdef _OPENMP
-#pragma omp parallel for default(none) collapse(2)	\
-	private(i1,i2)					\
+#pragma omp parallel for default(none) \
+	private(i1,i2)			\
 	shared(n1,n2,mask,drec,dobs)		
 #endif
 	for(i2=0; i2<n2; i2++)    		
@@ -112,8 +112,8 @@ int main(int argc, char *argv[])
 
 	/* perform thresholding; T{ At(drec) } */
 #ifdef _OPENMP
-#pragma omp parallel for default(none) collapse(2)	\
-	private(i1,i2)					\
+#pragma omp parallel for default(none)	\
+	private(i1,i2)			\
 	shared(n1,n2,pscale,dtmp,tmp)		
 #endif
 	for(i2=0; i2<n2; i2++)    		
