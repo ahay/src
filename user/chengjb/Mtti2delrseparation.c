@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
    clock_t t1, t2, t3, t4, t5;
    float   timespent;
 
-   int   ns;
+   int   ns, it;
    float dt;
 
    t1=clock();
@@ -385,7 +385,7 @@ int main(int argc, char* argv[])
 
     int iflag=0;
 
-    for(int it=0;it<ns;it++)
+    for(it=0;it<ns;it++)
     {
 	float t=it*dt;
 
