@@ -22,7 +22,13 @@
 #include <math.h>
 #include <rsf.h>
 #include <mpi.h>
+
+#ifdef _OPENMP
 #include <omp.h>
+#if _OPENMP < 200805
+#define collapse(x) 
+#endif
+#endif
 
 #include "mpikirmod.h"
 #include "mpikirmod2.h"
