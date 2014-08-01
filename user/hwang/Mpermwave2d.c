@@ -1,6 +1,6 @@
 /* Wavefield Extrapolation for 2D PERM */
 /*
-   Copyright (C) 2013 King Abduallah University of Science and Techonology
+   Copyright (C) 2013 King Abduallah University of Science and Technology
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
