@@ -15,7 +15,7 @@ penv = {'stampede' :  { 'batch' : 'slurm',
                         'acct'  : 'FDTD3D-Cont',
                         'mail'  : 'symes@caam.rice.edu',
                         'bcmd'  : '/usr/bin/sbatch',
-			'local' : 'export MODULEPATH=/opt/apps/xsede/modulefiles:/opt/apps/modulefiles:/opt/modulefiles; module() { eval $$(/opt/apps/lmod/lmod/libexec/lmod bash "$@");}; module restore; module list; printenv;',
+			'local' : 'export MODULEPATH=/opt/apps/xsede/modulefiles:/opt/apps/modulefiles:/opt/modulefiles; module() { eval $$(/opt/apps/lmod/lmod/libexec/lmod bash "$@");}; module restore;',
                         'suffix': 'bat', },
          'davinci' :  { 'batch' : 'pbs',
                         'queue' : 'trip',
@@ -75,9 +75,9 @@ Flow('csq24sm','vel24sm','add mode=p ${SOURCES[0]} |put data_type=csq')
 Flow('csq24sm2','vel24sm2','add mode=p ${SOURCES[0]} |put data_type=csq')
 Flow('csq24big','vel24big','add mode=p ${SOURCES[0]} |put data_type=csq')
 Flow('csq24noah','ocean','add mode=p ${SOURCES[0]} |put data_type=csq')
-Flow('csq24big80pct',['csq24big.rsf', 'csq24noah.rsh'], 
+Flow('csqbig80pct',['csq24big.rsf', 'csq24noah.rsf'], 
      'add < ${SOURCES[0]} ${SOURCES[1]} scale=0.8,0.2 > ${TARGETS[0]}')
-Flow('csq24big80pct_ext','csq24big80pct', 
+Flow('csqbig80pct_ext','csqbig80pct', 
      'spray < ${SOURCES[0]} axis=3 n=60 d=1.0 o=0.0| ' +
      'put dim=2 gdim=3 id1=0 id2=1 id3=3 ' +
      '> ${TARGETS[0]}')
@@ -119,6 +119,19 @@ exe_stampede_10min = {'platf':'stampede','nodes':'2','ppn':'16','wall':'00:10:00
 exe_stampede_30min = {'platf':'stampede','nodes':'2','ppn':'16','wall':'00:30:00'}
 # choose
 
+Flow('bornbigm.su','bornbig.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
+Flow('bornbigm2.su','bornbigm.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
+Flow('a_lsmig_80pct_altcheb.rsf', 'lsmig_80pct_altcheb.rsf',
+     'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[0]}; ' +
+     deriv + ' input=${SOURCES[0] ' +
+     'output=${TARGETS[0]} ' +
+     'axis=2 adjoint=0', stdin=0, stdout=0);
+Flow('ata_lsmig_80pct_altcheb.rsf', 'a_lsmig_80pct_altcheb.rsf',
+     'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[0]}; ' +
+     deriv + ' input=${SOURCES[0] ' +
+     'output=${TARGETS[0]} ' +
+     'axis=2 adjoint=1', stdin=0, stdout=0);
+
 jobs = [
         { 'job': 'bornbig',
           'pre': '/bin/cp ../line100m.su ../bornbig.su',
@@ -131,22 +144,13 @@ jobs = [
 	 	 getThreads(exe_stampede_10min),
           'exe': exe_stampede_10min
 	},
-	{ 'job': 'mute2',
-	  'pre': '/bin/cp bornbig.su bornbigm.su; /bin/cp bornbig.su bornbigm2.su',
-	  'src': ['bornbig.su'],
-	  'tgt': ['bornbigm.su', 'bornbigm2.su'],
-	  'cmd': linmute + ' input=bornbig.su output=bornbigm.su ' +
-	         'mute_slope=0.7 mute_zotime=0 mute_width=200; ' +
-	         linmute + ' input=bornbigm.su output=bornbigm2.su ' +
-	         'mute_slope=0.7 mute_zotime=0 mute_width=200; ',
-          'exe': exe_serial
-	},
 	{ 'job': 'mig_80pct',
           'pre': 'add scale=0.0 < ../csqbig80pct_ext.rsf > ../mig_80pct.rsf',
 	  'src': ['bornbigm2.su', 'wavelet_line100m.su', 'csqbig80pct_ext.rsf'],
           'tgt': ['mig_80pct.rsf'],
           'cmd': acd + ' ' + 
-		 'deriv=1 adjoint=1 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 ' +
+		 'deriv=1 adjoint=1 order=2 cfl=0.5 ' +
+		 'cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
 		 'csq=../csqbig80pct_ext.rsf csq_b1=../mig_80pct.rsf ' +
 		 'source=../wavelet_line100m.su ' +
 		 'data=../bornbigm2.su partask=' +
@@ -162,23 +166,13 @@ jobs = [
                  'sampord=1 nsnaps=20 csq=../lsmig_80pct_altcheb.rsf ' + 
                  'rcsq=../csqbig80pct_ext.rsf icsq=../lsmig_80pct_altcheb.rsf ' +
                  'source=../wavelet_line100m.su rhs=../mig_80pct.rsf ' + 
-                 'outfile=cheb80pct.out ' +
+                 'data=../bornbig.su outfile=cheb80pct.out ' + 
                  'InversionLevel = 0.04 ResRedn = 0.1 ' +
                  'FudgeFactor = 1.1 ' +
                  'MaxIter = 50 mute_slope=0.7 mute_zotime=0 mute_width=200 ' +
                  'partask=' + getThreads(exe_stampede_30min),
           'exe': exe_stampede_30min
         },
-        { 'job': 'ata_lsmig_80pct_altcheb',
-	  'pre': 'add scale=0.0 < ../csqbig80pct_ext.rsf > ' +
-                 '../ata_lsmig_80pct_altcheb.rsf',
-	  'src': ['lsmig_80pct_altcheb.rsf'],
-	  'tgt': ['ata_lsmig_80pct_altcheb.rsf'],
-	  'cmd': deriv + ' input=lsmig_80pct_altcheb.rsf ' +
-	         'output=ata_lsmig_80pct_altcheb.rsf ' +
-		 'axis=2',
-          'exe': exe_serial
-        },  
 	{ 'job': 'q_lsmig_80pct_altcheb',
 	  'src': ['ata_lsmig_80pct_altcheb.rsf'],
 	  'tgt': ['q_lsmig_80pct_altcheb.rsf'],
@@ -188,7 +182,7 @@ jobs = [
                  'sampord=1 nsnaps=20 csq=../lsmig_80pct_altcheb.rsf ' + 
                  'rcsq=../csqbig80pct_ext.rsf icsq=../q_lsmig_80pct_altcheb.rsf ' +
                  'source=../wavelet_line100m.su ' +
-		 'rhs=../ata_lsmig_80pct_altcheb.rsf ' + 
+		 'rhs=../ata_lsmig_80pct_altcheb.rsf data=../bornbig.su' + 
                  'outfile=cheb80pct.out ' +
 		 'specbd=../lsmig_80pct_altcheb.work/specbd.txt' +
                  'InversionLevel = 0.04 ResRedn = 0.1 ' +
