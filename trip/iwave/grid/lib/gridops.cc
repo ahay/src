@@ -1086,7 +1086,7 @@ namespace TSOpt {
     	cy[j].eval(mpif,cx[j]);
       }
 #ifdef IWAVE_USE_MPI
-        MPI_Barrier(retrieveGlobalComm());
+      MPI_Barrier(retrieveGlobalComm());
 #endif
     }
     catch (RVLException & e) {
