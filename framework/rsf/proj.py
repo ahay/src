@@ -179,7 +179,7 @@ combine ={
     }
 
 # Environmental variables to pass to SCons
-keepenv = ('DISPLAY','VPLOTFONTDIR','HOME',
+keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','USER','WORK', 'SCRATCH',
            'LD_LIBRARY_PATH','DYLD_LIBRARY_PATH','MIC_LD_LIBRARY_PATH',
            'RSFMEMSIZE','PYTHONPATH','SFPENOPTS')
 
