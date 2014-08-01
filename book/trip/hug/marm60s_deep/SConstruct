@@ -123,12 +123,12 @@ Flow('bornbigm.su','bornbig.su', linmute + ' input=${SOURCES[0]} output=${TARGET
 Flow('bornbigm2.su','bornbigm.su', linmute + ' input=${SOURCES[0]} output=${TARGETS[0]} mute_slope=0.7 mute_zotime=0 mute_width=200',stdin=0,stdout=0)
 Flow('a_lsmig_80pct_altcheb.rsf', 'lsmig_80pct_altcheb.rsf',
      'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[0]}; ' +
-     deriv + ' input=${SOURCES[0] ' +
+     deriv + ' input=${SOURCES[0]} ' +
      'output=${TARGETS[0]} ' +
      'axis=2 adjoint=0', stdin=0, stdout=0);
 Flow('ata_lsmig_80pct_altcheb.rsf', 'a_lsmig_80pct_altcheb.rsf',
      'add scale=0.0 < ${SOURCES[0]} > ${TARGETS[0]}; ' +
-     deriv + ' input=${SOURCES[0] ' +
+     deriv + ' input=${SOURCES[0]} ' +
      'output=${TARGETS[0]} ' +
      'axis=2 adjoint=1', stdin=0, stdout=0);
 
