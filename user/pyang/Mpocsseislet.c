@@ -27,6 +27,11 @@ POCS=projection onto convex sets
 
 #include "pthresh.h"
 
+/* collapse is a feature from OpenMP 3 (2008) */
+#if defined(_OPENMP) && _OPENMP < 200805
+    #define collapse(x) 
+#endif
+
 int main(int argc, char *argv[])
 {
     bool verb;
