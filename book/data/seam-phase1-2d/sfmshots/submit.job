@@ -1,0 +1,4 @@
+
+sbatch slurm_mshots.job
+
+
