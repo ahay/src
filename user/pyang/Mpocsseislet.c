@@ -18,8 +18,6 @@ POCS=projection onto convex sets
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-  Reference: On analysis-based two-step interpolation methods for randomly 
-	sampled seismic data, P Yang, J Gao, W Chen, Computers & Geosciences
 */
 
 #include <rsf.h>
