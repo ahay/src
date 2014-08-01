@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
    sf_init(argc,argv);
 
    timeval time1, time2, time3, time4, time5;
-   long long timeused = 0;
+   time_t timeused = 0;
 
    gettimeofday(&time1, 0);
 
