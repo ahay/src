@@ -228,7 +228,7 @@ class Project(Environment):
 
         # Keep environmental variables needed for SLURM
         for env in os.environ.keys():
-            if 'SLURM_' == env[:6]:
+            if 'SLURM_' == env[:6] or 'TACC_' == env[:5]:
                 self.Append(ENV={env:os.environ[env]})
 
         if sys.platform[:6] == 'cygwin':
