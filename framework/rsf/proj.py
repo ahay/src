@@ -219,10 +219,18 @@ class Project(Environment):
         self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                              self.figs+'/\\1',cwd)
         self.progsuffix = self['PROGSUFFIX']
+
+        # Keep certain environmental variables in the environment
         for env in keepenv:
             getenv = os.environ.get(env)
             if getenv:
                 self.Append(ENV={env:getenv})
+
+        # Keep environmental variables needed for SLURM
+        for env in os.environ.keys():
+            if 'SLURM_' == env[:6]:
+                self.Append(ENV={env:os.environ[env]})
+
         if sys.platform[:6] == 'cygwin':
             exe = ''
         else:
@@ -333,6 +341,7 @@ class Project(Environment):
 
         for key in self['ENV'].keys():
             self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key])
+
 
     def __Split(self,split,reduction,
                 sfiles,tfiles,flow,stdout,stdin,jobmult,suffix,prefix,src_suffix):
