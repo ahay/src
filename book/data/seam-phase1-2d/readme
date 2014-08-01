@@ -1,0 +1,21 @@
+these directories are for processng a 2d extraction of the 3D SEAM project
+
+SEAM stands for SEg Advanced Modeling project.
+
+SEAM Phase1 is a 3d synthetic for benchamrking subsalt techniques.  I mostly 
+know about the weve equation seismic synthetic data, but there is also
+synthetic gravity.
+
+The 2D extraction is in the [rpcess of release Summer of 2014.  I wonder
+if formal release will be at the 2014 SEG convention in October.
+
+This data was used at the 2d Madagascar Working Workshop Summer 2014.
+Our objective was (is) to compare 2d finite difference wave equation programs
+in Madagascar.  Statements about relative runtime and accuracy would be great.
+ 
+Directories in this test are:
+
+fetch - download the 2D extraction of velocity and 3D seismic
+sfmshots - compute 2D synthetic using Pengliang's 8th order space 3rd order time
+sfawefd3d - compute 2D synthetic using Sava's 4th order space 3rd order time
+
