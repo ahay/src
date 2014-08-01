@@ -1,8 +1,8 @@
 these directories are for processng a 2d extraction of the 3D SEAM project
 
-SEAM stands for SEg Advanced Modeling project.
+SEAM stands for SEG Advanced Modeling project.
 
-SEAM Phase1 is a 3d synthetic for benchamrking subsalt techniques.  I mostly 
+SEAM Phase1 is a 3d synthetic for benchmarking subsalt techniques.  I mostly 
 know about the weve equation seismic synthetic data, but there is also
 synthetic gravity.
 
