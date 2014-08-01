@@ -20,7 +20,9 @@
 
 #include <rsf.h>
 #include <mpi.h>
+#ifdef _OPENMP
 #include <omp.h>
+#endif
 #include <math.h>
 #include <time.h>
 
@@ -387,7 +389,9 @@ int sglfdfor2(float ***fwf, float **rcd, bool verb)
 	for(it=0; it<nt; it++){
 //		sf_warning("test txxn1[801][30]=%d",txxn1[801][30])
 		if(verb) sf_warning("Forward it=%d/%d;", it+1, nt);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
+#endif
 		for(ix=nfd+pmlsize; ix<nfd+pmlsize+nx; ix++){
 			for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 				vxn1[ix][iz]=vxn0[ix][iz]-dt/fdenx[ix][iz]*ldx(txxn0, ix, iz);
@@ -396,7 +400,9 @@ int sglfdfor2(float ***fwf, float **rcd, bool verb)
 		}
 
 		pml_vxz(vxn1, vzn1, vxn0, vzn0, txxn0);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
+#endif
 		for(ix=nfd+pmlsize; ix<nfd+pmlsize+nx; ix++){
 			for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 				txxn1[ix][iz]=txxn0[ix][iz]-dt*fc11[ix][iz]*(ldx(vxn1, ix-1, iz) + ldz(vzn1, ix, iz-1));
@@ -410,7 +416,9 @@ int sglfdfor2(float ***fwf, float **rcd, bool verb)
 		}
 
 		if(it%wfinv==0){
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
+#endif
 			for(ix=0; ix<nx; ix++){
 				for(iz=0; iz<nz; iz++){
 					fwf[wfit][ix][iz]=txxn0[ix+nfd+pmlsize][iz+nfd+pmlsize];
@@ -418,7 +426,9 @@ int sglfdfor2(float ***fwf, float **rcd, bool verb)
 			}
 			wfit++;
 		}
+#ifdef _OPENMP
 #pragma omp parallel for private(ix)
+#endif
 		for(ix=0; ix<ng; ix++){
 			rcd[ix][it]=txxn0[ix*ginv+pmlsize+nfd][pmlsize+nfd+gp];
 		}
@@ -467,7 +477,9 @@ int sglfdback2(float ***mig1, float **mig2, float ***fwf, float **localrec, bool
 	wfit=wfnt-1;
 	for(it=nt-1; it>=0; it--){
 		if(verb) sf_warning("Backward it=%d/%d;", it+1, nt);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
+#endif
 		for(ix=nfd+pmlsize; ix<nfd+pmlsize+nx; ix++){
 			for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 				txxn0[ix][iz]=txxn1[ix][iz]+dt*bc11[ix][iz]*(ldx(vxn1, ix-1, iz) +ldz(vzn1, ix, iz-1));
@@ -475,11 +487,15 @@ int sglfdback2(float ***mig1, float **mig2, float ***fwf, float **localrec, bool
 		}
 
 		pml_txxb(txxn0, vxn1, vzn1);
+#ifdef _OPENMP
 #pragma omp parallel for private(ix)
+#endif
 		for(ix=0; ix<ng; ix++){
 			txxn0[ix*ginv+pmlsize+nfd][pmlsize+nfd+gp]+=localrec[ix][it];
 		}
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)
+#endif
 		for(ix=nfd+pmlsize; ix<nfd+pmlsize+nx; ix++){
 			for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 				vxn0[ix][iz]=vxn1[ix][iz]+dt/bdenx[ix][iz]*ldx(txxn0, ix, iz);
@@ -646,28 +662,33 @@ void explsource(float **data)
 
 void pml_vxz(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **txxn0)
 {
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd; iz<nfd+pmlsize; iz++){
 			pml_fvxz
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+pmlsize; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_fvxz
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd+pmlsize+nx; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_fvxz
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize+nz; iz<nfd+2*pmlsize+nz; iz++){
 			pml_fvxz
@@ -677,28 +698,33 @@ void pml_vxz(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **txx
 
 void pml_vxzb(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **txxn0)
 {
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd; iz<nfd+pmlsize; iz++){
 			pml_bvxz
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+pmlsize; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_bvxz
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd+pmlsize+nx; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_bvxz
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize+nz; iz<nfd+2*pmlsize+nz; iz++){
 			pml_bvxz
@@ -708,7 +734,9 @@ void pml_vxzb(float **vxn1, float **vzn1, float **vxn0, float **vzn0, float **tx
 
 void pml_txx(float **txxn1, float **vxn1, float **vzn1)
 {
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd; iz<nfd+pmlsize; iz++){
 			pml_ftxx
@@ -721,15 +749,17 @@ void pml_txx(float **txxn1, float **vxn1, float **vzn1)
 			pml_ftxx
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd+pmlsize+nx; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_ftxx
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize+nz; iz<nfd+2*pmlsize+nz; iz++){
 			pml_ftxx
@@ -742,28 +772,33 @@ void pml_txx(float **txxn1, float **vxn1, float **vzn1)
 
 void pml_txxb(float **txxn0, float **vxn1, float **vzn1)
 {
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd; iz<nfd+pmlsize; iz++){
 			pml_btxx
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+pmlsize; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_btxx
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd+pmlsize+nx; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize; iz<nfd+pmlsize+nz; iz++){
 			pml_btxx
 		}
 	}
-
+#ifdef _OPENMP
 #pragma omp parallel for private(ix,iz)	
+#endif
 	for(ix=nfd; ix<nfd+2*pmlsize+nx; ix++){
 		for(iz=nfd+pmlsize+nz; iz<nfd+2*pmlsize+nz; iz++){
 			pml_btxx
