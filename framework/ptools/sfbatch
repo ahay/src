@@ -18,6 +18,19 @@
 
 import os, sys, time
 
+required_pars=dict(
+    batch= 'pbs or slurm', 
+    job=   'script name',
+    path=  'directory path',
+    queue= 'type of the queue',
+    mail=  'email for the user',
+    acct=  'account name',
+    wall=  'wall time',
+    nodes= 'number of nodes',
+    ppn=   'processes per node',
+    exe=   'command to run'
+    )
+
 if len(sys.argv) < 2:
     # selfdoc
     print '''
@@ -35,21 +48,7 @@ for arg in sys.argv[1:]:
     if 'batchfile=' == arg[:10]:
         parfile = arg[10:]
         sys.argv.remove(arg)
-
-required_pars=dict(
-    batch= 'pbs or slurm', 
-    job=   'script name',
-    path=  'directory path',
-    queue= 'type of the queue',
-    mail=  'email for the user',
-    acct=  'account name',
-    wall=  'wall time',
-    nodes= 'number of nodes',
-    ppn=   'processes per node',
-    exe=   'command to run'
-    )
         
-
 if parfile:
     # get keys from the parameter file
     
