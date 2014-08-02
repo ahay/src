@@ -265,10 +265,10 @@ def getBatchAttributes(batch):
     # environment
 
     exp = []
-    for i in ['USER', 'HOME', 'WORK', 'SCRATCH']:
-        var = os.getenv(i)
-        if var != None:
-            exp = exp + ['export ' + i + '=' + var + '; ']
+    #    for i in ['USER', 'HOME', 'WORK', 'SCRATCH']:
+    #        var = os.getenv(i)
+    #        if var != None:
+    #            exp = exp + ['export ' + i + '=' + var + '; ']
 
     syslist = ['slurm', 'pbs']
     bcmdlist = ['/usr/bin/sbatch', '/usr/bin/qsub']
