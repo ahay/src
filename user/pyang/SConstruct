@@ -22,11 +22,19 @@ mpi_progs = '''
 mpifwi
 '''
 
+
 ######################################################################
 # CUDA main programs
 cuda_progs = '''
 fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d gpurtm3d
 '''
+######################################################################
+# CUDA+MPI main programs
+cuda_mpi_progs = '''
+'''
+#mpigpufwi
+
+
 
 ######################################################################
 try:  # distributed version
@@ -131,6 +139,28 @@ for prog in cuda_mains:
     if root:
         env.Install(bindir,prog)
 
+#######################################################################
+# compiling CUDA+MPI programs
+
+cuda_mpi_mains = Split(cuda_mpi_progs)
+for prog in cuda_mpi_mains:
+    if CTP and NVCC and mpicc:
+        cfile = env.Command('MPICUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
+        prog = env.Program(prog,cfile,
+                           CC=NVCC,
+                           LINKFLAGS='-L'+' -lmpi',
+                           CFLAGS='-I'+' -prec-div=true --x=cu')
+    else:
+        prog = env.RSF_Place('sf'+prog,None,
+                             message='''
+                             Please ensure CUDA and MPI are installed correctly.
+                             Install script was unable to locate your mpi lib and/or include directory
+                             Rerun Madagascar installation after it has been fixed.
+                             ''')
+    if root:
+        env.Install(bindir,prog)
+
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
@@ -139,7 +169,8 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
-	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains)
+	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains)+ \
+	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mpi_mains)
 
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)
