@@ -18,6 +18,17 @@
 
 import os, sys, time
 
+if len(sys.argv) < 2:
+    # selfdoc
+    print '''
+    Usage: %s [batchfile=parfile] [key=value] 
+    
+    The parfile can contain Python-syntax key=value entries
+    for the following keys:''' % sys.argv[0]
+    for key in required_pars.keys():
+        print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
+    sys.exit(1)
+
 # Get a parameter file
 parfile = None
 for arg in sys.argv[1:]:
@@ -38,16 +49,6 @@ required_pars=dict(
     exe=   'command to run'
     )
         
-if len(sys.argv) < 2:
-    # selfdoc
-    print '''
-    Usage: %s batchfile=parfile [key=value] <job to run>
-    
-    The parfile contains Python-syntax key=value entries
-    for the following keys:''' % sys.argv[0]
-    for key in required_pars.keys():
-        print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
-    sys.exit(1)
 
 if parfile:
     # get keys from the parameter file
