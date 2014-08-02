@@ -41,7 +41,7 @@ Flow('ss',['xs','zs'],'''
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 
-#Creating data at specified receiver + saving full wavefield every 10th step: 
+#Creating data at specified receiver + saving full wavefield every 16th step: 
 Flow(['Fdat', 'Fwfl'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=16 jsnap=64') 
 
 
