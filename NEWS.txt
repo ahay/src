@@ -22,6 +22,8 @@ To APIs:
 
 To the Python package:
 
+* sfbatch: script for submitting jobs to a cluster queue system 
+
 To programs:
 
 * Added color=lb (Light-Bartlein) and color=gist_earth color schemes
