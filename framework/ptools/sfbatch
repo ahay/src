@@ -34,40 +34,51 @@ required_pars=dict(
     acct=  'account name',
     wall=  'wall time',
     nodes= 'number of nodes',
-    ppn=   'processes per node'
+    ppn=   'processes per node',
+    exe=   'command to run'
     )
         
-if not parfile:
+if len(sys.argv) < 2:
     # selfdoc
     print '''
     Usage: %s batchfile=parfile [key=value] <job to run>
     
-    The parfile should contain Python-syntax key=value entries
+    The parfile contains Python-syntax key=value entries
     for the following keys:''' % sys.argv[0]
     for key in required_pars.keys():
         print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
     sys.exit(1)
 
-try:
-    pfile = open(parfile)
-    pars = pfile.read()
-    pfile.close()
-except:
-    print '''
-    Could not read batchfile "%s".
-    ''' % parfile
-    sys.exit(2)
+if parfile:
+    # get keys from the parameter file
+    
+    try:
+        pfile = open(parfile)
+        pars = pfile.read()
+        pfile.close()
+    except:
+        print '''
+        Could not read batchfile "%s".
+        ''' % parfile
+        sys.exit(2)
 
-exec pars in locals()
+    exec pars in locals()
 
 for key in required_pars.keys():
+    # look for the key on the command line
     klen=len(key)+1
     for arg in sys.argv[1:]:
         if arg[:klen] == key+'=':
             locals()[key] = arg[klen:]
             sys.argv.remove(arg)
-
-exe = ' '.join(sys.argv[1:])
+    # check if the required key is specified
+    if not locals().has_key(key):
+        print '''
+        %s: need %s= parameter.
+        ''' % (sys.argv[0],key) 
+        sys.exit(3)
+        
+#exe = ' '.join(sys.argv[1:])
 
 # Write a batch script file
 cwd = os.getcwd()
@@ -115,7 +126,7 @@ else:
     print '''
     Unknown batch system "%s".
     ''' % batch
-    sys.exit(3)
+    sys.exit(4)
 
 submit = ' '.join([submit,jobfile])
 print submit
@@ -123,10 +134,9 @@ print submit
 os.unlink(jobid)
 if os.system(submit):
     print 'Failed to submit a job.'
-    sys.exit(4)
+    sys.exit(5)
 
 while not os.path.isfile(jobid):
      time.sleep(5)
 
 sys.exit(0)
-
