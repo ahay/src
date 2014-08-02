@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH -o slurm_lpf.job.o%j 
-#SBATCH -e slurm_lpf.job.e%j 
+#SBATCH -o slurm_mshots.job.o%j 
+#SBATCH -e slurm_mshots.job.e%j 
 #SBATCH -p normal #queue to run on 
 #SBATCH -N 10           #Number nodes to run on 
 #SBATCH -n 80           # total number of MPI tasks.  I guess each node gets n/N
@@ -28,6 +28,7 @@ echo RSF_THREADS=$RSF_THREADS
 export OMP_NUM_THREADS=1
 echo OMP_NUM_THREADS=$OMP_NUM_THREADS
 
+env
 pscons 
 
 

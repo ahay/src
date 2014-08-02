@@ -1,7 +1,7 @@
 from rsf.proj import *
 
-Flow('headerattr.txt','../fetch/vp_hdr.rsf',
-     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
+#Flow('headerattr.txt','../fetch/vp_hdr.rsf',
+#     'sfheaderattr > $TARGET && /bin/cat $TARGET',stdout=-1)
 
 #sftahread input=SEG14.Pisoelastic.rsf | sftahgethw key=sx,gx,offset >/dev/null
 # x coordinate must be divided by 10000 scalel and scaleco are both -10000
