@@ -131,7 +131,9 @@ else:
 submit = ' '.join([submit,jobfile])
 print submit
 
-os.unlink(jobid)
+if os.path.isfile(jobid):
+    os.unlink(jobid)
+    
 if os.system(submit):
     print 'Failed to submit a job.'
     sys.exit(5)
