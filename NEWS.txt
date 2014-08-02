@@ -23,6 +23,7 @@ To APIs:
 To the Python package:
 
 * sfbatch: script for submitting jobs to a cluster queue system 
+* Changed MPIRUN from a command-line option to a configure option
 
 To programs:
 

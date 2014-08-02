@@ -1125,6 +1125,15 @@ def mpi(context):
         need_pkg('mpi', fatal=False)
         context.env['MPICXX'] = None
 
+    context.Message("checking for MPIRUN ... ")
+    mpirun = context.env.get('MPIRUN',WhereIs('ibrun') or WhereIs('mpirun'))
+    if mpirun:
+        context.Result(mpirun)
+        context.env['MPIRUN'] = mpirun
+    else:
+        context.Result(context_failure)
+        context.env['MPIRUN'] = None
+
 def cuda(context):
     context.Message("checking for CUDA ... ")
 
@@ -2059,6 +2068,7 @@ def options(file):
     opts.Add('OPENGLPATH','Path to OpenGL headers')
     opts.Add('MPICC','MPI C compiler')
     opts.Add('MPICXX','MPI C++ compiler')
+    opts.Add('MPIRUN','MPI job command')
     opts.Add('PETSCDIR',
     'Portable, Extensible Toolkit for Scientific computation - installation directory')
     opts.Add('PETSCPATH','PETSc - path to headers')

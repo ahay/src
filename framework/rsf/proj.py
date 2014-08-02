@@ -192,8 +192,7 @@ class Project(Environment):
             'TIMER':'Whether to time execution',
             'CHECKPAR':'Whether to check parameters',
             'ENVIRON':'Additional environment settings',
-            'CLUSTER':'Nodes available on a cluster',
-            'MPIRUN':'mpirun command'
+            'CLUSTER':'Nodes available on a cluster'
             }
         rsf.conf.set_options(self,opts)
 

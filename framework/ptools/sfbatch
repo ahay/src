@@ -42,7 +42,8 @@ if not parfile:
     print '''
     Usage: %s batchfile=parfile [key=value] <job to run>
     
-    The parfile should contain key=value entries for the following keys:''' % sys.argv[0]
+    The parfile should contain Python-syntax key=value entries
+    for the following keys:''' % sys.argv[0]
     for key in required_pars.keys():
         print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
     sys.exit(1)
@@ -82,8 +83,8 @@ if batch == 'pbs':
     f.write('#PBS -q '+queue + '\n')
     f.write('#PBS -m abe\n')
     f.write('#PBS -M '+ mail + '\n')
-    f.write('#PBS -o '+os.path.join(path,job+'.%j.out')+'\n')
-    f.write('#PBS -e '+os.path.join(path,job+'.%j.err')+'\n')
+    f.write('#PBS -o '+job+'.%j.out\n')
+    f.write('#PBS -e '+job+'.%j.err\n')
     f.write('cd '+ path +'\n')
     f.write(exe + '\n')
     f.write('echo $PBS_JOBID > jobid\n')
@@ -102,8 +103,8 @@ elif batch == 'slurm':
     f.write('#SBATCH --mail-type=end\n')
     f.write('#SBATCH --mail-user='+mail + '\n')
     f.write('#SBATCH --uid=' + os.getenv('USER') + '\n')
-    f.write('#SBATCH -o '+os.path.join(path,job+'.%j.out')+'\n')
-    f.write('#SBATCH -e '+os.path.join(path,job+'.%j.err')+'\n')
+    f.write('#SBATCH -o '+job+'.%j.out\n')
+    f.write('#SBATCH -e '+job+'.%j.err\n')
     f.write('cd '+path+'\n')
     f.write(exe + '\n')
     f.write('echo $SLURM_JOBID > jobid\n')
