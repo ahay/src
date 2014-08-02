@@ -1,0 +1,20 @@
+#!/bin/bash
+#SBATCH -J cuda_job       	# Job name
+#SBATCH -o cuda_job.%j.out   	# Name of stdout output file(%j expands to jobId)
+#SBATCH -e cuda_job.%j.err   	# Name of stderr output file(%j expands to jobId)
+#SBATCH -p gpu       		# Submit to the 'normal' or 'development' queue
+#SBATCH -N 1                	# Total number of nodes requested (16 cores/node)
+#SBATCH -n 1                	# Total number of mpi tasks requested
+#SBATCH -t 00:20:00         	# Run time (hh:mm:ss) - 1.5 hours
+#SBATCH -A Madagascar-workshop	# Allocation name to charge job against
+
+# before run this job script, do:
+# 	module load cuda
+# 	./configure --prefix=$WORK/RSFROOT CC=`which gcc` CUDA_TOOLKIT_PATH=$TACC_CUDA_DIR
+# 	source env.sh
+# 	pscons install
+
+module load cuda
+
+# Run the gpu applications
+scons 
