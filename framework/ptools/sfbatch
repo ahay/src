@@ -43,7 +43,25 @@ if len(sys.argv) < 2:
         print '    %s= %s# %s' % (key,' ' * (7-len(key)), required_pars[key])
     sys.exit(1)
 
-# Get a parameter file
+# Read the default parameter file from ~/.batch
+parfile = os.path.join(os.environ.get('HOME'),'.batch')
+
+if os.path.isfile(parfile):
+    # get keys from the parameter file
+    
+    try:
+        pfile = open(parfile)
+        pars = pfile.read()
+        pfile.close()
+    except:
+        print '''
+        Could not read batchfile "%s".
+        ''' % parfile
+        sys.exit(2)
+
+    exec pars in locals()
+
+# Get a parameter file from the command line
 parfile = None
 for arg in sys.argv[1:]:
     if 'batchfile=' == arg[:10]:

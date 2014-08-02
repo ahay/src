@@ -112,9 +112,11 @@ def Flow(sources,flow,bindir,rsfflow=1,
     command = timer + command
 
     if batch:
-        command = '%s batchfile=%s exe="%s" np=%d path="%s" ' % \
-            (os.path.join(bindir,'sfbatch'),batch,command,np,os.getcwd())
+        command = '%s exe="%s" np=%d path="%s" ' % \
+            (os.path.join(bindir,'sfbatch'),command,np,os.getcwd())
+        if os.path.isfile(batch):
+            command += ' batchfile="%s" ' % batch
         if wall:
-            command += ' wall=%s' % wall
+            command += ' wall="%s" ' % wall
         
     return command
