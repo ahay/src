@@ -20,7 +20,8 @@ import rsf.prog
 
 def Flow(sources,flow,bindir,rsfflow=1,
          checkpar=False,coms=[],prefix='sf',progsuffix='',
-         remote='', stdout=1,stdin=1,timer='',mpirun=None,workdir=None):
+         remote='', stdout=1,stdin=1,timer='',
+         mpirun=None,workdir=None,batch=None,np=1,wall=''):
     'Output a command line'
     lines = string.split(str(flow),'&&')
     steps = []
@@ -109,5 +110,11 @@ def Flow(sources,flow,bindir,rsfflow=1,
     if workdir:
         command = '/bin/rm -rf %s && /bin/mkdir %s && cd %s && ' % (workdir,workdir,workdir) + command
     command = timer + command
+
+    if batch:
+        command = '%s batchfile=%s exe="%s" nodes=%d' % \
+            (os.path.join(bindir,'sfbatch'),batch,command,np)
+        if wall:
+            command += ' wall=%s' % wall
         
     return command

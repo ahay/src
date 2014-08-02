@@ -192,7 +192,8 @@ class Project(Environment):
             'TIMER':'Whether to time execution',
             'CHECKPAR':'Whether to check parameters',
             'ENVIRON':'Additional environment settings',
-            'CLUSTER':'Nodes available on a cluster'
+            'CLUSTER':'Nodes available on a cluster',
+            'BATCH' : 'Parameter file for batch jobs on a cluster'
             }
         rsf.conf.set_options(self,opts)
 
@@ -313,6 +314,7 @@ class Project(Environment):
 
         self.environ = self.get('ENVIRON','')
 
+        self.batch = self.get('BATCH')
         
         self.jobs = GetOption('num_jobs') # getting information from scons -j
         
@@ -416,7 +418,7 @@ class Project(Environment):
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsfflow=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,
              split=[],np=1,reduce='cat',jobmult=1,local=0,noderotate=1,
-             workdir=None):
+             workdir=None,wall=''):
 
         if not flow:
             return None     
@@ -492,7 +494,8 @@ class Project(Environment):
             
         command = rsf.flow.Flow(sources,flow,self.bindir,rsfflow,
                                 self.checkpar,self.coms,prefix,self.progsuffix,
-                                remote,stdout,stdin,self.timer,mpirun,workdir)
+                                remote,stdout,stdin,self.timer,mpirun,workdir,
+                                self.batch,np,wall)
 
         # May need to do it remotely
         if remote:
