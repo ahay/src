@@ -41,8 +41,10 @@ int main(int argc, char* argv[])
     float  *ww,**vv,**rr;     /* I/O arrays*/
     float **um,**uo,**up,**ud;/* tmp arrays */
 
-	/* Testing for OpenMP */
-	double start_time, end_time;
+#ifdef _OPENMP
+    /* Testing for OpenMP */
+    double start_time, end_time;
+#endif
  
     sf_init(argc,argv);
 
@@ -100,7 +102,9 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr,"\n");
 
 	/* Starting timer */
+#ifdef _OPENMP
     start_time = omp_get_wtime();
+#endif
 
     for (it=0; it<nt; it++) 
 {
@@ -197,8 +201,10 @@ int main(int argc, char* argv[])
     }
 
 	/* Ending timer */
+#ifdef _OPENMP
     end_time = omp_get_wtime();
-	sf_warning("Elapsed time is %f.",end_time-start_time);
+    sf_warning("Elapsed time is %f.",end_time-start_time);
+#endif
 
     if(verb) fprintf(stderr,"\n");    
     sf_close();
