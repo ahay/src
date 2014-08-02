@@ -28,7 +28,8 @@ required_pars=dict(
     wall=  'wall time',
     nodes= 'number of nodes',
     ppn=   'processes per node',
-    exe=   'command to run'
+    exe=   'command to run',
+    np=    'number of threads'
     )
 
 if len(sys.argv) < 2:
@@ -83,6 +84,10 @@ for key in required_pars.keys():
 # Write a batch script file
 cwd = os.getcwd()
 jobid = os.path.join(cwd,'jobid')
+
+# figure out the number of nodes
+if nodes > np/ppn:
+    nodes = max(1,np/ppn)
     
 if batch == 'pbs':
     submit = '/usr/bin/qsub'

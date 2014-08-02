@@ -112,7 +112,7 @@ def Flow(sources,flow,bindir,rsfflow=1,
     command = timer + command
 
     if batch:
-        command = '%s batchfile=%s exe="%s" nodes=%d' % \
+        command = '%s batchfile=%s exe="%s" np=%d' % \
             (os.path.join(bindir,'sfbatch'),batch,command,np)
         if wall:
             command += ' wall=%s' % wall
