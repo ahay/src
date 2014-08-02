@@ -1,0 +1,21 @@
+1.7-svn	sfsegyread	data/seam-phase1-2d/fetch:	upcwulin@c558-303.stampede.tacc.utexas.edu	Thu Jul 31 14:57:18 2014
+
+	d2=1
+	o1=0
+	n2=1751
+	o2=0
+	label1="Time"
+	data_format="native_float"
+	head="Vp_Elastic_N23900_hdr.rsf"
+	label2="Trace"
+	esize=4
+	in="/work/03056/upcwulin/rsfdata/data/seam-phase1-2d/fetch/Vp_Elastic_N23900.rsf@"
+	unit1="s"
+	d1=0.01
+	n1=1501
+1.7-svn	sfput	data/seam-phase1-2d/fetch:	upcwulin@c558-303.stampede.tacc.utexas.edu	Thu Jul 31 14:57:19 2014
+
+	d2=20
+	data_format="native_float"
+	label2=sx
+	in="/work/03056/upcwulin/rsfdata/data/seam-phase1-2d/fetch/vp.rsf@"
