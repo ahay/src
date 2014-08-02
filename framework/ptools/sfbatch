@@ -86,8 +86,14 @@ cwd = os.getcwd()
 jobid = os.path.join(cwd,'jobid')
 
 # figure out the number of nodes
+nodes = int(nodes)
+np    = int(np)
+ppn   = int(ppn)
+
 if nodes > np/ppn:
     nodes = max(1,np/ppn)
+
+np = nodes*ppn
     
 if batch == 'pbs':
     submit = '/usr/bin/qsub'
@@ -97,7 +103,7 @@ if batch == 'pbs':
     f.write('#PBS -A ' + acct + '\n')
     f.write('#PBS -V\n')
     f.write('#PBS -l walltime=' + wall + '\n')
-    f.write('#PBS -l nodes=' + nodes + ':ppn=' + ppn + '\n')
+    f.write('#PBS -l nodes=' + str(nodes) + ':ppn=' + str(ppn) + '\n')
     f.write('#PBS -q '+queue + '\n')
     f.write('#PBS -m abe\n')
     f.write('#PBS -M '+ mail + '\n')
@@ -115,7 +121,7 @@ elif batch == 'slurm':
     f.write('#SBATCH -J ' + job + '\n')
     f.write('#SBATCH -A ' + acct + '\n')
     f.write('#SBATCH -t '+wall + '\n')
-    f.write('#SBATCH -n ' + str(int(ppn) * int(nodes)) + '\n')
+    f.write('#SBATCH -n ' + str(np)) + '\n')
     f.write('#SBATCH -p '+queue + '\n')
     f.write('#SBATCH --mail-type=begin\n')
     f.write('#SBATCH --mail-type=end\n')
