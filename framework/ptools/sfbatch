@@ -16,7 +16,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, sys
+import os, sys, time
 
 # Get a parameter file
 parfile = None
@@ -70,6 +70,8 @@ for key in required_pars.keys():
 exe = ' '.join(sys.argv[1:])
 
 # Write a batch script file
+cwd = os.getcwd()
+jobid = os.path.join(cwd,'jobid')
     
 if batch == 'pbs':
     submit = '/usr/bin/qsub'
@@ -87,7 +89,7 @@ if batch == 'pbs':
     f.write('#PBS -e '+job+'.%j.err\n')
     f.write('cd '+ path +'\n')
     f.write(exe + '\n')
-    f.write('echo $PBS_JOBID > jobid\n')
+    f.write('echo $PBS_JOBID > ' + jobid + '\n')
     f.close()
 elif batch == 'slurm':
     submit = '/usr/bin/sbatch'
@@ -107,7 +109,7 @@ elif batch == 'slurm':
     f.write('#SBATCH -e '+job+'.%j.err\n')
     f.write('cd '+path+'\n')
     f.write(exe + '\n')
-    f.write('echo $SLURM_JOBID > jobid\n')
+    f.write('echo $SLURM_JOBID > ' + jobid + '\n')
     f.close()
 else:
     print '''
@@ -116,13 +118,15 @@ else:
     sys.exit(3)
 
 submit = ' '.join([submit,jobfile])
-
-run = '''
-/bin/rm -f jobid;
-%s; 
-(while [ ! -f ./jobid ]; do (sleep 1); done)
-''' % submit
-
 print submit
-sys.exit(os.system(run))
+
+os.unlink(jobid)
+if os.system(submit):
+    print 'Failed to submit a job.'
+    sys.exit(4)
+
+while not os.path.isfile(jobid):
+     time.sleep(5)
+
+sys.exit(0)
 
