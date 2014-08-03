@@ -5,14 +5,12 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-pad2 ctshift fulrtm2d fulsgrtm2d identity postrtm2d postrtminv 
-postrtmshape prertmshape sgewefd2d
+cwmllrrtm testcheck segy2rsf taper lrmodeling lrwave2abc ormsby cwsglrrtm pad2 ctshift fulrtm2d fulsgrtm2d identity postrtm2d postrtminv postrtmshape prertmshape sgewefd2d
 '''
-# differenciate
+ccprogs = 'cswavelr2cij cswavelr2abc swavelr2'
 
-ccprogs = '' #cswavelr2 swavelr2'
 mpi_progs = '''
-mpitest mpifdlsrtm mpifulrtm2d mpilrrtm mpiprertm2d
+mpicwlrrtm mpitest mpifdlsrtm mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
 pyprogs = 'lrrtm fdlsrtm'
@@ -103,6 +101,7 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
+	       map(lambda prog: env.Doc(prog,'M%s.cc' %prog,lang='c++'),ccmains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),pymains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
     doc = env.RSF_Docmerge(main,docs)

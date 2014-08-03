@@ -45,10 +45,10 @@ int main(int argc, char* argv[])
 	for(ix=0; ix<nx; ix++)
 		for(iz=0; iz<nz; iz++)
 			output[ix+left][iz+top]=input[ix][iz];
-	for(ix=0; ix<nx; ix++)
+	for(ix=left; ix<left+nx; ix++)
 		for(iz=0; iz<top; iz++)
 			output[ix][iz]=output[ix][top];
-	for(ix=0; ix<nx; ix++)
+	for(ix=left; ix<left+nx; ix++)
 		for(iz=0; iz<bottom; iz++)
 			output[ix][iz+top+nz]=output[ix][top+nz-1];
 	for(iz=0; iz<padnz; iz++)
