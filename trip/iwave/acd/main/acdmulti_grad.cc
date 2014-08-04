@@ -15,6 +15,7 @@
 #include "gradtest.hh"
 #include "scantest.hh"
 #include "segyops.hh"
+#include "helmop.hh"
 
 //#define GTEST_VERBOSE
 IOKEY IWaveInfo::iwave_iokeys[]
@@ -56,6 +57,7 @@ using TSOpt::IOTask;
 using TSOpt::IWaveOp;
 using TSOpt::SEGYTaperMute;
 using TSOpt::GridWindowOp;
+using TSOpt::GridMaskOp;
 #ifdef IWAVE_USE_MPI
 using TSOpt::MPIGridSpace;
 using TSOpt::MPISEGYSpace;
@@ -65,6 +67,7 @@ using TSOpt::SEGYSpace;
 #endif
 using TSOpt::GridExtendOp;
 using TSOpt::GridDerivOp;
+using TSOpt::HelmOp;
 
 int xargc;
 char **xargv;
@@ -117,9 +120,11 @@ int main(int argc, char ** argv) {
             SEGYTaperMute tnm(valparse<float>(*pars,"mute_slope",0.0f),
                               valparse<float>(*pars,"mute_zotime",0.0f),
                               valparse<float>(*pars,"mute_width",0.0f),0,
-                              valparse<float>(*pars,"min_gx",0.0f),
-                              valparse<float>(*pars,"max_gx",numeric_limits<float>::max()),
-                              valparse<float>(*pars,"taper_width",0.0f),0);
+                              valparse<float>(*pars,"min",0.0f),
+                              valparse<float>(*pars,"max",numeric_limits<float>::max()),
+                              valparse<float>(*pars,"taper_width",0.0f),
+                              valparse<int>(*pars,"taper_type",0),
+                              valparse<float>(*pars,"time_width",0.0f));
             
             LinearOpFO<float> tnmop(iwop.getRange(),iwop.getRange(),tnm,tnm);
         
@@ -193,24 +198,38 @@ int main(int argc, char ** argv) {
                 throw e;
             }
 #endif
+           
+    // assign window widths - default = 0;
+    RPNT swind,ewind;
+    RASN(swind,RPNT_0);
+    RASN(ewind,RPNT_0);
+    swind[0]=valparse<float>(*pars,"sww1",0.0f);
+    swind[1]=valparse<float>(*pars,"sww2",0.0f);
+    swind[2]=valparse<float>(*pars,"sww3",0.0f);
+    ewind[0]=valparse<float>(*pars,"eww1",0.0f);
+    ewind[1]=valparse<float>(*pars,"eww2",0.0f);
+    ewind[2]=valparse<float>(*pars,"eww3",0.0f);
+ 
+//            // assign window widths - default = 0;
+//            RPNT wind;
+//            RASN(wind,RPNT_0);
+//            wind[0]=valparse<float>(*pars,"windw1",0.0f);
+//            wind[1]=valparse<float>(*pars,"windw2",0.0f);
+//            wind[2]=valparse<float>(*pars,"windw3",0.0f);
             
-            // assign window widths - default = 0;
-            RPNT wind;
-            RASN(wind,RPNT_0);
-            wind[0]=valparse<float>(*pars,"windw1",0.0f);
-            wind[1]=valparse<float>(*pars,"windw2",0.0f);
-            wind[2]=valparse<float>(*pars,"windw3",0.0f);
-            
-            GridDerivOp dsop0(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
+            GridDerivOp dsop(op.getDomain(),dsdir,valparse<float>(*pars,"DSWeight",0.0f));
             
             // need to read in model space for bg input to GridWindowOp
             Vector<ireal> m_in(op.getDomain());
             AssignFilename minfn(valparse<std::string>(*pars,"csqext"));
             Components<ireal> cmin(m_in);
             cmin[0].eval(minfn);
-            GridWindowOp wop(op.getDomain(),m_in,wind);
+            GridMaskOp mop(op.getDomain(),m_in,swind,ewind);
+            OperatorEvaluation<float> mopeval(mop,m_in);
+            LinearOp<float> const & lmop=mopeval.getDeriv();
+
             
-            OpComp<float> dsop(wop,dsop0);
+            // OpComp<float> dsop(wop,dsop0);
             
             TensorOp<float> top(op,dsop);
             // create RHS of block system
@@ -221,11 +240,25 @@ int main(int argc, char ** argv) {
             
             // choice of preop is placeholder
             ScaleOpFwd<float> preop(top.getDomain(),1.0f);
-            
-            MultiFit<float> f(pdom, top, gext, preop, td,res);
+
+      RPNT w_arr;
+      RASN(w_arr,RPNT_1);
+      w_arr[0]=valparse<float>(*pars,"scale1",1.0f);
+      w_arr[1]=valparse<float>(*pars,"scale2",1.0f);
+      float power=0.0f;
+      float datum=0.0f;
+      power=valparse<float>(*pars,"power",0.0f);
+      datum=valparse<float>(*pars,"datum",0.0f);
+
+      HelmOp<ireal> hop(op.getDomain(),w_arr,power,datum);
+
+            MultiFit<float> f(pdom, top, gext, lmop, hop, td,res);
             
             FunctionalEvaluation<float> Fm(f,m);
-            
+            float aaa = Fm.getValue();
+           if (retrieveGlobalRank()==0) {
+ cerr << "\n Fm.getValue()=" << aaa << endl;
+} 
             // if gradient requested, compute and store, along with other quantities
             // at reference model
             string gradnamev = valparse<std::string>(*pars,"grad_vel","");

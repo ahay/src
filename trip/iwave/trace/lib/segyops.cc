@@ -10,6 +10,7 @@ float cosfun(float t){
 float cosfun2(float t){
     return 0.5 + cos(M_PI * t)/2.0f;
 }
+
 namespace TSOpt {
     
     using RVL::LocalDataContainer;

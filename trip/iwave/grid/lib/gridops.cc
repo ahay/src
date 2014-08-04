@@ -1054,7 +1054,7 @@ namespace TSOpt {
 	  if (dir < 0 || dir > gdom->getGrid().gdim-1) {
 	    RVLException e;
 	    e<<"Error: GridDerivOp constructor\n";
-	    e<<"  direction index "<<dir<<" out of dimension range [0,"<<gdom->getGrid().gdim-1<<"\n";
+	    e<<"  direction index "<<dir<<" out of dimension range [0,"<<gdom->getGrid().gdim-1<<"]\n";
 	    throw e;
 	  }
 	  RPNT d;
