@@ -26,7 +26,7 @@
 
 int main(int argc, char* argv[])
 {
-	bool wantwf, cmplx, correct;
+	bool wantwf, cmplx, correct, revert;
 	int ix, iz, it, wfit, i, j, in, ik;
 	int nt, nt2, wfnt, snpint, nx, nz, nx2, nz2, nzx, nzx2, nk, pad1, n2, m2, tmpint;
 	int n0, nth, multiple, snpint2;
@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
 	if(!sf_getbool("wantwf", &wantwf)) wantwf=false;
 	if(!sf_getbool("cmplx", &cmplx)) cmplx=false;
 	if(!sf_getbool("correct", &correct)) correct=false;
+	if(!sf_getbool("revert", &revert)) revert=false;
 	if(!sf_getint("pad1", &pad1)) pad1=1;
 	if(!sf_getint("nb", &nb)) nb=40; /* padded boundary width */
 	if(!sf_getfloat("coef", &coef)) coef=0.01; /* decaying parameter */
@@ -67,14 +68,13 @@ int main(int argc, char* argv[])
 	Frr=sf_input("ref");
 
 	at=sf_iaxa(Fsrc, 1); nt=sf_n(at); dt=sf_d(at); t0=sf_o(at);
-	ax=sf_iaxa(Frcd, 2); nx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax); 
-	rnx=nx-2*nb; sf_setn(ax, rnx); sf_seto(ax, x0+dx*nb);
-	if(!sf_getint("nz", &nz)) sf_error("Need input nz!");
+	ax=sf_iaxa(Frcd, 2); rnx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax); nx=rnx+2*nb;
+	if(!sf_getint("rnz", &rnz)) sf_error("Need input nz!");
 	if(!sf_getfloat("dz", &dz)) sf_error("Need input dz!");
 	if(!sf_getfloat("z0", &z0)) sf_error("Need input z0!");
 
-	az=sf_iaxa(Fsrc, 1); rnz=nz-2*nb;
-	sf_setn(az, rnz); sf_setd(az, dz); sf_seto(az, z0+dz*nb);
+	az=sf_iaxa(Fsrc, 1); nz=rnz+2*nb;
+	sf_setn(az, rnz); sf_setd(az, dz); sf_seto(az, z0);
 	sf_oaxa(Fimg, az, 1);
 	sf_oaxa(Fimg, ax, 2);
 	sf_putstring(Fimg, "label1", "Depth");
@@ -82,11 +82,15 @@ int main(int argc, char* argv[])
 	sf_putstring(Fimg, "unit1", "m");
 	sf_putstring(Fimg, "unit2", "m");
 
-	nt2=(nt-1)/multiple+1;
+	if(revert){
+		nt2=(nt-1)*multiple+1;
+	}else{
+		nt2=(nt-1)/multiple+1;
+	}
 	ww=sf_floatalloc(nt);
 	sf_floatread(ww, nt, Fsrc);
-	dd=sf_floatalloc2(nt2, nx);
-	sf_floatread(dd[0], nt2*nx, Frcd);
+	dd=sf_floatalloc2(nt2, rnx);
+	sf_floatread(dd[0], nt2*rnx, Frcd);
 	
 	Fleftf=sf_input("leftf");
 	Frightf=sf_input("rightf");
@@ -125,8 +129,14 @@ int main(int argc, char* argv[])
 	waveb=sf_floatalloc2(nzx2, m2);
 
 	if(!sf_getint("n0", &n0))   sf_error("Need n0=  !");
-	if(!sf_getint("snapint", &snpint)) snpint=10;
-	snpint2=snpint/multiple;
+	/* n0=nb means the receiver position is 0 */
+	if(!sf_getint("snapint", &snpint)) snpint=2;
+
+	if(revert){
+		snpint2=snpint*multiple;
+	}else{
+		snpint2=snpint/multiple;
+	}
 	wfnt=(nt-1)/snpint+1;
 	wfdt=dt*snpint;
 	wf1=sf_floatalloc3(rnz, rnx, wfnt);
@@ -269,8 +279,8 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for private(ix, j) shared(n0, it)
 #endif
-		for(ix=0; ix<nx; ix++){
-			j=ix*nz2+n0;
+		for(ix=0; ix<rnx; ix++){
+			j=(ix+nb)*nz2+n0;
 			curr[j]+=dd[ix][it];
 		}
 		

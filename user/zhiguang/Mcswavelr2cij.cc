@@ -70,7 +70,7 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 			r = sqrt(0.5*r)*dt;
 
 			double hypk=hypot(z0,x0);
-			float phf=1.;
+			double phf=1.;
 			if (iz<nb)
 				phf *= exp(-powf(coef*(nb-iz)*(z0/hypk),2));
 			else if (iz>nz-1-nb)
@@ -79,7 +79,7 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 				phf *= exp(-powf(coef*(nb-ix)*(x0/hypk),2));
 			else if (ix>nx-1-nb)
 				phf *= exp(-powf(coef*(ix-nx+1+nb)*(x0/hypk),2));
-			res(a,b) = cpx(cos(r), sin(r))*phf;
+			res(a,b) = cpx(cos(r)*phf, sin(r)*phf);
 		}
 	}
 	return 0;
