@@ -18,9 +18,9 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference:
-	Micikevicius, Paulius. "3D finite difference computation on GPUs
-	using CUDA." Proceedings of 2nd Workshop on General Purpose 
-	Processing on Graphics Processing Units. ACM, 2009.
+    Micikevicius, Paulius. "3D finite difference computation on GPUs
+    using CUDA." Proceedings of 2nd Workshop on General Purpose 
+    Processing on Graphics Processing Units. ACM, 2009.
 */
 
 #include <stdio.h>

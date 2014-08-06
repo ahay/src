@@ -18,12 +18,16 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   Reference:
-	1) Micikevicius, Paulius. "3D finite difference computation on GPUs
+    [1] Micikevicius, Paulius. "3D finite difference computation on GPUs
 	using CUDA." Proceedings of 2nd Workshop on General Purpose 
 	Processing on Graphics Processing Units. ACM, 2009.
-	2) Symes, William W., et al. "Computational Strategies For Reverse
-	time Migration." 2008 SEG Annual Meeting. Society of Exploration 
-	Geophysicists, 2008.
+    [2] Dussaud, E., W. W. Symes, L. Lemaistre, P. Singer, B. Denel, 
+	and A. Cherrett, 2008, Computational strategies for reverse-time
+	migration: 78th Annual International Meeting, SEG, Expanded 
+	Abstracts, 2267–2271
+    [3] Clapp, R. G. (2009, January). Reverse time migration with random 
+	boundaries. In 79th Annual International Meeting, SEG Expanded 
+	Abstracts (Vol. 28, pp. 2809-2813).
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,9 +42,9 @@ extern "C" {
 #ifndef PI
 #define PI 	SF_PI
 #endif
-#define BlockSize1 16// tile size in 1st-axis
-#define BlockSize2 16// tile size in 2nd-axis
-#define radius 	4// half of the order in space
+#define BlockSize1 	16// tile size in 1st-axis
+#define BlockSize2 	16// tile size in 2nd-axis
+#define radius 		4// half of the order in space
 
 void sf_check_gpu_error (const char *msg) 
 /*< check GPU errors >*/
@@ -200,74 +204,118 @@ __global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, floa
     }
 }
 
+
+
 void velocity_transform(float *v0, float*vv, float dt, float dz, float dx, float dy, int nz, int nx, int ny, int nb)
- /*< velocit2 transform: vv=v0*dt; vv<--vv^2 >*/
+ /*< velocity transform: vv<--vv^2 >*/
 {
-  int i1, i2, i3, nbr, nn1, nn2, nn3, r;
-  float d;
+	int i1, i2, i3, nbr, nn1, nn2, nn3;
+	float a;
 
-  nbr=radius+nb;
-  nn1=nz+2*nbr;
-  nn2=nx+2*nbr;
-  nn3=ny+2*nbr;
+	nbr=radius+nb;
+	nn1=nz+2*nbr;
+	nn2=nx+2*nbr;
+	nn3=ny+2*nbr;
 
-  for(i3=0; i3<ny; i3++){
-    for(i2=0; i2<nx; i2++){
-      for(i1=0; i1<nz; i1++){
-	vv[(i1+nbr)+nn1*(i2+nbr)+nn1*nn2*(i3+nbr)]=v0[i1+nz*i2+nz*nx*i3];
-      }
-    }
-  }  
-    // random boundary condition: randomized velocity=v+r*d
-    for         (i3=0; i3<nn3; 	i3++) {
-	for     (i2=0; i2<nn2; 	i2++) {
-	    for (i1=0; i1<nbr;  i1++) {
-		d=(nb-i1)*nbr*dz;
-		r=rand()%nbr;
-		vv[i1+nn1*i2+nn1*nn2*i3]=vv[nbr+nn1*i2+nn1*nn2*i3];
-		r=rand()%nbr;
-		vv[(nn1-i1-1)+nn1*i2+nn1*nn2]=vv[(nn1-nbr-1)+nn1*i2+nn1*nn2];
-	    }
-	}
-    }
-
-
-    for         (i3=0; i3<nn3; 	i3++) {
-	for     (i2=0; i2<nbr;  i2++) {
-	    for (i1=0; i1<nn1; 	i1++) {
-		d=(nb-i1)*nbr*dx;
-		r=rand()%nbr;
-		vv[i1+nn1*i2+nn1*nn2*i3]=vv[i1+nn1*nbr+nn1*nn2*i3];
-		r=rand()%nbr;
-		vv[i1+nn1*(nn2-i2-1)+nn1*nn2*i3]=vv[i1+nn1*(nn2-nbr-1)+nn1*nn2*i3];
-	    }
-	}
-    }
-
-    for         (i3=0; i3<nbr;  i3++) {
-	for     (i2=0; i2<nn2; 	i2++) {
-	    for (i1=0; i1<nn1; 	i1++) {
-		d=(nb-i1)*nbr*dy;
-		r=rand()%nbr;
-		vv[i1+nn1*i2+nn1*nn2*i3]=vv[i1+nn1*i2+nn1*nn2*nbr];
-		r=rand()%nbr;
-		vv[i1+nn1*i2+nn1*nn2*(nn3-i3-1)]=vv[i1+nn1*i2+nn1*nn2*(nn3-nbr-1)];
-	    }
-	}
-    }
-
-  // vv<--vv^2
-  for(i3=0; i3<nn3; i3++){
-    for(i2=0; i2<nn2; i2++){
-      for(i1=0; i1<nn1; i1++){
-	d=vv[i1+nn1*i2+nn1*nn2*i3]*dt;
-	vv[i1+nn1*i2+nn1*nn2*i3]=d*d;
-      }
-    }
-  }  
+	for(i3=0; i3<nn3; i3++)
+	for(i2=0; i2<nn2; i2++)
+	for(i1=0; i1<nn1; i1++)
+	{
+		a=vv[i1+nn1*i2+nn1*nn2*i3]*dt;
+		vv[i1+nn1*i2+nn1*nn2*i3]=a*a;
+	}  
 }
 
+void random_boundary(float *v0, float *vv, int nz, int nx, int ny, int nb)
+/*< initialize velocity using random boundary condition >*/
+{
+	int i1, i2, i3, nbr, nn1, nn2, nn3,a;
 
+	nbr=nb+radius;
+	nn1=nz+2*nbr;
+	nn2=nx+2*nbr;
+	nn3=ny+2*nbr;
+
+	/* top and bottom */
+    	for(i3=0; i3<nn3; i3++) 
+	for(i2=0; i2<nn2; i2++) 
+	for(i1=0; i1<nbr; i1++) 
+	{
+		a=(int)vv[i1+nn1*i2+nn1*nn2*i3];
+		vv[i1+nn1*i2+nn1*nn2*i3]-=float(rand()%a)/nbr*(nbr-i1);
+		a=(int)vv[(nn1-1-i1)+nn1*i2+nn1*nn2*i3];
+		vv[(nn1-1-i1)+nn1*i2+nn1*nn2*i3]-=float(rand()%a)/nbr*(nbr-i1);
+    	}
+
+	/* left and right */
+    	for(i3=0; i3<nn3; i3++) 
+	for(i2=0; i2<nbr; i2++) 
+	for(i1=0; i1<nn1; i1++) 
+	{
+		a=(int)vv[i1+nn1*i2+nn1*nn2*i3];
+		vv[i1+nn1*i2+nn1*nn2*i3]-=float(rand()%a)/nbr*(nbr-i2);
+		a=(int)vv[i1+nn1*(nn2-i2-1)+nn1*nn2*i3];
+		vv[i1+nn1*(nn2-i2-1)+nn1*nn2*i3]-=float(rand()%a)/nbr*(nbr-i2);
+	}
+
+	/* front and rear */
+    	for(i3=0; i3<nbr; i3++)
+	for(i2=0; i2<nn2; i2++)
+	for(i1=0; i1<nn1; i1++)
+	{
+		a=(int)vv[i1+nn1*i2+nn1*nn2*i3];
+		vv[i1+nn1*i2+nn1*nn2*i3]-=float(rand()%a)/nbr*(nbr-i3);
+		a=(int)vv[i1+nn1*i2+nn1*nn2*(nn3-1-i3)];
+		vv[i1+nn1*i2+nn1*nn2*(nn3-1-i3)]-=float(rand()%a)/nbr*(nbr-i3);
+	}
+
+}
+
+void extend3d(float *v0, float *vv, int nz, int nx, int ny, int nb)
+/*< extend 3d velocity model >*/
+{
+	int i1, i2, i3, nbr, nn1, nn2, nn3;
+
+	nbr=nb+radius;
+	nn1=nz+2*nbr;
+	nn2=nx+2*nbr;
+	nn3=ny+2*nbr;
+
+	/* central zone */
+	for(i3=0; i3<ny; i3++)
+	for(i2=0; i2<nx; i2++)
+	for(i1=0; i1<nz; i1++)
+	{
+		vv[(i1+nbr)+nn1*(i2+nbr)+nn1*nn2*(i3+nbr)]=v0[i1+nz*i2+nz*nx*i3];
+	}
+
+	/* top and bottom */
+    	for(i3=0; i3<nn3; i3++) 
+	for(i2=0; i2<nn2; i2++) 
+	for(i1=0; i1<nbr; i1++) 
+	{
+		vv[i1+nn1*i2+nn1*nn2*i3]=vv[nbr+nn1*i2+nn1*nn2*i3];
+		vv[(nn1-1-i1)+nn1*i2+nn1*nn2*i3]=vv[(nn1-1-nbr)+nn1*i2+nn1*nn2*i3];
+    	}
+
+	/* left and right */
+    	for(i3=0; i3<nn3; i3++) 
+	for(i2=0; i2<nbr; i2++) 
+	for(i1=0; i1<nn1; i1++) 
+	{
+		vv[i1+nn1*i2+nn1*nn2*i3]=vv[i1+nn1*nbr+nn1*nn2*i3];
+		vv[i1+nn1*(nn2-i2-1)+nn1*nn2*i3]=vv[i1+nn1*(nn2-nbr-1)+nn1*nn2*i3];
+	}
+
+	/* front and rear */
+    	for(i3=0; i3<nbr; i3++)
+	for(i2=0; i2<nn2; i2++)
+	for(i1=0; i1<nn1; i1++)
+	{
+		vv[i1+nn1*i2+nn1*nn2*i3]=vv[i1+nn1*i2+nn1*nn2*nbr];
+		vv[i1+nn1*i2+nn1*nn2*(nn3-1-i3)]=vv[i1+nn1*i2+nn1*nn2*(nn3-nbr-1)];
+	}
+}
 void window3d(float *a, float *b, int nz, int nx, int ny, int nb)
 /*< window a 3d subvolume >*/
 {
@@ -276,30 +324,33 @@ void window3d(float *a, float *b, int nz, int nx, int ny, int nb)
 	nn1=nz+2*nbr;
 	nn2=nx+2*nbr;
 	
-	for(i3=0; i3<ny; i3++){
-	    for(i2=0; i2<nx; i2++){
-	      for(i1=0; i1<nz; i1++){
+	for(i3=0; i3<ny; i3++)
+	for(i2=0; i2<nx; i2++)
+	for(i1=0; i1<nz; i1++)
+	{
 		a[i1+nz*i2+nz*nx*i3]=b[(i1+nbr)+nn1*(i2+nbr)+nn1*nn2*(i3+nbr)];
-	      }
-	    }
-	}  
+	}
 }
 
 
 int main(int argc, char* argv[])
 {
-	bool verb;
-	int nz, nx, ny, nb, nzb, nxb, nyb, nnz, nnx, nny, ns, nt, kt, it, is, szbeg, sxbeg, sybeg, jsz, jsx, jsy;
-	int *d_szxy;
+	bool verb, csdgather;
+	int nz, nx, ny, nb, nbr, nzb, nxb, nyb, nnz, nnx, nny, ns, ng, nl, nt;
+	int kt, it, is, distz, distx, disty, szbeg, sxbeg, sybeg, jsz, jsx, jsy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy;
+	int *d_szxy, *d_gzxy;
 	float dz, dx, dy, fm, dt, _dz2, _dx2, _dy2;
-	float *v0, *vv, *d_wlt, *d_vv, *d_p0, *d_p1, *ptr;
+	float *v0, *vv, *d_wlt, *d_vv, *d_sp0, *d_sp1, *d_gp0, *d_gp1, *d_Isg,  *ptr;
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
 	Fv=sf_input("in");
 	Fw=sf_output("out");
 
-    	if (!sf_getbool("verb",&verb)) verb=false; /* verbosit2 */
+    	if (!sf_getbool("verb",&verb)) verb=false;
+	/* verbosity */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+	/* default, common shot-gather; if n, record at every point */
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
     	if (!sf_histint(Fv,"n3",&ny)) sf_error("No n3= in input");
@@ -308,16 +359,20 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
    	if (!sf_getint("nb",&nb))  nb=20;
 	/* thickness of random boundary */
-   	if (!sf_getint("nt",&nt))  sf_error("nt required");
-	/* total number of time steps */
     	if (!sf_getint("kt",&kt)) sf_error("kt required");
 	/* record wavefield at time kt */
    	if (!sf_getfloat("dt",&dt))  sf_error("dt required");
 	/* time sampling interval */
    	if (!sf_getfloat("fm",&fm))  fm=20;
 	/* dominant frequency of Ricker wavelet */
-   	if (!sf_getint("ns",&ns))  ns=1;
-	/* number of sources */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");
+	/* total shots for each inline */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");
+	/* total receivers in each shot */
+    	if (!sf_getint("nl",&nl))   sf_error("no nl");
+	/* number of xlines for shots */
 	if (!sf_getint("szbeg",&szbeg)) sf_error("No szbeg");
 	/* source beginning of z-axis */
 	if (!sf_getint("sxbeg",&sxbeg)) sf_error("No sxbeg");
@@ -330,6 +385,18 @@ int main(int argc, char* argv[])
 	/* source jump interval in x-axis */
 	if (!sf_getint("jsy",&jsy)) sf_error("No jsy");
 	/* source jump interval in y-axis */
+	if (!sf_getint("gzbeg",&gzbeg)) sf_error("No gzbeg");
+	/* geophone/receiver beginning of z-axis */
+	if (!sf_getint("gxbeg",&gxbeg)) sf_error("No gxbeg");
+	/* geophone/receiver beginning of x-axis */
+	if (!sf_getint("gybeg",&gybeg)) sf_error("No gybeg");
+	/* geophone/receiver beginning of y-axis */
+	if (!sf_getint("jgz",&jgz)) sf_error("No jgz");
+	/* geophone/receiver jump interval in z-axis */
+	if (!sf_getint("jgx",&jgx)) sf_error("No jgx");
+	/* geophone/receiver jump interval in x-axis */
+	if (!sf_getint("jgy",&jgy)) sf_error("No jgy");
+	/* geophone/receiver jump interval in y-axis */
 
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
@@ -338,18 +405,21 @@ int main(int argc, char* argv[])
 	_dz2=1.0/(dz*dz);
 	_dx2=1.0/(dx*dx);
 	_dy2=1.0/(dy*dy);
+	nbr=nb+radius;
 	nzb=nz+2*nb;
 	nxb=nx+2*nb;
 	nyb=ny+2*nb;
-	nnz=nzb+2*radius;
-	nnx=nxb+2*radius;
-	nny=nyb+2*radius;
+	nnz=nz+2*nbr;
+	nnx=nx+2*nbr;
+	nny=ny+2*nbr;
     	v0=(float*)malloc(nz*nx*ny*sizeof(float));
     	vv=(float*)malloc(nnz*nnx*nny*sizeof(float));
-	sf_floatread(v0, nz*nx*ny, Fv);// read velocit2 model v0
-	velocity_transform(v0, vv, dt, dz, dx, dy, nz, nx, ny, nb);// init
+	sf_floatread(v0, nz*nx*ny, Fv);
+	extend3d(v0, vv, nz, nx, ny, nb);
+	random_boundary(v0, vv, nz, nx, ny, nb);
+	velocity_transform(v0, vv, dt, dz, dx, dy, nz, nx, ny, nb);
 
-    	cudaSetDevice(0);// initialize device, default device=0;
+    	cudaSetDevice(0);
 	sf_check_gpu_error("Failed to initialize device!");
 
 	dim3 dimg, dimb;
@@ -361,14 +431,32 @@ int main(int argc, char* argv[])
 	/* allocate memory on device */
 	cudaMalloc(&d_wlt, nt*sizeof(float));
 	cudaMalloc(&d_vv, nnz*nnx*nny*sizeof(float));
-	cudaMalloc(&d_p0, nnz*nnx*nny*sizeof(float));
-	cudaMalloc(&d_p1, nnz*nnx*nny*sizeof(float));
+	cudaMalloc(&d_sp0, nnz*nnx*nny*sizeof(float));
+	cudaMalloc(&d_sp1, nnz*nnx*nny*sizeof(float));
+	cudaMalloc(&d_gp0, nnz*nnx*nny*sizeof(float));
+	cudaMalloc(&d_gp1, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_szxy, ns*sizeof(int));
+	cudaMalloc(&d_gzxy, ng*sizeof(int));
 	sf_check_gpu_error("Failed to allocate memory for variables!");
 
 	cuda_ricker_wavelet<<<(nt+511)/512, 512>>>(d_wlt, fm, dt, nt);
 	cudaMemcpy(d_vv, vv, nnz*nnx*nny*sizeof(float), cudaMemcpyHostToDevice);
+	if (!(sxbeg>=0 && szbeg>=0 && sybeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz)&& sybeg+(ns-1)*jsy<ny)	
+	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
 	cuda_set_sg<<<1, ns>>>(d_szxy, szbeg, sxbeg, sybeg, jsz, jsx, jsy, ns, nz, nx, nb);
+	distz=szbeg-gzbeg;
+	distx=sxbeg-gxbeg;
+	disty=sybeg-gybeg;
+	if (csdgather)	{
+		if (!(gzbeg>=0 && gxbeg>=0 && gybeg>=0 && gzbeg+(ng-1)*jgz<nz && gxbeg+(ng-1)*jgx<nx && gybeg+(ng-1)*jgy<ny &&
+		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
+		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
+	}
+	else{
+		if (!(gzbeg>=0 && gxbeg>=0 && gybeg>=0 && gzbeg+(ng-1)*jgz<nz && gxbeg+(ng-1)*jgx<nx && gybeg+(ng-1)*jgy<ny))	
+		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
+	}
+	cuda_set_sg<<<1, ng>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ng, nz, nx, nb);
 
 	float mstimer;
 	cudaEvent_t start, stop;
@@ -377,29 +465,36 @@ int main(int argc, char* argv[])
 	for(is=0; is<ns; is++){
 	  cudaEventRecord(start);
 
-	  cudaMemset(d_p0, 0, nnz*nnx*nny*sizeof(float));
-	  cudaMemset(d_p1, 0, nnz*nnx*nny*sizeof(float));
+	  if (csdgather){
+		gxbeg=sxbeg+is*jsx-distx;
+		gybeg=sybeg+is*jsy-disty;
+		cuda_set_sg<<<1, ns>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ng, nz, nx, nb);
+	  }
+	  cudaMemset(d_sp0, 0, nnz*nnx*nny*sizeof(float));
+	  cudaMemset(d_sp1, 0, nnz*nnx*nny*sizeof(float));
 	  for(it=0; it<nt; it++){
-	    cuda_add_source<<<1,1>>>(true, d_p1, &d_wlt[it], &d_szxy[is], 1);
-	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
-	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;
+	    cuda_add_source<<<1,1>>>(true, d_sp1, &d_wlt[it], &d_szxy[is], 1);
+	    cuda_step_fd3d<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
+	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-	    sf_warning("it=%d",it);
+	    sf_warning("it=%d;",it);
 	  }
 
-	  ptr=d_p0; d_p0=d_p1; d_p1=ptr;
+	  ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+	  cudaMemset(d_gp0, 0, nnz*nnx*nny*sizeof(float));
+	  cudaMemset(d_gp1, 0, nnz*nnx*nny*sizeof(float));
 	  for(it=nt-1; it>-1; it--)
 	  {
 	    if(it==kt){
-	      cudaMemcpy(vv, d_p0, nnz*nnx*nny*sizeof(float), cudaMemcpyDeviceToHost);
+	      cudaMemcpy(vv, d_sp0, nnz*nnx*nny*sizeof(float), cudaMemcpyDeviceToHost);
 	      window3d(v0, vv, nz, nx, ny, nb);
 	      sf_floatwrite(v0, nz*nx*ny, Fw);	  
 	    }
 
-	    cuda_step_fd3d<<<dimg,dimb>>>(d_p0, d_p1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
-	    cuda_add_source<<<1,1>>>(false, d_p1, &d_wlt[it], &d_szxy[is], 1);
-	    ptr=d_p0; d_p0=d_p1; d_p1=ptr;
-	    sf_warning("it=%d",it);
+	    cuda_step_fd3d<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
+	    cuda_add_source<<<1,1>>>(false, d_sp1, &d_wlt[it], &d_szxy[is], 1);
+	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
+	    sf_warning("it=%d;",it);
 	  }
 	  cudaEventRecord(stop);
           cudaEventSynchronize(stop);
@@ -412,9 +507,12 @@ int main(int argc, char* argv[])
 	/* free memory on device */
 	cudaFree(d_wlt);
 	cudaFree(d_vv);
-	cudaFree(d_p0);
-	cudaFree(d_p1);
+	cudaFree(d_sp0);
+	cudaFree(d_sp1);
+	cudaFree(d_gp0);
+	cudaFree(d_gp1);
 	cudaFree(d_szxy);
+	cudaFree(d_gzxy);
 	free(v0);
 	free(vv);
 
