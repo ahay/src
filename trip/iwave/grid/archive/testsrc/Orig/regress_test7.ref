@@ -1,0 +1,4 @@
+GRIDPP Unit Test 7
+create GridDCF, GridDC, perm new file=test7.rsf, assign
+7.0 to all data samples, compute max and min
+test7 result: max=7 min=7

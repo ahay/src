@@ -1,0 +1,206 @@
+#############################################################################
+###################### COMMON DEFINITIONS - DO NOT ALTER ####################
+#############################################################################
+from rsf.proj import *
+from batch import getFlowSignature
+from batch import getThreads
+import os
+IWAVE           = os.getenv('NEWIWAVE')
+thispath        = os.getcwd()
+# both IWAVE and WORKPATH should be checked
+#############################################################################
+###################### END COMMON DEFINITIONS ###############################
+#############################################################################
+penv = {'stampede' :  { 'batch' : 'slurm',
+                        'queue' : 'normal',
+                        'acct'  : 'FDTD3D-Cont',
+                        'mail'  : 'yh15@caam.rice.edu',
+                        'bcmd'  : '/usr/bin/sbatch',
+                        'suffix': 'bat', },
+         'davinci' :  { 'batch' : 'pbs',
+                        'queue' : 'trip',
+                        'acct'  : 'yh15',
+                        'mail'  : 'huangyinmsn@hotmail.com',
+                        'bcmd'  : '/usr/bin/qsub',
+                        'suffix': 'pbs', },
+       }
+
+######################## LOCAL DEFINITIONS ##################################
+
+######## abbreviations for commands used in flows - put these first, if
+######## you use abbreviations
+# example:
+#          CWPROOT         = os.getenv('CWPROOT')
+#          ...
+#          sunull          = os.path.join(CWPROOT,'bin/sunull')
+CWPROOT         = os.getenv('CWPROOT')
+sunull          = os.path.join(CWPROOT,'bin/sunull')
+sushw           = os.path.join(CWPROOT,'bin/sushw')
+suchw           = os.path.join(CWPROOT,'bin/suchw')
+sugain          = os.path.join(CWPROOT,'bin/sugain')
+suwind          = os.path.join(CWPROOT,'bin/suwind')
+suwaveform      = os.path.join(CWPROOT,'bin/suwaveform')
+supsimage       = os.path.join(CWPROOT,'bin/supsimage')
+sumute          = os.path.join(CWPROOT,'bin/sumute')
+sutxtaper       = os.path.join(CWPROOT,'bin/sutxtaper')
+towed_array     = os.path.join(IWAVE,'trace/main/towed_array.x')
+acd             = os.path.join(IWAVE,'acd/main/acd.x')
+acdcgne         = os.path.join(IWAVE,'acd/main/acdcgne.x')
+acdlbfgs        = os.path.join(IWAVE,'acd/main/acdlbfgs.x')
+acdadjtest      = os.path.join(IWAVE,'acd/main/acdadjtest.x')
+dot             = os.path.join(IWAVE,'acd/main/dot.x')
+
+asfadd   = os.path.join(os.getenv('RSFROOT'),'bin/sfadd')
+asfcp    = os.path.join(os.getenv('RSFROOT'),'bin/sfcp')
+asfspike = os.path.join(os.getenv('RSFROOT'),'bin/sfspike')
+asfscale = os.path.join(os.getenv('RSFROOT'),'bin/sfscale')
+asfput  = os.path.join(os.getenv('RSFROOT'),'bin/sfput')
+
+
+fetches = {
+    'line_fix.su' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+    'velocity.HH' : ['marmousi', 'http://www.trip.caam.rice.edu'],
+}
+for file in fetches.keys():
+    Fetch(file,fetches[file][0],server=fetches[file][1])   
+
+Flow('vel','velocity.HH','dd form=native | window j1=6 j2=6')
+Flow('csqbase','vel','add mode=p < vel.rsf vel.rsf |put data_type=csq')
+Flow('rext','csqbase','window f2=383 n2=1 | spray axis=2 d= n=60')
+Flow('csq',['csqbase', 'rext'],'cat axis=2 d=24 csqbase.rsf rext.rsf',stdin=0)  
+Flow('csqhom','','makevel n1=126 d1=24 n2=444 d2=24 o1=0 o2=0 v000=2.25 | put data_type=csq data_format=native_float label1=Depth unit1=m label2=Position uni2=m unit=m^2/ms^2 esize=4',stdin=0) 
+Flow('csqsm','csq','smooth rect1=10 rect2=10 repeat=2')
+Flow('csqsm2','csq','smooth rect1=5 rect2=5 repeat=2')
+Flow('dcsq', ['csq', 'csqsm2'],'add mode=a scale=1,-1 < csq.rsf csqsm2.rsf |window min1=180| sfpad beg1=8') 
+Flow('csqext.rsf','csqsm.rsf', 'sfcat csqsm.rsf csqsm.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
+Flow('dcsqext.rsf','dcsq.rsf', 'sfcat dcsq.rsf dcsq.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
+Flow('csqe.rsf','csq.rsf', 'sfcat csq.rsf csq.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
+Flow('dcsqext.rsf','dcsq.rsf', 'sfcat dcsq.rsf dcsq.rsf d=1.0 o=0.0 | sfput id1=0 id2=1 id3=3 dim=2 gdim=3',stdin=0)
+
+Flow('hdr100m.su','line_fix.su', suwind + ' key=sx j=100')
+Flow('hdr6km.su', 'hdr100m.su', suwind + ' key=sx min=6000 max=6000 tmax=2')
+Flow('hdr2shot.su', 'hdr100m.su', suwind + ' key=sx min=6000 max=7000 j=1000 tmax=2')
+
+# create base wavelet (just time series, without source position
+# information) via suwaveform
+Flow('wavelet_base.su','',
+     suwaveform + ' type=ricker1 fpeak=10 ns=51 | ' + 
+     sushw + ' key=delrt  a=-100 > ${TARGETS[0]} ',
+     stdin=0)
+
+# add source coordinates from hdrfile to source AND receiver 
+# coordinates from wavelet to create "dressed" wavelet for array
+# source option in iwave. Note that iwave reads a source GATHER by
+# detecting new source coordinates (sx, sy, selev) but assigns source
+# trace GRID POSITIONS in the array by receiver coordinates (gx, gy, 
+# gelev). The towed array app sets these coordinates up so that each 
+# shot may have an array of sources, with the source traces in the 
+# same position relative to the data source coordinates - hence 
+# "towed_array".
+
+# use naming convention: time series stored in wavelet_base, 
+# headers for experiment foo stored in hdrfoo.su, wavelet in
+# waveletfoo.su
+
+for foo in ['100m', '6km', '2shot']:
+    Flow('wavelet_' + foo + '.su', ['wavelet_base.su', 'hdr' + foo + '.su'],
+         towed_array + 
+         '''
+         data=${SOURCES[1]} 
+         src=${SOURCES[0]} 
+         towed=${TARGETS[0]}
+         ''',
+         stdin=0, stdout=0)
+
+
+# pre-cooked exes
+exe_serial  = {}
+exe_getafix = {'platf':'mpi', 'ppn':'2'}
+exe_getafix1 = {'platf':'mpi', 'ppn':'1'}
+exe_davinci = {'platf':'davinci','nodes':'1','ppn':'16','wall':'03:00:00'}
+exe_davinci1 = {'platf':'davinci','nodes':'1','ppn':'2','wall':'01:30:00'}
+exe_davinci1ppn = {'platf':'davinci','nodes':'1','ppn':'1','wall':'01:30:00'}
+
+# choose
+#exe = exe_davinci
+#exe1 = exe_davinci1
+#exe1ppn = exe_davinci1ppn
+exe1 = exe_getafix
+exe1ppn = exe_getafix1
+
+jobs = [
+        { 'job': 'dot2',
+	  'pre': '/bin/rm -f dot2.txt',
+	  'src': ['hdr2shot.su', 'wavelet_2shot.su', 'csqext.rsf', 'dcsq.rsf'],
+	  'tgt': 'dot2.txt',
+	  'cmd': dot + ' order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
+          'csq=../csqext.rsf source=../wavelet_2shot.su data=../born2shot.su ' +
+          'outfile=../dot2.txt  partask=' + getThreads(exe1),
+          'exe': exe1,
+        },
+        { 'job': 'dot1',
+	  'pre': '/bin/rm -f dot1.txt',
+	  'src': ['hdr2shot.su', 'wavelet_2shot.su', 'csqext.rsf', 'dcsq.rsf'],
+	  'tgt': 'dot1.txt',
+	  'cmd': dot + ' order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 ' +
+          'csq=../csqext.rsf source=../wavelet_2shot.su data=../born2shot.su ' +
+          'outfile=../dot1.txt  partask=' + getThreads(exe1),
+          'exe': exe1ppn,
+        },
+        { 'job': 'born2shot',
+          'pre': '/bin/cp hdr2shot.su born2shot.su',
+          'src': ['hdr2shot.su', 'wavelet_2shot.su', 'csqsm.rsf', 'dcsq.rsf'],
+          'tgt': ['born2shot.su'],
+          'cmd': acd + ' ' + '''deriv=1 adjoint=0 order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 \
+csq=../csqsm.rsf csq_d1=../dcsq.rsf source=../wavelet_2shot.su \
+data=../born2shot.su partask=''' + getThreads(exe1),
+          'exe': exe1
+        },
+        { 'job': 'acdadjtest_2shot',
+          'pre': '/bin/cp hdr2shot.su born2shot_out.su; ' + asfadd + ' <csqext.rsf > rtmcsq_out.rsf scale=0.0',
+          'src': ['hdr2shot.su', 'wavelet_2shot.su', 'csqext.rsf', 'dcsq.rsf'],
+          'tgt': ['born2shot_out.su', 'rtmcsq_out.rsf'],
+          'cmd': acdadjtest + ' ' + '''order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 \
+csq=../csqext.rsf csq_d1_in=../dcsqext.rsf source=../wavelet_2shot.su \
+data=../born2shot.su csq_d1_out=../rtmcsq_out.rsf  partask=''' + getThreads(exe1),
+          'exe': exe1
+        },
+        { 'job': 'acdadjtest_2shot1ppn',
+          'pre': '/bin/cp hdr2shot.su born2shot_out1ppn.su; ' + asfadd + ' <csqext.rsf > rtmcsq_out1ppn.rsf scale=0.0',
+          'src': ['hdr2shot.su', 'wavelet_2shot.su', 'csqext.rsf', 'dcsq.rsf'],
+          'tgt': ['born2shot_out1ppn.su', 'rtmcsq_out1ppn.rsf'],
+          'cmd': acdadjtest + ' ' + '''order=2 cfl=0.5 cmin=1.0 cmax=6.0 sampord=1 nsnaps=20 \
+csq=../csqext.rsf csq_d1_in=../dcsqext.rsf source=../wavelet_2shot.su \
+data=../born2shot.su csq_d1_out=../rtmcsq_out1ppn.rsf  partask=''' + getThreads(exe1ppn),
+          'exe': exe1ppn
+        },
+]
+
+
+# loop for jobs defined in jobs dictionary
+for i in range(len(jobs)):
+    sig = getFlowSignature(jobs[i]['job']+'.work',jobs[i], penv)
+    if sig == None:
+        print 'Error return from iwave.getFlowSignature - cannot set up job = ' + i
+    else:
+#        print 'sig.cmd = ' + sig['cmd'] + '\n'
+#        print 'sig.src = ' + ' '.join(sig['src']) + '\n'
+#        print 'sig.tgt = ' + ' '.join(sig['tgt']) + '\n'
+        t=Flow(sig['dir'],None,sig['wcd'],stdin=0,stdout=0)
+        Flow(sig['tgt'], sig['src'] + [sig['dir']], sig['cmd'], stdin=0, stdout=0)
+        Clean(t,sig['dir'])
+Flow('born2shot', 'born2shot.su', 'suread endian=0 read=data < $SOURCE | put label1=Time label2=Pressure unit1=s unit2=BPa')
+Flow('born2shot_out', 'born2shot_out.su', 'suread endian=0 read=data < $SOURCE | put label1=Time label2=Pressure unit1=s unit2=BPa')
+Flow('born2shot_out1ppn', 'born2shot_out1ppn.su', 'suread endian=0 read=data < $SOURCE | put label1=Time label2=Pressure unit1=s unit2=BPa')
+Flow('diff_out', ['born2shot', 'born2shot_out'], 'add mode=a scale=1,-1 < born2shot.rsf born2shot_out.rsf')
+Flow('diff_out1ppn', ['born2shot', 'born2shot_out1ppn'], 'add mode=a scale=1,-1 < born2shot.rsf born2shot_out1ppn.rsf')
+Flow('drtmcsq', ['rtmcsq_out', 'rtmcsq_out1ppn'], 'add mode=a scale=1,-1 < rtmcsq_out.rsf rtmcsq_out1ppn.rsf')
+
+
+Flow('dotcsq', ['dcsqext', 'rtmcsq_out'], 'add mode=p ${SOURCES[0]} ${SOURCES[1]} ', stdin=0)
+Flow('dotdata', ['born2shot', 'born2shot_out'], 'add mode=p ${SOURCES[0]} ${SOURCES[1]} ', stdin=0)
+Flow('dotcsq1ppn', ['dcsqext', 'rtmcsq_out1ppn'], 'add mode=p ${SOURCES[0]} ${SOURCES[1]} ', stdin=0)
+Flow('dotdata1ppn', ['born2shot', 'born2shot_out1ppn'], 'add mode=p ${SOURCES[0]} ${SOURCES[1]} ', stdin=0)
+
+
+End()

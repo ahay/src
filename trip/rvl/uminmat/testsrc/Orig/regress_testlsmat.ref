@@ -1,0 +1,114 @@
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 3.1
+ * Purpose: test LAPACK-based LS solver
+ *   scalar type    = float
+ *   noise level    = 0
+ *   trust radius   = 1e+06
+ *   results reported in lsflt.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Build sol, rhs
+
+4. Build, run TRLSMat algorithm 
+
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 3.2
+ * Purpose: test LAPACK-based LS solver
+ *   scalar type    = double
+ *   noise level    = 0.1
+ *   trust radius   = 1e+06
+ *   results reported in lsdbl.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Build sol, rhs
+
+4. Build, run TRLSMat algorithm 
+
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 3.3
+ * Purpose: test LAPACK-based LS solver
+ *   scalar type    = complex<float>
+ *   noise level    = 0.1
+ *   trust radius   = 1e+06
+ *   results reported in lsfltcplx.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Build sol, rhs
+
+4. Build, run TRLSMat algorithm 
+
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 3.4
+ * Purpose: test LAPACK-based LS solver
+ *   scalar type    = complex<double>
+ *   noise level    = 0.5
+ *   trust radius   = 1e+06
+ *   results reported in lsdblcplx.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Build sol, rhs
+
+4. Build, run TRLSMat algorithm 
+
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 3.5
+ * Purpose: test LAPACK-based LS solver
+ *   scalar type    = float
+ *   noise level    = 0
+ *   trust radius   = 1
+ *   results reported in lsflt1.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Build sol, rhs
+
+4. Build, run TRLSMat algorithm 
+
+
+
+/****************************************************
+ *            BEGIN UMin UNIT TEST 3.6
+ * Purpose: test LAPACK-based LS solver
+ *   scalar type    = double
+ *   noise level    = 0.1
+ *   trust radius   = 1
+ *   results reported in lsdbl1.rpt
+ ****************************************************/
+
+1. Construct domain, range spaces
+
+2. Build GenMat
+
+3. Build sol, rhs
+
+4. Build, run TRLSMat algorithm 
+
+
