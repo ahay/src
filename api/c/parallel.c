@@ -31,6 +31,7 @@
 #include "system.h"
 
 #define SF_CMDLEN 4096
+#define RSF_MAX_DIM 9
 /*^*/
 
 static char command[SF_CMDLEN], splitcommand[SF_CMDLEN], **inames=NULL, **onames=NULL;
@@ -51,6 +52,59 @@ static void sizes(sf_file file, int axis, int ndim,
     }
 }
 
+int sf_mysplit(int argc, char ** argv,
+	       int * nfiles,
+	       int * nkeys,
+	       int * ikey,
+	       int * nsplit,
+	       int * lsplit,
+	       char ** rsf_filenames) {
+
+  int i;
+  char * eq;
+  char * key;
+  char * val;
+
+  int dim;
+  int gdim;
+  int n[RSF_MAX_DIM];
+  float d[RSF_MAX_DIM];
+  float o[RSF_MAX_DIM];
+  
+  rsf_filenames = (char**) sf_alloc(argc,sizeof(char*));
+  ikey = (int *) sf_alloc(argc,sizeof(int));
+  for (i=0;i<argc;i++) ikey[i]=0;
+
+  *nkeys = 0;
+  for (i=1; i<argc; i++) {
+    /* note - this works only for Madagascar/SU convention, no space betw
+       = separator and key, value strings - replace with IWAVE parser code!!
+    */
+    /* detect key=value pairs, generate list of keys */
+    eq  = strchr(argv[i],'=');
+    if (eq) {
+      /* extract filename, if any */
+      val=sf_charalloc(strlen(argv[i]));
+      strcpy(val,argv[i]+eq+1);
+      /* if rsf file, retrieve dimns */
+      if (len > 0  && isrsf(val,
+			    &dim, &gdim,
+			    n, o, d)) {
+	/* record */
+	strcpy(rsf_filenames[*nkeys],val);
+	ikey[*nkeys]=i;
+	/* compute size of split */
+	nsplit[*nkeys]=gdim-dim;
+	lsplit[*nkeys]=1;
+	for (j=gdim-1;j>dim-1;j--) lsplit[*nkeys]*=n[j];
+	*nkeys++;
+      }
+    }
+  }
+  return 0;
+}
+	       
+  
 char** sf_split(sf_file inp          /* input file */, 
 		int axis             /* split axis */,
 		int nodes            /* number of CPUs */,

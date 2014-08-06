@@ -19,7 +19,7 @@ multidivnL1 neighbors omptools parallel point polydiv pqueue pweno
 randn recfilt repeat runge quantile quadratic sharpen sharpinv simtab
 slice spline stack stretch system tent2 timer tinysolver triangle
 triangle1 triangle2 trianglen tridiagonal vector wavelet weight
-weight2
+weight2 isrsf
 '''
 
 try: # distribution version

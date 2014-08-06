@@ -1,4 +1,16 @@
-#include "cstd.h"
+#include <string.h>
+#include <stdio.h>
+
+#include "parallel.h"
+
+#include "file.h"
+/*^*/
+
+#include "alloc.h"
+#include "error.h"
+#include "files.h"
+#include "system.h"
+
 
 void intfree(int ** ia, int n) {
   int i;
@@ -98,3 +110,18 @@ int isrsf(const char * val,
   return 1;
 }
 
+int main(int argc, char ** argv) {
+  sf_file * fp = NULL;
+  int dim;
+  int gdim;
+  int * n;
+  float * o;
+  float * d; 
+  int verbose =1;
+
+  printf("return value is %d\n",
+	 isrsf(argv[1],
+	       fp,&dim,&gdim,&n,&o,&d,verbose));
+}
+
+	 

@@ -9,13 +9,14 @@ import os
 ###################### END COMMON DEFINITIONS ###############################
 #############################################################################
 
+#'local' : 'export MODULEPATH=/opt/apps/xsede/modulefiles:/opt/apps/modulefiles:/opt/modulefiles; module() { eval $$(/opt/apps/lmod/lmod/libexec/lmod bash "$@");}; module restore;',
 ######################## LOCAL DEFINITIONS ##################################
 penv = {'stampede' :  { 'batch' : 'slurm',
                         'queue' : 'normal',
                         'acct'  : 'FDTD3D-Cont',
                         'mail'  : 'symes@caam.rice.edu',
                         'bcmd'  : '/usr/bin/sbatch',
-			'local' : 'export MODULEPATH=/opt/apps/xsede/modulefiles:/opt/apps/modulefiles:/opt/modulefiles; module() { eval $$(/opt/apps/lmod/lmod/libexec/lmod bash "$@");}; module restore;',
+			'local' : '', 
                         'suffix': 'bat', },
          'davinci' :  { 'batch' : 'pbs',
                         'queue' : 'trip',
@@ -182,9 +183,8 @@ jobs = [
                  'sampord=1 nsnaps=20 csq=../lsmig_80pct_altcheb.rsf ' + 
                  'rcsq=../csqbig80pct_ext.rsf icsq=../q_lsmig_80pct_altcheb.rsf ' +
                  'source=../wavelet_line100m.su ' +
-		 'rhs=../ata_lsmig_80pct_altcheb.rsf data=../bornbig.su' + 
+		 'rhs=../ata_lsmig_80pct_altcheb.rsf data=../bornbig.su ' + 
                  'outfile=cheb80pct.out ' +
-		 'specbd=../lsmig_80pct_altcheb.work/specbd.txt' +
                  'InversionLevel = 0.04 ResRedn = 0.1 ' +
                  'FudgeFactor = 1.1 ' +
                  'MaxIter = 50 mute_slope=0.7 mute_zotime=0 mute_width=200 ' +
@@ -354,7 +354,7 @@ for i in range(len(jobs)):
     if sig == None:
         print 'Error return from iwave.getFlowSignature - cannot set up job = ' + i
     else:
-#        print 'sig.cmd = ' + sig['cmd'] + '\n'
+        print 'sig.cmd = ' + sig['cmd'] + '\n'
 #        print 'sig.src = ' + ' '.join(sig['src']) + '\n'
 #        print 'sig.tgt = ' + ' '.join(sig['tgt']) + '\n'
         Flow(sig['tgt'], sig['src'], sig['cmd'], stdin=0, stdout=0, workdir=sig['dir'])
