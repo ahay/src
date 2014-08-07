@@ -70,17 +70,42 @@ __global__ void cuda_ricker_wavelet(float *wlt, float fm, float dt, int nt)
 }
 
 
-
-__global__ void cuda_set_sg(int *szxy, int szbeg, int sxbeg, int sybeg, int jsz, int jsx, int jsy, int ns, int nz, int nx, int nb)
-/*< set the positions of sources and geophones in whole domain >*/
+__global__ void cuda_set_sg(int *szxy, int szbeg, int sxbeg, int sybeg, int jsz, int jsx, int jsy, int nsx, int nsy, int nz, int nx, int nb)
+/*< set positions of sources/receivers in whole domain:<<<dim3(1,1),dim3(nsx, nsy)>>> >*/
 {
-	int id=threadIdx.x+blockDim.x*blockIdx.x;
-	int nbr=nb+radius;
-	int nn1=nz+2*nbr;
-	int nn2=nx+2*nbr;
-    	if (id<ns) szxy[id]=(szbeg+id*jsz+nbr)+nn1*(sxbeg+id*jsx+nbr)+nn1*nn2*(sybeg+id*jsy+nbr);
+	int i1=threadIdx.x+blockDim.x*blockIdx.x;
+	int i2=threadIdx.y+blockDim.y*blockIdx.y;
+
+	if(i1<nsx && i2<nsy)
+	{
+		int id=i1+nsx*i2;
+		int nbr=nb+radius;
+		int nn1=nz+2*nbr;
+		int nn2=nx+2*nbr;
+
+		szxy[id]=(szbeg+i1*jsz+nbr)+nn1*(sxbeg+i1*jsx+nbr)+nn1*nn2*(sybeg+i2*jsy+nbr);
+	}
 }
 
+
+__global__ void cuda_mute(float *seis_kt, int gzbeg, int szbeg, int gxbeg, int gybeg, int sxc, int syc, int jgx, int jgy, int kt, int ntd, float vmute, float dt, float dz, float dx, float dy, int ng)
+/*< mute the direct arrival according to the given velocity vmute >*/ 
+{
+    	int id=threadIdx.x+blockDim.x*blockIdx.x;
+	float a=dz*(gzbeg-szbeg);
+	float b=dx*abs(gxbeg+id*jgx-sxc);
+	float c=dy*abs(gybeg+id*jgy-syc);
+	float t0=sqrtf(a*a+b*b+c*c)/vmute;
+	int ktt=int(t0/dt)+ntd;// ntd is manually added to obtain the best muting effect.
+    	if (id<ng && kt<ktt) seis_kt[id]=0.0;
+}
+
+__global__ void cuda_record(float*p, float *seis_kt, int *gzxy, int ng)
+/*< record the seismogram at time kt:<<<(ng+511)/512, 512>>> >*/
+{
+	int id=threadIdx.x+blockDim.x*blockIdx.x;
+    	if (id<ng) seis_kt[id]=p[gzxy[id]];
+}
 
 __global__ void cuda_add_source(bool add, float *p, float *source, int *szxy, int ns)
 /*< add/subtract sources: length of source[]=ns, index stored in szxy[] >*/
@@ -200,14 +225,33 @@ __global__ void cuda_step_fd3d(float *p0, float *p1, float *vv, float _dz2, floa
 	c1*=_dz2;	
 	c2*=_dx2;
 	c3*=_dy2;
+
         if (validw) p0[outIndex]=2.0*p1[outIndex]-p0[outIndex]+vv[outIndex]*(c1+c2+c3);
+    }
+}
+
+
+__global__ void cuda_cross_correlate(float *Isg, float *sp, float *gp, int n1, int n2, int n3)
+/*< apply cross-correlation imaging condition >*/
+{
+    int i1 = blockIdx.x * blockDim.x + threadIdx.x;
+    int i2 = blockIdx.y * blockDim.y + threadIdx.y;
+    int nn1=n1+2*radius;
+    int nn2=n2+2*radius;
+    int id=(i1+radius)+nn1*(i2+radius);
+    int i3;
+
+    for (i3 = 0 ; i3 < n3 ; i3++)
+    {
+	Isg[id]+=(i1<n1 && i2<n2)?sp[id]*gp[id]:0.0;
+	id+=nn1*nn2;
     }
 }
 
 
 
 void velocity_transform(float *v0, float*vv, float dt, float dz, float dx, float dy, int nz, int nx, int ny, int nb)
- /*< velocity transform: vv<--vv^2 >*/
+/*< velocity transform: vv<--vv^2 >*/
 {
 	int i1, i2, i3, nbr, nn1, nn2, nn3;
 	float a;
@@ -316,6 +360,8 @@ void extend3d(float *v0, float *vv, int nz, int nx, int ny, int nb)
 		vv[i1+nn1*i2+nn1*nn2*(nn3-1-i3)]=vv[i1+nn1*i2+nn1*nn2*(nn3-nbr-1)];
 	}
 }
+
+
 void window3d(float *a, float *b, int nz, int nx, int ny, int nb)
 /*< window a 3d subvolume >*/
 {
@@ -336,11 +382,11 @@ void window3d(float *a, float *b, int nz, int nx, int ny, int nb)
 int main(int argc, char* argv[])
 {
 	bool verb, csdgather;
-	int nz, nx, ny, nb, nbr, nzb, nxb, nyb, nnz, nnx, nny, ns, ng, nl, nt;
-	int kt, it, is, distz, distx, disty, szbeg, sxbeg, sybeg, jsz, jsx, jsy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy;
+	int nz, nx, ny, nb, nbr, nzb, nxb, nyb, nnz, nnx, nny, ns, ng, nsx, nsy, ngx, ngy, nt, tdmute;
+	int it, is, isx, isy, distx, disty, szbeg, sxbeg, sybeg, jsz, jsx, jsy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy;
 	int *d_szxy, *d_gzxy;
-	float dz, dx, dy, fm, dt, _dz2, _dx2, _dy2;
-	float *v0, *vv, *d_wlt, *d_vv, *d_sp0, *d_sp1, *d_gp0, *d_gp1, *d_Isg,  *ptr;
+	float dz, dx, dy, fm, dt, _dz2, _dx2, _dy2, vmute, mstimer;
+	float *v0, *vv, *d_wlt, *d_vv, *d_sp0, *d_sp1, *d_gp0, *d_gp1, *d_dobs, *d_Isg, *ptr;
 	sf_file Fv, Fw;
 
     	sf_init(argc,argv);
@@ -350,29 +396,38 @@ int main(int argc, char* argv[])
     	if (!sf_getbool("verb",&verb)) verb=false;
 	/* verbosity */
 	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
-	/* default, common shot-gather; if n, record at every point */
+	/* default, common shot-gather, rolling shooting; if n, record at every point */
     	if (!sf_histint(Fv,"n1",&nz)) sf_error("No n1= in input");
+	/* nz */
     	if (!sf_histint(Fv,"n2",&nx)) sf_error("No n2= in input");
+	/* nx */
     	if (!sf_histint(Fv,"n3",&ny)) sf_error("No n3= in input");
+	/* ny */
     	if (!sf_histfloat(Fv,"d1",&dz)) sf_error("No d1= in input");
+	/* dz */
     	if (!sf_histfloat(Fv,"d2",&dx)) sf_error("No d2= in input");
+	/* dx */
     	if (!sf_histfloat(Fv,"d3",&dy)) sf_error("No d3= in input");
+	/* dy */
+
    	if (!sf_getint("nb",&nb))  nb=20;
 	/* thickness of random boundary */
-    	if (!sf_getint("kt",&kt)) sf_error("kt required");
-	/* record wavefield at time kt */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");
+	/* total modeling time steps */
    	if (!sf_getfloat("dt",&dt))  sf_error("dt required");
 	/* time sampling interval */
    	if (!sf_getfloat("fm",&fm))  fm=20;
 	/* dominant frequency of Ricker wavelet */
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");
-	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   sf_error("no ns");
-	/* total shots for each inline */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");
-	/* total receivers in each shot */
-    	if (!sf_getint("nl",&nl))   sf_error("no nl");
-	/* number of xlines for shots */
+
+    	if (!sf_getint("nsx",&nsx))   sf_error("no nsx");
+	/* number of shots per x-axis */
+    	if (!sf_getint("nsy",&nsy))   sf_error("no nsy");
+	/* number of shots per y-axis */
+    	if (!sf_getint("ngx",&ngx))   sf_error("no ngx");
+	/* number of receivers per x-axis */
+    	if (!sf_getint("ngy",&ngy))   sf_error("no ngy");
+	/* number of receivers per y-axis */
+
 	if (!sf_getint("szbeg",&szbeg)) sf_error("No szbeg");
 	/* source beginning of z-axis */
 	if (!sf_getint("sxbeg",&sxbeg)) sf_error("No sxbeg");
@@ -398,6 +453,12 @@ int main(int argc, char* argv[])
 	if (!sf_getint("jgy",&jgy)) sf_error("No jgy");
 	/* geophone/receiver jump interval in y-axis */
 
+	if (!sf_getfloat("vmute",&vmute))   vmute=1500;
+	/* muting velocity to remove the low-freq artifacts, unit=m/s*/
+	if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);
+	/* number of deleyed time samples to mute */
+
+
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
 	sf_putint(Fw,"n3",ny);
@@ -405,6 +466,8 @@ int main(int argc, char* argv[])
 	_dz2=1.0/(dz*dz);
 	_dx2=1.0/(dx*dx);
 	_dy2=1.0/(dy*dy);
+	ns=nsx*nsy;
+	ng=ngx*ngy;
 	nbr=nb+radius;
 	nzb=nz+2*nb;
 	nxb=nx+2*nb;
@@ -428,47 +491,45 @@ int main(int argc, char* argv[])
 	dimb.x=BlockSize1;
 	dimb.y=BlockSize2;
 
-	/* allocate memory on device */
 	cudaMalloc(&d_wlt, nt*sizeof(float));
 	cudaMalloc(&d_vv, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_sp0, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_sp1, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_gp0, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_gp1, nnz*nnx*nny*sizeof(float));
+	cudaMalloc(&d_Isg, nnz*nnx*nny*sizeof(float));
 	cudaMalloc(&d_szxy, ns*sizeof(int));
 	cudaMalloc(&d_gzxy, ng*sizeof(int));
+	cudaMalloc(&d_dobs, ng*nt*sizeof(float));
 	sf_check_gpu_error("Failed to allocate memory for variables!");
 
 	cuda_ricker_wavelet<<<(nt+511)/512, 512>>>(d_wlt, fm, dt, nt);
 	cudaMemcpy(d_vv, vv, nnz*nnx*nny*sizeof(float), cudaMemcpyHostToDevice);
-	if (!(sxbeg>=0 && szbeg>=0 && sybeg>=0 && sxbeg+(ns-1)*jsx<nx && szbeg+(ns-1)*jsz<nz)&& sybeg+(ns-1)*jsy<ny)	
-	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
-	cuda_set_sg<<<1, ns>>>(d_szxy, szbeg, sxbeg, sybeg, jsz, jsx, jsy, ns, nz, nx, nb);
-	distz=szbeg-gzbeg;
-	distx=sxbeg-gxbeg;
-	disty=sybeg-gybeg;
+	if (!(sxbeg>=0 && szbeg>=0 && sybeg>=0 && sxbeg+(nsx-1)*jsx<nx && sybeg+(nsy-1)*jsy<ny))	
+	{ sf_error("sources exceeds the computing zone!"); exit(1); }
+	cuda_set_sg<<<dim3((nsx+BlockSize1-1)/BlockSize1,(nsy+BlockSize2-1)/BlockSize2),dimb>>>(d_szxy, szbeg, sxbeg, sybeg, jsz, jsx, jsy, nsx, nsy, nz, nx, nb);
+	if (!(	gzbeg>=0 && gxbeg>=0 	&& gybeg>=0 && gxbeg+(ngx-1)*jgx<nx && gybeg+(ngy-1)*jgy<ny))	
+	{ sf_error("geophones exceeds the computing zone!"); exit(1); }
 	if (csdgather)	{
-		if (!(gzbeg>=0 && gxbeg>=0 && gybeg>=0 && gzbeg+(ng-1)*jgz<nz && gxbeg+(ng-1)*jgx<nx && gybeg+(ng-1)*jgy<ny &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
+		distx=sxbeg-gxbeg;
+		disty=sybeg-gybeg;
+		if (!(sxbeg+(nsx-1)*jsx+(ngx-1)*jgx-distx <nx  && sybeg+(nsy-1)*jsy+(ngy-1)*jgy-disty <ny))	
+		{ sf_error("geophones exceeds the computing zone!"); exit(1); }
 	}
-	else{
-		if (!(gzbeg>=0 && gxbeg>=0 && gybeg>=0 && gzbeg+(ng-1)*jgz<nz && gxbeg+(ng-1)*jgx<nx && gybeg+(ng-1)*jgy<ny))	
-		{ sf_error("geophones exceeds the computing zone!"); exit(1);}
-	}
-	cuda_set_sg<<<1, ng>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ng, nz, nx, nb);
+	cuda_set_sg<<<dim3((ngx+BlockSize1-1)/BlockSize1,(ngy+BlockSize2-1)/BlockSize2),dimb>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ngx, ngy, nz, nx, nb);
 
-	float mstimer;
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
 	cudaEventCreate(&stop);
 	for(is=0; is<ns; is++){
 	  cudaEventRecord(start);
 
+	  isx=is%nsx;
+	  isy=is/nsx;
 	  if (csdgather){
-		gxbeg=sxbeg+is*jsx-distx;
-		gybeg=sybeg+is*jsy-disty;
-		cuda_set_sg<<<1, ns>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ng, nz, nx, nb);
+		//gxbeg=sxbeg+isx*jsx-distx;
+		gybeg=sybeg+isy*jsy;//-disty;
+		cuda_set_sg<<<dim3((ngx+BlockSize1-1)/BlockSize1,(ngy+BlockSize2-1)/BlockSize2),dimb>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ngx, ngy, nz, nx, nb);
 	  }
 	  cudaMemset(d_sp0, 0, nnz*nnx*nny*sizeof(float));
 	  cudaMemset(d_sp1, 0, nnz*nnx*nny*sizeof(float));
@@ -477,25 +538,30 @@ int main(int argc, char* argv[])
 	    cuda_step_fd3d<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
 	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 
-	    sf_warning("it=%d;",it);
+	    cuda_record<<<(ng+511)/512, 512>>>(d_sp0, &d_dobs[it*ng], d_gzxy, ng);
+	    cuda_mute<<<(ng+511)/512, 512>>>(&d_dobs[it*ng], gzbeg, szbeg, gxbeg, gybeg, sxbeg+isx*jsx, sybeg+isy*jsy, jgx, jgy, it, tdmute, vmute, dt, dz, dx, dy, ng);
 	  }
+	  sf_warning("forward propagation finished!");
 
 	  ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
 	  cudaMemset(d_gp0, 0, nnz*nnx*nny*sizeof(float));
 	  cudaMemset(d_gp1, 0, nnz*nnx*nny*sizeof(float));
 	  for(it=nt-1; it>-1; it--)
 	  {
-	    if(it==kt){
-	      cudaMemcpy(vv, d_sp0, nnz*nnx*nny*sizeof(float), cudaMemcpyDeviceToHost);
-	      window3d(v0, vv, nz, nx, ny, nb);
-	      sf_floatwrite(v0, nz*nx*ny, Fw);	  
-	    }
-
+	    /* reconstruct source wavefield*/
 	    cuda_step_fd3d<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
 	    cuda_add_source<<<1,1>>>(false, d_sp1, &d_wlt[it], &d_szxy[is], 1);
 	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
-	    sf_warning("it=%d;",it);
+
+	    /* backpropagate receiver wavefield */
+	    cuda_add_source<<<(ng+511)/512,512>>>(true, d_gp1, &d_dobs[it*ng], d_gzxy, ng);
+	    cuda_step_fd3d<<<dimg,dimb>>>(d_gp0, d_gp1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
+ 	    ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
+
+	    /* apply imaging condition */
+	    cuda_cross_correlate<<<dimg, dimb>>>(d_Isg, d_sp0, d_gp0, nzb, nxb, nyb);
 	  }
+
 	  cudaEventRecord(stop);
           cudaEventSynchronize(stop);
   	  cudaEventElapsedTime(&mstimer, start, stop);
@@ -504,15 +570,16 @@ int main(int argc, char* argv[])
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
-	/* free memory on device */
 	cudaFree(d_wlt);
 	cudaFree(d_vv);
 	cudaFree(d_sp0);
 	cudaFree(d_sp1);
 	cudaFree(d_gp0);
 	cudaFree(d_gp1);
+	cudaFree(d_Isg);
 	cudaFree(d_szxy);
 	cudaFree(d_gzxy);
+	cudaFree(d_dobs);
 	free(v0);
 	free(vv);
 
