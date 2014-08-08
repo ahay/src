@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static std::valarray<float>  vp, vs, e, d, t;
+static std::valarray<float>  vp, vs, e, d, t, p;
 static std::valarray<float>  f, s, xtap, ktap;
 static std::valarray<double> kx, kz;
 static double dt;
@@ -149,10 +149,10 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 			z=z*z;
 
 			double r = 2.0*x/ff;
-			r = 1.0+2*r*(2.0*dd*z-(z-x)*ee)+r*r*ee*ee;
+			r = max(0.0,1.0+2*r*(2.0*dd*z-(z-x)*ee)+r*r*ee*ee);
 			if(pwave){
 				if(!half){
-					r=1.0+ee*x-(1.0-sqrt(r))*ff/2.0;
+					r=max(0.0,1.0+ee*x-(1.0-sqrt(r))*ff/2.0);
 					r=pp*sqrt(r)*k*dt;
 					r=2.*(cos(r)-1);
 				}else{
@@ -162,7 +162,7 @@ static int sample(vector<int>& rs, vector<int>& cs, DblNumMat& res)
 				}
 			}else{
 				if(!half){
-					r=1.0+ee*x-(1.0+sqrt(r))*ff/2.0;
+					r=max(0.0,1.0+ee*x-(1.0+sqrt(r))*ff/2.0);
 					r=pp*sqrt(r)*k*dt;
 					r=2.*(cos(r)-1);
 				}else{
@@ -206,7 +206,7 @@ int main(int argc, char** argv)
 	par.get("pwave",pwave, true);
 	// if y, yield left and right matrices for P-wave; else for SV-wave.
 
-    iRSF vp0, vs0("vs0"), epsilon("epsilon"), delta("delta"), theta("theta");
+    iRSF vp0, vs0("vs0"), epsilon("epsilon"), delta("delta"), theta("theta"), phi("phi");
 
     int nz,nx;
     vp0.get("n1",nz);
@@ -218,12 +218,14 @@ int main(int argc, char** argv)
 	e.resize(m);
 	d.resize(m);
 	t.resize(m);
+	p.resize(m);
 
 	vp0 >> vp;
 	vs0 >> vs;
 	epsilon >> e;
 	delta >> d;
 	theta >> t;
+	phi >> p;
 
 	if(exact){
 		f.resize(m);
@@ -236,11 +238,14 @@ int main(int argc, char** argv)
 		for(int im=0; im<m; im++)
 			s[im]=powf(vp[im]/vs[im], 2)*(e[im]-d[im]);
 	}
+	sf_warning("t[500][500]=%f",t[500*710+500]);
 
     /* fram degrees to radians */
     for (int im=0; im < m; im++) {
-	t[im] *= SF_PI/180.;
+		//t[im] *= SF_PI/180.;
+		t[im] *= cos(p[im]);
     }
+	sf_warning("t[500][500]=%f",t[500*710+500]);
     
     iRSF fft("fft");
 
@@ -340,6 +345,7 @@ int main(int argc, char** argv)
 	}
 
     double *rdat = rmat.data();
+	sf_warning("rdat[10000]=%f",rdat[10000]);
     std::valarray<float> rdata(n2*n);    
     for (int k=0; k < n2*n; k++) 
 	rdata[k] = rdat[k];

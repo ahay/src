@@ -24,7 +24,7 @@
 
 using namespace std;
 
-static std::valarray<float>  vp, vs, e, d, t;
+static std::valarray<float>  vp, vs, e, d, t, p;
 static std::valarray<float>  f, s;
 static std::valarray<float> kx, kz;
 static float dt, ct, cb, cl, cr;
@@ -176,10 +176,10 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 			z=z*z;
 
 			float r = 2.0*x/ff;
-			r = 1.0+2*r*(2.0*dd*z-(z-x)*ee)+r*r*ee*ee;
+			r = max(0., 1.0+2*r*(2.0*dd*z-(z-x)*ee)+r*r*ee*ee);
 			if(pwave){
 				if(!half){
-					r=1.0+ee*x-(1.0-sqrt(r))*ff/2.0;
+					r=max(0., 1.0+ee*x-(1.0-sqrt(r))*ff/2.0);
 					r=pp*sqrt(r)*k*dt;
 					res(a,b)=cpx(cos(r), sin(r))*phf;
 				}else{
@@ -189,7 +189,7 @@ static int sample(vector<int>& rs, vector<int>& cs, CpxNumMat& res)
 				}
 			}else{
 				if(!half){
-					r=1.0+ee*x-(1.0+sqrt(r))*ff/2.0;
+					r=max(0., 1.0+ee*x-(1.0+sqrt(r))*ff/2.0);
 					r=pp*sqrt(r)*k*dt;
 					res(a,b)=cpx(cos(r), sin(r))*phf;
 				}else{
@@ -238,7 +238,7 @@ int main(int argc, char** argv)
 	par.get("pwave",pwave, true);
 	// if y, yield left and right matrices for P-wave; else for SV-wave.
 
-    iRSF vp0, vs0("vs0"), epsilon("epsilon"), delta("delta"), theta("theta");
+    iRSF vp0, vs0("vs0"), epsilon("epsilon"), delta("delta"), theta("theta"), phi("phi");
 
     vp0.get("n1",nz);
     vp0.get("n2",nx);
@@ -249,12 +249,14 @@ int main(int argc, char** argv)
 	e.resize(m);
 	d.resize(m);
 	t.resize(m);
+	p.resize(m);
 
 	vp0 >> vp;
 	vs0 >> vs;
 	epsilon >> e;
 	delta >> d;
 	theta >> t;
+	phi >> p;
 
 	if(exact){
 		f.resize(m);
@@ -270,7 +272,7 @@ int main(int argc, char** argv)
 
     /* fram degrees to radians */
     for (int im=0; im < m; im++) {
-	t[im] *= SF_PI/180.;
+	t[im] *= cos(p[im]);
     }
     
     iRSF fft("fft");
