@@ -458,7 +458,6 @@ int main(int argc, char* argv[])
 	if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);
 	/* number of deleyed time samples to mute */
 
-
 	sf_putint(Fw,"n1",nz);
 	sf_putint(Fw,"n2",nx);
 	sf_putint(Fw,"n3",ny);
@@ -517,6 +516,12 @@ int main(int argc, char* argv[])
 		{ sf_error("geophones exceeds the computing zone!"); exit(1); }
 	}
 	cuda_set_sg<<<dim3((ngx+BlockSize1-1)/BlockSize1,(ngy+BlockSize2-1)/BlockSize2),dimb>>>(d_gzxy, gzbeg, gxbeg, gybeg, jgz, jgx, jgy, ngx, ngy, nz, nx, nb);
+	cudaMemset(d_sp0, 0, nnz*nnx*nny*sizeof(float));
+	cudaMemset(d_sp1, 0, nnz*nnx*nny*sizeof(float));
+	cudaMemset(d_gp0, 0, nnz*nnx*nny*sizeof(float));
+	cudaMemset(d_gp1, 0, nnz*nnx*nny*sizeof(float));
+	cudaMemset(d_Isg, 0, nnz*nnx*nny*sizeof(float));
+	cudaMemset(d_dobs, 0, ng*nt*sizeof(float));
 
 	cudaEvent_t start, stop;
   	cudaEventCreate(&start);	
@@ -548,7 +553,7 @@ int main(int argc, char* argv[])
 	  cudaMemset(d_gp1, 0, nnz*nnx*nny*sizeof(float));
 	  for(it=nt-1; it>-1; it--)
 	  {
-	    /* reconstruct source wavefield*/
+	    /* reconstruct source wavefield */
 	    cuda_step_fd3d<<<dimg,dimb>>>(d_sp0, d_sp1, d_vv, _dz2, _dx2, _dy2, nzb, nxb, nyb);
 	    cuda_add_source<<<1,1>>>(false, d_sp1, &d_wlt[it], &d_szxy[is], 1);
 	    ptr=d_sp0; d_sp0=d_sp1; d_sp1=ptr;
@@ -580,6 +585,7 @@ int main(int argc, char* argv[])
 	cudaFree(d_szxy);
 	cudaFree(d_gzxy);
 	cudaFree(d_dobs);
+
 	free(v0);
 	free(vv);
 

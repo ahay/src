@@ -40,12 +40,10 @@ Some basic descriptions of this code are in order.
 
 5) The final images can be two kinds: result of correlation imaging 
    condition and the normalized one. The normalized correlation imaging
-   result is preferred due to compensated illumination. This code does
-   not perform any kind of filtering, which is recommended if you 
-   obtained the CUDA RTM result. Some of the filters are popular and 
-   effective to remove the low frequency artifacts of the imaging: the
-   Laplacian filtering, derivative filtering and the bandpass filtering. 
-   In this code, we use laplacian filtering.
+   result is preferred due to compensated illumination. Some filters 
+   are popular and effective to remove the low frequency artifacts of 
+   the imaging: the Laplacian filtering, derivative filtering and 
+   the bandpass filtering. In this code, we use laplacian filtering.
 */
 
 /*
@@ -168,6 +166,7 @@ void sf_check_gpu_error(const char *msg)
 void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float dt, int N)
 /*< sanity check about stability condition and non-dispersion condition >*/
 {
+	int i;
 	float C;
 	if(NJ==2) C=1;
 	else if (NJ==4)	 	C=0.857;
@@ -176,7 +175,7 @@ void check_grid_sanity(int NJ, float *vel, float fm, float dz, float dx, float d
 	else if (NJ==10)	C=0.759;
 
 	float maxvel=vel[0], minvel=vel[0];
-	for(int i=0; i<N; i++)	{
+	for(i=0; i<N; i++)	{
 		if(vel[i]>maxvel) maxvel=vel[i];
 		if(vel[i]<minvel) minvel=vel[i];
 	}
@@ -345,15 +344,16 @@ int main(int argc, char* argv[])
 {
 	int tdmute, is, kt, distx, distz;
 	float phost, mstimer;
-    	sf_file vmodl, imag1, imag2; /* I/O files */
+    	sf_file vmodl, imag1, imag2; 
 
-    	/* initialize Madagascar */
-    	sf_init(argc,argv);
+    	sf_init(argc,argv);/* initialize Madagascar */
 
-    	/*< set up I/O files >*/
-    	vmodl = sf_input ("in");   /* velocity model, unit=m/s */
-    	imag1 = sf_output("out");  /* output image with correlation imaging condition */ 
-    	imag2 = sf_output("imag2");  /* output image with normalized correlation imaging condition */ 
+    	vmodl = sf_input ("in");	
+	/* velocity model, unit=m/s */
+    	imag1 = sf_output("out");  	
+	/* output image with correlation imaging condition */ 
+    	imag2 = sf_output("imag2");  	
+	/* output image with normalized correlation imaging condition */ 
 
     	/* get parameters for RTM */
     	if (!sf_histint(vmodl,"n1",&nz1)) sf_error("no n1");
@@ -361,27 +361,45 @@ int main(int argc, char* argv[])
     	if (!sf_histfloat(vmodl,"d1",&dz)) sf_error("no d1");
    	if (!sf_histfloat(vmodl,"d2",&dx)) sf_error("no d2");
 
-    	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	/* dominant freq of ricker */
-    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	/* time interval */
+    	if (!sf_getfloat("fm",&fm)) sf_error("no fm");	
+	/* dominant freq of ricker */
+    	if (!sf_getfloat("dt",&dt)) sf_error("no dt");	
+	/* time interval */
 
-    	if (!sf_getint("nt",&nt))   sf_error("no nt");	/* total modeling time steps */
-    	if (!sf_getint("ns",&ns))   sf_error("no ns");	/* total shots */
-    	if (!sf_getint("ng",&ng))   sf_error("no ng");	/* total receivers in each shot */
+    	if (!sf_getint("nt",&nt))   sf_error("no nt");	
+	/* total modeling time steps */
+    	if (!sf_getint("ns",&ns))   sf_error("no ns");	
+	/* total shots */
+    	if (!sf_getint("ng",&ng))   sf_error("no ng");	
+	/* total receivers in each shot */
 	
-    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");/* source x-axis  jump interval  */
-    	if (!sf_getint("jsz",&jsz))   jsz=0;/* source z-axis jump interval  */
-    	if (!sf_getint("jgx",&jgx))   jgx=1;/* receiver x-axis jump interval */
-    	if (!sf_getint("jgz",&jgz))   jgz=0;/* receiver z-axis jump interval */
-    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");/* x-begining index of sources, starting from 0 */
-    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");/* z-begining index of sources, starting from 0 */
-    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");/* x-begining index of receivers, starting from 0 */
-    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");/* z-begining index of receivers, starting from 0 */
+    	if (!sf_getint("jsx",&jsx))   sf_error("no jsx");
+	/* source x-axis  jump interval  */
+    	if (!sf_getint("jsz",&jsz))   jsz=0;
+	/* source z-axis jump interval  */
+    	if (!sf_getint("jgx",&jgx))   jgx=1;
+	/* receiver x-axis jump interval */
+    	if (!sf_getint("jgz",&jgz))   jgz=0;
+	/* receiver z-axis jump interval */
+    	if (!sf_getint("sxbeg",&sxbeg))   sf_error("no sxbeg");
+	/* x-begining index of sources, starting from 0 */
+    	if (!sf_getint("szbeg",&szbeg))   sf_error("no szbeg");
+	/* z-begining index of sources, starting from 0 */
+    	if (!sf_getint("gxbeg",&gxbeg))   sf_error("no gxbeg");
+	/* x-begining index of receivers, starting from 0 */
+    	if (!sf_getint("gzbeg",&gzbeg))   sf_error("no gzbeg");	
+	/* z-begining index of receivers, starting from 0 */
 
-    	if (!sf_getint("order",&NJ))   NJ=6;/* order of finite difference, order=2,4,6,8,10 */
-    	if (!sf_getfloat("phost",&phost)) phost=0;/* phost% points on host with zero-copy pinned memory, the rest on device */
-	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;/* default, common shot-gather; if n, record at every point*/
-	if (!sf_getfloat("vmute",&vmute))   vmute=1500;/* muting velocity to remove the low-freq artifacts, unit=m/s*/
-	if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);/* number of deleyed time samples to mute */
+    	if (!sf_getint("order",&NJ))   NJ=6;
+	/* order of finite difference, order=2,4,6,8,10 */
+    	if (!sf_getfloat("phost",&phost)) phost=0;
+	/* phost% points on host with zero-copy pinned memory, the rest on device */
+	if (!sf_getbool("csdgather",&csdgather)) csdgather=true;
+	/* default, common shot-gather; if n, record at every point*/
+	if (!sf_getfloat("vmute",&vmute))   vmute=1500;
+	/* muting velocity to remove the low-freq artifacts, unit=m/s*/
+	if (!sf_getint("tdmute",&tdmute))   tdmute=2.0/(fm*dt);
+	/* number of deleyed time samples to mute */
 
     	sf_putint(imag1,"n1",nz1);
     	sf_putint(imag1,"n2",nx1);
@@ -435,15 +453,12 @@ int main(int argc, char* argv[])
 	{ sf_warning("sources exceeds the computing zone!"); exit(1);}
 	cuda_set_sg<<<(ns+255)/256, 256>>>(d_Sxz, sxbeg, szbeg, jsx, jsz, ns, npml, nnz);
 
-	distx=sxbeg-gxbeg;
-	distz=szbeg-gzbeg;
+	if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+	{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
 	if (csdgather)	{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz &&
-		(sxbeg+(ns-1)*jsx)+(ng-1)*jgx-distx <nx  && (szbeg+(ns-1)*jsz)+(ng-1)*jgz-distz <nz))	
-		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
-	}
-	else{
-		if (!(gxbeg>=0 && gzbeg>=0 && gxbeg+(ng-1)*jgx<nx && gzbeg+(ng-1)*jgz<nz))	
+		distx=sxbeg-gxbeg;
+		distz=szbeg-gzbeg;
+		if (!( sxbeg+(ns-1)*jsx+(ng-1)*jgx-distx <nx  && szbeg+(ns-1)*jsz+(ng-1)*jgz-distz <nz))	
 		{ sf_warning("geophones exceeds the computing zone!"); exit(1);}
 	}
 	cuda_set_sg<<<(ng+255)/256, 256>>>(d_Gxz, gxbeg, gzbeg, jgx, jgz, ng, npml, nnz);
@@ -508,7 +523,6 @@ int main(int argc, char* argv[])
 			/* backward time step receiver wavefield */
 			step_forward(d_vel, d_gp0, d_gp1, d_gvx, d_gvz, d_convvx, d_convvz, d_convpx, d_convpz, d_bx1, d_bz1, d_bx2, d_bz2);
 			ptr=d_gp0; d_gp0=d_gp1; d_gp1=ptr;
-
 
 			cuda_cross_correlate<<<dimg0, dimb0>>>(d_Isg, d_Iss, d_sp0, d_gp0, npml, nnz, nnx);
 		}
