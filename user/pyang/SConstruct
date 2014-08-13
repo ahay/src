@@ -22,19 +22,17 @@ mpi_progs = '''
 mpifwi
 '''
 
-
 ######################################################################
 # CUDA main programs
 cuda_progs = '''
 fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d gpurtm3d
 '''
+
 ######################################################################
 # CUDA+MPI main programs
 cuda_mpi_progs = '''
 '''
-#mpigpufwi
-
-
+#mpigpufd3d
 
 ######################################################################
 try:  # distributed version
@@ -142,14 +140,25 @@ for prog in cuda_mains:
 #######################################################################
 # compiling CUDA+MPI programs
 
+# YOU MAY HAVE TO EDIT THIS SECTION!!!
+# MPI_LIB and MPI_INC must be defined for your specific system
+MPI_LIB = '/opt/openmpi/1.6.0/gcc/4.4.6/lib'		# MPI lib directory (contains libmpi.so)
+MPI_INC = '/opt/openmpi/1.6.0/gcc/4.4.6/include'	# MPI include directory	(contains mpi.h)
+
+mpi_err = 0
+if not os.path.exists(MPI_LIB + "/libmpi.so"):
+	mpi_err += 1
+if not os.path.exists(MPI_INC + "/mpi.h"):
+	mpi_err += 1
+
 cuda_mpi_mains = Split(cuda_mpi_progs)
 for prog in cuda_mpi_mains:
-    if CTP and NVCC and mpicc:
+    if CTP and NVCC and (mpi_err == 0):
         cfile = env.Command('MPICUDA'+prog+'.c','M'+prog+'.cu','cp $SOURCE $TARGET')
-        prog = env.Program(prog,cfile,
+        prog = env.Program(cfile,
                            CC=NVCC,
-                           LINKFLAGS='-L'+' -lmpi',
-                           CFLAGS='-I'+' -prec-div=true --x=cu')
+                           LINKFLAGS='-L'+MPI_LIB+' -lmpi',
+                           CFLAGS='-I'+MPI_INC+' -prec-div=true -arch=sm_21 --x=cu')
     else:
         prog = env.RSF_Place('sf'+prog,None,
                              message='''
@@ -169,10 +178,9 @@ if root:
     main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains+mpi_mains) + \
-	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains)+ \
-	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mpi_mains)
-
+	map(lambda prog: env.Doc(prog,'M' + prog+'.cu'),cuda_mains + cuda_mpi_mains)
     env.Depends(docs,'#/framework/rsf/doc.py')	
+
     doc = env.RSF_Docmerge(main,docs)
     env.Install(pkgdir,doc)
 
