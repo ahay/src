@@ -12,8 +12,11 @@ echo SLURM_NNODES=$SLURM_NNODES
 echo SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE
 echo SLURM_NODELIST=$SLURM_NODELIST
 
+unset DISPLAY
 env
+echo start `date`
 pscons 
+echo end `date`
 
 
 

@@ -13,38 +13,9 @@ Result('Fvel','grey color=j scalebar=y')
 Flow('Fden','Fvel', 'math output=1')
 
 #Source wavelet:
-#Flow('Fwav', None, 'spike nsp=1 n1=2000 d1=0.0005 k1=200 | ricker1 frequency=20 | transp')
 Flow('Fwav', None, 'spike nsp=1 n1=16001 d1=0.001 k1=200 | ricker1 frequency=10 | transp')
 #Result('Fwav',''' transp | sfwiggle ''') 
 
-
-#Source position (x,z):
-#Flow('Fsou', None, 'spike n1=2 nsp=2 k1=1,2 mag=400,100 o1=0 o2=0')
-#Receiver position (x,z):
-#Flow('Frec', None, 'spike n1=2 n2=2 nsp=4 k1=1,2,1,2 k2=1,1,2,2 mag=600,200,600,200 o1=0 o2=0')
-#Flow('Frec', None, 'spike n1=2 nsp=2 k1=1,2 mag=600,200 o1=0 o2=0')
-# experiment setup
-#par = {
-#    'nx':101, 'ox':200, 'dx':4, 'lx':'x','ux':'m',
-#    }
-#Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-#Flow('s_',None,'math n1=2      d1=200      o1=300      output=0')
-# receiver positions
-#Flow('zr','r_','math output=20')
-#Flow('xr','r_','math output="x1"')
-#Flow('rr',['xr','zr'],'''cat axis=2 space=n
-#     ${SOURCES[0]} ${SOURCES[1]} | transp
-#     ''', stdin=0)
-
-# source positions
-#Flow('zs','s_','math output=40')
-#Flow('xs','s_','math output="x1"')
-#Flow('rs','s_','math output=1')
-#Flow('ss',['xs','zs','rs'],'''
-#Flow('ss',['xs','zs'],'''
-#     cat axis=2 space=n
-#     ${SOURCES[0]} ${SOURCES[1]} | transp
-#     ''', stdin=0)
 
 # experiment setup:
 par = {
