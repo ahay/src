@@ -1168,28 +1168,24 @@ def zom(imag,data,velo,dens,rcoo,custom,par):
     
     awepar = 'ompchunk=%(ompchunk)d ompnth=%(ompnth)d verb=y free=n snap=%(snap)s jsnap=%(jdata)d jdata=%(jdata)d dabc=%(dabc)s nb=%(nb)d'%par + ' ' + custom
 
-    rdat = imag+'rdat'
     rwfl = imag+'wwfl'
 
     Flow(imag,[data,rcoo,velo,dens],
          '''
-         %sreverse < ${SOURCES[0]} which=2 opt=i verb=n >%s datapath=%s/;
-         '''%(M8R,rdat,DPT) +
-         '''
-         %sawefd2d < %s cden=n %s verb=n
+         %sawefd2d < ${SOURCES[0]} adj=y cden=n %s verb=n
          vel=${SOURCES[2]}
          den=${SOURCES[3]}
          sou=${SOURCES[1]}
          rec=${SOURCES[1]}
          wfl=%s datapath=%s/
          >/dev/null;
-         '''%(M8R,rdat,awepar+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
+         '''%(M8R,awepar+' jsnap=%d'%(par['nt']-1),rwfl,DPT) +
          '''
          %swindow < %s n3=1 f3=1 >${TARGETS[0]};
          '''%(M8R,rwfl) +
          '''
-         %srm %s %s
-         '''%(M8R,rdat,rwfl),
+         %srm %s
+         '''%(M8R,rwfl),
               stdin=0,
               stdout=0)
     
