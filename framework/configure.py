@@ -135,6 +135,7 @@ def check_all(context):
     petsc(context) # FDNSI
     psp(context) #FDNSI
     sparse(context) #FDNSI
+    pfft(context)
 
 def identify_platform(context):
     global plat
@@ -1486,6 +1487,79 @@ def sparse(context):
     context.env['CPPPATH'] = oldpath
     context.env['LIBS'] = oldlibs
 
+def pfft(context):
+    # Check fftw first
+    fftw_is_double_precision = True
+    oldlibs = path_get(context,'LIBS')
+    regex_fftw = re.compile('fftw*')
+    oldlibs_no_fftw = [x for x in oldlibs if not regex_fftw.match(x)]
+    #context.env['LIBS'] = oldlibs_no_fftw
+    text = '''
+        #include <fftw3.h>
+        int main(int argc,char* argv[]) {
+        fftwf_complex *in;
+        fftwf_plan p;
+        in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * 10);
+        p = fftwf_plan_dft_1d(10, in, in, FFTW_FORWARD, FFTW_ESTIMATE);
+        fftwf_destroy_plan(p);
+        fftwf_free(in);
+        return 0;
+        }\n'''
+    res_fftw = context.TryLink(text,'.c')
+    if res_fftw:
+        if 'fftw3f' in oldlibs:
+            fftw_is_double_precision = False
+    
+    # Check MPI
+    path = os.environ['PATH']
+    if plat['OS'] == 'linux':
+        if plat['distro'] == 'fedora' or plat['distro'] == 'rhel':
+            path += ':/usr/lib64/openmpi/bin/'
+    mpicc = context.env.get('MPICC',WhereIs('mpicc', path))
+    
+    if res_fftw and mpicc : # check pfft if fftw & mpi available
+        context.Message("checking for pfft ... ")
+        text_double = '''
+            #include <pfft.h>
+            int main(int argc, char **argv){
+            MPI_Init(&argc, &argv);
+            pfft_init();
+            MPI_Finalize();
+            return 0;
+            }\n'''
+        text_float = re.sub('pfft_init','pfftf_init',text_double)
+        cc = context.env.get('CC')
+        context.env['CC'] = mpicc
+        context.env.Append(ENV={'MPICH_CC':cc,'MPICH_CLINKER':cc})
+        
+        oldpath = path_get(context,'CPPPATH')
+        pfftpath = ['/usr/local/include']
+        context.env['CPPPATH'] = oldpath+pfftpath
+        
+        if fftw_is_double_precision:
+            pfftlibs = ['pfft','fftw3_mpi','fftw3']
+            context.env['LIBS'] = oldlibs_no_fftw+pfftlibs
+            res = context.TryLink(text_double,'.c')
+        else:
+            pfftlibs = ['pfftf','fftw3f_mpi','fftw3f']
+            context.env['LIBS'] = oldlibs_no_fftw+pfftlibs
+            res = context.TryLink(text_float,'.c')
+        
+        context.env['CC'] = cc
+
+        if res:
+            context.Result(res)
+            context.env['PFFT'] = True
+            context.env['PFFTPATH'] = pfftpath
+            context.env['PFFTLIBS'] = pfftlibs
+        else:
+            context.Result(context_failure)
+            context.env['CPPPATH'] = oldpath
+            context.env['LIBS'] = oldlibs
+    else: # quit detecting if no fftw or mpi available
+        context.Result(context_failure)
+        #need_pkg('pfft',fatal=False)
+
 def ncpus():
     'Detects number of CPUs'
     if plat['OS'] in ('linux','posix'):
@@ -2149,5 +2223,6 @@ def options(file):
     opts.Add('EPYDOC','RSF Python package HTML documentation')
     opts.Add('NUMPY','Existence of numpy package')
     opts.Add('SWIG','Location of SWIG')
+    opts.Add('PFFT','The PFFT library')
     
     return opts
