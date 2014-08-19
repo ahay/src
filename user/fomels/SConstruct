@@ -19,7 +19,7 @@ velinv vidattr vofzperm warp1 warpadd warpscan zero zmarch ztrace
 
 ccprogs = 'anisolr2 isolr2 isolr3 permlr1 permlr2 permlr3'
 
-pyprogs = 'cgi fft ipick results zoom'
+pyprogs = 'cgi fft ipick results zoom las2rsf'
 pymods = 'conjdir conjgrad dottest steepd'
 
 try:  # distributed version

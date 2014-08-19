@@ -1,0 +1,26 @@
+from rsf.proj import *
+
+# download well-log data
+Fetch('L-30.las','1406_Make_a_synthetic',
+      server='https://raw.githubusercontent.com',
+      top='seg/tutorials/master')
+
+# Convert to RSF
+Flow('L-30','L-30.las','las2rsf $SOURCE $TARGET',stdin=0,stdout=-1)
+
+# Examine with "< L-30.rsf sfheaderattr segy=n"
+
+# Mask bad values
+Flow('mask','L-30','headermath segy=n output=DT | mask min=0')
+
+# Extract DT
+Flow('DT','L-30 mask',
+     '''
+     headermath segy=n output=DT | 
+     headerwindow mask=${SOURCES[1]} | window | 
+     put o1=1150.5 d1=0.5 label1=Depth unit1=ft
+     ''')
+
+Result('DT','graph title=DT') 
+
+End()

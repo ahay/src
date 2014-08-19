@@ -56,7 +56,9 @@ Check the output using sfheaderattr < file.rsf segy=n
     lasfile = sys.argv[1]
 
     if len(sys.argv) < 3:
-       rsffile=os.path.splitext(lasfile)[0]+'.rsf'
+        rsffile=os.path.splitext(lasfile)[0]+'.rsf'
+    else:
+        rsffile = sys.argv[2]
 
     las2rsf(lasfile,rsffile)
     sys.exit(0)

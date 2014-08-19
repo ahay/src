@@ -35,6 +35,7 @@ An addition operation can be performed by sfadd.
 
 int main(int argc, char* argv[])
 {
+    bool segy;
     int i, i1, i2, n1, n2, n3, n, nt, len, nkey;
     sf_file in, out;
     int mem; /* for avoiding int to off_t typecast warning */
@@ -68,7 +69,14 @@ int main(int argc, char* argv[])
 	}
     }
 
-    segy_init(n1,in);
+    if (!sf_getbool("segy",&segy)) segy=true;
+    /* if SEGY headers */
+
+    if (segy) {
+	segy_init(n1,in);
+    } else {
+	other_init(n1,in);
+    }
 
     for (i=0; i < n1; i++) {
 	sf_putint(out,segykeyword(i),i+3);
