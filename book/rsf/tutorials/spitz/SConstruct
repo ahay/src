@@ -5,16 +5,21 @@ from rsf.proj import *
 Flow('signal',None,
      '''
      spike n1=101 n2=32 k1=51 d2=1 label2=Trace unit2= | 
-     math output="input*1.05^x2" | trapez frequency=0,50,75,125
+     math output="input*1.05^x2" | trapez frequency=0,0,50,75
      ''')
 Flow('noise','signal',
-     'spike k1=51 mag=1 | trapez frequency=0,50,75,125')
+     'spike k1=51 mag=1 label2=Trace unit2= | trapez frequency=0,0,50,75')
 Flow('data','signal noise','add ${SOURCES[1]}')
 
+Result('band','noise','spectra all=y | graph title=Spectrum')
+
 for case in Split('signal noise data'):
-    Plot(case,'wiggle poly=y yreverse=y transp=y title=%s' % case.capitalize())
+    title = case.capitalize()
+    Plot(case,'wiggle clip=150 poly=y yreverse=y transp=y title=%s' % title)
+    Plot('g'+case,case,'grey clip=150 color=G title=%s' % title)
 
 Result('data','data signal noise','SideBySideAniso')
+Result('gdata','gdata gsignal gnoise','SideBySideAniso')
 
 # Estimate data PEF and noise PEF (time domain, on a helix)
 
@@ -30,8 +35,11 @@ Flow('signal2','signoi','window n3=1')
 Flow('noise2', 'signoi','window f3=1')
 
 for case in Split('signal2 noise2'):
-    Plot(case,'wiggle poly=y yreverse=y transp=y title="Estimated %s"' % case[:-1].capitalize())
+    title = 'Estimated ' + case[:-1].capitalize()
+    Plot(case,'wiggle clip=150 poly=y yreverse=y transp=y title="%s"' % title)
+    Plot('g'+case,case,'grey clip=150 color=G title="%s" ' % title)
 
 Result('signoi','data signal2 noise2','SideBySideAniso')
+Result('gsignoi','gdata gsignal2 gnoise2','SideBySideAniso')
 
 End()
