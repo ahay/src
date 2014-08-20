@@ -1,0 +1,249 @@
+from rsf.proj import*
+import sys
+sys.path.append('../../temp/recipes')
+import deblend2
+
+## parameters definition
+clip=0.85  		#display percentage
+fraction=0.5	#B=fraction*I
+niter=40	#number of iterations
+n1=512		#temporal sampling number
+n2=256		#spatial sampling number
+padno=256	#padding for seislet tranform
+r1=10		#smoothing radius
+r2=10		#smoothing radius
+ddip=5		#changing dip map interval
+fhi=50  	#bandpass frequency value
+mute1='cp'	#muting function in shaping
+mute2='cp'	#muting function in shaping
+mode='soft'	#thresholding type (hard thresholding turns to be very bad
+thr=9		#thresholding level(percentage)
+
+## module defining
+def Grey(hyper,other): 
+	Result(hyper,'put o2=-1 | grey label2=Trace unit2="" label1=Time labelsz=11 unit1="s" title="" wherexlabel=b wheretitle=t %s'%other)
+
+def Greyplot(hyper,other): 
+	Plot(hyper,'grey label2=Trace unit2="" label1=Time labelsz=11 unit1="s" title="" wherexlabel=b wheretitle=t %s'%other)
+
+def Graph(hyper,other):
+	Result(hyper,'graph label1="" label2="" unit1="" labelsz=11 unit2=""  title="" wherexlabel=b wheretitle=t %s' %other)
+
+def Graphplot(hyper,other):
+	Plot(hyper,'graph label1="" label2="" unit1="" labelsz=11 unit2=""  title="" wherexlabel=b wheretitle=t %s' %other)
+
+
+##########################################
+#    Make synthetic hyper:hyper1* & hyper2
+##########################################
+Flow('hyper1',None,
+     '''
+     spike n1=512 k1=130,150,180,250,300 nsp=5|
+     ricker1 frequency=30 |
+     spray axis=2 n=256 d=0.01 o=-1 label=Offset unit=km |
+     nmostretch inv=y v0=4 half=n |
+     scale axis=12 | put d2=1
+     ''')
+Grey('hyper1',' clip=%g'%clip)
+Flow('hyper2',None,
+     '''
+     spike n1=512 k1=130,150,180,250,300 nsp=5 |
+     ricker1 frequency=30 |
+     spray axis=2 n=256 d=0.01 o=1 label=Offset unit=km |
+     nmostretch inv=y v0=6 half=n |
+     scale axis=12 | put d2=1
+     ''')
+Grey('hyper2',' clip=%g'%clip)
+#############################################
+#		Experiment
+#############################################
+## Apply dithering
+# var=1 makes the dithering range larger, unit=ms
+Flow('dither','hyper1',
+     '''
+     window n1=1 |
+     noise rep=y seed=122011 var=0.1 | math output="1000*input"
+     ''')
+Flow('hypershottime1','hyper1','window n1=1 | math output=3*1000*x1')
+Flow('hypershottime2','hypershottime1 dither','add scale=1,1 ${SOURCES[1]}')
+
+## Blend 
+Flow('hypers','hyper2 hyper1 hypershottime1 hypershottime2','blend shot_time_in=${SOURCES[3]} shot_time_out=${SOURCES[2]} |add scale=1,1 ${SOURCES[1]}' )
+Flow('uhypers','hyper1 hyper2 hypershottime1 hypershottime2','blend shot_time_in=${SOURCES[2]} shot_time_out=${SOURCES[3]} |add scale=1,1 ${SOURCES[1]}' )
+
+Grey('hypers',' clip=%g'%clip)
+Grey('uhypers',' clip=%g'%clip)
+Flow('hypersfft','hypers','math output="input/2"')
+Flow('uhypersfft','uhypers','math output="input/2"')
+Flow('hypersslet','hypers','math output="input/2"')
+Flow('uhypersslet','uhypers','math output="input/2"')
+Flow('hypersfxdecon','hypers','math output="input/2"')
+Flow('uhypersfxdecon','uhypers','math output="input/2"')
+
+## fk transform and filtering
+Flow('hypersfka','hypers','fft1 | fft3 axis=2 pad=1 | cabs')
+Flow('hypersfkr','hypers','fft1 | fft3 axis=2 pad=1 | real')
+Flow('hypersfki','hypers','fft1 | fft3 axis=2 pad=1 | imag')
+Flow('hypersfk','hypers','fft1 | fft3 axis=2 pad=1')
+Flow('hypersfkr_filt','hypersfkr','mutter half=n t0=0 slope0=40 x0=0 ')
+Flow('hypersfki_filt','hypersfki','mutter half=n t0=0 slope0=40 x0=0 ')
+
+Grey('hypersfka',' label1=Frequency unit1=Hz label2=Wavenumber color=j')
+Grey('hypersfkr',' label1=Frequency unit1=Hz label2=Wavenumber color=j')
+Grey('hypersfki',' label1=Frequency unit1=Hz label2=Wavenumber color=j')
+Grey('hypersfkr_filt',' label1=Frequency unit1=Hz label2=Wavenumber color=j')
+Grey('hypersfki_filt',' label1=Frequency unit1=Hz label2=Wavenumber color=j')
+
+## fk inverse transform -> recon and difference
+Flow('hypers_re','hypersfkr_filt hypersfki_filt','cmplx ${SOURCES[1]} | fft3 axis=2 inv=y | fft1 inv=y')
+Flow('hypers_redif','hypers hypers_re','add scale=1,-1 ${SOURCES[1]}')
+Grey('hypers_re','')
+Grey('hypers_redif','')
+
+#deblend using fft
+deblend2.deblendfft('hyper1',
+	  'hyper2',
+	  'hypers',
+          'uhypers',
+	  'hypersfft',
+	  'uhypersfft',
+	  'hyperdeblendedfft1',
+	  'hyperdeblendedfft2',
+	  'hypershottime1',
+	  'hypershottime2',
+	   mute1,
+	   mute2,
+	   n1,
+	   n2,
+	   niter,
+	   mode,
+	   thr,
+	   clip,
+	   fraction)
+
+#deblend using seislet
+deblend2.deblendslet('hyper1',
+	  'hyper2',
+	  'hypers',
+          'uhypers',
+	  'hypersslet',
+	  'uhypersslet',
+	  'hyperdeblendedslet1',
+	  'hyperdeblendedslet2',
+	  'hypershottime1',
+	  'hypershottime2',
+	   mute1,
+	   mute2,
+	   n1,
+	   n2,
+	   r1,
+	   r2,
+	   padno,
+	   niter,
+	   ddip,
+	   mode,
+	   thr,
+	   clip,
+	   fhi,
+	   fraction)
+
+#deblend using fxdecon
+deblend2.deblendfxdecon('hyper1',
+	  'hyper2',
+	  'hypers',
+          'uhypers',
+	  'hypersfxdecon',
+	  'uhypersfxdecon',
+	  'hyperdeblendedfxdecon1',
+	  'hyperdeblendedfxdecon2',
+	  'hypershottime1',
+	  'hypershottime2',
+	   mute1,
+	   mute2,
+	   n1,
+	   n2,
+	   niter,
+	   clip,
+	   fraction)
+
+## Ploting difference, error, deblended sections
+Flow('hyperdifffft1','hypers hyperdeblendedfft1','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyperdifffft2','uhypers hyperdeblendedfft2','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyperdiffslet1','hypers hyperdeblendedslet1','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyperdiffslet2','uhypers hyperdeblendedslet2','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyperdifffxdecon1','hypers hyperdeblendedfxdecon1','add scale=1,-1 ${SOURCES[1]}')
+Flow('hyperdifffxdecon2','uhypers hyperdeblendedfxdecon2','add scale=1,-1 ${SOURCES[1]}')
+
+Flow('hypererrorfft1','hyper1 hyperdeblendedfft1','add scale=1,-1 ${SOURCES[1]}')
+Flow('hypererrorfft2','hyper2 hyperdeblendedfft2','add scale=1,-1 ${SOURCES[1]}')
+Flow('hypererrorslet1','hyper1 hyperdeblendedslet1','add scale=1,-1 ${SOURCES[1]}')
+Flow('hypererrorslet2','hyper2 hyperdeblendedslet2','add scale=1,-1 ${SOURCES[1]}')
+Flow('hypererrorfxdecon1','hyper1 hyperdeblendedfxdecon1','add scale=1,-1 ${SOURCES[1]}')
+Flow('hypererrorfxdecon2','hyper2 hyperdeblendedfxdecon2','add scale=1,-1 ${SOURCES[1]}')
+
+Grey('hyperdifffft1','title="" clip=%g'%clip)
+Grey('hyperdifffft2','title="" clip=%g'%clip)
+Grey('hyperdiffslet1','title="" clip=%g'%clip)
+Grey('hyperdiffslet2','title="" clip=%g'%clip)
+Grey('hyperdifffxdecon1','title="" clip=%g'%clip)
+Grey('hyperdifffxdecon2','title="" clip=%g'%clip)
+Grey('hypererrorfft1','title="" clip=%g'%clip)
+Grey('hypererrorfft2','title="" clip=%g'%clip)
+Grey('hypererrorslet1','title="" clip=%g'%clip)
+Grey('hypererrorslet2','title="" clip=%g'%clip)
+Grey('hypererrorfxdecon1','title="" clip=%g'%clip)
+Grey('hypererrorfxdecon2','title="" clip=%g'%clip)
+#Grey('hyperdeblendedfft1','title="Deblended 1 (fft)"clip=%g'%clip)
+#Grey('hyperdeblendedfft2','title="Deblended 1 (fft)"clip=%g'%clip)
+#Grey('hyperdeblendedslet1','title="Deblended 1 (Seislet)" clip=%g'%clip)
+#Grey('hyperdeblendedslet2','title="Deblended 1 (Seislet)" clip=%g'%clip)
+Grey('hyperdeblendedfft1',' clip=%g'%clip)
+Grey('hyperdeblendedfft2',' clip=%g'%clip)
+Grey('hyperdeblendedslet1',' clip=%g'%clip)
+Grey('hyperdeblendedslet2',' clip=%g'%clip)
+Grey('hyperdeblendedfxdecon1',' clip=%g'%clip)
+Grey('hyperdeblendedfxdecon2',' clip=%g'%clip)
+
+## Ploting
+Flow('hypersnrsa','hypersfft-snrsa hypersslet-snrsa hypersfxdecon-snrsa','cat axis=2 ${SOURCES[1:3]}')
+Flow('hypersnrsb','uhypersfft-snrsb uhypersslet-snrsb uhypersfxdecon-snrsb','cat axis=2 ${SOURCES[1:3]}')
+
+Graph('hypersnrsa','dash=0,1,0 title=""  symbol="o+*" symbolsz=8 label1="Iteration no. #" label2="SNR" unit2="dB"  min1=0 max1=%g min2=0 max2=40 d1=1'%niter)
+Graph('hypersnrsb','dash=0,1,0 title=""  symbol="o+*" symbolsz=8 label1="Iteration no. #" label2="SNR" unit2="dB"  min1=0 max1=%g min2=0 max2=40 d1=1'%niter)
+
+Greyplot('hypers',' title="Iter # = %g"'%(0))
+Greyplot('uhypers',' title="Iter # = %g"'%(0))
+deblendffts1=['hypers']
+deblendffts2=['uhypers']
+deblendslets1=['hypers']
+deblendslets2=['uhypers']
+deblendfxdecons1=['hypers']
+deblendfxdecons2=['uhypers']
+
+for i in range(niter):
+	deblendfft1='hypersfft%gp%g'%(i+1,i+1)
+	deblendfft2='uhypersfft%gp%g'%(i+1,i+1)
+	deblendslet1='hypersslet%gp%g'%(i+1,i+1)
+	deblendslet2='uhypersslet%gp%g'%(i+1,i+1)
+	deblendfxdecon1='hypersfxdecon%gp%g'%(i+1,i+1)
+	deblendfxdecon2='uhypersfxdecon%gp%g'%(i+1,i+1)
+	deblendffts1.append(deblendfft1)
+	deblendffts2.append(deblendfft2)
+	deblendslets1.append(deblendslet1)
+	deblendslets2.append(deblendslet2)
+	deblendfxdecons1.append(deblendfxdecon1)
+	deblendfxdecons2.append(deblendfxdecon2)
+
+	Greyplot(deblendfft1,' title="Iter # = %g"'%(i+1))
+	Greyplot(deblendfft2,' title="Iter # = %g"'%(i+1))
+	Greyplot(deblendslet1,' title="Iter # = %g"'%(i+1))
+	Greyplot(deblendslet2,' title="Iter # = %g"'%(i+1))
+	Greyplot(deblendfxdecon1,' title="Iter # = %g"'%(i+1))
+	Greyplot(deblendfxdecon2,' title="Iter # = %g"'%(i+1))
+Plot('deblendfft1',deblendffts1,'Movie')
+Plot('deblendfft2',deblendffts2,'Movie')
+Plot('deblendslet1',deblendslets1,'Movie')
+Plot('deblendslet2',deblendslets2,'Movie')
+Plot('deblendfxdecon1',deblendfxdecons1,'Movie')
+Plot('deblendfxdecon2',deblendfxdecons2,'Movie')
+End()

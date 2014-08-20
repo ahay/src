@@ -11,6 +11,9 @@ To the reproducible documents collection:
 * tongji/lrmode: Fast algorithms for elastic-wave-mode separation and
   vector decomposition using low-rank approximation for anisotropic
   media (Cheng and Fomel)
+* tccs/deblend: Iterative deblending of simultaneous-source seismic
+  data using seislet-domain shaping regularization (Chen, Fomel, and
+  Hu)
 
 To SCons:
 
