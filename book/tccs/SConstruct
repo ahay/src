@@ -27,7 +27,8 @@ Papers(copyr='The University of Texas at Austin',
                 'uncert': 'Sergey Fomel and Evgeny Landa',
                 'dsrtomo': 'Siwei Li, Alexander Vladimirsky, and Sergey Fomel',
                 'phase': 'Sergey Fomel and Mirko van~der~Baan',
-                'emdpf': 'Yangkang Chen and Jitao Ma'
+                'emdpf': 'Yangkang Chen and Jitao Ma',
+                'sglowrank': 'Gang Fang, Sergey Fomel, Qizhen Du, and Jingwei Hu',
                 },
        fig=('diffr/chan3d','pwmig','width=\\textwidth'))
 
@@ -63,5 +64,6 @@ End(use=['newalg','algorithmic','amsfonts','amsmath','amssymb',
 \newcommand{\vct}{\mathbf}
 \newcommand{\mtx}{\tensor}
 \newcommand{\discriminant}{D}
+\DeclareMathOperator{\arccosh}{arccosh}
    ''')
 

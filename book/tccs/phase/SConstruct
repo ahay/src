@@ -1,4 +1,4 @@
 from rsf.tex import *
 
-End(color='tskew picklocal bfoc bpik boonm boon-win mpik ampl ampr')
+End(color='tskew picklocal bfoc bpik boonm boon-win mpik ampl ampr',use='amsmath',include=r'\DeclareMathOperator{\arccosh}{arccosh}')
 
