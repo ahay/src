@@ -8,27 +8,11 @@
 #SBATCH -t 2:00:00    #maximum time
 #SBATCH -A TCCS        #account to charge
 
-echo SLURM_NNODES=$SLURM_NNODES
-echo SLURM_TASKS_PER_NODE=$SLURM_TASKS_PER_NODE
-
-# previous sge code has seperate path if mycores -lt 16
-
-# number of nodes
-# $SLURM_NNODES
-echo SLURM_NODELIST=$SLURM_NODELIST
-
-# host.sh translates $SLURM_NODELIST to RSF_CLUSTER required by pscons
-export RSF_CLUSTER=`./host.sh`
-echo RSF_CLUSTER=$RSF_CLUSTER
-
-echo RSF_THREADS=$RSF_THREADS
-
-export RSF_THREADS=$SLURM_NNODES
-echo RSF_THREADS=$RSF_THREADS
-export OMP_NUM_THREADS=1
-echo OMP_NUM_THREADS=$OMP_NUM_THREADS
-
-pscons 
+unset DISPLAY
+env
+echo start `date`
+time pscons 
+echo end `date`
 
 
 
