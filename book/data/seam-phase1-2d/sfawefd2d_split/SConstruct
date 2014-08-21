@@ -50,7 +50,7 @@ Flow(['Fdat', 'Fwfl'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOU
 # split=(?,'mpi',?) only allows splitting on one input in Flow (probably stdin) 
 #Flow(['Fdat_mpi', 'Fwfl_mpi'], ['Fwav', 'Fvel', 'Fden', 'ss', 'rr'], 'awefd2d  vel=${SOURCES[1]} sou=${SOURCES[3]} rec=${SOURCES[4]} wfl=${TARGETS[1]} den=${SOURCES[2]} verb=y free=y expl=y snap=y dabc=y jdata=1 jsnap=1000',split=[2,'mpi',[3]],reduce='cat axis=3') 
  
-Flow('shots','Fdat','sftransp plane=12')
+Flow('shots','Fdat','sftransp plane=12 | sfput unit2="m" label3="receiver" label3="shot"')
 #View the wavefield movie:
 #Result('movie', 'Fwfl', 'grey gainpanel=a pclip=99 color=j scalebar=y')
 #Result('movie_omp', 'Fwfl_omp', 'grey gainpanel=a pclip=99 color=j scalebar=y')
@@ -60,6 +60,6 @@ Result('snap', 'Fwfl', 'window f3=8 n3=1 | grey pclip=99 color=j title="snapshot
 #Result('snap_omp', 'Fwfl_omp', 'window f3=8 n3=1 | grey pclip=99 color=j title="snapshot at t=4s"')
 #Result('snap_mpi', 'Fwfl_mpi', 'window f3=8 n3=1 | grey pclip=99 color=j title="snapshot at t=4s"')
 #View the data recorded at receiver:
-Result('data', 'shots', 'window j3=10 n3=3 | grey title="Data recorded at receiver" unit2= label2=amplitude')
+Result('data', 'shots', 'window j3=10 n3=3 | grey title="Data recorded at receiver" label2=receiver')
 
 End()
