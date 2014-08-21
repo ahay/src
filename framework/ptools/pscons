@@ -33,8 +33,21 @@ signal.signal(signal.SIGINT,handler) # handle interrupt
 
 cpu = rsf.node.cpus()
 
-threads = int(os.environ.get('RSF_THREADS',cpu))
-cluster = os.environ.get('RSF_CLUSTER','localhost %d' % cpu)
+cluster = os.environ.get('RSF_CLUSTER','none')
+if cluster == 'none':
+    if os.environ.get('SLURM_NODELIST','none') != "none":
+        cluster=os.popen("slurm_nodelist2rsf_cluster").read()
+if cluster == 'none':
+    cluster='localhost %d' % cpu
+
+# We need one pscons thread for each remote task.  The number of
+# remote tasks is the sum of the number of tasks on each of the
+# nodes listed in the string "cluster"
+
+cluster_list=cluster.split(" ")
+threads=0
+for indx_cluster in range(0,len(cluster_list),2):
+    threads+=int(cluster_list[indx_cluster+1])
 
 args = ' '.join(sys.argv[1:])
 command = 'scons -j %d CLUSTER="%s" %s' % (threads,cluster,args)
