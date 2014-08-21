@@ -15,7 +15,7 @@ echo SLURM_NODELIST=$SLURM_NODELIST
 unset DISPLAY
 env
 echo start `date`
-pscons 
+time pscons 
 echo end `date`
 
 

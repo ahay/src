@@ -11,7 +11,7 @@
 unset DISPLAY
 env
 echo start `date`
-timex pscons 
+time pscons 
 echo end `date`
 
 
