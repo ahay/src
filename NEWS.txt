@@ -18,6 +18,7 @@ To the reproducible documents collection:
 To SCons:
 
 * Added SLURM support for running MPI jobs through SCons
+* Added workdir= in Fetch
 
 To documentation:
 

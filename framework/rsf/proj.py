@@ -99,6 +99,7 @@ def retrieve(target=None,source=None,env=None):
     top = env.get('top')
     folder = top + os.sep +env['dir']
     private = env.get('private')
+    workdir = env.get('workdir')
     if private:
         login = private['login']
         password = private['password']
@@ -115,18 +116,24 @@ def retrieve(target=None,source=None,env=None):
             return 3
         for file in map(str,target):
             remote = os.path.basename(file)
+            if (workdir):
+                pwd = os.getcwd()
+                os.chdir(workdir)
             try:
-                 download = open(file,'wb')
-                 session.retrbinary('RETR '+remote,
-                                    lambda x: download.write(x))
-                 download.close()
+                download = open(file,'wb')
+                session.retrbinary('RETR '+remote,
+                                   lambda x: download.write(x))
+                download.close()
             except:
-                 print 'Could not download file "%s" ' % file
-                 return 1
-            if not os.stat(file)[6]:
+                print 'Could not download file "%s" ' % file
+                return 1
+            if not os.stat(file)[6]: # if zero size file
                 print 'Could not download file "%s" ' % file
                 os.unlink(file)
                 return 4
+            if (workdir):
+                os.chdir(pwd)
+                os.symlink(os.path(workdir,file),file)
         session.quit()
     else:
         server = env.get('server')
@@ -144,6 +151,9 @@ def retrieve(target=None,source=None,env=None):
             for file in map(str,target):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])
+                if (workdir):
+                    pwd = os.getcwd()
+                    os.chdir(workdir)
                 try:
                     urllib.urlretrieve(rdir,file)
 
@@ -154,12 +164,15 @@ def retrieve(target=None,source=None,env=None):
                 except:
                     print 'Could not download "%s" from "%s" ' % (file,rdir)
                     return 5
+                if (workdir):
+                    os.chdir(pwd)
+                    os.symlink(os.path(workdir,file),file)
     return 0
 
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
 Retrieve = Builder(action = Action(retrieve,
-                                   varlist=['dir','private','top','server']))
+                                   varlist=['dir','private','top','server','workdir']))
 Test = Builder(action=Action(test),varlist=['figdir','bindir'])
 Echo = Builder(action=Action(echo),varlist=['out','err'])
 
