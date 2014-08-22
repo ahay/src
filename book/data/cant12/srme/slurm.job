@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#SBATCH -o slurm_srme.job.o%j 
+#SBATCH -e slurm_srme.job.e%j 
+#SBATCH -p development #queue to run on 
+#SBATCH -N 1           #Number nodes to run on 
+#SBATCH -n 1           # total number of MPI tasks.  I guess each node gets n/N
+#SBATCH -t 04:00:00    #maximum time
+#SBATCH -A TCCS        #account to charge
+
+unset DISPLAY
+env
+echo start `date
+time pscons multiple.rsf
+echo end `date`
