@@ -31,8 +31,8 @@ fbrec gpurtm gpufwi genshots gpufd3d gpufbrec3d gpurtm3d
 ######################################################################
 # CUDA+MPI main programs
 cuda_mpi_progs = '''
+mpigpufwi
 '''
-#mpigpufd3d
 
 ######################################################################
 try:  # distributed version

@@ -765,6 +765,7 @@ int main(int argc, char *argv[])
 		}
 		obj=cal_objective(derr, ng*nt*nk);/* local objective for current 'rank' */
 
+		/* MPI reduce objective/misfit: obj */
 		if(rank==0){
 		    sendbuf=MPI_IN_PLACE;
 		    recvbuf=&obj;
@@ -773,6 +774,7 @@ int main(int argc, char *argv[])
 		    recvbuf=NULL;
 		}
         	MPI_Reduce(sendbuf, recvbuf, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		/* MPI reduce gradient: g1 */
 		if(rank==0){
 		    sendbuf=MPI_IN_PLACE;
 		    recvbuf=g1[0];
@@ -781,6 +783,7 @@ int main(int argc, char *argv[])
 		    recvbuf=NULL;
 		}
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+		/* MPI reduce illumination: illum */
 		if(rank==0){
 		    sendbuf=MPI_IN_PLACE;
 		    recvbuf=illum[0];

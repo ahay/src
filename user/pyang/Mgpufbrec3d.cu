@@ -399,7 +399,6 @@ int main(int argc, char* argv[])
 	random_boundary(v0, vv, nz, nx, ny, nb);
 	velocity_transform(v0, vv, dt, dz, dx, dy, nz, nx, ny, nb);
 
-
     	cudaSetDevice(0);// initialize device, default device=0;
 	sf_check_gpu_error("Failed to initialize device!");
 
