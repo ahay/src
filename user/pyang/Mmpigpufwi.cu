@@ -342,8 +342,7 @@ int main(int argc, char *argv[])
 			cudaEventRecord(start);/* record starting time */
 		}
     		sf_seek(shots, rank*nt*ng*sizeof(float), SEEK_SET);/* Starting position in input files */
-
-		cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
+		if(rank==0) cudaMemcpy(d_g0, d_g1, nz*nx*sizeof(float), cudaMemcpyDeviceToDevice);
 		cudaMemset(d_g1, 0, nz*nx*sizeof(float));
 		cudaMemset(d_illum, 0, nz*nx*sizeof(float));
 		ik=0;
@@ -409,6 +408,7 @@ int main(int argc, char *argv[])
 		    recvbuf=NULL;
 		}
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            	MPI_Bcast(vv[0], nz*nx, MPI_FLOAT, 0, MPI_COMM_WORLD);
 		cudaMemcpy(d_g1, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 
 		/* MPI reduce illumination: d_illum */
@@ -421,10 +421,10 @@ int main(int argc, char *argv[])
 		    recvbuf=NULL;
 		}
 		MPI_Reduce(sendbuf, recvbuf, nz*nx, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-		cudaMemcpy(d_illum, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 
 		if(rank==0){
 			/* output illumination */
+			cudaMemcpy(d_illum, vv, nz*nx*sizeof(float), cudaMemcpyHostToDevice);
 			window(v0, vv, nz, nx, nz1, nx1);
 			sf_floatwrite(v0, nz1*nx1, illums);
 

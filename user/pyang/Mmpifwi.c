@@ -719,7 +719,7 @@ int main(int argc, char *argv[])
 	{
 		if(rank==0 && verb) start=MPI_Wtime();// record starting time
     		sf_seek(shots, rank*nt*ng*sizeof(float), SEEK_SET);/* Starting position in input files */
-		memcpy(g0[0], g1[0], nz*nx*sizeof(float));
+		if(rank==0) memcpy(g0[0], g1[0], nz*nx*sizeof(float));
 		memset(g1[0], 0, nz*nx*sizeof(float));
 		memset(illum[0], 0, nz*nx*sizeof(float));
 		memset(derr, 0, nk*ng*nt*sizeof(float));
