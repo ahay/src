@@ -40,6 +40,8 @@ To programs:
 
 ===Bug fixes===
 
+* Fixed memsize definition bug in sfrotate and sfreverse
+
 In the reproducible documents collection:
 
 In documentation:

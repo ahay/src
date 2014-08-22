@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("memsize",&mem))
         mem=sf_memsize();
     /* Max amount of RAM (in Mb) to be used */
-    memsize = mem * (1<<20); /* convert Mb to bytes */
+    memsize = (off_t) mem * (1<<20); /* convert Mb to bytes */
 
     if (verb) fprintf(stderr,"%s: Reversing over",sf_getprog());
     for (i=0, mask=1; i < dim; i++, mask <<= 1) {

@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("memsize",&mem))
         mem=sf_memsize();
     /* Max amount of RAM (in Mb) to be used */
-    memsize = mem * (1<<20); /* convert Mb to bytes */
+    memsize = (off_t) mem * (1<<20); /* convert Mb to bytes */
 
     dim2=0;
     for (i=0; i < dim; i++) {	
