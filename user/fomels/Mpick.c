@@ -7,8 +7,8 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 Theory in Appendix B of:
 S. Fomel, 2009, 
 Velocity analysis using AB semblance: Geophysical Prospecting, v. 57, 311-321.
-Reproducible version in RSFSRC/book/jsg/avo 
-http://ahay.org/RSF/book/jsg/avo/paper_html/
+Reproducible version in RSFSRC/book/tccs/avo 
+http://ahay.org/RSF/book/tccs/avo/paper_html/
 
 August 2012 program of the month:
 http://ahay.org/rsflog/index.php?/archives/302-Program-of-the-month-sfpick.html
