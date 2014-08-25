@@ -17,7 +17,7 @@ Xi'an, China, 710049}
 This tutorial provides a simple yet useful guide to do stability and dispersion analysis for wave equation.
 \end{abstract}
 
-\section{1D Warm up\cite{johnsonpset18336}}
+\section{1D Warm up\citep{johnsonpset18336}}
 In numerical analysis, von Neumann stability analysis is a procedure used to check the stability of finite difference schemes as applied to linear partial differential equations. The analysis is based on the Fourier decomposition of numerical error and was developed at Los Alamos National Laboratory after having been briefly described in a 1947 article by British researchers Crank and Nicolson. This method is an example of explicit time integration where the function that defines governing equation is evaluated at the current time. Later, the method was given a more rigorous treatment in an article co-authored by John von Neumann.
 
 \subsection{Stability example: Crank-Nicolson scheme}
@@ -217,7 +217,7 @@ leads to
  e^{-i(\omega \cdot l\Delta t -k\cos\theta \cdot p\Delta x-k\sin\theta \cdot q\Delta y)}
 \end{equation}
 
-\subsection{Dispersion analysis with regular grid FD \cite{liu2009new}}
+\subsection{Dispersion analysis with regular grid FD \citep{liu2009new}}
 With 2nd order FD in time and $2N$-th order FD in space, the wave equation becomes
 \begin{equation}\label{eq:disp1}
 \frac{u_{j,m}^{n+1}-2u_{j,m}^n+u_{j,m}^{n-1}}{\Delta t^2}
