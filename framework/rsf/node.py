@@ -64,10 +64,22 @@ class Hosts(object):
         'initialize list of nodes'
         
         # RSF_CLUSTER method
+        #print "get RSF_CLUSTER in node.py"
         cluster = os.environ.get('RSF_CLUSTER')
+        #print "test cluster=",cluster
         if not cluster:
+            #print "get SLURM_NODELIST"
+            test=os.environ.get('SLURM_NODELIST')
+            #print "test=", test
+            if not test:
+                #print "set RSF_CLUSTER from SLURM_NODELIST"
+                os.system("export RSF_CLUSTER=`slurm_nodelist2rsf_cluster `")
+                cluster = os.environ.get('RSF_CLUSTER')
+                #print "new cluster=",cluster
+        #print "test2 cluster"
+        if not cluster:        
             cluster = 'localhost %d' % cpus()
-
+        #print "cluster=",cluster
         hosts = cluster.split()
         self.nodes = []
         self.local = True
