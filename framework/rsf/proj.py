@@ -99,7 +99,10 @@ def retrieve(target=None,source=None,env=None):
     top = env.get('top')
     folder = top + os.sep +env['dir']
     private = env.get('private')
-    workdir = env.get('workdir')
+    usedatapath = env.get('usedatapath')
+    datapath="."
+    if usedatapath!=0:
+        datapath=rsf.path.getpath(os.getcwd())
     if private:
         login = private['login']
         password = private['password']
@@ -116,24 +119,26 @@ def retrieve(target=None,source=None,env=None):
             return 3
         for file in map(str,target):
             remote = os.path.basename(file)
-            if (workdir):
+            localfile=file
+            if usedatapath!=0:
                 pwd = os.getcwd()
-                os.chdir(workdir)
+                localfile=datapath+'/'+file
             try:
-                download = open(file,'wb')
+                download = open(localfile,'wb')
                 session.retrbinary('RETR '+remote,
                                    lambda x: download.write(x))
                 download.close()
             except:
                 print 'Could not download file "%s" ' % file
                 return 1
-            if not os.stat(file)[6]: # if zero size file
+            if not os.stat(localfile)[6]: # if zero size file
                 print 'Could not download file "%s" ' % file
-                os.unlink(file)
+                os.unlink(localfile)
                 return 4
-            if (workdir):
-                os.chdir(pwd)
-                os.symlink(os.path(workdir,file),file)
+            if usedatapath!=0:
+                if os.path.isfile(file):
+                    os.remove(file)
+                os.symlink(localfile,file)
         session.quit()
     else:
         server = env.get('server')
@@ -151,28 +156,28 @@ def retrieve(target=None,source=None,env=None):
             for file in map(str,target):
                 remote = os.path.basename(file)  
                 rdir =  '/'.join([server,folder,remote])
-                if (workdir):
-                    pwd = os.getcwd()
-                    os.chdir(workdir)
+                localfile=file
+                if usedatapath!=0:
+                    localfile=datapath+'/'+file
                 try:
-                    urllib.urlretrieve(rdir,file)
-
-                    if not os.stat(file)[6]:
+                    urllib.urlretrieve(rdir,localfile)
+                    if not os.stat(localfile)[6]:
                         print 'Could not download file "%s" ' % file
                         os.unlink(file)
                         return 2
                 except:
                     print 'Could not download "%s" from "%s" ' % (file,rdir)
                     return 5
-                if (workdir):
-                    os.chdir(pwd)
-                    os.symlink(os.path(workdir,file),file)
+                if usedatapath!=0:
+                    if os.path.isfile(file):
+                        os.remove(file)
+                    os.symlink(localfile,file)
     return 0
 
 printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
 
 Retrieve = Builder(action = Action(retrieve,
-                                   varlist=['dir','private','top','server','workdir']))
+                                   varlist=['dir','private','top','server','usedatapath']))
 Test = Builder(action=Action(test),varlist=['figdir','bindir'])
 Echo = Builder(action=Action(echo),varlist=['out','err'])
 
@@ -354,7 +359,9 @@ class Project(Environment):
         hosts_fd.close()
 
         for key in self['ENV'].keys():
-            self.environ = self.environ + ' %s=%s' % (key,self['ENV'][key])
+            # quote the env values because stampede has env variable 
+            # SLURM_NODE_ALIASES=(null)  This makes problems in the ssh to nodes.
+            self.environ = self.environ + " %s='%s'" % (key,self['ENV'][key])
 
 
     def __Split(self,split,reduction,
@@ -614,7 +621,7 @@ class Project(Environment):
         suffix = env.get('suffix',sfsuffix)
         os.system('%s files=n su=%d *%s >> %s' % (sizes,su,suffix,infofile))
         return 0
-    def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
+    def Fetch(self,files,dir,private=None,server=dataserver,top='data',usedatapath=0):
         if private:
             self.data.append('PRIVATE')
         elif server=='local':
@@ -626,7 +633,7 @@ class Project(Environment):
                 self.data.append(os.path.join(top,dir,fil))
         return self.Retrieve(files,None,
                              dir=dir,private=private,
-                             top=top,server=server)
+                             top=top,server=server,usedatapath=usedatapath)
 
 # Default project
 project = Project()
