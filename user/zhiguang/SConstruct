@@ -5,12 +5,12 @@ sys.path.append('../../framework')
 import bldutil
 
 progs = '''
-cwmllrrtm testcheck segy2rsf taper lrmodeling lrwave2abc ormsby cwsglrrtm pad2 ctshift fulrtm2d fulsgrtm2d identity postrtm2d postrtminv postrtmshape prertmshape sgewefd2d
+taper pad2 ctshift fulrtm2d fulsgrtm2d postrtm2d postrtminv postrtmshape prertmshape sgewefd2d
 '''
-ccprogs = 'cswavelr2cij cswavelr2abc swavelr2'
+ccprogs = ''
 
 mpi_progs = '''
-mpicwlrrtm mpitest mpifdlsrtm mpifulrtm2d mpilrrtm mpiprertm2d
+mpitest mpifdlsrtm mpifulrtm2d mpilrrtm mpiprertm2d
 '''
 
 pyprogs = 'lrrtm fdlsrtm'

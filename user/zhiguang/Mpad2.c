@@ -4,8 +4,8 @@
 
 int main(int argc, char* argv[])
 {
-	int ix, iz;
-	int nx, nz;
+	int ix, iz, i3;
+	int nx, nz, n3;
 	int top, bottom, left, right;
 	int padnx, padnz;
 	float dx, dz;
@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 
 	ax=sf_iaxa(Fin, 2); nx=sf_n(ax); dx=sf_d(ax); x0=sf_o(ax);
 	az=sf_iaxa(Fin, 1); nz=sf_n(az); dz=sf_d(az); z0=sf_o(az);
+	n3=sf_leftsize(Fin, 2);
 
 	padnx=left+nx+right;
 	padnz=top+nz+bottom;
@@ -40,25 +41,32 @@ int main(int argc, char* argv[])
 
 	input=sf_floatalloc2(nz, nx);
 	output=sf_floatalloc2(padnz, padnx);
-	sf_floatread(input[0], nz*nx, Fin);
 
-	for(ix=0; ix<nx; ix++)
-		for(iz=0; iz<nz; iz++)
-			output[ix+left][iz+top]=input[ix][iz];
-	for(ix=left; ix<left+nx; ix++)
-		for(iz=0; iz<top; iz++)
-			output[ix][iz]=output[ix][top];
-	for(ix=left; ix<left+nx; ix++)
-		for(iz=0; iz<bottom; iz++)
-			output[ix][iz+top+nz]=output[ix][top+nz-1];
-	for(iz=0; iz<padnz; iz++)
-		for(ix=0; ix<left; ix++)
-			output[ix][iz]=output[left][iz];
-	for(iz=0; iz<padnz; iz++)
-		for(ix=0; ix<right; ix++)
-			output[ix+left+nx][iz]=output[left+nx-1][iz];
-
-	sf_floatwrite(output[0], padnx*padnz, Fout);
+	for(i3=0; i3<n3; i3++){
+		sf_floatread(input[0], nz*nx, Fin);
+		
+		for(ix=0; ix<nx; ix++)
+			for(iz=0; iz<nz; iz++)
+				output[ix+left][iz+top]=input[ix][iz];
+		
+		for(ix=left; ix<left+nx; ix++)
+			for(iz=0; iz<top; iz++)
+				output[ix][iz]=output[ix][top];
+		
+		for(ix=left; ix<left+nx; ix++)
+			for(iz=0; iz<bottom; iz++)
+				output[ix][iz+top+nz]=output[ix][top+nz-1];
+		
+		for(iz=0; iz<padnz; iz++)
+			for(ix=0; ix<left; ix++)
+				output[ix][iz]=output[left][iz];
+		
+		for(iz=0; iz<padnz; iz++)
+			for(ix=0; ix<right; ix++)
+				output[ix+left+nx][iz]=output[left+nx-1][iz];
+		
+		sf_floatwrite(output[0], padnx*padnz, Fout);
+	}
 
 	return 0;
 }
