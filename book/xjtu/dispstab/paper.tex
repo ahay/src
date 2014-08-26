@@ -69,7 +69,7 @@ Define $\lambda=\Delta t/\Delta x$ and Fourier transform $\hat{u}^n=F{u^n}$. The
  \hat{u}^{n+1}=\hat{u}^n+b\lambda(2i\sin\frac{\theta}{2})\hat{v}^{n+1/2}
 \end{equation}
 \begin{equation}
- \hat{v}^{n+3/2}=\hat{v}^{n+1/2}+c\lambda(2\sin\frac{\theta}{2})\hat{u}^{n+1}
+ \hat{v}^{n+3/2}=\hat{v}^{n+1/2}+c\lambda(2i\sin\frac{\theta}{2})\hat{u}^{n+1}
 \end{equation}
 
 This can be expressed as a produce of $2\times2$ matrices:
@@ -119,7 +119,7 @@ Equations \eqref{eq:pml1} and \eqref{eq:pml2} result in
 \end{equation}
 \begin{equation}
  \hat{v}^{n+3/2}=\frac{1-\frac{\sigma\Delta t}{2}}{1+\frac{\sigma\Delta t}{2}}\hat{v}^{n+1/2}+
- \frac{c\lambda(2\sin\frac{\theta}{2})}{1+\frac{\sigma\Delta t}{2}}\hat{u}^{n+1}
+ \frac{c\lambda(2i\sin\frac{\theta}{2})}{1+\frac{\sigma\Delta t}{2}}\hat{u}^{n+1}
 \end{equation}
 Following the similar manipulation, the amplification matrix $G$ is
 \begin{equation}
@@ -192,12 +192,12 @@ With the notation $\frac{\partial^2 u}{\partial s^2}=u_{ss}, s=x,y,t$, in the ca
 \end{equation}
 Using the Fourier transform
 \begin{equation}
-u_t\leftrightarrow i\omega u, u_x\leftrightarrow i k_x u, u_y\leftrightarrow i k_y u;
-u_{tt}\leftrightarrow -\omega^2 u,
-u_{xx}\leftrightarrow -k_x^2 u,
-u_{yy}\leftrightarrow-k_y^2 u,
+u_t\leftrightarrow i\omega \hat{u}, u_x\leftrightarrow i k_x \hat{u}, u_y\leftrightarrow i k_y \hat{u};
+u_{tt}\leftrightarrow -\omega^2 \hat{u},
+u_{xx}\leftrightarrow -k_x^2 \hat{u},
+u_{yy}\leftrightarrow-k_y^2 \hat{u},
 \end{equation}
-the dispersion relationship is then obtained
+the relationship is then obtained
 \begin{equation}
  \omega^2=v^2 (k_x^2+k_y^2)
 \end{equation}
@@ -238,14 +238,14 @@ Note that $C_l=C_{-l}$, $k=\omega/v$, it follows that
 \begin{equation}\label{eq:disp2}
 \begin{split}
  &2\cos( v k\Delta t)-2\\
- =&v^2\Delta t^2 \left(
-\frac{1}{\Delta x^2}(C_0+\sum_{l=1}^{N}C_l (e^{i k\cos\theta \cdot l\Delta x}+e^{-i k\cos\theta \cdot l\Delta x}))
-+\frac{1}{\Delta y^2}(C_0+\sum_{l=1}^{N}C_l (e^{i k\cos\theta \cdot l\Delta y}+e^{-i k\cos\theta \cdot l\Delta y}))
-\right)\\
- =&v^2\Delta t^2 \left(
-\frac{1}{\Delta x^2}(C_0+2\sum_{l=1}^{N}C_l \cos(k\cos\theta \cdot l\Delta x))+
-\frac{1}{\Delta y^2}(C_0+2\sum_{l=1}^{N}C_l \cos(k\cos\theta \cdot l\Delta y))
-\right)\\
+ =&v^2\Delta t^2 (
+\frac{1}{\Delta x^2}(C_0+\sum_{l=1}^{N}C_l (e^{i k\cos\theta \cdot l\Delta x}+e^{-i k\cos\theta \cdot l\Delta x}))\\
+&+\frac{1}{\Delta y^2}(C_0+\sum_{l=1}^{N}C_l (e^{i k\cos\theta \cdot l\Delta y}+e^{-i k\cos\theta \cdot l\Delta y}))
+)\\
+ =&v^2\Delta t^2 (
+\frac{1}{\Delta x^2}(C_0+2\sum_{l=1}^{N}C_l \cos(k\cos\theta \cdot l\Delta x))\\
+&+\frac{1}{\Delta y^2}(C_0+2\sum_{l=1}^{N}C_l \cos(k\cos\theta \cdot l\Delta y))
+)\\
 \end{split}
 \end{equation}
 
